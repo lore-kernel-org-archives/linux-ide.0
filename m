@@ -1,6601 +1,3064 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH 5/9] libata: implement and use SHT initializers and ops inheritance
-Date: Wed, 30 Jan 2008 18:28:59 +0900
-Message-ID: <12016853432907-git-send-email-htejun@gmail.com>
+Subject: How to verify sht-ops-conversion patch doesn't change anything
+Date: Wed, 30 Jan 2008 18:49:49 +0900
+Message-ID: <47A0483D.6020101@gmail.com>
 References: <12016853433196-git-send-email-htejun@gmail.com>
+Mime-Version: 1.0
+Content-Type: multipart/mixed;
+ boundary="------------020203070305040007040100"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.179]:37130 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755064AbYA3J3V (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 30 Jan 2008 04:29:21 -0500
-Received: by wa-out-1112.google.com with SMTP id v27so277519wah.23
-        for <linux-ide@vger.kernel.org>; Wed, 30 Jan 2008 01:29:20 -0800 (PST)
+Received: from qb-out-0506.google.com ([72.14.204.238]:44640 "EHLO
+	qb-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753242AbYA3JuF (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 30 Jan 2008 04:50:05 -0500
+Received: by qb-out-0506.google.com with SMTP id e11so165465qbe.15
+        for <linux-ide@vger.kernel.org>; Wed, 30 Jan 2008 01:50:01 -0800 (PST)
 In-Reply-To: <12016853433196-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: jeff@garzik.org, linux-ide@vger.kernel.org, liml@rtr.ca, alan@lxorguk.ukuu.org.uk, kngregertsen@norway.atmel.com, sonic.adi@gmail.com, rmk@dyn-67.arm.linux.org.uk, alessandro.zummo@to
-Cc: Tejun Heo <htejun@gmail.com>
 
-libata lets low level drivers build scsi_host_template and
-ata_port_operations tables and register them with upper layers.  This
-allows low level drivers high level of flexibility but also burdens
-them with lots of boilerplate entries in thoes data structures.
+This is a multi-part message in MIME format.
+--------------020203070305040007040100
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 
-This becomes worse for drivers which support related similar
-controllers which differ slightly.  They share most of the operations
-except for a few.  However, the driver still needs to list all
-operations for each variant.  This results in large number of
-duplicate entries, which is not only inefficient but also error-prone
-as it becomes very difficult to tell what the actual differences are.
+The fifth patch, sht-ops-conversion, can be verified not to change the
+final sht and ops by printing out all entries and comparing the values
+before and after.
 
-This duplicate boilerplates all over the low level drivers also make
-updating the core layer exteremely difficult and error-prone.  When
-compounded with multi-branched development model, it ends up
-accumulating inconsistencies over time.  Some of those inconsistencies
-cause immediate problems and fixed.  Others just remain there dormant
-making maintenance increasingly difficult.
+1. Apply till the fourth patch and apply verify-before on top of it.
+   Build a kernel with all libata modules enabled.  Boot, cd into
+   drivers/ata and run the following command.
 
-To rectify the problem, this patch implements SHT initializers and
-ata_port_operations inheritance.  SHT initializers can be used to
-initialize all the boilerplate entries in a sht.  Three variants of
-them exist - BASE, BMDMA and NCQ - for different types of drivers.
-Note that entries can be overriden by putting individual initializers
-after the helper macro.
+   # insmod libata.ko; for i in $(ls *.ko | sort | grep -v libata.ko); do insmod $i; done; dmesg -c | grep -E 'SHT|OPS' | sed -r 's/^\[[ \.0-9]*\] (.*)$/\1/' | sort > ~/out.before
 
-Ops handling is a bit more involved to allow LLDs to easily re-use
-their own ops tables overriding only specific methods.  This is
-basically poor man's class inheritance.  An ops table has ->inherits
-field which can be set to any ops table as long as it doesn't create a
-loop.  When the host is started, the inheritance chain is followed and
-any operation which isn't specified is taken from the nearest ancestor
-which has it specified.  This operation is called finalization and
-done only once per an ops table and the LLD doesn't have to do
-anything special about it other than making the ops table non-const
-such that libata can update it.
+   If you need some libata modules built-in for rootfs, it's okay too.
+   It will give the same result.
 
-libata provides four base ops tables lower drivers can inherit from -
-base, sata, pmp, sff and bmdma.  To avoid overriding these ops
-accidentaly, these ops are declared const and LLDs should always
-inherit these instead of using them directly.
+2. Backout verify-before, apply the sht-ops-conversion patch and
+   verify-after on top of it and run the following command.
 
-After finalization, all the sht and ops table are identical before and
-after the patch except for setting .irq_handler to ata_interrupt in
-drivers which didn't use to.  The .irq_handler doesn't have any actual
-effect and the field will soon be removed by later patch.
+   # insmod libata.ko; for i in $(ls *.ko | sort | grep -v libata.ko); do insmod $i; done; dmesg -c | grep -E 'SHT|OPS' | sed -r 's/^\[[ \.0-9]*\] (.*)$/\1/' | sort > ~/out.after
 
-* sata_sx4 is still using old style EH and currently doesn't take
-  advantage of ops inheritance.
+3. Use your favorite diff program to compare out.before and out.after.
+   Graphical ones which show in-line differences will work best.
 
-Signed-off-by: Tejun Heo <htejun@gmail.com>
+verify-{before|after} patches add two dump functions in libata-core.c
+and makes all LLDs call them with their sht and ops tables on driver
+load.  If the supplied patches are enough for some reason, You can add
+those lines using the attached gen-verify.py script.
+
+out.before and out.after are the output files from x86-64.
+
+Thanks.
+
+-- 
+tejun
+
+--------------020203070305040007040100
+Content-Type: text/x-python;
+ name="gen-verify.py"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="gen-verify.py"
+
+#!/usr/bin/env python
+
+import sys
+import re
+
+files = sys.argv[1:]
+sht_re = re.compile('.*struct\s*scsi_host_template\s*(\w+)\s*(=|$)', re.M);
+ops_re = re.compile('.*struct\s*ata_port_operations\s*(\w+)\s*(=|$)', re.M);
+init_re = re.compile('^\s*module_init\s*\(\s*(\w*)\s*\)\s*;', re.M);
+
+for f in files:
+    srcf = open(f, 'r+')
+    src = srcf.read()
+    code = '{\n'
+
+    match = init_re.search(src)
+    initfn_pattern = '^[^\n]*\s*%s\s*\(\s*void\s*\).*(return[^;]*;)\s*^}' \
+                        % match.group(1);
+    match = re.compile(initfn_pattern, re.M|re.DOTALL).search(src)
+    pos = match.start(1)
+
+    match = sht_re.findall(src)
+    for m in match:
+        code += '\t\tata_dump_sht(DRV_NAME, &%s);\n' % m[0]
+
+    match = ops_re.findall(src)
+    for m in match:
+        code += '\t\tata_dump_ops(DRV_NAME, &%s);\n' % m[0]
+    code += '\t}\n\t'
+
+    srcf.seek(0)
+    srcf.truncate()
+    srcf.write(src[:pos] + code + src[pos:])
+
+--------------020203070305040007040100
+Content-Type: text/plain;
+ name="verify-before"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="verify-before"
+
 ---
- drivers/ata/ahci.c              |  105 ++-------------
- drivers/ata/ata_generic.c       |   47 +------
- drivers/ata/ata_piix.c          |  165 ++---------------------
- drivers/ata/libata-core.c       |  114 ++++++++++++++++-
- drivers/ata/pata_acpi.c         |   52 +-------
- drivers/ata/pata_ali.c          |  138 ++------------------
- drivers/ata/pata_amd.c          |  209 ++++--------------------------
- drivers/ata/pata_artop.c        |   77 +----------
- drivers/ata/pata_at32.c         |   39 +-----
- drivers/ata/pata_atiixp.c       |   47 +------
- drivers/ata/pata_bf54x.c        |   18 +--
- drivers/ata/pata_cmd640.c       |   49 +------
- drivers/ata/pata_cmd64x.c       |  112 ++--------------
- drivers/ata/pata_cs5520.c       |   44 +------
- drivers/ata/pata_cs5530.c       |   48 +------
- drivers/ata/pata_cs5535.c       |   47 +------
- drivers/ata/pata_cs5536.c       |   47 +------
- drivers/ata/pata_cypress.c      |   47 +------
- drivers/ata/pata_efar.c         |   46 +------
- drivers/ata/pata_hpt366.c       |   48 +------
- drivers/ata/pata_hpt37x.c       |  138 ++------------------
- drivers/ata/pata_hpt3x2n.c      |   48 +------
- drivers/ata/pata_hpt3x3.c       |   49 +-------
- drivers/ata/pata_icside.c       |   46 ++-----
- drivers/ata/pata_isapnp.c       |   37 +-----
- drivers/ata/pata_it8213.c       |   47 +------
- drivers/ata/pata_it821x.c       |   73 ++---------
- drivers/ata/pata_ixp4xx_cf.c    |   39 +-----
- drivers/ata/pata_jmicron.c      |   48 +-------
- drivers/ata/pata_legacy.c       |  276 +++------------------------------------
- drivers/ata/pata_marvell.c      |   50 +-------
- drivers/ata/pata_mpc52xx.c      |   34 +----
- drivers/ata/pata_mpiix.c        |   39 +-----
- drivers/ata/pata_netcell.c      |   49 +-------
- drivers/ata/pata_ninja32.c      |   46 +------
- drivers/ata/pata_ns87410.c      |   41 +-----
- drivers/ata/pata_ns87415.c      |   84 ++----------
- drivers/ata/pata_oldpiix.c      |   47 +------
- drivers/ata/pata_opti.c         |   45 +------
- drivers/ata/pata_optidma.c      |   79 +-----------
- drivers/ata/pata_pcmcia.c       |   64 +--------
- drivers/ata/pata_pdc2027x.c     |   72 +----------
- drivers/ata/pata_pdc202xx_old.c |   91 +++-----------
- drivers/ata/pata_platform.c     |   40 +-----
- drivers/ata/pata_qdi.c          |   63 +--------
- drivers/ata/pata_radisys.c      |   48 +------
- drivers/ata/pata_rz1000.c       |   47 +------
- drivers/ata/pata_sc1200.c       |   50 +------
- drivers/ata/pata_scc.c          |   21 +---
- drivers/ata/pata_serverworks.c  |   79 +-----------
- drivers/ata/pata_sil680.c       |   46 +------
- drivers/ata/pata_sis.c          |  193 +++-------------------------
- drivers/ata/pata_sl82c105.c     |   48 +------
- drivers/ata/pata_triflex.c      |   48 +------
- drivers/ata/pata_via.c          |   77 +----------
- drivers/ata/pata_winbond.c      |   41 +-----
- drivers/ata/pdc_adma.c          |   33 ++---
- drivers/ata/sata_fsl.c          |   19 +---
- drivers/ata/sata_inic162x.c     |   34 +----
- drivers/ata/sata_mv.c           |  100 ++-------------
- drivers/ata/sata_nv.c           |  155 +++-------------------
- drivers/ata/sata_promise.c      |   78 +++---------
- drivers/ata/sata_qstor.c        |   34 ++----
- drivers/ata/sata_sil.c          |   37 +-----
- drivers/ata/sata_sil24.c        |   34 +----
- drivers/ata/sata_sis.c          |   39 +-----
- drivers/ata/sata_svw.c          |   34 +-----
- drivers/ata/sata_sx4.c          |   17 +--
- drivers/ata/sata_uli.c          |   44 +------
- drivers/ata/sata_via.c          |  104 +--------------
- drivers/ata/sata_vsc.c          |   35 +-----
- include/linux/libata.h          |   80 +++++++++++-
- 72 files changed, 651 insertions(+), 4068 deletions(-)
+ drivers/ata/ahci.c              |    6 ++++
+ drivers/ata/ata_generic.c       |    4 +++
+ drivers/ata/ata_piix.c          |    8 ++++++
+ drivers/ata/libata-core.c       |   52 ++++++++++++++++++++++++++++++++++++++++
+ drivers/ata/pata_acpi.c         |    4 +++
+ drivers/ata/pata_ali.c          |    7 +++++
+ drivers/ata/pata_amd.c          |    9 ++++++
+ drivers/ata/pata_artop.c        |    5 +++
+ drivers/ata/pata_at32.c         |    4 +++
+ drivers/ata/pata_atiixp.c       |    4 +++
+ drivers/ata/pata_bf54x.c        |    4 +++
+ drivers/ata/pata_cmd640.c       |    4 +++
+ drivers/ata/pata_cmd64x.c       |    6 ++++
+ drivers/ata/pata_cs5520.c       |    4 +++
+ drivers/ata/pata_cs5530.c       |    4 +++
+ drivers/ata/pata_cs5535.c       |    4 +++
+ drivers/ata/pata_cs5536.c       |    4 +++
+ drivers/ata/pata_cypress.c      |    4 +++
+ drivers/ata/pata_efar.c         |    4 +++
+ drivers/ata/pata_hpt366.c       |    4 +++
+ drivers/ata/pata_hpt37x.c       |    7 +++++
+ drivers/ata/pata_hpt3x2n.c      |    4 +++
+ drivers/ata/pata_hpt3x3.c       |    4 +++
+ drivers/ata/pata_icside.c       |    4 +++
+ drivers/ata/pata_isapnp.c       |    4 +++
+ drivers/ata/pata_it8213.c       |    4 +++
+ drivers/ata/pata_it821x.c       |    5 +++
+ drivers/ata/pata_ixp4xx_cf.c    |    4 +++
+ drivers/ata/pata_jmicron.c      |    4 +++
+ drivers/ata/pata_legacy.c       |   14 ++++++++++
+ drivers/ata/pata_marvell.c      |    4 +++
+ drivers/ata/pata_mpc52xx.c      |    4 +++
+ drivers/ata/pata_mpiix.c        |    4 +++
+ drivers/ata/pata_netcell.c      |    4 +++
+ drivers/ata/pata_ninja32.c      |    4 +++
+ drivers/ata/pata_ns87410.c      |    4 +++
+ drivers/ata/pata_ns87415.c      |    5 +++
+ drivers/ata/pata_oldpiix.c      |    4 +++
+ drivers/ata/pata_opti.c         |    4 +++
+ drivers/ata/pata_optidma.c      |    5 +++
+ drivers/ata/pata_pcmcia.c       |    5 +++
+ drivers/ata/pata_pdc2027x.c     |    5 +++
+ drivers/ata/pata_pdc202xx_old.c |    5 +++
+ drivers/ata/pata_platform.c     |    4 +++
+ drivers/ata/pata_qdi.c          |    5 +++
+ drivers/ata/pata_radisys.c      |    4 +++
+ drivers/ata/pata_rz1000.c       |    4 +++
+ drivers/ata/pata_sc1200.c       |    4 +++
+ drivers/ata/pata_scc.c          |    4 +++
+ drivers/ata/pata_serverworks.c  |    5 +++
+ drivers/ata/pata_sil680.c       |    4 +++
+ drivers/ata/pata_sis.c          |    9 ++++++
+ drivers/ata/pata_sl82c105.c     |    4 +++
+ drivers/ata/pata_triflex.c      |    4 +++
+ drivers/ata/pata_via.c          |    5 +++
+ drivers/ata/pata_winbond.c      |    4 +++
+ drivers/ata/pdc_adma.c          |    4 +++
+ drivers/ata/sata_fsl.c          |    4 +++
+ drivers/ata/sata_inic162x.c     |    4 +++
+ drivers/ata/sata_mv.c           |    7 +++++
+ drivers/ata/sata_nv.c           |   10 +++++++
+ drivers/ata/sata_promise.c      |    6 ++++
+ drivers/ata/sata_qstor.c        |    4 +++
+ drivers/ata/sata_sil.c          |    4 +++
+ drivers/ata/sata_sil24.c        |    4 +++
+ drivers/ata/sata_sis.c          |    4 +++
+ drivers/ata/sata_svw.c          |    4 +++
+ drivers/ata/sata_sx4.c          |    4 +++
+ drivers/ata/sata_uli.c          |    4 +++
+ drivers/ata/sata_via.c          |    6 ++++
+ drivers/ata/sata_vsc.c          |    4 +++
+ include/linux/libata.h          |    3 ++
+ kernel/kallsyms.c               |    1 
+ 73 files changed, 393 insertions(+)
 
-diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
-index 08301ca..2361910 100644
---- a/drivers/ata/ahci.c
-+++ b/drivers/ata/ahci.c
-@@ -58,7 +58,6 @@ enum {
- 	AHCI_MAX_PORTS		= 32,
- 	AHCI_MAX_SG		= 168, /* hardware max is 64K */
- 	AHCI_DMA_BOUNDARY	= 0xffffffff,
--	AHCI_USE_CLUSTERING	= 1,
- 	AHCI_MAX_CMDS		= 32,
- 	AHCI_CMD_SZ		= 32,
- 	AHCI_CMD_SLOT_SZ	= AHCI_MAX_CMDS * AHCI_CMD_SZ,
-@@ -267,131 +266,51 @@ static struct class_device_attribute *ahci_shost_attrs[] = {
- };
+Index: work/drivers/ata/ahci.c
+===================================================================
+--- work.orig/drivers/ata/ahci.c
++++ work/drivers/ata/ahci.c
+@@ -2293,6 +2293,12 @@ static int ahci_init_one(struct pci_dev 
  
- static struct scsi_host_template ahci_sht = {
--	.module			= THIS_MODULE,
--	.name			= DRV_NAME,
--	.ioctl			= ata_scsi_ioctl,
--	.queuecommand		= ata_scsi_queuecmd,
--	.change_queue_depth	= ata_scsi_change_queue_depth,
-+	ATA_NCQ_SHT(DRV_NAME),
- 	.can_queue		= AHCI_MAX_CMDS - 1,
--	.this_id		= ATA_SHT_THIS_ID,
- 	.sg_tablesize		= AHCI_MAX_SG,
--	.cmd_per_lun		= ATA_SHT_CMD_PER_LUN,
--	.emulated		= ATA_SHT_EMULATED,
--	.use_clustering		= AHCI_USE_CLUSTERING,
--	.proc_name		= DRV_NAME,
- 	.dma_boundary		= AHCI_DMA_BOUNDARY,
--	.slave_configure	= ata_scsi_slave_config,
--	.slave_destroy		= ata_scsi_slave_destroy,
--	.bios_param		= ata_std_bios_param,
- 	.shost_attrs		= ahci_shost_attrs,
- };
- 
--static const struct ata_port_operations ahci_ops = {
-+static struct ata_port_operations ahci_ops = {
-+	.inherits		= &sata_pmp_port_ops,
-+
- 	.check_status		= ahci_check_status,
- 	.check_altstatus	= ahci_check_status,
--	.dev_select		= ata_noop_dev_select,
--
- 	.tf_read		= ahci_tf_read,
--
- 	.qc_defer		= sata_pmp_qc_defer_cmd_switch,
- 	.qc_prep		= ahci_qc_prep,
- 	.qc_issue		= ahci_qc_issue,
- 
--	.irq_clear		= ata_noop_irq_clear,
--
--	.scr_read		= ahci_scr_read,
--	.scr_write		= ahci_scr_write,
--
- 	.freeze			= ahci_freeze,
- 	.thaw			= ahci_thaw,
--
- 	.error_handler		= ahci_error_handler,
- 	.post_internal_cmd	= ahci_post_internal_cmd,
- 
--	.pmp_attach		= ahci_pmp_attach,
--	.pmp_detach		= ahci_pmp_detach,
--
--#ifdef CONFIG_PM
--	.port_suspend		= ahci_port_suspend,
--	.port_resume		= ahci_port_resume,
--#endif
--	.enable_pm		= ahci_enable_alpm,
--	.disable_pm		= ahci_disable_alpm,
--
--	.port_start		= ahci_port_start,
--	.port_stop		= ahci_port_stop,
--};
--
--static const struct ata_port_operations ahci_vt8251_ops = {
--	.check_status		= ahci_check_status,
--	.check_altstatus	= ahci_check_status,
--	.dev_select		= ata_noop_dev_select,
--
--	.tf_read		= ahci_tf_read,
--
--	.qc_defer		= sata_pmp_qc_defer_cmd_switch,
--	.qc_prep		= ahci_qc_prep,
--	.qc_issue		= ahci_qc_issue,
--
--	.irq_clear		= ata_noop_irq_clear,
--
- 	.scr_read		= ahci_scr_read,
- 	.scr_write		= ahci_scr_write,
--
--	.freeze			= ahci_freeze,
--	.thaw			= ahci_thaw,
--
--	.error_handler		= ahci_vt8251_error_handler,
--	.post_internal_cmd	= ahci_post_internal_cmd,
--
- 	.pmp_attach		= ahci_pmp_attach,
- 	.pmp_detach		= ahci_pmp_detach,
-+	.enable_pm		= ahci_enable_alpm,
-+	.disable_pm		= ahci_disable_alpm,
- 
- #ifdef CONFIG_PM
- 	.port_suspend		= ahci_port_suspend,
- 	.port_resume		= ahci_port_resume,
- #endif
--	.enable_pm		= ahci_enable_alpm,
--	.disable_pm		= ahci_disable_alpm,
--
- 	.port_start		= ahci_port_start,
- 	.port_stop		= ahci_port_stop,
- };
- 
--static const struct ata_port_operations ahci_p5wdh_ops = {
--	.check_status		= ahci_check_status,
--	.check_altstatus	= ahci_check_status,
--	.dev_select		= ata_noop_dev_select,
--
--	.tf_read		= ahci_tf_read,
--
--	.qc_defer		= sata_pmp_qc_defer_cmd_switch,
--	.qc_prep		= ahci_qc_prep,
--	.qc_issue		= ahci_qc_issue,
--
--	.irq_clear		= ata_noop_irq_clear,
--
--	.scr_read		= ahci_scr_read,
--	.scr_write		= ahci_scr_write,
--
--	.freeze			= ahci_freeze,
--	.thaw			= ahci_thaw,
-+static struct ata_port_operations ahci_vt8251_ops = {
-+	.inherits		= &ahci_ops,
-+	.error_handler		= ahci_vt8251_error_handler,
-+};
- 
-+static struct ata_port_operations ahci_p5wdh_ops = {
-+	.inherits		= &ahci_ops,
- 	.error_handler		= ahci_p5wdh_error_handler,
--	.post_internal_cmd	= ahci_post_internal_cmd,
--
--	.pmp_attach		= ahci_pmp_attach,
--	.pmp_detach		= ahci_pmp_detach,
--
--#ifdef CONFIG_PM
--	.port_suspend		= ahci_port_suspend,
--	.port_resume		= ahci_port_resume,
--#endif
--	.enable_pm		= ahci_enable_alpm,
--	.disable_pm		= ahci_disable_alpm,
--
--	.port_start		= ahci_port_start,
--	.port_stop		= ahci_port_stop,
- };
- 
- #define AHCI_HFLAGS(flags)	.private_data	= (void *)(flags)
-diff --git a/drivers/ata/ata_generic.c b/drivers/ata/ata_generic.c
-index db4c3cb..0b5b515 100644
---- a/drivers/ata/ata_generic.c
-+++ b/drivers/ata/ata_generic.c
-@@ -95,54 +95,13 @@ static int generic_set_mode(struct ata_link *link, struct ata_device **unused)
+ static int __init ahci_init(void)
+ {
++	{
++		ata_dump_sht(DRV_NAME, &ahci_sht);
++		ata_dump_ops(DRV_NAME, &ahci_ops);
++		ata_dump_ops(DRV_NAME, &ahci_vt8251_ops);
++		ata_dump_ops(DRV_NAME, &ahci_p5wdh_ops);
++	}
+ 	return pci_register_driver(&ahci_pci_driver);
  }
  
- static struct scsi_host_template generic_sht = {
--	.module			= THIS_MODULE,
--	.name			= DRV_NAME,
--	.ioctl			= ata_scsi_ioctl,
--	.queuecommand		= ata_scsi_queuecmd,
--	.can_queue		= ATA_DEF_QUEUE,
--	.this_id		= ATA_SHT_THIS_ID,
--	.sg_tablesize		= LIBATA_MAX_PRD,
--	.cmd_per_lun		= ATA_SHT_CMD_PER_LUN,
--	.emulated		= ATA_SHT_EMULATED,
--	.use_clustering		= ATA_SHT_USE_CLUSTERING,
--	.proc_name		= DRV_NAME,
--	.dma_boundary		= ATA_DMA_BOUNDARY,
--	.slave_configure	= ata_scsi_slave_config,
--	.slave_destroy		= ata_scsi_slave_destroy,
--	.bios_param		= ata_std_bios_param,
-+	ATA_BMDMA_SHT(DRV_NAME),
- };
+Index: work/drivers/ata/ata_generic.c
+===================================================================
+--- work.orig/drivers/ata/ata_generic.c
++++ work/drivers/ata/ata_generic.c
+@@ -228,6 +228,10 @@ static struct pci_driver ata_generic_pci
  
- static struct ata_port_operations generic_port_ops = {
--	.set_mode	= generic_set_mode,
--	.mode_filter	= ata_pci_default_filter,
--
--	.tf_load	= ata_tf_load,
--	.tf_read	= ata_tf_read,
--	.check_status 	= ata_check_status,
--	.exec_command	= ata_exec_command,
--	.dev_select 	= ata_std_dev_select,
--
--	.bmdma_setup 	= ata_bmdma_setup,
--	.bmdma_start 	= ata_bmdma_start,
--	.bmdma_stop	= ata_bmdma_stop,
--	.bmdma_status 	= ata_bmdma_status,
--
--	.data_xfer	= ata_data_xfer,
--
--	.freeze		= ata_bmdma_freeze,
--	.thaw		= ata_bmdma_thaw,
--	.error_handler	= ata_bmdma_error_handler,
--	.post_internal_cmd = ata_bmdma_post_internal_cmd,
-+	.inherits	= &ata_bmdma_port_ops,
- 	.cable_detect	= ata_cable_unknown,
--
--	.qc_prep 	= ata_qc_prep,
--	.qc_issue	= ata_qc_issue_prot,
--
--	.irq_handler	= ata_interrupt,
--	.irq_clear	= ata_bmdma_irq_clear,
--	.irq_on		= ata_irq_on,
--
--	.port_start	= ata_sff_port_start,
-+	.set_mode	= generic_set_mode,
- };
- 
- static int all_generic_ide;		/* Set to claim all devices */
-diff --git a/drivers/ata/ata_piix.c b/drivers/ata/ata_piix.c
-index 129d682..7cb48af 100644
---- a/drivers/ata/ata_piix.c
-+++ b/drivers/ata/ata_piix.c
-@@ -283,172 +283,37 @@ static struct pci_driver piix_pci_driver = {
- };
- 
- static struct scsi_host_template piix_sht = {
--	.module			= THIS_MODULE,
--	.name			= DRV_NAME,
--	.ioctl			= ata_scsi_ioctl,
--	.queuecommand		= ata_scsi_queuecmd,
--	.can_queue		= ATA_DEF_QUEUE,
--	.this_id		= ATA_SHT_THIS_ID,
--	.sg_tablesize		= LIBATA_MAX_PRD,
--	.cmd_per_lun		= ATA_SHT_CMD_PER_LUN,
--	.emulated		= ATA_SHT_EMULATED,
--	.use_clustering		= ATA_SHT_USE_CLUSTERING,
--	.proc_name		= DRV_NAME,
--	.dma_boundary		= ATA_DMA_BOUNDARY,
--	.slave_configure	= ata_scsi_slave_config,
--	.slave_destroy		= ata_scsi_slave_destroy,
--	.bios_param		= ata_std_bios_param,
-+	ATA_BMDMA_SHT(DRV_NAME),
- };
- 
--static const struct ata_port_operations piix_pata_ops = {
-+static struct ata_port_operations piix_pata_ops = {
-+	.inherits		= &ata_bmdma_port_ops,
-+	.cable_detect		= ata_cable_40wire,
- 	.set_piomode		= piix_set_piomode,
- 	.set_dmamode		= piix_set_dmamode,
--	.mode_filter		= ata_pci_default_filter,
--
--	.tf_load		= ata_tf_load,
--	.tf_read		= ata_tf_read,
--	.check_status		= ata_check_status,
--	.exec_command		= ata_exec_command,
--	.dev_select		= ata_std_dev_select,
--
--	.bmdma_setup		= ata_bmdma_setup,
--	.bmdma_start		= ata_bmdma_start,
--	.bmdma_stop		= ata_bmdma_stop,
--	.bmdma_status		= ata_bmdma_status,
--	.qc_prep		= ata_qc_prep,
--	.qc_issue		= ata_qc_issue_prot,
--	.data_xfer		= ata_data_xfer,
--
--	.freeze			= ata_bmdma_freeze,
--	.thaw			= ata_bmdma_thaw,
- 	.error_handler		= piix_pata_error_handler,
--	.post_internal_cmd	= ata_bmdma_post_internal_cmd,
--	.cable_detect		= ata_cable_40wire,
--
--	.irq_clear		= ata_bmdma_irq_clear,
--	.irq_on			= ata_irq_on,
--
--	.port_start		= ata_sff_port_start,
- };
- 
--static const struct ata_port_operations ich_pata_ops = {
--	.set_piomode		= piix_set_piomode,
--	.set_dmamode		= ich_set_dmamode,
--	.mode_filter		= ata_pci_default_filter,
--
--	.tf_load		= ata_tf_load,
--	.tf_read		= ata_tf_read,
--	.check_status		= ata_check_status,
--	.exec_command		= ata_exec_command,
--	.dev_select		= ata_std_dev_select,
--
--	.bmdma_setup		= ata_bmdma_setup,
--	.bmdma_start		= ata_bmdma_start,
--	.bmdma_stop		= ata_bmdma_stop,
--	.bmdma_status		= ata_bmdma_status,
--	.qc_prep		= ata_qc_prep,
--	.qc_issue		= ata_qc_issue_prot,
--	.data_xfer		= ata_data_xfer,
--
--	.freeze			= ata_bmdma_freeze,
--	.thaw			= ata_bmdma_thaw,
--	.error_handler		= piix_pata_error_handler,
--	.post_internal_cmd	= ata_bmdma_post_internal_cmd,
--	.cable_detect		= ich_pata_cable_detect,
--
--	.irq_clear		= ata_bmdma_irq_clear,
--	.irq_on			= ata_irq_on,
--
--	.port_start		= ata_sff_port_start,
-+static struct ata_port_operations piix_vmw_ops = {
-+	.inherits		= &piix_pata_ops,
-+	.bmdma_status		= piix_vmw_bmdma_status,
- };
- 
--static const struct ata_port_operations piix_sata_ops = {
--	.tf_load		= ata_tf_load,
--	.tf_read		= ata_tf_read,
--	.check_status		= ata_check_status,
--	.exec_command		= ata_exec_command,
--	.dev_select		= ata_std_dev_select,
--
--	.bmdma_setup		= ata_bmdma_setup,
--	.bmdma_start		= ata_bmdma_start,
--	.bmdma_stop		= ata_bmdma_stop,
--	.bmdma_status		= ata_bmdma_status,
--	.qc_prep		= ata_qc_prep,
--	.qc_issue		= ata_qc_issue_prot,
--	.data_xfer		= ata_data_xfer,
--
--	.mode_filter		= ata_pci_default_filter,
--	.freeze			= ata_bmdma_freeze,
--	.thaw			= ata_bmdma_thaw,
--	.error_handler		= ata_bmdma_error_handler,
--	.post_internal_cmd	= ata_bmdma_post_internal_cmd,
--
--	.irq_clear		= ata_bmdma_irq_clear,
--	.irq_on			= ata_irq_on,
--
--	.port_start		= ata_sff_port_start,
-+static struct ata_port_operations ich_pata_ops = {
-+	.inherits		= &piix_pata_ops,
-+	.cable_detect		= ich_pata_cable_detect,
-+	.set_dmamode		= ich_set_dmamode,
- };
- 
--static const struct ata_port_operations piix_vmw_ops = {
--	.set_piomode		= piix_set_piomode,
--	.set_dmamode		= piix_set_dmamode,
--	.mode_filter		= ata_pci_default_filter,
--
--	.tf_load		= ata_tf_load,
--	.tf_read		= ata_tf_read,
--	.check_status		= ata_check_status,
--	.exec_command		= ata_exec_command,
--	.dev_select		= ata_std_dev_select,
--
--	.bmdma_setup		= ata_bmdma_setup,
--	.bmdma_start		= ata_bmdma_start,
--	.bmdma_stop		= ata_bmdma_stop,
--	.bmdma_status		= piix_vmw_bmdma_status,
--	.qc_prep		= ata_qc_prep,
--	.qc_issue		= ata_qc_issue_prot,
--	.data_xfer		= ata_data_xfer,
--
--	.freeze			= ata_bmdma_freeze,
--	.thaw			= ata_bmdma_thaw,
--	.error_handler		= piix_pata_error_handler,
--	.post_internal_cmd	= ata_bmdma_post_internal_cmd,
--	.cable_detect		= ata_cable_40wire,
--
--	.irq_handler		= ata_interrupt,
--	.irq_clear		= ata_bmdma_irq_clear,
--	.irq_on			= ata_irq_on,
--
--	.port_start		= ata_sff_port_start,
-+static struct ata_port_operations piix_sata_ops = {
-+	.inherits		= &ata_bmdma_port_ops,
- };
- 
--static const struct ata_port_operations piix_sidpr_sata_ops = {
--	.tf_load		= ata_tf_load,
--	.tf_read		= ata_tf_read,
--	.check_status		= ata_check_status,
--	.exec_command		= ata_exec_command,
--	.dev_select		= ata_std_dev_select,
--
--	.bmdma_setup		= ata_bmdma_setup,
--	.bmdma_start		= ata_bmdma_start,
--	.bmdma_stop		= ata_bmdma_stop,
--	.bmdma_status		= ata_bmdma_status,
--	.qc_prep		= ata_qc_prep,
--	.qc_issue		= ata_qc_issue_prot,
--	.data_xfer		= ata_data_xfer,
--
-+static struct ata_port_operations piix_sidpr_sata_ops = {
-+	.inherits		= &piix_sata_ops,
- 	.scr_read		= piix_sidpr_scr_read,
- 	.scr_write		= piix_sidpr_scr_write,
--
--	.mode_filter		= ata_pci_default_filter,
--	.freeze			= ata_bmdma_freeze,
--	.thaw			= ata_bmdma_thaw,
- 	.error_handler		= piix_sidpr_error_handler,
--	.post_internal_cmd	= ata_bmdma_post_internal_cmd,
--
--	.irq_clear		= ata_bmdma_irq_clear,
--	.irq_on			= ata_irq_on,
--
--	.port_start		= ata_sff_port_start,
- };
- 
- static const struct piix_map_db ich5_map_db = {
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index e61c5db..0a55405 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -74,6 +74,56 @@ const unsigned long sata_deb_timing_normal[]		= {   5,  100, 2000 };
- const unsigned long sata_deb_timing_hotplug[]		= {  25,  500, 2000 };
- const unsigned long sata_deb_timing_long[]		= { 100, 2000, 5000 };
- 
-+const struct ata_port_operations ata_base_port_ops = {
-+	.irq_clear		= ata_noop_irq_clear,
-+};
-+
-+const struct ata_port_operations sata_port_ops = {
-+	.inherits		= &ata_base_port_ops,
-+
-+	.qc_defer		= ata_std_qc_defer,
-+	.dev_select		= ata_noop_dev_select,
-+};
-+
-+const struct ata_port_operations sata_pmp_port_ops = {
-+	.inherits		= &sata_port_ops,
-+};
-+
-+const struct ata_port_operations ata_sff_port_ops = {
-+	.inherits		= &ata_base_port_ops,
-+
-+	.qc_prep		= ata_qc_prep,
-+	.qc_issue		= ata_qc_issue_prot,
-+
-+	.freeze			= ata_bmdma_freeze,
-+	.thaw			= ata_bmdma_thaw,
-+	.error_handler		= ata_bmdma_error_handler,
-+	.post_internal_cmd	= ata_bmdma_post_internal_cmd,
-+
-+	.dev_select		= ata_std_dev_select,
-+	.check_status		= ata_check_status,
-+	.tf_load		= ata_tf_load,
-+	.tf_read		= ata_tf_read,
-+	.exec_command		= ata_exec_command,
-+	.data_xfer		= ata_data_xfer,
-+	.irq_on			= ata_irq_on,
-+
-+	.port_start		= ata_sff_port_start,
-+	.irq_handler		= ata_interrupt,
-+};
-+
-+const struct ata_port_operations ata_bmdma_port_ops = {
-+	.inherits		= &ata_sff_port_ops,
-+
-+	.mode_filter		= ata_pci_default_filter,
-+
-+	.bmdma_setup		= ata_bmdma_setup,
-+	.bmdma_start		= ata_bmdma_start,
-+	.bmdma_stop		= ata_bmdma_stop,
-+	.bmdma_status		= ata_bmdma_status,
-+	.irq_clear		= ata_bmdma_irq_clear,
-+};
-+
- static unsigned int ata_dev_init_params(struct ata_device *dev,
- 					u16 heads, u16 sectors);
- static unsigned int ata_dev_set_xfermode(struct ata_device *dev);
-@@ -6884,6 +6934,56 @@ static void ata_host_stop(struct device *gendev, void *res)
+ static int __init ata_generic_init(void)
+ {
++	{
++		ata_dump_sht(DRV_NAME, &generic_sht);
++		ata_dump_ops(DRV_NAME, &generic_port_ops);
++	}
+ 	return pci_register_driver(&ata_generic_pci_driver);
  }
  
- /**
-+ *	ata_finalize_port_ops - finalize ata_port_operations
-+ *	@ops: ata_port_operations to finalize
-+ *
-+ *	An ata_port_operations can inherit from another ops and that
-+ *	ops can again inherit from another.  This can go on as many
-+ *	times as necessary as long as there is no loop in the
-+ *	inheritance chain.
-+ *
-+ *	Ops tables are finalized when the host is started.  NULL or
-+ *	unspecified entries are inherited from the closet ancestor
-+ *	which has the method and the entry is populated with it.
-+ *	After finalization, the ops table directly points to all the
-+ *	methods and ->inherits is no longer necessary and cleared.
-+ *
-+ *	Using ATA_OP_NULL, inheriting ops can force a method to NULL.
-+ *
-+ *	LOCKING:
-+ *	None.
-+ */
-+static void ata_finalize_port_ops(struct ata_port_operations *ops)
+Index: work/drivers/ata/ata_piix.c
+===================================================================
+--- work.orig/drivers/ata/ata_piix.c
++++ work/drivers/ata/ata_piix.c
+@@ -1693,6 +1693,14 @@ static int __init piix_init(void)
+ 	in_module_init = 0;
+ 
+ 	DPRINTK("done\n");
++	{
++		ata_dump_sht(DRV_NAME, &piix_sht);
++		ata_dump_ops(DRV_NAME, &piix_pata_ops);
++		ata_dump_ops(DRV_NAME, &ich_pata_ops);
++		ata_dump_ops(DRV_NAME, &piix_sata_ops);
++		ata_dump_ops(DRV_NAME, &piix_vmw_ops);
++		ata_dump_ops(DRV_NAME, &piix_sidpr_sata_ops);
++	}
+ 	return 0;
+ }
+ 
+Index: work/drivers/ata/libata-core.c
+===================================================================
+--- work.orig/drivers/ata/libata-core.c
++++ work/drivers/ata/libata-core.c
+@@ -7660,3 +7660,55 @@ EXPORT_SYMBOL_GPL(ata_cable_80wire);
+ EXPORT_SYMBOL_GPL(ata_cable_unknown);
+ EXPORT_SYMBOL_GPL(ata_cable_ignore);
+ EXPORT_SYMBOL_GPL(ata_cable_sata);
++
++#include <linux/kallsyms.h>
++
++void ata_dump_sht(const char *drv_name, const struct scsi_host_template *sht)
 +{
-+	static spinlock_t lock = SPIN_LOCK_UNLOCKED;
-+	const struct ata_port_operations *cur;
-+	void **begin = (void **)ops;
-+	void **end = (void **)&ops->inherits;
++	const int begin_off = offsetof(struct scsi_host_template, detect);
++	const int end_off = offsetof(struct scsi_host_template, eh_timed_out) + sizeof(void *);
++	char symname[KSYM_NAME_LEN];
 +	void **pp;
 +
-+	if (!ops || !ops->inherits)
-+		return;
++	if (lookup_symbol_name((unsigned long)sht, symname))
++		snprintf(symname, KSYM_NAME_LEN, "%p", sht);
++	printk("SHT %s %s: %s", drv_name, symname, sht->name);
 +
-+	spin_lock(&lock);
-+
-+	for (cur = ops->inherits; cur; cur = cur->inherits) {
-+		void **inherit = (void **)cur;
-+
-+		for (pp = begin; pp < end; pp++, inherit++)
-+			if (!*pp)
-+				*pp = *inherit;
++	for (pp = (void *)sht + begin_off; pp < (void **)((void *)sht + end_off); pp++) {
++		if (lookup_symbol_name((unsigned long)*pp, symname))
++			snprintf(symname, KSYM_NAME_LEN, "%p", *pp);
++		printk(" <%s>", symname);
 +	}
 +
-+	for (pp = begin; pp < end; pp++)
-+		if (IS_ERR(*pp))
-+			*pp = NULL;
-+
-+	ops->inherits = NULL;
-+
-+	spin_unlock(&lock);
++	printk(" %s %d %d %u %u %lu %d %u %u %u %u %u %u %u %u %u\n",
++	       sht->proc_name, sht->can_queue, sht->this_id,
++	       sht->sg_tablesize, sht->max_sectors, sht->dma_boundary,
++	       sht->cmd_per_lun, sht->present, sht->supported_mode,
++	       sht->unchecked_isa_dma, sht->use_clustering, sht->emulated,
++	       sht->skip_settle_delay, sht->ordered_tag, sht->use_sg_chaining,
++	       sht->max_host_blocked);
 +}
++EXPORT_SYMBOL_GPL(ata_dump_sht);
 +
-+/**
-  *	ata_host_start - start and freeze ports of an ATA host
-  *	@host: ATA host to start ports for
-  *
-@@ -6908,9 +7008,13 @@ int ata_host_start(struct ata_host *host)
- 	if (host->flags & ATA_HOST_STARTED)
++void ata_dump_ops(const char *drv_name, const struct ata_port_operations *ops)
++{
++	const int begin_off = 0;
++	const int end_off = offsetof(struct ata_port_operations, eng_timeout) + sizeof(void *);
++	struct ata_port_operations my_ops = *ops;
++	char symname[KSYM_NAME_LEN];
++	void **pp;
++
++	if (lookup_symbol_name((unsigned long)ops, symname))
++		snprintf(symname, KSYM_NAME_LEN, "%p", ops);
++	printk("OPS %s %s:", drv_name, symname);
++
++	//ata_finalize_port_ops(&my_ops);
++
++	for (pp = (void *)&my_ops + begin_off; pp < (void **)((void *)&my_ops + end_off); pp++) {
++		if (lookup_symbol_name((unsigned long)*pp, symname))
++			snprintf(symname, KSYM_NAME_LEN, "%p", *pp);
++		printk(" <%s>", symname);
++	}
++	printk("\n");
++}
++EXPORT_SYMBOL_GPL(ata_dump_ops);
+Index: work/drivers/ata/pata_acpi.c
+===================================================================
+--- work.orig/drivers/ata/pata_acpi.c
++++ work/drivers/ata/pata_acpi.c
+@@ -335,6 +335,10 @@ static struct pci_driver pacpi_pci_drive
+ 
+ static int __init pacpi_init(void)
+ {
++	{
++		ata_dump_sht(DRV_NAME, &pacpi_sht);
++		ata_dump_ops(DRV_NAME, &pacpi_ops);
++	}
+ 	return pci_register_driver(&pacpi_pci_driver);
+ }
+ 
+Index: work/drivers/ata/pata_ali.c
+===================================================================
+--- work.orig/drivers/ata/pata_ali.c
++++ work/drivers/ata/pata_ali.c
+@@ -669,6 +669,13 @@ static struct pci_driver ali_pci_driver 
+ 
+ static int __init ali_init(void)
+ {
++	{
++		ata_dump_sht(DRV_NAME, &ali_sht);
++		ata_dump_ops(DRV_NAME, &ali_early_port_ops);
++		ata_dump_ops(DRV_NAME, &ali_20_port_ops);
++		ata_dump_ops(DRV_NAME, &ali_c2_port_ops);
++		ata_dump_ops(DRV_NAME, &ali_c5_port_ops);
++	}
+ 	return pci_register_driver(&ali_pci_driver);
+ }
+ 
+Index: work/drivers/ata/pata_amd.c
+===================================================================
+--- work.orig/drivers/ata/pata_amd.c
++++ work/drivers/ata/pata_amd.c
+@@ -777,6 +777,15 @@ static struct pci_driver amd_pci_driver 
+ 
+ static int __init amd_init(void)
+ {
++	{
++		ata_dump_sht(DRV_NAME, &amd_sht);
++		ata_dump_ops(DRV_NAME, &amd33_port_ops);
++		ata_dump_ops(DRV_NAME, &amd66_port_ops);
++		ata_dump_ops(DRV_NAME, &amd100_port_ops);
++		ata_dump_ops(DRV_NAME, &amd133_port_ops);
++		ata_dump_ops(DRV_NAME, &nv100_port_ops);
++		ata_dump_ops(DRV_NAME, &nv133_port_ops);
++	}
+ 	return pci_register_driver(&amd_pci_driver);
+ }
+ 
+Index: work/drivers/ata/pata_artop.c
+===================================================================
+--- work.orig/drivers/ata/pata_artop.c
++++ work/drivers/ata/pata_artop.c
+@@ -519,6 +519,11 @@ static struct pci_driver artop_pci_drive
+ 
+ static int __init artop_init(void)
+ {
++	{
++		ata_dump_sht(DRV_NAME, &artop_sht);
++		ata_dump_ops(DRV_NAME, &artop6210_ops);
++		ata_dump_ops(DRV_NAME, &artop6260_ops);
++	}
+ 	return pci_register_driver(&artop_pci_driver);
+ }
+ 
+Index: work/drivers/ata/pata_at32.c
+===================================================================
+--- work.orig/drivers/ata/pata_at32.c
++++ work/drivers/ata/pata_at32.c
+@@ -424,6 +424,10 @@ static struct platform_driver pata_at32_
+ 
+ static int __init pata_at32_init(void)
+ {
++	{
++		ata_dump_sht(DRV_NAME, &at32_sht);
++		ata_dump_ops(DRV_NAME, &at32_port_ops);
++	}
+ 	return platform_driver_probe(&pata_at32_driver, pata_at32_probe);
+ }
+ 
+Index: work/drivers/ata/pata_atiixp.c
+===================================================================
+--- work.orig/drivers/ata/pata_atiixp.c
++++ work/drivers/ata/pata_atiixp.c
+@@ -308,6 +308,10 @@ static struct pci_driver atiixp_pci_driv
+ 
+ static int __init atiixp_init(void)
+ {
++	{
++		ata_dump_sht(DRV_NAME, &atiixp_sht);
++		ata_dump_ops(DRV_NAME, &atiixp_port_ops);
++	}
+ 	return pci_register_driver(&atiixp_pci_driver);
+ }
+ 
+Index: work/drivers/ata/pata_bf54x.c
+===================================================================
+--- work.orig/drivers/ata/pata_bf54x.c
++++ work/drivers/ata/pata_bf54x.c
+@@ -1608,6 +1608,10 @@ static int __init bfin_atapi_init(void)
+ 		bfin_port_info[0].udma_mask = ATA_UDMA5;
+ 	};
+ 
++	{
++		ata_dump_sht(DRV_NAME, &bfin_sht);
++		ata_dump_ops(DRV_NAME, &bfin_pata_ops);
++	}
+ 	return platform_driver_register(&bfin_atapi_driver);
+ }
+ 
+Index: work/drivers/ata/pata_cmd640.c
+===================================================================
+--- work.orig/drivers/ata/pata_cmd640.c
++++ work/drivers/ata/pata_cmd640.c
+@@ -298,6 +298,10 @@ static struct pci_driver cmd640_pci_driv
+ 
+ static int __init cmd640_init(void)
+ {
++	{
++		ata_dump_sht(DRV_NAME, &cmd640_sht);
++		ata_dump_ops(DRV_NAME, &cmd640_port_ops);
++	}
+ 	return pci_register_driver(&cmd640_pci_driver);
+ }
+ 
+Index: work/drivers/ata/pata_cmd64x.c
+===================================================================
+--- work.orig/drivers/ata/pata_cmd64x.c
++++ work/drivers/ata/pata_cmd64x.c
+@@ -518,6 +518,12 @@ static struct pci_driver cmd64x_pci_driv
+ 
+ static int __init cmd64x_init(void)
+ {
++	{
++		ata_dump_sht(DRV_NAME, &cmd64x_sht);
++		ata_dump_ops(DRV_NAME, &cmd64x_port_ops);
++		ata_dump_ops(DRV_NAME, &cmd646r1_port_ops);
++		ata_dump_ops(DRV_NAME, &cmd648_port_ops);
++	}
+ 	return pci_register_driver(&cmd64x_pci_driver);
+ }
+ 
+Index: work/drivers/ata/pata_cs5520.c
+===================================================================
+--- work.orig/drivers/ata/pata_cs5520.c
++++ work/drivers/ata/pata_cs5520.c
+@@ -378,6 +378,10 @@ static struct pci_driver cs5520_pci_driv
+ 
+ static int __init cs5520_init(void)
+ {
++	{
++		ata_dump_sht(DRV_NAME, &cs5520_sht);
++		ata_dump_ops(DRV_NAME, &cs5520_port_ops);
++	}
+ 	return pci_register_driver(&cs5520_pci_driver);
+ }
+ 
+Index: work/drivers/ata/pata_cs5530.c
+===================================================================
+--- work.orig/drivers/ata/pata_cs5530.c
++++ work/drivers/ata/pata_cs5530.c
+@@ -404,6 +404,10 @@ static struct pci_driver cs5530_pci_driv
+ 
+ static int __init cs5530_init(void)
+ {
++	{
++		ata_dump_sht(DRV_NAME, &cs5530_sht);
++		ata_dump_ops(DRV_NAME, &cs5530_port_ops);
++	}
+ 	return pci_register_driver(&cs5530_pci_driver);
+ }
+ 
+Index: work/drivers/ata/pata_cs5535.c
+===================================================================
+--- work.orig/drivers/ata/pata_cs5535.c
++++ work/drivers/ata/pata_cs5535.c
+@@ -263,6 +263,10 @@ static struct pci_driver cs5535_pci_driv
+ 
+ static int __init cs5535_init(void)
+ {
++	{
++		ata_dump_sht(DRV_NAME, &cs5535_sht);
++		ata_dump_ops(DRV_NAME, &cs5535_port_ops);
++	}
+ 	return pci_register_driver(&cs5535_pci_driver);
+ }
+ 
+Index: work/drivers/ata/pata_cs5536.c
+===================================================================
+--- work.orig/drivers/ata/pata_cs5536.c
++++ work/drivers/ata/pata_cs5536.c
+@@ -324,6 +324,10 @@ static struct pci_driver cs5536_pci_driv
+ 
+ static int __init cs5536_init(void)
+ {
++	{
++		ata_dump_sht(DRV_NAME, &cs5536_sht);
++		ata_dump_ops(DRV_NAME, &cs5536_port_ops);
++	}
+ 	return pci_register_driver(&cs5536_pci_driver);
+ }
+ 
+Index: work/drivers/ata/pata_cypress.c
+===================================================================
+--- work.orig/drivers/ata/pata_cypress.c
++++ work/drivers/ata/pata_cypress.c
+@@ -200,6 +200,10 @@ static struct pci_driver cy82c693_pci_dr
+ 
+ static int __init cy82c693_init(void)
+ {
++	{
++		ata_dump_sht(DRV_NAME, &cy82c693_sht);
++		ata_dump_ops(DRV_NAME, &cy82c693_port_ops);
++	}
+ 	return pci_register_driver(&cy82c693_pci_driver);
+ }
+ 
+Index: work/drivers/ata/pata_efar.c
+===================================================================
+--- work.orig/drivers/ata/pata_efar.c
++++ work/drivers/ata/pata_efar.c
+@@ -336,6 +336,10 @@ static struct pci_driver efar_pci_driver
+ 
+ static int __init efar_init(void)
+ {
++	{
++		ata_dump_sht(DRV_NAME, &efar_sht);
++		ata_dump_ops(DRV_NAME, &efar_ops);
++	}
+ 	return pci_register_driver(&efar_pci_driver);
+ }
+ 
+Index: work/drivers/ata/pata_hpt366.c
+===================================================================
+--- work.orig/drivers/ata/pata_hpt366.c
++++ work/drivers/ata/pata_hpt366.c
+@@ -470,6 +470,10 @@ static struct pci_driver hpt36x_pci_driv
+ 
+ static int __init hpt36x_init(void)
+ {
++	{
++		ata_dump_sht(DRV_NAME, &hpt36x_sht);
++		ata_dump_ops(DRV_NAME, &hpt366_port_ops);
++	}
+ 	return pci_register_driver(&hpt36x_pci_driver);
+ }
+ 
+Index: work/drivers/ata/pata_hpt37x.c
+===================================================================
+--- work.orig/drivers/ata/pata_hpt37x.c
++++ work/drivers/ata/pata_hpt37x.c
+@@ -1187,6 +1187,13 @@ static struct pci_driver hpt37x_pci_driv
+ 
+ static int __init hpt37x_init(void)
+ {
++	{
++		ata_dump_sht(DRV_NAME, &hpt37x_sht);
++		ata_dump_ops(DRV_NAME, &hpt370_port_ops);
++		ata_dump_ops(DRV_NAME, &hpt370a_port_ops);
++		ata_dump_ops(DRV_NAME, &hpt372_port_ops);
++		ata_dump_ops(DRV_NAME, &hpt374_port_ops);
++	}
+ 	return pci_register_driver(&hpt37x_pci_driver);
+ }
+ 
+Index: work/drivers/ata/pata_hpt3x2n.c
+===================================================================
+--- work.orig/drivers/ata/pata_hpt3x2n.c
++++ work/drivers/ata/pata_hpt3x2n.c
+@@ -626,6 +626,10 @@ static struct pci_driver hpt3x2n_pci_dri
+ 
+ static int __init hpt3x2n_init(void)
+ {
++	{
++		ata_dump_sht(DRV_NAME, &hpt3x2n_sht);
++		ata_dump_ops(DRV_NAME, &hpt3x2n_port_ops);
++	}
+ 	return pci_register_driver(&hpt3x2n_pci_driver);
+ }
+ 
+Index: work/drivers/ata/pata_hpt3x3.c
+===================================================================
+--- work.orig/drivers/ata/pata_hpt3x3.c
++++ work/drivers/ata/pata_hpt3x3.c
+@@ -281,6 +281,10 @@ static struct pci_driver hpt3x3_pci_driv
+ 
+ static int __init hpt3x3_init(void)
+ {
++	{
++		ata_dump_sht(DRV_NAME, &hpt3x3_sht);
++		ata_dump_ops(DRV_NAME, &hpt3x3_port_ops);
++	}
+ 	return pci_register_driver(&hpt3x3_pci_driver);
+ }
+ 
+Index: work/drivers/ata/pata_icside.c
+===================================================================
+--- work.orig/drivers/ata/pata_icside.c
++++ work/drivers/ata/pata_icside.c
+@@ -665,6 +665,10 @@ static struct ecard_driver pata_icside_d
+ 
+ static int __init pata_icside_init(void)
+ {
++	{
++		ata_dump_sht(DRV_NAME, &pata_icside_sht);
++		ata_dump_ops(DRV_NAME, &pata_icside_port_ops);
++	}
+ 	return ecard_register_driver(&pata_icside_driver);
+ }
+ 
+Index: work/drivers/ata/pata_isapnp.c
+===================================================================
+--- work.orig/drivers/ata/pata_isapnp.c
++++ work/drivers/ata/pata_isapnp.c
+@@ -155,6 +155,10 @@ static struct pnp_driver isapnp_driver =
+ 
+ static int __init isapnp_init(void)
+ {
++	{
++		ata_dump_sht(DRV_NAME, &isapnp_sht);
++		ata_dump_ops(DRV_NAME, &isapnp_port_ops);
++	}
+ 	return pnp_register_driver(&isapnp_driver);
+ }
+ 
+Index: work/drivers/ata/pata_it8213.c
+===================================================================
+--- work.orig/drivers/ata/pata_it8213.c
++++ work/drivers/ata/pata_it8213.c
+@@ -347,6 +347,10 @@ static struct pci_driver it8213_pci_driv
+ 
+ static int __init it8213_init(void)
+ {
++	{
++		ata_dump_sht(DRV_NAME, &it8213_sht);
++		ata_dump_ops(DRV_NAME, &it8213_ops);
++	}
+ 	return pci_register_driver(&it8213_pci_driver);
+ }
+ 
+Index: work/drivers/ata/pata_it821x.c
+===================================================================
+--- work.orig/drivers/ata/pata_it821x.c
++++ work/drivers/ata/pata_it821x.c
+@@ -819,6 +819,11 @@ static struct pci_driver it821x_pci_driv
+ 
+ static int __init it821x_init(void)
+ {
++	{
++		ata_dump_sht(DRV_NAME, &it821x_sht);
++		ata_dump_ops(DRV_NAME, &it821x_smart_port_ops);
++		ata_dump_ops(DRV_NAME, &it821x_passthru_port_ops);
++	}
+ 	return pci_register_driver(&it821x_pci_driver);
+ }
+ 
+Index: work/drivers/ata/pata_ixp4xx_cf.c
+===================================================================
+--- work.orig/drivers/ata/pata_ixp4xx_cf.c
++++ work/drivers/ata/pata_ixp4xx_cf.c
+@@ -242,6 +242,10 @@ static struct platform_driver ixp4xx_pat
+ 
+ static int __init ixp4xx_pata_init(void)
+ {
++	{
++		ata_dump_sht(DRV_NAME, &ixp4xx_sht);
++		ata_dump_ops(DRV_NAME, &ixp4xx_port_ops);
++	}
+ 	return platform_driver_register(&ixp4xx_pata_platform_driver);
+ }
+ 
+Index: work/drivers/ata/pata_jmicron.c
+===================================================================
+--- work.orig/drivers/ata/pata_jmicron.c
++++ work/drivers/ata/pata_jmicron.c
+@@ -222,6 +222,10 @@ static struct pci_driver jmicron_pci_dri
+ 
+ static int __init jmicron_init(void)
+ {
++	{
++		ata_dump_sht(DRV_NAME, &jmicron_sht);
++		ata_dump_ops(DRV_NAME, &jmicron_ops);
++	}
+ 	return pci_register_driver(&jmicron_pci_driver);
+ }
+ 
+Index: work/drivers/ata/pata_legacy.c
+===================================================================
+--- work.orig/drivers/ata/pata_legacy.c
++++ work/drivers/ata/pata_legacy.c
+@@ -1507,6 +1507,20 @@ static __init int legacy_init(void)
+ 	}
+ 	if (ct != 0)
  		return 0;
++	{
++		ata_dump_sht(DRV_NAME, &legacy_sht);
++		ata_dump_ops(DRV_NAME, &simple_port_ops);
++		ata_dump_ops(DRV_NAME, &legacy_port_ops);
++		ata_dump_ops(DRV_NAME, &pdc20230_port_ops);
++		ata_dump_ops(DRV_NAME, &ht6560a_port_ops);
++		ata_dump_ops(DRV_NAME, &ht6560b_port_ops);
++		ata_dump_ops(DRV_NAME, &opti82c611a_port_ops);
++		ata_dump_ops(DRV_NAME, &opti82c46x_port_ops);
++		ata_dump_ops(DRV_NAME, &qdi6500_port_ops);
++		ata_dump_ops(DRV_NAME, &qdi6580_port_ops);
++		ata_dump_ops(DRV_NAME, &qdi6580dp_port_ops);
++		ata_dump_ops(DRV_NAME, &winbond_port_ops);
++	}
+ 	return -ENODEV;
+ }
  
-+	ata_finalize_port_ops(host->ops);
-+
- 	for (i = 0; i < host->n_ports; i++) {
- 		struct ata_port *ap = host->ports[i];
+Index: work/drivers/ata/pata_marvell.c
+===================================================================
+--- work.orig/drivers/ata/pata_marvell.c
++++ work/drivers/ata/pata_marvell.c
+@@ -210,6 +210,10 @@ static struct pci_driver marvell_pci_dri
  
-+		ata_finalize_port_ops(ap->ops);
-+
- 		if (!host->ops && !ata_port_is_dummy(ap))
- 			host->ops = ap->ops;
- 
-@@ -6972,7 +7076,7 @@ int ata_host_start(struct ata_host *host)
-  */
- /* KILLME - the only user left is ipr */
- void ata_host_init(struct ata_host *host, struct device *dev,
--		   unsigned long flags, const struct ata_port_operations *ops)
-+		   unsigned long flags, struct ata_port_operations *ops)
+ static int __init marvell_init(void)
  {
- 	spin_lock_init(&host->lock);
- 	host->dev = dev;
-@@ -7373,7 +7477,6 @@ int ata_pci_device_resume(struct pci_dev *pdev)
++	{
++		ata_dump_sht(DRV_NAME, &marvell_sht);
++		ata_dump_ops(DRV_NAME, &marvell_ops);
++	}
+ 	return pci_register_driver(&marvell_pci_driver);
+ }
  
- #endif /* CONFIG_PCI */
- 
--
- static int __init ata_init(void)
+Index: work/drivers/ata/pata_mpc52xx.c
+===================================================================
+--- work.orig/drivers/ata/pata_mpc52xx.c
++++ work/drivers/ata/pata_mpc52xx.c
+@@ -527,6 +527,10 @@ static int __init
+ mpc52xx_ata_init(void)
  {
- 	ata_probe_timeout *= HZ;
-@@ -7484,7 +7587,7 @@ static unsigned int ata_dummy_qc_issue(struct ata_queued_cmd *qc)
- 	return AC_ERR_SYSTEM;
+ 	printk(KERN_INFO "ata: MPC52xx IDE/ATA libata driver\n");
++	{
++		ata_dump_sht(DRV_NAME, &mpc52xx_ata_sht);
++		ata_dump_ops(DRV_NAME, &mpc52xx_ata_port_ops);
++	}
+ 	return of_register_platform_driver(&mpc52xx_ata_of_platform_driver);
  }
  
--const struct ata_port_operations ata_dummy_port_ops = {
-+struct ata_port_operations ata_dummy_port_ops = {
- 	.check_status		= ata_dummy_check_status,
- 	.check_altstatus	= ata_dummy_check_status,
- 	.dev_select		= ata_noop_dev_select,
-@@ -7512,6 +7615,11 @@ const struct ata_port_info ata_dummy_port_info = {
- EXPORT_SYMBOL_GPL(sata_deb_timing_normal);
- EXPORT_SYMBOL_GPL(sata_deb_timing_hotplug);
- EXPORT_SYMBOL_GPL(sata_deb_timing_long);
-+EXPORT_SYMBOL_GPL(ata_base_port_ops);
-+EXPORT_SYMBOL_GPL(sata_port_ops);
-+EXPORT_SYMBOL_GPL(sata_pmp_port_ops);
-+EXPORT_SYMBOL_GPL(ata_sff_port_ops);
-+EXPORT_SYMBOL_GPL(ata_bmdma_port_ops);
- EXPORT_SYMBOL_GPL(ata_dummy_port_ops);
- EXPORT_SYMBOL_GPL(ata_dummy_port_info);
- EXPORT_SYMBOL_GPL(ata_std_bios_param);
-diff --git a/drivers/ata/pata_acpi.c b/drivers/ata/pata_acpi.c
-index 244098a..2810488 100644
---- a/drivers/ata/pata_acpi.c
-+++ b/drivers/ata/pata_acpi.c
-@@ -232,57 +232,17 @@ static int pacpi_port_start(struct ata_port *ap)
- }
- 
- static struct scsi_host_template pacpi_sht = {
--	.module			= THIS_MODULE,
--	.name			= DRV_NAME,
--	.ioctl			= ata_scsi_ioctl,
--	.queuecommand		= ata_scsi_queuecmd,
--	.can_queue		= ATA_DEF_QUEUE,
--	.this_id		= ATA_SHT_THIS_ID,
--	.sg_tablesize		= LIBATA_MAX_PRD,
--	.cmd_per_lun		= ATA_SHT_CMD_PER_LUN,
--	.emulated		= ATA_SHT_EMULATED,
--	.use_clustering		= ATA_SHT_USE_CLUSTERING,
--	.proc_name		= DRV_NAME,
--	.dma_boundary		= ATA_DMA_BOUNDARY,
--	.slave_configure	= ata_scsi_slave_config,
--	.slave_destroy		= ata_scsi_slave_destroy,
--	/* Use standard CHS mapping rules */
--	.bios_param		= ata_std_bios_param,
-+	ATA_BMDMA_SHT(DRV_NAME),
- };
- 
--static const struct ata_port_operations pacpi_ops = {
-+static struct ata_port_operations pacpi_ops = {
-+	.inherits		= &ata_bmdma_port_ops,
-+	.qc_issue		= pacpi_qc_issue_prot,
-+	.cable_detect		= pacpi_cable_detect,
-+	.mode_filter		= pacpi_mode_filter,
- 	.set_piomode		= pacpi_set_piomode,
- 	.set_dmamode		= pacpi_set_dmamode,
--	.mode_filter		= pacpi_mode_filter,
--
--	/* Task file is PCI ATA format, use helpers */
--	.tf_load		= ata_tf_load,
--	.tf_read		= ata_tf_read,
--	.check_status		= ata_check_status,
--	.exec_command		= ata_exec_command,
--	.dev_select		= ata_std_dev_select,
--
--	.freeze			= ata_bmdma_freeze,
--	.thaw			= ata_bmdma_thaw,
- 	.error_handler		= pacpi_error_handler,
--	.post_internal_cmd	= ata_bmdma_post_internal_cmd,
--	.cable_detect		= pacpi_cable_detect,
--
--	/* BMDMA handling is PCI ATA format, use helpers */
--	.bmdma_setup		= ata_bmdma_setup,
--	.bmdma_start		= ata_bmdma_start,
--	.bmdma_stop		= ata_bmdma_stop,
--	.bmdma_status		= ata_bmdma_status,
--	.qc_prep		= ata_qc_prep,
--	.qc_issue		= pacpi_qc_issue_prot,
--	.data_xfer		= ata_data_xfer,
--
--	/* Timeout handling */
--	.irq_handler		= ata_interrupt,
--	.irq_clear		= ata_bmdma_irq_clear,
--	.irq_on			= ata_irq_on,
--
--	/* Generic PATA PCI ATA helpers */
- 	.port_start		= pacpi_port_start,
- };
- 
-diff --git a/drivers/ata/pata_ali.c b/drivers/ata/pata_ali.c
-index 8a9044c..ad9dce9 100644
---- a/drivers/ata/pata_ali.c
-+++ b/drivers/ata/pata_ali.c
-@@ -301,21 +301,7 @@ static int ali_check_atapi_dma(struct ata_queued_cmd *qc)
- }
- 
- static struct scsi_host_template ali_sht = {
--	.module			= THIS_MODULE,
--	.name			= DRV_NAME,
--	.ioctl			= ata_scsi_ioctl,
--	.queuecommand		= ata_scsi_queuecmd,
--	.can_queue		= ATA_DEF_QUEUE,
--	.this_id		= ATA_SHT_THIS_ID,
--	.sg_tablesize		= LIBATA_MAX_PRD,
--	.cmd_per_lun		= ATA_SHT_CMD_PER_LUN,
--	.emulated		= ATA_SHT_EMULATED,
--	.use_clustering		= ATA_SHT_USE_CLUSTERING,
--	.proc_name		= DRV_NAME,
--	.dma_boundary		= ATA_DMA_BOUNDARY,
--	.slave_configure	= ata_scsi_slave_config,
--	.slave_destroy		= ata_scsi_slave_destroy,
--	.bios_param		= ata_std_bios_param,
-+	ATA_BMDMA_SHT(DRV_NAME),
- };
- 
- /*
-@@ -323,29 +309,15 @@ static struct scsi_host_template ali_sht = {
-  */
- 
- static struct ata_port_operations ali_early_port_ops = {
--	.set_piomode	= ali_set_piomode,
--	.tf_load	= ata_tf_load,
--	.tf_read	= ata_tf_read,
--	.check_status 	= ata_check_status,
--	.exec_command	= ata_exec_command,
--	.dev_select 	= ata_std_dev_select,
--
--	.freeze		= ata_bmdma_freeze,
--	.thaw		= ata_bmdma_thaw,
--	.error_handler	= ata_bmdma_error_handler,
--	.post_internal_cmd = ata_bmdma_post_internal_cmd,
-+	.inherits	= &ata_sff_port_ops,
- 	.cable_detect	= ata_cable_40wire,
-+	.set_piomode	= ali_set_piomode,
-+};
- 
--	.qc_prep 	= ata_qc_prep,
--	.qc_issue	= ata_qc_issue_prot,
--
--	.data_xfer	= ata_data_xfer,
--
--	.irq_handler	= ata_interrupt,
--	.irq_clear	= ata_noop_irq_clear,
--	.irq_on		= ata_irq_on,
--
--	.port_start	= ata_sff_port_start,
-+static const struct ata_port_operations ali_dma_base_ops = {
-+	.inherits	= &ata_bmdma_port_ops,
-+	.set_piomode	= ali_set_piomode,
-+	.set_dmamode	= ali_set_dmamode,
- };
- 
- /*
-@@ -353,113 +325,29 @@ static struct ata_port_operations ali_early_port_ops = {
-  *	detect
-  */
- static struct ata_port_operations ali_20_port_ops = {
--	.set_piomode	= ali_set_piomode,
--	.set_dmamode	= ali_set_dmamode,
-+	.inherits	= &ali_dma_base_ops,
-+	.cable_detect	= ata_cable_40wire,
- 	.mode_filter	= ali_20_filter,
--
--	.tf_load	= ata_tf_load,
--	.tf_read	= ata_tf_read,
--	.check_status 	= ata_check_status,
--	.exec_command	= ata_exec_command,
--	.dev_select 	= ata_std_dev_select,
- 	.dev_config	= ali_lock_sectors,
--
--	.freeze		= ata_bmdma_freeze,
--	.thaw		= ata_bmdma_thaw,
--	.error_handler	= ata_bmdma_error_handler,
--	.post_internal_cmd = ata_bmdma_post_internal_cmd,
--	.cable_detect	= ata_cable_40wire,
--
--	.bmdma_setup 	= ata_bmdma_setup,
--	.bmdma_start 	= ata_bmdma_start,
--	.bmdma_stop	= ata_bmdma_stop,
--	.bmdma_status 	= ata_bmdma_status,
--
--	.qc_prep 	= ata_qc_prep,
--	.qc_issue	= ata_qc_issue_prot,
--
--	.data_xfer	= ata_data_xfer,
--
--	.irq_handler	= ata_interrupt,
--	.irq_clear	= ata_bmdma_irq_clear,
--	.irq_on		= ata_irq_on,
--
--	.port_start	= ata_sff_port_start,
- };
- 
- /*
-  *	Port operations for DMA capable ALi with cable detect
-  */
- static struct ata_port_operations ali_c2_port_ops = {
--	.set_piomode	= ali_set_piomode,
--	.set_dmamode	= ali_set_dmamode,
--	.mode_filter	= ata_pci_default_filter,
--	.tf_load	= ata_tf_load,
--	.tf_read	= ata_tf_read,
-+	.inherits	= &ali_dma_base_ops,
- 	.check_atapi_dma = ali_check_atapi_dma,
--	.check_status 	= ata_check_status,
--	.exec_command	= ata_exec_command,
--	.dev_select 	= ata_std_dev_select,
--	.dev_config	= ali_lock_sectors,
--
--	.freeze		= ata_bmdma_freeze,
--	.thaw		= ata_bmdma_thaw,
--	.error_handler	= ata_bmdma_error_handler,
--	.post_internal_cmd = ata_bmdma_post_internal_cmd,
- 	.cable_detect	= ali_c2_cable_detect,
--
--	.bmdma_setup 	= ata_bmdma_setup,
--	.bmdma_start 	= ata_bmdma_start,
--	.bmdma_stop	= ata_bmdma_stop,
--	.bmdma_status 	= ata_bmdma_status,
--
--	.qc_prep 	= ata_qc_prep,
--	.qc_issue	= ata_qc_issue_prot,
--
--	.data_xfer	= ata_data_xfer,
--
--	.irq_handler	= ata_interrupt,
--	.irq_clear	= ata_bmdma_irq_clear,
--	.irq_on		= ata_irq_on,
--
--	.port_start	= ata_sff_port_start,
-+	.dev_config	= ali_lock_sectors,
- };
- 
- /*
-  *	Port operations for DMA capable ALi with cable detect and LBA48
-  */
- static struct ata_port_operations ali_c5_port_ops = {
--	.set_piomode	= ali_set_piomode,
--	.set_dmamode	= ali_set_dmamode,
--	.mode_filter	= ata_pci_default_filter,
--	.tf_load	= ata_tf_load,
--	.tf_read	= ata_tf_read,
-+	.inherits	= &ali_dma_base_ops,
- 	.check_atapi_dma = ali_check_atapi_dma,
--	.check_status 	= ata_check_status,
--	.exec_command	= ata_exec_command,
--	.dev_select 	= ata_std_dev_select,
--
--	.freeze		= ata_bmdma_freeze,
--	.thaw		= ata_bmdma_thaw,
--	.error_handler	= ata_bmdma_error_handler,
--	.post_internal_cmd = ata_bmdma_post_internal_cmd,
- 	.cable_detect	= ali_c2_cable_detect,
--
--	.bmdma_setup 	= ata_bmdma_setup,
--	.bmdma_start 	= ata_bmdma_start,
--	.bmdma_stop	= ata_bmdma_stop,
--	.bmdma_status 	= ata_bmdma_status,
--
--	.qc_prep 	= ata_qc_prep,
--	.qc_issue	= ata_qc_issue_prot,
--
--	.data_xfer	= ata_data_xfer,
--
--	.irq_handler	= ata_interrupt,
--	.irq_clear	= ata_bmdma_irq_clear,
--	.irq_on		= ata_irq_on,
--
--	.port_start	= ata_sff_port_start,
- };
- 
- 
-diff --git a/drivers/ata/pata_amd.c b/drivers/ata/pata_amd.c
-index 567fe6b..0f317e0 100644
---- a/drivers/ata/pata_amd.c
-+++ b/drivers/ata/pata_amd.c
-@@ -354,223 +354,60 @@ static void nv_host_stop(struct ata_host *host)
- }
- 
- static struct scsi_host_template amd_sht = {
--	.module			= THIS_MODULE,
--	.name			= DRV_NAME,
--	.ioctl			= ata_scsi_ioctl,
--	.queuecommand		= ata_scsi_queuecmd,
--	.can_queue		= ATA_DEF_QUEUE,
--	.this_id		= ATA_SHT_THIS_ID,
--	.sg_tablesize		= LIBATA_MAX_PRD,
--	.cmd_per_lun		= ATA_SHT_CMD_PER_LUN,
--	.emulated		= ATA_SHT_EMULATED,
--	.use_clustering		= ATA_SHT_USE_CLUSTERING,
--	.proc_name		= DRV_NAME,
--	.dma_boundary		= ATA_DMA_BOUNDARY,
--	.slave_configure	= ata_scsi_slave_config,
--	.slave_destroy		= ata_scsi_slave_destroy,
--	.bios_param		= ata_std_bios_param,
-+	ATA_BMDMA_SHT(DRV_NAME),
-+};
-+
-+static const struct ata_port_operations amd_base_port_ops = {
-+	.inherits	= &ata_bmdma_port_ops,
-+	.error_handler	= amd_error_handler,
- };
- 
- static struct ata_port_operations amd33_port_ops = {
-+	.inherits	= &amd_base_port_ops,
-+	.cable_detect	= ata_cable_40wire,
- 	.set_piomode	= amd33_set_piomode,
- 	.set_dmamode	= amd33_set_dmamode,
--	.mode_filter	= ata_pci_default_filter,
--	.tf_load	= ata_tf_load,
--	.tf_read	= ata_tf_read,
--	.check_status 	= ata_check_status,
--	.exec_command	= ata_exec_command,
--	.dev_select 	= ata_std_dev_select,
--
--	.freeze		= ata_bmdma_freeze,
--	.thaw		= ata_bmdma_thaw,
--	.error_handler	= amd_error_handler,
--	.post_internal_cmd = ata_bmdma_post_internal_cmd,
--	.cable_detect	= ata_cable_40wire,
--
--	.bmdma_setup 	= ata_bmdma_setup,
--	.bmdma_start 	= ata_bmdma_start,
--	.bmdma_stop	= ata_bmdma_stop,
--	.bmdma_status 	= ata_bmdma_status,
--
--	.qc_prep 	= ata_qc_prep,
--	.qc_issue	= ata_qc_issue_prot,
--
--	.data_xfer	= ata_data_xfer,
--
--	.irq_handler	= ata_interrupt,
--	.irq_clear	= ata_bmdma_irq_clear,
--	.irq_on		= ata_irq_on,
--
--	.port_start	= ata_sff_port_start,
- };
- 
- static struct ata_port_operations amd66_port_ops = {
-+	.inherits	= &amd_base_port_ops,
-+	.cable_detect	= ata_cable_unknown,
- 	.set_piomode	= amd66_set_piomode,
- 	.set_dmamode	= amd66_set_dmamode,
--	.mode_filter	= ata_pci_default_filter,
--	.tf_load	= ata_tf_load,
--	.tf_read	= ata_tf_read,
--	.check_status 	= ata_check_status,
--	.exec_command	= ata_exec_command,
--	.dev_select 	= ata_std_dev_select,
--
--	.freeze		= ata_bmdma_freeze,
--	.thaw		= ata_bmdma_thaw,
--	.error_handler	= amd_error_handler,
--	.post_internal_cmd = ata_bmdma_post_internal_cmd,
--	.cable_detect	= ata_cable_unknown,
--
--	.bmdma_setup 	= ata_bmdma_setup,
--	.bmdma_start 	= ata_bmdma_start,
--	.bmdma_stop	= ata_bmdma_stop,
--	.bmdma_status 	= ata_bmdma_status,
--
--	.qc_prep 	= ata_qc_prep,
--	.qc_issue	= ata_qc_issue_prot,
--
--	.data_xfer	= ata_data_xfer,
--
--	.irq_handler	= ata_interrupt,
--	.irq_clear	= ata_bmdma_irq_clear,
--	.irq_on		= ata_irq_on,
--
--	.port_start	= ata_sff_port_start,
- };
- 
- static struct ata_port_operations amd100_port_ops = {
-+	.inherits	= &amd_base_port_ops,
-+	.cable_detect	= ata_cable_unknown,
- 	.set_piomode	= amd100_set_piomode,
- 	.set_dmamode	= amd100_set_dmamode,
--	.mode_filter	= ata_pci_default_filter,
--	.tf_load	= ata_tf_load,
--	.tf_read	= ata_tf_read,
--	.check_status 	= ata_check_status,
--	.exec_command	= ata_exec_command,
--	.dev_select 	= ata_std_dev_select,
--
--	.freeze		= ata_bmdma_freeze,
--	.thaw		= ata_bmdma_thaw,
--	.error_handler	= amd_error_handler,
--	.post_internal_cmd = ata_bmdma_post_internal_cmd,
--	.cable_detect	= ata_cable_unknown,
--
--	.bmdma_setup 	= ata_bmdma_setup,
--	.bmdma_start 	= ata_bmdma_start,
--	.bmdma_stop	= ata_bmdma_stop,
--	.bmdma_status 	= ata_bmdma_status,
--
--	.qc_prep 	= ata_qc_prep,
--	.qc_issue	= ata_qc_issue_prot,
--
--	.data_xfer	= ata_data_xfer,
--
--	.irq_handler	= ata_interrupt,
--	.irq_clear	= ata_bmdma_irq_clear,
--	.irq_on		= ata_irq_on,
--
--	.port_start	= ata_sff_port_start,
- };
- 
- static struct ata_port_operations amd133_port_ops = {
-+	.inherits	= &amd_base_port_ops,
-+	.cable_detect	= amd_cable_detect,
- 	.set_piomode	= amd133_set_piomode,
- 	.set_dmamode	= amd133_set_dmamode,
--	.mode_filter	= ata_pci_default_filter,
--	.tf_load	= ata_tf_load,
--	.tf_read	= ata_tf_read,
--	.check_status 	= ata_check_status,
--	.exec_command	= ata_exec_command,
--	.dev_select 	= ata_std_dev_select,
--
--	.freeze		= ata_bmdma_freeze,
--	.thaw		= ata_bmdma_thaw,
--	.error_handler	= amd_error_handler,
--	.post_internal_cmd = ata_bmdma_post_internal_cmd,
--	.cable_detect	= amd_cable_detect,
--
--	.bmdma_setup 	= ata_bmdma_setup,
--	.bmdma_start 	= ata_bmdma_start,
--	.bmdma_stop	= ata_bmdma_stop,
--	.bmdma_status 	= ata_bmdma_status,
--
--	.qc_prep 	= ata_qc_prep,
--	.qc_issue	= ata_qc_issue_prot,
--
--	.data_xfer	= ata_data_xfer,
--
--	.irq_handler	= ata_interrupt,
--	.irq_clear	= ata_bmdma_irq_clear,
--	.irq_on		= ata_irq_on,
-+};
- 
--	.port_start	= ata_sff_port_start,
-+static const struct ata_port_operations nv_base_port_ops = {
-+	.inherits	= &ata_bmdma_port_ops,
-+	.cable_detect	= ata_cable_ignore,
-+	.mode_filter	= nv_mode_filter,
-+	.error_handler	= nv_error_handler,
-+	.host_stop	= nv_host_stop,
- };
- 
- static struct ata_port_operations nv100_port_ops = {
-+	.inherits	= &nv_base_port_ops,
- 	.set_piomode	= nv100_set_piomode,
- 	.set_dmamode	= nv100_set_dmamode,
--	.mode_filter	= ata_pci_default_filter,
--	.tf_load	= ata_tf_load,
--	.tf_read	= ata_tf_read,
--	.check_status 	= ata_check_status,
--	.exec_command	= ata_exec_command,
--	.dev_select 	= ata_std_dev_select,
--
--	.freeze		= ata_bmdma_freeze,
--	.thaw		= ata_bmdma_thaw,
--	.error_handler	= nv_error_handler,
--	.post_internal_cmd = ata_bmdma_post_internal_cmd,
--	.cable_detect	= ata_cable_ignore,
--	.mode_filter	= nv_mode_filter,
--
--	.bmdma_setup 	= ata_bmdma_setup,
--	.bmdma_start 	= ata_bmdma_start,
--	.bmdma_stop	= ata_bmdma_stop,
--	.bmdma_status 	= ata_bmdma_status,
--
--	.qc_prep 	= ata_qc_prep,
--	.qc_issue	= ata_qc_issue_prot,
--
--	.data_xfer	= ata_data_xfer,
--
--	.irq_handler	= ata_interrupt,
--	.irq_clear	= ata_bmdma_irq_clear,
--	.irq_on		= ata_irq_on,
--
--	.port_start	= ata_sff_port_start,
--	.host_stop	= nv_host_stop,
- };
- 
- static struct ata_port_operations nv133_port_ops = {
-+	.inherits	= &nv_base_port_ops,
- 	.set_piomode	= nv133_set_piomode,
- 	.set_dmamode	= nv133_set_dmamode,
--	.mode_filter	= ata_pci_default_filter,
--	.tf_load	= ata_tf_load,
--	.tf_read	= ata_tf_read,
--	.check_status 	= ata_check_status,
--	.exec_command	= ata_exec_command,
--	.dev_select 	= ata_std_dev_select,
--
--	.freeze		= ata_bmdma_freeze,
--	.thaw		= ata_bmdma_thaw,
--	.error_handler	= nv_error_handler,
--	.post_internal_cmd = ata_bmdma_post_internal_cmd,
--	.cable_detect	= ata_cable_ignore,
--	.mode_filter	= nv_mode_filter,
--
--	.bmdma_setup 	= ata_bmdma_setup,
--	.bmdma_start 	= ata_bmdma_start,
--	.bmdma_stop	= ata_bmdma_stop,
--	.bmdma_status 	= ata_bmdma_status,
--
--	.qc_prep 	= ata_qc_prep,
--	.qc_issue	= ata_qc_issue_prot,
--
--	.data_xfer	= ata_data_xfer,
--
--	.irq_handler	= ata_interrupt,
--	.irq_clear	= ata_bmdma_irq_clear,
--	.irq_on		= ata_irq_on,
--
--	.port_start	= ata_sff_port_start,
--	.host_stop	= nv_host_stop,
- };
- 
- static int amd_init_one(struct pci_dev *pdev, const struct pci_device_id *id)
-diff --git a/drivers/ata/pata_artop.c b/drivers/ata/pata_artop.c
-index a238c7b..0101e5a 100644
---- a/drivers/ata/pata_artop.c
-+++ b/drivers/ata/pata_artop.c
-@@ -314,86 +314,23 @@ static void artop6260_set_dmamode (struct ata_port *ap, struct ata_device *adev)
- }
- 
- static struct scsi_host_template artop_sht = {
--	.module			= THIS_MODULE,
--	.name			= DRV_NAME,
--	.ioctl			= ata_scsi_ioctl,
--	.queuecommand		= ata_scsi_queuecmd,
--	.can_queue		= ATA_DEF_QUEUE,
--	.this_id		= ATA_SHT_THIS_ID,
--	.sg_tablesize		= LIBATA_MAX_PRD,
--	.cmd_per_lun		= ATA_SHT_CMD_PER_LUN,
--	.emulated		= ATA_SHT_EMULATED,
--	.use_clustering		= ATA_SHT_USE_CLUSTERING,
--	.proc_name		= DRV_NAME,
--	.dma_boundary		= ATA_DMA_BOUNDARY,
--	.slave_configure	= ata_scsi_slave_config,
--	.slave_destroy		= ata_scsi_slave_destroy,
--	.bios_param		= ata_std_bios_param,
-+	ATA_BMDMA_SHT(DRV_NAME),
- };
- 
--static const struct ata_port_operations artop6210_ops = {
-+static struct ata_port_operations artop6210_ops = {
-+	.inherits		= &ata_bmdma_port_ops,
-+	.cable_detect		= ata_cable_40wire,
- 	.set_piomode		= artop6210_set_piomode,
- 	.set_dmamode		= artop6210_set_dmamode,
--	.mode_filter		= ata_pci_default_filter,
--
--	.tf_load		= ata_tf_load,
--	.tf_read		= ata_tf_read,
--	.check_status		= ata_check_status,
--	.exec_command		= ata_exec_command,
--	.dev_select		= ata_std_dev_select,
--
--	.freeze			= ata_bmdma_freeze,
--	.thaw			= ata_bmdma_thaw,
- 	.error_handler		= artop6210_error_handler,
--	.post_internal_cmd 	= ata_bmdma_post_internal_cmd,
--	.cable_detect		= ata_cable_40wire,
--
--	.bmdma_setup		= ata_bmdma_setup,
--	.bmdma_start		= ata_bmdma_start,
--	.bmdma_stop		= ata_bmdma_stop,
--	.bmdma_status		= ata_bmdma_status,
--	.qc_prep		= ata_qc_prep,
--	.qc_issue		= ata_qc_issue_prot,
--
--	.data_xfer		= ata_data_xfer,
--
--	.irq_handler		= ata_interrupt,
--	.irq_clear		= ata_bmdma_irq_clear,
--	.irq_on			= ata_irq_on,
--
--	.port_start		= ata_sff_port_start,
- };
- 
--static const struct ata_port_operations artop6260_ops = {
-+static struct ata_port_operations artop6260_ops = {
-+	.inherits		= &ata_bmdma_port_ops,
-+	.cable_detect		= artop6260_cable_detect,
- 	.set_piomode		= artop6260_set_piomode,
- 	.set_dmamode		= artop6260_set_dmamode,
--	.mode_filter		= ata_pci_default_filter,
--
--	.tf_load		= ata_tf_load,
--	.tf_read		= ata_tf_read,
--	.check_status		= ata_check_status,
--	.exec_command		= ata_exec_command,
--	.dev_select		= ata_std_dev_select,
--
--	.freeze			= ata_bmdma_freeze,
--	.thaw			= ata_bmdma_thaw,
- 	.error_handler		= artop6260_error_handler,
--	.post_internal_cmd 	= ata_bmdma_post_internal_cmd,
--	.cable_detect		= artop6260_cable_detect,
--
--	.bmdma_setup		= ata_bmdma_setup,
--	.bmdma_start		= ata_bmdma_start,
--	.bmdma_stop		= ata_bmdma_stop,
--	.bmdma_status		= ata_bmdma_status,
--	.qc_prep		= ata_qc_prep,
--	.qc_issue		= ata_qc_issue_prot,
--	.data_xfer		= ata_data_xfer,
--
--	.irq_handler		= ata_interrupt,
--	.irq_clear		= ata_bmdma_irq_clear,
--	.irq_on			= ata_irq_on,
--
--	.port_start		= ata_sff_port_start,
- };
- 
- 
-diff --git a/drivers/ata/pata_at32.c b/drivers/ata/pata_at32.c
-index 86a8ee9..d495c79 100644
---- a/drivers/ata/pata_at32.c
-+++ b/drivers/ata/pata_at32.c
-@@ -167,46 +167,13 @@ static void pata_at32_set_piomode(struct ata_port *ap, struct ata_device *adev)
- }
- 
- static struct scsi_host_template at32_sht = {
--	.module			= THIS_MODULE,
--	.name			= DRV_NAME,
--	.ioctl			= ata_scsi_ioctl,
--	.queuecommand		= ata_scsi_queuecmd,
--	.can_queue		= ATA_DEF_QUEUE,
--	.this_id		= ATA_SHT_THIS_ID,
--	.sg_tablesize		= LIBATA_MAX_PRD,
--	.cmd_per_lun		= ATA_SHT_CMD_PER_LUN,
--	.emulated		= ATA_SHT_EMULATED,
--	.use_clustering		= ATA_SHT_USE_CLUSTERING,
--	.proc_name		= DRV_NAME,
--	.dma_boundary		= ATA_DMA_BOUNDARY,
--	.slave_configure	= ata_scsi_slave_config,
--	.slave_destroy		= ata_scsi_slave_destroy,
--	.bios_param		= ata_std_bios_param,
-+	ATA_PIO_SHT(DRV_NAME),
- };
- 
- static struct ata_port_operations at32_port_ops = {
--	.set_piomode		= pata_at32_set_piomode,
--	.tf_load		= ata_tf_load,
--	.tf_read		= ata_tf_read,
--	.exec_command		= ata_exec_command,
--	.check_status		= ata_check_status,
--	.dev_select		= ata_std_dev_select,
--
--	.freeze			= ata_bmdma_freeze,
--	.thaw			= ata_bmdma_thaw,
--	.error_handler		= ata_bmdma_error_handler,
--	.post_internal_cmd	= ata_bmdma_post_internal_cmd,
-+	.inherits		= &ata_sff_port_ops,
- 	.cable_detect		= ata_cable_40wire,
--
--	.qc_prep		= ata_qc_prep,
--	.qc_issue		= ata_qc_issue_prot,
--
--	.data_xfer		= ata_data_xfer,
--
--	.irq_clear		= ata_noop_irq_clear,
--	.irq_on			= ata_irq_on,
--
--	.port_start		= ata_sff_port_start,
-+	.set_piomode		= pata_at32_set_piomode,
- };
- 
- static int __init pata_at32_init_one(struct device *dev,
-diff --git a/drivers/ata/pata_atiixp.c b/drivers/ata/pata_atiixp.c
-index 9623f52..5bc2040 100644
---- a/drivers/ata/pata_atiixp.c
-+++ b/drivers/ata/pata_atiixp.c
-@@ -221,54 +221,19 @@ static void atiixp_bmdma_stop(struct ata_queued_cmd *qc)
- }
- 
- static struct scsi_host_template atiixp_sht = {
--	.module			= THIS_MODULE,
--	.name			= DRV_NAME,
--	.ioctl			= ata_scsi_ioctl,
--	.queuecommand		= ata_scsi_queuecmd,
--	.can_queue		= ATA_DEF_QUEUE,
--	.this_id		= ATA_SHT_THIS_ID,
--	.sg_tablesize		= LIBATA_MAX_PRD,
--	.cmd_per_lun		= ATA_SHT_CMD_PER_LUN,
--	.emulated		= ATA_SHT_EMULATED,
--	.use_clustering		= ATA_SHT_USE_CLUSTERING,
--	.proc_name		= DRV_NAME,
--	.dma_boundary		= ATA_DMA_BOUNDARY,
--	.slave_configure	= ata_scsi_slave_config,
--	.slave_destroy		= ata_scsi_slave_destroy,
--	.bios_param		= ata_std_bios_param,
-+	ATA_BMDMA_SHT(DRV_NAME),
- };
- 
- static struct ata_port_operations atiixp_port_ops = {
--	.set_piomode	= atiixp_set_piomode,
--	.set_dmamode	= atiixp_set_dmamode,
--	.mode_filter	= ata_pci_default_filter,
--	.tf_load	= ata_tf_load,
--	.tf_read	= ata_tf_read,
--	.check_status 	= ata_check_status,
--	.exec_command	= ata_exec_command,
--	.dev_select 	= ata_std_dev_select,
--
--	.freeze		= ata_bmdma_freeze,
--	.thaw		= ata_bmdma_thaw,
--	.error_handler	= atiixp_error_handler,
--	.post_internal_cmd = ata_bmdma_post_internal_cmd,
--	.cable_detect	= atiixp_cable_detect,
-+	.inherits	= &ata_bmdma_port_ops,
- 
--	.bmdma_setup 	= ata_bmdma_setup,
- 	.bmdma_start 	= atiixp_bmdma_start,
- 	.bmdma_stop	= atiixp_bmdma_stop,
--	.bmdma_status 	= ata_bmdma_status,
--
--	.qc_prep 	= ata_qc_prep,
--	.qc_issue	= ata_qc_issue_prot,
--
--	.data_xfer	= ata_data_xfer,
- 
--	.irq_handler	= ata_interrupt,
--	.irq_clear	= ata_bmdma_irq_clear,
--	.irq_on		= ata_irq_on,
--
--	.port_start	= ata_sff_port_start,
-+	.cable_detect	= atiixp_cable_detect,
-+	.set_piomode	= atiixp_set_piomode,
-+	.set_dmamode	= atiixp_set_dmamode,
-+	.error_handler	= atiixp_error_handler,
- };
- 
- static int atiixp_init_one(struct pci_dev *dev, const struct pci_device_id *id)
-diff --git a/drivers/ata/pata_bf54x.c b/drivers/ata/pata_bf54x.c
-index 0a6fa94..16f8fa5 100644
---- a/drivers/ata/pata_bf54x.c
-+++ b/drivers/ata/pata_bf54x.c
-@@ -1358,24 +1358,14 @@ static int bfin_port_start(struct ata_port *ap)
- }
- 
- static struct scsi_host_template bfin_sht = {
--	.module			= THIS_MODULE,
--	.name			= DRV_NAME,
--	.ioctl			= ata_scsi_ioctl,
--	.queuecommand		= ata_scsi_queuecmd,
--	.can_queue		= ATA_DEF_QUEUE,
--	.this_id		= ATA_SHT_THIS_ID,
-+	ATA_BASE_SHT(DRV_NAME),
- 	.sg_tablesize		= SG_NONE,
--	.cmd_per_lun		= ATA_SHT_CMD_PER_LUN,
--	.emulated		= ATA_SHT_EMULATED,
--	.use_clustering		= ATA_SHT_USE_CLUSTERING,
--	.proc_name		= DRV_NAME,
- 	.dma_boundary		= ATA_DMA_BOUNDARY,
--	.slave_configure	= ata_scsi_slave_config,
--	.slave_destroy		= ata_scsi_slave_destroy,
--	.bios_param		= ata_std_bios_param,
- };
- 
- static const struct ata_port_operations bfin_pata_ops = {
-+	.inherits		= &ata_sff_port_ops,
-+
- 	.set_piomode		= bfin_set_piomode,
- 	.set_dmamode		= bfin_set_dmamode,
- 
-@@ -1393,14 +1383,12 @@ static const struct ata_port_operations bfin_pata_ops = {
- 	.data_xfer		= bfin_data_xfer,
- 
- 	.qc_prep		= ata_noop_qc_prep,
--	.qc_issue		= ata_qc_issue_prot,
- 
- 	.freeze			= bfin_bmdma_freeze,
- 	.thaw			= bfin_bmdma_thaw,
- 	.error_handler		= bfin_error_handler,
- 	.post_internal_cmd	= bfin_bmdma_stop,
- 
--	.irq_handler		= ata_interrupt,
- 	.irq_clear		= bfin_irq_clear,
- 	.irq_on			= bfin_irq_on,
- 
-diff --git a/drivers/ata/pata_cmd640.c b/drivers/ata/pata_cmd640.c
-index 0ef1d1d..061c891 100644
---- a/drivers/ata/pata_cmd640.c
-+++ b/drivers/ata/pata_cmd640.c
-@@ -166,53 +166,16 @@ static int cmd640_port_start(struct ata_port *ap)
- }
- 
- static struct scsi_host_template cmd640_sht = {
--	.module			= THIS_MODULE,
--	.name			= DRV_NAME,
--	.ioctl			= ata_scsi_ioctl,
--	.queuecommand		= ata_scsi_queuecmd,
--	.can_queue		= ATA_DEF_QUEUE,
--	.this_id		= ATA_SHT_THIS_ID,
--	.sg_tablesize		= LIBATA_MAX_PRD,
--	.cmd_per_lun		= ATA_SHT_CMD_PER_LUN,
--	.emulated		= ATA_SHT_EMULATED,
--	.use_clustering		= ATA_SHT_USE_CLUSTERING,
--	.proc_name		= DRV_NAME,
--	.dma_boundary		= ATA_DMA_BOUNDARY,
--	.slave_configure	= ata_scsi_slave_config,
--	.slave_destroy		= ata_scsi_slave_destroy,
--	.bios_param		= ata_std_bios_param,
-+	ATA_BMDMA_SHT(DRV_NAME),
- };
- 
- static struct ata_port_operations cmd640_port_ops = {
--	.set_piomode	= cmd640_set_piomode,
--	.mode_filter	= ata_pci_default_filter,
--	.tf_load	= ata_tf_load,
--	.tf_read	= ata_tf_read,
--	.check_status 	= ata_check_status,
--	.exec_command	= ata_exec_command,
--	.dev_select 	= ata_std_dev_select,
--
--	.freeze		= ata_bmdma_freeze,
--	.thaw		= ata_bmdma_thaw,
--	.error_handler	= ata_bmdma_error_handler,
--	.post_internal_cmd = ata_bmdma_post_internal_cmd,
--	.cable_detect	= ata_cable_40wire,
--
--	.bmdma_setup 	= ata_bmdma_setup,
--	.bmdma_start 	= ata_bmdma_start,
--	.bmdma_stop	= ata_bmdma_stop,
--	.bmdma_status 	= ata_bmdma_status,
--
--	.qc_prep 	= ata_qc_prep,
--	.qc_issue	= cmd640_qc_issue_prot,
--
--	/* In theory this is not needed once we kill the prefetcher */
-+	.inherits	= &ata_bmdma_port_ops,
-+	/* In theory xfer_noirq is not needed once we kill the prefetcher */
- 	.data_xfer	= ata_data_xfer_noirq,
--
--	.irq_handler	= ata_interrupt,
--	.irq_clear	= ata_bmdma_irq_clear,
--	.irq_on		= ata_irq_on,
--
-+	.qc_issue	= cmd640_qc_issue_prot,
-+	.cable_detect	= ata_cable_40wire,
-+	.set_piomode	= cmd640_set_piomode,
- 	.port_start	= cmd640_port_start,
- };
- 
-diff --git a/drivers/ata/pata_cmd64x.c b/drivers/ata/pata_cmd64x.c
-index e8c1262..1ac8ecf 100644
---- a/drivers/ata/pata_cmd64x.c
-+++ b/drivers/ata/pata_cmd64x.c
-@@ -266,120 +266,30 @@ static void cmd646r1_bmdma_stop(struct ata_queued_cmd *qc)
- }
- 
- static struct scsi_host_template cmd64x_sht = {
--	.module			= THIS_MODULE,
--	.name			= DRV_NAME,
--	.ioctl			= ata_scsi_ioctl,
--	.queuecommand		= ata_scsi_queuecmd,
--	.can_queue		= ATA_DEF_QUEUE,
--	.this_id		= ATA_SHT_THIS_ID,
--	.sg_tablesize		= LIBATA_MAX_PRD,
--	.cmd_per_lun		= ATA_SHT_CMD_PER_LUN,
--	.emulated		= ATA_SHT_EMULATED,
--	.use_clustering		= ATA_SHT_USE_CLUSTERING,
--	.proc_name		= DRV_NAME,
--	.dma_boundary		= ATA_DMA_BOUNDARY,
--	.slave_configure	= ata_scsi_slave_config,
--	.slave_destroy		= ata_scsi_slave_destroy,
--	.bios_param		= ata_std_bios_param,
-+	ATA_BMDMA_SHT(DRV_NAME),
- };
- 
--static struct ata_port_operations cmd64x_port_ops = {
-+static const struct ata_port_operations cmd64x_base_ops = {
-+	.inherits	= &ata_bmdma_port_ops,
- 	.set_piomode	= cmd64x_set_piomode,
- 	.set_dmamode	= cmd64x_set_dmamode,
--	.mode_filter	= ata_pci_default_filter,
--	.tf_load	= ata_tf_load,
--	.tf_read	= ata_tf_read,
--	.check_status 	= ata_check_status,
--	.exec_command	= ata_exec_command,
--	.dev_select 	= ata_std_dev_select,
--
--	.freeze		= ata_bmdma_freeze,
--	.thaw		= ata_bmdma_thaw,
--	.error_handler	= ata_bmdma_error_handler,
--	.post_internal_cmd = ata_bmdma_post_internal_cmd,
--	.cable_detect	= ata_cable_40wire,
--
--	.bmdma_setup 	= ata_bmdma_setup,
--	.bmdma_start 	= ata_bmdma_start,
--	.bmdma_stop	= ata_bmdma_stop,
--	.bmdma_status 	= ata_bmdma_status,
--
--	.qc_prep 	= ata_qc_prep,
--	.qc_issue	= ata_qc_issue_prot,
--
--	.data_xfer	= ata_data_xfer,
--
--	.irq_handler	= ata_interrupt,
--	.irq_clear	= ata_bmdma_irq_clear,
--	.irq_on		= ata_irq_on,
--
--	.port_start	= ata_sff_port_start,
- };
- 
--static struct ata_port_operations cmd646r1_port_ops = {
--	.set_piomode	= cmd64x_set_piomode,
--	.set_dmamode	= cmd64x_set_dmamode,
--	.mode_filter	= ata_pci_default_filter,
--	.tf_load	= ata_tf_load,
--	.tf_read	= ata_tf_read,
--	.check_status 	= ata_check_status,
--	.exec_command	= ata_exec_command,
--	.dev_select 	= ata_std_dev_select,
--
--	.freeze		= ata_bmdma_freeze,
--	.thaw		= ata_bmdma_thaw,
--	.error_handler	= ata_bmdma_error_handler,
--	.post_internal_cmd = ata_bmdma_post_internal_cmd,
-+static struct ata_port_operations cmd64x_port_ops = {
-+	.inherits	= &cmd64x_base_ops,
- 	.cable_detect	= ata_cable_40wire,
-+};
- 
--	.bmdma_setup 	= ata_bmdma_setup,
--	.bmdma_start 	= ata_bmdma_start,
-+static struct ata_port_operations cmd646r1_port_ops = {
-+	.inherits	= &cmd64x_base_ops,
- 	.bmdma_stop	= cmd646r1_bmdma_stop,
--	.bmdma_status 	= ata_bmdma_status,
--
--	.qc_prep 	= ata_qc_prep,
--	.qc_issue	= ata_qc_issue_prot,
--
--	.data_xfer	= ata_data_xfer,
--
--	.irq_handler	= ata_interrupt,
--	.irq_clear	= ata_bmdma_irq_clear,
--	.irq_on		= ata_irq_on,
--
--	.port_start	= ata_sff_port_start,
-+	.cable_detect	= ata_cable_40wire,
- };
- 
- static struct ata_port_operations cmd648_port_ops = {
--	.set_piomode	= cmd64x_set_piomode,
--	.set_dmamode	= cmd64x_set_dmamode,
--	.mode_filter	= ata_pci_default_filter,
--	.tf_load	= ata_tf_load,
--	.tf_read	= ata_tf_read,
--	.check_status 	= ata_check_status,
--	.exec_command	= ata_exec_command,
--	.dev_select 	= ata_std_dev_select,
--
--	.freeze		= ata_bmdma_freeze,
--	.thaw		= ata_bmdma_thaw,
--	.error_handler	= ata_bmdma_error_handler,
--	.post_internal_cmd = ata_bmdma_post_internal_cmd,
--	.cable_detect	= cmd648_cable_detect,
--
--	.bmdma_setup 	= ata_bmdma_setup,
--	.bmdma_start 	= ata_bmdma_start,
-+	.inherits	= &cmd64x_base_ops,
- 	.bmdma_stop	= cmd648_bmdma_stop,
--	.bmdma_status 	= ata_bmdma_status,
--
--	.qc_prep 	= ata_qc_prep,
--	.qc_issue	= ata_qc_issue_prot,
--
--	.data_xfer	= ata_data_xfer,
--
--	.irq_handler	= ata_interrupt,
--	.irq_clear	= ata_bmdma_irq_clear,
--	.irq_on		= ata_irq_on,
--
--	.port_start	= ata_sff_port_start,
-+	.cable_detect	= cmd648_cable_detect,
- };
- 
- static int cmd64x_init_one(struct pci_dev *pdev, const struct pci_device_id *id)
-diff --git a/drivers/ata/pata_cs5520.c b/drivers/ata/pata_cs5520.c
-index 5614e76..69a1077 100644
---- a/drivers/ata/pata_cs5520.c
-+++ b/drivers/ata/pata_cs5520.c
-@@ -140,52 +140,16 @@ static void cs5520_set_piomode(struct ata_port *ap, struct ata_device *adev)
- }
- 
- static struct scsi_host_template cs5520_sht = {
--	.module			= THIS_MODULE,
--	.name			= DRV_NAME,
--	.ioctl			= ata_scsi_ioctl,
--	.queuecommand		= ata_scsi_queuecmd,
--	.can_queue		= ATA_DEF_QUEUE,
--	.this_id		= ATA_SHT_THIS_ID,
-+	ATA_BMDMA_SHT(DRV_NAME),
- 	.sg_tablesize		= LIBATA_DUMB_MAX_PRD,
--	.cmd_per_lun		= ATA_SHT_CMD_PER_LUN,
--	.emulated		= ATA_SHT_EMULATED,
--	.use_clustering		= ATA_SHT_USE_CLUSTERING,
--	.proc_name		= DRV_NAME,
--	.dma_boundary		= ATA_DMA_BOUNDARY,
--	.slave_configure	= ata_scsi_slave_config,
--	.slave_destroy		= ata_scsi_slave_destroy,
--	.bios_param		= ata_std_bios_param,
- };
- 
- static struct ata_port_operations cs5520_port_ops = {
-+	.inherits		= &ata_bmdma_port_ops,
-+	.qc_prep		= ata_dumb_qc_prep,
-+	.cable_detect		= ata_cable_40wire,
- 	.set_piomode		= cs5520_set_piomode,
- 	.set_dmamode		= cs5520_set_dmamode,
--	.mode_filter		= ata_pci_default_filter,
--
--	.tf_load		= ata_tf_load,
--	.tf_read		= ata_tf_read,
--	.check_status		= ata_check_status,
--	.exec_command		= ata_exec_command,
--	.dev_select		= ata_std_dev_select,
--
--	.freeze			= ata_bmdma_freeze,
--	.thaw			= ata_bmdma_thaw,
--	.error_handler		= ata_bmdma_error_handler,
--	.post_internal_cmd	= ata_bmdma_post_internal_cmd,
--	.cable_detect		= ata_cable_40wire,
--
--	.bmdma_setup		= ata_bmdma_setup,
--	.bmdma_start		= ata_bmdma_start,
--	.bmdma_stop		= ata_bmdma_stop,
--	.bmdma_status		= ata_bmdma_status,
--	.qc_prep		= ata_dumb_qc_prep,
--	.qc_issue		= ata_qc_issue_prot,
--	.data_xfer		= ata_data_xfer,
--
--	.irq_clear		= ata_bmdma_irq_clear,
--	.irq_on			= ata_irq_on,
--
--	.port_start		= ata_sff_port_start,
- };
- 
- static int __devinit cs5520_init_one(struct pci_dev *pdev, const struct pci_device_id *id)
-diff --git a/drivers/ata/pata_cs5530.c b/drivers/ata/pata_cs5530.c
-index f876aed..e4a16a5 100644
---- a/drivers/ata/pata_cs5530.c
-+++ b/drivers/ata/pata_cs5530.c
-@@ -161,55 +161,19 @@ static unsigned int cs5530_qc_issue_prot(struct ata_queued_cmd *qc)
- }
- 
- static struct scsi_host_template cs5530_sht = {
--	.module			= THIS_MODULE,
--	.name			= DRV_NAME,
--	.ioctl			= ata_scsi_ioctl,
--	.queuecommand		= ata_scsi_queuecmd,
--	.can_queue		= ATA_DEF_QUEUE,
--	.this_id		= ATA_SHT_THIS_ID,
--	.sg_tablesize		= LIBATA_DUMB_MAX_PRD,
--	.cmd_per_lun		= ATA_SHT_CMD_PER_LUN,
--	.emulated		= ATA_SHT_EMULATED,
--	.use_clustering		= ATA_SHT_USE_CLUSTERING,
--	.proc_name		= DRV_NAME,
--	.dma_boundary		= ATA_DMA_BOUNDARY,
--	.slave_configure	= ata_scsi_slave_config,
--	.slave_destroy		= ata_scsi_slave_destroy,
--	.bios_param		= ata_std_bios_param,
-+	ATA_BMDMA_SHT(DRV_NAME),
-+	.sg_tablesize	= LIBATA_DUMB_MAX_PRD,
- };
- 
- static struct ata_port_operations cs5530_port_ops = {
--	.set_piomode	= cs5530_set_piomode,
--	.set_dmamode	= cs5530_set_dmamode,
--	.mode_filter	= ata_pci_default_filter,
--
--	.tf_load	= ata_tf_load,
--	.tf_read	= ata_tf_read,
--	.check_status 	= ata_check_status,
--	.exec_command	= ata_exec_command,
--	.dev_select 	= ata_std_dev_select,
--
--	.bmdma_setup 	= ata_bmdma_setup,
--	.bmdma_start 	= ata_bmdma_start,
--	.bmdma_stop	= ata_bmdma_stop,
--	.bmdma_status 	= ata_bmdma_status,
--
--	.freeze		= ata_bmdma_freeze,
--	.thaw		= ata_bmdma_thaw,
--	.error_handler	= ata_bmdma_error_handler,
--	.post_internal_cmd = ata_bmdma_post_internal_cmd,
--	.cable_detect	= ata_cable_40wire,
-+	.inherits	= &ata_bmdma_port_ops,
- 
- 	.qc_prep 	= ata_dumb_qc_prep,
- 	.qc_issue	= cs5530_qc_issue_prot,
- 
--	.data_xfer	= ata_data_xfer,
--
--	.irq_handler	= ata_interrupt,
--	.irq_clear	= ata_bmdma_irq_clear,
--	.irq_on		= ata_irq_on,
--
--	.port_start	= ata_sff_port_start,
-+	.cable_detect	= ata_cable_40wire,
-+	.set_piomode	= cs5530_set_piomode,
-+	.set_dmamode	= cs5530_set_dmamode,
- };
- 
- static const struct dmi_system_id palmax_dmi_table[] = {
-diff --git a/drivers/ata/pata_cs5535.c b/drivers/ata/pata_cs5535.c
-index 0132453..f910a8a 100644
---- a/drivers/ata/pata_cs5535.c
-+++ b/drivers/ata/pata_cs5535.c
-@@ -158,55 +158,14 @@ static void cs5535_set_dmamode(struct ata_port *ap, struct ata_device *adev)
- }
- 
- static struct scsi_host_template cs5535_sht = {
--	.module			= THIS_MODULE,
--	.name			= DRV_NAME,
--	.ioctl			= ata_scsi_ioctl,
--	.queuecommand		= ata_scsi_queuecmd,
--	.can_queue		= ATA_DEF_QUEUE,
--	.this_id		= ATA_SHT_THIS_ID,
--	.sg_tablesize		= LIBATA_MAX_PRD,
--	.cmd_per_lun		= ATA_SHT_CMD_PER_LUN,
--	.emulated		= ATA_SHT_EMULATED,
--	.use_clustering		= ATA_SHT_USE_CLUSTERING,
--	.proc_name		= DRV_NAME,
--	.dma_boundary		= ATA_DMA_BOUNDARY,
--	.slave_configure	= ata_scsi_slave_config,
--	.slave_destroy		= ata_scsi_slave_destroy,
--	.bios_param		= ata_std_bios_param,
-+	ATA_BMDMA_SHT(DRV_NAME),
- };
- 
- static struct ata_port_operations cs5535_port_ops = {
-+	.inherits	= &ata_bmdma_port_ops,
-+	.cable_detect	= cs5535_cable_detect,
- 	.set_piomode	= cs5535_set_piomode,
- 	.set_dmamode	= cs5535_set_dmamode,
--	.mode_filter	= ata_pci_default_filter,
--
--	.tf_load	= ata_tf_load,
--	.tf_read	= ata_tf_read,
--	.check_status 	= ata_check_status,
--	.exec_command	= ata_exec_command,
--	.dev_select 	= ata_std_dev_select,
--
--	.freeze		= ata_bmdma_freeze,
--	.thaw		= ata_bmdma_thaw,
--	.error_handler	= ata_bmdma_error_handler,
--	.post_internal_cmd = ata_bmdma_post_internal_cmd,
--	.cable_detect	= cs5535_cable_detect,
--
--	.bmdma_setup 	= ata_bmdma_setup,
--	.bmdma_start 	= ata_bmdma_start,
--	.bmdma_stop	= ata_bmdma_stop,
--	.bmdma_status 	= ata_bmdma_status,
--
--	.qc_prep 	= ata_qc_prep,
--	.qc_issue	= ata_qc_issue_prot,
--
--	.data_xfer	= ata_data_xfer,
--
--	.irq_handler	= ata_interrupt,
--	.irq_clear	= ata_bmdma_irq_clear,
--	.irq_on		= ata_irq_on,
--
--	.port_start	= ata_sff_port_start,
- };
- 
- /**
-diff --git a/drivers/ata/pata_cs5536.c b/drivers/ata/pata_cs5536.c
-index c59c806..69d63aa 100644
---- a/drivers/ata/pata_cs5536.c
-+++ b/drivers/ata/pata_cs5536.c
-@@ -221,55 +221,14 @@ static void cs5536_set_dmamode(struct ata_port *ap, struct ata_device *adev)
- }
- 
- static struct scsi_host_template cs5536_sht = {
--	.module			= THIS_MODULE,
--	.name			= DRV_NAME,
--	.ioctl			= ata_scsi_ioctl,
--	.queuecommand		= ata_scsi_queuecmd,
--	.can_queue		= ATA_DEF_QUEUE,
--	.this_id		= ATA_SHT_THIS_ID,
--	.sg_tablesize		= LIBATA_MAX_PRD,
--	.cmd_per_lun		= ATA_SHT_CMD_PER_LUN,
--	.emulated		= ATA_SHT_EMULATED,
--	.use_clustering		= ATA_SHT_USE_CLUSTERING,
--	.proc_name		= DRV_NAME,
--	.dma_boundary		= ATA_DMA_BOUNDARY,
--	.slave_configure	= ata_scsi_slave_config,
--	.slave_destroy		= ata_scsi_slave_destroy,
--	.bios_param		= ata_std_bios_param,
-+	ATA_BMDMA_SHT(DRV_NAME),
- };
- 
- static struct ata_port_operations cs5536_port_ops = {
-+	.inherits		= &ata_bmdma_port_ops,
-+	.cable_detect		= cs5536_cable_detect,
- 	.set_piomode		= cs5536_set_piomode,
- 	.set_dmamode		= cs5536_set_dmamode,
--	.mode_filter		= ata_pci_default_filter,
--
--	.tf_load		= ata_tf_load,
--	.tf_read		= ata_tf_read,
--	.check_status		= ata_check_status,
--	.exec_command		= ata_exec_command,
--	.dev_select		= ata_std_dev_select,
--
--	.freeze			= ata_bmdma_freeze,
--	.thaw			= ata_bmdma_thaw,
--	.error_handler		= ata_bmdma_error_handler,
--	.post_internal_cmd	= ata_bmdma_post_internal_cmd,
--	.cable_detect		= cs5536_cable_detect,
--
--	.bmdma_setup		= ata_bmdma_setup,
--	.bmdma_start		= ata_bmdma_start,
--	.bmdma_stop		= ata_bmdma_stop,
--	.bmdma_status		= ata_bmdma_status,
--
--	.qc_prep		= ata_qc_prep,
--	.qc_issue		= ata_qc_issue_prot,
--
--	.data_xfer		= ata_data_xfer,
--
--	.irq_handler		= ata_interrupt,
--	.irq_clear		= ata_bmdma_irq_clear,
--	.irq_on			= ata_irq_on,
--
--	.port_start		= ata_sff_port_start,
- };
- 
- /**
-diff --git a/drivers/ata/pata_cypress.c b/drivers/ata/pata_cypress.c
-index fc5f9c4..c459553 100644
---- a/drivers/ata/pata_cypress.c
-+++ b/drivers/ata/pata_cypress.c
-@@ -110,55 +110,14 @@ static void cy82c693_set_dmamode(struct ata_port *ap, struct ata_device *adev)
- }
- 
- static struct scsi_host_template cy82c693_sht = {
--	.module			= THIS_MODULE,
--	.name			= DRV_NAME,
--	.ioctl			= ata_scsi_ioctl,
--	.queuecommand		= ata_scsi_queuecmd,
--	.can_queue		= ATA_DEF_QUEUE,
--	.this_id		= ATA_SHT_THIS_ID,
--	.sg_tablesize		= LIBATA_MAX_PRD,
--	.cmd_per_lun		= ATA_SHT_CMD_PER_LUN,
--	.emulated		= ATA_SHT_EMULATED,
--	.use_clustering		= ATA_SHT_USE_CLUSTERING,
--	.proc_name		= DRV_NAME,
--	.dma_boundary		= ATA_DMA_BOUNDARY,
--	.slave_configure	= ata_scsi_slave_config,
--	.slave_destroy		= ata_scsi_slave_destroy,
--	.bios_param		= ata_std_bios_param,
-+	ATA_BMDMA_SHT(DRV_NAME),
- };
- 
- static struct ata_port_operations cy82c693_port_ops = {
-+	.inherits	= &ata_bmdma_port_ops,
-+	.cable_detect	= ata_cable_40wire,
- 	.set_piomode	= cy82c693_set_piomode,
- 	.set_dmamode	= cy82c693_set_dmamode,
--	.mode_filter	= ata_pci_default_filter,
--
--	.tf_load	= ata_tf_load,
--	.tf_read	= ata_tf_read,
--	.check_status 	= ata_check_status,
--	.exec_command	= ata_exec_command,
--	.dev_select 	= ata_std_dev_select,
--
--	.freeze		= ata_bmdma_freeze,
--	.thaw		= ata_bmdma_thaw,
--	.error_handler	= ata_bmdma_error_handler,
--	.post_internal_cmd = ata_bmdma_post_internal_cmd,
--	.cable_detect	= ata_cable_40wire,
--
--	.bmdma_setup 	= ata_bmdma_setup,
--	.bmdma_start 	= ata_bmdma_start,
--	.bmdma_stop	= ata_bmdma_stop,
--	.bmdma_status 	= ata_bmdma_status,
--
--	.qc_prep 	= ata_qc_prep,
--	.qc_issue	= ata_qc_issue_prot,
--
--	.data_xfer	= ata_data_xfer,
--
--	.irq_handler	= ata_interrupt,
--	.irq_clear	= ata_bmdma_irq_clear,
--	.irq_on		= ata_irq_on,
--
--	.port_start	= ata_sff_port_start,
- };
- 
- static int cy82c693_init_one(struct pci_dev *pdev, const struct pci_device_id *id)
-diff --git a/drivers/ata/pata_efar.c b/drivers/ata/pata_efar.c
-index 043dcd3..a6129bd 100644
---- a/drivers/ata/pata_efar.c
-+++ b/drivers/ata/pata_efar.c
-@@ -233,53 +233,15 @@ static void efar_set_dmamode (struct ata_port *ap, struct ata_device *adev)
- }
- 
- static struct scsi_host_template efar_sht = {
--	.module			= THIS_MODULE,
--	.name			= DRV_NAME,
--	.ioctl			= ata_scsi_ioctl,
--	.queuecommand		= ata_scsi_queuecmd,
--	.can_queue		= ATA_DEF_QUEUE,
--	.this_id		= ATA_SHT_THIS_ID,
--	.sg_tablesize		= LIBATA_MAX_PRD,
--	.cmd_per_lun		= ATA_SHT_CMD_PER_LUN,
--	.emulated		= ATA_SHT_EMULATED,
--	.use_clustering		= ATA_SHT_USE_CLUSTERING,
--	.proc_name		= DRV_NAME,
--	.dma_boundary		= ATA_DMA_BOUNDARY,
--	.slave_configure	= ata_scsi_slave_config,
--	.slave_destroy		= ata_scsi_slave_destroy,
--	.bios_param		= ata_std_bios_param,
-+	ATA_BMDMA_SHT(DRV_NAME),
- };
- 
--static const struct ata_port_operations efar_ops = {
-+static struct ata_port_operations efar_ops = {
-+	.inherits		= &ata_bmdma_port_ops,
-+	.cable_detect		= efar_cable_detect,
- 	.set_piomode		= efar_set_piomode,
- 	.set_dmamode		= efar_set_dmamode,
--	.mode_filter		= ata_pci_default_filter,
--
--	.tf_load		= ata_tf_load,
--	.tf_read		= ata_tf_read,
--	.check_status		= ata_check_status,
--	.exec_command		= ata_exec_command,
--	.dev_select		= ata_std_dev_select,
--
--	.freeze			= ata_bmdma_freeze,
--	.thaw			= ata_bmdma_thaw,
- 	.error_handler		= efar_error_handler,
--	.post_internal_cmd	= ata_bmdma_post_internal_cmd,
--	.cable_detect		= efar_cable_detect,
--
--	.bmdma_setup		= ata_bmdma_setup,
--	.bmdma_start		= ata_bmdma_start,
--	.bmdma_stop		= ata_bmdma_stop,
--	.bmdma_status		= ata_bmdma_status,
--	.qc_prep		= ata_qc_prep,
--	.qc_issue		= ata_qc_issue_prot,
--	.data_xfer		= ata_data_xfer,
--
--	.irq_handler		= ata_interrupt,
--	.irq_clear		= ata_bmdma_irq_clear,
--	.irq_on			= ata_irq_on,
--
--	.port_start		= ata_sff_port_start,
- };
- 
- 
-diff --git a/drivers/ata/pata_hpt366.c b/drivers/ata/pata_hpt366.c
-index 6f63b73..9fa47d4 100644
---- a/drivers/ata/pata_hpt366.c
-+++ b/drivers/ata/pata_hpt366.c
-@@ -290,21 +290,7 @@ static void hpt366_set_dmamode(struct ata_port *ap, struct ata_device *adev)
- }
- 
- static struct scsi_host_template hpt36x_sht = {
--	.module			= THIS_MODULE,
--	.name			= DRV_NAME,
--	.ioctl			= ata_scsi_ioctl,
--	.queuecommand		= ata_scsi_queuecmd,
--	.can_queue		= ATA_DEF_QUEUE,
--	.this_id		= ATA_SHT_THIS_ID,
--	.sg_tablesize		= LIBATA_MAX_PRD,
--	.cmd_per_lun		= ATA_SHT_CMD_PER_LUN,
--	.emulated		= ATA_SHT_EMULATED,
--	.use_clustering		= ATA_SHT_USE_CLUSTERING,
--	.proc_name		= DRV_NAME,
--	.dma_boundary		= ATA_DMA_BOUNDARY,
--	.slave_configure	= ata_scsi_slave_config,
--	.slave_destroy		= ata_scsi_slave_destroy,
--	.bios_param		= ata_std_bios_param,
-+	ATA_BMDMA_SHT(DRV_NAME),
- };
- 
- /*
-@@ -312,37 +298,11 @@ static struct scsi_host_template hpt36x_sht = {
-  */
- 
- static struct ata_port_operations hpt366_port_ops = {
-+	.inherits	= &ata_bmdma_port_ops,
-+	.cable_detect	= hpt36x_cable_detect,
-+	.mode_filter	= hpt366_filter,
- 	.set_piomode	= hpt366_set_piomode,
- 	.set_dmamode	= hpt366_set_dmamode,
--	.mode_filter	= hpt366_filter,
--
--	.tf_load	= ata_tf_load,
--	.tf_read	= ata_tf_read,
--	.check_status 	= ata_check_status,
--	.exec_command	= ata_exec_command,
--	.dev_select 	= ata_std_dev_select,
--
--	.freeze		= ata_bmdma_freeze,
--	.thaw		= ata_bmdma_thaw,
--	.error_handler	= ata_bmdma_error_handler,
--	.post_internal_cmd = ata_bmdma_post_internal_cmd,
--	.cable_detect	= hpt36x_cable_detect,
--
--	.bmdma_setup 	= ata_bmdma_setup,
--	.bmdma_start 	= ata_bmdma_start,
--	.bmdma_stop	= ata_bmdma_stop,
--	.bmdma_status 	= ata_bmdma_status,
--
--	.qc_prep 	= ata_qc_prep,
--	.qc_issue	= ata_qc_issue_prot,
--
--	.data_xfer	= ata_data_xfer,
--
--	.irq_handler	= ata_interrupt,
--	.irq_clear	= ata_bmdma_irq_clear,
--	.irq_on		= ata_irq_on,
--
--	.port_start	= ata_sff_port_start,
- };
- 
- /**
-diff --git a/drivers/ata/pata_hpt37x.c b/drivers/ata/pata_hpt37x.c
-index 7a69f36..a9d10c6 100644
---- a/drivers/ata/pata_hpt37x.c
-+++ b/drivers/ata/pata_hpt37x.c
-@@ -619,21 +619,7 @@ static void hpt37x_bmdma_stop(struct ata_queued_cmd *qc)
- 
- 
- static struct scsi_host_template hpt37x_sht = {
--	.module			= THIS_MODULE,
--	.name			= DRV_NAME,
--	.ioctl			= ata_scsi_ioctl,
--	.queuecommand		= ata_scsi_queuecmd,
--	.can_queue		= ATA_DEF_QUEUE,
--	.this_id		= ATA_SHT_THIS_ID,
--	.sg_tablesize		= LIBATA_MAX_PRD,
--	.cmd_per_lun		= ATA_SHT_CMD_PER_LUN,
--	.emulated		= ATA_SHT_EMULATED,
--	.use_clustering		= ATA_SHT_USE_CLUSTERING,
--	.proc_name		= DRV_NAME,
--	.dma_boundary		= ATA_DMA_BOUNDARY,
--	.slave_configure	= ata_scsi_slave_config,
--	.slave_destroy		= ata_scsi_slave_destroy,
--	.bios_param		= ata_std_bios_param,
-+	ATA_BMDMA_SHT(DRV_NAME),
- };
- 
- /*
-@@ -641,36 +627,15 @@ static struct scsi_host_template hpt37x_sht = {
-  */
- 
- static struct ata_port_operations hpt370_port_ops = {
--	.set_piomode	= hpt370_set_piomode,
--	.set_dmamode	= hpt370_set_dmamode,
--	.mode_filter	= hpt370_filter,
--
--	.tf_load	= ata_tf_load,
--	.tf_read	= ata_tf_read,
--	.check_status 	= ata_check_status,
--	.exec_command	= ata_exec_command,
--	.dev_select 	= ata_std_dev_select,
--
--	.freeze		= ata_bmdma_freeze,
--	.thaw		= ata_bmdma_thaw,
--	.error_handler	= hpt37x_error_handler,
--	.post_internal_cmd = ata_bmdma_post_internal_cmd,
-+	.inherits	= &ata_bmdma_port_ops,
- 
--	.bmdma_setup 	= ata_bmdma_setup,
- 	.bmdma_start 	= hpt370_bmdma_start,
- 	.bmdma_stop	= hpt370_bmdma_stop,
--	.bmdma_status 	= ata_bmdma_status,
- 
--	.qc_prep 	= ata_qc_prep,
--	.qc_issue	= ata_qc_issue_prot,
--
--	.data_xfer	= ata_data_xfer,
--
--	.irq_handler	= ata_interrupt,
--	.irq_clear	= ata_bmdma_irq_clear,
--	.irq_on		= ata_irq_on,
--
--	.port_start	= ata_sff_port_start,
-+	.mode_filter	= hpt370_filter,
-+	.set_piomode	= hpt370_set_piomode,
-+	.set_dmamode	= hpt370_set_dmamode,
-+	.error_handler	= hpt37x_error_handler,
- };
- 
- /*
-@@ -678,36 +643,8 @@ static struct ata_port_operations hpt370_port_ops = {
-  */
- 
- static struct ata_port_operations hpt370a_port_ops = {
--	.set_piomode	= hpt370_set_piomode,
--	.set_dmamode	= hpt370_set_dmamode,
-+	.inherits	= &hpt370_port_ops,
- 	.mode_filter	= hpt370a_filter,
--
--	.tf_load	= ata_tf_load,
--	.tf_read	= ata_tf_read,
--	.check_status 	= ata_check_status,
--	.exec_command	= ata_exec_command,
--	.dev_select 	= ata_std_dev_select,
--
--	.freeze		= ata_bmdma_freeze,
--	.thaw		= ata_bmdma_thaw,
--	.error_handler	= hpt37x_error_handler,
--	.post_internal_cmd = ata_bmdma_post_internal_cmd,
--
--	.bmdma_setup 	= ata_bmdma_setup,
--	.bmdma_start 	= hpt370_bmdma_start,
--	.bmdma_stop	= hpt370_bmdma_stop,
--	.bmdma_status 	= ata_bmdma_status,
--
--	.qc_prep 	= ata_qc_prep,
--	.qc_issue	= ata_qc_issue_prot,
--
--	.data_xfer	= ata_data_xfer,
--
--	.irq_handler	= ata_interrupt,
--	.irq_clear	= ata_bmdma_irq_clear,
--	.irq_on		= ata_irq_on,
--
--	.port_start	= ata_sff_port_start,
- };
- 
- /*
-@@ -716,36 +653,13 @@ static struct ata_port_operations hpt370a_port_ops = {
-  */
- 
- static struct ata_port_operations hpt372_port_ops = {
--	.set_piomode	= hpt372_set_piomode,
--	.set_dmamode	= hpt372_set_dmamode,
--	.mode_filter	= ata_pci_default_filter,
--
--	.tf_load	= ata_tf_load,
--	.tf_read	= ata_tf_read,
--	.check_status 	= ata_check_status,
--	.exec_command	= ata_exec_command,
--	.dev_select 	= ata_std_dev_select,
--
--	.freeze		= ata_bmdma_freeze,
--	.thaw		= ata_bmdma_thaw,
--	.error_handler	= hpt37x_error_handler,
--	.post_internal_cmd = ata_bmdma_post_internal_cmd,
-+	.inherits	= &ata_bmdma_port_ops,
- 
--	.bmdma_setup 	= ata_bmdma_setup,
--	.bmdma_start 	= ata_bmdma_start,
- 	.bmdma_stop	= hpt37x_bmdma_stop,
--	.bmdma_status 	= ata_bmdma_status,
--
--	.qc_prep 	= ata_qc_prep,
--	.qc_issue	= ata_qc_issue_prot,
--
--	.data_xfer	= ata_data_xfer,
- 
--	.irq_handler	= ata_interrupt,
--	.irq_clear	= ata_bmdma_irq_clear,
--	.irq_on		= ata_irq_on,
--
--	.port_start	= ata_sff_port_start,
-+	.set_piomode	= hpt372_set_piomode,
-+	.set_dmamode	= hpt372_set_dmamode,
-+	.error_handler	= hpt37x_error_handler,
- };
- 
- /*
-@@ -754,36 +668,8 @@ static struct ata_port_operations hpt372_port_ops = {
-  */
- 
- static struct ata_port_operations hpt374_port_ops = {
--	.set_piomode	= hpt372_set_piomode,
--	.set_dmamode	= hpt372_set_dmamode,
--	.mode_filter	= ata_pci_default_filter,
--
--	.tf_load	= ata_tf_load,
--	.tf_read	= ata_tf_read,
--	.check_status 	= ata_check_status,
--	.exec_command	= ata_exec_command,
--	.dev_select 	= ata_std_dev_select,
--
--	.freeze		= ata_bmdma_freeze,
--	.thaw		= ata_bmdma_thaw,
-+	.inherits	= &hpt372_port_ops,
- 	.error_handler	= hpt374_error_handler,
--	.post_internal_cmd = ata_bmdma_post_internal_cmd,
--
--	.bmdma_setup 	= ata_bmdma_setup,
--	.bmdma_start 	= ata_bmdma_start,
--	.bmdma_stop	= hpt37x_bmdma_stop,
--	.bmdma_status 	= ata_bmdma_status,
--
--	.qc_prep 	= ata_qc_prep,
--	.qc_issue	= ata_qc_issue_prot,
--
--	.data_xfer	= ata_data_xfer,
--
--	.irq_handler	= ata_interrupt,
--	.irq_clear	= ata_bmdma_irq_clear,
--	.irq_on		= ata_irq_on,
--
--	.port_start	= ata_sff_port_start,
- };
- 
- /**
-diff --git a/drivers/ata/pata_hpt3x2n.c b/drivers/ata/pata_hpt3x2n.c
-index 3a517cb..b77b127 100644
---- a/drivers/ata/pata_hpt3x2n.c
-+++ b/drivers/ata/pata_hpt3x2n.c
-@@ -339,21 +339,7 @@ static unsigned int hpt3x2n_qc_issue_prot(struct ata_queued_cmd *qc)
- }
- 
- static struct scsi_host_template hpt3x2n_sht = {
--	.module			= THIS_MODULE,
--	.name			= DRV_NAME,
--	.ioctl			= ata_scsi_ioctl,
--	.queuecommand		= ata_scsi_queuecmd,
--	.can_queue		= ATA_DEF_QUEUE,
--	.this_id		= ATA_SHT_THIS_ID,
--	.sg_tablesize		= LIBATA_MAX_PRD,
--	.cmd_per_lun		= ATA_SHT_CMD_PER_LUN,
--	.emulated		= ATA_SHT_EMULATED,
--	.use_clustering		= ATA_SHT_USE_CLUSTERING,
--	.proc_name		= DRV_NAME,
--	.dma_boundary		= ATA_DMA_BOUNDARY,
--	.slave_configure	= ata_scsi_slave_config,
--	.slave_destroy		= ata_scsi_slave_destroy,
--	.bios_param		= ata_std_bios_param,
-+	ATA_BMDMA_SHT(DRV_NAME),
- };
- 
- /*
-@@ -361,37 +347,15 @@ static struct scsi_host_template hpt3x2n_sht = {
-  */
- 
- static struct ata_port_operations hpt3x2n_port_ops = {
--	.set_piomode	= hpt3x2n_set_piomode,
--	.set_dmamode	= hpt3x2n_set_dmamode,
--	.mode_filter	= ata_pci_default_filter,
-+	.inherits	= &ata_bmdma_port_ops,
- 
--	.tf_load	= ata_tf_load,
--	.tf_read	= ata_tf_read,
--	.check_status 	= ata_check_status,
--	.exec_command	= ata_exec_command,
--	.dev_select 	= ata_std_dev_select,
--
--	.freeze		= ata_bmdma_freeze,
--	.thaw		= ata_bmdma_thaw,
--	.error_handler	= hpt3x2n_error_handler,
--	.post_internal_cmd = ata_bmdma_post_internal_cmd,
--	.cable_detect	= hpt3x2n_cable_detect,
--
--	.bmdma_setup 	= ata_bmdma_setup,
--	.bmdma_start 	= ata_bmdma_start,
- 	.bmdma_stop	= hpt3x2n_bmdma_stop,
--	.bmdma_status 	= ata_bmdma_status,
--
--	.qc_prep 	= ata_qc_prep,
- 	.qc_issue	= hpt3x2n_qc_issue_prot,
- 
--	.data_xfer	= ata_data_xfer,
--
--	.irq_handler	= ata_interrupt,
--	.irq_clear	= ata_bmdma_irq_clear,
--	.irq_on		= ata_irq_on,
--
--	.port_start	= ata_sff_port_start,
-+	.cable_detect	= hpt3x2n_cable_detect,
-+	.set_piomode	= hpt3x2n_set_piomode,
-+	.set_dmamode	= hpt3x2n_set_dmamode,
-+	.error_handler	= hpt3x2n_error_handler,
- };
- 
- /**
-diff --git a/drivers/ata/pata_hpt3x3.c b/drivers/ata/pata_hpt3x3.c
-index c09f95a..8857d02 100644
---- a/drivers/ata/pata_hpt3x3.c
-+++ b/drivers/ata/pata_hpt3x3.c
-@@ -102,58 +102,17 @@ static int hpt3x3_atapi_dma(struct ata_queued_cmd *qc)
- }
- 
- static struct scsi_host_template hpt3x3_sht = {
--	.module			= THIS_MODULE,
--	.name			= DRV_NAME,
--	.ioctl			= ata_scsi_ioctl,
--	.queuecommand		= ata_scsi_queuecmd,
--	.can_queue		= ATA_DEF_QUEUE,
--	.this_id		= ATA_SHT_THIS_ID,
--	.sg_tablesize		= LIBATA_MAX_PRD,
--	.cmd_per_lun		= ATA_SHT_CMD_PER_LUN,
--	.emulated		= ATA_SHT_EMULATED,
--	.use_clustering		= ATA_SHT_USE_CLUSTERING,
--	.proc_name		= DRV_NAME,
--	.dma_boundary		= ATA_DMA_BOUNDARY,
--	.slave_configure	= ata_scsi_slave_config,
--	.slave_destroy		= ata_scsi_slave_destroy,
--	.bios_param		= ata_std_bios_param,
-+	ATA_BMDMA_SHT(DRV_NAME),
- };
- 
- static struct ata_port_operations hpt3x3_port_ops = {
-+	.inherits	= &ata_bmdma_port_ops,
-+	.check_atapi_dma= hpt3x3_atapi_dma,
-+	.cable_detect	= ata_cable_40wire,
- 	.set_piomode	= hpt3x3_set_piomode,
- #if defined(CONFIG_PATA_HPT3X3_DMA)
- 	.set_dmamode	= hpt3x3_set_dmamode,
- #endif
--	.mode_filter	= ata_pci_default_filter,
--
--	.tf_load	= ata_tf_load,
--	.tf_read	= ata_tf_read,
--	.check_status 	= ata_check_status,
--	.exec_command	= ata_exec_command,
--	.dev_select 	= ata_std_dev_select,
--
--	.freeze		= ata_bmdma_freeze,
--	.thaw		= ata_bmdma_thaw,
--	.error_handler	= ata_bmdma_error_handler,
--	.post_internal_cmd = ata_bmdma_post_internal_cmd,
--	.cable_detect	= ata_cable_40wire,
--
--	.bmdma_setup 	= ata_bmdma_setup,
--	.bmdma_start 	= ata_bmdma_start,
--	.bmdma_stop	= ata_bmdma_stop,
--	.bmdma_status 	= ata_bmdma_status,
--	.check_atapi_dma= hpt3x3_atapi_dma,
--
--	.qc_prep 	= ata_qc_prep,
--	.qc_issue	= ata_qc_issue_prot,
--
--	.data_xfer	= ata_data_xfer,
--
--	.irq_handler	= ata_interrupt,
--	.irq_clear	= ata_bmdma_irq_clear,
--	.irq_on		= ata_irq_on,
--
--	.port_start	= ata_sff_port_start,
- };
- 
- /**
-diff --git a/drivers/ata/pata_icside.c b/drivers/ata/pata_icside.c
-index 121fe52..f0ec997 100644
---- a/drivers/ata/pata_icside.c
-+++ b/drivers/ata/pata_icside.c
-@@ -311,21 +311,9 @@ static int pata_icside_port_start(struct ata_port *ap)
- }
- 
- static struct scsi_host_template pata_icside_sht = {
--	.module			= THIS_MODULE,
--	.name			= DRV_NAME,
--	.ioctl			= ata_scsi_ioctl,
--	.queuecommand		= ata_scsi_queuecmd,
--	.can_queue		= ATA_DEF_QUEUE,
--	.this_id		= ATA_SHT_THIS_ID,
-+	ATA_BASE_SHT(DRV_NAME),
- 	.sg_tablesize		= PATA_ICSIDE_MAX_SG,
--	.cmd_per_lun		= ATA_SHT_CMD_PER_LUN,
--	.emulated		= ATA_SHT_EMULATED,
--	.use_clustering		= ATA_SHT_USE_CLUSTERING,
--	.proc_name		= DRV_NAME,
- 	.dma_boundary		= ~0, /* no dma boundaries */
--	.slave_configure	= ata_scsi_slave_config,
--	.slave_destroy		= ata_scsi_slave_destroy,
--	.bios_param		= ata_std_bios_param,
- };
- 
- static void pata_icside_postreset(struct ata_link *link, unsigned int *classes)
-@@ -357,37 +345,21 @@ static void pata_icside_error_handler(struct ata_port *ap)
- }
- 
- static struct ata_port_operations pata_icside_port_ops = {
--	.set_dmamode		= pata_icside_set_dmamode,
--
--	.tf_load		= ata_tf_load,
--	.tf_read		= ata_tf_read,
--	.exec_command		= ata_exec_command,
--	.check_status		= ata_check_status,
--	.dev_select		= ata_std_dev_select,
--
--	.cable_detect		= ata_cable_40wire,
--
--	.bmdma_setup		= pata_icside_bmdma_setup,
--	.bmdma_start		= pata_icside_bmdma_start,
--
--	.data_xfer		= ata_data_xfer_noirq,
--
-+	.inherits		= &ata_sff_port_ops,
- 	/* no need to build any PRD tables for DMA */
- 	.qc_prep		= ata_noop_qc_prep,
--	.qc_issue		= ata_qc_issue_prot,
-+	.data_xfer		= ata_data_xfer_noirq,
-+	.bmdma_setup		= pata_icside_bmdma_setup,
-+	.bmdma_start		= pata_icside_bmdma_start,
-+	.bmdma_stop		= pata_icside_bmdma_stop,
-+	.bmdma_status		= pata_icside_bmdma_status,
- 
--	.freeze			= ata_bmdma_freeze,
--	.thaw			= ata_bmdma_thaw,
-+	.cable_detect		= ata_cable_40wire,
-+	.set_dmamode		= pata_icside_set_dmamode,
- 	.error_handler		= pata_icside_error_handler,
- 	.post_internal_cmd	= pata_icside_bmdma_stop,
- 
--	.irq_clear		= ata_noop_irq_clear,
--	.irq_on			= ata_irq_on,
--
- 	.port_start		= pata_icside_port_start,
--
--	.bmdma_stop		= pata_icside_bmdma_stop,
--	.bmdma_status		= pata_icside_bmdma_status,
- };
- 
- static void __devinit
-diff --git a/drivers/ata/pata_isapnp.c b/drivers/ata/pata_isapnp.c
-index ef561de..085913e 100644
---- a/drivers/ata/pata_isapnp.c
-+++ b/drivers/ata/pata_isapnp.c
-@@ -20,45 +20,12 @@
- #define DRV_VERSION "0.2.2"
- 
- static struct scsi_host_template isapnp_sht = {
--	.module			= THIS_MODULE,
--	.name			= DRV_NAME,
--	.ioctl			= ata_scsi_ioctl,
--	.queuecommand		= ata_scsi_queuecmd,
--	.can_queue		= ATA_DEF_QUEUE,
--	.this_id		= ATA_SHT_THIS_ID,
--	.sg_tablesize		= LIBATA_MAX_PRD,
--	.cmd_per_lun		= ATA_SHT_CMD_PER_LUN,
--	.emulated		= ATA_SHT_EMULATED,
--	.use_clustering		= ATA_SHT_USE_CLUSTERING,
--	.proc_name		= DRV_NAME,
--	.dma_boundary		= ATA_DMA_BOUNDARY,
--	.slave_configure	= ata_scsi_slave_config,
--	.slave_destroy		= ata_scsi_slave_destroy,
--	.bios_param		= ata_std_bios_param,
-+	ATA_PIO_SHT(DRV_NAME),
- };
- 
- static struct ata_port_operations isapnp_port_ops = {
--	.tf_load	= ata_tf_load,
--	.tf_read	= ata_tf_read,
--	.check_status 	= ata_check_status,
--	.exec_command	= ata_exec_command,
--	.dev_select 	= ata_std_dev_select,
--
--	.freeze		= ata_bmdma_freeze,
--	.thaw		= ata_bmdma_thaw,
--	.error_handler	= ata_bmdma_error_handler,
--	.post_internal_cmd = ata_bmdma_post_internal_cmd,
-+	.inherits	= &ata_sff_port_ops,
- 	.cable_detect	= ata_cable_40wire,
--
--	.qc_prep 	= ata_qc_prep,
--	.qc_issue	= ata_qc_issue_prot,
--
--	.data_xfer	= ata_data_xfer,
--
--	.irq_clear	= ata_noop_irq_clear,
--	.irq_on		= ata_irq_on,
--
--	.port_start	= ata_sff_port_start,
- };
- 
- /**
-diff --git a/drivers/ata/pata_it8213.c b/drivers/ata/pata_it8213.c
-index 60c30dc..50977b7 100644
---- a/drivers/ata/pata_it8213.c
-+++ b/drivers/ata/pata_it8213.c
-@@ -243,53 +243,16 @@ static void it8213_set_dmamode (struct ata_port *ap, struct ata_device *adev)
- }
- 
- static struct scsi_host_template it8213_sht = {
--	.module			= THIS_MODULE,
--	.name			= DRV_NAME,
--	.ioctl			= ata_scsi_ioctl,
--	.queuecommand		= ata_scsi_queuecmd,
--	.can_queue		= ATA_DEF_QUEUE,
--	.this_id		= ATA_SHT_THIS_ID,
--	.sg_tablesize		= LIBATA_MAX_PRD,
--	.cmd_per_lun		= ATA_SHT_CMD_PER_LUN,
--	.emulated		= ATA_SHT_EMULATED,
--	.use_clustering		= ATA_SHT_USE_CLUSTERING,
--	.proc_name		= DRV_NAME,
--	.dma_boundary		= ATA_DMA_BOUNDARY,
--	.slave_configure	= ata_scsi_slave_config,
--	.slave_destroy		= ata_scsi_slave_destroy,
--	.bios_param		= ata_std_bios_param,
-+	ATA_BMDMA_SHT(DRV_NAME),
- };
- 
--static const struct ata_port_operations it8213_ops = {
-+
-+static struct ata_port_operations it8213_ops = {
-+	.inherits		= &ata_bmdma_port_ops,
-+	.cable_detect		= it8213_cable_detect,
- 	.set_piomode		= it8213_set_piomode,
- 	.set_dmamode		= it8213_set_dmamode,
--	.mode_filter		= ata_pci_default_filter,
--
--	.tf_load		= ata_tf_load,
--	.tf_read		= ata_tf_read,
--	.check_status		= ata_check_status,
--	.exec_command		= ata_exec_command,
--	.dev_select		= ata_std_dev_select,
--
--	.freeze			= ata_bmdma_freeze,
--	.thaw			= ata_bmdma_thaw,
- 	.error_handler		= it8213_error_handler,
--	.post_internal_cmd	= ata_bmdma_post_internal_cmd,
--	.cable_detect		= it8213_cable_detect,
--
--	.bmdma_setup		= ata_bmdma_setup,
--	.bmdma_start		= ata_bmdma_start,
--	.bmdma_stop		= ata_bmdma_stop,
--	.bmdma_status		= ata_bmdma_status,
--	.qc_prep		= ata_qc_prep,
--	.qc_issue		= ata_qc_issue_prot,
--	.data_xfer		= ata_data_xfer,
--
--	.irq_handler		= ata_interrupt,
--	.irq_clear		= ata_bmdma_irq_clear,
--	.irq_on			= ata_irq_on,
--
--	.port_start		= ata_sff_port_start,
- };
- 
- 
-diff --git a/drivers/ata/pata_it821x.c b/drivers/ata/pata_it821x.c
-index 3181e2c..f7ac52e 100644
---- a/drivers/ata/pata_it821x.c
-+++ b/drivers/ata/pata_it821x.c
-@@ -632,89 +632,34 @@ static int it821x_port_start(struct ata_port *ap)
- }
- 
- static struct scsi_host_template it821x_sht = {
--	.module			= THIS_MODULE,
--	.name			= DRV_NAME,
--	.ioctl			= ata_scsi_ioctl,
--	.queuecommand		= ata_scsi_queuecmd,
--	.can_queue		= ATA_DEF_QUEUE,
--	.this_id		= ATA_SHT_THIS_ID,
--	.sg_tablesize		= LIBATA_MAX_PRD,
--	.cmd_per_lun		= ATA_SHT_CMD_PER_LUN,
--	.emulated		= ATA_SHT_EMULATED,
--	.use_clustering		= ATA_SHT_USE_CLUSTERING,
--	.proc_name		= DRV_NAME,
--	.dma_boundary		= ATA_DMA_BOUNDARY,
--	.slave_configure	= ata_scsi_slave_config,
--	.slave_destroy		= ata_scsi_slave_destroy,
--	.bios_param		= ata_std_bios_param,
-+	ATA_BMDMA_SHT(DRV_NAME),
- };
- 
- static struct ata_port_operations it821x_smart_port_ops = {
--	.set_mode	= it821x_smart_set_mode,
--	.tf_load	= ata_tf_load,
--	.tf_read	= ata_tf_read,
--	.mode_filter	= ata_pci_default_filter,
-+	.inherits	= &ata_bmdma_port_ops,
- 
--	.check_status 	= ata_check_status,
- 	.check_atapi_dma= it821x_check_atapi_dma,
--	.exec_command	= ata_exec_command,
--	.dev_select 	= ata_std_dev_select,
--	.dev_config	= it821x_dev_config,
--
--	.freeze		= ata_bmdma_freeze,
--	.thaw		= ata_bmdma_thaw,
--	.error_handler	= ata_bmdma_error_handler,
--	.post_internal_cmd = ata_bmdma_post_internal_cmd,
--	.cable_detect	= it821x_ident_hack,
--
--	.bmdma_setup 	= ata_bmdma_setup,
--	.bmdma_start 	= ata_bmdma_start,
--	.bmdma_stop	= ata_bmdma_stop,
--	.bmdma_status 	= ata_bmdma_status,
--
--	.qc_prep 	= ata_qc_prep,
- 	.qc_issue	= it821x_smart_qc_issue_prot,
- 
--	.data_xfer	= ata_data_xfer,
--
--	.irq_handler	= ata_interrupt,
--	.irq_clear	= ata_bmdma_irq_clear,
--	.irq_on		= ata_irq_on,
-+	.cable_detect	= it821x_ident_hack,
-+	.set_mode	= it821x_smart_set_mode,
-+	.dev_config	= it821x_dev_config,
- 
- 	.port_start	= it821x_port_start,
- };
- 
- static struct ata_port_operations it821x_passthru_port_ops = {
--	.set_piomode	= it821x_passthru_set_piomode,
--	.set_dmamode	= it821x_passthru_set_dmamode,
--	.mode_filter	= ata_pci_default_filter,
-+	.inherits	= &ata_bmdma_port_ops,
- 
--	.tf_load	= ata_tf_load,
--	.tf_read	= ata_tf_read,
--	.check_status 	= ata_check_status,
--	.exec_command	= ata_exec_command,
- 	.check_atapi_dma= it821x_check_atapi_dma,
- 	.dev_select 	= it821x_passthru_dev_select,
--
--	.freeze		= ata_bmdma_freeze,
--	.thaw		= ata_bmdma_thaw,
--	.error_handler	= ata_bmdma_error_handler,
--	.post_internal_cmd = ata_bmdma_post_internal_cmd,
--	.cable_detect	= ata_cable_unknown,
--
--	.bmdma_setup 	= ata_bmdma_setup,
- 	.bmdma_start 	= it821x_passthru_bmdma_start,
- 	.bmdma_stop	= it821x_passthru_bmdma_stop,
--	.bmdma_status 	= ata_bmdma_status,
--
--	.qc_prep 	= ata_qc_prep,
- 	.qc_issue	= it821x_passthru_qc_issue_prot,
- 
--	.data_xfer	= ata_data_xfer,
--
--	.irq_clear	= ata_bmdma_irq_clear,
--	.irq_handler	= ata_interrupt,
--	.irq_on		= ata_irq_on,
-+	.cable_detect	= ata_cable_unknown,
-+	.set_piomode	= it821x_passthru_set_piomode,
-+	.set_dmamode	= it821x_passthru_set_dmamode,
- 
- 	.port_start	= it821x_port_start,
- };
-diff --git a/drivers/ata/pata_ixp4xx_cf.c b/drivers/ata/pata_ixp4xx_cf.c
-index 6eb8cc9..d02629a 100644
---- a/drivers/ata/pata_ixp4xx_cf.c
-+++ b/drivers/ata/pata_ixp4xx_cf.c
-@@ -88,47 +88,14 @@ static unsigned int ixp4xx_mmio_data_xfer(struct ata_device *dev,
- }
- 
- static struct scsi_host_template ixp4xx_sht = {
--	.module			= THIS_MODULE,
--	.name			= DRV_NAME,
--	.ioctl			= ata_scsi_ioctl,
--	.queuecommand		= ata_scsi_queuecmd,
--	.can_queue		= ATA_DEF_QUEUE,
--	.this_id		= ATA_SHT_THIS_ID,
--	.sg_tablesize		= LIBATA_MAX_PRD,
--	.cmd_per_lun		= ATA_SHT_CMD_PER_LUN,
--	.emulated		= ATA_SHT_EMULATED,
--	.use_clustering		= ATA_SHT_USE_CLUSTERING,
--	.proc_name		= DRV_NAME,
--	.dma_boundary		= ATA_DMA_BOUNDARY,
--	.slave_configure	= ata_scsi_slave_config,
--	.slave_destroy		= ata_scsi_slave_destroy,
--	.bios_param		= ata_std_bios_param,
-+	ATA_PIO_SHT(DRV_NAME),
- };
- 
- static struct ata_port_operations ixp4xx_port_ops = {
--	.set_mode		= ixp4xx_set_mode,
--
--	.tf_load		= ata_tf_load,
--	.tf_read		= ata_tf_read,
--	.exec_command		= ata_exec_command,
--	.check_status 		= ata_check_status,
--	.dev_select 		= ata_std_dev_select,
--
--	.freeze			= ata_bmdma_freeze,
--	.thaw			= ata_bmdma_thaw,
--	.error_handler		= ata_bmdma_error_handler,
--	.post_internal_cmd	= ata_bmdma_post_internal_cmd,
--
--	.qc_prep 		= ata_qc_prep,
--	.qc_issue		= ata_qc_issue_prot,
-+	.inherits		= &ata_sff_port_ops,
- 	.data_xfer		= ixp4xx_mmio_data_xfer,
- 	.cable_detect		= ata_cable_40wire,
--
--	.irq_handler		= ata_interrupt,
--	.irq_clear		= ata_noop_irq_clear,
--	.irq_on			= ata_irq_on,
--
--	.port_start		= ata_sff_port_start,
-+	.set_mode		= ixp4xx_set_mode,
- };
- 
- static void ixp4xx_setup_port(struct ata_port *ap,
-diff --git a/drivers/ata/pata_jmicron.c b/drivers/ata/pata_jmicron.c
-index 4d25c45..dbfb368 100644
---- a/drivers/ata/pata_jmicron.c
-+++ b/drivers/ata/pata_jmicron.c
-@@ -121,54 +121,12 @@ static void jmicron_error_handler(struct ata_port *ap)
- /* No PIO or DMA methods needed for this device */
- 
- static struct scsi_host_template jmicron_sht = {
--	.module			= THIS_MODULE,
--	.name			= DRV_NAME,
--	.ioctl			= ata_scsi_ioctl,
--	.queuecommand		= ata_scsi_queuecmd,
--	.can_queue		= ATA_DEF_QUEUE,
--	.this_id		= ATA_SHT_THIS_ID,
--	.sg_tablesize		= LIBATA_MAX_PRD,
--	.cmd_per_lun		= ATA_SHT_CMD_PER_LUN,
--	.emulated		= ATA_SHT_EMULATED,
--	.use_clustering		= ATA_SHT_USE_CLUSTERING,
--	.proc_name		= DRV_NAME,
--	.dma_boundary		= ATA_DMA_BOUNDARY,
--	.slave_configure	= ata_scsi_slave_config,
--	.slave_destroy		= ata_scsi_slave_destroy,
--	/* Use standard CHS mapping rules */
--	.bios_param		= ata_std_bios_param,
-+	ATA_BMDMA_SHT(DRV_NAME),
- };
- 
--static const struct ata_port_operations jmicron_ops = {
--	/* Task file is PCI ATA format, use helpers */
--	.tf_load		= ata_tf_load,
--	.tf_read		= ata_tf_read,
--	.check_status		= ata_check_status,
--	.exec_command		= ata_exec_command,
--	.dev_select		= ata_std_dev_select,
--
--	.mode_filter		= ata_pci_default_filter,
--	.freeze			= ata_bmdma_freeze,
--	.thaw			= ata_bmdma_thaw,
-+static struct ata_port_operations jmicron_ops = {
-+	.inherits		= &ata_bmdma_port_ops,
- 	.error_handler		= jmicron_error_handler,
--	.post_internal_cmd	= ata_bmdma_post_internal_cmd,
--
--	/* BMDMA handling is PCI ATA format, use helpers */
--	.bmdma_setup		= ata_bmdma_setup,
--	.bmdma_start		= ata_bmdma_start,
--	.bmdma_stop		= ata_bmdma_stop,
--	.bmdma_status		= ata_bmdma_status,
--	.qc_prep		= ata_qc_prep,
--	.qc_issue		= ata_qc_issue_prot,
--	.data_xfer		= ata_data_xfer,
--
--	/* IRQ-related hooks */
--	.irq_handler		= ata_interrupt,
--	.irq_clear		= ata_bmdma_irq_clear,
--	.irq_on			= ata_irq_on,
--
--	/* Generic PATA PCI ATA helpers */
--	.port_start		= ata_sff_port_start,
- };
- 
- 
-diff --git a/drivers/ata/pata_legacy.c b/drivers/ata/pata_legacy.c
-index 7b2140e..fadb301 100644
---- a/drivers/ata/pata_legacy.c
-+++ b/drivers/ata/pata_legacy.c
-@@ -208,21 +208,12 @@ static int legacy_set_mode(struct ata_link *link, struct ata_device **unused)
- }
- 
- static struct scsi_host_template legacy_sht = {
--	.module			= THIS_MODULE,
--	.name			= DRV_NAME,
--	.ioctl			= ata_scsi_ioctl,
--	.queuecommand		= ata_scsi_queuecmd,
--	.can_queue		= ATA_DEF_QUEUE,
--	.this_id		= ATA_SHT_THIS_ID,
--	.sg_tablesize		= LIBATA_MAX_PRD,
--	.cmd_per_lun		= ATA_SHT_CMD_PER_LUN,
--	.emulated		= ATA_SHT_EMULATED,
--	.use_clustering		= ATA_SHT_USE_CLUSTERING,
--	.proc_name		= DRV_NAME,
--	.dma_boundary		= ATA_DMA_BOUNDARY,
--	.slave_configure	= ata_scsi_slave_config,
--	.slave_destroy		= ata_scsi_slave_destroy,
--	.bios_param		= ata_std_bios_param,
-+	ATA_PIO_SHT(DRV_NAME),
-+};
-+
-+static const struct ata_port_operations legacy_base_port_ops = {
-+	.inherits	= &ata_sff_port_ops,
-+	.cable_detect	= ata_cable_40wire,
- };
- 
- /*
-@@ -234,55 +225,14 @@ static struct scsi_host_template legacy_sht = {
-  */
- 
- static struct ata_port_operations simple_port_ops = {
--	.tf_load	= ata_tf_load,
--	.tf_read	= ata_tf_read,
--	.check_status 	= ata_check_status,
--	.exec_command	= ata_exec_command,
--	.dev_select 	= ata_std_dev_select,
--
--	.freeze		= ata_bmdma_freeze,
--	.thaw		= ata_bmdma_thaw,
--	.error_handler	= ata_bmdma_error_handler,
--	.post_internal_cmd = ata_bmdma_post_internal_cmd,
--	.cable_detect	= ata_cable_40wire,
--
--	.qc_prep 	= ata_qc_prep,
--	.qc_issue	= ata_qc_issue_prot,
--
-+	.inherits	= &legacy_base_port_ops,
- 	.data_xfer	= ata_data_xfer_noirq,
--
--	.irq_handler	= ata_interrupt,
--	.irq_clear	= ata_noop_irq_clear,
--	.irq_on		= ata_irq_on,
--
--	.port_start	= ata_sff_port_start,
- };
- 
- static struct ata_port_operations legacy_port_ops = {
--	.set_mode	= legacy_set_mode,
--
--	.tf_load	= ata_tf_load,
--	.tf_read	= ata_tf_read,
--	.check_status 	= ata_check_status,
--	.exec_command	= ata_exec_command,
--	.dev_select 	= ata_std_dev_select,
--	.cable_detect	= ata_cable_40wire,
--
--	.freeze		= ata_bmdma_freeze,
--	.thaw		= ata_bmdma_thaw,
--	.error_handler	= ata_bmdma_error_handler,
--	.post_internal_cmd = ata_bmdma_post_internal_cmd,
--
--	.qc_prep 	= ata_qc_prep,
--	.qc_issue	= ata_qc_issue_prot,
--
-+	.inherits	= &legacy_base_port_ops,
- 	.data_xfer	= ata_data_xfer_noirq,
--
--	.irq_handler	= ata_interrupt,
--	.irq_clear	= ata_noop_irq_clear,
--	.irq_on		= ata_irq_on,
--
--	.port_start	= ata_sff_port_start,
-+	.set_mode	= legacy_set_mode,
- };
- 
- /*
-@@ -373,30 +323,9 @@ static unsigned int pdc_data_xfer_vlb(struct ata_device *dev,
- }
- 
- static struct ata_port_operations pdc20230_port_ops = {
-+	.inherits	= &legacy_base_port_ops,
- 	.set_piomode	= pdc20230_set_piomode,
--
--	.tf_load	= ata_tf_load,
--	.tf_read	= ata_tf_read,
--	.check_status 	= ata_check_status,
--	.exec_command	= ata_exec_command,
--	.dev_select 	= ata_std_dev_select,
--
--	.freeze		= ata_bmdma_freeze,
--	.thaw		= ata_bmdma_thaw,
--	.error_handler	= ata_bmdma_error_handler,
--	.post_internal_cmd = ata_bmdma_post_internal_cmd,
--	.cable_detect	= ata_cable_40wire,
--
--	.qc_prep 	= ata_qc_prep,
--	.qc_issue	= ata_qc_issue_prot,
--
- 	.data_xfer	= pdc_data_xfer_vlb,
--
--	.irq_handler	= ata_interrupt,
--	.irq_clear	= ata_noop_irq_clear,
--	.irq_on		= ata_irq_on,
--
--	.port_start	= ata_sff_port_start,
- };
- 
- /*
-@@ -427,30 +356,8 @@ static void ht6560a_set_piomode(struct ata_port *ap, struct ata_device *adev)
- }
- 
- static struct ata_port_operations ht6560a_port_ops = {
-+	.inherits	= &legacy_base_port_ops,
- 	.set_piomode	= ht6560a_set_piomode,
--
--	.tf_load	= ata_tf_load,
--	.tf_read	= ata_tf_read,
--	.check_status 	= ata_check_status,
--	.exec_command	= ata_exec_command,
--	.dev_select 	= ata_std_dev_select,
--
--	.freeze		= ata_bmdma_freeze,
--	.thaw		= ata_bmdma_thaw,
--	.error_handler	= ata_bmdma_error_handler,
--	.post_internal_cmd = ata_bmdma_post_internal_cmd,
--	.cable_detect	= ata_cable_40wire,
--
--	.qc_prep 	= ata_qc_prep,
--	.qc_issue	= ata_qc_issue_prot,
--
--	.data_xfer	= ata_data_xfer,	/* Check vlb/noirq */
--
--	.irq_handler	= ata_interrupt,
--	.irq_clear	= ata_noop_irq_clear,
--	.irq_on		= ata_irq_on,
--
--	.port_start	= ata_sff_port_start,
- };
- 
- /*
-@@ -492,30 +399,8 @@ static void ht6560b_set_piomode(struct ata_port *ap, struct ata_device *adev)
- }
- 
- static struct ata_port_operations ht6560b_port_ops = {
-+	.inherits	= &legacy_base_port_ops,
- 	.set_piomode	= ht6560b_set_piomode,
--
--	.tf_load	= ata_tf_load,
--	.tf_read	= ata_tf_read,
--	.check_status 	= ata_check_status,
--	.exec_command	= ata_exec_command,
--	.dev_select 	= ata_std_dev_select,
--
--	.freeze		= ata_bmdma_freeze,
--	.thaw		= ata_bmdma_thaw,
--	.error_handler	= ata_bmdma_error_handler,
--	.post_internal_cmd = ata_bmdma_post_internal_cmd,
--	.cable_detect	= ata_cable_40wire,
--
--	.qc_prep 	= ata_qc_prep,
--	.qc_issue	= ata_qc_issue_prot,
--
--	.data_xfer	= ata_data_xfer,    /* FIXME: Check 32bit and noirq */
--
--	.irq_handler	= ata_interrupt,
--	.irq_clear	= ata_noop_irq_clear,
--	.irq_on		= ata_irq_on,
--
--	.port_start	= ata_sff_port_start,
- };
- 
- /*
-@@ -613,30 +498,8 @@ static void opti82c611a_set_piomode(struct ata_port *ap,
- 
- 
- static struct ata_port_operations opti82c611a_port_ops = {
-+	.inherits	= &legacy_base_port_ops,
- 	.set_piomode	= opti82c611a_set_piomode,
--
--	.tf_load	= ata_tf_load,
--	.tf_read	= ata_tf_read,
--	.check_status 	= ata_check_status,
--	.exec_command	= ata_exec_command,
--	.dev_select 	= ata_std_dev_select,
--
--	.freeze		= ata_bmdma_freeze,
--	.thaw		= ata_bmdma_thaw,
--	.error_handler	= ata_bmdma_error_handler,
--	.post_internal_cmd = ata_bmdma_post_internal_cmd,
--	.cable_detect	= ata_cable_40wire,
--
--	.qc_prep 	= ata_qc_prep,
--	.qc_issue	= ata_qc_issue_prot,
--
--	.data_xfer	= ata_data_xfer,
--
--	.irq_handler	= ata_interrupt,
--	.irq_clear	= ata_noop_irq_clear,
--	.irq_on		= ata_irq_on,
--
--	.port_start	= ata_sff_port_start,
- };
- 
- /*
-@@ -745,30 +608,9 @@ static unsigned int opti82c46x_qc_issue_prot(struct ata_queued_cmd *qc)
- }
- 
- static struct ata_port_operations opti82c46x_port_ops = {
-+	.inherits	= &legacy_base_port_ops,
- 	.set_piomode	= opti82c46x_set_piomode,
--
--	.tf_load	= ata_tf_load,
--	.tf_read	= ata_tf_read,
--	.check_status 	= ata_check_status,
--	.exec_command	= ata_exec_command,
--	.dev_select 	= ata_std_dev_select,
--
--	.freeze		= ata_bmdma_freeze,
--	.thaw		= ata_bmdma_thaw,
--	.error_handler	= ata_bmdma_error_handler,
--	.post_internal_cmd = ata_bmdma_post_internal_cmd,
--	.cable_detect	= ata_cable_40wire,
--
--	.qc_prep 	= ata_qc_prep,
- 	.qc_issue	= opti82c46x_qc_issue_prot,
--
--	.data_xfer	= ata_data_xfer,
--
--	.irq_handler	= ata_interrupt,
--	.irq_clear	= ata_noop_irq_clear,
--	.irq_on		= ata_irq_on,
--
--	.port_start	= ata_sff_port_start,
- };
- 
- static void qdi6500_set_piomode(struct ata_port *ap, struct ata_device *adev)
-@@ -930,84 +772,22 @@ static int qdi_port(struct platform_device *dev,
- }
- 
- static struct ata_port_operations qdi6500_port_ops = {
-+	.inherits	= &legacy_base_port_ops,
- 	.set_piomode	= qdi6500_set_piomode,
--
--	.tf_load	= ata_tf_load,
--	.tf_read	= ata_tf_read,
--	.check_status 	= ata_check_status,
--	.exec_command	= ata_exec_command,
--	.dev_select 	= ata_std_dev_select,
--
--	.freeze		= ata_bmdma_freeze,
--	.thaw		= ata_bmdma_thaw,
--	.error_handler	= ata_bmdma_error_handler,
--	.post_internal_cmd = ata_bmdma_post_internal_cmd,
--	.cable_detect	= ata_cable_40wire,
--
--	.qc_prep 	= ata_qc_prep,
- 	.qc_issue	= qdi_qc_issue_prot,
--
- 	.data_xfer	= vlb32_data_xfer,
--
--	.irq_handler	= ata_interrupt,
--	.irq_clear	= ata_noop_irq_clear,
--	.irq_on		= ata_irq_on,
--
--	.port_start	= ata_sff_port_start,
- };
- 
- static struct ata_port_operations qdi6580_port_ops = {
-+	.inherits	= &legacy_base_port_ops,
- 	.set_piomode	= qdi6580_set_piomode,
--
--	.tf_load	= ata_tf_load,
--	.tf_read	= ata_tf_read,
--	.check_status 	= ata_check_status,
--	.exec_command	= ata_exec_command,
--	.dev_select 	= ata_std_dev_select,
--
--	.freeze		= ata_bmdma_freeze,
--	.thaw		= ata_bmdma_thaw,
--	.error_handler	= ata_bmdma_error_handler,
--	.post_internal_cmd = ata_bmdma_post_internal_cmd,
--	.cable_detect	= ata_cable_40wire,
--
--	.qc_prep 	= ata_qc_prep,
--	.qc_issue	= ata_qc_issue_prot,
--
- 	.data_xfer	= vlb32_data_xfer,
--
--	.irq_handler	= ata_interrupt,
--	.irq_clear	= ata_noop_irq_clear,
--	.irq_on		= ata_irq_on,
--
--	.port_start	= ata_sff_port_start,
- };
- 
- static struct ata_port_operations qdi6580dp_port_ops = {
-+	.inherits	= &legacy_base_port_ops,
- 	.set_piomode	= qdi6580dp_set_piomode,
--
--	.tf_load	= ata_tf_load,
--	.tf_read	= ata_tf_read,
--	.check_status 	= ata_check_status,
--	.exec_command	= ata_exec_command,
--	.dev_select 	= ata_std_dev_select,
--
--	.freeze		= ata_bmdma_freeze,
--	.thaw		= ata_bmdma_thaw,
--	.error_handler	= ata_bmdma_error_handler,
--	.post_internal_cmd = ata_bmdma_post_internal_cmd,
--	.cable_detect	= ata_cable_40wire,
--
--	.qc_prep 	= ata_qc_prep,
--	.qc_issue	= qdi_qc_issue_prot,
--
- 	.data_xfer	= vlb32_data_xfer,
--
--	.irq_handler	= ata_interrupt,
--	.irq_clear	= ata_noop_irq_clear,
--	.irq_on		= ata_irq_on,
--
--	.port_start	= ata_sff_port_start,
- };
- 
- static DEFINE_SPINLOCK(winbond_lock);
-@@ -1076,29 +856,9 @@ static int winbond_port(struct platform_device *dev,
- }
- 
- static struct ata_port_operations winbond_port_ops = {
-+	.inherits	= &legacy_base_port_ops,
- 	.set_piomode	= winbond_set_piomode,
--
--	.tf_load	= ata_tf_load,
--	.tf_read	= ata_tf_read,
--	.check_status 	= ata_check_status,
--	.exec_command	= ata_exec_command,
--	.dev_select 	= ata_std_dev_select,
--
--	.freeze		= ata_bmdma_freeze,
--	.thaw		= ata_bmdma_thaw,
--	.error_handler	= ata_bmdma_error_handler,
--	.post_internal_cmd = ata_bmdma_post_internal_cmd,
--	.cable_detect	= ata_cable_40wire,
--
--	.qc_prep 	= ata_qc_prep,
--	.qc_issue	= ata_qc_issue_prot,
--
- 	.data_xfer	= vlb32_data_xfer,
--
--	.irq_clear	= ata_noop_irq_clear,
--	.irq_on		= ata_irq_on,
--
--	.port_start	= ata_sff_port_start,
- };
- 
- static struct legacy_controller controllers[] = {
-diff --git a/drivers/ata/pata_marvell.c b/drivers/ata/pata_marvell.c
-index 113be4f..bbc9985 100644
---- a/drivers/ata/pata_marvell.c
-+++ b/drivers/ata/pata_marvell.c
-@@ -92,55 +92,13 @@ static void marvell_error_handler(struct ata_port *ap)
- /* No PIO or DMA methods needed for this device */
- 
- static struct scsi_host_template marvell_sht = {
--	.module			= THIS_MODULE,
--	.name			= DRV_NAME,
--	.ioctl			= ata_scsi_ioctl,
--	.queuecommand		= ata_scsi_queuecmd,
--	.can_queue		= ATA_DEF_QUEUE,
--	.this_id		= ATA_SHT_THIS_ID,
--	.sg_tablesize		= LIBATA_MAX_PRD,
--	.cmd_per_lun		= ATA_SHT_CMD_PER_LUN,
--	.emulated		= ATA_SHT_EMULATED,
--	.use_clustering		= ATA_SHT_USE_CLUSTERING,
--	.proc_name		= DRV_NAME,
--	.dma_boundary		= ATA_DMA_BOUNDARY,
--	.slave_configure	= ata_scsi_slave_config,
--	.slave_destroy		= ata_scsi_slave_destroy,
--	/* Use standard CHS mapping rules */
--	.bios_param		= ata_std_bios_param,
-+	ATA_BMDMA_SHT(DRV_NAME),
- };
- 
--static const struct ata_port_operations marvell_ops = {
--	/* Task file is PCI ATA format, use helpers */
--	.tf_load		= ata_tf_load,
--	.tf_read		= ata_tf_read,
--	.check_status		= ata_check_status,
--	.exec_command		= ata_exec_command,
--	.dev_select		= ata_std_dev_select,
--
--	.mode_filter		= ata_pci_default_filter,
--	.freeze			= ata_bmdma_freeze,
--	.thaw			= ata_bmdma_thaw,
--	.error_handler		= marvell_error_handler,
--	.post_internal_cmd	= ata_bmdma_post_internal_cmd,
-+static struct ata_port_operations marvell_ops = {
-+	.inherits		= &ata_bmdma_port_ops,
- 	.cable_detect		= marvell_cable_detect,
--
--	/* BMDMA handling is PCI ATA format, use helpers */
--	.bmdma_setup		= ata_bmdma_setup,
--	.bmdma_start		= ata_bmdma_start,
--	.bmdma_stop		= ata_bmdma_stop,
--	.bmdma_status		= ata_bmdma_status,
--	.qc_prep		= ata_qc_prep,
--	.qc_issue		= ata_qc_issue_prot,
--	.data_xfer		= ata_data_xfer,
--
--	/* Timeout handling */
--	.irq_handler		= ata_interrupt,
--	.irq_clear		= ata_bmdma_irq_clear,
--	.irq_on			= ata_irq_on,
--
--	/* Generic PATA PCI ATA helpers */
--	.port_start		= ata_sff_port_start,
-+	.error_handler		= marvell_error_handler,
- };
- 
- 
-diff --git a/drivers/ata/pata_mpc52xx.c b/drivers/ata/pata_mpc52xx.c
-index 9383efb..6495c31 100644
---- a/drivers/ata/pata_mpc52xx.c
-+++ b/drivers/ata/pata_mpc52xx.c
-@@ -265,40 +265,16 @@ mpc52xx_ata_error_handler(struct ata_port *ap)
- 
- 
- static struct scsi_host_template mpc52xx_ata_sht = {
--	.module			= THIS_MODULE,
--	.name			= DRV_NAME,
--	.ioctl			= ata_scsi_ioctl,
--	.queuecommand		= ata_scsi_queuecmd,
--	.can_queue		= ATA_DEF_QUEUE,
--	.this_id		= ATA_SHT_THIS_ID,
--	.sg_tablesize		= LIBATA_MAX_PRD,
--	.cmd_per_lun		= ATA_SHT_CMD_PER_LUN,
--	.emulated		= ATA_SHT_EMULATED,
--	.use_clustering		= ATA_SHT_USE_CLUSTERING,
--	.proc_name		= DRV_NAME,
--	.dma_boundary		= ATA_DMA_BOUNDARY,
--	.slave_configure	= ata_scsi_slave_config,
--	.slave_destroy		= ata_scsi_slave_destroy,
--	.bios_param		= ata_std_bios_param,
-+	ATA_PIO_SHT(DRV_NAME),
- };
- 
- static struct ata_port_operations mpc52xx_ata_port_ops = {
--	.set_piomode		= mpc52xx_ata_set_piomode,
-+	.inherits		= &ata_sff_port_ops,
- 	.dev_select		= mpc52xx_ata_dev_select,
--	.tf_load		= ata_tf_load,
--	.tf_read		= ata_tf_read,
--	.check_status		= ata_check_status,
--	.exec_command		= ata_exec_command,
--	.freeze			= ata_bmdma_freeze,
--	.thaw			= ata_bmdma_thaw,
--	.error_handler		= mpc52xx_ata_error_handler,
- 	.cable_detect		= ata_cable_40wire,
--	.qc_prep		= ata_qc_prep,
--	.qc_issue		= ata_qc_issue_prot,
--	.data_xfer		= ata_data_xfer,
--	.irq_clear		= ata_noop_irq_clear,
--	.irq_on			= ata_irq_on,
--	.port_start		= ata_sff_port_start,
-+	.set_piomode		= mpc52xx_ata_set_piomode,
-+	.error_handler		= mpc52xx_ata_error_handler,
-+	.post_internal_cmd	= ATA_OP_NULL,
- };
- 
- static int __devinit
-diff --git a/drivers/ata/pata_mpiix.c b/drivers/ata/pata_mpiix.c
-index ced6372..dab54f8 100644
---- a/drivers/ata/pata_mpiix.c
-+++ b/drivers/ata/pata_mpiix.c
-@@ -151,46 +151,15 @@ static unsigned int mpiix_qc_issue_prot(struct ata_queued_cmd *qc)
- }
- 
- static struct scsi_host_template mpiix_sht = {
--	.module			= THIS_MODULE,
--	.name			= DRV_NAME,
--	.ioctl			= ata_scsi_ioctl,
--	.queuecommand		= ata_scsi_queuecmd,
--	.can_queue		= ATA_DEF_QUEUE,
--	.this_id		= ATA_SHT_THIS_ID,
--	.sg_tablesize		= LIBATA_MAX_PRD,
--	.cmd_per_lun		= ATA_SHT_CMD_PER_LUN,
--	.emulated		= ATA_SHT_EMULATED,
--	.use_clustering		= ATA_SHT_USE_CLUSTERING,
--	.proc_name		= DRV_NAME,
--	.dma_boundary		= ATA_DMA_BOUNDARY,
--	.slave_configure	= ata_scsi_slave_config,
--	.slave_destroy		= ata_scsi_slave_destroy,
--	.bios_param		= ata_std_bios_param,
-+	ATA_PIO_SHT(DRV_NAME),
- };
- 
- static struct ata_port_operations mpiix_port_ops = {
-+	.inherits	= &ata_sff_port_ops,
-+	.qc_issue	= mpiix_qc_issue_prot,
-+	.cable_detect	= ata_cable_40wire,
- 	.set_piomode	= mpiix_set_piomode,
--
--	.tf_load	= ata_tf_load,
--	.tf_read	= ata_tf_read,
--	.check_status 	= ata_check_status,
--	.exec_command	= ata_exec_command,
--	.dev_select 	= ata_std_dev_select,
--
--	.freeze		= ata_bmdma_freeze,
--	.thaw		= ata_bmdma_thaw,
- 	.error_handler	= mpiix_error_handler,
--	.post_internal_cmd = ata_bmdma_post_internal_cmd,
--	.cable_detect	= ata_cable_40wire,
--
--	.qc_prep 	= ata_qc_prep,
--	.qc_issue	= mpiix_qc_issue_prot,
--	.data_xfer	= ata_data_xfer,
--
--	.irq_clear	= ata_noop_irq_clear,
--	.irq_on		= ata_irq_on,
--
--	.port_start	= ata_sff_port_start,
- };
- 
- static int mpiix_init_one(struct pci_dev *dev, const struct pci_device_id *id)
-diff --git a/drivers/ata/pata_netcell.c b/drivers/ata/pata_netcell.c
-index 9fd1a84..65389d1 100644
---- a/drivers/ata/pata_netcell.c
-+++ b/drivers/ata/pata_netcell.c
-@@ -21,55 +21,12 @@
- /* No PIO or DMA methods needed for this device */
- 
- static struct scsi_host_template netcell_sht = {
--	.module			= THIS_MODULE,
--	.name			= DRV_NAME,
--	.ioctl			= ata_scsi_ioctl,
--	.queuecommand		= ata_scsi_queuecmd,
--	.can_queue		= ATA_DEF_QUEUE,
--	.this_id		= ATA_SHT_THIS_ID,
--	.sg_tablesize		= LIBATA_MAX_PRD,
--	.cmd_per_lun		= ATA_SHT_CMD_PER_LUN,
--	.emulated		= ATA_SHT_EMULATED,
--	.use_clustering		= ATA_SHT_USE_CLUSTERING,
--	.proc_name		= DRV_NAME,
--	.dma_boundary		= ATA_DMA_BOUNDARY,
--	.slave_configure	= ata_scsi_slave_config,
--	.slave_destroy		= ata_scsi_slave_destroy,
--	/* Use standard CHS mapping rules */
--	.bios_param		= ata_std_bios_param,
-+	ATA_BMDMA_SHT(DRV_NAME),
- };
- 
--static const struct ata_port_operations netcell_ops = {
--	/* Task file is PCI ATA format, use helpers */
--	.tf_load		= ata_tf_load,
--	.tf_read		= ata_tf_read,
--	.check_status		= ata_check_status,
--	.exec_command		= ata_exec_command,
--	.dev_select		= ata_std_dev_select,
--
--	.mode_filter		= ata_pci_default_filter,
--	.freeze			= ata_bmdma_freeze,
--	.thaw			= ata_bmdma_thaw,
--	.error_handler		= ata_bmdma_error_handler,
--	.post_internal_cmd	= ata_bmdma_post_internal_cmd,
-+static struct ata_port_operations netcell_ops = {
-+	.inherits	= &ata_bmdma_port_ops,
- 	.cable_detect		= ata_cable_80wire,
--
--	/* BMDMA handling is PCI ATA format, use helpers */
--	.bmdma_setup		= ata_bmdma_setup,
--	.bmdma_start		= ata_bmdma_start,
--	.bmdma_stop		= ata_bmdma_stop,
--	.bmdma_status		= ata_bmdma_status,
--	.qc_prep		= ata_qc_prep,
--	.qc_issue		= ata_qc_issue_prot,
--	.data_xfer		= ata_data_xfer,
--
--	/* IRQ-related hooks */
--	.irq_handler		= ata_interrupt,
--	.irq_clear		= ata_bmdma_irq_clear,
--	.irq_on			= ata_irq_on,
--
--	/* Generic PATA PCI ATA helpers */
--	.port_start		= ata_sff_port_start,
- };
- 
- 
-diff --git a/drivers/ata/pata_ninja32.c b/drivers/ata/pata_ninja32.c
-index 1c1b835..c37b951 100644
---- a/drivers/ata/pata_ninja32.c
-+++ b/drivers/ata/pata_ninja32.c
-@@ -78,54 +78,14 @@ static void ninja32_dev_select(struct ata_port *ap, unsigned int device)
- }
- 
- static struct scsi_host_template ninja32_sht = {
--	.module			= THIS_MODULE,
--	.name			= DRV_NAME,
--	.ioctl			= ata_scsi_ioctl,
--	.queuecommand		= ata_scsi_queuecmd,
--	.can_queue		= ATA_DEF_QUEUE,
--	.this_id		= ATA_SHT_THIS_ID,
--	.sg_tablesize		= LIBATA_MAX_PRD,
--	.cmd_per_lun		= ATA_SHT_CMD_PER_LUN,
--	.emulated		= ATA_SHT_EMULATED,
--	.use_clustering		= ATA_SHT_USE_CLUSTERING,
--	.proc_name		= DRV_NAME,
--	.dma_boundary		= ATA_DMA_BOUNDARY,
--	.slave_configure	= ata_scsi_slave_config,
--	.slave_destroy		= ata_scsi_slave_destroy,
--	.bios_param		= ata_std_bios_param,
-+	ATA_BMDMA_SHT(DRV_NAME),
- };
- 
- static struct ata_port_operations ninja32_port_ops = {
--	.set_piomode	= ninja32_set_piomode,
--	.mode_filter	= ata_pci_default_filter,
--
--	.tf_load	= ata_tf_load,
--	.tf_read	= ata_tf_read,
--	.check_status 	= ata_check_status,
--	.exec_command	= ata_exec_command,
-+	.inherits	= &ata_bmdma_port_ops,
- 	.dev_select 	= ninja32_dev_select,
--
--	.freeze		= ata_bmdma_freeze,
--	.thaw		= ata_bmdma_thaw,
--	.error_handler	= ata_bmdma_error_handler,
--	.post_internal_cmd = ata_bmdma_post_internal_cmd,
- 	.cable_detect	= ata_cable_40wire,
--
--	.bmdma_setup 	= ata_bmdma_setup,
--	.bmdma_start 	= ata_bmdma_start,
--	.bmdma_stop	= ata_bmdma_stop,
--	.bmdma_status 	= ata_bmdma_status,
--
--	.qc_prep 	= ata_qc_prep,
--	.qc_issue	= ata_qc_issue_prot,
--
--	.data_xfer	= ata_data_xfer,
--
--	.irq_handler	= ata_interrupt,
--	.irq_clear	= ata_bmdma_irq_clear,
--	.irq_on		= ata_irq_on,
--
--	.port_start	= ata_sff_port_start,
-+	.set_piomode	= ninja32_set_piomode,
- };
- 
- static int ninja32_init_one(struct pci_dev *dev, const struct pci_device_id *id)
-diff --git a/drivers/ata/pata_ns87410.c b/drivers/ata/pata_ns87410.c
-index d182bdf..5b1982f 100644
---- a/drivers/ata/pata_ns87410.c
-+++ b/drivers/ata/pata_ns87410.c
-@@ -144,48 +144,15 @@ static unsigned int ns87410_qc_issue_prot(struct ata_queued_cmd *qc)
- }
- 
- static struct scsi_host_template ns87410_sht = {
--	.module			= THIS_MODULE,
--	.name			= DRV_NAME,
--	.ioctl			= ata_scsi_ioctl,
--	.queuecommand		= ata_scsi_queuecmd,
--	.can_queue		= ATA_DEF_QUEUE,
--	.this_id		= ATA_SHT_THIS_ID,
--	.sg_tablesize		= LIBATA_MAX_PRD,
--	.cmd_per_lun		= ATA_SHT_CMD_PER_LUN,
--	.emulated		= ATA_SHT_EMULATED,
--	.use_clustering		= ATA_SHT_USE_CLUSTERING,
--	.proc_name		= DRV_NAME,
--	.dma_boundary		= ATA_DMA_BOUNDARY,
--	.slave_configure	= ata_scsi_slave_config,
--	.slave_destroy		= ata_scsi_slave_destroy,
--	.bios_param		= ata_std_bios_param,
-+	ATA_PIO_SHT(DRV_NAME),
- };
- 
- static struct ata_port_operations ns87410_port_ops = {
-+	.inherits	= &ata_sff_port_ops,
-+	.qc_issue	= ns87410_qc_issue_prot,
-+	.cable_detect	= ata_cable_40wire,
- 	.set_piomode	= ns87410_set_piomode,
--
--	.tf_load	= ata_tf_load,
--	.tf_read	= ata_tf_read,
--	.check_status 	= ata_check_status,
--	.exec_command	= ata_exec_command,
--	.dev_select 	= ata_std_dev_select,
--
--	.freeze		= ata_bmdma_freeze,
--	.thaw		= ata_bmdma_thaw,
- 	.error_handler	= ns87410_error_handler,
--	.post_internal_cmd = ata_bmdma_post_internal_cmd,
--	.cable_detect	= ata_cable_40wire,
--
--	.qc_prep 	= ata_qc_prep,
--	.qc_issue	= ns87410_qc_issue_prot,
--
--	.data_xfer	= ata_data_xfer,
--
--	.irq_handler	= ata_interrupt,
--	.irq_clear	= ata_noop_irq_clear,
--	.irq_on		= ata_irq_on,
--
--	.port_start	= ata_sff_port_start,
- };
- 
- static int ns87410_init_one(struct pci_dev *dev, const struct pci_device_id *id)
-diff --git a/drivers/ata/pata_ns87415.c b/drivers/ata/pata_ns87415.c
-index 93eb958..38d86a2 100644
---- a/drivers/ata/pata_ns87415.c
-+++ b/drivers/ata/pata_ns87415.c
-@@ -297,90 +297,32 @@ static u8 ns87560_bmdma_status(struct ata_port *ap)
+Index: work/drivers/ata/pata_mpiix.c
+===================================================================
+--- work.orig/drivers/ata/pata_mpiix.c
++++ work/drivers/ata/pata_mpiix.c
+@@ -278,6 +278,10 @@ static struct pci_driver mpiix_pci_drive
+ 
+ static int __init mpiix_init(void)
  {
- 	return ns87560_read_buggy(ap->ioaddr.bmdma_addr + ATA_DMA_STATUS);
- }
-+#endif		/* 87560 SuperIO Support */
- 
--static const struct ata_port_operations ns87560_pata_ops = {
--	.set_piomode		= ns87415_set_piomode,
--	.mode_filter		= ata_pci_default_filter,
-+static struct ata_port_operations ns87415_pata_ops = {
-+	.inherits		= &ata_bmdma_port_ops,
- 
--	.tf_load		= ata_tf_load,
--	.tf_read		= ns87560_tf_read,
--	.check_status		= ns87560_check_status,
- 	.check_atapi_dma	= ns87415_check_atapi_dma,
--	.exec_command		= ata_exec_command,
--	.dev_select		= ata_std_dev_select,
--
--	.freeze			= ata_bmdma_freeze,
--	.thaw			= ata_bmdma_thaw,
--	.error_handler		= ata_bmdma_error_handler,
--	.post_internal_cmd 	= ata_bmdma_post_internal_cmd,
--	.cable_detect		= ata_cable_40wire,
--
- 	.bmdma_setup		= ns87415_bmdma_setup,
- 	.bmdma_start		= ns87415_bmdma_start,
- 	.bmdma_stop		= ns87415_bmdma_stop,
--	.bmdma_status		= ns87560_bmdma_status,
--	.qc_prep		= ata_qc_prep,
--	.qc_issue		= ata_qc_issue_prot,
--	.data_xfer		= ata_data_xfer,
--
--	.irq_handler		= ata_interrupt,
- 	.irq_clear		= ns87415_bmdma_irq_clear,
--	.irq_on			= ata_irq_on,
--
--	.port_start		= ata_sff_port_start,
--};
--
--#endif		/* 87560 SuperIO Support */
--
--
--static const struct ata_port_operations ns87415_pata_ops = {
--	.set_piomode		= ns87415_set_piomode,
--	.mode_filter		= ata_pci_default_filter,
- 
--	.tf_load		= ata_tf_load,
--	.tf_read		= ata_tf_read,
--	.check_status		= ata_check_status,
--	.check_atapi_dma	= ns87415_check_atapi_dma,
--	.exec_command		= ata_exec_command,
--	.dev_select		= ata_std_dev_select,
--
--	.freeze			= ata_bmdma_freeze,
--	.thaw			= ata_bmdma_thaw,
--	.error_handler		= ata_bmdma_error_handler,
--	.post_internal_cmd 	= ata_bmdma_post_internal_cmd,
- 	.cable_detect		= ata_cable_40wire,
-+	.set_piomode		= ns87415_set_piomode,
-+};
- 
--	.bmdma_setup		= ns87415_bmdma_setup,
--	.bmdma_start		= ns87415_bmdma_start,
--	.bmdma_stop		= ns87415_bmdma_stop,
--	.bmdma_status		= ata_bmdma_status,
--	.qc_prep		= ata_qc_prep,
--	.qc_issue		= ata_qc_issue_prot,
--	.data_xfer		= ata_data_xfer,
--
--	.irq_handler		= ata_interrupt,
--	.irq_clear		= ns87415_bmdma_irq_clear,
--	.irq_on			= ata_irq_on,
--
--	.port_start		= ata_sff_port_start,
-+#if defined(CONFIG_SUPERIO)
-+static struct ata_port_operations ns87560_pata_ops = {
-+	.inherits		= &ns87415_pata_ops,
-+	.tf_read		= ns87560_tf_read,
-+	.check_status		= ns87560_check_status,
-+	.bmdma_status		= ns87560_bmdma_status,
- };
-+#endif
- 
- static struct scsi_host_template ns87415_sht = {
--	.module			= THIS_MODULE,
--	.name			= DRV_NAME,
--	.ioctl			= ata_scsi_ioctl,
--	.queuecommand		= ata_scsi_queuecmd,
--	.can_queue		= ATA_DEF_QUEUE,
--	.this_id		= ATA_SHT_THIS_ID,
--	.sg_tablesize		= LIBATA_MAX_PRD,
--	.cmd_per_lun		= ATA_SHT_CMD_PER_LUN,
--	.emulated		= ATA_SHT_EMULATED,
--	.use_clustering		= ATA_SHT_USE_CLUSTERING,
--	.proc_name		= DRV_NAME,
--	.dma_boundary		= ATA_DMA_BOUNDARY,
--	.slave_configure	= ata_scsi_slave_config,
--	.slave_destroy		= ata_scsi_slave_destroy,
--	.bios_param		= ata_std_bios_param,
-+	ATA_BMDMA_SHT(DRV_NAME),
- };
- 
- 
-diff --git a/drivers/ata/pata_oldpiix.c b/drivers/ata/pata_oldpiix.c
-index 44da09a..f6062b3 100644
---- a/drivers/ata/pata_oldpiix.c
-+++ b/drivers/ata/pata_oldpiix.c
-@@ -220,53 +220,16 @@ static unsigned int oldpiix_qc_issue_prot(struct ata_queued_cmd *qc)
- 
- 
- static struct scsi_host_template oldpiix_sht = {
--	.module			= THIS_MODULE,
--	.name			= DRV_NAME,
--	.ioctl			= ata_scsi_ioctl,
--	.queuecommand		= ata_scsi_queuecmd,
--	.can_queue		= ATA_DEF_QUEUE,
--	.this_id		= ATA_SHT_THIS_ID,
--	.sg_tablesize		= LIBATA_MAX_PRD,
--	.cmd_per_lun		= ATA_SHT_CMD_PER_LUN,
--	.emulated		= ATA_SHT_EMULATED,
--	.use_clustering		= ATA_SHT_USE_CLUSTERING,
--	.proc_name		= DRV_NAME,
--	.dma_boundary		= ATA_DMA_BOUNDARY,
--	.slave_configure	= ata_scsi_slave_config,
--	.slave_destroy		= ata_scsi_slave_destroy,
--	.bios_param		= ata_std_bios_param,
-+	ATA_BMDMA_SHT(DRV_NAME),
- };
- 
--static const struct ata_port_operations oldpiix_pata_ops = {
-+static struct ata_port_operations oldpiix_pata_ops = {
-+	.inherits		= &ata_bmdma_port_ops,
-+	.qc_issue		= oldpiix_qc_issue_prot,
-+	.cable_detect		= ata_cable_40wire,
- 	.set_piomode		= oldpiix_set_piomode,
- 	.set_dmamode		= oldpiix_set_dmamode,
--	.mode_filter		= ata_pci_default_filter,
--
--	.tf_load		= ata_tf_load,
--	.tf_read		= ata_tf_read,
--	.check_status		= ata_check_status,
--	.exec_command		= ata_exec_command,
--	.dev_select		= ata_std_dev_select,
--
--	.freeze			= ata_bmdma_freeze,
--	.thaw			= ata_bmdma_thaw,
- 	.error_handler		= oldpiix_pata_error_handler,
--	.post_internal_cmd 	= ata_bmdma_post_internal_cmd,
--	.cable_detect		= ata_cable_40wire,
--
--	.bmdma_setup		= ata_bmdma_setup,
--	.bmdma_start		= ata_bmdma_start,
--	.bmdma_stop		= ata_bmdma_stop,
--	.bmdma_status		= ata_bmdma_status,
--	.qc_prep		= ata_qc_prep,
--	.qc_issue		= oldpiix_qc_issue_prot,
--	.data_xfer		= ata_data_xfer,
--
--	.irq_handler		= ata_interrupt,
--	.irq_clear		= ata_bmdma_irq_clear,
--	.irq_on			= ata_irq_on,
--
--	.port_start		= ata_sff_port_start,
- };
- 
- 
-diff --git a/drivers/ata/pata_opti.c b/drivers/ata/pata_opti.c
-index ebb9dc1..3787d39 100644
---- a/drivers/ata/pata_opti.c
-+++ b/drivers/ata/pata_opti.c
-@@ -165,53 +165,14 @@ static void opti_set_piomode(struct ata_port *ap, struct ata_device *adev)
++	{
++		ata_dump_sht(DRV_NAME, &mpiix_sht);
++		ata_dump_ops(DRV_NAME, &mpiix_port_ops);
++	}
+ 	return pci_register_driver(&mpiix_pci_driver);
  }
  
- static struct scsi_host_template opti_sht = {
--	.module			= THIS_MODULE,
--	.name			= DRV_NAME,
--	.ioctl			= ata_scsi_ioctl,
--	.queuecommand		= ata_scsi_queuecmd,
--	.can_queue		= ATA_DEF_QUEUE,
--	.this_id		= ATA_SHT_THIS_ID,
--	.sg_tablesize		= LIBATA_MAX_PRD,
--	.cmd_per_lun		= ATA_SHT_CMD_PER_LUN,
--	.emulated		= ATA_SHT_EMULATED,
--	.use_clustering		= ATA_SHT_USE_CLUSTERING,
--	.proc_name		= DRV_NAME,
--	.dma_boundary		= ATA_DMA_BOUNDARY,
--	.slave_configure	= ata_scsi_slave_config,
--	.slave_destroy		= ata_scsi_slave_destroy,
--	.bios_param		= ata_std_bios_param,
-+	ATA_BMDMA_SHT(DRV_NAME),
- };
+Index: work/drivers/ata/pata_netcell.c
+===================================================================
+--- work.orig/drivers/ata/pata_netcell.c
++++ work/drivers/ata/pata_netcell.c
+@@ -137,6 +137,10 @@ static struct pci_driver netcell_pci_dri
  
- static struct ata_port_operations opti_port_ops = {
-+	.inherits	= &ata_bmdma_port_ops,
-+	.cable_detect	= ata_cable_40wire,
- 	.set_piomode	= opti_set_piomode,
--	.mode_filter	= ata_pci_default_filter,
--	.tf_load	= ata_tf_load,
--	.tf_read	= ata_tf_read,
--	.check_status 	= ata_check_status,
--	.exec_command	= ata_exec_command,
--	.dev_select 	= ata_std_dev_select,
--
--	.freeze		= ata_bmdma_freeze,
--	.thaw		= ata_bmdma_thaw,
- 	.error_handler	= opti_error_handler,
--	.post_internal_cmd = ata_bmdma_post_internal_cmd,
--	.cable_detect	= ata_cable_40wire,
--
--	.bmdma_setup 	= ata_bmdma_setup,
--	.bmdma_start 	= ata_bmdma_start,
--	.bmdma_stop	= ata_bmdma_stop,
--	.bmdma_status 	= ata_bmdma_status,
--
--	.qc_prep 	= ata_qc_prep,
--	.qc_issue	= ata_qc_issue_prot,
--
--	.data_xfer	= ata_data_xfer,
--
--	.irq_handler	= ata_interrupt,
--	.irq_clear	= ata_bmdma_irq_clear,
--	.irq_on		= ata_irq_on,
--
--	.port_start	= ata_sff_port_start,
- };
- 
- static int opti_init_one(struct pci_dev *dev, const struct pci_device_id *id)
-diff --git a/drivers/ata/pata_optidma.c b/drivers/ata/pata_optidma.c
-index 3f9d035..eb4b081 100644
---- a/drivers/ata/pata_optidma.c
-+++ b/drivers/ata/pata_optidma.c
-@@ -350,91 +350,22 @@ static int optidma_set_mode(struct ata_link *link, struct ata_device **r_failed)
+ static int __init netcell_init(void)
+ {
++	{
++		ata_dump_sht(DRV_NAME, &netcell_sht);
++		ata_dump_ops(DRV_NAME, &netcell_ops);
++	}
+ 	return pci_register_driver(&netcell_pci_driver);
  }
  
- static struct scsi_host_template optidma_sht = {
--	.module			= THIS_MODULE,
--	.name			= DRV_NAME,
--	.ioctl			= ata_scsi_ioctl,
--	.queuecommand		= ata_scsi_queuecmd,
--	.can_queue		= ATA_DEF_QUEUE,
--	.this_id		= ATA_SHT_THIS_ID,
--	.sg_tablesize		= LIBATA_MAX_PRD,
--	.cmd_per_lun		= ATA_SHT_CMD_PER_LUN,
--	.emulated		= ATA_SHT_EMULATED,
--	.use_clustering		= ATA_SHT_USE_CLUSTERING,
--	.proc_name		= DRV_NAME,
--	.dma_boundary		= ATA_DMA_BOUNDARY,
--	.slave_configure	= ata_scsi_slave_config,
--	.slave_destroy		= ata_scsi_slave_destroy,
--	.bios_param		= ata_std_bios_param,
-+	ATA_BMDMA_SHT(DRV_NAME),
- };
+Index: work/drivers/ata/pata_ninja32.c
+===================================================================
+--- work.orig/drivers/ata/pata_ninja32.c
++++ work/drivers/ata/pata_ninja32.c
+@@ -196,6 +196,10 @@ static struct pci_driver ninja32_pci_dri
  
- static struct ata_port_operations optidma_port_ops = {
-+	.inherits	= &ata_bmdma_port_ops,
-+	.cable_detect	= ata_cable_40wire,
- 	.set_piomode	= optidma_set_pio_mode,
- 	.set_dmamode	= optidma_set_dma_mode,
--	.mode_filter	= ata_pci_default_filter,
--
--	.tf_load	= ata_tf_load,
--	.tf_read	= ata_tf_read,
--	.check_status 	= ata_check_status,
--	.exec_command	= ata_exec_command,
--	.dev_select 	= ata_std_dev_select,
--
--	.freeze		= ata_bmdma_freeze,
--	.thaw		= ata_bmdma_thaw,
--	.post_internal_cmd = ata_bmdma_post_internal_cmd,
--	.error_handler	= optidma_error_handler,
- 	.set_mode	= optidma_set_mode,
--	.cable_detect	= ata_cable_40wire,
--
--	.bmdma_setup 	= ata_bmdma_setup,
--	.bmdma_start 	= ata_bmdma_start,
--	.bmdma_stop	= ata_bmdma_stop,
--	.bmdma_status 	= ata_bmdma_status,
--
--	.qc_prep 	= ata_qc_prep,
--	.qc_issue	= ata_qc_issue_prot,
--
--	.data_xfer	= ata_data_xfer,
--
--	.irq_handler	= ata_interrupt,
--	.irq_clear	= ata_bmdma_irq_clear,
--	.irq_on		= ata_irq_on,
--
--	.port_start	= ata_sff_port_start,
-+	.error_handler	= optidma_error_handler,
- };
- 
- static struct ata_port_operations optiplus_port_ops = {
-+	.inherits	= &optidma_port_ops,
- 	.set_piomode	= optiplus_set_pio_mode,
- 	.set_dmamode	= optiplus_set_dma_mode,
--	.mode_filter	= ata_pci_default_filter,
--
--	.tf_load	= ata_tf_load,
--	.tf_read	= ata_tf_read,
--	.check_status 	= ata_check_status,
--	.exec_command	= ata_exec_command,
--	.dev_select 	= ata_std_dev_select,
--
--	.freeze		= ata_bmdma_freeze,
--	.thaw		= ata_bmdma_thaw,
--	.post_internal_cmd = ata_bmdma_post_internal_cmd,
--	.error_handler	= optidma_error_handler,
--	.set_mode	= optidma_set_mode,
--	.cable_detect	= ata_cable_40wire,
--
--	.bmdma_setup 	= ata_bmdma_setup,
--	.bmdma_start 	= ata_bmdma_start,
--	.bmdma_stop	= ata_bmdma_stop,
--	.bmdma_status 	= ata_bmdma_status,
--
--	.qc_prep 	= ata_qc_prep,
--	.qc_issue	= ata_qc_issue_prot,
--
--	.data_xfer	= ata_data_xfer,
--
--	.irq_handler	= ata_interrupt,
--	.irq_clear	= ata_bmdma_irq_clear,
--	.irq_on		= ata_irq_on,
--
--	.port_start	= ata_sff_port_start,
- };
- 
- /**
-diff --git a/drivers/ata/pata_pcmcia.c b/drivers/ata/pata_pcmcia.c
-index 9881a9e..57efbf0 100644
---- a/drivers/ata/pata_pcmcia.c
-+++ b/drivers/ata/pata_pcmcia.c
-@@ -128,71 +128,21 @@ static unsigned int ata_data_xfer_8bit(struct ata_device *dev,
- 
- 
- static struct scsi_host_template pcmcia_sht = {
--	.module			= THIS_MODULE,
--	.name			= DRV_NAME,
--	.ioctl			= ata_scsi_ioctl,
--	.queuecommand		= ata_scsi_queuecmd,
--	.can_queue		= ATA_DEF_QUEUE,
--	.this_id		= ATA_SHT_THIS_ID,
--	.sg_tablesize		= LIBATA_MAX_PRD,
--	.cmd_per_lun		= ATA_SHT_CMD_PER_LUN,
--	.emulated		= ATA_SHT_EMULATED,
--	.use_clustering		= ATA_SHT_USE_CLUSTERING,
--	.proc_name		= DRV_NAME,
--	.dma_boundary		= ATA_DMA_BOUNDARY,
--	.slave_configure	= ata_scsi_slave_config,
--	.slave_destroy		= ata_scsi_slave_destroy,
--	.bios_param		= ata_std_bios_param,
-+	ATA_PIO_SHT(DRV_NAME),
- };
- 
- static struct ata_port_operations pcmcia_port_ops = {
--	.set_mode	= pcmcia_set_mode,
--	.tf_load	= ata_tf_load,
--	.tf_read	= ata_tf_read,
--	.check_status 	= ata_check_status,
--	.exec_command	= ata_exec_command,
--	.dev_select 	= ata_std_dev_select,
--
--	.freeze		= ata_bmdma_freeze,
--	.thaw		= ata_bmdma_thaw,
--	.error_handler	= ata_bmdma_error_handler,
--	.post_internal_cmd = ata_bmdma_post_internal_cmd,
--	.cable_detect	= ata_cable_40wire,
--
--	.qc_prep 	= ata_qc_prep,
--	.qc_issue	= ata_qc_issue_prot,
--
-+	.inherits	= &ata_sff_port_ops,
- 	.data_xfer	= ata_data_xfer_noirq,
--
--	.irq_clear	= ata_noop_irq_clear,
--	.irq_on		= ata_irq_on,
--
--	.port_start	= ata_sff_port_start,
-+	.cable_detect	= ata_cable_40wire,
-+	.set_mode	= pcmcia_set_mode,
- };
- 
- static struct ata_port_operations pcmcia_8bit_port_ops = {
--	.set_mode	= pcmcia_set_mode_8bit,
--	.tf_load	= ata_tf_load,
--	.tf_read	= ata_tf_read,
--	.check_status 	= ata_check_status,
--	.exec_command	= ata_exec_command,
--	.dev_select 	= ata_std_dev_select,
--
--	.freeze		= ata_bmdma_freeze,
--	.thaw		= ata_bmdma_thaw,
--	.error_handler	= ata_bmdma_error_handler,
--	.post_internal_cmd = ata_bmdma_post_internal_cmd,
--	.cable_detect	= ata_cable_40wire,
--
--	.qc_prep 	= ata_qc_prep,
--	.qc_issue	= ata_qc_issue_prot,
--
-+	.inherits	= &ata_sff_port_ops,
- 	.data_xfer	= ata_data_xfer_8bit,
--
--	.irq_clear	= ata_noop_irq_clear,
--	.irq_on		= ata_irq_on,
--
--	.port_start	= ata_sff_port_start,
-+	.cable_detect	= ata_cable_40wire,
-+	.set_mode	= pcmcia_set_mode_8bit,
- };
- 
- #define CS_CHECK(fn, ret) \
-diff --git a/drivers/ata/pata_pdc2027x.c b/drivers/ata/pata_pdc2027x.c
-index 028af5d..baa9fa7 100644
---- a/drivers/ata/pata_pdc2027x.c
-+++ b/drivers/ata/pata_pdc2027x.c
-@@ -129,84 +129,22 @@ static struct pci_driver pdc2027x_pci_driver = {
- };
- 
- static struct scsi_host_template pdc2027x_sht = {
--	.module			= THIS_MODULE,
--	.name			= DRV_NAME,
--	.ioctl			= ata_scsi_ioctl,
--	.queuecommand		= ata_scsi_queuecmd,
--	.can_queue		= ATA_DEF_QUEUE,
--	.this_id		= ATA_SHT_THIS_ID,
--	.sg_tablesize		= LIBATA_MAX_PRD,
--	.cmd_per_lun		= ATA_SHT_CMD_PER_LUN,
--	.emulated		= ATA_SHT_EMULATED,
--	.use_clustering		= ATA_SHT_USE_CLUSTERING,
--	.proc_name		= DRV_NAME,
--	.dma_boundary		= ATA_DMA_BOUNDARY,
--	.slave_configure	= ata_scsi_slave_config,
--	.slave_destroy		= ata_scsi_slave_destroy,
--	.bios_param		= ata_std_bios_param,
-+	ATA_BMDMA_SHT(DRV_NAME),
- };
- 
- static struct ata_port_operations pdc2027x_pata100_ops = {
--	.mode_filter		= ata_pci_default_filter,
--
--	.tf_load		= ata_tf_load,
--	.tf_read		= ata_tf_read,
--	.check_status		= ata_check_status,
--	.exec_command		= ata_exec_command,
--	.dev_select		= ata_std_dev_select,
--
-+	.inherits		= &ata_bmdma_port_ops,
- 	.check_atapi_dma	= pdc2027x_check_atapi_dma,
--	.bmdma_setup		= ata_bmdma_setup,
--	.bmdma_start		= ata_bmdma_start,
--	.bmdma_stop		= ata_bmdma_stop,
--	.bmdma_status		= ata_bmdma_status,
--	.qc_prep		= ata_qc_prep,
--	.qc_issue		= ata_qc_issue_prot,
--	.data_xfer		= ata_data_xfer,
--
--	.freeze			= ata_bmdma_freeze,
--	.thaw			= ata_bmdma_thaw,
--	.error_handler		= pdc2027x_error_handler,
--	.post_internal_cmd 	= ata_bmdma_post_internal_cmd,
- 	.cable_detect		= pdc2027x_cable_detect,
--
--	.irq_clear		= ata_bmdma_irq_clear,
--	.irq_on			= ata_irq_on,
--
--	.port_start		= ata_sff_port_start,
-+	.error_handler		= pdc2027x_error_handler,
- };
- 
- static struct ata_port_operations pdc2027x_pata133_ops = {
-+	.inherits		= &pdc2027x_pata100_ops,
-+	.mode_filter		= pdc2027x_mode_filter,
- 	.set_piomode		= pdc2027x_set_piomode,
- 	.set_dmamode		= pdc2027x_set_dmamode,
- 	.set_mode		= pdc2027x_set_mode,
--	.mode_filter		= pdc2027x_mode_filter,
--
--	.tf_load		= ata_tf_load,
--	.tf_read		= ata_tf_read,
--	.check_status		= ata_check_status,
--	.exec_command		= ata_exec_command,
--	.dev_select		= ata_std_dev_select,
--
--	.check_atapi_dma	= pdc2027x_check_atapi_dma,
--	.bmdma_setup		= ata_bmdma_setup,
--	.bmdma_start		= ata_bmdma_start,
--	.bmdma_stop		= ata_bmdma_stop,
--	.bmdma_status		= ata_bmdma_status,
--	.qc_prep		= ata_qc_prep,
--	.qc_issue		= ata_qc_issue_prot,
--	.data_xfer		= ata_data_xfer,
--
--	.freeze			= ata_bmdma_freeze,
--	.thaw			= ata_bmdma_thaw,
--	.error_handler		= pdc2027x_error_handler,
--	.post_internal_cmd	= ata_bmdma_post_internal_cmd,
--	.cable_detect		= pdc2027x_cable_detect,
--
--	.irq_clear		= ata_bmdma_irq_clear,
--	.irq_on			= ata_irq_on,
--
--	.port_start		= ata_sff_port_start,
- };
- 
- static struct ata_port_info pdc2027x_port_info[] = {
-diff --git a/drivers/ata/pata_pdc202xx_old.c b/drivers/ata/pata_pdc202xx_old.c
-index 3ed8667..4daac20 100644
---- a/drivers/ata/pata_pdc202xx_old.c
-+++ b/drivers/ata/pata_pdc202xx_old.c
-@@ -262,87 +262,28 @@ static int pdc2026x_check_atapi_dma(struct ata_queued_cmd *qc)
+ static int __init ninja32_init(void)
+ {
++	{
++		ata_dump_sht(DRV_NAME, &ninja32_sht);
++		ata_dump_ops(DRV_NAME, &ninja32_port_ops);
++	}
+ 	return pci_register_driver(&ninja32_pci_driver);
  }
  
- static struct scsi_host_template pdc202xx_sht = {
--	.module			= THIS_MODULE,
--	.name			= DRV_NAME,
--	.ioctl			= ata_scsi_ioctl,
--	.queuecommand		= ata_scsi_queuecmd,
--	.can_queue		= ATA_DEF_QUEUE,
--	.this_id		= ATA_SHT_THIS_ID,
--	.sg_tablesize		= LIBATA_MAX_PRD,
--	.cmd_per_lun		= ATA_SHT_CMD_PER_LUN,
--	.emulated		= ATA_SHT_EMULATED,
--	.use_clustering		= ATA_SHT_USE_CLUSTERING,
--	.proc_name		= DRV_NAME,
--	.dma_boundary		= ATA_DMA_BOUNDARY,
--	.slave_configure	= ata_scsi_slave_config,
--	.slave_destroy		= ata_scsi_slave_destroy,
--	.bios_param		= ata_std_bios_param,
-+	ATA_BMDMA_SHT(DRV_NAME),
- };
+Index: work/drivers/ata/pata_ns87410.c
+===================================================================
+--- work.orig/drivers/ata/pata_ns87410.c
++++ work/drivers/ata/pata_ns87410.c
+@@ -219,6 +219,10 @@ static struct pci_driver ns87410_pci_dri
  
- static struct ata_port_operations pdc2024x_port_ops = {
--	.set_piomode	= pdc202xx_set_piomode,
--	.set_dmamode	= pdc202xx_set_dmamode,
--	.mode_filter	= ata_pci_default_filter,
--	.tf_load	= ata_tf_load,
--	.tf_read	= ata_tf_read,
--	.check_status 	= ata_check_status,
--	.exec_command	= ata_exec_command,
--	.dev_select 	= ata_std_dev_select,
--
--	.freeze		= ata_bmdma_freeze,
--	.thaw		= ata_bmdma_thaw,
--	.error_handler	= ata_bmdma_error_handler,
--	.post_internal_cmd = ata_bmdma_post_internal_cmd,
--	.cable_detect	= ata_cable_40wire,
--
--	.bmdma_setup 	= ata_bmdma_setup,
--	.bmdma_start 	= ata_bmdma_start,
--	.bmdma_stop	= ata_bmdma_stop,
--	.bmdma_status 	= ata_bmdma_status,
--
--	.qc_prep 	= ata_qc_prep,
--	.qc_issue	= ata_qc_issue_prot,
--	.data_xfer	= ata_data_xfer,
--
--	.irq_handler	= ata_interrupt,
--	.irq_clear	= ata_bmdma_irq_clear,
--	.irq_on		= ata_irq_on,
--
--	.port_start	= ata_sff_port_start,
-+	.inherits		= &ata_bmdma_port_ops,
-+
-+	.cable_detect		= ata_cable_40wire,
-+	.set_piomode		= pdc202xx_set_piomode,
-+	.set_dmamode		= pdc202xx_set_dmamode,
- };
- 
- static struct ata_port_operations pdc2026x_port_ops = {
--	.set_piomode	= pdc202xx_set_piomode,
--	.set_dmamode	= pdc202xx_set_dmamode,
--	.mode_filter	= ata_pci_default_filter,
--	.tf_load	= ata_tf_load,
--	.tf_read	= ata_tf_read,
--	.check_status 	= ata_check_status,
--	.exec_command	= ata_exec_command,
--	.dev_select 	= ata_std_dev_select,
--	.dev_config	= pdc2026x_dev_config,
--
--	.freeze		= ata_bmdma_freeze,
--	.thaw		= ata_bmdma_thaw,
--	.error_handler	= ata_bmdma_error_handler,
--	.post_internal_cmd = ata_bmdma_post_internal_cmd,
--	.cable_detect	= pdc2026x_cable_detect,
--
--	.check_atapi_dma= pdc2026x_check_atapi_dma,
--	.bmdma_setup 	= ata_bmdma_setup,
--	.bmdma_start 	= pdc2026x_bmdma_start,
--	.bmdma_stop	= pdc2026x_bmdma_stop,
--	.bmdma_status 	= ata_bmdma_status,
--
--	.qc_prep 	= ata_qc_prep,
--	.qc_issue	= ata_qc_issue_prot,
--	.data_xfer	= ata_data_xfer,
--
--	.irq_handler	= ata_interrupt,
--	.irq_clear	= ata_bmdma_irq_clear,
--	.irq_on		= ata_irq_on,
--
--	.port_start	= pdc2026x_port_start,
-+	.inherits		= &pdc2024x_port_ops,
-+
-+	.check_atapi_dma	= pdc2026x_check_atapi_dma,
-+	.bmdma_start		= pdc2026x_bmdma_start,
-+	.bmdma_stop		= pdc2026x_bmdma_stop,
-+
-+	.cable_detect		= pdc2026x_cable_detect,
-+	.dev_config		= pdc2026x_dev_config,
-+
-+	.port_start		= pdc2026x_port_start,
- };
- 
- static int pdc202xx_init_one(struct pci_dev *dev, const struct pci_device_id *id)
-diff --git a/drivers/ata/pata_platform.c b/drivers/ata/pata_platform.c
-index d2edcbf..0f86ca3 100644
---- a/drivers/ata/pata_platform.c
-+++ b/drivers/ata/pata_platform.c
-@@ -47,45 +47,15 @@ static int pata_platform_set_mode(struct ata_link *link, struct ata_device **unu
+ static int __init ns87410_init(void)
+ {
++	{
++		ata_dump_sht(DRV_NAME, &ns87410_sht);
++		ata_dump_ops(DRV_NAME, &ns87410_port_ops);
++	}
+ 	return pci_register_driver(&ns87410_pci_driver);
  }
  
- static struct scsi_host_template pata_platform_sht = {
--	.module			= THIS_MODULE,
--	.name			= DRV_NAME,
--	.ioctl			= ata_scsi_ioctl,
--	.queuecommand		= ata_scsi_queuecmd,
--	.can_queue		= ATA_DEF_QUEUE,
--	.this_id		= ATA_SHT_THIS_ID,
--	.sg_tablesize		= LIBATA_MAX_PRD,
--	.cmd_per_lun		= ATA_SHT_CMD_PER_LUN,
--	.emulated		= ATA_SHT_EMULATED,
--	.use_clustering		= ATA_SHT_USE_CLUSTERING,
--	.proc_name		= DRV_NAME,
--	.dma_boundary		= ATA_DMA_BOUNDARY,
--	.slave_configure	= ata_scsi_slave_config,
--	.slave_destroy		= ata_scsi_slave_destroy,
--	.bios_param		= ata_std_bios_param,
-+	ATA_PIO_SHT(DRV_NAME),
- };
+Index: work/drivers/ata/pata_ns87415.c
+===================================================================
+--- work.orig/drivers/ata/pata_ns87415.c
++++ work/drivers/ata/pata_ns87415.c
+@@ -457,6 +457,11 @@ static struct pci_driver ns87415_pci_dri
  
- static struct ata_port_operations pata_platform_port_ops = {
--	.set_mode		= pata_platform_set_mode,
--
--	.tf_load		= ata_tf_load,
--	.tf_read		= ata_tf_read,
--	.check_status		= ata_check_status,
--	.exec_command		= ata_exec_command,
--	.dev_select		= ata_std_dev_select,
--
--	.freeze			= ata_bmdma_freeze,
--	.thaw			= ata_bmdma_thaw,
--	.error_handler		= ata_bmdma_error_handler,
--	.post_internal_cmd	= ata_bmdma_post_internal_cmd,
--	.cable_detect		= ata_cable_unknown,
--
--	.qc_prep		= ata_qc_prep,
--	.qc_issue		= ata_qc_issue_prot,
--
-+	.inherits		= &ata_sff_port_ops,
- 	.data_xfer		= ata_data_xfer_noirq,
--
--	.irq_clear		= ata_noop_irq_clear,
--	.irq_on			= ata_irq_on,
-+	.cable_detect		= ata_cable_unknown,
-+	.set_mode		= pata_platform_set_mode,
-+	.port_start		= ATA_OP_NULL,
- };
- 
- static void pata_platform_setup_port(struct ata_ioports *ioaddr,
-diff --git a/drivers/ata/pata_qdi.c b/drivers/ata/pata_qdi.c
-index 60238d5..d16b343 100644
---- a/drivers/ata/pata_qdi.c
-+++ b/drivers/ata/pata_qdi.c
-@@ -154,73 +154,20 @@ static unsigned int qdi_data_xfer(struct ata_device *dev, unsigned char *buf,
+ static int __init ns87415_init(void)
+ {
++	{
++		ata_dump_sht(DRV_NAME, &ns87415_sht);
++		//ata_dump_ops(DRV_NAME, &ns87560_pata_ops);
++		ata_dump_ops(DRV_NAME, &ns87415_pata_ops);
++	}
+ 	return pci_register_driver(&ns87415_pci_driver);
  }
  
- static struct scsi_host_template qdi_sht = {
--	.module			= THIS_MODULE,
--	.name			= DRV_NAME,
--	.ioctl			= ata_scsi_ioctl,
--	.queuecommand		= ata_scsi_queuecmd,
--	.can_queue		= ATA_DEF_QUEUE,
--	.this_id		= ATA_SHT_THIS_ID,
--	.sg_tablesize		= LIBATA_MAX_PRD,
--	.cmd_per_lun		= ATA_SHT_CMD_PER_LUN,
--	.emulated		= ATA_SHT_EMULATED,
--	.use_clustering		= ATA_SHT_USE_CLUSTERING,
--	.proc_name		= DRV_NAME,
--	.dma_boundary		= ATA_DMA_BOUNDARY,
--	.slave_configure	= ata_scsi_slave_config,
--	.slave_destroy		= ata_scsi_slave_destroy,
--	.bios_param		= ata_std_bios_param,
-+	ATA_PIO_SHT(DRV_NAME),
- };
+Index: work/drivers/ata/pata_oldpiix.c
+===================================================================
+--- work.orig/drivers/ata/pata_oldpiix.c
++++ work/drivers/ata/pata_oldpiix.c
+@@ -323,6 +323,10 @@ static struct pci_driver oldpiix_pci_dri
  
- static struct ata_port_operations qdi6500_port_ops = {
--	.set_piomode	= qdi6500_set_piomode,
--
--	.tf_load	= ata_tf_load,
--	.tf_read	= ata_tf_read,
--	.check_status 	= ata_check_status,
--	.exec_command	= ata_exec_command,
--	.dev_select 	= ata_std_dev_select,
--
--	.freeze		= ata_bmdma_freeze,
--	.thaw		= ata_bmdma_thaw,
--	.error_handler	= ata_bmdma_error_handler,
--	.post_internal_cmd = ata_bmdma_post_internal_cmd,
--	.cable_detect	= ata_cable_40wire,
--
--	.qc_prep 	= ata_qc_prep,
-+	.inherits	= &ata_sff_port_ops,
- 	.qc_issue	= qdi_qc_issue_prot,
--
- 	.data_xfer	= qdi_data_xfer,
--
--	.irq_clear	= ata_noop_irq_clear,
--	.irq_on		= ata_irq_on,
--
--	.port_start	= ata_sff_port_start,
-+	.cable_detect	= ata_cable_40wire,
-+	.set_piomode	= qdi6500_set_piomode,
- };
- 
- static struct ata_port_operations qdi6580_port_ops = {
-+	.inherits	= &qdi6500_port_ops,
- 	.set_piomode	= qdi6580_set_piomode,
--
--	.tf_load	= ata_tf_load,
--	.tf_read	= ata_tf_read,
--	.check_status 	= ata_check_status,
--	.exec_command	= ata_exec_command,
--	.dev_select 	= ata_std_dev_select,
--
--	.freeze		= ata_bmdma_freeze,
--	.thaw		= ata_bmdma_thaw,
--	.error_handler	= ata_bmdma_error_handler,
--	.post_internal_cmd = ata_bmdma_post_internal_cmd,
--	.cable_detect	= ata_cable_40wire,
--
--	.qc_prep 	= ata_qc_prep,
--	.qc_issue	= qdi_qc_issue_prot,
--
--	.data_xfer	= qdi_data_xfer,
--
--	.irq_clear	= ata_noop_irq_clear,
--	.irq_on		= ata_irq_on,
--
--	.port_start	= ata_sff_port_start,
- };
- 
- /**
-diff --git a/drivers/ata/pata_radisys.c b/drivers/ata/pata_radisys.c
-index 8109b08..94e60b3 100644
---- a/drivers/ata/pata_radisys.c
-+++ b/drivers/ata/pata_radisys.c
-@@ -185,53 +185,15 @@ static unsigned int radisys_qc_issue_prot(struct ata_queued_cmd *qc)
- 
- 
- static struct scsi_host_template radisys_sht = {
--	.module			= THIS_MODULE,
--	.name			= DRV_NAME,
--	.ioctl			= ata_scsi_ioctl,
--	.queuecommand		= ata_scsi_queuecmd,
--	.can_queue		= ATA_DEF_QUEUE,
--	.this_id		= ATA_SHT_THIS_ID,
--	.sg_tablesize		= LIBATA_MAX_PRD,
--	.cmd_per_lun		= ATA_SHT_CMD_PER_LUN,
--	.emulated		= ATA_SHT_EMULATED,
--	.use_clustering		= ATA_SHT_USE_CLUSTERING,
--	.proc_name		= DRV_NAME,
--	.dma_boundary		= ATA_DMA_BOUNDARY,
--	.slave_configure	= ata_scsi_slave_config,
--	.slave_destroy		= ata_scsi_slave_destroy,
--	.bios_param		= ata_std_bios_param,
-+	ATA_BMDMA_SHT(DRV_NAME),
- };
- 
--static const struct ata_port_operations radisys_pata_ops = {
-+static struct ata_port_operations radisys_pata_ops = {
-+	.inherits		= &ata_bmdma_port_ops,
-+	.qc_issue		= radisys_qc_issue_prot,
-+	.cable_detect		= ata_cable_unknown,
- 	.set_piomode		= radisys_set_piomode,
- 	.set_dmamode		= radisys_set_dmamode,
--	.mode_filter		= ata_pci_default_filter,
--
--	.tf_load		= ata_tf_load,
--	.tf_read		= ata_tf_read,
--	.check_status		= ata_check_status,
--	.exec_command		= ata_exec_command,
--	.dev_select		= ata_std_dev_select,
--
--	.freeze			= ata_bmdma_freeze,
--	.thaw			= ata_bmdma_thaw,
--	.error_handler		= ata_bmdma_error_handler,
--	.post_internal_cmd	= ata_bmdma_post_internal_cmd,
--	.cable_detect		= ata_cable_unknown,
--
--	.bmdma_setup		= ata_bmdma_setup,
--	.bmdma_start		= ata_bmdma_start,
--	.bmdma_stop		= ata_bmdma_stop,
--	.bmdma_status		= ata_bmdma_status,
--	.qc_prep		= ata_qc_prep,
--	.qc_issue		= radisys_qc_issue_prot,
--	.data_xfer		= ata_data_xfer,
--
--	.irq_handler		= ata_interrupt,
--	.irq_clear		= ata_bmdma_irq_clear,
--	.irq_on			= ata_irq_on,
--
--	.port_start		= ata_sff_port_start,
- };
- 
- 
-diff --git a/drivers/ata/pata_rz1000.c b/drivers/ata/pata_rz1000.c
-index d922698..f9d40be 100644
---- a/drivers/ata/pata_rz1000.c
-+++ b/drivers/ata/pata_rz1000.c
-@@ -53,54 +53,13 @@ static int rz1000_set_mode(struct ata_link *link, struct ata_device **unused)
- 
- 
- static struct scsi_host_template rz1000_sht = {
--	.module			= THIS_MODULE,
--	.name			= DRV_NAME,
--	.ioctl			= ata_scsi_ioctl,
--	.queuecommand		= ata_scsi_queuecmd,
--	.can_queue		= ATA_DEF_QUEUE,
--	.this_id		= ATA_SHT_THIS_ID,
--	.sg_tablesize		= LIBATA_MAX_PRD,
--	.cmd_per_lun		= ATA_SHT_CMD_PER_LUN,
--	.emulated		= ATA_SHT_EMULATED,
--	.use_clustering		= ATA_SHT_USE_CLUSTERING,
--	.proc_name		= DRV_NAME,
--	.dma_boundary		= ATA_DMA_BOUNDARY,
--	.slave_configure	= ata_scsi_slave_config,
--	.slave_destroy		= ata_scsi_slave_destroy,
--	.bios_param		= ata_std_bios_param,
-+	ATA_BMDMA_SHT(DRV_NAME),
- };
- 
- static struct ata_port_operations rz1000_port_ops = {
--	.set_mode	= rz1000_set_mode,
--	.mode_filter	= ata_pci_default_filter,
--
--	.tf_load	= ata_tf_load,
--	.tf_read	= ata_tf_read,
--	.check_status 	= ata_check_status,
--	.exec_command	= ata_exec_command,
--	.dev_select 	= ata_std_dev_select,
--
--	.bmdma_setup 	= ata_bmdma_setup,
--	.bmdma_start 	= ata_bmdma_start,
--	.bmdma_stop	= ata_bmdma_stop,
--	.bmdma_status 	= ata_bmdma_status,
--
--	.qc_prep 	= ata_qc_prep,
--	.qc_issue	= ata_qc_issue_prot,
--
--	.data_xfer	= ata_data_xfer,
--
--	.freeze		= ata_bmdma_freeze,
--	.thaw		= ata_bmdma_thaw,
--	.error_handler	= ata_bmdma_error_handler,
--	.post_internal_cmd = ata_bmdma_post_internal_cmd,
-+	.inherits	= &ata_bmdma_port_ops,
- 	.cable_detect	= ata_cable_40wire,
--
--	.irq_handler	= ata_interrupt,
--	.irq_clear	= ata_bmdma_irq_clear,
--	.irq_on		= ata_irq_on,
--
--	.port_start	= ata_sff_port_start,
-+	.set_mode	= rz1000_set_mode,
- };
- 
- static int rz1000_fifo_disable(struct pci_dev *pdev)
-diff --git a/drivers/ata/pata_sc1200.c b/drivers/ata/pata_sc1200.c
-index 725a858..362b7f8 100644
---- a/drivers/ata/pata_sc1200.c
-+++ b/drivers/ata/pata_sc1200.c
-@@ -179,55 +179,17 @@ static unsigned int sc1200_qc_issue_prot(struct ata_queued_cmd *qc)
+ static int __init oldpiix_init(void)
+ {
++	{
++		ata_dump_sht(DRV_NAME, &oldpiix_sht);
++		ata_dump_ops(DRV_NAME, &oldpiix_pata_ops);
++	}
+ 	return pci_register_driver(&oldpiix_pci_driver);
  }
  
- static struct scsi_host_template sc1200_sht = {
--	.module			= THIS_MODULE,
--	.name			= DRV_NAME,
--	.ioctl			= ata_scsi_ioctl,
--	.queuecommand		= ata_scsi_queuecmd,
--	.can_queue		= ATA_DEF_QUEUE,
--	.this_id		= ATA_SHT_THIS_ID,
--	.sg_tablesize		= LIBATA_DUMB_MAX_PRD,
--	.cmd_per_lun		= ATA_SHT_CMD_PER_LUN,
--	.emulated		= ATA_SHT_EMULATED,
--	.use_clustering		= ATA_SHT_USE_CLUSTERING,
--	.proc_name		= DRV_NAME,
--	.dma_boundary		= ATA_DMA_BOUNDARY,
--	.slave_configure	= ata_scsi_slave_config,
--	.slave_destroy		= ata_scsi_slave_destroy,
--	.bios_param		= ata_std_bios_param,
-+	ATA_BMDMA_SHT(DRV_NAME),
-+	.sg_tablesize	= LIBATA_DUMB_MAX_PRD,
- };
+Index: work/drivers/ata/pata_opti.c
+===================================================================
+--- work.orig/drivers/ata/pata_opti.c
++++ work/drivers/ata/pata_opti.c
+@@ -251,6 +251,10 @@ static struct pci_driver opti_pci_driver
  
- static struct ata_port_operations sc1200_port_ops = {
--	.set_piomode	= sc1200_set_piomode,
--	.set_dmamode	= sc1200_set_dmamode,
--	.mode_filter	= ata_pci_default_filter,
--
--	.tf_load	= ata_tf_load,
--	.tf_read	= ata_tf_read,
--	.check_status 	= ata_check_status,
--	.exec_command	= ata_exec_command,
--	.dev_select 	= ata_std_dev_select,
--
--	.freeze		= ata_bmdma_freeze,
--	.thaw		= ata_bmdma_thaw,
--	.error_handler	= ata_bmdma_error_handler,
--	.post_internal_cmd = ata_bmdma_post_internal_cmd,
--	.cable_detect	= ata_cable_40wire,
--
--	.bmdma_setup 	= ata_bmdma_setup,
--	.bmdma_start 	= ata_bmdma_start,
--	.bmdma_stop	= ata_bmdma_stop,
--	.bmdma_status 	= ata_bmdma_status,
--
-+	.inherits	= &ata_bmdma_port_ops,
- 	.qc_prep 	= ata_dumb_qc_prep,
- 	.qc_issue	= sc1200_qc_issue_prot,
--
--	.data_xfer	= ata_data_xfer,
--
--	.irq_handler	= ata_interrupt,
--	.irq_clear	= ata_bmdma_irq_clear,
--	.irq_on		= ata_irq_on,
--
--	.port_start	= ata_sff_port_start,
-+	.cable_detect	= ata_cable_40wire,
-+	.set_piomode	= sc1200_set_piomode,
-+	.set_dmamode	= sc1200_set_dmamode,
- };
- 
- /**
-diff --git a/drivers/ata/pata_scc.c b/drivers/ata/pata_scc.c
-index 55055b2..033d1f3 100644
---- a/drivers/ata/pata_scc.c
-+++ b/drivers/ata/pata_scc.c
-@@ -968,24 +968,12 @@ static void scc_port_stop (struct ata_port *ap)
+ static int __init opti_init(void)
+ {
++	{
++		ata_dump_sht(DRV_NAME, &opti_sht);
++		ata_dump_ops(DRV_NAME, &opti_port_ops);
++	}
+ 	return pci_register_driver(&opti_pci_driver);
  }
  
- static struct scsi_host_template scc_sht = {
--	.module			= THIS_MODULE,
--	.name			= DRV_NAME,
--	.ioctl			= ata_scsi_ioctl,
--	.queuecommand		= ata_scsi_queuecmd,
--	.can_queue		= ATA_DEF_QUEUE,
--	.this_id		= ATA_SHT_THIS_ID,
--	.sg_tablesize		= LIBATA_MAX_PRD,
--	.cmd_per_lun		= ATA_SHT_CMD_PER_LUN,
--	.emulated		= ATA_SHT_EMULATED,
--	.use_clustering		= ATA_SHT_USE_CLUSTERING,
--	.proc_name		= DRV_NAME,
--	.dma_boundary		= ATA_DMA_BOUNDARY,
--	.slave_configure	= ata_scsi_slave_config,
--	.slave_destroy		= ata_scsi_slave_destroy,
--	.bios_param		= ata_std_bios_param,
-+	ATA_BMDMA_SHT(DRV_NAME),
- };
+Index: work/drivers/ata/pata_optidma.c
+===================================================================
+--- work.orig/drivers/ata/pata_optidma.c
++++ work/drivers/ata/pata_optidma.c
+@@ -538,6 +538,11 @@ static struct pci_driver optidma_pci_dri
  
- static const struct ata_port_operations scc_pata_ops = {
-+	.inherits		= &ata_bmdma_port_ops,
-+
- 	.set_piomode		= scc_set_piomode,
- 	.set_dmamode		= scc_set_dmamode,
- 	.mode_filter		= scc_mode_filter,
-@@ -1003,9 +991,6 @@ static const struct ata_port_operations scc_pata_ops = {
- 	.bmdma_status		= scc_bmdma_status,
- 	.data_xfer		= scc_data_xfer,
- 
--	.qc_prep		= ata_qc_prep,
--	.qc_issue		= ata_qc_issue_prot,
--
- 	.freeze			= scc_bmdma_freeze,
- 	.error_handler		= scc_error_handler,
- 	.post_internal_cmd	= scc_bmdma_stop,
-diff --git a/drivers/ata/pata_serverworks.c b/drivers/ata/pata_serverworks.c
-index 0b1e882..a5ce863 100644
---- a/drivers/ata/pata_serverworks.c
-+++ b/drivers/ata/pata_serverworks.c
-@@ -298,89 +298,20 @@ static void serverworks_set_dmamode(struct ata_port *ap, struct ata_device *adev
+ static int __init optidma_init(void)
+ {
++	{
++		ata_dump_sht(DRV_NAME, &optidma_sht);
++		ata_dump_ops(DRV_NAME, &optidma_port_ops);
++		ata_dump_ops(DRV_NAME, &optiplus_port_ops);
++	}
+ 	return pci_register_driver(&optidma_pci_driver);
  }
  
- static struct scsi_host_template serverworks_sht = {
--	.module			= THIS_MODULE,
--	.name			= DRV_NAME,
--	.ioctl			= ata_scsi_ioctl,
--	.queuecommand		= ata_scsi_queuecmd,
--	.can_queue		= ATA_DEF_QUEUE,
--	.this_id		= ATA_SHT_THIS_ID,
--	.sg_tablesize		= LIBATA_MAX_PRD,
--	.cmd_per_lun		= ATA_SHT_CMD_PER_LUN,
--	.emulated		= ATA_SHT_EMULATED,
--	.use_clustering		= ATA_SHT_USE_CLUSTERING,
--	.proc_name		= DRV_NAME,
--	.dma_boundary		= ATA_DMA_BOUNDARY,
--	.slave_configure	= ata_scsi_slave_config,
--	.slave_destroy		= ata_scsi_slave_destroy,
--	.bios_param		= ata_std_bios_param,
-+	ATA_BMDMA_SHT(DRV_NAME),
- };
+Index: work/drivers/ata/pata_pcmcia.c
+===================================================================
+--- work.orig/drivers/ata/pata_pcmcia.c
++++ work/drivers/ata/pata_pcmcia.c
+@@ -499,6 +499,11 @@ static struct pcmcia_driver pcmcia_drive
  
- static struct ata_port_operations serverworks_osb4_port_ops = {
-+	.inherits	= &ata_bmdma_port_ops,
-+	.cable_detect	= serverworks_cable_detect,
-+	.mode_filter	= serverworks_osb4_filter,
- 	.set_piomode	= serverworks_set_piomode,
- 	.set_dmamode	= serverworks_set_dmamode,
--	.mode_filter	= serverworks_osb4_filter,
--
--	.tf_load	= ata_tf_load,
--	.tf_read	= ata_tf_read,
--	.check_status 	= ata_check_status,
--	.exec_command	= ata_exec_command,
--	.dev_select 	= ata_std_dev_select,
--
--	.freeze		= ata_bmdma_freeze,
--	.thaw		= ata_bmdma_thaw,
--	.error_handler	= ata_bmdma_error_handler,
--	.post_internal_cmd = ata_bmdma_post_internal_cmd,
--	.cable_detect	= serverworks_cable_detect,
--
--	.bmdma_setup 	= ata_bmdma_setup,
--	.bmdma_start 	= ata_bmdma_start,
--	.bmdma_stop	= ata_bmdma_stop,
--	.bmdma_status 	= ata_bmdma_status,
--
--	.qc_prep 	= ata_qc_prep,
--	.qc_issue	= ata_qc_issue_prot,
--
--	.data_xfer	= ata_data_xfer,
--
--	.irq_handler	= ata_interrupt,
--	.irq_clear	= ata_bmdma_irq_clear,
--	.irq_on		= ata_irq_on,
--
--	.port_start	= ata_sff_port_start,
- };
- 
- static struct ata_port_operations serverworks_csb_port_ops = {
--	.set_piomode	= serverworks_set_piomode,
--	.set_dmamode	= serverworks_set_dmamode,
-+	.inherits	= &serverworks_osb4_port_ops,
- 	.mode_filter	= serverworks_csb_filter,
--
--	.tf_load	= ata_tf_load,
--	.tf_read	= ata_tf_read,
--	.check_status 	= ata_check_status,
--	.exec_command	= ata_exec_command,
--	.dev_select 	= ata_std_dev_select,
--
--	.freeze		= ata_bmdma_freeze,
--	.thaw		= ata_bmdma_thaw,
--	.error_handler	= ata_bmdma_error_handler,
--	.post_internal_cmd = ata_bmdma_post_internal_cmd,
--	.cable_detect	= serverworks_cable_detect,
--
--	.bmdma_setup 	= ata_bmdma_setup,
--	.bmdma_start 	= ata_bmdma_start,
--	.bmdma_stop	= ata_bmdma_stop,
--	.bmdma_status 	= ata_bmdma_status,
--
--	.qc_prep 	= ata_qc_prep,
--	.qc_issue	= ata_qc_issue_prot,
--
--	.data_xfer	= ata_data_xfer,
--
--	.irq_handler	= ata_interrupt,
--	.irq_clear	= ata_bmdma_irq_clear,
--	.irq_on		= ata_irq_on,
--
--	.port_start	= ata_sff_port_start,
- };
- 
- static int serverworks_fixup_osb4(struct pci_dev *pdev)
-diff --git a/drivers/ata/pata_sil680.c b/drivers/ata/pata_sil680.c
-index ecdaebe..bc3253d 100644
---- a/drivers/ata/pata_sil680.c
-+++ b/drivers/ata/pata_sil680.c
-@@ -192,54 +192,14 @@ static void sil680_set_dmamode(struct ata_port *ap, struct ata_device *adev)
+ static int __init pcmcia_init(void)
+ {
++	{
++		ata_dump_sht(DRV_NAME, &pcmcia_sht);
++		ata_dump_ops(DRV_NAME, &pcmcia_port_ops);
++		ata_dump_ops(DRV_NAME, &pcmcia_8bit_port_ops);
++	}
+ 	return pcmcia_register_driver(&pcmcia_driver);
  }
  
- static struct scsi_host_template sil680_sht = {
--	.module			= THIS_MODULE,
--	.name			= DRV_NAME,
--	.ioctl			= ata_scsi_ioctl,
--	.queuecommand		= ata_scsi_queuecmd,
--	.can_queue		= ATA_DEF_QUEUE,
--	.this_id		= ATA_SHT_THIS_ID,
--	.sg_tablesize		= LIBATA_MAX_PRD,
--	.cmd_per_lun		= ATA_SHT_CMD_PER_LUN,
--	.emulated		= ATA_SHT_EMULATED,
--	.use_clustering		= ATA_SHT_USE_CLUSTERING,
--	.proc_name		= DRV_NAME,
--	.dma_boundary		= ATA_DMA_BOUNDARY,
--	.slave_configure	= ata_scsi_slave_config,
--	.slave_destroy		= ata_scsi_slave_destroy,
--	.bios_param		= ata_std_bios_param,
-+	ATA_BMDMA_SHT(DRV_NAME),
- };
- 
- static struct ata_port_operations sil680_port_ops = {
-+	.inherits	= &ata_bmdma_port_ops,
-+	.cable_detect	= sil680_cable_detect,
- 	.set_piomode	= sil680_set_piomode,
- 	.set_dmamode	= sil680_set_dmamode,
--	.mode_filter	= ata_pci_default_filter,
--	.tf_load	= ata_tf_load,
--	.tf_read	= ata_tf_read,
--	.check_status 	= ata_check_status,
--	.exec_command	= ata_exec_command,
--	.dev_select 	= ata_std_dev_select,
--
--	.freeze		= ata_bmdma_freeze,
--	.thaw		= ata_bmdma_thaw,
--	.error_handler	= ata_bmdma_error_handler,
--	.post_internal_cmd = ata_bmdma_post_internal_cmd,
--	.cable_detect	= sil680_cable_detect,
--
--	.bmdma_setup 	= ata_bmdma_setup,
--	.bmdma_start 	= ata_bmdma_start,
--	.bmdma_stop	= ata_bmdma_stop,
--	.bmdma_status 	= ata_bmdma_status,
--
--	.qc_prep 	= ata_qc_prep,
--	.qc_issue	= ata_qc_issue_prot,
--
--	.data_xfer	= ata_data_xfer,
--
--	.irq_handler	= ata_interrupt,
--	.irq_clear	= ata_bmdma_irq_clear,
--	.irq_on		= ata_irq_on,
--
--	.port_start	= ata_sff_port_start,
- };
- 
- /**
-diff --git a/drivers/ata/pata_sis.c b/drivers/ata/pata_sis.c
-index ff98050..f155a55 100644
---- a/drivers/ata/pata_sis.c
-+++ b/drivers/ata/pata_sis.c
-@@ -514,213 +514,54 @@ static void sis_133_set_dmamode (struct ata_port *ap, struct ata_device *adev)
- }
- 
- static struct scsi_host_template sis_sht = {
--	.module			= THIS_MODULE,
--	.name			= DRV_NAME,
--	.ioctl			= ata_scsi_ioctl,
--	.queuecommand		= ata_scsi_queuecmd,
--	.can_queue		= ATA_DEF_QUEUE,
--	.this_id		= ATA_SHT_THIS_ID,
--	.sg_tablesize		= LIBATA_MAX_PRD,
--	.cmd_per_lun		= ATA_SHT_CMD_PER_LUN,
--	.emulated		= ATA_SHT_EMULATED,
--	.use_clustering		= ATA_SHT_USE_CLUSTERING,
--	.proc_name		= DRV_NAME,
--	.dma_boundary		= ATA_DMA_BOUNDARY,
--	.slave_configure	= ata_scsi_slave_config,
--	.slave_destroy		= ata_scsi_slave_destroy,
--	.bios_param		= ata_std_bios_param,
-+	ATA_BMDMA_SHT(DRV_NAME),
- };
- 
--static const struct ata_port_operations sis_133_ops = {
-+static struct ata_port_operations sis_133_for_sata_ops = {
-+	.inherits		= &ata_bmdma_port_ops,
- 	.set_piomode		= sis_133_set_piomode,
- 	.set_dmamode		= sis_133_set_dmamode,
--	.mode_filter		= ata_pci_default_filter,
--
--	.tf_load		= ata_tf_load,
--	.tf_read		= ata_tf_read,
--	.check_status		= ata_check_status,
--	.exec_command		= ata_exec_command,
--	.dev_select		= ata_std_dev_select,
--
--	.freeze			= ata_bmdma_freeze,
--	.thaw			= ata_bmdma_thaw,
--	.error_handler		= sis_error_handler,
--	.post_internal_cmd	= ata_bmdma_post_internal_cmd,
- 	.cable_detect		= sis_133_cable_detect,
-+};
- 
--	.bmdma_setup		= ata_bmdma_setup,
--	.bmdma_start		= ata_bmdma_start,
--	.bmdma_stop		= ata_bmdma_stop,
--	.bmdma_status		= ata_bmdma_status,
--	.qc_prep		= ata_qc_prep,
--	.qc_issue		= ata_qc_issue_prot,
--	.data_xfer		= ata_data_xfer,
--
--	.irq_handler		= ata_interrupt,
--	.irq_clear		= ata_bmdma_irq_clear,
--	.irq_on			= ata_irq_on,
--
--	.port_start		= ata_sff_port_start,
-+static struct ata_port_operations sis_base_ops = {
-+	.inherits		= &ata_bmdma_port_ops,
-+	.error_handler		= sis_error_handler,
- };
- 
--static const struct ata_port_operations sis_133_for_sata_ops = {
-+static struct ata_port_operations sis_133_ops = {
-+	.inherits		= &sis_base_ops,
- 	.set_piomode		= sis_133_set_piomode,
- 	.set_dmamode		= sis_133_set_dmamode,
--	.mode_filter		= ata_pci_default_filter,
--
--	.tf_load		= ata_tf_load,
--	.tf_read		= ata_tf_read,
--	.check_status		= ata_check_status,
--	.exec_command		= ata_exec_command,
--	.dev_select		= ata_std_dev_select,
--
--	.freeze			= ata_bmdma_freeze,
--	.thaw			= ata_bmdma_thaw,
--	.error_handler		= ata_bmdma_error_handler,
--	.post_internal_cmd	= ata_bmdma_post_internal_cmd,
- 	.cable_detect		= sis_133_cable_detect,
--
--	.bmdma_setup		= ata_bmdma_setup,
--	.bmdma_start		= ata_bmdma_start,
--	.bmdma_stop		= ata_bmdma_stop,
--	.bmdma_status		= ata_bmdma_status,
--	.qc_prep		= ata_qc_prep,
--	.qc_issue		= ata_qc_issue_prot,
--	.data_xfer		= ata_data_xfer,
--
--	.irq_handler		= ata_interrupt,
--	.irq_clear		= ata_bmdma_irq_clear,
--	.irq_on			= ata_irq_on,
--
--	.port_start		= ata_sff_port_start,
- };
- 
--static const struct ata_port_operations sis_133_early_ops = {
-+static struct ata_port_operations sis_133_early_ops = {
-+	.inherits		= &sis_base_ops,
- 	.set_piomode		= sis_100_set_piomode,
- 	.set_dmamode		= sis_133_early_set_dmamode,
--	.mode_filter		= ata_pci_default_filter,
--
--	.tf_load		= ata_tf_load,
--	.tf_read		= ata_tf_read,
--	.check_status		= ata_check_status,
--	.exec_command		= ata_exec_command,
--	.dev_select		= ata_std_dev_select,
--
--	.freeze			= ata_bmdma_freeze,
--	.thaw			= ata_bmdma_thaw,
--	.error_handler		= sis_error_handler,
--	.post_internal_cmd	= ata_bmdma_post_internal_cmd,
- 	.cable_detect		= sis_66_cable_detect,
--
--	.bmdma_setup		= ata_bmdma_setup,
--	.bmdma_start		= ata_bmdma_start,
--	.bmdma_stop		= ata_bmdma_stop,
--	.bmdma_status		= ata_bmdma_status,
--	.qc_prep		= ata_qc_prep,
--	.qc_issue		= ata_qc_issue_prot,
--	.data_xfer		= ata_data_xfer,
--
--	.irq_handler		= ata_interrupt,
--	.irq_clear		= ata_bmdma_irq_clear,
--	.irq_on			= ata_irq_on,
--
--	.port_start		= ata_sff_port_start,
- };
- 
--static const struct ata_port_operations sis_100_ops = {
-+static struct ata_port_operations sis_100_ops = {
-+	.inherits		= &sis_base_ops,
- 	.set_piomode		= sis_100_set_piomode,
- 	.set_dmamode		= sis_100_set_dmamode,
--	.mode_filter		= ata_pci_default_filter,
--
--	.tf_load		= ata_tf_load,
--	.tf_read		= ata_tf_read,
--	.check_status		= ata_check_status,
--	.exec_command		= ata_exec_command,
--	.dev_select		= ata_std_dev_select,
--
--	.freeze			= ata_bmdma_freeze,
--	.thaw			= ata_bmdma_thaw,
--	.error_handler		= sis_error_handler,
--	.post_internal_cmd	= ata_bmdma_post_internal_cmd,
- 	.cable_detect		= sis_66_cable_detect,
--
--	.bmdma_setup		= ata_bmdma_setup,
--	.bmdma_start		= ata_bmdma_start,
--	.bmdma_stop		= ata_bmdma_stop,
--	.bmdma_status		= ata_bmdma_status,
--	.qc_prep		= ata_qc_prep,
--	.qc_issue		= ata_qc_issue_prot,
--	.data_xfer		= ata_data_xfer,
--
--	.irq_handler		= ata_interrupt,
--	.irq_clear		= ata_bmdma_irq_clear,
--	.irq_on			= ata_irq_on,
--
--	.port_start		= ata_sff_port_start,
- };
- 
--static const struct ata_port_operations sis_66_ops = {
-+static struct ata_port_operations sis_66_ops = {
-+	.inherits		= &sis_base_ops,
- 	.set_piomode		= sis_old_set_piomode,
- 	.set_dmamode		= sis_66_set_dmamode,
--	.mode_filter		= ata_pci_default_filter,
--
--	.tf_load		= ata_tf_load,
--	.tf_read		= ata_tf_read,
--	.check_status		= ata_check_status,
--	.exec_command		= ata_exec_command,
--	.dev_select		= ata_std_dev_select,
- 	.cable_detect		= sis_66_cable_detect,
--
--	.freeze			= ata_bmdma_freeze,
--	.thaw			= ata_bmdma_thaw,
--	.error_handler		= sis_error_handler,
--	.post_internal_cmd	= ata_bmdma_post_internal_cmd,
--
--	.bmdma_setup		= ata_bmdma_setup,
--	.bmdma_start		= ata_bmdma_start,
--	.bmdma_stop		= ata_bmdma_stop,
--	.bmdma_status		= ata_bmdma_status,
--	.qc_prep		= ata_qc_prep,
--	.qc_issue		= ata_qc_issue_prot,
--	.data_xfer		= ata_data_xfer,
--
--	.irq_handler		= ata_interrupt,
--	.irq_clear		= ata_bmdma_irq_clear,
--	.irq_on			= ata_irq_on,
--
--	.port_start		= ata_sff_port_start,
- };
- 
--static const struct ata_port_operations sis_old_ops = {
-+static struct ata_port_operations sis_old_ops = {
-+	.inherits		= &sis_base_ops,
- 	.set_piomode		= sis_old_set_piomode,
- 	.set_dmamode		= sis_old_set_dmamode,
--	.mode_filter		= ata_pci_default_filter,
--
--	.tf_load		= ata_tf_load,
--	.tf_read		= ata_tf_read,
--	.check_status		= ata_check_status,
--	.exec_command		= ata_exec_command,
--	.dev_select		= ata_std_dev_select,
--
--	.freeze			= ata_bmdma_freeze,
--	.thaw			= ata_bmdma_thaw,
--	.error_handler		= sis_error_handler,
--	.post_internal_cmd	= ata_bmdma_post_internal_cmd,
- 	.cable_detect		= ata_cable_40wire,
--
--	.bmdma_setup		= ata_bmdma_setup,
--	.bmdma_start		= ata_bmdma_start,
--	.bmdma_stop		= ata_bmdma_stop,
--	.bmdma_status		= ata_bmdma_status,
--	.qc_prep		= ata_qc_prep,
--	.qc_issue		= ata_qc_issue_prot,
--	.data_xfer		= ata_data_xfer,
--
--	.irq_handler		= ata_interrupt,
--	.irq_clear		= ata_bmdma_irq_clear,
--	.irq_on			= ata_irq_on,
--
--	.port_start		= ata_sff_port_start,
- };
- 
- static const struct ata_port_info sis_info = {
-diff --git a/drivers/ata/pata_sl82c105.c b/drivers/ata/pata_sl82c105.c
-index 51831ac..04fd30b 100644
---- a/drivers/ata/pata_sl82c105.c
-+++ b/drivers/ata/pata_sl82c105.c
-@@ -207,54 +207,16 @@ static void sl82c105_bmdma_stop(struct ata_queued_cmd *qc)
- }
- 
- static struct scsi_host_template sl82c105_sht = {
--	.module			= THIS_MODULE,
--	.name			= DRV_NAME,
--	.ioctl			= ata_scsi_ioctl,
--	.queuecommand		= ata_scsi_queuecmd,
--	.can_queue		= ATA_DEF_QUEUE,
--	.this_id		= ATA_SHT_THIS_ID,
--	.sg_tablesize		= LIBATA_MAX_PRD,
--	.cmd_per_lun		= ATA_SHT_CMD_PER_LUN,
--	.emulated		= ATA_SHT_EMULATED,
--	.use_clustering		= ATA_SHT_USE_CLUSTERING,
--	.proc_name		= DRV_NAME,
--	.dma_boundary		= ATA_DMA_BOUNDARY,
--	.slave_configure	= ata_scsi_slave_config,
--	.slave_destroy		= ata_scsi_slave_destroy,
--	.bios_param		= ata_std_bios_param,
-+	ATA_BMDMA_SHT(DRV_NAME),
- };
- 
- static struct ata_port_operations sl82c105_port_ops = {
--	.set_piomode	= sl82c105_set_piomode,
--	.mode_filter	= ata_pci_default_filter,
--
--	.tf_load	= ata_tf_load,
--	.tf_read	= ata_tf_read,
--	.check_status 	= ata_check_status,
--	.exec_command	= ata_exec_command,
--	.dev_select 	= ata_std_dev_select,
--
--	.freeze		= ata_bmdma_freeze,
--	.thaw		= ata_bmdma_thaw,
--	.error_handler	= sl82c105_error_handler,
--	.post_internal_cmd = ata_bmdma_post_internal_cmd,
--	.cable_detect	= ata_cable_40wire,
--
--	.bmdma_setup 	= ata_bmdma_setup,
-+	.inherits	= &ata_bmdma_port_ops,
- 	.bmdma_start 	= sl82c105_bmdma_start,
- 	.bmdma_stop	= sl82c105_bmdma_stop,
--	.bmdma_status 	= ata_bmdma_status,
--
--	.qc_prep 	= ata_qc_prep,
--	.qc_issue	= ata_qc_issue_prot,
--
--	.data_xfer	= ata_data_xfer,
--
--	.irq_handler	= ata_interrupt,
--	.irq_clear	= ata_bmdma_irq_clear,
--	.irq_on		= ata_irq_on,
--
--	.port_start	= ata_sff_port_start,
-+	.cable_detect	= ata_cable_40wire,
-+	.set_piomode	= sl82c105_set_piomode,
-+	.error_handler	= sl82c105_error_handler,
- };
- 
- /**
-diff --git a/drivers/ata/pata_triflex.c b/drivers/ata/pata_triflex.c
-index 403eafc..bc4956e 100644
---- a/drivers/ata/pata_triflex.c
-+++ b/drivers/ata/pata_triflex.c
-@@ -180,54 +180,16 @@ static void triflex_bmdma_stop(struct ata_queued_cmd *qc)
- }
- 
- static struct scsi_host_template triflex_sht = {
--	.module			= THIS_MODULE,
--	.name			= DRV_NAME,
--	.ioctl			= ata_scsi_ioctl,
--	.queuecommand		= ata_scsi_queuecmd,
--	.can_queue		= ATA_DEF_QUEUE,
--	.this_id		= ATA_SHT_THIS_ID,
--	.sg_tablesize		= LIBATA_MAX_PRD,
--	.cmd_per_lun		= ATA_SHT_CMD_PER_LUN,
--	.emulated		= ATA_SHT_EMULATED,
--	.use_clustering		= ATA_SHT_USE_CLUSTERING,
--	.proc_name		= DRV_NAME,
--	.dma_boundary		= ATA_DMA_BOUNDARY,
--	.slave_configure	= ata_scsi_slave_config,
--	.slave_destroy		= ata_scsi_slave_destroy,
--	.bios_param		= ata_std_bios_param,
-+	ATA_BMDMA_SHT(DRV_NAME),
- };
- 
- static struct ata_port_operations triflex_port_ops = {
--	.set_piomode	= triflex_set_piomode,
--	.mode_filter	= ata_pci_default_filter,
--
--	.tf_load	= ata_tf_load,
--	.tf_read	= ata_tf_read,
--	.check_status 	= ata_check_status,
--	.exec_command	= ata_exec_command,
--	.dev_select 	= ata_std_dev_select,
--
--	.freeze		= ata_bmdma_freeze,
--	.thaw		= ata_bmdma_thaw,
--	.error_handler	= triflex_error_handler,
--	.post_internal_cmd = ata_bmdma_post_internal_cmd,
--	.cable_detect	= ata_cable_40wire,
--
--	.bmdma_setup 	= ata_bmdma_setup,
-+	.inherits	= &ata_bmdma_port_ops,
- 	.bmdma_start 	= triflex_bmdma_start,
- 	.bmdma_stop	= triflex_bmdma_stop,
--	.bmdma_status 	= ata_bmdma_status,
--
--	.qc_prep 	= ata_qc_prep,
--	.qc_issue	= ata_qc_issue_prot,
--
--	.data_xfer	= ata_data_xfer,
--
--	.irq_handler	= ata_interrupt,
--	.irq_clear	= ata_bmdma_irq_clear,
--	.irq_on		= ata_irq_on,
--
--	.port_start	= ata_sff_port_start,
-+	.cable_detect	= ata_cable_40wire,
-+	.set_piomode	= triflex_set_piomode,
-+	.error_handler	= triflex_error_handler,
- };
- 
- static int triflex_init_one(struct pci_dev *dev, const struct pci_device_id *id)
-diff --git a/drivers/ata/pata_via.c b/drivers/ata/pata_via.c
-index 47ec47b..c941d5a 100644
---- a/drivers/ata/pata_via.c
-+++ b/drivers/ata/pata_via.c
-@@ -331,89 +331,20 @@ static void via_set_dmamode(struct ata_port *ap, struct ata_device *adev)
- }
- 
- static struct scsi_host_template via_sht = {
--	.module			= THIS_MODULE,
--	.name			= DRV_NAME,
--	.ioctl			= ata_scsi_ioctl,
--	.queuecommand		= ata_scsi_queuecmd,
--	.can_queue		= ATA_DEF_QUEUE,
--	.this_id		= ATA_SHT_THIS_ID,
--	.sg_tablesize		= LIBATA_MAX_PRD,
--	.cmd_per_lun		= ATA_SHT_CMD_PER_LUN,
--	.emulated		= ATA_SHT_EMULATED,
--	.use_clustering		= ATA_SHT_USE_CLUSTERING,
--	.proc_name		= DRV_NAME,
--	.dma_boundary		= ATA_DMA_BOUNDARY,
--	.slave_configure	= ata_scsi_slave_config,
--	.slave_destroy		= ata_scsi_slave_destroy,
--	.bios_param		= ata_std_bios_param,
-+	ATA_BMDMA_SHT(DRV_NAME),
- };
- 
- static struct ata_port_operations via_port_ops = {
-+	.inherits	= &ata_bmdma_port_ops,
-+	.cable_detect	= via_cable_detect,
- 	.set_piomode	= via_set_piomode,
- 	.set_dmamode	= via_set_dmamode,
--	.mode_filter	= ata_pci_default_filter,
--
--	.tf_load	= ata_tf_load,
--	.tf_read	= ata_tf_read,
--	.check_status 	= ata_check_status,
--	.exec_command	= ata_exec_command,
--	.dev_select 	= ata_std_dev_select,
--
--	.freeze		= ata_bmdma_freeze,
--	.thaw		= ata_bmdma_thaw,
- 	.error_handler	= via_error_handler,
--	.post_internal_cmd = ata_bmdma_post_internal_cmd,
--	.cable_detect	= via_cable_detect,
--
--	.bmdma_setup 	= ata_bmdma_setup,
--	.bmdma_start 	= ata_bmdma_start,
--	.bmdma_stop	= ata_bmdma_stop,
--	.bmdma_status 	= ata_bmdma_status,
--
--	.qc_prep 	= ata_qc_prep,
--	.qc_issue	= ata_qc_issue_prot,
--
--	.data_xfer	= ata_data_xfer,
--
--	.irq_handler	= ata_interrupt,
--	.irq_clear	= ata_bmdma_irq_clear,
--	.irq_on		= ata_irq_on,
--
--	.port_start	= ata_sff_port_start,
- };
- 
- static struct ata_port_operations via_port_ops_noirq = {
--	.set_piomode	= via_set_piomode,
--	.set_dmamode	= via_set_dmamode,
--	.mode_filter	= ata_pci_default_filter,
--
--	.tf_load	= ata_tf_load,
--	.tf_read	= ata_tf_read,
--	.check_status 	= ata_check_status,
--	.exec_command	= ata_exec_command,
--	.dev_select 	= ata_std_dev_select,
--
--	.freeze		= ata_bmdma_freeze,
--	.thaw		= ata_bmdma_thaw,
--	.error_handler	= via_error_handler,
--	.post_internal_cmd = ata_bmdma_post_internal_cmd,
--	.cable_detect	= via_cable_detect,
--
--	.bmdma_setup 	= ata_bmdma_setup,
--	.bmdma_start 	= ata_bmdma_start,
--	.bmdma_stop	= ata_bmdma_stop,
--	.bmdma_status 	= ata_bmdma_status,
--
--	.qc_prep 	= ata_qc_prep,
--	.qc_issue	= ata_qc_issue_prot,
--
-+	.inherits	= &via_port_ops,
- 	.data_xfer	= ata_data_xfer_noirq,
--
--	.irq_handler	= ata_interrupt,
--	.irq_clear	= ata_bmdma_irq_clear,
--	.irq_on		= ata_irq_on,
--
--	.port_start	= ata_sff_port_start,
- };
- 
- /**
-diff --git a/drivers/ata/pata_winbond.c b/drivers/ata/pata_winbond.c
-index 5318248..f235bb0 100644
---- a/drivers/ata/pata_winbond.c
-+++ b/drivers/ata/pata_winbond.c
-@@ -122,47 +122,14 @@ static unsigned int winbond_data_xfer(struct ata_device *dev,
- }
- 
- static struct scsi_host_template winbond_sht = {
--	.module			= THIS_MODULE,
--	.name			= DRV_NAME,
--	.ioctl			= ata_scsi_ioctl,
--	.queuecommand		= ata_scsi_queuecmd,
--	.can_queue		= ATA_DEF_QUEUE,
--	.this_id		= ATA_SHT_THIS_ID,
--	.sg_tablesize		= LIBATA_MAX_PRD,
--	.cmd_per_lun		= ATA_SHT_CMD_PER_LUN,
--	.emulated		= ATA_SHT_EMULATED,
--	.use_clustering		= ATA_SHT_USE_CLUSTERING,
--	.proc_name		= DRV_NAME,
--	.dma_boundary		= ATA_DMA_BOUNDARY,
--	.slave_configure	= ata_scsi_slave_config,
--	.slave_destroy		= ata_scsi_slave_destroy,
--	.bios_param		= ata_std_bios_param,
-+	ATA_PIO_SHT(DRV_NAME),
- };
- 
- static struct ata_port_operations winbond_port_ops = {
--	.set_piomode	= winbond_set_piomode,
--
--	.tf_load	= ata_tf_load,
--	.tf_read	= ata_tf_read,
--	.check_status 	= ata_check_status,
--	.exec_command	= ata_exec_command,
--	.dev_select 	= ata_std_dev_select,
--
--	.freeze		= ata_bmdma_freeze,
--	.thaw		= ata_bmdma_thaw,
--	.error_handler	= ata_bmdma_error_handler,
--	.post_internal_cmd = ata_bmdma_post_internal_cmd,
--	.cable_detect	= ata_cable_40wire,
--
--	.qc_prep 	= ata_qc_prep,
--	.qc_issue	= ata_qc_issue_prot,
--
-+	.inherits	= &ata_sff_port_ops,
- 	.data_xfer	= winbond_data_xfer,
--
--	.irq_clear	= ata_noop_irq_clear,
--	.irq_on		= ata_irq_on,
--
--	.port_start	= ata_sff_port_start,
-+	.cable_detect	= ata_cable_40wire,
-+	.set_piomode	= winbond_set_piomode,
- };
- 
- /**
-diff --git a/drivers/ata/pdc_adma.c b/drivers/ata/pdc_adma.c
-index bc2d12a..a570614 100644
---- a/drivers/ata/pdc_adma.c
-+++ b/drivers/ata/pdc_adma.c
-@@ -143,43 +143,34 @@ static void adma_thaw(struct ata_port *ap);
- static void adma_error_handler(struct ata_port *ap);
- 
- static struct scsi_host_template adma_ata_sht = {
--	.module			= THIS_MODULE,
--	.name			= DRV_NAME,
--	.ioctl			= ata_scsi_ioctl,
--	.queuecommand		= ata_scsi_queuecmd,
--	.slave_configure	= ata_scsi_slave_config,
--	.slave_destroy		= ata_scsi_slave_destroy,
--	.bios_param		= ata_std_bios_param,
--	.proc_name		= DRV_NAME,
--	.can_queue		= ATA_DEF_QUEUE,
--	.this_id		= ATA_SHT_THIS_ID,
-+	ATA_BASE_SHT(DRV_NAME),
- 	.sg_tablesize		= LIBATA_MAX_PRD,
- 	.dma_boundary		= ADMA_DMA_BOUNDARY,
--	.cmd_per_lun		= ATA_SHT_CMD_PER_LUN,
--	.use_clustering		= ENABLE_CLUSTERING,
--	.emulated		= ATA_SHT_EMULATED,
- };
- 
--static const struct ata_port_operations adma_ata_ops = {
-+static struct ata_port_operations adma_ata_ops = {
-+	.inherits		= &ata_base_port_ops,
-+
-+	.dev_select		= ata_std_dev_select,
- 	.tf_load		= ata_tf_load,
- 	.tf_read		= ata_tf_read,
--	.exec_command		= ata_exec_command,
- 	.check_status		= ata_check_status,
--	.dev_select		= ata_std_dev_select,
--	.check_atapi_dma	= adma_check_atapi_dma,
-+	.exec_command		= ata_exec_command,
- 	.data_xfer		= ata_data_xfer,
-+	.check_atapi_dma	= adma_check_atapi_dma,
-+	.bmdma_stop		= adma_bmdma_stop,
-+	.bmdma_status		= adma_bmdma_status,
- 	.qc_prep		= adma_qc_prep,
- 	.qc_issue		= adma_qc_issue,
-+	.irq_on			= ata_irq_on,
-+
- 	.freeze			= adma_freeze,
- 	.thaw			= adma_thaw,
- 	.error_handler		= adma_error_handler,
--	.irq_clear		= ata_noop_irq_clear,
--	.irq_on			= ata_irq_on,
-+
- 	.port_start		= adma_port_start,
- 	.port_stop		= adma_port_stop,
- 	.host_stop		= adma_host_stop,
--	.bmdma_stop		= adma_bmdma_stop,
--	.bmdma_status		= adma_bmdma_status,
- };
- 
- static struct ata_port_info adma_port_info[] = {
-diff --git a/drivers/ata/sata_fsl.c b/drivers/ata/sata_fsl.c
-index 7778fd3..e90a4d6 100644
---- a/drivers/ata/sata_fsl.c
-+++ b/drivers/ata/sata_fsl.c
-@@ -1202,35 +1202,22 @@ static int sata_fsl_init_controller(struct ata_host *host)
-  * scsi mid-layer and libata interface structures
+Index: work/drivers/ata/pata_pdc2027x.c
+===================================================================
+--- work.orig/drivers/ata/pata_pdc2027x.c
++++ work/drivers/ata/pata_pdc2027x.c
+@@ -845,6 +845,11 @@ static int __devinit pdc2027x_init_one(s
   */
- static struct scsi_host_template sata_fsl_sht = {
--	.module = THIS_MODULE,
--	.name = "sata_fsl",
--	.ioctl = ata_scsi_ioctl,
--	.queuecommand = ata_scsi_queuecmd,
--	.change_queue_depth = ata_scsi_change_queue_depth,
-+	ATA_NCQ_SHT("sata_fsl"),
- 	.can_queue = SATA_FSL_QUEUE_DEPTH,
--	.this_id = ATA_SHT_THIS_ID,
- 	.sg_tablesize = SATA_FSL_MAX_PRD_USABLE,
--	.cmd_per_lun = ATA_SHT_CMD_PER_LUN,
--	.emulated = ATA_SHT_EMULATED,
--	.use_clustering = ATA_SHT_USE_CLUSTERING,
--	.proc_name = "sata_fsl",
- 	.dma_boundary = ATA_DMA_BOUNDARY,
--	.slave_configure = ata_scsi_slave_config,
--	.slave_destroy = ata_scsi_slave_destroy,
--	.bios_param = ata_std_bios_param,
- };
- 
- static const struct ata_port_operations sata_fsl_ops = {
-+	.inherits = &sata_port_ops,
-+
- 	.check_status = sata_fsl_check_status,
- 	.check_altstatus = sata_fsl_check_status,
--	.dev_select = ata_noop_dev_select,
- 
- 	.tf_read = sata_fsl_tf_read,
- 
--	.qc_defer = ata_std_qc_defer,
- 	.qc_prep = sata_fsl_qc_prep,
- 	.qc_issue = sata_fsl_qc_issue,
--	.irq_clear = ata_noop_irq_clear,
- 
- 	.scr_read = sata_fsl_scr_read,
- 	.scr_write = sata_fsl_scr_write,
-diff --git a/drivers/ata/sata_inic162x.c b/drivers/ata/sata_inic162x.c
-index ea7e2b1..f94181d 100644
---- a/drivers/ata/sata_inic162x.c
-+++ b/drivers/ata/sata_inic162x.c
-@@ -120,21 +120,8 @@ static int inic_slave_config(struct scsi_device *sdev)
+ static int __init pdc2027x_init(void)
+ {
++	{
++		ata_dump_sht(DRV_NAME, &pdc2027x_sht);
++		ata_dump_ops(DRV_NAME, &pdc2027x_pata100_ops);
++		ata_dump_ops(DRV_NAME, &pdc2027x_pata133_ops);
++	}
+ 	return pci_register_driver(&pdc2027x_pci_driver);
  }
  
- static struct scsi_host_template inic_sht = {
--	.module			= THIS_MODULE,
--	.name			= DRV_NAME,
--	.ioctl			= ata_scsi_ioctl,
--	.queuecommand		= ata_scsi_queuecmd,
--	.can_queue		= ATA_DEF_QUEUE,
--	.this_id		= ATA_SHT_THIS_ID,
--	.sg_tablesize		= LIBATA_MAX_PRD,
--	.cmd_per_lun		= ATA_SHT_CMD_PER_LUN,
--	.emulated		= ATA_SHT_EMULATED,
--	.use_clustering		= ATA_SHT_USE_CLUSTERING,
--	.proc_name		= DRV_NAME,
--	.dma_boundary		= ATA_DMA_BOUNDARY,
-+	ATA_BMDMA_SHT(DRV_NAME),
- 	.slave_configure	= inic_slave_config,
--	.slave_destroy		= ata_scsi_slave_destroy,
--	.bios_param		= ata_std_bios_param,
- };
+Index: work/drivers/ata/pata_pdc202xx_old.c
+===================================================================
+--- work.orig/drivers/ata/pata_pdc202xx_old.c
++++ work/drivers/ata/pata_pdc202xx_old.c
+@@ -412,6 +412,11 @@ static struct pci_driver pdc202xx_pci_dr
  
- static const int scr_map[] = {
-@@ -547,26 +534,13 @@ static int inic_port_start(struct ata_port *ap)
+ static int __init pdc202xx_init(void)
+ {
++	{
++		ata_dump_sht(DRV_NAME, &pdc202xx_sht);
++		ata_dump_ops(DRV_NAME, &pdc2024x_port_ops);
++		ata_dump_ops(DRV_NAME, &pdc2026x_port_ops);
++	}
+ 	return pci_register_driver(&pdc202xx_pci_driver);
  }
  
- static struct ata_port_operations inic_port_ops = {
--	.tf_load		= ata_tf_load,
--	.tf_read		= ata_tf_read,
--	.check_status		= ata_check_status,
--	.exec_command		= ata_exec_command,
--	.dev_select		= ata_std_dev_select,
--
--	.scr_read		= inic_scr_read,
--	.scr_write		= inic_scr_write,
-+	.inherits		= &ata_sff_port_ops,
+Index: work/drivers/ata/pata_platform.c
+===================================================================
+--- work.orig/drivers/ata/pata_platform.c
++++ work/drivers/ata/pata_platform.c
+@@ -263,6 +263,10 @@ static struct platform_driver pata_platf
  
- 	.bmdma_setup		= inic_bmdma_setup,
- 	.bmdma_start		= inic_bmdma_start,
- 	.bmdma_stop		= inic_bmdma_stop,
- 	.bmdma_status		= inic_bmdma_status,
--
--	.irq_clear		= ata_noop_irq_clear,
--	.irq_on			= ata_irq_on,
--
--	.qc_prep	 	= ata_qc_prep,
- 	.qc_issue		= inic_qc_issue,
--	.data_xfer		= ata_data_xfer,
+ static int __init pata_platform_init(void)
+ {
++	{
++		ata_dump_sht(DRV_NAME, &pata_platform_sht);
++		ata_dump_ops(DRV_NAME, &pata_platform_port_ops);
++	}
+ 	return platform_driver_register(&pata_platform_driver);
+ }
  
- 	.freeze			= inic_freeze,
- 	.thaw			= inic_thaw,
-@@ -574,8 +548,10 @@ static struct ata_port_operations inic_port_ops = {
- 	.post_internal_cmd	= inic_post_internal_cmd,
- 	.dev_config		= inic_dev_config,
+Index: work/drivers/ata/pata_qdi.c
+===================================================================
+--- work.orig/drivers/ata/pata_qdi.c
++++ work/drivers/ata/pata_qdi.c
+@@ -390,6 +390,11 @@ static __init int qdi_init(void)
+ 	}
+ 	if (ct != 0)
+ 		return 0;
++	{
++		ata_dump_sht(DRV_NAME, &qdi_sht);
++		ata_dump_ops(DRV_NAME, &qdi6500_port_ops);
++		ata_dump_ops(DRV_NAME, &qdi6580_port_ops);
++	}
+ 	return -ENODEV;
+ }
  
--	.port_resume		= inic_port_resume,
-+	.scr_read		= inic_scr_read,
-+	.scr_write		= inic_scr_write,
+Index: work/drivers/ata/pata_radisys.c
+===================================================================
+--- work.orig/drivers/ata/pata_radisys.c
++++ work/drivers/ata/pata_radisys.c
+@@ -289,6 +289,10 @@ static struct pci_driver radisys_pci_dri
  
-+	.port_resume		= inic_port_resume,
- 	.port_start		= inic_port_start,
- };
+ static int __init radisys_init(void)
+ {
++	{
++		ata_dump_sht(DRV_NAME, &radisys_sht);
++		ata_dump_ops(DRV_NAME, &radisys_pata_ops);
++	}
+ 	return pci_register_driver(&radisys_pci_driver);
+ }
  
-diff --git a/drivers/ata/sata_mv.c b/drivers/ata/sata_mv.c
-index 939bf1d..c365650 100644
---- a/drivers/ata/sata_mv.c
-+++ b/drivers/ata/sata_mv.c
-@@ -452,61 +452,28 @@ static void mv_channel_reset(struct mv_host_priv *hpriv, void __iomem *mmio,
- 			     unsigned int port_no);
+Index: work/drivers/ata/pata_rz1000.c
+===================================================================
+--- work.orig/drivers/ata/pata_rz1000.c
++++ work/drivers/ata/pata_rz1000.c
+@@ -179,6 +179,10 @@ static struct pci_driver rz1000_pci_driv
  
- static struct scsi_host_template mv5_sht = {
--	.module			= THIS_MODULE,
--	.name			= DRV_NAME,
--	.ioctl			= ata_scsi_ioctl,
--	.queuecommand		= ata_scsi_queuecmd,
--	.can_queue		= ATA_DEF_QUEUE,
--	.this_id		= ATA_SHT_THIS_ID,
-+	ATA_BASE_SHT(DRV_NAME),
- 	.sg_tablesize		= MV_MAX_SG_CT / 2,
--	.cmd_per_lun		= ATA_SHT_CMD_PER_LUN,
--	.emulated		= ATA_SHT_EMULATED,
--	.use_clustering		= 1,
--	.proc_name		= DRV_NAME,
- 	.dma_boundary		= MV_DMA_BOUNDARY,
--	.slave_configure	= ata_scsi_slave_config,
--	.slave_destroy		= ata_scsi_slave_destroy,
--	.bios_param		= ata_std_bios_param,
- };
+ static int __init rz1000_init(void)
+ {
++	{
++		ata_dump_sht(DRV_NAME, &rz1000_sht);
++		ata_dump_ops(DRV_NAME, &rz1000_port_ops);
++	}
+ 	return pci_register_driver(&rz1000_pci_driver);
+ }
  
- static struct scsi_host_template mv6_sht = {
--	.module			= THIS_MODULE,
--	.name			= DRV_NAME,
--	.ioctl			= ata_scsi_ioctl,
--	.queuecommand		= ata_scsi_queuecmd,
--	.can_queue		= ATA_DEF_QUEUE,
--	.this_id		= ATA_SHT_THIS_ID,
-+	ATA_BASE_SHT(DRV_NAME),
- 	.sg_tablesize		= MV_MAX_SG_CT / 2,
--	.cmd_per_lun		= ATA_SHT_CMD_PER_LUN,
--	.emulated		= ATA_SHT_EMULATED,
--	.use_clustering		= 1,
--	.proc_name		= DRV_NAME,
- 	.dma_boundary		= MV_DMA_BOUNDARY,
--	.slave_configure	= ata_scsi_slave_config,
--	.slave_destroy		= ata_scsi_slave_destroy,
--	.bios_param		= ata_std_bios_param,
- };
+Index: work/drivers/ata/pata_sc1200.c
+===================================================================
+--- work.orig/drivers/ata/pata_sc1200.c
++++ work/drivers/ata/pata_sc1200.c
+@@ -274,6 +274,10 @@ static struct pci_driver sc1200_pci_driv
  
--static const struct ata_port_operations mv5_ops = {
--	.tf_load		= ata_tf_load,
--	.tf_read		= ata_tf_read,
--	.check_status		= ata_check_status,
--	.exec_command		= ata_exec_command,
--	.dev_select		= ata_std_dev_select,
--
--	.cable_detect		= ata_cable_sata,
-+static struct ata_port_operations mv5_ops = {
-+	.inherits		= &ata_sff_port_ops,
+ static int __init sc1200_init(void)
+ {
++	{
++		ata_dump_sht(DRV_NAME, &sc1200_sht);
++		ata_dump_ops(DRV_NAME, &sc1200_port_ops);
++	}
+ 	return pci_register_driver(&sc1200_pci_driver);
+ }
  
- 	.qc_prep		= mv_qc_prep,
- 	.qc_issue		= mv_qc_issue,
--	.data_xfer		= ata_data_xfer,
--
--	.irq_clear		= ata_noop_irq_clear,
--	.irq_on			= ata_irq_on,
+Index: work/drivers/ata/pata_scc.c
+===================================================================
+--- work.orig/drivers/ata/pata_scc.c
++++ work/drivers/ata/pata_scc.c
+@@ -1189,6 +1189,10 @@ static int __init scc_init (void)
+ 		return rc;
  
--	.error_handler		= mv_error_handler,
--	.post_internal_cmd	= mv_post_int_cmd,
-+	.cable_detect		= ata_cable_sata,
- 	.freeze			= mv_eh_freeze,
- 	.thaw			= mv_eh_thaw,
-+	.error_handler		= mv_error_handler,
-+	.post_internal_cmd	= mv_post_int_cmd,
+ 	DPRINTK("done\n");
++	{
++		ata_dump_sht(DRV_NAME, &scc_sht);
++		ata_dump_ops(DRV_NAME, &scc_pata_ops);
++	}
+ 	return 0;
+ }
  
- 	.scr_read		= mv5_scr_read,
- 	.scr_write		= mv5_scr_write,
-@@ -515,60 +482,15 @@ static const struct ata_port_operations mv5_ops = {
- 	.port_stop		= mv_port_stop,
- };
+Index: work/drivers/ata/pata_serverworks.c
+===================================================================
+--- work.orig/drivers/ata/pata_serverworks.c
++++ work/drivers/ata/pata_serverworks.c
+@@ -594,6 +594,11 @@ static struct pci_driver serverworks_pci
  
--static const struct ata_port_operations mv6_ops = {
--	.tf_load		= ata_tf_load,
--	.tf_read		= ata_tf_read,
--	.check_status		= ata_check_status,
--	.exec_command		= ata_exec_command,
--	.dev_select		= ata_std_dev_select,
--
--	.cable_detect		= ata_cable_sata,
--
--	.qc_prep		= mv_qc_prep,
--	.qc_issue		= mv_qc_issue,
--	.data_xfer		= ata_data_xfer,
--
--	.irq_clear		= ata_noop_irq_clear,
--	.irq_on			= ata_irq_on,
--
--	.error_handler		= mv_error_handler,
--	.post_internal_cmd	= mv_post_int_cmd,
--	.freeze			= mv_eh_freeze,
--	.thaw			= mv_eh_thaw,
--
-+static struct ata_port_operations mv6_ops = {
-+	.inherits		= &mv5_ops,
- 	.scr_read		= mv_scr_read,
- 	.scr_write		= mv_scr_write,
--
--	.port_start		= mv_port_start,
--	.port_stop		= mv_port_stop,
- };
+ static int __init serverworks_init(void)
+ {
++	{
++		ata_dump_sht(DRV_NAME, &serverworks_sht);
++		ata_dump_ops(DRV_NAME, &serverworks_osb4_port_ops);
++		ata_dump_ops(DRV_NAME, &serverworks_csb_port_ops);
++	}
+ 	return pci_register_driver(&serverworks_pci_driver);
+ }
  
--static const struct ata_port_operations mv_iie_ops = {
--	.tf_load		= ata_tf_load,
--	.tf_read		= ata_tf_read,
--	.check_status		= ata_check_status,
--	.exec_command		= ata_exec_command,
--	.dev_select		= ata_std_dev_select,
--
--	.cable_detect		= ata_cable_sata,
--
-+static struct ata_port_operations mv_iie_ops = {
-+	.inherits		= &mv6_ops,
- 	.qc_prep		= mv_qc_prep_iie,
--	.qc_issue		= mv_qc_issue,
--	.data_xfer		= ata_data_xfer,
--
--	.irq_clear		= ata_noop_irq_clear,
--	.irq_on			= ata_irq_on,
--
--	.error_handler		= mv_error_handler,
--	.post_internal_cmd	= mv_post_int_cmd,
--	.freeze			= mv_eh_freeze,
--	.thaw			= mv_eh_thaw,
--
--	.scr_read		= mv_scr_read,
--	.scr_write		= mv_scr_write,
--
--	.port_start		= mv_port_start,
--	.port_stop		= mv_port_stop,
- };
+Index: work/drivers/ata/pata_sil680.c
+===================================================================
+--- work.orig/drivers/ata/pata_sil680.c
++++ work/drivers/ata/pata_sil680.c
+@@ -437,6 +437,10 @@ static struct pci_driver sil680_pci_driv
  
- static const struct ata_port_info mv_port_info[] = {
-diff --git a/drivers/ata/sata_nv.c b/drivers/ata/sata_nv.c
-index 8eb588e..434aee5 100644
---- a/drivers/ata/sata_nv.c
-+++ b/drivers/ata/sata_nv.c
-@@ -384,161 +384,60 @@ static struct pci_driver nv_pci_driver = {
- };
+ static int __init sil680_init(void)
+ {
++	{
++		ata_dump_sht(DRV_NAME, &sil680_sht);
++		ata_dump_ops(DRV_NAME, &sil680_port_ops);
++	}
+ 	return pci_register_driver(&sil680_pci_driver);
+ }
  
- static struct scsi_host_template nv_sht = {
--	.module			= THIS_MODULE,
--	.name			= DRV_NAME,
--	.ioctl			= ata_scsi_ioctl,
--	.queuecommand		= ata_scsi_queuecmd,
--	.can_queue		= ATA_DEF_QUEUE,
--	.this_id		= ATA_SHT_THIS_ID,
--	.sg_tablesize		= LIBATA_MAX_PRD,
--	.cmd_per_lun		= ATA_SHT_CMD_PER_LUN,
--	.emulated		= ATA_SHT_EMULATED,
--	.use_clustering		= ATA_SHT_USE_CLUSTERING,
--	.proc_name		= DRV_NAME,
--	.dma_boundary		= ATA_DMA_BOUNDARY,
--	.slave_configure	= ata_scsi_slave_config,
--	.slave_destroy		= ata_scsi_slave_destroy,
--	.bios_param		= ata_std_bios_param,
-+	ATA_BMDMA_SHT(DRV_NAME),
- };
+Index: work/drivers/ata/pata_sis.c
+===================================================================
+--- work.orig/drivers/ata/pata_sis.c
++++ work/drivers/ata/pata_sis.c
+@@ -1027,6 +1027,15 @@ static struct pci_driver sis_pci_driver 
  
- static struct scsi_host_template nv_adma_sht = {
--	.module			= THIS_MODULE,
--	.name			= DRV_NAME,
--	.ioctl			= ata_scsi_ioctl,
--	.queuecommand		= ata_scsi_queuecmd,
--	.change_queue_depth	= ata_scsi_change_queue_depth,
-+	ATA_NCQ_SHT(DRV_NAME),
- 	.can_queue		= NV_ADMA_MAX_CPBS,
--	.this_id		= ATA_SHT_THIS_ID,
- 	.sg_tablesize		= NV_ADMA_SGTBL_TOTAL_LEN,
--	.cmd_per_lun		= ATA_SHT_CMD_PER_LUN,
--	.emulated		= ATA_SHT_EMULATED,
--	.use_clustering		= ATA_SHT_USE_CLUSTERING,
--	.proc_name		= DRV_NAME,
- 	.dma_boundary		= NV_ADMA_DMA_BOUNDARY,
- 	.slave_configure	= nv_adma_slave_config,
--	.slave_destroy		= ata_scsi_slave_destroy,
--	.bios_param		= ata_std_bios_param,
- };
+ static int __init sis_init(void)
+ {
++	{
++		ata_dump_sht(DRV_NAME, &sis_sht);
++		ata_dump_ops(DRV_NAME, &sis_133_ops);
++		ata_dump_ops(DRV_NAME, &sis_133_for_sata_ops);
++		ata_dump_ops(DRV_NAME, &sis_133_early_ops);
++		ata_dump_ops(DRV_NAME, &sis_100_ops);
++		ata_dump_ops(DRV_NAME, &sis_66_ops);
++		ata_dump_ops(DRV_NAME, &sis_old_ops);
++	}
+ 	return pci_register_driver(&sis_pci_driver);
+ }
  
- static struct scsi_host_template nv_swncq_sht = {
--	.module			= THIS_MODULE,
--	.name			= DRV_NAME,
--	.ioctl			= ata_scsi_ioctl,
--	.queuecommand		= ata_scsi_queuecmd,
--	.change_queue_depth	= ata_scsi_change_queue_depth,
-+	ATA_NCQ_SHT(DRV_NAME),
- 	.can_queue		= ATA_MAX_QUEUE,
--	.this_id		= ATA_SHT_THIS_ID,
- 	.sg_tablesize		= LIBATA_MAX_PRD,
--	.cmd_per_lun		= ATA_SHT_CMD_PER_LUN,
--	.emulated		= ATA_SHT_EMULATED,
--	.use_clustering		= ATA_SHT_USE_CLUSTERING,
--	.proc_name		= DRV_NAME,
- 	.dma_boundary		= ATA_DMA_BOUNDARY,
- 	.slave_configure	= nv_swncq_slave_config,
--	.slave_destroy		= ata_scsi_slave_destroy,
--	.bios_param		= ata_std_bios_param,
- };
+Index: work/drivers/ata/pata_sl82c105.c
+===================================================================
+--- work.orig/drivers/ata/pata_sl82c105.c
++++ work/drivers/ata/pata_sl82c105.c
+@@ -352,6 +352,10 @@ static struct pci_driver sl82c105_pci_dr
  
--static const struct ata_port_operations nv_generic_ops = {
--	.tf_load		= ata_tf_load,
--	.tf_read		= ata_tf_read,
--	.exec_command		= ata_exec_command,
--	.check_status		= ata_check_status,
--	.dev_select		= ata_std_dev_select,
--	.bmdma_setup		= ata_bmdma_setup,
--	.bmdma_start		= ata_bmdma_start,
--	.bmdma_stop		= ata_bmdma_stop,
--	.bmdma_status		= ata_bmdma_status,
--	.qc_prep		= ata_qc_prep,
--	.qc_issue		= ata_qc_issue_prot,
--	.mode_filter		= ata_pci_default_filter,
--	.freeze			= ata_bmdma_freeze,
--	.thaw			= ata_bmdma_thaw,
-+static struct ata_port_operations nv_generic_ops = {
-+	.inherits		= &ata_bmdma_port_ops,
- 	.error_handler		= nv_error_handler,
--	.post_internal_cmd	= ata_bmdma_post_internal_cmd,
--	.data_xfer		= ata_data_xfer,
--	.irq_clear		= ata_bmdma_irq_clear,
--	.irq_on			= ata_irq_on,
- 	.scr_read		= nv_scr_read,
- 	.scr_write		= nv_scr_write,
--	.port_start		= ata_sff_port_start,
- };
+ static int __init sl82c105_init(void)
+ {
++	{
++		ata_dump_sht(DRV_NAME, &sl82c105_sht);
++		ata_dump_ops(DRV_NAME, &sl82c105_port_ops);
++	}
+ 	return pci_register_driver(&sl82c105_pci_driver);
+ }
  
--static const struct ata_port_operations nv_nf2_ops = {
--	.tf_load		= ata_tf_load,
--	.tf_read		= ata_tf_read,
--	.exec_command		= ata_exec_command,
--	.check_status		= ata_check_status,
--	.dev_select		= ata_std_dev_select,
--	.bmdma_setup		= ata_bmdma_setup,
--	.bmdma_start		= ata_bmdma_start,
--	.bmdma_stop		= ata_bmdma_stop,
--	.bmdma_status		= ata_bmdma_status,
--	.qc_prep		= ata_qc_prep,
--	.qc_issue		= ata_qc_issue_prot,
--	.mode_filter		= ata_pci_default_filter,
-+static struct ata_port_operations nv_nf2_ops = {
-+	.inherits		= &nv_generic_ops,
- 	.freeze			= nv_nf2_freeze,
- 	.thaw			= nv_nf2_thaw,
--	.error_handler		= nv_error_handler,
--	.post_internal_cmd	= ata_bmdma_post_internal_cmd,
--	.data_xfer		= ata_data_xfer,
--	.irq_clear		= ata_bmdma_irq_clear,
--	.irq_on			= ata_irq_on,
--	.scr_read		= nv_scr_read,
--	.scr_write		= nv_scr_write,
--	.port_start		= ata_sff_port_start,
- };
+Index: work/drivers/ata/pata_triflex.c
+===================================================================
+--- work.orig/drivers/ata/pata_triflex.c
++++ work/drivers/ata/pata_triflex.c
+@@ -267,6 +267,10 @@ static struct pci_driver triflex_pci_dri
  
--static const struct ata_port_operations nv_ck804_ops = {
--	.tf_load		= ata_tf_load,
--	.tf_read		= ata_tf_read,
--	.exec_command		= ata_exec_command,
--	.check_status		= ata_check_status,
--	.dev_select		= ata_std_dev_select,
--	.bmdma_setup		= ata_bmdma_setup,
--	.bmdma_start		= ata_bmdma_start,
--	.bmdma_stop		= ata_bmdma_stop,
--	.bmdma_status		= ata_bmdma_status,
--	.qc_prep		= ata_qc_prep,
--	.qc_issue		= ata_qc_issue_prot,
--	.mode_filter		= ata_pci_default_filter,
-+static struct ata_port_operations nv_ck804_ops = {
-+	.inherits		= &nv_generic_ops,
- 	.freeze			= nv_ck804_freeze,
- 	.thaw			= nv_ck804_thaw,
--	.error_handler		= nv_error_handler,
--	.post_internal_cmd	= ata_bmdma_post_internal_cmd,
--	.data_xfer		= ata_data_xfer,
--	.irq_clear		= ata_bmdma_irq_clear,
--	.irq_on			= ata_irq_on,
--	.scr_read		= nv_scr_read,
--	.scr_write		= nv_scr_write,
--	.port_start		= ata_sff_port_start,
- 	.host_stop		= nv_ck804_host_stop,
- };
+ static int __init triflex_init(void)
+ {
++	{
++		ata_dump_sht(DRV_NAME, &triflex_sht);
++		ata_dump_ops(DRV_NAME, &triflex_port_ops);
++	}
+ 	return pci_register_driver(&triflex_pci_driver);
+ }
  
--static const struct ata_port_operations nv_adma_ops = {
--	.tf_load		= ata_tf_load,
--	.tf_read		= nv_adma_tf_read,
-+static struct ata_port_operations nv_adma_ops = {
-+	.inherits		= &nv_generic_ops,
+Index: work/drivers/ata/pata_via.c
+===================================================================
+--- work.orig/drivers/ata/pata_via.c
++++ work/drivers/ata/pata_via.c
+@@ -665,6 +665,11 @@ static struct pci_driver via_pci_driver 
+ 
+ static int __init via_init(void)
+ {
++	{
++		ata_dump_sht(DRV_NAME, &via_sht);
++		ata_dump_ops(DRV_NAME, &via_port_ops);
++		ata_dump_ops(DRV_NAME, &via_port_ops_noirq);
++	}
+ 	return pci_register_driver(&via_pci_driver);
+ }
+ 
+Index: work/drivers/ata/pata_winbond.c
+===================================================================
+--- work.orig/drivers/ata/pata_winbond.c
++++ work/drivers/ata/pata_winbond.c
+@@ -289,6 +289,10 @@ static __init int winbond_init(void)
+ 	}
+ 	if (ct != 0)
+ 		return 0;
++	{
++		ata_dump_sht(DRV_NAME, &winbond_sht);
++		ata_dump_ops(DRV_NAME, &winbond_port_ops);
++	}
+ 	return -ENODEV;
+ }
+ 
+Index: work/drivers/ata/pdc_adma.c
+===================================================================
+--- work.orig/drivers/ata/pdc_adma.c
++++ work/drivers/ata/pdc_adma.c
+@@ -723,6 +723,10 @@ static int adma_ata_init_one(struct pci_
+ 
+ static int __init adma_ata_init(void)
+ {
++	{
++		ata_dump_sht(DRV_NAME, &adma_ata_sht);
++		ata_dump_ops(DRV_NAME, &adma_ata_ops);
++	}
+ 	return pci_register_driver(&adma_ata_pci_driver);
+ }
+ 
+Index: work/drivers/ata/sata_fsl.c
+===================================================================
+--- work.orig/drivers/ata/sata_fsl.c
++++ work/drivers/ata/sata_fsl.c
+@@ -1373,6 +1373,10 @@ static struct of_platform_driver fsl_sat
+ static int __init sata_fsl_init(void)
+ {
+ 	of_register_platform_driver(&fsl_sata_driver);
++	{
++		ata_dump_sht(DRV_NAME, &sata_fsl_sht);
++		ata_dump_ops(DRV_NAME, &sata_fsl_ops);
++	}
+ 	return 0;
+ }
+ 
+Index: work/drivers/ata/sata_inic162x.c
+===================================================================
+--- work.orig/drivers/ata/sata_inic162x.c
++++ work/drivers/ata/sata_inic162x.c
+@@ -755,6 +755,10 @@ static struct pci_driver inic_pci_driver
+ 
+ static int __init inic_init(void)
+ {
++	{
++		ata_dump_sht(DRV_NAME, &inic_sht);
++		ata_dump_ops(DRV_NAME, &inic_port_ops);
++	}
+ 	return pci_register_driver(&inic_pci_driver);
+ }
+ 
+Index: work/drivers/ata/sata_mv.c
+===================================================================
+--- work.orig/drivers/ata/sata_mv.c
++++ work/drivers/ata/sata_mv.c
+@@ -2755,6 +2755,13 @@ static int mv_init_one(struct pci_dev *p
+ 
+ static int __init mv_init(void)
+ {
++	{
++		ata_dump_sht(DRV_NAME, &mv5_sht);
++		ata_dump_sht(DRV_NAME, &mv6_sht);
++		ata_dump_ops(DRV_NAME, &mv5_ops);
++		ata_dump_ops(DRV_NAME, &mv6_ops);
++		ata_dump_ops(DRV_NAME, &mv_iie_ops);
++	}
+ 	return pci_register_driver(&mv_pci_driver);
+ }
+ 
+Index: work/drivers/ata/sata_nv.c
+===================================================================
+--- work.orig/drivers/ata/sata_nv.c
++++ work/drivers/ata/sata_nv.c
+@@ -2529,6 +2529,16 @@ static void nv_adma_host_stop(struct ata
+ 
+ static int __init nv_init(void)
+ {
++	{
++		ata_dump_sht(DRV_NAME, &nv_sht);
++		ata_dump_sht(DRV_NAME, &nv_adma_sht);
++		ata_dump_sht(DRV_NAME, &nv_swncq_sht);
++		ata_dump_ops(DRV_NAME, &nv_generic_ops);
++		ata_dump_ops(DRV_NAME, &nv_nf2_ops);
++		ata_dump_ops(DRV_NAME, &nv_ck804_ops);
++		ata_dump_ops(DRV_NAME, &nv_adma_ops);
++		ata_dump_ops(DRV_NAME, &nv_swncq_ops);
++	}
+ 	return pci_register_driver(&nv_pci_driver);
+ }
+ 
+Index: work/drivers/ata/sata_promise.c
+===================================================================
+--- work.orig/drivers/ata/sata_promise.c
++++ work/drivers/ata/sata_promise.c
+@@ -1106,6 +1106,12 @@ static int pdc_ata_init_one(struct pci_d
+ 
+ static int __init pdc_ata_init(void)
+ {
++	{
++		ata_dump_sht(DRV_NAME, &pdc_ata_sht);
++		ata_dump_ops(DRV_NAME, &pdc_sata_ops);
++		ata_dump_ops(DRV_NAME, &pdc_old_sata_ops);
++		ata_dump_ops(DRV_NAME, &pdc_pata_ops);
++	}
+ 	return pci_register_driver(&pdc_ata_pci_driver);
+ }
+ 
+Index: work/drivers/ata/sata_qstor.c
+===================================================================
+--- work.orig/drivers/ata/sata_qstor.c
++++ work/drivers/ata/sata_qstor.c
+@@ -677,6 +677,10 @@ static int qs_ata_init_one(struct pci_de
+ 
+ static int __init qs_ata_init(void)
+ {
++	{
++		ata_dump_sht(DRV_NAME, &qs_ata_sht);
++		ata_dump_ops(DRV_NAME, &qs_ata_ops);
++	}
+ 	return pci_register_driver(&qs_ata_pci_driver);
+ }
+ 
+Index: work/drivers/ata/sata_sil.c
+===================================================================
+--- work.orig/drivers/ata/sata_sil.c
++++ work/drivers/ata/sata_sil.c
+@@ -719,6 +719,10 @@ static int sil_pci_device_resume(struct 
+ 
+ static int __init sil_init(void)
+ {
++	{
++		ata_dump_sht(DRV_NAME, &sil_sht);
++		ata_dump_ops(DRV_NAME, &sil_ops);
++	}
+ 	return pci_register_driver(&sil_pci_driver);
+ }
+ 
+Index: work/drivers/ata/sata_sil24.c
+===================================================================
+--- work.orig/drivers/ata/sata_sil24.c
++++ work/drivers/ata/sata_sil24.c
+@@ -1412,6 +1412,10 @@ static int sil24_port_resume(struct ata_
+ 
+ static int __init sil24_init(void)
+ {
++	{
++		ata_dump_sht(DRV_NAME, &sil24_sht);
++		ata_dump_ops(DRV_NAME, &sil24_ops);
++	}
+ 	return pci_register_driver(&sil24_pci_driver);
+ }
+ 
+Index: work/drivers/ata/sata_sis.c
+===================================================================
+--- work.orig/drivers/ata/sata_sis.c
++++ work/drivers/ata/sata_sis.c
+@@ -366,6 +366,10 @@ static int sis_init_one(struct pci_dev *
+ 
+ static int __init sis_init(void)
+ {
++	{
++		ata_dump_sht(DRV_NAME, &sis_sht);
++		ata_dump_ops(DRV_NAME, &sis_ops);
++	}
+ 	return pci_register_driver(&sis_pci_driver);
+ }
+ 
+Index: work/drivers/ata/sata_svw.c
+===================================================================
+--- work.orig/drivers/ata/sata_svw.c
++++ work/drivers/ata/sata_svw.c
+@@ -502,6 +502,10 @@ static struct pci_driver k2_sata_pci_dri
+ 
+ static int __init k2_sata_init(void)
+ {
++	{
++		ata_dump_sht(DRV_NAME, &k2_sata_sht);
++		ata_dump_ops(DRV_NAME, &k2_sata_ops);
++	}
+ 	return pci_register_driver(&k2_sata_pci_driver);
+ }
+ 
+Index: work/drivers/ata/sata_sx4.c
+===================================================================
+--- work.orig/drivers/ata/sata_sx4.c
++++ work/drivers/ata/sata_sx4.c
+@@ -1444,6 +1444,10 @@ static int pdc_sata_init_one(struct pci_
+ 
+ static int __init pdc_sata_init(void)
+ {
++	{
++		ata_dump_sht(DRV_NAME, &pdc_sata_sht);
++		ata_dump_ops(DRV_NAME, &pdc_20621_ops);
++	}
+ 	return pci_register_driver(&pdc_sata_pci_driver);
+ }
+ 
+Index: work/drivers/ata/sata_uli.c
+===================================================================
+--- work.orig/drivers/ata/sata_uli.c
++++ work/drivers/ata/sata_uli.c
+@@ -286,6 +286,10 @@ static int uli_init_one(struct pci_dev *
+ 
+ static int __init uli_init(void)
+ {
++	{
++		ata_dump_sht(DRV_NAME, &uli_sht);
++		ata_dump_ops(DRV_NAME, &uli_ops);
++	}
+ 	return pci_register_driver(&uli_pci_driver);
+ }
+ 
+Index: work/drivers/ata/sata_via.c
+===================================================================
+--- work.orig/drivers/ata/sata_via.c
++++ work/drivers/ata/sata_via.c
+@@ -550,6 +550,12 @@ static int svia_init_one(struct pci_dev 
+ 
+ static int __init svia_init(void)
+ {
++	{
++		ata_dump_sht(DRV_NAME, &svia_sht);
++		ata_dump_ops(DRV_NAME, &vt6420_sata_ops);
++		ata_dump_ops(DRV_NAME, &vt6421_pata_ops);
++		ata_dump_ops(DRV_NAME, &vt6421_sata_ops);
++	}
+ 	return pci_register_driver(&svia_pci_driver);
+ }
+ 
+Index: work/drivers/ata/sata_vsc.c
+===================================================================
+--- work.orig/drivers/ata/sata_vsc.c
++++ work/drivers/ata/sata_vsc.c
+@@ -472,6 +472,10 @@ static struct pci_driver vsc_sata_pci_dr
+ 
+ static int __init vsc_sata_init(void)
+ {
++	{
++		ata_dump_sht(DRV_NAME, &vsc_sata_sht);
++		ata_dump_ops(DRV_NAME, &vsc_sata_ops);
++	}
+ 	return pci_register_driver(&vsc_sata_pci_driver);
+ }
+ 
+Index: work/include/linux/libata.h
+===================================================================
+--- work.orig/include/linux/libata.h
++++ work/include/linux/libata.h
+@@ -790,6 +790,9 @@ static inline int ata_port_is_dummy(stru
+ 	return ap->ops == &ata_dummy_port_ops;
+ }
+ 
++extern void ata_dump_sht(const char *drv_name, const struct scsi_host_template *sht);
++extern void ata_dump_ops(const char *drv_name, const struct ata_port_operations *ops);
 +
- 	.check_atapi_dma	= nv_adma_check_atapi_dma,
--	.exec_command		= ata_exec_command,
--	.check_status		= ata_check_status,
--	.dev_select		= ata_std_dev_select,
--	.bmdma_setup		= ata_bmdma_setup,
--	.bmdma_start		= ata_bmdma_start,
--	.bmdma_stop		= ata_bmdma_stop,
--	.bmdma_status		= ata_bmdma_status,
-+	.tf_read		= nv_adma_tf_read,
- 	.qc_defer		= ata_std_qc_defer,
- 	.qc_prep		= nv_adma_qc_prep,
- 	.qc_issue		= nv_adma_qc_issue,
--	.mode_filter		= ata_pci_default_filter,
-+	.irq_clear		= nv_adma_irq_clear,
-+
- 	.freeze			= nv_adma_freeze,
- 	.thaw			= nv_adma_thaw,
- 	.error_handler		= nv_adma_error_handler,
- 	.post_internal_cmd	= nv_adma_post_internal_cmd,
--	.data_xfer		= ata_data_xfer,
--	.irq_clear		= nv_adma_irq_clear,
--	.irq_on			= ata_irq_on,
--	.scr_read		= nv_scr_read,
--	.scr_write		= nv_scr_write,
-+
- 	.port_start		= nv_adma_port_start,
- 	.port_stop		= nv_adma_port_stop,
- #ifdef CONFIG_PM
-@@ -548,29 +447,17 @@ static const struct ata_port_operations nv_adma_ops = {
- 	.host_stop		= nv_adma_host_stop,
- };
+ extern void sata_print_link_status(struct ata_link *link);
+ extern void ata_port_probe(struct ata_port *);
+ extern void ata_bus_reset(struct ata_port *ap);
+Index: work/kernel/kallsyms.c
+===================================================================
+--- work.orig/kernel/kallsyms.c
++++ work/kernel/kallsyms.c
+@@ -291,6 +291,7 @@ int lookup_symbol_name(unsigned long add
+ 	/* see if it's in a module */
+ 	return lookup_module_symbol_name(addr, symname);
+ }
++EXPORT_SYMBOL_GPL(lookup_symbol_name);
  
--static const struct ata_port_operations nv_swncq_ops = {
--	.tf_load		= ata_tf_load,
--	.tf_read		= ata_tf_read,
--	.exec_command		= ata_exec_command,
--	.check_status		= ata_check_status,
--	.dev_select		= ata_std_dev_select,
--	.bmdma_setup		= ata_bmdma_setup,
--	.bmdma_start		= ata_bmdma_start,
--	.bmdma_stop		= ata_bmdma_stop,
--	.bmdma_status		= ata_bmdma_status,
-+static struct ata_port_operations nv_swncq_ops = {
-+	.inherits		= &nv_generic_ops,
-+
- 	.qc_defer		= ata_std_qc_defer,
- 	.qc_prep		= nv_swncq_qc_prep,
- 	.qc_issue		= nv_swncq_qc_issue,
--	.mode_filter		= ata_pci_default_filter,
-+
- 	.freeze			= nv_mcp55_freeze,
- 	.thaw			= nv_mcp55_thaw,
- 	.error_handler		= nv_swncq_error_handler,
--	.post_internal_cmd	= ata_bmdma_post_internal_cmd,
--	.data_xfer		= ata_data_xfer,
--	.irq_clear		= ata_bmdma_irq_clear,
--	.irq_on			= ata_irq_on,
--	.scr_read		= nv_scr_read,
--	.scr_write		= nv_scr_write,
-+
- #ifdef CONFIG_PM
- 	.port_suspend		= nv_swncq_port_suspend,
- 	.port_resume		= nv_swncq_port_resume,
-diff --git a/drivers/ata/sata_promise.c b/drivers/ata/sata_promise.c
-index a07d319..71fddef 100644
---- a/drivers/ata/sata_promise.c
-+++ b/drivers/ata/sata_promise.c
-@@ -153,91 +153,45 @@ static int pdc_pata_cable_detect(struct ata_port *ap);
- static int pdc_sata_cable_detect(struct ata_port *ap);
- 
- static struct scsi_host_template pdc_ata_sht = {
--	.module			= THIS_MODULE,
--	.name			= DRV_NAME,
--	.ioctl			= ata_scsi_ioctl,
--	.queuecommand		= ata_scsi_queuecmd,
--	.can_queue		= ATA_DEF_QUEUE,
--	.this_id		= ATA_SHT_THIS_ID,
-+	ATA_BASE_SHT(DRV_NAME),
- 	.sg_tablesize		= PDC_MAX_PRD,
--	.cmd_per_lun		= ATA_SHT_CMD_PER_LUN,
--	.emulated		= ATA_SHT_EMULATED,
--	.use_clustering		= ATA_SHT_USE_CLUSTERING,
--	.proc_name		= DRV_NAME,
- 	.dma_boundary		= ATA_DMA_BOUNDARY,
--	.slave_configure	= ata_scsi_slave_config,
--	.slave_destroy		= ata_scsi_slave_destroy,
--	.bios_param		= ata_std_bios_param,
- };
- 
--static const struct ata_port_operations pdc_sata_ops = {
-+static const struct ata_port_operations pdc_common_ops = {
-+	.inherits		= &ata_sff_port_ops,
-+
- 	.tf_load		= pdc_tf_load_mmio,
--	.tf_read		= ata_tf_read,
--	.check_status		= ata_check_status,
- 	.exec_command		= pdc_exec_command_mmio,
--	.dev_select		= ata_std_dev_select,
- 	.check_atapi_dma	= pdc_check_atapi_dma,
--
- 	.qc_prep		= pdc_qc_prep,
- 	.qc_issue		= pdc_qc_issue_prot,
-+	.irq_clear		= pdc_irq_clear,
-+
- 	.freeze			= pdc_freeze,
- 	.thaw			= pdc_thaw,
--	.error_handler		= pdc_sata_error_handler,
- 	.post_internal_cmd	= pdc_post_internal_cmd,
--	.cable_detect		= pdc_sata_cable_detect,
--	.data_xfer		= ata_data_xfer,
--	.irq_clear		= pdc_irq_clear,
--	.irq_on			= ata_irq_on,
-+};
- 
-+static struct ata_port_operations pdc_sata_ops = {
-+	.inherits		= &pdc_common_ops,
-+	.cable_detect		= pdc_sata_cable_detect,
-+	.error_handler		= pdc_sata_error_handler,
- 	.scr_read		= pdc_sata_scr_read,
- 	.scr_write		= pdc_sata_scr_write,
- 	.port_start		= pdc_sata_port_start,
- };
- 
- /* First-generation chips need a more restrictive ->check_atapi_dma op */
--static const struct ata_port_operations pdc_old_sata_ops = {
--	.tf_load		= pdc_tf_load_mmio,
--	.tf_read		= ata_tf_read,
--	.check_status		= ata_check_status,
--	.exec_command		= pdc_exec_command_mmio,
--	.dev_select		= ata_std_dev_select,
-+static struct ata_port_operations pdc_old_sata_ops = {
-+	.inherits		= &pdc_sata_ops,
- 	.check_atapi_dma	= pdc_old_sata_check_atapi_dma,
--
--	.qc_prep		= pdc_qc_prep,
--	.qc_issue		= pdc_qc_issue_prot,
--	.freeze			= pdc_freeze,
--	.thaw			= pdc_thaw,
--	.error_handler		= pdc_sata_error_handler,
--	.post_internal_cmd	= pdc_post_internal_cmd,
--	.cable_detect		= pdc_sata_cable_detect,
--	.data_xfer		= ata_data_xfer,
--	.irq_clear		= pdc_irq_clear,
--	.irq_on			= ata_irq_on,
--
--	.scr_read		= pdc_sata_scr_read,
--	.scr_write		= pdc_sata_scr_write,
--	.port_start		= pdc_sata_port_start,
- };
- 
--static const struct ata_port_operations pdc_pata_ops = {
--	.tf_load		= pdc_tf_load_mmio,
--	.tf_read		= ata_tf_read,
--	.check_status		= ata_check_status,
--	.exec_command		= pdc_exec_command_mmio,
--	.dev_select		= ata_std_dev_select,
--	.check_atapi_dma	= pdc_check_atapi_dma,
--
--	.qc_prep		= pdc_qc_prep,
--	.qc_issue		= pdc_qc_issue_prot,
--	.freeze			= pdc_freeze,
--	.thaw			= pdc_thaw,
--	.error_handler		= pdc_pata_error_handler,
--	.post_internal_cmd	= pdc_post_internal_cmd,
-+static struct ata_port_operations pdc_pata_ops = {
-+	.inherits		= &pdc_common_ops,
- 	.cable_detect		= pdc_pata_cable_detect,
--	.data_xfer		= ata_data_xfer,
--	.irq_clear		= pdc_irq_clear,
--	.irq_on			= ata_irq_on,
--
-+	.error_handler		= pdc_pata_error_handler,
- 	.port_start		= pdc_common_port_start,
- };
- 
-diff --git a/drivers/ata/sata_qstor.c b/drivers/ata/sata_qstor.c
-index 3c8e97f..107ef09 100644
---- a/drivers/ata/sata_qstor.c
-+++ b/drivers/ata/sata_qstor.c
-@@ -126,44 +126,30 @@ static void qs_thaw(struct ata_port *ap);
- static void qs_error_handler(struct ata_port *ap);
- 
- static struct scsi_host_template qs_ata_sht = {
--	.module			= THIS_MODULE,
--	.name			= DRV_NAME,
--	.ioctl			= ata_scsi_ioctl,
--	.queuecommand		= ata_scsi_queuecmd,
--	.can_queue		= ATA_DEF_QUEUE,
--	.this_id		= ATA_SHT_THIS_ID,
-+	ATA_BASE_SHT(DRV_NAME),
- 	.sg_tablesize		= QS_MAX_PRD,
--	.cmd_per_lun		= ATA_SHT_CMD_PER_LUN,
--	.emulated		= ATA_SHT_EMULATED,
--	.use_clustering		= ENABLE_CLUSTERING,
--	.proc_name		= DRV_NAME,
- 	.dma_boundary		= QS_DMA_BOUNDARY,
--	.slave_configure	= ata_scsi_slave_config,
--	.slave_destroy		= ata_scsi_slave_destroy,
--	.bios_param		= ata_std_bios_param,
- };
- 
--static const struct ata_port_operations qs_ata_ops = {
--	.tf_load		= ata_tf_load,
--	.tf_read		= ata_tf_read,
--	.check_status		= ata_check_status,
-+static struct ata_port_operations qs_ata_ops = {
-+	.inherits		= &ata_sff_port_ops,
-+
- 	.check_atapi_dma	= qs_check_atapi_dma,
--	.exec_command		= ata_exec_command,
--	.dev_select		= ata_std_dev_select,
-+	.bmdma_stop		= qs_bmdma_stop,
-+	.bmdma_status		= qs_bmdma_status,
- 	.qc_prep		= qs_qc_prep,
- 	.qc_issue		= qs_qc_issue,
--	.data_xfer		= ata_data_xfer,
-+
- 	.freeze			= qs_freeze,
- 	.thaw			= qs_thaw,
- 	.error_handler		= qs_error_handler,
--	.irq_clear		= ata_noop_irq_clear,
--	.irq_on			= ata_irq_on,
-+	.post_internal_cmd	= ATA_OP_NULL,
-+
- 	.scr_read		= qs_scr_read,
- 	.scr_write		= qs_scr_write,
-+
- 	.port_start		= qs_port_start,
- 	.host_stop		= qs_host_stop,
--	.bmdma_stop		= qs_bmdma_stop,
--	.bmdma_status		= qs_bmdma_status,
- };
- 
- static const struct ata_port_info qs_port_info[] = {
-diff --git a/drivers/ata/sata_sil.c b/drivers/ata/sata_sil.c
-index 53f0bae..eac7ca7 100644
---- a/drivers/ata/sata_sil.c
-+++ b/drivers/ata/sata_sil.c
-@@ -167,48 +167,17 @@ static struct pci_driver sil_pci_driver = {
- };
- 
- static struct scsi_host_template sil_sht = {
--	.module			= THIS_MODULE,
--	.name			= DRV_NAME,
--	.ioctl			= ata_scsi_ioctl,
--	.queuecommand		= ata_scsi_queuecmd,
--	.can_queue		= ATA_DEF_QUEUE,
--	.this_id		= ATA_SHT_THIS_ID,
--	.sg_tablesize		= LIBATA_MAX_PRD,
--	.cmd_per_lun		= ATA_SHT_CMD_PER_LUN,
--	.emulated		= ATA_SHT_EMULATED,
--	.use_clustering		= ATA_SHT_USE_CLUSTERING,
--	.proc_name		= DRV_NAME,
--	.dma_boundary		= ATA_DMA_BOUNDARY,
--	.slave_configure	= ata_scsi_slave_config,
--	.slave_destroy		= ata_scsi_slave_destroy,
--	.bios_param		= ata_std_bios_param,
-+	ATA_BMDMA_SHT(DRV_NAME),
- };
- 
--static const struct ata_port_operations sil_ops = {
-+static struct ata_port_operations sil_ops = {
-+	.inherits		= &ata_bmdma_port_ops,
- 	.dev_config		= sil_dev_config,
--	.tf_load		= ata_tf_load,
--	.tf_read		= ata_tf_read,
--	.check_status		= ata_check_status,
--	.exec_command		= ata_exec_command,
--	.dev_select		= ata_std_dev_select,
- 	.set_mode		= sil_set_mode,
--	.mode_filter		= ata_pci_default_filter,
--	.bmdma_setup            = ata_bmdma_setup,
--	.bmdma_start            = ata_bmdma_start,
--	.bmdma_stop		= ata_bmdma_stop,
--	.bmdma_status		= ata_bmdma_status,
--	.qc_prep		= ata_qc_prep,
--	.qc_issue		= ata_qc_issue_prot,
--	.data_xfer		= ata_data_xfer,
- 	.freeze			= sil_freeze,
- 	.thaw			= sil_thaw,
--	.error_handler		= ata_bmdma_error_handler,
--	.post_internal_cmd	= ata_bmdma_post_internal_cmd,
--	.irq_clear		= ata_bmdma_irq_clear,
--	.irq_on			= ata_irq_on,
- 	.scr_read		= sil_scr_read,
- 	.scr_write		= sil_scr_write,
--	.port_start		= ata_sff_port_start,
- };
- 
- static const struct ata_port_info sil_port_info[] = {
-diff --git a/drivers/ata/sata_sil24.c b/drivers/ata/sata_sil24.c
-index 5e57f78..d90d328 100644
---- a/drivers/ata/sata_sil24.c
-+++ b/drivers/ata/sata_sil24.c
-@@ -384,52 +384,34 @@ static struct pci_driver sil24_pci_driver = {
- };
- 
- static struct scsi_host_template sil24_sht = {
--	.module			= THIS_MODULE,
--	.name			= DRV_NAME,
--	.ioctl			= ata_scsi_ioctl,
--	.queuecommand		= ata_scsi_queuecmd,
--	.change_queue_depth	= ata_scsi_change_queue_depth,
-+	ATA_NCQ_SHT(DRV_NAME),
- 	.can_queue		= SIL24_MAX_CMDS,
--	.this_id		= ATA_SHT_THIS_ID,
- 	.sg_tablesize		= SIL24_MAX_SGE,
--	.cmd_per_lun		= ATA_SHT_CMD_PER_LUN,
--	.emulated		= ATA_SHT_EMULATED,
--	.use_clustering		= ATA_SHT_USE_CLUSTERING,
--	.proc_name		= DRV_NAME,
- 	.dma_boundary		= ATA_DMA_BOUNDARY,
--	.slave_configure	= ata_scsi_slave_config,
--	.slave_destroy		= ata_scsi_slave_destroy,
--	.bios_param		= ata_std_bios_param,
- };
- 
--static const struct ata_port_operations sil24_ops = {
--	.dev_config		= sil24_dev_config,
-+static struct ata_port_operations sil24_ops = {
-+	.inherits		= &sata_pmp_port_ops,
- 
- 	.check_status		= sil24_check_status,
- 	.check_altstatus	= sil24_check_status,
--	.dev_select		= ata_noop_dev_select,
--
- 	.tf_read		= sil24_tf_read,
--
- 	.qc_defer		= sil24_qc_defer,
- 	.qc_prep		= sil24_qc_prep,
- 	.qc_issue		= sil24_qc_issue,
- 
--	.irq_clear		= ata_noop_irq_clear,
-+	.freeze			= sil24_freeze,
-+	.thaw			= sil24_thaw,
-+	.error_handler		= sil24_error_handler,
-+	.post_internal_cmd	= sil24_post_internal_cmd,
-+	.dev_config		= sil24_dev_config,
- 
- 	.scr_read		= sil24_scr_read,
- 	.scr_write		= sil24_scr_write,
--
- 	.pmp_attach		= sil24_pmp_attach,
- 	.pmp_detach		= sil24_pmp_detach,
- 
--	.freeze			= sil24_freeze,
--	.thaw			= sil24_thaw,
--	.error_handler		= sil24_error_handler,
--	.post_internal_cmd	= sil24_post_internal_cmd,
--
- 	.port_start		= sil24_port_start,
--
- #ifdef CONFIG_PM
- 	.port_resume		= sil24_port_resume,
- #endif
-diff --git a/drivers/ata/sata_sis.c b/drivers/ata/sata_sis.c
-index a8adef9..9089c7a 100644
---- a/drivers/ata/sata_sis.c
-+++ b/drivers/ata/sata_sis.c
-@@ -86,46 +86,13 @@ static struct pci_driver sis_pci_driver = {
- };
- 
- static struct scsi_host_template sis_sht = {
--	.module			= THIS_MODULE,
--	.name			= DRV_NAME,
--	.ioctl			= ata_scsi_ioctl,
--	.queuecommand		= ata_scsi_queuecmd,
--	.can_queue		= ATA_DEF_QUEUE,
--	.this_id		= ATA_SHT_THIS_ID,
--	.sg_tablesize		= LIBATA_MAX_PRD,
--	.cmd_per_lun		= ATA_SHT_CMD_PER_LUN,
--	.emulated		= ATA_SHT_EMULATED,
--	.use_clustering		= ATA_SHT_USE_CLUSTERING,
--	.proc_name		= DRV_NAME,
--	.dma_boundary		= ATA_DMA_BOUNDARY,
--	.slave_configure	= ata_scsi_slave_config,
--	.slave_destroy		= ata_scsi_slave_destroy,
--	.bios_param		= ata_std_bios_param,
-+	ATA_BMDMA_SHT(DRV_NAME),
- };
- 
--static const struct ata_port_operations sis_ops = {
--	.tf_load		= ata_tf_load,
--	.tf_read		= ata_tf_read,
--	.check_status		= ata_check_status,
--	.exec_command		= ata_exec_command,
--	.dev_select		= ata_std_dev_select,
--	.bmdma_setup            = ata_bmdma_setup,
--	.bmdma_start            = ata_bmdma_start,
--	.bmdma_stop		= ata_bmdma_stop,
--	.bmdma_status		= ata_bmdma_status,
--	.qc_prep		= ata_qc_prep,
--	.qc_issue		= ata_qc_issue_prot,
--	.data_xfer		= ata_data_xfer,
--	.mode_filter		= ata_pci_default_filter,
--	.freeze			= ata_bmdma_freeze,
--	.thaw			= ata_bmdma_thaw,
--	.error_handler		= ata_bmdma_error_handler,
--	.post_internal_cmd	= ata_bmdma_post_internal_cmd,
--	.irq_clear		= ata_bmdma_irq_clear,
--	.irq_on			= ata_irq_on,
-+static struct ata_port_operations sis_ops = {
-+	.inherits		= &ata_bmdma_port_ops,
- 	.scr_read		= sis_scr_read,
- 	.scr_write		= sis_scr_write,
--	.port_start		= ata_sff_port_start,
- };
- 
- static const struct ata_port_info sis_port_info = {
-diff --git a/drivers/ata/sata_svw.c b/drivers/ata/sata_svw.c
-index 302854c..26e624a 100644
---- a/drivers/ata/sata_svw.c
-+++ b/drivers/ata/sata_svw.c
-@@ -307,51 +307,23 @@ static int k2_sata_proc_info(struct Scsi_Host *shost, char *page, char **start,
- 
- 
- static struct scsi_host_template k2_sata_sht = {
--	.module			= THIS_MODULE,
--	.name			= DRV_NAME,
--	.ioctl			= ata_scsi_ioctl,
--	.queuecommand		= ata_scsi_queuecmd,
--	.can_queue		= ATA_DEF_QUEUE,
--	.this_id		= ATA_SHT_THIS_ID,
--	.sg_tablesize		= LIBATA_MAX_PRD,
--	.cmd_per_lun		= ATA_SHT_CMD_PER_LUN,
--	.emulated		= ATA_SHT_EMULATED,
--	.use_clustering		= ATA_SHT_USE_CLUSTERING,
--	.proc_name		= DRV_NAME,
--	.dma_boundary		= ATA_DMA_BOUNDARY,
--	.slave_configure	= ata_scsi_slave_config,
--	.slave_destroy		= ata_scsi_slave_destroy,
-+	ATA_BMDMA_SHT(DRV_NAME),
- #ifdef CONFIG_PPC_OF
- 	.proc_info		= k2_sata_proc_info,
- #endif
--	.bios_param		= ata_std_bios_param,
- };
- 
- 
--static const struct ata_port_operations k2_sata_ops = {
-+static struct ata_port_operations k2_sata_ops = {
-+	.inherits		= &ata_bmdma_port_ops,
- 	.tf_load		= k2_sata_tf_load,
- 	.tf_read		= k2_sata_tf_read,
- 	.check_status		= k2_stat_check_status,
--	.exec_command		= ata_exec_command,
--	.dev_select		= ata_std_dev_select,
- 	.check_atapi_dma	= k2_sata_check_atapi_dma,
- 	.bmdma_setup		= k2_bmdma_setup_mmio,
- 	.bmdma_start		= k2_bmdma_start_mmio,
--	.bmdma_stop		= ata_bmdma_stop,
--	.bmdma_status		= ata_bmdma_status,
--	.qc_prep		= ata_qc_prep,
--	.qc_issue		= ata_qc_issue_prot,
--	.data_xfer		= ata_data_xfer,
--	.mode_filter		= ata_pci_default_filter,
--	.freeze			= ata_bmdma_freeze,
--	.thaw			= ata_bmdma_thaw,
--	.error_handler		= ata_bmdma_error_handler,
--	.post_internal_cmd	= ata_bmdma_post_internal_cmd,
--	.irq_clear		= ata_bmdma_irq_clear,
--	.irq_on			= ata_irq_on,
- 	.scr_read		= k2_sata_scr_read,
- 	.scr_write		= k2_sata_scr_write,
--	.port_start		= ata_sff_port_start,
- };
- 
- static const struct ata_port_info k2_port_info[] = {
-diff --git a/drivers/ata/sata_sx4.c b/drivers/ata/sata_sx4.c
-index e3d56bc..8138cda 100644
---- a/drivers/ata/sata_sx4.c
-+++ b/drivers/ata/sata_sx4.c
-@@ -236,24 +236,13 @@ static unsigned int pdc20621_qc_issue_prot(struct ata_queued_cmd *qc);
- 
- 
- static struct scsi_host_template pdc_sata_sht = {
--	.module			= THIS_MODULE,
--	.name			= DRV_NAME,
--	.ioctl			= ata_scsi_ioctl,
--	.queuecommand		= ata_scsi_queuecmd,
--	.can_queue		= ATA_DEF_QUEUE,
--	.this_id		= ATA_SHT_THIS_ID,
-+	ATA_BASE_SHT(DRV_NAME),
- 	.sg_tablesize		= LIBATA_MAX_PRD,
--	.cmd_per_lun		= ATA_SHT_CMD_PER_LUN,
--	.emulated		= ATA_SHT_EMULATED,
--	.use_clustering		= ATA_SHT_USE_CLUSTERING,
--	.proc_name		= DRV_NAME,
- 	.dma_boundary		= ATA_DMA_BOUNDARY,
--	.slave_configure	= ata_scsi_slave_config,
--	.slave_destroy		= ata_scsi_slave_destroy,
--	.bios_param		= ata_std_bios_param,
- };
- 
--static const struct ata_port_operations pdc_20621_ops = {
-+/* TODO: inherit from base port_ops after converting to new EH */
-+static struct ata_port_operations pdc_20621_ops = {
- 	.tf_load		= pdc_tf_load_mmio,
- 	.tf_read		= ata_tf_read,
- 	.check_status		= ata_check_status,
-diff --git a/drivers/ata/sata_uli.c b/drivers/ata/sata_uli.c
-index f7fc045..6ecd13f 100644
---- a/drivers/ata/sata_uli.c
-+++ b/drivers/ata/sata_uli.c
-@@ -76,51 +76,13 @@ static struct pci_driver uli_pci_driver = {
- };
- 
- static struct scsi_host_template uli_sht = {
--	.module			= THIS_MODULE,
--	.name			= DRV_NAME,
--	.ioctl			= ata_scsi_ioctl,
--	.queuecommand		= ata_scsi_queuecmd,
--	.can_queue		= ATA_DEF_QUEUE,
--	.this_id		= ATA_SHT_THIS_ID,
--	.sg_tablesize		= LIBATA_MAX_PRD,
--	.cmd_per_lun		= ATA_SHT_CMD_PER_LUN,
--	.emulated		= ATA_SHT_EMULATED,
--	.use_clustering		= ATA_SHT_USE_CLUSTERING,
--	.proc_name		= DRV_NAME,
--	.dma_boundary		= ATA_DMA_BOUNDARY,
--	.slave_configure	= ata_scsi_slave_config,
--	.slave_destroy		= ata_scsi_slave_destroy,
--	.bios_param		= ata_std_bios_param,
-+	ATA_BMDMA_SHT(DRV_NAME),
- };
- 
--static const struct ata_port_operations uli_ops = {
--	.tf_load		= ata_tf_load,
--	.tf_read		= ata_tf_read,
--	.check_status		= ata_check_status,
--	.exec_command		= ata_exec_command,
--	.dev_select		= ata_std_dev_select,
--
--	.bmdma_setup            = ata_bmdma_setup,
--	.bmdma_start            = ata_bmdma_start,
--	.bmdma_stop		= ata_bmdma_stop,
--	.bmdma_status		= ata_bmdma_status,
--	.qc_prep		= ata_qc_prep,
--	.qc_issue		= ata_qc_issue_prot,
--	.data_xfer		= ata_data_xfer,
--
--	.mode_filter		= ata_pci_default_filter,
--	.freeze			= ata_bmdma_freeze,
--	.thaw			= ata_bmdma_thaw,
--	.error_handler		= ata_bmdma_error_handler,
--	.post_internal_cmd	= ata_bmdma_post_internal_cmd,
--
--	.irq_clear		= ata_bmdma_irq_clear,
--	.irq_on			= ata_irq_on,
--
-+static struct ata_port_operations uli_ops = {
-+	.inherits		= &ata_bmdma_port_ops,
- 	.scr_read		= uli_scr_read,
- 	.scr_write		= uli_scr_write,
--
--	.port_start		= ata_sff_port_start,
- };
- 
- static const struct ata_port_info uli_port_info = {
-diff --git a/drivers/ata/sata_via.c b/drivers/ata/sata_via.c
-index 8d64a3d..8b7d78b 100644
---- a/drivers/ata/sata_via.c
-+++ b/drivers/ata/sata_via.c
-@@ -102,114 +102,26 @@ static struct pci_driver svia_pci_driver = {
- };
- 
- static struct scsi_host_template svia_sht = {
--	.module			= THIS_MODULE,
--	.name			= DRV_NAME,
--	.ioctl			= ata_scsi_ioctl,
--	.queuecommand		= ata_scsi_queuecmd,
--	.can_queue		= ATA_DEF_QUEUE,
--	.this_id		= ATA_SHT_THIS_ID,
--	.sg_tablesize		= LIBATA_MAX_PRD,
--	.cmd_per_lun		= ATA_SHT_CMD_PER_LUN,
--	.emulated		= ATA_SHT_EMULATED,
--	.use_clustering		= ATA_SHT_USE_CLUSTERING,
--	.proc_name		= DRV_NAME,
--	.dma_boundary		= ATA_DMA_BOUNDARY,
--	.slave_configure	= ata_scsi_slave_config,
--	.slave_destroy		= ata_scsi_slave_destroy,
--	.bios_param		= ata_std_bios_param,
-+	ATA_BMDMA_SHT(DRV_NAME),
- };
- 
--static const struct ata_port_operations vt6420_sata_ops = {
--	.mode_filter		= ata_pci_default_filter,
--
--	.tf_load		= ata_tf_load,
--	.tf_read		= ata_tf_read,
--	.check_status		= ata_check_status,
--	.exec_command		= ata_exec_command,
--	.dev_select		= ata_std_dev_select,
--
--	.bmdma_setup            = ata_bmdma_setup,
--	.bmdma_start            = ata_bmdma_start,
--	.bmdma_stop		= ata_bmdma_stop,
--	.bmdma_status		= ata_bmdma_status,
--
--	.qc_prep		= ata_qc_prep,
--	.qc_issue		= ata_qc_issue_prot,
--	.data_xfer		= ata_data_xfer,
--
-+static struct ata_port_operations vt6420_sata_ops = {
-+	.inherits		= &ata_bmdma_port_ops,
- 	.freeze			= svia_noop_freeze,
--	.thaw			= ata_bmdma_thaw,
- 	.error_handler		= vt6420_error_handler,
--	.post_internal_cmd	= ata_bmdma_post_internal_cmd,
--
--	.irq_clear		= ata_bmdma_irq_clear,
--	.irq_on			= ata_irq_on,
--
--	.port_start		= ata_sff_port_start,
- };
- 
--static const struct ata_port_operations vt6421_pata_ops = {
-+static struct ata_port_operations vt6421_pata_ops = {
-+	.inherits		= &ata_bmdma_port_ops,
-+	.cable_detect		= vt6421_pata_cable_detect,
- 	.set_piomode		= vt6421_set_pio_mode,
- 	.set_dmamode		= vt6421_set_dma_mode,
--	.mode_filter		= ata_pci_default_filter,
--
--	.tf_load		= ata_tf_load,
--	.tf_read		= ata_tf_read,
--	.check_status		= ata_check_status,
--	.exec_command		= ata_exec_command,
--	.dev_select		= ata_std_dev_select,
--
--	.bmdma_setup            = ata_bmdma_setup,
--	.bmdma_start            = ata_bmdma_start,
--	.bmdma_stop		= ata_bmdma_stop,
--	.bmdma_status		= ata_bmdma_status,
--
--	.qc_prep		= ata_qc_prep,
--	.qc_issue		= ata_qc_issue_prot,
--	.data_xfer		= ata_data_xfer,
--
--	.freeze			= ata_bmdma_freeze,
--	.thaw			= ata_bmdma_thaw,
--	.error_handler		= ata_bmdma_error_handler,
--	.post_internal_cmd	= ata_bmdma_post_internal_cmd,
--	.cable_detect		= vt6421_pata_cable_detect,
--
--	.irq_clear		= ata_bmdma_irq_clear,
--	.irq_on			= ata_irq_on,
--
--	.port_start		= ata_sff_port_start,
- };
- 
--static const struct ata_port_operations vt6421_sata_ops = {
--	.mode_filter		= ata_pci_default_filter,
--
--	.tf_load		= ata_tf_load,
--	.tf_read		= ata_tf_read,
--	.check_status		= ata_check_status,
--	.exec_command		= ata_exec_command,
--	.dev_select		= ata_std_dev_select,
--
--	.bmdma_setup            = ata_bmdma_setup,
--	.bmdma_start            = ata_bmdma_start,
--	.bmdma_stop		= ata_bmdma_stop,
--	.bmdma_status		= ata_bmdma_status,
--
--	.qc_prep		= ata_qc_prep,
--	.qc_issue		= ata_qc_issue_prot,
--	.data_xfer		= ata_data_xfer,
--
--	.freeze			= ata_bmdma_freeze,
--	.thaw			= ata_bmdma_thaw,
--	.error_handler		= ata_bmdma_error_handler,
--	.post_internal_cmd	= ata_bmdma_post_internal_cmd,
--
--	.irq_clear		= ata_bmdma_irq_clear,
--	.irq_on			= ata_irq_on,
--
-+static struct ata_port_operations vt6421_sata_ops = {
-+	.inherits		= &ata_bmdma_port_ops,
- 	.scr_read		= svia_scr_read,
- 	.scr_write		= svia_scr_write,
--
--	.port_start		= ata_sff_port_start,
- };
- 
- static const struct ata_port_info vt6420_port_info = {
-diff --git a/drivers/ata/sata_vsc.c b/drivers/ata/sata_vsc.c
-index 099a2ba..8045a72 100644
---- a/drivers/ata/sata_vsc.c
-+++ b/drivers/ata/sata_vsc.c
-@@ -300,47 +300,18 @@ out:
- 
- 
- static struct scsi_host_template vsc_sata_sht = {
--	.module			= THIS_MODULE,
--	.name			= DRV_NAME,
--	.ioctl			= ata_scsi_ioctl,
--	.queuecommand		= ata_scsi_queuecmd,
--	.can_queue		= ATA_DEF_QUEUE,
--	.this_id		= ATA_SHT_THIS_ID,
--	.sg_tablesize		= LIBATA_MAX_PRD,
--	.cmd_per_lun		= ATA_SHT_CMD_PER_LUN,
--	.emulated		= ATA_SHT_EMULATED,
--	.use_clustering		= ATA_SHT_USE_CLUSTERING,
--	.proc_name		= DRV_NAME,
--	.dma_boundary		= ATA_DMA_BOUNDARY,
--	.slave_configure	= ata_scsi_slave_config,
--	.slave_destroy		= ata_scsi_slave_destroy,
--	.bios_param		= ata_std_bios_param,
-+	ATA_BMDMA_SHT(DRV_NAME),
- };
- 
- 
--static const struct ata_port_operations vsc_sata_ops = {
-+static struct ata_port_operations vsc_sata_ops = {
-+	.inherits		= &ata_bmdma_port_ops,
- 	.tf_load		= vsc_sata_tf_load,
- 	.tf_read		= vsc_sata_tf_read,
--	.exec_command		= ata_exec_command,
--	.check_status		= ata_check_status,
--	.dev_select		= ata_std_dev_select,
--	.bmdma_setup            = ata_bmdma_setup,
--	.bmdma_start            = ata_bmdma_start,
--	.bmdma_stop		= ata_bmdma_stop,
--	.bmdma_status		= ata_bmdma_status,
--	.qc_prep		= ata_qc_prep,
--	.qc_issue		= ata_qc_issue_prot,
--	.data_xfer		= ata_data_xfer,
--	.mode_filter		= ata_pci_default_filter,
- 	.freeze			= vsc_freeze,
- 	.thaw			= vsc_thaw,
--	.error_handler		= ata_bmdma_error_handler,
--	.post_internal_cmd	= ata_bmdma_post_internal_cmd,
--	.irq_clear		= ata_bmdma_irq_clear,
--	.irq_on			= ata_irq_on,
- 	.scr_read		= vsc_sata_scr_read,
- 	.scr_write		= vsc_sata_scr_write,
--	.port_start		= ata_sff_port_start,
- };
- 
- static void __devinit vsc_sata_setup_port(struct ata_ioports *port,
-diff --git a/include/linux/libata.h b/include/linux/libata.h
-index b6f06a2..27ceed7 100644
---- a/include/linux/libata.h
-+++ b/include/linux/libata.h
-@@ -432,7 +432,7 @@ struct ata_host {
- 	void __iomem * const	*iomap;
- 	unsigned int		n_ports;
- 	void			*private_data;
--	const struct ata_port_operations *ops;
-+	struct ata_port_operations *ops;
- 	unsigned long		flags;
- #ifdef CONFIG_ATA_ACPI
- 	acpi_handle		acpi_handle;
-@@ -607,7 +607,7 @@ struct ata_link {
- 
- struct ata_port {
- 	struct Scsi_Host	*scsi_host; /* our co-allocated scsi host */
--	const struct ata_port_operations *ops;
-+	struct ata_port_operations *ops;
- 	spinlock_t		*lock;
- 	unsigned long		flags;	/* ATA_FLAG_xxx */
- 	unsigned int		pflags; /* ATA_PFLAG_xxx */
-@@ -672,6 +672,13 @@ struct ata_port {
- 	u8			sector_buf[ATA_SECT_SIZE]; /* owned by EH */
- };
- 
-+/* The following initializer overrides a method to NULL whether one of
-+ * its parent has the method defined or not.  This is equivalent to
-+ * ERR_PTR(-ENOENT).  Unfortunately, ERR_PTR doesn't render a constant
-+ * expression and thus can't be used as an initializer.
-+ */
-+#define ATA_OP_NULL		(void *)(unsigned long)(-ENOENT)
-+
- struct ata_port_operations {
- 	/*
- 	 * Command execution
-@@ -741,6 +748,12 @@ struct ata_port_operations {
- 	void (*phy_reset)(struct ata_port *ap);
- 	void (*eng_timeout)(struct ata_port *ap);
- 	irq_handler_t irq_handler;
-+
-+	/*
-+	 * ->inherits must be the last field and all the preceding
-+	 * fields must be pointers.
-+	 */
-+	const struct ata_port_operations	*inherits;
- };
- 
- struct ata_port_info {
-@@ -750,7 +763,7 @@ struct ata_port_info {
- 	unsigned long		pio_mask;
- 	unsigned long		mwdma_mask;
- 	unsigned long		udma_mask;
--	const struct ata_port_operations *port_ops;
-+	struct ata_port_operations *port_ops;
- 	irq_handler_t		irq_handler;
- 	void 			*private_data;
- };
-@@ -773,7 +786,7 @@ extern const unsigned long sata_deb_timing_normal[];
- extern const unsigned long sata_deb_timing_hotplug[];
- extern const unsigned long sata_deb_timing_long[];
- 
--extern const struct ata_port_operations ata_dummy_port_ops;
-+extern struct ata_port_operations ata_dummy_port_ops;
- extern const struct ata_port_info ata_dummy_port_info;
- 
- static inline const unsigned long *
-@@ -820,7 +833,7 @@ extern int ata_host_activate(struct ata_host *host, int irq,
- 			     struct scsi_host_template *sht);
- extern void ata_host_detach(struct ata_host *host);
- extern void ata_host_init(struct ata_host *, struct device *,
--			  unsigned long, const struct ata_port_operations *);
-+			  unsigned long, struct ata_port_operations *);
- extern int ata_scsi_detect(struct scsi_host_template *sht);
- extern int ata_scsi_ioctl(struct scsi_device *dev, int cmd, void __user *arg);
- extern int ata_scsi_queuecmd(struct scsi_cmnd *cmd, void (*done)(struct scsi_cmnd *));
-@@ -1078,6 +1091,63 @@ extern void ata_do_eh(struct ata_port *ap, ata_prereset_fn_t prereset,
- 		      ata_postreset_fn_t postreset);
- 
- /*
-+ * Base operations to inherit from and initializers for sht
-+ *
-+ * Operations
-+ *
-+ * base  : Common to all libata drivers.
-+ * sata  : SATA controllers w/ native interface.
-+ * pmp   : SATA controllers w/ PMP support.
-+ * sff   : SFF ATA controllers w/o BMDMA support.
-+ * bmdma : SFF ATA controllers w/ BMDMA support.
-+ *
-+ * sht initializers
-+ *
-+ * BASE  : Common to all libata drivers.  The user must set
-+ *	   sg_tablesize and dma_boundary.
-+ * PIO   : SFF ATA controllers w/ only PIO support.
-+ * BMDMA : SFF ATA controllers w/ BMDMA support.  sg_tablesize and
-+ *	   dma_boundary are set to BMDMA limits.
-+ * NCQ   : SATA controllers supporting NCQ.  The user must set
-+ *	   sg_tablesize, dma_boundary and can_queue.
-+ */
-+extern const struct ata_port_operations ata_base_port_ops;
-+extern const struct ata_port_operations sata_port_ops;
-+extern const struct ata_port_operations sata_pmp_port_ops;
-+extern const struct ata_port_operations ata_sff_port_ops;
-+extern const struct ata_port_operations ata_bmdma_port_ops;
-+
-+#define ATA_BASE_SHT(drv_name)					\
-+	.module			= THIS_MODULE,			\
-+	.name			= drv_name,			\
-+	.ioctl			= ata_scsi_ioctl,		\
-+	.queuecommand		= ata_scsi_queuecmd,		\
-+	.can_queue		= ATA_DEF_QUEUE,		\
-+	.this_id		= ATA_SHT_THIS_ID,		\
-+	.cmd_per_lun		= ATA_SHT_CMD_PER_LUN,		\
-+	.emulated		= ATA_SHT_EMULATED,		\
-+	.use_clustering		= ATA_SHT_USE_CLUSTERING,	\
-+	.proc_name		= drv_name,			\
-+	.slave_configure	= ata_scsi_slave_config,	\
-+	.slave_destroy		= ata_scsi_slave_destroy,	\
-+	.bios_param		= ata_std_bios_param
-+
-+/* PIO only, sg_tablesize and dma_boundary limits can be removed */
-+#define ATA_PIO_SHT(drv_name)					\
-+	ATA_BASE_SHT(drv_name),					\
-+	.sg_tablesize		= LIBATA_MAX_PRD,		\
-+	.dma_boundary		= ATA_DMA_BOUNDARY
-+
-+#define ATA_BMDMA_SHT(drv_name)					\
-+	ATA_BASE_SHT(drv_name),					\
-+	.sg_tablesize		= LIBATA_MAX_PRD,		\
-+	.dma_boundary		= ATA_DMA_BOUNDARY
-+
-+#define ATA_NCQ_SHT(drv_name)					\
-+	ATA_BASE_SHT(drv_name),					\
-+	.change_queue_depth	= ata_scsi_change_queue_depth
-+
-+/*
-  * printk helpers
-  */
- #define ata_port_printk(ap, lv, fmt, args...) \
--- 
-1.5.2.4
+ int lookup_symbol_attrs(unsigned long addr, unsigned long *size,
+ 			unsigned long *offset, char *modname, char *name)
 
+--------------020203070305040007040100
+Content-Type: text/plain;
+ name="verify-after"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="verify-after"
+
+---
+ drivers/ata/ahci.c              |    6 ++++
+ drivers/ata/ata_generic.c       |    4 +++
+ drivers/ata/ata_piix.c          |    8 ++++++
+ drivers/ata/libata-core.c       |   52 ++++++++++++++++++++++++++++++++++++++++
+ drivers/ata/pata_acpi.c         |    4 +++
+ drivers/ata/pata_ali.c          |    8 ++++++
+ drivers/ata/pata_amd.c          |   11 ++++++++
+ drivers/ata/pata_artop.c        |    5 +++
+ drivers/ata/pata_at32.c         |    4 +++
+ drivers/ata/pata_atiixp.c       |    4 +++
+ drivers/ata/pata_bf54x.c        |    4 +++
+ drivers/ata/pata_cmd640.c       |    4 +++
+ drivers/ata/pata_cmd64x.c       |    7 +++++
+ drivers/ata/pata_cs5520.c       |    4 +++
+ drivers/ata/pata_cs5530.c       |    4 +++
+ drivers/ata/pata_cs5535.c       |    4 +++
+ drivers/ata/pata_cs5536.c       |    4 +++
+ drivers/ata/pata_cypress.c      |    4 +++
+ drivers/ata/pata_efar.c         |    4 +++
+ drivers/ata/pata_hpt366.c       |    4 +++
+ drivers/ata/pata_hpt37x.c       |    7 +++++
+ drivers/ata/pata_hpt3x2n.c      |    4 +++
+ drivers/ata/pata_hpt3x3.c       |    4 +++
+ drivers/ata/pata_icside.c       |    4 +++
+ drivers/ata/pata_isapnp.c       |    4 +++
+ drivers/ata/pata_it8213.c       |    4 +++
+ drivers/ata/pata_it821x.c       |    5 +++
+ drivers/ata/pata_ixp4xx_cf.c    |    4 +++
+ drivers/ata/pata_jmicron.c      |    4 +++
+ drivers/ata/pata_legacy.c       |   14 ++++++++++
+ drivers/ata/pata_marvell.c      |    4 +++
+ drivers/ata/pata_mpc52xx.c      |    4 +++
+ drivers/ata/pata_mpiix.c        |    4 +++
+ drivers/ata/pata_netcell.c      |    4 +++
+ drivers/ata/pata_ninja32.c      |    4 +++
+ drivers/ata/pata_ns87410.c      |    4 +++
+ drivers/ata/pata_ns87415.c      |    5 +++
+ drivers/ata/pata_oldpiix.c      |    4 +++
+ drivers/ata/pata_opti.c         |    4 +++
+ drivers/ata/pata_optidma.c      |    5 +++
+ drivers/ata/pata_pcmcia.c       |    5 +++
+ drivers/ata/pata_pdc2027x.c     |    5 +++
+ drivers/ata/pata_pdc202xx_old.c |    5 +++
+ drivers/ata/pata_platform.c     |    4 +++
+ drivers/ata/pata_qdi.c          |    5 +++
+ drivers/ata/pata_radisys.c      |    4 +++
+ drivers/ata/pata_rz1000.c       |    4 +++
+ drivers/ata/pata_sc1200.c       |    4 +++
+ drivers/ata/pata_scc.c          |    4 +++
+ drivers/ata/pata_serverworks.c  |    5 +++
+ drivers/ata/pata_sil680.c       |    4 +++
+ drivers/ata/pata_sis.c          |   10 +++++++
+ drivers/ata/pata_sl82c105.c     |    4 +++
+ drivers/ata/pata_triflex.c      |    4 +++
+ drivers/ata/pata_via.c          |    5 +++
+ drivers/ata/pata_winbond.c      |    4 +++
+ drivers/ata/pdc_adma.c          |    4 +++
+ drivers/ata/sata_fsl.c          |    4 +++
+ drivers/ata/sata_inic162x.c     |    4 +++
+ drivers/ata/sata_mv.c           |    7 +++++
+ drivers/ata/sata_nv.c           |   10 +++++++
+ drivers/ata/sata_promise.c      |    7 +++++
+ drivers/ata/sata_qstor.c        |    4 +++
+ drivers/ata/sata_sil.c          |    4 +++
+ drivers/ata/sata_sil24.c        |    4 +++
+ drivers/ata/sata_sis.c          |    4 +++
+ drivers/ata/sata_svw.c          |    4 +++
+ drivers/ata/sata_sx4.c          |    4 +++
+ drivers/ata/sata_uli.c          |    4 +++
+ drivers/ata/sata_via.c          |    6 ++++
+ drivers/ata/sata_vsc.c          |    4 +++
+ include/linux/libata.h          |    3 ++
+ kernel/kallsyms.c               |    1 
+ 73 files changed, 399 insertions(+)
+
+Index: work/drivers/ata/ahci.c
+===================================================================
+--- work.orig/drivers/ata/ahci.c
++++ work/drivers/ata/ahci.c
+@@ -2212,6 +2212,12 @@ static int ahci_init_one(struct pci_dev 
+ 
+ static int __init ahci_init(void)
+ {
++	{
++		ata_dump_sht(DRV_NAME, &ahci_sht);
++		ata_dump_ops(DRV_NAME, &ahci_ops);
++		ata_dump_ops(DRV_NAME, &ahci_vt8251_ops);
++		ata_dump_ops(DRV_NAME, &ahci_p5wdh_ops);
++	}
+ 	return pci_register_driver(&ahci_pci_driver);
+ }
+ 
+Index: work/drivers/ata/ata_generic.c
+===================================================================
+--- work.orig/drivers/ata/ata_generic.c
++++ work/drivers/ata/ata_generic.c
+@@ -187,6 +187,10 @@ static struct pci_driver ata_generic_pci
+ 
+ static int __init ata_generic_init(void)
+ {
++	{
++		ata_dump_sht(DRV_NAME, &generic_sht);
++		ata_dump_ops(DRV_NAME, &generic_port_ops);
++	}
+ 	return pci_register_driver(&ata_generic_pci_driver);
+ }
+ 
+Index: work/drivers/ata/ata_piix.c
+===================================================================
+--- work.orig/drivers/ata/ata_piix.c
++++ work/drivers/ata/ata_piix.c
+@@ -1558,6 +1558,14 @@ static int __init piix_init(void)
+ 	in_module_init = 0;
+ 
+ 	DPRINTK("done\n");
++	{
++		ata_dump_sht(DRV_NAME, &piix_sht);
++		ata_dump_ops(DRV_NAME, &piix_pata_ops);
++		ata_dump_ops(DRV_NAME, &piix_vmw_ops);
++		ata_dump_ops(DRV_NAME, &ich_pata_ops);
++		ata_dump_ops(DRV_NAME, &piix_sata_ops);
++		ata_dump_ops(DRV_NAME, &piix_sidpr_sata_ops);
++	}
+ 	return 0;
+ }
+ 
+Index: work/drivers/ata/pata_acpi.c
+===================================================================
+--- work.orig/drivers/ata/pata_acpi.c
++++ work/drivers/ata/pata_acpi.c
+@@ -295,6 +295,10 @@ static struct pci_driver pacpi_pci_drive
+ 
+ static int __init pacpi_init(void)
+ {
++	{
++		ata_dump_sht(DRV_NAME, &pacpi_sht);
++		ata_dump_ops(DRV_NAME, &pacpi_ops);
++	}
+ 	return pci_register_driver(&pacpi_pci_driver);
+ }
+ 
+Index: work/drivers/ata/pata_ali.c
+===================================================================
+--- work.orig/drivers/ata/pata_ali.c
++++ work/drivers/ata/pata_ali.c
+@@ -557,6 +557,14 @@ static struct pci_driver ali_pci_driver 
+ 
+ static int __init ali_init(void)
+ {
++	{
++		ata_dump_sht(DRV_NAME, &ali_sht);
++		ata_dump_ops(DRV_NAME, &ali_early_port_ops);
++		ata_dump_ops(DRV_NAME, &ali_dma_base_ops);
++		ata_dump_ops(DRV_NAME, &ali_20_port_ops);
++		ata_dump_ops(DRV_NAME, &ali_c2_port_ops);
++		ata_dump_ops(DRV_NAME, &ali_c5_port_ops);
++	}
+ 	return pci_register_driver(&ali_pci_driver);
+ }
+ 
+Index: work/drivers/ata/pata_amd.c
+===================================================================
+--- work.orig/drivers/ata/pata_amd.c
++++ work/drivers/ata/pata_amd.c
+@@ -614,6 +614,17 @@ static struct pci_driver amd_pci_driver 
+ 
+ static int __init amd_init(void)
+ {
++	{
++		ata_dump_sht(DRV_NAME, &amd_sht);
++		ata_dump_ops(DRV_NAME, &amd_base_port_ops);
++		ata_dump_ops(DRV_NAME, &amd33_port_ops);
++		ata_dump_ops(DRV_NAME, &amd66_port_ops);
++		ata_dump_ops(DRV_NAME, &amd100_port_ops);
++		ata_dump_ops(DRV_NAME, &amd133_port_ops);
++		ata_dump_ops(DRV_NAME, &nv_base_port_ops);
++		ata_dump_ops(DRV_NAME, &nv100_port_ops);
++		ata_dump_ops(DRV_NAME, &nv133_port_ops);
++	}
+ 	return pci_register_driver(&amd_pci_driver);
+ }
+ 
+Index: work/drivers/ata/pata_artop.c
+===================================================================
+--- work.orig/drivers/ata/pata_artop.c
++++ work/drivers/ata/pata_artop.c
+@@ -456,6 +456,11 @@ static struct pci_driver artop_pci_drive
+ 
+ static int __init artop_init(void)
+ {
++	{
++		ata_dump_sht(DRV_NAME, &artop_sht);
++		ata_dump_ops(DRV_NAME, &artop6210_ops);
++		ata_dump_ops(DRV_NAME, &artop6260_ops);
++	}
+ 	return pci_register_driver(&artop_pci_driver);
+ }
+ 
+Index: work/drivers/ata/pata_at32.c
+===================================================================
+--- work.orig/drivers/ata/pata_at32.c
++++ work/drivers/ata/pata_at32.c
+@@ -391,6 +391,10 @@ static struct platform_driver pata_at32_
+ 
+ static int __init pata_at32_init(void)
+ {
++	{
++		ata_dump_sht(DRV_NAME, &at32_sht);
++		ata_dump_ops(DRV_NAME, &at32_port_ops);
++	}
+ 	return platform_driver_probe(&pata_at32_driver, pata_at32_probe);
+ }
+ 
+Index: work/drivers/ata/pata_atiixp.c
+===================================================================
+--- work.orig/drivers/ata/pata_atiixp.c
++++ work/drivers/ata/pata_atiixp.c
+@@ -273,6 +273,10 @@ static struct pci_driver atiixp_pci_driv
+ 
+ static int __init atiixp_init(void)
+ {
++	{
++		ata_dump_sht(DRV_NAME, &atiixp_sht);
++		ata_dump_ops(DRV_NAME, &atiixp_port_ops);
++	}
+ 	return pci_register_driver(&atiixp_pci_driver);
+ }
+ 
+Index: work/drivers/ata/pata_bf54x.c
+===================================================================
+--- work.orig/drivers/ata/pata_bf54x.c
++++ work/drivers/ata/pata_bf54x.c
+@@ -1596,6 +1596,10 @@ static int __init bfin_atapi_init(void)
+ 		bfin_port_info[0].udma_mask = ATA_UDMA5;
+ 	};
+ 
++	{
++		ata_dump_sht(DRV_NAME, &bfin_sht);
++		ata_dump_ops(DRV_NAME, &bfin_pata_ops);
++	}
+ 	return platform_driver_register(&bfin_atapi_driver);
+ }
+ 
+Index: work/drivers/ata/pata_cmd640.c
+===================================================================
+--- work.orig/drivers/ata/pata_cmd640.c
++++ work/drivers/ata/pata_cmd640.c
+@@ -261,6 +261,10 @@ static struct pci_driver cmd640_pci_driv
+ 
+ static int __init cmd640_init(void)
+ {
++	{
++		ata_dump_sht(DRV_NAME, &cmd640_sht);
++		ata_dump_ops(DRV_NAME, &cmd640_port_ops);
++	}
+ 	return pci_register_driver(&cmd640_pci_driver);
+ }
+ 
+Index: work/drivers/ata/pata_cmd64x.c
+===================================================================
+--- work.orig/drivers/ata/pata_cmd64x.c
++++ work/drivers/ata/pata_cmd64x.c
+@@ -428,6 +428,13 @@ static struct pci_driver cmd64x_pci_driv
+ 
+ static int __init cmd64x_init(void)
+ {
++	{
++		ata_dump_sht(DRV_NAME, &cmd64x_sht);
++		ata_dump_ops(DRV_NAME, &cmd64x_base_ops);
++		ata_dump_ops(DRV_NAME, &cmd64x_port_ops);
++		ata_dump_ops(DRV_NAME, &cmd646r1_port_ops);
++		ata_dump_ops(DRV_NAME, &cmd648_port_ops);
++	}
+ 	return pci_register_driver(&cmd64x_pci_driver);
+ }
+ 
+Index: work/drivers/ata/pata_cs5520.c
+===================================================================
+--- work.orig/drivers/ata/pata_cs5520.c
++++ work/drivers/ata/pata_cs5520.c
+@@ -342,6 +342,10 @@ static struct pci_driver cs5520_pci_driv
+ 
+ static int __init cs5520_init(void)
+ {
++	{
++		ata_dump_sht(DRV_NAME, &cs5520_sht);
++		ata_dump_ops(DRV_NAME, &cs5520_port_ops);
++	}
+ 	return pci_register_driver(&cs5520_pci_driver);
+ }
+ 
+Index: work/drivers/ata/pata_cs5530.c
+===================================================================
+--- work.orig/drivers/ata/pata_cs5530.c
++++ work/drivers/ata/pata_cs5530.c
+@@ -368,6 +368,10 @@ static struct pci_driver cs5530_pci_driv
+ 
+ static int __init cs5530_init(void)
+ {
++	{
++		ata_dump_sht(DRV_NAME, &cs5530_sht);
++		ata_dump_ops(DRV_NAME, &cs5530_port_ops);
++	}
+ 	return pci_register_driver(&cs5530_pci_driver);
+ }
+ 
+Index: work/drivers/ata/pata_cs5535.c
+===================================================================
+--- work.orig/drivers/ata/pata_cs5535.c
++++ work/drivers/ata/pata_cs5535.c
+@@ -222,6 +222,10 @@ static struct pci_driver cs5535_pci_driv
+ 
+ static int __init cs5535_init(void)
+ {
++	{
++		ata_dump_sht(DRV_NAME, &cs5535_sht);
++		ata_dump_ops(DRV_NAME, &cs5535_port_ops);
++	}
+ 	return pci_register_driver(&cs5535_pci_driver);
+ }
+ 
+Index: work/drivers/ata/pata_cs5536.c
+===================================================================
+--- work.orig/drivers/ata/pata_cs5536.c
++++ work/drivers/ata/pata_cs5536.c
+@@ -283,6 +283,10 @@ static struct pci_driver cs5536_pci_driv
+ 
+ static int __init cs5536_init(void)
+ {
++	{
++		ata_dump_sht(DRV_NAME, &cs5536_sht);
++		ata_dump_ops(DRV_NAME, &cs5536_port_ops);
++	}
+ 	return pci_register_driver(&cs5536_pci_driver);
+ }
+ 
+Index: work/drivers/ata/pata_cypress.c
+===================================================================
+--- work.orig/drivers/ata/pata_cypress.c
++++ work/drivers/ata/pata_cypress.c
+@@ -159,6 +159,10 @@ static struct pci_driver cy82c693_pci_dr
+ 
+ static int __init cy82c693_init(void)
+ {
++	{
++		ata_dump_sht(DRV_NAME, &cy82c693_sht);
++		ata_dump_ops(DRV_NAME, &cy82c693_port_ops);
++	}
+ 	return pci_register_driver(&cy82c693_pci_driver);
+ }
+ 
+Index: work/drivers/ata/pata_efar.c
+===================================================================
+--- work.orig/drivers/ata/pata_efar.c
++++ work/drivers/ata/pata_efar.c
+@@ -298,6 +298,10 @@ static struct pci_driver efar_pci_driver
+ 
+ static int __init efar_init(void)
+ {
++	{
++		ata_dump_sht(DRV_NAME, &efar_sht);
++		ata_dump_ops(DRV_NAME, &efar_ops);
++	}
+ 	return pci_register_driver(&efar_pci_driver);
+ }
+ 
+Index: work/drivers/ata/pata_hpt366.c
+===================================================================
+--- work.orig/drivers/ata/pata_hpt366.c
++++ work/drivers/ata/pata_hpt366.c
+@@ -430,6 +430,10 @@ static struct pci_driver hpt36x_pci_driv
+ 
+ static int __init hpt36x_init(void)
+ {
++	{
++		ata_dump_sht(DRV_NAME, &hpt36x_sht);
++		ata_dump_ops(DRV_NAME, &hpt366_port_ops);
++	}
+ 	return pci_register_driver(&hpt36x_pci_driver);
+ }
+ 
+Index: work/drivers/ata/pata_hpt37x.c
+===================================================================
+--- work.orig/drivers/ata/pata_hpt37x.c
++++ work/drivers/ata/pata_hpt37x.c
+@@ -1073,6 +1073,13 @@ static struct pci_driver hpt37x_pci_driv
+ 
+ static int __init hpt37x_init(void)
+ {
++	{
++		ata_dump_sht(DRV_NAME, &hpt37x_sht);
++		ata_dump_ops(DRV_NAME, &hpt370_port_ops);
++		ata_dump_ops(DRV_NAME, &hpt370a_port_ops);
++		ata_dump_ops(DRV_NAME, &hpt372_port_ops);
++		ata_dump_ops(DRV_NAME, &hpt374_port_ops);
++	}
+ 	return pci_register_driver(&hpt37x_pci_driver);
+ }
+ 
+Index: work/drivers/ata/pata_hpt3x2n.c
+===================================================================
+--- work.orig/drivers/ata/pata_hpt3x2n.c
++++ work/drivers/ata/pata_hpt3x2n.c
+@@ -590,6 +590,10 @@ static struct pci_driver hpt3x2n_pci_dri
+ 
+ static int __init hpt3x2n_init(void)
+ {
++	{
++		ata_dump_sht(DRV_NAME, &hpt3x2n_sht);
++		ata_dump_ops(DRV_NAME, &hpt3x2n_port_ops);
++	}
+ 	return pci_register_driver(&hpt3x2n_pci_driver);
+ }
+ 
+Index: work/drivers/ata/pata_hpt3x3.c
+===================================================================
+--- work.orig/drivers/ata/pata_hpt3x3.c
++++ work/drivers/ata/pata_hpt3x3.c
+@@ -240,6 +240,10 @@ static struct pci_driver hpt3x3_pci_driv
+ 
+ static int __init hpt3x3_init(void)
+ {
++	{
++		ata_dump_sht(DRV_NAME, &hpt3x3_sht);
++		ata_dump_ops(DRV_NAME, &hpt3x3_port_ops);
++	}
+ 	return pci_register_driver(&hpt3x3_pci_driver);
+ }
+ 
+Index: work/drivers/ata/pata_icside.c
+===================================================================
+--- work.orig/drivers/ata/pata_icside.c
++++ work/drivers/ata/pata_icside.c
+@@ -637,6 +637,10 @@ static struct ecard_driver pata_icside_d
+ 
+ static int __init pata_icside_init(void)
+ {
++	{
++		ata_dump_sht(DRV_NAME, &pata_icside_sht);
++		ata_dump_ops(DRV_NAME, &pata_icside_port_ops);
++	}
+ 	return ecard_register_driver(&pata_icside_driver);
+ }
+ 
+Index: work/drivers/ata/pata_isapnp.c
+===================================================================
+--- work.orig/drivers/ata/pata_isapnp.c
++++ work/drivers/ata/pata_isapnp.c
+@@ -122,6 +122,10 @@ static struct pnp_driver isapnp_driver =
+ 
+ static int __init isapnp_init(void)
+ {
++	{
++		ata_dump_sht(DRV_NAME, &isapnp_sht);
++		ata_dump_ops(DRV_NAME, &isapnp_port_ops);
++	}
+ 	return pnp_register_driver(&isapnp_driver);
+ }
+ 
+Index: work/drivers/ata/pata_it8213.c
+===================================================================
+--- work.orig/drivers/ata/pata_it8213.c
++++ work/drivers/ata/pata_it8213.c
+@@ -310,6 +310,10 @@ static struct pci_driver it8213_pci_driv
+ 
+ static int __init it8213_init(void)
+ {
++	{
++		ata_dump_sht(DRV_NAME, &it8213_sht);
++		ata_dump_ops(DRV_NAME, &it8213_ops);
++	}
+ 	return pci_register_driver(&it8213_pci_driver);
+ }
+ 
+Index: work/drivers/ata/pata_it821x.c
+===================================================================
+--- work.orig/drivers/ata/pata_it821x.c
++++ work/drivers/ata/pata_it821x.c
+@@ -764,6 +764,11 @@ static struct pci_driver it821x_pci_driv
+ 
+ static int __init it821x_init(void)
+ {
++	{
++		ata_dump_sht(DRV_NAME, &it821x_sht);
++		ata_dump_ops(DRV_NAME, &it821x_smart_port_ops);
++		ata_dump_ops(DRV_NAME, &it821x_passthru_port_ops);
++	}
+ 	return pci_register_driver(&it821x_pci_driver);
+ }
+ 
+Index: work/drivers/ata/pata_ixp4xx_cf.c
+===================================================================
+--- work.orig/drivers/ata/pata_ixp4xx_cf.c
++++ work/drivers/ata/pata_ixp4xx_cf.c
+@@ -209,6 +209,10 @@ static struct platform_driver ixp4xx_pat
+ 
+ static int __init ixp4xx_pata_init(void)
+ {
++	{
++		ata_dump_sht(DRV_NAME, &ixp4xx_sht);
++		ata_dump_ops(DRV_NAME, &ixp4xx_port_ops);
++	}
+ 	return platform_driver_register(&ixp4xx_pata_platform_driver);
+ }
+ 
+Index: work/drivers/ata/pata_jmicron.c
+===================================================================
+--- work.orig/drivers/ata/pata_jmicron.c
++++ work/drivers/ata/pata_jmicron.c
+@@ -180,6 +180,10 @@ static struct pci_driver jmicron_pci_dri
+ 
+ static int __init jmicron_init(void)
+ {
++	{
++		ata_dump_sht(DRV_NAME, &jmicron_sht);
++		ata_dump_ops(DRV_NAME, &jmicron_ops);
++	}
+ 	return pci_register_driver(&jmicron_pci_driver);
+ }
+ 
+Index: work/drivers/ata/pata_legacy.c
+===================================================================
+--- work.orig/drivers/ata/pata_legacy.c
++++ work/drivers/ata/pata_legacy.c
+@@ -1267,6 +1267,20 @@ static __init int legacy_init(void)
+ 	}
+ 	if (ct != 0)
+ 		return 0;
++	{
++		ata_dump_sht(DRV_NAME, &legacy_sht);
++		ata_dump_ops(DRV_NAME, &simple_port_ops);
++		ata_dump_ops(DRV_NAME, &legacy_port_ops);
++		ata_dump_ops(DRV_NAME, &pdc20230_port_ops);
++		ata_dump_ops(DRV_NAME, &ht6560a_port_ops);
++		ata_dump_ops(DRV_NAME, &ht6560b_port_ops);
++		ata_dump_ops(DRV_NAME, &opti82c611a_port_ops);
++		ata_dump_ops(DRV_NAME, &opti82c46x_port_ops);
++		ata_dump_ops(DRV_NAME, &qdi6500_port_ops);
++		ata_dump_ops(DRV_NAME, &qdi6580_port_ops);
++		ata_dump_ops(DRV_NAME, &qdi6580dp_port_ops);
++		ata_dump_ops(DRV_NAME, &winbond_port_ops);
++	}
+ 	return -ENODEV;
+ }
+ 
+Index: work/drivers/ata/pata_marvell.c
+===================================================================
+--- work.orig/drivers/ata/pata_marvell.c
++++ work/drivers/ata/pata_marvell.c
+@@ -168,6 +168,10 @@ static struct pci_driver marvell_pci_dri
+ 
+ static int __init marvell_init(void)
+ {
++	{
++		ata_dump_sht(DRV_NAME, &marvell_sht);
++		ata_dump_ops(DRV_NAME, &marvell_ops);
++	}
+ 	return pci_register_driver(&marvell_pci_driver);
+ }
+ 
+Index: work/drivers/ata/pata_mpc52xx.c
+===================================================================
+--- work.orig/drivers/ata/pata_mpc52xx.c
++++ work/drivers/ata/pata_mpc52xx.c
+@@ -503,6 +503,10 @@ static int __init
+ mpc52xx_ata_init(void)
+ {
+ 	printk(KERN_INFO "ata: MPC52xx IDE/ATA libata driver\n");
++	{
++		ata_dump_sht(DRV_NAME, &mpc52xx_ata_sht);
++		ata_dump_ops(DRV_NAME, &mpc52xx_ata_port_ops);
++	}
+ 	return of_register_platform_driver(&mpc52xx_ata_of_platform_driver);
+ }
+ 
+Index: work/drivers/ata/pata_mpiix.c
+===================================================================
+--- work.orig/drivers/ata/pata_mpiix.c
++++ work/drivers/ata/pata_mpiix.c
+@@ -247,6 +247,10 @@ static struct pci_driver mpiix_pci_drive
+ 
+ static int __init mpiix_init(void)
+ {
++	{
++		ata_dump_sht(DRV_NAME, &mpiix_sht);
++		ata_dump_ops(DRV_NAME, &mpiix_port_ops);
++	}
+ 	return pci_register_driver(&mpiix_pci_driver);
+ }
+ 
+Index: work/drivers/ata/pata_netcell.c
+===================================================================
+--- work.orig/drivers/ata/pata_netcell.c
++++ work/drivers/ata/pata_netcell.c
+@@ -94,6 +94,10 @@ static struct pci_driver netcell_pci_dri
+ 
+ static int __init netcell_init(void)
+ {
++	{
++		ata_dump_sht(DRV_NAME, &netcell_sht);
++		ata_dump_ops(DRV_NAME, &netcell_ops);
++	}
+ 	return pci_register_driver(&netcell_pci_driver);
+ }
+ 
+Index: work/drivers/ata/pata_ninja32.c
+===================================================================
+--- work.orig/drivers/ata/pata_ninja32.c
++++ work/drivers/ata/pata_ninja32.c
+@@ -156,6 +156,10 @@ static struct pci_driver ninja32_pci_dri
+ 
+ static int __init ninja32_init(void)
+ {
++	{
++		ata_dump_sht(DRV_NAME, &ninja32_sht);
++		ata_dump_ops(DRV_NAME, &ninja32_port_ops);
++	}
+ 	return pci_register_driver(&ninja32_pci_driver);
+ }
+ 
+Index: work/drivers/ata/pata_ns87410.c
+===================================================================
+--- work.orig/drivers/ata/pata_ns87410.c
++++ work/drivers/ata/pata_ns87410.c
+@@ -186,6 +186,10 @@ static struct pci_driver ns87410_pci_dri
+ 
+ static int __init ns87410_init(void)
+ {
++	{
++		ata_dump_sht(DRV_NAME, &ns87410_sht);
++		ata_dump_ops(DRV_NAME, &ns87410_port_ops);
++	}
+ 	return pci_register_driver(&ns87410_pci_driver);
+ }
+ 
+Index: work/drivers/ata/pata_ns87415.c
+===================================================================
+--- work.orig/drivers/ata/pata_ns87415.c
++++ work/drivers/ata/pata_ns87415.c
+@@ -399,6 +399,11 @@ static struct pci_driver ns87415_pci_dri
+ 
+ static int __init ns87415_init(void)
+ {
++	{
++		ata_dump_sht(DRV_NAME, &ns87415_sht);
++		ata_dump_ops(DRV_NAME, &ns87415_pata_ops);
++		//ata_dump_ops(DRV_NAME, &ns87560_pata_ops);
++	}
+ 	return pci_register_driver(&ns87415_pci_driver);
+ }
+ 
+Index: work/drivers/ata/pata_oldpiix.c
+===================================================================
+--- work.orig/drivers/ata/pata_oldpiix.c
++++ work/drivers/ata/pata_oldpiix.c
+@@ -286,6 +286,10 @@ static struct pci_driver oldpiix_pci_dri
+ 
+ static int __init oldpiix_init(void)
+ {
++	{
++		ata_dump_sht(DRV_NAME, &oldpiix_sht);
++		ata_dump_ops(DRV_NAME, &oldpiix_pata_ops);
++	}
+ 	return pci_register_driver(&oldpiix_pci_driver);
+ }
+ 
+Index: work/drivers/ata/pata_opti.c
+===================================================================
+--- work.orig/drivers/ata/pata_opti.c
++++ work/drivers/ata/pata_opti.c
+@@ -212,6 +212,10 @@ static struct pci_driver opti_pci_driver
+ 
+ static int __init opti_init(void)
+ {
++	{
++		ata_dump_sht(DRV_NAME, &opti_sht);
++		ata_dump_ops(DRV_NAME, &opti_port_ops);
++	}
+ 	return pci_register_driver(&opti_pci_driver);
+ }
+ 
+Index: work/drivers/ata/pata_optidma.c
+===================================================================
+--- work.orig/drivers/ata/pata_optidma.c
++++ work/drivers/ata/pata_optidma.c
+@@ -469,6 +469,11 @@ static struct pci_driver optidma_pci_dri
+ 
+ static int __init optidma_init(void)
+ {
++	{
++		ata_dump_sht(DRV_NAME, &optidma_sht);
++		ata_dump_ops(DRV_NAME, &optidma_port_ops);
++		ata_dump_ops(DRV_NAME, &optiplus_port_ops);
++	}
+ 	return pci_register_driver(&optidma_pci_driver);
+ }
+ 
+Index: work/drivers/ata/pata_pcmcia.c
+===================================================================
+--- work.orig/drivers/ata/pata_pcmcia.c
++++ work/drivers/ata/pata_pcmcia.c
+@@ -449,6 +449,11 @@ static struct pcmcia_driver pcmcia_drive
+ 
+ static int __init pcmcia_init(void)
+ {
++	{
++		ata_dump_sht(DRV_NAME, &pcmcia_sht);
++		ata_dump_ops(DRV_NAME, &pcmcia_port_ops);
++		ata_dump_ops(DRV_NAME, &pcmcia_8bit_port_ops);
++	}
+ 	return pcmcia_register_driver(&pcmcia_driver);
+ }
+ 
+Index: work/drivers/ata/pata_pdc2027x.c
+===================================================================
+--- work.orig/drivers/ata/pata_pdc2027x.c
++++ work/drivers/ata/pata_pdc2027x.c
+@@ -783,6 +783,11 @@ static int __devinit pdc2027x_init_one(s
+  */
+ static int __init pdc2027x_init(void)
+ {
++	{
++		ata_dump_sht(DRV_NAME, &pdc2027x_sht);
++		ata_dump_ops(DRV_NAME, &pdc2027x_pata100_ops);
++		ata_dump_ops(DRV_NAME, &pdc2027x_pata133_ops);
++	}
+ 	return pci_register_driver(&pdc2027x_pci_driver);
+ }
+ 
+Index: work/drivers/ata/pata_pdc202xx_old.c
+===================================================================
+--- work.orig/drivers/ata/pata_pdc202xx_old.c
++++ work/drivers/ata/pata_pdc202xx_old.c
+@@ -353,6 +353,11 @@ static struct pci_driver pdc202xx_pci_dr
+ 
+ static int __init pdc202xx_init(void)
+ {
++	{
++		ata_dump_sht(DRV_NAME, &pdc202xx_sht);
++		ata_dump_ops(DRV_NAME, &pdc2024x_port_ops);
++		ata_dump_ops(DRV_NAME, &pdc2026x_port_ops);
++	}
+ 	return pci_register_driver(&pdc202xx_pci_driver);
+ }
+ 
+Index: work/drivers/ata/pata_platform.c
+===================================================================
+--- work.orig/drivers/ata/pata_platform.c
++++ work/drivers/ata/pata_platform.c
+@@ -233,6 +233,10 @@ static struct platform_driver pata_platf
+ 
+ static int __init pata_platform_init(void)
+ {
++	{
++		ata_dump_sht(DRV_NAME, &pata_platform_sht);
++		ata_dump_ops(DRV_NAME, &pata_platform_port_ops);
++	}
+ 	return platform_driver_register(&pata_platform_driver);
+ }
+ 
+Index: work/drivers/ata/pata_qdi.c
+===================================================================
+--- work.orig/drivers/ata/pata_qdi.c
++++ work/drivers/ata/pata_qdi.c
+@@ -337,6 +337,11 @@ static __init int qdi_init(void)
+ 	}
+ 	if (ct != 0)
+ 		return 0;
++	{
++		ata_dump_sht(DRV_NAME, &qdi_sht);
++		ata_dump_ops(DRV_NAME, &qdi6500_port_ops);
++		ata_dump_ops(DRV_NAME, &qdi6580_port_ops);
++	}
+ 	return -ENODEV;
+ }
+ 
+Index: work/drivers/ata/pata_radisys.c
+===================================================================
+--- work.orig/drivers/ata/pata_radisys.c
++++ work/drivers/ata/pata_radisys.c
+@@ -251,6 +251,10 @@ static struct pci_driver radisys_pci_dri
+ 
+ static int __init radisys_init(void)
+ {
++	{
++		ata_dump_sht(DRV_NAME, &radisys_sht);
++		ata_dump_ops(DRV_NAME, &radisys_pata_ops);
++	}
+ 	return pci_register_driver(&radisys_pci_driver);
+ }
+ 
+Index: work/drivers/ata/pata_rz1000.c
+===================================================================
+--- work.orig/drivers/ata/pata_rz1000.c
++++ work/drivers/ata/pata_rz1000.c
+@@ -138,6 +138,10 @@ static struct pci_driver rz1000_pci_driv
+ 
+ static int __init rz1000_init(void)
+ {
++	{
++		ata_dump_sht(DRV_NAME, &rz1000_sht);
++		ata_dump_ops(DRV_NAME, &rz1000_port_ops);
++	}
+ 	return pci_register_driver(&rz1000_pci_driver);
+ }
+ 
+Index: work/drivers/ata/pata_sc1200.c
+===================================================================
+--- work.orig/drivers/ata/pata_sc1200.c
++++ work/drivers/ata/pata_sc1200.c
+@@ -236,6 +236,10 @@ static struct pci_driver sc1200_pci_driv
+ 
+ static int __init sc1200_init(void)
+ {
++	{
++		ata_dump_sht(DRV_NAME, &sc1200_sht);
++		ata_dump_ops(DRV_NAME, &sc1200_port_ops);
++	}
+ 	return pci_register_driver(&sc1200_pci_driver);
+ }
+ 
+Index: work/drivers/ata/pata_scc.c
+===================================================================
+--- work.orig/drivers/ata/pata_scc.c
++++ work/drivers/ata/pata_scc.c
+@@ -1174,6 +1174,10 @@ static int __init scc_init (void)
+ 		return rc;
+ 
+ 	DPRINTK("done\n");
++	{
++		ata_dump_sht(DRV_NAME, &scc_sht);
++		ata_dump_ops(DRV_NAME, &scc_pata_ops);
++	}
+ 	return 0;
+ }
+ 
+Index: work/drivers/ata/pata_serverworks.c
+===================================================================
+--- work.orig/drivers/ata/pata_serverworks.c
++++ work/drivers/ata/pata_serverworks.c
+@@ -525,6 +525,11 @@ static struct pci_driver serverworks_pci
+ 
+ static int __init serverworks_init(void)
+ {
++	{
++		ata_dump_sht(DRV_NAME, &serverworks_sht);
++		ata_dump_ops(DRV_NAME, &serverworks_osb4_port_ops);
++		ata_dump_ops(DRV_NAME, &serverworks_csb_port_ops);
++	}
+ 	return pci_register_driver(&serverworks_pci_driver);
+ }
+ 
+Index: work/drivers/ata/pata_sil680.c
+===================================================================
+--- work.orig/drivers/ata/pata_sil680.c
++++ work/drivers/ata/pata_sil680.c
+@@ -397,6 +397,10 @@ static struct pci_driver sil680_pci_driv
+ 
+ static int __init sil680_init(void)
+ {
++	{
++		ata_dump_sht(DRV_NAME, &sil680_sht);
++		ata_dump_ops(DRV_NAME, &sil680_port_ops);
++	}
+ 	return pci_register_driver(&sil680_pci_driver);
+ }
+ 
+Index: work/drivers/ata/pata_sis.c
+===================================================================
+--- work.orig/drivers/ata/pata_sis.c
++++ work/drivers/ata/pata_sis.c
+@@ -868,6 +868,16 @@ static struct pci_driver sis_pci_driver 
+ 
+ static int __init sis_init(void)
+ {
++	{
++		ata_dump_sht(DRV_NAME, &sis_sht);
++		ata_dump_ops(DRV_NAME, &sis_133_for_sata_ops);
++		ata_dump_ops(DRV_NAME, &sis_base_ops);
++		ata_dump_ops(DRV_NAME, &sis_133_ops);
++		ata_dump_ops(DRV_NAME, &sis_133_early_ops);
++		ata_dump_ops(DRV_NAME, &sis_100_ops);
++		ata_dump_ops(DRV_NAME, &sis_66_ops);
++		ata_dump_ops(DRV_NAME, &sis_old_ops);
++	}
+ 	return pci_register_driver(&sis_pci_driver);
+ }
+ 
+Index: work/drivers/ata/pata_sl82c105.c
+===================================================================
+--- work.orig/drivers/ata/pata_sl82c105.c
++++ work/drivers/ata/pata_sl82c105.c
+@@ -314,6 +314,10 @@ static struct pci_driver sl82c105_pci_dr
+ 
+ static int __init sl82c105_init(void)
+ {
++	{
++		ata_dump_sht(DRV_NAME, &sl82c105_sht);
++		ata_dump_ops(DRV_NAME, &sl82c105_port_ops);
++	}
+ 	return pci_register_driver(&sl82c105_pci_driver);
+ }
+ 
+Index: work/drivers/ata/pata_triflex.c
+===================================================================
+--- work.orig/drivers/ata/pata_triflex.c
++++ work/drivers/ata/pata_triflex.c
+@@ -229,6 +229,10 @@ static struct pci_driver triflex_pci_dri
+ 
+ static int __init triflex_init(void)
+ {
++	{
++		ata_dump_sht(DRV_NAME, &triflex_sht);
++		ata_dump_ops(DRV_NAME, &triflex_port_ops);
++	}
+ 	return pci_register_driver(&triflex_pci_driver);
+ }
+ 
+Index: work/drivers/ata/pata_via.c
+===================================================================
+--- work.orig/drivers/ata/pata_via.c
++++ work/drivers/ata/pata_via.c
+@@ -596,6 +596,11 @@ static struct pci_driver via_pci_driver 
+ 
+ static int __init via_init(void)
+ {
++	{
++		ata_dump_sht(DRV_NAME, &via_sht);
++		ata_dump_ops(DRV_NAME, &via_port_ops);
++		ata_dump_ops(DRV_NAME, &via_port_ops_noirq);
++	}
+ 	return pci_register_driver(&via_pci_driver);
+ }
+ 
+Index: work/drivers/ata/pata_winbond.c
+===================================================================
+--- work.orig/drivers/ata/pata_winbond.c
++++ work/drivers/ata/pata_winbond.c
+@@ -256,6 +256,10 @@ static __init int winbond_init(void)
+ 	}
+ 	if (ct != 0)
+ 		return 0;
++	{
++		ata_dump_sht(DRV_NAME, &winbond_sht);
++		ata_dump_ops(DRV_NAME, &winbond_port_ops);
++	}
+ 	return -ENODEV;
+ }
+ 
+Index: work/drivers/ata/pdc_adma.c
+===================================================================
+--- work.orig/drivers/ata/pdc_adma.c
++++ work/drivers/ata/pdc_adma.c
+@@ -714,6 +714,10 @@ static int adma_ata_init_one(struct pci_
+ 
+ static int __init adma_ata_init(void)
+ {
++	{
++		ata_dump_sht(DRV_NAME, &adma_ata_sht);
++		ata_dump_ops(DRV_NAME, &adma_ata_ops);
++	}
+ 	return pci_register_driver(&adma_ata_pci_driver);
+ }
+ 
+Index: work/drivers/ata/sata_fsl.c
+===================================================================
+--- work.orig/drivers/ata/sata_fsl.c
++++ work/drivers/ata/sata_fsl.c
+@@ -1360,6 +1360,10 @@ static struct of_platform_driver fsl_sat
+ static int __init sata_fsl_init(void)
+ {
+ 	of_register_platform_driver(&fsl_sata_driver);
++	{
++		ata_dump_sht(DRV_NAME, &sata_fsl_sht);
++		ata_dump_ops(DRV_NAME, &sata_fsl_ops);
++	}
+ 	return 0;
+ }
+ 
+Index: work/drivers/ata/sata_inic162x.c
+===================================================================
+--- work.orig/drivers/ata/sata_inic162x.c
++++ work/drivers/ata/sata_inic162x.c
+@@ -731,6 +731,10 @@ static struct pci_driver inic_pci_driver
+ 
+ static int __init inic_init(void)
+ {
++	{
++		ata_dump_sht(DRV_NAME, &inic_sht);
++		ata_dump_ops(DRV_NAME, &inic_port_ops);
++	}
+ 	return pci_register_driver(&inic_pci_driver);
+ }
+ 
+Index: work/drivers/ata/sata_mv.c
+===================================================================
+--- work.orig/drivers/ata/sata_mv.c
++++ work/drivers/ata/sata_mv.c
+@@ -2677,6 +2677,13 @@ static int mv_init_one(struct pci_dev *p
+ 
+ static int __init mv_init(void)
+ {
++	{
++		ata_dump_sht(DRV_NAME, &mv5_sht);
++		ata_dump_sht(DRV_NAME, &mv6_sht);
++		ata_dump_ops(DRV_NAME, &mv5_ops);
++		ata_dump_ops(DRV_NAME, &mv6_ops);
++		ata_dump_ops(DRV_NAME, &mv_iie_ops);
++	}
+ 	return pci_register_driver(&mv_pci_driver);
+ }
+ 
+Index: work/drivers/ata/sata_nv.c
+===================================================================
+--- work.orig/drivers/ata/sata_nv.c
++++ work/drivers/ata/sata_nv.c
+@@ -2416,6 +2416,16 @@ static void nv_adma_host_stop(struct ata
+ 
+ static int __init nv_init(void)
+ {
++	{
++		ata_dump_sht(DRV_NAME, &nv_sht);
++		ata_dump_sht(DRV_NAME, &nv_adma_sht);
++		ata_dump_sht(DRV_NAME, &nv_swncq_sht);
++		ata_dump_ops(DRV_NAME, &nv_generic_ops);
++		ata_dump_ops(DRV_NAME, &nv_nf2_ops);
++		ata_dump_ops(DRV_NAME, &nv_ck804_ops);
++		ata_dump_ops(DRV_NAME, &nv_adma_ops);
++		ata_dump_ops(DRV_NAME, &nv_swncq_ops);
++	}
+ 	return pci_register_driver(&nv_pci_driver);
+ }
+ 
+Index: work/drivers/ata/sata_promise.c
+===================================================================
+--- work.orig/drivers/ata/sata_promise.c
++++ work/drivers/ata/sata_promise.c
+@@ -1060,6 +1060,13 @@ static int pdc_ata_init_one(struct pci_d
+ 
+ static int __init pdc_ata_init(void)
+ {
++	{
++		ata_dump_sht(DRV_NAME, &pdc_ata_sht);
++		ata_dump_ops(DRV_NAME, &pdc_common_ops);
++		ata_dump_ops(DRV_NAME, &pdc_sata_ops);
++		ata_dump_ops(DRV_NAME, &pdc_old_sata_ops);
++		ata_dump_ops(DRV_NAME, &pdc_pata_ops);
++	}
+ 	return pci_register_driver(&pdc_ata_pci_driver);
+ }
+ 
+Index: work/drivers/ata/sata_qstor.c
+===================================================================
+--- work.orig/drivers/ata/sata_qstor.c
++++ work/drivers/ata/sata_qstor.c
+@@ -663,6 +663,10 @@ static int qs_ata_init_one(struct pci_de
+ 
+ static int __init qs_ata_init(void)
+ {
++	{
++		ata_dump_sht(DRV_NAME, &qs_ata_sht);
++		ata_dump_ops(DRV_NAME, &qs_ata_ops);
++	}
+ 	return pci_register_driver(&qs_ata_pci_driver);
+ }
+ 
+Index: work/drivers/ata/sata_sil.c
+===================================================================
+--- work.orig/drivers/ata/sata_sil.c
++++ work/drivers/ata/sata_sil.c
+@@ -688,6 +688,10 @@ static int sil_pci_device_resume(struct 
+ 
+ static int __init sil_init(void)
+ {
++	{
++		ata_dump_sht(DRV_NAME, &sil_sht);
++		ata_dump_ops(DRV_NAME, &sil_ops);
++	}
+ 	return pci_register_driver(&sil_pci_driver);
+ }
+ 
+Index: work/drivers/ata/sata_sil24.c
+===================================================================
+--- work.orig/drivers/ata/sata_sil24.c
++++ work/drivers/ata/sata_sil24.c
+@@ -1394,6 +1394,10 @@ static int sil24_port_resume(struct ata_
+ 
+ static int __init sil24_init(void)
+ {
++	{
++		ata_dump_sht(DRV_NAME, &sil24_sht);
++		ata_dump_ops(DRV_NAME, &sil24_ops);
++	}
+ 	return pci_register_driver(&sil24_pci_driver);
+ }
+ 
+Index: work/drivers/ata/sata_sis.c
+===================================================================
+--- work.orig/drivers/ata/sata_sis.c
++++ work/drivers/ata/sata_sis.c
+@@ -333,6 +333,10 @@ static int sis_init_one(struct pci_dev *
+ 
+ static int __init sis_init(void)
+ {
++	{
++		ata_dump_sht(DRV_NAME, &sis_sht);
++		ata_dump_ops(DRV_NAME, &sis_ops);
++	}
+ 	return pci_register_driver(&sis_pci_driver);
+ }
+ 
+Index: work/drivers/ata/sata_svw.c
+===================================================================
+--- work.orig/drivers/ata/sata_svw.c
++++ work/drivers/ata/sata_svw.c
+@@ -474,6 +474,10 @@ static struct pci_driver k2_sata_pci_dri
+ 
+ static int __init k2_sata_init(void)
+ {
++	{
++		ata_dump_sht(DRV_NAME, &k2_sata_sht);
++		ata_dump_ops(DRV_NAME, &k2_sata_ops);
++	}
+ 	return pci_register_driver(&k2_sata_pci_driver);
+ }
+ 
+Index: work/drivers/ata/sata_sx4.c
+===================================================================
+--- work.orig/drivers/ata/sata_sx4.c
++++ work/drivers/ata/sata_sx4.c
+@@ -1433,6 +1433,10 @@ static int pdc_sata_init_one(struct pci_
+ 
+ static int __init pdc_sata_init(void)
+ {
++	{
++		ata_dump_sht(DRV_NAME, &pdc_sata_sht);
++		ata_dump_ops(DRV_NAME, &pdc_20621_ops);
++	}
+ 	return pci_register_driver(&pdc_sata_pci_driver);
+ }
+ 
+Index: work/drivers/ata/sata_uli.c
+===================================================================
+--- work.orig/drivers/ata/sata_uli.c
++++ work/drivers/ata/sata_uli.c
+@@ -248,6 +248,10 @@ static int uli_init_one(struct pci_dev *
+ 
+ static int __init uli_init(void)
+ {
++	{
++		ata_dump_sht(DRV_NAME, &uli_sht);
++		ata_dump_ops(DRV_NAME, &uli_ops);
++	}
+ 	return pci_register_driver(&uli_pci_driver);
+ }
+ 
+Index: work/drivers/ata/sata_via.c
+===================================================================
+--- work.orig/drivers/ata/sata_via.c
++++ work/drivers/ata/sata_via.c
+@@ -462,6 +462,12 @@ static int svia_init_one(struct pci_dev 
+ 
+ static int __init svia_init(void)
+ {
++	{
++		ata_dump_sht(DRV_NAME, &svia_sht);
++		ata_dump_ops(DRV_NAME, &vt6420_sata_ops);
++		ata_dump_ops(DRV_NAME, &vt6421_pata_ops);
++		ata_dump_ops(DRV_NAME, &vt6421_sata_ops);
++	}
+ 	return pci_register_driver(&svia_pci_driver);
+ }
+ 
+Index: work/drivers/ata/sata_vsc.c
+===================================================================
+--- work.orig/drivers/ata/sata_vsc.c
++++ work/drivers/ata/sata_vsc.c
+@@ -443,6 +443,10 @@ static struct pci_driver vsc_sata_pci_dr
+ 
+ static int __init vsc_sata_init(void)
+ {
++	{
++		ata_dump_sht(DRV_NAME, &vsc_sata_sht);
++		ata_dump_ops(DRV_NAME, &vsc_sata_ops);
++	}
+ 	return pci_register_driver(&vsc_sata_pci_driver);
+ }
+ 
+Index: work/drivers/ata/libata-core.c
+===================================================================
+--- work.orig/drivers/ata/libata-core.c
++++ work/drivers/ata/libata-core.c
+@@ -7768,3 +7768,55 @@ EXPORT_SYMBOL_GPL(ata_cable_80wire);
+ EXPORT_SYMBOL_GPL(ata_cable_unknown);
+ EXPORT_SYMBOL_GPL(ata_cable_ignore);
+ EXPORT_SYMBOL_GPL(ata_cable_sata);
++
++#include <linux/kallsyms.h>
++
++void ata_dump_sht(const char *drv_name, const struct scsi_host_template *sht)
++{
++	const int begin_off = offsetof(struct scsi_host_template, detect);
++	const int end_off = offsetof(struct scsi_host_template, eh_timed_out) + sizeof(void *);
++	char symname[KSYM_NAME_LEN];
++	void **pp;
++
++	if (lookup_symbol_name((unsigned long)sht, symname))
++		snprintf(symname, KSYM_NAME_LEN, "%p", sht);
++	printk("SHT %s %s: %s", drv_name, symname, sht->name);
++
++	for (pp = (void *)sht + begin_off; pp < (void **)((void *)sht + end_off); pp++) {
++		if (lookup_symbol_name((unsigned long)*pp, symname))
++			snprintf(symname, KSYM_NAME_LEN, "%p", *pp);
++		printk(" <%s>", symname);
++	}
++
++	printk(" %s %d %d %u %u %lu %d %u %u %u %u %u %u %u %u %u\n",
++	       sht->proc_name, sht->can_queue, sht->this_id,
++	       sht->sg_tablesize, sht->max_sectors, sht->dma_boundary,
++	       sht->cmd_per_lun, sht->present, sht->supported_mode,
++	       sht->unchecked_isa_dma, sht->use_clustering, sht->emulated,
++	       sht->skip_settle_delay, sht->ordered_tag, sht->use_sg_chaining,
++	       sht->max_host_blocked);
++}
++EXPORT_SYMBOL_GPL(ata_dump_sht);
++
++void ata_dump_ops(const char *drv_name, const struct ata_port_operations *ops)
++{
++	const int begin_off = 0;
++	const int end_off = offsetof(struct ata_port_operations, eng_timeout) + sizeof(void *);
++	struct ata_port_operations my_ops = *ops;
++	char symname[KSYM_NAME_LEN];
++	void **pp;
++
++	if (lookup_symbol_name((unsigned long)ops, symname))
++		snprintf(symname, KSYM_NAME_LEN, "%p", ops);
++	printk("OPS %s %s:", drv_name, symname);
++
++	ata_finalize_port_ops(&my_ops);
++
++	for (pp = (void *)&my_ops + begin_off; pp < (void **)((void *)&my_ops + end_off); pp++) {
++		if (lookup_symbol_name((unsigned long)*pp, symname))
++			snprintf(symname, KSYM_NAME_LEN, "%p", *pp);
++		printk(" <%s>", symname);
++	}
++	printk("\n");
++}
++EXPORT_SYMBOL_GPL(ata_dump_ops);
+Index: work/include/linux/libata.h
+===================================================================
+--- work.orig/include/linux/libata.h
++++ work/include/linux/libata.h
+@@ -803,6 +803,9 @@ static inline int ata_port_is_dummy(stru
+ 	return ap->ops == &ata_dummy_port_ops;
+ }
+ 
++extern void ata_dump_sht(const char *drv_name, const struct scsi_host_template *sht);
++extern void ata_dump_ops(const char *drv_name, const struct ata_port_operations *ops);
++
+ extern void sata_print_link_status(struct ata_link *link);
+ extern void ata_port_probe(struct ata_port *);
+ extern void ata_bus_reset(struct ata_port *ap);
+Index: work/kernel/kallsyms.c
+===================================================================
+--- work.orig/kernel/kallsyms.c
++++ work/kernel/kallsyms.c
+@@ -291,6 +291,7 @@ int lookup_symbol_name(unsigned long add
+ 	/* see if it's in a module */
+ 	return lookup_module_symbol_name(addr, symname);
+ }
++EXPORT_SYMBOL_GPL(lookup_symbol_name);
+ 
+ int lookup_symbol_attrs(unsigned long addr, unsigned long *size,
+ 			unsigned long *offset, char *modname, char *name)
+
+--------------020203070305040007040100
+Content-Type: text/plain;
+ name="out.before"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="out.before"
+
+OPS ahci ahci_ops: <sata_pmp_qc_defer_cmd_switch> <0000000000000000> <ahci_qc_prep> <ahci_qc_issue> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ahci_freeze> <ahci_thaw> <ahci_error_handler> <ahci_post_internal_cmd> <ahci_scr_read> <ahci_scr_write> <ahci_pmp_attach> <ahci_pmp_detach> <ahci_enable_alpm> <ahci_disable_alpm> <ahci_port_suspend> <ahci_port_resume> <ahci_port_start> <ahci_port_stop> <0000000000000000> <ata_noop_dev_select> <ahci_check_status> <ahci_check_status> <0000000000000000> <ahci_tf_read> <0000000000000000> <0000000000000000> <0000000000000000> <ata_noop_irq_clear> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000>
+OPS ahci ahci_p5wdh_ops: <sata_pmp_qc_defer_cmd_switch> <0000000000000000> <ahci_qc_prep> <ahci_qc_issue> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ahci_freeze> <ahci_thaw> <ahci_p5wdh_error_handler> <ahci_post_internal_cmd> <ahci_scr_read> <ahci_scr_write> <ahci_pmp_attach> <ahci_pmp_detach> <ahci_enable_alpm> <ahci_disable_alpm> <ahci_port_suspend> <ahci_port_resume> <ahci_port_start> <ahci_port_stop> <0000000000000000> <ata_noop_dev_select> <ahci_check_status> <ahci_check_status> <0000000000000000> <ahci_tf_read> <0000000000000000> <0000000000000000> <0000000000000000> <ata_noop_irq_clear> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000>
+OPS ahci ahci_vt8251_ops: <sata_pmp_qc_defer_cmd_switch> <0000000000000000> <ahci_qc_prep> <ahci_qc_issue> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ahci_freeze> <ahci_thaw> <ahci_vt8251_error_handler> <ahci_post_internal_cmd> <ahci_scr_read> <ahci_scr_write> <ahci_pmp_attach> <ahci_pmp_detach> <ahci_enable_alpm> <ahci_disable_alpm> <ahci_port_suspend> <ahci_port_resume> <ahci_port_start> <ahci_port_stop> <0000000000000000> <ata_noop_dev_select> <ahci_check_status> <ahci_check_status> <0000000000000000> <ahci_tf_read> <0000000000000000> <0000000000000000> <0000000000000000> <ata_noop_irq_clear> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000>
+OPS ata_generic generic_port_ops: <0000000000000000> <0000000000000000> <ata_qc_prep> <ata_qc_issue_prot> <ata_cable_unknown> <ata_pci_default_filter> <0000000000000000> <0000000000000000> <generic_set_mode> <0000000000000000> <ata_bmdma_freeze> <ata_bmdma_thaw> <ata_bmdma_error_handler> <ata_bmdma_post_internal_cmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_sff_port_start> <0000000000000000> <0000000000000000> <ata_std_dev_select> <ata_check_status> <0000000000000000> <ata_tf_load> <ata_tf_read> <ata_exec_command> <ata_data_xfer> <ata_irq_on> <ata_bmdma_irq_clear> <ata_bmdma_setup> <ata_bmdma_start> <ata_bmdma_stop> <ata_bmdma_status> <0000000000000000> <0000000000000000>
+OPS ata_piix ich_pata_ops: <0000000000000000> <0000000000000000> <ata_qc_prep> <ata_qc_issue_prot> <ich_pata_cable_detect> <ata_pci_default_filter> <piix_set_piomode> <ich_set_dmamode> <0000000000000000> <0000000000000000> <ata_bmdma_freeze> <ata_bmdma_thaw> <piix_pata_error_handler> <ata_bmdma_post_internal_cmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_sff_port_start> <0000000000000000> <0000000000000000> <ata_std_dev_select> <ata_check_status> <0000000000000000> <ata_tf_load> <ata_tf_read> <ata_exec_command> <ata_data_xfer> <ata_irq_on> <ata_bmdma_irq_clear> <ata_bmdma_setup> <ata_bmdma_start> <ata_bmdma_stop> <ata_bmdma_status> <0000000000000000> <0000000000000000>
+OPS ata_piix piix_pata_ops: <0000000000000000> <0000000000000000> <ata_qc_prep> <ata_qc_issue_prot> <ata_cable_40wire> <ata_pci_default_filter> <piix_set_piomode> <piix_set_dmamode> <0000000000000000> <0000000000000000> <ata_bmdma_freeze> <ata_bmdma_thaw> <piix_pata_error_handler> <ata_bmdma_post_internal_cmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_sff_port_start> <0000000000000000> <0000000000000000> <ata_std_dev_select> <ata_check_status> <0000000000000000> <ata_tf_load> <ata_tf_read> <ata_exec_command> <ata_data_xfer> <ata_irq_on> <ata_bmdma_irq_clear> <ata_bmdma_setup> <ata_bmdma_start> <ata_bmdma_stop> <ata_bmdma_status> <0000000000000000> <0000000000000000>
+OPS ata_piix piix_sata_ops: <0000000000000000> <0000000000000000> <ata_qc_prep> <ata_qc_issue_prot> <0000000000000000> <ata_pci_default_filter> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_bmdma_freeze> <ata_bmdma_thaw> <ata_bmdma_error_handler> <ata_bmdma_post_internal_cmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_sff_port_start> <0000000000000000> <0000000000000000> <ata_std_dev_select> <ata_check_status> <0000000000000000> <ata_tf_load> <ata_tf_read> <ata_exec_command> <ata_data_xfer> <ata_irq_on> <ata_bmdma_irq_clear> <ata_bmdma_setup> <ata_bmdma_start> <ata_bmdma_stop> <ata_bmdma_status> <0000000000000000> <0000000000000000>
+OPS ata_piix piix_sidpr_sata_ops: <0000000000000000> <0000000000000000> <ata_qc_prep> <ata_qc_issue_prot> <0000000000000000> <ata_pci_default_filter> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_bmdma_freeze> <ata_bmdma_thaw> <piix_sidpr_error_handler> <ata_bmdma_post_internal_cmd> <piix_sidpr_scr_read> <piix_sidpr_scr_write> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_sff_port_start> <0000000000000000> <0000000000000000> <ata_std_dev_select> <ata_check_status> <0000000000000000> <ata_tf_load> <ata_tf_read> <ata_exec_command> <ata_data_xfer> <ata_irq_on> <ata_bmdma_irq_clear> <ata_bmdma_setup> <ata_bmdma_start> <ata_bmdma_stop> <ata_bmdma_status> <0000000000000000> <00000000000000
+ 00>
+OPS ata_piix piix_vmw_ops: <0000000000000000> <0000000000000000> <ata_qc_prep> <ata_qc_issue_prot> <ata_cable_40wire> <ata_pci_default_filter> <piix_set_piomode> <piix_set_dmamode> <0000000000000000> <0000000000000000> <ata_bmdma_freeze> <ata_bmdma_thaw> <piix_pata_error_handler> <ata_bmdma_post_internal_cmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_sff_port_start> <0000000000000000> <0000000000000000> <ata_std_dev_select> <ata_check_status> <0000000000000000> <ata_tf_load> <ata_tf_read> <ata_exec_command> <ata_data_xfer> <ata_irq_on> <ata_bmdma_irq_clear> <ata_bmdma_setup> <ata_bmdma_start> <ata_bmdma_stop> <piix_vmw_bmdma_status> <0000000000000000> <0000000000000000>
+OPS pata_acpi pacpi_ops: <0000000000000000> <0000000000000000> <ata_qc_prep> <pacpi_qc_issue_prot> <pacpi_cable_detect> <pacpi_mode_filter> <pacpi_set_piomode> <pacpi_set_dmamode> <0000000000000000> <0000000000000000> <ata_bmdma_freeze> <ata_bmdma_thaw> <pacpi_error_handler> <ata_bmdma_post_internal_cmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <pacpi_port_start> <0000000000000000> <0000000000000000> <ata_std_dev_select> <ata_check_status> <0000000000000000> <ata_tf_load> <ata_tf_read> <ata_exec_command> <ata_data_xfer> <ata_irq_on> <ata_bmdma_irq_clear> <ata_bmdma_setup> <ata_bmdma_start> <ata_bmdma_stop> <ata_bmdma_status> <0000000000000000> <0000000000000000>
+OPS pata_ali ali_20_port_ops: <0000000000000000> <0000000000000000> <ata_qc_prep> <ata_qc_issue_prot> <ata_cable_40wire> <ali_20_filter> <ali_set_piomode> <ali_set_dmamode> <0000000000000000> <ali_lock_sectors> <ata_bmdma_freeze> <ata_bmdma_thaw> <ata_bmdma_error_handler> <ata_bmdma_post_internal_cmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_sff_port_start> <0000000000000000> <0000000000000000> <ata_std_dev_select> <ata_check_status> <0000000000000000> <ata_tf_load> <ata_tf_read> <ata_exec_command> <ata_data_xfer> <ata_irq_on> <ata_bmdma_irq_clear> <ata_bmdma_setup> <ata_bmdma_start> <ata_bmdma_stop> <ata_bmdma_status> <0000000000000000> <0000000000000000>
+OPS pata_ali ali_c2_port_ops: <0000000000000000> <ali_check_atapi_dma> <ata_qc_prep> <ata_qc_issue_prot> <ali_c2_cable_detect> <ata_pci_default_filter> <ali_set_piomode> <ali_set_dmamode> <0000000000000000> <ali_lock_sectors> <ata_bmdma_freeze> <ata_bmdma_thaw> <ata_bmdma_error_handler> <ata_bmdma_post_internal_cmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_sff_port_start> <0000000000000000> <0000000000000000> <ata_std_dev_select> <ata_check_status> <0000000000000000> <ata_tf_load> <ata_tf_read> <ata_exec_command> <ata_data_xfer> <ata_irq_on> <ata_bmdma_irq_clear> <ata_bmdma_setup> <ata_bmdma_start> <ata_bmdma_stop> <ata_bmdma_status> <0000000000000000> <0000000000000000>
+OPS pata_ali ali_c5_port_ops: <0000000000000000> <ali_check_atapi_dma> <ata_qc_prep> <ata_qc_issue_prot> <ali_c2_cable_detect> <ata_pci_default_filter> <ali_set_piomode> <ali_set_dmamode> <0000000000000000> <0000000000000000> <ata_bmdma_freeze> <ata_bmdma_thaw> <ata_bmdma_error_handler> <ata_bmdma_post_internal_cmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_sff_port_start> <0000000000000000> <0000000000000000> <ata_std_dev_select> <ata_check_status> <0000000000000000> <ata_tf_load> <ata_tf_read> <ata_exec_command> <ata_data_xfer> <ata_irq_on> <ata_bmdma_irq_clear> <ata_bmdma_setup> <ata_bmdma_start> <ata_bmdma_stop> <ata_bmdma_status> <0000000000000000> <0000000000000000>
+OPS pata_ali ali_early_port_ops: <0000000000000000> <0000000000000000> <ata_qc_prep> <ata_qc_issue_prot> <ata_cable_40wire> <0000000000000000> <ali_set_piomode> <0000000000000000> <0000000000000000> <0000000000000000> <ata_bmdma_freeze> <ata_bmdma_thaw> <ata_bmdma_error_handler> <ata_bmdma_post_internal_cmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_sff_port_start> <0000000000000000> <0000000000000000> <ata_std_dev_select> <ata_check_status> <0000000000000000> <ata_tf_load> <ata_tf_read> <ata_exec_command> <ata_data_xfer> <ata_irq_on> <ata_noop_irq_clear> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000>
+OPS pata_amd amd100_port_ops: <0000000000000000> <0000000000000000> <ata_qc_prep> <ata_qc_issue_prot> <ata_cable_unknown> <ata_pci_default_filter> <amd100_set_piomode> <amd100_set_dmamode> <0000000000000000> <0000000000000000> <ata_bmdma_freeze> <ata_bmdma_thaw> <amd_error_handler> <ata_bmdma_post_internal_cmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_sff_port_start> <0000000000000000> <0000000000000000> <ata_std_dev_select> <ata_check_status> <0000000000000000> <ata_tf_load> <ata_tf_read> <ata_exec_command> <ata_data_xfer> <ata_irq_on> <ata_bmdma_irq_clear> <ata_bmdma_setup> <ata_bmdma_start> <ata_bmdma_stop> <ata_bmdma_status> <0000000000000000> <0000000000000000>
+OPS pata_amd amd133_port_ops: <0000000000000000> <0000000000000000> <ata_qc_prep> <ata_qc_issue_prot> <amd_cable_detect> <ata_pci_default_filter> <amd133_set_piomode> <amd133_set_dmamode> <0000000000000000> <0000000000000000> <ata_bmdma_freeze> <ata_bmdma_thaw> <amd_error_handler> <ata_bmdma_post_internal_cmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_sff_port_start> <0000000000000000> <0000000000000000> <ata_std_dev_select> <ata_check_status> <0000000000000000> <ata_tf_load> <ata_tf_read> <ata_exec_command> <ata_data_xfer> <ata_irq_on> <ata_bmdma_irq_clear> <ata_bmdma_setup> <ata_bmdma_start> <ata_bmdma_stop> <ata_bmdma_status> <0000000000000000> <0000000000000000>
+OPS pata_amd amd33_port_ops: <0000000000000000> <0000000000000000> <ata_qc_prep> <ata_qc_issue_prot> <ata_cable_40wire> <ata_pci_default_filter> <amd33_set_piomode> <amd33_set_dmamode> <0000000000000000> <0000000000000000> <ata_bmdma_freeze> <ata_bmdma_thaw> <amd_error_handler> <ata_bmdma_post_internal_cmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_sff_port_start> <0000000000000000> <0000000000000000> <ata_std_dev_select> <ata_check_status> <0000000000000000> <ata_tf_load> <ata_tf_read> <ata_exec_command> <ata_data_xfer> <ata_irq_on> <ata_bmdma_irq_clear> <ata_bmdma_setup> <ata_bmdma_start> <ata_bmdma_stop> <ata_bmdma_status> <0000000000000000> <0000000000000000>
+OPS pata_amd amd66_port_ops: <0000000000000000> <0000000000000000> <ata_qc_prep> <ata_qc_issue_prot> <ata_cable_unknown> <ata_pci_default_filter> <amd66_set_piomode> <amd66_set_dmamode> <0000000000000000> <0000000000000000> <ata_bmdma_freeze> <ata_bmdma_thaw> <amd_error_handler> <ata_bmdma_post_internal_cmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_sff_port_start> <0000000000000000> <0000000000000000> <ata_std_dev_select> <ata_check_status> <0000000000000000> <ata_tf_load> <ata_tf_read> <ata_exec_command> <ata_data_xfer> <ata_irq_on> <ata_bmdma_irq_clear> <ata_bmdma_setup> <ata_bmdma_start> <ata_bmdma_stop> <ata_bmdma_status> <0000000000000000> <0000000000000000>
+OPS pata_amd nv100_port_ops: <0000000000000000> <0000000000000000> <ata_qc_prep> <ata_qc_issue_prot> <ata_cable_ignore> <nv_mode_filter> <nv100_set_piomode> <nv100_set_dmamode> <0000000000000000> <0000000000000000> <ata_bmdma_freeze> <ata_bmdma_thaw> <nv_error_handler> <ata_bmdma_post_internal_cmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_sff_port_start> <0000000000000000> <nv_host_stop> <ata_std_dev_select> <ata_check_status> <0000000000000000> <ata_tf_load> <ata_tf_read> <ata_exec_command> <ata_data_xfer> <ata_irq_on> <ata_bmdma_irq_clear> <ata_bmdma_setup> <ata_bmdma_start> <ata_bmdma_stop> <ata_bmdma_status> <0000000000000000> <0000000000000000>
+OPS pata_amd nv133_port_ops: <0000000000000000> <0000000000000000> <ata_qc_prep> <ata_qc_issue_prot> <ata_cable_ignore> <nv_mode_filter> <nv133_set_piomode> <nv133_set_dmamode> <0000000000000000> <0000000000000000> <ata_bmdma_freeze> <ata_bmdma_thaw> <nv_error_handler> <ata_bmdma_post_internal_cmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_sff_port_start> <0000000000000000> <nv_host_stop> <ata_std_dev_select> <ata_check_status> <0000000000000000> <ata_tf_load> <ata_tf_read> <ata_exec_command> <ata_data_xfer> <ata_irq_on> <ata_bmdma_irq_clear> <ata_bmdma_setup> <ata_bmdma_start> <ata_bmdma_stop> <ata_bmdma_status> <0000000000000000> <0000000000000000>
+OPS pata_artop artop6210_ops: <0000000000000000> <0000000000000000> <ata_qc_prep> <ata_qc_issue_prot> <ata_cable_40wire> <ata_pci_default_filter> <artop6210_set_piomode> <artop6210_set_dmamode> <0000000000000000> <0000000000000000> <ata_bmdma_freeze> <ata_bmdma_thaw> <artop6210_error_handler> <ata_bmdma_post_internal_cmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_sff_port_start> <0000000000000000> <0000000000000000> <ata_std_dev_select> <ata_check_status> <0000000000000000> <ata_tf_load> <ata_tf_read> <ata_exec_command> <ata_data_xfer> <ata_irq_on> <ata_bmdma_irq_clear> <ata_bmdma_setup> <ata_bmdma_start> <ata_bmdma_stop> <ata_bmdma_status> <0000000000000000> <0000000000000000
+ >
+OPS pata_artop artop6260_ops: <0000000000000000> <0000000000000000> <ata_qc_prep> <ata_qc_issue_prot> <artop6260_cable_detect> <ata_pci_default_filter> <artop6260_set_piomode> <artop6260_set_dmamode> <0000000000000000> <0000000000000000> <ata_bmdma_freeze> <ata_bmdma_thaw> <artop6260_error_handler> <ata_bmdma_post_internal_cmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_sff_port_start> <0000000000000000> <0000000000000000> <ata_std_dev_select> <ata_check_status> <0000000000000000> <ata_tf_load> <ata_tf_read> <ata_exec_command> <ata_data_xfer> <ata_irq_on> <ata_bmdma_irq_clear> <ata_bmdma_setup> <ata_bmdma_start> <ata_bmdma_stop> <ata_bmdma_status> <0000000000000000> <0000000000
+ 000000>
+OPS pata_atiixp atiixp_port_ops: <0000000000000000> <0000000000000000> <ata_qc_prep> <ata_qc_issue_prot> <atiixp_cable_detect> <ata_pci_default_filter> <atiixp_set_piomode> <atiixp_set_dmamode> <0000000000000000> <0000000000000000> <ata_bmdma_freeze> <ata_bmdma_thaw> <atiixp_error_handler> <ata_bmdma_post_internal_cmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_sff_port_start> <0000000000000000> <0000000000000000> <ata_std_dev_select> <ata_check_status> <0000000000000000> <ata_tf_load> <ata_tf_read> <ata_exec_command> <ata_data_xfer> <ata_irq_on> <ata_bmdma_irq_clear> <ata_bmdma_setup> <atiixp_bmdma_start> <atiixp_bmdma_stop> <ata_bmdma_status> <0000000000000000> <0000000000000
+ 000>
+OPS pata_cmd640 cmd640_port_ops: <0000000000000000> <0000000000000000> <ata_qc_prep> <cmd640_qc_issue_prot> <ata_cable_40wire> <ata_pci_default_filter> <cmd640_set_piomode> <0000000000000000> <0000000000000000> <0000000000000000> <ata_bmdma_freeze> <ata_bmdma_thaw> <ata_bmdma_error_handler> <ata_bmdma_post_internal_cmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <cmd640_port_start> <0000000000000000> <0000000000000000> <ata_std_dev_select> <ata_check_status> <0000000000000000> <ata_tf_load> <ata_tf_read> <ata_exec_command> <ata_data_xfer_noirq> <ata_irq_on> <ata_bmdma_irq_clear> <ata_bmdma_setup> <ata_bmdma_start> <ata_bmdma_stop> <ata_bmdma_status> <0000000000000000> <0000000000000
+ 000>
+OPS pata_cmd64x cmd646r1_port_ops: <0000000000000000> <0000000000000000> <ata_qc_prep> <ata_qc_issue_prot> <ata_cable_40wire> <ata_pci_default_filter> <cmd64x_set_piomode> <cmd64x_set_dmamode> <0000000000000000> <0000000000000000> <ata_bmdma_freeze> <ata_bmdma_thaw> <ata_bmdma_error_handler> <ata_bmdma_post_internal_cmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_sff_port_start> <0000000000000000> <0000000000000000> <ata_std_dev_select> <ata_check_status> <0000000000000000> <ata_tf_load> <ata_tf_read> <ata_exec_command> <ata_data_xfer> <ata_irq_on> <ata_bmdma_irq_clear> <ata_bmdma_setup> <ata_bmdma_start> <cmd646r1_bmdma_stop> <ata_bmdma_status> <0000000000000000> <000000000000
+ 0000>
+OPS pata_cmd64x cmd648_port_ops: <0000000000000000> <0000000000000000> <ata_qc_prep> <ata_qc_issue_prot> <cmd648_cable_detect> <ata_pci_default_filter> <cmd64x_set_piomode> <cmd64x_set_dmamode> <0000000000000000> <0000000000000000> <ata_bmdma_freeze> <ata_bmdma_thaw> <ata_bmdma_error_handler> <ata_bmdma_post_internal_cmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_sff_port_start> <0000000000000000> <0000000000000000> <ata_std_dev_select> <ata_check_status> <0000000000000000> <ata_tf_load> <ata_tf_read> <ata_exec_command> <ata_data_xfer> <ata_irq_on> <ata_bmdma_irq_clear> <ata_bmdma_setup> <ata_bmdma_start> <cmd648_bmdma_stop> <ata_bmdma_status> <0000000000000000> <0000000000000
+ 000>
+OPS pata_cmd64x cmd64x_port_ops: <0000000000000000> <0000000000000000> <ata_qc_prep> <ata_qc_issue_prot> <ata_cable_40wire> <ata_pci_default_filter> <cmd64x_set_piomode> <cmd64x_set_dmamode> <0000000000000000> <0000000000000000> <ata_bmdma_freeze> <ata_bmdma_thaw> <ata_bmdma_error_handler> <ata_bmdma_post_internal_cmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_sff_port_start> <0000000000000000> <0000000000000000> <ata_std_dev_select> <ata_check_status> <0000000000000000> <ata_tf_load> <ata_tf_read> <ata_exec_command> <ata_data_xfer> <ata_irq_on> <ata_bmdma_irq_clear> <ata_bmdma_setup> <ata_bmdma_start> <ata_bmdma_stop> <ata_bmdma_status> <0000000000000000> <0000000000000000>
+OPS pata_cs5520 cs5520_port_ops: <0000000000000000> <0000000000000000> <ata_dumb_qc_prep> <ata_qc_issue_prot> <ata_cable_40wire> <ata_pci_default_filter> <cs5520_set_piomode> <cs5520_set_dmamode> <0000000000000000> <0000000000000000> <ata_bmdma_freeze> <ata_bmdma_thaw> <ata_bmdma_error_handler> <ata_bmdma_post_internal_cmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_sff_port_start> <0000000000000000> <0000000000000000> <ata_std_dev_select> <ata_check_status> <0000000000000000> <ata_tf_load> <ata_tf_read> <ata_exec_command> <ata_data_xfer> <ata_irq_on> <ata_bmdma_irq_clear> <ata_bmdma_setup> <ata_bmdma_start> <ata_bmdma_stop> <ata_bmdma_status> <0000000000000000> <00000000000000
+ 00>
+OPS pata_cs5530 cs5530_port_ops: <0000000000000000> <0000000000000000> <ata_dumb_qc_prep> <cs5530_qc_issue_prot> <ata_cable_40wire> <ata_pci_default_filter> <cs5530_set_piomode> <cs5530_set_dmamode> <0000000000000000> <0000000000000000> <ata_bmdma_freeze> <ata_bmdma_thaw> <ata_bmdma_error_handler> <ata_bmdma_post_internal_cmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_sff_port_start> <0000000000000000> <0000000000000000> <ata_std_dev_select> <ata_check_status> <0000000000000000> <ata_tf_load> <ata_tf_read> <ata_exec_command> <ata_data_xfer> <ata_irq_on> <ata_bmdma_irq_clear> <ata_bmdma_setup> <ata_bmdma_start> <ata_bmdma_stop> <ata_bmdma_status> <0000000000000000> <00000000000
+ 00000>
+OPS pata_cypress cy82c693_port_ops: <0000000000000000> <0000000000000000> <ata_qc_prep> <ata_qc_issue_prot> <ata_cable_40wire> <ata_pci_default_filter> <cy82c693_set_piomode> <cy82c693_set_dmamode> <0000000000000000> <0000000000000000> <ata_bmdma_freeze> <ata_bmdma_thaw> <ata_bmdma_error_handler> <ata_bmdma_post_internal_cmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_sff_port_start> <0000000000000000> <0000000000000000> <ata_std_dev_select> <ata_check_status> <0000000000000000> <ata_tf_load> <ata_tf_read> <ata_exec_command> <ata_data_xfer> <ata_irq_on> <ata_bmdma_irq_clear> <ata_bmdma_setup> <ata_bmdma_start> <ata_bmdma_stop> <ata_bmdma_status> <0000000000000000> <000000000000
+ 0000>
+OPS pata_efar efar_ops: <0000000000000000> <0000000000000000> <ata_qc_prep> <ata_qc_issue_prot> <efar_cable_detect> <ata_pci_default_filter> <efar_set_piomode> <efar_set_dmamode> <0000000000000000> <0000000000000000> <ata_bmdma_freeze> <ata_bmdma_thaw> <efar_error_handler> <ata_bmdma_post_internal_cmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_sff_port_start> <0000000000000000> <0000000000000000> <ata_std_dev_select> <ata_check_status> <0000000000000000> <ata_tf_load> <ata_tf_read> <ata_exec_command> <ata_data_xfer> <ata_irq_on> <ata_bmdma_irq_clear> <ata_bmdma_setup> <ata_bmdma_start> <ata_bmdma_stop> <ata_bmdma_status> <0000000000000000> <0000000000000000>
+OPS pata_hpt366 hpt366_port_ops: <0000000000000000> <0000000000000000> <ata_qc_prep> <ata_qc_issue_prot> <hpt36x_cable_detect> <hpt366_filter> <hpt366_set_piomode> <hpt366_set_dmamode> <0000000000000000> <0000000000000000> <ata_bmdma_freeze> <ata_bmdma_thaw> <ata_bmdma_error_handler> <ata_bmdma_post_internal_cmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_sff_port_start> <0000000000000000> <0000000000000000> <ata_std_dev_select> <ata_check_status> <0000000000000000> <ata_tf_load> <ata_tf_read> <ata_exec_command> <ata_data_xfer> <ata_irq_on> <ata_bmdma_irq_clear> <ata_bmdma_setup> <ata_bmdma_start> <ata_bmdma_stop> <ata_bmdma_status> <0000000000000000> <0000000000000000>
+OPS pata_hpt37x hpt370a_port_ops: <0000000000000000> <0000000000000000> <ata_qc_prep> <ata_qc_issue_prot> <0000000000000000> <hpt370a_filter> <hpt370_set_piomode> <hpt370_set_dmamode> <0000000000000000> <0000000000000000> <ata_bmdma_freeze> <ata_bmdma_thaw> <hpt37x_error_handler> <ata_bmdma_post_internal_cmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_sff_port_start> <0000000000000000> <0000000000000000> <ata_std_dev_select> <ata_check_status> <0000000000000000> <ata_tf_load> <ata_tf_read> <ata_exec_command> <ata_data_xfer> <ata_irq_on> <ata_bmdma_irq_clear> <ata_bmdma_setup> <hpt370_bmdma_start> <hpt370_bmdma_stop> <ata_bmdma_status> <0000000000000000> <0000000000000000>
+OPS pata_hpt37x hpt370_port_ops: <0000000000000000> <0000000000000000> <ata_qc_prep> <ata_qc_issue_prot> <0000000000000000> <hpt370_filter> <hpt370_set_piomode> <hpt370_set_dmamode> <0000000000000000> <0000000000000000> <ata_bmdma_freeze> <ata_bmdma_thaw> <hpt37x_error_handler> <ata_bmdma_post_internal_cmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_sff_port_start> <0000000000000000> <0000000000000000> <ata_std_dev_select> <ata_check_status> <0000000000000000> <ata_tf_load> <ata_tf_read> <ata_exec_command> <ata_data_xfer> <ata_irq_on> <ata_bmdma_irq_clear> <ata_bmdma_setup> <hpt370_bmdma_start> <hpt370_bmdma_stop> <ata_bmdma_status> <0000000000000000> <0000000000000000>
+OPS pata_hpt37x hpt372_port_ops: <0000000000000000> <0000000000000000> <ata_qc_prep> <ata_qc_issue_prot> <0000000000000000> <ata_pci_default_filter> <hpt372_set_piomode> <hpt372_set_dmamode> <0000000000000000> <0000000000000000> <ata_bmdma_freeze> <ata_bmdma_thaw> <hpt37x_error_handler> <ata_bmdma_post_internal_cmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_sff_port_start> <0000000000000000> <0000000000000000> <ata_std_dev_select> <ata_check_status> <0000000000000000> <ata_tf_load> <ata_tf_read> <ata_exec_command> <ata_data_xfer> <ata_irq_on> <ata_bmdma_irq_clear> <ata_bmdma_setup> <ata_bmdma_start> <hpt37x_bmdma_stop> <ata_bmdma_status> <0000000000000000> <0000000000000000>
+OPS pata_hpt37x hpt374_port_ops: <0000000000000000> <0000000000000000> <ata_qc_prep> <ata_qc_issue_prot> <0000000000000000> <ata_pci_default_filter> <hpt372_set_piomode> <hpt372_set_dmamode> <0000000000000000> <0000000000000000> <ata_bmdma_freeze> <ata_bmdma_thaw> <hpt374_error_handler> <ata_bmdma_post_internal_cmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_sff_port_start> <0000000000000000> <0000000000000000> <ata_std_dev_select> <ata_check_status> <0000000000000000> <ata_tf_load> <ata_tf_read> <ata_exec_command> <ata_data_xfer> <ata_irq_on> <ata_bmdma_irq_clear> <ata_bmdma_setup> <ata_bmdma_start> <hpt37x_bmdma_stop> <ata_bmdma_status> <0000000000000000> <0000000000000000>
+OPS pata_hpt3x2n hpt3x2n_port_ops: <0000000000000000> <0000000000000000> <ata_qc_prep> <hpt3x2n_qc_issue_prot> <hpt3x2n_cable_detect> <ata_pci_default_filter> <hpt3x2n_set_piomode> <hpt3x2n_set_dmamode> <0000000000000000> <0000000000000000> <ata_bmdma_freeze> <ata_bmdma_thaw> <hpt3x2n_error_handler> <ata_bmdma_post_internal_cmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_sff_port_start> <0000000000000000> <0000000000000000> <ata_std_dev_select> <ata_check_status> <0000000000000000> <ata_tf_load> <ata_tf_read> <ata_exec_command> <ata_data_xfer> <ata_irq_on> <ata_bmdma_irq_clear> <ata_bmdma_setup> <ata_bmdma_start> <hpt3x2n_bmdma_stop> <ata_bmdma_status> <0000000000000000> <00000
+ 00000000000>
+OPS pata_hpt3x3 hpt3x3_port_ops: <0000000000000000> <hpt3x3_atapi_dma> <ata_qc_prep> <ata_qc_issue_prot> <ata_cable_40wire> <ata_pci_default_filter> <hpt3x3_set_piomode> <hpt3x3_set_dmamode> <0000000000000000> <0000000000000000> <ata_bmdma_freeze> <ata_bmdma_thaw> <ata_bmdma_error_handler> <ata_bmdma_post_internal_cmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_sff_port_start> <0000000000000000> <0000000000000000> <ata_std_dev_select> <ata_check_status> <0000000000000000> <ata_tf_load> <ata_tf_read> <ata_exec_command> <ata_data_xfer> <ata_irq_on> <ata_bmdma_irq_clear> <ata_bmdma_setup> <ata_bmdma_start> <ata_bmdma_stop> <ata_bmdma_status> <0000000000000000> <0000000000000000>
+OPS pata_it8213 it8213_ops: <0000000000000000> <0000000000000000> <ata_qc_prep> <ata_qc_issue_prot> <it8213_cable_detect> <ata_pci_default_filter> <it8213_set_piomode> <it8213_set_dmamode> <0000000000000000> <0000000000000000> <ata_bmdma_freeze> <ata_bmdma_thaw> <it8213_error_handler> <ata_bmdma_post_internal_cmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_sff_port_start> <0000000000000000> <0000000000000000> <ata_std_dev_select> <ata_check_status> <0000000000000000> <ata_tf_load> <ata_tf_read> <ata_exec_command> <ata_data_xfer> <ata_irq_on> <ata_bmdma_irq_clear> <ata_bmdma_setup> <ata_bmdma_start> <ata_bmdma_stop> <ata_bmdma_status> <0000000000000000> <0000000000000000>
+OPS pata_it821x it821x_passthru_port_ops: <0000000000000000> <it821x_check_atapi_dma> <ata_qc_prep> <it821x_passthru_qc_issue_prot> <ata_cable_unknown> <ata_pci_default_filter> <it821x_passthru_set_piomode> <it821x_passthru_set_dmamode> <0000000000000000> <0000000000000000> <ata_bmdma_freeze> <ata_bmdma_thaw> <ata_bmdma_error_handler> <ata_bmdma_post_internal_cmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <it821x_port_start> <0000000000000000> <0000000000000000> <it821x_passthru_dev_select> <ata_check_status> <0000000000000000> <ata_tf_load> <ata_tf_read> <ata_exec_command> <ata_data_xfer> <ata_irq_on> <ata_bmdma_irq_clear> <ata_bmdma_setup> <it821x_passthru_bmdma_start> <it821x_pa
+ ssthru_bmdma_stop> <ata_bmdma_status> <0000000000000000> <0000000000000000>
+OPS pata_it821x it821x_smart_port_ops: <0000000000000000> <it821x_check_atapi_dma> <ata_qc_prep> <it821x_smart_qc_issue_prot> <it821x_ident_hack> <ata_pci_default_filter> <0000000000000000> <0000000000000000> <it821x_smart_set_mode> <it821x_dev_config> <ata_bmdma_freeze> <ata_bmdma_thaw> <ata_bmdma_error_handler> <ata_bmdma_post_internal_cmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <it821x_port_start> <0000000000000000> <0000000000000000> <ata_std_dev_select> <ata_check_status> <0000000000000000> <ata_tf_load> <ata_tf_read> <ata_exec_command> <ata_data_xfer> <ata_irq_on> <ata_bmdma_irq_clear> <ata_bmdma_setup> <ata_bmdma_start> <ata_bmdma_stop> <ata_bmdma_status> <000000000000000
+ 0> <0000000000000000>
+OPS pata_jmicron jmicron_ops: <0000000000000000> <0000000000000000> <ata_qc_prep> <ata_qc_issue_prot> <0000000000000000> <ata_pci_default_filter> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_bmdma_freeze> <ata_bmdma_thaw> <jmicron_error_handler> <ata_bmdma_post_internal_cmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_sff_port_start> <0000000000000000> <0000000000000000> <ata_std_dev_select> <ata_check_status> <0000000000000000> <ata_tf_load> <ata_tf_read> <ata_exec_command> <ata_data_xfer> <ata_irq_on> <ata_bmdma_irq_clear> <ata_bmdma_setup> <ata_bmdma_start> <ata_bmdma_stop> <ata_bmdma_status> <0000000000000000> <0000000000000000>
+OPS pata_marvell marvell_ops: <0000000000000000> <0000000000000000> <ata_qc_prep> <ata_qc_issue_prot> <marvell_cable_detect> <ata_pci_default_filter> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_bmdma_freeze> <ata_bmdma_thaw> <marvell_error_handler> <ata_bmdma_post_internal_cmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_sff_port_start> <0000000000000000> <0000000000000000> <ata_std_dev_select> <ata_check_status> <0000000000000000> <ata_tf_load> <ata_tf_read> <ata_exec_command> <ata_data_xfer> <ata_irq_on> <ata_bmdma_irq_clear> <ata_bmdma_setup> <ata_bmdma_start> <ata_bmdma_stop> <ata_bmdma_status> <0000000000000000> <0000000000000000>
+OPS pata_mpiix mpiix_port_ops: <0000000000000000> <0000000000000000> <ata_qc_prep> <mpiix_qc_issue_prot> <ata_cable_40wire> <0000000000000000> <mpiix_set_piomode> <0000000000000000> <0000000000000000> <0000000000000000> <ata_bmdma_freeze> <ata_bmdma_thaw> <mpiix_error_handler> <ata_bmdma_post_internal_cmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_sff_port_start> <0000000000000000> <0000000000000000> <ata_std_dev_select> <ata_check_status> <0000000000000000> <ata_tf_load> <ata_tf_read> <ata_exec_command> <ata_data_xfer> <ata_irq_on> <ata_noop_irq_clear> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000>
+OPS pata_netcell netcell_ops: <0000000000000000> <0000000000000000> <ata_qc_prep> <ata_qc_issue_prot> <ata_cable_80wire> <ata_pci_default_filter> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_bmdma_freeze> <ata_bmdma_thaw> <ata_bmdma_error_handler> <ata_bmdma_post_internal_cmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_sff_port_start> <0000000000000000> <0000000000000000> <ata_std_dev_select> <ata_check_status> <0000000000000000> <ata_tf_load> <ata_tf_read> <ata_exec_command> <ata_data_xfer> <ata_irq_on> <ata_bmdma_irq_clear> <ata_bmdma_setup> <ata_bmdma_start> <ata_bmdma_stop> <ata_bmdma_status> <0000000000000000> <0000000000000000>
+OPS pata_ninja32 ninja32_port_ops: <0000000000000000> <0000000000000000> <ata_qc_prep> <ata_qc_issue_prot> <ata_cable_40wire> <ata_pci_default_filter> <ninja32_set_piomode> <0000000000000000> <0000000000000000> <0000000000000000> <ata_bmdma_freeze> <ata_bmdma_thaw> <ata_bmdma_error_handler> <ata_bmdma_post_internal_cmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_sff_port_start> <0000000000000000> <0000000000000000> <ninja32_dev_select> <ata_check_status> <0000000000000000> <ata_tf_load> <ata_tf_read> <ata_exec_command> <ata_data_xfer> <ata_irq_on> <ata_bmdma_irq_clear> <ata_bmdma_setup> <ata_bmdma_start> <ata_bmdma_stop> <ata_bmdma_status> <0000000000000000> <0000000000000000>
+OPS pata_ns87410 ns87410_port_ops: <0000000000000000> <0000000000000000> <ata_qc_prep> <ns87410_qc_issue_prot> <ata_cable_40wire> <0000000000000000> <ns87410_set_piomode> <0000000000000000> <0000000000000000> <0000000000000000> <ata_bmdma_freeze> <ata_bmdma_thaw> <ns87410_error_handler> <ata_bmdma_post_internal_cmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_sff_port_start> <0000000000000000> <0000000000000000> <ata_std_dev_select> <ata_check_status> <0000000000000000> <ata_tf_load> <ata_tf_read> <ata_exec_command> <ata_data_xfer> <ata_irq_on> <ata_noop_irq_clear> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000>
+OPS pata_ns87415 ns87415_pata_ops: <0000000000000000> <ns87415_check_atapi_dma> <ata_qc_prep> <ata_qc_issue_prot> <ata_cable_40wire> <ata_pci_default_filter> <ns87415_set_piomode> <0000000000000000> <0000000000000000> <0000000000000000> <ata_bmdma_freeze> <ata_bmdma_thaw> <ata_bmdma_error_handler> <ata_bmdma_post_internal_cmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_sff_port_start> <0000000000000000> <0000000000000000> <ata_std_dev_select> <ata_check_status> <0000000000000000> <ata_tf_load> <ata_tf_read> <ata_exec_command> <ata_data_xfer> <ata_irq_on> <ns87415_bmdma_irq_clear> <ns87415_bmdma_setup> <ns87415_bmdma_start> <ns87415_bmdma_stop> <ata_bmdma_status> <00000000000000
+ 00> <0000000000000000>
+OPS pata_oldpiix oldpiix_pata_ops: <0000000000000000> <0000000000000000> <ata_qc_prep> <oldpiix_qc_issue_prot> <ata_cable_40wire> <ata_pci_default_filter> <oldpiix_set_piomode> <oldpiix_set_dmamode> <0000000000000000> <0000000000000000> <ata_bmdma_freeze> <ata_bmdma_thaw> <oldpiix_pata_error_handler> <ata_bmdma_post_internal_cmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_sff_port_start> <0000000000000000> <0000000000000000> <ata_std_dev_select> <ata_check_status> <0000000000000000> <ata_tf_load> <ata_tf_read> <ata_exec_command> <ata_data_xfer> <ata_irq_on> <ata_bmdma_irq_clear> <ata_bmdma_setup> <ata_bmdma_start> <ata_bmdma_stop> <ata_bmdma_status> <0000000000000000> <00000000
+ 00000000>
+OPS pata_optidma optidma_port_ops: <0000000000000000> <0000000000000000> <ata_qc_prep> <ata_qc_issue_prot> <ata_cable_40wire> <ata_pci_default_filter> <optidma_set_pio_mode> <optidma_set_dma_mode> <optidma_set_mode> <0000000000000000> <ata_bmdma_freeze> <ata_bmdma_thaw> <optidma_error_handler> <ata_bmdma_post_internal_cmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_sff_port_start> <0000000000000000> <0000000000000000> <ata_std_dev_select> <ata_check_status> <0000000000000000> <ata_tf_load> <ata_tf_read> <ata_exec_command> <ata_data_xfer> <ata_irq_on> <ata_bmdma_irq_clear> <ata_bmdma_setup> <ata_bmdma_start> <ata_bmdma_stop> <ata_bmdma_status> <0000000000000000> <000000000000000
+ 0>
+OPS pata_optidma optiplus_port_ops: <0000000000000000> <0000000000000000> <ata_qc_prep> <ata_qc_issue_prot> <ata_cable_40wire> <ata_pci_default_filter> <optiplus_set_pio_mode> <optiplus_set_dma_mode> <optidma_set_mode> <0000000000000000> <ata_bmdma_freeze> <ata_bmdma_thaw> <optidma_error_handler> <ata_bmdma_post_internal_cmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_sff_port_start> <0000000000000000> <0000000000000000> <ata_std_dev_select> <ata_check_status> <0000000000000000> <ata_tf_load> <ata_tf_read> <ata_exec_command> <ata_data_xfer> <ata_irq_on> <ata_bmdma_irq_clear> <ata_bmdma_setup> <ata_bmdma_start> <ata_bmdma_stop> <ata_bmdma_status> <0000000000000000> <000000000000
+ 0000>
+OPS pata_opti opti_port_ops: <0000000000000000> <0000000000000000> <ata_qc_prep> <ata_qc_issue_prot> <ata_cable_40wire> <ata_pci_default_filter> <opti_set_piomode> <0000000000000000> <0000000000000000> <0000000000000000> <ata_bmdma_freeze> <ata_bmdma_thaw> <opti_error_handler> <ata_bmdma_post_internal_cmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_sff_port_start> <0000000000000000> <0000000000000000> <ata_std_dev_select> <ata_check_status> <0000000000000000> <ata_tf_load> <ata_tf_read> <ata_exec_command> <ata_data_xfer> <ata_irq_on> <ata_bmdma_irq_clear> <ata_bmdma_setup> <ata_bmdma_start> <ata_bmdma_stop> <ata_bmdma_status> <0000000000000000> <0000000000000000>
+OPS pata_pcmcia pcmcia_8bit_port_ops: <0000000000000000> <0000000000000000> <ata_qc_prep> <ata_qc_issue_prot> <ata_cable_40wire> <0000000000000000> <0000000000000000> <0000000000000000> <pcmcia_set_mode_8bit> <0000000000000000> <ata_bmdma_freeze> <ata_bmdma_thaw> <ata_bmdma_error_handler> <ata_bmdma_post_internal_cmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_sff_port_start> <0000000000000000> <0000000000000000> <ata_std_dev_select> <ata_check_status> <0000000000000000> <ata_tf_load> <ata_tf_read> <ata_exec_command> <ata_data_xfer_8bit> <ata_irq_on> <ata_noop_irq_clear> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <000000000000
+ 0000>
+OPS pata_pcmcia pcmcia_port_ops: <0000000000000000> <0000000000000000> <ata_qc_prep> <ata_qc_issue_prot> <ata_cable_40wire> <0000000000000000> <0000000000000000> <0000000000000000> <pcmcia_set_mode> <0000000000000000> <ata_bmdma_freeze> <ata_bmdma_thaw> <ata_bmdma_error_handler> <ata_bmdma_post_internal_cmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_sff_port_start> <0000000000000000> <0000000000000000> <ata_std_dev_select> <ata_check_status> <0000000000000000> <ata_tf_load> <ata_tf_read> <ata_exec_command> <ata_data_xfer_noirq> <ata_irq_on> <ata_noop_irq_clear> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000>
+OPS pata_pdc2027x pdc2027x_pata100_ops: <0000000000000000> <pdc2027x_check_atapi_dma> <ata_qc_prep> <ata_qc_issue_prot> <pdc2027x_cable_detect> <ata_pci_default_filter> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_bmdma_freeze> <ata_bmdma_thaw> <pdc2027x_error_handler> <ata_bmdma_post_internal_cmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_sff_port_start> <0000000000000000> <0000000000000000> <ata_std_dev_select> <ata_check_status> <0000000000000000> <ata_tf_load> <ata_tf_read> <ata_exec_command> <ata_data_xfer> <ata_irq_on> <ata_bmdma_irq_clear> <ata_bmdma_setup> <ata_bmdma_start> <ata_bmdma_stop> <ata_bmdma_status> <0000000000000000> <0000
+ 000000000000>
+OPS pata_pdc2027x pdc2027x_pata133_ops: <0000000000000000> <pdc2027x_check_atapi_dma> <ata_qc_prep> <ata_qc_issue_prot> <pdc2027x_cable_detect> <pdc2027x_mode_filter> <pdc2027x_set_piomode> <pdc2027x_set_dmamode> <pdc2027x_set_mode> <0000000000000000> <ata_bmdma_freeze> <ata_bmdma_thaw> <pdc2027x_error_handler> <ata_bmdma_post_internal_cmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_sff_port_start> <0000000000000000> <0000000000000000> <ata_std_dev_select> <ata_check_status> <0000000000000000> <ata_tf_load> <ata_tf_read> <ata_exec_command> <ata_data_xfer> <ata_irq_on> <ata_bmdma_irq_clear> <ata_bmdma_setup> <ata_bmdma_start> <ata_bmdma_stop> <ata_bmdma_status> <0000000000000000
+ > <0000000000000000>
+OPS pata_pdc202xx_old pdc2024x_port_ops: <0000000000000000> <0000000000000000> <ata_qc_prep> <ata_qc_issue_prot> <ata_cable_40wire> <ata_pci_default_filter> <pdc202xx_set_piomode> <pdc202xx_set_dmamode> <0000000000000000> <0000000000000000> <ata_bmdma_freeze> <ata_bmdma_thaw> <ata_bmdma_error_handler> <ata_bmdma_post_internal_cmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_sff_port_start> <0000000000000000> <0000000000000000> <ata_std_dev_select> <ata_check_status> <0000000000000000> <ata_tf_load> <ata_tf_read> <ata_exec_command> <ata_data_xfer> <ata_irq_on> <ata_bmdma_irq_clear> <ata_bmdma_setup> <ata_bmdma_start> <ata_bmdma_stop> <ata_bmdma_status> <0000000000000000> <0000000
+ 000000000>
+OPS pata_pdc202xx_old pdc2026x_port_ops: <0000000000000000> <pdc2026x_check_atapi_dma> <ata_qc_prep> <ata_qc_issue_prot> <pdc2026x_cable_detect> <ata_pci_default_filter> <pdc202xx_set_piomode> <pdc202xx_set_dmamode> <0000000000000000> <pdc2026x_dev_config> <ata_bmdma_freeze> <ata_bmdma_thaw> <ata_bmdma_error_handler> <ata_bmdma_post_internal_cmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <pdc2026x_port_start> <0000000000000000> <0000000000000000> <ata_std_dev_select> <ata_check_status> <0000000000000000> <ata_tf_load> <ata_tf_read> <ata_exec_command> <ata_data_xfer> <ata_irq_on> <ata_bmdma_irq_clear> <ata_bmdma_setup> <pdc2026x_bmdma_start> <pdc2026x_bmdma_stop> <ata_bmdma_status> 
+ <0000000000000000> <0000000000000000>
+OPS pata_radisys radisys_pata_ops: <0000000000000000> <0000000000000000> <ata_qc_prep> <radisys_qc_issue_prot> <ata_cable_unknown> <ata_pci_default_filter> <radisys_set_piomode> <radisys_set_dmamode> <0000000000000000> <0000000000000000> <ata_bmdma_freeze> <ata_bmdma_thaw> <ata_bmdma_error_handler> <ata_bmdma_post_internal_cmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_sff_port_start> <0000000000000000> <0000000000000000> <ata_std_dev_select> <ata_check_status> <0000000000000000> <ata_tf_load> <ata_tf_read> <ata_exec_command> <ata_data_xfer> <ata_irq_on> <ata_bmdma_irq_clear> <ata_bmdma_setup> <ata_bmdma_start> <ata_bmdma_stop> <ata_bmdma_status> <0000000000000000> <0000000000
+ 000000>
+OPS pata_rz1000 rz1000_port_ops: <0000000000000000> <0000000000000000> <ata_qc_prep> <ata_qc_issue_prot> <ata_cable_40wire> <ata_pci_default_filter> <0000000000000000> <0000000000000000> <rz1000_set_mode> <0000000000000000> <ata_bmdma_freeze> <ata_bmdma_thaw> <ata_bmdma_error_handler> <ata_bmdma_post_internal_cmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_sff_port_start> <0000000000000000> <0000000000000000> <ata_std_dev_select> <ata_check_status> <0000000000000000> <ata_tf_load> <ata_tf_read> <ata_exec_command> <ata_data_xfer> <ata_irq_on> <ata_bmdma_irq_clear> <ata_bmdma_setup> <ata_bmdma_start> <ata_bmdma_stop> <ata_bmdma_status> <0000000000000000> <0000000000000000>
+OPS pata_serverworks serverworks_csb_port_ops: <0000000000000000> <0000000000000000> <ata_qc_prep> <ata_qc_issue_prot> <serverworks_cable_detect> <serverworks_csb_filter> <serverworks_set_piomode> <serverworks_set_dmamode> <0000000000000000> <0000000000000000> <ata_bmdma_freeze> <ata_bmdma_thaw> <ata_bmdma_error_handler> <ata_bmdma_post_internal_cmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_sff_port_start> <0000000000000000> <0000000000000000> <ata_std_dev_select> <ata_check_status> <0000000000000000> <ata_tf_load> <ata_tf_read> <ata_exec_command> <ata_data_xfer> <ata_irq_on> <ata_bmdma_irq_clear> <ata_bmdma_setup> <ata_bmdma_start> <ata_bmdma_stop> <ata_bmdma_status> <000000
+ 0000000000> <0000000000000000>
+OPS pata_serverworks serverworks_osb4_port_ops: <0000000000000000> <0000000000000000> <ata_qc_prep> <ata_qc_issue_prot> <serverworks_cable_detect> <serverworks_osb4_filter> <serverworks_set_piomode> <serverworks_set_dmamode> <0000000000000000> <0000000000000000> <ata_bmdma_freeze> <ata_bmdma_thaw> <ata_bmdma_error_handler> <ata_bmdma_post_internal_cmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_sff_port_start> <0000000000000000> <0000000000000000> <ata_std_dev_select> <ata_check_status> <0000000000000000> <ata_tf_load> <ata_tf_read> <ata_exec_command> <ata_data_xfer> <ata_irq_on> <ata_bmdma_irq_clear> <ata_bmdma_setup> <ata_bmdma_start> <ata_bmdma_stop> <ata_bmdma_status> <0000
+ 000000000000> <0000000000000000>
+OPS pata_sil680 sil680_port_ops: <0000000000000000> <0000000000000000> <ata_qc_prep> <ata_qc_issue_prot> <sil680_cable_detect> <ata_pci_default_filter> <sil680_set_piomode> <sil680_set_dmamode> <0000000000000000> <0000000000000000> <ata_bmdma_freeze> <ata_bmdma_thaw> <ata_bmdma_error_handler> <ata_bmdma_post_internal_cmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_sff_port_start> <0000000000000000> <0000000000000000> <ata_std_dev_select> <ata_check_status> <0000000000000000> <ata_tf_load> <ata_tf_read> <ata_exec_command> <ata_data_xfer> <ata_irq_on> <ata_bmdma_irq_clear> <ata_bmdma_setup> <ata_bmdma_start> <ata_bmdma_stop> <ata_bmdma_status> <0000000000000000> <0000000000000000
+ >
+OPS pata_sis sis_100_ops: <0000000000000000> <0000000000000000> <ata_qc_prep> <ata_qc_issue_prot> <sis_66_cable_detect> <ata_pci_default_filter> <sis_100_set_piomode> <sis_100_set_dmamode> <0000000000000000> <0000000000000000> <ata_bmdma_freeze> <ata_bmdma_thaw> <sis_error_handler> <ata_bmdma_post_internal_cmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_sff_port_start> <0000000000000000> <0000000000000000> <ata_std_dev_select> <ata_check_status> <0000000000000000> <ata_tf_load> <ata_tf_read> <ata_exec_command> <ata_data_xfer> <ata_irq_on> <ata_bmdma_irq_clear> <ata_bmdma_setup> <ata_bmdma_start> <ata_bmdma_stop> <ata_bmdma_status> <0000000000000000> <0000000000000000>
+OPS pata_sis sis_133_early_ops: <0000000000000000> <0000000000000000> <ata_qc_prep> <ata_qc_issue_prot> <sis_66_cable_detect> <ata_pci_default_filter> <sis_100_set_piomode> <sis_133_early_set_dmamode> <0000000000000000> <0000000000000000> <ata_bmdma_freeze> <ata_bmdma_thaw> <sis_error_handler> <ata_bmdma_post_internal_cmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_sff_port_start> <0000000000000000> <0000000000000000> <ata_std_dev_select> <ata_check_status> <0000000000000000> <ata_tf_load> <ata_tf_read> <ata_exec_command> <ata_data_xfer> <ata_irq_on> <ata_bmdma_irq_clear> <ata_bmdma_setup> <ata_bmdma_start> <ata_bmdma_stop> <ata_bmdma_status> <0000000000000000> <000000000000000
+ 0>
+OPS pata_sis sis_133_for_sata_ops: <0000000000000000> <0000000000000000> <ata_qc_prep> <ata_qc_issue_prot> <sis_133_cable_detect> <ata_pci_default_filter> <sis_133_set_piomode> <sis_133_set_dmamode> <0000000000000000> <0000000000000000> <ata_bmdma_freeze> <ata_bmdma_thaw> <ata_bmdma_error_handler> <ata_bmdma_post_internal_cmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_sff_port_start> <0000000000000000> <0000000000000000> <ata_std_dev_select> <ata_check_status> <0000000000000000> <ata_tf_load> <ata_tf_read> <ata_exec_command> <ata_data_xfer> <ata_irq_on> <ata_bmdma_irq_clear> <ata_bmdma_setup> <ata_bmdma_start> <ata_bmdma_stop> <ata_bmdma_status> <0000000000000000> <00000000000
+ 00000>
+OPS pata_sis sis_133_ops: <0000000000000000> <0000000000000000> <ata_qc_prep> <ata_qc_issue_prot> <sis_133_cable_detect> <ata_pci_default_filter> <sis_133_set_piomode> <sis_133_set_dmamode> <0000000000000000> <0000000000000000> <ata_bmdma_freeze> <ata_bmdma_thaw> <sis_error_handler> <ata_bmdma_post_internal_cmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_sff_port_start> <0000000000000000> <0000000000000000> <ata_std_dev_select> <ata_check_status> <0000000000000000> <ata_tf_load> <ata_tf_read> <ata_exec_command> <ata_data_xfer> <ata_irq_on> <ata_bmdma_irq_clear> <ata_bmdma_setup> <ata_bmdma_start> <ata_bmdma_stop> <ata_bmdma_status> <0000000000000000> <0000000000000000>
+OPS pata_sis sis_66_ops: <0000000000000000> <0000000000000000> <ata_qc_prep> <ata_qc_issue_prot> <sis_66_cable_detect> <ata_pci_default_filter> <sis_old_set_piomode> <sis_66_set_dmamode> <0000000000000000> <0000000000000000> <ata_bmdma_freeze> <ata_bmdma_thaw> <sis_error_handler> <ata_bmdma_post_internal_cmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_sff_port_start> <0000000000000000> <0000000000000000> <ata_std_dev_select> <ata_check_status> <0000000000000000> <ata_tf_load> <ata_tf_read> <ata_exec_command> <ata_data_xfer> <ata_irq_on> <ata_bmdma_irq_clear> <ata_bmdma_setup> <ata_bmdma_start> <ata_bmdma_stop> <ata_bmdma_status> <0000000000000000> <0000000000000000>
+OPS pata_sis sis_old_ops: <0000000000000000> <0000000000000000> <ata_qc_prep> <ata_qc_issue_prot> <ata_cable_40wire> <ata_pci_default_filter> <sis_old_set_piomode> <sis_old_set_dmamode> <0000000000000000> <0000000000000000> <ata_bmdma_freeze> <ata_bmdma_thaw> <sis_error_handler> <ata_bmdma_post_internal_cmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_sff_port_start> <0000000000000000> <0000000000000000> <ata_std_dev_select> <ata_check_status> <0000000000000000> <ata_tf_load> <ata_tf_read> <ata_exec_command> <ata_data_xfer> <ata_irq_on> <ata_bmdma_irq_clear> <ata_bmdma_setup> <ata_bmdma_start> <ata_bmdma_stop> <ata_bmdma_status> <0000000000000000> <0000000000000000>
+OPS pata_sl82c105 sl82c105_port_ops: <0000000000000000> <0000000000000000> <ata_qc_prep> <ata_qc_issue_prot> <ata_cable_40wire> <ata_pci_default_filter> <sl82c105_set_piomode> <0000000000000000> <0000000000000000> <0000000000000000> <ata_bmdma_freeze> <ata_bmdma_thaw> <sl82c105_error_handler> <ata_bmdma_post_internal_cmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_sff_port_start> <0000000000000000> <0000000000000000> <ata_std_dev_select> <ata_check_status> <0000000000000000> <ata_tf_load> <ata_tf_read> <ata_exec_command> <ata_data_xfer> <ata_irq_on> <ata_bmdma_irq_clear> <ata_bmdma_setup> <sl82c105_bmdma_start> <sl82c105_bmdma_stop> <ata_bmdma_status> <0000000000000000> <000000
+ 0000000000>
+OPS pata_triflex triflex_port_ops: <0000000000000000> <0000000000000000> <ata_qc_prep> <ata_qc_issue_prot> <ata_cable_40wire> <ata_pci_default_filter> <triflex_set_piomode> <0000000000000000> <0000000000000000> <0000000000000000> <ata_bmdma_freeze> <ata_bmdma_thaw> <triflex_error_handler> <ata_bmdma_post_internal_cmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_sff_port_start> <0000000000000000> <0000000000000000> <ata_std_dev_select> <ata_check_status> <0000000000000000> <ata_tf_load> <ata_tf_read> <ata_exec_command> <ata_data_xfer> <ata_irq_on> <ata_bmdma_irq_clear> <ata_bmdma_setup> <triflex_bmdma_start> <triflex_bmdma_stop> <ata_bmdma_status> <0000000000000000> <000000000000
+ 0000>
+OPS pata_via via_port_ops: <0000000000000000> <0000000000000000> <ata_qc_prep> <ata_qc_issue_prot> <via_cable_detect> <ata_pci_default_filter> <via_set_piomode> <via_set_dmamode> <0000000000000000> <0000000000000000> <ata_bmdma_freeze> <ata_bmdma_thaw> <via_error_handler> <ata_bmdma_post_internal_cmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_sff_port_start> <0000000000000000> <0000000000000000> <ata_std_dev_select> <ata_check_status> <0000000000000000> <ata_tf_load> <ata_tf_read> <ata_exec_command> <ata_data_xfer> <ata_irq_on> <ata_bmdma_irq_clear> <ata_bmdma_setup> <ata_bmdma_start> <ata_bmdma_stop> <ata_bmdma_status> <0000000000000000> <0000000000000000>
+OPS pata_via via_port_ops_noirq: <0000000000000000> <0000000000000000> <ata_qc_prep> <ata_qc_issue_prot> <via_cable_detect> <ata_pci_default_filter> <via_set_piomode> <via_set_dmamode> <0000000000000000> <0000000000000000> <ata_bmdma_freeze> <ata_bmdma_thaw> <via_error_handler> <ata_bmdma_post_internal_cmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_sff_port_start> <0000000000000000> <0000000000000000> <ata_std_dev_select> <ata_check_status> <0000000000000000> <ata_tf_load> <ata_tf_read> <ata_exec_command> <ata_data_xfer_noirq> <ata_irq_on> <ata_bmdma_irq_clear> <ata_bmdma_setup> <ata_bmdma_start> <ata_bmdma_stop> <ata_bmdma_status> <0000000000000000> <0000000000000000>
+OPS pdc_adma adma_ata_ops: <0000000000000000> <adma_check_atapi_dma> <adma_qc_prep> <adma_qc_issue> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <adma_freeze> <adma_thaw> <adma_error_handler> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <adma_port_start> <adma_port_stop> <adma_host_stop> <ata_std_dev_select> <ata_check_status> <0000000000000000> <ata_tf_load> <ata_tf_read> <ata_exec_command> <ata_data_xfer> <ata_irq_on> <ata_noop_irq_clear> <0000000000000000> <0000000000000000> <adma_bmdma_stop> <adma_bmdma_status> <0000000000000000> <0000000000000000>
+OPS sata_inic162x inic_port_ops: <0000000000000000> <0000000000000000> <ata_qc_prep> <inic_qc_issue> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <inic_dev_config> <inic_freeze> <inic_thaw> <inic_error_handler> <inic_post_internal_cmd> <inic_scr_read> <inic_scr_write> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <inic_port_resume> <inic_port_start> <0000000000000000> <0000000000000000> <ata_std_dev_select> <ata_check_status> <0000000000000000> <ata_tf_load> <ata_tf_read> <ata_exec_command> <ata_data_xfer> <ata_irq_on> <ata_noop_irq_clear> <inic_bmdma_setup> <inic_bmdma_start> <inic_bmdma_stop> <inic_bmdma_status> <0000000000000000> <0000000000000000>
+OPS sata_mv mv5_ops: <0000000000000000> <0000000000000000> <mv_qc_prep> <mv_qc_issue> <ata_cable_sata> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <mv_eh_freeze> <mv_eh_thaw> <mv_error_handler> <mv_post_int_cmd> <mv5_scr_read> <mv5_scr_write> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <mv_port_start> <mv_port_stop> <0000000000000000> <ata_std_dev_select> <ata_check_status> <0000000000000000> <ata_tf_load> <ata_tf_read> <ata_exec_command> <ata_data_xfer> <ata_irq_on> <ata_noop_irq_clear> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000>
+OPS sata_mv mv6_ops: <0000000000000000> <0000000000000000> <mv_qc_prep> <mv_qc_issue> <ata_cable_sata> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <mv_eh_freeze> <mv_eh_thaw> <mv_error_handler> <mv_post_int_cmd> <mv_scr_read> <mv_scr_write> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <mv_port_start> <mv_port_stop> <0000000000000000> <ata_std_dev_select> <ata_check_status> <0000000000000000> <ata_tf_load> <ata_tf_read> <ata_exec_command> <ata_data_xfer> <ata_irq_on> <ata_noop_irq_clear> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000>
+OPS sata_mv mv_iie_ops: <0000000000000000> <0000000000000000> <mv_qc_prep_iie> <mv_qc_issue> <ata_cable_sata> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <mv_eh_freeze> <mv_eh_thaw> <mv_error_handler> <mv_post_int_cmd> <mv_scr_read> <mv_scr_write> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <mv_port_start> <mv_port_stop> <0000000000000000> <ata_std_dev_select> <ata_check_status> <0000000000000000> <ata_tf_load> <ata_tf_read> <ata_exec_command> <ata_data_xfer> <ata_irq_on> <ata_noop_irq_clear> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000>
+OPS sata_nv nv_adma_ops: <ata_std_qc_defer> <nv_adma_check_atapi_dma> <nv_adma_qc_prep> <nv_adma_qc_issue> <0000000000000000> <ata_pci_default_filter> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <nv_adma_freeze> <nv_adma_thaw> <nv_adma_error_handler> <nv_adma_post_internal_cmd> <nv_scr_read> <nv_scr_write> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <nv_adma_port_suspend> <nv_adma_port_resume> <nv_adma_port_start> <nv_adma_port_stop> <nv_adma_host_stop> <ata_std_dev_select> <ata_check_status> <0000000000000000> <ata_tf_load> <nv_adma_tf_read> <ata_exec_command> <ata_data_xfer> <ata_irq_on> <nv_adma_irq_clear> <ata_bmdma_setup> <ata_bmdma_start> <ata_bmdma_stop> <ata_bmdma_status> <0000000000000000> <0000000000000000>
+OPS sata_nv nv_ck804_ops: <0000000000000000> <0000000000000000> <ata_qc_prep> <ata_qc_issue_prot> <0000000000000000> <ata_pci_default_filter> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <nv_ck804_freeze> <nv_ck804_thaw> <nv_error_handler> <ata_bmdma_post_internal_cmd> <nv_scr_read> <nv_scr_write> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_sff_port_start> <0000000000000000> <nv_ck804_host_stop> <ata_std_dev_select> <ata_check_status> <0000000000000000> <ata_tf_load> <ata_tf_read> <ata_exec_command> <ata_data_xfer> <ata_irq_on> <ata_bmdma_irq_clear> <ata_bmdma_setup> <ata_bmdma_start> <ata_bmdma_stop> <ata_bmdma_status> <0000000000000000> <0000000000000000>
+OPS sata_nv nv_generic_ops: <0000000000000000> <0000000000000000> <ata_qc_prep> <ata_qc_issue_prot> <0000000000000000> <ata_pci_default_filter> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_bmdma_freeze> <ata_bmdma_thaw> <nv_error_handler> <ata_bmdma_post_internal_cmd> <nv_scr_read> <nv_scr_write> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_sff_port_start> <0000000000000000> <0000000000000000> <ata_std_dev_select> <ata_check_status> <0000000000000000> <ata_tf_load> <ata_tf_read> <ata_exec_command> <ata_data_xfer> <ata_irq_on> <ata_bmdma_irq_clear> <ata_bmdma_setup> <ata_bmdma_start> <ata_bmdma_stop> <ata_bmdma_status> <0000000000000000> <0000000000000000>
+OPS sata_nv nv_nf2_ops: <0000000000000000> <0000000000000000> <ata_qc_prep> <ata_qc_issue_prot> <0000000000000000> <ata_pci_default_filter> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <nv_nf2_freeze> <nv_nf2_thaw> <nv_error_handler> <ata_bmdma_post_internal_cmd> <nv_scr_read> <nv_scr_write> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_sff_port_start> <0000000000000000> <0000000000000000> <ata_std_dev_select> <ata_check_status> <0000000000000000> <ata_tf_load> <ata_tf_read> <ata_exec_command> <ata_data_xfer> <ata_irq_on> <ata_bmdma_irq_clear> <ata_bmdma_setup> <ata_bmdma_start> <ata_bmdma_stop> <ata_bmdma_status> <0000000000000000> <0000000000000000>
+OPS sata_nv nv_swncq_ops: <ata_std_qc_defer> <0000000000000000> <nv_swncq_qc_prep> <nv_swncq_qc_issue> <0000000000000000> <ata_pci_default_filter> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <nv_mcp55_freeze> <nv_mcp55_thaw> <nv_swncq_error_handler> <ata_bmdma_post_internal_cmd> <nv_scr_read> <nv_scr_write> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <nv_swncq_port_suspend> <nv_swncq_port_resume> <nv_swncq_port_start> <0000000000000000> <0000000000000000> <ata_std_dev_select> <ata_check_status> <0000000000000000> <ata_tf_load> <ata_tf_read> <ata_exec_command> <ata_data_xfer> <ata_irq_on> <ata_bmdma_irq_clear> <ata_bmdma_setup> <ata_bmdma_start> <ata_bmdma_stop> <ata_bmdma_status> <0000000000000000> <0000000000000000>
+OPS sata_promise pdc_old_sata_ops: <0000000000000000> <pdc_old_sata_check_atapi_dma> <pdc_qc_prep> <pdc_qc_issue_prot> <pdc_sata_cable_detect> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <pdc_freeze> <pdc_thaw> <pdc_sata_error_handler> <pdc_post_internal_cmd> <pdc_sata_scr_read> <pdc_sata_scr_write> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <pdc_sata_port_start> <0000000000000000> <0000000000000000> <ata_std_dev_select> <ata_check_status> <0000000000000000> <pdc_tf_load_mmio> <ata_tf_read> <pdc_exec_command_mmio> <ata_data_xfer> <ata_irq_on> <pdc_irq_clear> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000>
+ 
+OPS sata_promise pdc_pata_ops: <0000000000000000> <pdc_check_atapi_dma> <pdc_qc_prep> <pdc_qc_issue_prot> <pdc_pata_cable_detect> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <pdc_freeze> <pdc_thaw> <pdc_pata_error_handler> <pdc_post_internal_cmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <pdc_common_port_start> <0000000000000000> <0000000000000000> <ata_std_dev_select> <ata_check_status> <0000000000000000> <pdc_tf_load_mmio> <ata_tf_read> <pdc_exec_command_mmio> <ata_data_xfer> <ata_irq_on> <pdc_irq_clear> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000>
+OPS sata_promise pdc_sata_ops: <0000000000000000> <pdc_check_atapi_dma> <pdc_qc_prep> <pdc_qc_issue_prot> <pdc_sata_cable_detect> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <pdc_freeze> <pdc_thaw> <pdc_sata_error_handler> <pdc_post_internal_cmd> <pdc_sata_scr_read> <pdc_sata_scr_write> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <pdc_sata_port_start> <0000000000000000> <0000000000000000> <ata_std_dev_select> <ata_check_status> <0000000000000000> <pdc_tf_load_mmio> <ata_tf_read> <pdc_exec_command_mmio> <ata_data_xfer> <ata_irq_on> <pdc_irq_clear> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000>
+OPS sata_qstor qs_ata_ops: <0000000000000000> <qs_check_atapi_dma> <qs_qc_prep> <qs_qc_issue> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <qs_freeze> <qs_thaw> <qs_error_handler> <0000000000000000> <qs_scr_read> <qs_scr_write> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <qs_port_start> <0000000000000000> <qs_host_stop> <ata_std_dev_select> <ata_check_status> <0000000000000000> <ata_tf_load> <ata_tf_read> <ata_exec_command> <ata_data_xfer> <ata_irq_on> <ata_noop_irq_clear> <0000000000000000> <0000000000000000> <qs_bmdma_stop> <qs_bmdma_status> <0000000000000000> <0000000000000000>
+OPS sata_sil24 sil24_ops: <sil24_qc_defer> <0000000000000000> <sil24_qc_prep> <sil24_qc_issue> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <sil24_dev_config> <sil24_freeze> <sil24_thaw> <sil24_error_handler> <sil24_post_internal_cmd> <sil24_scr_read> <sil24_scr_write> <sil24_pmp_attach> <sil24_pmp_detach> <0000000000000000> <0000000000000000> <0000000000000000> <sil24_port_resume> <sil24_port_start> <0000000000000000> <0000000000000000> <ata_noop_dev_select> <sil24_check_status> <sil24_check_status> <0000000000000000> <sil24_tf_read> <0000000000000000> <0000000000000000> <0000000000000000> <ata_noop_irq_clear> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000>
+OPS sata_sil sil_ops: <0000000000000000> <0000000000000000> <ata_qc_prep> <ata_qc_issue_prot> <0000000000000000> <ata_pci_default_filter> <0000000000000000> <0000000000000000> <sil_set_mode> <sil_dev_config> <sil_freeze> <sil_thaw> <ata_bmdma_error_handler> <ata_bmdma_post_internal_cmd> <sil_scr_read> <sil_scr_write> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_sff_port_start> <0000000000000000> <0000000000000000> <ata_std_dev_select> <ata_check_status> <0000000000000000> <ata_tf_load> <ata_tf_read> <ata_exec_command> <ata_data_xfer> <ata_irq_on> <ata_bmdma_irq_clear> <ata_bmdma_setup> <ata_bmdma_start> <ata_bmdma_stop> <ata_bmdma_status> <0000000000000000> <0000000000000000>
+OPS sata_sis sis_ops: <0000000000000000> <0000000000000000> <ata_qc_prep> <ata_qc_issue_prot> <0000000000000000> <ata_pci_default_filter> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_bmdma_freeze> <ata_bmdma_thaw> <ata_bmdma_error_handler> <ata_bmdma_post_internal_cmd> <sis_scr_read> <sis_scr_write> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_sff_port_start> <0000000000000000> <0000000000000000> <ata_std_dev_select> <ata_check_status> <0000000000000000> <ata_tf_load> <ata_tf_read> <ata_exec_command> <ata_data_xfer> <ata_irq_on> <ata_bmdma_irq_clear> <ata_bmdma_setup> <ata_bmdma_start> <ata_bmdma_stop> <ata_bmdma_status> <0000000000000000> <0000000000000000>
+OPS sata_svw k2_sata_ops: <0000000000000000> <k2_sata_check_atapi_dma> <ata_qc_prep> <ata_qc_issue_prot> <0000000000000000> <ata_pci_default_filter> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_bmdma_freeze> <ata_bmdma_thaw> <ata_bmdma_error_handler> <ata_bmdma_post_internal_cmd> <k2_sata_scr_read> <k2_sata_scr_write> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_sff_port_start> <0000000000000000> <0000000000000000> <ata_std_dev_select> <k2_stat_check_status> <0000000000000000> <k2_sata_tf_load> <k2_sata_tf_read> <ata_exec_command> <ata_data_xfer> <ata_irq_on> <ata_bmdma_irq_clear> <k2_bmdma_setup_mmio> <k2_bmdma_start_mmio> <ata_bmdma_stop> <ata_bmdma_status> <0000000000000000> <00
+ 00000000000000>
+OPS sata_sx4 pdc_20621_ops: <0000000000000000> <0000000000000000> <pdc20621_qc_prep> <pdc20621_qc_issue_prot> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <pdc_port_start> <0000000000000000> <0000000000000000> <ata_std_dev_select> <ata_check_status> <0000000000000000> <pdc_tf_load_mmio> <ata_tf_read> <pdc_exec_command_mmio> <ata_data_xfer> <ata_irq_on> <pdc20621_irq_clear> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <pdc_20621_phy_reset> <pdc_eng_timeout>
+OPS sata_uli uli_ops: <0000000000000000> <0000000000000000> <ata_qc_prep> <ata_qc_issue_prot> <0000000000000000> <ata_pci_default_filter> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_bmdma_freeze> <ata_bmdma_thaw> <ata_bmdma_error_handler> <ata_bmdma_post_internal_cmd> <uli_scr_read> <uli_scr_write> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_sff_port_start> <0000000000000000> <0000000000000000> <ata_std_dev_select> <ata_check_status> <0000000000000000> <ata_tf_load> <ata_tf_read> <ata_exec_command> <ata_data_xfer> <ata_irq_on> <ata_bmdma_irq_clear> <ata_bmdma_setup> <ata_bmdma_start> <ata_bmdma_stop> <ata_bmdma_status> <0000000000000000> <0000000000000000>
+OPS sata_via vt6420_sata_ops: <0000000000000000> <0000000000000000> <ata_qc_prep> <ata_qc_issue_prot> <0000000000000000> <ata_pci_default_filter> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <svia_noop_freeze> <ata_bmdma_thaw> <vt6420_error_handler> <ata_bmdma_post_internal_cmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_sff_port_start> <0000000000000000> <0000000000000000> <ata_std_dev_select> <ata_check_status> <0000000000000000> <ata_tf_load> <ata_tf_read> <ata_exec_command> <ata_data_xfer> <ata_irq_on> <ata_bmdma_irq_clear> <ata_bmdma_setup> <ata_bmdma_start> <ata_bmdma_stop> <ata_bmdma_status> <0000000000000000> <0000000000000000>
+OPS sata_via vt6421_pata_ops: <0000000000000000> <0000000000000000> <ata_qc_prep> <ata_qc_issue_prot> <vt6421_pata_cable_detect> <ata_pci_default_filter> <vt6421_set_pio_mode> <vt6421_set_dma_mode> <0000000000000000> <0000000000000000> <ata_bmdma_freeze> <ata_bmdma_thaw> <ata_bmdma_error_handler> <ata_bmdma_post_internal_cmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_sff_port_start> <0000000000000000> <0000000000000000> <ata_std_dev_select> <ata_check_status> <0000000000000000> <ata_tf_load> <ata_tf_read> <ata_exec_command> <ata_data_xfer> <ata_irq_on> <ata_bmdma_irq_clear> <ata_bmdma_setup> <ata_bmdma_start> <ata_bmdma_stop> <ata_bmdma_status> <0000000000000000> <000000000000
+ 0000>
+OPS sata_via vt6421_sata_ops: <0000000000000000> <0000000000000000> <ata_qc_prep> <ata_qc_issue_prot> <0000000000000000> <ata_pci_default_filter> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_bmdma_freeze> <ata_bmdma_thaw> <ata_bmdma_error_handler> <ata_bmdma_post_internal_cmd> <svia_scr_read> <svia_scr_write> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_sff_port_start> <0000000000000000> <0000000000000000> <ata_std_dev_select> <ata_check_status> <0000000000000000> <ata_tf_load> <ata_tf_read> <ata_exec_command> <ata_data_xfer> <ata_irq_on> <ata_bmdma_irq_clear> <ata_bmdma_setup> <ata_bmdma_start> <ata_bmdma_stop> <ata_bmdma_status> <0000000000000000> <0000000000000000>
+OPS sata_vsc vsc_sata_ops: <0000000000000000> <0000000000000000> <ata_qc_prep> <ata_qc_issue_prot> <0000000000000000> <ata_pci_default_filter> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <vsc_freeze> <vsc_thaw> <ata_bmdma_error_handler> <ata_bmdma_post_internal_cmd> <vsc_sata_scr_read> <vsc_sata_scr_write> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_sff_port_start> <0000000000000000> <0000000000000000> <ata_std_dev_select> <ata_check_status> <0000000000000000> <vsc_sata_tf_load> <vsc_sata_tf_read> <ata_exec_command> <ata_data_xfer> <ata_irq_on> <ata_bmdma_irq_clear> <ata_bmdma_setup> <ata_bmdma_start> <ata_bmdma_stop> <ata_bmdma_status> <0000000000000000> <0000000000000000>
+OPS sc1200 sc1200_port_ops: <0000000000000000> <0000000000000000> <ata_dumb_qc_prep> <sc1200_qc_issue_prot> <ata_cable_40wire> <ata_pci_default_filter> <sc1200_set_piomode> <sc1200_set_dmamode> <0000000000000000> <0000000000000000> <ata_bmdma_freeze> <ata_bmdma_thaw> <ata_bmdma_error_handler> <ata_bmdma_post_internal_cmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_sff_port_start> <0000000000000000> <0000000000000000> <ata_std_dev_select> <ata_check_status> <0000000000000000> <ata_tf_load> <ata_tf_read> <ata_exec_command> <ata_data_xfer> <ata_irq_on> <ata_bmdma_irq_clear> <ata_bmdma_setup> <ata_bmdma_start> <ata_bmdma_stop> <ata_bmdma_status> <0000000000000000> <0000000000000000
+ >
+SHT ahci ahci_sht: ahci <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_ioctl> <ata_scsi_queuecmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_slave_config> <ata_scsi_slave_destroy> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_change_queue_depth> <0000000000000000> <ata_std_bios_param> <0000000000000000> <0000000000000000> ahci 31 -1 168 0 4294967295 1 0 0 0 1 1 0 0 0 0
+SHT ata_generic generic_sht: ata_generic <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_ioctl> <ata_scsi_queuecmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_slave_config> <ata_scsi_slave_destroy> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_std_bios_param> <0000000000000000> <0000000000000000> ata_generic 1 -1 128 0 65535 1 0 0 0 1 1 0 0 0 0
+SHT ata_piix piix_sht: ata_piix <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_ioctl> <ata_scsi_queuecmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_slave_config> <ata_scsi_slave_destroy> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_std_bios_param> <0000000000000000> <0000000000000000> ata_piix 1 -1 128 0 65535 1 0 0 0 1 1 0 0 0 0
+SHT pata_acpi pacpi_sht: pata_acpi <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_ioctl> <ata_scsi_queuecmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_slave_config> <ata_scsi_slave_destroy> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_std_bios_param> <0000000000000000> <0000000000000000> pata_acpi 1 -1 128 0 65535 1 0 0 0 1 1 0 0 0 0
+SHT pata_ali ali_sht: pata_ali <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_ioctl> <ata_scsi_queuecmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_slave_config> <ata_scsi_slave_destroy> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_std_bios_param> <0000000000000000> <0000000000000000> pata_ali 1 -1 128 0 65535 1 0 0 0 1 1 0 0 0 0
+SHT pata_amd amd_sht: pata_amd <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_ioctl> <ata_scsi_queuecmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_slave_config> <ata_scsi_slave_destroy> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_std_bios_param> <0000000000000000> <0000000000000000> pata_amd 1 -1 128 0 65535 1 0 0 0 1 1 0 0 0 0
+SHT pata_artop artop_sht: pata_artop <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_ioctl> <ata_scsi_queuecmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_slave_config> <ata_scsi_slave_destroy> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_std_bios_param> <0000000000000000> <0000000000000000> pata_artop 1 -1 128 0 65535 1 0 0 0 1 1 0 0 0 0
+SHT pata_atiixp atiixp_sht: pata_atiixp <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_ioctl> <ata_scsi_queuecmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_slave_config> <ata_scsi_slave_destroy> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_std_bios_param> <0000000000000000> <0000000000000000> pata_atiixp 1 -1 128 0 65535 1 0 0 0 1 1 0 0 0 0
+SHT pata_cmd640 cmd640_sht: pata_cmd640 <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_ioctl> <ata_scsi_queuecmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_slave_config> <ata_scsi_slave_destroy> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_std_bios_param> <0000000000000000> <0000000000000000> pata_cmd640 1 -1 128 0 65535 1 0 0 0 1 1 0 0 0 0
+SHT pata_cmd64x cmd64x_sht: pata_cmd64x <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_ioctl> <ata_scsi_queuecmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_slave_config> <ata_scsi_slave_destroy> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_std_bios_param> <0000000000000000> <0000000000000000> pata_cmd64x 1 -1 128 0 65535 1 0 0 0 1 1 0 0 0 0
+SHT pata_cs5520 cs5520_sht: pata_cs5520 <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_ioctl> <ata_scsi_queuecmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_slave_config> <ata_scsi_slave_destroy> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_std_bios_param> <0000000000000000> <0000000000000000> pata_cs5520 1 -1 64 0 65535 1 0 0 0 1 1 0 0 0 0
+SHT pata_cs5530 cs5530_sht: pata_cs5530 <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_ioctl> <ata_scsi_queuecmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_slave_config> <ata_scsi_slave_destroy> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_std_bios_param> <0000000000000000> <0000000000000000> pata_cs5530 1 -1 64 0 65535 1 0 0 0 1 1 0 0 0 0
+SHT pata_cypress cy82c693_sht: pata_cypress <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_ioctl> <ata_scsi_queuecmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_slave_config> <ata_scsi_slave_destroy> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_std_bios_param> <0000000000000000> <0000000000000000> pata_cypress 1 -1 128 0 65535 1 0 0 0 1 1 0 0 0 0
+SHT pata_efar efar_sht: pata_efar <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_ioctl> <ata_scsi_queuecmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_slave_config> <ata_scsi_slave_destroy> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_std_bios_param> <0000000000000000> <0000000000000000> pata_efar 1 -1 128 0 65535 1 0 0 0 1 1 0 0 0 0
+SHT pata_hpt366 hpt36x_sht: pata_hpt366 <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_ioctl> <ata_scsi_queuecmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_slave_config> <ata_scsi_slave_destroy> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_std_bios_param> <0000000000000000> <0000000000000000> pata_hpt366 1 -1 128 0 65535 1 0 0 0 1 1 0 0 0 0
+SHT pata_hpt37x hpt37x_sht: pata_hpt37x <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_ioctl> <ata_scsi_queuecmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_slave_config> <ata_scsi_slave_destroy> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_std_bios_param> <0000000000000000> <0000000000000000> pata_hpt37x 1 -1 128 0 65535 1 0 0 0 1 1 0 0 0 0
+SHT pata_hpt3x2n hpt3x2n_sht: pata_hpt3x2n <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_ioctl> <ata_scsi_queuecmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_slave_config> <ata_scsi_slave_destroy> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_std_bios_param> <0000000000000000> <0000000000000000> pata_hpt3x2n 1 -1 128 0 65535 1 0 0 0 1 1 0 0 0 0
+SHT pata_hpt3x3 hpt3x3_sht: pata_hpt3x3 <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_ioctl> <ata_scsi_queuecmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_slave_config> <ata_scsi_slave_destroy> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_std_bios_param> <0000000000000000> <0000000000000000> pata_hpt3x3 1 -1 128 0 65535 1 0 0 0 1 1 0 0 0 0
+SHT pata_it8213 it8213_sht: pata_it8213 <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_ioctl> <ata_scsi_queuecmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_slave_config> <ata_scsi_slave_destroy> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_std_bios_param> <0000000000000000> <0000000000000000> pata_it8213 1 -1 128 0 65535 1 0 0 0 1 1 0 0 0 0
+SHT pata_it821x it821x_sht: pata_it821x <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_ioctl> <ata_scsi_queuecmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_slave_config> <ata_scsi_slave_destroy> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_std_bios_param> <0000000000000000> <0000000000000000> pata_it821x 1 -1 128 0 65535 1 0 0 0 1 1 0 0 0 0
+SHT pata_jmicron jmicron_sht: pata_jmicron <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_ioctl> <ata_scsi_queuecmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_slave_config> <ata_scsi_slave_destroy> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_std_bios_param> <0000000000000000> <0000000000000000> pata_jmicron 1 -1 128 0 65535 1 0 0 0 1 1 0 0 0 0
+SHT pata_marvell marvell_sht: pata_marvell <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_ioctl> <ata_scsi_queuecmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_slave_config> <ata_scsi_slave_destroy> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_std_bios_param> <0000000000000000> <0000000000000000> pata_marvell 1 -1 128 0 65535 1 0 0 0 1 1 0 0 0 0
+SHT pata_mpiix mpiix_sht: pata_mpiix <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_ioctl> <ata_scsi_queuecmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_slave_config> <ata_scsi_slave_destroy> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_std_bios_param> <0000000000000000> <0000000000000000> pata_mpiix 1 -1 128 0 65535 1 0 0 0 1 1 0 0 0 0
+SHT pata_netcell netcell_sht: pata_netcell <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_ioctl> <ata_scsi_queuecmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_slave_config> <ata_scsi_slave_destroy> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_std_bios_param> <0000000000000000> <0000000000000000> pata_netcell 1 -1 128 0 65535 1 0 0 0 1 1 0 0 0 0
+SHT pata_ninja32 ninja32_sht: pata_ninja32 <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_ioctl> <ata_scsi_queuecmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_slave_config> <ata_scsi_slave_destroy> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_std_bios_param> <0000000000000000> <0000000000000000> pata_ninja32 1 -1 128 0 65535 1 0 0 0 1 1 0 0 0 0
+SHT pata_ns87410 ns87410_sht: pata_ns87410 <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_ioctl> <ata_scsi_queuecmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_slave_config> <ata_scsi_slave_destroy> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_std_bios_param> <0000000000000000> <0000000000000000> pata_ns87410 1 -1 128 0 65535 1 0 0 0 1 1 0 0 0 0
+SHT pata_ns87415 ns87415_sht: pata_ns87415 <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_ioctl> <ata_scsi_queuecmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_slave_config> <ata_scsi_slave_destroy> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_std_bios_param> <0000000000000000> <0000000000000000> pata_ns87415 1 -1 128 0 65535 1 0 0 0 1 1 0 0 0 0
+SHT pata_oldpiix oldpiix_sht: pata_oldpiix <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_ioctl> <ata_scsi_queuecmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_slave_config> <ata_scsi_slave_destroy> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_std_bios_param> <0000000000000000> <0000000000000000> pata_oldpiix 1 -1 128 0 65535 1 0 0 0 1 1 0 0 0 0
+SHT pata_optidma optidma_sht: pata_optidma <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_ioctl> <ata_scsi_queuecmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_slave_config> <ata_scsi_slave_destroy> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_std_bios_param> <0000000000000000> <0000000000000000> pata_optidma 1 -1 128 0 65535 1 0 0 0 1 1 0 0 0 0
+SHT pata_opti opti_sht: pata_opti <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_ioctl> <ata_scsi_queuecmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_slave_config> <ata_scsi_slave_destroy> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_std_bios_param> <0000000000000000> <0000000000000000> pata_opti 1 -1 128 0 65535 1 0 0 0 1 1 0 0 0 0
+SHT pata_pcmcia pcmcia_sht: pata_pcmcia <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_ioctl> <ata_scsi_queuecmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_slave_config> <ata_scsi_slave_destroy> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_std_bios_param> <0000000000000000> <0000000000000000> pata_pcmcia 1 -1 128 0 65535 1 0 0 0 1 1 0 0 0 0
+SHT pata_pdc2027x pdc2027x_sht: pata_pdc2027x <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_ioctl> <ata_scsi_queuecmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_slave_config> <ata_scsi_slave_destroy> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_std_bios_param> <0000000000000000> <0000000000000000> pata_pdc2027x 1 -1 128 0 65535 1 0 0 0 1 1 0 0 0 0
+SHT pata_pdc202xx_old pdc202xx_sht: pata_pdc202xx_old <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_ioctl> <ata_scsi_queuecmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_slave_config> <ata_scsi_slave_destroy> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_std_bios_param> <0000000000000000> <0000000000000000> pata_pdc202xx_old 1 -1 128 0 65535 1 0 0 0 1 1 0 0 0 0
+SHT pata_radisys radisys_sht: pata_radisys <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_ioctl> <ata_scsi_queuecmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_slave_config> <ata_scsi_slave_destroy> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_std_bios_param> <0000000000000000> <0000000000000000> pata_radisys 1 -1 128 0 65535 1 0 0 0 1 1 0 0 0 0
+SHT pata_rz1000 rz1000_sht: pata_rz1000 <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_ioctl> <ata_scsi_queuecmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_slave_config> <ata_scsi_slave_destroy> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_std_bios_param> <0000000000000000> <0000000000000000> pata_rz1000 1 -1 128 0 65535 1 0 0 0 1 1 0 0 0 0
+SHT pata_serverworks serverworks_sht: pata_serverworks <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_ioctl> <ata_scsi_queuecmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_slave_config> <ata_scsi_slave_destroy> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_std_bios_param> <0000000000000000> <0000000000000000> pata_serverworks 1 -1 128 0 65535 1 0 0 0 1 1 0 0 0 0
+SHT pata_sil680 sil680_sht: pata_sil680 <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_ioctl> <ata_scsi_queuecmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_slave_config> <ata_scsi_slave_destroy> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_std_bios_param> <0000000000000000> <0000000000000000> pata_sil680 1 -1 128 0 65535 1 0 0 0 1 1 0 0 0 0
+SHT pata_sis sis_sht: pata_sis <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_ioctl> <ata_scsi_queuecmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_slave_config> <ata_scsi_slave_destroy> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_std_bios_param> <0000000000000000> <0000000000000000> pata_sis 1 -1 128 0 65535 1 0 0 0 1 1 0 0 0 0
+SHT pata_sl82c105 sl82c105_sht: pata_sl82c105 <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_ioctl> <ata_scsi_queuecmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_slave_config> <ata_scsi_slave_destroy> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_std_bios_param> <0000000000000000> <0000000000000000> pata_sl82c105 1 -1 128 0 65535 1 0 0 0 1 1 0 0 0 0
+SHT pata_triflex triflex_sht: pata_triflex <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_ioctl> <ata_scsi_queuecmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_slave_config> <ata_scsi_slave_destroy> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_std_bios_param> <0000000000000000> <0000000000000000> pata_triflex 1 -1 128 0 65535 1 0 0 0 1 1 0 0 0 0
+SHT pata_via via_sht: pata_via <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_ioctl> <ata_scsi_queuecmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_slave_config> <ata_scsi_slave_destroy> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_std_bios_param> <0000000000000000> <0000000000000000> pata_via 1 -1 128 0 65535 1 0 0 0 1 1 0 0 0 0
+SHT pdc_adma adma_ata_sht: pdc_adma <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_ioctl> <ata_scsi_queuecmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_slave_config> <ata_scsi_slave_destroy> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_std_bios_param> <0000000000000000> <0000000000000000> pdc_adma 1 -1 128 0 4294967295 1 0 0 0 1 1 0 0 0 0
+SHT sata_inic162x inic_sht: sata_inic162x <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_ioctl> <ata_scsi_queuecmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <inic_slave_config> <ata_scsi_slave_destroy> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_std_bios_param> <0000000000000000> <0000000000000000> sata_inic162x 1 -1 128 0 65535 1 0 0 0 1 1 0 0 0 0
+SHT sata_mv mv5_sht: sata_mv <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_ioctl> <ata_scsi_queuecmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_slave_config> <ata_scsi_slave_destroy> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_std_bios_param> <0000000000000000> <0000000000000000> sata_mv 1 -1 88 0 65535 1 0 0 0 1 1 0 0 0 0
+SHT sata_mv mv6_sht: sata_mv <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_ioctl> <ata_scsi_queuecmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_slave_config> <ata_scsi_slave_destroy> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_std_bios_param> <0000000000000000> <0000000000000000> sata_mv 1 -1 88 0 65535 1 0 0 0 1 1 0 0 0 0
+SHT sata_nv nv_adma_sht: sata_nv <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_ioctl> <ata_scsi_queuecmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <nv_adma_slave_config> <ata_scsi_slave_destroy> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_change_queue_depth> <0000000000000000> <ata_std_bios_param> <0000000000000000> <0000000000000000> sata_nv 32 -1 61 0 4294967295 1 0 0 0 1 1 0 0 0 0
+SHT sata_nv nv_sht: sata_nv <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_ioctl> <ata_scsi_queuecmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_slave_config> <ata_scsi_slave_destroy> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_std_bios_param> <0000000000000000> <0000000000000000> sata_nv 1 -1 128 0 65535 1 0 0 0 1 1 0 0 0 0
+SHT sata_nv nv_swncq_sht: sata_nv <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_ioctl> <ata_scsi_queuecmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <nv_swncq_slave_config> <ata_scsi_slave_destroy> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_change_queue_depth> <0000000000000000> <ata_std_bios_param> <0000000000000000> <0000000000000000> sata_nv 32 -1 128 0 65535 1 0 0 0 1 1 0 0 0 0
+SHT sata_promise pdc_ata_sht: sata_promise <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_ioctl> <ata_scsi_queuecmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_slave_config> <ata_scsi_slave_destroy> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_std_bios_param> <0000000000000000> <0000000000000000> sata_promise 1 -1 127 0 65535 1 0 0 0 1 1 0 0 0 0
+SHT sata_qstor qs_ata_sht: sata_qstor <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_ioctl> <ata_scsi_queuecmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_slave_config> <ata_scsi_slave_destroy> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_std_bios_param> <0000000000000000> <0000000000000000> sata_qstor 1 -1 128 0 18446744073709551615 1 0 0 0 1 1 0 0 0 0
+SHT sata_sil24 sil24_sht: sata_sil24 <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_ioctl> <ata_scsi_queuecmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_slave_config> <ata_scsi_slave_destroy> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_change_queue_depth> <0000000000000000> <ata_std_bios_param> <0000000000000000> <0000000000000000> sata_sil24 31 -1 253 0 65535 1 0 0 0 1 1 0 0 0 0
+SHT sata_sil sil_sht: sata_sil <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_ioctl> <ata_scsi_queuecmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_slave_config> <ata_scsi_slave_destroy> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_std_bios_param> <0000000000000000> <0000000000000000> sata_sil 1 -1 128 0 65535 1 0 0 0 1 1 0 0 0 0
+SHT sata_sis sis_sht: sata_sis <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_ioctl> <ata_scsi_queuecmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_slave_config> <ata_scsi_slave_destroy> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_std_bios_param> <0000000000000000> <0000000000000000> sata_sis 1 -1 128 0 65535 1 0 0 0 1 1 0 0 0 0
+SHT sata_svw k2_sata_sht: sata_svw <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_ioctl> <ata_scsi_queuecmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_slave_config> <ata_scsi_slave_destroy> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_std_bios_param> <0000000000000000> <0000000000000000> sata_svw 1 -1 128 0 65535 1 0 0 0 1 1 0 0 0 0
+SHT sata_sx4 pdc_sata_sht: sata_sx4 <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_ioctl> <ata_scsi_queuecmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_slave_config> <ata_scsi_slave_destroy> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_std_bios_param> <0000000000000000> <0000000000000000> sata_sx4 1 -1 128 0 65535 1 0 0 0 1 1 0 0 0 0
+SHT sata_uli uli_sht: sata_uli <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_ioctl> <ata_scsi_queuecmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_slave_config> <ata_scsi_slave_destroy> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_std_bios_param> <0000000000000000> <0000000000000000> sata_uli 1 -1 128 0 65535 1 0 0 0 1 1 0 0 0 0
+SHT sata_via svia_sht: sata_via <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_ioctl> <ata_scsi_queuecmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_slave_config> <ata_scsi_slave_destroy> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_std_bios_param> <0000000000000000> <0000000000000000> sata_via 1 -1 128 0 65535 1 0 0 0 1 1 0 0 0 0
+SHT sata_vsc vsc_sata_sht: sata_vsc <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_ioctl> <ata_scsi_queuecmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_slave_config> <ata_scsi_slave_destroy> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_std_bios_param> <0000000000000000> <0000000000000000> sata_vsc 1 -1 128 0 65535 1 0 0 0 1 1 0 0 0 0
+SHT sc1200 sc1200_sht: sc1200 <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_ioctl> <ata_scsi_queuecmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_slave_config> <ata_scsi_slave_destroy> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_std_bios_param> <0000000000000000> <0000000000000000> sc1200 1 -1 64 0 65535 1 0 0 0 1 1 0 0 0 0
+
+--------------020203070305040007040100
+Content-Type: text/plain;
+ name="out.after"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="out.after"
+
+OPS ahci ahci_ops: <sata_pmp_qc_defer_cmd_switch> <0000000000000000> <ahci_qc_prep> <ahci_qc_issue> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ahci_freeze> <ahci_thaw> <ahci_error_handler> <ahci_post_internal_cmd> <ahci_scr_read> <ahci_scr_write> <ahci_pmp_attach> <ahci_pmp_detach> <ahci_enable_alpm> <ahci_disable_alpm> <ahci_port_suspend> <ahci_port_resume> <ahci_port_start> <ahci_port_stop> <0000000000000000> <ata_noop_dev_select> <ahci_check_status> <ahci_check_status> <0000000000000000> <ahci_tf_read> <0000000000000000> <0000000000000000> <0000000000000000> <ata_noop_irq_clear> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000>
+OPS ahci ahci_p5wdh_ops: <sata_pmp_qc_defer_cmd_switch> <0000000000000000> <ahci_qc_prep> <ahci_qc_issue> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ahci_freeze> <ahci_thaw> <ahci_p5wdh_error_handler> <ahci_post_internal_cmd> <ahci_scr_read> <ahci_scr_write> <ahci_pmp_attach> <ahci_pmp_detach> <ahci_enable_alpm> <ahci_disable_alpm> <ahci_port_suspend> <ahci_port_resume> <ahci_port_start> <ahci_port_stop> <0000000000000000> <ata_noop_dev_select> <ahci_check_status> <ahci_check_status> <0000000000000000> <ahci_tf_read> <0000000000000000> <0000000000000000> <0000000000000000> <ata_noop_irq_clear> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000>
+OPS ahci ahci_vt8251_ops: <sata_pmp_qc_defer_cmd_switch> <0000000000000000> <ahci_qc_prep> <ahci_qc_issue> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ahci_freeze> <ahci_thaw> <ahci_vt8251_error_handler> <ahci_post_internal_cmd> <ahci_scr_read> <ahci_scr_write> <ahci_pmp_attach> <ahci_pmp_detach> <ahci_enable_alpm> <ahci_disable_alpm> <ahci_port_suspend> <ahci_port_resume> <ahci_port_start> <ahci_port_stop> <0000000000000000> <ata_noop_dev_select> <ahci_check_status> <ahci_check_status> <0000000000000000> <ahci_tf_read> <0000000000000000> <0000000000000000> <0000000000000000> <ata_noop_irq_clear> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000>
+OPS ata_generic generic_port_ops: <0000000000000000> <0000000000000000> <ata_qc_prep> <ata_qc_issue_prot> <ata_cable_unknown> <ata_pci_default_filter> <0000000000000000> <0000000000000000> <generic_set_mode> <0000000000000000> <ata_bmdma_freeze> <ata_bmdma_thaw> <ata_bmdma_error_handler> <ata_bmdma_post_internal_cmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_sff_port_start> <0000000000000000> <0000000000000000> <ata_std_dev_select> <ata_check_status> <0000000000000000> <ata_tf_load> <ata_tf_read> <ata_exec_command> <ata_data_xfer> <ata_irq_on> <ata_bmdma_irq_clear> <ata_bmdma_setup> <ata_bmdma_start> <ata_bmdma_stop> <ata_bmdma_status> <0000000000000000> <0000000000000000>
+OPS ata_piix ich_pata_ops: <0000000000000000> <0000000000000000> <ata_qc_prep> <ata_qc_issue_prot> <ich_pata_cable_detect> <ata_pci_default_filter> <piix_set_piomode> <ich_set_dmamode> <0000000000000000> <0000000000000000> <ata_bmdma_freeze> <ata_bmdma_thaw> <piix_pata_error_handler> <ata_bmdma_post_internal_cmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_sff_port_start> <0000000000000000> <0000000000000000> <ata_std_dev_select> <ata_check_status> <0000000000000000> <ata_tf_load> <ata_tf_read> <ata_exec_command> <ata_data_xfer> <ata_irq_on> <ata_bmdma_irq_clear> <ata_bmdma_setup> <ata_bmdma_start> <ata_bmdma_stop> <ata_bmdma_status> <0000000000000000> <0000000000000000>
+OPS ata_piix piix_pata_ops: <0000000000000000> <0000000000000000> <ata_qc_prep> <ata_qc_issue_prot> <ata_cable_40wire> <ata_pci_default_filter> <piix_set_piomode> <piix_set_dmamode> <0000000000000000> <0000000000000000> <ata_bmdma_freeze> <ata_bmdma_thaw> <piix_pata_error_handler> <ata_bmdma_post_internal_cmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_sff_port_start> <0000000000000000> <0000000000000000> <ata_std_dev_select> <ata_check_status> <0000000000000000> <ata_tf_load> <ata_tf_read> <ata_exec_command> <ata_data_xfer> <ata_irq_on> <ata_bmdma_irq_clear> <ata_bmdma_setup> <ata_bmdma_start> <ata_bmdma_stop> <ata_bmdma_status> <0000000000000000> <0000000000000000>
+OPS ata_piix piix_sata_ops: <0000000000000000> <0000000000000000> <ata_qc_prep> <ata_qc_issue_prot> <0000000000000000> <ata_pci_default_filter> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_bmdma_freeze> <ata_bmdma_thaw> <ata_bmdma_error_handler> <ata_bmdma_post_internal_cmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_sff_port_start> <0000000000000000> <0000000000000000> <ata_std_dev_select> <ata_check_status> <0000000000000000> <ata_tf_load> <ata_tf_read> <ata_exec_command> <ata_data_xfer> <ata_irq_on> <ata_bmdma_irq_clear> <ata_bmdma_setup> <ata_bmdma_start> <ata_bmdma_stop> <ata_bmdma_status> <0000000000000000> <0000000000000000>
+OPS ata_piix piix_sidpr_sata_ops: <0000000000000000> <0000000000000000> <ata_qc_prep> <ata_qc_issue_prot> <0000000000000000> <ata_pci_default_filter> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_bmdma_freeze> <ata_bmdma_thaw> <piix_sidpr_error_handler> <ata_bmdma_post_internal_cmd> <piix_sidpr_scr_read> <piix_sidpr_scr_write> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_sff_port_start> <0000000000000000> <0000000000000000> <ata_std_dev_select> <ata_check_status> <0000000000000000> <ata_tf_load> <ata_tf_read> <ata_exec_command> <ata_data_xfer> <ata_irq_on> <ata_bmdma_irq_clear> <ata_bmdma_setup> <ata_bmdma_start> <ata_bmdma_stop> <ata_bmdma_status> <0000000000000000> <00000000000000
+ 00>
+OPS ata_piix piix_vmw_ops: <0000000000000000> <0000000000000000> <ata_qc_prep> <ata_qc_issue_prot> <ata_cable_40wire> <ata_pci_default_filter> <piix_set_piomode> <piix_set_dmamode> <0000000000000000> <0000000000000000> <ata_bmdma_freeze> <ata_bmdma_thaw> <piix_pata_error_handler> <ata_bmdma_post_internal_cmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_sff_port_start> <0000000000000000> <0000000000000000> <ata_std_dev_select> <ata_check_status> <0000000000000000> <ata_tf_load> <ata_tf_read> <ata_exec_command> <ata_data_xfer> <ata_irq_on> <ata_bmdma_irq_clear> <ata_bmdma_setup> <ata_bmdma_start> <ata_bmdma_stop> <piix_vmw_bmdma_status> <0000000000000000> <0000000000000000>
+OPS pata_acpi pacpi_ops: <0000000000000000> <0000000000000000> <ata_qc_prep> <pacpi_qc_issue_prot> <pacpi_cable_detect> <pacpi_mode_filter> <pacpi_set_piomode> <pacpi_set_dmamode> <0000000000000000> <0000000000000000> <ata_bmdma_freeze> <ata_bmdma_thaw> <pacpi_error_handler> <ata_bmdma_post_internal_cmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <pacpi_port_start> <0000000000000000> <0000000000000000> <ata_std_dev_select> <ata_check_status> <0000000000000000> <ata_tf_load> <ata_tf_read> <ata_exec_command> <ata_data_xfer> <ata_irq_on> <ata_bmdma_irq_clear> <ata_bmdma_setup> <ata_bmdma_start> <ata_bmdma_stop> <ata_bmdma_status> <0000000000000000> <0000000000000000>
+OPS pata_ali ali_20_port_ops: <0000000000000000> <0000000000000000> <ata_qc_prep> <ata_qc_issue_prot> <ata_cable_40wire> <ali_20_filter> <ali_set_piomode> <ali_set_dmamode> <0000000000000000> <ali_lock_sectors> <ata_bmdma_freeze> <ata_bmdma_thaw> <ata_bmdma_error_handler> <ata_bmdma_post_internal_cmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_sff_port_start> <0000000000000000> <0000000000000000> <ata_std_dev_select> <ata_check_status> <0000000000000000> <ata_tf_load> <ata_tf_read> <ata_exec_command> <ata_data_xfer> <ata_irq_on> <ata_bmdma_irq_clear> <ata_bmdma_setup> <ata_bmdma_start> <ata_bmdma_stop> <ata_bmdma_status> <0000000000000000> <0000000000000000>
+OPS pata_ali ali_c2_port_ops: <0000000000000000> <ali_check_atapi_dma> <ata_qc_prep> <ata_qc_issue_prot> <ali_c2_cable_detect> <ata_pci_default_filter> <ali_set_piomode> <ali_set_dmamode> <0000000000000000> <ali_lock_sectors> <ata_bmdma_freeze> <ata_bmdma_thaw> <ata_bmdma_error_handler> <ata_bmdma_post_internal_cmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_sff_port_start> <0000000000000000> <0000000000000000> <ata_std_dev_select> <ata_check_status> <0000000000000000> <ata_tf_load> <ata_tf_read> <ata_exec_command> <ata_data_xfer> <ata_irq_on> <ata_bmdma_irq_clear> <ata_bmdma_setup> <ata_bmdma_start> <ata_bmdma_stop> <ata_bmdma_status> <0000000000000000> <0000000000000000>
+OPS pata_ali ali_c5_port_ops: <0000000000000000> <ali_check_atapi_dma> <ata_qc_prep> <ata_qc_issue_prot> <ali_c2_cable_detect> <ata_pci_default_filter> <ali_set_piomode> <ali_set_dmamode> <0000000000000000> <0000000000000000> <ata_bmdma_freeze> <ata_bmdma_thaw> <ata_bmdma_error_handler> <ata_bmdma_post_internal_cmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_sff_port_start> <0000000000000000> <0000000000000000> <ata_std_dev_select> <ata_check_status> <0000000000000000> <ata_tf_load> <ata_tf_read> <ata_exec_command> <ata_data_xfer> <ata_irq_on> <ata_bmdma_irq_clear> <ata_bmdma_setup> <ata_bmdma_start> <ata_bmdma_stop> <ata_bmdma_status> <0000000000000000> <0000000000000000>
+OPS pata_ali ali_dma_base_ops: <0000000000000000> <0000000000000000> <ata_qc_prep> <ata_qc_issue_prot> <0000000000000000> <ata_pci_default_filter> <ali_set_piomode> <ali_set_dmamode> <0000000000000000> <0000000000000000> <ata_bmdma_freeze> <ata_bmdma_thaw> <ata_bmdma_error_handler> <ata_bmdma_post_internal_cmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_sff_port_start> <0000000000000000> <0000000000000000> <ata_std_dev_select> <ata_check_status> <0000000000000000> <ata_tf_load> <ata_tf_read> <ata_exec_command> <ata_data_xfer> <ata_irq_on> <ata_bmdma_irq_clear> <ata_bmdma_setup> <ata_bmdma_start> <ata_bmdma_stop> <ata_bmdma_status> <0000000000000000> <0000000000000000>
+OPS pata_ali ali_early_port_ops: <0000000000000000> <0000000000000000> <ata_qc_prep> <ata_qc_issue_prot> <ata_cable_40wire> <0000000000000000> <ali_set_piomode> <0000000000000000> <0000000000000000> <0000000000000000> <ata_bmdma_freeze> <ata_bmdma_thaw> <ata_bmdma_error_handler> <ata_bmdma_post_internal_cmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_sff_port_start> <0000000000000000> <0000000000000000> <ata_std_dev_select> <ata_check_status> <0000000000000000> <ata_tf_load> <ata_tf_read> <ata_exec_command> <ata_data_xfer> <ata_irq_on> <ata_noop_irq_clear> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000>
+OPS pata_amd amd100_port_ops: <0000000000000000> <0000000000000000> <ata_qc_prep> <ata_qc_issue_prot> <ata_cable_unknown> <ata_pci_default_filter> <amd100_set_piomode> <amd100_set_dmamode> <0000000000000000> <0000000000000000> <ata_bmdma_freeze> <ata_bmdma_thaw> <amd_error_handler> <ata_bmdma_post_internal_cmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_sff_port_start> <0000000000000000> <0000000000000000> <ata_std_dev_select> <ata_check_status> <0000000000000000> <ata_tf_load> <ata_tf_read> <ata_exec_command> <ata_data_xfer> <ata_irq_on> <ata_bmdma_irq_clear> <ata_bmdma_setup> <ata_bmdma_start> <ata_bmdma_stop> <ata_bmdma_status> <0000000000000000> <0000000000000000>
+OPS pata_amd amd133_port_ops: <0000000000000000> <0000000000000000> <ata_qc_prep> <ata_qc_issue_prot> <amd_cable_detect> <ata_pci_default_filter> <amd133_set_piomode> <amd133_set_dmamode> <0000000000000000> <0000000000000000> <ata_bmdma_freeze> <ata_bmdma_thaw> <amd_error_handler> <ata_bmdma_post_internal_cmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_sff_port_start> <0000000000000000> <0000000000000000> <ata_std_dev_select> <ata_check_status> <0000000000000000> <ata_tf_load> <ata_tf_read> <ata_exec_command> <ata_data_xfer> <ata_irq_on> <ata_bmdma_irq_clear> <ata_bmdma_setup> <ata_bmdma_start> <ata_bmdma_stop> <ata_bmdma_status> <0000000000000000> <0000000000000000>
+OPS pata_amd amd33_port_ops: <0000000000000000> <0000000000000000> <ata_qc_prep> <ata_qc_issue_prot> <ata_cable_40wire> <ata_pci_default_filter> <amd33_set_piomode> <amd33_set_dmamode> <0000000000000000> <0000000000000000> <ata_bmdma_freeze> <ata_bmdma_thaw> <amd_error_handler> <ata_bmdma_post_internal_cmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_sff_port_start> <0000000000000000> <0000000000000000> <ata_std_dev_select> <ata_check_status> <0000000000000000> <ata_tf_load> <ata_tf_read> <ata_exec_command> <ata_data_xfer> <ata_irq_on> <ata_bmdma_irq_clear> <ata_bmdma_setup> <ata_bmdma_start> <ata_bmdma_stop> <ata_bmdma_status> <0000000000000000> <0000000000000000>
+OPS pata_amd amd66_port_ops: <0000000000000000> <0000000000000000> <ata_qc_prep> <ata_qc_issue_prot> <ata_cable_unknown> <ata_pci_default_filter> <amd66_set_piomode> <amd66_set_dmamode> <0000000000000000> <0000000000000000> <ata_bmdma_freeze> <ata_bmdma_thaw> <amd_error_handler> <ata_bmdma_post_internal_cmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_sff_port_start> <0000000000000000> <0000000000000000> <ata_std_dev_select> <ata_check_status> <0000000000000000> <ata_tf_load> <ata_tf_read> <ata_exec_command> <ata_data_xfer> <ata_irq_on> <ata_bmdma_irq_clear> <ata_bmdma_setup> <ata_bmdma_start> <ata_bmdma_stop> <ata_bmdma_status> <0000000000000000> <0000000000000000>
+OPS pata_amd amd_base_port_ops: <0000000000000000> <0000000000000000> <ata_qc_prep> <ata_qc_issue_prot> <0000000000000000> <ata_pci_default_filter> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_bmdma_freeze> <ata_bmdma_thaw> <amd_error_handler> <ata_bmdma_post_internal_cmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_sff_port_start> <0000000000000000> <0000000000000000> <ata_std_dev_select> <ata_check_status> <0000000000000000> <ata_tf_load> <ata_tf_read> <ata_exec_command> <ata_data_xfer> <ata_irq_on> <ata_bmdma_irq_clear> <ata_bmdma_setup> <ata_bmdma_start> <ata_bmdma_stop> <ata_bmdma_status> <0000000000000000> <0000000000000000>
+OPS pata_amd nv100_port_ops: <0000000000000000> <0000000000000000> <ata_qc_prep> <ata_qc_issue_prot> <ata_cable_ignore> <nv_mode_filter> <nv100_set_piomode> <nv100_set_dmamode> <0000000000000000> <0000000000000000> <ata_bmdma_freeze> <ata_bmdma_thaw> <nv_error_handler> <ata_bmdma_post_internal_cmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_sff_port_start> <0000000000000000> <nv_host_stop> <ata_std_dev_select> <ata_check_status> <0000000000000000> <ata_tf_load> <ata_tf_read> <ata_exec_command> <ata_data_xfer> <ata_irq_on> <ata_bmdma_irq_clear> <ata_bmdma_setup> <ata_bmdma_start> <ata_bmdma_stop> <ata_bmdma_status> <0000000000000000> <0000000000000000>
+OPS pata_amd nv133_port_ops: <0000000000000000> <0000000000000000> <ata_qc_prep> <ata_qc_issue_prot> <ata_cable_ignore> <nv_mode_filter> <nv133_set_piomode> <nv133_set_dmamode> <0000000000000000> <0000000000000000> <ata_bmdma_freeze> <ata_bmdma_thaw> <nv_error_handler> <ata_bmdma_post_internal_cmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_sff_port_start> <0000000000000000> <nv_host_stop> <ata_std_dev_select> <ata_check_status> <0000000000000000> <ata_tf_load> <ata_tf_read> <ata_exec_command> <ata_data_xfer> <ata_irq_on> <ata_bmdma_irq_clear> <ata_bmdma_setup> <ata_bmdma_start> <ata_bmdma_stop> <ata_bmdma_status> <0000000000000000> <0000000000000000>
+OPS pata_amd nv_base_port_ops: <0000000000000000> <0000000000000000> <ata_qc_prep> <ata_qc_issue_prot> <ata_cable_ignore> <nv_mode_filter> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_bmdma_freeze> <ata_bmdma_thaw> <nv_error_handler> <ata_bmdma_post_internal_cmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_sff_port_start> <0000000000000000> <nv_host_stop> <ata_std_dev_select> <ata_check_status> <0000000000000000> <ata_tf_load> <ata_tf_read> <ata_exec_command> <ata_data_xfer> <ata_irq_on> <ata_bmdma_irq_clear> <ata_bmdma_setup> <ata_bmdma_start> <ata_bmdma_stop> <ata_bmdma_status> <0000000000000000> <0000000000000000>
+OPS pata_artop artop6210_ops: <0000000000000000> <0000000000000000> <ata_qc_prep> <ata_qc_issue_prot> <ata_cable_40wire> <ata_pci_default_filter> <artop6210_set_piomode> <artop6210_set_dmamode> <0000000000000000> <0000000000000000> <ata_bmdma_freeze> <ata_bmdma_thaw> <artop6210_error_handler> <ata_bmdma_post_internal_cmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_sff_port_start> <0000000000000000> <0000000000000000> <ata_std_dev_select> <ata_check_status> <0000000000000000> <ata_tf_load> <ata_tf_read> <ata_exec_command> <ata_data_xfer> <ata_irq_on> <ata_bmdma_irq_clear> <ata_bmdma_setup> <ata_bmdma_start> <ata_bmdma_stop> <ata_bmdma_status> <0000000000000000> <0000000000000000
+ >
+OPS pata_artop artop6260_ops: <0000000000000000> <0000000000000000> <ata_qc_prep> <ata_qc_issue_prot> <artop6260_cable_detect> <ata_pci_default_filter> <artop6260_set_piomode> <artop6260_set_dmamode> <0000000000000000> <0000000000000000> <ata_bmdma_freeze> <ata_bmdma_thaw> <artop6260_error_handler> <ata_bmdma_post_internal_cmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_sff_port_start> <0000000000000000> <0000000000000000> <ata_std_dev_select> <ata_check_status> <0000000000000000> <ata_tf_load> <ata_tf_read> <ata_exec_command> <ata_data_xfer> <ata_irq_on> <ata_bmdma_irq_clear> <ata_bmdma_setup> <ata_bmdma_start> <ata_bmdma_stop> <ata_bmdma_status> <0000000000000000> <0000000000
+ 000000>
+OPS pata_atiixp atiixp_port_ops: <0000000000000000> <0000000000000000> <ata_qc_prep> <ata_qc_issue_prot> <atiixp_cable_detect> <ata_pci_default_filter> <atiixp_set_piomode> <atiixp_set_dmamode> <0000000000000000> <0000000000000000> <ata_bmdma_freeze> <ata_bmdma_thaw> <atiixp_error_handler> <ata_bmdma_post_internal_cmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_sff_port_start> <0000000000000000> <0000000000000000> <ata_std_dev_select> <ata_check_status> <0000000000000000> <ata_tf_load> <ata_tf_read> <ata_exec_command> <ata_data_xfer> <ata_irq_on> <ata_bmdma_irq_clear> <ata_bmdma_setup> <atiixp_bmdma_start> <atiixp_bmdma_stop> <ata_bmdma_status> <0000000000000000> <0000000000000
+ 000>
+OPS pata_cmd640 cmd640_port_ops: <0000000000000000> <0000000000000000> <ata_qc_prep> <cmd640_qc_issue_prot> <ata_cable_40wire> <ata_pci_default_filter> <cmd640_set_piomode> <0000000000000000> <0000000000000000> <0000000000000000> <ata_bmdma_freeze> <ata_bmdma_thaw> <ata_bmdma_error_handler> <ata_bmdma_post_internal_cmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <cmd640_port_start> <0000000000000000> <0000000000000000> <ata_std_dev_select> <ata_check_status> <0000000000000000> <ata_tf_load> <ata_tf_read> <ata_exec_command> <ata_data_xfer_noirq> <ata_irq_on> <ata_bmdma_irq_clear> <ata_bmdma_setup> <ata_bmdma_start> <ata_bmdma_stop> <ata_bmdma_status> <0000000000000000> <0000000000000
+ 000>
+OPS pata_cmd64x cmd646r1_port_ops: <0000000000000000> <0000000000000000> <ata_qc_prep> <ata_qc_issue_prot> <ata_cable_40wire> <ata_pci_default_filter> <cmd64x_set_piomode> <cmd64x_set_dmamode> <0000000000000000> <0000000000000000> <ata_bmdma_freeze> <ata_bmdma_thaw> <ata_bmdma_error_handler> <ata_bmdma_post_internal_cmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_sff_port_start> <0000000000000000> <0000000000000000> <ata_std_dev_select> <ata_check_status> <0000000000000000> <ata_tf_load> <ata_tf_read> <ata_exec_command> <ata_data_xfer> <ata_irq_on> <ata_bmdma_irq_clear> <ata_bmdma_setup> <ata_bmdma_start> <cmd646r1_bmdma_stop> <ata_bmdma_status> <0000000000000000> <000000000000
+ 0000>
+OPS pata_cmd64x cmd648_port_ops: <0000000000000000> <0000000000000000> <ata_qc_prep> <ata_qc_issue_prot> <cmd648_cable_detect> <ata_pci_default_filter> <cmd64x_set_piomode> <cmd64x_set_dmamode> <0000000000000000> <0000000000000000> <ata_bmdma_freeze> <ata_bmdma_thaw> <ata_bmdma_error_handler> <ata_bmdma_post_internal_cmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_sff_port_start> <0000000000000000> <0000000000000000> <ata_std_dev_select> <ata_check_status> <0000000000000000> <ata_tf_load> <ata_tf_read> <ata_exec_command> <ata_data_xfer> <ata_irq_on> <ata_bmdma_irq_clear> <ata_bmdma_setup> <ata_bmdma_start> <cmd648_bmdma_stop> <ata_bmdma_status> <0000000000000000> <0000000000000
+ 000>
+OPS pata_cmd64x cmd64x_base_ops: <0000000000000000> <0000000000000000> <ata_qc_prep> <ata_qc_issue_prot> <0000000000000000> <ata_pci_default_filter> <cmd64x_set_piomode> <cmd64x_set_dmamode> <0000000000000000> <0000000000000000> <ata_bmdma_freeze> <ata_bmdma_thaw> <ata_bmdma_error_handler> <ata_bmdma_post_internal_cmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_sff_port_start> <0000000000000000> <0000000000000000> <ata_std_dev_select> <ata_check_status> <0000000000000000> <ata_tf_load> <ata_tf_read> <ata_exec_command> <ata_data_xfer> <ata_irq_on> <ata_bmdma_irq_clear> <ata_bmdma_setup> <ata_bmdma_start> <ata_bmdma_stop> <ata_bmdma_status> <0000000000000000> <0000000000000000>
+OPS pata_cmd64x cmd64x_port_ops: <0000000000000000> <0000000000000000> <ata_qc_prep> <ata_qc_issue_prot> <ata_cable_40wire> <ata_pci_default_filter> <cmd64x_set_piomode> <cmd64x_set_dmamode> <0000000000000000> <0000000000000000> <ata_bmdma_freeze> <ata_bmdma_thaw> <ata_bmdma_error_handler> <ata_bmdma_post_internal_cmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_sff_port_start> <0000000000000000> <0000000000000000> <ata_std_dev_select> <ata_check_status> <0000000000000000> <ata_tf_load> <ata_tf_read> <ata_exec_command> <ata_data_xfer> <ata_irq_on> <ata_bmdma_irq_clear> <ata_bmdma_setup> <ata_bmdma_start> <ata_bmdma_stop> <ata_bmdma_status> <0000000000000000> <0000000000000000>
+OPS pata_cs5520 cs5520_port_ops: <0000000000000000> <0000000000000000> <ata_dumb_qc_prep> <ata_qc_issue_prot> <ata_cable_40wire> <ata_pci_default_filter> <cs5520_set_piomode> <cs5520_set_dmamode> <0000000000000000> <0000000000000000> <ata_bmdma_freeze> <ata_bmdma_thaw> <ata_bmdma_error_handler> <ata_bmdma_post_internal_cmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_sff_port_start> <0000000000000000> <0000000000000000> <ata_std_dev_select> <ata_check_status> <0000000000000000> <ata_tf_load> <ata_tf_read> <ata_exec_command> <ata_data_xfer> <ata_irq_on> <ata_bmdma_irq_clear> <ata_bmdma_setup> <ata_bmdma_start> <ata_bmdma_stop> <ata_bmdma_status> <0000000000000000> <00000000000000
+ 00>
+OPS pata_cs5530 cs5530_port_ops: <0000000000000000> <0000000000000000> <ata_dumb_qc_prep> <cs5530_qc_issue_prot> <ata_cable_40wire> <ata_pci_default_filter> <cs5530_set_piomode> <cs5530_set_dmamode> <0000000000000000> <0000000000000000> <ata_bmdma_freeze> <ata_bmdma_thaw> <ata_bmdma_error_handler> <ata_bmdma_post_internal_cmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_sff_port_start> <0000000000000000> <0000000000000000> <ata_std_dev_select> <ata_check_status> <0000000000000000> <ata_tf_load> <ata_tf_read> <ata_exec_command> <ata_data_xfer> <ata_irq_on> <ata_bmdma_irq_clear> <ata_bmdma_setup> <ata_bmdma_start> <ata_bmdma_stop> <ata_bmdma_status> <0000000000000000> <00000000000
+ 00000>
+OPS pata_cypress cy82c693_port_ops: <0000000000000000> <0000000000000000> <ata_qc_prep> <ata_qc_issue_prot> <ata_cable_40wire> <ata_pci_default_filter> <cy82c693_set_piomode> <cy82c693_set_dmamode> <0000000000000000> <0000000000000000> <ata_bmdma_freeze> <ata_bmdma_thaw> <ata_bmdma_error_handler> <ata_bmdma_post_internal_cmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_sff_port_start> <0000000000000000> <0000000000000000> <ata_std_dev_select> <ata_check_status> <0000000000000000> <ata_tf_load> <ata_tf_read> <ata_exec_command> <ata_data_xfer> <ata_irq_on> <ata_bmdma_irq_clear> <ata_bmdma_setup> <ata_bmdma_start> <ata_bmdma_stop> <ata_bmdma_status> <0000000000000000> <000000000000
+ 0000>
+OPS pata_efar efar_ops: <0000000000000000> <0000000000000000> <ata_qc_prep> <ata_qc_issue_prot> <efar_cable_detect> <ata_pci_default_filter> <efar_set_piomode> <efar_set_dmamode> <0000000000000000> <0000000000000000> <ata_bmdma_freeze> <ata_bmdma_thaw> <efar_error_handler> <ata_bmdma_post_internal_cmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_sff_port_start> <0000000000000000> <0000000000000000> <ata_std_dev_select> <ata_check_status> <0000000000000000> <ata_tf_load> <ata_tf_read> <ata_exec_command> <ata_data_xfer> <ata_irq_on> <ata_bmdma_irq_clear> <ata_bmdma_setup> <ata_bmdma_start> <ata_bmdma_stop> <ata_bmdma_status> <0000000000000000> <0000000000000000>
+OPS pata_hpt366 hpt366_port_ops: <0000000000000000> <0000000000000000> <ata_qc_prep> <ata_qc_issue_prot> <hpt36x_cable_detect> <hpt366_filter> <hpt366_set_piomode> <hpt366_set_dmamode> <0000000000000000> <0000000000000000> <ata_bmdma_freeze> <ata_bmdma_thaw> <ata_bmdma_error_handler> <ata_bmdma_post_internal_cmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_sff_port_start> <0000000000000000> <0000000000000000> <ata_std_dev_select> <ata_check_status> <0000000000000000> <ata_tf_load> <ata_tf_read> <ata_exec_command> <ata_data_xfer> <ata_irq_on> <ata_bmdma_irq_clear> <ata_bmdma_setup> <ata_bmdma_start> <ata_bmdma_stop> <ata_bmdma_status> <0000000000000000> <0000000000000000>
+OPS pata_hpt37x hpt370a_port_ops: <0000000000000000> <0000000000000000> <ata_qc_prep> <ata_qc_issue_prot> <0000000000000000> <hpt370a_filter> <hpt370_set_piomode> <hpt370_set_dmamode> <0000000000000000> <0000000000000000> <ata_bmdma_freeze> <ata_bmdma_thaw> <hpt37x_error_handler> <ata_bmdma_post_internal_cmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_sff_port_start> <0000000000000000> <0000000000000000> <ata_std_dev_select> <ata_check_status> <0000000000000000> <ata_tf_load> <ata_tf_read> <ata_exec_command> <ata_data_xfer> <ata_irq_on> <ata_bmdma_irq_clear> <ata_bmdma_setup> <hpt370_bmdma_start> <hpt370_bmdma_stop> <ata_bmdma_status> <0000000000000000> <0000000000000000>
+OPS pata_hpt37x hpt370_port_ops: <0000000000000000> <0000000000000000> <ata_qc_prep> <ata_qc_issue_prot> <0000000000000000> <hpt370_filter> <hpt370_set_piomode> <hpt370_set_dmamode> <0000000000000000> <0000000000000000> <ata_bmdma_freeze> <ata_bmdma_thaw> <hpt37x_error_handler> <ata_bmdma_post_internal_cmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_sff_port_start> <0000000000000000> <0000000000000000> <ata_std_dev_select> <ata_check_status> <0000000000000000> <ata_tf_load> <ata_tf_read> <ata_exec_command> <ata_data_xfer> <ata_irq_on> <ata_bmdma_irq_clear> <ata_bmdma_setup> <hpt370_bmdma_start> <hpt370_bmdma_stop> <ata_bmdma_status> <0000000000000000> <0000000000000000>
+OPS pata_hpt37x hpt372_port_ops: <0000000000000000> <0000000000000000> <ata_qc_prep> <ata_qc_issue_prot> <0000000000000000> <ata_pci_default_filter> <hpt372_set_piomode> <hpt372_set_dmamode> <0000000000000000> <0000000000000000> <ata_bmdma_freeze> <ata_bmdma_thaw> <hpt37x_error_handler> <ata_bmdma_post_internal_cmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_sff_port_start> <0000000000000000> <0000000000000000> <ata_std_dev_select> <ata_check_status> <0000000000000000> <ata_tf_load> <ata_tf_read> <ata_exec_command> <ata_data_xfer> <ata_irq_on> <ata_bmdma_irq_clear> <ata_bmdma_setup> <ata_bmdma_start> <hpt37x_bmdma_stop> <ata_bmdma_status> <0000000000000000> <0000000000000000>
+OPS pata_hpt37x hpt374_port_ops: <0000000000000000> <0000000000000000> <ata_qc_prep> <ata_qc_issue_prot> <0000000000000000> <ata_pci_default_filter> <hpt372_set_piomode> <hpt372_set_dmamode> <0000000000000000> <0000000000000000> <ata_bmdma_freeze> <ata_bmdma_thaw> <hpt374_error_handler> <ata_bmdma_post_internal_cmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_sff_port_start> <0000000000000000> <0000000000000000> <ata_std_dev_select> <ata_check_status> <0000000000000000> <ata_tf_load> <ata_tf_read> <ata_exec_command> <ata_data_xfer> <ata_irq_on> <ata_bmdma_irq_clear> <ata_bmdma_setup> <ata_bmdma_start> <hpt37x_bmdma_stop> <ata_bmdma_status> <0000000000000000> <0000000000000000>
+OPS pata_hpt3x2n hpt3x2n_port_ops: <0000000000000000> <0000000000000000> <ata_qc_prep> <hpt3x2n_qc_issue_prot> <hpt3x2n_cable_detect> <ata_pci_default_filter> <hpt3x2n_set_piomode> <hpt3x2n_set_dmamode> <0000000000000000> <0000000000000000> <ata_bmdma_freeze> <ata_bmdma_thaw> <hpt3x2n_error_handler> <ata_bmdma_post_internal_cmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_sff_port_start> <0000000000000000> <0000000000000000> <ata_std_dev_select> <ata_check_status> <0000000000000000> <ata_tf_load> <ata_tf_read> <ata_exec_command> <ata_data_xfer> <ata_irq_on> <ata_bmdma_irq_clear> <ata_bmdma_setup> <ata_bmdma_start> <hpt3x2n_bmdma_stop> <ata_bmdma_status> <0000000000000000> <00000
+ 00000000000>
+OPS pata_hpt3x3 hpt3x3_port_ops: <0000000000000000> <hpt3x3_atapi_dma> <ata_qc_prep> <ata_qc_issue_prot> <ata_cable_40wire> <ata_pci_default_filter> <hpt3x3_set_piomode> <hpt3x3_set_dmamode> <0000000000000000> <0000000000000000> <ata_bmdma_freeze> <ata_bmdma_thaw> <ata_bmdma_error_handler> <ata_bmdma_post_internal_cmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_sff_port_start> <0000000000000000> <0000000000000000> <ata_std_dev_select> <ata_check_status> <0000000000000000> <ata_tf_load> <ata_tf_read> <ata_exec_command> <ata_data_xfer> <ata_irq_on> <ata_bmdma_irq_clear> <ata_bmdma_setup> <ata_bmdma_start> <ata_bmdma_stop> <ata_bmdma_status> <0000000000000000> <0000000000000000>
+OPS pata_it8213 it8213_ops: <0000000000000000> <0000000000000000> <ata_qc_prep> <ata_qc_issue_prot> <it8213_cable_detect> <ata_pci_default_filter> <it8213_set_piomode> <it8213_set_dmamode> <0000000000000000> <0000000000000000> <ata_bmdma_freeze> <ata_bmdma_thaw> <it8213_error_handler> <ata_bmdma_post_internal_cmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_sff_port_start> <0000000000000000> <0000000000000000> <ata_std_dev_select> <ata_check_status> <0000000000000000> <ata_tf_load> <ata_tf_read> <ata_exec_command> <ata_data_xfer> <ata_irq_on> <ata_bmdma_irq_clear> <ata_bmdma_setup> <ata_bmdma_start> <ata_bmdma_stop> <ata_bmdma_status> <0000000000000000> <0000000000000000>
+OPS pata_it821x it821x_passthru_port_ops: <0000000000000000> <it821x_check_atapi_dma> <ata_qc_prep> <it821x_passthru_qc_issue_prot> <ata_cable_unknown> <ata_pci_default_filter> <it821x_passthru_set_piomode> <it821x_passthru_set_dmamode> <0000000000000000> <0000000000000000> <ata_bmdma_freeze> <ata_bmdma_thaw> <ata_bmdma_error_handler> <ata_bmdma_post_internal_cmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <it821x_port_start> <0000000000000000> <0000000000000000> <it821x_passthru_dev_select> <ata_check_status> <0000000000000000> <ata_tf_load> <ata_tf_read> <ata_exec_command> <ata_data_xfer> <ata_irq_on> <ata_bmdma_irq_clear> <ata_bmdma_setup> <it821x_passthru_bmdma_start> <it821x_pa
+ ssthru_bmdma_stop> <ata_bmdma_status> <0000000000000000> <0000000000000000>
+OPS pata_it821x it821x_smart_port_ops: <0000000000000000> <it821x_check_atapi_dma> <ata_qc_prep> <it821x_smart_qc_issue_prot> <it821x_ident_hack> <ata_pci_default_filter> <0000000000000000> <0000000000000000> <it821x_smart_set_mode> <it821x_dev_config> <ata_bmdma_freeze> <ata_bmdma_thaw> <ata_bmdma_error_handler> <ata_bmdma_post_internal_cmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <it821x_port_start> <0000000000000000> <0000000000000000> <ata_std_dev_select> <ata_check_status> <0000000000000000> <ata_tf_load> <ata_tf_read> <ata_exec_command> <ata_data_xfer> <ata_irq_on> <ata_bmdma_irq_clear> <ata_bmdma_setup> <ata_bmdma_start> <ata_bmdma_stop> <ata_bmdma_status> <000000000000000
+ 0> <0000000000000000>
+OPS pata_jmicron jmicron_ops: <0000000000000000> <0000000000000000> <ata_qc_prep> <ata_qc_issue_prot> <0000000000000000> <ata_pci_default_filter> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_bmdma_freeze> <ata_bmdma_thaw> <jmicron_error_handler> <ata_bmdma_post_internal_cmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_sff_port_start> <0000000000000000> <0000000000000000> <ata_std_dev_select> <ata_check_status> <0000000000000000> <ata_tf_load> <ata_tf_read> <ata_exec_command> <ata_data_xfer> <ata_irq_on> <ata_bmdma_irq_clear> <ata_bmdma_setup> <ata_bmdma_start> <ata_bmdma_stop> <ata_bmdma_status> <0000000000000000> <0000000000000000>
+OPS pata_marvell marvell_ops: <0000000000000000> <0000000000000000> <ata_qc_prep> <ata_qc_issue_prot> <marvell_cable_detect> <ata_pci_default_filter> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_bmdma_freeze> <ata_bmdma_thaw> <marvell_error_handler> <ata_bmdma_post_internal_cmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_sff_port_start> <0000000000000000> <0000000000000000> <ata_std_dev_select> <ata_check_status> <0000000000000000> <ata_tf_load> <ata_tf_read> <ata_exec_command> <ata_data_xfer> <ata_irq_on> <ata_bmdma_irq_clear> <ata_bmdma_setup> <ata_bmdma_start> <ata_bmdma_stop> <ata_bmdma_status> <0000000000000000> <0000000000000000>
+OPS pata_mpiix mpiix_port_ops: <0000000000000000> <0000000000000000> <ata_qc_prep> <mpiix_qc_issue_prot> <ata_cable_40wire> <0000000000000000> <mpiix_set_piomode> <0000000000000000> <0000000000000000> <0000000000000000> <ata_bmdma_freeze> <ata_bmdma_thaw> <mpiix_error_handler> <ata_bmdma_post_internal_cmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_sff_port_start> <0000000000000000> <0000000000000000> <ata_std_dev_select> <ata_check_status> <0000000000000000> <ata_tf_load> <ata_tf_read> <ata_exec_command> <ata_data_xfer> <ata_irq_on> <ata_noop_irq_clear> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000>
+OPS pata_netcell netcell_ops: <0000000000000000> <0000000000000000> <ata_qc_prep> <ata_qc_issue_prot> <ata_cable_80wire> <ata_pci_default_filter> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_bmdma_freeze> <ata_bmdma_thaw> <ata_bmdma_error_handler> <ata_bmdma_post_internal_cmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_sff_port_start> <0000000000000000> <0000000000000000> <ata_std_dev_select> <ata_check_status> <0000000000000000> <ata_tf_load> <ata_tf_read> <ata_exec_command> <ata_data_xfer> <ata_irq_on> <ata_bmdma_irq_clear> <ata_bmdma_setup> <ata_bmdma_start> <ata_bmdma_stop> <ata_bmdma_status> <0000000000000000> <0000000000000000>
+OPS pata_ninja32 ninja32_port_ops: <0000000000000000> <0000000000000000> <ata_qc_prep> <ata_qc_issue_prot> <ata_cable_40wire> <ata_pci_default_filter> <ninja32_set_piomode> <0000000000000000> <0000000000000000> <0000000000000000> <ata_bmdma_freeze> <ata_bmdma_thaw> <ata_bmdma_error_handler> <ata_bmdma_post_internal_cmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_sff_port_start> <0000000000000000> <0000000000000000> <ninja32_dev_select> <ata_check_status> <0000000000000000> <ata_tf_load> <ata_tf_read> <ata_exec_command> <ata_data_xfer> <ata_irq_on> <ata_bmdma_irq_clear> <ata_bmdma_setup> <ata_bmdma_start> <ata_bmdma_stop> <ata_bmdma_status> <0000000000000000> <0000000000000000>
+OPS pata_ns87410 ns87410_port_ops: <0000000000000000> <0000000000000000> <ata_qc_prep> <ns87410_qc_issue_prot> <ata_cable_40wire> <0000000000000000> <ns87410_set_piomode> <0000000000000000> <0000000000000000> <0000000000000000> <ata_bmdma_freeze> <ata_bmdma_thaw> <ns87410_error_handler> <ata_bmdma_post_internal_cmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_sff_port_start> <0000000000000000> <0000000000000000> <ata_std_dev_select> <ata_check_status> <0000000000000000> <ata_tf_load> <ata_tf_read> <ata_exec_command> <ata_data_xfer> <ata_irq_on> <ata_noop_irq_clear> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000>
+OPS pata_ns87415 ns87415_pata_ops: <0000000000000000> <ns87415_check_atapi_dma> <ata_qc_prep> <ata_qc_issue_prot> <ata_cable_40wire> <ata_pci_default_filter> <ns87415_set_piomode> <0000000000000000> <0000000000000000> <0000000000000000> <ata_bmdma_freeze> <ata_bmdma_thaw> <ata_bmdma_error_handler> <ata_bmdma_post_internal_cmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_sff_port_start> <0000000000000000> <0000000000000000> <ata_std_dev_select> <ata_check_status> <0000000000000000> <ata_tf_load> <ata_tf_read> <ata_exec_command> <ata_data_xfer> <ata_irq_on> <ns87415_bmdma_irq_clear> <ns87415_bmdma_setup> <ns87415_bmdma_start> <ns87415_bmdma_stop> <ata_bmdma_status> <00000000000000
+ 00> <0000000000000000>
+OPS pata_oldpiix oldpiix_pata_ops: <0000000000000000> <0000000000000000> <ata_qc_prep> <oldpiix_qc_issue_prot> <ata_cable_40wire> <ata_pci_default_filter> <oldpiix_set_piomode> <oldpiix_set_dmamode> <0000000000000000> <0000000000000000> <ata_bmdma_freeze> <ata_bmdma_thaw> <oldpiix_pata_error_handler> <ata_bmdma_post_internal_cmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_sff_port_start> <0000000000000000> <0000000000000000> <ata_std_dev_select> <ata_check_status> <0000000000000000> <ata_tf_load> <ata_tf_read> <ata_exec_command> <ata_data_xfer> <ata_irq_on> <ata_bmdma_irq_clear> <ata_bmdma_setup> <ata_bmdma_start> <ata_bmdma_stop> <ata_bmdma_status> <0000000000000000> <00000000
+ 00000000>
+OPS pata_optidma optidma_port_ops: <0000000000000000> <0000000000000000> <ata_qc_prep> <ata_qc_issue_prot> <ata_cable_40wire> <ata_pci_default_filter> <optidma_set_pio_mode> <optidma_set_dma_mode> <optidma_set_mode> <0000000000000000> <ata_bmdma_freeze> <ata_bmdma_thaw> <optidma_error_handler> <ata_bmdma_post_internal_cmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_sff_port_start> <0000000000000000> <0000000000000000> <ata_std_dev_select> <ata_check_status> <0000000000000000> <ata_tf_load> <ata_tf_read> <ata_exec_command> <ata_data_xfer> <ata_irq_on> <ata_bmdma_irq_clear> <ata_bmdma_setup> <ata_bmdma_start> <ata_bmdma_stop> <ata_bmdma_status> <0000000000000000> <000000000000000
+ 0>
+OPS pata_optidma optiplus_port_ops: <0000000000000000> <0000000000000000> <ata_qc_prep> <ata_qc_issue_prot> <ata_cable_40wire> <ata_pci_default_filter> <optiplus_set_pio_mode> <optiplus_set_dma_mode> <optidma_set_mode> <0000000000000000> <ata_bmdma_freeze> <ata_bmdma_thaw> <optidma_error_handler> <ata_bmdma_post_internal_cmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_sff_port_start> <0000000000000000> <0000000000000000> <ata_std_dev_select> <ata_check_status> <0000000000000000> <ata_tf_load> <ata_tf_read> <ata_exec_command> <ata_data_xfer> <ata_irq_on> <ata_bmdma_irq_clear> <ata_bmdma_setup> <ata_bmdma_start> <ata_bmdma_stop> <ata_bmdma_status> <0000000000000000> <000000000000
+ 0000>
+OPS pata_opti opti_port_ops: <0000000000000000> <0000000000000000> <ata_qc_prep> <ata_qc_issue_prot> <ata_cable_40wire> <ata_pci_default_filter> <opti_set_piomode> <0000000000000000> <0000000000000000> <0000000000000000> <ata_bmdma_freeze> <ata_bmdma_thaw> <opti_error_handler> <ata_bmdma_post_internal_cmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_sff_port_start> <0000000000000000> <0000000000000000> <ata_std_dev_select> <ata_check_status> <0000000000000000> <ata_tf_load> <ata_tf_read> <ata_exec_command> <ata_data_xfer> <ata_irq_on> <ata_bmdma_irq_clear> <ata_bmdma_setup> <ata_bmdma_start> <ata_bmdma_stop> <ata_bmdma_status> <0000000000000000> <0000000000000000>
+OPS pata_pcmcia pcmcia_8bit_port_ops: <0000000000000000> <0000000000000000> <ata_qc_prep> <ata_qc_issue_prot> <ata_cable_40wire> <0000000000000000> <0000000000000000> <0000000000000000> <pcmcia_set_mode_8bit> <0000000000000000> <ata_bmdma_freeze> <ata_bmdma_thaw> <ata_bmdma_error_handler> <ata_bmdma_post_internal_cmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_sff_port_start> <0000000000000000> <0000000000000000> <ata_std_dev_select> <ata_check_status> <0000000000000000> <ata_tf_load> <ata_tf_read> <ata_exec_command> <ata_data_xfer_8bit> <ata_irq_on> <ata_noop_irq_clear> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <000000000000
+ 0000>
+OPS pata_pcmcia pcmcia_port_ops: <0000000000000000> <0000000000000000> <ata_qc_prep> <ata_qc_issue_prot> <ata_cable_40wire> <0000000000000000> <0000000000000000> <0000000000000000> <pcmcia_set_mode> <0000000000000000> <ata_bmdma_freeze> <ata_bmdma_thaw> <ata_bmdma_error_handler> <ata_bmdma_post_internal_cmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_sff_port_start> <0000000000000000> <0000000000000000> <ata_std_dev_select> <ata_check_status> <0000000000000000> <ata_tf_load> <ata_tf_read> <ata_exec_command> <ata_data_xfer_noirq> <ata_irq_on> <ata_noop_irq_clear> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000>
+OPS pata_pdc2027x pdc2027x_pata100_ops: <0000000000000000> <pdc2027x_check_atapi_dma> <ata_qc_prep> <ata_qc_issue_prot> <pdc2027x_cable_detect> <ata_pci_default_filter> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_bmdma_freeze> <ata_bmdma_thaw> <pdc2027x_error_handler> <ata_bmdma_post_internal_cmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_sff_port_start> <0000000000000000> <0000000000000000> <ata_std_dev_select> <ata_check_status> <0000000000000000> <ata_tf_load> <ata_tf_read> <ata_exec_command> <ata_data_xfer> <ata_irq_on> <ata_bmdma_irq_clear> <ata_bmdma_setup> <ata_bmdma_start> <ata_bmdma_stop> <ata_bmdma_status> <0000000000000000> <0000
+ 000000000000>
+OPS pata_pdc2027x pdc2027x_pata133_ops: <0000000000000000> <pdc2027x_check_atapi_dma> <ata_qc_prep> <ata_qc_issue_prot> <pdc2027x_cable_detect> <pdc2027x_mode_filter> <pdc2027x_set_piomode> <pdc2027x_set_dmamode> <pdc2027x_set_mode> <0000000000000000> <ata_bmdma_freeze> <ata_bmdma_thaw> <pdc2027x_error_handler> <ata_bmdma_post_internal_cmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_sff_port_start> <0000000000000000> <0000000000000000> <ata_std_dev_select> <ata_check_status> <0000000000000000> <ata_tf_load> <ata_tf_read> <ata_exec_command> <ata_data_xfer> <ata_irq_on> <ata_bmdma_irq_clear> <ata_bmdma_setup> <ata_bmdma_start> <ata_bmdma_stop> <ata_bmdma_status> <0000000000000000
+ > <0000000000000000>
+OPS pata_pdc202xx_old pdc2024x_port_ops: <0000000000000000> <0000000000000000> <ata_qc_prep> <ata_qc_issue_prot> <ata_cable_40wire> <ata_pci_default_filter> <pdc202xx_set_piomode> <pdc202xx_set_dmamode> <0000000000000000> <0000000000000000> <ata_bmdma_freeze> <ata_bmdma_thaw> <ata_bmdma_error_handler> <ata_bmdma_post_internal_cmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_sff_port_start> <0000000000000000> <0000000000000000> <ata_std_dev_select> <ata_check_status> <0000000000000000> <ata_tf_load> <ata_tf_read> <ata_exec_command> <ata_data_xfer> <ata_irq_on> <ata_bmdma_irq_clear> <ata_bmdma_setup> <ata_bmdma_start> <ata_bmdma_stop> <ata_bmdma_status> <0000000000000000> <0000000
+ 000000000>
+OPS pata_pdc202xx_old pdc2026x_port_ops: <0000000000000000> <pdc2026x_check_atapi_dma> <ata_qc_prep> <ata_qc_issue_prot> <pdc2026x_cable_detect> <ata_pci_default_filter> <pdc202xx_set_piomode> <pdc202xx_set_dmamode> <0000000000000000> <pdc2026x_dev_config> <ata_bmdma_freeze> <ata_bmdma_thaw> <ata_bmdma_error_handler> <ata_bmdma_post_internal_cmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <pdc2026x_port_start> <0000000000000000> <0000000000000000> <ata_std_dev_select> <ata_check_status> <0000000000000000> <ata_tf_load> <ata_tf_read> <ata_exec_command> <ata_data_xfer> <ata_irq_on> <ata_bmdma_irq_clear> <ata_bmdma_setup> <pdc2026x_bmdma_start> <pdc2026x_bmdma_stop> <ata_bmdma_status> 
+ <0000000000000000> <0000000000000000>
+OPS pata_radisys radisys_pata_ops: <0000000000000000> <0000000000000000> <ata_qc_prep> <radisys_qc_issue_prot> <ata_cable_unknown> <ata_pci_default_filter> <radisys_set_piomode> <radisys_set_dmamode> <0000000000000000> <0000000000000000> <ata_bmdma_freeze> <ata_bmdma_thaw> <ata_bmdma_error_handler> <ata_bmdma_post_internal_cmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_sff_port_start> <0000000000000000> <0000000000000000> <ata_std_dev_select> <ata_check_status> <0000000000000000> <ata_tf_load> <ata_tf_read> <ata_exec_command> <ata_data_xfer> <ata_irq_on> <ata_bmdma_irq_clear> <ata_bmdma_setup> <ata_bmdma_start> <ata_bmdma_stop> <ata_bmdma_status> <0000000000000000> <0000000000
+ 000000>
+OPS pata_rz1000 rz1000_port_ops: <0000000000000000> <0000000000000000> <ata_qc_prep> <ata_qc_issue_prot> <ata_cable_40wire> <ata_pci_default_filter> <0000000000000000> <0000000000000000> <rz1000_set_mode> <0000000000000000> <ata_bmdma_freeze> <ata_bmdma_thaw> <ata_bmdma_error_handler> <ata_bmdma_post_internal_cmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_sff_port_start> <0000000000000000> <0000000000000000> <ata_std_dev_select> <ata_check_status> <0000000000000000> <ata_tf_load> <ata_tf_read> <ata_exec_command> <ata_data_xfer> <ata_irq_on> <ata_bmdma_irq_clear> <ata_bmdma_setup> <ata_bmdma_start> <ata_bmdma_stop> <ata_bmdma_status> <0000000000000000> <0000000000000000>
+OPS pata_serverworks serverworks_csb_port_ops: <0000000000000000> <0000000000000000> <ata_qc_prep> <ata_qc_issue_prot> <serverworks_cable_detect> <serverworks_csb_filter> <serverworks_set_piomode> <serverworks_set_dmamode> <0000000000000000> <0000000000000000> <ata_bmdma_freeze> <ata_bmdma_thaw> <ata_bmdma_error_handler> <ata_bmdma_post_internal_cmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_sff_port_start> <0000000000000000> <0000000000000000> <ata_std_dev_select> <ata_check_status> <0000000000000000> <ata_tf_load> <ata_tf_read> <ata_exec_command> <ata_data_xfer> <ata_irq_on> <ata_bmdma_irq_clear> <ata_bmdma_setup> <ata_bmdma_start> <ata_bmdma_stop> <ata_bmdma_status> <000000
+ 0000000000> <0000000000000000>
+OPS pata_serverworks serverworks_osb4_port_ops: <0000000000000000> <0000000000000000> <ata_qc_prep> <ata_qc_issue_prot> <serverworks_cable_detect> <serverworks_osb4_filter> <serverworks_set_piomode> <serverworks_set_dmamode> <0000000000000000> <0000000000000000> <ata_bmdma_freeze> <ata_bmdma_thaw> <ata_bmdma_error_handler> <ata_bmdma_post_internal_cmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_sff_port_start> <0000000000000000> <0000000000000000> <ata_std_dev_select> <ata_check_status> <0000000000000000> <ata_tf_load> <ata_tf_read> <ata_exec_command> <ata_data_xfer> <ata_irq_on> <ata_bmdma_irq_clear> <ata_bmdma_setup> <ata_bmdma_start> <ata_bmdma_stop> <ata_bmdma_status> <0000
+ 000000000000> <0000000000000000>
+OPS pata_sil680 sil680_port_ops: <0000000000000000> <0000000000000000> <ata_qc_prep> <ata_qc_issue_prot> <sil680_cable_detect> <ata_pci_default_filter> <sil680_set_piomode> <sil680_set_dmamode> <0000000000000000> <0000000000000000> <ata_bmdma_freeze> <ata_bmdma_thaw> <ata_bmdma_error_handler> <ata_bmdma_post_internal_cmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_sff_port_start> <0000000000000000> <0000000000000000> <ata_std_dev_select> <ata_check_status> <0000000000000000> <ata_tf_load> <ata_tf_read> <ata_exec_command> <ata_data_xfer> <ata_irq_on> <ata_bmdma_irq_clear> <ata_bmdma_setup> <ata_bmdma_start> <ata_bmdma_stop> <ata_bmdma_status> <0000000000000000> <0000000000000000
+ >
+OPS pata_sis sis_100_ops: <0000000000000000> <0000000000000000> <ata_qc_prep> <ata_qc_issue_prot> <sis_66_cable_detect> <ata_pci_default_filter> <sis_100_set_piomode> <sis_100_set_dmamode> <0000000000000000> <0000000000000000> <ata_bmdma_freeze> <ata_bmdma_thaw> <sis_error_handler> <ata_bmdma_post_internal_cmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_sff_port_start> <0000000000000000> <0000000000000000> <ata_std_dev_select> <ata_check_status> <0000000000000000> <ata_tf_load> <ata_tf_read> <ata_exec_command> <ata_data_xfer> <ata_irq_on> <ata_bmdma_irq_clear> <ata_bmdma_setup> <ata_bmdma_start> <ata_bmdma_stop> <ata_bmdma_status> <0000000000000000> <0000000000000000>
+OPS pata_sis sis_133_early_ops: <0000000000000000> <0000000000000000> <ata_qc_prep> <ata_qc_issue_prot> <sis_66_cable_detect> <ata_pci_default_filter> <sis_100_set_piomode> <sis_133_early_set_dmamode> <0000000000000000> <0000000000000000> <ata_bmdma_freeze> <ata_bmdma_thaw> <sis_error_handler> <ata_bmdma_post_internal_cmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_sff_port_start> <0000000000000000> <0000000000000000> <ata_std_dev_select> <ata_check_status> <0000000000000000> <ata_tf_load> <ata_tf_read> <ata_exec_command> <ata_data_xfer> <ata_irq_on> <ata_bmdma_irq_clear> <ata_bmdma_setup> <ata_bmdma_start> <ata_bmdma_stop> <ata_bmdma_status> <0000000000000000> <000000000000000
+ 0>
+OPS pata_sis sis_133_for_sata_ops: <0000000000000000> <0000000000000000> <ata_qc_prep> <ata_qc_issue_prot> <sis_133_cable_detect> <ata_pci_default_filter> <sis_133_set_piomode> <sis_133_set_dmamode> <0000000000000000> <0000000000000000> <ata_bmdma_freeze> <ata_bmdma_thaw> <ata_bmdma_error_handler> <ata_bmdma_post_internal_cmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_sff_port_start> <0000000000000000> <0000000000000000> <ata_std_dev_select> <ata_check_status> <0000000000000000> <ata_tf_load> <ata_tf_read> <ata_exec_command> <ata_data_xfer> <ata_irq_on> <ata_bmdma_irq_clear> <ata_bmdma_setup> <ata_bmdma_start> <ata_bmdma_stop> <ata_bmdma_status> <0000000000000000> <00000000000
+ 00000>
+OPS pata_sis sis_133_ops: <0000000000000000> <0000000000000000> <ata_qc_prep> <ata_qc_issue_prot> <sis_133_cable_detect> <ata_pci_default_filter> <sis_133_set_piomode> <sis_133_set_dmamode> <0000000000000000> <0000000000000000> <ata_bmdma_freeze> <ata_bmdma_thaw> <sis_error_handler> <ata_bmdma_post_internal_cmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_sff_port_start> <0000000000000000> <0000000000000000> <ata_std_dev_select> <ata_check_status> <0000000000000000> <ata_tf_load> <ata_tf_read> <ata_exec_command> <ata_data_xfer> <ata_irq_on> <ata_bmdma_irq_clear> <ata_bmdma_setup> <ata_bmdma_start> <ata_bmdma_stop> <ata_bmdma_status> <0000000000000000> <0000000000000000>
+OPS pata_sis sis_66_ops: <0000000000000000> <0000000000000000> <ata_qc_prep> <ata_qc_issue_prot> <sis_66_cable_detect> <ata_pci_default_filter> <sis_old_set_piomode> <sis_66_set_dmamode> <0000000000000000> <0000000000000000> <ata_bmdma_freeze> <ata_bmdma_thaw> <sis_error_handler> <ata_bmdma_post_internal_cmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_sff_port_start> <0000000000000000> <0000000000000000> <ata_std_dev_select> <ata_check_status> <0000000000000000> <ata_tf_load> <ata_tf_read> <ata_exec_command> <ata_data_xfer> <ata_irq_on> <ata_bmdma_irq_clear> <ata_bmdma_setup> <ata_bmdma_start> <ata_bmdma_stop> <ata_bmdma_status> <0000000000000000> <0000000000000000>
+OPS pata_sis sis_base_ops: <0000000000000000> <0000000000000000> <ata_qc_prep> <ata_qc_issue_prot> <0000000000000000> <ata_pci_default_filter> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_bmdma_freeze> <ata_bmdma_thaw> <sis_error_handler> <ata_bmdma_post_internal_cmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_sff_port_start> <0000000000000000> <0000000000000000> <ata_std_dev_select> <ata_check_status> <0000000000000000> <ata_tf_load> <ata_tf_read> <ata_exec_command> <ata_data_xfer> <ata_irq_on> <ata_bmdma_irq_clear> <ata_bmdma_setup> <ata_bmdma_start> <ata_bmdma_stop> <ata_bmdma_status> <0000000000000000> <0000000000000000>
+OPS pata_sis sis_old_ops: <0000000000000000> <0000000000000000> <ata_qc_prep> <ata_qc_issue_prot> <ata_cable_40wire> <ata_pci_default_filter> <sis_old_set_piomode> <sis_old_set_dmamode> <0000000000000000> <0000000000000000> <ata_bmdma_freeze> <ata_bmdma_thaw> <sis_error_handler> <ata_bmdma_post_internal_cmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_sff_port_start> <0000000000000000> <0000000000000000> <ata_std_dev_select> <ata_check_status> <0000000000000000> <ata_tf_load> <ata_tf_read> <ata_exec_command> <ata_data_xfer> <ata_irq_on> <ata_bmdma_irq_clear> <ata_bmdma_setup> <ata_bmdma_start> <ata_bmdma_stop> <ata_bmdma_status> <0000000000000000> <0000000000000000>
+OPS pata_sl82c105 sl82c105_port_ops: <0000000000000000> <0000000000000000> <ata_qc_prep> <ata_qc_issue_prot> <ata_cable_40wire> <ata_pci_default_filter> <sl82c105_set_piomode> <0000000000000000> <0000000000000000> <0000000000000000> <ata_bmdma_freeze> <ata_bmdma_thaw> <sl82c105_error_handler> <ata_bmdma_post_internal_cmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_sff_port_start> <0000000000000000> <0000000000000000> <ata_std_dev_select> <ata_check_status> <0000000000000000> <ata_tf_load> <ata_tf_read> <ata_exec_command> <ata_data_xfer> <ata_irq_on> <ata_bmdma_irq_clear> <ata_bmdma_setup> <sl82c105_bmdma_start> <sl82c105_bmdma_stop> <ata_bmdma_status> <0000000000000000> <000000
+ 0000000000>
+OPS pata_triflex triflex_port_ops: <0000000000000000> <0000000000000000> <ata_qc_prep> <ata_qc_issue_prot> <ata_cable_40wire> <ata_pci_default_filter> <triflex_set_piomode> <0000000000000000> <0000000000000000> <0000000000000000> <ata_bmdma_freeze> <ata_bmdma_thaw> <triflex_error_handler> <ata_bmdma_post_internal_cmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_sff_port_start> <0000000000000000> <0000000000000000> <ata_std_dev_select> <ata_check_status> <0000000000000000> <ata_tf_load> <ata_tf_read> <ata_exec_command> <ata_data_xfer> <ata_irq_on> <ata_bmdma_irq_clear> <ata_bmdma_setup> <triflex_bmdma_start> <triflex_bmdma_stop> <ata_bmdma_status> <0000000000000000> <000000000000
+ 0000>
+OPS pata_via via_port_ops: <0000000000000000> <0000000000000000> <ata_qc_prep> <ata_qc_issue_prot> <via_cable_detect> <ata_pci_default_filter> <via_set_piomode> <via_set_dmamode> <0000000000000000> <0000000000000000> <ata_bmdma_freeze> <ata_bmdma_thaw> <via_error_handler> <ata_bmdma_post_internal_cmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_sff_port_start> <0000000000000000> <0000000000000000> <ata_std_dev_select> <ata_check_status> <0000000000000000> <ata_tf_load> <ata_tf_read> <ata_exec_command> <ata_data_xfer> <ata_irq_on> <ata_bmdma_irq_clear> <ata_bmdma_setup> <ata_bmdma_start> <ata_bmdma_stop> <ata_bmdma_status> <0000000000000000> <0000000000000000>
+OPS pata_via via_port_ops_noirq: <0000000000000000> <0000000000000000> <ata_qc_prep> <ata_qc_issue_prot> <via_cable_detect> <ata_pci_default_filter> <via_set_piomode> <via_set_dmamode> <0000000000000000> <0000000000000000> <ata_bmdma_freeze> <ata_bmdma_thaw> <via_error_handler> <ata_bmdma_post_internal_cmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_sff_port_start> <0000000000000000> <0000000000000000> <ata_std_dev_select> <ata_check_status> <0000000000000000> <ata_tf_load> <ata_tf_read> <ata_exec_command> <ata_data_xfer_noirq> <ata_irq_on> <ata_bmdma_irq_clear> <ata_bmdma_setup> <ata_bmdma_start> <ata_bmdma_stop> <ata_bmdma_status> <0000000000000000> <0000000000000000>
+OPS pdc_adma adma_ata_ops: <0000000000000000> <adma_check_atapi_dma> <adma_qc_prep> <adma_qc_issue> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <adma_freeze> <adma_thaw> <adma_error_handler> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <adma_port_start> <adma_port_stop> <adma_host_stop> <ata_std_dev_select> <ata_check_status> <0000000000000000> <ata_tf_load> <ata_tf_read> <ata_exec_command> <ata_data_xfer> <ata_irq_on> <ata_noop_irq_clear> <0000000000000000> <0000000000000000> <adma_bmdma_stop> <adma_bmdma_status> <0000000000000000> <0000000000000000>
+OPS sata_inic162x inic_port_ops: <0000000000000000> <0000000000000000> <ata_qc_prep> <inic_qc_issue> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <inic_dev_config> <inic_freeze> <inic_thaw> <inic_error_handler> <inic_post_internal_cmd> <inic_scr_read> <inic_scr_write> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <inic_port_resume> <inic_port_start> <0000000000000000> <0000000000000000> <ata_std_dev_select> <ata_check_status> <0000000000000000> <ata_tf_load> <ata_tf_read> <ata_exec_command> <ata_data_xfer> <ata_irq_on> <ata_noop_irq_clear> <inic_bmdma_setup> <inic_bmdma_start> <inic_bmdma_stop> <inic_bmdma_status> <0000000000000000> <0000000000000000>
+OPS sata_mv mv5_ops: <0000000000000000> <0000000000000000> <mv_qc_prep> <mv_qc_issue> <ata_cable_sata> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <mv_eh_freeze> <mv_eh_thaw> <mv_error_handler> <mv_post_int_cmd> <mv5_scr_read> <mv5_scr_write> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <mv_port_start> <mv_port_stop> <0000000000000000> <ata_std_dev_select> <ata_check_status> <0000000000000000> <ata_tf_load> <ata_tf_read> <ata_exec_command> <ata_data_xfer> <ata_irq_on> <ata_noop_irq_clear> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000>
+OPS sata_mv mv6_ops: <0000000000000000> <0000000000000000> <mv_qc_prep> <mv_qc_issue> <ata_cable_sata> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <mv_eh_freeze> <mv_eh_thaw> <mv_error_handler> <mv_post_int_cmd> <mv_scr_read> <mv_scr_write> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <mv_port_start> <mv_port_stop> <0000000000000000> <ata_std_dev_select> <ata_check_status> <0000000000000000> <ata_tf_load> <ata_tf_read> <ata_exec_command> <ata_data_xfer> <ata_irq_on> <ata_noop_irq_clear> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000>
+OPS sata_mv mv_iie_ops: <0000000000000000> <0000000000000000> <mv_qc_prep_iie> <mv_qc_issue> <ata_cable_sata> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <mv_eh_freeze> <mv_eh_thaw> <mv_error_handler> <mv_post_int_cmd> <mv_scr_read> <mv_scr_write> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <mv_port_start> <mv_port_stop> <0000000000000000> <ata_std_dev_select> <ata_check_status> <0000000000000000> <ata_tf_load> <ata_tf_read> <ata_exec_command> <ata_data_xfer> <ata_irq_on> <ata_noop_irq_clear> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000>
+OPS sata_nv nv_adma_ops: <ata_std_qc_defer> <nv_adma_check_atapi_dma> <nv_adma_qc_prep> <nv_adma_qc_issue> <0000000000000000> <ata_pci_default_filter> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <nv_adma_freeze> <nv_adma_thaw> <nv_adma_error_handler> <nv_adma_post_internal_cmd> <nv_scr_read> <nv_scr_write> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <nv_adma_port_suspend> <nv_adma_port_resume> <nv_adma_port_start> <nv_adma_port_stop> <nv_adma_host_stop> <ata_std_dev_select> <ata_check_status> <0000000000000000> <ata_tf_load> <nv_adma_tf_read> <ata_exec_command> <ata_data_xfer> <ata_irq_on> <nv_adma_irq_clear> <ata_bmdma_setup> <ata_bmdma_start> <ata_bmdma_stop> <ata_bmdma_status> <0000000000000000> <0000000000000000>
+OPS sata_nv nv_ck804_ops: <0000000000000000> <0000000000000000> <ata_qc_prep> <ata_qc_issue_prot> <0000000000000000> <ata_pci_default_filter> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <nv_ck804_freeze> <nv_ck804_thaw> <nv_error_handler> <ata_bmdma_post_internal_cmd> <nv_scr_read> <nv_scr_write> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_sff_port_start> <0000000000000000> <nv_ck804_host_stop> <ata_std_dev_select> <ata_check_status> <0000000000000000> <ata_tf_load> <ata_tf_read> <ata_exec_command> <ata_data_xfer> <ata_irq_on> <ata_bmdma_irq_clear> <ata_bmdma_setup> <ata_bmdma_start> <ata_bmdma_stop> <ata_bmdma_status> <0000000000000000> <0000000000000000>
+OPS sata_nv nv_generic_ops: <0000000000000000> <0000000000000000> <ata_qc_prep> <ata_qc_issue_prot> <0000000000000000> <ata_pci_default_filter> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_bmdma_freeze> <ata_bmdma_thaw> <nv_error_handler> <ata_bmdma_post_internal_cmd> <nv_scr_read> <nv_scr_write> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_sff_port_start> <0000000000000000> <0000000000000000> <ata_std_dev_select> <ata_check_status> <0000000000000000> <ata_tf_load> <ata_tf_read> <ata_exec_command> <ata_data_xfer> <ata_irq_on> <ata_bmdma_irq_clear> <ata_bmdma_setup> <ata_bmdma_start> <ata_bmdma_stop> <ata_bmdma_status> <0000000000000000> <0000000000000000>
+OPS sata_nv nv_nf2_ops: <0000000000000000> <0000000000000000> <ata_qc_prep> <ata_qc_issue_prot> <0000000000000000> <ata_pci_default_filter> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <nv_nf2_freeze> <nv_nf2_thaw> <nv_error_handler> <ata_bmdma_post_internal_cmd> <nv_scr_read> <nv_scr_write> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_sff_port_start> <0000000000000000> <0000000000000000> <ata_std_dev_select> <ata_check_status> <0000000000000000> <ata_tf_load> <ata_tf_read> <ata_exec_command> <ata_data_xfer> <ata_irq_on> <ata_bmdma_irq_clear> <ata_bmdma_setup> <ata_bmdma_start> <ata_bmdma_stop> <ata_bmdma_status> <0000000000000000> <0000000000000000>
+OPS sata_nv nv_swncq_ops: <ata_std_qc_defer> <0000000000000000> <nv_swncq_qc_prep> <nv_swncq_qc_issue> <0000000000000000> <ata_pci_default_filter> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <nv_mcp55_freeze> <nv_mcp55_thaw> <nv_swncq_error_handler> <ata_bmdma_post_internal_cmd> <nv_scr_read> <nv_scr_write> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <nv_swncq_port_suspend> <nv_swncq_port_resume> <nv_swncq_port_start> <0000000000000000> <0000000000000000> <ata_std_dev_select> <ata_check_status> <0000000000000000> <ata_tf_load> <ata_tf_read> <ata_exec_command> <ata_data_xfer> <ata_irq_on> <ata_bmdma_irq_clear> <ata_bmdma_setup> <ata_bmdma_start> <ata_bmdma_stop> <ata_bmdma_status> <0000000000000000> <0000000000000000>
+OPS sata_promise pdc_common_ops: <0000000000000000> <pdc_check_atapi_dma> <pdc_qc_prep> <pdc_qc_issue_prot> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <pdc_freeze> <pdc_thaw> <ata_bmdma_error_handler> <pdc_post_internal_cmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_sff_port_start> <0000000000000000> <0000000000000000> <ata_std_dev_select> <ata_check_status> <0000000000000000> <pdc_tf_load_mmio> <ata_tf_read> <pdc_exec_command_mmio> <ata_data_xfer> <ata_irq_on> <pdc_irq_clear> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000>
+OPS sata_promise pdc_old_sata_ops: <0000000000000000> <pdc_old_sata_check_atapi_dma> <pdc_qc_prep> <pdc_qc_issue_prot> <pdc_sata_cable_detect> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <pdc_freeze> <pdc_thaw> <pdc_sata_error_handler> <pdc_post_internal_cmd> <pdc_sata_scr_read> <pdc_sata_scr_write> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <pdc_sata_port_start> <0000000000000000> <0000000000000000> <ata_std_dev_select> <ata_check_status> <0000000000000000> <pdc_tf_load_mmio> <ata_tf_read> <pdc_exec_command_mmio> <ata_data_xfer> <ata_irq_on> <pdc_irq_clear> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000>
+ 
+OPS sata_promise pdc_pata_ops: <0000000000000000> <pdc_check_atapi_dma> <pdc_qc_prep> <pdc_qc_issue_prot> <pdc_pata_cable_detect> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <pdc_freeze> <pdc_thaw> <pdc_pata_error_handler> <pdc_post_internal_cmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <pdc_common_port_start> <0000000000000000> <0000000000000000> <ata_std_dev_select> <ata_check_status> <0000000000000000> <pdc_tf_load_mmio> <ata_tf_read> <pdc_exec_command_mmio> <ata_data_xfer> <ata_irq_on> <pdc_irq_clear> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000>
+OPS sata_promise pdc_sata_ops: <0000000000000000> <pdc_check_atapi_dma> <pdc_qc_prep> <pdc_qc_issue_prot> <pdc_sata_cable_detect> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <pdc_freeze> <pdc_thaw> <pdc_sata_error_handler> <pdc_post_internal_cmd> <pdc_sata_scr_read> <pdc_sata_scr_write> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <pdc_sata_port_start> <0000000000000000> <0000000000000000> <ata_std_dev_select> <ata_check_status> <0000000000000000> <pdc_tf_load_mmio> <ata_tf_read> <pdc_exec_command_mmio> <ata_data_xfer> <ata_irq_on> <pdc_irq_clear> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000>
+OPS sata_qstor qs_ata_ops: <0000000000000000> <qs_check_atapi_dma> <qs_qc_prep> <qs_qc_issue> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <qs_freeze> <qs_thaw> <qs_error_handler> <0000000000000000> <qs_scr_read> <qs_scr_write> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <qs_port_start> <0000000000000000> <qs_host_stop> <ata_std_dev_select> <ata_check_status> <0000000000000000> <ata_tf_load> <ata_tf_read> <ata_exec_command> <ata_data_xfer> <ata_irq_on> <ata_noop_irq_clear> <0000000000000000> <0000000000000000> <qs_bmdma_stop> <qs_bmdma_status> <0000000000000000> <0000000000000000>
+OPS sata_sil24 sil24_ops: <sil24_qc_defer> <0000000000000000> <sil24_qc_prep> <sil24_qc_issue> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <sil24_dev_config> <sil24_freeze> <sil24_thaw> <sil24_error_handler> <sil24_post_internal_cmd> <sil24_scr_read> <sil24_scr_write> <sil24_pmp_attach> <sil24_pmp_detach> <0000000000000000> <0000000000000000> <0000000000000000> <sil24_port_resume> <sil24_port_start> <0000000000000000> <0000000000000000> <ata_noop_dev_select> <sil24_check_status> <sil24_check_status> <0000000000000000> <sil24_tf_read> <0000000000000000> <0000000000000000> <0000000000000000> <ata_noop_irq_clear> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000>
+OPS sata_sil sil_ops: <0000000000000000> <0000000000000000> <ata_qc_prep> <ata_qc_issue_prot> <0000000000000000> <ata_pci_default_filter> <0000000000000000> <0000000000000000> <sil_set_mode> <sil_dev_config> <sil_freeze> <sil_thaw> <ata_bmdma_error_handler> <ata_bmdma_post_internal_cmd> <sil_scr_read> <sil_scr_write> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_sff_port_start> <0000000000000000> <0000000000000000> <ata_std_dev_select> <ata_check_status> <0000000000000000> <ata_tf_load> <ata_tf_read> <ata_exec_command> <ata_data_xfer> <ata_irq_on> <ata_bmdma_irq_clear> <ata_bmdma_setup> <ata_bmdma_start> <ata_bmdma_stop> <ata_bmdma_status> <0000000000000000> <0000000000000000>
+OPS sata_sis sis_ops: <0000000000000000> <0000000000000000> <ata_qc_prep> <ata_qc_issue_prot> <0000000000000000> <ata_pci_default_filter> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_bmdma_freeze> <ata_bmdma_thaw> <ata_bmdma_error_handler> <ata_bmdma_post_internal_cmd> <sis_scr_read> <sis_scr_write> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_sff_port_start> <0000000000000000> <0000000000000000> <ata_std_dev_select> <ata_check_status> <0000000000000000> <ata_tf_load> <ata_tf_read> <ata_exec_command> <ata_data_xfer> <ata_irq_on> <ata_bmdma_irq_clear> <ata_bmdma_setup> <ata_bmdma_start> <ata_bmdma_stop> <ata_bmdma_status> <0000000000000000> <0000000000000000>
+OPS sata_svw k2_sata_ops: <0000000000000000> <k2_sata_check_atapi_dma> <ata_qc_prep> <ata_qc_issue_prot> <0000000000000000> <ata_pci_default_filter> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_bmdma_freeze> <ata_bmdma_thaw> <ata_bmdma_error_handler> <ata_bmdma_post_internal_cmd> <k2_sata_scr_read> <k2_sata_scr_write> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_sff_port_start> <0000000000000000> <0000000000000000> <ata_std_dev_select> <k2_stat_check_status> <0000000000000000> <k2_sata_tf_load> <k2_sata_tf_read> <ata_exec_command> <ata_data_xfer> <ata_irq_on> <ata_bmdma_irq_clear> <k2_bmdma_setup_mmio> <k2_bmdma_start_mmio> <ata_bmdma_stop> <ata_bmdma_status> <0000000000000000> <00
+ 00000000000000>
+OPS sata_sx4 pdc_20621_ops: <0000000000000000> <0000000000000000> <pdc20621_qc_prep> <pdc20621_qc_issue_prot> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <pdc_port_start> <0000000000000000> <0000000000000000> <ata_std_dev_select> <ata_check_status> <0000000000000000> <pdc_tf_load_mmio> <ata_tf_read> <pdc_exec_command_mmio> <ata_data_xfer> <ata_irq_on> <pdc20621_irq_clear> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <pdc_20621_phy_reset> <pdc_eng_timeout>
+OPS sata_uli uli_ops: <0000000000000000> <0000000000000000> <ata_qc_prep> <ata_qc_issue_prot> <0000000000000000> <ata_pci_default_filter> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_bmdma_freeze> <ata_bmdma_thaw> <ata_bmdma_error_handler> <ata_bmdma_post_internal_cmd> <uli_scr_read> <uli_scr_write> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_sff_port_start> <0000000000000000> <0000000000000000> <ata_std_dev_select> <ata_check_status> <0000000000000000> <ata_tf_load> <ata_tf_read> <ata_exec_command> <ata_data_xfer> <ata_irq_on> <ata_bmdma_irq_clear> <ata_bmdma_setup> <ata_bmdma_start> <ata_bmdma_stop> <ata_bmdma_status> <0000000000000000> <0000000000000000>
+OPS sata_via vt6420_sata_ops: <0000000000000000> <0000000000000000> <ata_qc_prep> <ata_qc_issue_prot> <0000000000000000> <ata_pci_default_filter> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <svia_noop_freeze> <ata_bmdma_thaw> <vt6420_error_handler> <ata_bmdma_post_internal_cmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_sff_port_start> <0000000000000000> <0000000000000000> <ata_std_dev_select> <ata_check_status> <0000000000000000> <ata_tf_load> <ata_tf_read> <ata_exec_command> <ata_data_xfer> <ata_irq_on> <ata_bmdma_irq_clear> <ata_bmdma_setup> <ata_bmdma_start> <ata_bmdma_stop> <ata_bmdma_status> <0000000000000000> <0000000000000000>
+OPS sata_via vt6421_pata_ops: <0000000000000000> <0000000000000000> <ata_qc_prep> <ata_qc_issue_prot> <vt6421_pata_cable_detect> <ata_pci_default_filter> <vt6421_set_pio_mode> <vt6421_set_dma_mode> <0000000000000000> <0000000000000000> <ata_bmdma_freeze> <ata_bmdma_thaw> <ata_bmdma_error_handler> <ata_bmdma_post_internal_cmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_sff_port_start> <0000000000000000> <0000000000000000> <ata_std_dev_select> <ata_check_status> <0000000000000000> <ata_tf_load> <ata_tf_read> <ata_exec_command> <ata_data_xfer> <ata_irq_on> <ata_bmdma_irq_clear> <ata_bmdma_setup> <ata_bmdma_start> <ata_bmdma_stop> <ata_bmdma_status> <0000000000000000> <000000000000
+ 0000>
+OPS sata_via vt6421_sata_ops: <0000000000000000> <0000000000000000> <ata_qc_prep> <ata_qc_issue_prot> <0000000000000000> <ata_pci_default_filter> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_bmdma_freeze> <ata_bmdma_thaw> <ata_bmdma_error_handler> <ata_bmdma_post_internal_cmd> <svia_scr_read> <svia_scr_write> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_sff_port_start> <0000000000000000> <0000000000000000> <ata_std_dev_select> <ata_check_status> <0000000000000000> <ata_tf_load> <ata_tf_read> <ata_exec_command> <ata_data_xfer> <ata_irq_on> <ata_bmdma_irq_clear> <ata_bmdma_setup> <ata_bmdma_start> <ata_bmdma_stop> <ata_bmdma_status> <0000000000000000> <0000000000000000>
+OPS sata_vsc vsc_sata_ops: <0000000000000000> <0000000000000000> <ata_qc_prep> <ata_qc_issue_prot> <0000000000000000> <ata_pci_default_filter> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <vsc_freeze> <vsc_thaw> <ata_bmdma_error_handler> <ata_bmdma_post_internal_cmd> <vsc_sata_scr_read> <vsc_sata_scr_write> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_sff_port_start> <0000000000000000> <0000000000000000> <ata_std_dev_select> <ata_check_status> <0000000000000000> <vsc_sata_tf_load> <vsc_sata_tf_read> <ata_exec_command> <ata_data_xfer> <ata_irq_on> <ata_bmdma_irq_clear> <ata_bmdma_setup> <ata_bmdma_start> <ata_bmdma_stop> <ata_bmdma_status> <0000000000000000> <0000000000000000>
+OPS sc1200 sc1200_port_ops: <0000000000000000> <0000000000000000> <ata_dumb_qc_prep> <sc1200_qc_issue_prot> <ata_cable_40wire> <ata_pci_default_filter> <sc1200_set_piomode> <sc1200_set_dmamode> <0000000000000000> <0000000000000000> <ata_bmdma_freeze> <ata_bmdma_thaw> <ata_bmdma_error_handler> <ata_bmdma_post_internal_cmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_sff_port_start> <0000000000000000> <0000000000000000> <ata_std_dev_select> <ata_check_status> <0000000000000000> <ata_tf_load> <ata_tf_read> <ata_exec_command> <ata_data_xfer> <ata_irq_on> <ata_bmdma_irq_clear> <ata_bmdma_setup> <ata_bmdma_start> <ata_bmdma_stop> <ata_bmdma_status> <0000000000000000> <0000000000000000
+ >
+SHT ahci ahci_sht: ahci <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_ioctl> <ata_scsi_queuecmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_slave_config> <ata_scsi_slave_destroy> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_change_queue_depth> <0000000000000000> <ata_std_bios_param> <0000000000000000> <0000000000000000> ahci 31 -1 168 0 4294967295 1 0 0 0 1 1 0 0 0 0
+SHT ata_generic generic_sht: ata_generic <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_ioctl> <ata_scsi_queuecmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_slave_config> <ata_scsi_slave_destroy> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_std_bios_param> <0000000000000000> <0000000000000000> ata_generic 1 -1 128 0 65535 1 0 0 0 1 1 0 0 0 0
+SHT ata_piix piix_sht: ata_piix <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_ioctl> <ata_scsi_queuecmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_slave_config> <ata_scsi_slave_destroy> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_std_bios_param> <0000000000000000> <0000000000000000> ata_piix 1 -1 128 0 65535 1 0 0 0 1 1 0 0 0 0
+SHT pata_acpi pacpi_sht: pata_acpi <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_ioctl> <ata_scsi_queuecmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_slave_config> <ata_scsi_slave_destroy> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_std_bios_param> <0000000000000000> <0000000000000000> pata_acpi 1 -1 128 0 65535 1 0 0 0 1 1 0 0 0 0
+SHT pata_ali ali_sht: pata_ali <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_ioctl> <ata_scsi_queuecmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_slave_config> <ata_scsi_slave_destroy> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_std_bios_param> <0000000000000000> <0000000000000000> pata_ali 1 -1 128 0 65535 1 0 0 0 1 1 0 0 0 0
+SHT pata_amd amd_sht: pata_amd <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_ioctl> <ata_scsi_queuecmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_slave_config> <ata_scsi_slave_destroy> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_std_bios_param> <0000000000000000> <0000000000000000> pata_amd 1 -1 128 0 65535 1 0 0 0 1 1 0 0 0 0
+SHT pata_artop artop_sht: pata_artop <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_ioctl> <ata_scsi_queuecmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_slave_config> <ata_scsi_slave_destroy> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_std_bios_param> <0000000000000000> <0000000000000000> pata_artop 1 -1 128 0 65535 1 0 0 0 1 1 0 0 0 0
+SHT pata_atiixp atiixp_sht: pata_atiixp <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_ioctl> <ata_scsi_queuecmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_slave_config> <ata_scsi_slave_destroy> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_std_bios_param> <0000000000000000> <0000000000000000> pata_atiixp 1 -1 128 0 65535 1 0 0 0 1 1 0 0 0 0
+SHT pata_cmd640 cmd640_sht: pata_cmd640 <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_ioctl> <ata_scsi_queuecmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_slave_config> <ata_scsi_slave_destroy> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_std_bios_param> <0000000000000000> <0000000000000000> pata_cmd640 1 -1 128 0 65535 1 0 0 0 1 1 0 0 0 0
+SHT pata_cmd64x cmd64x_sht: pata_cmd64x <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_ioctl> <ata_scsi_queuecmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_slave_config> <ata_scsi_slave_destroy> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_std_bios_param> <0000000000000000> <0000000000000000> pata_cmd64x 1 -1 128 0 65535 1 0 0 0 1 1 0 0 0 0
+SHT pata_cs5520 cs5520_sht: pata_cs5520 <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_ioctl> <ata_scsi_queuecmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_slave_config> <ata_scsi_slave_destroy> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_std_bios_param> <0000000000000000> <0000000000000000> pata_cs5520 1 -1 64 0 65535 1 0 0 0 1 1 0 0 0 0
+SHT pata_cs5530 cs5530_sht: pata_cs5530 <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_ioctl> <ata_scsi_queuecmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_slave_config> <ata_scsi_slave_destroy> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_std_bios_param> <0000000000000000> <0000000000000000> pata_cs5530 1 -1 64 0 65535 1 0 0 0 1 1 0 0 0 0
+SHT pata_cypress cy82c693_sht: pata_cypress <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_ioctl> <ata_scsi_queuecmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_slave_config> <ata_scsi_slave_destroy> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_std_bios_param> <0000000000000000> <0000000000000000> pata_cypress 1 -1 128 0 65535 1 0 0 0 1 1 0 0 0 0
+SHT pata_efar efar_sht: pata_efar <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_ioctl> <ata_scsi_queuecmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_slave_config> <ata_scsi_slave_destroy> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_std_bios_param> <0000000000000000> <0000000000000000> pata_efar 1 -1 128 0 65535 1 0 0 0 1 1 0 0 0 0
+SHT pata_hpt366 hpt36x_sht: pata_hpt366 <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_ioctl> <ata_scsi_queuecmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_slave_config> <ata_scsi_slave_destroy> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_std_bios_param> <0000000000000000> <0000000000000000> pata_hpt366 1 -1 128 0 65535 1 0 0 0 1 1 0 0 0 0
+SHT pata_hpt37x hpt37x_sht: pata_hpt37x <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_ioctl> <ata_scsi_queuecmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_slave_config> <ata_scsi_slave_destroy> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_std_bios_param> <0000000000000000> <0000000000000000> pata_hpt37x 1 -1 128 0 65535 1 0 0 0 1 1 0 0 0 0
+SHT pata_hpt3x2n hpt3x2n_sht: pata_hpt3x2n <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_ioctl> <ata_scsi_queuecmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_slave_config> <ata_scsi_slave_destroy> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_std_bios_param> <0000000000000000> <0000000000000000> pata_hpt3x2n 1 -1 128 0 65535 1 0 0 0 1 1 0 0 0 0
+SHT pata_hpt3x3 hpt3x3_sht: pata_hpt3x3 <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_ioctl> <ata_scsi_queuecmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_slave_config> <ata_scsi_slave_destroy> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_std_bios_param> <0000000000000000> <0000000000000000> pata_hpt3x3 1 -1 128 0 65535 1 0 0 0 1 1 0 0 0 0
+SHT pata_it8213 it8213_sht: pata_it8213 <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_ioctl> <ata_scsi_queuecmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_slave_config> <ata_scsi_slave_destroy> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_std_bios_param> <0000000000000000> <0000000000000000> pata_it8213 1 -1 128 0 65535 1 0 0 0 1 1 0 0 0 0
+SHT pata_it821x it821x_sht: pata_it821x <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_ioctl> <ata_scsi_queuecmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_slave_config> <ata_scsi_slave_destroy> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_std_bios_param> <0000000000000000> <0000000000000000> pata_it821x 1 -1 128 0 65535 1 0 0 0 1 1 0 0 0 0
+SHT pata_jmicron jmicron_sht: pata_jmicron <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_ioctl> <ata_scsi_queuecmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_slave_config> <ata_scsi_slave_destroy> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_std_bios_param> <0000000000000000> <0000000000000000> pata_jmicron 1 -1 128 0 65535 1 0 0 0 1 1 0 0 0 0
+SHT pata_marvell marvell_sht: pata_marvell <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_ioctl> <ata_scsi_queuecmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_slave_config> <ata_scsi_slave_destroy> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_std_bios_param> <0000000000000000> <0000000000000000> pata_marvell 1 -1 128 0 65535 1 0 0 0 1 1 0 0 0 0
+SHT pata_mpiix mpiix_sht: pata_mpiix <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_ioctl> <ata_scsi_queuecmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_slave_config> <ata_scsi_slave_destroy> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_std_bios_param> <0000000000000000> <0000000000000000> pata_mpiix 1 -1 128 0 65535 1 0 0 0 1 1 0 0 0 0
+SHT pata_netcell netcell_sht: pata_netcell <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_ioctl> <ata_scsi_queuecmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_slave_config> <ata_scsi_slave_destroy> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_std_bios_param> <0000000000000000> <0000000000000000> pata_netcell 1 -1 128 0 65535 1 0 0 0 1 1 0 0 0 0
+SHT pata_ninja32 ninja32_sht: pata_ninja32 <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_ioctl> <ata_scsi_queuecmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_slave_config> <ata_scsi_slave_destroy> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_std_bios_param> <0000000000000000> <0000000000000000> pata_ninja32 1 -1 128 0 65535 1 0 0 0 1 1 0 0 0 0
+SHT pata_ns87410 ns87410_sht: pata_ns87410 <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_ioctl> <ata_scsi_queuecmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_slave_config> <ata_scsi_slave_destroy> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_std_bios_param> <0000000000000000> <0000000000000000> pata_ns87410 1 -1 128 0 65535 1 0 0 0 1 1 0 0 0 0
+SHT pata_ns87415 ns87415_sht: pata_ns87415 <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_ioctl> <ata_scsi_queuecmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_slave_config> <ata_scsi_slave_destroy> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_std_bios_param> <0000000000000000> <0000000000000000> pata_ns87415 1 -1 128 0 65535 1 0 0 0 1 1 0 0 0 0
+SHT pata_oldpiix oldpiix_sht: pata_oldpiix <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_ioctl> <ata_scsi_queuecmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_slave_config> <ata_scsi_slave_destroy> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_std_bios_param> <0000000000000000> <0000000000000000> pata_oldpiix 1 -1 128 0 65535 1 0 0 0 1 1 0 0 0 0
+SHT pata_optidma optidma_sht: pata_optidma <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_ioctl> <ata_scsi_queuecmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_slave_config> <ata_scsi_slave_destroy> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_std_bios_param> <0000000000000000> <0000000000000000> pata_optidma 1 -1 128 0 65535 1 0 0 0 1 1 0 0 0 0
+SHT pata_opti opti_sht: pata_opti <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_ioctl> <ata_scsi_queuecmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_slave_config> <ata_scsi_slave_destroy> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_std_bios_param> <0000000000000000> <0000000000000000> pata_opti 1 -1 128 0 65535 1 0 0 0 1 1 0 0 0 0
+SHT pata_pcmcia pcmcia_sht: pata_pcmcia <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_ioctl> <ata_scsi_queuecmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_slave_config> <ata_scsi_slave_destroy> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_std_bios_param> <0000000000000000> <0000000000000000> pata_pcmcia 1 -1 128 0 65535 1 0 0 0 1 1 0 0 0 0
+SHT pata_pdc2027x pdc2027x_sht: pata_pdc2027x <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_ioctl> <ata_scsi_queuecmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_slave_config> <ata_scsi_slave_destroy> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_std_bios_param> <0000000000000000> <0000000000000000> pata_pdc2027x 1 -1 128 0 65535 1 0 0 0 1 1 0 0 0 0
+SHT pata_pdc202xx_old pdc202xx_sht: pata_pdc202xx_old <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_ioctl> <ata_scsi_queuecmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_slave_config> <ata_scsi_slave_destroy> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_std_bios_param> <0000000000000000> <0000000000000000> pata_pdc202xx_old 1 -1 128 0 65535 1 0 0 0 1 1 0 0 0 0
+SHT pata_radisys radisys_sht: pata_radisys <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_ioctl> <ata_scsi_queuecmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_slave_config> <ata_scsi_slave_destroy> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_std_bios_param> <0000000000000000> <0000000000000000> pata_radisys 1 -1 128 0 65535 1 0 0 0 1 1 0 0 0 0
+SHT pata_rz1000 rz1000_sht: pata_rz1000 <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_ioctl> <ata_scsi_queuecmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_slave_config> <ata_scsi_slave_destroy> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_std_bios_param> <0000000000000000> <0000000000000000> pata_rz1000 1 -1 128 0 65535 1 0 0 0 1 1 0 0 0 0
+SHT pata_serverworks serverworks_sht: pata_serverworks <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_ioctl> <ata_scsi_queuecmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_slave_config> <ata_scsi_slave_destroy> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_std_bios_param> <0000000000000000> <0000000000000000> pata_serverworks 1 -1 128 0 65535 1 0 0 0 1 1 0 0 0 0
+SHT pata_sil680 sil680_sht: pata_sil680 <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_ioctl> <ata_scsi_queuecmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_slave_config> <ata_scsi_slave_destroy> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_std_bios_param> <0000000000000000> <0000000000000000> pata_sil680 1 -1 128 0 65535 1 0 0 0 1 1 0 0 0 0
+SHT pata_sis sis_sht: pata_sis <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_ioctl> <ata_scsi_queuecmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_slave_config> <ata_scsi_slave_destroy> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_std_bios_param> <0000000000000000> <0000000000000000> pata_sis 1 -1 128 0 65535 1 0 0 0 1 1 0 0 0 0
+SHT pata_sl82c105 sl82c105_sht: pata_sl82c105 <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_ioctl> <ata_scsi_queuecmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_slave_config> <ata_scsi_slave_destroy> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_std_bios_param> <0000000000000000> <0000000000000000> pata_sl82c105 1 -1 128 0 65535 1 0 0 0 1 1 0 0 0 0
+SHT pata_triflex triflex_sht: pata_triflex <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_ioctl> <ata_scsi_queuecmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_slave_config> <ata_scsi_slave_destroy> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_std_bios_param> <0000000000000000> <0000000000000000> pata_triflex 1 -1 128 0 65535 1 0 0 0 1 1 0 0 0 0
+SHT pata_via via_sht: pata_via <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_ioctl> <ata_scsi_queuecmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_slave_config> <ata_scsi_slave_destroy> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_std_bios_param> <0000000000000000> <0000000000000000> pata_via 1 -1 128 0 65535 1 0 0 0 1 1 0 0 0 0
+SHT pdc_adma adma_ata_sht: pdc_adma <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_ioctl> <ata_scsi_queuecmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_slave_config> <ata_scsi_slave_destroy> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_std_bios_param> <0000000000000000> <0000000000000000> pdc_adma 1 -1 128 0 4294967295 1 0 0 0 1 1 0 0 0 0
+SHT sata_inic162x inic_sht: sata_inic162x <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_ioctl> <ata_scsi_queuecmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <inic_slave_config> <ata_scsi_slave_destroy> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_std_bios_param> <0000000000000000> <0000000000000000> sata_inic162x 1 -1 128 0 65535 1 0 0 0 1 1 0 0 0 0
+SHT sata_mv mv5_sht: sata_mv <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_ioctl> <ata_scsi_queuecmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_slave_config> <ata_scsi_slave_destroy> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_std_bios_param> <0000000000000000> <0000000000000000> sata_mv 1 -1 88 0 65535 1 0 0 0 1 1 0 0 0 0
+SHT sata_mv mv6_sht: sata_mv <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_ioctl> <ata_scsi_queuecmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_slave_config> <ata_scsi_slave_destroy> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_std_bios_param> <0000000000000000> <0000000000000000> sata_mv 1 -1 88 0 65535 1 0 0 0 1 1 0 0 0 0
+SHT sata_nv nv_adma_sht: sata_nv <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_ioctl> <ata_scsi_queuecmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <nv_adma_slave_config> <ata_scsi_slave_destroy> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_change_queue_depth> <0000000000000000> <ata_std_bios_param> <0000000000000000> <0000000000000000> sata_nv 32 -1 61 0 4294967295 1 0 0 0 1 1 0 0 0 0
+SHT sata_nv nv_sht: sata_nv <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_ioctl> <ata_scsi_queuecmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_slave_config> <ata_scsi_slave_destroy> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_std_bios_param> <0000000000000000> <0000000000000000> sata_nv 1 -1 128 0 65535 1 0 0 0 1 1 0 0 0 0
+SHT sata_nv nv_swncq_sht: sata_nv <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_ioctl> <ata_scsi_queuecmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <nv_swncq_slave_config> <ata_scsi_slave_destroy> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_change_queue_depth> <0000000000000000> <ata_std_bios_param> <0000000000000000> <0000000000000000> sata_nv 32 -1 128 0 65535 1 0 0 0 1 1 0 0 0 0
+SHT sata_promise pdc_ata_sht: sata_promise <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_ioctl> <ata_scsi_queuecmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_slave_config> <ata_scsi_slave_destroy> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_std_bios_param> <0000000000000000> <0000000000000000> sata_promise 1 -1 127 0 65535 1 0 0 0 1 1 0 0 0 0
+SHT sata_qstor qs_ata_sht: sata_qstor <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_ioctl> <ata_scsi_queuecmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_slave_config> <ata_scsi_slave_destroy> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_std_bios_param> <0000000000000000> <0000000000000000> sata_qstor 1 -1 128 0 18446744073709551615 1 0 0 0 1 1 0 0 0 0
+SHT sata_sil24 sil24_sht: sata_sil24 <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_ioctl> <ata_scsi_queuecmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_slave_config> <ata_scsi_slave_destroy> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_change_queue_depth> <0000000000000000> <ata_std_bios_param> <0000000000000000> <0000000000000000> sata_sil24 31 -1 253 0 65535 1 0 0 0 1 1 0 0 0 0
+SHT sata_sil sil_sht: sata_sil <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_ioctl> <ata_scsi_queuecmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_slave_config> <ata_scsi_slave_destroy> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_std_bios_param> <0000000000000000> <0000000000000000> sata_sil 1 -1 128 0 65535 1 0 0 0 1 1 0 0 0 0
+SHT sata_sis sis_sht: sata_sis <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_ioctl> <ata_scsi_queuecmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_slave_config> <ata_scsi_slave_destroy> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_std_bios_param> <0000000000000000> <0000000000000000> sata_sis 1 -1 128 0 65535 1 0 0 0 1 1 0 0 0 0
+SHT sata_svw k2_sata_sht: sata_svw <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_ioctl> <ata_scsi_queuecmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_slave_config> <ata_scsi_slave_destroy> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_std_bios_param> <0000000000000000> <0000000000000000> sata_svw 1 -1 128 0 65535 1 0 0 0 1 1 0 0 0 0
+SHT sata_sx4 pdc_sata_sht: sata_sx4 <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_ioctl> <ata_scsi_queuecmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_slave_config> <ata_scsi_slave_destroy> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_std_bios_param> <0000000000000000> <0000000000000000> sata_sx4 1 -1 128 0 65535 1 0 0 0 1 1 0 0 0 0
+SHT sata_uli uli_sht: sata_uli <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_ioctl> <ata_scsi_queuecmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_slave_config> <ata_scsi_slave_destroy> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_std_bios_param> <0000000000000000> <0000000000000000> sata_uli 1 -1 128 0 65535 1 0 0 0 1 1 0 0 0 0
+SHT sata_via svia_sht: sata_via <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_ioctl> <ata_scsi_queuecmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_slave_config> <ata_scsi_slave_destroy> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_std_bios_param> <0000000000000000> <0000000000000000> sata_via 1 -1 128 0 65535 1 0 0 0 1 1 0 0 0 0
+SHT sata_vsc vsc_sata_sht: sata_vsc <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_ioctl> <ata_scsi_queuecmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_slave_config> <ata_scsi_slave_destroy> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_std_bios_param> <0000000000000000> <0000000000000000> sata_vsc 1 -1 128 0 65535 1 0 0 0 1 1 0 0 0 0
+SHT sc1200 sc1200_sht: sc1200 <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_ioctl> <ata_scsi_queuecmd> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_scsi_slave_config> <ata_scsi_slave_destroy> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <0000000000000000> <ata_std_bios_param> <0000000000000000> <0000000000000000> sc1200 1 -1 64 0 65535 1 0 0 0 1 1 0 0 0 0
+
+--------------020203070305040007040100--
