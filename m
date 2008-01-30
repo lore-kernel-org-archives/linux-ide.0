@@ -1,652 +1,247 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH 3/9] libata: implement and use ata_noop_irq_clear()
-Date: Wed, 30 Jan 2008 18:28:57 +0900
-Message-ID: <12016853432109-git-send-email-htejun@gmail.com>
-References: <12016853433196-git-send-email-htejun@gmail.com>
+Subject: [PATCHSET libata-dev#upstream] clean up scsi_host_templates and ata_port_operations
+Date: Wed, 30 Jan 2008 18:28:54 +0900
+Message-ID: <12016853433196-git-send-email-htejun@gmail.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.178]:35445 "EHLO
+Received: from wa-out-1112.google.com ([209.85.146.182]:36505 "EHLO
 	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754894AbYA3J3M (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 30 Jan 2008 04:29:12 -0500
-Received: by wa-out-1112.google.com with SMTP id v27so277515wah.23
-        for <linux-ide@vger.kernel.org>; Wed, 30 Jan 2008 01:29:12 -0800 (PST)
-In-Reply-To: <12016853433196-git-send-email-htejun@gmail.com>
+	with ESMTP id S1751321AbYA3J3L (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 30 Jan 2008 04:29:11 -0500
+Received: by wa-out-1112.google.com with SMTP id v27so277500wah.23
+        for <linux-ide@vger.kernel.org>; Wed, 30 Jan 2008 01:29:10 -0800 (PST)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: jeff@garzik.org, linux-ide@vger.kernel.org, liml@rtr.ca, alan@lxorguk.ukuu.org.uk, kngregertsen@norway.atmel.com, sonic.adi@gmail.com, rmk@dyn-67.arm.linux.org.uk, alessandro.zummo@to
-Cc: Tejun Heo <htejun@gmail.com>
 
-->irq_clear() is used to clear IRQ bit of a SFF controller and isn't
-useful for drivers which don't use libata SFF HSM implementation.
-However, it's a required callback and many drivers implement their own
-noop version as placeholder.  This patch implements ata_noop_irq_clear
-and use it to replace those custom placeholders.
 
-Also, SFF drivers which don't support BMDMA don't need to use
-ata_bmdma_irq_clear().  It becomes noop if BMDMA address isn't
-initialized.  Convert them to use ata_noop_irq_clear().
+Hello, all.
 
-Signed-off-by: Tejun Heo <htejun@gmail.com>
----
- drivers/ata/ahci.c           |   12 +++---------
- drivers/ata/libata-core.c    |    1 +
- drivers/ata/libata-sff.c     |    8 ++++++++
- drivers/ata/pata_ali.c       |    2 +-
- drivers/ata/pata_at32.c      |    7 +------
- drivers/ata/pata_icside.c    |    7 +------
- drivers/ata/pata_isapnp.c    |    2 +-
- drivers/ata/pata_ixp4xx_cf.c |    2 +-
- drivers/ata/pata_legacy.c    |   22 +++++++++++-----------
- drivers/ata/pata_mpc52xx.c   |    2 +-
- drivers/ata/pata_mpiix.c     |    2 +-
- drivers/ata/pata_ns87410.c   |    2 +-
- drivers/ata/pata_pcmcia.c    |    4 ++--
- drivers/ata/pata_platform.c  |    2 +-
- drivers/ata/pata_qdi.c       |    4 ++--
- drivers/ata/pata_winbond.c   |    2 +-
- drivers/ata/pdc_adma.c       |    8 +-------
- drivers/ata/sata_fsl.c       |    7 +------
- drivers/ata/sata_inic162x.c  |    7 +------
- drivers/ata/sata_mv.c        |   11 +++--------
- drivers/ata/sata_qstor.c     |    8 +-------
- drivers/ata/sata_sil24.c     |    8 +-------
- include/linux/libata.h       |    1 +
- 23 files changed, 46 insertions(+), 85 deletions(-)
+This is the first take of cleanup-sht-ops patchset.  As the name
+suggests it reorganizes and cleans up scsi_host_template and
+ata_port_operation tables used by libata core and low level drivers.
 
-diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
-index 70a0f07..07dcaf6 100644
---- a/drivers/ata/ahci.c
-+++ b/drivers/ata/ahci.c
-@@ -238,7 +238,6 @@ static int ahci_scr_read(struct ata_port *ap, unsigned int sc_reg, u32 *val);
- static int ahci_scr_write(struct ata_port *ap, unsigned int sc_reg, u32 val);
- static int ahci_init_one(struct pci_dev *pdev, const struct pci_device_id *ent);
- static unsigned int ahci_qc_issue(struct ata_queued_cmd *qc);
--static void ahci_irq_clear(struct ata_port *ap);
- static int ahci_port_start(struct ata_port *ap);
- static void ahci_port_stop(struct ata_port *ap);
- static void ahci_tf_read(struct ata_port *ap, struct ata_taskfile *tf);
-@@ -298,7 +297,7 @@ static const struct ata_port_operations ahci_ops = {
- 	.qc_prep		= ahci_qc_prep,
- 	.qc_issue		= ahci_qc_issue,
- 
--	.irq_clear		= ahci_irq_clear,
-+	.irq_clear		= ata_noop_irq_clear,
- 
- 	.scr_read		= ahci_scr_read,
- 	.scr_write		= ahci_scr_write,
-@@ -334,7 +333,7 @@ static const struct ata_port_operations ahci_vt8251_ops = {
- 	.qc_prep		= ahci_qc_prep,
- 	.qc_issue		= ahci_qc_issue,
- 
--	.irq_clear		= ahci_irq_clear,
-+	.irq_clear		= ata_noop_irq_clear,
- 
- 	.scr_read		= ahci_scr_read,
- 	.scr_write		= ahci_scr_write,
-@@ -368,7 +367,7 @@ static const struct ata_port_operations ahci_p5wdh_ops = {
- 	.qc_prep		= ahci_qc_prep,
- 	.qc_issue		= ahci_qc_issue,
- 
--	.irq_clear		= ahci_irq_clear,
-+	.irq_clear		= ata_noop_irq_clear,
- 
- 	.scr_read		= ahci_scr_read,
- 	.scr_write		= ahci_scr_write,
-@@ -1712,11 +1711,6 @@ static void ahci_port_intr(struct ata_port *ap)
- 	}
- }
- 
--static void ahci_irq_clear(struct ata_port *ap)
--{
--	/* TODO */
--}
--
- static irqreturn_t ahci_interrupt(int irq, void *dev_instance)
- {
- 	struct ata_host *host = dev_instance;
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index e71276b..e61c5db 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -7558,6 +7558,7 @@ EXPORT_SYMBOL_GPL(ata_noop_qc_prep);
- EXPORT_SYMBOL_GPL(ata_bmdma_setup);
- EXPORT_SYMBOL_GPL(ata_bmdma_start);
- EXPORT_SYMBOL_GPL(ata_bmdma_irq_clear);
-+EXPORT_SYMBOL_GPL(ata_noop_irq_clear);
- EXPORT_SYMBOL_GPL(ata_bmdma_status);
- EXPORT_SYMBOL_GPL(ata_bmdma_stop);
- EXPORT_SYMBOL_GPL(ata_bmdma_freeze);
-diff --git a/drivers/ata/libata-sff.c b/drivers/ata/libata-sff.c
-index 60cd4b1..34cdab0 100644
---- a/drivers/ata/libata-sff.c
-+++ b/drivers/ata/libata-sff.c
-@@ -297,6 +297,14 @@ void ata_bmdma_irq_clear(struct ata_port *ap)
- }
- 
- /**
-+ *	ata_noop_irq_clear - Noop placeholder for irq_clear
-+ *	@ap: Port associated with this ATA transaction.
-+ */
-+void ata_noop_irq_clear(struct ata_port *ap)
-+{
-+}
-+
-+/**
-  *	ata_bmdma_status - Read PCI IDE BMDMA status
-  *	@ap: Port associated with this ATA transaction.
-  *
-diff --git a/drivers/ata/pata_ali.c b/drivers/ata/pata_ali.c
-index 5ef6594..8a9044c 100644
---- a/drivers/ata/pata_ali.c
-+++ b/drivers/ata/pata_ali.c
-@@ -342,7 +342,7 @@ static struct ata_port_operations ali_early_port_ops = {
- 	.data_xfer	= ata_data_xfer,
- 
- 	.irq_handler	= ata_interrupt,
--	.irq_clear	= ata_bmdma_irq_clear,
-+	.irq_clear	= ata_noop_irq_clear,
- 	.irq_on		= ata_irq_on,
- 
- 	.port_start	= ata_sff_port_start,
-diff --git a/drivers/ata/pata_at32.c b/drivers/ata/pata_at32.c
-index 67e574d..86a8ee9 100644
---- a/drivers/ata/pata_at32.c
-+++ b/drivers/ata/pata_at32.c
-@@ -166,11 +166,6 @@ static void pata_at32_set_piomode(struct ata_port *ap, struct ata_device *adev)
- 	}
- }
- 
--static void pata_at32_irq_clear(struct ata_port *ap)
--{
--	/* No DMA controller yet */
--}
--
- static struct scsi_host_template at32_sht = {
- 	.module			= THIS_MODULE,
- 	.name			= DRV_NAME,
-@@ -208,7 +203,7 @@ static struct ata_port_operations at32_port_ops = {
- 
- 	.data_xfer		= ata_data_xfer,
- 
--	.irq_clear		= pata_at32_irq_clear,
-+	.irq_clear		= ata_noop_irq_clear,
- 	.irq_on			= ata_irq_on,
- 
- 	.port_start		= ata_sff_port_start,
-diff --git a/drivers/ata/pata_icside.c b/drivers/ata/pata_icside.c
-index 5b8586d..121fe52 100644
---- a/drivers/ata/pata_icside.c
-+++ b/drivers/ata/pata_icside.c
-@@ -328,11 +328,6 @@ static struct scsi_host_template pata_icside_sht = {
- 	.bios_param		= ata_std_bios_param,
- };
- 
--/* wish this was exported from libata-core */
--static void ata_dummy_noret(struct ata_port *port)
--{
--}
--
- static void pata_icside_postreset(struct ata_link *link, unsigned int *classes)
- {
- 	struct ata_port *ap = link->ap;
-@@ -386,7 +381,7 @@ static struct ata_port_operations pata_icside_port_ops = {
- 	.error_handler		= pata_icside_error_handler,
- 	.post_internal_cmd	= pata_icside_bmdma_stop,
- 
--	.irq_clear		= ata_dummy_noret,
-+	.irq_clear		= ata_noop_irq_clear,
- 	.irq_on			= ata_irq_on,
- 
- 	.port_start		= pata_icside_port_start,
-diff --git a/drivers/ata/pata_isapnp.c b/drivers/ata/pata_isapnp.c
-index 4320e79..ef561de 100644
---- a/drivers/ata/pata_isapnp.c
-+++ b/drivers/ata/pata_isapnp.c
-@@ -55,7 +55,7 @@ static struct ata_port_operations isapnp_port_ops = {
- 
- 	.data_xfer	= ata_data_xfer,
- 
--	.irq_clear	= ata_bmdma_irq_clear,
-+	.irq_clear	= ata_noop_irq_clear,
- 	.irq_on		= ata_irq_on,
- 
- 	.port_start	= ata_sff_port_start,
-diff --git a/drivers/ata/pata_ixp4xx_cf.c b/drivers/ata/pata_ixp4xx_cf.c
-index 030878f..83e38cc 100644
---- a/drivers/ata/pata_ixp4xx_cf.c
-+++ b/drivers/ata/pata_ixp4xx_cf.c
-@@ -126,7 +126,7 @@ static struct ata_port_operations ixp4xx_port_ops = {
- 	.cable_detect		= ata_cable_40wire,
- 
- 	.irq_handler		= ata_interrupt,
--	.irq_clear		= ata_bmdma_irq_clear,
-+	.irq_clear		= ata_noop_irq_clear,
- 	.irq_on			= ata_irq_on,
- 
- 	.port_start		= ata_port_start,
-diff --git a/drivers/ata/pata_legacy.c b/drivers/ata/pata_legacy.c
-index 333dc15..7b2140e 100644
---- a/drivers/ata/pata_legacy.c
-+++ b/drivers/ata/pata_legacy.c
-@@ -252,7 +252,7 @@ static struct ata_port_operations simple_port_ops = {
- 	.data_xfer	= ata_data_xfer_noirq,
- 
- 	.irq_handler	= ata_interrupt,
--	.irq_clear	= ata_bmdma_irq_clear,
-+	.irq_clear	= ata_noop_irq_clear,
- 	.irq_on		= ata_irq_on,
- 
- 	.port_start	= ata_sff_port_start,
-@@ -279,7 +279,7 @@ static struct ata_port_operations legacy_port_ops = {
- 	.data_xfer	= ata_data_xfer_noirq,
- 
- 	.irq_handler	= ata_interrupt,
--	.irq_clear	= ata_bmdma_irq_clear,
-+	.irq_clear	= ata_noop_irq_clear,
- 	.irq_on		= ata_irq_on,
- 
- 	.port_start	= ata_sff_port_start,
-@@ -393,7 +393,7 @@ static struct ata_port_operations pdc20230_port_ops = {
- 	.data_xfer	= pdc_data_xfer_vlb,
- 
- 	.irq_handler	= ata_interrupt,
--	.irq_clear	= ata_bmdma_irq_clear,
-+	.irq_clear	= ata_noop_irq_clear,
- 	.irq_on		= ata_irq_on,
- 
- 	.port_start	= ata_sff_port_start,
-@@ -447,7 +447,7 @@ static struct ata_port_operations ht6560a_port_ops = {
- 	.data_xfer	= ata_data_xfer,	/* Check vlb/noirq */
- 
- 	.irq_handler	= ata_interrupt,
--	.irq_clear	= ata_bmdma_irq_clear,
-+	.irq_clear	= ata_noop_irq_clear,
- 	.irq_on		= ata_irq_on,
- 
- 	.port_start	= ata_sff_port_start,
-@@ -512,7 +512,7 @@ static struct ata_port_operations ht6560b_port_ops = {
- 	.data_xfer	= ata_data_xfer,    /* FIXME: Check 32bit and noirq */
- 
- 	.irq_handler	= ata_interrupt,
--	.irq_clear	= ata_bmdma_irq_clear,
-+	.irq_clear	= ata_noop_irq_clear,
- 	.irq_on		= ata_irq_on,
- 
- 	.port_start	= ata_sff_port_start,
-@@ -633,7 +633,7 @@ static struct ata_port_operations opti82c611a_port_ops = {
- 	.data_xfer	= ata_data_xfer,
- 
- 	.irq_handler	= ata_interrupt,
--	.irq_clear	= ata_bmdma_irq_clear,
-+	.irq_clear	= ata_noop_irq_clear,
- 	.irq_on		= ata_irq_on,
- 
- 	.port_start	= ata_sff_port_start,
-@@ -765,7 +765,7 @@ static struct ata_port_operations opti82c46x_port_ops = {
- 	.data_xfer	= ata_data_xfer,
- 
- 	.irq_handler	= ata_interrupt,
--	.irq_clear	= ata_bmdma_irq_clear,
-+	.irq_clear	= ata_noop_irq_clear,
- 	.irq_on		= ata_irq_on,
- 
- 	.port_start	= ata_sff_port_start,
-@@ -950,7 +950,7 @@ static struct ata_port_operations qdi6500_port_ops = {
- 	.data_xfer	= vlb32_data_xfer,
- 
- 	.irq_handler	= ata_interrupt,
--	.irq_clear	= ata_bmdma_irq_clear,
-+	.irq_clear	= ata_noop_irq_clear,
- 	.irq_on		= ata_irq_on,
- 
- 	.port_start	= ata_sff_port_start,
-@@ -977,7 +977,7 @@ static struct ata_port_operations qdi6580_port_ops = {
- 	.data_xfer	= vlb32_data_xfer,
- 
- 	.irq_handler	= ata_interrupt,
--	.irq_clear	= ata_bmdma_irq_clear,
-+	.irq_clear	= ata_noop_irq_clear,
- 	.irq_on		= ata_irq_on,
- 
- 	.port_start	= ata_sff_port_start,
-@@ -1004,7 +1004,7 @@ static struct ata_port_operations qdi6580dp_port_ops = {
- 	.data_xfer	= vlb32_data_xfer,
- 
- 	.irq_handler	= ata_interrupt,
--	.irq_clear	= ata_bmdma_irq_clear,
-+	.irq_clear	= ata_noop_irq_clear,
- 	.irq_on		= ata_irq_on,
- 
- 	.port_start	= ata_sff_port_start,
-@@ -1095,7 +1095,7 @@ static struct ata_port_operations winbond_port_ops = {
- 
- 	.data_xfer	= vlb32_data_xfer,
- 
--	.irq_clear	= ata_bmdma_irq_clear,
-+	.irq_clear	= ata_noop_irq_clear,
- 	.irq_on		= ata_irq_on,
- 
- 	.port_start	= ata_sff_port_start,
-diff --git a/drivers/ata/pata_mpc52xx.c b/drivers/ata/pata_mpc52xx.c
-index dc40162..bc5259e 100644
---- a/drivers/ata/pata_mpc52xx.c
-+++ b/drivers/ata/pata_mpc52xx.c
-@@ -296,7 +296,7 @@ static struct ata_port_operations mpc52xx_ata_port_ops = {
- 	.qc_prep		= ata_qc_prep,
- 	.qc_issue		= ata_qc_issue_prot,
- 	.data_xfer		= ata_data_xfer,
--	.irq_clear		= ata_bmdma_irq_clear,
-+	.irq_clear		= ata_noop_irq_clear,
- 	.irq_on			= ata_irq_on,
- 	.port_start		= ata_port_start,
- };
-diff --git a/drivers/ata/pata_mpiix.c b/drivers/ata/pata_mpiix.c
-index c0d9e0c..ced6372 100644
---- a/drivers/ata/pata_mpiix.c
-+++ b/drivers/ata/pata_mpiix.c
-@@ -187,7 +187,7 @@ static struct ata_port_operations mpiix_port_ops = {
- 	.qc_issue	= mpiix_qc_issue_prot,
- 	.data_xfer	= ata_data_xfer,
- 
--	.irq_clear	= ata_bmdma_irq_clear,
-+	.irq_clear	= ata_noop_irq_clear,
- 	.irq_on		= ata_irq_on,
- 
- 	.port_start	= ata_sff_port_start,
-diff --git a/drivers/ata/pata_ns87410.c b/drivers/ata/pata_ns87410.c
-index 9fe66fd..d182bdf 100644
---- a/drivers/ata/pata_ns87410.c
-+++ b/drivers/ata/pata_ns87410.c
-@@ -182,7 +182,7 @@ static struct ata_port_operations ns87410_port_ops = {
- 	.data_xfer	= ata_data_xfer,
- 
- 	.irq_handler	= ata_interrupt,
--	.irq_clear	= ata_bmdma_irq_clear,
-+	.irq_clear	= ata_noop_irq_clear,
- 	.irq_on		= ata_irq_on,
- 
- 	.port_start	= ata_sff_port_start,
-diff --git a/drivers/ata/pata_pcmcia.c b/drivers/ata/pata_pcmcia.c
-index 3e7f6a9..9881a9e 100644
---- a/drivers/ata/pata_pcmcia.c
-+++ b/drivers/ata/pata_pcmcia.c
-@@ -164,7 +164,7 @@ static struct ata_port_operations pcmcia_port_ops = {
- 
- 	.data_xfer	= ata_data_xfer_noirq,
- 
--	.irq_clear	= ata_bmdma_irq_clear,
-+	.irq_clear	= ata_noop_irq_clear,
- 	.irq_on		= ata_irq_on,
- 
- 	.port_start	= ata_sff_port_start,
-@@ -189,7 +189,7 @@ static struct ata_port_operations pcmcia_8bit_port_ops = {
- 
- 	.data_xfer	= ata_data_xfer_8bit,
- 
--	.irq_clear	= ata_bmdma_irq_clear,
-+	.irq_clear	= ata_noop_irq_clear,
- 	.irq_on		= ata_irq_on,
- 
- 	.port_start	= ata_sff_port_start,
-diff --git a/drivers/ata/pata_platform.c b/drivers/ata/pata_platform.c
-index ac03a90..07b024a 100644
---- a/drivers/ata/pata_platform.c
-+++ b/drivers/ata/pata_platform.c
-@@ -86,7 +86,7 @@ static struct ata_port_operations pata_platform_port_ops = {
- 
- 	.data_xfer		= ata_data_xfer_noirq,
- 
--	.irq_clear		= ata_bmdma_irq_clear,
-+	.irq_clear		= ata_noop_irq_clear,
- 	.irq_on			= ata_irq_on,
- 
- 	.port_start		= ata_dummy_ret0,
-diff --git a/drivers/ata/pata_qdi.c b/drivers/ata/pata_qdi.c
-index 9f308ed..60238d5 100644
---- a/drivers/ata/pata_qdi.c
-+++ b/drivers/ata/pata_qdi.c
-@@ -191,7 +191,7 @@ static struct ata_port_operations qdi6500_port_ops = {
- 
- 	.data_xfer	= qdi_data_xfer,
- 
--	.irq_clear	= ata_bmdma_irq_clear,
-+	.irq_clear	= ata_noop_irq_clear,
- 	.irq_on		= ata_irq_on,
- 
- 	.port_start	= ata_sff_port_start,
-@@ -217,7 +217,7 @@ static struct ata_port_operations qdi6580_port_ops = {
- 
- 	.data_xfer	= qdi_data_xfer,
- 
--	.irq_clear	= ata_bmdma_irq_clear,
-+	.irq_clear	= ata_noop_irq_clear,
- 	.irq_on		= ata_irq_on,
- 
- 	.port_start	= ata_sff_port_start,
-diff --git a/drivers/ata/pata_winbond.c b/drivers/ata/pata_winbond.c
-index 99c92ed..5318248 100644
---- a/drivers/ata/pata_winbond.c
-+++ b/drivers/ata/pata_winbond.c
-@@ -159,7 +159,7 @@ static struct ata_port_operations winbond_port_ops = {
- 
- 	.data_xfer	= winbond_data_xfer,
- 
--	.irq_clear	= ata_bmdma_irq_clear,
-+	.irq_clear	= ata_noop_irq_clear,
- 	.irq_on		= ata_irq_on,
- 
- 	.port_start	= ata_sff_port_start,
-diff --git a/drivers/ata/pdc_adma.c b/drivers/ata/pdc_adma.c
-index 8e1b7e9..bc2d12a 100644
---- a/drivers/ata/pdc_adma.c
-+++ b/drivers/ata/pdc_adma.c
-@@ -138,7 +138,6 @@ static unsigned int adma_qc_issue(struct ata_queued_cmd *qc);
- static int adma_check_atapi_dma(struct ata_queued_cmd *qc);
- static void adma_bmdma_stop(struct ata_queued_cmd *qc);
- static u8 adma_bmdma_status(struct ata_port *ap);
--static void adma_irq_clear(struct ata_port *ap);
- static void adma_freeze(struct ata_port *ap);
- static void adma_thaw(struct ata_port *ap);
- static void adma_error_handler(struct ata_port *ap);
-@@ -174,7 +173,7 @@ static const struct ata_port_operations adma_ata_ops = {
- 	.freeze			= adma_freeze,
- 	.thaw			= adma_thaw,
- 	.error_handler		= adma_error_handler,
--	.irq_clear		= adma_irq_clear,
-+	.irq_clear		= ata_noop_irq_clear,
- 	.irq_on			= ata_irq_on,
- 	.port_start		= adma_port_start,
- 	.port_stop		= adma_port_stop,
-@@ -223,11 +222,6 @@ static u8 adma_bmdma_status(struct ata_port *ap)
- 	return 0;
- }
- 
--static void adma_irq_clear(struct ata_port *ap)
--{
--	/* nothing */
--}
--
- static void adma_reset_engine(struct ata_port *ap)
- {
- 	void __iomem *chan = ADMA_PORT_REGS(ap);
-diff --git a/drivers/ata/sata_fsl.c b/drivers/ata/sata_fsl.c
-index b66a1f4..e798c4c 100644
---- a/drivers/ata/sata_fsl.c
-+++ b/drivers/ata/sata_fsl.c
-@@ -944,11 +944,6 @@ static void sata_fsl_post_internal_cmd(struct ata_queued_cmd *qc)
- 	}
- }
- 
--static void sata_fsl_irq_clear(struct ata_port *ap)
--{
--	/* unused */
--}
--
- static void sata_fsl_error_intr(struct ata_port *ap)
- {
- 	struct ata_link *link = &ap->link;
-@@ -1234,7 +1229,7 @@ static const struct ata_port_operations sata_fsl_ops = {
- 
- 	.qc_prep = sata_fsl_qc_prep,
- 	.qc_issue = sata_fsl_qc_issue,
--	.irq_clear = sata_fsl_irq_clear,
-+	.irq_clear = ata_noop_irq_clear,
- 
- 	.scr_read = sata_fsl_scr_read,
- 	.scr_write = sata_fsl_scr_write,
-diff --git a/drivers/ata/sata_inic162x.c b/drivers/ata/sata_inic162x.c
-index 96e614a..ea7e2b1 100644
---- a/drivers/ata/sata_inic162x.c
-+++ b/drivers/ata/sata_inic162x.c
-@@ -277,11 +277,6 @@ static u8 inic_bmdma_status(struct ata_port *ap)
- 	return ATA_DMA_INTR;
- }
- 
--static void inic_irq_clear(struct ata_port *ap)
--{
--	/* noop */
--}
--
- static void inic_host_intr(struct ata_port *ap)
- {
- 	void __iomem *port_base = inic_port_base(ap);
-@@ -566,7 +561,7 @@ static struct ata_port_operations inic_port_ops = {
- 	.bmdma_stop		= inic_bmdma_stop,
- 	.bmdma_status		= inic_bmdma_status,
- 
--	.irq_clear		= inic_irq_clear,
-+	.irq_clear		= ata_noop_irq_clear,
- 	.irq_on			= ata_irq_on,
- 
- 	.qc_prep	 	= ata_qc_prep,
-diff --git a/drivers/ata/sata_mv.c b/drivers/ata/sata_mv.c
-index 0e54d9e..939bf1d 100644
---- a/drivers/ata/sata_mv.c
-+++ b/drivers/ata/sata_mv.c
-@@ -414,7 +414,6 @@ struct mv_hw_ops {
- 	void (*reset_bus)(struct pci_dev *pdev, void __iomem *mmio);
- };
- 
--static void mv_irq_clear(struct ata_port *ap);
- static int mv_scr_read(struct ata_port *ap, unsigned int sc_reg_in, u32 *val);
- static int mv_scr_write(struct ata_port *ap, unsigned int sc_reg_in, u32 val);
- static int mv5_scr_read(struct ata_port *ap, unsigned int sc_reg_in, u32 *val);
-@@ -501,7 +500,7 @@ static const struct ata_port_operations mv5_ops = {
- 	.qc_issue		= mv_qc_issue,
- 	.data_xfer		= ata_data_xfer,
- 
--	.irq_clear		= mv_irq_clear,
-+	.irq_clear		= ata_noop_irq_clear,
- 	.irq_on			= ata_irq_on,
- 
- 	.error_handler		= mv_error_handler,
-@@ -529,7 +528,7 @@ static const struct ata_port_operations mv6_ops = {
- 	.qc_issue		= mv_qc_issue,
- 	.data_xfer		= ata_data_xfer,
- 
--	.irq_clear		= mv_irq_clear,
-+	.irq_clear		= ata_noop_irq_clear,
- 	.irq_on			= ata_irq_on,
- 
- 	.error_handler		= mv_error_handler,
-@@ -557,7 +556,7 @@ static const struct ata_port_operations mv_iie_ops = {
- 	.qc_issue		= mv_qc_issue,
- 	.data_xfer		= ata_data_xfer,
- 
--	.irq_clear		= mv_irq_clear,
-+	.irq_clear		= ata_noop_irq_clear,
- 	.irq_on			= ata_irq_on,
- 
- 	.error_handler		= mv_error_handler,
-@@ -760,10 +759,6 @@ static inline int mv_get_hc_count(unsigned long port_flags)
- 	return ((port_flags & MV_FLAG_DUAL_HC) ? 2 : 1);
- }
- 
--static void mv_irq_clear(struct ata_port *ap)
--{
--}
--
- static void mv_set_edma_ptrs(void __iomem *port_mmio,
- 			     struct mv_host_priv *hpriv,
- 			     struct mv_port_priv *pp)
-diff --git a/drivers/ata/sata_qstor.c b/drivers/ata/sata_qstor.c
-index 91cc12c..3c8e97f 100644
---- a/drivers/ata/sata_qstor.c
-+++ b/drivers/ata/sata_qstor.c
-@@ -121,7 +121,6 @@ static unsigned int qs_qc_issue(struct ata_queued_cmd *qc);
- static int qs_check_atapi_dma(struct ata_queued_cmd *qc);
- static void qs_bmdma_stop(struct ata_queued_cmd *qc);
- static u8 qs_bmdma_status(struct ata_port *ap);
--static void qs_irq_clear(struct ata_port *ap);
- static void qs_freeze(struct ata_port *ap);
- static void qs_thaw(struct ata_port *ap);
- static void qs_error_handler(struct ata_port *ap);
-@@ -157,7 +156,7 @@ static const struct ata_port_operations qs_ata_ops = {
- 	.freeze			= qs_freeze,
- 	.thaw			= qs_thaw,
- 	.error_handler		= qs_error_handler,
--	.irq_clear		= qs_irq_clear,
-+	.irq_clear		= ata_noop_irq_clear,
- 	.irq_on			= ata_irq_on,
- 	.scr_read		= qs_scr_read,
- 	.scr_write		= qs_scr_write,
-@@ -211,11 +210,6 @@ static u8 qs_bmdma_status(struct ata_port *ap)
- 	return 0;
- }
- 
--static void qs_irq_clear(struct ata_port *ap)
--{
--	/* nothing */
--}
--
- static inline void qs_enter_reg_mode(struct ata_port *ap)
- {
- 	u8 __iomem *chan = qs_mmio_base(ap->host) + (ap->port_no * 0x4000);
-diff --git a/drivers/ata/sata_sil24.c b/drivers/ata/sata_sil24.c
-index 64cdde5..5e57f78 100644
---- a/drivers/ata/sata_sil24.c
-+++ b/drivers/ata/sata_sil24.c
-@@ -348,7 +348,6 @@ static void sil24_tf_read(struct ata_port *ap, struct ata_taskfile *tf);
- static int sil24_qc_defer(struct ata_queued_cmd *qc);
- static void sil24_qc_prep(struct ata_queued_cmd *qc);
- static unsigned int sil24_qc_issue(struct ata_queued_cmd *qc);
--static void sil24_irq_clear(struct ata_port *ap);
- static void sil24_pmp_attach(struct ata_port *ap);
- static void sil24_pmp_detach(struct ata_port *ap);
- static void sil24_freeze(struct ata_port *ap);
-@@ -416,7 +415,7 @@ static const struct ata_port_operations sil24_ops = {
- 	.qc_prep		= sil24_qc_prep,
- 	.qc_issue		= sil24_qc_issue,
- 
--	.irq_clear		= sil24_irq_clear,
-+	.irq_clear		= ata_noop_irq_clear,
- 
- 	.scr_read		= sil24_scr_read,
- 	.scr_write		= sil24_scr_write,
-@@ -921,11 +920,6 @@ static unsigned int sil24_qc_issue(struct ata_queued_cmd *qc)
- 	return 0;
- }
- 
--static void sil24_irq_clear(struct ata_port *ap)
--{
--	/* unused */
--}
--
- static void sil24_pmp_attach(struct ata_port *ap)
- {
- 	sil24_config_pmp(ap, 1);
-diff --git a/include/linux/libata.h b/include/linux/libata.h
-index 7af3da8..b6f06a2 100644
---- a/include/linux/libata.h
-+++ b/include/linux/libata.h
-@@ -903,6 +903,7 @@ extern void ata_bmdma_start(struct ata_queued_cmd *qc);
- extern void ata_bmdma_stop(struct ata_queued_cmd *qc);
- extern u8   ata_bmdma_status(struct ata_port *ap);
- extern void ata_bmdma_irq_clear(struct ata_port *ap);
-+extern void ata_noop_irq_clear(struct ata_port *ap);
- extern void ata_bmdma_freeze(struct ata_port *ap);
- extern void ata_bmdma_thaw(struct ata_port *ap);
- extern void ata_bmdma_drive_eh(struct ata_port *ap, ata_prereset_fn_t prereset,
--- 
-1.5.2.4
+libata has always tried to allow a lot of flexibility to its low level
+drivers and most parts of libata are overridable in some way.  LLDs
+always submit full sht and ops tables to upper layers and they're free
+to override any field they see fit.  This is all great but as time
+goes by more and more fields have been added, more drivers got written
+and individual drivers got extended to support more controllers.
 
+This means that each driver should carry large amount of boilerplate
+code and replicate them for each variant it supports.  This is not
+only inconveinent but also highly error-prone when combined with our
+multi-branched development model.
+
+Low level drivers and core layers are being modified in different
+branches all the time.  Core layer changes sometimes calls for update
+in boilerplate code which is now a massive work due to the number of
+low level drivers.  Later when core layer changes and low level driver
+changes get merged, they can easily conflict and go unnoticed as
+there's no automatic propagation of core changes to low level drivers
+and the differences are often buried by all the bolierplating.
+
+This patchset tries to solve the problem so that life is easier for
+both core and lld developers.  The goals are...
+
+* Reduce the amount of boilerplating.  It's way too much.  Unless a
+  LLD wants to change the default behavior, LLD should be able to use
+  provided helper and be done with it.
+
+* Allow LLD to reuse ops tables easily.  Many drivers support similar
+  but not quite identical chipsets, sometimes different generations of
+  a single product or different products comforming to a standard.  In
+  these cases, drivers usually only need to use a few different
+  methods for each sub-type.  Currently, a LLD should replicate whole
+  ops table for each variant.  By allowing LLD to override parts of
+  its ops table, it can be made much easier and safer.
+
+* Make core changes automagically propagate to low level drivers.
+  libata now has a lot of low level drivers and it's getting
+  increasingly difficult to update core and libata already has
+  accumulated quite some amount of inconsistencies along the way.  By
+  putting control of default behaviors in the core layer, things
+  become easier for both core layer and LLDs.
+
+* And all of above while not sacrificing flexibility.
+
+This patchset adds initializer macros for shts and inheritance for ops
+tables combined with base tables to inherit from.  The sht part is
+straight forward, they're good old initializer macros which we
+probably should have added long time ago.  They're named ATA_*_SHT()
+and four variants exist.
+
+BASE  : Common to all libata drivers.  The user must set sg_tablesize
+	and dma_boundary.
+PIO   : SFF ATA controllers w/ only PIO support.
+BMDMA : SFF ATA controllers w/ BMDMA support.  sg_tablesize and
+	dma_boundary are set to BMDMA limits.
+NCQ   : SATA controllers supporting NCQ.  The user must set
+	sg_tablesize, dma_boundary and can_queue.
+
+LLDs can override or add specific fields by putting initializers below
+the helpers.
+
+The ops part is a tad bit trickier to make it easy for LLDs to reuse
+their ops tables.  A new field ->inherits is added which points to the
+ops table to inherit operations from.  The pointed table in turn can
+inherit from another table as long as the inheritance doesn't form a
+loop, so by inheriting an existing ops table, a LLD can avoid
+specifying every needed op.  It just needs to specify what it has
+implemented differently or additionally.
+
+Also, as inheriting is done by simply initializing ->inherits field, a
+LLD can inherit its own ops table to define a slightly different
+version without defining initializer macros or copying the ops table
+manually.  Please take a look at how ahci, ata_piix, pata_amd or
+pata_sis take advantage of this.
+
+The inheritance is hidden from LLDs and doesn't have any hot-path run
+time overhead.  Inheritance is solved when the host is started.  It's
+called finalization of the ops table.  The inheritance chain is
+followed and each missing callback is filled from the nearest ancestor
+which has the method implemented.  Once the host is started, there's
+no difference from using direct full ops table and even the
+finalization is done only once per ops table.
+
+libata provides five base ops tables LLDs of different classes can
+inherit from.  They are named [s]ata_*_port_ops.
+
+base  : Common to all libata drivers.
+sata  : SATA controllers w/ native interface (non-SFF).
+pmp   : SATA controllers w/ PMP support.
+sff   : SFF ATA controllers w/o BMDMA support.
+bmdma : SFF ATA controllers w/ BMDMA support.
+
+This patchset is consisted of 9 patches.  The first four fix bugs and
+hunts down inconsistencies in preparation of the conversion.  The
+fifth patch, sht-ops-conversion, implements and uses sht and ops
+helpers.  The rest cleans up untidy port_info, sht, ops usages which
+stemmed from or remain due to the cumbersome mechanism.
+
+As the volume of conversion done in sht-ops-conversion makes it pretty
+diffcult to verify.  It has been verified by dumping all the sht and
+ops fields and comparing their values before and after.  For all
+drivers which are compilable under x86(_64), the patch doesn't change
+any field.  I'll write a reply to this head message containing the
+patches and scripts used to verify it.
+
+The following drivers need specific platform to build, so they need
+verification.  If you work on one of the following drivers, please
+verify that the driver builds and works fine.  It would be best if you
+can verify that the sht and ops don't change by the fifth path using
+the method I'll write in another message.
+
+* pata_at32
+* pata_bf54x
+* pata_icside
+* pata_ixp4xx_cf
+* pata_mpc52xx
+* pata_scc
+* sata_fsl
+
+All combined, this patchset sheds around 3700 lines of code from
+libata and will make libata developers' lives (especially mine)
+easier.
+
+Basic functionality is tested on ahci, ata_piix, sata_sil, sata_sil24,
+pata_jmicron, pata_hpt3x2n, sata_promise and pdc_adma.  The
+sht-ops-conversion shouldn't cause any trouble but later clean up
+patches definitely need some testing.  Fortunately, mistakes are
+likely easy to spot during probing.
+
+This patchset is on top of
+
+  upstream (a984f58dd97f22f5113700322fed311a0ee29947)
++ prefer-hardreset patchset [1]
++ grace-failure-on-no-reset patch [2]
++ pci-allow-multiple-pcim_enable_device [3]
+
+and comes with an impressive diffstat output.
+
+ drivers/ata/ahci.c              |  158 ++++------------------
+ drivers/ata/ata_generic.c       |   49 -------
+ drivers/ata/ata_piix.c          |  185 ++------------------------
+ drivers/ata/libata-core.c       |  131 +++++++++++++++++-
+ drivers/ata/libata-eh.c         |   32 +++-
+ drivers/ata/libata-pmp.c        |   47 +-----
+ drivers/ata/libata-sff.c        |   53 ++-----
+ drivers/ata/pata_acpi.c         |   71 +---------
+ drivers/ata/pata_ali.c          |  161 +++--------------------
+ drivers/ata/pata_amd.c          |  266 +++++++-------------------------------
+ drivers/ata/pata_artop.c        |  121 ++---------------
+ drivers/ata/pata_at32.c         |   44 ------
+ drivers/ata/pata_atiixp.c       |   55 +------
+ drivers/ata/pata_bf54x.c        |   37 -----
+ drivers/ata/pata_cmd640.c       |   73 +++-------
+ drivers/ata/pata_cmd64x.c       |  135 +++----------------
+ drivers/ata/pata_cs5520.c       |   58 ++------
+ drivers/ata/pata_cs5530.c       |   70 +++-------
+ drivers/ata/pata_cs5535.c       |   50 -------
+ drivers/ata/pata_cs5536.c       |   50 -------
+ drivers/ata/pata_cypress.c      |   50 -------
+ drivers/ata/pata_efar.c         |   64 ---------
+ drivers/ata/pata_hpt366.c       |   81 ++++-------
+ drivers/ata/pata_hpt37x.c       |  244 +++++++----------------------------
+ drivers/ata/pata_hpt3x2n.c      |   81 ++---------
+ drivers/ata/pata_hpt3x3.c       |   50 -------
+ drivers/ata/pata_icside.c       |   59 +-------
+ drivers/ata/pata_isapnp.c       |   37 -----
+ drivers/ata/pata_it8213.c       |   65 +--------
+ drivers/ata/pata_it821x.c       |   91 +++----------
+ drivers/ata/pata_ixp4xx_cf.c    |   42 ------
+ drivers/ata/pata_jmicron.c      |   65 ---------
+ drivers/ata/pata_legacy.c       |  276 ++--------------------------------------
+ drivers/ata/pata_marvell.c      |   67 ---------
+ drivers/ata/pata_mpc52xx.c      |   42 ------
+ drivers/ata/pata_mpiix.c        |   55 -------
+ drivers/ata/pata_netcell.c      |   56 +-------
+ drivers/ata/pata_ninja32.c      |   46 ------
+ drivers/ata/pata_ns87410.c      |   60 --------
+ drivers/ata/pata_ns87415.c      |   94 ++-----------
+ drivers/ata/pata_oldpiix.c      |   66 +--------
+ drivers/ata/pata_opti.c         |   64 ---------
+ drivers/ata/pata_optidma.c      |  101 +-------------
+ drivers/ata/pata_pcmcia.c       |   64 +--------
+ drivers/ata/pata_pdc2027x.c     |   89 ------------
+ drivers/ata/pata_pdc202xx_old.c |   92 ++-----------
+ drivers/ata/pata_platform.c     |   44 ------
+ drivers/ata/pata_qdi.c          |   63 ---------
+ drivers/ata/pata_radisys.c      |   51 -------
+ drivers/ata/pata_rz1000.c       |   49 -------
+ drivers/ata/pata_sc1200.c       |   53 +------
+ drivers/ata/pata_scc.c          |   36 -----
+ drivers/ata/pata_serverworks.c  |  104 +++------------
+ drivers/ata/pata_sil680.c       |   63 ++-------
+ drivers/ata/pata_sis.c          |  244 +++++------------------------------
+ drivers/ata/pata_sl82c105.c     |   63 +--------
+ drivers/ata/pata_triflex.c      |   56 --------
+ drivers/ata/pata_via.c          |  135 ++++---------------
+ drivers/ata/pata_winbond.c      |   41 -----
+ drivers/ata/pdc_adma.c          |   49 ++-----
+ drivers/ata/sata_fsl.c          |   35 -----
+ drivers/ata/sata_inic162x.c     |   44 +-----
+ drivers/ata/sata_mv.c           |  119 ++---------------
+ drivers/ata/sata_nv.c           |  196 ++++++----------------------
+ drivers/ata/sata_promise.c      |   96 ++-----------
+ drivers/ata/sata_qstor.c        |   46 ++----
+ drivers/ata/sata_sil.c          |   36 -----
+ drivers/ata/sata_sil24.c        |   58 +++-----
+ drivers/ata/sata_sis.c          |   38 -----
+ drivers/ata/sata_svw.c          |   33 ----
+ drivers/ata/sata_sx4.c          |   17 --
+ drivers/ata/sata_uli.c          |   43 ------
+ drivers/ata/sata_via.c          |  112 +---------------
+ drivers/ata/sata_vsc.c          |   34 ----
+ drivers/pci/pci.c               |    3 
+ drivers/scsi/ipr.c              |    3 
+ include/linux/libata.h          |  222 +++++++++++++++++++++-----------
+ 77 files changed, 1204 insertions(+), 4929 deletions(-)
+
+Thanks.
+
+--
+tejun
+
+[1] http://thread.gmane.org/gmane.linux.ide/27447
+[2] http://article.gmane.org/gmane.linux.ide/27781
+[3] http://article.gmane.org/gmane.linux.ide/27782
