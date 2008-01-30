@@ -1,31 +1,48 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH 09/13] sata_mv ncq Use DMA memory pools for hardware memory
- tables
-Date: Wed, 30 Jan 2008 12:08:47 -0500
-Message-ID: <47A0AF1F.1070609@pobox.com>
-References: <479BC217.60709@rtr.ca> <479BC31D.1050206@rtr.ca> <479F5E1F.8030508@pobox.com> <479F6F40.7040401@rtr.ca> <47A04954.7010306@pobox.com> <47A0A875.1070203@rtr.ca>
+From: Mark Lord <liml@rtr.ca>
+Subject: Re: [PATCH 5/9] libata: implement and use SHT initializers and ops
+ inheritance
+Date: Wed, 30 Jan 2008 12:09:18 -0500
+Message-ID: <47A0AF3E.305@rtr.ca>
+References: <12016853433196-git-send-email-htejun@gmail.com> <12016853432907-git-send-email-htejun@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:50030 "EHLO mail.dvmed.net"
+Received: from rtr.ca ([76.10.145.34]:3159 "EHLO mail.rtr.ca"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758040AbYA3RIu (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 30 Jan 2008 12:08:50 -0500
-In-Reply-To: <47A0A875.1070203@rtr.ca>
+	id S1756143AbYA3RJT (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 30 Jan 2008 12:09:19 -0500
+In-Reply-To: <12016853432907-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark Lord <liml@rtr.ca>
-Cc: IDE/ATA development list <linux-ide@vger.kernel.org>
+To: Tejun Heo <htejun@gmail.com>
+Cc: jeff@garzik.org, linux-ide@vger.kernel.org, alan@lxorguk.ukuu.org.uk, kngregertsen@norway.atmel.com, sonic.adi@gmail.com, rmk@dyn-67.arm.linux.org.uk, alessandro.zummo@towertech.it, domen.puncer@telargo.com, akira2.iguchi@toshiba.co.jp, leoli@freescale.com
 
-Mark Lord wrote:
-> Meanwhile, no further action required here.
+Tejun Heo wrote:
+> libata lets low level drivers build scsi_host_template and
+> ata_port_operations tables and register them with upper layers.  This
+> allows low level drivers high level of flexibility but also burdens
+> them with lots of boilerplate entries in thoes data structures.
+..
+> diff --git a/drivers/ata/sata_mv.c b/drivers/ata/sata_mv.c
+> index 939bf1d..c365650 100644
+> --- a/drivers/ata/sata_mv.c
+> +++ b/drivers/ata/sata_mv.c
+> @@ -452,61 +452,28 @@ static void mv_channel_reset(struct mv_host_priv *hpriv, void __iomem *mmio,
+>  			     unsigned int port_no);
+>  
+>  static struct scsi_host_template mv5_sht = {
+> -	.module			= THIS_MODULE,
+> -	.name			= DRV_NAME,
+> -	.ioctl			= ata_scsi_ioctl,
+> -	.queuecommand		= ata_scsi_queuecmd,
+> -	.can_queue		= ATA_DEF_QUEUE,
+> -	.this_id		= ATA_SHT_THIS_ID,
+> +	ATA_BASE_SHT(DRV_NAME),
+>  	.sg_tablesize		= MV_MAX_SG_CT / 2,
+..
 
-ACK :)
+I think this will need to be re-diff'd against the latest sata_mv,
+which now has NCQ support.
 
-And thanks for rounding out the NCQ work.  sata_mv has needed love and 
-attention for a while (well, really, its entire life).
-
-	Jeff
-
-
+Cheers
