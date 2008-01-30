@@ -1,29 +1,26 @@
 From: Adrian Bunk <bunk@kernel.org>
-Subject: [2.6 patch] ata_piix.c:piix_init_one() must be __devinit
-Date: Wed, 30 Jan 2008 22:02:02 +0200
-Message-ID: <20080130200202.GH29368@does.not.exist>
+Subject: [2.6 patch] ide/ppc/pmac.c section fixes
+Date: Wed, 30 Jan 2008 22:03:20 +0200
+Message-ID: <20080130200320.GI29368@does.not.exist>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp4.pp.htv.fi ([213.243.153.38]:51700 "EHLO smtp4.pp.htv.fi"
+Received: from smtp6.pp.htv.fi ([213.243.153.40]:40753 "EHLO smtp6.pp.htv.fi"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750904AbYA3UB2 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 30 Jan 2008 15:01:28 -0500
+	id S1761820AbYA3UCq (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 30 Jan 2008 15:02:46 -0500
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: jgarzik@pobox.com
+To: bzolnier@gmail.com
 Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-This patch fixes the following section mismatches:
+This patch fixes the following section mismatch:
 
 <--  snip  -->
 
 ...
-WARNING: drivers/ata/built-in.o(.text+0x15072): Section mismatch in reference from the function piix_init_one() to the function .devinit.text:piix_init_sata_map()
-WARNING: drivers/ata/built-in.o(.text+0x150dd): Section mismatch in reference from the function piix_init_one() to the function .devinit.text:piix_init_pcs()
-WARNING: drivers/ata/built-in.o(.text+0x150e5): Section mismatch in reference from the function piix_init_one() to the function .devinit.text:piix_init_sidpr()
-WARNING: drivers/ata/built-in.o(.text+0x15107): Section mismatch in reference from the function piix_init_one() to the function .devinit.text:piix_check_450nx_errata()
+WARNING: vmlinux.o(.text+0x3b641c): Section mismatch in reference from the function .pmac_ide_setup_device() to the function .init.text:.pmac_ide_setup_dma()
 ...
 
 <--  snip  -->
@@ -31,19 +28,31 @@ WARNING: drivers/ata/built-in.o(.text+0x15107): Section mismatch in reference fr
 Signed-off-by: Adrian Bunk <bunk@kernel.org>
 
 ---
-222e97f95d38ce7cb41980671cc4383df28b5f7a 
-diff --git a/drivers/ata/ata_piix.c b/drivers/ata/ata_piix.c
-index a65c8ae..7a3b9ef 100644
---- a/drivers/ata/ata_piix.c
-+++ b/drivers/ata/ata_piix.c
-@@ -1595,7 +1595,8 @@ static void piix_iocfg_bit18_quirk(struct pci_dev *pdev)
-  *	Zero on success, or -ERRNO value.
+
+ drivers/ide/ppc/pmac.c |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+400d1da2f5d6ea50d75a075ed230c244d1631f4a 
+diff --git a/drivers/ide/ppc/pmac.c b/drivers/ide/ppc/pmac.c
+index 736d12c..7aa160e 100644
+--- a/drivers/ide/ppc/pmac.c
++++ b/drivers/ide/ppc/pmac.c
+@@ -1011,7 +1011,7 @@ pmac_ide_do_resume(ide_hwif_t *hwif)
+  * (it is kept in 2.4). This introduce an interface numbering change on some
+  * rare machines unfortunately, but it's better this way.
   */
- 
--static int piix_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
-+static int __devinit piix_init_one(struct pci_dev *pdev,
-+				   const struct pci_device_id *ent)
+-static int
++static int __devinit
+ pmac_ide_setup_device(pmac_ide_hwif_t *pmif, ide_hwif_t *hwif, hw_regs_t *hw)
  {
- 	static int printed_version;
- 	struct device *dev = &pdev->dev;
+ 	struct device_node *np = pmif->node;
+@@ -1726,7 +1726,7 @@ pmac_ide_dma_lost_irq (ide_drive_t *drive)
+  * Allocate the data structures needed for using DMA with an interface
+  * and fill the proper list of functions pointers
+  */
+-static void __init 
++static void __devinit 
+ pmac_ide_setup_dma(pmac_ide_hwif_t *pmif, ide_hwif_t *hwif)
+ {
+ 	/* We won't need pci_dev if we switch to generic consistent
 
