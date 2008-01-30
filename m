@@ -1,77 +1,76 @@
 From: Robert Hancock <hancockr@shaw.ca>
-Subject: [PATCH] sata_nv: fix for completion handling
-Date: Tue, 29 Jan 2008 19:53:19 -0600
-Message-ID: <479FD88F.8090605@shaw.ca>
+Subject: Re: DMA mapping on SCSI device?
+Date: Tue, 29 Jan 2008 20:00:50 -0600
+Message-ID: <479FDA52.8050204@shaw.ca>
+References: <896139.88121.qm@web31812.mail.mud.yahoo.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from idcmail-mo1so.shaw.ca ([24.71.223.10]:8490 "EHLO
-	pd2mo3so.prod.shaw.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750815AbYA3Byc (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 29 Jan 2008 20:54:32 -0500
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-reply-to: <896139.88121.qm@web31812.mail.mud.yahoo.com>
+Sender: linux-scsi-owner@vger.kernel.org
+To: ltuikov@yahoo.com
+Cc: linux-arch@vger.kernel.org, ide <linux-ide@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-kernel <linux-kernel@vger.kernel.org>, ide <linux-ide@vger.kernel.org>, Jeff Garzik <jeff@garzik.org>, Tejun Heo <htejun@gmail.com>, Kuan Luo <kluo@nvidia.com>, Allen Martin <AM>
 
-This patch is based on an original patch from Kuan Luo of NVIDIA,
-posted under subject "fixed a bug of adma in rhel4u5 with HDS7250SASUN500G".
-His description follows. I've reworked it a bit to avoid some unnecessary
-repeated checks but it should be functionally identical.
+Luben Tuikov wrote:
+> --- On Mon, 1/28/08, Robert Hancock <hancockr@shaw.ca> wrote:
+>> The trick is that if an ATAPI device is connected, we (as
+>> far as I'm 
+>> aware) can't use ADMA mode, so we have to switch that
+>> port into legacy 
+>> mode.
+> 
+> Can you double check this with the HW architect of the
+> HW DMA engine of the ASIC?
 
-"The patch is to solve the error message "ata1: CPB flags CMD err,
-flags=0x11" when testing HDS7250SASUN500G in rhel4u5.
-I tested this hd in 2.6.24-rc7 which needed to remove the mask in
-blacklist to run the ncq and the same error also showed up. 
+Will do so. However, previous statements from NVIDIA fairly clearly 
+indicate that this is the case.
 
-I traced the  bug and found that the interrupt finished a command (for
-example, tag=0) when the driver got that adma status is
-NV_ADMA_STAT_DONE  and  cpb->resp_flags is NV_CPB_RESP_DONE.
-However, For this hd, the drive maybe didn't clear bit 0 at this moment.
-It meaned the hardware  had not completely finished the command.
-If at the same time  the driver freed the command(tag 0) and sended
-another command (tag 0), the error happened.
+> 
+>> This means it's only capable of 32-bit DMA.
+>> However the other port 
+>> on the controller may be connected to a hard drive and
+>> therefore still 
+>> capable of 64-bit DMA.
+> 
+> If this is indeed the case as you've presented it here,
+> it sounds like a HW shortcoming.  I cannot see how the device
+> type (or protocol) dictate how the DMA engine operates.
+> They live in two different domains.
 
-The notifier register is 32-bit register containing notifier value.
-Value is bit vector containing one bit per tag number (0-31) in
-corresponding bit positions (bit 0 is for tag 0, etc). When bit is set
-then ADMA indicates that command with corresponding tag number completed
-execution.
+Well, there is an indirect link. The ADMA interface (which supports 
+64-bit DMA) cannot be used to issue ATAPI commands, so if an ATAPI 
+device is connected we have to go to legacy mode, which supports only 
+32-bit DMA.
 
-So i added the check notifier code. Sometimes i saw that the notifier
-reg set some bits  , but the adma status set NV_ADMA_STAT_CMD_COMPLETE
-,not NV_ADMA_STAT_DONE. So i added the NV_ADMA_STAT_CMD_COMPLETE check
-code."
+I'm not sure why ADMA mode doesn't support ATAPI. The only reason I can 
+think of is that there's issues since ATAPI commands can potentially be 
+of unpredictable transfer size. The "real" ADMA spec that the NVIDIA 
+implementation is loosely based on does have some special "ignore 
+excess" controls that don't seem to be in the NVIDIA version (or at 
+least not to the knowledge I have on this hardware).
 
-Signed-off-by: Robert Hancock <hancockr@shaw.ca>
+And yes, it is a rather unfortunate hardware shortcoming (presuming that 
+it is entirely true).
 
---- linux-2.6.24-rc7-git3/drivers/ata/sata_nv.c	2008-01-11 17:32:40.000000000 -0600
-+++ linux-2.6.24-rc7-git3edit/drivers/ata/sata_nv.c	2008-01-11 17:43:40.000000000 -0600
-@@ -1011,14 +1011,20 @@
- 			}
- 
- 			if (status & (NV_ADMA_STAT_DONE |
--				      NV_ADMA_STAT_CPBERR)) {
--				u32 check_commands;
-+				      NV_ADMA_STAT_CPBERR |
-+				      NV_ADMA_STAT_CMD_COMPLETE)) {
-+				u32 check_commands = notifier_clears[i];
- 				int pos, error = 0;
- 
--				if (ata_tag_valid(ap->link.active_tag))
--					check_commands = 1 << ap->link.active_tag;
--				else
--					check_commands = ap->link.sactive;
-+				if (status & NV_ADMA_STAT_CPBERR) {
-+					/* Check all active commands */
-+					if (ata_tag_valid(ap->link.active_tag))
-+						check_commands = 1 <<
-+							ap->link.active_tag;
-+					else
-+						check_commands = ap->
-+							link.sactive;
-+				}
- 
- 				/** Check CPBs for completed commands */
- 				while ((pos = ffs(check_commands)) && !error) {
-
+> 
+>> The ideal solution would be to do mapping against a
+>> different struct 
+>> device for each port, so that we could maintain the proper
+>> DMA mask for 
+>> each of them at all times. However I'm not sure if
+>> that's possible. The 
+>> thought of using the SCSI struct device for DMA mapping was
+>> brought up 
+>> at one point.. any thoughts on that?
+> 
+> The reason for this is that the object that a struct scsi_dev
+> represents has nothing to do with HW DMA engines.
+> 
+> It looks like your current solution is correct and
+> x86_64's blk_queue_bounce_limit needs work.
+> 
+>     Luben
+> 
+> 
