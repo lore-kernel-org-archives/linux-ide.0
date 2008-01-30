@@ -1,450 +1,721 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH 7/9] libata: stop overloading port_info->private_data
-Date: Wed, 30 Jan 2008 18:29:01 +0900
-Message-ID: <1201685344817-git-send-email-htejun@gmail.com>
+Subject: [PATCH 4/9] libata: normalize port_info, port_operations and sht tables
+Date: Wed, 30 Jan 2008 18:28:58 +0900
+Message-ID: <12016853433225-git-send-email-htejun@gmail.com>
 References: <12016853433196-git-send-email-htejun@gmail.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.178]:35445 "EHLO
+Received: from wa-out-1112.google.com ([209.85.146.179]:37130 "EHLO
 	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755036AbYA3J3S (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 30 Jan 2008 04:29:18 -0500
-Received: by wa-out-1112.google.com with SMTP id v27so277515wah.23
-        for <linux-ide@vger.kernel.org>; Wed, 30 Jan 2008 01:29:18 -0800 (PST)
+	with ESMTP id S1754916AbYA3J3N (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 30 Jan 2008 04:29:13 -0500
+Received: by wa-out-1112.google.com with SMTP id v27so277519wah.23
+        for <linux-ide@vger.kernel.org>; Wed, 30 Jan 2008 01:29:12 -0800 (PST)
 In-Reply-To: <12016853433196-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: jeff@garzik.org, linux-ide@vger.kernel.org, liml@rtr.ca, alan@lxorguk.ukuu.org.uk, kngregertsen@norway.atmel.com, sonic.adi@gmail.com, rmk@dyn-67.arm.linux.org.uk, alessandro.zummo@to
 Cc: Tejun Heo <htejun@gmail.com>
 
-port_info->private_data is currently used for two purposes - to record
-private data about the port_info or to specify host->private_data to
-use when allocating ata_host.
+Over the time, port info, ops and sht structures developed quite a bit
+of inconsistencies.  This patch updates drivers.
 
-This overloading is confusing and counter-intuitive in that
-port_info->private_data becomes host->private_data instead of
-port->private_data.  In addition, port_info and host don't correspond
-to each other 1-to-1.  Currently, the first non-NULL
-port_info->private_data is used.
+* Enable/disable_pm callbacks added to all ahci ops tables.
 
-This patch makes port_info->private_data just be what it is -
-private_data for the port_info where LLD can jot down extra info.
-libata no longer sets host->private_data to the first non-NULL
-port_info->private_data.  host->private_data now should be set
-directly after allocating/prepping ata_host just as ap->private_data
-is set.
+* Every driver for SFF controllers now uses ata_sff_port_start()
+  instead of ata_port_start() unless the driver has custom
+  implementation.
 
-This means that ata_pci_init_one() can't be used for drivers which
-require host->private_data.  The conversion is cheap.  This patch
-converts all six low level drivers which need such conversion and the
-number of added lines is only around 20.
+* Every driver for SFF controllers now uses ata_pci_default_filter()
+  unless the driver has custom implementation.
+
+* Removed an odd port_info->sht initialization from ata_piix.c.
+  Likely a merge byproduct.
+
+* A port which has ATA_FLAG_SATA set doesn't need to set cable_detect
+  to ata_cable_sata().  Remove it from vt6421_port_ops.
+
+* Some drivers had unnecessary .max_sectors initialization which is
+  ignored and was missing .slave_destroy callback.  Fixed.
+
+* Removed unnecessary sht initializations port_info's.
+
+* Removed onsolete scsi device suspend/resume callbacks from
+  pata_bf54x.
+
+* No reason to set ata_pci_default_filter() for PIO-only drivers.
+
+* pata_platform sets port_start to ata_dummy_ret0.  port_start can
+  just be set to NULL.
+
+* sata_fsl supports NCQ but was missing qc_defer.  Fixed.
 
 Signed-off-by: Tejun Heo <htejun@gmail.com>
 ---
- drivers/ata/libata-core.c  |    2 --
- drivers/ata/pata_amd.c     |   17 +++++++++++------
- drivers/ata/pata_hpt366.c  |   18 +++++++++++-------
- drivers/ata/pata_hpt37x.c  |   40 +++++++++++++++++++++-------------------
- drivers/ata/pata_hpt3x2n.c |   14 +++++++++-----
- drivers/ata/pata_sis.c     |   24 ++++++++++++++----------
- drivers/ata/pata_via.c     |   24 ++++++++++++++----------
- 7 files changed, 80 insertions(+), 59 deletions(-)
+ drivers/ata/ahci.c           |    4 ++++
+ drivers/ata/ata_generic.c    |    1 +
+ drivers/ata/ata_piix.c       |   13 +++++++------
+ drivers/ata/pata_artop.c     |    1 +
+ drivers/ata/pata_bf54x.c     |    5 -----
+ drivers/ata/pata_cmd64x.c    |    6 +++---
+ drivers/ata/pata_cs5520.c    |    1 +
+ drivers/ata/pata_cs5536.c    |    2 +-
+ drivers/ata/pata_hpt3x3.c    |    1 -
+ drivers/ata/pata_it8213.c    |    2 +-
+ drivers/ata/pata_ixp4xx_cf.c |    3 +--
+ drivers/ata/pata_jmicron.c   |    3 ++-
+ drivers/ata/pata_marvell.c   |    1 +
+ drivers/ata/pata_mpc52xx.c   |    4 ++--
+ drivers/ata/pata_netcell.c   |    1 +
+ drivers/ata/pata_opti.c      |    1 +
+ drivers/ata/pata_optidma.c   |    2 ++
+ drivers/ata/pata_platform.c  |    4 ----
+ drivers/ata/pata_rz1000.c    |    1 +
+ drivers/ata/sata_fsl.c       |    1 +
+ drivers/ata/sata_nv.c        |   11 ++++++++---
+ drivers/ata/sata_sil.c       |    3 ++-
+ drivers/ata/sata_sis.c       |    3 ++-
+ drivers/ata/sata_svw.c       |    3 ++-
+ drivers/ata/sata_uli.c       |    3 ++-
+ drivers/ata/sata_via.c       |   12 ++++++++----
+ drivers/ata/sata_vsc.c       |    3 ++-
+ 27 files changed, 57 insertions(+), 38 deletions(-)
 
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index 65d082c..a791525 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -6907,8 +6907,6 @@ struct ata_host *ata_host_alloc_pinfo(struct device *dev,
+diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+index 07dcaf6..08301ca 100644
+--- a/drivers/ata/ahci.c
++++ b/drivers/ata/ahci.c
+@@ -351,6 +351,8 @@ static const struct ata_port_operations ahci_vt8251_ops = {
+ 	.port_suspend		= ahci_port_suspend,
+ 	.port_resume		= ahci_port_resume,
+ #endif
++	.enable_pm		= ahci_enable_alpm,
++	.disable_pm		= ahci_disable_alpm,
  
- 		if (!host->ops && (pi->port_ops != &ata_dummy_port_ops))
- 			host->ops = pi->port_ops;
--		if (!host->private_data && pi->private_data)
--			host->private_data = pi->private_data;
- 	}
+ 	.port_start		= ahci_port_start,
+ 	.port_stop		= ahci_port_stop,
+@@ -385,6 +387,8 @@ static const struct ata_port_operations ahci_p5wdh_ops = {
+ 	.port_suspend		= ahci_port_suspend,
+ 	.port_resume		= ahci_port_resume,
+ #endif
++	.enable_pm		= ahci_enable_alpm,
++	.disable_pm		= ahci_disable_alpm,
  
- 	return host;
-diff --git a/drivers/ata/pata_amd.c b/drivers/ata/pata_amd.c
-index 9ce6cd9..461c8f6 100644
---- a/drivers/ata/pata_amd.c
-+++ b/drivers/ata/pata_amd.c
-@@ -484,10 +484,10 @@ static int amd_init_one(struct pci_dev *pdev, const struct pci_device_id *id)
- 			.port_ops = &amd100_port_ops
- 		}
- 	};
--	struct ata_port_info pi;
--	const struct ata_port_info *ppi[] = { &pi, NULL };
-+	const struct ata_port_info *ppi[] = { NULL, NULL };
- 	static int printed_version;
- 	int type = id->driver_data;
-+	struct ata_host *host;
- 	u8 fifo;
- 	int rc;
+ 	.port_start		= ahci_port_start,
+ 	.port_stop		= ahci_port_stop,
+diff --git a/drivers/ata/ata_generic.c b/drivers/ata/ata_generic.c
+index 2053420..db4c3cb 100644
+--- a/drivers/ata/ata_generic.c
++++ b/drivers/ata/ata_generic.c
+@@ -114,6 +114,7 @@ static struct scsi_host_template generic_sht = {
  
-@@ -510,9 +510,13 @@ static int amd_init_one(struct pci_dev *pdev, const struct pci_device_id *id)
- 		type = 6;	/* UDMA 100 only */
+ static struct ata_port_operations generic_port_ops = {
+ 	.set_mode	= generic_set_mode,
++	.mode_filter	= ata_pci_default_filter,
  
- 	/*
--	 * Okay, type is determined now.  Apply type-specific workarounds.
-+	 * Okay, type is determined now.  Prepare host and apply
-+	 * type-specific workarounds.
- 	 */
--	pi = info[type];
-+	*ppi = &info[type];
-+	rc = ata_pci_prepare_sff_host(pdev, ppi, &host);
-+	if (rc)
-+		return rc;
+ 	.tf_load	= ata_tf_load,
+ 	.tf_read	= ata_tf_read,
+diff --git a/drivers/ata/ata_piix.c b/drivers/ata/ata_piix.c
+index a65c8ae..129d682 100644
+--- a/drivers/ata/ata_piix.c
++++ b/drivers/ata/ata_piix.c
+@@ -328,7 +328,7 @@ static const struct ata_port_operations piix_pata_ops = {
+ 	.irq_clear		= ata_bmdma_irq_clear,
+ 	.irq_on			= ata_irq_on,
  
- 	if (type < 3)
- 		ata_pci_clear_simplex(pdev);
-@@ -531,11 +535,12 @@ static int amd_init_one(struct pci_dev *pdev, const struct pci_device_id *id)
- 		u32 udma;
+-	.port_start		= ata_port_start,
++	.port_start		= ata_sff_port_start,
+ };
  
- 		pci_read_config_dword(pdev, 0x60, &udma);
--		pi.private_data = (void *)(unsigned long)udma;
-+		host->private_data = (void *)(unsigned long)udma;
- 	}
+ static const struct ata_port_operations ich_pata_ops = {
+@@ -359,7 +359,7 @@ static const struct ata_port_operations ich_pata_ops = {
+ 	.irq_clear		= ata_bmdma_irq_clear,
+ 	.irq_on			= ata_irq_on,
  
- 	/* And fire it up */
--	return ata_pci_init_one(pdev, ppi, &amd_sht);
-+	pci_set_master(pdev);
-+	return ata_pci_activate_sff_host(host, ata_interrupt, &amd_sht);
- }
+-	.port_start		= ata_port_start,
++	.port_start		= ata_sff_port_start,
+ };
  
- #ifdef CONFIG_PM
-diff --git a/drivers/ata/pata_hpt366.c b/drivers/ata/pata_hpt366.c
-index 512cba5..5534060 100644
---- a/drivers/ata/pata_hpt366.c
-+++ b/drivers/ata/pata_hpt366.c
-@@ -356,9 +356,8 @@ static int hpt36x_init_one(struct pci_dev *dev, const struct pci_device_id *id)
- 		.udma_mask = ATA_UDMA4,
- 		.port_ops = &hpt366_port_ops
- 	};
--	struct ata_port_info info = info_hpt366;
--	const struct ata_port_info *ppi[] = { &info, NULL };
--
-+	const struct ata_port_info *ppi[] = { &info_hpt366, NULL };
-+	struct ata_host *host;
- 	u32 class_rev;
- 	u32 reg1;
- 	int rc;
-@@ -367,6 +366,10 @@ static int hpt36x_init_one(struct pci_dev *dev, const struct pci_device_id *id)
- 	if (rc)
- 		return rc;
+ static const struct ata_port_operations piix_sata_ops = {
+@@ -377,6 +377,7 @@ static const struct ata_port_operations piix_sata_ops = {
+ 	.qc_issue		= ata_qc_issue_prot,
+ 	.data_xfer		= ata_data_xfer,
  
-+	rc = ata_pci_prepare_sff_host(dev, ppi, &host);
-+	if (rc)
-+		return rc;
-+
- 	pci_read_config_dword(dev, PCI_CLASS_REVISION, &class_rev);
- 	class_rev &= 0xFF;
++	.mode_filter		= ata_pci_default_filter,
+ 	.freeze			= ata_bmdma_freeze,
+ 	.thaw			= ata_bmdma_thaw,
+ 	.error_handler		= ata_bmdma_error_handler,
+@@ -385,7 +386,7 @@ static const struct ata_port_operations piix_sata_ops = {
+ 	.irq_clear		= ata_bmdma_irq_clear,
+ 	.irq_on			= ata_irq_on,
  
-@@ -383,17 +386,18 @@ static int hpt36x_init_one(struct pci_dev *dev, const struct pci_device_id *id)
- 	/* info_hpt366 is safe against re-entry so we can scribble on it */
- 	switch((reg1 & 0x700) >> 8) {
- 		case 5:
--			info.private_data = &hpt366_40;
-+			host->private_data = &hpt366_40;
- 			break;
- 		case 9:
--			info.private_data = &hpt366_25;
-+			host->private_data = &hpt366_25;
- 			break;
- 		default:
--			info.private_data = &hpt366_33;
-+			host->private_data = &hpt366_33;
- 			break;
- 	}
- 	/* Now kick off ATA set up */
--	return ata_pci_init_one(dev, ppi, &hpt36x_sht);
-+	pci_set_master(dev);
-+	return ata_pci_activate_sff_host(host, ata_interrupt, &hpt36x_sht);
- }
+-	.port_start		= ata_port_start,
++	.port_start		= ata_sff_port_start,
+ };
  
- #ifdef CONFIG_PM
-diff --git a/drivers/ata/pata_hpt37x.c b/drivers/ata/pata_hpt37x.c
-index 97fc5dc..16ec8f4 100644
---- a/drivers/ata/pata_hpt37x.c
-+++ b/drivers/ata/pata_hpt37x.c
-@@ -831,10 +831,9 @@ static int hpt37x_init_one(struct pci_dev *dev, const struct pci_device_id *id)
- 	};
+ static const struct ata_port_operations piix_vmw_ops = {
+@@ -417,7 +418,7 @@ static const struct ata_port_operations piix_vmw_ops = {
+ 	.irq_clear		= ata_bmdma_irq_clear,
+ 	.irq_on			= ata_irq_on,
  
- 	static const int MHz[4] = { 33, 40, 50, 66 };
--	const struct ata_port_info *port;
-+	const struct ata_port_info *ppi[] = { NULL, NULL };
- 	void *private_data = NULL;
--	struct ata_port_info port_info;
--	const struct ata_port_info *ppi[] = { &port_info, NULL };
-+	struct ata_host *host;
+-	.port_start		= ata_port_start,
++	.port_start		= ata_sff_port_start,
+ };
  
- 	u8 irqmask;
- 	u32 class_rev;
-@@ -866,17 +865,17 @@ static int hpt37x_init_one(struct pci_dev *dev, const struct pci_device_id *id)
+ static const struct ata_port_operations piix_sidpr_sata_ops = {
+@@ -438,6 +439,7 @@ static const struct ata_port_operations piix_sidpr_sata_ops = {
+ 	.scr_read		= piix_sidpr_scr_read,
+ 	.scr_write		= piix_sidpr_scr_write,
  
- 		switch(class_rev) {
- 			case 3:
--				port = &info_hpt370;
-+				*ppi = &info_hpt370;
- 				chip_table = &hpt370;
- 				prefer_dpll = 0;
- 				break;
- 			case 4:
--				port = &info_hpt370a;
-+				*ppi = &info_hpt370a;
- 				chip_table = &hpt370a;
- 				prefer_dpll = 0;
- 				break;
- 			case 5:
--				port = &info_hpt372;
-+				*ppi = &info_hpt372;
- 				chip_table = &hpt372;
- 				break;
- 			default:
-@@ -889,21 +888,21 @@ static int hpt37x_init_one(struct pci_dev *dev, const struct pci_device_id *id)
- 				/* 372N if rev >= 2*/
- 				if (class_rev >= 2)
- 					return -ENODEV;
--				port = &info_hpt372;
-+				*ppi = &info_hpt372;
- 				chip_table = &hpt372a;
- 				break;
- 			case PCI_DEVICE_ID_TTI_HPT302:
- 				/* 302N if rev > 1 */
- 				if (class_rev > 1)
- 					return -ENODEV;
--				port = &info_hpt372;
-+				*ppi = &info_hpt372;
- 				/* Check this */
- 				chip_table = &hpt302;
- 				break;
- 			case PCI_DEVICE_ID_TTI_HPT371:
- 				if (class_rev > 1)
- 					return -ENODEV;
--				port = &info_hpt372;
-+				*ppi = &info_hpt372;
- 				chip_table = &hpt371;
- 				/* Single channel device, master is not present
- 				   but the BIOS (or us for non x86) must mark it
-@@ -914,7 +913,7 @@ static int hpt37x_init_one(struct pci_dev *dev, const struct pci_device_id *id)
- 				break;
- 			case PCI_DEVICE_ID_TTI_HPT374:
- 				chip_table = &hpt374;
--				port = &info_hpt374;
-+				*ppi = &info_hpt374;
- 				break;
- 			default:
- 				printk(KERN_ERR "pata_hpt37x: PCI table is bogus please report (%d).\n", dev->device);
-@@ -993,7 +992,7 @@ static int hpt37x_init_one(struct pci_dev *dev, const struct pci_device_id *id)
- 		int dpll, adjust;
++	.mode_filter		= ata_pci_default_filter,
+ 	.freeze			= ata_bmdma_freeze,
+ 	.thaw			= ata_bmdma_thaw,
+ 	.error_handler		= piix_sidpr_error_handler,
+@@ -446,7 +448,7 @@ static const struct ata_port_operations piix_sidpr_sata_ops = {
+ 	.irq_clear		= ata_bmdma_irq_clear,
+ 	.irq_on			= ata_irq_on,
  
- 		/* Compute DPLL */
--		dpll = (port->udma_mask & 0xC0) ? 3 : 2;
-+		dpll = ((*ppi)->udma_mask & 0xC0) ? 3 : 2;
+-	.port_start		= ata_port_start,
++	.port_start		= ata_sff_port_start,
+ };
  
- 		f_low = (MHz[clock_slot] * 48) / MHz[dpll];
- 		f_high = f_low + 2;
-@@ -1033,19 +1032,22 @@ static int hpt37x_init_one(struct pci_dev *dev, const struct pci_device_id *id)
- 		 *	about lack of UDMA133 support on lower clocks
-  		 */
+ static const struct piix_map_db ich5_map_db = {
+@@ -675,7 +677,6 @@ static struct ata_port_info piix_port_info[] = {
  
--		if (clock_slot < 2 && port == &info_hpt370)
--			port = &info_hpt370_33;
--		if (clock_slot < 2 && port == &info_hpt370a)
--			port = &info_hpt370a_33;
-+		if (clock_slot < 2 && *ppi == &info_hpt370)
-+			*ppi = &info_hpt370_33;
-+		if (clock_slot < 2 && *ppi == &info_hpt370a)
-+			*ppi = &info_hpt370a_33;
- 		printk(KERN_INFO "pata_hpt37x: %s using %dMHz bus clock.\n",
- 		       chip_table->name, MHz[clock_slot]);
- 	}
+ 	[piix_pata_vmw] =
+ 	{
+-		.sht		= &piix_sht,
+ 		.flags		= PIIX_PATA_FLAGS,
+ 		.pio_mask	= 0x1f,	/* pio0-4 */
+ 		.mwdma_mask	= 0x06, /* mwdma1-2 ?? CHECK 0 should be ok but slow */
+diff --git a/drivers/ata/pata_artop.c b/drivers/ata/pata_artop.c
+index 2f81480..a238c7b 100644
+--- a/drivers/ata/pata_artop.c
++++ b/drivers/ata/pata_artop.c
+@@ -367,6 +367,7 @@ static const struct ata_port_operations artop6210_ops = {
+ static const struct ata_port_operations artop6260_ops = {
+ 	.set_piomode		= artop6260_set_piomode,
+ 	.set_dmamode		= artop6260_set_dmamode,
++	.mode_filter		= ata_pci_default_filter,
  
--	/* Now kick off ATA set up */
--	port_info = *port;
--	port_info.private_data = private_data;
-+	/* prepare host and kick off */
-+	rc = ata_pci_prepare_sff_host(dev, ppi, &host);
-+	if (rc)
-+		return rc;
-+	host->private_data = private_data;
+ 	.tf_load		= ata_tf_load,
+ 	.tf_read		= ata_tf_read,
+diff --git a/drivers/ata/pata_bf54x.c b/drivers/ata/pata_bf54x.c
+index a32e3c4..0a6fa94 100644
+--- a/drivers/ata/pata_bf54x.c
++++ b/drivers/ata/pata_bf54x.c
+@@ -1373,10 +1373,6 @@ static struct scsi_host_template bfin_sht = {
+ 	.slave_configure	= ata_scsi_slave_config,
+ 	.slave_destroy		= ata_scsi_slave_destroy,
+ 	.bios_param		= ata_std_bios_param,
+-#ifdef CONFIG_PM
+-	.resume			= ata_scsi_device_resume,
+-	.suspend		= ata_scsi_device_suspend,
+-#endif
+ };
  
--	return ata_pci_init_one(dev, ppi, &hpt37x_sht);
-+	pci_set_master(dev);
-+	return ata_pci_activate_sff_host(host, ata_interrupt, &hpt37x_sht);
- }
+ static const struct ata_port_operations bfin_pata_ops = {
+@@ -1414,7 +1410,6 @@ static const struct ata_port_operations bfin_pata_ops = {
  
- static const struct pci_device_id hpt37x[] = {
-diff --git a/drivers/ata/pata_hpt3x2n.c b/drivers/ata/pata_hpt3x2n.c
-index 2c178c3..616f7a5 100644
---- a/drivers/ata/pata_hpt3x2n.c
-+++ b/drivers/ata/pata_hpt3x2n.c
-@@ -458,8 +458,8 @@ static int hpt3x2n_init_one(struct pci_dev *dev, const struct pci_device_id *id)
- 		.udma_mask = ATA_UDMA6,
- 		.port_ops = &hpt3x2n_port_ops
- 	};
--	struct ata_port_info port = info;
--	const struct ata_port_info *ppi[] = { &port, NULL };
-+	const struct ata_port_info *ppi[] = { &info, NULL };
-+	struct ata_host *host;
+ static struct ata_port_info bfin_port_info[] = {
+ 	{
+-		.sht		= &bfin_sht,
+ 		.flags		= ATA_FLAG_SLAVE_POSS
+ 				| ATA_FLAG_MMIO
+ 				| ATA_FLAG_NO_LEGACY,
+diff --git a/drivers/ata/pata_cmd64x.c b/drivers/ata/pata_cmd64x.c
+index 1c9a8d9..e8c1262 100644
+--- a/drivers/ata/pata_cmd64x.c
++++ b/drivers/ata/pata_cmd64x.c
+@@ -313,7 +313,7 @@ static struct ata_port_operations cmd64x_port_ops = {
+ 	.irq_clear	= ata_bmdma_irq_clear,
+ 	.irq_on		= ata_irq_on,
  
- 	u8 irqmask;
- 	u32 class_rev;
-@@ -474,6 +474,10 @@ static int hpt3x2n_init_one(struct pci_dev *dev, const struct pci_device_id *id)
- 	if (rc)
- 		return rc;
+-	.port_start	= ata_port_start,
++	.port_start	= ata_sff_port_start,
+ };
  
-+	rc = ata_pci_prepare_sff_host(dev, ppi, &host);
-+	if (rc)
-+		return rc;
-+
- 	pci_read_config_dword(dev, PCI_CLASS_REVISION, &class_rev);
- 	class_rev &= 0xFF;
+ static struct ata_port_operations cmd646r1_port_ops = {
+@@ -346,7 +346,7 @@ static struct ata_port_operations cmd646r1_port_ops = {
+ 	.irq_clear	= ata_bmdma_irq_clear,
+ 	.irq_on		= ata_irq_on,
  
-@@ -554,9 +558,8 @@ static int hpt3x2n_init_one(struct pci_dev *dev, const struct pci_device_id *id)
- 	       pci_mhz);
- 	/* Set our private data up. We only need a few flags so we use
- 	   it directly */
--	port.private_data = NULL;
- 	if (pci_mhz > 60) {
--		port.private_data = (void *)PCI66;
-+		host->private_data = (void *)PCI66;
- 		/*
- 		 * On  HPT371N, if ATA clock is 66 MHz we must set bit 2 in
- 		 * the MISC. register to stretch the UltraDMA Tss timing.
-@@ -567,7 +570,8 @@ static int hpt3x2n_init_one(struct pci_dev *dev, const struct pci_device_id *id)
- 	}
+-	.port_start	= ata_port_start,
++	.port_start	= ata_sff_port_start,
+ };
  
- 	/* Now kick off ATA set up */
--	return ata_pci_init_one(dev, ppi, &hpt3x2n_sht);
-+	pci_set_master(dev);
-+	return ata_pci_activate_sff_host(host, ata_interrupt, &hpt3x2n_sht);
- }
+ static struct ata_port_operations cmd648_port_ops = {
+@@ -379,7 +379,7 @@ static struct ata_port_operations cmd648_port_ops = {
+ 	.irq_clear	= ata_bmdma_irq_clear,
+ 	.irq_on		= ata_irq_on,
  
- static const struct pci_device_id hpt3x2n[] = {
-diff --git a/drivers/ata/pata_sis.c b/drivers/ata/pata_sis.c
-index 1d8cf11..45c689c 100644
---- a/drivers/ata/pata_sis.c
-+++ b/drivers/ata/pata_sis.c
-@@ -690,11 +690,11 @@ static void sis_fixup(struct pci_dev *pdev, struct sis_chipset *sis)
- static int sis_init_one (struct pci_dev *pdev, const struct pci_device_id *ent)
+-	.port_start	= ata_port_start,
++	.port_start	= ata_sff_port_start,
+ };
+ 
+ static int cmd64x_init_one(struct pci_dev *pdev, const struct pci_device_id *id)
+diff --git a/drivers/ata/pata_cs5520.c b/drivers/ata/pata_cs5520.c
+index 972ed9f..5614e76 100644
+--- a/drivers/ata/pata_cs5520.c
++++ b/drivers/ata/pata_cs5520.c
+@@ -160,6 +160,7 @@ static struct scsi_host_template cs5520_sht = {
+ static struct ata_port_operations cs5520_port_ops = {
+ 	.set_piomode		= cs5520_set_piomode,
+ 	.set_dmamode		= cs5520_set_dmamode,
++	.mode_filter		= ata_pci_default_filter,
+ 
+ 	.tf_load		= ata_tf_load,
+ 	.tf_read		= ata_tf_read,
+diff --git a/drivers/ata/pata_cs5536.c b/drivers/ata/pata_cs5536.c
+index d753e56..c59c806 100644
+--- a/drivers/ata/pata_cs5536.c
++++ b/drivers/ata/pata_cs5536.c
+@@ -269,7 +269,7 @@ static struct ata_port_operations cs5536_port_ops = {
+ 	.irq_clear		= ata_bmdma_irq_clear,
+ 	.irq_on			= ata_irq_on,
+ 
+-	.port_start		= ata_port_start,
++	.port_start		= ata_sff_port_start,
+ };
+ 
+ /**
+diff --git a/drivers/ata/pata_hpt3x3.c b/drivers/ata/pata_hpt3x3.c
+index cb8bdb6..c09f95a 100644
+--- a/drivers/ata/pata_hpt3x3.c
++++ b/drivers/ata/pata_hpt3x3.c
+@@ -189,7 +189,6 @@ static int hpt3x3_init_one(struct pci_dev *pdev, const struct pci_device_id *id)
  {
  	static int printed_version;
--	struct ata_port_info port;
--	const struct ata_port_info *ppi[] = { &port, NULL };
--	struct pci_dev *host = NULL;
-+	const struct ata_port_info *ppi[] = { NULL, NULL };
-+	struct pci_dev *bridge = NULL;
- 	struct sis_chipset *chipset = NULL;
- 	struct sis_chipset *sets;
-+	struct ata_host *host;
- 	int rc;
+ 	static const struct ata_port_info info = {
+-		.sht = &hpt3x3_sht,
+ 		.flags = ATA_FLAG_SLAVE_POSS,
+ 		.pio_mask = 0x1f,
+ #if defined(CONFIG_PATA_HPT3X3_DMA)
+diff --git a/drivers/ata/pata_it8213.c b/drivers/ata/pata_it8213.c
+index 1eda821..60c30dc 100644
+--- a/drivers/ata/pata_it8213.c
++++ b/drivers/ata/pata_it8213.c
+@@ -250,13 +250,13 @@ static struct scsi_host_template it8213_sht = {
+ 	.can_queue		= ATA_DEF_QUEUE,
+ 	.this_id		= ATA_SHT_THIS_ID,
+ 	.sg_tablesize		= LIBATA_MAX_PRD,
+-	.max_sectors		= ATA_MAX_SECTORS,
+ 	.cmd_per_lun		= ATA_SHT_CMD_PER_LUN,
+ 	.emulated		= ATA_SHT_EMULATED,
+ 	.use_clustering		= ATA_SHT_USE_CLUSTERING,
+ 	.proc_name		= DRV_NAME,
+ 	.dma_boundary		= ATA_DMA_BOUNDARY,
+ 	.slave_configure	= ata_scsi_slave_config,
++	.slave_destroy		= ata_scsi_slave_destroy,
+ 	.bios_param		= ata_std_bios_param,
+ };
  
- 	static struct sis_chipset sis_chipsets[] = {
-@@ -754,11 +754,11 @@ static int sis_init_one (struct pci_dev *pdev, const struct pci_device_id *ent)
+diff --git a/drivers/ata/pata_ixp4xx_cf.c b/drivers/ata/pata_ixp4xx_cf.c
+index 83e38cc..6eb8cc9 100644
+--- a/drivers/ata/pata_ixp4xx_cf.c
++++ b/drivers/ata/pata_ixp4xx_cf.c
+@@ -107,7 +107,6 @@ static struct scsi_host_template ixp4xx_sht = {
  
- 	/* We have to find the bridge first */
- 	for (sets = &sis_chipsets[0]; sets->device; sets++) {
--		host = pci_get_device(PCI_VENDOR_ID_SI, sets->device, NULL);
--		if (host != NULL) {
-+		bridge = pci_get_device(PCI_VENDOR_ID_SI, sets->device, NULL);
-+		if (bridge != NULL) {
- 			chipset = sets;			/* Match found */
- 			if (sets->device == 0x630) {	/* SIS630 */
--				if (host->revision >= 0x30)	/* 630 ET */
-+				if (bridge->revision >= 0x30)	/* 630 ET */
- 					chipset = &sis100_early;
- 			}
- 			break;
-@@ -825,18 +825,22 @@ static int sis_init_one (struct pci_dev *pdev, const struct pci_device_id *ent)
- 			break;
- 		}
- 	}
--	pci_dev_put(host);
-+	pci_dev_put(bridge);
+ static struct ata_port_operations ixp4xx_port_ops = {
+ 	.set_mode		= ixp4xx_set_mode,
+-	.mode_filter		= ata_pci_default_filter,
  
- 	/* No chipset info, no support */
- 	if (chipset == NULL)
- 		return -ENODEV;
+ 	.tf_load		= ata_tf_load,
+ 	.tf_read		= ata_tf_read,
+@@ -129,7 +128,7 @@ static struct ata_port_operations ixp4xx_port_ops = {
+ 	.irq_clear		= ata_noop_irq_clear,
+ 	.irq_on			= ata_irq_on,
  
--	port = *chipset->info;
--	port.private_data = chipset;
-+	*ppi = chipset->info;
-+	rc = ata_pci_prepare_sff_host(pdev, ppi, &host);
-+	if (rc)
-+		return rc;
-+	host->private_data = chipset;
+-	.port_start		= ata_port_start,
++	.port_start		= ata_sff_port_start,
+ };
  
- 	sis_fixup(pdev, chipset);
+ static void ixp4xx_setup_port(struct ata_port *ap,
+diff --git a/drivers/ata/pata_jmicron.c b/drivers/ata/pata_jmicron.c
+index 5b8174d..4d25c45 100644
+--- a/drivers/ata/pata_jmicron.c
++++ b/drivers/ata/pata_jmicron.c
+@@ -147,6 +147,7 @@ static const struct ata_port_operations jmicron_ops = {
+ 	.exec_command		= ata_exec_command,
+ 	.dev_select		= ata_std_dev_select,
  
--	return ata_pci_init_one(pdev, ppi, &sis_sht);
-+	pci_set_master(pdev);
-+	return ata_pci_activate_sff_host(host, ata_interrupt, &sis_sht);
++	.mode_filter		= ata_pci_default_filter,
+ 	.freeze			= ata_bmdma_freeze,
+ 	.thaw			= ata_bmdma_thaw,
+ 	.error_handler		= jmicron_error_handler,
+@@ -167,7 +168,7 @@ static const struct ata_port_operations jmicron_ops = {
+ 	.irq_on			= ata_irq_on,
+ 
+ 	/* Generic PATA PCI ATA helpers */
+-	.port_start		= ata_port_start,
++	.port_start		= ata_sff_port_start,
+ };
+ 
+ 
+diff --git a/drivers/ata/pata_marvell.c b/drivers/ata/pata_marvell.c
+index 9afc8a3..113be4f 100644
+--- a/drivers/ata/pata_marvell.c
++++ b/drivers/ata/pata_marvell.c
+@@ -118,6 +118,7 @@ static const struct ata_port_operations marvell_ops = {
+ 	.exec_command		= ata_exec_command,
+ 	.dev_select		= ata_std_dev_select,
+ 
++	.mode_filter		= ata_pci_default_filter,
+ 	.freeze			= ata_bmdma_freeze,
+ 	.thaw			= ata_bmdma_thaw,
+ 	.error_handler		= marvell_error_handler,
+diff --git a/drivers/ata/pata_mpc52xx.c b/drivers/ata/pata_mpc52xx.c
+index bc5259e..9383efb 100644
+--- a/drivers/ata/pata_mpc52xx.c
++++ b/drivers/ata/pata_mpc52xx.c
+@@ -272,13 +272,13 @@ static struct scsi_host_template mpc52xx_ata_sht = {
+ 	.can_queue		= ATA_DEF_QUEUE,
+ 	.this_id		= ATA_SHT_THIS_ID,
+ 	.sg_tablesize		= LIBATA_MAX_PRD,
+-	.max_sectors		= ATA_MAX_SECTORS,
+ 	.cmd_per_lun		= ATA_SHT_CMD_PER_LUN,
+ 	.emulated		= ATA_SHT_EMULATED,
+ 	.use_clustering		= ATA_SHT_USE_CLUSTERING,
+ 	.proc_name		= DRV_NAME,
+ 	.dma_boundary		= ATA_DMA_BOUNDARY,
+ 	.slave_configure	= ata_scsi_slave_config,
++	.slave_destroy		= ata_scsi_slave_destroy,
+ 	.bios_param		= ata_std_bios_param,
+ };
+ 
+@@ -298,7 +298,7 @@ static struct ata_port_operations mpc52xx_ata_port_ops = {
+ 	.data_xfer		= ata_data_xfer,
+ 	.irq_clear		= ata_noop_irq_clear,
+ 	.irq_on			= ata_irq_on,
+-	.port_start		= ata_port_start,
++	.port_start		= ata_sff_port_start,
+ };
+ 
+ static int __devinit
+diff --git a/drivers/ata/pata_netcell.c b/drivers/ata/pata_netcell.c
+index 0e4a08e..9fd1a84 100644
+--- a/drivers/ata/pata_netcell.c
++++ b/drivers/ata/pata_netcell.c
+@@ -47,6 +47,7 @@ static const struct ata_port_operations netcell_ops = {
+ 	.exec_command		= ata_exec_command,
+ 	.dev_select		= ata_std_dev_select,
+ 
++	.mode_filter		= ata_pci_default_filter,
+ 	.freeze			= ata_bmdma_freeze,
+ 	.thaw			= ata_bmdma_thaw,
+ 	.error_handler		= ata_bmdma_error_handler,
+diff --git a/drivers/ata/pata_opti.c b/drivers/ata/pata_opti.c
+index 8f79447..ebb9dc1 100644
+--- a/drivers/ata/pata_opti.c
++++ b/drivers/ata/pata_opti.c
+@@ -184,6 +184,7 @@ static struct scsi_host_template opti_sht = {
+ 
+ static struct ata_port_operations opti_port_ops = {
+ 	.set_piomode	= opti_set_piomode,
++	.mode_filter	= ata_pci_default_filter,
+ 	.tf_load	= ata_tf_load,
+ 	.tf_read	= ata_tf_read,
+ 	.check_status 	= ata_check_status,
+diff --git a/drivers/ata/pata_optidma.c b/drivers/ata/pata_optidma.c
+index be8c421..3f9d035 100644
+--- a/drivers/ata/pata_optidma.c
++++ b/drivers/ata/pata_optidma.c
+@@ -370,6 +370,7 @@ static struct scsi_host_template optidma_sht = {
+ static struct ata_port_operations optidma_port_ops = {
+ 	.set_piomode	= optidma_set_pio_mode,
+ 	.set_dmamode	= optidma_set_dma_mode,
++	.mode_filter	= ata_pci_default_filter,
+ 
+ 	.tf_load	= ata_tf_load,
+ 	.tf_read	= ata_tf_read,
+@@ -404,6 +405,7 @@ static struct ata_port_operations optidma_port_ops = {
+ static struct ata_port_operations optiplus_port_ops = {
+ 	.set_piomode	= optiplus_set_pio_mode,
+ 	.set_dmamode	= optiplus_set_dma_mode,
++	.mode_filter	= ata_pci_default_filter,
+ 
+ 	.tf_load	= ata_tf_load,
+ 	.tf_read	= ata_tf_read,
+diff --git a/drivers/ata/pata_platform.c b/drivers/ata/pata_platform.c
+index 07b024a..d2edcbf 100644
+--- a/drivers/ata/pata_platform.c
++++ b/drivers/ata/pata_platform.c
+@@ -46,8 +46,6 @@ static int pata_platform_set_mode(struct ata_link *link, struct ata_device **unu
+ 	return 0;
  }
  
- static const struct pci_device_id sis_pci_tbl[] = {
-diff --git a/drivers/ata/pata_via.c b/drivers/ata/pata_via.c
-index affb665..3ccee4f 100644
---- a/drivers/ata/pata_via.c
-+++ b/drivers/ata/pata_via.c
-@@ -438,10 +438,10 @@ static int via_init_one(struct pci_dev *pdev, const struct pci_device_id *id)
- 		.udma_mask = ATA_UDMA6,	/* FIXME: should check north bridge */
- 		.port_ops = &via_port_ops
- 	};
--	struct ata_port_info type;
--	const struct ata_port_info *ppi[] = { &type, NULL };
-+	const struct ata_port_info *ppi[] = { NULL, NULL };
- 	struct pci_dev *isa = NULL;
- 	const struct via_isa_bridge *config;
-+	struct ata_host *host;
- 	static int printed_version;
- 	u8 enable;
- 	u32 timing;
-@@ -487,25 +487,25 @@ static int via_init_one(struct pci_dev *pdev, const struct pci_device_id *id)
- 	switch(config->flags & VIA_UDMA) {
- 		case VIA_UDMA_NONE:
- 			if (config->flags & VIA_NO_UNMASK)
--				type = via_mwdma_info_borked;
-+				*ppi = &via_mwdma_info_borked;
- 			else
--				type = via_mwdma_info;
-+				*ppi = &via_mwdma_info;
- 			break;
- 		case VIA_UDMA_33:
--			type = via_udma33_info;
-+			*ppi = &via_udma33_info;
- 			break;
- 		case VIA_UDMA_66:
--			type = via_udma66_info;
-+			*ppi = &via_udma66_info;
- 			/* The 66 MHz devices require we enable the clock */
- 			pci_read_config_dword(pdev, 0x50, &timing);
- 			timing |= 0x80008;
- 			pci_write_config_dword(pdev, 0x50, timing);
- 			break;
- 		case VIA_UDMA_100:
--			type = via_udma100_info;
-+			*ppi = &via_udma100_info;
- 			break;
- 		case VIA_UDMA_133:
--			type = via_udma133_info;
-+			*ppi = &via_udma133_info;
- 			break;
- 		default:
- 			WARN_ON(1);
-@@ -520,9 +520,13 @@ static int via_init_one(struct pci_dev *pdev, const struct pci_device_id *id)
- 	}
+-static int ata_dummy_ret0(struct ata_port *ap)	{ return 0; }
+-
+ static struct scsi_host_template pata_platform_sht = {
+ 	.module			= THIS_MODULE,
+ 	.name			= DRV_NAME,
+@@ -88,8 +86,6 @@ static struct ata_port_operations pata_platform_port_ops = {
  
- 	/* We have established the device type, now fire it up */
--	type.private_data = (void *)config;
-+	rc = ata_pci_prepare_sff_host(pdev, ppi, &host);
-+	if (rc)
-+		return rc;
-+	host->private_data = (void *)config;
+ 	.irq_clear		= ata_noop_irq_clear,
+ 	.irq_on			= ata_irq_on,
+-
+-	.port_start		= ata_dummy_ret0,
+ };
  
--	return ata_pci_init_one(pdev, ppi, &via_sht);
-+	pci_set_master(pdev);
-+	return ata_pci_activate_sff_host(host, ata_interrupt, &via_sht);
- }
+ static void pata_platform_setup_port(struct ata_ioports *ioaddr,
+diff --git a/drivers/ata/pata_rz1000.c b/drivers/ata/pata_rz1000.c
+index ba8a31c..d922698 100644
+--- a/drivers/ata/pata_rz1000.c
++++ b/drivers/ata/pata_rz1000.c
+@@ -72,6 +72,7 @@ static struct scsi_host_template rz1000_sht = {
  
- #ifdef CONFIG_PM
+ static struct ata_port_operations rz1000_port_ops = {
+ 	.set_mode	= rz1000_set_mode,
++	.mode_filter	= ata_pci_default_filter,
+ 
+ 	.tf_load	= ata_tf_load,
+ 	.tf_read	= ata_tf_read,
+diff --git a/drivers/ata/sata_fsl.c b/drivers/ata/sata_fsl.c
+index e798c4c..7778fd3 100644
+--- a/drivers/ata/sata_fsl.c
++++ b/drivers/ata/sata_fsl.c
+@@ -1227,6 +1227,7 @@ static const struct ata_port_operations sata_fsl_ops = {
+ 
+ 	.tf_read = sata_fsl_tf_read,
+ 
++	.qc_defer = ata_std_qc_defer,
+ 	.qc_prep = sata_fsl_qc_prep,
+ 	.qc_issue = sata_fsl_qc_issue,
+ 	.irq_clear = ata_noop_irq_clear,
+diff --git a/drivers/ata/sata_nv.c b/drivers/ata/sata_nv.c
+index e1d05a2..8eb588e 100644
+--- a/drivers/ata/sata_nv.c
++++ b/drivers/ata/sata_nv.c
+@@ -451,6 +451,7 @@ static const struct ata_port_operations nv_generic_ops = {
+ 	.bmdma_status		= ata_bmdma_status,
+ 	.qc_prep		= ata_qc_prep,
+ 	.qc_issue		= ata_qc_issue_prot,
++	.mode_filter		= ata_pci_default_filter,
+ 	.freeze			= ata_bmdma_freeze,
+ 	.thaw			= ata_bmdma_thaw,
+ 	.error_handler		= nv_error_handler,
+@@ -460,7 +461,7 @@ static const struct ata_port_operations nv_generic_ops = {
+ 	.irq_on			= ata_irq_on,
+ 	.scr_read		= nv_scr_read,
+ 	.scr_write		= nv_scr_write,
+-	.port_start		= ata_port_start,
++	.port_start		= ata_sff_port_start,
+ };
+ 
+ static const struct ata_port_operations nv_nf2_ops = {
+@@ -475,6 +476,7 @@ static const struct ata_port_operations nv_nf2_ops = {
+ 	.bmdma_status		= ata_bmdma_status,
+ 	.qc_prep		= ata_qc_prep,
+ 	.qc_issue		= ata_qc_issue_prot,
++	.mode_filter		= ata_pci_default_filter,
+ 	.freeze			= nv_nf2_freeze,
+ 	.thaw			= nv_nf2_thaw,
+ 	.error_handler		= nv_error_handler,
+@@ -484,7 +486,7 @@ static const struct ata_port_operations nv_nf2_ops = {
+ 	.irq_on			= ata_irq_on,
+ 	.scr_read		= nv_scr_read,
+ 	.scr_write		= nv_scr_write,
+-	.port_start		= ata_port_start,
++	.port_start		= ata_sff_port_start,
+ };
+ 
+ static const struct ata_port_operations nv_ck804_ops = {
+@@ -499,6 +501,7 @@ static const struct ata_port_operations nv_ck804_ops = {
+ 	.bmdma_status		= ata_bmdma_status,
+ 	.qc_prep		= ata_qc_prep,
+ 	.qc_issue		= ata_qc_issue_prot,
++	.mode_filter		= ata_pci_default_filter,
+ 	.freeze			= nv_ck804_freeze,
+ 	.thaw			= nv_ck804_thaw,
+ 	.error_handler		= nv_error_handler,
+@@ -508,7 +511,7 @@ static const struct ata_port_operations nv_ck804_ops = {
+ 	.irq_on			= ata_irq_on,
+ 	.scr_read		= nv_scr_read,
+ 	.scr_write		= nv_scr_write,
+-	.port_start		= ata_port_start,
++	.port_start		= ata_sff_port_start,
+ 	.host_stop		= nv_ck804_host_stop,
+ };
+ 
+@@ -526,6 +529,7 @@ static const struct ata_port_operations nv_adma_ops = {
+ 	.qc_defer		= ata_std_qc_defer,
+ 	.qc_prep		= nv_adma_qc_prep,
+ 	.qc_issue		= nv_adma_qc_issue,
++	.mode_filter		= ata_pci_default_filter,
+ 	.freeze			= nv_adma_freeze,
+ 	.thaw			= nv_adma_thaw,
+ 	.error_handler		= nv_adma_error_handler,
+@@ -557,6 +561,7 @@ static const struct ata_port_operations nv_swncq_ops = {
+ 	.qc_defer		= ata_std_qc_defer,
+ 	.qc_prep		= nv_swncq_qc_prep,
+ 	.qc_issue		= nv_swncq_qc_issue,
++	.mode_filter		= ata_pci_default_filter,
+ 	.freeze			= nv_mcp55_freeze,
+ 	.thaw			= nv_mcp55_thaw,
+ 	.error_handler		= nv_swncq_error_handler,
+diff --git a/drivers/ata/sata_sil.c b/drivers/ata/sata_sil.c
+index 7052915..53f0bae 100644
+--- a/drivers/ata/sata_sil.c
++++ b/drivers/ata/sata_sil.c
+@@ -192,6 +192,7 @@ static const struct ata_port_operations sil_ops = {
+ 	.exec_command		= ata_exec_command,
+ 	.dev_select		= ata_std_dev_select,
+ 	.set_mode		= sil_set_mode,
++	.mode_filter		= ata_pci_default_filter,
+ 	.bmdma_setup            = ata_bmdma_setup,
+ 	.bmdma_start            = ata_bmdma_start,
+ 	.bmdma_stop		= ata_bmdma_stop,
+@@ -207,7 +208,7 @@ static const struct ata_port_operations sil_ops = {
+ 	.irq_on			= ata_irq_on,
+ 	.scr_read		= sil_scr_read,
+ 	.scr_write		= sil_scr_write,
+-	.port_start		= ata_port_start,
++	.port_start		= ata_sff_port_start,
+ };
+ 
+ static const struct ata_port_info sil_port_info[] = {
+diff --git a/drivers/ata/sata_sis.c b/drivers/ata/sata_sis.c
+index a01260a..a8adef9 100644
+--- a/drivers/ata/sata_sis.c
++++ b/drivers/ata/sata_sis.c
+@@ -116,6 +116,7 @@ static const struct ata_port_operations sis_ops = {
+ 	.qc_prep		= ata_qc_prep,
+ 	.qc_issue		= ata_qc_issue_prot,
+ 	.data_xfer		= ata_data_xfer,
++	.mode_filter		= ata_pci_default_filter,
+ 	.freeze			= ata_bmdma_freeze,
+ 	.thaw			= ata_bmdma_thaw,
+ 	.error_handler		= ata_bmdma_error_handler,
+@@ -124,7 +125,7 @@ static const struct ata_port_operations sis_ops = {
+ 	.irq_on			= ata_irq_on,
+ 	.scr_read		= sis_scr_read,
+ 	.scr_write		= sis_scr_write,
+-	.port_start		= ata_port_start,
++	.port_start		= ata_sff_port_start,
+ };
+ 
+ static const struct ata_port_info sis_port_info = {
+diff --git a/drivers/ata/sata_svw.c b/drivers/ata/sata_svw.c
+index 69f651e..302854c 100644
+--- a/drivers/ata/sata_svw.c
++++ b/drivers/ata/sata_svw.c
+@@ -342,6 +342,7 @@ static const struct ata_port_operations k2_sata_ops = {
+ 	.qc_prep		= ata_qc_prep,
+ 	.qc_issue		= ata_qc_issue_prot,
+ 	.data_xfer		= ata_data_xfer,
++	.mode_filter		= ata_pci_default_filter,
+ 	.freeze			= ata_bmdma_freeze,
+ 	.thaw			= ata_bmdma_thaw,
+ 	.error_handler		= ata_bmdma_error_handler,
+@@ -350,7 +351,7 @@ static const struct ata_port_operations k2_sata_ops = {
+ 	.irq_on			= ata_irq_on,
+ 	.scr_read		= k2_sata_scr_read,
+ 	.scr_write		= k2_sata_scr_write,
+-	.port_start		= ata_port_start,
++	.port_start		= ata_sff_port_start,
+ };
+ 
+ static const struct ata_port_info k2_port_info[] = {
+diff --git a/drivers/ata/sata_uli.c b/drivers/ata/sata_uli.c
+index e710e71..f7fc045 100644
+--- a/drivers/ata/sata_uli.c
++++ b/drivers/ata/sata_uli.c
+@@ -108,6 +108,7 @@ static const struct ata_port_operations uli_ops = {
+ 	.qc_issue		= ata_qc_issue_prot,
+ 	.data_xfer		= ata_data_xfer,
+ 
++	.mode_filter		= ata_pci_default_filter,
+ 	.freeze			= ata_bmdma_freeze,
+ 	.thaw			= ata_bmdma_thaw,
+ 	.error_handler		= ata_bmdma_error_handler,
+@@ -119,7 +120,7 @@ static const struct ata_port_operations uli_ops = {
+ 	.scr_read		= uli_scr_read,
+ 	.scr_write		= uli_scr_write,
+ 
+-	.port_start		= ata_port_start,
++	.port_start		= ata_sff_port_start,
+ };
+ 
+ static const struct ata_port_info uli_port_info = {
+diff --git a/drivers/ata/sata_via.c b/drivers/ata/sata_via.c
+index f16f8f7..8d64a3d 100644
+--- a/drivers/ata/sata_via.c
++++ b/drivers/ata/sata_via.c
+@@ -120,6 +120,8 @@ static struct scsi_host_template svia_sht = {
+ };
+ 
+ static const struct ata_port_operations vt6420_sata_ops = {
++	.mode_filter		= ata_pci_default_filter,
++
+ 	.tf_load		= ata_tf_load,
+ 	.tf_read		= ata_tf_read,
+ 	.check_status		= ata_check_status,
+@@ -143,12 +145,13 @@ static const struct ata_port_operations vt6420_sata_ops = {
+ 	.irq_clear		= ata_bmdma_irq_clear,
+ 	.irq_on			= ata_irq_on,
+ 
+-	.port_start		= ata_port_start,
++	.port_start		= ata_sff_port_start,
+ };
+ 
+ static const struct ata_port_operations vt6421_pata_ops = {
+ 	.set_piomode		= vt6421_set_pio_mode,
+ 	.set_dmamode		= vt6421_set_dma_mode,
++	.mode_filter		= ata_pci_default_filter,
+ 
+ 	.tf_load		= ata_tf_load,
+ 	.tf_read		= ata_tf_read,
+@@ -174,10 +177,12 @@ static const struct ata_port_operations vt6421_pata_ops = {
+ 	.irq_clear		= ata_bmdma_irq_clear,
+ 	.irq_on			= ata_irq_on,
+ 
+-	.port_start		= ata_port_start,
++	.port_start		= ata_sff_port_start,
+ };
+ 
+ static const struct ata_port_operations vt6421_sata_ops = {
++	.mode_filter		= ata_pci_default_filter,
++
+ 	.tf_load		= ata_tf_load,
+ 	.tf_read		= ata_tf_read,
+ 	.check_status		= ata_check_status,
+@@ -197,7 +202,6 @@ static const struct ata_port_operations vt6421_sata_ops = {
+ 	.thaw			= ata_bmdma_thaw,
+ 	.error_handler		= ata_bmdma_error_handler,
+ 	.post_internal_cmd	= ata_bmdma_post_internal_cmd,
+-	.cable_detect		= ata_cable_sata,
+ 
+ 	.irq_clear		= ata_bmdma_irq_clear,
+ 	.irq_on			= ata_irq_on,
+@@ -205,7 +209,7 @@ static const struct ata_port_operations vt6421_sata_ops = {
+ 	.scr_read		= svia_scr_read,
+ 	.scr_write		= svia_scr_write,
+ 
+-	.port_start		= ata_port_start,
++	.port_start		= ata_sff_port_start,
+ };
+ 
+ static const struct ata_port_info vt6420_port_info = {
+diff --git a/drivers/ata/sata_vsc.c b/drivers/ata/sata_vsc.c
+index 95ae3ed..099a2ba 100644
+--- a/drivers/ata/sata_vsc.c
++++ b/drivers/ata/sata_vsc.c
+@@ -331,6 +331,7 @@ static const struct ata_port_operations vsc_sata_ops = {
+ 	.qc_prep		= ata_qc_prep,
+ 	.qc_issue		= ata_qc_issue_prot,
+ 	.data_xfer		= ata_data_xfer,
++	.mode_filter		= ata_pci_default_filter,
+ 	.freeze			= vsc_freeze,
+ 	.thaw			= vsc_thaw,
+ 	.error_handler		= ata_bmdma_error_handler,
+@@ -339,7 +340,7 @@ static const struct ata_port_operations vsc_sata_ops = {
+ 	.irq_on			= ata_irq_on,
+ 	.scr_read		= vsc_sata_scr_read,
+ 	.scr_write		= vsc_sata_scr_write,
+-	.port_start		= ata_port_start,
++	.port_start		= ata_sff_port_start,
+ };
+ 
+ static void __devinit vsc_sata_setup_port(struct ata_ioports *port,
 -- 
 1.5.2.4
 
