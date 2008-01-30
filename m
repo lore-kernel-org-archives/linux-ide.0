@@ -1,34 +1,77 @@
-From: Mark Lord <liml@rtr.ca>
-Subject: Re: Problem with ata layer in 2.6.24
-Date: Tue, 29 Jan 2008 19:19:38 -0500
-Message-ID: <479FC29A.1000207@rtr.ca>
-References: <200801272122.21823.gene.heskett@gmail.com> <200801291204.44671.gene.heskett@gmail.com> <20080129185445.1c7d3a83@core> <200801291741.50192.gene.heskett@gmail.com>
+From: Robert Hancock <hancockr@shaw.ca>
+Subject: [PATCH] sata_nv: fix for completion handling
+Date: Tue, 29 Jan 2008 19:53:19 -0600
+Message-ID: <479FD88F.8090605@shaw.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([76.10.145.34]:3116 "EHLO mail.rtr.ca"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752723AbYA3ATn (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 29 Jan 2008 19:19:43 -0500
-In-Reply-To: <200801291741.50192.gene.heskett@gmail.com>
+Received: from idcmail-mo1so.shaw.ca ([24.71.223.10]:8490 "EHLO
+	pd2mo3so.prod.shaw.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750815AbYA3Byc (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 29 Jan 2008 20:54:32 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Gene Heskett <gene.heskett@gmail.com>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, Mikael Pettersson <mikpe@it.uu.se>, Richard Heck <rgheck@bobjweil.com>, Daniel Barkalow <barkalow@iabervon.org>, Zan Lynx <zlynx@acm.org>, Calvin Walton <calvin.walton@gmail.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Linux ide Mailing list <linux-ide@vger.kernel.org>
+To: linux-kernel <linux-kernel@vger.kernel.org>, ide <linux-ide@vger.kernel.org>, Jeff Garzik <jeff@garzik.org>, Tejun Heo <htejun@gmail.com>, Kuan Luo <kluo@nvidia.com>, Allen Martin <AM>
 
-Gene Heskett wrote:
->
-> I doubt libata has that capability now, or ever will, cuz these ide/atapi 
-> devices are generally dumber than rocks about that.  But any device claiming 
-> to be scsi-II is supposed to be able to do those sorts of things while the 
-> cpu is off crunching numbers for BOINC or whatever.
-..
+This patch is based on an original patch from Kuan Luo of NVIDIA,
+posted under subject "fixed a bug of adma in rhel4u5 with HDS7250SASUN500G".
+His description follows. I've reworked it a bit to avoid some unnecessary
+repeated checks but it should be functionally identical.
 
-The CD/DVD drives all all "MMC" devices internally, which means they speak
-a SCSI command protocol.  Regardless of the electrical or optical interface.
+"The patch is to solve the error message "ata1: CPB flags CMD err,
+flags=0x11" when testing HDS7250SASUN500G in rhel4u5.
+I tested this hd in 2.6.24-rc7 which needed to remove the mask in
+blacklist to run the ncq and the same error also showed up. 
 
-Linux is software, and the software protocol is exactly the same for them,
-no matter what the cable/bus type happens to be.
+I traced the  bug and found that the interrupt finished a command (for
+example, tag=0) when the driver got that adma status is
+NV_ADMA_STAT_DONE  and  cpb->resp_flags is NV_CPB_RESP_DONE.
+However, For this hd, the drive maybe didn't clear bit 0 at this moment.
+It meaned the hardware  had not completely finished the command.
+If at the same time  the driver freed the command(tag 0) and sended
+another command (tag 0), the error happened.
 
-Cheers
+The notifier register is 32-bit register containing notifier value.
+Value is bit vector containing one bit per tag number (0-31) in
+corresponding bit positions (bit 0 is for tag 0, etc). When bit is set
+then ADMA indicates that command with corresponding tag number completed
+execution.
+
+So i added the check notifier code. Sometimes i saw that the notifier
+reg set some bits  , but the adma status set NV_ADMA_STAT_CMD_COMPLETE
+,not NV_ADMA_STAT_DONE. So i added the NV_ADMA_STAT_CMD_COMPLETE check
+code."
+
+Signed-off-by: Robert Hancock <hancockr@shaw.ca>
+
+--- linux-2.6.24-rc7-git3/drivers/ata/sata_nv.c	2008-01-11 17:32:40.000000000 -0600
++++ linux-2.6.24-rc7-git3edit/drivers/ata/sata_nv.c	2008-01-11 17:43:40.000000000 -0600
+@@ -1011,14 +1011,20 @@
+ 			}
+ 
+ 			if (status & (NV_ADMA_STAT_DONE |
+-				      NV_ADMA_STAT_CPBERR)) {
+-				u32 check_commands;
++				      NV_ADMA_STAT_CPBERR |
++				      NV_ADMA_STAT_CMD_COMPLETE)) {
++				u32 check_commands = notifier_clears[i];
+ 				int pos, error = 0;
+ 
+-				if (ata_tag_valid(ap->link.active_tag))
+-					check_commands = 1 << ap->link.active_tag;
+-				else
+-					check_commands = ap->link.sactive;
++				if (status & NV_ADMA_STAT_CPBERR) {
++					/* Check all active commands */
++					if (ata_tag_valid(ap->link.active_tag))
++						check_commands = 1 <<
++							ap->link.active_tag;
++					else
++						check_commands = ap->
++							link.sactive;
++				}
+ 
+ 				/** Check CPBs for completed commands */
+ 				while ((pos = ffs(check_commands)) && !error) {
+
