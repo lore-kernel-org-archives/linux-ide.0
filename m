@@ -1,61 +1,68 @@
-From: "Shane Huang" <Shane.Huang@amd.com>
-Subject: RE: About forcing 32bit DMA patch for AMD690G(SB600)
-Date: Thu, 31 Jan 2008 17:14:19 +0800
-Message-ID: <B90463BC30D2E446BA423D888DC85E5020F11E@sshaexmb1.amd.com>
-References: <B90463BC30D2E446BA423D888DC85E501BF3CB@sshaexmb1.amd.com>
- <47992BA3.3070104@gmail.com>
- <76366b180801242019h382fd604vd1458dab8b64dd4c@mail.gmail.com>
- <4799788E.1030600@gmail.com> <20080125205743.GA26124@lks.home>
- <479A8BDF.1090908@gmail.com>
+From: Jens Axboe <jens.axboe@oracle.com>
+Subject: Re: kernel BUG at ide-cd.c:1726 in 2.6.24-03863-g0ba6c33 && -g8561b089
+Date: Thu, 31 Jan 2008 14:05:58 +0100
+Message-ID: <20080131130558.GV15220@kernel.dk>
+References: <20080129.151353.48534987.k-ueda@ct.jp.nec.com> <adar6g0e0g2.fsf@cisco.com> <20080129.182356.70224412.k-ueda@ct.jp.nec.com> <20080130.202659.104027826.k-ueda@ct.jp.nec.com> <adamyqmafl3.fsf@cisco.com> <ab418ea90801302349u945788jeed1f42021801dbf@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
- charset=us-ascii
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outbound-sin.frontbridge.com ([207.46.51.80]:15356 "EHLO
-	outbound7-sin-R.bigfish.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1757454AbYAaJOj convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 31 Jan 2008 04:14:39 -0500
-Content-class: urn:content-classes:message
-In-Reply-To: <479A8BDF.1090908@gmail.com>
+Received: from brick.kernel.dk ([87.55.233.238]:3931 "EHLO kernel.dk"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1765290AbYAaNGC (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 31 Jan 2008 08:06:02 -0500
+Content-Disposition: inline
+In-Reply-To: <ab418ea90801302349u945788jeed1f42021801dbf@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Andrew Paprocki <andrew@ishiboo.com>, sriharivijayaraghavan@yahoo.com.au, linux-ide@vger.kernel.org, Shane Huang <Shane.Huang@amd.com>
+To: Nai Xia <nai.xia@gmail.com>
+Cc: Roland Dreier <rdreier@cisco.com>, Kiyoshi Ueda <k-ueda@ct.jp.nec.com>, bzolnier@gmail.com, bbpetkov@yahoo.de, flo@rfc822.org, linux-kernel@vger.kernel.org, j-nomura@ce.jp.nec.com, linux-ide@vger.kernel.org
 
-Dear Tejun:
-
-
-> The test results point to varied kinds and degrees of problems.  At
-> the moment.  To avoid turning off anything fancy on systems involving
-> SB600/700, we definitely need more info.
+On Thu, Jan 31 2008, Nai Xia wrote:
+> My dmesg relevant info is quite similar:
 > 
-> Shane, can you please summarize chipset product lines and revisions
-> and how they're configured together (e.g. SB600 Axx goes together with
-> RSxxx kind of stuff)?
+> [    6.875041] Freeing unused kernel memory: 320k freed
+> [    8.143120] ide-cd: rq still having bio: dev hdc: type=2, flags=114c8
+> [    8.144439]
+> [    8.144439] sector 10824201199534213, nr/cnr 0/0
+> [    8.144439] bio cf029280, biotail cf029280, buffer 00000000, data
+> 00000000, len 158
+> [    8.144439] cdb: 12 00 00 00 fe 00 00 00 00 00 00 00 00 00 00 00
+> [    8.144439] backup: data_len=158  bi_size=158
+> [    8.160756] ide-cd: rq still having bio: dev hdc: type=2, flags=114c8
+> [    8.160756]
+> [    8.160756] sector 2669858, nr/cnr 0/0
+> [    8.160756] bio cf029300, biotail cf029300, buffer 00000000, data
+> 00000000, len 158
+> [    8.160756] cdb: 12 01 00 00 fe 00 00 00 00 00 00 00 00 00 00 00
+> [    8.160756] backup: data_len=158  bi_size=158
+> [   14.851101] eth0: link up
+> [   27.121883] eth0: no IPv6 routers present
+> 
+> 
+> And by the way, Kiyoshi,
+> This can be reproduced in a typical setup vmware workstation 6.02 with
+> a vritual IDE cdrom,
+> in case you wanna catch that with your own eyes. :-)
+> Thanks for your trying hard to correct this annoying bug.
 
-I'll have to ask for other guys' help to summarize them, and will
-provide
-it here once I get it.
+The below fix should be enough. It's perfectly legal to have leftover
+byte counts when the drive signals completion, happens all the time for
+eg user issued commands where you don't know an exact byte count.
 
+diff --git a/drivers/ide/ide-cd.c b/drivers/ide/ide-cd.c
+index 74c6087..bee05a3 100644
+--- a/drivers/ide/ide-cd.c
++++ b/drivers/ide/ide-cd.c
+@@ -1722,7 +1722,7 @@ static ide_startstop_t cdrom_newpc_intr(ide_drive_t *drive)
+ 	 */
+ 	if ((stat & DRQ_STAT) == 0) {
+ 		spin_lock_irqsave(&ide_lock, flags);
+-		if (__blk_end_request(rq, 0, 0))
++		if (__blk_end_request(rq, 0, rq->data_len))
+ 			BUG();
+ 		HWGROUP(drive)->rq = NULL;
+ 		spin_unlock_irqrestore(&ide_lock, flags);
 
-> Currently the following issues have been discovered and we need to
-> find out what's caused by which.
-> ..........
-> ..........
-> * Shane's test with RS690 + SB600 triggered a weird SERR_INTERNAL
->   error condition if pci=nomsi is used insted of
->   quirk_disable_all_msi.  This is super-weird.  Maybe difference in
->   memory layout and 64bit DMA acutally didn't work?  Shane, can you
->   please do some data write/read/verify test on the setup?
-
-I will do further debug on these issues before long, because I'm busy
-with other issues and my SB600 board is being used by other guy.. :-(
-
-
-
-Thanks
-Shane
-
+-- 
+Jens Axboe
 
