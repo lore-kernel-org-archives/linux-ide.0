@@ -1,46 +1,77 @@
-From: Akira Iguchi <akira2.iguchi@toshiba.co.jp>
-Subject: Re: [PATCHSET libata-dev#upstream] clean up scsi_host_templates and
- ata_port_operations
-Date: Thu, 31 Jan 2008 17:29:12 +0900
-Message-ID: <200801310828.m0V8Scc0005066@toshiba.co.jp>
-References: <12016853433196-git-send-email-htejun@gmail.com>
+From: "Shane Huang" <Shane.Huang@amd.com>
+Subject: RE: About forcing 32bit DMA patch for AMD690G(SB600)
+Date: Thu, 31 Jan 2008 16:53:10 +0800
+Message-ID: <B90463BC30D2E446BA423D888DC85E5020F102@sshaexmb1.amd.com>
+References: <B90463BC30D2E446BA423D888DC85E501BF3CB@sshaexmb1.amd.com>
+ <47992BA3.3070104@gmail.com>
+ <76366b180801242019h382fd604vd1458dab8b64dd4c@mail.gmail.com>
+ <4799788E.1030600@gmail.com>
+ <76366b180801251707j7b892d6w83fcf3560426aa19@mail.gmail.com>
 Mime-Version: 1.0
+Content-Type: text/plain;
+ charset=us-ascii
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from imx9.toshiba.co.jp ([202.33.96.51]:38199 "EHLO
-	imx9.toshiba.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757414AbYAaIgu (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 31 Jan 2008 03:36:50 -0500
-Received: from imx12.toshiba.co.jp (imx12 [61.202.160.132])
-	by imx9.toshiba.co.jp  with ESMTP id m0V8ai6c026525
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <linux-ide@vger.kernel.org>; Thu, 31 Jan 2008 17:36:44 +0900 (JST)
-Received: from arc11.toshiba.co.jp ([133.199.90.127])
-	by imx12.toshiba.co.jp  with ESMTP id m0V8Sf5F015924
-	for <linux-ide@vger.kernel.org>; Thu, 31 Jan 2008 17:28:41 +0900 (JST)
-Received: (from root@localhost)
-	by arc11.toshiba.co.jp  id m0V8Sfs1017644
-	for linux-ide@vger.kernel.org; Thu, 31 Jan 2008 17:28:41 +0900 (JST)
-Received: from mx2.toshiba.co.jp (localhost [127.0.0.1])
-	by ovp11.toshiba.co.jp  with ESMTP id m0V8Sfeg002650
-	for <linux-ide@vger.kernel.org>; Thu, 31 Jan 2008 17:28:41 +0900 (JST)
-In-Reply-To: (Your message of "Wed, 30 Jan 2008 18:28:54 +0900")
-  <12016853433196-git-send-email-htejun@gmail.com>
+Received: from outbound-wa4.frontbridge.com ([216.32.181.16]:60797 "EHLO
+	outbound4-wa4-R.bigfish.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754020AbYAaI5Y convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 31 Jan 2008 03:57:24 -0500
+Content-class: urn:content-classes:message
+In-Reply-To: <76366b180801251707j7b892d6w83fcf3560426aa19@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: jeff@garzik.org, linux-ide@vger.kernel.org, liml@rtr.ca, alan@lxorguk.ukuu.org.uk, kngregertsen@norway.atmel.com, sonic.adi@gmail.com, rmk@dyn-67.arm.linux.org.uk, alessandro.zummo@towertech.it, domen.puncer@telargo.com, leoli@freescale.com
+To: Andrew Paprocki <andrew@ishiboo.com>, Tejun Heo <htejun@gmail.com>
+Cc: sriharivijayaraghavan@yahoo.com.au, linux-ide@vger.kernel.org, Shane Huang <Shane.Huang@amd.com>
 
-Tejun Heo wrote:
->The following drivers need specific platform to build, so they need
->verification.  If you work on one of the following drivers, please
->verify that the driver builds and works fine.  It would be best if you
->can verify that the sht and ops don't change by the fifth path using
->the method I'll write in another message.
-..
->* pata_scc
+Hi Andrew:
 
-I check pata_scc and it works fine.
-Your verification method detects 1 difference in ops
-(.thaw: NULL -> ata_bmdma_thaw) but there is no problem.
+Thanks for your help on your platform.
+And Is there any update at your side on SB600 64bit DMA capacity?
 
-Cheers
+As Tejun mentioned, the test result on my SB600 engineering board
+(RS690 A12 +SB600 A21) is a little different from the result of Srihari.
+But I do not have other SB600 boards especially ASUS M2A-VM to do
+further debug. So if you can provide us your test result, that's really
+good.
+
+
+Thanks
+Shane
+
+
+
+> -----Original Message-----
+> From: andrew.m.paprocki@gmail.com 
+> [mailto:andrew.m.paprocki@gmail.com] On Behalf Of Andrew Paprocki
+> Sent: Saturday, January 26, 2008 9:08 AM
+> To: Tejun Heo
+> Cc: Shane Huang; sriharivijayaraghavan@yahoo.com.au; 
+> linux-ide@vger.kernel.org
+> Subject: Re: About forcing 32bit DMA patch for AMD690G(SB600)
+> 
+> I'll try to get that configuration together.. right now I only have 2
+> 1gb sticks installed on the board, so I would need to track down 2gb
+> ones. If I can find some laying around, I'll let you know.
+> 
+> Thanks,
+> -Andrew
+> 
+> On Jan 25, 2008 12:50 AM, Tejun Heo <htejun@gmail.com> wrote:
+> > Andrew Paprocki wrote:
+> > > I have an SB600/RS690 here with SATA drives connected. I 
+> haven't been
+> > > following this thread, but I can help test something if 
+> it would help.
+> >
+> > We're trying to determine whether SB600 ahci controller can 
+> do 64bit DMA
+> > or not.  Srihari's couldn't but Shane's test result tells a 
+> different
+> > story.  Do you have memory mapped over 4G (if you have 4G 
+> some of them
+> > will be over 4G, you can know this by looking at the e820 
+> map printed
+> > during boot)?
+
+
