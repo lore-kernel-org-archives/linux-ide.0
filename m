@@ -1,41 +1,131 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: libata pm
-Date: Thu, 31 Jan 2008 10:13:56 +0900
-Message-ID: <47A120D4.7030504@gmail.com>
-References: <52279.82.140.50.2.1201370600.squirrel@ssl.cavemail.org>             <49398.82.140.50.2.1201377943.squirrel@ssl.cavemail.org>             <479BC34D.2000007@gmail.com>          <49407.82.140.63.93.1201397926.squirrel@ssl.cavemail.org>       <49713.82.140.63.93.1201462475.squirrel@ssl.cavemail.org>       <479D2D3C.4050102@gmail.com>    <51861.82.140.47.248.1201516318.squirrel@ssl.cavemail.org>    <479DC4A4.30809@gmail.com> <50028.82.140.53.128.1201728857.squirrel@ssl.cavemail.org>
+From: Kiyoshi Ueda <k-ueda@ct.jp.nec.com>
+Subject: Re: kernel BUG at ide-cd.c:1726 in 2.6.24-03863-g0ba6c33 &&
+ -g8561b089
+Date: Wed, 30 Jan 2008 20:26:59 -0500 (EST)
+Message-ID: <20080130.202659.104027826.k-ueda@ct.jp.nec.com>
+References: <20080129.151353.48534987.k-ueda@ct.jp.nec.com>
+	<adar6g0e0g2.fsf@cisco.com>
+	<20080129.182356.70224412.k-ueda@ct.jp.nec.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from po-out-1718.google.com ([72.14.252.153]:5592 "EHLO
-	po-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752112AbYAaBOJ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 30 Jan 2008 20:14:09 -0500
-Received: by po-out-1718.google.com with SMTP id c31so776768poi.1
-        for <linux-ide@vger.kernel.org>; Wed, 30 Jan 2008 17:14:08 -0800 (PST)
-In-Reply-To: <50028.82.140.53.128.1201728857.squirrel@ssl.cavemail.org>
+Received: from mx1.redhat.com ([66.187.233.31]:37895 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1759751AbYAaB1s (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 30 Jan 2008 20:27:48 -0500
+In-Reply-To: <20080129.182356.70224412.k-ueda@ct.jp.nec.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: dusty@gmx.li
-Cc: linux-ide@vger.kernel.org
+To: bzolnier@gmail.com, rdreier@cisco.com, bbpetkov@yahoo.de
+Cc: nai.xia@gmail.com, flo@rfc822.org, linux-kernel@vger.kernel.org, jens.axboe@oracle.com, j-nomura@ce.jp.nec.com, k-ueda@ct.jp.nec.com, linux-ide@vger.kernel.org
 
-dusty@gmx.li wrote:
-> Sorry for my late answer, but i had to sort this out first.
-> After replacing the first PSU with a new Corsair 650W the power no longer
-> fluctuated more than 0,01 V (and this only when booting up the drives...)
-> I did a full resync on both raid arrays and got no more errors or resets,
-> but there were some inconsitencies during sync and the xfs filesystem on
-> both arrays had to be repaired. Are these problems caused by the pm resets
-> ?
+Hi Roland, Borislav, Bart,
 
-libata EH won't lose any data as long as the hardware doesn't.  If power
-fluctuates causing your drive to briefly power down - this does happen
-and you can hear the drive doing emergency unload when it happens, the
-data in write buffer can be lost.  On coming back, all that libata can
-know is that the PHY suffered brief connection loss, so it resets the
-device and goes on, so the data in the cache is lost now.  It's
-basically pulling the power plug from the harddrive while write is going
-on and connecting it back quickly.  You're bound to lose data.
+Added linux-ide ML, since we may be able to get helps from other
+ide experts.  This thread started from:
+    http://lkml.org/lkml/2008/1/29/140
 
--- 
-tejun
+On Tue, 29 Jan 2008 18:23:56 -0500 (EST), Kiyoshi Ueda wrote:
+> Hi Bart, 
+> 
+> On Tue, 29 Jan 2008 14:22:53 -0800, Roland Dreier wrote:
+> > Hi, I saw the same BUG from ide-cd on one of my systems.  I applied
+> > the debugging patch to replace the BUG with blk_dump_rq_flags(), and I
+> > got the output below (full boot log and .config attached to this
+> > email).
+> > 
+> > Please let me know if there's anything else that would help debug the
+> > problem.
+> 
+> Thank you for the information, Roland.
+> 
+>  
+> > [    4.072271] Uniform CD-ROM driver Revision: 3.20
+> > [    4.098236] ide-cd: rq still having bio: dev hda: type=2, flags=114c8
+> > [    4.100269]
+> > [    4.100269] sector 1949759, nr/cnr 0/0
+> > [    4.100269] bio ffff8102418cc600, biotail ffff8102418cc600, buffer 0000000000000000, d8
+> > [    4.100269] cdb: 12 00 00 00 fe 00 00 00 00 00 00 00 00 00 00 00
+> > [    4.101005] ide-cd: rq still having bio: dev hda: type=2, flags=114c8
+> > [    4.104269]
+> > [    4.104269] sector 1949759, nr/cnr 0/0
+> > [    4.104269] bio ffff8102418cc600, biotail ffff8102418cc600, buffer 0000000000000000, d2
+> > [    4.104269] cdb: 12 00 00 00 fe 00 00 00 00 00 00 00 00 00 00 00
+> > [    4.109203] ide-cd: rq still having bio: dev hda: type=2, flags=114c8
+> > [    4.112270]
+> > [    4.112270] sector 1949759, nr/cnr 0/0
+> > [    4.112270] bio ffff8102418cc600, biotail ffff8102418cc600, buffer 0000000000000000, d8
+> > [    4.112270] cdb: 12 01 00 00 fe 00 00 00 00 00 00 00 00 00 00 00
+> > [    4.112945] ide-cd: rq still having bio: dev hda: type=2, flags=114c8
+> > [    4.116270]
+> > [    4.116270] sector 1949759, nr/cnr 0/0
+> > [    4.116270] bio ffff8102418cc600, biotail ffff8102418cc600, buffer 0000000000000000, d2
+> > [    4.116270] cdb: 12 01 00 00 fe 00 00 00 00 00 00 00 00 00 00 00
+> 
+> Bart,
+> This means that the rq still has a bio even after DRQ_STAT is cleared.
+> The original ide-cd code was calling only end_that_request_last() there.
+> So I thought that the rq should have no bio when DRQ_STAT is cleared,
+> otherwise the bio leaks.
+> 
+> Was my understanding wrong and is that correct behavior in ide-cd?
+
+I borrowed a box having the same nForce chipset and tried sg_inq
+command to submit the GPCMD_INQUIRY ("cdb: 12" of the debug message).
+I confirmed that ide-cd run through the code path (DRQ_STAT == 0)
+by the same debug patch, but requests always don't have bio there
+on my test box.  So I can't reproduce the problem yet.
+-----------------------------------------------------------------------
+ide-cd: rq: dev hda: type=2, flags=114c8
+
+sector 37958141, nr/cnr 0/0
+bio 00000000, biotail f78e4980, buffer 00000000, data 00000000, len 0
+cdb: 12 00 00 00 24 00 00 00 00 00 00 00 00 00 00 00
+-----------------------------------------------------------------------
+
+
+The original code was calling only end_that_request_last() here,
+but no problem happened.
+This may mean that the upper layer can handle the rq correctly,
+no matter whether the rq still has a bio or not.
+If so, we should be able to unlink the bio by calling
+end_that_request_chunk() with remaining data size.
+
+
+
+Roland,
+Could you try the patch below and give me all boot messages again?
+
+This patch displays debug messages against requests still having bio,
+then tries to unlink all bios from the rq before the rq is completed.
+So your system may be able to continue to work correctly
+after displaying debug messages.
+I'd like to see the debug messages and know whether your system
+still gets the problem or not.
+
+--- a/drivers/ide/ide-cd.c	2008-01-30 18:24:51.000000000 -0500
++++ b/drivers/ide/ide-cd.c	2008-01-30 18:24:33.000000000 -0500
+@@ -1722,8 +1722,18 @@ static ide_startstop_t cdrom_newpc_intr(
+ 	 */
+ 	if ((stat & DRQ_STAT) == 0) {
+ 		spin_lock_irqsave(&ide_lock, flags);
+-		if (__blk_end_request(rq, 0, 0))
+-			BUG();
++		if (__blk_end_request(rq, 0, 0)) {
++			blk_dump_rq_flags(rq, "ide-cd: rq still having bio");
++			printk("backup: data_len=%u  bi_size=%u\n",
++				rq->data_len, rq->bio->bi_size);
++
++			if (__blk_end_request(rq, 0, rq->data_len)) {
++				blk_dump_rq_flags(rq, "ide-cd: BAD rq");
++				printk("backup: data_len=%u  bi_size=%u\n",
++					rq->data_len, rq->bio->bi_size);
++				BUG();
++			}
++		}
+ 		HWGROUP(drive)->rq = NULL;
+ 		spin_unlock_irqrestore(&ide_lock, flags);
+ 
+Thanks,
+Kiyoshi Ueda
