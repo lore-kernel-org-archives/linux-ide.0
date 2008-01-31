@@ -1,48 +1,49 @@
-From: Jens Axboe <jens.axboe@oracle.com>
-Subject: Re: kernel BUG at ide-cd.c:1726 in 2.6.24-03863-g0ba6c33 && -g8561b089
-Date: Thu, 31 Jan 2008 16:04:18 +0100
-Message-ID: <20080131150418.GD15220@kernel.dk>
-References: <20080129.151353.48534987.k-ueda@ct.jp.nec.com> <adar6g0e0g2.fsf@cisco.com> <20080129.182356.70224412.k-ueda@ct.jp.nec.com> <20080130.202659.104027826.k-ueda@ct.jp.nec.com> <adamyqmafl3.fsf@cisco.com> <ab418ea90801302349u945788jeed1f42021801dbf@mail.gmail.com> <20080131130558.GV15220@kernel.dk> <20080131145341.GA32687@paradigm.rfc822.org>
+From: Simos Xenitellis <simos.lists@googlemail.com>
+Subject: Add one more HITACHI SATA disk to NCQ blacklist
+Date: Thu, 31 Jan 2008 16:33:14 +0000
+Message-ID: <1201797194.7165.13.camel@user-computer>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from brick.kernel.dk ([87.55.233.238]:18883 "EHLO kernel.dk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753245AbYAaPE0 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 31 Jan 2008 10:04:26 -0500
-Content-Disposition: inline
-In-Reply-To: <20080131145341.GA32687@paradigm.rfc822.org>
+Received: from ug-out-1314.google.com ([66.249.92.168]:20755 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756193AbYAaQdM (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 31 Jan 2008 11:33:12 -0500
+Received: by ug-out-1314.google.com with SMTP id z38so561075ugc.16
+        for <linux-ide@vger.kernel.org>; Thu, 31 Jan 2008 08:33:11 -0800 (PST)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Florian Lohoff <flo@rfc822.org>
-Cc: Nai Xia <nai.xia@gmail.com>, Roland Dreier <rdreier@cisco.com>, Kiyoshi Ueda <k-ueda@ct.jp.nec.com>, bzolnier@gmail.com, bbpetkov@yahoo.de, linux-kernel@vger.kernel.org, j-nomura@ce.jp.nec.com, linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-On Thu, Jan 31 2008, Florian Lohoff wrote:
-> On Thu, Jan 31, 2008 at 02:05:58PM +0100, Jens Axboe wrote:
-> > The below fix should be enough. It's perfectly legal to have leftover
-> > byte counts when the drive signals completion, happens all the time for
-> > eg user issued commands where you don't know an exact byte count.
-> > 
-> > diff --git a/drivers/ide/ide-cd.c b/drivers/ide/ide-cd.c
-> > index 74c6087..bee05a3 100644
-> > --- a/drivers/ide/ide-cd.c
-> > +++ b/drivers/ide/ide-cd.c
-> > @@ -1722,7 +1722,7 @@ static ide_startstop_t cdrom_newpc_intr(ide_drive_t *drive)
-> >  	 */
-> >  	if ((stat & DRQ_STAT) == 0) {
-> >  		spin_lock_irqsave(&ide_lock, flags);
-> > -		if (__blk_end_request(rq, 0, 0))
-> > +		if (__blk_end_request(rq, 0, rq->data_len))
-> >  			BUG();
-> >  		HWGROUP(drive)->rq = NULL;
-> >  		spin_unlock_irqrestore(&ide_lock, flags);
-> > 
-> 
-> Fixes the crash on boot for me ...
+Hi,
+The hard disk with 
+	model num: "HITACHI HTS541616J9SA00"
+	model rev: "SB4IC7UP"
 
-Great, thanks for confirming that. I'll make sure the patch goes
-upstream today, if Linus is available.
+is causing NCQ errors and should be blacklisted.
+Currently the blacklist for Hitachi hard disks includes
 
--- 
-Jens Axboe
+	{ "HITACHI HDS7250SASUN500G*", NULL,    ATA_HORKAGE_NONCQ },
+	{ "HITACHI HDS7225SBSUN250G*", NULL,    ATA_HORKAGE_NONCQ },
+...
+	/* Blacklist entries taken from Silicon Image 3124/3132
+	   Windows driver .inf file - also several Linux problem reports */
+	{ "HTS541060G9SA00",    "MB3OC60D",     ATA_HORKAGE_NONCQ, },
+	{ "HTS541080G9SA00",    "MB4OC60D",     ATA_HORKAGE_NONCQ, },
+	{ "HTS541010G9SA00",    "MBZOC60D",     ATA_HORKAGE_NONCQ, },
+
+
+http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=blob_plain;f=drivers/ata/libata-core.c;hb=HEAD
+
+The same hard disk causing NCQ errors to different users,
+http://www.nabble.com/hdparm--B-1-and-Load_Cycle-on-Hitachi-HTS541616J9SA00-td14702758.html
+https://bugs.edge.launchpad.net/ubuntu/+source/linux-source-2.6.22/+bug/137470
+
+
+Could you please add the entry
+	{ "HITACHI HTS541616J9SA00",    NULL,     ATA_HORKAGE_NONCQ, },
+
+Simos
+
 
