@@ -1,37 +1,36 @@
-From: "Jan Beulich" <jbeulich@novell.com>
-Subject: AHCI driver preferring nr_ports over port map
-Date: Fri, 01 Feb 2008 15:12:15 +0000
-Message-ID: <47A344DF.76E4.0078.0@novell.com>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [PATCH 1/2 v3] sata_mv: Remove PCI dependency
+Date: Fri, 01 Feb 2008 11:50:38 -0500
+Message-ID: <47A34DDE.80502@garzik.org>
+References: <1201733446499-git-send-email-saeed.bishara@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from public.id2-vpn.continvity.gns.novell.com ([195.33.99.129]:36333
-	"EHLO public.id2-vpn.continvity.gns.novell.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752350AbYBAPcU (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 1 Feb 2008 10:32:20 -0500
-Content-Disposition: inline
+Received: from srv5.dvmed.net ([207.36.208.214]:59223 "EHLO mail.dvmed.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753986AbYBAQul (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 1 Feb 2008 11:50:41 -0500
+In-Reply-To: <1201733446499-git-send-email-saeed.bishara@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: linux-ide@vger.kernel.org
+To: saeed.bishara@gmail.com
+Cc: linux-ide@vger.kernel.org, saeed@marvell.com, htejun@gmail.com, liml@rtr.ca, Saeed Bishara <saeed@il.marvell.com>
 
-Jeff,
+saeed.bishara@gmail.com wrote:
+> From: Saeed Bishara <saeed@ubuntu-saeed.il.marvell.com>
+> 
+> The integrated SATA controller is connected directly to the SoC's
+> internal bus, not via PCI interface. this patch removes the dependency
+> on the PCI interface.
+> 
+> Signed-off-by: Saeed Bishara <saeed@marvell.com>
+> ---
+>  drivers/ata/Kconfig   |    2 +-
+>  drivers/ata/sata_mv.c |  132 +++++++++++++++++++++++++++---------------------
+>  2 files changed, 75 insertions(+), 59 deletions(-)
 
-while I realize that Intel's documentation may not be consistent with
-anything more generic (which I don't know where to look for), this
-current behavior seems to contradict what Intel documents for ESB2:
+applied, thanks for your patience
 
-"23.3.1.4 PI =E2=80=93 Ports Implemented Register (D31:F2)
-Address Offset: ABAR + 0Ch=E2=80=930Fh Attribute: R/WO, RO
-Default Value: 00000000h Size: 32 bits
 
-This register indicates which ports are exposed to the Intel=C2=AE
-631xESB/632xESB I/O Controller Hub. It is loaded by platform BIOS. It
-indicates which ports that the device supports are available for
-software to use. For ports that are not available, software must not
-read or write to registers within that port."
 
-Could you shed any extra light on this?
-
-Thanks, Jan
