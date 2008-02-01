@@ -1,33 +1,29 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH RESEND number 2] libata: eliminate the home grown dma
-	padding in favour of that provided by the block layer
-Date: Fri, 01 Feb 2008 15:09:35 -0600
-Message-ID: <1201900175.3134.67.camel@localhost.localdomain>
-References: <1199138168.3110.12.camel@localhost.localdomain>
-	 <1200698057.3111.68.camel@localhost.localdomain>
-	 <1201894847.3134.59.camel@localhost.localdomain>
-	 <47A37AF3.3030503@garzik.org>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: [2.6 patch] unexport ide_dma_on
+Date: Fri, 1 Feb 2008 22:49:25 +0100
+Message-ID: <200802012249.26067.bzolnier@gmail.com>
+References: <20080128220844.GG8767@does.not.exist>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain;
+  charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <47A37AF3.3030503@garzik.org>
-Sender: linux-scsi-owner@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-ide <linux-ide@vger.kernel.org>, Jens Axboe <Jens.Axboe@oracle.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Tejun Heo <htejun@gmail.com>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from an-out-0708.google.com ([209.85.132.241]:64119 "EHLO
+	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754231AbYBAWhG (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 1 Feb 2008 17:37:06 -0500
+Received: by an-out-0708.google.com with SMTP id d31so316160and.103
+        for <linux-ide@vger.kernel.org>; Fri, 01 Feb 2008 14:37:04 -0800 (PST)
+In-Reply-To: <20080128220844.GG8767@does.not.exist>
+Content-Disposition: inline
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Adrian Bunk <bunk@kernel.org>
+Cc: Sergei Shtylyov <sshtylyov@ru.mvista.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-
-On Fri, 2008-02-01 at 15:02 -0500, Jeff Garzik wrote:
-> James Bottomley wrote:
-> > Could we please get this in ... I thought I mentioned several times that
-> > it fixes a fatal oops in both aic94xx and ipr.
+On Monday 28 January 2008, Adrian Bunk wrote:
+> ide_dma_on can be unexported.
 > 
-> Tejun has a persistent objection...  see other email.
+> Signed-off-by: Adrian Bunk <bunk@kernel.org>
 
-Actually, see other email .. I meant that this patch (eliminate dma
-padding) is independent of the drain one.
-
-James
-
-
+applied
