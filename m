@@ -1,55 +1,55 @@
 From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH] sata_nv: fix for completion handling
-Date: Fri, 01 Feb 2008 11:50:52 -0500
-Message-ID: <47A34DEC.7050808@garzik.org>
-References: <479FD88F.8090605@shaw.ca>
+Subject: Re: [PATCH 2/2 v3] sata_mv: Support SoC controllers
+Date: Fri, 01 Feb 2008 11:53:30 -0500
+Message-ID: <47A34E8A.6020007@garzik.org>
+References: <1201733446499-git-send-email-saeed.bishara@gmail.com> <12017334492566-git-send-email-saeed.bishara@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:59234 "EHLO mail.dvmed.net"
+Received: from srv5.dvmed.net ([207.36.208.214]:60615 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754023AbYBAQu4 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 1 Feb 2008 11:50:56 -0500
-In-Reply-To: <479FD88F.8090605@shaw.ca>
+	id S1754335AbYBAQxe (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 1 Feb 2008 11:53:34 -0500
+In-Reply-To: <12017334492566-git-send-email-saeed.bishara@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Robert Hancock <hancockr@shaw.ca>
-Cc: linux-kernel <linux-kernel@vger.kernel.org>, ide <linux-ide@vger.kernel.org>, Tejun Heo <htejun@gmail.com>, Kuan Luo <kluo@nvidia.com>, Allen Martin <AMartin@nvidia.com>
+To: saeed.bishara@gmail.com
+Cc: linux-ide@vger.kernel.org, saeed@marvell.com, htejun@gmail.com, liml@rtr.ca, Saeed Bishara <saeed@il.marvell.com>, Paul Mundt <lethal@linux-sh.org>
 
-Robert Hancock wrote:
-> This patch is based on an original patch from Kuan Luo of NVIDIA,
-> posted under subject "fixed a bug of adma in rhel4u5 with HDS7250SASUN500G".
-> His description follows. I've reworked it a bit to avoid some unnecessary
-> repeated checks but it should be functionally identical.
-> 
-> "The patch is to solve the error message "ata1: CPB flags CMD err,
-> flags=0x11" when testing HDS7250SASUN500G in rhel4u5.
-> I tested this hd in 2.6.24-rc7 which needed to remove the mask in
-> blacklist to run the ncq and the same error also showed up. 
-> 
-> I traced the  bug and found that the interrupt finished a command (for
-> example, tag=0) when the driver got that adma status is
-> NV_ADMA_STAT_DONE  and  cpb->resp_flags is NV_CPB_RESP_DONE.
-> However, For this hd, the drive maybe didn't clear bit 0 at this moment.
-> It meaned the hardware  had not completely finished the command.
-> If at the same time  the driver freed the command(tag 0) and sended
-> another command (tag 0), the error happened.
-> 
-> The notifier register is 32-bit register containing notifier value.
-> Value is bit vector containing one bit per tag number (0-31) in
-> corresponding bit positions (bit 0 is for tag 0, etc). When bit is set
-> then ADMA indicates that command with corresponding tag number completed
-> execution.
-> 
-> So i added the check notifier code. Sometimes i saw that the notifier
-> reg set some bits  , but the adma status set NV_ADMA_STAT_CMD_COMPLETE
-> ,not NV_ADMA_STAT_DONE. So i added the NV_ADMA_STAT_CMD_COMPLETE check
-> code."
-> 
-> Signed-off-by: Robert Hancock <hancockr@shaw.ca>
+saeed.bishara@gmail.com wrote:
+> --- /dev/null
+> +++ b/include/linux/sata_mv.h
+> @@ -0,0 +1,21 @@
+> +/*
+> + * Marvell integrated SATA platfrom device data definition file.
+> + *
+> + * Saeed Bishara <saeed@marvell.com>
+> + *
+> + * This file is licensed under the terms of the GNU General Public
+> + * License version 2. This program is licensed "as is" without any
+> + * warranty of any kind, whether express or implied.
+> + */
+> +
+> +#ifndef __LINUX_SATA_MV_H__
+> +#define __LINUX_SATA_MV_H__
+> +
+> +/*
+> + * Sata private data
+> + */
+> +struct mv_sata_platform_data {
+> +	int	n_ports; /* number of sata ports */
+> +};
+> +
+> +#endif
 
-applied, thanks all for investigating this stuff
+Overall, the patch is OK, but I fear adding way too many of these tiny 
+includes, for each platform.
 
+Unless Paul M objects (pata_platform maintainer), I will rename 
+linux/pata_platform.h to linux/ata_platform.h, and we can put your 
+mv_sata_platform_data structure in there.
+
+	Jeff
 
 
