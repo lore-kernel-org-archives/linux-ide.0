@@ -1,91 +1,58 @@
-From: Kiyoshi Ueda <k-ueda@ct.jp.nec.com>
-Subject: Re: kernel BUG at ide-cd.c:1726 in 2.6.24-03863-g0ba6c33 &&
- -g8561b089
-Date: Fri, 01 Feb 2008 12:39:27 -0500 (EST)
-Message-ID: <20080201.123927.71085228.k-ueda@ct.jp.nec.com>
-References: <20080131213740.GA4500@gollum.tnic>
-	<20080131.173556.38717303.k-ueda@ct.jp.nec.com>
-	<20080201075117.GC4500@gollum.tnic>
+From: "Bartlomiej Zolnierkiewicz" <bzolnier@gmail.com>
+Subject: Re: [PATCH #upstream] libata: implement libata.force module parameter
+Date: Fri, 1 Feb 2008 18:46:32 +0100
+Message-ID: <58cb370e0802010946v3544a4echc08a17f678222555@mail.gmail.com>
+References: <47A3375F.80101@gmail.com> <47A356C3.3010904@garzik.org>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1757516AbYBARkH@vger.kernel.org>
-In-Reply-To: <20080201075117.GC4500@gollum.tnic>
-Sender: linux-kernel-owner@vger.kernel.org
-To: petkovbb@gmail.com, petkovbb@googlemail.com
-Cc: jens.axboe@oracle.com, nai.xia@gmail.com, rdreier@cisco.com, bzolnier@gmail.com, flo@rfc822.org, linux-kernel@vger.kernel.org, j-nomura@ce.jp.nec.com, linux-ide@vger.kernel.org, k-ueda@ct.jp.nec.com
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from fk-out-0910.google.com ([209.85.128.185]:45896 "EHLO
+	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752288AbYBARqd (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 1 Feb 2008 12:46:33 -0500
+Received: by fk-out-0910.google.com with SMTP id z23so1163039fkz.5
+        for <linux-ide@vger.kernel.org>; Fri, 01 Feb 2008 09:46:32 -0800 (PST)
+In-Reply-To: <47A356C3.3010904@garzik.org>
+Content-Disposition: inline
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: Tejun Heo <htejun@gmail.com>, IDE/ATA development list <linux-ide@vger.kernel.org>, Mark Lord <liml@rtr.ca>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Sam Ravnborg <sam@ravnborg.org>, Andrew Morton <akpm@linux-foundation.org>, LKML <linux-kernel@vger.kernel.org>
 
-Hi Boris,
+On Feb 1, 2008 6:28 PM, Jeff Garzik <jeff@garzik.org> wrote:
+> Tejun Heo wrote:
+> > This patch implements libata.force module parameter which can
+> > selectively override ATA port, link and device configurations
+> > including cable type, SATA PHY SPD limit, transfer mode and NCQ.
+> >
+> > For example, you can say "use 1.5Gbps for all fan-out ports attached
+> > to the second port but allow 3.0Gbps for the PMP device itself, oh,
+> > the device attached to the third fan-out port chokes on NCQ and
+> > shouldn't go over UDMA4" by the following.
+> >
+> >  libata.force=2:1.5g,2.15:3.0g,2.03:noncq,udma4
+> >
+> > Signed-off-by: Tejun Heo <htejun@gmail.com>
+> > ---
+> > I guess it's about time we add something like this.  More than
+> > anything else this should help debugging and can serve as a last
+> > resort to work around problems.
+> >
+> > Thanks.
+> >
+> >  Documentation/kernel-parameters.txt |   35 +++
+> >  drivers/ata/libata-core.c           |  375 +++++++++++++++++++++++++++++++++++-
+> >  drivers/ata/libata-eh.c             |    8
+> >  drivers/ata/libata.h                |    1
+> >  4 files changed, 415 insertions(+), 4 deletions(-)
+>
+> ACK, but it breaks the build due to section type conflicts:
+>
+> drivers/ata/libata-core.c:108: error: ata_force_param_buf causes a
+> section type conflict
+>
+> Given that the data is marked __initdata and the code is marked __init,
+> I cannot see the problem.
 
-On Fri, 1 Feb 2008 08:51:17 +0100, Borislav Petkov wrote:
-> > > > The below fix should be enough. It's perfectly legal to have leftover
-> > > > byte counts when the drive signals completion, happens all the time for
-> > > > eg user issued commands where you don't know an exact byte count.
-> > > 
-> > > Actually, this behavior has been the case even before
-> > > the __blk_end_request() changes.
-> > > I did test plain 2.6.24 with the following
-> > > 
-> > > 
-> > > --- linux-2.6/drivers/ide/ide-cd.c	2008-01-31 22:18:59.000000000 +0100
-> > > +++ linux-2.6/drivers/ide/ide-cd.c-new	2008-01-31 22:18:50.000000000 +0100
-> > > @@ -1711,8 +1711,12 @@ static ide_startstop_t cdrom_newpc_intr(
-> > >  	/*
-> > >  	 * If DRQ is clear, the command has completed.
-> > >  	 */
-> > > -	if ((stat & DRQ_STAT) == 0)
-> > > +	if ((stat & DRQ_STAT) == 0) {
-> > > +		blk_dump_rq_flags(rq, "ide-cd: rq still having bio");
-> > > +		printk("backup: data_len=%u  bi_size=%u\n",
-> > > +				rq->data_len, rq->bio->bi_size);
-> > >  		goto end_request;
-> > > +	}
-> > >  
-> > >  	/*
-> > >  	 * check which way to transfer data
-> > > 
-> > > 
-> > > to see whether we've been getting residual byte counts:
-> > > 
-> > > Jan 31 22:10:06 gollum kernel: [   26.702877] ide-cd: rq still having bio: dev hdc: type=2, flags=114c8
-> > > Jan 31 22:10:06 gollum kernel: [   26.702945]
-> > > Jan 31 22:10:06 gollum kernel: [   26.702946] sector 2673511, nr/cnr 0/0
-> > > Jan 31 22:10:06 gollum kernel: [   26.703052] bio dfa8ec40, biotail dfa8ec40, buffer 00000000, data 00000000, len 158
-> > > Jan 31 22:10:06 gollum kernel: [   26.703122] cdb: 12 00 00 00 fe 00 00 00 00 00 00 00 00 00 00 00
-> > > Jan 31 22:10:06 gollum kernel: [   26.703877] backup: data_len=158  bi_size=158
-> > > 
-> > > ... so we've been simply silently ignoring this until now so
-> > > i guess we don't need to BUG() for something that's totally benign.
-> 
-> Hi Kiyoshi,
->  
-> > end_that_request_last() is not called when __blk_end_reuqest()
-> > returns 1.  Then, the issuer isn't waken up.
-> > So I think the BUG() or error messages should be there.
-> 
-> you mean, end_that_request_last() isn't called when __end_that_request_first()
-> returns an error and this is the case only for fs and pc requests.
-> Otherwise it _is_ called, thus simulating somewhat the previous behavior.
-> However, we never BUG()'ged on residual byte counts before and
-> this driver has been in the kernel tree for ages, so what puzzles
-> me now is how is BUG()'ing here better than before and shouldn't we
-> simply issue a warning instead of killing the interrupt handler...
-
-The Jens' patch passes the residual byte counts to __blk_end_request(),
-so __end_that_reqeust_first() should never return 1 and we should never
-BUG() on the residual byte counts, unless inconsistency happens such as
-the size of remaining bios is bigger than the residual byte counts.
-
-So if __blk_end_request() returns 1 even with the Jens' patch,
-it means that the block layer or the driver really have a bug.
-And then, the request and the bios could leak or the issuer
-would wait forever because end_that_request_last() isn't called.
-
-The previous behavior might ignore such inconsistency and leak only
-the bios because it was calling end_that_request_last() anyway.
-I would like to BUG() in such cases personally, but I don't object
-strongly if you prefer not to BUG().
-
-Thanks,
-Kiyoshi Ueda
+the data is marked as "const"
