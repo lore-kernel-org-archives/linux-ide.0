@@ -1,35 +1,30 @@
-From: "saeed bishara" <saeed.bishara@gmail.com>
-Subject: Re: [PATCH 2/2 v3] sata_mv: Support SoC controllers
-Date: Fri, 1 Feb 2008 21:54:26 +0200
-Message-ID: <c70ff3ad0802011154u329604e5y3b68cbd60e63d5e3@mail.gmail.com>
-References: <1201733446499-git-send-email-saeed.bishara@gmail.com>
-	 <12017334492566-git-send-email-saeed.bishara@gmail.com>
-	 <47A34E8A.6020007@garzik.org>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [PATCH RESEND number 2] libata: eliminate the home grown dma
+ padding in favour of that provided by the block layer
+Date: Fri, 01 Feb 2008 15:02:59 -0500
+Message-ID: <47A37AF3.3030503@garzik.org>
+References: <1199138168.3110.12.camel@localhost.localdomain>	 <1200698057.3111.68.camel@localhost.localdomain> <1201894847.3134.59.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wr-out-0506.google.com ([64.233.184.229]:3445 "EHLO
-	wr-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755858AbYBATy3 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 1 Feb 2008 14:54:29 -0500
-Received: by wr-out-0506.google.com with SMTP id c48so1262359wra.23
-        for <linux-ide@vger.kernel.org>; Fri, 01 Feb 2008 11:54:28 -0800 (PST)
-In-Reply-To: <47A34E8A.6020007@garzik.org>
-Content-Disposition: inline
+Received: from srv5.dvmed.net ([207.36.208.214]:44435 "EHLO mail.dvmed.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756204AbYBAUDD (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 1 Feb 2008 15:03:03 -0500
+In-Reply-To: <1201894847.3134.59.camel@localhost.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: linux-ide@vger.kernel.org, saeed@marvell.com, htejun@gmail.com, liml@rtr.ca, Saeed Bishara <saeed@il.marvell.com>, Paul Mundt <lethal@linux-sh.org>
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-ide <linux-ide@vger.kernel.org>, Jens Axboe <Jens.Axboe@oracle.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Tejun Heo <htejun@gmail.com>
 
->
-> Unless Paul M objects (pata_platform maintainer), I will rename
-> linux/pata_platform.h to linux/ata_platform.h, and we can put your
-> mv_sata_platform_data structure in there.
-seems better idea.
+James Bottomley wrote:
+> Could we please get this in ... I thought I mentioned several times that
+> it fixes a fatal oops in both aic94xx and ipr.
 
-now I have a patch for the arm subsystem that depends on this patch,
-how can I make sure that the new patch will not bypass this one? is
-there anything git got to do with this?
+Tejun has a persistent objection...  see other email.
 
-saeed
+	Jeff
+
+
+
