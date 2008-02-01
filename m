@@ -1,35 +1,40 @@
 From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH 2/4] libata: update ATAPI overflow draining
-Date: Fri, 01 Feb 2008 15:34:09 -0500
-Message-ID: <47A38241.9070602@garzik.org>
-References: <11992723701811-git-send-email-htejun@gmail.com> <11992723711166-git-send-email-htejun@gmail.com>
+Subject: Re: [PATCH #upstream] libata: make EH fail gracefully if no reset
+ method is available
+Date: Fri, 01 Feb 2008 15:35:12 -0500
+Message-ID: <47A38280.6000806@garzik.org>
+References: <47A040E2.1050801@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:46405 "EHLO mail.dvmed.net"
+Received: from srv5.dvmed.net ([207.36.208.214]:46427 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753359AbYBAUeM (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 1 Feb 2008 15:34:12 -0500
-In-Reply-To: <11992723711166-git-send-email-htejun@gmail.com>
+	id S1756971AbYBAUfP (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 1 Feb 2008 15:35:15 -0500
+In-Reply-To: <47A040E2.1050801@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Tejun Heo <htejun@gmail.com>
-Cc: LKML <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: IDE/ATA development list <linux-ide@vger.kernel.org>
 
-Tejun,
+Tejun Heo wrote:
+> When no reset method is available, libata currently oopses.  Although
+> the condition can't happen unless there's a bug in a low level driver,
+> oopsing isn't the best way to report the error condition.  Complain,
+> dump stack and fail reset instead.
+> 
+> Signed-off-by: Tejun Heo <htejun@gmail.com>
+> ---
+> This patch is on top of
+> 
+> upstream (a984f58dd97f22f5113700322fed311a0ee29947)
+> + prefer-hardreset patchset
+>   http://thread.gmane.org/gmane.linux.ide/27447
+> 
+>  drivers/ata/libata-eh.c |    7 ++++++-
+>  1 files changed, 6 insertions(+), 1 deletions(-)
 
-If you could explain your objection to James's patches in this area, I 
-would really appreciate it.
-
-We have several conflicting patches in this area, and we need to get the 
-details sorted.
-
-I think you mentioned a key objection that was we actually need to know 
-/two/ sizes at the block layer:  (1) the size including all padding and 
-drain buffers, and (2) the raw or "true" size.
-
-	Jeff
-
+ACK (held in mbox, due to waiting on drive manufacturers' responses)
 
 
