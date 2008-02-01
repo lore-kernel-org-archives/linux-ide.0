@@ -1,65 +1,55 @@
-From: Sam Ravnborg <sam@ravnborg.org>
-Subject: Re: [PATCH #upstream] libata: implement libata.force module parameter
-Date: Fri, 1 Feb 2008 19:36:21 +0100
-Message-ID: <20080201183621.GC14759@uranus.ravnborg.org>
-References: <47A3375F.80101@gmail.com> <47A356C3.3010904@garzik.org>
+From: Paul Mundt <lethal@linux-sh.org>
+Subject: Re: [PATCH 2/2 v3] sata_mv: Support SoC controllers
+Date: Sat, 2 Feb 2008 03:15:57 +0900
+Message-ID: <20080201181557.GA5999@linux-sh.org>
+References: <1201733446499-git-send-email-saeed.bishara@gmail.com> <12017334492566-git-send-email-saeed.bishara@gmail.com> <47A34E8A.6020007@garzik.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from pasmtpa.tele.dk ([80.160.77.114]:49851 "EHLO pasmtpA.tele.dk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751121AbYBASgS (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 1 Feb 2008 13:36:18 -0500
+Received: from pip15.gyao.ne.jp ([61.122.117.253]:18498 "EHLO mx.gate01.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1753414AbYBASsP (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 1 Feb 2008 13:48:15 -0500
 Content-Disposition: inline
-In-Reply-To: <47A356C3.3010904@garzik.org>
+In-Reply-To: <47A34E8A.6020007@garzik.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Jeff Garzik <jeff@garzik.org>
-Cc: Tejun Heo <htejun@gmail.com>, IDE/ATA development list <linux-ide@vger.kernel.org>, Mark Lord <liml@rtr.ca>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Andrew Morton <akpm@linux-foundation.org>, LKML <linux-kernel@vger.kernel.org>
+Cc: saeed.bishara@gmail.com, linux-ide@vger.kernel.org, saeed@marvell.com, htejun@gmail.com, liml@rtr.ca, Saeed Bishara <saeed@il.marvell.com>
 
-On Fri, Feb 01, 2008 at 12:28:35PM -0500, Jeff Garzik wrote:
-> Tejun Heo wrote:
-> >This patch implements libata.force module parameter which can
-> >selectively override ATA port, link and device configurations
-> >including cable type, SATA PHY SPD limit, transfer mode and NCQ.
-> >
-> >For example, you can say "use 1.5Gbps for all fan-out ports attached
-> >to the second port but allow 3.0Gbps for the PMP device itself, oh,
-> >the device attached to the third fan-out port chokes on NCQ and
-> >shouldn't go over UDMA4" by the following.
-> >
-> > libata.force=2:1.5g,2.15:3.0g,2.03:noncq,udma4
-> >
-> >Signed-off-by: Tejun Heo <htejun@gmail.com>
-> >---
-> >I guess it's about time we add something like this.  More than
-> >anything else this should help debugging and can serve as a last
-> >resort to work around problems.
-> >
-> >Thanks.
-> >
-> > Documentation/kernel-parameters.txt |   35 +++
-> > drivers/ata/libata-core.c           |  375 
-> > +++++++++++++++++++++++++++++++++++-
-> > drivers/ata/libata-eh.c             |    8 
-> > drivers/ata/libata.h                |    1 
-> > 4 files changed, 415 insertions(+), 4 deletions(-)
+On Fri, Feb 01, 2008 at 11:53:30AM -0500, Jeff Garzik wrote:
+> saeed.bishara@gmail.com wrote:
+> >--- /dev/null
+> >+++ b/include/linux/sata_mv.h
+> >@@ -0,0 +1,21 @@
+> >+/*
+> >+ * Marvell integrated SATA platfrom device data definition file.
+> >+ *
+> >+ * Saeed Bishara <saeed@marvell.com>
+> >+ *
+> >+ * This file is licensed under the terms of the GNU General Public
+> >+ * License version 2. This program is licensed "as is" without any
+> >+ * warranty of any kind, whether express or implied.
+> >+ */
+> >+
+> >+#ifndef __LINUX_SATA_MV_H__
+> >+#define __LINUX_SATA_MV_H__
+> >+
+> >+/*
+> >+ * Sata private data
+> >+ */
+> >+struct mv_sata_platform_data {
+> >+	int	n_ports; /* number of sata ports */
+> >+};
+> >+
+> >+#endif
 > 
-> ACK, but it breaks the build due to section type conflicts:
+> Overall, the patch is OK, but I fear adding way too many of these tiny 
+> includes, for each platform.
 > 
-> drivers/ata/libata-core.c:108: error: ata_force_param_buf causes a 
-> section type conflict
+> Unless Paul M objects (pata_platform maintainer), I will rename 
+> linux/pata_platform.h to linux/ata_platform.h, and we can put your 
+> mv_sata_platform_data structure in there.
 > 
-> Given that the data is marked __initdata and the code is marked __init, 
-> I cannot see the problem.
-
-I have lost the actual patch.
-But what you see is what happens when you mix const and non-const data
-in the same section.
-
-Look for use of __initdata for const data and replace it with __initconst.
-
-And modpost cannot warn about it as gcc errors out before we look at the
-.o file with modpost.
-
-	Sam
+No objections from me, feel free to make the best use you can out of
+what's there.
