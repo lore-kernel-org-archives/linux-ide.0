@@ -1,357 +1,559 @@
-From: "dusty@gmx.li" <dusty@gmx.li>
-Subject: Re: libata pm
-Date: Fri, 1 Feb 2008 15:12:54 -0000 (UTC)
-Message-ID: <57014.82.140.47.129.1201878774.squirrel@ssl.cavemail.org>
-References: <52279.82.140.50.2.1201370600.squirrel@ssl.cavemail.org>         
-          <49398.82.140.50.2.1201377943.squirrel@ssl.cavemail.org>         
-          <479BC34D.2000007@gmail.com>            
-    <49407.82.140.63.93.1201397926.squirrel@ssl.cavemail.org>         
-    <49713.82.140.63.93.1201462475.squirrel@ssl.cavemail.org>         
-    <479D2D3C.4050102@gmail.com>      
-    <51861.82.140.47.248.1201516318.squirrel@ssl.cavemail.org>      
-    <479DC4A4.30809@gmail.com>   
-    <50028.82.140.53.128.1201728857.squirrel@ssl.cavemail.org>   
-    <47A120D4.7030504@gmail.com>
-    <59194.82.140.47.129.1201873378.squirrel@ssl.cavemail.org>
-    <47A32749.6060009@rtr.ca>
-Reply-To: dusty@gmx.li
+From: Tejun Heo <htejun@gmail.com>
+Subject: [PATCH #upstream] libata: implement libata.force module parameter
+Date: Sat, 02 Feb 2008 00:14:39 +0900
+Message-ID: <47A3375F.80101@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from cavemail.org ([62.75.189.85]:57564 "EHLO mail.cavemail.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754310AbYBAPNC (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 1 Feb 2008 10:13:02 -0500
-In-Reply-To: <47A32749.6060009@rtr.ca>
+Received: from el-out-1112.google.com ([209.85.162.180]:22389 "EHLO
+	el-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752659AbYBAPOv (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 1 Feb 2008 10:14:51 -0500
+Received: by el-out-1112.google.com with SMTP id v27so432167ele.23
+        for <linux-ide@vger.kernel.org>; Fri, 01 Feb 2008 07:14:48 -0800 (PST)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark Lord <liml@rtr.ca>
-Cc: dusty@gmx.li, Tejun Heo <htejun@gmail.com>, linux-ide@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, Mark Lord <liml@rtr.ca>, Alan Cox <alan@lxorguk.ukuu.org.uk>
 
-Am Fr, 1.02.2008, 14:06, schrieb Mark Lord:
-> dusty@gmx.li wrote:
->>>> Sorry for my late answer, but i had to sort this out first.
->>>> After replacing the first PSU with a new Corsair 650W the power no
->>>> longer fluctuated more than 0,01 V (and this only when booting up
->>>> the drives...) I did a full resync on both raid arrays and got no
->>>> more errors or resets, but there were some inconsitencies during
->>>> sync and the xfs filesystem on both arrays had to be repaired. Are
->>>> these problems caused by the pm resets ?
->>>>
->>> libata EH won't lose any data as long as the hardware doesn't.  If
->>> power fluctuates causing your drive to briefly power down - this does
->>> happen and you can hear the drive doing emergency unload when it
->>> happens, the data in write buffer can be lost.  On coming back, all
->>> that libata can know is that the PHY suffered brief connection loss,
->>> so it resets the device and goes on, so the data in the cache is lost
->>> now.  It's basically pulling the power plug from the harddrive while
->>> write is going on and connecting it back quickly.  You're bound to
->>> lose data.
->>>
->> After I got the new PSU and the raid was in full sync without any error
->>  for 48h, I thought all problems were gone. Today the sata errors
->> reappeared and whenever the load is high enough I get the following:
-> ..
->
->
-> What exact brand/model drives are those again (hdparm --Istdout, please)
-> ?
->
->
-> If I have a similar unit here, I may try to reproduce this.
->
->
-Yes, of course. This is the failing drive:
-hdparm --Istdout /dev/sdn
+This patch implements libata.force module parameter which can
+selectively override ATA port, link and device configurations
+including cable type, SATA PHY SPD limit, transfer mode and NCQ.
 
-/dev/sdn:
-0040 3fff c837 0010 8856 022a 003f 0000
-0000 0000 5330 4d55 4a31 4650 3930 3136
-3432 2020 2020 2020 0003 8000 0004 4352
-3130 302d 3131 5341 4d53 554e 4720 4844
-3530 314c 4a20 2020 2020 2020 2020 2020
-2020 2020 2020 2020 2020 2020 2020 8010
-0000 2f00 4000 0200 0200 0007 3fff 0010
-003f fc10 00fb 0000 ffff 0fff 0000 0007
-0003 0078 0078 0078 0078 0000 0000 0000
-0000 0000 0000 001f 0706 0000 004c 0040
-01f8 0052 746b 7f01 4123 7469 bc01 4123
-20ff 0054 0054 0000 fffe 0000 fe00 0000
-0000 0000 0000 0000 6030 3a38 0000 0000
-0000 0000 0000 0000 5000 0f00 1b90 1642
-0000 0000 0000 0000 0000 0000 0000 4014
-4014 0000 0000 0000 0000 0000 0000 0000
-0021 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 ffff 0400 0e00 0003
-0000 9a00 0300 2400 6a20 3231 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 003f 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 100f 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0001 0400 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 9ca5
+For example, you can say "use 1.5Gbps for all fan-out ports attached
+to the second port but allow 3.0Gbps for the PMP device itself, oh,
+the device attached to the third fan-out port chokes on NCQ and
+shouldn't go over UDMA4" by the following.
 
+ libata.force=2:1.5g,2.15:3.0g,2.03:noncq,udma4
 
-And now all others: (All the same model Samsung HD501LJ)
+Signed-off-by: Tejun Heo <htejun@gmail.com>
+---
+I guess it's about time we add something like this.  More than
+anything else this should help debugging and can serve as a last
+resort to work around problems.
 
-hdparm --Istdout /dev/sdo
+Thanks.
 
-/dev/sdo:
-0040 3fff c837 0010 8856 022a 003f 0000
-0000 0000 5330 4d55 4a31 4450 3932 3433
-3833 2020 2020 2020 0003 8000 0004 4352
-3130 302d 3131 5341 4d53 554e 4720 4844
-3530 314c 4a20 2020 2020 2020 2020 2020
-2020 2020 2020 2020 2020 2020 2020 8010
-0000 2f00 4000 0200 0200 0007 3fff 0010
-003f fc10 00fb 0000 ffff 0fff 0000 0007
-0003 0078 0078 0078 0078 0000 0000 0000
-0000 0000 0000 001f 0706 0000 004c 0040
-01f8 0052 746b 7f01 4123 7469 bc01 4123
-20ff 0054 0054 0000 fffe 0000 fe00 0000
-0000 0000 0000 0000 6030 3a38 0000 0000
-0000 0000 0000 0000 5000 0f00 1b92 4383
-0000 0000 0000 0000 0000 0000 0000 4014
-4014 0000 0000 0000 0000 0000 0000 0000
-0021 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 ffff 0400 0e00 0003
-0000 9a00 0300 2400 6a20 3231 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 003f 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 100f 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0001 0400 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 27a5
+ Documentation/kernel-parameters.txt |   35 +++
+ drivers/ata/libata-core.c           |  375 +++++++++++++++++++++++++++++++++++-
+ drivers/ata/libata-eh.c             |    8 
+ drivers/ata/libata.h                |    1 
+ 4 files changed, 415 insertions(+), 4 deletions(-)
 
-hdparm --Istdout /dev/sdp
-
-/dev/sdp:
-0040 3fff c837 0010 8856 022a 003f 0000
-0000 0000 2020 2020 2020 5330 5a46 4a31
-4d50 3930 3538 3734 0003 8000 0004 4352
-3130 302d 3131 5341 4d53 554e 4720 4844
-3530 314c 4a20 2020 2020 2020 2020 2020
-2020 2020 2020 2020 2020 2020 2020 8010
-0000 2f00 4000 0200 0200 0007 3fff 0010
-003f fc10 00fb 0000 ffff 0fff 0000 0007
-0003 0078 0078 0078 0078 0000 0000 0000
-0000 0000 0000 001f 0706 0000 004c 0040
-01f8 0052 746b 7f01 4123 7469 be01 4123
-20ff 0054 0054 0000 fffe 0000 fe80 0000
-0000 0000 0000 0000 6030 3a38 0000 0000
-0000 0000 0000 0000 5000 0f00 0b0f 0100
-0000 0000 0000 0000 0000 0000 0000 4014
-4014 0000 0000 0000 0000 0000 0000 0000
-0021 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 ffff 0400 0e00 0003
-0000 9a00 0300 2400 6a20 3231 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 003f 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 100f 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0001 0400 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 f2a5
-
-hdparm --Istdout /dev/sdi
-
-/dev/sdi:
-0040 3fff c837 0010 8856 022a 003f 0000
-0000 0000 5330 4d55 4a31 3350 3131 3937
-3436 2020 2020 2020 0003 8000 0004 4352
-3130 302d 3130 5341 4d53 554e 4720 4844
-3530 314c 4a20 2020 2020 2020 2020 2020
-2020 2020 2020 2020 2020 2020 2020 8010
-0000 2f00 4000 0200 0200 0007 3fff 0010
-003f fc10 00fb 0110 ffff 0fff 0000 0007
-0003 0078 0078 0078 0078 0000 0000 0000
-0000 0000 0000 001f 0706 0000 004c 0040
-01f8 0052 746b 7f01 4123 7469 bc01 4123
-20ff 0054 0054 0000 fffe 0000 fe00 0000
-0000 0000 0000 0000 6030 3a38 0000 0000
-0000 0000 0000 0000 5000 0f00 1b11 9746
-0000 0000 0000 0000 0000 0000 0000 4010
-4010 0000 0000 0000 0000 0000 0000 0000
-0021 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 ffff 0400 0e00 0003
-0000 9a00 0300 2400 6420 3231 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 003f 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 100f 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0001 0400 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 a1a5
-
-hdparm --Istdout /dev/sdj
-
-/dev/sdj:
-0040 3fff c837 0010 8856 022a 003f 0000
-0000 0000 5330 4d55 4a31 3350 3131 3937
-3434 2020 2020 2020 0003 8000 0004 4352
-3130 302d 3130 5341 4d53 554e 4720 4844
-3530 314c 4a20 2020 2020 2020 2020 2020
-2020 2020 2020 2020 2020 2020 2020 8010
-0000 2f00 4000 0200 0200 0007 3fff 0010
-003f fc10 00fb 0110 ffff 0fff 0000 0007
-0003 0078 0078 0078 0078 0000 0000 0000
-0000 0000 0000 001f 0706 0000 004c 0040
-01f8 0052 746b 7f01 4123 7469 bc01 4123
-20ff 0054 0054 0000 fffe 0000 fe00 0000
-0000 0000 0000 0000 6030 3a38 0000 0000
-0000 0000 0000 0000 5000 0f00 1b11 9744
-0000 0000 0000 0000 0000 0000 0000 4010
-4010 0000 0000 0000 0000 0000 0000 0000
-0021 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 ffff 0400 0e00 0003
-0000 9a00 0300 2400 6420 3231 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 003f 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 100f 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0001 0400 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 a5a5
-
-hdparm --Istdout /dev/sdk
-
-/dev/sdk:
-0040 3fff c837 0010 8856 022a 003f 0000
-0000 0000 5330 4d55 4a31 3350 3131 3937
-3437 2020 2020 2020 0003 8000 0004 4352
-3130 302d 3130 5341 4d53 554e 4720 4844
-3530 314c 4a20 2020 2020 2020 2020 2020
-2020 2020 2020 2020 2020 2020 2020 8010
-0000 2f00 4000 0200 0200 0007 3fff 0010
-003f fc10 00fb 0110 ffff 0fff 0000 0007
-0003 0078 0078 0078 0078 0000 0000 0000
-0000 0000 0000 001f 0706 0000 004c 0040
-01f8 0052 746b 7f01 4123 7469 bc01 4123
-20ff 0054 0054 0000 fffe 0000 fe00 0000
-0000 0000 0000 0000 6030 3a38 0000 0000
-0000 0000 0000 0000 5000 0f00 1b11 9747
-0000 0000 0000 0000 0000 0000 0000 4010
-4010 0000 0000 0000 0000 0000 0000 0000
-0021 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 ffff 0400 0e00 0003
-0000 9a00 0300 2400 6420 3231 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 003f 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 100f 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0001 0400 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 9fa5
-
-hdparm --Istdout /dev/sdl
-
-/dev/sdl:
-0040 3fff c837 0010 8856 022a 003f 0000
-0000 0000 5330 4d55 4a31 3350 3131 3937
-3435 2020 2020 2020 0003 8000 0004 4352
-3130 302d 3130 5341 4d53 554e 4720 4844
-3530 314c 4a20 2020 2020 2020 2020 2020
-2020 2020 2020 2020 2020 2020 2020 8010
-0000 2f00 4000 0200 0200 0007 3fff 0010
-003f fc10 00fb 0110 ffff 0fff 0000 0007
-0003 0078 0078 0078 0078 0000 0000 0000
-0000 0000 0000 001f 0706 0000 004c 0040
-01f8 0052 746b 7f01 4123 7469 bc01 4123
-20ff 0054 0054 0000 fffe 0000 fe00 0000
-0000 0000 0000 0000 6030 3a38 0000 0000
-0000 0000 0000 0000 5000 0f00 1b11 9745
-0000 0000 0000 0000 0000 0000 0000 4010
-4010 0000 0000 0000 0000 0000 0000 0000
-0021 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 ffff 0400 0e00 0003
-0000 9a00 0300 2400 6420 3231 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 003f 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 100f 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0001 0400 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 a3a5
-
-hdparm --Istdout /dev/sdm
-
-/dev/sdm:
-0040 3fff c837 0010 8856 022a 003f 0000
-0000 0000 5330 4d55 4a31 3350 3739 3830
-3436 2020 2020 2020 0003 8000 0004 4352
-3130 302d 3130 5341 4d53 554e 4720 4844
-3530 314c 4a20 2020 2020 2020 2020 2020
-2020 2020 2020 2020 2020 2020 2020 8010
-0000 2f00 4000 0200 0200 0007 3fff 0010
-003f fc10 00fb 0000 ffff 0fff 0000 0007
-0003 0078 0078 0078 0078 0000 0000 0000
-0000 0000 0000 001f 0706 0000 004c 0040
-01f8 0052 746b 7f01 4123 7469 bc01 4123
-20ff 0054 0054 0000 fffe 0000 fe00 0000
-0000 0000 0000 0000 6030 3a38 0000 0000
-0000 0000 0000 0000 5000 0f00 1b79 8046
-0000 0000 0000 0000 0000 0000 0000 4010
-4010 0000 0000 0000 0000 0000 0000 0000
-0021 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 ffff 0400 0e00 0003
-0000 9a00 0300 2400 6420 3231 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 003f 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 100f 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0001 0400 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 5ba5
-
-
+diff --git a/Documentation/kernel-parameters.txt b/Documentation/kernel-parameters.txt
+index c417877..dc7eb38 100644
+--- a/Documentation/kernel-parameters.txt
++++ b/Documentation/kernel-parameters.txt
+@@ -895,6 +895,41 @@ and is between 256 and 4096 characters. It is defined in the file
+ 			when set.
+ 			Format: <int>
+ 
++	libata.force=	[LIBATA] Force configurations.  The format is comma
++			separated list of "[ID:]VAL" where ID is
++			PORT[:DEVICE].  PORT and DEVICE are decimal numbers
++			matching port, link or device.  Basically, it matches
++			the ATA ID string printed on console by libata.  If
++			the whole ID part is omitted, the last PORT and DEVICE
++			values are used.  If ID hasn't been specified yet, the
++			configuration applies to all ports, links and devices.
++
++			If only DEVICE is omitted, the parameter applies to
++			the port and all links and devices behind it.  DEVICE
++			number of 0 either selects the first device or the
++			first fan-out link behind PMP device.  It does not
++			select the host link.  DEVICE number of 15 selects the
++			host link and device attached to it.
++
++			The VAL specifies the configuration to force.  As long
++			as there's no ambiguity shortcut notation is allowed.
++			For example, both 1.5 and 1.5G would work for 1.5Gbps.
++			The following configurations can be forced.
++
++			* Cable type: 40c, 80c, short40c, unk, ign or sata.
++			  Any ID with matching PORT is used.
++
++			* SATA link speed limit: 1.5Gbps or 3.0Gbps.
++
++			* Transfer mode: pio[0-7], mwdma[0-4] and udma[0-7].
++			  udma[/][16,25,33,44,66,100,133] notation is also
++			  allowed.
++
++			* [no]ncq: Turn on or off NCQ.
++
++			If there are multiple matching configurations changing
++			the same attribute, the last one is used.
++
+ 	load_ramdisk=	[RAM] List of ramdisks to load from floppy
+ 			See Documentation/ramdisk.txt.
+ 
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index ce803d1..dc2e579 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -87,6 +87,28 @@ static struct workqueue_struct *ata_wq;
+ 
+ struct workqueue_struct *ata_aux_wq;
+ 
++struct ata_force_param {
++	const char	*name;
++	unsigned int	cbl;
++	int		spd_limit;
++	unsigned long	xfer_mask;
++	unsigned int	horkage_on;
++	unsigned int	horkage_off;
++};
++
++struct ata_force_ent {
++	int			port;
++	int			device;
++	struct ata_force_param	param;
++};
++
++static struct ata_force_ent *ata_force_tbl;
++static int ata_force_tbl_size;
++
++static char ata_force_param_buf[PAGE_SIZE] __initdata;
++module_param_string(force, ata_force_param_buf, sizeof(ata_force_param_buf), 0444);
++MODULE_PARM_DESC(force, "Force ATA configurations including cable type, link speed and transfer mode (see Documentation/kernel-parameters.txt for details)");
++
+ int atapi_enabled = 1;
+ module_param(atapi_enabled, int, 0444);
+ MODULE_PARM_DESC(atapi_enabled, "Enable discovery of ATAPI devices (0=off, 1=on)");
+@@ -130,6 +152,179 @@ MODULE_VERSION(DRV_VERSION);
+ 
+ 
+ /**
++ *	ata_force_cbl - force cable type according to libata.force
++ *	@link: ATA link of interest
++ *
++ *	Force cable type according to libata.force and whine about it.
++ *	The last entry which has matching port number is used, so it
++ *	can be specified as part of device force parameters.  For
++ *	example, both "a:40c,1.00:udma4" and "1.00:40c,udma4" have the
++ *	same effect.
++ *
++ *	LOCKING:
++ *	EH context.
++ */
++void ata_force_cbl(struct ata_port *ap)
++{
++	int i;
++
++	for (i = ata_force_tbl_size - 1; i >= 0; i--) {
++		const struct ata_force_ent *fe = &ata_force_tbl[i];
++
++		if (fe->port != -1 && fe->port != ap->print_id)
++			continue;
++
++		if (fe->param.cbl == ATA_CBL_NONE)
++			continue;
++
++		ap->cbl = fe->param.cbl;
++		ata_port_printk(ap, KERN_NOTICE,
++				"FORCE: cable set to %s\n", fe->param.name);
++		return;
++	}
++}
++
++/**
++ *	ata_force_spd_limit - force SATA spd limit according to libata.force
++ *	@link: ATA link of interest
++ *
++ *	Force SATA spd limit according to libata.force and whine about
++ *	it.  When only the port part is specified (e.g. 1:), the limit
++ *	applies to all links connected to both the host link and all
++ *	fan-out ports connected via PMP.  If the device part is
++ *	specified as 0 (e.g. 1.00:), it specifies the first fan-out
++ *	link not the host link.  Device number 15 always points to the
++ *	host link whether PMP is attached or not.
++ *
++ *	LOCKING:
++ *	EH context.
++ */
++static void ata_force_spd_limit(struct ata_link *link)
++{
++	int linkno, i;
++
++	if (ata_is_host_link(link))
++		linkno = 15;
++	else
++		linkno = link->pmp;
++
++	for (i = ata_force_tbl_size - 1; i >= 0; i--) {
++		const struct ata_force_ent *fe = &ata_force_tbl[i];
++
++		if (fe->port != -1 && fe->port != link->ap->print_id)
++			continue;
++
++		if (fe->device != -1 && fe->device != linkno)
++			continue;
++
++		if (!fe->param.spd_limit)
++			continue;
++
++		link->hw_sata_spd_limit = (1 << fe->param.spd_limit) - 1;
++		ata_link_printk(link, KERN_NOTICE,
++			"FORCE: PHY spd limit set to %s\n", fe->param.name);
++		return;
++	}
++}
++
++/**
++ *	ata_force_xfermask - force xfermask according to libata.force
++ *	@dev: ATA device of interest
++ *
++ *	Force xfer_mask according to libata.force and whine about it.
++ *	For consistency with link selection, device number 15 selects
++ *	the first device connected to the host link.
++ *
++ *	LOCKING:
++ *	EH context.
++ */
++static void ata_force_xfermask(struct ata_device *dev)
++{
++	int devno = dev->link->pmp + dev->devno;
++	int alt_devno = devno;
++	int i;
++
++	/* allow n.15 for the first device attached to host port */
++	if (ata_is_host_link(dev->link) && devno == 0)
++		alt_devno = 15;
++
++	for (i = ata_force_tbl_size - 1; i >= 0; i--) {
++		const struct ata_force_ent *fe = &ata_force_tbl[i];
++		unsigned long pio_mask, mwdma_mask, udma_mask;
++
++		if (fe->port != -1 && fe->port != dev->link->ap->print_id)
++			continue;
++
++		if (fe->device != -1 && fe->device != devno &&
++		    fe->device != alt_devno)
++			continue;
++
++		if (!fe->param.xfer_mask)
++			continue;
++
++		ata_unpack_xfermask(fe->param.xfer_mask,
++				    &pio_mask, &mwdma_mask, &udma_mask);
++		if (udma_mask)
++			dev->udma_mask = udma_mask;
++		else if (mwdma_mask) {
++			dev->udma_mask = 0;
++			dev->mwdma_mask = mwdma_mask;
++		} else {
++			dev->udma_mask = 0;
++			dev->mwdma_mask = 0;
++			dev->pio_mask = pio_mask;
++		}
++
++		ata_dev_printk(dev, KERN_NOTICE,
++			"FORCE: xfer_mask set to %s\n", fe->param.name);
++		return;
++	}
++}
++
++/**
++ *	ata_force_horkage - force horkage according to libata.force
++ *	@dev: ATA device of interest
++ *
++ *	Force horkage according to libata.force and whine about it.
++ *	For consistency with link selection, device number 15 selects
++ *	the first device connected to the host link.
++ *
++ *	LOCKING:
++ *	EH context.
++ */
++static void ata_force_horkage(struct ata_device *dev)
++{
++	int devno = dev->link->pmp + dev->devno;
++	int alt_devno = devno;
++	int i;
++
++	/* allow n.15 for the first device attached to host port */
++	if (ata_is_host_link(dev->link) && devno == 0)
++		alt_devno = 15;
++
++	for (i = 0; i < ata_force_tbl_size; i++) {
++		const struct ata_force_ent *fe = &ata_force_tbl[i];
++
++		if (fe->port != -1 && fe->port != dev->link->ap->print_id)
++			continue;
++
++		if (fe->device != -1 && fe->device != devno &&
++		    fe->device != alt_devno)
++			continue;
++
++		if (!(~dev->horkage & fe->param.horkage_on) &&
++		    !(dev->horkage & fe->param.horkage_off))
++			continue;
++
++		dev->horkage |= fe->param.horkage_on;
++		dev->horkage &= ~fe->param.horkage_off;
++
++		ata_dev_printk(dev, KERN_NOTICE,
++			"FORCE: horkage modified (%s)\n", fe->param.name);
++	}
++}
++
++/**
+  *	ata_tf_to_fis - Convert ATA taskfile to SATA FIS structure
+  *	@tf: Taskfile to convert
+  *	@pmp: Port multiplier port
+@@ -2067,6 +2262,7 @@ int ata_dev_configure(struct ata_device *dev)
+ 
+ 	/* set horkage */
+ 	dev->horkage |= ata_dev_blacklisted(dev);
++	ata_force_horkage(dev);
+ 
+ 	/* let ACPI work its magic */
+ 	rc = ata_acpi_on_devcfg(dev);
+@@ -3132,6 +3328,7 @@ int ata_do_set_mode(struct ata_link *link, struct ata_device **r_failed_dev)
+ 			mode_mask = ATA_DMA_MASK_CFA;
+ 
+ 		ata_dev_xfermask(dev);
++		ata_force_xfermask(dev);
+ 
+ 		pio_mask = ata_pack_xfermask(dev->pio_mask, 0, 0);
+ 		dma_mask = ata_pack_xfermask(0, dev->mwdma_mask, dev->udma_mask);
+@@ -6665,7 +6862,8 @@ void ata_link_init(struct ata_port *ap, struct ata_link *link, int pmp)
+  */
+ int sata_link_init_spd(struct ata_link *link)
+ {
+-	u32 scontrol, spd;
++	u32 scontrol;
++	u8 spd;
+ 	int rc;
+ 
+ 	rc = sata_scr_read(link, SCR_CONTROL, &scontrol);
+@@ -6676,6 +6874,8 @@ int sata_link_init_spd(struct ata_link *link)
+ 	if (spd)
+ 		link->hw_sata_spd_limit &= (1 << spd) - 1;
+ 
++	ata_force_spd_limit(link);
++
+ 	link->sata_spd_limit = link->hw_sata_spd_limit;
+ 
+ 	return 0;
+@@ -7387,10 +7587,182 @@ int ata_pci_device_resume(struct pci_dev *pdev)
+ 
+ #endif /* CONFIG_PCI */
+ 
++static int __init ata_parse_force_one(char **cur,
++				      struct ata_force_ent *force_ent,
++				      const char **reason)
++{
++	static const struct ata_force_param force_tbl[] __initdata = {
++		{ "40c",	.cbl		= ATA_CBL_PATA40 },
++		{ "80c",	.cbl		= ATA_CBL_PATA80 },
++		{ "short40c",	.cbl		= ATA_CBL_PATA40_SHORT },
++		{ "unk",	.cbl		= ATA_CBL_PATA_UNK },
++		{ "ign",	.cbl		= ATA_CBL_PATA_IGN },
++		{ "sata",	.cbl		= ATA_CBL_SATA },
++		{ "1.5Gbps",	.spd_limit	= 1 },
++		{ "3.0Gbps",	.spd_limit	= 2 },
++		{ "noncq",	.horkage_on	= ATA_HORKAGE_NONCQ },
++		{ "ncq",	.horkage_off	= ATA_HORKAGE_NONCQ },
++		{ "pio0",	.xfer_mask	= 1 << (ATA_SHIFT_PIO + 0) },
++		{ "pio1",	.xfer_mask	= 1 << (ATA_SHIFT_PIO + 1) },
++		{ "pio2",	.xfer_mask	= 1 << (ATA_SHIFT_PIO + 2) },
++		{ "pio3",	.xfer_mask	= 1 << (ATA_SHIFT_PIO + 3) },
++		{ "pio4",	.xfer_mask	= 1 << (ATA_SHIFT_PIO + 4) },
++		{ "pio5",	.xfer_mask	= 1 << (ATA_SHIFT_PIO + 5) },
++		{ "pio6",	.xfer_mask	= 1 << (ATA_SHIFT_PIO + 6) },
++		{ "mwdma0",	.xfer_mask	= 1 << (ATA_SHIFT_MWDMA + 0) },
++		{ "mwdma1",	.xfer_mask	= 1 << (ATA_SHIFT_MWDMA + 1) },
++		{ "mwdma2",	.xfer_mask	= 1 << (ATA_SHIFT_MWDMA + 2) },
++		{ "mwdma3",	.xfer_mask	= 1 << (ATA_SHIFT_MWDMA + 3) },
++		{ "mwdma4",	.xfer_mask	= 1 << (ATA_SHIFT_MWDMA + 4) },
++		{ "udma0",	.xfer_mask	= 1 << (ATA_SHIFT_UDMA + 0) },
++		{ "udma16",	.xfer_mask	= 1 << (ATA_SHIFT_UDMA + 0) },
++		{ "udma/16",	.xfer_mask	= 1 << (ATA_SHIFT_UDMA + 0) },
++		{ "udma1",	.xfer_mask	= 1 << (ATA_SHIFT_UDMA + 1) },
++		{ "udma25",	.xfer_mask	= 1 << (ATA_SHIFT_UDMA + 1) },
++		{ "udma/25",	.xfer_mask	= 1 << (ATA_SHIFT_UDMA + 1) },
++		{ "udma2",	.xfer_mask	= 1 << (ATA_SHIFT_UDMA + 2) },
++		{ "udma33",	.xfer_mask	= 1 << (ATA_SHIFT_UDMA + 2) },
++		{ "udma/33",	.xfer_mask	= 1 << (ATA_SHIFT_UDMA + 2) },
++		{ "udma3",	.xfer_mask	= 1 << (ATA_SHIFT_UDMA + 3) },
++		{ "udma44",	.xfer_mask	= 1 << (ATA_SHIFT_UDMA + 3) },
++		{ "udma/44",	.xfer_mask	= 1 << (ATA_SHIFT_UDMA + 3) },
++		{ "udma4",	.xfer_mask	= 1 << (ATA_SHIFT_UDMA + 4) },
++		{ "udma66",	.xfer_mask	= 1 << (ATA_SHIFT_UDMA + 4) },
++		{ "udma/66",	.xfer_mask	= 1 << (ATA_SHIFT_UDMA + 4) },
++		{ "udma5",	.xfer_mask	= 1 << (ATA_SHIFT_UDMA + 5) },
++		{ "udma100",	.xfer_mask	= 1 << (ATA_SHIFT_UDMA + 5) },
++		{ "udma/100",	.xfer_mask	= 1 << (ATA_SHIFT_UDMA + 5) },
++		{ "udma6",	.xfer_mask	= 1 << (ATA_SHIFT_UDMA + 6) },
++		{ "udma133",	.xfer_mask	= 1 << (ATA_SHIFT_UDMA + 6) },
++		{ "udma/133",	.xfer_mask	= 1 << (ATA_SHIFT_UDMA + 6) },
++		{ "udma7",	.xfer_mask	= 1 << (ATA_SHIFT_UDMA + 7) },
++	};
++	char *start = *cur, *p = *cur;
++	char *id, *val, *endp;
++	const struct ata_force_param *match_fp = NULL;
++	int nr_matches = 0, i;
++
++	/* find where this param ends and update *cur */
++	while (*p != '\0' && *p != ',')
++		p++;
++
++	if (*p == '\0')
++		*cur = p;
++	else
++		*cur = p + 1;
++
++	*p = '\0';
++
++	/* parse */
++	p = strchr(start, ':');
++	if (!p) {
++		val = strstrip(start);
++		goto parse_val;
++	}
++	*p = '\0';
++
++	id = strstrip(start);
++	val = strstrip(p + 1);
++
++	/* parse id */
++	p = strchr(id, '.');
++	if (p) {
++		*p++ = '\0';
++		force_ent->device = simple_strtoul(p, &endp, 10);
++		if (p == endp || *endp != '\0') {
++			*reason = "invalid device";
++			return -EINVAL;
++		}
++	}
++
++	force_ent->port = simple_strtoul(id, &endp, 10);
++	if (p == endp || *endp != '\0') {
++		*reason = "invalid port/link";
++		return -EINVAL;
++	}
++
++ parse_val:
++	/* parse val, allow shortcuts so that both 1.5 and 1.5Gbps work */
++	for (i = 0; i < ARRAY_SIZE(force_tbl); i++) {
++		const struct ata_force_param *fp = &force_tbl[i];
++
++		if (strncasecmp(val, fp->name, strlen(val)))
++			continue;
++
++		nr_matches++;
++		match_fp = fp;
++
++		if (strcasecmp(val, fp->name) == 0) {
++			nr_matches = 1;
++			break;
++		}
++	}
++
++	if (!nr_matches) {
++		*reason = "unknown value";
++		return -EINVAL;
++	}
++	if (nr_matches > 1) {
++		*reason = "ambigious value";
++		return -EINVAL;
++	}
++
++	force_ent->param = *match_fp;
++
++	return 0;
++}
++
++static void __init ata_parse_force_param(void)
++{
++	int idx = 0, size = 1;
++	int last_port = -1, last_device = -1;
++	char *p, *cur, *next;
++
++	/* calculate maximum number of params and allocate force_tbl */
++	for (p = ata_force_param_buf; *p; p++)
++		if (*p == ',')
++			size++;
++
++	ata_force_tbl = kzalloc(sizeof(ata_force_tbl[0]) * size, GFP_KERNEL);
++	if (!ata_force_tbl) {
++		printk(KERN_WARNING "ata: failed to extend force table, "
++		       "libata.force ignored\n");
++		return;
++	}
++
++	/* parse and populate the table */
++	for (cur = ata_force_param_buf; *cur != '\0'; cur = next) {
++		const char *reason = "";
++		struct ata_force_ent te = { .port = -1, .device = -1 };
++
++		next = cur;
++		if (ata_parse_force_one(&next, &te, &reason)) {
++			printk(KERN_WARNING "ata: failed to parse force "
++			       "parameter \"%s\" (%s)\n",
++			       cur, reason);
++			continue;
++		}
++
++		if (te.port == -1) {
++			te.port = last_port;
++			te.device = last_device;
++		}
++
++		ata_force_tbl[idx++] = te;
++
++		last_port = te.port;
++		last_device = te.device;
++	}
++
++	ata_force_tbl_size = idx;
++}
+ 
+ static int __init ata_init(void)
+ {
+ 	ata_probe_timeout *= HZ;
++
++	ata_parse_force_param();
++
+ 	ata_wq = create_workqueue("ata");
+ 	if (!ata_wq)
+ 		return -ENOMEM;
+@@ -7407,6 +7779,7 @@ static int __init ata_init(void)
+ 
+ static void __exit ata_exit(void)
+ {
++	kfree(ata_force_tbl);
+ 	destroy_workqueue(ata_wq);
+ 	destroy_workqueue(ata_aux_wq);
+ }
+diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
+index 4e31071..698ce2c 100644
+--- a/drivers/ata/libata-eh.c
++++ b/drivers/ata/libata-eh.c
+@@ -2393,9 +2393,11 @@ static int ata_eh_revalidate_and_attach(struct ata_link *link,
+ 	}
+ 
+ 	/* PDIAG- should have been released, ask cable type if post-reset */
+-	if (ata_is_host_link(link) && ap->ops->cable_detect &&
+-	    (ehc->i.flags & ATA_EHI_DID_RESET))
+-		ap->cbl = ap->ops->cable_detect(ap);
++	if ((ehc->i.flags & ATA_EHI_DID_RESET) && ata_is_host_link(link)) {
++		if (ap->ops->cable_detect)
++			ap->cbl = ap->ops->cable_detect(ap);
++		ata_force_cbl(ap);
++	}
+ 
+ 	/* Configure new devices forward such that user doesn't see
+ 	 * device detection messages backwards.
+diff --git a/drivers/ata/libata.h b/drivers/ata/libata.h
+index 409ffb9..6036ded 100644
+--- a/drivers/ata/libata.h
++++ b/drivers/ata/libata.h
+@@ -61,6 +61,7 @@ extern int atapi_passthru16;
+ extern int libata_fua;
+ extern int libata_noacpi;
+ extern int libata_allow_tpm;
++extern void ata_force_cbl(struct ata_port *ap);
+ extern struct ata_queued_cmd *ata_qc_new_init(struct ata_device *dev);
+ extern int ata_build_rw_tf(struct ata_taskfile *tf, struct ata_device *dev,
+ 			   u64 block, u32 n_block, unsigned int tf_flags,
