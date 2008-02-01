@@ -1,55 +1,78 @@
-From: Paul Mundt <lethal@linux-sh.org>
-Subject: Re: [PATCH 2/2 v3] sata_mv: Support SoC controllers
-Date: Sat, 2 Feb 2008 03:15:57 +0900
-Message-ID: <20080201181557.GA5999@linux-sh.org>
-References: <1201733446499-git-send-email-saeed.bishara@gmail.com> <12017334492566-git-send-email-saeed.bishara@gmail.com> <47A34E8A.6020007@garzik.org>
+From: Kiyoshi Ueda <k-ueda@ct.jp.nec.com>
+Subject: Re: kernel BUG at ide-cd.c:1726 in 2.6.24-03863-g0ba6c33 &&
+ -g8561b089
+Date: Fri, 01 Feb 2008 14:37:41 -0500 (EST)
+Message-ID: <20080201.143741.104030452.k-ueda@ct.jp.nec.com>
+References: <20080201075117.GC4500@gollum.tnic>
+	<20080201.123927.71085228.k-ueda@ct.jp.nec.com>
+	<20080201182909.GA7837@gollum.tnic>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: Text/Plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from pip15.gyao.ne.jp ([61.122.117.253]:18498 "EHLO mx.gate01.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1753414AbYBASsP (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 1 Feb 2008 13:48:15 -0500
-Content-Disposition: inline
-In-Reply-To: <47A34E8A.6020007@garzik.org>
+Received: from mx1.redhat.com ([66.187.233.31]:38512 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753845AbYBATiz (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 1 Feb 2008 14:38:55 -0500
+In-Reply-To: <20080201182909.GA7837@gollum.tnic>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: saeed.bishara@gmail.com, linux-ide@vger.kernel.org, saeed@marvell.com, htejun@gmail.com, liml@rtr.ca, Saeed Bishara <saeed@il.marvell.com>
+To: petkovbb@gmail.com, petkovbb@googlemail.com
+Cc: jens.axboe@oracle.com, nai.xia@gmail.com, rdreier@cisco.com, bzolnier@gmail.com, flo@rfc822.org, linux-kernel@vger.kernel.org, j-nomura@ce.jp.nec.com, linux-ide@vger.kernel.org, k-ueda@ct.jp.nec.com
 
-On Fri, Feb 01, 2008 at 11:53:30AM -0500, Jeff Garzik wrote:
-> saeed.bishara@gmail.com wrote:
-> >--- /dev/null
-> >+++ b/include/linux/sata_mv.h
-> >@@ -0,0 +1,21 @@
-> >+/*
-> >+ * Marvell integrated SATA platfrom device data definition file.
-> >+ *
-> >+ * Saeed Bishara <saeed@marvell.com>
-> >+ *
-> >+ * This file is licensed under the terms of the GNU General Public
-> >+ * License version 2. This program is licensed "as is" without any
-> >+ * warranty of any kind, whether express or implied.
-> >+ */
-> >+
-> >+#ifndef __LINUX_SATA_MV_H__
-> >+#define __LINUX_SATA_MV_H__
-> >+
-> >+/*
-> >+ * Sata private data
-> >+ */
-> >+struct mv_sata_platform_data {
-> >+	int	n_ports; /* number of sata ports */
-> >+};
-> >+
-> >+#endif
+Hi Boris,
+
+On Fri, 1 Feb 2008 19:29:09 +0100, Borislav Petkov wrote:
+> > > > end_that_request_last() is not called when __blk_end_reuqest()
+> > > > returns 1.  Then, the issuer isn't waken up.
+> > > > So I think the BUG() or error messages should be there.
+> > > 
+> > > you mean, end_that_request_last() isn't called when __end_that_request_first()
+> > > returns an error and this is the case only for fs and pc requests.
+> > > Otherwise it _is_ called, thus simulating somewhat the previous behavior.
+> > > However, we never BUG()'ged on residual byte counts before and
+> > > this driver has been in the kernel tree for ages, so what puzzles
+> > > me now is how is BUG()'ing here better than before and shouldn't we
+> > > simply issue a warning instead of killing the interrupt handler...
+> > 
+> > The Jens' patch passes the residual byte counts to __blk_end_request(),
+> > so __end_that_reqeust_first() should never return 1 and we should never
+> > BUG() on the residual byte counts, unless inconsistency happens such as
+> > the size of remaining bios is bigger than the residual byte counts.
 > 
-> Overall, the patch is OK, but I fear adding way too many of these tiny 
-> includes, for each platform.
+> yep.
 > 
-> Unless Paul M objects (pata_platform maintainer), I will rename 
-> linux/pata_platform.h to linux/ata_platform.h, and we can put your 
-> mv_sata_platform_data structure in there.
+> > So if __blk_end_request() returns 1 even with the Jens' patch,
+> > it means that the block layer or the driver really have a bug.
+> > And then, the request and the bios could leak or the issuer
+> > would wait forever because end_that_request_last() isn't called.
+> > 
+> > The previous behavior might ignore such inconsistency and leak only
+> > the bios because it was calling end_that_request_last() anyway.
+> > I would like to BUG() in such cases personally, but I don't object
+> > strongly if you prefer not to BUG().
 > 
-No objections from me, feel free to make the best use you can out of
-what's there.
+> BUG() is definitely what we should do here to catch this case of sizeof(bios) >
+> rq->data_len. Putting a brown paper bag over the issue will never get it fixed
+> if it really leaks bios. Thanks for clarifying that.
+> 
+> By the way, shouldn't we be doing a little branch prediction here:
+> 
+> diff --git a/drivers/ide/ide-cd.c b/drivers/ide/ide-cd.c
+> index 74c6087..bee05a3 100644
+> --- a/drivers/ide/ide-cd.c
+> +++ b/drivers/ide/ide-cd.c
+> @@ -1722,7 +1722,7 @@ static ide_startstop_t cdrom_newpc_intr(ide_drive_t *drive)
+>          */
+>         if ((stat & DRQ_STAT) == 0) {
+>                 spin_lock_irqsave(&ide_lock, flags);
+> -               if (__blk_end_request(rq, 0, 0))
+> +               if (unlikely(__blk_end_request(rq, 0, rq->data_len)))
+>                         BUG();
+>                 HWGROUP(drive)->rq = NULL;
+>                 spin_unlock_irqrestore(&ide_lock, flags);
+
+I think it's reasonable.
+
+Thanks,
+Kiyoshi Ueda
