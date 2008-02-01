@@ -1,128 +1,39 @@
-From: Borislav Petkov <petkovbb@googlemail.com>
-Subject: Re: [PATCH 0/32] ide-tape redux v1
-Date: Fri, 1 Feb 2008 09:21:52 +0100
-Message-ID: <20080201082152.GE4500@gollum.tnic>
-References: <1201423312-2460-1-git-send-email-bbpetkov@yahoo.de> <200801272045.40712.bzolnier@gmail.com> <20080128054343.GB3074@gollum.tnic> <200801300129.56003.bzolnier@gmail.com>
-Reply-To: petkovbb@gmail.com
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: About forcing 32bit DMA patch for AMD690G(SB600)
+Date: Fri, 01 Feb 2008 17:23:47 +0900
+Message-ID: <47A2D713.1010203@gmail.com>
+References: <B90463BC30D2E446BA423D888DC85E501BF3CB@sshaexmb1.amd.com> <47992BA3.3070104@gmail.com> <76366b180801242019h382fd604vd1458dab8b64dd4c@mail.gmail.com> <4799788E.1030600@gmail.com> <76366b180801251707j7b892d6w83fcf3560426aa19@mail.gmail.com> <B90463BC30D2E446BA423D888DC85E5020F102@sshaexmb1.amd.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from an-out-0708.google.com ([209.85.132.244]:60369 "EHLO
+Received: from an-out-0708.google.com ([209.85.132.248]:62936 "EHLO
 	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753270AbYBAIWp (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 1 Feb 2008 03:22:45 -0500
-Received: by an-out-0708.google.com with SMTP id d31so248811and.103
-        for <linux-ide@vger.kernel.org>; Fri, 01 Feb 2008 00:22:44 -0800 (PST)
-Content-Disposition: inline
-In-Reply-To: <200801300129.56003.bzolnier@gmail.com>
+	with ESMTP id S1753587AbYBAIXz (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 1 Feb 2008 03:23:55 -0500
+Received: by an-out-0708.google.com with SMTP id d31so248874and.103
+        for <linux-ide@vger.kernel.org>; Fri, 01 Feb 2008 00:23:53 -0800 (PST)
+In-Reply-To: <B90463BC30D2E446BA423D888DC85E5020F102@sshaexmb1.amd.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: Shane Huang <Shane.Huang@amd.com>
+Cc: Andrew Paprocki <andrew@ishiboo.com>, sriharivijayaraghavan@yahoo.com.au, linux-ide@vger.kernel.org
 
-On Wed, Jan 30, 2008 at 01:29:55AM +0100, Bartlomiej Zolnierkiewicz wro=
-te:
-> On Monday 28 January 2008, Borislav Petkov wrote:
-> > Hi Bart,
-> >=20
-> > [...]
-> >=20
-> > > > the BKL in idetape_write_release() with finer-grained locking e=
-tc, probably also
-> > > > some pipeline improvements, removal of OnStream support, etc. b=
-ut that'll come
-> > > > later.
-> > >=20
-> > > On-Stream support has been long gone but it seems that deprecatio=
-n
-> > > warning etc. managed to survive.
-> > >=20
-> > > w.r.t. to the pipeline-mode: it should be pipelined into /dev/nul=
-l
-> > >=20
-> > > rationale:
-> > > - it is _very_ complex
-> > > - causes errors to be deferred till the next user-space access
-> > > - direct I/O using blk_rq_map_user() will offer superior performa=
-nce
-> > >=20
-> > > the only question is whether to remove it...
-> >=20
-> > Well, on the one hand, since the driver is only being maintained we=
- should not
-> > remove code that works. Also, i don't know how many users ide-tape =
-really has
-> > but, would it be worth the trouble at all? Because if nobody's usin=
-g it, we
-> > could just as well pipe the whole thing into /dev/null.. On the oth=
-er hand, the
->=20
-> This may be the other alternative... [ there is always libata PATA...=
- ]
->=20
-> If you want to give ide-tape removal a try, go ahead (I suggest start=
-ing
-> with adding warning printk() and keeping patch in -mm for some time).=
-=2E.
+Shane Huang wrote:
+> As Tejun mentioned, the test result on my SB600 engineering board
+> (RS690 A12 +SB600 A21) is a little different from the result of Srihari.
+> But I do not have other SB600 boards especially ASUS M2A-VM to do
+> further debug. So if you can provide us your test result, that's really
+> good.
 
-Well, we don't have any numbers on whether someone is using the driver =
-at all,
-so i probably the best thing we should do is give it a grace period of =
-1/2 year
-before we get rid of it. In the meantime, let's see how many souls cry =
-out :)
+My 5 cents: Just order the board.  These stock PC hardware are too cheap
+these days, it doesn't make any sense to try to debug somewhat difficult
+problem remotely if the hardware is available on the market.  Even if
+you have to spend your own money, it will be money well spent compared
+to the time and effort you'll have to spend in comparison - hardware is
+just too cheap.
 
----
-commit 5b4566d1ed9b050d53d776285da84f8c3cc13d2c
-Author: Borislav Petkov <petkovbb@gmail.com>
-Date:   Fri Feb 1 09:12:02 2008 +0100
+Thanks.
 
-    ide-tape: schedule driver for removal after 6 months in case it doe=
-sn't have
-    any users left.
-
-    Signed-off-by: Borislav Petkov <petkovbb@gmail.com>
-
-diff --git a/Documentation/feature-removal-schedule.txt b/Documentation=
-/feature-removal-schedule.txt
-index 20c4c8b..21d71a9 100644
---- a/Documentation/feature-removal-schedule.txt
-+++ b/Documentation/feature-removal-schedule.txt
-@@ -333,3 +333,13 @@ Why:	This driver has been marked obsolete for many=
- years.
- Who:	Stephen Hemminger <shemminger@linux-foundation.org>
-=20
- ---------------------------
-+
-+What:	ide-tape driver
-+When:	July 2008
-+Files:	drivers/ide/ide-tape.c
-+Why:	This driver might not have any users anymore and maintaining it f=
-or no
-+	reason is an effort no one wants to make.
-+Who:	Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Borislav Petkov
-+	<petkovbb@googlemail.com>
-+
-+---------------------------
-diff --git a/drivers/ide/ide-tape.c b/drivers/ide/ide-tape.c
-index f51712c..fd81f4c 100644
---- a/drivers/ide/ide-tape.c
-+++ b/drivers/ide/ide-tape.c
-@@ -3829,6 +3829,11 @@ static int ide_tape_probe(ide_drive_t *drive)
- 	g->fops =3D &idetape_block_ops;
- 	ide_register_region(g);
-=20
-+	printk(KERN_WARNING "It is possible that this driver does not have an=
-y"
-+		" users anymore and, as a result, it will be REMOVED soon."
-+		" Please notify Bart <bzolnier@gmail.com> or Boris"
-+		" <petkovbb@gmail.com> in case you still need it.\n");
-+
- 	return 0;
-=20
- out_free_tape:
-
---=20
-Regards/Gru=DF,
-    Boris.
+-- 
+tejun
