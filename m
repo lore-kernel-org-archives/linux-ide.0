@@ -1,57 +1,41 @@
-From: Bodo Eggert <7eggert@gmx.de>
-Subject: Re: [PATCH] ide-core: remove conditional compiling with MODULE in ide-core.c
-Date: Sat, 02 Feb 2008 19:58:15 +0100
-Message-ID: <E1JLNZ9-0000iB-G8@be1.7eggert.dyndns.org>
-References: <9Slso-6q4-5@gated-at.bofh.it>
-Reply-To: 7eggert@gmx.de
+From: Olof Johansson <olof@lixom.net>
+Subject: Re: [PATCH 3/3 2.6.24-git] PPC/LIBATA: Select HAVE_PATA_PLATFORM
+	for ARCH_PPC
+Date: Sat, 2 Feb 2008 13:12:39 -0600
+Message-ID: <20080202191239.GA29039@lixom.net>
+References: <20080202162133.678366209@fluff.org.uk> <20080202162232.212855590@fluff.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.126.179]:54612 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752154AbYBBS6X (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 2 Feb 2008 13:58:23 -0500
+Received: from lixom.net ([66.141.50.11]:37749 "EHLO mail.lixom.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754026AbYBBTME (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 2 Feb 2008 14:12:04 -0500
+Content-Disposition: inline
+In-Reply-To: <20080202162232.212855590@fluff.org.uk>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Denis Cheng <crquan@gmail.com>, linux-kernel@vger.kernel.org, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-ide@vger.kernel.org
+To: Ben Dooks <ben-linux@fluff.org>
+Cc: linux-ide@vger.kernel.org, jeff@garzik.org, htejun@gmail.com, linuxppc-dev@ozlabs.org
 
-Denis Cheng <crquan@gmail.com> wrote:
+On Sat, Feb 02, 2008 at 04:21:36PM +0000, Ben Dooks wrote:
+> Use the new HAVE_PATA_PLATFORM to select PATA_PLATFORM
+> driver.
+> 
+> CC: linuxppc-dev@ozlabs.org
+> Signed-off-by: Ben Dooks <ben-linux@fluff.org>
 
-> use module_init/module_exit to replace the original cond-compiling, t=
-hese
-> macros were well designed to deal module/built-in compiling.
->=20
-> the original __setup with null string was invalid and not executed,
-> __setup("", ide_setup);
->=20
-> however, with the current module_param mechanics, module parameters a=
-lso can
-> be input on the kernel command line, with this style:
->=20
-> ide-core.options=3D"ide=3Dnodma hdd=3Dcdrom idebus=3D..."
->=20
-> so Documentation/kernel-parameters.txt also updated.
+What tree is this against? It doesn't apply to current mainline nor
+jgarzik's libata-dev upstream branch.
 
-> --- a/Documentation/kernel-parameters.txt
+Anyway: NACK: I like this approach but this needs to be added to
+arch/powerpc as well.
 
-> -     ide=3D            [HW] (E)IDE subsystem
-> -                     Format: ide=3Dnodma or ide=3Ddoubler or ide=3Dr=
-everse
-> -                     See Documentation/ide.txt.
-> -
-> -     ide?=3D           [HW] (E)IDE subsystem
-> -                     Format: ide?=3Dnoprobe or chipset specific para=
-meters.
-> -                     See Documentation/ide.txt.
-> -
-> -     idebus=3D         [HW] (E)IDE subsystem - VLB/PCI bus speed
-> +     ide-core.options=3D [HW] (E)IDE subsystem
-> +                     Format: ide-core.options=3D"ide=3Dnodma hdd=3Dc=
-drom idebus=3D..."
+It's actually more needed there than arch/ppc, I don't personally care
+if arch/ppc can't use pata_platform for the last couple of months it's
+still around (it's getting deleted this summer, all platforms should
+have moved to powerpc by then).
 
-IMO you should use separate options for things like nodma while you're =
-at it.
 
-=A2=A2
+-Olof
 
