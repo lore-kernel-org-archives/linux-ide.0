@@ -1,36 +1,47 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: SiI 3512 Serial ATA Controller - kernel 2.6.23
-Date: Sat, 02 Feb 2008 12:04:50 +0900
-Message-ID: <47A3DDD2.2010600@gmail.com>
-References: <Pine.LNX.4.63.0801222230470.4758@crystal.rdstm.ro> <47965AA7.4080703@garzik.org> <Pine.LNX.4.63.0801231244040.28840@crystal.rdstm.ro>
+From: "Shane Huang" <Shane.Huang@amd.com>
+Subject: RE: About forcing 32bit DMA patch for AMD690G(SB600)
+Date: Sat, 2 Feb 2008 12:04:04 +0800
+Message-ID: <B90463BC30D2E446BA423D888DC85E5020F617@sshaexmb1.amd.com>
+References: <B90463BC30D2E446BA423D888DC85E501BF3CB@sshaexmb1.amd.com>
+ <47992BA3.3070104@gmail.com>
+ <76366b180801242019h382fd604vd1458dab8b64dd4c@mail.gmail.com>
+ <4799788E.1030600@gmail.com>
+ <76366b180801251707j7b892d6w83fcf3560426aa19@mail.gmail.com>
+ <B90463BC30D2E446BA423D888DC85E5020F102@sshaexmb1.amd.com>
+ <47A2D713.1010203@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+ charset=us-ascii
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rv-out-0910.google.com ([209.85.198.184]:28538 "EHLO
-	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758012AbYBBDE5 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 1 Feb 2008 22:04:57 -0500
-Received: by rv-out-0910.google.com with SMTP id k20so950079rvb.1
-        for <linux-ide@vger.kernel.org>; Fri, 01 Feb 2008 19:04:56 -0800 (PST)
-In-Reply-To: <Pine.LNX.4.63.0801231244040.28840@crystal.rdstm.ro>
+Received: from outbound-sin.frontbridge.com ([207.46.51.80]:13208 "EHLO
+	outbound5-sin-R.bigfish.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751497AbYBBEKX convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 1 Feb 2008 23:10:23 -0500
+Content-class: urn:content-classes:message
+In-Reply-To: <47A2D713.1010203@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Dan Nica <timi@crystal.rdstm.ro>
-Cc: Jeff Garzik <jeff@garzik.org>, linux-kernel@vger.kernel.org, Linux IDE mailing list <linux-ide@vger.kernel.org>
+To: Tejun Heo <htejun@gmail.com>
+Cc: Andrew Paprocki <andrew@ishiboo.com>, sriharivijayaraghavan@yahoo.com.au, linux-ide@vger.kernel.org, Shane Huang <Shane.Huang@amd.com>
 
-Dan Nica wrote:
-> those errors apears only when I use the harddrives with
-> the sii controller and only when I make operation between
-> the onboard sata and the sii sata controller, operations between 
-> ide and drives that are on sii works perfectly...
+Dear Tejun:
 
-Hmm.. Your drive is raising ABRT on writes.  It can point to a number of
-things including media access error and transmission error.  It's
-basically a catch-all bit.  In the log, libata EH slowed down the device
-to udma33 without any effect so I don't think it's transmission error
-caused by cable misdetection or miswiring (mid connector connected to
-the only drive on the cable).  What does 'smartctl -a' say about the drive?
+ 
+> My 5 cents: Just order the board.  These stock PC hardware 
+> are too cheap
+> these days, it doesn't make any sense to try to debug 
+> somewhat difficult
+> problem remotely if the hardware is available on the market.  Even if
+> you have to spend your own money, it will be money well spent compared
+> to the time and effort you'll have to spend in comparison - 
+> hardware is just too cheap.
 
--- 
-tejun
+Yes you are right, we are trying to get one ASUS M2A-VM board.
+
+
+Thanks
+Shane
+
+
