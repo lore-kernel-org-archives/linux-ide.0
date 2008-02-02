@@ -1,161 +1,65 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [PATCH 7/8] ide: add struct ide_port_info instances to legacy host drivers
-Date: Sat, 2 Feb 2008 00:35:30 +0100
-Message-ID: <200802020035.30918.bzolnier@gmail.com>
-References: <20080106170220.6861.4814.sendpatchset@localhost.localdomain> <20080106170310.6861.14522.sendpatchset@localhost.localdomain> <479E3AEA.5090600@ru.mvista.com>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: [PATCH 5/9] libata: implement and use SHT initializers and ops
+ inheritance
+Date: Sat, 02 Feb 2008 09:06:50 +0900
+Message-ID: <47A3B41A.9020702@gmail.com>
+References: <12016853433196-git-send-email-htejun@gmail.com> <12016853432907-git-send-email-htejun@gmail.com> <47A385E4.5000901@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wr-out-0506.google.com ([64.233.184.233]:49489 "EHLO
-	wr-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759990AbYBAXXA (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 1 Feb 2008 18:23:00 -0500
-Received: by wr-out-0506.google.com with SMTP id c48so1367111wra.23
-        for <linux-ide@vger.kernel.org>; Fri, 01 Feb 2008 15:22:57 -0800 (PST)
-In-Reply-To: <479E3AEA.5090600@ru.mvista.com>
-Content-Disposition: inline
+Received: from rv-out-0910.google.com ([209.85.198.184]:49659 "EHLO
+	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1761544AbYBBAHA (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 1 Feb 2008 19:07:00 -0500
+Received: by rv-out-0910.google.com with SMTP id k20so925208rvb.1
+        for <linux-ide@vger.kernel.org>; Fri, 01 Feb 2008 16:06:57 -0800 (PST)
+In-Reply-To: <47A385E4.5000901@garzik.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Russell King <rmk@arm.linux.org.uk>
+To: Jeff Garzik <jeff@garzik.org>
+Cc: linux-ide@vger.kernel.org, liml@rtr.ca, alan@lxorguk.ukuu.org.uk, kngregertsen@norway.atmel.com, sonic.adi@gmail.com, rmk@dyn-67.arm.linux.org.uk, alessandro.zummo@towertech.it, domen.puncer@telargo.com, akira2.iguchi@toshiba.co.jp, leoli@freescale.com
 
+Jeff Garzik wrote:
+> Two comments:
+> 
+> 1) Please split into SHT and ops patches (SHT first, I presume)
 
-Hi,
+Sure.
 
-On Monday 28 January 2008, Sergei Shtylyov wrote:
-> Hello.
-> 
-> Bartlomiej Zolnierkiewicz wrote:
-> 
-> > * Remove 'struct pci_dev *dev' argument from ide_hwif_setup_dma().
-> 
-> > * Un-static ide_hwif_setup_dma() and add CONFIG_BLK_DEV_IDEDMA_PCI=n version.
-> 
-> > * Add 'const struct ide_port_info *d' argument to ide_device_add[_all]().
-> 
-> > * Factor out generic ports init from ide_pci_setup_ports() to ide_init_port(),
-> >   move it to ide-probe.c and call it in in ide_device_add_all() instead of
-> >   ide_pci_setup_ports().
-> 
-> > * Move ->mate setup to ide_device_add_all() from ide_port_init().
-> 
-> > * Add IDE_HFLAG_NO_AUTOTUNE host flag for host drivers that don't enable
-> >   ->autotune currently.
-> 
-> > * Setup hwif->chipset in ide_init_port() but iff pi->chipset is set
-> >   (to not override setup done by ide_hwif_configure()).
-> 
-> > * Add ETRAX host handling to ide_device_add_all().
-> 
-> > * cmd640.c: set IDE_HFLAG_ABUSE_* also for CONFIG_BLK_DEV_CMD640_ENHANCED=n.
-> 
-> > * pmac.c: make pmac_ide_setup_dma() return an error value and move DMA masks
-> >   setup to pmac_ide_setup_device().
-> 
-> > * Add 'struct ide_port_info' instances to legacy host drivers, pass them to
-> >   ide_device_add() calls and then remove open-coded ports initialization.
-> 
-> > Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-> 
-> > Index: b/drivers/ide/arm/icside.c
-> > ===================================================================
-> > --- a/drivers/ide/arm/icside.c
-> > +++ b/drivers/ide/arm/icside.c
-> > @@ -459,11 +456,19 @@ icside_register_v5(struct icside_state *
-> >  
-> >  	idx[0] = hwif->index;
-> >  
-> > -	ide_device_add(idx);
-> > +	ide_device_add(idx, NULL);
-> >  
-> >  	return 0;
-> >  }
-> >  
-> > +static const struct ide_port_info icside_v6_port_info __initdata = {
-> > +	.host_flags		= IDE_HFLAG_SERIALIZE |
-> > +				  IDE_HFLAG_NO_DMA | /* no SFF-style DMA */
-> > +				  IDE_HFLAG_NO_AUTOTUNE,
-> > +	.mwdma_mask		= ATA_MWDMA2,
-> > +	.swdma_mask		= ATA_SWDMA2,
-> > +};
-> > +
-> 
->     Interesting... this driver's support for SWDMA0 is broken since the cycle 
-> should be 960 ns long, not 480, and SWDMA2 is underclocked using the same 
-> cycle as SWDMA1, 480 ns...
+> 2) It seems like inheritance would be easier and less error-prone if the
+> ops were copied, rather than modifying the structures in-place.  Comments?
 
-Added Russell to Cc:.
+I thought about making per-port copies on host allocation or host start.
+ The pros of such approach would be...
 
-> > Index: b/drivers/ide/cris/ide-cris.c
-> > ===================================================================
-> > --- a/drivers/ide/cris/ide-cris.c
-> > +++ b/drivers/ide/cris/ide-cris.c
-> > @@ -753,6 +753,15 @@ static void cris_set_dma_mode(ide_drive_
-> >  		cris_ide_set_speed(TYPE_DMA, 0, strobe, hold);
-> >  }
-> >  
-> > +static const struct ide_port_info cris_port_info __initdata = {
-> > +	.chipset		= ide_etrax100,
-> > +	.host_flags		= IDE_HFLAG_NO_ATAPI_DMA |
-> > +				  IDE_HFLAG_NO_DMA, /* no SFF-style DMA */
-> > +	.pio_mask		= ATA_PIO4,
-> > +	.udma_mask		= cris_ultra_mask,
-> 
->     Hm, I wonder which value it will assume, 0x07 or 0?  Not sure even after 
-> looking at the source... :-)
+* LLD's ops table can be made const.
 
-This is tricky since it depends on the CRIS version
-(0x07 on CRIS V32 and 0x00 on CRIS V10).
+* LLD can modify ops table freely after the copying happens.  To take
+advantage of this, host allocation is probably the best place to copy
+the ops tables.
 
-> > +	.mwdma_mask		= ATA_MWDMA2,
-> > +};
-> > +
-> >  static int __init init_e100_ide(void)
-> >  {
-> >  	hw_regs_t hw;
-> > Index: b/drivers/ide/ide-probe.c
-> > ===================================================================
-> > --- a/drivers/ide/ide-probe.c
-> > +++ b/drivers/ide/ide-probe.c
-> > @@ -1289,12 +1289,86 @@ static void hwif_register_devices(ide_hw
-> >  	}
-> >  }
-> >  
-> > -int ide_device_add_all(u8 *idx)
-> > +static void ide_init_port(ide_hwif_t *hwif, unsigned int port,
-> > +			  const struct ide_port_info *d)
-> >  {
-> > -	ide_hwif_t *hwif;
-> > +	if (d->chipset != ide_etrax100)
-> > +		hwif->channel = port;
-> 
->    Hm, what's so special about ide_etrax100?
+Cons are...
 
-The driver supports *4* channels and it didn't set ->channel at all.
+* It changes the way a libata LLD should handle ops table.  The current
+usage model is based on that ops table is used directly and shared and a
+separate table should be defined for different variants.  I think it's
+better to keep the current way and inheritance makes it easy.  This
+almost cancels out the second pro point.
 
-Since in the meantime ide-cris got marked as BROKEN I guess that a patch
-removing above code would be OK.
+* More overhead (doesn't really matter tho).
 
-> > +int ide_device_add_all(u8 idx[MAX_HWIFS], const struct ide_port_info *d)
-> 
->     Function prototype doesn't match with one from <linux/ide.h> which has the 
-> first argument as a pointer...
+I don't see where modifying the ops table in-place is more difficult or
+error-prone.  Only LLD's own ops tables need to drop const and it's not
+like ops tables are directly manipulated by any code other than the
+finalization code.
 
-I fixed it locally, thanks.
+Another thing is that what was needed here was static class inheritance
+and the in-place finalization is run-time variant of inheritance
+resolving done by OO compilers.  I think it's nice to keep that familiar
+semantics.
 
-> > +{
-> > +	ide_hwif_t *hwif, *mate = NULL;
-> >  	int i, rc = 0;
-> >  
-> >  	for (i = 0; i < MAX_HWIFS; i++) {
-> > +		if (d == NULL || idx[i] == 0xff) {
-> 
->     Why check for (d == NULL) every time and not do it once and break from the 
-> loop or even do it before the loop?
+Thanks.
 
-To save on some code lines and resulting code size
-(ide_device_add_all is not performance critical).
-
-Bart
+-- 
+tejun
