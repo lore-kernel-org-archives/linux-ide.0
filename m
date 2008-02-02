@@ -1,58 +1,57 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH] ide-tape: dump gcw fields on error in idetape_identify_device()
-Date: Sat, 2 Feb 2008 19:22:56 +0100
-Message-ID: <200802021922.56703.bzolnier@gmail.com>
+From: Bodo Eggert <7eggert@gmx.de>
+Subject: Re: [PATCH] ide-core: remove conditional compiling with MODULE in ide-core.c
+Date: Sat, 02 Feb 2008 19:58:15 +0100
+Message-ID: <E1JLNZ9-0000iB-G8@be1.7eggert.dyndns.org>
+References: <9Slso-6q4-5@gated-at.bofh.it>
+Reply-To: 7eggert@gmx.de
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.182]:47027 "EHLO
-	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933532AbYBBSZI (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 2 Feb 2008 13:25:08 -0500
-Received: by py-out-1112.google.com with SMTP id u52so2298701pyb.10
-        for <linux-ide@vger.kernel.org>; Sat, 02 Feb 2008 10:25:07 -0800 (PST)
-Content-Disposition: inline
+Received: from moutng.kundenserver.de ([212.227.126.179]:54612 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752154AbYBBS6X (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 2 Feb 2008 13:58:23 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, Borislav Petkov <bbpetkov@yahoo.de>
+To: Denis Cheng <crquan@gmail.com>, linux-kernel@vger.kernel.org, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-ide@vger.kernel.org
 
+Denis Cheng <crquan@gmail.com> wrote:
 
-Cc: Borislav Petkov <bbpetkov@yahoo.de>
-Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
----
-goes before "ide-tape: remove IDETAPE_DEBUG_INFO" patch in IDE quilt tree
+> use module_init/module_exit to replace the original cond-compiling, t=
+hese
+> macros were well designed to deal module/built-in compiling.
+>=20
+> the original __setup with null string was invalid and not executed,
+> __setup("", ide_setup);
+>=20
+> however, with the current module_param mechanics, module parameters a=
+lso can
+> be input on the kernel command line, with this style:
+>=20
+> ide-core.options=3D"ide=3Dnodma hdd=3Dcdrom idebus=3D..."
+>=20
+> so Documentation/kernel-parameters.txt also updated.
 
- drivers/ide/ide-tape.c |   13 +++++++------
- 1 file changed, 7 insertions(+), 6 deletions(-)
+> --- a/Documentation/kernel-parameters.txt
 
-Index: b/drivers/ide/ide-tape.c
-===================================================================
---- a/drivers/ide/ide-tape.c
-+++ b/drivers/ide/ide-tape.c
-@@ -3852,16 +3852,17 @@ static int idetape_identify_device (ide_
- 
- 	/* Check that we can support this device */
- 
--	if (gcw.protocol !=2 )
--		printk(KERN_ERR "ide-tape: Protocol is not ATAPI\n");
-+	if (gcw.protocol != 2)
-+		printk(KERN_ERR "ide-tape: Protocol (0x%02x) is not ATAPI\n",
-+				gcw.protocol);
- 	else if (gcw.device_type != 1)
--		printk(KERN_ERR "ide-tape: Device type is not set to tape\n");
-+		printk(KERN_ERR "ide-tape: Device type (0x%02x) is not set "
-+				"to tape\n", gcw.device_type);
- 	else if (!gcw.removable)
- 		printk(KERN_ERR "ide-tape: The removable flag is not set\n");
- 	else if (gcw.packet_size != 0) {
--		printk(KERN_ERR "ide-tape: Packet size is not 12 bytes long\n");
--		if (gcw.packet_size == 1)
--			printk(KERN_ERR "ide-tape: Sorry, padding to 16 bytes is still not supported\n");
-+		printk(KERN_ERR "ide-tape: Packet size (0x%02x) is not 12 "
-+				"bytes long\n", gcw.packet_size);
- 	} else
- 		return 1;
- 	return 0;
+> -     ide=3D            [HW] (E)IDE subsystem
+> -                     Format: ide=3Dnodma or ide=3Ddoubler or ide=3Dr=
+everse
+> -                     See Documentation/ide.txt.
+> -
+> -     ide?=3D           [HW] (E)IDE subsystem
+> -                     Format: ide?=3Dnoprobe or chipset specific para=
+meters.
+> -                     See Documentation/ide.txt.
+> -
+> -     idebus=3D         [HW] (E)IDE subsystem - VLB/PCI bus speed
+> +     ide-core.options=3D [HW] (E)IDE subsystem
+> +                     Format: ide-core.options=3D"ide=3Dnodma hdd=3Dc=
+drom idebus=3D..."
+
+IMO you should use separate options for things like nodma while you're =
+at it.
+
+=A2=A2
+
