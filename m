@@ -1,13 +1,13 @@
 From: Ben Dooks <ben-linux@fluff.org>
 Subject: [PATCH 1/3 2.6.24-git] LIBATA: Add HAVE_PATA_PLATFORM to select PATA_PLATFORM driver
-Date: Sat, 02 Feb 2008 16:21:34 +0000
-Message-ID: <20080202162231.863337543@fluff.org.uk>
-References: <20080202162133.678366209@fluff.org.uk>
+Date: Sat, 02 Feb 2008 16:16:37 +0000
+Message-ID: <20080202161756.340973237@fluff.org.uk>
+References: <20080202161636.269848721@fluff.org.uk>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from 87-194-8-8.bethere.co.uk ([87.194.8.8]:60246 "EHLO
+Received: from 87-194-8-8.bethere.co.uk ([87.194.8.8]:60248 "EHLO
 	kira.home.fluff.org" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751173AbYBBQes (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 2 Feb 2008 11:34:48 -0500
+	with ESMTP id S1751197AbYBBQew (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 2 Feb 2008 11:34:52 -0500
 Content-Disposition: inline; filename=libata-pata-kconfig.patch
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
