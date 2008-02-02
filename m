@@ -1,46 +1,58 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH] ide-scsi: remove needless SELECT_DRIVE() call
-Date: Sat, 2 Feb 2008 19:06:33 +0100
-Message-ID: <200802021906.33277.bzolnier@gmail.com>
+Subject: [PATCH] ide-tape: dump gcw fields on error in idetape_identify_device()
+Date: Sat, 2 Feb 2008 19:22:56 +0100
+Message-ID: <200802021922.56703.bzolnier@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
   charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ag-out-0708.google.com ([72.14.246.242]:63281 "EHLO
-	ag-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933510AbYBBSZH (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 2 Feb 2008 13:25:07 -0500
-Received: by ag-out-0708.google.com with SMTP id 35so298072aga.10
-        for <linux-ide@vger.kernel.org>; Sat, 02 Feb 2008 10:25:06 -0800 (PST)
+Received: from py-out-1112.google.com ([64.233.166.182]:47027 "EHLO
+	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933532AbYBBSZI (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 2 Feb 2008 13:25:08 -0500
+Received: by py-out-1112.google.com with SMTP id u52so2298701pyb.10
+        for <linux-ide@vger.kernel.org>; Sat, 02 Feb 2008 10:25:07 -0800 (PST)
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, Borislav Petkov <bbpetkov@yahoo.de>
 
 
-SELECT_DRIVE() is called by IDE core code in start_request() before device
-driver's ->do_request method.  In ide-scsi case ->do_request is implemented
-by idescsi_do_request() which is also the only user of idescsi_issue_pc().
-
+Cc: Borislav Petkov <bbpetkov@yahoo.de>
 Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 ---
-goes before "ide: unexport SELECT_DRIVE()" patch in IDE quilt tree
+goes before "ide-tape: remove IDETAPE_DEBUG_INFO" patch in IDE quilt tree
 
- drivers/scsi/ide-scsi.c |    2 --
- 1 file changed, 2 deletions(-)
+ drivers/ide/ide-tape.c |   13 +++++++------
+ 1 file changed, 7 insertions(+), 6 deletions(-)
 
-Index: b/drivers/scsi/ide-scsi.c
+Index: b/drivers/ide/ide-tape.c
 ===================================================================
---- a/drivers/scsi/ide-scsi.c
-+++ b/drivers/scsi/ide-scsi.c
-@@ -588,8 +588,6 @@ static ide_startstop_t idescsi_issue_pc 
- 		hwif->sg_mapped = 0;
- 	}
+--- a/drivers/ide/ide-tape.c
++++ b/drivers/ide/ide-tape.c
+@@ -3852,16 +3852,17 @@ static int idetape_identify_device (ide_
  
--	SELECT_DRIVE(drive);
--
- 	ide_pktcmd_tf_load(drive, IDE_TFLAG_NO_SELECT_MASK, bcount, dma);
+ 	/* Check that we can support this device */
  
- 	if (dma)
+-	if (gcw.protocol !=2 )
+-		printk(KERN_ERR "ide-tape: Protocol is not ATAPI\n");
++	if (gcw.protocol != 2)
++		printk(KERN_ERR "ide-tape: Protocol (0x%02x) is not ATAPI\n",
++				gcw.protocol);
+ 	else if (gcw.device_type != 1)
+-		printk(KERN_ERR "ide-tape: Device type is not set to tape\n");
++		printk(KERN_ERR "ide-tape: Device type (0x%02x) is not set "
++				"to tape\n", gcw.device_type);
+ 	else if (!gcw.removable)
+ 		printk(KERN_ERR "ide-tape: The removable flag is not set\n");
+ 	else if (gcw.packet_size != 0) {
+-		printk(KERN_ERR "ide-tape: Packet size is not 12 bytes long\n");
+-		if (gcw.packet_size == 1)
+-			printk(KERN_ERR "ide-tape: Sorry, padding to 16 bytes is still not supported\n");
++		printk(KERN_ERR "ide-tape: Packet size (0x%02x) is not 12 "
++				"bytes long\n", gcw.packet_size);
+ 	} else
+ 		return 1;
+ 	return 0;
