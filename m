@@ -1,53 +1,121 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: excess timeouts accessing pci-sata card both ports
-Date: Sat, 02 Feb 2008 14:11:43 +0900
-Message-ID: <47A3FB8F.4060103@gmail.com>
-References: 00801240919.2173@centrum.cz> <200801240919.2173@centrum.cz> <200801242359.10655@centrum.cz> <200801250037.4195@centrum.cz> <200801250055.9430@centrum.cz>
+From: "Anantha Subramanyam" <ananth@broadcom.com>
+Subject: RE: [PATCH 2.6.23.11]: [sata_svw]: Add ATAPI DMA support for
+ HT1x00 SATA controller
+Date: Fri, 1 Feb 2008 19:11:31 -0800
+Message-ID: <03235919BBDE634289BB6A0758A20B360352AC8D@NT-SJCA-0751.brcm.ad.broadcom.com>
+References: <03235919BBDE634289BB6A0758A20B3602F39355@NT-SJCA-0751.brcm.ad.broadcom.com>
+ <47A3B9C0.4000309@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1250
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+ charset=us-ascii
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rv-out-0910.google.com ([209.85.198.187]:62818 "EHLO
-	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932129AbYBBFLw (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 2 Feb 2008 00:11:52 -0500
-Received: by rv-out-0910.google.com with SMTP id k20so966753rvb.1
-        for <linux-ide@vger.kernel.org>; Fri, 01 Feb 2008 21:11:51 -0800 (PST)
-In-Reply-To: <200801250055.9430@centrum.cz>
+Received: from mms1.broadcom.com ([216.31.210.17]:1454 "EHLO mms1.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755975AbYBBFMi convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 2 Feb 2008 00:12:38 -0500
+Content-class: urn:content-classes:message
+In-Reply-To: <47A3B9C0.4000309@garzik.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: drtyc@centrum.cz
+To: Jeff Garzik <jeff@garzik.org>
 Cc: linux-ide@vger.kernel.org
 
-drtyc@centrum.cz wrote:
-> Removed 3 drives. Both data and power.
-> Left only port1 connected
-> It's the drive and power cable that in the first test was port2 failing
-> and in second test was port1 and ok
-> both cards plugged in and initialized.
-> third test it's the port1 alone sda working ok
-> fourth test it's the port2 alone sda failing.
-> 
-> any idea what's wrong as this does not seem to be power related problem.
-> 
-> vanilla 2.6.23.14
-> sata_via module... details in the inlined emails.
-> 
-> (4th test config)
-> ata1: SATA link down (SStatus 0 SControl 310)
-> ata2: SATA link up 1.5 Gbps (SStatus 113 SControl 310)
-> ata4: SATA link down (SStatus 0 SControl 310)
-> ata5: SATA link down (SStatus 0 SControl 310)
-> 
-> Faulty card? Both cards? Driver bug? Or design bug/incompatibility on second port?
+ 
 
-It seems like you're experiencing transmission problems on reads.
-SError value of 0x3000400 is Protocol Error, Link Sequence Error and
-Transport State Transition Error.  Hardresetting the link should usually
-recover from such conditions but error handling on via has never been
-reliable.  How easily can you trigger the problem?
+> 
+> Thanks much for your patience.  Feedback:
+> 
+. 
+. 
+. 
+> > -	static int printed_version;
+> > +	static int printed_version = 0;
+>
+Thanks for the detailed feedback, will take care of points raised above.
+ 
+> 
+> 3) we try _very_ hard to avoid all dependencies on the state 
+> produced by 
+> BIOS.  The three main reasons:
+> 
+> 	a) the driver may be used on non-x86 platforms, where
+> 	   x86 BIOS code simply cannot be executed
+> 
+> 	b) during suspend/resume, the driver must be able to
+> 	   initialize the controller fully after transition
+> 	   from PCI D3 to PCI D0
+> 
+> 	c) PCI controller hotplug
+> 
+> Thus, I would like to avoid the need for the 'skip_init' module 
+> parameter.  Users and automated Linux install tools will be 
+> completely 
+> unaware of skip_init, and will not have enough knowledge to 
+> use it.  It 
+> is best to simply Do The Right Thing in all cases.
+> 
+Can be left out, but the reasoning behind this was :
+1. For our embedded customers who spin their own kernels, this code was
+meant to be a placeholder to optimize the pre-emphasis etc values as
+needed.
+2. Default was left as BIOS controlled for the customers who use
+standard linux distributions but will always have BIOS to optimize these
+values.
 
-Thanks.
+Good point about the hotplus, but this controller is part of the
+motherboard chipset so hotplug should not be an issue.
 
--- 
-tejun
+
+> 
+> 4) don't use udelay/mdelay when you can sleep:
+> 
+> > +inline void k2_lnx_sleep( u32 usec_delay)
+> > +{
+> > +    (usec_delay > 1000) ? mdelay(usec_delay/1000 + 1):
+> > udelay(usec_delay);
+> > +}
+> 
+> 
+> 5) is it reasonable to use QDMA for ATA also?
+> 
+Yes QDMA could be used for ATA also. Due to time considerations plan to
+do this at a later stage, currently the brunt of the patch is aimed at
+providing DMA support for ATAPI devices by working around a busmaster
+issue with ATAPI. 
+
+> 
+> 6) use spin_lock() rather than spin_lock_irqsave() in 
+> k2_ht1x_interrupt().  You're not competing with other 
+> interrupts AFAICS.
+> 
+Interrupt could come from other ports before completing processing for
+the currently interrupting ports, or am I missing something. Based this
+function on the current generic handler ata_interrupt.
+
+> 
+> 7) in k2_ht1x_qdma_intr(), ap->hsm_task_state generally refers to PIO 
+> state.  ditto for the use of ata_hsm_move() in 
+> k2_ht1x_handle_qdma_error().
+> 
+> Can you explain the need, there?
+> 
+Maybe I misunderstood the code, but k2_ht1x_qdma_intr was based on
+ata_host_intr.
+
+> It is more likely that you should override ->qc_issue and 
+> handle things 
+> at a top level, rather than overriding specific pieces of the 
+> ATAPI host 
+> state machine.  The HSM was not really designed to be 
+> overridden piecemeal.
+> 
+> 
+Related to #5 above. Had considered it, but could not see a way to
+override qc_issue without affecting the ATA interface. Suggestions ?
+ 
+
+Thanks again.
+
+-Ananth
+
