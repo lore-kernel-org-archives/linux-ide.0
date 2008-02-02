@@ -1,9 +1,9 @@
 From: Ben Dooks <ben-linux@fluff.org>
 Subject: [PATCH 2/3 2.6.24-git] ARM/RPC: Use HAVE_PATA_PLATFORM to select pata
 	platform driver
-Date: Sat, 02 Feb 2008 16:16:38 +0000
-Message-ID: <20080202161756.505881942@fluff.org.uk>
-References: <20080202161636.269848721@fluff.org.uk>
+Date: Sat, 02 Feb 2008 16:21:35 +0000
+Message-ID: <20080202162232.016724531@fluff.org.uk>
+References: <20080202162133.678366209@fluff.org.uk>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
