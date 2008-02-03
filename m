@@ -1,61 +1,43 @@
-From: Olof Johansson <olof@lixom.net>
-Subject: Re: [PATCH 3/3 2.6.24-git] PPC/LIBATA: Select HAVE_PATA_PLATFORM
-	for ARCH_PPC
-Date: Sat, 2 Feb 2008 18:23:43 -0600
-Message-ID: <20080203002343.GA1372@lixom.net>
-References: <20080202162133.678366209@fluff.org.uk> <20080202162232.212855590@fluff.org.uk> <20080202191239.GA29039@lixom.net> <20080202194102.GJ26792@trinity.fluff.org>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [BUG] 2.6.24 refuses to boot - ATA problem?
+Date: Sat, 02 Feb 2008 20:37:27 -0500
+Message-ID: <47A51AD7.3070102@garzik.org>
+References: <745427.71265.qm@web52907.mail.re2.yahoo.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from lixom.net ([66.141.50.11]:58122 "EHLO mail.lixom.net"
+Received: from srv5.dvmed.net ([207.36.208.214]:42753 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1765907AbYBCAXH (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 2 Feb 2008 19:23:07 -0500
-Content-Disposition: inline
-In-Reply-To: <20080202194102.GJ26792@trinity.fluff.org>
+	id S1754243AbYBCBha (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 2 Feb 2008 20:37:30 -0500
+In-Reply-To: <745427.71265.qm@web52907.mail.re2.yahoo.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Ben Dooks <ben-linux@fluff.org>
-Cc: linux-ide@vger.kernel.org, jeff@garzik.org, htejun@gmail.com, linuxppc-dev@ozlabs.org
+To: Chris Rankin <rankincj@yahoo.com>
+Cc: linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
 
-On Sat, Feb 02, 2008 at 07:41:02PM +0000, Ben Dooks wrote:
-> On Sat, Feb 02, 2008 at 01:12:39PM -0600, Olof Johansson wrote:
-> > On Sat, Feb 02, 2008 at 04:21:36PM +0000, Ben Dooks wrote:
-> > > Use the new HAVE_PATA_PLATFORM to select PATA_PLATFORM
-> > > driver.
-> > > 
-> > > CC: linuxppc-dev@ozlabs.org
-> > > Signed-off-by: Ben Dooks <ben-linux@fluff.org>
-> > 
-> > What tree is this against? It doesn't apply to current mainline nor
-> > jgarzik's libata-dev upstream branch.
-> 
-> It is a series that i've just sent to the linux-ide list, only the ppc
-> part was cc'd to the ppc list.
-
-D'oh. Ok, makes more sense now.
-
-Are you planning on adding HAVE_PATA_PLATFORM to the other archs that
-use it as well, or keep it under EMBEDDED there?
+Chris Rankin wrote:
+> ata1.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 frozen
+> ata1.00: cmd c8/00:08:00:00:00/00:00:00:00:00/e0 tag 0 dma 4096 in
+> res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
+> ata1.00: status: { DRDY }
+> ata1: soft resetting link
+> ata1.00: configured for UDMA/66
+> ata1: EH complete
+> ata1.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 frozen
+> ata1.00: cmd c8/00:08:00:00:00/00:00:00:00:00/e0 tag 0 dma 4096 in
+> res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
+> ata1.00: status: { DRDY }
+> ata1: soft resetting link
 
 
-> > Anyway: NACK: I like this approach but this needs to be added to
-> > arch/powerpc as well.
-> 
-> I can add that to the series.
+Had at least one other report like this...  Sleepiness prevents me from 
+recalling more at the moment, but I think the other report was fixed 
+with a special ACPI switch...
 
-Ok, cool. We can probably move it in under the relevant powerpc
-sub-platforms over time, and that's a powerpc-specific change anyway,
-no need to get that through linux-ide.
+/me puts in pile for Monday...
 
-> > It's actually more needed there than arch/ppc, I don't personally care
-> > if arch/ppc can't use pata_platform for the last couple of months it's
-> > still around (it's getting deleted this summer, all platforms should
-> > have moved to powerpc by then).
-> 
-> Thanks, didn't know that.
-
-No problem. :)
+	Jeff
 
 
--Olof
