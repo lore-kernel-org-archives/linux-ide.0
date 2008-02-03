@@ -1,60 +1,80 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH RESEND number 2] libata: eliminate the home grown dma
-	padding in favour of that provided by the block layer
-Date: Sat, 02 Feb 2008 22:32:54 -0600
-Message-ID: <1202013174.3187.69.camel@localhost.localdomain>
-References: <1199138168.3110.12.camel@localhost.localdomain>
-	 <1200698057.3111.68.camel@localhost.localdomain>
-	 <1201894847.3134.59.camel@localhost.localdomain>
-	 <47A37AF3.3030503@garzik.org>
-	 <1201900175.3134.67.camel@localhost.localdomain> <47A52F23.70506@gmail.com>
+From: Ingo Molnar <mingo@elte.hu>
+Subject: Re: [BUG] 2.6.24 refuses to boot - ATA problem?
+Date: Sun, 3 Feb 2008 05:44:28 +0100
+Message-ID: <20080203044428.GA10139@elte.hu>
+References: <745427.71265.qm@web52907.mail.re2.yahoo.com> <47A51AD7.3070102@garzik.org> <200802022243.13710.gene.heskett@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <47A52F23.70506@gmail.com>
-Sender: linux-scsi-owner@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Jeff Garzik <jeff@garzik.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-ide <linux-ide@vger.kernel.org>, Jens Axboe <Jens.Axboe@oracle.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mx3.mail.elte.hu ([157.181.1.138]:49926 "EHLO mx3.mail.elte.hu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755005AbYBCEok (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 2 Feb 2008 23:44:40 -0500
+Content-Disposition: inline
+In-Reply-To: <200802022243.13710.gene.heskett@gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Gene Heskett <gene.heskett@gmail.com>
+Cc: Jeff Garzik <jeff@garzik.org>, Chris Rankin <rankincj@yahoo.com>, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
 
 
-On Sun, 2008-02-03 at 12:04 +0900, Tejun Heo wrote:
-> James Bottomley wrote:
-> > On Fri, 2008-02-01 at 15:02 -0500, Jeff Garzik wrote:
-> >> James Bottomley wrote:
-> >>> Could we please get this in ... I thought I mentioned several times that
-> >>> it fixes a fatal oops in both aic94xx and ipr.
-> >> Tejun has a persistent objection...  see other email.
-> > 
-> > Actually, see other email .. I meant that this patch (eliminate dma
-> > padding) is independent of the drain one.
+* Gene Heskett <gene.heskett@gmail.com> wrote:
+
+> I think that one came from me, but it also gets over 14,000 hits on 
+> google.
 > 
-> Sorry about the delay.
+> Now Jeff, here is the strange part.  That error was killing me, many 
+> times an hour and eventually crashing completely, repeatedly.
 > 
-> There's a problem here.  For the blk layer dma padding itself, it's okay
-> but the problem is that it blocks the pending draining patch without
-> supplying usable alternative at the moment.
-
-The alternative is already there.  The current drain infrastructure is
-already in the block layer.  The patch I sent merely activates it for
-ATA.  Is there some issue with this that I haven't forseen?  My analysis
-is that it should do everything your patch does (except at the block
-layer and in a manner that doesn't trigger the aic94xx panic).
-
->   I agree that the long term
-> solution should be in the block layer && I understand that it causes
-> problem for SAS controllers but for the moment if we don't include the
-> existing draining patch, far more ATAPI devices are affected.  So, it's
-> catch-22 situation.
+> I applied that kernel argument acpi_use_timer_override once and have 
+> not had the error since, and that includes one test of a full let it 
+> cool for a minute powerdown reboot to see if it would come back, which 
+> it did not.
 > 
-> I think the best solution is to update block layer draining such that it
-> can be included together before the merge window closes.  I'll dig into it.
+> That argument causes the kernel to log this as its responding to that 
+> command:
+> 
+> [   27.097095] ENABLING IO-APIC IRQs
+> [   27.097287] ..TIMER: vector=0x31 apic1=0 pin1=2 apic2=-1 pin2=-1
+> [   27.107291] ..MP-BIOS bug: 8254 timer not connected to IO-APIC
+> [   27.107343] ...trying to set up timer (IRQ0) through the 8259A ...  failed.
+> [   27.107346] ...trying to set up timer as Virtual Wire IRQ... failed.
+> [   27.117353] ...trying to set up timer as ExtINT IRQ... works.
+> 
+> The last 4 lines above are not logged without that argument.  So my 
+> theory ATM is that this forced the kernel to initialize something in 
+> the boards registers that it does not initialize without that command, 
+> and that its going fubar as shown in the msg quoted above is a totally 
+> random thing, perhaps dependent on the phase of one of jupiters moons 
+> as to what state it powers up in.  And I got lucky, so far in that my 
+> single powerdown reset didn't trigger it again...  And you _know_ what 
+> that knocking sound is by now. :)
 
-Like I said, the block layer pieces are already upstream.  All we need
-is the ATA bits and I think it should all work ... unless there's some
-part I haven't though of?
+that's weird. Could you try the hack below and _remove_ the 
+acpi_use_timer_override flag? The change should artificially cause the 
+above 4 lines to appear again, in all cases.
 
-James
+This would test the following aspects of your theory: is this unknown 
+side-effect of the the acpi_use_timer_override flag related to the timer 
+setup sequence in io_apic_32.c? If not, then the difference most likely 
+lies in the different ACPI setup sequence.
 
+	Ingo
 
+---
+ arch/x86/kernel/io_apic_32.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+Index: linux/arch/x86/kernel/io_apic_32.c
+===================================================================
+--- linux.orig/arch/x86/kernel/io_apic_32.c
++++ linux/arch/x86/kernel/io_apic_32.c
+@@ -2208,7 +2208,7 @@ static inline void __init check_timer(vo
+ 		 * Ok, does IRQ0 through the IOAPIC work?
+ 		 */
+ 		unmask_IO_APIC_irq(0);
+-		if (timer_irq_works()) {
++		if (timer_irq_works() && 0) {
+ 			if (nmi_watchdog == NMI_IO_APIC) {
+ 				disable_8259A_irq(0);
+ 				setup_nmi();
