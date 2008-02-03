@@ -1,50 +1,43 @@
-From: "Kuan Luo" <kluo@nvidia.com>
-Subject: RE: PROBLEM: SATA hotplugging not working with nForce MCP61
-Date: Sun, 3 Feb 2008 10:59:48 +0800
-Message-ID: <15F501D1A78BD343BE8F4D8DB854566B1BFE2ADB@hkemmail01.nvidia.com>
-References: <20080128074336.GB2736@solitudo.net> <47A3FFB4.2010509@gmail.com> <20080202173723.GA26461@solitudo.net> <47A4F956.6030005@gmail.com> <47A50249.2080902@shaw.ca>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: [PATCH RESEND number 2] libata: eliminate the home grown dma
+ padding in favour of that provided by the block layer
+Date: Sun, 03 Feb 2008 12:04:03 +0900
+Message-ID: <47A52F23.70506@gmail.com>
+References: <1199138168.3110.12.camel@localhost.localdomain>	 <1200698057.3111.68.camel@localhost.localdomain>	 <1201894847.3134.59.camel@localhost.localdomain>	 <47A37AF3.3030503@garzik.org> <1201900175.3134.67.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hqemgate03.nvidia.com ([216.228.112.145]:4155 "EHLO
-	hqemgate03.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753950AbYBCC7x convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 2 Feb 2008 21:59:53 -0500
-In-Reply-To: <47A50249.2080902@shaw.ca>
-Content-class: urn:content-classes:message
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <1201900175.3134.67.camel@localhost.localdomain>
+Sender: linux-scsi-owner@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Jeff Garzik <jeff@garzik.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-ide <linux-ide@vger.kernel.org>, Jens Axboe <Jens.Axboe@oracle.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
 List-Id: linux-ide@vger.kernel.org
-To: Robert Hancock <hancockr@shaw.ca>, Tejun Heo <htejun@gmail.com>
-Cc: Tuomas Jormola <tj@solitudo.net>, linux-ide@vger.kernel.org, Peer Chen <pchen@nvidia.com>, Allen Martin <AMartin@nvidia.com>
 
-robert wrote:
-> Tejun Heo wrote:
-> > Tuomas Jormola wrote:
-> >> 00:08.0 IDE interface [0101]: nVidia Corporation MCP61 
-> SATA Controller [10de:03f6] (rev a2)
-> >> 00:08.1 IDE interface [0101]: nVidia Corporation MCP61 
-> SATA Controller [10de:03f6] (rev a2)
-> > 
-> > That's MCP61 which is GENERIC variant in sata_nv which does 
-> not support
-> > hotplugging.  Robert, is this hardware restriction or do we 
-> just need
-> > more info?
+James Bottomley wrote:
+> On Fri, 2008-02-01 at 15:02 -0500, Jeff Garzik wrote:
+>> James Bottomley wrote:
+>>> Could we please get this in ... I thought I mentioned several times that
+>>> it fixes a fatal oops in both aic94xx and ipr.
+>> Tejun has a persistent objection...  see other email.
 > 
-> Well, MCP61 originally supported SWNCQ which includes hotplug 
-> support. 
-> However, SWNCQ was later disabled on MCP61 due to hardware 
-> bugs. NVIDIA 
-> guys, it is possible to still use hotplug on MCP61?
-> 
+> Actually, see other email .. I meant that this patch (eliminate dma
+> padding) is independent of the drain one.
 
-Yes, it needs to add some code to support hotplug without swncq.
+Sorry about the delay.
 
------------------------------------------------------------------------------------
-This email message is for the sole use of the intended recipient(s) and may contain
-confidential information.  Any unauthorized review, use, disclosure or distribution
-is prohibited.  If you are not the intended recipient, please contact the sender by
-reply email and destroy all copies of the original message.
------------------------------------------------------------------------------------
+There's a problem here.  For the blk layer dma padding itself, it's okay
+but the problem is that it blocks the pending draining patch without
+supplying usable alternative at the moment.  I agree that the long term
+solution should be in the block layer && I understand that it causes
+problem for SAS controllers but for the moment if we don't include the
+existing draining patch, far more ATAPI devices are affected.  So, it's
+catch-22 situation.
+
+I think the best solution is to update block layer draining such that it
+can be included together before the merge window closes.  I'll dig into it.
+
+Thanks.
+
+-- 
+tejun
