@@ -1,62 +1,58 @@
-From: Mark Lord <liml@rtr.ca>
-Subject: Re: [BUG] 2.6.24 refuses to boot - ATA problem?
-Date: Mon, 04 Feb 2008 14:13:24 -0500
-Message-ID: <47A763D4.5090606@rtr.ca>
-References: <745427.71265.qm@web52907.mail.re2.yahoo.com> <200802030011.34086.gene.heskett@gmail.com> <20080203055807.GA25545@elte.hu> <200802030125.24663.gene.heskett@gmail.com>
+From: Kiyoshi Ueda <k-ueda@ct.jp.nec.com>
+Subject: [PATCH] ide: another possible ide panic fix for blk-end-request
+Date: Mon, 04 Feb 2008 14:53:12 -0500 (EST)
+Message-ID: <20080204.145312.39152078.k-ueda@ct.jp.nec.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([76.10.145.34]:4567 "EHLO mail.rtr.ca"
+Received: from mx1.redhat.com ([66.187.233.31]:58705 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753857AbYBDTN0 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 4 Feb 2008 14:13:26 -0500
-In-Reply-To: <200802030125.24663.gene.heskett@gmail.com>
+	id S1755506AbYBDTxO (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 4 Feb 2008 14:53:14 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Gene Heskett <gene.heskett@gmail.com>
-Cc: Ingo Molnar <mingo@elte.hu>, Jeff Garzik <jeff@garzik.org>, Chris Rankin <rankincj@yahoo.com>, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
+To: jens.axboe@oracle.com, bzolnier@gmail.com, petkovbb@googlemail.com
+Cc: linux-ide@vger.kernel.org, j-nomura@ce.jp.nec.com, k-ueda@ct.jp.nec.com
 
-Gene Heskett wrote:
-> On Sunday 03 February 2008, Ingo Molnar wrote:
->> * Gene Heskett <gene.heskett@gmail.com> wrote:
->>> I believe its the same, but lemme paste it for sure, yes:
->>> [   26.339926] ENABLING IO-APIC IRQs
->>> [   26.340119] ..TIMER: vector=0x31 apic1=0 pin1=0 apic2=-1 pin2=-1
->>> [   26.350129] ..MP-BIOS bug: 8254 timer not connected to IO-APIC
->>> [   26.350182] ...trying to set up timer (IRQ0) through the 8259A ... 
->>> failed. [   26.350185] ...trying to set up timer as Virtual Wire IRQ...
->>> failed. [   26.360186] ...trying to set up timer as ExtINT IRQ... works.
->>>
->>> The third line is the only line that makes it to the screen during the
->>> boot trace.
->>>
->>> Now, what does this tell us?
->> the question would be:
->>
->> - if you remove the acpi_use_timer_override boot flag
->> - and if you boot a kernel with this hack applied
->>
->> => do those weird PATA failures come back?
->>
->> If the failues do _not_ come back then the problem is somehow
->> affected/worked-around by the IO-APIC code that generates the above 4
->> lines. If the failures are still the same then the above 4 lines are
->> really just an uninteresting side-effect of the acpi_use_timer_override
->> flag - and the real side-effects (that fixes PATA on your box) are to be
->> found elsewhere.
->>
->> Sadly, the latter variant is the expected answer.
->>
->> 	Ingo
-> 
-> And at this point, I can't tell.  This reboot was from a cold start, without 
-> the argument, and cold by long enough to make the rounds about the house and 
-> pick up a beer, but not take my evening pillbox.  A minute cold, maybe 2 max.  
-> The log is clean since except for a kudzu nag of some sort:
-..
+Hi Jens, Bart, Boris,
 
-Just to muddy your observations:  it is quite possible that a cold (power-off)
-reboot may be required to properly observe what happens here.
+I have reviewed all blk-end-request patches again to confirm whether
+there are any similar problems with the last week's ide-cd panic:
+    http://lkml.org/lkml/2008/1/29/140
 
-Cheers
+And I found a possible similar bug in ide-io change:
+ide_end_drive_cmd() could be called for blk_pc_request() which could
+have bios.  To complete such requests correctly, we need to pass
+the actual size of the request.
+Otherwise, __blk_end_request() returns 1 because the request still has
+bios, and the system will BUG() unnecessarily.
+
+The following patch fixes the bug and should be applied on top of
+Linus' git.
+Please review and apply.
+
+
+Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: Borislav Petkov <petkovbb@googlemail.com>
+Signed-off-by: Kiyoshi Ueda <k-ueda@ct.jp.nec.com>
+Signed-off-by: Jun'ichi Nomura <j-nomura@ce.jp.nec.com>
+---
+ drivers/ide/ide-io.c |    3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+--- a/drivers/ide/ide-io.c	2008-02-01 18:20:02.000000000 -0500
++++ b/drivers/ide/ide-io.c	2008-02-01 18:21:50.000000000 -0500
+@@ -388,7 +388,8 @@ void ide_end_drive_cmd (ide_drive_t *dri
+ 	spin_lock_irqsave(&ide_lock, flags);
+ 	HWGROUP(drive)->rq = NULL;
+ 	rq->errors = err;
+-	if (__blk_end_request(rq, (rq->errors ? -EIO : 0), 0))
++	if (unlikely(__blk_end_request(rq, (rq->errors ? -EIO : 0),
++				       blk_rq_bytes(rq))))
+ 		BUG();
+ 	spin_unlock_irqrestore(&ide_lock, flags);
+ }
+
+Thanks,
+Kiyoshi Ueda
