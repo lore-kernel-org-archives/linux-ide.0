@@ -1,40 +1,62 @@
-From: David Milburn <dmilburn@redhat.com>
-Subject: [PATCH] libata-core: unblacklist HITACHI drives
-Date: Mon, 4 Feb 2008 12:24:21 -0600
-Message-ID: <20080204182421.GA22434@dhcp-210.hsv.redhat.com>
+From: Mark Lord <liml@rtr.ca>
+Subject: Re: [BUG] 2.6.24 refuses to boot - ATA problem?
+Date: Mon, 04 Feb 2008 14:13:24 -0500
+Message-ID: <47A763D4.5090606@rtr.ca>
+References: <745427.71265.qm@web52907.mail.re2.yahoo.com> <200802030011.34086.gene.heskett@gmail.com> <20080203055807.GA25545@elte.hu> <200802030125.24663.gene.heskett@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:60618 "EHLO mx1.redhat.com"
+Received: from rtr.ca ([76.10.145.34]:4567 "EHLO mail.rtr.ca"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754170AbYBDSb4 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 4 Feb 2008 13:31:56 -0500
-Content-Disposition: inline
+	id S1753857AbYBDTN0 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 4 Feb 2008 14:13:26 -0500
+In-Reply-To: <200802030125.24663.gene.heskett@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: jeff@garzik.org
-Cc: linux-ide@vger.kernel.org
+To: Gene Heskett <gene.heskett@gmail.com>
+Cc: Ingo Molnar <mingo@elte.hu>, Jeff Garzik <jeff@garzik.org>, Chris Rankin <rankincj@yahoo.com>, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
 
-The HITACHI HDS7250SASUN500G and HITACHI HDS7225SBSUN250 drives
-do not need to be blacklisted, the NCQ problem has been resolved
-with the "sata_nv: fix for completion handling" patch.
+Gene Heskett wrote:
+> On Sunday 03 February 2008, Ingo Molnar wrote:
+>> * Gene Heskett <gene.heskett@gmail.com> wrote:
+>>> I believe its the same, but lemme paste it for sure, yes:
+>>> [   26.339926] ENABLING IO-APIC IRQs
+>>> [   26.340119] ..TIMER: vector=0x31 apic1=0 pin1=0 apic2=-1 pin2=-1
+>>> [   26.350129] ..MP-BIOS bug: 8254 timer not connected to IO-APIC
+>>> [   26.350182] ...trying to set up timer (IRQ0) through the 8259A ... 
+>>> failed. [   26.350185] ...trying to set up timer as Virtual Wire IRQ...
+>>> failed. [   26.360186] ...trying to set up timer as ExtINT IRQ... works.
+>>>
+>>> The third line is the only line that makes it to the screen during the
+>>> boot trace.
+>>>
+>>> Now, what does this tell us?
+>> the question would be:
+>>
+>> - if you remove the acpi_use_timer_override boot flag
+>> - and if you boot a kernel with this hack applied
+>>
+>> => do those weird PATA failures come back?
+>>
+>> If the failues do _not_ come back then the problem is somehow
+>> affected/worked-around by the IO-APIC code that generates the above 4
+>> lines. If the failures are still the same then the above 4 lines are
+>> really just an uninteresting side-effect of the acpi_use_timer_override
+>> flag - and the real side-effects (that fixes PATA on your box) are to be
+>> found elsewhere.
+>>
+>> Sadly, the latter variant is the expected answer.
+>>
+>> 	Ingo
+> 
+> And at this point, I can't tell.  This reboot was from a cold start, without 
+> the argument, and cold by long enough to make the rounds about the house and 
+> pick up a beer, but not take my evening pillbox.  A minute cold, maybe 2 max.  
+> The log is clean since except for a kudzu nag of some sort:
+..
 
-Signed-off-by David Milburn <dmilburn@redhat.com>
----
+Just to muddy your observations:  it is quite possible that a cold (power-off)
+reboot may be required to properly observe what happens here.
 
- libata-core.c |    2 --
- 1 files changed, 2 deletions(-)
-
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index bdbd55a..ba5406e 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -4154,8 +4154,6 @@ static const struct ata_blacklist_entry ata_device_blacklist [] = {
- 	/* NCQ is broken */
- 	{ "Maxtor *",		"BANC*",	ATA_HORKAGE_NONCQ },
- 	{ "Maxtor 7V300F0",	"VA111630",	ATA_HORKAGE_NONCQ },
--	{ "HITACHI HDS7250SASUN500G*", NULL,    ATA_HORKAGE_NONCQ },
--	{ "HITACHI HDS7225SBSUN250G*", NULL,    ATA_HORKAGE_NONCQ },
- 	{ "ST380817AS",		"3.42",		ATA_HORKAGE_NONCQ },
- 	{ "ST3160023AS",	"3.42",		ATA_HORKAGE_NONCQ },
- 
+Cheers
