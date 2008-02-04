@@ -1,58 +1,108 @@
-From: Kiyoshi Ueda <k-ueda@ct.jp.nec.com>
-Subject: [PATCH] ide: another possible ide panic fix for blk-end-request
-Date: Mon, 04 Feb 2008 14:53:12 -0500 (EST)
-Message-ID: <20080204.145312.39152078.k-ueda@ct.jp.nec.com>
+From: Borislav Petkov <petkovbb@googlemail.com>
+Subject: Re: (fwd) Bug#11922: I/O error on blank tapes
+Date: Mon, 4 Feb 2008 22:28:35 +0100
+Message-ID: <20080204212835.GA29286@gollum.tnic>
+References: <20080204142206.GB5532@stro.at>
+Reply-To: petkovbb@gmail.com
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:58705 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755506AbYBDTxO (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 4 Feb 2008 14:53:14 -0500
+Received: from ag-out-0708.google.com ([72.14.246.248]:35287 "EHLO
+	ag-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753202AbYBDVac (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 4 Feb 2008 16:30:32 -0500
+Received: by ag-out-0708.google.com with SMTP id 35so2171729aga.10
+        for <linux-ide@vger.kernel.org>; Mon, 04 Feb 2008 13:30:31 -0800 (PST)
+Content-Disposition: inline
+In-Reply-To: <20080204142206.GB5532@stro.at>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: jens.axboe@oracle.com, bzolnier@gmail.com, petkovbb@googlemail.com
-Cc: linux-ide@vger.kernel.org, j-nomura@ce.jp.nec.com, k-ueda@ct.jp.nec.com
+To: maximilian attems <max@stro.at>
+Cc: linux-ide@vger.kernel.org, Stephen Kitt <steve@sk2.org>, bzolnier@gmail.com
 
-Hi Jens, Bart, Boris,
+On Mon, Feb 04, 2008 at 03:22:06PM +0100, maximilian attems wrote:
 
-I have reviewed all blk-end-request patches again to confirm whether
-there are any similar problems with the last week's ide-cd panic:
-    http://lkml.org/lkml/2008/1/29/140
+(Added Bart to CC)
 
-And I found a possible similar bug in ide-io change:
-ide_end_drive_cmd() could be called for blk_pc_request() which could
-have bios.  To complete such requests correctly, we need to pass
-the actual size of the request.
-Otherwise, __blk_end_request() returns 1 because the request still has
-bios, and the system will BUG() unnecessarily.
+> hello borislav,
+>=20
+> may i forward you that *old* Debian kernel bug,
+> have seen you working on ide-tape:
+> http://bugs.debian.org/11922
+> no we don't carry any ide patches anymore.
+>=20
+> maybe you've already fixed it in latest?
+>=20
+> thanks
+>=20
+> --=20
+> maks
+>=20
+> ----- Forwarded message from Stephen Kitt <steve@sk2.org> -----
+>=20
+> Subject: Bug#11922: I/O error on blank tapes
+> Date: Sat, 1 Dec 2007 19:06:18 +0100
+> From: Stephen Kitt <steve@sk2.org>
+> To: 11922@bugs.debian.org
+>=20
+> Hi,
+>=20
+> This does still occur with 2.6.22; with a blank tape in my HP DDS-4 d=
+rive:
+>=20
+> $ tar tzvf /dev/nst0
+> tar: /dev/nst0: Cannot read: Input/output error
+> tar: At beginning of tape, quitting now
+> tar: Error is not recoverable: exiting now
+>=20
+> gzip: stdin: unexpected end of file
+> tar: Child returned status 2
+> tar: Error exit delayed from previous errors
+>=20
+> Nothing gets logged anywhere, which fits the original bug description=
+=2E
+>=20
+> This is a well-known issue: see for example
+> http://www.sibbald.com/bacula/html-manual/Bacula_Console.html (search=
+ for
+> "blank tape").
+>=20
+> Regards,
+>=20
+> Stephen
+>=20
+>=20
+>=20
+> --=20
+> To UNSUBSCRIBE, email to debian-kernel-REQUEST@lists.debian.org
+> with a subject of "unsubscribe". Trouble? Contact listmaster@lists.de=
+bian.org
+>=20
+>=20
+> ----- End forwarded message -----
 
-The following patch fixes the bug and should be applied on top of
-Linus' git.
-Please review and apply.
+Hi Maks,
 
+we're currently in the process of aggressively cleaning up ide-tape. Ho=
+wever,
+this brings (almost) no functional changes to the driver and we haven't=
+ looked
+at any bugs that might exist. Actually, I wanted to probe the community=
+ to see
+whether anyone is using ide-tape at all, and if not, to remove it compl=
+etely.
 
-Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: Borislav Petkov <petkovbb@googlemail.com>
-Signed-off-by: Kiyoshi Ueda <k-ueda@ct.jp.nec.com>
-Signed-off-by: Jun'ichi Nomura <j-nomura@ce.jp.nec.com>
----
- drivers/ide/ide-io.c |    3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+Since i don't have the hardware, i'm gonna have to ask you (or Stephen)=
+ to wait
+until all changes have entered mainline and then to try to reproduce th=
+e bug again
+after having enabled debugging (IDETAPE_DEBUG_LOG) and send me the sysl=
+og
+output.
 
---- a/drivers/ide/ide-io.c	2008-02-01 18:20:02.000000000 -0500
-+++ b/drivers/ide/ide-io.c	2008-02-01 18:21:50.000000000 -0500
-@@ -388,7 +388,8 @@ void ide_end_drive_cmd (ide_drive_t *dri
- 	spin_lock_irqsave(&ide_lock, flags);
- 	HWGROUP(drive)->rq = NULL;
- 	rq->errors = err;
--	if (__blk_end_request(rq, (rq->errors ? -EIO : 0), 0))
-+	if (unlikely(__blk_end_request(rq, (rq->errors ? -EIO : 0),
-+				       blk_rq_bytes(rq))))
- 		BUG();
- 	spin_unlock_irqrestore(&ide_lock, flags);
- }
+Thanks.
 
-Thanks,
-Kiyoshi Ueda
+--=20
+Regards/Gru=DF,
+    Boris.
