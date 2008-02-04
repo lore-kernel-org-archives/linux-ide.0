@@ -1,9 +1,9 @@
 From: Borislav Petkov <petkovbb@googlemail.com>
-Subject: [PATCH 13/22] ide-tape: remove struct idetape_id_gcw
-Date: Mon,  4 Feb 2008 14:40:31 +0100
-Message-ID: <1202132440-26648-14-git-send-email-petkovbb@gmail.com>
+Subject: [PATCH 10/22] ide-tape: shorten some function names
+Date: Mon,  4 Feb 2008 14:40:28 +0100
+Message-ID: <1202132440-26648-11-git-send-email-petkovbb@gmail.com>
 References: <1202132440-26648-1-git-send-email-petkovbb@gmail.com>
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1756400AbYBDNpO@vger.kernel.org>
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1757847AbYBDNrJ@vger.kernel.org>
 In-Reply-To: <1202132440-26648-1-git-send-email-petkovbb@gmail.com>
 Sender: linux-kernel-owner@vger.kernel.org
 To: bzolnier@gmail.com
@@ -12,113 +12,135 @@ List-Id: linux-ide@vger.kernel.org
 
 Signed-off-by: Borislav Petkov <petkovbb@gmail.com>
 ---
- drivers/ide/ide-tape.c |   58 ++++++++++++++++++++---------------------------
- 1 files changed, 25 insertions(+), 33 deletions(-)
+ drivers/ide/ide-tape.c |   32 +++++++++++++++-----------------
+ 1 files changed, 15 insertions(+), 17 deletions(-)
 
 diff --git a/drivers/ide/ide-tape.c b/drivers/ide/ide-tape.c
-index 712c5df..175d507 100644
+index ae2c76d..4fee160 100644
 --- a/drivers/ide/ide-tape.c
 +++ b/drivers/ide/ide-tape.c
-@@ -520,20 +520,6 @@ enum {
- #define	IDETAPE_ERROR_FILEMARK		102
- #define	IDETAPE_ERROR_EOD		103
+@@ -1053,7 +1053,7 @@ static void idetape_postpone_request (ide_drive_t *drive)
+  * command. We will transfer some of the data (as requested by the drive) and
+  * will re-point interrupt handler to us. When data transfer is finished, we
+  * will act according to the algorithm described before
+- * idetape_issue_packet_command.
++ * idetape_issue_pc.
+  */
  
--/*
-- *	The following is used to format the general configuration word of
-- *	the ATAPI IDENTIFY DEVICE command.
-- */
--struct idetape_id_gcw {	
--	unsigned packet_size		:2;	/* Packet Size */
--	unsigned reserved234		:3;	/* Reserved */
--	unsigned drq_type		:2;	/* Command packet DRQ type */
--	unsigned removable		:1;	/* Removable media */
--	unsigned device_type		:5;	/* Device type */
--	unsigned reserved13		:1;	/* Reserved */
--	unsigned protocol		:2;	/* Protocol type */
--};
--
- /* Structures related to the SELECT SENSE / MODE SENSE packet commands. */
- #define IDETAPE_BLOCK_DESCRIPTOR	0
- #define	IDETAPE_CAPABILITIES_PAGE	0x2a
-@@ -3382,37 +3368,41 @@ static int idetape_chrdev_release (struct inode *inode, struct file *filp)
+ typedef void idetape_io_buf(ide_drive_t *, idetape_pc_t *, unsigned int);
+@@ -1233,7 +1233,7 @@ static ide_startstop_t idetape_pc_intr(ide_drive_t *drive)
+  *
+  *	The handling will be done in three stages:
+  *
+- *	1.	idetape_issue_packet_command will send the packet command to the
++ *	1.	idetape_issue_pc will send the packet command to the
+  *		drive, and will set the interrupt handler to idetape_pc_intr.
+  *
+  *	2.	On each interrupt, idetape_pc_intr will be called. This step
+@@ -1308,7 +1308,7 @@ static ide_startstop_t idetape_transfer_pc(ide_drive_t *drive)
+ 	return ide_started;
  }
  
- /*
-- *	idetape_identify_device is called to check the contents of the
-- *	ATAPI IDENTIFY command results. We return:
-+ * check the contents of the ATAPI IDENTIFY command results. We return:
-  *
-- *	1	If the tape can be supported by us, based on the information
-- *		we have so far.
-+ * 1 - If the tape can be supported by us, based on the information we have so
-+ * far.
-  *
-- *	0 	If this tape driver is not currently supported by us.
-+ * 0 - If this tape driver is not currently supported by us.
-  */
--static int idetape_identify_device (ide_drive_t *drive)
-+static int idetape_identify_device(ide_drive_t *drive)
+-static ide_startstop_t idetape_issue_packet_command (ide_drive_t *drive, idetape_pc_t *pc)
++static ide_startstop_t idetape_issue_pc(ide_drive_t *drive, idetape_pc_t *pc)
  {
--	struct idetape_id_gcw gcw;
--	struct hd_driveid *id = drive->id;
-+
-+	u8 gcw[2];
-+	u8 protocol, device_type, removable, packet_size;
+ 	ide_hwif_t *hwif = drive->hwif;
+ 	idetape_tape_t *tape = drive->driver_data;
+@@ -1614,7 +1614,7 @@ static ide_startstop_t idetape_do_request(ide_drive_t *drive,
+ 	 */
+ 	if (tape->failed_pc != NULL &&
+ 	    tape->pc->c[0] == REQUEST_SENSE) {
+-		return idetape_issue_packet_command(drive, tape->failed_pc);
++		return idetape_issue_pc(drive, tape->failed_pc);
+ 	}
+ 	if (postponed_rq != NULL)
+ 		if (rq != postponed_rq) {
+@@ -1707,7 +1707,7 @@ static ide_startstop_t idetape_do_request(ide_drive_t *drive,
+ 	}
+ 	BUG();
+ out:
+-	return idetape_issue_packet_command(drive, pc);
++	return idetape_issue_pc(drive, pc);
  
- 	if (drive->id_read == 0)
- 		return 1;
+ err:
+ 	printk(KERN_ERR "ide-tape: Error processing request %u\n", rq->cmd[0]);
+@@ -2263,11 +2263,8 @@ static int idetape_queue_rw_tail(ide_drive_t *drive, int cmd, int blocks, struct
+ 	return (tape->blk_size * (blocks-rq.current_nr_sectors));
+ }
  
--	*((unsigned short *) &gcw) = id->config;
-+	*((unsigned short *) &gcw) = drive->id->config;
+-/*
+- *	idetape_insert_pipeline_into_queue is used to start servicing the
+- *	pipeline stages, starting from tape->next_stage.
+- */
+-static void idetape_insert_pipeline_into_queue (ide_drive_t *drive)
++/* start servicing the pipeline stages, starting from tape->next_stage. */
++static void idetape_plug_pipeline(ide_drive_t *drive)
+ {
+ 	idetape_tape_t *tape = drive->driver_data;
  
--	/* Check that we can support this device */
-+	protocol	=   (gcw[1] & 0xC0) >> 6;
-+	device_type	=    gcw[1] & 0x1F;
-+	removable	= !!(gcw[0] & 0x80);
-+	packet_size	=    gcw[0] & 0x3;
+@@ -2359,7 +2356,7 @@ static int idetape_add_chrdev_write_request (ide_drive_t *drive, int blocks)
+ 			spin_unlock_irqrestore(&tape->lock, flags);
+ 		} else {
+ 			spin_unlock_irqrestore(&tape->lock, flags);
+-			idetape_insert_pipeline_into_queue(drive);
++			idetape_plug_pipeline(drive);
+ 			if (idetape_pipeline_active(tape))
+ 				continue;
+ 			/*
+@@ -2396,7 +2393,7 @@ static int idetape_add_chrdev_write_request (ide_drive_t *drive, int blocks)
+ 			tape->insert_time = jiffies;
+ 			tape->insert_size = 0;
+ 			tape->insert_speed = 0;
+-			idetape_insert_pipeline_into_queue(drive);
++			idetape_plug_pipeline(drive);
+ 		}
+ 	}
+ 	if (test_and_clear_bit(IDETAPE_PIPELINE_ERROR, &tape->flags))
+@@ -2415,7 +2412,7 @@ static void idetape_wait_for_pipeline (ide_drive_t *drive)
+ 	unsigned long flags;
  
--	if (gcw.protocol != 2)
-+	/* Check that we can support this device */
-+	if (protocol != 2)
- 		printk(KERN_ERR "ide-tape: Protocol (0x%02x) is not ATAPI\n",
--				gcw.protocol);
--	else if (gcw.device_type != 1)
-+			protocol);
-+	else if (device_type != 1)
- 		printk(KERN_ERR "ide-tape: Device type (0x%02x) is not set "
--				"to tape\n", gcw.device_type);
--	else if (!gcw.removable)
-+				"to tape\n", device_type);
-+	else if (!removable)
- 		printk(KERN_ERR "ide-tape: The removable flag is not set\n");
--	else if (gcw.packet_size != 0) {
-+	else if (packet_size != 0) {
- 		printk(KERN_ERR "ide-tape: Packet size (0x%02x) is not 12 "
--				"bytes long\n", gcw.packet_size);
-+				"bytes long\n", packet_size);
- 	} else
- 		return 1;
+ 	while (tape->next_stage || idetape_pipeline_active(tape)) {
+-		idetape_insert_pipeline_into_queue(drive);
++		idetape_plug_pipeline(drive);
+ 		spin_lock_irqsave(&tape->lock, flags);
+ 		if (idetape_pipeline_active(tape))
+ 			idetape_wait_for_request(drive, tape->active_data_rq);
+@@ -2508,7 +2505,7 @@ static void idetape_restart_speed_control (ide_drive_t *drive)
+ 	tape->controlled_previous_head_time = tape->uncontrolled_previous_head_time = jiffies;
+ }
+ 
+-static int idetape_initiate_read (ide_drive_t *drive, int max_stages)
++static int idetape_init_read(ide_drive_t *drive, int max_stages)
+ {
+ 	idetape_tape_t *tape = drive->driver_data;
+ 	idetape_stage_t *new_stage;
+@@ -2569,7 +2566,7 @@ static int idetape_initiate_read (ide_drive_t *drive, int max_stages)
+ 			tape->insert_time = jiffies;
+ 			tape->insert_size = 0;
+ 			tape->insert_speed = 0;
+-			idetape_insert_pipeline_into_queue(drive);
++			idetape_plug_pipeline(drive);
+ 		}
+ 	}
  	return 0;
-@@ -3541,8 +3531,8 @@ static void idetape_setup (ide_drive_t *drive, idetape_tape_t *tape, int minor)
- {
- 	unsigned long t1, tmid, tn, t;
- 	int speed;
--	struct idetape_id_gcw gcw;
- 	int stage_size;
-+	u8 gcw[2];
- 	struct sysinfo si;
- 	u16 *ctl = (u16 *)&tape->caps[12];
- 
-@@ -3564,7 +3554,9 @@ static void idetape_setup (ide_drive_t *drive, idetape_tape_t *tape, int minor)
- 	tape->max_insert_speed = 10000;
- 	tape->speed_control = 1;
- 	*((unsigned short *) &gcw) = drive->id->config;
--	if (gcw.drq_type == 1)
-+
-+	/* Command packet DRQ type */
-+	if (((gcw[0] & 0x60) >> 5) == 1)
- 		tape->flags |= IDETAPE_FL_DRQ_INTERRUPT;
- 
- 	tape->min_pipeline = tape->max_pipeline = tape->max_stages = 10;
+@@ -2599,7 +2596,7 @@ static int idetape_add_chrdev_read_request (ide_drive_t *drive,int blocks)
+ 	 * Wait for the next block to be available at the head
+ 	 * of the pipeline
+ 	 */
+-	idetape_initiate_read(drive, tape->max_stages);
++	idetape_init_read(drive, tape->max_stages);
+ 	if (tape->first_stage == NULL) {
+ 		if (test_bit(IDETAPE_PIPELINE_ERROR, &tape->flags))
+ 			return 0;
+@@ -2862,7 +2859,8 @@ static ssize_t idetape_chrdev_read (struct file *file, char __user *buf,
+ 			    (count % tape->blk_size) == 0)
+ 				tape->user_bs_factor = count / tape->blk_size;
+ 	}
+-	if ((rc = idetape_initiate_read(drive, tape->max_stages)) < 0)
++	rc = idetape_init_read(drive, tape->max_stages);
++	if (rc < 0)
+ 		return rc;
+ 	if (count == 0)
+ 		return (0);
 -- 
 1.5.3.7
