@@ -1,146 +1,41 @@
 From: Borislav Petkov <petkovbb@googlemail.com>
-Subject: [PATCH 10/22] ide-tape: shorten some function names
-Date: Mon,  4 Feb 2008 14:40:28 +0100
-Message-ID: <1202132440-26648-11-git-send-email-petkovbb@gmail.com>
+Subject: [PATCH 18/22] ide-tape: remove leftover OnStream support warning
+Date: Mon,  4 Feb 2008 14:40:36 +0100
+Message-ID: <1202132440-26648-19-git-send-email-petkovbb@gmail.com>
 References: <1202132440-26648-1-git-send-email-petkovbb@gmail.com>
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1757847AbYBDNrJ@vger.kernel.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from hs-out-0708.google.com ([64.233.178.249]:3803 "EHLO
+	hs-out-2122.google.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1758249AbYBDNsi (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 4 Feb 2008 08:48:38 -0500
+Received: by hs-out-2122.google.com with SMTP id 54so1919777hsz.5
+        for <linux-ide@vger.kernel.org>; Mon, 04 Feb 2008 05:48:37 -0800 (PST)
 In-Reply-To: <1202132440-26648-1-git-send-email-petkovbb@gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-ide-owner@vger.kernel.org
+List-Id: linux-ide@vger.kernel.org
 To: bzolnier@gmail.com
 Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Borislav Petkov <petkovbb@gmail.com>
-List-Id: linux-ide@vger.kernel.org
 
 Signed-off-by: Borislav Petkov <petkovbb@gmail.com>
 ---
- drivers/ide/ide-tape.c |   32 +++++++++++++++-----------------
- 1 files changed, 15 insertions(+), 17 deletions(-)
+ drivers/ide/ide-tape.c |    4 ----
+ 1 files changed, 0 insertions(+), 4 deletions(-)
 
 diff --git a/drivers/ide/ide-tape.c b/drivers/ide/ide-tape.c
-index ae2c76d..4fee160 100644
+index cfcf5b0..4a12c0b 100644
 --- a/drivers/ide/ide-tape.c
 +++ b/drivers/ide/ide-tape.c
-@@ -1053,7 +1053,7 @@ static void idetape_postpone_request (ide_drive_t *drive)
-  * command. We will transfer some of the data (as requested by the drive) and
-  * will re-point interrupt handler to us. When data transfer is finished, we
-  * will act according to the algorithm described before
-- * idetape_issue_packet_command.
-+ * idetape_issue_pc.
-  */
- 
- typedef void idetape_io_buf(ide_drive_t *, idetape_pc_t *, unsigned int);
-@@ -1233,7 +1233,7 @@ static ide_startstop_t idetape_pc_intr(ide_drive_t *drive)
-  *
-  *	The handling will be done in three stages:
-  *
-- *	1.	idetape_issue_packet_command will send the packet command to the
-+ *	1.	idetape_issue_pc will send the packet command to the
-  *		drive, and will set the interrupt handler to idetape_pc_intr.
-  *
-  *	2.	On each interrupt, idetape_pc_intr will be called. This step
-@@ -1308,7 +1308,7 @@ static ide_startstop_t idetape_transfer_pc(ide_drive_t *drive)
- 	return ide_started;
- }
- 
--static ide_startstop_t idetape_issue_packet_command (ide_drive_t *drive, idetape_pc_t *pc)
-+static ide_startstop_t idetape_issue_pc(ide_drive_t *drive, idetape_pc_t *pc)
- {
- 	ide_hwif_t *hwif = drive->hwif;
- 	idetape_tape_t *tape = drive->driver_data;
-@@ -1614,7 +1614,7 @@ static ide_startstop_t idetape_do_request(ide_drive_t *drive,
- 	 */
- 	if (tape->failed_pc != NULL &&
- 	    tape->pc->c[0] == REQUEST_SENSE) {
--		return idetape_issue_packet_command(drive, tape->failed_pc);
-+		return idetape_issue_pc(drive, tape->failed_pc);
+@@ -3629,10 +3629,6 @@ static int ide_tape_probe(ide_drive_t *drive)
+ 		printk("ide-tape: passing drive %s to ide-scsi emulation.\n", drive->name);
+ 		goto failed;
  	}
- 	if (postponed_rq != NULL)
- 		if (rq != postponed_rq) {
-@@ -1707,7 +1707,7 @@ static ide_startstop_t idetape_do_request(ide_drive_t *drive,
- 	}
- 	BUG();
- out:
--	return idetape_issue_packet_command(drive, pc);
-+	return idetape_issue_pc(drive, pc);
- 
- err:
- 	printk(KERN_ERR "ide-tape: Error processing request %u\n", rq->cmd[0]);
-@@ -2263,11 +2263,8 @@ static int idetape_queue_rw_tail(ide_drive_t *drive, int cmd, int blocks, struct
- 	return (tape->blk_size * (blocks-rq.current_nr_sectors));
- }
- 
--/*
-- *	idetape_insert_pipeline_into_queue is used to start servicing the
-- *	pipeline stages, starting from tape->next_stage.
-- */
--static void idetape_insert_pipeline_into_queue (ide_drive_t *drive)
-+/* start servicing the pipeline stages, starting from tape->next_stage. */
-+static void idetape_plug_pipeline(ide_drive_t *drive)
- {
- 	idetape_tape_t *tape = drive->driver_data;
- 
-@@ -2359,7 +2356,7 @@ static int idetape_add_chrdev_write_request (ide_drive_t *drive, int blocks)
- 			spin_unlock_irqrestore(&tape->lock, flags);
- 		} else {
- 			spin_unlock_irqrestore(&tape->lock, flags);
--			idetape_insert_pipeline_into_queue(drive);
-+			idetape_plug_pipeline(drive);
- 			if (idetape_pipeline_active(tape))
- 				continue;
- 			/*
-@@ -2396,7 +2393,7 @@ static int idetape_add_chrdev_write_request (ide_drive_t *drive, int blocks)
- 			tape->insert_time = jiffies;
- 			tape->insert_size = 0;
- 			tape->insert_speed = 0;
--			idetape_insert_pipeline_into_queue(drive);
-+			idetape_plug_pipeline(drive);
- 		}
- 	}
- 	if (test_and_clear_bit(IDETAPE_PIPELINE_ERROR, &tape->flags))
-@@ -2415,7 +2412,7 @@ static void idetape_wait_for_pipeline (ide_drive_t *drive)
- 	unsigned long flags;
- 
- 	while (tape->next_stage || idetape_pipeline_active(tape)) {
--		idetape_insert_pipeline_into_queue(drive);
-+		idetape_plug_pipeline(drive);
- 		spin_lock_irqsave(&tape->lock, flags);
- 		if (idetape_pipeline_active(tape))
- 			idetape_wait_for_request(drive, tape->active_data_rq);
-@@ -2508,7 +2505,7 @@ static void idetape_restart_speed_control (ide_drive_t *drive)
- 	tape->controlled_previous_head_time = tape->uncontrolled_previous_head_time = jiffies;
- }
- 
--static int idetape_initiate_read (ide_drive_t *drive, int max_stages)
-+static int idetape_init_read(ide_drive_t *drive, int max_stages)
- {
- 	idetape_tape_t *tape = drive->driver_data;
- 	idetape_stage_t *new_stage;
-@@ -2569,7 +2566,7 @@ static int idetape_initiate_read (ide_drive_t *drive, int max_stages)
- 			tape->insert_time = jiffies;
- 			tape->insert_size = 0;
- 			tape->insert_speed = 0;
--			idetape_insert_pipeline_into_queue(drive);
-+			idetape_plug_pipeline(drive);
- 		}
- 	}
- 	return 0;
-@@ -2599,7 +2596,7 @@ static int idetape_add_chrdev_read_request (ide_drive_t *drive,int blocks)
- 	 * Wait for the next block to be available at the head
- 	 * of the pipeline
- 	 */
--	idetape_initiate_read(drive, tape->max_stages);
-+	idetape_init_read(drive, tape->max_stages);
- 	if (tape->first_stage == NULL) {
- 		if (test_bit(IDETAPE_PIPELINE_ERROR, &tape->flags))
- 			return 0;
-@@ -2862,7 +2859,8 @@ static ssize_t idetape_chrdev_read (struct file *file, char __user *buf,
- 			    (count % tape->blk_size) == 0)
- 				tape->user_bs_factor = count / tape->blk_size;
- 	}
--	if ((rc = idetape_initiate_read(drive, tape->max_stages)) < 0)
-+	rc = idetape_init_read(drive, tape->max_stages);
-+	if (rc < 0)
- 		return rc;
- 	if (count == 0)
- 		return (0);
+-	if (strstr(drive->id->model, "OnStream DI-")) {
+-		printk(KERN_WARNING "ide-tape: Use drive %s with ide-scsi emulation and osst.\n", drive->name);
+-		printk(KERN_WARNING "ide-tape: OnStream support will be removed soon from ide-tape!\n");
+-	}
+ 	tape = kzalloc(sizeof (idetape_tape_t), GFP_KERNEL);
+ 	if (tape == NULL) {
+ 		printk(KERN_ERR "ide-tape: %s: Can't allocate a tape structure\n", drive->name);
 -- 
 1.5.3.7
+
