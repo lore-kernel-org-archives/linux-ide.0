@@ -1,111 +1,46 @@
 From: Borislav Petkov <petkovbb@googlemail.com>
-Subject: [PATCH 03/22] ide-tape: remove unreachable code chunk
-Date: Mon,  4 Feb 2008 14:40:21 +0100
-Message-ID: <1202132440-26648-4-git-send-email-petkovbb@gmail.com>
+Subject: [PATCH 17/22] ide-tape: collect module-related macro calls at the end
+Date: Mon,  4 Feb 2008 14:40:35 +0100
+Message-ID: <1202132440-26648-18-git-send-email-petkovbb@gmail.com>
 References: <1202132440-26648-1-git-send-email-petkovbb@gmail.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rn-out-0910.google.com ([64.233.170.191]:3718 "EHLO
-	rn-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756080AbYBDNmj (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 4 Feb 2008 08:42:39 -0500
-Received: by rn-out-0910.google.com with SMTP id i24so1733761rng.19
-        for <linux-ide@vger.kernel.org>; Mon, 04 Feb 2008 05:42:38 -0800 (PST)
+Received: from py-out-1112.google.com ([64.233.166.178]:19005 "EHLO
+	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756049AbYBDNmg (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 4 Feb 2008 08:42:36 -0500
+Received: by py-out-1112.google.com with SMTP id u52so3286457pyb.10
+        for <linux-ide@vger.kernel.org>; Mon, 04 Feb 2008 05:42:34 -0800 (PST)
 In-Reply-To: <1202132440-26648-1-git-send-email-petkovbb@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: bzolnier@gmail.com
 Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Borislav Petkov <petkovbb@gmail.com>
 
-tape->speed_control is set to 1 in idetape_setup(), but, in calculate_speeds()
-its value is tested for being 0, 1, or 2. Remove the if-branches where
-tape->speed_control != 1 since they are never executed. Also, rename
-calculate_speeds() by adding driver's prefix as is with the other function names.
-
 Signed-off-by: Borislav Petkov <petkovbb@gmail.com>
 ---
- drivers/ide/ide-tape.c |   22 ++++++++++------------
- 1 files changed, 10 insertions(+), 12 deletions(-)
+ drivers/ide/ide-tape.c |    5 ++---
+ 1 files changed, 2 insertions(+), 3 deletions(-)
 
 diff --git a/drivers/ide/ide-tape.c b/drivers/ide/ide-tape.c
-index c8c57ab..b15dd17 100644
+index 24f048f..cfcf5b0 100644
 --- a/drivers/ide/ide-tape.c
 +++ b/drivers/ide/ide-tape.c
-@@ -87,7 +87,8 @@ enum {
-  *	the optimum value or until we reach MAX.
-  *
-  *	Setting the following parameter to 0 is illegal: the pipelined mode
-- *	cannot be disabled (calculate_speeds() divides by tape->max_stages.)
-+ *	cannot be disabled (idetape_calculate_speeds() divides by
-+ *	tape->max_stages.)
-  */
- #define IDETAPE_MIN_PIPELINE_STAGES	  1
- #define IDETAPE_MAX_PIPELINE_STAGES	400
-@@ -1475,10 +1476,9 @@ static void idetape_create_mode_sense_cmd (idetape_pc_t *pc, u8 page_code)
- 	pc->callback = &idetape_pc_callback;
+@@ -3681,9 +3681,6 @@ failed:
+ 	return -ENODEV;
  }
  
--static void calculate_speeds(ide_drive_t *drive)
-+static void idetape_calculate_speeds(ide_drive_t *drive)
+-MODULE_DESCRIPTION("ATAPI Streaming TAPE Driver");
+-MODULE_LICENSE("GPL");
+-
+ static void __exit idetape_exit (void)
  {
- 	idetape_tape_t *tape = drive->driver_data;
--	int full = 125, empty = 75;
- 
- 	if (time_after(jiffies, tape->controlled_pipeline_head_time + 120 * HZ)) {
- 		tape->controlled_previous_pipeline_head = tape->controlled_last_pipeline_head;
-@@ -1505,22 +1505,20 @@ static void calculate_speeds(ide_drive_t *drive)
- 		}
- 	}
- 	tape->pipeline_head_speed = max(tape->uncontrolled_pipeline_head_speed, tape->controlled_pipeline_head_speed);
--	if (tape->speed_control == 0) {
--		tape->max_insert_speed = 5000;
--	} else if (tape->speed_control == 1) {
-+
-+	if (tape->speed_control == 1) {
- 		if (tape->nr_pending_stages >= tape->max_stages / 2)
- 			tape->max_insert_speed = tape->pipeline_head_speed +
- 				(1100 - tape->pipeline_head_speed) * 2 * (tape->nr_pending_stages - tape->max_stages / 2) / tape->max_stages;
- 		else
- 			tape->max_insert_speed = 500 +
- 				(tape->pipeline_head_speed - 500) * 2 * tape->nr_pending_stages / tape->max_stages;
-+
- 		if (tape->nr_pending_stages >= tape->max_stages * 99 / 100)
- 			tape->max_insert_speed = 5000;
--	} else if (tape->speed_control == 2) {
--		tape->max_insert_speed = tape->pipeline_head_speed * empty / 100 +
--			(tape->pipeline_head_speed * full / 100 - tape->pipeline_head_speed * empty / 100) * tape->nr_pending_stages / tape->max_stages;
- 	} else
- 		tape->max_insert_speed = tape->speed_control;
-+
- 	tape->max_insert_speed = max(tape->max_insert_speed, 500);
- }
- 
-@@ -1697,7 +1695,7 @@ static ide_startstop_t idetape_do_request(ide_drive_t *drive,
- 		tape->measure_insert_time = 1;
- 	if (time_after(jiffies, tape->insert_time))
- 		tape->insert_speed = tape->insert_size / 1024 * HZ / (jiffies - tape->insert_time);
--	calculate_speeds(drive);
-+	idetape_calculate_speeds(drive);
- 	if (!test_and_clear_bit(IDETAPE_IGNORE_DSC, &tape->flags) &&
- 	    (stat & SEEK_STAT) == 0) {
- 		if (postponed_rq == NULL) {
-@@ -2419,7 +2417,7 @@ static int idetape_add_chrdev_write_request (ide_drive_t *drive, int blocks)
- 	idetape_switch_buffers(tape, new_stage);
- 	idetape_add_stage_tail(drive, new_stage);
- 	tape->pipeline_head++;
--	calculate_speeds(drive);
-+	idetape_calculate_speeds(drive);
- 
- 	/*
- 	 *	Estimate whether the tape has stopped writing by checking
-@@ -2659,7 +2657,7 @@ static int idetape_add_chrdev_read_request (ide_drive_t *drive,int blocks)
- 		idetape_remove_stage_head(drive);
- 		spin_unlock_irqrestore(&tape->spinlock, flags);
- 		tape->pipeline_head++;
--		calculate_speeds(drive);
-+		idetape_calculate_speeds(drive);
- 	}
- 	if (bytes_read > blocks * tape->tape_block_size) {
- 		printk(KERN_ERR "ide-tape: bug: trying to return more bytes than requested\n");
+ 	driver_unregister(&idetape_driver.gen_driver);
+@@ -3726,3 +3723,5 @@ MODULE_ALIAS("ide:*m-tape*");
+ module_init(idetape_init);
+ module_exit(idetape_exit);
+ MODULE_ALIAS_CHARDEV_MAJOR(IDETAPE_MAJOR);
++MODULE_DESCRIPTION("ATAPI Streaming TAPE Driver");
++MODULE_LICENSE("GPL");
 -- 
 1.5.3.7
 
