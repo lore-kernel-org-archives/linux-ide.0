@@ -1,74 +1,244 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCH RESEND number 2] libata: eliminate the home grown dma
- padding in favour of that provided by the block layer
-Date: Tue, 05 Feb 2008 10:07:02 +0900
-Message-ID: <47A7B6B6.2050801@gmail.com>
-References: <1199138168.3110.12.camel@localhost.localdomain>	 <1200698057.3111.68.camel@localhost.localdomain>	 <1201894847.3134.59.camel@localhost.localdomain>	 <47A37AF3.3030503@garzik.org>	 <1201900175.3134.67.camel@localhost.localdomain> <47A52F23.70506@gmail.com>	 <1202013174.3187.69.camel@localhost.localdomain>	 <47A56F2B.4040904@gmail.com>	 <1202049511.3318.13.camel@localhost.localdomain>	 <47A5DA5F.3070209@gmail.com>	 <1202055156.3318.58.camel@localhost.localdomain>	 <47A66A39.7090800@gmail.com> <47A6D9F2.5060102@gmail.com>	 <47A72475.5040106@gmail.com>	 <1202142222.3096.26.camel@localhost.localdomain>	 <47A7A887.2040307@gmail.com>	 <1202171564.3096.147.camel@localhost.localdomain>	 <47A7B11C.10607@gmail.com> <1202172826.3096.163.camel@localhost.localdomain>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: [PATCH] ppc: fix #ifdef-s in mediabay driver (take 2)
+Date: Mon, 4 Feb 2008 20:47:51 +0100
+Message-ID: <200802042047.52026.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <1202172826.3096.163.camel@localhost.localdomain>
-Sender: linux-scsi-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Jeff Garzik <jeff@garzik.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-ide <linux-ide@vger.kernel.org>, Jens Axboe <Jens.Axboe@oracle.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mu-out-0910.google.com ([209.85.134.190]:16633 "EHLO
+	mu-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756915AbYBEBPI (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 4 Feb 2008 20:15:08 -0500
+Received: by mu-out-0910.google.com with SMTP id i10so2168757mue.5
+        for <linux-ide@vger.kernel.org>; Mon, 04 Feb 2008 17:15:05 -0800 (PST)
+Content-Disposition: inline
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: linux-kernel@vger.kernel.org
+Cc: linux-ide@vger.kernel.org, linuxppc-dev@ozlabs.org, Benjamin Herrenschmidt <benh@kernel.crashing.org>, Andrew Morton <akpm@linux-foundation.org>
 
-James Bottomley wrote:
->>>> No, it doesn't.  Drain needs to extend the sg table too 
->>> The patches do extend the sg table.
->> Hmm... Where?
-> 
-> It's the block component; it's already in git head with this patch:
-> 
-> commit fa0ccd837e3dddb44c7db2f128a8bb7e4eabc21a
-> Author: James Bottomley <James.Bottomley@HansenPartnership.com>
-> Date:   Thu Jan 10 11:30:36 2008 -0600
-> 
->     block: implement drain buffers
-> 
-> The description is pretty reasonable.  The way it works is by making
-> block add the drain buffer to the sg table as the last element.
-> 
-> The way it works is if you simply use the length block gives you, you
-> find yourself doing DMA to every element in the sg table except the last
-> one.  If you expand the length to anything up to blk_rq_drain_size() you
-> then use the last element for the drain.
 
-Oops, I was talking about padding.  Sorry about that.
+* Replace incorrect CONFIG_BLK_DEV_IDE #ifdef in
+  check_media_bay() by CONFIG_MAC_FLOPPY one.
 
->> Adjusting qc->nbytes isn't enough.  libata will have to trim at the end
->> of sglist.  With both draining and padding, it means libata will have to
->> trim one sg entry and a few more bytes.  Block layer is behaving
->> differently and in a very noticeable way, it's sending inconsistent
->> values in data_len and sg list.
-> 
-> No, that's the point.  With all the space available, you don't need to
-> trim at all ... you simply don't use it.  The rationale is the way the
-> sg element stuff works.  If you program a DMA table (PRD table in IDE
-> speak) into a controller, it doesn't care if you don't use the last few
-> pieces.  With the default length set, the DMA controller won't use the
-> last programmed element, but it's their if you expand the length or tell
-> it to for an overrun.
+* Replace incorrect CONFIG_BLK_DEV_IDE #ifdef-s by
+  CONFIG_BLK_DEV_IDE_PMAC ones.
 
-Not all controllers have a place to set 'default length'.  They just run
-till sg list terminates.
+* check_media_bay() is used only by drivers/block/swim3.c
+  so make this function available only if CONFIG_MAC_FLOPPY
+  is defined.
 
->> Okay, I see your point.  The biggest problem is that by doing that blk
->> layer breaks a pretty important rule - keeping data len consistent with
->> sg list and the bugs it's gonna cause will be very subtle and dangerous.
->>  This is definitely where we can spend four extra bytes.
-> 
-> The lengths don't have to be consistent (otherwise we wouldn't need to
-> calculate them separately) the request reported length just has to be
-> less than the sg table actual length.  We even make use of this property
-> in SCSI when we can't fit a request into a single command ... we are
-> allowed to chunk up the request as we complete it.  I'm not saying it's
-> best practice, but it is acceptable behaviour.
+* check_media_bay_by_base() and media_bay_set_ide_infos()
+  are used only by drivers/ide/ppc/pmac.c so so make these
+  functions available only if CONFIG_MAC_FLOPPY is defined.
 
-libata definitely isn't ready for that and I don't think expanding the
-behavior to whole block layer is a wise thing to do when the best
-practice can be bought at the cost of 4 bytes per request.  No?
+v2:
+* Remove ifdefs from function prototypes. (Andrew Morton)
 
--- 
-tejun
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Cc: Andrew Morton <akpm@linux-foundation.org>
+Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+---
+ drivers/macintosh/mediabay.c   |   46 ++++++++++++++++++-----------------------
+ include/asm-powerpc/mediabay.h |    8 +++----
+ 2 files changed, 25 insertions(+), 29 deletions(-)
+
+Index: b/drivers/macintosh/mediabay.c
+===================================================================
+--- a/drivers/macintosh/mediabay.c
++++ b/drivers/macintosh/mediabay.c
+@@ -78,12 +78,14 @@ struct media_bay_info {
+ 	int				cached_gpio;
+ 	int				sleeping;
+ 	struct semaphore		lock;
+-#ifdef CONFIG_BLK_DEV_IDE
++#ifdef CONFIG_BLK_DEV_IDE_PMAC
+ 	void __iomem			*cd_base;
+-	int 				cd_index;
+ 	int				cd_irq;
+ 	int				cd_retry;
+ #endif
++#if defined(CONFIG_BLK_DEV_IDE_PMAC) || defined(CONFIG_MAC_FLOPPY)
++	int 				cd_index;
++#endif
+ };
+ 
+ #define MAX_BAYS	2
+@@ -91,7 +93,7 @@ struct media_bay_info {
+ static struct media_bay_info media_bays[MAX_BAYS];
+ int media_bay_count = 0;
+ 
+-#ifdef CONFIG_BLK_DEV_IDE
++#ifdef CONFIG_BLK_DEV_IDE_PMAC
+ /* check the busy bit in the media-bay ide interface
+    (assumes the media-bay contains an ide device) */
+ #define MB_IDE_READY(i)	((readb(media_bays[i].cd_base + 0x70) & 0x80) == 0)
+@@ -401,7 +403,7 @@ static void poll_media_bay(struct media_
+ 				set_mb_power(bay, id != MB_NO);
+ 				bay->content_id = id;
+ 				if (id == MB_NO) {
+-#ifdef CONFIG_BLK_DEV_IDE
++#ifdef CONFIG_BLK_DEV_IDE_PMAC
+ 					bay->cd_retry = 0;
+ #endif
+ 					printk(KERN_INFO "media bay %d is empty\n", bay->index);
+@@ -414,9 +416,9 @@ static void poll_media_bay(struct media_
+ 	}
+ }
+ 
++#ifdef CONFIG_MAC_FLOPPY
+ int check_media_bay(struct device_node *which_bay, int what)
+ {
+-#ifdef CONFIG_BLK_DEV_IDE
+ 	int	i;
+ 
+ 	for (i=0; i<media_bay_count; i++)
+@@ -426,14 +428,14 @@ int check_media_bay(struct device_node *
+ 			media_bays[i].cd_index = -1;
+ 			return -EINVAL;
+ 		}
+-#endif /* CONFIG_BLK_DEV_IDE */
+ 	return -ENODEV;
+ }
+ EXPORT_SYMBOL(check_media_bay);
++#endif /* CONFIG_MAC_FLOPPY */
+ 
++#ifdef CONFIG_BLK_DEV_IDE_PMAC
+ int check_media_bay_by_base(unsigned long base, int what)
+ {
+-#ifdef CONFIG_BLK_DEV_IDE
+ 	int	i;
+ 
+ 	for (i=0; i<media_bay_count; i++)
+@@ -443,15 +445,13 @@ int check_media_bay_by_base(unsigned lon
+ 			media_bays[i].cd_index = -1;
+ 			return -EINVAL;
+ 		} 
+-#endif
+-	
++
+ 	return -ENODEV;
+ }
+ 
+ int media_bay_set_ide_infos(struct device_node* which_bay, unsigned long base,
+-	int irq, int index)
++			    int irq, int index)
+ {
+-#ifdef CONFIG_BLK_DEV_IDE
+ 	int	i;
+ 
+ 	for (i=0; i<media_bay_count; i++) {
+@@ -483,10 +483,10 @@ int media_bay_set_ide_infos(struct devic
+ 			return -ENODEV;
+ 		}
+ 	}
+-#endif /* CONFIG_BLK_DEV_IDE */
+-	
++
+ 	return -ENODEV;
+ }
++#endif /* CONFIG_BLK_DEV_IDE_PMAC */
+ 
+ static void media_bay_step(int i)
+ {
+@@ -521,14 +521,13 @@ static void media_bay_step(int i)
+ 	    	bay->state = mb_resetting;
+ 		MBDBG("mediabay%d: waiting reset (kind:%d)\n", i, bay->content_id);
+ 	    	break;
+-	    
+ 	case mb_resetting:
+ 		if (bay->content_id != MB_CD) {
+ 			MBDBG("mediabay%d: bay is up (kind:%d)\n", i, bay->content_id);
+ 			bay->state = mb_up;
+ 			break;
+ 	    	}
+-#ifdef CONFIG_BLK_DEV_IDE
++#ifdef CONFIG_BLK_DEV_IDE_PMAC
+ 		MBDBG("mediabay%d: waiting IDE reset (kind:%d)\n", i, bay->content_id);
+ 		bay->ops->un_reset_ide(bay);
+ 	    	bay->timer = msecs_to_jiffies(MB_IDE_WAIT);
+@@ -536,16 +535,14 @@ static void media_bay_step(int i)
+ #else
+ 		printk(KERN_DEBUG "media-bay %d is ide (not compiled in kernel)\n", i);
+ 		set_mb_power(bay, 0);
+-#endif /* CONFIG_BLK_DEV_IDE */
++#endif /* CONFIG_BLK_DEV_IDE_PMAC */
+ 	    	break;
+-	    
+-#ifdef CONFIG_BLK_DEV_IDE
++#ifdef CONFIG_BLK_DEV_IDE_PMAC
+ 	case mb_ide_resetting:
+ 	    	bay->timer = msecs_to_jiffies(MB_IDE_TIMEOUT);
+ 	    	bay->state = mb_ide_waiting;
+ 		MBDBG("mediabay%d: waiting IDE ready (kind:%d)\n", i, bay->content_id);
+ 	    	break;
+-	    
+ 	case mb_ide_waiting:
+ 		if (bay->cd_base == NULL) {
+ 			bay->timer = 0;
+@@ -587,11 +584,10 @@ static void media_bay_step(int i)
+ 			bay->timer = 0;
+ 	    	}
+ 		break;
+-#endif /* CONFIG_BLK_DEV_IDE */
+-
++#endif /* CONFIG_BLK_DEV_IDE_PMAC */
+ 	case mb_powering_down:
+ 	    	bay->state = mb_empty;
+-#ifdef CONFIG_BLK_DEV_IDE
++#ifdef CONFIG_BLK_DEV_IDE_PMAC
+     	        if (bay->cd_index >= 0) {
+ 			printk(KERN_DEBUG "Unregistering mb %d ide, index:%d\n", i,
+ 			       bay->cd_index);
+@@ -607,7 +603,7 @@ static void media_bay_step(int i)
+ 				bay->content_id = MB_NO;
+ 			}
+ 	    	}
+-#endif /* CONFIG_BLK_DEV_IDE */    
++#endif /* CONFIG_BLK_DEV_IDE_PMAC */
+ 		MBDBG("mediabay%d: end of power down\n", i);
+ 	    	break;
+ 	}
+@@ -739,7 +735,7 @@ static int media_bay_resume(struct macio
+ 	       	bay->last_value = bay->content_id;
+ 	       	bay->value_count = msecs_to_jiffies(MB_STABLE_DELAY);
+ 	       	bay->timer = msecs_to_jiffies(MB_POWER_DELAY);
+-#ifdef CONFIG_BLK_DEV_IDE
++#ifdef CONFIG_BLK_DEV_IDE_PMAC
+ 	       	bay->cd_retry = 0;
+ #endif
+ 	       	do {
+@@ -829,7 +825,7 @@ static int __init media_bay_init(void)
+ 	for (i=0; i<MAX_BAYS; i++) {
+ 		memset((char *)&media_bays[i], 0, sizeof(struct media_bay_info));
+ 		media_bays[i].content_id	= -1;
+-#ifdef CONFIG_BLK_DEV_IDE
++#ifdef CONFIG_BLK_DEV_IDE_PMAC
+ 		media_bays[i].cd_index		= -1;
+ #endif
+ 	}
+Index: b/include/asm-powerpc/mediabay.h
+===================================================================
+--- a/include/asm-powerpc/mediabay.h
++++ b/include/asm-powerpc/mediabay.h
+@@ -18,14 +18,14 @@
+ #define MB_NO		7	/* media bay contains nothing */
+ 
+ int check_media_bay(struct device_node *which_bay, int what);
+-int check_media_bay_by_base(unsigned long base, int what);
+ 
+ /* Number of bays in the machine or 0 */
+ extern int media_bay_count;
+ 
+-/* called by pmac-ide.c to register IDE controller for media bay */
+-extern int media_bay_set_ide_infos(struct device_node* which_bay,
+-			unsigned long base, int irq, int index);
++int check_media_bay_by_base(unsigned long base, int what);
++/* called by IDE PMAC host driver to register IDE controller for media bay */
++int media_bay_set_ide_infos(struct device_node *which_bay, unsigned long base,
++			    int irq, int index);
+ 
+ #endif /* __KERNEL__ */
+ #endif /* _PPC_MEDIABAY_H */
