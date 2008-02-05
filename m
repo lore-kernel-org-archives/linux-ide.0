@@ -1,102 +1,198 @@
-From: Kamalesh Babulal <kamalesh@linux.vnet.ibm.com>
-Subject: [BUG] 2.6.24-mm1 and 2.6.24-git13 kernel panic's while bootup at
- ide_device_add_all
-Date: Tue, 05 Feb 2008 13:33:49 +0530
-Message-ID: <47A81865.9000506@linux.vnet.ibm.com>
+From: "S, Chandrakala (STSD)" <chandrakala.s@hp.com>
+Subject: RE: [PATCH 0/7] blk_end_request: full I/O completion
+	handler
+Date: Tue, 5 Feb 2008 16:04:00 +0530
+Message-ID: <77334B9413C72244AE1B51ADD4868D700AF902CF@BGEEXC02.asiapacific.cpqcorp.net>
+References: <20070903074549.GJ4253@kernel.dk>
+Reply-To: device-mapper development <dm-devel@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from e28smtp04.in.ibm.com ([59.145.155.4]:44046 "EHLO
-	e28esmtp04.in.ibm.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1754760AbYBEIDz (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 5 Feb 2008 03:03:55 -0500
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
+Return-path: <dm-devel-bounces@redhat.com>
+Content-class: urn:content-classes:message
+In-Reply-To: <20070903074549.GJ4253@kernel.dk>
+List-Unsubscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
+List-Archive: <https://www.redhat.com/archives/dm-devel>
+List-Post: <mailto:dm-devel@redhat.com>
+List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
+List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=subscribe>
+Sender: dm-devel-bounces@redhat.com
+Errors-To: dm-devel-bounces@redhat.com
+To: Jens Axboe <jens.axboe@oracle.com>, Kiyoshi Ueda <k-ueda@ct.jp.nec.com>
+Cc: linux-scsi@vger.kernel.org, "Miller, Mike (OS Dev)" <mike.miller@hp.com>, linux-kernel@vger.kernel.org, grant.likely@secretlab.ca, linux-ide@vger.kernel.org, dm-devel@redhat.com, j-nomura@ce.jp.nec.com
 List-Id: linux-ide@vger.kernel.org
-To: LKML <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, ananth@in.ibm.com, Andy Whitcroft <apw@shadowen.org>, Balbir Singh <balbir@l>
 
-Hi,
+Hello,
 
-The kernel bootup panics with the 2.6.24-mm1 and 2.6.24-git13 kernel
-while defconfig compiled in for x86_64 (Intel(R) Xeon) box
+We would like to know in which kernel version these patches are
+available. =20
+=20
+Thanks,
+Chandrakala
 
-BUG: unable to handle kernel paging request at ffffffffffffffb0
-IP: [<ffffffff80413642>] init_irq+0x188/0x444
-PGD 203067 PUD 204067 PMD 0 
-Oops: 0000 [1] SMP 
-CPU 2 
-Modules linked in:
-Pid: 1, comm: swapper Not tainted 2.6.24 #1
-RIP: 0010:[<ffffffff80413642>]  [<ffffffff80413642>] init_irq+0x188/0x444
-RSP: 0018:ffff81022f093e00  EFLAGS: 00010287
-RAX: ffffffffffffff90 RBX: ffffffff808a9100 RCX: 0000000000000000
-RDX: 00000000ffffffff RSI: ffff81022fc039c0 RDI: ffffffff8074dd00
-RBP: ffff81022f093e30 R08: ffffffff808af880 R09: 0000000000000002
-R10: 0000000000000001 R11: ffff8100000bed60 R12: ffffffff808b0400
-R13: ffffffff808b0410 R14: 0000000000000000 R15: ffffffffffffffff
-FS:  0000000000000000(0000) GS:ffff81022f0883c0(0000) knlGS:0000000000000000
-CS:  0010 DS: 0018 ES: 0018 CR0: 000000008005003b
-CR2: ffffffffffffffb0 CR3: 0000000000201000 CR4: 00000000000006e0
-DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
-DR3: 0000000000000000 DR6: 00000000ffff0ff0 DR7: 0000000000000400
-Process swapper (pid: 1, threadinfo ffff81022f092000, task ffff81022f0797d0)
-Stack:  ffff81022f093e30 0000000000000000 ffffffff808a9100 ffffffff808a9120
- 00000000ffffffed 0000000000000000 ffff81022f093eb0 ffffffff80414425
- ffff81022f093ec0 0000000000000000 000000008074e920 0000000000000246
-Call Trace:
- [<ffffffff80414425>] ide_device_add_all+0xb27/0xe1b
- [<ffffffff807d2884>] ide_generic_init+0x3a/0x3e
- [<ffffffff807b473b>] kernel_init+0x175/0x2e7
- [<ffffffff8020bff8>] child_rip+0xa/0x12
- [<ffffffff80372350>] ? acpi_ds_init_one_object+0x0/0x88
- [<ffffffff807b45c6>] ? kernel_init+0x0/0x2e7
- [<ffffffff8020bfee>] ? child_rip+0x0/0x12
+-----Original Message-----
+From: linux-scsi-owner@vger.kernel.org
+[mailto:linux-scsi-owner@vger.kernel.org] On Behalf Of Jens Axboe
+Sent: Monday, September 03, 2007 1:16 PM
+To: Kiyoshi Ueda
+Cc: linux-kernel@vger.kernel.org; linux-scsi@vger.kernel.org;
+linux-ide@vger.kernel.org; Miller, Mike (OS Dev);
+grant.likely@secretlab.ca; dm-devel@redhat.com; j-nomura@ce.jp.nec.com
+Subject: Re: [PATCH 0/7] blk_end_request: full I/O completion handler
 
+On Fri, Aug 31 2007, Kiyoshi Ueda wrote:
+> Hello,
+>=20
+> This set of patches changes request completion interface between=20
+> device drivers and block layer to 1 step procedure from current 2 step
 
-Code: 89 03 49 8b 45 18 48 89 18 48 39 1b 75 04 0f 0b eb fe fe 05 51 51 38 00 fb eb 5b 48 8b 83 28 07 00 00 83 ca ff 48 83 e8 70 74 0e <48> 8b 40 20 48 8b 80 88 00 00 00 8b 50 04 48 8b 3d 79 ff 2f 00 
-RIP  [<ffffffff80413642>] init_irq+0x188/0x444
- RSP <ffff81022f093e00>
-CR2: ffffffffffffffb0
----[ end trace 9010a4c8c4ba608a ]---
+> procedures using end_that_request_{first/chunk} and=20
+> end_that_request_last().
+>=20
+> This change allows request-based multipath to hook in before=20
+> completing each chunk of request, check errors for it and retry it=20
+> using another path if error is detected.
+>=20
+> Summaries of each patch are below:
+>   1/7: add new request completion interface, blk_end_request()
+>   2/7: add some macros to get the size of request in bytes
+>   3/7: convert normal drivers to use blk_end_request()
+>   4/7: convert odd drivers like cciss/cpqarray/xsysace to use
+>        blk_end_request()
+>   5/7: convert ide-cd (cdrom_newpc_intr) to use blk_end_request()
+>   6/7: remove/unexport no longer needed end_that_request_*
+>   7/7: change rq->end_io to cover request completion as a whole
+>=20
+> I have tested the patch on two machines, ia64+QLA1280+QLA2200 and=20
+> x86_64+SATA+IDE-CDROM.
+> I can't test other device drivers for which I don't have hardware.
+> So testing help and any comments would be very much appreciated.
+>=20
+> The interface change causes code modifications of *ALL DEVICE DRIVERS*
 
-(gdb) p init_irq
-$1 = {int (ide_hwif_t *)} 0xffffffff804134ba <init_irq>
-(gdb) p/x 0xffffffff804134ba+0x188
-$2 = 0xffffffff80413642
-(gdb) l *0xffffffff80413642
-0xffffffff80413642 is in init_irq (include/linux/ide.h:1311).
-1306            print_hex_dump(KERN_INFO, "", DUMP_PREFIX_NONE, 16, 2, id, 512, 0);
-1307    }
-1308
-1309    static inline int hwif_to_node(ide_hwif_t *hwif)
-1310    {
-1311            struct pci_dev *dev = to_pci_dev(hwif->dev);
-1312            return dev ? pcibus_to_node(dev->bus) : -1;
-1313    }
-1314
-1315    static inline ide_drive_t *ide_get_paired_drive(ide_drive_t *drive)
-(gdb) 
+> which are using end_that_request_{first/chunk/last} to complete
+request.
+> But it should not affect the behavior.
+>=20
+> Please review and apply if no problem.
+> This patch-set should be applied on top of 2.6.23-rc3-mm1.
+>=20
+>=20
+> BACKGROUND
+> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+> The patch is necessary to allow device stacking at request level, that
 
-(gdb) p ide_device_add_all
-$1 = {int (u8 *, const struct ide_port_info *)} 0xffffffff804138fe <ide_device_add_all>
-(gdb) p/x 0xffffffff804138fe
-$2 = 0xffffffff804138fe
-(gdb) l *0xffffffff804138fe
-0xffffffff804138fe is in ide_device_add_all (drivers/ide/ide-probe.c:1372).
-1367                            hwif->cbl = hwif->cable_detect(hwif);
-1368            }
-1369    }
-1370
-1371    int ide_device_add_all(u8 *idx, const struct ide_port_info *d)
-1372    {
-1373            ide_hwif_t *hwif, *mate = NULL;
-1374            int i, rc = 0;
-1375
-1376            for (i = 0; i < MAX_HWIFS; i++) {
-(gdb) 
+> is request-based device-mapper multipath.
+> Currently, device-mapper is implemented as a stacking block device at=20
+> BIO level.  OTOH, request-based DM will stack at request level to=20
+> allow better multipathing decision.
+> To allow device stacking at request level, the completion procedure=20
+> need to provide a hook for it.
+> For example, dm-multipath has to check errors and retry with other=20
+> paths if necessary before returning the I/O result to upper layer.
+> struct request has 'end_io' hook currently.  But it's called at the=20
+> very late stage of completion handling where the I/O result is already
 
--- 
-Thanks & Regards,
-Kamalesh Babulal,
-Linux Technology Center,
-IBM, ISTL.
+> returned to the upper layer.
+> So we need something here.
+>=20
+> The first approach to hook in completion of each chunk of request was=20
+> adding a new rq->end_io_first() hook and calling it on the top of=20
+> __end_that_request_first().
+>   - http://marc.theaimsgroup.com/?l=3Dlinux-scsi&m=3D115520444515914&w=3D=
+2
+>   - http://marc.theaimsgroup.com/?l=3Dlinux-kernel&m=3D116656637425880&=
+w=3D2
+> However, Jens pointed out that redesigning rq->end_io() as a full=20
+> completion handler would be better:
+>=20
+> On Thu, 21 Dec 2006 08:49:47 +0100, Jens Axboe <jens.axboe@oracle.com>
+wrote:
+> > Ok, I see what you are getting at. The current ->end_io() is called=20
+> > when the request has fully completed, you want notification for each
+
+> > chunk potentially completed.
+> >=20
+> > I think a better design here would be to use ->end_io() as the full=20
+> > completion handler, similar to how bio->bi_end_io() works. A request
+
+> > originating from __make_request() would set something ala:
+> .....
+> > instead of calling the functions manually. That would allow you to=20
+> > get notification right at the beginning and do what you need,=20
+> > without adding a special hook for this.
+>=20
+> I thought his comment was reasonable.
+> So I modified the patches based on his suggestion.
+>=20
+>=20
+> WHAT IS CHANGED
+> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+> The change is basically illustlated by the following pseudo code:
+>=20
+> [Before]
+>   if (end_that_request_{first/chunk} succeeds) { <-- completes bios
+>      <do something driver specific>
+>      end_that_request_last() <-- calls end_io()
+>      <the request is free from the driver>
+>   } else {
+>      <the request was incomplete, retry for leftover or ignoring>
+>   }
+>=20
+> [After]
+>   if (blk_end_request() succeeds) { <-- calls end_io(), completes bios
+>      <the request is free from the driver>
+>   } else {
+>      <the request was incomplete, retry for leftover or ignoring>
+>   }
+>=20
+>=20
+> In detail, request completion procedures are changed like below.
+>=20
+> [Before]
+>   o 2 steps completion using end_that_request_{first/chunk}
+>     and end_that_request_last().
+>   o Device drivers have ownership of a request until they
+>     call end_that_request_last().
+>   o rq->end_io() is called at the last stage of
+>     end_that_request_last() for some block layer codes need
+>     specific request handling when completing it.
+>=20
+> [After]
+>   o 1 step completion using blk_end_request().
+>     (end_that_request_* are no longer used from device drivers.)
+>   o Device drivers give over ownership of a request
+>     when calling blk_end_request().
+>     If it returns 0, the request is completed.
+>     If it returns 1, the request isn't completed and
+>     the ownership is returned to the device driver again.
+>   o rq->end_io() is called at the top of blk_end_request() to
+>     allow to hook all parts of request completion.
+>     Existing users of rq->end_io() must be changed to do
+>     all parts of request completion.
+>=20
+>=20
+> EXAMPLE CODE
+> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+> Request-based Device-mapper multipath patch-set is attached as=20
+> appendix, although it still needs some work and isn't ready for
+review.
+> It checks error of a request and retries the request using other paths
+
+> if error is detected, before completing bios in the request.
+> (See clone_end_request() in appendix#1.)
+
+This looks good, thanks for following up on this! I've replied with
+comments on changes for the core bits, the interface I quite agree with.
+So if you fix up the things I ask for, I'll merge this up.
+
+--
+Jens Axboe
+
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+the body of a message to majordomo@vger.kernel.org More majordomo info
+at  http://vger.kernel.org/majordomo-info.html
