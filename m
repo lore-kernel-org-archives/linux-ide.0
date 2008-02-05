@@ -1,99 +1,57 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: (fwd) Bug#11922: I/O error on blank tapes
-Date: Mon, 04 Feb 2008 15:56:53 -0600
-Message-ID: <1202162213.3096.119.camel@localhost.localdomain>
-References: <20080204142206.GB5532@stro.at>
-	 <20080204212835.GA29286@gollum.tnic>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: [PATCH RESEND number 2] libata: eliminate the home grown dma
+ padding in favour of that provided by the block layer
+Date: Tue, 05 Feb 2008 09:06:31 +0900
+Message-ID: <47A7A887.2040307@gmail.com>
+References: <1199138168.3110.12.camel@localhost.localdomain>	 <1200698057.3111.68.camel@localhost.localdomain>	 <1201894847.3134.59.camel@localhost.localdomain>	 <47A37AF3.3030503@garzik.org>	 <1201900175.3134.67.camel@localhost.localdomain> <47A52F23.70506@gmail.com>	 <1202013174.3187.69.camel@localhost.localdomain>	 <47A56F2B.4040904@gmail.com>	 <1202049511.3318.13.camel@localhost.localdomain>	 <47A5DA5F.3070209@gmail.com>	 <1202055156.3318.58.camel@localhost.localdomain>	 <47A66A39.7090800@gmail.com> <47A6D9F2.5060102@gmail.com>	 <47A72475.5040106@gmail.com> <1202142222.3096.26.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:45205 "EHLO
-	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755757AbYBDV5C (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 4 Feb 2008 16:57:02 -0500
-In-Reply-To: <20080204212835.GA29286@gollum.tnic>
+Received: from rv-out-0910.google.com ([209.85.198.190]:12842 "EHLO
+	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756571AbYBEAGl (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 4 Feb 2008 19:06:41 -0500
+Received: by rv-out-0910.google.com with SMTP id k20so1574341rvb.1
+        for <linux-ide@vger.kernel.org>; Mon, 04 Feb 2008 16:06:41 -0800 (PST)
+In-Reply-To: <1202142222.3096.26.camel@localhost.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: petkovbb@gmail.com
-Cc: maximilian attems <max@stro.at>, linux-ide@vger.kernel.org, Stephen Kitt <steve@sk2.org>, bzolnier@gmail.com, linux-scsi <linux-scsi@vger.kernel.org>
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Jeff Garzik <jeff@garzik.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-ide <linux-ide@vger.kernel.org>, Jens Axboe <Jens.Axboe@oracle.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
 
+James Bottomley wrote:
+> Plus, tape devices are also ATAPI and since the problem seems to be
+> handling of ATAPI pio commands, they need all of this too.  It really
+> is, I think, better just to do the setup in the libata slave configure
+> if the device is atapi.
 
-On Mon, 2008-02-04 at 22:28 +0100, Borislav Petkov wrote:
-> On Mon, Feb 04, 2008 at 03:22:06PM +0100, maximilian attems wrote:
-> 
-> (Added Bart to CC)
-> 
-> > hello borislav,
-> > 
-> > may i forward you that *old* Debian kernel bug,
-> > have seen you working on ide-tape:
-> > http://bugs.debian.org/11922
-> > no we don't carry any ide patches anymore.
-> > 
-> > maybe you've already fixed it in latest?
-> > 
-> > thanks
-> > 
-> > -- 
-> > maks
-> > 
-> > ----- Forwarded message from Stephen Kitt <steve@sk2.org> -----
-> > 
-> > Subject: Bug#11922: I/O error on blank tapes
-> > Date: Sat, 1 Dec 2007 19:06:18 +0100
-> > From: Stephen Kitt <steve@sk2.org>
-> > To: 11922@bugs.debian.org
-> > 
-> > Hi,
-> > 
-> > This does still occur with 2.6.22; with a blank tape in my HP DDS-4 drive:
-> > 
-> > $ tar tzvf /dev/nst0
-> > tar: /dev/nst0: Cannot read: Input/output error
+If no SCSI HBA needs it, fine.
 
-That's a SCSI tape, not an IDE one.  I cc'd the SCSI list
+> For all the rest, I think code demonstrates better ... well, except the
+> sata_fsl.c update ... you leave in qc->n_iter, but it's only ever set to
+> zero ... doesn't that cause this driver to break?
 
-James
+Probably.  I was gonna cross check with your patch while splitting.
+They seem mostly identical so I'll probably use your patch with some
+modifications.
 
-> > tar: At beginning of tape, quitting now
-> > tar: Error is not recoverable: exiting now
-> > 
-> > gzip: stdin: unexpected end of file
-> > tar: Child returned status 2
-> > tar: Error exit delayed from previous errors
-> > 
-> > Nothing gets logged anywhere, which fits the original bug description.
-> > 
-> > This is a well-known issue: see for example
-> > http://www.sibbald.com/bacula/html-manual/Bacula_Console.html (search for
-> > "blank tape").
-> > 
-> > Regards,
-> > 
-> > Stephen
-> > 
-> > 
-> > 
-> > -- 
-> > To UNSUBSCRIBE, email to debian-kernel-REQUEST@lists.debian.org
-> > with a subject of "unsubscribe". Trouble? Contact listmaster@lists.debian.org
-> > 
-> > 
-> > ----- End forwarded message -----
-> 
-> Hi Maks,
-> 
-> we're currently in the process of aggressively cleaning up ide-tape. However,
-> this brings (almost) no functional changes to the driver and we haven't looked
-> at any bugs that might exist. Actually, I wanted to probe the community to see
-> whether anyone is using ide-tape at all, and if not, to remove it completely.
-> 
-> Since i don't have the hardware, i'm gonna have to ask you (or Stephen) to wait
-> until all changes have entered mainline and then to try to reproduce the bug again
-> after having enabled debugging (IDETAPE_DEBUG_LOG) and send me the syslog
-> output.
-> 
-> Thanks.
-> 
+> I analysed all the places you use the expanded data length.  To keep the
+> true length in the request and add the drain if necessary, I think
+> requires this update over my published libata drain patch.  I've also
+> added the request accessor to the drain buffer.  Could you verify this
+> actually works?  If it does, it's better than all the additions to block
+> and sr.  It would probably help to resend the series rebased against git
+> current.
 
+No, it doesn't.  Drain needs to extend the sg table too and it makes
+controllers lax about buffer overruns for commands they shouldn't be.
+Gee.. What's the deal with extra four bytes?  If you're worried about
+the size of struct request, chopping off PC request part into a separate
+struct would be far better strategy than making what's already confusing
+more confusing.
+
+Thanks.
+
+-- 
+tejun
