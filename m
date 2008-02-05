@@ -1,57 +1,43 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCH RESEND number 2] libata: eliminate the home grown dma
- padding in favour of that provided by the block layer
-Date: Tue, 05 Feb 2008 09:06:31 +0900
-Message-ID: <47A7A887.2040307@gmail.com>
-References: <1199138168.3110.12.camel@localhost.localdomain>	 <1200698057.3111.68.camel@localhost.localdomain>	 <1201894847.3134.59.camel@localhost.localdomain>	 <47A37AF3.3030503@garzik.org>	 <1201900175.3134.67.camel@localhost.localdomain> <47A52F23.70506@gmail.com>	 <1202013174.3187.69.camel@localhost.localdomain>	 <47A56F2B.4040904@gmail.com>	 <1202049511.3318.13.camel@localhost.localdomain>	 <47A5DA5F.3070209@gmail.com>	 <1202055156.3318.58.camel@localhost.localdomain>	 <47A66A39.7090800@gmail.com> <47A6D9F2.5060102@gmail.com>	 <47A72475.5040106@gmail.com> <1202142222.3096.26.camel@localhost.localdomain>
+From: Luben Tuikov <ltuikov@yahoo.com>
+Subject: Re: [PATCH] enclosure: add support for enclosure services
+Date: Mon, 4 Feb 2008 16:32:18 -0800 (PST)
+Message-ID: <50030.21278.qm@web31808.mail.mud.yahoo.com>
+References: <1202074856.3318.111.camel@localhost.localdomain>
+Reply-To: ltuikov@yahoo.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rv-out-0910.google.com ([209.85.198.190]:12842 "EHLO
-	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756571AbYBEAGl (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 4 Feb 2008 19:06:41 -0500
-Received: by rv-out-0910.google.com with SMTP id k20so1574341rvb.1
-        for <linux-ide@vger.kernel.org>; Mon, 04 Feb 2008 16:06:41 -0800 (PST)
-In-Reply-To: <1202142222.3096.26.camel@localhost.localdomain>
+Received: from web31808.mail.mud.yahoo.com ([68.142.207.71]:30017 "HELO
+	web31808.mail.mud.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1757352AbYBEAcS (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 4 Feb 2008 19:32:18 -0500
+In-Reply-To: <1202074856.3318.111.camel@localhost.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Jeff Garzik <jeff@garzik.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-ide <linux-ide@vger.kernel.org>, Jens Axboe <Jens.Axboe@oracle.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+To: linux-scsi <linux-scsi@vger.kernel.org>, James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: linux-kernel <linux-kernel@vger.kernel.org>, linux-ide <linux-ide@vger.kernel.org>, "Accardi, Kristen C" <kristen.c.accardi@intel.com>
 
-James Bottomley wrote:
-> Plus, tape devices are also ATAPI and since the problem seems to be
-> handling of ATAPI pio commands, they need all of this too.  It really
-> is, I think, better just to do the setup in the libata slave configure
-> if the device is atapi.
+--- On Sun, 2/3/08, James Bottomley <James.Bottomley@HansenPartnership.com> wrote:
 
-If no SCSI HBA needs it, fine.
+> The enclosure misc device is really just a library providing
+> sysfs
+> support for physical enclosure devices and their
+> components.
 
-> For all the rest, I think code demonstrates better ... well, except the
-> sata_fsl.c update ... you leave in qc->n_iter, but it's only ever set to
-> zero ... doesn't that cause this driver to break?
+Who is the target audience/user of those facilities?
+a) The kernel itself needing to read/write SES pages?
+b) A user space application using sysfs to read/write
+   SES pages?
 
-Probably.  I was gonna cross check with your patch while splitting.
-They seem mostly identical so I'll probably use your patch with some
-modifications.
+At the moment SES device management is done via
+an application (user-space) and a user-space library
+used by the application and /dev/sgX to send SCSI
+commands to the SES device.
 
-> I analysed all the places you use the expanded data length.  To keep the
-> true length in the request and add the drain if necessary, I think
-> requires this update over my published libata drain patch.  I've also
-> added the request accessor to the drain buffer.  Could you verify this
-> actually works?  If it does, it's better than all the additions to block
-> and sr.  It would probably help to resend the series rebased against git
-> current.
+One could have a very good argument to not bloat
+the kernel with this but leave it to a user-space
+application and a library to do all this and
+communicate with the SES device via the kernel's /dev/sgX.
 
-No, it doesn't.  Drain needs to extend the sg table too and it makes
-controllers lax about buffer overruns for commands they shouldn't be.
-Gee.. What's the deal with extra four bytes?  If you're worried about
-the size of struct request, chopping off PC request part into a separate
-struct would be far better strategy than making what's already confusing
-more confusing.
+   Luben
 
-Thanks.
-
--- 
-tejun
