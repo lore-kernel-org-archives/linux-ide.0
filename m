@@ -1,136 +1,102 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH 5/5] libata: implement drain buffers
-Date: Tue,  5 Feb 2008 16:53:05 +0900
-Message-ID: <12021979861729-git-send-email-htejun@gmail.com>
-References: <12021979851743-git-send-email-htejun@gmail.com>
+From: Kamalesh Babulal <kamalesh@linux.vnet.ibm.com>
+Subject: [BUG] 2.6.24-mm1 and 2.6.24-git13 kernel panic's while bootup at
+ ide_device_add_all
+Date: Tue, 05 Feb 2008 13:33:49 +0530
+Message-ID: <47A81865.9000506@linux.vnet.ibm.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rv-out-0910.google.com ([209.85.198.185]:23522 "EHLO
-	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754762AbYBEHxZ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 5 Feb 2008 02:53:25 -0500
-Received: by rv-out-0910.google.com with SMTP id k20so1647560rvb.1
-        for <linux-ide@vger.kernel.org>; Mon, 04 Feb 2008 23:53:25 -0800 (PST)
-In-Reply-To: <12021979851743-git-send-email-htejun@gmail.com>
+Received: from e28smtp04.in.ibm.com ([59.145.155.4]:44046 "EHLO
+	e28esmtp04.in.ibm.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1754760AbYBEIDz (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 5 Feb 2008 03:03:55 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: jeff@garzik.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, fujita.tomonori@lab.ntt.co.jp, Jens.Axboe@oracle.com
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Tejun Heo <htejun@gmail.com>
+To: LKML <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, ananth@in.ibm.com, Andy Whitcroft <apw@shadowen.org>, Balbir Singh <balbir@l>
 
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Hi,
 
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
+The kernel bootup panics with the 2.6.24-mm1 and 2.6.24-git13 kernel
+while defconfig compiled in for x86_64 (Intel(R) Xeon) box
 
-This just updates the libata slave configure routine to take advantage
-of the block layer drain buffers.  It also adjusts the size lengths in
-the atapi code to add the drain buffer to the DMA length so the driver
-knows it can rely on it.
+BUG: unable to handle kernel paging request at ffffffffffffffb0
+IP: [<ffffffff80413642>] init_irq+0x188/0x444
+PGD 203067 PUD 204067 PMD 0 
+Oops: 0000 [1] SMP 
+CPU 2 
+Modules linked in:
+Pid: 1, comm: swapper Not tainted 2.6.24 #1
+RIP: 0010:[<ffffffff80413642>]  [<ffffffff80413642>] init_irq+0x188/0x444
+RSP: 0018:ffff81022f093e00  EFLAGS: 00010287
+RAX: ffffffffffffff90 RBX: ffffffff808a9100 RCX: 0000000000000000
+RDX: 00000000ffffffff RSI: ffff81022fc039c0 RDI: ffffffff8074dd00
+RBP: ffff81022f093e30 R08: ffffffff808af880 R09: 0000000000000002
+R10: 0000000000000001 R11: ffff8100000bed60 R12: ffffffff808b0400
+R13: ffffffff808b0410 R14: 0000000000000000 R15: ffffffffffffffff
+FS:  0000000000000000(0000) GS:ffff81022f0883c0(0000) knlGS:0000000000000000
+CS:  0010 DS: 0018 ES: 0018 CR0: 000000008005003b
+CR2: ffffffffffffffb0 CR3: 0000000000201000 CR4: 00000000000006e0
+DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+DR3: 0000000000000000 DR6: 00000000ffff0ff0 DR7: 0000000000000400
+Process swapper (pid: 1, threadinfo ffff81022f092000, task ffff81022f0797d0)
+Stack:  ffff81022f093e30 0000000000000000 ffffffff808a9100 ffffffff808a9120
+ 00000000ffffffed 0000000000000000 ffff81022f093eb0 ffffffff80414425
+ ffff81022f093ec0 0000000000000000 000000008074e920 0000000000000246
+Call Trace:
+ [<ffffffff80414425>] ide_device_add_all+0xb27/0xe1b
+ [<ffffffff807d2884>] ide_generic_init+0x3a/0x3e
+ [<ffffffff807b473b>] kernel_init+0x175/0x2e7
+ [<ffffffff8020bff8>] child_rip+0xa/0x12
+ [<ffffffff80372350>] ? acpi_ds_init_one_object+0x0/0x88
+ [<ffffffff807b45c6>] ? kernel_init+0x0/0x2e7
+ [<ffffffff8020bfee>] ? child_rip+0x0/0x12
 
-I suspect I should also be checking for AHCI as well as ATA_DEV_ATAPI,
-but I couldn't see how to do that easily.
 
-tj: * atapi_drain_needed() added such that draining is applied to only
-      misc ATAPI commands.
-    * q->bounce_gfp used when allocating drain buffer.
-    * ata_dev_printk() used instead of sdev_printk().
+Code: 89 03 49 8b 45 18 48 89 18 48 39 1b 75 04 0f 0b eb fe fe 05 51 51 38 00 fb eb 5b 48 8b 83 28 07 00 00 83 ca ff 48 83 e8 70 74 0e <48> 8b 40 20 48 8b 80 88 00 00 00 8b 50 04 48 8b 3d 79 ff 2f 00 
+RIP  [<ffffffff80413642>] init_irq+0x188/0x444
+ RSP <ffff81022f093e00>
+CR2: ffffffffffffffb0
+---[ end trace 9010a4c8c4ba608a ]---
 
-Signed-off-by: James Bottomley <James.Bottomley@HansenPartnership.com>
-Signed-off-by: Tejun Heo <htejun@gmail.com>
----
- drivers/ata/libata-scsi.c |   41 +++++++++++++++++++++++++++++++++++------
- 1 files changed, 35 insertions(+), 6 deletions(-)
+(gdb) p init_irq
+$1 = {int (ide_hwif_t *)} 0xffffffff804134ba <init_irq>
+(gdb) p/x 0xffffffff804134ba+0x188
+$2 = 0xffffffff80413642
+(gdb) l *0xffffffff80413642
+0xffffffff80413642 is in init_irq (include/linux/ide.h:1311).
+1306            print_hex_dump(KERN_INFO, "", DUMP_PREFIX_NONE, 16, 2, id, 512, 0);
+1307    }
+1308
+1309    static inline int hwif_to_node(ide_hwif_t *hwif)
+1310    {
+1311            struct pci_dev *dev = to_pci_dev(hwif->dev);
+1312            return dev ? pcibus_to_node(dev->bus) : -1;
+1313    }
+1314
+1315    static inline ide_drive_t *ide_get_paired_drive(ide_drive_t *drive)
+(gdb) 
 
-diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-index e54ee6e..185d699 100644
---- a/drivers/ata/libata-scsi.c
-+++ b/drivers/ata/libata-scsi.c
-@@ -826,17 +826,38 @@ static void ata_scsi_sdev_config(struct scsi_device *sdev)
- 	sdev->max_device_blocked = 1;
- }
- 
--static void ata_scsi_dev_config(struct scsi_device *sdev,
--				struct ata_device *dev)
-+static int atapi_drain_needed(struct request *rq)
-+{
-+	if (likely(!blk_pc_request(rq)))
-+		return 0;
-+
-+	return atapi_cmd_type(rq->cmd[0]) == ATAPI_MISC;
-+}
-+
-+static int ata_scsi_dev_config(struct scsi_device *sdev,
-+			       struct ata_device *dev)
- {
- 	/* configure max sectors */
- 	blk_queue_max_sectors(sdev->request_queue, dev->max_sectors);
- 
--	if (dev->class == ATA_DEV_ATAPI)
-+	if (dev->class == ATA_DEV_ATAPI) {
-+		struct request_queue *q = sdev->request_queue;
-+		void *buf;
-+
- 		/* set the min alignment */
- 		blk_queue_update_dma_alignment(sdev->request_queue,
- 					       ATA_DMA_PAD_SZ - 1);
--	else {
-+
-+		/* configure draining */
-+		buf = kmalloc(ATAPI_MAX_DRAIN, q->bounce_gfp | GFP_KERNEL);
-+		if (!buf) {
-+			ata_dev_printk(dev, KERN_ERR,
-+				       "drain buffer allocation failed\n");
-+			return -ENOMEM;
-+		}
-+
-+		blk_queue_dma_drain(q, atapi_drain_needed, buf, ATAPI_MAX_DRAIN);
-+	} else {
- 		/* ATA devices must be sector aligned */
- 		blk_queue_update_dma_alignment(sdev->request_queue,
- 					       ATA_SECT_SIZE - 1);
-@@ -853,6 +874,8 @@ static void ata_scsi_dev_config(struct scsi_device *sdev,
- 		depth = min(ATA_MAX_QUEUE - 1, depth);
- 		scsi_adjust_queue_depth(sdev, MSG_SIMPLE_TAG, depth);
- 	}
-+
-+	return 0;
- }
- 
- /**
-@@ -871,13 +894,14 @@ int ata_scsi_slave_config(struct scsi_device *sdev)
- {
- 	struct ata_port *ap = ata_shost_to_port(sdev->host);
- 	struct ata_device *dev = __ata_scsi_find_dev(ap, sdev);
-+	int rc = 0;
- 
- 	ata_scsi_sdev_config(sdev);
- 
- 	if (dev)
--		ata_scsi_dev_config(sdev, dev);
-+		rc = ata_scsi_dev_config(sdev, dev);
- 
--	return 0;
-+	return rc;
- }
- 
- /**
-@@ -897,6 +921,7 @@ int ata_scsi_slave_config(struct scsi_device *sdev)
- void ata_scsi_slave_destroy(struct scsi_device *sdev)
- {
- 	struct ata_port *ap = ata_shost_to_port(sdev->host);
-+	struct request_queue *q = sdev->request_queue;
- 	unsigned long flags;
- 	struct ata_device *dev;
- 
-@@ -912,6 +937,10 @@ void ata_scsi_slave_destroy(struct scsi_device *sdev)
- 		ata_port_schedule_eh(ap);
- 	}
- 	spin_unlock_irqrestore(ap->lock, flags);
-+
-+	kfree(q->dma_drain_buffer);
-+	q->dma_drain_buffer = NULL;
-+	q->dma_drain_size = 0;
- }
- 
- /**
+(gdb) p ide_device_add_all
+$1 = {int (u8 *, const struct ide_port_info *)} 0xffffffff804138fe <ide_device_add_all>
+(gdb) p/x 0xffffffff804138fe
+$2 = 0xffffffff804138fe
+(gdb) l *0xffffffff804138fe
+0xffffffff804138fe is in ide_device_add_all (drivers/ide/ide-probe.c:1372).
+1367                            hwif->cbl = hwif->cable_detect(hwif);
+1368            }
+1369    }
+1370
+1371    int ide_device_add_all(u8 *idx, const struct ide_port_info *d)
+1372    {
+1373            ide_hwif_t *hwif, *mate = NULL;
+1374            int i, rc = 0;
+1375
+1376            for (i = 0; i < MAX_HWIFS; i++) {
+(gdb) 
+
 -- 
-1.5.2.4
-
+Thanks & Regards,
+Kamalesh Babulal,
+Linux Technology Center,
+IBM, ISTL.
