@@ -1,116 +1,80 @@
-From: "Jan Beulich" <jbeulich@novell.com>
+From: Tejun Heo <htejun@gmail.com>
 Subject: Re: AHCI driver preferring nr_ports over port map
-Date: Tue, 05 Feb 2008 12:40:04 +0000
-Message-ID: <47A86734.76E4.0078.0@novell.com>
-References: <47A712240200007800045D39@public.id2-vpn.continvity.gns.novell.com>
- <47A71538.50803@gmail.com> <47A8228B.76E4.0078.0@novell.com>
- <47A854AE.5070403@gmail.com>
+Date: Tue, 05 Feb 2008 22:17:46 +0900
+Message-ID: <47A861FA.1070001@gmail.com>
+References: <47A712240200007800045D39@public.id2-vpn.continvity.gns.novell.com> <47A71538.50803@gmail.com> <47A8228B.76E4.0078.0@novell.com> <47A854AE.5070403@gmail.com> <47A86734.76E4.0078.0@novell.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from public.id2-vpn.continvity.gns.novell.com ([195.33.99.129]:13889
-	"EHLO public.id2-vpn.continvity.gns.novell.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751995AbYBEMjs (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 5 Feb 2008 07:39:48 -0500
-In-Reply-To: <47A854AE.5070403@gmail.com>
-Content-Disposition: inline
+Received: from rv-out-0910.google.com ([209.85.198.184]:25910 "EHLO
+	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751389AbYBENR7 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 5 Feb 2008 08:17:59 -0500
+Received: by rv-out-0910.google.com with SMTP id k20so1694093rvb.1
+        for <linux-ide@vger.kernel.org>; Tue, 05 Feb 2008 05:17:58 -0800 (PST)
+In-Reply-To: <47A86734.76E4.0078.0@novell.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
+To: Jan Beulich <jbeulich@novell.com>
 Cc: jgarzik@pobox.com, linux-ide@vger.kernel.org
 
->>> Tejun Heo <htejun@gmail.com> 05.02.08 13:21 >>>
->Jan Beulich wrote:
->>> Yes, we can be more smart if necessary.  I don't know.  The hardwar=
-e is
->>> clearly violating the spec which requires those two values to agree=
-=2E
->>=20
->> So are you saying the ESB2 spec is violating a higher level spec? I =
-know
->> almost nothing about AHCI, so please forgive that question...
->
->n_ports and PI should agree with each other.  That's what the ahci spe=
-c
->requires.  If ESB2 spec has different opinion about n_ports, it's in
->violation of AHCI spec but I don't think it explicitly state such
->things, does it?
+Jan Beulich wrote:
+> It does, in the description for bits 4:0 of the host capabilities register:
+> "Number of Ports (NPS)" RO. Hardwired to 5h to indicate support for 6
+> ports. Note that the number of ports indicated in this field may be more
+> than the number of ports indicated in the PI (ABAR + 0Ch) register."
 
-It does, in the description for bits 4:0 of the host capabilities regis=
-ter:
-"Number of Ports (NPS) =E2=80=93 RO. Hardwired to 5h to indicate suppor=
-t for 6
-ports. Note that the number of ports indicated in this field may be mor=
-e
-than the number of ports indicated in the PI (ABAR + 0Ch) register."
+Oops, you're right, NP can go over PI.  Somehow I've been believing it
+should match PI.  Oh well, that's me being delusional again.  :-(
 
->I'd like to see more output including leading controller detection but
->yeah, it seems there's no silicon implemented for the last port.  The
->SStatus value 4 indicates that PHY is offline which usually happens wh=
-en
->the PHY is turned off from SControl.  Hmm... weird.  How many ports do=
-es
->the machine actually have?  I agree we'll need to adjust PI handling f=
-or
->the controller.
+>From ahci 1.1.
 
-<7>libata version 2.00 loaded.
-<7>ahci 0000:00:1f.2: version 2.0
-<6>ACPI: PCI Interrupt 0000:00:1f.2[C] -> GSI 20 (level, low) -> IRQ 66
-<7>PCI: Setting latency timer of device 0000:00:1f.2 to 64
-<6>ahci 0000:00:1f.2: AHCI 0001.0100 32 slots 6 ports 3 Gbps 0x1f impl =
-SATA mode
-<6>ahci 0000:00:1f.2: flags: 64bit ncq pm led slum part=20
-<6>ata1: SATA max UDMA/133 cmd 0xF882E100 ctl 0x0 bmdma 0x0 irq 66
-<6>ata2: SATA max UDMA/133 cmd 0xF882E180 ctl 0x0 bmdma 0x0 irq 66
-<6>ata3: SATA max UDMA/133 cmd 0xF882E200 ctl 0x0 bmdma 0x0 irq 66
-<6>ata4: SATA max UDMA/133 cmd 0xF882E280 ctl 0x0 bmdma 0x0 irq 66
-<6>ata5: SATA max UDMA/133 cmd 0xF882E300 ctl 0x0 bmdma 0x0 irq 66
-<6>ata6: SATA max UDMA/133 cmd 0xF882E380 ctl 0x0 bmdma 0x0 irq 66
-<6>scsi0 : ahci
-<6>ata1: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-<6>ata1.00: ATA-7, max UDMA/133, 312500000 sectors: LBA48 NCQ (depth 31=
-/32)
-<6>ata1.00: configured for UDMA/133
-<6>scsi1 : ahci
-<6>ata2: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-<6>ata2.00: ATA-7, max UDMA/133, 312500000 sectors: LBA48 NCQ (depth 31=
-/32)
-<6>ata2.00: configured for UDMA/133
-<6>scsi2 : ahci
-<6>ata3: SATA link down (SStatus 0 SControl 300)
-<6>scsi3 : ahci
-<6>ata4: SATA link down (SStatus 0 SControl 300)
-<6>scsi4 : ahci
-<6>ata5: SATA link down (SStatus 4 SControl 300)
-<6>scsi5 : ahci
-<6>ata6: SATA link down (SStatus 0 SControl 0)
-<5>  Vendor: ATA       Model: ST3160815AS       Rev: 3.AD
-<5>  Type:   Direct-Access                      ANSI SCSI revision: 05
-<5>SCSI device sda: 312500000 512-byte hdwr sectors (160000 MB)
-<5>sda: Write Protect is off
-<7>sda: Mode Sense: 00 3a 00 00
-<5>SCSI device sda: drive cache: write back
-<5>SCSI device sda: 312500000 512-byte hdwr sectors (160000 MB)
-<5>sda: Write Protect is off
-<7>sda: Mode Sense: 00 3a 00 00
-<5>SCSI device sda: drive cache: write back
-<6> sda: sda1 sda2 sda3 sda4 < sda5 sda6 sda7 sda8 sda9 sda10 >
-<5>sd 0:0:0:0: Attached scsi disk sda
-<5>  Vendor: ATA       Model: ST3160815AS       Rev: 3.AD
-<5>  Type:   Direct-Access                      ANSI SCSI revision: 05
-<5>sd 0:0:0:0: Attached scsi generic sg0 type 0
-<5>SCSI device sdb: 312500000 512-byte hdwr sectors (160000 MB)
-<5>sdb: Write Protect is off
-<7>sdb: Mode Sense: 00 3a 00 00
-<5>SCSI device sdb: drive cache: write back
-<5>SCSI device sdb: 312500000 512-byte hdwr sectors (160000 MB)
-<5>sdb: Write Protect is off
-<7>sdb: Mode Sense: 00 3a 00 00
-<5>SCSI device sdb: drive cache: write back
-<6> sdb: sdb1
-<5>sd 1:0:0:0: Attached scsi disk sdb
-<5>sd 1:0:0:0: Attached scsi generic sg1 type 0
+ Number of Ports (NP): 0's based value indicating the maximum number
+ of ports supported by the HBA silicon. A maximum of 32 ports can be
+ supported. A value of Impl.  '0h', indicating one port, is the
+ minimum requirement. Note that the number of ports Spec.  indicated
+ in this field may be more than the number of ports indicated in the
+ GHC.PI register.
 
-Jan
+Does the following patch fix the problem?
+
+diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+index e75966b..39627c7 100644
+--- a/drivers/ata/ahci.c
++++ b/drivers/ata/ahci.c
+@@ -679,24 +679,20 @@ static void ahci_save_initial_config(struct pci_dev *pdev,
+ 
+ 	/* cross check port_map and cap.n_ports */
+ 	if (port_map) {
+-		u32 tmp_port_map = port_map;
+-		int n_ports = ahci_nr_ports(cap);
++		int map_ports = 0;
+ 
+-		for (i = 0; i < AHCI_MAX_PORTS && n_ports; i++) {
+-			if (tmp_port_map & (1 << i)) {
+-				n_ports--;
+-				tmp_port_map &= ~(1 << i);
+-			}
+-		}
++		for (i = 0; i < AHCI_MAX_PORTS; i++)
++			if (port_map & (1 << i))
++				map_ports++;
+ 
+-		/* If n_ports and port_map are inconsistent, whine and
+-		 * clear port_map and let it be generated from n_ports.
++		/* If PI has more ports than n_ports, whine and clear
++		 * port_map and let it be generated from n_ports.
+ 		 */
+-		if (n_ports || tmp_port_map) {
++		if (map_ports > ahci_nr_ports(cap)) {
+ 			dev_printk(KERN_WARNING, &pdev->dev,
+-				   "nr_ports (%u) and implemented port map "
+-				   "(0x%x) don't match, using nr_ports\n",
+-				   ahci_nr_ports(cap), port_map);
++				   "implemented port map (0x%x) contains more "
++				   "ports than nr_ports (%u), using nr_ports\n",
++				   port_map, ahci_nr_ports(cap));
+ 			port_map = 0;
+ 		}
+ 	}
