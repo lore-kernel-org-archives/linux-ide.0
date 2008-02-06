@@ -1,34 +1,46 @@
-From: bugme-daemon@bugzilla.kernel.org
-Subject: [Bug 9898] libata fails for ALi Corporation M5229 IDE
-Date: Wed,  6 Feb 2008 03:12:19 -0800 (PST)
-Message-ID: <20080206111219.637F1108010@picon.linux-foundation.org>
-References: <bug-9898-11633@http.bugzilla.kernel.org/>
+From: Pavel Machek <pavel@ucw.cz>
+Subject: Re: 2.6.26-git0: IDE oops during boot
+Date: Wed, 6 Feb 2008 12:08:05 +0100
+Message-ID: <20080206110805.GB3613@elf.ucw.cz>
+References: <20080206105334.GA3664@elf.ucw.cz>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp2.linux-foundation.org ([207.189.120.14]:45968 "EHLO
-	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752092AbYBFLMV (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 6 Feb 2008 06:12:21 -0500
-Received: from picon.linux-foundation.org (picon.linux-foundation.org [207.189.120.79])
-	by smtp2.linux-foundation.org (8.13.5.20060308/8.13.5/Debian-3ubuntu1.1) with ESMTP id m16BCJUx021949
-	for <linux-ide@vger.kernel.org>; Wed, 6 Feb 2008 03:12:20 -0800
-In-Reply-To: <bug-9898-11633@http.bugzilla.kernel.org/>
+Received: from gprs189-60.eurotel.cz ([160.218.189.60]:52680 "EHLO amd.ucw.cz"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1753042AbYBFLUb (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 6 Feb 2008 06:20:31 -0500
+Content-Disposition: inline
+In-Reply-To: <20080206105334.GA3664@elf.ucw.cz>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: kernel list <linux-kernel@vger.kernel.org>, bzolnier@gmail.com, linux-ide@vger.kernel.org
 
-http://bugzilla.kernel.org/show_bug.cgi?id=9898
+On Wed 2008-02-06 11:53:34, Pavel Machek wrote:
+> Hi!
+> 
+> Trying to boot 2.6.25-git0 (few days old), I get
+> 
+> BUG: unable to handle kernel paging request at ffff..ffb0
+> IP at init_irq+0x42e
+> 
+> Call trace:
+> ide_device_add_all
+> ide_generic_init
+> kernel_init
+> child_rip
+> vgacon_cursor
+> kernel_init
+> child_rip
+> 
+> Excerpt from config:
+> 
+> CONFIG_IDE=y
+> CONFIG_BLK_DEV_IDE=y
 
-
-
-
-
-------- Comment #1 from hathe@sidux.com  2008-02-06 03:12 -------
-Created an attachment (id=14721)
- --> (http://bugzilla.kernel.org/attachment.cgi?id=14721&action=view)
-dmesg output
-
-
+Disabling CONFIG_IDE made my machine boot, as it was using libata
+anyway.
+									Pavel
 -- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug, or are watching the assignee.
+(english) http://www.livejournal.com/~pavelmachek
+(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
