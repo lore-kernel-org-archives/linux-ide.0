@@ -1,44 +1,57 @@
-From: bugme-daemon@bugzilla.kernel.org
-Subject: [Bug 9898] libata fails for ALi Corporation M5229 IDE
-Date: Wed,  6 Feb 2008 03:28:47 -0800 (PST)
-Message-ID: <20080206112848.011FA108069@picon.linux-foundation.org>
-References: <bug-9898-11633@http.bugzilla.kernel.org/>
+From: Andrew Morton <akpm@linux-foundation.org>
+Subject: Re: [Bugme-new] [Bug 9898] New: libata fails for ALi Corporation
+ M5229 IDE
+Date: Wed, 6 Feb 2008 03:31:37 -0800
+Message-ID: <20080206033137.82f85fd1.akpm@linux-foundation.org>
+References: <bug-9898-10286@http.bugzilla.kernel.org/>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp2.linux-foundation.org ([207.189.120.14]:45793 "EHLO
+Received: from smtp2.linux-foundation.org ([207.189.120.14]:43606 "EHLO
 	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1762015AbYBFL3U (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 6 Feb 2008 06:29:20 -0500
-Received: from picon.linux-foundation.org (picon.linux-foundation.org [207.189.120.79])
-	by smtp2.linux-foundation.org (8.13.5.20060308/8.13.5/Debian-3ubuntu1.1) with ESMTP id m16BSmsU022408
-	for <linux-ide@vger.kernel.org>; Wed, 6 Feb 2008 03:28:49 -0800
-In-Reply-To: <bug-9898-11633@http.bugzilla.kernel.org/>
+	by vger.kernel.org with ESMTP id S1754393AbYBFLb6 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 6 Feb 2008 06:31:58 -0500
+In-Reply-To: <bug-9898-10286@http.bugzilla.kernel.org/>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: hathe@sidux.com
+Cc: bugme-daemon@bugzilla.kernel.org, linux-ide@vger.kernel.org
 
-http://bugzilla.kernel.org/show_bug.cgi?id=9898
+On Wed,  6 Feb 2008 03:09:36 -0800 (PST) bugme-daemon@bugzilla.kernel.org wrote:
 
+> http://bugzilla.kernel.org/show_bug.cgi?id=9898
+> 
+>            Summary: libata fails for ALi Corporation M5229 IDE
+>            Product: IO/Storage
+>            Version: 2.5
+>      KernelVersion: 2.6.24
+>           Platform: All
+>         OS/Version: Linux
+>               Tree: Mainline
+>             Status: NEW
+>           Severity: normal
+>           Priority: P1
+>          Component: IDE
+>         AssignedTo: io_ide@kernel-bugs.osdl.org
+>         ReportedBy: hathe@sidux.com
+> 
+> 
+> Latest working kernel version: 2.6.23.14 (with blkdev)
+> Earliest failing kernel version: 2.6.24 (with libata)
+> Distribution: sidux
+> Hardware Environment: Acer Travelmate 632XV 
+> Software Environment:
+> Problem Description: System boots fine, but after some minutes complete system
+> freeze. Nothing is mentioned in the logfiles. 
+> 
+> System informations:
+> lspci -nn | grep IDE
+> 00:10.0 IDE interface [0101]: ALi Corporation M5229 IDE [10b9:5229] (rev c4)
+> 
+> Steps to reproduce: reboot and wait some minutes (<10)
+> 
 
-alan@lxorguk.ukuu.org.uk changed:
+A regression.
 
-           What    |Removed                     |Added
-----------------------------------------------------------------------------
-         AssignedTo|io_ide@kernel-bugs.osdl.org |alan@lxorguk.ukuu.org.uk
-             Status|NEW                         |ASSIGNED
-
-
-
-
-------- Comment #2 from alan@lxorguk.ukuu.org.uk  2008-02-06 03:28 -------
-If you build a kernel for the system using the old IDE layer with 2.6.24 what
-do you see  and what does the log look like.
-
-Also if you boot 2.6.24 and leave it in text mode you should get traces for any
-ATA failure which will be needed to debug it.
-
-
--- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug, or are watching the assignee.
-You are the assignee for the bug, or are watching the assignee.
+What makes you think it's due to IDE?
