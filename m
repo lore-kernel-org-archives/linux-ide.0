@@ -1,105 +1,66 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [Bugme-new] [Bug 9901] New: kernel panic in stex modules (?)
-Date: Wed, 06 Feb 2008 12:26:39 -0600
-Message-ID: <1202322400.3112.96.camel@localhost.localdomain>
-References: <bug-9901-10286@http.bugzilla.kernel.org/>
-	 <20080206101502.ba8746a6.akpm@linux-foundation.org>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: 2.6.26-git0: IDE oops during boot
+Date: Wed, 6 Feb 2008 21:05:42 +0100
+Message-ID: <200802062105.42929.bzolnier@gmail.com>
+References: <20080206105334.GA3664@elf.ucw.cz> <20080206110805.GB3613@elf.ucw.cz>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:47629 "EHLO
-	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752318AbYBFS0m (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 6 Feb 2008 13:26:42 -0500
-In-Reply-To: <20080206101502.ba8746a6.akpm@linux-foundation.org>
+Received: from wa-out-1112.google.com ([209.85.146.180]:27735 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755534AbYBFTv6 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 6 Feb 2008 14:51:58 -0500
+Received: by wa-out-1112.google.com with SMTP id v27so643707wah.23
+        for <linux-ide@vger.kernel.org>; Wed, 06 Feb 2008 11:51:58 -0800 (PST)
+In-Reply-To: <20080206110805.GB3613@elf.ucw.cz>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, FUJITA Tomonori <tomof@acm.org>, bugme-daemon@bugzilla.kernel.org, dairinin@gmail.com
+To: Pavel Machek <pavel@ucw.cz>
+Cc: kernel list <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, Kamalesh Babulal <kamalesh@linux.vnet.ibm.com>
 
-On Wed, 2008-02-06 at 10:15 -0800, Andrew Morton wrote:
-> On Wed,  6 Feb 2008 09:40:15 -0800 (PST) bugme-daemon@bugzilla.kernel.org wrote:
-> 
-> > http://bugzilla.kernel.org/show_bug.cgi?id=9901
+
+Hi,
+
+On Wednesday 06 February 2008, Pavel Machek wrote:
+> On Wed 2008-02-06 11:53:34, Pavel Machek wrote:
+> > Hi!
 > > 
-> >            Summary: kernel panic in stex modules (?)
-> >            Product: IO/Storage
-> >            Version: 2.5
-> >      KernelVersion: 2.6.24
-> >           Platform: All
-> >         OS/Version: Linux
-> >               Tree: Mainline
-> >             Status: NEW
-> >           Severity: normal
-> >           Priority: P1
-> >          Component: Serial ATA
-> >         AssignedTo: jgarzik@pobox.com
-> >         ReportedBy: dairinin@gmail.com
+> > Trying to boot 2.6.25-git0 (few days old), I get
 > > 
+> > BUG: unable to handle kernel paging request at ffff..ffb0
+> > IP at init_irq+0x42e
+
+init_irq? hmm...
+
+> > Call trace:
+> > ide_device_add_all
+
+this comes from ide-generic
+(Generic IDE host driver)
+
+> > ide_generic_init
+> > kernel_init
+> > child_rip
+> > vgacon_cursor
+> > kernel_init
+> > child_rip
 > > 
-> > Latest working kernel version: 2.6.23-r6
-> > Earliest failing kernel version: 2.6.24
-> > Distribution: Gentoo
-> > Hardware Environment: Core2D E6600, Asus p5B Dlx, 2G DDR2 667, Promise ST
-> > EX4350
-> > Software Environment: GCC 4.2.3/4.1.2, CFLAGS="-O2"
+> > Excerpt from config:
 > > 
-> > Problem Description:
-> > The problem is frequent kernel panics within the same module. Can't say what it
-> > is, but looks like it is related to dma and promise driver.
-> > The first culprit, the memory, is ok, 8 hours of memtest passed without errors.
-> > Before, kernel 2.6.23-gentoo-r6, compiled with GCC 4.1.2 worked just fine, then
-> > after upgrade to 4.2.2 th bug appeared. Upgrade to 2.6.24 didn't solve the
-> > problem. Switching back to GCC 4.1.2 made things better for a moment, crashes
-> > became less frequent and I thought compiler was the cause. But today system
-> > crashed again with same symptoms.
-> > Sorry, but I can't save crash log, so I'll provide screen "shot":
-> > http://img238.imageshack.us/my.php?image=p2030030ki1.jpg
-> > 
-> > Steps to reproduce:
-> > Boot, start FTP-server, load RAID with heavy input, in some hours it will
-> > crash. With pure reads system can run several days, heavy write load kills it
-> > much too easier.
-> > 
+> > CONFIG_IDE=y
+> > CONFIG_BLK_DEV_IDE=y
 > 
-> The supertrak driver has regressed in 2.6.24.  And
-> 
-> commit 9cb83c7529d929c00f37d821daed1942a1b20602
-> Author: FUJITA Tomonori <tomof@acm.org>
-> Date:   Tue Oct 16 11:24:32 2007 +0200
-> 
->     [SCSI] add use_sg_chaining option to scsi_host_template
->     
-> looks a likely candidate.
-> 
-> And this:
-> 
-> commit d3f46f39b7092594b498abc12f0c73b0b9913bde
-> Author: James Bottomley <James.Bottomley@HansenPartnership.com>
-> Date:   Tue Jan 15 11:11:46 2008 -0600
-> 
->     [SCSI] remove use_sg_chaining
-> 
-> from 2.6.25 looks to be a likely fix for it.  Should it be backported?
+> Disabling CONFIG_IDE made my machine boot, as it was using libata
+> anyway.
 
-If the patch you identify is the culprit, mine can't be the fix ... and
-it should also be present in git head.
+Kamalesh/Pavel:
 
-The BUG_ON is here: isn't it?
+Could you try latest git and see if the OOPS is still there?
 
-static inline void
-dma_unmap_sg(struct device *hwdev, struct scatterlist *sg, int nents,
-	     int direction)
-{
-	BUG_ON(!valid_dma_direction(direction));
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-	dma_ops->unmap_sg(hwdev, sg, nents, direction);
-}
+[ Yeah, I'm unable to reproduce it. :( ]
 
-stex only does scsi_dma_unmap(), so something looks to have tampered
-with the cmnd->sc_data_direction somehow ... and I can't see how.
-
-James
-
-
+Thanks,
+Bart
