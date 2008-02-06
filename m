@@ -1,388 +1,151 @@
-From: Andrew Morton <akpm@linux-foundation.org>
-Subject: Re: [PATCH] enclosure: add support for enclosure services
-Date: Tue, 5 Feb 2008 16:12:18 -0800
-Message-ID: <20080205161218.70af0ff9.akpm@linux-foundation.org>
-References: <1202074856.3318.111.camel@localhost.localdomain>
-	<20080203220348.GH2648@uranus.ravnborg.org>
-	<1202084211.3318.129.camel@localhost.localdomain>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: [git patches] IDE updates part #4
+Date: Wed, 6 Feb 2008 01:48:17 +0100
+Message-ID: <200802060148.17663.bzolnier@gmail.com>
+References: <200802022035.02326.bzolnier@gmail.com> <alpine.LFD.1.00.0802051059330.3110@woody.linux-foundation.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <1202084211.3318.129.camel@localhost.localdomain>
-Sender: linux-scsi-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: sam@ravnborg.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, kristen.c.accardi@intel.com
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from wa-out-1112.google.com ([209.85.146.178]:45464 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760613AbYBFAfh convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 5 Feb 2008 19:35:37 -0500
+Received: by wa-out-1112.google.com with SMTP id v27so167062wah.23
+        for <linux-ide@vger.kernel.org>; Tue, 05 Feb 2008 16:35:34 -0800 (PST)
+In-Reply-To: <alpine.LFD.1.00.0802051059330.3110@woody.linux-foundation.org>
+Content-Disposition: inline
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-
-On Sun, 03 Feb 2008 18:16:51 -0600
-James Bottomley <James.Bottomley@HansenPartnership.com> wrote:
-
-> 
-> From: James Bottomley <James.Bottomley@HansenPartnership.com>
-> Date: Sun, 3 Feb 2008 15:40:56 -0600
-> Subject: [SCSI] enclosure: add support for enclosure services
-> 
-> The enclosure misc device is really just a library providing sysfs
-> support for physical enclosure devices and their components.
-> 
-
-Thanks for sending it out for review.
-
-> +struct enclosure_device *enclosure_find(struct device *dev)
-> +{
-> +	struct enclosure_device *edev = NULL;
-> +
-> +	mutex_lock(&container_list_lock);
-> +	list_for_each_entry(edev, &container_list, node) {
-> +		if (edev->cdev.dev == dev) {
-> +			mutex_unlock(&container_list_lock);
-> +			return edev;
-> +		}
-> +	}
-> +	mutex_unlock(&container_list_lock);
-> +
-> +	return NULL;
-> +}
-> +EXPORT_SYMBOL_GPL(enclosure_find);
-
-This looks a little odd.  We don't take a ref on the object after looking
-it up, so what prevents some other thread of control from freeing or
-otherwise altering the returned object while the caller is playing with it?
-
-> +/**
-> + * enclosure_for_each_device - calls a function for each enclosure
-> + * @fn:		the function to call
-> + * @data:	the data to pass to each call
-> + *
-> + * Loops over all the enclosures calling the function.
-> + *
-> + * Note, this function uses a mutex which will be held across calls to
-> + * @fn, so it must have user context, and @fn should not sleep or
-
-Probably "non atomic context" would be more accurate.
-
-fn() actually _can_ sleep.
-
-> + * otherwise cause the mutex to be held for indefinite periods
-> + */
-> +int enclosure_for_each_device(int (*fn)(struct enclosure_device *, void *),
-> +			      void *data)
-> +{
-> +	int error = 0;
-> +	struct enclosure_device *edev;
-> +
-> +	mutex_lock(&container_list_lock);
-> +	list_for_each_entry(edev, &container_list, node) {
-> +		error = fn(edev, data);
-> +		if (error)
-> +			break;
-> +	}
-> +	mutex_unlock(&container_list_lock);
-> +
-> +	return error;
-> +}
-> +EXPORT_SYMBOL_GPL(enclosure_for_each_device);
-> +
-> +/**
-> + * enclosure_register - register device as an enclosure
-> + *
-> + * @dev:	device containing the enclosure
-> + * @components:	number of components in the enclosure
-> + *
-> + * This sets up the device for being an enclosure.  Note that @dev does
-> + * not have to be a dedicated enclosure device.  It may be some other type
-> + * of device that additionally responds to enclosure services
-> + */
-> +struct enclosure_device *
-> +enclosure_register(struct device *dev, const char *name, int components,
-> +		   struct enclosure_component_callbacks *cb)
-> +{
-> +	struct enclosure_device *edev =
-> +		kzalloc(sizeof(struct enclosure_device) +
-> +			sizeof(struct enclosure_component)*components,
-> +			GFP_KERNEL);
-> +	int err, i;
-> +
-> +	if (!edev)
-> +		return ERR_PTR(-ENOMEM);
-> +
-> +	if (!cb) {
-> +		kfree(edev);
-> +		return ERR_PTR(-EINVAL);
-> +	}
-
-It would be less fuss if this were to test cb before doing the kzalloc().
-
-Can cb==NULL actually and legitimately happen?
-
-> +	edev->components = components;
-> +
-> +	edev->cdev.class = &enclosure_class;
-> +	edev->cdev.dev = get_device(dev);
-> +	edev->cb = cb;
-> +	snprintf(edev->cdev.class_id, BUS_ID_SIZE, "%s", name);
-> +	err = class_device_register(&edev->cdev);
-> +	if (err)
-> +		goto err;
-> +
-> +	for (i = 0; i < components; i++)
-> +		edev->component[i].number = -1;
-> +
-> +	mutex_lock(&container_list_lock);
-> +	list_add_tail(&edev->node, &container_list);
-> +	mutex_unlock(&container_list_lock);
-> +
-> +	return edev;
-> +
-> + err:
-> +	put_device(edev->cdev.dev);
-> +	kfree(edev);
-> +	return ERR_PTR(err);
-> +}
-> +EXPORT_SYMBOL_GPL(enclosure_register);
-> +
-> +static struct enclosure_component_callbacks enclosure_null_callbacks;
-> +
-> +/**
-> + * enclosure_unregister - remove an enclosure
-> + *
-> + * @edev:	the registered enclosure to remove;
-> + */
-> +void enclosure_unregister(struct enclosure_device *edev)
-> +{
-> +	int i;
-> +
-> +	if (!edev)
-> +		return;
-
-Is this legal?
-
-> +	mutex_lock(&container_list_lock);
-> +	list_del(&edev->node);
-> +	mutex_unlock(&container_list_lock);
-
-See, right now, someone who found this enclosure_device via
-enclosure_find() could still be playing with it?
-
-> +	for (i = 0; i < edev->components; i++)
-> +		if (edev->component[i].number != -1)
-> +			class_device_unregister(&edev->component[i].cdev);
-> +
-> +	/* prevent any callbacks into service user */
-> +	edev->cb = &enclosure_null_callbacks;
-> +	class_device_unregister(&edev->cdev);
-> +}
-> +EXPORT_SYMBOL_GPL(enclosure_unregister);
-> +
-> +/**
-> + * enclosure_component_register - add a particular component to an enclosure
-> + * @edev:	the enclosure to add the component
-> + * @num:	the device number
-> + * @type:	the type of component being added
-> + * @name:	an optional name to appear in sysfs (leave NULL if none)
-> + *
-> + * Registers the component.  The name is optional for enclosures that
-> + * give their components a unique name.  If not, leave the field NULL
-> + * and a name will be assigned.
-> + *
-> + * Returns a pointer to the enclosure component or an error.
-> + */
-> +struct enclosure_component *
-> +enclosure_component_register(struct enclosure_device *edev,
-> +			     unsigned int number,
-> +			     enum enclosure_component_type type,
-> +			     const char *name)
-> +{
-> +	struct enclosure_component *ecomp;
-> +	struct class_device *cdev;
-> +	int err;
-> +
-> +	if (!edev || number >= edev->components)
-> +		return ERR_PTR(-EINVAL);
-
-Is !edev possible and legitimate?
-
-> +	ecomp = &edev->component[number];
-> +
-> +	if (ecomp->number != -1)
-> +		return ERR_PTR(-EINVAL);
-> +
-> +	ecomp->type = type;
-> +	ecomp->number = number;
-> +	cdev = &ecomp->cdev;
-> +	cdev->parent = class_device_get(&edev->cdev);
-> +	cdev->class = &enclosure_component_class;
-> +	if (name)
-> +		snprintf(cdev->class_id, BUS_ID_SIZE, "%s", name);
-> +	else
-> +		snprintf(cdev->class_id, BUS_ID_SIZE, "%d", number);
-
-%u :)
-
-> +
-> +	err = class_device_register(cdev);
-> +	if (err)
-> +		ERR_PTR(err);
-> +
-> +	return ecomp;
-> +}
-> +EXPORT_SYMBOL_GPL(enclosure_component_register);
-> +
-> +/**
-> + * enclosure_add_device - add a device as being part of an enclosure
-> + * @edev:	the enclosure device being added to.
-> + * @num:	the number of the component
-> + * @dev:	the device being added
-> + *
-> + * Declares a real device to reside in slot (or identifier) @num of an
-> + * enclosure.  This will cause the relevant sysfs links to appear.
-> + * This function may also be used to change a device associated with
-> + * an enclosure without having to call enclosure_remove_device() in
-> + * between.
-> + *
-> + * Returns zero on success or an error.
-> + */
-> +int enclosure_add_device(struct enclosure_device *edev, int component,
-> +			 struct device *dev)
-> +{
-> +	struct class_device *cdev;
-> +
-> +	if (!edev || component >= edev->components)
-> +		return -EINVAL;
-> +
-> +	cdev = &edev->component[component].cdev;
-> +
-> +	class_device_del(cdev);
-> +	if (cdev->dev)
-> +		put_device(cdev->dev);
-> +	cdev->dev = get_device(dev);
-> +	return class_device_add(cdev);
-> +}
-> +EXPORT_SYMBOL_GPL(enclosure_add_device);
-> +
-> +/*
-> + * sysfs pieces below
-> + */
-> +
-> +static ssize_t enclosure_show_components(struct class_device *cdev, char *buf)
-> +{
-> +	struct enclosure_device *edev = to_enclosure_device(cdev);
-> +
-> +	return snprintf(buf, 40, "%d\n", edev->components);
-> +}
-
-"40"?
-
-> +static struct class_device_attribute enclosure_attrs[] = {
-> +	__ATTR(components, S_IRUGO, enclosure_show_components, NULL),
-> +	__ATTR_NULL
-> +};
-> +
-> +static struct class enclosure_class = {
-> +	.name			= "enclosure",
-> +	.owner			= THIS_MODULE,
-> +	.release		= enclosure_release,
-> +	.class_dev_attrs	= enclosure_attrs,
-> +};
-> +
-> +static char *enclosure_status [] = {
-> +	[ENCLOSURE_STATUS_UNSUPPORTED] = "unsupported",
-> +	[ENCLOSURE_STATUS_OK] = "OK",
-> +	[ENCLOSURE_STATUS_CRITICAL] = "critical",
-> +	[ENCLOSURE_STATUS_NON_CRITICAL] = "non-critical",
-> +	[ENCLOSURE_STATUS_UNRECOVERABLE] = "unrecoverable",
-> +	[ENCLOSURE_STATUS_NOT_INSTALLED] = "not installed",
-> +	[ENCLOSURE_STATUS_UNKNOWN] = "unknown",
-> +	[ENCLOSURE_STATUS_UNAVAILABLE] = "unavailable",
-> +};
-> +
-> +static char *enclosure_type [] = {
-> +	[ENCLOSURE_COMPONENT_DEVICE] = "device",
-> +	[ENCLOSURE_COMPONENT_ARRAY_DEVICE] = "array device",
-> +};
-
-One could play with const here, if sufficiently keen.
-
-> +static ssize_t set_component_fault(struct class_device *cdev, const char *buf,
-> +				   size_t count)
-> +{
-> +	struct enclosure_device *edev = to_enclosure_device(cdev->parent);
-> +	struct enclosure_component *ecomp = to_enclosure_component(cdev);
-> +	int val = simple_strtoul(buf, NULL, 0);
-
-hrm, we do this conversion about 1e99 times in the kernel and we have to go
-and pass three args where only one was needed. katoi()?
-
-> +	if (edev->cb->set_fault)
-> +		edev->cb->set_fault(edev, ecomp, val);
-> +	return count;
-> +}
-> +
-> +static ssize_t get_component_status(struct class_device *cdev, char *buf)
-> +{
-> +	struct enclosure_device *edev = to_enclosure_device(cdev->parent);
-> +	struct enclosure_component *ecomp = to_enclosure_component(cdev);
-> +
-> +	if (edev->cb->get_status)
-> +		edev->cb->get_status(edev, ecomp);
-> +	return snprintf(buf, 40, "%s\n", enclosure_status[ecomp->status]);
-> +}
-> +
-> +static ssize_t set_component_status(struct class_device *cdev, const char *buf,
-> +				   size_t count)
-> +{
-> +	struct enclosure_device *edev = to_enclosure_device(cdev->parent);
-> +	struct enclosure_component *ecomp = to_enclosure_component(cdev);
-> +	int i;
-> +
-> +	for (i = 0; enclosure_status[i]; i++) {
-> +		if (strncmp(buf, enclosure_status[i],
-> +			    strlen(enclosure_status[i])) == 0 &&
-> +		    buf[strlen(enclosure_status[i])] == '\n')
-> +			break;
-> +	}
-
-So if an application does
-
-	write(fd, "foo", 3)
-
-it won't work?  Thye have to do
-
-	write(fd, "foo\n", 4)
-
-?
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
 
-> +	if (enclosure_status[i] && edev->cb->set_status) {
-> +		edev->cb->set_status(edev, ecomp, i);
-> +		return count;
-> +	} else
-> +		return -EINVAL;
-> +}
-> +
->
-> ...
->
-> +#define to_enclosure_device(x) container_of((x), struct enclosure_device, cdev)
-> +#define to_enclosure_component(x) container_of((x), struct enclosure_component, cdev)
+Hi Linus,
 
-These could be C functions...
+On Tuesday 05 February 2008, Linus Torvalds wrote:
+>=20
+> On Sat, 2 Feb 2008, Bartlomiej Zolnierkiewicz wrote:
+> >=20
+> > * next part of IDE probing code re-organization saga
+> >   (that would be me)
+>=20
+> This seems to cause very irritating and bogus messages for me:
+>=20
+> 	Probing IDE interface ide0...
+> 	Probing IDE interface ide1...
+> 	ide2: I/O resource 0x0-0x7 not free.
+> 	ide2: ports already in use, skipping probe
+> 	ide3: I/O resource 0x0-0x7 not free.
+> 	ide3: ports already in use, skipping probe
+> 	ide4: I/O resource 0x0-0x7 not free.
+> 	ide4: ports already in use, skipping probe
+> 	ide5: I/O resource 0x0-0x7 not free.
+> 	ide5: ports already in use, skipping probe
+> 	ide6: I/O resource 0x0-0x7 not free.
+> 	ide6: ports already in use, skipping probe
+> 	ide7: I/O resource 0x0-0x7 not free.
+> 	ide7: ports already in use, skipping probe
+> 	ide8: I/O resource 0x0-0x7 not free.
+> 	ide8: ports already in use, skipping probe
+> 	ide9: I/O resource 0x0-0x7 not free.
+> 	ide9: ports already in use, skipping probe
+>=20
+> and that's just totally bogus. It shouldn't even request that region,=
+=20
+> since it's not been allocated!
+>=20
+> So that "ide_device_add_all()" is missing some checks. Should it chec=
+k the=20
+> probe[] array like ideprobe_init() used to, or what?
 
-> +struct enclosure_device *
-> +enclosure_register(struct device *, const char *, int,
-> +		   struct enclosure_component_callbacks *);
-> +void enclosure_unregister(struct enclosure_device *);
-> +struct enclosure_component *
-> +enclosure_component_register(struct enclosure_device *, unsigned int,
-> +				 enum enclosure_component_type, const char *);
-> +int enclosure_add_device(struct enclosure_device *enclosure, int component,
-> +			 struct device *dev);
-> +int enclosure_remove_device(struct enclosure_device *enclosure, int component);
-> +struct enclosure_device *enclosure_find(struct device *dev);
-> +int enclosure_for_each_device(int (*fn)(struct enclosure_device *, void *),
-> +			      void *data);
-> +
-> +#endif /* _LINUX_ENCLOSURE_H_ */
+This is ide-generic problem exhibited by recent ide_device_add_all() ch=
+anges.
+=46ix below (it works for me) - you may merge the patch as it is or wai=
+t an hour
+or so for the next IDE tree pull request.
 
-Nice looking driver.
+Also sorry for the issue in the first place (it turned out that it slip=
+ped
+my testing because I has been running with IDE_MAX_HWIFS=3D2 for some t=
+ime :).
+
+
+=46rom: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: [PATCH] ide-generic: probing bugfix
+
+On Tuesday 05 February 2008, Linus Torvalds wrote:
+>=20
+> On Sat, 2 Feb 2008, Bartlomiej Zolnierkiewicz wrote:
+> >=20
+> > * next part of IDE probing code re-organization saga
+> > =A0 (that would be me)
+>=20
+> This seems to cause very irritating and bogus messages for me:
+>=20
+> =A0=A0=A0=A0=A0=A0Probing IDE interface ide0...
+> =A0=A0=A0=A0=A0=A0Probing IDE interface ide1...
+> =A0=A0=A0=A0=A0=A0ide2: I/O resource 0x0-0x7 not free.
+> =A0=A0=A0=A0=A0=A0ide2: ports already in use, skipping probe
+> =A0=A0=A0=A0=A0=A0ide3: I/O resource 0x0-0x7 not free.
+> =A0=A0=A0=A0=A0=A0ide3: ports already in use, skipping probe
+> =A0=A0=A0=A0=A0=A0ide4: I/O resource 0x0-0x7 not free.
+> =A0=A0=A0=A0=A0=A0ide4: ports already in use, skipping probe
+> =A0=A0=A0=A0=A0=A0ide5: I/O resource 0x0-0x7 not free.
+> =A0=A0=A0=A0=A0=A0ide5: ports already in use, skipping probe
+> =A0=A0=A0=A0=A0=A0ide6: I/O resource 0x0-0x7 not free.
+> =A0=A0=A0=A0=A0=A0ide6: ports already in use, skipping probe
+> =A0=A0=A0=A0=A0=A0ide7: I/O resource 0x0-0x7 not free.
+> =A0=A0=A0=A0=A0=A0ide7: ports already in use, skipping probe
+> =A0=A0=A0=A0=A0=A0ide8: I/O resource 0x0-0x7 not free.
+> =A0=A0=A0=A0=A0=A0ide8: ports already in use, skipping probe
+> =A0=A0=A0=A0=A0=A0ide9: I/O resource 0x0-0x7 not free.
+> =A0=A0=A0=A0=A0=A0ide9: ports already in use, skipping probe
+>=20
+> and that's just totally bogus. It shouldn't even request that region,=
+=20
+> since it's not been allocated!
+
+The commit 139ddfcab50e5eabcc88341c8743a990ac1be6a2 ("ide: move handlin=
+g of
+I/O resources out of ide_probe_port()") changed the ordering of hwif->n=
+oprobe
+check vs ide_hwif_request_regions() call (so that we now reserve I/O re=
+gions
+before checking for hwif->noprobe).  However ide-generic host driver de=
+pended
+on hwif->noprobe to be set for skipping probing of empty ide_hwifs[] sl=
+ots.
+
+=46ix it by passing only indexes of non-empty slots to ide_device_add_a=
+ll()
+from ide_generic_init().
+
+Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+---
+ drivers/ide/ide-generic.c |   10 ++++++++--
+ 1 file changed, 8 insertions(+), 2 deletions(-)
+
+Index: b/drivers/ide/ide-generic.c
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+--- a/drivers/ide/ide-generic.c
++++ b/drivers/ide/ide-generic.c
+@@ -20,8 +20,14 @@ static int __init ide_generic_init(void)
+ 	if (ide_hwifs[0].io_ports[IDE_DATA_OFFSET])
+ 		ide_get_lock(NULL, NULL); /* for atari only */
+=20
+-	for (i =3D 0; i < MAX_HWIFS; i++)
+-		idx[i] =3D ide_hwifs[i].present ? 0xff : i;
++	for (i =3D 0; i < MAX_HWIFS; i++) {
++		ide_hwif_t *hwif =3D &ide_hwifs[i];
++
++		if (hwif->io_ports[IDE_DATA_OFFSET] && !hwif->present)
++			idx[i] =3D i;
++		else
++			idx[i] =3D 0xff;
++	}
+=20
+ 	ide_device_add_all(idx, NULL);
+=20
