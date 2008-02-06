@@ -1,66 +1,38 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: 2.6.26-git0: IDE oops during boot
-Date: Wed, 6 Feb 2008 21:05:42 +0100
-Message-ID: <200802062105.42929.bzolnier@gmail.com>
-References: <20080206105334.GA3664@elf.ucw.cz> <20080206110805.GB3613@elf.ucw.cz>
+Subject: Re: [PATCH 2/5] ide: remove redundant BUG_ON() from [atapi_]reset_pollfunc()
+Date: Wed, 6 Feb 2008 21:43:18 +0100
+Message-ID: <200802062143.19121.bzolnier@gmail.com>
+References: <200802020146.30385.bzolnier@gmail.com> <47A9F78D.20904@ru.mvista.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
   charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.180]:27735 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755534AbYBFTv6 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 6 Feb 2008 14:51:58 -0500
-Received: by wa-out-1112.google.com with SMTP id v27so643707wah.23
-        for <linux-ide@vger.kernel.org>; Wed, 06 Feb 2008 11:51:58 -0800 (PST)
-In-Reply-To: <20080206110805.GB3613@elf.ucw.cz>
+Received: from wr-out-0506.google.com ([64.233.184.234]:24840 "EHLO
+	wr-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755863AbYBFU3i (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 6 Feb 2008 15:29:38 -0500
+Received: by wr-out-0506.google.com with SMTP id c48so2870315wra.23
+        for <linux-ide@vger.kernel.org>; Wed, 06 Feb 2008 12:29:37 -0800 (PST)
+In-Reply-To: <47A9F78D.20904@ru.mvista.com>
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Pavel Machek <pavel@ucw.cz>
-Cc: kernel list <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, Kamalesh Babulal <kamalesh@linux.vnet.ibm.com>
+To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-
-Hi,
-
-On Wednesday 06 February 2008, Pavel Machek wrote:
-> On Wed 2008-02-06 11:53:34, Pavel Machek wrote:
-> > Hi!
-> > 
-> > Trying to boot 2.6.25-git0 (few days old), I get
-> > 
-> > BUG: unable to handle kernel paging request at ffff..ffb0
-> > IP at init_irq+0x42e
-
-init_irq? hmm...
-
-> > Call trace:
-> > ide_device_add_all
-
-this comes from ide-generic
-(Generic IDE host driver)
-
-> > ide_generic_init
-> > kernel_init
-> > child_rip
-> > vgacon_cursor
-> > kernel_init
-> > child_rip
-> > 
-> > Excerpt from config:
-> > 
-> > CONFIG_IDE=y
-> > CONFIG_BLK_DEV_IDE=y
+On Wednesday 06 February 2008, Sergei Shtylyov wrote:
+> Bartlomiej Zolnierkiewicz wrote:
 > 
-> Disabling CONFIG_IDE made my machine boot, as it was using libata
-> anyway.
+> > Same BUG_ON() is present inside ide_set_handler().
+> 
+>     There is no BUG_ON there -- __ide_set_handler() has a check for the same 
+> condition and a printk(KERN_CRIT)... myabe it should be replaced with BUG_ON()...
 
-Kamalesh/Pavel:
+Yeah, you're right - care to make a patch?
 
-Could you try latest git and see if the OOPS is still there?
-
-[ Yeah, I'm unable to reproduce it. :( ]
-
-Thanks,
-Bart
+> > Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+> 
+> Acked-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+> 
+> MBR, Sergei
