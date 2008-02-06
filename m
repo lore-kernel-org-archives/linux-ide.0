@@ -1,35 +1,44 @@
 From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: libata: kill now unused n_iter and fix sata_fsl
-Date: Wed, 06 Feb 2008 07:03:45 -0500
-Message-ID: <47A9A221.9050403@garzik.org>
-References: <47A7EED3.2050801@gmail.com>
+Subject: Re: [PATCH] ahci: fix CAP.NP and PI handling
+Date: Wed, 06 Feb 2008 07:03:37 -0500
+Message-ID: <47A9A219.8060303@garzik.org>
+References: <47A9501F.5020501@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:40517 "EHLO mail.dvmed.net"
+Received: from srv5.dvmed.net ([207.36.208.214]:40508 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1761363AbYBFMDr (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 6 Feb 2008 07:03:47 -0500
-In-Reply-To: <47A7EED3.2050801@gmail.com>
+	id S1761659AbYBFMDk (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 6 Feb 2008 07:03:40 -0500
+In-Reply-To: <47A9501F.5020501@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Tejun Heo <htejun@gmail.com>
-Cc: IDE/ATA development list <linux-ide@vger.kernel.org>, James Bottomley <James.Bottomley@HansenPartnership.com>, Li Yang <leoli@freescale.com>
+Cc: IDE/ATA development list <linux-ide@vger.kernel.org>, Jan Beulich <jbeulich@novell.com>
 
 Tejun Heo wrote:
-> From: James Bottomley <James.Bottomley@HansenPartnership.com>
+> AHCI uses CAP.NP to indicate the number of ports and PI to tell which
+> ports are enabled.  The only requirement is that the number of ports
+> indicated by CAP.NP should equal or be higher than the number of
+> enabled ports in PI.
 > 
-> qc->n_iter was used for libata's own sg walking before sg chaining
-> replaced it.  During conversion, the field and its usage in sata_fsl
-> were left behind.  Kill the filed and update sata_fsl.
+> CAP.NP and PI carry duplicate information and there have been some
+> interesting cases.  Some early AHCI controllers didn't set PI at all
+> and just implement from port 0 to CAP.NP.  An ICH8 board which wired
+> four out of six available ports had 3 (4 ports) for CAP.NP and 0x33
+> for PI.  While ESB2 has less bits set in PI than the value in CAP.NP.
 > 
-> tj: This was part of James's libata-use-block-layer-padding patch.
->     Separated out by me.
+> Till now, ahci driver assumed that PI is invalid if it doesn't match
+> CAP.NP exactly.  This violates AHCI standard and the driver ends up
+> accessing unmimplemented ports on ESB2.
 > 
-> Signed-off-by: James Bottomley <James.Bottomley@HansenPartnership.com>
+> This patch updates CAP.NP and PI handling such that PI can have less
+> number of bits set than indicated in CAP.NP and the highest port is
+> determined as the maximum port of what CAP.NP and PI indicate.
+> 
 > Signed-off-by: Tejun Heo <htejun@gmail.com>
-> Cc: Li Yang <leoli@freescale.com>
+> Cc: Jan Beulich <jbeulich@novell.com>
 
 applied
 
