@@ -1,27 +1,31 @@
-From: Russell King - ARM Linux <linux@arm.linux.org.uk>
-Subject: Re: [PATCH 2/3 2.6.24-git] ARM/RPC: Use HAVE_PATA_PLATFORM to select pata platform driver
-Date: Wed, 6 Feb 2008 12:46:59 +0000
-Message-ID: <20080206124659.GB21027@flint.arm.linux.org.uk>
-References: <20080202161636.269848721@fluff.org.uk> <20080202161756.505881942@fluff.org.uk> <47A9A0D9.4090308@garzik.org>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: Re: [PATCH 2/5] ide: remove redundant BUG_ON() from [atapi_]reset_pollfunc()
+Date: Wed, 06 Feb 2008 21:08:13 +0300
+Message-ID: <47A9F78D.20904@ru.mvista.com>
+References: <200802020146.30385.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from caramon.arm.linux.org.uk ([78.32.30.218]:51548 "EHLO
-	caramon.arm.linux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1761534AbYBFMrf (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 6 Feb 2008 07:47:35 -0500
-Content-Disposition: inline
-In-Reply-To: <47A9A0D9.4090308@garzik.org>
+Received: from h155.mvista.com ([63.81.120.155]:27094 "EHLO imap.sh.mvista.com"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751230AbYBFSHV (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 6 Feb 2008 13:07:21 -0500
+In-Reply-To: <200802020146.30385.bzolnier@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: Ben Dooks <ben-linux@fluff.org>, linux-ide@vger.kernel.org, htejun@gmail.com, Linux ARM Kernel <linux-arm-kernel@lists.arm.linux.org.uk>
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Wed, Feb 06, 2008 at 06:58:17AM -0500, Jeff Garzik wrote:
-> ACK patch series...  would it be ok to send via the ARM maintainer?
-> 
-> I would prefer to add this at the same time as its user...
+Bartlomiej Zolnierkiewicz wrote:
 
-I've only seen the one patch, and I suspect that it depends on patches
-to other architectures (to convert other architectures to use the new
-variable.)
+> Same BUG_ON() is present inside ide_set_handler().
+
+    There is no BUG_ON there -- __ide_set_handler() has a check for the same 
+condition and a printk(KERN_CRIT)... myabe it should be replaced with BUG_ON()...
+
+> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+
+Acked-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+
+MBR, Sergei
