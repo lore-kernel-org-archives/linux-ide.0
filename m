@@ -1,46 +1,44 @@
-From: Pavel Machek <pavel@ucw.cz>
-Subject: Re: 2.6.26-git0: IDE oops during boot
-Date: Wed, 6 Feb 2008 12:08:05 +0100
-Message-ID: <20080206110805.GB3613@elf.ucw.cz>
-References: <20080206105334.GA3664@elf.ucw.cz>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: bugme-daemon@bugzilla.kernel.org
+Subject: [Bug 9898] libata fails for ALi Corporation M5229 IDE
+Date: Wed,  6 Feb 2008 03:28:47 -0800 (PST)
+Message-ID: <20080206112848.011FA108069@picon.linux-foundation.org>
+References: <bug-9898-11633@http.bugzilla.kernel.org/>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from gprs189-60.eurotel.cz ([160.218.189.60]:52680 "EHLO amd.ucw.cz"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1753042AbYBFLUb (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 6 Feb 2008 06:20:31 -0500
-Content-Disposition: inline
-In-Reply-To: <20080206105334.GA3664@elf.ucw.cz>
+Received: from smtp2.linux-foundation.org ([207.189.120.14]:45793 "EHLO
+	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1762015AbYBFL3U (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 6 Feb 2008 06:29:20 -0500
+Received: from picon.linux-foundation.org (picon.linux-foundation.org [207.189.120.79])
+	by smtp2.linux-foundation.org (8.13.5.20060308/8.13.5/Debian-3ubuntu1.1) with ESMTP id m16BSmsU022408
+	for <linux-ide@vger.kernel.org>; Wed, 6 Feb 2008 03:28:49 -0800
+In-Reply-To: <bug-9898-11633@http.bugzilla.kernel.org/>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: kernel list <linux-kernel@vger.kernel.org>, bzolnier@gmail.com, linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-On Wed 2008-02-06 11:53:34, Pavel Machek wrote:
-> Hi!
-> 
-> Trying to boot 2.6.25-git0 (few days old), I get
-> 
-> BUG: unable to handle kernel paging request at ffff..ffb0
-> IP at init_irq+0x42e
-> 
-> Call trace:
-> ide_device_add_all
-> ide_generic_init
-> kernel_init
-> child_rip
-> vgacon_cursor
-> kernel_init
-> child_rip
-> 
-> Excerpt from config:
-> 
-> CONFIG_IDE=y
-> CONFIG_BLK_DEV_IDE=y
+http://bugzilla.kernel.org/show_bug.cgi?id=9898
 
-Disabling CONFIG_IDE made my machine boot, as it was using libata
-anyway.
-									Pavel
+
+alan@lxorguk.ukuu.org.uk changed:
+
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+         AssignedTo|io_ide@kernel-bugs.osdl.org |alan@lxorguk.ukuu.org.uk
+             Status|NEW                         |ASSIGNED
+
+
+
+
+------- Comment #2 from alan@lxorguk.ukuu.org.uk  2008-02-06 03:28 -------
+If you build a kernel for the system using the old IDE layer with 2.6.24 what
+do you see  and what does the log look like.
+
+Also if you boot 2.6.24 and leave it in text mode you should get traces for any
+ATA failure which will be needed to debug it.
+
+
 -- 
-(english) http://www.livejournal.com/~pavelmachek
-(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug, or are watching the assignee.
+You are the assignee for the bug, or are watching the assignee.
