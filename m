@@ -1,56 +1,120 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH #upstream-fixes] pata_via: fix SATA cable detection on cx700
-Date: Thu, 07 Feb 2008 10:18:53 +0900
-Message-ID: <47AA5C7D.7000108@gmail.com>
+Subject: [PATCH #upstream-fixes] libata: ignore deverr on SETXFER if mode
+ is configured
+Date: Thu, 07 Feb 2008 10:34:08 +0900
+Message-ID: <47AA6010.30003@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rv-out-0910.google.com ([209.85.198.184]:11267 "EHLO
+Received: from rv-out-0910.google.com ([209.85.198.185]:34778 "EHLO
 	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759335AbYBGBTD (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 6 Feb 2008 20:19:03 -0500
-Received: by rv-out-0910.google.com with SMTP id k20so2077000rvb.1
-        for <linux-ide@vger.kernel.org>; Wed, 06 Feb 2008 17:19:00 -0800 (PST)
+	with ESMTP id S1751446AbYBGBeP (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 6 Feb 2008 20:34:15 -0500
+Received: by rv-out-0910.google.com with SMTP id k20so2079989rvb.1
+        for <linux-ide@vger.kernel.org>; Wed, 06 Feb 2008 17:34:14 -0800 (PST)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Jeff Garzik <jeff@garzik.org>, IDE/ATA development list <linux-ide@vger.kernel.org>
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>
 
-The first port of cx700 is SATA.  Fix cable detection.
+Some controllers (VIA CX700) raise device error on SETXFER even after
+mode configuration succeeded.  Update ata_dev_set_mode() such that
+device error is ignored if transfer mode is configured correctly.  To
+implement this, device is revalidated even after device error on
+SETXFER.
+
+This fixes kernel bugzilla bug 8563.
 
 Signed-off-by: Tejun Heo <htejun@gmail.com>
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>
 ---
- drivers/ata/pata_via.c |    6 +++++-
- 1 file changed, 5 insertions(+), 1 deletion(-)
+ drivers/ata/libata-core.c |   48 +++++++++++++++++++++++++++++++---------------
+ 1 file changed, 33 insertions(+), 15 deletions(-)
 
-diff --git a/drivers/ata/pata_via.c b/drivers/ata/pata_via.c
-index 39627ab..d119a68 100644
---- a/drivers/ata/pata_via.c
-+++ b/drivers/ata/pata_via.c
-@@ -84,6 +84,7 @@ enum {
- 	VIA_BAD_ID	= 0x100, /* Has wrong vendor ID (0x1107) */
- 	VIA_BAD_AST	= 0x200, /* Don't touch Address Setup Timing */
- 	VIA_NO_ENABLES	= 0x400, /* Has no enablebits */
-+	VIA_SATA_PATA	= 0x800, /* SATA/PATA combined configuration */
- };
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index bdbd55a..bcd2860 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -3048,6 +3048,8 @@ int ata_down_xfermask_limit(struct ata_device *dev, unsigned int sel)
+ static int ata_dev_set_mode(struct ata_device *dev)
+ {
+ 	struct ata_eh_context *ehc = &dev->link->eh_context;
++	const char *dev_err_whine = "";
++	int ign_dev_err = 0;
+ 	unsigned int err_mask;
+ 	int rc;
  
- /*
-@@ -100,7 +101,7 @@ static const struct via_isa_bridge {
- 	{ "vx800",	PCI_DEVICE_ID_VIA_VX800,    0x00, 0x2f, VIA_UDMA_133 | VIA_BAD_AST },
- 	{ "vt8237s",	PCI_DEVICE_ID_VIA_8237S,    0x00, 0x2f, VIA_UDMA_133 | VIA_BAD_AST },
- 	{ "vt8251",	PCI_DEVICE_ID_VIA_8251,     0x00, 0x2f, VIA_UDMA_133 | VIA_BAD_AST },
--	{ "cx700",	PCI_DEVICE_ID_VIA_CX700,    0x00, 0x2f, VIA_UDMA_133 | VIA_BAD_AST },
-+	{ "cx700",	PCI_DEVICE_ID_VIA_CX700,    0x00, 0x2f, VIA_UDMA_133 | VIA_BAD_AST | VIA_SATA_PATA },
- 	{ "vt6410",	PCI_DEVICE_ID_VIA_6410,     0x00, 0x2f, VIA_UDMA_133 | VIA_BAD_AST | VIA_NO_ENABLES},
- 	{ "vt8237a",	PCI_DEVICE_ID_VIA_8237A,    0x00, 0x2f, VIA_UDMA_133 | VIA_BAD_AST },
- 	{ "vt8237",	PCI_DEVICE_ID_VIA_8237,     0x00, 0x2f, VIA_UDMA_133 | VIA_BAD_AST },
-@@ -172,6 +173,9 @@ static int via_cable_detect(struct ata_port *ap) {
- 	if (via_cable_override(pdev))
- 		return ATA_CBL_PATA40_SHORT;
+@@ -3057,41 +3059,57 @@ static int ata_dev_set_mode(struct ata_device *dev)
  
-+	if ((config->flags & VIA_SATA_PATA) && ap->port_no == 0)
-+		return ATA_CBL_SATA;
+ 	err_mask = ata_dev_set_xfermode(dev);
+ 
++	if (err_mask & ~AC_ERR_DEV)
++		goto fail;
 +
- 	/* Early chips are 40 wire */
- 	if ((config->flags & VIA_UDMA) < VIA_UDMA_66)
- 		return ATA_CBL_PATA40;
++	/* revalidate */
++	ehc->i.flags |= ATA_EHI_POST_SETMODE;
++	rc = ata_dev_revalidate(dev, ATA_DEV_UNKNOWN, 0);
++	ehc->i.flags &= ~ATA_EHI_POST_SETMODE;
++	if (rc)
++		return rc;
++
+ 	/* Old CFA may refuse this command, which is just fine */
+ 	if (dev->xfer_shift == ATA_SHIFT_PIO && ata_id_is_cfa(dev->id))
+-		err_mask &= ~AC_ERR_DEV;
++		ign_dev_err = 1;
+ 
+ 	/* Some very old devices and some bad newer ones fail any kind of
+ 	   SET_XFERMODE request but support PIO0-2 timings and no IORDY */
+ 	if (dev->xfer_shift == ATA_SHIFT_PIO && !ata_id_has_iordy(dev->id) &&
+ 			dev->pio_mode <= XFER_PIO_2)
+-		err_mask &= ~AC_ERR_DEV;
++		ign_dev_err = 1;
+ 
+ 	/* Early MWDMA devices do DMA but don't allow DMA mode setting.
+ 	   Don't fail an MWDMA0 set IFF the device indicates it is in MWDMA0 */
+ 	if (dev->xfer_shift == ATA_SHIFT_MWDMA &&
+ 	    dev->dma_mode == XFER_MW_DMA_0 &&
+ 	    (dev->id[63] >> 8) & 1)
+-		err_mask &= ~AC_ERR_DEV;
++		ign_dev_err = 1;
+ 
+-	if (err_mask) {
+-		ata_dev_printk(dev, KERN_ERR, "failed to set xfermode "
+-			       "(err_mask=0x%x)\n", err_mask);
+-		return -EIO;
+-	}
++	/* if the device is actually configured correctly, ignore dev err */
++	if (dev->xfer_mode == ata_xfer_mask2mode(ata_id_xfermask(dev->id)))
++		ign_dev_err = 1;
+ 
+-	ehc->i.flags |= ATA_EHI_POST_SETMODE;
+-	rc = ata_dev_revalidate(dev, ATA_DEV_UNKNOWN, 0);
+-	ehc->i.flags &= ~ATA_EHI_POST_SETMODE;
+-	if (rc)
+-		return rc;
++	if (err_mask & AC_ERR_DEV) {
++		if (!ign_dev_err)
++			goto fail;
++		else
++			dev_err_whine = " (device error ignored)";
++	}
+ 
+ 	DPRINTK("xfer_shift=%u, xfer_mode=0x%x\n",
+ 		dev->xfer_shift, (int)dev->xfer_mode);
+ 
+-	ata_dev_printk(dev, KERN_INFO, "configured for %s\n",
+-		       ata_mode_string(ata_xfer_mode2mask(dev->xfer_mode)));
++	ata_dev_printk(dev, KERN_INFO, "configured for %s%s\n",
++		       ata_mode_string(ata_xfer_mode2mask(dev->xfer_mode)),
++		       dev_err_whine);
++
+ 	return 0;
++
++ fail:
++	ata_dev_printk(dev, KERN_ERR, "failed to set xfermode "
++		       "(err_mask=0x%x)\n", err_mask);
++	return -EIO;
+ }
+ 
+ /**
