@@ -1,51 +1,50 @@
-From: Byron Bradley <byron.bbradley@gmail.com>
-Subject: Re: sata_mv: problems using it as a platform_driver
-Date: Fri, 8 Feb 2008 02:20:35 +0000 (GMT)
-Message-ID: <alpine.DEB.1.00.0802080217070.16853@git.byronbradley.co.uk>
-References: <alpine.DEB.1.00.0802080113560.16853@git.byronbradley.co.uk>
+From: Michael Schmitz <schmitz@granat.biophys.uni-duesseldorf.de>
+Subject: Re: falconide broken
+Date: Fri, 08 Feb 2008 00:48:40 +0100 (CET)
+Message-ID: <Pine.LNX.4.44.0802080043460.2967-100000@zirkon.biophys.uni-duesseldorf.de>
+References: <Pine.LNX.4.64.0802070933130.17555@anakin>
 Mime-Version: 1.0
 Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mu-out-0910.google.com ([209.85.134.188]:34888 "EHLO
-	mu-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1762135AbYBHCUi (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 7 Feb 2008 21:20:38 -0500
-Received: by mu-out-0910.google.com with SMTP id i10so3978341mue.5
-        for <linux-ide@vger.kernel.org>; Thu, 07 Feb 2008 18:20:36 -0800 (PST)
-In-Reply-To: <alpine.DEB.1.00.0802080113560.16853@git.byronbradley.co.uk>
+Received: from mail.rz.uni-duesseldorf.de ([134.99.128.30]:57016 "EHLO
+	mail.rz.uni-duesseldorf.de" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1756210AbYBHDLj (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 7 Feb 2008 22:11:39 -0500
+In-reply-to: <Pine.LNX.4.64.0802070933130.17555@anakin>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: saeed@marvell.com, linux-ide@vger.kernel.org, mlord@pobox.com, jeff@garzik.org, linux-arm-kernel@lists.arm.linux.org.uk
+To: Geert Uytterhoeven <geert@linux-m68k.org>
+Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Linux/m68k <linux-m68k@vger.kernel.org>, linux-ide@vger.kernel.org
 
-On Fri, 8 Feb 2008, Byron Bradley wrote:
+Hi,
 
-> I'm having problems getting the sata_mv driver working as a platform
-> driver on the QNAP TS-209 and the Linkstation/Kurobox (both are Marvell
-> Orion 88f5182 based devices). First of all it would oops in
-> mv_port_start() while calling dma_pool_alloc(), the patch to fix this is
-> at the end of this email.
+> One of the recent IDE changes seems to have broken Atari Falcon IDE.
+> My smoke test boot on Aranym gives:
 >
-> In mv_platform_probe() host->iomap is set to NULL but it is dereferenced
-> in mv_start_dma(), I'm not sure what the fix for this is. This is based on
-> the latest 2.6-git and a merge with the for-rmk branch of the orion git.
+> Uniform Multi-Platform E-IDE driver Revision: 7.00alpha2
+> ide: Assuming 50MHz system bus speed for PIO modes; override with idebus=xx
+> ide: Falcon IDE controller
+> Unable to handle kernel NULL pointer dereference at virtual address 00000000
+> Oops: 00000000
+> Modules linked in:
+> PC: [<00133abc>] ide_outb+0x8/0xa
+> SR: 2300  SP: 00817e80  a2: 008159c0
+> d0: 00000008    d1: 00000000    d2: 008312b0    d3: 00000000
+> d4: 00000000    d5: 00817f34    a0: 00000039    a1: 00000000
 
-The following patch makes this driver work although I have no idea if this
-is the correct thing to do. Will this be OK for other devices using this
-driver? The pointer only works because it is dereferenced as
-iomap[MV_PRIMARY_BAR] and MV_PRIMARY_BAR = 0, will another offset ever be
-used in the future?
+Looks like the IDE base address did not get set at all...
 
-diff --git a/drivers/ata/sata_mv.c b/drivers/ata/sata_mv.c
-index 04b5717..b538ccc 100644
---- a/drivers/ata/sata_mv.c
-+++ b/drivers/ata/sata_mv.c
-@@ -2950,8 +2950,8 @@ static int mv_platform_probe(struct platform_device *pdev)
- 	host->private_data = hpriv;
- 	hpriv->n_ports = n_ports;
+[...]
+> Call Trace: [<00136e52>] ide_device_add_all+0x2e0/0xd84
+>  [<00131350>] ide_init_port_data+0x6c/0x10a
+>  [<00002300>] system_call+0x10/0x26
+>  [<00137922>] ide_device_add+0x2c/0x32
+>  [<00276f96>] falconide_init+0xd4/0xe6
 
--	host->iomap = NULL;
- 	hpriv->base = ioremap(res->start, res->end - res->start + 1);
-+	host->iomap = &hpriv->base;
- 	hpriv->base -= MV_SATAHC0_REG_BASE;
+I'd have to look at changes to falconide_init and ide_init_port_data, but
+no git access at work.... Good luck with the bisect!
 
- 	rc = mv_create_dma_pools(hpriv, &pdev->dev);
+	Michael
+
+
