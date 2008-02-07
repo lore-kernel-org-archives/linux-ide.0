@@ -1,80 +1,111 @@
-From: Geert Uytterhoeven <geert@linux-m68k.org>
-Subject: falconide broken
-Date: Thu, 7 Feb 2008 09:38:31 +0100 (CET)
-Message-ID: <Pine.LNX.4.64.0802070933130.17555@anakin>
+From: Kamalesh Babulal <kamalesh@linux.vnet.ibm.com>
+Subject: Re: 2.6.26-git0: IDE oops during boot
+Date: Thu, 07 Feb 2008 15:05:07 +0530
+Message-ID: <47AAD0CB.3090305@linux.vnet.ibm.com>
+References: <20080206105334.GA3664@elf.ucw.cz> <20080206110805.GB3613@elf.ucw.cz> <200802062105.42929.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from yergi.telenet-ops.be ([195.130.132.36]:54969 "EHLO
-	yergi.telenet-ops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753952AbYBGIjP (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 7 Feb 2008 03:39:15 -0500
-Received: from edna.telenet-ops.be (unknown [195.130.132.58])
-	by yergi.telenet-ops.be (Postfix) with ESMTP id 663FA5CAB4E
-	for <linux-ide@vger.kernel.org>; Thu,  7 Feb 2008 09:39:15 +0100 (CET)
+Received: from E23SMTP03.au.ibm.com ([202.81.18.172]:45970 "EHLO
+	e23smtp03.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752738AbYBGJfN (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 7 Feb 2008 04:35:13 -0500
+In-Reply-To: <200802062105.42929.bzolnier@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: Linux/m68k <linux-m68k@vger.kernel.org>, linux-ide@vger.kernel.org
+Cc: Pavel Machek <pavel@ucw.cz>, kernel list <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org
 
+Bartlomiej Zolnierkiewicz wrote:
+> Hi,
+> 
+> On Wednesday 06 February 2008, Pavel Machek wrote:
+>> On Wed 2008-02-06 11:53:34, Pavel Machek wrote:
+>>> Hi!
+>>>
+>>> Trying to boot 2.6.25-git0 (few days old), I get
+>>>
+>>> BUG: unable to handle kernel paging request at ffff..ffb0
+>>> IP at init_irq+0x42e
+> 
+> init_irq? hmm...
+> 
+>>> Call trace:
+>>> ide_device_add_all
+> 
+> this comes from ide-generic
+> (Generic IDE host driver)
+> 
+>>> ide_generic_init
+>>> kernel_init
+>>> child_rip
+>>> vgacon_cursor
+>>> kernel_init
+>>> child_rip
+>>>
+>>> Excerpt from config:
+>>>
+>>> CONFIG_IDE=y
+>>> CONFIG_BLK_DEV_IDE=y
+>> Disabling CONFIG_IDE made my machine boot, as it was using libata
+>> anyway.
+> 
+> Kamalesh/Pavel:
+> 
+> Could you try latest git and see if the OOPS is still there?
+> 
+> [ Yeah, I'm unable to reproduce it. :( ]
+> 
+> Thanks,
+> Bart
+Hi Bart,
 
-One of the recent IDE changes seems to have broken Atari Falcon IDE.
-My smoke test boot on Aranym gives:
+The panic is reproducible with the 2.6.24-git16 kernel, the call trace is
+similar to the previous one
 
-Uniform Multi-Platform E-IDE driver Revision: 7.00alpha2
-ide: Assuming 50MHz system bus speed for PIO modes; override with idebus=xx
-ide: Falcon IDE controller
-Unable to handle kernel NULL pointer dereference at virtual address 00000000
-Oops: 00000000
+BUG: unable to handle kernel paging request at ffffffffffffffa0
+IP: [<ffffffff80415673>] init_irq+0x188/0x444
+PGD 203067 PUD 204067 PMD 0 
+Oops: 0000 [1] SMP 
+CPU 3 
 Modules linked in:
-PC: [<00133abc>] ide_outb+0x8/0xa
-SR: 2300  SP: 00817e80  a2: 008159c0
-d0: 00000008    d1: 00000000    d2: 008312b0    d3: 00000000
-d4: 00000000    d5: 00817f34    a0: 00000039    a1: 00000000
-Process swapper (pid: 1, task=008159c0)
-Frame format=7 eff addr=01000039 ssw=0000 faddr=01000039
-wb 1 stat/addr/data: 0000 00000000 00000000
-wb 2 stat/addr/data: 0000 00000000 00000000
-wb 3 stat/addr/data: 0000 01000039 00000000
-push data: 00000000 00000000 00000000 00000000
-Stack from 00817ee8:
-        00136e52 00000008 00000039 0025fc20 00000000 00000000 00000000 00000000
-        00000000 00000000 0025fbd6 00817f62 0027f394 00817f38 00131350 00002300
-        00137922 00817f34 00000000 00ffffff 00817f9c 00276f96 00817f98 00000000
-        0025fbd6 00817f62 0025fbd6 00000000 00266a6c 00027a58 0002fff0 0000fff0
-        0005fff0 0009fff0 000dfff0 0011fff0 0015fff0 0019fff0 001d0000 00390000
-        00000000 000f0000 00000000 00000000 00ffffff 00283ff8 00266ada 00000000
-Call Trace: [<00136e52>] ide_device_add_all+0x2e0/0xd84
- [<00131350>] ide_init_port_data+0x6c/0x10a
- [<00002300>] system_call+0x10/0x26
- [<00137922>] ide_device_add+0x2c/0x32
- [<00276f96>] falconide_init+0xd4/0xe6
- [<00266a6c>] kernel_init+0x0/0x2ce
- [<00027a58>] printk+0x0/0x1a
- [<0002fff0>] __group_complete_signal+0x48/0x1bc
- [<0000fff0>] slognp1+0xe0/0x140
- [<0005fff0>] sys_swapoff+0x5a6/0x92e
- [<0009fff0>] sysfs_open_file+0x40/0x1c8
- [<000dfff0>] blk_end_sync_rq+0xc/0x2c
- [<0011fff0>] do_con_write+0x1422/0x1aa0
- [<0015fff0>] psmouse_connect+0x10e/0x212
- [<0019fff0>] raw_sendmsg+0x476/0x68c
- [<000f0000>] bitmap_scnprintf+0x46/0x122
- [<00266ada>] kernel_init+0x6e/0x2ce
- [<00266a6c>] kernel_init+0x0/0x2ce
- [<00027a58>] printk+0x0/0x1a
- [<002704be>] __alloc_bootmem+0x0/0x3e
- [<00002950>] kernel_thread+0x3a/0x4e
+Pid: 1, comm: swapper Not tainted 2.6.24-git16 #1
+RIP: 0010:[<ffffffff80415673>]  [<ffffffff80415673>] init_irq+0x188/0x444
+RSP: 0000:ffff81022f093e00  EFLAGS: 00010282
+RAX: ffffffffffffff80 RBX: ffffffff808ad200 RCX: 0000000000000000
+RDX: 00000000ffffffff RSI: ffff81022fc039c0 RDI: ffffffff807512c0
+RBP: ffff81022f093e30 R08: ffff81022f093d70 R09: 0000000000000002
+R10: 0000000000000001 R11: ffff81022f093c00 R12: ffffffff808b4500
+R13: ffffffff808b4510 R14: 0000000000000000 R15: ffffffffffffffff
+FS:  0000000000000000(0000) GS:ffff81022f0e7ac0(0000) knlGS:0000000000000000
+CS:  0010 DS: 0018 ES: 0018 CR0: 000000008005003b
+CR2: ffffffffffffffa0 CR3: 0000000000201000 CR4: 00000000000006e0
+DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+DR3: 0000000000000000 DR6: 00000000ffff0ff0 DR7: 0000000000000400
+Process swapper (pid: 1, threadinfo ffff81022f092000, task ffff81022f0797e0)
+Stack:  ffff81022f093e30 0000000000000000 ffffffff808ad200 ffffffff808ad220
+ ffffffff808add80 0000000000000000 ffff81022f093eb0 ffffffff8041648f
+ ffff81022f093ec0 0000000000000000 0000000080751ee0 0000000000000246
+Call Trace:
+ [<ffffffff8041648f>] ide_device_add_all+0xb60/0xe54
+ [<ffffffff807d6d48>] ide_generic_init+0x46/0x4a
+ [<ffffffff807b873b>] kernel_init+0x175/0x2e7
+ [<ffffffff8020bff8>] child_rip+0xa/0x12
+ [<ffffffff8037476c>] acpi_ds_init_one_object+0x0/0x88
+ [<ffffffff807b85c6>] kernel_init+0x0/0x2e7
+ [<ffffffff8020bfee>] child_rip+0x0/0x12
 
-I'll try to bisect later...
 
-Gr{oetje,eeting}s,
+Code: 89 03 49 8b 45 18 48 89 18 48 39 1b 75 04 0f 0b eb fe fe 05 20 71 38 00 fb eb 5b 48 8b 83 20 07 00 00 83 ca ff 48 83 c0 80 74 0e <48> 8b 40 20 48 8b 80 88 00 00 00 8b 50 04 48 8b 3d 48 11 30 00 
+RIP  [<ffffffff80415673>] init_irq+0x188/0x444
+ RSP <ffff81022f093e00>
+CR2: ffffffffffffffa0
+---[ end trace 165798c72d52c3e3 ]---
 
-						Geert
 
---
-Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
-
-In personal conversations with technical people, I call myself a hacker. But
-when I'm talking to journalists I just say "programmer" or something like that.
-							    -- Linus Torvalds
+-- 
+Thanks & Regards,
+Kamalesh Babulal,
+Linux Technology Center,
+IBM, ISTL.
