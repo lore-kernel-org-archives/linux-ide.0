@@ -1,47 +1,36 @@
-From: Borislav Petkov <petkovbb@googlemail.com>
-Subject: [PATCH] ide-cd: replace ntohs with generic byteorder macro
-	be16_to_cpu
-Date: Fri, 8 Feb 2008 07:29:03 +0100
-Message-ID: <20080208062903.GA20018@gollum.tnic>
-Reply-To: petkovbb@gmail.com
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Subject: Re: [PATCH 00/18] ide: warm-plug support for IDE devices and other
+	goodies
+Date: Fri, 08 Feb 2008 19:40:43 +1100
+Message-ID: <1202460043.7079.157.camel@pasglop>
+References: <20080208004421.17746.32557.sendpatchset@localhost.localdomain>
+Reply-To: benh@kernel.crashing.org
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from fk-out-0910.google.com ([209.85.128.189]:49255 "EHLO
-	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751631AbYBHG3T (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 8 Feb 2008 01:29:19 -0500
-Received: by fk-out-0910.google.com with SMTP id z23so3336918fkz.5
-        for <linux-ide@vger.kernel.org>; Thu, 07 Feb 2008 22:29:16 -0800 (PST)
-Content-Disposition: inline
+Received: from gate.crashing.org ([63.228.1.57]:47937 "EHLO gate.crashing.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755470AbYBHIlF (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 8 Feb 2008 03:41:05 -0500
+In-Reply-To: <20080208004421.17746.32557.sendpatchset@localhost.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: bzolnier@gmail.com
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: linux-ide@vger.kernel.org, linuxppc-dev@ozlabs.org, linux-kernel@vger.kernel.org
 
-commit d41c6bc739e7ea7880f7f5983a9694f2e0214d92
-Author: Borislav Petkov <petkovbb@gmail.com>
-Date:   Fri Feb 8 07:25:44 2008 +0100
 
-    ide-cd: replace ntohs with generic byteorder macro be16_to_cpu
-   =20
-    Signed-off-by: Borislav Petkov <petkovbb@gmail.com>
+On Fri, 2008-02-08 at 01:44 +0100, Bartlomiej Zolnierkiewicz wrote:
+> - couple of fixes and preparatory patches
+> 
+> - rework of PowerMac media-bay support ([un]register IDE devices instead of
+>   [un]registering IDE interface) [ it is the main reason for spamming PPC ML ]
 
-diff --git a/drivers/ide/ide-cd.c b/drivers/ide/ide-cd.c
-index 5e42c19..354c91d 100644
---- a/drivers/ide/ide-cd.c
-+++ b/drivers/ide/ide-cd.c
-@@ -1555,7 +1555,7 @@ int ide_cd_read_toc(ide_drive_t *drive, struct re=
-quest_sense *sense)
- 	if (stat)
- 		return stat;
-=20
--	toc->hdr.toc_length =3D ntohs (toc->hdr.toc_length);
-+	toc->hdr.toc_length =3D be16_to_cpu(toc->hdr.toc_length);
-=20
- 	if (info->cd_flags & IDE_CD_FLAG_TOCTRACKS_AS_BCD) {
- 		toc->hdr.first_track =3D BCD2BIN(toc->hdr.first_track);
---=20
-Regards/Gru=DF,
-    Boris.
+Interesting... I was thinking about doing a full remove of the device at
+a higher level instead but I suppose what you propose is easier.
+
+I'll have a look & test next week hopefully.
+
+Ben.
+
+
