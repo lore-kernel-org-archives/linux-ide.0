@@ -1,65 +1,78 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH 16/18] ide: remove ->hold field from ide_hwif_t
-Date: Fri, 08 Feb 2008 01:46:19 +0100
-Message-ID: <20080208004619.17746.469.sendpatchset@localhost.localdomain>
+Subject: [PATCH 17/18] ide: remove init_hwif_default()
+Date: Fri, 08 Feb 2008 01:46:26 +0100
+Message-ID: <20080208004626.17746.19452.sendpatchset@localhost.localdomain>
 References: <20080208004421.17746.32557.sendpatchset@localhost.localdomain>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wr-out-0506.google.com ([64.233.184.224]:46536 "EHLO
-	wr-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1763296AbYBHAcI (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 7 Feb 2008 19:32:08 -0500
-Received: by wr-out-0506.google.com with SMTP id c48so3446847wra.23
-        for <linux-ide@vger.kernel.org>; Thu, 07 Feb 2008 16:32:07 -0800 (PST)
+Received: from py-out-1112.google.com ([64.233.166.183]:57863 "EHLO
+	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933985AbYBHAcT (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 7 Feb 2008 19:32:19 -0500
+Received: by py-out-1112.google.com with SMTP id u52so5202641pyb.10
+        for <linux-ide@vger.kernel.org>; Thu, 07 Feb 2008 16:32:16 -0800 (PST)
 In-Reply-To: <20080208004421.17746.32557.sendpatchset@localhost.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
 Cc: linuxppc-dev@ozlabs.org, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-kernel@vger.kernel.org
 
-->hold is write-only now, remove it.
+init_hwif_default() is only used by init_ide_data() now, inline it there.
 
 Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 ---
- drivers/ide/mips/au1xxx-ide.c |    3 ---
- drivers/ide/ppc/pmac.c        |    1 -
- include/linux/ide.h           |    1 -
- 3 files changed, 5 deletions(-)
+ drivers/ide/ide.c |   25 +++++++++----------------
+ 1 file changed, 9 insertions(+), 16 deletions(-)
 
-Index: b/drivers/ide/mips/au1xxx-ide.c
+Index: b/drivers/ide/ide.c
 ===================================================================
---- a/drivers/ide/mips/au1xxx-ide.c
-+++ b/drivers/ide/mips/au1xxx-ide.c
-@@ -617,9 +617,6 @@ static int au_ide_probe(struct device *d
+--- a/drivers/ide/ide.c
++++ b/drivers/ide/ide.c
+@@ -168,19 +168,6 @@ static void ide_port_init_devices_data(i
+ }
  
- 	hwif->dev = dev;
  
--	/* hold should be on in all cases */
--	hwif->hold                      = 1;
+-static void init_hwif_default(ide_hwif_t *hwif, unsigned int index)
+-{
+-	hw_regs_t hw;
 -
- 	hwif->mmio  = 1;
+-	memset(&hw, 0, sizeof(hw_regs_t));
+-
+-	ide_init_hwif_ports(&hw, ide_default_io_base(index), 0, &hwif->irq);
+-
+-	memcpy(hwif->io_ports, hw.io_ports, sizeof(hw.io_ports));
+-
+-	hwif->noprobe = !hwif->io_ports[IDE_DATA_OFFSET];
+-}
+-
+ /*
+  * init_ide_data() sets reasonable default values into all fields
+  * of all instances of the hwifs and drives, but only on the first call.
+@@ -201,9 +188,9 @@ static void init_hwif_default(ide_hwif_t
+ #define MAGIC_COOKIE 0x12345678
+ static void __init init_ide_data (void)
+ {
+-	ide_hwif_t *hwif;
+ 	unsigned int index;
+ 	static unsigned long magic_cookie = MAGIC_COOKIE;
++	hw_regs_t hw;
  
- 	/* If the user has selected DDMA assisted copies,
-Index: b/drivers/ide/ppc/pmac.c
-===================================================================
---- a/drivers/ide/ppc/pmac.c
-+++ b/drivers/ide/ppc/pmac.c
-@@ -1120,7 +1120,6 @@ pmac_ide_setup_device(pmac_ide_hwif_t *p
- 	hwif->hwif_data = pmif;
- 	ide_init_port_hw(hwif, hw);
- 	hwif->noprobe = pmif->mediabay;
--	hwif->hold = pmif->mediabay;
- 	hwif->cbl = pmif->cable_80 ? ATA_CBL_PATA80 : ATA_CBL_PATA40;
- 	hwif->set_pio_mode = pmac_ide_set_pio_mode;
- 	if (pmif->kind == controller_un_ata6
-Index: b/include/linux/ide.h
-===================================================================
---- a/include/linux/ide.h
-+++ b/include/linux/ide.h
-@@ -573,7 +573,6 @@ typedef struct hwif_s {
+ 	if (magic_cookie != MAGIC_COOKIE)
+ 		return;		/* already initialized */
+@@ -211,9 +198,15 @@ static void __init init_ide_data (void)
  
- 	unsigned	noprobe    : 1;	/* don't probe for this interface */
- 	unsigned	present    : 1;	/* this interface exists */
--	unsigned	hold       : 1; /* this interface is always present */
- 	unsigned	serialized : 1;	/* serialized all channel operation */
- 	unsigned	sharing_irq: 1;	/* 1 = sharing irq with another hwif */
- 	unsigned	reset      : 1;	/* reset after probe */
+ 	/* Initialise all interface structures */
+ 	for (index = 0; index < MAX_HWIFS; ++index) {
+-		hwif = &ide_hwifs[index];
++		ide_hwif_t *hwif = &ide_hwifs[index];
++
+ 		ide_init_port_data(hwif, index);
+-		init_hwif_default(hwif, index);
++
++		memset(&hw, 0, sizeof(hw));
++		ide_init_hwif_ports(&hw, ide_default_io_base(index), 0,
++				    &hwif->irq);
++		memcpy(hwif->io_ports, hw.io_ports, sizeof(hw.io_ports));
++		hwif->noprobe = !hwif->io_ports[IDE_DATA_OFFSET];
+ #if !defined(CONFIG_PPC32) || !defined(CONFIG_PCI)
+ 		hwif->irq =
+ 			ide_init_default_irq(hwif->io_ports[IDE_DATA_OFFSET]);
