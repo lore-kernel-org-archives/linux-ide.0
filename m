@@ -1,50 +1,111 @@
-From: Michael Schmitz <schmitz@granat.biophys.uni-duesseldorf.de>
-Subject: Re: falconide broken
-Date: Fri, 08 Feb 2008 00:48:40 +0100 (CET)
-Message-ID: <Pine.LNX.4.44.0802080043460.2967-100000@zirkon.biophys.uni-duesseldorf.de>
-References: <Pine.LNX.4.64.0802070933130.17555@anakin>
+From: Mark Lord <liml@rtr.ca>
+Subject: Re: [PATCH] sata_mv: fix loop with last port
+Date: Thu, 07 Feb 2008 23:30:42 -0500
+Message-ID: <47ABDAF2.7030209@rtr.ca>
+References: <200802071506.17459.yinghai.lu@sun.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.rz.uni-duesseldorf.de ([134.99.128.30]:57016 "EHLO
-	mail.rz.uni-duesseldorf.de" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756210AbYBHDLj (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 7 Feb 2008 22:11:39 -0500
-In-reply-to: <Pine.LNX.4.64.0802070933130.17555@anakin>
+Received: from rtr.ca ([76.10.145.34]:1075 "EHLO mail.rtr.ca"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1760329AbYBHEao (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 7 Feb 2008 23:30:44 -0500
+In-Reply-To: <200802071506.17459.yinghai.lu@sun.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Geert Uytterhoeven <geert@linux-m68k.org>
-Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Linux/m68k <linux-m68k@vger.kernel.org>, linux-ide@vger.kernel.org
+To: Yinghai Lu <Yinghai.Lu@Sun.COM>
+Cc: Jeff Garzik <jgarzik@redhat.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Saeed Bishara <saeed@marvell.com>
 
-Hi,
-
-> One of the recent IDE changes seems to have broken Atari Falcon IDE.
-> My smoke test boot on Aranym gives:
->
-> Uniform Multi-Platform E-IDE driver Revision: 7.00alpha2
-> ide: Assuming 50MHz system bus speed for PIO modes; override with idebus=xx
-> ide: Falcon IDE controller
-> Unable to handle kernel NULL pointer dereference at virtual address 00000000
-> Oops: 00000000
+Yinghai Lu wrote:
+> [PATCH] sata_mv: fix loop with last port
+> 
+> commit f351b2d638c3cb0b95adde3549b7bfaf3f991dfa
+>         sata_mv: Support SoC controllers
+> 
+> cause panic:
+> 
+> scsi 4:0:0:0: Direct-Access     ATA      HITACHI HDS7225S V44O PQ: 0 ANSI: 5
+> sd 4:0:0:0: [sde] 488390625 512-byte hardware sectors (250056 MB)
+> sd 4:0:0:0: [sde] Write Protect is off
+> sd 4:0:0:0: [sde] Mode Sense: 00 3a 00 00
+> sd 4:0:0:0: [sde] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+> sd 4:0:0:0: [sde] 488390625 512-byte hardware sectors (250056 MB)
+> sd 4:0:0:0: [sde] Write Protect is off
+> sd 4:0:0:0: [sde] Mode Sense: 00 3a 00 00
+> sd 4:0:0:0: [sde] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+>  sde:<1>BUG: unable to handle kernel NULL pointer dereference at 000000000000001a
+> IP: [<ffffffff806262c7>] mv_interrupt+0x21c/0x4cc
+> PGD 0
+> Oops: 0000 [1] SMP
+> CPU 3
 > Modules linked in:
-> PC: [<00133abc>] ide_outb+0x8/0xa
-> SR: 2300  SP: 00817e80  a2: 008159c0
-> d0: 00000008    d1: 00000000    d2: 008312b0    d3: 00000000
-> d4: 00000000    d5: 00817f34    a0: 00000039    a1: 00000000
+> Pid: 0, comm: swapper Not tainted 2.6.24-smp-08636-g0afc2ed-dirty #26
+> RIP: 0010:[<ffffffff806262c7>]  [<ffffffff806262c7>] mv_interrupt+0x21c/0x4cc
+> RSP: 0000:ffff8102050bbec8  EFLAGS: 00010297
+> RAX: 0000000000000008 RBX: 0000000000000000 RCX: 0000000000000003
+> RDX: 0000000000008000 RSI: 0000000000000286 RDI: ffff8102035180e0
+> RBP: 0000000000000001 R08: 0000000000000003 R09: ffff8102036613e0
+> R10: 0000000000000002 R11: ffffffff8061474c R12: ffff8102035bf828
+> R13: 0000000000000008 R14: ffff81020348ece8 R15: ffffc20002cb2000
+> FS:  0000000000000000(0000) GS:ffff810405025700(0000) knlGS:0000000000000000
+> CS:  0010 DS: 0018 ES: 0018 CR0: 000000008005003b
+> CR2: 000000000000001a CR3: 0000000000201000 CR4: 00000000000006e0
+> DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+> DR3: 0000000000000000 DR6: 00000000ffff0ff0 DR7: 0000000000000400
+> Process swapper (pid: 0, threadinfo ffff810405094000, task ffff8102050b28c0)
+> Stack:  000000010000000c 0002040000220400 0000001100000002 ffff81020348eda8
+>  0000000000000001 ffff8102035f2cc0 0000000000000000 0000000000000000
+>  0000000000000018 0000000000000000 0000000000000000 ffffffff80269ee8
+> Call Trace:
+>  <IRQ>  [<ffffffff80269ee8>] ? handle_IRQ_event+0x25/0x53
+>  [<ffffffff8026b393>] ? handle_fasteoi_irq+0x90/0xc8
+>  [<ffffffff802218e2>] ? do_IRQ+0xf1/0x15f
+>  [<ffffffff8021df24>] ? default_idle+0x0/0x55
+>  [<ffffffff8021f361>] ? ret_from_intr+0x0/0xa
+>  <EOI>  [<ffffffff8023010c>] ? lapic_next_event+0x0/0xa
+>  [<ffffffff8021df55>] ? default_idle+0x31/0x55
+>  [<ffffffff8021df50>] ? default_idle+0x2c/0x55
+>  [<ffffffff8021df24>] ? default_idle+0x0/0x55
+>  [<ffffffff8021e00b>] ? cpu_idle+0x92/0xb8
+> 
+> 
+> Code: 41 14 85 c0 89 44 24 14 0f 84 9d 02 00 00 f7 d0 01 d6 41 89 d5 89 41 14 8b 41 14 89 34 24 e9 7e 02 00 00 49 63 c5 49 8b 5c c6 48 <f6> 43 1a 80 4c 8b a3 20 37 00 00 0f 85 62 02 00 00 31 c9 41 83
+> RIP  [<ffffffff806262c7>] mv_interrupt+0x21c/0x4cc
+>  RSP <ffff8102050bbec8>
+> CR2: 000000000000001a
+> ---[ end trace 2583b5f7a5350584 ]---
+> Kernel panic - not syncing: Aiee, killing interrupt handler!
+> 
+> last_port already include port0 base.
+> this patch change use last_port directly, and move pp assignment later.
+> 
+> Signed-off-by: Yinghai Lu <yinghai.lu@sun.com>
+..
 
-Looks like the IDE base address did not get set at all...
+Yup, obvious bug fixes, thanks.
+Signed-off-by: Mark Lord <mlord@pobox.com>
 
-[...]
-> Call Trace: [<00136e52>] ide_device_add_all+0x2e0/0xd84
->  [<00131350>] ide_init_port_data+0x6c/0x10a
->  [<00002300>] system_call+0x10/0x26
->  [<00137922>] ide_device_add+0x2c/0x32
->  [<00276f96>] falconide_init+0xd4/0xe6
-
-I'd have to look at changes to falconide_init and ide_init_port_data, but
-no git access at work.... Good luck with the bisect!
-
-	Michael
-
-
+> Index: linux-2.6/drivers/ata/sata_mv.c
+> ===================================================================
+> --- linux-2.6.orig/drivers/ata/sata_mv.c
+> +++ linux-2.6/drivers/ata/sata_mv.c
+> @@ -1716,14 +1716,16 @@ static void mv_host_intr(struct ata_host
+>  	VPRINTK("ENTER, hc%u relevant=0x%08x HC IRQ cause=0x%08x\n",
+>  		hc, relevant, hc_irq_cause);
+>  
+> -	for (port = port0; port < port0 + last_port; port++) {
+> +	for (port = port0; port < last_port; port++) {
+>  		struct ata_port *ap = host->ports[port];
+> -		struct mv_port_priv *pp = ap->private_data;
+> +		struct mv_port_priv *pp;
+>  		int have_err_bits, hard_port, shift;
+>  
+>  		if ((!ap) || (ap->flags & ATA_FLAG_DISABLED))
+>  			continue;
+>  
+> +		pp = ap->private_data;
+> +
+>  		shift = port << 1;		/* (port * 2) */
+>  		if (port >= MV_PORTS_PER_HC) {
+>  			shift++;	/* skip bit 8 in the HC Main IRQ reg */
