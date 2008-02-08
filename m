@@ -1,103 +1,65 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH 13/18] ide: remove CONFIG_BLK_DEV_HD_IDE config option
-Date: Fri, 08 Feb 2008 01:45:52 +0100
-Message-ID: <20080208004552.17746.61665.sendpatchset@localhost.localdomain>
+Subject: [PATCH 16/18] ide: remove ->hold field from ide_hwif_t
+Date: Fri, 08 Feb 2008 01:46:19 +0100
+Message-ID: <20080208004619.17746.469.sendpatchset@localhost.localdomain>
 References: <20080208004421.17746.32557.sendpatchset@localhost.localdomain>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.181]:3951 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932679AbYBHAbl (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 7 Feb 2008 19:31:41 -0500
-Received: by wa-out-1112.google.com with SMTP id v27so89647wah.23
-        for <linux-ide@vger.kernel.org>; Thu, 07 Feb 2008 16:31:40 -0800 (PST)
+Received: from wr-out-0506.google.com ([64.233.184.224]:46536 "EHLO
+	wr-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1763296AbYBHAcI (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 7 Feb 2008 19:32:08 -0500
+Received: by wr-out-0506.google.com with SMTP id c48so3446847wra.23
+        for <linux-ide@vger.kernel.org>; Thu, 07 Feb 2008 16:32:07 -0800 (PST)
 In-Reply-To: <20080208004421.17746.32557.sendpatchset@localhost.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
 Cc: linuxppc-dev@ozlabs.org, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-kernel@vger.kernel.org
 
-* Remove CONFIG_BLK_DEV_HD hack from init_hwif_default() ("ide0=noprobe"
-  kernel parameter should be used instead if somebody wishes to use the
-  old "hd" driver).
-
-* Make CONFIG_BLK_DEV_HD_ONLY config option available also when IDE
-  subsystem is used and update help entry.
-
-* Remove no longer needed CONFIG_BLK_DEV_HD_IDE config option.
+->hold is write-only now, remove it.
 
 Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 ---
- drivers/ide/Kconfig |   25 +++++--------------------
- drivers/ide/ide.c   |    4 ----
- 2 files changed, 5 insertions(+), 24 deletions(-)
+ drivers/ide/mips/au1xxx-ide.c |    3 ---
+ drivers/ide/ppc/pmac.c        |    1 -
+ include/linux/ide.h           |    1 -
+ 3 files changed, 5 deletions(-)
 
-Index: b/drivers/ide/Kconfig
+Index: b/drivers/ide/mips/au1xxx-ide.c
 ===================================================================
---- a/drivers/ide/Kconfig
-+++ b/drivers/ide/Kconfig
-@@ -118,24 +118,6 @@ config BLK_DEV_IDE_SATA
+--- a/drivers/ide/mips/au1xxx-ide.c
++++ b/drivers/ide/mips/au1xxx-ide.c
+@@ -617,9 +617,6 @@ static int au_ide_probe(struct device *d
  
- 	  If unsure, say N.
+ 	hwif->dev = dev;
  
--config BLK_DEV_HD_IDE
--	bool "Use old disk-only driver on primary interface"
--	depends on (X86 || SH_MPC1211)
--	---help---
--	  There are two drivers for MFM/RLL/IDE disks.  Most people use just
--	  the new enhanced driver by itself.  This option however installs the
--	  old hard disk driver to control the primary IDE/disk interface in
--	  the system, leaving the new enhanced IDE driver to take care of only
--	  the 2nd/3rd/4th IDE interfaces.  Doing this will prevent you from
--	  having an IDE/ATAPI CD-ROM or tape drive connected to the primary
--	  IDE interface.  Choosing this option may be useful for older systems
--	  which have MFM/RLL/ESDI controller+drives at the primary port
--	  address (0x1f0), along with IDE drives at the secondary/3rd/4th port
--	  addresses.
+-	/* hold should be on in all cases */
+-	hwif->hold                      = 1;
 -
--	  Normally, just say N here; you will then use the new driver for all
--	  4 interfaces.
--
- config BLK_DEV_IDEDISK
- 	tristate "Include IDE/ATA-2 DISK support"
- 	---help---
-@@ -1112,7 +1094,6 @@ endif
+ 	hwif->mmio  = 1;
  
- config BLK_DEV_HD_ONLY
- 	bool "Old hard disk (MFM/RLL/IDE) driver"
--	depends on BLK_DEV_IDE=n
- 	help
- 	  There are two drivers for MFM/RLL/IDE hard disks. Most people use
- 	  the newer enhanced driver, but this old one is still around for two
-@@ -1124,12 +1105,16 @@ config BLK_DEV_HD_ONLY
- 	  for systems with only older MFM/RLL/ESDI drives. Choosing the old
- 	  driver can save 13 KB or so of kernel memory.
- 
-+	  If you want to use this driver together with the new one you have
-+	  to use "ide0=noprobe" kernel parameter to prevent the new driver
-+	  from probing the primary interface.
-+
- 	  If you are unsure, then just choose the Enhanced IDE/MFM/RLL driver
- 	  instead of this one. For more detailed information, read the
- 	  Disk-HOWTO, available from
- 	  <http://www.tldp.org/docs.html#howto>.
- 
- config BLK_DEV_HD
--	def_bool BLK_DEV_HD_IDE || BLK_DEV_HD_ONLY
-+	def_bool BLK_DEV_HD_ONLY
- 
- endif # IDE
-Index: b/drivers/ide/ide.c
+ 	/* If the user has selected DDMA assisted copies,
+Index: b/drivers/ide/ppc/pmac.c
 ===================================================================
---- a/drivers/ide/ide.c
-+++ b/drivers/ide/ide.c
-@@ -179,10 +179,6 @@ static void init_hwif_default(ide_hwif_t
- 	memcpy(hwif->io_ports, hw.io_ports, sizeof(hw.io_ports));
+--- a/drivers/ide/ppc/pmac.c
++++ b/drivers/ide/ppc/pmac.c
+@@ -1120,7 +1120,6 @@ pmac_ide_setup_device(pmac_ide_hwif_t *p
+ 	hwif->hwif_data = pmif;
+ 	ide_init_port_hw(hwif, hw);
+ 	hwif->noprobe = pmif->mediabay;
+-	hwif->hold = pmif->mediabay;
+ 	hwif->cbl = pmif->cable_80 ? ATA_CBL_PATA80 : ATA_CBL_PATA40;
+ 	hwif->set_pio_mode = pmac_ide_set_pio_mode;
+ 	if (pmif->kind == controller_un_ata6
+Index: b/include/linux/ide.h
+===================================================================
+--- a/include/linux/ide.h
++++ b/include/linux/ide.h
+@@ -573,7 +573,6 @@ typedef struct hwif_s {
  
- 	hwif->noprobe = !hwif->io_ports[IDE_DATA_OFFSET];
--#ifdef CONFIG_BLK_DEV_HD
--	if (hwif->io_ports[IDE_DATA_OFFSET] == HD_DATA)
--		hwif->noprobe = 1;	/* may be overridden by ide_setup() */
--#endif
- }
- 
- /*
+ 	unsigned	noprobe    : 1;	/* don't probe for this interface */
+ 	unsigned	present    : 1;	/* this interface exists */
+-	unsigned	hold       : 1; /* this interface is always present */
+ 	unsigned	serialized : 1;	/* serialized all channel operation */
+ 	unsigned	sharing_irq: 1;	/* 1 = sharing irq with another hwif */
+ 	unsigned	reset      : 1;	/* reset after probe */
