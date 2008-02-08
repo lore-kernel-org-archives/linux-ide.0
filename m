@@ -1,51 +1,33 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCHSET #upstream] block/libata: update and use block layer
- padding and draining
-Date: Fri, 08 Feb 2008 15:56:02 -0500
-Message-ID: <47ACC1E2.5040905@garzik.org>
-References: <12021979851743-git-send-email-htejun@gmail.com> <47AA4C53.5050503@garzik.org>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: [PATCH] ide-cd: replace ntohs with generic byteorder macro be16_to_cpu
+Date: Fri, 8 Feb 2008 21:39:16 +0100
+Message-ID: <200802082139.16877.bzolnier@gmail.com>
+References: <20080208062903.GA20018@gollum.tnic>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:42164 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755820AbYBHU4J (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 8 Feb 2008 15:56:09 -0500
-In-Reply-To: <47AA4C53.5050503@garzik.org>
+Received: from qb-out-0506.google.com ([72.14.204.224]:15506 "EHLO
+	qb-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755385AbYBHVDI (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 8 Feb 2008 16:03:08 -0500
+Received: by qb-out-0506.google.com with SMTP id e11so6434904qbe.15
+        for <linux-ide@vger.kernel.org>; Fri, 08 Feb 2008 13:03:05 -0800 (PST)
+In-Reply-To: <20080208062903.GA20018@gollum.tnic>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jens.Axboe@oracle.com
-Cc: Tejun Heo <htejun@gmail.com>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, fujita.tomonori@lab.ntt.co.jp, James.Bottomley@HansenPartnership.com, Andrew Morton <akpm@linux-foundation.org>
+To: petkovbb@gmail.com
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Jeff Garzik wrote:
-> Tejun Heo wrote:
->> This patchset updates block layer padding and draining support and
->> make libata use it.  It's based on James Bottomley's initial work and,
->> of the five, the last two patches are from James with some
->> modifications.
->>
->> Please read the following thread for more info.
->>
->>   http://thread.gmane.org/gmane.linux.scsi/37185
->>
->> This patchset is on top of
->>
->>   upstream (a6af42fc9a12165136d82206ad52f18c5955ce87)
->> + kill-n_iter-and-fix-fsl patch [1]
+On Friday 08 February 2008, Borislav Petkov wrote:
+> commit d41c6bc739e7ea7880f7f5983a9694f2e0214d92
+> Author: Borislav Petkov <petkovbb@gmail.com>
+> Date:   Fri Feb 8 07:25:44 2008 +0100
 > 
-> ACK patchset...  lets definitely get these fixes upstream.
-> 
-> Once Jens is happy, I would prefer the merge the lot upstream, if that 
-> is OK with everyone involved?
+>     ide-cd: replace ntohs with generic byteorder macro be16_to_cpu
+>     
+>     Signed-off-by: Borislav Petkov <petkovbb@gmail.com>
 
-Jens, ping?
-
-It's a bug fix, so it would be nice to get this in soonish.  As noted, 
-if all looks good, I would prefer to merge via libata-dev...
-
-Thanks,
-
-	Jeff
-
-
+applied
