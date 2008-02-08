@@ -1,15 +1,14 @@
 From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH 08/18] ide: move ide_port_setup_devices() call to
-	ide_device_add_all()
-Date: Fri, 08 Feb 2008 20:20:42 +0300
-Message-ID: <47AC8F6A.8040900@ru.mvista.com>
+Subject: Re: [PATCH 02/18] ide: fix ide_find_port()
+Date: Fri, 08 Feb 2008 20:23:01 +0300
+Message-ID: <47AC8FF5.4010204@ru.mvista.com>
 References: <20080208004421.17746.32557.sendpatchset@localhost.localdomain>
-	<20080208004516.17746.18498.sendpatchset@localhost.localdomain>
+	<20080208004434.17746.33986.sendpatchset@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linuxppc-dev-bounces+glppd-linuxppc64-dev=m.gmane.org@ozlabs.org>
-In-Reply-To: <20080208004516.17746.18498.sendpatchset@localhost.localdomain>
+In-Reply-To: <20080208004434.17746.33986.sendpatchset@localhost.localdomain>
 List-Unsubscribe: <https://ozlabs.org/mailman/listinfo/linuxppc-dev>,
 	<mailto:linuxppc-dev-request@ozlabs.org?subject=unsubscribe>
 List-Archive: <http://ozlabs.org/pipermail/linuxppc-dev>
@@ -25,8 +24,11 @@ List-Id: linux-ide@vger.kernel.org
 
 Bartlomiej Zolnierkiewicz wrote:
 
-> Add ide_cfg_mtx lock/unlock to ide_port_setup_devices() and then move
-> ide_port_setup_devices() call from init_irq() to ide_device_add_all().
+> * Instead of checking for '->io_ports[IDE_DATA_OFFSET] == 0' check for
+>   '->chipset == ide_unknown' when looking for an empty ide_hwifs[] slot.
+
+> * Do ide-pnp initialization after ide-generic when IDE is built-in
+>   (ide-pnp is the only user of ide_find_port() which needs such fixup).
 
 > Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 
