@@ -1,62 +1,61 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCHSET #upstream] block/libata: update and use block layer
-  padding and draining
-Date: Fri, 08 Feb 2008 16:48:35 -0500
-Message-ID: <47ACCE33.9090809@garzik.org>
-References: <12021979851743-git-send-email-htejun@gmail.com> <47AA4C53.5050503@garzik.org> <47ACC1E2.5040905@garzik.org> <20080208210422.GG23197@kernel.dk>
+From: Anthony Liguori <anthony@codemonkey.ws>
+Subject: Re: current mainline ide doesn't like qemu/kvm (or vice versa)
+Date: Fri, 08 Feb 2008 16:35:14 -0600
+Message-ID: <47ACD922.9040101@codemonkey.ws>
+References: <20080208152508.GA16290@lst.de> <20080208155350.733d2399@core>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:55678 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750899AbYBHVsj (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 8 Feb 2008 16:48:39 -0500
-In-Reply-To: <20080208210422.GG23197@kernel.dk>
+Received: from fg-out-1718.google.com ([72.14.220.156]:56371 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1762904AbYBHWfT (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 8 Feb 2008 17:35:19 -0500
+Received: by fg-out-1718.google.com with SMTP id e21so3010190fga.17
+        for <linux-ide@vger.kernel.org>; Fri, 08 Feb 2008 14:35:17 -0800 (PST)
+In-Reply-To: <20080208155350.733d2399@core>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jens Axboe <jens.axboe@oracle.com>
-Cc: Tejun Heo <htejun@gmail.com>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, fujita.tomonori@lab.ntt.co.jp, James.Bottomley@HansenPartnership.com, Andrew Morton <akpm@linux-foundation.org>
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: Christoph Hellwig <hch@lst.de>, bzolnier@gmail.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Jens Axboe wrote:
-> On Fri, Feb 08 2008, Jeff Garzik wrote:
->> Jeff Garzik wrote:
->>> Tejun Heo wrote:
->>>> This patchset updates block layer padding and draining support and
->>>> make libata use it.  It's based on James Bottomley's initial work and,
->>>> of the five, the last two patches are from James with some
->>>> modifications.
->>>>
->>>> Please read the following thread for more info.
->>>>
->>>>  http://thread.gmane.org/gmane.linux.scsi/37185
->>>>
->>>> This patchset is on top of
->>>>
->>>>  upstream (a6af42fc9a12165136d82206ad52f18c5955ce87)
->>>> + kill-n_iter-and-fix-fsl patch [1]
->>> ACK patchset...  lets definitely get these fixes upstream.
->>>
->>> Once Jens is happy, I would prefer the merge the lot upstream, if that 
->>> is OK with everyone involved?
->> Jens, ping?
->>
->> It's a bug fix, so it would be nice to get this in soonish.  As noted, 
->> if all looks good, I would prefer to merge via libata-dev...
+Alan Cox wrote:
+> On Fri, 8 Feb 2008 16:25:08 +0100
+> Christoph Hellwig <hch@lst.de> wrote:
 > 
-> I'm ok with it, but lets please merge the block bits through the block
-> repo, since they are not trivial. Wont be until the week after next,
-> though.
+>> When trying to put some stress on qemu by running the xfs testsuite
+>> I get the following:
+>>
+>> debian:~/xfs-cmds/xfstests# sh check 
+>> [  438.166822] SGI XFS with ACLs, security attributes, realtime, large block numbers, no debug enabled
+>> [  438.185557] SGI XFS Quota Management subsystem
+>> [  438.193150] hdb: task_no_data_intr: status=0x41 { DriveReady Error }
+>> [  438.194018] hdb: task_no_data_intr: error=0x04 { DriveStatusError }
+>> [  438.194195] ide: failed opcode was: 0x9d
+> 
+> Drive aborted the command. Thats all correct.
+>> and after that the kernel seems to hang.  Qemu is emulating a piix3
+>> device, and using the piix driver.  This is on a pretty old kvm (version
+>> 28) because newer ones don't even compile.
 
-hmmm, rather than delaying the bug fixes for two weeks, since you're OK 
-with it we can push upstream now, and apply further fixes if problems 
-arise during testing?
+kvm-28 is ancient and there have been IDE emulation fixes since.  I am 
+not aware of issues building KVM either.  The problems you reported a 
+month ago on kvm-devel have been fixed.
 
-I would rather get these fixes out into wide testing sooner rather than 
-later.
+> Old Qemu is not really a credible IDE emulation. The chances are that as
+> with all the libata bugs I close for qemu the problem is qemu. Please
+> file a bug with the qemu people.
 
-	Jeff
+Agreed, this is very likely to be a QEMU issue (that may have already 
+been fixed).
 
+Regards,
 
+Anthony Liguori
 
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-ide" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
 
