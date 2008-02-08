@@ -1,37 +1,33 @@
 From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH 02/18] ide: fix ide_find_port()
-Date: Fri, 08 Feb 2008 20:23:01 +0300
-Message-ID: <47AC8FF5.4010204@ru.mvista.com>
-References: <20080208004421.17746.32557.sendpatchset@localhost.localdomain>
-	<20080208004434.17746.33986.sendpatchset@localhost.localdomain>
+Subject: Re: [PATCH] pdc202xx_old: always enable burst mode
+Date: Fri, 08 Feb 2008 20:25:35 +0300
+Message-ID: <47AC908F.2060201@ru.mvista.com>
+References: <200802072214.44352.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linuxppc-dev-bounces+glppd-linuxppc64-dev=m.gmane.org@ozlabs.org>
-In-Reply-To: <20080208004434.17746.33986.sendpatchset@localhost.localdomain>
-List-Unsubscribe: <https://ozlabs.org/mailman/listinfo/linuxppc-dev>,
-	<mailto:linuxppc-dev-request@ozlabs.org?subject=unsubscribe>
-List-Archive: <http://ozlabs.org/pipermail/linuxppc-dev>
-List-Post: <mailto:linuxppc-dev@ozlabs.org>
-List-Help: <mailto:linuxppc-dev-request@ozlabs.org?subject=help>
-List-Subscribe: <https://ozlabs.org/mailman/listinfo/linuxppc-dev>,
-	<mailto:linuxppc-dev-request@ozlabs.org?subject=subscribe>
-Sender: linuxppc-dev-bounces+glppd-linuxppc64-dev=m.gmane.org@ozlabs.org
-Errors-To: linuxppc-dev-bounces+glppd-linuxppc64-dev=m.gmane.org@ozlabs.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linuxppc-dev@ozlabs.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from homer.mvista.com ([63.81.120.155]:60903 "EHLO
+	imap.sh.mvista.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1764340AbYBHRYn (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 8 Feb 2008 12:24:43 -0500
+In-Reply-To: <200802072214.44352.bzolnier@gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Alan Cox <alan@lxorguk.ukuu.org.uk>
 
 Bartlomiej Zolnierkiewicz wrote:
 
-> * Instead of checking for '->io_ports[IDE_DATA_OFFSET] == 0' check for
->   '->chipset == ide_unknown' when looking for an empty ide_hwifs[] slot.
+> Alan has noticed that distros always enabled burst mode
+> (+ datasheet confirms that it is the right thing to do).
 
-> * Do ide-pnp initialization after ide-generic when IDE is built-in
->   (ide-pnp is the only user of ide_find_port() which needs such fixup).
+> Thus fix pdc202xx_old host driver to do it unconditionally
+> and remove no longer needed CONFIG_PDC202XX_BURST option.
 
+> Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>
 > Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 
 Acked-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
 
-MBR, Sergei
+WBR, Sergei
