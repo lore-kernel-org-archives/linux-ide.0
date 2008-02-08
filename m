@@ -1,27 +1,53 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [2.6 patch] fix ide/legacy/gayle.c compilation
-Date: Fri, 8 Feb 2008 21:33:17 +0100
-Message-ID: <200802082133.17290.bzolnier@gmail.com>
-References: <20080207231226.GD7198@cs181133002.pp.htv.fi>
+From: Jens Axboe <jens.axboe@oracle.com>
+Subject: Re: [PATCHSET #upstream] block/libata: update and use block layer  padding and draining
+Date: Fri, 8 Feb 2008 22:04:22 +0100
+Message-ID: <20080208210422.GG23197@kernel.dk>
+References: <12021979851743-git-send-email-htejun@gmail.com> <47AA4C53.5050503@garzik.org> <47ACC1E2.5040905@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from qb-out-0506.google.com ([72.14.204.225]:15661 "EHLO
-	qb-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755336AbYBHVDJ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 8 Feb 2008 16:03:09 -0500
-Received: by qb-out-0506.google.com with SMTP id e11so6434905qbe.15
-        for <linux-ide@vger.kernel.org>; Fri, 08 Feb 2008 13:03:09 -0800 (PST)
-In-Reply-To: <20080207231226.GD7198@cs181133002.pp.htv.fi>
+Received: from brick.kernel.dk ([87.55.233.238]:4498 "EHLO kernel.dk"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1763379AbYBHVE1 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 8 Feb 2008 16:04:27 -0500
 Content-Disposition: inline
+In-Reply-To: <47ACC1E2.5040905@garzik.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Adrian Bunk <bunk@kernel.org>
-Cc: geert@linux-m68k.org, linux-m68k@lists.linux-m68k.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: Tejun Heo <htejun@gmail.com>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, fujita.tomonori@lab.ntt.co.jp, James.Bottomley@HansenPartnership.com, Andrew Morton <akpm@linux-foundation.org>
 
-On Friday 08 February 2008, Adrian Bunk wrote:
-> Signed-off-by: Adrian Bunk <bunk@kernel.org>
+On Fri, Feb 08 2008, Jeff Garzik wrote:
+> Jeff Garzik wrote:
+> >Tejun Heo wrote:
+> >>This patchset updates block layer padding and draining support and
+> >>make libata use it.  It's based on James Bottomley's initial work and,
+> >>of the five, the last two patches are from James with some
+> >>modifications.
+> >>
+> >>Please read the following thread for more info.
+> >>
+> >>  http://thread.gmane.org/gmane.linux.scsi/37185
+> >>
+> >>This patchset is on top of
+> >>
+> >>  upstream (a6af42fc9a12165136d82206ad52f18c5955ce87)
+> >>+ kill-n_iter-and-fix-fsl patch [1]
+> >
+> >ACK patchset...  lets definitely get these fixes upstream.
+> >
+> >Once Jens is happy, I would prefer the merge the lot upstream, if that 
+> >is OK with everyone involved?
+> 
+> Jens, ping?
+> 
+> It's a bug fix, so it would be nice to get this in soonish.  As noted, 
+> if all looks good, I would prefer to merge via libata-dev...
 
-applied
+I'm ok with it, but lets please merge the block bits through the block
+repo, since they are not trivial. Wont be until the week after next,
+though.
+
+-- 
+Jens Axboe
+
