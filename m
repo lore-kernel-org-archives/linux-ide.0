@@ -1,36 +1,60 @@
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Subject: Re: [PATCH 00/18] ide: warm-plug support for IDE devices and other
-	goodies
-Date: Fri, 08 Feb 2008 19:40:43 +1100
-Message-ID: <1202460043.7079.157.camel@pasglop>
-References: <20080208004421.17746.32557.sendpatchset@localhost.localdomain>
-Reply-To: benh@kernel.crashing.org
+From: Jens Axboe <jens.axboe@oracle.com>
+Subject: Re: [PATCH 0/7] blk_end_request: full I/O completion handler
+Date: Fri, 8 Feb 2008 09:51:48 +0100
+Message-ID: <20080208085148.GD15220@kernel.dk>
+References: <20080205103851.GQ15220@kernel.dk> <77334B9413C72244AE1B51ADD4868D700AFD9D60@BGEEXC02.asiapacific.cpqcorp.net>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from gate.crashing.org ([63.228.1.57]:47937 "EHLO gate.crashing.org"
+Received: from brick.kernel.dk ([87.55.233.238]:13780 "EHLO kernel.dk"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755470AbYBHIlF (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 8 Feb 2008 03:41:05 -0500
-In-Reply-To: <20080208004421.17746.32557.sendpatchset@localhost.localdomain>
+	id S1758181AbYBHIvv (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 8 Feb 2008 03:51:51 -0500
+Content-Disposition: inline
+In-Reply-To: <77334B9413C72244AE1B51ADD4868D700AFD9D60@BGEEXC02.asiapacific.cpqcorp.net>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: linux-ide@vger.kernel.org, linuxppc-dev@ozlabs.org, linux-kernel@vger.kernel.org
+To: "S, Chandrakala (STSD)" <chandrakala.s@hp.com>
+Cc: Kiyoshi Ueda <k-ueda@ct.jp.nec.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, "Miller, Mike (OS Dev)" <mike.miller@hp.com>, grant.likely@secretlab.ca, dm-devel@redhat.com, j-nomura@ce.jp.nec.com
 
-
-On Fri, 2008-02-08 at 01:44 +0100, Bartlomiej Zolnierkiewicz wrote:
-> - couple of fixes and preparatory patches
+On Fri, Feb 08 2008, S, Chandrakala (STSD) wrote:
+> Hi,
 > 
-> - rework of PowerMac media-bay support ([un]register IDE devices instead of
->   [un]registering IDE interface) [ it is the main reason for spamming PPC ML ]
+> Thanks for the information! 
+> We would like to know when does the 2.6.25 kernel will be available at
+> kernel.org.
 
-Interesting... I was thinking about doing a full remove of the device at
-a higher level instead but I suppose what you propose is easier.
+So would I, if I locate my crystal ball I'll be sure to let you know :-)
 
-I'll have a look & test next week hopefully.
+Seriously, given past experience, it's probably sometime in April.
 
-Ben.
+> 
+> Thanks,
+> Chandrakala 
+> 
+> -----Original Message-----
+> From: Jens Axboe [mailto:jens.axboe@oracle.com] 
+> Sent: Tuesday, February 05, 2008 4:09 PM
+> To: S, Chandrakala (STSD)
+> Cc: Kiyoshi Ueda; linux-kernel@vger.kernel.org;
+> linux-scsi@vger.kernel.org; linux-ide@vger.kernel.org; Miller, Mike (OS
+> Dev); grant.likely@secretlab.ca; dm-devel@redhat.com;
+> j-nomura@ce.jp.nec.com
+> Subject: Re: [PATCH 0/7] blk_end_request: full I/O completion handler
+> 
+> On Tue, Feb 05 2008, S, Chandrakala (STSD) wrote:
+> > Hello,
+> > 
+> > We would like to know in which kernel version these patches are 
+> > available.
+> 
+> They were merged after 2.6.24 was released, so they will show up in the
+> 2.6.25 kernel.
+> 
+> --
+> Jens Axboe
+> 
 
+-- 
+Jens Axboe
 
