@@ -1,41 +1,60 @@
-From: Adrian Bunk <bunk@kernel.org>
-Subject: ide/arm/bast-ide.c compile error
-Date: Sat, 9 Feb 2008 02:15:15 +0200
-Message-ID: <20080209001515.GF6505@cs181133002.pp.htv.fi>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: [PATCHSET #upstream] block/libata: update and use block layer
+  padding and draining
+Date: Sat, 09 Feb 2008 09:22:16 +0900
+Message-ID: <47ACF238.3030605@gmail.com>
+References: <12021979851743-git-send-email-htejun@gmail.com> <47AA4C53.5050503@garzik.org> <47ACC1E2.5040905@garzik.org> <20080208210422.GG23197@kernel.dk> <47ACCE33.9090809@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp5.pp.htv.fi ([213.243.153.39]:38378 "EHLO smtp5.pp.htv.fi"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753686AbYBIAO7 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 8 Feb 2008 19:14:59 -0500
-Content-Disposition: inline
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <47ACCE33.9090809@garzik.org>
+Sender: linux-scsi-owner@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: Jens Axboe <jens.axboe@oracle.com>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, fujita.tomonori@lab.ntt.co.jp, James.Bottomley@HansenPartnership.com, Andrew Morton <akpm@linux-foundation.org>
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, rmk@arm.linux.org.uk
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Commit 9e016a719209d95338e314b46c3012cc7feaaeec causes the following 
-compile error:
+Jeff Garzik wrote:
+> Jens Axboe wrote:
+>> On Fri, Feb 08 2008, Jeff Garzik wrote:
+>>> Jeff Garzik wrote:
+>>>> Tejun Heo wrote:
+>>>>> This patchset updates block layer padding and draining support and
+>>>>> make libata use it.  It's based on James Bottomley's initial work and,
+>>>>> of the five, the last two patches are from James with some
+>>>>> modifications.
+>>>>>
+>>>>> Please read the following thread for more info.
+>>>>>
+>>>>>  http://thread.gmane.org/gmane.linux.scsi/37185
+>>>>>
+>>>>> This patchset is on top of
+>>>>>
+>>>>>  upstream (a6af42fc9a12165136d82206ad52f18c5955ce87)
+>>>>> + kill-n_iter-and-fix-fsl patch [1]
+>>>> ACK patchset...  lets definitely get these fixes upstream.
+>>>>
+>>>> Once Jens is happy, I would prefer the merge the lot upstream, if
+>>>> that is OK with everyone involved?
+>>> Jens, ping?
+>>>
+>>> It's a bug fix, so it would be nice to get this in soonish.  As
+>>> noted, if all looks good, I would prefer to merge via libata-dev...
+>>
+>> I'm ok with it, but lets please merge the block bits through the block
+>> repo, since they are not trivial. Wont be until the week after next,
+>> though.
+> 
+> hmmm, rather than delaying the bug fixes for two weeks, since you're OK
+> with it we can push upstream now, and apply further fixes if problems
+> arise during testing?
+> 
+> I would rather get these fixes out into wide testing sooner rather than
+> later.
 
-<--  snip  -->
+I have an updated version.  Please standby a bit.
 
-...
-  CC      drivers/ide/arm/bast-ide.o
-/home/bunk/linux/kernel-2.6/git/linux-2.6/drivers/ide/arm/bast-ide.c: In function 'bastide_register':
-/home/bunk/linux/kernel-2.6/git/linux-2.6/drivers/ide/arm/bast-ide.c:31: error: 'hwif' redeclared as different kind of symbol
-/home/bunk/linux/kernel-2.6/git/linux-2.6/drivers/ide/arm/bast-ide.c:29: error: previous definition of 'hwif' was here
-make[4]: *** [drivers/ide/arm/bast-ide.o] Error 1
-
-<--  snip  -->
-
-cu
-Adrian
+Thanks.
 
 -- 
-
-       "Is there not promise of rain?" Ling Tan asked suddenly out
-        of the darkness. There had been need of rain for many days.
-       "Only a promise," Lao Er said.
-                                       Pearl S. Buck - Dragon Seed
-
+tejun
