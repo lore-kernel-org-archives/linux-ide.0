@@ -1,35 +1,35 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH 07/18] ide: factor out devices init from ide_init_port_data()
-Date: Sat, 09 Feb 2008 21:10:58 +0300
-Message-ID: <47ADECB2.6030808@ru.mvista.com>
-References: <20080208004421.17746.32557.sendpatchset@localhost.localdomain> <20080208004509.17746.70379.sendpatchset@localhost.localdomain>
+From: Chris Rankin <rankincj@yahoo.com>
+Subject: Re: Linux 2.6.24.1  - kernel does not boot; IRQ trouble?
+Date: Sat, 9 Feb 2008 18:22:32 +0000 (GMT)
+Message-ID: <869708.29623.qm@web52902.mail.re2.yahoo.com>
+References: <20080209180633.GB20784@kroah.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from h155.mvista.com ([63.81.120.155]:5375 "EHLO imap.sh.mvista.com"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1755746AbYBISKH (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 9 Feb 2008 13:10:07 -0500
-In-Reply-To: <20080208004509.17746.70379.sendpatchset@localhost.localdomain>
+Received: from web52902.mail.re2.yahoo.com ([206.190.49.12]:22226 "HELO
+	web52902.mail.re2.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1753298AbYBISWe (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 9 Feb 2008 13:22:34 -0500
+In-Reply-To: <20080209180633.GB20784@kroah.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: linux-ide@vger.kernel.org, linuxppc-dev@ozlabs.org, linux-kernel@vger.kernel.org
+To: Greg KH <greg@kroah.com>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-Bartlomiej Zolnierkiewicz wrote:
+--- Greg KH <greg@kroah.com> wrote:
+> Does any older kernel version work?  2.6.23?  Newer ones?
+Everything up to and including 2.6.23.11 works fine. I never tried 2.6.23.{12,13,14,15}, but I
+expect they're fine too.
 
-> * Factor out devices init from ide_init_port_data() to
->   ide_port_init_devices_data().
+>  2.6.24-git15?
+No idea. This box isn't really set up to use git. Anyway, I would refer you to this thread:
+http://www.uwsg.iu.edu/hypermail/linux/kernel/0802.0/0898.html
 
-> While at it:
+Cheers,
+Chris
 
-> * Add explicit clearing of IDE device structure.
 
-> There should be no functionality changes caused by this patch.
 
-> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-
-Acked-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-
-MBR, Sergei
+      ___________________________________________________________
+Support the World Aids Awareness campaign this month with Yahoo! For Good http://uk.promotions.yahoo.com/forgood/
