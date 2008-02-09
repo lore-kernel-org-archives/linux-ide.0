@@ -1,60 +1,41 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCHSET #upstream] block/libata: update and use block layer
-  padding and draining
-Date: Sat, 09 Feb 2008 09:22:16 +0900
-Message-ID: <47ACF238.3030605@gmail.com>
-References: <12021979851743-git-send-email-htejun@gmail.com> <47AA4C53.5050503@garzik.org> <47ACC1E2.5040905@garzik.org> <20080208210422.GG23197@kernel.dk> <47ACCE33.9090809@garzik.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <47ACCE33.9090809@garzik.org>
-Sender: linux-scsi-owner@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: Jens Axboe <jens.axboe@oracle.com>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, fujita.tomonori@lab.ntt.co.jp, James.Bottomley@HansenPartnership.com, Andrew Morton <akpm@linux-foundation.org>
+Subject: [PATCHSET #upstream] block/libata: update and use block layer padding and draining, take 2
+Date: Sat,  9 Feb 2008 10:40:19 +0900
+Message-ID: <12025212262892-git-send-email-htejun@gmail.com>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from rv-out-0910.google.com ([209.85.198.187]:57403 "EHLO
+	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756214AbYBIBke (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 8 Feb 2008 20:40:34 -0500
+Received: by rv-out-0910.google.com with SMTP id k20so2705689rvb.1
+        for <linux-ide@vger.kernel.org>; Fri, 08 Feb 2008 17:40:33 -0800 (PST)
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: jeff@garzik.org, linux-ide@vger.kernel.org, jens.axboe@oracle.com, linux-scsi@vger.kernel.org, fujita.tomonori@lab.ntt.co.jp, James.Bottomley@HansenPartnership.com, akpm@linux-foundation.org
 
-Jeff Garzik wrote:
-> Jens Axboe wrote:
->> On Fri, Feb 08 2008, Jeff Garzik wrote:
->>> Jeff Garzik wrote:
->>>> Tejun Heo wrote:
->>>>> This patchset updates block layer padding and draining support and
->>>>> make libata use it.  It's based on James Bottomley's initial work and,
->>>>> of the five, the last two patches are from James with some
->>>>> modifications.
->>>>>
->>>>> Please read the following thread for more info.
->>>>>
->>>>>  http://thread.gmane.org/gmane.linux.scsi/37185
->>>>>
->>>>> This patchset is on top of
->>>>>
->>>>>  upstream (a6af42fc9a12165136d82206ad52f18c5955ce87)
->>>>> + kill-n_iter-and-fix-fsl patch [1]
->>>> ACK patchset...  lets definitely get these fixes upstream.
->>>>
->>>> Once Jens is happy, I would prefer the merge the lot upstream, if
->>>> that is OK with everyone involved?
->>> Jens, ping?
->>>
->>> It's a bug fix, so it would be nice to get this in soonish.  As
->>> noted, if all looks good, I would prefer to merge via libata-dev...
->>
->> I'm ok with it, but lets please merge the block bits through the block
->> repo, since they are not trivial. Wont be until the week after next,
->> though.
-> 
-> hmmm, rather than delaying the bug fixes for two weeks, since you're OK
-> with it we can push upstream now, and apply further fixes if problems
-> arise during testing?
-> 
-> I would rather get these fixes out into wide testing sooner rather than
-> later.
 
-I have an updated version.  Please standby a bit.
+This is the second take of blk-layer-padding-and-draining patchset.
+Changes from the last take[L] are...
+
+* libata-update-ATAPI-overflow-draining patch added.  This patch fixes
+  up ATAPI PIO handling before updating it to use block layer
+  draining.  consumed accounting and atapi_qc_may_overflow() update
+  will survive blk draining conversion.
+
+* blk-clear-drain-buffer-for-writes patch added.  This patch makes
+  block layer clear drain buffer before chaining it to the sg list if
+  the command in question is a write.
+
+* libata-implement-drain-buffers updated such that
+  atapi_drain_needed() uses the same logic as atapi_qc_may_overflow()
+  and ATAPI PIO drain logic is replaced too.
+
+This patchset is against the current upstream
+(bc5468f52b785ffa1fe0ea289baec2c51384d436).
 
 Thanks.
 
--- 
+--
 tejun
+
+[L] http://thread.gmane.org/gmane.linux.ide/28048
