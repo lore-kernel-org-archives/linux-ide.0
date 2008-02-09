@@ -1,132 +1,70 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH] scsi: ses fix for len and mem leaking when fail to add
-	intf
-Date: Sat, 09 Feb 2008 09:00:42 -0600
-Message-ID: <1202569242.4254.9.camel@localhost.localdomain>
-References: <200802090413.53275.yinghai.lu@sun.com>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: [PATCH] ide-floppy: remove struct idefloppy_id_gcw
+Date: Sat, 9 Feb 2008 16:21:05 +0100
+Message-ID: <200802091621.05671.bzolnier@gmail.com>
+References: <20080209080334.GA23177@gollum.tnic>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:36835 "EHLO
-	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753988AbYBIPAs (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 9 Feb 2008 10:00:48 -0500
-In-Reply-To: <200802090413.53275.yinghai.lu@sun.com>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1755195AbYBIQSW@vger.kernel.org>
+In-Reply-To: <20080209080334.GA23177@gollum.tnic>
+Content-Disposition: inline
+Sender: linux-kernel-owner@vger.kernel.org
+To: petkovbb@gmail.com
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Yinghai Lu <Yinghai.Lu@Sun.COM>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, kristen.c.accardi@intel.com
 
-
-On Sat, 2008-02-09 at 04:13 -0800, Yinghai Lu wrote:
-> [PATCH] scsi: ses fix for len and mem leaking when fail to add intf
+On Saturday 09 February 2008, Borislav Petkov wrote:
+> commit a6aaf3dd3e88d1bd1e85fb4329042ecb9247e0eb
+> Author: Borislav Petkov <petkovbb@gmail.com>
+> Date:   Fri Feb 8 18:21:47 2008 +0100
 > 
-> change to u32 before left shifting char
+>     ide-floppy: remove struct idefloppy_id_gcw
+>     
+>     Signed-off-by: Borislav Petkov <petkovbb@gmail.com>
 
-This one is a bit unnecessary; C promotion rules guarantee that
-everything is promoted to int (or above) before doing arithmetic.  Since
-it's only ever done on 16 bits, signed or unsigned int is adequate for
-the conversion.
+applied with some changes
 
-> also fix leaking with scomp leaking when failing.
+> diff --git a/drivers/ide/ide-floppy.c b/drivers/ide/ide-floppy.c
+> index faf22d7..5d5bde8 100644
+> --- a/drivers/ide/ide-floppy.c
+> +++ b/drivers/ide/ide-floppy.c
 
-Yes, I see that, thanks!  There's also the kmalloc of scomp which should
-be kzalloc if you care to fix that up in the resend.
+[...]
 
-> -		edev = 	enclosure_find(&sdev->host->shost_gendev);
-> +		edev = enclosure_find(&sdev->host->shost_gendev);
+>  #ifdef CONFIG_PPC
+>  	/* kludge for Apple PowerBook internal zip */
+> -	if ((gcw.device_type == 5) &&
+> -	    !strstr(id->model, "CD-ROM") &&
+> -	    strstr(id->model, "ZIP"))
+> -		gcw.device_type = 0;
+> +	if ((device_type == 5) &&
+> +		trstr(id->model, "CD-ROM") &&
+                ^^^^^
 
-Space cleanups also need mention in the changelog.
+[...]
 
-> -	ses_dev->page1 = buf;
-> -	ses_dev->page1_len = len;
-> -
->  	result = ses_recv_diag(sdev, 1, buf, len);
->  	if (result)
->  		goto recv_failed;
->  
-> +	ses_dev->page1 = buf;
-> +	ses_dev->page1_len = len;
-> +
+> -	else if (!gcw.removable)
+> -		printk(KERN_ERR "ide-floppy: The removable flag is not set\n");
+> -	else if (gcw.drq_type == 3) {
+> +				"to floppy\n", device_type);
+> +	else if (!removable)
+> +		printk(KERN_ERR "ide-floppy: The removable flag (0x%02x) is not"
 
-Neither of us gets this right.  By removing the kfree(buf) from the
-err_free path, you cause a leak here.  I cause a double free.  I think
-putting back the kfree(buf) and keeping this hunk is the fix.
+no need to dump it (it is a single bit flag)
 
->  	types = buf[10];
->  	len = buf[11];
->  
-> @@ -474,11 +474,12 @@ static int ses_intf_add(struct class_dev
->  			components += type_ptr[1];
->  	}
->  
-> +	buf = NULL;
+[ please document such changes in patch description ]
 
-Yes, prevents double free (but only if buf is freed).
+> +	else if (drq_type == 3) {
+>  		printk(KERN_ERR "ide-floppy: Sorry, DRQ type (0x%02x) not "
+> -				"supported\n", gcw.drq_type);
+> -	} else if (gcw.packet_size != 0) {
+> +				"supported\n", drq_type);
+> +	} else if (packet_size != 0) {
+>  		printk(KERN_ERR "ide-floppy: Packet size (0x%02x) is not 12 "
+> -				"bytes long\n", gcw.packet_size);
+> +				"bytes\n", packet_size);
+>  	} else
 
->  	result = ses_recv_diag(sdev, 2, hdr_buf, INIT_ALLOC_SIZE);
->  	if (result)
->  		goto recv_failed;
->  
-> @@ -492,11 +493,12 @@ static int ses_intf_add(struct class_dev
->  
->  	/* The additional information page --- allows us
->  	 * to match up the devices */
-> +	buf = NULL;
-
-It's probably better to move these closer to the statements that make
-them necessary (in this case above the comment).
-
->  	if (IS_ERR(edev)) {
->  		err = PTR_ERR(edev);
-> +		kfree(scomp);
->  		goto err_free;
->  	}
-
-kfree(scomp) should be in the err_free path just in case someone else
-adds something to this.
- 
->  	/* add 1 for trailing '\0' we'll use */
->  	buf = kzalloc(len + 1, GFP_KERNEL);
-> -	result = ses_recv_diag(sdev, 7, buf, len);
-> -	if (result) {
-> +	if (buf)
-> +		result = ses_recv_diag(sdev, 7, buf, len);
-> +	else
-> +		result = 7;
-> +
-
-What exactly is this supposed to be doing, and why 7?  If you're
-thinking of conditioning the page 7 receive on the success of the
-allocation, we really need the allocation failure report more than we
-need the driver to attach.
-
-> -					addl_desc_ptr += addl_desc_ptr[1] + 2;
-> +					addl_desc_ptr += 2 + addl_desc_ptr[1];
-
-This is rather pointless, isn't it?
-
->   err_free:
-> -	kfree(buf);
-
-You can't remove this.  Also add kfree(scomp) here.
-
->  	kfree(ses_dev->page10);
->  	kfree(ses_dev->page2);
->  	kfree(ses_dev->page1);
-> @@ -630,6 +636,7 @@ static void ses_intf_remove(struct class
->  	ses_dev = edev->scratch;
->  	edev->scratch = NULL;
->  
-> +	kfree(ses_dev->page10);
-
-Yes, a bug, thanks.
-
->  	kfree(ses_dev->page1);
->  	kfree(ses_dev->page2);
->  	kfree(ses_dev);
-
-James
-
-
+needless braces can be removed while at it
