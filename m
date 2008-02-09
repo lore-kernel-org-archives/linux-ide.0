@@ -1,152 +1,102 @@
-From: "Yinghai Lu" <yhlu.kernel@gmail.com>
-Subject: Re: [PATCH] scsi: ses fix for len and mem leaking when fail to add intf
-Date: Sat, 9 Feb 2008 14:28:46 -0800
-Message-ID: <86802c440802091428v87a10f5h280ae1d82b1db6a@mail.gmail.com>
-References: <200802090413.53275.yinghai.lu@sun.com>
-	 <1202569242.4254.9.camel@localhost.localdomain>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: Current git --> kaboom [bisect] seems IDE related.
+Date: Sun, 10 Feb 2008 00:06:10 +0100
+Message-ID: <200802100006.11086.bzolnier@gmail.com>
+References: <20080209193224.GA21448@Chamillionaire.breakpoint.cc> <200802092128.39247.bzolnier@gmail.com> <20080209212237.GA22582@Chamillionaire.breakpoint.cc>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain;
+  charset="iso-8859-15"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1757343AbYBIW3B@vger.kernel.org>
-In-Reply-To: <1202569242.4254.9.camel@localhost.localdomain>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from fg-out-1718.google.com ([72.14.220.157]:48677 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752276AbYBIWx3 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 9 Feb 2008 17:53:29 -0500
+Received: by fg-out-1718.google.com with SMTP id e21so3303944fga.17
+        for <linux-ide@vger.kernel.org>; Sat, 09 Feb 2008 14:53:27 -0800 (PST)
+In-Reply-To: <20080209212237.GA22582@Chamillionaire.breakpoint.cc>
 Content-Disposition: inline
-Sender: linux-kernel-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@hansenpartnership.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, kristen.c.accardi@intel.com
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Sebastian Siewior <ide+bug@ml.breakpoint.cc>
+Cc: Tejun Heo <htejun@gmail.com>, Sergei Shtylyov <sshtylyov@ru.mvista.com>, linux-ide@vger.kernel.org, Christoph Hellwig <hch@infradead.org>, Jens Axboe <jens.axboe@oracle.com>
 
-On Feb 9, 2008 7:00 AM, James Bottomley
-<James.Bottomley@hansenpartnership.com> wrote:
->
-> On Sat, 2008-02-09 at 04:13 -0800, Yinghai Lu wrote:
-> > [PATCH] scsi: ses fix for len and mem leaking when fail to add intf
-> >
-> > change to u32 before left shifting char
->
-> This one is a bit unnecessary; C promotion rules guarantee that
-> everything is promoted to int (or above) before doing arithmetic.  Since
-> it's only ever done on 16 bits, signed or unsigned int is adequate for
-> the conversion.
+On Saturday 09 February 2008, Sebastian Siewior wrote:
+> * Bartlomiej Zolnierkiewicz | 2008-02-09 21:28:39 [+0100]:
+> 
+> >It could be that due to block layer changes to I/O barrier handling
+> >allocating ATA command structure on the stack is no longer safe.
 
-thank. just learned that.
+Update: it was never a very brilliant idea...
 
-yhlu@yhlunb:~/xx/xx/notes> cat ctest.c
-#include <stdio.h>
-int main(int argc, char *argv[])
-{
-        unsigned char buf[20];
-        int len;
+> >Please try booting with "hdx=noflush" kernel parameter or please try
+> >the attached patch which should fix the issue (if my theory is correct).
+> That was quick.
+> hdx=noflush worked well. The patch delayed the disk access as you can
+> see in [1]. After the IPI message the hd led enlightened and was
+> active until "lost interrupt" message. The following boot process was
+> verry slow. Basically everything what required disk access took a while
+> and the hd-led was almost continuous on. I aborted the boot process via
+> magic keys after about 15 minutes.
+> 
+> [1] http://download.breakpoint.cc/lnx-2.6.24-post-long-boot.jpg
 
-        buf[2] = 0x02;
-        buf[3] = 0x03;
+Thanks, I see now that there can be > 1 flush request queued at a given time.
 
-        len = (buf[2] << 8) + buf[3];
+Please dump the old patch and try this one.
 
-        printf("len = %x\n", len);
-        return 0;
-}
-yhlu@yhlunb:~/xx/xx/notes> gcc -o ctest ctest.c
-yhlu@yhlunb:~/xx/xx/notes> ./ctest
-len = 203
-yhlu@yhlunb:~/xx/xx/notes>
+[ Christoph: this may also fix your qemu/kvm+xfs problem. ]
 
+---
+ drivers/ide/ide-disk.c |   12 ++++++------
+ include/linux/blkdev.h |    5 +++++
+ 2 files changed, 11 insertions(+), 6 deletions(-)
 
->
-> > also fix leaking with scomp leaking when failing.
->
-> Yes, I see that, thanks!  There's also the kmalloc of scomp which should
-> be kzalloc if you care to fix that up in the resend.
->
-> > -             edev =  enclosure_find(&sdev->host->shost_gendev);
-> > +             edev = enclosure_find(&sdev->host->shost_gendev);
->
-> Space cleanups also need mention in the changelog.
->
-> > -     ses_dev->page1 = buf;
-> > -     ses_dev->page1_len = len;
-> > -
-> >       result = ses_recv_diag(sdev, 1, buf, len);
-> >       if (result)
-> >               goto recv_failed;
-> >
-> > +     ses_dev->page1 = buf;
-> > +     ses_dev->page1_len = len;
-> > +
->
-> Neither of us gets this right.  By removing the kfree(buf) from the
-> err_free path, you cause a leak here.  I cause a double free.  I think
-> putting back the kfree(buf) and keeping this hunk is the fix.
-
-the buf already become sdev->page1, sdev->pag10, sdev->page2.
-so it will be freed via them
-
->
-> >       types = buf[10];
-> >       len = buf[11];
-> >
-> > @@ -474,11 +474,12 @@ static int ses_intf_add(struct class_dev
-> >                       components += type_ptr[1];
-> >       }
-> >
-> > +     buf = NULL;
->
-> Yes, prevents double free (but only if buf is freed).
-
-it became sdev->page1 already
-
->
-> >       result = ses_recv_diag(sdev, 2, hdr_buf, INIT_ALLOC_SIZE);
-> >       if (result)
-> >               goto recv_failed;
-> >
-> > @@ -492,11 +493,12 @@ static int ses_intf_add(struct class_dev
-> >
-> >       /* The additional information page --- allows us
-> >        * to match up the devices */
-> > +     buf = NULL;
->
-> It's probably better to move these closer to the statements that make
-> them necessary (in this case above the comment).
-
-OK
-
->
-> >       if (IS_ERR(edev)) {
-> >               err = PTR_ERR(edev);
-> > +             kfree(scomp);
-> >               goto err_free;
-> >       }
->
-> kfree(scomp) should be in the err_free path just in case someone else
-> adds something to this.
-
-ok.
-
->
-> >       /* add 1 for trailing '\0' we'll use */
-> >       buf = kzalloc(len + 1, GFP_KERNEL);
-> > -     result = ses_recv_diag(sdev, 7, buf, len);
-> > -     if (result) {
-> > +     if (buf)
-> > +             result = ses_recv_diag(sdev, 7, buf, len);
-> > +     else
-> > +             result = 7;
-> > +
->
-> What exactly is this supposed to be doing, and why 7?  If you're
-> thinking of conditioning the page 7 receive on the success of the
-> allocation, we really need the allocation failure report more than we
-> need the driver to attach.
-
-want to move out label out of if later.
-
->
-> > -                                     addl_desc_ptr += addl_desc_ptr[1] + 2;
-> > +                                     addl_desc_ptr += 2 + addl_desc_ptr[1];
->
-> This is rather pointless, isn't it?
->
-> >   err_free:
-> > -     kfree(buf);
->
-> You can't remove this.  Also add kfree(scomp) here.
+Index: b/drivers/ide/ide-disk.c
+===================================================================
+--- a/drivers/ide/ide-disk.c
++++ b/drivers/ide/ide-disk.c
+@@ -590,20 +590,20 @@ static ide_proc_entry_t idedisk_proc[] =
+ static void idedisk_prepare_flush(struct request_queue *q, struct request *rq)
+ {
+ 	ide_drive_t *drive = q->queuedata;
+-	ide_task_t task;
++	ide_task_t *task = (ide_task_t *)&rq->cmd[0];
+ 
+ 	memset(&task, 0, sizeof(task));
+ 	if (ide_id_has_flush_cache_ext(drive->id) &&
+ 	    (drive->capacity64 >= (1UL << 28)))
+-		task.tf.command = WIN_FLUSH_CACHE_EXT;
++		task->tf.command = WIN_FLUSH_CACHE_EXT;
+ 	else
+-		task.tf.command = WIN_FLUSH_CACHE;
+-	task.tf_flags	= IDE_TFLAG_OUT_TF | IDE_TFLAG_OUT_DEVICE;
+-	task.data_phase	= TASKFILE_NO_DATA;
++		task->tf.command = WIN_FLUSH_CACHE;
++	task->tf_flags	 = IDE_TFLAG_OUT_TF | IDE_TFLAG_OUT_DEVICE;
++	task->data_phase = TASKFILE_NO_DATA;
+ 
+ 	rq->cmd_type = REQ_TYPE_ATA_TASKFILE;
+ 	rq->cmd_flags |= REQ_SOFTBARRIER;
+-	rq->special = &task;
++	rq->special = task;
+ }
+ 
+ /*
+Index: b/include/linux/blkdev.h
+===================================================================
+--- a/include/linux/blkdev.h
++++ b/include/linux/blkdev.h
+@@ -134,7 +134,12 @@ enum rq_flag_bits {
+ #define REQ_ALLOCED	(1 << __REQ_ALLOCED)
+ #define REQ_RW_META	(1 << __REQ_RW_META)
+ 
++/* FIXME: temporary hack to make flush requests work */
++#ifdef CONFIG_IDE
++#define BLK_MAX_CDB	48 /* max sizeof(ide_task_t) */
++#else
+ #define BLK_MAX_CDB	16
++#endif
+ 
+ /*
+  * try to put the fields that are referenced together in the same cacheline.
