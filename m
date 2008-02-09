@@ -1,128 +1,33 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH] ide: remove ->hold field from ide_hwif_t (take 2)
-Date: Sat, 9 Feb 2008 18:54:07 +0100
-Message-ID: <200802091854.07310.bzolnier@gmail.com>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: Re: [PATCH] ide: remove ->hold field from ide_hwif_t (take 2)
+Date: Sat, 09 Feb 2008 20:48:56 +0300
+Message-ID: <47ADE788.90504@ru.mvista.com>
+References: <200802091854.07310.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wx-out-0506.google.com ([66.249.82.237]:12367 "EHLO
-	wx-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754726AbYBIRkP (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 9 Feb 2008 12:40:15 -0500
-Received: by wx-out-0506.google.com with SMTP id h31so4342950wxd.4
-        for <linux-ide@vger.kernel.org>; Sat, 09 Feb 2008 09:40:14 -0800 (PST)
-Content-Disposition: inline
+Received: from h155.mvista.com ([63.81.120.155]:5231 "EHLO imap.sh.mvista.com"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1750804AbYBIRsE (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 9 Feb 2008 12:48:04 -0500
+In-Reply-To: <200802091854.07310.bzolnier@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
+Bartlomiej Zolnierkiewicz wrote:
 
-->hold is write-only now, remove it.
+> ->hold is write-only now, remove it.
 
-v2:
-* v1 missed bast-ide, palm_bk3710, ide-cs and delkin_cb host drivers.
+> v2:
+> * v1 missed bast-ide, palm_bk3710, ide-cs and delkin_cb host drivers.
 
-Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
----
- drivers/ide/arm/bast-ide.c    |    2 +-
- drivers/ide/arm/palm_bk3710.c |    2 +-
- drivers/ide/legacy/ide-cs.c   |    2 +-
- drivers/ide/mips/au1xxx-ide.c |    3 ---
- drivers/ide/pci/delkin_cb.c   |    2 +-
- drivers/ide/ppc/pmac.c        |    1 -
- include/linux/ide.h           |    1 -
- 7 files changed, 4 insertions(+), 9 deletions(-)
+    And those drivers were reading it, so it wasn't quite write-only. :-)
 
-Index: b/drivers/ide/arm/bast-ide.c
-===================================================================
---- a/drivers/ide/arm/bast-ide.c
-+++ b/drivers/ide/arm/bast-ide.c
-@@ -54,7 +54,7 @@ bastide_register(unsigned int base, unsi
- 
- 	if (hwif->present)
- 		ide_unregister(i);
--	else if (!hwif->hold)
-+	else
- 		ide_init_port_data(hwif, i);
- 
- 	ide_init_port_hw(hwif, &hw);
-Index: b/drivers/ide/arm/palm_bk3710.c
-===================================================================
---- a/drivers/ide/arm/palm_bk3710.c
-+++ b/drivers/ide/arm/palm_bk3710.c
-@@ -386,7 +386,7 @@ static int __devinit palm_bk3710_probe(s
- 
- 	if (hwif->present)
- 		ide_unregister(i, 0, 0);
--	else if (!hwif->hold)
-+	else
- 		ide_init_port_data(hwif, i);
- 
- 	ide_init_port_hw(hwif, &hw);
-Index: b/drivers/ide/legacy/ide-cs.c
-===================================================================
---- a/drivers/ide/legacy/ide-cs.c
-+++ b/drivers/ide/legacy/ide-cs.c
-@@ -164,7 +164,7 @@ static int idecs_register(unsigned long 
- 
-     if (hwif->present)
- 	ide_unregister(i);
--    else if (!hwif->hold)
-+    else
- 	ide_init_port_data(hwif, i);
- 
-     ide_init_port_hw(hwif, &hw);
-Index: b/drivers/ide/mips/au1xxx-ide.c
-===================================================================
---- a/drivers/ide/mips/au1xxx-ide.c
-+++ b/drivers/ide/mips/au1xxx-ide.c
-@@ -617,9 +617,6 @@ static int au_ide_probe(struct device *d
- 
- 	hwif->dev = dev;
- 
--	/* hold should be on in all cases */
--	hwif->hold                      = 1;
--
- 	hwif->mmio  = 1;
- 
- 	/* If the user has selected DDMA assisted copies,
-Index: b/drivers/ide/pci/delkin_cb.c
-===================================================================
---- a/drivers/ide/pci/delkin_cb.c
-+++ b/drivers/ide/pci/delkin_cb.c
-@@ -86,7 +86,7 @@ delkin_cb_probe (struct pci_dev *dev, co
- 
- 	if (hwif->present)
- 		ide_unregister(i);
--	else if (!hwif->hold)
-+	else
- 		ide_init_port_data(hwif, i);
- 
- 	ide_init_port_hw(hwif, &hw);
-Index: b/drivers/ide/ppc/pmac.c
-===================================================================
---- a/drivers/ide/ppc/pmac.c
-+++ b/drivers/ide/ppc/pmac.c
-@@ -1120,7 +1120,6 @@ pmac_ide_setup_device(pmac_ide_hwif_t *p
- 	hwif->hwif_data = pmif;
- 	ide_init_port_hw(hwif, hw);
- 	hwif->noprobe = pmif->mediabay;
--	hwif->hold = pmif->mediabay;
- 	hwif->cbl = pmif->cable_80 ? ATA_CBL_PATA80 : ATA_CBL_PATA40;
- 	hwif->set_pio_mode = pmac_ide_set_pio_mode;
- 	if (pmif->kind == controller_un_ata6
-Index: b/include/linux/ide.h
-===================================================================
---- a/include/linux/ide.h
-+++ b/include/linux/ide.h
-@@ -573,7 +573,6 @@ typedef struct hwif_s {
- 
- 	unsigned	noprobe    : 1;	/* don't probe for this interface */
- 	unsigned	present    : 1;	/* this interface exists */
--	unsigned	hold       : 1; /* this interface is always present */
- 	unsigned	serialized : 1;	/* serialized all channel operation */
- 	unsigned	sharing_irq: 1;	/* 1 = sharing irq with another hwif */
- 	unsigned	reset      : 1;	/* reset after probe */
+> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+
+Acked-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+
+MBR, Sergei
