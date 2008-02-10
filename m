@@ -1,46 +1,38 @@
-From: Elias Oltmanns <eo@nebensachen.de>
-Subject: Current qc_defer implementation may lead to infinite recursion
-Date: Sun, 10 Feb 2008 18:54:19 +0100
-Message-ID: <87ir0w4rzo.fsf@denkblock.local>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: [PATCH] ide: introduce CONFIG_BLK_DEV_IDEDMA_SFF option
+Date: Sun, 10 Feb 2008 20:05:32 +0100
+Message-ID: <200802102005.32607.bzolnier@gmail.com>
+References: <200802092033.59852.sshtylyov@ru.mvista.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nebensachen.de ([195.34.83.29]:57490 "EHLO mail.nebensachen.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752182AbYBJSv1 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 10 Feb 2008 13:51:27 -0500
+Received: from wx-out-0506.google.com ([66.249.82.234]:27143 "EHLO
+	wx-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754128AbYBJSvk (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 10 Feb 2008 13:51:40 -0500
+Received: by wx-out-0506.google.com with SMTP id h31so4523507wxd.4
+        for <linux-ide@vger.kernel.org>; Sun, 10 Feb 2008 10:51:39 -0800 (PST)
+In-Reply-To: <200802092033.59852.sshtylyov@ru.mvista.com>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: linux-ide@vger.kernel.org
+To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Cc: asalnikov@ru.mvista.com, linux-ide@vger.kernel.org
 
-Hi Tejun,
+On Saturday 09 February 2008, Sergei Shtylyov wrote:
+> Introduce new option CONFIG_BLK_DEV_IDEDMA_SFF for non-PCI SFF-8038i compatible
+> bus mastering IDE controllers (which there are a few known), thus fixing a hack
+> made for Palmchip BK3710 controller...
+> 
+> Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
 
-due to your commit 31cc23b34913bc173680bdc87af79e551bf8cc0d libata now
-sets max_host_blocked and max_device_blocked to 1 for all devices it
-manages. Under certain conditions this may lead to system lockups due to
-infinite recursion as I have explained to James on the scsi list (kept
-you cc-ed). James told me that it was the business of libata to make
-sure that such a recursion cannot happen.
+thanks, applied
 
-In my discussion with James I imprudently claimed that this was easy to
-fix in libata. However, after giving the matter some thought, I'm not at
-all sure as to what exactly should be done about it. The easy bit is
-that max_host_blocked and max_device_blocked should be left alone as
-long as the low level driver does not provide the ->qc_defer() callback.
-But even if the driver has defined this callback, ata_std_qc_defer() for
-one will not prevent this recursion on a uniprocessor, whereas things
-might work out well on an SMP system due to the lock fiddling in the
-scsi midlayer.
+> ---
+> Bart, did you mean something like that?
+> Anton, make sure it works, just in case... :-)
 
-As a conclusion, the current implementation makes it imperative to leave
-max_host_blocked and max_device_blocked alone on a uniprocessor system.
-For SMP systems the current implementation might just be fine but even
-there it might just as well be a good idea to make the adjustment
-depending on ->qc_defer != NULL.
-
-Any ideas?
-
-Regards,
-
-Elias
+I later noticed that there is still pci_alloc_consistent() call
+which needs to be converted to dma_alloc_coherent() in ide-dma.c... :/
