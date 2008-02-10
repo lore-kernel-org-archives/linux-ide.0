@@ -1,49 +1,26 @@
-From: "Robert P. J. Day" <rpjday@crashcourse.ca>
-Subject: is there a value to CONFIG_NO_ATA_LEGACY?
-Date: Sun, 10 Feb 2008 14:44:16 -0500 (EST)
-Message-ID: <alpine.LFD.1.00.0802101442240.14742@localhost.localdomain>
+From: Sebastian Siewior <ide+bug@ml.breakpoint.cc>
+Subject: Re: Current git --> kaboom [bisect] seems IDE related.
+Date: Sun, 10 Feb 2008 20:51:45 +0100
+Message-ID: <20080210195145.GB30084@Chamillionaire.breakpoint.cc>
+References: <20080209193224.GA21448@Chamillionaire.breakpoint.cc> <200802101438.46698.bzolnier@gmail.com> <1202653165.3136.18.camel@localhost.localdomain> <200802101932.06946.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=iso-8859-15
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from astoria.ccjclearline.com ([64.235.106.9]:39481 "EHLO
-	astoria.ccjclearline.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752646AbYBJToZ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 10 Feb 2008 14:44:25 -0500
-Received: from cpe00142a336e11-cm001ac318e826.cpe.net.cable.rogers.com ([99.235.212.34] helo=crashcourse.ca)
-	by astoria.ccjclearline.com with esmtpsa (TLSv1:AES256-SHA:256)
-	(Exim 4.68)
-	(envelope-from <rpjday@crashcourse.ca>)
-	id 1JOI6A-0005nw-WE
-	for linux-ide@vger.kernel.org; Sun, 10 Feb 2008 14:44:23 -0500
+Received: from Chamillionaire.breakpoint.cc ([85.10.199.196]:58549 "EHLO
+	Chamillionaire.breakpoint.cc" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752845AbYBJTv4 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 10 Feb 2008 14:51:56 -0500
+Content-Disposition: inline
+In-Reply-To: <200802101932.06946.bzolnier@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: James Bottomley <James.Bottomley@hansenpartnership.com>, Christoph Hellwig <hch@infradead.org>, Tejun Heo <htejun@gmail.com>, Sergei Shtylyov <sshtylyov@ru.mvista.com>, linux-ide@vger.kernel.org, Jens Axboe <jens.axboe@oracle.com>
 
+* Bartlomiej Zolnierkiewicz | 2008-02-10 19:32:06 [+0100]:
 
-  in drivers/ata/libata-sff.c:
+>Sebastian/Christoph, please test the final patch (after your ACK I'll push
+>it to Linus together with the rest of pending IDE fixes).
+This seems to work.
 
-...
-#if defined(CONFIG_NO_ATA_LEGACY)
-                /* Some platforms with PCI limits cannot address compat
-                   port space. In that case we punt if their firmware has
-                   left a device in compatibility mode */
-                if (legacy_mode) {
-                        printk(KERN_ERR "ata: Compatibility mode ATA is not supported on this platform, skipping.\n");
-                        return -EOPNOTSUPP;
-                }
-#endif
-...
-
-  there is no Kconfig file that defines that variable -- should that
-test be removed?  or is something eventually coming that defines it?
-
-rday
---
-========================================================================
-Robert P. J. Day
-Linux Consulting, Training and Annoying Kernel Pedantry
-Waterloo, Ontario, CANADA
-
-Home page:                                         http://crashcourse.ca
-Fedora Cookbook:    http://crashcourse.ca/wiki/index.php/Fedora_Cookbook
-========================================================================
+Sebastian
