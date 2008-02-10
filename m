@@ -1,58 +1,84 @@
-From: Kai Makisara <Kai.Makisara@kolumbus.fi>
-Subject: Re: (fwd) Bug#11922: I/O error on blank tapes
-Date: Sun, 10 Feb 2008 23:23:31 +0200 (EET)
-Message-ID: <alpine.LSU.1.00.0802102319100.6303@kai.makisara.local>
-References: <20080204142206.GB5532@stro.at>  <20080204212835.GA29286@gollum.tnic> <1202162213.3096.119.camel@localhost.localdomain> <alpine.LSU.1.00.0802051846230.8573@kai.makisara.local>
+From: "Nish Aravamudan" <nish.aravamudan@gmail.com>
+Subject: Re: 2.6.26-git0: IDE oops during boot
+Date: Sun, 10 Feb 2008 13:32:58 -0800
+Message-ID: <29495f1d0802101332p6b39b331ye2f6fb488b63e228@mail.gmail.com>
+References: <20080206105334.GA3664@elf.ucw.cz>
+	 <200802062105.42929.bzolnier@gmail.com>
+	 <47AAD0CB.3090305@linux.vnet.ibm.com>
+	 <200802071501.09318.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from emh04.mail.saunalahti.fi ([62.142.5.110]:37155 "EHLO
-	emh04.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750786AbYBJVXk (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 10 Feb 2008 16:23:40 -0500
-In-Reply-To: <alpine.LSU.1.00.0802051846230.8573@kai.makisara.local>
+Received: from fg-out-1718.google.com ([72.14.220.153]:56574 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751144AbYBJVdB (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 10 Feb 2008 16:33:01 -0500
+Received: by fg-out-1718.google.com with SMTP id e21so3578070fga.17
+        for <linux-ide@vger.kernel.org>; Sun, 10 Feb 2008 13:32:59 -0800 (PST)
+In-Reply-To: <200802071501.09318.bzolnier@gmail.com>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: petkovbb@gmail.com, maximilian attems <max@stro.at>, linux-ide@vger.kernel.org, Stephen Kitt <steve@sk2.org>, bzolnier@gmail.com, linux-scsi <linux-scsi@vger.kernel.org>
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: Kamalesh Babulal <kamalesh@linux.vnet.ibm.com>, Pavel Machek <pavel@ucw.cz>, kernel list <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org
 
-On Tue, 5 Feb 2008, Kai Makisara wrote:
+On 2/7/08, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com> wrote:
+>
+> On Thursday 07 February 2008, Kamalesh Babulal wrote:
+> > Bartlomiej Zolnierkiewicz wrote:
+> > > Hi,
+> > >
+> > > On Wednesday 06 February 2008, Pavel Machek wrote:
+> > >> On Wed 2008-02-06 11:53:34, Pavel Machek wrote:
+> > >>> Hi!
+> > >>>
+> > >>> Trying to boot 2.6.25-git0 (few days old), I get
+> > >>>
+> > >>> BUG: unable to handle kernel paging request at ffff..ffb0
+> > >>> IP at init_irq+0x42e
+> > >
+> > > init_irq? hmm...
+> > >
+> > >>> Call trace:
+> > >>> ide_device_add_all
+> > >
+> > > this comes from ide-generic
+> > > (Generic IDE host driver)
+> > >
+> > >>> ide_generic_init
+> > >>> kernel_init
+> > >>> child_rip
+> > >>> vgacon_cursor
+> > >>> kernel_init
+> > >>> child_rip
+> > >>>
+> > >>> Excerpt from config:
+> > >>>
+> > >>> CONFIG_IDE=y
+> > >>> CONFIG_BLK_DEV_IDE=y
+> > >> Disabling CONFIG_IDE made my machine boot, as it was using libata
+> > >> anyway.
+> > >
+> > > Kamalesh/Pavel:
+> > >
+> > > Could you try latest git and see if the OOPS is still there?
+> > >
+> > > [ Yeah, I'm unable to reproduce it. :( ]
+> > >
+> > > Thanks,
+> > > Bart
+> > Hi Bart,
+> >
+> > The panic is reproducible with the 2.6.24-git16 kernel, the call trace is
+> > similar to the previous one
+>
+> Thanks, I again reviewed ide-probe.c changes but nothing seems wrong...
+>
+> Could you please bisect it down to the guilty commit?
 
-> On Mon, 4 Feb 2008, James Bottomley wrote:
-> 
-> > 
-> > On Mon, 2008-02-04 at 22:28 +0100, Borislav Petkov wrote:
-> > > On Mon, Feb 04, 2008 at 03:22:06PM +0100, maximilian attems wrote:
-> > > 
-> > > (Added Bart to CC)
-> > > 
-> > > > hello borislav,
-> > > > 
-...
-> > > > This does still occur with 2.6.22; with a blank tape in my HP DDS-4 drive:
-> > > > 
-> > > > $ tar tzvf /dev/nst0
-> > > > tar: /dev/nst0: Cannot read: Input/output error
-> > 
-> > That's a SCSI tape, not an IDE one.  I cc'd the SCSI list
-> > 
-> This is not a bug, it is a feature. There is _nothing_ on the tape and if 
-> you try to read something, you get an error. The same thing applies to 
-> reading after the last filemark. Note that after writing a filemark at the 
-> beginning of the tape, the situation is different. Now there is a file and 
-> the normal EOF semantics apply although there still is no data.
-> 
-> I admit that the error return could be more descriptive but the st driver 
-> tries to be compatible with other Unices.
-> 
-> The behavior can be changed if Linux does not match other Unices. I don't 
-> remember if I have tested just this with other Unices. I will try to test 
-> this with Tru64 tomorrow. If anyone has data on other Unices, it would be 
-> helpful.
-> 
-None of our Tru64 boxes have a user-accessible tape drive any more. 
-However, I have been able to test with a Solaris box. The behavior there 
-matches the Linux behavior: blank tape -> i/o error when trying to read.
+Kamalesh, were you able to bisect this down? I just got hit by the
+same panic on a 4-way x86_64, with 2.6.24-git22.
 
--- 
-Kai
+Thanks,
+Nish
