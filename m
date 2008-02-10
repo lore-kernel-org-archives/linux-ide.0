@@ -1,98 +1,58 @@
-From: Byron Bradley <byron.bbradley@gmail.com>
-Subject: [PATCH] sata_mv: platform driver allocs dma without create
-Date: Sun, 10 Feb 2008 21:17:30 +0000 (GMT)
-Message-ID: <alpine.DEB.1.00.0802102117150.9668@git.byronbradley.co.uk>
+From: Kai Makisara <Kai.Makisara@kolumbus.fi>
+Subject: Re: (fwd) Bug#11922: I/O error on blank tapes
+Date: Sun, 10 Feb 2008 23:23:31 +0200 (EET)
+Message-ID: <alpine.LSU.1.00.0802102319100.6303@kai.makisara.local>
+References: <20080204142206.GB5532@stro.at>  <20080204212835.GA29286@gollum.tnic> <1202162213.3096.119.camel@localhost.localdomain> <alpine.LSU.1.00.0802051846230.8573@kai.makisara.local>
 Mime-Version: 1.0
 Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1755055AbYBJVR4@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: jgarzik@pobox.com, linux-ide@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, saeed@marvell.com, mlord@pobox.com
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from emh04.mail.saunalahti.fi ([62.142.5.110]:37155 "EHLO
+	emh04.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750786AbYBJVXk (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 10 Feb 2008 16:23:40 -0500
+In-Reply-To: <alpine.LSU.1.00.0802051846230.8573@kai.makisara.local>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: petkovbb@gmail.com, maximilian attems <max@stro.at>, linux-ide@vger.kernel.org, Stephen Kitt <steve@sk2.org>, bzolnier@gmail.com, linux-scsi <linux-scsi@vger.kernel.org>
 
-When the sata_mv driver is used as a platform driver,
-mv_create_dma_pools() is never called so it fails when trying
-to alloc in mv_pool_start().
+On Tue, 5 Feb 2008, Kai Makisara wrote:
 
-Signed-off-by: Byron Bradley <byron.bbradley@gmail.com>
-Acked-by: Mark Lord <mlord@pobox.com>
----
+> On Mon, 4 Feb 2008, James Bottomley wrote:
+> 
+> > 
+> > On Mon, 2008-02-04 at 22:28 +0100, Borislav Petkov wrote:
+> > > On Mon, Feb 04, 2008 at 03:22:06PM +0100, maximilian attems wrote:
+> > > 
+> > > (Added Bart to CC)
+> > > 
+> > > > hello borislav,
+> > > > 
+...
+> > > > This does still occur with 2.6.22; with a blank tape in my HP DDS-4 drive:
+> > > > 
+> > > > $ tar tzvf /dev/nst0
+> > > > tar: /dev/nst0: Cannot read: Input/output error
+> > 
+> > That's a SCSI tape, not an IDE one.  I cc'd the SCSI list
+> > 
+> This is not a bug, it is a feature. There is _nothing_ on the tape and if 
+> you try to read something, you get an error. The same thing applies to 
+> reading after the last filemark. Note that after writing a filemark at the 
+> beginning of the tape, the situation is different. Now there is a file and 
+> the normal EOF semantics apply although there still is no data.
+> 
+> I admit that the error return could be more descriptive but the st driver 
+> tries to be compatible with other Unices.
+> 
+> The behavior can be changed if Linux does not match other Unices. I don't 
+> remember if I have tested just this with other Unices. I will try to test 
+> this with Tru64 tomorrow. If anyone has data on other Unices, it would be 
+> helpful.
+> 
+None of our Tru64 boxes have a user-accessible tape drive any more. 
+However, I have been able to test with a Solaris box. The behavior there 
+matches the Linux behavior: blank tape -> i/o error when trying to read.
 
-Mark, based on the comment from Andrew Morton on the "sata_mv: fix loop
-with last port" patch I have changed your Signed-off-by to an Acked-by.
-Hopefully thats correct.
-
- drivers/ata/sata_mv.c |   44 ++++++++++++++++++++++++--------------------
- 1 files changed, 24 insertions(+), 20 deletions(-)
-
-diff --git a/drivers/ata/sata_mv.c b/drivers/ata/sata_mv.c
-index f5333ce..04b5717 100644
---- a/drivers/ata/sata_mv.c
-+++ b/drivers/ata/sata_mv.c
-@@ -2881,6 +2881,26 @@ done:
- 	return rc;
- }
-
-+static int mv_create_dma_pools(struct mv_host_priv *hpriv, struct device *dev)
-+{
-+	hpriv->crqb_pool   = dmam_pool_create("crqb_q", dev, MV_CRQB_Q_SZ,
-+							     MV_CRQB_Q_SZ, 0);
-+	if (!hpriv->crqb_pool)
-+		return -ENOMEM;
-+
-+	hpriv->crpb_pool   = dmam_pool_create("crpb_q", dev, MV_CRPB_Q_SZ,
-+							     MV_CRPB_Q_SZ, 0);
-+	if (!hpriv->crpb_pool)
-+		return -ENOMEM;
-+
-+	hpriv->sg_tbl_pool = dmam_pool_create("sg_tbl", dev, MV_SG_TBL_SZ,
-+							     MV_SG_TBL_SZ, 0);
-+	if (!hpriv->sg_tbl_pool)
-+		return -ENOMEM;
-+
-+	return 0;
-+}
-+
- /**
-  *      mv_platform_probe - handle a positive probe of an soc Marvell
-  *      host
-@@ -2934,6 +2954,10 @@ static int mv_platform_probe(struct platform_device *pdev)
- 	hpriv->base = ioremap(res->start, res->end - res->start + 1);
- 	hpriv->base -= MV_SATAHC0_REG_BASE;
-
-+	rc = mv_create_dma_pools(hpriv, &pdev->dev);
-+	if (rc)
-+		return rc;
-+
- 	/* initialize adapter */
- 	rc = mv_init_host(host, chip_soc);
- 	if (rc)
-@@ -3070,26 +3094,6 @@ static void mv_print_info(struct ata_host *host)
- 	       scc_s, (MV_HP_FLAG_MSI & hpriv->hp_flags) ? "MSI" : "INTx");
- }
-
--static int mv_create_dma_pools(struct mv_host_priv *hpriv, struct device *dev)
--{
--	hpriv->crqb_pool   = dmam_pool_create("crqb_q", dev, MV_CRQB_Q_SZ,
--							     MV_CRQB_Q_SZ, 0);
--	if (!hpriv->crqb_pool)
--		return -ENOMEM;
--
--	hpriv->crpb_pool   = dmam_pool_create("crpb_q", dev, MV_CRPB_Q_SZ,
--							     MV_CRPB_Q_SZ, 0);
--	if (!hpriv->crpb_pool)
--		return -ENOMEM;
--
--	hpriv->sg_tbl_pool = dmam_pool_create("sg_tbl", dev, MV_SG_TBL_SZ,
--							     MV_SG_TBL_SZ, 0);
--	if (!hpriv->sg_tbl_pool)
--		return -ENOMEM;
--
--	return 0;
--}
--
- /**
-  *      mv_pci_init_one - handle a positive probe of a PCI Marvell host
-  *      @pdev: PCI device found
 -- 
-1.5.4.rc2.38.gd6da3
+Kai
