@@ -1,38 +1,67 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [PATCH] ide: introduce CONFIG_BLK_DEV_IDEDMA_SFF option
-Date: Sun, 10 Feb 2008 20:05:32 +0100
-Message-ID: <200802102005.32607.bzolnier@gmail.com>
-References: <200802092033.59852.sshtylyov@ru.mvista.com>
+From: Boaz Harrosh <bharrosh@panasas.com>
+Subject: [PATCHSET 0/3] varlen extended and vendor-specific cdbs
+Date: Sun, 10 Feb 2008 20:59:00 +0200
+Message-ID: <47AF4974.9010200@panasas.com>
+References: <20080209193224.GA21448@Chamillionaire.breakpoint.cc> <200802100006.11086.bzolnier@gmail.com> <20080210052621.GA22257@infradead.org> <200802101438.46698.bzolnier@gmail.com> <20080210144352.GA3537@infradead.org> <47AF1321.7000107@panasas.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wx-out-0506.google.com ([66.249.82.234]:27143 "EHLO
-	wx-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754128AbYBJSvk (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 10 Feb 2008 13:51:40 -0500
-Received: by wx-out-0506.google.com with SMTP id h31so4523507wxd.4
-        for <linux-ide@vger.kernel.org>; Sun, 10 Feb 2008 10:51:39 -0800 (PST)
-In-Reply-To: <200802092033.59852.sshtylyov@ru.mvista.com>
-Content-Disposition: inline
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <47AF1321.7000107@panasas.com>
+Sender: linux-scsi-owner@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Jens Axboe <jens.axboe@oracle.com>, James Bottomley <James.Bottomley@hansenpartnership.com>
+Cc: Sebastian Siewior <ide+bug@ml.breakpoint.cc>, Tejun Heo <htejun@gmail.com>, Sergei Shtylyov <sshtylyov@ru.mvista.com>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Cc: asalnikov@ru.mvista.com, linux-ide@vger.kernel.org
 
-On Saturday 09 February 2008, Sergei Shtylyov wrote:
-> Introduce new option CONFIG_BLK_DEV_IDEDMA_SFF for non-PCI SFF-8038i compatible
-> bus mastering IDE controllers (which there are a few known), thus fixing a hack
-> made for Palmchip BK3710 controller...
-> 
-> Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Submitted is a patchset for adding support for variable-length, extended,
+and vendor specific CDBs. It should now cover the entire range of the 
+SCSI standard. (and/or any other use of command packets in block devices)
 
-thanks, applied
+They are based on scsi-misc.
 
-> ---
-> Bart, did you mean something like that?
-> Anton, make sure it works, just in case... :-)
+Difference from last time, is at struct request. I did a smallish
+hack to save the extra pointer space. The pointer now shares it's
+space with the request->cmd, as they are mutual exclusive. The
+flag to switch between them is when cmd_len == 0 and varlen_cdb_len != 0
+I've added 2 accessors to hide the mess. I think this approach
+should be safe. I can easily go back to the separate pointer,
+but I figured a little hack is better then a bloat.
 
-I later noticed that there is still pci_alloc_consistent() call
-which needs to be converted to dma_alloc_coherent() in ide-dma.c... :/
+This is on top of the size shrink to struct scsi_cmnd gained
+in the first patch. We save upto 12 bytes on 32 bit ARCHs
+
+So over all, this cleans things up, and add fixtures without
+any extra cost.
+
+[1/3] Let scsi_cmnd->cmnd use request->cmd buffer
+  Here I let scsi_cmnd->cmnd point to the space allocated by
+  request->cmd, instead of copying the data. The scsi_cmnd->cmd_len
+  is guaranteed to contain the right length of the command.
+  I have tried to go over every single place in the kernel that uses
+  scsi_cmnd->cmnd and make sure it looks sane. Surprisingly to me,
+  that was not at all bad. I hope I did not miss anything.
+
+  I've tested on an x86_64 machine booting from a sata disk and
+  ran the iscsi regression tests as well as my bidi and varlen tests
+  on top of the complete patchset and all tests passed.
+
+[2/3] block layer varlen-cd
+   Here I added an option to use a user supplied buffer for an arbitrary
+   large command. Buffer must be kept valid until execution of request
+   ends. The pointer to the buffer shares it's space with the fixed
+   length command, so the size of struct request does not change.
+
+[3/3] scsi: varlen extended and vendor-specific cdbs
+  Adds support for variable length, extended, and vendor-specific
+  cdbs at the scsi mid-layer.
+
+Bart:
+If you need this infrastructure see second patch for an easy to use
+inline accessors on struct request. If you then need to use them in
+a scsi LLD, thats easy same as before only cmd_len will be bigger then 16.
+If you need to use them in a block LLD. You need to use the accessors and
+an extra if() statement. See 3rd patch on how scsi_lib.c uses it.
+
+Boaz
+
+
