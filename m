@@ -1,108 +1,51 @@
-From: Holger Macht <hmacht@suse.de>
-Subject: [PATCH] libata: Forcing PIO0 mode on reset must not freeze system
-Date: Sun, 10 Feb 2008 20:55:56 +0100
-Message-ID: <20080210195556.GA5261@homac>
+From: Srihari Vijayaraghavan <sriharivijayaraghavan@yahoo.com.au>
+Subject: RE: About forcing 32bit DMA patch for AMD690G(SB600)
+Date: Mon, 11 Feb 2008 07:55:30 +1100 (EST)
+Message-ID: <725100.52910.qm@web52607.mail.re2.yahoo.com>
+References: <B90463BC30D2E446BA423D888DC85E5020F617@sshaexmb1.amd.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ns.suse.de ([195.135.220.2]:35988 "EHLO mx1.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752813AbYBJTzL (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 10 Feb 2008 14:55:11 -0500
-Content-Disposition: inline
+Received: from web52607.mail.re2.yahoo.com ([206.190.48.210]:29274 "HELO
+	web52607.mail.re2.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1754889AbYBJVCM (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 10 Feb 2008 16:02:12 -0500
+In-Reply-To: <B90463BC30D2E446BA423D888DC85E5020F617@sshaexmb1.amd.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-kernel@vger.kernel.org
-Cc: linux-ide@vger.kernel.org, htejun@gmail.com, alan@redhat.com, jeff@garzik.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: Andrew Paprocki <andrew@ishiboo.com>, sriharivijayaraghavan@yahoo.com.au, linux-ide@vger.kernel.org, Shane Huang <Shane.Huang@amd.com>
 
-Calling ap->ops->set_piomode(ap, dev) on a device/controller which got
-already removed, locks the system hard. Reproducibly on an X60 attached to
-a dock station containing a cdrom device with doing
+Shane Huang <Shane.Huang@amd.com> wrote:
+> Dear Tejun:
+> 
+>  
+> > My 5 cents: Just order the board.  These stock PC hardware 
+> > are too cheap
+> > these days, it doesn't make any sense to try to debug 
+> > somewhat difficult
+> > problem remotely if the hardware is available on the market.  Even if
+> > you have to spend your own money, it will be money well spent compared
+> > to the time and effort you'll have to spend in comparison - 
+> > hardware is just too cheap.
+> 
+> Yes you are right, we are trying to get one ASUS M2A-VM board.
 
-  $ echo 1 > /sys/devices/platform/dock.0/undock && echo 123 > /dev/sr0
+Sorry folks I've been offline for a few weeks & I notice I missed out a lot of
+important emails.
 
-This calls ata_eh_reset(...) which in turn tries to force PIO mode 0. But
-the device is already gone.
+Now that I see I need to verify certain things, I'm very happy to do it. Just
+give me a day or two.
 
-Bisecting revealed the following commit as culprit:
+> Thanks
+> Shane
 
-  commit cdeab1140799f09c5f728a5ff85e0bdfa5679cd2
-  Author: Tejun Heo <htejun@gmail.com>
-  Date:   Mon Oct 29 16:41:09 2007 +0900
-  
-      libata: relocate forcing PIO0 on reset
-      
-      Forcing PIO0 on reset was done inside ata_bus_softreset(), which is a
-      bit out of place as it should be applied to all resets - hard, soft
-      and implementation which don't use ata_bus_softreset().  Relocate it
-      such that...
-      
-      * For new EH, it's done in ata_eh_reset() before calling prereset.
-      
-      * For old EH, it's done before calling ap->ops->phy_reset() in
-        ata_bus_probe().
-      
-      This makes PIO0 forced after all resets.  Another difference is that
-      reset itself is done after PIO0 is forced.
-      
-      Signed-off-by: Tejun Heo <htejun@gmail.com>
-      Acked-by: Alan Cox <alan@redhat.com>
-      Signed-off-by: Jeff Garzik <jeff@garzik.org>
+Thanks
+
+Srihari
 
 
-ATTENTION! The following patch solves the problem on my system, but please
-be aware that I don't really know what I'm doing because I don't have the
-big picture. There's surely a better way to check if the device/controller
-is still functional than calling ata_link_{online,offline}.
-
-
-Signed-off-by: Holger Macht <hmacht@suse.de>
----
-
-diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
-index 4e31071..d6a7c57 100644
---- a/drivers/ata/libata-eh.c
-+++ b/drivers/ata/libata-eh.c
-@@ -2131,23 +2131,25 @@ int ata_eh_reset(struct ata_link *link, int classify,
- 
- 	ata_eh_about_to_do(link, NULL, ehc->i.action & ATA_EH_RESET_MASK);
- 
--	ata_link_for_each_dev(dev, link) {
--		/* If we issue an SRST then an ATA drive (not ATAPI)
--		 * may change configuration and be in PIO0 timing. If
--		 * we do a hard reset (or are coming from power on)
--		 * this is true for ATA or ATAPI. Until we've set a
--		 * suitable controller mode we should not touch the
--		 * bus as we may be talking too fast.
--		 */
--		dev->pio_mode = XFER_PIO_0;
-+	if (ata_link_online(link) != ata_link_offline(link)) {
-+		ata_link_for_each_dev(dev, link) {
-+			/* If we issue an SRST then an ATA drive (not ATAPI)
-+			 * may change configuration and be in PIO0 timing. If
-+			 * we do a hard reset (or are coming from power on)
-+			 * this is true for ATA or ATAPI. Until we've set a
-+			 * suitable controller mode we should not touch the
-+			 * bus as we may be talking too fast.
-+			 */
-+			dev->pio_mode = XFER_PIO_0;
- 
--		/* If the controller has a pio mode setup function
--		 * then use it to set the chipset to rights. Don't
--		 * touch the DMA setup as that will be dealt with when
--		 * configuring devices.
--		 */
--		if (ap->ops->set_piomode)
--			ap->ops->set_piomode(ap, dev);
-+			/* If the controller has a pio mode setup function
-+			 * then use it to set the chipset to rights. Don't
-+			 * touch the DMA setup as that will be dealt with when
-+			 * configuring devices.
-+			 */
-+			if (ap->ops->set_piomode)
-+				ap->ops->set_piomode(ap, dev);
-+		}
- 	}
- 
- 	/* Determine which reset to use and record in ehc->i.action.
+      Get the name you always wanted with the new y7mail email address.
+www.yahoo7.com.au/y7mail
 
