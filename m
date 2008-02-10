@@ -1,51 +1,98 @@
-From: Srihari Vijayaraghavan <sriharivijayaraghavan@yahoo.com.au>
-Subject: RE: About forcing 32bit DMA patch for AMD690G(SB600)
-Date: Mon, 11 Feb 2008 07:55:30 +1100 (EST)
-Message-ID: <725100.52910.qm@web52607.mail.re2.yahoo.com>
-References: <B90463BC30D2E446BA423D888DC85E5020F617@sshaexmb1.amd.com>
+From: Byron Bradley <byron.bbradley@gmail.com>
+Subject: [PATCH] sata_mv: platform driver allocs dma without create
+Date: Sun, 10 Feb 2008 21:17:30 +0000 (GMT)
+Message-ID: <alpine.DEB.1.00.0802102117150.9668@git.byronbradley.co.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from web52607.mail.re2.yahoo.com ([206.190.48.210]:29274 "HELO
-	web52607.mail.re2.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1754889AbYBJVCM (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 10 Feb 2008 16:02:12 -0500
-In-Reply-To: <B90463BC30D2E446BA423D888DC85E5020F617@sshaexmb1.amd.com>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1755055AbYBJVR4@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: jgarzik@pobox.com, linux-ide@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, saeed@marvell.com, mlord@pobox.com
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Andrew Paprocki <andrew@ishiboo.com>, sriharivijayaraghavan@yahoo.com.au, linux-ide@vger.kernel.org, Shane Huang <Shane.Huang@amd.com>
 
-Shane Huang <Shane.Huang@amd.com> wrote:
-> Dear Tejun:
-> 
->  
-> > My 5 cents: Just order the board.  These stock PC hardware 
-> > are too cheap
-> > these days, it doesn't make any sense to try to debug 
-> > somewhat difficult
-> > problem remotely if the hardware is available on the market.  Even if
-> > you have to spend your own money, it will be money well spent compared
-> > to the time and effort you'll have to spend in comparison - 
-> > hardware is just too cheap.
-> 
-> Yes you are right, we are trying to get one ASUS M2A-VM board.
+When the sata_mv driver is used as a platform driver,
+mv_create_dma_pools() is never called so it fails when trying
+to alloc in mv_pool_start().
 
-Sorry folks I've been offline for a few weeks & I notice I missed out a lot of
-important emails.
+Signed-off-by: Byron Bradley <byron.bbradley@gmail.com>
+Acked-by: Mark Lord <mlord@pobox.com>
+---
 
-Now that I see I need to verify certain things, I'm very happy to do it. Just
-give me a day or two.
+Mark, based on the comment from Andrew Morton on the "sata_mv: fix loop
+with last port" patch I have changed your Signed-off-by to an Acked-by.
+Hopefully thats correct.
 
-> Thanks
-> Shane
+ drivers/ata/sata_mv.c |   44 ++++++++++++++++++++++++--------------------
+ 1 files changed, 24 insertions(+), 20 deletions(-)
 
-Thanks
+diff --git a/drivers/ata/sata_mv.c b/drivers/ata/sata_mv.c
+index f5333ce..04b5717 100644
+--- a/drivers/ata/sata_mv.c
++++ b/drivers/ata/sata_mv.c
+@@ -2881,6 +2881,26 @@ done:
+ 	return rc;
+ }
 
-Srihari
++static int mv_create_dma_pools(struct mv_host_priv *hpriv, struct device *dev)
++{
++	hpriv->crqb_pool   = dmam_pool_create("crqb_q", dev, MV_CRQB_Q_SZ,
++							     MV_CRQB_Q_SZ, 0);
++	if (!hpriv->crqb_pool)
++		return -ENOMEM;
++
++	hpriv->crpb_pool   = dmam_pool_create("crpb_q", dev, MV_CRPB_Q_SZ,
++							     MV_CRPB_Q_SZ, 0);
++	if (!hpriv->crpb_pool)
++		return -ENOMEM;
++
++	hpriv->sg_tbl_pool = dmam_pool_create("sg_tbl", dev, MV_SG_TBL_SZ,
++							     MV_SG_TBL_SZ, 0);
++	if (!hpriv->sg_tbl_pool)
++		return -ENOMEM;
++
++	return 0;
++}
++
+ /**
+  *      mv_platform_probe - handle a positive probe of an soc Marvell
+  *      host
+@@ -2934,6 +2954,10 @@ static int mv_platform_probe(struct platform_device *pdev)
+ 	hpriv->base = ioremap(res->start, res->end - res->start + 1);
+ 	hpriv->base -= MV_SATAHC0_REG_BASE;
 
++	rc = mv_create_dma_pools(hpriv, &pdev->dev);
++	if (rc)
++		return rc;
++
+ 	/* initialize adapter */
+ 	rc = mv_init_host(host, chip_soc);
+ 	if (rc)
+@@ -3070,26 +3094,6 @@ static void mv_print_info(struct ata_host *host)
+ 	       scc_s, (MV_HP_FLAG_MSI & hpriv->hp_flags) ? "MSI" : "INTx");
+ }
 
-      Get the name you always wanted with the new y7mail email address.
-www.yahoo7.com.au/y7mail
-
+-static int mv_create_dma_pools(struct mv_host_priv *hpriv, struct device *dev)
+-{
+-	hpriv->crqb_pool   = dmam_pool_create("crqb_q", dev, MV_CRQB_Q_SZ,
+-							     MV_CRQB_Q_SZ, 0);
+-	if (!hpriv->crqb_pool)
+-		return -ENOMEM;
+-
+-	hpriv->crpb_pool   = dmam_pool_create("crpb_q", dev, MV_CRPB_Q_SZ,
+-							     MV_CRPB_Q_SZ, 0);
+-	if (!hpriv->crpb_pool)
+-		return -ENOMEM;
+-
+-	hpriv->sg_tbl_pool = dmam_pool_create("sg_tbl", dev, MV_SG_TBL_SZ,
+-							     MV_SG_TBL_SZ, 0);
+-	if (!hpriv->sg_tbl_pool)
+-		return -ENOMEM;
+-
+-	return 0;
+-}
+-
+ /**
+  *      mv_pci_init_one - handle a positive probe of a PCI Marvell host
+  *      @pdev: PCI device found
+-- 
+1.5.4.rc2.38.gd6da3
