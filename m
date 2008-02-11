@@ -1,18 +1,22 @@
 From: Holger Macht <hmacht@suse.de>
 Subject: Re: [PATCH] libata: Forcing PIO0 mode on reset must not freeze
 	system
-Date: Mon, 11 Feb 2008 11:04:46 +0100
-Message-ID: <20080211100446.GA4646@homac.suse.de>
+Date: Mon, 11 Feb 2008 11:29:07 +0100
+Message-ID: <20080211102907.GC4646@homac.suse.de>
 References: <20080210195556.GA5261@homac> <47AFB4DB.1000204@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1757296AbYBKKEW@vger.kernel.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from ns2.suse.de ([195.135.220.15]:36055 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751899AbYBKK2S (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 11 Feb 2008 05:28:18 -0500
 Content-Disposition: inline
 In-Reply-To: <47AFB4DB.1000204@gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, alan@redhat.com, jeff@garzik.org, Kristen Carlson Accardi <kristen.c.accardi@intel.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, alan@redhat.com, jeff@garzik.org
 
 On Mon 11. Feb - 11:37:15, Tejun Heo wrote:
 > Hello,
@@ -61,21 +65,10 @@ On Mon 11. Feb - 11:37:15, Tejun Heo wrote:
 > In the above example, even the reset sequence itself can cause hang if
 > the hardware is implemented slightly differently.  The reason why
 > set_piomode() locks up but reset sequence doesn't is simple dumb luck.
-> I think the proper fix is to tell libata to detach the cdrom before
-> undocking.
 
-Wouldn't the proper fix be to call ata_acpi_handle_hotplug _somewhere_?
-(which is currently called nowhere AFAICS)
-
-Anyway, kernel hackers keep telling me that the kernel should just do the
-right thing. Shouldn't userspace never be able to freeze the system?
-
-It's completely ok for me to handle this from userspace, if that's the
-position of the libata developers.
-
-In this case, we should change the dock driver to default to
-immediate_undock=false, because otherwise it's far too risky to freeze the
-system.
+Another thing, whether it's poor luck or not, it worked like this than at
+least 2.6.22. And it was _heavily_ tested. The above commit broke it
+between 2.6.24-rc1 and 2.6.24-rc2, which is at least a regression.
 
 Regards,
 	Holger
