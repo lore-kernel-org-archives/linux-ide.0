@@ -1,139 +1,61 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH] scsi: ses fix mem leaking when fail to add intf
-Date: Sun, 10 Feb 2008 22:28:38 -0600
-Message-ID: <1202704118.3136.79.camel@localhost.localdomain>
-References: <200802090413.53275.yinghai.lu@sun.com>
-	 <1202569242.4254.9.camel@localhost.localdomain>
-	 <200802091515.48076.yinghai.lu@sun.com>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: Current qc_defer implementation may lead to infinite recursion
+Date: Mon, 11 Feb 2008 14:06:09 +0900
+Message-ID: <47AFD7C1.7070204@gmail.com>
+References: <87ir0w4rzo.fsf@denkblock.local>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:43018 "EHLO
-	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752718AbYBKE2o (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 10 Feb 2008 23:28:44 -0500
-In-Reply-To: <200802091515.48076.yinghai.lu@sun.com>
+Received: from wa-out-1112.google.com ([209.85.146.182]:34041 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750773AbYBKFGP (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 11 Feb 2008 00:06:15 -0500
+Received: by wa-out-1112.google.com with SMTP id v27so1942290wah.23
+        for <linux-ide@vger.kernel.org>; Sun, 10 Feb 2008 21:06:15 -0800 (PST)
+In-Reply-To: <87ir0w4rzo.fsf@denkblock.local>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Yinghai Lu <Yinghai.Lu@Sun.COM>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, kristen.c.accardi@intel.com
+To: Tejun Heo <htejun@gmail.com>, linux-ide@vger.kernel.org
 
-
-On Sat, 2008-02-09 at 15:15 -0800, Yinghai Lu wrote:
-> [PATCH] scsi: ses fix mem leaking when fail to add intf
+Elias Oltmanns wrote:
+> Hi Tejun,
 > 
-> fix leaking with scomp leaking when failing.
-> also remove one extra space.
+> due to your commit 31cc23b34913bc173680bdc87af79e551bf8cc0d libata now
+> sets max_host_blocked and max_device_blocked to 1 for all devices it
+> manages. Under certain conditions this may lead to system lockups due to
+> infinite recursion as I have explained to James on the scsi list (kept
+> you cc-ed). James told me that it was the business of libata to make
+> sure that such a recursion cannot happen.
+> 
+> In my discussion with James I imprudently claimed that this was easy to
+> fix in libata. However, after giving the matter some thought, I'm not at
+> all sure as to what exactly should be done about it. The easy bit is
+> that max_host_blocked and max_device_blocked should be left alone as
+> long as the low level driver does not provide the ->qc_defer() callback.
+> But even if the driver has defined this callback, ata_std_qc_defer() for
+> one will not prevent this recursion on a uniprocessor, whereas things
+> might work out well on an SMP system due to the lock fiddling in the
+> scsi midlayer.
+> 
+> As a conclusion, the current implementation makes it imperative to leave
+> max_host_blocked and max_device_blocked alone on a uniprocessor system.
+> For SMP systems the current implementation might just be fine but even
+> there it might just as well be a good idea to make the adjustment
+> depending on ->qc_defer != NULL.
 
-There are still a few extraneous code moves in this one.  This is about
-the correct minimal set, isn't it?
+Hmmm... The reason why max_host_blocked and max_device_blocked are set
+to 1 is to let libata re-consider status after each command completion
+as blocked status can be rather complex w/ PMP.  I haven't really
+followed the code yet but you're saying that blocked count of 2 should
+be used for that behavior, right?
 
-James
+Another strange thing is that there hasn't been any such lock up /
+infinite recursion report till now although ->qc_defer mechanism bas
+been used widely for some time now.  Can you reproduce the problem w/o
+the disk shock protection?
 
----
+Thanks.
 
-From: Yinghai Lu <Yinghai.Lu@Sun.COM>
-Date: Sat, 9 Feb 2008 15:15:47 -0800
-Subject: [SCSI] ses: fix memory leaks
-
-fix leaking with scomp leaking when failing. Also free page10 on
-driver removal  and remove one extra space.
-
-Signed-off-by: Yinghai Lu <yinghai.lu@sun.com>
-Signed-off-by: James Bottomley <James.Bottomley@HansenPartnership.com>
----
- drivers/scsi/ses.c |   20 ++++++++++++--------
- 1 files changed, 12 insertions(+), 8 deletions(-)
-
-diff --git a/drivers/scsi/ses.c b/drivers/scsi/ses.c
-index 2a6e4f4..8abc4a9 100644
---- a/drivers/scsi/ses.c
-+++ b/drivers/scsi/ses.c
-@@ -416,11 +416,11 @@ static int ses_intf_add(struct class_device *cdev,
- 	int i, j, types, len, components = 0;
- 	int err = -ENOMEM;
- 	struct enclosure_device *edev;
--	struct ses_component *scomp;
-+	struct ses_component *scomp = NULL;
- 
- 	if (!scsi_device_enclosure(sdev)) {
- 		/* not an enclosure, but might be in one */
--		edev = 	enclosure_find(&sdev->host->shost_gendev);
-+		edev = enclosure_find(&sdev->host->shost_gendev);
- 		if (edev) {
- 			ses_match_to_enclosure(edev, sdev);
- 			class_device_put(&edev->cdev);
-@@ -456,9 +456,6 @@ static int ses_intf_add(struct class_device *cdev,
- 	if (!buf)
- 		goto err_free;
- 
--	ses_dev->page1 = buf;
--	ses_dev->page1_len = len;
--
- 	result = ses_recv_diag(sdev, 1, buf, len);
- 	if (result)
- 		goto recv_failed;
-@@ -473,6 +470,9 @@ static int ses_intf_add(struct class_device *cdev,
- 		    type_ptr[0] == ENCLOSURE_COMPONENT_ARRAY_DEVICE)
- 			components += type_ptr[1];
- 	}
-+	ses_dev->page1 = buf;
-+	ses_dev->page1_len = len;
-+	buf = NULL;
- 
- 	result = ses_recv_diag(sdev, 2, hdr_buf, INIT_ALLOC_SIZE);
- 	if (result)
-@@ -489,6 +489,7 @@ static int ses_intf_add(struct class_device *cdev,
- 		goto recv_failed;
- 	ses_dev->page2 = buf;
- 	ses_dev->page2_len = len;
-+	buf = NULL;
- 
- 	/* The additional information page --- allows us
- 	 * to match up the devices */
-@@ -506,11 +507,12 @@ static int ses_intf_add(struct class_device *cdev,
- 		goto recv_failed;
- 	ses_dev->page10 = buf;
- 	ses_dev->page10_len = len;
-+	buf = NULL;
- 
-  no_page10:
--	scomp = kmalloc(sizeof(struct ses_component) * components, GFP_KERNEL);
-+	scomp = kzalloc(sizeof(struct ses_component) * components, GFP_KERNEL);
- 	if (!scomp)
--		goto  err_free;
-+		goto err_free;
- 
- 	edev = enclosure_register(cdev->dev, sdev->sdev_gendev.bus_id,
- 				  components, &ses_enclosure_callbacks);
-@@ -521,7 +523,7 @@ static int ses_intf_add(struct class_device *cdev,
- 
- 	edev->scratch = ses_dev;
- 	for (i = 0; i < components; i++)
--		edev->component[i].scratch = scomp++;
-+		edev->component[i].scratch = scomp + i;
- 
- 	/* Page 7 for the descriptors is optional */
- 	buf = NULL;
-@@ -598,6 +600,7 @@ static int ses_intf_add(struct class_device *cdev,
- 	err = -ENODEV;
-  err_free:
- 	kfree(buf);
-+	kfree(scomp);
- 	kfree(ses_dev->page10);
- 	kfree(ses_dev->page2);
- 	kfree(ses_dev->page1);
-@@ -630,6 +633,7 @@ static void ses_intf_remove(struct class_device *cdev,
- 	ses_dev = edev->scratch;
- 	edev->scratch = NULL;
- 
-+	kfree(ses_dev->page10);
- 	kfree(ses_dev->page1);
- 	kfree(ses_dev->page2);
- 	kfree(ses_dev);
 -- 
-1.5.3.8
-
-
-
+tejun
