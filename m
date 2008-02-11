@@ -1,45 +1,32 @@
-From: Saeed Bishara <saeed@marvell.com>
-Subject: Re: sata_mv: problems using it as a platform_driver
-Date: Mon, 11 Feb 2008 08:35:01 -0500
-Message-ID: <47B04F05.4060505@marvell.com>
-References: <alpine.DEB.1.00.0802080113560.16853@git.byronbradley.co.uk> <alpine.DEB.1.00.0802080217070.16853@git.byronbradley.co.uk> <47ABDDBE.4060607@rtr.ca>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [PATCH] libata: Forcing PIO0 mode on reset must not freeze
+ system
+Date: Mon, 11 Feb 2008 11:50:50 +0000
+Message-ID: <20080211115050.77feb1af@core>
+References: <20080210195556.GA5261@homac>
+	<47AFB4DB.1000204@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from galiil.marvell.com ([199.203.130.254]:19187 "EHLO
-	il.marvell.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751046AbYBKLnz (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 11 Feb 2008 06:43:55 -0500
-In-Reply-To: <47ABDDBE.4060607@rtr.ca>
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:55164 "EHLO
+	lxorguk.ukuu.org.uk" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1752520AbYBKL6f (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 11 Feb 2008 06:58:35 -0500
+In-Reply-To: <47AFB4DB.1000204@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark Lord <liml@rtr.ca>, Byron Bradley <byron.bbradley@gmail.com>, jeff@garzik.org
-Cc: linux-ide@vger.kernel.org, mlord@pobox.com
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, htejun@gmail.com, alan@redhat.com, jeff@garzik.org
 
->>      host->private_data = hpriv;
->>      hpriv->n_ports = n_ports;
->>
->> -    host->iomap = NULL;
->>      hpriv->base = ioremap(res->start, res->end - res->start + 1);
->> +    host->iomap = &hpriv->base;
->>      hpriv->base -= MV_SATAHC0_REG_BASE;
->>
->>      rc = mv_create_dma_pools(hpriv, &pdev->dev);
-> ..
-> 
-> Well, that's definitely one way to attack it.
-the fix better be done by using the hpriv->base instead of iomap table:
-                 void __iomem *hc_mmio = mv_hc_base_from_port(
--                               ap->host->iomap[MV_PRIMARY_BAR], hard_port);
-+                                       mv_host_base(ap->host), hard_port);
-                u32 hc_irq_cause, ipending;
- 
-> 
-> The original problem being, for a non-PCI device, there is no iomap[]
-> table.
-> sata_mv only ever uses iomap[MV_PRIMARY_BAR=0], so the above patch should
-> work around it just fine.
-Jeff, do the libata upper drivers use the other BARs? if not, then we can use pci_iomap to map BAR0, this way we can remove the iomap[] table and use one iomem pointer for pci and none-pci devices. 
+> In the above example, even the reset sequence itself can cause hang if
+> the hardware is implemented slightly differently.  The reason why
+> set_piomode() locks up but reset sequence doesn't is simple dumb luck.
+> I think the proper fix is to tell libata to detach the cdrom before
+> undocking.
 
-Saeed
+Just a thought but which ICH variant is this. For the older ones we have
+to turn IORDY off in software before an eject and they cannot fully
+support hot unplug
+
+Alan
+
