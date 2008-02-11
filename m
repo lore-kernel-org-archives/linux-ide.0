@@ -1,59 +1,55 @@
-From: Russell King <rmk+lkml@arm.linux.org.uk>
-Subject: Re: [PATCH 7/8] ide: add struct ide_port_info instances to legacy host drivers
-Date: Mon, 11 Feb 2008 18:36:15 +0000
-Message-ID: <20080211183615.GA29891@flint.arm.linux.org.uk>
-References: <20080106170220.6861.4814.sendpatchset@localhost.localdomain> <20080106170310.6861.14522.sendpatchset@localhost.localdomain> <479E3AEA.5090600@ru.mvista.com> <200802020035.30918.bzolnier@gmail.com>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: [PATCH] Prevent IDE boot ops on NUMA system in mainline
+Date: Mon, 11 Feb 2008 20:26:26 +0100
+Message-ID: <200802112026.27677.bzolnier@gmail.com>
+References: <20080211003520.GA32082@basil.nowhere.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from caramon.arm.linux.org.uk ([78.32.30.218]:50881 "EHLO
-	caramon.arm.linux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750769AbYBKSgt (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 11 Feb 2008 13:36:49 -0500
+Received: from ug-out-1314.google.com ([66.249.92.173]:57884 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756709AbYBKTWY (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 11 Feb 2008 14:22:24 -0500
+Received: by ug-out-1314.google.com with SMTP id z38so354314ugc.16
+        for <linux-ide@vger.kernel.org>; Mon, 11 Feb 2008 11:22:21 -0800 (PST)
+In-Reply-To: <20080211003520.GA32082@basil.nowhere.org>
 Content-Disposition: inline
-In-Reply-To: <200802020035.30918.bzolnier@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: Sergei Shtylyov <sshtylyov@ru.mvista.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Andi Kleen <andi@firstfloor.org>
+Cc: torvalds@osdl.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Sat, Feb 02, 2008 at 12:35:30AM +0100, Bartlomiej Zolnierkiewicz wrote:
-> > > Index: b/drivers/ide/arm/icside.c
-> > > ===================================================================
-> > > --- a/drivers/ide/arm/icside.c
-> > > +++ b/drivers/ide/arm/icside.c
-> > > @@ -459,11 +456,19 @@ icside_register_v5(struct icside_state *
-> > >  
-> > >  	idx[0] = hwif->index;
-> > >  
-> > > -	ide_device_add(idx);
-> > > +	ide_device_add(idx, NULL);
-> > >  
-> > >  	return 0;
-> > >  }
-> > >  
-> > > +static const struct ide_port_info icside_v6_port_info __initdata = {
-> > > +	.host_flags		= IDE_HFLAG_SERIALIZE |
-> > > +				  IDE_HFLAG_NO_DMA | /* no SFF-style DMA */
-> > > +				  IDE_HFLAG_NO_AUTOTUNE,
-> > > +	.mwdma_mask		= ATA_MWDMA2,
-> > > +	.swdma_mask		= ATA_SWDMA2,
-> > > +};
-> > > +
-> > 
-> >     Interesting... this driver's support for SWDMA0 is broken since the cycle 
-> > should be 960 ns long, not 480, and SWDMA2 is underclocked using the same 
-> > cycle as SWDMA1, 480 ns...
+On Monday 11 February 2008, Andi Kleen wrote:
 > 
-> Added Russell to Cc:.
+> Without this patch a Opteron test system here oopses at boot with currentg git. 
+> 
+> Calling to_pci_dev() on a NULL pointer gives a negative value so the following NULL 
+> pointer check never triggers and then an illegal address is referenced. Check the 
+> unadjusted original device pointer for NULL instead.
+> 
+> Signed-off-by: Andi Kleen <ak@suse.de>
 
-Underclocking the DMA is not a problem - if you look at the timing
-diagrams and associated tables in the ATA specifications, you'll
-find that they specify the *minimum* cycle timings.
+Thanks Andi!
 
-However, you're correct that SWDMA0 is not able to be supported.
+This may explain+resolve ide_generic OOPS-es reported by Pavel/Kamalesh/Nish.
 
--- 
-Russell King
- Linux kernel    2.6 ARM Linux   - http://www.arm.linux.org.uk/
- maintainer of:
+[ I also see that Linus has already merged the patch and you've followed
+  up on pcibus_to_node() issue so there is nothing left for me to do...
+
+  I really love when things turn out like this... ;) ]
+
+> Index: linux/include/linux/ide.h
+> ===================================================================
+> --- linux.orig/include/linux/ide.h
+> +++ linux/include/linux/ide.h
+> @@ -1294,7 +1294,7 @@ static inline void ide_dump_identify(u8 
+>  static inline int hwif_to_node(ide_hwif_t *hwif)
+>  {
+>  	struct pci_dev *dev = to_pci_dev(hwif->dev);
+> -	return dev ? pcibus_to_node(dev->bus) : -1;
+> +	return hwif->dev ? pcibus_to_node(dev->bus) : -1;
+>  }
+>  
+>  static inline ide_drive_t *ide_get_paired_drive(ide_drive_t *drive)
