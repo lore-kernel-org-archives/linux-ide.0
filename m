@@ -1,42 +1,60 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [SCSI] ses: fix memory leaks
-Date: Mon, 11 Feb 2008 11:02:06 -0600
-Message-ID: <1202749326.3122.39.camel@localhost.localdomain>
-References: <200802090413.53275.yinghai.lu@sun.com>
-	 <200802091515.48076.yinghai.lu@sun.com>
-	 <1202704118.3136.79.camel@localhost.localdomain>
-	 <200802102325.26538.yinghai.lu@sun.com>
-	 <1202747000.3122.28.camel@localhost.localdomain>
+From: Linus Torvalds <torvalds@linux-foundation.org>
+Subject: Re: [PATCH] Prevent IDE boot ops on NUMA system in mainline
+Date: Mon, 11 Feb 2008 09:33:14 -0800 (PST)
+Message-ID: <alpine.LFD.1.00.0802110929230.2920@woody.linux-foundation.org>
+References: <20080211003520.GA32082@basil.nowhere.org>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:41352 "EHLO
-	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1758227AbYBKRCL (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 11 Feb 2008 12:02:11 -0500
-In-Reply-To: <1202747000.3122.28.camel@localhost.localdomain>
+Received: from smtp2.linux-foundation.org ([207.189.120.14]:52103 "EHLO
+	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1759980AbYBKRft (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 11 Feb 2008 12:35:49 -0500
+In-Reply-To: <20080211003520.GA32082@basil.nowhere.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Yinghai Lu <Yinghai.Lu@Sun.COM>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, kristen.c.accardi@intel.com
+To: Andi Kleen <andi@firstfloor.org>
+Cc: bzolnier@gmail.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
 
-On Mon, 2008-02-11 at 10:23 -0600, James Bottomley wrote:
-> On Sun, 2008-02-10 at 23:25 -0800, Yinghai Lu wrote:
-> > please check it...
+
+On Mon, 11 Feb 2008, Andi Kleen wrote:
 > 
-> This one looks perfect, thanks!
+> Without this patch a Opteron test system here oopses at boot with currentg git. 
+> 
+> Calling to_pci_dev() on a NULL pointer gives a negative value so the following NULL 
+> pointer check never triggers and then an illegal address is referenced. Check the 
+> unadjusted original device pointer for NULL instead.
+> 
+> Signed-off-by: Andi Kleen <ak@suse.de>
+> 
+> Index: linux/include/linux/ide.h
+> ===================================================================
+> --- linux.orig/include/linux/ide.h
+> +++ linux/include/linux/ide.h
+> @@ -1294,7 +1294,7 @@ static inline void ide_dump_identify(u8 
+>  static inline int hwif_to_node(ide_hwif_t *hwif)
+>  {
+>  	struct pci_dev *dev = to_pci_dev(hwif->dev);
+> -	return dev ? pcibus_to_node(dev->bus) : -1;
+> +	return hwif->dev ? pcibus_to_node(dev->bus) : -1;
+>  }
 
-Well, nearly perfect.  I corrected this typo:
+Ok, I applied this, but it causes a *lot* of noise about "unused variable 
+'dev'" because pcibus_to_node() is defined to be -1 when you don't do any 
+strange NUMA thing (so that "dev->bus" usage thing is never even seen by 
+the compiler.
 
-+       if (!buf)
-+               goto simple_polulate;
-                            ^^^^^^^^
+So we should probably make pcibus_to_node() be an inline function for that 
+case, or just make that thing be
 
-Which a compile check before you submitted the patch would have picked
-up ...
+	return hwif->dev ?
+		pcibus_to_node(to_pci_dev(hwif->dev)->bus)
+	       :
+		-1;
 
-James
+or something. Because now things are really noisy.
 
+Preferences, anybody? Bartlomiej?
 
+		Linus
