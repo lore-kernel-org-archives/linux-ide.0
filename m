@@ -1,40 +1,65 @@
-From: Yinghai Lu <Yinghai.Lu@Sun.COM>
-Subject: Re: [SCSI] ses: fix memory leaks
-Date: Mon, 11 Feb 2008 12:25:03 -0800
-Message-ID: <200802111225.04021.yinghai.lu@sun.com>
-References: <200802090413.53275.yinghai.lu@sun.com>
- <1202747000.3122.28.camel@localhost.localdomain>
- <1202749326.3122.39.camel@localhost.localdomain>
+From: Geert Uytterhoeven <geert@linux-m68k.org>
+Subject: [PATCH] ide: Add missing base addresses for falconide and macide
+Date: Mon, 11 Feb 2008 22:34:06 +0100 (CET)
+Message-ID: <Pine.LNX.4.64.0802112232060.7963@anakin>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7BIT
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from sca-es-mail-1.Sun.COM ([192.18.43.132]:53762 "EHLO
-	sca-es-mail-1.sun.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751507AbYBKURW (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 11 Feb 2008 15:17:22 -0500
-In-reply-to: <1202749326.3122.39.camel@localhost.localdomain>
-Content-disposition: inline
+Received: from yergi.telenet-ops.be ([195.130.132.36]:55238 "EHLO
+	yergi.telenet-ops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753708AbYBKVet (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 11 Feb 2008 16:34:49 -0500
+Received: from nelson.telenet-ops.be (unknown [195.130.133.66])
+	by yergi.telenet-ops.be (Postfix) with ESMTP id 785675C8ECF
+	for <linux-ide@vger.kernel.org>; Mon, 11 Feb 2008 22:34:50 +0100 (CET)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: James Bottomley <James.Bottomley@hansenpartnership.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, kristen.c.accardi@intel.com
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: Michael Schmitz <schmitz@debian.org>, linux-ide@vger.kernel.org, Linux/m68k <linux-m68k@vger.kernel.org>, Linux Kernel Development <linux-kernel@vger.kernel.org>
 
-On Monday 11 February 2008 09:02:06 am James Bottomley wrote:
-> 
-> On Mon, 2008-02-11 at 10:23 -0600, James Bottomley wrote:
-> > On Sun, 2008-02-10 at 23:25 -0800, Yinghai Lu wrote:
-> > > please check it...
-> > 
-> > This one looks perfect, thanks!
-> 
-> Well, nearly perfect.  I corrected this typo:
-> 
-> +       if (!buf)
-> +               goto simple_polulate;
->                             ^^^^^^^^
-> 
-> Which a compile check before you submitted the patch would have picked
-> up ...
+commit 29dd59755a849cc6475faa6a75f3b804e23a6fc2 ("ide: remove ide_setup_ports")
+forgot to take into account the base addresses for the CONTROL registers for
+falconide and macide, as pointed out by Michael Schmitz.
 
-sorry for that.
+Falconide was tested on Aranym.
+
+Signed-off-by: Geert Uytterhoeven <geert@linux-m68k.org>
+Cc: Michael Schmitz <schmitz@debian.org>
+---
+ drivers/ide/legacy/falconide.c |    2 +-
+ drivers/ide/legacy/macide.c    |    2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
+
+--- a/drivers/ide/legacy/falconide.c
++++ b/drivers/ide/legacy/falconide.c
+@@ -54,7 +54,7 @@ static void __init falconide_setup_ports
+ 	for (i = 1; i < 8; i++)
+ 		hw->io_ports[i] = ATA_HD_BASE + 1 + i * 4;
+ 
+-	hw->io_ports[IDE_CONTROL_OFFSET] = ATA_HD_CONTROL;
++	hw->io_ports[IDE_CONTROL_OFFSET] = ATA_HD_BASE + ATA_HD_CONTROL;
+ 
+ 	hw->irq = IRQ_MFP_IDE;
+ 	hw->ack_intr = NULL;
+--- a/drivers/ide/legacy/macide.c
++++ b/drivers/ide/legacy/macide.c
+@@ -74,7 +74,7 @@ static void __init macide_setup_ports(hw
+ 	for (i = 0; i < 8; i++)
+ 		hw->io_ports[i] = base + i * 4;
+ 
+-	hw->io_ports[IDE_CONTROL_OFFSET] = IDE_CONTROL;
++	hw->io_ports[IDE_CONTROL_OFFSET] = base + IDE_CONTROL;
+ 
+ 	hw->irq = irq;
+ 	hw->ack_intr = ack_intr;
+
+Gr{oetje,eeting}s,
+
+						Geert
+
+--
+Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
+
+In personal conversations with technical people, I call myself a hacker. But
+when I'm talking to journalists I just say "programmer" or something like that.
+							    -- Linus Torvalds
