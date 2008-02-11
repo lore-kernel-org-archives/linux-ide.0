@@ -1,36 +1,52 @@
-From: Atsushi Nemoto <anemo@mba.ocn.ne.jp>
-Subject: Re: [PATCH 7/8] ide: add struct ide_port_info instances to legacy
- host drivers
-Date: Mon, 11 Feb 2008 21:01:28 +0900 (JST)
-Message-ID: <20080211.210128.108308594.anemo@mba.ocn.ne.jp>
-References: <20080211.010729.115910395.anemo@mba.ocn.ne.jp>
-	<200802101804.49154.bzolnier@gmail.com>
-	<200802110016.08078.bzolnier@gmail.com>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: [PATCH] libata: Forcing PIO0 mode on reset must not freeze	system
+Date: Mon, 11 Feb 2008 22:11:32 +0900
+Message-ID: <47B04984.1020401@gmail.com>
+References: <20080210195556.GA5261@homac> <47AFB4DB.1000204@gmail.com> <20080211100446.GA4646@homac.suse.de> <47B02E96.4050900@gmail.com> <20080211112802.GA4528@homac.suse.de>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mba.ocn.ne.jp ([122.1.235.107]:57003 "EHLO smtp.mba.ocn.ne.jp"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752315AbYBKMBO (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 11 Feb 2008 07:01:14 -0500
-In-Reply-To: <200802110016.08078.bzolnier@gmail.com>
+Received: from wa-out-1112.google.com ([209.85.146.183]:45819 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753162AbYBKNLk (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 11 Feb 2008 08:11:40 -0500
+Received: by wa-out-1112.google.com with SMTP id v27so2166473wah.23
+        for <linux-ide@vger.kernel.org>; Mon, 11 Feb 2008 05:11:39 -0800 (PST)
+In-Reply-To: <20080211112802.GA4528@homac.suse.de>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: bzolnier@gmail.com
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, alan@redhat.com, jeff@garzik.org, Kristen Carlson Accardi <kristen.c.accardi@intel.com>
 
-On Mon, 11 Feb 2008 00:16:07 +0100, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com> wrote:
-> > It is too late for -git but not too late for 2.6.25-rc1. ;-)
-> > 
-> > Could you make a patch please?
+Holger Macht wrote:
+>> It should be called via ata_acpi_{ap|dev}_notify() callbacks installed
+>> via acpi_install_notify_handler().  Can you add dump_stack() in the
+>> function and verify that it actually is being called?  It could be that
+>> the method is called too late or libata takes too long to actually
+>> unplug the device.  Hmmm... It seems what ata_acpi_handle_hotplug() does
+>> isn't enough for undock.  It probably should request detaching the
+>> device instead of just notifying hotplug event.  Anyways, please lemme
+>> know whether and when the function is called.
 > 
-> I went ahead and made a patch (sorry, I needed it for git pull request :).
+> I already checked, it's never called AFAICS. And I couldn't find a place
+> where it should be installed, otherwise, I would have sent a patch. The
+> dock driver already calls the notify methods on devices in the dock
+> station before doing the real undock.
+
+ata_acpi_associate() calls acpi_install_notify_handler() for each
+device.  Isn't that enough?
+
+> immediate_undock=1:
+>  User presses undock button on the dock station, dock driver calls ACPI
+>  undock method immediately.
 > 
-> From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-> Subject: [PATCH] ide: ide_init_port() bugfix
+> immediate_undock=0:
+>  User presses undock button on the dock station, dock driver throws uevent
+>  and waits for userland to undock the system via sysfs.
+> 
+> immediate_undock is currently set to 1 by default.
 
-Thanks!  Looks sane for me :)
+Thanks for the explanation.
 
----
-Atsushi Nemoto
+-- 
+tejun
