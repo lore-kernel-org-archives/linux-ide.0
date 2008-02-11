@@ -1,29 +1,44 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH] sata_mv: platform driver allocs dma without create
-Date: Mon, 11 Feb 2008 14:31:40 -0500
-Message-ID: <47B0A29C.6000508@pobox.com>
-References: <alpine.DEB.1.00.0802102117150.9668@git.byronbradley.co.uk>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: 2.6.25 Regression: DriveStatusError
+Date: Mon, 11 Feb 2008 20:51:45 +0100
+Message-ID: <200802112051.45395.bzolnier@gmail.com>
+References: <200802110927.36109.dex@dragonslave.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain;
+  charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1760953AbYBKTb5@vger.kernel.org>
-In-Reply-To: <alpine.DEB.1.00.0802102117150.9668@git.byronbradley.co.uk>
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1760146AbYBKThy@vger.kernel.org>
+In-Reply-To: <200802110927.36109.dex@dragonslave.de>
+Content-Disposition: inline
 Sender: linux-kernel-owner@vger.kernel.org
-To: Byron Bradley <byron.bbradley@gmail.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, saeed@marvell.com, mlord@pobox.com
+To: webmaster@dragonslave.de
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
-Byron Bradley wrote:
-> When the sata_mv driver is used as a platform driver,
-> mv_create_dma_pools() is never called so it fails when trying
-> to alloc in mv_pool_start().
-> 
-> Signed-off-by: Byron Bradley <byron.bbradley@gmail.com>
-> Acked-by: Mark Lord <mlord@pobox.com>
-> ---
-> 
-> Mark, based on the comment from Andrew Morton on the "sata_mv: fix loop
-> with last port" patch I have changed your Signed-off-by to an Acked-by.
-> Hopefully thats correct.
 
-applied
+Hi,
+
+On Monday 11 February 2008, Daniel Exner wrote:
+> Hi!
+> 
+> Please CC me as I'm not subscribed to any list, thx in advance.
+> 
+> I tried all -git Kernels since begining of cycle and starting when they finaly 
+> compiled fine, they weren't able to mount my root.
+> 
+> As my laptop with the serial cable is on the run currently I wasn't able to 
+> get a trace (perhaps by the we) but error written by hand from screen was 
+> this:
+> 
+> hda: task_no_data_intr: status=0x51 {DriveReady SeekComplete Error}
+> hda: task_no_data_intr: error=0x04 {DriveStatusError}
+> failed opcode was: 0xe1
+
+[...]
+
+Could you please try 2.6.25-rc1-git1:
+
+http://kernel.org/pub/linux/kernel/v2.6/snapshots/patch-2.6.25-rc1-git1.bz2
+
+Thanks,
+Bart
