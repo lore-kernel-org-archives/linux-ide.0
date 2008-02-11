@@ -1,142 +1,132 @@
-From: Yinghai Lu <Yinghai.Lu@Sun.COM>
-Subject: [SCSI] ses: fix memory leaks
-Date: Sun, 10 Feb 2008 23:25:25 -0800
-Message-ID: <200802102325.26538.yinghai.lu@sun.com>
-References: <200802090413.53275.yinghai.lu@sun.com>
- <200802091515.48076.yinghai.lu@sun.com>
- <1202704118.3136.79.camel@localhost.localdomain>
+From: Kamalesh Babulal <kamalesh@linux.vnet.ibm.com>
+Subject: Re: 2.6.26-git0: IDE oops during boot
+Date: Mon, 11 Feb 2008 13:24:24 +0530
+Message-ID: <47AFFF30.6070808@linux.vnet.ibm.com>
+References: <20080206105334.GA3664@elf.ucw.cz> <200802062105.42929.bzolnier@gmail.com> <47AAD0CB.3090305@linux.vnet.ibm.com> <200802071501.09318.bzolnier@gmail.com> <29495f1d0802101332p6b39b331ye2f6fb488b63e228@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from sca-es-mail-2.Sun.COM ([192.18.43.133]:58801 "EHLO
-	sca-es-mail-2.sun.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752401AbYBKHRm convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 11 Feb 2008 02:17:42 -0500
-In-reply-to: <1202704118.3136.79.camel@localhost.localdomain>
-Content-disposition: inline
+Received: from e28smtp01.in.ibm.com ([59.145.155.1]:35158 "EHLO
+	e28smtp01.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753298AbYBKHy3 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 11 Feb 2008 02:54:29 -0500
+In-Reply-To: <29495f1d0802101332p6b39b331ye2f6fb488b63e228@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: James Bottomley <James.Bottomley@hansenpartnership.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, kristen.c.accardi@intel.com
+To: Nish Aravamudan <nish.aravamudan@gmail.com>
+Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Pavel Machek <pavel@ucw.cz>, kernel list <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, ananth@in.ibm.com
 
-please check it...
+Nish Aravamudan wrote:
+> On 2/7/08, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com> wrote:
+>> On Thursday 07 February 2008, Kamalesh Babulal wrote:
+>>> Bartlomiej Zolnierkiewicz wrote:
+>>>> Hi,
+>>>>
+>>>> On Wednesday 06 February 2008, Pavel Machek wrote:
+>>>>> On Wed 2008-02-06 11:53:34, Pavel Machek wrote:
+>>>>>> Hi!
+>>>>>>
+>>>>>> Trying to boot 2.6.25-git0 (few days old), I get
+>>>>>>
+>>>>>> BUG: unable to handle kernel paging request at ffff..ffb0
+>>>>>> IP at init_irq+0x42e
+>>>> init_irq? hmm...
+>>>>
+>>>>>> Call trace:
+>>>>>> ide_device_add_all
+>>>> this comes from ide-generic
+>>>> (Generic IDE host driver)
+>>>>
+>>>>>> ide_generic_init
+>>>>>> kernel_init
+>>>>>> child_rip
+>>>>>> vgacon_cursor
+>>>>>> kernel_init
+>>>>>> child_rip
+>>>>>>
+>>>>>> Excerpt from config:
+>>>>>>
+>>>>>> CONFIG_IDE=y
+>>>>>> CONFIG_BLK_DEV_IDE=y
+>>>>> Disabling CONFIG_IDE made my machine boot, as it was using libata
+>>>>> anyway.
+>>>> Kamalesh/Pavel:
+>>>>
+>>>> Could you try latest git and see if the OOPS is still there?
+>>>>
+>>>> [ Yeah, I'm unable to reproduce it. :( ]
+>>>>
+>>>> Thanks,
+>>>> Bart
+>>> Hi Bart,
+>>>
+>>> The panic is reproducible with the 2.6.24-git16 kernel, the call trace is
+>>> similar to the previous one
+>> Thanks, I again reviewed ide-probe.c changes but nothing seems wrong...
+>>
+>> Could you please bisect it down to the guilty commit?
+> 
+> Kamalesh, were you able to bisect this down? I just got hit by the
+> same panic on a 4-way x86_64, with 2.6.24-git22.
+> 
+> Thanks,
+> Nish
 
----
+Hi Nish,
 
-=46rom: Yinghai Lu <yinghai.lu@sun.com>
+I tried bisecting and the guilty patch seems to be 
 
-[SCSI] ses: fix memory leaks
+36501650ec45b1db308c3b51886044863be2d762 is first bad commit
+commit 36501650ec45b1db308c3b51886044863be2d762
+Author: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Date:   Fri Feb 1 23:09:31 2008 +0100
 
-fix leaking with scomp leaking when failing. Also free page10 on
-driver removal =C2=A0and remove one extra space.
+    ide: keep pointer to struct device instead of struct pci_dev in ide_hwif_t
 
-Signed-off-by: Yinghai Lu <yinghai.lu@sun.com>
-Signed-off-by: James Bottomley <James.Bottomley@HansenPartnership.com>
----
 
- drivers/scsi/ses.c |   23 ++++++++++++++---------
- 1 file changed, 14 insertions(+), 9 deletions(-)
+the gdb output, also points to the changes made by the guilty patch
 
-Index: linux-2.6/drivers/scsi/ses.c
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
---- linux-2.6.orig/drivers/scsi/ses.c
-+++ linux-2.6/drivers/scsi/ses.c
-@@ -416,11 +416,11 @@ static int ses_intf_add(struct class_dev
- 	int i, j, types, len, components =3D 0;
- 	int err =3D -ENOMEM;
- 	struct enclosure_device *edev;
--	struct ses_component *scomp;
-+	struct ses_component *scomp =3D NULL;
-=20
- 	if (!scsi_device_enclosure(sdev)) {
- 		/* not an enclosure, but might be in one */
--		edev =3D 	enclosure_find(&sdev->host->shost_gendev);
-+		edev =3D enclosure_find(&sdev->host->shost_gendev);
- 		if (edev) {
- 			ses_match_to_enclosure(edev, sdev);
- 			class_device_put(&edev->cdev);
-@@ -456,9 +456,6 @@ static int ses_intf_add(struct class_dev
- 	if (!buf)
- 		goto err_free;
-=20
--	ses_dev->page1 =3D buf;
--	ses_dev->page1_len =3D len;
--
- 	result =3D ses_recv_diag(sdev, 1, buf, len);
- 	if (result)
- 		goto recv_failed;
-@@ -473,6 +470,9 @@ static int ses_intf_add(struct class_dev
- 		    type_ptr[0] =3D=3D ENCLOSURE_COMPONENT_ARRAY_DEVICE)
- 			components +=3D type_ptr[1];
- 	}
-+	ses_dev->page1 =3D buf;
-+	ses_dev->page1_len =3D len;
-+	buf =3D NULL;
-=20
- 	result =3D ses_recv_diag(sdev, 2, hdr_buf, INIT_ALLOC_SIZE);
- 	if (result)
-@@ -489,6 +489,7 @@ static int ses_intf_add(struct class_dev
- 		goto recv_failed;
- 	ses_dev->page2 =3D buf;
- 	ses_dev->page2_len =3D len;
-+	buf =3D NULL;
-=20
- 	/* The additional information page --- allows us
- 	 * to match up the devices */
-@@ -506,11 +507,12 @@ static int ses_intf_add(struct class_dev
- 		goto recv_failed;
- 	ses_dev->page10 =3D buf;
- 	ses_dev->page10_len =3D len;
-+	buf =3D NULL;
-=20
-  no_page10:
--	scomp =3D kmalloc(sizeof(struct ses_component) * components, GFP_KERN=
-EL);
-+	scomp =3D kzalloc(sizeof(struct ses_component) * components, GFP_KERN=
-EL);
- 	if (!scomp)
--		goto  err_free;
-+		goto err_free;
-=20
- 	edev =3D enclosure_register(cdev->dev, sdev->sdev_gendev.bus_id,
- 				  components, &ses_enclosure_callbacks);
-@@ -521,10 +523,9 @@ static int ses_intf_add(struct class_dev
-=20
- 	edev->scratch =3D ses_dev;
- 	for (i =3D 0; i < components; i++)
--		edev->component[i].scratch =3D scomp++;
-+		edev->component[i].scratch =3D scomp + i;
-=20
- 	/* Page 7 for the descriptors is optional */
--	buf =3D NULL;
- 	result =3D ses_recv_diag(sdev, 7, hdr_buf, INIT_ALLOC_SIZE);
- 	if (result)
- 		goto simple_populate;
-@@ -532,6 +533,8 @@ static int ses_intf_add(struct class_dev
- 	len =3D (hdr_buf[2] << 8) + hdr_buf[3] + 4;
- 	/* add 1 for trailing '\0' we'll use */
- 	buf =3D kzalloc(len + 1, GFP_KERNEL);
-+	if (!buf)
-+		goto simple_polulate;
- 	result =3D ses_recv_diag(sdev, 7, buf, len);
- 	if (result) {
-  simple_populate:
-@@ -598,6 +601,7 @@ static int ses_intf_add(struct class_dev
- 	err =3D -ENODEV;
-  err_free:
- 	kfree(buf);
-+	kfree(scomp);
- 	kfree(ses_dev->page10);
- 	kfree(ses_dev->page2);
- 	kfree(ses_dev->page1);
-@@ -630,6 +634,7 @@ static void ses_intf_remove(struct class
- 	ses_dev =3D edev->scratch;
- 	edev->scratch =3D NULL;
-=20
-+	kfree(ses_dev->page10);
- 	kfree(ses_dev->page1);
- 	kfree(ses_dev->page2);
- 	kfree(ses_dev);
+(gdb) p ide_device_add_all
+$1 = {int (u8 *, const struct ide_port_info *)} 0xffffffff804176ac <ide_device_add_all>
+(gdb) p/x 0xffffffff804176ac+0xb60
+$2 = 0xffffffff8041820c
+(gdb) l *0xffffffff8041820c
+0xffffffff8041820c is in ide_device_add_all (drivers/ide/ide-probe.c:1249).
+1244                    goto out;
+1245            }
+1246
+1247            sg_init_table(hwif->sg_table, hwif->sg_max_nents);
+1248
+1249            if (init_irq(hwif) == 0)
+1250                    goto done;
+1251
+1252            old_irq = hwif->irq;
+1253            /*
+(gdb) 
+
+
+(gdb) p init_irq
+$1 = {int (ide_hwif_t *)} 0xffffffff8041721f <init_irq>
+(gdb) p/x 0xffffffff8041721f+0x1a4
+$2 = 0xffffffff804173c3
+(gdb) l *0xffffffff804173c3
+0xffffffff804173c3 is in init_irq (include/asm/pci.h:101).
+96      /* Returns the node based on pci bus */
+97      static inline int __pcibus_to_node(struct pci_bus *bus)
+98      {
+99              struct pci_sysdata *sd = bus->sysdata;
+100
+101             return sd->node;
+102     }
+103
+104     static inline cpumask_t __pcibus_to_cpumask(struct pci_bus *bus)
+105     {
+(gdb) 
+
+
+-- 
+Thanks & Regards,
+Kamalesh Babulal,
+Linux Technology Center,
+IBM, ISTL.
