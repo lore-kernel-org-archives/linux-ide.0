@@ -1,59 +1,95 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH #upstream] libata: make EH fail gracefully if no reset
- method is available
-Date: Mon, 11 Feb 2008 14:25:28 -0500
-Message-ID: <47B0A128.4020002@garzik.org>
-References: <47A040E2.1050801@gmail.com>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: Current git --> kaboom [bisect] seems IDE related.
+Date: Mon, 11 Feb 2008 20:41:52 +0100
+Message-ID: <200802112041.53042.bzolnier@gmail.com>
+References: <20080209193224.GA21448@Chamillionaire.breakpoint.cc> <200802101932.06946.bzolnier@gmail.com> <47B07809.6010404@ru.mvista.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:56850 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757305AbYBKTZa (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 11 Feb 2008 14:25:30 -0500
-In-Reply-To: <47A040E2.1050801@gmail.com>
+Received: from nf-out-0910.google.com ([64.233.182.190]:19527 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756709AbYBKT2f (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 11 Feb 2008 14:28:35 -0500
+Received: by nf-out-0910.google.com with SMTP id g13so1288319nfb.21
+        for <linux-ide@vger.kernel.org>; Mon, 11 Feb 2008 11:28:33 -0800 (PST)
+In-Reply-To: <47B07809.6010404@ru.mvista.com>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: IDE/ATA development list <linux-ide@vger.kernel.org>
+To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Cc: James Bottomley <James.Bottomley@hansenpartnership.com>, Christoph Hellwig <hch@infradead.org>, Sebastian Siewior <ide+bug@ml.breakpoint.cc>, Tejun Heo <htejun@gmail.com>, linux-ide@vger.kernel.org, Jens Axboe <jens.axboe@oracle.com>
 
-Tejun Heo wrote:
-> When no reset method is available, libata currently oopses.  Although
-> the condition can't happen unless there's a bug in a low level driver,
-> oopsing isn't the best way to report the error condition.  Complain,
-> dump stack and fail reset instead.
+On Monday 11 February 2008, Sergei Shtylyov wrote:
+> Bartlomiej Zolnierkiewicz wrote:
 > 
-> Signed-off-by: Tejun Heo <htejun@gmail.com>
-> ---
-> This patch is on top of
+> > From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+> > Subject: [PATCH] ide-disk: fix flush requests (take 2)
 > 
-> upstream (a984f58dd97f22f5113700322fed311a0ee29947)
-> + prefer-hardreset patchset
->   http://thread.gmane.org/gmane.linux.ide/27447
+> > commit 813a0eb233ee67d7166241a8b389b6a76f2247f9
+> > Author: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+> > Date:   Fri Jan 25 22:17:10 2008 +0100
 > 
->  drivers/ata/libata-eh.c |    7 ++++++-
->  1 files changed, 6 insertions(+), 1 deletions(-)
+> >     ide: switch idedisk_prepare_flush() to use REQ_TYPE_ATA_TASKFILE requests
 > 
-> diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
-> index 64418f1..8d82b06 100644
-> --- a/drivers/ata/libata-eh.c
-> +++ b/drivers/ata/libata-eh.c
-> @@ -2135,9 +2135,14 @@ int ata_eh_reset(struct ata_link *link, int classify,
->  	if (hardreset) {
->  		reset = hardreset;
->  		ehc->i.action = ATA_EH_HARDRESET;
-> -	} else {
-> +	} else if (softreset) {
->  		reset = softreset;
->  		ehc->i.action = ATA_EH_SOFTRESET;
-> +	} else {
-> +		ata_link_printk(link, KERN_ERR, "BUG: no reset method, "
-> +				"please report to linux-ide@vger.kernel.org\n");
-> +		dump_stack();
-> +		return -EINVAL;
+> > ...
+> 
+> > broke flush requests.
+> 
+> > Allocating IDE command structure on the stack for flush requests is not
+> > a very brilliant idea:
+> 
+> > - idedisk_prepare_flush() only prepares the request and it doesn't wait
+> >   for it to be completed
+> 
+> > - there are can be multiple flush requests queued in the queue
+> 
+> > Fix the problem (per hints from James Bottomley) by:
+> > - dynamically allocating ide_task_t instance using kmalloc(..., GFP_ATOMIC)
+> > - adding new taskfile flag (IDE_TFLAG_DYN)
+> > - calling kfree() in ide_end_drive_command() if IDE_TFLAG_DYN is set
+> >   (while at it rename 'args' to 'task' and fix whitespace damage)
+> 
+> > [ This will be fixed properly before 2.6.25 but this bug is rather
+> >   critical and the proper solution requires some more work + testing. ]
+> 
+> > Thanks to Sebastian Siewior and Christoph Hellwig for reporitng the
+> > problem and testing patches (extra thanks to Sebastian for bisecting
+> > it to the guilty commmit).
+> > 
+> > Cc: Sebastian Siewior <ide-bug@ml.breakpoint.cc>
+> > Cc: Christoph Hellwig <hch@infradead.org>
+> > Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
+> > Cc: Jens Axboe <jens.axboe@oracle.com>
+> > Cc: Tejun Heo <htejun@gmail.com>
+> > Cc: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+> > Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+> 
+> Acked-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+> 
+> > Index: b/drivers/ide/ide-disk.c
+> > ===================================================================
+> > --- a/drivers/ide/ide-disk.c
+> > +++ b/drivers/ide/ide-disk.c
+> > @@ -590,20 +590,24 @@ static ide_proc_entry_t idedisk_proc[] =
+> >  static void idedisk_prepare_flush(struct request_queue *q, struct request *rq)
+> >  {
+> >  	ide_drive_t *drive = q->queuedata;
+> > -	ide_task_t task;
+> > +	ide_task_t *task = kmalloc(sizeof(*task), GFP_ATOMIC);
+> >  
+> > -	memset(&task, 0, sizeof(task));
+> > +	/* FIXME: map struct ide_taskfile on rq->cmd[] */
+> > +	BUG_ON(task == NULL);
+> > +
+> > +	memset(task, 0, sizeof(*task));
+> 
+>     Why not kzalloc() then?
 
-ACK, but holding due to hold on prefer-hardreset patch (pinging device 
-manufacturers)
+Well, yes.  However since the patch has been already merged upstream and it
+is only a temporary solution I don't think it is worth doing it now (OTOH if
+somebody sends me a patch I'll happily merge it).
 
-
+Thanks,
+Bart
