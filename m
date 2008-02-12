@@ -1,52 +1,49 @@
-From: Luben Tuikov <ltuikov@yahoo.com>
-Subject: Re: [PATCH] enclosure: add support for enclosure services
-Date: Tue, 12 Feb 2008 11:45:29 -0800 (PST)
-Message-ID: <608362.85432.qm@web31812.mail.mud.yahoo.com>
-References: <20080212102244.32869382@appleyard>
-Reply-To: ltuikov@yahoo.com
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Subject: Re: [PATCH 00/18] ide: warm-plug support for IDE devices and other
+	goodies
+Date: Wed, 13 Feb 2008 07:59:52 +1100
+Message-ID: <1202849992.7410.19.camel@pasglop>
+References: <20080208004421.17746.32557.sendpatchset@localhost.localdomain>
+	 <1202460043.7079.157.camel@pasglop>  <20080212114905.GA9940@iram.es>
+Reply-To: benh@kernel.crashing.org
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <20080212102244.32869382@appleyard>
-Sender: linux-scsi-owner@vger.kernel.org
-To: Kristen Carlson Accardi <kristen.c.accardi@intel.com>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, linux-ide <linux-ide@vger.kernel.org>, jeff@garzik.org
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from gate.crashing.org ([63.228.1.57]:49198 "EHLO gate.crashing.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756606AbYBLVA3 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 12 Feb 2008 16:00:29 -0500
+In-Reply-To: <20080212114905.GA9940@iram.es>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Gabriel Paubert <paubert@iram.es>
+Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linuxppc-dev@ozlabs.org
 
---- On Tue, 2/12/08, Kristen Carlson Accardi <kristen.c.accardi@intel.com> wrote:
-> Hi,
-> I apologize for taking so long to review this patch.  I
-> obviously agree
-> wholeheartedly with Luben.  The problem I ran into while
-> trying to
-> design an enclosure management interface for the SATA
-> devices is that
-> there is all this vendor defined stuff.  For example, for
-> the AHCI LED
-> protocol, the only "defined" LED is
-> 'activity'.  For LED2 and LED3 it
-> is up to hardware vendors to define these.  For SGPIO
-> there's all kinds
-> of ways for hw vendors to customize.  I felt that it was
-> going to be a
-> maintainance nightmare to have to keep track of various
-> vendors
-> enclosure implementations in the ahci driver, and that
-> it'd be better
-> to just have user space libraries take care of that.  Plus,
-> that way a
-> vendor doesn't have to get a patch into the kernel to
-> get their new
-> spiffy wizzy bang blinky lights working (think of how long
-> it takes
-> something to even get into a vendor kernel, which is what
-> these guys
-> care about...).  So I'm still not sold on having an
-> enclosure
-> abstraction in the kernel - at least for the SATA
-> controllers.
 
-And I agree wholeheartedly with Kristen.
+On Tue, 2008-02-12 at 12:49 +0100, Gabriel Paubert wrote:
+> On Fri, Feb 08, 2008 at 07:40:43PM +1100, Benjamin Herrenschmidt wrote:
+> > 
+> > On Fri, 2008-02-08 at 01:44 +0100, Bartlomiej Zolnierkiewicz wrote:
+> > > - couple of fixes and preparatory patches
+> > > 
+> > > - rework of PowerMac media-bay support ([un]register IDE devices instead of
+> > >   [un]registering IDE interface) [ it is the main reason for spamming PPC ML ]
+> > 
+> > Interesting... I was thinking about doing a full remove of the device at
+> > a higher level instead but I suppose what you propose is easier.
+> 
+> Well, I have serious problem on a Pegasos which appeared some time
+> between 2.6.24 and 2.6.25-rc1: at boot I get an infinite string of 
+> 
+> hdb: empty DMA table?
+> 
+> I'm trying to bisect it right now.
 
-   Luben
+Pegasos doesn't use the pmac ide which is what we were discussing. It
+uses a VIA IDE which uses a normal PRD table. So something else must
+have broken...
+
+Ben.
+
 
