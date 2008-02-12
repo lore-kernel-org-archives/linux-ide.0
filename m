@@ -1,41 +1,61 @@
-From: Borislav Petkov <petkovbb@googlemail.com>
-Subject: Re: IDE cdrom problem with PLEXTOR DVDR PX-608AL
-Date: Tue, 12 Feb 2008 18:20:58 +0100
-Message-ID: <20080212172057.GA12480@gollum.tnic>
-References: <200802121026.17420.hpj@urpla.net>
-Reply-To: petkovbb@gmail.com
+From: "Gabor FUNK" <FUNK.Gabor@hunetkft.hu>
+Subject: Re: JMicron - hard resetting link
+Date: Tue, 12 Feb 2008 18:27:44 +0100
+Message-ID: <002f01c86d9c$94542f50$4d0fa8c0@M2007>
+References: <009401c86d5c$5eb57bf0$4d0fa8c0@M2007> <47B19997.1010404@gmail.com> <003801c86d84$fdae0510$4d0fa8c0@M2007> <47B1B299.3010208@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain;
+	format=flowed;
+	charset="iso-8859-2";
+	reply-type=original
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from an-out-0708.google.com ([209.85.132.251]:41162 "EHLO
-	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758838AbYBLRV1 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 12 Feb 2008 12:21:27 -0500
-Received: by an-out-0708.google.com with SMTP id d31so1244601and.103
-        for <linux-ide@vger.kernel.org>; Tue, 12 Feb 2008 09:21:26 -0800 (PST)
-Content-Disposition: inline
-In-Reply-To: <200802121026.17420.hpj@urpla.net>
+Received: from ns1.huweb.hu ([62.112.193.37]:52641 "EHLO ns1.huweb.hu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753695AbYBLR17 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 12 Feb 2008 12:27:59 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Hans-Peter Jansen <hpj@urpla.net>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: IDE/ATA development list <linux-ide@vger.kernel.org>
 
-On Tue, Feb 12, 2008 at 10:26:17AM +0100, Hans-Peter Jansen wrote:
-> Hi,=20
->=20
-> I suffer from unreliable cdrom operations (failing DAE and burn sessi=
-ons)=20
-> with the openSUSE 2.6.18.8-0.7-bigsmp kernel.
-			^^^^
-Hi,
+> What I said was that timeouts occurring due to transmission errors
+> should be recoverable.  It seems like IRQ delivery didn't work probably
+> due to screaming IRQ.  I need to see the messages before the first
+> relevant error message.  It's always a good idea to post full kernel log
+> from boot till failure.  Things which don't seem relevant are often
+> relevant.
+Naturally. Full kern.log with boot:
+http://www.huweb.hu/maques/tmp/jmicron/kern.log
+(no edits, there are really only those 2 lines between Feb 6 and Feb 9's 1st 
+exception)
 
-can please you test this with a more recent kernel. Yours is almost anc=
-ient -
-from Sep. 2006.
+Previously there was kernel 2.6.23.9 and I noticed the following in syslog 
+by then:
+Feb  6 19:10:19 storage1 kernel: ata4: D2H reg with I during NCQ, this 
+message won't be printed again
+Feb  6 19:10:20 storage1 kernel: ata1: D2H reg with I during NCQ, this 
+message won't be printed again
+Feb  6 19:10:20 storage1 kernel: ata2: D2H reg with I during NCQ, this 
+message won't be printed again
+Feb  6 19:10:21 storage1 kernel: ata3: D2H reg with I during NCQ, this 
+message won't be printed again
 
-Thanks.
+I googled and saw that there was some fixes related to this (maybe it
+was you), so that's why we hoped that 2.6.24 will fix this. Actually the
+above error messages were gone, but...
 
---=20
-Regards/Gru=DF,
-    Boris.
+> Till now, none of this kind of problem has been tracked down to MB or
+> the controller while 90% of hardware problems turned out to be power
+> related.
+I'll put a brand new, probably different PSU in the case and put the MB
+and the 4 disks of the problematic controller on it, and put the 2 system
+and other 4 disks to this one (or even another one).
+
+Meanwhile I'd welcome if you have any suggestion why controller reset
+causing a "fatal error"...
+BTW, the drives were accessible after the array broke (when I got there).
+
+Thanks,
+Gabor 
+
