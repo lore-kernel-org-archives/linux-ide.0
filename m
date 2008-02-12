@@ -1,133 +1,43 @@
-From: Hans-Peter Jansen <hpj@urpla.net>
-Subject: IDE cdrom problem with PLEXTOR DVDR PX-608AL
-Date: Tue, 12 Feb 2008 10:26:17 +0100
-Message-ID: <200802121026.17420.hpj@urpla.net>
+From: Elias Oltmanns <eo@nebensachen.de>
+Subject: Re: Current qc_defer implementation may lead to infinite recursion
+Date: Tue, 12 Feb 2008 10:43:24 +0100
+Message-ID: <871w7i33yb.fsf@denkblock.local>
+References: <87ir0w4rzo.fsf@denkblock.local> <47AFD7C1.7070204@gmail.com>
+	<871w7k9b8y.fsf@denkblock.local> <47B00AA1.3010104@gmail.com>
+	<87r6fj2lsx.fsf@denkblock.local> <47B0F2E0.9020204@gmail.com>
+	<877iha3621.fsf@denkblock.local> <47B1614B.5020209@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.126.183]:61602 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751855AbYBLJ00 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 12 Feb 2008 04:26:26 -0500
-Content-Disposition: inline
+Received: from nebensachen.de ([195.34.83.29]:46842 "EHLO mail.nebensachen.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1762109AbYBLJnb (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 12 Feb 2008 04:43:31 -0500
+In-Reply-To: <47B1614B.5020209@gmail.com> (Tejun Heo's message of "Tue, 12 Feb
+	2008 18:05:15 +0900")
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: linux-ide@vger.kernel.org
 
-Hi, 
+Tejun Heo <htejun@gmail.com> wrote:
+> Elias Oltmanns wrote:
+>> This proves that piix_qc_defer() has declined the same command 100
+>> times in succession. However, this will only happen if the status of
+>> all the commands enqueued for one port hasn't changed in the
+>> meantime. This suggests to me that the threads scheduled for command
+>> execution and completion aren't served for some reason. Any ideas?
+>
+> Blocked counts of 1 will cause busy looping because when blk_run_queue()
+> returns because it's recursing too deep, it schedules unplug work right
+> away, so it will easily loop 100 times.  Max blocked counts should be
+> adjusted to two (needs some testing before actually submitting the
+> change).  But that still shouldn't cause any lock up.  What happens if
+> you remove the 100 times limit?  Does the machine hang on IO?
 
-I suffer from unreliable cdrom operations (failing DAE and burn sessions) 
-with the openSUSE 2.6.18.8-0.7-bigsmp kernel.
+Yes, it does. In fact, I had already verified that before sending the
+previous email.
 
-Additionally, the syslog is continuesly spammed with:
- 
-Feb 12 00:03:22 kernel: hdc: cdrom_pc_intr: The drive appears confused (ireason = 0x01).
- Trying to recover by ending request.
-Feb 12 00:57:52 kernel: hdc: cdrom_pc_intr: The drive appears confused (ireason = 0x01).
- Trying to recover by ending request.
-Feb 12 01:36:21 kernel: hdc: cdrom_pc_intr: The drive appears confused (ireason = 0x01).
- Trying to recover by ending request.
-Feb 12 01:38:49 kernel: hde: cdrom_pc_intr: The drive appears confused (ireason = 0x01).
- Trying to recover by ending request.
-Feb 12 08:06:07 kernel: hde: cdrom_pc_intr: The drive appears confused (ireason = 0x01).
- Trying to recover by ending request.
+Regards,
 
-I drove that devices on a pdc20268 based Promise Ultra TX/2 100 card for 
-some time, which had some IDE/ATAPI issues documented. After exchanging 
-that PCI card with a "Silicon Image PCI0680 based one, the problem persists.
-
-Is there any firmware/atapi protocol problem known with these drives?
-
-These are the offenders:
-
-42: IDE 02.0: 10602 CD-ROM (DVD)
-  [Created at block.222]
-  UDI: /org/freedesktop/Hal/devices/storage_model_PLEXTOR_DVDR_PX_608AL
-  Unique ID: 90A1.yYhZwSaKZZ6
-  Parent ID: ejN_.zzJBQoyZsp8
-  SysFS ID: /block/hdc
-  SysFS BusID: 1.0
-  SysFS Device Link: /devices/pci0000:00/0000:00:0e.0/0000:02:06.0/ide1/1.0
-  Hardware Class: cdrom
-  Model: "PLEXTOR DVDR PX-608AL"
-  Vendor: "PLEXTOR"
-  Device: "DVDR PX-608AL"
-  Revision: "1.01"
-  Serial ID: "GDDL000676UE"
-  Driver: "SiI_IDE", "ide-cdrom"
-  Driver Modules: "siimage", "ide_cd"
-  Device File: /dev/hdc
-  Device Files: /dev/hdc, /dev/disk/by-path/pci-0000:02:06.0-ide-0:0
-  Device Number: block 22:0
-  Features: CD-R, CD-RW, DVD, DVD-R, DVD-RW, DVD+R, DVD+RW, DVD+DL, DVDRAM
-  Drive status: no medium
-  Config Status: cfg=no, avail=yes, need=no, active=unknown
-  Attached to: #34 (Unknown mass storage controller)
-  Drive Speed: 24
-
-43: IDE 04.0: 10602 CD-ROM (DVD)
-  [Created at block.222]
-  UDI: /org/freedesktop/Hal/devices/storage_model_PLEXTOR_DVDR_PX_608AL_0
-  Unique ID: 3Ng9.rKN6BMng3oC
-  Parent ID: ejN_.zzJBQoyZsp8
-  SysFS ID: /block/hde
-  SysFS BusID: 2.0
-  SysFS Device Link: /devices/pci0000:00/0000:00:0e.0/0000:02:06.0/ide2/2.0
-  Hardware Class: cdrom
-  Model: "PLEXTOR DVDR PX-608AL"
-  Vendor: "PLEXTOR"
-  Device: "DVDR PX-608AL"
-  Revision: "1.01"
-  Serial ID: "GGDL007101UE"
-  Driver: "SiI_IDE", "ide-cdrom"
-  Driver Modules: "siimage", "ide_cd"
-  Device File: /dev/hde
-  Device Files: /dev/hde, /dev/disk/by-path/pci-0000:02:06.0-ide-1:0
-  Device Number: block 33:0
-  Features: CD-R, CD-RW, DVD, DVD-R, DVD-RW, DVD+R, DVD+RW, DVD+DL, DVDRAM
-  Drive status: no medium
-  Config Status: cfg=no, avail=yes, need=no, active=unknown
-  Attached to: #34 (Unknown mass storage controller)
-  Drive Speed: 24
-
-hanging on this controller (now):
-
-44: PCI 206.0: 0180 Unknown mass storage controller
-  [Created at pci.286]
-  UDI: /org/freedesktop/Hal/devices/pci_1095_680
-  Unique ID: ejN_.zzJBQoyZsp8
-  Parent ID: vuMS.8LoPsVNGJbF
-  SysFS ID: /devices/pci0000:00/0000:00:0e.0/0000:02:06.0
-  SysFS BusID: 0000:02:06.0
-  Hardware Class: storage
-  Model: "Silicon Image PCI0680 Ultra ATA-133 Host Controller"
-  Vendor: pci 0x1095 "Silicon Image, Inc."
-  Device: pci 0x0680 "PCI0680 Ultra ATA-133 Host Controller"
-  SubVendor: pci 0x1095 "Silicon Image, Inc."
-  SubDevice: pci 0x0680 
-  Revision: 0x02
-  Driver: "SiI_IDE"
-  Driver Modules: "siimage"
-  I/O Ports: 0x9c00-0x9c07 (rw)
-  I/O Ports: 0x9800-0x9803 (rw)
-  I/O Ports: 0x9400-0x9407 (rw)
-  I/O Ports: 0x9000-0x9003 (rw)
-  I/O Ports: 0x8c00-0x8c0f (rw)
-  Memory Range: 0xfdfff000-0xfdfff0ff (rw,non-prefetchable)
-  Memory Range: 0xf4000000-0xf407ffff (ro,prefetchable,disabled)
-  IRQ: 169 (1767334 events)
-  Module Alias: "pci:v00001095d00000680sv00001095sd00000680bc01sc80i00"
-  Driver Info #0:
-    Driver Status: siimage is active
-    Driver Activation Cmd: "modprobe siimage"
-  Driver Info #1:
-    Driver Status: pata_sil680 is active
-    Driver Activation Cmd: "modprobe pata_sil680"
-  Config Status: cfg=no, avail=yes, need=no, active=unknown
-  Attached to: #30 (PCI bridge)
-
-Any hints are highly appreciated.
-
-Pete
+Elias
