@@ -1,41 +1,72 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: libata/sata_sil24 cache alignment problem?
-Date: Tue, 12 Feb 2008 17:36:28 -0600
-Message-ID: <1202859388.3137.164.camel@localhost.localdomain>
-References: <20080212180254.GA28237@postdiluvian.org>
-	 <20080212221257.12eeab13@core>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: JMicron - hard resetting link
+Date: Wed, 13 Feb 2008 08:50:34 +0900
+Message-ID: <47B230CA.9060506@gmail.com>
+References: <009401c86d5c$5eb57bf0$4d0fa8c0@M2007> <47B19997.1010404@gmail.com> <003801c86d84$fdae0510$4d0fa8c0@M2007> <47B1B299.3010208@gmail.com> <002f01c86d9c$94542f50$4d0fa8c0@M2007>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-2
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:59947 "EHLO
-	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752053AbYBLXgf (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 12 Feb 2008 18:36:35 -0500
-In-Reply-To: <20080212221257.12eeab13@core>
+Received: from el-out-1112.google.com ([209.85.162.176]:3629 "EHLO
+	el-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1762956AbYBLXun (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 12 Feb 2008 18:50:43 -0500
+Received: by el-out-1112.google.com with SMTP id v27so2151752ele.23
+        for <linux-ide@vger.kernel.org>; Tue, 12 Feb 2008 15:50:42 -0800 (PST)
+In-Reply-To: <002f01c86d9c$94542f50$4d0fa8c0@M2007>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: Mark Mason <mason@postdiluvian.org>, linux-ide@vger.kernel.org, jgarzik@pobox.com
+To: Gabor FUNK <FUNK.Gabor@hunetkft.hu>
+Cc: IDE/ATA development list <linux-ide@vger.kernel.org>
 
+Hello,
 
-On Tue, 2008-02-12 at 22:12 +0000, Alan Cox wrote:
-> > Has anyone else reported a problem like this?  It requires
-> > non-coherent DMA, and a lack of a cache invalidate instruction, and
-> > one of the drivers that has this problem (it looks like sata_qstor
-> > does too, I haven't looked at others), so maybe that doesn't cover
-> > any other architectures.
+Gabor FUNK wrote:
+>> What I said was that timeouts occurring due to transmission errors
+>> should be recoverable.  It seems like IRQ delivery didn't work probably
+>> due to screaming IRQ.  I need to see the messages before the first
+>> relevant error message.  It's always a good idea to post full kernel log
+>> from boot till failure.  Things which don't seem relevant are often
+>> relevant.
+> Naturally. Full kern.log with boot:
+> http://www.huweb.hu/maques/tmp/jmicron/kern.log
+> (no edits, there are really only those 2 lines between Feb 6 and Feb 9's
+> 1st exception)
+
+Hmmm... Indeed.  This is the first time this mode of failure is reported.
+
+> Previously there was kernel 2.6.23.9 and I noticed the following in
+> syslog by then:
+> Feb  6 19:10:19 storage1 kernel: ata4: D2H reg with I during NCQ, this
+> message won't be printed again
+> Feb  6 19:10:20 storage1 kernel: ata1: D2H reg with I during NCQ, this
+> message won't be printed again
+> Feb  6 19:10:20 storage1 kernel: ata2: D2H reg with I during NCQ, this
+> message won't be printed again
+> Feb  6 19:10:21 storage1 kernel: ata3: D2H reg with I during NCQ, this
+> message won't be printed again
 > 
-> Nobody has, not even PA-RISC which is normally guaranteed to make life
-> miserable in the caching area but I agree entirely with your diagnosis
-> and that buffer should indeed be marked cache aligned
+> I googled and saw that there was some fixes related to this (maybe it
+> was you), so that's why we hoped that 2.6.24 will fix this. Actually the
+> above error messages were gone, but...
 
-I tell you what ... find me a parisc box that actually has IDE and we
-might have told you ...
+Yeap, those are gone.
 
-(actually, the pa8800's have IDE CD's on a cmd640 chip, but that oopses
-on boot for no reason we've tracked yet).
+>> Till now, none of this kind of problem has been tracked down to MB or
+>> the controller while 90% of hardware problems turned out to be power
+>> related.
+> I'll put a brand new, probably different PSU in the case and put the MB
+> and the 4 disks of the problematic controller on it, and put the 2 system
+> and other 4 disks to this one (or even another one).
 
-James
+Yeap, please keep me posted.
 
+> Meanwhile I'd welcome if you have any suggestion why controller reset
+> causing a "fatal error"...
+> BTW, the drives were accessible after the array broke (when I got there).
 
+What do you mean by 'drives were accessible'?  /dev/sdX nodes were
+accessible?
+
+-- 
+tejun
