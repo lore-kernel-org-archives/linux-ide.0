@@ -1,14 +1,14 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH 03/10] libata: implement and use ata_noop_irq_clear()
-Date: Tue, 12 Feb 2008 17:43:14 +0900
-Message-ID: <12028058022780-git-send-email-htejun@gmail.com>
+Subject: [PATCH 01/10] libata: PCI device should be powered up before being accessed
+Date: Tue, 12 Feb 2008 17:43:12 +0900
+Message-ID: <12028058012608-git-send-email-htejun@gmail.com>
 References: <1202805801343-git-send-email-htejun@gmail.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rv-out-0910.google.com ([209.85.198.184]:10453 "EHLO
-	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752520AbYBLIng (ORCPT
+Received: from py-out-1112.google.com ([64.233.166.179]:15823 "EHLO
+	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752314AbYBLIng (ORCPT
 	<rfc822;linux-ide@vger.kernel.org>); Tue, 12 Feb 2008 03:43:36 -0500
-Received: by rv-out-0910.google.com with SMTP id k20so3595166rvb.1
+Received: by py-out-1112.google.com with SMTP id u52so7236249pyb.10
         for <linux-ide@vger.kernel.org>; Tue, 12 Feb 2008 00:43:35 -0800 (PST)
 In-Reply-To: <1202805801343-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
@@ -16,637 +16,646 @@ List-Id: linux-ide@vger.kernel.org
 To: jeff@garzik.org, linux-ide@vger.kernel.org, liml@rtr.ca, alan@lxorguk.ukuu.org.uk, kngregertsen@norway.atmel.com, sonic.adi@gmail.com, rmk@arm.linux.org.uk, alessandro.zummo@towertech
 Cc: Tejun Heo <htejun@gmail.com>
 
-->irq_clear() is used to clear IRQ bit of a SFF controller and isn't
-useful for drivers which don't use libata SFF HSM implementation.
-However, it's a required callback and many drivers implement their own
-noop version as placeholder.  This patch implements ata_noop_irq_clear
-and use it to replace those custom placeholders.
+PCI device should be powered up or powered up before its PCI regsiters
+are accessed.  Although PCI configuration register access is allowed
+in D3hot, PCI device is free to reset its status when transiting from
+D3hot to D0 causing configuration data to change.
 
-Also, SFF drivers which don't support BMDMA don't need to use
-ata_bmdma_irq_clear().  It becomes noop if BMDMA address isn't
-initialized.  Convert them to use ata_noop_irq_clear().
+Many libata SFF drivers which use ata_pci_init_one() read and update
+configuration registers before calling ata_pci_init_one() which
+enables the PCI device.  Also, in resume paths, some drivers access
+registers without resuming the PCI device.
+
+This patch adds a call to pcim_enable_device() in init path if
+register is accessed before calling ata_pci_init_one() and make resume
+paths first resume PCI devices, access PCI configuration regiters then
+resume ATA host.
+
+While at it...
+
+* cmd640 was strange in that it set ->resume even when CONFIG_PM is
+  not.  This is by-product of minimal build fix.  Updated.
+
+* In cs5530, Don't BUG() on reinit failure.  Just whine and fail
+  resume.
 
 Signed-off-by: Tejun Heo <htejun@gmail.com>
 ---
- drivers/ata/ahci.c           |   12 +++---------
- drivers/ata/libata-core.c    |    1 +
- drivers/ata/libata-sff.c     |    8 ++++++++
- drivers/ata/pata_ali.c       |    2 +-
- drivers/ata/pata_at32.c      |    7 +------
- drivers/ata/pata_icside.c    |    7 +------
- drivers/ata/pata_isapnp.c    |    2 +-
- drivers/ata/pata_ixp4xx_cf.c |    2 +-
- drivers/ata/pata_legacy.c    |   22 +++++++++++-----------
- drivers/ata/pata_mpc52xx.c   |    2 +-
- drivers/ata/pata_mpiix.c     |    2 +-
- drivers/ata/pata_ns87410.c   |    2 +-
- drivers/ata/pata_pcmcia.c    |    4 ++--
- drivers/ata/pata_platform.c  |    2 +-
- drivers/ata/pata_qdi.c       |    4 ++--
- drivers/ata/pata_winbond.c   |    2 +-
- drivers/ata/pdc_adma.c       |    8 +-------
- drivers/ata/sata_fsl.c       |    7 +------
- drivers/ata/sata_inic162x.c  |    7 +------
- drivers/ata/sata_mv.c        |   11 +++--------
- drivers/ata/sata_qstor.c     |    8 +-------
- drivers/ata/sata_sil24.c     |    8 +-------
- include/linux/libata.h       |    1 +
- 23 files changed, 46 insertions(+), 85 deletions(-)
+ drivers/ata/pata_ali.c         |   14 +++++++++++++-
+ drivers/ata/pata_amd.c         |   16 +++++++++++++++-
+ drivers/ata/pata_artop.c       |    5 +++++
+ drivers/ata/pata_cmd640.c      |   21 ++++++++++++++++-----
+ drivers/ata/pata_cmd64x.c      |   15 ++++++++++++++-
+ drivers/ata/pata_cs5520.c      |   15 ++++++++++++++-
+ drivers/ata/pata_cs5530.c      |   18 ++++++++++++++++--
+ drivers/ata/pata_hpt366.c      |   14 +++++++++++++-
+ drivers/ata/pata_hpt37x.c      |    5 +++++
+ drivers/ata/pata_hpt3x2n.c     |    5 +++++
+ drivers/ata/pata_it821x.c      |   14 +++++++++++++-
+ drivers/ata/pata_netcell.c     |    5 +++++
+ drivers/ata/pata_ns87415.c     |    6 ++++++
+ drivers/ata/pata_optidma.c     |    5 +++++
+ drivers/ata/pata_serverworks.c |   19 ++++++++++++++++---
+ drivers/ata/pata_sil680.c      |   13 +++++++++++--
+ drivers/ata/pata_sis.c         |    6 +++++-
+ drivers/ata/pata_sl82c105.c    |    5 +++++
+ drivers/ata/pata_via.c         |   14 +++++++++++++-
+ 19 files changed, 195 insertions(+), 20 deletions(-)
 
-diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
-index 44946bd..415cc77 100644
---- a/drivers/ata/ahci.c
-+++ b/drivers/ata/ahci.c
-@@ -238,7 +238,6 @@ static int ahci_scr_read(struct ata_port *ap, unsigned int sc_reg, u32 *val);
- static int ahci_scr_write(struct ata_port *ap, unsigned int sc_reg, u32 val);
- static int ahci_init_one(struct pci_dev *pdev, const struct pci_device_id *ent);
- static unsigned int ahci_qc_issue(struct ata_queued_cmd *qc);
--static void ahci_irq_clear(struct ata_port *ap);
- static int ahci_port_start(struct ata_port *ap);
- static void ahci_port_stop(struct ata_port *ap);
- static void ahci_tf_read(struct ata_port *ap, struct ata_taskfile *tf);
-@@ -298,7 +297,7 @@ static const struct ata_port_operations ahci_ops = {
- 	.qc_prep		= ahci_qc_prep,
- 	.qc_issue		= ahci_qc_issue,
+diff --git a/drivers/ata/pata_ali.c b/drivers/ata/pata_ali.c
+index 7e68edf..5ef6594 100644
+--- a/drivers/ata/pata_ali.c
++++ b/drivers/ata/pata_ali.c
+@@ -597,6 +597,11 @@ static int ali_init_one(struct pci_dev *pdev, const struct pci_device_id *id)
+ 	const struct ata_port_info *ppi[] = { NULL, NULL };
+ 	u8 tmp;
+ 	struct pci_dev *isa_bridge;
++	int rc;
++
++	rc = pcim_enable_device(pdev);
++	if (rc)
++		return rc;
  
--	.irq_clear		= ahci_irq_clear,
-+	.irq_clear		= ata_noop_irq_clear,
+ 	/*
+ 	 * The chipset revision selects the driver operations and
+@@ -632,8 +637,15 @@ static int ali_init_one(struct pci_dev *pdev, const struct pci_device_id *id)
+ #ifdef CONFIG_PM
+ static int ali_reinit_one(struct pci_dev *pdev)
+ {
++	struct ata_host *host = dev_get_drvdata(&pdev->dev);
++	int rc;
++
++	rc = ata_pci_device_do_resume(pdev);
++	if (rc)
++		return rc;
+ 	ali_init_chipset(pdev);
+-	return ata_pci_device_resume(pdev);
++	ata_host_resume(host);
++	return 0;
+ }
+ #endif
  
- 	.scr_read		= ahci_scr_read,
- 	.scr_write		= ahci_scr_write,
-@@ -334,7 +333,7 @@ static const struct ata_port_operations ahci_vt8251_ops = {
- 	.qc_prep		= ahci_qc_prep,
- 	.qc_issue		= ahci_qc_issue,
+diff --git a/drivers/ata/pata_amd.c b/drivers/ata/pata_amd.c
+index 761a666..567fe6b 100644
+--- a/drivers/ata/pata_amd.c
++++ b/drivers/ata/pata_amd.c
+@@ -662,10 +662,15 @@ static int amd_init_one(struct pci_dev *pdev, const struct pci_device_id *id)
+ 	static int printed_version;
+ 	int type = id->driver_data;
+ 	u8 fifo;
++	int rc;
  
--	.irq_clear		= ahci_irq_clear,
-+	.irq_clear		= ata_noop_irq_clear,
+ 	if (!printed_version++)
+ 		dev_printk(KERN_DEBUG, &pdev->dev, "version " DRV_VERSION "\n");
  
- 	.scr_read		= ahci_scr_read,
- 	.scr_write		= ahci_scr_write,
-@@ -368,7 +367,7 @@ static const struct ata_port_operations ahci_p5wdh_ops = {
- 	.qc_prep		= ahci_qc_prep,
- 	.qc_issue		= ahci_qc_issue,
++	rc = pcim_enable_device(pdev);
++	if (rc)
++		return rc;
++
+ 	pci_read_config_byte(pdev, 0x41, &fifo);
  
--	.irq_clear		= ahci_irq_clear,
-+	.irq_clear		= ata_noop_irq_clear,
- 
- 	.scr_read		= ahci_scr_read,
- 	.scr_write		= ahci_scr_write,
-@@ -1710,11 +1709,6 @@ static void ahci_port_intr(struct ata_port *ap)
+ 	/* Check for AMD7409 without swdma errata and if found adjust type */
+@@ -709,6 +714,13 @@ static int amd_init_one(struct pci_dev *pdev, const struct pci_device_id *id)
+ #ifdef CONFIG_PM
+ static int amd_reinit_one(struct pci_dev *pdev)
+ {
++	struct ata_host *host = dev_get_drvdata(&pdev->dev);
++	int rc;
++
++	rc = ata_pci_device_do_resume(pdev);
++	if (rc)
++		return rc;
++
+ 	if (pdev->vendor == PCI_VENDOR_ID_AMD) {
+ 		u8 fifo;
+ 		pci_read_config_byte(pdev, 0x41, &fifo);
+@@ -721,7 +733,9 @@ static int amd_reinit_one(struct pci_dev *pdev)
+ 		    pdev->device == PCI_DEVICE_ID_AMD_COBRA_7401)
+ 		    	ata_pci_clear_simplex(pdev);
  	}
+-	return ata_pci_device_resume(pdev);
++
++	ata_host_resume(host);
++	return 0;
+ }
+ #endif
+ 
+diff --git a/drivers/ata/pata_artop.c b/drivers/ata/pata_artop.c
+index d421831..2f81480 100644
+--- a/drivers/ata/pata_artop.c
++++ b/drivers/ata/pata_artop.c
+@@ -446,11 +446,16 @@ static int artop_init_one (struct pci_dev *pdev, const struct pci_device_id *id)
+ 		.port_ops	= &artop6260_ops,
+ 	};
+ 	const struct ata_port_info *ppi[] = { NULL, NULL };
++	int rc;
+ 
+ 	if (!printed_version++)
+ 		dev_printk(KERN_DEBUG, &pdev->dev,
+ 			   "version " DRV_VERSION "\n");
+ 
++	rc = pcim_enable_device(pdev);
++	if (rc)
++		return rc;
++
+ 	if (id->driver_data == 0) {	/* 6210 variant */
+ 		ppi[0] = &info_6210;
+ 		ppi[1] = &ata_dummy_port_info;
+diff --git a/drivers/ata/pata_cmd640.c b/drivers/ata/pata_cmd640.c
+index 43d198f..0ef1d1d 100644
+--- a/drivers/ata/pata_cmd640.c
++++ b/drivers/ata/pata_cmd640.c
+@@ -254,20 +254,31 @@ static int cmd640_init_one(struct pci_dev *pdev, const struct pci_device_id *id)
+ 		.port_ops = &cmd640_port_ops
+ 	};
+ 	const struct ata_port_info *ppi[] = { &info, NULL };
++	int rc;
++
++	rc = pcim_enable_device(pdev);
++	if (rc)
++		return rc;
+ 
+ 	cmd640_hardware_init(pdev);
++
+ 	return ata_pci_init_one(pdev, ppi);
  }
  
--static void ahci_irq_clear(struct ata_port *ap)
--{
--	/* TODO */
--}
--
- static irqreturn_t ahci_interrupt(int irq, void *dev_instance)
++#ifdef CONFIG_PM
+ static int cmd640_reinit_one(struct pci_dev *pdev)
  {
- 	struct ata_host *host = dev_instance;
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index 410f1ea..2772657 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -7556,6 +7556,7 @@ EXPORT_SYMBOL_GPL(ata_noop_qc_prep);
- EXPORT_SYMBOL_GPL(ata_bmdma_setup);
- EXPORT_SYMBOL_GPL(ata_bmdma_start);
- EXPORT_SYMBOL_GPL(ata_bmdma_irq_clear);
-+EXPORT_SYMBOL_GPL(ata_noop_irq_clear);
- EXPORT_SYMBOL_GPL(ata_bmdma_status);
- EXPORT_SYMBOL_GPL(ata_bmdma_stop);
- EXPORT_SYMBOL_GPL(ata_bmdma_freeze);
-diff --git a/drivers/ata/libata-sff.c b/drivers/ata/libata-sff.c
-index 60cd4b1..34cdab0 100644
---- a/drivers/ata/libata-sff.c
-+++ b/drivers/ata/libata-sff.c
-@@ -297,6 +297,14 @@ void ata_bmdma_irq_clear(struct ata_port *ap)
++	struct ata_host *host = dev_get_drvdata(&pdev->dev);
++	int rc;
++
++	rc = ata_pci_device_do_resume(pdev);
++	if (rc)
++		return rc;
+ 	cmd640_hardware_init(pdev);
+-#ifdef CONFIG_PM
+-	return ata_pci_device_resume(pdev);
+-#else
++	ata_host_resume(host);
+ 	return 0;
+-#endif
+ }
++#endif
+ 
+ static const struct pci_device_id cmd640[] = {
+ 	{ PCI_VDEVICE(CMD, 0x640), 0 },
+@@ -281,8 +292,8 @@ static struct pci_driver cmd640_pci_driver = {
+ 	.remove		= ata_pci_remove_one,
+ #ifdef CONFIG_PM
+ 	.suspend	= ata_pci_device_suspend,
+-#endif
+ 	.resume		= cmd640_reinit_one,
++#endif
+ };
+ 
+ static int __init cmd640_init(void)
+diff --git a/drivers/ata/pata_cmd64x.c b/drivers/ata/pata_cmd64x.c
+index 7acbbd9..1c9a8d9 100644
+--- a/drivers/ata/pata_cmd64x.c
++++ b/drivers/ata/pata_cmd64x.c
+@@ -435,6 +435,11 @@ static int cmd64x_init_one(struct pci_dev *pdev, const struct pci_device_id *id)
+ 	};
+ 	const struct ata_port_info *ppi[] = { &cmd_info[id->driver_data], NULL };
+ 	u8 mrdmode;
++	int rc;
++
++	rc = pcim_enable_device(pdev);
++	if (rc)
++		return rc;
+ 
+ 	pci_read_config_dword(pdev, PCI_CLASS_REVISION, &class_rev);
+ 	class_rev &= 0xFF;
+@@ -470,7 +475,14 @@ static int cmd64x_init_one(struct pci_dev *pdev, const struct pci_device_id *id)
+ #ifdef CONFIG_PM
+ static int cmd64x_reinit_one(struct pci_dev *pdev)
+ {
++	struct ata_host *host = dev_get_drvdata(&pdev->dev);
+ 	u8 mrdmode;
++	int rc;
++
++	rc = ata_pci_device_do_resume(pdev);
++	if (rc)
++		return rc;
++
+ 	pci_write_config_byte(pdev, PCI_LATENCY_TIMER, 64);
+ 	pci_read_config_byte(pdev, MRDMODE, &mrdmode);
+ 	mrdmode &= ~ 0x30;	/* IRQ set up */
+@@ -479,7 +491,8 @@ static int cmd64x_reinit_one(struct pci_dev *pdev)
+ #ifdef CONFIG_PPC
+ 	pci_write_config_byte(pdev, UDIDETCR0, 0xF0);
+ #endif
+-	return ata_pci_device_resume(pdev);
++	ata_host_resume(host);
++	return 0;
+ }
+ #endif
+ 
+diff --git a/drivers/ata/pata_cs5520.c b/drivers/ata/pata_cs5520.c
+index 7ed279b..dd6b235 100644
+--- a/drivers/ata/pata_cs5520.c
++++ b/drivers/ata/pata_cs5520.c
+@@ -203,6 +203,10 @@ static int __devinit cs5520_init_one(struct pci_dev *pdev, const struct pci_devi
+ 	struct ata_ioports *ioaddr;
+ 	int i, rc;
+ 
++	rc = pcim_enable_device(pdev);
++	if (rc)
++		return rc;
++
+ 	/* IDE port enable bits */
+ 	pci_read_config_byte(pdev, 0x60, &pcicfg);
+ 
+@@ -310,11 +314,20 @@ static int __devinit cs5520_init_one(struct pci_dev *pdev, const struct pci_devi
+ 
+ static int cs5520_reinit_one(struct pci_dev *pdev)
+ {
++	struct ata_host *host = dev_get_drvdata(&pdev->dev);
+ 	u8 pcicfg;
++	int rc;
++
++	rc = ata_pci_device_do_resume(pdev);
++	if (rc)
++		return rc;
++
+ 	pci_read_config_byte(pdev, 0x60, &pcicfg);
+ 	if ((pcicfg & 0x40) == 0)
+ 		pci_write_config_byte(pdev, 0x60, pcicfg | 0x40);
+-	return ata_pci_device_resume(pdev);
++
++	ata_host_resume(host);
++	return 0;
  }
  
  /**
-+ *	ata_noop_irq_clear - Noop placeholder for irq_clear
-+ *	@ap: Port associated with this ATA transaction.
-+ */
-+void ata_noop_irq_clear(struct ata_port *ap)
-+{
-+}
+diff --git a/drivers/ata/pata_cs5530.c b/drivers/ata/pata_cs5530.c
+index e1818fd..f876aed 100644
+--- a/drivers/ata/pata_cs5530.c
++++ b/drivers/ata/pata_cs5530.c
+@@ -349,6 +349,11 @@ static int cs5530_init_one(struct pci_dev *pdev, const struct pci_device_id *id)
+ 		.port_ops = &cs5530_port_ops
+ 	};
+ 	const struct ata_port_info *ppi[] = { &info, NULL };
++	int rc;
 +
-+/**
-  *	ata_bmdma_status - Read PCI IDE BMDMA status
-  *	@ap: Port associated with this ATA transaction.
-  *
-diff --git a/drivers/ata/pata_ali.c b/drivers/ata/pata_ali.c
-index 5ef6594..8a9044c 100644
---- a/drivers/ata/pata_ali.c
-+++ b/drivers/ata/pata_ali.c
-@@ -342,7 +342,7 @@ static struct ata_port_operations ali_early_port_ops = {
- 	.data_xfer	= ata_data_xfer,
++	rc = pcim_enable_device(pdev);
++	if (rc)
++		return rc;
  
- 	.irq_handler	= ata_interrupt,
--	.irq_clear	= ata_bmdma_irq_clear,
-+	.irq_clear	= ata_noop_irq_clear,
- 	.irq_on		= ata_irq_on,
+ 	/* Chip initialisation */
+ 	if (cs5530_init_chip())
+@@ -364,10 +369,19 @@ static int cs5530_init_one(struct pci_dev *pdev, const struct pci_device_id *id)
+ #ifdef CONFIG_PM
+ static int cs5530_reinit_one(struct pci_dev *pdev)
+ {
++	struct ata_host *host = dev_get_drvdata(&pdev->dev);
++	int rc;
++
++	rc = ata_pci_device_do_resume(pdev);
++	if (rc)
++		return rc;
++
+ 	/* If we fail on resume we are doomed */
+ 	if (cs5530_init_chip())
+-		BUG();
+-	return ata_pci_device_resume(pdev);
++		return -EIO;
++
++	ata_host_resume(host);
++	return 0;
+ }
+ #endif /* CONFIG_PM */
  
- 	.port_start	= ata_sff_port_start,
-diff --git a/drivers/ata/pata_at32.c b/drivers/ata/pata_at32.c
-index db057b1..27c959f 100644
---- a/drivers/ata/pata_at32.c
-+++ b/drivers/ata/pata_at32.c
-@@ -166,11 +166,6 @@ static void pata_at32_set_piomode(struct ata_port *ap, struct ata_device *adev)
+diff --git a/drivers/ata/pata_hpt366.c b/drivers/ata/pata_hpt366.c
+index 0713872..6f63b73 100644
+--- a/drivers/ata/pata_hpt366.c
++++ b/drivers/ata/pata_hpt366.c
+@@ -402,6 +402,11 @@ static int hpt36x_init_one(struct pci_dev *dev, const struct pci_device_id *id)
+ 
+ 	u32 class_rev;
+ 	u32 reg1;
++	int rc;
++
++	rc = pcim_enable_device(dev);
++	if (rc)
++		return rc;
+ 
+ 	pci_read_config_dword(dev, PCI_CLASS_REVISION, &class_rev);
+ 	class_rev &= 0xFF;
+@@ -435,8 +440,15 @@ static int hpt36x_init_one(struct pci_dev *dev, const struct pci_device_id *id)
+ #ifdef CONFIG_PM
+ static int hpt36x_reinit_one(struct pci_dev *dev)
+ {
++	struct ata_host *host = dev_get_drvdata(&dev->dev);
++	int rc;
++
++	rc = ata_pci_device_do_resume(dev);
++	if (rc)
++		return rc;
+ 	hpt36x_init_chipset(dev);
+-	return ata_pci_device_resume(dev);
++	ata_host_resume(host);
++	return 0;
+ }
+ #endif
+ 
+diff --git a/drivers/ata/pata_hpt37x.c b/drivers/ata/pata_hpt37x.c
+index 68eb349..7a69f36 100644
+--- a/drivers/ata/pata_hpt37x.c
++++ b/drivers/ata/pata_hpt37x.c
+@@ -966,6 +966,11 @@ static int hpt37x_init_one(struct pci_dev *dev, const struct pci_device_id *id)
+ 
+ 	const struct hpt_chip *chip_table;
+ 	int clock_slot;
++	int rc;
++
++	rc = pcim_enable_device(dev);
++	if (rc)
++		return rc;
+ 
+ 	pci_read_config_dword(dev, PCI_CLASS_REVISION, &class_rev);
+ 	class_rev &= 0xFF;
+diff --git a/drivers/ata/pata_hpt3x2n.c b/drivers/ata/pata_hpt3x2n.c
+index 9f1c084..3a517cb 100644
+--- a/drivers/ata/pata_hpt3x2n.c
++++ b/drivers/ata/pata_hpt3x2n.c
+@@ -505,6 +505,11 @@ static int hpt3x2n_init_one(struct pci_dev *dev, const struct pci_device_id *id)
+ 	unsigned int f_low, f_high;
+ 	int adjust;
+ 	unsigned long iobase = pci_resource_start(dev, 4);
++	int rc;
++
++	rc = pcim_enable_device(dev);
++	if (rc)
++		return rc;
+ 
+ 	pci_read_config_dword(dev, PCI_CLASS_REVISION, &class_rev);
+ 	class_rev &= 0xFF;
+diff --git a/drivers/ata/pata_it821x.c b/drivers/ata/pata_it821x.c
+index 109ddd4..3181e2c 100644
+--- a/drivers/ata/pata_it821x.c
++++ b/drivers/ata/pata_it821x.c
+@@ -759,6 +759,11 @@ static int it821x_init_one(struct pci_dev *pdev, const struct pci_device_id *id)
+ 
+ 	const struct ata_port_info *ppi[] = { NULL, NULL };
+ 	static char *mode[2] = { "pass through", "smart" };
++	int rc;
++
++	rc = pcim_enable_device(pdev);
++	if (rc)
++		return rc;
+ 
+ 	/* Force the card into bypass mode if so requested */
+ 	if (it8212_noraid) {
+@@ -780,10 +785,17 @@ static int it821x_init_one(struct pci_dev *pdev, const struct pci_device_id *id)
+ #ifdef CONFIG_PM
+ static int it821x_reinit_one(struct pci_dev *pdev)
+ {
++	struct ata_host *host = dev_get_drvdata(&pdev->dev);
++	int rc;
++
++	rc = ata_pci_device_do_resume(pdev);
++	if (rc)
++		return rc;
+ 	/* Resume - turn raid back off if need be */
+ 	if (it8212_noraid)
+ 		it821x_disable_raid(pdev);
+-	return ata_pci_device_resume(pdev);
++	ata_host_resume(host);
++	return rc;
+ }
+ #endif
+ 
+diff --git a/drivers/ata/pata_netcell.c b/drivers/ata/pata_netcell.c
+index 25c922a..0e4a08e 100644
+--- a/drivers/ata/pata_netcell.c
++++ b/drivers/ata/pata_netcell.c
+@@ -100,11 +100,16 @@ static int netcell_init_one (struct pci_dev *pdev, const struct pci_device_id *e
+ 		.port_ops	= &netcell_ops,
+ 	};
+ 	const struct ata_port_info *port_info[] = { &info, NULL };
++	int rc;
+ 
+ 	if (!printed_version++)
+ 		dev_printk(KERN_DEBUG, &pdev->dev,
+ 			   "version " DRV_VERSION "\n");
+ 
++	rc = pcim_enable_device(pdev);
++	if (rc)
++		return rc;
++
+ 	/* Any chip specific setup/optimisation/messages here */
+ 	ata_pci_clear_simplex(pdev);
+ 
+diff --git a/drivers/ata/pata_ns87415.c b/drivers/ata/pata_ns87415.c
+index d0e2e50..93eb958 100644
+--- a/drivers/ata/pata_ns87415.c
++++ b/drivers/ata/pata_ns87415.c
+@@ -410,6 +410,7 @@ static int ns87415_init_one (struct pci_dev *pdev, const struct pci_device_id *e
+ 		.port_ops	= &ns87415_pata_ops,
+ 	};
+ 	const struct ata_port_info *ppi[] = { &info, NULL };
++	int rc;
+ #if defined(CONFIG_SUPERIO)
+ 	static const struct ata_port_info info87560 = {
+ 		.sht		= &ns87415_sht,
+@@ -425,6 +426,11 @@ static int ns87415_init_one (struct pci_dev *pdev, const struct pci_device_id *e
+ 	if (!printed_version++)
+ 		dev_printk(KERN_DEBUG, &pdev->dev,
+ 			   "version " DRV_VERSION "\n");
++
++	rc = pcim_enable_device(pdev);
++	if (rc)
++		return rc;
++
+ 	/* Select 512 byte sectors */
+ 	pci_write_config_byte(pdev, 0x55, 0xEE);
+ 	/* Select PIO0 8bit clocking */
+diff --git a/drivers/ata/pata_optidma.c b/drivers/ata/pata_optidma.c
+index f9b485a..be8c421 100644
+--- a/drivers/ata/pata_optidma.c
++++ b/drivers/ata/pata_optidma.c
+@@ -497,10 +497,15 @@ static int optidma_init_one(struct pci_dev *dev, const struct pci_device_id *id)
+ 	};
+ 	const struct ata_port_info *ppi[] = { &info_82c700, NULL };
+ 	static int printed_version;
++	int rc;
+ 
+ 	if (!printed_version++)
+ 		dev_printk(KERN_DEBUG, &dev->dev, "version " DRV_VERSION "\n");
+ 
++	rc = pcim_enable_device(dev);
++	if (rc)
++		return rc;
++
+ 	/* Fixed location chipset magic */
+ 	inw(0x1F1);
+ 	inw(0x1F1);
+diff --git a/drivers/ata/pata_serverworks.c b/drivers/ata/pata_serverworks.c
+index 9c523fb..0b1e882 100644
+--- a/drivers/ata/pata_serverworks.c
++++ b/drivers/ata/pata_serverworks.c
+@@ -498,6 +498,11 @@ static int serverworks_init_one(struct pci_dev *pdev, const struct pci_device_id
+ 		}
+ 	};
+ 	const struct ata_port_info *ppi[] = { &info[id->driver_data], NULL };
++	int rc;
++
++	rc = pcim_enable_device(pdev);
++	if (rc)
++		return rc;
+ 
+ 	/* Force master latency timer to 64 PCI clocks */
+ 	pci_write_config_byte(pdev, PCI_LATENCY_TIMER, 0x40);
+@@ -535,11 +540,17 @@ static int serverworks_init_one(struct pci_dev *pdev, const struct pci_device_id
+ #ifdef CONFIG_PM
+ static int serverworks_reinit_one(struct pci_dev *pdev)
+ {
++	struct ata_host *host = dev_get_drvdata(&pdev->dev);
++	int rc;
++
++	rc = ata_pci_device_do_resume(pdev);
++	if (rc)
++		return rc;
++
+ 	/* Force master latency timer to 64 PCI clocks */
+ 	pci_write_config_byte(pdev, PCI_LATENCY_TIMER, 0x40);
+ 
+-	switch (pdev->device)
+-	{
++	switch (pdev->device) {
+ 		case PCI_DEVICE_ID_SERVERWORKS_OSB4IDE:
+ 			serverworks_fixup_osb4(pdev);
+ 			break;
+@@ -554,7 +565,9 @@ static int serverworks_reinit_one(struct pci_dev *pdev)
+ 			serverworks_fixup_ht1000(pdev);
+ 			break;
  	}
+-	return ata_pci_device_resume(pdev);
++
++	ata_host_resume(host);
++	return 0;
  }
+ #endif
  
--static void pata_at32_irq_clear(struct ata_port *ap)
--{
--	/* No DMA controller yet */
--}
--
- static struct scsi_host_template at32_sht = {
- 	.module			= THIS_MODULE,
- 	.name			= DRV_NAME,
-@@ -208,7 +203,7 @@ static struct ata_port_operations at32_port_ops = {
+diff --git a/drivers/ata/pata_sil680.c b/drivers/ata/pata_sil680.c
+index 503245a..ecdaebe 100644
+--- a/drivers/ata/pata_sil680.c
++++ b/drivers/ata/pata_sil680.c
+@@ -342,6 +342,10 @@ static int __devinit sil680_init_one(struct pci_dev *pdev,
+ 	if (!printed_version++)
+ 		dev_printk(KERN_DEBUG, &pdev->dev, "version " DRV_VERSION "\n");
  
- 	.data_xfer		= ata_data_xfer,
- 
--	.irq_clear		= pata_at32_irq_clear,
-+	.irq_clear		= ata_noop_irq_clear,
- 	.irq_on			= ata_irq_on,
- 
- 	.port_start		= ata_sff_port_start,
-diff --git a/drivers/ata/pata_icside.c b/drivers/ata/pata_icside.c
-index 5b8586d..121fe52 100644
---- a/drivers/ata/pata_icside.c
-+++ b/drivers/ata/pata_icside.c
-@@ -328,11 +328,6 @@ static struct scsi_host_template pata_icside_sht = {
- 	.bios_param		= ata_std_bios_param,
- };
- 
--/* wish this was exported from libata-core */
--static void ata_dummy_noret(struct ata_port *port)
--{
--}
--
- static void pata_icside_postreset(struct ata_link *link, unsigned int *classes)
++	rc = pcim_enable_device(pdev);
++	if (rc)
++		return rc;
++
+ 	switch (sil680_init_chip(pdev, &try_mmio)) {
+ 		case 0:
+ 			ppi[0] = &info_slow;
+@@ -402,10 +406,15 @@ use_ioports:
+ #ifdef CONFIG_PM
+ static int sil680_reinit_one(struct pci_dev *pdev)
  {
- 	struct ata_port *ap = link->ap;
-@@ -386,7 +381,7 @@ static struct ata_port_operations pata_icside_port_ops = {
- 	.error_handler		= pata_icside_error_handler,
- 	.post_internal_cmd	= pata_icside_bmdma_stop,
+-	int try_mmio;
++	struct ata_host *host = dev_get_drvdata(&pdev->dev);
++	int try_mmio, rc;
  
--	.irq_clear		= ata_dummy_noret,
-+	.irq_clear		= ata_noop_irq_clear,
- 	.irq_on			= ata_irq_on,
- 
- 	.port_start		= pata_icside_port_start,
-diff --git a/drivers/ata/pata_isapnp.c b/drivers/ata/pata_isapnp.c
-index 4320e79..ef561de 100644
---- a/drivers/ata/pata_isapnp.c
-+++ b/drivers/ata/pata_isapnp.c
-@@ -55,7 +55,7 @@ static struct ata_port_operations isapnp_port_ops = {
- 
- 	.data_xfer	= ata_data_xfer,
- 
--	.irq_clear	= ata_bmdma_irq_clear,
-+	.irq_clear	= ata_noop_irq_clear,
- 	.irq_on		= ata_irq_on,
- 
- 	.port_start	= ata_sff_port_start,
-diff --git a/drivers/ata/pata_ixp4xx_cf.c b/drivers/ata/pata_ixp4xx_cf.c
-index 030878f..83e38cc 100644
---- a/drivers/ata/pata_ixp4xx_cf.c
-+++ b/drivers/ata/pata_ixp4xx_cf.c
-@@ -126,7 +126,7 @@ static struct ata_port_operations ixp4xx_port_ops = {
- 	.cable_detect		= ata_cable_40wire,
- 
- 	.irq_handler		= ata_interrupt,
--	.irq_clear		= ata_bmdma_irq_clear,
-+	.irq_clear		= ata_noop_irq_clear,
- 	.irq_on			= ata_irq_on,
- 
- 	.port_start		= ata_port_start,
-diff --git a/drivers/ata/pata_legacy.c b/drivers/ata/pata_legacy.c
-index 333dc15..7b2140e 100644
---- a/drivers/ata/pata_legacy.c
-+++ b/drivers/ata/pata_legacy.c
-@@ -252,7 +252,7 @@ static struct ata_port_operations simple_port_ops = {
- 	.data_xfer	= ata_data_xfer_noirq,
- 
- 	.irq_handler	= ata_interrupt,
--	.irq_clear	= ata_bmdma_irq_clear,
-+	.irq_clear	= ata_noop_irq_clear,
- 	.irq_on		= ata_irq_on,
- 
- 	.port_start	= ata_sff_port_start,
-@@ -279,7 +279,7 @@ static struct ata_port_operations legacy_port_ops = {
- 	.data_xfer	= ata_data_xfer_noirq,
- 
- 	.irq_handler	= ata_interrupt,
--	.irq_clear	= ata_bmdma_irq_clear,
-+	.irq_clear	= ata_noop_irq_clear,
- 	.irq_on		= ata_irq_on,
- 
- 	.port_start	= ata_sff_port_start,
-@@ -393,7 +393,7 @@ static struct ata_port_operations pdc20230_port_ops = {
- 	.data_xfer	= pdc_data_xfer_vlb,
- 
- 	.irq_handler	= ata_interrupt,
--	.irq_clear	= ata_bmdma_irq_clear,
-+	.irq_clear	= ata_noop_irq_clear,
- 	.irq_on		= ata_irq_on,
- 
- 	.port_start	= ata_sff_port_start,
-@@ -447,7 +447,7 @@ static struct ata_port_operations ht6560a_port_ops = {
- 	.data_xfer	= ata_data_xfer,	/* Check vlb/noirq */
- 
- 	.irq_handler	= ata_interrupt,
--	.irq_clear	= ata_bmdma_irq_clear,
-+	.irq_clear	= ata_noop_irq_clear,
- 	.irq_on		= ata_irq_on,
- 
- 	.port_start	= ata_sff_port_start,
-@@ -512,7 +512,7 @@ static struct ata_port_operations ht6560b_port_ops = {
- 	.data_xfer	= ata_data_xfer,    /* FIXME: Check 32bit and noirq */
- 
- 	.irq_handler	= ata_interrupt,
--	.irq_clear	= ata_bmdma_irq_clear,
-+	.irq_clear	= ata_noop_irq_clear,
- 	.irq_on		= ata_irq_on,
- 
- 	.port_start	= ata_sff_port_start,
-@@ -633,7 +633,7 @@ static struct ata_port_operations opti82c611a_port_ops = {
- 	.data_xfer	= ata_data_xfer,
- 
- 	.irq_handler	= ata_interrupt,
--	.irq_clear	= ata_bmdma_irq_clear,
-+	.irq_clear	= ata_noop_irq_clear,
- 	.irq_on		= ata_irq_on,
- 
- 	.port_start	= ata_sff_port_start,
-@@ -765,7 +765,7 @@ static struct ata_port_operations opti82c46x_port_ops = {
- 	.data_xfer	= ata_data_xfer,
- 
- 	.irq_handler	= ata_interrupt,
--	.irq_clear	= ata_bmdma_irq_clear,
-+	.irq_clear	= ata_noop_irq_clear,
- 	.irq_on		= ata_irq_on,
- 
- 	.port_start	= ata_sff_port_start,
-@@ -950,7 +950,7 @@ static struct ata_port_operations qdi6500_port_ops = {
- 	.data_xfer	= vlb32_data_xfer,
- 
- 	.irq_handler	= ata_interrupt,
--	.irq_clear	= ata_bmdma_irq_clear,
-+	.irq_clear	= ata_noop_irq_clear,
- 	.irq_on		= ata_irq_on,
- 
- 	.port_start	= ata_sff_port_start,
-@@ -977,7 +977,7 @@ static struct ata_port_operations qdi6580_port_ops = {
- 	.data_xfer	= vlb32_data_xfer,
- 
- 	.irq_handler	= ata_interrupt,
--	.irq_clear	= ata_bmdma_irq_clear,
-+	.irq_clear	= ata_noop_irq_clear,
- 	.irq_on		= ata_irq_on,
- 
- 	.port_start	= ata_sff_port_start,
-@@ -1004,7 +1004,7 @@ static struct ata_port_operations qdi6580dp_port_ops = {
- 	.data_xfer	= vlb32_data_xfer,
- 
- 	.irq_handler	= ata_interrupt,
--	.irq_clear	= ata_bmdma_irq_clear,
-+	.irq_clear	= ata_noop_irq_clear,
- 	.irq_on		= ata_irq_on,
- 
- 	.port_start	= ata_sff_port_start,
-@@ -1095,7 +1095,7 @@ static struct ata_port_operations winbond_port_ops = {
- 
- 	.data_xfer	= vlb32_data_xfer,
- 
--	.irq_clear	= ata_bmdma_irq_clear,
-+	.irq_clear	= ata_noop_irq_clear,
- 	.irq_on		= ata_irq_on,
- 
- 	.port_start	= ata_sff_port_start,
-diff --git a/drivers/ata/pata_mpc52xx.c b/drivers/ata/pata_mpc52xx.c
-index 5413ebf..d84e0c8 100644
---- a/drivers/ata/pata_mpc52xx.c
-+++ b/drivers/ata/pata_mpc52xx.c
-@@ -296,7 +296,7 @@ static struct ata_port_operations mpc52xx_ata_port_ops = {
- 	.qc_prep		= ata_qc_prep,
- 	.qc_issue		= ata_qc_issue_prot,
- 	.data_xfer		= ata_data_xfer,
--	.irq_clear		= ata_bmdma_irq_clear,
-+	.irq_clear		= ata_noop_irq_clear,
- 	.irq_on			= ata_irq_on,
- 	.port_start		= ata_port_start,
- };
-diff --git a/drivers/ata/pata_mpiix.c b/drivers/ata/pata_mpiix.c
-index c0d9e0c..ced6372 100644
---- a/drivers/ata/pata_mpiix.c
-+++ b/drivers/ata/pata_mpiix.c
-@@ -187,7 +187,7 @@ static struct ata_port_operations mpiix_port_ops = {
- 	.qc_issue	= mpiix_qc_issue_prot,
- 	.data_xfer	= ata_data_xfer,
- 
--	.irq_clear	= ata_bmdma_irq_clear,
-+	.irq_clear	= ata_noop_irq_clear,
- 	.irq_on		= ata_irq_on,
- 
- 	.port_start	= ata_sff_port_start,
-diff --git a/drivers/ata/pata_ns87410.c b/drivers/ata/pata_ns87410.c
-index 9fe66fd..d182bdf 100644
---- a/drivers/ata/pata_ns87410.c
-+++ b/drivers/ata/pata_ns87410.c
-@@ -182,7 +182,7 @@ static struct ata_port_operations ns87410_port_ops = {
- 	.data_xfer	= ata_data_xfer,
- 
- 	.irq_handler	= ata_interrupt,
--	.irq_clear	= ata_bmdma_irq_clear,
-+	.irq_clear	= ata_noop_irq_clear,
- 	.irq_on		= ata_irq_on,
- 
- 	.port_start	= ata_sff_port_start,
-diff --git a/drivers/ata/pata_pcmcia.c b/drivers/ata/pata_pcmcia.c
-index 3e7f6a9..9881a9e 100644
---- a/drivers/ata/pata_pcmcia.c
-+++ b/drivers/ata/pata_pcmcia.c
-@@ -164,7 +164,7 @@ static struct ata_port_operations pcmcia_port_ops = {
- 
- 	.data_xfer	= ata_data_xfer_noirq,
- 
--	.irq_clear	= ata_bmdma_irq_clear,
-+	.irq_clear	= ata_noop_irq_clear,
- 	.irq_on		= ata_irq_on,
- 
- 	.port_start	= ata_sff_port_start,
-@@ -189,7 +189,7 @@ static struct ata_port_operations pcmcia_8bit_port_ops = {
- 
- 	.data_xfer	= ata_data_xfer_8bit,
- 
--	.irq_clear	= ata_bmdma_irq_clear,
-+	.irq_clear	= ata_noop_irq_clear,
- 	.irq_on		= ata_irq_on,
- 
- 	.port_start	= ata_sff_port_start,
-diff --git a/drivers/ata/pata_platform.c b/drivers/ata/pata_platform.c
-index aad7adc..a8429f5 100644
---- a/drivers/ata/pata_platform.c
-+++ b/drivers/ata/pata_platform.c
-@@ -86,7 +86,7 @@ static struct ata_port_operations pata_platform_port_ops = {
- 
- 	.data_xfer		= ata_data_xfer_noirq,
- 
--	.irq_clear		= ata_bmdma_irq_clear,
-+	.irq_clear		= ata_noop_irq_clear,
- 	.irq_on			= ata_irq_on,
- 
- 	.port_start		= ata_dummy_ret0,
-diff --git a/drivers/ata/pata_qdi.c b/drivers/ata/pata_qdi.c
-index 9f308ed..60238d5 100644
---- a/drivers/ata/pata_qdi.c
-+++ b/drivers/ata/pata_qdi.c
-@@ -191,7 +191,7 @@ static struct ata_port_operations qdi6500_port_ops = {
- 
- 	.data_xfer	= qdi_data_xfer,
- 
--	.irq_clear	= ata_bmdma_irq_clear,
-+	.irq_clear	= ata_noop_irq_clear,
- 	.irq_on		= ata_irq_on,
- 
- 	.port_start	= ata_sff_port_start,
-@@ -217,7 +217,7 @@ static struct ata_port_operations qdi6580_port_ops = {
- 
- 	.data_xfer	= qdi_data_xfer,
- 
--	.irq_clear	= ata_bmdma_irq_clear,
-+	.irq_clear	= ata_noop_irq_clear,
- 	.irq_on		= ata_irq_on,
- 
- 	.port_start	= ata_sff_port_start,
-diff --git a/drivers/ata/pata_winbond.c b/drivers/ata/pata_winbond.c
-index 99c92ed..5318248 100644
---- a/drivers/ata/pata_winbond.c
-+++ b/drivers/ata/pata_winbond.c
-@@ -159,7 +159,7 @@ static struct ata_port_operations winbond_port_ops = {
- 
- 	.data_xfer	= winbond_data_xfer,
- 
--	.irq_clear	= ata_bmdma_irq_clear,
-+	.irq_clear	= ata_noop_irq_clear,
- 	.irq_on		= ata_irq_on,
- 
- 	.port_start	= ata_sff_port_start,
-diff --git a/drivers/ata/pdc_adma.c b/drivers/ata/pdc_adma.c
-index 8e1b7e9..bc2d12a 100644
---- a/drivers/ata/pdc_adma.c
-+++ b/drivers/ata/pdc_adma.c
-@@ -138,7 +138,6 @@ static unsigned int adma_qc_issue(struct ata_queued_cmd *qc);
- static int adma_check_atapi_dma(struct ata_queued_cmd *qc);
- static void adma_bmdma_stop(struct ata_queued_cmd *qc);
- static u8 adma_bmdma_status(struct ata_port *ap);
--static void adma_irq_clear(struct ata_port *ap);
- static void adma_freeze(struct ata_port *ap);
- static void adma_thaw(struct ata_port *ap);
- static void adma_error_handler(struct ata_port *ap);
-@@ -174,7 +173,7 @@ static const struct ata_port_operations adma_ata_ops = {
- 	.freeze			= adma_freeze,
- 	.thaw			= adma_thaw,
- 	.error_handler		= adma_error_handler,
--	.irq_clear		= adma_irq_clear,
-+	.irq_clear		= ata_noop_irq_clear,
- 	.irq_on			= ata_irq_on,
- 	.port_start		= adma_port_start,
- 	.port_stop		= adma_port_stop,
-@@ -223,11 +222,6 @@ static u8 adma_bmdma_status(struct ata_port *ap)
- 	return 0;
++	rc = ata_pci_device_do_resume(pdev);
++	if (rc)
++		return rc;
+ 	sil680_init_chip(pdev, &try_mmio);
+-	return ata_pci_device_resume(pdev);
++	ata_host_resume(host);
++	return 0;
  }
+ #endif
  
--static void adma_irq_clear(struct ata_port *ap)
--{
--	/* nothing */
--}
--
- static void adma_reset_engine(struct ata_port *ap)
- {
- 	void __iomem *chan = ADMA_PORT_REGS(ap);
-diff --git a/drivers/ata/sata_fsl.c b/drivers/ata/sata_fsl.c
-index 47a9084..686a9b8 100644
---- a/drivers/ata/sata_fsl.c
-+++ b/drivers/ata/sata_fsl.c
-@@ -944,11 +944,6 @@ static void sata_fsl_post_internal_cmd(struct ata_queued_cmd *qc)
+diff --git a/drivers/ata/pata_sis.c b/drivers/ata/pata_sis.c
+index dc7e915..abda90f 100644
+--- a/drivers/ata/pata_sis.c
++++ b/drivers/ata/pata_sis.c
+@@ -862,6 +862,7 @@ static int sis_init_one (struct pci_dev *pdev, const struct pci_device_id *ent)
+ 	struct pci_dev *host = NULL;
+ 	struct sis_chipset *chipset = NULL;
+ 	struct sis_chipset *sets;
++	int rc;
+ 
+ 	static struct sis_chipset sis_chipsets[] = {
+ 
+@@ -914,8 +915,11 @@ static int sis_init_one (struct pci_dev *pdev, const struct pci_device_id *ent)
+ 		dev_printk(KERN_DEBUG, &pdev->dev,
+ 			   "version " DRV_VERSION "\n");
+ 
+-	/* We have to find the bridge first */
++	rc = pcim_enable_device(pdev);
++	if (rc)
++		return rc;
+ 
++	/* We have to find the bridge first */
+ 	for (sets = &sis_chipsets[0]; sets->device; sets++) {
+ 		host = pci_get_device(PCI_VENDOR_ID_SI, sets->device, NULL);
+ 		if (host != NULL) {
+diff --git a/drivers/ata/pata_sl82c105.c b/drivers/ata/pata_sl82c105.c
+index 81ef207..6c37181 100644
+--- a/drivers/ata/pata_sl82c105.c
++++ b/drivers/ata/pata_sl82c105.c
+@@ -344,6 +344,11 @@ static int sl82c105_init_one(struct pci_dev *dev, const struct pci_device_id *id
+ 					       NULL };
+ 	u32 val;
+ 	int rev;
++	int rc;
++
++	rc = pcim_enable_device(dev);
++	if (rc)
++		return rc;
+ 
+ 	rev = sl82c105_bridge_revision(dev);
+ 
+diff --git a/drivers/ata/pata_via.c b/drivers/ata/pata_via.c
+index 39627ab..47ec47b 100644
+--- a/drivers/ata/pata_via.c
++++ b/drivers/ata/pata_via.c
+@@ -520,10 +520,15 @@ static int via_init_one(struct pci_dev *pdev, const struct pci_device_id *id)
+ 	static int printed_version;
+ 	u8 enable;
+ 	u32 timing;
++	int rc;
+ 
+ 	if (!printed_version++)
+ 		dev_printk(KERN_DEBUG, &pdev->dev, "version " DRV_VERSION "\n");
+ 
++	rc = pcim_enable_device(pdev);
++	if (rc)
++		return rc;
++
+ 	/* To find out how the IDE will behave and what features we
+ 	   actually have to look at the bridge not the IDE controller */
+ 	for (config = via_isa_bridges; config->id; config++)
+@@ -611,6 +616,11 @@ static int via_reinit_one(struct pci_dev *pdev)
+ 	u32 timing;
+ 	struct ata_host *host = dev_get_drvdata(&pdev->dev);
+ 	const struct via_isa_bridge *config = host->private_data;
++	int rc;
++
++	rc = ata_pci_device_do_resume(pdev);
++	if (rc)
++		return rc;
+ 
+ 	via_config_fifo(pdev, config->flags);
+ 
+@@ -626,7 +636,9 @@ static int via_reinit_one(struct pci_dev *pdev)
+ 		timing &= ~0x80008;
+ 		pci_write_config_dword(pdev, 0x50, timing);
  	}
+-	return ata_pci_device_resume(pdev);
++
++	ata_host_resume(host);
++	return 0;
  }
+ #endif
  
--static void sata_fsl_irq_clear(struct ata_port *ap)
--{
--	/* unused */
--}
--
- static void sata_fsl_error_intr(struct ata_port *ap)
- {
- 	struct ata_link *link = &ap->link;
-@@ -1234,7 +1229,7 @@ static const struct ata_port_operations sata_fsl_ops = {
- 
- 	.qc_prep = sata_fsl_qc_prep,
- 	.qc_issue = sata_fsl_qc_issue,
--	.irq_clear = sata_fsl_irq_clear,
-+	.irq_clear = ata_noop_irq_clear,
- 
- 	.scr_read = sata_fsl_scr_read,
- 	.scr_write = sata_fsl_scr_write,
-diff --git a/drivers/ata/sata_inic162x.c b/drivers/ata/sata_inic162x.c
-index 59e65ed..74f1436 100644
---- a/drivers/ata/sata_inic162x.c
-+++ b/drivers/ata/sata_inic162x.c
-@@ -266,11 +266,6 @@ static u8 inic_bmdma_status(struct ata_port *ap)
- 	return ATA_DMA_INTR;
- }
- 
--static void inic_irq_clear(struct ata_port *ap)
--{
--	/* noop */
--}
--
- static void inic_host_intr(struct ata_port *ap)
- {
- 	void __iomem *port_base = inic_port_base(ap);
-@@ -555,7 +550,7 @@ static struct ata_port_operations inic_port_ops = {
- 	.bmdma_stop		= inic_bmdma_stop,
- 	.bmdma_status		= inic_bmdma_status,
- 
--	.irq_clear		= inic_irq_clear,
-+	.irq_clear		= ata_noop_irq_clear,
- 	.irq_on			= ata_irq_on,
- 
- 	.qc_prep	 	= ata_qc_prep,
-diff --git a/drivers/ata/sata_mv.c b/drivers/ata/sata_mv.c
-index 3cd7400..a73c7af 100644
---- a/drivers/ata/sata_mv.c
-+++ b/drivers/ata/sata_mv.c
-@@ -461,7 +461,6 @@ struct mv_hw_ops {
- 	void (*reset_bus)(struct ata_host *host, void __iomem *mmio);
- };
- 
--static void mv_irq_clear(struct ata_port *ap);
- static int mv_scr_read(struct ata_port *ap, unsigned int sc_reg_in, u32 *val);
- static int mv_scr_write(struct ata_port *ap, unsigned int sc_reg_in, u32 val);
- static int mv5_scr_read(struct ata_port *ap, unsigned int sc_reg_in, u32 *val);
-@@ -564,7 +563,7 @@ static const struct ata_port_operations mv5_ops = {
- 	.qc_issue		= mv_qc_issue,
- 	.data_xfer		= ata_data_xfer,
- 
--	.irq_clear		= mv_irq_clear,
-+	.irq_clear		= ata_noop_irq_clear,
- 	.irq_on			= ata_irq_on,
- 
- 	.error_handler		= mv_error_handler,
-@@ -592,7 +591,7 @@ static const struct ata_port_operations mv6_ops = {
- 	.qc_issue		= mv_qc_issue,
- 	.data_xfer		= ata_data_xfer,
- 
--	.irq_clear		= mv_irq_clear,
-+	.irq_clear		= ata_noop_irq_clear,
- 	.irq_on			= ata_irq_on,
- 
- 	.error_handler		= mv_error_handler,
-@@ -620,7 +619,7 @@ static const struct ata_port_operations mv_iie_ops = {
- 	.qc_issue		= mv_qc_issue,
- 	.data_xfer		= ata_data_xfer,
- 
--	.irq_clear		= mv_irq_clear,
-+	.irq_clear		= ata_noop_irq_clear,
- 	.irq_on			= ata_irq_on,
- 
- 	.error_handler		= mv_error_handler,
-@@ -801,10 +800,6 @@ static inline int mv_get_hc_count(unsigned long port_flags)
- 	return ((port_flags & MV_FLAG_DUAL_HC) ? 2 : 1);
- }
- 
--static void mv_irq_clear(struct ata_port *ap)
--{
--}
--
- static void mv_set_edma_ptrs(void __iomem *port_mmio,
- 			     struct mv_host_priv *hpriv,
- 			     struct mv_port_priv *pp)
-diff --git a/drivers/ata/sata_qstor.c b/drivers/ata/sata_qstor.c
-index 91cc12c..3c8e97f 100644
---- a/drivers/ata/sata_qstor.c
-+++ b/drivers/ata/sata_qstor.c
-@@ -121,7 +121,6 @@ static unsigned int qs_qc_issue(struct ata_queued_cmd *qc);
- static int qs_check_atapi_dma(struct ata_queued_cmd *qc);
- static void qs_bmdma_stop(struct ata_queued_cmd *qc);
- static u8 qs_bmdma_status(struct ata_port *ap);
--static void qs_irq_clear(struct ata_port *ap);
- static void qs_freeze(struct ata_port *ap);
- static void qs_thaw(struct ata_port *ap);
- static void qs_error_handler(struct ata_port *ap);
-@@ -157,7 +156,7 @@ static const struct ata_port_operations qs_ata_ops = {
- 	.freeze			= qs_freeze,
- 	.thaw			= qs_thaw,
- 	.error_handler		= qs_error_handler,
--	.irq_clear		= qs_irq_clear,
-+	.irq_clear		= ata_noop_irq_clear,
- 	.irq_on			= ata_irq_on,
- 	.scr_read		= qs_scr_read,
- 	.scr_write		= qs_scr_write,
-@@ -211,11 +210,6 @@ static u8 qs_bmdma_status(struct ata_port *ap)
- 	return 0;
- }
- 
--static void qs_irq_clear(struct ata_port *ap)
--{
--	/* nothing */
--}
--
- static inline void qs_enter_reg_mode(struct ata_port *ap)
- {
- 	u8 __iomem *chan = qs_mmio_base(ap->host) + (ap->port_no * 0x4000);
-diff --git a/drivers/ata/sata_sil24.c b/drivers/ata/sata_sil24.c
-index 64cdde5..5e57f78 100644
---- a/drivers/ata/sata_sil24.c
-+++ b/drivers/ata/sata_sil24.c
-@@ -348,7 +348,6 @@ static void sil24_tf_read(struct ata_port *ap, struct ata_taskfile *tf);
- static int sil24_qc_defer(struct ata_queued_cmd *qc);
- static void sil24_qc_prep(struct ata_queued_cmd *qc);
- static unsigned int sil24_qc_issue(struct ata_queued_cmd *qc);
--static void sil24_irq_clear(struct ata_port *ap);
- static void sil24_pmp_attach(struct ata_port *ap);
- static void sil24_pmp_detach(struct ata_port *ap);
- static void sil24_freeze(struct ata_port *ap);
-@@ -416,7 +415,7 @@ static const struct ata_port_operations sil24_ops = {
- 	.qc_prep		= sil24_qc_prep,
- 	.qc_issue		= sil24_qc_issue,
- 
--	.irq_clear		= sil24_irq_clear,
-+	.irq_clear		= ata_noop_irq_clear,
- 
- 	.scr_read		= sil24_scr_read,
- 	.scr_write		= sil24_scr_write,
-@@ -921,11 +920,6 @@ static unsigned int sil24_qc_issue(struct ata_queued_cmd *qc)
- 	return 0;
- }
- 
--static void sil24_irq_clear(struct ata_port *ap)
--{
--	/* unused */
--}
--
- static void sil24_pmp_attach(struct ata_port *ap)
- {
- 	sil24_config_pmp(ap, 1);
-diff --git a/include/linux/libata.h b/include/linux/libata.h
-index 7e012d9..db6f2b9 100644
---- a/include/linux/libata.h
-+++ b/include/linux/libata.h
-@@ -902,6 +902,7 @@ extern void ata_bmdma_start(struct ata_queued_cmd *qc);
- extern void ata_bmdma_stop(struct ata_queued_cmd *qc);
- extern u8   ata_bmdma_status(struct ata_port *ap);
- extern void ata_bmdma_irq_clear(struct ata_port *ap);
-+extern void ata_noop_irq_clear(struct ata_port *ap);
- extern void ata_bmdma_freeze(struct ata_port *ap);
- extern void ata_bmdma_thaw(struct ata_port *ap);
- extern void ata_bmdma_drive_eh(struct ata_port *ap, ata_prereset_fn_t prereset,
 -- 
 1.5.2.4
 
