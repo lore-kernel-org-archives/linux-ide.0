@@ -1,41 +1,63 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: 2.6.24 found 5 exceptions in dmesg after not using the system
- for while
-Date: Tue, 12 Feb 2008 10:40:00 +0900
-Message-ID: <47B0F8F0.4000902@gmail.com>
-References: <76366b180802091514k23cc5b0dw875386427eacf881@mail.gmail.com>
+From: Borislav Petkov <petkovbb@googlemail.com>
+Subject: Re: [PATCH 0/4] ide: generic packet command representation
+Date: Tue, 12 Feb 2008 06:59:19 +0100
+Message-ID: <20080212055919.GD2879@gollum.tnic>
+References: <1202718880-1793-1-git-send-email-petkovbb@gmail.com> <200802120109.24152.bzolnier@gmail.com>
+Reply-To: petkovbb@gmail.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wr-out-0506.google.com ([64.233.184.237]:37795 "EHLO
-	wr-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751830AbYBLBkI (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 11 Feb 2008 20:40:08 -0500
-Received: by wr-out-0506.google.com with SMTP id c48so4314587wra.23
-        for <linux-ide@vger.kernel.org>; Mon, 11 Feb 2008 17:40:07 -0800 (PST)
-In-Reply-To: <76366b180802091514k23cc5b0dw875386427eacf881@mail.gmail.com>
+Received: from fg-out-1718.google.com ([72.14.220.152]:54940 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752876AbYBLGAO (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 12 Feb 2008 01:00:14 -0500
+Received: by fg-out-1718.google.com with SMTP id e21so4009501fga.17
+        for <linux-ide@vger.kernel.org>; Mon, 11 Feb 2008 22:00:12 -0800 (PST)
+Content-Disposition: inline
+In-Reply-To: <200802120109.24152.bzolnier@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Andrew Paprocki <andrew@ishiboo.com>
-Cc: linux-ide@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-Andrew Paprocki wrote:
-> I haven't used the system with these errors in a day or two and I came
-> back and noticed 5 exceptions in dmesg. These are all the same:
-> 
-> ata1: exception Emask 0x10 SAct 0x0 SErr 0x90200 action 0xe frozen
-> ata1: irq_stat 0x00400000, PHY RDY changed
-> ata1: SError: { Persist PHYRdyChg 10B8B }
+On Tue, Feb 12, 2008 at 01:09:24AM +0100, Bartlomiej Zolnierkiewicz wro=
+te:
+>=20
+> On Monday 11 February 2008, Borislav Petkov wrote:
+> > Hi Bart,
+> >=20
+> > here's the ide_atapi_pc unification series. It all went pretty smoo=
+thly along
+> > the search & replace line. Using driver-specific members in ide_ata=
+pi_pc like
+> > idefloppy_callback and idetape_callback is kinda dumb but this appr=
+oach seemed
+> > the fastest versus unnecessary callback function signature change t=
+hat will
+> > touch stuff all over the place. Besides, ide-tape might be gone soo=
+n so that
+> > would alleviate the problem.
+>=20
+> applied all four patches, thanks!
+>=20
+> > On a different note, i noticed ide-scsi might also need a cleanup s=
+imilar to the
+> > other drivers. It is next on my TODO list in case you don't have an=
+ything with a
+> > higher prio.
+>=20
+> I was actually hoping that you'll continue unifying ATAPI handling...
 
-That's link going down and up again.  Reseat/replace cable and see
-whether the problem goes away.  Connecting the drive to different port
-is also worth trying.  If none helps, the most likely cause is power.
-After boot, record the result of 'smartctl -a' on the drive.  After the
-above conditions occur, do the same and compare the result.  If
-Start_Stop_Count increased, your power is having problem keeping the
-drive spun up and if writes were in progress during such events, you'll
-lose data.
+yeah, sure. ide-scsi simply will wander down the prio stack pushed by t=
+he other
+stuff :)
 
--- 
-tejun
+> [ ide-scsi is orphaned and has (probably) unfixable problems (because=
+ of having
+
+does this mean it might have a similar to idetape's destiny...?
+
+--=20
+Regards/Gru=DF,
+    Boris.
