@@ -1,14 +1,14 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH 06/10] libata: implement and use ops inheritance
-Date: Tue, 12 Feb 2008 17:43:17 +0900
-Message-ID: <12028058022089-git-send-email-htejun@gmail.com>
+Subject: [PATCH 10/10] libata: make reset related methods proper port operations
+Date: Tue, 12 Feb 2008 17:43:21 +0900
+Message-ID: <1202805803468-git-send-email-htejun@gmail.com>
 References: <1202805801343-git-send-email-htejun@gmail.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rv-out-0910.google.com ([209.85.198.184]:10453 "EHLO
+Received: from rv-out-0910.google.com ([209.85.198.185]:10917 "EHLO
 	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754281AbYBLInt (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 12 Feb 2008 03:43:49 -0500
-Received: by rv-out-0910.google.com with SMTP id k20so3595166rvb.1
+	with ESMTP id S1754238AbYBLIns (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 12 Feb 2008 03:43:48 -0500
+Received: by rv-out-0910.google.com with SMTP id k20so3595172rvb.1
         for <linux-ide@vger.kernel.org>; Tue, 12 Feb 2008 00:43:48 -0800 (PST)
 In-Reply-To: <1202805801343-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
@@ -16,5098 +16,1882 @@ List-Id: linux-ide@vger.kernel.org
 To: jeff@garzik.org, linux-ide@vger.kernel.org, liml@rtr.ca, alan@lxorguk.ukuu.org.uk, kngregertsen@norway.atmel.com, sonic.adi@gmail.com, rmk@arm.linux.org.uk, alessandro.zummo@towertech
 Cc: Tejun Heo <htejun@gmail.com>
 
-libata lets low level drivers build ata_port_operations table and
-register it with libata core layer.  This allows low level drivers
-high level of flexibility but also burdens them with lots of
-boilerplate entries.
+Currently reset methods are not specified directly in the
+ata_port_operations table.  If a LLD wants to use custom reset
+methods, it should construct and use a error_handler which uses those
+reset methods.  It's done this way for two reasons.
 
-This becomes worse for drivers which support related similar
-controllers which differ slightly.  They share most of the operations
-except for a few.  However, the driver still needs to list all
-operations for each variant.  This results in large number of
-duplicate entries, which is not only inefficient but also error-prone
-as it becomes very difficult to tell what the actual differences are.
+First, the ops table already contained too many methods and adding
+four more of them would noticeably increase the amount of necessary
+boilerplate code all over low level drivers.
 
-This duplicate boilerplates all over the low level drivers also make
-updating the core layer exteremely difficult and error-prone.  When
-compounded with multi-branched development model, it ends up
-accumulating inconsistencies over time.  Some of those inconsistencies
-cause immediate problems and fixed.  Others just remain there dormant
-making maintenance increasingly difficult.
+Second, as ->error_handler uses those reset methods, it can get
+confusing.  ie. By overriding ->error_handler, those reset ops can be
+made useless making layering a bit hazy.
 
-To rectify the problem, this patch implements ata_port_operations
-inheritance.  To allow LLDs to easily re-use their own ops tables
-overriding only specific methods, this patch implements poor man's
-class inheritance.  An ops table has ->inherits field which can be set
-to any ops table as long as it doesn't create a loop.  When the host
-is started, the inheritance chain is followed and any operation which
-isn't specified is taken from the nearest ancestor which has it
-specified.  This operation is called finalization and done only once
-per an ops table and the LLD doesn't have to do anything special about
-it other than making the ops table non-const such that libata can
-update it.
+Now that ops table uses inheritance, the first problem doesn't exist
+anymore.  The second isn't completely solved but is relieved by
+providing default values - most drivers can just override what it has
+implemented and don't have to concern itself about higher level
+callbacks.  In fact, there currently is no driver which actually
+modifies error handling behavior.  Drivers which override
+->error_handler just wraps the standard error handler only to prepare
+the controller for EH.  I don't think making ops layering strict has
+any noticeable benefit.
 
-libata provides four base ops tables lower drivers can inherit from -
-base, sata, pmp, sff and bmdma.  To avoid overriding these ops
-accidentaly, these ops are declared const and LLDs should always
-inherit these instead of using them directly.
+This patch makes ->prereset, ->softreset, ->hardreset, ->postreset and
+their PMP counterparts propoer ops.  Default ops are provided in the
+base ops tables and drivers are converted to override individual reset
+methods instead of creating custom error_handler.
 
-After finalization, all the ops table are identical before and after
-the patch except for setting .irq_handler to ata_interrupt in drivers
-which didn't use to.  The .irq_handler doesn't have any actual effect
-and the field will soon be removed by later patch.
+* ata_std_error_handler() doesn't use sata_std_hardreset() if SCRs
+  aren't accessible.  sata_promise doesn't need to use separate
+  error_handlers for PATA and SATA anymore.
 
-* sata_sx4 is still using old style EH and currently doesn't take
-  advantage of ops inheritance.
+* softreset is broken for sata_inic162x and sata_sx4.  As libata now
+  always prefers hardreset, this doesn't really matter but the ops are
+  forced to NULL using ATA_OP_NULL for documentation purpose.
+
+* pata_hpt374 needs to use different prereset for the first and second
+  PCI functions.  This used to be done by branching from
+  hpt374_error_handler().  The proper way to do this is to use
+  separate ops and port_info tables for each function.  Converted.
 
 Signed-off-by: Tejun Heo <htejun@gmail.com>
 ---
- drivers/ata/ahci.c              |   90 ++------------
- drivers/ata/ata_generic.c       |   31 +-----
- drivers/ata/ata_piix.c          |  149 ++--------------------
- drivers/ata/libata-core.c       |  114 +++++++++++++++++-
- drivers/ata/pata_acpi.c         |   35 +-----
- drivers/ata/pata_ali.c          |  122 ++----------------
- drivers/ata/pata_amd.c          |  193 ++++-------------------------
- drivers/ata/pata_artop.c        |   61 +--------
- drivers/ata/pata_at32.c         |   23 +---
- drivers/ata/pata_atiixp.c       |   31 +----
- drivers/ata/pata_bf54x.c        |    4 +-
- drivers/ata/pata_cmd640.c       |   33 +----
- drivers/ata/pata_cmd64x.c       |   96 ++-------------
- drivers/ata/pata_cs5520.c       |   29 +----
- drivers/ata/pata_cs5530.c       |   31 +----
- drivers/ata/pata_cs5535.c       |   31 +-----
- drivers/ata/pata_cs5536.c       |   31 +-----
- drivers/ata/pata_cypress.c      |   31 +-----
- drivers/ata/pata_efar.c         |   30 +----
- drivers/ata/pata_hpt366.c       |   32 +-----
- drivers/ata/pata_hpt37x.c       |  122 ++-----------------
- drivers/ata/pata_hpt3x2n.c      |   32 +----
- drivers/ata/pata_hpt3x3.c       |   33 +-----
- drivers/ata/pata_icside.c       |   32 ++----
- drivers/ata/pata_isapnp.c       |   21 +---
- drivers/ata/pata_it8213.c       |   31 +----
- drivers/ata/pata_it821x.c       |   57 ++--------
- drivers/ata/pata_ixp4xx_cf.c    |   23 +---
- drivers/ata/pata_jmicron.c      |   31 +-----
- drivers/ata/pata_legacy.c       |  260 +++------------------------------------
- drivers/ata/pata_marvell.c      |   33 +-----
- drivers/ata/pata_mpc52xx.c      |   18 +--
- drivers/ata/pata_mpiix.c        |   23 +---
- drivers/ata/pata_netcell.c      |   32 +-----
- drivers/ata/pata_ninja32.c      |   30 +----
- drivers/ata/pata_ns87410.c      |   25 +----
- drivers/ata/pata_ns87415.c      |   68 ++---------
- drivers/ata/pata_oldpiix.c      |   31 +----
- drivers/ata/pata_opti.c         |   23 +---
- drivers/ata/pata_optidma.c      |   63 +---------
- drivers/ata/pata_pcmcia.c       |   48 +-------
- drivers/ata/pata_pdc2027x.c     |   56 +--------
- drivers/ata/pata_pdc202xx_old.c |   75 +++---------
- drivers/ata/pata_platform.c     |   24 +---
- drivers/ata/pata_qdi.c          |   47 +-------
- drivers/ata/pata_radisys.c      |   32 +----
- drivers/ata/pata_rz1000.c       |   25 +----
- drivers/ata/pata_sc1200.c       |   33 +-----
- drivers/ata/pata_scc.c          |    6 +-
- drivers/ata/pata_serverworks.c  |   63 +---------
- drivers/ata/pata_sil680.c       |   30 +----
- drivers/ata/pata_sis.c          |  177 +++------------------------
- drivers/ata/pata_sl82c105.c     |   34 +-----
- drivers/ata/pata_triflex.c      |   32 +----
- drivers/ata/pata_via.c          |   61 +---------
- drivers/ata/pata_winbond.c      |   25 +----
- drivers/ata/pdc_adma.c          |   19 ++--
- drivers/ata/sata_fsl.c          |    5 +-
- drivers/ata/sata_inic162x.c     |   19 +---
- drivers/ata/sata_mv.c           |   66 ++---------
- drivers/ata/sata_nv.c           |  113 +++--------------
- drivers/ata/sata_promise.c      |   64 +++--------
- drivers/ata/sata_qstor.c        |   20 ++--
- drivers/ata/sata_sil.c          |   21 +---
- drivers/ata/sata_sil24.c        |   20 +--
- drivers/ata/sata_sis.c          |   23 +---
- drivers/ata/sata_svw.c          |   18 +---
- drivers/ata/sata_sx4.c          |    3 +-
- drivers/ata/sata_uli.c          |   28 +----
- drivers/ata/sata_via.c          |   88 +------------
- drivers/ata/sata_vsc.c          |   19 +---
- include/linux/libata.h          |   23 +++-
- 72 files changed, 522 insertions(+), 2980 deletions(-)
+ drivers/ata/ahci.c          |   53 ++++++++++++------------------------
+ drivers/ata/ata_piix.c      |   21 +++-----------
+ drivers/ata/libata-core.c   |   15 ++++++++--
+ drivers/ata/libata-eh.c     |   25 ++++++++++-------
+ drivers/ata/libata-pmp.c    |   47 ++++++++-------------------------
+ drivers/ata/libata-sff.c    |   38 +++------------------------
+ drivers/ata/pata_acpi.c     |   16 +----------
+ drivers/ata/pata_amd.c      |   18 +-----------
+ drivers/ata/pata_artop.c    |   34 +----------------------
+ drivers/ata/pata_atiixp.c   |    7 +----
+ drivers/ata/pata_bf54x.c    |   14 +--------
+ drivers/ata/pata_efar.c     |   15 +----------
+ drivers/ata/pata_hpt37x.c   |   61 ++++++++++++++-----------------------------
+ drivers/ata/pata_hpt3x2n.c  |   16 +----------
+ drivers/ata/pata_icside.c   |    8 +-----
+ drivers/ata/pata_it8213.c   |   15 +----------
+ drivers/ata/pata_jmicron.c  |   15 +----------
+ drivers/ata/pata_marvell.c  |   16 +----------
+ drivers/ata/pata_mpc52xx.c  |   10 -------
+ drivers/ata/pata_mpiix.c    |   16 +----------
+ drivers/ata/pata_ns87410.c  |   16 +----------
+ drivers/ata/pata_oldpiix.c  |   16 +----------
+ drivers/ata/pata_opti.c     |   17 +-----------
+ drivers/ata/pata_optidma.c  |   17 +-----------
+ drivers/ata/pata_pdc2027x.c |   19 +------------
+ drivers/ata/pata_scc.c      |   15 ++--------
+ drivers/ata/pata_sis.c      |   15 +----------
+ drivers/ata/pata_sl82c105.c |    8 +-----
+ drivers/ata/pata_triflex.c  |    7 +----
+ drivers/ata/pata_via.c      |   14 +---------
+ drivers/ata/pdc_adma.c      |   11 ++-----
+ drivers/ata/sata_fsl.c      |   12 +--------
+ drivers/ata/sata_inic162x.c |    5 ++-
+ drivers/ata/sata_mv.c       |   16 +++++-----
+ drivers/ata/sata_nv.c       |   17 +++--------
+ drivers/ata/sata_promise.c  |   22 +++------------
+ drivers/ata/sata_qstor.c    |    6 +++-
+ drivers/ata/sata_sil24.c    |   18 +++++++++---
+ drivers/ata/sata_via.c      |   10 +-----
+ drivers/scsi/ipr.c          |    3 +-
+ include/linux/libata.h      |   22 +++++++--------
+ 41 files changed, 169 insertions(+), 577 deletions(-)
 
 diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
-index b0cb4f1..81bdc0b 100644
+index 81bdc0b..eb61092 100644
 --- a/drivers/ata/ahci.c
 +++ b/drivers/ata/ahci.c
-@@ -273,112 +273,44 @@ static struct scsi_host_template ahci_sht = {
- 	.shost_attrs		= ahci_shost_attrs,
- };
+@@ -246,9 +246,18 @@ static void ahci_freeze(struct ata_port *ap);
+ static void ahci_thaw(struct ata_port *ap);
+ static void ahci_pmp_attach(struct ata_port *ap);
+ static void ahci_pmp_detach(struct ata_port *ap);
++static int ahci_softreset(struct ata_link *link, unsigned int *class,
++			  unsigned long deadline);
++static int ahci_hardreset(struct ata_link *link, unsigned int *class,
++			  unsigned long deadline);
++static int ahci_vt8251_hardreset(struct ata_link *link, unsigned int *class,
++				 unsigned long deadline);
++static int ahci_p5wdh_hardreset(struct ata_link *link, unsigned int *class,
++				unsigned long deadline);
++static void ahci_postreset(struct ata_link *link, unsigned int *class);
++static int ahci_pmp_softreset(struct ata_link *link, unsigned int *class,
++			      unsigned long deadline);
+ static void ahci_error_handler(struct ata_port *ap);
+-static void ahci_vt8251_error_handler(struct ata_port *ap);
+-static void ahci_p5wdh_error_handler(struct ata_port *ap);
+ static void ahci_post_internal_cmd(struct ata_queued_cmd *qc);
+ static int ahci_port_resume(struct ata_port *ap);
+ static unsigned int ahci_fill_sg(struct ata_queued_cmd *qc, void *cmd_tbl);
+@@ -285,6 +294,10 @@ static struct ata_port_operations ahci_ops = {
  
--static const struct ata_port_operations ahci_ops = {
-+static struct ata_port_operations ahci_ops = {
-+	.inherits		= &sata_pmp_port_ops,
-+
- 	.check_status		= ahci_check_status,
- 	.check_altstatus	= ahci_check_status,
--	.dev_select		= ata_noop_dev_select,
--
- 	.tf_read		= ahci_tf_read,
--
- 	.qc_defer		= sata_pmp_qc_defer_cmd_switch,
- 	.qc_prep		= ahci_qc_prep,
- 	.qc_issue		= ahci_qc_issue,
- 
--	.irq_clear		= ata_noop_irq_clear,
--
--	.scr_read		= ahci_scr_read,
--	.scr_write		= ahci_scr_write,
--
  	.freeze			= ahci_freeze,
  	.thaw			= ahci_thaw,
--
++	.softreset		= ahci_softreset,
++	.hardreset		= ahci_hardreset,
++	.postreset		= ahci_postreset,
++	.pmp_softreset		= ahci_pmp_softreset,
  	.error_handler		= ahci_error_handler,
  	.post_internal_cmd	= ahci_post_internal_cmd,
  
--	.pmp_attach		= ahci_pmp_attach,
--	.pmp_detach		= ahci_pmp_detach,
--
--#ifdef CONFIG_PM
--	.port_suspend		= ahci_port_suspend,
--	.port_resume		= ahci_port_resume,
--#endif
--	.enable_pm		= ahci_enable_alpm,
--	.disable_pm		= ahci_disable_alpm,
--
--	.port_start		= ahci_port_start,
--	.port_stop		= ahci_port_stop,
--};
--
--static const struct ata_port_operations ahci_vt8251_ops = {
--	.check_status		= ahci_check_status,
--	.check_altstatus	= ahci_check_status,
--	.dev_select		= ata_noop_dev_select,
--
--	.tf_read		= ahci_tf_read,
--
--	.qc_defer		= sata_pmp_qc_defer_cmd_switch,
--	.qc_prep		= ahci_qc_prep,
--	.qc_issue		= ahci_qc_issue,
--
--	.irq_clear		= ata_noop_irq_clear,
--
- 	.scr_read		= ahci_scr_read,
- 	.scr_write		= ahci_scr_write,
--
--	.freeze			= ahci_freeze,
--	.thaw			= ahci_thaw,
--
--	.error_handler		= ahci_vt8251_error_handler,
--	.post_internal_cmd	= ahci_post_internal_cmd,
--
- 	.pmp_attach		= ahci_pmp_attach,
- 	.pmp_detach		= ahci_pmp_detach,
-+	.enable_pm		= ahci_enable_alpm,
-+	.disable_pm		= ahci_disable_alpm,
+@@ -305,12 +318,12 @@ static struct ata_port_operations ahci_ops = {
  
- #ifdef CONFIG_PM
- 	.port_suspend		= ahci_port_suspend,
- 	.port_resume		= ahci_port_resume,
- #endif
--	.enable_pm		= ahci_enable_alpm,
--	.disable_pm		= ahci_disable_alpm,
--
- 	.port_start		= ahci_port_start,
- 	.port_stop		= ahci_port_stop,
+ static struct ata_port_operations ahci_vt8251_ops = {
+ 	.inherits		= &ahci_ops,
+-	.error_handler		= ahci_vt8251_error_handler,
++	.hardreset		= ahci_vt8251_hardreset,
  };
  
--static const struct ata_port_operations ahci_p5wdh_ops = {
--	.check_status		= ahci_check_status,
--	.check_altstatus	= ahci_check_status,
--	.dev_select		= ata_noop_dev_select,
--
--	.tf_read		= ahci_tf_read,
--
--	.qc_defer		= sata_pmp_qc_defer_cmd_switch,
--	.qc_prep		= ahci_qc_prep,
--	.qc_issue		= ahci_qc_issue,
--
--	.irq_clear		= ata_noop_irq_clear,
--
--	.scr_read		= ahci_scr_read,
--	.scr_write		= ahci_scr_write,
--
--	.freeze			= ahci_freeze,
--	.thaw			= ahci_thaw,
-+static struct ata_port_operations ahci_vt8251_ops = {
-+	.inherits		= &ahci_ops,
-+	.error_handler		= ahci_vt8251_error_handler,
-+};
- 
-+static struct ata_port_operations ahci_p5wdh_ops = {
-+	.inherits		= &ahci_ops,
- 	.error_handler		= ahci_p5wdh_error_handler,
--	.post_internal_cmd	= ahci_post_internal_cmd,
--
--	.pmp_attach		= ahci_pmp_attach,
--	.pmp_detach		= ahci_pmp_detach,
--
--#ifdef CONFIG_PM
--	.port_suspend		= ahci_port_suspend,
--	.port_resume		= ahci_port_resume,
--#endif
--	.enable_pm		= ahci_enable_alpm,
--	.disable_pm		= ahci_disable_alpm,
--
--	.port_start		= ahci_port_start,
--	.port_stop		= ahci_port_stop,
+ static struct ata_port_operations ahci_p5wdh_ops = {
+ 	.inherits		= &ahci_ops,
+-	.error_handler		= ahci_p5wdh_error_handler,
++	.hardreset		= ahci_p5wdh_hardreset,
  };
  
  #define AHCI_HFLAGS(flags)	.private_data	= (void *)(flags)
-diff --git a/drivers/ata/ata_generic.c b/drivers/ata/ata_generic.c
-index 5c64ce1..0b5b515 100644
---- a/drivers/ata/ata_generic.c
-+++ b/drivers/ata/ata_generic.c
-@@ -99,36 +99,9 @@ static struct scsi_host_template generic_sht = {
- };
+@@ -1737,37 +1750,7 @@ static void ahci_error_handler(struct ata_port *ap)
+ 		ahci_start_engine(ap);
+ 	}
  
- static struct ata_port_operations generic_port_ops = {
--	.set_mode	= generic_set_mode,
--	.mode_filter	= ata_pci_default_filter,
+-	/* perform recovery */
+-	sata_pmp_do_eh(ap, ata_std_prereset, ahci_softreset,
+-		       ahci_hardreset, ahci_postreset,
+-		       sata_pmp_std_prereset, ahci_pmp_softreset,
+-		       sata_pmp_std_hardreset, sata_pmp_std_postreset);
+-}
 -
--	.tf_load	= ata_tf_load,
--	.tf_read	= ata_tf_read,
--	.check_status 	= ata_check_status,
--	.exec_command	= ata_exec_command,
--	.dev_select 	= ata_std_dev_select,
+-static void ahci_vt8251_error_handler(struct ata_port *ap)
+-{
+-	if (!(ap->pflags & ATA_PFLAG_FROZEN)) {
+-		/* restart engine */
+-		ahci_stop_engine(ap);
+-		ahci_start_engine(ap);
+-	}
 -
--	.bmdma_setup 	= ata_bmdma_setup,
--	.bmdma_start 	= ata_bmdma_start,
--	.bmdma_stop	= ata_bmdma_stop,
--	.bmdma_status 	= ata_bmdma_status,
+-	/* perform recovery */
+-	ata_do_eh(ap, ata_std_prereset, ahci_softreset, ahci_vt8251_hardreset,
+-		  ahci_postreset);
+-}
 -
--	.data_xfer	= ata_data_xfer,
+-static void ahci_p5wdh_error_handler(struct ata_port *ap)
+-{
+-	if (!(ap->pflags & ATA_PFLAG_FROZEN)) {
+-		/* restart engine */
+-		ahci_stop_engine(ap);
+-		ahci_start_engine(ap);
+-	}
 -
--	.freeze		= ata_bmdma_freeze,
--	.thaw		= ata_bmdma_thaw,
--	.error_handler	= ata_bmdma_error_handler,
--	.post_internal_cmd = ata_bmdma_post_internal_cmd,
-+	.inherits	= &ata_bmdma_port_ops,
- 	.cable_detect	= ata_cable_unknown,
--
--	.qc_prep 	= ata_qc_prep,
--	.qc_issue	= ata_qc_issue_prot,
--
--	.irq_handler	= ata_interrupt,
--	.irq_clear	= ata_bmdma_irq_clear,
--	.irq_on		= ata_irq_on,
--
--	.port_start	= ata_sff_port_start,
-+	.set_mode	= generic_set_mode,
- };
+-	/* perform recovery */
+-	ata_do_eh(ap, ata_std_prereset, ahci_softreset, ahci_p5wdh_hardreset,
+-		  ahci_postreset);
++	sata_pmp_error_handler(ap);
+ }
  
- static int all_generic_ide;		/* Set to claim all devices */
+ static void ahci_post_internal_cmd(struct ata_queued_cmd *qc)
 diff --git a/drivers/ata/ata_piix.c b/drivers/ata/ata_piix.c
-index 62e31d9..abdc714 100644
+index abdc714..99e7d89 100644
 --- a/drivers/ata/ata_piix.c
 +++ b/drivers/ata/ata_piix.c
-@@ -294,155 +294,34 @@ static struct scsi_host_template piix_sht = {
- 	ATA_BMDMA_SHT(DRV_NAME),
- };
+@@ -162,15 +162,16 @@ struct piix_host_priv {
  
--static const struct ata_port_operations piix_pata_ops = {
-+static struct ata_port_operations piix_pata_ops = {
-+	.inherits		= &ata_bmdma_port_ops,
-+	.cable_detect		= ata_cable_40wire,
+ static int piix_init_one(struct pci_dev *pdev,
+ 			 const struct pci_device_id *ent);
+-static void piix_pata_error_handler(struct ata_port *ap);
++static int piix_pata_prereset(struct ata_link *link, unsigned long deadline);
+ static void piix_set_piomode(struct ata_port *ap, struct ata_device *adev);
+ static void piix_set_dmamode(struct ata_port *ap, struct ata_device *adev);
+ static void ich_set_dmamode(struct ata_port *ap, struct ata_device *adev);
+ static int ich_pata_cable_detect(struct ata_port *ap);
+ static u8 piix_vmw_bmdma_status(struct ata_port *ap);
++static int piix_sidpr_hardreset(struct ata_link *link, unsigned int *class,
++				unsigned long deadline);
+ static int piix_sidpr_scr_read(struct ata_port *ap, unsigned int reg, u32 *val);
+ static int piix_sidpr_scr_write(struct ata_port *ap, unsigned int reg, u32 val);
+-static void piix_sidpr_error_handler(struct ata_port *ap);
+ #ifdef CONFIG_PM
+ static int piix_pci_device_suspend(struct pci_dev *pdev, pm_message_t mesg);
+ static int piix_pci_device_resume(struct pci_dev *pdev);
+@@ -299,7 +300,7 @@ static struct ata_port_operations piix_pata_ops = {
+ 	.cable_detect		= ata_cable_40wire,
  	.set_piomode		= piix_set_piomode,
  	.set_dmamode		= piix_set_dmamode,
--	.mode_filter		= ata_pci_default_filter,
--
--	.tf_load		= ata_tf_load,
--	.tf_read		= ata_tf_read,
--	.check_status		= ata_check_status,
--	.exec_command		= ata_exec_command,
--	.dev_select		= ata_std_dev_select,
--
--	.bmdma_setup		= ata_bmdma_setup,
--	.bmdma_start		= ata_bmdma_start,
--	.bmdma_stop		= ata_bmdma_stop,
--	.bmdma_status		= ata_bmdma_status,
--	.qc_prep		= ata_qc_prep,
--	.qc_issue		= ata_qc_issue_prot,
--	.data_xfer		= ata_data_xfer,
--
--	.freeze			= ata_bmdma_freeze,
--	.thaw			= ata_bmdma_thaw,
- 	.error_handler		= piix_pata_error_handler,
--	.post_internal_cmd	= ata_bmdma_post_internal_cmd,
--	.cable_detect		= ata_cable_40wire,
--
--	.irq_clear		= ata_bmdma_irq_clear,
--	.irq_on			= ata_irq_on,
-+};
- 
--	.port_start		= ata_sff_port_start,
-+static struct ata_port_operations piix_vmw_ops = {
-+	.inherits		= &piix_pata_ops,
-+	.bmdma_status		= piix_vmw_bmdma_status,
- };
- 
--static const struct ata_port_operations ich_pata_ops = {
--	.set_piomode		= piix_set_piomode,
--	.set_dmamode		= ich_set_dmamode,
--	.mode_filter		= ata_pci_default_filter,
--
--	.tf_load		= ata_tf_load,
--	.tf_read		= ata_tf_read,
--	.check_status		= ata_check_status,
--	.exec_command		= ata_exec_command,
--	.dev_select		= ata_std_dev_select,
--
--	.bmdma_setup		= ata_bmdma_setup,
--	.bmdma_start		= ata_bmdma_start,
--	.bmdma_stop		= ata_bmdma_stop,
--	.bmdma_status		= ata_bmdma_status,
--	.qc_prep		= ata_qc_prep,
--	.qc_issue		= ata_qc_issue_prot,
--	.data_xfer		= ata_data_xfer,
--
--	.freeze			= ata_bmdma_freeze,
--	.thaw			= ata_bmdma_thaw,
 -	.error_handler		= piix_pata_error_handler,
--	.post_internal_cmd	= ata_bmdma_post_internal_cmd,
-+static struct ata_port_operations ich_pata_ops = {
-+	.inherits		= &piix_pata_ops,
- 	.cable_detect		= ich_pata_cable_detect,
--
--	.irq_clear		= ata_bmdma_irq_clear,
--	.irq_on			= ata_irq_on,
--
--	.port_start		= ata_sff_port_start,
-+	.set_dmamode		= ich_set_dmamode,
++	.prereset		= piix_pata_prereset,
  };
  
--static const struct ata_port_operations piix_sata_ops = {
--	.tf_load		= ata_tf_load,
--	.tf_read		= ata_tf_read,
--	.check_status		= ata_check_status,
--	.exec_command		= ata_exec_command,
--	.dev_select		= ata_std_dev_select,
--
--	.bmdma_setup		= ata_bmdma_setup,
--	.bmdma_start		= ata_bmdma_start,
--	.bmdma_stop		= ata_bmdma_stop,
--	.bmdma_status		= ata_bmdma_status,
--	.qc_prep		= ata_qc_prep,
--	.qc_issue		= ata_qc_issue_prot,
--	.data_xfer		= ata_data_xfer,
--
--	.mode_filter		= ata_pci_default_filter,
--	.freeze			= ata_bmdma_freeze,
--	.thaw			= ata_bmdma_thaw,
--	.error_handler		= ata_bmdma_error_handler,
--	.post_internal_cmd	= ata_bmdma_post_internal_cmd,
--
--	.irq_clear		= ata_bmdma_irq_clear,
--	.irq_on			= ata_irq_on,
--
--	.port_start		= ata_sff_port_start,
-+static struct ata_port_operations piix_sata_ops = {
-+	.inherits		= &ata_bmdma_port_ops,
- };
+ static struct ata_port_operations piix_vmw_ops = {
+@@ -319,9 +320,9 @@ static struct ata_port_operations piix_sata_ops = {
  
--static const struct ata_port_operations piix_vmw_ops = {
--	.set_piomode		= piix_set_piomode,
--	.set_dmamode		= piix_set_dmamode,
--	.mode_filter		= ata_pci_default_filter,
--
--	.tf_load		= ata_tf_load,
--	.tf_read		= ata_tf_read,
--	.check_status		= ata_check_status,
--	.exec_command		= ata_exec_command,
--	.dev_select		= ata_std_dev_select,
--
--	.bmdma_setup		= ata_bmdma_setup,
--	.bmdma_start		= ata_bmdma_start,
--	.bmdma_stop		= ata_bmdma_stop,
--	.bmdma_status		= piix_vmw_bmdma_status,
--	.qc_prep		= ata_qc_prep,
--	.qc_issue		= ata_qc_issue_prot,
--	.data_xfer		= ata_data_xfer,
--
--	.freeze			= ata_bmdma_freeze,
--	.thaw			= ata_bmdma_thaw,
--	.error_handler		= piix_pata_error_handler,
--	.post_internal_cmd	= ata_bmdma_post_internal_cmd,
--	.cable_detect		= ata_cable_40wire,
--
--	.irq_handler		= ata_interrupt,
--	.irq_clear		= ata_bmdma_irq_clear,
--	.irq_on			= ata_irq_on,
--
--	.port_start		= ata_sff_port_start,
--};
--
--static const struct ata_port_operations piix_sidpr_sata_ops = {
--	.tf_load		= ata_tf_load,
--	.tf_read		= ata_tf_read,
--	.check_status		= ata_check_status,
--	.exec_command		= ata_exec_command,
--	.dev_select		= ata_std_dev_select,
--
--	.bmdma_setup		= ata_bmdma_setup,
--	.bmdma_start		= ata_bmdma_start,
--	.bmdma_stop		= ata_bmdma_stop,
--	.bmdma_status		= ata_bmdma_status,
--	.qc_prep		= ata_qc_prep,
--	.qc_issue		= ata_qc_issue_prot,
--	.data_xfer		= ata_data_xfer,
--
-+static struct ata_port_operations piix_sidpr_sata_ops = {
-+	.inherits		= &piix_sata_ops,
+ static struct ata_port_operations piix_sidpr_sata_ops = {
+ 	.inherits		= &piix_sata_ops,
++	.hardreset		= piix_sidpr_hardreset,
  	.scr_read		= piix_sidpr_scr_read,
  	.scr_write		= piix_sidpr_scr_write,
--
--	.mode_filter		= ata_pci_default_filter,
--	.freeze			= ata_bmdma_freeze,
--	.thaw			= ata_bmdma_thaw,
- 	.error_handler		= piix_sidpr_error_handler,
--	.post_internal_cmd	= ata_bmdma_post_internal_cmd,
--
--	.irq_clear		= ata_bmdma_irq_clear,
--	.irq_on			= ata_irq_on,
--
--	.port_start		= ata_sff_port_start,
+-	.error_handler		= piix_sidpr_error_handler,
  };
  
  static const struct piix_map_db ich5_map_db = {
+@@ -645,12 +646,6 @@ static int piix_pata_prereset(struct ata_link *link, unsigned long deadline)
+ 	return ata_std_prereset(link, deadline);
+ }
+ 
+-static void piix_pata_error_handler(struct ata_port *ap)
+-{
+-	ata_bmdma_drive_eh(ap, piix_pata_prereset, ata_std_softreset, NULL,
+-			   ata_std_postreset);
+-}
+-
+ /**
+  *	piix_set_piomode - Initialize host controller PATA PIO timings
+  *	@ap: Port whose timings we are configuring
+@@ -1057,12 +1052,6 @@ static int piix_sidpr_hardreset(struct ata_link *link, unsigned int *class,
+ 	return -EAGAIN;
+ }
+ 
+-static void piix_sidpr_error_handler(struct ata_port *ap)
+-{
+-	ata_bmdma_drive_eh(ap, ata_std_prereset, ata_std_softreset,
+-			   piix_sidpr_hardreset, ata_std_postreset);
+-}
+-
+ #ifdef CONFIG_PM
+ static int piix_broken_suspend(void)
+ {
 diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index 2772657..4bb8e1e 100644
+index 685e3c7..e6d7f16 100644
 --- a/drivers/ata/libata-core.c
 +++ b/drivers/ata/libata-core.c
-@@ -74,6 +74,56 @@ const unsigned long sata_deb_timing_normal[]		= {   5,  100, 2000 };
- const unsigned long sata_deb_timing_hotplug[]		= {  25,  500, 2000 };
- const unsigned long sata_deb_timing_long[]		= { 100, 2000, 5000 };
+@@ -76,6 +76,10 @@ const unsigned long sata_deb_timing_long[]		= { 100, 2000, 5000 };
  
-+const struct ata_port_operations ata_base_port_ops = {
-+	.irq_clear		= ata_noop_irq_clear,
-+};
+ const struct ata_port_operations ata_base_port_ops = {
+ 	.irq_clear		= ata_noop_irq_clear,
++	.prereset		= ata_std_prereset,
++	.hardreset		= sata_std_hardreset,
++	.postreset		= ata_std_postreset,
++	.error_handler		= ata_std_error_handler,
+ };
+ 
+ const struct ata_port_operations sata_port_ops = {
+@@ -83,6 +87,11 @@ const struct ata_port_operations sata_port_ops = {
+ 
+ 	.qc_defer		= ata_std_qc_defer,
+ 	.dev_select		= ata_noop_dev_select,
 +
-+const struct ata_port_operations sata_port_ops = {
-+	.inherits		= &ata_base_port_ops,
-+
-+	.qc_defer		= ata_std_qc_defer,
-+	.dev_select		= ata_noop_dev_select,
-+};
-+
-+const struct ata_port_operations sata_pmp_port_ops = {
-+	.inherits		= &sata_port_ops,
-+};
-+
-+const struct ata_port_operations ata_sff_port_ops = {
-+	.inherits		= &ata_base_port_ops,
-+
-+	.qc_prep		= ata_qc_prep,
-+	.qc_issue		= ata_qc_issue_prot,
-+
-+	.freeze			= ata_bmdma_freeze,
-+	.thaw			= ata_bmdma_thaw,
-+	.error_handler		= ata_bmdma_error_handler,
-+	.post_internal_cmd	= ata_bmdma_post_internal_cmd,
-+
-+	.dev_select		= ata_std_dev_select,
-+	.check_status		= ata_check_status,
-+	.tf_load		= ata_tf_load,
-+	.tf_read		= ata_tf_read,
-+	.exec_command		= ata_exec_command,
-+	.data_xfer		= ata_data_xfer,
-+	.irq_on			= ata_irq_on,
-+
-+	.port_start		= ata_sff_port_start,
-+	.irq_handler		= ata_interrupt,
-+};
-+
-+const struct ata_port_operations ata_bmdma_port_ops = {
-+	.inherits		= &ata_sff_port_ops,
-+
-+	.mode_filter		= ata_pci_default_filter,
-+
-+	.bmdma_setup		= ata_bmdma_setup,
-+	.bmdma_start		= ata_bmdma_start,
-+	.bmdma_stop		= ata_bmdma_stop,
-+	.bmdma_status		= ata_bmdma_status,
-+	.irq_clear		= ata_bmdma_irq_clear,
-+};
-+
- static unsigned int ata_dev_init_params(struct ata_device *dev,
- 					u16 heads, u16 sectors);
- static unsigned int ata_dev_set_xfermode(struct ata_device *dev);
-@@ -6882,6 +6932,56 @@ static void ata_host_stop(struct device *gendev, void *res)
++	.pmp_prereset		= sata_pmp_std_prereset,
++	.pmp_hardreset		= sata_pmp_std_hardreset,
++	.pmp_postreset		= sata_pmp_std_postreset,
++	.error_handler		= sata_pmp_error_handler,
+ };
+ 
+ const struct ata_port_operations sata_pmp_port_ops = {
+@@ -97,6 +106,7 @@ const struct ata_port_operations ata_sff_port_ops = {
+ 
+ 	.freeze			= ata_bmdma_freeze,
+ 	.thaw			= ata_bmdma_thaw,
++	.softreset		= ata_std_softreset,
+ 	.error_handler		= ata_bmdma_error_handler,
+ 	.post_internal_cmd	= ata_bmdma_post_internal_cmd,
+ 
+@@ -7666,7 +7676,6 @@ EXPORT_SYMBOL_GPL(ata_bmdma_status);
+ EXPORT_SYMBOL_GPL(ata_bmdma_stop);
+ EXPORT_SYMBOL_GPL(ata_bmdma_freeze);
+ EXPORT_SYMBOL_GPL(ata_bmdma_thaw);
+-EXPORT_SYMBOL_GPL(ata_bmdma_drive_eh);
+ EXPORT_SYMBOL_GPL(ata_bmdma_error_handler);
+ EXPORT_SYMBOL_GPL(ata_bmdma_post_internal_cmd);
+ EXPORT_SYMBOL_GPL(ata_port_probe);
+@@ -7736,7 +7745,7 @@ EXPORT_SYMBOL_GPL(sata_pmp_qc_defer_cmd_switch);
+ EXPORT_SYMBOL_GPL(sata_pmp_std_prereset);
+ EXPORT_SYMBOL_GPL(sata_pmp_std_hardreset);
+ EXPORT_SYMBOL_GPL(sata_pmp_std_postreset);
+-EXPORT_SYMBOL_GPL(sata_pmp_do_eh);
++EXPORT_SYMBOL_GPL(sata_pmp_error_handler);
+ 
+ EXPORT_SYMBOL_GPL(__ata_ehi_push_desc);
+ EXPORT_SYMBOL_GPL(ata_ehi_push_desc);
+@@ -7754,7 +7763,7 @@ EXPORT_SYMBOL_GPL(ata_eh_freeze_port);
+ EXPORT_SYMBOL_GPL(ata_eh_thaw_port);
+ EXPORT_SYMBOL_GPL(ata_eh_qc_complete);
+ EXPORT_SYMBOL_GPL(ata_eh_qc_retry);
+-EXPORT_SYMBOL_GPL(ata_do_eh);
++EXPORT_SYMBOL_GPL(ata_std_error_handler);
+ EXPORT_SYMBOL_GPL(ata_irq_on);
+ EXPORT_SYMBOL_GPL(ata_dev_try_classify);
+ 
+diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
+index 8d82b06..95e5513 100644
+--- a/drivers/ata/libata-eh.c
++++ b/drivers/ata/libata-eh.c
+@@ -2805,30 +2805,35 @@ void ata_eh_finish(struct ata_port *ap)
  }
  
  /**
-+ *	ata_finalize_port_ops - finalize ata_port_operations
-+ *	@ops: ata_port_operations to finalize
-+ *
-+ *	An ata_port_operations can inherit from another ops and that
-+ *	ops can again inherit from another.  This can go on as many
-+ *	times as necessary as long as there is no loop in the
-+ *	inheritance chain.
-+ *
-+ *	Ops tables are finalized when the host is started.  NULL or
-+ *	unspecified entries are inherited from the closet ancestor
-+ *	which has the method and the entry is populated with it.
-+ *	After finalization, the ops table directly points to all the
-+ *	methods and ->inherits is no longer necessary and cleared.
-+ *
-+ *	Using ATA_OP_NULL, inheriting ops can force a method to NULL.
-+ *
-+ *	LOCKING:
-+ *	None.
-+ */
-+static void ata_finalize_port_ops(struct ata_port_operations *ops)
-+{
-+	static spinlock_t lock = SPIN_LOCK_UNLOCKED;
-+	const struct ata_port_operations *cur;
-+	void **begin = (void **)ops;
-+	void **end = (void **)&ops->inherits;
-+	void **pp;
-+
-+	if (!ops || !ops->inherits)
-+		return;
-+
-+	spin_lock(&lock);
-+
-+	for (cur = ops->inherits; cur; cur = cur->inherits) {
-+		void **inherit = (void **)cur;
-+
-+		for (pp = begin; pp < end; pp++, inherit++)
-+			if (!*pp)
-+				*pp = *inherit;
-+	}
-+
-+	for (pp = begin; pp < end; pp++)
-+		if (IS_ERR(*pp))
-+			*pp = NULL;
-+
-+	ops->inherits = NULL;
-+
-+	spin_unlock(&lock);
-+}
-+
-+/**
-  *	ata_host_start - start and freeze ports of an ATA host
-  *	@host: ATA host to start ports for
+- *	ata_do_eh - do standard error handling
++ *	ata_std_error_handler - do standard error handling
+  *	@ap: host port to handle error for
+- *	@prereset: prereset method (can be NULL)
+- *	@softreset: softreset method (can be NULL)
+- *	@hardreset: hardreset method (can be NULL)
+- *	@postreset: postreset method (can be NULL)
   *
-@@ -6906,9 +7006,13 @@ int ata_host_start(struct ata_host *host)
- 	if (host->flags & ATA_HOST_STARTED)
- 		return 0;
- 
-+	ata_finalize_port_ops(host->ops);
-+
- 	for (i = 0; i < host->n_ports; i++) {
- 		struct ata_port *ap = host->ports[i];
- 
-+		ata_finalize_port_ops(ap->ops);
-+
- 		if (!host->ops && !ata_port_is_dummy(ap))
- 			host->ops = ap->ops;
- 
-@@ -6970,7 +7074,7 @@ int ata_host_start(struct ata_host *host)
+  *	Perform standard error handling sequence.
+  *
+  *	LOCKING:
+  *	Kernel thread context (may sleep).
   */
- /* KILLME - the only user left is ipr */
- void ata_host_init(struct ata_host *host, struct device *dev,
--		   unsigned long flags, const struct ata_port_operations *ops)
-+		   unsigned long flags, struct ata_port_operations *ops)
+-void ata_do_eh(struct ata_port *ap, ata_prereset_fn_t prereset,
+-	       ata_reset_fn_t softreset, ata_reset_fn_t hardreset,
+-	       ata_postreset_fn_t postreset)
++void ata_std_error_handler(struct ata_port *ap)
  {
- 	spin_lock_init(&host->lock);
- 	host->dev = dev;
-@@ -7371,7 +7475,6 @@ int ata_pci_device_resume(struct pci_dev *pdev)
++	struct ata_port_operations *ops = ap->ops;
++	ata_reset_fn_t hardreset = ops->hardreset;
+ 	struct ata_device *dev;
+ 	int rc;
  
- #endif /* CONFIG_PCI */
++	/* sata_std_hardreset is inherited to all drivers from
++	 * ata_base_port_ops.  Ignore it if SCR access is not
++	 * available.  Returning -EAGAIN from hardreset when SCR
++	 * access is unavailable achieves about the same effect but
++	 * that causes the wrong message to be printed.
++	 */
++	if (hardreset == sata_std_hardreset && !sata_scr_valid(&ap->link))
++		hardreset = NULL;
++
+ 	ata_eh_autopsy(ap);
+ 	ata_eh_report(ap);
  
--
- static int __init ata_init(void)
+-	rc = ata_eh_recover(ap, prereset, softreset, hardreset, postreset,
+-			    NULL);
++	rc = ata_eh_recover(ap, ops->prereset, ops->softreset, hardreset,
++			    ops->postreset, NULL);
+ 	if (rc) {
+ 		ata_link_for_each_dev(dev, &ap->link)
+ 			ata_dev_disable(dev);
+diff --git a/drivers/ata/libata-pmp.c b/drivers/ata/libata-pmp.c
+index 2e9eea8..19e57a7 100644
+--- a/drivers/ata/libata-pmp.c
++++ b/drivers/ata/libata-pmp.c
+@@ -962,14 +962,6 @@ static int sata_pmp_handle_link_fail(struct ata_link *link, int *link_tries)
+ /**
+  *	sata_pmp_eh_recover - recover PMP-enabled port
+  *	@ap: ATA port to recover
+- *	@prereset: prereset method (can be NULL)
+- *	@softreset: softreset method
+- *	@hardreset: hardreset method
+- *	@postreset: postreset method (can be NULL)
+- *	@pmp_prereset: PMP prereset method (can be NULL)
+- *	@pmp_softreset: PMP softreset method (can be NULL)
+- *	@pmp_hardreset: PMP hardreset method (can be NULL)
+- *	@pmp_postreset: PMP postreset method (can be NULL)
+  *
+  *	Drive EH recovery operation for PMP enabled port @ap.  This
+  *	function recovers host and PMP ports with proper retrials and
+@@ -982,12 +974,9 @@ static int sata_pmp_handle_link_fail(struct ata_link *link, int *link_tries)
+  *	RETURNS:
+  *	0 on success, -errno on failure.
+  */
+-static int sata_pmp_eh_recover(struct ata_port *ap,
+-		ata_prereset_fn_t prereset, ata_reset_fn_t softreset,
+-		ata_reset_fn_t hardreset, ata_postreset_fn_t postreset,
+-		ata_prereset_fn_t pmp_prereset, ata_reset_fn_t pmp_softreset,
+-		ata_reset_fn_t pmp_hardreset, ata_postreset_fn_t pmp_postreset)
++static int sata_pmp_eh_recover(struct ata_port *ap)
  {
- 	ata_probe_timeout *= HZ;
-@@ -7482,7 +7585,7 @@ static unsigned int ata_dummy_qc_issue(struct ata_queued_cmd *qc)
- 	return AC_ERR_SYSTEM;
++	struct ata_port_operations *ops = ap->ops;
+ 	int pmp_tries, link_tries[SATA_PMP_MAX_PORTS];
+ 	struct ata_link *pmp_link = &ap->link;
+ 	struct ata_device *pmp_dev = pmp_link->device;
+@@ -1005,8 +994,8 @@ static int sata_pmp_eh_recover(struct ata_port *ap,
+  retry:
+ 	/* PMP attached? */
+ 	if (!ap->nr_pmp_links) {
+-		rc = ata_eh_recover(ap, prereset, softreset, hardreset,
+-				    postreset, NULL);
++		rc = ata_eh_recover(ap, ops->prereset, ops->softreset,
++				    ops->hardreset, ops->postreset, NULL);
+ 		if (rc) {
+ 			ata_link_for_each_dev(dev, &ap->link)
+ 				ata_dev_disable(dev);
+@@ -1024,8 +1013,8 @@ static int sata_pmp_eh_recover(struct ata_port *ap,
+ 	}
+ 
+ 	/* recover pmp */
+-	rc = sata_pmp_eh_recover_pmp(ap, prereset, softreset, hardreset,
+-				     postreset);
++	rc = sata_pmp_eh_recover_pmp(ap, ops->prereset, ops->softreset,
++				     ops->hardreset, ops->postreset);
+ 	if (rc)
+ 		goto pmp_fail;
+ 
+@@ -1035,8 +1024,8 @@ static int sata_pmp_eh_recover(struct ata_port *ap,
+ 		goto pmp_fail;
+ 
+ 	/* recover links */
+-	rc = ata_eh_recover(ap, pmp_prereset, pmp_softreset, pmp_hardreset,
+-			    pmp_postreset, &link);
++	rc = ata_eh_recover(ap, ops->pmp_prereset, ops->pmp_softreset,
++			    ops->pmp_hardreset, ops->pmp_postreset, &link);
+ 	if (rc)
+ 		goto link_fail;
+ 
+@@ -1132,16 +1121,8 @@ static int sata_pmp_eh_recover(struct ata_port *ap,
  }
  
--const struct ata_port_operations ata_dummy_port_ops = {
-+struct ata_port_operations ata_dummy_port_ops = {
- 	.check_status		= ata_dummy_check_status,
- 	.check_altstatus	= ata_dummy_check_status,
- 	.dev_select		= ata_noop_dev_select,
-@@ -7510,6 +7613,11 @@ const struct ata_port_info ata_dummy_port_info = {
- EXPORT_SYMBOL_GPL(sata_deb_timing_normal);
- EXPORT_SYMBOL_GPL(sata_deb_timing_hotplug);
- EXPORT_SYMBOL_GPL(sata_deb_timing_long);
-+EXPORT_SYMBOL_GPL(ata_base_port_ops);
-+EXPORT_SYMBOL_GPL(sata_port_ops);
-+EXPORT_SYMBOL_GPL(sata_pmp_port_ops);
-+EXPORT_SYMBOL_GPL(ata_sff_port_ops);
-+EXPORT_SYMBOL_GPL(ata_bmdma_port_ops);
- EXPORT_SYMBOL_GPL(ata_dummy_port_ops);
- EXPORT_SYMBOL_GPL(ata_dummy_port_info);
- EXPORT_SYMBOL_GPL(ata_std_bios_param);
+ /**
+- *	sata_pmp_do_eh - do standard error handling for PMP-enabled host
++ *	sata_pmp_error_handler - do standard error handling for PMP-enabled host
+  *	@ap: host port to handle error for
+- *	@prereset: prereset method (can be NULL)
+- *	@softreset: softreset method
+- *	@hardreset: hardreset method
+- *	@postreset: postreset method (can be NULL)
+- *	@pmp_prereset: PMP prereset method (can be NULL)
+- *	@pmp_softreset: PMP softreset method (can be NULL)
+- *	@pmp_hardreset: PMP hardreset method (can be NULL)
+- *	@pmp_postreset: PMP postreset method (can be NULL)
+  *
+  *	Perform standard error handling sequence for PMP-enabled host
+  *	@ap.
+@@ -1149,16 +1130,10 @@ static int sata_pmp_eh_recover(struct ata_port *ap,
+  *	LOCKING:
+  *	Kernel thread context (may sleep).
+  */
+-void sata_pmp_do_eh(struct ata_port *ap,
+-		ata_prereset_fn_t prereset, ata_reset_fn_t softreset,
+-		ata_reset_fn_t hardreset, ata_postreset_fn_t postreset,
+-		ata_prereset_fn_t pmp_prereset, ata_reset_fn_t pmp_softreset,
+-		ata_reset_fn_t pmp_hardreset, ata_postreset_fn_t pmp_postreset)
++void sata_pmp_error_handler(struct ata_port *ap)
+ {
+ 	ata_eh_autopsy(ap);
+ 	ata_eh_report(ap);
+-	sata_pmp_eh_recover(ap, prereset, softreset, hardreset, postreset,
+-			    pmp_prereset, pmp_softreset, pmp_hardreset,
+-			    pmp_postreset);
++	sata_pmp_eh_recover(ap);
+ 	ata_eh_finish(ap);
+ }
+diff --git a/drivers/ata/libata-sff.c b/drivers/ata/libata-sff.c
+index 538b4af..4132667 100644
+--- a/drivers/ata/libata-sff.c
++++ b/drivers/ata/libata-sff.c
+@@ -389,27 +389,18 @@ void ata_bmdma_thaw(struct ata_port *ap)
+ }
+ 
+ /**
+- *	ata_bmdma_drive_eh - Perform EH with given methods for BMDMA controller
++ *	ata_bmdma_error_handler - Stock error handler for BMDMA controller
+  *	@ap: port to handle error for
+- *	@prereset: prereset method (can be NULL)
+- *	@softreset: softreset method (can be NULL)
+- *	@hardreset: hardreset method (can be NULL)
+- *	@postreset: postreset method (can be NULL)
+  *
+- *	Handle error for ATA BMDMA controller.  It can handle both
++ *	Stock error handler for BMDMA controller.  It can handle both
+  *	PATA and SATA controllers.  Many controllers should be able to
+  *	use this EH as-is or with some added handling before and
+  *	after.
+  *
+- *	This function is intended to be used for constructing
+- *	->error_handler callback by low level drivers.
+- *
+  *	LOCKING:
+  *	Kernel thread context (may sleep)
+  */
+-void ata_bmdma_drive_eh(struct ata_port *ap, ata_prereset_fn_t prereset,
+-			ata_reset_fn_t softreset, ata_reset_fn_t hardreset,
+-			ata_postreset_fn_t postreset)
++void ata_bmdma_error_handler(struct ata_port *ap)
+ {
+ 	struct ata_queued_cmd *qc;
+ 	unsigned long flags;
+@@ -453,28 +444,7 @@ void ata_bmdma_drive_eh(struct ata_port *ap, ata_prereset_fn_t prereset,
+ 		ata_eh_thaw_port(ap);
+ 
+ 	/* PIO and DMA engines have been stopped, perform recovery */
+-	ata_do_eh(ap, prereset, softreset, hardreset, postreset);
+-}
+-
+-/**
+- *	ata_bmdma_error_handler - Stock error handler for BMDMA controller
+- *	@ap: port to handle error for
+- *
+- *	Stock error handler for BMDMA controller.
+- *
+- *	LOCKING:
+- *	Kernel thread context (may sleep)
+- */
+-void ata_bmdma_error_handler(struct ata_port *ap)
+-{
+-	ata_reset_fn_t hardreset;
+-
+-	hardreset = NULL;
+-	if (sata_scr_valid(&ap->link))
+-		hardreset = sata_std_hardreset;
+-
+-	ata_bmdma_drive_eh(ap, ata_std_prereset, ata_std_softreset, hardreset,
+-			   ata_std_postreset);
++	ata_std_error_handler(ap);
+ }
+ 
+ /**
 diff --git a/drivers/ata/pata_acpi.c b/drivers/ata/pata_acpi.c
-index fbe213f..2810488 100644
+index 7dd28fd..d337f32 100644
 --- a/drivers/ata/pata_acpi.c
 +++ b/drivers/ata/pata_acpi.c
-@@ -235,39 +235,14 @@ static struct scsi_host_template pacpi_sht = {
- 	ATA_BMDMA_SHT(DRV_NAME),
- };
+@@ -68,20 +68,6 @@ static int pacpi_cable_detect(struct ata_port *ap)
+ }
  
--static const struct ata_port_operations pacpi_ops = {
-+static struct ata_port_operations pacpi_ops = {
-+	.inherits		= &ata_bmdma_port_ops,
-+	.qc_issue		= pacpi_qc_issue_prot,
-+	.cable_detect		= pacpi_cable_detect,
-+	.mode_filter		= pacpi_mode_filter,
+ /**
+- *	pacpi_error_handler - Setup and error handler
+- *	@ap: Port to handle
+- *
+- *	LOCKING:
+- *	None (inherited from caller).
+- */
+-
+-static void pacpi_error_handler(struct ata_port *ap)
+-{
+-	return ata_bmdma_drive_eh(ap, pacpi_pre_reset, ata_std_softreset,
+-				  NULL, ata_std_postreset);
+-}
+-
+-/**
+  *	pacpi_discover_modes	-	filter non ACPI modes
+  *	@adev: ATA device
+  *	@mask: proposed modes
+@@ -242,7 +228,7 @@ static struct ata_port_operations pacpi_ops = {
+ 	.mode_filter		= pacpi_mode_filter,
  	.set_piomode		= pacpi_set_piomode,
  	.set_dmamode		= pacpi_set_dmamode,
--	.mode_filter		= pacpi_mode_filter,
--
--	/* Task file is PCI ATA format, use helpers */
--	.tf_load		= ata_tf_load,
--	.tf_read		= ata_tf_read,
--	.check_status		= ata_check_status,
--	.exec_command		= ata_exec_command,
--	.dev_select		= ata_std_dev_select,
--
--	.freeze			= ata_bmdma_freeze,
--	.thaw			= ata_bmdma_thaw,
- 	.error_handler		= pacpi_error_handler,
--	.post_internal_cmd	= ata_bmdma_post_internal_cmd,
--	.cable_detect		= pacpi_cable_detect,
--
--	/* BMDMA handling is PCI ATA format, use helpers */
--	.bmdma_setup		= ata_bmdma_setup,
--	.bmdma_start		= ata_bmdma_start,
--	.bmdma_stop		= ata_bmdma_stop,
--	.bmdma_status		= ata_bmdma_status,
--	.qc_prep		= ata_qc_prep,
--	.qc_issue		= pacpi_qc_issue_prot,
--	.data_xfer		= ata_data_xfer,
--
--	/* Timeout handling */
--	.irq_handler		= ata_interrupt,
--	.irq_clear		= ata_bmdma_irq_clear,
--	.irq_on			= ata_irq_on,
--
--	/* Generic PATA PCI ATA helpers */
+-	.error_handler		= pacpi_error_handler,
++	.prereset		= pacpi_pre_reset,
  	.port_start		= pacpi_port_start,
  };
  
-diff --git a/drivers/ata/pata_ali.c b/drivers/ata/pata_ali.c
-index af028a6..ad9dce9 100644
---- a/drivers/ata/pata_ali.c
-+++ b/drivers/ata/pata_ali.c
-@@ -309,29 +309,15 @@ static struct scsi_host_template ali_sht = {
-  */
- 
- static struct ata_port_operations ali_early_port_ops = {
--	.set_piomode	= ali_set_piomode,
--	.tf_load	= ata_tf_load,
--	.tf_read	= ata_tf_read,
--	.check_status 	= ata_check_status,
--	.exec_command	= ata_exec_command,
--	.dev_select 	= ata_std_dev_select,
--
--	.freeze		= ata_bmdma_freeze,
--	.thaw		= ata_bmdma_thaw,
--	.error_handler	= ata_bmdma_error_handler,
--	.post_internal_cmd = ata_bmdma_post_internal_cmd,
-+	.inherits	= &ata_sff_port_ops,
- 	.cable_detect	= ata_cable_40wire,
-+	.set_piomode	= ali_set_piomode,
-+};
- 
--	.qc_prep 	= ata_qc_prep,
--	.qc_issue	= ata_qc_issue_prot,
--
--	.data_xfer	= ata_data_xfer,
--
--	.irq_handler	= ata_interrupt,
--	.irq_clear	= ata_noop_irq_clear,
--	.irq_on		= ata_irq_on,
--
--	.port_start	= ata_sff_port_start,
-+static const struct ata_port_operations ali_dma_base_ops = {
-+	.inherits	= &ata_bmdma_port_ops,
-+	.set_piomode	= ali_set_piomode,
-+	.set_dmamode	= ali_set_dmamode,
- };
- 
- /*
-@@ -339,113 +325,29 @@ static struct ata_port_operations ali_early_port_ops = {
-  *	detect
-  */
- static struct ata_port_operations ali_20_port_ops = {
--	.set_piomode	= ali_set_piomode,
--	.set_dmamode	= ali_set_dmamode,
-+	.inherits	= &ali_dma_base_ops,
-+	.cable_detect	= ata_cable_40wire,
- 	.mode_filter	= ali_20_filter,
--
--	.tf_load	= ata_tf_load,
--	.tf_read	= ata_tf_read,
--	.check_status 	= ata_check_status,
--	.exec_command	= ata_exec_command,
--	.dev_select 	= ata_std_dev_select,
- 	.dev_config	= ali_lock_sectors,
--
--	.freeze		= ata_bmdma_freeze,
--	.thaw		= ata_bmdma_thaw,
--	.error_handler	= ata_bmdma_error_handler,
--	.post_internal_cmd = ata_bmdma_post_internal_cmd,
--	.cable_detect	= ata_cable_40wire,
--
--	.bmdma_setup 	= ata_bmdma_setup,
--	.bmdma_start 	= ata_bmdma_start,
--	.bmdma_stop	= ata_bmdma_stop,
--	.bmdma_status 	= ata_bmdma_status,
--
--	.qc_prep 	= ata_qc_prep,
--	.qc_issue	= ata_qc_issue_prot,
--
--	.data_xfer	= ata_data_xfer,
--
--	.irq_handler	= ata_interrupt,
--	.irq_clear	= ata_bmdma_irq_clear,
--	.irq_on		= ata_irq_on,
--
--	.port_start	= ata_sff_port_start,
- };
- 
- /*
-  *	Port operations for DMA capable ALi with cable detect
-  */
- static struct ata_port_operations ali_c2_port_ops = {
--	.set_piomode	= ali_set_piomode,
--	.set_dmamode	= ali_set_dmamode,
--	.mode_filter	= ata_pci_default_filter,
--	.tf_load	= ata_tf_load,
--	.tf_read	= ata_tf_read,
-+	.inherits	= &ali_dma_base_ops,
- 	.check_atapi_dma = ali_check_atapi_dma,
--	.check_status 	= ata_check_status,
--	.exec_command	= ata_exec_command,
--	.dev_select 	= ata_std_dev_select,
--	.dev_config	= ali_lock_sectors,
--
--	.freeze		= ata_bmdma_freeze,
--	.thaw		= ata_bmdma_thaw,
--	.error_handler	= ata_bmdma_error_handler,
--	.post_internal_cmd = ata_bmdma_post_internal_cmd,
- 	.cable_detect	= ali_c2_cable_detect,
--
--	.bmdma_setup 	= ata_bmdma_setup,
--	.bmdma_start 	= ata_bmdma_start,
--	.bmdma_stop	= ata_bmdma_stop,
--	.bmdma_status 	= ata_bmdma_status,
--
--	.qc_prep 	= ata_qc_prep,
--	.qc_issue	= ata_qc_issue_prot,
--
--	.data_xfer	= ata_data_xfer,
--
--	.irq_handler	= ata_interrupt,
--	.irq_clear	= ata_bmdma_irq_clear,
--	.irq_on		= ata_irq_on,
--
--	.port_start	= ata_sff_port_start,
-+	.dev_config	= ali_lock_sectors,
- };
- 
- /*
-  *	Port operations for DMA capable ALi with cable detect and LBA48
-  */
- static struct ata_port_operations ali_c5_port_ops = {
--	.set_piomode	= ali_set_piomode,
--	.set_dmamode	= ali_set_dmamode,
--	.mode_filter	= ata_pci_default_filter,
--	.tf_load	= ata_tf_load,
--	.tf_read	= ata_tf_read,
-+	.inherits	= &ali_dma_base_ops,
- 	.check_atapi_dma = ali_check_atapi_dma,
--	.check_status 	= ata_check_status,
--	.exec_command	= ata_exec_command,
--	.dev_select 	= ata_std_dev_select,
--
--	.freeze		= ata_bmdma_freeze,
--	.thaw		= ata_bmdma_thaw,
--	.error_handler	= ata_bmdma_error_handler,
--	.post_internal_cmd = ata_bmdma_post_internal_cmd,
- 	.cable_detect	= ali_c2_cable_detect,
--
--	.bmdma_setup 	= ata_bmdma_setup,
--	.bmdma_start 	= ata_bmdma_start,
--	.bmdma_stop	= ata_bmdma_stop,
--	.bmdma_status 	= ata_bmdma_status,
--
--	.qc_prep 	= ata_qc_prep,
--	.qc_issue	= ata_qc_issue_prot,
--
--	.data_xfer	= ata_data_xfer,
--
--	.irq_handler	= ata_interrupt,
--	.irq_clear	= ata_bmdma_irq_clear,
--	.irq_on		= ata_irq_on,
--
--	.port_start	= ata_sff_port_start,
- };
- 
- 
 diff --git a/drivers/ata/pata_amd.c b/drivers/ata/pata_amd.c
-index 94f859b..0f317e0 100644
+index a7013c9..24fb14d 100644
 --- a/drivers/ata/pata_amd.c
 +++ b/drivers/ata/pata_amd.c
-@@ -357,206 +357,57 @@ static struct scsi_host_template amd_sht = {
- 	ATA_BMDMA_SHT(DRV_NAME),
+@@ -144,13 +144,6 @@ static int amd_pre_reset(struct ata_link *link, unsigned long deadline)
+ 	return ata_std_prereset(link, deadline);
+ }
+ 
+-static void amd_error_handler(struct ata_port *ap)
+-{
+-	return ata_bmdma_drive_eh(ap, amd_pre_reset,
+-				      ata_std_softreset, NULL,
+-				      ata_std_postreset);
+-}
+-
+ static int amd_cable_detect(struct ata_port *ap)
+ {
+ 	static const u32 bitmask[2] = {0x03, 0x0C};
+@@ -301,13 +294,6 @@ static int nv_pre_reset(struct ata_link *link, unsigned long deadline)
+ 	return ata_std_prereset(link, deadline);
+ }
+ 
+-static void nv_error_handler(struct ata_port *ap)
+-{
+-	ata_bmdma_drive_eh(ap, nv_pre_reset,
+-			       ata_std_softreset, NULL,
+-			       ata_std_postreset);
+-}
+-
+ /**
+  *	nv100_set_piomode	-	set initial PIO mode data
+  *	@ap: ATA interface
+@@ -359,7 +345,7 @@ static struct scsi_host_template amd_sht = {
+ 
+ static const struct ata_port_operations amd_base_port_ops = {
+ 	.inherits	= &ata_bmdma_port_ops,
+-	.error_handler	= amd_error_handler,
++	.prereset	= amd_pre_reset,
  };
  
-+static const struct ata_port_operations amd_base_port_ops = {
-+	.inherits	= &ata_bmdma_port_ops,
-+	.error_handler	= amd_error_handler,
-+};
-+
  static struct ata_port_operations amd33_port_ops = {
-+	.inherits	= &amd_base_port_ops,
-+	.cable_detect	= ata_cable_40wire,
- 	.set_piomode	= amd33_set_piomode,
- 	.set_dmamode	= amd33_set_dmamode,
--	.mode_filter	= ata_pci_default_filter,
--	.tf_load	= ata_tf_load,
--	.tf_read	= ata_tf_read,
--	.check_status 	= ata_check_status,
--	.exec_command	= ata_exec_command,
--	.dev_select 	= ata_std_dev_select,
--
--	.freeze		= ata_bmdma_freeze,
--	.thaw		= ata_bmdma_thaw,
--	.error_handler	= amd_error_handler,
--	.post_internal_cmd = ata_bmdma_post_internal_cmd,
--	.cable_detect	= ata_cable_40wire,
--
--	.bmdma_setup 	= ata_bmdma_setup,
--	.bmdma_start 	= ata_bmdma_start,
--	.bmdma_stop	= ata_bmdma_stop,
--	.bmdma_status 	= ata_bmdma_status,
--
--	.qc_prep 	= ata_qc_prep,
--	.qc_issue	= ata_qc_issue_prot,
--
--	.data_xfer	= ata_data_xfer,
--
--	.irq_handler	= ata_interrupt,
--	.irq_clear	= ata_bmdma_irq_clear,
--	.irq_on		= ata_irq_on,
--
--	.port_start	= ata_sff_port_start,
- };
- 
- static struct ata_port_operations amd66_port_ops = {
-+	.inherits	= &amd_base_port_ops,
-+	.cable_detect	= ata_cable_unknown,
- 	.set_piomode	= amd66_set_piomode,
- 	.set_dmamode	= amd66_set_dmamode,
--	.mode_filter	= ata_pci_default_filter,
--	.tf_load	= ata_tf_load,
--	.tf_read	= ata_tf_read,
--	.check_status 	= ata_check_status,
--	.exec_command	= ata_exec_command,
--	.dev_select 	= ata_std_dev_select,
--
--	.freeze		= ata_bmdma_freeze,
--	.thaw		= ata_bmdma_thaw,
--	.error_handler	= amd_error_handler,
--	.post_internal_cmd = ata_bmdma_post_internal_cmd,
--	.cable_detect	= ata_cable_unknown,
--
--	.bmdma_setup 	= ata_bmdma_setup,
--	.bmdma_start 	= ata_bmdma_start,
--	.bmdma_stop	= ata_bmdma_stop,
--	.bmdma_status 	= ata_bmdma_status,
--
--	.qc_prep 	= ata_qc_prep,
--	.qc_issue	= ata_qc_issue_prot,
--
--	.data_xfer	= ata_data_xfer,
--
--	.irq_handler	= ata_interrupt,
--	.irq_clear	= ata_bmdma_irq_clear,
--	.irq_on		= ata_irq_on,
--
--	.port_start	= ata_sff_port_start,
- };
- 
- static struct ata_port_operations amd100_port_ops = {
-+	.inherits	= &amd_base_port_ops,
-+	.cable_detect	= ata_cable_unknown,
- 	.set_piomode	= amd100_set_piomode,
- 	.set_dmamode	= amd100_set_dmamode,
--	.mode_filter	= ata_pci_default_filter,
--	.tf_load	= ata_tf_load,
--	.tf_read	= ata_tf_read,
--	.check_status 	= ata_check_status,
--	.exec_command	= ata_exec_command,
--	.dev_select 	= ata_std_dev_select,
--
--	.freeze		= ata_bmdma_freeze,
--	.thaw		= ata_bmdma_thaw,
--	.error_handler	= amd_error_handler,
--	.post_internal_cmd = ata_bmdma_post_internal_cmd,
--	.cable_detect	= ata_cable_unknown,
--
--	.bmdma_setup 	= ata_bmdma_setup,
--	.bmdma_start 	= ata_bmdma_start,
--	.bmdma_stop	= ata_bmdma_stop,
--	.bmdma_status 	= ata_bmdma_status,
--
--	.qc_prep 	= ata_qc_prep,
--	.qc_issue	= ata_qc_issue_prot,
--
--	.data_xfer	= ata_data_xfer,
--
--	.irq_handler	= ata_interrupt,
--	.irq_clear	= ata_bmdma_irq_clear,
--	.irq_on		= ata_irq_on,
--
--	.port_start	= ata_sff_port_start,
- };
- 
- static struct ata_port_operations amd133_port_ops = {
-+	.inherits	= &amd_base_port_ops,
-+	.cable_detect	= amd_cable_detect,
- 	.set_piomode	= amd133_set_piomode,
- 	.set_dmamode	= amd133_set_dmamode,
--	.mode_filter	= ata_pci_default_filter,
--	.tf_load	= ata_tf_load,
--	.tf_read	= ata_tf_read,
--	.check_status 	= ata_check_status,
--	.exec_command	= ata_exec_command,
--	.dev_select 	= ata_std_dev_select,
--
--	.freeze		= ata_bmdma_freeze,
--	.thaw		= ata_bmdma_thaw,
--	.error_handler	= amd_error_handler,
--	.post_internal_cmd = ata_bmdma_post_internal_cmd,
--	.cable_detect	= amd_cable_detect,
--
--	.bmdma_setup 	= ata_bmdma_setup,
--	.bmdma_start 	= ata_bmdma_start,
--	.bmdma_stop	= ata_bmdma_stop,
--	.bmdma_status 	= ata_bmdma_status,
--
--	.qc_prep 	= ata_qc_prep,
--	.qc_issue	= ata_qc_issue_prot,
--
--	.data_xfer	= ata_data_xfer,
--
--	.irq_handler	= ata_interrupt,
--	.irq_clear	= ata_bmdma_irq_clear,
--	.irq_on		= ata_irq_on,
-+};
- 
--	.port_start	= ata_sff_port_start,
-+static const struct ata_port_operations nv_base_port_ops = {
-+	.inherits	= &ata_bmdma_port_ops,
-+	.cable_detect	= ata_cable_ignore,
-+	.mode_filter	= nv_mode_filter,
-+	.error_handler	= nv_error_handler,
-+	.host_stop	= nv_host_stop,
- };
- 
- static struct ata_port_operations nv100_port_ops = {
-+	.inherits	= &nv_base_port_ops,
- 	.set_piomode	= nv100_set_piomode,
- 	.set_dmamode	= nv100_set_dmamode,
--	.mode_filter	= ata_pci_default_filter,
--	.tf_load	= ata_tf_load,
--	.tf_read	= ata_tf_read,
--	.check_status 	= ata_check_status,
--	.exec_command	= ata_exec_command,
--	.dev_select 	= ata_std_dev_select,
--
--	.freeze		= ata_bmdma_freeze,
--	.thaw		= ata_bmdma_thaw,
+@@ -394,7 +380,7 @@ static const struct ata_port_operations nv_base_port_ops = {
+ 	.inherits	= &ata_bmdma_port_ops,
+ 	.cable_detect	= ata_cable_ignore,
+ 	.mode_filter	= nv_mode_filter,
 -	.error_handler	= nv_error_handler,
--	.post_internal_cmd = ata_bmdma_post_internal_cmd,
--	.cable_detect	= ata_cable_ignore,
--	.mode_filter	= nv_mode_filter,
--
--	.bmdma_setup 	= ata_bmdma_setup,
--	.bmdma_start 	= ata_bmdma_start,
--	.bmdma_stop	= ata_bmdma_stop,
--	.bmdma_status 	= ata_bmdma_status,
--
--	.qc_prep 	= ata_qc_prep,
--	.qc_issue	= ata_qc_issue_prot,
--
--	.data_xfer	= ata_data_xfer,
--
--	.irq_handler	= ata_interrupt,
--	.irq_clear	= ata_bmdma_irq_clear,
--	.irq_on		= ata_irq_on,
--
--	.port_start	= ata_sff_port_start,
--	.host_stop	= nv_host_stop,
++	.prereset	= nv_pre_reset,
+ 	.host_stop	= nv_host_stop,
  };
  
- static struct ata_port_operations nv133_port_ops = {
-+	.inherits	= &nv_base_port_ops,
- 	.set_piomode	= nv133_set_piomode,
- 	.set_dmamode	= nv133_set_dmamode,
--	.mode_filter	= ata_pci_default_filter,
--	.tf_load	= ata_tf_load,
--	.tf_read	= ata_tf_read,
--	.check_status 	= ata_check_status,
--	.exec_command	= ata_exec_command,
--	.dev_select 	= ata_std_dev_select,
--
--	.freeze		= ata_bmdma_freeze,
--	.thaw		= ata_bmdma_thaw,
--	.error_handler	= nv_error_handler,
--	.post_internal_cmd = ata_bmdma_post_internal_cmd,
--	.cable_detect	= ata_cable_ignore,
--	.mode_filter	= nv_mode_filter,
--
--	.bmdma_setup 	= ata_bmdma_setup,
--	.bmdma_start 	= ata_bmdma_start,
--	.bmdma_stop	= ata_bmdma_stop,
--	.bmdma_status 	= ata_bmdma_status,
--
--	.qc_prep 	= ata_qc_prep,
--	.qc_issue	= ata_qc_issue_prot,
--
--	.data_xfer	= ata_data_xfer,
--
--	.irq_handler	= ata_interrupt,
--	.irq_clear	= ata_bmdma_irq_clear,
--	.irq_on		= ata_irq_on,
--
--	.port_start	= ata_sff_port_start,
--	.host_stop	= nv_host_stop,
- };
- 
- static int amd_init_one(struct pci_dev *pdev, const struct pci_device_id *id)
 diff --git a/drivers/ata/pata_artop.c b/drivers/ata/pata_artop.c
-index 7bfb7e8..0101e5a 100644
+index ebd15ca..b6d8c4d 100644
 --- a/drivers/ata/pata_artop.c
 +++ b/drivers/ata/pata_artop.c
-@@ -317,69 +317,20 @@ static struct scsi_host_template artop_sht = {
- 	ATA_BMDMA_SHT(DRV_NAME),
- };
+@@ -56,21 +56,6 @@ static int artop6210_pre_reset(struct ata_link *link, unsigned long deadline)
+ }
  
--static const struct ata_port_operations artop6210_ops = {
-+static struct ata_port_operations artop6210_ops = {
-+	.inherits		= &ata_bmdma_port_ops,
-+	.cable_detect		= ata_cable_40wire,
+ /**
+- *	artop6210_error_handler - Probe specified port on PATA host controller
+- *	@ap: Port to probe
+- *
+- *	LOCKING:
+- *	None (inherited from caller).
+- */
+-
+-static void artop6210_error_handler(struct ata_port *ap)
+-{
+-	ata_bmdma_drive_eh(ap, artop6210_pre_reset,
+-				    ata_std_softreset, NULL,
+-				    ata_std_postreset);
+-}
+-
+-/**
+  *	artop6260_pre_reset	-	check for 40/80 pin
+  *	@link: link
+  *	@deadline: deadline jiffies for the operation
+@@ -114,21 +99,6 @@ static int artop6260_cable_detect(struct ata_port *ap)
+ }
+ 
+ /**
+- *	artop6260_error_handler - Probe specified port on PATA host controller
+- *	@ap: Port to probe
+- *
+- *	LOCKING:
+- *	None (inherited from caller).
+- */
+-
+-static void artop6260_error_handler(struct ata_port *ap)
+-{
+-	ata_bmdma_drive_eh(ap, artop6260_pre_reset,
+-				    ata_std_softreset, NULL,
+-				    ata_std_postreset);
+-}
+-
+-/**
+  *	artop6210_load_piomode - Load a set of PATA PIO timings
+  *	@ap: Port whose timings we are configuring
+  *	@adev: Device
+@@ -322,7 +292,7 @@ static struct ata_port_operations artop6210_ops = {
+ 	.cable_detect		= ata_cable_40wire,
  	.set_piomode		= artop6210_set_piomode,
  	.set_dmamode		= artop6210_set_dmamode,
--	.mode_filter		= ata_pci_default_filter,
--
--	.tf_load		= ata_tf_load,
--	.tf_read		= ata_tf_read,
--	.check_status		= ata_check_status,
--	.exec_command		= ata_exec_command,
--	.dev_select		= ata_std_dev_select,
--
--	.freeze			= ata_bmdma_freeze,
--	.thaw			= ata_bmdma_thaw,
- 	.error_handler		= artop6210_error_handler,
--	.post_internal_cmd 	= ata_bmdma_post_internal_cmd,
--	.cable_detect		= ata_cable_40wire,
--
--	.bmdma_setup		= ata_bmdma_setup,
--	.bmdma_start		= ata_bmdma_start,
--	.bmdma_stop		= ata_bmdma_stop,
--	.bmdma_status		= ata_bmdma_status,
--	.qc_prep		= ata_qc_prep,
--	.qc_issue		= ata_qc_issue_prot,
--
--	.data_xfer		= ata_data_xfer,
--
--	.irq_handler		= ata_interrupt,
--	.irq_clear		= ata_bmdma_irq_clear,
--	.irq_on			= ata_irq_on,
--
--	.port_start		= ata_sff_port_start,
+-	.error_handler		= artop6210_error_handler,
++	.prereset		= artop6210_pre_reset,
  };
  
--static const struct ata_port_operations artop6260_ops = {
-+static struct ata_port_operations artop6260_ops = {
-+	.inherits		= &ata_bmdma_port_ops,
-+	.cable_detect		= artop6260_cable_detect,
+ static struct ata_port_operations artop6260_ops = {
+@@ -330,7 +300,7 @@ static struct ata_port_operations artop6260_ops = {
+ 	.cable_detect		= artop6260_cable_detect,
  	.set_piomode		= artop6260_set_piomode,
  	.set_dmamode		= artop6260_set_dmamode,
--	.mode_filter		= ata_pci_default_filter,
--
--	.tf_load		= ata_tf_load,
--	.tf_read		= ata_tf_read,
--	.check_status		= ata_check_status,
--	.exec_command		= ata_exec_command,
--	.dev_select		= ata_std_dev_select,
--
--	.freeze			= ata_bmdma_freeze,
--	.thaw			= ata_bmdma_thaw,
- 	.error_handler		= artop6260_error_handler,
--	.post_internal_cmd 	= ata_bmdma_post_internal_cmd,
--	.cable_detect		= artop6260_cable_detect,
--
--	.bmdma_setup		= ata_bmdma_setup,
--	.bmdma_start		= ata_bmdma_start,
--	.bmdma_stop		= ata_bmdma_stop,
--	.bmdma_status		= ata_bmdma_status,
--	.qc_prep		= ata_qc_prep,
--	.qc_issue		= ata_qc_issue_prot,
--	.data_xfer		= ata_data_xfer,
--
--	.irq_handler		= ata_interrupt,
--	.irq_clear		= ata_bmdma_irq_clear,
--	.irq_on			= ata_irq_on,
--
--	.port_start		= ata_sff_port_start,
+-	.error_handler		= artop6260_error_handler,
++	.prereset		= artop6260_pre_reset,
  };
  
  
-diff --git a/drivers/ata/pata_at32.c b/drivers/ata/pata_at32.c
-index d7b7b7f..5283155 100644
---- a/drivers/ata/pata_at32.c
-+++ b/drivers/ata/pata_at32.c
-@@ -171,28 +171,9 @@ static struct scsi_host_template at32_sht = {
- };
- 
- static struct ata_port_operations at32_port_ops = {
--	.set_piomode		= pata_at32_set_piomode,
--	.tf_load		= ata_tf_load,
--	.tf_read		= ata_tf_read,
--	.exec_command		= ata_exec_command,
--	.check_status		= ata_check_status,
--	.dev_select		= ata_std_dev_select,
--
--	.freeze			= ata_bmdma_freeze,
--	.thaw			= ata_bmdma_thaw,
--	.error_handler		= ata_bmdma_error_handler,
--	.post_internal_cmd	= ata_bmdma_post_internal_cmd,
-+	.inherits		= &ata_sff_port_ops,
- 	.cable_detect		= ata_cable_40wire,
--
--	.qc_prep		= ata_qc_prep,
--	.qc_issue		= ata_qc_issue_prot,
--
--	.data_xfer		= ata_data_xfer,
--
--	.irq_clear		= ata_noop_irq_clear,
--	.irq_on			= ata_irq_on,
--
--	.port_start		= ata_sff_port_start,
-+	.set_piomode		= pata_at32_set_piomode,
- };
- 
- static int __init pata_at32_init_one(struct device *dev,
 diff --git a/drivers/ata/pata_atiixp.c b/drivers/ata/pata_atiixp.c
-index 6240db5..5bc2040 100644
+index ac6c79d..4e1f545 100644
 --- a/drivers/ata/pata_atiixp.c
 +++ b/drivers/ata/pata_atiixp.c
-@@ -225,36 +225,15 @@ static struct scsi_host_template atiixp_sht = {
- };
+@@ -48,11 +48,6 @@ static int atiixp_pre_reset(struct ata_link *link, unsigned long deadline)
+ 	return ata_std_prereset(link, deadline);
+ }
  
- static struct ata_port_operations atiixp_port_ops = {
--	.set_piomode	= atiixp_set_piomode,
--	.set_dmamode	= atiixp_set_dmamode,
--	.mode_filter	= ata_pci_default_filter,
--	.tf_load	= ata_tf_load,
--	.tf_read	= ata_tf_read,
--	.check_status 	= ata_check_status,
--	.exec_command	= ata_exec_command,
--	.dev_select 	= ata_std_dev_select,
+-static void atiixp_error_handler(struct ata_port *ap)
+-{
+-	ata_bmdma_drive_eh(ap, atiixp_pre_reset, ata_std_softreset, NULL,   ata_std_postreset);
+-}
 -
--	.freeze		= ata_bmdma_freeze,
--	.thaw		= ata_bmdma_thaw,
+ static int atiixp_cable_detect(struct ata_port *ap)
+ {
+ 	struct pci_dev *pdev = to_pci_dev(ap->host->dev);
+@@ -233,7 +228,7 @@ static struct ata_port_operations atiixp_port_ops = {
+ 	.cable_detect	= atiixp_cable_detect,
+ 	.set_piomode	= atiixp_set_piomode,
+ 	.set_dmamode	= atiixp_set_dmamode,
 -	.error_handler	= atiixp_error_handler,
--	.post_internal_cmd = ata_bmdma_post_internal_cmd,
--	.cable_detect	= atiixp_cable_detect,
-+	.inherits	= &ata_bmdma_port_ops,
- 
--	.bmdma_setup 	= ata_bmdma_setup,
- 	.bmdma_start 	= atiixp_bmdma_start,
- 	.bmdma_stop	= atiixp_bmdma_stop,
--	.bmdma_status 	= ata_bmdma_status,
--
--	.qc_prep 	= ata_qc_prep,
--	.qc_issue	= ata_qc_issue_prot,
--
--	.data_xfer	= ata_data_xfer,
- 
--	.irq_handler	= ata_interrupt,
--	.irq_clear	= ata_bmdma_irq_clear,
--	.irq_on		= ata_irq_on,
--
--	.port_start	= ata_sff_port_start,
-+	.cable_detect	= atiixp_cable_detect,
-+	.set_piomode	= atiixp_set_piomode,
-+	.set_dmamode	= atiixp_set_dmamode,
-+	.error_handler	= atiixp_error_handler,
++	.prereset	= atiixp_pre_reset,
  };
  
  static int atiixp_init_one(struct pci_dev *dev, const struct pci_device_id *id)
 diff --git a/drivers/ata/pata_bf54x.c b/drivers/ata/pata_bf54x.c
-index 6c75fca..7a22ef4 100644
+index 7a22ef4..eea275a 100644
 --- a/drivers/ata/pata_bf54x.c
 +++ b/drivers/ata/pata_bf54x.c
-@@ -1363,6 +1363,8 @@ static struct scsi_host_template bfin_sht = {
- };
+@@ -1314,17 +1314,6 @@ static void bfin_std_postreset(struct ata_link *link, unsigned int *classes)
+ 	write_atapi_register(base, ATA_REG_CTRL, ap->ctl);
+ }
  
- static const struct ata_port_operations bfin_pata_ops = {
-+	.inherits		= &ata_sff_port_ops,
-+
- 	.set_piomode		= bfin_set_piomode,
- 	.set_dmamode		= bfin_set_dmamode,
- 
-@@ -1380,14 +1382,12 @@ static const struct ata_port_operations bfin_pata_ops = {
- 	.data_xfer		= bfin_data_xfer,
- 
- 	.qc_prep		= ata_noop_qc_prep,
--	.qc_issue		= ata_qc_issue_prot,
+-/**
+- *	bfin_error_handler - Stock error handler for DMA controller
+- *	@ap: port to handle error for
+- */
+-
+-static void bfin_error_handler(struct ata_port *ap)
+-{
+-	ata_bmdma_drive_eh(ap, ata_std_prereset, bfin_std_softreset, NULL,
+-			   bfin_std_postreset);
+-}
+-
+ static void bfin_port_stop(struct ata_port *ap)
+ {
+ 	dev_dbg(ap->dev, "in atapi port stop\n");
+@@ -1385,7 +1374,8 @@ static const struct ata_port_operations bfin_pata_ops = {
  
  	.freeze			= bfin_bmdma_freeze,
  	.thaw			= bfin_bmdma_thaw,
- 	.error_handler		= bfin_error_handler,
+-	.error_handler		= bfin_error_handler,
++	.softreset		= bfin_std_softreset,
++	.postreset		= bfin_std_postreset,
  	.post_internal_cmd	= bfin_bmdma_stop,
  
--	.irq_handler		= ata_interrupt,
  	.irq_clear		= bfin_irq_clear,
- 	.irq_on			= bfin_irq_on,
- 
-diff --git a/drivers/ata/pata_cmd640.c b/drivers/ata/pata_cmd640.c
-index 26562b8..061c891 100644
---- a/drivers/ata/pata_cmd640.c
-+++ b/drivers/ata/pata_cmd640.c
-@@ -170,35 +170,12 @@ static struct scsi_host_template cmd640_sht = {
- };
- 
- static struct ata_port_operations cmd640_port_ops = {
--	.set_piomode	= cmd640_set_piomode,
--	.mode_filter	= ata_pci_default_filter,
--	.tf_load	= ata_tf_load,
--	.tf_read	= ata_tf_read,
--	.check_status 	= ata_check_status,
--	.exec_command	= ata_exec_command,
--	.dev_select 	= ata_std_dev_select,
--
--	.freeze		= ata_bmdma_freeze,
--	.thaw		= ata_bmdma_thaw,
--	.error_handler	= ata_bmdma_error_handler,
--	.post_internal_cmd = ata_bmdma_post_internal_cmd,
--	.cable_detect	= ata_cable_40wire,
--
--	.bmdma_setup 	= ata_bmdma_setup,
--	.bmdma_start 	= ata_bmdma_start,
--	.bmdma_stop	= ata_bmdma_stop,
--	.bmdma_status 	= ata_bmdma_status,
--
--	.qc_prep 	= ata_qc_prep,
--	.qc_issue	= cmd640_qc_issue_prot,
--
--	/* In theory this is not needed once we kill the prefetcher */
-+	.inherits	= &ata_bmdma_port_ops,
-+	/* In theory xfer_noirq is not needed once we kill the prefetcher */
- 	.data_xfer	= ata_data_xfer_noirq,
--
--	.irq_handler	= ata_interrupt,
--	.irq_clear	= ata_bmdma_irq_clear,
--	.irq_on		= ata_irq_on,
--
-+	.qc_issue	= cmd640_qc_issue_prot,
-+	.cable_detect	= ata_cable_40wire,
-+	.set_piomode	= cmd640_set_piomode,
- 	.port_start	= cmd640_port_start,
- };
- 
-diff --git a/drivers/ata/pata_cmd64x.c b/drivers/ata/pata_cmd64x.c
-index 6aea05c..1ac8ecf 100644
---- a/drivers/ata/pata_cmd64x.c
-+++ b/drivers/ata/pata_cmd64x.c
-@@ -269,103 +269,27 @@ static struct scsi_host_template cmd64x_sht = {
- 	ATA_BMDMA_SHT(DRV_NAME),
- };
- 
--static struct ata_port_operations cmd64x_port_ops = {
-+static const struct ata_port_operations cmd64x_base_ops = {
-+	.inherits	= &ata_bmdma_port_ops,
- 	.set_piomode	= cmd64x_set_piomode,
- 	.set_dmamode	= cmd64x_set_dmamode,
--	.mode_filter	= ata_pci_default_filter,
--	.tf_load	= ata_tf_load,
--	.tf_read	= ata_tf_read,
--	.check_status 	= ata_check_status,
--	.exec_command	= ata_exec_command,
--	.dev_select 	= ata_std_dev_select,
--
--	.freeze		= ata_bmdma_freeze,
--	.thaw		= ata_bmdma_thaw,
--	.error_handler	= ata_bmdma_error_handler,
--	.post_internal_cmd = ata_bmdma_post_internal_cmd,
--	.cable_detect	= ata_cable_40wire,
--
--	.bmdma_setup 	= ata_bmdma_setup,
--	.bmdma_start 	= ata_bmdma_start,
--	.bmdma_stop	= ata_bmdma_stop,
--	.bmdma_status 	= ata_bmdma_status,
--
--	.qc_prep 	= ata_qc_prep,
--	.qc_issue	= ata_qc_issue_prot,
--
--	.data_xfer	= ata_data_xfer,
--
--	.irq_handler	= ata_interrupt,
--	.irq_clear	= ata_bmdma_irq_clear,
--	.irq_on		= ata_irq_on,
--
--	.port_start	= ata_sff_port_start,
- };
- 
--static struct ata_port_operations cmd646r1_port_ops = {
--	.set_piomode	= cmd64x_set_piomode,
--	.set_dmamode	= cmd64x_set_dmamode,
--	.mode_filter	= ata_pci_default_filter,
--	.tf_load	= ata_tf_load,
--	.tf_read	= ata_tf_read,
--	.check_status 	= ata_check_status,
--	.exec_command	= ata_exec_command,
--	.dev_select 	= ata_std_dev_select,
--
--	.freeze		= ata_bmdma_freeze,
--	.thaw		= ata_bmdma_thaw,
--	.error_handler	= ata_bmdma_error_handler,
--	.post_internal_cmd = ata_bmdma_post_internal_cmd,
-+static struct ata_port_operations cmd64x_port_ops = {
-+	.inherits	= &cmd64x_base_ops,
- 	.cable_detect	= ata_cable_40wire,
-+};
- 
--	.bmdma_setup 	= ata_bmdma_setup,
--	.bmdma_start 	= ata_bmdma_start,
-+static struct ata_port_operations cmd646r1_port_ops = {
-+	.inherits	= &cmd64x_base_ops,
- 	.bmdma_stop	= cmd646r1_bmdma_stop,
--	.bmdma_status 	= ata_bmdma_status,
--
--	.qc_prep 	= ata_qc_prep,
--	.qc_issue	= ata_qc_issue_prot,
--
--	.data_xfer	= ata_data_xfer,
--
--	.irq_handler	= ata_interrupt,
--	.irq_clear	= ata_bmdma_irq_clear,
--	.irq_on		= ata_irq_on,
--
--	.port_start	= ata_sff_port_start,
-+	.cable_detect	= ata_cable_40wire,
- };
- 
- static struct ata_port_operations cmd648_port_ops = {
--	.set_piomode	= cmd64x_set_piomode,
--	.set_dmamode	= cmd64x_set_dmamode,
--	.mode_filter	= ata_pci_default_filter,
--	.tf_load	= ata_tf_load,
--	.tf_read	= ata_tf_read,
--	.check_status 	= ata_check_status,
--	.exec_command	= ata_exec_command,
--	.dev_select 	= ata_std_dev_select,
--
--	.freeze		= ata_bmdma_freeze,
--	.thaw		= ata_bmdma_thaw,
--	.error_handler	= ata_bmdma_error_handler,
--	.post_internal_cmd = ata_bmdma_post_internal_cmd,
--	.cable_detect	= cmd648_cable_detect,
--
--	.bmdma_setup 	= ata_bmdma_setup,
--	.bmdma_start 	= ata_bmdma_start,
-+	.inherits	= &cmd64x_base_ops,
- 	.bmdma_stop	= cmd648_bmdma_stop,
--	.bmdma_status 	= ata_bmdma_status,
--
--	.qc_prep 	= ata_qc_prep,
--	.qc_issue	= ata_qc_issue_prot,
--
--	.data_xfer	= ata_data_xfer,
--
--	.irq_handler	= ata_interrupt,
--	.irq_clear	= ata_bmdma_irq_clear,
--	.irq_on		= ata_irq_on,
--
--	.port_start	= ata_sff_port_start,
-+	.cable_detect	= cmd648_cable_detect,
- };
- 
- static int cmd64x_init_one(struct pci_dev *pdev, const struct pci_device_id *id)
-diff --git a/drivers/ata/pata_cs5520.c b/drivers/ata/pata_cs5520.c
-index 7e64309..46d0ce3 100644
---- a/drivers/ata/pata_cs5520.c
-+++ b/drivers/ata/pata_cs5520.c
-@@ -145,34 +145,11 @@ static struct scsi_host_template cs5520_sht = {
- };
- 
- static struct ata_port_operations cs5520_port_ops = {
-+	.inherits		= &ata_bmdma_port_ops,
-+	.qc_prep		= ata_dumb_qc_prep,
-+	.cable_detect		= ata_cable_40wire,
- 	.set_piomode		= cs5520_set_piomode,
- 	.set_dmamode		= cs5520_set_dmamode,
--	.mode_filter		= ata_pci_default_filter,
--
--	.tf_load		= ata_tf_load,
--	.tf_read		= ata_tf_read,
--	.check_status		= ata_check_status,
--	.exec_command		= ata_exec_command,
--	.dev_select		= ata_std_dev_select,
--
--	.freeze			= ata_bmdma_freeze,
--	.thaw			= ata_bmdma_thaw,
--	.error_handler		= ata_bmdma_error_handler,
--	.post_internal_cmd	= ata_bmdma_post_internal_cmd,
--	.cable_detect		= ata_cable_40wire,
--
--	.bmdma_setup		= ata_bmdma_setup,
--	.bmdma_start		= ata_bmdma_start,
--	.bmdma_stop		= ata_bmdma_stop,
--	.bmdma_status		= ata_bmdma_status,
--	.qc_prep		= ata_dumb_qc_prep,
--	.qc_issue		= ata_qc_issue_prot,
--	.data_xfer		= ata_data_xfer,
--
--	.irq_clear		= ata_bmdma_irq_clear,
--	.irq_on			= ata_irq_on,
--
--	.port_start		= ata_sff_port_start,
- };
- 
- static int __devinit cs5520_init_one(struct pci_dev *pdev, const struct pci_device_id *id)
-diff --git a/drivers/ata/pata_cs5530.c b/drivers/ata/pata_cs5530.c
-index 0bb03da..e4a16a5 100644
---- a/drivers/ata/pata_cs5530.c
-+++ b/drivers/ata/pata_cs5530.c
-@@ -166,37 +166,14 @@ static struct scsi_host_template cs5530_sht = {
- };
- 
- static struct ata_port_operations cs5530_port_ops = {
--	.set_piomode	= cs5530_set_piomode,
--	.set_dmamode	= cs5530_set_dmamode,
--	.mode_filter	= ata_pci_default_filter,
--
--	.tf_load	= ata_tf_load,
--	.tf_read	= ata_tf_read,
--	.check_status 	= ata_check_status,
--	.exec_command	= ata_exec_command,
--	.dev_select 	= ata_std_dev_select,
--
--	.bmdma_setup 	= ata_bmdma_setup,
--	.bmdma_start 	= ata_bmdma_start,
--	.bmdma_stop	= ata_bmdma_stop,
--	.bmdma_status 	= ata_bmdma_status,
--
--	.freeze		= ata_bmdma_freeze,
--	.thaw		= ata_bmdma_thaw,
--	.error_handler	= ata_bmdma_error_handler,
--	.post_internal_cmd = ata_bmdma_post_internal_cmd,
--	.cable_detect	= ata_cable_40wire,
-+	.inherits	= &ata_bmdma_port_ops,
- 
- 	.qc_prep 	= ata_dumb_qc_prep,
- 	.qc_issue	= cs5530_qc_issue_prot,
- 
--	.data_xfer	= ata_data_xfer,
--
--	.irq_handler	= ata_interrupt,
--	.irq_clear	= ata_bmdma_irq_clear,
--	.irq_on		= ata_irq_on,
--
--	.port_start	= ata_sff_port_start,
-+	.cable_detect	= ata_cable_40wire,
-+	.set_piomode	= cs5530_set_piomode,
-+	.set_dmamode	= cs5530_set_dmamode,
- };
- 
- static const struct dmi_system_id palmax_dmi_table[] = {
-diff --git a/drivers/ata/pata_cs5535.c b/drivers/ata/pata_cs5535.c
-index 48a1834..f910a8a 100644
---- a/drivers/ata/pata_cs5535.c
-+++ b/drivers/ata/pata_cs5535.c
-@@ -162,37 +162,10 @@ static struct scsi_host_template cs5535_sht = {
- };
- 
- static struct ata_port_operations cs5535_port_ops = {
-+	.inherits	= &ata_bmdma_port_ops,
-+	.cable_detect	= cs5535_cable_detect,
- 	.set_piomode	= cs5535_set_piomode,
- 	.set_dmamode	= cs5535_set_dmamode,
--	.mode_filter	= ata_pci_default_filter,
--
--	.tf_load	= ata_tf_load,
--	.tf_read	= ata_tf_read,
--	.check_status 	= ata_check_status,
--	.exec_command	= ata_exec_command,
--	.dev_select 	= ata_std_dev_select,
--
--	.freeze		= ata_bmdma_freeze,
--	.thaw		= ata_bmdma_thaw,
--	.error_handler	= ata_bmdma_error_handler,
--	.post_internal_cmd = ata_bmdma_post_internal_cmd,
--	.cable_detect	= cs5535_cable_detect,
--
--	.bmdma_setup 	= ata_bmdma_setup,
--	.bmdma_start 	= ata_bmdma_start,
--	.bmdma_stop	= ata_bmdma_stop,
--	.bmdma_status 	= ata_bmdma_status,
--
--	.qc_prep 	= ata_qc_prep,
--	.qc_issue	= ata_qc_issue_prot,
--
--	.data_xfer	= ata_data_xfer,
--
--	.irq_handler	= ata_interrupt,
--	.irq_clear	= ata_bmdma_irq_clear,
--	.irq_on		= ata_irq_on,
--
--	.port_start	= ata_sff_port_start,
- };
- 
- /**
-diff --git a/drivers/ata/pata_cs5536.c b/drivers/ata/pata_cs5536.c
-index 592e70d..69d63aa 100644
---- a/drivers/ata/pata_cs5536.c
-+++ b/drivers/ata/pata_cs5536.c
-@@ -225,37 +225,10 @@ static struct scsi_host_template cs5536_sht = {
- };
- 
- static struct ata_port_operations cs5536_port_ops = {
-+	.inherits		= &ata_bmdma_port_ops,
-+	.cable_detect		= cs5536_cable_detect,
- 	.set_piomode		= cs5536_set_piomode,
- 	.set_dmamode		= cs5536_set_dmamode,
--	.mode_filter		= ata_pci_default_filter,
--
--	.tf_load		= ata_tf_load,
--	.tf_read		= ata_tf_read,
--	.check_status		= ata_check_status,
--	.exec_command		= ata_exec_command,
--	.dev_select		= ata_std_dev_select,
--
--	.freeze			= ata_bmdma_freeze,
--	.thaw			= ata_bmdma_thaw,
--	.error_handler		= ata_bmdma_error_handler,
--	.post_internal_cmd	= ata_bmdma_post_internal_cmd,
--	.cable_detect		= cs5536_cable_detect,
--
--	.bmdma_setup		= ata_bmdma_setup,
--	.bmdma_start		= ata_bmdma_start,
--	.bmdma_stop		= ata_bmdma_stop,
--	.bmdma_status		= ata_bmdma_status,
--
--	.qc_prep		= ata_qc_prep,
--	.qc_issue		= ata_qc_issue_prot,
--
--	.data_xfer		= ata_data_xfer,
--
--	.irq_handler		= ata_interrupt,
--	.irq_clear		= ata_bmdma_irq_clear,
--	.irq_on			= ata_irq_on,
--
--	.port_start		= ata_sff_port_start,
- };
- 
- /**
-diff --git a/drivers/ata/pata_cypress.c b/drivers/ata/pata_cypress.c
-index 07fa1ab..c459553 100644
---- a/drivers/ata/pata_cypress.c
-+++ b/drivers/ata/pata_cypress.c
-@@ -114,37 +114,10 @@ static struct scsi_host_template cy82c693_sht = {
- };
- 
- static struct ata_port_operations cy82c693_port_ops = {
-+	.inherits	= &ata_bmdma_port_ops,
-+	.cable_detect	= ata_cable_40wire,
- 	.set_piomode	= cy82c693_set_piomode,
- 	.set_dmamode	= cy82c693_set_dmamode,
--	.mode_filter	= ata_pci_default_filter,
--
--	.tf_load	= ata_tf_load,
--	.tf_read	= ata_tf_read,
--	.check_status 	= ata_check_status,
--	.exec_command	= ata_exec_command,
--	.dev_select 	= ata_std_dev_select,
--
--	.freeze		= ata_bmdma_freeze,
--	.thaw		= ata_bmdma_thaw,
--	.error_handler	= ata_bmdma_error_handler,
--	.post_internal_cmd = ata_bmdma_post_internal_cmd,
--	.cable_detect	= ata_cable_40wire,
--
--	.bmdma_setup 	= ata_bmdma_setup,
--	.bmdma_start 	= ata_bmdma_start,
--	.bmdma_stop	= ata_bmdma_stop,
--	.bmdma_status 	= ata_bmdma_status,
--
--	.qc_prep 	= ata_qc_prep,
--	.qc_issue	= ata_qc_issue_prot,
--
--	.data_xfer	= ata_data_xfer,
--
--	.irq_handler	= ata_interrupt,
--	.irq_clear	= ata_bmdma_irq_clear,
--	.irq_on		= ata_irq_on,
--
--	.port_start	= ata_sff_port_start,
- };
- 
- static int cy82c693_init_one(struct pci_dev *pdev, const struct pci_device_id *id)
 diff --git a/drivers/ata/pata_efar.c b/drivers/ata/pata_efar.c
-index 8700d9d..ef62fc6 100644
+index 2f5b484..1d839a5 100644
 --- a/drivers/ata/pata_efar.c
 +++ b/drivers/ata/pata_efar.c
-@@ -236,36 +236,12 @@ static struct scsi_host_template efar_sht = {
- 	ATA_BMDMA_SHT(DRV_NAME),
- };
+@@ -49,19 +49,6 @@ static int efar_pre_reset(struct ata_link *link, unsigned long deadline)
+ }
  
--static const struct ata_port_operations efar_ops = {
-+static struct ata_port_operations efar_ops = {
-+	.inherits		= &ata_bmdma_port_ops,
-+	.cable_detect		= efar_cable_detect,
+ /**
+- *	efar_probe_reset - Probe specified port on PATA host controller
+- *	@ap: Port to probe
+- *
+- *	LOCKING:
+- *	None (inherited from caller).
+- */
+-
+-static void efar_error_handler(struct ata_port *ap)
+-{
+-	ata_bmdma_drive_eh(ap, efar_pre_reset, ata_std_softreset, NULL, ata_std_postreset);
+-}
+-
+-/**
+  *	efar_cable_detect	-	check for 40/80 pin
+  *	@ap: Port
+  *
+@@ -241,7 +228,7 @@ static struct ata_port_operations efar_ops = {
+ 	.cable_detect		= efar_cable_detect,
  	.set_piomode		= efar_set_piomode,
  	.set_dmamode		= efar_set_dmamode,
--	.mode_filter		= ata_pci_default_filter,
--
--	.tf_load		= ata_tf_load,
--	.tf_read		= ata_tf_read,
--	.check_status		= ata_check_status,
--	.exec_command		= ata_exec_command,
--	.dev_select		= ata_std_dev_select,
--
--	.freeze			= ata_bmdma_freeze,
--	.thaw			= ata_bmdma_thaw,
- 	.error_handler		= efar_error_handler,
--	.post_internal_cmd	= ata_bmdma_post_internal_cmd,
--	.cable_detect		= efar_cable_detect,
--
--	.bmdma_setup		= ata_bmdma_setup,
--	.bmdma_start		= ata_bmdma_start,
--	.bmdma_stop		= ata_bmdma_stop,
--	.bmdma_status		= ata_bmdma_status,
--	.qc_prep		= ata_qc_prep,
--	.qc_issue		= ata_qc_issue_prot,
--	.data_xfer		= ata_data_xfer,
--
--	.irq_handler		= ata_interrupt,
--	.irq_clear		= ata_bmdma_irq_clear,
--	.irq_on			= ata_irq_on,
--
--	.port_start		= ata_sff_port_start,
+-	.error_handler		= efar_error_handler,
++	.prereset		= efar_pre_reset,
  };
  
  
-diff --git a/drivers/ata/pata_hpt366.c b/drivers/ata/pata_hpt366.c
-index 03c4d2b..9fa47d4 100644
---- a/drivers/ata/pata_hpt366.c
-+++ b/drivers/ata/pata_hpt366.c
-@@ -298,37 +298,11 @@ static struct scsi_host_template hpt36x_sht = {
-  */
- 
- static struct ata_port_operations hpt366_port_ops = {
-+	.inherits	= &ata_bmdma_port_ops,
-+	.cable_detect	= hpt36x_cable_detect,
-+	.mode_filter	= hpt366_filter,
- 	.set_piomode	= hpt366_set_piomode,
- 	.set_dmamode	= hpt366_set_dmamode,
--	.mode_filter	= hpt366_filter,
--
--	.tf_load	= ata_tf_load,
--	.tf_read	= ata_tf_read,
--	.check_status 	= ata_check_status,
--	.exec_command	= ata_exec_command,
--	.dev_select 	= ata_std_dev_select,
--
--	.freeze		= ata_bmdma_freeze,
--	.thaw		= ata_bmdma_thaw,
--	.error_handler	= ata_bmdma_error_handler,
--	.post_internal_cmd = ata_bmdma_post_internal_cmd,
--	.cable_detect	= hpt36x_cable_detect,
--
--	.bmdma_setup 	= ata_bmdma_setup,
--	.bmdma_start 	= ata_bmdma_start,
--	.bmdma_stop	= ata_bmdma_stop,
--	.bmdma_status 	= ata_bmdma_status,
--
--	.qc_prep 	= ata_qc_prep,
--	.qc_issue	= ata_qc_issue_prot,
--
--	.data_xfer	= ata_data_xfer,
--
--	.irq_handler	= ata_interrupt,
--	.irq_clear	= ata_bmdma_irq_clear,
--	.irq_on		= ata_irq_on,
--
--	.port_start	= ata_sff_port_start,
- };
- 
- /**
 diff --git a/drivers/ata/pata_hpt37x.c b/drivers/ata/pata_hpt37x.c
-index 9238e69..a9d10c6 100644
+index 591726a..ff48936 100644
 --- a/drivers/ata/pata_hpt37x.c
 +++ b/drivers/ata/pata_hpt37x.c
-@@ -627,36 +627,15 @@ static struct scsi_host_template hpt37x_sht = {
-  */
+@@ -341,19 +341,7 @@ static int hpt37x_pre_reset(struct ata_link *link, unsigned long deadline)
+ 	return ata_std_prereset(link, deadline);
+ }
  
- static struct ata_port_operations hpt370_port_ops = {
--	.set_piomode	= hpt370_set_piomode,
--	.set_dmamode	= hpt370_set_dmamode,
--	.mode_filter	= hpt370_filter,
+-/**
+- *	hpt37x_error_handler	-	reset the hpt374
+- *	@ap: ATA port to reset
+- *
+- *	Perform probe for HPT37x, except for HPT374 channel 2
+- */
 -
--	.tf_load	= ata_tf_load,
--	.tf_read	= ata_tf_read,
--	.check_status 	= ata_check_status,
--	.exec_command	= ata_exec_command,
--	.dev_select 	= ata_std_dev_select,
+-static void hpt37x_error_handler(struct ata_port *ap)
+-{
+-	ata_bmdma_drive_eh(ap, hpt37x_pre_reset, ata_std_softreset, NULL, ata_std_postreset);
+-}
 -
--	.freeze		= ata_bmdma_freeze,
--	.thaw		= ata_bmdma_thaw,
+-static int hpt374_pre_reset(struct ata_link *link, unsigned long deadline)
++static int hpt374_fn1_pre_reset(struct ata_link *link, unsigned long deadline)
+ {
+ 	static const struct pci_bits hpt37x_enable_bits[] = {
+ 		{ 0x50, 1, 0x04, 0x04 },
+@@ -390,25 +378,6 @@ static int hpt374_pre_reset(struct ata_link *link, unsigned long deadline)
+ }
+ 
+ /**
+- *	hpt374_error_handler	-	reset the hpt374
+- *	@classes:
+- *
+- *	The 374 cable detect is a little different due to the extra
+- *	channels. The function 0 channels work like usual but function 1
+- *	is special
+- */
+-
+-static void hpt374_error_handler(struct ata_port *ap)
+-{
+-	struct pci_dev *pdev = to_pci_dev(ap->host->dev);
+-
+-	if (!(PCI_FUNC(pdev->devfn) & 1))
+-		hpt37x_error_handler(ap);
+-	else
+-		ata_bmdma_drive_eh(ap, hpt374_pre_reset, ata_std_softreset, NULL, ata_std_postreset);
+-}
+-
+-/**
+  *	hpt370_set_piomode		-	PIO setup
+  *	@ap: ATA interface
+  *	@adev: device on the interface
+@@ -635,7 +604,7 @@ static struct ata_port_operations hpt370_port_ops = {
+ 	.mode_filter	= hpt370_filter,
+ 	.set_piomode	= hpt370_set_piomode,
+ 	.set_dmamode	= hpt370_set_dmamode,
 -	.error_handler	= hpt37x_error_handler,
--	.post_internal_cmd = ata_bmdma_post_internal_cmd,
-+	.inherits	= &ata_bmdma_port_ops,
- 
--	.bmdma_setup 	= ata_bmdma_setup,
- 	.bmdma_start 	= hpt370_bmdma_start,
- 	.bmdma_stop	= hpt370_bmdma_stop,
--	.bmdma_status 	= ata_bmdma_status,
- 
--	.qc_prep 	= ata_qc_prep,
--	.qc_issue	= ata_qc_issue_prot,
--
--	.data_xfer	= ata_data_xfer,
--
--	.irq_handler	= ata_interrupt,
--	.irq_clear	= ata_bmdma_irq_clear,
--	.irq_on		= ata_irq_on,
--
--	.port_start	= ata_sff_port_start,
-+	.mode_filter	= hpt370_filter,
-+	.set_piomode	= hpt370_set_piomode,
-+	.set_dmamode	= hpt370_set_dmamode,
-+	.error_handler	= hpt37x_error_handler,
++	.prereset	= hpt37x_pre_reset,
  };
  
  /*
-@@ -664,36 +643,8 @@ static struct ata_port_operations hpt370_port_ops = {
-  */
+@@ -659,17 +628,17 @@ static struct ata_port_operations hpt372_port_ops = {
  
- static struct ata_port_operations hpt370a_port_ops = {
--	.set_piomode	= hpt370_set_piomode,
--	.set_dmamode	= hpt370_set_dmamode,
-+	.inherits	= &hpt370_port_ops,
- 	.mode_filter	= hpt370a_filter,
--
--	.tf_load	= ata_tf_load,
--	.tf_read	= ata_tf_read,
--	.check_status 	= ata_check_status,
--	.exec_command	= ata_exec_command,
--	.dev_select 	= ata_std_dev_select,
--
--	.freeze		= ata_bmdma_freeze,
--	.thaw		= ata_bmdma_thaw,
+ 	.set_piomode	= hpt372_set_piomode,
+ 	.set_dmamode	= hpt372_set_dmamode,
 -	.error_handler	= hpt37x_error_handler,
--	.post_internal_cmd = ata_bmdma_post_internal_cmd,
--
--	.bmdma_setup 	= ata_bmdma_setup,
--	.bmdma_start 	= hpt370_bmdma_start,
--	.bmdma_stop	= hpt370_bmdma_stop,
--	.bmdma_status 	= ata_bmdma_status,
--
--	.qc_prep 	= ata_qc_prep,
--	.qc_issue	= ata_qc_issue_prot,
--
--	.data_xfer	= ata_data_xfer,
--
--	.irq_handler	= ata_interrupt,
--	.irq_clear	= ata_bmdma_irq_clear,
--	.irq_on		= ata_irq_on,
--
--	.port_start	= ata_sff_port_start,
++	.prereset	= hpt37x_pre_reset,
  };
  
  /*
-@@ -702,36 +653,13 @@ static struct ata_port_operations hpt370a_port_ops = {
+  *	Configuration for HPT374. Mode setting works like 372 and friends
+- *	but we have a different cable detection procedure.
++ *	but we have a different cable detection procedure for function 1.
   */
  
- static struct ata_port_operations hpt372_port_ops = {
--	.set_piomode	= hpt372_set_piomode,
--	.set_dmamode	= hpt372_set_dmamode,
--	.mode_filter	= ata_pci_default_filter,
--
--	.tf_load	= ata_tf_load,
--	.tf_read	= ata_tf_read,
--	.check_status 	= ata_check_status,
--	.exec_command	= ata_exec_command,
--	.dev_select 	= ata_std_dev_select,
--
--	.freeze		= ata_bmdma_freeze,
--	.thaw		= ata_bmdma_thaw,
--	.error_handler	= hpt37x_error_handler,
--	.post_internal_cmd = ata_bmdma_post_internal_cmd,
-+	.inherits	= &ata_bmdma_port_ops,
- 
--	.bmdma_setup 	= ata_bmdma_setup,
--	.bmdma_start 	= ata_bmdma_start,
- 	.bmdma_stop	= hpt37x_bmdma_stop,
--	.bmdma_status 	= ata_bmdma_status,
--
--	.qc_prep 	= ata_qc_prep,
--	.qc_issue	= ata_qc_issue_prot,
--
--	.data_xfer	= ata_data_xfer,
- 
--	.irq_handler	= ata_interrupt,
--	.irq_clear	= ata_bmdma_irq_clear,
--	.irq_on		= ata_irq_on,
--
--	.port_start	= ata_sff_port_start,
-+	.set_piomode	= hpt372_set_piomode,
-+	.set_dmamode	= hpt372_set_dmamode,
-+	.error_handler	= hpt37x_error_handler,
- };
- 
- /*
-@@ -740,36 +668,8 @@ static struct ata_port_operations hpt372_port_ops = {
-  */
- 
- static struct ata_port_operations hpt374_port_ops = {
--	.set_piomode	= hpt372_set_piomode,
--	.set_dmamode	= hpt372_set_dmamode,
--	.mode_filter	= ata_pci_default_filter,
--
--	.tf_load	= ata_tf_load,
--	.tf_read	= ata_tf_read,
--	.check_status 	= ata_check_status,
--	.exec_command	= ata_exec_command,
--	.dev_select 	= ata_std_dev_select,
--
--	.freeze		= ata_bmdma_freeze,
--	.thaw		= ata_bmdma_thaw,
-+	.inherits	= &hpt372_port_ops,
- 	.error_handler	= hpt374_error_handler,
--	.post_internal_cmd = ata_bmdma_post_internal_cmd,
--
--	.bmdma_setup 	= ata_bmdma_setup,
--	.bmdma_start 	= ata_bmdma_start,
--	.bmdma_stop	= hpt37x_bmdma_stop,
--	.bmdma_status 	= ata_bmdma_status,
--
--	.qc_prep 	= ata_qc_prep,
--	.qc_issue	= ata_qc_issue_prot,
--
--	.data_xfer	= ata_data_xfer,
--
--	.irq_handler	= ata_interrupt,
--	.irq_clear	= ata_bmdma_irq_clear,
--	.irq_on		= ata_irq_on,
--
--	.port_start	= ata_sff_port_start,
+-static struct ata_port_operations hpt374_port_ops = {
++static struct ata_port_operations hpt374_fn1_port_ops = {
+ 	.inherits	= &hpt372_port_ops,
+-	.error_handler	= hpt374_error_handler,
++	.prereset	= hpt374_fn1_pre_reset,
  };
  
  /**
+@@ -821,13 +790,20 @@ static int hpt37x_init_one(struct pci_dev *dev, const struct pci_device_id *id)
+ 		.udma_mask = ATA_UDMA6,
+ 		.port_ops = &hpt372_port_ops
+ 	};
+-	/* HPT374 - UDMA100 */
+-	static const struct ata_port_info info_hpt374 = {
++	/* HPT374 - UDMA100, function 1 uses different prereset method */
++	static const struct ata_port_info info_hpt374_fn0 = {
++		.flags = ATA_FLAG_SLAVE_POSS,
++		.pio_mask = 0x1f,
++		.mwdma_mask = 0x07,
++		.udma_mask = ATA_UDMA5,
++		.port_ops = &hpt372_port_ops
++	};
++	static const struct ata_port_info info_hpt374_fn1 = {
+ 		.flags = ATA_FLAG_SLAVE_POSS,
+ 		.pio_mask = 0x1f,
+ 		.mwdma_mask = 0x07,
+ 		.udma_mask = ATA_UDMA5,
+-		.port_ops = &hpt374_port_ops
++		.port_ops = &hpt374_fn1_port_ops
+ 	};
+ 
+ 	static const int MHz[4] = { 33, 40, 50, 66 };
+@@ -912,7 +888,10 @@ static int hpt37x_init_one(struct pci_dev *dev, const struct pci_device_id *id)
+ 				break;
+ 			case PCI_DEVICE_ID_TTI_HPT374:
+ 				chip_table = &hpt374;
+-				ppi[0] = &info_hpt374;
++				if (!(PCI_FUNC(dev->devfn) & 1))
++					*ppi = &info_hpt374_fn0;
++				else
++					*ppi = &info_hpt374_fn1;
+ 				break;
+ 			default:
+ 				printk(KERN_ERR "pata_hpt37x: PCI table is bogus please report (%d).\n", dev->device);
 diff --git a/drivers/ata/pata_hpt3x2n.c b/drivers/ata/pata_hpt3x2n.c
-index aa380c4..b77b127 100644
+index c774be9..cd44ee3 100644
 --- a/drivers/ata/pata_hpt3x2n.c
 +++ b/drivers/ata/pata_hpt3x2n.c
-@@ -347,37 +347,15 @@ static struct scsi_host_template hpt3x2n_sht = {
+@@ -148,7 +148,7 @@ static int hpt3x2n_cable_detect(struct ata_port *ap)
+  *	Reset the hardware and state machine,
   */
  
- static struct ata_port_operations hpt3x2n_port_ops = {
--	.set_piomode	= hpt3x2n_set_piomode,
--	.set_dmamode	= hpt3x2n_set_dmamode,
--	.mode_filter	= ata_pci_default_filter,
-+	.inherits	= &ata_bmdma_port_ops,
- 
--	.tf_load	= ata_tf_load,
--	.tf_read	= ata_tf_read,
--	.check_status 	= ata_check_status,
--	.exec_command	= ata_exec_command,
--	.dev_select 	= ata_std_dev_select,
--
--	.freeze		= ata_bmdma_freeze,
--	.thaw		= ata_bmdma_thaw,
--	.error_handler	= hpt3x2n_error_handler,
--	.post_internal_cmd = ata_bmdma_post_internal_cmd,
--	.cable_detect	= hpt3x2n_cable_detect,
--
--	.bmdma_setup 	= ata_bmdma_setup,
--	.bmdma_start 	= ata_bmdma_start,
- 	.bmdma_stop	= hpt3x2n_bmdma_stop,
--	.bmdma_status 	= ata_bmdma_status,
--
--	.qc_prep 	= ata_qc_prep,
- 	.qc_issue	= hpt3x2n_qc_issue_prot,
- 
--	.data_xfer	= ata_data_xfer,
--
--	.irq_handler	= ata_interrupt,
--	.irq_clear	= ata_bmdma_irq_clear,
--	.irq_on		= ata_irq_on,
--
--	.port_start	= ata_sff_port_start,
-+	.cable_detect	= hpt3x2n_cable_detect,
-+	.set_piomode	= hpt3x2n_set_piomode,
-+	.set_dmamode	= hpt3x2n_set_dmamode,
-+	.error_handler	= hpt3x2n_error_handler,
- };
+-static int hpt3xn_pre_reset(struct ata_link *link, unsigned long deadline)
++static int hpt3x2n_pre_reset(struct ata_link *link, unsigned long deadline)
+ {
+ 	struct ata_port *ap = link->ap;
+ 	struct pci_dev *pdev = to_pci_dev(ap->host->dev);
+@@ -160,18 +160,6 @@ static int hpt3xn_pre_reset(struct ata_link *link, unsigned long deadline)
+ }
  
  /**
-diff --git a/drivers/ata/pata_hpt3x3.c b/drivers/ata/pata_hpt3x3.c
-index 9837ab0..8857d02 100644
---- a/drivers/ata/pata_hpt3x3.c
-+++ b/drivers/ata/pata_hpt3x3.c
-@@ -106,40 +106,13 @@ static struct scsi_host_template hpt3x3_sht = {
- };
- 
- static struct ata_port_operations hpt3x3_port_ops = {
-+	.inherits	= &ata_bmdma_port_ops,
-+	.check_atapi_dma= hpt3x3_atapi_dma,
-+	.cable_detect	= ata_cable_40wire,
- 	.set_piomode	= hpt3x3_set_piomode,
- #if defined(CONFIG_PATA_HPT3X3_DMA)
- 	.set_dmamode	= hpt3x3_set_dmamode,
- #endif
--	.mode_filter	= ata_pci_default_filter,
+- *	hpt3x2n_error_handler	-	probe the hpt3x2n bus
+- *	@ap: ATA port to reset
+- *
+- *	Perform the probe reset handling for the 3x2N
+- */
 -
--	.tf_load	= ata_tf_load,
--	.tf_read	= ata_tf_read,
--	.check_status 	= ata_check_status,
--	.exec_command	= ata_exec_command,
--	.dev_select 	= ata_std_dev_select,
+-static void hpt3x2n_error_handler(struct ata_port *ap)
+-{
+-	ata_bmdma_drive_eh(ap, hpt3xn_pre_reset, ata_std_softreset, NULL, ata_std_postreset);
+-}
 -
--	.freeze		= ata_bmdma_freeze,
--	.thaw		= ata_bmdma_thaw,
--	.error_handler	= ata_bmdma_error_handler,
--	.post_internal_cmd = ata_bmdma_post_internal_cmd,
--	.cable_detect	= ata_cable_40wire,
--
--	.bmdma_setup 	= ata_bmdma_setup,
--	.bmdma_start 	= ata_bmdma_start,
--	.bmdma_stop	= ata_bmdma_stop,
--	.bmdma_status 	= ata_bmdma_status,
--	.check_atapi_dma= hpt3x3_atapi_dma,
--
--	.qc_prep 	= ata_qc_prep,
--	.qc_issue	= ata_qc_issue_prot,
--
--	.data_xfer	= ata_data_xfer,
--
--	.irq_handler	= ata_interrupt,
--	.irq_clear	= ata_bmdma_irq_clear,
--	.irq_on		= ata_irq_on,
--
--	.port_start	= ata_sff_port_start,
+-/**
+  *	hpt3x2n_set_piomode		-	PIO setup
+  *	@ap: ATA interface
+  *	@adev: device on the interface
+@@ -355,7 +343,7 @@ static struct ata_port_operations hpt3x2n_port_ops = {
+ 	.cable_detect	= hpt3x2n_cable_detect,
+ 	.set_piomode	= hpt3x2n_set_piomode,
+ 	.set_dmamode	= hpt3x2n_set_dmamode,
+-	.error_handler	= hpt3x2n_error_handler,
++	.prereset	= hpt3x2n_pre_reset,
  };
  
  /**
 diff --git a/drivers/ata/pata_icside.c b/drivers/ata/pata_icside.c
-index ca86d28..f0ec997 100644
+index f0ec997..340d86a 100644
 --- a/drivers/ata/pata_icside.c
 +++ b/drivers/ata/pata_icside.c
-@@ -345,37 +345,21 @@ static void pata_icside_error_handler(struct ata_port *ap)
+@@ -338,12 +338,6 @@ static void pata_icside_postreset(struct ata_link *link, unsigned int *classes)
+ 	}
  }
  
+-static void pata_icside_error_handler(struct ata_port *ap)
+-{
+-	ata_bmdma_drive_eh(ap, ata_std_prereset, ata_std_softreset, NULL,
+-			   pata_icside_postreset);
+-}
+-
  static struct ata_port_operations pata_icside_port_ops = {
--	.set_dmamode		= pata_icside_set_dmamode,
--
--	.tf_load		= ata_tf_load,
--	.tf_read		= ata_tf_read,
--	.exec_command		= ata_exec_command,
--	.check_status		= ata_check_status,
--	.dev_select		= ata_std_dev_select,
--
--	.cable_detect		= ata_cable_40wire,
--
--	.bmdma_setup		= pata_icside_bmdma_setup,
--	.bmdma_start		= pata_icside_bmdma_start,
--
--	.data_xfer		= ata_data_xfer_noirq,
--
-+	.inherits		= &ata_sff_port_ops,
+ 	.inherits		= &ata_sff_port_ops,
  	/* no need to build any PRD tables for DMA */
- 	.qc_prep		= ata_noop_qc_prep,
--	.qc_issue		= ata_qc_issue_prot,
-+	.data_xfer		= ata_data_xfer_noirq,
-+	.bmdma_setup		= pata_icside_bmdma_setup,
-+	.bmdma_start		= pata_icside_bmdma_start,
-+	.bmdma_stop		= pata_icside_bmdma_stop,
-+	.bmdma_status		= pata_icside_bmdma_status,
+@@ -356,7 +350,7 @@ static struct ata_port_operations pata_icside_port_ops = {
  
--	.freeze			= ata_bmdma_freeze,
--	.thaw			= ata_bmdma_thaw,
-+	.cable_detect		= ata_cable_40wire,
-+	.set_dmamode		= pata_icside_set_dmamode,
- 	.error_handler		= pata_icside_error_handler,
+ 	.cable_detect		= ata_cable_40wire,
+ 	.set_dmamode		= pata_icside_set_dmamode,
+-	.error_handler		= pata_icside_error_handler,
++	.postreset		= pata_icside_postreset,
  	.post_internal_cmd	= pata_icside_bmdma_stop,
  
--	.irq_clear		= ata_noop_irq_clear,
--	.irq_on			= ata_irq_on,
--
  	.port_start		= pata_icside_port_start,
--
--	.bmdma_stop		= pata_icside_bmdma_stop,
--	.bmdma_status		= pata_icside_bmdma_status,
- };
- 
- static void __devinit
-diff --git a/drivers/ata/pata_isapnp.c b/drivers/ata/pata_isapnp.c
-index 91ca4d5..085913e 100644
---- a/drivers/ata/pata_isapnp.c
-+++ b/drivers/ata/pata_isapnp.c
-@@ -24,27 +24,8 @@ static struct scsi_host_template isapnp_sht = {
- };
- 
- static struct ata_port_operations isapnp_port_ops = {
--	.tf_load	= ata_tf_load,
--	.tf_read	= ata_tf_read,
--	.check_status 	= ata_check_status,
--	.exec_command	= ata_exec_command,
--	.dev_select 	= ata_std_dev_select,
--
--	.freeze		= ata_bmdma_freeze,
--	.thaw		= ata_bmdma_thaw,
--	.error_handler	= ata_bmdma_error_handler,
--	.post_internal_cmd = ata_bmdma_post_internal_cmd,
-+	.inherits	= &ata_sff_port_ops,
- 	.cable_detect	= ata_cable_40wire,
--
--	.qc_prep 	= ata_qc_prep,
--	.qc_issue	= ata_qc_issue_prot,
--
--	.data_xfer	= ata_data_xfer,
--
--	.irq_clear	= ata_noop_irq_clear,
--	.irq_on		= ata_irq_on,
--
--	.port_start	= ata_sff_port_start,
- };
- 
- /**
 diff --git a/drivers/ata/pata_it8213.c b/drivers/ata/pata_it8213.c
-index 678a05b..9ce8952 100644
+index d23a46b..84ab89e 100644
 --- a/drivers/ata/pata_it8213.c
 +++ b/drivers/ata/pata_it8213.c
-@@ -246,36 +246,13 @@ static struct scsi_host_template it8213_sht = {
- 	ATA_BMDMA_SHT(DRV_NAME),
- };
+@@ -44,19 +44,6 @@ static int it8213_pre_reset(struct ata_link *link, unsigned long deadline)
+ }
  
--static const struct ata_port_operations it8213_ops = {
-+
-+static struct ata_port_operations it8213_ops = {
-+	.inherits		= &ata_bmdma_port_ops,
-+	.cable_detect		= it8213_cable_detect,
+ /**
+- *	it8213_error_handler - Probe specified port on PATA host controller
+- *	@ap: Port to probe
+- *
+- *	LOCKING:
+- *	None (inherited from caller).
+- */
+-
+-static void it8213_error_handler(struct ata_port *ap)
+-{
+-	ata_bmdma_drive_eh(ap, it8213_pre_reset, ata_std_softreset, NULL, ata_std_postreset);
+-}
+-
+-/**
+  *	it8213_cable_detect	-	check for 40/80 pin
+  *	@ap: Port
+  *
+@@ -252,7 +239,7 @@ static struct ata_port_operations it8213_ops = {
+ 	.cable_detect		= it8213_cable_detect,
  	.set_piomode		= it8213_set_piomode,
  	.set_dmamode		= it8213_set_dmamode,
--	.mode_filter		= ata_pci_default_filter,
--
--	.tf_load		= ata_tf_load,
--	.tf_read		= ata_tf_read,
--	.check_status		= ata_check_status,
--	.exec_command		= ata_exec_command,
--	.dev_select		= ata_std_dev_select,
--
--	.freeze			= ata_bmdma_freeze,
--	.thaw			= ata_bmdma_thaw,
- 	.error_handler		= it8213_error_handler,
--	.post_internal_cmd	= ata_bmdma_post_internal_cmd,
--	.cable_detect		= it8213_cable_detect,
--
--	.bmdma_setup		= ata_bmdma_setup,
--	.bmdma_start		= ata_bmdma_start,
--	.bmdma_stop		= ata_bmdma_stop,
--	.bmdma_status		= ata_bmdma_status,
--	.qc_prep		= ata_qc_prep,
--	.qc_issue		= ata_qc_issue_prot,
--	.data_xfer		= ata_data_xfer,
--
--	.irq_handler		= ata_interrupt,
--	.irq_clear		= ata_bmdma_irq_clear,
--	.irq_on			= ata_irq_on,
--
--	.port_start		= ata_sff_port_start,
+-	.error_handler		= it8213_error_handler,
++	.prereset		= it8213_pre_reset,
  };
  
  
-diff --git a/drivers/ata/pata_it821x.c b/drivers/ata/pata_it821x.c
-index 491ea69..f7ac52e 100644
---- a/drivers/ata/pata_it821x.c
-+++ b/drivers/ata/pata_it821x.c
-@@ -636,71 +636,30 @@ static struct scsi_host_template it821x_sht = {
- };
- 
- static struct ata_port_operations it821x_smart_port_ops = {
--	.set_mode	= it821x_smart_set_mode,
--	.tf_load	= ata_tf_load,
--	.tf_read	= ata_tf_read,
--	.mode_filter	= ata_pci_default_filter,
-+	.inherits	= &ata_bmdma_port_ops,
- 
--	.check_status 	= ata_check_status,
- 	.check_atapi_dma= it821x_check_atapi_dma,
--	.exec_command	= ata_exec_command,
--	.dev_select 	= ata_std_dev_select,
--	.dev_config	= it821x_dev_config,
--
--	.freeze		= ata_bmdma_freeze,
--	.thaw		= ata_bmdma_thaw,
--	.error_handler	= ata_bmdma_error_handler,
--	.post_internal_cmd = ata_bmdma_post_internal_cmd,
--	.cable_detect	= it821x_ident_hack,
--
--	.bmdma_setup 	= ata_bmdma_setup,
--	.bmdma_start 	= ata_bmdma_start,
--	.bmdma_stop	= ata_bmdma_stop,
--	.bmdma_status 	= ata_bmdma_status,
--
--	.qc_prep 	= ata_qc_prep,
- 	.qc_issue	= it821x_smart_qc_issue_prot,
- 
--	.data_xfer	= ata_data_xfer,
--
--	.irq_handler	= ata_interrupt,
--	.irq_clear	= ata_bmdma_irq_clear,
--	.irq_on		= ata_irq_on,
-+	.cable_detect	= it821x_ident_hack,
-+	.set_mode	= it821x_smart_set_mode,
-+	.dev_config	= it821x_dev_config,
- 
- 	.port_start	= it821x_port_start,
- };
- 
- static struct ata_port_operations it821x_passthru_port_ops = {
--	.set_piomode	= it821x_passthru_set_piomode,
--	.set_dmamode	= it821x_passthru_set_dmamode,
--	.mode_filter	= ata_pci_default_filter,
-+	.inherits	= &ata_bmdma_port_ops,
- 
--	.tf_load	= ata_tf_load,
--	.tf_read	= ata_tf_read,
--	.check_status 	= ata_check_status,
--	.exec_command	= ata_exec_command,
- 	.check_atapi_dma= it821x_check_atapi_dma,
- 	.dev_select 	= it821x_passthru_dev_select,
--
--	.freeze		= ata_bmdma_freeze,
--	.thaw		= ata_bmdma_thaw,
--	.error_handler	= ata_bmdma_error_handler,
--	.post_internal_cmd = ata_bmdma_post_internal_cmd,
--	.cable_detect	= ata_cable_unknown,
--
--	.bmdma_setup 	= ata_bmdma_setup,
- 	.bmdma_start 	= it821x_passthru_bmdma_start,
- 	.bmdma_stop	= it821x_passthru_bmdma_stop,
--	.bmdma_status 	= ata_bmdma_status,
--
--	.qc_prep 	= ata_qc_prep,
- 	.qc_issue	= it821x_passthru_qc_issue_prot,
- 
--	.data_xfer	= ata_data_xfer,
--
--	.irq_clear	= ata_bmdma_irq_clear,
--	.irq_handler	= ata_interrupt,
--	.irq_on		= ata_irq_on,
-+	.cable_detect	= ata_cable_unknown,
-+	.set_piomode	= it821x_passthru_set_piomode,
-+	.set_dmamode	= it821x_passthru_set_dmamode,
- 
- 	.port_start	= it821x_port_start,
- };
-diff --git a/drivers/ata/pata_ixp4xx_cf.c b/drivers/ata/pata_ixp4xx_cf.c
-index b7e8e82..d02629a 100644
---- a/drivers/ata/pata_ixp4xx_cf.c
-+++ b/drivers/ata/pata_ixp4xx_cf.c
-@@ -92,29 +92,10 @@ static struct scsi_host_template ixp4xx_sht = {
- };
- 
- static struct ata_port_operations ixp4xx_port_ops = {
--	.set_mode		= ixp4xx_set_mode,
--
--	.tf_load		= ata_tf_load,
--	.tf_read		= ata_tf_read,
--	.exec_command		= ata_exec_command,
--	.check_status 		= ata_check_status,
--	.dev_select 		= ata_std_dev_select,
--
--	.freeze			= ata_bmdma_freeze,
--	.thaw			= ata_bmdma_thaw,
--	.error_handler		= ata_bmdma_error_handler,
--	.post_internal_cmd	= ata_bmdma_post_internal_cmd,
--
--	.qc_prep 		= ata_qc_prep,
--	.qc_issue		= ata_qc_issue_prot,
-+	.inherits		= &ata_sff_port_ops,
- 	.data_xfer		= ixp4xx_mmio_data_xfer,
- 	.cable_detect		= ata_cable_40wire,
--
--	.irq_handler		= ata_interrupt,
--	.irq_clear		= ata_noop_irq_clear,
--	.irq_on			= ata_irq_on,
--
--	.port_start		= ata_sff_port_start,
-+	.set_mode		= ixp4xx_set_mode,
- };
- 
- static void ixp4xx_setup_port(struct ata_port *ap,
 diff --git a/drivers/ata/pata_jmicron.c b/drivers/ata/pata_jmicron.c
-index 2981ad6..dbfb368 100644
+index 530eef9..317f347 100644
 --- a/drivers/ata/pata_jmicron.c
 +++ b/drivers/ata/pata_jmicron.c
-@@ -124,36 +124,9 @@ static struct scsi_host_template jmicron_sht = {
- 	ATA_BMDMA_SHT(DRV_NAME),
- };
- 
--static const struct ata_port_operations jmicron_ops = {
--	/* Task file is PCI ATA format, use helpers */
--	.tf_load		= ata_tf_load,
--	.tf_read		= ata_tf_read,
--	.check_status		= ata_check_status,
--	.exec_command		= ata_exec_command,
--	.dev_select		= ata_std_dev_select,
--
--	.mode_filter		= ata_pci_default_filter,
--	.freeze			= ata_bmdma_freeze,
--	.thaw			= ata_bmdma_thaw,
-+static struct ata_port_operations jmicron_ops = {
-+	.inherits		= &ata_bmdma_port_ops,
- 	.error_handler		= jmicron_error_handler,
--	.post_internal_cmd	= ata_bmdma_post_internal_cmd,
--
--	/* BMDMA handling is PCI ATA format, use helpers */
--	.bmdma_setup		= ata_bmdma_setup,
--	.bmdma_start		= ata_bmdma_start,
--	.bmdma_stop		= ata_bmdma_stop,
--	.bmdma_status		= ata_bmdma_status,
--	.qc_prep		= ata_qc_prep,
--	.qc_issue		= ata_qc_issue_prot,
--	.data_xfer		= ata_data_xfer,
--
--	/* IRQ-related hooks */
--	.irq_handler		= ata_interrupt,
--	.irq_clear		= ata_bmdma_irq_clear,
--	.irq_on			= ata_irq_on,
--
--	/* Generic PATA PCI ATA helpers */
--	.port_start		= ata_sff_port_start,
- };
- 
- 
-diff --git a/drivers/ata/pata_legacy.c b/drivers/ata/pata_legacy.c
-index 77c7c67..fadb301 100644
---- a/drivers/ata/pata_legacy.c
-+++ b/drivers/ata/pata_legacy.c
-@@ -211,6 +211,11 @@ static struct scsi_host_template legacy_sht = {
- 	ATA_PIO_SHT(DRV_NAME),
- };
- 
-+static const struct ata_port_operations legacy_base_port_ops = {
-+	.inherits	= &ata_sff_port_ops,
-+	.cable_detect	= ata_cable_40wire,
-+};
-+
- /*
-  *	These ops are used if the user indicates the hardware
-  *	snoops the commands to decide on the mode and handles the
-@@ -220,55 +225,14 @@ static struct scsi_host_template legacy_sht = {
-  */
- 
- static struct ata_port_operations simple_port_ops = {
--	.tf_load	= ata_tf_load,
--	.tf_read	= ata_tf_read,
--	.check_status 	= ata_check_status,
--	.exec_command	= ata_exec_command,
--	.dev_select 	= ata_std_dev_select,
--
--	.freeze		= ata_bmdma_freeze,
--	.thaw		= ata_bmdma_thaw,
--	.error_handler	= ata_bmdma_error_handler,
--	.post_internal_cmd = ata_bmdma_post_internal_cmd,
--	.cable_detect	= ata_cable_40wire,
--
--	.qc_prep 	= ata_qc_prep,
--	.qc_issue	= ata_qc_issue_prot,
--
-+	.inherits	= &legacy_base_port_ops,
- 	.data_xfer	= ata_data_xfer_noirq,
--
--	.irq_handler	= ata_interrupt,
--	.irq_clear	= ata_noop_irq_clear,
--	.irq_on		= ata_irq_on,
--
--	.port_start	= ata_sff_port_start,
- };
- 
- static struct ata_port_operations legacy_port_ops = {
--	.set_mode	= legacy_set_mode,
--
--	.tf_load	= ata_tf_load,
--	.tf_read	= ata_tf_read,
--	.check_status 	= ata_check_status,
--	.exec_command	= ata_exec_command,
--	.dev_select 	= ata_std_dev_select,
--	.cable_detect	= ata_cable_40wire,
--
--	.freeze		= ata_bmdma_freeze,
--	.thaw		= ata_bmdma_thaw,
--	.error_handler	= ata_bmdma_error_handler,
--	.post_internal_cmd = ata_bmdma_post_internal_cmd,
--
--	.qc_prep 	= ata_qc_prep,
--	.qc_issue	= ata_qc_issue_prot,
--
-+	.inherits	= &legacy_base_port_ops,
- 	.data_xfer	= ata_data_xfer_noirq,
--
--	.irq_handler	= ata_interrupt,
--	.irq_clear	= ata_noop_irq_clear,
--	.irq_on		= ata_irq_on,
--
--	.port_start	= ata_sff_port_start,
-+	.set_mode	= legacy_set_mode,
- };
- 
- /*
-@@ -359,30 +323,9 @@ static unsigned int pdc_data_xfer_vlb(struct ata_device *dev,
+@@ -105,19 +105,6 @@ static int jmicron_pre_reset(struct ata_link *link, unsigned long deadline)
+ 	return ata_std_prereset(link, deadline);
  }
  
- static struct ata_port_operations pdc20230_port_ops = {
-+	.inherits	= &legacy_base_port_ops,
- 	.set_piomode	= pdc20230_set_piomode,
+-/**
+- *	jmicron_error_handler - Setup and error handler
+- *	@ap: Port to handle
+- *
+- *	LOCKING:
+- *	None (inherited from caller).
+- */
 -
--	.tf_load	= ata_tf_load,
--	.tf_read	= ata_tf_read,
--	.check_status 	= ata_check_status,
--	.exec_command	= ata_exec_command,
--	.dev_select 	= ata_std_dev_select,
+-static void jmicron_error_handler(struct ata_port *ap)
+-{
+-	return ata_bmdma_drive_eh(ap, jmicron_pre_reset, ata_std_softreset, NULL, ata_std_postreset);
+-}
 -
--	.freeze		= ata_bmdma_freeze,
--	.thaw		= ata_bmdma_thaw,
--	.error_handler	= ata_bmdma_error_handler,
--	.post_internal_cmd = ata_bmdma_post_internal_cmd,
--	.cable_detect	= ata_cable_40wire,
--
--	.qc_prep 	= ata_qc_prep,
--	.qc_issue	= ata_qc_issue_prot,
--
- 	.data_xfer	= pdc_data_xfer_vlb,
--
--	.irq_handler	= ata_interrupt,
--	.irq_clear	= ata_noop_irq_clear,
--	.irq_on		= ata_irq_on,
--
--	.port_start	= ata_sff_port_start,
+ /* No PIO or DMA methods needed for this device */
+ 
+ static struct scsi_host_template jmicron_sht = {
+@@ -126,7 +113,7 @@ static struct scsi_host_template jmicron_sht = {
+ 
+ static struct ata_port_operations jmicron_ops = {
+ 	.inherits		= &ata_bmdma_port_ops,
+-	.error_handler		= jmicron_error_handler,
++	.prereset		= jmicron_pre_reset,
  };
  
- /*
-@@ -413,30 +356,8 @@ static void ht6560a_set_piomode(struct ata_port *ap, struct ata_device *adev)
- }
  
- static struct ata_port_operations ht6560a_port_ops = {
-+	.inherits	= &legacy_base_port_ops,
- 	.set_piomode	= ht6560a_set_piomode,
--
--	.tf_load	= ata_tf_load,
--	.tf_read	= ata_tf_read,
--	.check_status 	= ata_check_status,
--	.exec_command	= ata_exec_command,
--	.dev_select 	= ata_std_dev_select,
--
--	.freeze		= ata_bmdma_freeze,
--	.thaw		= ata_bmdma_thaw,
--	.error_handler	= ata_bmdma_error_handler,
--	.post_internal_cmd = ata_bmdma_post_internal_cmd,
--	.cable_detect	= ata_cable_40wire,
--
--	.qc_prep 	= ata_qc_prep,
--	.qc_issue	= ata_qc_issue_prot,
--
--	.data_xfer	= ata_data_xfer,	/* Check vlb/noirq */
--
--	.irq_handler	= ata_interrupt,
--	.irq_clear	= ata_noop_irq_clear,
--	.irq_on		= ata_irq_on,
--
--	.port_start	= ata_sff_port_start,
- };
- 
- /*
-@@ -478,30 +399,8 @@ static void ht6560b_set_piomode(struct ata_port *ap, struct ata_device *adev)
- }
- 
- static struct ata_port_operations ht6560b_port_ops = {
-+	.inherits	= &legacy_base_port_ops,
- 	.set_piomode	= ht6560b_set_piomode,
--
--	.tf_load	= ata_tf_load,
--	.tf_read	= ata_tf_read,
--	.check_status 	= ata_check_status,
--	.exec_command	= ata_exec_command,
--	.dev_select 	= ata_std_dev_select,
--
--	.freeze		= ata_bmdma_freeze,
--	.thaw		= ata_bmdma_thaw,
--	.error_handler	= ata_bmdma_error_handler,
--	.post_internal_cmd = ata_bmdma_post_internal_cmd,
--	.cable_detect	= ata_cable_40wire,
--
--	.qc_prep 	= ata_qc_prep,
--	.qc_issue	= ata_qc_issue_prot,
--
--	.data_xfer	= ata_data_xfer,    /* FIXME: Check 32bit and noirq */
--
--	.irq_handler	= ata_interrupt,
--	.irq_clear	= ata_noop_irq_clear,
--	.irq_on		= ata_irq_on,
--
--	.port_start	= ata_sff_port_start,
- };
- 
- /*
-@@ -599,30 +498,8 @@ static void opti82c611a_set_piomode(struct ata_port *ap,
- 
- 
- static struct ata_port_operations opti82c611a_port_ops = {
-+	.inherits	= &legacy_base_port_ops,
- 	.set_piomode	= opti82c611a_set_piomode,
--
--	.tf_load	= ata_tf_load,
--	.tf_read	= ata_tf_read,
--	.check_status 	= ata_check_status,
--	.exec_command	= ata_exec_command,
--	.dev_select 	= ata_std_dev_select,
--
--	.freeze		= ata_bmdma_freeze,
--	.thaw		= ata_bmdma_thaw,
--	.error_handler	= ata_bmdma_error_handler,
--	.post_internal_cmd = ata_bmdma_post_internal_cmd,
--	.cable_detect	= ata_cable_40wire,
--
--	.qc_prep 	= ata_qc_prep,
--	.qc_issue	= ata_qc_issue_prot,
--
--	.data_xfer	= ata_data_xfer,
--
--	.irq_handler	= ata_interrupt,
--	.irq_clear	= ata_noop_irq_clear,
--	.irq_on		= ata_irq_on,
--
--	.port_start	= ata_sff_port_start,
- };
- 
- /*
-@@ -731,30 +608,9 @@ static unsigned int opti82c46x_qc_issue_prot(struct ata_queued_cmd *qc)
- }
- 
- static struct ata_port_operations opti82c46x_port_ops = {
-+	.inherits	= &legacy_base_port_ops,
- 	.set_piomode	= opti82c46x_set_piomode,
--
--	.tf_load	= ata_tf_load,
--	.tf_read	= ata_tf_read,
--	.check_status 	= ata_check_status,
--	.exec_command	= ata_exec_command,
--	.dev_select 	= ata_std_dev_select,
--
--	.freeze		= ata_bmdma_freeze,
--	.thaw		= ata_bmdma_thaw,
--	.error_handler	= ata_bmdma_error_handler,
--	.post_internal_cmd = ata_bmdma_post_internal_cmd,
--	.cable_detect	= ata_cable_40wire,
--
--	.qc_prep 	= ata_qc_prep,
- 	.qc_issue	= opti82c46x_qc_issue_prot,
--
--	.data_xfer	= ata_data_xfer,
--
--	.irq_handler	= ata_interrupt,
--	.irq_clear	= ata_noop_irq_clear,
--	.irq_on		= ata_irq_on,
--
--	.port_start	= ata_sff_port_start,
- };
- 
- static void qdi6500_set_piomode(struct ata_port *ap, struct ata_device *adev)
-@@ -916,84 +772,22 @@ static int qdi_port(struct platform_device *dev,
- }
- 
- static struct ata_port_operations qdi6500_port_ops = {
-+	.inherits	= &legacy_base_port_ops,
- 	.set_piomode	= qdi6500_set_piomode,
--
--	.tf_load	= ata_tf_load,
--	.tf_read	= ata_tf_read,
--	.check_status 	= ata_check_status,
--	.exec_command	= ata_exec_command,
--	.dev_select 	= ata_std_dev_select,
--
--	.freeze		= ata_bmdma_freeze,
--	.thaw		= ata_bmdma_thaw,
--	.error_handler	= ata_bmdma_error_handler,
--	.post_internal_cmd = ata_bmdma_post_internal_cmd,
--	.cable_detect	= ata_cable_40wire,
--
--	.qc_prep 	= ata_qc_prep,
- 	.qc_issue	= qdi_qc_issue_prot,
--
- 	.data_xfer	= vlb32_data_xfer,
--
--	.irq_handler	= ata_interrupt,
--	.irq_clear	= ata_noop_irq_clear,
--	.irq_on		= ata_irq_on,
--
--	.port_start	= ata_sff_port_start,
- };
- 
- static struct ata_port_operations qdi6580_port_ops = {
-+	.inherits	= &legacy_base_port_ops,
- 	.set_piomode	= qdi6580_set_piomode,
--
--	.tf_load	= ata_tf_load,
--	.tf_read	= ata_tf_read,
--	.check_status 	= ata_check_status,
--	.exec_command	= ata_exec_command,
--	.dev_select 	= ata_std_dev_select,
--
--	.freeze		= ata_bmdma_freeze,
--	.thaw		= ata_bmdma_thaw,
--	.error_handler	= ata_bmdma_error_handler,
--	.post_internal_cmd = ata_bmdma_post_internal_cmd,
--	.cable_detect	= ata_cable_40wire,
--
--	.qc_prep 	= ata_qc_prep,
--	.qc_issue	= ata_qc_issue_prot,
--
- 	.data_xfer	= vlb32_data_xfer,
--
--	.irq_handler	= ata_interrupt,
--	.irq_clear	= ata_noop_irq_clear,
--	.irq_on		= ata_irq_on,
--
--	.port_start	= ata_sff_port_start,
- };
- 
- static struct ata_port_operations qdi6580dp_port_ops = {
-+	.inherits	= &legacy_base_port_ops,
- 	.set_piomode	= qdi6580dp_set_piomode,
--
--	.tf_load	= ata_tf_load,
--	.tf_read	= ata_tf_read,
--	.check_status 	= ata_check_status,
--	.exec_command	= ata_exec_command,
--	.dev_select 	= ata_std_dev_select,
--
--	.freeze		= ata_bmdma_freeze,
--	.thaw		= ata_bmdma_thaw,
--	.error_handler	= ata_bmdma_error_handler,
--	.post_internal_cmd = ata_bmdma_post_internal_cmd,
--	.cable_detect	= ata_cable_40wire,
--
--	.qc_prep 	= ata_qc_prep,
--	.qc_issue	= qdi_qc_issue_prot,
--
- 	.data_xfer	= vlb32_data_xfer,
--
--	.irq_handler	= ata_interrupt,
--	.irq_clear	= ata_noop_irq_clear,
--	.irq_on		= ata_irq_on,
--
--	.port_start	= ata_sff_port_start,
- };
- 
- static DEFINE_SPINLOCK(winbond_lock);
-@@ -1062,29 +856,9 @@ static int winbond_port(struct platform_device *dev,
- }
- 
- static struct ata_port_operations winbond_port_ops = {
-+	.inherits	= &legacy_base_port_ops,
- 	.set_piomode	= winbond_set_piomode,
--
--	.tf_load	= ata_tf_load,
--	.tf_read	= ata_tf_read,
--	.check_status 	= ata_check_status,
--	.exec_command	= ata_exec_command,
--	.dev_select 	= ata_std_dev_select,
--
--	.freeze		= ata_bmdma_freeze,
--	.thaw		= ata_bmdma_thaw,
--	.error_handler	= ata_bmdma_error_handler,
--	.post_internal_cmd = ata_bmdma_post_internal_cmd,
--	.cable_detect	= ata_cable_40wire,
--
--	.qc_prep 	= ata_qc_prep,
--	.qc_issue	= ata_qc_issue_prot,
--
- 	.data_xfer	= vlb32_data_xfer,
--
--	.irq_clear	= ata_noop_irq_clear,
--	.irq_on		= ata_irq_on,
--
--	.port_start	= ata_sff_port_start,
- };
- 
- static struct legacy_controller controllers[] = {
 diff --git a/drivers/ata/pata_marvell.c b/drivers/ata/pata_marvell.c
-index 34b6c06..bbc9985 100644
+index 9a51a97..d38e64c 100644
 --- a/drivers/ata/pata_marvell.c
 +++ b/drivers/ata/pata_marvell.c
-@@ -95,37 +95,10 @@ static struct scsi_host_template marvell_sht = {
- 	ATA_BMDMA_SHT(DRV_NAME),
- };
+@@ -75,20 +75,6 @@ static int marvell_cable_detect(struct ata_port *ap)
+ 	return 0;	/* Our BUG macro needs the right markup */
+ }
  
--static const struct ata_port_operations marvell_ops = {
--	/* Task file is PCI ATA format, use helpers */
--	.tf_load		= ata_tf_load,
--	.tf_read		= ata_tf_read,
--	.check_status		= ata_check_status,
--	.exec_command		= ata_exec_command,
--	.dev_select		= ata_std_dev_select,
+-/**
+- *	marvell_error_handler - Setup and error handler
+- *	@ap: Port to handle
+- *
+- *	LOCKING:
+- *	None (inherited from caller).
+- */
 -
--	.mode_filter		= ata_pci_default_filter,
--	.freeze			= ata_bmdma_freeze,
--	.thaw			= ata_bmdma_thaw,
--	.error_handler		= marvell_error_handler,
--	.post_internal_cmd	= ata_bmdma_post_internal_cmd,
-+static struct ata_port_operations marvell_ops = {
-+	.inherits		= &ata_bmdma_port_ops,
+-static void marvell_error_handler(struct ata_port *ap)
+-{
+-	return ata_bmdma_drive_eh(ap, marvell_pre_reset, ata_std_softreset,
+-				  NULL, ata_std_postreset);
+-}
+-
+ /* No PIO or DMA methods needed for this device */
+ 
+ static struct scsi_host_template marvell_sht = {
+@@ -98,7 +84,7 @@ static struct scsi_host_template marvell_sht = {
+ static struct ata_port_operations marvell_ops = {
+ 	.inherits		= &ata_bmdma_port_ops,
  	.cable_detect		= marvell_cable_detect,
--
--	/* BMDMA handling is PCI ATA format, use helpers */
--	.bmdma_setup		= ata_bmdma_setup,
--	.bmdma_start		= ata_bmdma_start,
--	.bmdma_stop		= ata_bmdma_stop,
--	.bmdma_status		= ata_bmdma_status,
--	.qc_prep		= ata_qc_prep,
--	.qc_issue		= ata_qc_issue_prot,
--	.data_xfer		= ata_data_xfer,
--
--	/* Timeout handling */
--	.irq_handler		= ata_interrupt,
--	.irq_clear		= ata_bmdma_irq_clear,
--	.irq_on			= ata_irq_on,
--
--	/* Generic PATA PCI ATA helpers */
--	.port_start		= ata_sff_port_start,
-+	.error_handler		= marvell_error_handler,
+-	.error_handler		= marvell_error_handler,
++	.prereset		= marvell_pre_reset,
  };
  
  
 diff --git a/drivers/ata/pata_mpc52xx.c b/drivers/ata/pata_mpc52xx.c
-index 4117b61..ac7c082 100644
+index ac7c082..fec9319 100644
 --- a/drivers/ata/pata_mpc52xx.c
 +++ b/drivers/ata/pata_mpc52xx.c
-@@ -269,22 +269,12 @@ static struct scsi_host_template mpc52xx_ata_sht = {
- };
+@@ -255,15 +255,6 @@ mpc52xx_ata_dev_select(struct ata_port *ap, unsigned int device)
+ 	ata_std_dev_select(ap,device);
+ }
  
- static struct ata_port_operations mpc52xx_ata_port_ops = {
--	.set_piomode		= mpc52xx_ata_set_piomode,
-+	.inherits		= &ata_sff_port_ops,
+-static void
+-mpc52xx_ata_error_handler(struct ata_port *ap)
+-{
+-	ata_bmdma_drive_eh(ap, ata_std_prereset, ata_std_softreset, NULL,
+-			ata_std_postreset);
+-}
+-
+-
+-
+ static struct scsi_host_template mpc52xx_ata_sht = {
+ 	ATA_PIO_SHT(DRV_NAME),
+ };
+@@ -273,7 +264,6 @@ static struct ata_port_operations mpc52xx_ata_port_ops = {
  	.dev_select		= mpc52xx_ata_dev_select,
--	.tf_load		= ata_tf_load,
--	.tf_read		= ata_tf_read,
--	.check_status		= ata_check_status,
--	.exec_command		= ata_exec_command,
--	.freeze			= ata_bmdma_freeze,
--	.thaw			= ata_bmdma_thaw,
--	.error_handler		= mpc52xx_ata_error_handler,
  	.cable_detect		= ata_cable_40wire,
--	.qc_prep		= ata_qc_prep,
--	.qc_issue		= ata_qc_issue_prot,
--	.data_xfer		= ata_data_xfer,
--	.irq_clear		= ata_noop_irq_clear,
--	.irq_on			= ata_irq_on,
--	.port_start		= ata_sff_port_start,
-+	.set_piomode		= mpc52xx_ata_set_piomode,
-+	.error_handler		= mpc52xx_ata_error_handler,
-+	.post_internal_cmd	= ATA_OP_NULL,
+ 	.set_piomode		= mpc52xx_ata_set_piomode,
+-	.error_handler		= mpc52xx_ata_error_handler,
+ 	.post_internal_cmd	= ATA_OP_NULL,
  };
  
- static int __devinit
 diff --git a/drivers/ata/pata_mpiix.c b/drivers/ata/pata_mpiix.c
-index e8e6837..dab54f8 100644
+index dab54f8..1b9d0d4 100644
 --- a/drivers/ata/pata_mpiix.c
 +++ b/drivers/ata/pata_mpiix.c
-@@ -155,28 +155,11 @@ static struct scsi_host_template mpiix_sht = {
- };
+@@ -59,20 +59,6 @@ static int mpiix_pre_reset(struct ata_link *link, unsigned long deadline)
+ }
  
- static struct ata_port_operations mpiix_port_ops = {
-+	.inherits	= &ata_sff_port_ops,
-+	.qc_issue	= mpiix_qc_issue_prot,
-+	.cable_detect	= ata_cable_40wire,
+ /**
+- *	mpiix_error_handler		-	probe reset
+- *	@ap: ATA port
+- *
+- *	Perform the ATA probe and bus reset sequence plus specific handling
+- *	for this hardware. The MPIIX has the enable bits in a different place
+- *	to PIIX4 and friends. As a pure PIO device it has no cable detect
+- */
+-
+-static void mpiix_error_handler(struct ata_port *ap)
+-{
+-	ata_bmdma_drive_eh(ap, mpiix_pre_reset, ata_std_softreset, NULL, ata_std_postreset);
+-}
+-
+-/**
+  *	mpiix_set_piomode	-	set initial PIO mode data
+  *	@ap: ATA interface
+  *	@adev: ATA device
+@@ -159,7 +145,7 @@ static struct ata_port_operations mpiix_port_ops = {
+ 	.qc_issue	= mpiix_qc_issue_prot,
+ 	.cable_detect	= ata_cable_40wire,
  	.set_piomode	= mpiix_set_piomode,
--
--	.tf_load	= ata_tf_load,
--	.tf_read	= ata_tf_read,
--	.check_status 	= ata_check_status,
--	.exec_command	= ata_exec_command,
--	.dev_select 	= ata_std_dev_select,
--
--	.freeze		= ata_bmdma_freeze,
--	.thaw		= ata_bmdma_thaw,
- 	.error_handler	= mpiix_error_handler,
--	.post_internal_cmd = ata_bmdma_post_internal_cmd,
--	.cable_detect	= ata_cable_40wire,
--
--	.qc_prep 	= ata_qc_prep,
--	.qc_issue	= mpiix_qc_issue_prot,
--	.data_xfer	= ata_data_xfer,
--
--	.irq_clear	= ata_noop_irq_clear,
--	.irq_on		= ata_irq_on,
--
--	.port_start	= ata_sff_port_start,
+-	.error_handler	= mpiix_error_handler,
++	.prereset	= mpiix_pre_reset,
  };
  
  static int mpiix_init_one(struct pci_dev *dev, const struct pci_device_id *id)
-diff --git a/drivers/ata/pata_netcell.c b/drivers/ata/pata_netcell.c
-index 11f200a..65389d1 100644
---- a/drivers/ata/pata_netcell.c
-+++ b/drivers/ata/pata_netcell.c
-@@ -24,37 +24,9 @@ static struct scsi_host_template netcell_sht = {
- 	ATA_BMDMA_SHT(DRV_NAME),
- };
- 
--static const struct ata_port_operations netcell_ops = {
--	/* Task file is PCI ATA format, use helpers */
--	.tf_load		= ata_tf_load,
--	.tf_read		= ata_tf_read,
--	.check_status		= ata_check_status,
--	.exec_command		= ata_exec_command,
--	.dev_select		= ata_std_dev_select,
--
--	.mode_filter		= ata_pci_default_filter,
--	.freeze			= ata_bmdma_freeze,
--	.thaw			= ata_bmdma_thaw,
--	.error_handler		= ata_bmdma_error_handler,
--	.post_internal_cmd	= ata_bmdma_post_internal_cmd,
-+static struct ata_port_operations netcell_ops = {
-+	.inherits	= &ata_bmdma_port_ops,
- 	.cable_detect		= ata_cable_80wire,
--
--	/* BMDMA handling is PCI ATA format, use helpers */
--	.bmdma_setup		= ata_bmdma_setup,
--	.bmdma_start		= ata_bmdma_start,
--	.bmdma_stop		= ata_bmdma_stop,
--	.bmdma_status		= ata_bmdma_status,
--	.qc_prep		= ata_qc_prep,
--	.qc_issue		= ata_qc_issue_prot,
--	.data_xfer		= ata_data_xfer,
--
--	/* IRQ-related hooks */
--	.irq_handler		= ata_interrupt,
--	.irq_clear		= ata_bmdma_irq_clear,
--	.irq_on			= ata_irq_on,
--
--	/* Generic PATA PCI ATA helpers */
--	.port_start		= ata_sff_port_start,
- };
- 
- 
-diff --git a/drivers/ata/pata_ninja32.c b/drivers/ata/pata_ninja32.c
-index 3edda36..c37b951 100644
---- a/drivers/ata/pata_ninja32.c
-+++ b/drivers/ata/pata_ninja32.c
-@@ -82,36 +82,10 @@ static struct scsi_host_template ninja32_sht = {
- };
- 
- static struct ata_port_operations ninja32_port_ops = {
--	.set_piomode	= ninja32_set_piomode,
--	.mode_filter	= ata_pci_default_filter,
--
--	.tf_load	= ata_tf_load,
--	.tf_read	= ata_tf_read,
--	.check_status 	= ata_check_status,
--	.exec_command	= ata_exec_command,
-+	.inherits	= &ata_bmdma_port_ops,
- 	.dev_select 	= ninja32_dev_select,
--
--	.freeze		= ata_bmdma_freeze,
--	.thaw		= ata_bmdma_thaw,
--	.error_handler	= ata_bmdma_error_handler,
--	.post_internal_cmd = ata_bmdma_post_internal_cmd,
- 	.cable_detect	= ata_cable_40wire,
--
--	.bmdma_setup 	= ata_bmdma_setup,
--	.bmdma_start 	= ata_bmdma_start,
--	.bmdma_stop	= ata_bmdma_stop,
--	.bmdma_status 	= ata_bmdma_status,
--
--	.qc_prep 	= ata_qc_prep,
--	.qc_issue	= ata_qc_issue_prot,
--
--	.data_xfer	= ata_data_xfer,
--
--	.irq_handler	= ata_interrupt,
--	.irq_clear	= ata_bmdma_irq_clear,
--	.irq_on		= ata_irq_on,
--
--	.port_start	= ata_sff_port_start,
-+	.set_piomode	= ninja32_set_piomode,
- };
- 
- static int ninja32_init_one(struct pci_dev *dev, const struct pci_device_id *id)
 diff --git a/drivers/ata/pata_ns87410.c b/drivers/ata/pata_ns87410.c
-index d2f85f1..5b1982f 100644
+index 5a043e4..4d2eefe 100644
 --- a/drivers/ata/pata_ns87410.c
 +++ b/drivers/ata/pata_ns87410.c
-@@ -148,30 +148,11 @@ static struct scsi_host_template ns87410_sht = {
- };
+@@ -54,20 +54,6 @@ static int ns87410_pre_reset(struct ata_link *link, unsigned long deadline)
+ }
  
- static struct ata_port_operations ns87410_port_ops = {
-+	.inherits	= &ata_sff_port_ops,
-+	.qc_issue	= ns87410_qc_issue_prot,
-+	.cable_detect	= ata_cable_40wire,
+ /**
+- *	ns87410_error_handler		-	probe reset
+- *	@ap: ATA port
+- *
+- *	Perform the ATA probe and bus reset sequence plus specific handling
+- *	for this hardware. The MPIIX has the enable bits in a different place
+- *	to PIIX4 and friends. As a pure PIO device it has no cable detect
+- */
+-
+-static void ns87410_error_handler(struct ata_port *ap)
+-{
+-	ata_bmdma_drive_eh(ap, ns87410_pre_reset, ata_std_softreset, NULL, ata_std_postreset);
+-}
+-
+-/**
+  *	ns87410_set_piomode	-	set initial PIO mode data
+  *	@ap: ATA interface
+  *	@adev: ATA device
+@@ -152,7 +138,7 @@ static struct ata_port_operations ns87410_port_ops = {
+ 	.qc_issue	= ns87410_qc_issue_prot,
+ 	.cable_detect	= ata_cable_40wire,
  	.set_piomode	= ns87410_set_piomode,
--
--	.tf_load	= ata_tf_load,
--	.tf_read	= ata_tf_read,
--	.check_status 	= ata_check_status,
--	.exec_command	= ata_exec_command,
--	.dev_select 	= ata_std_dev_select,
--
--	.freeze		= ata_bmdma_freeze,
--	.thaw		= ata_bmdma_thaw,
- 	.error_handler	= ns87410_error_handler,
--	.post_internal_cmd = ata_bmdma_post_internal_cmd,
--	.cable_detect	= ata_cable_40wire,
--
--	.qc_prep 	= ata_qc_prep,
--	.qc_issue	= ns87410_qc_issue_prot,
--
--	.data_xfer	= ata_data_xfer,
--
--	.irq_handler	= ata_interrupt,
--	.irq_clear	= ata_noop_irq_clear,
--	.irq_on		= ata_irq_on,
--
--	.port_start	= ata_sff_port_start,
+-	.error_handler	= ns87410_error_handler,
++	.prereset	= ns87410_pre_reset,
  };
  
  static int ns87410_init_one(struct pci_dev *dev, const struct pci_device_id *id)
-diff --git a/drivers/ata/pata_ns87415.c b/drivers/ata/pata_ns87415.c
-index 78d6344..38d86a2 100644
---- a/drivers/ata/pata_ns87415.c
-+++ b/drivers/ata/pata_ns87415.c
-@@ -297,73 +297,29 @@ static u8 ns87560_bmdma_status(struct ata_port *ap)
- {
- 	return ns87560_read_buggy(ap->ioaddr.bmdma_addr + ATA_DMA_STATUS);
- }
-+#endif		/* 87560 SuperIO Support */
- 
--static const struct ata_port_operations ns87560_pata_ops = {
--	.set_piomode		= ns87415_set_piomode,
--	.mode_filter		= ata_pci_default_filter,
-+static struct ata_port_operations ns87415_pata_ops = {
-+	.inherits		= &ata_bmdma_port_ops,
- 
--	.tf_load		= ata_tf_load,
--	.tf_read		= ns87560_tf_read,
--	.check_status		= ns87560_check_status,
- 	.check_atapi_dma	= ns87415_check_atapi_dma,
--	.exec_command		= ata_exec_command,
--	.dev_select		= ata_std_dev_select,
--
--	.freeze			= ata_bmdma_freeze,
--	.thaw			= ata_bmdma_thaw,
--	.error_handler		= ata_bmdma_error_handler,
--	.post_internal_cmd 	= ata_bmdma_post_internal_cmd,
--	.cable_detect		= ata_cable_40wire,
--
- 	.bmdma_setup		= ns87415_bmdma_setup,
- 	.bmdma_start		= ns87415_bmdma_start,
- 	.bmdma_stop		= ns87415_bmdma_stop,
--	.bmdma_status		= ns87560_bmdma_status,
--	.qc_prep		= ata_qc_prep,
--	.qc_issue		= ata_qc_issue_prot,
--	.data_xfer		= ata_data_xfer,
--
--	.irq_handler		= ata_interrupt,
- 	.irq_clear		= ns87415_bmdma_irq_clear,
--	.irq_on			= ata_irq_on,
--
--	.port_start		= ata_sff_port_start,
--};
--
--#endif		/* 87560 SuperIO Support */
--
--
--static const struct ata_port_operations ns87415_pata_ops = {
--	.set_piomode		= ns87415_set_piomode,
--	.mode_filter		= ata_pci_default_filter,
- 
--	.tf_load		= ata_tf_load,
--	.tf_read		= ata_tf_read,
--	.check_status		= ata_check_status,
--	.check_atapi_dma	= ns87415_check_atapi_dma,
--	.exec_command		= ata_exec_command,
--	.dev_select		= ata_std_dev_select,
--
--	.freeze			= ata_bmdma_freeze,
--	.thaw			= ata_bmdma_thaw,
--	.error_handler		= ata_bmdma_error_handler,
--	.post_internal_cmd 	= ata_bmdma_post_internal_cmd,
- 	.cable_detect		= ata_cable_40wire,
-+	.set_piomode		= ns87415_set_piomode,
-+};
- 
--	.bmdma_setup		= ns87415_bmdma_setup,
--	.bmdma_start		= ns87415_bmdma_start,
--	.bmdma_stop		= ns87415_bmdma_stop,
--	.bmdma_status		= ata_bmdma_status,
--	.qc_prep		= ata_qc_prep,
--	.qc_issue		= ata_qc_issue_prot,
--	.data_xfer		= ata_data_xfer,
--
--	.irq_handler		= ata_interrupt,
--	.irq_clear		= ns87415_bmdma_irq_clear,
--	.irq_on			= ata_irq_on,
--
--	.port_start		= ata_sff_port_start,
-+#if defined(CONFIG_SUPERIO)
-+static struct ata_port_operations ns87560_pata_ops = {
-+	.inherits		= &ns87415_pata_ops,
-+	.tf_read		= ns87560_tf_read,
-+	.check_status		= ns87560_check_status,
-+	.bmdma_status		= ns87560_bmdma_status,
- };
-+#endif
- 
- static struct scsi_host_template ns87415_sht = {
- 	ATA_BMDMA_SHT(DRV_NAME),
 diff --git a/drivers/ata/pata_oldpiix.c b/drivers/ata/pata_oldpiix.c
-index 45f9b3e..f6062b3 100644
+index 7001b75..c1da79a 100644
 --- a/drivers/ata/pata_oldpiix.c
 +++ b/drivers/ata/pata_oldpiix.c
-@@ -223,36 +223,13 @@ static struct scsi_host_template oldpiix_sht = {
- 	ATA_BMDMA_SHT(DRV_NAME),
- };
+@@ -51,20 +51,6 @@ static int oldpiix_pre_reset(struct ata_link *link, unsigned long deadline)
+ }
  
--static const struct ata_port_operations oldpiix_pata_ops = {
-+static struct ata_port_operations oldpiix_pata_ops = {
-+	.inherits		= &ata_bmdma_port_ops,
-+	.qc_issue		= oldpiix_qc_issue_prot,
-+	.cable_detect		= ata_cable_40wire,
+ /**
+- *	oldpiix_pata_error_handler - Probe specified port on PATA host controller
+- *	@ap: Port to probe
+- *	@classes:
+- *
+- *	LOCKING:
+- *	None (inherited from caller).
+- */
+-
+-static void oldpiix_pata_error_handler(struct ata_port *ap)
+-{
+-	ata_bmdma_drive_eh(ap, oldpiix_pre_reset, ata_std_softreset, NULL, ata_std_postreset);
+-}
+-
+-/**
+  *	oldpiix_set_piomode - Initialize host controller PATA PIO timings
+  *	@ap: Port whose timings we are configuring
+  *	@adev: Device whose timings we are configuring
+@@ -229,7 +215,7 @@ static struct ata_port_operations oldpiix_pata_ops = {
+ 	.cable_detect		= ata_cable_40wire,
  	.set_piomode		= oldpiix_set_piomode,
  	.set_dmamode		= oldpiix_set_dmamode,
--	.mode_filter		= ata_pci_default_filter,
--
--	.tf_load		= ata_tf_load,
--	.tf_read		= ata_tf_read,
--	.check_status		= ata_check_status,
--	.exec_command		= ata_exec_command,
--	.dev_select		= ata_std_dev_select,
--
--	.freeze			= ata_bmdma_freeze,
--	.thaw			= ata_bmdma_thaw,
- 	.error_handler		= oldpiix_pata_error_handler,
--	.post_internal_cmd 	= ata_bmdma_post_internal_cmd,
--	.cable_detect		= ata_cable_40wire,
--
--	.bmdma_setup		= ata_bmdma_setup,
--	.bmdma_start		= ata_bmdma_start,
--	.bmdma_stop		= ata_bmdma_stop,
--	.bmdma_status		= ata_bmdma_status,
--	.qc_prep		= ata_qc_prep,
--	.qc_issue		= oldpiix_qc_issue_prot,
--	.data_xfer		= ata_data_xfer,
--
--	.irq_handler		= ata_interrupt,
--	.irq_clear		= ata_bmdma_irq_clear,
--	.irq_on			= ata_irq_on,
--
--	.port_start		= ata_sff_port_start,
+-	.error_handler		= oldpiix_pata_error_handler,
++	.prereset		= oldpiix_pre_reset,
  };
  
  
 diff --git a/drivers/ata/pata_opti.c b/drivers/ata/pata_opti.c
-index 1deacfa..c4a0795 100644
+index 5a5f20e..4ddd03a 100644
 --- a/drivers/ata/pata_opti.c
 +++ b/drivers/ata/pata_opti.c
-@@ -169,29 +169,10 @@ static struct scsi_host_template opti_sht = {
- };
+@@ -68,21 +68,6 @@ static int opti_pre_reset(struct ata_link *link, unsigned long deadline)
+ }
  
- static struct ata_port_operations opti_port_ops = {
-+	.inherits	= &ata_sff_port_ops,
-+	.cable_detect	= ata_cable_40wire,
+ /**
+- *	opti_probe_reset		-	probe reset
+- *	@ap: ATA port
+- *
+- *	Perform the ATA probe and bus reset sequence plus specific handling
+- *	for this hardware. The Opti needs little handling - we have no UDMA66
+- *	capability that needs cable detection. All we must do is check the port
+- *	is enabled.
+- */
+-
+-static void opti_error_handler(struct ata_port *ap)
+-{
+-	ata_bmdma_drive_eh(ap, opti_pre_reset, ata_std_softreset, NULL, ata_std_postreset);
+-}
+-
+-/**
+  *	opti_write_reg		-	control register setup
+  *	@ap: ATA port
+  *	@value: value
+@@ -172,7 +157,7 @@ static struct ata_port_operations opti_port_ops = {
+ 	.inherits	= &ata_sff_port_ops,
+ 	.cable_detect	= ata_cable_40wire,
  	.set_piomode	= opti_set_piomode,
--	.tf_load	= ata_tf_load,
--	.tf_read	= ata_tf_read,
--	.check_status 	= ata_check_status,
--	.exec_command	= ata_exec_command,
--	.dev_select 	= ata_std_dev_select,
--
--	.freeze		= ata_bmdma_freeze,
--	.thaw		= ata_bmdma_thaw,
- 	.error_handler	= opti_error_handler,
--	.post_internal_cmd = ata_bmdma_post_internal_cmd,
--	.cable_detect	= ata_cable_40wire,
--
--	.qc_prep 	= ata_qc_prep,
--	.qc_issue	= ata_qc_issue_prot,
--
--	.data_xfer	= ata_data_xfer,
--
--	.irq_handler	= ata_interrupt,
--	.irq_clear	= ata_noop_irq_clear,
--	.irq_on		= ata_irq_on,
--
--	.port_start	= ata_sff_port_start,
+-	.error_handler	= opti_error_handler,
++	.prereset	= opti_pre_reset,
  };
  
  static int opti_init_one(struct pci_dev *dev, const struct pci_device_id *id)
 diff --git a/drivers/ata/pata_optidma.c b/drivers/ata/pata_optidma.c
-index 7495758..eb4b081 100644
+index ba2819f..36ac147 100644
 --- a/drivers/ata/pata_optidma.c
 +++ b/drivers/ata/pata_optidma.c
-@@ -354,73 +354,18 @@ static struct scsi_host_template optidma_sht = {
- };
+@@ -68,21 +68,6 @@ static int optidma_pre_reset(struct ata_link *link, unsigned long deadline)
+ }
  
- static struct ata_port_operations optidma_port_ops = {
-+	.inherits	= &ata_bmdma_port_ops,
-+	.cable_detect	= ata_cable_40wire,
+ /**
+- *	optidma_probe_reset		-	probe reset
+- *	@ap: ATA port
+- *
+- *	Perform the ATA probe and bus reset sequence plus specific handling
+- *	for this hardware. The Opti needs little handling - we have no UDMA66
+- *	capability that needs cable detection. All we must do is check the port
+- *	is enabled.
+- */
+-
+-static void optidma_error_handler(struct ata_port *ap)
+-{
+-	ata_bmdma_drive_eh(ap, optidma_pre_reset, ata_std_softreset, NULL, ata_std_postreset);
+-}
+-
+-/**
+  *	optidma_unlock		-	unlock control registers
+  *	@ap: ATA port
+  *
+@@ -359,7 +344,7 @@ static struct ata_port_operations optidma_port_ops = {
  	.set_piomode	= optidma_set_pio_mode,
  	.set_dmamode	= optidma_set_dma_mode,
--	.mode_filter	= ata_pci_default_filter,
--
--	.tf_load	= ata_tf_load,
--	.tf_read	= ata_tf_read,
--	.check_status 	= ata_check_status,
--	.exec_command	= ata_exec_command,
--	.dev_select 	= ata_std_dev_select,
--
--	.freeze		= ata_bmdma_freeze,
--	.thaw		= ata_bmdma_thaw,
--	.post_internal_cmd = ata_bmdma_post_internal_cmd,
--	.error_handler	= optidma_error_handler,
  	.set_mode	= optidma_set_mode,
--	.cable_detect	= ata_cable_40wire,
--
--	.bmdma_setup 	= ata_bmdma_setup,
--	.bmdma_start 	= ata_bmdma_start,
--	.bmdma_stop	= ata_bmdma_stop,
--	.bmdma_status 	= ata_bmdma_status,
--
--	.qc_prep 	= ata_qc_prep,
--	.qc_issue	= ata_qc_issue_prot,
--
--	.data_xfer	= ata_data_xfer,
--
--	.irq_handler	= ata_interrupt,
--	.irq_clear	= ata_bmdma_irq_clear,
--	.irq_on		= ata_irq_on,
--
--	.port_start	= ata_sff_port_start,
-+	.error_handler	= optidma_error_handler,
+-	.error_handler	= optidma_error_handler,
++	.prereset	= optidma_pre_reset,
  };
  
  static struct ata_port_operations optiplus_port_ops = {
-+	.inherits	= &optidma_port_ops,
- 	.set_piomode	= optiplus_set_pio_mode,
- 	.set_dmamode	= optiplus_set_dma_mode,
--	.mode_filter	= ata_pci_default_filter,
--
--	.tf_load	= ata_tf_load,
--	.tf_read	= ata_tf_read,
--	.check_status 	= ata_check_status,
--	.exec_command	= ata_exec_command,
--	.dev_select 	= ata_std_dev_select,
--
--	.freeze		= ata_bmdma_freeze,
--	.thaw		= ata_bmdma_thaw,
--	.post_internal_cmd = ata_bmdma_post_internal_cmd,
--	.error_handler	= optidma_error_handler,
--	.set_mode	= optidma_set_mode,
--	.cable_detect	= ata_cable_40wire,
--
--	.bmdma_setup 	= ata_bmdma_setup,
--	.bmdma_start 	= ata_bmdma_start,
--	.bmdma_stop	= ata_bmdma_stop,
--	.bmdma_status 	= ata_bmdma_status,
--
--	.qc_prep 	= ata_qc_prep,
--	.qc_issue	= ata_qc_issue_prot,
--
--	.data_xfer	= ata_data_xfer,
--
--	.irq_handler	= ata_interrupt,
--	.irq_clear	= ata_bmdma_irq_clear,
--	.irq_on		= ata_irq_on,
--
--	.port_start	= ata_sff_port_start,
- };
- 
- /**
-diff --git a/drivers/ata/pata_pcmcia.c b/drivers/ata/pata_pcmcia.c
-index c05b36c..57efbf0 100644
---- a/drivers/ata/pata_pcmcia.c
-+++ b/drivers/ata/pata_pcmcia.c
-@@ -132,53 +132,17 @@ static struct scsi_host_template pcmcia_sht = {
- };
- 
- static struct ata_port_operations pcmcia_port_ops = {
--	.set_mode	= pcmcia_set_mode,
--	.tf_load	= ata_tf_load,
--	.tf_read	= ata_tf_read,
--	.check_status 	= ata_check_status,
--	.exec_command	= ata_exec_command,
--	.dev_select 	= ata_std_dev_select,
--
--	.freeze		= ata_bmdma_freeze,
--	.thaw		= ata_bmdma_thaw,
--	.error_handler	= ata_bmdma_error_handler,
--	.post_internal_cmd = ata_bmdma_post_internal_cmd,
--	.cable_detect	= ata_cable_40wire,
--
--	.qc_prep 	= ata_qc_prep,
--	.qc_issue	= ata_qc_issue_prot,
--
-+	.inherits	= &ata_sff_port_ops,
- 	.data_xfer	= ata_data_xfer_noirq,
--
--	.irq_clear	= ata_noop_irq_clear,
--	.irq_on		= ata_irq_on,
--
--	.port_start	= ata_sff_port_start,
-+	.cable_detect	= ata_cable_40wire,
-+	.set_mode	= pcmcia_set_mode,
- };
- 
- static struct ata_port_operations pcmcia_8bit_port_ops = {
--	.set_mode	= pcmcia_set_mode_8bit,
--	.tf_load	= ata_tf_load,
--	.tf_read	= ata_tf_read,
--	.check_status 	= ata_check_status,
--	.exec_command	= ata_exec_command,
--	.dev_select 	= ata_std_dev_select,
--
--	.freeze		= ata_bmdma_freeze,
--	.thaw		= ata_bmdma_thaw,
--	.error_handler	= ata_bmdma_error_handler,
--	.post_internal_cmd = ata_bmdma_post_internal_cmd,
--	.cable_detect	= ata_cable_40wire,
--
--	.qc_prep 	= ata_qc_prep,
--	.qc_issue	= ata_qc_issue_prot,
--
-+	.inherits	= &ata_sff_port_ops,
- 	.data_xfer	= ata_data_xfer_8bit,
--
--	.irq_clear	= ata_noop_irq_clear,
--	.irq_on		= ata_irq_on,
--
--	.port_start	= ata_sff_port_start,
-+	.cable_detect	= ata_cable_40wire,
-+	.set_mode	= pcmcia_set_mode_8bit,
- };
- 
- #define CS_CHECK(fn, ret) \
 diff --git a/drivers/ata/pata_pdc2027x.c b/drivers/ata/pata_pdc2027x.c
-index 302c2c6..baa9fa7 100644
+index baa9fa7..d591e21 100644
 --- a/drivers/ata/pata_pdc2027x.c
 +++ b/drivers/ata/pata_pdc2027x.c
-@@ -133,66 +133,18 @@ static struct scsi_host_template pdc2027x_sht = {
+@@ -63,7 +63,7 @@ enum {
  };
  
- static struct ata_port_operations pdc2027x_pata100_ops = {
--	.mode_filter		= ata_pci_default_filter,
--
--	.tf_load		= ata_tf_load,
--	.tf_read		= ata_tf_read,
--	.check_status		= ata_check_status,
--	.exec_command		= ata_exec_command,
--	.dev_select		= ata_std_dev_select,
--
-+	.inherits		= &ata_bmdma_port_ops,
+ static int pdc2027x_init_one(struct pci_dev *pdev, const struct pci_device_id *ent);
+-static void pdc2027x_error_handler(struct ata_port *ap);
++static int pdc2027x_prereset(struct ata_link *link, unsigned long deadline);
+ static void pdc2027x_set_piomode(struct ata_port *ap, struct ata_device *adev);
+ static void pdc2027x_set_dmamode(struct ata_port *ap, struct ata_device *adev);
+ static int pdc2027x_check_atapi_dma(struct ata_queued_cmd *qc);
+@@ -136,7 +136,7 @@ static struct ata_port_operations pdc2027x_pata100_ops = {
+ 	.inherits		= &ata_bmdma_port_ops,
  	.check_atapi_dma	= pdc2027x_check_atapi_dma,
--	.bmdma_setup		= ata_bmdma_setup,
--	.bmdma_start		= ata_bmdma_start,
--	.bmdma_stop		= ata_bmdma_stop,
--	.bmdma_status		= ata_bmdma_status,
--	.qc_prep		= ata_qc_prep,
--	.qc_issue		= ata_qc_issue_prot,
--	.data_xfer		= ata_data_xfer,
--
--	.freeze			= ata_bmdma_freeze,
--	.thaw			= ata_bmdma_thaw,
--	.error_handler		= pdc2027x_error_handler,
--	.post_internal_cmd 	= ata_bmdma_post_internal_cmd,
  	.cable_detect		= pdc2027x_cable_detect,
--
--	.irq_clear		= ata_bmdma_irq_clear,
--	.irq_on			= ata_irq_on,
--
--	.port_start		= ata_sff_port_start,
-+	.error_handler		= pdc2027x_error_handler,
+-	.error_handler		= pdc2027x_error_handler,
++	.prereset		= pdc2027x_prereset,
  };
  
  static struct ata_port_operations pdc2027x_pata133_ops = {
-+	.inherits		= &pdc2027x_pata100_ops,
-+	.mode_filter		= pdc2027x_mode_filter,
- 	.set_piomode		= pdc2027x_set_piomode,
- 	.set_dmamode		= pdc2027x_set_dmamode,
- 	.set_mode		= pdc2027x_set_mode,
--	.mode_filter		= pdc2027x_mode_filter,
--
--	.tf_load		= ata_tf_load,
--	.tf_read		= ata_tf_read,
--	.check_status		= ata_check_status,
--	.exec_command		= ata_exec_command,
--	.dev_select		= ata_std_dev_select,
--
--	.check_atapi_dma	= pdc2027x_check_atapi_dma,
--	.bmdma_setup		= ata_bmdma_setup,
--	.bmdma_start		= ata_bmdma_start,
--	.bmdma_stop		= ata_bmdma_stop,
--	.bmdma_status		= ata_bmdma_status,
--	.qc_prep		= ata_qc_prep,
--	.qc_issue		= ata_qc_issue_prot,
--	.data_xfer		= ata_data_xfer,
--
--	.freeze			= ata_bmdma_freeze,
--	.thaw			= ata_bmdma_thaw,
--	.error_handler		= pdc2027x_error_handler,
--	.post_internal_cmd	= ata_bmdma_post_internal_cmd,
--	.cable_detect		= pdc2027x_cable_detect,
--
--	.irq_clear		= ata_bmdma_irq_clear,
--	.irq_on			= ata_irq_on,
--
--	.port_start		= ata_sff_port_start,
- };
- 
- static struct ata_port_info pdc2027x_port_info[] = {
-diff --git a/drivers/ata/pata_pdc202xx_old.c b/drivers/ata/pata_pdc202xx_old.c
-index 564ee07..4daac20 100644
---- a/drivers/ata/pata_pdc202xx_old.c
-+++ b/drivers/ata/pata_pdc202xx_old.c
-@@ -266,69 +266,24 @@ static struct scsi_host_template pdc202xx_sht = {
- };
- 
- static struct ata_port_operations pdc2024x_port_ops = {
--	.set_piomode	= pdc202xx_set_piomode,
--	.set_dmamode	= pdc202xx_set_dmamode,
--	.mode_filter	= ata_pci_default_filter,
--	.tf_load	= ata_tf_load,
--	.tf_read	= ata_tf_read,
--	.check_status 	= ata_check_status,
--	.exec_command	= ata_exec_command,
--	.dev_select 	= ata_std_dev_select,
--
--	.freeze		= ata_bmdma_freeze,
--	.thaw		= ata_bmdma_thaw,
--	.error_handler	= ata_bmdma_error_handler,
--	.post_internal_cmd = ata_bmdma_post_internal_cmd,
--	.cable_detect	= ata_cable_40wire,
--
--	.bmdma_setup 	= ata_bmdma_setup,
--	.bmdma_start 	= ata_bmdma_start,
--	.bmdma_stop	= ata_bmdma_stop,
--	.bmdma_status 	= ata_bmdma_status,
--
--	.qc_prep 	= ata_qc_prep,
--	.qc_issue	= ata_qc_issue_prot,
--	.data_xfer	= ata_data_xfer,
--
--	.irq_handler	= ata_interrupt,
--	.irq_clear	= ata_bmdma_irq_clear,
--	.irq_on		= ata_irq_on,
--
--	.port_start	= ata_sff_port_start,
-+	.inherits		= &ata_bmdma_port_ops,
-+
-+	.cable_detect		= ata_cable_40wire,
-+	.set_piomode		= pdc202xx_set_piomode,
-+	.set_dmamode		= pdc202xx_set_dmamode,
- };
- 
- static struct ata_port_operations pdc2026x_port_ops = {
--	.set_piomode	= pdc202xx_set_piomode,
--	.set_dmamode	= pdc202xx_set_dmamode,
--	.mode_filter	= ata_pci_default_filter,
--	.tf_load	= ata_tf_load,
--	.tf_read	= ata_tf_read,
--	.check_status 	= ata_check_status,
--	.exec_command	= ata_exec_command,
--	.dev_select 	= ata_std_dev_select,
--	.dev_config	= pdc2026x_dev_config,
--
--	.freeze		= ata_bmdma_freeze,
--	.thaw		= ata_bmdma_thaw,
--	.error_handler	= ata_bmdma_error_handler,
--	.post_internal_cmd = ata_bmdma_post_internal_cmd,
--	.cable_detect	= pdc2026x_cable_detect,
--
--	.check_atapi_dma= pdc2026x_check_atapi_dma,
--	.bmdma_setup 	= ata_bmdma_setup,
--	.bmdma_start 	= pdc2026x_bmdma_start,
--	.bmdma_stop	= pdc2026x_bmdma_stop,
--	.bmdma_status 	= ata_bmdma_status,
--
--	.qc_prep 	= ata_qc_prep,
--	.qc_issue	= ata_qc_issue_prot,
--	.data_xfer	= ata_data_xfer,
--
--	.irq_handler	= ata_interrupt,
--	.irq_clear	= ata_bmdma_irq_clear,
--	.irq_on		= ata_irq_on,
--
--	.port_start	= pdc2026x_port_start,
-+	.inherits		= &pdc2024x_port_ops,
-+
-+	.check_atapi_dma	= pdc2026x_check_atapi_dma,
-+	.bmdma_start		= pdc2026x_bmdma_start,
-+	.bmdma_stop		= pdc2026x_bmdma_stop,
-+
-+	.cable_detect		= pdc2026x_cable_detect,
-+	.dev_config		= pdc2026x_dev_config,
-+
-+	.port_start		= pdc2026x_port_start,
- };
- 
- static int pdc202xx_init_one(struct pci_dev *dev, const struct pci_device_id *id)
-diff --git a/drivers/ata/pata_platform.c b/drivers/ata/pata_platform.c
-index cd2d03a..0588c9b 100644
---- a/drivers/ata/pata_platform.c
-+++ b/drivers/ata/pata_platform.c
-@@ -51,27 +51,11 @@ static struct scsi_host_template pata_platform_sht = {
- };
- 
- static struct ata_port_operations pata_platform_port_ops = {
--	.set_mode		= pata_platform_set_mode,
--
--	.tf_load		= ata_tf_load,
--	.tf_read		= ata_tf_read,
--	.check_status		= ata_check_status,
--	.exec_command		= ata_exec_command,
--	.dev_select		= ata_std_dev_select,
--
--	.freeze			= ata_bmdma_freeze,
--	.thaw			= ata_bmdma_thaw,
--	.error_handler		= ata_bmdma_error_handler,
--	.post_internal_cmd	= ata_bmdma_post_internal_cmd,
--	.cable_detect		= ata_cable_unknown,
--
--	.qc_prep		= ata_qc_prep,
--	.qc_issue		= ata_qc_issue_prot,
--
-+	.inherits		= &ata_sff_port_ops,
- 	.data_xfer		= ata_data_xfer_noirq,
--
--	.irq_clear		= ata_noop_irq_clear,
--	.irq_on			= ata_irq_on,
-+	.cable_detect		= ata_cable_unknown,
-+	.set_mode		= pata_platform_set_mode,
-+	.port_start		= ATA_OP_NULL,
- };
- 
- static void pata_platform_setup_port(struct ata_ioports *ioaddr,
-diff --git a/drivers/ata/pata_qdi.c b/drivers/ata/pata_qdi.c
-index ccb8682..d16b343 100644
---- a/drivers/ata/pata_qdi.c
-+++ b/drivers/ata/pata_qdi.c
-@@ -158,55 +158,16 @@ static struct scsi_host_template qdi_sht = {
- };
- 
- static struct ata_port_operations qdi6500_port_ops = {
--	.set_piomode	= qdi6500_set_piomode,
--
--	.tf_load	= ata_tf_load,
--	.tf_read	= ata_tf_read,
--	.check_status 	= ata_check_status,
--	.exec_command	= ata_exec_command,
--	.dev_select 	= ata_std_dev_select,
--
--	.freeze		= ata_bmdma_freeze,
--	.thaw		= ata_bmdma_thaw,
--	.error_handler	= ata_bmdma_error_handler,
--	.post_internal_cmd = ata_bmdma_post_internal_cmd,
--	.cable_detect	= ata_cable_40wire,
--
--	.qc_prep 	= ata_qc_prep,
-+	.inherits	= &ata_sff_port_ops,
- 	.qc_issue	= qdi_qc_issue_prot,
--
- 	.data_xfer	= qdi_data_xfer,
--
--	.irq_clear	= ata_noop_irq_clear,
--	.irq_on		= ata_irq_on,
--
--	.port_start	= ata_sff_port_start,
-+	.cable_detect	= ata_cable_40wire,
-+	.set_piomode	= qdi6500_set_piomode,
- };
- 
- static struct ata_port_operations qdi6580_port_ops = {
-+	.inherits	= &qdi6500_port_ops,
- 	.set_piomode	= qdi6580_set_piomode,
--
--	.tf_load	= ata_tf_load,
--	.tf_read	= ata_tf_read,
--	.check_status 	= ata_check_status,
--	.exec_command	= ata_exec_command,
--	.dev_select 	= ata_std_dev_select,
--
--	.freeze		= ata_bmdma_freeze,
--	.thaw		= ata_bmdma_thaw,
--	.error_handler	= ata_bmdma_error_handler,
--	.post_internal_cmd = ata_bmdma_post_internal_cmd,
--	.cable_detect	= ata_cable_40wire,
--
--	.qc_prep 	= ata_qc_prep,
--	.qc_issue	= qdi_qc_issue_prot,
--
--	.data_xfer	= qdi_data_xfer,
--
--	.irq_clear	= ata_noop_irq_clear,
--	.irq_on		= ata_irq_on,
--
--	.port_start	= ata_sff_port_start,
- };
+@@ -252,21 +252,6 @@ static int pdc2027x_prereset(struct ata_link *link, unsigned long deadline)
+ }
  
  /**
-diff --git a/drivers/ata/pata_radisys.c b/drivers/ata/pata_radisys.c
-index 3981bf8..94e60b3 100644
---- a/drivers/ata/pata_radisys.c
-+++ b/drivers/ata/pata_radisys.c
-@@ -188,36 +188,12 @@ static struct scsi_host_template radisys_sht = {
- 	ATA_BMDMA_SHT(DRV_NAME),
- };
- 
--static const struct ata_port_operations radisys_pata_ops = {
-+static struct ata_port_operations radisys_pata_ops = {
-+	.inherits		= &ata_bmdma_port_ops,
-+	.qc_issue		= radisys_qc_issue_prot,
-+	.cable_detect		= ata_cable_unknown,
- 	.set_piomode		= radisys_set_piomode,
- 	.set_dmamode		= radisys_set_dmamode,
--	.mode_filter		= ata_pci_default_filter,
+- *	pdc2027x_error_handler - Perform reset on PATA port and classify
+- *	@ap: Port to reset
+- *
+- *	Reset PATA phy and classify attached devices.
+- *
+- *	LOCKING:
+- *	None (inherited from caller).
+- */
 -
--	.tf_load		= ata_tf_load,
--	.tf_read		= ata_tf_read,
--	.check_status		= ata_check_status,
--	.exec_command		= ata_exec_command,
--	.dev_select		= ata_std_dev_select,
+-static void pdc2027x_error_handler(struct ata_port *ap)
+-{
+-	ata_bmdma_drive_eh(ap, pdc2027x_prereset, ata_std_softreset, NULL, ata_std_postreset);
+-}
 -
--	.freeze			= ata_bmdma_freeze,
--	.thaw			= ata_bmdma_thaw,
--	.error_handler		= ata_bmdma_error_handler,
--	.post_internal_cmd	= ata_bmdma_post_internal_cmd,
--	.cable_detect		= ata_cable_unknown,
--
--	.bmdma_setup		= ata_bmdma_setup,
--	.bmdma_start		= ata_bmdma_start,
--	.bmdma_stop		= ata_bmdma_stop,
--	.bmdma_status		= ata_bmdma_status,
--	.qc_prep		= ata_qc_prep,
--	.qc_issue		= radisys_qc_issue_prot,
--	.data_xfer		= ata_data_xfer,
--
--	.irq_handler		= ata_interrupt,
--	.irq_clear		= ata_bmdma_irq_clear,
--	.irq_on			= ata_irq_on,
--
--	.port_start		= ata_sff_port_start,
- };
- 
- 
-diff --git a/drivers/ata/pata_rz1000.c b/drivers/ata/pata_rz1000.c
-index 80909a6..a2aef73 100644
---- a/drivers/ata/pata_rz1000.c
-+++ b/drivers/ata/pata_rz1000.c
-@@ -57,30 +57,9 @@ static struct scsi_host_template rz1000_sht = {
- };
- 
- static struct ata_port_operations rz1000_port_ops = {
--	.set_mode	= rz1000_set_mode,
--
--	.tf_load	= ata_tf_load,
--	.tf_read	= ata_tf_read,
--	.check_status 	= ata_check_status,
--	.exec_command	= ata_exec_command,
--	.dev_select 	= ata_std_dev_select,
--
--	.qc_prep 	= ata_qc_prep,
--	.qc_issue	= ata_qc_issue_prot,
--
--	.data_xfer	= ata_data_xfer,
--
--	.freeze		= ata_bmdma_freeze,
--	.thaw		= ata_bmdma_thaw,
--	.error_handler	= ata_bmdma_error_handler,
--	.post_internal_cmd = ata_bmdma_post_internal_cmd,
-+	.inherits	= &ata_sff_port_ops,
- 	.cable_detect	= ata_cable_40wire,
--
--	.irq_handler	= ata_interrupt,
--	.irq_clear	= ata_noop_irq_clear,
--	.irq_on		= ata_irq_on,
--
--	.port_start	= ata_sff_port_start,
-+	.set_mode	= rz1000_set_mode,
- };
- 
- static int rz1000_fifo_disable(struct pci_dev *pdev)
-diff --git a/drivers/ata/pata_sc1200.c b/drivers/ata/pata_sc1200.c
-index 38ce6e1..362b7f8 100644
---- a/drivers/ata/pata_sc1200.c
-+++ b/drivers/ata/pata_sc1200.c
-@@ -184,37 +184,12 @@ static struct scsi_host_template sc1200_sht = {
- };
- 
- static struct ata_port_operations sc1200_port_ops = {
--	.set_piomode	= sc1200_set_piomode,
--	.set_dmamode	= sc1200_set_dmamode,
--	.mode_filter	= ata_pci_default_filter,
--
--	.tf_load	= ata_tf_load,
--	.tf_read	= ata_tf_read,
--	.check_status 	= ata_check_status,
--	.exec_command	= ata_exec_command,
--	.dev_select 	= ata_std_dev_select,
--
--	.freeze		= ata_bmdma_freeze,
--	.thaw		= ata_bmdma_thaw,
--	.error_handler	= ata_bmdma_error_handler,
--	.post_internal_cmd = ata_bmdma_post_internal_cmd,
--	.cable_detect	= ata_cable_40wire,
--
--	.bmdma_setup 	= ata_bmdma_setup,
--	.bmdma_start 	= ata_bmdma_start,
--	.bmdma_stop	= ata_bmdma_stop,
--	.bmdma_status 	= ata_bmdma_status,
--
-+	.inherits	= &ata_bmdma_port_ops,
- 	.qc_prep 	= ata_dumb_qc_prep,
- 	.qc_issue	= sc1200_qc_issue_prot,
--
--	.data_xfer	= ata_data_xfer,
--
--	.irq_handler	= ata_interrupt,
--	.irq_clear	= ata_bmdma_irq_clear,
--	.irq_on		= ata_irq_on,
--
--	.port_start	= ata_sff_port_start,
-+	.cable_detect	= ata_cable_40wire,
-+	.set_piomode	= sc1200_set_piomode,
-+	.set_dmamode	= sc1200_set_dmamode,
- };
- 
- /**
+-/**
+  *	pdc2720x_mode_filter	-	mode selection filter
+  *	@adev: ATA device
+  *	@mask: list of modes proposed
 diff --git a/drivers/ata/pata_scc.c b/drivers/ata/pata_scc.c
-index d5daf07..d643d49 100644
+index d643d49..7def1e0 100644
 --- a/drivers/ata/pata_scc.c
 +++ b/drivers/ata/pata_scc.c
-@@ -972,6 +972,8 @@ static struct scsi_host_template scc_sht = {
- };
- 
- static const struct ata_port_operations scc_pata_ops = {
-+	.inherits		= &ata_bmdma_port_ops,
-+
- 	.set_piomode		= scc_set_piomode,
- 	.set_dmamode		= scc_set_dmamode,
- 	.mode_filter		= scc_mode_filter,
-@@ -989,10 +991,8 @@ static const struct ata_port_operations scc_pata_ops = {
- 	.bmdma_status		= scc_bmdma_status,
- 	.data_xfer		= scc_data_xfer,
- 
--	.qc_prep		= ata_qc_prep,
--	.qc_issue		= ata_qc_issue_prot,
--
- 	.freeze			= scc_bmdma_freeze,
-+	.thaw			= ATA_OP_NULL,
- 	.error_handler		= scc_error_handler,
- 	.post_internal_cmd	= scc_bmdma_stop,
- 
-diff --git a/drivers/ata/pata_serverworks.c b/drivers/ata/pata_serverworks.c
-index 1abc6b6..a5ce863 100644
---- a/drivers/ata/pata_serverworks.c
-+++ b/drivers/ata/pata_serverworks.c
-@@ -302,71 +302,16 @@ static struct scsi_host_template serverworks_sht = {
- };
- 
- static struct ata_port_operations serverworks_osb4_port_ops = {
-+	.inherits	= &ata_bmdma_port_ops,
-+	.cable_detect	= serverworks_cable_detect,
-+	.mode_filter	= serverworks_osb4_filter,
- 	.set_piomode	= serverworks_set_piomode,
- 	.set_dmamode	= serverworks_set_dmamode,
--	.mode_filter	= serverworks_osb4_filter,
--
--	.tf_load	= ata_tf_load,
--	.tf_read	= ata_tf_read,
--	.check_status 	= ata_check_status,
--	.exec_command	= ata_exec_command,
--	.dev_select 	= ata_std_dev_select,
--
--	.freeze		= ata_bmdma_freeze,
--	.thaw		= ata_bmdma_thaw,
--	.error_handler	= ata_bmdma_error_handler,
--	.post_internal_cmd = ata_bmdma_post_internal_cmd,
--	.cable_detect	= serverworks_cable_detect,
--
--	.bmdma_setup 	= ata_bmdma_setup,
--	.bmdma_start 	= ata_bmdma_start,
--	.bmdma_stop	= ata_bmdma_stop,
--	.bmdma_status 	= ata_bmdma_status,
--
--	.qc_prep 	= ata_qc_prep,
--	.qc_issue	= ata_qc_issue_prot,
--
--	.data_xfer	= ata_data_xfer,
--
--	.irq_handler	= ata_interrupt,
--	.irq_clear	= ata_bmdma_irq_clear,
--	.irq_on		= ata_irq_on,
--
--	.port_start	= ata_sff_port_start,
- };
- 
- static struct ata_port_operations serverworks_csb_port_ops = {
--	.set_piomode	= serverworks_set_piomode,
--	.set_dmamode	= serverworks_set_dmamode,
-+	.inherits	= &serverworks_osb4_port_ops,
- 	.mode_filter	= serverworks_csb_filter,
--
--	.tf_load	= ata_tf_load,
--	.tf_read	= ata_tf_read,
--	.check_status 	= ata_check_status,
--	.exec_command	= ata_exec_command,
--	.dev_select 	= ata_std_dev_select,
--
--	.freeze		= ata_bmdma_freeze,
--	.thaw		= ata_bmdma_thaw,
--	.error_handler	= ata_bmdma_error_handler,
--	.post_internal_cmd = ata_bmdma_post_internal_cmd,
--	.cable_detect	= serverworks_cable_detect,
--
--	.bmdma_setup 	= ata_bmdma_setup,
--	.bmdma_start 	= ata_bmdma_start,
--	.bmdma_stop	= ata_bmdma_stop,
--	.bmdma_status 	= ata_bmdma_status,
--
--	.qc_prep 	= ata_qc_prep,
--	.qc_issue	= ata_qc_issue_prot,
--
--	.data_xfer	= ata_data_xfer,
--
--	.irq_handler	= ata_interrupt,
--	.irq_clear	= ata_bmdma_irq_clear,
--	.irq_on		= ata_irq_on,
--
--	.port_start	= ata_sff_port_start,
- };
- 
- static int serverworks_fixup_osb4(struct pci_dev *pdev)
-diff --git a/drivers/ata/pata_sil680.c b/drivers/ata/pata_sil680.c
-index 6ebf6f7..bc3253d 100644
---- a/drivers/ata/pata_sil680.c
-+++ b/drivers/ata/pata_sil680.c
-@@ -196,36 +196,10 @@ static struct scsi_host_template sil680_sht = {
- };
- 
- static struct ata_port_operations sil680_port_ops = {
-+	.inherits	= &ata_bmdma_port_ops,
-+	.cable_detect	= sil680_cable_detect,
- 	.set_piomode	= sil680_set_piomode,
- 	.set_dmamode	= sil680_set_dmamode,
--	.mode_filter	= ata_pci_default_filter,
--	.tf_load	= ata_tf_load,
--	.tf_read	= ata_tf_read,
--	.check_status 	= ata_check_status,
--	.exec_command	= ata_exec_command,
--	.dev_select 	= ata_std_dev_select,
--
--	.freeze		= ata_bmdma_freeze,
--	.thaw		= ata_bmdma_thaw,
--	.error_handler	= ata_bmdma_error_handler,
--	.post_internal_cmd = ata_bmdma_post_internal_cmd,
--	.cable_detect	= sil680_cable_detect,
--
--	.bmdma_setup 	= ata_bmdma_setup,
--	.bmdma_start 	= ata_bmdma_start,
--	.bmdma_stop	= ata_bmdma_stop,
--	.bmdma_status 	= ata_bmdma_status,
--
--	.qc_prep 	= ata_qc_prep,
--	.qc_issue	= ata_qc_issue_prot,
--
--	.data_xfer	= ata_data_xfer,
--
--	.irq_handler	= ata_interrupt,
--	.irq_clear	= ata_bmdma_irq_clear,
--	.irq_on		= ata_irq_on,
--
--	.port_start	= ata_sff_port_start,
- };
+@@ -905,17 +905,6 @@ static void scc_std_postreset(struct ata_link *link, unsigned int *classes)
+ }
  
  /**
+- *	scc_error_handler - Stock error handler for BMDMA controller
+- *	@ap: port to handle error for
+- */
+-
+-static void scc_error_handler (struct ata_port *ap)
+-{
+-	ata_bmdma_drive_eh(ap, scc_pata_prereset, scc_std_softreset, NULL,
+-			   scc_std_postreset);
+-}
+-
+-/**
+  *	scc_bmdma_irq_clear - Clear PCI IDE BMDMA interrupt.
+  *	@ap: Port associated with this ATA transaction.
+  *
+@@ -993,7 +982,9 @@ static const struct ata_port_operations scc_pata_ops = {
+ 
+ 	.freeze			= scc_bmdma_freeze,
+ 	.thaw			= ATA_OP_NULL,
+-	.error_handler		= scc_error_handler,
++	.prereset		= scc_pata_prereset,
++	.softreset		= scc_std_softreset,
++	.postreset		= scc_std_postreset,
+ 	.post_internal_cmd	= scc_bmdma_stop,
+ 
+ 	.irq_clear		= scc_bmdma_irq_clear,
 diff --git a/drivers/ata/pata_sis.c b/drivers/ata/pata_sis.c
-index dcd8457..3ed6286 100644
+index 28abfc2..793e671 100644
 --- a/drivers/ata/pata_sis.c
 +++ b/drivers/ata/pata_sis.c
-@@ -517,196 +517,51 @@ static struct scsi_host_template sis_sht = {
- 	ATA_BMDMA_SHT(DRV_NAME),
- };
+@@ -161,19 +161,6 @@ static int sis_pre_reset(struct ata_link *link, unsigned long deadline)
  
--static const struct ata_port_operations sis_133_ops = {
-+static struct ata_port_operations sis_133_for_sata_ops = {
-+	.inherits		= &ata_bmdma_port_ops,
- 	.set_piomode		= sis_133_set_piomode,
- 	.set_dmamode		= sis_133_set_dmamode,
--	.mode_filter		= ata_pci_default_filter,
+ 
+ /**
+- *	sis_error_handler - Probe specified port on PATA host controller
+- *	@ap: Port to probe
+- *
+- *	LOCKING:
+- *	None (inherited from caller).
+- */
 -
--	.tf_load		= ata_tf_load,
--	.tf_read		= ata_tf_read,
--	.check_status		= ata_check_status,
--	.exec_command		= ata_exec_command,
--	.dev_select		= ata_std_dev_select,
+-static void sis_error_handler(struct ata_port *ap)
+-{
+-	ata_bmdma_drive_eh(ap, sis_pre_reset, ata_std_softreset, NULL, ata_std_postreset);
+-}
 -
--	.freeze			= ata_bmdma_freeze,
--	.thaw			= ata_bmdma_thaw,
+-/**
+  *	sis_set_fifo	-	Set RWP fifo bits for this device
+  *	@ap: Port
+  *	@adev: Device
+@@ -526,7 +513,7 @@ static struct ata_port_operations sis_133_for_sata_ops = {
+ 
+ static struct ata_port_operations sis_base_ops = {
+ 	.inherits		= &ata_bmdma_port_ops,
 -	.error_handler		= sis_error_handler,
--	.post_internal_cmd	= ata_bmdma_post_internal_cmd,
- 	.cable_detect		= sis_133_cable_detect,
-+};
- 
--	.bmdma_setup		= ata_bmdma_setup,
--	.bmdma_start		= ata_bmdma_start,
--	.bmdma_stop		= ata_bmdma_stop,
--	.bmdma_status		= ata_bmdma_status,
--	.qc_prep		= ata_qc_prep,
--	.qc_issue		= ata_qc_issue_prot,
--	.data_xfer		= ata_data_xfer,
--
--	.irq_handler		= ata_interrupt,
--	.irq_clear		= ata_bmdma_irq_clear,
--	.irq_on			= ata_irq_on,
--
--	.port_start		= ata_sff_port_start,
-+static struct ata_port_operations sis_base_ops = {
-+	.inherits		= &ata_bmdma_port_ops,
-+	.error_handler		= sis_error_handler,
++	.prereset		= sis_pre_reset,
  };
  
--static const struct ata_port_operations sis_133_for_sata_ops = {
-+static struct ata_port_operations sis_133_ops = {
-+	.inherits		= &sis_base_ops,
- 	.set_piomode		= sis_133_set_piomode,
- 	.set_dmamode		= sis_133_set_dmamode,
--	.mode_filter		= ata_pci_default_filter,
--
--	.tf_load		= ata_tf_load,
--	.tf_read		= ata_tf_read,
--	.check_status		= ata_check_status,
--	.exec_command		= ata_exec_command,
--	.dev_select		= ata_std_dev_select,
--
--	.freeze			= ata_bmdma_freeze,
--	.thaw			= ata_bmdma_thaw,
--	.error_handler		= ata_bmdma_error_handler,
--	.post_internal_cmd	= ata_bmdma_post_internal_cmd,
- 	.cable_detect		= sis_133_cable_detect,
--
--	.bmdma_setup		= ata_bmdma_setup,
--	.bmdma_start		= ata_bmdma_start,
--	.bmdma_stop		= ata_bmdma_stop,
--	.bmdma_status		= ata_bmdma_status,
--	.qc_prep		= ata_qc_prep,
--	.qc_issue		= ata_qc_issue_prot,
--	.data_xfer		= ata_data_xfer,
--
--	.irq_handler		= ata_interrupt,
--	.irq_clear		= ata_bmdma_irq_clear,
--	.irq_on			= ata_irq_on,
--
--	.port_start		= ata_sff_port_start,
- };
- 
--static const struct ata_port_operations sis_133_early_ops = {
-+static struct ata_port_operations sis_133_early_ops = {
-+	.inherits		= &sis_base_ops,
- 	.set_piomode		= sis_100_set_piomode,
- 	.set_dmamode		= sis_133_early_set_dmamode,
--	.mode_filter		= ata_pci_default_filter,
--
--	.tf_load		= ata_tf_load,
--	.tf_read		= ata_tf_read,
--	.check_status		= ata_check_status,
--	.exec_command		= ata_exec_command,
--	.dev_select		= ata_std_dev_select,
--
--	.freeze			= ata_bmdma_freeze,
--	.thaw			= ata_bmdma_thaw,
--	.error_handler		= sis_error_handler,
--	.post_internal_cmd	= ata_bmdma_post_internal_cmd,
- 	.cable_detect		= sis_66_cable_detect,
--
--	.bmdma_setup		= ata_bmdma_setup,
--	.bmdma_start		= ata_bmdma_start,
--	.bmdma_stop		= ata_bmdma_stop,
--	.bmdma_status		= ata_bmdma_status,
--	.qc_prep		= ata_qc_prep,
--	.qc_issue		= ata_qc_issue_prot,
--	.data_xfer		= ata_data_xfer,
--
--	.irq_handler		= ata_interrupt,
--	.irq_clear		= ata_bmdma_irq_clear,
--	.irq_on			= ata_irq_on,
--
--	.port_start		= ata_sff_port_start,
- };
- 
--static const struct ata_port_operations sis_100_ops = {
-+static struct ata_port_operations sis_100_ops = {
-+	.inherits		= &sis_base_ops,
- 	.set_piomode		= sis_100_set_piomode,
- 	.set_dmamode		= sis_100_set_dmamode,
--	.mode_filter		= ata_pci_default_filter,
--
--	.tf_load		= ata_tf_load,
--	.tf_read		= ata_tf_read,
--	.check_status		= ata_check_status,
--	.exec_command		= ata_exec_command,
--	.dev_select		= ata_std_dev_select,
--
--	.freeze			= ata_bmdma_freeze,
--	.thaw			= ata_bmdma_thaw,
--	.error_handler		= sis_error_handler,
--	.post_internal_cmd	= ata_bmdma_post_internal_cmd,
- 	.cable_detect		= sis_66_cable_detect,
--
--	.bmdma_setup		= ata_bmdma_setup,
--	.bmdma_start		= ata_bmdma_start,
--	.bmdma_stop		= ata_bmdma_stop,
--	.bmdma_status		= ata_bmdma_status,
--	.qc_prep		= ata_qc_prep,
--	.qc_issue		= ata_qc_issue_prot,
--	.data_xfer		= ata_data_xfer,
--
--	.irq_handler		= ata_interrupt,
--	.irq_clear		= ata_bmdma_irq_clear,
--	.irq_on			= ata_irq_on,
--
--	.port_start		= ata_sff_port_start,
- };
- 
--static const struct ata_port_operations sis_66_ops = {
-+static struct ata_port_operations sis_66_ops = {
-+	.inherits		= &sis_base_ops,
- 	.set_piomode		= sis_old_set_piomode,
- 	.set_dmamode		= sis_66_set_dmamode,
--	.mode_filter		= ata_pci_default_filter,
--
--	.tf_load		= ata_tf_load,
--	.tf_read		= ata_tf_read,
--	.check_status		= ata_check_status,
--	.exec_command		= ata_exec_command,
--	.dev_select		= ata_std_dev_select,
- 	.cable_detect		= sis_66_cable_detect,
--
--	.freeze			= ata_bmdma_freeze,
--	.thaw			= ata_bmdma_thaw,
--	.error_handler		= sis_error_handler,
--	.post_internal_cmd	= ata_bmdma_post_internal_cmd,
--
--	.bmdma_setup		= ata_bmdma_setup,
--	.bmdma_start		= ata_bmdma_start,
--	.bmdma_stop		= ata_bmdma_stop,
--	.bmdma_status		= ata_bmdma_status,
--	.qc_prep		= ata_qc_prep,
--	.qc_issue		= ata_qc_issue_prot,
--	.data_xfer		= ata_data_xfer,
--
--	.irq_handler		= ata_interrupt,
--	.irq_clear		= ata_bmdma_irq_clear,
--	.irq_on			= ata_irq_on,
--
--	.port_start		= ata_sff_port_start,
- };
- 
--static const struct ata_port_operations sis_old_ops = {
-+static struct ata_port_operations sis_old_ops = {
-+	.inherits		= &sis_base_ops,
- 	.set_piomode		= sis_old_set_piomode,
- 	.set_dmamode		= sis_old_set_dmamode,
--	.mode_filter		= ata_pci_default_filter,
--
--	.tf_load		= ata_tf_load,
--	.tf_read		= ata_tf_read,
--	.check_status		= ata_check_status,
--	.exec_command		= ata_exec_command,
--	.dev_select		= ata_std_dev_select,
--
--	.freeze			= ata_bmdma_freeze,
--	.thaw			= ata_bmdma_thaw,
--	.error_handler		= sis_error_handler,
--	.post_internal_cmd	= ata_bmdma_post_internal_cmd,
- 	.cable_detect		= ata_cable_40wire,
--
--	.bmdma_setup		= ata_bmdma_setup,
--	.bmdma_start		= ata_bmdma_start,
--	.bmdma_stop		= ata_bmdma_stop,
--	.bmdma_status		= ata_bmdma_status,
--	.qc_prep		= ata_qc_prep,
--	.qc_issue		= ata_qc_issue_prot,
--	.data_xfer		= ata_data_xfer,
--
--	.irq_handler		= ata_interrupt,
--	.irq_clear		= ata_bmdma_irq_clear,
--	.irq_on			= ata_irq_on,
--
--	.port_start		= ata_sff_port_start,
- };
- 
- static const struct ata_port_info sis_info = {
+ static struct ata_port_operations sis_133_ops = {
 diff --git a/drivers/ata/pata_sl82c105.c b/drivers/ata/pata_sl82c105.c
-index ece366b..0dd8e2f 100644
+index 1d97f92..bee11ca 100644
 --- a/drivers/ata/pata_sl82c105.c
 +++ b/drivers/ata/pata_sl82c105.c
-@@ -239,37 +239,13 @@ static struct scsi_host_template sl82c105_sht = {
- };
+@@ -64,12 +64,6 @@ static int sl82c105_pre_reset(struct ata_link *link, unsigned long deadline)
+ }
  
- static struct ata_port_operations sl82c105_port_ops = {
--	.set_piomode	= sl82c105_set_piomode,
--	.mode_filter	= ata_pci_default_filter,
+ 
+-static void sl82c105_error_handler(struct ata_port *ap)
+-{
+-	ata_bmdma_drive_eh(ap, sl82c105_pre_reset, ata_std_softreset, NULL, ata_std_postreset);
+-}
 -
--	.tf_load	= ata_tf_load,
--	.tf_read	= ata_tf_read,
--	.check_status 	= ata_check_status,
--	.exec_command	= ata_exec_command,
--	.dev_select 	= ata_std_dev_select,
 -
--	.freeze		= ata_bmdma_freeze,
--	.thaw		= ata_bmdma_thaw,
--	.error_handler	= sl82c105_error_handler,
--	.post_internal_cmd = ata_bmdma_post_internal_cmd,
--	.cable_detect	= ata_cable_40wire,
--
--	.bmdma_setup 	= ata_bmdma_setup,
-+	.inherits	= &ata_bmdma_port_ops,
-+	.qc_defer	= sl82c105_qc_defer,
- 	.bmdma_start 	= sl82c105_bmdma_start,
+ /**
+  *	sl82c105_configure_piomode	-	set chip PIO timing
+  *	@ap: ATA interface
+@@ -245,7 +239,7 @@ static struct ata_port_operations sl82c105_port_ops = {
  	.bmdma_stop	= sl82c105_bmdma_stop,
--	.bmdma_status 	= ata_bmdma_status,
--
--	.qc_defer	= sl82c105_qc_defer,
--	.qc_prep 	= ata_qc_prep,
--	.qc_issue	= ata_qc_issue_prot,
--
--	.data_xfer	= ata_data_xfer,
--
--	.irq_handler	= ata_interrupt,
--	.irq_clear	= ata_bmdma_irq_clear,
--	.irq_on		= ata_irq_on,
--
--	.port_start	= ata_sff_port_start,
-+	.cable_detect	= ata_cable_40wire,
-+	.set_piomode	= sl82c105_set_piomode,
-+	.error_handler	= sl82c105_error_handler,
+ 	.cable_detect	= ata_cable_40wire,
+ 	.set_piomode	= sl82c105_set_piomode,
+-	.error_handler	= sl82c105_error_handler,
++	.prereset	= sl82c105_pre_reset,
  };
  
  /**
 diff --git a/drivers/ata/pata_triflex.c b/drivers/ata/pata_triflex.c
-index 5105699..bc4956e 100644
+index f07b0e5..bd546a3 100644
 --- a/drivers/ata/pata_triflex.c
 +++ b/drivers/ata/pata_triflex.c
-@@ -184,36 +184,12 @@ static struct scsi_host_template triflex_sht = {
- };
+@@ -71,11 +71,6 @@ static int triflex_prereset(struct ata_link *link, unsigned long deadline)
  
- static struct ata_port_operations triflex_port_ops = {
--	.set_piomode	= triflex_set_piomode,
--	.mode_filter	= ata_pci_default_filter,
+ 
+ 
+-static void triflex_error_handler(struct ata_port *ap)
+-{
+-	ata_bmdma_drive_eh(ap, triflex_prereset, ata_std_softreset, NULL, ata_std_postreset);
+-}
 -
--	.tf_load	= ata_tf_load,
--	.tf_read	= ata_tf_read,
--	.check_status 	= ata_check_status,
--	.exec_command	= ata_exec_command,
--	.dev_select 	= ata_std_dev_select,
--
--	.freeze		= ata_bmdma_freeze,
--	.thaw		= ata_bmdma_thaw,
--	.error_handler	= triflex_error_handler,
--	.post_internal_cmd = ata_bmdma_post_internal_cmd,
--	.cable_detect	= ata_cable_40wire,
--
--	.bmdma_setup 	= ata_bmdma_setup,
-+	.inherits	= &ata_bmdma_port_ops,
- 	.bmdma_start 	= triflex_bmdma_start,
+ /**
+  *	triflex_load_timing		-	timing configuration
+  *	@ap: ATA interface
+@@ -189,7 +184,7 @@ static struct ata_port_operations triflex_port_ops = {
  	.bmdma_stop	= triflex_bmdma_stop,
--	.bmdma_status 	= ata_bmdma_status,
--
--	.qc_prep 	= ata_qc_prep,
--	.qc_issue	= ata_qc_issue_prot,
--
--	.data_xfer	= ata_data_xfer,
--
--	.irq_handler	= ata_interrupt,
--	.irq_clear	= ata_bmdma_irq_clear,
--	.irq_on		= ata_irq_on,
--
--	.port_start	= ata_sff_port_start,
-+	.cable_detect	= ata_cable_40wire,
-+	.set_piomode	= triflex_set_piomode,
-+	.error_handler	= triflex_error_handler,
+ 	.cable_detect	= ata_cable_40wire,
+ 	.set_piomode	= triflex_set_piomode,
+-	.error_handler	= triflex_error_handler,
++	.prereset	= triflex_prereset,
  };
  
  static int triflex_init_one(struct pci_dev *dev, const struct pci_device_id *id)
 diff --git a/drivers/ata/pata_via.c b/drivers/ata/pata_via.c
-index 5f445be..c941d5a 100644
+index 29612c9..e2d7fba 100644
 --- a/drivers/ata/pata_via.c
 +++ b/drivers/ata/pata_via.c
-@@ -335,71 +335,16 @@ static struct scsi_host_template via_sht = {
- };
+@@ -211,18 +211,6 @@ static int via_pre_reset(struct ata_link *link, unsigned long deadline)
  
- static struct ata_port_operations via_port_ops = {
-+	.inherits	= &ata_bmdma_port_ops,
-+	.cable_detect	= via_cable_detect,
+ 
+ /**
+- *	via_error_handler		-	reset for VIA chips
+- *	@ap: ATA port
+- *
+- *	Handle the reset callback for the later chips with cable detect
+- */
+-
+-static void via_error_handler(struct ata_port *ap)
+-{
+-	ata_bmdma_drive_eh(ap, via_pre_reset, ata_std_softreset, NULL, ata_std_postreset);
+-}
+-
+-/**
+  *	via_do_set_mode	-	set initial PIO mode data
+  *	@ap: ATA interface
+  *	@adev: ATA device
+@@ -339,7 +327,7 @@ static struct ata_port_operations via_port_ops = {
+ 	.cable_detect	= via_cable_detect,
  	.set_piomode	= via_set_piomode,
  	.set_dmamode	= via_set_dmamode,
--	.mode_filter	= ata_pci_default_filter,
--
--	.tf_load	= ata_tf_load,
--	.tf_read	= ata_tf_read,
--	.check_status 	= ata_check_status,
--	.exec_command	= ata_exec_command,
--	.dev_select 	= ata_std_dev_select,
--
--	.freeze		= ata_bmdma_freeze,
--	.thaw		= ata_bmdma_thaw,
- 	.error_handler	= via_error_handler,
--	.post_internal_cmd = ata_bmdma_post_internal_cmd,
--	.cable_detect	= via_cable_detect,
--
--	.bmdma_setup 	= ata_bmdma_setup,
--	.bmdma_start 	= ata_bmdma_start,
--	.bmdma_stop	= ata_bmdma_stop,
--	.bmdma_status 	= ata_bmdma_status,
--
--	.qc_prep 	= ata_qc_prep,
--	.qc_issue	= ata_qc_issue_prot,
--
--	.data_xfer	= ata_data_xfer,
--
--	.irq_handler	= ata_interrupt,
--	.irq_clear	= ata_bmdma_irq_clear,
--	.irq_on		= ata_irq_on,
--
--	.port_start	= ata_sff_port_start,
+-	.error_handler	= via_error_handler,
++	.prereset	= via_pre_reset,
  };
  
  static struct ata_port_operations via_port_ops_noirq = {
--	.set_piomode	= via_set_piomode,
--	.set_dmamode	= via_set_dmamode,
--	.mode_filter	= ata_pci_default_filter,
--
--	.tf_load	= ata_tf_load,
--	.tf_read	= ata_tf_read,
--	.check_status 	= ata_check_status,
--	.exec_command	= ata_exec_command,
--	.dev_select 	= ata_std_dev_select,
--
--	.freeze		= ata_bmdma_freeze,
--	.thaw		= ata_bmdma_thaw,
--	.error_handler	= via_error_handler,
--	.post_internal_cmd = ata_bmdma_post_internal_cmd,
--	.cable_detect	= via_cable_detect,
--
--	.bmdma_setup 	= ata_bmdma_setup,
--	.bmdma_start 	= ata_bmdma_start,
--	.bmdma_stop	= ata_bmdma_stop,
--	.bmdma_status 	= ata_bmdma_status,
--
--	.qc_prep 	= ata_qc_prep,
--	.qc_issue	= ata_qc_issue_prot,
--
-+	.inherits	= &via_port_ops,
- 	.data_xfer	= ata_data_xfer_noirq,
--
--	.irq_handler	= ata_interrupt,
--	.irq_clear	= ata_bmdma_irq_clear,
--	.irq_on		= ata_irq_on,
--
--	.port_start	= ata_sff_port_start,
- };
- 
- /**
-diff --git a/drivers/ata/pata_winbond.c b/drivers/ata/pata_winbond.c
-index 9bafae9..f235bb0 100644
---- a/drivers/ata/pata_winbond.c
-+++ b/drivers/ata/pata_winbond.c
-@@ -126,29 +126,10 @@ static struct scsi_host_template winbond_sht = {
- };
- 
- static struct ata_port_operations winbond_port_ops = {
--	.set_piomode	= winbond_set_piomode,
--
--	.tf_load	= ata_tf_load,
--	.tf_read	= ata_tf_read,
--	.check_status 	= ata_check_status,
--	.exec_command	= ata_exec_command,
--	.dev_select 	= ata_std_dev_select,
--
--	.freeze		= ata_bmdma_freeze,
--	.thaw		= ata_bmdma_thaw,
--	.error_handler	= ata_bmdma_error_handler,
--	.post_internal_cmd = ata_bmdma_post_internal_cmd,
--	.cable_detect	= ata_cable_40wire,
--
--	.qc_prep 	= ata_qc_prep,
--	.qc_issue	= ata_qc_issue_prot,
--
-+	.inherits	= &ata_sff_port_ops,
- 	.data_xfer	= winbond_data_xfer,
--
--	.irq_clear	= ata_noop_irq_clear,
--	.irq_on		= ata_irq_on,
--
--	.port_start	= ata_sff_port_start,
-+	.cable_detect	= ata_cable_40wire,
-+	.set_piomode	= winbond_set_piomode,
- };
- 
- /**
 diff --git a/drivers/ata/pdc_adma.c b/drivers/ata/pdc_adma.c
-index fdf62de..a570614 100644
+index a570614..5ed065d 100644
 --- a/drivers/ata/pdc_adma.c
 +++ b/drivers/ata/pdc_adma.c
-@@ -148,26 +148,29 @@ static struct scsi_host_template adma_ata_sht = {
- 	.dma_boundary		= ADMA_DMA_BOUNDARY,
- };
+@@ -140,7 +140,7 @@ static void adma_bmdma_stop(struct ata_queued_cmd *qc);
+ static u8 adma_bmdma_status(struct ata_port *ap);
+ static void adma_freeze(struct ata_port *ap);
+ static void adma_thaw(struct ata_port *ap);
+-static void adma_error_handler(struct ata_port *ap);
++static int adma_prereset(struct ata_link *link, unsigned long deadline);
  
--static const struct ata_port_operations adma_ata_ops = {
-+static struct ata_port_operations adma_ata_ops = {
-+	.inherits		= &ata_base_port_ops,
-+
-+	.dev_select		= ata_std_dev_select,
- 	.tf_load		= ata_tf_load,
- 	.tf_read		= ata_tf_read,
--	.exec_command		= ata_exec_command,
- 	.check_status		= ata_check_status,
--	.dev_select		= ata_std_dev_select,
--	.check_atapi_dma	= adma_check_atapi_dma,
-+	.exec_command		= ata_exec_command,
- 	.data_xfer		= ata_data_xfer,
-+	.check_atapi_dma	= adma_check_atapi_dma,
-+	.bmdma_stop		= adma_bmdma_stop,
-+	.bmdma_status		= adma_bmdma_status,
- 	.qc_prep		= adma_qc_prep,
- 	.qc_issue		= adma_qc_issue,
-+	.irq_on			= ata_irq_on,
-+
+ static struct scsi_host_template adma_ata_sht = {
+ 	ATA_BASE_SHT(DRV_NAME),
+@@ -166,7 +166,8 @@ static struct ata_port_operations adma_ata_ops = {
+ 
  	.freeze			= adma_freeze,
  	.thaw			= adma_thaw,
- 	.error_handler		= adma_error_handler,
--	.irq_clear		= ata_noop_irq_clear,
--	.irq_on			= ata_irq_on,
-+
+-	.error_handler		= adma_error_handler,
++	.prereset		= adma_prereset,
++	.softreset		= ata_std_softreset,
+ 
  	.port_start		= adma_port_start,
  	.port_stop		= adma_port_stop,
- 	.host_stop		= adma_host_stop,
--	.bmdma_stop		= adma_bmdma_stop,
--	.bmdma_status		= adma_bmdma_status,
- };
- 
- static struct ata_port_info adma_port_info[] = {
-diff --git a/drivers/ata/sata_fsl.c b/drivers/ata/sata_fsl.c
-index 5f75156..e1aec85 100644
---- a/drivers/ata/sata_fsl.c
-+++ b/drivers/ata/sata_fsl.c
-@@ -1209,16 +1209,15 @@ static struct scsi_host_template sata_fsl_sht = {
- };
- 
- static const struct ata_port_operations sata_fsl_ops = {
-+	.inherits = &sata_port_ops,
-+
- 	.check_status = sata_fsl_check_status,
- 	.check_altstatus = sata_fsl_check_status,
--	.dev_select = ata_noop_dev_select,
- 
- 	.tf_read = sata_fsl_tf_read,
- 
--	.qc_defer = ata_std_qc_defer,
- 	.qc_prep = sata_fsl_qc_prep,
- 	.qc_issue = sata_fsl_qc_issue,
--	.irq_clear = ata_noop_irq_clear,
- 
- 	.scr_read = sata_fsl_scr_read,
- 	.scr_write = sata_fsl_scr_write,
-diff --git a/drivers/ata/sata_inic162x.c b/drivers/ata/sata_inic162x.c
-index bb853df..047f80f 100644
---- a/drivers/ata/sata_inic162x.c
-+++ b/drivers/ata/sata_inic162x.c
-@@ -522,26 +522,13 @@ static int inic_port_start(struct ata_port *ap)
+@@ -292,12 +293,6 @@ static int adma_prereset(struct ata_link *link, unsigned long deadline)
+ 	return ata_std_prereset(link, deadline);
  }
  
- static struct ata_port_operations inic_port_ops = {
--	.tf_load		= ata_tf_load,
--	.tf_read		= ata_tf_read,
--	.check_status		= ata_check_status,
--	.exec_command		= ata_exec_command,
--	.dev_select		= ata_std_dev_select,
+-static void adma_error_handler(struct ata_port *ap)
+-{
+-	ata_do_eh(ap, adma_prereset, ata_std_softreset, NULL,
+-		  ata_std_postreset);
+-}
 -
--	.scr_read		= inic_scr_read,
--	.scr_write		= inic_scr_write,
-+	.inherits		= &ata_sff_port_ops,
+ static int adma_fill_sg(struct ata_queued_cmd *qc)
+ {
+ 	struct scatterlist *sg;
+diff --git a/drivers/ata/sata_fsl.c b/drivers/ata/sata_fsl.c
+index e1aec85..20048a0 100644
+--- a/drivers/ata/sata_fsl.c
++++ b/drivers/ata/sata_fsl.c
+@@ -923,16 +923,6 @@ err:
+ 	return -EIO;
+ }
  
- 	.bmdma_setup		= inic_bmdma_setup,
- 	.bmdma_start		= inic_bmdma_start,
- 	.bmdma_stop		= inic_bmdma_stop,
- 	.bmdma_status		= inic_bmdma_status,
+-static void sata_fsl_error_handler(struct ata_port *ap)
+-{
 -
--	.irq_clear		= ata_noop_irq_clear,
--	.irq_on			= ata_irq_on,
+-	DPRINTK("in xx_error_handler\n");
 -
--	.qc_prep	 	= ata_qc_prep,
- 	.qc_issue		= inic_qc_issue,
--	.data_xfer		= ata_data_xfer,
+-	/* perform recovery */
+-	ata_do_eh(ap, ata_std_prereset, sata_fsl_softreset, sata_std_hardreset,
+-		  ata_std_postreset);
+-}
+-
+ static void sata_fsl_post_internal_cmd(struct ata_queued_cmd *qc)
+ {
+ 	if (qc->flags & ATA_QCFLAG_FAILED)
+@@ -1224,7 +1214,7 @@ static const struct ata_port_operations sata_fsl_ops = {
+ 
+ 	.freeze = sata_fsl_freeze,
+ 	.thaw = sata_fsl_thaw,
+-	.error_handler = sata_fsl_error_handler,
++	.softreset = sata_fsl_softreset,
+ 	.post_internal_cmd = sata_fsl_post_internal_cmd,
+ 
+ 	.port_start = sata_fsl_port_start,
+diff --git a/drivers/ata/sata_inic162x.c b/drivers/ata/sata_inic162x.c
+index 047f80f..ba1c099 100644
+--- a/drivers/ata/sata_inic162x.c
++++ b/drivers/ata/sata_inic162x.c
+@@ -452,8 +452,7 @@ static void inic_error_handler(struct ata_port *ap)
+ 	spin_unlock_irqrestore(ap->lock, flags);
+ 
+ 	/* PIO and DMA engines have been stopped, perform recovery */
+-	ata_do_eh(ap, ata_std_prereset, NULL, inic_hardreset,
+-		  ata_std_postreset);
++	ata_std_error_handler(ap);
+ }
+ 
+ static void inic_post_internal_cmd(struct ata_queued_cmd *qc)
+@@ -532,6 +531,8 @@ static struct ata_port_operations inic_port_ops = {
  
  	.freeze			= inic_freeze,
  	.thaw			= inic_thaw,
-@@ -549,8 +536,10 @@ static struct ata_port_operations inic_port_ops = {
++	.softreset		= ATA_OP_NULL,	/* softreset is broken */
++	.hardreset		= inic_hardreset,
+ 	.error_handler		= inic_error_handler,
  	.post_internal_cmd	= inic_post_internal_cmd,
  	.dev_config		= inic_dev_config,
- 
--	.port_resume		= inic_port_resume,
-+	.scr_read		= inic_scr_read,
-+	.scr_write		= inic_scr_write,
- 
-+	.port_resume		= inic_port_resume,
- 	.port_start		= inic_port_start,
- };
- 
 diff --git a/drivers/ata/sata_mv.c b/drivers/ata/sata_mv.c
-index bb1b356..2e6d368 100644
+index 2e6d368..b0fbab9 100644
 --- a/drivers/ata/sata_mv.c
 +++ b/drivers/ata/sata_mv.c
-@@ -526,23 +526,16 @@ static struct scsi_host_template mv6_sht = {
- 	.dma_boundary		= MV_DMA_BOUNDARY,
- };
+@@ -470,7 +470,10 @@ static void mv_port_stop(struct ata_port *ap);
+ static void mv_qc_prep(struct ata_queued_cmd *qc);
+ static void mv_qc_prep_iie(struct ata_queued_cmd *qc);
+ static unsigned int mv_qc_issue(struct ata_queued_cmd *qc);
+-static void mv_error_handler(struct ata_port *ap);
++static int mv_prereset(struct ata_link *link, unsigned long deadline);
++static int mv_hardreset(struct ata_link *link, unsigned int *class,
++			unsigned long deadline);
++static void mv_postreset(struct ata_link *link, unsigned int *classes);
+ static void mv_eh_freeze(struct ata_port *ap);
+ static void mv_eh_thaw(struct ata_port *ap);
+ static void mv6_dev_config(struct ata_device *dev);
+@@ -534,7 +537,10 @@ static struct ata_port_operations mv5_ops = {
  
--static const struct ata_port_operations mv5_ops = {
--	.tf_load		= ata_tf_load,
--	.tf_read		= ata_tf_read,
--	.check_status		= ata_check_status,
--	.exec_command		= ata_exec_command,
--	.dev_select		= ata_std_dev_select,
-+static struct ata_port_operations mv5_ops = {
-+	.inherits		= &ata_sff_port_ops,
- 
- 	.qc_prep		= mv_qc_prep,
- 	.qc_issue		= mv_qc_issue,
--	.data_xfer		= ata_data_xfer,
- 
--	.irq_clear		= ata_noop_irq_clear,
--	.irq_on			= ata_irq_on,
--
--	.error_handler		= mv_error_handler,
  	.freeze			= mv_eh_freeze,
  	.thaw			= mv_eh_thaw,
-+	.error_handler		= mv_error_handler,
-+	.post_internal_cmd	= ATA_OP_NULL,
+-	.error_handler		= mv_error_handler,
++	.prereset		= mv_prereset,
++	.hardreset		= mv_hardreset,
++	.postreset		= mv_postreset,
++	.error_handler		= ata_std_error_handler, /* avoid SFF EH */
+ 	.post_internal_cmd	= ATA_OP_NULL,
  
  	.scr_read		= mv5_scr_read,
- 	.scr_write		= mv5_scr_write,
-@@ -551,57 +544,18 @@ static const struct ata_port_operations mv5_ops = {
- 	.port_stop		= mv_port_stop,
- };
+@@ -2417,12 +2423,6 @@ static void mv_postreset(struct ata_link *link, unsigned int *classes)
+ 	iowrite8(ap->ctl, ap->ioaddr.ctl_addr);
+ }
  
--static const struct ata_port_operations mv6_ops = {
--	.dev_config             = mv6_dev_config,
--	.tf_load		= ata_tf_load,
--	.tf_read		= ata_tf_read,
--	.check_status		= ata_check_status,
--	.exec_command		= ata_exec_command,
--	.dev_select		= ata_std_dev_select,
+-static void mv_error_handler(struct ata_port *ap)
+-{
+-	ata_do_eh(ap, mv_prereset, ata_std_softreset,
+-		  mv_hardreset, mv_postreset);
+-}
 -
--	.qc_prep		= mv_qc_prep,
--	.qc_issue		= mv_qc_issue,
--	.data_xfer		= ata_data_xfer,
--
--	.irq_clear		= ata_noop_irq_clear,
--	.irq_on			= ata_irq_on,
--
--	.error_handler		= mv_error_handler,
--	.freeze			= mv_eh_freeze,
--	.thaw			= mv_eh_thaw,
-+static struct ata_port_operations mv6_ops = {
-+	.inherits		= &mv5_ops,
- 	.qc_defer		= ata_std_qc_defer,
--
-+	.dev_config             = mv6_dev_config,
- 	.scr_read		= mv_scr_read,
- 	.scr_write		= mv_scr_write,
--
--	.port_start		= mv_port_start,
--	.port_stop		= mv_port_stop,
- };
- 
--static const struct ata_port_operations mv_iie_ops = {
--	.tf_load		= ata_tf_load,
--	.tf_read		= ata_tf_read,
--	.check_status		= ata_check_status,
--	.exec_command		= ata_exec_command,
--	.dev_select		= ata_std_dev_select,
--
-+static struct ata_port_operations mv_iie_ops = {
-+	.inherits		= &mv6_ops,
-+	.dev_config		= ATA_OP_NULL,
- 	.qc_prep		= mv_qc_prep_iie,
--	.qc_issue		= mv_qc_issue,
--	.data_xfer		= ata_data_xfer,
--
--	.irq_clear		= ata_noop_irq_clear,
--	.irq_on			= ata_irq_on,
--
--	.error_handler		= mv_error_handler,
--	.freeze			= mv_eh_freeze,
--	.thaw			= mv_eh_thaw,
--	.qc_defer		= ata_std_qc_defer,
--
--	.scr_read		= mv_scr_read,
--	.scr_write		= mv_scr_write,
--
--	.port_start		= mv_port_start,
--	.port_stop		= mv_port_stop,
- };
- 
- static const struct ata_port_info mv_port_info[] = {
+ static void mv_eh_freeze(struct ata_port *ap)
+ {
+ 	struct mv_host_priv *hpriv = ap->host->private_data;
 diff --git a/drivers/ata/sata_nv.c b/drivers/ata/sata_nv.c
-index 9e2b4ce..7b7ba0e 100644
+index 5637b08..b2eb572 100644
 --- a/drivers/ata/sata_nv.c
 +++ b/drivers/ata/sata_nv.c
-@@ -404,106 +404,41 @@ static struct scsi_host_template nv_swncq_sht = {
- 	.slave_configure	= nv_swncq_slave_config,
- };
+@@ -309,7 +309,8 @@ static void nv_nf2_freeze(struct ata_port *ap);
+ static void nv_nf2_thaw(struct ata_port *ap);
+ static void nv_ck804_freeze(struct ata_port *ap);
+ static void nv_ck804_thaw(struct ata_port *ap);
+-static void nv_error_handler(struct ata_port *ap);
++static int nv_hardreset(struct ata_link *link, unsigned int *class,
++			unsigned long deadline);
+ static int nv_adma_slave_config(struct scsi_device *sdev);
+ static int nv_adma_check_atapi_dma(struct ata_queued_cmd *qc);
+ static void nv_adma_qc_prep(struct ata_queued_cmd *qc);
+@@ -406,7 +407,7 @@ static struct scsi_host_template nv_swncq_sht = {
  
--static const struct ata_port_operations nv_generic_ops = {
--	.tf_load		= ata_tf_load,
--	.tf_read		= ata_tf_read,
--	.exec_command		= ata_exec_command,
--	.check_status		= ata_check_status,
--	.dev_select		= ata_std_dev_select,
--	.bmdma_setup		= ata_bmdma_setup,
--	.bmdma_start		= ata_bmdma_start,
--	.bmdma_stop		= ata_bmdma_stop,
--	.bmdma_status		= ata_bmdma_status,
--	.qc_prep		= ata_qc_prep,
--	.qc_issue		= ata_qc_issue_prot,
--	.mode_filter		= ata_pci_default_filter,
--	.freeze			= ata_bmdma_freeze,
--	.thaw			= ata_bmdma_thaw,
-+static struct ata_port_operations nv_generic_ops = {
-+	.inherits		= &ata_bmdma_port_ops,
- 	.error_handler		= nv_error_handler,
--	.post_internal_cmd	= ata_bmdma_post_internal_cmd,
--	.data_xfer		= ata_data_xfer,
--	.irq_clear		= ata_bmdma_irq_clear,
--	.irq_on			= ata_irq_on,
+ static struct ata_port_operations nv_generic_ops = {
+ 	.inherits		= &ata_bmdma_port_ops,
+-	.error_handler		= nv_error_handler,
++	.hardreset		= nv_hardreset,
  	.scr_read		= nv_scr_read,
  	.scr_write		= nv_scr_write,
--	.port_start		= ata_sff_port_start,
  };
+@@ -1599,12 +1600,6 @@ static int nv_hardreset(struct ata_link *link, unsigned int *class,
+ 	return sata_std_hardreset(link, &dummy, deadline);
+ }
  
--static const struct ata_port_operations nv_nf2_ops = {
--	.tf_load		= ata_tf_load,
--	.tf_read		= ata_tf_read,
--	.exec_command		= ata_exec_command,
--	.check_status		= ata_check_status,
--	.dev_select		= ata_std_dev_select,
--	.bmdma_setup		= ata_bmdma_setup,
--	.bmdma_start		= ata_bmdma_start,
--	.bmdma_stop		= ata_bmdma_stop,
--	.bmdma_status		= ata_bmdma_status,
--	.qc_prep		= ata_qc_prep,
--	.qc_issue		= ata_qc_issue_prot,
--	.mode_filter		= ata_pci_default_filter,
-+static struct ata_port_operations nv_nf2_ops = {
-+	.inherits		= &nv_generic_ops,
- 	.freeze			= nv_nf2_freeze,
- 	.thaw			= nv_nf2_thaw,
--	.error_handler		= nv_error_handler,
--	.post_internal_cmd	= ata_bmdma_post_internal_cmd,
--	.data_xfer		= ata_data_xfer,
--	.irq_clear		= ata_bmdma_irq_clear,
--	.irq_on			= ata_irq_on,
--	.scr_read		= nv_scr_read,
--	.scr_write		= nv_scr_write,
--	.port_start		= ata_sff_port_start,
- };
+-static void nv_error_handler(struct ata_port *ap)
+-{
+-	ata_bmdma_drive_eh(ap, ata_std_prereset, ata_std_softreset,
+-			   nv_hardreset, ata_std_postreset);
+-}
+-
+ static void nv_adma_error_handler(struct ata_port *ap)
+ {
+ 	struct nv_adma_port_priv *pp = ap->private_data;
+@@ -1658,8 +1653,7 @@ static void nv_adma_error_handler(struct ata_port *ap)
+ 		readw(mmio + NV_ADMA_CTL);	/* flush posted write */
+ 	}
  
--static const struct ata_port_operations nv_ck804_ops = {
--	.tf_load		= ata_tf_load,
--	.tf_read		= ata_tf_read,
--	.exec_command		= ata_exec_command,
--	.check_status		= ata_check_status,
--	.dev_select		= ata_std_dev_select,
--	.bmdma_setup		= ata_bmdma_setup,
--	.bmdma_start		= ata_bmdma_start,
--	.bmdma_stop		= ata_bmdma_stop,
--	.bmdma_status		= ata_bmdma_status,
--	.qc_prep		= ata_qc_prep,
--	.qc_issue		= ata_qc_issue_prot,
--	.mode_filter		= ata_pci_default_filter,
-+static struct ata_port_operations nv_ck804_ops = {
-+	.inherits		= &nv_generic_ops,
- 	.freeze			= nv_ck804_freeze,
- 	.thaw			= nv_ck804_thaw,
--	.error_handler		= nv_error_handler,
--	.post_internal_cmd	= ata_bmdma_post_internal_cmd,
--	.data_xfer		= ata_data_xfer,
--	.irq_clear		= ata_bmdma_irq_clear,
--	.irq_on			= ata_irq_on,
--	.scr_read		= nv_scr_read,
--	.scr_write		= nv_scr_write,
--	.port_start		= ata_sff_port_start,
- 	.host_stop		= nv_ck804_host_stop,
- };
+-	ata_bmdma_drive_eh(ap, ata_std_prereset, ata_std_softreset,
+-			   nv_hardreset, ata_std_postreset);
++	ata_bmdma_error_handler(ap);
+ }
  
--static const struct ata_port_operations nv_adma_ops = {
--	.tf_load		= ata_tf_load,
--	.tf_read		= nv_adma_tf_read,
-+static struct ata_port_operations nv_adma_ops = {
-+	.inherits		= &nv_generic_ops,
-+
- 	.check_atapi_dma	= nv_adma_check_atapi_dma,
--	.exec_command		= ata_exec_command,
--	.check_status		= ata_check_status,
--	.dev_select		= ata_std_dev_select,
--	.bmdma_setup		= ata_bmdma_setup,
--	.bmdma_start		= ata_bmdma_start,
--	.bmdma_stop		= ata_bmdma_stop,
--	.bmdma_status		= ata_bmdma_status,
-+	.tf_read		= nv_adma_tf_read,
- 	.qc_defer		= ata_std_qc_defer,
- 	.qc_prep		= nv_adma_qc_prep,
- 	.qc_issue		= nv_adma_qc_issue,
--	.mode_filter		= ata_pci_default_filter,
-+	.irq_clear		= nv_adma_irq_clear,
-+
- 	.freeze			= nv_adma_freeze,
- 	.thaw			= nv_adma_thaw,
- 	.error_handler		= nv_adma_error_handler,
- 	.post_internal_cmd	= nv_adma_post_internal_cmd,
--	.data_xfer		= ata_data_xfer,
--	.irq_clear		= nv_adma_irq_clear,
--	.irq_on			= ata_irq_on,
--	.scr_read		= nv_scr_read,
--	.scr_write		= nv_scr_write,
-+
- 	.port_start		= nv_adma_port_start,
- 	.port_stop		= nv_adma_port_stop,
+ static void nv_swncq_qc_to_dq(struct ata_port *ap, struct ata_queued_cmd *qc)
+@@ -1785,8 +1779,7 @@ static void nv_swncq_error_handler(struct ata_port *ap)
+ 		ehc->i.action |= ATA_EH_RESET;
+ 	}
+ 
+-	ata_bmdma_drive_eh(ap, ata_std_prereset, ata_std_softreset,
+-			   nv_hardreset, ata_std_postreset);
++	ata_bmdma_error_handler(ap);
+ }
+ 
  #ifdef CONFIG_PM
-@@ -513,29 +448,17 @@ static const struct ata_port_operations nv_adma_ops = {
- 	.host_stop		= nv_adma_host_stop,
- };
- 
--static const struct ata_port_operations nv_swncq_ops = {
--	.tf_load		= ata_tf_load,
--	.tf_read		= ata_tf_read,
--	.exec_command		= ata_exec_command,
--	.check_status		= ata_check_status,
--	.dev_select		= ata_std_dev_select,
--	.bmdma_setup		= ata_bmdma_setup,
--	.bmdma_start		= ata_bmdma_start,
--	.bmdma_stop		= ata_bmdma_stop,
--	.bmdma_status		= ata_bmdma_status,
-+static struct ata_port_operations nv_swncq_ops = {
-+	.inherits		= &nv_generic_ops,
-+
- 	.qc_defer		= ata_std_qc_defer,
- 	.qc_prep		= nv_swncq_qc_prep,
- 	.qc_issue		= nv_swncq_qc_issue,
--	.mode_filter		= ata_pci_default_filter,
-+
- 	.freeze			= nv_mcp55_freeze,
- 	.thaw			= nv_mcp55_thaw,
- 	.error_handler		= nv_swncq_error_handler,
--	.post_internal_cmd	= ata_bmdma_post_internal_cmd,
--	.data_xfer		= ata_data_xfer,
--	.irq_clear		= ata_bmdma_irq_clear,
--	.irq_on			= ata_irq_on,
--	.scr_read		= nv_scr_read,
--	.scr_write		= nv_scr_write,
-+
- #ifdef CONFIG_PM
- 	.port_suspend		= nv_swncq_port_suspend,
- 	.port_resume		= nv_swncq_port_resume,
 diff --git a/drivers/ata/sata_promise.c b/drivers/ata/sata_promise.c
-index 2e4d037..71fddef 100644
+index 71fddef..4dec8a1 100644
 --- a/drivers/ata/sata_promise.c
 +++ b/drivers/ata/sata_promise.c
-@@ -158,74 +158,40 @@ static struct scsi_host_template pdc_ata_sht = {
- 	.dma_boundary		= ATA_DMA_BOUNDARY,
- };
- 
--static const struct ata_port_operations pdc_sata_ops = {
-+static const struct ata_port_operations pdc_common_ops = {
-+	.inherits		= &ata_sff_port_ops,
-+
- 	.tf_load		= pdc_tf_load_mmio,
--	.tf_read		= ata_tf_read,
--	.check_status		= ata_check_status,
- 	.exec_command		= pdc_exec_command_mmio,
--	.dev_select		= ata_std_dev_select,
- 	.check_atapi_dma	= pdc_check_atapi_dma,
--
- 	.qc_prep		= pdc_qc_prep,
- 	.qc_issue		= pdc_qc_issue_prot,
-+	.irq_clear		= pdc_irq_clear,
-+
+@@ -146,8 +146,7 @@ static void pdc_irq_clear(struct ata_port *ap);
+ static unsigned int pdc_qc_issue_prot(struct ata_queued_cmd *qc);
+ static void pdc_freeze(struct ata_port *ap);
+ static void pdc_thaw(struct ata_port *ap);
+-static void pdc_pata_error_handler(struct ata_port *ap);
+-static void pdc_sata_error_handler(struct ata_port *ap);
++static void pdc_error_handler(struct ata_port *ap);
+ static void pdc_post_internal_cmd(struct ata_queued_cmd *qc);
+ static int pdc_pata_cable_detect(struct ata_port *ap);
+ static int pdc_sata_cable_detect(struct ata_port *ap);
+@@ -171,12 +170,12 @@ static const struct ata_port_operations pdc_common_ops = {
  	.freeze			= pdc_freeze,
  	.thaw			= pdc_thaw,
--	.error_handler		= pdc_sata_error_handler,
  	.post_internal_cmd	= pdc_post_internal_cmd,
--	.cable_detect		= pdc_sata_cable_detect,
--	.data_xfer		= ata_data_xfer,
--	.irq_clear		= pdc_irq_clear,
--	.irq_on			= ata_irq_on,
-+};
++	.error_handler		= pdc_error_handler,
+ };
  
-+static struct ata_port_operations pdc_sata_ops = {
-+	.inherits		= &pdc_common_ops,
-+	.cable_detect		= pdc_sata_cable_detect,
-+	.error_handler		= pdc_sata_error_handler,
+ static struct ata_port_operations pdc_sata_ops = {
+ 	.inherits		= &pdc_common_ops,
+ 	.cable_detect		= pdc_sata_cable_detect,
+-	.error_handler		= pdc_sata_error_handler,
  	.scr_read		= pdc_sata_scr_read,
  	.scr_write		= pdc_sata_scr_write,
  	.port_start		= pdc_sata_port_start,
- };
- 
- /* First-generation chips need a more restrictive ->check_atapi_dma op */
--static const struct ata_port_operations pdc_old_sata_ops = {
--	.tf_load		= pdc_tf_load_mmio,
--	.tf_read		= ata_tf_read,
--	.check_status		= ata_check_status,
--	.exec_command		= pdc_exec_command_mmio,
--	.dev_select		= ata_std_dev_select,
-+static struct ata_port_operations pdc_old_sata_ops = {
-+	.inherits		= &pdc_sata_ops,
- 	.check_atapi_dma	= pdc_old_sata_check_atapi_dma,
--
--	.qc_prep		= pdc_qc_prep,
--	.qc_issue		= pdc_qc_issue_prot,
--	.freeze			= pdc_freeze,
--	.thaw			= pdc_thaw,
--	.error_handler		= pdc_sata_error_handler,
--	.post_internal_cmd	= pdc_post_internal_cmd,
--	.cable_detect		= pdc_sata_cable_detect,
--	.data_xfer		= ata_data_xfer,
--	.irq_clear		= pdc_irq_clear,
--	.irq_on			= ata_irq_on,
--
--	.scr_read		= pdc_sata_scr_read,
--	.scr_write		= pdc_sata_scr_write,
--	.port_start		= pdc_sata_port_start,
- };
- 
--static const struct ata_port_operations pdc_pata_ops = {
--	.tf_load		= pdc_tf_load_mmio,
--	.tf_read		= ata_tf_read,
--	.check_status		= ata_check_status,
--	.exec_command		= pdc_exec_command_mmio,
--	.dev_select		= ata_std_dev_select,
--	.check_atapi_dma	= pdc_check_atapi_dma,
--
--	.qc_prep		= pdc_qc_prep,
--	.qc_issue		= pdc_qc_issue_prot,
--	.freeze			= pdc_freeze,
--	.thaw			= pdc_thaw,
--	.error_handler		= pdc_pata_error_handler,
--	.post_internal_cmd	= pdc_post_internal_cmd,
-+static struct ata_port_operations pdc_pata_ops = {
-+	.inherits		= &pdc_common_ops,
+@@ -191,7 +190,6 @@ static struct ata_port_operations pdc_old_sata_ops = {
+ static struct ata_port_operations pdc_pata_ops = {
+ 	.inherits		= &pdc_common_ops,
  	.cable_detect		= pdc_pata_cable_detect,
--	.data_xfer		= ata_data_xfer,
--	.irq_clear		= pdc_irq_clear,
--	.irq_on			= ata_irq_on,
--
-+	.error_handler		= pdc_pata_error_handler,
+-	.error_handler		= pdc_pata_error_handler,
  	.port_start		= pdc_common_port_start,
  };
  
+@@ -612,24 +610,12 @@ static void pdc_thaw(struct ata_port *ap)
+ 	readl(mmio + PDC_CTLSTAT); /* flush */
+ }
+ 
+-static void pdc_common_error_handler(struct ata_port *ap, ata_reset_fn_t hardreset)
++static void pdc_error_handler(struct ata_port *ap)
+ {
+ 	if (!(ap->pflags & ATA_PFLAG_FROZEN))
+ 		pdc_reset_port(ap);
+ 
+-	/* perform recovery */
+-	ata_do_eh(ap, ata_std_prereset, ata_std_softreset, hardreset,
+-		  ata_std_postreset);
+-}
+-
+-static void pdc_pata_error_handler(struct ata_port *ap)
+-{
+-	pdc_common_error_handler(ap, NULL);
+-}
+-
+-static void pdc_sata_error_handler(struct ata_port *ap)
+-{
+-	pdc_common_error_handler(ap, sata_std_hardreset);
++	ata_std_error_handler(ap);
+ }
+ 
+ static void pdc_post_internal_cmd(struct ata_queued_cmd *qc)
 diff --git a/drivers/ata/sata_qstor.c b/drivers/ata/sata_qstor.c
-index 2566d09..107ef09 100644
+index 107ef09..2ceb099 100644
 --- a/drivers/ata/sata_qstor.c
 +++ b/drivers/ata/sata_qstor.c
-@@ -131,27 +131,25 @@ static struct scsi_host_template qs_ata_sht = {
- 	.dma_boundary		= QS_DMA_BOUNDARY,
- };
+@@ -123,6 +123,7 @@ static void qs_bmdma_stop(struct ata_queued_cmd *qc);
+ static u8 qs_bmdma_status(struct ata_port *ap);
+ static void qs_freeze(struct ata_port *ap);
+ static void qs_thaw(struct ata_port *ap);
++static int qs_prereset(struct ata_link *link, unsigned long deadline);
+ static void qs_error_handler(struct ata_port *ap);
  
--static const struct ata_port_operations qs_ata_ops = {
--	.tf_load		= ata_tf_load,
--	.tf_read		= ata_tf_read,
--	.check_status		= ata_check_status,
-+static struct ata_port_operations qs_ata_ops = {
-+	.inherits		= &ata_sff_port_ops,
-+
- 	.check_atapi_dma	= qs_check_atapi_dma,
--	.exec_command		= ata_exec_command,
--	.dev_select		= ata_std_dev_select,
-+	.bmdma_stop		= qs_bmdma_stop,
-+	.bmdma_status		= qs_bmdma_status,
- 	.qc_prep		= qs_qc_prep,
- 	.qc_issue		= qs_qc_issue,
--	.data_xfer		= ata_data_xfer,
-+
+ static struct scsi_host_template qs_ata_sht = {
+@@ -142,6 +143,8 @@ static struct ata_port_operations qs_ata_ops = {
+ 
  	.freeze			= qs_freeze,
  	.thaw			= qs_thaw,
++	.prereset		= qs_prereset,
++	.softreset		= ATA_OP_NULL,
  	.error_handler		= qs_error_handler,
--	.irq_clear		= ata_noop_irq_clear,
--	.irq_on			= ata_irq_on,
-+	.post_internal_cmd	= ATA_OP_NULL,
-+
- 	.scr_read		= qs_scr_read,
- 	.scr_write		= qs_scr_write,
-+
- 	.port_start		= qs_port_start,
- 	.host_stop		= qs_host_stop,
--	.bmdma_stop		= qs_bmdma_stop,
--	.bmdma_status		= qs_bmdma_status,
- };
+ 	.post_internal_cmd	= ATA_OP_NULL,
  
- static const struct ata_port_info qs_port_info[] = {
-diff --git a/drivers/ata/sata_sil.c b/drivers/ata/sata_sil.c
-index 738c1a8..eac7ca7 100644
---- a/drivers/ata/sata_sil.c
-+++ b/drivers/ata/sata_sil.c
-@@ -170,31 +170,14 @@ static struct scsi_host_template sil_sht = {
- 	ATA_BMDMA_SHT(DRV_NAME),
- };
+@@ -250,8 +253,7 @@ static int qs_scr_read(struct ata_port *ap, unsigned int sc_reg, u32 *val)
+ static void qs_error_handler(struct ata_port *ap)
+ {
+ 	qs_enter_reg_mode(ap);
+-	ata_do_eh(ap, qs_prereset, NULL, sata_std_hardreset,
+-		  ata_std_postreset);
++	ata_std_error_handler(ap);
+ }
  
--static const struct ata_port_operations sil_ops = {
-+static struct ata_port_operations sil_ops = {
-+	.inherits		= &ata_bmdma_port_ops,
- 	.dev_config		= sil_dev_config,
--	.tf_load		= ata_tf_load,
--	.tf_read		= ata_tf_read,
--	.check_status		= ata_check_status,
--	.exec_command		= ata_exec_command,
--	.dev_select		= ata_std_dev_select,
- 	.set_mode		= sil_set_mode,
--	.mode_filter		= ata_pci_default_filter,
--	.bmdma_setup            = ata_bmdma_setup,
--	.bmdma_start            = ata_bmdma_start,
--	.bmdma_stop		= ata_bmdma_stop,
--	.bmdma_status		= ata_bmdma_status,
--	.qc_prep		= ata_qc_prep,
--	.qc_issue		= ata_qc_issue_prot,
--	.data_xfer		= ata_data_xfer,
- 	.freeze			= sil_freeze,
- 	.thaw			= sil_thaw,
--	.error_handler		= ata_bmdma_error_handler,
--	.post_internal_cmd	= ata_bmdma_post_internal_cmd,
--	.irq_clear		= ata_bmdma_irq_clear,
--	.irq_on			= ata_irq_on,
- 	.scr_read		= sil_scr_read,
- 	.scr_write		= sil_scr_write,
--	.port_start		= ata_sff_port_start,
- };
- 
- static const struct ata_port_info sil_port_info[] = {
+ static int qs_scr_write(struct ata_port *ap, unsigned int sc_reg, u32 val)
 diff --git a/drivers/ata/sata_sil24.c b/drivers/ata/sata_sil24.c
-index 31aaeb5..d90d328 100644
+index d90d328..f0bdf06 100644
 --- a/drivers/ata/sata_sil24.c
 +++ b/drivers/ata/sata_sil24.c
-@@ -390,34 +390,28 @@ static struct scsi_host_template sil24_sht = {
- 	.dma_boundary		= ATA_DMA_BOUNDARY,
- };
+@@ -352,6 +352,14 @@ static void sil24_pmp_attach(struct ata_port *ap);
+ static void sil24_pmp_detach(struct ata_port *ap);
+ static void sil24_freeze(struct ata_port *ap);
+ static void sil24_thaw(struct ata_port *ap);
++static int sil24_softreset(struct ata_link *link, unsigned int *class,
++			   unsigned long deadline);
++static int sil24_hardreset(struct ata_link *link, unsigned int *class,
++			   unsigned long deadline);
++static int sil24_pmp_softreset(struct ata_link *link, unsigned int *class,
++			       unsigned long deadline);
++static int sil24_pmp_hardreset(struct ata_link *link, unsigned int *class,
++			       unsigned long deadline);
+ static void sil24_error_handler(struct ata_port *ap);
+ static void sil24_post_internal_cmd(struct ata_queued_cmd *qc);
+ static int sil24_port_start(struct ata_port *ap);
+@@ -402,6 +410,10 @@ static struct ata_port_operations sil24_ops = {
  
--static const struct ata_port_operations sil24_ops = {
--	.dev_config		= sil24_dev_config,
-+static struct ata_port_operations sil24_ops = {
-+	.inherits		= &sata_pmp_port_ops,
+ 	.freeze			= sil24_freeze,
+ 	.thaw			= sil24_thaw,
++	.softreset		= sil24_softreset,
++	.hardreset		= sil24_hardreset,
++	.pmp_softreset		= sil24_pmp_softreset,
++	.pmp_hardreset		= sil24_pmp_hardreset,
+ 	.error_handler		= sil24_error_handler,
+ 	.post_internal_cmd	= sil24_post_internal_cmd,
+ 	.dev_config		= sil24_dev_config,
+@@ -1181,11 +1193,7 @@ static void sil24_error_handler(struct ata_port *ap)
+ 	if (sil24_init_port(ap))
+ 		ata_eh_freeze_port(ap);
  
- 	.check_status		= sil24_check_status,
- 	.check_altstatus	= sil24_check_status,
--	.dev_select		= ata_noop_dev_select,
--
- 	.tf_read		= sil24_tf_read,
--
- 	.qc_defer		= sil24_qc_defer,
- 	.qc_prep		= sil24_qc_prep,
- 	.qc_issue		= sil24_qc_issue,
+-	/* perform recovery */
+-	sata_pmp_do_eh(ap, ata_std_prereset, sil24_softreset, sil24_hardreset,
+-		       ata_std_postreset, sata_pmp_std_prereset,
+-		       sil24_pmp_softreset, sil24_pmp_hardreset,
+-		       sata_pmp_std_postreset);
++	sata_pmp_error_handler(ap);
  
--	.irq_clear		= ata_noop_irq_clear,
-+	.freeze			= sil24_freeze,
-+	.thaw			= sil24_thaw,
-+	.error_handler		= sil24_error_handler,
-+	.post_internal_cmd	= sil24_post_internal_cmd,
-+	.dev_config		= sil24_dev_config,
- 
- 	.scr_read		= sil24_scr_read,
- 	.scr_write		= sil24_scr_write,
--
- 	.pmp_attach		= sil24_pmp_attach,
- 	.pmp_detach		= sil24_pmp_detach,
- 
--	.freeze			= sil24_freeze,
--	.thaw			= sil24_thaw,
--	.error_handler		= sil24_error_handler,
--	.post_internal_cmd	= sil24_post_internal_cmd,
--
- 	.port_start		= sil24_port_start,
--
- #ifdef CONFIG_PM
- 	.port_resume		= sil24_port_resume,
- #endif
-diff --git a/drivers/ata/sata_sis.c b/drivers/ata/sata_sis.c
-index 4becb7f..9089c7a 100644
---- a/drivers/ata/sata_sis.c
-+++ b/drivers/ata/sata_sis.c
-@@ -89,29 +89,10 @@ static struct scsi_host_template sis_sht = {
- 	ATA_BMDMA_SHT(DRV_NAME),
- };
- 
--static const struct ata_port_operations sis_ops = {
--	.tf_load		= ata_tf_load,
--	.tf_read		= ata_tf_read,
--	.check_status		= ata_check_status,
--	.exec_command		= ata_exec_command,
--	.dev_select		= ata_std_dev_select,
--	.bmdma_setup            = ata_bmdma_setup,
--	.bmdma_start            = ata_bmdma_start,
--	.bmdma_stop		= ata_bmdma_stop,
--	.bmdma_status		= ata_bmdma_status,
--	.qc_prep		= ata_qc_prep,
--	.qc_issue		= ata_qc_issue_prot,
--	.data_xfer		= ata_data_xfer,
--	.mode_filter		= ata_pci_default_filter,
--	.freeze			= ata_bmdma_freeze,
--	.thaw			= ata_bmdma_thaw,
--	.error_handler		= ata_bmdma_error_handler,
--	.post_internal_cmd	= ata_bmdma_post_internal_cmd,
--	.irq_clear		= ata_bmdma_irq_clear,
--	.irq_on			= ata_irq_on,
-+static struct ata_port_operations sis_ops = {
-+	.inherits		= &ata_bmdma_port_ops,
- 	.scr_read		= sis_scr_read,
- 	.scr_write		= sis_scr_write,
--	.port_start		= ata_sff_port_start,
- };
- 
- static const struct ata_port_info sis_port_info = {
-diff --git a/drivers/ata/sata_svw.c b/drivers/ata/sata_svw.c
-index b404bb6..26e624a 100644
---- a/drivers/ata/sata_svw.c
-+++ b/drivers/ata/sata_svw.c
-@@ -314,30 +314,16 @@ static struct scsi_host_template k2_sata_sht = {
- };
- 
- 
--static const struct ata_port_operations k2_sata_ops = {
-+static struct ata_port_operations k2_sata_ops = {
-+	.inherits		= &ata_bmdma_port_ops,
- 	.tf_load		= k2_sata_tf_load,
- 	.tf_read		= k2_sata_tf_read,
- 	.check_status		= k2_stat_check_status,
--	.exec_command		= ata_exec_command,
--	.dev_select		= ata_std_dev_select,
- 	.check_atapi_dma	= k2_sata_check_atapi_dma,
- 	.bmdma_setup		= k2_bmdma_setup_mmio,
- 	.bmdma_start		= k2_bmdma_start_mmio,
--	.bmdma_stop		= ata_bmdma_stop,
--	.bmdma_status		= ata_bmdma_status,
--	.qc_prep		= ata_qc_prep,
--	.qc_issue		= ata_qc_issue_prot,
--	.data_xfer		= ata_data_xfer,
--	.mode_filter		= ata_pci_default_filter,
--	.freeze			= ata_bmdma_freeze,
--	.thaw			= ata_bmdma_thaw,
--	.error_handler		= ata_bmdma_error_handler,
--	.post_internal_cmd	= ata_bmdma_post_internal_cmd,
--	.irq_clear		= ata_bmdma_irq_clear,
--	.irq_on			= ata_irq_on,
- 	.scr_read		= k2_sata_scr_read,
- 	.scr_write		= k2_sata_scr_write,
--	.port_start		= ata_sff_port_start,
- };
- 
- static const struct ata_port_info k2_port_info[] = {
-diff --git a/drivers/ata/sata_sx4.c b/drivers/ata/sata_sx4.c
-index 1802f92..8138cda 100644
---- a/drivers/ata/sata_sx4.c
-+++ b/drivers/ata/sata_sx4.c
-@@ -241,7 +241,8 @@ static struct scsi_host_template pdc_sata_sht = {
- 	.dma_boundary		= ATA_DMA_BOUNDARY,
- };
- 
--static const struct ata_port_operations pdc_20621_ops = {
-+/* TODO: inherit from base port_ops after converting to new EH */
-+static struct ata_port_operations pdc_20621_ops = {
- 	.tf_load		= pdc_tf_load_mmio,
- 	.tf_read		= ata_tf_read,
- 	.check_status		= ata_check_status,
-diff --git a/drivers/ata/sata_uli.c b/drivers/ata/sata_uli.c
-index 764d706..6ecd13f 100644
---- a/drivers/ata/sata_uli.c
-+++ b/drivers/ata/sata_uli.c
-@@ -79,34 +79,10 @@ static struct scsi_host_template uli_sht = {
- 	ATA_BMDMA_SHT(DRV_NAME),
- };
- 
--static const struct ata_port_operations uli_ops = {
--	.tf_load		= ata_tf_load,
--	.tf_read		= ata_tf_read,
--	.check_status		= ata_check_status,
--	.exec_command		= ata_exec_command,
--	.dev_select		= ata_std_dev_select,
--
--	.bmdma_setup            = ata_bmdma_setup,
--	.bmdma_start            = ata_bmdma_start,
--	.bmdma_stop		= ata_bmdma_stop,
--	.bmdma_status		= ata_bmdma_status,
--	.qc_prep		= ata_qc_prep,
--	.qc_issue		= ata_qc_issue_prot,
--	.data_xfer		= ata_data_xfer,
--
--	.mode_filter		= ata_pci_default_filter,
--	.freeze			= ata_bmdma_freeze,
--	.thaw			= ata_bmdma_thaw,
--	.error_handler		= ata_bmdma_error_handler,
--	.post_internal_cmd	= ata_bmdma_post_internal_cmd,
--
--	.irq_clear		= ata_bmdma_irq_clear,
--	.irq_on			= ata_irq_on,
--
-+static struct ata_port_operations uli_ops = {
-+	.inherits		= &ata_bmdma_port_ops,
- 	.scr_read		= uli_scr_read,
- 	.scr_write		= uli_scr_write,
--
--	.port_start		= ata_sff_port_start,
- };
- 
- static const struct ata_port_info uli_port_info = {
+ 	pp->do_port_rst = 0;
+ }
 diff --git a/drivers/ata/sata_via.c b/drivers/ata/sata_via.c
-index cdee078..57026fe 100644
+index 57026fe..402fd73 100644
 --- a/drivers/ata/sata_via.c
 +++ b/drivers/ata/sata_via.c
-@@ -103,97 +103,23 @@ static struct scsi_host_template svia_sht = {
- 	ATA_BMDMA_SHT(DRV_NAME),
- };
- 
--static const struct ata_port_operations vt6420_sata_ops = {
--	.mode_filter		= ata_pci_default_filter,
--
--	.tf_load		= ata_tf_load,
--	.tf_read		= ata_tf_read,
--	.check_status		= ata_check_status,
--	.exec_command		= ata_exec_command,
--	.dev_select		= ata_std_dev_select,
--
--	.bmdma_setup            = ata_bmdma_setup,
--	.bmdma_start            = ata_bmdma_start,
--	.bmdma_stop		= ata_bmdma_stop,
--	.bmdma_status		= ata_bmdma_status,
--
--	.qc_prep		= ata_qc_prep,
--	.qc_issue		= ata_qc_issue_prot,
--	.data_xfer		= ata_data_xfer,
--
-+static struct ata_port_operations vt6420_sata_ops = {
-+	.inherits		= &ata_bmdma_port_ops,
+@@ -71,7 +71,7 @@ static int svia_init_one(struct pci_dev *pdev, const struct pci_device_id *ent);
+ static int svia_scr_read(struct ata_port *ap, unsigned int sc_reg, u32 *val);
+ static int svia_scr_write(struct ata_port *ap, unsigned int sc_reg, u32 val);
+ static void svia_noop_freeze(struct ata_port *ap);
+-static void vt6420_error_handler(struct ata_port *ap);
++static int vt6420_prereset(struct ata_link *link, unsigned long deadline);
+ static int vt6421_pata_cable_detect(struct ata_port *ap);
+ static void vt6421_set_pio_mode(struct ata_port *ap, struct ata_device *adev);
+ static void vt6421_set_dma_mode(struct ata_port *ap, struct ata_device *adev);
+@@ -106,7 +106,7 @@ static struct scsi_host_template svia_sht = {
+ static struct ata_port_operations vt6420_sata_ops = {
+ 	.inherits		= &ata_bmdma_port_ops,
  	.freeze			= svia_noop_freeze,
--	.thaw			= ata_bmdma_thaw,
- 	.error_handler		= vt6420_error_handler,
--	.post_internal_cmd	= ata_bmdma_post_internal_cmd,
--
--	.irq_clear		= ata_bmdma_irq_clear,
--	.irq_on			= ata_irq_on,
--
--	.port_start		= ata_sff_port_start,
+-	.error_handler		= vt6420_error_handler,
++	.prereset		= vt6420_prereset,
  };
  
--static const struct ata_port_operations vt6421_pata_ops = {
-+static struct ata_port_operations vt6421_pata_ops = {
-+	.inherits		= &ata_bmdma_port_ops,
-+	.cable_detect		= vt6421_pata_cable_detect,
- 	.set_piomode		= vt6421_set_pio_mode,
- 	.set_dmamode		= vt6421_set_dma_mode,
--	.mode_filter		= ata_pci_default_filter,
--
--	.tf_load		= ata_tf_load,
--	.tf_read		= ata_tf_read,
--	.check_status		= ata_check_status,
--	.exec_command		= ata_exec_command,
--	.dev_select		= ata_std_dev_select,
--
--	.bmdma_setup            = ata_bmdma_setup,
--	.bmdma_start            = ata_bmdma_start,
--	.bmdma_stop		= ata_bmdma_stop,
--	.bmdma_status		= ata_bmdma_status,
--
--	.qc_prep		= ata_qc_prep,
--	.qc_issue		= ata_qc_issue_prot,
--	.data_xfer		= ata_data_xfer,
--
--	.freeze			= ata_bmdma_freeze,
--	.thaw			= ata_bmdma_thaw,
--	.error_handler		= ata_bmdma_error_handler,
--	.post_internal_cmd	= ata_bmdma_post_internal_cmd,
--	.cable_detect		= vt6421_pata_cable_detect,
--
--	.irq_clear		= ata_bmdma_irq_clear,
--	.irq_on			= ata_irq_on,
--
--	.port_start		= ata_sff_port_start,
- };
+ static struct ata_port_operations vt6421_pata_ops = {
+@@ -247,12 +247,6 @@ static int vt6420_prereset(struct ata_link *link, unsigned long deadline)
+ 	return 0;
+ }
  
--static const struct ata_port_operations vt6421_sata_ops = {
--	.mode_filter		= ata_pci_default_filter,
+-static void vt6420_error_handler(struct ata_port *ap)
+-{
+-	return ata_bmdma_drive_eh(ap, vt6420_prereset, ata_std_softreset,
+-				  NULL, ata_std_postreset);
+-}
 -
--	.tf_load		= ata_tf_load,
--	.tf_read		= ata_tf_read,
--	.check_status		= ata_check_status,
--	.exec_command		= ata_exec_command,
--	.dev_select		= ata_std_dev_select,
--
--	.bmdma_setup            = ata_bmdma_setup,
--	.bmdma_start            = ata_bmdma_start,
--	.bmdma_stop		= ata_bmdma_stop,
--	.bmdma_status		= ata_bmdma_status,
--
--	.qc_prep		= ata_qc_prep,
--	.qc_issue		= ata_qc_issue_prot,
--	.data_xfer		= ata_data_xfer,
--
--	.freeze			= ata_bmdma_freeze,
--	.thaw			= ata_bmdma_thaw,
--	.error_handler		= ata_bmdma_error_handler,
--	.post_internal_cmd	= ata_bmdma_post_internal_cmd,
--
--	.irq_clear		= ata_bmdma_irq_clear,
--	.irq_on			= ata_irq_on,
--
-+static struct ata_port_operations vt6421_sata_ops = {
-+	.inherits		= &ata_bmdma_port_ops,
- 	.scr_read		= svia_scr_read,
- 	.scr_write		= svia_scr_write,
--
--	.port_start		= ata_sff_port_start,
- };
+ static int vt6421_pata_cable_detect(struct ata_port *ap)
+ {
+ 	struct pci_dev *pdev = to_pci_dev(ap->host->dev);
+diff --git a/drivers/scsi/ipr.c b/drivers/scsi/ipr.c
+index 2074701..054b93c 100644
+--- a/drivers/scsi/ipr.c
++++ b/drivers/scsi/ipr.c
+@@ -3937,7 +3937,7 @@ static int __ipr_eh_dev_reset(struct scsi_cmnd * scsi_cmd)
+ 	if (ipr_is_gata(res) && res->sata_port) {
+ 		ap = res->sata_port->ap;
+ 		spin_unlock_irq(scsi_cmd->device->host->host_lock);
+-		ata_do_eh(ap, NULL, NULL, ipr_sata_reset, NULL);
++		ata_std_error_handler(ap);
+ 		spin_lock_irq(scsi_cmd->device->host->host_lock);
  
- static const struct ata_port_info vt6420_port_info = {
-diff --git a/drivers/ata/sata_vsc.c b/drivers/ata/sata_vsc.c
-index fd6855f..8045a72 100644
---- a/drivers/ata/sata_vsc.c
-+++ b/drivers/ata/sata_vsc.c
-@@ -304,29 +304,14 @@ static struct scsi_host_template vsc_sata_sht = {
- };
- 
- 
--static const struct ata_port_operations vsc_sata_ops = {
-+static struct ata_port_operations vsc_sata_ops = {
-+	.inherits		= &ata_bmdma_port_ops,
- 	.tf_load		= vsc_sata_tf_load,
- 	.tf_read		= vsc_sata_tf_read,
--	.exec_command		= ata_exec_command,
--	.check_status		= ata_check_status,
--	.dev_select		= ata_std_dev_select,
--	.bmdma_setup            = ata_bmdma_setup,
--	.bmdma_start            = ata_bmdma_start,
--	.bmdma_stop		= ata_bmdma_stop,
--	.bmdma_status		= ata_bmdma_status,
--	.qc_prep		= ata_qc_prep,
--	.qc_issue		= ata_qc_issue_prot,
--	.data_xfer		= ata_data_xfer,
--	.mode_filter		= ata_pci_default_filter,
- 	.freeze			= vsc_freeze,
- 	.thaw			= vsc_thaw,
--	.error_handler		= ata_bmdma_error_handler,
--	.post_internal_cmd	= ata_bmdma_post_internal_cmd,
--	.irq_clear		= ata_bmdma_irq_clear,
--	.irq_on			= ata_irq_on,
- 	.scr_read		= vsc_sata_scr_read,
- 	.scr_write		= vsc_sata_scr_write,
--	.port_start		= ata_sff_port_start,
- };
- 
- static void __devinit vsc_sata_setup_port(struct ata_ioports *port,
+ 		list_for_each_entry(ipr_cmd, &ioa_cfg->pending_q, queue) {
+@@ -5275,6 +5275,7 @@ static struct ata_port_operations ipr_sata_ops = {
+ 	.check_altstatus = ipr_ata_check_altstatus,
+ 	.dev_select = ata_noop_dev_select,
+ 	.phy_reset = ipr_ata_phy_reset,
++	.hardreset = ipr_sata_reset,
+ 	.post_internal_cmd = ipr_ata_post_internal,
+ 	.tf_read = ipr_tf_read,
+ 	.qc_prep = ata_noop_qc_prep,
 diff --git a/include/linux/libata.h b/include/linux/libata.h
-index dee4775..1c7c8cc 100644
+index 4101dfe..900609b 100644
 --- a/include/linux/libata.h
 +++ b/include/linux/libata.h
-@@ -432,7 +432,7 @@ struct ata_host {
- 	void __iomem * const	*iomap;
- 	unsigned int		n_ports;
- 	void			*private_data;
--	const struct ata_port_operations *ops;
-+	struct ata_port_operations *ops;
- 	unsigned long		flags;
- #ifdef CONFIG_ATA_ACPI
- 	acpi_handle		acpi_handle;
-@@ -606,7 +606,7 @@ struct ata_link {
+@@ -700,6 +700,14 @@ struct ata_port_operations {
  
- struct ata_port {
- 	struct Scsi_Host	*scsi_host; /* our co-allocated scsi host */
--	const struct ata_port_operations *ops;
-+	struct ata_port_operations *ops;
- 	spinlock_t		*lock;
- 	unsigned long		flags;	/* ATA_FLAG_xxx */
- 	unsigned int		pflags; /* ATA_PFLAG_xxx */
-@@ -671,6 +671,13 @@ struct ata_port {
- 	u8			sector_buf[ATA_SECT_SIZE]; /* owned by EH */
- };
+ 	void (*freeze)(struct ata_port *ap);
+ 	void (*thaw)(struct ata_port *ap);
++	ata_prereset_fn_t	prereset;
++	ata_reset_fn_t		softreset;
++	ata_reset_fn_t		hardreset;
++	ata_postreset_fn_t	postreset;
++	ata_prereset_fn_t	pmp_prereset;
++	ata_reset_fn_t		pmp_softreset;
++	ata_reset_fn_t		pmp_hardreset;
++	ata_postreset_fn_t	pmp_postreset;
+ 	void (*error_handler)(struct ata_port *ap);
+ 	void (*post_internal_cmd)(struct ata_queued_cmd *qc);
  
-+/* The following initializer overrides a method to NULL whether one of
-+ * its parent has the method defined or not.  This is equivalent to
-+ * ERR_PTR(-ENOENT).  Unfortunately, ERR_PTR doesn't render a constant
-+ * expression and thus can't be used as an initializer.
-+ */
-+#define ATA_OP_NULL		(void *)(unsigned long)(-ENOENT)
-+
- struct ata_port_operations {
- 	/*
- 	 * Command execution
-@@ -740,6 +747,12 @@ struct ata_port_operations {
- 	void (*phy_reset)(struct ata_port *ap);
- 	void (*eng_timeout)(struct ata_port *ap);
- 	irq_handler_t irq_handler;
-+
-+	/*
-+	 * ->inherits must be the last field and all the preceding
-+	 * fields must be pointers.
-+	 */
-+	const struct ata_port_operations	*inherits;
- };
+@@ -915,10 +923,6 @@ extern void ata_bmdma_irq_clear(struct ata_port *ap);
+ extern void ata_noop_irq_clear(struct ata_port *ap);
+ extern void ata_bmdma_freeze(struct ata_port *ap);
+ extern void ata_bmdma_thaw(struct ata_port *ap);
+-extern void ata_bmdma_drive_eh(struct ata_port *ap, ata_prereset_fn_t prereset,
+-			       ata_reset_fn_t softreset,
+-			       ata_reset_fn_t hardreset,
+-			       ata_postreset_fn_t postreset);
+ extern void ata_bmdma_error_handler(struct ata_port *ap);
+ extern void ata_bmdma_post_internal_cmd(struct ata_queued_cmd *qc);
+ extern int ata_hsm_move(struct ata_port *ap, struct ata_queued_cmd *qc,
+@@ -1062,11 +1066,7 @@ extern int sata_pmp_std_prereset(struct ata_link *link, unsigned long deadline);
+ extern int sata_pmp_std_hardreset(struct ata_link *link, unsigned int *class,
+ 				  unsigned long deadline);
+ extern void sata_pmp_std_postreset(struct ata_link *link, unsigned int *class);
+-extern void sata_pmp_do_eh(struct ata_port *ap,
+-		ata_prereset_fn_t prereset, ata_reset_fn_t softreset,
+-		ata_reset_fn_t hardreset, ata_postreset_fn_t postreset,
+-		ata_prereset_fn_t pmp_prereset, ata_reset_fn_t pmp_softreset,
+-		ata_reset_fn_t pmp_hardreset, ata_postreset_fn_t pmp_postreset);
++extern void sata_pmp_error_handler(struct ata_port *ap);
  
- struct ata_port_info {
-@@ -749,7 +762,7 @@ struct ata_port_info {
- 	unsigned long		pio_mask;
- 	unsigned long		mwdma_mask;
- 	unsigned long		udma_mask;
--	const struct ata_port_operations *port_ops;
-+	struct ata_port_operations *port_ops;
- 	irq_handler_t		irq_handler;
- 	void 			*private_data;
- };
-@@ -772,7 +785,7 @@ extern const unsigned long sata_deb_timing_normal[];
- extern const unsigned long sata_deb_timing_hotplug[];
- extern const unsigned long sata_deb_timing_long[];
+ /*
+  * EH
+@@ -1083,9 +1083,7 @@ extern void ata_eh_thaw_port(struct ata_port *ap);
+ extern void ata_eh_qc_complete(struct ata_queued_cmd *qc);
+ extern void ata_eh_qc_retry(struct ata_queued_cmd *qc);
  
--extern const struct ata_port_operations ata_dummy_port_ops;
-+extern struct ata_port_operations ata_dummy_port_ops;
- extern const struct ata_port_info ata_dummy_port_info;
+-extern void ata_do_eh(struct ata_port *ap, ata_prereset_fn_t prereset,
+-		      ata_reset_fn_t softreset, ata_reset_fn_t hardreset,
+-		      ata_postreset_fn_t postreset);
++extern void ata_std_error_handler(struct ata_port *ap);
  
- static inline const unsigned long *
-@@ -819,7 +832,7 @@ extern int ata_host_activate(struct ata_host *host, int irq,
- 			     struct scsi_host_template *sht);
- extern void ata_host_detach(struct ata_host *host);
- extern void ata_host_init(struct ata_host *, struct device *,
--			  unsigned long, const struct ata_port_operations *);
-+			  unsigned long, struct ata_port_operations *);
- extern int ata_scsi_detect(struct scsi_host_template *sht);
- extern int ata_scsi_ioctl(struct scsi_device *dev, int cmd, void __user *arg);
- extern int ata_scsi_queuecmd(struct scsi_cmnd *cmd, void (*done)(struct scsi_cmnd *));
+ /*
+  * Base operations to inherit from and initializers for sht
 -- 
 1.5.2.4
 
