@@ -1,42 +1,29 @@
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Subject: Re: [PATCH 00/18] ide: warm-plug support for IDE devices and other
-	goodies
-Date: Wed, 13 Feb 2008 08:04:07 +1100
-Message-ID: <1202850247.7410.24.camel@pasglop>
-References: <20080208004421.17746.32557.sendpatchset@localhost.localdomain>
-	 <1202460043.7079.157.camel@pasglop>
-Reply-To: benh@kernel.crashing.org
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: [PATCH] ide-floppy: rename end_request handler properly
+Date: Tue, 12 Feb 2008 21:10:45 +0100
+Message-ID: <200802122110.45593.bzolnier@gmail.com>
+References: <20080212143635.GA4530@gollum.tnic>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from gate.crashing.org ([63.228.1.57]:56797 "EHLO gate.crashing.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1765384AbYBLVE2 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 12 Feb 2008 16:04:28 -0500
-In-Reply-To: <1202460043.7079.157.camel@pasglop>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1753246AbYBLV0t@vger.kernel.org>
+In-Reply-To: <20080212143635.GA4530@gollum.tnic>
+Content-Disposition: inline
+Sender: linux-kernel-owner@vger.kernel.org
+To: petkovbb@gmail.com
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linuxppc-dev@ozlabs.org
 
-
-On Fri, 2008-02-08 at 19:40 +1100, Benjamin Herrenschmidt wrote:
-> On Fri, 2008-02-08 at 01:44 +0100, Bartlomiej Zolnierkiewicz wrote:
-> > - couple of fixes and preparatory patches
-> > 
-> > - rework of PowerMac media-bay support ([un]register IDE devices instead of
-> >   [un]registering IDE interface) [ it is the main reason for spamming PPC ML ]
+On Tuesday 12 February 2008, Borislav Petkov wrote:
+> commit 48f9b88d491aa478ffcf21e2f523e3665db0770b
+> Author: Borislav Petkov <petkovbb@gmail.com>
+> Date:   Tue Feb 12 09:42:19 2008 +0100
 > 
-> Interesting... I was thinking about doing a full remove of the device at
-> a higher level instead but I suppose what you propose is easier.
-> 
-> I'll have a look & test next week hopefully.
+>     ide-floppy: rename end_request handler properly
+>     
+>     mv idefloppy_do_end_request -> idefloppy_end_request as is the case with ide-cd
+>     
+>     Signed-off-by: Borislav Petkov <petkovbb@gmail.com>
 
-Also, the above would have the advantage of not relying on drivers/ide
-infrastructure, and thus working with libata (once somebody has ported
-pmac ide to libata).
-
-Ben.
-
-
+applied
