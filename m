@@ -1,150 +1,41 @@
 From: Borislav Petkov <petkovbb@googlemail.com>
-Subject: [PATCH] ide-scsi: do non-atomic pc->flags testing
-Date: Tue, 12 Feb 2008 16:25:50 +0100
-Message-ID: <20080212152550.GE4530@gollum.tnic>
-References: <1202718880-1793-1-git-send-email-petkovbb@gmail.com> <200802120109.24152.bzolnier@gmail.com> <20080212055919.GD2879@gollum.tnic> <200802121328.48515.bzolnier@gmail.com>
+Subject: Re: IDE cdrom problem with PLEXTOR DVDR PX-608AL
+Date: Tue, 12 Feb 2008 18:20:58 +0100
+Message-ID: <20080212172057.GA12480@gollum.tnic>
+References: <200802121026.17420.hpj@urpla.net>
 Reply-To: petkovbb@gmail.com
 Mime-Version: 1.0
 Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from el-out-1112.google.com ([209.85.162.180]:23727 "EHLO
-	el-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756569AbYBLP0V (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 12 Feb 2008 10:26:21 -0500
-Received: by el-out-1112.google.com with SMTP id v27so1997460ele.23
-        for <linux-ide@vger.kernel.org>; Tue, 12 Feb 2008 07:26:20 -0800 (PST)
+Received: from an-out-0708.google.com ([209.85.132.251]:41162 "EHLO
+	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758838AbYBLRV1 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 12 Feb 2008 12:21:27 -0500
+Received: by an-out-0708.google.com with SMTP id d31so1244601and.103
+        for <linux-ide@vger.kernel.org>; Tue, 12 Feb 2008 09:21:26 -0800 (PST)
 Content-Disposition: inline
-In-Reply-To: <200802121328.48515.bzolnier@gmail.com>
+In-Reply-To: <200802121026.17420.hpj@urpla.net>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+To: Hans-Peter Jansen <hpj@urpla.net>
 Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-commit 272976f0f5754707f9e41da315717a6eb8d9d536
-Author: Borislav Petkov <petkovbb@gmail.com>
-Date:   Tue Feb 12 16:22:44 2008 +0100
+On Tue, Feb 12, 2008 at 10:26:17AM +0100, Hans-Peter Jansen wrote:
+> Hi,=20
+>=20
+> I suffer from unreliable cdrom operations (failing DAE and burn sessi=
+ons)=20
+> with the openSUSE 2.6.18.8-0.7-bigsmp kernel.
+			^^^^
+Hi,
 
-    ide-scsi: do non-atomic pc->flags testing
+can please you test this with a more recent kernel. Yours is almost anc=
+ient -
+from Sep. 2006.
 
-    Signed-off-by: Borislav Petkov <petkovbb@gmail.com>
+Thanks.
 
-diff --git a/drivers/scsi/ide-scsi.c b/drivers/scsi/ide-scsi.c
-index 5ec421c..eb84cdc 100644
---- a/drivers/scsi/ide-scsi.c
-+++ b/drivers/scsi/ide-scsi.c
-@@ -319,8 +319,10 @@ static int idescsi_end_request (ide_drive_t *drive=
-, int uptodate, int nrsecs)
- 		pc =3D opc;
- 		rq =3D pc->rq;
- 		pc->scsi_cmd->result =3D (CHECK_CONDITION << 1) |
--					((test_bit(PC_TIMEDOUT, &pc->flags)?DID_TIME_OUT:DID_OK) << 16);
--	} else if (test_bit(PC_TIMEDOUT, &pc->flags)) {
-+					(((pc->flags & PC_TIMEDOUT) ?
-+							  DID_TIME_OUT :
-+							  DID_OK) << 16);
-+	} else if (pc->flags & PC_TIMEDOUT) {
- 		if (log)
- 			printk (KERN_WARNING "ide-scsi: %s: timed out for %lu\n",
- 					drive->name, pc->scsi_cmd->serial_number);
-@@ -362,7 +364,7 @@ static int idescsi_expiry(ide_drive_t *drive)
- #if IDESCSI_DEBUG_LOG
- 	printk(KERN_WARNING "idescsi_expiry called for %lu at %lu\n", pc->scs=
-i_cmd->serial_number, jiffies);
- #endif
--	set_bit(PC_TIMEDOUT, &pc->flags);
-+	pc->flags |=3D PC_TIMEDOUT;
-=20
- 	return 0;					/* we do not want the ide subsystem to retry */
- }
-@@ -384,7 +386,7 @@ static ide_startstop_t idescsi_pc_intr (ide_drive_t=
- *drive)
- 	printk (KERN_INFO "ide-scsi: Reached idescsi_pc_intr interrupt handle=
-r\n");
- #endif /* IDESCSI_DEBUG_LOG */
-=20
--	if (test_bit(PC_TIMEDOUT, &pc->flags)){
-+	if (pc->flags & PC_TIMEDOUT) {
- #if IDESCSI_DEBUG_LOG
- 		printk(KERN_WARNING "idescsi_pc_intr: got timed out packet  %lu at %=
-lu\n",
- 				pc->scsi_cmd->serial_number, jiffies);
-@@ -393,7 +395,8 @@ static ide_startstop_t idescsi_pc_intr (ide_drive_t=
- *drive)
- 		idescsi_end_request (drive, 1, 0);
- 		return ide_stopped;
- 	}
--	if (test_and_clear_bit (PC_DMA_IN_PROGRESS, &pc->flags)) {
-+	if (pc->flags & PC_DMA_IN_PROGRESS) {
-+		pc->flags &=3D ~PC_DMA_IN_PROGRESS;
- #if IDESCSI_DEBUG_LOG
- 		printk ("ide-scsi: %s: DMA complete\n", drive->name);
- #endif /* IDESCSI_DEBUG_LOG */
-@@ -432,7 +435,7 @@ static ide_startstop_t idescsi_pc_intr (ide_drive_t=
- *drive)
- 					"- discarding data\n");
- 				temp =3D pc->buf_size - pc->xferred;
- 				if (temp) {
--					clear_bit(PC_WRITING, &pc->flags);
-+					pc->flags &=3D ~PC_WRITING;
- 					if (pc->sg)
- 						idescsi_input_buffers(drive, pc,
- 									temp);
-@@ -454,14 +457,14 @@ static ide_startstop_t idescsi_pc_intr (ide_drive=
-_t *drive)
- 		}
- 	}
- 	if (ireason & IO) {
--		clear_bit(PC_WRITING, &pc->flags);
-+		pc->flags &=3D ~PC_WRITING;
- 		if (pc->sg)
- 			idescsi_input_buffers(drive, pc, bcount);
- 		else
- 			hwif->atapi_input_bytes(drive, pc->cur_pos,
- 						bcount);
- 	} else {
--		set_bit(PC_WRITING, &pc->flags);
-+		pc->flags |=3D PC_WRITING;
- 		if (pc->sg)
- 			idescsi_output_buffers(drive, pc, bcount);
- 		else
-@@ -501,8 +504,8 @@ static ide_startstop_t idescsi_transfer_pc(ide_driv=
-e_t *drive)
- 	ide_set_handler(drive, &idescsi_pc_intr, get_timeout(pc), idescsi_exp=
-iry);
- 	/* Send the actual packet */
- 	drive->hwif->atapi_output_bytes(drive, scsi->pc->c, 12);
--	if (test_bit (PC_DMA_OK, &pc->flags)) {
--		set_bit (PC_DMA_IN_PROGRESS, &pc->flags);
-+	if (pc->flags & PC_DMA_OK) {
-+		pc->flags |=3D PC_DMA_IN_PROGRESS;
- 		hwif->dma_start(drive);
- 	}
- 	return ide_started;
-@@ -512,10 +515,10 @@ static inline int idescsi_set_direction(struct id=
-e_atapi_pc *pc)
- {
- 	switch (pc->c[0]) {
- 		case READ_6: case READ_10: case READ_12:
--			clear_bit(PC_WRITING, &pc->flags);
-+			pc->flags &=3D ~PC_WRITING;
- 			return 0;
- 		case WRITE_6: case WRITE_10: case WRITE_12:
--			set_bit(PC_WRITING, &pc->flags);
-+			pc->flags |=3D PC_WRITING;
- 			return 0;
- 		default:
- 			return 1;
-@@ -572,7 +575,7 @@ static ide_startstop_t idescsi_issue_pc(ide_drive_t=
- *drive,
- 	ide_pktcmd_tf_load(drive, IDE_TFLAG_NO_SELECT_MASK, bcount, dma);
-=20
- 	if (dma)
--		set_bit(PC_DMA_OK, &pc->flags);
-+		pc->flags |=3D PC_DMA_OK;
-=20
- 	if (test_bit(IDESCSI_DRQ_INTERRUPT, &scsi->flags)) {
- 		ide_execute_command(drive, WIN_PACKETCMD, &idescsi_transfer_pc,
 --=20
 Regards/Gru=DF,
     Boris.
