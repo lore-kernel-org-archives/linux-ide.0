@@ -1,56 +1,57 @@
 From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH] enclosure: add support for enclosure services
-Date: Tue, 12 Feb 2008 13:28:15 -0600
-Message-ID: <1202844495.3137.120.camel@localhost.localdomain>
-References: <1202172065.3096.154.camel@localhost.localdomain>
-	 <922945.25870.qm@web31811.mail.mud.yahoo.com>
-	 <20080212102244.32869382@appleyard>
-	 <1202841935.3137.94.camel@localhost.localdomain>
-	 <20080212110752.21840627@appleyard>
+Subject: Re: Subject: [PATCH 1/3] Let scsi_cmnd->cmnd use request->cmd
+	buffer
+Date: Tue, 12 Feb 2008 13:41:13 -0600
+Message-ID: <1202845273.3137.123.camel@localhost.localdomain>
+References: <20080209193224.GA21448@Chamillionaire.breakpoint.cc>
+	 <200802100006.11086.bzolnier@gmail.com>
+	 <20080210052621.GA22257@infradead.org>
+	 <200802101438.46698.bzolnier@gmail.com>
+	 <20080210144352.GA3537@infradead.org> <47AF1321.7000107@panasas.com>
+	 <47AF4974.9010200@panasas.com>  <47AF4AED.8080104@panasas.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:60956 "EHLO
+Received: from accolon.hansenpartnership.com ([76.243.235.52]:43372 "EHLO
 	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750928AbYBLT2T (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 12 Feb 2008 14:28:19 -0500
-In-Reply-To: <20080212110752.21840627@appleyard>
+	by vger.kernel.org with ESMTP id S1751093AbYBLTlR (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 12 Feb 2008 14:41:17 -0500
+In-Reply-To: <47AF4AED.8080104@panasas.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: kristen.c.accardi@intel.com
-Cc: ltuikov@yahoo.com, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, linux-ide <linux-ide@vger.kernel.org>, jeff@garzik.org
+To: Boaz Harrosh <bharrosh@panasas.com>
+Cc: Christoph Hellwig <hch@infradead.org>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Jens Axboe <jens.axboe@oracle.com>, Sebastian Siewior <ide+bug@ml.breakpoint.cc>, Tejun Heo <htejun@gmail.com>, Sergei Shtylyov <sshtylyov@ru.mvista.com>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On Tue, 2008-02-12 at 11:07 -0800, Kristen Carlson Accardi wrote:
-> I understand what you are trying to do - I guess I just doubt the value
-> you've added by doing this.  I think that there's going to be so much
-> customization that system vendors will want to add, that they are going
-> to wind up adding a custom library regardless, so standardising those
-> few things won't buy us anything.
+On Sun, 2008-02-10 at 21:05 +0200, Boaz Harrosh wrote:
+> - struct scsi_cmnd had a 16 bytes command buffer of its own.
+>   This is an unnecessary duplication and copy of request's
+>   cmd. It is probably left overs from the time that scsi_cmnd
+>   could function without a request attached. So clean that up.
+> 
+> - Once above is done, few places, apart from scsi-ml, needed
+>   adjustments due to changing the data type of scsi_cmnd->cmnd.
+> 
+> - Lots of drivers still use MAX_COMMAND_SIZE. So I have left
+>   that #define but equate it to BLK_MAX_CDB. The way I see it
+>   and is reflected in the patch below is.
+>   MAX_COMMAND_SIZE - means: The longest fixed-length (*) SCSI CDB
+>                      as per the SCSI standard and is not related
+>                      to the implementation.
+>   BLK_MAX_CDB.     - The allocated space at the request level
+> 
+> (*)fixed-length here means commands that their size can be determined
+>    by their opcode and the CDB does not carry a length specifier, like
+>    the VARIABLE_LENGTH_CMD(0x7f) command. This is actually not exactly
+>    true and the SCSI standard also defines extended commands and
+>    vendor specific commands that can be bigger than 16 bytes. The kernel
+>    will support these using the same infrastructure used for VARLEN CDB's.
+>    So in effect MAX_COMMAND_SIZE means the maximum size command
+>    scsi-ml supports without specifying a cmd_len by ULD's
 
-It depends ... if you actually have a use for the customisations, yes.
-If you just want the basics of who (what's in the enclousure), what
-(activity) and where (locate) then I think it solves your problem almost
-entirely.
-
-So, entirely as a straw horse, tell me what else your enclosures provide
-that I haven't listed in the four points.  The SES standards too provide
-a huge range of things that no-one ever seems to implement (temperature,
-power, fan speeds etc).
-
-I think the users of enclosures fall int these categories
-
-85% just want to know where their device actually is (i.e. that sdc is
-in enclosure slot 5)
-50% like watching the activity lights
-30% want to be able to have a visual locate function
-20% want a visual failure indication (the other 80% rely on some OS
-notification instead)
-
-When you add up the overlapping needs, you get about 90% of people happy
-with the basics that the enclosure services provide.  Could there be
-more ... sure; should there be more ... I don't think so ... that's what
-value add the user libraries can provide.
+When we do this, what happens to the minority of drivers that need the
+command in DMAable memory ... or have you audited them all and we can
+now dump the DMA pool allocation for SCSI commands?
 
 James
 
