@@ -1,67 +1,133 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCH #upstream] libata: implement libata.force module parameter
-Date: Tue, 12 Feb 2008 18:07:15 +0900
-Message-ID: <47B161C3.7040200@gmail.com>
-References: <47A3375F.80101@gmail.com> <47A356C3.3010904@garzik.org>
+From: Hans-Peter Jansen <hpj@urpla.net>
+Subject: IDE cdrom problem with PLEXTOR DVDR PX-608AL
+Date: Tue, 12 Feb 2008 10:26:17 +0100
+Message-ID: <200802121026.17420.hpj@urpla.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain;
+  charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.176]:42702 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759350AbYBLJHZ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 12 Feb 2008 04:07:25 -0500
-Received: by wa-out-1112.google.com with SMTP id v27so2662006wah.23
-        for <linux-ide@vger.kernel.org>; Tue, 12 Feb 2008 01:07:23 -0800 (PST)
-In-Reply-To: <47A356C3.3010904@garzik.org>
+Received: from moutng.kundenserver.de ([212.227.126.183]:61602 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751855AbYBLJ00 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 12 Feb 2008 04:26:26 -0500
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: IDE/ATA development list <linux-ide@vger.kernel.org>, Mark Lord <liml@rtr.ca>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Sam Ravnborg <sam@ravnborg.org>, Andrew Morton <akpm@linux-foundation.org>, LKML <linux-kernel@vger.kernel.org>Sam Ravnborg <sam@ravnborg.org>
+To: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-Jeff Garzik wrote:
-> Tejun Heo wrote:
->> This patch implements libata.force module parameter which can
->> selectively override ATA port, link and device configurations
->> including cable type, SATA PHY SPD limit, transfer mode and NCQ.
->>
->> For example, you can say "use 1.5Gbps for all fan-out ports attached
->> to the second port but allow 3.0Gbps for the PMP device itself, oh,
->> the device attached to the third fan-out port chokes on NCQ and
->> shouldn't go over UDMA4" by the following.
->>
->>  libata.force=2:1.5g,2.15:3.0g,2.03:noncq,udma4
->>
->> Signed-off-by: Tejun Heo <htejun@gmail.com>
->> ---
->> I guess it's about time we add something like this.  More than
->> anything else this should help debugging and can serve as a last
->> resort to work around problems.
->>
->> Thanks.
->>
->>  Documentation/kernel-parameters.txt |   35 +++
->>  drivers/ata/libata-core.c           |  375
->> +++++++++++++++++++++++++++++++++++-
->>  drivers/ata/libata-eh.c             |    8
->>  drivers/ata/libata.h                |    1  4 files changed, 415
->> insertions(+), 4 deletions(-)
-> 
-> ACK, but it breaks the build due to section type conflicts:
-> 
-> drivers/ata/libata-core.c:108: error: ata_force_param_buf causes a
-> section type conflict
-> 
-> Given that the data is marked __initdata and the code is marked __init,
-> I cannot see the problem.
+Hi, 
 
-Jeff, this no longer causes build failure whether libata is configured
-built-in or as a module.  I have no idea what's going on but there
-doesn't seem to be a proper solution on the horizon yet.  I think we can
-go ahead and commit this one and convert it to __initdataconst when it
-becomes available.
+I suffer from unreliable cdrom operations (failing DAE and burn sessions) 
+with the openSUSE 2.6.18.8-0.7-bigsmp kernel.
 
-Thanks.
+Additionally, the syslog is continuesly spammed with:
+ 
+Feb 12 00:03:22 kernel: hdc: cdrom_pc_intr: The drive appears confused (ireason = 0x01).
+ Trying to recover by ending request.
+Feb 12 00:57:52 kernel: hdc: cdrom_pc_intr: The drive appears confused (ireason = 0x01).
+ Trying to recover by ending request.
+Feb 12 01:36:21 kernel: hdc: cdrom_pc_intr: The drive appears confused (ireason = 0x01).
+ Trying to recover by ending request.
+Feb 12 01:38:49 kernel: hde: cdrom_pc_intr: The drive appears confused (ireason = 0x01).
+ Trying to recover by ending request.
+Feb 12 08:06:07 kernel: hde: cdrom_pc_intr: The drive appears confused (ireason = 0x01).
+ Trying to recover by ending request.
 
--- 
-tejun
+I drove that devices on a pdc20268 based Promise Ultra TX/2 100 card for 
+some time, which had some IDE/ATAPI issues documented. After exchanging 
+that PCI card with a "Silicon Image PCI0680 based one, the problem persists.
+
+Is there any firmware/atapi protocol problem known with these drives?
+
+These are the offenders:
+
+42: IDE 02.0: 10602 CD-ROM (DVD)
+  [Created at block.222]
+  UDI: /org/freedesktop/Hal/devices/storage_model_PLEXTOR_DVDR_PX_608AL
+  Unique ID: 90A1.yYhZwSaKZZ6
+  Parent ID: ejN_.zzJBQoyZsp8
+  SysFS ID: /block/hdc
+  SysFS BusID: 1.0
+  SysFS Device Link: /devices/pci0000:00/0000:00:0e.0/0000:02:06.0/ide1/1.0
+  Hardware Class: cdrom
+  Model: "PLEXTOR DVDR PX-608AL"
+  Vendor: "PLEXTOR"
+  Device: "DVDR PX-608AL"
+  Revision: "1.01"
+  Serial ID: "GDDL000676UE"
+  Driver: "SiI_IDE", "ide-cdrom"
+  Driver Modules: "siimage", "ide_cd"
+  Device File: /dev/hdc
+  Device Files: /dev/hdc, /dev/disk/by-path/pci-0000:02:06.0-ide-0:0
+  Device Number: block 22:0
+  Features: CD-R, CD-RW, DVD, DVD-R, DVD-RW, DVD+R, DVD+RW, DVD+DL, DVDRAM
+  Drive status: no medium
+  Config Status: cfg=no, avail=yes, need=no, active=unknown
+  Attached to: #34 (Unknown mass storage controller)
+  Drive Speed: 24
+
+43: IDE 04.0: 10602 CD-ROM (DVD)
+  [Created at block.222]
+  UDI: /org/freedesktop/Hal/devices/storage_model_PLEXTOR_DVDR_PX_608AL_0
+  Unique ID: 3Ng9.rKN6BMng3oC
+  Parent ID: ejN_.zzJBQoyZsp8
+  SysFS ID: /block/hde
+  SysFS BusID: 2.0
+  SysFS Device Link: /devices/pci0000:00/0000:00:0e.0/0000:02:06.0/ide2/2.0
+  Hardware Class: cdrom
+  Model: "PLEXTOR DVDR PX-608AL"
+  Vendor: "PLEXTOR"
+  Device: "DVDR PX-608AL"
+  Revision: "1.01"
+  Serial ID: "GGDL007101UE"
+  Driver: "SiI_IDE", "ide-cdrom"
+  Driver Modules: "siimage", "ide_cd"
+  Device File: /dev/hde
+  Device Files: /dev/hde, /dev/disk/by-path/pci-0000:02:06.0-ide-1:0
+  Device Number: block 33:0
+  Features: CD-R, CD-RW, DVD, DVD-R, DVD-RW, DVD+R, DVD+RW, DVD+DL, DVDRAM
+  Drive status: no medium
+  Config Status: cfg=no, avail=yes, need=no, active=unknown
+  Attached to: #34 (Unknown mass storage controller)
+  Drive Speed: 24
+
+hanging on this controller (now):
+
+44: PCI 206.0: 0180 Unknown mass storage controller
+  [Created at pci.286]
+  UDI: /org/freedesktop/Hal/devices/pci_1095_680
+  Unique ID: ejN_.zzJBQoyZsp8
+  Parent ID: vuMS.8LoPsVNGJbF
+  SysFS ID: /devices/pci0000:00/0000:00:0e.0/0000:02:06.0
+  SysFS BusID: 0000:02:06.0
+  Hardware Class: storage
+  Model: "Silicon Image PCI0680 Ultra ATA-133 Host Controller"
+  Vendor: pci 0x1095 "Silicon Image, Inc."
+  Device: pci 0x0680 "PCI0680 Ultra ATA-133 Host Controller"
+  SubVendor: pci 0x1095 "Silicon Image, Inc."
+  SubDevice: pci 0x0680 
+  Revision: 0x02
+  Driver: "SiI_IDE"
+  Driver Modules: "siimage"
+  I/O Ports: 0x9c00-0x9c07 (rw)
+  I/O Ports: 0x9800-0x9803 (rw)
+  I/O Ports: 0x9400-0x9407 (rw)
+  I/O Ports: 0x9000-0x9003 (rw)
+  I/O Ports: 0x8c00-0x8c0f (rw)
+  Memory Range: 0xfdfff000-0xfdfff0ff (rw,non-prefetchable)
+  Memory Range: 0xf4000000-0xf407ffff (ro,prefetchable,disabled)
+  IRQ: 169 (1767334 events)
+  Module Alias: "pci:v00001095d00000680sv00001095sd00000680bc01sc80i00"
+  Driver Info #0:
+    Driver Status: siimage is active
+    Driver Activation Cmd: "modprobe siimage"
+  Driver Info #1:
+    Driver Status: pata_sil680 is active
+    Driver Activation Cmd: "modprobe pata_sil680"
+  Config Status: cfg=no, avail=yes, need=no, active=unknown
+  Attached to: #30 (PCI bridge)
+
+Any hints are highly appreciated.
+
+Pete
