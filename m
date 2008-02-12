@@ -1,48 +1,37 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [PATCH 0/4] ide: generic packet command representation
-Date: Tue, 12 Feb 2008 01:09:24 +0100
-Message-ID: <200802120109.24152.bzolnier@gmail.com>
-References: <1202718880-1793-1-git-send-email-petkovbb@gmail.com>
+Subject: Re: [PATCH] ide: Add missing base addresses for falconide and macide
+Date: Tue, 12 Feb 2008 01:15:37 +0100
+Message-ID: <200802120115.37876.bzolnier@gmail.com>
+References: <Pine.LNX.4.64.0802112232060.7963@anakin>
 Mime-Version: 1.0
 Content-Type: text/plain;
-  charset="utf-8"
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.186]:11111 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756334AbYBLANC (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 11 Feb 2008 19:13:02 -0500
-Received: by nf-out-0910.google.com with SMTP id g13so1341853nfb.21
-        for <linux-ide@vger.kernel.org>; Mon, 11 Feb 2008 16:13:01 -0800 (PST)
-In-Reply-To: <1202718880-1793-1-git-send-email-petkovbb@gmail.com>
+Received: from mu-out-0910.google.com ([209.85.134.187]:30755 "EHLO
+	mu-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756622AbYBLANH (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 11 Feb 2008 19:13:07 -0500
+Received: by mu-out-0910.google.com with SMTP id i10so5799228mue.5
+        for <linux-ide@vger.kernel.org>; Mon, 11 Feb 2008 16:13:02 -0800 (PST)
+In-Reply-To: <Pine.LNX.4.64.0802112232060.7963@anakin>
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Borislav Petkov <petkovbb@googlemail.com>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Borislav Petkov <petkovbb@gmail.com>
+To: Geert Uytterhoeven <geert@linux-m68k.org>
+Cc: Michael Schmitz <schmitz@debian.org>, linux-ide@vger.kernel.org, Linux/m68k <linux-m68k@vger.kernel.org>, Linux Kernel Development <linux-kernel@vger.kernel.org>
 
-
-On Monday 11 February 2008, Borislav Petkov wrote:
-> Hi Bart,
+On Monday 11 February 2008, Geert Uytterhoeven wrote:
+> commit 29dd59755a849cc6475faa6a75f3b804e23a6fc2 ("ide: remove ide_setup_ports")
+> forgot to take into account the base addresses for the CONTROL registers for
+> falconide and macide, as pointed out by Michael Schmitz.
 > 
-> here's the ide_atapi_pc unification series. It all went pretty smoothly along
-> the search & replace line. Using driver-specific members in ide_atapi_pc like
-> idefloppy_callback and idetape_callback is kinda dumb but this approach seemed
-> the fastest versus unnecessary callback function signature change that will
-> touch stuff all over the place. Besides, ide-tape might be gone soon so that
-> would alleviate the problem.
+> Falconide was tested on Aranym.
+> 
+> Signed-off-by: Geert Uytterhoeven <geert@linux-m68k.org>
+> Cc: Michael Schmitz <schmitz@debian.org>
 
-applied all four patches, thanks!
+Thanks!  Applied.
 
-> On a different note, i noticed ide-scsi might also need a cleanup similar to the
-> other drivers. It is next on my TODO list in case you don't have anything with a
-> higher prio.
-
-I was actually hoping that you'll continue unifying ATAPI handling...
-
-[ ide-scsi is orphaned and has (probably) unfixable problems (because of having
-  dependencies on both IDE and SCSI subsystems) so it is not worth IMO but I will
-  of course accept patches... ]
-
-Thanks,
-Bart
+[ this patch was a missing link to (hopefully) bring the number of open
+  2.6.25 IDE regressions down to _zero_ ]
