@@ -1,72 +1,35 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: JMicron - hard resetting link
-Date: Wed, 13 Feb 2008 08:50:34 +0900
-Message-ID: <47B230CA.9060506@gmail.com>
-References: <009401c86d5c$5eb57bf0$4d0fa8c0@M2007> <47B19997.1010404@gmail.com> <003801c86d84$fdae0510$4d0fa8c0@M2007> <47B1B299.3010208@gmail.com> <002f01c86d9c$94542f50$4d0fa8c0@M2007>
+From: Akira Iguchi <akira2.iguchi@toshiba.co.jp>
+Subject: Re: [PATCHSET libata-dev#upstream] clean up scsi_host_templates and
+ ata_port_operations, take #2
+Date: Wed, 13 Feb 2008 08:55:29 +0900
+Message-ID: <200802122354.m1CNsV4n011311@toshiba.co.jp>
+References: <1202805801343-git-send-email-htejun@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-2
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from el-out-1112.google.com ([209.85.162.176]:3629 "EHLO
-	el-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1762956AbYBLXun (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 12 Feb 2008 18:50:43 -0500
-Received: by el-out-1112.google.com with SMTP id v27so2151752ele.23
-        for <linux-ide@vger.kernel.org>; Tue, 12 Feb 2008 15:50:42 -0800 (PST)
-In-Reply-To: <002f01c86d9c$94542f50$4d0fa8c0@M2007>
+Received: from imx12.toshiba.co.jp ([61.202.160.132]:57460 "EHLO
+	imx12.toshiba.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1764300AbYBLXye (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 12 Feb 2008 18:54:34 -0500
+Received: from arc11.toshiba.co.jp ([133.199.90.127])
+	by imx12.toshiba.co.jp  with ESMTP id m1CNsWNU020711
+	for <linux-ide@vger.kernel.org>; Wed, 13 Feb 2008 08:54:32 +0900 (JST)
+Received: (from root@localhost)
+	by arc11.toshiba.co.jp  id m1CNsW2U022587
+	for linux-ide@vger.kernel.org; Wed, 13 Feb 2008 08:54:32 +0900 (JST)
+Received: from mx12.toshiba.co.jp (localhost [127.0.0.1])
+	by ovp11.toshiba.co.jp  with ESMTP id m1CNsWqT015363
+	for <linux-ide@vger.kernel.org>; Wed, 13 Feb 2008 08:54:32 +0900 (JST)
+In-Reply-To: (Your message of "Tue, 12 Feb 2008 17:43:11 +0900")
+  <1202805801343-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Gabor FUNK <FUNK.Gabor@hunetkft.hu>
-Cc: IDE/ATA development list <linux-ide@vger.kernel.org>
+To: Tejun Heo <htejun@gmail.com>
+Cc: jeff@garzik.org, linux-ide@vger.kernel.org, liml@rtr.ca, alan@lxorguk.ukuu.org.uk, kngregertsen@norway.atmel.com, sonic.adi@gmail.com, rmk@arm.linux.org.uk, alessandro.zummo@towertech.it, domen.puncer@telargo.com, leoli@freescale.com
 
-Hello,
+Tejun Heo wrote:
+>* pata_scc should now have NULL thaw after conversion.
 
-Gabor FUNK wrote:
->> What I said was that timeouts occurring due to transmission errors
->> should be recoverable.  It seems like IRQ delivery didn't work probably
->> due to screaming IRQ.  I need to see the messages before the first
->> relevant error message.  It's always a good idea to post full kernel log
->> from boot till failure.  Things which don't seem relevant are often
->> relevant.
-> Naturally. Full kern.log with boot:
-> http://www.huweb.hu/maques/tmp/jmicron/kern.log
-> (no edits, there are really only those 2 lines between Feb 6 and Feb 9's
-> 1st exception)
+I'm sorry. This is a bug.
+Please use default thaw (ata_bmdma_thaw) for pata_scc.
 
-Hmmm... Indeed.  This is the first time this mode of failure is reported.
-
-> Previously there was kernel 2.6.23.9 and I noticed the following in
-> syslog by then:
-> Feb  6 19:10:19 storage1 kernel: ata4: D2H reg with I during NCQ, this
-> message won't be printed again
-> Feb  6 19:10:20 storage1 kernel: ata1: D2H reg with I during NCQ, this
-> message won't be printed again
-> Feb  6 19:10:20 storage1 kernel: ata2: D2H reg with I during NCQ, this
-> message won't be printed again
-> Feb  6 19:10:21 storage1 kernel: ata3: D2H reg with I during NCQ, this
-> message won't be printed again
-> 
-> I googled and saw that there was some fixes related to this (maybe it
-> was you), so that's why we hoped that 2.6.24 will fix this. Actually the
-> above error messages were gone, but...
-
-Yeap, those are gone.
-
->> Till now, none of this kind of problem has been tracked down to MB or
->> the controller while 90% of hardware problems turned out to be power
->> related.
-> I'll put a brand new, probably different PSU in the case and put the MB
-> and the 4 disks of the problematic controller on it, and put the 2 system
-> and other 4 disks to this one (or even another one).
-
-Yeap, please keep me posted.
-
-> Meanwhile I'd welcome if you have any suggestion why controller reset
-> causing a "fatal error"...
-> BTW, the drives were accessible after the array broke (when I got there).
-
-What do you mean by 'drives were accessible'?  /dev/sdX nodes were
-accessible?
-
--- 
-tejun
+Cheers
