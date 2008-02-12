@@ -1,184 +1,178 @@
-From: Elias Oltmanns <eo@nebensachen.de>
-Subject: Re: Current qc_defer implementation may lead to infinite recursion
-Date: Tue, 12 Feb 2008 09:57:58 +0100
-Message-ID: <877iha3621.fsf@denkblock.local>
-References: <87ir0w4rzo.fsf@denkblock.local> <47AFD7C1.7070204@gmail.com>
-	<871w7k9b8y.fsf@denkblock.local> <47B00AA1.3010104@gmail.com>
-	<87r6fj2lsx.fsf@denkblock.local> <47B0F2E0.9020204@gmail.com>
+From: Kamalesh Babulal <kamalesh@linux.vnet.ibm.com>
+Subject: Re: 2.6.26-git0: IDE oops during boot
+Date: Tue, 12 Feb 2008 14:34:19 +0530
+Message-ID: <47B16113.1060807@linux.vnet.ibm.com>
+References: <20080206105334.GA3664@elf.ucw.cz> <29495f1d0802101332p6b39b331ye2f6fb488b63e228@mail.gmail.com> <47AFFF30.6070808@linux.vnet.ibm.com> <200802112035.39462.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary="=-=-="
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nebensachen.de ([195.34.83.29]:37608 "EHLO mail.nebensachen.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758668AbYBLI6S (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 12 Feb 2008 03:58:18 -0500
+Received: from e28smtp05.in.ibm.com ([59.145.155.5]:43735 "EHLO
+	e28esmtp05.in.ibm.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1759193AbYBLJE0 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 12 Feb 2008 04:04:26 -0500
+In-Reply-To: <200802112035.39462.bzolnier@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: linux-ide@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: Nish Aravamudan <nish.aravamudan@gmail.com>, Pavel Machek <pavel@ucw.cz>, kernel list <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, ananth@in.ibm.com, Andi Kleen <andi@firstfloor.org>
 
---=-=-=
+Bartlomiej Zolnierkiewicz wrote:
+> Hi,
+> 
+> On Monday 11 February 2008, Kamalesh Babulal wrote:
+>> Nish Aravamudan wrote:
+>>> On 2/7/08, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com> wrote:
+>>>> On Thursday 07 February 2008, Kamalesh Babulal wrote:
+>>>>> Bartlomiej Zolnierkiewicz wrote:
+>>>>>> Hi,
+>>>>>>
+>>>>>> On Wednesday 06 February 2008, Pavel Machek wrote:
+>>>>>>> On Wed 2008-02-06 11:53:34, Pavel Machek wrote:
+>>>>>>>> Hi!
+>>>>>>>>
+>>>>>>>> Trying to boot 2.6.25-git0 (few days old), I get
+>>>>>>>>
+>>>>>>>> BUG: unable to handle kernel paging request at ffff..ffb0
+>>>>>>>> IP at init_irq+0x42e
+>>>>>> init_irq? hmm...
+>>>>>>
+>>>>>>>> Call trace:
+>>>>>>>> ide_device_add_all
+>>>>>> this comes from ide-generic
+>>>>>> (Generic IDE host driver)
+>>>>>>
+>>>>>>>> ide_generic_init
+>>>>>>>> kernel_init
+>>>>>>>> child_rip
+>>>>>>>> vgacon_cursor
+>>>>>>>> kernel_init
+>>>>>>>> child_rip
+>>>>>>>>
+>>>>>>>> Excerpt from config:
+>>>>>>>>
+>>>>>>>> CONFIG_IDE=y
+>>>>>>>> CONFIG_BLK_DEV_IDE=y
+>>>>>>> Disabling CONFIG_IDE made my machine boot, as it was using libata
+>>>>>>> anyway.
+>>>>>> Kamalesh/Pavel:
+>>>>>>
+>>>>>> Could you try latest git and see if the OOPS is still there?
+>>>>>>
+>>>>>> [ Yeah, I'm unable to reproduce it. :( ]
+>>>>>>
+>>>>>> Thanks,
+>>>>>> Bart
+>>>>> Hi Bart,
+>>>>>
+>>>>> The panic is reproducible with the 2.6.24-git16 kernel, the call trace is
+>>>>> similar to the previous one
+>>>> Thanks, I again reviewed ide-probe.c changes but nothing seems wrong...
+>>>>
+>>>> Could you please bisect it down to the guilty commit?
+>>> Kamalesh, were you able to bisect this down? I just got hit by the
+>>> same panic on a 4-way x86_64, with 2.6.24-git22.
+>>>
+>>> Thanks,
+>>> Nish
+>> Hi Nish,
+>>
+>> I tried bisecting and the guilty patch seems to be 
+>>
+>> 36501650ec45b1db308c3b51886044863be2d762 is first bad commit
+>> commit 36501650ec45b1db308c3b51886044863be2d762
+>> Author: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+>> Date:   Fri Feb 1 23:09:31 2008 +0100
+>>
+>>     ide: keep pointer to struct device instead of struct pci_dev in ide_hwif_t
+>>
+>>
+>> the gdb output, also points to the changes made by the guilty patch
+>>
+>> (gdb) p ide_device_add_all
+>> $1 = {int (u8 *, const struct ide_port_info *)} 0xffffffff804176ac <ide_device_add_all>
+>> (gdb) p/x 0xffffffff804176ac+0xb60
+>> $2 = 0xffffffff8041820c
+>> (gdb) l *0xffffffff8041820c
+>> 0xffffffff8041820c is in ide_device_add_all (drivers/ide/ide-probe.c:1249).
+>> 1244                    goto out;
+>> 1245            }
+>> 1246
+>> 1247            sg_init_table(hwif->sg_table, hwif->sg_max_nents);
+>> 1248
+>> 1249            if (init_irq(hwif) == 0)
+>> 1250                    goto done;
+>> 1251
+>> 1252            old_irq = hwif->irq;
+>> 1253            /*
+>> (gdb) 
+>>
+>>
+>> (gdb) p init_irq
+>> $1 = {int (ide_hwif_t *)} 0xffffffff8041721f <init_irq>
+>> (gdb) p/x 0xffffffff8041721f+0x1a4
+>> $2 = 0xffffffff804173c3
+>> (gdb) l *0xffffffff804173c3
+>> 0xffffffff804173c3 is in init_irq (include/asm/pci.h:101).
+>> 96      /* Returns the node based on pci bus */
+>> 97      static inline int __pcibus_to_node(struct pci_bus *bus)
+>> 98      {
+>> 99              struct pci_sysdata *sd = bus->sysdata;
+>> 100
+>> 101             return sd->node;
+>> 102     }
+>> 103
+>> 104     static inline cpumask_t __pcibus_to_cpumask(struct pci_bus *bus)
+>> 105     {
+>> (gdb) 
+> 
+> Thanks for the detailed analysis and sorry for the bug.
+> 
+> I think that this may has been just fixed by Andi's recent hwif_to_node()
+> fix (patch below, it is in Linus' tree already), could please verify this?
+> 
+> commit 1f07e988290fc45932f5028c9e2a862c37a57336
+> Author: Andi Kleen <andi@firstfloor.org>
+> Date:   Mon Feb 11 01:35:20 2008 +0100
+> 
+>     Prevent IDE boot ops on NUMA system
+>     
+>     Without this patch a Opteron test system here oopses at boot with
+>     current git.
+>     
+>     Calling to_pci_dev() on a NULL pointer gives a negative value so the
+>     following NULL pointer check never triggers and then an illegal address
+>     is referenced.  Check the unadjusted original device pointer for NULL
+>     instead.
+>     
+>     Signed-off-by: Andi Kleen <ak@suse.de>
+>     Signed-off-by: Linus Torvalds <torvalds@linux-foundation.org>
+> 
+> diff --git a/include/linux/ide.h b/include/linux/ide.h
+> index 23fad89..a3b69c1 100644
+> --- a/include/linux/ide.h
+> +++ b/include/linux/ide.h
+> @@ -1295,7 +1295,7 @@ static inline void ide_dump_identify(u8 *id)
+>  static inline int hwif_to_node(ide_hwif_t *hwif)
+>  {
+>  	struct pci_dev *dev = to_pci_dev(hwif->dev);
+> -	return dev ? pcibus_to_node(dev->bus) : -1;
+> +	return hwif->dev ? pcibus_to_node(dev->bus) : -1;
+>  }
+> 
+>  static inline ide_drive_t *ide_get_paired_drive(ide_drive_t *drive)
+Hi Bart,
+Thanks !! the patch solves the kernel panic but when after applying the patch,kernel is not
+able to mount the filesystem and panics, am i not sure what is likely causing the panic.
 
-Tejun Heo <htejun@gmail.com> wrote:
-> Elias Oltmanns wrote:
->> +static int piix_qc_defer(struct ata_queued_cmd *qc)
->> +{
->> +	static struct ata_port *ap = NULL;
->> +	struct ata_queued_cmd qcmd[ATA_MAX_QUEUE];
->
-> missing static?
-
-Oh well, I must have been too tired already yesterday. There are a few
-more things I got wrong last time. Please see the new patch at the end
-of this email.
-
-This time I applied the patch to 2.6.24.1 and performed a
-
-# cat large-file > /dev/null &
-# tail -f /var/log/kern.log
-
-and aborted once the output of dump_stack() had occurred. This proves
-that piix_qc_defer() has declined the same command 100 times in
-succession. However, this will only happen if the status of all the
-commands enqueued for one port hasn't changed in the meantime. This
-suggests to me that the threads scheduled for command execution and
-completion aren't served for some reason. Any ideas?
-
-The foot print of piix_qc_defer() in my log files looks like this, by
-the way:
-
-Feb 12 08:53:42 denkblock kernel: piix_qc_defer(): saved current state
-Feb 12 08:53:42 denkblock kernel: Pid: 31, comm: kblockd/0 Not tainted 2.6.24.1-dbg-1 #1
-Feb 12 08:53:42 denkblock kernel:  [<e0042116>] piix_qc_defer+0xac/0xeb [ata_piix]
-Feb 12 08:53:42 denkblock kernel:  [<e008c4e4>] ata_scsi_translate+0xd6/0x10a [libata]
-Feb 12 08:53:42 denkblock kernel:  [<e008af20>] ata_build_rw_tf+0x175/0x242 [libata]
-Feb 12 08:53:42 denkblock kernel:  [<e006734e>] scsi_done+0x0/0x16 [scsi_mod]
-Feb 12 08:53:42 denkblock kernel:  [<e008eb8f>] ata_scsi_queuecmd+0x17f/0x184 [libata]
-Feb 12 08:53:42 denkblock kernel:  [<e008c20a>] ata_scsi_rw_xlat+0x0/0x1de [libata]
-Feb 12 08:53:42 denkblock kernel:  [<e0067aa8>] scsi_dispatch_cmd+0x197/0x20b [scsi_mod]
-Feb 12 08:53:42 denkblock kernel:  [<e006cb33>] scsi_request_fn+0x256/0x2d7 [scsi_mod]
-Feb 12 08:53:42 denkblock kernel:  [<e0042136>] piix_qc_defer+0xcc/0xeb [ata_piix]
-Feb 12 08:53:42 denkblock kernel:  [<c01961d3>] blk_run_queue+0x2a/0x4b
-Feb 12 08:53:42 denkblock kernel:  [<e006bea2>] scsi_queue_insert+0x84/0x8e [scsi_mod]
-Feb 12 08:53:42 denkblock kernel:  [<e006a70d>] scsi_delete_timer+0xf/0x50 [scsi_mod]
-Feb 12 08:53:42 denkblock kernel:  [<e0067adc>] scsi_dispatch_cmd+0x1cb/0x20b [scsi_mod]
-Feb 12 08:53:42 denkblock kernel:  [<e006cb33>] scsi_request_fn+0x256/0x2d7 [scsi_mod]
-Feb 12 08:53:42 denkblock kernel:  [<c0195289>] blk_remove_plug+0x4e/0x5a
-Feb 12 08:53:42 denkblock kernel:  [<c01934c2>] blk_unplug_work+0x0/0xc
-Feb 12 08:53:42 denkblock kernel:  [<c01952b2>] __generic_unplug_device+0x1d/0x1f
-Feb 12 08:53:42 denkblock kernel:  [<c0195c07>] generic_unplug_device+0x6/0x8
-Feb 12 08:53:42 denkblock kernel:  [<c01934cd>] blk_unplug_work+0xb/0xc
-Feb 12 08:53:42 denkblock kernel:  [<c0122943>] run_workqueue+0x6b/0xdf
-Feb 12 08:53:42 denkblock kernel:  [<c024dcd2>] schedule+0x1f3/0x20d
-Feb 12 08:53:42 denkblock kernel:  [<c0122f37>] worker_thread+0x0/0xbd
-Feb 12 08:53:42 denkblock kernel:  [<c0122fe9>] worker_thread+0xb2/0xbd
-Feb 12 08:53:42 denkblock kernel:  [<c0125429>] autoremove_wake_function+0x0/0x35
-Feb 12 08:53:42 denkblock kernel:  [<c01252d2>] kthread+0x36/0x5c
-Feb 12 08:53:42 denkblock kernel:  [<c012529c>] kthread+0x0/0x5c
-Feb 12 08:53:42 denkblock kernel:  [<c0104733>] kernel_thread_helper+0x7/0x10
-Feb 12 08:53:42 denkblock kernel:  =======================
-
-Regards,
-
-Elias
+Creating root device.
+Mounting root filesystem.
+mount: could not  find filesystem
+Kernel panic - not syncing: Attempted to kill init!
 
 
---=-=-=
-Content-Type: text/x-patch
-Content-Disposition: inline; filename=test-qc_defer.patch
-
----
-
- drivers/ata/ata_piix.c |   42 ++++++++++++++++++++++++++++++++++++++++++
- 1 files changed, 42 insertions(+), 0 deletions(-)
-
-diff --git a/drivers/ata/ata_piix.c b/drivers/ata/ata_piix.c
-index b406b39..c987462 100644
---- a/drivers/ata/ata_piix.c
-+++ b/drivers/ata/ata_piix.c
-@@ -167,6 +167,7 @@ static void piix_set_dmamode(struct ata_
- static void ich_set_dmamode(struct ata_port *ap, struct ata_device *adev);
- static int ich_pata_cable_detect(struct ata_port *ap);
- static u8 piix_vmw_bmdma_status(struct ata_port *ap);
-+static int piix_qc_defer(struct ata_queued_cmd *qc);
- #ifdef CONFIG_PM
- static int piix_pci_device_suspend(struct pci_dev *pdev, pm_message_t mesg);
- static int piix_pci_device_resume(struct pci_dev *pdev);
-@@ -311,6 +312,7 @@ static const struct ata_port_operations 
- 	.bmdma_start		= ata_bmdma_start,
- 	.bmdma_stop		= ata_bmdma_stop,
- 	.bmdma_status		= ata_bmdma_status,
-+	.qc_defer		= piix_qc_defer,
- 	.qc_prep		= ata_qc_prep,
- 	.qc_issue		= ata_qc_issue_prot,
- 	.data_xfer		= ata_data_xfer,
-@@ -343,6 +345,7 @@ static const struct ata_port_operations 
- 	.bmdma_start		= ata_bmdma_start,
- 	.bmdma_stop		= ata_bmdma_stop,
- 	.bmdma_status		= ata_bmdma_status,
-+	.qc_defer		= piix_qc_defer,
- 	.qc_prep		= ata_qc_prep,
- 	.qc_issue		= ata_qc_issue_prot,
- 	.data_xfer		= ata_data_xfer,
-@@ -371,6 +374,7 @@ static const struct ata_port_operations 
- 	.bmdma_start		= ata_bmdma_start,
- 	.bmdma_stop		= ata_bmdma_stop,
- 	.bmdma_status		= ata_bmdma_status,
-+	.qc_defer		= piix_qc_defer,
- 	.qc_prep		= ata_qc_prep,
- 	.qc_issue		= ata_qc_issue_prot,
- 	.data_xfer		= ata_data_xfer,
-@@ -402,6 +406,7 @@ static const struct ata_port_operations 
- 	.bmdma_start		= ata_bmdma_start,
- 	.bmdma_stop		= ata_bmdma_stop,
- 	.bmdma_status		= piix_vmw_bmdma_status,
-+	.qc_defer		= piix_qc_defer,
- 	.qc_prep		= ata_qc_prep,
- 	.qc_issue		= ata_qc_issue_prot,
- 	.data_xfer		= ata_data_xfer,
-@@ -419,6 +424,43 @@ static const struct ata_port_operations 
- 	.port_start		= ata_port_start,
- };
- 
-+static int piix_qc_defer(struct ata_queued_cmd *qc)
-+{
-+	static struct ata_port *ap = NULL;
-+	static struct ata_queued_cmd qcmd[ATA_MAX_QUEUE];
-+	static int count = 0;
-+#define PIIX_QC_DEFER_THRESHOLD 5000
-+
-+	if (!ap)
-+		ap = qc->ap;
-+	else if (ap != qc->ap)
-+		return 0;
-+
-+	if (count > PIIX_QC_DEFER_THRESHOLD + 100)
-+		return 0;
-+
-+	count++;
-+	if (count < PIIX_QC_DEFER_THRESHOLD)
-+		return 0;
-+	else if (count == PIIX_QC_DEFER_THRESHOLD) {
-+		int i;
-+		if (ap->qc_allocated) {
-+			for (i = 0; i < ATA_MAX_QUEUE; i++)
-+				qcmd[i] = ap->qcmd[i];
-+			printk(KERN_DEBUG "piix_qc_defer(): saved current state\n");
-+			return ATA_DEFER_LINK;
-+		} else
-+			count--;
-+	} else if (count == PIIX_QC_DEFER_THRESHOLD + 100) {
-+		dump_stack();
-+		count++;
-+	} else if (!memcmp(qcmd, ap->qcmd, sizeof(qcmd[0]) * ATA_MAX_QUEUE))
-+		return ATA_DEFER_LINK;
-+	else
-+		count = 0;
-+	return 0;
-+}
-+
- static const struct piix_map_db ich5_map_db = {
- 	.mask = 0x7,
- 	.port_enable = 0x3,
-
---=-=-=--
+-- 
+Thanks & Regards,
+Kamalesh Babulal,
+Linux Technology Center,
+IBM, ISTL.
