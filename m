@@ -1,147 +1,56 @@
-From: Borislav Petkov <petkovbb@googlemail.com>
-Subject: [PATCH 2/2] ide-scsi: do non-atomic pc->flags testing
-Date: Wed, 13 Feb 2008 18:25:44 +0100
-Message-ID: <1202923544-19551-2-git-send-email-petkovbb@gmail.com>
-References: <1202923544-19551-1-git-send-email-petkovbb@gmail.com>
+From: Greg KH <greg@kroah.com>
+Subject: Re: pci_get_device_reverse(), why does Calgary need this?
+Date: Wed, 13 Feb 2008 09:28:24 -0800
+Message-ID: <20080213172824.GB10733@kroah.com>
+References: <20080213001506.GA13933@kroah.com> <20080213021737.72b9815d@core> <20080213044536.GC10101@kroah.com> <200802131334.12351.bzolnier@gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.182]:59734 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1761304AbYBMR0N (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 13 Feb 2008 12:26:13 -0500
-Received: by wa-out-1112.google.com with SMTP id v27so128390wah.23
-        for <linux-ide@vger.kernel.org>; Wed, 13 Feb 2008 09:26:11 -0800 (PST)
-In-Reply-To: <1202923544-19551-1-git-send-email-petkovbb@gmail.com>
+Received: from pentafluge.infradead.org ([213.146.154.40]:45882 "EHLO
+	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933331AbYBMRey (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 13 Feb 2008 12:34:54 -0500
+Content-Disposition: inline
+In-Reply-To: <200802131334.12351.bzolnier@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: bzolnier@gmail.com
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Borislav Petkov <petkovbb@gmail.com>
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, muli@il.ibm.com, jdmason@kudzu.us, linux-ide@vger.kernel.org, linux-pci@atrey.karlin.mff.cuni.cz, linux-kernel@vger.kernel.org, discuss@x86-64.org
 
-...also, convert ide-scsi to using the generic pc->flags defines.
+On Wed, Feb 13, 2008 at 01:34:12PM +0100, Bartlomiej Zolnierkiewicz wrote:
+> On Wednesday 13 February 2008, Greg KH wrote:
+> > On Wed, Feb 13, 2008 at 02:17:37AM +0000, Alan Cox wrote:
+> > > > Why does the calgary driver need this?  Can we just use pci_get_device()
+> > > > instead?  Why do you need to walk the device list backwards?  Do you get
+> > > > false positives going forward?
+> > > 
+> > > It doesn't look to be performance critical so the driver can
+> > > pci_get_device until the end and use the final hit anyway.
+> > 
+> > That would make more sense.
+> > 
+> > > IDE reverse is more problematic but nobody seems to use it.
+> > 
+> > I've seen two posters say they use it.  I'm wondering what it is really
+> > solving if they use it, and why if it's really needed, scsi never had to
+> > implement such a hack...
+> 
+> It is no longer solving anything, just adds more pain. ;)
+> 
+> [ The option comes from 2.2.x (so long before LABEL=/ and /dev/disk/by-id/
+>   became popular).  Some "off-board" controllers integrated on motherboards
+>   used to appear before "on-board" IDE on PCI bus so this option was meant
+>   to preserve the legacy ordering. ]
+> 
+> Since it is valid only when "Probe IDE PCI devices in the PCI bus order
+> (DEPRECATED)" config option is used it is already on its way out (though
+> marking it as obsoleted would make it more explicit).
+> 
+> I think that removing "ide=reverse" in 2.6.26 would be OK...
 
-Signed-off-by: Borislav Petkov <petkovbb@gmail.com>
----
- drivers/scsi/ide-scsi.c |   37 ++++++++++++++++---------------------
- 1 files changed, 16 insertions(+), 21 deletions(-)
+Great, thanks for your blessing.  I'll make up a patch and send it to
+you for approval.
 
-diff --git a/drivers/scsi/ide-scsi.c b/drivers/scsi/ide-scsi.c
-index 5ec421c..93c3fc2 100644
---- a/drivers/scsi/ide-scsi.c
-+++ b/drivers/scsi/ide-scsi.c
-@@ -61,14 +61,6 @@
- #define IDESCSI_DEBUG_LOG		0
- 
- /*
-- *	Packet command status bits.
-- */
--#define PC_DMA_IN_PROGRESS		0	/* 1 while DMA in progress */
--#define PC_WRITING			1	/* Data direction */
--#define PC_TIMEDOUT			3	/* command timed out */
--#define PC_DMA_OK			4	/* Use DMA */
--
--/*
-  *	SCSI command transformation layer
-  */
- #define IDESCSI_SG_TRANSFORM		1	/* /dev/sg transformation */
-@@ -319,8 +311,10 @@ static int idescsi_end_request (ide_drive_t *drive, int uptodate, int nrsecs)
- 		pc = opc;
- 		rq = pc->rq;
- 		pc->scsi_cmd->result = (CHECK_CONDITION << 1) |
--					((test_bit(PC_TIMEDOUT, &pc->flags)?DID_TIME_OUT:DID_OK) << 16);
--	} else if (test_bit(PC_TIMEDOUT, &pc->flags)) {
-+				(((pc->flags & PC_FLAG_TIMEDOUT) ?
-+				  DID_TIME_OUT :
-+				  DID_OK) << 16);
-+	} else if (pc->flags & PC_FLAG_TIMEDOUT) {
- 		if (log)
- 			printk (KERN_WARNING "ide-scsi: %s: timed out for %lu\n",
- 					drive->name, pc->scsi_cmd->serial_number);
-@@ -362,7 +356,7 @@ static int idescsi_expiry(ide_drive_t *drive)
- #if IDESCSI_DEBUG_LOG
- 	printk(KERN_WARNING "idescsi_expiry called for %lu at %lu\n", pc->scsi_cmd->serial_number, jiffies);
- #endif
--	set_bit(PC_TIMEDOUT, &pc->flags);
-+	pc->flags |= PC_FLAG_TIMEDOUT;
- 
- 	return 0;					/* we do not want the ide subsystem to retry */
- }
-@@ -384,7 +378,7 @@ static ide_startstop_t idescsi_pc_intr (ide_drive_t *drive)
- 	printk (KERN_INFO "ide-scsi: Reached idescsi_pc_intr interrupt handler\n");
- #endif /* IDESCSI_DEBUG_LOG */
- 
--	if (test_bit(PC_TIMEDOUT, &pc->flags)){
-+	if (pc->flags & PC_FLAG_TIMEDOUT) {
- #if IDESCSI_DEBUG_LOG
- 		printk(KERN_WARNING "idescsi_pc_intr: got timed out packet  %lu at %lu\n",
- 				pc->scsi_cmd->serial_number, jiffies);
-@@ -393,7 +387,8 @@ static ide_startstop_t idescsi_pc_intr (ide_drive_t *drive)
- 		idescsi_end_request (drive, 1, 0);
- 		return ide_stopped;
- 	}
--	if (test_and_clear_bit (PC_DMA_IN_PROGRESS, &pc->flags)) {
-+	if (pc->flags & PC_FLAG_DMA_IN_PROGRESS) {
-+		pc->flags &= ~PC_FLAG_DMA_IN_PROGRESS;
- #if IDESCSI_DEBUG_LOG
- 		printk ("ide-scsi: %s: DMA complete\n", drive->name);
- #endif /* IDESCSI_DEBUG_LOG */
-@@ -432,7 +427,7 @@ static ide_startstop_t idescsi_pc_intr (ide_drive_t *drive)
- 					"- discarding data\n");
- 				temp = pc->buf_size - pc->xferred;
- 				if (temp) {
--					clear_bit(PC_WRITING, &pc->flags);
-+					pc->flags &= ~PC_FLAG_WRITING;
- 					if (pc->sg)
- 						idescsi_input_buffers(drive, pc,
- 									temp);
-@@ -454,14 +449,14 @@ static ide_startstop_t idescsi_pc_intr (ide_drive_t *drive)
- 		}
- 	}
- 	if (ireason & IO) {
--		clear_bit(PC_WRITING, &pc->flags);
-+		pc->flags &= ~PC_FLAG_WRITING;
- 		if (pc->sg)
- 			idescsi_input_buffers(drive, pc, bcount);
- 		else
- 			hwif->atapi_input_bytes(drive, pc->cur_pos,
- 						bcount);
- 	} else {
--		set_bit(PC_WRITING, &pc->flags);
-+		pc->flags |= PC_FLAG_WRITING;
- 		if (pc->sg)
- 			idescsi_output_buffers(drive, pc, bcount);
- 		else
-@@ -501,8 +496,8 @@ static ide_startstop_t idescsi_transfer_pc(ide_drive_t *drive)
- 	ide_set_handler(drive, &idescsi_pc_intr, get_timeout(pc), idescsi_expiry);
- 	/* Send the actual packet */
- 	drive->hwif->atapi_output_bytes(drive, scsi->pc->c, 12);
--	if (test_bit (PC_DMA_OK, &pc->flags)) {
--		set_bit (PC_DMA_IN_PROGRESS, &pc->flags);
-+	if (pc->flags & PC_FLAG_DMA_OK) {
-+		pc->flags |= PC_FLAG_DMA_IN_PROGRESS;
- 		hwif->dma_start(drive);
- 	}
- 	return ide_started;
-@@ -512,10 +507,10 @@ static inline int idescsi_set_direction(struct ide_atapi_pc *pc)
- {
- 	switch (pc->c[0]) {
- 		case READ_6: case READ_10: case READ_12:
--			clear_bit(PC_WRITING, &pc->flags);
-+			pc->flags &= ~PC_FLAG_WRITING;
- 			return 0;
- 		case WRITE_6: case WRITE_10: case WRITE_12:
--			set_bit(PC_WRITING, &pc->flags);
-+			pc->flags |= PC_FLAG_WRITING;
- 			return 0;
- 		default:
- 			return 1;
-@@ -572,7 +567,7 @@ static ide_startstop_t idescsi_issue_pc(ide_drive_t *drive,
- 	ide_pktcmd_tf_load(drive, IDE_TFLAG_NO_SELECT_MASK, bcount, dma);
- 
- 	if (dma)
--		set_bit(PC_DMA_OK, &pc->flags);
-+		pc->flags |= PC_FLAG_DMA_OK;
- 
- 	if (test_bit(IDESCSI_DRQ_INTERRUPT, &scsi->flags)) {
- 		ide_execute_command(drive, WIN_PACKETCMD, &idescsi_transfer_pc,
--- 
-1.5.3.7
+thanks,
 
+greg k-h
