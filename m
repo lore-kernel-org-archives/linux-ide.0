@@ -1,54 +1,140 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH] enclosure: add support for enclosure services
-Date: Wed, 13 Feb 2008 12:17:09 -0600
-Message-ID: <1202926629.3109.63.camel@localhost.localdomain>
-References: <1202172065.3096.154.camel@localhost.localdomain>
-	 <922945.25870.qm@web31811.mail.mud.yahoo.com>
-	 <20080212102244.32869382@appleyard>
-	 <1202841935.3137.94.camel@localhost.localdomain>
-	 <20080212110752.21840627@appleyard>
-	 <1202844495.3137.120.camel@localhost.localdomain>
-	 <20080213094502.4112d5e5@appleyard>
+From: Greg KH <greg@kroah.com>
+Subject: Re: pci_get_device_reverse(), why does Calgary need this?
+Date: Wed, 13 Feb 2008 10:16:55 -0800
+Message-ID: <20080213181655.GB8960@kroah.com>
+References: <20080213001506.GA13933@kroah.com> <20080213021737.72b9815d@core> <20080213044536.GC10101@kroah.com> <200802131334.12351.bzolnier@gmail.com> <20080213172824.GB10733@kroah.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S932521AbYBMSRe@vger.kernel.org>
-In-Reply-To: <20080213094502.4112d5e5@appleyard>
-Sender: linux-kernel-owner@vger.kernel.org
-To: kristen.c.accardi@intel.com
-Cc: ltuikov@yahoo.com, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, linux-ide <linux-ide@vger.kernel.org>, jeff@garzik.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from pentafluge.infradead.org ([213.146.154.40]:45907 "EHLO
+	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756591AbYBMSTS (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 13 Feb 2008 13:19:18 -0500
+Content-Disposition: inline
+In-Reply-To: <20080213172824.GB10733@kroah.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, muli@il.ibm.com, jdmason@kudzu.us, linux-ide@vger.kernel.org, linux-pci@atrey.karlin.mff.cuni.cz, linux-kernel@vger.kernel.org, discuss@x86-64.org
 
-On Wed, 2008-02-13 at 09:45 -0800, Kristen Carlson Accardi wrote:
-> I don't think I'm arguing whether or not your solution may work, what I
-> am arguing is really a more philosophical point.  Not "can we do it
-> this way", but "should we do it way".  I am of the opinion that
-> management belongs in userspace.  I also am of the opinion that if you
-> can successfully accomplish something in user space, you should.  I
-> also believe that even if you provide this basic interface, all system
-> vendors are going to provide libraries on top of that to customize it,
-> so you've not added much value to just a simple message passing
-> interface.
+On Wed, Feb 13, 2008 at 09:28:24AM -0800, Greg KH wrote:
+> On Wed, Feb 13, 2008 at 01:34:12PM +0100, Bartlomiej Zolnierkiewicz wrote:
+> > On Wednesday 13 February 2008, Greg KH wrote:
+> > > On Wed, Feb 13, 2008 at 02:17:37AM +0000, Alan Cox wrote:
+> > > > > Why does the calgary driver need this?  Can we just use pci_get_device()
+> > > > > instead?  Why do you need to walk the device list backwards?  Do you get
+> > > > > false positives going forward?
+> > > > 
+> > > > It doesn't look to be performance critical so the driver can
+> > > > pci_get_device until the end and use the final hit anyway.
+> > > 
+> > > That would make more sense.
+> > > 
+> > > > IDE reverse is more problematic but nobody seems to use it.
+> > > 
+> > > I've seen two posters say they use it.  I'm wondering what it is really
+> > > solving if they use it, and why if it's really needed, scsi never had to
+> > > implement such a hack...
+> > 
+> > It is no longer solving anything, just adds more pain. ;)
+> > 
+> > [ The option comes from 2.2.x (so long before LABEL=/ and /dev/disk/by-id/
+> >   became popular).  Some "off-board" controllers integrated on motherboards
+> >   used to appear before "on-board" IDE on PCI bus so this option was meant
+> >   to preserve the legacy ordering. ]
+> > 
+> > Since it is valid only when "Probe IDE PCI devices in the PCI bus order
+> > (DEPRECATED)" config option is used it is already on its way out (though
+> > marking it as obsoleted would make it more explicit).
+> > 
+> > I think that removing "ide=reverse" in 2.6.26 would be OK...
+> 
+> Great, thanks for your blessing.  I'll make up a patch and send it to
+> you for approval.
 
-I'm not necessarily arguing against that.  However, what you're
-providing is slightly more than just a userspace tap into the enclosure.
-You're adding a file to display and control the enclosure state
-(sw_activity).  This constitutes an ad-hoc sysfs interface.  I'm not
-telling you not to do it, but I am pleading that if we have to have all
-these sysfs interfaces, lets at least do it in a uniform way.
+How does the patch below look?  I didn't want to remove the whole config
+option, as there is more to the logic than just the "reverse order"
+stuff there.
 
-Enclosures are such nasty beasts, that even the job of getting a tap
-into them is problematic, so if we have a different tap infrastructure
-for every different enclosure type and connection it's still going to be
-pretty unmanageable to a userspace interface.
+If you don't mind, can I take this through the PCI tree so as to allow
+the removal of this pci function afterwards?
 
-> So, I'm happy to defer to Jeff's judgement call here - I just want to
-> do what's right for our customers and get an enclosure management
-> interface for SATA exposed, preferrably in time for the 2.6.26 merge
-> window.  If he prefers your design, I'll disagree, but commit to his
-> decision and try to get this to work for SATA. If he'd rather see
-> something along the lines of what I proposed, then since it is 100% self
-> contained in the SATA subsystem, it shouldn't impact whatever you
-> want to do in the SCSI subsystem.
+thanks,
 
-James
+greg k-h
+
+--------
+From: Greg Kroah-Hartman <gregkh@suse.de>
+Subject: IDE: remove ide=reverse IDE core
+
+This option is obsolete and can be removed safely.
+
+It allows us to remove the pci_get_device_reverse() function from the
+PCI core.
+
+
+Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Signed-off-by: Greg Kroah-Hartman <gregkh@suse.de>
+
+---
+ drivers/ide/ide-scan-pci.c |    9 ++-------
+ drivers/ide/ide.c          |   12 ------------
+ include/linux/ide.h        |    1 -
+ 3 files changed, 2 insertions(+), 20 deletions(-)
+
+--- a/drivers/ide/ide-scan-pci.c
++++ b/drivers/ide/ide-scan-pci.c
+@@ -88,13 +88,8 @@ static int __init ide_scan_pcibus(void)
+ 	struct list_head *l, *n;
+ 
+ 	pre_init = 0;
+-	if (!ide_scan_direction)
+-		while ((dev = pci_get_device(PCI_ANY_ID, PCI_ANY_ID, dev)))
+-			ide_scan_pcidev(dev);
+-	else
+-		while ((dev = pci_get_device_reverse(PCI_ANY_ID, PCI_ANY_ID,
+-						     dev)))
+-			ide_scan_pcidev(dev);
++	while ((dev = pci_get_device(PCI_ANY_ID, PCI_ANY_ID, dev)))
++		ide_scan_pcidev(dev);
+ 
+ 	/*
+ 	 *	Hand the drivers over to the PCI layer now we
+--- a/drivers/ide/ide.c
++++ b/drivers/ide/ide.c
+@@ -92,10 +92,6 @@ static int system_bus_speed;	/* holds wh
+ DEFINE_MUTEX(ide_cfg_mtx);
+  __cacheline_aligned_in_smp DEFINE_SPINLOCK(ide_lock);
+ 
+-#ifdef CONFIG_IDEPCI_PCIBUS_ORDER
+-int ide_scan_direction; /* THIS was formerly 2.2.x pci=reverse */
+-#endif
+-
+ int noautodma = 0;
+ 
+ #ifdef CONFIG_BLK_DEV_IDEACPI
+@@ -1227,14 +1223,6 @@ static int __init ide_setup(char *s)
+ 		goto obsolete_option;
+ 	}
+ 
+-#ifdef CONFIG_IDEPCI_PCIBUS_ORDER
+-	if (!strcmp(s, "ide=reverse")) {
+-		ide_scan_direction = 1;
+-		printk(" : Enabled support for IDE inverse scan order.\n");
+-		return 1;
+-	}
+-#endif
+-
+ #ifdef CONFIG_BLK_DEV_IDEACPI
+ 	if (!strcmp(s, "ide=noacpi")) {
+ 		//printk(" : Disable IDE ACPI support.\n");
+--- a/include/linux/ide.h
++++ b/include/linux/ide.h
+@@ -988,7 +988,6 @@ extern void do_ide_request(struct reques
+ void ide_init_disk(struct gendisk *, ide_drive_t *);
+ 
+ #ifdef CONFIG_IDEPCI_PCIBUS_ORDER
+-extern int ide_scan_direction;
+ extern int __ide_pci_register_driver(struct pci_driver *driver, struct module *owner, const char *mod_name);
+ #define ide_pci_register_driver(d) __ide_pci_register_driver(d, THIS_MODULE, KBUILD_MODNAME)
+ #else
