@@ -1,53 +1,56 @@
-From: Ken Moffat <zarniwhoop@ntlworld.com>
-Subject: Re: "ide=reverse" do we still need this?
-Date: Wed, 13 Feb 2008 15:32:49 +0000
-Message-ID: <20080213153249.GA21749@deepthought>
-References: <20080213001506.GA13933@kroah.com> <20080213024329.GA6912@deepthought> <20080213044304.GA10101@kroah.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH] enclosure: add support for enclosure services
+Date: Wed, 13 Feb 2008 10:04:51 -0600
+Message-ID: <1202918691.3109.18.camel@localhost.localdomain>
+References: <875344.96222.qm@web31808.mail.mud.yahoo.com>
+	 <47B2F9C3.8070207@emulex.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mtaout01-winn.ispmail.ntl.com ([81.103.221.47]:16781 "EHLO
-	mtaout01-winn.ispmail.ntl.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1765620AbYBMPcx convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 13 Feb 2008 10:32:53 -0500
-Content-Disposition: inline
-In-Reply-To: <20080213044304.GA10101@kroah.com>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <47B2F9C3.8070207@emulex.com>
+Sender: linux-scsi-owner@vger.kernel.org
+To: James.Smart@Emulex.Com
+Cc: ltuikov@yahoo.com, Kristen Carlson Accardi <kristen.c.accardi@intel.com>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, linux-ide <linux-ide@vger.kernel.org>, jeff@garzik.org
 List-Id: linux-ide@vger.kernel.org
-To: Greg KH <greg@kroah.com>
-Cc: bzolnier@gmail.com, muli@il.ibm.com, jdmason@kudzu.us, linux-ide@vger.kernel.org, linux-pci@atrey.karlin.mff.cuni.cz, linux-kernel@vger.kernel.org, discuss@x86-64.org
 
-On Tue, Feb 12, 2008 at 08:43:04PM -0800, Greg KH wrote:
->=20
-> Can't you just boot with /dev/disk/by-id/ and an initramfs to not hav=
-e
-> to worry about such a thing in the future?
->=20
- Can comebody remind me what the initramfs is for in that situation,
-please ?  From the little I've noticed, I thought the /dev/disk/by-id
-part went into fstab ?  At the moment, I just build the things I
-think I need in to the kernel on that box, without modules.
+On Wed, 2008-02-13 at 09:08 -0500, James Smart wrote:
+> The keep-it-in-user-space arguments seem fairly compelling to me.
+> Especially as we've pushed whole i/o subsystems out to user space
+> (iscsi, stgt, talked about fcoe, a lot of dm control, etc).
 
- Anyway, I'll try to find time to read my notes to see if I can
-identify what happened/when, and to take the box down again so I
-can try to confirm exactly what the problem is, if it still exists.
-I certainly won't be taking it down until I've written my weekly
-backups to tape at the weekend, so maybe not before next week.
+And to me too.
 
-> Have you tried the PATA drivers instead of IDE to see if this solves =
-the
-> "moves around" issue?  If they work, then you would not need the comm=
-and
-> line option at all.
+> The functionality seems to align with Doug's sg/lsscsi utility chain
+> as well.  Granted, the new utility would have to be designed in such
+> as way that it can incorporate vendor "hardware handlers".  But, if
+> James has a somewhat common implementation already for a kernel
+> implementation, I'm sure that can be the starting point for lsscsi.
+> 
+> So, the main question I believe is being asked is:
+> - Do we need to represent this via the object/sysfs tree or can an
+>    outside utility be depended upon to show it ?
+> 
+> Note that I am not supporting:
+> "Vendors may choose to distribute their own applications".
+> For this to become truly useful, there needs to be a common tool/method
+> that presents common features in a common manner, regardless of whether
+> it is in kernel or not.
 
- My previous kernel was 2.18-series, I think at that time they were
-still under development.  This box handles the backups for my
-various desktop boxes, which is why I'm very conservative about
-changing it.  I guess the drivers are stable now, I'll maybe give
-that a go (depending on time).
+I don't disagree with that, but the fact is that there isn't such a
+tool.   It's also a fact that the enterprise is reasonably unhappy with
+the lack of an enclosure management infrastructure, since it's something
+they got on all the other unix systems.
 
-Ken
---=20
-das eine Mal als Trag=F6die, das andere Mal als Farce
+I think a minimal infrastructure in-kernel does just about everything
+the enterprise wants ... and since it's stateless, they can always use
+direct connect tools in addition.
+
+However, I'm happy to be proven wrong ... anyone on this thread is
+welcome to come up with a userland enclosure infrastructure.  Once it
+does everything the in-kernel one does (which is really about the
+minimal possible set), I'll be glad to erase the in-kernel one.
+
+James
+
+
