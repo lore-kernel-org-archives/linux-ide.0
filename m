@@ -1,179 +1,106 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [PATCH] ide-floppy: merge callbacks
-Date: Wed, 13 Feb 2008 23:04:23 +0100
-Message-ID: <200802132304.24126.bzolnier@gmail.com>
-References: <20080213205733.GC13446@gollum.tnic>
+Subject: Re: pci_get_device_reverse(), why does Calgary need this?
+Date: Wed, 13 Feb 2008 23:20:36 +0100
+Message-ID: <200802132320.37172.bzolnier@gmail.com>
+References: <20080213001506.GA13933@kroah.com> <20080213172824.GB10733@kroah.com> <20080213181655.GB8960@kroah.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
   charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.170]:17900 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934922AbYBMVu4 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 13 Feb 2008 16:50:56 -0500
-Received: by ug-out-1314.google.com with SMTP id z38so868498ugc.16
-        for <linux-ide@vger.kernel.org>; Wed, 13 Feb 2008 13:50:56 -0800 (PST)
-In-Reply-To: <20080213205733.GC13446@gollum.tnic>
+Received: from nf-out-0910.google.com ([64.233.182.189]:37189 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933935AbYBMWHG (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 13 Feb 2008 17:07:06 -0500
+Received: by nf-out-0910.google.com with SMTP id g13so109391nfb.21
+        for <linux-ide@vger.kernel.org>; Wed, 13 Feb 2008 14:07:04 -0800 (PST)
+In-Reply-To: <20080213181655.GB8960@kroah.com>
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: petkovbb@gmail.com
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: Greg KH <greg@kroah.com>
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, muli@il.ibm.com, jdmason@kudzu.us, linux-ide@vger.kernel.org, linux-pci@atrey.karlin.mff.cuni.cz, linux-kernel@vger.kernel.org, discuss@x86-64.org
 
-On Wednesday 13 February 2008, Borislav Petkov wrote:
-> commit d1f1f84f413ab00cb2fec48170d022fcd900e214
-> Author: Borislav Petkov <petkovbb@gmail.com>
-> Date:   Wed Feb 13 20:26:56 2008 +0100
+On Wednesday 13 February 2008, Greg KH wrote:
+> On Wed, Feb 13, 2008 at 09:28:24AM -0800, Greg KH wrote:
+> > On Wed, Feb 13, 2008 at 01:34:12PM +0100, Bartlomiej Zolnierkiewicz wrote:
+> > > On Wednesday 13 February 2008, Greg KH wrote:
+> > > > On Wed, Feb 13, 2008 at 02:17:37AM +0000, Alan Cox wrote:
+> > > > > > Why does the calgary driver need this?  Can we just use pci_get_device()
+> > > > > > instead?  Why do you need to walk the device list backwards?  Do you get
+> > > > > > false positives going forward?
+> > > > > 
+> > > > > It doesn't look to be performance critical so the driver can
+> > > > > pci_get_device until the end and use the final hit anyway.
+> > > > 
+> > > > That would make more sense.
+> > > > 
+> > > > > IDE reverse is more problematic but nobody seems to use it.
+> > > > 
+> > > > I've seen two posters say they use it.  I'm wondering what it is really
+> > > > solving if they use it, and why if it's really needed, scsi never had to
+> > > > implement such a hack...
+> > > 
+> > > It is no longer solving anything, just adds more pain. ;)
+> > > 
+> > > [ The option comes from 2.2.x (so long before LABEL=/ and /dev/disk/by-id/
+> > >   became popular).  Some "off-board" controllers integrated on motherboards
+> > >   used to appear before "on-board" IDE on PCI bus so this option was meant
+> > >   to preserve the legacy ordering. ]
+> > > 
+> > > Since it is valid only when "Probe IDE PCI devices in the PCI bus order
+> > > (DEPRECATED)" config option is used it is already on its way out (though
+> > > marking it as obsoleted would make it more explicit).
+> > > 
+> > > I think that removing "ide=reverse" in 2.6.26 would be OK...
+> > 
+> > Great, thanks for your blessing.  I'll make up a patch and send it to
+> > you for approval.
 > 
->     ide-floppy: merge callbacks
->     
->     The appropriate functionality of the callback is established through querying
->     the ATAPI packet command in pc->c[0].
->     
->     While at it, simplify if (floppy->failed_pc)-branch to be found in the original
->     idefloppy_request_sense_callback().
->     
->     Signed-off-by: Borislav Petkov <petkovbb@gmail.com>
-> 
-> diff --git a/drivers/ide/ide-floppy.c b/drivers/ide/ide-floppy.c
-> index 5f133df..1365310 100644
-> --- a/drivers/ide/ide-floppy.c
-> +++ b/drivers/ide/ide-floppy.c
-> @@ -313,50 +313,39 @@ static struct request *idefloppy_next_rq_storage(ide_drive_t *drive)
->  	return (&floppy->rq_stack[floppy->rq_stack_index++]);
->  }
->  
-> -static void idefloppy_request_sense_callback(ide_drive_t *drive)
-> +static void ide_floppy_callback(ide_drive_t *drive)
->  {
->  	idefloppy_floppy_t *floppy = drive->driver_data;
-> -	u8 *buf = floppy->pc->buf;
->  
->  	debug_log("Reached %s\n", __func__);
->  
-> -	if (!floppy->pc->error) {
-> -		floppy->sense_key = buf[2] & 0x0F;
-> -		floppy->asc = buf[12];
-> -		floppy->ascq = buf[13];
-> -		floppy->progress_indication = buf[15] & 0x80 ?
-> -			(u16)get_unaligned((u16 *)&buf[16]) : 0x10000;
-> +	if (floppy->pc->c[0] == GPCMD_REQUEST_SENSE) {
-> +		u8 *buf = floppy->pc->buf;
->  
-> -		if (floppy->failed_pc)
-> -			debug_log("pc = %x, sense key = %x, asc = %x,"
-> -					" ascq = %x\n",
-> -					floppy->failed_pc->c[0],
-> -					floppy->sense_key,
-> -					floppy->asc,
-> -					floppy->ascq);
-> -		else
-> -			debug_log("sense key = %x, asc = %x, ascq = %x\n",
-> -					floppy->sense_key,
-> -					floppy->asc,
-> -					floppy->ascq);
-> -
-> -
-> -		idefloppy_end_request(drive, 1, 0);
-> -	} else {
-> -		printk(KERN_ERR "Error in REQUEST SENSE itself - Aborting"
-> -				" request!\n");
-> -		idefloppy_end_request(drive, 0, 0);
-> -	}
-> -}
-> +		if (!floppy->pc->error) {
-> +			floppy->sense_key = buf[2] & 0x0F;
-> +			floppy->asc = buf[12];
-> +			floppy->ascq = buf[13];
-> +			floppy->progress_indication = buf[15] & 0x80 ?
-> +				(u16)get_unaligned((u16 *)&buf[16]) : 0x10000;
->  
-> -/* General packet command callback function. */
-> -static void idefloppy_pc_callback(ide_drive_t *drive)
-> -{
-> -	idefloppy_floppy_t *floppy = drive->driver_data;
-> +			if (floppy->failed_pc)
-> +				debug_log("pc = %x, ", floppy->failed_pc->c[0]);
->  
-> -	debug_log("Reached %s\n", __func__);
-> +			debug_log("sense key = %x, asc = %x, ascq = %x\n",
-> +				floppy->sense_key, floppy->asc,	floppy->ascq);
->  
-> -	idefloppy_end_request(drive, floppy->pc->error ? 0 : 1, 0);
-> +			idefloppy_end_request(drive, 1, 0);
-> +		} else {
-> +			printk(KERN_ERR "Error in REQUEST SENSE itself - "
-> +					"Aborting request!\n");
-> +			idefloppy_end_request(drive, 0, 0);
-> +		}
-> +	} else if (floppy->pc->c[0] == GPCMD_READ_10 ||
-> +		floppy->pc->c[0] == GPCMD_WRITE_10)
-> +		idefloppy_end_request(drive, 1, 0);
-> +	else
-> +		idefloppy_end_request(drive, floppy->pc->error ? 0 : 1, 0);
->  }
->  
->  static void idefloppy_init_pc(struct ide_atapi_pc *pc)
-> @@ -367,7 +356,7 @@ static void idefloppy_init_pc(struct ide_atapi_pc *pc)
->  	pc->req_xfer = 0;
->  	pc->buf = pc->pc_buf;
->  	pc->buf_size = IDEFLOPPY_PC_BUFFER_SIZE;
-> -	pc->idefloppy_callback = &idefloppy_pc_callback;
-> +	pc->idefloppy_callback = &ide_floppy_callback;
->  }
->  
->  static void idefloppy_create_request_sense_cmd(struct ide_atapi_pc *pc)
-> @@ -376,7 +365,6 @@ static void idefloppy_create_request_sense_cmd(struct ide_atapi_pc *pc)
->  	pc->c[0] = GPCMD_REQUEST_SENSE;
->  	pc->c[4] = 255;
->  	pc->req_xfer = 18;
-> -	pc->idefloppy_callback = &idefloppy_request_sense_callback;
->  }
->  
->  /*
-> @@ -697,14 +685,6 @@ static ide_startstop_t idefloppy_issue_pc(ide_drive_t *drive,
->  	}
->  }
->  
-> -static void idefloppy_rw_callback(ide_drive_t *drive)
-> -{
-> -	debug_log("Reached %s\n", __func__);
-> -
-> -	idefloppy_end_request(drive, 1, 0);
-> -	return;
-> -}
-> -
->  static void idefloppy_create_prevent_cmd(struct ide_atapi_pc *pc, int prevent)
->  {
->  	debug_log("creating prevent removal command, prevent = %d\n", prevent);
-> @@ -799,7 +779,6 @@ static void idefloppy_create_rw_cmd(idefloppy_floppy_t *floppy,
->  	put_unaligned(cpu_to_be16(blocks), (unsigned short *)&pc->c[7]);
->  	put_unaligned(cpu_to_be32(block), (unsigned int *) &pc->c[2]);
->  
-> -	pc->idefloppy_callback = &idefloppy_rw_callback;
->  	pc->rq = rq;
->  	pc->b_count = cmd == READ ? 0 : rq->bio->bi_size;
->  	if (rq->cmd_flags & REQ_RW)
-> @@ -813,7 +792,6 @@ static void idefloppy_blockpc_cmd(idefloppy_floppy_t *floppy,
->  		struct ide_atapi_pc *pc, struct request *rq)
->  {
->  	idefloppy_init_pc(pc);
-> -	pc->idefloppy_callback = &idefloppy_rw_callback;
+> How does the patch below look?  I didn't want to remove the whole config
+> option, as there is more to the logic than just the "reverse order"
+> stuff there.
 
-For unknown reasons blk_pc_request() requests were overriding the default
-*_pc_callback and using *_rw_callback instead - the patch changes this
-behavior silently.
+looks fine,
 
-[ When I suggest some changes I can be wrong as well (just like in this case
-  because after closer look merging callbacks is not as simple as checking
-  only pc->c[0]) so do not trust me automatically :) + please always try to
-  fully read and understand the underlying code. ]
+Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 
-Otherwise patch looks fine, please correct the above issue (either
-by fixing idefloppy_blockpc_cmd() to use *_pc_callback in a pre-patch
-or by adding missing check for blk_pc_request() requests) + resubmit.
+> If you don't mind, can I take this through the PCI tree so as to allow
+> the removal of this pci function afterwards?
 
->  	memcpy(pc->c, rq->cmd, sizeof(pc->c)); 
->  	pc->rq = rq;
->  	pc->b_count = rq->data_len;
+[...]
+
+great, could you also:
+- rebase it on top of the patch below
+- forward the patch below to Linus for 2.6.25
+
+?
+
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: [PATCH] ide: mark "ide=reverse" option as obsolete
+
+- it is valid only if "Probe IDE PCI devices in the PCI bus order
+  (DEPRECATED)" config option is used
+
+- Greg needs to remove pci_get_device_reverse() for PCI core changes
+
+Cc: Greg Kroah-Hartman <gregkh@suse.de>
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+---
+ drivers/ide/ide.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+Index: b/drivers/ide/ide.c
+===================================================================
+--- a/drivers/ide/ide.c
++++ b/drivers/ide/ide.c
+@@ -1038,7 +1038,7 @@ static int __init ide_setup(char *s)
+ 	if (!strcmp(s, "ide=reverse")) {
+ 		ide_scan_direction = 1;
+ 		printk(" : Enabled support for IDE inverse scan order.\n");
+-		return 1;
++		goto obsolete_option;
+ 	}
+ #endif
+ 
