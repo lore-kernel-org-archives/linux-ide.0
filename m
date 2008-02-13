@@ -1,122 +1,65 @@
-From: Luben Tuikov <ltuikov@yahoo.com>
-Subject: Re: [PATCH] enclosure: add support for enclosure services
-Date: Wed, 13 Feb 2008 01:48:01 -0800 (PST)
-Message-ID: <875344.96222.qm@web31808.mail.mud.yahoo.com>
-References: <1202841935.3137.94.camel@localhost.localdomain>
-Reply-To: ltuikov@yahoo.com
+From: Gabriel Paubert <paubert@iram.es>
+Subject: Re: [PATCH 00/18] ide: warm-plug support for IDE devices and other goodies
+Date: Wed, 13 Feb 2008 11:08:20 +0100
+Message-ID: <20080213100820.GA19955@iram.es>
+References: <20080208004421.17746.32557.sendpatchset@localhost.localdomain> <1202460043.7079.157.camel@pasglop> <20080212114905.GA9940@iram.es> <20080212123002.GA11000@iram.es>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1763435AbYBMJs0@vger.kernel.org>
-In-Reply-To: <1202841935.3137.94.camel@localhost.localdomain>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Kristen Carlson Accardi <kristen.c.accardi@intel.com>, James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, linux-ide <linux-ide@vger.kernel.org>, jeff@garzik.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from gra-lx1.iram.es ([150.214.224.41]:59833 "EHLO gra-lx1.iram.es"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752036AbYBMKIZ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 13 Feb 2008 05:08:25 -0500
+Content-Disposition: inline
+In-Reply-To: <20080212123002.GA11000@iram.es>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linuxppc-dev@ozlabs.org
 
---- On Tue, 2/12/08, James Bottomley James.Bottomley@HansenPartnership.com> wrote:
-> > I apologize for taking so long to review this patch. 
-> I obviously agree
-> > wholeheartedly with Luben.  The problem I ran into
-> while trying to
-> > design an enclosure management interface for the SATA
-> devices is that
-> > there is all this vendor defined stuff.  For example,
-> for the AHCI LED
-> > protocol, the only "defined" LED is
-> 'activity'.  For LED2 and LED3 it
-> > is up to hardware vendors to define these.  For SGPIO
-> there's all kinds
-> > of ways for hw vendors to customize.  I felt that it
-> was going to be a
-> > maintainance nightmare to have to keep track of
-> various vendors
-> > enclosure implementations in the ahci driver, and that
-> it'd be better
-> > to just have user space libraries take care of that. 
-> Plus, that way a
-> > vendor doesn't have to get a patch into the kernel
-> to get their new
-> > spiffy wizzy bang blinky lights working (think of how
-> long it takes
-> > something to even get into a vendor kernel, which is
-> what these guys
-> > care about...).  So I'm still not sold on having
-> an enclosure
-> > abstraction in the kernel - at least for the SATA
-> controllers.
+On Tue, Feb 12, 2008 at 01:30:03PM +0100, Gabriel Paubert wrote:
+> On Tue, Feb 12, 2008 at 12:49:05PM +0100, Gabriel Paubert wrote:
+> > On Fri, Feb 08, 2008 at 07:40:43PM +1100, Benjamin Herrenschmidt wrote:
+> > > 
+> > > On Fri, 2008-02-08 at 01:44 +0100, Bartlomiej Zolnierkiewicz wrote:
+> > > > - couple of fixes and preparatory patches
+> > > > 
+> > > > - rework of PowerMac media-bay support ([un]register IDE devices instead of
+> > > >   [un]registering IDE interface) [ it is the main reason for spamming PPC ML ]
+> > > 
+> > > Interesting... I was thinking about doing a full remove of the device at
+> > > a higher level instead but I suppose what you propose is easier.
+> > 
+> > Well, I have serious problem on a Pegasos which appeared some time
+> > between 2.6.24 and 2.6.25-rc1: at boot I get an infinite string of 
+> > 
+> > hdb: empty DMA table?
+> > 
+> > I'm trying to bisect it right now.
 > 
-> Correct me if I'm wrong, but didn't the original
-> AHCI enclosure patch
-> expose activity LEDs via sysfs?
+> Argh, the first bisect point ended up with timeouts on hdb...
 > 
-> I'm not saying there aren't a lot of non standard
-> pieces that need to be
-> activated by direct commands or other user activated
-> protocol.  I am
-> saying there are a lot of standard pieces that we could do
-> with showing
-> in a uniform manner.
+> Flagged as bad, to try to see when the problems started, but 
+> I suspect that there are several.
 
-Which is already the case without the SES kernel bloat.
-Case in point, the excellent user-space application
-"lsscsi" would clearly show which device is SES.
+Well, it's worse than this. After 7 or 8 bisections (all flagged
+bad) the symptoms changed: the system boots up to the point where
+it does not recognize LVM volumes. So there are at least 3 bugs:
+1) the timeout on interrupts (only seen on hdb)
+2) the empty DMA table messages (seen on hda and hdb)
+3) the inability to see logical volumes ("pvs" does not find them,
+  they are back when rebooting into 2.6.24). This is the apparently
+  the earliest introduced bug (no problems with the disks with that
+  version).
 
-And the excellent user-space application "sg_ses" could
-control an SES device.
+I am away from that machine until next Tuesday. IIRC the last git
+bisect was something like 160 revisions left.
 
-> The pieces I think are absolutely standard are
+	Gabriel
+
 > 
-> 1. Actual enclosure presence (is this device in an
-> enclosure)
-
-"lsscsi"
-
-> 2. Activity LED, this seems to be a feature of every
-> enclosure.
-
-So that means that it needs a kernel representation?
-If this indeed were the case, for every "feature" of every
-type of device (not only SCSI) then the kernel itself would
-be insurmountably big.
-
-> I also think the following are reasonably standard (based
-> on the fact
-> that most enclosure standards recommend but don't
-> require this):
-> 
-> 3. Locate LED (for locating the device).  Even if you only
-> have an
-> activity LED, this is usually done by flashing the activity
-> LED in a
-> well defined pattern.
-> 4. Fault.  this is the least standardised of the lot, but
-> does seem to
-> be present in about every enclosure implementation.
-> 
-> All I've done is standardise these four pieces ... the
-> services actually
-> take into account that it might not be possible to do
-> certain of these
-> (like fault).
-
-And none of this means that it needs a kernel representation.
-
-1. You're not "standardizing" any known, in-practice,
-kernel representation, that is already in practice and
-thusly needs a kernel representation.
-
-2. The kernel itself is not using nor needing this
-"representation" in order to function properly (the kernel).
-
-Leaving control of SES devices to user-space makes both
-the kernel and the vendors happy.  All the kernel needs
-to do is expose the SES device to user-space as it currently
-does.  It makes it so much easier both to vendors and to
-the kernel to stay out of unnecessary representations.
-
-Vendors may choose to distribute their own applications
-to control their hardware, as long as the kernel exposes
-an SES device and provides functionality, as opposed to
-policy of any kind.
-
-    Luben
+> 	Gabriel
+> _______________________________________________
+> Linuxppc-dev mailing list
+> Linuxppc-dev@ozlabs.org
+> https://ozlabs.org/mailman/listinfo/linuxppc-dev
