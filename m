@@ -1,53 +1,33 @@
-From: Mark Lord <mlord@pobox.com>
-Subject: Re: [PATCH 2/2] sata_mv: remove iounmap in mv_platform_remove
-Date: Wed, 13 Feb 2008 14:31:50 -0500
-Message-ID: <47B345A6.9000605@pobox.com>
-References: <12029369502995-git-send-email-saeed@marvell.com>
- <12029369532977-git-send-email-saeed@marvell.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+From: Dirk GOUDERS <hank@et.bocholt.fh-gelsenkirchen.de>
+Subject: Re: [discuss] "ide=reverse" do we still need this?
+Date: Wed, 13 Feb 2008 21:00:15 +0100
+Message-ID: <3138.1202932815@sora.hank.home>
+References: <20080213001506.GA13933@kroah.com> <1237.1202889295@sora.hank.home> <20080213082643.GB14098@kroah.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from a-sasl-quonix.sasl.smtp.pobox.com ([208.72.237.25]:41110 "EHLO
-	sasl.smtp.pobox.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751186AbYBMTcX (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 13 Feb 2008 14:32:23 -0500
-In-Reply-To: <12029369532977-git-send-email-saeed@marvell.com>
+Received: from alice.et.bocholt.fh-gelsenkirchen.de ([193.175.197.63]:34652
+	"EHLO alice.et.bocholt.fh-gelsenkirchen.de" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755404AbYBMUBV (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 13 Feb 2008 15:01:21 -0500
+In-reply-to: <20080213082643.GB14098@kroah.com> 
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Saeed Bishara <saeed@marvell.com>
-Cc: jeff@garzik.org, htejun@gmail.com, linux-ide@vger.kernel.org, saeed.bishara@gmail.com, nico@cam.org, byron.bbradley@gmail.com
+To: Greg KH <greg@kroah.com>
+Cc: bzolnier@gmail.com, muli@il.ibm.com, discuss@x86-64.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, jdmason@kudzu.us, linux-pci@atrey.karlin.mff.cuni.cz
 
-Saeed Bishara wrote:
-> this will fix crash bug when doing rmmod to the driver, this is because the
-> port_stop function get called later and it could access the device's registers.
+
+> Hm, so, to summarize:
+>   - you needed this option many years ago to get a box to work properly
+>   - you don't need this today
 > 
-> Signed-off-by: Saeed Bishara <saeed@marvell.com>
-> ---
->  drivers/ata/sata_mv.c |    3 ---
->  1 files changed, 0 insertions(+), 3 deletions(-)
-> 
-> diff --git a/drivers/ata/sata_mv.c b/drivers/ata/sata_mv.c
-> index 9c9a5b0..c61e666 100644
-> --- a/drivers/ata/sata_mv.c
-> +++ b/drivers/ata/sata_mv.c
-> @@ -2983,11 +2983,8 @@ static int __devexit mv_platform_remove(struct platform_device *pdev)
->  {
->  	struct device *dev = &pdev->dev;
->  	struct ata_host *host = dev_get_drvdata(dev);
-> -	struct mv_host_priv *hpriv = host->private_data;
-> -	void __iomem *base = hpriv->base;
->  
->  	ata_host_detach(host);
-> -	iounmap(base);
->  	return 0;
->  }
-..
+> So, if the option went away, you would not be inconvenienced?
 
-Where does the iounmap() now get done instead of that place?
+After having reanimated the old system and after comments of other
+persons I would not be inconvenienced if the option went away.
 
+The system indeed did not boot correctly without that option, because
+the disks appeared in a wrong order.  On the other hand, I was able to
+(re)install bootloaders (grub as well as lilo) and after that did not
+need the option any more.  Unfortunately, after that I was not able to
+reproduce the initial situation where the option was needed.
 
--- 
-Mark Lord
-Real-Time Remedies Inc.
-mlord@pobox.com
+Dirk
