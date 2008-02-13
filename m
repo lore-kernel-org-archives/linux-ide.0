@@ -1,38 +1,54 @@
-From: Greg KH <greg@kroah.com>
-Subject: Re: pci_get_device_reverse(), why does Calgary need this?
-Date: Tue, 12 Feb 2008 20:45:36 -0800
-Message-ID: <20080213044536.GC10101@kroah.com>
-References: <20080213001506.GA13933@kroah.com> <20080213001638.GB13933@kroah.com> <20080213021737.72b9815d@core>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: [PATCH] pata_cs5536.c bugfix
+Date: Wed, 13 Feb 2008 01:41:44 -0500
+Message-ID: <yq1abm5pdcn.fsf@sermon.lab.mkp.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:60067 "EHLO
-	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1765392AbYBMGCU (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 13 Feb 2008 01:02:20 -0500
-Content-Disposition: inline
-In-Reply-To: <20080213021737.72b9815d@core>
+Received: from rgminet01.oracle.com ([148.87.113.118]:61501 "EHLO
+	rgminet01.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750797AbYBMGmo (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 13 Feb 2008 01:42:44 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: muli@il.ibm.com, jdmason@kudzu.us, bzolnier@gmail.com, linux-ide@vger.kernel.org, linux-pci@atrey.karlin.mff.cuni.cz, linux-kernel@vger.kernel.org, discuss@x86-64.org
+To: Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org
 
-On Wed, Feb 13, 2008 at 02:17:37AM +0000, Alan Cox wrote:
-> > Why does the calgary driver need this?  Can we just use pci_get_device()
-> > instead?  Why do you need to walk the device list backwards?  Do you get
-> > false positives going forward?
-> 
-> It doesn't look to be performance critical so the driver can
-> pci_get_device until the end and use the final hit anyway.
 
-That would make more sense.
+Fix speed negotiation for secondary device.
 
-> IDE reverse is more problematic but nobody seems to use it.
+Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 
-I've seen two posters say they use it.  I'm wondering what it is really
-solving if they use it, and why if it's really needed, scsi never had to
-implement such a hack...
+---
 
-thanks,
-
-greg k-h
+diff -r 9f5ca67cc28f drivers/ata/pata_cs5536.c
+--- a/drivers/ata/pata_cs5536.c	Mon Feb 11 20:52:01 2008 -0800
++++ b/drivers/ata/pata_cs5536.c	Tue Feb 12 08:52:43 2008 -0500
+@@ -40,7 +40,7 @@
+ #include <asm/msr.h>
+ 
+ #define DRV_NAME	"pata_cs5536"
+-#define DRV_VERSION	"0.0.6"
++#define DRV_VERSION	"0.0.7"
+ 
+ enum {
+ 	CFG			= 0,
+@@ -153,8 +153,8 @@ static void cs5536_set_piomode(struct at
+ 	struct ata_device *pair = ata_dev_pair(adev);
+ 	int mode = adev->pio_mode - XFER_PIO_0;
+ 	int cmdmode = mode;
+-	int dshift = ap->port_no ? IDE_D1_SHIFT : IDE_D0_SHIFT;
+-	int cshift = ap->port_no ? IDE_CAST_D1_SHIFT : IDE_CAST_D0_SHIFT;
++	int dshift = adev->devno ? IDE_D1_SHIFT : IDE_D0_SHIFT;
++	int cshift = adev->devno ? IDE_CAST_D1_SHIFT : IDE_CAST_D0_SHIFT;
+ 	u32 dtc, cast, etc;
+ 
+ 	if (pair)
+@@ -201,7 +201,7 @@ static void cs5536_set_dmamode(struct at
+ 	struct pci_dev *pdev = to_pci_dev(ap->host->dev);
+ 	u32 dtc, etc;
+ 	int mode = adev->dma_mode;
+-	int dshift = ap->port_no ? IDE_D1_SHIFT : IDE_D0_SHIFT;
++	int dshift = adev->devno ? IDE_D1_SHIFT : IDE_D0_SHIFT;
+ 
+ 	if (mode >= XFER_UDMA_0) {
+ 		cs5536_read(pdev, ETC, &etc);
