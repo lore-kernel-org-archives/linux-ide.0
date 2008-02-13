@@ -1,71 +1,54 @@
-From: Borislav Petkov <petkovbb@googlemail.com>
-Subject: Re: [RFC PATCH] ide-floppy: use rq->cmd for preparing and sending
-	packet cmds to the drive
-Date: Wed, 13 Feb 2008 13:46:25 +0100
-Message-ID: <20080213124625.GB13446@gollum.tnic>
-References: <20080212143715.GB4530@gollum.tnic> <200802122239.22566.bzolnier@gmail.com>
-Reply-To: petkovbb@gmail.com
+From: Rene Herman <rene.herman@keyaccess.nl>
+Subject: Re: "ide=reverse" do we still need this?
+Date: Wed, 13 Feb 2008 13:57:21 +0100
+Message-ID: <47B2E931.4080408@keyaccess.nl>
+References: <20080213001506.GA13933@kroah.com> <47B24AB3.3040009@keyaccess.nl> <20080213044436.GB10101@kroah.com> <47B2DD45.7080709@keyaccess.nl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1760951AbYBMMrQ@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <200802122239.22566.bzolnier@gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-15; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from smtpq2.tilbu1.nb.home.nl ([213.51.146.201]:35846 "EHLO
+	smtpq2.tilbu1.nb.home.nl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751380AbYBMM4X (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 13 Feb 2008 07:56:23 -0500
+In-Reply-To: <47B2DD45.7080709@keyaccess.nl>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Greg KH <greg@kroah.com>
+Cc: bzolnier@gmail.com, muli@il.ibm.com, jdmason@kudzu.us, linux-ide@vger.kernel.org, linux-pci@atrey.karlin.mff.cuni.cz, linux-kernel@vger.kernel.org, discuss@x86-64.org
 
-On Tue, Feb 12, 2008 at 10:39:22PM +0100, Bartlomiej Zolnierkiewicz wro=
-te:
+On 13-02-08 13:06, Rene Herman wrote:
+> On 13-02-08 05:44, Greg KH wrote:
+> 
+>>> While details escape me somewhat again at the monment, a few months ago
+>>> I was playing around with a PCI Promise IDE controller and needed
+>>> ide=reverse to save me from having to switch disks around to still have
+>>> a bootable system.
+>>>
+>>> Or some such. Not too clear anymore, but I remember it saved the day.
+>>
+>> You couldn't just change the boot disk in grub?
+>>
+>> Or use an initramfs and /dev/disk/by-id/ to keep any future moves stable?
+> 
+> No. The thing is that you need these kinds of hacks while messing with 
+> old systems, building and stripping them, often in recovery type of 
+> situations.
+> 
+> As said (same as the other person I saw reacting) details of what was 
+> most decidedly needed last time around escape me at the moment, but 
+> ide=reverse is the kind of hack that saves one hours of unscrewing 
+> computer cases and switching disks around while building stuff, making 
+> quick tests, doing recovery...
+> 
+> If it must go for the greater architectural good, so be it, but it's the 
+> type of thing that's used specifically in the situations where you don't 
+> have stable, well arranged (or known!) setups to begin with.
 
-Hi Bart,
+Allow me to add that the demise of drivers/ide itself is an argument for 
+just shooting the thing if it helps clean up the API. Next year when I'm 
+messing with that Promise controller again, the machine might very well be 
+running a kernel using PATA instead of IDE anyway...
 
-> I think that this _really_ should be done _after_ unifying ATAPI hand=
-ling [*].
-> Otherwise you will be making some of the same changes to the _three_ =
-copies
-> of (more or less) identical code and more importantly we will have to=
- delay
-> unification after _all_ drivers are converted to rq->cmd[] (+ lets no=
-t forget
-> that I'll have more changes to review ;).
->=20
-> (*) please take a closer look at *_issue_pc(), *_transfer_pc() and *_=
-pc_intr()
->     in ide-{floppy,tape,scsi} (the useful hint is that after making t=
-hese
->     functions free of references to device driver specific objects/fu=
-nctions
->     we can use drive->media =3D=3D ide_{floppy,tape,scsi} checks for =
-handling
->     not yet fully unified / media type specific code).
+Rene.
 
-I started working on probably the easiest unification we could do: unif=
-y all the
-pc->flags defines and move them in a header where all drivers can use t=
-hem. This
-raises an architectural design question: The way i see it, the generic =
-ATAPI handling
-is going to be sort of "serving" functionality to the drivers using ATA=
-PI. Do we want
-all this functionality to go to ide.{h,c} or we want specific atapi.{h,=
-c} files that
-contain only this unified functionality, or whatever else. In general, =
-how is this
-generic layer going to be distributed among headers/.c files and what d=
-o we want there?
-
-/me tends to think that special headers/files, small and easy to manage=
- and
-modular, have more advantages in this case but this is just me. After w=
-e've
-decided on that, the rest of the issues will resolve by themselves/get =
-easier to
-tackle.
-
-Thanks.
-
---=20
-Regards/Gru=DF,
-    Boris.
