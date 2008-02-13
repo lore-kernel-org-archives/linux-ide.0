@@ -1,15 +1,15 @@
 From: Mark Mason <mason@postdiluvian.org>
 Subject: Re: libata/sata_sil24 cache alignment problem?
-Date: Wed, 13 Feb 2008 13:47:02 -0500
-Message-ID: <20080213184702.GA13458@postdiluvian.org>
+Date: Wed, 13 Feb 2008 13:51:59 -0500
+Message-ID: <20080213185159.GA13584@postdiluvian.org>
 References: <20080212180254.GA28237@postdiluvian.org> <20080212221257.12eeab13@core>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from postdiluvian.org ([128.30.54.21]:56515 "EHLO
+Received: from postdiluvian.org ([128.30.54.21]:60159 "EHLO
 	porklips.postdiluvian.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753911AbYBMSrP (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 13 Feb 2008 13:47:15 -0500
+	with ESMTP id S1755648AbYBMSwF (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 13 Feb 2008 13:52:05 -0500
 Content-Disposition: inline
 In-Reply-To: <20080212221257.12eeab13@core>
 Sender: linux-ide-owner@vger.kernel.org
@@ -33,18 +33,7 @@ Alan Cox <alan@lxorguk.ukuu.org.uk> wrote:
 > 
 > Please do.
 
-Here it is.  I'd appreciate it if someone could sanity check where I'm
-freeing the buffer.  It works, but I don't know the code well enough
-to know if this covers all cases.
-
-I'm counting on kmalloc to return a cache aligned buffer.  I found
-some reason to think it does, but I don't remember offhand what that
-reason was, or if it's configurable per-architecture.  The buffer has
-to be both physically and virtually contiguous, I was tempted to just
-allocate a page and waste some space but we've got 64K pages, so I'm a
-bit more sensitive about that.
-
-
+Oops, sorry, I left a file out of that diff.  Here it is again...
 
 *** drivers/scsi/libata-core.c	2008-02-13 13:34:32.141489000 -0500
 --- drivers/scsi/libata-core.c.orig	2008-02-13 13:29:35.620360000 -0500
@@ -133,3 +122,50 @@ bit more sensitive about that.
   /**
    *	ata_scsi_release - SCSI layer callback hook for host unload
 --- 5596,5636 ----
+*** include/linux/libata.h	2008-02-13 10:51:39.151202000 -0500
+--- include/linux/libata.h.orig	2008-02-13 13:50:26.531572000 -0500
+***************
+*** 550,570 ****
+  
+  	u32			msg_enable;
+  	struct list_head	eh_done_q;
+  	wait_queue_head_t	eh_wait_q;
+  
+  	pm_message_t		pm_mesg;
+  	int			*pm_result;
+  
+  	void			*private_data;
+  
+! 	u8			*sector_buf; /* owned by EH */
+  };
+  
+  struct ata_port_operations {
+  	void (*port_disable) (struct ata_port *);
+  
+  	void (*dev_config) (struct ata_port *, struct ata_device *);
+  
+  	void (*set_piomode) (struct ata_port *, struct ata_device *);
+  	void (*set_dmamode) (struct ata_port *, struct ata_device *);
+  	unsigned long (*mode_filter) (const struct ata_port *, struct ata_device *, unsigned long);
+--- 550,570 ----
+  
+  	u32			msg_enable;
+  	struct list_head	eh_done_q;
+  	wait_queue_head_t	eh_wait_q;
+  
+  	pm_message_t		pm_mesg;
+  	int			*pm_result;
+  
+  	void			*private_data;
+  
+! 	u8			sector_buf[ATA_SECT_SIZE]; /* owned by EH */
+  };
+  
+  struct ata_port_operations {
+  	void (*port_disable) (struct ata_port *);
+  
+  	void (*dev_config) (struct ata_port *, struct ata_device *);
+  
+  	void (*set_piomode) (struct ata_port *, struct ata_device *);
+  	void (*set_dmamode) (struct ata_port *, struct ata_device *);
+  	unsigned long (*mode_filter) (const struct ata_port *, struct ata_device *, unsigned long);
