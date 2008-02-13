@@ -1,44 +1,31 @@
-From: Rene Herman <rene.herman@keyaccess.nl>
-Subject: Re: "ide=reverse" do we still need this?
-Date: Wed, 13 Feb 2008 02:41:07 +0100
-Message-ID: <47B24AB3.3040009@keyaccess.nl>
-References: <20080213001506.GA13933@kroah.com>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: libata/sata_sil24 cache alignment problem?
+Date: Wed, 13 Feb 2008 02:13:38 +0000
+Message-ID: <20080213021338.6946650e@core>
+References: <20080212180254.GA28237@postdiluvian.org>
+	<20080212221257.12eeab13@core>
+	<1202859388.3137.164.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-15; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtpq2.tilbu1.nb.home.nl ([213.51.146.201]:57167 "EHLO
-	smtpq2.tilbu1.nb.home.nl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751526AbYBMBja (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 12 Feb 2008 20:39:30 -0500
-In-Reply-To: <20080213001506.GA13933@kroah.com>
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:40992 "EHLO
+	lxorguk.ukuu.org.uk" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1753979AbYBMCWu (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 12 Feb 2008 21:22:50 -0500
+In-Reply-To: <1202859388.3137.164.camel@localhost.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Greg KH <greg@kroah.com>
-Cc: bzolnier@gmail.com, muli@il.ibm.com, jdmason@kudzu.us, linux-ide@vger.kernel.org, linux-pci@atrey.karlin.mff.cuni.cz, linux-kernel@vger.kernel.org, discuss@x86-64.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Mark Mason <mason@postdiluvian.org>, linux-ide@vger.kernel.org, jgarzik@pobox.com
 
-On 13-02-08 01:15, Greg KH wrote:
+> I tell you what ... find me a parisc box that actually has IDE and we
+> might have told you ...
 
-> I'm reworking the pci device list logic (we currently keep all PCI
-> devices in 2 lists, which isn't the nicest, we should be able to get
-> away with only 1 list.)
-> 
-> The only bother I've found so far is the pci_get_device_reverse()
-> function, it's used in 2 places, IDE and the calgary driver.
-> 
-> I'm curious if we really still support the ide=reverse option?  It's a
-> config option that I don't think the distros still enable (SuSE does
-> not).  Is this still needed these days?
-> 
-> In digging, we changed this option in 2.2.x from being called
-> "pci=reverse" and no one else seems to miss it.
-> 
-> Any thoughts?
+The NS87415 variant IDE has been tested on parisc and didn't blow up -
+must just be lucky.
 
-While details escape me somewhat again at the monment, a few months ago I 
-was playing around with a PCI Promise IDE controller and needed ide=reverse 
-to save me from having to switch disks around to still have a bootable system.
+> (actually, the pa8800's have IDE CD's on a cmd640 chip, but that oopses
+> on boot for no reason we've tracked yet).
 
-Or some such. Not too clear anymore, but I remember it saved the day.
-
-Rene.
+With libata, old IDE or both ? and what does the oops look like ?
