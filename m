@@ -1,130 +1,44 @@
-From: Borislav Petkov <petkovbb@googlemail.com>
-Subject: [PATCH 2/2] ide-scsi: do non-atomic pc->flags testing
-Date: Wed, 13 Feb 2008 17:18:51 +0100
-Message-ID: <1202919531-17798-2-git-send-email-petkovbb@gmail.com>
-References: <1202919531-17798-1-git-send-email-petkovbb@gmail.com>
+From: Mark Lord <liml@rtr.ca>
+Subject: Re: [PATCH #upstream] libata: implement libata.force module parameter
+Date: Wed, 13 Feb 2008 11:24:34 -0500
+Message-ID: <47B319C2.5030002@rtr.ca>
+References: <47A3375F.80101@gmail.com> <47B2368D.9080408@gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.189]:7660 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757541AbYBMQXz (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 13 Feb 2008 11:23:55 -0500
-Received: by nf-out-0910.google.com with SMTP id g13so43087nfb.21
-        for <linux-ide@vger.kernel.org>; Wed, 13 Feb 2008 08:23:53 -0800 (PST)
-In-Reply-To: <1202919531-17798-1-git-send-email-petkovbb@gmail.com>
+Received: from rtr.ca ([76.10.145.34]:2679 "EHLO mail.rtr.ca"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S933159AbYBMQYg (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 13 Feb 2008 11:24:36 -0500
+In-Reply-To: <47B2368D.9080408@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: bzolnier@gmail.com
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Borislav Petkov <petkovbb@gmail.com>
+To: Tejun Heo <htejun@gmail.com>
+Cc: Jeff Garzik <jeff@garzik.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>
 
-Signed-off-by: Borislav Petkov <petkovbb@gmail.com>
----
- drivers/scsi/ide-scsi.c |   27 ++++++++++++++-------------
- 1 files changed, 14 insertions(+), 13 deletions(-)
+Tejun Heo wrote:
+> This patch implements libata.force module parameter which can
+> selectively override ATA port, link and device configurations
+> including cable type, SATA PHY SPD limit, transfer mode and NCQ.
+...
+> +	libata.force=	[LIBATA] Force configurations.  The format is comma
+> +			separated list of "[ID:]VAL" where ID is
+> +			PORT[:DEVICE].  PORT and DEVICE are decimal numbers
+> +			matching port, link or device.  Basically, it matches
+..
 
-diff --git a/drivers/scsi/ide-scsi.c b/drivers/scsi/ide-scsi.c
-index d46c81c..93c3fc2 100644
---- a/drivers/scsi/ide-scsi.c
-+++ b/drivers/scsi/ide-scsi.c
-@@ -311,10 +311,10 @@ static int idescsi_end_request (ide_drive_t *drive, int uptodate, int nrsecs)
- 		pc = opc;
- 		rq = pc->rq;
- 		pc->scsi_cmd->result = (CHECK_CONDITION << 1) |
--				((test_bit(PC_FLAG_TIMEDOUT, &pc->flags) ?
-+				(((pc->flags & PC_FLAG_TIMEDOUT) ?
- 				  DID_TIME_OUT :
- 				  DID_OK) << 16);
--	} else if (test_bit(PC_FLAG_TIMEDOUT, &pc->flags)) {
-+	} else if (pc->flags & PC_FLAG_TIMEDOUT) {
- 		if (log)
- 			printk (KERN_WARNING "ide-scsi: %s: timed out for %lu\n",
- 					drive->name, pc->scsi_cmd->serial_number);
-@@ -356,7 +356,7 @@ static int idescsi_expiry(ide_drive_t *drive)
- #if IDESCSI_DEBUG_LOG
- 	printk(KERN_WARNING "idescsi_expiry called for %lu at %lu\n", pc->scsi_cmd->serial_number, jiffies);
- #endif
--	set_bit(PC_FLAG_TIMEDOUT, &pc->flags);
-+	pc->flags |= PC_FLAG_TIMEDOUT;
- 
- 	return 0;					/* we do not want the ide subsystem to retry */
- }
-@@ -378,7 +378,7 @@ static ide_startstop_t idescsi_pc_intr (ide_drive_t *drive)
- 	printk (KERN_INFO "ide-scsi: Reached idescsi_pc_intr interrupt handler\n");
- #endif /* IDESCSI_DEBUG_LOG */
- 
--	if (test_bit(PC_FLAG_TIMEDOUT, &pc->flags)) {
-+	if (pc->flags & PC_FLAG_TIMEDOUT) {
- #if IDESCSI_DEBUG_LOG
- 		printk(KERN_WARNING "idescsi_pc_intr: got timed out packet  %lu at %lu\n",
- 				pc->scsi_cmd->serial_number, jiffies);
-@@ -387,7 +387,8 @@ static ide_startstop_t idescsi_pc_intr (ide_drive_t *drive)
- 		idescsi_end_request (drive, 1, 0);
- 		return ide_stopped;
- 	}
--	if (test_and_clear_bit(PC_FLAG_DMA_IN_PROGRESS, &pc->flags)) {
-+	if (pc->flags & PC_FLAG_DMA_IN_PROGRESS) {
-+		pc->flags &= ~PC_FLAG_DMA_IN_PROGRESS;
- #if IDESCSI_DEBUG_LOG
- 		printk ("ide-scsi: %s: DMA complete\n", drive->name);
- #endif /* IDESCSI_DEBUG_LOG */
-@@ -426,7 +427,7 @@ static ide_startstop_t idescsi_pc_intr (ide_drive_t *drive)
- 					"- discarding data\n");
- 				temp = pc->buf_size - pc->xferred;
- 				if (temp) {
--					clear_bit(PC_FLAG_WRITING, &pc->flags);
-+					pc->flags &= ~PC_FLAG_WRITING;
- 					if (pc->sg)
- 						idescsi_input_buffers(drive, pc,
- 									temp);
-@@ -448,14 +449,14 @@ static ide_startstop_t idescsi_pc_intr (ide_drive_t *drive)
- 		}
- 	}
- 	if (ireason & IO) {
--		clear_bit(PC_FLAG_WRITING, &pc->flags);
-+		pc->flags &= ~PC_FLAG_WRITING;
- 		if (pc->sg)
- 			idescsi_input_buffers(drive, pc, bcount);
- 		else
- 			hwif->atapi_input_bytes(drive, pc->cur_pos,
- 						bcount);
- 	} else {
--		set_bit(PC_FLAG_WRITING, &pc->flags);
-+		pc->flags |= PC_FLAG_WRITING;
- 		if (pc->sg)
- 			idescsi_output_buffers(drive, pc, bcount);
- 		else
-@@ -495,8 +496,8 @@ static ide_startstop_t idescsi_transfer_pc(ide_drive_t *drive)
- 	ide_set_handler(drive, &idescsi_pc_intr, get_timeout(pc), idescsi_expiry);
- 	/* Send the actual packet */
- 	drive->hwif->atapi_output_bytes(drive, scsi->pc->c, 12);
--	if (test_bit(PC_FLAG_DMA_OK, &pc->flags)) {
--		set_bit(PC_FLAG_DMA_IN_PROGRESS, &pc->flags);
-+	if (pc->flags & PC_FLAG_DMA_OK) {
-+		pc->flags |= PC_FLAG_DMA_IN_PROGRESS;
- 		hwif->dma_start(drive);
- 	}
- 	return ide_started;
-@@ -506,10 +507,10 @@ static inline int idescsi_set_direction(struct ide_atapi_pc *pc)
- {
- 	switch (pc->c[0]) {
- 		case READ_6: case READ_10: case READ_12:
--			clear_bit(PC_FLAG_WRITING, &pc->flags);
-+			pc->flags &= ~PC_FLAG_WRITING;
- 			return 0;
- 		case WRITE_6: case WRITE_10: case WRITE_12:
--			set_bit(PC_FLAG_WRITING, &pc->flags);
-+			pc->flags |= PC_FLAG_WRITING;
- 			return 0;
- 		default:
- 			return 1;
-@@ -566,7 +567,7 @@ static ide_startstop_t idescsi_issue_pc(ide_drive_t *drive,
- 	ide_pktcmd_tf_load(drive, IDE_TFLAG_NO_SELECT_MASK, bcount, dma);
- 
- 	if (dma)
--		set_bit(PC_FLAG_DMA_OK, &pc->flags);
-+		pc->flags |= PC_FLAG_DMA_OK;
- 
- 	if (test_bit(IDESCSI_DRQ_INTERRUPT, &scsi->flags)) {
- 		ide_execute_command(drive, WIN_PACKETCMD, &idescsi_transfer_pc,
--- 
-1.5.3.7
+Mmm.. not a NAK, but is there also a way to set/change these on the fly?
 
+I ask because, on my 4-core test system here, libata enumerates
+the ports differently depending upon whether I boot with a 32-bit
+kernel or a 64-bit kernel.
+
+Major PITA, that, and it's just the kind of thing that spoils
+fixed "PORT:DEVICE" module parameters, too.
+
+Now mind you, it's more likely the PCI layer that does the reverse
+order thing, but the end result is that my drives/ports are numbered
+differently depending upon which kernel I happen to boot with.
+
+??
