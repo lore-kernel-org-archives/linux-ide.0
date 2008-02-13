@@ -1,65 +1,61 @@
-From: Gabriel Paubert <paubert@iram.es>
-Subject: Re: [PATCH 00/18] ide: warm-plug support for IDE devices and other goodies
-Date: Wed, 13 Feb 2008 11:08:20 +0100
-Message-ID: <20080213100820.GA19955@iram.es>
-References: <20080208004421.17746.32557.sendpatchset@localhost.localdomain> <1202460043.7079.157.camel@pasglop> <20080212114905.GA9940@iram.es> <20080212123002.GA11000@iram.es>
+From: Bernd Schubert <bs@q-leap.de>
+Subject: sil3114 corruptions (was: Re: [PATCH 3/3] faster workaround)
+Date: Wed, 13 Feb 2008 11:12:02 +0100
+Message-ID: <200802131112.03292.bs@q-leap.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+  charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from gra-lx1.iram.es ([150.214.224.41]:59833 "EHLO gra-lx1.iram.es"
+Received: from ns1.q-leap.de ([153.94.51.193]:50408 "EHLO mail.q-leap.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752036AbYBMKIZ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 13 Feb 2008 05:08:25 -0500
+	id S1754629AbYBMKMG (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 13 Feb 2008 05:12:06 -0500
 Content-Disposition: inline
-In-Reply-To: <20080212123002.GA11000@iram.es>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linuxppc-dev@ozlabs.org
+To: Tejun Heo <htejun@gmail.com>, linux-ide@vger.kernel.org
 
-On Tue, Feb 12, 2008 at 01:30:03PM +0100, Gabriel Paubert wrote:
-> On Tue, Feb 12, 2008 at 12:49:05PM +0100, Gabriel Paubert wrote:
-> > On Fri, Feb 08, 2008 at 07:40:43PM +1100, Benjamin Herrenschmidt wrote:
-> > > 
-> > > On Fri, 2008-02-08 at 01:44 +0100, Bartlomiej Zolnierkiewicz wrote:
-> > > > - couple of fixes and preparatory patches
-> > > > 
-> > > > - rework of PowerMac media-bay support ([un]register IDE devices instead of
-> > > >   [un]registering IDE interface) [ it is the main reason for spamming PPC ML ]
-> > > 
-> > > Interesting... I was thinking about doing a full remove of the device at
-> > > a higher level instead but I suppose what you propose is easier.
-> > 
-> > Well, I have serious problem on a Pegasos which appeared some time
-> > between 2.6.24 and 2.6.25-rc1: at boot I get an infinite string of 
-> > 
-> > hdb: empty DMA table?
-> > 
-> > I'm trying to bisect it right now.
-> 
-> Argh, the first bisect point ended up with timeouts on hdb...
-> 
-> Flagged as bad, to try to see when the problems started, but 
-> I suspect that there are several.
+Hello Tejun,
 
-Well, it's worse than this. After 7 or 8 bisections (all flagged
-bad) the symptoms changed: the system boots up to the point where
-it does not recognize LVM volumes. So there are at least 3 bugs:
-1) the timeout on interrupts (only seen on hdb)
-2) the empty DMA table messages (seen on hda and hdb)
-3) the inability to see logical volumes ("pvs" does not find them,
-  they are back when rebooting into 2.6.24). This is the apparently
-  the earliest introduced bug (no problems with the disks with that
-  version).
+On Tuesday 23 October 2007 10:08:01 you wrote:
+> Jeff Garzik wrote:
+> > Alan Cox wrote:
+> >>> 2) Once we identified, over time, the set of drives affected by this
+> >>> 3112 quirk (aka drives that didn't fully comply to SATA spec), the
+> >>> debugging of corruption cases largely shifted to the standard
+> >>> routine: update the BIOS, replace the
+> >>> cables/RAM/power/mainboard/slot/etc. to be certain of problem location.
+> >>
+> >> Except for the continued series of later SI + Nvidia chipset (mostly)
+> >> pattern which seems unanswered but also being later chips I assume
+> >> unrelated to this problem.
+> >
+> > The SIL_FLAG_MOD15WRITE flag is set in sil_port_info[] is set according
+> > to the best info we have from SiI, which indicates that 3114 and 3512 do
+> > not have the same problem as the 3112.
+>
+> I don't think this data corruption problem w/ sil3114 is related to
+> m15w.  m15w workaround slows down things quite a bit and is likely to
+> hide problems on PCI bus side.  There are reports of data corruption
+> with 3114 on nvidia (most common), via and now amd chipsets.  There's
+> one on intel too but IIRC wasn't too definite.
+>
+> According to a user, freebsd didn't have data corruption problem on the
+> same hardware.  I copied PCI FIFO setup code (ours is broken BTW) but it
+> didn't fix the problem.
+>
+> I'll try to reproduce the problem locally and hunt it down.
 
-I am away from that machine until next Tuesday. IIRC the last git
-bisect was something like 160 revisions left.
+the problem just came up here again, as you and Jeff already guessed also with 
+the the workaround patches.
+I guess you didn't find time to look into it yet? Is there anything I can do? 
+What would you have done after reproducing it?
 
-	Gabriel
 
-> 
-> 	Gabriel
-> _______________________________________________
-> Linuxppc-dev mailing list
-> Linuxppc-dev@ozlabs.org
-> https://ozlabs.org/mailman/listinfo/linuxppc-dev
+Thanks,
+Bernd
+
+-- 
+Bernd Schubert
+Q-Leap Networks GmbH
