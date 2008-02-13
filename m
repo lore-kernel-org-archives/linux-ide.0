@@ -1,44 +1,32 @@
-From: Mark Lord <liml@rtr.ca>
-Subject: Re: [PATCH #upstream] libata: implement libata.force module parameter
-Date: Wed, 13 Feb 2008 11:24:34 -0500
-Message-ID: <47B319C2.5030002@rtr.ca>
-References: <47A3375F.80101@gmail.com> <47B2368D.9080408@gmail.com>
+From: "Bartlomiej Zolnierkiewicz" <bzolnier@gmail.com>
+Subject: Re: [PATCH 1/2] ide: use generic ATAPI packet command flags in ide-{floppy,tape,scsi}
+Date: Wed, 13 Feb 2008 17:35:34 +0100
+Message-ID: <58cb370e0802130835p242386fcj815649c9c33f43f4@mail.gmail.com>
+References: <1202919531-17798-1-git-send-email-petkovbb@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([76.10.145.34]:2679 "EHLO mail.rtr.ca"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933159AbYBMQYg (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 13 Feb 2008 11:24:36 -0500
-In-Reply-To: <47B2368D.9080408@gmail.com>
+Received: from fk-out-0910.google.com ([209.85.128.185]:33997 "EHLO
+	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933266AbYBMQfg (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 13 Feb 2008 11:35:36 -0500
+Received: by fk-out-0910.google.com with SMTP id z23so69559fkz.5
+        for <linux-ide@vger.kernel.org>; Wed, 13 Feb 2008 08:35:35 -0800 (PST)
+In-Reply-To: <1202919531-17798-1-git-send-email-petkovbb@gmail.com>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Jeff Garzik <jeff@garzik.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>
+To: Borislav Petkov <petkovbb@googlemail.com>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Borislav Petkov <petkovbb@gmail.com>
 
-Tejun Heo wrote:
-> This patch implements libata.force module parameter which can
-> selectively override ATA port, link and device configurations
-> including cable type, SATA PHY SPD limit, transfer mode and NCQ.
-...
-> +	libata.force=	[LIBATA] Force configurations.  The format is comma
-> +			separated list of "[ID:]VAL" where ID is
-> +			PORT[:DEVICE].  PORT and DEVICE are decimal numbers
-> +			matching port, link or device.  Basically, it matches
-..
+On Feb 13, 2008 5:18 PM, Borislav Petkov <petkovbb@googlemail.com> wrote:
+> This is done in one single patch in order not to cause git breakage.
+>
+> Signed-off-by: Borislav Petkov <petkovbb@gmail.com>
 
-Mmm.. not a NAK, but is there also a way to set/change these on the fly?
+Looks good but could you please reorder patches and move PC_* -> PC_FLAG *
+rename in ide-scsi to the patch removing atomic bitops from ide-scsi?
 
-I ask because, on my 4-core test system here, libata enumerates
-the ports differently depending upon whether I boot with a 32-bit
-kernel or a 64-bit kernel.
-
-Major PITA, that, and it's just the kind of thing that spoils
-fixed "PORT:DEVICE" module parameters, too.
-
-Now mind you, it's more likely the PCI layer that does the reverse
-order thing, but the end result is that my drives/ports are numbered
-differently depending upon which kernel I happen to boot with.
-
-??
+Thanks,
+Bart
