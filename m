@@ -1,88 +1,70 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: pci_get_device_reverse(), why does Calgary need this?
-Date: Thu, 14 Feb 2008 01:02:55 +0100
-Message-ID: <200802140102.55805.bzolnier@gmail.com>
-References: <20080213001506.GA13933@kroah.com> <200802132320.37172.bzolnier@gmail.com> <20080213234140.GA5169@kroah.com>
+From: Andrew Morton <akpm@linux-foundation.org>
+Subject: Re: [PATCHSET] printk: implement printk_header() and merging
+ printk, take #3
+Date: Wed, 13 Feb 2008 15:57:01 -0800
+Message-ID: <20080213155701.48871761.akpm@linux-foundation.org>
+References: <12028937731333-git-send-email-htejun@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.175]:33642 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759396AbYBMXtH (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 13 Feb 2008 18:49:07 -0500
-Received: by ug-out-1314.google.com with SMTP id z38so891090ugc.16
-        for <linux-ide@vger.kernel.org>; Wed, 13 Feb 2008 15:49:04 -0800 (PST)
-In-Reply-To: <20080213234140.GA5169@kroah.com>
-Content-Disposition: inline
+Received: from smtp2.linux-foundation.org ([207.189.120.14]:58514 "EHLO
+	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1765005AbYBMX5c (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 13 Feb 2008 18:57:32 -0500
+In-Reply-To: <12028937731333-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Greg KH <greg@kroah.com>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, muli@il.ibm.com, jdmason@kudzu.us, linux-ide@vger.kernel.org, linux-pci@atrey.karlin.mff.cuni.cz, linux-kernel@vger.kernel.org, discuss@x86-64.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: jeff@garzik.org, linux-ide@vger.kernel.org, jengelh@computergmbh.de, matthew@wil.cx, randy.dunlap@oracle.com, daniel.ritz-ml@swissonline.ch, linux-kernel@vger.kernel.org
 
-On Thursday 14 February 2008, Greg KH wrote:
-> On Wed, Feb 13, 2008 at 11:20:36PM +0100, Bartlomiej Zolnierkiewicz wrote:
-> > On Wednesday 13 February 2008, Greg KH wrote:
-> > > On Wed, Feb 13, 2008 at 09:28:24AM -0800, Greg KH wrote:
-> > > > On Wed, Feb 13, 2008 at 01:34:12PM +0100, Bartlomiej Zolnierkiewicz wrote:
-> > > > > On Wednesday 13 February 2008, Greg KH wrote:
-> > > > > > On Wed, Feb 13, 2008 at 02:17:37AM +0000, Alan Cox wrote:
-> > > > > > > > Why does the calgary driver need this?  Can we just use pci_get_device()
-> > > > > > > > instead?  Why do you need to walk the device list backwards?  Do you get
-> > > > > > > > false positives going forward?
-> > > > > > > 
-> > > > > > > It doesn't look to be performance critical so the driver can
-> > > > > > > pci_get_device until the end and use the final hit anyway.
-> > > > > > 
-> > > > > > That would make more sense.
-> > > > > > 
-> > > > > > > IDE reverse is more problematic but nobody seems to use it.
-> > > > > > 
-> > > > > > I've seen two posters say they use it.  I'm wondering what it is really
-> > > > > > solving if they use it, and why if it's really needed, scsi never had to
-> > > > > > implement such a hack...
-> > > > > 
-> > > > > It is no longer solving anything, just adds more pain. ;)
-> > > > > 
-> > > > > [ The option comes from 2.2.x (so long before LABEL=/ and /dev/disk/by-id/
-> > > > >   became popular).  Some "off-board" controllers integrated on motherboards
-> > > > >   used to appear before "on-board" IDE on PCI bus so this option was meant
-> > > > >   to preserve the legacy ordering. ]
-> > > > > 
-> > > > > Since it is valid only when "Probe IDE PCI devices in the PCI bus order
-> > > > > (DEPRECATED)" config option is used it is already on its way out (though
-> > > > > marking it as obsoleted would make it more explicit).
-> > > > > 
-> > > > > I think that removing "ide=reverse" in 2.6.26 would be OK...
-> > > > 
-> > > > Great, thanks for your blessing.  I'll make up a patch and send it to
-> > > > you for approval.
-> > > 
-> > > How does the patch below look?  I didn't want to remove the whole config
-> > > option, as there is more to the logic than just the "reverse order"
-> > > stuff there.
-> > 
-> > looks fine,
-> > 
-> > Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-> 
-> Thanks.
-> 
-> > > If you don't mind, can I take this through the PCI tree so as to allow
-> > > the removal of this pci function afterwards?
-> > 
-> > [...]
-> > 
-> > great, could you also:
-> > - rebase it on top of the patch below
-> > - forward the patch below to Linus for 2.6.25
-> 
-> Sure, you want this to go in for .25, but not the one I just posted
-> removing this option, correct?  That should wait for .26?
+On Wed, 13 Feb 2008 18:09:28 +0900
+Tejun Heo <htejun@gmail.com> wrote:
 
-Yes, lets give people the final call before actually removing this option
-(unless of course there is some urgent reason for removing it in .25).
+> This is the third take of implement-printk_header-and-mprintk
+> patchset.
+> 
+> Changes from the last take[L] are...
+> 
+> * Now header is printed on every line of a multiline message.  If the
+>   header ends with ':' followed by spaces.  The colon is replaced with
+>   space from the second line.
+> 
+> * s/mprintk/mprintk_flush/ and s/mprintk_add/mprintk/ as suggested.
+> 
+> * mprintk_init_alloc() and mprintk_free() added to ease malloc'd
+>   buffer handling.  No need to specify buffer size.  Sizing is left to
+>   mprintk.
+> 
+> This patchset aims to make printing multiline messages and assembling
+> message piece-by-piece easier.
+> 
+> In a nutshell, printk_header() lets you do the following atomically
+> (against other messages).
+> 
+>  code:
+>   printk(KERN_INFO "ata1.00: ", "line0\nline1\nline2\n");
+> 
+>  output:
+>   <6>ata1.00: line0
+>   <6>ata1.00  line1
+>   <6>ata1.00  line2
 
-Thanks,
-Bart
+That seems sensible.
+
+> And mprintk the following.
+> 
+>  code:
+>   DEFINE_MPRINTK(mp, 2 * 80);
+> 
+>   mprintk_set_header(&mp, KERN_INFO "ata%u.%2u: ", 1, 0);
+>   mprintk_push(&mp, "ATA %d", 7);
+>   mprintk_push(&mp, ", %u sectors\n", 1024);
+>   mprintk(&mp, "everything seems dandy\n");
+> 
+>  output:
+>   <6>ata1.00: ATA 7, 1024 sectors
+>   <6>ata1.00  everything seems dandy
+> 
+
+And that looks like an awful lot of fuss.  Is it really worth doing?
