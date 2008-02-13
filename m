@@ -1,49 +1,48 @@
 From: Greg KH <greg@kroah.com>
 Subject: Re: "ide=reverse" do we still need this?
-Date: Tue, 12 Feb 2008 20:43:04 -0800
-Message-ID: <20080213044304.GA10101@kroah.com>
-References: <20080213001506.GA13933@kroah.com> <20080213024329.GA6912@deepthought>
+Date: Tue, 12 Feb 2008 20:44:36 -0800
+Message-ID: <20080213044436.GB10101@kroah.com>
+References: <20080213001506.GA13933@kroah.com> <47B24AB3.3040009@keyaccess.nl>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:60054 "EHLO
+Received: from pentafluge.infradead.org ([213.146.154.40]:60059 "EHLO
 	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1764712AbYBMGCH (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 13 Feb 2008 01:02:07 -0500
+	with ESMTP id S1764861AbYBMGCJ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 13 Feb 2008 01:02:09 -0500
 Content-Disposition: inline
-In-Reply-To: <20080213024329.GA6912@deepthought>
+In-Reply-To: <47B24AB3.3040009@keyaccess.nl>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Ken Moffat <zarniwhoop@ntlworld.com>
+To: Rene Herman <rene.herman@keyaccess.nl>
 Cc: bzolnier@gmail.com, muli@il.ibm.com, jdmason@kudzu.us, linux-ide@vger.kernel.org, linux-pci@atrey.karlin.mff.cuni.cz, linux-kernel@vger.kernel.org, discuss@x86-64.org
 
-On Wed, Feb 13, 2008 at 02:43:29AM +0000, Ken Moffat wrote:
-> On Tue, Feb 12, 2008 at 04:15:07PM -0800, Greg KH wrote:
-> > 
-> > I'm curious if we really still support the ide=reverse option?  It's a
-> > config option that I don't think the distros still enable (SuSE does
-> > not).  Is this still needed these days?
-> > 
->  My "server" has a consumer-grade desktop amd64 mobo, with all that
-> implies about cheap hardware and strange/misleading bios options.
-> It also has an add-in dual IDE card with the main data on raid1.
-> It's set to ide=reverse, without that it doesn't boot (the add-ins
-> are IDE, system drive is SATA, so I guess it probably tries to boot
-> from the DVD - it's been a long time since it bit me and I don't
-> remember the full details.
-> 
->  That was how it was set for 2.6.18.6, and how it now boots from
-> 2.6.22.18.  I think at one time the order of the interfaces might
-> have been different.  Certainly, I carry forward a fallback without
-> ide=reverse in lilo.conf, just in case the disks move on my next
-> kernel upgrade.
+On Wed, Feb 13, 2008 at 02:41:07AM +0100, Rene Herman wrote:
+> On 13-02-08 01:15, Greg KH wrote:
+>
+>> I'm reworking the pci device list logic (we currently keep all PCI
+>> devices in 2 lists, which isn't the nicest, we should be able to get
+>> away with only 1 list.)
+>> The only bother I've found so far is the pci_get_device_reverse()
+>> function, it's used in 2 places, IDE and the calgary driver.
+>> I'm curious if we really still support the ide=reverse option?  It's a
+>> config option that I don't think the distros still enable (SuSE does
+>> not).  Is this still needed these days?
+>> In digging, we changed this option in 2.2.x from being called
+>> "pci=reverse" and no one else seems to miss it.
+>> Any thoughts?
+>
+> While details escape me somewhat again at the monment, a few months ago I 
+> was playing around with a PCI Promise IDE controller and needed ide=reverse 
+> to save me from having to switch disks around to still have a bootable 
+> system.
+>
+> Or some such. Not too clear anymore, but I remember it saved the day.
 
-Can't you just boot with /dev/disk/by-id/ and an initramfs to not have
-to worry about such a thing in the future?
+You couldn't just change the boot disk in grub?
 
-Have you tried the PATA drivers instead of IDE to see if this solves the
-"moves around" issue?  If they work, then you would not need the command
-line option at all.
+Or use an initramfs and /dev/disk/by-id/ to keep any future moves
+stable?
 
 thanks,
 
