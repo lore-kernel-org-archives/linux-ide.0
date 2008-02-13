@@ -1,126 +1,70 @@
-From: Kamalesh Babulal <kamalesh@linux.vnet.ibm.com>
-Subject: Re: [BUG] 2.6.24-mm1 and 2.6.24-git13 kernel panic's while bootup
- at ide_device_add_all
-Date: Wed, 13 Feb 2008 18:29:18 +0530
-Message-ID: <47B2E9A6.9060101@linux.vnet.ibm.com>
-References: <47A81865.9000506@linux.vnet.ibm.com> <200802131342.39803.rjw@sisk.pl>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: [RFC PATCH] ide-floppy: use rq->cmd for preparing and sending packet cmds to the drive
+Date: Wed, 13 Feb 2008 14:30:16 +0100
+Message-ID: <200802131430.16450.bzolnier@gmail.com>
+References: <20080212143715.GB4530@gollum.tnic> <200802122239.22566.bzolnier@gmail.com> <20080213124625.GB13446@gollum.tnic>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from E23SMTP03.au.ibm.com ([202.81.18.172]:48420 "EHLO
-	e23smtp03.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751965AbYBMM7a (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 13 Feb 2008 07:59:30 -0500
-In-Reply-To: <200802131342.39803.rjw@sisk.pl>
+Received: from nf-out-0910.google.com ([64.233.182.187]:54390 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751376AbYBMNRG (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 13 Feb 2008 08:17:06 -0500
+Received: by nf-out-0910.google.com with SMTP id g13so5283nfb.21
+        for <linux-ide@vger.kernel.org>; Wed, 13 Feb 2008 05:17:05 -0800 (PST)
+In-Reply-To: <20080213124625.GB13446@gollum.tnic>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: LKML <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, ananth@in.ibm.com, Andy Whitcroft <apw@shadowen.org>, Balbir Singh <balbir@linux.vnet.ibm.com>
-
-Rafael J. Wysocki wrote:
-> On Tuesday, 5 of February 2008, Kamalesh Babulal wrote:
->> Hi,
->>
->> The kernel bootup panics with the 2.6.24-mm1 and 2.6.24-git13 kernel
->> while defconfig compiled in for x86_64 (Intel(R) Xeon) box
-> 
-> Is that still happening or has it been fixed?
-> 
-> Rafael
-
-The panic is solved by the patch http://lkml.org/lkml/2008/2/11/350
-but the kernel is not boot because of the panic (http://lkml.org/lkml/2008/2/12/91)
-
-Creating root device.
-Mounting root filesystem.
-mount: could not  find filesystem
-Kernel panic - not syncing: Attempted to kill init!
-
-> 
-> 
->> BUG: unable to handle kernel paging request at ffffffffffffffb0
->> IP: [<ffffffff80413642>] init_irq+0x188/0x444
->> PGD 203067 PUD 204067 PMD 0 
->> Oops: 0000 [1] SMP 
->> CPU 2 
->> Modules linked in:
->> Pid: 1, comm: swapper Not tainted 2.6.24 #1
->> RIP: 0010:[<ffffffff80413642>]  [<ffffffff80413642>] init_irq+0x188/0x444
->> RSP: 0018:ffff81022f093e00  EFLAGS: 00010287
->> RAX: ffffffffffffff90 RBX: ffffffff808a9100 RCX: 0000000000000000
->> RDX: 00000000ffffffff RSI: ffff81022fc039c0 RDI: ffffffff8074dd00
->> RBP: ffff81022f093e30 R08: ffffffff808af880 R09: 0000000000000002
->> R10: 0000000000000001 R11: ffff8100000bed60 R12: ffffffff808b0400
->> R13: ffffffff808b0410 R14: 0000000000000000 R15: ffffffffffffffff
->> FS:  0000000000000000(0000) GS:ffff81022f0883c0(0000) knlGS:0000000000000000
->> CS:  0010 DS: 0018 ES: 0018 CR0: 000000008005003b
->> CR2: ffffffffffffffb0 CR3: 0000000000201000 CR4: 00000000000006e0
->> DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
->> DR3: 0000000000000000 DR6: 00000000ffff0ff0 DR7: 0000000000000400
->> Process swapper (pid: 1, threadinfo ffff81022f092000, task ffff81022f0797d0)
->> Stack:  ffff81022f093e30 0000000000000000 ffffffff808a9100 ffffffff808a9120
->>  00000000ffffffed 0000000000000000 ffff81022f093eb0 ffffffff80414425
->>  ffff81022f093ec0 0000000000000000 000000008074e920 0000000000000246
->> Call Trace:
->>  [<ffffffff80414425>] ide_device_add_all+0xb27/0xe1b
->>  [<ffffffff807d2884>] ide_generic_init+0x3a/0x3e
->>  [<ffffffff807b473b>] kernel_init+0x175/0x2e7
->>  [<ffffffff8020bff8>] child_rip+0xa/0x12
->>  [<ffffffff80372350>] ? acpi_ds_init_one_object+0x0/0x88
->>  [<ffffffff807b45c6>] ? kernel_init+0x0/0x2e7
->>  [<ffffffff8020bfee>] ? child_rip+0x0/0x12
->>
->>
->> Code: 89 03 49 8b 45 18 48 89 18 48 39 1b 75 04 0f 0b eb fe fe 05 51 51 38 00 fb eb 5b 48 8b 83 28 07 00 00 83 ca ff 48 83 e8 70 74 0e <48> 8b 40 20 48 8b 80 88 00 00 00 8b 50 04 48 8b 3d 79 ff 2f 00 
->> RIP  [<ffffffff80413642>] init_irq+0x188/0x444
->>  RSP <ffff81022f093e00>
->> CR2: ffffffffffffffb0
->> ---[ end trace 9010a4c8c4ba608a ]---
->>
->> (gdb) p init_irq
->> $1 = {int (ide_hwif_t *)} 0xffffffff804134ba <init_irq>
->> (gdb) p/x 0xffffffff804134ba+0x188
->> $2 = 0xffffffff80413642
->> (gdb) l *0xffffffff80413642
->> 0xffffffff80413642 is in init_irq (include/linux/ide.h:1311).
->> 1306            print_hex_dump(KERN_INFO, "", DUMP_PREFIX_NONE, 16, 2, id, 512, 0);
->> 1307    }
->> 1308
->> 1309    static inline int hwif_to_node(ide_hwif_t *hwif)
->> 1310    {
->> 1311            struct pci_dev *dev = to_pci_dev(hwif->dev);
->> 1312            return dev ? pcibus_to_node(dev->bus) : -1;
->> 1313    }
->> 1314
->> 1315    static inline ide_drive_t *ide_get_paired_drive(ide_drive_t *drive)
->> (gdb) 
->>
->> (gdb) p ide_device_add_all
->> $1 = {int (u8 *, const struct ide_port_info *)} 0xffffffff804138fe <ide_device_add_all>
->> (gdb) p/x 0xffffffff804138fe
->> $2 = 0xffffffff804138fe
->> (gdb) l *0xffffffff804138fe
->> 0xffffffff804138fe is in ide_device_add_all (drivers/ide/ide-probe.c:1372).
->> 1367                            hwif->cbl = hwif->cable_detect(hwif);
->> 1368            }
->> 1369    }
->> 1370
->> 1371    int ide_device_add_all(u8 *idx, const struct ide_port_info *d)
->> 1372    {
->> 1373            ide_hwif_t *hwif, *mate = NULL;
->> 1374            int i, rc = 0;
->> 1375
->> 1376            for (i = 0; i < MAX_HWIFS; i++) {
->> (gdb) 
->>
-> 
-> 
-> 
+To: petkovbb@gmail.com
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
 
--- 
-Thanks & Regards,
-Kamalesh Babulal,
-Linux Technology Center,
-IBM, ISTL.
+Hi,
+
+On Wednesday 13 February 2008, Borislav Petkov wrote:
+> On Tue, Feb 12, 2008 at 10:39:22PM +0100, Bartlomiej Zolnierkiewicz wrote:
+> 
+> Hi Bart,
+> 
+> > I think that this _really_ should be done _after_ unifying ATAPI handling [*].
+> > Otherwise you will be making some of the same changes to the _three_ copies
+> > of (more or less) identical code and more importantly we will have to delay
+> > unification after _all_ drivers are converted to rq->cmd[] (+ lets not forget
+> > that I'll have more changes to review ;).
+> > 
+> > (*) please take a closer look at *_issue_pc(), *_transfer_pc() and *_pc_intr()
+> >     in ide-{floppy,tape,scsi} (the useful hint is that after making these
+> >     functions free of references to device driver specific objects/functions
+> >     we can use drive->media == ide_{floppy,tape,scsi} checks for handling
+> >     not yet fully unified / media type specific code).
+> 
+> I started working on probably the easiest unification we could do: unify all the
+> pc->flags defines and move them in a header where all drivers can use them. This
+
+Yep.
+
+> raises an architectural design question: The way i see it, the generic ATAPI handling
+> is going to be sort of "serving" functionality to the drivers using ATAPI. Do we want
+> all this functionality to go to ide.{h,c} or we want specific atapi.{h,c} files that
+> contain only this unified functionality, or whatever else. In general, how is this
+> generic layer going to be distributed among headers/.c files and what do we want there?
+> 
+> /me tends to think that special headers/files, small and easy to manage and
+> modular, have more advantages in this case but this is just me. After we've
+> decided on that, the rest of the issues will resolve by themselves/get easier to
+> tackle.
+
+I think that:
+
+	drivers/ide/ide-atapi.c
+	include/linux/ide.h
+
+should be fine for now...
+
+Moving code around is trivial so we can always fixup before pushing upstream.
+
+Thanks,
+Bart
