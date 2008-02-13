@@ -1,109 +1,44 @@
-From: Michael Ellerman <michael@ellerman.id.au>
-Subject: Re: [PATCH 09/18] ide: rework PowerMac media-bay support
-Date: Wed, 13 Feb 2008 18:29:36 +1100
-Message-ID: <1202887776.7971.19.camel@concordia.ozlabs.ibm.com>
-References: <20080208004421.17746.32557.sendpatchset@localhost.localdomain>
-	 <20080208004523.17746.24578.sendpatchset@localhost.localdomain>
-Reply-To: michael@ellerman.id.au
-Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-rcWHPrY1cbcdMlpZJp3I"
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S932393AbYBMH35@vger.kernel.org>
-In-Reply-To: <20080208004523.17746.24578.sendpatchset@localhost.localdomain>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: linux-ide@vger.kernel.org, linuxppc-dev@ozlabs.org, linux-kernel@vger.kernel.org
+From: Dirk GOUDERS <hank@et.bocholt.fh-gelsenkirchen.de>
+Subject: Re: [discuss] "ide=reverse" do we still need this?
+Date: Wed, 13 Feb 2008 08:54:55 +0100
+Message-ID: <1237.1202889295@sora.hank.home>
+References: <20080213001506.GA13933@kroah.com>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from alice.et.bocholt.fh-gelsenkirchen.de ([193.175.197.63]:54799
+	"EHLO alice.et.bocholt.fh-gelsenkirchen.de" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754044AbYBMIJx (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 13 Feb 2008 03:09:53 -0500
+In-reply-to: <20080213001506.GA13933@kroah.com> 
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Greg KH <greg@kroah.com>
+Cc: bzolnier@gmail.com, muli@il.ibm.com, discuss@x86-64.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, jdmason@kudzu.us, linux-pci@atrey.karlin.mff.cuni.cz
 
+Hi,
 
---=-rcWHPrY1cbcdMlpZJp3I
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+> I'm reworking the pci device list logic (we currently keep all PCI
+> devices in 2 lists, which isn't the nicest, we should be able to get
+> away with only 1 list.)
+> 
+> The only bother I've found so far is the pci_get_device_reverse()
+> function, it's used in 2 places, IDE and the calgary driver.
+> 
+> I'm curious if we really still support the ide=reverse option?  It's a
+> config option that I don't think the distros still enable (SuSE does
+> not).  Is this still needed these days?
+> 
+> In digging, we changed this option in 2.2.x from being called
+> "pci=reverse" and no one else seems to miss it.
+> 
+> Any thoughts?
 
-On Fri, 2008-02-08 at 01:45 +0100, Bartlomiej Zolnierkiewicz wrote:
-> Rework PowerMac media-bay support in such way that instead of
-> un/registering the IDE interface we un/register IDE devices:
->=20
-> * Add ide_port_scan() helper for probing+registerering devices on a port.
->=20
-> * Rename ide_port_unregister_devices() to __ide_port_unregister_devices()=
-.
->=20
-> * Add ide_port_unregister_devices() helper for unregistering devices on a=
- port.
->=20
-> * Add 'ide_hwif_t *cd_port' to 'struct media_bay_info', pass 'hwif' inste=
-ad
->   of hwif->index to media_bay_set_ide_infos() and use it to setup 'cd_por=
-t'.
->=20
-> * Use ide_port_unregister_devices() instead of ide_unregister()
->   and ide_port_scan() instead of ide_register_hw() in media_bay_step().
->=20
-> * Unexport ide_register_hw() and make it static.
->=20
-> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-> ---
->  drivers/ide/ide-probe.c        |   18 ++++++++++++++++++
->  drivers/ide/ide.c              |   22 ++++++++++++++++------
->  drivers/ide/ppc/pmac.c         |    3 ++-
->  drivers/macintosh/mediabay.c   |   17 +++++++----------
->  include/asm-powerpc/mediabay.h |    4 +++-
->  include/linux/ide.h            |    6 ++----
->  6 files changed, 48 insertions(+), 22 deletions(-)
+I remember vaguely that some years ago, we set up a box with four IDE
+disks as a RAID set.  For that purpose, we added a PCI ATA100 controller
+so that each disk could act as a primary IDE device and we were only able
+to boot the system with the option ide=reverse.
+That box has been replaced by some other so I cannot verify it but as
+far as I remember it was a problem with disk numbering between BIOS,
+bootloader and/or kernel.  Also, at that time we used lilo and I am not
+sure if grub would have done better.
 
-> Index: b/include/asm-powerpc/mediabay.h
-> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
-> --- a/include/asm-powerpc/mediabay.h
-> +++ b/include/asm-powerpc/mediabay.h
-> @@ -22,10 +22,12 @@ int check_media_bay(struct device_node *
->  /* Number of bays in the machine or 0 */
->  extern int media_bay_count;
-> =20
-> +#ifdef CONFIG_BLK_DEV_IDE_PMAC
->  int check_media_bay_by_base(unsigned long base, int what);
->  /* called by IDE PMAC host driver to register IDE controller for media b=
-ay */
->  int media_bay_set_ide_infos(struct device_node *which_bay, unsigned long=
- base,
-> -			    int irq, int index);
-> +			    int irq, ide_hwif_t *hwif);
-> +#endif
-> =20
->  #endif /* __KERNEL__ */
->  #endif /* _PPC_MEDIABAY_H */
-
-This hunk breaks pmac32_defconfig for me.
-
-include2/asm/mediabay.h:29: error: syntax error before 'ide_hwif_t'
-make[3]: *** [arch/powerpc/platforms/powermac/setup.o] Error 1
-make[2]: *** [arch/powerpc/platforms/powermac] Error 2
-make[1]: *** [arch/powerpc/platforms] Error 2
-make: *** [sub-make] Error 2
-
-cheers
-
---=20
-Michael Ellerman
-OzLabs, IBM Australia Development Lab
-
-wwweb: http://michael.ellerman.id.au
-phone: +61 2 6212 1183 (tie line 70 21183)
-
-We do not inherit the earth from our ancestors,
-we borrow it from our children. - S.M.A.R.T Person
-
---=-rcWHPrY1cbcdMlpZJp3I
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.6 (GNU/Linux)
-
-iD8DBQBHspxgdSjSd0sB4dIRAibPAJ0dcGD1H6r7zo8Pb8j3YsG+884OSgCeNItN
-zwItoANm8Lo9B2HVBkp3mLg=
-=FdoT
------END PGP SIGNATURE-----
-
---=-rcWHPrY1cbcdMlpZJp3I--
+Dirk
