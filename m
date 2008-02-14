@@ -1,36 +1,85 @@
-From: bugme-daemon@bugzilla.kernel.org
-Subject: [Bug 9962] mount: could not  find filesystem
-Date: Wed, 13 Feb 2008 16:22:30 -0800 (PST)
-Message-ID: <20080214002230.EB127108018@picon.linux-foundation.org>
-References: <bug-9962-11633@http.bugzilla.kernel.org/>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: [PATCH 08/11] ppc/pplus: remove ppc_ide_md.ide_init_hwif hook
+Date: Thu, 14 Feb 2008 01:37:22 +0100
+Message-ID: <20080214003722.12879.2412.sendpatchset@localhost.localdomain>
+References: <20080214003621.12879.33868.sendpatchset@localhost.localdomain>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp2.linux-foundation.org ([207.189.120.14]:59107 "EHLO
-	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S933821AbYBNAXB (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 13 Feb 2008 19:23:01 -0500
-Received: from picon.linux-foundation.org (picon.linux-foundation.org [207.189.120.79])
-	by smtp2.linux-foundation.org (8.13.5.20060308/8.13.5/Debian-3ubuntu1.1) with ESMTP id m1E0MVfT015637
-	for <linux-ide@vger.kernel.org>; Wed, 13 Feb 2008 16:22:32 -0800
-In-Reply-To: <bug-9962-11633@http.bugzilla.kernel.org/>
+Received: from nf-out-0910.google.com ([64.233.182.190]:64981 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934559AbYBNAW4 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 13 Feb 2008 19:22:56 -0500
+Received: by nf-out-0910.google.com with SMTP id g13so128999nfb.21
+        for <linux-ide@vger.kernel.org>; Wed, 13 Feb 2008 16:22:55 -0800 (PST)
+In-Reply-To: <20080214003621.12879.33868.sendpatchset@localhost.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
+Cc: linuxppc-dev@ozlabs.org, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Benjamin Herrenschmidt <benh@kernel.crashing.org>, linux-kernel@vger.kernel.org
 
-http://bugzilla.kernel.org/show_bug.cgi?id=9962
+* Call ide_init_default_irq() for pplus in init_ide_data().
 
+* Remove no longer needed pplus_ide_init_hwif_ports().
 
-rjw@sisk.pl changed:
+There should be no functional changes caused by this patch.
 
-           What    |Removed                     |Added
-----------------------------------------------------------------------------
-         AssignedTo|io_ide@kernel-bugs.osdl.org |other_other@kernel-
-                   |                            |bugs.osdl.org
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+---
+ arch/ppc/platforms/pplus.c |   23 -----------------------
+ drivers/ide/ide.c          |    2 +-
+ 2 files changed, 1 insertion(+), 24 deletions(-)
 
-
-
-
--- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug, or are watching the assignee.
-You are the assignee for the bug, or are watching the assignee.
+Index: b/arch/ppc/platforms/pplus.c
+===================================================================
+--- a/arch/ppc/platforms/pplus.c
++++ b/arch/ppc/platforms/pplus.c
+@@ -695,28 +695,6 @@ static unsigned long pplus_ide_default_i
+ 		return 0;
+ 	}
+ }
+-
+-static void __init
+-pplus_ide_init_hwif_ports(hw_regs_t * hw, unsigned long data_port,
+-			  unsigned long ctrl_port, int *irq)
+-{
+-	unsigned long reg = data_port;
+-	int i;
+-
+-	for (i = IDE_DATA_OFFSET; i <= IDE_STATUS_OFFSET; i++) {
+-		hw->io_ports[i] = reg;
+-		reg += 1;
+-	}
+-
+-	if (ctrl_port)
+-		hw->io_ports[IDE_CONTROL_OFFSET] = ctrl_port;
+-	else
+-		hw->io_ports[IDE_CONTROL_OFFSET] =
+-		    hw->io_ports[IDE_DATA_OFFSET] + 0x206;
+-
+-	if (irq != NULL)
+-		*irq = pplus_ide_default_irq(data_port);
+-}
+ #endif
+ 
+ #ifdef CONFIG_SMP
+@@ -887,7 +865,6 @@ platform_init(unsigned long r3, unsigned
+ #if defined(CONFIG_BLK_DEV_IDE) || defined(CONFIG_BLK_DEV_IDE_MODULE)
+ 	ppc_ide_md.default_irq = pplus_ide_default_irq;
+ 	ppc_ide_md.default_io_base = pplus_ide_default_io_base;
+-	ppc_ide_md.ide_init_hwif = pplus_ide_init_hwif_ports;
+ #endif
+ 
+ #ifdef CONFIG_SERIAL_TEXT_DEBUG
+Index: b/drivers/ide/ide.c
+===================================================================
+--- a/drivers/ide/ide.c
++++ b/drivers/ide/ide.c
+@@ -214,7 +214,7 @@ static void __init init_ide_data (void)
+ 		memcpy(hwif->io_ports, hw.io_ports, sizeof(hw.io_ports));
+ #endif
+ 		hwif->noprobe = !hwif->io_ports[IDE_DATA_OFFSET];
+-#if !defined(CONFIG_PPC32) || !defined(CONFIG_PCI)
++#if !defined(CONFIG_PPC32) || defined(CONFIG_PPLUS) || !defined(CONFIG_PCI)
+ 		hwif->irq =
+ 			ide_init_default_irq(hwif->io_ports[IDE_DATA_OFFSET]);
+ #endif
