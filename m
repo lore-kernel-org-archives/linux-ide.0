@@ -1,41 +1,41 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: "mount: could not find filesystem" - aacraid? (was: Re:
-	2.6.26-git0: IDE oops during boot)
-Date: Thu, 14 Feb 2008 09:47:32 -0600
-Message-ID: <1203004052.3189.18.camel@localhost.localdomain>
-References: <20080206105334.GA3664@elf.ucw.cz>
-	 <47B40DF2.10009@linux.vnet.ibm.com> <200802141301.35032.bzolnier@gmail.com>
-	 <200802141307.42169.bzolnier@gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+From: bugme-daemon@bugzilla.kernel.org
+Subject: [Bug 9904] ASUS DVD-E616A - drive side 80-wire cable detection failed
+Date: Thu, 14 Feb 2008 07:52:09 -0800 (PST)
+Message-ID: <20080214155209.6AE4D108011@picon.linux-foundation.org>
+References: <bug-9904-11633@http.bugzilla.kernel.org/>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:42706 "EHLO
-	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751634AbYBNPrm (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 14 Feb 2008 10:47:42 -0500
-In-Reply-To: <200802141307.42169.bzolnier@gmail.com>
+Received: from smtp2.linux-foundation.org ([207.189.120.14]:34578 "EHLO
+	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752113AbYBNPwL (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 14 Feb 2008 10:52:11 -0500
+Received: from picon.linux-foundation.org (picon.linux-foundation.org [207.189.120.79])
+	by smtp2.linux-foundation.org (8.13.5.20060308/8.13.5/Debian-3ubuntu1.1) with ESMTP id m1EFq95Z015446
+	for <linux-ide@vger.kernel.org>; Thu, 14 Feb 2008 07:52:10 -0800
+In-Reply-To: <bug-9904-11633@http.bugzilla.kernel.org/>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: Kamalesh Babulal <kamalesh@linux.vnet.ibm.com>, Nish Aravamudan <nish.aravamudan@gmail.com>, Pavel Machek <pavel@ucw.cz>, kernel list <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, ananth@in.ibm.com, Andi Kleen <andi@firstfloor.org>, linux-scsi@vger.kernel.org, aacraid@adaptec.com
+To: linux-ide@vger.kernel.org
 
-On Thu, 2008-02-14 at 13:07 +0100, Bartlomiej Zolnierkiewicz wrote:
-> > I worry that another git-bisect session will be needed unless SCSI
-> > developers are already aware of the problem source.
-> 
-> Yinghai Lu noticed that it may be actually a SES problem:
-> 
-> http://lkml.org/lkml/2008/2/14/88
-> 
-> [ I overlooked the above mail, sorry ]
+http://bugzilla.kernel.org/show_bug.cgi?id=9904
 
-Only if SES is enabled, is it (CONFIG_SCSI_ENCLOSURE)? ... is there
-actually a dmesg of the failing system somewhere, I couldn't find it in
-the (somewhat long) thread?
 
-James
+chewi@aura-online.co.uk changed:
+
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+                 CC|                            |chewi@aura-online.co.uk
 
 
 
 
+------- Comment #1 from chewi@aura-online.co.uk  2008-02-14 07:52 -------
+I can confirm that this is also happening here with my Western Digital
+WD1200JB. The motherboard an ASUS Striker Extreme, which has an NVIDIA
+(nForce?) IDE controller so the bug doesn't appear to be hardware-specific.
+This is a new machine so I haven't tried any earlier kernel versions.
+
+
+-- 
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug, or are watching the assignee.
