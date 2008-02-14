@@ -1,56 +1,61 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCH #upstream] libata: implement libata.force module parameter
-Date: Thu, 14 Feb 2008 09:17:53 +0900
-Message-ID: <47B388B1.6050203@gmail.com>
-References: <47A3375F.80101@gmail.com> <47B2368D.9080408@gmail.com> <47B319C2.5030002@rtr.ca>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: [PATCH 00/11] ide/ppc: remove PPC specific IDE hacks
+Date: Thu, 14 Feb 2008 01:36:21 +0100
+Message-ID: <20080214003621.12879.33868.sendpatchset@localhost.localdomain>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from el-out-1112.google.com ([209.85.162.181]:41513 "EHLO
-	el-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1765392AbYBNASA (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 13 Feb 2008 19:18:00 -0500
-Received: by el-out-1112.google.com with SMTP id v27so204032ele.23
-        for <linux-ide@vger.kernel.org>; Wed, 13 Feb 2008 16:17:59 -0800 (PST)
-In-Reply-To: <47B319C2.5030002@rtr.ca>
+Received: from nf-out-0910.google.com ([64.233.182.190]:64981 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1764890AbYBNAV4 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 13 Feb 2008 19:21:56 -0500
+Received: by nf-out-0910.google.com with SMTP id g13so128999nfb.21
+        for <linux-ide@vger.kernel.org>; Wed, 13 Feb 2008 16:21:54 -0800 (PST)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark Lord <liml@rtr.ca>
-Cc: Jeff Garzik <jeff@garzik.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>
+To: linux-ide@vger.kernel.org
+Cc: linuxppc-dev@ozlabs.org, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Benjamin Herrenschmidt <benh@kernel.crashing.org>, linux-kernel@vger.kernel.org
 
-Mark Lord wrote:
-> Tejun Heo wrote:
->> This patch implements libata.force module parameter which can
->> selectively override ATA port, link and device configurations
->> including cable type, SATA PHY SPD limit, transfer mode and NCQ.
-> ...
->> +    libata.force=    [LIBATA] Force configurations.  The format is comma
->> +            separated list of "[ID:]VAL" where ID is
->> +            PORT[:DEVICE].  PORT and DEVICE are decimal numbers
->> +            matching port, link or device.  Basically, it matches
-> ..
-> 
-> Mmm.. not a NAK, but is there also a way to set/change these on the fly?
 
-What do you mean by 'on the fly'?  While the system is running?  If so,
-I think that should be done through other interfaces - pass through,
-sysfs, etc...
+Previous patchset adding warm-plug support allows the removal of PPC specific
+IDE hacks (500 LOC gone)...
 
-> I ask because, on my 4-core test system here, libata enumerates
-> the ports differently depending upon whether I boot with a 32-bit
-> kernel or a 64-bit kernel.
-> 
-> Major PITA, that, and it's just the kind of thing that spoils
-> fixed "PORT:DEVICE" module parameters, too.
-> 
-> Now mind you, it's more likely the PCI layer that does the reverse
-> order thing, but the end result is that my drives/ports are numbered
-> differently depending upon which kernel I happen to boot with.
+[ Ben, please take a look when you have some time, thanks! ]
 
-Heck... That's ugly.  libata.force is mainly conceived as debugging /
-installation helper, so using fixed PORT is good enough but maybe
-allowing bus_id as PORT is useful?  Something like [00:1f.2]:00?
+diffstat:
 
--- 
-tejun
+ arch/powerpc/kernel/setup_32.c          |    8 --
+ arch/powerpc/platforms/powermac/pci.c   |   22 -------
+ arch/powerpc/platforms/powermac/pmac.h  |    5 -
+ arch/powerpc/platforms/powermac/setup.c |    8 --
+ arch/ppc/configs/sandpoint_defconfig    |    2 
+ arch/ppc/kernel/ppc_ksyms.c             |    5 -
+ arch/ppc/kernel/setup.c                 |    2 
+ arch/ppc/platforms/4xx/bamboo.c         |    1 
+ arch/ppc/platforms/4xx/ebony.c          |    1 
+ arch/ppc/platforms/4xx/luan.c           |    1 
+ arch/ppc/platforms/4xx/ocotea.c         |    1 
+ arch/ppc/platforms/4xx/taishan.c        |    1 
+ arch/ppc/platforms/4xx/yucca.c          |    1 
+ arch/ppc/platforms/chestnut.c           |    1 
+ arch/ppc/platforms/cpci690.c            |    1 
+ arch/ppc/platforms/ev64260.c            |    1 
+ arch/ppc/platforms/hdpu.c               |   36 -----------
+ arch/ppc/platforms/lopec.c              |   85 ----------------------------
+ arch/ppc/platforms/mvme5100.c           |    1 
+ arch/ppc/platforms/powerpmc250.c        |    1 
+ arch/ppc/platforms/pplus.c              |   58 -------------------
+ arch/ppc/platforms/prep_setup.c         |   38 ------------
+ arch/ppc/platforms/prpmc750.c           |    1 
+ arch/ppc/platforms/prpmc800.c           |    1 
+ arch/ppc/platforms/radstone_ppc7d.c     |    1 
+ arch/ppc/platforms/residual.c           |    1 
+ arch/ppc/platforms/sandpoint.c          |   94 -------------------------------
+ arch/ppc/platforms/sandpoint.h          |    3 
+ arch/ppc/platforms/spruce.c             |    1 
+ arch/ppc/syslib/m8xx_setup.c            |    6 -
+ arch/ppc/syslib/ppc4xx_setup.c          |   23 -------
+ drivers/ide/ide.c                       |    6 -
+ drivers/ide/pci/sl82c105.c              |    6 +
+ drivers/ide/ppc/mpc8xx.c                |   86 +++++++---------------------
+ drivers/ide/ppc/pmac.c                  |   97 +++-----------------------------
+ include/asm-powerpc/ide.h               |   47 ++++++++++-----
+ 36 files changed, 72 insertions(+), 581 deletions(-)
