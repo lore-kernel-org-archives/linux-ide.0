@@ -1,202 +1,318 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH 07/11] ppc/sandpoint: remove ppc_ide_md hooks
-Date: Thu, 14 Feb 2008 01:37:15 +0100
-Message-ID: <20080214003715.12879.31660.sendpatchset@localhost.localdomain>
+Subject: [PATCH 09/11] ppc: remove ppc_ide_md
+Date: Thu, 14 Feb 2008 01:37:29 +0100
+Message-ID: <20080214003729.12879.2159.sendpatchset@localhost.localdomain>
 References: <20080214003621.12879.33868.sendpatchset@localhost.localdomain>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ik-out-1112.google.com ([66.249.90.178]:47302 "EHLO
-	ik-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933290AbYBNAWv (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 13 Feb 2008 19:22:51 -0500
-Received: by ik-out-1112.google.com with SMTP id c28so153703ika.5
-        for <linux-ide@vger.kernel.org>; Wed, 13 Feb 2008 16:22:48 -0800 (PST)
+Received: from nf-out-0910.google.com ([64.233.182.189]:1264 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934559AbYBNAXG (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 13 Feb 2008 19:23:06 -0500
+Received: by nf-out-0910.google.com with SMTP id g13so129154nfb.21
+        for <linux-ide@vger.kernel.org>; Wed, 13 Feb 2008 16:23:02 -0800 (PST)
 In-Reply-To: <20080214003621.12879.33868.sendpatchset@localhost.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
 Cc: linuxppc-dev@ozlabs.org, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Benjamin Herrenschmidt <benh@kernel.crashing.org>, linux-kernel@vger.kernel.org
 
-* Add IDE_HFLAG_FORCE_LEGACY_IRQS host flag for Motorola-Sandpoint platform
-  to sl82c105 host driver.
+* Add special cases for pplus and prep to ide_default_{irq,io_base}()
+  (+ FIXMEs about the need to use IDE platform host driver instead).
 
-* Disable ide_generic host driver in arch/ppc/configs/sandpoint_defconfig
-  and enable sl82c105 one.
+* Remove no longer needed ppc_ide_md and struct ide_machdep_calls.
 
-* Remove ppc_ide_md hooks from arch/ppc/platforms/sandpoint.c - no need for
-  them (sl82c105 host driver takes care of all this setup).
+* Then remove <linux/ide.h> include from:
+  - arch/powerpc/kernel/setup_32.c
+  - arch/ppc/kernel/ppc_ksyms.c
+  - arch/ppc/kernel/setup.c
+  - arch/ppc/platforms/pplus.c
+  - arch/ppc/platforms/prep_setup.c
 
-* Then remove no longer needed <linux/ide.h> include.
-
-* Also update arch/ppc/platforms/sandpoint.h.
-
-Unfortunately (unlike lopec's case) sl82c105 host driver was not enabled
-in defconfing so there is a funcionality change.
-
-[ Not a big deal since sl82c105 is superior over ide_generic. ]
+There should be no functional changes caused by this patch.
 
 Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
 Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 ---
- arch/ppc/configs/sandpoint_defconfig |    2 
- arch/ppc/platforms/sandpoint.c       |   94 -----------------------------------
- arch/ppc/platforms/sandpoint.h       |    3 -
- drivers/ide/pci/sl82c105.c           |    2 
- 4 files changed, 2 insertions(+), 99 deletions(-)
+ arch/powerpc/kernel/setup_32.c  |    8 ------
+ arch/ppc/kernel/ppc_ksyms.c     |    5 ----
+ arch/ppc/kernel/setup.c         |    2 -
+ arch/ppc/platforms/pplus.c      |   35 -----------------------------
+ arch/ppc/platforms/prep_setup.c |   38 --------------------------------
+ drivers/ide/ide.c               |    4 ---
+ include/asm-powerpc/ide.h       |   47 +++++++++++++++++++++++++++-------------
+ 7 files changed, 32 insertions(+), 107 deletions(-)
 
-Index: b/arch/ppc/configs/sandpoint_defconfig
+Index: b/arch/powerpc/kernel/setup_32.c
 ===================================================================
---- a/arch/ppc/configs/sandpoint_defconfig
-+++ b/arch/ppc/configs/sandpoint_defconfig
-@@ -189,7 +189,7 @@ CONFIG_IDE_TASKFILE_IO=y
- #
- # IDE chipset support/bugfixes
- #
--CONFIG_IDE_GENERIC=y
-+CONFIG_BLK_DEV_SL82C105=y
- # CONFIG_BLK_DEV_IDEPCI is not set
- # CONFIG_BLK_DEV_IDEDMA is not set
- # CONFIG_IDEDMA_AUTO is not set
-Index: b/arch/ppc/platforms/sandpoint.c
-===================================================================
---- a/arch/ppc/platforms/sandpoint.c
-+++ b/arch/ppc/platforms/sandpoint.c
-@@ -71,7 +71,6 @@
- #include <linux/initrd.h>
- #include <linux/console.h>
+--- a/arch/powerpc/kernel/setup_32.c
++++ b/arch/powerpc/kernel/setup_32.c
+@@ -10,9 +10,6 @@
+ #include <linux/reboot.h>
  #include <linux/delay.h>
+ #include <linux/initrd.h>
+-#if defined(CONFIG_IDE) || defined(CONFIG_IDE_MODULE)
+-#include <linux/ide.h>
+-#endif
+ #include <linux/tty.h>
+ #include <linux/bootmem.h>
+ #include <linux/seq_file.h>
+@@ -51,11 +48,6 @@
+ 
+ extern void bootx_init(unsigned long r4, unsigned long phys);
+ 
+-#if defined(CONFIG_BLK_DEV_IDE) || defined(CONFIG_BLK_DEV_IDE_MODULE)
+-struct ide_machdep_calls ppc_ide_md;
+-EXPORT_SYMBOL(ppc_ide_md);
+-#endif
+-
+ int boot_cpuid;
+ EXPORT_SYMBOL_GPL(boot_cpuid);
+ int boot_cpuid_phys;
+Index: b/arch/ppc/kernel/ppc_ksyms.c
+===================================================================
+--- a/arch/ppc/kernel/ppc_ksyms.c
++++ b/arch/ppc/kernel/ppc_ksyms.c
+@@ -12,7 +12,6 @@
+ #include <linux/irq.h>
+ #include <linux/pci.h>
+ #include <linux/delay.h>
+-#include <linux/ide.h>
+ #include <linux/pm.h>
+ #include <linux/bitops.h>
+ 
+@@ -124,10 +123,6 @@ EXPORT_SYMBOL(__ioremap);
+ EXPORT_SYMBOL(iounmap);
+ EXPORT_SYMBOL(ioremap_bot);	/* aka VMALLOC_END */
+ 
+-#if defined(CONFIG_BLK_DEV_IDE) || defined(CONFIG_BLK_DEV_IDE_MODULE)
+-EXPORT_SYMBOL(ppc_ide_md);
+-#endif
+-
+ #ifdef CONFIG_PCI
+ EXPORT_SYMBOL(isa_io_base);
+ EXPORT_SYMBOL(isa_mem_base);
+Index: b/arch/ppc/kernel/setup.c
+===================================================================
+--- a/arch/ppc/kernel/setup.c
++++ b/arch/ppc/kernel/setup.c
+@@ -10,7 +10,6 @@
+ #include <linux/reboot.h>
+ #include <linux/delay.h>
+ #include <linux/initrd.h>
+-#include <linux/ide.h>
+ #include <linux/screen_info.h>
+ #include <linux/bootmem.h>
+ #include <linux/seq_file.h>
+@@ -57,7 +56,6 @@ extern void ppc6xx_idle(void);
+ extern void power4_idle(void);
+ 
+ extern boot_infos_t *boot_infos;
+-struct ide_machdep_calls ppc_ide_md;
+ 
+ /* Used with the BI_MEMSIZE bootinfo parameter to store the memory
+    size value reported by the boot loader. */
+Index: b/arch/ppc/platforms/pplus.c
+===================================================================
+--- a/arch/ppc/platforms/pplus.c
++++ b/arch/ppc/platforms/pplus.c
+@@ -19,7 +19,6 @@
+ #include <linux/ioport.h>
+ #include <linux/console.h>
+ #include <linux/pci.h>
 -#include <linux/ide.h>
  #include <linux/seq_file.h>
  #include <linux/root_dev.h>
- #include <linux/serial.h>
-@@ -559,93 +558,6 @@ sandpoint_show_cpuinfo(struct seq_file *
- 	return 0;
+ 
+@@ -668,35 +667,6 @@ static void __init pplus_init_IRQ(void)
+ 		ppc_md.progress("init_irq: exit", 0);
  }
  
 -#if defined(CONFIG_BLK_DEV_IDE) || defined(CONFIG_BLK_DEV_IDE_MODULE)
 -/*
-- * IDE support.
+- * IDE stuff.
 - */
--static int		sandpoint_ide_ports_known = 0;
--static unsigned long	sandpoint_ide_regbase[MAX_HWIFS];
--static unsigned long	sandpoint_ide_ctl_regbase[MAX_HWIFS];
--static unsigned long	sandpoint_idedma_regbase;
--
--static void
--sandpoint_ide_probe(void)
+-static int pplus_ide_default_irq(unsigned long base)
 -{
--	struct pci_dev *pdev = pci_get_device(PCI_VENDOR_ID_WINBOND,
--			PCI_DEVICE_ID_WINBOND_82C105, NULL);
--
--	if (pdev) {
--		sandpoint_ide_regbase[0]=pdev->resource[0].start;
--		sandpoint_ide_regbase[1]=pdev->resource[2].start;
--		sandpoint_ide_ctl_regbase[0]=pdev->resource[1].start;
--		sandpoint_ide_ctl_regbase[1]=pdev->resource[3].start;
--		sandpoint_idedma_regbase=pdev->resource[4].start;
--		pci_dev_put(pdev);
+-	switch (base) {
+-	case 0x1f0:
+-		return 14;
+-	case 0x170:
+-		return 15;
+-	default:
+-		return 0;
 -	}
--
--	sandpoint_ide_ports_known = 1;
 -}
 -
--static int
--sandpoint_ide_default_irq(unsigned long base)
+-static unsigned long pplus_ide_default_io_base(int index)
 -{
--	if (sandpoint_ide_ports_known == 0)
--		sandpoint_ide_probe();
--
--	if (base == sandpoint_ide_regbase[0])
--		return SANDPOINT_IDE_INT0;
--	else if (base == sandpoint_ide_regbase[1])
--		return SANDPOINT_IDE_INT1;
--	else
+-	switch (index) {
+-	case 0:
+-		return 0x1f0;
+-	case 1:
+-		return 0x170;
+-	default:
 -		return 0;
+-	}
+-}
+-#endif
+-
+ #ifdef CONFIG_SMP
+ /* PowerPlus (MTX) support */
+ static int __init smp_pplus_probe(void)
+@@ -862,11 +832,6 @@ platform_init(unsigned long r3, unsigned
+ 	ppc_md.find_end_of_memory = pplus_find_end_of_memory;
+ 	ppc_md.setup_io_mappings = pplus_map_io;
+ 
+-#if defined(CONFIG_BLK_DEV_IDE) || defined(CONFIG_BLK_DEV_IDE_MODULE)
+-	ppc_ide_md.default_irq = pplus_ide_default_irq;
+-	ppc_ide_md.default_io_base = pplus_ide_default_io_base;
+-#endif
+-
+ #ifdef CONFIG_SERIAL_TEXT_DEBUG
+ 	ppc_md.progress = gen550_progress;
+ #endif				/* CONFIG_SERIAL_TEXT_DEBUG */
+Index: b/arch/ppc/platforms/prep_setup.c
+===================================================================
+--- a/arch/ppc/platforms/prep_setup.c
++++ b/arch/ppc/platforms/prep_setup.c
+@@ -33,7 +33,6 @@
+ #include <linux/console.h>
+ #include <linux/timex.h>
+ #include <linux/pci.h>
+-#include <linux/ide.h>
+ #include <linux/seq_file.h>
+ #include <linux/root_dev.h>
+ 
+@@ -894,38 +893,6 @@ prep_init_IRQ(void)
+ 		i8259_init(MPC10X_MAPA_PCI_INTACK_ADDR, 0);
+ }
+ 
+-#if defined(CONFIG_BLK_DEV_IDE) || defined(CONFIG_BLK_DEV_IDE_MODULE)
+-/*
+- * IDE stuff.
+- */
+-static int
+-prep_ide_default_irq(unsigned long base)
+-{
+-	switch (base) {
+-		case 0x1f0: return 13;
+-		case 0x170: return 13;
+-		case 0x1e8: return 11;
+-		case 0x168: return 10;
+-		case 0xfff0: return 14;		/* MCP(N)750 ide0 */
+-		case 0xffe0: return 15;		/* MCP(N)750 ide1 */
+-		default: return 0;
+-	}
 -}
 -
 -static unsigned long
--sandpoint_ide_default_io_base(int index)
+-prep_ide_default_io_base(int index)
 -{
--	if (sandpoint_ide_ports_known == 0)
--		sandpoint_ide_probe();
--
--	return sandpoint_ide_regbase[index];
--}
--
--static void __init
--sandpoint_ide_init_hwif_ports(hw_regs_t *hw, unsigned long data_port,
--		unsigned long ctrl_port, int *irq)
--{
--	unsigned long reg = data_port;
--	uint	alt_status_base;
--	int	i;
--
--	for (i = IDE_DATA_OFFSET; i <= IDE_STATUS_OFFSET; i++) {
--		hw->io_ports[i] = reg++;
--	}
--
--	if (data_port == sandpoint_ide_regbase[0]) {
--		alt_status_base = sandpoint_ide_ctl_regbase[0] + 2;
--		hw->irq = 14;
--	}
--	else if (data_port == sandpoint_ide_regbase[1]) {
--		alt_status_base = sandpoint_ide_ctl_regbase[1] + 2;
--		hw->irq = 15;
--	}
--	else {
--		alt_status_base = 0;
--		hw->irq = 0;
--	}
--
--	if (ctrl_port) {
--		hw->io_ports[IDE_CONTROL_OFFSET] = ctrl_port;
--	} else {
--		hw->io_ports[IDE_CONTROL_OFFSET] = alt_status_base;
--	}
--
--	if (irq != NULL) {
--		*irq = hw->irq;
+-	switch (index) {
+-		case 0: return 0x1f0;
+-		case 1: return 0x170;
+-		case 2: return 0x1e8;
+-		case 3: return 0x168;
+-		default:
+-			return 0;
 -	}
 -}
 -#endif
 -
- /*
-  * Set BAT 3 to map 0xf8000000 to end of physical memory space 1-to-1.
-  */
-@@ -736,10 +648,4 @@ platform_init(unsigned long r3, unsigned
- #ifdef CONFIG_SERIAL_TEXT_DEBUG
- 	ppc_md.progress = gen550_progress;
- #endif
--
--#if defined(CONFIG_BLK_DEV_IDE) || defined(CONFIG_BLK_DEV_IDE_MODULE)
--	ppc_ide_md.default_irq = sandpoint_ide_default_irq;
--	ppc_ide_md.default_io_base = sandpoint_ide_default_io_base;
--	ppc_ide_md.ide_init_hwif = sandpoint_ide_init_hwif_ports;
--#endif
- }
-Index: b/arch/ppc/platforms/sandpoint.h
-===================================================================
---- a/arch/ppc/platforms/sandpoint.h
-+++ b/arch/ppc/platforms/sandpoint.h
-@@ -28,9 +28,6 @@
-  */
- #define SANDPOINT_IDE_INT0		23	/* EPIC 7 */
- #define SANDPOINT_IDE_INT1		24	/* EPIC 8 */
--#else
--#define SANDPOINT_IDE_INT0		14	/* 8259 Test */
--#define SANDPOINT_IDE_INT1		15	/* 8259 Test */
- #endif
+ #ifdef CONFIG_SMP
+ /* PReP (MTX) support */
+ static int __init
+@@ -1070,11 +1037,6 @@ prep_init(unsigned long r3, unsigned lon
  
- /*
-Index: b/drivers/ide/pci/sl82c105.c
+ 	ppc_md.setup_io_mappings = prep_map_io;
+ 
+-#if defined(CONFIG_BLK_DEV_IDE) || defined(CONFIG_BLK_DEV_IDE_MODULE)
+-	ppc_ide_md.default_irq = prep_ide_default_irq;
+-	ppc_ide_md.default_io_base = prep_ide_default_io_base;
+-#endif
+-
+ #ifdef CONFIG_SMP
+ 	smp_ops			 = &prep_smp_ops;
+ #endif /* CONFIG_SMP */
+Index: b/drivers/ide/ide.c
 ===================================================================
---- a/drivers/ide/pci/sl82c105.c
-+++ b/drivers/ide/pci/sl82c105.c
-@@ -329,7 +329,7 @@ static const struct ide_port_info sl82c1
- 	.host_flags	= IDE_HFLAG_IO_32BIT |
- 			  IDE_HFLAG_UNMASK_IRQS |
- /* FIXME: check for Compatibility mode in generic IDE PCI code */
--#ifdef CONFIG_LOPEC
-+#if defined(CONFIG_LOPEC) || defined(CONFIG_SANDPOINT)
- 			  IDE_HFLAG_FORCE_LEGACY_IRQS |
+--- a/drivers/ide/ide.c
++++ b/drivers/ide/ide.c
+@@ -207,10 +207,6 @@ static void __init init_ide_data (void)
+ #ifdef CONFIG_IDE_ARCH_OBSOLETE_INIT
+ 		memset(&hw, 0, sizeof(hw));
+ 		ide_std_init_ports(&hw, io_addr, ctl_addr);
+-# ifdef CONFIG_PPC32
+-		if (ppc_ide_md.ide_init_hwif)
+-			ppc_ide_md.ide_init_hwif(&hw, io_addr, 0, &hwif->irq);
+-# endif
+ 		memcpy(hwif->io_ports, hw.io_ports, sizeof(hw.io_ports));
  #endif
- 			  IDE_HFLAG_NO_AUTODMA |
+ 		hwif->noprobe = !hwif->io_ports[IDE_DATA_OFFSET];
+Index: b/include/asm-powerpc/ide.h
+===================================================================
+--- a/include/asm-powerpc/ide.h
++++ b/include/asm-powerpc/ide.h
+@@ -31,30 +31,47 @@
+ #include <linux/hdreg.h>
+ #include <linux/ioport.h>
+ 
+-struct ide_machdep_calls {
+-        int         (*default_irq)(unsigned long base);
+-        unsigned long (*default_io_base)(int index);
+-        void        (*ide_init_hwif)(hw_regs_t *hw,
+-                                     unsigned long data_port,
+-                                     unsigned long ctrl_port,
+-                                     int *irq);
+-};
+-
+-extern struct ide_machdep_calls ppc_ide_md;
+-
+ #define IDE_ARCH_OBSOLETE_DEFAULTS
+ 
++/* FIXME: use ide_platform host driver */
+ static __inline__ int ide_default_irq(unsigned long base)
+ {
+-	if (ppc_ide_md.default_irq)
+-		return ppc_ide_md.default_irq(base);
++#ifdef CONFIG_PPLUS
++	switch (base) {
++	case 0x1f0:	return 14;
++	case 0x170:	return 15;
++	}
++#endif
++#ifdef CONFIG_PPC_PREP
++	switch (base) {
++	case 0x1f0:	return 13;
++	case 0x170:	return 13;
++	case 0x1e8:	return 11;
++	case 0x168:	return 10;
++	case 0xfff0:	return 14;	/* MCP(N)750 ide0 */
++	case 0xffe0:	return 15;	/* MCP(N)750 ide1 */
++	}
++#endif
+ 	return 0;
+ }
+ 
++/* FIXME: use ide_platform host driver */
+ static __inline__ unsigned long ide_default_io_base(int index)
+ {
+-	if (ppc_ide_md.default_io_base)
+-		return ppc_ide_md.default_io_base(index);
++#ifdef CONFIG_PPLUS
++	switch (index) {
++	case 0:		return 0x1f0;
++	case 1:		return 0x170;
++	}
++#endif
++#ifdef CONFIG_PPC_PREP
++	switch (index) {
++	case 0:		return 0x1f0;
++	case 1:		return 0x170;
++	case 2:		return 0x1e8;
++	case 3:		return 0x168;
++	}
++#endif
+ 	return 0;
+ }
+ 
