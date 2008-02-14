@@ -1,35 +1,34 @@
-From: "saeed bishara" <saeed.bishara@gmail.com>
-Subject: Re: [PATCH 2/2] sata_mv: remove iounmap in mv_platform_remove
-Date: Thu, 14 Feb 2008 14:56:55 +0200
-Message-ID: <c70ff3ad0802140456v50e0b0faj2c2b1f7d11c60fc5@mail.gmail.com>
-References: <12029369502995-git-send-email-saeed@marvell.com>
-	 <12029369532977-git-send-email-saeed@marvell.com>
-	 <47B345A6.9000605@pobox.com>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: Re: pci_get_device_reverse(), why does Calgary need this?
+Date: Thu, 14 Feb 2008 16:09:47 +0300
+Message-ID: <47B43D9B.3020105@ru.mvista.com>
+References: <20080213001506.GA13933@kroah.com> <20080213172824.GB10733@kroah.com> <20080213181655.GB8960@kroah.com> <200802132320.37172.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.180]:30746 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755008AbYBNM4z (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 14 Feb 2008 07:56:55 -0500
-Received: by wa-out-1112.google.com with SMTP id v27so573633wah.23
-        for <linux-ide@vger.kernel.org>; Thu, 14 Feb 2008 04:56:55 -0800 (PST)
-In-Reply-To: <47B345A6.9000605@pobox.com>
-Content-Disposition: inline
+Received: from h155.mvista.com ([63.81.120.155]:8170 "EHLO imap.sh.mvista.com"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751376AbYBNNIv (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 14 Feb 2008 08:08:51 -0500
+In-Reply-To: <200802132320.37172.bzolnier@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark Lord <mlord@pobox.com>
-Cc: Saeed Bishara <saeed@marvell.com>, jeff@garzik.org, htejun@gmail.com, linux-ide@vger.kernel.org, nico@cam.org, byron.bbradley@gmail.com
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: Greg KH <greg@kroah.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>, muli@il.ibm.com, jdmason@kudzu.us, linux-ide@vger.kernel.org, linux-pci@atrey.karlin.mff.cuni.cz, linux-kernel@vger.kernel.org, discuss@x86-64.org
 
->  > this will fix crash bug when doing rmmod to the driver, this is because the
->  > port_stop function get called later and it could access the device's registers.
->  >
->
->  Where does the iounmap() now get done instead of that place?
->
-nowhere, the /proc/iomem still shows that sata_mv uses io mempry after
-the rrmod, but when I re-load the driver, I can see it reuses the same
-io address range. so it doesn't waste io mem  resources.
+> From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+> Subject: [PATCH] ide: mark "ide=reverse" option as obsolete
 
-saeed
+> - it is valid only if "Probe IDE PCI devices in the PCI bus order
+>   (DEPRECATED)" config option is used
+
+> - Greg needs to remove pci_get_device_reverse() for PCI core changes
+
+> Cc: Greg Kroah-Hartman <gregkh@suse.de>
+> Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>
+> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+
+Acked-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+
+MBR, Sergei
