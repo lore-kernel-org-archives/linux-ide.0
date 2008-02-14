@@ -1,59 +1,36 @@
 From: Mark Lord <liml@rtr.ca>
-Subject: Re: [PATCH #upstream] libata: implement libata.force module parameter
-Date: Thu, 14 Feb 2008 11:24:42 -0500
-Message-ID: <47B46B4A.80708@rtr.ca>
-References: <47A3375F.80101@gmail.com> <47B2368D.9080408@gmail.com> <47B319C2.5030002@rtr.ca> <47B388B1.6050203@gmail.com>
+Subject: Re: [PATCHSET] printk: implement printk_header() and merging printk,
+ take #3
+Date: Thu, 14 Feb 2008 11:29:28 -0500
+Message-ID: <47B46C68.6050904@rtr.ca>
+References: <12028937731333-git-send-email-htejun@gmail.com> <20080213155701.48871761.akpm@linux-foundation.org> <47B38E13.1060503@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([76.10.145.34]:4671 "EHLO mail.rtr.ca"
+Received: from rtr.ca ([76.10.145.34]:3374 "EHLO mail.rtr.ca"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753343AbYBNQYo (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 14 Feb 2008 11:24:44 -0500
-In-Reply-To: <47B388B1.6050203@gmail.com>
+	id S1753329AbYBNQ33 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 14 Feb 2008 11:29:29 -0500
+In-Reply-To: <47B38E13.1060503@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Tejun Heo <htejun@gmail.com>
-Cc: Jeff Garzik <jeff@garzik.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: Andrew Morton <akpm@linux-foundation.org>, jeff@garzik.org, linux-ide@vger.kernel.org, jengelh@computergmbh.de, matthew@wil.cx, randy.dunlap@oracle.com, daniel.ritz-ml@swissonline.ch, linux-kernel@vger.kernel.org
 
 Tejun Heo wrote:
-> Mark Lord wrote:
->> Tejun Heo wrote:
->>> This patch implements libata.force module parameter which can
->>> selectively override ATA port, link and device configurations
->>> including cable type, SATA PHY SPD limit, transfer mode and NCQ.
->> ...
->>> +    libata.force=    [LIBATA] Force configurations.  The format is comma
->>> +            separated list of "[ID:]VAL" where ID is
->>> +            PORT[:DEVICE].  PORT and DEVICE are decimal numbers
->>> +            matching port, link or device.  Basically, it matches
->> ..
->>
->> Mmm.. not a NAK, but is there also a way to set/change these on the fly?
-> 
-> What do you mean by 'on the fly'?  While the system is running?  If so,
-> I think that should be done through other interfaces - pass through,
-> sysfs, etc...
+>..
+> * For timeouts, result TF isn't available and thus res printout is
+> misleading.  res shouldn't be printed after timeouts.  This would
+> require allocating yest another temp buf and separating out res printing
+> into separate snprintf.
 ..
 
-Yes, that's the type of thing I had in mind.
-Some way to accomplish similar forced settings *after* libata is loaded.
+And snprintf() is buggy, by the way.  It does not always seem to return
+the correct character fill counts.  I've given up trying to use it here
+for anything in kernelspace that *must* work.
 
->> Now mind you, it's more likely the PCI layer that does the reverse
->> order thing, but the end result is that my drives/ports are numbered
->> differently depending upon which kernel I happen to boot with.
-> 
-> Heck... That's ugly.  libata.force is mainly conceived as debugging /
-> installation helper, so using fixed PORT is good enough but maybe
-> allowing bus_id as PORT is useful?  Something like [00:1f.2]:00?
-..
+Someday I'll go back and try to figure out where it's screwing up.
+I think it is doing so in the cases where it runs out of space in the buffer.
 
-It's just plain ugly the way it works, but livable (barely).
-We might actually have a use here for something similar to "ide=reverse",
-which was intended for exactly this kind of situation.
-
-But such usability flags seem to be in disfavour nowadays.
-
-Cheers! 
-
+-ml
