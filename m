@@ -1,60 +1,50 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH 11/11] ppc/pmac: remove no longer needed IDE quirk
-Date: Thu, 14 Feb 2008 01:37:43 +0100
-Message-ID: <20080214003743.12879.33797.sendpatchset@localhost.localdomain>
-References: <20080214003621.12879.33868.sendpatchset@localhost.localdomain>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: libata/sata_sil24 cache alignment problem?
+Date: Thu, 14 Feb 2008 00:21:35 +0000
+Message-ID: <20080214002135.065dd322@core>
+References: <20080212180254.GA28237@postdiluvian.org>
+	<20080212221257.12eeab13@core>
+	<20080213184702.GA13458@postdiluvian.org>
+	<20080213202151.34b7e5bc@core>
+	<20080213212549.GA14732@postdiluvian.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.170]:27663 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934525AbYBNAXY (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 13 Feb 2008 19:23:24 -0500
-Received: by ug-out-1314.google.com with SMTP id z38so897247ugc.16
-        for <linux-ide@vger.kernel.org>; Wed, 13 Feb 2008 16:23:22 -0800 (PST)
-In-Reply-To: <20080214003621.12879.33868.sendpatchset@localhost.localdomain>
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:37477 "EHLO
+	lxorguk.ukuu.org.uk" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S934651AbYBNA3b (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 13 Feb 2008 19:29:31 -0500
+In-Reply-To: <20080213212549.GA14732@postdiluvian.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
-Cc: linuxppc-dev@ozlabs.org, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Benjamin Herrenschmidt <benh@kernel.crashing.org>, linux-kernel@vger.kernel.org
+To: Mark Mason <mason@postdiluvian.org>
+Cc: linux-ide@vger.kernel.org, jgarzik@pobox.com
 
-IDE PMAC host driver and all IDE PCI host drivers use pci_enable_device()
-nowadays so the following quirk in pmac_pcibios_after_init() can be removed.
+> I hadn't considered that approach due to the way the ata_port is allocated:
+> 
+> > libata-core.c:
+> >         host = scsi_host_alloc(ent->sht, sizeof(struct ata_port));
+> > 
+> > hosts.c:
+> > struct Scsi_Host *scsi_host_alloc(struct scsi_host_template *sht, int privsize)
+> > {
+> >         shost = kzalloc(sizeof(struct Scsi_Host) + privsize, gfp_mask);
+> > }
+> 
+> The ata_port allocation is tacked onto the end of the Scsi_Host
+> allocation, so the start of ata_port will only be cache aligned if the
+> end of the Scsi_Host struct is, although that would be easy enough to
+> fix since it's currently aligned to an unsigned long boundary.
 
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
----
- arch/powerpc/platforms/powermac/pci.c |   22 ----------------------
- 1 file changed, 22 deletions(-)
+You are right.
 
-Index: b/arch/powerpc/platforms/powermac/pci.c
-===================================================================
---- a/arch/powerpc/platforms/powermac/pci.c
-+++ b/arch/powerpc/platforms/powermac/pci.c
-@@ -1144,28 +1144,6 @@ void __init pmac_pcibios_after_init(void
- {
- 	struct device_node* nd;
- 
--#ifdef CONFIG_BLK_DEV_IDE
--	struct pci_dev *dev = NULL;
--
--	/* OF fails to initialize IDE controllers on macs
--	 * (and maybe other machines)
--	 *
--	 * Ideally, this should be moved to the IDE layer, but we need
--	 * to check specifically with Andre Hedrick how to do it cleanly
--	 * since the common IDE code seem to care about the fact that the
--	 * BIOS may have disabled a controller.
--	 *
--	 * -- BenH
--	 */
--	for_each_pci_dev(dev) {
--		if ((dev->class >> 16) != PCI_BASE_CLASS_STORAGE)
--			continue;
--		if (pci_enable_device(dev))
--			printk(KERN_WARNING
--			       "pci: Failed to enable %s\n", pci_name(dev));
--	}
--#endif /* CONFIG_BLK_DEV_IDE */
--
- 	for_each_node_by_name(nd, "firewire") {
- 		if (nd->parent && (of_device_is_compatible(nd, "pci106b,18") ||
- 				   of_device_is_compatible(nd, "pci106b,30") ||
+> I like that approach better, since it's clearer what the intent is,
+> and it's easier.  Is there any other way that the ata_port struct
+> might be used that would invalidate this?  
+
+I can't think of one. The object lifetime is right - the ata_port is
+created before the port buffer is used and destroyed after it is finished
+(obviously or embedding it in the struct wouldn't work either)
+
+Alan
