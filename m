@@ -1,222 +1,54 @@
-From: Borislav Petkov <petkovbb@googlemail.com>
-Subject: Re: [PATCH] ide-floppy: merge callbacks
-Date: Thu, 14 Feb 2008 07:27:59 +0100
-Message-ID: <20080214062759.GF13446@gollum.tnic>
-References: <20080213205733.GC13446@gollum.tnic> <200802132304.24126.bzolnier@gmail.com>
-Reply-To: petkovbb@gmail.com
+From: Andreas Jaeger <aj@suse.de>
+Subject: Re: [discuss] pci_get_device_reverse(), why does Calgary need this?
+Date: Thu, 14 Feb 2008 08:44:56 +0100
+Message-ID: <ho3arwq8w7.fsf@reger.suse.de>
+References: <20080213001506.GA13933@kroah.com> <20080213021737.72b9815d@core>
+	<20080213044536.GC10101@kroah.com>
+	<200802131334.12351.bzolnier@gmail.com>
+	<20080213172824.GB10733@kroah.com> <20080213181655.GB8960@kroah.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: multipart/signed; boundary="=-=-=";
+	micalg=pgp-sha1; protocol="application/pgp-signature"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from fk-out-0910.google.com ([209.85.128.185]:54771 "EHLO
-	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1764712AbYBNG2b (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 14 Feb 2008 01:28:31 -0500
-Received: by fk-out-0910.google.com with SMTP id z23so261352fkz.5
-        for <linux-ide@vger.kernel.org>; Wed, 13 Feb 2008 22:28:29 -0800 (PST)
-Content-Disposition: inline
-In-Reply-To: <200802132304.24126.bzolnier@gmail.com>
+Received: from ns1.suse.de ([195.135.220.2]:40159 "EHLO mx1.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758111AbYBNHpA (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 14 Feb 2008 02:45:00 -0500
+In-Reply-To: <20080213181655.GB8960@kroah.com> (Greg KH's message of "Wed, 13
+	Feb 2008 10:16:55 -0800")
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: Greg KH <greg@kroah.com>
+Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, muli@il.ibm.com, discuss@x86-64.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, jdmason@kudzu.us, linux-pci@atrey.karlin.mff.cuni.cz, Alan Cox <alan@lxorguk.ukuu.org.uk>
 
-On Wed, Feb 13, 2008 at 11:04:23PM +0100, Bartlomiej Zolnierkiewicz wro=
-te:
-> On Wednesday 13 February 2008, Borislav Petkov wrote:
-> > commit d1f1f84f413ab00cb2fec48170d022fcd900e214
-> > Author: Borislav Petkov <petkovbb@gmail.com>
-> > Date:   Wed Feb 13 20:26:56 2008 +0100
-> >=20
-> >     ide-floppy: merge callbacks
-> >    =20
-> >     The appropriate functionality of the callback is established th=
-rough querying
-> >     the ATAPI packet command in pc->c[0].
-> >    =20
-> >     While at it, simplify if (floppy->failed_pc)-branch to be found=
- in the original
-> >     idefloppy_request_sense_callback().
-> >    =20
-> >     Signed-off-by: Borislav Petkov <petkovbb@gmail.com>
-> >=20
-> > diff --git a/drivers/ide/ide-floppy.c b/drivers/ide/ide-floppy.c
-> > index 5f133df..1365310 100644
-> > --- a/drivers/ide/ide-floppy.c
-> > +++ b/drivers/ide/ide-floppy.c
-> > @@ -313,50 +313,39 @@ static struct request *idefloppy_next_rq_stor=
-age(ide_drive_t *drive)
-> >  	return (&floppy->rq_stack[floppy->rq_stack_index++]);
-> >  }
-> > =20
-> > -static void idefloppy_request_sense_callback(ide_drive_t *drive)
-> > +static void ide_floppy_callback(ide_drive_t *drive)
-> >  {
-> >  	idefloppy_floppy_t *floppy =3D drive->driver_data;
-> > -	u8 *buf =3D floppy->pc->buf;
-> > =20
-> >  	debug_log("Reached %s\n", __func__);
-> > =20
-> > -	if (!floppy->pc->error) {
-> > -		floppy->sense_key =3D buf[2] & 0x0F;
-> > -		floppy->asc =3D buf[12];
-> > -		floppy->ascq =3D buf[13];
-> > -		floppy->progress_indication =3D buf[15] & 0x80 ?
-> > -			(u16)get_unaligned((u16 *)&buf[16]) : 0x10000;
-> > +	if (floppy->pc->c[0] =3D=3D GPCMD_REQUEST_SENSE) {
-> > +		u8 *buf =3D floppy->pc->buf;
-> > =20
-> > -		if (floppy->failed_pc)
-> > -			debug_log("pc =3D %x, sense key =3D %x, asc =3D %x,"
-> > -					" ascq =3D %x\n",
-> > -					floppy->failed_pc->c[0],
-> > -					floppy->sense_key,
-> > -					floppy->asc,
-> > -					floppy->ascq);
-> > -		else
-> > -			debug_log("sense key =3D %x, asc =3D %x, ascq =3D %x\n",
-> > -					floppy->sense_key,
-> > -					floppy->asc,
-> > -					floppy->ascq);
-> > -
-> > -
-> > -		idefloppy_end_request(drive, 1, 0);
-> > -	} else {
-> > -		printk(KERN_ERR "Error in REQUEST SENSE itself - Aborting"
-> > -				" request!\n");
-> > -		idefloppy_end_request(drive, 0, 0);
-> > -	}
-> > -}
-> > +		if (!floppy->pc->error) {
-> > +			floppy->sense_key =3D buf[2] & 0x0F;
-> > +			floppy->asc =3D buf[12];
-> > +			floppy->ascq =3D buf[13];
-> > +			floppy->progress_indication =3D buf[15] & 0x80 ?
-> > +				(u16)get_unaligned((u16 *)&buf[16]) : 0x10000;
-> > =20
-> > -/* General packet command callback function. */
-> > -static void idefloppy_pc_callback(ide_drive_t *drive)
-> > -{
-> > -	idefloppy_floppy_t *floppy =3D drive->driver_data;
-> > +			if (floppy->failed_pc)
-> > +				debug_log("pc =3D %x, ", floppy->failed_pc->c[0]);
-> > =20
-> > -	debug_log("Reached %s\n", __func__);
-> > +			debug_log("sense key =3D %x, asc =3D %x, ascq =3D %x\n",
-> > +				floppy->sense_key, floppy->asc,	floppy->ascq);
-> > =20
-> > -	idefloppy_end_request(drive, floppy->pc->error ? 0 : 1, 0);
-> > +			idefloppy_end_request(drive, 1, 0);
-> > +		} else {
-> > +			printk(KERN_ERR "Error in REQUEST SENSE itself - "
-> > +					"Aborting request!\n");
-> > +			idefloppy_end_request(drive, 0, 0);
-> > +		}
-> > +	} else if (floppy->pc->c[0] =3D=3D GPCMD_READ_10 ||
-> > +		floppy->pc->c[0] =3D=3D GPCMD_WRITE_10)
-> > +		idefloppy_end_request(drive, 1, 0);
-> > +	else
-> > +		idefloppy_end_request(drive, floppy->pc->error ? 0 : 1, 0);
-> >  }
-> > =20
-> >  static void idefloppy_init_pc(struct ide_atapi_pc *pc)
-> > @@ -367,7 +356,7 @@ static void idefloppy_init_pc(struct ide_atapi_=
-pc *pc)
-> >  	pc->req_xfer =3D 0;
-> >  	pc->buf =3D pc->pc_buf;
-> >  	pc->buf_size =3D IDEFLOPPY_PC_BUFFER_SIZE;
-> > -	pc->idefloppy_callback =3D &idefloppy_pc_callback;
-> > +	pc->idefloppy_callback =3D &ide_floppy_callback;
-> >  }
-> > =20
-> >  static void idefloppy_create_request_sense_cmd(struct ide_atapi_pc=
- *pc)
-> > @@ -376,7 +365,6 @@ static void idefloppy_create_request_sense_cmd(=
-struct ide_atapi_pc *pc)
-> >  	pc->c[0] =3D GPCMD_REQUEST_SENSE;
-> >  	pc->c[4] =3D 255;
-> >  	pc->req_xfer =3D 18;
-> > -	pc->idefloppy_callback =3D &idefloppy_request_sense_callback;
-> >  }
-> > =20
-> >  /*
-> > @@ -697,14 +685,6 @@ static ide_startstop_t idefloppy_issue_pc(ide_=
-drive_t *drive,
-> >  	}
-> >  }
-> > =20
-> > -static void idefloppy_rw_callback(ide_drive_t *drive)
-> > -{
-> > -	debug_log("Reached %s\n", __func__);
-> > -
-> > -	idefloppy_end_request(drive, 1, 0);
-> > -	return;
-> > -}
-> > -
-> >  static void idefloppy_create_prevent_cmd(struct ide_atapi_pc *pc, =
-int prevent)
-> >  {
-> >  	debug_log("creating prevent removal command, prevent =3D %d\n", p=
-revent);
-> > @@ -799,7 +779,6 @@ static void idefloppy_create_rw_cmd(idefloppy_f=
-loppy_t *floppy,
-> >  	put_unaligned(cpu_to_be16(blocks), (unsigned short *)&pc->c[7]);
-> >  	put_unaligned(cpu_to_be32(block), (unsigned int *) &pc->c[2]);
-> > =20
-> > -	pc->idefloppy_callback =3D &idefloppy_rw_callback;
-> >  	pc->rq =3D rq;
-> >  	pc->b_count =3D cmd =3D=3D READ ? 0 : rq->bio->bi_size;
-> >  	if (rq->cmd_flags & REQ_RW)
-> > @@ -813,7 +792,6 @@ static void idefloppy_blockpc_cmd(idefloppy_flo=
-ppy_t *floppy,
-> >  		struct ide_atapi_pc *pc, struct request *rq)
-> >  {
-> >  	idefloppy_init_pc(pc);
-> > -	pc->idefloppy_callback =3D &idefloppy_rw_callback;
->=20
-> For unknown reasons blk_pc_request() requests were overriding the def=
-ault
-> *_pc_callback and using *_rw_callback instead - the patch changes thi=
-s
-> behavior silently.
->=20
-> [ When I suggest some changes I can be wrong as well (just like in th=
-is case
->   because after closer look merging callbacks is not as simple as che=
-cking
->   only pc->c[0]) so do not trust me automatically :) + please always =
-try to
->   fully read and understand the underlying code. ]
+--=-=-=
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: quoted-printable
 
-I did actually _read_ the code but probably the assumption i made was w=
-rong (i
-tend to do that off and on.. :)), and didn't elaborate on that in my or=
-iginal
-mail. First of all, the *_pc_callback is overridden with in the *_rw_ca=
-llback in
-*_blockpc_cmd() not only for pc requests but also for fs requests in *_=
-create_rw_cmd
-in *_do_request(). The pc->c member is only memcopied in *_blockpc_cmd(=
-) from
-rq->cmd and i thought the command in pc->c[0] would be the sole criteri=
-a to
-decide upon how to end the request. And this is actually what it boils =
-down
-to, the *_rw_callback() ends the request without error checking (i.e. c=
-alls
-idefloppy_end_request(?, 1, ?) with the second arg uptodate =3D 1 which=
- turns off
-the error local var in *_end_request, while the *_pc_callback() checks =
-for errors.
+Greg KH <greg@kroah.com> writes:
 
-But shouldn't we do error checking for pc requests too? ide-cd does tur=
-n off
-error checking for fs requests but not for pc requests, so what do we w=
-ant to do
-here?
+> How does the patch below look?  I didn't want to remove the whole config
+> option, as there is more to the logic than just the "reverse order"
+> stuff there.
 
-Thanks.
+I think you miss Documentation - it's mentioned in ide.txt and
+kernel-parameters.txt,
 
---=20
-Regards/Gru=DF,
-    Boris.
+Andreas
+=2D-=20
+ Andreas Jaeger, Director Platform / openSUSE, aj@suse.de
+  SUSE LINUX Products GmbH, GF: Markus Rex, HRB 16746 (AG N=FCrnberg)
+   Maxfeldstr. 5, 90409 N=FCrnberg, Germany
+    GPG fingerprint =3D 93A3 365E CE47 B889 DF7F  FED1 389A 563C C272 A126
+
+--=-=-=
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.4-svn0 (GNU/Linux)
+
+iD8DBQFHs/F4OJpWPMJyoSYRAkmaAJ98FDBrEqgchU6Inns7ibejVMarRwCcDGD9
+z/1oDVda428hbN8Jolro2/4=
+=uc6p
+-----END PGP SIGNATURE-----
+--=-=-=--
