@@ -1,66 +1,59 @@
-From: bugme-daemon@bugzilla.kernel.org
-Subject: [Bug 9904] ASUS DVD-E616A - drive side 80-wire cable detection failed
-Date: Thu, 14 Feb 2008 08:15:30 -0800 (PST)
-Message-ID: <20080214161531.100B2108069@picon.linux-foundation.org>
-References: <bug-9904-11633@http.bugzilla.kernel.org/>
+From: Mark Lord <liml@rtr.ca>
+Subject: Re: [PATCH #upstream] libata: implement libata.force module parameter
+Date: Thu, 14 Feb 2008 11:24:42 -0500
+Message-ID: <47B46B4A.80708@rtr.ca>
+References: <47A3375F.80101@gmail.com> <47B2368D.9080408@gmail.com> <47B319C2.5030002@rtr.ca> <47B388B1.6050203@gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp2.linux-foundation.org ([207.189.120.14]:45053 "EHLO
-	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752273AbYBNQQE (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 14 Feb 2008 11:16:04 -0500
-Received: from picon.linux-foundation.org (picon.linux-foundation.org [207.189.120.79])
-	by smtp2.linux-foundation.org (8.13.5.20060308/8.13.5/Debian-3ubuntu1.1) with ESMTP id m1EGFVIQ016236
-	for <linux-ide@vger.kernel.org>; Thu, 14 Feb 2008 08:15:36 -0800
-In-Reply-To: <bug-9904-11633@http.bugzilla.kernel.org/>
+Received: from rtr.ca ([76.10.145.34]:4671 "EHLO mail.rtr.ca"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753343AbYBNQYo (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 14 Feb 2008 11:24:44 -0500
+In-Reply-To: <47B388B1.6050203@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: Jeff Garzik <jeff@garzik.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>
 
-http://bugzilla.kernel.org/show_bug.cgi?id=9904
+Tejun Heo wrote:
+> Mark Lord wrote:
+>> Tejun Heo wrote:
+>>> This patch implements libata.force module parameter which can
+>>> selectively override ATA port, link and device configurations
+>>> including cable type, SATA PHY SPD limit, transfer mode and NCQ.
+>> ...
+>>> +    libata.force=    [LIBATA] Force configurations.  The format is comma
+>>> +            separated list of "[ID:]VAL" where ID is
+>>> +            PORT[:DEVICE].  PORT and DEVICE are decimal numbers
+>>> +            matching port, link or device.  Basically, it matches
+>> ..
+>>
+>> Mmm.. not a NAK, but is there also a way to set/change these on the fly?
+> 
+> What do you mean by 'on the fly'?  While the system is running?  If so,
+> I think that should be done through other interfaces - pass through,
+> sysfs, etc...
+..
 
+Yes, that's the type of thing I had in mind.
+Some way to accomplish similar forced settings *after* libata is loaded.
 
+>> Now mind you, it's more likely the PCI layer that does the reverse
+>> order thing, but the end result is that my drives/ports are numbered
+>> differently depending upon which kernel I happen to boot with.
+> 
+> Heck... That's ugly.  libata.force is mainly conceived as debugging /
+> installation helper, so using fixed PORT is good enough but maybe
+> allowing bus_id as PORT is useful?  Something like [00:1f.2]:00?
+..
 
+It's just plain ugly the way it works, but livable (barely).
+We might actually have a use here for something similar to "ide=reverse",
+which was intended for exactly this kind of situation.
 
+But such usability flags seem to be in disfavour nowadays.
 
-------- Comment #3 from jtsn@gmx.de  2008-02-14 08:15 -------
-# hdparm --Istdout /dev/hdd
+Cheers! 
 
-/dev/hdd:
-85c0 0000 0000 0000 0000 0000 0000 0000
-0000 0000 2020 2020 2020 2020 2020 2020
-2020 2020 2020 2020 0000 0000 0000 312e
-3038 2020 2020 4153 5553 2020 2020 4456
-442d 4536 3136 4120 2020 2020 2020 2020
-2020 2020 2020 2020 2020 2020 2020 0000
-0000 0b00 0000 0200 0200 0006 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0007
-0003 0078 0078 00e3 0078 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-043f 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-
-
--- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug, or are watching the assignee.
