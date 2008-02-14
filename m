@@ -1,40 +1,191 @@
 From: Harvey Harrison <harvey.harrison@gmail.com>
-Subject: [PATCH 02/11] ata: fix sparse warning in sata_promise.c
-Date: Wed, 13 Feb 2008 21:14:08 -0800
-Message-ID: <1202966048.2748.16.camel@brick>
+Subject: [PATCH 11/11] ata: fix sparse warnings in pata_legacy.c
+Date: Wed, 13 Feb 2008 21:14:32 -0800
+Message-ID: <1202966072.2748.27.camel@brick>
 References: <3ad7c41048d88a3f8aad098570b9fac9ff719aff.1202965399.git.harvey.harrison@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1765573AbYBNFPU@vger.kernel.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from rv-out-0910.google.com ([209.85.198.187]:7923 "EHLO
+	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752578AbYBNFOf (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 14 Feb 2008 00:14:35 -0500
+Received: by rv-out-0910.google.com with SMTP id k20so160087rvb.1
+        for <linux-ide@vger.kernel.org>; Wed, 13 Feb 2008 21:14:34 -0800 (PST)
 In-Reply-To: <3ad7c41048d88a3f8aad098570b9fac9ff719aff.1202965399.git.harvey.harrison@gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>, Tejun Heo <htejun@gmail.com>
-Cc: linux-ide <linux-ide@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>, Tejun Heo <htejun@gmail.com>
+Cc: LKML <linux-kernel@vger.kernel.org>, linux-ide <linux-ide@vger.kernel.org>
 
-drivers/ata/sata_promise.c:546:15: warning: symbol 'len' shadows an earlier one
-drivers/ata/sata_promise.c:538:6: originally declared here
+Let's use ld for legacy_data instead of shadowing these static
+int variables.
 
-len is set again immediately after the loop, so this is safe.
+drivers/ata/pata_legacy.c:777:21: warning: symbol 'qdi' shadows an earlier one
+drivers/ata/pata_legacy.c:128:12: originally declared here
+drivers/ata/pata_legacy.c:811:21: warning: symbol 'qdi' shadows an earlier one
+drivers/ata/pata_legacy.c:128:12: originally declared here
+drivers/ata/pata_legacy.c:848:21: warning: symbol 'qdi' shadows an earlier one
+drivers/ata/pata_legacy.c:128:12: originally declared here
+drivers/ata/pata_legacy.c:882:21: warning: symbol 'qdi' shadows an earlier one
+drivers/ata/pata_legacy.c:128:12: originally declared here
+drivers/ata/pata_legacy.c:1040:21: warning: symbol 'winbond' shadows an earlier one
+drivers/ata/pata_legacy.c:129:12: originally declared here
 
 Signed-off-by: Harvey Harrison <harvey.harrison@gmail.com>
 ---
- drivers/ata/sata_promise.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+ drivers/ata/pata_legacy.c |   44 ++++++++++++++++++++++----------------------
+ 1 files changed, 22 insertions(+), 22 deletions(-)
 
-diff --git a/drivers/ata/sata_promise.c b/drivers/ata/sata_promise.c
-index a07d319..f251a5f 100644
---- a/drivers/ata/sata_promise.c
-+++ b/drivers/ata/sata_promise.c
-@@ -543,7 +543,7 @@ static void pdc_fill_sg(struct ata_queued_cmd *qc)
- 	idx = 0;
- 	for_each_sg(qc->sg, sg, qc->n_elem, si) {
- 		u32 addr, offset;
--		u32 sg_len, len;
-+		u32 sg_len;
+diff --git a/drivers/ata/pata_legacy.c b/drivers/ata/pata_legacy.c
+index 6c59969..1c598e5 100644
+--- a/drivers/ata/pata_legacy.c
++++ b/drivers/ata/pata_legacy.c
+@@ -774,14 +774,14 @@ static struct ata_port_operations opti82c46x_port_ops = {
+ static void qdi6500_set_piomode(struct ata_port *ap, struct ata_device *adev)
+ {
+ 	struct ata_timing t;
+-	struct legacy_data *qdi = ap->host->private_data;
++	struct legacy_data *ld = ap->host->private_data;
+ 	int active, recovery;
+ 	u8 timing;
  
- 		/* determine if physical DMA addr spans 64K boundary.
- 		 * Note h/w doesn't support 64-bit, so we unconditionally
+ 	/* Get the timing data in cycles */
+ 	ata_timing_compute(adev, adev->pio_mode, &t, 30303, 1000);
+ 
+-	if (qdi->fast) {
++	if (ld->fast) {
+ 		active = 8 - FIT(t.active, 1, 8);
+ 		recovery = 18 - FIT(t.recover, 3, 18);
+ 	} else {
+@@ -790,9 +790,9 @@ static void qdi6500_set_piomode(struct ata_port *ap, struct ata_device *adev)
+ 	}
+ 	timing = (recovery << 4) | active | 0x08;
+ 
+-	qdi->clock[adev->devno] = timing;
++	ld->clock[adev->devno] = timing;
+ 
+-	outb(timing, qdi->timing);
++	outb(timing, ld->timing);
+ }
+ 
+ /**
+@@ -808,14 +808,14 @@ static void qdi6500_set_piomode(struct ata_port *ap, struct ata_device *adev)
+ static void qdi6580dp_set_piomode(struct ata_port *ap, struct ata_device *adev)
+ {
+ 	struct ata_timing t;
+-	struct legacy_data *qdi = ap->host->private_data;
++	struct legacy_data *ld = ap->host->private_data;
+ 	int active, recovery;
+ 	u8 timing;
+ 
+ 	/* Get the timing data in cycles */
+ 	ata_timing_compute(adev, adev->pio_mode, &t, 30303, 1000);
+ 
+-	if (qdi->fast) {
++	if (ld->fast) {
+ 		active = 8 - FIT(t.active, 1, 8);
+ 		recovery = 18 - FIT(t.recover, 3, 18);
+ 	} else {
+@@ -824,12 +824,12 @@ static void qdi6580dp_set_piomode(struct ata_port *ap, struct ata_device *adev)
+ 	}
+ 	timing = (recovery << 4) | active | 0x08;
+ 
+-	qdi->clock[adev->devno] = timing;
++	ld->clock[adev->devno] = timing;
+ 
+-	outb(timing, qdi->timing + 2 * ap->port_no);
++	outb(timing, ld->timing + 2 * ap->port_no);
+ 	/* Clear the FIFO */
+ 	if (adev->class != ATA_DEV_ATA)
+-		outb(0x5F, qdi->timing + 3);
++		outb(0x5F, ld->timing + 3);
+ }
+ 
+ /**
+@@ -845,14 +845,14 @@ static void qdi6580dp_set_piomode(struct ata_port *ap, struct ata_device *adev)
+ static void qdi6580_set_piomode(struct ata_port *ap, struct ata_device *adev)
+ {
+ 	struct ata_timing t;
+-	struct legacy_data *qdi = ap->host->private_data;
++	struct legacy_data *ld = ap->host->private_data;
+ 	int active, recovery;
+ 	u8 timing;
+ 
+ 	/* Get the timing data in cycles */
+ 	ata_timing_compute(adev, adev->pio_mode, &t, 30303, 1000);
+ 
+-	if (qdi->fast) {
++	if (ld->fast) {
+ 		active = 8 - FIT(t.active, 1, 8);
+ 		recovery = 18 - FIT(t.recover, 3, 18);
+ 	} else {
+@@ -860,11 +860,11 @@ static void qdi6580_set_piomode(struct ata_port *ap, struct ata_device *adev)
+ 		recovery = 15 - FIT(t.recover, 0, 15);
+ 	}
+ 	timing = (recovery << 4) | active | 0x08;
+-	qdi->clock[adev->devno] = timing;
+-	outb(timing, qdi->timing + 2 * adev->devno);
++	ld->clock[adev->devno] = timing;
++	outb(timing, ld->timing + 2 * adev->devno);
+ 	/* Clear the FIFO */
+ 	if (adev->class != ATA_DEV_ATA)
+-		outb(0x5F, qdi->timing + 3);
++		outb(0x5F, ld->timing + 3);
+ }
+ 
+ /**
+@@ -879,12 +879,12 @@ static unsigned int qdi_qc_issue_prot(struct ata_queued_cmd *qc)
+ {
+ 	struct ata_port *ap = qc->ap;
+ 	struct ata_device *adev = qc->dev;
+-	struct legacy_data *qdi = ap->host->private_data;
++	struct legacy_data *ld = ap->host->private_data;
+ 
+-	if (qdi->clock[adev->devno] != qdi->last) {
++	if (ld->clock[adev->devno] != ld->last) {
+ 		if (adev->pio_mode) {
+-			qdi->last = qdi->clock[adev->devno];
+-			outb(qdi->clock[adev->devno], qdi->timing +
++			ld->last = ld->clock[adev->devno];
++			outb(ld->clock[adev->devno], ld->timing +
+ 							2 * ap->port_no);
+ 		}
+ 	}
+@@ -1037,12 +1037,12 @@ static u8 winbond_readcfg(unsigned long port, u8 reg)
+ static void winbond_set_piomode(struct ata_port *ap, struct ata_device *adev)
+ {
+ 	struct ata_timing t;
+-	struct legacy_data *winbond = ap->host->private_data;
++	struct legacy_data *ld = ap->host->private_data;
+ 	int active, recovery;
+ 	u8 reg;
+ 	int timing = 0x88 + (ap->port_no * 4) + (adev->devno * 2);
+ 
+-	reg = winbond_readcfg(winbond->timing, 0x81);
++	reg = winbond_readcfg(ld->timing, 0x81);
+ 
+ 	/* Get the timing data in cycles */
+ 	if (reg & 0x40)		/* Fast VLB bus, assume 50MHz */
+@@ -1053,7 +1053,7 @@ static void winbond_set_piomode(struct ata_port *ap, struct ata_device *adev)
+ 	active = (FIT(t.active, 3, 17) - 1) & 0x0F;
+ 	recovery = (FIT(t.recover, 1, 15) + 1) & 0x0F;
+ 	timing = (active << 4) | recovery;
+-	winbond_writecfg(winbond->timing, timing, reg);
++	winbond_writecfg(ld->timing, timing, reg);
+ 
+ 	/* Load the setup timing */
+ 
+@@ -1063,7 +1063,7 @@ static void winbond_set_piomode(struct ata_port *ap, struct ata_device *adev)
+ 	if (!ata_pio_need_iordy(adev))
+ 		reg |= 0x02;	/* IORDY off */
+ 	reg |= (FIT(t.setup, 0, 3) << 6);
+-	winbond_writecfg(winbond->timing, timing + 1, reg);
++	winbond_writecfg(ld->timing, timing + 1, reg);
+ }
+ 
+ static int winbond_port(struct platform_device *dev,
 -- 
 1.5.4.1.1278.gc75be
+
