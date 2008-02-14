@@ -1,89 +1,47 @@
-From: Greg KH <greg@kroah.com>
-Subject: Re: pci_get_device_reverse(), why does Calgary need this?
-Date: Wed, 13 Feb 2008 20:58:42 -0800
-Message-ID: <20080214045842.GA1432@kroah.com>
-References: <20080213001506.GA13933@kroah.com> <200802132320.37172.bzolnier@gmail.com> <20080213234140.GA5169@kroah.com> <200802140102.55805.bzolnier@gmail.com>
+From: Harvey Harrison <harvey.harrison@gmail.com>
+Subject: [PATCH 03/11] ata: fix sparse warning in sata_via.c
+Date: Wed, 13 Feb 2008 21:14:11 -0800
+Message-ID: <1202966051.2748.17.camel@brick>
+References: <3ad7c41048d88a3f8aad098570b9fac9ff719aff.1202965399.git.harvey.harrison@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:44193 "EHLO
-	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758333AbYBNFAa (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 14 Feb 2008 00:00:30 -0500
-Content-Disposition: inline
-In-Reply-To: <200802140102.55805.bzolnier@gmail.com>
+Received: from rv-out-0910.google.com ([209.85.198.188]:7963 "EHLO
+	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752776AbYBNFON (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 14 Feb 2008 00:14:13 -0500
+Received: by rv-out-0910.google.com with SMTP id k20so160092rvb.1
+        for <linux-ide@vger.kernel.org>; Wed, 13 Feb 2008 21:14:12 -0800 (PST)
+In-Reply-To: <3ad7c41048d88a3f8aad098570b9fac9ff719aff.1202965399.git.harvey.harrison@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, muli@il.ibm.com, jdmason@kudzu.us, linux-ide@vger.kernel.org, linux-pci@atrey.karlin.mff.cuni.cz, linux-kernel@vger.kernel.org, discuss@x86-64.org
+To: Jeff Garzik <jeff@garzik.org>, Tejun Heo <htejun@gmail.com>
+Cc: LKML <linux-kernel@vger.kernel.org>, linux-ide <linux-ide@vger.kernel.org>
 
-On Thu, Feb 14, 2008 at 01:02:55AM +0100, Bartlomiej Zolnierkiewicz wrote:
-> On Thursday 14 February 2008, Greg KH wrote:
-> > On Wed, Feb 13, 2008 at 11:20:36PM +0100, Bartlomiej Zolnierkiewicz wrote:
-> > > On Wednesday 13 February 2008, Greg KH wrote:
-> > > > On Wed, Feb 13, 2008 at 09:28:24AM -0800, Greg KH wrote:
-> > > > > On Wed, Feb 13, 2008 at 01:34:12PM +0100, Bartlomiej Zolnierkiewicz wrote:
-> > > > > > On Wednesday 13 February 2008, Greg KH wrote:
-> > > > > > > On Wed, Feb 13, 2008 at 02:17:37AM +0000, Alan Cox wrote:
-> > > > > > > > > Why does the calgary driver need this?  Can we just use pci_get_device()
-> > > > > > > > > instead?  Why do you need to walk the device list backwards?  Do you get
-> > > > > > > > > false positives going forward?
-> > > > > > > > 
-> > > > > > > > It doesn't look to be performance critical so the driver can
-> > > > > > > > pci_get_device until the end and use the final hit anyway.
-> > > > > > > 
-> > > > > > > That would make more sense.
-> > > > > > > 
-> > > > > > > > IDE reverse is more problematic but nobody seems to use it.
-> > > > > > > 
-> > > > > > > I've seen two posters say they use it.  I'm wondering what it is really
-> > > > > > > solving if they use it, and why if it's really needed, scsi never had to
-> > > > > > > implement such a hack...
-> > > > > > 
-> > > > > > It is no longer solving anything, just adds more pain. ;)
-> > > > > > 
-> > > > > > [ The option comes from 2.2.x (so long before LABEL=/ and /dev/disk/by-id/
-> > > > > >   became popular).  Some "off-board" controllers integrated on motherboards
-> > > > > >   used to appear before "on-board" IDE on PCI bus so this option was meant
-> > > > > >   to preserve the legacy ordering. ]
-> > > > > > 
-> > > > > > Since it is valid only when "Probe IDE PCI devices in the PCI bus order
-> > > > > > (DEPRECATED)" config option is used it is already on its way out (though
-> > > > > > marking it as obsoleted would make it more explicit).
-> > > > > > 
-> > > > > > I think that removing "ide=reverse" in 2.6.26 would be OK...
-> > > > > 
-> > > > > Great, thanks for your blessing.  I'll make up a patch and send it to
-> > > > > you for approval.
-> > > > 
-> > > > How does the patch below look?  I didn't want to remove the whole config
-> > > > option, as there is more to the logic than just the "reverse order"
-> > > > stuff there.
-> > > 
-> > > looks fine,
-> > > 
-> > > Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-> > 
-> > Thanks.
-> > 
-> > > > If you don't mind, can I take this through the PCI tree so as to allow
-> > > > the removal of this pci function afterwards?
-> > > 
-> > > [...]
-> > > 
-> > > great, could you also:
-> > > - rebase it on top of the patch below
-> > > - forward the patch below to Linus for 2.6.25
-> > 
-> > Sure, you want this to go in for .25, but not the one I just posted
-> > removing this option, correct?  That should wait for .26?
-> 
-> Yes, lets give people the final call before actually removing this option
-> (unless of course there is some urgent reason for removing it in .25).
+drivers/ata/sata_via.c:336:2: warning: returning void-valued expression
 
-No, no rush from me, I'll queue this up and send it to Linus in my next
-batch.
+Signed-off-by: Harvey Harrison <harvey.harrison@gmail.com>
+---
+ drivers/ata/sata_via.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
 
-thanks,
+diff --git a/drivers/ata/sata_via.c b/drivers/ata/sata_via.c
+index 30caa03..0d03f44 100644
+--- a/drivers/ata/sata_via.c
++++ b/drivers/ata/sata_via.c
+@@ -333,8 +333,8 @@ static int vt6420_prereset(struct ata_link *link, unsigned long deadline)
+ 
+ static void vt6420_error_handler(struct ata_port *ap)
+ {
+-	return ata_bmdma_drive_eh(ap, vt6420_prereset, ata_std_softreset,
+-				  NULL, ata_std_postreset);
++	ata_bmdma_drive_eh(ap, vt6420_prereset, ata_std_softreset, NULL,
++			   ata_std_postreset);
+ }
+ 
+ static int vt6421_pata_cable_detect(struct ata_port *ap)
+-- 
+1.5.4.1.1278.gc75be
 
-greg k-h
+
