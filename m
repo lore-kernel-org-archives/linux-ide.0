@@ -1,62 +1,89 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: libata/sata_sil24 cache alignment problem?
-Date: Thu, 14 Feb 2008 12:05:00 +0900
-Message-ID: <47B3AFDC.5040605@gmail.com>
-References: <20080212180254.GA28237@postdiluvian.org>	<20080212221257.12eeab13@core>	<20080213184702.GA13458@postdiluvian.org>	<20080213202151.34b7e5bc@core>	<20080213212549.GA14732@postdiluvian.org> <20080214002135.065dd322@core>
+From: Greg KH <greg@kroah.com>
+Subject: Re: pci_get_device_reverse(), why does Calgary need this?
+Date: Wed, 13 Feb 2008 20:58:42 -0800
+Message-ID: <20080214045842.GA1432@kroah.com>
+References: <20080213001506.GA13933@kroah.com> <200802132320.37172.bzolnier@gmail.com> <20080213234140.GA5169@kroah.com> <200802140102.55805.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rn-out-0910.google.com ([64.233.170.188]:55601 "EHLO
-	rn-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754384AbYBNDFH (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 13 Feb 2008 22:05:07 -0500
-Received: by rn-out-0910.google.com with SMTP id i24so1131088rng.19
-        for <linux-ide@vger.kernel.org>; Wed, 13 Feb 2008 19:05:06 -0800 (PST)
-In-Reply-To: <20080214002135.065dd322@core>
+Received: from pentafluge.infradead.org ([213.146.154.40]:44193 "EHLO
+	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758333AbYBNFAa (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 14 Feb 2008 00:00:30 -0500
+Content-Disposition: inline
+In-Reply-To: <200802140102.55805.bzolnier@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: Mark Mason <mason@postdiluvian.org>, linux-ide@vger.kernel.org, jgarzik@pobox.com, James Bottomley <James.Bottomley@HansenPartnership.com>, Jens Axboe <jens.axboe@oracle.com>
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, muli@il.ibm.com, jdmason@kudzu.us, linux-ide@vger.kernel.org, linux-pci@atrey.karlin.mff.cuni.cz, linux-kernel@vger.kernel.org, discuss@x86-64.org
 
-Alan Cox wrote:
->> I hadn't considered that approach due to the way the ata_port is allocated:
->>
->>> libata-core.c:
->>>         host = scsi_host_alloc(ent->sht, sizeof(struct ata_port));
->>>
->>> hosts.c:
->>> struct Scsi_Host *scsi_host_alloc(struct scsi_host_template *sht, int privsize)
->>> {
->>>         shost = kzalloc(sizeof(struct Scsi_Host) + privsize, gfp_mask);
->>> }
->> The ata_port allocation is tacked onto the end of the Scsi_Host
->> allocation, so the start of ata_port will only be cache aligned if the
->> end of the Scsi_Host struct is, although that would be easy enough to
->> fix since it's currently aligned to an unsigned long boundary.
+On Thu, Feb 14, 2008 at 01:02:55AM +0100, Bartlomiej Zolnierkiewicz wrote:
+> On Thursday 14 February 2008, Greg KH wrote:
+> > On Wed, Feb 13, 2008 at 11:20:36PM +0100, Bartlomiej Zolnierkiewicz wrote:
+> > > On Wednesday 13 February 2008, Greg KH wrote:
+> > > > On Wed, Feb 13, 2008 at 09:28:24AM -0800, Greg KH wrote:
+> > > > > On Wed, Feb 13, 2008 at 01:34:12PM +0100, Bartlomiej Zolnierkiewicz wrote:
+> > > > > > On Wednesday 13 February 2008, Greg KH wrote:
+> > > > > > > On Wed, Feb 13, 2008 at 02:17:37AM +0000, Alan Cox wrote:
+> > > > > > > > > Why does the calgary driver need this?  Can we just use pci_get_device()
+> > > > > > > > > instead?  Why do you need to walk the device list backwards?  Do you get
+> > > > > > > > > false positives going forward?
+> > > > > > > > 
+> > > > > > > > It doesn't look to be performance critical so the driver can
+> > > > > > > > pci_get_device until the end and use the final hit anyway.
+> > > > > > > 
+> > > > > > > That would make more sense.
+> > > > > > > 
+> > > > > > > > IDE reverse is more problematic but nobody seems to use it.
+> > > > > > > 
+> > > > > > > I've seen two posters say they use it.  I'm wondering what it is really
+> > > > > > > solving if they use it, and why if it's really needed, scsi never had to
+> > > > > > > implement such a hack...
+> > > > > > 
+> > > > > > It is no longer solving anything, just adds more pain. ;)
+> > > > > > 
+> > > > > > [ The option comes from 2.2.x (so long before LABEL=/ and /dev/disk/by-id/
+> > > > > >   became popular).  Some "off-board" controllers integrated on motherboards
+> > > > > >   used to appear before "on-board" IDE on PCI bus so this option was meant
+> > > > > >   to preserve the legacy ordering. ]
+> > > > > > 
+> > > > > > Since it is valid only when "Probe IDE PCI devices in the PCI bus order
+> > > > > > (DEPRECATED)" config option is used it is already on its way out (though
+> > > > > > marking it as obsoleted would make it more explicit).
+> > > > > > 
+> > > > > > I think that removing "ide=reverse" in 2.6.26 would be OK...
+> > > > > 
+> > > > > Great, thanks for your blessing.  I'll make up a patch and send it to
+> > > > > you for approval.
+> > > > 
+> > > > How does the patch below look?  I didn't want to remove the whole config
+> > > > option, as there is more to the logic than just the "reverse order"
+> > > > stuff there.
+> > > 
+> > > looks fine,
+> > > 
+> > > Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+> > 
+> > Thanks.
+> > 
+> > > > If you don't mind, can I take this through the PCI tree so as to allow
+> > > > the removal of this pci function afterwards?
+> > > 
+> > > [...]
+> > > 
+> > > great, could you also:
+> > > - rebase it on top of the patch below
+> > > - forward the patch below to Linus for 2.6.25
+> > 
+> > Sure, you want this to go in for .25, but not the one I just posted
+> > removing this option, correct?  That should wait for .26?
 > 
-> You are right.
+> Yes, lets give people the final call before actually removing this option
+> (unless of course there is some urgent reason for removing it in .25).
 
-For recent kernels, ata_port is allocated separately so
-____cacheline_aligned should be enough.
+No, no rush from me, I'll queue this up and send it to Linus in my next
+batch.
 
->> I like that approach better, since it's clearer what the intent is,
+thanks,
 
-But, yeah, allocating separately is probably safer.
-
->> and it's easier.  Is there any other way that the ata_port struct
->> might be used that would invalidate this?  
-> 
-> I can't think of one. The object lifetime is right - the ata_port is
-> created before the port buffer is used and destroyed after it is finished
-> (obviously or embedding it in the struct wouldn't work either)
-
-I'll prep a patch for the current kernel.  Hmmm... This means that any
-DMA buffer should be aligned to cacheline.  Block layer DMA alignment
-helpers should probably take this into consideration and we better add
-warnings to dma map functions.  This only affects DMA-to-memory, right?
-
-Thanks.
-
--- 
-tejun
+greg k-h
