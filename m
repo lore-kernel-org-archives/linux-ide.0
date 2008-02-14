@@ -1,41 +1,41 @@
 From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH] scsi: align shost->hostdata to cacheline
-Date: Thu, 14 Feb 2008 09:05:20 -0600
-Message-ID: <1203001520.3189.11.camel@localhost.localdomain>
-References: <20080212180254.GA28237@postdiluvian.org>
-	 <20080212221257.12eeab13@core>	<20080213184702.GA13458@postdiluvian.org>
-	 <20080213202151.34b7e5bc@core>	<20080213212549.GA14732@postdiluvian.org>
-	 <20080214002135.065dd322@core> <47B3AFDC.5040605@gmail.com>
-	 <47B40E51.3060002@gmail.com>
+Subject: Re: "mount: could not find filesystem" - aacraid? (was: Re:
+	2.6.26-git0: IDE oops during boot)
+Date: Thu, 14 Feb 2008 09:47:32 -0600
+Message-ID: <1203004052.3189.18.camel@localhost.localdomain>
+References: <20080206105334.GA3664@elf.ucw.cz>
+	 <47B40DF2.10009@linux.vnet.ibm.com> <200802141301.35032.bzolnier@gmail.com>
+	 <200802141307.42169.bzolnier@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:40397 "EHLO
+Received: from accolon.hansenpartnership.com ([76.243.235.52]:42706 "EHLO
 	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752090AbYBNPF2 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 14 Feb 2008 10:05:28 -0500
-In-Reply-To: <47B40E51.3060002@gmail.com>
+	by vger.kernel.org with ESMTP id S1751634AbYBNPrm (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 14 Feb 2008 10:47:42 -0500
+In-Reply-To: <200802141307.42169.bzolnier@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, Mark Mason <mason@postdiluvian.org>, linux-ide@vger.kernel.org, jgarzik@pobox.com, Jens Axboe <jens.axboe@oracle.com>
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: Kamalesh Babulal <kamalesh@linux.vnet.ibm.com>, Nish Aravamudan <nish.aravamudan@gmail.com>, Pavel Machek <pavel@ucw.cz>, kernel list <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, ananth@in.ibm.com, Andi Kleen <andi@firstfloor.org>, linux-scsi@vger.kernel.org, aacraid@adaptec.com
 
-On Thu, 2008-02-14 at 18:48 +0900, Tejun Heo wrote:
-> shost->hostdata can contain arbitrary data including DMA target
-> buffers.  Align it to cacheline.
+On Thu, 2008-02-14 at 13:07 +0100, Bartlomiej Zolnierkiewicz wrote:
+> > I worry that another git-bisect session will be needed unless SCSI
+> > developers are already aware of the problem source.
 > 
-> Signed-off-by: Tejun Heo <htejun@gmail.com>
-> ---
-> James, what do you think?
+> Yinghai Lu noticed that it may be actually a SES problem:
+> 
+> http://lkml.org/lkml/2008/2/14/88
+> 
+> [ I overlooked the above mail, sorry ]
 
-Hmm, it will blow out the host size ... although that's not such a huge
-problem since there are relatively few of them in most running kernels.
-What's the actual use case for this, though?  The host structure is
-allocated in ordinary memory ... we don't make sure it's DMAable, and
-most HBAs that want to use memory for mailboxes need coherent memory
-anyway.
+Only if SES is enabled, is it (CONFIG_SCSI_ENCLOSURE)? ... is there
+actually a dmesg of the failing system somewhere, I couldn't find it in
+the (somewhat long) thread?
 
 James
+
+
 
 
