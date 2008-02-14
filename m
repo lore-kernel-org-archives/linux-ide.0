@@ -1,64 +1,197 @@
-From: Bill Davidsen <davidsen@tmr.com>
-Subject: Re: "ide=reverse" do we still need this?
-Date: Thu, 14 Feb 2008 12:16:42 -0500
-Message-ID: <47B4777A.70400@tmr.com>
-References: <20080213001506.GA13933@kroah.com> <47B24AB3.3040009@keyaccess.nl> <20080213044436.GB10101@kroah.com>
+From: Harvey Harrison <harvey.harrison@gmail.com>
+Subject: [PATCH 11/11v2] ata: fix sparse warnings in pata_legacy.c
+Date: Thu, 14 Feb 2008 09:36:32 -0800
+Message-ID: <1203010593.2748.43.camel@brick>
+References: <3ad7c41048d88a3f8aad098570b9fac9ff719aff.1202965399.git.harvey.harrison@gmail.com>
+	 <1202966072.2748.27.camel@brick>  <20080214120206.1a52f77d@core>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.tmr.com ([64.65.253.246]:39658 "EHLO gaimboi.tmr.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752435AbYBNRRf (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 14 Feb 2008 12:17:35 -0500
-In-Reply-To: <20080213044436.GB10101@kroah.com>
+Received: from rv-out-0910.google.com ([209.85.198.184]:37991 "EHLO
+	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754247AbYBNRgf (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 14 Feb 2008 12:36:35 -0500
+Received: by rv-out-0910.google.com with SMTP id k20so274227rvb.1
+        for <linux-ide@vger.kernel.org>; Thu, 14 Feb 2008 09:36:34 -0800 (PST)
+In-Reply-To: <20080214120206.1a52f77d@core>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Greg KH <greg@kroah.com>
-Cc: Rene Herman <rene.herman@keyaccess.nl>, bzolnier@gmail.com, muli@il.ibm.com, jdmason@kudzu.us, linux-ide@vger.kernel.org, linux-pci@atrey.karlin.mff.cuni.cz, linux-kernel@vger.kernel.org, discuss@x86-64.org
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: Jeff Garzik <jeff@garzik.org>, Tejun Heo <htejun@gmail.com>, LKML <linux-kernel@vger.kernel.org>, linux-ide <linux-ide@vger.kernel.org>
 
-Greg KH wrote:
-> On Wed, Feb 13, 2008 at 02:41:07AM +0100, Rene Herman wrote:
->> On 13-02-08 01:15, Greg KH wrote:
->>
->>> I'm reworking the pci device list logic (we currently keep all PCI
->>> devices in 2 lists, which isn't the nicest, we should be able to get
->>> away with only 1 list.)
->>> The only bother I've found so far is the pci_get_device_reverse()
->>> function, it's used in 2 places, IDE and the calgary driver.
->>> I'm curious if we really still support the ide=reverse option?  It's a
->>> config option that I don't think the distros still enable (SuSE does
->>> not).  Is this still needed these days?
->>> In digging, we changed this option in 2.2.x from being called
->>> "pci=reverse" and no one else seems to miss it.
->>> Any thoughts?
->> While details escape me somewhat again at the monment, a few months ago I 
->> was playing around with a PCI Promise IDE controller and needed ide=reverse 
->> to save me from having to switch disks around to still have a bootable 
->> system.
->>
->> Or some such. Not too clear anymore, but I remember it saved the day.
-> 
-> You couldn't just change the boot disk in grub?
-> 
-> Or use an initramfs and /dev/disk/by-id/ to keep any future moves
-> stable?
-> 
-There are any number of things you can do when the system is booted, but 
-the only thing you can do when the system won't boot is use kernel boot 
-options.
+Use ld_qdi and ld_winbond to avoid shadowing static int
+variables qdi and winbond.  The ld_ prefix refers to
+legacy_data.
 
-This is primarily useful for old systems running modern software, such 
-as old PC redeployed to network, external device control, or system 
-monitoring. Upgrading the BIOS is no longer going to happen, and 
-upgrading the hardware isn't cost effective, but keeping old systems out 
-of the landfill is ecologically and financially sound.
+drivers/ata/pata_legacy.c:777:21: warning: symbol 'qdi' shadows an earlier one
+drivers/ata/pata_legacy.c:128:12: originally declared here
+drivers/ata/pata_legacy.c:811:21: warning: symbol 'qdi' shadows an earlier one
+drivers/ata/pata_legacy.c:128:12: originally declared here
+drivers/ata/pata_legacy.c:848:21: warning: symbol 'qdi' shadows an earlier one
+drivers/ata/pata_legacy.c:128:12: originally declared here
+drivers/ata/pata_legacy.c:882:21: warning: symbol 'qdi' shadows an earlier one
+drivers/ata/pata_legacy.c:128:12: originally declared here
+drivers/ata/pata_legacy.c:1040:21: warning: symbol 'winbond' shadows an earlier one
+drivers/ata/pata_legacy.c:129:12: originally declared here
 
-The option is a holdover from the past, but so arm some of my clients 
-and their hardware. ;-)
-And *my* hardware, I might add, I am as cheap as anyone.
+Signed-off-by: Harvey Harrison <harvey.harrison@gmail.com>
+---
+Alan Cox's suggestion of using a ld_ prefix incorporated.
 
+ drivers/ata/pata_legacy.c |   44 ++++++++++++++++++++++----------------------
+ 1 files changed, 22 insertions(+), 22 deletions(-)
+
+diff --git a/drivers/ata/pata_legacy.c b/drivers/ata/pata_legacy.c
+index 6c59969..68077f2 100644
+--- a/drivers/ata/pata_legacy.c
++++ b/drivers/ata/pata_legacy.c
+@@ -774,14 +774,14 @@ static struct ata_port_operations opti82c46x_port_ops = {
+ static void qdi6500_set_piomode(struct ata_port *ap, struct ata_device *adev)
+ {
+ 	struct ata_timing t;
+-	struct legacy_data *qdi = ap->host->private_data;
++	struct legacy_data *ld_qdi = ap->host->private_data;
+ 	int active, recovery;
+ 	u8 timing;
+ 
+ 	/* Get the timing data in cycles */
+ 	ata_timing_compute(adev, adev->pio_mode, &t, 30303, 1000);
+ 
+-	if (qdi->fast) {
++	if (ld_qdi->fast) {
+ 		active = 8 - FIT(t.active, 1, 8);
+ 		recovery = 18 - FIT(t.recover, 3, 18);
+ 	} else {
+@@ -790,9 +790,9 @@ static void qdi6500_set_piomode(struct ata_port *ap, struct ata_device *adev)
+ 	}
+ 	timing = (recovery << 4) | active | 0x08;
+ 
+-	qdi->clock[adev->devno] = timing;
++	ld_qdi->clock[adev->devno] = timing;
+ 
+-	outb(timing, qdi->timing);
++	outb(timing, ld_qdi->timing);
+ }
+ 
+ /**
+@@ -808,14 +808,14 @@ static void qdi6500_set_piomode(struct ata_port *ap, struct ata_device *adev)
+ static void qdi6580dp_set_piomode(struct ata_port *ap, struct ata_device *adev)
+ {
+ 	struct ata_timing t;
+-	struct legacy_data *qdi = ap->host->private_data;
++	struct legacy_data *ld_qdi = ap->host->private_data;
+ 	int active, recovery;
+ 	u8 timing;
+ 
+ 	/* Get the timing data in cycles */
+ 	ata_timing_compute(adev, adev->pio_mode, &t, 30303, 1000);
+ 
+-	if (qdi->fast) {
++	if (ld_qdi->fast) {
+ 		active = 8 - FIT(t.active, 1, 8);
+ 		recovery = 18 - FIT(t.recover, 3, 18);
+ 	} else {
+@@ -824,12 +824,12 @@ static void qdi6580dp_set_piomode(struct ata_port *ap, struct ata_device *adev)
+ 	}
+ 	timing = (recovery << 4) | active | 0x08;
+ 
+-	qdi->clock[adev->devno] = timing;
++	ld_qdi->clock[adev->devno] = timing;
+ 
+-	outb(timing, qdi->timing + 2 * ap->port_no);
++	outb(timing, ld_qdi->timing + 2 * ap->port_no);
+ 	/* Clear the FIFO */
+ 	if (adev->class != ATA_DEV_ATA)
+-		outb(0x5F, qdi->timing + 3);
++		outb(0x5F, ld_qdi->timing + 3);
+ }
+ 
+ /**
+@@ -845,14 +845,14 @@ static void qdi6580dp_set_piomode(struct ata_port *ap, struct ata_device *adev)
+ static void qdi6580_set_piomode(struct ata_port *ap, struct ata_device *adev)
+ {
+ 	struct ata_timing t;
+-	struct legacy_data *qdi = ap->host->private_data;
++	struct legacy_data *ld_qdi = ap->host->private_data;
+ 	int active, recovery;
+ 	u8 timing;
+ 
+ 	/* Get the timing data in cycles */
+ 	ata_timing_compute(adev, adev->pio_mode, &t, 30303, 1000);
+ 
+-	if (qdi->fast) {
++	if (ld_qdi->fast) {
+ 		active = 8 - FIT(t.active, 1, 8);
+ 		recovery = 18 - FIT(t.recover, 3, 18);
+ 	} else {
+@@ -860,11 +860,11 @@ static void qdi6580_set_piomode(struct ata_port *ap, struct ata_device *adev)
+ 		recovery = 15 - FIT(t.recover, 0, 15);
+ 	}
+ 	timing = (recovery << 4) | active | 0x08;
+-	qdi->clock[adev->devno] = timing;
+-	outb(timing, qdi->timing + 2 * adev->devno);
++	ld_qdi->clock[adev->devno] = timing;
++	outb(timing, ld_qdi->timing + 2 * adev->devno);
+ 	/* Clear the FIFO */
+ 	if (adev->class != ATA_DEV_ATA)
+-		outb(0x5F, qdi->timing + 3);
++		outb(0x5F, ld_qdi->timing + 3);
+ }
+ 
+ /**
+@@ -879,12 +879,12 @@ static unsigned int qdi_qc_issue_prot(struct ata_queued_cmd *qc)
+ {
+ 	struct ata_port *ap = qc->ap;
+ 	struct ata_device *adev = qc->dev;
+-	struct legacy_data *qdi = ap->host->private_data;
++	struct legacy_data *ld_qdi = ap->host->private_data;
+ 
+-	if (qdi->clock[adev->devno] != qdi->last) {
++	if (ld_qdi->clock[adev->devno] != ld_qdi->last) {
+ 		if (adev->pio_mode) {
+-			qdi->last = qdi->clock[adev->devno];
+-			outb(qdi->clock[adev->devno], qdi->timing +
++			ld_qdi->last = ld_qdi->clock[adev->devno];
++			outb(ld_qdi->clock[adev->devno], ld_qdi->timing +
+ 							2 * ap->port_no);
+ 		}
+ 	}
+@@ -1037,12 +1037,12 @@ static u8 winbond_readcfg(unsigned long port, u8 reg)
+ static void winbond_set_piomode(struct ata_port *ap, struct ata_device *adev)
+ {
+ 	struct ata_timing t;
+-	struct legacy_data *winbond = ap->host->private_data;
++	struct legacy_data *ld_winbond = ap->host->private_data;
+ 	int active, recovery;
+ 	u8 reg;
+ 	int timing = 0x88 + (ap->port_no * 4) + (adev->devno * 2);
+ 
+-	reg = winbond_readcfg(winbond->timing, 0x81);
++	reg = winbond_readcfg(ld_winbond->timing, 0x81);
+ 
+ 	/* Get the timing data in cycles */
+ 	if (reg & 0x40)		/* Fast VLB bus, assume 50MHz */
+@@ -1053,7 +1053,7 @@ static void winbond_set_piomode(struct ata_port *ap, struct ata_device *adev)
+ 	active = (FIT(t.active, 3, 17) - 1) & 0x0F;
+ 	recovery = (FIT(t.recover, 1, 15) + 1) & 0x0F;
+ 	timing = (active << 4) | recovery;
+-	winbond_writecfg(winbond->timing, timing, reg);
++	winbond_writecfg(ld_winbond->timing, timing, reg);
+ 
+ 	/* Load the setup timing */
+ 
+@@ -1063,7 +1063,7 @@ static void winbond_set_piomode(struct ata_port *ap, struct ata_device *adev)
+ 	if (!ata_pio_need_iordy(adev))
+ 		reg |= 0x02;	/* IORDY off */
+ 	reg |= (FIT(t.setup, 0, 3) << 6);
+-	winbond_writecfg(winbond->timing, timing + 1, reg);
++	winbond_writecfg(ld_winbond->timing, timing + 1, reg);
+ }
+ 
+ static int winbond_port(struct platform_device *dev,
 -- 
-Bill Davidsen <davidsen@tmr.com>
-   "We have more to fear from the bungling of the incompetent than from
-the machinations of the wicked."  - from Slashdot
+1.5.4.1.1278.gc75be
+
+
+
