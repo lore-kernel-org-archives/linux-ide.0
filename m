@@ -1,53 +1,70 @@
-From: Harvey Harrison <harvey.harrison@gmail.com>
-Subject: sparse patches for libata
-Date: Wed, 13 Feb 2008 21:30:34 -0800
-Message-ID: <1202967034.2748.37.camel@brick>
+From: Borislav Petkov <petkovbb@googlemail.com>
+Subject: Re: IDE cdrom problem with PLEXTOR DVDR PX-608AL
+Date: Thu, 14 Feb 2008 07:26:52 +0100
+Message-ID: <20080214062652.GE13446@gollum.tnic>
+References: <200802121026.17420.hpj@urpla.net> <20080212172057.GA12480@gollum.tnic> <200802140037.51450.hpj@urpla.net>
+Reply-To: petkovbb@gmail.com
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wx-out-0506.google.com ([66.249.82.232]:17294 "EHLO
-	wx-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751542AbYBNFah (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 14 Feb 2008 00:30:37 -0500
-Received: by wx-out-0506.google.com with SMTP id h31so227256wxd.4
-        for <linux-ide@vger.kernel.org>; Wed, 13 Feb 2008 21:30:36 -0800 (PST)
+Received: from nf-out-0910.google.com ([64.233.182.186]:64521 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751101AbYBNG1B (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 14 Feb 2008 01:27:01 -0500
+Received: by nf-out-0910.google.com with SMTP id g13so165995nfb.21
+        for <linux-ide@vger.kernel.org>; Wed, 13 Feb 2008 22:26:59 -0800 (PST)
+Content-Disposition: inline
+In-Reply-To: <200802140037.51450.hpj@urpla.net>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>, Tejun Heo <htejun@gmail.com>
-Cc: linux-ide <linux-ide@vger.kernel.org>
+To: Hans-Peter Jansen <hpj@urpla.net>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, bzolnier@gmail.com
 
-Just a note to let you know that with the series of 11 patches
-I just sent, libata is almost sparse-clean on X86_32 (~250 sparse
-warnings to ~40).
+On Thu, Feb 14, 2008 at 12:37:50AM +0100, Hans-Peter Jansen wrote:
 
-The remaining warnings are:
+[Added Bart to CC]
 
-drivers/ata/libata-core.c:7089:7: warning: symbol 'rc' shadows an earlier one
-drivers/ata/libata-core.c:7030:9: originally declared here
-drivers/ata/libata-core.c:5610:2: warning: context imbalance in 'ata_hsm_move' - different lock contexts for basic block
-drivers/ata/libata-core.c:4821:20: warning: potentially expensive pointer subtraction
-drivers/ata/libata-core.c:5039:9: warning: potentially expensive pointer subtraction
-drivers/ata/libata-core.c:5194:9: warning: potentially expensive pointer subtraction
-drivers/ata/libata-core.c:6664:20: warning: potentially expensive pointer subtraction
+> Am Dienstag, 12. Februar 2008 schrieb Borislav Petkov:
+> > On Tue, Feb 12, 2008 at 10:26:17AM +0100, Hans-Peter Jansen wrote:
+> > > Hi,
+> > >
+> > > I suffer from unreliable cdrom operations (failing DAE and burn
+> > > sessions) with the openSUSE 2.6.18.8-0.7-bigsmp kernel.
+> >
+> > 			^^^^
+> > Hi,
+> >
+> > can please you test this with a more recent kernel. Yours is almost
+> > ancient - from Sep. 2006.
+>=20
+> Sure, sorry. Here we go:
+>=20
+> Feb 14 00:18:18 kernel: hde: cdrom_pc_intr: The drive appears confuse=
+d (ireason =3D 0x01).
+>  Trying to recover by ending request.
+> Feb 14 00:27:27 kernel: hdc: cdrom_pc_intr: The drive appears confuse=
+d (ireason =3D 0x01).=20
+>  Trying to recover by ending request.
+>=20
+> ~> uname -a
+> Linux xrated 2.6.24.1-35-pae #1 SMP 2008/02/12 01:00:18 UTC i686 athl=
+on i386 GNU/Linux
 
+Actually the interrupt handler in ide-cd got rewritten and you're still=
+ using the
+old one (cdrom_pc_intr vs cdrom_newpc_intr). Those changes went into ma=
+inline before
+the 2.6.25-rc1 so we'll be able to test the new one only when you try o=
+ut 2.6.25-rc1
+or wait until 2.6.25 is released in case you don't want to try hazardou=
+s materials
+such as an -rc kernel[*] :).
 
-[repeated 29 times, will look at possibly silencing this if it can be
-done nicely]
-include/linux/libata.h:1214:13: warning: potentially expensive pointer subtraction
+Bart?
 
-include/linux/scatterlist.h:184:9: warning: potentially expensive pointer subtraction
+*. As a matter of fact it runs quite smoothly on my machines.
 
-drivers/ata/libata-scsi.c:1865:14: warning: symbol 'ata_scsiop_inq_89' was not declared. Should it be static?
-
-Same issue as the FIT macro replacement patch I did, except open-coded
-min_t and max_t.
-drivers/ata/pata_amd.c:59:11: warning: symbol '__x' shadows an earlier one
-drivers/ata/pata_amd.c:59:11: originally declared here
-
-Other than that drivers/ata is sparse clean.
-
-Cheers,
-
-Harvey
-
+--=20
+Regards/Gru=DF,
+    Boris.
