@@ -1,41 +1,50 @@
 From: Harvey Harrison <harvey.harrison@gmail.com>
-Subject: [PATCH 1/3] ata: make ata_scsiop_inq_89 static in libata-scsi.c
-Date: Thu, 14 Feb 2008 10:45:20 -0800
-Message-ID: <1203014720.2748.63.camel@brick>
+Subject: [PATCH 3/3] ata: simplify clock divisor logic in pata_amd.c
+Date: Thu, 14 Feb 2008 10:45:25 -0800
+Message-ID: <1203014725.2748.65.camel@brick>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wr-out-0506.google.com ([64.233.184.238]:27142 "EHLO
-	wr-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754236AbYBNSpY (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 14 Feb 2008 13:45:24 -0500
-Received: by wr-out-0506.google.com with SMTP id c48so764790wra.23
-        for <linux-ide@vger.kernel.org>; Thu, 14 Feb 2008 10:45:23 -0800 (PST)
+Received: from rv-out-0910.google.com ([209.85.198.184]:15625 "EHLO
+	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756043AbYBNSp3 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 14 Feb 2008 13:45:29 -0500
+Received: by rv-out-0910.google.com with SMTP id k20so287556rvb.1
+        for <linux-ide@vger.kernel.org>; Thu, 14 Feb 2008 10:45:27 -0800 (PST)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Jeff Garzik <jeff@garzik.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>
 Cc: linux-ide <linux-ide@vger.kernel.org>
 
+Current code is essentially choosing between dividing by 1 or
+dividing by two, make the conditions a little more obvious.
+
+As a bonus, removes a sparse error:
+drivers/ata/pata_amd.c:59:11: warning: symbol '__x' shadows an earlier one
+drivers/ata/pata_amd.c:59:11: originally declared here
+
 Signed-off-by: Harvey Harrison <harvey.harrison@gmail.com>
 ---
- drivers/ata/libata-scsi.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+ drivers/ata/pata_amd.c |    5 ++++-
+ 1 files changed, 4 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-index c02c490..1cea18f 100644
---- a/drivers/ata/libata-scsi.c
-+++ b/drivers/ata/libata-scsi.c
-@@ -1862,7 +1862,7 @@ unsigned int ata_scsiop_inq_83(struct ata_scsi_args *args, u8 *rbuf,
-  *	spin_lock_irqsave(host lock)
-  */
+diff --git a/drivers/ata/pata_amd.c b/drivers/ata/pata_amd.c
+index 4b8d9b5..eaadb78 100644
+--- a/drivers/ata/pata_amd.c
++++ b/drivers/ata/pata_amd.c
+@@ -56,7 +56,10 @@ static void timing_setup(struct ata_port *ap, struct ata_device *adev, int offse
+ 	u8 t;
  
--unsigned int ata_scsiop_inq_89(struct ata_scsi_args *args, u8 *rbuf,
-+static unsigned int ata_scsiop_inq_89(struct ata_scsi_args *args, u8 *rbuf,
- 			      unsigned int buflen)
- {
- 	u8 pbuf[60];
+ 	T = 1000000000 / amd_clock;
+-	UT = T / min_t(int, max_t(int, clock, 1), 2);
++	if (clock >= 2)
++		UT = T / 2;
++	else
++		UT = t;
+ 
+ 	if (ata_timing_compute(adev, speed, &at, T, UT) < 0) {
+ 		dev_printk(KERN_ERR, &pdev->dev, "unknown mode %d.\n", speed);
 -- 
 1.5.4.1.1278.gc75be
-
 
