@@ -1,64 +1,105 @@
-From: Harvey Harrison <harvey.harrison@gmail.com>
-Subject: [PATCH 05/11v2] ata: replace macro with static inline in libata.h
-Date: Thu, 14 Feb 2008 10:11:37 -0800
-Message-ID: <1203012697.2748.55.camel@brick>
-References: <3ad7c41048d88a3f8aad098570b9fac9ff719aff.1202965399.git.harvey.harrison@gmail.com>
-	 <1202966058.2748.19.camel@brick>  <20080214120101.150a3284@core>
+From: "Richard Liu" <richliu.tw@gmail.com>
+Subject: ST31000340NS (1000G) Capacity equal 33MB issue.
+Date: Fri, 15 Feb 2008 02:18:59 +0800
+Message-ID: <d0d565260802141018y63a988bbpc6aecf771baacb84@mail.gmail.com>
+References: <d0d565260802141013q61cb5e7fh7dcf04d7729213f7@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wx-out-0506.google.com ([66.249.82.228]:38092 "EHLO
-	wx-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753484AbYBNSLk (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 14 Feb 2008 13:11:40 -0500
-Received: by wx-out-0506.google.com with SMTP id h31so387583wxd.4
-        for <linux-ide@vger.kernel.org>; Thu, 14 Feb 2008 10:11:39 -0800 (PST)
-In-Reply-To: <20080214120101.150a3284@core>
+Received: from el-out-1112.google.com ([209.85.162.177]:56113 "EHLO
+	el-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752748AbYBNSTB (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 14 Feb 2008 13:19:01 -0500
+Received: by el-out-1112.google.com with SMTP id v27so459001ele.23
+        for <linux-ide@vger.kernel.org>; Thu, 14 Feb 2008 10:19:00 -0800 (PST)
+In-Reply-To: <d0d565260802141013q61cb5e7fh7dcf04d7729213f7@mail.gmail.com>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: Jeff Garzik <jeff@garzik.org>, Tejun Heo <htejun@gmail.com>, LKML <linux-kernel@vger.kernel.org>, linux-ide <linux-ide@vger.kernel.org>
+To: linux-ide@vger.kernel.org
 
-Instead of using min/max_t(short... use a static inline to get
-typechecking.
+Hello all:
 
-As a bonus, avoid a metric ton of sparse warnings like:
-drivers/ata/pata_ali.c:176:14: warning: symbol '__x' shadows an earlier one
-drivers/ata/pata_ali.c:176:14: originally declared here
+     I bought a Seagate ES.2 ST31000340NS (1000GB) and run at Gentoo
+Linux kernel 2.6.24.
+But Linux kernel report the disk size only 33MB.
+I tried Intel ICH5 and Sil3112, but get the same result.
 
-Due to nesting min_t macro inside max_t macro which both use a __x
-identifier internally.
+I don't know this issue was caused by libsata or scsi layer .
 
-Signed-off-by: Harvey Harrison <harvey.harrison@gmail.com>
----
-Alan, is this more to your liking?
+Could you help me to solved it ?
 
- include/linux/libata.h |    9 ++++++++-
- 1 files changed, 8 insertions(+), 1 deletions(-)
+Here is the relative information.
+I think this would be helpful.
 
-diff --git a/include/linux/libata.h b/include/linux/libata.h
-index bc5a8d0..b5590fb 100644
---- a/include/linux/libata.h
-+++ b/include/linux/libata.h
-@@ -764,7 +764,14 @@ struct ata_timing {
- 	unsigned short udma;		/* t2CYCTYP/2 */
- };
- 
--#define FIT(v, vmin, vmax)	max_t(short, min_t(short, v, vmax), vmin)
-+static inline short FIT(short v, short vmin, short vmax)
-+{
-+	if (v >= vmax)
-+		return vmax;
-+	if (v <= vmin)
-+		return vmin;
-+	return v;
-+}
- 
- extern const unsigned long sata_deb_timing_normal[];
- extern const unsigned long sata_deb_timing_hotplug[];
--- 
-1.5.4.1.1278.gc75be
+==
+dmesg
+==
+ata4: SATA link up 1.5 Gbps (SStatus 113 SControl 310)
+ ata4.00: HPA detected: current 65134, native 1953525167
+ata4.00: ATA-6: ST31000340NS, SN04, max UDMA/133
+ata4.00: 65134 sectors, multi 16: LBA48 NCQ (depth 0/32)
+ata4.00: configured for UDMA/100
+scsi 3:0:0:0: Direct-Access     ATA      ST31000340NS     SN04 PQ: 0 ANSI: 5
+ sd 3:0:0:0: [sdc] 65134 512-byte hardware sectors (33 MB)
+sd 3:0:0:0: [sdc] Write Protect is off
+sd 3:0:0:0: [sdc] Mode Sense: 00 3a 00 00
+sd 3:0:0:0: [sdc] Write cache: enabled, read cache: enabled, doesn't
+support DPO or FUA
+ sd 3:0:0:0: [sdc] 65134 512-byte hardware sectors (33 MB)
+sd 3:0:0:0: [sdc] Write Protect is off
+sd 3:0:0:0: [sdc] Mode Sense: 00 3a 00 00
+sd 3:0:0:0: [sdc] Write cache: enabled, read cache: enabled, doesn't
+support DPO or FUA
+  sdc: unknown partition table
+sd 3:0:0:0: [sdc] Attached SCSI disk
+sd 3:0:0:0: Attached scsi generic sg2 type 0
+==
+Seatool
+==
+# ./st -i /dev/sg2
+        /dev/sg2
+        Vendor = ATA
+        Product = ST31000340NS
+         Version = SN04
+        Serial Number =
+        Copyright =
+        SCSI Firmware =
+        Servo RAM Release =
+        Servo ROM Release =
+        Servo RAM Date =
+        Servo ROM Date =
 
+        Blocksize = 512, Highblock = 65133, Capacity = 33 MB
+        -this is a Seagate drive
+        -this drive does not support DST
+        -Mode Page Settings [current value (default)]:
+                -WCE bit = 1 (0)
+                 -RCD bit = 0 (0)
+                -AWRE bit = 1 (0)
+                -ARRE bit = 0 (0)
+                -DExcpt bit = 0 (0)
+                -Number of cache segments = 0 (0)
 
+==
+hdparm
+ ==
+hdparm -i /dev/sdc
 
+/dev/sdc:
+
+ Model=ST31000340NS                            , FwRev=SN04    ,
+SerialNo=            9QJ09BJ4
+ Config={ HardSect NotMFM HdSw>15uSec Fixed DTR>10Mbs RotSpdTol>.5% }
+  RawCHS=64/16/63, TrkSize=0, SectSize=0, ECCbytes=4
+ BuffType=unknown, BuffSize=0kB, MaxMultSect=16, MultSect=?16?
+ CurCHS=64/16/63, CurSects=64512, LBA=yes, LBAsects=65134
+ IORDY=on/off, tPIO={min:120,w/IORDY:120}, tDMA={min:120,rec:120}
+  PIO modes:  pio0 pio1 pio2 pio3 pio4
+ DMA modes:  mdma0 mdma1 mdma2
+ UDMA modes: udma0 udma1 udma2 udma3 udma4 *udma5
+ AdvancedPM=no WriteCache=enabled
+ Drive conforms to: ATA/ATAPI-6 T13 1410D revision 2:  ATA/ATAPI-4,5,6
+
+ * signifies the current active mode
