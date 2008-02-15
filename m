@@ -1,41 +1,58 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH 06/11] ata: sparse fixes for pata_amd.c
-Date: Fri, 15 Feb 2008 13:52:36 -0500
-Message-ID: <47B5DF74.3020801@garzik.org>
-References: <3ad7c41048d88a3f8aad098570b9fac9ff719aff.1202965399.git.harvey.harrison@gmail.com> <1202966060.2748.20.camel@brick>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH] scsi: align shost->hostdata to cacheline
+Date: Fri, 15 Feb 2008 12:57:17 -0600
+Message-ID: <1203101837.3058.34.camel@localhost.localdomain>
+References: <20080212180254.GA28237@postdiluvian.org>
+	 <20080212221257.12eeab13@core>	<20080213184702.GA13458@postdiluvian.org>
+	 <20080213202151.34b7e5bc@core>	<20080213212549.GA14732@postdiluvian.org>
+	 <20080214002135.065dd322@core> <47B3AFDC.5040605@gmail.com>
+	 <47B40E51.3060002@gmail.com>
+	 <1203001520.3189.11.camel@localhost.localdomain>
+	 <47B4C55F.1070806@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:54673 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1761068AbYBOSwi (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 15 Feb 2008 13:52:38 -0500
-In-Reply-To: <1202966060.2748.20.camel@brick>
+Received: from accolon.hansenpartnership.com ([76.243.235.52]:49109 "EHLO
+	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753686AbYBOS51 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 15 Feb 2008 13:57:27 -0500
+In-Reply-To: <47B4C55F.1070806@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Harvey Harrison <harvey.harrison@gmail.com>
-Cc: Tejun Heo <htejun@gmail.com>, LKML <linux-kernel@vger.kernel.org>, linux-ide <linux-ide@vger.kernel.org>
+To: Tejun Heo <htejun@gmail.com>
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, Mark Mason <mason@postdiluvian.org>, linux-ide@vger.kernel.org, jgarzik@pobox.com, Jens Axboe <jens.axboe@oracle.com>
 
-Harvey Harrison wrote:
-> drop return statement.
-> drivers/ata/pata_amd.c:149:2: warning: returning void-valued expression
-> 
-> Commit ce54d1616302117fa98513ae916bb3333e1c02ea pata_amd: update mode selection for NV PATAs
-> 
-> added the initializer for nv_mode_filter but missed deleting the previously
-> set mode_filter
-> 
-> drivers/ata/pata_amd.c:509:3: warning: Initializer entry defined twice
-> drivers/ata/pata_amd.c:521:3:   also defined here
-> drivers/ata/pata_amd.c:544:3: warning: Initializer entry defined twice
-> drivers/ata/pata_amd.c:556:3:   also defined here
-> 
-> Signed-off-by: Harvey Harrison <harvey.harrison@gmail.com>
-> ---
->  drivers/ata/pata_amd.c |    7 ++-----
->  1 files changed, 2 insertions(+), 5 deletions(-)
 
-applied 6-10
+On Fri, 2008-02-15 at 07:49 +0900, Tejun Heo wrote:
+> James Bottomley wrote:
+> > On Thu, 2008-02-14 at 18:48 +0900, Tejun Heo wrote:
+> >> shost->hostdata can contain arbitrary data including DMA target
+> >> buffers.  Align it to cacheline.
+> >>
+> >> Signed-off-by: Tejun Heo <htejun@gmail.com>
+> >> ---
+> >> James, what do you think?
+> > 
+> > Hmm, it will blow out the host size ... although that's not such a huge
+> > problem since there are relatively few of them in most running kernels.
+> > What's the actual use case for this, though?  The host structure is
+> > allocated in ordinary memory ... we don't make sure it's DMAable, and
+> > most HBAs that want to use memory for mailboxes need coherent memory
+> > anyway.
+> 
+> "As it can contain arbitrary structure, it should follow the largest
+> meaningful alignment to allow the contained structure proper alignment."
+> is the logic.  I think it's generally RTTD for inline private data but
+> feel free to disagree.
+
+Well, the way we usually do that is to have the host float the alignment
+if necessary.  The problem with relying on __cacheline_aligned for an
+allocated structure is that it only works if the allocated structure
+actually begins on a cacheline.  Kmalloc (which is where we get the host
+from) doesn't necessarily obey this if certain slab debugging flags are
+present.
+
+James
 
 
