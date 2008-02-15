@@ -1,35 +1,34 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCH] ata: fix sparse warning in libata.h
-Date: Sat, 16 Feb 2008 07:18:54 +0900
-Message-ID: <47B60FCE.80303@gmail.com>
-References: <1203016578.2748.69.camel@brick>	 <20080215223250.0f229dbe@weinigel.se> <1203111692.15275.50.camel@brick>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [PATCH 5/11v2] ata: replace macro with static inline in
+ libata.h
+Date: Fri, 15 Feb 2008 22:30:36 +0000
+Message-ID: <20080215223036.2111edd5@core>
+References: <1203113215.15275.53.camel@brick>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rv-out-0910.google.com ([209.85.198.191]:24809 "EHLO
-	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754780AbYBOWTD (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 15 Feb 2008 17:19:03 -0500
-Received: by rv-out-0910.google.com with SMTP id k20so607537rvb.1
-        for <linux-ide@vger.kernel.org>; Fri, 15 Feb 2008 14:19:02 -0800 (PST)
-In-Reply-To: <1203111692.15275.50.camel@brick>
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:60768 "EHLO
+	lxorguk.ukuu.org.uk" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1760655AbYBOWie (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 15 Feb 2008 17:38:34 -0500
+In-Reply-To: <1203113215.15275.53.camel@brick>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Harvey Harrison <harvey.harrison@gmail.com>
-Cc: Christer Weinigel <christer@weinigel.se>, Jeff Garzik <jeff@garzik.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Andrew Morton <akpm@linux-foundation.org>, linux-ide <linux-ide@vger.kernel.org>
+Cc: Jeff Garzik <jeff@garzik.org>, linux-ide <linux-ide@vger.kernel.org>
 
-Harvey Harrison wrote:
-> Avoids lots of these, also is more readable.
-> include/linux/libata.h:1210:13: warning: potentially expensive pointer subtraction
-> 
-> Change the subtraction to addition on the other side of the comparison.
-> 
-> Thanks to Christer Weinigel for the suggestion.
-> 
-> Signed-off-by: Harvey Harrison <harvey.harrison@gmail.com>
+On Fri, 15 Feb 2008 14:06:55 -0800
+Harvey Harrison <harvey.harrison@gmail.com> wrote:
 
-Acked-by: Tejun Heo <htejun@gmail.com>
+> Move to using a static inline which will force the same typechecking
+> that min_t/max_t do (in this case, short).  As a bonus, avoid a ton
+> of sparse warnings like:
+> 
+> drivers/ata/pata_ali.c:176:14: warning: symbol '__x' shadows an earlier one
+> drivers/ata/pata_ali.c:176:14: originally declared here
+> 
+> Due to nesting min_t macro inside max_t macro which both use a __x
+> identifier internally.
 
--- 
-tejun
+NAK. This is a sparse bug, fix sparse.
