@@ -1,58 +1,38 @@
-From: Yinghai Lu <Yinghai.Lu@Sun.COM>
-Subject: Re: [PATCH] SCSI: fix data corruption caused by ses v2
-Date: Fri, 15 Feb 2008 10:44:50 -0800
-Message-ID: <200802151044.51586.yinghai.lu@sun.com>
-References: <200802090413.53275.yinghai.lu@sun.com>
- <200802131625.17172.yinghai.lu@sun.com>
- <1203090786.3058.22.camel@localhost.localdomain>
+From: Greg KH <greg@kroah.com>
+Subject: Re: pci_get_device_reverse(), why does Calgary need this?
+Date: Fri, 15 Feb 2008 10:28:22 -0800
+Message-ID: <20080215182822.GA5675@kroah.com>
+References: <20080213001506.GA13933@kroah.com> <20080213001638.GB13933@kroah.com> <20080213093225.GA16985@rhun.haifa.ibm.com> <20080213173203.GC10733@kroah.com> <20080213174711.GB22274@rhun.haifa.ibm.com> <20080213181459.GA8960@kroah.com> <20080215071703.GA9022@kroah.com> <20080215074827.GE4334@rhun.haifa.ibm.com> <20080215152008.GA1975@kroah.com> <20080215153140.GN1178@uranus.ravnborg.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from sca-es-mail-2.Sun.COM ([192.18.43.133]:42309 "EHLO
-	sca-es-mail-2.sun.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755232AbYBOSYq (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 15 Feb 2008 13:24:46 -0500
-In-reply-to: <1203090786.3058.22.camel@localhost.localdomain>
-Content-disposition: inline
+Received: from pentafluge.infradead.org ([213.146.154.40]:33919 "EHLO
+	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755981AbYBOSbJ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 15 Feb 2008 13:31:09 -0500
+Content-Disposition: inline
+In-Reply-To: <20080215153140.GN1178@uranus.ravnborg.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: James Bottomley <James.Bottomley@hansenpartnership.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, kristen.c.accardi@intel.com, Ingo Molnar <mingo@elte.hu>, "H. Peter Anvin" <hpa@zytor.com>
+To: Sam Ravnborg <sam@ravnborg.org>
+Cc: Muli Ben-Yehuda <muli@il.ibm.com>, jdmason@kudzu.us, bzolnier@gmail.com, linux-ide@vger.kernel.org, linux-pci@atrey.karlin.mff.cuni.cz, linux-kernel@vger.kernel.org, discuss@x86-64.org
 
-On Friday 15 February 2008 07:53:06 am James Bottomley wrote:
-> On Wed, 2008-02-13 at 16:25 -0800, Yinghai Lu wrote:
-> > one system: initrd get courrupted:
+On Fri, Feb 15, 2008 at 04:31:40PM +0100, Sam Ravnborg wrote:
+> On Fri, Feb 15, 2008 at 07:20:08AM -0800, Greg KH wrote:
+> > On Fri, Feb 15, 2008 at 09:48:27AM +0200, Muli Ben-Yehuda wrote:
+> > > In conclusion, our usage doesn't seem lika a good fit for the probe
+> > > approach, although it could probably converted provided we got the
+> > > ordering right with regards to regular PCI device
+> > > initialization. Doesn't seem to be worth the effort.
 > > 
-> > RAMDISK: Compressed image found at block 0
-> > RAMDISK: incomplete write (-28 != 2048) 134217728
-> > crc error
-> > VFS: Mounted root (ext2 filesystem).
-> > Freeing unused kernel memory: 388k freed
-> > init_special_inode: bogus i_mode (177777)
-> > Warning: unable to open an initial console.
-> > init_special_inode: bogus i_mode (177777)
-> > init_special_inode: bogus i_mode (177777)
-> > Kernel panic - not syncing: No init found.  Try passing init= option to kernel.
-> > 
-> > bisected to
-> > commit 9927c68864e9c39cc317b4f559309ba29e642168
-> > Author: James Bottomley <James.Bottomley@HansenPartnership.com>
-> > Date:   Sun Feb 3 15:48:56 2008 -0600
-> > 
-> >     [SCSI] ses: add new Enclosure ULD
-> > 
-> > changes:
-> > 1. change char to unsigned char to avoid type change later.
-> > 2. preserve len for page1
-> > 3. need to move desc_ptr even the entry is not enclosure_component_device/raid.
-> >    so keep desc_ptr on right position
-> > 4. record page7 len, and double check if desc_ptr out of boundary before touch.
-> > 5. fix typo in subenclosure checking: should use hdr_buf instead.
-> > 
-> > Signed-off-by: Yinghai Lu <yinghai.lu@sun.com>
+> > After reading this, and looking at the code again, I agree.  Thanks for
+> > the great explaination, I'll leave the code alone now :)
 > 
-> OK, I added this with a fixup to eliminate the spurious goto
-> 
+> Copy the nice explanation from the mail into the code as a comment
+> somewhere?
 
-good
+That would be nice.  Muli, want to make a patch for this?
+
+thanks,
+
+greg k-h
