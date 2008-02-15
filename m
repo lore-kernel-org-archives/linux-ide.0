@@ -1,55 +1,42 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [RFC-UGLYPATCH] ata: small optimization in linux/libata.h
-Date: Fri, 15 Feb 2008 10:58:05 +0900
-Message-ID: <47B4F1AD.3060808@gmail.com>
-References: <1203016578.2748.69.camel@brick>  <47B4D129.8060308@gmail.com> <1203033902.10192.7.camel@brick>
+From: Andrew Morton <akpm@linux-foundation.org>
+Subject: Re: [PATCHSET] printk: implement printk_header() and merging
+ printk, take #3
+Date: Thu, 14 Feb 2008 18:27:00 -0800
+Message-ID: <20080214182700.a9a706e9.akpm@linux-foundation.org>
+References: <12028937731333-git-send-email-htejun@gmail.com>
+	<20080213155701.48871761.akpm@linux-foundation.org>
+	<47B38E13.1060503@gmail.com>
+	<20080213170950.86945835.akpm@linux-foundation.org>
+	<47B398B3.40308@gmail.com>
+	<47B4EFAB.2040102@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rv-out-0910.google.com ([209.85.198.189]:57375 "EHLO
-	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754442AbYBOB6M (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 14 Feb 2008 20:58:12 -0500
-Received: by rv-out-0910.google.com with SMTP id k20so366024rvb.1
-        for <linux-ide@vger.kernel.org>; Thu, 14 Feb 2008 17:58:11 -0800 (PST)
-In-Reply-To: <1203033902.10192.7.camel@brick>
+Received: from smtp2.linux-foundation.org ([207.189.120.14]:51886 "EHLO
+	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1760221AbYBOC2b (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 14 Feb 2008 21:28:31 -0500
+In-Reply-To: <47B4EFAB.2040102@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Harvey Harrison <harvey.harrison@gmail.com>
-Cc: Jeff Garzik <jeff@garzik.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Andrew Morton <akpm@linux-foundation.org>, linux-ide <linux-ide@vger.kernel.org>
+To: Tejun Heo <htejun@gmail.com>
+Cc: jeff@garzik.org, linux-ide@vger.kernel.org, jengelh@computergmbh.de, matthew@wil.cx, randy.dunlap@oracle.com, daniel.ritz-ml@swissonline.ch, linux-kernel@vger.kernel.org
 
-Harvey Harrison wrote:
->>> I know it's ugly, but I had it done anyways.  The one real problem I have
->>> with it is that if link and ap->pmp_link ever get changed to different types
->>> the compiler will not even warn as we cast away to (char *).  To make it
->>> a bit more robust, a BUILD_BUG_ON checking the pointer types may be a
->>> good idea.
->> Sorry, but Nacked-by: Tejun Heo <htejun@gmail.com>
->>
-> 
-> Can't say I really blame you, other than this one error, drivers/ata
-> builds almost sparse-clean, and I had it done anyways.  I wonder if
-> a helper similar in spirit would be any better.  This doesn't have
-> any typechecking, but perhaps that could be dealt with too.
-> 
-> Ran into a similar problem with mmzone.h, akpm has the patch, but
-> maybe a helper (kernel.h?) would be cleaner.  Or maybe it's just
-> better to live with the sparse warnings....
-> 
-> /*
->  * return the offset of the ptr from the base, in bytes.
->  */
-> #define PTR_OFF(base, ptr) \
-> ((char *)ptr - (char *)base)
-> 
-> if (PTR_OFF(ap->pmp_link, ++link) < ap->nr_pmp_links * sizeof(*link))
-> 	return link;
+On Fri, 15 Feb 2008 10:49:31 +0900 Tejun Heo <htejun@gmail.com> wrote:
 
-Can you please explain why it warns against pointer substraction?  Is it
-because it can generate division?
+> > printk is a special case, I think.  It's the primary logging/debugging
+> > method which can't fail and as it's mostly interpreted by human beings
+> > (and developers in problematic cases), it has different maneuvering room
+> > on errors - ie. it's far better to print messages w/o header or proper
+> > log level than failing to print, which is quite different requirements
+> > from other components.
+> 
+> Andrew, any more comments or suggestions on how to proceed on this?
 
-Thanks.
+Nope.
 
--- 
-tejun
+>  One
+> way or the other, I think this is a problem worth solving.
+
+There are a lot of such problems ;)
