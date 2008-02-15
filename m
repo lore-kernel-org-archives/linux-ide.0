@@ -1,31 +1,41 @@
 From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH 01/11] ata: fix sparse warning in ata_piix.c
-Date: Fri, 15 Feb 2008 13:51:58 -0500
-Message-ID: <47B5DF4E.5040407@garzik.org>
-References: <1202966045.2748.15.camel@brick>
+Subject: Re: [PATCH] pata_scc.c: add thaw ops
+Date: Fri, 15 Feb 2008 13:52:21 -0500
+Message-ID: <47B5DF65.3010800@garzik.org>
+References: <200802130254.m1D2s9bG023092@toshiba.co.jp>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:54632 "EHLO mail.dvmed.net"
+Received: from srv5.dvmed.net ([207.36.208.214]:54656 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754674AbYBOSwA (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 15 Feb 2008 13:52:00 -0500
-In-Reply-To: <1202966045.2748.15.camel@brick>
+	id S1760140AbYBOSwY (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 15 Feb 2008 13:52:24 -0500
+In-Reply-To: <200802130254.m1D2s9bG023092@toshiba.co.jp>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Harvey Harrison <harvey.harrison@gmail.com>
-Cc: Tejun Heo <htejun@gmail.com>, LKML <linux-kernel@vger.kernel.org>, linux-ide <linux-ide@vger.kernel.org>
+To: Akira Iguchi <akira2.iguchi@toshiba.co.jp>
+Cc: kou.ishizaki@toshiba.co.jp, linux-ide@vger.kernel.org
 
-Harvey Harrison wrote:
-> drivers/ata/ata_piix.c:1655:8: warning: symbol 'rc' shadows an earlier one
-> drivers/ata/ata_piix.c:1616:6: originally declared here
+Akira Iguchi wrote:
+> This patch adds default thaw ops and fixes the freeze/thaw inconsistency.
 > 
-> Signed-off-by: Harvey Harrison <harvey.harrison@gmail.com>
+> Signed-off-by: Kou Ishizaki <kou.ishizaki@toshiba.co.jp>
+> Signed-off-by: Akira Iguchi <akira2.iguchi@toshiba.co.jp>
 > ---
->  drivers/ata/ata_piix.c |    2 +-
->  1 files changed, 1 insertions(+), 1 deletions(-)
+> 
+> diff -pu linux-2.6.25-rc1/drivers/ata/pata_scc.c linux-2.6.25-rc1_mod/drivers/ata/pata_scc.c
+> --- linux-2.6.25-rc1/drivers/ata/pata_scc.c	2008-02-11 07:18:14.000000000 +0900
+> +++ linux-2.6.25-rc1_mod/drivers/ata/pata_scc.c	2008-02-13 11:37:34.000000000 +0900
+> @@ -1007,6 +1007,8 @@ static const struct ata_port_operations 
+>  	.qc_issue		= ata_qc_issue_prot,
+>  
+>  	.freeze			= scc_bmdma_freeze,
+> +	.thaw			= ata_bmdma_thaw,
+> +
+>  	.error_handler		= scc_error_handler,
+>  	.post_internal_cmd	= scc_bmdma_stop,
 
-applied 1-4
+applied
 
 
