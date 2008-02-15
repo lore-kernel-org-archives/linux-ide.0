@@ -1,44 +1,102 @@
-From: Kamalesh Babulal <kamalesh@linux.vnet.ibm.com>
-Subject: [BUID_FAILURE] next-20080215 Build failure caused by ide: rework
- PowerMac media-bay support
-Date: Fri, 15 Feb 2008 23:24:11 +0530
-Message-ID: <47B5D1C3.40702@linux.vnet.ibm.com>
+From: Malte =?UTF-8?B?U2NocsO2ZGVy?= <maltesch@gmx.de>
+Subject: Re: Regression: kernel 2.6.24{,.1} ahci problem, does not boot
+ (resend)
+Date: Fri, 15 Feb 2008 19:12:15 +0100
+Message-ID: <20080215191215.430ee2e0@highlander.home.lan>
+References: <20080214184700.0bd3837d@highlander.home.lan>
+	<47B4D02E.9030101@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; boundary="Sig_/YN=RmG0aoGTr9uPkO+q1kUe";
+ protocol="application/pgp-signature"; micalg=PGP-SHA1
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from E23SMTP03.au.ibm.com ([202.81.18.172]:56041 "EHLO
-	e23smtp03.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755294AbYBORyT (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 15 Feb 2008 12:54:19 -0500
+Received: from mail.gmx.net ([213.165.64.20]:37793 "HELO mail.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1757734AbYBOSMR (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 15 Feb 2008 13:12:17 -0500
+In-Reply-To: <47B4D02E.9030101@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: bzolnier@gmail.com
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linuxppc-dev@ozlabs.org, michael@ellerman.id.au, Andy Whitcroft <apw@shadowen.org>
+To: Tejun Heo <htejun@gmail.com>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-The linux-next-20080215 kernel build fails on the powerpc with
-following error
- 
-  CC      arch/powerpc/platforms/powermac/setup.o
-In file included from arch/powerpc/platforms/powermac/setup.c:66:
-include/asm/mediabay.h:29: error: syntax error before 'ide_hwif_t'
-include/asm/mediabay.h:29: warning: function declaration isn't a prototype
-make[2]: *** [arch/powerpc/platforms/powermac/setup.o] Error 1
-make[1]: *** [arch/powerpc/platforms/powermac] Error 2
-make: *** [arch/powerpc/platforms] Error 2
+--Sig_/YN=RmG0aoGTr9uPkO+q1kUe
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 
-This build failure is caused by the  ide: rework PowerMac media-bay support
-patch.This problem was reported and solution suggested according to
-http://lkml.org/lkml/2008/2/13/195 including the 
+On Fri, 15 Feb 2008 08:35:10 +0900
+Tejun Heo <htejun@gmail.com> wrote:
 
-#include <linux/ide.h> after
+> Malte Schr=C3=B6der wrote:
+> > Hello,
+> > on one of my machines neither 2.6.24 nor 2.6.24.1 work.
+> > The system is 64bit on Athlon X2 and ATI-Chipset (SB600).
+> >=20
+> > Extract from the kernel messages during boot:
+> >=20
+> > [   66.943103] ahci 0000:00:12.0: controller can't do 64bit DMA, forcin=
+g 32bit
+> > [   66.950374] ahci 0000:00:12.0: controller can't do PMP, turning off =
+CAP_PMP
+> > [   67.956470] ahci 0000:00:12.0: AHCI 0001.0100 32 slots 4 ports 3 Gbp=
+s 0xf impl SATA mode
+> > [   67.964996] ahci 0000:00:12.0: flags: ncq sntf ilck pm led clo pio s=
+lum part
+> > [   67.972820] scsi0 : ahci
+> > [   67.975699] scsi1 : ahci
+> > [   67.978445] scsi2 : ahci
+> > [   67.981178] scsi3 : ahci
+> > [   67.983949] ata1: SATA max UDMA/133 abar m1024@0xfadffc00 port 0xfad=
+ffd00 irq 509
+> > [   67.991825] ata2: SATA max UDMA/133 abar m1024@0xfadffc00 port 0xfad=
+ffd80 irq 509
+> > [   67.999729] ata3: SATA max UDMA/133 abar m1024@0xfadffc00 port 0xfad=
+ffe00 irq 509
+> > [   68.007619] ata4: SATA max UDMA/133 abar m1024@0xfadffc00 port 0xfad=
+ffe80 irq 509
+> > [   68.470669] ata1: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+> > [   98.431945] ata1.00: qc timeout (cmd 0xec)
+> > [   98.454907] ata1.00: failed to IDENTIFY (I/O error, err_mask=3D0x4)
+> > [   98.461296] ata1: failed to recover some devices, retrying in 5 secs
+> > [  103.916773] ata1: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+> > [  133.878045] ata1.00: qc timeout (cmd 0xec)
+> > [  133.882371] ata1.00: failed to IDENTIFY (I/O error, err_mask=3D0x4)
+> > [  133.888797] ata1: failed to recover some devices, retrying in 5 secs
+> > [  139.343901] ata1: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+> > [  169.305174] ata1.00: qc timeout (cmd 0xec)
+> > [  169.309534] ata1.00: failed to IDENTIFY (I/O error, err_mask=3D0x4)
+> > [  169.315926] ata1: failed to recover some devices, retrying in 5 secs
+> > [  174.771030] ata1: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+> >=20
+> > The complete boot-log (captured via serial console), lspci output,
+> > output of hdparm -I and the kernel config are attached.
+> >=20
+> > The PC has one IDE-drive and four SATA-drives (see hdparm.txt).
+> > If I wait long enough, the IDE-drive get's recognized and I can
+> > continue the boot process, but the SATA-drives are never recognized.
+> > The system work's fine with kernel 2.6.23.11 (later kernels not tested).
+>=20
+> Does irqpoll kernel parameter help?
+=20
+No, problem stays.
 
-#ifdef CONFIG_BLK_DEV_IDE_PMAC
+--=20
+---------------------------------------
+Malte Schr=C3=B6der
+MalteSch@gmx.de
+ICQ# 68121508
+---------------------------------------
 
-helps in fixing the build failure.
 
--- 
-Thanks & Regards,
-Kamalesh Babulal,
-Linux Technology Center,
-IBM, ISTL.
+--Sig_/YN=RmG0aoGTr9uPkO+q1kUe
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.6 (GNU/Linux)
+
+iD8DBQFHtdX/4q3E2oMjYtURAgrXAKDiCwsELkyVwiCGSgiNOwQx9qfK2gCghAmp
+ffivnZTdi074RoHI75jB5Yc=
+=6UTt
+-----END PGP SIGNATURE-----
+
+--Sig_/YN=RmG0aoGTr9uPkO+q1kUe--
