@@ -1,102 +1,58 @@
-From: Malte =?UTF-8?B?U2NocsO2ZGVy?= <maltesch@gmx.de>
-Subject: Re: Regression: kernel 2.6.24{,.1} ahci problem, does not boot
- (resend)
-Date: Fri, 15 Feb 2008 19:12:15 +0100
-Message-ID: <20080215191215.430ee2e0@highlander.home.lan>
-References: <20080214184700.0bd3837d@highlander.home.lan>
-	<47B4D02E.9030101@gmail.com>
+From: Yinghai Lu <Yinghai.Lu@Sun.COM>
+Subject: Re: [PATCH] SCSI: fix data corruption caused by ses v2
+Date: Fri, 15 Feb 2008 10:44:50 -0800
+Message-ID: <200802151044.51586.yinghai.lu@sun.com>
+References: <200802090413.53275.yinghai.lu@sun.com>
+ <200802131625.17172.yinghai.lu@sun.com>
+ <1203090786.3058.22.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: multipart/signed; boundary="Sig_/YN=RmG0aoGTr9uPkO+q1kUe";
- protocol="application/pgp-signature"; micalg=PGP-SHA1
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.gmx.net ([213.165.64.20]:37793 "HELO mail.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1757734AbYBOSMR (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 15 Feb 2008 13:12:17 -0500
-In-Reply-To: <47B4D02E.9030101@gmail.com>
+Received: from sca-es-mail-2.Sun.COM ([192.18.43.133]:42309 "EHLO
+	sca-es-mail-2.sun.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755232AbYBOSYq (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 15 Feb 2008 13:24:46 -0500
+In-reply-to: <1203090786.3058.22.camel@localhost.localdomain>
+Content-disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: James Bottomley <James.Bottomley@hansenpartnership.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, kristen.c.accardi@intel.com, Ingo Molnar <mingo@elte.hu>, "H. Peter Anvin" <hpa@zytor.com>
 
---Sig_/YN=RmG0aoGTr9uPkO+q1kUe
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
+On Friday 15 February 2008 07:53:06 am James Bottomley wrote:
+> On Wed, 2008-02-13 at 16:25 -0800, Yinghai Lu wrote:
+> > one system: initrd get courrupted:
+> > 
+> > RAMDISK: Compressed image found at block 0
+> > RAMDISK: incomplete write (-28 != 2048) 134217728
+> > crc error
+> > VFS: Mounted root (ext2 filesystem).
+> > Freeing unused kernel memory: 388k freed
+> > init_special_inode: bogus i_mode (177777)
+> > Warning: unable to open an initial console.
+> > init_special_inode: bogus i_mode (177777)
+> > init_special_inode: bogus i_mode (177777)
+> > Kernel panic - not syncing: No init found.  Try passing init= option to kernel.
+> > 
+> > bisected to
+> > commit 9927c68864e9c39cc317b4f559309ba29e642168
+> > Author: James Bottomley <James.Bottomley@HansenPartnership.com>
+> > Date:   Sun Feb 3 15:48:56 2008 -0600
+> > 
+> >     [SCSI] ses: add new Enclosure ULD
+> > 
+> > changes:
+> > 1. change char to unsigned char to avoid type change later.
+> > 2. preserve len for page1
+> > 3. need to move desc_ptr even the entry is not enclosure_component_device/raid.
+> >    so keep desc_ptr on right position
+> > 4. record page7 len, and double check if desc_ptr out of boundary before touch.
+> > 5. fix typo in subenclosure checking: should use hdr_buf instead.
+> > 
+> > Signed-off-by: Yinghai Lu <yinghai.lu@sun.com>
+> 
+> OK, I added this with a fixup to eliminate the spurious goto
+> 
 
-On Fri, 15 Feb 2008 08:35:10 +0900
-Tejun Heo <htejun@gmail.com> wrote:
-
-> Malte Schr=C3=B6der wrote:
-> > Hello,
-> > on one of my machines neither 2.6.24 nor 2.6.24.1 work.
-> > The system is 64bit on Athlon X2 and ATI-Chipset (SB600).
-> >=20
-> > Extract from the kernel messages during boot:
-> >=20
-> > [   66.943103] ahci 0000:00:12.0: controller can't do 64bit DMA, forcin=
-g 32bit
-> > [   66.950374] ahci 0000:00:12.0: controller can't do PMP, turning off =
-CAP_PMP
-> > [   67.956470] ahci 0000:00:12.0: AHCI 0001.0100 32 slots 4 ports 3 Gbp=
-s 0xf impl SATA mode
-> > [   67.964996] ahci 0000:00:12.0: flags: ncq sntf ilck pm led clo pio s=
-lum part
-> > [   67.972820] scsi0 : ahci
-> > [   67.975699] scsi1 : ahci
-> > [   67.978445] scsi2 : ahci
-> > [   67.981178] scsi3 : ahci
-> > [   67.983949] ata1: SATA max UDMA/133 abar m1024@0xfadffc00 port 0xfad=
-ffd00 irq 509
-> > [   67.991825] ata2: SATA max UDMA/133 abar m1024@0xfadffc00 port 0xfad=
-ffd80 irq 509
-> > [   67.999729] ata3: SATA max UDMA/133 abar m1024@0xfadffc00 port 0xfad=
-ffe00 irq 509
-> > [   68.007619] ata4: SATA max UDMA/133 abar m1024@0xfadffc00 port 0xfad=
-ffe80 irq 509
-> > [   68.470669] ata1: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-> > [   98.431945] ata1.00: qc timeout (cmd 0xec)
-> > [   98.454907] ata1.00: failed to IDENTIFY (I/O error, err_mask=3D0x4)
-> > [   98.461296] ata1: failed to recover some devices, retrying in 5 secs
-> > [  103.916773] ata1: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-> > [  133.878045] ata1.00: qc timeout (cmd 0xec)
-> > [  133.882371] ata1.00: failed to IDENTIFY (I/O error, err_mask=3D0x4)
-> > [  133.888797] ata1: failed to recover some devices, retrying in 5 secs
-> > [  139.343901] ata1: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-> > [  169.305174] ata1.00: qc timeout (cmd 0xec)
-> > [  169.309534] ata1.00: failed to IDENTIFY (I/O error, err_mask=3D0x4)
-> > [  169.315926] ata1: failed to recover some devices, retrying in 5 secs
-> > [  174.771030] ata1: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-> >=20
-> > The complete boot-log (captured via serial console), lspci output,
-> > output of hdparm -I and the kernel config are attached.
-> >=20
-> > The PC has one IDE-drive and four SATA-drives (see hdparm.txt).
-> > If I wait long enough, the IDE-drive get's recognized and I can
-> > continue the boot process, but the SATA-drives are never recognized.
-> > The system work's fine with kernel 2.6.23.11 (later kernels not tested).
->=20
-> Does irqpoll kernel parameter help?
-=20
-No, problem stays.
-
---=20
----------------------------------------
-Malte Schr=C3=B6der
-MalteSch@gmx.de
-ICQ# 68121508
----------------------------------------
-
-
---Sig_/YN=RmG0aoGTr9uPkO+q1kUe
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.6 (GNU/Linux)
-
-iD8DBQFHtdX/4q3E2oMjYtURAgrXAKDiCwsELkyVwiCGSgiNOwQx9qfK2gCghAmp
-ffivnZTdi074RoHI75jB5Yc=
-=6UTt
------END PGP SIGNATURE-----
-
---Sig_/YN=RmG0aoGTr9uPkO+q1kUe--
+good
