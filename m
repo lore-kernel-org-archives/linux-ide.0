@@ -1,55 +1,91 @@
-From: "yong xue" <ultraice@gmail.com>
-Subject: Re: pci_get_device_reverse(), why does Calgary need this?
-Date: Fri, 15 Feb 2008 23:46:06 +0800
-Message-ID: <f20f12900802150746t6117e5cexa06ec4516e44100b@mail.gmail.com>
-References: <20080213001506.GA13933@kroah.com>
-	 <20080213001638.GB13933@kroah.com>
-	 <20080213093225.GA16985@rhun.haifa.ibm.com>
-	 <20080213173203.GC10733@kroah.com>
-	 <20080213174711.GB22274@rhun.haifa.ibm.com>
-	 <20080213181459.GA8960@kroah.com> <20080215071703.GA9022@kroah.com>
-	 <20080215074827.GE4334@rhun.haifa.ibm.com>
-	 <20080215152008.GA1975@kroah.com>
-	 <20080215153140.GN1178@uranus.ravnborg.org>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH] SCSI: fix data corruption caused by ses v2
+Date: Fri, 15 Feb 2008 09:53:06 -0600
+Message-ID: <1203090786.3058.22.camel@localhost.localdomain>
+References: <200802090413.53275.yinghai.lu@sun.com>
+	 <200802122310.23050.yinghai.lu@sun.com>
+	 <1202945127.3109.89.camel@localhost.localdomain>
+	 <200802131625.17172.yinghai.lu@sun.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.183]:11696 "EHLO
-	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752189AbYBOPqK (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 15 Feb 2008 10:46:10 -0500
-Received: by py-out-1112.google.com with SMTP id u52so919514pyb.10
-        for <linux-ide@vger.kernel.org>; Fri, 15 Feb 2008 07:46:07 -0800 (PST)
-In-Reply-To: <20080215153140.GN1178@uranus.ravnborg.org>
-Content-Disposition: inline
+Received: from accolon.hansenpartnership.com ([76.243.235.52]:37548 "EHLO
+	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1756622AbYBOPxO (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 15 Feb 2008 10:53:14 -0500
+In-Reply-To: <200802131625.17172.yinghai.lu@sun.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Sam Ravnborg <sam@ravnborg.org>
-Cc: Greg KH <greg@kroah.com>, Muli Ben-Yehuda <muli@il.ibm.com>, jdmason@kudzu.us, bzolnier@gmail.com, linux-ide@vger.kernel.org, linux-pci@atrey.karlin.mff.cuni.cz, linux-kernel@vger.kernel.org, discuss@x86-64.org
+To: Yinghai Lu <Yinghai.Lu@Sun.COM>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, kristen.c.accardi@intel.com, Ingo Molnar <mingo@elte.hu>, "H. Peter Anvin" <hpa@zytor.com>
 
-2008/2/15, Sam Ravnborg <sam@ravnborg.org>:
-> On Fri, Feb 15, 2008 at 07:20:08AM -0800, Greg KH wrote:
->  > On Fri, Feb 15, 2008 at 09:48:27AM +0200, Muli Ben-Yehuda wrote:
->  > > In conclusion, our usage doesn't seem lika a good fit for the probe
->  > > approach, although it could probably converted provided we got the
->  > > ordering right with regards to regular PCI device
->  > > initialization. Doesn't seem to be worth the effort.
->  >
->  > After reading this, and looking at the code again, I agree.  Thanks for
->  > the great explaination, I'll leave the code alone now :)
->
->
-> Copy the nice explanation from the mail into the code as a comment
->  somewhere?
->         Sam
+On Wed, 2008-02-13 at 16:25 -0800, Yinghai Lu wrote:
+> one system: initrd get courrupted:
+> 
+> RAMDISK: Compressed image found at block 0
+> RAMDISK: incomplete write (-28 != 2048) 134217728
+> crc error
+> VFS: Mounted root (ext2 filesystem).
+> Freeing unused kernel memory: 388k freed
+> init_special_inode: bogus i_mode (177777)
+> Warning: unable to open an initial console.
+> init_special_inode: bogus i_mode (177777)
+> init_special_inode: bogus i_mode (177777)
+> Kernel panic - not syncing: No init found.  Try passing init= option to kernel.
+> 
+> bisected to
+> commit 9927c68864e9c39cc317b4f559309ba29e642168
+> Author: James Bottomley <James.Bottomley@HansenPartnership.com>
+> Date:   Sun Feb 3 15:48:56 2008 -0600
+> 
+>     [SCSI] ses: add new Enclosure ULD
+> 
+> changes:
+> 1. change char to unsigned char to avoid type change later.
+> 2. preserve len for page1
+> 3. need to move desc_ptr even the entry is not enclosure_component_device/raid.
+>    so keep desc_ptr on right position
+> 4. record page7 len, and double check if desc_ptr out of boundary before touch.
+> 5. fix typo in subenclosure checking: should use hdr_buf instead.
+> 
+> Signed-off-by: Yinghai Lu <yinghai.lu@sun.com>
 
-I think  it is good  to do so.
+OK, I added this with a fixup to eliminate the spurious goto
 
-xueyong
->
-> -
->  To unsubscribe from this list: send the line "unsubscribe linux-ide" in
->  the body of a message to majordomo@vger.kernel.org
->  More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+Thanks,
+
+James
+
+---
+
+diff --git a/drivers/scsi/ses.c b/drivers/scsi/ses.c
+index cbba012..a6d9669 100644
+--- a/drivers/scsi/ses.c
++++ b/drivers/scsi/ses.c
+@@ -561,16 +561,15 @@ static int ses_intf_add(struct class_device *cdev,
+ 			if (desc_ptr) {
+ 				if (desc_ptr >= buf + page7_len) {
+ 					desc_ptr = NULL;
+-					goto noname;
++				} else {
++					len = (desc_ptr[2] << 8) + desc_ptr[3];
++					desc_ptr += 4;
++					/* Add trailing zero - pushes into
++					 * reserved space */
++					desc_ptr[len] = '\0';
++					name = desc_ptr;
+ 				}
+-				len = (desc_ptr[2] << 8) + desc_ptr[3];
+-				desc_ptr += 4;
+-				/* Add trailing zero - pushes into
+-				 * reserved space */
+-				desc_ptr[len] = '\0';
+-				name = desc_ptr;
+ 			}
+-		noname:
+ 			if (type_ptr[0] == ENCLOSURE_COMPONENT_DEVICE ||
+ 			    type_ptr[0] == ENCLOSURE_COMPONENT_ARRAY_DEVICE) {
+ 
+
+
