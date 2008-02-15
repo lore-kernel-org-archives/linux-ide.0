@@ -1,73 +1,33 @@
-From: Hugo Mills <hugo@carfax.org.uk>
-Subject: Re: Spurious completions during NCQ
-Date: Fri, 15 Feb 2008 15:04:50 +0000
-Message-ID: <20080215150449.GC27745@vlad.carfax.org.uk>
-References: <20080215134658.GB27745@vlad.carfax.org.uk> <1203087600.25150.5.camel@zem>
+From: Sam Ravnborg <sam@ravnborg.org>
+Subject: Re: pci_get_device_reverse(), why does Calgary need this?
+Date: Fri, 15 Feb 2008 16:31:40 +0100
+Message-ID: <20080215153140.GN1178@uranus.ravnborg.org>
+References: <20080213001506.GA13933@kroah.com> <20080213001638.GB13933@kroah.com> <20080213093225.GA16985@rhun.haifa.ibm.com> <20080213173203.GC10733@kroah.com> <20080213174711.GB22274@rhun.haifa.ibm.com> <20080213181459.GA8960@kroah.com> <20080215071703.GA9022@kroah.com> <20080215074827.GE4334@rhun.haifa.ibm.com> <20080215152008.GA1975@kroah.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="bKyqfOwhbdpXa4YI"
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from frost.carfax.org.uk ([212.13.194.111]:1130 "EHLO
-	frost.carfax.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751315AbYBOP3a (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 15 Feb 2008 10:29:30 -0500
+Received: from pasmtpb.tele.dk ([80.160.77.98]:42561 "EHLO pasmtpB.tele.dk"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750751AbYBOPbc (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 15 Feb 2008 10:31:32 -0500
 Content-Disposition: inline
-In-Reply-To: <1203087600.25150.5.camel@zem>
+In-Reply-To: <20080215152008.GA1975@kroah.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Calvin Walton <calvin.walton@gmail.com>
-Cc: Hugo Mills <hugo-lkml@carfax.org.uk>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: Greg KH <greg@kroah.com>
+Cc: Muli Ben-Yehuda <muli@il.ibm.com>, jdmason@kudzu.us, bzolnier@gmail.com, linux-ide@vger.kernel.org, linux-pci@atrey.karlin.mff.cuni.cz, linux-kernel@vger.kernel.org, discuss@x86-64.org
 
-
---bKyqfOwhbdpXa4YI
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-
-On Fri, Feb 15, 2008 at 10:00:00AM -0500, Calvin Walton wrote:
-> On Fri, 2008-02-15 at 13:46 +0000, Hugo Mills wrote:
-> > I'm getting these on my Dell Latitude D830:
-> > 
-> > Feb 15 13:06:00 willow kernel: ata1.00: exception Emask 0x2 SAct 0x4 SErr 0x0 action 0x2 frozen
-> > Feb 15 13:06:00 willow kernel: ata1.00: spurious completions during NCQ issue=0x0 SAct=0x4 FIS=004040a1:00000002
+On Fri, Feb 15, 2008 at 07:20:08AM -0800, Greg KH wrote:
+> On Fri, Feb 15, 2008 at 09:48:27AM +0200, Muli Ben-Yehuda wrote:
+> > In conclusion, our usage doesn't seem lika a good fit for the probe
+> > approach, although it could probably converted provided we got the
+> > ordering right with regards to regular PCI device
+> > initialization. Doesn't seem to be worth the effort.
 > 
-> >    In some cases, there are several cmd/res lines listed. It's
-> > happening about once an hour or so (not correlated with any other
-> > event that I can see). It doesn't seem to be affecting operation of
-> > the machine, but it's making me nervous.
-> > 
-> >    Can anyone set my mind at rest? (Or suggest a fix?)
-> 
-> You didn't mention which SATA chipset your laptop has, but some quick
-> googling says that it's AHCI. Until 2.6.24, the AHCI driver has a
-> problem where it'll report superious NCQ completions due to a bug in the
-> driver logic.
-> 
-> > uname -a reports:
-> > Linux willow 2.6.23.1-hrt3 #1 SMP Sun Nov 4 14:51:20 GMT 2007 x86_64 GNU/Linux
-> 
-> The fix is simple, upgrade your kernel to 2.6.24 :)
+> After reading this, and looking at the code again, I agree.  Thanks for
+> the great explaination, I'll leave the code alone now :)
 
-   Excellent. Thank you for clearing this up for me. I'll head off and
-do the upgrade now.
+Copy the nice explanation from the mail into the code as a comment
+somewhere?
 
-   Hugo.
-
--- 
-=== Hugo Mills: hugo@... carfax.org.uk | darksatanic.net | lug.org.uk ===
-  PGP key: 515C238D from wwwkeys.eu.pgp.net or http://www.carfax.org.uk
-    --- All mushrooms are edible,  but some are only edible once. ---    
-
---bKyqfOwhbdpXa4YI
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.6 (GNU/Linux)
-
-iD8DBQFHtaoRIKyzvlFcI40RAld/AJ9ciHYEcPF1Kr6spz4UMMgkXsEa9gCeJuGp
-9VkYC7UwdoZC08b9YAHQWvo=
-=zh1y
------END PGP SIGNATURE-----
-
---bKyqfOwhbdpXa4YI--
+	Sam
