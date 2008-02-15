@@ -1,52 +1,38 @@
-From: Harvey Harrison <harvey.harrison@gmail.com>
-Subject: [PATCH] ata: fix sparse warning in libata.h
-Date: Fri, 15 Feb 2008 13:41:32 -0800
-Message-ID: <1203111692.15275.50.camel@brick>
+From: Christer Weinigel <christer@weinigel.se>
+Subject: Re: [RFC-UGLYPATCH] ata: small optimization in linux/libata.h
+Date: Fri, 15 Feb 2008 22:32:50 +0100
+Message-ID: <20080215223250.0f229dbe@weinigel.se>
 References: <1203016578.2748.69.camel@brick>
-	 <20080215223250.0f229dbe@weinigel.se>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.180]:32078 "EHLO
-	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752687AbYBOVle (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 15 Feb 2008 16:41:34 -0500
-Received: by py-out-1112.google.com with SMTP id u52so1032885pyb.10
-        for <linux-ide@vger.kernel.org>; Fri, 15 Feb 2008 13:41:34 -0800 (PST)
-In-Reply-To: <20080215223250.0f229dbe@weinigel.se>
+Received: from 2-1-3-15a.ens.sth.bostream.se ([82.182.31.214]:59815 "EHLO
+	zoo.weinigel.se" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753208AbYBOVnl (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 15 Feb 2008 16:43:41 -0500
+In-Reply-To: <1203016578.2748.69.camel@brick>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Christer Weinigel <christer@weinigel.se>
+To: Harvey Harrison <harvey.harrison@gmail.com>
 Cc: Jeff Garzik <jeff@garzik.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Andrew Morton <akpm@linux-foundation.org>, linux-ide <linux-ide@vger.kernel.org>
 
-Avoids lots of these, also is more readable.
-include/linux/libata.h:1210:13: warning: potentially expensive pointer subtraction
+On Thu, 14 Feb 2008 11:16:18 -0800
+Harvey Harrison <harvey.harrison@gmail.com> wrote:
 
-Change the subtraction to addition on the other side of the comparison.
+> Original:
+> 	if (++link - ap->pmp_link < ap->nr_pmp_links)
+> Next:
+> 	if ((char*)++link - (char *)ap->pmp_link < ap->nr_pmp_links * sizeof(*link)) return link;
 
-Thanks to Christer Weinigel for the suggestion.
+Ungh. 
 
-Signed-off-by: Harvey Harrison <harvey.harrison@gmail.com>
----
- include/linux/libata.h |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+Why not rewrite it as (untested):
 
-diff --git a/include/linux/libata.h b/include/linux/libata.h
-index bc5a8d0..a6243bb 100644
---- a/include/linux/libata.h
-+++ b/include/linux/libata.h
-@@ -1207,7 +1207,7 @@ static inline struct ata_link *ata_port_next_link(struct ata_link *link)
- 		return ap->pmp_link;
- 	}
- 
--	if (++link - ap->pmp_link < ap->nr_pmp_links)
-+	if (++link < ap->nr_pmp_links + ap->pmp_link)
- 		return link;
- 	return NULL;
- }
--- 
-1.5.4.1.1278.gc75be
+    if (++link < ap->pmp_link + ap->nr_pmp_links)
 
+That should be just as efficient and more readable since it
+is a simple if (ptr < start + size).
 
+  /Christer
 
