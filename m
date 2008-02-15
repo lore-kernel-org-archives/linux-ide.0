@@ -1,32 +1,34 @@
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: Re: "ide=reverse" do we still need this?
-Date: Fri, 15 Feb 2008 06:58:48 -0700
-Message-ID: <20080215135848.GD7657@parisc-linux.org>
-References: <20080213001506.GA13933@kroah.com> <47B24AB3.3040009@keyaccess.nl> <20080213044436.GB10101@kroah.com> <47B4777A.70400@tmr.com>
+From: Jan Engelhardt <jengelh@computergmbh.de>
+Subject: Re: [PATCH 0/4] ide: generic packet command representation
+Date: Fri, 15 Feb 2008 15:04:48 +0100 (CET)
+Message-ID: <Pine.LNX.4.64.0802151503580.30301@fbirervta.pbzchgretzou.qr>
+References: <1202718880-1793-1-git-send-email-petkovbb@gmail.com>
+ <200802120109.24152.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from palinux.external.hp.com ([192.25.206.14]:34791 "EHLO
-	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755509AbYBON6u (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 15 Feb 2008 08:58:50 -0500
-Content-Disposition: inline
-In-Reply-To: <47B4777A.70400@tmr.com>
+Received: from sovereign.computergmbh.de ([85.214.69.204]:40208 "EHLO
+	sovereign.computergmbh.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756133AbYBOOEt (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 15 Feb 2008 09:04:49 -0500
+In-Reply-To: <200802120109.24152.bzolnier@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bill Davidsen <davidsen@tmr.com>
-Cc: Greg KH <greg@kroah.com>, Rene Herman <rene.herman@keyaccess.nl>, bzolnier@gmail.com, muli@il.ibm.com, jdmason@kudzu.us, linux-ide@vger.kernel.org, linux-pci@atrey.karlin.mff.cuni.cz, linux-kernel@vger.kernel.org, discuss@x86-64.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: Borislav Petkov <petkovbb@googlemail.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Borislav Petkov <petkovbb@gmail.com>
 
-On Thu, Feb 14, 2008 at 12:16:42PM -0500, Bill Davidsen wrote:
-> There are any number of things you can do when the system is booted, but 
-> the only thing you can do when the system won't boot is use kernel boot 
-> options.
 
-Greg's not removing your option to boot the system using an old kernel
-to set up a new kernel properly ;-)
+On Feb 12 2008 01:09, Bartlomiej Zolnierkiewicz wrote:
+>
+>> On a different note, i noticed ide-scsi might also need a cleanup
+>> similar to the other drivers. It is next on my TODO list in case
+>> you don't have anything with a higher prio.
+>
+>I was actually hoping that you'll continue unifying ATAPI handling...
+>
+>[ ide-scsi is orphaned and has (probably) unfixable problems
+>  (because of having dependencies on both IDE and SCSI subsystems)
+>  so it is not worth IMO but I will of course accept patches... ]
 
--- 
-Intel are signing my paycheques ... these opinions are still mine
-"Bill, look, we understand that you're interested in selling us this
-operating system, but compare it to ours.  We can't possibly take such
-a retrograde step."
+So, why is ide-scsi still in the tree? Is there some use case besides
+cdrecord? (Which can use /dev/hda already without the ide-scsi blob...)
