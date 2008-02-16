@@ -1,108 +1,130 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: Optiarc DVD RW AD-5200A audio playing
-Date: Sat, 16 Feb 2008 16:24:01 +0100
-Message-ID: <200802161624.02768.bzolnier@gmail.com>
-References: <47B5EDB7.5050709@canonical.com> <20080216090532.GK13446@gollum.tnic>
+From: Mark Lord <liml@rtr.ca>
+Subject: Re: ST31000340NS (1000G) Capacity equal 33MB issue.
+Date: Sat, 16 Feb 2008 10:46:57 -0500
+Message-ID: <47B70571.4060303@rtr.ca>
+References: <d0d565260802141013q61cb5e7fh7dcf04d7729213f7@mail.gmail.com> <d0d565260802141018y63a988bbpc6aecf771baacb84@mail.gmail.com> <47B499F2.1010306@rtr.ca> <47B5CC39.7020302@rtr.ca>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wx-out-0506.google.com ([66.249.82.229]:39119 "EHLO
-	wx-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755995AbYBPPQR (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 16 Feb 2008 10:16:17 -0500
-Received: by wx-out-0506.google.com with SMTP id h31so906081wxd.4
-        for <linux-ide@vger.kernel.org>; Sat, 16 Feb 2008 07:16:17 -0800 (PST)
-In-Reply-To: <20080216090532.GK13446@gollum.tnic>
-Content-Disposition: inline
+Received: from rtr.ca ([76.10.145.34]:3547 "EHLO mail.rtr.ca"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752332AbYBPPq7 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 16 Feb 2008 10:46:59 -0500
+In-Reply-To: <47B5CC39.7020302@rtr.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: petkovbb@gmail.com
-Cc: Stefan Bader <stefan.bader@canonical.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Jens Axboe <jens.axboe@oracle.com>
+To: Richard Liu <richliu.tw@gmail.com>
+Cc: linux-ide@vger.kernel.org
 
-
-Hi,
-
-On Saturday 16 February 2008, Borislav Petkov wrote:
-> On Fri, Feb 15, 2008 at 02:53:27PM -0500, Stefan Bader wrote:
-> > Hello Borislav,
-> > 
-> > I worked on a problem with an DVD driver (model=Optiarc DVD RW AD-5200A)
-> > which obviously has the same problem as some Matshita drives. The
-> > following patch was reported to enabled audio playing on this drive.
-> > Would this approach be suitable for upstream or are there other
-> > solutions to this problem?
-> > 
-> > Regards,
-> > Stefan
-> > 
-> > --- a/drivers/ide/ide-cd.c
-> > +++ b/drivers/ide/ide-cd.c
-> > @@ -2988,7 +2988,8 @@ int ide_cdrom_probe_capabilities (ide_drive_t *drive)
-> >  	if (strcmp(drive->id->model, "MATSHITADVD-ROM SR-8187") == 0 ||
-> >  	    strcmp(drive->id->model, "MATSHITADVD-ROM SR-8186") == 0 ||
-> >  	    strcmp(drive->id->model, "MATSHITADVD-ROM SR-8176") == 0 ||
-> > -	    strcmp(drive->id->model, "MATSHITADVD-ROM SR-8174") == 0)
-> > +	    strcmp(drive->id->model, "MATSHITADVD-ROM SR-8174") == 0 ||
-> > +	    strcmp(drive->id->model, "Optiarc DVD RW AD-5200A") == 0)
-> >  		CDROM_CONFIG_FLAGS(drive)->audio_play = 1;
-> > 
-> >  #if ! STANDARD_ATAPI
+Mark Lord wrote:
+> Richard Liu wrote:
+>> Dear Mark:
+>>
+>> 2008/2/15, Mark Lord <liml@rtr.ca>:
+>>> Richard Liu wrote:
+>>>  > Hello all:
+>>>  >
+>>>  >      I bought a Seagate ES.2 ST31000340NS (1000GB) and run at Gentoo
+>>>  > Linux kernel 2.6.24.
+>>>  > But Linux kernel report the disk size only 33MB.
+>>>  > I tried Intel ICH5 and Sil3112, but get the same result.
+>>>  >
+>>>  > I don't know this issue was caused by libsata or scsi layer .
+>>>
+>>> ..
+>>>
+>>>> hdparm
+>>>  >  ==
+>>>  > hdparm -i /dev/sdc
+>>>  >
+>>>  > /dev/sdc:
+>>>  >
+>>>  >  Model=ST31000340NS                            , FwRev=SN04    ,
+>>>  > SerialNo=            9QJ09BJ4
+>>>  >  Config={ HardSect NotMFM HdSw>15uSec Fixed DTR>10Mbs RotSpdTol>.5% }
+>>>  >   RawCHS=64/16/63, TrkSize=0, SectSize=0, ECCbytes=4
+>>>  >  BuffType=unknown, BuffSize=0kB, MaxMultSect=16, MultSect=?16?
+>>>  >  CurCHS=64/16/63, CurSects=64512, LBA=yes, LBAsects=65134
+>>>  >  IORDY=on/off, tPIO={min:120,w/IORDY:120}, tDMA={min:120,rec:120}
+>>>  >   PIO modes:  pio0 pio1 pio2 pio3 pio4
+>>>  >  DMA modes:  mdma0 mdma1 mdma2
+>>>  >  UDMA modes: udma0 udma1 udma2 udma3 udma4 *udma5
+>>>  >  AdvancedPM=no WriteCache=enabled
+>>>  >  Drive conforms to: ATA/ATAPI-6 T13 1410D revision 2:  
+>>> ATA/ATAPI-4,5,6
+>>>  >
+>>>  >  * signifies the current active mode
+>>>
+>>> ..
+>>>
+>>>  Nothing wrong there, but I would really like/prefer to see the 
+>>> output from:
+>>>
+>>>     hdparm --Istdout /dev/sdc
+>>>
+>>>
+>>>  thanks.
+>>>
+>>
+>>  # hdparm --Istdout /dev/sdc
+>>
+>> /dev/sdc:
+>> 0c5a 0040 c837 0010 0000 0000 003f 0000
+>> 0000 0000 2020 2020 2020 2020 2020 2020
+>> 3951 4a30 3942 4a34 0000 0000 0004 534e
+>> 3034 2020 2020 5354 3331 3030 3033 3430
+>> 4e53 2020 2020 2020 2020 2020 2020 2020
+>> 2020 2020 2020 2020 2020 2020 2020 8010
+>> 0000 2f00 4000 0200 0200 0007 0040 0010
+>> 003f fc00 0000 0110 fe6e 0000 0000 0007
+>> 0003 0078 0078 0078 0078 0000 0000 0000
+>> 0000 0000 0000 001f 0502 0000 0040 0040
+>> 0070 001b 346b 7d01 4123 3468 bc01 4103
+>> 207f 0000 0000 fefe fffe 0000 fe00 0000
+>> 0000 0000 0000 0000 fe6e 0000 0000 0000
+>> 0000 0000 0000 0000 5000 c500 09b9 0136
+>> 0000 0000 0000 0000 0000 0000 0000 4006
+>> 4006 0000 0000 0000 0000 0000 0000 0000
+>> 0021 6db0 7470 6db0 7470 0000 0002 0140
+>> 0100 5000 3c06 3c0a 0000 003c 0000 0008
+>> 0000 0000 000f 0280 0000 0000 000a 0000
+>> 0000 0000 0000 0000 0000 0000 2700 8000
+>> 0000 0000 0000 0000 0000 0000 0000 0000
+>> 0000 0000 0000 0000 0000 0000 0000 0000
+>> 0000 0000 0000 0000 0000 0000 0000 0000
+>> 0000 0000 0000 0000 0000 0000 0000 0000
+>> 0000 0000 0000 0000 0000 0000 0000 0000
+>> 0000 0000 0000 0000 0000 0000 003d 0000
+>> 0000 0000 0000 0000 0000 0000 0000 0000
+>> 0000 1c20 0000 0000 0000 0000 0000 0000
+>> 0000 0000 0000 0000 0000 0000 0000 0000
+>> 0000 0000 0000 0000 0000 0000 0000 0000
+>> 0000 0000 0000 0000 0000 0000 0000 0000
+>> 0000 0000 0000 0000 0000 0000 0000 e9a5
+> ..
 > 
-> Hi Stefan,
+> Thanks.  By running the above data through hdparm --Istdin,
+> I see that the drive is indeed identifying itself as a 33MB drive.
 > 
-> just to make sure that the audioplay bit is not set in the capabilities page,
-> can you please try the following patch applied against 2.6.25-rc2 and send me
-> the output. Thanks!
+> Probably because it has been told to do so by either the factory defaults,
+> or the BIOS, having enabled these features (which can cause it to report
+> fake values for various things):
 > 
-> @Bart: by the way, this cdi->mask thingy is kinda unintuitive doing double
-> negation to check whether a feature is supported or not. Yeah, this comes from
-> "above," i.e. uniform cdrom layer. But still, shouldn't we use a cdi->caps_flags
-> or something similar instead, which mirrors the caps page bits setting?
-
-It seems so (at least having negative flags is very unintuitive) but they
-might be some reason for this ugliness, Jens?
-
-[ Please also remember that since cdrom layer is _uniform_ it may be not
-  possible and/or desirable to have 1-1 mapping between caps page bits
-  and the future cdi->caps_flags. ]
-
-> commit 435f0f4496a1b32af2d542f43b2370a890fe2f83
-> Author: Borislav Petkov <petkovbb@gmail.com>
-> Date:   Sat Feb 16 09:56:36 2008 +0100
+>           *    Host Protected Area feature set
+>           *    Device Configuration Overlay feature set
 > 
->     ide-cd: Enable audio play quirk for Optiarc DVD RW AD-5200A drive
->     
->     Reported-by: Stefan Bader <stefan.bader@canonical.com>
->     Signed-off-by: Borislav Petkov <petkovbb@gmail.com>
+> So that's why the 1TB drive appears as a 33MB drive.
 > 
-> diff --git a/drivers/ide/ide-cd.c b/drivers/ide/ide-cd.c
-> index f77db6b..2c9d06e 100644
-> --- a/drivers/ide/ide-cd.c
-> +++ b/drivers/ide/ide-cd.c
-> @@ -1750,6 +1750,10 @@ int ide_cdrom_probe_capabilities (ide_drive_t *drive)
->  		cdi->mask &= ~(CDC_DVD_RAM | CDC_RAM);
->  	if (buf[8 + 3] & 0x10)
->  		cdi->mask &= ~CDC_DVD_R;
-> +	if (!(buf[8 + 4] & 0x01)) {
+> In the near future, I will be enhancing hdparm to query more
+> detailed data from underneath those artificial features.
+> 
+> But you'll have to enable the entire 1TB capacity if you want Linux to 
+> use it.
+> It is currently disabled in the drive, and Linux respects that.
+..
 
-Hmm, shouldn't there be '&& (cd->cd_flags & IDE_CD_FLAG_PLAY_AUDIO_OK)'
-to prevent false positives?
+Okay, hdparm-8.1 is now available from sourceforge.net.
+Download it, build it ("make"), and see what you get from "hdparm -N /dev/sdc"
 
-> +		printk(KERN_INFO "ide-cd: audio play not advertised in caps page,"
-
-Would be nice to also printk() the device name.
-
-> +				 " enabling quirk.\n");
-> +	}
->  	if ((buf[8 + 4] & 0x01) || (cd->cd_flags & IDE_CD_FLAG_PLAY_AUDIO_OK))
->  		cdi->mask &= ~CDC_PLAY_AUDIO;
->  
-> @@ -1929,6 +1933,7 @@ static const struct cd_list_entry ide_cd_quirks_list[] = {
->  	{ "MATSHITADVD-ROM SR-8186", NULL,   IDE_CD_FLAG_PLAY_AUDIO_OK	    },
->  	{ "MATSHITADVD-ROM SR-8176", NULL,   IDE_CD_FLAG_PLAY_AUDIO_OK	    },
->  	{ "MATSHITADVD-ROM SR-8174", NULL,   IDE_CD_FLAG_PLAY_AUDIO_OK	    },
-> +	{ "Optiarc DVD RW AD-5200A", NULL,   IDE_CD_FLAG_PLAY_AUDIO_OK      },
->  	{ NULL, NULL, 0 }
->  };
+Thanks
