@@ -1,22 +1,22 @@
 From: bugme-daemon@bugzilla.kernel.org
-Subject: [Bug 7506] it821x: long wait time due to dma_timer_expiry
-Date: Sat, 16 Feb 2008 10:45:31 -0800 (PST)
-Message-ID: <20080216184531.1496C11D10A@picon.linux-foundation.org>
-References: <bug-7506-11633@http.bugzilla.kernel.org/>
+Subject: [Bug 6883] ide-probe.c attempts to use polling designed for ancient Seagate drives on some compact flash disks
+Date: Sat, 16 Feb 2008 10:46:24 -0800 (PST)
+Message-ID: <20080216184624.55947108069@picon.linux-foundation.org>
+References: <bug-6883-11633@http.bugzilla.kernel.org/>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp2.linux-foundation.org ([207.189.120.14]:42402 "EHLO
+Received: from smtp2.linux-foundation.org ([207.189.120.14]:41398 "EHLO
 	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751301AbYBPSqf (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 16 Feb 2008 13:46:35 -0500
+	by vger.kernel.org with ESMTP id S1752290AbYBPSqx (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 16 Feb 2008 13:46:53 -0500
 Received: from picon.linux-foundation.org (picon.linux-foundation.org [207.189.120.79])
-	by smtp2.linux-foundation.org (8.13.5.20060308/8.13.5/Debian-3ubuntu1.1) with ESMTP id m1GIk17q007985
-	for <linux-ide@vger.kernel.org>; Sat, 16 Feb 2008 10:46:02 -0800
-In-Reply-To: <bug-7506-11633@http.bugzilla.kernel.org/>
+	by smtp2.linux-foundation.org (8.13.5.20060308/8.13.5/Debian-3ubuntu1.1) with ESMTP id m1GIkOpf008011
+	for <linux-ide@vger.kernel.org>; Sat, 16 Feb 2008 10:46:25 -0800
+In-Reply-To: <bug-6883-11633@http.bugzilla.kernel.org/>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
 
-http://bugzilla.kernel.org/show_bug.cgi?id=7506
+http://bugzilla.kernel.org/show_bug.cgi?id=6883
 
 
 bzolnier@gmail.com changed:
@@ -24,13 +24,12 @@ bzolnier@gmail.com changed:
            What    |Removed                     |Added
 ----------------------------------------------------------------------------
          AssignedTo|bzolnier@gmail.com          |io_ide@kernel-bugs.osdl.org
-      KernelVersion|2.6.19-rc3                  |2.6.19-rc3 - 2.6.23-rc2
 
 
 
 
-------- Comment #12 from bzolnier@gmail.com  2008-02-16 10:45 -------
-Martin, could you try 2.6.25-rc2?
+------- Comment #1 from bzolnier@gmail.com  2008-02-16 10:46 -------
+Is this still a problem with recent kernels (2.6.24 or 2.6.25-rc2)?
 
 
 -- 
