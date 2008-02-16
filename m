@@ -1,106 +1,130 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH 11/12] ide: cleanup ide_match_hwif()
-Date: Sat, 16 Feb 2008 17:40:09 +0100
-Message-ID: <20080216164009.10174.55119.sendpatchset@localhost.localdomain>
+Subject: [PATCH 09/12] ide: move default IDE ports setup to ide_generic host driver
+Date: Sat, 16 Feb 2008 17:39:53 +0100
+Message-ID: <20080216163953.10174.29472.sendpatchset@localhost.localdomain>
 References: <20080216163856.10174.72546.sendpatchset@localhost.localdomain>
 Return-path: <linux-ide-owner@vger.kernel.org>
 Received: from fg-out-1718.google.com ([72.14.220.157]:14693 "EHLO
 	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755023AbYBPQZl (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 16 Feb 2008 11:25:41 -0500
+	with ESMTP id S1753273AbYBPQZW (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 16 Feb 2008 11:25:22 -0500
 Received: by fg-out-1718.google.com with SMTP id e21so842257fga.17
-        for <linux-ide@vger.kernel.org>; Sat, 16 Feb 2008 08:25:40 -0800 (PST)
+        for <linux-ide@vger.kernel.org>; Sat, 16 Feb 2008 08:25:21 -0800 (PST)
 In-Reply-To: <20080216163856.10174.72546.sendpatchset@localhost.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
 Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-kernel@vger.kernel.org
 
-* Remove no longer needed matching against I/O base and 'io_base' argument.
+* Make CONFIG_IDE_GENERIC depended on CONFIG_IDE_ARCH_OBSOLETE_DEFAULTS.
 
-* Move printk() to the caller and remove 'name' argument.
+* Move default IDE ports setup from init_ide_data() to ide_generic
+  host driver (remembering to not break "idex=noprobe" parameter).
+
+* Use ide_init_port_hw() in ide_generic host driver.
+
+* Remove no longer needed CONFIG_IDE_ARCH_OBSOLETE_DEFAULTS.
 
 Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 ---
- drivers/ide/setup-pci.c |   47 +++++++++++++++--------------------------------
- 1 file changed, 15 insertions(+), 32 deletions(-)
+ drivers/ide/Kconfig       |    4 +---
+ drivers/ide/ide-generic.c |   16 +++++++++++++---
+ drivers/ide/ide.c         |   18 ------------------
+ 3 files changed, 14 insertions(+), 24 deletions(-)
 
-Index: b/drivers/ide/setup-pci.c
+Index: b/drivers/ide/Kconfig
 ===================================================================
---- a/drivers/ide/setup-pci.c
-+++ b/drivers/ide/setup-pci.c
-@@ -22,42 +22,20 @@
+--- a/drivers/ide/Kconfig
++++ b/drivers/ide/Kconfig
+@@ -307,6 +307,7 @@ comment "IDE chipset support/bugfixes"
  
+ config IDE_GENERIC
+ 	tristate "generic/default IDE chipset support"
++	depends on ALPHA || X86 || IA64 || M32R || MIPS || PPC32
+ 	help
+ 	  If unsure, say N.
  
- /**
-- *	ide_match_hwif	-	match a PCI IDE against an ide_hwif
-- *	@io_base: I/O base of device
-- *	@bootable: set if its bootable
-- *	@name: name of device
-+ *	ide_match_hwif	-	find free ide_hwifs[] slot
-+ *	@bootable: bootable flag
-  *
-- *	Match a PCI IDE port against an entry in ide_hwifs[],
-- *	based on io_base port if possible. Return the matching hwif,
-- *	or a new hwif. If we find an error (clashing, out of devices, etc)
-- *	return NULL
-- *
-- *	FIXME: we need to handle mmio matches here too
-+ *	Return the new hwif.  If we are out of free slots return NULL.
-  */
+@@ -1096,9 +1097,6 @@ config BLK_DEV_IDEDMA
+ 	def_bool BLK_DEV_IDEDMA_SFF || BLK_DEV_IDEDMA_PMAC || \
+ 		 BLK_DEV_IDEDMA_ICS || BLK_DEV_IDE_AU1XXX_MDMA2_DBDMA
  
--static ide_hwif_t *ide_match_hwif(unsigned long io_base, u8 bootable, const char *name)
-+static ide_hwif_t *ide_match_hwif(u8 bootable)
- {
--	int h;
- 	ide_hwif_t *hwif;
-+	int h;
+-config IDE_ARCH_OBSOLETE_DEFAULTS
+-	def_bool ALPHA || X86 || IA64 || M32R || MIPS || PPC32
+-
+ endif
  
- 	/*
--	 * Look for a hwif with matching io_base default value.
--	 * If chipset is "ide_unknown", then claim that hwif slot.
--	 * Otherwise, some other chipset has already claimed it..  :(
--	 */
--	for (h = 0; h < MAX_HWIFS; ++h) {
--		hwif = &ide_hwifs[h];
--		if (hwif->io_ports[IDE_DATA_OFFSET] == io_base) {
--			if (hwif->chipset == ide_unknown)
--				return hwif; /* match */
--			printk(KERN_ERR "%s: port 0x%04lx already claimed by %s\n",
--				name, io_base, hwif->name);
--			return NULL;	/* already claimed */
--		}
--	}
--	/*
--	 * Okay, there is no hwif matching our io_base,
--	 * so we'll just claim an unassigned slot.
-+	 * Claim an unassigned slot.
-+	 *
- 	 * Give preference to claiming other slots before claiming ide0/ide1,
- 	 * just in case there's another interface yet-to-be-scanned
- 	 * which uses ports 1f0/170 (the ide0/ide1 defaults).
-@@ -83,7 +61,7 @@ static ide_hwif_t *ide_match_hwif(unsign
- 		if (hwif->chipset == ide_unknown)
- 			return hwif;	/* pick an unused entry */
- 	}
--	printk(KERN_ERR "%s: too many IDE interfaces, no room in table\n", name);
+ config BLK_DEV_HD_ONLY
+Index: b/drivers/ide/ide-generic.c
+===================================================================
+--- a/drivers/ide/ide-generic.c
++++ b/drivers/ide/ide-generic.c
+@@ -94,11 +94,21 @@ static int __init ide_generic_init(void)
+ 
+ 	for (i = 0; i < MAX_HWIFS; i++) {
+ 		ide_hwif_t *hwif = &ide_hwifs[i];
++		unsigned long io_addr = ide_default_io_base(i);
++		hw_regs_t hw;
 +
- 	return NULL;
++		if (hwif->chipset == ide_unknown && io_addr) {
++			u8 oldnoprobe = hwif->noprobe;
++
++			memset(&hw, 0, sizeof(hw));
++			ide_std_init_ports(&hw, io_addr, io_addr + 0x206);
++			hw.irq = ide_init_default_irq(io_addr);
++			ide_init_port_hw(hwif, &hw);
++
++			hwif->noprobe = oldnoprobe;
+ 
+-		if (hwif->io_ports[IDE_DATA_OFFSET] &&
+-		    hwif->chipset == ide_unknown)
+ 			idx[i] = i;
+-		else
++		} else
+ 			idx[i] = 0xff;
+ 	}
+ 
+Index: b/drivers/ide/ide.c
+===================================================================
+--- a/drivers/ide/ide.c
++++ b/drivers/ide/ide.c
+@@ -167,12 +167,6 @@ static void ide_port_init_devices_data(i
+ 	}
  }
  
-@@ -367,8 +345,13 @@ static ide_hwif_t *ide_hwif_configure(st
- 		ctl = port ? 0x374 : 0x3f4;
- 		base = port ? 0x170 : 0x1f0;
- 	}
--	if ((hwif = ide_match_hwif(base, bootable, d->name)) == NULL)
--		return NULL;	/* no room in ide_hwifs[] */
-+
-+	hwif = ide_match_hwif(bootable);
-+	if (hwif == NULL) {
-+		printk(KERN_ERR "%s: too many IDE interfaces, no room in "
-+				"table\n", d->name);
-+		return NULL;
-+	}
+-#ifndef CONFIG_IDE_ARCH_OBSOLETE_DEFAULTS
+-# define ide_default_io_base(index)	(0)
+-# define ide_default_irq(base)		(0)
+-# define ide_init_default_irq(base)	(0)
+-#endif
+-
+ /*
+  * init_ide_data() sets reasonable default values into all fields
+  * of all instances of the hwifs and drives, but only on the first call.
+@@ -195,7 +189,6 @@ static void __init init_ide_data (void)
+ {
+ 	unsigned int index;
+ 	static unsigned long magic_cookie = MAGIC_COOKIE;
+-	hw_regs_t hw;
  
- 	memset(&hw, 0, sizeof(hw));
- 	hw.irq = irq;
+ 	if (magic_cookie != MAGIC_COOKIE)
+ 		return;		/* already initialized */
+@@ -204,19 +197,8 @@ static void __init init_ide_data (void)
+ 	/* Initialise all interface structures */
+ 	for (index = 0; index < MAX_HWIFS; ++index) {
+ 		ide_hwif_t *hwif = &ide_hwifs[index];
+-		unsigned long io_addr = ide_default_io_base(index);
+-		unsigned long ctl_addr = io_addr + 0x206;
+ 
+ 		ide_init_port_data(hwif, index);
+-
+-#ifdef CONFIG_IDE_ARCH_OBSOLETE_DEFAULTS
+-		memset(&hw, 0, sizeof(hw));
+-		ide_std_init_ports(&hw, io_addr, ctl_addr);
+-		memcpy(hwif->io_ports, hw.io_ports, sizeof(hw.io_ports));
+-		hwif->noprobe = !hwif->io_ports[IDE_DATA_OFFSET];
+-		hwif->irq =
+-			ide_init_default_irq(hwif->io_ports[IDE_DATA_OFFSET]);
+-#endif
+ 	}
+ }
+ 
