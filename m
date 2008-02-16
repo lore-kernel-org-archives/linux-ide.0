@@ -1,314 +1,171 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH 12/12] ide: cleanup ide_find_port()
-Date: Sat, 16 Feb 2008 17:40:20 +0100
-Message-ID: <20080216164020.10174.9344.sendpatchset@localhost.localdomain>
-References: <20080216163856.10174.72546.sendpatchset@localhost.localdomain>
+From: Borislav Petkov <petkovbb@googlemail.com>
+Subject: Re: Optiarc DVD RW AD-5200A audio playing
+Date: Sat, 16 Feb 2008 17:43:02 +0100
+Message-ID: <20080216164302.GP13446@gollum.tnic>
+References: <47B5EDB7.5050709@canonical.com> <20080216090532.GK13446@gollum.tnic> <200802161624.02768.bzolnier@gmail.com>
+Reply-To: petkovbb@gmail.com
+Mime-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from fk-out-0910.google.com ([209.85.128.189]:28570 "EHLO
+Received: from fk-out-0910.google.com ([209.85.128.185]:43687 "EHLO
 	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758541AbYBPQZt (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 16 Feb 2008 11:25:49 -0500
-Received: by fk-out-0910.google.com with SMTP id z23so1114980fkz.5
-        for <linux-ide@vger.kernel.org>; Sat, 16 Feb 2008 08:25:47 -0800 (PST)
-In-Reply-To: <20080216163856.10174.72546.sendpatchset@localhost.localdomain>
+	with ESMTP id S1754285AbYBPQne (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 16 Feb 2008 11:43:34 -0500
+Received: by fk-out-0910.google.com with SMTP id z23so1120534fkz.5
+        for <linux-ide@vger.kernel.org>; Sat, 16 Feb 2008 08:43:33 -0800 (PST)
+Content-Disposition: inline
+In-Reply-To: <200802161624.02768.bzolnier@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
-Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-kernel@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: Stefan Bader <stefan.bader@canonical.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Jens Axboe <jens.axboe@oracle.com>
 
-Remove no longer needed matching against I/O base and 'base' argument.
+On Sat, Feb 16, 2008 at 04:24:01PM +0100, Bartlomiej Zolnierkiewicz wro=
+te:
+>=20
+> Hi,
+>=20
+> On Saturday 16 February 2008, Borislav Petkov wrote:
+> > On Fri, Feb 15, 2008 at 02:53:27PM -0500, Stefan Bader wrote:
+> > > Hello Borislav,
+> > >=20
+> > > I worked on a problem with an DVD driver (model=3DOptiarc DVD RW =
+AD-5200A)
+> > > which obviously has the same problem as some Matshita drives. The
+> > > following patch was reported to enabled audio playing on this dri=
+ve.
+> > > Would this approach be suitable for upstream or are there other
+> > > solutions to this problem?
+> > >=20
+> > > Regards,
+> > > Stefan
+> > >=20
+> > > --- a/drivers/ide/ide-cd.c
+> > > +++ b/drivers/ide/ide-cd.c
+> > > @@ -2988,7 +2988,8 @@ int ide_cdrom_probe_capabilities (ide_drive=
+_t *drive)
+> > >  	if (strcmp(drive->id->model, "MATSHITADVD-ROM SR-8187") =3D=3D =
+0 ||
+> > >  	    strcmp(drive->id->model, "MATSHITADVD-ROM SR-8186") =3D=3D =
+0 ||
+> > >  	    strcmp(drive->id->model, "MATSHITADVD-ROM SR-8176") =3D=3D =
+0 ||
+> > > -	    strcmp(drive->id->model, "MATSHITADVD-ROM SR-8174") =3D=3D =
+0)
+> > > +	    strcmp(drive->id->model, "MATSHITADVD-ROM SR-8174") =3D=3D =
+0 ||
+> > > +	    strcmp(drive->id->model, "Optiarc DVD RW AD-5200A") =3D=3D =
+0)
+> > >  		CDROM_CONFIG_FLAGS(drive)->audio_play =3D 1;
+> > >=20
+> > >  #if ! STANDARD_ATAPI
+> >=20
+> > Hi Stefan,
+> >=20
+> > just to make sure that the audioplay bit is not set in the capabili=
+ties page,
+> > can you please try the following patch applied against 2.6.25-rc2 a=
+nd send me
+> > the output. Thanks!
+> >=20
+> > @Bart: by the way, this cdi->mask thingy is kinda unintuitive doing=
+ double
+> > negation to check whether a feature is supported or not. Yeah, this=
+ comes from
+> > "above," i.e. uniform cdrom layer. But still, shouldn't we use a cd=
+i->caps_flags
+> > or something similar instead, which mirrors the caps page bits sett=
+ing?
+>=20
+> It seems so (at least having negative flags is very unintuitive) but =
+they
+> might be some reason for this ugliness, Jens?
+>=20
+> [ Please also remember that since cdrom layer is _uniform_ it may be =
+not
+>   possible and/or desirable to have 1-1 mapping between caps page bit=
+s
+>   and the future cdi->caps_flags. ]
+>=20
+> > commit 435f0f4496a1b32af2d542f43b2370a890fe2f83
+> > Author: Borislav Petkov <petkovbb@gmail.com>
+> > Date:   Sat Feb 16 09:56:36 2008 +0100
+> >=20
+> >     ide-cd: Enable audio play quirk for Optiarc DVD RW AD-5200A dri=
+ve
+> >    =20
+> >     Reported-by: Stefan Bader <stefan.bader@canonical.com>
+> >     Signed-off-by: Borislav Petkov <petkovbb@gmail.com>
+> >=20
+> > diff --git a/drivers/ide/ide-cd.c b/drivers/ide/ide-cd.c
+> > index f77db6b..2c9d06e 100644
+> > --- a/drivers/ide/ide-cd.c
+> > +++ b/drivers/ide/ide-cd.c
+> > @@ -1750,6 +1750,10 @@ int ide_cdrom_probe_capabilities (ide_drive_=
+t *drive)
+> >  		cdi->mask &=3D ~(CDC_DVD_RAM | CDC_RAM);
+> >  	if (buf[8 + 3] & 0x10)
+> >  		cdi->mask &=3D ~CDC_DVD_R;
+> > +	if (!(buf[8 + 4] & 0x01)) {
+>=20
+> Hmm, shouldn't there be '&& (cd->cd_flags & IDE_CD_FLAG_PLAY_AUDIO_OK=
+)'
+> to prevent false positives?
 
-Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
----
- drivers/ide/arm/bast-ide.c        |    2 +-
- drivers/ide/arm/icside.c          |    2 +-
- drivers/ide/arm/ide_arm.c         |    2 +-
- drivers/ide/arm/palm_bk3710.c     |    2 +-
- drivers/ide/arm/rapide.c          |    2 +-
- drivers/ide/cris/ide-cris.c       |    2 +-
- drivers/ide/h8300/ide-h8300.c     |    3 +--
- drivers/ide/ide-generic.c         |    2 +-
- drivers/ide/ide-pnp.c             |    2 +-
- drivers/ide/ide.c                 |   15 +++------------
- drivers/ide/legacy/buddha.c       |    2 +-
- drivers/ide/legacy/falconide.c    |    2 +-
- drivers/ide/legacy/gayle.c        |    2 +-
- drivers/ide/legacy/ide-cs.c       |    2 +-
- drivers/ide/legacy/ide_platform.c |    2 +-
- drivers/ide/legacy/macide.c       |    2 +-
- drivers/ide/legacy/q40ide.c       |    2 +-
- drivers/ide/pci/delkin_cb.c       |    2 +-
- include/linux/ide.h               |    2 +-
- 19 files changed, 21 insertions(+), 31 deletions(-)
+I wanted to see whether the caps page reports the audioplay bit off...
 
-Index: b/drivers/ide/arm/bast-ide.c
-===================================================================
---- a/drivers/ide/arm/bast-ide.c
-+++ b/drivers/ide/arm/bast-ide.c
-@@ -41,7 +41,7 @@ static int __init bastide_register(unsig
- 	hw.io_ports[IDE_CONTROL_OFFSET] = aux + (6 * 0x20);
- 	hw.irq = irq;
- 
--	hwif = ide_find_port(hw.io_ports[IDE_DATA_OFFSET]);
-+	hwif = ide_find_port();
- 	if (hwif == NULL)
- 		goto out;
- 
-Index: b/drivers/ide/arm/icside.c
-===================================================================
---- a/drivers/ide/arm/icside.c
-+++ b/drivers/ide/arm/icside.c
-@@ -400,7 +400,7 @@ icside_setup(void __iomem *base, struct 
- 	unsigned long port = (unsigned long)base + info->dataoffset;
- 	ide_hwif_t *hwif;
- 
--	hwif = ide_find_port(port);
-+	hwif = ide_find_port();
- 	if (hwif) {
- 		int i;
- 
-Index: b/drivers/ide/arm/ide_arm.c
-===================================================================
---- a/drivers/ide/arm/ide_arm.c
-+++ b/drivers/ide/arm/ide_arm.c
-@@ -34,7 +34,7 @@ static int __init ide_arm_init(void)
- 	ide_std_init_ports(&hw, IDE_ARM_IO, IDE_ARM_IO + 0x206);
- 	hw.irq = IDE_ARM_IRQ;
- 
--	hwif = ide_find_port(hw.io_ports[IDE_DATA_OFFSET]);
-+	hwif = ide_find_port();
- 	if (hwif) {
- 		ide_init_port_hw(hwif, &hw);
- 		idx[0] = hwif->index;
-Index: b/drivers/ide/arm/palm_bk3710.c
-===================================================================
---- a/drivers/ide/arm/palm_bk3710.c
-+++ b/drivers/ide/arm/palm_bk3710.c
-@@ -378,7 +378,7 @@ static int __devinit palm_bk3710_probe(s
- 	hw.irq = irq->start;
- 	hw.chipset = ide_palm3710;
- 
--	hwif = ide_find_port(hw.io_ports[IDE_DATA_OFFSET]);
-+	hwif = ide_find_port();
- 	if (hwif == NULL)
- 		goto out;
- 
-Index: b/drivers/ide/arm/rapide.c
-===================================================================
---- a/drivers/ide/arm/rapide.c
-+++ b/drivers/ide/arm/rapide.c
-@@ -44,7 +44,7 @@ rapide_probe(struct expansion_card *ec, 
- 		goto release;
- 	}
- 
--	hwif = ide_find_port((unsigned long)base);
-+	hwif = ide_find_port();
- 	if (hwif) {
- 		memset(&hw, 0, sizeof(hw));
- 		rapide_setup_ports(&hw, base, base + 0x818, 1 << 6, ec->irq);
-Index: b/drivers/ide/cris/ide-cris.c
-===================================================================
---- a/drivers/ide/cris/ide-cris.c
-+++ b/drivers/ide/cris/ide-cris.c
-@@ -804,7 +804,7 @@ static int __init init_e100_ide(void)
- 
- 		cris_setup_ports(&hw, cris_ide_base_address(h));
- 
--		hwif = ide_find_port(hw.io_ports[IDE_DATA_OFFSET]);
-+		hwif = ide_find_port();
- 		if (hwif == NULL)
- 			continue;
- 		ide_init_port_data(hwif, hwif->index);
-Index: b/drivers/ide/h8300/ide-h8300.c
-===================================================================
---- a/drivers/ide/h8300/ide-h8300.c
-+++ b/drivers/ide/h8300/ide-h8300.c
-@@ -99,8 +99,7 @@ static int __init h8300_ide_init(void)
- 
- 	hw_setup(&hw);
- 
--	/* register if */
--	hwif = ide_find_port(hw.io_ports[IDE_DATA_OFFSET]);
-+	hwif = ide_find_port();
- 	if (hwif == NULL) {
- 		printk(KERN_ERR "ide-h8300: IDE I/F register failed\n");
- 		return -ENOENT;
-Index: b/drivers/ide/ide-generic.c
-===================================================================
---- a/drivers/ide/ide-generic.c
-+++ b/drivers/ide/ide-generic.c
-@@ -33,7 +33,7 @@ static ssize_t store_add(struct class *c
- 	if (sscanf(buf, "%x:%x:%d", &base, &ctl, &irq) != 3)
- 		return -EINVAL;
- 
--	hwif = ide_find_port(base);
-+	hwif = ide_find_port();
- 	if (hwif == NULL)
- 		return -ENOENT;
- 
-Index: b/drivers/ide/ide-pnp.c
-===================================================================
---- a/drivers/ide/ide-pnp.c
-+++ b/drivers/ide/ide-pnp.c
-@@ -38,7 +38,7 @@ static int idepnp_probe(struct pnp_dev *
- 				pnp_port_start(dev, 1));
- 	hw.irq = pnp_irq(dev, 0);
- 
--	hwif = ide_find_port(hw.io_ports[IDE_DATA_OFFSET]);
-+	hwif = ide_find_port();
- 	if (hwif) {
- 		u8 index = hwif->index;
- 		u8 idx[4] = { index, 0xff, 0xff, 0xff };
-Index: b/drivers/ide/ide.c
-===================================================================
---- a/drivers/ide/ide.c
-+++ b/drivers/ide/ide.c
-@@ -234,28 +234,19 @@ static int ide_system_bus_speed(void)
- 	return pci_dev_present(pci_default) ? 33 : 50;
- }
- 
--ide_hwif_t * ide_find_port(unsigned long base)
-+ide_hwif_t *ide_find_port(void)
- {
- 	ide_hwif_t *hwif;
- 	int i;
- 
- 	for (i = 0; i < MAX_HWIFS; i++) {
- 		hwif = &ide_hwifs[i];
--		if (hwif->io_ports[IDE_DATA_OFFSET] == base)
--			goto found;
--	}
--
--	for (i = 0; i < MAX_HWIFS; i++) {
--		hwif = &ide_hwifs[i];
- 		if (hwif->chipset == ide_unknown)
--			goto found;
-+			return hwif;
- 	}
- 
--	hwif = NULL;
--found:
--	return hwif;
-+	return NULL;
- }
--
- EXPORT_SYMBOL_GPL(ide_find_port);
- 
- static struct resource* hwif_request_region(ide_hwif_t *hwif,
-Index: b/drivers/ide/legacy/buddha.c
-===================================================================
---- a/drivers/ide/legacy/buddha.c
-+++ b/drivers/ide/legacy/buddha.c
-@@ -221,7 +221,7 @@ fail_base2:
- 
- 			buddha_setup_ports(&hw, base, ctl, irq_port, ack_intr);
- 
--			hwif = ide_find_port(hw.io_ports[IDE_DATA_OFFSET]);
-+			hwif = ide_find_port();
- 			if (hwif) {
- 				u8 index = hwif->index;
- 
-Index: b/drivers/ide/legacy/falconide.c
-===================================================================
---- a/drivers/ide/legacy/falconide.c
-+++ b/drivers/ide/legacy/falconide.c
-@@ -76,7 +76,7 @@ static int __init falconide_init(void)
- 
- 	falconide_setup_ports(&hw);
- 
--	hwif = ide_find_port(hw.io_ports[IDE_DATA_OFFSET]);
-+	hwif = ide_find_port();
- 	if (hwif) {
- 		u8 index = hwif->index;
- 		u8 idx[4] = { index, 0xff, 0xff, 0xff };
-Index: b/drivers/ide/legacy/gayle.c
-===================================================================
---- a/drivers/ide/legacy/gayle.c
-+++ b/drivers/ide/legacy/gayle.c
-@@ -175,7 +175,7 @@ found:
- 
- 	gayle_setup_ports(&hw, base, ctrlport, irqport, ack_intr);
- 
--	hwif = ide_find_port(base);
-+	hwif = ide_find_port();
- 	if (hwif) {
- 	    u8 index = hwif->index;
- 
-Index: b/drivers/ide/legacy/ide-cs.c
-===================================================================
---- a/drivers/ide/legacy/ide-cs.c
-+++ b/drivers/ide/legacy/ide-cs.c
-@@ -156,7 +156,7 @@ static int idecs_register(unsigned long 
-     hw.chipset = ide_pci;
-     hw.dev = &handle->dev;
- 
--    hwif = ide_find_port(hw.io_ports[IDE_DATA_OFFSET]);
-+    hwif = ide_find_port();
-     if (hwif == NULL)
- 	return -1;
- 
-Index: b/drivers/ide/legacy/ide_platform.c
-===================================================================
---- a/drivers/ide/legacy/ide_platform.c
-+++ b/drivers/ide/legacy/ide_platform.c
-@@ -89,7 +89,7 @@ static int __devinit plat_ide_probe(stru
- 			res_alt->start, res_alt->end - res_alt->start + 1);
- 	}
- 
--	hwif = ide_find_port((unsigned long)base);
-+	hwif = ide_find_port();
- 	if (!hwif) {
- 		ret = -ENODEV;
- 		goto out;
-Index: b/drivers/ide/legacy/macide.c
-===================================================================
---- a/drivers/ide/legacy/macide.c
-+++ b/drivers/ide/legacy/macide.c
-@@ -120,7 +120,7 @@ static int __init macide_init(void)
- 
- 	macide_setup_ports(&hw, base, irq, ack_intr);
- 
--	hwif = ide_find_port(hw.io_ports[IDE_DATA_OFFSET]);
-+	hwif = ide_find_port();
- 	if (hwif) {
- 		u8 index = hwif->index;
- 		u8 idx[4] = { index, 0xff, 0xff, 0xff };
-Index: b/drivers/ide/legacy/q40ide.c
-===================================================================
---- a/drivers/ide/legacy/q40ide.c
-+++ b/drivers/ide/legacy/q40ide.c
-@@ -137,7 +137,7 @@ static int __init q40ide_init(void)
- //			m68kide_iops,
- 			q40ide_default_irq(pcide_bases[i]));
- 
--	hwif = ide_find_port(hw.io_ports[IDE_DATA_OFFSET]);
-+	hwif = ide_find_port();
- 	if (hwif) {
- 		ide_init_port_data(hwif, hwif->index);
- 		ide_init_port_hw(hwif, &hw);
-Index: b/drivers/ide/pci/delkin_cb.c
-===================================================================
---- a/drivers/ide/pci/delkin_cb.c
-+++ b/drivers/ide/pci/delkin_cb.c
-@@ -78,7 +78,7 @@ delkin_cb_probe (struct pci_dev *dev, co
- 	hw.irq = dev->irq;
- 	hw.chipset = ide_pci;		/* this enables IRQ sharing */
- 
--	hwif = ide_find_port(hw.io_ports[IDE_DATA_OFFSET]);
-+	hwif = ide_find_port();
- 	if (hwif == NULL)
- 		goto out_disable;
- 
-Index: b/include/linux/ide.h
-===================================================================
---- a/include/linux/ide.h
-+++ b/include/linux/ide.h
-@@ -171,7 +171,7 @@ typedef struct hw_regs_s {
- 	struct device	*dev;
- } hw_regs_t;
- 
--struct hwif_s * ide_find_port(unsigned long);
-+struct hwif_s *ide_find_port(void);
- void ide_init_port_data(struct hwif_s *, unsigned int);
- void ide_init_port_hw(struct hwif_s *, hw_regs_t *);
- 
+>=20
+> > +		printk(KERN_INFO "ide-cd: audio play not advertised in caps page=
+,"
+>=20
+> Would be nice to also printk() the device name.
+
+=2E.. but printing the device model is actually a good idea and this wi=
+ll rule out
+false positives, so Stefan, please drop the previous patch and test the=
+ updated
+one below. Thanks.
+
+
+commit 6cc44b0ce5c9270b15d456eb9ffa91b855e4e0d0
+Author: Borislav Petkov <petkovbb@gmail.com>
+Date:   Sat Feb 16 09:56:36 2008 +0100
+
+    ide-cd: Enable audio play quirk for Optiarc DVD RW AD-5200A drive
+   =20
+    Reported-by: Stefan Bader <stefan.bader@canonical.com>
+    Signed-off-by: Borislav Petkov <petkovbb@gmail.com>
+
+diff --git a/drivers/ide/ide-cd.c b/drivers/ide/ide-cd.c
+index f77db6b..4c9984f 100644
+--- a/drivers/ide/ide-cd.c
++++ b/drivers/ide/ide-cd.c
+@@ -1750,6 +1750,11 @@ int ide_cdrom_probe_capabilities (ide_drive_t *d=
+rive)
+ 		cdi->mask &=3D ~(CDC_DVD_RAM | CDC_RAM);
+ 	if (buf[8 + 3] & 0x10)
+ 		cdi->mask &=3D ~CDC_DVD_R;
++	if (!(buf[8 + 4] & 0x01)) {
++		printk(KERN_INFO "ide-cd: audio play not advertised in caps "
++				"page for drive model [%s], enabling quirk.\n",
++				drive->id->model);
++	}
+ 	if ((buf[8 + 4] & 0x01) || (cd->cd_flags & IDE_CD_FLAG_PLAY_AUDIO_OK)=
+)
+ 		cdi->mask &=3D ~CDC_PLAY_AUDIO;
+=20
+@@ -1929,6 +1934,7 @@ static const struct cd_list_entry ide_cd_quirks_l=
+ist[] =3D {
+ 	{ "MATSHITADVD-ROM SR-8186", NULL,   IDE_CD_FLAG_PLAY_AUDIO_OK	    },
+ 	{ "MATSHITADVD-ROM SR-8176", NULL,   IDE_CD_FLAG_PLAY_AUDIO_OK	    },
+ 	{ "MATSHITADVD-ROM SR-8174", NULL,   IDE_CD_FLAG_PLAY_AUDIO_OK	    },
++	{ "Optiarc DVD RW AD-5200A", NULL,   IDE_CD_FLAG_PLAY_AUDIO_OK      }=
+,
+ 	{ NULL, NULL, 0 }
+ };
+=20
+
+--=20
+Regards/Gru=DF,
+    Boris.
