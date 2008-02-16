@@ -1,22 +1,22 @@
 From: bugme-daemon@bugzilla.kernel.org
-Subject: [Bug 6883] ide-probe.c attempts to use polling designed for ancient Seagate drives on some compact flash disks
-Date: Sat, 16 Feb 2008 10:46:24 -0800 (PST)
-Message-ID: <20080216184624.55947108069@picon.linux-foundation.org>
-References: <bug-6883-11633@http.bugzilla.kernel.org/>
+Subject: [Bug 6745] kernel hangs when trying to read atip wiith cdrecord
+Date: Sat, 16 Feb 2008 10:47:28 -0800 (PST)
+Message-ID: <20080216184728.38D78108018@picon.linux-foundation.org>
+References: <bug-6745-11633@http.bugzilla.kernel.org/>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp2.linux-foundation.org ([207.189.120.14]:41398 "EHLO
+Received: from smtp2.linux-foundation.org ([207.189.120.14]:40959 "EHLO
 	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752290AbYBPSqx (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 16 Feb 2008 13:46:53 -0500
+	by vger.kernel.org with ESMTP id S1753264AbYBPSsE (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 16 Feb 2008 13:48:04 -0500
 Received: from picon.linux-foundation.org (picon.linux-foundation.org [207.189.120.79])
-	by smtp2.linux-foundation.org (8.13.5.20060308/8.13.5/Debian-3ubuntu1.1) with ESMTP id m1GIkOpf008011
-	for <linux-ide@vger.kernel.org>; Sat, 16 Feb 2008 10:46:25 -0800
-In-Reply-To: <bug-6883-11633@http.bugzilla.kernel.org/>
+	by smtp2.linux-foundation.org (8.13.5.20060308/8.13.5/Debian-3ubuntu1.1) with ESMTP id m1GIlSs1008057
+	for <linux-ide@vger.kernel.org>; Sat, 16 Feb 2008 10:47:34 -0800
+In-Reply-To: <bug-6745-11633@http.bugzilla.kernel.org/>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
 
-http://bugzilla.kernel.org/show_bug.cgi?id=6883
+http://bugzilla.kernel.org/show_bug.cgi?id=6745
 
 
 bzolnier@gmail.com changed:
@@ -28,8 +28,8 @@ bzolnier@gmail.com changed:
 
 
 
-------- Comment #1 from bzolnier@gmail.com  2008-02-16 10:46 -------
-Is this still a problem with recent kernels (2.6.24 or 2.6.25-rc2)?
+------- Comment #7 from bzolnier@gmail.com  2008-02-16 10:47 -------
+Is this still a problem with recent kernels?
 
 
 -- 
