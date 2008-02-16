@@ -1,100 +1,65 @@
-From: Jose Alberto Reguero <jareguero@telefonica.net>
-Subject: Problem with ahci and a external sata disk
-Date: Tue, 19 Feb 2008 16:46:39 +0100
-Message-ID: <200802191646.39277.jareguero@telefonica.net>
+From: Pavel Machek <pavel@ucw.cz>
+Subject: Re: [PATCH] enclosure: add support for enclosure services
+Date: Sat, 16 Feb 2008 12:44:58 +0000
+Message-ID: <20080216124458.GA3979@ucw.cz>
+References: <1202172065.3096.154.camel@localhost.localdomain> <922945.25870.qm@web31811.mail.mud.yahoo.com> <20080212102244.32869382@appleyard> <1202841935.3137.94.camel@localhost.localdomain> <20080212110752.21840627@appleyard> <1202844495.3137.120.camel@localhost.localdomain> <20080213094502.4112d5e5@appleyard>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outmailhost.telefonica.net ([213.4.149.242]:40138 "EHLO
-	ctsmtpout4.frontal.correo" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1751026AbYBSPwJ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 19 Feb 2008 10:52:09 -0500
-Received: from jar.dominio (80.25.230.35) by ctsmtpout4.frontal.correo (7.2.056.6) (authenticated as jareguero$telefonica.net)
-        id 47B4747A0022F9CB for linux-ide@vger.kernel.org; Tue, 19 Feb 2008 16:46:41 +0100
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
 Content-Disposition: inline
-Sender: linux-ide-owner@vger.kernel.org
+In-Reply-To: <20080213094502.4112d5e5@appleyard>
+Sender: linux-scsi-owner@vger.kernel.org
+To: Kristen Carlson Accardi <kristen.c.accardi@intel.com>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, ltuikov@yahoo.com, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, linux-ide <linux-ide@vger.kernel.org>, jeff@garzik.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
 
-When I try to make a ext3 fs in the disk I got a lot of erros:
+On Wed 2008-02-13 09:45:02, Kristen Carlson Accardi wrote:
+> On Tue, 12 Feb 2008 13:28:15 -0600
+> James Bottomley <James.Bottomley@HansenPartnership.com> wrote:
+> 
+> > On Tue, 2008-02-12 at 11:07 -0800, Kristen Carlson Accardi wrote:
+> > > I understand what you are trying to do - I guess I just doubt the
+> > > value you've added by doing this.  I think that there's going to be
+> > > so much customization that system vendors will want to add, that
+> > > they are going to wind up adding a custom library regardless, so
+> > > standardising those few things won't buy us anything.
+> > 
+> > It depends ... if you actually have a use for the customisations, yes.
+> > If you just want the basics of who (what's in the enclousure), what
+> > (activity) and where (locate) then I think it solves your problem
+> > almost entirely.
+> > 
+> > So, entirely as a straw horse, tell me what else your enclosures
+> > provide that I haven't listed in the four points.  The SES standards
+> > too provide a huge range of things that no-one ever seems to
+> > implement (temperature, power, fan speeds etc).
+> > 
+> > I think the users of enclosures fall int these categories
+> > 
+> > 85% just want to know where their device actually is (i.e. that sdc is
+> > in enclosure slot 5)
+> > 50% like watching the activity lights
+> > 30% want to be able to have a visual locate function
+> > 20% want a visual failure indication (the other 80% rely on some OS
+> > notification instead)
+> > 
+> > When you add up the overlapping needs, you get about 90% of people
+> > happy with the basics that the enclosure services provide.  Could
+> > there be more ... sure; should there be more ... I don't think so ...
+> > that's what value add the user libraries can provide.
+> > 
+> > James
+> > 
+> > 
+> 
+> I don't think I'm arguing whether or not your solution may work, what I
+> am arguing is really a more philosophical point.  Not "can we do it
+> this way", but "should we do it way".  I am of the opinion that
 
-Disk:
+Hw abstraction is still kernel's job. That's why we have leds exported
+in sysfs... let vendors have their libraries, but lets put the
+'everyone does these' stuff in kernel.
 
-Feb 18 22:10:44 jar kernel: ata4: irq_stat 0x02400000, PHY RDY changed
-Feb 18 22:10:44 jar kernel: ata4: hard resetting link
-Feb 18 22:10:56 jar kernel: ata4: SATA link up 3.0 Gbps (SStatus 123 SControl 
-300)
-Feb 18 22:10:56 jar kernel: ata4.00: ATA-6: Seagate FreeAgent Pro, 3.AFM, max 
-UDMA/133
-Feb 18 22:10:56 jar kernel: ata4.00: 1465149168 sectors, multi 0: LBA48
-Feb 18 22:10:56 jar kernel: ata4.00: configured for UDMA/133
-Feb 18 22:10:56 jar kernel: ata4: EH complete
-Feb 18 22:10:56 jar kernel: scsi 3:0:0:0: Direct-Access     ATA      Seagate 
-FreeAgen 3.AF PQ: 0 ANSI: 5
-Feb 18 22:10:56 jar kernel: sd 3:0:0:0: [sdd] 1465149168 512-byte hardware 
-sectors (750156 MB)
-Feb 18 22:10:56 jar kernel: sd 3:0:0:0: [sdd] Write Protect is off
-Feb 18 22:10:56 jar kernel: sd 3:0:0:0: [sdd] Write cache: enabled, read 
-cache: enabled, doesn't support DPO or FUA
-Feb 18 22:10:56 jar kernel: sd 3:0:0:0: [sdd] 1465149168 512-byte hardware 
-sectors (750156 MB)
-Feb 18 22:10:56 jar kernel: sd 3:0:0:0: [sdd] Write Protect is off
-Feb 18 22:10:56 jar kernel: sd 3:0:0:0: [sdd] Write cache: enabled, read 
-cache: enabled, doesn't support DPO or FUA
-Feb 18 22:10:56 jar kernel:  sdd: sdd1
-Feb 18 22:10:56 jar kernel: sd 3:0:0:0: [sdd] Attached SCSI disk
-Feb 18 22:10:56 jar kernel: sd 3:0:0:0: Attached scsi generic sg4 type 0
-
-Errors:
-
-Feb 18 22:12:48 jar kernel: ata4.00: exception Emask 0x0 SAct 0x0 SErr 0x0 
-action 0x2
-Feb 18 22:12:48 jar kernel: ata4.00: irq_stat 0x40000001
-Feb 18 22:12:48 jar kernel: ata4.00: cmd ca/00:00:65:2d:00/00:00:00:00:00/e0 
-tag 0 dma 131072 out
-Feb 18 22:12:48 jar kernel:          res 51/84:00:64:2e:00/00:00:00:00:00/e0 
-Emask 0x10 (ATA bus error)
-Feb 18 22:12:48 jar kernel: ata4.00: status: { DRDY ERR }
-Feb 18 22:12:48 jar kernel: ata4.00: error: { ICRC ABRT }
-Feb 18 22:12:48 jar kernel: ata4: hard resetting link
-
-Feb 18 22:12:48 jar kernel: ata4.00: configured for UDMA/133Feb 18 22:12:48 
-jar kernel: ata4: EH complete                                                       
-Feb 18 22:12:48 jar kernel: sd 3:0:0:0: [sdd] 1465149168 512-byte hardware 
-sectors (750156 MB)                                                                  
-Feb 18 22:12:48 jar kernel: sd 3:0:0:0: [sdd] Write Protect is off              
-Feb 18 22:12:48 jar kernel: sd 3:0:0:0: [sdd] Write cache: enabled, read 
-cache: enabled, doesn't support DPO or FUA                                             
-Feb 18 22:12:49 jar kernel: ata4.00: exception Emask 0x0 SAct 0x0 SErr 0x0 
-action 0x2                                                                           
-Feb 18 22:12:49 jar kernel: ata4.00: irq_stat 0x40000001                        
-Feb 18 22:12:49 jar kernel: ata4.00: cmd ca/00:00:4f:06:28/00:00:00:00:00/e0 
-tag 0 dma 131072 out                                                               
-Feb 18 22:12:49 jar kernel:          res 51/84:00:4e:07:28/00:00:00:00:00/e0 
-Emask 0x10 (ATA bus error)
-Feb 18 22:12:49 jar kernel: ata4.00: status: { DRDY ERR }
-Feb 18 22:12:49 jar kernel: ata4.00: error: { ICRC ABRT }
-Feb 18 22:12:49 jar kernel: ata4: hard resetting link
-
-Feb 18 22:12:49 jar kernel: ata4.00: configured for UDMA/133
-Feb 18 22:12:49 jar kernel: ata4: EH complete
-Feb 18 22:12:49 jar kernel: sd 3:0:0:0: [sdd] 1465149168 512-byte hardware 
-sectors (750156 MB)
-Feb 18 22:12:49 jar kernel: sd 3:0:0:0: [sdd] Write Protect is off
-Feb 18 22:12:49 jar kernel: sd 3:0:0:0: [sdd] Write cache: enabled, read 
-cache: enabled, doesn't support DPO or FUA
-Feb 18 22:12:50 jar kernel: ata4.00: exception Emask 0x0 SAct 0x0 SErr 0x0 
-actio
-n 0x2
-Feb 18 22:12:50 jar kernel: ata4.00: irq_stat 0x40000001
-Feb 18 22:12:50 jar kernel: ata4.00: cmd ca/00:00:4f:08:60/00:00:00:00:00/e0 
-tag 0 dma 131072 out
-Feb 18 22:12:50 jar kernel:          res 51/84:00:4e:09:60/00:00:00:00:00/e0 
-Emask 0x10 (ATA bus error)
-Feb 18 22:12:50 jar kernel: ata4.00: status: { DRDY ERR }
-Feb 18 22:12:50 jar kernel: ata4.00: error: { ICRC ABRT }
-Feb 18 22:12:50 jar kernel: ata4: hard resetting link
-
-Jose Alberto
+-- 
+(english) http://www.livejournal.com/~pavelmachek
+(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
