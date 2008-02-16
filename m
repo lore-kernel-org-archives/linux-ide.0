@@ -1,34 +1,134 @@
-From: Mark Lord <liml@rtr.ca>
-Subject: Re: [PATCHSET] printk: implement printk_header() and merging printk,
- take #3
-Date: Sat, 16 Feb 2008 09:13:49 -0500
-Message-ID: <47B6EF9D.5090804@rtr.ca>
-References: <12028937731333-git-send-email-htejun@gmail.com>	<20080213155701.48871761.akpm@linux-foundation.org>	<47B38E13.1060503@gmail.com>	<20080213170950.86945835.akpm@linux-foundation.org>	<47B398B3.40308@gmail.com>	<47B4EFAB.2040102@gmail.com>	<20080214182700.a9a706e9.akpm@linux-foundation.org>	<47B4FA9C.9080809@gmail.com> <20080214185003.9ca9a640.akpm@linux-foundation.org> <47B50420.3060403@gmail.com>
+From: Julia Lawall <julia@diku.dk>
+Subject: [PATCH 1/4] : More use DIV_ROUND_UP
+Date: Sat, 16 Feb 2008 15:49:07 +0100 (MET)
+Message-ID: <Pine.LNX.4.58.0802161548370.1185@pc-041.diku.dk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([76.10.145.34]:3486 "EHLO mail.rtr.ca"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754544AbYBPONw (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 16 Feb 2008 09:13:52 -0500
-In-Reply-To: <47B50420.3060403@gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1757553AbYBPOt1@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: bzolnier@gmail.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, jeff@garzik.org, linux-ide@vger.kernel.org, jengelh@computergmbh.de, matthew@wil.cx, randy.dunlap@oracle.com, daniel.ritz-ml@swissonline.ch, linux-kernel@vger.kernel.org
 
-Tejun Heo wrote:
-> Andrew Morton wrote:
->>> So, I guess it's NACK w/o suggested alternatives, right?
->> I wouldn't nack without good reasons, and I have none here.  I don't have
->> very strong opinions either way.
-> 
-> I was just wondering whether I should just go with snprintf dancing in
-> eh_link_report, which does make sense if not many need merging printk.
-..
+From: Julia Lawall <julia@diku.dk>
 
-Any chance you could poke through snprintf() and look for the off-by-one bug
-on the return result?  (I think it happens when "n" is exceeded).
+The kernel.h macro DIV_ROUND_UP performs the computation (((n) + (d) - 1) /
+(d)) but is perhaps more readable.
 
-:)
+An extract of the semantic patch that makes this change is as follows:
+(http://www.emn.fr/x-info/coccinelle/)
+
+// <smpl>
+@haskernel@
+@@
+
+#include <linux/kernel.h>
+
+@depends on haskernel@
+expression n,d;
+@@
+
+(
+- (n + d - 1) / d
++ DIV_ROUND_UP(n,d)
+|
+- (n + (d - 1)) / d
++ DIV_ROUND_UP(n,d)
+)
+
+@depends on haskernel@
+expression n,d;
+@@
+
+- DIV_ROUND_UP((n),d)
++ DIV_ROUND_UP(n,d)
+
+@depends on haskernel@
+expression n,d;
+@@
+
+- DIV_ROUND_UP(n,(d))
++ DIV_ROUND_UP(n,d)
+// </smpl>
+
+Signed-off-by: Julia Lawall <julia@diku.dk>
+
+---
+
+diff -u -p a/drivers/ide/arm/palm_bk3710.c b/drivers/ide/arm/palm_bk3710.c
+--- a/drivers/ide/arm/palm_bk3710.c 2008-02-13 20:42:50.000000000 +0100
++++ b/drivers/ide/arm/palm_bk3710.c 2008-02-15 22:25:33.000000000 +0100
+@@ -96,11 +96,11 @@ static void palm_bk3710_setudmamode(void
+ 	u16 val16;
+
+ 	/* DMA Data Setup */
+-	t0 = (palm_bk3710_udmatimings[mode].cycletime + ide_palm_clk - 1)
+-			/ ide_palm_clk - 1;
+-	tenv = (20 + ide_palm_clk - 1) / ide_palm_clk - 1;
+-	trp = (palm_bk3710_udmatimings[mode].rptime + ide_palm_clk - 1)
+-			/ ide_palm_clk - 1;
++	t0 = DIV_ROUND_UP(palm_bk3710_udmatimings[mode].cycletime,
++			  ide_palm_clk) - 1;
++	tenv = DIV_ROUND_UP(20, ide_palm_clk) - 1;
++	trp = DIV_ROUND_UP(palm_bk3710_udmatimings[mode].rptime,
++			   ide_palm_clk) - 1;
+
+ 	/* udmatim Register */
+ 	val16 = readw(base + BK3710_UDMATIM) & (dev ? 0xFF0F : 0xFFF0);
+@@ -141,8 +141,8 @@ static void palm_bk3710_setdmamode(void
+ 	cycletime = max_t(int, t->cycle, min_cycle);
+
+ 	/* DMA Data Setup */
+-	t0 = (cycletime + ide_palm_clk - 1) / ide_palm_clk;
+-	td = (t->active + ide_palm_clk - 1) / ide_palm_clk;
++	t0 = DIV_ROUND_UP(cycletime, ide_palm_clk);
++	td = DIV_ROUND_UP(t->active, ide_palm_clk);
+ 	tkw = t0 - td - 1;
+ 	td -= 1;
+
+@@ -168,9 +168,9 @@ static void palm_bk3710_setpiomode(void
+ 	struct ide_timing *t;
+
+ 	/* PIO Data Setup */
+-	t0 = (cycletime + ide_palm_clk - 1) / ide_palm_clk;
+-	t2 = (ide_timing_find_mode(XFER_PIO_0 + mode)->active +
+-	      ide_palm_clk - 1)	/ ide_palm_clk;
++	t0 = DIV_ROUND_UP(cycletime, ide_palm_clk);
++	t2 = DIV_ROUND_UP(ide_timing_find_mode(XFER_PIO_0 + mode)->active,
++			  ide_palm_clk);
+
+ 	t2i = t0 - t2 - 1;
+ 	t2 -= 1;
+@@ -192,8 +192,8 @@ static void palm_bk3710_setpiomode(void
+
+ 	/* TASKFILE Setup */
+ 	t = ide_timing_find_mode(XFER_PIO_0 + mode);
+-	t0 = (t->cyc8b + ide_palm_clk - 1) / ide_palm_clk;
+-	t2 = (t->act8b + ide_palm_clk - 1) / ide_palm_clk;
++	t0 = DIV_ROUND_UP(t->cyc8b, ide_palm_clk);
++	t2 = DIV_ROUND_UP(t->act8b, ide_palm_clk);
+
+ 	t2i = t0 - t2 - 1;
+ 	t2 -= 1;
+diff -u -p a/drivers/ide/pci/cmd640.c b/drivers/ide/pci/cmd640.c
+--- a/drivers/ide/pci/cmd640.c 2008-02-08 08:58:12.000000000 +0100
++++ b/drivers/ide/pci/cmd640.c 2008-02-15 22:25:38.000000000 +0100
+@@ -584,15 +584,15 @@ static void cmd640_set_mode (unsigned in
+ 	active_time = ide_pio_timings[pio_mode].active_time;
+ 	recovery_time = cycle_time - (setup_time + active_time);
+ 	clock_time = 1000 / bus_speed;
+-	cycle_count = (cycle_time + clock_time - 1) / clock_time;
++	cycle_count = DIV_ROUND_UP(cycle_time, clock_time);
+
+-	setup_count = (setup_time + clock_time - 1) / clock_time;
++	setup_count = DIV_ROUND_UP(setup_time, clock_time);
+
+-	active_count = (active_time + clock_time - 1) / clock_time;
++	active_count = DIV_ROUND_UP(active_time, clock_time);
+ 	if (active_count < 2)
+ 		active_count = 2; /* minimum allowed by cmd640 */
+
+-	recovery_count = (recovery_time + clock_time - 1) / clock_time;
++	recovery_count = DIV_ROUND_UP(recovery_time, clock_time);
+ 	recovery_count2 = cycle_count - (setup_count + active_count);
+ 	if (recovery_count2 > recovery_count)
+ 		recovery_count = recovery_count2;
