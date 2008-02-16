@@ -1,59 +1,101 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH 5/9] scc_pata: store 'hwif' pointer in struct scc_ports
-Date: Sat, 16 Feb 2008 21:27:01 +0100
-Message-ID: <20080216202701.25536.54484.sendpatchset@localhost.localdomain>
+Subject: [PATCH 8/9] qd65xx: return error value in qd_probe()
+Date: Sat, 16 Feb 2008 21:27:22 +0100
+Message-ID: <20080216202722.25536.36800.sendpatchset@localhost.localdomain>
 References: <20080216202634.25536.78915.sendpatchset@localhost.localdomain>
 Return-path: <linux-ide-owner@vger.kernel.org>
 Received: from fg-out-1718.google.com ([72.14.220.152]:12569 "EHLO
 	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758751AbYBPUM3 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 16 Feb 2008 15:12:29 -0500
+	with ESMTP id S1759614AbYBPUMs (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 16 Feb 2008 15:12:48 -0500
 Received: by fg-out-1718.google.com with SMTP id e21so897291fga.17
-        for <linux-ide@vger.kernel.org>; Sat, 16 Feb 2008 12:12:28 -0800 (PST)
+        for <linux-ide@vger.kernel.org>; Sat, 16 Feb 2008 12:12:47 -0800 (PST)
 In-Reply-To: <20080216202634.25536.78915.sendpatchset@localhost.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
 Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-kernel@vger.kernel.org
 
-Replace 'unsigned char hwif_id' by 'ide_hwif_t *hwif' in struct scc_ports.
-This allows us to remove ide_hwifs[] usage from scc_remove().
-
-There should be no functional changes caused by this patch.
+Return error value in qd_probe() and use it in qd65xx_init()
+instead of checking ide_hwifs[].chipset.
 
 Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 ---
- drivers/ide/pci/scc_pata.c |    6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+ drivers/ide/legacy/qd65xx.c |   25 +++++++++++++++----------
+ 1 file changed, 15 insertions(+), 10 deletions(-)
 
-Index: b/drivers/ide/pci/scc_pata.c
+Index: b/drivers/ide/legacy/qd65xx.c
 ===================================================================
---- a/drivers/ide/pci/scc_pata.c
-+++ b/drivers/ide/pci/scc_pata.c
-@@ -65,7 +65,7 @@
+--- a/drivers/ide/legacy/qd65xx.c
++++ b/drivers/ide/legacy/qd65xx.c
+@@ -396,7 +396,7 @@ static int __init qd_probe(int base)
+ 	config = inb(QD_CONFIG_PORT);
  
- static struct scc_ports {
- 	unsigned long ctl, dma;
--	unsigned char hwif_id;  /* for removing hwif from system */
-+	ide_hwif_t *hwif;  /* for removing port from system */
- } scc_ports[MAX_HWIFS];
+ 	if (! ((config & QD_CONFIG_BASEPORT) >> 1 == (base == 0xb0)) )
+-		return 1;
++		return -ENODEV;
  
- /* PIO transfer mode  table */
-@@ -664,7 +664,7 @@ static void __devinit init_hwif_scc(ide_
+ 	unit = ! (config & QD_CONFIG_IDE_BASEPORT);
+ 
+@@ -410,7 +410,8 @@ static int __init qd_probe(int base)
+ 
+ 	if ((config & 0xf0) == QD_CONFIG_QD6500) {
+ 
+-		if (qd_testreg(base)) return 1;		/* bad register */
++		if (qd_testreg(base))
++			 return -ENODEV;	/* bad register */
+ 
+ 		/* qd6500 found */
+ 
+@@ -421,7 +422,7 @@ static int __init qd_probe(int base)
+ 		
+ 		if (config & QD_CONFIG_DISABLED) {
+ 			printk(KERN_WARNING "qd6500 is disabled !\n");
+-			return 1;
++			return -ENODEV;
+ 		}
+ 
+ 		ide_init_port_hw(hwif, &hw[unit]);
+@@ -443,8 +444,8 @@ static int __init qd_probe(int base)
+ 
+ 		u8 control;
+ 
+-		if (qd_testreg(base) || qd_testreg(base+0x02)) return 1;
+-			/* bad registers */
++		if (qd_testreg(base) || qd_testreg(base + 0x02))
++			return -ENODEV;	/* bad registers */
+ 
+ 		/* qd6580 found */
+ 
+@@ -508,7 +509,7 @@ static int __init qd_probe(int base)
+ 		}
+ 	}
+ 	/* no qd65xx found */
+-	return 1;
++	return -ENODEV;
+ }
+ 
+ int probe_qd65xx = 0;
+@@ -518,14 +519,18 @@ MODULE_PARM_DESC(probe, "probe for QD65x
+ 
+ static int __init qd65xx_init(void)
  {
- 	struct scc_ports *ports = ide_get_hwifdata(hwif);
++	int rc1, rc2 = -ENODEV;
++
+ 	if (probe_qd65xx == 0)
+ 		return -ENODEV;
  
--	ports->hwif_id = hwif->index;
-+	ports->hwif = hwif;
+-	if (qd_probe(0x30))
+-		qd_probe(0xb0);
+-	if (ide_hwifs[0].chipset != ide_qd65xx &&
+-	    ide_hwifs[1].chipset != ide_qd65xx)
++	rc1 = qd_probe(0x30);
++	if (rc1)
++		rc2 = qd_probe(0xb0);
++
++	if (rc1 < 0 && rc2 < 0)
+ 		return -ENODEV;
++
+ 	return 0;
+ }
  
- 	hwif->dma_command = hwif->dma_base;
- 	hwif->dma_status = hwif->dma_base + 0x04;
-@@ -726,7 +726,7 @@ static int __devinit scc_init_one(struct
- static void __devexit scc_remove(struct pci_dev *dev)
- {
- 	struct scc_ports *ports = pci_get_drvdata(dev);
--	ide_hwif_t *hwif = &ide_hwifs[ports->hwif_id];
-+	ide_hwif_t *hwif = ports->hwif;
- 	unsigned long ctl_base = pci_resource_start(dev, 0);
- 	unsigned long dma_base = pci_resource_start(dev, 1);
- 	unsigned long ctl_size = pci_resource_len(dev, 0);
