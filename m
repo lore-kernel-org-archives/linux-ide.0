@@ -1,134 +1,79 @@
-From: Julia Lawall <julia@diku.dk>
-Subject: [PATCH 1/4] : More use DIV_ROUND_UP
-Date: Sat, 16 Feb 2008 15:49:07 +0100 (MET)
-Message-ID: <Pine.LNX.4.58.0802161548370.1185@pc-041.diku.dk>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: ST310211A and HPA ( was Re: Bug#401035: linux-image-2.6-686 - another misbehaving Seagate )
+Date: Sat, 16 Feb 2008 15:41:54 +0100
+Message-ID: <200802161541.55852.bzolnier@gmail.com>
+References: <20080204013239.639903001D@harold.telenet-ops.be> <20080206081121.GA6119@fitfioullt278>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1757553AbYBPOt1@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: bzolnier@gmail.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from wx-out-0506.google.com ([66.249.82.229]:39119 "EHLO
+	wx-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754927AbYBPPQJ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 16 Feb 2008 10:16:09 -0500
+Received: by wx-out-0506.google.com with SMTP id h31so906081wxd.4
+        for <linux-ide@vger.kernel.org>; Sat, 16 Feb 2008 07:16:08 -0800 (PST)
+In-Reply-To: <20080206081121.GA6119@fitfioullt278>
+Content-Disposition: inline
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Mikko Rapeli <mikko.rapeli@teleca.com>
+Cc: Bart Champagne <bart@as35701.net>, 401035@bugs.debian.org, linux-ide@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>
 
-From: Julia Lawall <julia@diku.dk>
+On Wednesday 06 February 2008, Mikko Rapeli wrote:
+> (cc'ing linux-ide)
+> 
+> On Mon, Feb 04, 2008 at 02:32:59AM +0100, Bart Champagne wrote:
+> > Just found another type of Seagate drives that shows this behaviour : 
+> > ST310211A
+> > Can this one be blacklisted as well ?
+> 
+> Yes, do you have a patch? And a dmesg dump of the drive in use with and 
+> without a patch?
+> 
+> If you do, please send them to upstream linux-ide@vger.kernel.org and hope
+> that the fix gets applied to Debian kernels too. Also, please test the
+> sata/pata driver with your drive and add a blacklist there too.
+> 
+> If you don't have a patch, here's one for 2.6.24 to go.
+> 
+> From 4a8b40c53d2e539bad3f93996f599d69a16af94b Mon Sep 17 00:00:00 2001
+> From: Mikko Rapeli <mikko.rapeli@teleca.com>
+> Date: Wed, 6 Feb 2008 09:41:14 +0200
+> Subject: [PATCH] ST310211A has buggy HPA too.
+> 
+> Signed-off-by: Mikko Rapeli <mikko.rapeli@teleca.com>
 
-The kernel.h macro DIV_ROUND_UP performs the computation (((n) + (d) - 1) /
-(d)) but is perhaps more readable.
+applied (this was confirmed by Bart Champagne to fix the issue)
 
-An extract of the semantic patch that makes this change is as follows:
-(http://www.emn.fr/x-info/coccinelle/)
+Thanks.
 
-// <smpl>
-@haskernel@
-@@
-
-#include <linux/kernel.h>
-
-@depends on haskernel@
-expression n,d;
-@@
-
-(
-- (n + d - 1) / d
-+ DIV_ROUND_UP(n,d)
-|
-- (n + (d - 1)) / d
-+ DIV_ROUND_UP(n,d)
-)
-
-@depends on haskernel@
-expression n,d;
-@@
-
-- DIV_ROUND_UP((n),d)
-+ DIV_ROUND_UP(n,d)
-
-@depends on haskernel@
-expression n,d;
-@@
-
-- DIV_ROUND_UP(n,(d))
-+ DIV_ROUND_UP(n,d)
-// </smpl>
-
-Signed-off-by: Julia Lawall <julia@diku.dk>
-
----
-
-diff -u -p a/drivers/ide/arm/palm_bk3710.c b/drivers/ide/arm/palm_bk3710.c
---- a/drivers/ide/arm/palm_bk3710.c 2008-02-13 20:42:50.000000000 +0100
-+++ b/drivers/ide/arm/palm_bk3710.c 2008-02-15 22:25:33.000000000 +0100
-@@ -96,11 +96,11 @@ static void palm_bk3710_setudmamode(void
- 	u16 val16;
-
- 	/* DMA Data Setup */
--	t0 = (palm_bk3710_udmatimings[mode].cycletime + ide_palm_clk - 1)
--			/ ide_palm_clk - 1;
--	tenv = (20 + ide_palm_clk - 1) / ide_palm_clk - 1;
--	trp = (palm_bk3710_udmatimings[mode].rptime + ide_palm_clk - 1)
--			/ ide_palm_clk - 1;
-+	t0 = DIV_ROUND_UP(palm_bk3710_udmatimings[mode].cycletime,
-+			  ide_palm_clk) - 1;
-+	tenv = DIV_ROUND_UP(20, ide_palm_clk) - 1;
-+	trp = DIV_ROUND_UP(palm_bk3710_udmatimings[mode].rptime,
-+			   ide_palm_clk) - 1;
-
- 	/* udmatim Register */
- 	val16 = readw(base + BK3710_UDMATIM) & (dev ? 0xFF0F : 0xFFF0);
-@@ -141,8 +141,8 @@ static void palm_bk3710_setdmamode(void
- 	cycletime = max_t(int, t->cycle, min_cycle);
-
- 	/* DMA Data Setup */
--	t0 = (cycletime + ide_palm_clk - 1) / ide_palm_clk;
--	td = (t->active + ide_palm_clk - 1) / ide_palm_clk;
-+	t0 = DIV_ROUND_UP(cycletime, ide_palm_clk);
-+	td = DIV_ROUND_UP(t->active, ide_palm_clk);
- 	tkw = t0 - td - 1;
- 	td -= 1;
-
-@@ -168,9 +168,9 @@ static void palm_bk3710_setpiomode(void
- 	struct ide_timing *t;
-
- 	/* PIO Data Setup */
--	t0 = (cycletime + ide_palm_clk - 1) / ide_palm_clk;
--	t2 = (ide_timing_find_mode(XFER_PIO_0 + mode)->active +
--	      ide_palm_clk - 1)	/ ide_palm_clk;
-+	t0 = DIV_ROUND_UP(cycletime, ide_palm_clk);
-+	t2 = DIV_ROUND_UP(ide_timing_find_mode(XFER_PIO_0 + mode)->active,
-+			  ide_palm_clk);
-
- 	t2i = t0 - t2 - 1;
- 	t2 -= 1;
-@@ -192,8 +192,8 @@ static void palm_bk3710_setpiomode(void
-
- 	/* TASKFILE Setup */
- 	t = ide_timing_find_mode(XFER_PIO_0 + mode);
--	t0 = (t->cyc8b + ide_palm_clk - 1) / ide_palm_clk;
--	t2 = (t->act8b + ide_palm_clk - 1) / ide_palm_clk;
-+	t0 = DIV_ROUND_UP(t->cyc8b, ide_palm_clk);
-+	t2 = DIV_ROUND_UP(t->act8b, ide_palm_clk);
-
- 	t2i = t0 - t2 - 1;
- 	t2 -= 1;
-diff -u -p a/drivers/ide/pci/cmd640.c b/drivers/ide/pci/cmd640.c
---- a/drivers/ide/pci/cmd640.c 2008-02-08 08:58:12.000000000 +0100
-+++ b/drivers/ide/pci/cmd640.c 2008-02-15 22:25:38.000000000 +0100
-@@ -584,15 +584,15 @@ static void cmd640_set_mode (unsigned in
- 	active_time = ide_pio_timings[pio_mode].active_time;
- 	recovery_time = cycle_time - (setup_time + active_time);
- 	clock_time = 1000 / bus_speed;
--	cycle_count = (cycle_time + clock_time - 1) / clock_time;
-+	cycle_count = DIV_ROUND_UP(cycle_time, clock_time);
-
--	setup_count = (setup_time + clock_time - 1) / clock_time;
-+	setup_count = DIV_ROUND_UP(setup_time, clock_time);
-
--	active_count = (active_time + clock_time - 1) / clock_time;
-+	active_count = DIV_ROUND_UP(active_time, clock_time);
- 	if (active_count < 2)
- 		active_count = 2; /* minimum allowed by cmd640 */
-
--	recovery_count = (recovery_time + clock_time - 1) / clock_time;
-+	recovery_count = DIV_ROUND_UP(recovery_time, clock_time);
- 	recovery_count2 = cycle_count - (setup_count + active_count);
- 	if (recovery_count2 > recovery_count)
- 		recovery_count = recovery_count2;
+> ---
+>  drivers/ata/libata-core.c |    1 +
+>  drivers/ide/ide-disk.c    |    1 +
+>  2 files changed, 2 insertions(+), 0 deletions(-)
+> 
+> diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+> index 6380726..d08f869 100644
+> --- a/drivers/ata/libata-core.c
+> +++ b/drivers/ata/libata-core.c
+> @@ -4169,6 +4169,7 @@ static const struct ata_blacklist_entry ata_device_blacklist [] = {
+>  	/* Devices which report 1 sector over size HPA */
+>  	{ "ST340823A",		NULL,		ATA_HORKAGE_HPA_SIZE, },
+>  	{ "ST320413A",		NULL,		ATA_HORKAGE_HPA_SIZE, },
+> +	{ "ST310211A",		NULL,		ATA_HORKAGE_HPA_SIZE, },
+>  
+>  	/* Devices which get the IVB wrong */
+>  	{ "QUANTUM FIREBALLlct10 05", "A03.0900", ATA_HORKAGE_IVB, },
+> diff --git a/drivers/ide/ide-disk.c b/drivers/ide/ide-disk.c
+> index b178190..a0f9940 100644
+> --- a/drivers/ide/ide-disk.c
+> +++ b/drivers/ide/ide-disk.c
+> @@ -462,6 +462,7 @@ static inline int idedisk_supports_lba48(const struct hd_driveid *id)
+>  static const struct drive_list_entry hpa_list[] = {
+>  	{ "ST340823A",	NULL },
+>  	{ "ST320413A",	NULL },
+> +	{ "ST310211A",	NULL },
+>  	{ NULL,		NULL }
+>  };
