@@ -1,15 +1,15 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH 4/9] cmd640: use ide_find_port()
-Date: Sat, 16 Feb 2008 21:26:55 +0100
-Message-ID: <20080216202655.25536.76193.sendpatchset@localhost.localdomain>
+Subject: [PATCH 6/9] umc8672: don't use ide_hwifs[] in umc_set_pio_mode()
+Date: Sat, 16 Feb 2008 21:27:08 +0100
+Message-ID: <20080216202708.25536.95262.sendpatchset@localhost.localdomain>
 References: <20080216202634.25536.78915.sendpatchset@localhost.localdomain>
 Return-path: <linux-ide-owner@vger.kernel.org>
 Received: from fk-out-0910.google.com ([209.85.128.186]:14715 "EHLO
 	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757346AbYBPUMV (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 16 Feb 2008 15:12:21 -0500
+	with ESMTP id S1759365AbYBPUMf (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 16 Feb 2008 15:12:35 -0500
 Received: by fk-out-0910.google.com with SMTP id z23so1181336fkz.5
-        for <linux-ide@vger.kernel.org>; Sat, 16 Feb 2008 12:12:20 -0800 (PST)
+        for <linux-ide@vger.kernel.org>; Sat, 16 Feb 2008 12:12:34 -0800 (PST)
 In-Reply-To: <20080216202634.25536.78915.sendpatchset@localhost.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
@@ -18,84 +18,26 @@ Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-kernel@vger.kernel.org
 
 Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 ---
- drivers/ide/pci/cmd640.c |   30 ++++++++++++++++++------------
- 1 file changed, 18 insertions(+), 12 deletions(-)
+ drivers/ide/legacy/umc8672.c |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-Index: b/drivers/ide/pci/cmd640.c
+Index: b/drivers/ide/legacy/umc8672.c
 ===================================================================
---- a/drivers/ide/pci/cmd640.c
-+++ b/drivers/ide/pci/cmd640.c
-@@ -744,20 +744,21 @@ static int __init cmd640x_init(void)
- 	printk(KERN_INFO "cmd640: buggy cmd640%c interface on %s, config=0x%02x"
- 			 "\n", 'a' + cmd640_chip_version - 1, bus_type, cfr);
+--- a/drivers/ide/legacy/umc8672.c
++++ b/drivers/ide/legacy/umc8672.c
+@@ -105,13 +105,13 @@ static void umc_set_speeds (u8 speeds[])
  
--	cmd_hwif0 = &ide_hwifs[0];
--	cmd_hwif1 = &ide_hwifs[1];
-+	cmd_hwif0 = ide_find_port();
+ static void umc_set_pio_mode(ide_drive_t *drive, const u8 pio)
+ {
++	ide_hwif_t *hwif = drive->hwif;
+ 	unsigned long flags;
+-	ide_hwgroup_t *hwgroup = ide_hwifs[HWIF(drive)->index^1].hwgroup;
  
- 	/*
- 	 * Initialize data for primary port
- 	 */
--	oldnoprobe = cmd_hwif0->noprobe;
--	ide_init_port_hw(cmd_hwif0, &hw[0]);
--	cmd_hwif0->noprobe = oldnoprobe;
-+	if (cmd_hwif0) {
-+		oldnoprobe = cmd_hwif0->noprobe;
-+		ide_init_port_hw(cmd_hwif0, &hw[0]);
-+		cmd_hwif0->noprobe = oldnoprobe;
- #ifdef CONFIG_BLK_DEV_CMD640_ENHANCED
--	cmd_hwif0->set_pio_mode = &cmd640_set_pio_mode;
-+		cmd_hwif0->set_pio_mode = &cmd640_set_pio_mode;
- #endif /* CONFIG_BLK_DEV_CMD640_ENHANCED */
- 
--	idx[0] = cmd_hwif0->index;
-+		idx[0] = cmd_hwif0->index;
-+	}
- 
- 	/*
- 	 * Ensure compatibility by always using the slowest timings
-@@ -772,7 +773,7 @@ static int __init cmd640x_init(void)
- 	/*
- 	 * Try to enable the secondary interface, if not already enabled
- 	 */
--	if (cmd_hwif1->noprobe) {
-+	if (cmd_hwif1 && cmd_hwif1->noprobe) {
- 		port2 = "not probed";
+ 	printk("%s: setting umc8672 to PIO mode%d (speed %d)\n",
+ 		drive->name, pio, pio_to_umc[pio]);
+ 	spin_lock_irqsave(&ide_lock, flags);
+-	if (hwgroup && hwgroup->handler != NULL) {
++	if (hwif->mate && hwif->mate->hwgroup->handler) {
+ 		printk(KERN_ERR "umc8672: other interface is busy: exiting tune_umc()\n");
  	} else {
- 		b = get_cmd640_reg(CNTRL);
-@@ -803,7 +804,7 @@ static int __init cmd640x_init(void)
- 	/*
- 	 * Initialize data for secondary cmd640 port, if enabled
- 	 */
--	if (second_port_cmd640) {
-+	if (second_port_cmd640 && cmd_hwif1) {
- 		oldnoprobe = cmd_hwif1->noprobe;
- 		ide_init_port_hw(cmd_hwif1, &hw[1]);
- 		cmd_hwif1->noprobe = oldnoprobe;
-@@ -813,7 +814,7 @@ static int __init cmd640x_init(void)
- 
- 		idx[1] = cmd_hwif1->index;
- 	}
--	printk(KERN_INFO "%s: %sserialized, secondary interface %s\n", cmd_hwif1->name,
-+	printk(KERN_INFO "cmd640: %sserialized, secondary interface %s\n",
- 			 second_port_cmd640 ? "" : "not ", port2);
- 
- 	/*
-@@ -823,10 +824,15 @@ static int __init cmd640x_init(void)
- 	for (index = 0; index < (2 + (second_port_cmd640 << 1)); index++) {
- 		ide_drive_t *drive;
- 
--		if (index > 1)
-+		if (index > 1) {
-+			if (cmd_hwif1 == NULL)
-+				continue;
- 			drive = &cmd_hwif1->drives[index & 1];
--		else
-+		} else  {
-+			if (cmd_hwif0 == NULL)
-+				continue;
- 			drive = &cmd_hwif0->drives[index & 1];
-+		}
- 
- #ifdef CONFIG_BLK_DEV_CMD640_ENHANCED
- 		if (drive->autotune || ((index > 1) && second_port_toggled)) {
+ 		current_speeds[drive->name[2] - 'a'] = pio_to_umc[pio];
