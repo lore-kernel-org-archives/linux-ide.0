@@ -1,49 +1,142 @@
-From: Joris <joris@v5.be>
-Subject: Re: ICH7: ata_piix twice as fast as ahci?
-Date: Sun, 17 Feb 2008 17:39:41 +0100
-Message-ID: <6b9952490802170839m4456353ejfd5a68d0aaccdf88@mail.gmail.com>
-References: <6b9952490802170741h1de9be53nefccea3775f7de00@mail.gmail.com>
-	 <20080217161033.3bb420fd@core>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: PROBLEM: Corruption problems in pata_via for Via NanoBook owners (Cloudbook, EasyNote XS etc.)
+Date: Sun, 17 Feb 2008 17:59:54 +0100
+Message-ID: <200802171759.55089.bzolnier@gmail.com>
+References: <5BDDEEF9-D2AC-4112-83EB-43D02E8C4E6C@tranquility.fsbusiness.co.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from an-out-0708.google.com ([209.85.132.244]:10429 "EHLO
+Received: from an-out-0708.google.com ([209.85.132.248]:56898 "EHLO
 	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755571AbYBQQjl (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 17 Feb 2008 11:39:41 -0500
-Received: by an-out-0708.google.com with SMTP id d31so309110and.103
-        for <linux-ide@vger.kernel.org>; Sun, 17 Feb 2008 08:39:41 -0800 (PST)
-In-Reply-To: <20080217161033.3bb420fd@core>
+	with ESMTP id S1752469AbYBQRK3 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 17 Feb 2008 12:10:29 -0500
+Received: by an-out-0708.google.com with SMTP id d31so310913and.103
+        for <linux-ide@vger.kernel.org>; Sun, 17 Feb 2008 09:10:28 -0800 (PST)
+In-Reply-To: <5BDDEEF9-D2AC-4112-83EB-43D02E8C4E6C@tranquility.fsbusiness.co.uk>
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: Linux IDE <linux-ide@vger.kernel.org>
-
-2008/2/17, Alan Cox <alan@lxorguk.ukuu.org.uk>:
-> On Sun, 17 Feb 2008 16:41:42 +0100
-> Joris <joris@v5.be> wrote:
->
-> > Hello List,
-> >
-> > Odd problem on my machines: the sata disks appear to be a lot slower
-> > when used via ata_piix vs the ahci driver.
->
-> I would expect that. AHCI allows the use of NCQ and unloads a ton of work
-> from the processor. It also means you pretty much avoid the inter command
-> latency that limits standard IDE performance.
-
-Alan,
-
->From your response I'm not sure if I made clear that ata_piix was
-faster, and ahci slower?
-
-Am I interpreting this correctly as having to choose between fast iops
-with low cpu (+ hotplug) with ahci and twice the linear read speed
-with ata_piix?
+To: Andrew Smith <asmith@tranquility.fsbusiness.co.uk>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>
 
 
+Hi,
 
-Kind regards,
-Joris
+On Sunday 17 February 2008, Andrew Smith wrote:
+> One Line : Changes in 2.24 have rendered the ide handling on the Via  
+> NanoBook unstable resulting in data loss under heavy load.
+> 
+> Keywords : modules, pata_via, viac82xxxx
+> 
+> Kernel version : 2.24
+> 
+> Environment : Packard Bell Easynote XS - based on Via Nanobook  
+> reference platform. (same as Everex Cloudbook in the USA).
+> 
+> Detail:
+> 
+> In v2.23 Kernel the following patch could be applied to viac82xxxx  
+> (see end of document), this works stably.
+> 
+> In 2.24 the device ID 0x581 for Vendor VIA was added to the pata_via  
+> driver causing some problems.
+> 
+> It builds fine and seems to start up OK, however, on large IOs then  
+> the kernel starts to throw errors about MULTICMDs (I think that was  
+> the term) returning an invalid response.
+> 
+> I have lost 2 builds so far (disk corruption) and have reverted to  
+> 2.23 with the attached patch which does work fine (and gives UDMA133).
+> 
+> Suggestions:
+> 
+> Re-implement 0x581 handling in via82xxxx based on patch shown below.
+
+Thank you for reporting it (I was unaware that via82cxxx misses some ids).
+
+I ported your patch over 2.6.25-rc2 and merged it.
+
+> Drop 0x581 support from pata_ide unless it is known to work with other  
+> hardware variants reliably.
+
+Added Jeff/Alan to cc: so they can follow up on this.
+
+> If 0x581 is more desirable in pata_ide then make the via82cxxxx and  
+> pata_ide drivers mutually exclusive in a kernel configuration.
+> 
+> 
+> Regards,
+> 
+> -Andy Smith
+> 
+> *** linux-2.6.23/drivers/ide/pci/via82cxxx.c	2007-10-09  
+> 22:31:38.000000000 +0200
+> --- linux-2.6.23-via-patch/drivers/ide/pci/via82cxxx.c	2007-11-02  
+> 01:03:57.000000000 +0100
+> ***************
+> *** 61,66 ****
+> --- 61,68 ----
+>    #define VIA_NO_UNMASK		0x08 /* Doesn't work with IRQ unmasking on */
+>    #define VIA_BAD_ID		0x10 /* Has wrong vendor ID (0x1107) */
+>    #define VIA_BAD_AST		0x20 /* Don't touch Address Setup Timing */
+> + #define PCI_DEVICE_ID_VIA_CX700 0x8324
+> + #define PCI_DEVICE_ID_VIA_CX700_IDE 0x0581
+> 
+>    /*
+>     * VIA SouthBridge chips.
+> ***************
+> *** 545,550 ****
+> --- 547,553 ----
+>    	{ PCI_VENDOR_ID_VIA, PCI_DEVICE_ID_VIA_82C576_1, PCI_ANY_ID,  
+> PCI_ANY_ID, 0, 0, 0},
+>    	{ PCI_VENDOR_ID_VIA, PCI_DEVICE_ID_VIA_82C586_1, PCI_ANY_ID,  
+> PCI_ANY_ID, 0, 0, 0},
+>    	{ PCI_VENDOR_ID_VIA, PCI_DEVICE_ID_VIA_6410,     PCI_ANY_ID,  
+> PCI_ANY_ID, 0, 0, 1},
+> + 	{ PCI_VENDOR_ID_VIA, PCI_DEVICE_ID_VIA_CX700_IDE, PCI_ANY_ID,  
+> PCI_ANY_ID, 0, 0, 0},
+>    	{ PCI_VENDOR_ID_VIA, PCI_DEVICE_ID_VIA_SATA_EIDE,     PCI_ANY_ID,  
+> PCI_ANY_ID, 0, 0, 1},
+>    	{ 0, },
+>    };
+
+2.6.25-rc2 version:
+
+From: Andrew Smith <asmith@tranquility.fsbusiness.co.uk>
+Subject: [PATCH] via82cxxx: add new PCI id for cx700
+
+[bart: manually ported it over via82cxxx changes]
+
+From: Andrew Smith <asmith@tranquility.fsbusiness.co.uk>
+Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+---
+ drivers/ide/pci/via82cxxx.c |    1 +
+ include/linux/pci_ids.h     |    1 +
+ 2 files changed, 2 insertions(+)
+
+Index: b/drivers/ide/pci/via82cxxx.c
+===================================================================
+--- a/drivers/ide/pci/via82cxxx.c
++++ b/drivers/ide/pci/via82cxxx.c
+@@ -479,6 +479,7 @@ static int __devinit via_init_one(struct
+ static const struct pci_device_id via_pci_tbl[] = {
+ 	{ PCI_VDEVICE(VIA, PCI_DEVICE_ID_VIA_82C576_1),  0 },
+ 	{ PCI_VDEVICE(VIA, PCI_DEVICE_ID_VIA_82C586_1),  0 },
++	{ PCI_VDEVICE(VIA, PCI_DEVICE_ID_VIA_CX700_IDE), 0 },
+ 	{ PCI_VDEVICE(VIA, PCI_DEVICE_ID_VIA_6410),      1 },
+ 	{ PCI_VDEVICE(VIA, PCI_DEVICE_ID_VIA_SATA_EIDE), 1 },
+ 	{ 0, },
+Index: b/include/linux/pci_ids.h
+===================================================================
+--- a/include/linux/pci_ids.h
++++ b/include/linux/pci_ids.h
+@@ -1351,6 +1351,7 @@
+ #define PCI_DEVICE_ID_VIA_8231_4	0x8235
+ #define PCI_DEVICE_ID_VIA_8365_1	0x8305
+ #define PCI_DEVICE_ID_VIA_CX700		0x8324
++#define PCI_DEVICE_ID_VIA_CX700_IDE	0x0581
+ #define PCI_DEVICE_ID_VIA_VX800		0x8353
+ #define PCI_DEVICE_ID_VIA_8371_1	0x8391
+ #define PCI_DEVICE_ID_VIA_82C598_1	0x8598
