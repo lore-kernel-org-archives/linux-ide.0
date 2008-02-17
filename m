@@ -1,101 +1,86 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH 3/4] ide-disk: add proc_idedisk_read_smart() helper
-Date: Sun, 17 Feb 2008 20:53:22 +0100
-Message-ID: <200802172053.22686.bzolnier@gmail.com>
+From: "Richard Liu" <richliu.tw@gmail.com>
+Subject: Re: ST31000340NS (1000G) Capacity equal 33MB issue.
+Date: Mon, 18 Feb 2008 03:41:07 +0800
+Message-ID: <d0d565260802171141r1cfdc78fo63383dd8f6b655f2@mail.gmail.com>
+References: <d0d565260802141013q61cb5e7fh7dcf04d7729213f7@mail.gmail.com>
+	 <d0d565260802141018y63a988bbpc6aecf771baacb84@mail.gmail.com>
+	 <47B499F2.1010306@rtr.ca> <47B5CC39.7020302@rtr.ca>
+	 <47B70571.4060303@rtr.ca>
+	 <d0d565260802170721r34ad933blabb3745691a6a3e9@mail.gmail.com>
+	 <47B88881.40003@rtr.ca> <47B88A76.7070601@rtr.ca>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from fk-out-0910.google.com ([209.85.128.184]:51272 "EHLO
-	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752471AbYBQTj6 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 17 Feb 2008 14:39:58 -0500
-Received: by fk-out-0910.google.com with SMTP id z23so1462677fkz.5
-        for <linux-ide@vger.kernel.org>; Sun, 17 Feb 2008 11:39:57 -0800 (PST)
+Received: from an-out-0708.google.com ([209.85.132.242]:25195 "EHLO
+	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753715AbYBQTlI (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 17 Feb 2008 14:41:08 -0500
+Received: by an-out-0708.google.com with SMTP id d31so319966and.103
+        for <linux-ide@vger.kernel.org>; Sun, 17 Feb 2008 11:41:08 -0800 (PST)
+In-Reply-To: <47B88A76.7070601@rtr.ca>
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
+To: Mark Lord <liml@rtr.ca>
+Cc: linux-ide@vger.kernel.org
 
-* Factor out common code from proc_idedisk_read_smart_{thresholds,values}()
-  to proc_idedisk_read_smart() helper.
+Dear Mark:
 
-* Rename proc_idedisk_read_smart_thresholds() to proc_idedisk_read_st()
-  and proc_idedisk_read_smart_values() to proc_idedisk_read_sv().
+2008/2/18, Mark Lord <liml@rtr.ca>:
+> Mark Lord wrote:
+> > Richard Liu wrote:
+> ..
+> >>   I downloaded hdparm-8.1
+> >> and here is output information.
+> >>
+> >> # ./hdparm -N /dev/sdc
+> >>
+> >> /dev/sdc:
+> >>  max sectors   = 65134/1953525168, HPA is enabled
+> > ..
+> >
+> > Yes, pretty much as expected there.
+> >
+> > You can safely now try this:
+> >
+> >    ./hdparm -N1953525168 /dev/sdc
+> >
+> > If that works, it will have temporarily restored access to the entire
+> > drive.
+> > Then you can try to make it permanent by doing this:
+> >
+> >   ./hdparm -Np1953525168 /dev/sdc
+> >
+> > If *that* also works, then reboot and things should be fine,
+> > unless your machine BIOS changes it back again on boot.. :/
+> >
+> > If either of those *fails*, then it is because your BIOS (or possibly
+> > the system startup scripts) have "frozen" the configuration
+> > to prevent changes.  Dunno why they would do that, but it's possible.
+> >
+> > In which case, you could move the drive to another machine temporarily,
+> > and then issue that same command there.
 
-There should be no functional changes caused by this patch.
+I am very appreciate for your help.
 
-Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
----
- drivers/ide/ide-disk.c |   39 +++++++++++++++++----------------------
- 1 file changed, 17 insertions(+), 22 deletions(-)
+Both command
+./hdparm -N1953525168 /dev/sdc
+and
+./hdparm -Np1953525168 /dev/sdc
+work fine.
 
-Index: b/drivers/ide/ide-disk.c
-===================================================================
---- a/drivers/ide/ide-disk.c
-+++ b/drivers/ide/ide-disk.c
-@@ -540,13 +540,13 @@ static int proc_idedisk_read_capacity
- 	PROC_IDE_READ_RETURN(page,start,off,count,eof,len);
- }
- 
--static int proc_idedisk_read_smart_thresholds
--	(char *page, char **start, off_t off, int count, int *eof, void *data)
-+static int proc_idedisk_read_smart(char *page, char **start, off_t off,
-+				   int count, int *eof, void *data, u8 sub_cmd)
- {
- 	ide_drive_t	*drive = (ide_drive_t *)data;
- 	int		len = 0, i = 0;
- 
--	if (get_smart_data(drive, page, SMART_READ_THRESHOLDS) == 0) {
-+	if (get_smart_data(drive, page, sub_cmd) == 0) {
- 		unsigned short *val = (unsigned short *) page;
- 		char *out = ((char *)val) + (SECTOR_WORDS * 4);
- 		page = out;
-@@ -559,31 +559,26 @@ static int proc_idedisk_read_smart_thres
- 	PROC_IDE_READ_RETURN(page,start,off,count,eof,len);
- }
- 
--static int proc_idedisk_read_smart_values
-+static int proc_idedisk_read_sv
- 	(char *page, char **start, off_t off, int count, int *eof, void *data)
- {
--	ide_drive_t	*drive = (ide_drive_t *)data;
--	int		len = 0, i = 0;
-+	return proc_idedisk_read_smart(page, start, off, count, eof, data,
-+				       SMART_READ_VALUES);
-+}
- 
--	if (get_smart_data(drive, page, SMART_READ_VALUES) == 0) {
--		unsigned short *val = (unsigned short *) page;
--		char *out = ((char *)val) + (SECTOR_WORDS * 4);
--		page = out;
--		do {
--			out += sprintf(out, "%04x%c", le16_to_cpu(*val), (++i & 7) ? ' ' : '\n');
--			val += 1;
--		} while (i < (SECTOR_WORDS * 2));
--		len = out - page;
--	}
--	PROC_IDE_READ_RETURN(page,start,off,count,eof,len);
-+static int proc_idedisk_read_st
-+	(char *page, char **start, off_t off, int count, int *eof, void *data)
-+{
-+	return proc_idedisk_read_smart(page, start, off, count, eof, data,
-+				       SMART_READ_THRESHOLDS);
- }
- 
- static ide_proc_entry_t idedisk_proc[] = {
--	{ "cache",		S_IFREG|S_IRUGO,	proc_idedisk_read_cache,		NULL },
--	{ "capacity",		S_IFREG|S_IRUGO,	proc_idedisk_read_capacity,		NULL },
--	{ "geometry",		S_IFREG|S_IRUGO,	proc_ide_read_geometry,			NULL },
--	{ "smart_values",	S_IFREG|S_IRUSR,	proc_idedisk_read_smart_values,		NULL },
--	{ "smart_thresholds",	S_IFREG|S_IRUSR,	proc_idedisk_read_smart_thresholds,	NULL },
-+	{ "cache",	  S_IFREG|S_IRUGO, proc_idedisk_read_cache,    NULL },
-+	{ "capacity",	  S_IFREG|S_IRUGO, proc_idedisk_read_capacity, NULL },
-+	{ "geometry",	  S_IFREG|S_IRUGO, proc_ide_read_geometry,     NULL },
-+	{ "smart_values", S_IFREG|S_IRUSR, proc_idedisk_read_sv,       NULL },
-+	{ "smart_thresholds", S_IFREG|S_IRUSR, proc_idedisk_read_st,   NULL },
- 	{ NULL, 0, NULL, NULL }
- };
- #endif	/* CONFIG_IDE_PROC_FS */
+I can get while 1000G disk space.
+
+I tried to read/write some file (around 3G bytes) into the disk.
+and uses md5 to verify data.
+It seems no problem.
+
+Thank you very much.
+> ..
+>
+> Or just hot unplug/replug the drive and try it again.
+> That should also work, assuming the driver for your controller supports hotplug.
+>
+> Cheers
+>
