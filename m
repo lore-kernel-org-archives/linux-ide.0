@@ -1,59 +1,63 @@
-From: FUJITA Tomonori <tomof@acm.org>
-Subject: Re: [PATCH] scsi_debug: disable clustering
-Date: Mon, 18 Feb 2008 00:11:45 +0900
-Message-ID: <20080218001211R.tomof@acm.org>
-References: <20080217142848.GD21012@parisc-linux.org>
-	<20080217235244N.tomof@acm.org>
-	<1203260534.3082.15.camel@localhost.localdomain>
+From: "Richard Liu" <richliu.tw@gmail.com>
+Subject: Re: ST31000340NS (1000G) Capacity equal 33MB issue.
+Date: Sun, 17 Feb 2008 23:21:36 +0800
+Message-ID: <d0d565260802170721r34ad933blabb3745691a6a3e9@mail.gmail.com>
+References: <d0d565260802141013q61cb5e7fh7dcf04d7729213f7@mail.gmail.com>
+	 <d0d565260802141018y63a988bbpc6aecf771baacb84@mail.gmail.com>
+	 <47B499F2.1010306@rtr.ca> <47B5CC39.7020302@rtr.ca>
+	 <47B70571.4060303@rtr.ca>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <1203260534.3082.15.camel@localhost.localdomain>
-Sender: linux-scsi-owner@vger.kernel.org
-To: James.Bottomley@HansenPartnership.com
-Cc: tomof@acm.org, matthew@wil.cx, dougg@torque.net, linux-scsi@vger.kernel.org, fujita.tomonori@lab.ntt.co.jp, linux-ide@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from an-out-0708.google.com ([209.85.132.241]:25816 "EHLO
+	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756726AbYBQPVj (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 17 Feb 2008 10:21:39 -0500
+Received: by an-out-0708.google.com with SMTP id d31so304941and.103
+        for <linux-ide@vger.kernel.org>; Sun, 17 Feb 2008 07:21:36 -0800 (PST)
+In-Reply-To: <47B70571.4060303@rtr.ca>
+Content-Disposition: inline
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Mark Lord <liml@rtr.ca>
+Cc: linux-ide@vger.kernel.org
 
-On Sun, 17 Feb 2008 09:02:14 -0600
-James Bottomley <James.Bottomley@HansenPartnership.com> wrote:
+Dear Mark:
 
-> 
-> On Sun, 2008-02-17 at 23:52 +0900, FUJITA Tomonori wrote:
-> > On Sun, 17 Feb 2008 07:28:48 -0700
-> > Matthew Wilcox <matthew@wil.cx> wrote:
-> > 
-> > > On Sun, Feb 17, 2008 at 08:18:11AM -0600, James Bottomley wrote:
-> > > > No, he means that kmap_atomic can only map a page of data.  This makes
-> > > > single page only sg list entries and input assumption into this loop.
-> > > > with ENABLE_CLUSTERING, that's potentially not true.   Of course, this
-> > > > accidentally works most of the time because of the way kmap functions.
-> > > 
-> > > Ah, right.  I'm on the verge of releasing a ram-based scsi driver I've
-> > > been working on ... this loop should work fine with clustering as it
-> > > takes account of the sg potentially having multiple pages:
-> > > 
-> > >         scsi_for_each_sg(cmnd, sg, scsi_sg_count(cmnd), i) {
-> > >                 struct page *sgpage = sg_page(sg);
-> > >                 unsigned int to_off = sg->offset;
-> > >                 unsigned int sg_copy = sg->length;
-> > >                 if (sg_copy > len)
-> > >                         sg_copy = len;
-> > >                 len -= sg_copy;
-> > 
-> > stex driver has a similar function to copies data between a buffer and
-> > a scatter list. I think that scsi_kmap_atomic_sg is a bit primitive
-> > (and not very popular).  I'll send a patch to add a helper function to
-> > scsi_lib.c that copies data between a buffer and a scatter list. It
-> > would be useful for several drivers.
-> 
-> Actually, if you're going to sweep up them all, libata also does this.
+2008/2/16, Mark Lord <liml@rtr.ca>:
+> Mark Lord wrote:
+> > Richard Liu wrote:
+> >
+> > Thanks.  By running the above data through hdparm --Istdin,
+> > I see that the drive is indeed identifying itself as a 33MB drive.
+> >
+> > Probably because it has been told to do so by either the factory defaults,
+> > or the BIOS, having enabled these features (which can cause it to report
+> > fake values for various things):
+> >
+> >           *    Host Protected Area feature set
+> >           *    Device Configuration Overlay feature set
+> >
+> > So that's why the 1TB drive appears as a 33MB drive.
+> >
+> > In the near future, I will be enhancing hdparm to query more
+> > detailed data from underneath those artificial features.
+> >
+> > But you'll have to enable the entire 1TB capacity if you want Linux to
+> > use it.
+> > It is currently disabled in the drive, and Linux respects that.
+> ..
+>
+> Okay, hdparm-8.1 is now available from sourceforge.net.
+> Download it, build it ("make"), and see what you get from "hdparm -N /dev/sdc"
+>
+> Thanks
+>
+  I downloaded hdparm-8.1
+and here is output information.
 
-Thanks, I'll look at it.
+# ./hdparm -N /dev/sdc
 
-
-> However, mapping and copying data isn't a SCSI specific function, it's
-> one any virtual block driver should do, so I think block might be the
-> correct location for such a function.
-
-I see. It could go to lib/scatterlist.c or block/ I guess.
+/dev/sdc:
+ max sectors   = 65134/1953525168, HPA is enabled
