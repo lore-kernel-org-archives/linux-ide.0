@@ -1,44 +1,43 @@
-From: WaVeR <debian@hispeed.ch>
-Subject: Re: IDE cdrom problem
-Date: Sun, 17 Feb 2008 15:16:42 +0100
-Message-ID: <1203257802.6141.6.camel@Jupiter>
-References: <200802161624.47003.bzolnier@gmail.com>
-	 <20080216164912.GQ13446@gollum.tnic>
-	 <200802161840.08209.bzolnier@gmail.com>
-	 <20080216180938.GS13446@gollum.tnic> <1203190042.14195.4.camel@Jupiter>
-	 <20080216202300.GU13446@gollum.tnic>
-Reply-To: debian@hispeed.ch
+From: "Paul Fleischer" <paul@xpg.dk>
+Subject: Re: DMA being disabled during heavy HD activity
+Date: Sun, 17 Feb 2008 15:20:19 +0100
+Message-ID: <ab2fc2a60802170620u6c717c16u10e14fec7500a1b5@mail.gmail.com>
+References: <ab2fc2a60802170323o341fe1d8lfb91de8339f11e6a@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-15
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from viefep18-int.chello.at ([213.46.255.22]:64733 "EHLO
-	viefep23-int.chello.at" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1757854AbYBQOQt (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 17 Feb 2008 09:16:49 -0500
-In-Reply-To: <20080216202300.GU13446@gollum.tnic>
+Received: from an-out-0708.google.com ([209.85.132.242]:1739 "EHLO
+	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755764AbYBQOUU (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 17 Feb 2008 09:20:20 -0500
+Received: by an-out-0708.google.com with SMTP id d31so302078and.103
+        for <linux-ide@vger.kernel.org>; Sun, 17 Feb 2008 06:20:19 -0800 (PST)
+In-Reply-To: <ab2fc2a60802170323o341fe1d8lfb91de8339f11e6a@mail.gmail.com>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: petkovbb@gmail.com
-Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-Hi all,
+Hi again,
 
-Le samedi 16 f=E9vrier 2008 =E0 21:23 +0100, Borislav Petkov a =E9crit =
-:
-> > Do you want me to try the 2.6.25-rc2 ? and give my feedback
->=20
-> Yes, please.
+2008/2/17, Paul Fleischer <paul@xpg.dk>:
+> Hi,
+>
+> I am experiencing some strange behaviour. When I have heavy HDD
+> activity (running MythTV, for instance), I get 17 of these:
+>
+> [   90.004956] hda: dma_intr: bad DMA status (dma_stat=76)
+> [   90.004963] hda: dma_intr: status=0x50 { DriveReady SeekComplete }
+> [   90.004966] ide: failed opcode was: unknown
 
-Until now, there's no prob with the kernel 2.6.25-rc2.=20
+I have now found out that it is not heavy HDD activity that causes
+this. It occurs when I start using the 3D capabilities of the fglrx
+driver. I suspect that there is some kind of resource conflict between
+the fglrx driver and the IDE system. But as the fglrx driver is closed
+source I know that I'm on deep water here. Maybe someone has a
+suggestions.
 
-15:14 waver@Jupiter ~% uname -a
-Linux Jupiter 2.6.25-rc2.waver.1 #1 Sun Feb 17 14:31:07 CET 2008 i686
-GNU/Linux
+I apologize about the noise on the mailing list.
 
-
-Regards,
-
----
-Hassan
-
+/Paul
