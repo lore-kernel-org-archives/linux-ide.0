@@ -1,37 +1,45 @@
-From: Mark Lord <liml@rtr.ca>
-Subject: Re: ST31000340NS (1000G) Capacity equal 33MB issue.
-Date: Sun, 17 Feb 2008 15:32:33 -0500
-Message-ID: <47B899E1.7080903@rtr.ca>
-References: <d0d565260802141013q61cb5e7fh7dcf04d7729213f7@mail.gmail.com>	 <d0d565260802141018y63a988bbpc6aecf771baacb84@mail.gmail.com>	 <47B499F2.1010306@rtr.ca> <47B5CC39.7020302@rtr.ca>	 <47B70571.4060303@rtr.ca>	 <d0d565260802170721r34ad933blabb3745691a6a3e9@mail.gmail.com>	 <47B88881.40003@rtr.ca> <87f94c370802171148y15dc3850pf1a679921e5f4de6@mail.gmail.com>
+From: Willy Tarreau <w@1wt.eu>
+Subject: [PATCH 0/2] libata: implement 32-bit transfers for PIO mode
+Date: Sun, 17 Feb 2008 22:18:10 +0100
+Message-ID: <20080217211810.GA15001@1wt.eu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([76.10.145.34]:1498 "EHLO mail.rtr.ca"
+Received: from 1wt.eu ([62.212.114.60]:2013 "EHLO 1wt.eu"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751949AbYBQUcg (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 17 Feb 2008 15:32:36 -0500
-In-Reply-To: <87f94c370802171148y15dc3850pf1a679921e5f4de6@mail.gmail.com>
+	id S1757281AbYBQVSS (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 17 Feb 2008 16:18:18 -0500
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Greg Freemyer <greg.freemyer@gmail.com>
-Cc: Richard Liu <richliu.tw@gmail.com>, linux-ide@vger.kernel.org
+To: jeff@garzik.org
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Greg Freemyer wrote:
->..
-> Very cool new functionality in [hdparm] 8.1
-> Looking forward to testing it this week.
-> 
-> Thanks for your efforts.
-> 
-> I assume DCO is still able to hide sectors from us?
-..
+Hi Jeff,
 
-I'm not sure (haven't tried it here yet).
+For several times I tried libata on small machines equipped with either
+CompactFlash or IDE DOM (Disk-On-Module). All those machines with small
+flashes (<= 256 MB) were about 35-40% slower under libata than under the
+plain old IDE driver. I realized that all the slower ones were running
+PIO only.
 
-But the way I read the ATA8 specification,
-it sounds like "hdparm -N" should show the true capacity,
-regardless of DCO.  But what's not clear, is whether one
-can then use -Nnnnnnnn to restore the capacity under DCO..
+Today I had time to investigate the issue on a Geode LX board. At first
+I thought it was the pata_cs5536 driver which would have incorrect timings,
+but this was not the case. I finally noticed that under IDE, my flashes
+were running in 32-bit mode while I could not enable 32-bit with libata.
 
-Gotta try it someday, I guess.
+Reading ata_data_xfer() made it obvious that transfers were only 16-bit
+wide.
+
+Thus, I have implemented the 32-bit mode to bring the performance back
+to the level of the old IDE driver. I jumped from 1.5 MB/s to 2.5 MB/s,
+which is an important difference at this level of performance, especially
+when large files are read. The 32-bit mode is enabled using the ioctl
+which is already implemented but only accepts a null value.
+
+I'm joining two patches which I hope you'll consider for inclusion. I've
+updated them to latest Linus' git.
+
+Best regards,
+Willy
+
