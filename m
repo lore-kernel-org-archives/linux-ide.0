@@ -1,67 +1,56 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH] scsi_debug: disable clustering
-Date: Sun, 17 Feb 2008 09:22:40 -0600
-Message-ID: <1203261760.3082.28.camel@localhost.localdomain>
-References: <20080217142848.GD21012@parisc-linux.org>
-	 <20080217235244N.tomof@acm.org>
-	 <1203260534.3082.15.camel@localhost.localdomain>
-	 <20080218001211R.tomof@acm.org>
+From: Joris <joris@v5.be>
+Subject: ICH7: ata_piix twice as fast as ahci?
+Date: Sun, 17 Feb 2008 16:41:42 +0100
+Message-ID: <6b9952490802170741h1de9be53nefccea3775f7de00@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <20080218001211R.tomof@acm.org>
-Sender: linux-scsi-owner@vger.kernel.org
-To: FUJITA Tomonori <tomof@acm.org>
-Cc: matthew@wil.cx, dougg@torque.net, linux-scsi@vger.kernel.org, fujita.tomonori@lab.ntt.co.jp, linux-ide@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from an-out-0708.google.com ([209.85.132.248]:55255 "EHLO
+	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751001AbYBQPln (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 17 Feb 2008 10:41:43 -0500
+Received: by an-out-0708.google.com with SMTP id d31so305895and.103
+        for <linux-ide@vger.kernel.org>; Sun, 17 Feb 2008 07:41:43 -0800 (PST)
+Content-Disposition: inline
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Linux IDE <linux-ide@vger.kernel.org>
 
-On Mon, 2008-02-18 at 00:11 +0900, FUJITA Tomonori wrote:
-> On Sun, 17 Feb 2008 09:02:14 -0600
-> James Bottomley <James.Bottomley@HansenPartnership.com> wrote:
-> 
-> > 
-> > On Sun, 2008-02-17 at 23:52 +0900, FUJITA Tomonori wrote:
-> > > On Sun, 17 Feb 2008 07:28:48 -0700
-> > > Matthew Wilcox <matthew@wil.cx> wrote:
-> > > 
-> > > > On Sun, Feb 17, 2008 at 08:18:11AM -0600, James Bottomley wrote:
-> > > > > No, he means that kmap_atomic can only map a page of data.  This makes
-> > > > > single page only sg list entries and input assumption into this loop.
-> > > > > with ENABLE_CLUSTERING, that's potentially not true.   Of course, this
-> > > > > accidentally works most of the time because of the way kmap functions.
-> > > > 
-> > > > Ah, right.  I'm on the verge of releasing a ram-based scsi driver I've
-> > > > been working on ... this loop should work fine with clustering as it
-> > > > takes account of the sg potentially having multiple pages:
-> > > > 
-> > > >         scsi_for_each_sg(cmnd, sg, scsi_sg_count(cmnd), i) {
-> > > >                 struct page *sgpage = sg_page(sg);
-> > > >                 unsigned int to_off = sg->offset;
-> > > >                 unsigned int sg_copy = sg->length;
-> > > >                 if (sg_copy > len)
-> > > >                         sg_copy = len;
-> > > >                 len -= sg_copy;
-> > > 
-> > > stex driver has a similar function to copies data between a buffer and
-> > > a scatter list. I think that scsi_kmap_atomic_sg is a bit primitive
-> > > (and not very popular).  I'll send a patch to add a helper function to
-> > > scsi_lib.c that copies data between a buffer and a scatter list. It
-> > > would be useful for several drivers.
-> > 
-> > Actually, if you're going to sweep up them all, libata also does this.
-> 
-> Thanks, I'll look at it.
-> 
-> 
-> > However, mapping and copying data isn't a SCSI specific function, it's
-> > one any virtual block driver should do, so I think block might be the
-> > correct location for such a function.
-> 
-> I see. It could go to lib/scatterlist.c or block/ I guess.
+Hello List,
 
-Actually, lib/scatterlist is probably better.
+Odd problem on my machines: the sata disks appear to be a lot slower
+when used via ata_piix vs the ahci driver.
 
-James
+* dd if=/dev/sda of=/dev/null runs at roughly 50MB/s under ahci a
+steady 100MB/s under ata_piix, same for hdparm
+* bonnie++ -d /home/bonnietest -s 16G -r 8192 -u root returns:
+** ahci 64bit,16G,70460,99,92676,15,45442,6,66155,94,103556,7,515.9,0,16,4300,16,+++++,+++,2698,9,4735,18,+++++,+++,2611,9
+** ata_piix 32bit,16G,50939,99,88159,16,41311,11,38945,69,108351,16,352.9,0,16,5045,5,+++++,+++,3882,4,5099,5,+++++,+++,3489,3
+
+Is this a known issue? Is there a way to diagnose and/or fix this?
+I'd love to combine a high-speed system with hotpluggable disks.
 
 
+Kind regards,
+Joris
+
+Extra info:
+
+
+I tried the following without result:
+* The 'raid' functionality was disabled in the bios.
+* Update kernels (the debian stable 2.6.18-6-amd64 and 2.6.22-3-amd64
+from backports.org)
+* Reinstall OS in 32 bit mode
+* Limit the amount of ram on the machine to 2GB using the mem=2048M
+kernel parameter.
+
+
+HW info:
+Xeon 3210, Supermicro PDSMi+ motherboard, Seagate ES2 500GB sata disks, 8GB ram
+Sata controller: 00:1f.2 SATA controller: Intel Corporation 82801GR/GH
+(ICH7 Family) Serial ATA Storage Controller AHCI (rev 01)
+
+OS: A bare Debian 4.0 with all security updates, running nothing but
+some idle daemons and ssh.
