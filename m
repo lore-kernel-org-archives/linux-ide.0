@@ -1,58 +1,69 @@
-From: Mark Lord <liml@rtr.ca>
-Subject: Re: ST31000340NS (1000G) Capacity equal 33MB issue.
-Date: Sun, 17 Feb 2008 14:26:46 -0500
-Message-ID: <47B88A76.7070601@rtr.ca>
-References: <d0d565260802141013q61cb5e7fh7dcf04d7729213f7@mail.gmail.com>	 <d0d565260802141018y63a988bbpc6aecf771baacb84@mail.gmail.com>	 <47B499F2.1010306@rtr.ca> <47B5CC39.7020302@rtr.ca>	 <47B70571.4060303@rtr.ca> <d0d565260802170721r34ad933blabb3745691a6a3e9@mail.gmail.com> <47B88881.40003@rtr.ca>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: [PATCH 1/4] ide: fix sparse warning about shadowing 'flags' symbol
+Date: Sun, 17 Feb 2008 20:52:10 +0100
+Message-ID: <200802172052.10691.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([76.10.145.34]:2564 "EHLO mail.rtr.ca"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751312AbYBQT0r (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 17 Feb 2008 14:26:47 -0500
-In-Reply-To: <47B88881.40003@rtr.ca>
+Received: from fk-out-0910.google.com ([209.85.128.189]:51808 "EHLO
+	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751603AbYBQTjz (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 17 Feb 2008 14:39:55 -0500
+Received: by fk-out-0910.google.com with SMTP id z23so1462658fkz.5
+        for <linux-ide@vger.kernel.org>; Sun, 17 Feb 2008 11:39:53 -0800 (PST)
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Richard Liu <richliu.tw@gmail.com>
-Cc: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
 
-Mark Lord wrote:
-> Richard Liu wrote:
-..
->>   I downloaded hdparm-8.1
->> and here is output information.
->>
->> # ./hdparm -N /dev/sdc
->>
->> /dev/sdc:
->>  max sectors   = 65134/1953525168, HPA is enabled
-> ..
-> 
-> Yes, pretty much as expected there.
-> 
-> You can safely now try this:
-> 
->    ./hdparm -N1953525168 /dev/sdc
-> 
-> If that works, it will have temporarily restored access to the entire 
-> drive.
-> Then you can try to make it permanent by doing this:
-> 
->   ./hdparm -Np1953525168 /dev/sdc
-> 
-> If *that* also works, then reboot and things should be fine,
-> unless your machine BIOS changes it back again on boot.. :/
-> 
-> If either of those *fails*, then it is because your BIOS (or possibly 
-> the system startup scripts) have "frozen" the configuration
-> to prevent changes.  Dunno why they would do that, but it's possible.
-> 
-> In which case, you could move the drive to another machine temporarily,
-> and then issue that same command there.
-..
+drivers/ide/ide.c:801:18: warning: symbol 'flags' shadows an earlier one
+drivers/ide/ide.c:732:16: originally declared here
 
-Or just hot unplug/replug the drive and try it again.
-That should also work, assuming the driver for your controller supports hotplug.
+Also fix some whitespace damage while at it.
 
-Cheers
+Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+---
+ drivers/ide/ide.c |   13 +++++--------
+ 1 file changed, 5 insertions(+), 8 deletions(-)
+
+Index: b/drivers/ide/ide.c
+===================================================================
+--- a/drivers/ide/ide.c
++++ b/drivers/ide/ide.c
+@@ -797,10 +797,9 @@ int generic_ide_ioctl(ide_drive_t *drive
+ 			drive->nice1 = (arg >> IDE_NICE_1) & 1;
+ 			return 0;
+ 		case HDIO_DRIVE_RESET:
+-		{
+-			unsigned long flags;
+-			if (!capable(CAP_SYS_ADMIN)) return -EACCES;
+-			
++			if (!capable(CAP_SYS_ADMIN))
++				return -EACCES;
++
+ 			/*
+ 			 *	Abort the current command on the
+ 			 *	group if there is one, taking
+@@ -819,17 +818,15 @@ int generic_ide_ioctl(ide_drive_t *drive
+ 			ide_abort(drive, "drive reset");
+ 
+ 			BUG_ON(HWGROUP(drive)->handler);
+-				
++
+ 			/* Ensure nothing gets queued after we
+ 			   drop the lock. Reset will clear the busy */
+-		   
++
+ 			HWGROUP(drive)->busy = 1;
+ 			spin_unlock_irqrestore(&ide_lock, flags);
+ 			(void) ide_do_reset(drive);
+ 
+ 			return 0;
+-		}
+-
+ 		case HDIO_GET_BUSSTATE:
+ 			if (!capable(CAP_SYS_ADMIN))
+ 				return -EACCES;
