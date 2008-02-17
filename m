@@ -1,43 +1,82 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH 5/5] ide: unexport ide_hwifs[]
-Date: Sun, 17 Feb 2008 19:51:41 +0100
-Message-ID: <20080217185141.16210.1716.sendpatchset@localhost.localdomain>
-References: <20080217185105.16210.26582.sendpatchset@localhost.localdomain>
+From: Mark Lord <liml@rtr.ca>
+Subject: Re: ST31000340NS (1000G) Capacity equal 33MB issue.
+Date: Sun, 17 Feb 2008 14:18:25 -0500
+Message-ID: <47B88881.40003@rtr.ca>
+References: <d0d565260802141013q61cb5e7fh7dcf04d7729213f7@mail.gmail.com>	 <d0d565260802141018y63a988bbpc6aecf771baacb84@mail.gmail.com>	 <47B499F2.1010306@rtr.ca> <47B5CC39.7020302@rtr.ca>	 <47B70571.4060303@rtr.ca> <d0d565260802170721r34ad933blabb3745691a6a3e9@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from fk-out-0910.google.com ([209.85.128.191]:63272 "EHLO
-	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754473AbYBQShF (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 17 Feb 2008 13:37:05 -0500
-Received: by fk-out-0910.google.com with SMTP id z23so1438294fkz.5
-        for <linux-ide@vger.kernel.org>; Sun, 17 Feb 2008 10:37:04 -0800 (PST)
-In-Reply-To: <20080217185105.16210.26582.sendpatchset@localhost.localdomain>
+Received: from rtr.ca ([76.10.145.34]:2144 "EHLO mail.rtr.ca"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752185AbYBQTS1 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 17 Feb 2008 14:18:27 -0500
+In-Reply-To: <d0d565260802170721r34ad933blabb3745691a6a3e9@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
-Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-kernel@vger.kernel.org
+To: Richard Liu <richliu.tw@gmail.com>
+Cc: linux-ide@vger.kernel.org
 
-All modular users have been fixed to not reference ide_hwifs[] directly.
+Richard Liu wrote:
+> Dear Mark:
+> 
+> 2008/2/16, Mark Lord <liml@rtr.ca>:
+>> Mark Lord wrote:
+>>> Richard Liu wrote:
+>>>
+>>> Thanks.  By running the above data through hdparm --Istdin,
+>>> I see that the drive is indeed identifying itself as a 33MB drive.
+>>>
+>>> Probably because it has been told to do so by either the factory defaults,
+>>> or the BIOS, having enabled these features (which can cause it to report
+>>> fake values for various things):
+>>>
+>>>           *    Host Protected Area feature set
+>>>           *    Device Configuration Overlay feature set
+>>>
+>>> So that's why the 1TB drive appears as a 33MB drive.
+>>>
+>>> In the near future, I will be enhancing hdparm to query more
+>>> detailed data from underneath those artificial features.
+>>>
+>>> But you'll have to enable the entire 1TB capacity if you want Linux to
+>>> use it.
+>>> It is currently disabled in the drive, and Linux respects that.
+>> ..
+>>
+>> Okay, hdparm-8.1 is now available from sourceforge.net.
+>> Download it, build it ("make"), and see what you get from "hdparm -N /dev/sdc"
+>>
+>> Thanks
+>>
+>   I downloaded hdparm-8.1
+> and here is output information.
+> 
+> # ./hdparm -N /dev/sdc
+> 
+> /dev/sdc:
+>  max sectors   = 65134/1953525168, HPA is enabled
+..
 
-Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
----
- drivers/ide/ide.c |    5 -----
- 1 file changed, 5 deletions(-)
+Yes, pretty much as expected there.
 
-Index: b/drivers/ide/ide.c
-===================================================================
---- a/drivers/ide/ide.c
-+++ b/drivers/ide/ide.c
-@@ -102,13 +102,8 @@ int ide_noacpitfs = 1;
- int ide_noacpionboot = 1;
- #endif
- 
--/*
-- * This is declared extern in ide.h, for access by other IDE modules:
-- */
- ide_hwif_t ide_hwifs[MAX_HWIFS];	/* master data repository */
- 
--EXPORT_SYMBOL(ide_hwifs);
--
- static void ide_port_init_devices_data(ide_hwif_t *);
- 
- /*
+You can safely now try this:
+
+    ./hdparm -N1953525168 /dev/sdc
+
+If that works, it will have temporarily restored access to the entire drive.
+Then you can try to make it permanent by doing this:
+
+   ./hdparm -Np1953525168 /dev/sdc
+
+If *that* also works, then reboot and things should be fine,
+unless your machine BIOS changes it back again on boot.. :/
+
+If either of those *fails*, then it is because your BIOS 
+(or possibly the system startup scripts) have "frozen" the configuration
+to prevent changes.  Dunno why they would do that, but it's possible.
+
+In which case, you could move the drive to another machine temporarily,
+and then issue that same command there.
+
+Cheers
