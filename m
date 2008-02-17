@@ -1,68 +1,30 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [PATCH 1/4] : More use DIV_ROUND_UP
-Date: Sun, 17 Feb 2008 18:17:47 +0100
-Message-ID: <200802171817.48155.bzolnier@gmail.com>
-References: <Pine.LNX.4.58.0802161548370.1185@pc-041.diku.dk>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: ICH7: ata_piix twice as fast as ahci?
+Date: Sun, 17 Feb 2008 17:20:45 +0000
+Message-ID: <20080217172045.050afd14@core>
+References: <6b9952490802170741h1de9be53nefccea3775f7de00@mail.gmail.com>
+	<20080217161033.3bb420fd@core>
+	<6b9952490802170839m4456353ejfd5a68d0aaccdf88@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mu-out-0910.google.com ([209.85.134.188]:47523 "EHLO
-	mu-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753474AbYBQRKg (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 17 Feb 2008 12:10:36 -0500
-Received: by mu-out-0910.google.com with SMTP id i10so1225230mue.5
-        for <linux-ide@vger.kernel.org>; Sun, 17 Feb 2008 09:10:35 -0800 (PST)
-In-Reply-To: <Pine.LNX.4.58.0802161548370.1185@pc-041.diku.dk>
-Content-Disposition: inline
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:58931 "EHLO
+	lxorguk.ukuu.org.uk" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751708AbYBQR3F (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 17 Feb 2008 12:29:05 -0500
+In-Reply-To: <6b9952490802170839m4456353ejfd5a68d0aaccdf88@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Julia Lawall <julia@diku.dk>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
+To: Joris <joris@v5.be>
+Cc: Linux IDE <linux-ide@vger.kernel.org>
 
-On Saturday 16 February 2008, Julia Lawall wrote:
-> From: Julia Lawall <julia@diku.dk>
-> 
-> The kernel.h macro DIV_ROUND_UP performs the computation (((n) + (d) - 1) /
-> (d)) but is perhaps more readable.
-> 
-> An extract of the semantic patch that makes this change is as follows:
-> (http://www.emn.fr/x-info/coccinelle/)
-> 
-> // <smpl>
-> @haskernel@
-> @@
-> 
-> #include <linux/kernel.h>
-> 
-> @depends on haskernel@
-> expression n,d;
-> @@
-> 
-> (
-> - (n + d - 1) / d
-> + DIV_ROUND_UP(n,d)
-> |
-> - (n + (d - 1)) / d
-> + DIV_ROUND_UP(n,d)
-> )
-> 
-> @depends on haskernel@
-> expression n,d;
-> @@
-> 
-> - DIV_ROUND_UP((n),d)
-> + DIV_ROUND_UP(n,d)
-> 
-> @depends on haskernel@
-> expression n,d;
-> @@
-> 
-> - DIV_ROUND_UP(n,(d))
-> + DIV_ROUND_UP(n,d)
-> // </smpl>
-> 
-> Signed-off-by: Julia Lawall <julia@diku.dk>
+> Am I interpreting this correctly as having to choose between fast iops
+> with low cpu (+ hotplug) with ahci and twice the linear read speed
+> with ata_piix?
 
-applied, thanks
+Some drives do weird things when NCQ is used and turn off some of their
+caching in that case so it depends on the drive what happens to linear
+speed.
+
+Alan
