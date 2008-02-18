@@ -1,51 +1,36 @@
-From: Saeed Bishara <saeed@marvell.com>
-Subject: [PATCH] sata_mv: remove iounmap in mv_platform_remove and use devm_iomap
-Date: Mon, 18 Feb 2008 07:42:28 -1100
-Message-ID: <12033601481951-git-send-email-saeed@marvell.com>
+From: bugme-daemon@bugzilla.kernel.org
+Subject: [Bug 3615] Kernels 2.6.9 and 2.6.10-rc1 hang for 30 seconds during boot
+Date: Mon, 18 Feb 2008 08:04:51 -0800 (PST)
+Message-ID: <20080218160451.BB5AB108017@picon.linux-foundation.org>
+References: <bug-3615-11633@http.bugzilla.kernel.org/>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from host2.marvell.com ([65.219.4.2]:33342 "EHLO maili.marvell.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752178AbYBRP6A (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 18 Feb 2008 10:58:00 -0500
+Received: from smtp2.linux-foundation.org ([207.189.120.14]:58801 "EHLO
+	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1757615AbYBRQFW (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 18 Feb 2008 11:05:22 -0500
+Received: from picon.linux-foundation.org (picon.linux-foundation.org [207.189.120.79])
+	by smtp2.linux-foundation.org (8.13.5.20060308/8.13.5/Debian-3ubuntu1.1) with ESMTP id m1IG4px7017723
+	for <linux-ide@vger.kernel.org>; Mon, 18 Feb 2008 08:04:52 -0800
+In-Reply-To: <bug-3615-11633@http.bugzilla.kernel.org/>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: jeff@garzik.org, mlord@pobox.com, htejun@gmail.com, linux-ide@vger.kernel.org
-Cc: saeed.bishara@gmail.com, saeed@marvell.com, byron.bbradley@gmail.com, tbm@cyrius.com
+To: linux-ide@vger.kernel.org
 
-this will fix crash bug when doing rmmod to the driver, this is because the
-port_stop function get called later and it could access the device's registers.
+http://bugzilla.kernel.org/show_bug.cgi?id=3615
 
-Signed-off-by: Saeed Bishara <saeed@marvell.com>
----
- drivers/ata/sata_mv.c |    6 ++----
- 1 files changed, 2 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/ata/sata_mv.c b/drivers/ata/sata_mv.c
-index 9c9a5b0..f510448 100644
---- a/drivers/ata/sata_mv.c
-+++ b/drivers/ata/sata_mv.c
-@@ -2951,7 +2951,8 @@ static int mv_platform_probe(struct platform_device *pdev)
- 	hpriv->n_ports = n_ports;
- 
- 	host->iomap = NULL;
--	hpriv->base = ioremap(res->start, res->end - res->start + 1);
-+	hpriv->base = devm_ioremap(&pdev->dev, res->start,
-+				   res->end - res->start + 1);
- 	hpriv->base -= MV_SATAHC0_REG_BASE;
- 
- 	rc = mv_create_dma_pools(hpriv, &pdev->dev);
-@@ -2983,11 +2984,8 @@ static int __devexit mv_platform_remove(struct platform_device *pdev)
- {
- 	struct device *dev = &pdev->dev;
- 	struct ata_host *host = dev_get_drvdata(dev);
--	struct mv_host_priv *hpriv = host->private_data;
--	void __iomem *base = hpriv->base;
- 
- 	ata_host_detach(host);
--	iounmap(base);
- 	return 0;
- }
- 
+bzolnier@gmail.com changed:
+
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+         AssignedTo|io_ide@kernel-bugs.osdl.org |bzolnier@gmail.com
+             Status|NEW                         |ASSIGNED
+
+
+
+
 -- 
-1.5.2.5
-
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug, or are watching the assignee.
+You are the assignee for the bug, or are watching the assignee.
