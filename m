@@ -1,60 +1,60 @@
-From: Kamalesh Babulal <kamalesh@linux.vnet.ibm.com>
-Subject: [PATCH-RESEND] next-20080218 build failure at pmac_ide_macio_attach ()
-Date: Mon, 18 Feb 2008 22:36:18 +0530
-Message-ID: <20080218170618.GA7435@linux.vnet.ibm.com>
-References: <20080218140159.GA31310@linux.vnet.ibm.com> <jeodae4acy.fsf@sykes.suse.de>
-Reply-To: Kamalesh Babulal <kamalesh@linux.vnet.ibm.com>
+From: Mark Lord <liml@rtr.ca>
+Subject: Re: [PATCH] sata_mv: remove iounmap in mv_platform_remove and use
+ devm_iomap
+Date: Mon, 18 Feb 2008 13:57:56 -0500
+Message-ID: <47B9D534.3090902@rtr.ca>
+References: <12033601481951-git-send-email-saeed@marvell.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from E23SMTP04.au.ibm.com ([202.81.18.173]:51419 "EHLO
-	e23smtp04.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750932AbYBRRG0 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 18 Feb 2008 12:06:26 -0500
-Content-Disposition: inline
-In-Reply-To: <jeodae4acy.fsf@sykes.suse.de>
+Received: from rtr.ca ([76.10.145.34]:2841 "EHLO mail.rtr.ca"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752155AbYBRS56 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 18 Feb 2008 13:57:58 -0500
+In-Reply-To: <12033601481951-git-send-email-saeed@marvell.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Andreas Schwab <schwab@suse.de>
-Cc: Kamalesh Babulal <kamalesh@linux.vnet.ibm.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linuxppc-dev@ozlabs.org, sfr@canb.auug.org.au, apw@shadowen.org
+To: Saeed Bishara <saeed@marvell.com>
+Cc: jeff@garzik.org, mlord@pobox.com, htejun@gmail.com, linux-ide@vger.kernel.org, saeed.bishara@gmail.com, byron.bbradley@gmail.com, tbm@cyrius.com
 
-On Mon, Feb 18, 2008 at 03:17:49PM +0100, Andreas Schwab wrote:
-> Kamalesh Babulal <kamalesh@linux.vnet.ibm.com> writes:
+Saeed Bishara wrote:
+> this will fix crash bug when doing rmmod to the driver, this is because the
+> port_stop function get called later and it could access the device's registers.
 > 
-.
-.
-<snip>
-> Just remove the cast.
+> Signed-off-by: Saeed Bishara <saeed@marvell.com>
+> ---
+>  drivers/ata/sata_mv.c |    6 ++----
+>  1 files changed, 2 insertions(+), 4 deletions(-)
 > 
-> Andreas.
+> diff --git a/drivers/ata/sata_mv.c b/drivers/ata/sata_mv.c
+> index 9c9a5b0..f510448 100644
+> --- a/drivers/ata/sata_mv.c
+> +++ b/drivers/ata/sata_mv.c
+> @@ -2951,7 +2951,8 @@ static int mv_platform_probe(struct platform_device *pdev)
+>  	hpriv->n_ports = n_ports;
+>  
+>  	host->iomap = NULL;
+> -	hpriv->base = ioremap(res->start, res->end - res->start + 1);
+> +	hpriv->base = devm_ioremap(&pdev->dev, res->start,
+> +				   res->end - res->start + 1);
+>  	hpriv->base -= MV_SATAHC0_REG_BASE;
+>  
+>  	rc = mv_create_dma_pools(hpriv, &pdev->dev);
+> @@ -2983,11 +2984,8 @@ static int __devexit mv_platform_remove(struct platform_device *pdev)
+>  {
+>  	struct device *dev = &pdev->dev;
+>  	struct ata_host *host = dev_get_drvdata(dev);
+> -	struct mv_host_priv *hpriv = host->private_data;
+> -	void __iomem *base = hpriv->base;
+>  
+>  	ata_host_detach(host);
+> -	iounmap(base);
+>  	return 0;
+>  }
+>  
+..
 
-Resending the patch after making the changes Andreas said.
+Acked0by: Mark Lord <mlord@pobox.com>
 
-Signed-off-by: Kamalesh Babulal <kamalesh@linux.vnet.ibm.com>
-Cc: Andreas Schwab <schwab@suse.de>
---
---- linux-2.6.25-rc1/drivers/ide/ppc/pmac.c	2008-02-18 22:24:49.000000000 +0530
-+++ linux-2.6.25-rc1/drivers/ide/ppc/~pmac.c	2008-02-18 22:25:10.000000000 +0530
-@@ -1091,7 +1091,7 @@ pmac_ide_macio_attach(struct macio_dev *
- 	int irq, rc;
- 	hw_regs_t hw;
- 
--	pmif = (struct pmac_ide_hwif)kzalloc(sizeof(*pmif), GFP_KERNEL);
-+	pmif = kzalloc(sizeof(*pmif), GFP_KERNEL);
- 	if (pmif == NULL)
- 		return -ENOMEM;
- 
-@@ -1229,7 +1229,7 @@ pmac_ide_pci_attach(struct pci_dev *pdev
- 		return -ENODEV;
- 	}
- 
--	pmif = (struct pmac_ide_hwif)kzalloc(sizeof(*pmif), GFP_KERNEL);
-+	pmif = kzalloc(sizeof(*pmif), GFP_KERNEL);
- 	if (pmif == NULL)
- 		return -ENOMEM;
- 
--- 
-Thanks & Regards,
-Kamalesh Babulal,
-Linux Technology Center,
-IBM, ISTL.
+Looks correct to me.
