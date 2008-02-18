@@ -1,34 +1,145 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [PATCH ht6560b] Force prefetch for some devices
-Date: Mon, 18 Feb 2008 14:36:36 +0000
-Message-ID: <20080218143636.3394eece@core>
-References: <47B97EFA.2040805@caiway.nl>
+From: Stefan Bader <stefan.bader@canonical.com>
+Subject: Re: Optiarc DVD RW AD-5200A audio playing
+Date: Mon, 18 Feb 2008 09:17:40 -0500
+Message-ID: <47B99384.2080900@canonical.com>
+References: <47B5EDB7.5050709@canonical.com> <20080216090532.GK13446@gollum.tnic> <200802161624.02768.bzolnier@gmail.com> <20080216164302.GP13446@gollum.tnic>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:47446 "EHLO
-	lxorguk.ukuu.org.uk" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1750893AbYBROpH (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 18 Feb 2008 09:45:07 -0500
-In-Reply-To: <47B97EFA.2040805@caiway.nl>
+Received: from adelie.canonical.com ([91.189.90.139]:41144 "EHLO
+	adelie.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752201AbYBROwz (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 18 Feb 2008 09:52:55 -0500
+In-Reply-To: <20080216164302.GP13446@gollum.tnic>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jan Evert van Grootheest <j.e.van.grootheest@caiway.nl>
-Cc: linux-ide@vger.kernel.org, bzolnier@gmail.com
+To: petkovbb@gmail.com, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Stefan Bader <stefan.bader@canonical.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Jens Axboe <jen>
 
-On Mon, 18 Feb 2008 13:50:02 +0100
-Jan Evert van Grootheest <j.e.van.grootheest@caiway.nl> wrote:
-
-> Prefetch needs to be set for some ide devices to work when connected to
-> a ht6560b interface. This was not always done properly, causing a system
-> with a HD and CD on the primary interface to not work properly. Or, in
-> effect, hang hard.
+Borislav Petkov wrote:
+> On Sat, Feb 16, 2008 at 04:24:01PM +0100, Bartlomiej Zolnierkiewicz wrote:
+>> Hi,
+>>
+>> On Saturday 16 February 2008, Borislav Petkov wrote:
+>>> On Fri, Feb 15, 2008 at 02:53:27PM -0500, Stefan Bader wrote:
+>>>> Hello Borislav,
+>>>>
+>>>> I worked on a problem with an DVD driver (model=Optiarc DVD RW AD-5200A)
+>>>> which obviously has the same problem as some Matshita drives. The
+>>>> following patch was reported to enabled audio playing on this drive.
+>>>> Would this approach be suitable for upstream or are there other
+>>>> solutions to this problem?
+>>>>
+>>>> Regards,
+>>>> Stefan
+>>>>
+>>>> --- a/drivers/ide/ide-cd.c
+>>>> +++ b/drivers/ide/ide-cd.c
+>>>> @@ -2988,7 +2988,8 @@ int ide_cdrom_probe_capabilities (ide_drive_t *drive)
+>>>>  	if (strcmp(drive->id->model, "MATSHITADVD-ROM SR-8187") == 0 ||
+>>>>  	    strcmp(drive->id->model, "MATSHITADVD-ROM SR-8186") == 0 ||
+>>>>  	    strcmp(drive->id->model, "MATSHITADVD-ROM SR-8176") == 0 ||
+>>>> -	    strcmp(drive->id->model, "MATSHITADVD-ROM SR-8174") == 0)
+>>>> +	    strcmp(drive->id->model, "MATSHITADVD-ROM SR-8174") == 0 ||
+>>>> +	    strcmp(drive->id->model, "Optiarc DVD RW AD-5200A") == 0)
+>>>>  		CDROM_CONFIG_FLAGS(drive)->audio_play = 1;
+>>>>
+>>>>  #if ! STANDARD_ATAPI
+>>> Hi Stefan,
+>>>
+>>> just to make sure that the audioplay bit is not set in the capabilities page,
+>>> can you please try the following patch applied against 2.6.25-rc2 and send me
+>>> the output. Thanks!
+>>>
+>>> @Bart: by the way, this cdi->mask thingy is kinda unintuitive doing double
+>>> negation to check whether a feature is supported or not. Yeah, this comes from
+>>> "above," i.e. uniform cdrom layer. But still, shouldn't we use a cdi->caps_flags
+>>> or something similar instead, which mirrors the caps page bits setting?
+>> It seems so (at least having negative flags is very unintuitive) but they
+>> might be some reason for this ugliness, Jens?
+>>
+>> [ Please also remember that since cdrom layer is _uniform_ it may be not
+>>   possible and/or desirable to have 1-1 mapping between caps page bits
+>>   and the future cdi->caps_flags. ]
+>>
+>>> commit 435f0f4496a1b32af2d542f43b2370a890fe2f83
+>>> Author: Borislav Petkov <petkovbb@gmail.com>
+>>> Date:   Sat Feb 16 09:56:36 2008 +0100
+>>>
+>>>     ide-cd: Enable audio play quirk for Optiarc DVD RW AD-5200A drive
+>>>     
+>>>     Reported-by: Stefan Bader <stefan.bader@canonical.com>
+>>>     Signed-off-by: Borislav Petkov <petkovbb@gmail.com>
+>>>
+>>> diff --git a/drivers/ide/ide-cd.c b/drivers/ide/ide-cd.c
+>>> index f77db6b..2c9d06e 100644
+>>> --- a/drivers/ide/ide-cd.c
+>>> +++ b/drivers/ide/ide-cd.c
+>>> @@ -1750,6 +1750,10 @@ int ide_cdrom_probe_capabilities (ide_drive_t *drive)
+>>>  		cdi->mask &= ~(CDC_DVD_RAM | CDC_RAM);
+>>>  	if (buf[8 + 3] & 0x10)
+>>>  		cdi->mask &= ~CDC_DVD_R;
+>>> +	if (!(buf[8 + 4] & 0x01)) {
+>> Hmm, shouldn't there be '&& (cd->cd_flags & IDE_CD_FLAG_PLAY_AUDIO_OK)'
+>> to prevent false positives?
 > 
-> This patch forces prefetch on devices before checking whether it
-> is necessary to change the settings in the interface
+> I wanted to see whether the caps page reports the audioplay bit off...
+> 
+>>> +		printk(KERN_INFO "ide-cd: audio play not advertised in caps page,"
+>> Would be nice to also printk() the device name.
+> 
+> ... but printing the device model is actually a good idea and this will rule out
+> false positives, so Stefan, please drop the previous patch and test the updated
+> one below. Thanks.
+> 
+> 
 
-Interesting, that is backwards to the docs and not something I've seen.
-If you are correct then pata_legacy also wants tweaking .
+Hi Borislav,
 
-Alan
+the problem is that I don't own this drive myself and the owner is
+running a 2.6.22 kernel and is normally not doing any kernel compiles.
+But I could provide him a modified patch.
+Though, if you just want to know whether the cap bit was really unset, I
+think we know this already. When I got the problem report we checked
+/proc/sys/dev/cdrom/info and that showed the "Can play audio" bit as 0.
+Which is the reason I gave the owner the patch for adding the model to
+the excemption list. And from his feedback I take that the drive plays
+audio tracks with the patch in use.
+
+Stefan
+
+> commit 6cc44b0ce5c9270b15d456eb9ffa91b855e4e0d0
+> Author: Borislav Petkov <petkovbb@gmail.com>
+> Date:   Sat Feb 16 09:56:36 2008 +0100
+> 
+>     ide-cd: Enable audio play quirk for Optiarc DVD RW AD-5200A drive
+>     
+>     Reported-by: Stefan Bader <stefan.bader@canonical.com>
+>     Signed-off-by: Borislav Petkov <petkovbb@gmail.com>
+> 
+> diff --git a/drivers/ide/ide-cd.c b/drivers/ide/ide-cd.c
+> index f77db6b..4c9984f 100644
+> --- a/drivers/ide/ide-cd.c
+> +++ b/drivers/ide/ide-cd.c
+> @@ -1750,6 +1750,11 @@ int ide_cdrom_probe_capabilities (ide_drive_t *drive)
+>  		cdi->mask &= ~(CDC_DVD_RAM | CDC_RAM);
+>  	if (buf[8 + 3] & 0x10)
+>  		cdi->mask &= ~CDC_DVD_R;
+> +	if (!(buf[8 + 4] & 0x01)) {
+> +		printk(KERN_INFO "ide-cd: audio play not advertised in caps "
+> +				"page for drive model [%s], enabling quirk.\n",
+> +				drive->id->model);
+> +	}
+>  	if ((buf[8 + 4] & 0x01) || (cd->cd_flags & IDE_CD_FLAG_PLAY_AUDIO_OK))
+>  		cdi->mask &= ~CDC_PLAY_AUDIO;
+>  
+> @@ -1929,6 +1934,7 @@ static const struct cd_list_entry ide_cd_quirks_list[] = {
+>  	{ "MATSHITADVD-ROM SR-8186", NULL,   IDE_CD_FLAG_PLAY_AUDIO_OK	    },
+>  	{ "MATSHITADVD-ROM SR-8176", NULL,   IDE_CD_FLAG_PLAY_AUDIO_OK	    },
+>  	{ "MATSHITADVD-ROM SR-8174", NULL,   IDE_CD_FLAG_PLAY_AUDIO_OK	    },
+> +	{ "Optiarc DVD RW AD-5200A", NULL,   IDE_CD_FLAG_PLAY_AUDIO_OK      },
+>  	{ NULL, NULL, 0 }
+>  };
+>  
+> 
+
