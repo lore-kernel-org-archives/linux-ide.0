@@ -1,61 +1,56 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH ht6560b] Force prefetch for some devices
-Date: Mon, 18 Feb 2008 16:58:52 +0300
-Message-ID: <47B98F1C.3050808@ru.mvista.com>
-References: <47B97EFA.2040805@caiway.nl>
+From: Jan Evert van Grootheest <j.e.van.grootheest@caiway.nl>
+Subject: [PATCH] ht6560b can only do up to PIO mode 4
+Date: Mon, 18 Feb 2008 14:58:20 +0100
+Message-ID: <47B98EFC.8080507@caiway.nl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed;
+ boundary="------------040405020105030802010703"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from gateway-1237.mvista.com ([63.81.120.155]:52856 "EHLO
-	imap.sh.mvista.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751232AbYBRN5v (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 18 Feb 2008 08:57:51 -0500
-In-Reply-To: <47B97EFA.2040805@caiway.nl>
+Received: from pelian.kabelfoon.nl ([62.45.45.43]:53386 "EHLO
+	pelian.kabelfoon.nl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750878AbYBRN6V (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 18 Feb 2008 08:58:21 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jan Evert van Grootheest <j.e.van.grootheest@caiway.nl>
-Cc: linux-ide@vger.kernel.org, bzolnier@gmail.com
+To: linux-ide@vger.kernel.org, bzolnier@gmail.com
 
-Hello.
+This is a multi-part message in MIME format.
+--------------040405020105030802010703
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 
-Jan Evert van Grootheest wrote:
+According to the datasheet, ht6560b only supports up to PIO mode 4.
 
-> Prefetch needs to be set for some ide devices to work when connected to
+Signed-off-by: Jan Evert van Grootheest <janevert@caiway.nl>
 
-    Prefetch bit seems to mean 1=disable, 0=enable despite what the datasheet 
-says...
 
-> a ht6560b interface. This was not always done properly, causing a system
-> with a HD and CD on the primary interface to not work properly. Or, in
-> effect, hang hard.
+--------------040405020105030802010703
+Content-Type: text/x-patch;
+ name="ht.pio.patch"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="ht.pio.patch"
 
-> This patch forces prefetch on devices before checking whether it
-> is necessary to change the settings in the interface
+--- a/drivers/ide/legacy/ht6560b.c
++++ b/drivers/ide/legacy/ht6560b.c
+@@ -343,7 +343,7 @@ int __init ht6560b_init(void)
+ 	hwif->chipset = ide_ht6560b;
+ 	hwif->selectproc = &ht6560b_selectproc;
+ 	hwif->host_flags = IDE_HFLAG_ABUSE_PREFETCH;
+-	hwif->pio_mask = ATA_PIO5;
++	hwif->pio_mask = ATA_PIO4;
+ 	hwif->set_pio_mode = &ht6560b_set_pio_mode;
+ 	hwif->serialized = 1;	/* is this needed? */
+ 	hwif->mate = mate;
+@@ -351,7 +351,7 @@ int __init ht6560b_init(void)
+ 	mate->chipset = ide_ht6560b;
+ 	mate->selectproc = &ht6560b_selectproc;
+ 	mate->host_flags = IDE_HFLAG_ABUSE_PREFETCH;
+-	mate->pio_mask = ATA_PIO5;
++	mate->pio_mask = ATA_PIO4;
+ 	mate->set_pio_mode = &ht6560b_set_pio_mode;
+ 	mate->serialized = 1;	/* is this needed? */
+ 	mate->mate = hwif;
 
-> This patch should also be applied to 2.4. I don't currently have a
-> 2.4 tree around.
 
-> (also change my email address)
-
-> Signed-off-by: Jan Evert van Grootheest <janevert@caiway.nl>
-
-    Please send the patch to the current 2.4 maintainer, after applying it to 
-the 2.4 tree which you can download on kernel.org.
-
-> ------------------------------------------------------------------------
-> 
-> --- linux-2.6.git/drivers/ide/legacy/ht6560b.c	2008-02-01 18:50:31.000000000 +0100
-> +++ linux-2.6.24/drivers/ide/legacy/ht6560b.c	2008-02-18 13:48:59.000000000 +0100
-> @@ -23,18 +23,21 @@
->   *                      "Prefetch" mode bit OFF for ide disks and
->   *                      ON for anything else.
->   *
-> + *  Version 0.08        Need to force prefetch for CDs and other non-disk
-> + *                      devices. (not sure which devices exactly need
-> + *                      prefetch)
->   *
-
-    Hard disks only ai guess, i.e. non-ATAPI device.
-
-MBR, Sergei
+--------------040405020105030802010703--
