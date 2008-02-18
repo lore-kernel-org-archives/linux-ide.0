@@ -1,63 +1,35 @@
-From: Kamalesh Babulal <kamalesh@linux.vnet.ibm.com>
-Subject: [PATCH] next-20080218 build failure at pmac_ide_macio_attach ()
-Date: Mon, 18 Feb 2008 19:31:59 +0530
-Message-ID: <20080218140159.GA31310@linux.vnet.ibm.com>
-Reply-To: Kamalesh Babulal <kamalesh@linux.vnet.ibm.com>
+From: Jan Evert van Grootheest <j.e.van.grootheest@caiway.nl>
+Subject: DMA on ht6560b?
+Date: Mon, 18 Feb 2008 15:13:53 +0100
+Message-ID: <47B992A1.2030008@caiway.nl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1754879AbYBROC1@vger.kernel.org>
-Content-Disposition: inline
-Sender: linux-kernel-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org
-Cc: linux-ide@vger.kernel.org, linuxppc-dev@ozlabs.org, sfr@canb.auug.org.au, apw@shadowen.org
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from pelian.kabelfoon.nl ([62.45.45.43]:52926 "EHLO
+	pelian.kabelfoon.nl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751441AbYBRONy (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 18 Feb 2008 09:13:54 -0500
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org, bzolnier@gmail.com
 
 Hi,
 
-The next-20080218 kernel build fails on the powerpc(s)
+With digging into the code...
 
-drivers/ide/ppc/pmac.c: In function =E2=80=98pmac_ide_macio_attach=E2=80=
-=99:
-drivers/ide/ppc/pmac.c:1094: error: conversion to non-scalar type reque=
-sted
-drivers/ide/ppc/pmac.c: In function =E2=80=98pmac_ide_pci_attach=E2=80=99=
-:
-drivers/ide/ppc/pmac.c:1232: error: conversion to non-scalar type reque=
-sted
-make[3]: *** [drivers/ide/ppc/pmac.o] Error 1
-make[2]: *** [drivers/ide/ppc] Error 2
-make[1]: *** [drivers/ide] Error 2
-make: *** [drivers] Error 2
+I think the ht6560b controller supports DMA. At least it did so in 2.2 
+(where hdparm could still turn it on). DMA in 2.2 would improve the HD 
+from about 1M/s to 4M/s. So that's quite interesting.
+Also the datasheet claims that there is full ANSI ATA-4a support. 
+According to the ATA table on wikipedia that should include up to mwdma 
+2 and udma33.
 
-I Have tested this patch for build failure only.
+What's the magic that will turn it on for the ht6560b controller?
+I would guess at the [sm]wdma_mask fields in hwif_t? Plus something for 
+set_dma_mode?
+Some help would be appreciated.
 
-Signed-off-by: Kamalesh Babulal <kamalesh@linux.vnet.ibm.com>
----
---- linux-2.6.25-rc1/drivers/ide/ppc/pmac.c	2008-02-18 18:41:48.0000000=
-00 +0530
-+++ linux-2.6.25-rc1/drivers/ide/ppc/~pmac.c	2008-02-18 19:20:37.000000=
-000 +0530
-@@ -1091,7 +1091,7 @@ pmac_ide_macio_attach(struct macio_dev *
- 	int irq, rc;
- 	hw_regs_t hw;
-=20
--	pmif =3D (struct pmac_ide_hwif)kzalloc(sizeof(*pmif), GFP_KERNEL);
-+	pmif =3D (struct pmac_ide_hwif*)kzalloc(sizeof(*pmif), GFP_KERNEL);
- 	if (pmif =3D=3D NULL)
- 		return -ENOMEM;
-=20
-@@ -1229,7 +1229,7 @@ pmac_ide_pci_attach(struct pci_dev *pdev
- 		return -ENODEV;
- 	}
-=20
--	pmif =3D (struct pmac_ide_hwif)kzalloc(sizeof(*pmif), GFP_KERNEL);
-+	pmif =3D (struct pmac_ide_hwif*)kzalloc(sizeof(*pmif), GFP_KERNEL);
- 	if (pmif =3D=3D NULL)
- 		return -ENOMEM;
-=20
---=20
-Thanks & Regards,
-Kamalesh Babulal,
-Linux Technology Center,
-IBM, ISTL.
+Thanks,
+Jan Evert
+
