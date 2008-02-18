@@ -1,31 +1,52 @@
-From: Mark Lord <liml@rtr.ca>
-Subject: atapi_dmadir:  why do we not (also) auto-detect it from IDENTIFY
- PACKET ??
-Date: Mon, 18 Feb 2008 14:02:36 -0500
-Message-ID: <47B9D64C.3000705@rtr.ca>
+From: Elias Oltmanns <eo@nebensachen.de>
+Subject: Re: Current qc_defer implementation may lead to infinite recursion
+Date: Mon, 18 Feb 2008 21:03:54 +0100
+Message-ID: <874pc6vxp1.fsf@denkblock.local>
+References: <87ir0w4rzo.fsf@denkblock.local> <47AFD7C1.7070204@gmail.com>
+	<871w7k9b8y.fsf@denkblock.local> <47B00AA1.3010104@gmail.com>
+	<87r6fj2lsx.fsf@denkblock.local> <47B0F2E0.9020204@gmail.com>
+	<877iha3621.fsf@denkblock.local> <47B1614B.5020209@gmail.com>
+	<871w7i33yb.fsf@denkblock.local> <47B19768.8000006@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([76.10.145.34]:4364 "EHLO mail.rtr.ca"
+Received: from nebensachen.de ([195.34.83.29]:46670 "EHLO mail.nebensachen.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751538AbYBRTCi (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 18 Feb 2008 14:02:38 -0500
+	id S1750770AbYBRUFb (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 18 Feb 2008 15:05:31 -0500
+In-Reply-To: <47B19768.8000006@gmail.com> (Tejun Heo's message of "Tue, 12 Feb
+	2008 21:56:08 +0900")
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Albert Lee <albertcc@tw.ibm.com>, IDE/ATA development list <linux-ide@vger.kernel.org>, Jeff Garzik <jgarzik@pobox.com>, Alan Cox <alan@redhat.com>, Tejun Heo <htejun@gmail.com>
+To: Tejun Heo <htejun@gmail.com>
+Cc: linux-ide@vger.kernel.org
 
-Albert / Jeff,
+Hi Tejun,
 
-Way back in 2.6.17-rc2, you guys signed-off on 95de719adc94392a95c3c4d0a2d6b8b1ea39d236,
-which added a libata module parameter for atapi_dmadir.
+Tejun Heo <htejun@gmail.com> wrote:
+> Elias Oltmanns wrote:
+>> Tejun Heo <htejun@gmail.com> wrote:
+>>> Elias Oltmanns wrote:
+>>>> This proves that piix_qc_defer() has declined the same command 100
+>>>> times in succession. However, this will only happen if the status of
+>>>> all the commands enqueued for one port hasn't changed in the
+>>>> meantime. This suggests to me that the threads scheduled for command
+>>>> execution and completion aren't served for some reason. Any ideas?
+>>> Blocked counts of 1 will cause busy looping because when blk_run_queue()
+>>> returns because it's recursing too deep, it schedules unplug work right
+>>> away, so it will easily loop 100 times.  Max blocked counts should be
+>>> adjusted to two (needs some testing before actually submitting the
+>>> change).  But that still shouldn't cause any lock up.  What happens if
+>>> you remove the 100 times limit?  Does the machine hang on IO?
+>> 
+>> Yes, it does. In fact, I had already verified that before sending the
+>> previous email.
+>
+> Hmmm.... it's supposed not to lock up although it can cause busy wait.
+> I'll test it tomorrow.
 
-That's nice, but many modern drives (or bridge chips) flag this in
-their IDENTIFY PACKET response, as bit-15 of word-62 of the returned data.
+Have you had a chance to test yet? What is to be done about it?
 
-So for those at lease, we should be automatically setting atapi_dmadir=1.
-But on a per-device basis, not globally as done now.
+Regards,
 
-Albert: do you want to cook up a bug fix for this?
-
-Cheers
+Elias
