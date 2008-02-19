@@ -1,27 +1,36 @@
-From: Alan Cox <alan@redhat.com>
-Subject: Re: [PATCH] libata-scsi: automatically use DMADIR if drive/bridge requires it
-Date: Mon, 18 Feb 2008 17:20:44 -0500
-Message-ID: <20080218222044.GA20041@devserv.devel.redhat.com>
-References: <47B9D64C.3000705@rtr.ca> <47B9F05A.1060207@rtr.ca>
+From: Mark Lord <mlord@pobox.com>
+Subject: hdparm-8.2 now available
+Date: Mon, 18 Feb 2008 19:25:20 -0500
+Message-ID: <47BA21F0.90405@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:36542 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753443AbYBRW1p (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 18 Feb 2008 17:27:45 -0500
-Content-Disposition: inline
-In-Reply-To: <47B9F05A.1060207@rtr.ca>
+Received: from a-sasl-quonix.sasl.smtp.pobox.com ([208.72.237.25]:56520 "EHLO
+	sasl.smtp.pobox.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750935AbYBSAZn (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 18 Feb 2008 19:25:43 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark Lord <liml@rtr.ca>
-Cc: Albert Lee <albertcc@tw.ibm.com>, IDE/ATA development list <linux-ide@vger.kernel.org>, Jeff Garzik <jgarzik@pobox.com>, Alan Cox <alan@redhat.com>, Tejun Heo <htejun@gmail.com>
+To: IDE/ATA development list <linux-ide@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>, ballen@gravity.phys.uwm.edu, Ric Wheeler <ric@emc.com>
 
-On Mon, Feb 18, 2008 at 03:53:46PM -0500, Mark Lord wrote:
-> +		/* some SATA bridges need us to indicate data xfer direction 
-> */
-> +		if (atapi_dmadir || (dev->id[62] & 0x8000))
+hdparm for SATA/PATA has now been updated to version 8.2.
+ 
+Upgrading is strongly recommended for all users.
+This version fixes several bugs in earlier 7.x/8.x releases
+that could cause issues when advanced features are attempted
+on devices being driven by the old drivers/ide subsystem.
 
-The rest of the code uses ata_ inlines/defines in ata.h for things like this
-and religiously checks validity bits and ATA versions.
+libata devices were unaffected, but drivers/ide devices could
+misbehave or even be corrupted by some operations.
 
+hdparm-8.2 is available at http://sourceforge.net/projects/hdparm/ 
+
+Upgrading from any earlier 7.x or 8.x version
+is strongly recommended for all users.
+
+Cheers
+-- 
+Mark Lord
+Real-Time Remedies Inc.
+mlord@pobox.com
