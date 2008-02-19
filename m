@@ -1,36 +1,75 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: Optiarc DVD RW AD-5200A audio playing
-Date: Tue, 19 Feb 2008 23:10:05 +0100
-Message-ID: <200802192310.05759.bzolnier@gmail.com>
-References: <47B5EDB7.5050709@canonical.com> <200802190018.48850.bzolnier@gmail.com> <20080219055233.GA4901@gollum.tnic>
+Subject: Re: [PATCH] ide-cd: remove the internal 64k buffer
+Date: Tue, 19 Feb 2008 22:51:36 +0100
+Message-ID: <200802192251.37183.bzolnier@gmail.com>
+References: <20080219143247.GA3980@gollum.tnic>
 Mime-Version: 1.0
 Content-Type: text/plain;
   charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.185]:2285 "EHLO
+Received: from nf-out-0910.google.com ([64.233.182.187]:1817 "EHLO
 	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1761940AbYBSWEE (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 19 Feb 2008 17:04:04 -0500
-Received: by nf-out-0910.google.com with SMTP id g13so756844nfb.21
-        for <linux-ide@vger.kernel.org>; Tue, 19 Feb 2008 14:04:02 -0800 (PST)
-In-Reply-To: <20080219055233.GA4901@gollum.tnic>
+	with ESMTP id S1761812AbYBSWD7 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 19 Feb 2008 17:03:59 -0500
+Received: by nf-out-0910.google.com with SMTP id g13so756837nfb.21
+        for <linux-ide@vger.kernel.org>; Tue, 19 Feb 2008 14:03:59 -0800 (PST)
+In-Reply-To: <20080219143247.GA3980@gollum.tnic>
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: petkovbb@gmail.com
-Cc: Stefan Bader <stefan.bader@canonical.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Jens Axboe <jens.axboe@oracle.com>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+
+
+Hi,
 
 On Tuesday 19 February 2008, Borislav Petkov wrote:
-
-[...]
-
-> Author: Borislav Petkov <petkovbb@gmail.com>
-> Date:   Sat Feb 16 09:56:36 2008 +0100
+> Hi Bart,
 > 
->     ide-cd: Enable audio play quirk for Optiarc DVD RW AD-5200A drive
+> here's one more item from my TODO list. The removal is straight forward, after
+> testing it with all my cdrom drives they all seem even to rotate quieter due to
+> the automatic speed adjustment of the drive to the continuous data stream
+> bandwidth in contrast to the buffer-mode in which recurring buffer-fill speedups
+> caused the drive's read speeed to spike in order to keep the buffer filled up
+> constantly.
+> 
+> Still, i'd keep this a bit longer in -mm to see whether there are some
+> other issues with it and with all the different workloads.
+> 
+> 
+> commit a855bd5d94ddac678cf90b4b8f20dbd3ac8ea29a
+> Author: Borislav Petkov <petkovbb@gmail.com>
+> Date:   Tue Feb 19 14:25:09 2008 +0100
+> 
+>     ide-cd: remove the internal 64k buffer
 >     
->     Reported-by: Stefan Bader <stefan.bader@canonical.com>
+>     This removes the internal ide-cd buffer and falls back to read-ahead block layer
+>     capabilities. Thorough testing (cd burning, dvd read, raw read) gives with the
+>     bufferless mode marginally better performance in addition to simplified code.
+>     
+>     bufferless:
+>     
+>     dd: reading `/dev/hdc': Input/output error
+>     6238+0 records in
+>     6238+0 records out
+>     204406784 bytes (204 MB) copied, 259.891 s, 787 kB/s
+>     
+>     real    4m21.598s
+>     user    0m0.014s
+>     sys     0m0.744s
+>     
+>     with the old buffer (2.6.25-rc1):
+>     
+>     dd: reading `/dev/hdc': Input/output error
+>     6238+0 records in
+>     6238+0 records out
+>     204406784 bytes (204 MB) copied, 262.893 s, 778 kB/s
+>     
+>     real    4m22.938s
+>     user    0m0.009s
+>     sys     0m0.771s
+>     
 >     Signed-off-by: Borislav Petkov <petkovbb@gmail.com>
 
-applied
+applied, thanks
