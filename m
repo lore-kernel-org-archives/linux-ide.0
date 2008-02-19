@@ -1,82 +1,40 @@
-From: Ken Moffat <zarniwhoop@ntlworld.com>
-Subject: Re: "ide=reverse" do we still need this?
-Date: Tue, 19 Feb 2008 15:08:41 +0000
-Message-ID: <20080219150841.GA2965@deepthought>
-References: <20080213001506.GA13933@kroah.com> <20080213024329.GA6912@deepthought> <20080213044304.GA10101@kroah.com> <20080213153249.GA21749@deepthought>
+From: Mark Lord <liml@rtr.ca>
+Subject: Re: sata_sil24 stability and performance
+Date: Tue, 19 Feb 2008 10:32:07 -0500
+Message-ID: <47BAF677.5000602@rtr.ca>
+References: <20080219020916.GA29902@denix.org> <20080219043659.GA11936@jim.sh>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1757048AbYBSPJH@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20080213153249.GA21749@deepthought>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Greg KH <greg@kroah.com>
-Cc: bzolnier@gmail.com, muli@il.ibm.com, jdmason@kudzu.us, linux-ide@vger.kernel.org, linux-pci@atrey.karlin.mff.cuni.cz, linux-kernel@vger.kernel.org, discuss@x86-64.org
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from rtr.ca ([76.10.145.34]:3677 "EHLO mail.rtr.ca"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753737AbYBSPcK (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 19 Feb 2008 10:32:10 -0500
+In-Reply-To: <20080219043659.GA11936@jim.sh>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Jim Paris <jim@jtan.com>
+Cc: Denys Dmytriyenko <denis@denix.org>, linux-ide@vger.kernel.org
 
-On Wed, Feb 13, 2008 at 03:32:49PM +0000, Ken Moffat wrote:
-> On Tue, Feb 12, 2008 at 08:43:04PM -0800, Greg KH wrote:
-> >=20
-> > Can't you just boot with /dev/disk/by-id/ and an initramfs to not h=
-ave
-> > to worry about such a thing in the future?
-> >=20
+Jim Paris wrote:
+> ..
+> As you may have noticed on this list, power supplies are very
+> frequently a problem.
+..
 
- Initramfs isn't something I've ever tried, so I'm not about to rush
-into it on the server.  Maybe I'll try it on a desktop one day.
-Anyway, I've now got it running without ide=3Dreverse, details follow
-for anybody else who gets a similar problem in the future.
+Actually, no, I haven't noticed that.  :)
 
->  Can comebody remind me what the initramfs is for in that situation,
-> please ?  From the little I've noticed, I thought the /dev/disk/by-id
-> part went into fstab ?  At the moment, I just build the things I
-> think I need in to the kernel on that box, without modules.
->=20
- And for the next person asking this, it seems to be so that you
-can specify the root=3D parameter.
+I do see them more frequently being suggested as a possible problem,
+and then after some time and expense on the part of the reporters
+it nearly always turns out to have been a device driver bug,
+or (less often) a firmware quirk of the device.
 
->  Anyway, I'll try to find time to read my notes to see if I can
-> identify what happened/when, and to take the box down again so I
-> can try to confirm exactly what the problem is, if it still exists.
-> I certainly won't be taking it down until I've written my weekly
-> backups to tape at the weekend, so maybe not before next week.
->=20
+Yes, PSUs are often suggested as a problem here,
+but only rarely has that been true.
 
- Turns out I was wrong about having a SATA disk for the system - I
-used to, but then I needed to separate the backups into separate r/o
-and r/w filesystems when nfs no longer let me export part of a ro fs
-as rw.  In the change, my staging area for writing to tape or DVD
-moved to the system disk, and the only big-enough disk I could get
-locally was parallel ide.  So in that setup, ide on a card comes
-first.
-> > Have you tried the PATA drivers instead of IDE to see if this solve=
-s the
-> > "moves around" issue?  If they work, then you would not need the co=
-mmand
-> > line option at all.
->=20
+Especially nowadays, as PSUs are becoming much larger than
+they historically once were.
 
- My first thought was to try using libata for the drives on the
-add-on card (sii0680), although it's marked as experimental.  Maybe
-I picked the wrong driver, but they didn't show up.  Reverted to
-previous config.
-
- Changed to mount-by-label so that I don't have to change fstab for
-the old and new kernels.
-
- Moved the main drive and the CD to libata (sii still old IDE) -
-specify sda instead of hda in root=3D, change system scripts referencin=
-g
-drives by name (for SMART - system disk is again -d ata, the data raid
-moved from hd{e,g} to hd{a,c}), now seems to be working but I expect
-I'll notice a few things more in my scripts over the next days.
-
- I also discovered that lilo needed the real node specified in root=3D
-to exist.  It complained, so I added a symlink to the hdaX node -
-panic'd trying to load rootfs from 0307.  Reboot to old kernel, run mkn=
-od on /dev,
-repeat, booted.
-
-Ken
---=20
-das eine Mal als Trag=F6die, das andere Mal als Farce
+Cheers
+(been around here since 1993 or so)
