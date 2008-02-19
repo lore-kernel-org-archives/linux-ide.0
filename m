@@ -1,65 +1,39 @@
-From: Pavel Machek <pavel@ucw.cz>
-Subject: Re: [PATCH] enclosure: add support for enclosure services
-Date: Sat, 16 Feb 2008 12:44:58 +0000
-Message-ID: <20080216124458.GA3979@ucw.cz>
-References: <1202172065.3096.154.camel@localhost.localdomain> <922945.25870.qm@web31811.mail.mud.yahoo.com> <20080212102244.32869382@appleyard> <1202841935.3137.94.camel@localhost.localdomain> <20080212110752.21840627@appleyard> <1202844495.3137.120.camel@localhost.localdomain> <20080213094502.4112d5e5@appleyard>
+From: Randy Dunlap <randy.dunlap@oracle.com>
+Subject: [PATCH] libata: fix kernel-doc parameter warning
+Date: Tue, 19 Feb 2008 13:43:21 -0800
+Message-ID: <20080219134321.68047fa6.randy.dunlap@oracle.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20080213094502.4112d5e5@appleyard>
-Sender: linux-scsi-owner@vger.kernel.org
-To: Kristen Carlson Accardi <kristen.c.accardi@intel.com>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, ltuikov@yahoo.com, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, linux-ide <linux-ide@vger.kernel.org>, jeff@garzik.org
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from rgminet01.oracle.com ([148.87.113.118]:58089 "EHLO
+	rgminet01.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753663AbYBSVrg (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 19 Feb 2008 16:47:36 -0500
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: ide <linux-ide@vger.kernel.org>
+Cc: jgarzik <jgarzik@pobox.com>
 
-On Wed 2008-02-13 09:45:02, Kristen Carlson Accardi wrote:
-> On Tue, 12 Feb 2008 13:28:15 -0600
-> James Bottomley <James.Bottomley@HansenPartnership.com> wrote:
-> 
-> > On Tue, 2008-02-12 at 11:07 -0800, Kristen Carlson Accardi wrote:
-> > > I understand what you are trying to do - I guess I just doubt the
-> > > value you've added by doing this.  I think that there's going to be
-> > > so much customization that system vendors will want to add, that
-> > > they are going to wind up adding a custom library regardless, so
-> > > standardising those few things won't buy us anything.
-> > 
-> > It depends ... if you actually have a use for the customisations, yes.
-> > If you just want the basics of who (what's in the enclousure), what
-> > (activity) and where (locate) then I think it solves your problem
-> > almost entirely.
-> > 
-> > So, entirely as a straw horse, tell me what else your enclosures
-> > provide that I haven't listed in the four points.  The SES standards
-> > too provide a huge range of things that no-one ever seems to
-> > implement (temperature, power, fan speeds etc).
-> > 
-> > I think the users of enclosures fall int these categories
-> > 
-> > 85% just want to know where their device actually is (i.e. that sdc is
-> > in enclosure slot 5)
-> > 50% like watching the activity lights
-> > 30% want to be able to have a visual locate function
-> > 20% want a visual failure indication (the other 80% rely on some OS
-> > notification instead)
-> > 
-> > When you add up the overlapping needs, you get about 90% of people
-> > happy with the basics that the enclosure services provide.  Could
-> > there be more ... sure; should there be more ... I don't think so ...
-> > that's what value add the user libraries can provide.
-> > 
-> > James
-> > 
-> > 
-> 
-> I don't think I'm arguing whether or not your solution may work, what I
-> am arguing is really a more philosophical point.  Not "can we do it
-> this way", but "should we do it way".  I am of the opinion that
+From: Randy Dunlap <randy.dunlap@oracle.com>
 
-Hw abstraction is still kernel's job. That's why we have leds exported
-in sysfs... let vendors have their libraries, but lets put the
-'everyone does these' stuff in kernel.
+Fix libata kernel-doc parameter:
 
--- 
-(english) http://www.livejournal.com/~pavelmachek
-(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
+Warning(linux-2.6.25-rc2-git3//drivers/ata/libata-scsi.c:845): No description found for parameter 'rq'
+
+Signed-off-by: Randy Dunlap <randy.dunlap@oracle.com>
+---
+ drivers/ata/libata-scsi.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+--- linux-2.6.25-rc2-git3.orig/drivers/ata/libata-scsi.c
++++ linux-2.6.25-rc2-git3/drivers/ata/libata-scsi.c
+@@ -828,7 +828,7 @@ static void ata_scsi_sdev_config(struct 
+ 
+ /**
+  *	atapi_drain_needed - Check whether data transfer may overflow
+- *	@request: request to be checked
++ *	@rq: request to be checked
+  *
+  *	ATAPI commands which transfer variable length data to host
+  *	might overflow due to application error or hardare bug.  This
