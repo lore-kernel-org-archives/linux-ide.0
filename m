@@ -1,66 +1,58 @@
-From: Geert Uytterhoeven <geert@linux-m68k.org>
-Subject: Re: [PATCH] falconide: fix resources reservation
-Date: Wed, 20 Feb 2008 10:40:59 +0100 (CET)
-Message-ID: <Pine.LNX.4.64.0802201039520.19893@vixen.sonytel.be>
-References: <200802200150.26989.bzolnier@gmail.com>
-Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+From: =?ISO-8859-1?Q?Guillaume_Laur=E8s?= <guillaume-laures@neuf.fr>
+Subject: Re: PROBLEM: I/O scheduler problem with an 8 SATA disks raid 5 under heavy load  ?
+Date: Wed, 20 Feb 2008 12:35:14 +0100
+Message-ID: <DE29CFB4-18E5-4CA3-A44D-6AD46D1A122D@neuf.fr>
+References: <fa.NcJePXcdrF+7E7oXv5ULIxogTYI@ifi.uio.no> <4782C3DB.1090201@shaw.ca> <2A722A49-F024-44E9-9FC8-7B714FB25626@neuf.fr> <47840EB2.2010300@shaw.ca>
+Mime-Version: 1.0 (Apple Message framework v753)
+Content-Type: text/plain; charset=ISO-8859-1;
+	delsp=yes	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from vervifontaine.sonytel.be ([80.88.33.193]:47970 "EHLO
-	vervifontaine.sonycom.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1756351AbYBTJlE (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 20 Feb 2008 04:41:04 -0500
-In-Reply-To: <200802200150.26989.bzolnier@gmail.com>
+Received: from neuf-infra-smtp-out-sp604007av.neufgp.fr ([84.96.92.120]:49284
+	"EHLO neuf-infra-smtp-out-sp604007av.neufgp.fr" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751159AbYBTLfU convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 20 Feb 2008 06:35:20 -0500
+In-Reply-To: <47840EB2.2010300@shaw.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: linux-ide@vger.kernel.org, Linux Kernel Development <linux-kernel@vger.kernel.org>, Michael Schmitz <schmitz@debian.org>
+To: Robert Hancock <hancockr@shaw.ca>
+Cc: linux-kernel@vger.kernel.org, ide <linux-ide@vger.kernel.org>
 
-On Wed, 20 Feb 2008, Bartlomiej Zolnierkiewicz wrote:
-> * Tell IDE layer to not manage resources by setting
->   hwif->mmio flag and request resources in falconide_init().
-> 
-> * Use request_mem_region() for resources reservation.
-> 
-> * Use driver name for resources reservation.
-> 
-> Cc: Geert Uytterhoeven <geert@linux-m68k.org>
-> Cc: Michael Schmitz <schmitz@debian.org>
-> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-> ---
->  drivers/ide/legacy/falconide.c |    7 +++++++
->  1 file changed, 7 insertions(+)
-> 
-> Index: b/drivers/ide/legacy/falconide.c
-> ===================================================================
-> --- a/drivers/ide/legacy/falconide.c
-> +++ b/drivers/ide/legacy/falconide.c
-> @@ -22,6 +22,7 @@
->  #include <asm/atariints.h>
->  #include <asm/atari_stdma.h>
->  
-> +#define DRV_NAME "falconide"
->  
->      /*
->       *  Base of the IDE interface
-> @@ -74,6 +75,11 @@ static int __init falconide_init(void)
->  
->  	printk(KERN_INFO "ide: Falcon IDE controller\n");
->  
-> +	if (!request_mem_region(ATA_HD_BASE, 0x40, DRV_NAME)) {
-> +		printk(KERN_ERR "%s: resources busy\n");
-                                 ^^
-Woops, missing parameter?
+Hello all,
 
-pr_error()?
+A bit of update to this issue.
 
-Gr{oetje,eeting}s,
+Switching the cabling of the most problematic drive with a new one =20
+didn't fix the issue.
+I couldn't yet switch the power supply with a more powerful one. =20
+However I temporarily added a pci-e SATA host and another drive, the =20
+situation was just as bad, not worse ;-) This HBA just had 2 ports, =20
+so I couldn't swap it completely with the nvidia ports.
 
-						Geert
+Just as a guess I added sata_nv.adma=3D0 and the problem completly =20
+disappeared for 4 weeks now. Removing it from cmdline just make it =20
+come back.
 
---
-Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
+Unfortunately I'm running xen on this host so I don't think adma =20
+patches if any may be suitable to me, at least as long as something > =20
+2.6.20 doesn't come in gentoo for xen...
 
-In personal conversations with technical people, I call myself a hacker. But
-when I'm talking to journalists I just say "programmer" or something like that.
-							    -- Linus Torvalds
+Regards,
+
+GoM
+
+Le 9 janv. 08 =E0 01:00, Robert Hancock a =E9crit :
+
+>> So it seems to be either a cabling problem or a bug with sata_nv ? =20
+>> I'm running gentoo's 2.6.20-xen, and maybe my problem looks like =20
+>> the sata_nv/adma/samsung problems reports I can see on the net ?
+>
+> I don't think it's the same problem. In that case the controller =20
+> appears to indicate that it didn't even start processing the =20
+> command. In this case it's indicating that the command was sent to =20
+> the drive and is still waiting for it to indicate completion.
+>
+> It could be a cabling problem, yes. Also, are you sure your power =20
+> supply is able to handle the power draw of that many drives?
+
