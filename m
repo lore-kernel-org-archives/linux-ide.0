@@ -1,74 +1,47 @@
 From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH] libata: Register for dock events when the drive is	inside
- a dock station
-Date: Wed, 20 Feb 2008 12:11:32 -0500
-Message-ID: <47BC5F44.605@garzik.org>
-References: <20080214124048.GB9708@homac.suse.de> <20080214125615.GD9708@homac.suse.de>
+Subject: Re: [PATCH] ata: fix sparse warning in libata.h
+Date: Wed, 20 Feb 2008 12:12:55 -0500
+Message-ID: <47BC5F97.6070800@garzik.org>
+References: <1203016578.2748.69.camel@brick>	 <20080215223250.0f229dbe@weinigel.se> <1203111692.15275.50.camel@brick>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:56954 "EHLO mail.dvmed.net"
+Received: from srv5.dvmed.net ([207.36.208.214]:56990 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933517AbYBTRLe (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 20 Feb 2008 12:11:34 -0500
-In-Reply-To: <20080214125615.GD9708@homac.suse.de>
+	id S1764772AbYBTRNC (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 20 Feb 2008 12:13:02 -0500
+In-Reply-To: <1203111692.15275.50.camel@brick>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Tejun Heo <htejun@gmail.com>, Kristen Carlson Accardi <kristen.c.accardi@intel.com>
+To: Harvey Harrison <harvey.harrison@gmail.com>
+Cc: Christer Weinigel <christer@weinigel.se>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Andrew Morton <akpm@linux-foundation.org>, linux-ide <linux-ide@vger.kernel.org>
 
-Holger Macht wrote:
-> On Thu 14. Feb - 13:40:48, Holger Macht wrote:
->> If a device/bay is inside a docking station, we need to register for dock
->> events additionally to bay events. If a dock event occurs, the dock driver
->> will call the appropriate handler (ata_acpi_ap_notify() or
->> ata_acpi_dev_notify()) for us.
->>
->> Signed-off-by: Holger Macht <hmacht@suse.de>
+Harvey Harrison wrote:
+> Avoids lots of these, also is more readable.
+> include/linux/libata.h:1210:13: warning: potentially expensive pointer subtraction
 > 
-> Updated patch which only includes the dock specific function if the dock
-> driver is actually compiled.
+> Change the subtraction to addition on the other side of the comparison.
 > 
-> Signed-off-by: Holger Macht <hmacht@suse.de>
+> Thanks to Christer Weinigel for the suggestion.
+> 
+> Signed-off-by: Harvey Harrison <harvey.harrison@gmail.com>
 > ---
+>  include/linux/libata.h |    2 +-
+>  1 files changed, 1 insertions(+), 1 deletions(-)
 > 
-> diff --git a/drivers/ata/libata-acpi.c b/drivers/ata/libata-acpi.c
-> index 9e8ec19..5f16055 100644
-> --- a/drivers/ata/libata-acpi.c
-> +++ b/drivers/ata/libata-acpi.c
-> @@ -191,20 +191,33 @@ void ata_acpi_associate(struct ata_host *host)
->  		else
->  			ata_acpi_associate_ide_port(ap);
+> diff --git a/include/linux/libata.h b/include/linux/libata.h
+> index bc5a8d0..a6243bb 100644
+> --- a/include/linux/libata.h
+> +++ b/include/linux/libata.h
+> @@ -1207,7 +1207,7 @@ static inline struct ata_link *ata_port_next_link(struct ata_link *link)
+>  		return ap->pmp_link;
+>  	}
 >  
-> -		if (ap->acpi_handle)
-> +		if (ap->acpi_handle) {
->  			acpi_install_notify_handler (ap->acpi_handle,
->  						     ACPI_SYSTEM_NOTIFY,
->  						     ata_acpi_ap_notify,
->  						     ap);
-> +#ifdef CONFIG_ACPI_DOCK
-> +			/* we might be on a docking station */
-> +			register_hotplug_dock_device(ap->acpi_handle,
-> +						     ata_acpi_ap_notify, ap);
-> +#endif
-> +		}
->  
->  		for (j = 0; j < ata_link_max_devices(&ap->link); j++) {
->  			struct ata_device *dev = &ap->link.device[j];
->  
-> -			if (dev->acpi_handle)
-> +			if (dev->acpi_handle) {
->  				acpi_install_notify_handler (dev->acpi_handle,
->  							     ACPI_SYSTEM_NOTIFY,
->  							     ata_acpi_dev_notify,
->  							     dev);
-> +#ifdef CONFIG_ACPI_DOCK
-> +				/* we might be on a docking station */
-> +				register_hotplug_dock_device(ap->acpi_handle,
-> +							     ata_acpi_dev_notify,
-> +							     ap);
-> +#endif
+> -	if (++link - ap->pmp_link < ap->nr_pmp_links)
+> +	if (++link < ap->nr_pmp_links + ap->pmp_link)
+>  		return link;
 
-CONFIG_ACPI_DOCK is a tristate, so you might have CONFIG_ACPI_DOCK_MODULE...
+applied
 
 
