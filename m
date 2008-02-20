@@ -1,98 +1,82 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [PATCH] ide-generic: Fix no initalization of idx in some case
-Date: Wed, 20 Feb 2008 15:35:18 +0100
-Message-ID: <200802201535.18288.bzolnier@gmail.com>
-References: <1203515735.26116.4.camel@localhost>
+Subject: Re: [BUG] next-20080219 -  ide oops while bootup at ide_device_add_all ()
+Date: Wed, 20 Feb 2008 15:32:01 +0100
+Message-ID: <200802201532.01616.bzolnier@gmail.com>
+References: <47BBA2D6.7020909@linux.vnet.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
-  charset="utf-8"
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.189]:15179 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754941AbYBTOXL (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 20 Feb 2008 09:23:11 -0500
-Received: by nf-out-0910.google.com with SMTP id g13so804634nfb.21
-        for <linux-ide@vger.kernel.org>; Wed, 20 Feb 2008 06:23:10 -0800 (PST)
-In-Reply-To: <1203515735.26116.4.camel@localhost>
+Received: from an-out-0708.google.com ([209.85.132.248]:34098 "EHLO
+	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756052AbYBTOXI (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 20 Feb 2008 09:23:08 -0500
+Received: by an-out-0708.google.com with SMTP id d31so629305and.103
+        for <linux-ide@vger.kernel.org>; Wed, 20 Feb 2008 06:23:07 -0800 (PST)
+In-Reply-To: <47BBA2D6.7020909@linux.vnet.ibm.com>
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Johann Felix Soden <johfel@gmx.de>
-Cc: Sergei Shtylyov <sshtylyov@ru.mvista.com>, Kamalesh Babulal <kamalesh@linux.vnet.ibm.com>, linux-ide@vger.kernel.org
+To: Kamalesh Babulal <kamalesh@linux.vnet.ibm.com>
+Cc: kernel list <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, sfr@canb.auug.org.au, Andy Whitcroft <apw@shadowen.org>
 
-On Wednesday 20 February 2008, Johann Felix Soden wrote:
-> From: Johann Felix Soden <johfel@users.sourceforge.net>
+
+Hi,
+
+On Wednesday 20 February 2008, Kamalesh Babulal wrote:
+> Hi, 
 > 
-> If the slot is already occupied, there should be written 0xff to idx[i].
-> In the ongoing code and in this case there are no writings to idx[i], so
-> garbage stays in idx. The kernel get into a endless loop printing:
+> The next-20080219 kernel oops while booting up on x86_64 box. This bug
+> was fixed in the 2.6.24-git(s) with the patch posted at
+> http://lkml.org/lkml/2008/2/11/350 
 > 
-> : I/O resource 0x0-0x0 not free.
-> Trying to free nonexistent resource <0000000000000000-0000000000000000>
-> Trying to free nonexistent resource <0000000000000000-0000000000000000>
+> ide0 at 0x1f0-0x1f7,0x3f6 on irq 14
+> BUG: unable to handle kernel paging request at ffffffff80a37b8d
+> IP: [<ffffffff8039470a>] ide_device_add_all+0x1a5/0x517
+> PGD 203067 PUD 207063 PMD 0 
+> Oops: 0000 [1] SMP 
+> last sysfs file: 
+> CPU 1 
+> Modules linked in:
+> Pid: 1, comm: swapper Not tainted 2.6.25-rc2-autotest-next-20080219 #1
+> RIP: 0010:[<ffffffff8039470a>]  [<ffffffff8039470a>] ide_device_add_all+0x1a5/0x517
+> RSP: 0000:ffff8101e7125db0  EFLAGS: 00010206
+> RAX: 00000000000a8000 RBX: 0000000000000009 RCX: 0000000000000009
+> RDX: ffff8101e7125e60 RSI: 0000000000000000 RDI: ffff8101e7125e60
+> RBP: 0000000000000000 R08: 0000000000000000 R09: ffff8101e68de870
+> R10: 0000000000000177 R11: 0000000000000174 R12: ffffffff80990080
+> R13: 0000000000000000 R14: 000000000000000a R15: 0000000000000000
+> FS:  0000000000000000(0000) GS:ffff8101e710d740(0000) knlGS:0000000000000000
+> CS:  0010 DS: 0018 ES: 0018 CR0: 000000008005003b
+> CR2: ffffffff80a37b8d CR3: 0000000000201000 CR4: 00000000000006e0
+> DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+> DR3: 0000000000000000 DR6: 00000000ffff0ff0 DR7: 0000000000000400
+> Process swapper (pid: 1, threadinfo ffff8101e7124000, task ffff8101e7123200)
+> Stack:  ffff8101e7125e60 0000000000000009 00000000000001f0 ffffffff80990080
+>  0000000000000001 000000000000000a 0000000000000000 ffffffff8088d725
+>  0000000000000170 0000000000000171 0000000000000172 0000000000000173
+> Call Trace:
+>  [<ffffffff8088d725>] ide_generic_init+0x169/0x1d8
+>  [<ffffffff808706f7>] kernel_init+0x17d/0x2e9
+>  [<ffffffff8020cc78>] child_rip+0xa/0x12
+>  [<ffffffff8087057a>] kernel_init+0x0/0x2e9
+>  [<ffffffff8020cc6e>] child_rip+0x0/0x12
 > 
-> This patch solves http://article.gmane.org/gmane.linux.ide/28810 .
 > 
-> Signed-off-by: Johann Felix Soden <johfel@users.sourceforge.net>
-> CC: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+> Code: 49 ff c5 49 83 fe 0a 0f 85 97 fe ff ff 45 31 ed 48 8b 14 24 41 8a 44 15 00 3c ff 0f 84 4d 01 00 00 0f b6 c0 48 69 c0 00 0c 00 00 <80> b8 8d fb 98 80 0d 48 8d 98 80 f4 98 80 75 15 48 8b 80 88 f4 
+> RIP  [<ffffffff8039470a>] ide_device_add_all+0x1a5/0x517
+>  RSP <ffff8101e7125db0>
+> CR2: ffffffff80a37b8d
+> ---[ end trace 31f82065a26d65bf ]---
+> Kernel panic - not syncing: Attempted to kill init!
 
-Thanks!  I integrated it with the original patch to preserve bisectability:
+This is fixed now (thanks to Johann Felix Soden).
 
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH] ide-generic: use ide_find_port() (take 3)
+http://marc.info/?l=linux-ide&m=120351576111554&w=2
 
-There should be no functional changes caused by this patch.
+[ actually this bug is a good thing because it is clear now that people
+  are actively testing linux-next ;-) ]
 
-v2:
-* Fix comment (noticed by Sergei Shtylyov).
-
-v3:
-* Fix no initalization of idx in some case. (Johann Felix Soden)
-
-Cc: Johann Felix Soden <johfel@users.sourceforge.net>
-Cc: Kamalesh Babulal <kamalesh@linux.vnet.ibm.com>
-Cc: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
----
- drivers/ide/ide-generic.c |   19 +++++++++++++++----
- 1 file changed, 15 insertions(+), 4 deletions(-)
-
-Index: b/drivers/ide/ide-generic.c
-===================================================================
---- a/drivers/ide/ide-generic.c
-+++ b/drivers/ide/ide-generic.c
-@@ -90,18 +90,29 @@ static int __init ide_generic_init(void)
- 	int i;
- 
- 	for (i = 0; i < MAX_HWIFS; i++) {
--		ide_hwif_t *hwif = &ide_hwifs[i];
-+		ide_hwif_t *hwif;
- 		unsigned long io_addr = ide_default_io_base(i);
- 		hw_regs_t hw;
- 
--		if (hwif->chipset == ide_unknown && io_addr) {
--			u8 oldnoprobe = hwif->noprobe;
-+		if (io_addr) {
-+			u8 oldnoprobe;
-+
-+			/*
-+			 * Skip probing if the corresponding
-+			 * slot is already occupied.
-+			 */
-+			hwif = ide_find_port();
-+			if (hwif == NULL || hwif->index != i) {
-+				idx[i] = 0xff;
-+				continue;
-+			}
- 
- 			memset(&hw, 0, sizeof(hw));
- 			ide_std_init_ports(&hw, io_addr, io_addr + 0x206);
- 			hw.irq = ide_default_irq(io_addr);
--			ide_init_port_hw(hwif, &hw);
- 
-+			oldnoprobe = hwif->noprobe;
-+			ide_init_port_hw(hwif, &hw);
- 			hwif->noprobe = oldnoprobe;
- 
- 			idx[i] = i;
+Thanks,
+Bart
