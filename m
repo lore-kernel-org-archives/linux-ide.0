@@ -1,68 +1,66 @@
-From: Kamalesh Babulal <kamalesh@linux.vnet.ibm.com>
-Subject: [BUG] next-20080219 -  ide oops while bootup at ide_device_add_all
- ()
-Date: Wed, 20 Feb 2008 09:17:34 +0530
-Message-ID: <47BBA2D6.7020909@linux.vnet.ibm.com>
+From: Geert Uytterhoeven <geert@linux-m68k.org>
+Subject: Re: [PATCH] falconide: fix resources reservation
+Date: Wed, 20 Feb 2008 10:40:59 +0100 (CET)
+Message-ID: <Pine.LNX.4.64.0802201039520.19893@vixen.sonytel.be>
+References: <200802200150.26989.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from e28smtp03.in.ibm.com ([59.145.155.3]:53665 "EHLO
-	e28esmtp03.in.ibm.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751288AbYBTDrh (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 19 Feb 2008 22:47:37 -0500
+Received: from vervifontaine.sonytel.be ([80.88.33.193]:47970 "EHLO
+	vervifontaine.sonycom.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1756351AbYBTJlE (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 20 Feb 2008 04:41:04 -0500
+In-Reply-To: <200802200150.26989.bzolnier@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: kernel list <linux-kernel@vger.kernel.org>
-Cc: linux-ide@vger.kernel.org, bzolnier@gmail.com, sfr@canb.auug.org.au, Andy Whitcroft <apw@shadowen.org>
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: linux-ide@vger.kernel.org, Linux Kernel Development <linux-kernel@vger.kernel.org>, Michael Schmitz <schmitz@debian.org>
 
-Hi, 
+On Wed, 20 Feb 2008, Bartlomiej Zolnierkiewicz wrote:
+> * Tell IDE layer to not manage resources by setting
+>   hwif->mmio flag and request resources in falconide_init().
+> 
+> * Use request_mem_region() for resources reservation.
+> 
+> * Use driver name for resources reservation.
+> 
+> Cc: Geert Uytterhoeven <geert@linux-m68k.org>
+> Cc: Michael Schmitz <schmitz@debian.org>
+> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+> ---
+>  drivers/ide/legacy/falconide.c |    7 +++++++
+>  1 file changed, 7 insertions(+)
+> 
+> Index: b/drivers/ide/legacy/falconide.c
+> ===================================================================
+> --- a/drivers/ide/legacy/falconide.c
+> +++ b/drivers/ide/legacy/falconide.c
+> @@ -22,6 +22,7 @@
+>  #include <asm/atariints.h>
+>  #include <asm/atari_stdma.h>
+>  
+> +#define DRV_NAME "falconide"
+>  
+>      /*
+>       *  Base of the IDE interface
+> @@ -74,6 +75,11 @@ static int __init falconide_init(void)
+>  
+>  	printk(KERN_INFO "ide: Falcon IDE controller\n");
+>  
+> +	if (!request_mem_region(ATA_HD_BASE, 0x40, DRV_NAME)) {
+> +		printk(KERN_ERR "%s: resources busy\n");
+                                 ^^
+Woops, missing parameter?
 
-The next-20080219 kernel oops while booting up on x86_64 box. This bug
-was fixed in the 2.6.24-git(s) with the patch posted at
-http://lkml.org/lkml/2008/2/11/350 
+pr_error()?
 
-ide0 at 0x1f0-0x1f7,0x3f6 on irq 14
-BUG: unable to handle kernel paging request at ffffffff80a37b8d
-IP: [<ffffffff8039470a>] ide_device_add_all+0x1a5/0x517
-PGD 203067 PUD 207063 PMD 0 
-Oops: 0000 [1] SMP 
-last sysfs file: 
-CPU 1 
-Modules linked in:
-Pid: 1, comm: swapper Not tainted 2.6.25-rc2-autotest-next-20080219 #1
-RIP: 0010:[<ffffffff8039470a>]  [<ffffffff8039470a>] ide_device_add_all+0x1a5/0x517
-RSP: 0000:ffff8101e7125db0  EFLAGS: 00010206
-RAX: 00000000000a8000 RBX: 0000000000000009 RCX: 0000000000000009
-RDX: ffff8101e7125e60 RSI: 0000000000000000 RDI: ffff8101e7125e60
-RBP: 0000000000000000 R08: 0000000000000000 R09: ffff8101e68de870
-R10: 0000000000000177 R11: 0000000000000174 R12: ffffffff80990080
-R13: 0000000000000000 R14: 000000000000000a R15: 0000000000000000
-FS:  0000000000000000(0000) GS:ffff8101e710d740(0000) knlGS:0000000000000000
-CS:  0010 DS: 0018 ES: 0018 CR0: 000000008005003b
-CR2: ffffffff80a37b8d CR3: 0000000000201000 CR4: 00000000000006e0
-DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
-DR3: 0000000000000000 DR6: 00000000ffff0ff0 DR7: 0000000000000400
-Process swapper (pid: 1, threadinfo ffff8101e7124000, task ffff8101e7123200)
-Stack:  ffff8101e7125e60 0000000000000009 00000000000001f0 ffffffff80990080
- 0000000000000001 000000000000000a 0000000000000000 ffffffff8088d725
- 0000000000000170 0000000000000171 0000000000000172 0000000000000173
-Call Trace:
- [<ffffffff8088d725>] ide_generic_init+0x169/0x1d8
- [<ffffffff808706f7>] kernel_init+0x17d/0x2e9
- [<ffffffff8020cc78>] child_rip+0xa/0x12
- [<ffffffff8087057a>] kernel_init+0x0/0x2e9
- [<ffffffff8020cc6e>] child_rip+0x0/0x12
+Gr{oetje,eeting}s,
 
+						Geert
 
-Code: 49 ff c5 49 83 fe 0a 0f 85 97 fe ff ff 45 31 ed 48 8b 14 24 41 8a 44 15 00 3c ff 0f 84 4d 01 00 00 0f b6 c0 48 69 c0 00 0c 00 00 <80> b8 8d fb 98 80 0d 48 8d 98 80 f4 98 80 75 15 48 8b 80 88 f4 
-RIP  [<ffffffff8039470a>] ide_device_add_all+0x1a5/0x517
- RSP <ffff8101e7125db0>
-CR2: ffffffff80a37b8d
----[ end trace 31f82065a26d65bf ]---
-Kernel panic - not syncing: Attempted to kill init!
--- 
-Thanks & Regards,
-Kamalesh Babulal,
-Linux Technology Center,
-IBM, ISTL.
+--
+Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
+
+In personal conversations with technical people, I call myself a hacker. But
+when I'm talking to journalists I just say "programmer" or something like that.
+							    -- Linus Torvalds
