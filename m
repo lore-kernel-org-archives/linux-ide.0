@@ -1,35 +1,65 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCH] sata_mv: remove iounmap in mv_platform_remove and use
- devm_iomap
-Date: Wed, 20 Feb 2008 08:25:00 +0900
-Message-ID: <47BB654C.10103@gmail.com>
-References: <12033601481951-git-send-email-saeed@marvell.com> <47B9D534.3090902@rtr.ca>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: [PATCH] delkin_cb: fix resources handling
+Date: Wed, 20 Feb 2008 01:46:24 +0100
+Message-ID: <200802200146.24248.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wr-out-0506.google.com ([64.233.184.228]:58315 "EHLO
-	wr-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752436AbYBSXZJ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 19 Feb 2008 18:25:09 -0500
-Received: by wr-out-0506.google.com with SMTP id c48so2307527wra.23
-        for <linux-ide@vger.kernel.org>; Tue, 19 Feb 2008 15:25:07 -0800 (PST)
-In-Reply-To: <47B9D534.3090902@rtr.ca>
+Received: from fk-out-0910.google.com ([209.85.128.190]:37570 "EHLO
+	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755489AbYBTAg3 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 19 Feb 2008 19:36:29 -0500
+Received: by fk-out-0910.google.com with SMTP id z23so2708602fkz.5
+        for <linux-ide@vger.kernel.org>; Tue, 19 Feb 2008 16:36:27 -0800 (PST)
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark Lord <liml@rtr.ca>
-Cc: Saeed Bishara <saeed@marvell.com>, jeff@garzik.org, mlord@pobox.com, linux-ide@vger.kernel.org, saeed.bishara@gmail.com, byron.bbradley@gmail.com, tbm@cyrius.com
+To: linux-ide@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, Mark Lord <mlord@pobox.com>
 
-Mark Lord wrote:
-> Saeed Bishara wrote:
->> this will fix crash bug when doing rmmod to the driver, this is
->> because the
->> port_stop function get called later and it could access the device's
->> registers.
->>
->> Signed-off-by: Saeed Bishara <saeed@marvell.com>
+Tell IDE layer to not manage resources by setting hwif->mmio flag.
 
-Acked-by: Tejun Heo <htejun@gmail.com>
+Cc: Mark Lord <mlord@pobox.com>
+Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+---
+ drivers/ide/pci/delkin_cb.c |    4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
--- 
-tejun
+Index: b/drivers/ide/pci/delkin_cb.c
+===================================================================
+--- a/drivers/ide/pci/delkin_cb.c
++++ b/drivers/ide/pci/delkin_cb.c
+@@ -71,7 +71,6 @@ delkin_cb_probe (struct pci_dev *dev, co
+ 		if (setup[i])
+ 			outb(setup[i], base + i);
+ 	}
+-	pci_release_regions(dev);	/* IDE layer handles regions itself */
+ 
+ 	memset(&hw, 0, sizeof(hw));
+ 	ide_std_init_ports(&hw, base + 0x10, base + 0x1e);
+@@ -90,6 +89,7 @@ delkin_cb_probe (struct pci_dev *dev, co
+ 		ide_init_port_data(hwif, i);
+ 
+ 	ide_init_port_hw(hwif, &hw);
++	hwif->mmio = 1;
+ 	hwif->quirkproc = &ide_undecoded_slave;
+ 
+ 	idx[0] = i;
+@@ -110,6 +110,7 @@ delkin_cb_probe (struct pci_dev *dev, co
+ 
+ out_disable:
+ 	printk(KERN_ERR "delkin_cb: no IDE devices found\n");
++	pci_release_regions(dev);
+ 	pci_disable_device(dev);
+ 	return -ENODEV;
+ }
+@@ -122,6 +123,7 @@ delkin_cb_remove (struct pci_dev *dev)
+ 	if (hwif)
+ 		ide_unregister(hwif->index);
+ 
++	pci_release_regions(dev);
+ 	pci_disable_device(dev);
+ }
+ 
