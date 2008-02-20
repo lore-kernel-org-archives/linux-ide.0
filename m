@@ -1,102 +1,108 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: [PATCH RFC] libata-core: do something about flush cache
-Date: Wed, 20 Feb 2008 21:45:08 +0000
-Message-ID: <20080220214508.5aed05d9@core>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: [PATCH] ide: remove hwif->straight8 flag
+Date: Thu, 21 Feb 2008 00:44:21 +0100
+Message-ID: <200802210044.21205.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:41976 "EHLO
-	lxorguk.ukuu.org.uk" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1757499AbYBTVyL (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 20 Feb 2008 16:54:11 -0500
+Received: from fk-out-0910.google.com ([209.85.128.187]:17467 "EHLO
+	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751921AbYBTXaf (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 20 Feb 2008 18:30:35 -0500
+Received: by fk-out-0910.google.com with SMTP id z23so3166722fkz.5
+        for <linux-ide@vger.kernel.org>; Wed, 20 Feb 2008 15:30:34 -0800 (PST)
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: jeff@garzik.org, linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
 
-The IDE layers assume a failed flush cache is a simple error, but it is
-actually far more complicated. The spec says that an error is returned by
-flush cache if a sector cannot be committed to disc. In that case the
-failed sector is dropped from cache and the command reports the bad
-sector. It does *not* automatically flush other sectors. Instead we must
-re-issue the flush.
+All host drivers now either set hwif->mmio or reserve continuous
+I/O resources so remove no longer needed hwif->straight8 flag
+and never reached code for 'hwif->straight8 == 0' case.
 
-Signed-off-by: Alan Cox <alan@redhat.com>
+Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+---
+ drivers/ide/ide.c   |   36 +++++++++++-------------------------
+ include/linux/ide.h |    1 -
+ 2 files changed, 11 insertions(+), 26 deletions(-)
 
-diff -u --new-file --recursive --exclude-from /usr/src/exclude linux.vanilla-2.6.25-rc2-mm1/drivers/ata/libata-core.c linux-2.6.25-rc2-mm1/drivers/ata/libata-core.c
---- linux.vanilla-2.6.25-rc2-mm1/drivers/ata/libata-core.c	2008-02-19 11:03:26.000000000 +0000
-+++ linux-2.6.25-rc2-mm1/drivers/ata/libata-core.c	2008-02-20 11:56:25.000000000 +0000
-@@ -6477,10 +6477,30 @@
- 	return 0;
- }
- 
-+static void ata_flush_cache_error(u8 cmd, struct ata_device *dev,
-+						struct ata_taskfile *tf)
-+{
-+	char *df = "";
-+	u64 lba;
-+
-+	if (tf->command & ATA_DF)
-+		df = " (device fault)";
-+
-+	if (cmd == ATA_CMD_FLUSH)
-+		lba = ata_tf_to_lba(tf);
-+	else
-+		lba = ata_tf_to_lba48(tf);
-+	
-+	ata_dev_printk(dev, KERN_WARNING, "flush of sector %lld failed%s.\n",
-+				lba, df);
-+}
-+
- int ata_flush_cache(struct ata_device *dev)
+Index: b/drivers/ide/ide.c
+===================================================================
+--- a/drivers/ide/ide.c
++++ b/drivers/ide/ide.c
+@@ -253,29 +253,21 @@ static struct resource* hwif_request_reg
+ int ide_hwif_request_regions(ide_hwif_t *hwif)
  {
- 	unsigned int err_mask;
- 	u8 cmd;
-+	struct ata_taskfile tf;
-+	int i;
+ 	unsigned long addr;
+-	unsigned int i;
  
- 	if (!ata_try_flush_cache(dev))
+ 	if (hwif->mmio)
  		return 0;
-@@ -6490,17 +6510,32 @@
- 	else
- 		cmd = ATA_CMD_FLUSH;
- 
--	/* This is wrong. On a failed flush we get back the LBA of the lost
--	   sector and we should (assuming it wasn't aborted as unknown) issue
--	   a further flush command to continue the writeback until it
--	   does not error */
--	err_mask = ata_do_simple_cmd(dev, cmd);
--	if (err_mask) {
--		ata_dev_printk(dev, KERN_ERR, "failed to flush cache\n");
--		return -EIO;
--	}
-+	/* 20 failed flush sectors and we abandon hope. This is a heuristic
-+	   we can twiddle later */
-+	for (i = 0; i < 20; i++) {
-+		ata_tf_init(dev, &tf);
-+		tf.command = cmd;
-+		tf.flags |= ATA_TFLAG_DEVICE;
-+		tf.protocol = ATA_PROT_NODATA;
- 
--	return 0;
-+		err_mask = ata_exec_internal(dev, &tf, NULL, DMA_NONE, NULL, 0, 0);
 +
-+		/* Flush completed without further errors */
-+		if (err_mask == 0)
-+			return 0;
-+		/* Non device errors cannot be fixed by a retry at this
-+		   level of the system */
-+		if (err_mask != AC_ERR_DEV) {
-+			ata_dev_printk(dev, KERN_ERR, "cache flush failed.\n");
-+			return -EIO;
-+		}
-+		/* On a media error the bad block is reported and the flush
-+		   stops. It will continue from after this sector when we
-+		   reissue the command */
-+		ata_flush_cache_error(cmd, dev, &tf);
-+	}
-+	ata_dev_printk(dev, KERN_ERR, "cache flush repeatedly failed.\n");
-+	return -EIO;
+ 	addr = hwif->io_ports[IDE_CONTROL_OFFSET];
++
+ 	if (addr && !hwif_request_region(hwif, addr, 1))
+ 		goto control_region_busy;
+-	hwif->straight8 = 0;
++
+ 	addr = hwif->io_ports[IDE_DATA_OFFSET];
+-	if ((addr | 7) == hwif->io_ports[IDE_STATUS_OFFSET]) {
+-		if (!hwif_request_region(hwif, addr, 8))
+-			goto data_region_busy;
+-		hwif->straight8 = 1;
+-		return 0;
+-	}
+-	for (i = IDE_DATA_OFFSET; i <= IDE_STATUS_OFFSET; i++) {
+-		addr = hwif->io_ports[i];
+-		if (!hwif_request_region(hwif, addr, 1)) {
+-			while (--i)
+-				release_region(addr, 1);
+-			goto data_region_busy;
+-		}
+-	}
++	BUG_ON((addr | 7) != hwif->io_ports[IDE_STATUS_OFFSET]);
++
++	if (!hwif_request_region(hwif, addr, 8))
++		goto data_region_busy;
++
+ 	return 0;
+ 
+ data_region_busy:
+@@ -301,19 +293,13 @@ control_region_busy:
+ 
+ void ide_hwif_release_regions(ide_hwif_t *hwif)
+ {
+-	u32 i = 0;
+-
+ 	if (hwif->mmio)
+ 		return;
++
+ 	if (hwif->io_ports[IDE_CONTROL_OFFSET])
+ 		release_region(hwif->io_ports[IDE_CONTROL_OFFSET], 1);
+-	if (hwif->straight8) {
+-		release_region(hwif->io_ports[IDE_DATA_OFFSET], 8);
+-		return;
+-	}
+-	for (i = IDE_DATA_OFFSET; i <= IDE_STATUS_OFFSET; i++)
+-		if (hwif->io_ports[i])
+-			release_region(hwif->io_ports[i], 1);
++
++	release_region(hwif->io_ports[IDE_DATA_OFFSET], 8);
  }
  
- #ifdef CONFIG_PM
+ void ide_remove_port_from_hwgroup(ide_hwif_t *hwif)
+Index: b/include/linux/ide.h
+===================================================================
+--- a/include/linux/ide.h
++++ b/include/linux/ide.h
+@@ -524,7 +524,6 @@ typedef struct hwif_s {
+ 	unsigned	reset      : 1;	/* reset after probe */
+ 	unsigned	sg_mapped  : 1;	/* sg_table and sg_nents are ready */
+ 	unsigned	mmio       : 1; /* host uses MMIO */
+-	unsigned	straight8  : 1;	/* Alan's straight 8 check */
+ 
+ 	struct device		gendev;
+ 	struct class_device	classdev;
