@@ -1,69 +1,112 @@
-From: Mark Lord <mlord@pobox.com>
-Subject: Re: What's needed for PMP support?
-Date: Wed, 20 Feb 2008 14:03:43 -0500
-Message-ID: <47BC798F.6070900@pobox.com>
-References: <4730E312.3090900@navy.mil> <4737C16E.3070607@gmail.com>
- <4738827D.9060405@pobox.com> <4738F935.1000708@gmail.com>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: [PATCH] falconide: fix resources reservation
+Date: Wed, 20 Feb 2008 21:03:09 +0100
+Message-ID: <200802202103.09560.bzolnier@gmail.com>
+References: <200802200150.26989.bzolnier@gmail.com> <Pine.LNX.4.64.0802201039520.19893@vixen.sonytel.be>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rune.pobox.com ([208.210.124.79]:45509 "EHLO rune.pobox.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750785AbYBTTDt (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 20 Feb 2008 14:03:49 -0500
-In-Reply-To: <4738F935.1000708@gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S932361AbYBTTt3@vger.kernel.org>
+In-Reply-To: <Pine.LNX.4.64.0802201039520.19893@vixen.sonytel.be>
+Content-Disposition: inline
+Sender: linux-kernel-owner@vger.kernel.org
+To: Geert Uytterhoeven <geert@linux-m68k.org>
+Cc: linux-ide@vger.kernel.org, Linux Kernel Development <linux-kernel@vger.kernel.org>, Michael Schmitz <schmitz@debian.org>
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: IDE/ATA development list <linux-ide@vger.kernel.org>
 
-Tejun Heo wrote:
->
-> The following things are needed for a LLD to support PMP.
-..
-> I think that's about it.  Feel free to ask if something isn't clear.
-..
+On Wednesday 20 February 2008, Geert Uytterhoeven wrote:
+> On Wed, 20 Feb 2008, Bartlomiej Zolnierkiewicz wrote:
+> > * Tell IDE layer to not manage resources by setting
+> >   hwif->mmio flag and request resources in falconide_init().
+> > 
+> > * Use request_mem_region() for resources reservation.
+> > 
+> > * Use driver name for resources reservation.
+> > 
+> > Cc: Geert Uytterhoeven <geert@linux-m68k.org>
+> > Cc: Michael Schmitz <schmitz@debian.org>
+> > Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+> > ---
+> >  drivers/ide/legacy/falconide.c |    7 +++++++
+> >  1 file changed, 7 insertions(+)
+> > 
+> > Index: b/drivers/ide/legacy/falconide.c
+> > ===================================================================
+> > --- a/drivers/ide/legacy/falconide.c
+> > +++ b/drivers/ide/legacy/falconide.c
+> > @@ -22,6 +22,7 @@
+> >  #include <asm/atariints.h>
+> >  #include <asm/atari_stdma.h>
+> >  
+> > +#define DRV_NAME "falconide"
+> >  
+> >      /*
+> >       *  Base of the IDE interface
+> > @@ -74,6 +75,11 @@ static int __init falconide_init(void)
+> >  
+> >  	printk(KERN_INFO "ide: Falcon IDE controller\n");
+> >  
+> > +	if (!request_mem_region(ATA_HD_BASE, 0x40, DRV_NAME)) {
+> > +		printk(KERN_ERR "%s: resources busy\n");
+>                                  ^^
+> Woops, missing parameter?
 
-Tejun, I've added PMP to sata_mv, and am now trying to get it
-to work with a Marvell PM attached.
+thanks, fixed
 
-And the behaviour I see is very bizarre.
+> pr_error()?
 
-After hard+soft resets, the PM signature is found,
-and libata interrogates the PM registers.
+dunno...
 
-It successfully reads register 0, and then register 1.
-But all subsequent registers read out (incorrectly) as zeros.
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: [PATCH] falconide: fix resources reservation (take 2)
 
-I've traced the taskfiles in/out, and it all looks proper
-except for the actual data coming back from the PM.
+* Tell IDE layer to not manage resources by setting
+  hwif->mmio flag and request resources in falconide_init().
 
-After some experimentation, I found that all of the PM registers
-were readable, if I simple inserted a  sata_pmp_read(link, 0, &junk)
-in front of each issue of sata_pmp_read(link, reg, &r_val).
+* Use request_mem_region() for resources reservation.
 
-Then the PM is recognized and all, but fails port enumerations
-probably due to either my hack or the same original bug (whatever that is?)
+* Use driver name for resources reservation.
 
-I'm confused.
+v2:
+* Fix missing printk() parameter. (Noticed by Geert Uytterhoeven)
 
-The PM itself works fine here on sata_sil24 and AHCI(jmicron),
-so it's obviously the sata_mv driver or chipset that's being weird.
+Cc: Geert Uytterhoeven <geert@linux-m68k.org>
+Cc: Michael Schmitz <schmitz@debian.org>
+Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+---
+ drivers/ide/legacy/falconide.c |    7 +++++++
+ 1 file changed, 7 insertions(+)
 
-Ever seen anything like this before?
-I'm trying to use stock libata functions for all of this where possible,
-so there's not really that much new/necessary code in sata_mv for this.
-I do force the PMP value for outgoing-FIS's (non standard register for it),
-but that's about all that's custom here.
-
-The driver uses ATA register mode emulation for all commands
-other than READ/WRITE disk stuff, including for the PM register accesses.
-
-Ever seen anything like this before?
-
-Cheers
--- 
-Mark Lord
-Real-Time Remedies Inc.
-mlord@pobox.com
+Index: b/drivers/ide/legacy/falconide.c
+===================================================================
+--- a/drivers/ide/legacy/falconide.c
++++ b/drivers/ide/legacy/falconide.c
+@@ -22,6 +22,7 @@
+ #include <asm/atariints.h>
+ #include <asm/atari_stdma.h>
+ 
++#define DRV_NAME "falconide"
+ 
+     /*
+      *  Base of the IDE interface
+@@ -74,6 +75,11 @@ static int __init falconide_init(void)
+ 
+ 	printk(KERN_INFO "ide: Falcon IDE controller\n");
+ 
++	if (!request_mem_region(ATA_HD_BASE, 0x40, DRV_NAME)) {
++		printk(KERN_ERR "%s: resources busy\n", DRV_NAME);
++		return -EBUSY;
++	}
++
+ 	falconide_setup_ports(&hw);
+ 
+ 	hwif = ide_find_port();
+@@ -83,6 +89,7 @@ static int __init falconide_init(void)
+ 
+ 		ide_init_port_data(hwif, index);
+ 		ide_init_port_hw(hwif, &hw);
++		hwif->mmio = 1;
+ 
+ 		ide_get_lock(NULL, NULL);
+ 		ide_device_add(idx, NULL);
