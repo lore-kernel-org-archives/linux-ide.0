@@ -1,56 +1,34 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCH] scsi: align shost->hostdata to cacheline
-Date: Thu, 21 Feb 2008 11:32:50 +0900
-Message-ID: <47BCE2D2.5030506@gmail.com>
-References: <20080212180254.GA28237@postdiluvian.org>	 <20080212221257.12eeab13@core>	<20080213184702.GA13458@postdiluvian.org>	 <20080213202151.34b7e5bc@core>	<20080213212549.GA14732@postdiluvian.org>	 <20080214002135.065dd322@core> <47B3AFDC.5040605@gmail.com>	 <47B40E51.3060002@gmail.com>	 <1203001520.3189.11.camel@localhost.localdomain>	 <47B4C55F.1070806@gmail.com> <1203101837.3058.34.camel@localhost.localdomain>
+Subject: Re: Regression: kernel 2.6.24{,.1} ahci problem, does not boot (resend)
+Date: Thu, 21 Feb 2008 11:51:11 +0900
+Message-ID: <47BCE71F.2000309@gmail.com>
+References: <20080214184700.0bd3837d@highlander.home.lan>	<47B4D02E.9030101@gmail.com> <20080215191215.430ee2e0@highlander.home.lan>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rv-out-0910.google.com ([209.85.198.188]:50590 "EHLO
-	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750959AbYBUCc4 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 20 Feb 2008 21:32:56 -0500
-Received: by rv-out-0910.google.com with SMTP id k20so2095736rvb.1
-        for <linux-ide@vger.kernel.org>; Wed, 20 Feb 2008 18:32:56 -0800 (PST)
-In-Reply-To: <1203101837.3058.34.camel@localhost.localdomain>
+Received: from wf-out-1314.google.com ([209.85.200.175]:45770 "EHLO
+	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752168AbYBUCvV (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 20 Feb 2008 21:51:21 -0500
+Received: by wf-out-1314.google.com with SMTP id 28so806086wff.4
+        for <linux-ide@vger.kernel.org>; Wed, 20 Feb 2008 18:51:17 -0800 (PST)
+In-Reply-To: <20080215191215.430ee2e0@highlander.home.lan>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, Mark Mason <mason@postdiluvian.org>, linux-ide@vger.kernel.org, jgarzik@pobox.com, Jens Axboe <jens.axboe@oracle.com>
+To: =?UTF-8?B?TWFsdGUgU2NocsO2ZGVy?= <maltesch@gmx.de>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-James Bottomley wrote:
-> On Fri, 2008-02-15 at 07:49 +0900, Tejun Heo wrote:
->> James Bottomley wrote:
->>> On Thu, 2008-02-14 at 18:48 +0900, Tejun Heo wrote:
->>>> shost->hostdata can contain arbitrary data including DMA target
->>>> buffers.  Align it to cacheline.
->>>>
->>>> Signed-off-by: Tejun Heo <htejun@gmail.com>
->>>> ---
->>>> James, what do you think?
->>> Hmm, it will blow out the host size ... although that's not such a huge
->>> problem since there are relatively few of them in most running kernels.
->>> What's the actual use case for this, though?  The host structure is
->>> allocated in ordinary memory ... we don't make sure it's DMAable, and
->>> most HBAs that want to use memory for mailboxes need coherent memory
->>> anyway.
->> "As it can contain arbitrary structure, it should follow the largest
->> meaningful alignment to allow the contained structure proper alignment."
->> is the logic.  I think it's generally RTTD for inline private data but
->> feel free to disagree.
-> 
-> Well, the way we usually do that is to have the host float the alignment
-> if necessary.  The problem with relying on __cacheline_aligned for an
-> allocated structure is that it only works if the allocated structure
-> actually begins on a cacheline.  Kmalloc (which is where we get the host
-> from) doesn't necessarily obey this if certain slab debugging flags are
-> present.
+Malte Schr=C3=B6der wrote:
+>> Does irqpoll kernel parameter help?
+> =20
+> No, problem stays.
 
-Hmmm... Right.  That means libata either needs to create a separate slab
-for the sector buf or align it after allocating by itself.  Eeeek.
+Can you capture full boot log w/ irqpoll specified?  If you have root
+filesystem connected to ahci, you'll probably have to use serial or
+netconsole.  Also, please post full boot log from 2.6.23.11.
 
 Thanks.
 
--- 
+--=20
 tejun
