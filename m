@@ -1,284 +1,74 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH] ide: remove dead/obsolete ->busproc method
-Date: Thu, 21 Feb 2008 21:21:03 +0100
-Message-ID: <200802212121.03847.bzolnier@gmail.com>
+From: Mark Lord <liml@rtr.ca>
+Subject: [PATCH] libata-pmp: clear hob for pmp register accesses
+Date: Thu, 21 Feb 2008 15:52:25 -0500
+Message-ID: <47BDE489.6070701@rtr.ca>
+References: <4730E312.3090900@navy.mil> <4737C16E.3070607@gmail.com> <4738827D.9060405@pobox.com> <4738F935.1000708@gmail.com> <47BC798F.6070900@pobox.com> <47BCF28F.5080702@gmail.com> <47BD93BC.3080301@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.188]:8616 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758071AbYBUUI3 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 21 Feb 2008 15:08:29 -0500
-Received: by nf-out-0910.google.com with SMTP id g13so96463nfb.21
-        for <linux-ide@vger.kernel.org>; Thu, 21 Feb 2008 12:08:26 -0800 (PST)
-Content-Disposition: inline
+Received: from rtr.ca ([76.10.145.34]:1218 "EHLO mail.rtr.ca"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753303AbYBUUw1 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 21 Feb 2008 15:52:27 -0500
+In-Reply-To: <47BD93BC.3080301@pobox.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, Sergei Shtylyov <sshtylyov@ru.mvista.com>
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: Tejun Heo <htejun@gmail.com>, IDE/ATA development list <linux-ide@vger.kernel.org>, Saeed Bishara <saeed@marvell.com>
 
-->busproc method is used by HDIO_SET_BUSSTATE ioctl but it has no chance
-of working as intended (in 2.4.x days) because to issue an ioctl there
-is a device node needed and:
+Mark Lord wrote:
+> Tejun Heo wrote:
+>> Hello, Mark.
+>>
+>> Mark Lord wrote:
+>>> Tejun, I've added PMP to sata_mv, and am now trying to get it
+>>> to work with a Marvell PM attached.
+>>>
+>>> And the behaviour I see is very bizarre.
+>>>
+>>> After hard+soft resets, the PM signature is found,
+>>> and libata interrogates the PM registers.
+>>>
+>>> It successfully reads register 0, and then register 1.
+>>> But all subsequent registers read out (incorrectly) as zeros.
+..
 
-- for BUSSTATE_TRISTATE+OFF it is too late (devices are already gone)
+Saeed has confirmed this behaviour with a SATA analyzer.
+The Marvell port-multiplier apparently likes to see clean HOB
+information when accessing PMP registers.
 
-- for BUSSTATE_TRISTATE+ON it is too early (devices are not registered yet)
+Since sata_mv uses PIO shadow register access, this doesn't happen
+automatically, as it might in a more purely FIS-based driver (eg. ahci).
 
-Just remove ->busproc method for now (it was only implemented by hpt366,
-siimage and tc86c001 host drivers).
+One way to fix this is to flag these commands with ATA_TFLAG_LBA48,
+forcing libata to write out the HOB fields with known (zero) values.
 
-Cc: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Signed-off-by: Saeed Bishara <saeed@marvell.com>
+Acked-by: Mark Lord <mlord@pobox.com>
 ---
-This patch goes before "ide: add warm-plug support for IDE devices" in
-the IDE quilt tree.
+ drivers/ata/libata-pmp.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
 
- drivers/ide/ide.c          |    3 --
- drivers/ide/pci/hpt366.c   |   59 ---------------------------------------------
- drivers/ide/pci/sgiioc4.c  |    1 
- drivers/ide/pci/siimage.c  |   43 --------------------------------
- drivers/ide/pci/tc86c001.c |   36 ---------------------------
- include/linux/ide.h        |    2 -
- 6 files changed, 144 deletions(-)
-
-Index: b/drivers/ide/ide.c
-===================================================================
---- a/drivers/ide/ide.c
-+++ b/drivers/ide/ide.c
-@@ -418,7 +418,6 @@ static void ide_hwif_restore(ide_hwif_t 
- 	hwif->resetproc			= tmp_hwif->resetproc;
- 	hwif->maskproc			= tmp_hwif->maskproc;
- 	hwif->quirkproc			= tmp_hwif->quirkproc;
--	hwif->busproc			= tmp_hwif->busproc;
+diff --git a/drivers/ata/libata-pmp.c b/drivers/ata/libata-pmp.c
+index caef2bb..d91f509 100644
+--- a/drivers/ata/libata-pmp.c
++++ b/drivers/ata/libata-pmp.c
+@@ -35,7 +35,7 @@ static unsigned int sata_pmp_read(struct ata_link *link, int reg, u32 *r_val)
+ 	ata_tf_init(pmp_dev, &tf);
+ 	tf.command = ATA_CMD_PMP_READ;
+ 	tf.protocol = ATA_PROT_NODATA;
+-	tf.flags |= ATA_TFLAG_ISADDR | ATA_TFLAG_DEVICE;
++	tf.flags |= ATA_TFLAG_ISADDR | ATA_TFLAG_DEVICE | ATA_TFLAG_LBA48;
+ 	tf.feature = reg;
+ 	tf.device = link->pmp;
  
- 	hwif->ata_input_data		= tmp_hwif->ata_input_data;
- 	hwif->ata_output_data		= tmp_hwif->ata_output_data;
-@@ -1083,8 +1082,6 @@ int generic_ide_ioctl(ide_drive_t *drive
- 		case HDIO_SET_BUSSTATE:
- 			if (!capable(CAP_SYS_ADMIN))
- 				return -EACCES;
--			if (HWIF(drive)->busproc)
--				return HWIF(drive)->busproc(drive, (int)arg);
- 			return -EOPNOTSUPP;
- 		default:
- 			return -EINVAL;
-Index: b/drivers/ide/pci/hpt366.c
-===================================================================
---- a/drivers/ide/pci/hpt366.c
-+++ b/drivers/ide/pci/hpt366.c
-@@ -929,64 +929,6 @@ static void hpt3xxn_rw_disk(ide_drive_t 
- 	hpt3xxn_set_clock(HWIF(drive), rq_data_dir(rq) ? 0x23 : 0x21);
- }
- 
--/* 
-- * Set/get power state for a drive.
-- * NOTE: affects both drives on each channel.
-- *
-- * When we turn the power back on, we need to re-initialize things.
-- */
--#define TRISTATE_BIT  0x8000
--
--static int hpt3xx_busproc(ide_drive_t *drive, int state)
--{
--	ide_hwif_t *hwif	= HWIF(drive);
--	struct pci_dev *dev	= to_pci_dev(hwif->dev);
--	u8  mcr_addr		= hwif->select_data + 2;
--	u8  resetmask		= hwif->channel ? 0x80 : 0x40;
--	u8  bsr2		= 0;
--	u16 mcr			= 0;
--
--	hwif->bus_state = state;
--
--	/* Grab the status. */
--	pci_read_config_word(dev, mcr_addr, &mcr);
--	pci_read_config_byte(dev, 0x59, &bsr2);
--
--	/*
--	 * Set the state. We don't set it if we don't need to do so.
--	 * Make sure that the drive knows that it has failed if it's off.
--	 */
--	switch (state) {
--	case BUSSTATE_ON:
--		if (!(bsr2 & resetmask))
--			return 0;
--		hwif->drives[0].failures = hwif->drives[1].failures = 0;
--
--		pci_write_config_byte(dev, 0x59, bsr2 & ~resetmask);
--		pci_write_config_word(dev, mcr_addr, mcr & ~TRISTATE_BIT);
--		return 0;
--	case BUSSTATE_OFF:
--		if ((bsr2 & resetmask) && !(mcr & TRISTATE_BIT))
--			return 0;
--		mcr &= ~TRISTATE_BIT;
--		break;
--	case BUSSTATE_TRISTATE:
--		if ((bsr2 & resetmask) &&  (mcr & TRISTATE_BIT))
--			return 0;
--		mcr |= TRISTATE_BIT;
--		break;
--	default:
--		return -EINVAL;
--	}
--
--	hwif->drives[0].failures = hwif->drives[0].max_failures + 1;
--	hwif->drives[1].failures = hwif->drives[1].max_failures + 1;
--
--	pci_write_config_word(dev, mcr_addr, mcr);
--	pci_write_config_byte(dev, 0x59, bsr2 | resetmask);
--	return 0;
--}
--
- /**
-  *	hpt37x_calibrate_dpll	-	calibrate the DPLL
-  *	@dev: PCI device
-@@ -1334,7 +1276,6 @@ static void __devinit init_hwif_hpt366(i
- 
- 	hwif->quirkproc		= &hpt3xx_quirkproc;
- 	hwif->maskproc		= &hpt3xx_maskproc;
--	hwif->busproc		= &hpt3xx_busproc;
- 
- 	hwif->udma_filter	= &hpt3xx_udma_filter;
- 	hwif->mdma_filter	= &hpt3xx_mdma_filter;
-Index: b/drivers/ide/pci/sgiioc4.c
-===================================================================
---- a/drivers/ide/pci/sgiioc4.c
-+++ b/drivers/ide/pci/sgiioc4.c
-@@ -562,7 +562,6 @@ ide_init_sgiioc4(ide_hwif_t * hwif)
- 						clear interrupts */
- 	hwif->maskproc = &sgiioc4_maskproc;	/* Mask on/off NIEN register */
- 	hwif->quirkproc = NULL;
--	hwif->busproc = NULL;
- 
- 	hwif->INB = &sgiioc4_INB;
- 
-Index: b/drivers/ide/pci/siimage.c
-===================================================================
---- a/drivers/ide/pci/siimage.c
-+++ b/drivers/ide/pci/siimage.c
-@@ -370,48 +370,6 @@ static int siimage_mmio_ide_dma_test_irq
- }
- 
- /**
-- *	sil_sata_busproc	-	bus isolation IOCTL
-- *	@drive: drive to isolate/restore
-- *	@state: bus state to set
-- *
-- *	Used by the SII3112 to handle bus isolation. As this is a 
-- *	SATA controller the work required is quite limited, we 
-- *	just have to clean up the statistics
-- */
--
--static int sil_sata_busproc(ide_drive_t * drive, int state)
--{
--	ide_hwif_t *hwif	= HWIF(drive);
--	struct pci_dev *dev	= to_pci_dev(hwif->dev);
--	u32 stat_config		= 0;
--	unsigned long addr	= siimage_selreg(hwif, 0);
--
--	if (hwif->mmio)
--		stat_config = readl((void __iomem *)addr);
--	else
--		pci_read_config_dword(dev, addr, &stat_config);
--
--	switch (state) {
--		case BUSSTATE_ON:
--			hwif->drives[0].failures = 0;
--			hwif->drives[1].failures = 0;
--			break;
--		case BUSSTATE_OFF:
--			hwif->drives[0].failures = hwif->drives[0].max_failures + 1;
--			hwif->drives[1].failures = hwif->drives[1].max_failures + 1;
--			break;
--		case BUSSTATE_TRISTATE:
--			hwif->drives[0].failures = hwif->drives[0].max_failures + 1;
--			hwif->drives[1].failures = hwif->drives[1].max_failures + 1;
--			break;
--		default:
--			return -EINVAL;
--	}
--	hwif->bus_state = state;
--	return 0;
--}
--
--/**
-  *	sil_sata_reset_poll	-	wait for SATA reset
-  *	@drive: drive we are resetting
-  *
-@@ -818,7 +776,6 @@ static void __devinit init_hwif_siimage(
- 	if (sata) {
- 		static int first = 1;
- 
--		hwif->busproc = &sil_sata_busproc;
- 		hwif->reset_poll = &sil_sata_reset_poll;
- 		hwif->pre_reset = &sil_sata_pre_reset;
- 		hwif->udma_filter = &sil_sata_udma_filter;
-Index: b/drivers/ide/pci/tc86c001.c
-===================================================================
---- a/drivers/ide/pci/tc86c001.c
-+++ b/drivers/ide/pci/tc86c001.c
-@@ -126,40 +126,6 @@ static void tc86c001_dma_start(ide_drive
- 	ide_dma_start(drive);
- }
- 
--static int tc86c001_busproc(ide_drive_t *drive, int state)
--{
--	ide_hwif_t *hwif	= HWIF(drive);
--	unsigned long sc_base	= hwif->config_data;
--	u16 scr1;
--
--	/* System Control 1 Register bit 11 (ATA Hard Reset) read */
--	scr1 = inw(sc_base + 0x00);
--
--	switch (state) {
--		case BUSSTATE_ON:
--			if (!(scr1 & 0x0800))
--				return 0;
--			scr1 &= ~0x0800;
--
--			hwif->drives[0].failures = hwif->drives[1].failures = 0;
--			break;
--		case BUSSTATE_OFF:
--			if (scr1 & 0x0800)
--				return 0;
--			scr1 |= 0x0800;
--
--			hwif->drives[0].failures = hwif->drives[0].max_failures + 1;
--			hwif->drives[1].failures = hwif->drives[1].max_failures + 1;
--			break;
--		default:
--			return -EINVAL;
--	}
--
--	/* System Control 1 Register bit 11 (ATA Hard Reset) write */
--	outw(scr1, sc_base + 0x00);
--	return 0;
--}
--
- static u8 __devinit tc86c001_cable_detect(ide_hwif_t *hwif)
- {
- 	struct pci_dev *dev = to_pci_dev(hwif->dev);
-@@ -194,8 +160,6 @@ static void __devinit init_hwif_tc86c001
- 	hwif->set_pio_mode = &tc86c001_set_pio_mode;
- 	hwif->set_dma_mode = &tc86c001_set_mode;
- 
--	hwif->busproc	= &tc86c001_busproc;
--
- 	hwif->cable_detect = tc86c001_cable_detect;
- 
- 	if (!hwif->dma_base)
-Index: b/include/linux/ide.h
-===================================================================
---- a/include/linux/ide.h
-+++ b/include/linux/ide.h
-@@ -502,8 +502,6 @@ typedef struct hwif_s {
- 	void	(*maskproc)(ide_drive_t *, int);
- 	/* check host's drive quirk list */
- 	void	(*quirkproc)(ide_drive_t *);
--	/* driver soft-power interface */
--	int	(*busproc)(ide_drive_t *, int);
- #endif
- 	u8 (*mdma_filter)(ide_drive_t *);
- 	u8 (*udma_filter)(ide_drive_t *);
+@@ -71,7 +71,7 @@ static unsigned int sata_pmp_write(struct ata_link *link, int reg, u32 val)
+ 	ata_tf_init(pmp_dev, &tf);
+ 	tf.command = ATA_CMD_PMP_WRITE;
+ 	tf.protocol = ATA_PROT_NODATA;
+-	tf.flags |= ATA_TFLAG_ISADDR | ATA_TFLAG_DEVICE;
++	tf.flags |= ATA_TFLAG_ISADDR | ATA_TFLAG_DEVICE | ATA_TFLAG_LBA48;
+ 	tf.feature = reg;
+ 	tf.device = link->pmp;
+ 	tf.nsect = val & 0xff;
