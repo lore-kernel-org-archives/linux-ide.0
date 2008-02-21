@@ -1,65 +1,54 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: Re: sata_sil24 not configuring drive right?
-Date: Thu, 21 Feb 2008 10:23:51 +0900
-Message-ID: <47BCD2A7.1030504@gmail.com>
-References: <47BB8346.4070400@fhtw-berlin.de> <47BBA66C.7050900@gmail.com> <47BC7D47.9060608@fhtw-berlin.de>
+Subject: Re: [PATCH] scsi: align shost->hostdata to cacheline
+Date: Thu, 21 Feb 2008 11:32:50 +0900
+Message-ID: <47BCE2D2.5030506@gmail.com>
+References: <20080212180254.GA28237@postdiluvian.org>	 <20080212221257.12eeab13@core>	<20080213184702.GA13458@postdiluvian.org>	 <20080213202151.34b7e5bc@core>	<20080213212549.GA14732@postdiluvian.org>	 <20080214002135.065dd322@core> <47B3AFDC.5040605@gmail.com>	 <47B40E51.3060002@gmail.com>	 <1203001520.3189.11.camel@localhost.localdomain>	 <47B4C55F.1070806@gmail.com> <1203101837.3058.34.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wx-out-0506.google.com ([66.249.82.230]:50246 "EHLO
-	wx-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756800AbYBUBX7 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 20 Feb 2008 20:23:59 -0500
-Received: by wx-out-0506.google.com with SMTP id h31so2373591wxd.4
-        for <linux-ide@vger.kernel.org>; Wed, 20 Feb 2008 17:23:58 -0800 (PST)
-In-Reply-To: <47BC7D47.9060608@fhtw-berlin.de>
+Received: from rv-out-0910.google.com ([209.85.198.188]:50590 "EHLO
+	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750959AbYBUCc4 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 20 Feb 2008 21:32:56 -0500
+Received: by rv-out-0910.google.com with SMTP id k20so2095736rvb.1
+        for <linux-ide@vger.kernel.org>; Wed, 20 Feb 2008 18:32:56 -0800 (PST)
+In-Reply-To: <1203101837.3058.34.camel@localhost.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Johann-Christoph Jacob <johann-christoph.jacob@fhtw-berlin.de>
-Cc: linux-ide@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, Mark Mason <mason@postdiluvian.org>, linux-ide@vger.kernel.org, jgarzik@pobox.com, Jens Axboe <jens.axboe@oracle.com>
 
-Johann-Christoph Jacob wrote:
-> my problem is not with the transfer mode but with the NCQ queue_depth.
-> My bootlog shows:
-> ata1.00: 234441648 sectors, multi 16: LBA48 NCQ (depth 1)
-> but i would like it to show:
-> ata1.00: 234441648 sectors, multi 16: LBA48 NCQ (depth 31/32)
-> or something similar.
-> I was not exact enough concerning the writeability of
-> /sys/block/sda/device/queue_depth
-> The file is not read only but writing to it fails:
-> echo 31 > /sys/block/sda/device/queue_depth
-> bash: echo: write error: Invalid argument
+James Bottomley wrote:
+> On Fri, 2008-02-15 at 07:49 +0900, Tejun Heo wrote:
+>> James Bottomley wrote:
+>>> On Thu, 2008-02-14 at 18:48 +0900, Tejun Heo wrote:
+>>>> shost->hostdata can contain arbitrary data including DMA target
+>>>> buffers.  Align it to cacheline.
+>>>>
+>>>> Signed-off-by: Tejun Heo <htejun@gmail.com>
+>>>> ---
+>>>> James, what do you think?
+>>> Hmm, it will blow out the host size ... although that's not such a huge
+>>> problem since there are relatively few of them in most running kernels.
+>>> What's the actual use case for this, though?  The host structure is
+>>> allocated in ordinary memory ... we don't make sure it's DMAable, and
+>>> most HBAs that want to use memory for mailboxes need coherent memory
+>>> anyway.
+>> "As it can contain arbitrary structure, it should follow the largest
+>> meaningful alignment to allow the contained structure proper alignment."
+>> is the logic.  I think it's generally RTTD for inline private data but
+>> feel free to disagree.
+> 
+> Well, the way we usually do that is to have the host float the alignment
+> if necessary.  The problem with relying on __cacheline_aligned for an
+> allocated structure is that it only works if the allocated structure
+> actually begins on a cacheline.  Kmalloc (which is where we get the host
+> from) doesn't necessarily obey this if certain slab debugging flags are
+> present.
 
-Right.
-
->>> ATA device, with non-removable media
->>>         Model Number:       WDC WD1200BEVS-07LAT0                   
->>>         Serial Number:      WD-WXE906801963
->>>         Firmware Revision:  01.06M01
->>> Standards:
->>>         Supported: 7 6 5 4 
->>>         Likely used: 7
->>> Configuration:
->>>         Logical         max     current
->>>         cylinders       16383   16383
->>>         heads           16      16
->>>         sectors/track   63      63
->>>         --
->>>         CHS current addressable sectors:   16514064
->>>         LBA    user addressable sectors:  234441648
->>>         LBA48  user addressable sectors:  234441648
->>>         device size with M = 1024*1024:      114473 MBytes
->>>         device size with M = 1000*1000:      120034 MBytes (120 GB)
->>> Capabilities:
->>>         LBA, IORDY(can be disabled)
->>>         Queue depth: 1
-
-Hmm... Here it is.  Interesting.  The drive is reporting queue depth of
-1.  Interesting.  This is the first time I see this.  The drive is
-telling libata that it supports NCQ and the max queue depth is 1 and
-libata configures it accordingly.  I'll ask wd about it.
+Hmmm... Right.  That means libata either needs to create a separate slab
+for the sector buf or align it after allocating by itself.  Eeeek.
 
 Thanks.
 
