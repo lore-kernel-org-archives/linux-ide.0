@@ -1,47 +1,77 @@
-From: Pavel Machek <pavel@ucw.cz>
-Subject: power_state: get rid of write-only variable in SATA
-Date: Thu, 21 Feb 2008 13:56:55 +0100
-Message-ID: <20080221125652.GA23548@elf.ucw.cz>
+From: Mark Lord <mlord@pobox.com>
+Subject: Re: What's needed for PMP support?
+Date: Thu, 21 Feb 2008 10:07:40 -0500
+Message-ID: <47BD93BC.3080301@pobox.com>
+References: <4730E312.3090900@navy.mil> <4737C16E.3070607@gmail.com>
+ <4738827D.9060405@pobox.com> <4738F935.1000708@gmail.com>
+ <47BC798F.6070900@pobox.com> <47BCF28F.5080702@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from gprs189-60.eurotel.cz ([160.218.189.60]:43074 "EHLO amd.ucw.cz"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1755249AbYBUNGE (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 21 Feb 2008 08:06:04 -0500
-Content-Disposition: inline
+Received: from rune.pobox.com ([208.210.124.79]:45054 "EHLO rune.pobox.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751051AbYBUPMd (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 21 Feb 2008 10:12:33 -0500
+In-Reply-To: <47BCF28F.5080702@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: kernel list <linux-kernel@vger.kernel.org>, Linux-pm mailing list <linux-pm@lists.osdl.org>, jgarzik@pobox.com, linux-ide@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: IDE/ATA development list <linux-ide@vger.kernel.org>
 
+Tejun Heo wrote:
+> Hello, Mark.
+> 
+> Mark Lord wrote:
+>> Tejun, I've added PMP to sata_mv, and am now trying to get it
+>> to work with a Marvell PM attached.
+>>
+>> And the behaviour I see is very bizarre.
+>>
+>> After hard+soft resets, the PM signature is found,
+>> and libata interrogates the PM registers.
+>>
+>> It successfully reads register 0, and then register 1.
+>> But all subsequent registers read out (incorrectly) as zeros.
+> 
+> Hmmm...
+> 
+>> I've traced the taskfiles in/out, and it all looks proper
+>> except for the actual data coming back from the PM.
+>>
+>> After some experimentation, I found that all of the PM registers
+>> were readable, if I simple inserted a  sata_pmp_read(link, 0, &junk)
+>> in front of each issue of sata_pmp_read(link, reg, &r_val).
+> 
+> Hmmmmmmm...
+> 
+>> Then the PM is recognized and all, but fails port enumerations
+>> probably due to either my hack or the same original bug (whatever that is?)
+>>
+>> I'm confused.
+> 
+> That makes two of us.
+> 
+>> The PM itself works fine here on sata_sil24 and AHCI(jmicron),
+..
 
-power_state is scheduled for removal, and libata uses it in write-only
-mode. Remove it.
+Well, last night I found someone else to try the code
+with a 0x1095:0x3726 (vendor/device?) Port-Multiplier.
+It *appears* to work fine with sata_mv, unlike the Marvell one.
+Hopefully the nice folks at Marvell will take a look (I've emailed them)
+and report back with some useful information eventually.
 
-Signed-off-by: Pavel Machek <pavel@suse.cz>
+> No but I had my fair share of problems doing PMP support for both sil24
+> and ahci.  Any chance you can get access to a bus analyzer?  I had a
+> very weird problem w/ ahci PMP support which I don't think I could fix
+> if I didn't have access to a bus analyzer at the time.  (I don't
+> remember details now tho.)
+..
 
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index b4985bc..a31572d 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -6542,8 +6542,6 @@ int ata_host_suspend(struct ata_host *ho
- 	ata_lpm_enable(host);
- 
- 	rc = ata_host_request_pm(host, mesg, 0, ATA_EHI_QUIET, 1);
--	if (rc == 0)
--		host->dev->power.power_state = mesg;
- 	return rc;
- }
- 
-@@ -6562,7 +6560,6 @@ void ata_host_resume(struct ata_host *ho
- {
- 	ata_host_request_pm(host, PMSG_ON, ATA_EH_SOFTRESET,
- 			    ATA_EHI_NO_AUTOPSY | ATA_EHI_QUIET, 0);
--	host->dev->power.power_state = PMSG_ON;
- 
- 	/* reenable link pm */
- 	ata_lpm_disable(host);
+I figure they must have a few of those kicking around at Marvell..
 
+Cheers
 -- 
-(english) http://www.livejournal.com/~pavelmachek
-(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
+Mark Lord
+Real-Time Remedies Inc.
+mlord@pobox.com
