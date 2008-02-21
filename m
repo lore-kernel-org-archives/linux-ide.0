@@ -1,60 +1,94 @@
-From: "Gabor FUNK" <FUNK.Gabor@hunetkft.hu>
-Subject: Re: JMicron - hard resetting link
-Date: Thu, 21 Feb 2008 22:45:20 +0100
-Message-ID: <008901c874d3$10731c80$4d0fa8c0@M2007>
-References: <009401c86d5c$5eb57bf0$4d0fa8c0@M2007> <47B19997.1010404@gmail.com> <003801c86d84$fdae0510$4d0fa8c0@M2007> <47B1B299.3010208@gmail.com> <002f01c86d9c$94542f50$4d0fa8c0@M2007> <47B230CA.9060506@gmail.com> <005c01c86f5d$b050b4e0$4d0fa8c0@M2007> <47B4CF71.5070408@gmail.com>
+From: "saeed bishara" <saeed.bishara@gmail.com>
+Subject: Re: [PATCH] libata-pmp: clear hob for pmp register accesses
+Date: Thu, 21 Feb 2008 23:51:10 +0200
+Message-ID: <c70ff3ad0802211351s360eea12p64e4e79f359813af@mail.gmail.com>
+References: <4730E312.3090900@navy.mil> <4737C16E.3070607@gmail.com>
+	 <4738827D.9060405@pobox.com> <4738F935.1000708@gmail.com>
+	 <47BC798F.6070900@pobox.com> <47BCF28F.5080702@gmail.com>
+	 <47BD93BC.3080301@pobox.com> <47BDE489.6070701@rtr.ca>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	format=flowed;
-	charset="iso-8859-2";
-	reply-type=original
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ns1.huweb.hu ([62.112.193.37]:45939 "EHLO ns1.huweb.hu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1761295AbYBUVp3 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 21 Feb 2008 16:45:29 -0500
+Received: from el-out-1112.google.com ([209.85.162.182]:53992 "EHLO
+	el-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759833AbYBUVvM (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 21 Feb 2008 16:51:12 -0500
+Received: by el-out-1112.google.com with SMTP id v27so183216ele.23
+        for <linux-ide@vger.kernel.org>; Thu, 21 Feb 2008 13:51:11 -0800 (PST)
+In-Reply-To: <47BDE489.6070701@rtr.ca>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: IDE/ATA development list <linux-ide@vger.kernel.org>
+To: Mark Lord <liml@rtr.ca>
+Cc: Jeff Garzik <jgarzik@pobox.com>, Tejun Heo <htejun@gmail.com>, IDE/ATA development list <linux-ide@vger.kernel.org>, Saeed Bishara <saeed@marvell.com>
 
->> So a different brand PSU was additionally installed, and this
->> one got the motherboard and the 4 disk which were failing.
->> The "old" PSU got the second 4 hdds and the 2 other system
->> HDDs.
->> Test was started yesterday (Feb 13) about 16:30 CET including
->> array building up and file copies. About today (14) 20:22 the
->> problem appeared, but seemingly "moved" with the PSU to the
->> other 4 disks bunch (on nvidia controller) - more precisely, only
->> 2 of them (array is still operational).
-> 
-> Hmmm..
-> 
->> So it seems that there is definitely something with the "old" PSU.
->> 
->> Also, I tried to mount the failed drives, without success.
->> 
->> Thought I let you know.
->> Now I will try with the only one, "new" PSU to see what happens...
-> 
-> Yeah, please keep us posted.  Thanks.
+Hi,
+ I just what to make it clear that this is not a bug of the Marvell's
+PM, the sata specification (I'm looking at version 2.5) defines the
+READ/WRITE PM registers to be extended commands, specifically, the
+features HOB of the READ PM register defined to be RegNum[15:8].
 
-To sum it up:
-- 1st the 4 disks on the Jmicron controller failed with 1 [chieftek] PSU
-- then it failed with 2 PSU too, but this time the chieftek was only
-   connected to the different 4 disks - on the nvidia controller. MB
-   and other disks were on the other, non-chieftek [650W] PSU.
-- Then I started the tests with only this second PSU, and it ran
-   for about 6 days under heavy testing and array rebuilding and
-   guess what: it failed again.
+saeed
 
-Full kernel log at:
-http://www.huweb.hu/maques/tmp/jmicron/kern0221.log
-
-Since it is not a "switch on and see" problem, I'm not in too good
-position, so unless someone have a really great idea or observation,
-I seriously have to consider to replace the MB and probably add
-some extra sata controllers.
-
-Thanks, G.
+On Thu, Feb 21, 2008 at 10:52 PM, Mark Lord <liml@rtr.ca> wrote:
+> Mark Lord wrote:
+>  > Tejun Heo wrote:
+>  >> Hello, Mark.
+>  >>
+>  >> Mark Lord wrote:
+>  >>> Tejun, I've added PMP to sata_mv, and am now trying to get it
+>  >>> to work with a Marvell PM attached.
+>  >>>
+>  >>> And the behaviour I see is very bizarre.
+>  >>>
+>  >>> After hard+soft resets, the PM signature is found,
+>  >>> and libata interrogates the PM registers.
+>  >>>
+>  >>> It successfully reads register 0, and then register 1.
+>  >>> But all subsequent registers read out (incorrectly) as zeros.
+>  ..
+>
+>  Saeed has confirmed this behaviour with a SATA analyzer.
+>  The Marvell port-multiplier apparently likes to see clean HOB
+>  information when accessing PMP registers.
+>
+>  Since sata_mv uses PIO shadow register access, this doesn't happen
+>  automatically, as it might in a more purely FIS-based driver (eg. ahci).
+>
+>  One way to fix this is to flag these commands with ATA_TFLAG_LBA48,
+>  forcing libata to write out the HOB fields with known (zero) values.
+>
+>  Signed-off-by: Saeed Bishara <saeed@marvell.com>
+>  Acked-by: Mark Lord <mlord@pobox.com>
+>  ---
+>   drivers/ata/libata-pmp.c |    4 ++--
+>   1 files changed, 2 insertions(+), 2 deletions(-)
+>
+>  diff --git a/drivers/ata/libata-pmp.c b/drivers/ata/libata-pmp.c
+>  index caef2bb..d91f509 100644
+>  --- a/drivers/ata/libata-pmp.c
+>  +++ b/drivers/ata/libata-pmp.c
+>  @@ -35,7 +35,7 @@ static unsigned int sata_pmp_read(struct ata_link *link, int reg, u32 *r_val)
+>         ata_tf_init(pmp_dev, &tf);
+>         tf.command = ATA_CMD_PMP_READ;
+>         tf.protocol = ATA_PROT_NODATA;
+>  -       tf.flags |= ATA_TFLAG_ISADDR | ATA_TFLAG_DEVICE;
+>  +       tf.flags |= ATA_TFLAG_ISADDR | ATA_TFLAG_DEVICE | ATA_TFLAG_LBA48;
+>         tf.feature = reg;
+>         tf.device = link->pmp;
+>
+>  @@ -71,7 +71,7 @@ static unsigned int sata_pmp_write(struct ata_link *link, int reg, u32 val)
+>         ata_tf_init(pmp_dev, &tf);
+>         tf.command = ATA_CMD_PMP_WRITE;
+>         tf.protocol = ATA_PROT_NODATA;
+>  -       tf.flags |= ATA_TFLAG_ISADDR | ATA_TFLAG_DEVICE;
+>  +       tf.flags |= ATA_TFLAG_ISADDR | ATA_TFLAG_DEVICE | ATA_TFLAG_LBA48;
+>         tf.feature = reg;
+>         tf.device = link->pmp;
+>         tf.nsect = val & 0xff;
+>  -
+>  To unsubscribe from this list: send the line "unsubscribe linux-ide" in
+>  the body of a message to majordomo@vger.kernel.org
+>  More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
