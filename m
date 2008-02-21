@@ -1,77 +1,56 @@
-From: Mark Lord <mlord@pobox.com>
-Subject: Re: What's needed for PMP support?
-Date: Thu, 21 Feb 2008 10:07:40 -0500
-Message-ID: <47BD93BC.3080301@pobox.com>
-References: <4730E312.3090900@navy.mil> <4737C16E.3070607@gmail.com>
- <4738827D.9060405@pobox.com> <4738F935.1000708@gmail.com>
- <47BC798F.6070900@pobox.com> <47BCF28F.5080702@gmail.com>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: power_state: get rid of write-only variable in SATA
+Date: Thu, 21 Feb 2008 11:09:19 -0500
+Message-ID: <47BDA22F.5060300@pobox.com>
+References: <20080221125652.GA23548@elf.ucw.cz>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rune.pobox.com ([208.210.124.79]:45054 "EHLO rune.pobox.com"
+Received: from srv5.dvmed.net ([207.36.208.214]:42298 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751051AbYBUPMd (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 21 Feb 2008 10:12:33 -0500
-In-Reply-To: <47BCF28F.5080702@gmail.com>
+	id S1755130AbYBUQJX (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 21 Feb 2008 11:09:23 -0500
+In-Reply-To: <20080221125652.GA23548@elf.ucw.cz>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: IDE/ATA development list <linux-ide@vger.kernel.org>
+To: Pavel Machek <pavel@ucw.cz>
+Cc: kernel list <linux-kernel@vger.kernel.org>, Linux-pm mailing list <linux-pm@lists.osdl.org>, linux-ide@vger.kernel.org
 
-Tejun Heo wrote:
-> Hello, Mark.
+Pavel Machek wrote:
+> power_state is scheduled for removal, and libata uses it in write-only
+> mode. Remove it.
 > 
-> Mark Lord wrote:
->> Tejun, I've added PMP to sata_mv, and am now trying to get it
->> to work with a Marvell PM attached.
->>
->> And the behaviour I see is very bizarre.
->>
->> After hard+soft resets, the PM signature is found,
->> and libata interrogates the PM registers.
->>
->> It successfully reads register 0, and then register 1.
->> But all subsequent registers read out (incorrectly) as zeros.
+> Signed-off-by: Pavel Machek <pavel@suse.cz>
 > 
-> Hmmm...
-> 
->> I've traced the taskfiles in/out, and it all looks proper
->> except for the actual data coming back from the PM.
->>
->> After some experimentation, I found that all of the PM registers
->> were readable, if I simple inserted a  sata_pmp_read(link, 0, &junk)
->> in front of each issue of sata_pmp_read(link, reg, &r_val).
-> 
-> Hmmmmmmm...
-> 
->> Then the PM is recognized and all, but fails port enumerations
->> probably due to either my hack or the same original bug (whatever that is?)
->>
->> I'm confused.
-> 
-> That makes two of us.
-> 
->> The PM itself works fine here on sata_sil24 and AHCI(jmicron),
-..
+> diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+> index b4985bc..a31572d 100644
+> --- a/drivers/ata/libata-core.c
+> +++ b/drivers/ata/libata-core.c
+> @@ -6542,8 +6542,6 @@ int ata_host_suspend(struct ata_host *ho
+>  	ata_lpm_enable(host);
+>  
+>  	rc = ata_host_request_pm(host, mesg, 0, ATA_EHI_QUIET, 1);
+> -	if (rc == 0)
+> -		host->dev->power.power_state = mesg;
+>  	return rc;
+>  }
+>  
+> @@ -6562,7 +6560,6 @@ void ata_host_resume(struct ata_host *ho
+>  {
+>  	ata_host_request_pm(host, PMSG_ON, ATA_EH_SOFTRESET,
+>  			    ATA_EHI_NO_AUTOPSY | ATA_EHI_QUIET, 0);
+> -	host->dev->power.power_state = PMSG_ON;
+>  
+>  	/* reenable link pm */
+>  	ata_lpm_disable(host);
 
-Well, last night I found someone else to try the code
-with a 0x1095:0x3726 (vendor/device?) Port-Multiplier.
-It *appears* to work fine with sata_mv, unlike the Marvell one.
-Hopefully the nice folks at Marvell will take a look (I've emailed them)
-and report back with some useful information eventually.
+libata uses it under the assumption that "other parts" of the system are 
+aware of this variable.
 
-> No but I had my fair share of problems doing PMP support for both sil24
-> and ahci.  Any chance you can get access to a bus analyzer?  I had a
-> very weird problem w/ ahci PMP support which I don't think I could fix
-> if I didn't have access to a bus analyzer at the time.  (I don't
-> remember details now tho.)
-..
+May I assume that the API has changed such that this is no longer necessary?
 
-I figure they must have a few of those kicking around at Marvell..
+	Jeff
 
-Cheers
--- 
-Mark Lord
-Real-Time Remedies Inc.
-mlord@pobox.com
+
+
