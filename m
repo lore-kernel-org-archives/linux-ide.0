@@ -1,34 +1,81 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: Re: Regression: kernel 2.6.24{,.1} ahci problem, does not boot (resend)
-Date: Thu, 21 Feb 2008 11:51:11 +0900
-Message-ID: <47BCE71F.2000309@gmail.com>
-References: <20080214184700.0bd3837d@highlander.home.lan>	<47B4D02E.9030101@gmail.com> <20080215191215.430ee2e0@highlander.home.lan>
+Subject: Re: What's needed for PMP support?
+Date: Thu, 21 Feb 2008 12:39:59 +0900
+Message-ID: <47BCF28F.5080702@gmail.com>
+References: <4730E312.3090900@navy.mil> <4737C16E.3070607@gmail.com> <4738827D.9060405@pobox.com> <4738F935.1000708@gmail.com> <47BC798F.6070900@pobox.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wf-out-1314.google.com ([209.85.200.175]:45770 "EHLO
-	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752168AbYBUCvV (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 20 Feb 2008 21:51:21 -0500
-Received: by wf-out-1314.google.com with SMTP id 28so806086wff.4
-        for <linux-ide@vger.kernel.org>; Wed, 20 Feb 2008 18:51:17 -0800 (PST)
-In-Reply-To: <20080215191215.430ee2e0@highlander.home.lan>
+Received: from rv-out-0910.google.com ([209.85.198.184]:24146 "EHLO
+	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754232AbYBUDkH (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 20 Feb 2008 22:40:07 -0500
+Received: by rv-out-0910.google.com with SMTP id k20so2109569rvb.1
+        for <linux-ide@vger.kernel.org>; Wed, 20 Feb 2008 19:40:04 -0800 (PST)
+In-Reply-To: <47BC798F.6070900@pobox.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: =?UTF-8?B?TWFsdGUgU2NocsO2ZGVy?= <maltesch@gmx.de>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: Mark Lord <mlord@pobox.com>
+Cc: IDE/ATA development list <linux-ide@vger.kernel.org>
 
-Malte Schr=C3=B6der wrote:
->> Does irqpoll kernel parameter help?
-> =20
-> No, problem stays.
+Hello, Mark.
 
-Can you capture full boot log w/ irqpoll specified?  If you have root
-filesystem connected to ahci, you'll probably have to use serial or
-netconsole.  Also, please post full boot log from 2.6.23.11.
+Mark Lord wrote:
+> Tejun, I've added PMP to sata_mv, and am now trying to get it
+> to work with a Marvell PM attached.
+> 
+> And the behaviour I see is very bizarre.
+> 
+> After hard+soft resets, the PM signature is found,
+> and libata interrogates the PM registers.
+> 
+> It successfully reads register 0, and then register 1.
+> But all subsequent registers read out (incorrectly) as zeros.
 
-Thanks.
+Hmmm...
 
---=20
+> I've traced the taskfiles in/out, and it all looks proper
+> except for the actual data coming back from the PM.
+> 
+> After some experimentation, I found that all of the PM registers
+> were readable, if I simple inserted a  sata_pmp_read(link, 0, &junk)
+> in front of each issue of sata_pmp_read(link, reg, &r_val).
+
+Hmmmmmmm...
+
+> Then the PM is recognized and all, but fails port enumerations
+> probably due to either my hack or the same original bug (whatever that is?)
+> 
+> I'm confused.
+
+That makes two of us.
+
+> The PM itself works fine here on sata_sil24 and AHCI(jmicron),
+
+Yeah, Marvell PMPs behave very nicely with sil24 and ahci.
+
+> so it's obviously the sata_mv driver or chipset that's being weird.
+> 
+> Ever seen anything like this before?
+
+No.
+
+> I'm trying to use stock libata functions for all of this 	where possible,
+> so there's not really that much new/necessary code in sata_mv for this.
+> I do force the PMP value for outgoing-FIS's (non standard register for it),
+> but that's about all that's custom here.
+> 
+> The driver uses ATA register mode emulation for all commands
+> other than READ/WRITE disk stuff, including for the PM register accesses.
+> 
+> Ever seen anything like this before?
+
+No but I had my fair share of problems doing PMP support for both sil24
+and ahci.  Any chance you can get access to a bus analyzer?  I had a
+very weird problem w/ ahci PMP support which I don't think I could fix
+if I didn't have access to a bus analyzer at the time.  (I don't
+remember details now tho.)
+
+-- 
 tejun
