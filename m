@@ -1,108 +1,67 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH] ide: remove hwif->straight8 flag
-Date: Thu, 21 Feb 2008 00:44:21 +0100
-Message-ID: <200802210044.21205.bzolnier@gmail.com>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: sata_sil24 not configuring drive right?
+Date: Thu, 21 Feb 2008 10:23:51 +0900
+Message-ID: <47BCD2A7.1030504@gmail.com>
+References: <47BB8346.4070400@fhtw-berlin.de> <47BBA66C.7050900@gmail.com> <47BC7D47.9060608@fhtw-berlin.de>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from fk-out-0910.google.com ([209.85.128.187]:17467 "EHLO
-	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751921AbYBTXaf (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 20 Feb 2008 18:30:35 -0500
-Received: by fk-out-0910.google.com with SMTP id z23so3166722fkz.5
-        for <linux-ide@vger.kernel.org>; Wed, 20 Feb 2008 15:30:34 -0800 (PST)
-Content-Disposition: inline
+Received: from wx-out-0506.google.com ([66.249.82.230]:50246 "EHLO
+	wx-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756800AbYBUBX7 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 20 Feb 2008 20:23:59 -0500
+Received: by wx-out-0506.google.com with SMTP id h31so2373591wxd.4
+        for <linux-ide@vger.kernel.org>; Wed, 20 Feb 2008 17:23:58 -0800 (PST)
+In-Reply-To: <47BC7D47.9060608@fhtw-berlin.de>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
+To: Johann-Christoph Jacob <johann-christoph.jacob@fhtw-berlin.de>
+Cc: linux-ide@vger.kernel.org
 
-All host drivers now either set hwif->mmio or reserve continuous
-I/O resources so remove no longer needed hwif->straight8 flag
-and never reached code for 'hwif->straight8 == 0' case.
+Johann-Christoph Jacob wrote:
+> my problem is not with the transfer mode but with the NCQ queue_depth.
+> My bootlog shows:
+> ata1.00: 234441648 sectors, multi 16: LBA48 NCQ (depth 1)
+> but i would like it to show:
+> ata1.00: 234441648 sectors, multi 16: LBA48 NCQ (depth 31/32)
+> or something similar.
+> I was not exact enough concerning the writeability of
+> /sys/block/sda/device/queue_depth
+> The file is not read only but writing to it fails:
+> echo 31 > /sys/block/sda/device/queue_depth
+> bash: echo: write error: Invalid argument
 
-Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
----
- drivers/ide/ide.c   |   36 +++++++++++-------------------------
- include/linux/ide.h |    1 -
- 2 files changed, 11 insertions(+), 26 deletions(-)
+Right.
 
-Index: b/drivers/ide/ide.c
-===================================================================
---- a/drivers/ide/ide.c
-+++ b/drivers/ide/ide.c
-@@ -253,29 +253,21 @@ static struct resource* hwif_request_reg
- int ide_hwif_request_regions(ide_hwif_t *hwif)
- {
- 	unsigned long addr;
--	unsigned int i;
- 
- 	if (hwif->mmio)
- 		return 0;
-+
- 	addr = hwif->io_ports[IDE_CONTROL_OFFSET];
-+
- 	if (addr && !hwif_request_region(hwif, addr, 1))
- 		goto control_region_busy;
--	hwif->straight8 = 0;
-+
- 	addr = hwif->io_ports[IDE_DATA_OFFSET];
--	if ((addr | 7) == hwif->io_ports[IDE_STATUS_OFFSET]) {
--		if (!hwif_request_region(hwif, addr, 8))
--			goto data_region_busy;
--		hwif->straight8 = 1;
--		return 0;
--	}
--	for (i = IDE_DATA_OFFSET; i <= IDE_STATUS_OFFSET; i++) {
--		addr = hwif->io_ports[i];
--		if (!hwif_request_region(hwif, addr, 1)) {
--			while (--i)
--				release_region(addr, 1);
--			goto data_region_busy;
--		}
--	}
-+	BUG_ON((addr | 7) != hwif->io_ports[IDE_STATUS_OFFSET]);
-+
-+	if (!hwif_request_region(hwif, addr, 8))
-+		goto data_region_busy;
-+
- 	return 0;
- 
- data_region_busy:
-@@ -301,19 +293,13 @@ control_region_busy:
- 
- void ide_hwif_release_regions(ide_hwif_t *hwif)
- {
--	u32 i = 0;
--
- 	if (hwif->mmio)
- 		return;
-+
- 	if (hwif->io_ports[IDE_CONTROL_OFFSET])
- 		release_region(hwif->io_ports[IDE_CONTROL_OFFSET], 1);
--	if (hwif->straight8) {
--		release_region(hwif->io_ports[IDE_DATA_OFFSET], 8);
--		return;
--	}
--	for (i = IDE_DATA_OFFSET; i <= IDE_STATUS_OFFSET; i++)
--		if (hwif->io_ports[i])
--			release_region(hwif->io_ports[i], 1);
-+
-+	release_region(hwif->io_ports[IDE_DATA_OFFSET], 8);
- }
- 
- void ide_remove_port_from_hwgroup(ide_hwif_t *hwif)
-Index: b/include/linux/ide.h
-===================================================================
---- a/include/linux/ide.h
-+++ b/include/linux/ide.h
-@@ -524,7 +524,6 @@ typedef struct hwif_s {
- 	unsigned	reset      : 1;	/* reset after probe */
- 	unsigned	sg_mapped  : 1;	/* sg_table and sg_nents are ready */
- 	unsigned	mmio       : 1; /* host uses MMIO */
--	unsigned	straight8  : 1;	/* Alan's straight 8 check */
- 
- 	struct device		gendev;
- 	struct class_device	classdev;
+>>> ATA device, with non-removable media
+>>>         Model Number:       WDC WD1200BEVS-07LAT0                   
+>>>         Serial Number:      WD-WXE906801963
+>>>         Firmware Revision:  01.06M01
+>>> Standards:
+>>>         Supported: 7 6 5 4 
+>>>         Likely used: 7
+>>> Configuration:
+>>>         Logical         max     current
+>>>         cylinders       16383   16383
+>>>         heads           16      16
+>>>         sectors/track   63      63
+>>>         --
+>>>         CHS current addressable sectors:   16514064
+>>>         LBA    user addressable sectors:  234441648
+>>>         LBA48  user addressable sectors:  234441648
+>>>         device size with M = 1024*1024:      114473 MBytes
+>>>         device size with M = 1000*1000:      120034 MBytes (120 GB)
+>>> Capabilities:
+>>>         LBA, IORDY(can be disabled)
+>>>         Queue depth: 1
+
+Hmm... Here it is.  Interesting.  The drive is reporting queue depth of
+1.  Interesting.  This is the first time I see this.  The drive is
+telling libata that it supports NCQ and the max queue depth is 1 and
+libata configures it accordingly.  I'll ask wd about it.
+
+Thanks.
+
+-- 
+tejun
