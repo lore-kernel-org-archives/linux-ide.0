@@ -1,45 +1,86 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [PATCH] hpt366: fix section mismatch warnings
-Date: Fri, 22 Feb 2008 21:57:15 +0100
-Message-ID: <200802222157.15480.bzolnier@gmail.com>
-References: <20080222194651.GA7154@uranus.ravnborg.org> <47BF2846.1030604@ru.mvista.com>
+Subject: [PATCH] ide: remove ide-tape documentation from Documentation/ide.txt
+Date: Fri, 22 Feb 2008 22:05:32 +0100
+Message-ID: <200802222205.32903.bzolnier@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
   charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.175]:28069 "EHLO
+Received: from ug-out-1314.google.com ([66.249.92.173]:38810 "EHLO
 	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752025AbYBVUqb (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 22 Feb 2008 15:46:31 -0500
-Received: by ug-out-1314.google.com with SMTP id z38so1409151ugc.16
-        for <linux-ide@vger.kernel.org>; Fri, 22 Feb 2008 12:46:30 -0800 (PST)
-In-Reply-To: <47BF2846.1030604@ru.mvista.com>
+	with ESMTP id S1750985AbYBVUvR (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 22 Feb 2008 15:51:17 -0500
+Received: by ug-out-1314.google.com with SMTP id z38so1410491ugc.16
+        for <linux-ide@vger.kernel.org>; Fri, 22 Feb 2008 12:51:15 -0800 (PST)
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Cc: Sam Ravnborg <sam@ravnborg.org>, LKML <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
 
-On Friday 22 February 2008, Sergei Shtylyov wrote:
-> Sam Ravnborg wrote:
-> 
-> > hpt366: fix section mismatch warnings
-> 
-> > Fix following warnings:
-> > WARNING: o-sparc64/vmlinux.o(.data+0x195a38): Section mismatch in reference from the variable hpt37x_info.0 to the variable .devinit.data:hpt370
-> > WARNING: o-sparc64/vmlinux.o(.data+0x195a40): Section mismatch in reference from the variable hpt37x_info.0 to the variable .devinit.data:hpt370a
-> > WARNING: o-sparc64/vmlinux.o(.data+0x195a48): Section mismatch in reference from the variable hpt37x_info.0 to the variable .devinit.data:hpt372
-> > WARNING: o-sparc64/vmlinux.o(.data+0x195a50): Section mismatch in reference from the variable hpt37x_info.0 to the variable .devinit.data:hpt372n
-> 
-> > Replace a static array with a small switch resulting in
-> > more readable code.
-> > Be consistent in use of __devinitconst for const data
-> > to avoid section type conflicts.
-> > Mark the pci table __devinitconst.
-> 
-> > Signed-off-by: Sam Ravnborg <sam@ravnborg.org>
-> 
-> Acked-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+More complete documentation is available in Documentation/ide/ide-tape.txt.
 
-applied
+Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+---
+ Documentation/ide.txt |   47 -----------------------------------------------
+ 1 file changed, 47 deletions(-)
+
+Index: b/Documentation/ide.txt
+===================================================================
+--- a/Documentation/ide.txt
++++ b/Documentation/ide.txt
+@@ -279,53 +279,6 @@ You also need to use "probe" kernel para
+ 
+ ================================================================================
+ 
+-IDE ATAPI streaming tape driver
+--------------------------------
+-
+-This driver is a part of the Linux ide driver and works in co-operation
+-with linux/drivers/block/ide.c.
+-
+-The driver, in co-operation with ide.c, basically traverses the
+-request-list for the block device interface. The character device
+-interface, on the other hand, creates new requests, adds them
+-to the request-list of the block device, and waits for their completion.
+-
+-Pipelined operation mode is now supported on both reads and writes.
+-
+-The block device major and minor numbers are determined from the
+-tape's relative position in the ide interfaces, as explained in ide.c.
+-
+-The character device interface consists of the following devices:
+-
+- ht0		major 37, minor 0	first  IDE tape, rewind on close.
+- ht1		major 37, minor 1	second IDE tape, rewind on close.
+- ...
+- nht0		major 37, minor 128	first  IDE tape, no rewind on close.
+- nht1		major 37, minor 129	second IDE tape, no rewind on close.
+- ...
+-
+-Run /dev/MAKEDEV to create the above entries.
+-
+-The general magnetic tape commands compatible interface, as defined by
+-include/linux/mtio.h, is accessible through the character device.
+-
+-General ide driver configuration options, such as the interrupt-unmask
+-flag, can be configured by issuing an ioctl to the block device interface,
+-as any other ide device.
+-
+-Our own ide-tape ioctl's can be issued to either the block device or
+-the character device interface.
+-
+-Maximal throughput with minimal bus load will usually be achieved in the
+-following scenario:
+-
+-	1.	ide-tape is operating in the pipelined operation mode.
+-	2.	No buffering is performed by the user backup program.
+-
+-
+-
+-================================================================================
+-
+ Some Terminology
+ ----------------
+ IDE = Integrated Drive Electronics, meaning that each drive has a built-in
