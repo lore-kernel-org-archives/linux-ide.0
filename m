@@ -1,59 +1,58 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCH] libata: Register for dock events when the drive is	inside
- a dock station
-Date: Fri, 22 Feb 2008 10:34:24 +0900
-Message-ID: <47BE26A0.2040708@gmail.com>
-References: <20080214124048.GB9708@homac.suse.de> <20080214125615.GD9708@homac.suse.de> <47BC5F44.605@garzik.org> <20080221115305.GB5032@homac.suse.de>
+Subject: Re: [PATCH] libata-pmp: clear hob for pmp register accesses
+Date: Fri, 22 Feb 2008 10:40:41 +0900
+Message-ID: <47BE2819.90601@gmail.com>
+References: <4730E312.3090900@navy.mil> <4737C16E.3070607@gmail.com> <4738827D.9060405@pobox.com> <4738F935.1000708@gmail.com> <47BC798F.6070900@pobox.com> <47BCF28F.5080702@gmail.com> <47BD93BC.3080301@pobox.com> <47BDE489.6070701@rtr.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.182]:5074 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S936620AbYBVBe3 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 21 Feb 2008 20:34:29 -0500
-Received: by wa-out-1112.google.com with SMTP id v27so261833wah.23
-        for <linux-ide@vger.kernel.org>; Thu, 21 Feb 2008 17:34:29 -0800 (PST)
-In-Reply-To: <20080221115305.GB5032@homac.suse.de>
+Received: from nf-out-0910.google.com ([64.233.182.191]:42856 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760140AbYBVBku (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 21 Feb 2008 20:40:50 -0500
+Received: by nf-out-0910.google.com with SMTP id g13so163500nfb.21
+        for <linux-ide@vger.kernel.org>; Thu, 21 Feb 2008 17:40:48 -0800 (PST)
+In-Reply-To: <47BDE489.6070701@rtr.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Tejun Heo <htejun@gmail.com>, Kristen Carlson Accardi <kristen.c.accardi@intel.com>
+To: Mark Lord <liml@rtr.ca>
+Cc: Jeff Garzik <jgarzik@pobox.com>, IDE/ATA development list <linux-ide@vger.kernel.org>, Saeed Bishara <saeed@marvell.com>
 
-> If a device/bay is inside a docking station, we need to register for dock
-> events additionally to bay events. If a dock event occurs, the dock driver
-> will call the appropriate handler (ata_acpi_ap_notify() or
-> ata_acpi_dev_notify()) for us.
+Mark Lord wrote:
+> Mark Lord wrote:
+>> Tejun Heo wrote:
+>>> Hello, Mark.
+>>>
+>>> Mark Lord wrote:
+>>>> Tejun, I've added PMP to sata_mv, and am now trying to get it
+>>>> to work with a Marvell PM attached.
+>>>>
+>>>> And the behaviour I see is very bizarre.
+>>>>
+>>>> After hard+soft resets, the PM signature is found,
+>>>> and libata interrogates the PM registers.
+>>>>
+>>>> It successfully reads register 0, and then register 1.
+>>>> But all subsequent registers read out (incorrectly) as zeros.
+> ..
 > 
-> Signed-off-by: Holger Macht <hmacht@suse.de>
-> ---
+> Saeed has confirmed this behaviour with a SATA analyzer.
+> The Marvell port-multiplier apparently likes to see clean HOB
+> information when accessing PMP registers.
 > 
-> diff --git a/drivers/ata/libata-acpi.c b/drivers/ata/libata-acpi.c
-> index 9e8ec19..563ad72 100644
-> --- a/drivers/ata/libata-acpi.c
-> +++ b/drivers/ata/libata-acpi.c
-> @@ -191,20 +191,33 @@ void ata_acpi_associate(struct ata_host *host)
->  		else
->  			ata_acpi_associate_ide_port(ap);
->  
-> -		if (ap->acpi_handle)
-> +		if (ap->acpi_handle) {
->  			acpi_install_notify_handler (ap->acpi_handle,
->  						     ACPI_SYSTEM_NOTIFY,
->  						     ata_acpi_ap_notify,
->  						     ap);
-> +#ifdef CONFIG_ACPI_DOCK_MODULE
+> Since sata_mv uses PIO shadow register access, this doesn't happen
+> automatically, as it might in a more purely FIS-based driver (eg. ahci).
+> 
+> One way to fix this is to flag these commands with ATA_TFLAG_LBA48,
+> forcing libata to write out the HOB fields with known (zero) values.
+> 
+> Signed-off-by: Saeed Bishara <saeed@marvell.com>
+> Acked-by: Mark Lord <mlord@pobox.com>
 
-Heh, you need
+Acked-by: Tejun Heo <htejun@gmail.com>
 
-  #if defined(CONFIG_ACPI_DOCK) || defined(CONFIG_ACPI_DOCK_MODULE)
-
-Also, another question.  Is there a way to tell whether the device or
-port is connected behind a dock or not?  Just notifying hotplug signal
-is fine for hotplugging but to make hot unplug safe for PATA, libata
-should be able to tell whether the device is actually gonna go away and
-kill it explicitly.
-
-Thanks.
+I think this is correct w/ or w/o the mv problem.
 
 -- 
 tejun
