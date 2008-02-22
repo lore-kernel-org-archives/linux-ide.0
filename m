@@ -1,29 +1,82 @@
-From: Alan Cox <alan@redhat.com>
-Subject: Re: ata-piix.c (and libata.ko) in RHEL5.1 (build 78 currently) - this kernel is 2.6.18 baqsed
-Date: Fri, 22 Feb 2008 10:10:10 -0500
-Message-ID: <20080222151010.GC30920@devserv.devel.redhat.com>
-References: <6853F62BE9A693419863D51D4554A9E3012BE92B@EXNA.corp.stratus.com>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: [PATCH] libata: automatically use DMADIR if drive/bridge requires
+ it
+Date: Fri, 22 Feb 2008 11:32:21 -0500
+Message-ID: <47BEF915.1020106@pobox.com>
+References: <47B9D64C.3000705@rtr.ca> <47B9F05A.1060207@rtr.ca> <47BC6100.9020906@pobox.com> <47BC7727.1090508@rtr.ca> <47BCFD4E.4070100@gmail.com> <47BE9F66.5040404@tw.ibm.com> <47BECF0E.5040809@rtr.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:57299 "EHLO mx1.redhat.com"
+Received: from srv5.dvmed.net ([207.36.208.214]:34825 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753041AbYBVPYd (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 22 Feb 2008 10:24:33 -0500
-Content-Disposition: inline
-In-Reply-To: <6853F62BE9A693419863D51D4554A9E3012BE92B@EXNA.corp.stratus.com>
+	id S1759981AbYBVQc3 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 22 Feb 2008 11:32:29 -0500
+In-Reply-To: <47BECF0E.5040809@rtr.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "Richardson, Charlotte" <Charlotte.Richardson@stratus.com>
-Cc: jgarzik@pobox.com, alan@redhat.com, "Petrakis, Peter" <Peter.Petrakis@stratus.com>, "Duval, Dan" <Dan.Duval@stratus.com>, "Dailey, Nate" <Nate.Dailey@stratus.com>, linux-ide@vger.kernel.org
+To: Mark Lord <liml@rtr.ca>
+Cc: albertl@mail.com, Tejun Heo <htejun@gmail.com>, IDE/ATA development list <linux-ide@vger.kernel.org>, Alan Cox <alan@redhat.com>, Ricardo Salveti de Araujo <rsalveti@br.ibm.com>
 
-On Fri, Feb 22, 2008 at 09:52:45AM -0500, Richardson, Charlotte wrote:
-> There is a hack in its probe routine that disables this. I've disabled the hack and ran a long test of
-> hotplugs yesterday (added and removed a DVD drive connected to the ESB2 IDE - this is Intel
-> device 0x269E) for 26 cycles, and it all appears to function properly. There are other things that do
+Mark Lord wrote:
+> Albert Lee wrote:
+>> Tejun Heo wrote:
+>>> Back in 2.6.17-rc2, a libata module parameter was added for 
+>>> atapi_dmadir.
+>>>
+>>> That's nice, but most SATA devices which need it will tell us about it
+>>> in their IDENTIFY PACKET response, as bit-15 of word-62 of the
+>>> returned data (as per ATA7, ATA8 specifications).
+>>>
+>>> So for those which specify it, we should automatically use the DMADIR 
+>>> bit.
+>>> Otherwise, disc writing will fail by default on many SATA-ATAPI drives.
+>>>
+>>> This patch adds ATA_DFLAG_DMADIR and make ata_dev_configure() set it
+>>> if atapi_dmadir is set or identify data indicates DMADIR is necessary.
+>>> atapi_xlat() is converted to check ATA_DFLAG_DMADIR before setting
+>>> DMADIR.
+>>>
+>>> Original patch is from Mark Lord.
+>>>
+>>> Signed-off-by: Tejun Heo <htejun@gmail.com>
+>>> Cc: Mark Lord <mlord@pobox.com>
+>>> ---
+>>> I don't have a bridge which sets DMADIR but so only checked atapi_dmadir
+>>> parameter.  Thanks.
+>>>
+>>
+>> The patch looks good. However, it seems there is no realworld IDE-to-SATA
+>> bridge that requires DMADIR and also mangles IDENTIFY PACKET bit-15 of
+>> word-62 to indicate its presence.
+>>
+>>> From the previous test of the IDE-to-SATA bridges, only the Sil 3611
+>> requires the host software to hint on ATAPI DMADIR. But Sil 3611 doesn't
+>> mangle IDENTIFY PACKET word-62:
+>> http://www.spinics.net/lists/linux-ide/msg01514.html
+> ..
+> 
+> Ahh, great!  We have "history" here!
+> 
+> But there are more SATA bridges out there than the ones Alber has there
+> (SiI 3611/3811, Marvell 88i8030/88SA8040, Acard ARC770, JMicron JM20330).
+> 
+> There's the Marvell 88SA8050, and I have a funky looking thing here
+> that says "SataLink SPiF223A" on it (????).  I wonder what it does?
+> And how many other ones are there?
+> 
+> The Word62 patch (from Tejun) is simple enough that the "complexity"
+> point from before really doesn't hold water.
 
-It ought to work fine for ICH4 or so and later (older ICH you can only warm
-plug). Be sure to test the released RHEL as I know the dev tree has completely
-broken all hot plug disk support and hangs a lot if you do. Jeff I assume
-knows the status of fixing that.
+I'm going to apply Tejun's patch.  It's fine (as I noted I conditionally 
+ACK'd your original patch).
+
+My opinion, though, it that this is merely coding to the spec, rather 
+than making a bunch of real-world hardware work.  All the SATA<->PATA 
+bridges I have, that support ATAPI, do not flag DMADIR.
+
+	Jeff
+
+
+
 
