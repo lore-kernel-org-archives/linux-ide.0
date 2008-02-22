@@ -1,88 +1,74 @@
-From: "Shane Huang" <ati.shane@gmail.com>
-Subject: RE: [PATCH] AMD SB700/SB800 SATA support 64bit DMA
-Date: Fri, 22 Feb 2008 05:00:31 -0800
-Message-ID: <e2a1ca3c0802220500n565144f6k4fd25b55e4489326@mail.gmail.com>
+From: Mark Lord <liml@rtr.ca>
+Subject: Re: [PATCH] libata: automatically use DMADIR if drive/bridge requires
+ it
+Date: Fri, 22 Feb 2008 08:33:02 -0500
+Message-ID: <47BECF0E.5040809@rtr.ca>
+References: <47B9D64C.3000705@rtr.ca> <47B9F05A.1060207@rtr.ca> <47BC6100.9020906@pobox.com> <47BC7727.1090508@rtr.ca> <47BCFD4E.4070100@gmail.com> <47BE9F66.5040404@tw.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.156]:38814 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754598AbYBVNAc (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 22 Feb 2008 08:00:32 -0500
-Received: by fg-out-1718.google.com with SMTP id e21so290906fga.17
-        for <linux-ide@vger.kernel.org>; Fri, 22 Feb 2008 05:00:31 -0800 (PST)
-Content-Disposition: inline
+Received: from rtr.ca ([76.10.145.34]:2020 "EHLO mail.rtr.ca"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757361AbYBVNdG (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 22 Feb 2008 08:33:06 -0500
+In-Reply-To: <47BE9F66.5040404@tw.ibm.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: jgarzik@pobox.com, htejun@gmail.com
-Cc: linux-ide@vger.kernel.org, henry.su@amd.com, shane.huang@amd.com, ati.shane@gmail.com
+To: albertl@mail.com
+Cc: Tejun Heo <htejun@gmail.com>, Jeff Garzik <jgarzik@pobox.com>, IDE/ATA development list <linux-ide@vger.kernel.org>, Alan Cox <alan@redhat.com>, Ricardo Salveti de Araujo <rsalveti@br.ibm.com>
 
-Jeff and Tejun:
+Albert Lee wrote:
+> Tejun Heo wrote:
+>> Back in 2.6.17-rc2, a libata module parameter was added for atapi_dmadir.
+>>
+>> That's nice, but most SATA devices which need it will tell us about it
+>> in their IDENTIFY PACKET response, as bit-15 of word-62 of the
+>> returned data (as per ATA7, ATA8 specifications).
+>>
+>> So for those which specify it, we should automatically use the DMADIR bit.
+>> Otherwise, disc writing will fail by default on many SATA-ATAPI drives.
+>>
+>> This patch adds ATA_DFLAG_DMADIR and make ata_dev_configure() set it
+>> if atapi_dmadir is set or identify data indicates DMADIR is necessary.
+>> atapi_xlat() is converted to check ATA_DFLAG_DMADIR before setting
+>> DMADIR.
+>>
+>> Original patch is from Mark Lord.
+>>
+>> Signed-off-by: Tejun Heo <htejun@gmail.com>
+>> Cc: Mark Lord <mlord@pobox.com>
+>> ---
+>> I don't have a bridge which sets DMADIR but so only checked atapi_dmadir
+>> parameter.  Thanks.
+>>
+> 
+> The patch looks good. However, it seems there is no realworld IDE-to-SATA
+> bridge that requires DMADIR and also mangles IDENTIFY PACKET bit-15 of
+> word-62 to indicate its presence.
+> 
+>>From the previous test of the IDE-to-SATA bridges, only the Sil 3611
+> requires the host software to hint on ATAPI DMADIR. But Sil 3611 doesn't
+> mangle IDENTIFY PACKET word-62:
+> http://www.spinics.net/lists/linux-ide/msg01514.html
+..
 
+Ahh, great!  We have "history" here!
 
-I'm using my private mailbox to submit it before I set up
-the connection to our exchange mail server under linux.
-Please check whether this patch can be accepted.
+But there are more SATA bridges out there than the ones Alber has there
+(SiI 3611/3811, Marvell 88i8030/88SA8040, Acard ARC770, JMicron JM20330).
 
+There's the Marvell 88SA8050, and I have a funky looking thing here
+that says "SataLink SPiF223A" on it (????).  I wonder what it does?
+And how many other ones are there?
 
-Thanks
-Shane
+The Word62 patch (from Tejun) is simple enough that the "complexity"
+point from before really doesn't hold water.
 
+To be ATA compliant, we really should add it in.
+But yes, it would also be good to see it in action.
 
-CUT HERE
-========
-SB700 SATA controller can support 64 bit DMA, the previous commit
-badc2341579511a247f5993865aa68379e283c5c was added with
-careless reference to SB600, which should be modified by this patch.
+That's more likely to happen in the general user community,
+than in our limited circle of kernel folk with limited hardware.
 
-Signed-off-by: Shane Huang <shane.huang@amd.com>
-
-
-diff -ruN a/drivers/ata/ahci.c b/drivers/ata/ahci.c
---- a/drivers/ata/ahci.c	2008-02-22 18:17:03.000000000 +0800
-+++ b/drivers/ata/ahci.c	2008-02-22 18:16:54.000000000 +0800
-@@ -85,6 +85,7 @@
- 	board_ahci_ign_iferr	= 2,
- 	board_ahci_sb600	= 3,
- 	board_ahci_mv		= 4,
-+	board_ahci_sb700	= 5,
-
- 	/* global controller registers */
- 	HOST_CAP		= 0x00, /* host capabilities */
-@@ -442,6 +443,16 @@
- 		.udma_mask	= ATA_UDMA6,
- 		.port_ops	= &ahci_ops,
- 	},
-+	/* board_ahci_sb700 */
-+	{
-+		AHCI_HFLAGS	(AHCI_HFLAG_IGN_SERR_INTERNAL |
-+				 AHCI_HFLAG_NO_PMP),
-+		.flags		= AHCI_FLAG_COMMON,
-+		.link_flags	= AHCI_LFLAG_COMMON,
-+		.pio_mask	= 0x1f, /* pio0-4 */
-+		.udma_mask	= ATA_UDMA6,
-+		.port_ops	= &ahci_ops,
-+	},
- };
-
- static const struct pci_device_id ahci_pci_tbl[] = {
-@@ -484,12 +495,12 @@
-
- 	/* ATI */
- 	{ PCI_VDEVICE(ATI, 0x4380), board_ahci_sb600 }, /* ATI SB600 */
--	{ PCI_VDEVICE(ATI, 0x4390), board_ahci_sb600 }, /* ATI SB700/800 */
--	{ PCI_VDEVICE(ATI, 0x4391), board_ahci_sb600 }, /* ATI SB700/800 */
--	{ PCI_VDEVICE(ATI, 0x4392), board_ahci_sb600 }, /* ATI SB700/800 */
--	{ PCI_VDEVICE(ATI, 0x4393), board_ahci_sb600 }, /* ATI SB700/800 */
--	{ PCI_VDEVICE(ATI, 0x4394), board_ahci_sb600 }, /* ATI SB700/800 */
--	{ PCI_VDEVICE(ATI, 0x4395), board_ahci_sb600 }, /* ATI SB700/800 */
-+	{ PCI_VDEVICE(ATI, 0x4390), board_ahci_sb700 }, /* ATI SB700/800 */
-+	{ PCI_VDEVICE(ATI, 0x4391), board_ahci_sb700 }, /* ATI SB700/800 */
-+	{ PCI_VDEVICE(ATI, 0x4392), board_ahci_sb700 }, /* ATI SB700/800 */
-+	{ PCI_VDEVICE(ATI, 0x4393), board_ahci_sb700 }, /* ATI SB700/800 */
-+	{ PCI_VDEVICE(ATI, 0x4394), board_ahci_sb700 }, /* ATI SB700/800 */
-+	{ PCI_VDEVICE(ATI, 0x4395), board_ahci_sb700 }, /* ATI SB700/800 */
-
- 	/* VIA */
- 	{ PCI_VDEVICE(VIA, 0x3349), board_ahci_vt8251 }, /* VIA VT8251 */
+Cheers
