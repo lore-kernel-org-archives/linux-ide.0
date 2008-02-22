@@ -1,30 +1,31 @@
 From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [PATCH] AMD SB700/SB800 SATA support 64bit DMA
-Date: Fri, 22 Feb 2008 09:32:14 +0000
-Message-ID: <20080222093214.00ab5c58@core>
-References: <B90463BC30D2E446BA423D888DC85E502C6961@sshaexmb1.amd.com>
+Subject: Re: What's needed for PMP support?
+Date: Fri, 22 Feb 2008 09:57:41 +0000
+Message-ID: <20080222095741.481883a5@core>
+References: <4730E312.3090900@navy.mil>
+	<4737C16E.3070607@gmail.com>
+	<4738827D.9060405@pobox.com>
+	<4738F935.1000708@gmail.com>
+	<47BC798F.6070900@pobox.com>
+	<47BE17CA.6060406@rtr.ca>
+	<47BE1833.9090501@rtr.ca>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:54245 "EHLO
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:38361 "EHLO
 	lxorguk.ukuu.org.uk" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1762452AbYBVJmF (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 22 Feb 2008 04:42:05 -0500
-In-Reply-To: <B90463BC30D2E446BA423D888DC85E502C6961@sshaexmb1.amd.com>
+	with ESMTP id S1762309AbYBVKHI (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 22 Feb 2008 05:07:08 -0500
+In-Reply-To: <47BE1833.9090501@rtr.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-Cc: jgarzik@pobox.com, linux-ide@vger.kernel.org, Tejun Heo <htejun@gmail.com>, "Su, Henry" <Henry.Su@amd.com>, "Huang, Shane" <Shane.Huang@amd.com>
+To: Mark Lord <liml@rtr.ca>
+Cc: Tejun Heo <htejun@gmail.com>, IDE/ATA development list <linux-ide@vger.kernel.org>, Saeed Bishara <saeed@marvell.com>
 
-On Fri, 22 Feb 2008 12:55:20 +0800
-"Huang, Shane" <Shane.Huang@amd.com> wrote:
+> Heck, if .dev_select() took a *device* instead of a *port*
+> as it's parameter, then I could probably manage it fine in there.
 
-> Jeff:
-> 
-> SB700 SATA controller can support 64 bit DMA, the previous commit
-> badc2341579511a247f5993865aa68379e283c5c was added with
-> careless reference to SB600, which should be modified by this patch.
+dev_select gets called during probing before the relevant structures are
+neccessarily set up.
 
-Does the SB700 have the same limits as the SB600 on 256 sectors in one
-PRD entry ? If it does then this change needs to wait until the
-workaround for that is included.
