@@ -1,86 +1,102 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH] ide: remove ide-tape documentation from Documentation/ide.txt
-Date: Fri, 22 Feb 2008 22:05:32 +0100
-Message-ID: <200802222205.32903.bzolnier@gmail.com>
+Subject: [PATCH] ide: remove stale comments from ide-dma.c
+Date: Fri, 22 Feb 2008 22:24:53 +0100
+Message-ID: <200802222224.53642.bzolnier@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
   charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.173]:38810 "EHLO
+Received: from ug-out-1314.google.com ([66.249.92.173]:19929 "EHLO
 	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750985AbYBVUvR (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 22 Feb 2008 15:51:17 -0500
-Received: by ug-out-1314.google.com with SMTP id z38so1410491ugc.16
-        for <linux-ide@vger.kernel.org>; Fri, 22 Feb 2008 12:51:15 -0800 (PST)
+	with ESMTP id S1757965AbYBVVK1 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 22 Feb 2008 16:10:27 -0500
+Received: by ug-out-1314.google.com with SMTP id z38so1415608ugc.16
+        for <linux-ide@vger.kernel.org>; Fri, 22 Feb 2008 13:10:25 -0800 (PST)
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
 Cc: linux-kernel@vger.kernel.org
 
-More complete documentation is available in Documentation/ide/ide-tape.txt.
+- ide-dma.c is not a separate module
+
+- ide-dma.c is not PCI specific anymore
+
+- DMA is enabled by default nowadays
+
+- link for Intel Zappa BIOS is dead
+
+etc.
 
 Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 ---
- Documentation/ide.txt |   47 -----------------------------------------------
- 1 file changed, 47 deletions(-)
+ drivers/ide/ide-dma.c |   48 ------------------------------------------------
+ 1 file changed, 48 deletions(-)
 
-Index: b/Documentation/ide.txt
+Index: b/drivers/ide/ide-dma.c
 ===================================================================
---- a/Documentation/ide.txt
-+++ b/Documentation/ide.txt
-@@ -279,53 +279,6 @@ You also need to use "probe" kernel para
+--- a/drivers/ide/ide-dma.c
++++ b/drivers/ide/ide-dma.c
+@@ -11,49 +11,6 @@
+  */
  
- ================================================================================
+ /*
+- * This module provides support for the bus-master IDE DMA functions
+- * of various PCI chipsets, including the Intel PIIX (i82371FB for
+- * the 430 FX chipset), the PIIX3 (i82371SB for the 430 HX/VX and 
+- * 440 chipsets), and the PIIX4 (i82371AB for the 430 TX chipset)
+- * ("PIIX" stands for "PCI ISA IDE Xcellerator").
+- *
+- * Pretty much the same code works for other IDE PCI bus-mastering chipsets.
+- *
+- * DMA is supported for all IDE devices (disk drives, cdroms, tapes, floppies).
+- *
+- * By default, DMA support is prepared for use, but is currently enabled only
+- * for drives which already have DMA enabled (UltraDMA or mode 2 multi/single),
+- * or which are recognized as "good" (see table below).  Drives with only mode0
+- * or mode1 (multi/single) DMA should also work with this chipset/driver
+- * (eg. MC2112A) but are not enabled by default.
+- *
+- * Use "hdparm -i" to view modes supported by a given drive.
+- *
+- * The hdparm-3.5 (or later) utility can be used for manually enabling/disabling
+- * DMA support, but must be (re-)compiled against this kernel version or later.
+- *
+- * To enable DMA, use "hdparm -d1 /dev/hd?" on a per-drive basis after booting.
+- * If problems arise, ide.c will disable DMA operation after a few retries.
+- * This error recovery mechanism works and has been extremely well exercised.
+- *
+- * IDE drives, depending on their vintage, may support several different modes
+- * of DMA operation.  The boot-time modes are indicated with a "*" in
+- * the "hdparm -i" listing, and can be changed with *knowledgeable* use of
+- * the "hdparm -X" feature.  There is seldom a need to do this, as drives
+- * normally power-up with their "best" PIO/DMA modes enabled.
+- *
+- * Testing has been done with a rather extensive number of drives,
+- * with Quantum & Western Digital models generally outperforming the pack,
+- * and Fujitsu & Conner (and some Seagate which are really Conner) drives
+- * showing more lackluster throughput.
+- *
+- * Keep an eye on /var/adm/messages for "DMA disabled" messages.
+- *
+- * Some people have reported trouble with Intel Zappa motherboards.
+- * This can be fixed by upgrading the AMI BIOS to version 1.00.04.BS0,
+- * available from ftp://ftp.intel.com/pub/bios/10004bs0.exe
+- * (thanks to Glen Morrell <glen@spin.Stanford.edu> for researching this).
+- *
+  * Thanks to "Christopher J. Reimer" <reimer@doe.carleton.ca> for
+  * fixing the problem with the BIOS on some Acer motherboards.
+  *
+@@ -65,11 +22,6 @@
+  *
+  * Most importantly, thanks to Robert Bringman <rob@mars.trion.com>
+  * for supplying a Promise UDMA board & WD UDMA drive for this work!
+- *
+- * And, yes, Intel Zappa boards really *do* use both PIIX IDE ports.
+- *
+- * ATA-66/100 and recovery functions, I forgot the rest......
+- *
+  */
  
--IDE ATAPI streaming tape driver
---------------------------------
--
--This driver is a part of the Linux ide driver and works in co-operation
--with linux/drivers/block/ide.c.
--
--The driver, in co-operation with ide.c, basically traverses the
--request-list for the block device interface. The character device
--interface, on the other hand, creates new requests, adds them
--to the request-list of the block device, and waits for their completion.
--
--Pipelined operation mode is now supported on both reads and writes.
--
--The block device major and minor numbers are determined from the
--tape's relative position in the ide interfaces, as explained in ide.c.
--
--The character device interface consists of the following devices:
--
-- ht0		major 37, minor 0	first  IDE tape, rewind on close.
-- ht1		major 37, minor 1	second IDE tape, rewind on close.
-- ...
-- nht0		major 37, minor 128	first  IDE tape, no rewind on close.
-- nht1		major 37, minor 129	second IDE tape, no rewind on close.
-- ...
--
--Run /dev/MAKEDEV to create the above entries.
--
--The general magnetic tape commands compatible interface, as defined by
--include/linux/mtio.h, is accessible through the character device.
--
--General ide driver configuration options, such as the interrupt-unmask
--flag, can be configured by issuing an ioctl to the block device interface,
--as any other ide device.
--
--Our own ide-tape ioctl's can be issued to either the block device or
--the character device interface.
--
--Maximal throughput with minimal bus load will usually be achieved in the
--following scenario:
--
--	1.	ide-tape is operating in the pipelined operation mode.
--	2.	No buffering is performed by the user backup program.
--
--
--
--================================================================================
--
- Some Terminology
- ----------------
- IDE = Integrated Drive Electronics, meaning that each drive has a built-in
+ #include <linux/module.h>
