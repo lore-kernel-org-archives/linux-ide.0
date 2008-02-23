@@ -1,36 +1,124 @@
-From: "Vegard Nossum" <vegard.nossum@gmail.com>
-Subject: Re: ata1.00: failed to IDENTIFY (I/O error, err_mask=0x4)
-Date: Sat, 23 Feb 2008 19:52:38 +0100
-Message-ID: <19f34abd0802231052x926c873p3ceef7904a120087@mail.gmail.com>
-References: <19f34abd0802230948n3b98b7d2kd67ca9c2f8fbbd47@mail.gmail.com>
-	 <20080223183138.59d18e26@core>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: [PATCH 1/2] qd65xx: always use ->selectproc method
+Date: Sat, 23 Feb 2008 20:11:49 +0100
+Message-ID: <200802232011.49403.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rv-out-0910.google.com ([209.85.198.191]:11420 "EHLO
-	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754840AbYBWSwj (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 23 Feb 2008 13:52:39 -0500
-Received: by rv-out-0910.google.com with SMTP id k20so549714rvb.1
-        for <linux-ide@vger.kernel.org>; Sat, 23 Feb 2008 10:52:38 -0800 (PST)
-In-Reply-To: <20080223183138.59d18e26@core>
+Received: from ug-out-1314.google.com ([66.249.92.170]:9498 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757934AbYBWS6Y (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 23 Feb 2008 13:58:24 -0500
+Received: by ug-out-1314.google.com with SMTP id z38so219649ugc.16
+        for <linux-ide@vger.kernel.org>; Sat, 23 Feb 2008 10:58:22 -0800 (PST)
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+To: linux-ide@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
 
-On Sat, Feb 23, 2008 at 7:31 PM, Alan Cox <alan@lxorguk.ukuu.org.uk> wrote:
-> O> I don't see the connection between (no-)smp and ata. Something with
->
-> > interrupt routing/IPI, missing irq ack? Booting another !SMP kernel
->  > works fine. The problem also exists in 2.6.24-rc2.
->
->  Almost certainly interrupt routing try smp but with noapic and see if it
->  fails as well ?
+qd_select() checks itself whether timings should be reprogrammed so
+remove superfluous qd_timing_ok() and always use ->selectproc method
+(rename qd_select() to qd65xx_select() while at it).
 
-noapic works fine.
+Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+---
+ drivers/ide/legacy/qd65xx.c |   37 ++++++++++---------------------------
+ 1 file changed, 10 insertions(+), 27 deletions(-)
 
-
-V
+Index: b/drivers/ide/legacy/qd65xx.c
+===================================================================
+--- a/drivers/ide/legacy/qd65xx.c
++++ b/drivers/ide/legacy/qd65xx.c
+@@ -88,12 +88,12 @@
+ static int timings[4]={-1,-1,-1,-1}; /* stores current timing for each timer */
+ 
+ /*
+- * qd_select:
++ * qd65xx_select:
+  *
+- * This routine is invoked from ide.c to prepare for access to a given drive.
++ * This routine is invoked to prepare for access to a given drive.
+  */
+ 
+-static void qd_select (ide_drive_t *drive)
++static void qd65xx_select(ide_drive_t *drive)
+ {
+ 	u8 index = ((	(QD_TIMREG(drive)) & 0x80 ) >> 7) |
+ 			(QD_TIMREG(drive) & 0x02);
+@@ -168,36 +168,15 @@ static int qd_find_disk_type (ide_drive_
+ }
+ 
+ /*
+- * qd_timing_ok:
+- *
+- * check whether timings don't conflict
+- */
+-
+-static int qd_timing_ok (ide_drive_t drives[])
+-{
+-	return (IDE_IMPLY(drives[0].present && drives[1].present,
+-			IDE_IMPLY(QD_TIMREG(drives) == QD_TIMREG(drives+1),
+-			          QD_TIMING(drives) == QD_TIMING(drives+1))));
+-	/* if same timing register, must be same timing */
+-}
+-
+-/*
+  * qd_set_timing:
+  *
+- * records the timing, and enables selectproc as needed
++ * records the timing
+  */
+ 
+ static void qd_set_timing (ide_drive_t *drive, u8 timing)
+ {
+-	ide_hwif_t *hwif = HWIF(drive);
+-
+ 	drive->drive_data &= 0xff00;
+ 	drive->drive_data |= timing;
+-	if (qd_timing_ok(hwif->drives)) {
+-		qd_select(drive); /* selects once */
+-		hwif->selectproc = NULL;
+-	} else
+-		hwif->selectproc = &qd_select;
+ 
+ 	printk(KERN_DEBUG "%s: %#x\n", drive->name, timing);
+ }
+@@ -400,7 +379,8 @@ static int __init qd_probe(int base)
+ 		qd_setup(hwif, base, config);
+ 
+ 		hwif->port_init_devs = qd6500_port_init_devs;
+-		hwif->set_pio_mode = &qd6500_set_pio_mode;
++		hwif->set_pio_mode   = qd6500_set_pio_mode;
++		hwif->selectproc     = qd65xx_select;
+ 
+ 		idx[unit] = unit;
+ 
+@@ -441,7 +421,8 @@ static int __init qd_probe(int base)
+ 			qd_setup(hwif, base, config | (control << 8));
+ 
+ 			hwif->port_init_devs = qd6580_port_init_devs;
+-			hwif->set_pio_mode = &qd6580_set_pio_mode;
++			hwif->set_pio_mode   = qd6580_set_pio_mode;
++			hwif->selectproc     = qd65xx_select;
+ 
+ 			idx[unit] = unit;
+ 
+@@ -460,6 +441,7 @@ static int __init qd_probe(int base)
+ 				qd_setup(hwif, base, config | (control << 8));
+ 				hwif->port_init_devs = qd6580_port_init_devs;
+ 				hwif->set_pio_mode   = qd6580_set_pio_mode;
++				hwif->selectproc     = qd65xx_select;
+ 				idx[0] = 0;
+ 			}
+ 
+@@ -469,6 +451,7 @@ static int __init qd_probe(int base)
+ 				qd_setup(mate, base, config | (control << 8));
+ 				mate->port_init_devs = qd6580_port_init_devs;
+ 				mate->set_pio_mode   = qd6580_set_pio_mode;
++				hwif->selectproc     = qd65xx_select;
+ 				idx[1] = 1;
+ 			}
+ 
