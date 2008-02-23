@@ -1,101 +1,53 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH] ide: remove obsoleted "idex=noprobe" kernel parameter
-Date: Fri, 22 Feb 2008 23:59:02 +0100
-Message-ID: <200802222359.02590.bzolnier@gmail.com>
+From: Mark Lord <liml@rtr.ca>
+Subject: Re: new ata_port_operations for .pmp_{read,write} ?
+Date: Fri, 22 Feb 2008 19:38:20 -0500
+Message-ID: <47BF6AFC.2060301@rtr.ca>
+References: <4730E312.3090900@navy.mil> <4737C16E.3070607@gmail.com> <4738827D.9060405@pobox.com> <4738F935.1000708@gmail.com> <47BC798F.6070900@pobox.com> <47BE17CA.6060406@rtr.ca> <47BE1833.9090501@rtr.ca> <47BE2C0C.3020801@gmail.com> <47BE2DBD.9010704@rtr.ca> <47BE2F9E.5040206@gmail.com> <47BE32B5.5020300@rtr.ca> <47BE3325.8060209@rtr.ca> <47BE4701.2030104@rtr.ca> <47BE4DFE.2030407@rtr.ca> <47BEDAF2.8000301@rtr.ca> <47BEDC16.4000502@rtr.ca>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.168]:49238 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760223AbYBVWpK (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 22 Feb 2008 17:45:10 -0500
-Received: by ug-out-1314.google.com with SMTP id z38so8556ugc.16
-        for <linux-ide@vger.kernel.org>; Fri, 22 Feb 2008 14:45:09 -0800 (PST)
-Content-Disposition: inline
+Received: from rtr.ca ([76.10.145.34]:1520 "EHLO mail.rtr.ca"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S934521AbYBWAiW (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 22 Feb 2008 19:38:22 -0500
+In-Reply-To: <47BEDC16.4000502@rtr.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: IDE/ATA development list <linux-ide@vger.kernel.org>, Saeed Bishara <saeed@marvell.com>
 
-* Remove obsoleted "idex=noprobe" kernel parameter.
+Mark Lord wrote:
+> Mark Lord wrote:
+...
+>> And for that matter, is it possible for sata_pmp_read() to be called
+>> while the link is active with another command ?  Not today, it seems,
+>> but what about when hotplug polling gets implemented ?
+> ..
+> That's the one I'm most concerned about.  Should I be?
+...
 
-* Remove no longer needed hwif->noprobe quirk from ide_hwif_configure()
-  and hwif->noprobe checking from cmd640.c.
+Tejun,
 
-Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
----
-goes before "ide: move default IDE ports setup to ide_generic host driver"
-patch in IDE quilt tree
+On a related note, I'm now looking into PMP error handling in the driver.
+The obvious thing I see that I want to fix, is that after a media error
+on any PMP attached drive, I get this:
 
- drivers/ide/ide.c        |    6 ++----
- drivers/ide/pci/cmd640.c |    3 +--
- drivers/ide/setup-pci.c  |    7 -------
- 3 files changed, 3 insertions(+), 13 deletions(-)
+	ata20.00: failed to read SCR 1 (Emask=0x40)
+	ata20.01: failed to read SCR 1 (Emask=0x40)
+	ata20.02: failed to read SCR 1 (Emask=0x40)
+	ata20.03: failed to read SCR 1 (Emask=0x40)
+	ata20.04: failed to read SCR 1 (Emask=0x40)
 
-Index: b/drivers/ide/ide.c
-===================================================================
---- a/drivers/ide/ide.c
-+++ b/drivers/ide/ide.c
-@@ -1144,7 +1144,7 @@ static int __init ide_setup(char *s)
- 		 * (-8, -9, -10) are reserved to ease the hardcoding.
- 		 */
- 		static const char *ide_words[] = {
--			"noprobe", "serialize", "minus3", "minus4",
-+			"minus1", "serialize", "minus3", "minus4",
- 			"reset", "minus6", "ata66", "minus8", "minus9",
- 			"minus10", "four", "qd65xx", "ht6560b", "cmd640_vlb",
- 			"dtc2278", "umc8672", "ali14xx", NULL };
-@@ -1236,9 +1236,7 @@ static int __init ide_setup(char *s)
- 				hwif->serialized = hwif->mate->serialized = 1;
- 				goto obsolete_option;
- 
--			case -1: /* "noprobe" */
--				hwif->noprobe = 1;
--				goto obsolete_option;
-+			case -1:
- 			case 0:
- 			case 1:
- 			case 2:
-Index: b/drivers/ide/pci/cmd640.c
-===================================================================
---- a/drivers/ide/pci/cmd640.c
-+++ b/drivers/ide/pci/cmd640.c
-@@ -789,8 +789,7 @@ static int __init cmd640x_init(void)
- 	/*
- 	 * Try to enable the secondary interface, if not already enabled
- 	 */
--	if (cmd_hwif1->noprobe ||
--	    (cmd_hwif1->drives[0].noprobe && cmd_hwif1->drives[1].noprobe)) {
-+	if (cmd_hwif1->drives[0].noprobe && cmd_hwif1->drives[1].noprobe) {
- 		port2 = "not probed";
- 	} else {
- 		b = get_cmd640_reg(CNTRL);
-Index: b/drivers/ide/setup-pci.c
-===================================================================
---- a/drivers/ide/setup-pci.c
-+++ b/drivers/ide/setup-pci.c
-@@ -345,7 +345,6 @@ static ide_hwif_t *ide_hwif_configure(st
- 	unsigned long ctl = 0, base = 0;
- 	ide_hwif_t *hwif;
- 	u8 bootable = (d->host_flags & IDE_HFLAG_BOOTABLE) ? 1 : 0;
--	u8 oldnoprobe = 0;
- 	struct hw_regs_s hw;
- 
- 	if ((d->host_flags & IDE_HFLAG_ISA_PORTS) == 0) {
-@@ -376,14 +375,8 @@ static ide_hwif_t *ide_hwif_configure(st
- 	hw.chipset = d->chipset ? d->chipset : ide_pci;
- 	ide_std_init_ports(&hw, base, ctl | 2);
- 
--	if (hwif->io_ports[IDE_DATA_OFFSET] == base &&
--	    hwif->io_ports[IDE_CONTROL_OFFSET] == (ctl | 2))
--		oldnoprobe = hwif->noprobe;
--
- 	ide_init_port_hw(hwif, &hw);
- 
--	hwif->noprobe = oldnoprobe;
--
- 	hwif->dev = &dev->dev;
- 	hwif->cds = d;
- 
+Okay, so those are from sata_pmp_read(), which cannot even
+issue it's commands because the port was frozen by the EH.
+
+Is this expected?  I'm not entirely clear what to do in
+the EH for this driver.  The chipset docs say that
+after just about any kind of error software must do
+a hard reset of the channel to make it usable again.
+
+But I suspect that PIO commands may be okay before that,
+and sata_pmp_read() is trying to issue a PIO command.
+
+How to resolve this?
