@@ -1,42 +1,44 @@
-From: Cyrill Gorcunov <gorcunov@gmail.com>
-Subject: Re: [PATCH 08/10] IDE: Coding Style fixes to
-	drivers/ide/pci/generic.c
-Date: Sat, 23 Feb 2008 17:39:07 +0300
-Message-ID: <20080223143907.GE6747@cvg>
-References: <20080223150547.5256e734@paolo-desktop> <20080223142909.GD6747@cvg> <4d8e3fd30802230637h3c16e1bm4d99341c9cc8d70c@mail.gmail.com>
+From: Paolo Ciarrocchi <paolo.ciarrocchi@gmail.com>
+Subject: [PATCH 0/6] IDE: new series of Coding Style Fixes
+Date: Sat, 23 Feb 2008 18:38:12 +0100
+Message-ID: <20080223183812.5af6d36d@paolo-desktop>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.181]:12949 "EHLO
-	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753119AbYBWOjf (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 23 Feb 2008 09:39:35 -0500
-Received: by py-out-1112.google.com with SMTP id u52so1359203pyb.10
-        for <linux-ide@vger.kernel.org>; Sat, 23 Feb 2008 06:39:34 -0800 (PST)
-Content-Disposition: inline
-In-Reply-To: <4d8e3fd30802230637h3c16e1bm4d99341c9cc8d70c@mail.gmail.com>
+Received: from fg-out-1718.google.com ([72.14.220.155]:60686 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753244AbYBWRiS (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 23 Feb 2008 12:38:18 -0500
+Received: by fg-out-1718.google.com with SMTP id e21so632002fga.17
+        for <linux-ide@vger.kernel.org>; Sat, 23 Feb 2008 09:38:16 -0800 (PST)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Paolo Ciarrocchi <paolo.ciarrocchi@gmail.com>
-Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Linux Kernel <linux-kernel@vger.kernel.org>, linux-ide <linux-ide@vger.kernel.org>
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: Linux Kernel <linux-kernel@vger.kernel.org>, linux-ide <linux-ide@vger.kernel.org>
 
-[Paolo Ciarrocchi - Sat, Feb 23, 2008 at 06:07:01PM +0330]
-| > | -/**
-| > | +/*
-| > ^^^^^^^
-| >
-| > Hi Paolo, it seems you just broke kdoc structure
-| 
-| thank you for your comment, i didn't know that.
-| Won't happen in future patches.
+Bart,
+here is a new series of patches that remove some errors
+and warnings reported by checkpatch.pl from the IDE subsystem.
 
-no problem ;)
+All the patches have been compile tested and are against this morning (CET time :-)
+linux-next
 
-| Bart, can you fix that or do you want me to re-create the series?
-| 
-| Ciao,
-| --
-| Paolo
-| http://paolo.ciarrocchi.googlepages.com/
-| 
-		- Cyrill -
+Paolo Ciarrocchi (6):
+      IDE: Coding Style fixes to drivers/ide/pci/opti621.c
+      IDE: Coding Style fixes to drivers/ide/legacy/hd.c
+      IDE: Coding Style fixes to drivers/ide/legacy/ali14xx.c
+      IDE: Coding Style fixes to drivers/ide/pci/it8213.c
+      IDE: Coding Style fixes to drivers/ide/ide-floppy.c
+      IDE: Coding Style fixes to drivers/ide/pci/cmd640.c
+
+ drivers/ide/ide-floppy.c     |    4 +-
+ drivers/ide/legacy/ali14xx.c |   11 +++--
+ drivers/ide/legacy/hd.c      |   79 ++++++++++++++++++------------------
+ drivers/ide/pci/cmd640.c     |   90 +++++++++++++++++++++---------------------
+ drivers/ide/pci/it8213.c     |    9 ++--
+ drivers/ide/pci/opti621.c    |   50 ++++++++++++------------
+ 6 files changed, 122 insertions(+), 121 deletions(-)
+
+Ciao,
+                Paolo
