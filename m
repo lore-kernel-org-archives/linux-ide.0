@@ -1,82 +1,28 @@
-From: Sam Ravnborg <sam@ravnborg.org>
-Subject: [Fixed PATCH] hpt366: fix section mismatch warnings
-Date: Sat, 23 Feb 2008 22:22:22 +0100
-Message-ID: <20080223212222.GA16568@uranus.ravnborg.org>
-References: <20080222194651.GA7154@uranus.ravnborg.org>
+From: Anders Eriksson <aeriksson@fastmail.fm>
+Subject: Re: 2.6.25-rc2 + smartd = hang
+Date: Sat, 23 Feb 2008 23:13:59 +0100
+Message-ID: <20080223221400.0F97B2DC002@tippex.mynet.homeunix.org>
+References: <20080222165122.8D2BB93C12F@tippex.mynet.homeunix.org> <47BF0DCD.4060400@garzik.org> <20080222185645.9DD9C93C12F@tippex.mynet.homeunix.org> <47BF3DE3.4000100@rtr.ca> <20080222213932.3403F93C12F@tippex.mynet.homeunix.org> <47BF45E4.4020006@garzik.org> <20080223063943.4EF77364D5@smtp02.mtu.ru>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from pasmtpb.tele.dk ([80.160.77.98]:49258 "EHLO pasmtpB.tele.dk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751448AbYBWVWL (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 23 Feb 2008 16:22:11 -0500
-Content-Disposition: inline
-In-Reply-To: <20080222194651.GA7154@uranus.ravnborg.org>
+Received: from ch-smtp02.sth.basefarm.net ([80.76.149.213]:47721 "EHLO
+	ch-smtp02.sth.basefarm.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752759AbYBWWON (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 23 Feb 2008 17:14:13 -0500
+In-reply-to: <20080223063943.4EF77364D5@smtp02.mtu.ru> 
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Sergei Shtylyov <sshtylyov@ru.mvista.com>, LKML <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org
+To: Andrey Borzenkov <arvidjaar@mail.ru>
+Cc: Jeff Garzik <jeff@garzik.org>, aeriksson@fastmail.fm, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-hpt366: fix section mismatch warnings
 
-Fix following warnings:
-WARNING: o-sparc64/vmlinux.o(.data+0x195a38): Section mismatch in reference from the variable hpt37x_info.0 to the variable .devinit.data:hpt370
-WARNING: o-sparc64/vmlinux.o(.data+0x195a40): Section mismatch in reference from the variable hpt37x_info.0 to the variable .devinit.data:hpt370a
-WARNING: o-sparc64/vmlinux.o(.data+0x195a48): Section mismatch in reference from the variable hpt37x_info.0 to the variable .devinit.data:hpt372
-WARNING: o-sparc64/vmlinux.o(.data+0x195a50): Section mismatch in reference from the variable hpt37x_info.0 to the variable .devinit.data:hpt372n
 
-Replace a static array with a small switch resulting in
-more readable code.
-Mark the pci table __devinitconst.
 
-A lot of variables are const but annotated __devinitdata.
-Annotating them __devinitconst would cause a section type
-conflict error when build for 64 bit powerpc.
+arvidjaar@mail.ru said:
+> the comment on the very top of drivers/ata says:
+> tristate "Serial ATA (prod) and Parallel ATA (experimental) drivers" 
 
-Signed-off-by: Sam Ravnborg <sam@ravnborg.org>
-Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: Sergei Shtylyov <sshtylyov@ru.mvista.com>
----
 
-The first patch I posted caused a section type conflict when
-build for 64 bit powerpc. The actual cause of this is know and unavoidable
-when we start to declare variables const.
-The patch attached is much simpler as the transition from __devinitdata
-to __devinitconst turned out to be bogus.
+That's the one I was referring to.
 
-I also took the opportunity to simplify the switch as suggested by
-Sergei.
-
-	Sam
-
-diff --git a/drivers/ide/pci/hpt366.c b/drivers/ide/pci/hpt366.c
-index d0f7bb8..a5eeb6b 100644
---- a/drivers/ide/pci/hpt366.c
-+++ b/drivers/ide/pci/hpt366.c
-@@ -1570,11 +1570,13 @@ static int __devinit hpt366_init_one(struct pci_dev *dev, const struct pci_devic
- 		if (rev < 3)
- 			info = &hpt36x;
- 		else {
--			static const struct hpt_info *hpt37x_info[] =
--				{ &hpt370, &hpt370a, &hpt372, &hpt372n };
--
--			info = hpt37x_info[min_t(u8, rev, 6) - 3];
--			idx++;
-+			switch (min_t(u8, rev, 6)) {
-+			case 3: info = &hpt370;  break;
-+			case 4: info = &hpt370a; break;
-+			case 5: info = &hpt372;  break;
-+			case 6: info = &hpt372n; break;
-+			}
-+		idx++;
- 		}
- 		break;
- 	case 1:
-@@ -1626,7 +1628,7 @@ static int __devinit hpt366_init_one(struct pci_dev *dev, const struct pci_devic
- 	return ide_setup_pci_device(dev, &d);
- }
- 
--static const struct pci_device_id hpt366_pci_tbl[] = {
-+static const struct pci_device_id hpt366_pci_tbl[] __devinitconst = {
- 	{ PCI_VDEVICE(TTI, PCI_DEVICE_ID_TTI_HPT366),  0 },
- 	{ PCI_VDEVICE(TTI, PCI_DEVICE_ID_TTI_HPT372),  1 },
- 	{ PCI_VDEVICE(TTI, PCI_DEVICE_ID_TTI_HPT302),  2 },
