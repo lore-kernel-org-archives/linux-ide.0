@@ -1,131 +1,104 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH 3/4] ide: sanitize handling of IDE_HFLAG_NO_SET_MODE host flag
-Date: Sat, 23 Feb 2008 21:15:11 +0100
-Message-ID: <200802232115.11908.bzolnier@gmail.com>
+Subject: [PATCH 2/4] sis5513: fail early for unsupported chipsets
+Date: Sat, 23 Feb 2008 21:14:23 +0100
+Message-ID: <200802232114.23726.bzolnier@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
   charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.173]:16261 "EHLO
+Received: from ug-out-1314.google.com ([66.249.92.170]:18507 "EHLO
 	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1762884AbYBWUD6 (ORCPT
+	with ESMTP id S1754433AbYBWUD6 (ORCPT
 	<rfc822;linux-ide@vger.kernel.org>); Sat, 23 Feb 2008 15:03:58 -0500
-Received: by ug-out-1314.google.com with SMTP id z38so232755ugc.16
-        for <linux-ide@vger.kernel.org>; Sat, 23 Feb 2008 12:03:56 -0800 (PST)
+Received: by ug-out-1314.google.com with SMTP id z38so232752ugc.16
+        for <linux-ide@vger.kernel.org>; Sat, 23 Feb 2008 12:03:55 -0800 (PST)
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
 Cc: linux-kernel@vger.kernel.org
 
-* Check for IDE_HFLAG_NO_SET_MODE host flag in ide_set_pio(),
-  ide_set_[pio,dma]_mode(), ide_set_xfer_rate() and set_pio_mode().
+* Factor out chipset family detection from init_chipset_sis5513()
+  to sis_find_family().
 
-* Remove no longer needed IDE_HFLAG_NO_SET_MODE host flag checking
-  from ide_tune_dma().
+* Use sis_find_family() in sis5513_init_one() to fail early if the
+  chipset is unsupported.
 
-* Remove superfluous ->set_pio_mode checking from do_special().
+* Keep a local copy sis5513_chipset in sis5513_init_one()
+  and set .udma_mask according to chipset family.
 
-This is a part of preparations for adding 'struct ide_port_ops'.
+* Remove no longer need ->ultra_mask setting from init_hwif_sis5513().
 
 Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 ---
- drivers/ide/ide-dma.c |    3 ---
- drivers/ide/ide-io.c  |    4 ----
- drivers/ide/ide-lib.c |   12 ++++++++++--
- drivers/ide/ide.c     |    4 +++-
- 4 files changed, 13 insertions(+), 10 deletions(-)
+ drivers/ide/pci/sis5513.c |   27 +++++++++++++++------------
+ 1 file changed, 15 insertions(+), 12 deletions(-)
 
-Index: b/drivers/ide/ide-dma.c
+Index: b/drivers/ide/pci/sis5513.c
 ===================================================================
---- a/drivers/ide/ide-dma.c
-+++ b/drivers/ide/ide-dma.c
-@@ -706,9 +706,6 @@ static int ide_tune_dma(ide_drive_t *dri
- 	if (!speed)
- 		return 0;
+--- a/drivers/ide/pci/sis5513.c
++++ b/drivers/ide/pci/sis5513.c
+@@ -358,8 +358,7 @@ static u8 sis5513_ata133_udma_filter(ide
+ 	return (regdw & 0x08) ? ATA_UDMA6 : ATA_UDMA5;
+ }
  
--	if (hwif->host_flags & IDE_HFLAG_NO_SET_MODE)
--		return 1;
--
- 	if (ide_set_dma_mode(drive, speed))
- 		return 0;
- 
-Index: b/drivers/ide/ide-io.c
-===================================================================
---- a/drivers/ide/ide-io.c
-+++ b/drivers/ide/ide-io.c
-@@ -726,10 +726,6 @@ static ide_startstop_t do_special (ide_d
- 		s->b.set_tune = 0;
- 
- 		if (set_pio_mode_abuse(drive->hwif, req_pio)) {
--
--			if (hwif->set_pio_mode == NULL)
--				return ide_stopped;
--
- 			/*
- 			 * take ide_lock for drive->[no_]unmask/[no_]io_32bit
- 			 */
-Index: b/drivers/ide/ide-lib.c
-===================================================================
---- a/drivers/ide/ide-lib.c
-+++ b/drivers/ide/ide-lib.c
-@@ -300,7 +300,8 @@ void ide_set_pio(ide_drive_t *drive, u8 
- 	ide_hwif_t *hwif = drive->hwif;
- 	u8 host_pio, pio;
- 
--	if (hwif->set_pio_mode == NULL)
-+	if (hwif->set_pio_mode == NULL ||
-+	    (hwif->host_flags & IDE_HFLAG_NO_SET_MODE))
- 		return;
- 
- 	BUG_ON(hwif->pio_mask == 0x00);
-@@ -353,6 +354,9 @@ int ide_set_pio_mode(ide_drive_t *drive,
+-/* Chip detection and general config */
+-static unsigned int __devinit init_chipset_sis5513 (struct pci_dev *dev, const char *name)
++static int __devinit sis_find_family(struct pci_dev *dev)
  {
- 	ide_hwif_t *hwif = drive->hwif;
+ 	struct pci_dev *host;
+ 	int i = 0;
+@@ -440,9 +439,12 @@ static unsigned int __devinit init_chips
+ 			}
+ 	}
  
-+	if (hwif->host_flags & IDE_HFLAG_NO_SET_MODE)
-+		return 0;
+-	if (!chipset_family)
+-		return -1;
++	return chipset_family;
++}
+ 
++static unsigned int __devinit init_chipset_sis5513(struct pci_dev *dev,
++						   const char *name)
++{
+ 	/* Make general config ops here
+ 	   1/ tell IDE channels to operate in Compatibility mode only
+ 	   2/ tell old chips to allow per drive IDE timings */
+@@ -548,8 +550,6 @@ static u8 __devinit ata66_sis5513(ide_hw
+ 
+ static void __devinit init_hwif_sis5513 (ide_hwif_t *hwif)
+ {
+-	u8 udma_rates[] = { 0x00, 0x00, 0x07, 0x1f, 0x3f, 0x3f, 0x7f, 0x7f };
+-
+ 	hwif->set_pio_mode = &sis_set_pio_mode;
+ 	hwif->set_dma_mode = &sis_set_dma_mode;
+ 
+@@ -557,11 +557,6 @@ static void __devinit init_hwif_sis5513 
+ 		hwif->udma_filter = sis5513_ata133_udma_filter;
+ 
+ 	hwif->cable_detect = ata66_sis5513;
+-
+-	if (hwif->dma_base == 0)
+-		return;
+-
+-	hwif->ultra_mask = udma_rates[chipset_family];
+ }
+ 
+ static const struct ide_port_info sis5513_chipset __devinitdata = {
+@@ -576,7 +571,15 @@ static const struct ide_port_info sis551
+ 
+ static int __devinit sis5513_init_one(struct pci_dev *dev, const struct pci_device_id *id)
+ {
+-	return ide_setup_pci_device(dev, &sis5513_chipset);
++	struct ide_port_info d = sis5513_chipset;
++	u8 udma_rates[] = { 0x00, 0x00, 0x07, 0x1f, 0x3f, 0x3f, 0x7f, 0x7f };
 +
- 	if (hwif->set_pio_mode == NULL)
- 		return -1;
- 
-@@ -380,6 +384,9 @@ int ide_set_dma_mode(ide_drive_t *drive,
- {
- 	ide_hwif_t *hwif = drive->hwif;
- 
-+	if (hwif->host_flags & IDE_HFLAG_NO_SET_MODE)
-+		return 0;
++	if (sis_find_family(dev) == 0)
++		return -ENOTSUPP;
 +
- 	if (hwif->set_dma_mode == NULL)
- 		return -1;
++	d.udma_mask = udma_rates[chipset_family];
++
++	return ide_setup_pci_device(dev, &d);
+ }
  
-@@ -410,7 +417,8 @@ int ide_set_xfer_rate(ide_drive_t *drive
- {
- 	ide_hwif_t *hwif = drive->hwif;
- 
--	if (hwif->set_dma_mode == NULL)
-+	if (hwif->set_dma_mode == NULL ||
-+	    (hwif->host_flags & IDE_HFLAG_NO_SET_MODE))
- 		return -1;
- 
- 	rate = ide_rate_filter(drive, rate);
-Index: b/drivers/ide/ide.c
-===================================================================
---- a/drivers/ide/ide.c
-+++ b/drivers/ide/ide.c
-@@ -586,11 +586,13 @@ out:
- int set_pio_mode(ide_drive_t *drive, int arg)
- {
- 	struct request rq;
-+	ide_hwif_t *hwif = drive->hwif;
- 
- 	if (arg < 0 || arg > 255)
- 		return -EINVAL;
- 
--	if (drive->hwif->set_pio_mode == NULL)
-+	if (hwif->set_pio_mode == NULL ||
-+	    (hwif->host_flags & IDE_HFLAG_NO_SET_MODE))
- 		return -ENOSYS;
- 
- 	if (drive->special.b.set_tune)
+ static const struct pci_device_id sis5513_pci_tbl[] = {
