@@ -1,37 +1,66 @@
-From: "Paolo Ciarrocchi" <paolo.ciarrocchi@gmail.com>
-Subject: Re: [PATCH 00/10] IDE: Coding Style Fixes
-Date: Sat, 23 Feb 2008 15:09:16 +0100
-Message-ID: <4d8e3fd30802230609w3f7bdc3gb43c6272aa9af49c@mail.gmail.com>
-References: <20080223150436.6c09ce54@paolo-desktop>
+From: Adrian Bunk <bunk@kernel.org>
+Subject: Re: [PATCH 08/10] IDE: Coding Style fixes to
+	drivers/ide/pci/generic.c
+Date: Sat, 23 Feb 2008 16:18:41 +0200
+Message-ID: <20080223141841.GR1409@cs181133002.pp.htv.fi>
+References: <20080223150547.5256e734@paolo-desktop>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wr-out-0506.google.com ([64.233.184.236]:18831 "EHLO
-	wr-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759442AbYBWOJS (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 23 Feb 2008 09:09:18 -0500
-Received: by wr-out-0506.google.com with SMTP id c48so1182535wra.23
-        for <linux-ide@vger.kernel.org>; Sat, 23 Feb 2008 06:09:17 -0800 (PST)
-In-Reply-To: <20080223150436.6c09ce54@paolo-desktop>
+Received: from smtp6.pp.htv.fi ([213.243.153.40]:47149 "EHLO smtp6.pp.htv.fi"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753268AbYBWOTd (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 23 Feb 2008 09:19:33 -0500
 Content-Disposition: inline
+In-Reply-To: <20080223150547.5256e734@paolo-desktop>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: Linux Kernel <linux-kernel@vger.kernel.org>, linux-ide <linux-ide@vger.kernel.org>
+To: Paolo Ciarrocchi <paolo.ciarrocchi@gmail.com>
+Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Linux Kernel <linux-kernel@vger.kernel.org>, linux-ide <linux-ide@vger.kernel.org>
 
-On Sat, Feb 23, 2008 at 3:04 PM, Paolo Ciarrocchi
-<paolo.ciarrocchi@gmail.com> wrote:
-> Hi Bartlomiej,
->  The following 10 patches remove a huge number of errors and warnings
->  reported by checkpatch.pl from the IDE subsystem.
->
->  All the patches have been compile tested.
+On Sat, Feb 23, 2008 at 03:05:47PM +0100, Paolo Ciarrocchi wrote:
+> File is now error free.
+> Compile tested.
+> 
+> 
+> Signed-off-by: Paolo Ciarrocchi <paolo.ciarrocchi@gmail.com>
+> ---
+>  drivers/ide/pci/generic.c |   50 ++++++++++++++++++++++----------------------
+>  1 files changed, 25 insertions(+), 25 deletions(-)
+> 
+> diff --git a/drivers/ide/pci/generic.c b/drivers/ide/pci/generic.c
+> index f83afa1..f9a5879 100644
+> --- a/drivers/ide/pci/generic.c
+> +++ b/drivers/ide/pci/generic.c
+>...
+> -	/*  2 */ DECLARE_GENERIC_PCI_DEV("SAMURAI",	0),
+> -	/*  3 */ DECLARE_GENERIC_PCI_DEV("HT6565",	0),
+> -	/*  4 */ DECLARE_GENERIC_PCI_DEV("UM8673F",	IDE_HFLAGS_UMC),
+> -	/*  5 */ DECLARE_GENERIC_PCI_DEV("UM8886A",	IDE_HFLAGS_UMC),
+> -	/*  6 */ DECLARE_GENERIC_PCI_DEV("UM8886BF",	IDE_HFLAGS_UMC),
+> -	/*  7 */ DECLARE_GENERIC_PCI_DEV("HINT_IDE",	0),
+> -	/*  8 */ DECLARE_GENERIC_PCI_DEV("VIA_IDE",	IDE_HFLAG_NO_AUTODMA),
+> -	/*  9 */ DECLARE_GENERIC_PCI_DEV("OPTI621V",	IDE_HFLAG_NO_AUTODMA),
+> +	/*  2 */ DECLARE_GENERIC_PCI_DEV("SAMURAI", 0),
+> +	/*  3 */ DECLARE_GENERIC_PCI_DEV("HT6565", 0),
+> +	/*  4 */ DECLARE_GENERIC_PCI_DEV("UM8673F", IDE_HFLAGS_UMC),
+> +	/*  5 */ DECLARE_GENERIC_PCI_DEV("UM8886A", IDE_HFLAGS_UMC),
+> +	/*  6 */ DECLARE_GENERIC_PCI_DEV("UM8886BF", IDE_HFLAGS_UMC),
+> +	/*  7 */ DECLARE_GENERIC_PCI_DEV("HINT_IDE", 0),
+> +	/*  8 */ DECLARE_GENERIC_PCI_DEV("VIA_IDE", IDE_HFLAG_NO_AUTODMA),
+> +	/*  9 */ DECLARE_GENERIC_PCI_DEV("OPTI621V", IDE_HFLAG_NO_AUTODMA),
+>...
 
-I forgot to mention that the series is against a linux-next tree cloned
-a few hours ago.
+I do not even see checkpatch complaining about this, and even if it did 
+your patch would make the code _less_ readable.
 
-Ciao,
+cu
+Adrian
+
 -- 
-Paolo
-http://paolo.ciarrocchi.googlepages.com/
+
+       "Is there not promise of rain?" Ling Tan asked suddenly out
+        of the darkness. There had been need of rain for many days.
+       "Only a promise," Lao Er said.
+                                       Pearl S. Buck - Dragon Seed
+
