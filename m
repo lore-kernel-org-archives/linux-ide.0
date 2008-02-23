@@ -1,302 +1,202 @@
 From: Paolo Ciarrocchi <paolo.ciarrocchi@gmail.com>
-Subject: [PATCH 01/10] IDE: Coding Style fixes to drivers/ide/pci/sis5513.c
-Date: Sat, 23 Feb 2008 15:04:49 +0100
-Message-ID: <20080223150449.2a8aa051@paolo-desktop>
+Subject: [PATCH 04/10] IDE: Coding Style fixes to drivers/ide/setup-pci.c
+Date: Sat, 23 Feb 2008 15:05:16 +0100
+Message-ID: <20080223150516.4a455a45@paolo-desktop>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
 Received: from fg-out-1718.google.com ([72.14.220.156]:33567 "EHLO
 	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757934AbYBWOEz (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 23 Feb 2008 09:04:55 -0500
+	with ESMTP id S1758762AbYBWOFW (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 23 Feb 2008 09:05:22 -0500
 Received: by fg-out-1718.google.com with SMTP id e21so582555fga.17
-        for <linux-ide@vger.kernel.org>; Sat, 23 Feb 2008 06:04:54 -0800 (PST)
+        for <linux-ide@vger.kernel.org>; Sat, 23 Feb 2008 06:05:21 -0800 (PST)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 Cc: Linux Kernel <linux-kernel@vger.kernel.org>, linux-ide <linux-ide@vger.kernel.org>
 
-About 300 errors and warnings fixed.
 File is now error free.
 Compile tested.
 
 Signed-off-by: Paolo Ciarrocchi <paolo.ciarrocchi@gmail.com>
 ---
- drivers/ide/pci/sis5513.c |  190 ++++++++++++++++++++++-----------------------
- 1 files changed, 93 insertions(+), 97 deletions(-)
+ drivers/ide/setup-pci.c |   45 ++++++++++++++++++++-------------------------
+ 1 files changed, 20 insertions(+), 25 deletions(-)
 
-diff --git a/drivers/ide/pci/sis5513.c b/drivers/ide/pci/sis5513.c
-index e29c90f..bf4ddbc 100644
---- a/drivers/ide/pci/sis5513.c
-+++ b/drivers/ide/pci/sis5513.c
-@@ -59,10 +59,10 @@
- #define ATA_16		0x01
- #define ATA_33		0x02
- #define ATA_66		0x03
--#define ATA_100a	0x04 // SiS730/SiS550 is ATA100 with ATA66 layout
-+#define ATA_100a	0x04 /* SiS730/SiS550 is ATA100 with ATA66 layout */
- #define ATA_100		0x05
--#define ATA_133a	0x06 // SiS961b with 133 support
--#define ATA_133		0x07 // SiS962/963
-+#define ATA_133a	0x06 /* SiS961b with 133 support */
-+#define ATA_133		0x07 /* SiS962/963 */
- 
- static u8 chipset_family;
- 
-@@ -111,69 +111,69 @@ static const struct {
-    Indexed by chipset_family and (dma_mode - XFER_UDMA_0) */
- 
- /* {0, ATA_16, ATA_33, ATA_66, ATA_100a, ATA_100, ATA_133} */
--static u8 cycle_time_offset[] = {0,0,5,4,4,0,0};
--static u8 cycle_time_range[] = {0,0,2,3,3,4,4};
-+static u8 cycle_time_offset[] = {0, 0, 5, 4, 4, 0, 0};
-+static u8 cycle_time_range[] = {0, 0, 2, 3, 3, 4, 4};
- static u8 cycle_time_value[][XFER_UDMA_6 - XFER_UDMA_0 + 1] = {
--	{0,0,0,0,0,0,0}, /* no udma */
--	{0,0,0,0,0,0,0}, /* no udma */
--	{3,2,1,0,0,0,0}, /* ATA_33 */
--	{7,5,3,2,1,0,0}, /* ATA_66 */
--	{7,5,3,2,1,0,0}, /* ATA_100a (730 specific), differences are on cycle_time range and offset */
--	{11,7,5,4,2,1,0}, /* ATA_100 */
--	{15,10,7,5,3,2,1}, /* ATA_133a (earliest 691 southbridges) */
--	{15,10,7,5,3,2,1}, /* ATA_133 */
-+	{0, 0, 0, 0, 0, 0, 0}, /* no udma */
-+	{0, 0, 0, 0, 0, 0, 0}, /* no udma */
-+	{3, 2, 1, 0, 0, 0, 0}, /* ATA_33 */
-+	{7, 5, 3, 2, 1, 0, 0}, /* ATA_66 */
-+	{7, 5, 3, 2, 1, 0, 0}, /* ATA_100a (730 specific), differences are on cycle_time range and offset */
-+	{11, 7, 5, 4, 2, 1, 0}, /* ATA_100 */
-+	{15, 10, 7, 5, 3, 2, 1}, /* ATA_133a (earliest 691 southbridges) */
-+	{15, 10, 7, 5, 3, 2, 1}, /* ATA_133 */
- };
- /* CRC Valid Setup Time vary across IDE clock setting 33/66/100/133
-    See SiS962 data sheet for more detail */
- static u8 cvs_time_value[][XFER_UDMA_6 - XFER_UDMA_0 + 1] = {
--	{0,0,0,0,0,0,0}, /* no udma */
--	{0,0,0,0,0,0,0}, /* no udma */
--	{2,1,1,0,0,0,0},
--	{4,3,2,1,0,0,0},
--	{4,3,2,1,0,0,0},
--	{6,4,3,1,1,1,0},
--	{9,6,4,2,2,2,2},
--	{9,6,4,2,2,2,2},
-+	{0, 0, 0, 0, 0, 0, 0}, /* no udma */
-+	{0, 0, 0, 0, 0, 0, 0}, /* no udma */
-+	{2, 1, 1, 0, 0, 0, 0},
-+	{4, 3, 2, 1, 0, 0, 0},
-+	{4, 3, 2, 1, 0, 0, 0},
-+	{6, 4, 3, 1, 1, 1, 0},
-+	{9, 6, 4, 2, 2, 2, 2},
-+	{9, 6, 4, 2, 2, 2, 2},
- };
- /* Initialize time, Active time, Recovery time vary across
-    IDE clock settings. These 3 arrays hold the register value
-    for PIO0/1/2/3/4 and DMA0/1/2 mode in order */
- static u8 ini_time_value[][8] = {
--	{0,0,0,0,0,0,0,0},
--	{0,0,0,0,0,0,0,0},
--	{2,1,0,0,0,1,0,0},
--	{4,3,1,1,1,3,1,1},
--	{4,3,1,1,1,3,1,1},
--	{6,4,2,2,2,4,2,2},
--	{9,6,3,3,3,6,3,3},
--	{9,6,3,3,3,6,3,3},
-+	{0, 0, 0, 0, 0, 0, 0, 0},
-+	{0, 0, 0, 0, 0, 0, 0, 0},
-+	{2, 1, 0, 0, 0, 1, 0, 0},
-+	{4, 3, 1, 1, 1, 3, 1, 1},
-+	{4, 3, 1, 1, 1, 3, 1, 1},
-+	{6, 4, 2, 2, 2, 4, 2, 2},
-+	{9, 6, 3, 3, 3, 6, 3, 3},
-+	{9, 6, 3, 3, 3, 6, 3, 3},
- };
- static u8 act_time_value[][8] = {
--	{0,0,0,0,0,0,0,0},
--	{0,0,0,0,0,0,0,0},
--	{9,9,9,2,2,7,2,2},
--	{19,19,19,5,4,14,5,4},
--	{19,19,19,5,4,14,5,4},
--	{28,28,28,7,6,21,7,6},
--	{38,38,38,10,9,28,10,9},
--	{38,38,38,10,9,28,10,9},
-+	{0, 0, 0, 0, 0, 0, 0, 0},
-+	{0, 0, 0, 0, 0, 0, 0, 0},
-+	{9, 9, 9, 2, 2, 7, 2, 2},
-+	{19, 19, 19, 5, 4, 14, 5, 4},
-+	{19, 19, 19, 5, 4, 14, 5, 4},
-+	{28, 28, 28, 7, 6, 21, 7, 6},
-+	{38, 38, 38, 10, 9, 28, 10, 9},
-+	{38, 38, 38, 10, 9, 28, 10, 9},
- };
- static u8 rco_time_value[][8] = {
--	{0,0,0,0,0,0,0,0},
--	{0,0,0,0,0,0,0,0},
--	{9,2,0,2,0,7,1,1},
--	{19,5,1,5,2,16,3,2},
--	{19,5,1,5,2,16,3,2},
--	{30,9,3,9,4,25,6,4},
--	{40,12,4,12,5,34,12,5},
--	{40,12,4,12,5,34,12,5},
-+	{0, 0, 0, 0, 0, 0, 0, 0},
-+	{0, 0, 0, 0, 0, 0, 0, 0},
-+	{9, 2, 0, 2, 0, 7, 1, 1},
-+	{19, 5, 1, 5, 2, 16, 3, 2},
-+	{19, 5, 1, 5, 2, 16, 3, 2},
-+	{30, 9, 3, 9, 4, 25, 6, 4},
-+	{40, 12, 4, 12, 5, 34, 12, 5},
-+	{40, 12, 4, 12, 5, 34, 12, 5},
- };
- 
- /*
-  * Printing configuration
+diff --git a/drivers/ide/setup-pci.c b/drivers/ide/setup-pci.c
+index 1f2d8f9..631be79 100644
+--- a/drivers/ide/setup-pci.c
++++ b/drivers/ide/setup-pci.c
+@@ -27,13 +27,13 @@
+  *
+  *	We attempt to place the PCI interface into PCI native mode. If
+  *	we succeed the BARs are ok and the controller is in PCI mode.
+- *	Returns 0 on success or an errno code. 
++ *	Returns 0 on success or an errno code.
+  *
+  *	FIXME: if we program the interface and then fail to set the BARS
+  *	we don't switch it back to legacy mode. Do we actually care ??
   */
- /* Used for chipset type printing at boot time */
--static char* chipset_capability[] = {
-+static char *chipset_capability[] = {
- 	"ATA", "ATA 16",
- 	"ATA 33", "ATA 66",
- 	"ATA 100 (1st gen)", "ATA 100 (2nd gen)",
-@@ -272,7 +272,7 @@ static void sis_program_timings(ide_drive_t *drive, const u8 mode)
- 		sis_ata133_program_timings(drive, mode);
+- 
+-static int ide_setup_pci_baseregs (struct pci_dev *dev, const char *name)
++
++static int ide_setup_pci_baseregs(struct pci_dev *dev, const char *name)
+ {
+ 	u8 progif = 0;
+ 
+@@ -71,7 +71,7 @@ static void ide_pci_clear_simplex(unsigned long dma_base, const char *name)
+ 		printk(KERN_INFO "%s: simplex device: DMA forced\n", name);
  }
  
--static void config_drive_art_rwp (ide_drive_t *drive)
-+static void config_drive_art_rwp(ide_drive_t *drive)
- {
- 	ide_hwif_t *hwif	= HWIF(drive);
- 	struct pci_dev *dev	= to_pci_dev(hwif->dev);
-@@ -359,7 +359,7 @@ static u8 sis5513_ata133_udma_filter(ide_drive_t *drive)
+-/**
++/*
+  *	ide_get_or_set_dma_base		-	setup BMIBA
+  *	@d: IDE port info
+  *	@hwif: IDE interface
+@@ -140,11 +140,10 @@ void ide_setup_pci_noise(struct pci_dev *dev, const struct ide_port_info *d)
+ 			 " PCI slot %s\n", d->name, dev->vendor, dev->device,
+ 			 dev->revision, pci_name(dev));
  }
+-
+ EXPORT_SYMBOL_GPL(ide_setup_pci_noise);
  
- /* Chip detection and general config */
--static unsigned int __devinit init_chipset_sis5513 (struct pci_dev *dev, const char *name)
-+static unsigned int __devinit init_chipset_sis5513(struct pci_dev *dev, const char *name)
+ 
+-/**
++/*
+  *	ide_pci_enable	-	do PCI enables
+  *	@dev: PCI device
+  *	@d: IDE port info
+@@ -153,7 +152,7 @@ EXPORT_SYMBOL_GPL(ide_setup_pci_noise);
+  *	but if that fails then we only need IO space. The PCI code should
+  *	have setup the proper resources for us already for controllers in
+  *	legacy mode.
+- *	
++ *
+  *	Returns zero on success or an error code
+  */
+ 
+@@ -212,8 +211,8 @@ static int ide_pci_configure(struct pci_dev *dev, const struct ide_port_info *d)
+ 	 * Maybe the user deliberately *disabled* the device,
+ 	 * but we'll eventually ignore it again if no drives respond.
+ 	 */
+-	if (ide_setup_pci_baseregs(dev, d->name) || pci_write_config_word(dev, PCI_COMMAND, pcicmd|PCI_COMMAND_IO)) 
+-	{
++	if (ide_setup_pci_baseregs(dev, d->name) || pci_write_config_word(dev,
++					PCI_COMMAND, pcicmd|PCI_COMMAND_IO)) {
+ 		printk(KERN_INFO "%s: device disabled (BIOS)\n", d->name);
+ 		return -ENODEV;
+ 	}
+@@ -241,15 +240,15 @@ static int ide_pci_configure(struct pci_dev *dev, const struct ide_port_info *d)
+ static int ide_pci_check_iomem(struct pci_dev *dev, const struct ide_port_info *d, int bar)
  {
- 	struct pci_dev *host;
- 	int i = 0;
-@@ -381,7 +381,7 @@ static unsigned int __devinit init_chipset_sis5513 (struct pci_dev *dev, const c
- 				chipset_family = ATA_100a;
- 		}
- 		pci_dev_put(host);
+ 	ulong flags = pci_resource_flags(dev, bar);
 -	
 +
- 		printk(KERN_INFO "SIS5513: %s %s controller\n",
- 			 SiSHostChipInfo[i].name, chipset_capability[chipset_family]);
- 	}
-@@ -451,52 +451,48 @@ static unsigned int __devinit init_chipset_sis5513 (struct pci_dev *dev, const c
- 		u8 reg;
- 		u16 regw;
+ 	/* Unconfigured ? */
+ 	if (!flags || pci_resource_len(dev, bar) == 0)
+ 		return 0;
  
--		switch(chipset_family) {
--			case ATA_133:
--				/* SiS962 operation mode */
--				pci_read_config_word(dev, 0x50, &regw);
--				if (regw & 0x08)
--					pci_write_config_word(dev, 0x50, regw&0xfff7);
--				pci_read_config_word(dev, 0x52, &regw);
--				if (regw & 0x08)
--					pci_write_config_word(dev, 0x52, regw&0xfff7);
--				break;
--			case ATA_133a:
--			case ATA_100:
--				/* Fixup latency */
--				pci_write_config_byte(dev, PCI_LATENCY_TIMER, 0x80);
--				/* Set compatibility bit */
--				pci_read_config_byte(dev, 0x49, &reg);
--				if (!(reg & 0x01)) {
--					pci_write_config_byte(dev, 0x49, reg|0x01);
--				}
--				break;
--			case ATA_100a:
--			case ATA_66:
--				/* Fixup latency */
--				pci_write_config_byte(dev, PCI_LATENCY_TIMER, 0x10);
--
--				/* On ATA_66 chips the bit was elsewhere */
--				pci_read_config_byte(dev, 0x52, &reg);
--				if (!(reg & 0x04)) {
--					pci_write_config_byte(dev, 0x52, reg|0x04);
--				}
--				break;
--			case ATA_33:
--				/* On ATA_33 we didn't have a single bit to set */
--				pci_read_config_byte(dev, 0x09, &reg);
--				if ((reg & 0x0f) != 0x00) {
--					pci_write_config_byte(dev, 0x09, reg&0xf0);
--				}
--			case ATA_16:
--				/* force per drive recovery and active timings
--				   needed on ATA_33 and below chips */
--				pci_read_config_byte(dev, 0x52, &reg);
--				if (!(reg & 0x08)) {
--					pci_write_config_byte(dev, 0x52, reg|0x08);
--				}
--				break;
--		}
-+		switch (chipset_family) {
-+		case ATA_133:
-+			/* SiS962 operation mode */
-+			pci_read_config_word(dev, 0x50, &regw);
-+			if (regw & 0x08)
-+				pci_write_config_word(dev, 0x50, regw&0xfff7);
-+			pci_read_config_word(dev, 0x52, &regw);
-+			if (regw & 0x08)
-+				pci_write_config_word(dev, 0x52, regw&0xfff7);
-+			break;
-+		case ATA_133a:
-+		case ATA_100:
-+			/* Fixup latency */
-+			pci_write_config_byte(dev, PCI_LATENCY_TIMER, 0x80);
-+			/* Set compatibility bit */
-+			pci_read_config_byte(dev, 0x49, &reg);
-+			if (!(reg & 0x01))
-+				pci_write_config_byte(dev, 0x49, reg|0x01);
-+			break;
-+		case ATA_100a:
-+		case ATA_66:
-+			/* Fixup latency */
-+			pci_write_config_byte(dev, PCI_LATENCY_TIMER, 0x10);
+-	/* I/O space */		
+-	if(flags & PCI_BASE_ADDRESS_IO_MASK)
++	/* I/O space */
++	if (flags & PCI_BASE_ADDRESS_IO_MASK)
+ 		return 0;
+-		
 +
-+			/* On ATA_66 chips the bit was elsewhere */
-+			pci_read_config_byte(dev, 0x52, &reg);
-+			if (!(reg & 0x04))
-+				pci_write_config_byte(dev, 0x52, reg|0x04);
-+			break;
-+		case ATA_33:
-+			/* On ATA_33 we didn't have a single bit to set */
-+			pci_read_config_byte(dev, 0x09, &reg);
-+			if ((reg & 0x0f) != 0x00)
-+				pci_write_config_byte(dev, 0x09, reg&0xf0);
-+		case ATA_16:
-+			/* force per drive recovery and active timings
-+			   needed on ATA_33 and below chips */
-+			pci_read_config_byte(dev, 0x52, &reg);
-+			if (!(reg & 0x08))
-+				pci_write_config_byte(dev, 0x52, reg|0x08);
-+			break;
-+	}
- 	}
- 
- 	return 0;
-@@ -546,7 +542,7 @@ static u8 __devinit ata66_sis5513(ide_hwif_t *hwif)
- 	return ata66 ? ATA_CBL_PATA80 : ATA_CBL_PATA40;
+ 	/* Bad */
+ 	printk(KERN_ERR "%s: IO baseregs (BIOS) are reported "
+ 			"as MEM, report to "
+@@ -257,7 +256,7 @@ static int ide_pci_check_iomem(struct pci_dev *dev, const struct ide_port_info *
+ 	return -EINVAL;
  }
  
--static void __devinit init_hwif_sis5513 (ide_hwif_t *hwif)
-+static void __devinit init_hwif_sis5513(ide_hwif_t *hwif)
- {
- 	u8 udma_rates[] = { 0x00, 0x00, 0x07, 0x1f, 0x3f, 0x3f, 0x7f, 0x7f };
+-/**
++/*
+  *	ide_hwif_configure	-	configure an IDE interface
+  *	@dev: PCI device holding interface
+  *	@d: IDE port info
+@@ -284,7 +283,7 @@ static ide_hwif_t *ide_hwif_configure(struct pci_dev *dev,
+ 		/*  Possibly we should fail if these checks report true */
+ 		ide_pci_check_iomem(dev, d, 2*port);
+ 		ide_pci_check_iomem(dev, d, 2*port+1);
+- 
++
+ 		ctl  = pci_resource_start(dev, 2*port+1);
+ 		base = pci_resource_start(dev, 2*port);
+ 		if ((ctl && !base) || (base && !ctl)) {
+@@ -293,8 +292,7 @@ static ide_hwif_t *ide_hwif_configure(struct pci_dev *dev,
+ 			return NULL;
+ 		}
+ 	}
+-	if (!ctl)
+-	{
++	if (!ctl) {
+ 		/* Use default values */
+ 		ctl = port ? 0x374 : 0x3f4;
+ 		base = port ? 0x170 : 0x1f0;
+@@ -328,7 +326,7 @@ static ide_hwif_t *ide_hwif_configure(struct pci_dev *dev,
+ }
  
-@@ -568,7 +564,7 @@ static const struct ide_port_info sis5513_chipset __devinitdata = {
- 	.name		= "SIS5513",
- 	.init_chipset	= init_chipset_sis5513,
- 	.init_hwif	= init_hwif_sis5513,
--	.enablebits	= {{0x4a,0x02,0x02}, {0x4a,0x04,0x04}},
-+	.enablebits	= { {0x4a, 0x02, 0x02}, {0x4a, 0x04, 0x04} },
- 	.host_flags	= IDE_HFLAG_LEGACY_IRQS | IDE_HFLAG_NO_AUTODMA,
- 	.pio_mask	= ATA_PIO4,
- 	.mwdma_mask	= ATA_MWDMA2,
+ #ifdef CONFIG_BLK_DEV_IDEDMA_PCI
+-/**
++/*
+  *	ide_hwif_setup_dma	-	configure DMA interface
+  *	@hwif: IDE interface
+  *	@d: IDE port info
+@@ -351,9 +349,9 @@ void ide_hwif_setup_dma(ide_hwif_t *hwif, const struct ide_port_info *d)
+ 		unsigned long dma_base = ide_get_or_set_dma_base(d, hwif);
+ 		if (dma_base && !(pcicmd & PCI_COMMAND_MASTER)) {
+ 			/*
+- 			 * Set up BM-DMA capability
++			 * Set up BM-DMA capability
+ 			 * (PnP BIOS should have done this)
+- 			 */
++			 */
+ 			pci_set_master(dev);
+ 			if (pci_read_config_word(dev, PCI_COMMAND, &pcicmd) || !(pcicmd & PCI_COMMAND_MASTER)) {
+ 				printk(KERN_ERR "%s: %s error updating PCICMD\n",
+@@ -375,7 +373,7 @@ void ide_hwif_setup_dma(ide_hwif_t *hwif, const struct ide_port_info *d)
+ }
+ #endif /* CONFIG_BLK_DEV_IDEDMA_PCI */
+ 
+-/**
++/*
+  *	ide_setup_pci_controller	-	set up IDE PCI
+  *	@dev: PCI device
+  *	@d: IDE port info
+@@ -416,7 +414,7 @@ out:
+ 	return ret;
+ }
+ 
+-/**
++/*
+  *	ide_pci_setup_ports	-	configure ports/devices on PCI IDE
+  *	@dev: PCI device
+  *	@d: IDE port info
+@@ -458,7 +456,6 @@ void ide_pci_setup_ports(struct pci_dev *dev, const struct ide_port_info *d, int
+ 		*(idx + port) = hwif->index;
+ 	}
+ }
+-
+ EXPORT_SYMBOL_GPL(ide_pci_setup_ports);
+ 
+ /*
+@@ -541,7 +538,6 @@ int ide_setup_pci_device(struct pci_dev *dev, const struct ide_port_info *d)
+ 
+ 	return ret;
+ }
+-
+ EXPORT_SYMBOL_GPL(ide_setup_pci_device);
+ 
+ int ide_setup_pci_devices(struct pci_dev *dev1, struct pci_dev *dev2,
+@@ -565,5 +561,4 @@ int ide_setup_pci_devices(struct pci_dev *dev1, struct pci_dev *dev2,
+ out:
+ 	return ret;
+ }
+-
+ EXPORT_SYMBOL_GPL(ide_setup_pci_devices);
 -- 
 1.5.4.2.316.gf7a7
 
