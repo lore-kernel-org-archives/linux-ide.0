@@ -1,46 +1,42 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: 2.6.25-rc2 + smartd = hang
-Date: Sun, 24 Feb 2008 00:12:36 +0100
-Message-ID: <200802240012.36571.bzolnier@gmail.com>
-References: <20080222165122.8D2BB93C12F@tippex.mynet.homeunix.org> <20080222213932.3403F93C12F@tippex.mynet.homeunix.org> <20080223221721.5C8502DC002@tippex.mynet.homeunix.org>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: power_state: get rid of write-only variable in SATA
+Date: Sun, 24 Feb 2008 00:29:20 -0500
+Message-ID: <47C100B0.1040408@garzik.org>
+References: <20080221125652.GA23548@elf.ucw.cz>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.174]:25564 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751070AbYBWW7d (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 23 Feb 2008 17:59:33 -0500
-Received: by ug-out-1314.google.com with SMTP id z38so272377ugc.16
-        for <linux-ide@vger.kernel.org>; Sat, 23 Feb 2008 14:59:32 -0800 (PST)
-In-Reply-To: <20080223221721.5C8502DC002@tippex.mynet.homeunix.org>
-Content-Disposition: inline
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1759035AbYBXF3g@vger.kernel.org>
+In-Reply-To: <20080221125652.GA23548@elf.ucw.cz>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Pavel Machek <pavel@ucw.cz>
+Cc: kernel list <linux-kernel@vger.kernel.org>, Linux-pm mailing list <linux-pm@lists.osdl.org>, linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Anders Eriksson <aeriksson@fastmail.fm>
-Cc: Mark Lord <liml@rtr.ca>, Jeff Garzik <jeff@garzik.org>, linux-kernel@vger.kernel.org, Linux IDE mailing list <linux-ide@vger.kernel.org>, Jens Axboe <jens.axboe@oracle.com>
 
-
-Hi,
-
-On Saturday 23 February 2008, Anders Eriksson wrote:
+Pavel Machek wrote:
+> power_state is scheduled for removal, and libata uses it in write-only
+> mode. Remove it.
 > 
-> aeriksson@fastmail.fm said:
-> >> But at this point libata is working much better than the old IDE stuff, and
-> >> it really is worth moving things over if you can. 
-> >
-> > Ok, I'll take a stab at that tomorrow. Two things... 
+> Signed-off-by: Pavel Machek <pavel@suse.cz>
 > 
-> Having switched to ata_piix i can confirm that smartd doesn't hand the system 
-> anymore.
-> 
-> Still.. There seem to be a bug vs. the old drivers somewhere. Will that be 
-> addressed, or should there be a big warning for the old stuff (DEPRECATED?)
+> diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+> index b4985bc..a31572d 100644
+> --- a/drivers/ata/libata-core.c
+> +++ b/drivers/ata/libata-core.c
+> @@ -6542,8 +6542,6 @@ int ata_host_suspend(struct ata_host *ho
+>  	ata_lpm_enable(host);
+>  
+>  	rc = ata_host_request_pm(host, mesg, 0, ATA_EHI_QUIET, 1);
+> -	if (rc == 0)
+> -		host->dev->power.power_state = mesg;
+>  	return rc;
+>  }
+>  
+> @@ -6562,7 +6560,6 @@ void ata_host_resume(struct ata_host *ho
+>  {
+>  	ata_host_request_pm(host, PMSG_ON, ATA_EH_SOFTRESET,
+>  			    ATA_EHI_NO_AUTOPSY | ATA_EHI_QUIET, 0);
+> -	host->dev->power.power_state = PMSG_ON;
+>  
 
-Could you try bisecting it down to the guilty commit using git-bisect?
-
-[ the "old" stuff got few hundred commits in 2.6.25 ]
-
-Thanks,
-Bart
+applied
