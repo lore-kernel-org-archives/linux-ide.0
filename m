@@ -1,36 +1,29 @@
-From: Pavel Machek <pavel@ucw.cz>
+From: Anders Eriksson <aeriksson@fastmail.fm>
 Subject: Re: 2.6.25-rc2 + smartd = hang
-Date: Sat, 23 Feb 2008 21:49:01 +0100
-Message-ID: <20080223204900.GA4340@ucw.cz>
-References: <20080222165122.8D2BB93C12F@tippex.mynet.homeunix.org> <47BF0DCD.4060400@garzik.org> <20080222185645.9DD9C93C12F@tippex.mynet.homeunix.org> <47BF3DE3.4000100@rtr.ca>
+Date: Sun, 24 Feb 2008 09:25:47 +0100
+Message-ID: <20080224082547.84F542DC002@tippex.mynet.homeunix.org>
+References: <20080222165122.8D2BB93C12F@tippex.mynet.homeunix.org> <20080222213932.3403F93C12F@tippex.mynet.homeunix.org> <20080223221721.5C8502DC002@tippex.mynet.homeunix.org> <200802240012.36571.bzolnier@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from gprs189-60.eurotel.cz ([160.218.189.60]:4543 "EHLO spitz.ucw.cz"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751724AbYBXHzi (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 24 Feb 2008 02:55:38 -0500
-Content-Disposition: inline
-In-Reply-To: <47BF3DE3.4000100@rtr.ca>
+Received: from ch-smtp02.sth.basefarm.net ([80.76.149.213]:37253 "EHLO
+	ch-smtp02.sth.basefarm.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751226AbYBXI0A (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 24 Feb 2008 03:26:00 -0500
+In-reply-to: <200802240012.36571.bzolnier@gmail.com> 
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark Lord <liml@rtr.ca>
-Cc: Anders Eriksson <aeriksson@fastmail.fm>, Jeff Garzik <jeff@garzik.org>, linux-kernel@vger.kernel.org, Linux IDE mailing list <linux-ide@vger.kernel.org>, Jens Axboe <jens.axboe@oracle.com>
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: Anders Eriksson <aeriksson@fastmail.fm>, Mark Lord <liml@rtr.ca>, Jeff Garzik <jeff@garzik.org>, linux-kernel@vger.kernel.org, Linux IDE mailing list <linux-ide@vger.kernel.org>, Jens Axboe <jens.axboe@oracle.com>
 
-Hi!
 
-> So that's using the old IDE drivers.
-> And the network and USB are sharing IRQ#11 with each 
-> other.
-> 
-> If you are going to be using newer kernels like this 
-> (2.6.23+),
-> then you might consider shifting those drives over to 
-> libata drivers.
+bzolnier@gmail.com said:
+> Could you try bisecting it down to the guilty commit using git-bisect?
+> [ the "old" stuff got few hundred commits in 2.6.25 ]
+> Thanks, Bart 
 
-Yes, that will probably fix it for him, but but... maybe we should fix
-that regression?
-							Pavel
--- 
-(english) http://www.livejournal.com/~pavelmachek
-(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
+Will do. It'll take a while though. Not a fast machine and used by the 
+household...
+
+/A
+
