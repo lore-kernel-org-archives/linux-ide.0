@@ -1,55 +1,73 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [PATCH 0/6] IDE: new series of Coding Style Fixes
-Date: Sun, 24 Feb 2008 17:38:57 +0100
-Message-ID: <200802241738.57839.bzolnier@gmail.com>
-References: <20080223183812.5af6d36d@paolo-desktop>
+Subject: Re: [git patches] libata fixes
+Date: Sun, 24 Feb 2008 18:21:14 +0100
+Message-ID: <200802241821.15052.bzolnier@gmail.com>
+References: <20080224053508.GA17530@havoc.gtf.org>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.168]:31798 "EHLO
+Received: from ug-out-1314.google.com ([66.249.92.174]:50487 "EHLO
 	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753171AbYBXQcG (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 24 Feb 2008 11:32:06 -0500
-Received: by ug-out-1314.google.com with SMTP id z38so457571ugc.16
-        for <linux-ide@vger.kernel.org>; Sun, 24 Feb 2008 08:32:06 -0800 (PST)
-In-Reply-To: <20080223183812.5af6d36d@paolo-desktop>
+	with ESMTP id S1750924AbYBXRHm convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 24 Feb 2008 12:07:42 -0500
+Received: by ug-out-1314.google.com with SMTP id z38so467459ugc.16
+        for <linux-ide@vger.kernel.org>; Sun, 24 Feb 2008 09:07:40 -0800 (PST)
+In-Reply-To: <20080224053508.GA17530@havoc.gtf.org>
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Paolo Ciarrocchi <paolo.ciarrocchi@gmail.com>
-Cc: Linux Kernel <linux-kernel@vger.kernel.org>, linux-ide <linux-ide@vger.kernel.org>
+To: Jeff Garzik <jeff@garzik.org>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>
 
+On Sunday 24 February 2008, Jeff Garzik wrote:
 
-On Saturday 23 February 2008, Paolo Ciarrocchi wrote:
-> Bart,
-> here is a new series of patches that remove some errors
-> and warnings reported by checkpatch.pl from the IDE subsystem.
-> 
-> All the patches have been compile tested and are against this morning (CET time :-)
-> linux-next
-> 
-> Paolo Ciarrocchi (6):
->       IDE: Coding Style fixes to drivers/ide/pci/opti621.c
->       IDE: Coding Style fixes to drivers/ide/legacy/hd.c
->       IDE: Coding Style fixes to drivers/ide/legacy/ali14xx.c
->       IDE: Coding Style fixes to drivers/ide/pci/it8213.c
+[...]
 
-the above change (patch 4/6) seems to be m.i.a. ?
+> Alan Cox (1):
+>       pata_atiixp: Use 255 sector limit
 
->       IDE: Coding Style fixes to drivers/ide/ide-floppy.c
->       IDE: Coding Style fixes to drivers/ide/pci/cmd640.c
-> 
->  drivers/ide/ide-floppy.c     |    4 +-
->  drivers/ide/legacy/ali14xx.c |   11 +++--
->  drivers/ide/legacy/hd.c      |   79 ++++++++++++++++++------------------
->  drivers/ide/pci/cmd640.c     |   90 +++++++++++++++++++++---------------------
->  drivers/ide/pci/it8213.c     |    9 ++--
->  drivers/ide/pci/opti621.c    |   50 ++++++++++++------------
->  6 files changed, 122 insertions(+), 121 deletions(-)
+AHCI needs sorting too but this deals with the old interface
 
-I applied all the rest (some with minor fixes).
+Signed-off-by: Alan Cox <alan@redhat.com>
+Signed-off-by: Jeff Garzik <jeff@garzik.org>
+
+[...]
+
+>> diff --git a/drivers/ata/pata_atiixp.c b/drivers/ata/pata_atiixp.c
+> index 9623f52..408bdc1 100644
+> --- a/drivers/ata/pata_atiixp.c
+> +++ b/drivers/ata/pata_atiixp.c
+> @@ -227,7 +227,7 @@ static struct scsi_host_template atiixp_sht = {
+>  	.queuecommand		= ata_scsi_queuecmd,
+>  	.can_queue		= ATA_DEF_QUEUE,
+>  	.this_id		= ATA_SHT_THIS_ID,
+> -	.sg_tablesize		= LIBATA_MAX_PRD,
+> +	.sg_tablesize		= LIBATA_DUMB_MAX_PRD,
+>  	.cmd_per_lun		= ATA_SHT_CMD_PER_LUN,
+>  	.emulated		= ATA_SHT_EMULATED,
+>  	.use_clustering		= ATA_SHT_USE_CLUSTERING,
+> @@ -259,7 +259,7 @@ static struct ata_port_operations atiixp_port_ops = {
+>  	.bmdma_stop	= atiixp_bmdma_stop,
+>  	.bmdma_status 	= ata_bmdma_status,
+>  
+> -	.qc_prep 	= ata_qc_prep,
+> +	.qc_prep 	= ata_dumb_qc_prep,
+>  	.qc_issue	= ata_qc_issue_prot,
+>  
+>  	.data_xfer	= ata_data_xfer,
+
+This patch doesn't enforce "255 sector limit" but instead:
+
+- limits max PRD table size from 128 entries to 64
+
+- enables quirk needed for some chipsets to split 64K PRD table entry
+  on two 32K ones (these chipsets choke on size == 0x0000)
+
+>From the patch description it can't be told whether the patch itself is
+correct and only the patch description is bogus...
+
+Alan/Jeff: please elaborate on what the patch is trying to achieve.
 
 Thanks,
 Bart
