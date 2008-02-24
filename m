@@ -1,72 +1,112 @@
-From: Sam Ravnborg <sam@ravnborg.org>
-Subject: Re: [Fixed PATCH] hpt366: fix section mismatch warnings
-Date: Sun, 24 Feb 2008 18:53:15 +0100
-Message-ID: <20080224175315.GA10712@uranus.ravnborg.org>
-References: <20080222194651.GA7154@uranus.ravnborg.org> <20080223212222.GA16568@uranus.ravnborg.org> <200802241533.51671.bzolnier@gmail.com>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: IDE cdrom problem with PLEXTOR DVDR PX-608AL
+Date: Sun, 24 Feb 2008 19:16:12 +0100
+Message-ID: <200802241916.12546.bzolnier@gmail.com>
+References: <426a98560802232138q41d45d52ta515f1b791e937f4@mail.gmail.com> <20080224173451.GB11998@gollum.tnic>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from pasmtpb.tele.dk ([80.160.77.98]:60415 "EHLO pasmtpB.tele.dk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752013AbYBXRxE (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 24 Feb 2008 12:53:04 -0500
+Received: from ug-out-1314.google.com ([66.249.92.170]:56695 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753433AbYBXSB5 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 24 Feb 2008 13:01:57 -0500
+Received: by ug-out-1314.google.com with SMTP id z38so482748ugc.16
+        for <linux-ide@vger.kernel.org>; Sun, 24 Feb 2008 10:01:55 -0800 (PST)
+In-Reply-To: <20080224173451.GB11998@gollum.tnic>
 Content-Disposition: inline
-In-Reply-To: <200802241533.51671.bzolnier@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: Sergei Shtylyov <sshtylyov@ru.mvista.com>, LKML <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org
+To: petkovbb@gmail.com
+Cc: Brad Rosser <brad.rosser@gmail.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Sun, Feb 24, 2008 at 03:33:51PM +0100, Bartlomiej Zolnierkiewicz wrote:
-> On Saturday 23 February 2008, Sam Ravnborg wrote:
-> > hpt366: fix section mismatch warnings
-> > 
-> > Fix following warnings:
-> > WARNING: o-sparc64/vmlinux.o(.data+0x195a38): Section mismatch in reference from the variable hpt37x_info.0 to the variable .devinit.data:hpt370
-> > WARNING: o-sparc64/vmlinux.o(.data+0x195a40): Section mismatch in reference from the variable hpt37x_info.0 to the variable .devinit.data:hpt370a
-> > WARNING: o-sparc64/vmlinux.o(.data+0x195a48): Section mismatch in reference from the variable hpt37x_info.0 to the variable .devinit.data:hpt372
-> > WARNING: o-sparc64/vmlinux.o(.data+0x195a50): Section mismatch in reference from the variable hpt37x_info.0 to the variable .devinit.data:hpt372n
-> > 
-> > Replace a static array with a small switch resulting in
-> > more readable code.
-> > Mark the pci table __devinitconst.
-> > 
-> > A lot of variables are const but annotated __devinitdata.
-> > Annotating them __devinitconst would cause a section type
-> > conflict error when build for 64 bit powerpc.
-> > 
-> > Signed-off-by: Sam Ravnborg <sam@ravnborg.org>
-> > Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-> > Cc: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-> > ---
-> 
-> thanks, applied
-> 
-> > The first patch I posted caused a section type conflict when
-> > build for 64 bit powerpc. The actual cause of this is know and unavoidable
-> > when we start to declare variables const.
-> > The patch attached is much simpler as the transition from __devinitdata
-> > to __devinitconst turned out to be bogus.
-> 
-> Weird, I thought that the main purpose of __devinitconst was to replace
-> const + __devinitdata?
+On Sunday 24 February 2008, Borislav Petkov wrote:
+> On Sun, Feb 24, 2008 at 03:38:34PM +1000, Brad Rosser wrote:
 
-The problem we face is that gcc in some cases mark the
-destination section READ-ONLY and in other cases not.
-So if we annotate two variables to go into the same
-section and gcc only annotate one of them READ-ONLY them
-we will have a section type conflict.
+[...]
 
-gcc is not consistent across architectures what to mark
-READ-ONLY and not. And what we saw here was a combination
-where on x86 the destinatin section were marked equal
-(READ-ONLY or not READ-ONLY) but on powerpc were marked
-different. One was marked READ-ONLY the other was not.
+> > kernel: hda: cdrom_pc_intr: The drive appears confused (ireason =
+> > 0x01). Trying to recover by ending request.
+> > last message repeated 3 times
+> > kernel: ide: failed opcode was: unknown
+> > kernel: hda: drive not ready for command
+> > kernel: hda: status error: status=0x58 { DriveReady SeekComplete DataRequest }
 
-So when playing with const it is improtant to try out with
-a 64 bit gcc for powerpc to see if it causes any section
-type conflict. Note: 32 bit gcc does not have this
-issue.
+[...]
 
-	Sam
+> > When I saw the recent message from Hans-Peter Jansen about this exact
+> > problem, and Boris's comment that something in interrupt land for the
+> > CD driver had been fixed, I thought the latest version of the kernel would
+> > rectify matters.  I installed the 2.6.25-rc2 kernel from kernel.org
+> > but the problem
+> > is still there.
 
+Does the following patch help?
+
+[ It makes ireason handling for REQ_TYPE_ATA_PC requests be the same as
+  for other request types so "ireason == 1" quirk is used if needed. ]
+
+---
+ drivers/ide/ide-cd.c |   24 ++++++++++--------------
+ 1 file changed, 10 insertions(+), 14 deletions(-)
+
+Index: b/drivers/ide/ide-cd.c
+===================================================================
+--- a/drivers/ide/ide-cd.c
++++ b/drivers/ide/ide-cd.c
+@@ -670,8 +670,8 @@ static void cdrom_buffer_sectors (ide_dr
+  * and attempt to recover if there are problems.  Returns  0 if everything's
+  * ok; nonzero if the request has been terminated.
+  */
+-static
+-int ide_cd_check_ireason(ide_drive_t *drive, int len, int ireason, int rw)
++static int ide_cd_check_ireason(ide_drive_t *drive, struct request *rq,
++				int len, int ireason, int rw)
+ {
+ 	/*
+ 	 * ireason == 0: the drive wants to receive data from us
+@@ -701,6 +701,9 @@ int ide_cd_check_ireason(ide_drive_t *dr
+ 				drive->name, __FUNCTION__, ireason);
+ 	}
+ 
++	if (rq->cmd_type == REQ_TYPE_ATA_PC)
++		rq->cmd_flags |= REQ_FAILED;
++
+ 	cdrom_end_request(drive, 0);
+ 	return -1;
+ }
+@@ -1071,11 +1074,11 @@ static ide_startstop_t cdrom_newpc_intr(
+ 	/*
+ 	 * check which way to transfer data
+ 	 */
+-	if (blk_fs_request(rq) || blk_pc_request(rq)) {
+-		if (ide_cd_check_ireason(drive, len, ireason, write))
+-			return ide_stopped;
++	if (ide_cd_check_ireason(drive, rq, len, ireason, write))
++		return ide_stopped;
+ 
+-		if (blk_fs_request(rq) && write == 0) {
++	if (blk_fs_request(rq)) {
++		if (write == 0) {
+ 			int nskip;
+ 
+ 			if (ide_cd_check_transfer_size(drive, len)) {
+@@ -1101,16 +1104,9 @@ static ide_startstop_t cdrom_newpc_intr(
+ 	if (ireason == 0) {
+ 		write = 1;
+ 		xferfunc = HWIF(drive)->atapi_output_bytes;
+-	} else if (ireason == 2 || (ireason == 1 &&
+-		   (blk_fs_request(rq) || blk_pc_request(rq)))) {
++	} else {
+ 		write = 0;
+ 		xferfunc = HWIF(drive)->atapi_input_bytes;
+-	} else {
+-		printk(KERN_ERR "%s: %s: The drive "
+-				"appears confused (ireason = 0x%02x). "
+-				"Trying to recover by ending request.\n",
+-				drive->name, __FUNCTION__, ireason);
+-		goto end_request;
+ 	}
+ 
+ 	/*
