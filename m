@@ -1,41 +1,39 @@
-From: "Gabor FUNK" <FUNK.Gabor@hunetkft.hu>
-Subject: Re: JMicron - hard resetting link
-Date: Sun, 24 Feb 2008 10:04:14 +0100
-Message-ID: <002301c876c4$3ace8620$4d0fa8c0@M2007>
-References: <009401c86d5c$5eb57bf0$4d0fa8c0@M2007> <47B19997.1010404@gmail.com> <003801c86d84$fdae0510$4d0fa8c0@M2007> <47B1B299.3010208@gmail.com> <002f01c86d9c$94542f50$4d0fa8c0@M2007> <47B230CA.9060506@gmail.com> <005c01c86f5d$b050b4e0$4d0fa8c0@M2007> <47B4CF71.5070408@gmail.com> <008901c874d3$10731c80$4d0fa8c0@M2007> <47BE2D6A.6060603@gmail.com>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: [PATCH 00/10] IDE: Coding Style Fixes
+Date: Sun, 24 Feb 2008 16:49:51 +0100
+Message-ID: <200802241649.51627.bzolnier@gmail.com>
+References: <20080223150436.6c09ce54@paolo-desktop>
 Mime-Version: 1.0
 Content-Type: text/plain;
-	format=flowed;
-	charset="iso-8859-2";
-	reply-type=original
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ns1.huweb.hu ([62.112.193.37]:44523 "EHLO ns1.huweb.hu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752296AbYBXJE2 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 24 Feb 2008 04:04:28 -0500
+Received: from ug-out-1314.google.com ([66.249.92.175]:31376 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752927AbYBXQcC (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 24 Feb 2008 11:32:02 -0500
+Received: by ug-out-1314.google.com with SMTP id z38so457572ugc.16
+        for <linux-ide@vger.kernel.org>; Sun, 24 Feb 2008 08:32:00 -0800 (PST)
+In-Reply-To: <20080223150436.6c09ce54@paolo-desktop>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: IDE/ATA development list <linux-ide@vger.kernel.org>
+To: Paolo Ciarrocchi <paolo.ciarrocchi@gmail.com>
+Cc: Linux Kernel <linux-kernel@vger.kernel.org>, linux-ide <linux-ide@vger.kernel.org>, Adrian Bunk <bunk@kernel.org>, Cyrill Gorcunov <gorcunov@gmail.com>
 
->> Since it is not a "switch on and see" problem, I'm not in too good
->> position, so unless someone have a really great idea or observation,
->> I seriously have to consider to replace the MB and probably add
->> some extra sata controllers.
-> 
-> If you can still do some testing, what happens if you unplug power to
-> the failed drive and replug it while the system is still running?  Does
-> hotplug event get triggered and the drive gets recognized again?  If so,
-> does unplugging and replugging the SATA controller only (w/o powering
-> down the drive) achieve the same thing?
 
-I doubt I will start another week of testing without any major changes,
-I didn't do drive hotplug, but as for the controllers, they're are all on-
-board ones...
+On Saturday 23 February 2008, Paolo Ciarrocchi wrote:
+> Hi Bartlomiej,
+> The following 10 patches remove a huge number of errors and warnings
+> reported by checkpatch.pl from the IDE subsystem.
 
-I guess new (and different) motherboard and sata controllers cards will
-be the next thing to change, 'cause I strongly believe that PSU-s are fine
-and should be enough for the system.
+[...]
 
-G.
+Thanks!
+
+I applied everything (patch #8 with fixes based on comments from
+Adrian & Cyrill + patches #1/2/4/5 also with some improvements)
+and verified that md5sums for the resulting binary files remain
+the same.
+
+Bart
