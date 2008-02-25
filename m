@@ -1,131 +1,70 @@
-From: Borislav Petkov <petkovbb@googlemail.com>
-Subject: Re: IDE cdrom problem with PLEXTOR DVDR PX-608AL
-Date: Mon, 25 Feb 2008 15:45:19 +0100
-Message-ID: <20080225144519.GB3816@gollum.tnic>
-References: <426a98560802232138q41d45d52ta515f1b791e937f4@mail.gmail.com> <20080224173451.GB11998@gollum.tnic> <426a98560802241758j7a9be21m5eecc120ada804e4@mail.gmail.com> <20080225053404.GA3816@gollum.tnic> <426a98560802242157j61294ba6i2aaa9cce4d836a7b@mail.gmail.com>
-Reply-To: petkovbb@gmail.com
+From: Brian King <brking@linux.vnet.ibm.com>
+Subject: Re: Need help with libata error handling in libsas
+Date: Mon, 25 Feb 2008 10:34:29 -0600
+Message-ID: <47C2EE15.3060105@linux.vnet.ibm.com>
+References: <1203886936.3135.75.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from gv-out-0910.google.com ([216.239.58.185]:28131 "EHLO
-	gv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754442AbYBYOpa (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 25 Feb 2008 09:45:30 -0500
-Received: by gv-out-0910.google.com with SMTP id s4so553159gve.37
-        for <linux-ide@vger.kernel.org>; Mon, 25 Feb 2008 06:45:28 -0800 (PST)
-Content-Disposition: inline
-In-Reply-To: <426a98560802242157j61294ba6i2aaa9cce4d836a7b@mail.gmail.com>
+Received: from e3.ny.us.ibm.com ([32.97.182.143]:32778 "EHLO e3.ny.us.ibm.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756157AbYBYQeh (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 25 Feb 2008 11:34:37 -0500
+In-Reply-To: <1203886936.3135.75.camel@localhost.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Brad Rosser <brad.rosser@gmail.com>
-Cc: bzolnier@gmail.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: linux-ide <linux-ide@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
 
-On Mon, Feb 25, 2008 at 03:57:06PM +1000, Brad Rosser wrote:
-> Hi Boris,
->=20
-> >  Well, this sounds strange. Are you sure you're entering the boot o=
-ptions
-> >  correctly on the kernel command line? Which is your boot loader? I=
- just booted
-> >  my machine with 'hdc=3Dnoprobe'  (hdc is my cdrom drive) and here'=
-s what i get:
-> >
-> >  ...
-> >  [    0.304774] Probing IDE interface ide0...
-> >  [    0.569359] hdb: SAMSUNG SP2014N, ATA DISK drive
-> >  [    0.613977] Switched to NOHz mode on CPU #1
-> >  [    0.773368] Switched to NOHz mode on CPU #0
-> >  [    0.874486] hda: QUANTUM FIREBALLlct10 20, ATA DISK drive
-> >  [    0.874506] hda: host max PIO4 wanted PIO255(auto-tune) selecte=
-d PIO4
-> >  [    0.874506] hda: drive side 80-wire cable detection failed, lim=
-iting max speed to UDMA33
-> >  [    0.874506] hda: UDMA/33 mode selected
-> >  [    0.874533] hdb: host max PIO4 wanted PIO255(auto-tune) selecte=
-d PIO4
-> >  [    0.874620] hdb: UDMA/100 mode selected
-> >  [    0.874744] Probing IDE interface ide1...
->=20
-> >  so it seems you should check whether your kernel is receiving the =
-'hda=3Dnoprobe'
-> >  boot option at all, or something along that path is going wrong...
->=20
-> I'm entering the option 'hda=3Dnoprobe' (as one example) right after =
-my boot
-> label in LILO.  The dmesg output I attached last time was a boot of s=
-traight
-> 2.6.25-rc2 without any options; I've attached 'dmesg.noprobe.out' whi=
-ch is
-> the result of a boot with 'hda=3Dnoprobe'.
->=20
-> I must have done something stupid, but I can't see what; if you look =
-at this
-> line from the dmesg output:
->=20
-> Kernel command line: BOOT_IMAGE=3Dlinux_2.6.25rc2 ro root=3D900
-> md=3D0,/dev/sda5,/dev/sdb5 hda=3Dnoprobe
->=20
-> ... it would suggest the option 'hda=3Dnoprobe' was entered correctly=
-?
+James Bottomley wrote:
+> I keep hearing that we need to convert libsas to use libata's new error
+> handling.  Unfortunately, I have very little conception of what that
+> means.  Right at the moment, libsas doesn't use any error handling
+> functions of libata at all.
+> 
+> I've looked through the libata-eh functions, and I find them frankly
+> incomprehensible.
+> 
+> Firstly, let me say what SAS error handling actually does:
 
-ok, let's try something else: change the line "#if 0" to "#if 1" at the
-beginning of kernel/params.c, it looks like:
+Let me chime in with what ipr error handling does/can do. The ipr firmware
+provides two basic SATA error handling methods with some modifiers to each.
 
-#if 0
-#define DEBUGP printk
-#else
-#define DEBUGP(fmt, a...)
-#endif
+Cancel All - This cancels all outstanding commands to the device. When issued
+to an ATA device, this gets escalated by the firmware to an SRST. When issued
+to an ATAPI device, an ATA NOOP is issued.
 
-rebuild your kernel, and reboot with it. Then, please send me that boot=
- log to
-see whether the kernel command line is being received from the boot loa=
-der and
-what exactly is getting parsed. Thanks.
+Reset Device - This command has modifiers to indicate either a soft reset
+or a hard reset.
 
-> >  > I tried to apply the patch but failed; I probably did something =
-wrong.
-> >  > I deleted everything in your message above 'Index: b/drivers/ide=
-/ide-cd.c'
-> >  > and ran 'patch --dry-run -b -p1 < ../bart_patch'.  This is part =
-of my script
-> >  > log:
-> >
-> >  are you sure you're _really_ using 2.6.25-rc2? Applying the patch =
-against that
-> >  kernel works just fine, no fuzziness or even rejects. Care to try =
-out on a fresh
-> >  kernel source tarball? After all, building a kernel with your quad=
- core cpu won't
-> >  take that long :-) when using make -j8 or something in that order.
->=20
-> Heh.  This is my first new machine in 8 years, and I couldn't wait to=
- start
-> using multiple cores.  I was quick to discover the '-j' option ... bu=
-t I only
-> do '-j 4'.  Anyway ... I'd downloaded the full baseline linux-2.6.24.=
-tar.bz2,
-> unpacked it, and then ran the patch patch-2.6.25-rc2.bz2 against it. =
- That
-> patch ran perfectly.  And I was in the right directory when I ran Bar=
-t's patch,
-> as I listed in my earlier e-mail!  All indications were that I was ru=
-nning the
-> 2.6.25-rc2 kernel as required, I thought.
->=20
-> Well, I see that rc3 is out; maybe I'll give that a shot.
+Currently, the only SATA devices that ipr officially attaches are ATAPI
+DVD devices. In our testing we've come to the conclusion that trying to
+use anything but a hard reset for ERP is generally more trouble than it
+is worth.
 
-Please see whether you can apply the patch Bart just sent and if that s=
-till gets
-mangled and cannot be applied, consider making those changes to ide-cd.=
-c by hand
-- after all, there are only several lines that need to be changed so it=
- won't
-take that long.
+> All of this leads me to conclude, that all libsas needs is to plumb in
+> the ATA equivalent of abort, junk the task query for libata devices and
+> simply proceed, as if the task is held at the target, along the
+> escalating reset path.
 
-Thanks.
+The new libata-eh is used for more than just EH. It is used for device
+probing, device revalidation, and power management. It is also woken for
+all command failures and is where the request sense for ATAPI devices is
+issued. Device revalidation following reset is also critical for ATA and
+ATAPI devices. One example of this is some SATA/PATA converter chips
+lose their DMA xfer settings following a reset and default to PIO mode
+only. Any DMA transfer that is attempted simply hangs.
 
---=20
-Regards/Gru=DF,
-    Boris.
+The other issue is PMP support. The more that gets pushed into libsas,
+the more libsas needs to know about things such as PMP.
+
+-Brian
+
+-- 
+Brian King
+Linux on Power Virtualization
+IBM Linux Technology Center
+
+
+
