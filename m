@@ -1,70 +1,66 @@
-From: Brian King <brking@linux.vnet.ibm.com>
-Subject: Re: Need help with libata error handling in libsas
-Date: Mon, 25 Feb 2008 10:34:29 -0600
-Message-ID: <47C2EE15.3060105@linux.vnet.ibm.com>
-References: <1203886936.3135.75.camel@localhost.localdomain>
+From: Mark Lord <liml@rtr.ca>
+Subject: Re: new ata_port_operations for .pmp_{read,write} ?
+Date: Mon, 25 Feb 2008 11:55:36 -0500
+Message-ID: <47C2F308.1080602@rtr.ca>
+References: <4730E312.3090900@navy.mil> <4737C16E.3070607@gmail.com> <4738827D.9060405@pobox.com> <4738F935.1000708@gmail.com> <47BC798F.6070900@pobox.com> <47BE17CA.6060406@rtr.ca> <47BE1833.9090501@rtr.ca> <47BE2C0C.3020801@gmail.com> <47BE2DBD.9010704@rtr.ca> <47BE2F9E.5040206@gmail.com> <47BE32B5.5020300@rtr.ca> <47BE3325.8060209@rtr.ca> <47BE4701.2030104@rtr.ca> <47BE4DFE.2030407@rtr.ca> <47BEDAF2.8000301@rtr.ca> <47BFAC06.5030805@rtr.ca> <47C116D4.1090600@gmail.com> <47C248C8.9090409@rtr.ca> <47C2503A.7040308@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from e3.ny.us.ibm.com ([32.97.182.143]:32778 "EHLO e3.ny.us.ibm.com"
+Received: from rtr.ca ([76.10.145.34]:3236 "EHLO mail.rtr.ca"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756157AbYBYQeh (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 25 Feb 2008 11:34:37 -0500
-In-Reply-To: <1203886936.3135.75.camel@localhost.localdomain>
+	id S1754856AbYBYQwn (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 25 Feb 2008 11:52:43 -0500
+In-Reply-To: <47C2503A.7040308@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: linux-ide <linux-ide@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
+To: Tejun Heo <htejun@gmail.com>
+Cc: IDE/ATA development list <linux-ide@vger.kernel.org>, Saeed Bishara <saeed@marvell.com>, Jeff Garzik <jgarzik@pobox.com>
 
-James Bottomley wrote:
-> I keep hearing that we need to convert libsas to use libata's new error
-> handling.  Unfortunately, I have very little conception of what that
-> means.  Right at the moment, libsas doesn't use any error handling
-> functions of libata at all.
+Tejun Heo wrote:
+> Mark Lord wrote:
+..
+>> But no big deal.  I can clone code and not bother you any more.
+>> In fact, some of the cloned code was already in sata_mv, and I removed
+>> it this past week in my local working copy.  I'll just restore that,
+>> along with another big blob so that we can select pm port where needed.
+>>
+>> What a shame.
 > 
-> I've looked through the libata-eh functions, and I find them frankly
-> incomprehensible.
-> 
-> Firstly, let me say what SAS error handling actually does:
+> The order is somewhat reversed here and I can understand why you're
+> frustrated but I'm just trying to make things look right in long term,
+> so feel free to bother me. :-) For temporary solution, I'm okay either
+> way.  I'll clean things up later when the necessary core changes are made.
+..
 
-Let me chime in with what ipr error handling does/can do. The ipr firmware
-provides two basic SATA error handling methods with some modifiers to each.
+MMmm.. maybe the "vendor unique FIS" mechanism of the chipset
+can save the scenario here.  It would seem to be a reasonable
+way to direct a FIS (anything up to 8KB) at a specific pmp,
+without changing the "default" pmp on the channel.
 
-Cancel All - This cancels all outstanding commands to the device. When issued
-to an ATA device, this gets escalated by the firmware to an SRST. When issued
-to an ATAPI device, an ATA NOOP is issued.
+I can have qc_issue use that mechanism for anything destined
+for pmp==15.  If it works.  The Marvell proprietary driver
+has some kludgey status polling wrapped around their own use of it.
 
-Reset Device - This command has modifiers to indicate either a soft reset
-or a hard reset.
+One of the chip errata apparently requires this anyway for doing
+the READ_LOG_EXT commands after a device error, so perhaps it will
+work out to be useful in more ways.
 
-Currently, the only SATA devices that ipr officially attaches are ATAPI
-DVD devices. In our testing we've come to the conclusion that trying to
-use anything but a hard reset for ERP is generally more trouble than it
-is worth.
+Speaking of which.. I would like to sort out the "freeze" stuff,
+so that the sata_mv EH doesn't lock out the PMP commands as it
+does today.
 
-> All of this leads me to conclude, that all libsas needs is to plumb in
-> the ATA equivalent of abort, junk the task query for libata devices and
-> simply proceed, as if the task is held at the target, along the
-> escalating reset path.
+Can you recap what a LLD should be doing in the presence of a PM
+for EH purposes?  Eg. media error on a PMP drive, so what core
+ATA functions should the sata_mv EH interrupt handler be calling,
+and in what sequence.. so that the libata-pmp/eh code can still
+succeed in it's queries to the PM?
 
-The new libata-eh is used for more than just EH. It is used for device
-probing, device revalidation, and power management. It is also woken for
-all command failures and is where the request sense for ATAPI devices is
-issued. Device revalidation following reset is also critical for ATA and
-ATAPI devices. One example of this is some SATA/PATA converter chips
-lose their DMA xfer settings following a reset and default to PIO mode
-only. Any DMA transfer that is attempted simply hangs.
+I think James is also interested in a decent explanation of
+how to tie into the libata-eh stuff.
 
-The other issue is PMP support. The more that gets pushed into libsas,
-the more libsas needs to know about things such as PMP.
+Like I noted before, sata_mv will need to eventually hard reset
+the channel regardless, but it does seem permitted to use PIO
+or vendor-unique-FIS PIO (with polling for either) in the interim.
 
--Brian
-
--- 
-Brian King
-Linux on Power Virtualization
-IBM Linux Technology Center
-
-
-
+Thanks.
