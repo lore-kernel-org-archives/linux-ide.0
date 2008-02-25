@@ -1,63 +1,26 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: Need help with libata error handling in libsas
-Date: Mon, 25 Feb 2008 12:45:21 -0500
-Message-ID: <47C2FEB1.7020303@garzik.org>
-References: <1203886936.3135.75.camel@localhost.localdomain>	 <47C2EE15.3060105@linux.vnet.ibm.com> <1203958631.3254.48.camel@localhost.localdomain>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Old errata docs
+Date: Mon, 25 Feb 2008 17:37:57 +0000
+Message-ID: <20080225173757.3ffe70d9@core>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:49316 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753413AbYBYRp0 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 25 Feb 2008 12:45:26 -0500
-In-Reply-To: <1203958631.3254.48.camel@localhost.localdomain>
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:35030 "EHLO
+	lxorguk.ukuu.org.uk" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1753441AbYBYRsA (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 25 Feb 2008 12:48:00 -0500
+Received: from core (localhost.localdomain [127.0.0.1])
+	by lxorguk.ukuu.org.uk (8.14.2/8.14.2) with ESMTP id m1PHbwJK019691
+	for <linux-ide@vger.kernel.org>; Mon, 25 Feb 2008 17:37:58 GMT
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Brian King <brking@linux.vnet.ibm.com>, linux-ide <linux-ide@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
+To: linux-ide <linux-ide@vger.kernel.org>
 
-James Bottomley wrote:
-> On Mon, 2008-02-25 at 10:34 -0600, Brian King wrote:
->> The new libata-eh is used for more than just EH. It is used for device
->> probing, device revalidation, and power management. It is also woken for
->> all command failures and is where the request sense for ATAPI devices is
->> issued. Device revalidation following reset is also critical for ATA and
->> ATAPI devices. One example of this is some SATA/PATA converter chips
->> lose their DMA xfer settings following a reset and default to PIO mode
->> only. Any DMA transfer that is attempted simply hangs.
+Does anyone have in their posession the old errata docs for the HPT370
+controller. I'm seeing two reports now where there is some kind of FIFO
+corruption pattern (shifted data and duplicated dwords) on the drives
+which are UDMA100 blacklisted, so presumably more is required for the
+workaround.
 
-Strongly seconded.  Doing your own ATA EH would be foolish, as that 
-would imply duplicating all that carefully-time-tested logic handling 
-devices which follow the ATA specs... about 98% of the time :)
-
-Just the set-transfer-mode logic took years to get right for the 
-majority of ATA devices.
-
-
-> OK ... I'm grepping around in the source trying to figure out all of
-> this.  Is it documented anywhere?  That would really help me out at the
-> moment.
-
-Unfortunately, not really.  The simplistic version is...  freeze, set 
-some flags, call a function to schedule EH as needed -- most notably 
-when your HBA signals an ATA device error or some other error in the ATA 
-domain.
-
-
-Regardless of all this...   libsas IMO will cause some libata-EH growing 
-pains.  libsas needs libata-EH for probing, revalidation, 
-initialization, etc.  But libsas probably does NOT need libata-EH for 
-certain duties like SATA PHY diagnosis and link handling.
-
-libsas needs libata-EH.  Unfortunately for libsas, libata-EH was written 
-from the "libata controls the world" point of view, and probably needs 
-some modifications to play well in the new SATA/SAS shared worldview.
-
-Brian's recommendation is quite sane...  your ->error_handler() probably 
-just needs hard reset (aka COMRESET) capability.
-
-	Jeff
-
-
-
+Alan
