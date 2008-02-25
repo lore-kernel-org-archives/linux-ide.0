@@ -1,47 +1,143 @@
-From: "Paolo Ciarrocchi" <paolo.ciarrocchi@gmail.com>
-Subject: Re: [PATCH 3/3] IDE: Coding Style fixes to drivers/ide/pci/cy82c693.c
-Date: Mon, 25 Feb 2008 09:40:59 +0100
-Message-ID: <4d8e3fd30802250040ie77dbecw6cc396a0f2a9285e@mail.gmail.com>
-References: <20080224221144.1e9e7449@paolo-desktop>
-	 <20080225073122.GE11327@elte.hu>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: IDE cdrom problem with PLEXTOR DVDR PX-608AL
+Date: Mon, 25 Feb 2008 14:56:17 +0100
+Message-ID: <200802251456.17533.bzolnier@gmail.com>
+References: <426a98560802232138q41d45d52ta515f1b791e937f4@mail.gmail.com> <20080224173451.GB11998@gollum.tnic> <426a98560802241758j7a9be21m5eecc120ada804e4@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: Multipart/Mixed;
+  boundary="Boundary-00=_BkswHrW1RMyWnl4"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wf-out-1314.google.com ([209.85.200.172]:65002 "EHLO
-	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753579AbYBYIlA (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 25 Feb 2008 03:41:00 -0500
-Received: by wf-out-1314.google.com with SMTP id 28so804934wff.4
-        for <linux-ide@vger.kernel.org>; Mon, 25 Feb 2008 00:41:00 -0800 (PST)
-In-Reply-To: <20080225073122.GE11327@elte.hu>
-Content-Disposition: inline
+Received: from ug-out-1314.google.com ([66.249.92.170]:25591 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753382AbYBYNl5 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 25 Feb 2008 08:41:57 -0500
+Received: by ug-out-1314.google.com with SMTP id z38so788082ugc.16
+        for <linux-ide@vger.kernel.org>; Mon, 25 Feb 2008 05:41:55 -0800 (PST)
+In-Reply-To: <426a98560802241758j7a9be21m5eecc120ada804e4@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Ingo Molnar <mingo@elte.hu>
-Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Linux Kernel <linux-kernel@vger.kernel.org>, linux-ide <linux-ide@vger.kernel.org>
+To: Brad Rosser <brad.rosser@gmail.com>
+Cc: petkovbb@gmail.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Mon, Feb 25, 2008 at 8:31 AM, Ingo Molnar <mingo@elte.hu> wrote:
->
->  * Paolo Ciarrocchi <paolo.ciarrocchi@gmail.com> wrote:
->
->  > Before:
->  > total: 34 errors, 14 warnings, 456 lines checked
->  >
->  > After:
->  > total: 0 errors, 8 warnings, 456 lines checked
->
->  sidenote: please also indicate to maintainers that the cleanup causes no
->  change in generated code. Find below of how one of your cleanup patches
->  looks like in its final form in x86.git. (i auto-generated all of the
->  commit log)
->
->  info like that makes it easier for maintainers to see the intended zero
->  impact of your changes.
+--Boundary-00=_BkswHrW1RMyWnl4
+Content-Type: text/plain;
+  charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
-Sure, I'll script that.
+On Monday 25 February 2008, Brad Rosser wrote:
 
-Ciao,
--- 
-Paolo
-http://paolo.ciarrocchi.googlepages.com/
+[...]
+
+> Bart wrote:
+> 
+> > Does the following patch help?
+> >
+> > [ It makes ireason handling for REQ_TYPE_ATA_PC requests be the same as
+> > for other request types so "ireason == 1" quirk is used if needed. ]
+> 
+> I tried to apply the patch but failed; I probably did something wrong.
+> I deleted everything in your message above 'Index: b/drivers/ide/ide-cd.c'
+> and ran 'patch --dry-run -b -p1 < ../bart_patch'.  This is part of my script
+> log:
+> 
+> root:/usr/src/linux-2.6.25-rc2# pwd
+> /usr/src/linux-2.6.25-rc2
+> root:/usr/src/linux-2.6.25-rc2# cat ../bart_patch
+> Index: b/drivers/ide/ide-cd.c
+> ===================================================================
+> --- a/drivers/ide/ide-cd.c
+> +++ b/drivers/ide/ide-cd.c
+> @@ -670,8 +670,8 @@ static void cdrom_buffer_sectors (ide_dr
+>  * and attempt to recover if there are problems.  Returns  0 if everything's
+> ...
+> ...
+> root:/usr/src/linux-2.6.25-rc2# patch --dry-run -b -p1 < ../bart_patch
+> patching file drivers/ide/ide-cd.c
+> Hunk #1 FAILED at 670.
+> Hunk #2 FAILED at 701.
+> Hunk #3 FAILED at 1074.
+> Hunk #4 FAILED at 1104.
+> 4 out of 4 hunks FAILED -- saving rejects to file drivers/ide/ide-cd.c.rej
+
+Same command works just fine for me with 2.6.25-rc2/3.
+
+It could be that the patch got damaged somewhere on the way
+(to eleminate this possibility I'm attaching it to this mail).
+
+Thanks,
+Bart
+
+--Boundary-00=_BkswHrW1RMyWnl4
+Content-Type: text/x-diff;
+  charset="utf-8";
+  name="ide-cd-fix-ireason-handling-for-req_type_ata_pc.patch"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment;
+	filename="ide-cd-fix-ireason-handling-for-req_type_ata_pc.patch"
+
+---
+ drivers/ide/ide-cd.c |   24 ++++++++++--------------
+ 1 file changed, 10 insertions(+), 14 deletions(-)
+
+Index: b/drivers/ide/ide-cd.c
+===================================================================
+--- a/drivers/ide/ide-cd.c
++++ b/drivers/ide/ide-cd.c
+@@ -670,8 +670,8 @@ static void cdrom_buffer_sectors (ide_dr
+  * and attempt to recover if there are problems.  Returns  0 if everything's
+  * ok; nonzero if the request has been terminated.
+  */
+-static
+-int ide_cd_check_ireason(ide_drive_t *drive, int len, int ireason, int rw)
++static int ide_cd_check_ireason(ide_drive_t *drive, struct request *rq,
++				int len, int ireason, int rw)
+ {
+ 	/*
+ 	 * ireason == 0: the drive wants to receive data from us
+@@ -701,6 +701,9 @@ int ide_cd_check_ireason(ide_drive_t *dr
+ 				drive->name, __FUNCTION__, ireason);
+ 	}
+ 
++	if (rq->cmd_type == REQ_TYPE_ATA_PC)
++		rq->cmd_flags |= REQ_FAILED;
++
+ 	cdrom_end_request(drive, 0);
+ 	return -1;
+ }
+@@ -1071,11 +1074,11 @@ static ide_startstop_t cdrom_newpc_intr(
+ 	/*
+ 	 * check which way to transfer data
+ 	 */
+-	if (blk_fs_request(rq) || blk_pc_request(rq)) {
+-		if (ide_cd_check_ireason(drive, len, ireason, write))
+-			return ide_stopped;
++	if (ide_cd_check_ireason(drive, rq, len, ireason, write))
++		return ide_stopped;
+ 
+-		if (blk_fs_request(rq) && write == 0) {
++	if (blk_fs_request(rq)) {
++		if (write == 0) {
+ 			int nskip;
+ 
+ 			if (ide_cd_check_transfer_size(drive, len)) {
+@@ -1101,16 +1104,9 @@ static ide_startstop_t cdrom_newpc_intr(
+ 	if (ireason == 0) {
+ 		write = 1;
+ 		xferfunc = HWIF(drive)->atapi_output_bytes;
+-	} else if (ireason == 2 || (ireason == 1 &&
+-		   (blk_fs_request(rq) || blk_pc_request(rq)))) {
++	} else {
+ 		write = 0;
+ 		xferfunc = HWIF(drive)->atapi_input_bytes;
+-	} else {
+-		printk(KERN_ERR "%s: %s: The drive "
+-				"appears confused (ireason = 0x%02x). "
+-				"Trying to recover by ending request.\n",
+-				drive->name, __FUNCTION__, ireason);
+-		goto end_request;
+ 	}
+ 
+ 	/*
+
+--Boundary-00=_BkswHrW1RMyWnl4--
