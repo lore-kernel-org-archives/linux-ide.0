@@ -1,46 +1,39 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [ugly patch] Save .15W-.5W by AHCI powersaving
-Date: Mon, 25 Feb 2008 17:42:58 -0500
-Message-ID: <47C34472.3090706@garzik.org>
-References: <20080225134558.GA1611@elf.ucw.cz> <47C34081.5090205@rtr.ca>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: achi.c bug ?
+Date: Mon, 25 Feb 2008 17:55:35 -0500
+Message-ID: <47C34767.8090501@pobox.com>
+References: <1ada88ce0802160007s632126eiccf1031616c4e53c@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:36324 "EHLO mail.dvmed.net"
+Received: from srv5.dvmed.net ([207.36.208.214]:48871 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753739AbYBYWnF (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 25 Feb 2008 17:43:05 -0500
-In-Reply-To: <47C34081.5090205@rtr.ca>
+	id S1761859AbYBYWzi (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 25 Feb 2008 17:55:38 -0500
+In-Reply-To: <1ada88ce0802160007s632126eiccf1031616c4e53c@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark Lord <liml@rtr.ca>
-Cc: Pavel Machek <pavel@ucw.cz>, kernel list <linux-kernel@vger.kernel.org>, Linux-pm mailing list <linux-pm@lists.osdl.org>, stern@rowland.harvard.edu, linux-ide@vger.kernel.org
+To: chaoyang wang <chaoyang.wang@gmail.com>
+Cc: linux-ide@vger.kernel.org
 
-Mark Lord wrote:
-> Pavel Machek wrote:
->> This is a patch (very ugly, assumes you have just one disk) to bring
->> powersaving to AHCI. You need Alan's SCSI autosuspend (attached) patch
->> as a base.
->>
->> It saves .5W compared to config with disk spinning, and even .15W
->> compared to hdparm -y... on my thinkpad x60 anyway.
-> ..
-> 
-> There was a discussion of this here today.
-> It makes good use of AHCI-specific features.
-> 
-> Has it been tested with a Port-Multiplier yet?
-> 
-> This is cool enough that we really ought to do a hardware-independent
-> version, so that all SATA interfaces could benefit.  Especially ata_piix,
-> but others too.
+chaoyang wang wrote:
+> Dear Jeff,
+>  
+> I was looking at the kernel 2.6.21 code of the achi driver and found 
+> that the sg_table_size was set to 168, while the libata set the maximum 
+> sg to be 128 somewhere else. When a requester issues a request with >128 
+> sgs to the ahci attached device, the system would fall to a scilent 
+> error.  So, I could not count on the scsi probe 
+> of scsi_device->->host->sg_tablesize that was read from achi.
+>  
+> Any advise on the better fix?
+>  
+> Thanks you very much,
 
-BTW we can also save power by allowing the user to choose to disable 
-hotplugging support.  Then we can power down PHYs that are not in use.
+Can you be more specific about "somewhere else"?
 
-That requires the addition of some policy controls, because it is 
-user-specific whether or not to waste power waiting for a plug-in event.
+Reducing s/g table size should be quite safe.
 
 	Jeff
 
