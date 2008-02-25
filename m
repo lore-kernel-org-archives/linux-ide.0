@@ -1,66 +1,32 @@
-From: Mark Lord <liml@rtr.ca>
-Subject: Re: new ata_port_operations for .pmp_{read,write} ?
-Date: Mon, 25 Feb 2008 11:55:36 -0500
-Message-ID: <47C2F308.1080602@rtr.ca>
-References: <4730E312.3090900@navy.mil> <4737C16E.3070607@gmail.com> <4738827D.9060405@pobox.com> <4738F935.1000708@gmail.com> <47BC798F.6070900@pobox.com> <47BE17CA.6060406@rtr.ca> <47BE1833.9090501@rtr.ca> <47BE2C0C.3020801@gmail.com> <47BE2DBD.9010704@rtr.ca> <47BE2F9E.5040206@gmail.com> <47BE32B5.5020300@rtr.ca> <47BE3325.8060209@rtr.ca> <47BE4701.2030104@rtr.ca> <47BE4DFE.2030407@rtr.ca> <47BEDAF2.8000301@rtr.ca> <47BFAC06.5030805@rtr.ca> <47C116D4.1090600@gmail.com> <47C248C8.9090409@rtr.ca> <47C2503A.7040308@gmail.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: Need help with libata error handling in libsas
+Date: Mon, 25 Feb 2008 08:57:10 -0800
+Message-ID: <1203958631.3254.48.camel@localhost.localdomain>
+References: <1203886936.3135.75.camel@localhost.localdomain>
+	 <47C2EE15.3060105@linux.vnet.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([76.10.145.34]:3236 "EHLO mail.rtr.ca"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754856AbYBYQwn (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 25 Feb 2008 11:52:43 -0500
-In-Reply-To: <47C2503A.7040308@gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <47C2EE15.3060105@linux.vnet.ibm.com>
+Sender: linux-scsi-owner@vger.kernel.org
+To: Brian King <brking@linux.vnet.ibm.com>
+Cc: linux-ide <linux-ide@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: IDE/ATA development list <linux-ide@vger.kernel.org>, Saeed Bishara <saeed@marvell.com>, Jeff Garzik <jgarzik@pobox.com>
 
-Tejun Heo wrote:
-> Mark Lord wrote:
-..
->> But no big deal.  I can clone code and not bother you any more.
->> In fact, some of the cloned code was already in sata_mv, and I removed
->> it this past week in my local working copy.  I'll just restore that,
->> along with another big blob so that we can select pm port where needed.
->>
->> What a shame.
-> 
-> The order is somewhat reversed here and I can understand why you're
-> frustrated but I'm just trying to make things look right in long term,
-> so feel free to bother me. :-) For temporary solution, I'm okay either
-> way.  I'll clean things up later when the necessary core changes are made.
-..
+On Mon, 2008-02-25 at 10:34 -0600, Brian King wrote:
+> The new libata-eh is used for more than just EH. It is used for device
+> probing, device revalidation, and power management. It is also woken for
+> all command failures and is where the request sense for ATAPI devices is
+> issued. Device revalidation following reset is also critical for ATA and
+> ATAPI devices. One example of this is some SATA/PATA converter chips
+> lose their DMA xfer settings following a reset and default to PIO mode
+> only. Any DMA transfer that is attempted simply hangs.
 
-MMmm.. maybe the "vendor unique FIS" mechanism of the chipset
-can save the scenario here.  It would seem to be a reasonable
-way to direct a FIS (anything up to 8KB) at a specific pmp,
-without changing the "default" pmp on the channel.
+OK ... I'm grepping around in the source trying to figure out all of
+this.  Is it documented anywhere?  That would really help me out at the
+moment.
 
-I can have qc_issue use that mechanism for anything destined
-for pmp==15.  If it works.  The Marvell proprietary driver
-has some kludgey status polling wrapped around their own use of it.
+James
 
-One of the chip errata apparently requires this anyway for doing
-the READ_LOG_EXT commands after a device error, so perhaps it will
-work out to be useful in more ways.
 
-Speaking of which.. I would like to sort out the "freeze" stuff,
-so that the sata_mv EH doesn't lock out the PMP commands as it
-does today.
-
-Can you recap what a LLD should be doing in the presence of a PM
-for EH purposes?  Eg. media error on a PMP drive, so what core
-ATA functions should the sata_mv EH interrupt handler be calling,
-and in what sequence.. so that the libata-pmp/eh code can still
-succeed in it's queries to the PM?
-
-I think James is also interested in a decent explanation of
-how to tie into the libata-eh stuff.
-
-Like I noted before, sata_mv will need to eventually hard reset
-the channel regardless, but it does seem permitted to use PIO
-or vendor-unique-FIS PIO (with polling for either) in the interim.
-
-Thanks.
