@@ -1,73 +1,69 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: Sata-MV, Intergated Sata Device Support
-Date: Mon, 25 Feb 2008 18:40:51 -0500
-Message-ID: <47C35203.20402@garzik.org>
-References: <1176673884.5109.30.camel@Desktop>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: new ata_port_operations for .pmp_{read,write} ?
+Date: Tue, 26 Feb 2008 08:44:41 +0900
+Message-ID: <47C352E9.4060107@gmail.com>
+References: <4730E312.3090900@navy.mil> <4737C16E.3070607@gmail.com> <4738827D.9060405@pobox.com> <4738F935.1000708@gmail.com> <47BC798F.6070900@pobox.com> <47BE17CA.6060406@rtr.ca> <47BE1833.9090501@rtr.ca> <47BE2C0C.3020801@gmail.com> <47BE2DBD.9010704@rtr.ca> <47BE2F9E.5040206@gmail.com> <47BE32B5.5020300@rtr.ca> <47BE3325.8060209@rtr.ca> <47BE4701.2030104@rtr.ca> <47BE4DFE.2030407@rtr.ca> <47BEDAF2.8000301@rtr.ca> <47BFAC06.5030805@rtr.ca> <47C116D4.1090600@gmail.com> <47C248C8.9090409@rtr.ca> <47C2503A.7040308@gmail.com> <47C2F308.1080602@rtr.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:55792 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756120AbYBYXkx (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 25 Feb 2008 18:40:53 -0500
-In-Reply-To: <1176673884.5109.30.camel@Desktop>
+Received: from gv-out-0910.google.com ([216.239.58.185]:48786 "EHLO
+	gv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756236AbYBYXow (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 25 Feb 2008 18:44:52 -0500
+Received: by gv-out-0910.google.com with SMTP id s4so750120gve.37
+        for <linux-ide@vger.kernel.org>; Mon, 25 Feb 2008 15:44:51 -0800 (PST)
+In-Reply-To: <47C2F308.1080602@rtr.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
-Cc: jon@ngndg.com, LKML <linux-kernel@vger.kernel.org>, Mark Lord <liml@rtr.ca>, Saeed Bishara <saeed@marvell.com>
+To: Mark Lord <liml@rtr.ca>
+Cc: IDE/ATA development list <linux-ide@vger.kernel.org>, Saeed Bishara <saeed@marvell.com>, Jeff Garzik <jgarzik@pobox.com>
 
-Jon Li wrote:
-> Hello,
-> 
-> I am curious as to whether there are plans to add support for integrated
-> sata devices.  I personally want to add support for a 60x1C0 based
-> device (pci:id = 0x5182).  I think adding support should be relatively
-> simple, except for a few issues outlined below.
-> 
-> In the original mvSata.c (ver3.4) that has 0x5182 support, the config
-> space is as such:
-> 
-> case MV_SATA_DEVICE_ID_5182:
->         pAdapter->numberOfChannels = MV_SATA_5182_PORT_NUM;
->         pAdapter->numberOfUnits = 1;
->         pAdapter->portsPerUnit = 2;
->         pAdapter->sataAdapterGeneration = MV_SATA_GEN_IIE;
->         /*The integrated sata core chip based on 60x1 C0*/
->         pAdapter->chipIs60X1C0 = MV_TRUE;
->         pAdapter->hostInterface = MV_HOST_IF_INTEGRATED;
->         pAdapter->mainMaskOffset = 0x20024; /*the iobaseaddress is
-> 0x60000*/
->         pAdapter->mainCauseOffset = 0x20020;
->         break;
-> 
-> I have not yet figured out how all these values are defined in sata-mv.c
-> (ver 0.8).  Specifically, where do I define "numberOfChannels" which
-> should equal 2, and "numberOfUnits" which obviously equals 1?
-> 
-> I have a current config space (not completed) for sata-mv.c which is:
-> 
-> 	{  /* chip_5182 */
-> 		.sht		= &mv_sht,
-> 		.flags		= (MV_COMMON_FLAGS | MV_6XXX_FLAGS |
-> 				   MV_FLAG_DUAL_HC),
-> 		.pio_mask	= 0x1f,	/* pio0-4 */
-> 		.udma_mask	= 0x7f,	/* udma0-6 */
-> 		.port_ops	= &mv6_ops,
-> 	},
-> 
-> I believe according to the new structure in sata-mv.c,
-> HC_MAIN_IRQ_CAUSE_OFS should equal 0x20020 and HC_MAIN_IRQ_MASK_OFS
-> should equal 0x20024 for the 0x5182 device.
-> 
-> My final question is how to implement the MV_HOST_IF_INTEGRATED flag?
-> Is this already implemented and renamed in sata-mv.c?  Or do I need to
-> also add the routines?
+Hello, Mark.
 
-I just wanted to point the current sata_mv hackers to this message from 
-April 2007...
+Mark Lord wrote:
+> MMmm.. maybe the "vendor unique FIS" mechanism of the chipset
+> can save the scenario here.  It would seem to be a reasonable
+> way to direct a FIS (anything up to 8KB) at a specific pmp,
+> without changing the "default" pmp on the channel.
+> 
+> I can have qc_issue use that mechanism for anything destined
+> for pmp==15.  If it works.  The Marvell proprietary driver
+> has some kludgey status polling wrapped around their own use of it.
+> 
+> One of the chip errata apparently requires this anyway for doing
+> the READ_LOG_EXT commands after a device error, so perhaps it will
+> work out to be useful in more ways.
 
-	Jeff
+Hmmm...
 
+> Speaking of which.. I would like to sort out the "freeze" stuff,
+> so that the sata_mv EH doesn't lock out the PMP commands as it
+> does today.
+> 
+> Can you recap what a LLD should be doing in the presence of a PM
+> for EH purposes?  Eg. media error on a PMP drive, so what core
+> ATA functions should the sata_mv EH interrupt handler be calling,
+> and in what sequence.. so that the libata-pmp/eh code can still
+> succeed in it's queries to the PM?
 
+libata doesn't really put much restrictions on what a LLD should do on
+entering EH and if the controller's behavior is predictable, there's no
+reason to freeze the port.  If the problem is that the DMA engine isn't
+usable after PMP error but it's known that the controller isn't gonna
+cause irq storm, no need to freeze.  The only command EH issues before
+resetting which can use DMA protocol is READ_LOG_EXT.  Maybe there needs
+to be a way to force PIO protocol for READ_LOG_EXT.  Other than that, if
+no-data and PIO-only commands work fine, EH autopsy should work fine.
 
+> Like I noted before, sata_mv will need to eventually hard reset
+> the channel regardless, but it does seem permitted to use PIO
+> or vendor-unique-FIS PIO (with polling for either) in the interim.
+
+Just set ATA_EH_HARDRESET (which will soon become ATA_EH_RESET with
+prefer-COMRESET patchset) from the interrupt handler before requesting EH.
+
+Thanks.
+
+-- 
+tejun
