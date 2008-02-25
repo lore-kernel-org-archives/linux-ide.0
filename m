@@ -1,78 +1,48 @@
 From: Jeff Garzik <jeff@garzik.org>
-Subject: [git patches] libata updates
-Date: Mon, 25 Feb 2008 17:38:59 -0500
-Message-ID: <20080225223859.GA24360@havoc.gtf.org>
+Subject: Re: [ugly patch] Save .15W-.5W by AHCI powersaving
+Date: Mon, 25 Feb 2008 17:42:58 -0500
+Message-ID: <47C34472.3090706@garzik.org>
+References: <20080225134558.GA1611@elf.ucw.cz> <47C34081.5090205@rtr.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from havoc.gtf.org ([69.61.125.42]:56953 "EHLO havoc.gtf.org"
+Received: from srv5.dvmed.net ([207.36.208.214]:36324 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757337AbYBYWjA (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 25 Feb 2008 17:39:00 -0500
-Content-Disposition: inline
+	id S1753739AbYBYWnF (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 25 Feb 2008 17:43:05 -0500
+In-Reply-To: <47C34081.5090205@rtr.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>
-Cc: linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
+To: Mark Lord <liml@rtr.ca>
+Cc: Pavel Machek <pavel@ucw.cz>, kernel list <linux-kernel@vger.kernel.org>, Linux-pm mailing list <linux-pm@lists.osdl.org>, stern@rowland.harvard.edu, linux-ide@vger.kernel.org
+
+Mark Lord wrote:
+> Pavel Machek wrote:
+>> This is a patch (very ugly, assumes you have just one disk) to bring
+>> powersaving to AHCI. You need Alan's SCSI autosuspend (attached) patch
+>> as a base.
+>>
+>> It saves .5W compared to config with disk spinning, and even .15W
+>> compared to hdparm -y... on my thinkpad x60 anyway.
+> ..
+> 
+> There was a discussion of this here today.
+> It makes good use of AHCI-specific features.
+> 
+> Has it been tested with a Port-Multiplier yet?
+> 
+> This is cool enough that we really ought to do a hardware-independent
+> version, so that all SATA interfaces could benefit.  Especially ata_piix,
+> but others too.
+
+BTW we can also save power by allowing the user to choose to disable 
+hotplugging support.  Then we can power down PHYs that are not in use.
+
+That requires the addition of some policy controls, because it is 
+user-specific whether or not to waste power waiting for a plug-in event.
+
+	Jeff
 
 
-(additional explanation for the revert is in the full changeset
-description)
 
-Please pull from 'upstream-linus' branch of
-master.kernel.org:/pub/scm/linux/kernel/git/jgarzik/libata-dev.git upstream-linus
-
-to receive the following updates:
-
- drivers/ata/libata-core.c |    5 ++++-
- drivers/ata/libata.h      |    1 -
- 2 files changed, 4 insertions(+), 2 deletions(-)
-
-Adrian Bunk (1):
-      make atapi_dmadir static
-
-Jeff Garzik (1):
-      Revert "power_state: get rid of write-only variable in SATA"
-
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index fbc2435..4fbcce7 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -113,7 +113,7 @@ int atapi_enabled = 1;
- module_param(atapi_enabled, int, 0444);
- MODULE_PARM_DESC(atapi_enabled, "Enable discovery of ATAPI devices (0=off, 1=on)");
- 
--int atapi_dmadir = 0;
-+static int atapi_dmadir = 0;
- module_param(atapi_dmadir, int, 0444);
- MODULE_PARM_DESC(atapi_dmadir, "Enable ATAPI DMADIR bridge support (0=off, 1=on)");
- 
-@@ -6567,6 +6567,8 @@ int ata_host_suspend(struct ata_host *host, pm_message_t mesg)
- 	ata_lpm_enable(host);
- 
- 	rc = ata_host_request_pm(host, mesg, 0, ATA_EHI_QUIET, 1);
-+	if (rc == 0)
-+		host->dev->power.power_state = mesg;
- 	return rc;
- }
- 
-@@ -6585,6 +6587,7 @@ void ata_host_resume(struct ata_host *host)
- {
- 	ata_host_request_pm(host, PMSG_ON, ATA_EH_SOFTRESET,
- 			    ATA_EHI_NO_AUTOPSY | ATA_EHI_QUIET, 0);
-+	host->dev->power.power_state = PMSG_ON;
- 
- 	/* reenable link pm */
- 	ata_lpm_disable(host);
-diff --git a/drivers/ata/libata.h b/drivers/ata/libata.h
-index 6036ded..aa884f7 100644
---- a/drivers/ata/libata.h
-+++ b/drivers/ata/libata.h
-@@ -56,7 +56,6 @@ enum {
- extern unsigned int ata_print_id;
- extern struct workqueue_struct *ata_aux_wq;
- extern int atapi_enabled;
--extern int atapi_dmadir;
- extern int atapi_passthru16;
- extern int libata_fua;
- extern int libata_noacpi;
