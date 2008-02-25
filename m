@@ -1,39 +1,43 @@
 From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: achi.c bug ?
-Date: Mon, 25 Feb 2008 17:55:35 -0500
-Message-ID: <47C34767.8090501@pobox.com>
-References: <1ada88ce0802160007s632126eiccf1031616c4e53c@mail.gmail.com>
+Subject: Re: ULI 5288(SATA driver)
+Date: Mon, 25 Feb 2008 17:57:55 -0500
+Message-ID: <47C347F3.5070006@pobox.com>
+References: <C86899CCB10A6C4E93D5978DCB232D4B07A941EB@GDCMX01.igglobal.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:48871 "EHLO mail.dvmed.net"
+Received: from srv5.dvmed.net ([207.36.208.214]:48902 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1761859AbYBYWzi (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 25 Feb 2008 17:55:38 -0500
-In-Reply-To: <1ada88ce0802160007s632126eiccf1031616c4e53c@mail.gmail.com>
+	id S1759476AbYBYW55 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 25 Feb 2008 17:57:57 -0500
+In-Reply-To: <C86899CCB10A6C4E93D5978DCB232D4B07A941EB@GDCMX01.igglobal.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: chaoyang wang <chaoyang.wang@gmail.com>
+To: Saumendra Dash <Saumendra.Dash@infogain.com>
 Cc: linux-ide@vger.kernel.org
 
-chaoyang wang wrote:
-> Dear Jeff,
->  
-> I was looking at the kernel 2.6.21 code of the achi driver and found 
-> that the sg_table_size was set to 168, while the libata set the maximum 
-> sg to be 128 somewhere else. When a requester issues a request with >128 
-> sgs to the ahci attached device, the system would fall to a scilent 
-> error.  So, I could not count on the scsi probe 
-> of scsi_device->->host->sg_tablesize that was read from achi.
->  
-> Any advise on the better fix?
->  
-> Thanks you very much,
+Saumendra Dash wrote:
+> Hi Jeff,
+> 
+>  I'm working on ULI1575 SATA driver which I want to run in Emulated-PATA 
+> mode.
+>  I have the following understanding to run a SATA device in 
+> Emulated-PATA mode:
+> 
+>   1. In Emulated-PATA mode the legacy IDE driver should access the SATA 
+> device directly in combined mode.
+>   2. The class code of the device shlould be set to Emulated-PATA 
+> mode(0x0185).
+>   3. Enable SATA in combine mode. 
+> 
+>  After doing the above changes the driver does not work in Emulated-PATA 
+> mode.
+> 
+>  Is there something missing to make the driver work in Emulated-PATA mode?
 
-Can you be more specific about "somewhere else"?
-
-Reducing s/g table size should be quite safe.
+Use a PCI quirk to unconditionally disable emulated PATA mode, because 
+it's not needed.
 
 	Jeff
 
