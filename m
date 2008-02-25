@@ -1,160 +1,73 @@
-From: Andrew Morton <akpm@linux-foundation.org>
-Subject: Re: extra bytes written to SATA DVD drive on kernel 2.6.23 till
- 2.6.24.2
-Date: Mon, 25 Feb 2008 15:32:49 -0800
-Message-ID: <20080225153249.5a5d555c.akpm@linux-foundation.org>
-References: <200802252005.22663.gml@inode.at>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: Sata-MV, Intergated Sata Device Support
+Date: Mon, 25 Feb 2008 18:40:51 -0500
+Message-ID: <47C35203.20402@garzik.org>
+References: <1176673884.5109.30.camel@Desktop>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([207.189.120.13]:32817 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755852AbYBYXeW (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 25 Feb 2008 18:34:22 -0500
-In-Reply-To: <200802252005.22663.gml@inode.at>
+Received: from srv5.dvmed.net ([207.36.208.214]:55792 "EHLO mail.dvmed.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756120AbYBYXkx (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 25 Feb 2008 18:40:53 -0500
+In-Reply-To: <1176673884.5109.30.camel@Desktop>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Gerold Jury <gml@inode.at>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
+Cc: jon@ngndg.com, LKML <linux-kernel@vger.kernel.org>, Mark Lord <liml@rtr.ca>, Saeed Bishara <saeed@marvell.com>
 
-On Mon, 25 Feb 2008 20:05:22 +0100 Gerold Jury <gml@inode.at> wrote:
-
+Jon Li wrote:
 > Hello,
 > 
-> I have two DVD drives, one connected to the SATA port (LG) the other to the 
-> IDE port (PHILIPS) of a via chipset.
-> They are driven by VIA SATA support (SATA_VIA) and VIA PATA support 
-> (PATA_VIA).
+> I am curious as to whether there are plans to add support for integrated
+> sata devices.  I personally want to add support for a 60x1C0 based
+> device (pci:id = 0x5182).  I think adding support should be relatively
+> simple, except for a few issues outlined below.
 > 
-> When I write an iso image to the drive on the SATA port /dev/sr0 it has some 
-> extra bytes on disk which make the disk unreadable.
-> Writing to the IDE drive /dev/sr1 works well.
+> In the original mvSata.c (ver3.4) that has 0x5182 support, the config
+> space is as such:
 > 
-> A simple test with a DVD RAM and dd instead of growisofs
+> case MV_SATA_DEVICE_ID_5182:
+>         pAdapter->numberOfChannels = MV_SATA_5182_PORT_NUM;
+>         pAdapter->numberOfUnits = 1;
+>         pAdapter->portsPerUnit = 2;
+>         pAdapter->sataAdapterGeneration = MV_SATA_GEN_IIE;
+>         /*The integrated sata core chip based on 60x1 C0*/
+>         pAdapter->chipIs60X1C0 = MV_TRUE;
+>         pAdapter->hostInterface = MV_HOST_IF_INTEGRATED;
+>         pAdapter->mainMaskOffset = 0x20024; /*the iobaseaddress is
+> 0x60000*/
+>         pAdapter->mainCauseOffset = 0x20020;
+>         break;
 > 
-> dd if=/dev/zero of=/dev/srX bs=1024k count=10
+> I have not yet figured out how all these values are defined in sata-mv.c
+> (ver 0.8).  Specifically, where do I define "numberOfChannels" which
+> should equal 2, and "numberOfUnits" which obviously equals 1?
 > 
-> and a readback afterwards
+> I have a current config space (not completed) for sata-mv.c which is:
 > 
-> dd if=/dev/srX of=imageX.bin bs=1024k count=10
+> 	{  /* chip_5182 */
+> 		.sht		= &mv_sht,
+> 		.flags		= (MV_COMMON_FLAGS | MV_6XXX_FLAGS |
+> 				   MV_FLAG_DUAL_HC),
+> 		.pio_mask	= 0x1f,	/* pio0-4 */
+> 		.udma_mask	= 0x7f,	/* udma0-6 */
+> 		.port_ops	= &mv6_ops,
+> 	},
 > 
-> gives me an all zero file from the IDE drive but a file
-> full of probably scsi commands for the SATA drive and looks like
+> I believe according to the new structure in sata-mv.c,
+> HC_MAIN_IRQ_CAUSE_OFS should equal 0x20020 and HC_MAIN_IRQ_MASK_OFS
+> should equal 0x20024 for the 0x5182 device.
 > 
-> 00000000  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|
-> *
-> 00020000  2a 00 00 00 00 40 00 00  40 00 00 00 00 40 00 00  |*....@..@....@..|
-> 00020010  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|
-> *
-> 00040000  2a 00 00 00 00 80 00 00  40 00 00 00 00 80 00 00  |*.......@.......|
-> 00040010  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|
-> *
-> 00060000  2a 00 00 00 00 c0 00 00  02 00 00 00 00 c0 00 00  |*...............|
-> 00060010  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|
-> *
-> 00061010  00 00 00 00 00 00 00 00  2a 00 00 00 00 c2 00 00  |........*.......|
-> 00061020  40 00 00 00 00 c2 00 00  00 00 00 00 00 00 00 00  |@...............|
-> 00061030  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|
-> *
-> 00081010  00 00 00 00 00 00 00 00  2a 00 00 00 01 02 00 00  |........*.......|
-> 00081020  40 00 00 00 01 02 00 00  00 00 00 00 00 00 00 00  |@...............|
-> 00081030  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|
-> *
-> 000a1010  00 00 00 00 00 00 00 00  2a 00 00 00 01 42 00 00  |........*....B..|
-> 000a1020  40 00 00 00 01 42 00 00  00 00 00 00 00 00 00 00  |@....B..........|
-> 000a1030  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|
-> *
-> 000c1010  00 00 00 00 00 00 00 00  2a 00 00 00 01 82 00 00  |........*.......|
-> 000c1020  40 00 00 00 01 82 00 00  00 00 00 00 00 00 00 00  |@...............|
-> 000c1030  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|
-> 
-> I really need some hints to make the SATA drive usable, please.
-> 
+> My final question is how to implement the MV_HOST_IF_INTEGRATED flag?
+> Is this already implemented and renamed in sata-mv.c?  Or do I need to
+> also add the routines?
 
-(added linux-ide)
+I just wanted to point the current sata_mv hackers to this message from 
+April 2007...
 
-Did any earlier kernel work OK?  2.6.22?
+	Jeff
 
-Thanks.
-
-> 
-> uname -a
-> Linux blaubaer 2.6.24.2 #4 Sun Feb 24 21:50:21 CET 2008 x86_64 AMD Athlon(tm) 
-> 64 Processor 3400+ AuthenticAMD GNU/Linux
-> 
-> lspvi -v
-> 
-> 00:0f.0 RAID bus controller: VIA Technologies, Inc. VIA VT6420 SATA RAID 
-> Controller (rev 80)
->         Subsystem: ASUSTeK Computer Inc. A7V600/K8V Deluxe/K8V-X/A8V Deluxe 
-> motherboard
->         Flags: bus master, medium devsel, latency 64, IRQ 20
->         I/O ports at e800 [size=8]
->         I/O ports at e400 [size=4]
->         I/O ports at e000 [size=8]
->         I/O ports at d800 [size=4]
->         I/O ports at d400 [size=16]
->         I/O ports at d000 [size=256]
->         Capabilities: [c0] Power Management version 2
->         Kernel driver in use: sata_via
-> 
-> 00:0f.1 IDE interface: VIA Technologies, Inc. 
-> VT82C586A/B/VT82C686/A/B/VT823x/A/C PIPC Bus Master IDE (rev 06) (prog-if 8a 
-> [Master SecP PriP])
->         Subsystem: ASUSTeK Computer Inc. A7V600/K8V-X/A8V Deluxe motherboard
->         Flags: bus master, medium devsel, latency 32, IRQ 20
->         [virtual] Memory at 000001f0 (32-bit, non-prefetchable) [size=8]
->         [virtual] Memory at 000003f0 (type 3, non-prefetchable) [size=1]
->         [virtual] Memory at 00000170 (32-bit, non-prefetchable) [size=8]
->         [virtual] Memory at 00000370 (type 3, non-prefetchable) [size=1]
->         I/O ports at fc00 [size=16]
->         Capabilities: [c0] Power Management version 2
->         Kernel driver in use: pata_via
-> 
-> cat /var/log/messages
-> 
-> Feb 25 18:20:57 blaubaer sata_via 0000:00:0f.0: version 2.3
-> Feb 25 18:20:57 blaubaer ACPI: PCI Interrupt 0000:00:0f.0[B] -> GSI 20 (level, 
-> low) -> IRQ 20
-> Feb 25 18:20:57 blaubaer sata_via 0000:00:0f.0: routed to hard irq line 10
-> Feb 25 18:20:57 blaubaer scsi3 : sata_via
-> Feb 25 18:20:57 blaubaer scsi4 : sata_via
-> Feb 25 18:20:57 blaubaer ata4: SATA max UDMA/133 cmd 0xe800 ctl 0xe400 bmdma 
-> 0xd400 irq 20
-> Feb 25 18:20:57 blaubaer ata5: SATA max UDMA/133 cmd 0xe000 ctl 0xd800 bmdma 
-> 0xd408 irq 20
-> Feb 25 18:20:57 blaubaer ata4: SATA link down 1.5 Gbps (SStatus 0 SControl 
-> 300)
-> Feb 25 18:20:57 blaubaer ata5: SATA link up 1.5 Gbps (SStatus 113 SControl 
-> 300)
-> Feb 25 18:20:57 blaubaer ata5.00: ATAPI: HL-DT-ST DVDRAM GH20NS10, EL00, max 
-> UDMA/100
-> Feb 25 18:20:57 blaubaer ata5.00: configured for UDMA/100
-> Feb 25 18:20:57 blaubaer scsi 4:0:0:0: CD-ROM            HL-DT-ST DVDRAM 
-> GH20NS10  EL00 PQ: 0 ANSI: 5
-> Feb 25 18:20:57 blaubaer sr0: scsi3-mmc drive: 48x/48x writer dvd-ram cd/rw 
-> xa/form2 cdda tray
-> Feb 25 18:20:57 blaubaer Uniform CD-ROM driver Revision: 3.20
-> Feb 25 18:20:57 blaubaer sr 4:0:0:0: Attached scsi CD-ROM sr0
-> Feb 25 18:20:57 blaubaer sr 4:0:0:0: Attached scsi generic sg2 type 5
-> Feb 25 18:20:57 blaubaer pata_via 0000:00:0f.1: version 0.3.3
-> Feb 25 18:20:57 blaubaer ACPI: PCI Interrupt 0000:00:0f.1[A] -> GSI 20 (level, 
-> low) -> IRQ 20
-> Feb 25 18:20:57 blaubaer scsi5 : pata_via
-> Feb 25 18:20:57 blaubaer scsi6 : pata_via
-> Feb 25 18:20:57 blaubaer ata6: PATA max UDMA/133 cmd 0x1f0 ctl 0x3f6 bmdma 
-> 0xfc00 irq 14
-> Feb 25 18:20:57 blaubaer ata7: PATA max UDMA/133 cmd 0x170 ctl 0x376 bmdma 
-> 0xfc08 irq 15
-> Feb 25 18:20:57 blaubaer ata6.00: ATAPI: PHILIPS SPD2411P, BP01, max UDMA/66
-> Feb 25 18:20:57 blaubaer ata6.00: limited to UDMA/33 due to 40-wire cable
-> Feb 25 18:20:57 blaubaer ata6.00: configured for UDMA/33
-> Feb 25 18:20:57 blaubaer scsi 5:0:0:0: CD-ROM            PHILIPS  SPD2411P         
-> BP01 PQ: 0 ANSI: 5
-> Feb 25 18:20:57 blaubaer sr1: scsi3-mmc drive: 48x/48x writer dvd-ram cd/rw 
-> xa/form2 cdda tray
-> Feb 25 18:20:57 blaubaer sr 5:0:0:0: Attached scsi CD-ROM sr1
-> Feb 25 18:20:57 blaubaer sr 5:0:0:0: Attached scsi generic sg3 type 5
 
 
