@@ -1,56 +1,176 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: new ata_port_operations for .pmp_{read,write} ?
-Date: Mon, 25 Feb 2008 14:20:58 +0900
-Message-ID: <47C2503A.7040308@gmail.com>
-References: <4730E312.3090900@navy.mil> <4737C16E.3070607@gmail.com> <4738827D.9060405@pobox.com> <4738F935.1000708@gmail.com> <47BC798F.6070900@pobox.com> <47BE17CA.6060406@rtr.ca> <47BE1833.9090501@rtr.ca> <47BE2C0C.3020801@gmail.com> <47BE2DBD.9010704@rtr.ca> <47BE2F9E.5040206@gmail.com> <47BE32B5.5020300@rtr.ca> <47BE3325.8060209@rtr.ca> <47BE4701.2030104@rtr.ca> <47BE4DFE.2030407@rtr.ca> <47BEDAF2.8000301@rtr.ca> <47BFAC06.5030805@rtr.ca> <47C116D4.1090600@gmail.com> <47C248C8.9090409@rtr.ca>
+From: Borislav Petkov <petkovbb@googlemail.com>
+Subject: Re: IDE cdrom problem with PLEXTOR DVDR PX-608AL
+Date: Mon, 25 Feb 2008 06:34:04 +0100
+Message-ID: <20080225053404.GA3816@gollum.tnic>
+References: <426a98560802232138q41d45d52ta515f1b791e937f4@mail.gmail.com> <20080224173451.GB11998@gollum.tnic> <426a98560802241758j7a9be21m5eecc120ada804e4@mail.gmail.com>
+Reply-To: petkovbb@gmail.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wr-out-0506.google.com ([64.233.184.234]:13667 "EHLO
-	wr-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754974AbYBYFVH (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 25 Feb 2008 00:21:07 -0500
-Received: by wr-out-0506.google.com with SMTP id c48so2164226wra.23
-        for <linux-ide@vger.kernel.org>; Sun, 24 Feb 2008 21:21:04 -0800 (PST)
-In-Reply-To: <47C248C8.9090409@rtr.ca>
+Received: from an-out-0708.google.com ([209.85.132.251]:3067 "EHLO
+	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752958AbYBYFeP (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 25 Feb 2008 00:34:15 -0500
+Received: by an-out-0708.google.com with SMTP id d31so338710and.103
+        for <linux-ide@vger.kernel.org>; Sun, 24 Feb 2008 21:34:12 -0800 (PST)
+Content-Disposition: inline
+In-Reply-To: <426a98560802241758j7a9be21m5eecc120ada804e4@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark Lord <liml@rtr.ca>
-Cc: IDE/ATA development list <linux-ide@vger.kernel.org>, Saeed Bishara <saeed@marvell.com>, Jeff Garzik <jgarzik@pobox.com>
+To: Brad Rosser <brad.rosser@gmail.com>
+Cc: bzolnier@gmail.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Mark Lord wrote:
-> No, the quickest solution for sata_mv, the one I apparently will now be
-> using,
-> is to just clone about 250 lines of reset/debouce/probe code from
-> libata-core
-> and change perhaps five lines of it to work around this issue plus some
-> chipset errata.
-> 
-> What I was thinking of, before, is the SATA specification which details
-> use of bits in the SCR to select a PMP port.  Pretty much exactly as
-> this chipset does it, except in the SCR rather than a proprieary port.
-> 
-> But no big deal.  I can clone code and not bother you any more.
-> In fact, some of the cloned code was already in sata_mv, and I removed
-> it this past week in my local working copy.  I'll just restore that,
-> along with another big blob so that we can select pm port where needed.
-> 
-> What a shame.
+On Mon, Feb 25, 2008 at 11:58:57AM +1000, Brad Rosser wrote:
+> On Mon, Feb 25, 2008 at 3:34 AM, Borislav Petkov
+> <petkovbb@googlemail.com> wrote:
+> > On Sun, Feb 24, 2008 at 03:38:34PM +1000, Brad Rosser wrote:
+> > >
+> > > There's nothing in the bios that allows me to move one away from
+> > > the other.  I can 'reserve' or block IRQs, but that only shifts t=
+hem
+> > > both to another interrupt.
+> >
+> >  well the driver probes the bios for that data and assigns the irq =
+line it gets
+> >  from it.
+>=20
+> Oh.  I thought from all the 'IRQ routing/balancing' and the like in t=
+he
+> kernel there might be a way to switch things around, give the
+> Realtek driver a different IRQ than the one being used by the ide dri=
+ver.
+> Just my crossed-fingers hope.
+>=20
+> >  Can you please send me your whole boot log of 2.6.25-rc2? Thanks.
+>=20
+> It's attached as file 'dmesg.bug.out'.
+>=20
+> >  since your cdrom seems to be hda from what i've seen above, try bo=
+oting with
+> >  'hda=3Dnoprobe' or maybe 'hda=3Dnone' to see which one turns the p=
+robing off for
+> >  you. See Documentation/ide.txt for details.
+>=20
+> I tried both options, but in both cases there was no difference; the =
+ide_cd_mod
+> module was still loaded and the 'confused' message still popped up.
+>=20
+> I did four boots/tests of the 2.6.25-rc2 kernel, with and without tho=
+se
+> boot parameters ... on all four I had the 'confused' message several =
+times:
+>=20
+> hda: cdrom_newpc_intr: The drive appears confused (ireason =3D 0x01).
+> Trying to recover by ending request.
 
-The order is somewhat reversed here and I can understand why you're
-frustrated but I'm just trying to make things look right in long term,
-so feel free to bother me. :-) For temporary solution, I'm okay either
-way.  I'll clean things up later when the necessary core changes are made.
+Well, this sounds strange. Are you sure you're entering the boot option=
+s
+correctly on the kernel command line? Which is your boot loader? I just=
+ booted
+my machine with 'hdc=3Dnoprobe'  (hdc is my cdrom drive) and here's wha=
+t i get:
 
-* Adding ->pmp_select or ->scr_pmp_rw or whatever callback to work
-around the current problem.
+=2E..
+[    0.304774] Probing IDE interface ide0...
+[    0.569359] hdb: SAMSUNG SP2014N, ATA DISK drive
+[    0.613977] Switched to NOHz mode on CPU #1
+[    0.773368] Switched to NOHz mode on CPU #0
+[    0.874486] hda: QUANTUM FIREBALLlct10 20, ATA DISK drive
+[    0.874506] hda: host max PIO4 wanted PIO255(auto-tune) selected PIO=
+4
+[    0.874506] hda: drive side 80-wire cable detection failed, limiting=
+ max speed to UDMA33
+[    0.874506] hda: UDMA/33 mode selected
+[    0.874533] hdb: host max PIO4 wanted PIO255(auto-tune) selected PIO=
+4
+[    0.874620] hdb: UDMA/100 mode selected
+[    0.874744] Probing IDE interface ide1...
+-->
+[    0.877750] hdc: ide_wait_not_busy() skipped
+-->
+[    1.136180] hdd: IC35L120AVV207-0, ATA DISK drive
+[    1.186959] hdd: host max PIO4 wanted PIO255(auto-tune) selected PIO=
+4
+[    1.186959] hdd: host side 80-wire cable detection failed, limiting =
+max speed to UDMA33
+[    1.186959] hdd: UDMA/33 mode selected
+[    1.186959] ide0 at 0x1f0-0x1f7,0x3f6 on irq 14
+[    1.194971] ide1 at 0x170-0x177,0x376 on irq 15
+[    1.206876] Probing IDE interface ide2...
+[    1.720661] Probing IDE interface ide3...
+[    2.233564] Probing IDE interface ide4...
+[    2.746462] Probing IDE interface ide5...
+[    3.259395] hda: max request size: 128KiB
+[    3.259571] hda: 39876480 sectors (20416 MB) w/418KiB Cache, CHS=3D3=
+9560/16/63
+[    3.259571] hda: cache flushes not supported
+[    3.259571]  hda: hda1 hda2 hda3
+[    3.269291] hdb: max request size: 512KiB
+[    3.269511] hdb: 390721968 sectors (200049 MB) w/8192KiB Cache, CHS=3D=
+24321/255/63
+[    3.269962] hdb: cache flushes supported
+[    3.270078]  hdb: hdb1
+[    3.280914] hdd: max request size: 512KiB
+[    3.281247] hdd: 241254720 sectors (123522 MB) w/1821KiB Cache, CHS=3D=
+16383/255/63
+[    3.281729] hdd: cache flushes supported
+[    3.281729]  hdd: hdd1
+[    3.296760] PNP: PS/2 Controller [PNP0303:PS2K,PNP0f13:PS2M] at 0x60=
+,0x64 irq 1,12
+=2E..
 
-* Duplicate code in sata_mv.
+so it seems you should check whether your kernel is receiving the 'hda=3D=
+noprobe'
+boot option at all, or something along that path is going wrong...
 
-Whichever way you go, can you please mark where it's different and why?
+[...]
 
-Thanks.
+> I tried to apply the patch but failed; I probably did something wrong=
+=2E
+> I deleted everything in your message above 'Index: b/drivers/ide/ide-=
+cd.c'
+> and ran 'patch --dry-run -b -p1 < ../bart_patch'.  This is part of my=
+ script
+> log:
+>=20
+> root:/usr/src/linux-2.6.25-rc2# pwd
+> /usr/src/linux-2.6.25-rc2
+> root:/usr/src/linux-2.6.25-rc2# cat ../bart_patch
+> Index: b/drivers/ide/ide-cd.c
+> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+> --- a/drivers/ide/ide-cd.c
+> +++ b/drivers/ide/ide-cd.c
+> @@ -670,8 +670,8 @@ static void cdrom_buffer_sectors (ide_dr
+>  * and attempt to recover if there are problems.  Returns  0 if every=
+thing's
+> ...
+> ...
+> root:/usr/src/linux-2.6.25-rc2# patch --dry-run -b -p1 < ../bart_patc=
+h
+> patching file drivers/ide/ide-cd.c
+> Hunk #1 FAILED at 670.
+> Hunk #2 FAILED at 701.
+> Hunk #3 FAILED at 1074.
+> Hunk #4 FAILED at 1104.
+> 4 out of 4 hunks FAILED -- saving rejects to file drivers/ide/ide-cd.=
+c.rej
+>=20
+> Since it found drivers/ide/ide-cd.c I guess I got the '-p' level righ=
+t (?),
+> and that's about the sum total of my 'patch' experience to date.
+> Sorry.  Can you tell me what I did wrong?
 
--- 
-tejun
+are you sure you're _really_ using 2.6.25-rc2? Applying the patch again=
+st that
+kernel works just fine, no fuzziness or even rejects. Care to try out o=
+n a fresh
+kernel source tarball? After all, building a kernel with your quad core=
+ cpu won't
+take that long :-) when using make -j8 or something in that order.
+
+--=20
+Regards/Gru=DF,
+    Boris.
