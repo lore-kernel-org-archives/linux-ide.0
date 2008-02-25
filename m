@@ -1,49 +1,47 @@
-From: bugme-daemon@bugzilla.kernel.org
-Subject: [Bug 10086] New: 2.6.25-rc2 + smartd = hang
-Date: Sat, 23 Feb 2008 14:41:02 -0800 (PST)
-Message-ID: <bug-10086-11633@http.bugzilla.kernel.org/>
+From: "Paolo Ciarrocchi" <paolo.ciarrocchi@gmail.com>
+Subject: Re: [PATCH 3/3] IDE: Coding Style fixes to drivers/ide/pci/cy82c693.c
+Date: Mon, 25 Feb 2008 09:40:59 +0100
+Message-ID: <4d8e3fd30802250040ie77dbecw6cc396a0f2a9285e@mail.gmail.com>
+References: <20080224221144.1e9e7449@paolo-desktop>
+	 <20080225073122.GE11327@elte.hu>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([207.189.120.13]:44473 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753232AbYBYHyQ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 25 Feb 2008 02:54:16 -0500
-Received: from picon.linux-foundation.org (picon.linux-foundation.org [207.189.120.79])
-	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id m1P7sDhc004521
-	for <linux-ide@vger.kernel.org>; Sun, 24 Feb 2008 23:54:14 -0800
+Received: from wf-out-1314.google.com ([209.85.200.172]:65002 "EHLO
+	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753579AbYBYIlA (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 25 Feb 2008 03:41:00 -0500
+Received: by wf-out-1314.google.com with SMTP id 28so804934wff.4
+        for <linux-ide@vger.kernel.org>; Mon, 25 Feb 2008 00:41:00 -0800 (PST)
+In-Reply-To: <20080225073122.GE11327@elte.hu>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Ingo Molnar <mingo@elte.hu>
+Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Linux Kernel <linux-kernel@vger.kernel.org>, linux-ide <linux-ide@vger.kernel.org>
 
-http://bugzilla.kernel.org/show_bug.cgi?id=10086
+On Mon, Feb 25, 2008 at 8:31 AM, Ingo Molnar <mingo@elte.hu> wrote:
+>
+>  * Paolo Ciarrocchi <paolo.ciarrocchi@gmail.com> wrote:
+>
+>  > Before:
+>  > total: 34 errors, 14 warnings, 456 lines checked
+>  >
+>  > After:
+>  > total: 0 errors, 8 warnings, 456 lines checked
+>
+>  sidenote: please also indicate to maintainers that the cleanup causes no
+>  change in generated code. Find below of how one of your cleanup patches
+>  looks like in its final form in x86.git. (i auto-generated all of the
+>  commit log)
+>
+>  info like that makes it easier for maintainers to see the intended zero
+>  impact of your changes.
 
-           Summary: 2.6.25-rc2 + smartd = hang
-           Product: IO/Storage
-           Version: 2.5
-     KernelVersion: 2.6.25-rc2
-          Platform: All
-        OS/Version: Linux
-              Tree: Mainline
-            Status: NEW
-          Severity: normal
-          Priority: P1
-         Component: IDE
-        AssignedTo: io_ide@kernel-bugs.osdl.org
-        ReportedBy: rjw@sisk.pl
-OtherBugsDependingO 9832
-             nThis:
-        Regression: 1
+Sure, I'll script that.
 
-
-Subject         : 2.6.25-rc2 + smartd = hang
-Submitter       : Anders Eriksson <aeriksson@fastmail.fm>
-Date            : 2008-02-22 17:51
-References      : http://lkml.org/lkml/2008/2/22/239
-
-This entry is being used for tracking a regression from 2.6.24.  Please don't
-close it until the problem is fixed in the mainline.
-
-
+Ciao,
 -- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug, or are watching the assignee.
+Paolo
+http://paolo.ciarrocchi.googlepages.com/
