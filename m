@@ -1,58 +1,47 @@
-From: Andrew Morton <akpm@linux-foundation.org>
-Subject: Re: regression: CD burning (k3b) went broke
-Date: Tue, 26 Feb 2008 15:08:45 -0800
-Message-ID: <20080226150845.2196bc1a.akpm@linux-foundation.org>
-References: <1203583379.6244.27.camel@homer.simson.net>
-	<20080222073228.GZ23197@kernel.dk>
-	<1203752563.5225.4.camel@homer.simson.net>
-	<1203839683.17463.9.camel@homer.simson.net>
-	<1204019283.8731.11.camel@homer.simson.net>
-	<1204033003.11828.22.camel@homer.simson.net>
+From: "Paolo Ciarrocchi" <paolo.ciarrocchi@gmail.com>
+Subject: Re: [PATCH] ide-cd: fix some codestyle and most of the checkpatch.pl issues
+Date: Tue, 26 Feb 2008 23:46:53 +0030
+Message-ID: <4d8e3fd30802261516g5f4ca763kd4f8405f136b9847@mail.gmail.com>
+References: <1204012194-4208-1-git-send-email-petkovbb@gmail.com>
+	 <1204012194-4208-3-git-send-email-petkovbb@gmail.com>
+	 <200802262337.29873.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <1204033003.11828.22.camel@homer.simson.net>
-Sender: linux-scsi-owner@vger.kernel.org
-To: Mike Galbraith <efault@gmx.de>
-Cc: Jens Axboe <jens.axboe@oracle.com>, LKML <linux-kernel@vger.kernel.org>, Tejun Heo <htejun@gmail.com>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from wf-out-1314.google.com ([209.85.200.169]:38690 "EHLO
+	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1764198AbYBZXRD (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 26 Feb 2008 18:17:03 -0500
+Received: by wf-out-1314.google.com with SMTP id 28so1744095wff.4
+        for <linux-ide@vger.kernel.org>; Tue, 26 Feb 2008 15:16:54 -0800 (PST)
+In-Reply-To: <200802262337.29873.bzolnier@gmail.com>
+Content-Disposition: inline
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: Borislav Petkov <petkovbb@googlemail.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Borislav Petkov <petkovbb@gmail.com>
 
-On Tue, 26 Feb 2008 14:36:43 +0100 Mike Galbraith <efault@gmx.de> wrote:
+On 2/26/08, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com> wrote:
+>
+> On Tuesday 26 February 2008, Borislav Petkov wrote:
+> > Signed-off-by: Borislav Petkov <petkovbb@gmail.com>
+> > ---
+> > drivers/ide/ide-cd.c | 634
+> +++++++++++++++++++++++++------------------------
+> > 1 files changed, 323 insertions(+), 311 deletions(-)
+>
+> With 300 lines changed this is not trivial to review/apply anymore
+> (yeah, I sound like a broken record ;-) and since I've already applied
+> Paolo's patch from two days ago this one heavily rejects...
+>
+> Moreover md5sum is different before/after the patch - I tried really hard
+> to figure out why (by reverting some changes) but finally I gave up.
 
-> 
-> On Tue, 2008-02-26 at 10:48 +0100, Mike Galbraith wrote:
-> > Greetings,
-> > 
-> > I straced both a good and a bad kernel (good being .git with attached
-> > revert patch applied) and filtered/diffed/merged the output.  Scroll
-> > down to "HERE" to see the problem (resid).
-> > 
-> > I'm poking around, but not having much luck.
+is it because of the changes in the include section?
+and was the change suggested by checkpatch.pl?
 
-cc's added.
-
-I'm told this is part of "Tejun's DMA drain handling".
-
-> Seems the problem is data_len changes, but raw_data_len doesn't.  I've
-> not the foggiest IO-land clue, but k3b works again, so the below may
-> have some diagnostic value.
-
-So this change fixes a bug?  Can we have a recap of how it does this?
-
-> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-> index ba21d97..7a6f784 100644
-> --- a/drivers/scsi/scsi_lib.c
-> +++ b/drivers/scsi/scsi_lib.c
-> @@ -871,7 +871,7 @@ void scsi_io_completion(struct scsi_cmnd *cmd, unsigned int good_bytes)
->  			scsi_end_bidi_request(cmd);
->  			return;
->  		}
-> -		req->data_len = scsi_get_resid(cmd);
-> +		req->data_len = req->raw_data_len = scsi_get_resid(cmd);
->  	}
->  
->  	BUG_ON(blk_bidi_rq(req)); /* bidi not support for !blk_pc_request yet */
-> 
-
-Thanks.
+ciao,
+--
+Paolo
+http://paolo.ciarrocchi.googlepages.com/
