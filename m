@@ -1,64 +1,37 @@
 From: Mark Lord <liml@rtr.ca>
-Subject: Re: Sata-MV, Intergated Sata Device Support
-Date: Mon, 25 Feb 2008 19:07:57 -0500
-Message-ID: <47C3585D.8070701@rtr.ca>
-References: <1176673884.5109.30.camel@Desktop> <47C35203.20402@garzik.org>
+Subject: Re: new ata_port_operations for .pmp_{read,write} ?
+Date: Mon, 25 Feb 2008 19:12:21 -0500
+Message-ID: <47C35965.7030905@rtr.ca>
+References: <4730E312.3090900@navy.mil> <4737C16E.3070607@gmail.com> <4738827D.9060405@pobox.com> <4738F935.1000708@gmail.com> <47BC798F.6070900@pobox.com> <47BE17CA.6060406@rtr.ca> <47BE1833.9090501@rtr.ca> <47BE2C0C.3020801@gmail.com> <47BE2DBD.9010704@rtr.ca> <47BE2F9E.5040206@gmail.com> <47BE32B5.5020300@rtr.ca> <47BE3325.8060209@rtr.ca> <47BE4701.2030104@rtr.ca> <47BE4DFE.2030407@rtr.ca> <47BEDAF2.8000301@rtr.ca> <47BFAC06.5030805@rtr.ca> <47C116D4.1090600@gmail.com> <47C248C8.9090409@rtr.ca> <47C2503A.7040308@gmail.com> <47C2F308.1080602@rtr.ca> <47C352E9.4060107@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([76.10.145.34]:3150 "EHLO mail.rtr.ca"
+Received: from rtr.ca ([76.10.145.34]:4002 "EHLO mail.rtr.ca"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759532AbYBZAFL (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 25 Feb 2008 19:05:11 -0500
-In-Reply-To: <47C35203.20402@garzik.org>
+	id S1760076AbYBZAJe (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 25 Feb 2008 19:09:34 -0500
+In-Reply-To: <47C352E9.4060107@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: linux-ide@vger.kernel.org, jon@ngndg.com, LKML <linux-kernel@vger.kernel.org>, Saeed Bishara <saeed@marvell.com>
+To: Tejun Heo <htejun@gmail.com>
+Cc: IDE/ATA development list <linux-ide@vger.kernel.org>, Saeed Bishara <saeed@marvell.com>, Jeff Garzik <jgarzik@pobox.com>
 
-Jeff Garzik wrote:
-> Jon Li wrote:
->> Hello,
->>
->> I am curious as to whether there are plans to add support for integrated
->> sata devices.  I personally want to add support for a 60x1C0 based
->> device (pci:id = 0x5182).  I think adding support should be relatively
->> simple, except for a few issues outlined below.
->>
->> In the original mvSata.c (ver3.4) that has 0x5182 support, the config
->> space is as such:
->>
->> case MV_SATA_DEVICE_ID_5182:
->>         pAdapter->numberOfChannels = MV_SATA_5182_PORT_NUM;
->>         pAdapter->numberOfUnits = 1;
->>         pAdapter->portsPerUnit = 2;
->>         pAdapter->sataAdapterGeneration = MV_SATA_GEN_IIE;
->>         /*The integrated sata core chip based on 60x1 C0*/
->>         pAdapter->chipIs60X1C0 = MV_TRUE;
->>         pAdapter->hostInterface = MV_HOST_IF_INTEGRATED;
->>         pAdapter->mainMaskOffset = 0x20024; /*the iobaseaddress is
->> 0x60000*/
->>         pAdapter->mainCauseOffset = 0x20020;
->>         break;
->>
->> I have not yet figured out how all these values are defined in sata-mv.c
->> (ver 0.8).  Specifically, where do I define "numberOfChannels" which
->> should equal 2, and "numberOfUnits" which obviously equals 1?
->>
->> I have a current config space (not completed) for sata-mv.c which is:
->>
->>     {  /* chip_5182 */
->>         .sht        = &mv_sht,
->>         .flags        = (MV_COMMON_FLAGS | MV_6XXX_FLAGS |
->>                    MV_FLAG_DUAL_HC),
->>         .pio_mask    = 0x1f,    /* pio0-4 */
->>         .udma_mask    = 0x7f,    /* udma0-6 */
->>         .port_ops    = &mv6_ops,
->>     },
-...
+Tejun Heo wrote:
+>
+> libata doesn't really put much restrictions on what a LLD should do on
+> entering EH and if the controller's behavior is predictable, there's no
+> reason to freeze the port.  If the problem is that the DMA engine isn't
+> usable after PMP error but it's known that the controller isn't gonna
+> cause irq storm, no need to freeze.  The only command EH issues before
+> resetting which can use DMA protocol is READ_LOG_EXT.  Maybe there needs
+> to be a way to force PIO protocol for READ_LOG_EXT.  Other than that, if
+> no-data and PIO-only commands work fine, EH autopsy should work fine.
+..
 
-Saeed:  isn't this what your SOC patches already implemented for us?
-As near as I can tell, sata_mv now already has support for the 60x1C0.
+Eh?  READ LOG EXT *is* a PIO command, as opposed to READ LOG DMA EXT
+which uses DMA.
 
--ml
+And the EH also issues PIO READ_BUFFER commands for PM ports, if a PM is present.
+
+???
