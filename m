@@ -1,63 +1,140 @@
-From: Mark Lord <liml@rtr.ca>
-Subject: Re: libata .sg_tablesize: why always dividing by 2 ?
-Date: Tue, 26 Feb 2008 11:51:42 -0500
-Message-ID: <47C4439E.2000606@rtr.ca>
-References: <47C3572D.1060904@rtr.ca>  <47C35A3B.8080604@pobox.com>	 <1203987277.15052.68.camel@pasglop> <47C36D64.6010001@rtr.ca>	 <47C36EC3.4080708@rtr.ca> <1203994454.15052.83.camel@pasglop>	 <47C397C4.2090309@rtr.ca> <1204003805.15052.112.camel@pasglop>	 <47C3A71B.2070705@rtr.ca> <1204004844.15052.123.camel@pasglop> <47C43D7F.3010005@rtr.ca>
+From: Borislav Petkov <petkovbb@googlemail.com>
+Subject: Re: IDE cdrom problem with PLEXTOR DVDR PX-608AL
+Date: Tue, 26 Feb 2008 18:46:30 +0100
+Message-ID: <20080226174630.GB5497@gollum.tnic>
+References: <426a98560802232138q41d45d52ta515f1b791e937f4@mail.gmail.com> <20080224173451.GB11998@gollum.tnic> <426a98560802241758j7a9be21m5eecc120ada804e4@mail.gmail.com> <20080225053404.GA3816@gollum.tnic> <426a98560802242157j61294ba6i2aaa9cce4d836a7b@mail.gmail.com> <20080225144519.GB3816@gollum.tnic> <426a98560802260032p61a81811i6b18c5f5b828ce56@mail.gmail.com>
+Reply-To: petkovbb@gmail.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([76.10.145.34]:4882 "EHLO mail.rtr.ca"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751342AbYBZQsr (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 26 Feb 2008 11:48:47 -0500
-In-Reply-To: <47C43D7F.3010005@rtr.ca>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1764132AbYBZRqw@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <426a98560802260032p61a81811i6b18c5f5b828ce56@mail.gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Brad Rosser <brad.rosser@gmail.com>
+Cc: bzolnier@gmail.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: benh@kernel.crashing.org
-Cc: Jeff Garzik <jgarzik@pobox.com>, Tejun Heo <htejun@gmail.com>, Alan Cox <alan@redhat.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, IDE/ATA development list <linux-ide@vger.kernel.org>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
 
-Mark Lord wrote:
-> Benjamin Herrenschmidt wrote:
->> On Tue, 2008-02-26 at 00:43 -0500, Mark Lord wrote:
->>>> I suppose so. I don't remember all of the details, but iirc, it has to
->>>> do with crossing 64K boundaries. Some controllers can't handle it.
->>>>
->>>> It's not only the _size_ of the segments, it's their alignment.
->>>>
->>>> The iommu will not keep alignement beyond the page size (and even
->>>> then... on powerpc with a 64k base page size, you may still end up with
->>>> a 4k aligned result, but let's not go there now).
->>> ..
->>>
->>> That's just not possible, unless the IOMMU *splits* segments.
->>> And the IOMMU experts here say that it never does that.
->>
->> It is totally possible, and I know as wrote part of the powerpc iommu
->> code :-)
->>
->> The iommu code makes no guarantee vs. preserving the alignment of a
->> segment, at least not below PAGE_SIZE.
->>
->> Thus if you pass to dma_map_sg() a 64K aligned 64K segment, you may well
->> get back a 4K aligned 64K segment.
->>
->> Enforcing natural alignment in the iommu code only happens for
->> dma_alloc_coherent (it uses order-N allocations anyway), it doesn't
->> happen for map_sg. If we were to do that, we would make it very likely
->> for iommu allocations to fail on machine with small DMA windows.
->>
->> Ben.
-> ..
-> 
-> That's interesting.  Can you point us to the exact file::lines where
-> this happens?  It would be good to ensure that this gets fixed.
-> 
-> I'm copying Fujita Tomonori on this thread now -- he's the dude who's
-> trying to sort out the IOMMU mess.
-..
+On Tue, Feb 26, 2008 at 06:32:41PM +1000, Brad Rosser wrote:
+Hi Brad,
 
-Mmm.. looks like ppc is already fixed in mainline,
-commit 740c3ce66700640a6e6136ff679b067e92125794
+> Hello Boris, Bart,
+>=20
+> On Tue, Feb 26, 2008 at 12:45 AM, Borislav Petkov
+> <petkovbb@googlemail.com> wrote:
+> >
+> > On Mon, Feb 25, 2008 at 03:57:06PM +1000, Brad Rosser wrote:
+> > >
+> > > ... it would suggest the option 'hda=3Dnoprobe' was entered corre=
+ctly?
+> >
+> >  ok, let's try something else: change the line "#if 0" to "#if 1" a=
+t the
+> >  beginning of kernel/params.c, it looks like:
+> >
+> >  #if 0
+> >  #define DEBUGP printk
+> >  #else
+> >  #define DEBUGP(fmt, a...)
+> >  #endif
+> >
+> >  rebuild your kernel, and reboot with it. Then, please send me that=
+ boot log to
+> >  see whether the kernel command line is being received from the boo=
+t loader and
+> >  what exactly is getting parsed. Thanks.
+>=20
+> Boris,  I've done that; the output is in attached file dmesg.debug.ou=
+t.
 
-Ben?
+it seems that your boot loader is not supplying the kernel with the boo=
+t params
+properly as can be seen from the excerpt below:
+
+=2E..
+Kernel command line: BOOT_IMAGE=3Dlinux_2.6.25rc2 ro root=3D900 md=3D0,=
+/dev/sda5,/dev/sdb5 hda=3Dnoprobe
+Parsing ARGS: BOOT_IMAGE=3Dlinux_2.6.25rc2 ro root=3D900 md=3D0,/dev/sd=
+a5,/dev/sdb5 hda=3Dnoprobe
+Unknown argument: calling c03670ce
+Unknown argument: calling c03670ce
+Unknown argument: calling c03670ce
+Unknown argument: calling c03670ce
+md: Will configure md0 (super-block) from /dev/sda5,/dev/sdb5, below.
+Unknown argument: calling c03670ce
+=2E..
+
+and, as a result, the probing of hda still takes place.
+
+> It looks to me that the kernel still found the IDE DVD drive (hda) ..=
+=2E
+> in addition
+> to the system messages when the system was up I found the ide_cd_mod
+> module loaded on top of 'cdrom' as normal.
+>=20
+> >  Please see whether you can apply the patch Bart just sent and if t=
+hat still gets
+> >  mangled and cannot be applied, consider making those changes to id=
+e-cd.c by hand
+> >  - after all, there are only several lines that need to be changed =
+so it won't
+> >  take that long.
+>=20
+> Bart, I was able to apply that patch file you attached with no proble=
+ms, and the
+> behaviour of the patched kernel changed as follows:
+>=20
+> - no more 'confused' messages, nor the rush of other critical message=
+s
+> that accompanied a system hang on one out of four tests yesterday.
+>=20
+> - However, a new message that popped up twice; once after a few secon=
+ds
+> of network activity, and then about 15-20 seconds afterwards:
+>=20
+> hda: ide_cd_check_ireason: wrong transfer direction!
+> hda: ide_cd_check_ireason: wrong transfer direction!
+
+Bart, can we assume here that some of the nic interrupts somehow get ha=
+ndled by
+ide-cd or something gets mixed up there?
+
+> - also, I'm pretty sure that performance of both network and DVD driv=
+e suffered.
+>=20
+> As to the last ... my new PC, on which I'm doing all this testing, ha=
+s a gigabit
+> Realtek NIC.  It's hooked up via null UTP cable to my older machine w=
+hich has
+> a 100Mb/s card.  ethtool shows that they both auto-negotiate to run a=
+t 100Mb/s
+> full duplex.  When I run my network test (pumping through /dev/zero a=
+cross ssh
+> from the old machine to the new) the network stats tell me that I'm g=
+etting
+> 10MB/s out of the link, which is what I would expect.
+>=20
+> With the patched 2.6.25-rc2 kernel running with no activity reading t=
+he DVD
+> but the network going flat out (on the old PC's end) I noted that I w=
+as only
+> getting only 8.0 or 8.1 MB/sec, rather than the 10 MB/sec I've seen i=
+n the other
+> tests..  There was no other network traffic or cpu load on the machin=
+e(s).
+>=20
+> Then, when I mounted a DVD disc and did a 'wc /mnt/*' of its contents
+> an iostat showed me that I was getting only about 6MB/sec out of the =
+DVD
+> drive, which is less than I'd expect.  As soon as I killed the networ=
+k send
+> iostat's report zoomed up to roughly 10MB/sec.  So it seemed to me th=
+at,
+> in addition to the 'wrong direction' messages, I was losing some perf=
+ormance
+> on both the NIC and the DVD drive.
+
+
+--=20
+Regards/Gru=DF,
+    Boris.
