@@ -1,65 +1,64 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: libata .sg_tablesize: why always dividing by 2 ?
-Date: Mon, 25 Feb 2008 19:15:55 -0500
-Message-ID: <47C35A3B.8080604@pobox.com>
-References: <47C3572D.1060904@rtr.ca>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: Sata-MV, Intergated Sata Device Support
+Date: Mon, 25 Feb 2008 19:17:09 -0500
+Message-ID: <47C35A85.3020307@garzik.org>
+References: <1176673884.5109.30.camel@Desktop> <47C35203.20402@garzik.org> <47C3585D.8070701@rtr.ca>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:53711 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756734AbYBZAQH (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 25 Feb 2008 19:16:07 -0500
-In-Reply-To: <47C3572D.1060904@rtr.ca>
-Sender: linux-ide-owner@vger.kernel.org
-List-Id: linux-ide@vger.kernel.org
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1761600AbYBZAR0@vger.kernel.org>
+In-Reply-To: <47C3585D.8070701@rtr.ca>
+Sender: linux-kernel-owner@vger.kernel.org
 To: Mark Lord <liml@rtr.ca>
-Cc: Tejun Heo <htejun@gmail.com>, Alan Cox <alan@redhat.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, IDE/ATA development list <linux-ide@vger.kernel.org>, Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Cc: linux-ide@vger.kernel.org, jon@ngndg.com, LKML <linux-kernel@vger.kernel.org>, Saeed Bishara <saeed@marvell.com>
+List-Id: linux-ide@vger.kernel.org
 
 Mark Lord wrote:
-> Jeff,
+> Jeff Garzik wrote:
+>> Jon Li wrote:
+>>> Hello,
+>>>
+>>> I am curious as to whether there are plans to add support for integrated
+>>> sata devices.  I personally want to add support for a 60x1C0 based
+>>> device (pci:id = 0x5182).  I think adding support should be relatively
+>>> simple, except for a few issues outlined below.
+>>>
+>>> In the original mvSata.c (ver3.4) that has 0x5182 support, the config
+>>> space is as such:
+>>>
+>>> case MV_SATA_DEVICE_ID_5182:
+>>>         pAdapter->numberOfChannels = MV_SATA_5182_PORT_NUM;
+>>>         pAdapter->numberOfUnits = 1;
+>>>         pAdapter->portsPerUnit = 2;
+>>>         pAdapter->sataAdapterGeneration = MV_SATA_GEN_IIE;
+>>>         /*The integrated sata core chip based on 60x1 C0*/
+>>>         pAdapter->chipIs60X1C0 = MV_TRUE;
+>>>         pAdapter->hostInterface = MV_HOST_IF_INTEGRATED;
+>>>         pAdapter->mainMaskOffset = 0x20024; /*the iobaseaddress is
+>>> 0x60000*/
+>>>         pAdapter->mainCauseOffset = 0x20020;
+>>>         break;
+>>>
+>>> I have not yet figured out how all these values are defined in sata-mv.c
+>>> (ver 0.8).  Specifically, where do I define "numberOfChannels" which
+>>> should equal 2, and "numberOfUnits" which obviously equals 1?
+>>>
+>>> I have a current config space (not completed) for sata-mv.c which is:
+>>>
+>>>     {  /* chip_5182 */
+>>>         .sht        = &mv_sht,
+>>>         .flags        = (MV_COMMON_FLAGS | MV_6XXX_FLAGS |
+>>>                    MV_FLAG_DUAL_HC),
+>>>         .pio_mask    = 0x1f,    /* pio0-4 */
+>>>         .udma_mask    = 0x7f,    /* udma0-6 */
+>>>         .port_ops    = &mv6_ops,
+>>>     },
+> ...
 > 
-> We had a discussion here today about IOMMUs,
-> and they *never* split sg list entries -- they only ever *merge*.
-> 
-> And this happens only after the block layer has
-> already done merging while respecting q->seg_boundary_mask.
-> 
-> So worst case, the IOMMU may merge everything, and then in
-> libata we unmerge them again.  But the end result can never
-> exceed the max_sg_entries limit enforced by the block layer.
+> Saeed:  isn't this what your SOC patches already implemented for us?
+> As near as I can tell, sata_mv now already has support for the 60x1C0.
 
-<shrug>  Early experience said otherwise.  The split in foo_fill_sg() 
-and resulting sg_tablesize reduction were both needed to successfully 
-transfer data, when Ben H originally did the work.
-
-If Ben H and everyone on the arch side agrees with the above analysis, I 
-would be quite happy to remove all those "/ 2".
-
-
-> This can cost a lot of memory, as using NCQ effectively multiplies
-> everything by 32..
-
-I recommend dialing down the hyperbole a bit :)
-
-"a lot" in this case is...  maybe another page or two per table, if 
-that.  Compared with everything else in the system going on, with 
-16-byte S/G entries, S/G table size is really the least of our worries.
-
-
-If you were truly concerned about memory usage in sata_mv, a more 
-effective route is simply reducing MV_MAX_SG_CT to a number closer to 
-the average s/g table size -- which is far, far lower than 256 
-(currently MV_MAX_SG_CT), or even 128 (MV_MAX_SG_CT/2).
-
-Or moving to a scheme where you allocate (for example) S/G tables with 
-32 entries... then allocate on the fly for the rare case where the S/G 
-table must be larger.
-
-Memory usage is simply not an effective argument in this case.  Safety 
-and correctness are far more paramount.
+Saeed's stuff didn't support PCI though, and Jon Li is definitely 
+talking about PCI...
 
 	Jeff
-
-
