@@ -1,64 +1,34 @@
-From: Holger Macht <hmacht@suse.de>
-Subject: Re: [PATCH] libata: Register for dock events when the drive is
-	inside a dock station
-Date: Tue, 26 Feb 2008 11:15:51 +0100
-Message-ID: <20080226101551.GB10721@homac.suse.de>
-References: <20080214124048.GB9708@homac.suse.de> <20080214125615.GD9708@homac.suse.de> <47BC5F44.605@garzik.org> <20080221115305.GB5032@homac.suse.de> <47BE26A0.2040708@gmail.com>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: ops->qc_defer not invoked on ata_exec_internal_sg() paths ?
+Date: Tue, 26 Feb 2008 12:32:09 +0000
+Message-ID: <20080226123209.7ca9eed4@core>
+References: <47C35B6B.8000406@rtr.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:57443 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755634AbYBZKOm (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 26 Feb 2008 05:14:42 -0500
-Content-Disposition: inline
-In-Reply-To: <47BE26A0.2040708@gmail.com>
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:49288 "EHLO
+	lxorguk.ukuu.org.uk" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751457AbYBZMm2 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 26 Feb 2008 07:42:28 -0500
+In-Reply-To: <47C35B6B.8000406@rtr.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Jeff Garzik <jeff@garzik.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Kristen Carlson Accardi <kristen.c.accardi@intel.com>
+To: Mark Lord <liml@rtr.ca>
+Cc: Tejun Heo <htejun@gmail.com>, IDE/ATA development list <linux-ide@vger.kernel.org>
 
-On Fri 22. Feb - 10:34:24, Tejun Heo wrote:
-> > If a device/bay is inside a docking station, we need to register for dock
-> > events additionally to bay events. If a dock event occurs, the dock driver
-> > will call the appropriate handler (ata_acpi_ap_notify() or
-> > ata_acpi_dev_notify()) for us.
-> > 
-> > Signed-off-by: Holger Macht <hmacht@suse.de>
-> > ---
-> > 
-> > diff --git a/drivers/ata/libata-acpi.c b/drivers/ata/libata-acpi.c
-> > index 9e8ec19..563ad72 100644
-> > --- a/drivers/ata/libata-acpi.c
-> > +++ b/drivers/ata/libata-acpi.c
-> > @@ -191,20 +191,33 @@ void ata_acpi_associate(struct ata_host *host)
-> >  		else
-> >  			ata_acpi_associate_ide_port(ap);
-> >  
-> > -		if (ap->acpi_handle)
-> > +		if (ap->acpi_handle) {
-> >  			acpi_install_notify_handler (ap->acpi_handle,
-> >  						     ACPI_SYSTEM_NOTIFY,
-> >  						     ata_acpi_ap_notify,
-> >  						     ap);
-> > +#ifdef CONFIG_ACPI_DOCK_MODULE
+On Mon, 25 Feb 2008 19:20:59 -0500
+Mark Lord <liml@rtr.ca> wrote:
+
+> The optional .qc_defer() methods don't seem to be called
+> on the ata_exec_internal_sg() path.
 > 
-> Heh, you need
-> 
->   #if defined(CONFIG_ACPI_DOCK) || defined(CONFIG_ACPI_DOCK_MODULE)
-> 
-> Also, another question.  Is there a way to tell whether the device or
-> port is connected behind a dock or not?  Just notifying hotplug signal
-> is fine for hotplugging but to make hot unplug safe for PATA, libata
-> should be able to tell whether the device is actually gonna go away and
-> kill it explicitly.
+> At present, this is probably okay.  But in the future,
+> as we add functionality for link power management
+> and hotplug polling, this could be a problem.
 
-The hotplug handler is only called if the device is actually inside the
-dock station. If it is not, nothing will happen. I hope that I got your
-question right?
+It becomes a problem for me certainly if we ever issue anything via
+exec_internal_sg while another command may be outstanding anywhere on the
+same *host*. Right now its ok.
 
-However, if this would be helpful, it would be easy to add something like
-a am_I_on_dock_station?(...) function to the dock driver.
-
-Regards,
-	Holger
+Alan
