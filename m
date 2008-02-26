@@ -1,39 +1,64 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [RFC] Disk shock protection (revisited)
-Date: Mon, 25 Feb 2008 19:02:28 -0500
-Message-ID: <47C35714.4090604@garzik.org>
-References: <87skzgd1zk.fsf@denkblock.local>
+From: Mark Lord <liml@rtr.ca>
+Subject: Re: Sata-MV, Intergated Sata Device Support
+Date: Mon, 25 Feb 2008 19:07:57 -0500
+Message-ID: <47C3585D.8070701@rtr.ca>
+References: <1176673884.5109.30.camel@Desktop> <47C35203.20402@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:46761 "EHLO mail.dvmed.net"
+Received: from rtr.ca ([76.10.145.34]:3150 "EHLO mail.rtr.ca"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757531AbYBZACa (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 25 Feb 2008 19:02:30 -0500
-In-Reply-To: <87skzgd1zk.fsf@denkblock.local>
+	id S1759532AbYBZAFL (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 25 Feb 2008 19:05:11 -0500
+In-Reply-To: <47C35203.20402@garzik.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Jens Axboe <jens.axboe@oracle.com>
+To: Jeff Garzik <jeff@garzik.org>
+Cc: linux-ide@vger.kernel.org, jon@ngndg.com, LKML <linux-kernel@vger.kernel.org>, Saeed Bishara <saeed@marvell.com>
 
-Elias Oltmanns wrote:
-> The general idea: A daemon running in user space monitors input data
-> from an accelerometer. When the daemon detects a critical condition,
-> i.e., a sudden acceleration (for instance, laptop slides off the desk),
-> it signals the kernel so the hard disk may be put into a (more) safe
-> state. To this end, the kernel has to issue an idle immediate command
-> with unload feature and stop the block layer queue afterwards. Once the
-> daemon tells us that the imminent danger is over, the most important
-> task for the kernel is to restart the block layer queue. See below for
-> more details.
+Jeff Garzik wrote:
+> Jon Li wrote:
+>> Hello,
+>>
+>> I am curious as to whether there are plans to add support for integrated
+>> sata devices.  I personally want to add support for a 60x1C0 based
+>> device (pci:id = 0x5182).  I think adding support should be relatively
+>> simple, except for a few issues outlined below.
+>>
+>> In the original mvSata.c (ver3.4) that has 0x5182 support, the config
+>> space is as such:
+>>
+>> case MV_SATA_DEVICE_ID_5182:
+>>         pAdapter->numberOfChannels = MV_SATA_5182_PORT_NUM;
+>>         pAdapter->numberOfUnits = 1;
+>>         pAdapter->portsPerUnit = 2;
+>>         pAdapter->sataAdapterGeneration = MV_SATA_GEN_IIE;
+>>         /*The integrated sata core chip based on 60x1 C0*/
+>>         pAdapter->chipIs60X1C0 = MV_TRUE;
+>>         pAdapter->hostInterface = MV_HOST_IF_INTEGRATED;
+>>         pAdapter->mainMaskOffset = 0x20024; /*the iobaseaddress is
+>> 0x60000*/
+>>         pAdapter->mainCauseOffset = 0x20020;
+>>         break;
+>>
+>> I have not yet figured out how all these values are defined in sata-mv.c
+>> (ver 0.8).  Specifically, where do I define "numberOfChannels" which
+>> should equal 2, and "numberOfUnits" which obviously equals 1?
+>>
+>> I have a current config space (not completed) for sata-mv.c which is:
+>>
+>>     {  /* chip_5182 */
+>>         .sht        = &mv_sht,
+>>         .flags        = (MV_COMMON_FLAGS | MV_6XXX_FLAGS |
+>>                    MV_FLAG_DUAL_HC),
+>>         .pio_mask    = 0x1f,    /* pio0-4 */
+>>         .udma_mask    = 0x7f,    /* udma0-6 */
+>>         .port_ops    = &mv6_ops,
+>>     },
+...
 
-Speaking specifically to that problem, it seems to me that you either 
-want an mlock'd daemon, or just simply to keep everything in the kernel, 
-for this specific solution.
+Saeed:  isn't this what your SOC patches already implemented for us?
+As near as I can tell, sata_mv now already has support for the 60x1C0.
 
-You don't want, for example, to swap out other apps, swap in the daemon, 
-in order to handle a sudden acceleration.
-
-	Jeff
-
-
+-ml
