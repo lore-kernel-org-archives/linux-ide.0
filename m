@@ -1,60 +1,40 @@
-From: Mark Lord <lkml@rtr.ca>
-Subject: Re: [ugly patch] Save .15W-.5W by AHCI powersaving
-Date: Tue, 26 Feb 2008 10:52:36 -0500
-Message-ID: <47C435C4.9000402@rtr.ca>
-References: <20080225134558.GA1611@elf.ucw.cz> <47C34081.5090205@rtr.ca> <20080225223432.GN2659@elf.ucw.cz>
+From: Mark Lord <liml@rtr.ca>
+Subject: Re: Sata-MV, Intergated Sata Device Support
+Date: Tue, 26 Feb 2008 10:55:01 -0500
+Message-ID: <47C43655.1050907@rtr.ca>
+References: <1176673884.5109.30.camel@Desktop> <47C35203.20402@garzik.org> <47C3585D.8070701@rtr.ca> <47C35A85.3020307@garzik.org> <alpine.DEB.0.99.0802260024400.22022@ubuntu-saeed.il.marvell.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([76.10.145.34]:3478 "EHLO mail.rtr.ca"
+Received: from rtr.ca ([76.10.145.34]:3485 "EHLO mail.rtr.ca"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1763248AbYBZPtl (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 26 Feb 2008 10:49:41 -0500
-In-Reply-To: <20080225223432.GN2659@elf.ucw.cz>
+	id S1754027AbYBZPwF (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 26 Feb 2008 10:52:05 -0500
+In-Reply-To: <alpine.DEB.0.99.0802260024400.22022@ubuntu-saeed.il.marvell.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Pavel Machek <pavel@ucw.cz>
-Cc: Mark Lord <liml@rtr.ca>, kernel list <linux-kernel@vger.kernel.org>, Linux-pm mailing list <linux-pm@lists.osdl.org>, stern@rowland.harvard.edu, linux-ide@vger.kernel.org
+To: saeed <saeed@marvell.com>
+Cc: Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org, jon@ngndg.com, LKML <linux-kernel@vger.kernel.org>
 
-Pavel Machek wrote:
-> Hi!
+saeed wrote:
 > 
->>> This is a patch (very ugly, assumes you have just one disk) to bring
->>> powersaving to AHCI. You need Alan's SCSI autosuspend (attached) patch
->>> as a base.
+> On Mon, 25 Feb 2008, Jeff Garzik wrote:
+> 
+>>> ...
 >>>
->>> It saves .5W compared to config with disk spinning, and even .15W
->>> compared to hdparm -y... on my thinkpad x60 anyway.
->> ..
->>
->> There was a discussion of this here today.
-> 
-> Real-life discussion, or something I could read? :-).
-> 
->> It makes good use of AHCI-specific features.
->>
->> Has it been tested with a Port-Multiplier yet?
-> 
-> I do not know what port-multiplier is, sorry. But it was not really
-> tested. It is not expected to work on any other config than notebook
-> very similar to mine.
-> 
->> This is cool enough that we really ought to do a hardware-independent
->> version, so that all SATA interfaces could benefit.  Especially ata_piix,
->> but others too.
-> 
-> Well, it seems like it is 10 lines per driver once Alan's SCSI
-> autosuspend patches are in...
+>>> Saeed:  isn't this what your SOC patches already implemented for us?
+>>> As near as I can tell, sata_mv now already has support for the 60x1C0.
+>> Saeed's stuff didn't support PCI though, and Jon Li is definitely talking
+>> about PCI...
+> yes, my patch added support for the SoC sata like in the 5182, and this 
+> is what Jon Li was concerned about. he mentioneded the 60x1C0 pci device 
+> just to suggest to use it's code for the SoC sata as it is very similar.
 ..
 
-Cool (literally)!
+I don't think I understand your english there.
 
-I think I might have gotten your patch confused in my mind
-with another AHCI patch, which uses features of the chip itself
-to automatically negotiate/change link power status on the fly
-(no s/w needed, other than to turn it on).
+Does the current sata_mv driver work as-is with the chipset this person wants?
+If not, then exactly what has to change to make it work?
 
-That one is very ACPI specific, though.
-
-
+Thanks
