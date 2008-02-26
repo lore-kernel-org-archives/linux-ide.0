@@ -1,42 +1,39 @@
-From: Mark Lord <liml@rtr.ca>
-Subject: libata .sg_tablesize: why always dividing by 2 ?
-Date: Mon, 25 Feb 2008 19:02:53 -0500
-Message-ID: <47C3572D.1060904@rtr.ca>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [RFC] Disk shock protection (revisited)
+Date: Mon, 25 Feb 2008 19:02:28 -0500
+Message-ID: <47C35714.4090604@garzik.org>
+References: <87skzgd1zk.fsf@denkblock.local>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([76.10.145.34]:3150 "EHLO mail.rtr.ca"
+Received: from srv5.dvmed.net ([207.36.208.214]:46761 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757558AbYBZAAI (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 25 Feb 2008 19:00:08 -0500
+	id S1757531AbYBZACa (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 25 Feb 2008 19:02:30 -0500
+In-Reply-To: <87skzgd1zk.fsf@denkblock.local>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>, Tejun Heo <htejun@gmail.com>, Alan Cox <alan@redhat.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, IDE/ATA development list <linux-ide>
+To: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Jens Axboe <jens.axboe@oracle.com>
 
-Jeff,
+Elias Oltmanns wrote:
+> The general idea: A daemon running in user space monitors input data
+> from an accelerometer. When the daemon detects a critical condition,
+> i.e., a sudden acceleration (for instance, laptop slides off the desk),
+> it signals the kernel so the hard disk may be put into a (more) safe
+> state. To this end, the kernel has to issue an idle immediate command
+> with unload feature and stop the block layer queue afterwards. Once the
+> daemon tells us that the imminent danger is over, the most important
+> task for the kernel is to restart the block layer queue. See below for
+> more details.
 
-We had a discussion here today about IOMMUs,
-and they *never* split sg list entries -- they only ever *merge*.
+Speaking specifically to that problem, it seems to me that you either 
+want an mlock'd daemon, or just simply to keep everything in the kernel, 
+for this specific solution.
 
-And this happens only after the block layer has
-already done merging while respecting q->seg_boundary_mask.
+You don't want, for example, to swap out other apps, swap in the daemon, 
+in order to handle a sudden acceleration.
 
-So worst case, the IOMMU may merge everything, and then in
-libata we unmerge them again.  But the end result can never
-exceed the max_sg_entries limit enforced by the block layer.
-
-So.. why are we still specifying .sg_tablesize as half of
-what the LLD can really handle?
-
-This can cost a lot of memory, as using NCQ effectively multiplies
-everything by 32..
-
-Based on this information, I should be able to do this in sata_mv,
-for example:
-
--      .sg_tablesize           = MV_MAX_SG_CT / 2,
-+      .sg_tablesize           = MV_MAX_SG_CT,
+	Jeff
 
 
-???
