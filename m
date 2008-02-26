@@ -1,47 +1,51 @@
-From: Willy Tarreau <w@1wt.eu>
-Subject: Re: [RFC] Disk shock protection (revisited)
-Date: Tue, 26 Feb 2008 21:47:07 +0100
-Message-ID: <20080226204707.GB8953@1wt.eu>
-References: <87skzgd1zk.fsf@denkblock.local>
+From: Anders Eriksson <aeriksson@fastmail.fm>
+Subject: Re: 2.6.25-rc2 + smartd = hang
+Date: Tue, 26 Feb 2008 22:36:55 +0100
+Message-ID: <20080226213655.A0B3E93C195@tippex.mynet.homeunix.org>
+References: <20080222165122.8D2BB93C12F@tippex.mynet.homeunix.org> <200802240012.36571.bzolnier@gmail.com> <20080224082547.84F542DC002@tippex.mynet.homeunix.org> <200802241654.49150.bzolnier@gmail.com> <20080226082056.7519C93C195@tippex.mynet.homeunix.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from 1wt.eu ([62.212.114.60]:2154 "EHLO 1wt.eu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752121AbYBZUsH (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 26 Feb 2008 15:48:07 -0500
-Content-Disposition: inline
-In-Reply-To: <87skzgd1zk.fsf@denkblock.local>
+Received: from ch-smtp01.sth.basefarm.net ([80.76.149.212]:41691 "EHLO
+	ch-smtp01.sth.basefarm.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1760469AbYBZVhi (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 26 Feb 2008 16:37:38 -0500
+In-reply-to: <20080226082056.7519C93C195@tippex.mynet.homeunix.org> 
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Jens Axboe <jens.axboe@oracle.com>
+To: Anders Eriksson <aeriksson@fastmail.fm>
+Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Jeff Garzik <jeff@garzik.org>, linux-kernel@vger.kernel.org, Linux IDE mailing list <linux-ide@vger.kernel.org>, Jens Axboe <jens.axboe@oracle.com>
 
-Hi Elias,
 
-On Tue, Feb 26, 2008 at 12:56:31AM +0100, Elias Oltmanns wrote:
+Seems this one got lost.
 
-[ very interesting project ]
+/A
+> bzolnier@gmail.com said:
+> > Could you try bisecting it down to the guilty commit using git-bisect?
+> > [ the "old" stuff got few hundred commits in 2.6.25 ]
+> > Thanks, Bart 
 
-> Probably, the major problem is that I don't really know what kind of
-> applications (apart from shock protection) I should be thinking of that
-> might want to have a queue freezing facility at hand.
+Ok, I got this:
+852738f39258deafb3d89c187cb1a4050820d555 is first bad commit
+commit 852738f39258deafb3d89c187cb1a4050820d555
+Author: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Date:   Sat Jan 26 20:13:12 2008 +0100
 
-In terms of applications, depending on the sensitivity of the accelerometer,
-we can imagine that a laptop would immediately force unmount crypted
-filesystems if it believes it's being stolen, for instance. It's just a
-random idea that comes to my mind, in the hope it may help you imagine
-some crazy usages. But generally you should not fool your mind with too
-many hypothetical cases, ideas will come once you provide a smart interface
-and this interface will evolve with future needs.
+    ide: convert "empty" REQ_TYPE_ATA_CMD requests to use REQ_TYPE_ATA_TASKFILE
 
-Concerning your daemon, I think that every millisecond counts when a
-laptop falls on the floor. So I think that running it in the kernel
-should help you gain those precious milliseconds. I doubt your daemon
-could trigger fast enough while X is starting or during some activities
-which require a lot of CPU or uninterruptible I/O. If (I don't know)
-the driver can be woken up by an interrupt from the controller, it
-might react faster.
+    Based on the previous work by Tejun Heo.
 
-Good luck, and I sincerely wish you success on this project!
-Willy
+    There should be no functionality changes caused by this patch.
+
+    Cc: Tejun Heo <htejun@gmail.com>
+    Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+
+:040000 040000 e65605824ccc1c8bda2ab6f917b5457d36c5537e 5fb514a261b13494c5e9c035f9e7598276ce8839 M      drivers
+
+I'll run with the last known good version for a while,so if there's any more 
+testing needed let me know.
+
+/A 
+
+
 
