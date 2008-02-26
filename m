@@ -1,50 +1,50 @@
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Subject: Re: libata .sg_tablesize: why always dividing by 2 ?
-Date: Tue, 26 Feb 2008 11:54:37 +1100
-Message-ID: <1203987277.15052.68.camel@pasglop>
-References: <47C3572D.1060904@rtr.ca>  <47C35A3B.8080604@pobox.com>
-Reply-To: benh@kernel.crashing.org
+From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+Subject: Re: [RFC] Disk shock protection (revisited)
+Date: Mon, 25 Feb 2008 22:33:12 -0300
+Message-ID: <20080226013312.GA24646@khazad-dum.debian.net>
+References: <87skzgd1zk.fsf@denkblock.local> <47C35714.4090604@garzik.org> <87ejb0d0eu.fsf@denkblock.local>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from gate.crashing.org ([63.228.1.57]:51974 "EHLO gate.crashing.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751407AbYBZAzz (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 25 Feb 2008 19:55:55 -0500
-In-Reply-To: <47C35A3B.8080604@pobox.com>
+Received: from out3.smtp.messagingengine.com ([66.111.4.27]:53578 "EHLO
+	out3.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752672AbYBZBdR (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 25 Feb 2008 20:33:17 -0500
+Content-Disposition: inline
+In-Reply-To: <87ejb0d0eu.fsf@denkblock.local>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: Mark Lord <liml@rtr.ca>, Tejun Heo <htejun@gmail.com>, Alan Cox <alan@redhat.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, IDE/ATA development list <linux-ide@vger.kernel.org>
+To: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Jens Axboe <jens.axboe@oracle.com>
 
-
-On Mon, 2008-02-25 at 19:15 -0500, Jeff Garzik wrote:
-> Mark Lord wrote:
-> > Jeff,
-> > 
-> > We had a discussion here today about IOMMUs,
-> > and they *never* split sg list entries -- they only ever *merge*.
-> > 
-> > And this happens only after the block layer has
-> > already done merging while respecting q->seg_boundary_mask.
-> > 
-> > So worst case, the IOMMU may merge everything, and then in
-> > libata we unmerge them again.  But the end result can never
-> > exceed the max_sg_entries limit enforced by the block layer.
+On Tue, 26 Feb 2008, Elias Oltmanns wrote:
+> > You don't want, for example, to swap out other apps, swap in the
+> > daemon, in order to handle a sudden acceleration.
 > 
-> <shrug>  Early experience said otherwise.  The split in foo_fill_sg() 
-> and resulting sg_tablesize reduction were both needed to successfully 
-> transfer data, when Ben H originally did the work.
-> 
-> If Ben H and everyone on the arch side agrees with the above analysis, I 
-> would be quite happy to remove all those "/ 2".
+> Quite. But with mlock this particular problem can be handled in user
+> space just fine. The only reason I can see right now for putting this
 
-The split wasn't done by the iommu. The split was done by the IDE code
-itself to handle the stupid 64k crossing thingy. If it's done
-differently now, it might be possible to remove it, I haven't looked.
+And, as long as there is a way to also invoke it from within the kernel, we
+can call it from inside the kernel as well when there is a reason to make
+that function available.  Full flexibility is easily attainable here and
+nothing we should bother about too much.
 
-Cheers,
-Ben.
+> logic into the kernel as well is to keep the functionality around even
 
+Some hardware (Apple's?) has the entire APS logic in firmware (and AFAIK
+*also* export the accelerometer data for other uses).  On those boxes, if
+you want to trust the firmware, you just ignore the accelerometer and hook
+to an interrupt.  When you get the interrupt, you freeze the queue and
+unload heads.  Adding that to work in-kernel would be trivial.
 
+Adding a suspend-time-only emergency HDAPS in-kernel monitor thread would
+also be doable, if we wanted to duplicate that for ThinkPads (I don't really
+think it is needed, but...).  As long as queue freezing and the required
+unload immediate procedure can be called in at *any* time before the disk
+device, and its buses and controller are suspended, it would do to implement
+whatever we feel it is needed.
+
+-- 
+  "One disk to rule them all, One disk to find them. One disk to bring
+  them all and in the darkness grind them. In the Land of Redmond
+  where the shadows lie." -- The Silicon Valley Tarot
+  Henrique Holschuh
