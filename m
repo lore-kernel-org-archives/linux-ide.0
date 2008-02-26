@@ -1,51 +1,66 @@
-From: Anders Eriksson <aeriksson@fastmail.fm>
-Subject: Re: 2.6.25-rc2 + smartd = hang
-Date: Tue, 26 Feb 2008 22:36:55 +0100
-Message-ID: <20080226213655.A0B3E93C195@tippex.mynet.homeunix.org>
-References: <20080222165122.8D2BB93C12F@tippex.mynet.homeunix.org> <200802240012.36571.bzolnier@gmail.com> <20080224082547.84F542DC002@tippex.mynet.homeunix.org> <200802241654.49150.bzolnier@gmail.com> <20080226082056.7519C93C195@tippex.mynet.homeunix.org>
+From: Pavel Machek <pavel@ucw.cz>
+Subject: Re: [ugly patch] Save .15W-.5W by AHCI powersaving
+Date: Tue, 26 Feb 2008 22:49:08 +0100
+Message-ID: <20080226214908.GC10280@elf.ucw.cz>
+References: <20080225134558.GA1611@elf.ucw.cz> <47C34081.5090205@rtr.ca> <20080225223432.GN2659@elf.ucw.cz> <47C435C4.9000402@rtr.ca>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ch-smtp01.sth.basefarm.net ([80.76.149.212]:41691 "EHLO
-	ch-smtp01.sth.basefarm.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1760469AbYBZVhi (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 26 Feb 2008 16:37:38 -0500
-In-reply-to: <20080226082056.7519C93C195@tippex.mynet.homeunix.org> 
+Received: from gprs189-60.eurotel.cz ([160.218.189.60]:33904 "EHLO
+	gprs189-60.eurotel.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1762868AbYBZVsm (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 26 Feb 2008 16:48:42 -0500
+Content-Disposition: inline
+In-Reply-To: <47C435C4.9000402@rtr.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Anders Eriksson <aeriksson@fastmail.fm>
-Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Jeff Garzik <jeff@garzik.org>, linux-kernel@vger.kernel.org, Linux IDE mailing list <linux-ide@vger.kernel.org>, Jens Axboe <jens.axboe@oracle.com>
+To: Mark Lord <lkml@rtr.ca>
+Cc: Mark Lord <liml@rtr.ca>, kernel list <linux-kernel@vger.kernel.org>, Linux-pm mailing list <linux-pm@lists.osdl.org>, stern@rowland.harvard.edu, linux-ide@vger.kernel.org
 
+On Tue 2008-02-26 10:52:36, Mark Lord wrote:
+> Pavel Machek wrote:
+>> Hi!
+>>
+>>>> This is a patch (very ugly, assumes you have just one disk) to bring
+>>>> powersaving to AHCI. You need Alan's SCSI autosuspend (attached) patch
+>>>> as a base.
+>>>>
+>>>> It saves .5W compared to config with disk spinning, and even .15W
+>>>> compared to hdparm -y... on my thinkpad x60 anyway.
+>>> ..
+>>>
+>>> There was a discussion of this here today.
+>>
+>> Real-life discussion, or something I could read? :-).
+>>
+>>> It makes good use of AHCI-specific features.
+>>>
+>>> Has it been tested with a Port-Multiplier yet?
+>>
+>> I do not know what port-multiplier is, sorry. But it was not really
+>> tested. It is not expected to work on any other config than notebook
+>> very similar to mine.
+>>
+>>> This is cool enough that we really ought to do a hardware-independent
+>>> version, so that all SATA interfaces could benefit.  Especially ata_piix,
+>>> but others too.
+>>
+>> Well, it seems like it is 10 lines per driver once Alan's SCSI
+>> autosuspend patches are in...
+> ..
+>
+> Cool (literally)!
+>
+> I think I might have gotten your patch confused in my mind
+> with another AHCI patch, which uses features of the chip itself
+> to automatically negotiate/change link power status on the fly
+> (no s/w needed, other than to turn it on).
+>
+> That one is very ACPI specific, though.
 
-Seems this one got lost.
-
-/A
-> bzolnier@gmail.com said:
-> > Could you try bisecting it down to the guilty commit using git-bisect?
-> > [ the "old" stuff got few hundred commits in 2.6.25 ]
-> > Thanks, Bart 
-
-Ok, I got this:
-852738f39258deafb3d89c187cb1a4050820d555 is first bad commit
-commit 852738f39258deafb3d89c187cb1a4050820d555
-Author: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Date:   Sat Jan 26 20:13:12 2008 +0100
-
-    ide: convert "empty" REQ_TYPE_ATA_CMD requests to use REQ_TYPE_ATA_TASKFILE
-
-    Based on the previous work by Tejun Heo.
-
-    There should be no functionality changes caused by this patch.
-
-    Cc: Tejun Heo <htejun@gmail.com>
-    Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-
-:040000 040000 e65605824ccc1c8bda2ab6f917b5457d36c5537e 5fb514a261b13494c5e9c035f9e7598276ce8839 M      drivers
-
-I'll run with the last known good version for a while,so if there's any more 
-testing needed let me know.
-
-/A 
-
-
-
+Yep, I seen that, too. I'm just afraid to check, maybe AHCI powerdown
+does not save that much power when links in powersave already...
+									Pavel
+-- 
+(english) http://www.livejournal.com/~pavelmachek
+(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
