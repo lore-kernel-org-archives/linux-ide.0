@@ -1,54 +1,44 @@
-From: "Saumendra Dash" <Saumendra.Dash@infogain.com>
-Subject: RE: ULI 5288(SATA driver)
-Date: Wed, 27 Feb 2008 16:35:22 +0530
-Message-ID: <C86899CCB10A6C4E93D5978DCB232D4B07C86196@GDCMX01.igglobal.com>
-References: <47C347F3.5070006@pobox.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+From: Borislav Petkov <petkovbb@googlemail.com>
+Subject: [PATCH 1/5] ide-cd: include proper headers
+Date: Wed, 27 Feb 2008 19:20:45 +0100
+Message-ID: <1204136449-9490-2-git-send-email-petkovbb@gmail.com>
+References: <1204136449-9490-1-git-send-email-petkovbb@gmail.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.infogain.com ([65.223.106.147]:9202 "EHLO
-	ex2003test.igglobal.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752453AbYB0LVk convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 27 Feb 2008 06:21:40 -0500
-Content-class: urn:content-classes:message
-In-Reply-To: <47C347F3.5070006@pobox.com>
+Received: from ug-out-1314.google.com ([66.249.92.175]:48608 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756330AbYB0SVY (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 27 Feb 2008 13:21:24 -0500
+Received: by ug-out-1314.google.com with SMTP id z38so460544ugc.16
+        for <linux-ide@vger.kernel.org>; Wed, 27 Feb 2008 10:21:22 -0800 (PST)
+In-Reply-To: <1204136449-9490-1-git-send-email-petkovbb@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: linux-ide@vger.kernel.org
+To: bzolnier@gmail.com
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Borislav Petkov <petkovbb@gmail.com>
 
+Signed-off-by: Borislav Petkov <petkovbb@gmail.com>
+---
+ drivers/ide/ide-cd.c |    6 +++---
+ 1 files changed, 3 insertions(+), 3 deletions(-)
 
- Hi Jeff,
->> 
->>  I'm working on ULI1575 SATA driver which I want to run in Emulated-PATA 
->> mode.
->>  I have the following understanding to run a SATA device in 
-> Emulated-PATA mode:
->> 
->>   1. In Emulated-PATA mode the legacy IDE driver should access the SATA 
->> device directly in combined mode.
->>   2. The class code of the device shlould be set to Emulated-PATA 
->> mode(0x0185).
->>   3. Enable SATA in combine mode. 
->> 
->>  After doing the above changes the driver does not work in Emulated-PATA 
->> mode.
->> 
->>  Is there something missing to make the driver work in Emulated-PATA mode?
-
->Use a PCI quirk to unconditionally disable emulated PATA mode, because 
->it's not needed.
-
- I have disabled the emulated PATA mode this time but the following error is comming in both the ocassion.
- When I'm creating the partition using mkpart it is showing "The bus is in an invalid state, Access of this device is not allowed." and ide_open() returns with "No such device".
-
- Please suggest me what could be the problem?
-
-Thanks,
-Saumendra
-
-
-
-
+diff --git a/drivers/ide/ide-cd.c b/drivers/ide/ide-cd.c
+index 8877b7b..4d39567 100644
+--- a/drivers/ide/ide-cd.c
++++ b/drivers/ide/ide-cd.c
+@@ -41,10 +41,10 @@
+ 
+ #include <scsi/scsi.h>	/* For SCSI -> ATAPI command conversion */
+ 
+-#include <asm/irq.h>
+-#include <asm/io.h>
++#include <linux/irq.h>
++#include <linux/io.h>
+ #include <asm/byteorder.h>
+-#include <asm/uaccess.h>
++#include <linux/uaccess.h>
+ #include <asm/unaligned.h>
+ 
+ #include "ide-cd.h"
+-- 
+1.5.4.1
 
