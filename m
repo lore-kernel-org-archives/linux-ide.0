@@ -1,127 +1,170 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH 4/4] qd65xx: cleanup qd_probe()
-Date: Wed, 27 Feb 2008 23:21:56 +0100
-Message-ID: <200802272321.56276.bzolnier@gmail.com>
+From: Borislav Petkov <petkovbb@googlemail.com>
+Subject: Re: [PATCH 4/5] ide-cd: shorten lines longer than 80 columns
+Date: Wed, 27 Feb 2008 23:15:32 +0100
+Message-ID: <20080227221532.GB9545@gollum.tnic>
+References: <1204136449-9490-1-git-send-email-petkovbb@gmail.com> <1204136449-9490-5-git-send-email-petkovbb@gmail.com> <200802272218.50537.bzolnier@gmail.com>
+Reply-To: petkovbb@gmail.com
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.174]:47795 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760769AbYB0WI1 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 27 Feb 2008 17:08:27 -0500
-Received: by ug-out-1314.google.com with SMTP id z38so568670ugc.16
-        for <linux-ide@vger.kernel.org>; Wed, 27 Feb 2008 14:08:26 -0800 (PST)
+Received: from nf-out-0910.google.com ([64.233.182.187]:38161 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758187AbYB0WPi (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 27 Feb 2008 17:15:38 -0500
+Received: by nf-out-0910.google.com with SMTP id g13so1641908nfb.21
+        for <linux-ide@vger.kernel.org>; Wed, 27 Feb 2008 14:15:37 -0800 (PST)
 Content-Disposition: inline
+In-Reply-To: <200802272218.50537.bzolnier@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-* Replace 'if ()'-s by 'switch ()' block.
+On Wed, Feb 27, 2008 at 10:18:50PM +0100, Bartlomiej Zolnierkiewicz wro=
+te:
+> On Wednesday 27 February 2008, Borislav Petkov wrote:
+> > Signed-off-by: Borislav Petkov <petkovbb@gmail.com>
+>=20
+> interdiff for the merged version
+>=20
+> diff -u b/drivers/ide/ide-cd.c b/drivers/ide/ide-cd.c
+> --- b/drivers/ide/ide-cd.c
+> +++ b/drivers/ide/ide-cd.c
+> @@ -433,13 +433,13 @@
+>  			 * sector. If we got here the error is not correctable.
+>  			 */
+>  			ide_dump_status_no_sense(drive,
+> -						"media error (bad sector)",
+> -						stat);
+> +						 "media error (bad sector)",
+> +						 stat);
+>  			do_end_request =3D 1;
+>  		} else if (sense_key =3D=3D BLANK_CHECK) {
+>  			/* disk appears blank ?? */
+>  			ide_dump_status_no_sense(drive, "media error (blank)",
+> -						stat);
+> +						 stat);
+>  			do_end_request =3D 1;
+>  		} else if ((err & ~ABRT_ERR) !=3D 0) {
+>  			/* go to the default handler for other errors */
+> @@ -510,7 +510,7 @@
+>  	default:
+>  		if (!(rq->cmd_flags & REQ_QUIET))
+>  			printk(KERN_INFO "ide-cd: cmd 0x%x timed out\n",
+> -				rq->cmd[0]);
+> +					 rq->cmd[0]);
 
-* Merge common code for QD6500/QD6580A/QD6580B.
+why do you push the rq->cmd[0] thingy back here. Shouldn't it be aligne=
+d
+with the opening brace as the zillion others so far?
 
-There should be no functional changes caused by this patch.
+>  		wait =3D 0;
+>  		break;
+>  	}
+> @@ -552,7 +552,7 @@
+> =20
+>  		/* packet command */
+>  		ide_execute_command(drive, WIN_PACKETCMD, handler,
+> -					ATAPI_WAIT_PC, cdrom_timer_expiry);
+> +				    ATAPI_WAIT_PC, cdrom_timer_expiry);
+>  		return ide_started;
+>  	} else {
+>  		unsigned long flags;
+> @@ -809,7 +809,7 @@
+>  	info->dma =3D 0;
+>  	info->start_seek =3D jiffies;
+>  	return cdrom_start_packet_command(drive, 0,
+> -					cdrom_start_seek_continuation);
+> +					  cdrom_start_seek_continuation);
+>  }
+> =20
+>  /*
+> @@ -819,8 +819,8 @@
+>  static void restore_request(struct request *rq)
+>  {
+>  	if (rq->buffer !=3D bio_data(rq->bio)) {
+> -		sector_t n =3D (rq->buffer - (char *) bio_data(rq->bio)) /
+> -				SECTOR_SIZE;
+> +		sector_t n =3D
+> +			(rq->buffer - (char *)bio_data(rq->bio)) / SECTOR_SIZE;
 
-Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
----
- drivers/ide/legacy/qd65xx.c |   52 ++++++++++++++------------------------------
- 1 file changed, 17 insertions(+), 35 deletions(-)
+i must say, lines like this one always look ugly, no matter the formatt=
+ing
+tricks.
 
-Index: b/drivers/ide/legacy/qd65xx.c
-===================================================================
---- a/drivers/ide/legacy/qd65xx.c
-+++ b/drivers/ide/legacy/qd65xx.c
-@@ -334,7 +334,7 @@ static const struct ide_port_info qd65xx
- static int __init qd_probe(int base)
- {
- 	int rc;
--	u8 config, unit;
-+	u8 config, unit, control;
- 	struct ide_port_info d = qd65xx_port_info;
- 
- 	config = inb(QD_CONFIG_PORT);
-@@ -347,13 +347,11 @@ static int __init qd_probe(int base)
- 	if (unit)
- 		d.host_flags |= IDE_HFLAG_QD_2ND_PORT;
- 
--	if ((config & 0xf0) == QD_CONFIG_QD6500) {
--
-+	switch (config & 0xf0) {
-+	case QD_CONFIG_QD6500:
- 		if (qd_testreg(base))
- 			 return -ENODEV;	/* bad register */
- 
--		/* qd6500 found */
--
- 		if (config & QD_CONFIG_DISABLED) {
- 			printk(KERN_WARNING "qd6500 is disabled !\n");
- 			return -ENODEV;
-@@ -365,22 +363,12 @@ static int __init qd_probe(int base)
- 
- 		d.port_ops = &qd6500_port_ops;
- 		d.host_flags |= IDE_HFLAG_SINGLE;
--
--		rc = ide_legacy_device_add(&d, (base << 8) | config);
--
--		return (rc == 0) ? 1 : rc;
--	}
--
--	if (((config & 0xf0) == QD_CONFIG_QD6580_A) ||
--	    ((config & 0xf0) == QD_CONFIG_QD6580_B)) {
--
--		u8 control;
--
-+		break;
-+	case QD_CONFIG_QD6580_A:
-+	case QD_CONFIG_QD6580_B:
- 		if (qd_testreg(base) || qd_testreg(base + 0x02))
- 			return -ENODEV;	/* bad registers */
- 
--		/* qd6580 found */
--
- 		control = inb(QD_CONTROL_PORT);
- 
- 		printk(KERN_NOTICE "qd6580 at %#x\n", base);
-@@ -390,28 +378,22 @@ static int __init qd_probe(int base)
- 		outb(QD_DEF_CONTR, QD_CONTROL_PORT);
- 
- 		d.port_ops = &qd6580_port_ops;
--
--		if (control & QD_CONTR_SEC_DISABLED) {
--			/* secondary disabled */
--
--			printk(KERN_INFO "qd6580: single IDE board\n");
--
-+		if (control & QD_CONTR_SEC_DISABLED)
- 			d.host_flags |= IDE_HFLAG_SINGLE;
- 
--			rc = ide_legacy_device_add(&d, (base << 8) | config);
-+		printk(KERN_INFO "qd6580: %s IDE board\n",
-+			(control & QD_CONTR_SEC_DISABLED) ? "single" : "dual");
-+		break;
-+	default:
-+		return -ENODEV;
-+	}
- 
--			return (rc == 0) ? 1 : rc;
--		} else {
--			/* secondary enabled */
--			printk(KERN_INFO "qd6580: dual IDE board\n");
-+	rc = ide_legacy_device_add(&d, (base << 8) | config);
- 
--			rc = ide_legacy_device_add(&d, (base << 8) | config);
-+	if (d.host_flags & IDE_HFLAG_SINGLE)
-+		return (rc == 0) ? 1 : rc;
- 
--			return rc; /* no other qd65xx possible */
--		}
--	}
--	/* no qd65xx found */
--	return -ENODEV;
-+	return rc;
- }
- 
- int probe_qd65xx = 0;
+>  		rq->buffer =3D bio_data(rq->bio);
+>  		rq->nr_sectors +=3D n;
+> @@ -1192,8 +1192,8 @@
+>  	/* sg request */
+>  	if (rq->bio) {
+>  		int mask =3D drive->queue->dma_alignment;
+> -		unsigned long addr =3D (unsigned long)
+> -					page_address(bio_page(rq->bio));
+> +		unsigned long addr =3D
+> +			(unsigned long)page_address(bio_page(rq->bio));
+> =20
+>  		info->dma =3D drive->using_dma;
+> =20
+> @@ -1233,16 +1233,14 @@
+>  					return ide_stopped;
+>  				}
+>  				printk(KERN_ERR "%s: DSC timeout\n",
+> -					drive->name);
+> +						drive->name);
+>  			}
+>  			info->cd_flags &=3D ~IDE_CD_FLAG_SEEKING;
+>  		}
+> -		if ((rq_data_dir(rq) =3D=3D READ) &&
+> -			IDE_LARGE_SEEK(info->last_block,
+> -					block,
+> -					IDECD_SEEK_THRESHOLD) &&
+> -			drive->dsc_overlap)
+> -
+> +		if (rq_data_dir(rq) =3D=3D READ &&
+> +		    IDE_LARGE_SEEK(info->last_block, block,
+> +				   IDECD_SEEK_THRESHOLD) &&
+> +		    drive->dsc_overlap)
+>  			action =3D cdrom_start_seek(drive, block);
+>  		else
+>  			action =3D cdrom_start_rw(drive, rq);
+> @@ -1375,7 +1373,7 @@
+>  		toc =3D kmalloc(sizeof(struct atapi_toc), GFP_KERNEL);
+>  		if (toc =3D=3D NULL) {
+>  			printk(KERN_ERR "%s: No cdrom TOC buffer!\n",
+> -				drive->name);
+> +					drive->name);
+>  			return -ENOMEM;
+>  		}
+>  		info->toc =3D toc;
+> @@ -1619,7 +1617,7 @@
+>  	if (drive->media =3D=3D ide_optical) {
+>  		cdi->mask &=3D ~(CDC_MO_DRIVE | CDC_RAM);
+>  		printk(KERN_ERR "%s: ATAPI magneto-optical drive\n",
+> -			drive->name);
+> +				drive->name);
+>  		return nslots;
+>  	}
+> =20
+> @@ -2118,7 +2116,7 @@
+>  	if (ignore !=3D NULL) {
+>  		if (strstr(ignore, drive->name)) {
+>  			printk(KERN_INFO "ide-cd: ignoring drive %s\n",
+> -				drive->name);
+> +					 drive->name);
+>  			goto failed;
+>  		}
+>  	}
+> @@ -2130,7 +2128,7 @@
+>  	info =3D kzalloc(sizeof(struct cdrom_info), GFP_KERNEL);
+>  	if (info =3D=3D NULL) {
+>  		printk(KERN_ERR "%s: Can't allocate a cdrom structure\n",
+> -			drive->name);
+> +				drive->name);
+>  		goto failed;
+>  	}
+> =20
+
+--=20
+Regards/Gru=DF,
+    Boris.
