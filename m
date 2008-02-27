@@ -1,58 +1,36 @@
-From: Mike Galbraith <efault@gmx.de>
-Subject: Re: regression: CD burning (k3b) went broke
-Date: Wed, 27 Feb 2008 08:07:04 +0100
-Message-ID: <1204096025.1623.9.camel@homer.simson.net>
-References: <1203583379.6244.27.camel@homer.simson.net>
-	 <20080222073228.GZ23197@kernel.dk>
-	 <1203752563.5225.4.camel@homer.simson.net>
-	 <1203839683.17463.9.camel@homer.simson.net>
-	 <1204019283.8731.11.camel@homer.simson.net>
-	 <1204033003.11828.22.camel@homer.simson.net>
-	 <20080226150845.2196bc1a.akpm@linux-foundation.org>
-	 <1204079075.26640.8.camel@homer.simson.net>
-	 <1204092010.9934.31.camel@homer.simson.net>
+From: Anders Eriksson <aeriksson@fastmail.fm>
+Subject: Re: 2.6.25-rc2 + smartd = hang
+Date: Wed, 27 Feb 2008 08:53:46 +0100
+Message-ID: <20080227075346.9D55D93C5CF@tippex.mynet.homeunix.org>
+References: <20080222165122.8D2BB93C12F@tippex.mynet.homeunix.org> <200802241654.49150.bzolnier@gmail.com> <20080226082056.7519C93C195@tippex.mynet.homeunix.org> <200802262054.12806.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.gmx.net ([213.165.64.20]:35455 "HELO mail.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1754423AbYB0HHI (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 27 Feb 2008 02:07:08 -0500
-In-Reply-To: <1204092010.9934.31.camel@homer.simson.net>
+Received: from ch-smtp01.sth.basefarm.net ([80.76.149.212]:41950 "EHLO
+	ch-smtp01.sth.basefarm.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754235AbYB0Hyg (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 27 Feb 2008 02:54:36 -0500
+In-reply-to: <200802262054.12806.bzolnier@gmail.com> 
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: Jens Axboe <jens.axboe@oracle.com>, LKML <linux-kernel@vger.kernel.org>, Tejun Heo <htejun@gmail.com>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: Anders Eriksson <aeriksson@fastmail.fm>, Jeff Garzik <jeff@garzik.org>, linux-kernel@vger.kernel.org, Linux IDE mailing list <linux-ide@vger.kernel.org>, Jens Axboe <jens.axboe@oracle.com>
 
 
-On Wed, 2008-02-27 at 07:00 +0100, Mike Galbraith wrote:
+bzolnier@gmail.com said:
+> Thanks.
+> Unfortunately nothing seems wrong with the patch... :(
+> I'll take a closer look when I have some more time...
+> Bart 
 
-> (patchlet takes wing, and... goes splat?)
 
-Bugger, went splat... forgot preformat for patchlet insert.  <quiltuple
-checks>
- 
-Fix CD burning regression introduced by
-6b00769fe1502b4ad97bb327ef7ac971b208bfb5.  raw_data_len must be updated
-to reflect residual data upon IO completion because it is used by
-blk_complete_sghdr_rq() to set hdr->resid which eventually becomes
-visible to userland.
+Just to make sure I didn't goofed up the bisection...
 
-Signed-off-by: Mike Galbraith <efault@gmx.de>
+I bisected between v2.6.24 and v2.6.25-rc2. In the midst of the bisection, make
+install decided to call the new version 2.6.24-rc7-gXXXX. Is that ok? I figured
+rc7+delta was before 24-final, hence outside the bisection? After that event I
+got the normal series of good god bad good... So I figured we were on the right
+track anyway...
 
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index ba21d97..7a6f784 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -871,7 +871,7 @@ void scsi_io_completion(struct scsi_cmnd *cmd, unsigned int good_bytes)
- 			scsi_end_bidi_request(cmd);
- 			return;
- 		}
--		req->data_len = scsi_get_resid(cmd);
-+		req->data_len = req->raw_data_len = scsi_get_resid(cmd);
- 	}
- 
- 	BUG_ON(blk_bidi_rq(req)); /* bidi not support for !blk_pc_request yet */
-
+/A 
 
