@@ -1,36 +1,54 @@
-From: Anders Eriksson <aeriksson@fastmail.fm>
-Subject: Re: 2.6.25-rc2 + smartd = hang
-Date: Wed, 27 Feb 2008 08:53:46 +0100
-Message-ID: <20080227075346.9D55D93C5CF@tippex.mynet.homeunix.org>
-References: <20080222165122.8D2BB93C12F@tippex.mynet.homeunix.org> <200802241654.49150.bzolnier@gmail.com> <20080226082056.7519C93C195@tippex.mynet.homeunix.org> <200802262054.12806.bzolnier@gmail.com>
+From: "Saumendra Dash" <Saumendra.Dash@infogain.com>
+Subject: RE: ULI 5288(SATA driver)
+Date: Wed, 27 Feb 2008 16:35:22 +0530
+Message-ID: <C86899CCB10A6C4E93D5978DCB232D4B07C86196@GDCMX01.igglobal.com>
+References: <47C347F3.5070006@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ch-smtp01.sth.basefarm.net ([80.76.149.212]:41950 "EHLO
-	ch-smtp01.sth.basefarm.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754235AbYB0Hyg (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 27 Feb 2008 02:54:36 -0500
-In-reply-to: <200802262054.12806.bzolnier@gmail.com> 
+Received: from mail.infogain.com ([65.223.106.147]:9202 "EHLO
+	ex2003test.igglobal.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1752453AbYB0LVk convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 27 Feb 2008 06:21:40 -0500
+Content-class: urn:content-classes:message
+In-Reply-To: <47C347F3.5070006@pobox.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: Anders Eriksson <aeriksson@fastmail.fm>, Jeff Garzik <jeff@garzik.org>, linux-kernel@vger.kernel.org, Linux IDE mailing list <linux-ide@vger.kernel.org>, Jens Axboe <jens.axboe@oracle.com>
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: linux-ide@vger.kernel.org
 
 
-bzolnier@gmail.com said:
-> Thanks.
-> Unfortunately nothing seems wrong with the patch... :(
-> I'll take a closer look when I have some more time...
-> Bart 
+ Hi Jeff,
+>> 
+>>  I'm working on ULI1575 SATA driver which I want to run in Emulated-PATA 
+>> mode.
+>>  I have the following understanding to run a SATA device in 
+> Emulated-PATA mode:
+>> 
+>>   1. In Emulated-PATA mode the legacy IDE driver should access the SATA 
+>> device directly in combined mode.
+>>   2. The class code of the device shlould be set to Emulated-PATA 
+>> mode(0x0185).
+>>   3. Enable SATA in combine mode. 
+>> 
+>>  After doing the above changes the driver does not work in Emulated-PATA 
+>> mode.
+>> 
+>>  Is there something missing to make the driver work in Emulated-PATA mode?
+
+>Use a PCI quirk to unconditionally disable emulated PATA mode, because 
+>it's not needed.
+
+ I have disabled the emulated PATA mode this time but the following error is comming in both the ocassion.
+ When I'm creating the partition using mkpart it is showing "The bus is in an invalid state, Access of this device is not allowed." and ide_open() returns with "No such device".
+
+ Please suggest me what could be the problem?
+
+Thanks,
+Saumendra
 
 
-Just to make sure I didn't goofed up the bisection...
 
-I bisected between v2.6.24 and v2.6.25-rc2. In the midst of the bisection, make
-install decided to call the new version 2.6.24-rc7-gXXXX. Is that ok? I figured
-rc7+delta was before 24-final, hence outside the bisection? After that event I
-got the normal series of good god bad good... So I figured we were on the right
-track anyway...
 
-/A 
 
