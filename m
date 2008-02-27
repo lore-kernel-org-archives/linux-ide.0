@@ -1,20 +1,20 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [PATCH 0/5] ide-cd: trivial fixes
-Date: Wed, 27 Feb 2008 23:48:34 +0100
-Message-ID: <200802272348.35011.bzolnier@gmail.com>
-References: <1204136449-9490-1-git-send-email-petkovbb@gmail.com> <200802272218.40312.bzolnier@gmail.com> <20080227221814.GC9545@gollum.tnic>
+Subject: Re: [PATCH 4/5] ide-cd: shorten lines longer than 80 columns
+Date: Thu, 28 Feb 2008 00:01:43 +0100
+Message-ID: <200802280001.43316.bzolnier@gmail.com>
+References: <1204136449-9490-1-git-send-email-petkovbb@gmail.com> <200802272218.50537.bzolnier@gmail.com> <20080227221532.GB9545@gollum.tnic>
 Mime-Version: 1.0
 Content-Type: text/plain;
   charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.168]:45009 "EHLO
+Received: from ug-out-1314.google.com ([66.249.92.169]:44937 "EHLO
 	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750774AbYB0WrM (ORCPT
+	with ESMTP id S1752644AbYB0WrM (ORCPT
 	<rfc822;linux-ide@vger.kernel.org>); Wed, 27 Feb 2008 17:47:12 -0500
-Received: by ug-out-1314.google.com with SMTP id z38so279ugc.16
-        for <linux-ide@vger.kernel.org>; Wed, 27 Feb 2008 14:47:08 -0800 (PST)
-In-Reply-To: <20080227221814.GC9545@gollum.tnic>
+Received: by ug-out-1314.google.com with SMTP id z38so294ugc.16
+        for <linux-ide@vger.kernel.org>; Wed, 27 Feb 2008 14:47:10 -0800 (PST)
+In-Reply-To: <20080227221532.GB9545@gollum.tnic>
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
@@ -22,26 +22,48 @@ To: petkovbb@gmail.com
 Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
 On Wednesday 27 February 2008, Borislav Petkov wrote:
-> On Wed, Feb 27, 2008 at 10:18:40PM +0100, Bartlomiej Zolnierkiewicz wrote:
-> > 
-> > Hi,
-> > 
+> On Wed, Feb 27, 2008 at 10:18:50PM +0100, Bartlomiej Zolnierkiewicz wrote:
 > > On Wednesday 27 February 2008, Borislav Petkov wrote:
-> > > Hi Bart,
-> > > 
-> > > here are the ide-cd trivial fixes split in an easier to digest format. I
-> > > cannot do the md5sum check here since all of the patches change at least one
-> > > char but i hope that this'll be redundant here since they're trivially easy
-> > > to review :) now.
-> > > 
-> > >  drivers/ide/ide-cd.c |  591 +++++++++++++++++++++++++-------------------------
-> > >  1 files changed, 298 insertions(+), 293 deletions(-)
+> > > Signed-off-by: Borislav Petkov <petkovbb@gmail.com>
 > > 
-> > applied everything
+> > interdiff for the merged version
 > > 
-> > BTW patch #3/5 which accounts for 2/3 of the diffstat passes md5sum check here
-> 
-> huh, are you sure? The fixup-comments patch adds at least one char to the source
-> file so the md5sums cannot be the same.
 
-OTOH md5sums of the resulting _binary_ files matches... ;-) 
+[...]
+
+> > diff -u b/drivers/ide/ide-cd.c b/drivers/ide/ide-cd.c
+> > --- b/drivers/ide/ide-cd.c
+> > +++ b/drivers/ide/ide-cd.c
+> > @@ -510,7 +510,7 @@
+> >  	default:
+> >  		if (!(rq->cmd_flags & REQ_QUIET))
+> >  			printk(KERN_INFO "ide-cd: cmd 0x%x timed out\n",
+> > -				rq->cmd[0]);
+> > +					 rq->cmd[0]);
+> 
+> why do you push the rq->cmd[0] thingy back here. Shouldn't it be aligned
+> with the opening brace as the zillion others so far?
+
+IDE is quite consistent with the above style but maybe it is just me being
+used to it.  I could revert this change if you feel strong about it...
+
+> > @@ -819,8 +819,8 @@
+> >  static void restore_request(struct request *rq)
+> >  {
+> >  	if (rq->buffer != bio_data(rq->bio)) {
+> > -		sector_t n = (rq->buffer - (char *) bio_data(rq->bio)) /
+> > -				SECTOR_SIZE;
+> > +		sector_t n =
+> > +			(rq->buffer - (char *)bio_data(rq->bio)) / SECTOR_SIZE;
+> 
+> i must say, lines like this one always look ugly, no matter the formatting
+> tricks.
+
+For this case there is a simple solution: fix ide-cd to use hwif->sg_table
+instead of having it to walk rq->bio's and the whole function will vanish. ;-)
+
+[ IOW We are putting way too much time into these coding style fixes and as
+  the old code is replaced with the new one the coding style improves itself. ]
+
+Thanks,
+Bart
