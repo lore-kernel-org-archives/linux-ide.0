@@ -1,154 +1,127 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH 1/4] ide: remove ->noprobe field from ide_hwif_t
-Date: Wed, 27 Feb 2008 23:19:47 +0100
-Message-ID: <200802272319.48121.bzolnier@gmail.com>
+Subject: [PATCH 4/4] qd65xx: cleanup qd_probe()
+Date: Wed, 27 Feb 2008 23:21:56 +0100
+Message-ID: <200802272321.56276.bzolnier@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
   charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.175]:48301 "EHLO
+Received: from ug-out-1314.google.com ([66.249.92.174]:47795 "EHLO
 	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760721AbYB0WIY (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 27 Feb 2008 17:08:24 -0500
-Received: by ug-out-1314.google.com with SMTP id z38so568671ugc.16
-        for <linux-ide@vger.kernel.org>; Wed, 27 Feb 2008 14:08:22 -0800 (PST)
+	with ESMTP id S1760769AbYB0WI1 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 27 Feb 2008 17:08:27 -0500
+Received: by ug-out-1314.google.com with SMTP id z38so568670ugc.16
+        for <linux-ide@vger.kernel.org>; Wed, 27 Feb 2008 14:08:26 -0800 (PST)
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Cc: linux-kernel@vger.kernel.org
 
-Update IDE PMAC host driver to use drive->noprobe instead of hwif->noprobe
-and remove hwif->noprobe completely (it is always set to zero now).
+* Replace 'if ()'-s by 'switch ()' block.
+
+* Merge common code for QD6500/QD6580A/QD6580B.
 
 There should be no functional changes caused by this patch.
 
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
 Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 ---
- drivers/ide/arm/icside.c |    1 -
- drivers/ide/ide-probe.c  |    3 +--
- drivers/ide/ide.c        |    4 ----
- drivers/ide/mips/swarm.c |    1 -
- drivers/ide/ppc/pmac.c   |   15 ++++++++++-----
- include/linux/ide.h      |    1 -
- 6 files changed, 11 insertions(+), 14 deletions(-)
+ drivers/ide/legacy/qd65xx.c |   52 ++++++++++++++------------------------------
+ 1 file changed, 17 insertions(+), 35 deletions(-)
 
-Index: b/drivers/ide/arm/icside.c
+Index: b/drivers/ide/legacy/qd65xx.c
 ===================================================================
---- a/drivers/ide/arm/icside.c
-+++ b/drivers/ide/arm/icside.c
-@@ -424,7 +424,6 @@ icside_setup(void __iomem *base, struct 
- 		}
- 		hwif->io_ports[IDE_CONTROL_OFFSET] = (unsigned long)base + info->ctrloffset;
- 		hwif->irq     = ec->irq;
--		hwif->noprobe = 0;
- 		hwif->chipset = ide_acorn;
- 		hwif->gendev.parent = &ec->dev;
- 		hwif->dev = &ec->dev;
-Index: b/drivers/ide/ide-probe.c
-===================================================================
---- a/drivers/ide/ide-probe.c
-+++ b/drivers/ide/ide-probe.c
-@@ -773,8 +773,7 @@ static int ide_probe_port(ide_hwif_t *hw
- 
- 	BUG_ON(hwif->present);
- 
--	if (hwif->noprobe ||
--	    (hwif->drives[0].noprobe && hwif->drives[1].noprobe))
-+	if (hwif->drives[0].noprobe && hwif->drives[1].noprobe)
- 		return -EACCES;
- 
- 	/*
-Index: b/drivers/ide/ide.c
-===================================================================
---- a/drivers/ide/ide.c
-+++ b/drivers/ide/ide.c
-@@ -456,7 +456,6 @@ void ide_init_port_hw(ide_hwif_t *hwif, 
+--- a/drivers/ide/legacy/qd65xx.c
++++ b/drivers/ide/legacy/qd65xx.c
+@@ -334,7 +334,7 @@ static const struct ide_port_info qd65xx
+ static int __init qd_probe(int base)
  {
- 	memcpy(hwif->io_ports, hw->io_ports, sizeof(hwif->io_ports));
- 	hwif->irq = hw->irq;
--	hwif->noprobe = 0;
- 	hwif->chipset = hw->chipset;
- 	hwif->gendev.parent = hw->dev;
- 	hwif->ack_intr = hw->ack_intr;
-@@ -1016,14 +1015,12 @@ static int __init ide_setup(char *s)
- 				goto done;
- 			case -3: /* "nowerr" */
- 				drive->bad_wstat = BAD_R_STAT;
--				hwif->noprobe = 0;
- 				goto done;
- 			case -4: /* "cdrom" */
- 				drive->present = 1;
- 				drive->media = ide_cdrom;
- 				/* an ATAPI device ignores DRDY */
- 				drive->ready_stat = 0;
--				hwif->noprobe = 0;
- 				goto done;
- 			case -5: /* nodma */
- 				drive->nodma = 1;
-@@ -1054,7 +1051,6 @@ static int __init ide_setup(char *s)
- 				drive->sect	= drive->bios_sect = vals[2];
- 				drive->present	= 1;
- 				drive->forced_geom = 1;
--				hwif->noprobe = 0;
- 				goto done;
- 			default:
- 				goto bad_option;
-Index: b/drivers/ide/mips/swarm.c
-===================================================================
---- a/drivers/ide/mips/swarm.c
-+++ b/drivers/ide/mips/swarm.c
-@@ -113,7 +113,6 @@ static int __devinit swarm_ide_probe(str
- 	/* Prevent resource map manipulation.  */
- 	hwif->mmio = 1;
- 	hwif->chipset = ide_generic;
--	hwif->noprobe = 0;
+ 	int rc;
+-	u8 config, unit;
++	u8 config, unit, control;
+ 	struct ide_port_info d = qd65xx_port_info;
  
- 	for (i = IDE_DATA_OFFSET; i <= IDE_STATUS_OFFSET; i++)
- 		hwif->io_ports[i] =
-Index: b/drivers/ide/ppc/pmac.c
-===================================================================
---- a/drivers/ide/ppc/pmac.c
-+++ b/drivers/ide/ppc/pmac.c
-@@ -1049,17 +1049,22 @@ pmac_ide_setup_device(pmac_ide_hwif_t *p
- 	hwif->mmio = 1;
- 	hwif->hwif_data = pmif;
- 	ide_init_port_hw(hwif, hw);
--	hwif->noprobe = pmif->mediabay;
- 	hwif->cbl = pmif->cable_80 ? ATA_CBL_PATA80 : ATA_CBL_PATA40;
+ 	config = inb(QD_CONFIG_PORT);
+@@ -347,13 +347,11 @@ static int __init qd_probe(int base)
+ 	if (unit)
+ 		d.host_flags |= IDE_HFLAG_QD_2ND_PORT;
  
- 	printk(KERN_INFO "ide%d: Found Apple %s controller, bus ID %d%s, irq %d\n",
- 	       hwif->index, model_name[pmif->kind], pmif->aapl_bus_id,
- 	       pmif->mediabay ? " (mediabay)" : "", hwif->irq);
--			
-+
-+	if (pmif->mediabay) {
- #ifdef CONFIG_PMAC_MEDIABAY
--	if (pmif->mediabay && check_media_bay_by_base(pmif->regbase, MB_CD) == 0)
--		hwif->noprobe = 0;
--#endif /* CONFIG_PMAC_MEDIABAY */
-+		if (check_media_bay_by_base(pmif->regbase, MB_CD)) {
-+#else
-+		if (1) {
-+#endif
-+			hwif->drives[0].noprobe = 1;
-+			hwif->drives[1].noprobe = 1;
-+		}
+-	if ((config & 0xf0) == QD_CONFIG_QD6500) {
+-
++	switch (config & 0xf0) {
++	case QD_CONFIG_QD6500:
+ 		if (qd_testreg(base))
+ 			 return -ENODEV;	/* bad register */
+ 
+-		/* qd6500 found */
+-
+ 		if (config & QD_CONFIG_DISABLED) {
+ 			printk(KERN_WARNING "qd6500 is disabled !\n");
+ 			return -ENODEV;
+@@ -365,22 +363,12 @@ static int __init qd_probe(int base)
+ 
+ 		d.port_ops = &qd6500_port_ops;
+ 		d.host_flags |= IDE_HFLAG_SINGLE;
+-
+-		rc = ide_legacy_device_add(&d, (base << 8) | config);
+-
+-		return (rc == 0) ? 1 : rc;
+-	}
+-
+-	if (((config & 0xf0) == QD_CONFIG_QD6580_A) ||
+-	    ((config & 0xf0) == QD_CONFIG_QD6580_B)) {
+-
+-		u8 control;
+-
++		break;
++	case QD_CONFIG_QD6580_A:
++	case QD_CONFIG_QD6580_B:
+ 		if (qd_testreg(base) || qd_testreg(base + 0x02))
+ 			return -ENODEV;	/* bad registers */
+ 
+-		/* qd6580 found */
+-
+ 		control = inb(QD_CONTROL_PORT);
+ 
+ 		printk(KERN_NOTICE "qd6580 at %#x\n", base);
+@@ -390,28 +378,22 @@ static int __init qd_probe(int base)
+ 		outb(QD_DEF_CONTR, QD_CONTROL_PORT);
+ 
+ 		d.port_ops = &qd6580_port_ops;
+-
+-		if (control & QD_CONTR_SEC_DISABLED) {
+-			/* secondary disabled */
+-
+-			printk(KERN_INFO "qd6580: single IDE board\n");
+-
++		if (control & QD_CONTR_SEC_DISABLED)
+ 			d.host_flags |= IDE_HFLAG_SINGLE;
+ 
+-			rc = ide_legacy_device_add(&d, (base << 8) | config);
++		printk(KERN_INFO "qd6580: %s IDE board\n",
++			(control & QD_CONTR_SEC_DISABLED) ? "single" : "dual");
++		break;
++	default:
++		return -ENODEV;
 +	}
  
- #ifdef CONFIG_BLK_DEV_IDEDMA_PMAC
- 	if (pmif->cable_80 == 0)
-Index: b/include/linux/ide.h
-===================================================================
---- a/include/linux/ide.h
-+++ b/include/linux/ide.h
-@@ -516,7 +516,6 @@ typedef struct hwif_s {
- 	unsigned long	extra_base;	/* extra addr for dma ports */
- 	unsigned	extra_ports;	/* number of extra dma ports */
+-			return (rc == 0) ? 1 : rc;
+-		} else {
+-			/* secondary enabled */
+-			printk(KERN_INFO "qd6580: dual IDE board\n");
++	rc = ide_legacy_device_add(&d, (base << 8) | config);
  
--	unsigned	noprobe    : 1;	/* don't probe for this interface */
- 	unsigned	present    : 1;	/* this interface exists */
- 	unsigned	serialized : 1;	/* serialized all channel operation */
- 	unsigned	sharing_irq: 1;	/* 1 = sharing irq with another hwif */
+-			rc = ide_legacy_device_add(&d, (base << 8) | config);
++	if (d.host_flags & IDE_HFLAG_SINGLE)
++		return (rc == 0) ? 1 : rc;
+ 
+-			return rc; /* no other qd65xx possible */
+-		}
+-	}
+-	/* no qd65xx found */
+-	return -ENODEV;
++	return rc;
+ }
+ 
+ int probe_qd65xx = 0;
