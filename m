@@ -1,31 +1,23 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH 2/3] ide-cs: manage I/O resources in driver
-Date: Thu, 28 Feb 2008 00:03:29 +0100
-Message-ID: <200802280003.29312.bzolnier@gmail.com>
+Subject: [PATCH 1/3] ide-pnp: manage I/O resources in driver
+Date: Thu, 28 Feb 2008 00:02:51 +0100
+Message-ID: <200802280002.51966.bzolnier@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
   charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.175]:54556 "EHLO
+Received: from ug-out-1314.google.com ([66.249.92.174]:54056 "EHLO
 	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754706AbYB0WuT (ORCPT
+	with ESMTP id S1755733AbYB0WuT (ORCPT
 	<rfc822;linux-ide@vger.kernel.org>); Wed, 27 Feb 2008 17:50:19 -0500
-Received: by ug-out-1314.google.com with SMTP id z38so1748ugc.16
-        for <linux-ide@vger.kernel.org>; Wed, 27 Feb 2008 14:50:17 -0800 (PST)
+Received: by ug-out-1314.google.com with SMTP id z38so1744ugc.16
+        for <linux-ide@vger.kernel.org>; Wed, 27 Feb 2008 14:50:16 -0800 (PST)
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
 Cc: linux-kernel@vger.kernel.org
-
-* Make idecs_register() return pointer to hwif structure instead of
-  hwif's index.
-
-* Store pointer to hwif structure instead of hwif's index in ide_info_t
-  (fixes ide-cs for IDE[6-9]_MAJOR major numbers).
-
-* Remove no longer needed ide_major[].
 
 * Tell IDE layer to not manage resources by setting hwif->mmio flag.
 
@@ -35,180 +27,79 @@ Cc: linux-kernel@vger.kernel.org
 
 Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 ---
- drivers/ide/legacy/ide-cs.c |   70 ++++++++++++++++++++++++++++++--------------
- 1 file changed, 48 insertions(+), 22 deletions(-)
+ drivers/ide/ide-pnp.c |   29 +++++++++++++++++++++++++++--
+ 1 file changed, 27 insertions(+), 2 deletions(-)
 
-Index: b/drivers/ide/legacy/ide-cs.c
+Index: b/drivers/ide/ide-pnp.c
 ===================================================================
---- a/drivers/ide/legacy/ide-cs.c
-+++ b/drivers/ide/legacy/ide-cs.c
-@@ -51,6 +51,8 @@
- #include <pcmcia/cisreg.h>
- #include <pcmcia/ciscode.h>
+--- a/drivers/ide/ide-pnp.c
++++ b/drivers/ide/ide-pnp.c
+@@ -18,6 +18,8 @@
+ #include <linux/pnp.h>
+ #include <linux/ide.h>
  
-+#define DRV_NAME "ide-cs"
++#define DRV_NAME "ide-pnp"
 +
- /*====================================================================*/
- 
- /* Module parameters */
-@@ -72,16 +74,11 @@ static char *version =
- 
- /*====================================================================*/
- 
--static const char ide_major[] = {
--    IDE0_MAJOR, IDE1_MAJOR, IDE2_MAJOR, IDE3_MAJOR,
--    IDE4_MAJOR, IDE5_MAJOR
--};
--
- typedef struct ide_info_t {
- 	struct pcmcia_device	*p_dev;
-+	ide_hwif_t		*hwif;
-     int		ndev;
-     dev_node_t	node;
--    int		hd;
- } ide_info_t;
- 
- static void ide_release(struct pcmcia_device *);
-@@ -136,24 +133,44 @@ static int ide_probe(struct pcmcia_devic
- 
- static void ide_detach(struct pcmcia_device *link)
+ /* Add your devices here :)) */
+ static struct pnp_device_id idepnp_devices[] = {
+ 	/* Generic ESDI/IDE/ATA compatible hard disk controller */
+@@ -29,13 +31,29 @@ static int idepnp_probe(struct pnp_dev *
  {
-+    ide_info_t *info = link->priv;
-+    ide_hwif_t *hwif = info->hwif;
+ 	hw_regs_t hw;
+ 	ide_hwif_t *hwif;
++	unsigned long base, ctl;
+ 
+ 	if (!(pnp_port_valid(dev, 0) && pnp_port_valid(dev, 1) && pnp_irq_valid(dev, 0)))
+ 		return -1;
+ 
++	base = pnp_port_start(dev, 0);
++	ctl = pnp_port_start(dev, 1);
 +
-     DEBUG(0, "ide_detach(0x%p)\n", link);
- 
-     ide_release(link);
- 
--    kfree(link->priv);
-+    release_region(hwif->io_ports[IDE_CONTROL_OFFSET], 1);
-+    release_region(hwif->io_ports[IDE_DATA_OFFSET], 8);
++	if (!request_region(base, 8, DRV_NAME)) {
++		printk(KERN_ERR "%s: I/O resource 0x%lX-0x%lX not free.\n",
++				DRV_NAME, base, base + 7);
++		return -EBUSY;
++	}
 +
-+    kfree(info);
- } /* ide_detach */
- 
- static const struct ide_port_ops idecs_port_ops = {
- 	.quirkproc		= ide_undecoded_slave,
- };
- 
--static int idecs_register(unsigned long io, unsigned long ctl, unsigned long irq, struct pcmcia_device *handle)
-+static ide_hwif_t *idecs_register(unsigned long io, unsigned long ctl,
-+				unsigned long irq, struct pcmcia_device *handle)
- {
-     ide_hwif_t *hwif;
-     hw_regs_t hw;
-     int i;
-     u8 idx[4] = { 0xff, 0xff, 0xff, 0xff };
- 
-+    if (!request_region(io, 8, DRV_NAME)) {
-+	printk(KERN_ERR "%s: I/O resource 0x%lX-0x%lX not free.\n",
-+			DRV_NAME, io, io + 7);
-+	return NULL;
-+    }
++	if (!request_region(ctl, 1, DRV_NAME)) {
++		printk(KERN_ERR "%s: I/O resource 0x%lX not free.\n",
++				DRV_NAME, ctl);
++		release_region(base, 8);
++		return -EBUSY;
++	}
 +
-+    if (!request_region(ctl, 1, DRV_NAME)) {
-+	printk(KERN_ERR "%s: I/O resource 0x%lX not free.\n",
-+			DRV_NAME, ctl);
-+	release_region(io, 8);
-+	return NULL;
-+    }
+ 	memset(&hw, 0, sizeof(hw));
+-	ide_std_init_ports(&hw, pnp_port_start(dev, 0),
+-				pnp_port_start(dev, 1));
++	ide_std_init_ports(&hw, base, ctl);
+ 	hw.irq = pnp_irq(dev, 0);
+ 
+ 	hwif = ide_find_port();
+@@ -45,6 +63,7 @@ static int idepnp_probe(struct pnp_dev *
+ 
+ 		ide_init_port_data(hwif, index);
+ 		ide_init_port_hw(hwif, &hw);
++		hwif->mmio = 1;
+ 
+ 		printk(KERN_INFO "ide%d: generic PnP IDE interface\n", index);
+ 		pnp_set_drvdata(dev, hwif);
+@@ -54,6 +73,9 @@ static int idepnp_probe(struct pnp_dev *
+ 		return 0;
+ 	}
+ 
++	release_region(ctl, 1);
++	release_region(base, 8);
 +
-     memset(&hw, 0, sizeof(hw));
-     ide_std_init_ports(&hw, io, ctl);
-     hw.irq = irq;
-@@ -162,7 +179,7 @@ static int idecs_register(unsigned long 
- 
-     hwif = ide_find_port();
-     if (hwif == NULL)
--	return -1;
-+	goto out_release;
- 
-     i = hwif->index;
- 
-@@ -178,7 +195,13 @@ static int idecs_register(unsigned long 
- 
-     ide_device_add(idx, NULL);
- 
--    return hwif->present ? i : -1;
-+    if (hwif->present)
-+	return hwif;
-+
-+out_release:
-+    release_region(ctl, 1);
-+    release_region(io, 8);
-+    return NULL;
+ 	return -1;
  }
  
- /*======================================================================
-@@ -203,8 +226,9 @@ static int ide_config(struct pcmcia_devi
- 	cistpl_cftable_entry_t dflt;
-     } *stk = NULL;
-     cistpl_cftable_entry_t *cfg;
--    int i, pass, last_ret = 0, last_fn = 0, hd, is_kme = 0;
-+    int i, pass, last_ret = 0, last_fn = 0, is_kme = 0;
-     unsigned long io_base, ctl_base;
-+    ide_hwif_t *hwif;
+@@ -65,6 +87,9 @@ static void idepnp_remove(struct pnp_dev
+ 		ide_unregister(hwif->index);
+ 	else
+ 		printk(KERN_ERR "idepnp: Unable to remove device, please report.\n");
++
++	release_region(pnp_port_start(dev, 1), 1);
++	release_region(pnp_port_start(dev, 0), 8);
+ }
  
-     DEBUG(0, "ide_config(0x%p)\n", link);
- 
-@@ -300,14 +324,15 @@ static int ide_config(struct pcmcia_devi
- 	outb(0x81, ctl_base+1);
- 
-     /* retry registration in case device is still spinning up */
--    for (hd = -1, i = 0; i < 10; i++) {
--	hd = idecs_register(io_base, ctl_base, link->irq.AssignedIRQ, link);
--	if (hd >= 0) break;
-+    for (i = 0; i < 10; i++) {
-+	hwif = idecs_register(io_base, ctl_base, link->irq.AssignedIRQ, link);
-+	if (hwif)
-+	    break;
- 	if (link->io.NumPorts1 == 0x20) {
- 	    outb(0x02, ctl_base + 0x10);
--	    hd = idecs_register(io_base + 0x10, ctl_base + 0x10,
--				link->irq.AssignedIRQ, link);
--	    if (hd >= 0) {
-+	    hwif = idecs_register(io_base + 0x10, ctl_base + 0x10,
-+				  link->irq.AssignedIRQ, link);
-+	    if (hwif) {
- 		io_base += 0x10;
- 		ctl_base += 0x10;
- 		break;
-@@ -316,7 +341,7 @@ static int ide_config(struct pcmcia_devi
- 	msleep(100);
-     }
- 
--    if (hd < 0) {
-+    if (hwif == NULL) {
- 	printk(KERN_NOTICE "ide-cs: ide_register() at 0x%3lx & 0x%3lx"
- 	       ", irq %u failed\n", io_base, ctl_base,
- 	       link->irq.AssignedIRQ);
-@@ -324,10 +349,10 @@ static int ide_config(struct pcmcia_devi
-     }
- 
-     info->ndev = 1;
--    sprintf(info->node.dev_name, "hd%c", 'a' + (hd * 2));
--    info->node.major = ide_major[hd];
-+    sprintf(info->node.dev_name, "hd%c", 'a' + hwif->index * 2);
-+    info->node.major = hwif->major;
-     info->node.minor = 0;
--    info->hd = hd;
-+    info->hwif = hwif;
-     link->dev_node = &info->node;
-     printk(KERN_INFO "ide-cs: %s: Vpp = %d.%d\n",
- 	   info->node.dev_name, link->conf.Vpp / 10, link->conf.Vpp % 10);
-@@ -358,13 +383,14 @@ failed:
- void ide_release(struct pcmcia_device *link)
- {
-     ide_info_t *info = link->priv;
-+    ide_hwif_t *hwif = info->hwif;
- 
-     DEBUG(0, "ide_release(0x%p)\n", link);
- 
-     if (info->ndev) {
- 	/* FIXME: if this fails we need to queue the cleanup somehow
- 	   -- need to investigate the required PCMCIA magic */
--	ide_unregister(info->hd);
-+	ide_unregister(hwif->index);
-     }
-     info->ndev = 0;
- 
+ static struct pnp_driver idepnp_driver = {
