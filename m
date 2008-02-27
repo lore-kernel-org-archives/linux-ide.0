@@ -1,67 +1,135 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: regression: CD burning (k3b) went broke
-Date: Tue, 26 Feb 2008 19:46:12 -0500
-Message-ID: <47C4B2D4.109@garzik.org>
-References: <1203583379.6244.27.camel@homer.simson.net>	<20080222073228.GZ23197@kernel.dk>	<1203752563.5225.4.camel@homer.simson.net>	<1203839683.17463.9.camel@homer.simson.net>	<1204019283.8731.11.camel@homer.simson.net>	<1204033003.11828.22.camel@homer.simson.net> <20080226150845.2196bc1a.akpm@linux-foundation.org>
+From: "Fajun Chen" <fajunchen@gmail.com>
+Subject: PATA Sil680 Disabling IRQ
+Date: Tue, 26 Feb 2008 17:47:32 -0700
+Message-ID: <8202f4270802261647t505cccf7ra3c81e5fccc9366a@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed;
+	boundary="----=_Part_13210_28922967.1204073252968"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:46756 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753860AbYB0AqU (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 26 Feb 2008 19:46:20 -0500
-In-Reply-To: <20080226150845.2196bc1a.akpm@linux-foundation.org>
+Received: from gv-out-0910.google.com ([216.239.58.189]:7453 "EHLO
+	gv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754790AbYB0Arg (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 26 Feb 2008 19:47:36 -0500
+Received: by gv-out-0910.google.com with SMTP id s4so1107784gve.37
+        for <linux-ide@vger.kernel.org>; Tue, 26 Feb 2008 16:47:34 -0800 (PST)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: Mike Galbraith <efault@gmx.de>, Jens Axboe <jens.axboe@oracle.com>, LKML <linux-kernel@vger.kernel.org>, Tejun Heo <htejun@gmail.com>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+To: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
+Cc: Mark Lord <liml@rtr.ca>, Tejun Heo <htejun@gmail.com>
 
-Andrew Morton wrote:
-> On Tue, 26 Feb 2008 14:36:43 +0100 Mike Galbraith <efault@gmx.de> wrote:
-> 
->> On Tue, 2008-02-26 at 10:48 +0100, Mike Galbraith wrote:
->>> Greetings,
->>>
->>> I straced both a good and a bad kernel (good being .git with attached
->>> revert patch applied) and filtered/diffed/merged the output.  Scroll
->>> down to "HERE" to see the problem (resid).
->>>
->>> I'm poking around, but not having much luck.
-> 
-> cc's added.
-> 
-> I'm told this is part of "Tejun's DMA drain handling".
+------=_Part_13210_28922967.1204073252968
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
-Correct.
+Hi All,
 
+Attached is the source code to Identify Device through sg (courtesy of
+Mark Lord).  I intentionally change the data transfer from
+SG_DXFER_FROM_DEV to SG_DXFER_TO_DEV to expose the problem.  When the
+code is run on SATA Sil3124 controller,  it's working well. But when
+it is run on PATA Sil680,  IRQ was disabled right away (see dmesg log
+below). I have a old kernel 2.6.18 rc2 but I suspect the same problem
+exists in latest kernel release as well.  Please execute above code in
+your system and see what happens.
 
->> Seems the problem is data_len changes, but raw_data_len doesn't.  I've
->> not the foggiest IO-land clue, but k3b works again, so the below may
->> have some diagnostic value.
-> 
-> So this change fixes a bug?  Can we have a recap of how it does this?
-> 
->> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
->> index ba21d97..7a6f784 100644
->> --- a/drivers/scsi/scsi_lib.c
->> +++ b/drivers/scsi/scsi_lib.c
->> @@ -871,7 +871,7 @@ void scsi_io_completion(struct scsi_cmnd *cmd, unsigned int good_bytes)
->>  			scsi_end_bidi_request(cmd);
->>  			return;
->>  		}
->> -		req->data_len = scsi_get_resid(cmd);
->> +		req->data_len = req->raw_data_len = scsi_get_resid(cmd);
->>  	}
+dmesg log:
+[1204070913 936910] irq 15: nobody cared (try booting with the "irqpoll" option)
+[1204070913 936978]  [<c0127037>] __report_bad_irq+0x2b/0x69
+[1204070913 937039]  [<c012720f>] note_interrupt+0x19a/0x1d3
+[1204070913 937089]  [<c0126848>] handle_IRQ_event+0x21/0x47
+[1204070913 937138]  [<c01268de>] __do_IRQ+0x70/0x9f
+[1204070913 937183]  [<c01044a9>] do_IRQ+0x43/0x52
+[1204070913 937236]  [<c0102d7a>] common_interrupt+0x1a/0x20
+[1204070913 937283]  [<c0114d58>] __do_softirq+0x27/0x6e
+[1204070913 937341]  [<c0114dc1>] do_softirq+0x22/0x26
+[1204070913 937386]  [<c01044ae>] do_IRQ+0x48/0x52
+[1204070913 937430]  [<c0102d7a>] common_interrupt+0x1a/0x20
+[1204070913 937478]  [<c01014b4>] default_idle+0x31/0x59
+[1204070913 937523]  [<c010151b>] cpu_idle+0x3f/0x57
+[1204070913 937568]  [<c02de63a>] start_kernel+0x2ba/0x2bc
+[1204070913 937617] handlers:
+[1204070913 937651] [<c01e2bb0>] (ata_interrupt+0x0/0x173)
+[1204070913 937703] Disabling IRQ #15
+[1204070917 801261] ata5 port frozen
+[1204070917 801335] ata5.00: exception Emask 0x0 SAct 0x0 SErr 0x0
+action 0x0 frozen
+[1204070917 801407] ata5.00: tag 0 cmd 0xec Emask 0x6 stat 0x58 err
+0x0 (timeout)
+[1204070917 801476] ata5.00: lba 0x0 hob_lba 0x0 device 0x0
 
-I would love to get an answer as to what data_len (and of course 
-raw_data_len) should be set to AFTER the command completes, which is 
-what is going on here.
+Thanks,
+Fajun
 
-I can see the above being correct -- scsi_get_resid() returns the length 
-of the left-over data after the command is processed -- but I am mainly 
-curious why setting [raw_]data_len matters after I/O completion.
+------=_Part_13210_28922967.1204073252968
+Content-Type: application/octet-stream; name=sg_identify.c
+Content-Transfer-Encoding: base64
+X-Attachment-Id: f_fd54zl37
+Content-Disposition: attachment; filename=sg_identify.c
 
-	Jeff
-
-
+LyoKICogVGhpcyBjb2RlIGlzIGNvcHlyaWdodCAyMDA3IGJ5IE1hcmsgTG9yZCwKICogYW5kIGlz
+IG1hZGUgYXZhaWxhYmxlIHRvIGFsbCB1bmRlciB0aGUgdGVybXMKICogb2YgdGhlIEdOVSBHZW5l
+cmFsIFB1YmxpYyBMaWNlbnNlIHYyLgogKi8KI2luY2x1ZGUgPHN0ZGlvLmg+CiNpbmNsdWRlIDxz
+dGRsaWIuaD4KI2luY2x1ZGUgPHVuaXN0ZC5oPgojaW5jbHVkZSA8ZmNudGwuaD4KI2luY2x1ZGUg
+PGVycm5vLmg+CiNpbmNsdWRlIDxzdHJpbmcuaD4KI2luY2x1ZGUgPHN5cy9pb2N0bC5oPgojaW5j
+bHVkZSA8c3lzL3N0YXQuaD4KI2luY2x1ZGUgPHN5cy90eXBlcy5oPgoKI2luY2x1ZGUgPGxpbnV4
+L2ZzLmg+CiNpbmNsdWRlIDxsaW51eC9oZHJlZy5oPgojaW5jbHVkZSA8c2NzaS9zY3NpLmg+CiNp
+bmNsdWRlIDxzY3NpL3NnLmg+CiNpbmNsdWRlIDxzeXMvbW1hbi5oPgoKdHlwZWRlZiB1bnNpZ25l
+ZCBsb25nIGxvbmcgdTY0OwoKZW51bSB7CglBVEFfQ01EX1BJT19JREVOVElGWQkJPSAweGVjLAoJ
+QVRBX0NNRF9QSU9fUElERU5USUZZCQk9IDB4YTEsCgoJLyogbm9ybWFsIHNlY3RvciBzaXplIChi
+eXRlcykgZm9yIFBJTy9ETUEgKi8KCUFUQV9TRUNUX1NJWkUJCQk9IDUxMiwKCglBVEFfMTYJCQkJ
+PSAweDg1LAoJQVRBXzE2X0xFTgkJCT0gMTYsCgoJQVRBX0RFVl9SRUdfTEJBCQkJPSAoMSA8PCA2
+KSwKCglBVEFfTEJBNDgJCQk9IDEsCgoJLyogZGF0YSB0cmFuc2ZlciBwcm90b2NvbHM7IG9ubHkg
+YmFzaWMgUElPIGFuZCBETUEgYWN0dWFsbHkgd29yayAqLwoJQVRBX1BST1RPX05PTl9EQVRBCQk9
+ICggMyA8PCAxKSwKCUFUQV9QUk9UT19QSU9fSU4JCT0gKCA0IDw8IDEpLAoJQVRBX1BST1RPX1BJ
+T19PVVQJCT0gKCA1IDw8IDEpLAoJQVRBX1BST1RPX0RNQQkJCT0gKCA2IDw8IDEpLAoJQVRBX1BS
+T1RPX1VETUFfSU4JCT0gKDExIDw8IDEpLCAvKiB1bnN1cHBvcnRlZCAqLwoJQVRBX1BST1RPX1VE
+TUFfT1VUCQk9ICgxMiA8PCAxKSwgLyogdW5zdXBwb3J0ZWQgKi8KfTsKCi8qCiAqIFRhc2tmaWxl
+IGxheW91dCBmb3IgQVRBXzE2IGNkYiAoTEJBMjgvTEJBNDgpOgogKgogKgljZGJbIDRdID0gZmVh
+dHVyZQogKgljZGJbIDZdID0gbnNlY3QKICoJY2RiWyA4XSA9IGxiYWwKICoJY2RiWzEwXSA9IGxi
+YW0KICoJY2RiWzEyXSA9IGxiYWgKICoJY2RiWzEzXSA9IGRldmljZQogKgljZGJbMTRdID0gY29t
+bWFuZAogKgogKiAiaGlnaCBvcmRlciBieXRlIiAoaG9iKSBmaWVsZHMgZm9yIExCQTQ4IGNvbW1h
+bmRzOgogKgogKgljZGJbIDNdID0gaG9iX2ZlYXR1cmUKICoJY2RiWyA1XSA9IGhvYl9uc2VjdAog
+KgljZGJbIDddID0gaG9iX2xiYWwKICoJY2RiWyA5XSA9IGhvYl9sYmFtCiAqCWNkYlsxMV0gPSBo
+b2JfbGJhaAogKgogKiBkeGZlcl9kaXJlY3Rpb24gY2hvaWNlczoKICoKICoJU0dfRFhGRVJfVE9f
+REVWCQkod3JpdGluZyB0byBkcml2ZSkKICoJU0dfRFhGRVJfRlJPTV9ERVYJKHJlYWRpbmcgZnJv
+bSBkcml2ZSkKICoJU0dfRFhGRVJfTk9ORQkJKG5vbi1kYXRhIGNvbW1hbmRzKQogKi8KCnN0YXRp
+YyBpbnQgc2dfaXNzdWUgKGludCBmZCwgdW5zaWduZWQgY2hhciBhdGFfb3AsIHZvaWQgKmJ1ZikK
+ewoJdW5zaWduZWQgY2hhciBjZGJbQVRBXzE2X0xFTl0KCQk9IHsgQVRBXzE2LCAwLCAwLCAwLCAw
+LCAwLCAwLCAwLCAwLCAwLCAwLCAwLCAwLCAwLCAwLCAwIH07Cgl1bnNpZ25lZCBjaGFyIHNlbnNl
+WzMyXTsKCXVuc2lnbmVkIGludCBuc2VjdHMgPSAxOwoJc3RydWN0IHNnX2lvX2hkciBoZHI7CgoJ
+Y2RiWyAxXSA9IEFUQV9QUk9UT19QSU9fSU47CgljZGJbIDZdID0gbnNlY3RzOwoJY2RiWzE0XSA9
+IGF0YV9vcDsKCgltZW1zZXQoJmhkciwgMCwgc2l6ZW9mKHN0cnVjdCBzZ19pb19oZHIpKTsKCWhk
+ci5pbnRlcmZhY2VfaWQJPSAnUyc7CgloZHIuY21kX2xlbgkJPSBBVEFfMTZfTEVOOwoJaGRyLm14
+X3NiX2xlbgkJPSBzaXplb2Yoc2Vuc2UpOwoJaGRyLmR4ZmVyX2RpcmVjdGlvbgk9IFNHX0RYRkVS
+X1RPX0RFVjsKCWhkci5keGZlcl9sZW4JCT0gbnNlY3RzICogQVRBX1NFQ1RfU0laRTsKCWhkci5k
+eGZlcnAJCT0gYnVmOwoJaGRyLmNtZHAJCT0gY2RiOwoJaGRyLnNicAkJCT0gc2Vuc2U7CgloZHIu
+dGltZW91dAkJPSA1MDAwOyAvKiBtaWxsaXNlY29uZHMgKi8KCgltZW1zZXQoc2Vuc2UsIDAsIHNp
+emVvZihzZW5zZSkpOwoJaWYgKGlvY3RsKGZkLCBTR19JTywgJmhkcikgPCAwKSB7CgkJcGVycm9y
+KCJpb2N0bChTR19JTykiKTsKCQlyZXR1cm4gKC0xKTsKCX0KCWlmIChoZHIuc3RhdHVzID09IDAg
+JiYgaGRyLmhvc3Rfc3RhdHVzID09IDAgJiYgaGRyLmRyaXZlcl9zdGF0dXMgPT0gMCkKCQlyZXR1
+cm4gMDsgLyogc3VjY2VzcyAqLwoKCWlmIChoZHIuc3RhdHVzID4gMCkgewoJCXVuc2lnbmVkIGNo
+YXIgKmQgPSBzZW5zZSArIDg7CgkJLyogU0NTSSBzdGF0dXMgaXMgbm9uLXplcm8gKi8KCQlmcHJp
+bnRmKHN0ZGVyciwgIlNHX0lPIGVycm9yOiBTQ1NJIHNlbnNlPTB4JXgvJTAyeC8lMDJ4LCBBVEE9
+MHglMDJ4LyUwMnhcbiIsCgkJCXNlbnNlWzFdICYgMHhmLCBzZW5zZVsyXSwgc2Vuc2VbM10sIGRb
+MTNdLCBkWzNdKTsKCQlyZXR1cm4gLTE7Cgl9CgkvKiBzb21lIG90aGVyIGVycm9yIHdlIGRvbid0
+IGtub3cgYWJvdXQgeWV0ICovCglmcHJpbnRmKHN0ZGVyciwgIlNHX0lPIHJldHVybmVkOiBTQ1NJ
+IHN0YXR1cz0weCV4LCBob3N0X3N0YXR1cz0weCV4LCBkcml2ZXJfc3RhdHVzPTB4JXhcbiIsCgkJ
+aGRyLnN0YXR1cywgaGRyLmhvc3Rfc3RhdHVzLCBoZHIuZHJpdmVyX3N0YXR1cyk7CglyZXR1cm4g
+LTE7Cn0KCmludCBtYWluIChpbnQgYXJnYywgY2hhciAqYXJndltdKQp7Cgljb25zdCBjaGFyICpk
+ZXZwYXRoOwoJaW50IGksIHJjLCBmZDsKI2lmIDAKCXVuc2lnbmVkIHNob3J0IGlkW0FUQV9TRUNU
+X1NJWkUgLyAyXTsKCW1lbXNldChpZCwgMCwgc2l6ZW9mKGlkKSk7CiNlbHNlCgl1bnNpZ25lZCBz
+aG9ydCAqaWQ7CglpZCA9IG1tYXAoTlVMTCwgZ2V0cGFnZXNpemUoKSwgUFJPVF9SRUFEfFBST1Rf
+V1JJVEUsIE1BUF9TSEFSRUR8TUFQX0FOT05ZTU9VUywgLTEsIDApOwoJaWYgKGlkID09IE1BUF9G
+QUlMRUQpIHsKCQlwZXJyb3IoIm1tYXAiKTsKCQlleGl0KDEpOwoJfQojZW5kaWYKCWlmIChhcmdj
+ICE9IDIpIHsKCQlmcHJpbnRmKHN0ZGVyciwgIiVzOiBiYWQvbWlzc2luZyBwYXJtOiBleHBlY3Rl
+ZCA8ZGV2cGF0aD5cbiIsIGFyZ3ZbMF0pOwoJCWV4aXQoMSk7Cgl9CglkZXZwYXRoID0gYXJndlsx
+XTsKCglmZCA9IG9wZW4oZGV2cGF0aCwgT19SRFdSfE9fTk9OQkxPQ0spOwoJaWYgKGZkID09IC0x
+KSB7CgkJcGVycm9yKGRldnBhdGgpOwoJCWV4aXQoMSk7Cgl9CglyYyA9IHNnX2lzc3VlKGZkLCBB
+VEFfQ01EX1BJT19JREVOVElGWSwgaWQpOwoJaWYgKHJjICE9IDApCgkJcmMgPSBzZ19pc3N1ZShm
+ZCwgQVRBX0NNRF9QSU9fUElERU5USUZZLCBpZCk7CglpZiAocmMgPT0gMCkgewoJCXVuc2lnbmVk
+IHNob3J0ICpkID0gaWQ7CgkJZm9yIChpID0gMDsgaSA8ICgyNTYvOCk7ICsraSkgewoJCQlwcmlu
+dGYoIiUwNHggJTA0eCAlMDR4ICUwNHggJTA0eCAlMDR4ICUwNHggJTA0eFxuIiwKCQkJCWRbMF0s
+IGRbMV0sIGRbMl0sIGRbM10sIGRbNF0sIGRbNV0sIGRbNl0sIGRbN10pOwoJCQlkICs9IDg7CgkJ
+fQoJCWV4aXQoMCk7Cgl9CglleGl0KDEpOwp9Cg==
+------=_Part_13210_28922967.1204073252968--
