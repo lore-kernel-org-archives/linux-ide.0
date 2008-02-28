@@ -1,50 +1,95 @@
-From: Holger Macht <hmacht@suse.de>
-Subject: Re: [PATCH] libata: Register for dock events when the drive is
-	inside a dock station
-Date: Thu, 28 Feb 2008 12:09:27 +0100
-Message-ID: <20080228110927.GA5745@homac.suse.de>
-References: <20080214124048.GB9708@homac.suse.de> <20080214125615.GD9708@homac.suse.de> <47BC5F44.605@garzik.org> <20080221115305.GB5032@homac.suse.de> <47BE26A0.2040708@gmail.com> <20080226101551.GB10721@homac.suse.de> <47C6804A.50705@gmail.com>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [RFC] Disk shock protection (revisited)
+Date: Thu, 28 Feb 2008 11:13:49 +0000
+Message-ID: <20080228111349.6831925c@core>
+References: <87skzgd1zk.fsf@denkblock.local>
+	<20080226123946.75dbe3d2@core>
+	<87mypl8p49.fsf@denkblock.local>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from cantor.suse.de ([195.135.220.2]:57312 "EHLO mx1.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758966AbYB1LIO (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 28 Feb 2008 06:08:14 -0500
-Content-Disposition: inline
-In-Reply-To: <47C6804A.50705@gmail.com>
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:56203 "EHLO
+	lxorguk.ukuu.org.uk" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1754622AbYB1LZO (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 28 Feb 2008 06:25:14 -0500
+In-Reply-To: <87mypl8p49.fsf@denkblock.local>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Jeff Garzik <jeff@garzik.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Kristen Carlson Accardi <kristen.c.accardi@intel.com>
+To: Elias Oltmanns <eo@nebensachen.de>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Jens Axboe <jens.axboe@oracle.com>
 
-On Thu 28. Feb - 18:35:06, Tejun Heo wrote:
-> Holger Macht wrote:
-> > The hotplug handler is only called if the device is actually inside the
-> > dock station. If it is not, nothing will happen. I hope that I got your
-> > question right?
+> > That sounds like a non starter. What if the box is busy, what if the
+> > daemon or something you touch needs memory and causes paging ?
 > 
-> Yes, right.
+> The daemon runs mlock'd anyway, so there won't be any need for paging
+
+mlock does not guarantee anything of that form. A syscall by an mlocked
+process which causes a memory allocation can cause paging of another
+process on the system.
+
+> there. As for responsiveness under heavy load, I'm not quite sure I get
+> your meaning. On my system, at least, the only way I have managed to
+> decrease responsiveness noticeably is to cause a lot of I/O operations
+
+It depends a lot on hardware but you can certainly get user space delays
+in seconds as an extreme worst case.
+
+> stays in memory all the time, it can go ahead and notify the kernel that
+> the disk heads should be unloaded. The kernel takes care to insert the
+> idle immediate command at the head of the queue. Am I missing something?
+
+Yes - the fact we may well have bounced off the floor already.
+
+> happens to have access to more than one accelerometer. Right now, I don't
+> feel quite up to the job to write a dedicated kernel module that
+> replaces the daemon and is designed in a sufficiently generic way to
+
+Thats fine - nothing says a user space daemon isn't a good starting point.
+
+> > Yep. Pity the worst case completion time for an IDE I/O is 60 seconds or
+> > so.
 > 
-> > However, if this would be helpful, it would be easy to add something like
-> > a am_I_on_dock_station?(...) function to the dock driver.
-> 
-> Hmm.. as long as the event is only delivered when the device is actually
-> connected behind dock, I think it's okay.
+> Well, the low level driver would have to make sure that no requests are
+> accepted after the idle immediate command has been received. The block
 
-The dock driver also export a is_dock_device(acpi_handle) function, which
-could be used to make more fine-grained decisions, but it shouldn't be
-needed here.
+No doesn't work like that. The command currently being processed on IDE
+can take up to 60 seconds to complete. Idle immediate (on the devices it
+works for - it hangs some) is very special in that it can be used in some
+cases to interrupt a running command sequence. It requires a significant
+amount of work in the driver layer to then clean up and requeue the
+partial command and to know if it is possible to do so.
 
-> Does the attached patch fix the previous undock problem?  It now
-> explicitly tells libata EH to detach the notified devices on
-> EJECT_REQUEST and wait for EH to complete such that control is returned
-> to ACPI after all notified devices are actually detached.
+> and freezing the block layer queue eventually in order to stop
+> the request_fn() from being called needlessly. Once the specified time
+> is up or if the daemon writes 0 to that sysfs attrribute before that
+> time, it is kernel space code again that takes care that normal
+> operation is resumed.
 
-No it does not. Apparently, it freezes faster (from 1 second down to
-immediately). Before, it just froze when someone (in this case HAL) tried
-to access the device. The "echo 1 > undock" call does not even return, so
-it might have introduced another problem.
+I think we have three things here
 
-Regards,
-	Holger
+1.	A general queue freeze scheme from user space
+2.	A general implementation of a queue freeze that stops further
+command issuing while the queue is blocked
+3.	The ability for devices to provide a function to be called
+when a queue freeze is done (ie idle immediate and the like)
+
+The fine details of how you abort an ATA command don't actually matter
+for an initial implementation and can be written once the core stuff is
+right.
+
+> Well, this is something we'll have to discuss too since I don't have the
+> SATA specs and haven't a clue as to how idle immediate behaves in an NCQ
+> enabled system. However, my question was about something more basic than
+
+I have the specs, and I don't understand it or even if it is valid to do
+so. Some research (as in trying it and seeing) may be needed.
+
+> Yes, I thought as much. I just haven't quite worked out yet where or how
+> I am supposed to introduce libata specific sysfs attributes since this
+> seems to be left to the scsi midlayer so far.
+
+The scsi midlayer is the main manager of queues so that seems sane - and
+if you've got the basic queue freeze logic right then one assumes it will
+work for scsi too.
+
