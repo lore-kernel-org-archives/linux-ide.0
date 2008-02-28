@@ -1,26 +1,42 @@
-From: mailing list manager <majordomo@ml.kundenserver.de>
-Subject: Welcome to the mailing list [music@lankaneads.com]
-Date: Thu, 28 Feb 2008 14:35:00 +0100
-Message-ID: <0ML0xJ-1JUiua47vK-0000HP@ml.kundenserver.de>
+From: Anders Eriksson <aeriksson@fastmail.fm>
+Subject: -rc3 regression (was Re: 2.6.25-rc2 + smartd = hang )
+Date: Thu, 28 Feb 2008 15:38:54 +0100
+Message-ID: <20080228143854.6350093C855@tippex.mynet.homeunix.org>
+References: <20080222165122.8D2BB93C12F@tippex.mynet.homeunix.org> <200802241654.49150.bzolnier@gmail.com> <20080226082056.7519C93C195@tippex.mynet.homeunix.org> <200802262054.12806.bzolnier@gmail.com> <20080227075346.9D55D93C5CF@tippex.mynet.homeunix.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mout-bounce.kundenserver.de ([212.227.15.21]:62883 "EHLO
-	mout-bounce.kundenserver.de" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756980AbYB1NfE (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 28 Feb 2008 08:35:04 -0500
+Received: from ch-smtp02.sth.basefarm.net ([80.76.149.213]:56663 "EHLO
+	ch-smtp02.sth.basefarm.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751879AbYB1OjY (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 28 Feb 2008 09:39:24 -0500
+In-reply-to: <20080227075346.9D55D93C5CF@tippex.mynet.homeunix.org> 
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Jeff Garzik <jeff@garzik.org>, linux-kernel@vger.kernel.org, Linux IDE mailing list <linux-ide@vger.kernel.org>, Jens Axboe <jens.axboe>
 
-Dear User,
 
-Welcome to the mailing list.
-Visit our Websites
 
-www.LankanJobs.com - Jobs & Recruitment Service in Sri lanka
+aeriksson@fastmail.fm said:
+> bzolnier@gmail.com said:
+>> Thanks.
+>> Unfortunately nothing seems wrong with the patch... :(
+>> I'll take a closer look when I have some more time...
+>> Bart 
 
-www.HitzBox.com - Free Music Downloads Online
+> Just to make sure I didn't goofed up the bisection...
 
-www.LankanEads.com - Internet Advertising and Business Directory
+> I bisected between v2.6.24 and v2.6.25-rc2. In the midst of the bisection,
+> make install decided to call the new version 2.6.24-rc7-gXXXX. Is that ok? I
+> figured rc7+delta was before 24-final, hence outside the bisection? After
+> that event I got the normal series of good god bad good... So I figured we
+> were on the right track anyway...
 
-Best Regards,
-Eota Solutions Team.
+> /A  
+
+I can testify this regression is still present in 2.6.25-rc3
+
+/Anders
+
+
+
