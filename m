@@ -1,53 +1,64 @@
-From: "Fajun Chen" <fajunchen@gmail.com>
-Subject: Re: PATA Sil680 Disabling IRQ
-Date: Wed, 27 Feb 2008 17:20:24 -0700
-Message-ID: <8202f4270802271620u6cea6176p2bea5ff8e0b9bbef@mail.gmail.com>
-References: <8202f4270802261647t505cccf7ra3c81e5fccc9366a@mail.gmail.com>
-	 <47C4B5BE.7010709@garzik.org>
+From: Borislav Petkov <petkovbb@googlemail.com>
+Subject: Re: [PATCH 0/5] ide-cd: trivial fixes
+Date: Thu, 28 Feb 2008 06:52:51 +0100
+Message-ID: <20080228055251.GD9545@gollum.tnic>
+References: <1204136449-9490-1-git-send-email-petkovbb@gmail.com> <200802272218.40312.bzolnier@gmail.com> <20080227221814.GC9545@gollum.tnic> <200802272348.35011.bzolnier@gmail.com>
+Reply-To: petkovbb@gmail.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wx-out-0506.google.com ([66.249.82.230]:35752 "EHLO
-	wx-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755681AbYB1AU1 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 27 Feb 2008 19:20:27 -0500
-Received: by wx-out-0506.google.com with SMTP id h31so3171297wxd.4
-        for <linux-ide@vger.kernel.org>; Wed, 27 Feb 2008 16:20:24 -0800 (PST)
-In-Reply-To: <47C4B5BE.7010709@garzik.org>
+Received: from ug-out-1314.google.com ([66.249.92.170]:35173 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751449AbYB1Fw4 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 28 Feb 2008 00:52:56 -0500
+Received: by ug-out-1314.google.com with SMTP id z38so143988ugc.16
+        for <linux-ide@vger.kernel.org>; Wed, 27 Feb 2008 21:52:53 -0800 (PST)
 Content-Disposition: inline
+In-Reply-To: <200802272348.35011.bzolnier@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Mark Lord <liml@rtr.ca>, Tejun Heo <htejun@gmail.com>
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-On 2/26/08, Jeff Garzik <jeff@garzik.org> wrote:
-> Fajun Chen wrote:
-> > Hi All,
-> >
-> > Attached is the source code to Identify Device through sg (courtesy of
-> > Mark Lord).  I intentionally change the data transfer from
-> > SG_DXFER_FROM_DEV to SG_DXFER_TO_DEV to expose the problem.  When the
-> > code is run on SATA Sil3124 controller,  it's working well. But when
-> > it is run on PATA Sil680,  IRQ was disabled right away (see dmesg log
-> > below). I have a old kernel 2.6.18 rc2 but I suspect the same problem
-> > exists in latest kernel release as well.  Please execute above code in
-> > your system and see what happens.
->
-> root has permission to do anything -- including misprogram the device
-> resulting in a lockup / data corruption / nuclear explosion.
->
-> We do not work around problems that only present themselves when a
-> privileged administrator is doing something really wrong.
->
+On Wed, Feb 27, 2008 at 11:48:34PM +0100, Bartlomiej Zolnierkiewicz wro=
+te:
+> On Wednesday 27 February 2008, Borislav Petkov wrote:
+> > On Wed, Feb 27, 2008 at 10:18:40PM +0100, Bartlomiej Zolnierkiewicz=
+ wrote:
+> > >=20
+> > > Hi,
+> > >=20
+> > > On Wednesday 27 February 2008, Borislav Petkov wrote:
+> > > > Hi Bart,
+> > > >=20
+> > > > here are the ide-cd trivial fixes split in an easier to digest =
+format. I
+> > > > cannot do the md5sum check here since all of the patches change=
+ at least one
+> > > > char but i hope that this'll be redundant here since they're tr=
+ivially easy
+> > > > to review :) now.
+> > > >=20
+> > > >  drivers/ide/ide-cd.c |  591 +++++++++++++++++++++++++---------=
+----------------
+> > > >  1 files changed, 298 insertions(+), 293 deletions(-)
+> > >=20
+> > > applied everything
+> > >=20
+> > > BTW patch #3/5 which accounts for 2/3 of the diffstat passes md5s=
+um check here
+> >=20
+> > huh, are you sure? The fixup-comments patch adds at least one char =
+to the source
+> > file so the md5sums cannot be the same.
+>=20
+> OTOH md5sums of the resulting _binary_ files matches... ;-)=20
 
-PIO read/writes with wrong direction is not the only failure mode,
-PATA sil680 also failed with disabling IRQ with some unsupported
-commands such as Trusted Send (0x5E) even with perfect TF data. Given
-that some ATA commands are optional,  we may have a chance to hit the
-trap even with well programmed code.
+right, the compiler discards all comments during compilation and the so=
+le code
+remains unchanged.
 
-What would take to harden the PATA ISR code such that it fails more gracefully?
-
-Thanks,
-Fajun
+--=20
+Regards/Gru=DF,
+    Boris.
