@@ -1,190 +1,68 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCH] libata: Register for dock events when the drive is	inside
- a dock station
-Date: Thu, 28 Feb 2008 18:35:06 +0900
-Message-ID: <47C6804A.50705@gmail.com>
-References: <20080214124048.GB9708@homac.suse.de> <20080214125615.GD9708@homac.suse.de> <47BC5F44.605@garzik.org> <20080221115305.GB5032@homac.suse.de> <47BE26A0.2040708@gmail.com> <20080226101551.GB10721@homac.suse.de>
+From: Elias Oltmanns <eo@nebensachen.de>
+Subject: Re: [RFC] Disk shock protection (revisited)
+Date: Thu, 28 Feb 2008 11:10:08 +0100
+Message-ID: <87d4qh8k8v.fsf@denkblock.local>
+References: <87skzgd1zk.fsf@denkblock.local> <20080226204707.GB8953@1wt.eu>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------060804070902010603020600"
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.182]:9777 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751706AbYB1JfP (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 28 Feb 2008 04:35:15 -0500
-Received: by wa-out-1112.google.com with SMTP id v27so3838680wah.23
-        for <linux-ide@vger.kernel.org>; Thu, 28 Feb 2008 01:35:13 -0800 (PST)
-In-Reply-To: <20080226101551.GB10721@homac.suse.de>
+Received: from nebensachen.de ([195.34.83.29]:53196 "EHLO mail.nebensachen.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750744AbYB1KMF (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 28 Feb 2008 05:12:05 -0500
+In-Reply-To: <20080226204707.GB8953@1wt.eu> (Willy Tarreau's message of "Tue,
+	26 Feb 2008 21:47:07 +0100")
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>, Jeff Garzik <jeff@garzik.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Kristen Carlson Accardi <kristen.c.accardi@intel.com>
+To: linux-ide@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, Jens Axboe <jens.axboe@oracle.com>
 
-This is a multi-part message in MIME format.
---------------060804070902010603020600
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Willy Tarreau <w@1wt.eu> wrote:
+> Hi Elias,
 
-Holger Macht wrote:
-> The hotplug handler is only called if the device is actually inside the
-> dock station. If it is not, nothing will happen. I hope that I got your
-> question right?
+Hi Willy,
 
-Yes, right.
+>
+> On Tue, Feb 26, 2008 at 12:56:31AM +0100, Elias Oltmanns wrote:
+>
+> [ very interesting project ]
+>
+>> Probably, the major problem is that I don't really know what kind of
+>> applications (apart from shock protection) I should be thinking of that
+>> might want to have a queue freezing facility at hand.
+>
+> In terms of applications, depending on the sensitivity of the accelerometer,
+> we can imagine that a laptop would immediately force unmount crypted
+> filesystems if it believes it's being stolen, for instance. It's just a
+> random idea that comes to my mind, in the hope it may help you imagine
+> some crazy usages.
 
-> However, if this would be helpful, it would be easy to add something like
-> a am_I_on_dock_station?(...) function to the dock driver.
+Well, this application would use the same input data (acceleromtere) but
+it would certainly not require a generic queue freezing facility.
 
-Hmm.. as long as the event is only delivered when the device is actually
-connected behind dock, I think it's okay.
+> But generally you should not fool your mind with too many hypothetical
+> cases, ideas will come once you provide a smart interface and this
+> interface will evolve with future needs.
+>
+> Concerning your daemon, I think that every millisecond counts when a
+> laptop falls on the floor. So I think that running it in the kernel
+> should help you gain those precious milliseconds.
 
-Does the attached patch fix the previous undock problem?  It now
-explicitly tells libata EH to detach the notified devices on
-EJECT_REQUEST and wait for EH to complete such that control is returned
-to ACPI after all notified devices are actually detached.
+The idle immediate command itself may need up to 300 milliseconds to
+complete according to the ATA standard. This seems like a very long time
+compared to CPU standards, i.e., the time usually needed to serve a
+lightweight daemon.
 
-Thanks.
+> I doubt your daemon could trigger fast enough while X is starting or
+> during some activities which require a lot of CPU or uninterruptible
+> I/O.
 
--- 
-tejun
+On my system the daemon's response *feels* just fine even while
+compiling a kernel; I haven't done any measurements or benchmarks
+though. The thing I'm most concerned about is uninterruptible I/O but
+I'm not quite sure whether and how this can be addressed in kernel
+space.
 
---------------060804070902010603020600
-Content-Type: text/plain;
- name="patch"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="patch"
+Regards,
 
-diff --git a/drivers/ata/libata-acpi.c b/drivers/ata/libata-acpi.c
-index 9e8ec19..e1bdca1 100644
---- a/drivers/ata/libata-acpi.c
-+++ b/drivers/ata/libata-acpi.c
-@@ -118,45 +118,76 @@ static void ata_acpi_associate_ide_port(struct ata_port *ap)
- 		ap->pflags |= ATA_PFLAG_INIT_GTM_VALID;
- }
- 
--static void ata_acpi_handle_hotplug(struct ata_port *ap, struct kobject *kobj,
-+static void ata_acpi_handle_hotplug(struct ata_port *ap, struct ata_device *dev,
- 				    u32 event)
- {
- 	char event_string[12];
- 	char *envp[] = { event_string, NULL };
- 	struct ata_eh_info *ehi = &ap->link.eh_info;
-+	struct kobject *kobj = NULL;
-+	int wait = 0;
-+	unsigned long flags;
-+
-+	if (!ap)
-+		ap = dev->link->ap;
-+
-+	spin_lock_irqsave(ap->lock, flags);
-+
-+	switch (event) {
-+	case ACPI_NOTIFY_BUS_CHECK:
-+	case ACPI_NOTIFY_DEVICE_CHECK:
-+		ata_ehi_push_desc(ehi, "ACPI event");
-+		ata_ehi_hotplugged(ehi);
-+		ata_port_freeze(ap);
-+		break;
-+
-+	case ACPI_NOTIFY_EJECT_REQUEST:
-+		ata_ehi_push_desc(ehi, "ACPI event");
-+		if (dev)
-+			dev->flags |= ATA_DFLAG_DETACH;
-+		else {
-+			struct ata_link *tlink;
-+			struct ata_device *tdev;
-+
-+			ata_port_for_each_link(tlink, ap)
-+				ata_link_for_each_dev(tdev, tlink)
-+					tdev->flags |= ATA_DFLAG_DETACH;
-+		}
- 
--	if (event == 0 || event == 1) {
--	       unsigned long flags;
--	       spin_lock_irqsave(ap->lock, flags);
--	       ata_ehi_clear_desc(ehi);
--	       ata_ehi_push_desc(ehi, "ACPI event");
--	       ata_ehi_hotplugged(ehi);
--	       ata_port_freeze(ap);
--	       spin_unlock_irqrestore(ap->lock, flags);
-+		ata_port_schedule_eh(ap);
-+		wait = 1;
-+		break;
- 	}
- 
-+	if (dev) {
-+		if (dev->sdev)
-+			kobj = &dev->sdev->sdev_gendev.kobj;
-+	} else
-+		kobj = &ap->dev->kobj;
-+
- 	if (kobj) {
- 		sprintf(event_string, "BAY_EVENT=%d", event);
- 		kobject_uevent_env(kobj, KOBJ_CHANGE, envp);
- 	}
-+
-+	spin_unlock_irqrestore(ap->lock, flags);
-+
-+	if (wait)
-+		ata_port_wait_eh(ap);
- }
- 
- static void ata_acpi_dev_notify(acpi_handle handle, u32 event, void *data)
- {
- 	struct ata_device *dev = data;
--	struct kobject *kobj = NULL;
--
--	if (dev->sdev)
--		kobj = &dev->sdev->sdev_gendev.kobj;
- 
--	ata_acpi_handle_hotplug(dev->link->ap, kobj, event);
-+	ata_acpi_handle_hotplug(NULL, dev, event);
- }
- 
- static void ata_acpi_ap_notify(acpi_handle handle, u32 event, void *data)
- {
- 	struct ata_port *ap = data;
- 
--	ata_acpi_handle_hotplug(ap, &ap->dev->kobj, event);
-+	ata_acpi_handle_hotplug(ap, NULL, event);
- }
- 
- /**
-@@ -191,20 +222,33 @@ void ata_acpi_associate(struct ata_host *host)
- 		else
- 			ata_acpi_associate_ide_port(ap);
- 
--		if (ap->acpi_handle)
-+		if (ap->acpi_handle) {
- 			acpi_install_notify_handler (ap->acpi_handle,
- 						     ACPI_SYSTEM_NOTIFY,
- 						     ata_acpi_ap_notify,
- 						     ap);
-+#if defined(CONFIG_ACPI_DOCK) || defined(CONFIG_ACPI_DOCK_MODULE)
-+			/* we might be on a docking station */
-+			register_hotplug_dock_device(ap->acpi_handle,
-+						     ata_acpi_ap_notify, ap);
-+#endif
-+		}
- 
- 		for (j = 0; j < ata_link_max_devices(&ap->link); j++) {
- 			struct ata_device *dev = &ap->link.device[j];
- 
--			if (dev->acpi_handle)
-+			if (dev->acpi_handle) {
- 				acpi_install_notify_handler (dev->acpi_handle,
- 							     ACPI_SYSTEM_NOTIFY,
- 							     ata_acpi_dev_notify,
- 							     dev);
-+#if defined(CONFIG_ACPI_DOCK) || defined(CONFIG_ACPI_DOCK_MODULE)
-+				/* we might be on a docking station */
-+				register_hotplug_dock_device(ap->acpi_handle,
-+							     ata_acpi_dev_notify,
-+							     ap);
-+#endif
-+			}
- 		}
- 	}
- }
-
---------------060804070902010603020600--
+Elias
