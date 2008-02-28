@@ -1,68 +1,50 @@
-From: Elias Oltmanns <eo@nebensachen.de>
-Subject: Re: [RFC] Disk shock protection (revisited)
-Date: Thu, 28 Feb 2008 11:10:08 +0100
-Message-ID: <87d4qh8k8v.fsf@denkblock.local>
-References: <87skzgd1zk.fsf@denkblock.local> <20080226204707.GB8953@1wt.eu>
+From: Holger Macht <hmacht@suse.de>
+Subject: Re: [PATCH] libata: Register for dock events when the drive is
+	inside a dock station
+Date: Thu, 28 Feb 2008 12:09:27 +0100
+Message-ID: <20080228110927.GA5745@homac.suse.de>
+References: <20080214124048.GB9708@homac.suse.de> <20080214125615.GD9708@homac.suse.de> <47BC5F44.605@garzik.org> <20080221115305.GB5032@homac.suse.de> <47BE26A0.2040708@gmail.com> <20080226101551.GB10721@homac.suse.de> <47C6804A.50705@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nebensachen.de ([195.34.83.29]:53196 "EHLO mail.nebensachen.de"
+Received: from cantor.suse.de ([195.135.220.2]:57312 "EHLO mx1.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750744AbYB1KMF (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 28 Feb 2008 05:12:05 -0500
-In-Reply-To: <20080226204707.GB8953@1wt.eu> (Willy Tarreau's message of "Tue,
-	26 Feb 2008 21:47:07 +0100")
+	id S1758966AbYB1LIO (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 28 Feb 2008 06:08:14 -0500
+Content-Disposition: inline
+In-Reply-To: <47C6804A.50705@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, Jens Axboe <jens.axboe@oracle.com>
+To: Tejun Heo <htejun@gmail.com>
+Cc: Jeff Garzik <jeff@garzik.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Kristen Carlson Accardi <kristen.c.accardi@intel.com>
 
-Willy Tarreau <w@1wt.eu> wrote:
-> Hi Elias,
+On Thu 28. Feb - 18:35:06, Tejun Heo wrote:
+> Holger Macht wrote:
+> > The hotplug handler is only called if the device is actually inside the
+> > dock station. If it is not, nothing will happen. I hope that I got your
+> > question right?
+> 
+> Yes, right.
+> 
+> > However, if this would be helpful, it would be easy to add something like
+> > a am_I_on_dock_station?(...) function to the dock driver.
+> 
+> Hmm.. as long as the event is only delivered when the device is actually
+> connected behind dock, I think it's okay.
 
-Hi Willy,
+The dock driver also export a is_dock_device(acpi_handle) function, which
+could be used to make more fine-grained decisions, but it shouldn't be
+needed here.
 
->
-> On Tue, Feb 26, 2008 at 12:56:31AM +0100, Elias Oltmanns wrote:
->
-> [ very interesting project ]
->
->> Probably, the major problem is that I don't really know what kind of
->> applications (apart from shock protection) I should be thinking of that
->> might want to have a queue freezing facility at hand.
->
-> In terms of applications, depending on the sensitivity of the accelerometer,
-> we can imagine that a laptop would immediately force unmount crypted
-> filesystems if it believes it's being stolen, for instance. It's just a
-> random idea that comes to my mind, in the hope it may help you imagine
-> some crazy usages.
+> Does the attached patch fix the previous undock problem?  It now
+> explicitly tells libata EH to detach the notified devices on
+> EJECT_REQUEST and wait for EH to complete such that control is returned
+> to ACPI after all notified devices are actually detached.
 
-Well, this application would use the same input data (acceleromtere) but
-it would certainly not require a generic queue freezing facility.
-
-> But generally you should not fool your mind with too many hypothetical
-> cases, ideas will come once you provide a smart interface and this
-> interface will evolve with future needs.
->
-> Concerning your daemon, I think that every millisecond counts when a
-> laptop falls on the floor. So I think that running it in the kernel
-> should help you gain those precious milliseconds.
-
-The idle immediate command itself may need up to 300 milliseconds to
-complete according to the ATA standard. This seems like a very long time
-compared to CPU standards, i.e., the time usually needed to serve a
-lightweight daemon.
-
-> I doubt your daemon could trigger fast enough while X is starting or
-> during some activities which require a lot of CPU or uninterruptible
-> I/O.
-
-On my system the daemon's response *feels* just fine even while
-compiling a kernel; I haven't done any measurements or benchmarks
-though. The thing I'm most concerned about is uninterruptible I/O but
-I'm not quite sure whether and how this can be addressed in kernel
-space.
+No it does not. Apparently, it freezes faster (from 1 second down to
+immediately). Before, it just froze when someone (in this case HAL) tried
+to access the device. The "echo 1 > undock" call does not even return, so
+it might have introduced another problem.
 
 Regards,
-
-Elias
+	Holger
