@@ -1,31 +1,73 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCH] block: fix residual byte count handling
-Date: Fri, 29 Feb 2008 00:46:06 +0900
-Message-ID: <47C6D73E.4030302@gmail.com>
-References: <1203839683.17463.9.camel@homer.simson.net> <1204019283.8731.11.camel@homer.simson.net> <1204033003.11828.22.camel@homer.simson.net> <20080226150845.2196bc1a.akpm@linux-foundation.org> <1204079075.26640.8.camel@homer.simson.net> <1204092010.9934.31.camel@homer.simson.net> <1204096025.1623.9.camel@homer.simson.net> <47C6661E.9010504@gmail.com> <1204186800.7362.7.camel@homer.simson.net> <47C675C6.8000904@gmail.com> <20080228153542.GZ6704@kernel.dk>
+From: Holger Macht <hmacht@suse.de>
+Subject: Re: [PATCH] libata: Register for dock events when the drive is
+	inside a dock station
+Date: Thu, 28 Feb 2008 16:58:17 +0100
+Message-ID: <20080228155817.GB5593@homac.suse.de>
+References: <20080214124048.GB9708@homac.suse.de> <20080214125615.GD9708@homac.suse.de> <47BC5F44.605@garzik.org> <20080221115305.GB5032@homac.suse.de> <47BE26A0.2040708@gmail.com> <20080226101551.GB10721@homac.suse.de> <47C6804A.50705@gmail.com> <20080228110927.GA5745@homac.suse.de> <47C6B1B1.2040602@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <20080228153542.GZ6704@kernel.dk>
-Sender: linux-scsi-owner@vger.kernel.org
-To: Jens Axboe <jens.axboe@oracle.com>
-Cc: Mike Galbraith <efault@gmx.de>, Andrew Morton <akpm@linux-foundation.org>, LKML <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from cantor.suse.de ([195.135.220.2]:50018 "EHLO mx1.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758882AbYB1P6T (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 28 Feb 2008 10:58:19 -0500
+Content-Disposition: inline
+In-Reply-To: <47C6B1B1.2040602@gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: Jeff Garzik <jeff@garzik.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Kristen Carlson Accardi <kristen.c.accardi@intel.com>
 
-Jens Axboe wrote:
->> This problem was reported and diagnosed by Mike Galbraith.
+On Thu 28. Feb - 22:05:53, Tejun Heo wrote:
+> Holger Macht wrote:
+> > On Thu 28. Feb - 18:35:06, Tejun Heo wrote:
+> >> Holger Macht wrote:
+> >>> The hotplug handler is only called if the device is actually inside the
+> >>> dock station. If it is not, nothing will happen. I hope that I got your
+> >>> question right?
+> >> Yes, right.
+> >>
+> >>> However, if this would be helpful, it would be easy to add something like
+> >>> a am_I_on_dock_station?(...) function to the dock driver.
+> >> Hmm.. as long as the event is only delivered when the device is actually
+> >> connected behind dock, I think it's okay.
+> > 
+> > The dock driver also export a is_dock_device(acpi_handle) function, which
+> > could be used to make more fine-grained decisions, but it shouldn't be
+> > needed here.
+> > 
+> >> Does the attached patch fix the previous undock problem?  It now
+> >> explicitly tells libata EH to detach the notified devices on
+> >> EJECT_REQUEST and wait for EH to complete such that control is returned
+> >> to ACPI after all notified devices are actually detached.
+> > 
+> > No it does not. Apparently, it freezes faster (from 1 second down to
+> > immediately). Before, it just froze when someone (in this case HAL) tried
+> > to access the device. The "echo 1 > undock" call does not even return, so
+> > it might have introduced another problem.
 > 
-> Tejun, this patch isn't much cleaner at all. It really shows the pain of
-> these two seperate, yet related, variables.
+> The code should be in generally right direction.  Can you be persuaded
+> into tracking down what's going on?
 
-Not much cleaner compared to what?  I think padding stuff is bound to be
-somewhat complex.  It's a nasty thing in nature.  I think ->extra_len is
-better than ->raw_data_len because ->extra_len only needs to be updated
-where the dirty jobs are done and extra buffer areas are added.  Any
-better suggestions?
+I had a quick glance with adding some printk's. Now I got a different
+behaviour once. System did not freeze, but were certainly confused. The
+last thing which got printed to messages was exactly before
+spin_lock_irqsave(ap->lock, flags); at the beginning of ata_acpi_handle_hotplug(...)
 
-Thanks.
+The printk immediately after this call didn't come through anymore (with
+being able to use the system for a short time afterwards).
 
--- 
-tejun
+Maybe this helps.
+
+For further debugging, I would have to setup remote debugger, but I doubt
+I get around to do this for the next couple of days or even 1-2 weeks.
+
+I could test new patches, of course.
+
+Regards,
+	Holger
+
+P.S.: You'll need [1] patch for testing, otherwise the hotplug handler is
+never called.
+
+[1] http://git.kernel.org/?p=linux/kernel/git/lenb/linux-acpi-2.6.git;a=commit;h=3b5fee5952ff7eb6ff7a64247a01040b8b331b74
