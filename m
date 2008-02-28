@@ -1,65 +1,36 @@
-From: Holger Macht <hmacht@suse.de>
-Subject: Re: [PATCH] libata: Register for dock events when the drive is
-	inside a dock station
-Date: Thu, 28 Feb 2008 19:32:43 +0100
-Message-ID: <20080228183243.GA6146@homac.suse.de>
-References: <20080214124048.GB9708@homac.suse.de> <20080214125615.GD9708@homac.suse.de> <47BC5F44.605@garzik.org> <20080221115305.GB5032@homac.suse.de> <47BE26A0.2040708@gmail.com> <20080226101551.GB10721@homac.suse.de> <47C6804A.50705@gmail.com> <20080228110927.GA5745@homac.suse.de> <47C6B1B1.2040602@gmail.com> <20080228155817.GB5593@homac.suse.de>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: PATA Sil680 Disabling IRQ
+Date: Thu, 28 Feb 2008 20:22:55 +0000
+Message-ID: <20080228202255.5e3f0c43@core>
+References: <8202f4270802261647t505cccf7ra3c81e5fccc9366a@mail.gmail.com>
+	<47C4B5BE.7010709@garzik.org>
+	<8202f4270802271620u6cea6176p2bea5ff8e0b9bbef@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mx1.suse.de ([195.135.220.2]:51244 "EHLO mx1.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752806AbYB1Sbb (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 28 Feb 2008 13:31:31 -0500
-Content-Disposition: inline
-In-Reply-To: <20080228155817.GB5593@homac.suse.de>
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:58641 "EHLO
+	lxorguk.ukuu.org.uk" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1753539AbYB1Udt (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 28 Feb 2008 15:33:49 -0500
+In-Reply-To: <8202f4270802271620u6cea6176p2bea5ff8e0b9bbef@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>, Jeff Garzik <jeff@garzik.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Kristen Carlson Accardi <kristen.c.accardi@intel.com>
+To: Fajun Chen <fajunchen@gmail.com>
+Cc: Jeff Garzik <jeff@garzik.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Mark Lord <liml@rtr.ca>, Tejun Heo <htejun@gmail.com>
 
-On Thu 28. Feb - 16:58:17, Holger Macht wrote:
-> On Thu 28. Feb - 22:05:53, Tejun Heo wrote:
-> > Holger Macht wrote:
-> > > On Thu 28. Feb - 18:35:06, Tejun Heo wrote:
-> > >> Holger Macht wrote:
-> > >>> The hotplug handler is only called if the device is actually inside the
-> > >>> dock station. If it is not, nothing will happen. I hope that I got your
-> > >>> question right?
-> > >> Yes, right.
-> > >>
-> > >>> However, if this would be helpful, it would be easy to add something like
-> > >>> a am_I_on_dock_station?(...) function to the dock driver.
-> > >> Hmm.. as long as the event is only delivered when the device is actually
-> > >> connected behind dock, I think it's okay.
-> > > 
-> > > The dock driver also export a is_dock_device(acpi_handle) function, which
-> > > could be used to make more fine-grained decisions, but it shouldn't be
-> > > needed here.
-> > > 
-> > >> Does the attached patch fix the previous undock problem?  It now
-> > >> explicitly tells libata EH to detach the notified devices on
-> > >> EJECT_REQUEST and wait for EH to complete such that control is returned
-> > >> to ACPI after all notified devices are actually detached.
-> > > 
-> > > No it does not. Apparently, it freezes faster (from 1 second down to
-> > > immediately). Before, it just froze when someone (in this case HAL) tried
-> > > to access the device. The "echo 1 > undock" call does not even return, so
-> > > it might have introduced another problem.
-> > 
-> > The code should be in generally right direction.  Can you be persuaded
-> > into tracking down what's going on?
-> 
-> I had a quick glance with adding some printk's. Now I got a different
-> behaviour once. System did not freeze, but were certainly confused. The
-> last thing which got printed to messages was exactly before
-> spin_lock_irqsave(ap->lock, flags); at the beginning of ata_acpi_handle_hotplug(...)
-> 
-> The printk immediately after this call didn't come through anymore (with
-> being able to use the system for a short time afterwards).
+> PIO read/writes with wrong direction is not the only failure mode,
+> PATA sil680 also failed with disabling IRQ with some unsupported
+> commands such as Trusted Send (0x5E) even with perfect TF data. Given
+> that some ATA commands are optional,  we may have a chance to hit the
+> trap even with well programmed code.
 
-Ok, it seems that there is something broken somewhere else in
-2.6.25.rc3. Not sure at all if it's your patch freezing the machine. I'll
-give 2.6.24.3 a try...
+That sounds very strange - I regularly test PATA controlles with
+unsupported commands and see the correct 0x04 abort patterns.
 
-Regards,
-	Holger
+> What would take to harden the PATA ISR code such that it fails more gracefully?
+
+First thing would be to work out why your system is behaving differently
+to the others. What is the trigger here.
+
+Alan
