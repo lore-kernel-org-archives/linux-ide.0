@@ -1,48 +1,60 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: PATA Sil680 Disabling IRQ
-Date: Thu, 28 Feb 2008 23:10:02 +0000
-Message-ID: <20080228231002.325c9e1d@core>
-References: <8202f4270802261647t505cccf7ra3c81e5fccc9366a@mail.gmail.com>
-	<47C4B5BE.7010709@garzik.org>
-	<8202f4270802271620u6cea6176p2bea5ff8e0b9bbef@mail.gmail.com>
-	<20080228202255.5e3f0c43@core>
-	<8202f4270802281411j747bf96dx34ff81c4d192d417@mail.gmail.com>
+From: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
+Subject: Re: Unknown SATA PIIX PCI device ID 0x29b6
+Date: Fri, 29 Feb 2008 00:33:56 +0100 (CET)
+Message-ID: <Pine.LNX.4.64.0802290010320.10498@axis700.grange>
+References: <Pine.LNX.4.64.0802282306190.10087@axis700.grange>
+ <20080228225603.2764bfd1@core>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:42047 "EHLO
-	lxorguk.ukuu.org.uk" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1757317AbYB1XUz (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 28 Feb 2008 18:20:55 -0500
-In-Reply-To: <8202f4270802281411j747bf96dx34ff81c4d192d417@mail.gmail.com>
+Received: from mail.gmx.net ([213.165.64.20]:39965 "HELO mail.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1759790AbYB1Xdz (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 28 Feb 2008 18:33:55 -0500
+In-Reply-To: <20080228225603.2764bfd1@core>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Fajun Chen <fajunchen@gmail.com>
-Cc: Jeff Garzik <jeff@garzik.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Mark Lord <liml@rtr.ca>, Tejun Heo <htejun@gmail.com>
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: linux-kernel@vger.kernel.org, Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org
 
-> For most of unsupported commands, it will be aborted by drive.
-> However, for some unsupported commands, it may not.  I suspect these
-> bad commands are the new ones in ATA8 issued to some drives with old
-> firmware. For instance, can you try command 0x5E (Trusted Send PIO
-> data out) with sector count set to 1 and see what happens?
+On Thu, 28 Feb 2008, Alan Cox wrote:
 
-Well the kernel as of 2.6.24 defaults to blocking treacherous computing
-commands 8)
+> On Thu, 28 Feb 2008 23:37:36 +0100 (CET)
+> Guennadi Liakhovetski <g.liakhovetski@gmx.de> wrote:
+> 
+> > Hi
+> > 
+> > just found out that the eSATA connector on my Intel DQ35JO motherboard 
+> > doesn't work... because it is connected to the controller with product ID 
+> > 29b6... And this ID is not yet handled by the driver. Can I have a patch, 
+> > please?:-) I think the correct entry would be
+> 
+> If the device is in AHCI mode it should match the ahci class entry - is
+> the device in AHCI mode or PIIX mode ?
 
-> The blame is probably on drives which should have aborted these
-> commands. But the reality is that libata will handle variety of drives
-> including the ones with old firmware.  So the question here is whether
-> libata PATA code can be more fault tolerate. It seems the weakest link
-> is on PATA PIO since I have not been able to reproduce the IRQ
-> disabling problem on DMA operations.
+Indeed! It was in "IDE" mode, and 2 out of the 3 chips were handled by the 
+piix driver (btw, why did Intel put 3 different SATA controllers on one 
+board?). I switched it to AHCI mode (the third possibility is RAID) and 
+indeed a kernel with (only) ahci driver managed to bring them up! 
+Although, the eSATA link was "slow to respond":
 
-If you send crap to a drive you will get junk as a result. Only the
-superuser can do this so that behaviour is fine. The superuser can also
-crash the machine a million other ways. End users cannot send arbitary
-commands to the drive.
+ata4: port is slow to respond, please be patient (Status 0x80)
+ata4: softreset failed (device not ready)
+ata4: port is slow to respond, please be patient (Status 0x80)
+ata4: softreset failed (device not ready)
+ata4: port is slow to respond, please be patient (Status 0x80)
+ata4: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+ata4.00: ATA-7: WDC WD1600BB-00RDA0, 20.00K20, max UDMA/100
+ata4.00: 312581808 sectors, multi 16: LBA48
+ata4.00: applying bridge limits
+ata4.00: configured for UDMA/100
 
-Ditto they may know that an "unsupported" command for their ATA version
-is actually a vendor private command for the specific drive they have.
+but then it did manage it. Is such a delay normal?
 
-Alan
+One more question, what do UDMA numbers mean in SATA context? The internal 
+SATA disk is "ata1.00: configured for UDMA/133", but should be SATA-2.
+
+Thanks
+Guennadi
+---
+Guennadi Liakhovetski
