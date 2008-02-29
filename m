@@ -1,60 +1,134 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: devres and requesting resources
-Date: Fri, 29 Feb 2008 21:28:59 +0900
-Message-ID: <47C7FA8B.7040306@gmail.com>
-References: <47C75392.3020606@garzik.org> <20080229112651.5b2a7f6f@core> <47C7F664.5040102@garzik.org>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: [RFC PATCH] libata: PIO via bounce buffer
+Date: Fri, 29 Feb 2008 13:51:06 +0000
+Message-ID: <20080229135106.4fcf19e3@core>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.182]:32071 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757379AbYB2M3F (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 29 Feb 2008 07:29:05 -0500
-Received: by wa-out-1112.google.com with SMTP id v27so4654549wah.23
-        for <linux-ide@vger.kernel.org>; Fri, 29 Feb 2008 04:29:04 -0800 (PST)
-In-Reply-To: <47C7F664.5040102@garzik.org>
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:43833 "EHLO
+	lxorguk.ukuu.org.uk" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1752533AbYB2OCF (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 29 Feb 2008 09:02:05 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, Linux IDE mailing list <linux-ide@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>
+To: linux-ide@vger.kernel.org, jeff@garzik.org
 
-Jeff Garzik wrote:
-> Only rare PCI devices are shareable among multiple drivers.
-> 
-> sata_* at least intentionally used pci_request_regions() because it is
-> obvious from the hardware spec that multiple regions accessed by
-> multiple drivers is highly unlikely, without the driver being
-> specifically coded to support such sharing.  Such sharing code is far
-> beyond simple resource reservation, to avoid stepping on toes when there
-> is a single MMIO region and set of interrupt clearing registers.
-> 
-> So reading your email it sounds like there are valid cases for both
-> configurations.
-> 
-> Its a design choice either way, not a bug either way.
+First cut at the problem. Given the lack of certainty about worst case
+buffer size (1 page I suspect) this uses kmalloc. We could hang a buffer
+off the device (or I think in fact the port as we never do overlapped PIO)
 
-I was thinking like Alan when I was writing pcim_request_regions() but I
-agree reserving all the regions does avoid certain problems.  Especially
-true for controller which duals as native SATA and compatible SFF
-controller like ICH AHCIs.  ata_generic or ide generic might attach to a
-controller which is already being driven by ahci under certain
-configurations.
-
-Please note that pcim_request_regions() is a helper to do
-pci_request_region() calls and pcim_iomap() in one go.  Drivers which
-have different requirements can just open code pci_request_regions() and
-pcim_iomap().  pcim_request_regions() should provide sensible default
-behavior for common cases.
-
-I think the best solution is to allow duplicate request regions for
-managed devices which is okay as we know we're holding the resource and
-let drivers which need to reserve all regions call pci_request_regions()
-before calling pcim_request_regions().
-
-How does it sound?
-
-Thanks.
-
--- 
-tejun
+diff -u --new-file --recursive --exclude-from /usr/src/exclude linux.vanilla-2.6.25-rc2-mm1/drivers/ata/libata-core.c linux-2.6.25-rc2-mm1/drivers/ata/libata-core.c
+--- linux.vanilla-2.6.25-rc2-mm1/drivers/ata/libata-core.c	2008-02-19 11:03:26.000000000 +0000
++++ linux-2.6.25-rc2-mm1/drivers/ata/libata-core.c	2008-02-27 17:17:14.000000000 +0000
+@@ -5052,6 +5052,60 @@
+ 
+ 
+ /**
++ *	ata_bounce_pio_xfer	-	Transfer a block by PIO from high
++ *	@dev: target device
++ *	@page: highmem page
++ *	@offset: offset in page
++ *	@count: bytes to transfer
++ *	@do_write: writing if set, reading if not
++ *
++ *	Transfer a page of high memory via PIO. Whenever possible use a bounce
++ *	buffer to avoid transfers occuring with local IRQ disable
++ */
++
++static void ata_bounce_pio_xfer(struct ata_device *dev, struct page *page, 
++				  unsigned int offset, int count, int do_write)
++{
++	struct ata_port *ap = dev->link->ap;
++	unsigned long flags;
++	unsigned char *zebedee;
++	unsigned char *buf;
++
++	BUG_ON(offset + count > PAGE_SIZE);
++
++	zebedee = kmalloc(count, GFP_ATOMIC);
++	if (likely(zebedee)) {
++		if (do_write) {
++			local_irq_save(flags);
++			buf = kmap_atomic(page, KM_IRQ0);
++			memcpy(zebedee, buf + offset, count);
++			kunmap_atomic(buf, KM_IRQ0);
++			local_irq_restore(flags);
++		}
++		/* do the actual data transfer */
++		ap->ops->data_xfer(dev, zebedee, count, do_write);
++		if (!do_write) {
++			/* Read so bounce  data upwards */
++			local_irq_save(flags);
++			buf = kmap_atomic(page, KM_IRQ0);
++			memcpy(buf + offset, zebedee, count);
++			kunmap_atomic(buf, KM_IRQ0);
++			local_irq_restore(flags);
++		}
++		kfree(zebedee);
++	} else {
++		/* Only used when we are out of buffer memory
++		   as a last last resort */
++		local_irq_save(flags);
++		buf = kmap_atomic(page, KM_IRQ0);
++		/* do the actual data transfer */
++		ap->ops->data_xfer(dev, buf + offset, count, do_write);
++		kunmap_atomic(buf, KM_IRQ0);
++		local_irq_restore(flags);
++	}
++}
++
++/**
+  *	ata_pio_sector - Transfer a sector of data.
+  *	@qc: Command on going
+  *
+@@ -5081,21 +5135,13 @@
+ 
+ 	DPRINTK("data %s\n", qc->tf.flags & ATA_TFLAG_WRITE ? "write" : "read");
+ 
+-	if (PageHighMem(page)) {
+-		unsigned long flags;
+-
+-		/* FIXME: use a bounce buffer */
+-		local_irq_save(flags);
+-		buf = kmap_atomic(page, KM_IRQ0);
+-
+-		/* do the actual data transfer */
+-		ap->ops->data_xfer(qc->dev, buf + offset, qc->sect_size, do_write);
+-
+-		kunmap_atomic(buf, KM_IRQ0);
+-		local_irq_restore(flags);
++	if (PageHighMem(page) || 1 /* TEST FIXME */) {
++		ata_bounce_pio_xfer(qc->dev, page, offset, qc->sect_size,
++								do_write);
+ 	} else {
+ 		buf = page_address(page);
+-		ap->ops->data_xfer(qc->dev, buf + offset, qc->sect_size, do_write);
++		ap->ops->data_xfer(qc->dev, buf + offset,
++						qc->sect_size, do_write);
+ 	}
+ 
+ 	qc->curbytes += qc->sect_size;
+@@ -5242,19 +5288,9 @@
+ 
+ 	DPRINTK("data %s\n", qc->tf.flags & ATA_TFLAG_WRITE ? "write" : "read");
+ 
+-	if (PageHighMem(page)) {
+-		unsigned long flags;
+-
+-		/* FIXME: use bounce buffer */
+-		local_irq_save(flags);
+-		buf = kmap_atomic(page, KM_IRQ0);
+-
+-		/* do the actual data transfer */
+-		ap->ops->data_xfer(qc->dev,  buf + offset, count, do_write);
+-
+-		kunmap_atomic(buf, KM_IRQ0);
+-		local_irq_restore(flags);
+-	} else {
++	if (PageHighMem(page))
++		ata_bounce_pio_xfer(qc->dev, page, offset, count, do_write);
++	else {
+ 		buf = page_address(page);
+ 		ap->ops->data_xfer(qc->dev,  buf + offset, count, do_write);
+ 	}
