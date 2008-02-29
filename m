@@ -1,58 +1,123 @@
-From: Jens Axboe <jens.axboe@oracle.com>
-Subject: Re: [PATCH] block: fix residual byte count handling
-Date: Fri, 29 Feb 2008 21:11:25 +0100
-Message-ID: <20080229201123.GK6704@kernel.dk>
-References: <20080226150845.2196bc1a.akpm@linux-foundation.org> <1204079075.26640.8.camel@homer.simson.net> <1204092010.9934.31.camel@homer.simson.net> <1204096025.1623.9.camel@homer.simson.net> <47C6661E.9010504@gmail.com> <1204186800.7362.7.camel@homer.simson.net> <47C675C6.8000904@gmail.com> <20080228153542.GZ6704@kernel.dk> <47C6D73E.4030302@gmail.com> <1204303656.4003.19.camel@localhost.localdomain>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: Re: [PATCH 3/3] ide: remove IDE_*_REG macros
+Date: Fri, 29 Feb 2008 23:31:07 +0300
+Message-ID: <47C86B8B.8000100@ru.mvista.com>
+References: <200802091624.34064.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1204303656.4003.19.camel@localhost.localdomain>
-Sender: linux-scsi-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Tejun Heo <htejun@gmail.com>, Mike Galbraith <efault@gmx.de>, Andrew Morton <akpm@linux-foundation.org>, LKML <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from homer.mvista.com ([63.81.120.155]:38288 "EHLO
+	imap.sh.mvista.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1752431AbYB2UaC (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 29 Feb 2008 15:30:02 -0500
+In-Reply-To: <200802091624.34064.bzolnier@gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Borislav Petkov <petkovbb@gmail.com>
 
-On Fri, Feb 29 2008, James Bottomley wrote:
-> 
-> On Fri, 2008-02-29 at 00:46 +0900, Tejun Heo wrote:
-> > Jens Axboe wrote:
-> > >> This problem was reported and diagnosed by Mike Galbraith.
-> > > 
-> > > Tejun, this patch isn't much cleaner at all. It really shows the pain of
-> > > these two seperate, yet related, variables.
-> > 
-> > Not much cleaner compared to what?  I think padding stuff is bound to be
-> > somewhat complex.  It's a nasty thing in nature.  I think ->extra_len is
-> > better than ->raw_data_len because ->extra_len only needs to be updated
-> > where the dirty jobs are done and extra buffer areas are added.  Any
-> > better suggestions?
-> 
-> Well, I just investigated a bug report in the SCSI transport class.  Our
-> SMP handler is broken in exactly the same way.  We rely on the incoming
-> reported request lengths to size our request data, and they've blown up
-> from the true length to 512 bytes (the size of our alignment).
-> 
-> With the original patch, I have to run through the whole of libsas and
-> scsi_transport_sas doing
-> 
-> s/data_len/raw_data_len/
-> 
-> With your update it looks like I have to run through them all doing
-> 
-> s/data_len/data_len - extra_len/
-> 
-> which is even worse.  Can't we put things back to a point where data_len
-> means exactly that and extra_len means how much we have spare on the
-> end, so you know you can DMA up to data_len + extra_len if need be?
-> 
-> That way we don't have to sweep through every block driver altering the
-> way it uses data_len.
+Bartlomiej Zolnierkiewicz wrote:
 
-Fully agree. The reason why I think it's so ugly is that you have to
-keep these two seperate variables in sync. The burning was just one bug,
-there will be others...
+> * Add IDE_{ALTSTATUS,IREASON,BCOUNTL,BCOUNTH}_OFFSET defines.
 
--- 
-Jens Axboe
+> * Remove IDE_*_REG macros - this results in more readable
+>   and slightly smaller code.
+
+> There should be no functional changes caused by this patch.
+
+> Cc: Borislav Petkov <petkovbb@gmail.com>
+> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+
+Acked-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+
+> Index: b/drivers/ide/cris/ide-cris.c
+> ===================================================================
+> --- a/drivers/ide/cris/ide-cris.c
+> +++ b/drivers/ide/cris/ide-cris.c
+> @@ -228,7 +228,10 @@ cris_ide_fill_descriptor(cris_dma_descr_
+>  static void
+>  cris_ide_start_dma(ide_drive_t *drive, cris_dma_descr_type *d, int dir,int type,int len)
+>  {
+> -	reg_ata_rw_ctrl2 ctrl2 = REG_TYPE_CONV(reg_ata_rw_ctrl2, int, IDE_DATA_REG);
+> +	ide_hwif_t *hwif = drive->hwif;
+> +
+
+    Why insert new line in the declaration block?
+
+> +	reg_ata_rw_ctrl2 ctrl2 = REG_TYPE_CONV(reg_ata_rw_ctrl2, int,
+> +					       hwif->io_ports[IDE_DATA_OFFSET]);
+>  	reg_ata_rw_trf_cnt trf_cnt = {0};
+>  
+>  	mycontext.saved_data = (dma_descr_data*)virt_to_phys(d);
+> @@ -264,8 +267,12 @@ cris_ide_wait_dma(int dir)
+>  
+>  static int cris_dma_test_irq(ide_drive_t *drive)
+>  {
+> +	ide_hwif_t *hwif = drive->hwif;
+>  	int intr = REG_RD_INT(ata, regi_ata, r_intr);
+> -	reg_ata_rw_ctrl2 ctrl2 = REG_TYPE_CONV(reg_ata_rw_ctrl2, int, IDE_DATA_REG);
+> +
+
+    Same here...
+
+> +	reg_ata_rw_ctrl2 ctrl2 = REG_TYPE_CONV(reg_ata_rw_ctrl2, int,
+> +					       hwif->io_ports[IDE_DATA_OFFSET]);
+> +
+>  	return intr & (1 << ctrl2.sel) ? 1 : 0;
+>  }
+
+[...]
+
+> Index: b/drivers/ide/legacy/ht6560b.c
+> ===================================================================
+> --- a/drivers/ide/legacy/ht6560b.c
+> +++ b/drivers/ide/legacy/ht6560b.c
+> @@ -79,7 +79,7 @@
+>   * out how they setup those cycle time interfacing values, as they at Holtek
+>   * call them. IDESETUP.COM that is supplied with the drivers figures out
+>   * optimal values and fetches those values to drivers. I found out that
+> - * they use IDE_SELECT_REG to fetch timings to the ide board right after
+> + * they use Select register to fetch timings to the ide board right after
+
+    The register is called device/head officially. :-)
+
+> Index: b/drivers/scsi/ide-scsi.c
+> ===================================================================
+> --- a/drivers/scsi/ide-scsi.c
+> +++ b/drivers/scsi/ide-scsi.c
+> @@ -275,9 +275,12 @@ static int idescsi_end_request(ide_drive
+>  static ide_startstop_t
+>  idescsi_atapi_error(ide_drive_t *drive, struct request *rq, u8 stat, u8 err)
+>  {
+> +	ide_hwif_t *hwif = drive->hwif;
+> +
+>  	if (ide_read_status(drive) & (BUSY_STAT | DRQ_STAT))
+>  		/* force an abort */
+> -		HWIF(drive)->OUTB(WIN_IDLEIMMEDIATE,IDE_COMMAND_REG);
+> +		hwif->OUTB(WIN_IDLEIMMEDIATE,
+> +			   hwif->io_ports[IDE_COMMAND_OFFSET]);
+
+    Hum hm, why not WIN_DEVICE_RESET? :-O
+
+[...]
+> Index: b/include/linux/ide.h
+> ===================================================================
+> --- a/include/linux/ide.h
+> +++ b/include/linux/ide.h
+[...]
+> @@ -369,7 +355,7 @@ typedef struct ide_drive_s {
+>          u8	wcache;		/* status of write cache */
+
+    Spaces again...
+
+>  	u8	acoustic;	/* acoustic management */
+>  	u8	media;		/* disk, cdrom, tape, floppy, ... */
+> -	u8	ctl;		/* "normal" value for IDE_CONTROL_REG */
+> +	u8	ctl;		/* "normal" value for Control register */
+>  	u8	ready_stat;	/* min status value for drive ready */
+>  	u8	mult_count;	/* current multiple sector setting */
+>  	u8	mult_req;	/* requested multiple sector setting */
+
+MBR, Sergei
 
