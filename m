@@ -1,40 +1,33 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: devres and requesting resources
-Date: Thu, 28 Feb 2008 19:36:34 -0500
-Message-ID: <47C75392.3020606@garzik.org>
+From: Felix Miata <mrmazda@ij.net>
+Subject: Re: Unknown SATA PIIX PCI device ID 0x29b6
+Date: Thu, 28 Feb 2008 19:23:05 -0500
+Message-ID: <47C75069.5010006@ij.net>
+References: <Pine.LNX.4.64.0802282306190.10087@axis700.grange> <20080228225603.2764bfd1@core>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:47590 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753048AbYB2Agh (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 28 Feb 2008 19:36:37 -0500
+Received: from fall-pradero.atl.sa.earthlink.net ([207.69.195.104]:54643 "EHLO
+	fall-pradero.atl.sa.earthlink.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754299AbYB2AiG (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 28 Feb 2008 19:38:06 -0500
+In-Reply-To: <20080228225603.2764bfd1@core>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Linux IDE mailing list <linux-ide@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>
+To: linux-kernel@vger.kernel.org
+Cc: linux-ide@vger.kernel.org
 
-Something I just noticed, which I missed during the initial devres review...
+On 2008/02/28 22:56 (GMT) Alan Cox apparently typed:
 
-The vast majority of my ATA drivers originally called 
-pci_request_regions(), to reserve all regions attached to a device.
+> is the device in AHCI mode or PIIX mode ?
 
-In converting to pcim_iomap_regions(), we no longer reserve /all/ 
-regions, only the ones requested.
+How does one tell for sure? BIOS typically only say things like "compatible"
+or "enhanced".
+-- 
+"For God so loved the world that he gave his one
+and only Son, that whoever believes in him shall
+not perish but have eternal life." John 3:16 NIV
 
-This is actually a bug:  it was intentional to call 
-pci_request_regions(), because that ensures that no other software will 
-use our resources -- even if we are not actively using the resource in 
-question.
+ Team OS/2 ** Reg. Linux User #211409
 
-Or IOW, I wanted to ensure that there would be no device sharing... 
-which this devres conversion accidentally enabled.
-
-The simple fix is obviously to replace pci_request_region() call with 
-pci_request_regions() in lib/devres.c, but I wonder if that will break 
-any existing driver?
-
-	Jeff
-
-
+Felix Miata  ***  http://mrmazda.no-ip.com/
