@@ -1,31 +1,40 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH 2.6.23.11] sata_svw: Add support for HT1100 SATA controller
-Date: Thu, 28 Feb 2008 19:05:33 -0500
-Message-ID: <47C74C4D.6060402@pobox.com>
-References: <1204243115.4504.25.camel@LTSJCW-ANANTH.sj.broadcom.com>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: devres and requesting resources
+Date: Thu, 28 Feb 2008 19:36:34 -0500
+Message-ID: <47C75392.3020606@garzik.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:58835 "EHLO mail.dvmed.net"
+Received: from srv5.dvmed.net ([207.36.208.214]:47590 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752998AbYB2AFg (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 28 Feb 2008 19:05:36 -0500
-In-Reply-To: <1204243115.4504.25.camel@LTSJCW-ANANTH.sj.broadcom.com>
+	id S1753048AbYB2Agh (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 28 Feb 2008 19:36:37 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: ananth@broadcom.com
-Cc: linux-ide@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: Linux IDE mailing list <linux-ide@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>
 
-Anantha Subramanyam wrote:
-> This patch adds support (including ATAPI DMA) for HT1100 (aka BCM11000) SATA controller.
-> 
-> Signed-off-by: Anantha Subramanyam <ananth@broadcom.com>
+Something I just noticed, which I missed during the initial devres review...
 
-applied
+The vast majority of my ATA drivers originally called 
+pci_request_regions(), to reserve all regions attached to a device.
 
-Since this does not change the behavior of the existing, 
-already-supported chips (no regressions), I applied to the 
-#upstream-fixes branch of libata-dev.git, which means it is queued for 
-kernel 2.6.25.
+In converting to pcim_iomap_regions(), we no longer reserve /all/ 
+regions, only the ones requested.
+
+This is actually a bug:  it was intentional to call 
+pci_request_regions(), because that ensures that no other software will 
+use our resources -- even if we are not actively using the resource in 
+question.
+
+Or IOW, I wanted to ensure that there would be no device sharing... 
+which this devres conversion accidentally enabled.
+
+The simple fix is obviously to replace pci_request_region() call with 
+pci_request_regions() in lib/devres.c, but I wonder if that will break 
+any existing driver?
+
+	Jeff
+
 
