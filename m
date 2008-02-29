@@ -1,58 +1,61 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: devres and requesting resources
-Date: Fri, 29 Feb 2008 23:17:58 +0900
-Message-ID: <47C81416.1010305@gmail.com>
-References: <47C75392.3020606@garzik.org>	<20080229112651.5b2a7f6f@core>	<47C7F664.5040102@garzik.org>	<47C7FA8B.7040306@gmail.com> <20080229140106.41ccc843@core>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH] block: fix residual byte count handling
+Date: Fri, 29 Feb 2008 10:47:36 -0600
+Message-ID: <1204303656.4003.19.camel@localhost.localdomain>
+References: <1203839683.17463.9.camel@homer.simson.net>
+	 <1204019283.8731.11.camel@homer.simson.net>
+	 <1204033003.11828.22.camel@homer.simson.net>
+	 <20080226150845.2196bc1a.akpm@linux-foundation.org>
+	 <1204079075.26640.8.camel@homer.simson.net>
+	 <1204092010.9934.31.camel@homer.simson.net>
+	 <1204096025.1623.9.camel@homer.simson.net> <47C6661E.9010504@gmail.com>
+	 <1204186800.7362.7.camel@homer.simson.net> <47C675C6.8000904@gmail.com>
+	 <20080228153542.GZ6704@kernel.dk>  <47C6D73E.4030302@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wf-out-1314.google.com ([209.85.200.172]:36937 "EHLO
-	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755887AbYB2OSW (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 29 Feb 2008 09:18:22 -0500
-Received: by wf-out-1314.google.com with SMTP id 28so4019310wff.4
-        for <linux-ide@vger.kernel.org>; Fri, 29 Feb 2008 06:18:20 -0800 (PST)
-In-Reply-To: <20080229140106.41ccc843@core>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <47C6D73E.4030302@gmail.com>
+Sender: linux-scsi-owner@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: Jens Axboe <jens.axboe@oracle.com>, Mike Galbraith <efault@gmx.de>, Andrew Morton <akpm@linux-foundation.org>, LKML <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: Jeff Garzik <jeff@garzik.org>, Linux IDE mailing list <linux-ide@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 
-Alan Cox wrote:
->> controller like ICH AHCIs.  ata_generic or ide generic might attach to a
->> controller which is already being driven by ahci under certain
->> configurations.
-> 
-> ata_generic will not nor ata_legacy both are much too smart for that. The
-> legacy old IDE driver might but that probably isn't going to be fixed by
-> devres and is trivial to fix in that driver (just steal the code from
-> pata_legacy).
 
-Yeah, I saw the behavior with ahci + ide generic combination.  I think
-it was on SB600.  Heh... neat trick in pata_legacy().  Hmm... it's
-probably better to do at generic device level and with a generic helper.
+On Fri, 2008-02-29 at 00:46 +0900, Tejun Heo wrote:
+> Jens Axboe wrote:
+> >> This problem was reported and diagnosed by Mike Galbraith.
+> > 
+> > Tejun, this patch isn't much cleaner at all. It really shows the pain of
+> > these two seperate, yet related, variables.
+> 
+> Not much cleaner compared to what?  I think padding stuff is bound to be
+> somewhat complex.  It's a nasty thing in nature.  I think ->extra_len is
+> better than ->raw_data_len because ->extra_len only needs to be updated
+> where the dirty jobs are done and extra buffer areas are added.  Any
+> better suggestions?
 
->> have different requirements can just open code pci_request_regions() and
->> pcim_iomap().  pcim_request_regions() should provide sensible default
->> behavior for common cases.
-> 
-> Which is arguably the current behaviour. Changing the behaviour and not
-> the name is a really bad idea and will cause problems in future so don't
-> do that.
->> I think the best solution is to allow duplicate request regions for
->> managed devices which is okay as we know we're holding the resource and
->> let drivers which need to reserve all regions call pci_request_regions()
->> before calling pcim_request_regions().
-> 
-> How about
-> 
-> 	pcim_request_all_regions()
-> 
-> for the behaviour Jeff wants, simple, direct, differently named and
-> obvious what it does.
+Well, I just investigated a bug report in the SCSI transport class.  Our
+SMP handler is broken in exactly the same way.  We rely on the incoming
+reported request lengths to size our request data, and they've blown up
+from the true length to 512 bytes (the size of our alignment).
 
-Sounds good to me.  Jeff?
+With the original patch, I have to run through the whole of libsas and
+scsi_transport_sas doing
 
--- 
-tejun
+s/data_len/raw_data_len/
+
+With your update it looks like I have to run through them all doing
+
+s/data_len/data_len - extra_len/
+
+which is even worse.  Can't we put things back to a point where data_len
+means exactly that and extra_len means how much we have spare on the
+end, so you know you can DMA up to data_len + extra_len if need be?
+
+That way we don't have to sweep through every block driver altering the
+way it uses data_len.
+
+James
+
+
