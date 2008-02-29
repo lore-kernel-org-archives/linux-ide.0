@@ -1,36 +1,58 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: devres and requesting resources
-Date: Fri, 29 Feb 2008 14:25:42 -0500
-Message-ID: <47C85C36.3080509@garzik.org>
-References: <47C75392.3020606@garzik.org>	<20080229112651.5b2a7f6f@core>	<47C7F664.5040102@garzik.org>	<47C7FA8B.7040306@gmail.com> <20080229140106.41ccc843@core> <47C81416.1010305@gmail.com>
+From: Jens Axboe <jens.axboe@oracle.com>
+Subject: Re: [PATCH] block: fix residual byte count handling
+Date: Fri, 29 Feb 2008 21:11:25 +0100
+Message-ID: <20080229201123.GK6704@kernel.dk>
+References: <20080226150845.2196bc1a.akpm@linux-foundation.org> <1204079075.26640.8.camel@homer.simson.net> <1204092010.9934.31.camel@homer.simson.net> <1204096025.1623.9.camel@homer.simson.net> <47C6661E.9010504@gmail.com> <1204186800.7362.7.camel@homer.simson.net> <47C675C6.8000904@gmail.com> <20080228153542.GZ6704@kernel.dk> <47C6D73E.4030302@gmail.com> <1204303656.4003.19.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:51620 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752820AbYB2TZq (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 29 Feb 2008 14:25:46 -0500
-In-Reply-To: <47C81416.1010305@gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1204303656.4003.19.camel@localhost.localdomain>
+Sender: linux-scsi-owner@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Tejun Heo <htejun@gmail.com>, Mike Galbraith <efault@gmx.de>, Andrew Morton <akpm@linux-foundation.org>, LKML <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, Linux IDE mailing list <linux-ide@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 
-Tejun Heo wrote:
->> How about
->>
->> 	pcim_request_all_regions()
->>
->> for the behaviour Jeff wants, simple, direct, differently named and
->> obvious what it does.
+On Fri, Feb 29 2008, James Bottomley wrote:
 > 
-> Sounds good to me.  Jeff?
+> On Fri, 2008-02-29 at 00:46 +0900, Tejun Heo wrote:
+> > Jens Axboe wrote:
+> > >> This problem was reported and diagnosed by Mike Galbraith.
+> > > 
+> > > Tejun, this patch isn't much cleaner at all. It really shows the pain of
+> > > these two seperate, yet related, variables.
+> > 
+> > Not much cleaner compared to what?  I think padding stuff is bound to be
+> > somewhat complex.  It's a nasty thing in nature.  I think ->extra_len is
+> > better than ->raw_data_len because ->extra_len only needs to be updated
+> > where the dirty jobs are done and extra buffer areas are added.  Any
+> > better suggestions?
+> 
+> Well, I just investigated a bug report in the SCSI transport class.  Our
+> SMP handler is broken in exactly the same way.  We rely on the incoming
+> reported request lengths to size our request data, and they've blown up
+> from the true length to 512 bytes (the size of our alignment).
+> 
+> With the original patch, I have to run through the whole of libsas and
+> scsi_transport_sas doing
+> 
+> s/data_len/raw_data_len/
+> 
+> With your update it looks like I have to run through them all doing
+> 
+> s/data_len/data_len - extra_len/
+> 
+> which is even worse.  Can't we put things back to a point where data_len
+> means exactly that and extra_len means how much we have spare on the
+> end, so you know you can DMA up to data_len + extra_len if need be?
+> 
+> That way we don't have to sweep through every block driver altering the
+> way it uses data_len.
 
-Fine with me...  Naming doesn't really matter to much as simply having 
-the capability, in one form or another.
+Fully agree. The reason why I think it's so ugly is that you have to
+keep these two seperate variables in sync. The burning was just one bug,
+there will be others...
 
-	Jeff
-
-
+-- 
+Jens Axboe
 
