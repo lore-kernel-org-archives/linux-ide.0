@@ -1,39 +1,38 @@
-From: "Gaston, Jason D" <jason.d.gaston@intel.com>
-Subject: RE: Unknown SATA PIIX PCI device ID 0x29b6
-Date: Thu, 28 Feb 2008 19:50:07 -0800
-Message-ID: <39B20DF628532344BC7A2692CB6AEE070263AABB@orsmsx420.amr.corp.intel.com>
-References: <Pine.LNX.4.64.0802282306190.10087@axis700.grange> <20080228225603.2764bfd1@core> <47C75069.5010006@ij.net>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: PATA Sil680 Disabling IRQ
+Date: Fri, 29 Feb 2008 11:21:59 +0000
+Message-ID: <20080229112159.2e5adbd1@core>
+References: <8202f4270802261647t505cccf7ra3c81e5fccc9366a@mail.gmail.com>
+	<47C4B5BE.7010709@garzik.org>
+	<8202f4270802271620u6cea6176p2bea5ff8e0b9bbef@mail.gmail.com>
+	<20080228202255.5e3f0c43@core>
+	<8202f4270802281411j747bf96dx34ff81c4d192d417@mail.gmail.com>
+	<20080228231002.325c9e1d@core>
+	<8202f4270802281707g6fb80dc4i6a8015cdd13035ec@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:64006 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751906AbYB2EAc convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 28 Feb 2008 23:00:32 -0500
-Content-class: urn:content-classes:message
-In-Reply-To: <47C75069.5010006@ij.net>
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:46589 "EHLO
+	lxorguk.ukuu.org.uk" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1752654AbYB2LdB (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 29 Feb 2008 06:33:01 -0500
+In-Reply-To: <8202f4270802281707g6fb80dc4i6a8015cdd13035ec@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Felix Miata <mrmazda@ij.net>, linux-kernel@vger.kernel.org
-Cc: linux-ide@vger.kernel.org
+To: Fajun Chen <fajunchen@gmail.com>
+Cc: Jeff Garzik <jeff@garzik.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Mark Lord <liml@rtr.ca>, Tejun Heo <htejun@gmail.com>
 
->> is the device in AHCI mode or PIIX mode ?
->
->How does one tell for sure? BIOS typically only say things 
->like "compatible"
->or "enhanced".
+> I agree with you and Jeff that we can not prevent superuser from
+> corrupting the system.  What I want to understand more is if there's
+> room to harden PATA PIO code in libata.  For instance, when I set
+> wrong data transfer direction in DMA read, I got command timeout,
+> which to me is a more graceful failure than IRQ disabling.  I'm not
+> sure if the difference of failure mode between PIO and DMA is caused
+> by controller or software.  If the cause is software,  it would be
+> nice to close the gap.
 
-29b6 is the IDER, IDE Redirection, network device.  There there will not
-be anything "locally" attached to that network device.  I have not been
-adding the IDER Management devices to the ata_piix driver, perhaps I
-should?   
-
-When in doubt, about an unknown device, check the latest pci.ids file on
-http://pciids.sf.net.  We try to keep it up to date.
-
-Thanks,
-
-Jason
-
+Its almost impossible to tell - I can't duplicate the case you see. When
+I issue wrong commands I see the expected timeout/fail. It may be that
+Tejun's drain patches for the PIO fifo are going to help in your case I
+don't know. Nothing obvious in the SIL680 docs hit me
