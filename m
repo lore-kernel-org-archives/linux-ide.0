@@ -1,34 +1,39 @@
-From: bugme-daemon@bugzilla.kernel.org
-Subject: [Bug 3072] ATAPI Zip drive doesn't work properly
-Date: Thu, 28 Feb 2008 18:31:03 -0800 (PST)
-Message-ID: <20080229023103.D5D4C11D10C@picon.linux-foundation.org>
-References: <bug-3072-11633@http.bugzilla.kernel.org/>
+From: "Gaston, Jason D" <jason.d.gaston@intel.com>
+Subject: RE: Unknown SATA PIIX PCI device ID 0x29b6
+Date: Thu, 28 Feb 2008 19:50:07 -0800
+Message-ID: <39B20DF628532344BC7A2692CB6AEE070263AABB@orsmsx420.amr.corp.intel.com>
+References: <Pine.LNX.4.64.0802282306190.10087@axis700.grange> <20080228225603.2764bfd1@core> <47C75069.5010006@ij.net>
+Mime-Version: 1.0
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([207.189.120.13]:52615 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750844AbYB2Cbg (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 28 Feb 2008 21:31:36 -0500
-Received: from picon.linux-foundation.org (picon.linux-foundation.org [207.189.120.79])
-	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id m1T2V35N028499
-	for <linux-ide@vger.kernel.org>; Thu, 28 Feb 2008 18:31:06 -0800
-In-Reply-To: <bug-3072-11633@http.bugzilla.kernel.org/>
+Received: from mga11.intel.com ([192.55.52.93]:64006 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751906AbYB2EAc convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 28 Feb 2008 23:00:32 -0500
+Content-class: urn:content-classes:message
+In-Reply-To: <47C75069.5010006@ij.net>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Felix Miata <mrmazda@ij.net>, linux-kernel@vger.kernel.org
+Cc: linux-ide@vger.kernel.org
 
-http://bugzilla.kernel.org/show_bug.cgi?id=3072
+>> is the device in AHCI mode or PIIX mode ?
+>
+>How does one tell for sure? BIOS typically only say things 
+>like "compatible"
+>or "enhanced".
 
+29b6 is the IDER, IDE Redirection, network device.  There there will not
+be anything "locally" attached to that network device.  I have not been
+adding the IDER Management devices to the ata_piix driver, perhaps I
+should?   
 
+When in doubt, about an unknown device, check the latest pci.ids file on
+http://pciids.sf.net.  We try to keep it up to date.
 
+Thanks,
 
+Jason
 
-------- Comment #9 from dave@flaterco.com  2008-02-28 18:31 -------
-With 2.6.24.3 I determined that if the "stable" IDE drivers under
-ATA/ATAPI/MFM/RLL support are disabled, the Zip drive works great with the
-"experimental" PATA drivers in libata.
-
-
--- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug, or are watching the assignee.
