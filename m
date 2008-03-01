@@ -1,15 +1,15 @@
 From: Borislav Petkov <petkovbb@googlemail.com>
-Subject: [PATCH 09/24] ide-tape: remove pipeline-specific code from idetape_mtioctop
-Date: Sat,  1 Mar 2008 09:58:33 +0100
-Message-ID: <1204361928-30229-10-git-send-email-petkovbb@gmail.com>
+Subject: [PATCH 16/24] ide-tape: remove idetape_calculate_speeds
+Date: Sat,  1 Mar 2008 09:58:40 +0100
+Message-ID: <1204361928-30229-17-git-send-email-petkovbb@gmail.com>
 References: <1204361928-30229-1-git-send-email-petkovbb@gmail.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.188]:65331 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756878AbYCAI72 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 1 Mar 2008 03:59:28 -0500
-Received: by nf-out-0910.google.com with SMTP id g13so2626833nfb.21
-        for <linux-ide@vger.kernel.org>; Sat, 01 Mar 2008 00:59:27 -0800 (PST)
+Received: from mu-out-0910.google.com ([209.85.134.190]:55634 "EHLO
+	mu-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757149AbYCAI73 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 1 Mar 2008 03:59:29 -0500
+Received: by mu-out-0910.google.com with SMTP id i10so7533679mue.5
+        for <linux-ide@vger.kernel.org>; Sat, 01 Mar 2008 00:59:28 -0800 (PST)
 In-Reply-To: <1204361928-30229-1-git-send-email-petkovbb@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
@@ -18,65 +18,91 @@ Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Borislav Petkov <pe
 
 Signed-off-by: Borislav Petkov <petkovbb@gmail.com>
 ---
- drivers/ide/ide-tape.c |    8 --------
- 1 files changed, 0 insertions(+), 8 deletions(-)
+ drivers/ide/ide-tape.c |   64 ------------------------------------------------
+ 1 files changed, 0 insertions(+), 64 deletions(-)
 
 diff --git a/drivers/ide/ide-tape.c b/drivers/ide/ide-tape.c
-index d4a2e73..dd11c7b 100644
+index 93e42e6..cfc11bb 100644
 --- a/drivers/ide/ide-tape.c
 +++ b/drivers/ide/ide-tape.c
-@@ -2693,7 +2693,6 @@ static int idetape_mtioctop(ide_drive_t *drive, short mt_op, int mt_count)
- 	case MTWEOF:
- 		if (tape->write_prot)
- 			return -EACCES;
--		idetape_discard_read_pipeline(drive, 1);
- 		for (i = 0; i < mt_count; i++) {
- 			retval = idetape_write_filemark(drive);
- 			if (retval)
-@@ -2701,12 +2700,10 @@ static int idetape_mtioctop(ide_drive_t *drive, short mt_op, int mt_count)
- 		}
- 		return 0;
- 	case MTREW:
--		idetape_discard_read_pipeline(drive, 0);
- 		if (idetape_rewind_tape(drive))
- 			return -EIO;
- 		return 0;
- 	case MTLOAD:
--		idetape_discard_read_pipeline(drive, 0);
- 		idetape_create_load_unload_cmd(drive, &pc,
- 					       IDETAPE_LU_LOAD_MASK);
- 		return idetape_queue_pc_tail(drive, &pc);
-@@ -2721,7 +2718,6 @@ static int idetape_mtioctop(ide_drive_t *drive, short mt_op, int mt_count)
- 				if (!idetape_queue_pc_tail(drive, &pc))
- 					tape->door_locked = DOOR_UNLOCKED;
- 		}
--		idetape_discard_read_pipeline(drive, 0);
- 		idetape_create_load_unload_cmd(drive, &pc,
- 					      !IDETAPE_LU_LOAD_MASK);
- 		retval = idetape_queue_pc_tail(drive, &pc);
-@@ -2729,10 +2725,8 @@ static int idetape_mtioctop(ide_drive_t *drive, short mt_op, int mt_count)
- 			clear_bit(IDETAPE_FLAG_MEDIUM_PRESENT, &tape->flags);
- 		return retval;
- 	case MTNOP:
--		idetape_discard_read_pipeline(drive, 0);
- 		return idetape_flush_tape_buffers(drive);
- 	case MTRETEN:
--		idetape_discard_read_pipeline(drive, 0);
- 		idetape_create_load_unload_cmd(drive, &pc,
- 			IDETAPE_LU_RETENSION_MASK | IDETAPE_LU_LOAD_MASK);
- 		return idetape_queue_pc_tail(drive, &pc);
-@@ -2754,11 +2748,9 @@ static int idetape_mtioctop(ide_drive_t *drive, short mt_op, int mt_count)
- 			set_bit(IDETAPE_FLAG_DETECT_BS, &tape->flags);
- 		return 0;
- 	case MTSEEK:
--		idetape_discard_read_pipeline(drive, 0);
- 		return idetape_position_tape(drive,
- 			mt_count * tape->user_bs_factor, tape->partition, 0);
- 	case MTSETPART:
--		idetape_discard_read_pipeline(drive, 0);
- 		return idetape_position_tape(drive, 0, mt_count, 0);
- 	case MTFSR:
- 	case MTBSR:
+@@ -1187,69 +1187,6 @@ static void idetape_create_mode_sense_cmd(struct ide_atapi_pc *pc, u8 page_code)
+ 	pc->idetape_callback = &idetape_pc_callback;
+ }
+ 
+-static void idetape_calculate_speeds(ide_drive_t *drive)
+-{
+-	idetape_tape_t *tape = drive->driver_data;
+-
+-	if (time_after(jiffies,
+-			tape->controlled_pipeline_head_time + 120 * HZ)) {
+-		tape->controlled_previous_pipeline_head =
+-			tape->controlled_last_pipeline_head;
+-		tape->controlled_previous_head_time =
+-			tape->controlled_pipeline_head_time;
+-		tape->controlled_last_pipeline_head = tape->pipeline_head;
+-		tape->controlled_pipeline_head_time = jiffies;
+-	}
+-	if (time_after(jiffies, tape->controlled_pipeline_head_time + 60 * HZ))
+-		tape->controlled_pipeline_head_speed = (tape->pipeline_head -
+-				tape->controlled_last_pipeline_head) * 32 * HZ /
+-				(jiffies - tape->controlled_pipeline_head_time);
+-	else if (time_after(jiffies, tape->controlled_previous_head_time))
+-		tape->controlled_pipeline_head_speed = (tape->pipeline_head -
+-				tape->controlled_previous_pipeline_head) * 32 *
+-			HZ / (jiffies - tape->controlled_previous_head_time);
+-
+-	if (tape->nr_pending_stages < tape->max_stages/*- 1 */) {
+-		/* -1 for read mode error recovery */
+-		if (time_after(jiffies, tape->uncontrolled_previous_head_time +
+-					10 * HZ)) {
+-			tape->uncontrolled_pipeline_head_time = jiffies;
+-			tape->uncontrolled_pipeline_head_speed =
+-				(tape->pipeline_head -
+-				 tape->uncontrolled_previous_pipeline_head) *
+-				32 * HZ / (jiffies -
+-					tape->uncontrolled_previous_head_time);
+-		}
+-	} else {
+-		tape->uncontrolled_previous_head_time = jiffies;
+-		tape->uncontrolled_previous_pipeline_head = tape->pipeline_head;
+-		if (time_after(jiffies, tape->uncontrolled_pipeline_head_time +
+-					30 * HZ))
+-			tape->uncontrolled_pipeline_head_time = jiffies;
+-
+-	}
+-	tape->pipeline_head_speed = max(tape->uncontrolled_pipeline_head_speed,
+-					tape->controlled_pipeline_head_speed);
+-
+-	if (tape->speed_control == 1) {
+-		if (tape->nr_pending_stages >= tape->max_stages / 2)
+-			tape->max_insert_speed = tape->pipeline_head_speed +
+-				(1100 - tape->pipeline_head_speed) * 2 *
+-				(tape->nr_pending_stages - tape->max_stages / 2)
+-				/ tape->max_stages;
+-		else
+-			tape->max_insert_speed = 500 +
+-				(tape->pipeline_head_speed - 500) * 2 *
+-				tape->nr_pending_stages / tape->max_stages;
+-
+-		if (tape->nr_pending_stages >= tape->max_stages * 99 / 100)
+-			tape->max_insert_speed = 5000;
+-	} else
+-		tape->max_insert_speed = tape->speed_control;
+-
+-	tape->max_insert_speed = max(tape->max_insert_speed, 500);
+-}
+-
+ static ide_startstop_t idetape_media_access_finished(ide_drive_t *drive)
+ {
+ 	idetape_tape_t *tape = drive->driver_data;
+@@ -1402,7 +1339,6 @@ static ide_startstop_t idetape_do_request(ide_drive_t *drive,
+ 	if (time_after(jiffies, tape->insert_time))
+ 		tape->insert_speed = tape->insert_size / 1024 * HZ /
+ 					(jiffies - tape->insert_time);
+-	idetape_calculate_speeds(drive);
+ 	if (!test_and_clear_bit(IDETAPE_FLAG_IGNORE_DSC, &tape->flags) &&
+ 	    (stat & SEEK_STAT) == 0) {
+ 		if (postponed_rq == NULL) {
 -- 
 1.5.4.1
 
