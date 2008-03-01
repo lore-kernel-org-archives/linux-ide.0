@@ -1,127 +1,81 @@
 From: Borislav Petkov <petkovbb@googlemail.com>
-Subject: [PATCH 08/24] ide-tape: remove pipeline-specific code from idetape_space_over_filemarks
-Date: Sat,  1 Mar 2008 09:58:32 +0100
-Message-ID: <1204361928-30229-9-git-send-email-petkovbb@gmail.com>
+Subject: [PATCH 22/24] ide-tape: remove misc references to pipelined operation in the comments
+Date: Sat,  1 Mar 2008 09:58:46 +0100
+Message-ID: <1204361928-30229-23-git-send-email-petkovbb@gmail.com>
 References: <1204361928-30229-1-git-send-email-petkovbb@gmail.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
 Received: from nf-out-0910.google.com ([64.233.182.184]:64772 "EHLO
 	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751616AbYCAI7H (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 1 Mar 2008 03:59:07 -0500
+	with ESMTP id S1755305AbYCAI7S (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 1 Mar 2008 03:59:18 -0500
 Received: by nf-out-0910.google.com with SMTP id g13so2626781nfb.21
-        for <linux-ide@vger.kernel.org>; Sat, 01 Mar 2008 00:59:05 -0800 (PST)
+        for <linux-ide@vger.kernel.org>; Sat, 01 Mar 2008 00:59:17 -0800 (PST)
 In-Reply-To: <1204361928-30229-1-git-send-email-petkovbb@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: bzolnier@gmail.com
 Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Borislav Petkov <petkovbb@gmail.com>
 
-Also, remove idetape_wait_first_stage() too since it becomes unused.
-
 Signed-off-by: Borislav Petkov <petkovbb@gmail.com>
 ---
- drivers/ide/ide-tape.c |   65 +-----------------------------------------------
- 1 files changed, 1 insertions(+), 64 deletions(-)
+ drivers/ide/ide-tape.c |   15 ++++-----------
+ 1 files changed, 4 insertions(+), 11 deletions(-)
 
 diff --git a/drivers/ide/ide-tape.c b/drivers/ide/ide-tape.c
-index 99d6b29..d4a2e73 100644
+index 9810253..07e08a3 100644
 --- a/drivers/ide/ide-tape.c
 +++ b/drivers/ide/ide-tape.c
-@@ -2143,19 +2143,6 @@ static void idetape_create_space_cmd(struct ide_atapi_pc *pc, int count, u8 cmd)
- 	pc->idetape_callback = &idetape_pc_callback;
- }
- 
--static void idetape_wait_first_stage(ide_drive_t *drive)
--{
--	idetape_tape_t *tape = drive->driver_data;
--	unsigned long flags;
--
--	if (tape->first_stage == NULL)
--		return;
--	spin_lock_irqsave(&tape->lock, flags);
--	if (tape->active_stage == tape->first_stage)
--		idetape_wait_for_request(drive, tape->active_data_rq);
--	spin_unlock_irqrestore(&tape->lock, flags);
--}
--
- /* Queue up a character device originated write request. */
- static int idetape_add_chrdev_write_request(ide_drive_t *drive, int blocks)
- {
-@@ -2446,73 +2433,23 @@ static int idetape_blkdev_ioctl(ide_drive_t *drive, unsigned int cmd,
- 	return 0;
- }
- 
--/*
-- * The function below is now a bit more complicated than just passing the
-- * command to the tape since we may have crossed some filemarks during our
-- * pipelined read-ahead mode. As a minor side effect, the pipeline enables us to
-- * support MTFSFM when the filemark is in our internal pipeline even if the tape
-- * doesn't support spacing over filemarks in the reverse direction.
-- */
- static int idetape_space_over_filemarks(ide_drive_t *drive, short mt_op,
- 					int mt_count)
- {
- 	idetape_tape_t *tape = drive->driver_data;
- 	struct ide_atapi_pc pc;
--	unsigned long flags;
- 	int retval, count = 0;
- 	int sprev = !!(tape->caps[4] & 0x20);
- 
- 	if (mt_count == 0)
- 		return 0;
+@@ -267,9 +267,7 @@ typedef struct ide_tape_obj {
+ 	 * While polling for DSC we use postponed_rq to postpone the current
+ 	 * request so that ide.c will be able to service pending requests on the
+ 	 * other device. Note that at most we will have only one DSC (usually
+-	 * data transfer) request in the device request queue. Additional
+-	 * requests can be queued in our internal pipeline, but they will be
+-	 * visible to ide.c only one at a time.
++	 * data transfer) request in the device request queue.
+ 	 */
+ 	struct request *postponed_rq;
+ 	/* The time in which we started polling for DSC */
+@@ -309,10 +307,8 @@ typedef struct ide_tape_obj {
+ 	 * At most, there is only one ide-tape originated data transfer request
+ 	 * in the device request queue. This allows ide.c to easily service
+ 	 * requests from the other device when we postpone our active request.
+-	 * In the pipelined operation mode, we use our internal pipeline
+-	 * structure to hold more data requests. The data buffer size is chosen
+-	 * based on the tape's recommendation.
+ 	 */
 +
- 	if (MTBSF == mt_op || MTBSFM == mt_op) {
- 		if (!sprev)
- 			return -EIO;
- 		mt_count = -mt_count;
- 	}
+ 	/* ptr to the request which is waiting in the device request queue */
+ 	struct request *active_data_rq;
+ 	/* Data buffer size chosen based on the tape's recommendation */
+@@ -1792,8 +1788,7 @@ static int idetape_init_read(ide_drive_t *drive)
+ }
  
--	if (tape->chrdev_dir == IDETAPE_DIR_READ) {
--		/* its a read-ahead buffer, scan it for crossed filemarks. */
--		tape->merge_stage_size = 0;
--		if (test_and_clear_bit(IDETAPE_FLAG_FILEMARK, &tape->flags))
--			++count;
--		while (tape->first_stage != NULL) {
--			if (count == mt_count) {
--				if (mt_op == MTFSFM)
--					set_bit(IDETAPE_FLAG_FILEMARK,
--						&tape->flags);
--				return 0;
--			}
--			spin_lock_irqsave(&tape->lock, flags);
--			if (tape->first_stage == tape->active_stage) {
--				/*
--				 * We have reached the active stage in the read
--				 * pipeline. There is no point in allowing the
--				 * drive to continue reading any farther, so we
--				 * stop the pipeline.
--				 *
--				 * This section should be moved to a separate
--				 * subroutine because similar operations are
--				 * done in __idetape_discard_read_pipeline(),
--				 * for example.
--				 */
--				tape->next_stage = NULL;
--				spin_unlock_irqrestore(&tape->lock, flags);
--				idetape_wait_first_stage(drive);
--				tape->next_stage = tape->first_stage->next;
--			} else
--				spin_unlock_irqrestore(&tape->lock, flags);
--			if (tape->first_stage->rq.errors ==
--					IDETAPE_ERROR_FILEMARK)
--				++count;
--			idetape_remove_stage_head(drive);
--		}
--		idetape_discard_read_pipeline(drive, 0);
--	}
--
--	/*
--	 * The filemark was not found in our internal pipeline;	now we can issue
--	 * the space command.
--	 */
+ /*
+- * Called from idetape_chrdev_read() to service a character device read request
+- * and add read-ahead requests to our pipeline.
++ * Called from idetape_chrdev_read() to service a character device read request.
+  */
+ static int idetape_add_chrdev_read_request(ide_drive_t *drive, int blocks)
+ {
+@@ -2112,8 +2107,7 @@ static int idetape_write_filemark(ide_drive_t *drive)
+  *
+  * Note: MTBSF and MTBSFM are not supported when the tape doesn't support
+  * spacing over filemarks in the reverse direction. In this case, MTFSFM is also
+- * usually not supported (it is supported in the rare case in which we crossed
+- * the filemark during our read-ahead pipelined operation mode).
++ * usually not supported.
+  *
+  * The following commands are currently not supported:
+  *
+@@ -2129,7 +2123,6 @@ static int idetape_mtioctop(ide_drive_t *drive, short mt_op, int mt_count)
+ 	debug_log(DBG_ERR, "Handling MTIOCTOP ioctl: mt_op=%d, mt_count=%d\n",
+ 			mt_op, mt_count);
+ 
+-	/* Commands which need our pipelined read-ahead stages. */
  	switch (mt_op) {
  	case MTFSF:
- 	case MTBSF:
+ 	case MTFSFM:
 -- 
 1.5.4.1
 
