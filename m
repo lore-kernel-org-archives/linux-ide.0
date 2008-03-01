@@ -1,259 +1,73 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: [git patches] libata fixes, and release notes
-Date: Fri, 29 Feb 2008 19:32:59 -0500
-Message-ID: <20080301003259.GA12378@havoc.gtf.org>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: [PATCH] block: fix residual byte count handling
+Date: Sat, 01 Mar 2008 15:17:32 +0900
+Message-ID: <47C8F4FC.1040505@gmail.com>
+References: <20080226150845.2196bc1a.akpm@linux-foundation.org> <1204079075.26640.8.camel@homer.simson.net> <1204092010.9934.31.camel@homer.simson.net> <1204096025.1623.9.camel@homer.simson.net> <47C6661E.9010504@gmail.com> <1204186800.7362.7.camel@homer.simson.net> <47C675C6.8000904@gmail.com> <20080228153542.GZ6704@kernel.dk> <47C6D73E.4030302@gmail.com> <1204303656.4003.19.camel@localhost.localdomain> <20080229201123.GK6704@kernel.dk>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from havoc.gtf.org ([69.61.125.42]:40394 "EHLO havoc.gtf.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751926AbYCAAdA (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 29 Feb 2008 19:33:00 -0500
-Content-Disposition: inline
-Sender: linux-ide-owner@vger.kernel.org
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <20080229201123.GK6704@kernel.dk>
+Sender: linux-scsi-owner@vger.kernel.org
+To: Jens Axboe <jens.axboe@oracle.com>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Mike Galbraith <efault@gmx.de>, Andrew Morton <akpm@linux-foundation.org>, LKML <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>
 List-Id: linux-ide@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>
-Cc: linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
 
+Hello, Jens, James.
 
-RELEASE NOTES:
+Jens Axboe wrote:
+>> With the original patch, I have to run through the whole of libsas and
+>> scsi_transport_sas doing
+>>
+>> s/data_len/raw_data_len/
+>>
+>> With your update it looks like I have to run through them all doing
+>>
+>> s/data_len/data_len - extra_len/
 
-There remains an outstanding CD/DVD burning regression, which
-is IMO a release blocker.  A fix exists[1], but it is still being
-discussed[2].
+blk_rq_raw_data_len() should do.
 
-A data corruptor fix on ATI SB600 (AHCI clone) also exists[3], and is
-waiting on confirmation/feedback from AMD, but the existing workaround
-(AHCI_HFLAG_32BIT_ONLY) seems to work _most_ of the time, if only by
-luck.
+>> which is even worse.  Can't we put things back to a point where data_len
+>> means exactly that and extra_len means how much we have spare on the
+>> end, so you know you can DMA up to data_len + extra_len if need be?
+>>
+>> That way we don't have to sweep through every block driver altering the
+>> way it uses data_len.
 
-[1] http://marc.info/?l=linux-ide&m=120418865825486&w=2
-[2] http://marc.info/?t=120418867400002&r=1&w=2
-[3] http://marc.info/?l=linux-ide&m=120423157501944&w=2
+If SMP is broken because it needs start address alignment but not
+padding to align the size, what should be done is to make that exact
+requirement visible to the block layer.  Say,
+blk_queue_dma_start_alignment() or maybe change
+blk_queue_dma_alignment() such that it only indicates start address
+alignment and add blk_queue_dma_size_alignment() for drivers which
+require size to be aligned too.  I think those are few.
 
+I think the decision which value rq->data_len represents comes down to
+which size is used more in low level drivers because no matter which way
+we choose we'll have to update some of the drivers which expects the
+other thing from rq->data_len.
 
-Please pull from 'upstream-linus' branch of
-master.kernel.org:/pub/scm/linux/kernel/git/jgarzik/libata-dev.git upstream-linus
+blk_rq_raw_data_len() is needed iff a driver needs dummy buffers
+attached at the end and still needs to know the original request size
+which isn't the common case.
 
-to receive the following updates:
+> Fully agree. The reason why I think it's so ugly is that you have to
+> keep these two seperate variables in sync. The burning was just one bug,
+> there will be others...
 
- drivers/ata/libata-scsi.c |   10 ++++++
- drivers/ata/sata_svw.c    |   77 ++++++++++++++++++++++++++++++++++++--------
- 2 files changed, 73 insertions(+), 14 deletions(-)
+The posted modification isn't too bad as the maintenance of the two
+variables is at places where the nasty things happen.  I think what
+rq->data_len should represent when seen from LLDs is more important and
+please note that if SMP is broken because it simply doesn't require
+512byte size alignment, it's a different issue.
 
-Anantha Subramanyam (1):
-      sata_svw: Add support for HT1100 SATA controller
+As long as both raw_data_len and data_len are accessible, I'm okay
+either way.  My biggest reluctance is against breaking sum(sg) ==
+rq->data_len.  I think this can lead to much more subtle problems such
+as programming the controller w/ wrong bytes count and wrapped-around
+resid calculation.
 
-Jeff Garzik (1):
-      [libata] wrap kmap_atomic(KM_IRQ0) with local_irq_save/restore()
+Thanks.
 
-diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-index 0562b0a..7b1f1ee 100644
---- a/drivers/ata/libata-scsi.c
-+++ b/drivers/ata/libata-scsi.c
-@@ -1694,12 +1694,17 @@ void ata_scsi_rbuf_fill(struct ata_scsi_args *args,
- 	u8 *rbuf;
- 	unsigned int buflen, rc;
- 	struct scsi_cmnd *cmd = args->cmd;
-+	unsigned long flags;
-+
-+	local_irq_save(flags);
- 
- 	buflen = ata_scsi_rbuf_get(cmd, &rbuf);
- 	memset(rbuf, 0, buflen);
- 	rc = actor(args, rbuf, buflen);
- 	ata_scsi_rbuf_put(cmd, rbuf);
- 
-+	local_irq_restore(flags);
-+
- 	if (rc == 0)
- 		cmd->result = SAM_STAT_GOOD;
- 	args->done(cmd);
-@@ -2473,6 +2478,9 @@ static void atapi_qc_complete(struct ata_queued_cmd *qc)
- 		if ((scsicmd[0] == INQUIRY) && ((scsicmd[1] & 0x03) == 0)) {
- 			u8 *buf = NULL;
- 			unsigned int buflen;
-+			unsigned long flags;
-+
-+			local_irq_save(flags);
- 
- 			buflen = ata_scsi_rbuf_get(cmd, &buf);
- 
-@@ -2490,6 +2498,8 @@ static void atapi_qc_complete(struct ata_queued_cmd *qc)
- 			}
- 
- 			ata_scsi_rbuf_put(cmd, buf);
-+
-+			local_irq_restore(flags);
- 		}
- 
- 		cmd->result = SAM_STAT_GOOD;
-diff --git a/drivers/ata/sata_svw.c b/drivers/ata/sata_svw.c
-index 69f651e..840d1c4 100644
---- a/drivers/ata/sata_svw.c
-+++ b/drivers/ata/sata_svw.c
-@@ -45,6 +45,8 @@
- #include <linux/interrupt.h>
- #include <linux/device.h>
- #include <scsi/scsi_host.h>
-+#include <scsi/scsi_cmnd.h>
-+#include <scsi/scsi.h>
- #include <linux/libata.h>
- 
- #ifdef CONFIG_PPC_OF
-@@ -59,6 +61,7 @@ enum {
- 	/* ap->flags bits */
- 	K2_FLAG_SATA_8_PORTS		= (1 << 24),
- 	K2_FLAG_NO_ATAPI_DMA		= (1 << 25),
-+	K2_FLAG_BAR_POS_3			= (1 << 26),
- 
- 	/* Taskfile registers offsets */
- 	K2_SATA_TF_CMD_OFFSET		= 0x00,
-@@ -88,8 +91,10 @@ enum {
- 	/* Port stride */
- 	K2_SATA_PORT_OFFSET		= 0x100,
- 
--	board_svw4			= 0,
--	board_svw8			= 1,
-+	chip_svw4			= 0,
-+	chip_svw8			= 1,
-+	chip_svw42			= 2,	/* bar 3 */
-+	chip_svw43			= 3,	/* bar 5 */
- };
- 
- static u8 k2_stat_check_status(struct ata_port *ap);
-@@ -97,10 +102,25 @@ static u8 k2_stat_check_status(struct ata_port *ap);
- 
- static int k2_sata_check_atapi_dma(struct ata_queued_cmd *qc)
- {
-+	u8 cmnd = qc->scsicmd->cmnd[0];
-+
- 	if (qc->ap->flags & K2_FLAG_NO_ATAPI_DMA)
- 		return -1;	/* ATAPI DMA not supported */
-+	else {
-+		switch (cmnd) {
-+		case READ_10:
-+		case READ_12:
-+		case READ_16:
-+		case WRITE_10:
-+		case WRITE_12:
-+		case WRITE_16:
-+			return 0;
-+
-+		default:
-+			return -1;
-+		}
- 
--	return 0;
-+	}
- }
- 
- static int k2_sata_scr_read(struct ata_port *ap, unsigned int sc_reg, u32 *val)
-@@ -354,7 +374,7 @@ static const struct ata_port_operations k2_sata_ops = {
- };
- 
- static const struct ata_port_info k2_port_info[] = {
--	/* board_svw4 */
-+	/* chip_svw4 */
- 	{
- 		.flags		= ATA_FLAG_SATA | ATA_FLAG_NO_LEGACY |
- 				  ATA_FLAG_MMIO | K2_FLAG_NO_ATAPI_DMA,
-@@ -363,7 +383,7 @@ static const struct ata_port_info k2_port_info[] = {
- 		.udma_mask	= ATA_UDMA6,
- 		.port_ops	= &k2_sata_ops,
- 	},
--	/* board_svw8 */
-+	/* chip_svw8 */
- 	{
- 		.flags		= ATA_FLAG_SATA | ATA_FLAG_NO_LEGACY |
- 				  ATA_FLAG_MMIO | K2_FLAG_NO_ATAPI_DMA |
-@@ -373,6 +393,24 @@ static const struct ata_port_info k2_port_info[] = {
- 		.udma_mask	= ATA_UDMA6,
- 		.port_ops	= &k2_sata_ops,
- 	},
-+	/* chip_svw42 */
-+	{
-+		.flags		= ATA_FLAG_SATA | ATA_FLAG_NO_LEGACY |
-+				  ATA_FLAG_MMIO | K2_FLAG_BAR_POS_3,
-+		.pio_mask	= 0x1f,
-+		.mwdma_mask	= 0x07,
-+		.udma_mask	= ATA_UDMA6,
-+		.port_ops	= &k2_sata_ops,
-+	},
-+	/* chip_svw43 */
-+	{
-+		.flags		= ATA_FLAG_SATA | ATA_FLAG_NO_LEGACY |
-+				  ATA_FLAG_MMIO,
-+		.pio_mask	= 0x1f,
-+		.mwdma_mask	= 0x07,
-+		.udma_mask	= ATA_UDMA6,
-+		.port_ops	= &k2_sata_ops,
-+	},
- };
- 
- static void k2_sata_setup_port(struct ata_ioports *port, void __iomem *base)
-@@ -402,7 +440,7 @@ static int k2_sata_init_one(struct pci_dev *pdev, const struct pci_device_id *en
- 		{ &k2_port_info[ent->driver_data], NULL };
- 	struct ata_host *host;
- 	void __iomem *mmio_base;
--	int n_ports, i, rc;
-+	int n_ports, i, rc, bar_pos;
- 
- 	if (!printed_version++)
- 		dev_printk(KERN_DEBUG, &pdev->dev, "version " DRV_VERSION "\n");
-@@ -416,6 +454,9 @@ static int k2_sata_init_one(struct pci_dev *pdev, const struct pci_device_id *en
- 	if (!host)
- 		return -ENOMEM;
- 
-+	bar_pos = 5;
-+	if (ppi[0]->flags & K2_FLAG_BAR_POS_3)
-+		bar_pos = 3;
- 	/*
- 	 * If this driver happens to only be useful on Apple's K2, then
- 	 * we should check that here as it has a normal Serverworks ID
-@@ -428,17 +469,23 @@ static int k2_sata_init_one(struct pci_dev *pdev, const struct pci_device_id *en
- 	 * Check if we have resources mapped at all (second function may
- 	 * have been disabled by firmware)
- 	 */
--	if (pci_resource_len(pdev, 5) == 0)
-+	if (pci_resource_len(pdev, bar_pos) == 0) {
-+		/* In IDE mode we need to pin the device to ensure that
-+			pcim_release does not clear the busmaster bit in config
-+			space, clearing causes busmaster DMA to fail on
-+			ports 3 & 4 */
-+		pcim_pin_device(pdev);
- 		return -ENODEV;
-+	}
- 
- 	/* Request and iomap PCI regions */
--	rc = pcim_iomap_regions(pdev, 1 << 5, DRV_NAME);
-+	rc = pcim_iomap_regions(pdev, 1 << bar_pos, DRV_NAME);
- 	if (rc == -EBUSY)
- 		pcim_pin_device(pdev);
- 	if (rc)
- 		return rc;
- 	host->iomap = pcim_iomap_table(pdev);
--	mmio_base = host->iomap[5];
-+	mmio_base = host->iomap[bar_pos];
- 
- 	/* different controllers have different number of ports - currently 4 or 8 */
- 	/* All ports are on the same function. Multi-function device is no
-@@ -483,11 +530,13 @@ static int k2_sata_init_one(struct pci_dev *pdev, const struct pci_device_id *en
-  * controller
-  * */
- static const struct pci_device_id k2_sata_pci_tbl[] = {
--	{ PCI_VDEVICE(SERVERWORKS, 0x0240), board_svw4 },
--	{ PCI_VDEVICE(SERVERWORKS, 0x0241), board_svw4 },
--	{ PCI_VDEVICE(SERVERWORKS, 0x0242), board_svw8 },
--	{ PCI_VDEVICE(SERVERWORKS, 0x024a), board_svw4 },
--	{ PCI_VDEVICE(SERVERWORKS, 0x024b), board_svw4 },
-+	{ PCI_VDEVICE(SERVERWORKS, 0x0240), chip_svw4 },
-+	{ PCI_VDEVICE(SERVERWORKS, 0x0241), chip_svw4 },
-+	{ PCI_VDEVICE(SERVERWORKS, 0x0242), chip_svw8 },
-+	{ PCI_VDEVICE(SERVERWORKS, 0x024a), chip_svw4 },
-+	{ PCI_VDEVICE(SERVERWORKS, 0x024b), chip_svw4 },
-+	{ PCI_VDEVICE(SERVERWORKS, 0x0410), chip_svw42 },
-+	{ PCI_VDEVICE(SERVERWORKS, 0x0411), chip_svw43 },
- 
- 	{ }
- };
+-- 
+tejun
