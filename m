@@ -1,99 +1,106 @@
 From: Borislav Petkov <petkovbb@googlemail.com>
-Subject: [PATCH 17/24] ide-tape: remove pipeline-specific code from idetape_chrdev_open
-Date: Sat,  1 Mar 2008 09:58:41 +0100
-Message-ID: <1204361928-30229-18-git-send-email-petkovbb@gmail.com>
+Subject: [PATCH 18/24] ide-tape: remove pipeline-specific code from idetape_setup
+Date: Sat,  1 Mar 2008 09:58:42 +0100
+Message-ID: <1204361928-30229-19-git-send-email-petkovbb@gmail.com>
 References: <1204361928-30229-1-git-send-email-petkovbb@gmail.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.184]:64772 "EHLO
+Received: from nf-out-0910.google.com ([64.233.182.191]:64846 "EHLO
 	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757627AbYCAI7d (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 1 Mar 2008 03:59:33 -0500
-Received: by nf-out-0910.google.com with SMTP id g13so2626781nfb.21
-        for <linux-ide@vger.kernel.org>; Sat, 01 Mar 2008 00:59:32 -0800 (PST)
+	with ESMTP id S1756210AbYCAI72 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 1 Mar 2008 03:59:28 -0500
+Received: by nf-out-0910.google.com with SMTP id g13so2626785nfb.21
+        for <linux-ide@vger.kernel.org>; Sat, 01 Mar 2008 00:59:28 -0800 (PST)
 In-Reply-To: <1204361928-30229-1-git-send-email-petkovbb@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: bzolnier@gmail.com
 Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Borislav Petkov <petkovbb@gmail.com>
 
-As a result, remove orphaned idetape_restart_speed_control. Also, unnest
-if-condition in idetape_chrdev_open.
-
 Signed-off-by: Borislav Petkov <petkovbb@gmail.com>
 ---
- drivers/ide/ide-tape.c |   38 ++++++--------------------------------
- 1 files changed, 6 insertions(+), 32 deletions(-)
+ drivers/ide/ide-tape.c |   40 ++++------------------------------------
+ 1 files changed, 4 insertions(+), 36 deletions(-)
 
 diff --git a/drivers/ide/ide-tape.c b/drivers/ide/ide-tape.c
-index cfc11bb..5f57bdb 100644
+index 5f57bdb..2718006 100644
 --- a/drivers/ide/ide-tape.c
 +++ b/drivers/ide/ide-tape.c
-@@ -424,7 +424,6 @@ typedef struct ide_tape_obj {
- 	int uncontrolled_previous_pipeline_head;
- 	unsigned long controlled_previous_head_time;
- 	unsigned long uncontrolled_previous_head_time;
--	int restart_speed_control_req;
- 
- 	u32 debug_mask;
- } idetape_tape_t;
-@@ -1838,24 +1837,6 @@ static int idetape_add_chrdev_write_request(ide_drive_t *drive, int blocks)
- 					tape->merge_stage->bh);
- }
- 
--static void idetape_restart_speed_control(ide_drive_t *drive)
--{
--	idetape_tape_t *tape = drive->driver_data;
--
--	tape->restart_speed_control_req = 0;
--	tape->pipeline_head = 0;
--	tape->controlled_last_pipeline_head = 0;
--	tape->controlled_previous_pipeline_head = 0;
--	tape->uncontrolled_previous_pipeline_head = 0;
--	tape->controlled_pipeline_head_speed = 5000;
--	tape->pipeline_head_speed = 5000;
--	tape->uncontrolled_pipeline_head_speed = 0;
--	tape->controlled_pipeline_head_time =
--		tape->uncontrolled_pipeline_head_time = jiffies;
--	tape->controlled_previous_head_time =
--		tape->uncontrolled_previous_head_time = jiffies;
--}
--
- static int idetape_init_read(ide_drive_t *drive)
+@@ -2699,11 +2699,10 @@ static inline void idetape_add_settings(ide_drive_t *drive) { ; }
+  */
+ static void idetape_setup(ide_drive_t *drive, idetape_tape_t *tape, int minor)
  {
- 	idetape_tape_t *tape = drive->driver_data;
-@@ -2470,9 +2451,6 @@ static int idetape_chrdev_open(struct inode *inode, struct file *filp)
- 	if (!test_bit(IDETAPE_FLAG_ADDRESS_VALID, &tape->flags))
- 		(void)idetape_rewind_tape(drive);
+-	unsigned long t1, tmid, tn, t;
++	unsigned long t;
+ 	int speed;
+ 	int stage_size;
+ 	u8 gcw[2];
+-	struct sysinfo si;
+ 	u16 *ctl = (u16 *)&tape->caps[12];
  
--	if (tape->chrdev_dir != IDETAPE_DIR_READ)
--		clear_bit(IDETAPE_FLAG_PIPELINE_ERR, &tape->flags);
+ 	spin_lock_init(&tape->lock);
+@@ -2730,10 +2729,6 @@ static void idetape_setup(ide_drive_t *drive, idetape_tape_t *tape, int minor)
+ 	if (((gcw[0] & 0x60) >> 5) == 1)
+ 		set_bit(IDETAPE_FLAG_DRQ_INTERRUPT, &tape->flags);
+ 
+-	tape->min_pipeline = 10;
+-	tape->max_pipeline = 10;
+-	tape->max_stages   = 10;
 -
- 	/* Read block size and write protect status from drive. */
+ 	idetape_get_inquiry_results(drive);
+ 	idetape_get_mode_sense_results(drive);
  	ide_tape_get_bsize_from_bdesc(drive);
- 
-@@ -2493,16 +2471,12 @@ static int idetape_chrdev_open(struct inode *inode, struct file *filp)
+@@ -2751,36 +2746,10 @@ static void idetape_setup(ide_drive_t *drive, idetape_tape_t *tape, int minor)
+ 		tape->excess_bh_size = PAGE_SIZE - stage_size % PAGE_SIZE;
  	}
  
- 	/* Lock the tape drive door so user can't eject. */
--	if (tape->chrdev_dir == IDETAPE_DIR_NONE) {
--		if (idetape_create_prevent_cmd(drive, &pc, 1)) {
--			if (!idetape_queue_pc_tail(drive, &pc)) {
--				if (tape->door_locked != DOOR_EXPLICITLY_LOCKED)
--					tape->door_locked = DOOR_LOCKED;
--			}
--		}
--	}
--	idetape_restart_speed_control(drive);
--	tape->restart_speed_control_req = 0;
-+	if (tape->chrdev_dir == IDETAPE_DIR_NONE &&
-+	    idetape_create_prevent_cmd(drive, &pc, 1) &&
-+	    !idetape_queue_pc_tail(drive, &pc) &&
-+	    tape->door_locked != DOOR_EXPLICITLY_LOCKED)
-+		tape->door_locked = DOOR_LOCKED;
-+
- 	return 0;
+-	/* Select the "best" DSC read/write polling freq and pipeline size. */
++	/* select the "best" DSC read/write polling freq */
+ 	speed = max(*(u16 *)&tape->caps[14], *(u16 *)&tape->caps[8]);
  
- out_put_tape:
+-	tape->max_stages = speed * 1000 * 10 / tape->stage_size;
+-
+-	/* Limit memory use for pipeline to 10% of physical memory */
+-	si_meminfo(&si);
+-	if (tape->max_stages * tape->stage_size >
+-			si.totalram * si.mem_unit / 10)
+-		tape->max_stages =
+-			si.totalram * si.mem_unit / (10 * tape->stage_size);
+-
+-	tape->max_stages   = min(tape->max_stages, IDETAPE_MAX_PIPELINE_STAGES);
+-	tape->min_pipeline = min(tape->max_stages, IDETAPE_MIN_PIPELINE_STAGES);
+-	tape->max_pipeline =
+-		min(tape->max_stages * 2, IDETAPE_MAX_PIPELINE_STAGES);
+-	if (tape->max_stages == 0) {
+-		tape->max_stages   = 1;
+-		tape->min_pipeline = 1;
+-		tape->max_pipeline = 1;
+-	}
+-
+-	t1 = (tape->stage_size * HZ) / (speed * 1000);
+-	tmid = (*(u16 *)&tape->caps[16] * 32 * HZ) / (speed * 125);
+-	tn = (IDETAPE_FIFO_THRESHOLD * tape->stage_size * HZ) / (speed * 1000);
+-
+-	if (tape->max_stages)
+-		t = tn;
+-	else
+-		t = t1;
++	t = (tape->stage_size * HZ) / (speed * 1000);
+ 
+ 	/*
+ 	 * Ensure that the number we got makes sense; limit it within
+@@ -2790,11 +2759,10 @@ static void idetape_setup(ide_drive_t *drive, idetape_tape_t *tape, int minor)
+ 				min_t(unsigned long, t, IDETAPE_DSC_RW_MAX),
+ 				IDETAPE_DSC_RW_MIN);
+ 	printk(KERN_INFO "ide-tape: %s <-> %s: %dKBps, %d*%dkB buffer, "
+-		"%dkB pipeline, %lums tDSC%s\n",
++		"%lums tDSC%s\n",
+ 		drive->name, tape->name, *(u16 *)&tape->caps[14],
+ 		(*(u16 *)&tape->caps[16] * 512) / tape->stage_size,
+ 		tape->stage_size / 1024,
+-		tape->max_stages * tape->stage_size / 1024,
+ 		tape->best_dsc_rw_freq * 1000 / HZ,
+ 		drive->using_dma ? ", DMA":"");
+ 
 -- 
 1.5.4.1
 
