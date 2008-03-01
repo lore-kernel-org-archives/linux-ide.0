@@ -1,15 +1,15 @@
 From: Borislav Petkov <petkovbb@googlemail.com>
-Subject: [PATCH 20/24] ide-tape: remove pipelined mode tape control flags
-Date: Sat,  1 Mar 2008 09:58:44 +0100
-Message-ID: <1204361928-30229-21-git-send-email-petkovbb@gmail.com>
+Subject: [PATCH 14/24] ide-tape: remove __idetape_discard_read_pipeline
+Date: Sat,  1 Mar 2008 09:58:38 +0100
+Message-ID: <1204361928-30229-15-git-send-email-petkovbb@gmail.com>
 References: <1204361928-30229-1-git-send-email-petkovbb@gmail.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mu-out-0910.google.com ([209.85.134.187]:55344 "EHLO
-	mu-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751157AbYCAI7E (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 1 Mar 2008 03:59:04 -0500
-Received: by mu-out-0910.google.com with SMTP id i10so7533564mue.5
-        for <linux-ide@vger.kernel.org>; Sat, 01 Mar 2008 00:59:03 -0800 (PST)
+Received: from fk-out-0910.google.com ([209.85.128.184]:12899 "EHLO
+	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751254AbYCAI7G (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 1 Mar 2008 03:59:06 -0500
+Received: by fk-out-0910.google.com with SMTP id z23so6043882fkz.5
+        for <linux-ide@vger.kernel.org>; Sat, 01 Mar 2008 00:59:05 -0800 (PST)
 In-Reply-To: <1204361928-30229-1-git-send-email-petkovbb@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
@@ -18,38 +18,79 @@ Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Borislav Petkov <pe
 
 Signed-off-by: Borislav Petkov <petkovbb@gmail.com>
 ---
- drivers/ide/ide-tape.c |   14 +++++---------
- 1 files changed, 5 insertions(+), 9 deletions(-)
+ drivers/ide/ide-tape.c |   49 ------------------------------------------------
+ 1 files changed, 0 insertions(+), 49 deletions(-)
 
 diff --git a/drivers/ide/ide-tape.c b/drivers/ide/ide-tape.c
-index a5f29ea..68c9c09 100644
+index 3cb6e3d..a3a45b5 100644
 --- a/drivers/ide/ide-tape.c
 +++ b/drivers/ide/ide-tape.c
-@@ -206,19 +206,15 @@ enum {
- 	/* 0 When the tape position is unknown */
- 	IDETAPE_FLAG_ADDRESS_VALID	= (1 <<	1),
- 	/* Device already opened */
--	IDETAPE_FLAG_BUSY			= (1 << 2),
--	/* Error detected in a pipeline stage */
--	IDETAPE_FLAG_PIPELINE_ERR	= (1 <<	3),
-+	IDETAPE_FLAG_BUSY		= (1 << 2),
- 	/* Attempt to auto-detect the current user block size */
--	IDETAPE_FLAG_DETECT_BS		= (1 << 4),
-+	IDETAPE_FLAG_DETECT_BS		= (1 << 3),
- 	/* Currently on a filemark */
--	IDETAPE_FLAG_FILEMARK		= (1 << 5),
-+	IDETAPE_FLAG_FILEMARK		= (1 << 4),
- 	/* DRQ interrupt device */
--	IDETAPE_FLAG_DRQ_INTERRUPT	= (1 << 6),
--	/* pipeline active */
--	IDETAPE_FLAG_PIPELINE_ACTIVE	= (1 << 7),
-+	IDETAPE_FLAG_DRQ_INTERRUPT	= (1 << 5),
- 	/* 0 = no tape is loaded, so we don't rewind after ejecting */
--	IDETAPE_FLAG_MEDIUM_PRESENT	= (1 << 8),
-+	IDETAPE_FLAG_MEDIUM_PRESENT	= (1 << 6),
- };
+@@ -1973,52 +1973,6 @@ static int idetape_create_prevent_cmd(ide_drive_t *drive,
+ 	return 1;
+ }
  
- /* A pipeline stage. */
+-static int __idetape_discard_read_pipeline(ide_drive_t *drive)
+-{
+-	idetape_tape_t *tape = drive->driver_data;
+-	unsigned long flags;
+-	int cnt;
+-
+-	if (tape->chrdev_dir != IDETAPE_DIR_READ)
+-		return 0;
+-
+-	/* Remove merge stage. */
+-	cnt = tape->merge_stage_size / tape->blk_size;
+-	if (test_and_clear_bit(IDETAPE_FLAG_FILEMARK, &tape->flags))
+-		++cnt;		/* Filemarks count as 1 sector */
+-	tape->merge_stage_size = 0;
+-	if (tape->merge_stage != NULL) {
+-		__idetape_kfree_stage(tape->merge_stage);
+-		tape->merge_stage = NULL;
+-	}
+-
+-	/* Clear pipeline flags. */
+-	clear_bit(IDETAPE_FLAG_PIPELINE_ERR, &tape->flags);
+-	tape->chrdev_dir = IDETAPE_DIR_NONE;
+-
+-	/* Remove pipeline stages. */
+-	if (tape->first_stage == NULL)
+-		return 0;
+-
+-	spin_lock_irqsave(&tape->lock, flags);
+-	tape->next_stage = NULL;
+-	if (test_bit(IDETAPE_FLAG_PIPELINE_ACTIVE, &tape->flags))
+-		idetape_wait_for_request(drive, tape->active_data_rq);
+-	spin_unlock_irqrestore(&tape->lock, flags);
+-
+-	while (tape->first_stage != NULL) {
+-		struct request *rq_ptr = &tape->first_stage->rq;
+-
+-		cnt += rq_ptr->nr_sectors - rq_ptr->current_nr_sectors;
+-		if (rq_ptr->errors == IDETAPE_ERROR_FILEMARK)
+-			++cnt;
+-		idetape_remove_stage_head(drive);
+-	}
+-	tape->nr_pending_stages = 0;
+-	tape->max_stages = tape->min_pipeline;
+-	return cnt;
+-}
+-
+ /*
+  * Position the tape to the requested block using the LOCATE packet command.
+  * A READ POSITION command is then issued to check where we are positioned. Like
+@@ -2028,12 +1982,9 @@ static int __idetape_discard_read_pipeline(ide_drive_t *drive)
+ static int idetape_position_tape(ide_drive_t *drive, unsigned int block,
+ 		u8 partition, int skip)
+ {
+-	idetape_tape_t *tape = drive->driver_data;
+ 	int retval;
+ 	struct ide_atapi_pc pc;
+ 
+-	if (tape->chrdev_dir == IDETAPE_DIR_READ)
+-		__idetape_discard_read_pipeline(drive);
+ 	idetape_wait_ready(drive, 60 * 5 * HZ);
+ 	idetape_create_locate_cmd(drive, &pc, block, partition, skip);
+ 	retval = idetape_queue_pc_tail(drive, &pc);
 -- 
 1.5.4.1
 
