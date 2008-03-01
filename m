@@ -1,118 +1,93 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH] block: fix residual byte count handling
-Date: Sat, 01 Mar 2008 09:19:53 -0600
-Message-ID: <1204384793.4003.102.camel@localhost.localdomain>
-References: <20080226150845.2196bc1a.akpm@linux-foundation.org>
-	 <1204079075.26640.8.camel@homer.simson.net>
-	 <1204092010.9934.31.camel@homer.simson.net>
-	 <1204096025.1623.9.camel@homer.simson.net> <47C6661E.9010504@gmail.com>
-	 <1204186800.7362.7.camel@homer.simson.net> <47C675C6.8000904@gmail.com>
-	 <20080228153542.GZ6704@kernel.dk> <47C6D73E.4030302@gmail.com>
-	 <1204303656.4003.19.camel@localhost.localdomain>
-	 <20080229201123.GK6704@kernel.dk>  <47C8F4FC.1040505@gmail.com>
+From: Borislav Petkov <petkovbb@googlemail.com>
+Subject: Re: [PATCH 00/24] ide-tape: remove pipelined mode operation
+Date: Sat, 1 Mar 2008 16:37:13 +0100
+Message-ID: <20080301153713.GA30547@gollum.tnic>
+References: <1204361928-30229-1-git-send-email-petkovbb@gmail.com> <20080301102038.GC25835@cs181133002.pp.htv.fi>
+Reply-To: petkovbb@gmail.com
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <47C8F4FC.1040505@gmail.com>
-Sender: linux-scsi-owner@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Jens Axboe <jens.axboe@oracle.com>, Mike Galbraith <efault@gmx.de>, Andrew Morton <akpm@linux-foundation.org>, LKML <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from nf-out-0910.google.com ([64.233.182.186]:41402 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752773AbYCAPhd (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 1 Mar 2008 10:37:33 -0500
+Received: by nf-out-0910.google.com with SMTP id g13so2718455nfb.21
+        for <linux-ide@vger.kernel.org>; Sat, 01 Mar 2008 07:37:31 -0800 (PST)
+Content-Disposition: inline
+In-Reply-To: <20080301102038.GC25835@cs181133002.pp.htv.fi>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Adrian Bunk <bunk@kernel.org>
+Cc: bzolnier@gmail.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Jens Axboe <jens.axboe@oracle.com>
 
+On Sat, Mar 01, 2008 at 12:20:38PM +0200, Adrian Bunk wrote:
+> On Sat, Mar 01, 2008 at 09:58:24AM +0100, Borislav Petkov wrote:
+> > Hi Bart,
+> >=20
+> > here's the 1st draft of the pipeline removal series. As the diffsta=
+t below openly
+> > states it, a lot of code got removed - even more than the cleanup s=
+eries we did
+> > earlier.
+> >...
+>=20
+> After seeing commit d48567dd43868b3d2e1fcc33ee76dc2d38a1ddeb that=20
+> schedules ide-tape for removal I'm wondering whether any cleanups of=20
+> this driver make any sense at all:
 
-On Sat, 2008-03-01 at 15:17 +0900, Tejun Heo wrote:
-> Hello, Jens, James.
-> 
-> Jens Axboe wrote:
-> >> With the original patch, I have to run through the whole of libsas and
-> >> scsi_transport_sas doing
-> >>
-> >> s/data_len/raw_data_len/
-> >>
-> >> With your update it looks like I have to run through them all doing
-> >>
-> >> s/data_len/data_len - extra_len/
-> 
-> blk_rq_raw_data_len() should do.
+Hi Adrian,
 
-I know we *could* sweep through all the block drivers altering them; my
-point is that I don't think we *should*.  Fundamentally, every driver
-that cares is assuming req->data_len is the length of the request that
-came down.  The fact that it got padded is irrelevant (and actually
-detrimental) to most of them as the SMP driver illustrates.
+you're right and I'm expecting Bart's input on that. However, removing
+tape support in ide altogether is probably not the right thing to do an=
+d
+Bart wanted to keep some kind of a basic, ide-tape "light" version in s=
+o,
+yes, the above commit is misleading.
 
-We use a high dma_alignment not because we care about padding, but
-because we want to avoid scatter gather.  So we care about alignment of
-the start of the buffer (to avoid sg), but fundamentally, we need to
-know what its true length (not its padded length) is.  The true length
-feeds into the smp frame size and is checked by the interfaces, which is
-why the changes caused an SMP failure.
+Here's a fix, Bart please apply.
 
-Just for the principle of least surprise, can we not keep req->data_len
-what it has always been, namely the true data length of the request and
-express the fact that we've padded it by req->extra_len or something, so
-we don't have to do all of these driver changes.
+--
+=46rom 11c41d7760dd0b8f4cd1ab3076c86a2c4beec4de Mon Sep 17 00:00:00 200=
+1
+=46rom: Borislav Petkov <petkovbb@gmail.com>
+Date: Sat, 1 Mar 2008 16:31:17 +0100
+Subject: [PATCH] ide-tape: keep a light version in ide tree
 
-> >> which is even worse.  Can't we put things back to a point where data_len
-> >> means exactly that and extra_len means how much we have spare on the
-> >> end, so you know you can DMA up to data_len + extra_len if need be?
-> >>
-> >> That way we don't have to sweep through every block driver altering the
-> >> way it uses data_len.
-> 
-> If SMP is broken because it needs start address alignment but not
-> padding to align the size, what should be done is to make that exact
-> requirement visible to the block layer.  Say,
-> blk_queue_dma_start_alignment() or maybe change
-> blk_queue_dma_alignment() such that it only indicates start address
-> alignment and add blk_queue_dma_size_alignment() for drivers which
-> require size to be aligned too.  I think those are few.
+Keep a light version of the driver in for the
+small amount of ide tape hardware still using it.
 
-But this is true of *every* current user of the block layer apart from
-IDE ... we all care about alignment not padding.  Any current user that
-actually cares about padding will be doing their own adjustments, so
-they need changing anyway.
+Signed-off-by: Borislav Petkov <petkovbb@gmail.com>
+---
+ Documentation/feature-removal-schedule.txt |   10 ----------
+ 1 files changed, 0 insertions(+), 10 deletions(-)
 
-We can frame that with a different API, but blk_queue_dma_alignment()
-better be the common case (start but not pad alignment).
+diff --git a/Documentation/feature-removal-schedule.txt b/Documentation=
+/feature-removal-schedule.txt
+index ba899ff..4d3aa51 100644
+--- a/Documentation/feature-removal-schedule.txt
++++ b/Documentation/feature-removal-schedule.txt
+@@ -172,16 +172,6 @@ Who:	Len Brown <len.brown@intel.com>
+=20
+ ---------------------------
+=20
+-What:	ide-tape driver
+-When:	July 2008
+-Files:	drivers/ide/ide-tape.c
+-Why:	This driver might not have any users anymore and maintaining it f=
+or no
+-	reason is an effort no one wants to make.
+-Who:	Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Borislav Petkov
+-	<petkovbb@googlemail.com>
+-
+----------------------------
+-
+ What: libata spindown skipping and warning
+ When: Dec 2008
+ Why:  Some halt(8) implementations synchronize caches for and spin
+--=20
+1.5.4.1
 
-> I think the decision which value rq->data_len represents comes down to
-> which size is used more in low level drivers because no matter which way
-> we choose we'll have to update some of the drivers which expects the
-> other thing from rq->data_len.
-
-Right, and currently, apart from IDE, they all want it to mean the true
-data length.
-
-> blk_rq_raw_data_len() is needed iff a driver needs dummy buffers
-> attached at the end and still needs to know the original request size
-> which isn't the common case.
-
-I think it *is* the common case.
-
-> > Fully agree. The reason why I think it's so ugly is that you have to
-> > keep these two seperate variables in sync. The burning was just one bug,
-> > there will be others...
-> 
-> The posted modification isn't too bad as the maintenance of the two
-> variables is at places where the nasty things happen.  I think what
-> rq->data_len should represent when seen from LLDs is more important and
-> please note that if SMP is broken because it simply doesn't require
-> 512byte size alignment, it's a different issue.
-
-But we still have to find all the bugs this causes in all the block
-drivers ... that's my biggest concern right now.
-
-> As long as both raw_data_len and data_len are accessible, I'm okay
-> either way.  My biggest reluctance is against breaking sum(sg) ==
-> rq->data_len.  I think this can lead to much more subtle problems such
-> as programming the controller w/ wrong bytes count and wrapped-around
-> resid calculation.
-
-OK, so can we go back to data_len being the true value and add an
-extra_len for drivers who want to know where the padding lies?
-
-James
-
-
+--=20
+Regards/Gru=DF,
+    Boris.
