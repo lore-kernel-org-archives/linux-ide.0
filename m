@@ -1,150 +1,199 @@
 From: Borislav Petkov <petkovbb@googlemail.com>
-Subject: [PATCH 13/24] ide-tape: remove pipeline-specific code from idetape_chrdev_release
-Date: Sat,  1 Mar 2008 09:58:37 +0100
-Message-ID: <1204361928-30229-14-git-send-email-petkovbb@gmail.com>
+Subject: [PATCH 21/24] ide-tape: remove pipeline-specific members from struct ide_tape_obj
+Date: Sat,  1 Mar 2008 09:58:45 +0100
+Message-ID: <1204361928-30229-22-git-send-email-petkovbb@gmail.com>
 References: <1204361928-30229-1-git-send-email-petkovbb@gmail.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
 Received: from nf-out-0910.google.com ([64.233.182.184]:64772 "EHLO
 	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755777AbYCAI7T (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 1 Mar 2008 03:59:19 -0500
+	with ESMTP id S1756832AbYCAI71 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 1 Mar 2008 03:59:27 -0500
 Received: by nf-out-0910.google.com with SMTP id g13so2626781nfb.21
-        for <linux-ide@vger.kernel.org>; Sat, 01 Mar 2008 00:59:18 -0800 (PST)
+        for <linux-ide@vger.kernel.org>; Sat, 01 Mar 2008 00:59:26 -0800 (PST)
 In-Reply-To: <1204361928-30229-1-git-send-email-petkovbb@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: bzolnier@gmail.com
 Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Borislav Petkov <petkovbb@gmail.com>
 
-Also, remove orphaned functions idetape_{discard_read,plug,wait_for}_pipeline.
-Furthermore, tape->cache_stage becomes also unused, so remove it too. Finally,
-simplify 4-level-nested if-condition into a single compound one in
-idetape_chrdev_release().
+Most of them have become unused after removing the pipelined
+functionality - the rest is only being written to.
 
 Signed-off-by: Borislav Petkov <petkovbb@gmail.com>
 ---
- drivers/ide/ide-tape.c |   78 +++++-------------------------------------------
- 1 files changed, 8 insertions(+), 70 deletions(-)
+ drivers/ide/ide-tape.c |   95 +-----------------------------------------------
+ 1 files changed, 2 insertions(+), 93 deletions(-)
 
 diff --git a/drivers/ide/ide-tape.c b/drivers/ide/ide-tape.c
-index 3e80515..3cb6e3d 100644
+index 68c9c09..9810253 100644
 --- a/drivers/ide/ide-tape.c
 +++ b/drivers/ide/ide-tape.c
-@@ -366,7 +366,6 @@ typedef struct ide_tape_obj {
- 	/* New requests will be added to the pipeline here */
- 	idetape_stage_t *last_stage;
+@@ -323,26 +323,6 @@ typedef struct ide_tape_obj {
+ 	char *b_data;
+ 	int b_count;
+ 
+-	/*
+-	 * Pipeline parameters.
+-	 *
+-	 * To accomplish non-pipelined mode, we simply set the following
+-	 * variables to zero (or NULL, where appropriate).
+-	 */
+-	/* Number of currently used stages */
+-	int nr_stages;
+-	/* Number of pending stages */
+-	int nr_pending_stages;
+-	/* We will not allocate more than this number of stages */
+-	int max_stages, min_pipeline, max_pipeline;
+-	/* The first stage which will be removed from the pipeline */
+-	idetape_stage_t *first_stage;
+-	/* The currently active stage */
+-	idetape_stage_t *active_stage;
+-	/* Will be serviced after the currently active request */
+-	idetape_stage_t *next_stage;
+-	/* New requests will be added to the pipeline here */
+-	idetape_stage_t *last_stage;
  	/* Optional free stage which we can use */
--	idetape_stage_t *cache_stage;
  	int pages_per_stage;
  	/* Wasted space in each stage */
- 	int excess_bh_size;
-@@ -2045,25 +2044,6 @@ static int idetape_position_tape(ide_drive_t *drive, unsigned int block,
- 	return (idetape_queue_pc_tail(drive, &pc));
- }
+@@ -365,43 +345,8 @@ typedef struct ide_tape_obj {
+ 	/* the tape is write protected (hardware or opened as read-only) */
+ 	char write_prot;
  
--static void idetape_discard_read_pipeline(ide_drive_t *drive,
--					  int restore_position)
--{
--	idetape_tape_t *tape = drive->driver_data;
--	int cnt;
--	int seek, position;
+-	/*
+-	 * Limit the number of times a request can be postponed, to avoid an
+-	 * infinite postpone deadlock.
+-	 */
+-	int postpone_cnt;
 -
--	cnt = __idetape_discard_read_pipeline(drive);
--	if (restore_position) {
--		position = idetape_read_position(drive);
--		seek = position > cnt ? position - cnt : 0;
--		if (idetape_position_tape(drive, seek, 0, 0)) {
--			printk(KERN_INFO "ide-tape: %s: position_tape failed in"
--					 " discard_pipeline()\n", tape->name);
--			return;
--		}
--	}
--}
+-	/*
+-	 * Measures number of frames:
+-	 *
+-	 * 1. written/read to/from the driver pipeline (pipeline_head).
+-	 * 2. written/read to/from the tape buffers (idetape_bh).
+-	 * 3. written/read by the tape to/from the media (tape_head).
+-	 */
+-	int pipeline_head;
+-	int buffer_head;
+-	int tape_head;
+-	int last_tape_head;
 -
- /*
-  * Generate a read/write request for the block device interface and wait for it
-  * to be serviced.
-@@ -2093,19 +2073,6 @@ static int idetape_queue_rw_tail(ide_drive_t *drive, int cmd, int blocks,
- 	return (tape->blk_size * (blocks-rq.current_nr_sectors));
- }
+-	/* Speed control at the tape buffers input/output */
+-	unsigned long insert_time;
++	/* size control at the tape buffers input/output */
+ 	int insert_size;
+-	int insert_speed;
+-	int max_insert_speed;
+-	int measure_insert_time;
+-
+-	/* Speed regulation negative feedback loop */
+-	int speed_control;
+-	int pipeline_head_speed;
+-	int controlled_pipeline_head_speed;
+-	int uncontrolled_pipeline_head_speed;
+-	int controlled_last_pipeline_head;
+-	unsigned long uncontrolled_pipeline_head_time;
+-	unsigned long controlled_pipeline_head_time;
+-	int controlled_previous_pipeline_head;
+-	int uncontrolled_previous_pipeline_head;
+-	unsigned long controlled_previous_head_time;
+-	unsigned long uncontrolled_previous_head_time;
  
--/* start servicing the pipeline stages, starting from tape->next_stage. */
--static void idetape_plug_pipeline(ide_drive_t *drive)
--{
--	idetape_tape_t *tape = drive->driver_data;
--
--	if (tape->next_stage == NULL)
--		return;
--	if (!test_and_set_bit(IDETAPE_FLAG_PIPELINE_ACTIVE, &tape->flags)) {
--		idetape_activate_next_stage(drive);
--		(void) ide_do_drive_cmd(drive, tape->active_data_rq, ide_end);
+ 	u32 debug_mask;
+ } idetape_tape_t;
+@@ -1200,15 +1145,8 @@ static ide_startstop_t idetape_rw_callback(ide_drive_t *drive)
+ 	tape->avg_size += blocks * tape->blk_size;
+ 	tape->insert_size += blocks * tape->blk_size;
+ 	if (tape->insert_size > 1024 * 1024)
+-		tape->measure_insert_time = 1;
+-	if (tape->measure_insert_time) {
+-		tape->measure_insert_time = 0;
+-		tape->insert_time = jiffies;
+ 		tape->insert_size = 0;
 -	}
--}
--
- static void idetape_create_inquiry_cmd(struct ide_atapi_pc *pc)
- {
- 	idetape_init_pc(pc);
-@@ -2154,25 +2121,6 @@ static int idetape_add_chrdev_write_request(ide_drive_t *drive, int blocks)
- 					tape->merge_stage->bh);
- }
- 
--/*
-- * Wait until all pending pipeline requests are serviced. Typically called on
-- * device close.
-- */
--static void idetape_wait_for_pipeline(ide_drive_t *drive)
--{
--	idetape_tape_t *tape = drive->driver_data;
--	unsigned long flags;
--
--	while (tape->next_stage || test_bit(IDETAPE_FLAG_PIPELINE_ACTIVE,
--						&tape->flags)) {
--		idetape_plug_pipeline(drive);
--		spin_lock_irqsave(&tape->lock, flags);
--		if (test_bit(IDETAPE_FLAG_PIPELINE_ACTIVE, &tape->flags))
--			idetape_wait_for_request(drive, tape->active_data_rq);
--		spin_unlock_irqrestore(&tape->lock, flags);
--	}
--}
--
- static void idetape_restart_speed_control(ide_drive_t *drive)
- {
- 	idetape_tape_t *tape = drive->driver_data;
-@@ -2875,26 +2823,16 @@ static int idetape_chrdev_release(struct inode *inode, struct file *filp)
- 
- 	if (tape->chrdev_dir == IDETAPE_DIR_WRITE)
- 		idetape_write_release(drive, minor);
--	if (tape->chrdev_dir == IDETAPE_DIR_READ) {
--		if (minor < 128)
--			idetape_discard_read_pipeline(drive, 1);
--		else
--			idetape_wait_for_pipeline(drive);
--	}
--	if (tape->cache_stage != NULL) {
--		__idetape_kfree_stage(tape->cache_stage);
--		tape->cache_stage = NULL;
--	}
+-	if (time_after(jiffies, tape->insert_time))
+-		tape->insert_speed = tape->insert_size / 1024 * HZ /
+-					(jiffies - tape->insert_time);
 +
- 	if (minor < 128 && test_bit(IDETAPE_FLAG_MEDIUM_PRESENT, &tape->flags))
- 		(void) idetape_rewind_tape(drive);
--	if (tape->chrdev_dir == IDETAPE_DIR_NONE) {
--		if (tape->door_locked == DOOR_LOCKED) {
--			if (idetape_create_prevent_cmd(drive, &pc, 0)) {
--				if (!idetape_queue_pc_tail(drive, &pc))
--					tape->door_locked = DOOR_UNLOCKED;
--			}
--		}
--	}
-+
-+	if (tape->chrdev_dir == IDETAPE_DIR_NONE &&
-+	    tape->door_locked == DOOR_LOCKED &&
-+	    idetape_create_prevent_cmd(drive, &pc, 0) &&
-+	    !idetape_queue_pc_tail(drive, &pc))
-+		tape->door_locked = DOOR_UNLOCKED;
-+
- 	clear_bit(IDETAPE_FLAG_BUSY, &tape->flags);
- 	ide_tape_put(tape);
- 	unlock_kernel();
+ 	if (time_after_eq(jiffies, tape->avg_time + HZ)) {
+ 		tape->avg_speed = tape->avg_size * HZ /
+ 				(jiffies - tape->avg_time) / 1024;
+@@ -1313,9 +1251,6 @@ static ide_startstop_t idetape_do_request(ide_drive_t *drive,
+ 		drive->post_reset = 0;
+ 	}
+ 
+-	if (time_after(jiffies, tape->insert_time))
+-		tape->insert_speed = tape->insert_size / 1024 * HZ /
+-					(jiffies - tape->insert_time);
+ 	if (!test_and_clear_bit(IDETAPE_FLAG_IGNORE_DSC, &tape->flags) &&
+ 	    (stat & SEEK_STAT) == 0) {
+ 		if (postponed_rq == NULL) {
+@@ -1339,16 +1274,12 @@ static ide_startstop_t idetape_do_request(ide_drive_t *drive,
+ 		return ide_stopped;
+ 	}
+ 	if (rq->cmd[0] & REQ_IDETAPE_READ) {
+-		tape->buffer_head++;
+-		tape->postpone_cnt = 0;
+ 		pc = idetape_next_pc_storage(drive);
+ 		idetape_create_read_cmd(tape, pc, rq->current_nr_sectors,
+ 					(struct idetape_bh *)rq->special);
+ 		goto out;
+ 	}
+ 	if (rq->cmd[0] & REQ_IDETAPE_WRITE) {
+-		tape->buffer_head++;
+-		tape->postpone_cnt = 0;
+ 		pc = idetape_next_pc_storage(drive);
+ 		idetape_create_write_cmd(tape, pc, rq->current_nr_sectors,
+ 					 (struct idetape_bh *)rq->special);
+@@ -2628,18 +2559,6 @@ static void idetape_add_settings(ide_drive_t *drive)
+ 
+ 	ide_add_setting(drive, "buffer", SETTING_READ, TYPE_SHORT, 0, 0xffff,
+ 			1, 2, (u16 *)&tape->caps[16], NULL);
+-	ide_add_setting(drive, "pipeline_min", SETTING_RW, TYPE_INT, 1, 0xffff,
+-			tape->stage_size / 1024, 1, &tape->min_pipeline, NULL);
+-	ide_add_setting(drive, "pipeline", SETTING_RW, TYPE_INT, 1, 0xffff,
+-			tape->stage_size / 1024, 1, &tape->max_stages, NULL);
+-	ide_add_setting(drive, "pipeline_max", SETTING_RW, TYPE_INT, 1,	0xffff,
+-			tape->stage_size / 1024, 1, &tape->max_pipeline, NULL);
+-	ide_add_setting(drive, "pipeline_used",	SETTING_READ, TYPE_INT, 0,
+-			0xffff,	tape->stage_size / 1024, 1, &tape->nr_stages,
+-			NULL);
+-	ide_add_setting(drive, "pipeline_pending", SETTING_READ, TYPE_INT, 0,
+-			0xffff, tape->stage_size / 1024, 1,
+-			&tape->nr_pending_stages, NULL);
+ 	ide_add_setting(drive, "speed", SETTING_READ, TYPE_SHORT, 0, 0xffff,
+ 			1, 1, (u16 *)&tape->caps[14], NULL);
+ 	ide_add_setting(drive, "stage", SETTING_READ, TYPE_INT,	0, 0xffff, 1,
+@@ -2649,12 +2568,6 @@ static void idetape_add_settings(ide_drive_t *drive)
+ 			NULL);
+ 	ide_add_setting(drive, "dsc_overlap", SETTING_RW, TYPE_BYTE, 0, 1, 1,
+ 			1, &drive->dsc_overlap, NULL);
+-	ide_add_setting(drive, "pipeline_head_speed_c", SETTING_READ, TYPE_INT,
+-			0, 0xffff, 1, 1, &tape->controlled_pipeline_head_speed,
+-			NULL);
+-	ide_add_setting(drive, "pipeline_head_speed_u", SETTING_READ, TYPE_INT,
+-			0, 0xffff, 1, 1,
+-			&tape->uncontrolled_pipeline_head_speed, NULL);
+ 	ide_add_setting(drive, "avg_speed", SETTING_READ, TYPE_INT, 0, 0xffff,
+ 			1, 1, &tape->avg_speed, NULL);
+ 	ide_add_setting(drive, "debug_mask", SETTING_RW, TYPE_INT, 0, 0xffff, 1,
+@@ -2699,8 +2612,6 @@ static void idetape_setup(ide_drive_t *drive, idetape_tape_t *tape, int minor)
+ 	tape->name[2] = '0' + minor;
+ 	tape->chrdev_dir = IDETAPE_DIR_NONE;
+ 	tape->pc = tape->pc_stack;
+-	tape->max_insert_speed = 10000;
+-	tape->speed_control = 1;
+ 	*((unsigned short *) &gcw) = drive->id->config;
+ 
+ 	/* Command packet DRQ type */
+@@ -2764,8 +2675,6 @@ static void ide_tape_release(struct kref *kref)
+ 	ide_drive_t *drive = tape->drive;
+ 	struct gendisk *g = tape->disk;
+ 
+-	BUG_ON(tape->first_stage != NULL || tape->merge_stage_size);
+-
+ 	drive->dsc_overlap = 0;
+ 	drive->driver_data = NULL;
+ 	device_destroy(idetape_sysfs_class, MKDEV(IDETAPE_MAJOR, tape->minor));
 -- 
 1.5.4.1
 
