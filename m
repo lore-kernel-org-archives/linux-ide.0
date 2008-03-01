@@ -1,106 +1,247 @@
 From: Borislav Petkov <petkovbb@googlemail.com>
-Subject: [PATCH 18/24] ide-tape: remove pipeline-specific code from idetape_setup
-Date: Sat,  1 Mar 2008 09:58:42 +0100
-Message-ID: <1204361928-30229-19-git-send-email-petkovbb@gmail.com>
+Subject: [PATCH 15/24] ide-tape: remove pipeline-specific code from idetape_end_request
+Date: Sat,  1 Mar 2008 09:58:39 +0100
+Message-ID: <1204361928-30229-16-git-send-email-petkovbb@gmail.com>
 References: <1204361928-30229-1-git-send-email-petkovbb@gmail.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.191]:64846 "EHLO
+Received: from nf-out-0910.google.com ([64.233.182.191]:64804 "EHLO
 	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756210AbYCAI72 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 1 Mar 2008 03:59:28 -0500
-Received: by nf-out-0910.google.com with SMTP id g13so2626785nfb.21
-        for <linux-ide@vger.kernel.org>; Sat, 01 Mar 2008 00:59:28 -0800 (PST)
+	with ESMTP id S1757518AbYCAI7c (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 1 Mar 2008 03:59:32 -0500
+Received: by nf-out-0910.google.com with SMTP id g13so2626779nfb.21
+        for <linux-ide@vger.kernel.org>; Sat, 01 Mar 2008 00:59:31 -0800 (PST)
 In-Reply-To: <1204361928-30229-1-git-send-email-petkovbb@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: bzolnier@gmail.com
 Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Borislav Petkov <petkovbb@gmail.com>
 
+As a result, remove orphaned
+
+idetape_activate_next_stage
+idetape_remove_stage_head
+idetape_abort_pipeline
+idetape_wait_for_request
+idetape_kfree_stage
+
+too.
+
 Signed-off-by: Borislav Petkov <petkovbb@gmail.com>
 ---
- drivers/ide/ide-tape.c |   40 ++++------------------------------------
- 1 files changed, 4 insertions(+), 36 deletions(-)
+ drivers/ide/ide-tape.c |  172 +-----------------------------------------------
+ 1 files changed, 1 insertions(+), 171 deletions(-)
 
 diff --git a/drivers/ide/ide-tape.c b/drivers/ide/ide-tape.c
-index 5f57bdb..2718006 100644
+index a3a45b5..93e42e6 100644
 --- a/drivers/ide/ide-tape.c
 +++ b/drivers/ide/ide-tape.c
-@@ -2699,11 +2699,10 @@ static inline void idetape_add_settings(ide_drive_t *drive) { ; }
-  */
- static void idetape_setup(ide_drive_t *drive, idetape_tape_t *tape, int minor)
- {
--	unsigned long t1, tmid, tn, t;
-+	unsigned long t;
- 	int speed;
- 	int stage_size;
- 	u8 gcw[2];
--	struct sysinfo si;
- 	u16 *ctl = (u16 *)&tape->caps[12];
- 
- 	spin_lock_init(&tape->lock);
-@@ -2730,10 +2729,6 @@ static void idetape_setup(ide_drive_t *drive, idetape_tape_t *tape, int minor)
- 	if (((gcw[0] & 0x60) >> 5) == 1)
- 		set_bit(IDETAPE_FLAG_DRQ_INTERRUPT, &tape->flags);
- 
--	tape->min_pipeline = 10;
--	tape->max_pipeline = 10;
--	tape->max_stages   = 10;
--
- 	idetape_get_inquiry_results(drive);
- 	idetape_get_mode_sense_results(drive);
- 	ide_tape_get_bsize_from_bdesc(drive);
-@@ -2751,36 +2746,10 @@ static void idetape_setup(ide_drive_t *drive, idetape_tape_t *tape, int minor)
- 		tape->excess_bh_size = PAGE_SIZE - stage_size % PAGE_SIZE;
+@@ -673,28 +673,6 @@ static void idetape_analyze_error(ide_drive_t *drive, u8 *sense)
  	}
+ }
  
--	/* Select the "best" DSC read/write polling freq and pipeline size. */
-+	/* select the "best" DSC read/write polling freq */
- 	speed = max(*(u16 *)&tape->caps[14], *(u16 *)&tape->caps[8]);
- 
--	tape->max_stages = speed * 1000 * 10 / tape->stage_size;
+-static void idetape_activate_next_stage(ide_drive_t *drive)
+-{
+-	idetape_tape_t *tape = drive->driver_data;
+-	idetape_stage_t *stage = tape->next_stage;
+-	struct request *rq = &stage->rq;
 -
--	/* Limit memory use for pipeline to 10% of physical memory */
--	si_meminfo(&si);
--	if (tape->max_stages * tape->stage_size >
--			si.totalram * si.mem_unit / 10)
--		tape->max_stages =
--			si.totalram * si.mem_unit / (10 * tape->stage_size);
+-	debug_log(DBG_PROCS, "Enter %s\n", __func__);
 -
--	tape->max_stages   = min(tape->max_stages, IDETAPE_MAX_PIPELINE_STAGES);
--	tape->min_pipeline = min(tape->max_stages, IDETAPE_MIN_PIPELINE_STAGES);
--	tape->max_pipeline =
--		min(tape->max_stages * 2, IDETAPE_MAX_PIPELINE_STAGES);
--	if (tape->max_stages == 0) {
--		tape->max_stages   = 1;
--		tape->min_pipeline = 1;
--		tape->max_pipeline = 1;
+-	if (stage == NULL) {
+-		printk(KERN_ERR "ide-tape: bug: Trying to activate a non"
+-				" existing stage\n");
+-		return;
 -	}
 -
--	t1 = (tape->stage_size * HZ) / (speed * 1000);
--	tmid = (*(u16 *)&tape->caps[16] * 32 * HZ) / (speed * 125);
--	tn = (IDETAPE_FIFO_THRESHOLD * tape->stage_size * HZ) / (speed * 1000);
+-	rq->rq_disk = tape->disk;
+-	rq->buffer = NULL;
+-	rq->special = (void *)stage->bh;
+-	tape->active_data_rq = rq;
+-	tape->active_stage = stage;
+-	tape->next_stage = stage->next;
+-}
 -
--	if (tape->max_stages)
--		t = tn;
--	else
--		t = t1;
-+	t = (tape->stage_size * HZ) / (speed * 1000);
+ /* Free a stage along with its related buffers completely. */
+ static void __idetape_kfree_stage(idetape_stage_t *stage)
+ {
+@@ -717,84 +695,12 @@ static void __idetape_kfree_stage(idetape_stage_t *stage)
+ 	kfree(stage);
+ }
  
- 	/*
- 	 * Ensure that the number we got makes sense; limit it within
-@@ -2790,11 +2759,10 @@ static void idetape_setup(ide_drive_t *drive, idetape_tape_t *tape, int minor)
- 				min_t(unsigned long, t, IDETAPE_DSC_RW_MAX),
- 				IDETAPE_DSC_RW_MIN);
- 	printk(KERN_INFO "ide-tape: %s <-> %s: %dKBps, %d*%dkB buffer, "
--		"%dkB pipeline, %lums tDSC%s\n",
-+		"%lums tDSC%s\n",
- 		drive->name, tape->name, *(u16 *)&tape->caps[14],
- 		(*(u16 *)&tape->caps[16] * 512) / tape->stage_size,
- 		tape->stage_size / 1024,
--		tape->max_stages * tape->stage_size / 1024,
- 		tape->best_dsc_rw_freq * 1000 / HZ,
- 		drive->using_dma ? ", DMA":"");
+-static void idetape_kfree_stage(idetape_tape_t *tape, idetape_stage_t *stage)
+-{
+-	__idetape_kfree_stage(stage);
+-}
+-
+-/*
+- * Remove tape->first_stage from the pipeline. The caller should avoid race
+- * conditions.
+- */
+-static void idetape_remove_stage_head(ide_drive_t *drive)
+-{
+-	idetape_tape_t *tape = drive->driver_data;
+-	idetape_stage_t *stage;
+-
+-	debug_log(DBG_PROCS, "Enter %s\n", __func__);
+-
+-	if (tape->first_stage == NULL) {
+-		printk(KERN_ERR "ide-tape: bug: tape->first_stage is NULL\n");
+-		return;
+-	}
+-	if (tape->active_stage == tape->first_stage) {
+-		printk(KERN_ERR "ide-tape: bug: Trying to free our active "
+-				"pipeline stage\n");
+-		return;
+-	}
+-	stage = tape->first_stage;
+-	tape->first_stage = stage->next;
+-	idetape_kfree_stage(tape, stage);
+-	tape->nr_stages--;
+-	if (tape->first_stage == NULL) {
+-		tape->last_stage = NULL;
+-		if (tape->next_stage != NULL)
+-			printk(KERN_ERR "ide-tape: bug: tape->next_stage !="
+-					" NULL\n");
+-		if (tape->nr_stages)
+-			printk(KERN_ERR "ide-tape: bug: nr_stages should be 0 "
+-					"now\n");
+-	}
+-}
+-
+-/*
+- * This will free all the pipeline stages starting from new_last_stage->next
+- * to the end of the list, and point tape->last_stage to new_last_stage.
+- */
+-static void idetape_abort_pipeline(ide_drive_t *drive,
+-				   idetape_stage_t *new_last_stage)
+-{
+-	idetape_tape_t *tape = drive->driver_data;
+-	idetape_stage_t *stage = new_last_stage->next;
+-	idetape_stage_t *nstage;
+-
+-	debug_log(DBG_PROCS, "%s: Enter %s\n", tape->name, __func__);
+-
+-	while (stage) {
+-		nstage = stage->next;
+-		idetape_kfree_stage(tape, stage);
+-		--tape->nr_stages;
+-		--tape->nr_pending_stages;
+-		stage = nstage;
+-	}
+-	if (new_last_stage)
+-		new_last_stage->next = NULL;
+-	tape->last_stage = new_last_stage;
+-	tape->next_stage = NULL;
+-}
+-
+-/*
+- * Finish servicing a request and insert a pending pipeline request into the
+- * main device queue.
+- */
++/* Finish servicing a request. */
+ static int idetape_end_request(ide_drive_t *drive, int uptodate, int nr_sects)
+ {
+ 	struct request *rq = HWGROUP(drive)->rq;
+ 	idetape_tape_t *tape = drive->driver_data;
+-	unsigned long flags;
+ 	int error;
+-	int remove_stage = 0;
+-	idetape_stage_t *active_stage;
  
+ 	debug_log(DBG_PROCS, "Enter %s\n", __func__);
+ 
+@@ -812,61 +718,8 @@ static int idetape_end_request(ide_drive_t *drive, int uptodate, int nr_sects)
+ 		return 0;
+ 	}
+ 
+-	spin_lock_irqsave(&tape->lock, flags);
+-
+-	/* The request was a pipelined data transfer request */
+-	if (tape->active_data_rq == rq) {
+-		active_stage = tape->active_stage;
+-		tape->active_stage = NULL;
+-		tape->active_data_rq = NULL;
+-		tape->nr_pending_stages--;
+-		if (rq->cmd[0] & REQ_IDETAPE_WRITE) {
+-			remove_stage = 1;
+-			if (error) {
+-				set_bit(IDETAPE_FLAG_PIPELINE_ERR,
+-					&tape->flags);
+-				if (error == IDETAPE_ERROR_EOD)
+-					idetape_abort_pipeline(drive,
+-								active_stage);
+-			}
+-		} else if (rq->cmd[0] & REQ_IDETAPE_READ) {
+-			if (error == IDETAPE_ERROR_EOD) {
+-				set_bit(IDETAPE_FLAG_PIPELINE_ERR,
+-					&tape->flags);
+-				idetape_abort_pipeline(drive, active_stage);
+-			}
+-		}
+-		if (tape->next_stage != NULL) {
+-			idetape_activate_next_stage(drive);
+-
+-			/* Insert the next request into the request queue. */
+-			(void)ide_do_drive_cmd(drive, tape->active_data_rq,
+-						ide_end);
+-		} else if (!error) {
+-			/*
+-			 * This is a part of the feedback loop which tries to
+-			 * find the optimum number of stages. We are starting
+-			 * from a minimum maximum number of stages, and if we
+-			 * sense that the pipeline is empty, we try to increase
+-			 * it, until we reach the user compile time memory
+-			 * limit.
+-			 */
+-			int i = (tape->max_pipeline - tape->min_pipeline) / 10;
+-
+-			tape->max_stages += max(i, 1);
+-			tape->max_stages = max(tape->max_stages,
+-						tape->min_pipeline);
+-			tape->max_stages = min(tape->max_stages,
+-						tape->max_pipeline);
+-		}
+-	}
+ 	ide_end_drive_cmd(drive, 0, 0);
+ 
+-	if (remove_stage)
+-		idetape_remove_stage_head(drive);
+-	if (tape->active_data_rq == NULL)
+-		clear_bit(IDETAPE_FLAG_PIPELINE_ACTIVE, &tape->flags);
+-	spin_unlock_irqrestore(&tape->lock, flags);
+ 	return 0;
+ }
+ 
+@@ -1760,29 +1613,6 @@ static void idetape_init_merge_stage(idetape_tape_t *tape)
+ 	}
+ }
+ 
+-/*
+- * Install a completion in a pending request and sleep until it is serviced. The
+- * caller should ensure that the request will not be serviced before we install
+- * the completion (usually by disabling interrupts).
+- */
+-static void idetape_wait_for_request(ide_drive_t *drive, struct request *rq)
+-{
+-	DECLARE_COMPLETION_ONSTACK(wait);
+-	idetape_tape_t *tape = drive->driver_data;
+-
+-	if (rq == NULL || !blk_special_request(rq)) {
+-		printk(KERN_ERR "ide-tape: bug: Trying to sleep on non-valid"
+-				 " request\n");
+-		return;
+-	}
+-	rq->end_io_data = &wait;
+-	rq->end_io = blk_end_sync_rq;
+-	spin_unlock_irq(&tape->lock);
+-	wait_for_completion(&wait);
+-	/* The stage and its struct request have been deallocated */
+-	spin_lock_irq(&tape->lock);
+-}
+-
+ static ide_startstop_t idetape_read_position_callback(ide_drive_t *drive)
+ {
+ 	idetape_tape_t *tape = drive->driver_data;
 -- 
 1.5.4.1
 
