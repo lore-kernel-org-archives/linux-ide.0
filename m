@@ -1,69 +1,43 @@
 From: Borislav Petkov <petkovbb@googlemail.com>
-Subject: [PATCH 06/24] ide-tape: remove unused stage-parameter from idetape_copy_stage_to_user
-Date: Sat,  1 Mar 2008 09:58:30 +0100
-Message-ID: <1204361928-30229-7-git-send-email-petkovbb@gmail.com>
-References: <1204361928-30229-1-git-send-email-petkovbb@gmail.com>
+Subject: [PATCH 00/24] ide-tape: remove pipelined mode operation
+Date: Sat,  1 Mar 2008 09:58:24 +0100
+Message-ID: <1204361928-30229-1-git-send-email-petkovbb@gmail.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.184]:64814 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756959AbYCAI72 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 1 Mar 2008 03:59:28 -0500
-Received: by nf-out-0910.google.com with SMTP id g13so2626786nfb.21
-        for <linux-ide@vger.kernel.org>; Sat, 01 Mar 2008 00:59:27 -0800 (PST)
-In-Reply-To: <1204361928-30229-1-git-send-email-petkovbb@gmail.com>
+Received: from mu-out-0910.google.com ([209.85.134.187]:55344 "EHLO
+	mu-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754124AbYCAI7O (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 1 Mar 2008 03:59:14 -0500
+Received: by mu-out-0910.google.com with SMTP id i10so7533564mue.5
+        for <linux-ide@vger.kernel.org>; Sat, 01 Mar 2008 00:59:13 -0800 (PST)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: bzolnier@gmail.com
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Borislav Petkov <petkovbb@gmail.com>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Borislav Petkov <petkovbb@gmail.com>, Jens Axboe <jens.axboe@oracle.com>
 
-Signed-off-by: Borislav Petkov <petkovbb@gmail.com>
----
- drivers/ide/ide-tape.c |   11 ++++-------
- 1 files changed, 4 insertions(+), 7 deletions(-)
+Hi Bart,
 
-diff --git a/drivers/ide/ide-tape.c b/drivers/ide/ide-tape.c
-index 6bca29b..a54c1cb 100644
---- a/drivers/ide/ide-tape.c
-+++ b/drivers/ide/ide-tape.c
-@@ -1717,7 +1717,7 @@ static int idetape_copy_stage_from_user(idetape_tape_t *tape,
- }
- 
- static int idetape_copy_stage_to_user(idetape_tape_t *tape, char __user *buf,
--		idetape_stage_t *stage, int n)
-+				      int n)
- {
- 	struct idetape_bh *bh = tape->bh;
- 	int count;
-@@ -2576,8 +2576,7 @@ static ssize_t idetape_chrdev_read(struct file *file, char __user *buf,
- 	if (tape->merge_stage_size) {
- 		actually_read = min((unsigned int)(tape->merge_stage_size),
- 				    (unsigned int)count);
--		if (idetape_copy_stage_to_user(tape, buf, tape->merge_stage,
--					       actually_read))
-+		if (idetape_copy_stage_to_user(tape, buf, actually_read))
- 			ret = -EFAULT;
- 		buf += actually_read;
- 		tape->merge_stage_size -= actually_read;
-@@ -2587,8 +2586,7 @@ static ssize_t idetape_chrdev_read(struct file *file, char __user *buf,
- 		bytes_read = idetape_add_chrdev_read_request(drive, ctl);
- 		if (bytes_read <= 0)
- 			goto finish;
--		if (idetape_copy_stage_to_user(tape, buf, tape->merge_stage,
--					       bytes_read))
-+		if (idetape_copy_stage_to_user(tape, buf, bytes_read))
- 			ret = -EFAULT;
- 		buf += bytes_read;
- 		count -= bytes_read;
-@@ -2599,8 +2597,7 @@ static ssize_t idetape_chrdev_read(struct file *file, char __user *buf,
- 		if (bytes_read <= 0)
- 			goto finish;
- 		temp = min((unsigned long)count, (unsigned long)bytes_read);
--		if (idetape_copy_stage_to_user(tape, buf, tape->merge_stage,
--					       temp))
-+		if (idetape_copy_stage_to_user(tape, buf, temp))
- 			ret = -EFAULT;
- 		actually_read += temp;
- 		tape->merge_stage_size = bytes_read-temp;
--- 
-1.5.4.1
+here's the 1st draft of the pipeline removal series. As the diffstat below openly
+states it, a lot of code got removed - even more than the cleanup series we did
+earlier. There are several issues that we need to address concerning these
+patches:
 
+1. only compile-tested since i don't have the hardware, i.e. longer -mm brewing is
+advisable the least.
+
+2. I have left the tape->merge_stage buffer structure along with its
+alloc/free functions intact for now, for simplicity. The next step would be
+to go and carefully audit the code and then remove that last piece
+too and use allocations on the stack instead. I guess we still expect
+Jens's response on whether blk_{get,put}_request is the way to go here.
+
+Jens?
+
+3. After applying those we're moving into the direction of a lightweight
+ide-tape driver so the stanza for its removal in
+Documentation/feature-removal-schedule.txt becomes incorrect.
+
+4. ... (i'm sure you're gonna have some more :))
+
+ Documentation/ide/ide-tape.txt |  211 +++------
+ drivers/ide/ide-tape.c         | 1032 +++-------------------------------------
+ 2 files changed, 134 insertions(+), 1109 deletions(-)
