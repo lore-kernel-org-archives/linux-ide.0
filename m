@@ -1,7 +1,7 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH 5/9] ide: manage I/O resources in ide_legacy_init_one()
-Date: Sat, 1 Mar 2008 19:47:59 +0100
-Message-ID: <200803011948.00032.bzolnier@gmail.com>
+Subject: [PATCH 8/9] ide: remove ide_hwif_request_regions()
+Date: Sat, 1 Mar 2008 21:53:33 +0100
+Message-ID: <200803012153.34093.bzolnier@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
   charset="iso-8859-1"
@@ -9,157 +9,94 @@ Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
 Received: from ug-out-1314.google.com ([66.249.92.175]:27722 "EHLO
 	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760103AbYCAUnk (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 1 Mar 2008 15:43:40 -0500
+	with ESMTP id S1759985AbYCAUnm (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 1 Mar 2008 15:43:42 -0500
 Received: by ug-out-1314.google.com with SMTP id z38so1035350ugc.16
-        for <linux-ide@vger.kernel.org>; Sat, 01 Mar 2008 12:43:39 -0800 (PST)
+        for <linux-ide@vger.kernel.org>; Sat, 01 Mar 2008 12:43:42 -0800 (PST)
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
 Cc: linux-kernel@vger.kernel.org
 
-* Tell IDE layer to not manage resources by setting hwif->mmio flag.
-
-* Use {request,release}_region() for resources management.
-
-* Set ->name field of 'struct ide_port_info' instances in legacy VLB
-  host drivers and use driver name for resources management.
+Remove no longer used ide_hwif_request_regions() and hwif_request_region().
 
 Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 ---
- drivers/ide/ide-probe.c      |   14 ++++++++++++++
- drivers/ide/legacy/ali14xx.c |    3 +++
- drivers/ide/legacy/dtc2278.c |    3 +++
- drivers/ide/legacy/ht6560b.c |    1 +
- drivers/ide/legacy/qd65xx.c  |    3 +++
- drivers/ide/legacy/umc8672.c |    3 +++
- 6 files changed, 27 insertions(+)
+ drivers/ide/ide.c   |   50 --------------------------------------------------
+ include/linux/ide.h |    1 -
+ 2 files changed, 51 deletions(-)
 
-Index: b/drivers/ide/ide-probe.c
+Index: b/drivers/ide/ide.c
 ===================================================================
---- a/drivers/ide/ide-probe.c
-+++ b/drivers/ide/ide-probe.c
-@@ -1644,12 +1644,26 @@ static void ide_legacy_init_one(u8 *idx,
- 		irq  = 15;
- 	}
+--- a/drivers/ide/ide.c
++++ b/drivers/ide/ide.c
+@@ -229,56 +229,6 @@ static int ide_system_bus_speed(void)
+ 	return pci_dev_present(pci_default) ? 33 : 50;
+ }
  
-+	if (!request_region(base, 8, d->name)) {
-+		printk(KERN_ERR "%s: I/O resource 0x%lX-0x%lX not free.\n",
-+				d->name, base, base + 7);
-+		return;
-+	}
-+
-+	if (!request_region(ctl, 1, d->name)) {
-+		printk(KERN_ERR "%s: I/O resource 0x%lX not free.\n",
-+				d->name, ctl);
-+		release_region(base, 8);
-+		return;
-+	}
-+
- 	ide_std_init_ports(hw, base, ctl);
- 	hw->irq = irq;
- 
- 	hwif = ide_find_port_slot(d);
- 	if (hwif) {
- 		ide_init_port_hw(hwif, hw);
-+		hwif->mmio = 1;
- 		if (config)
- 			hwif->config_data = config;
- 		idx[port_no] = hwif->index;
-Index: b/drivers/ide/legacy/ali14xx.c
+-static struct resource* hwif_request_region(ide_hwif_t *hwif,
+-					    unsigned long addr, int num)
+-{
+-	struct resource *res = request_region(addr, num, hwif->name);
+-
+-	if (!res)
+-		printk(KERN_ERR "%s: I/O resource 0x%lX-0x%lX not free.\n",
+-				hwif->name, addr, addr+num-1);
+-	return res;
+-}
+-
+-/**
+- *	ide_hwif_request_regions - request resources for IDE
+- *	@hwif: interface to use
+- *
+- *	Requests all the needed resources for an interface.
+- *	Right now core IDE code does this work which is deeply wrong.
+- *	MMIO leaves it to the controller driver,
+- *	PIO will migrate this way over time.
+- */
+-
+-int ide_hwif_request_regions(ide_hwif_t *hwif)
+-{
+-	unsigned long addr;
+-
+-	if (hwif->mmio)
+-		return 0;
+-
+-	addr = hwif->io_ports[IDE_CONTROL_OFFSET];
+-
+-	if (addr && !hwif_request_region(hwif, addr, 1))
+-		goto control_region_busy;
+-
+-	addr = hwif->io_ports[IDE_DATA_OFFSET];
+-	BUG_ON((addr | 7) != hwif->io_ports[IDE_STATUS_OFFSET]);
+-
+-	if (!hwif_request_region(hwif, addr, 8))
+-		goto data_region_busy;
+-
+-	return 0;
+-
+-data_region_busy:
+-	addr = hwif->io_ports[IDE_CONTROL_OFFSET];
+-	if (addr)
+-		release_region(addr, 1);
+-control_region_busy:
+-	/* If any errors are return, we drop the hwif interface. */
+-	return -EBUSY;
+-}
+-
+ void ide_remove_port_from_hwgroup(ide_hwif_t *hwif)
+ {
+ 	ide_hwgroup_t *hwgroup = hwif->hwgroup;
+Index: b/include/linux/ide.h
 ===================================================================
---- a/drivers/ide/legacy/ali14xx.c
-+++ b/drivers/ide/legacy/ali14xx.c
-@@ -49,6 +49,8 @@
+--- a/include/linux/ide.h
++++ b/include/linux/ide.h
+@@ -1204,7 +1204,6 @@ static inline void ide_acpi_set_state(id
+ #endif
  
- #include <asm/io.h>
+ void ide_remove_port_from_hwgroup(ide_hwif_t *);
+-extern int ide_hwif_request_regions(ide_hwif_t *hwif);
+ void ide_unregister(unsigned int);
  
-+#define DRV_NAME "ali14xx"
-+
- /* port addresses for auto-detection */
- #define ALI_NUM_PORTS 4
- static const int ports[ALI_NUM_PORTS] __initdata =
-@@ -197,6 +199,7 @@ static const struct ide_port_ops ali14xx
- };
- 
- static const struct ide_port_info ali14xx_port_info = {
-+	.name			= DRV_NAME,
- 	.chipset		= ide_ali14xx,
- 	.port_ops		= &ali14xx_port_ops,
- 	.host_flags		= IDE_HFLAG_NO_DMA | IDE_HFLAG_NO_AUTOTUNE,
-Index: b/drivers/ide/legacy/dtc2278.c
-===================================================================
---- a/drivers/ide/legacy/dtc2278.c
-+++ b/drivers/ide/legacy/dtc2278.c
-@@ -16,6 +16,8 @@
- 
- #include <asm/io.h>
- 
-+#define DRV_NAME "dtc2278"
-+
- /*
-  * Changing this #undef to #define may solve start up problems in some systems.
-  */
-@@ -91,6 +93,7 @@ static const struct ide_port_ops dtc2278
- };
- 
- static const struct ide_port_info dtc2278_port_info __initdata = {
-+	.name			= DRV_NAME,
- 	.chipset		= ide_dtc2278,
- 	.port_ops		= &dtc2278_port_ops,
- 	.host_flags		= IDE_HFLAG_SERIALIZE |
-Index: b/drivers/ide/legacy/ht6560b.c
-===================================================================
---- a/drivers/ide/legacy/ht6560b.c
-+++ b/drivers/ide/legacy/ht6560b.c
-@@ -335,6 +335,7 @@ static const struct ide_port_ops ht6560b
- };
- 
- static const struct ide_port_info ht6560b_port_info __initdata = {
-+	.name			= DRV_NAME,
- 	.chipset		= ide_ht6560b,
- 	.port_ops		= &ht6560b_port_ops,
- 	.host_flags		= IDE_HFLAG_SERIALIZE | /* is this needed? */
-Index: b/drivers/ide/legacy/qd65xx.c
-===================================================================
---- a/drivers/ide/legacy/qd65xx.c
-+++ b/drivers/ide/legacy/qd65xx.c
-@@ -37,6 +37,8 @@
- #include <asm/system.h>
- #include <asm/io.h>
- 
-+#define DRV_NAME "qd65xx"
-+
- #include "qd65xx.h"
- 
- /*
-@@ -317,6 +319,7 @@ static const struct ide_port_ops qd6580_
- };
- 
- static const struct ide_port_info qd65xx_port_info __initdata = {
-+	.name			= DRV_NAME,
- 	.chipset		= ide_qd65xx,
- 	.host_flags		= IDE_HFLAG_IO_32BIT |
- 				  IDE_HFLAG_NO_DMA |
-Index: b/drivers/ide/legacy/umc8672.c
-===================================================================
---- a/drivers/ide/legacy/umc8672.c
-+++ b/drivers/ide/legacy/umc8672.c
-@@ -51,6 +51,8 @@
- 
- #include <asm/io.h>
- 
-+#define DRV_NAME "umc8672"
-+
- /*
-  * Default speeds.  These can be changed with "auto-tune" and/or hdparm.
-  */
-@@ -125,6 +127,7 @@ static const struct ide_port_ops umc8672
- };
- 
- static const struct ide_port_info umc8672_port_info __initdata = {
-+	.name			= DRV_NAME,
- 	.chipset		= ide_umc8672,
- 	.port_ops		= &umc8672_port_ops,
- 	.host_flags		= IDE_HFLAG_NO_DMA | IDE_HFLAG_NO_AUTOTUNE,
+ void ide_register_region(struct gendisk *);
