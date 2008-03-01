@@ -1,18 +1,18 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH 2/9] ide-4drives: manage I/O resources in driver
-Date: Sat, 1 Mar 2008 19:47:43 +0100
-Message-ID: <200803011947.43296.bzolnier@gmail.com>
+Subject: [PATCH 5/9] ide: manage I/O resources in ide_legacy_init_one()
+Date: Sat, 1 Mar 2008 19:47:59 +0100
+Message-ID: <200803011948.00032.bzolnier@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
   charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.174]:27483 "EHLO
+Received: from ug-out-1314.google.com ([66.249.92.175]:27722 "EHLO
 	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751744AbYCAUng (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 1 Mar 2008 15:43:36 -0500
-Received: by ug-out-1314.google.com with SMTP id z38so1035349ugc.16
-        for <linux-ide@vger.kernel.org>; Sat, 01 Mar 2008 12:43:36 -0800 (PST)
+	with ESMTP id S1760103AbYCAUnk (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 1 Mar 2008 15:43:40 -0500
+Received: by ug-out-1314.google.com with SMTP id z38so1035350ugc.16
+        for <linux-ide@vger.kernel.org>; Sat, 01 Mar 2008 12:43:39 -0800 (PST)
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
@@ -23,87 +23,143 @@ Cc: linux-kernel@vger.kernel.org
 
 * Use {request,release}_region() for resources management.
 
-* Use driver name for resources management.
-
-* Remove no longer needed 'hwif->chipset == ide_4drives' handling
-  from ide_device_add_all().
+* Set ->name field of 'struct ide_port_info' instances in legacy VLB
+  host drivers and use driver name for resources management.
 
 Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 ---
- drivers/ide/ide-probe.c          |    3 +--
- drivers/ide/legacy/ide-4drives.c |   20 +++++++++++++++++++-
- 2 files changed, 20 insertions(+), 3 deletions(-)
+ drivers/ide/ide-probe.c      |   14 ++++++++++++++
+ drivers/ide/legacy/ali14xx.c |    3 +++
+ drivers/ide/legacy/dtc2278.c |    3 +++
+ drivers/ide/legacy/ht6560b.c |    1 +
+ drivers/ide/legacy/qd65xx.c  |    3 +++
+ drivers/ide/legacy/umc8672.c |    3 +++
+ 6 files changed, 27 insertions(+)
 
 Index: b/drivers/ide/ide-probe.c
 ===================================================================
 --- a/drivers/ide/ide-probe.c
 +++ b/drivers/ide/ide-probe.c
-@@ -1526,8 +1526,7 @@ int ide_device_add_all(u8 *idx, const st
- 
- 		hwif = &ide_hwifs[idx[i]];
- 
--		if ((hwif->chipset != ide_4drives || !hwif->mate ||
--		     !hwif->mate->present) && ide_hwif_request_regions(hwif)) {
-+		if (ide_hwif_request_regions(hwif)) {
- 			printk(KERN_ERR "%s: ports already in use, "
- 					"skipping probe\n", hwif->name);
- 			continue;
-Index: b/drivers/ide/legacy/ide-4drives.c
-===================================================================
---- a/drivers/ide/legacy/ide-4drives.c
-+++ b/drivers/ide/legacy/ide-4drives.c
-@@ -4,6 +4,8 @@
- #include <linux/module.h>
- #include <linux/ide.h>
- 
-+#define DRV_NAME "ide-4drives"
-+
- int probe_4drives;
- 
- module_param_named(probe, probe_4drives, bool, 0);
-@@ -12,21 +14,36 @@ MODULE_PARM_DESC(probe, "probe for gener
- static int __init ide_4drives_init(void)
- {
- 	ide_hwif_t *hwif, *mate;
-+	unsigned long base = 0x1f0, ctl = 0x3f6;
- 	u8 idx[4] = { 0xff, 0xff, 0xff, 0xff };
- 	hw_regs_t hw;
- 
- 	if (probe_4drives == 0)
- 		return -ENODEV;
- 
-+	if (!request_region(base, 8, DRV_NAME)) {
-+		printk(KERN_ERR "%s: I/O resource 0x%lX-0x%lX not free.\n",
-+				DRV_NAME, base, base + 7);
-+		return -EBUSY;
-+	}
-+
-+	if (!request_region(ctl, 1, DRV_NAME)) {
-+		printk(KERN_ERR "%s: I/O resource 0x%lX not free.\n",
-+				DRV_NAME, ctl);
-+		release_region(base, 8);
-+		return -EBUSY;
-+	}
-+
- 	memset(&hw, 0, sizeof(hw));
- 
--	ide_std_init_ports(&hw, 0x1f0, 0x3f6);
-+	ide_std_init_ports(&hw, base, ctl);
- 	hw.irq = 14;
- 	hw.chipset = ide_4drives;
- 
- 	hwif = ide_find_port();
- 	if (hwif) {
- 		ide_init_port_hw(hwif, &hw);
-+		hwif->mmio = 1;
- 		idx[0] = hwif->index;
+@@ -1644,12 +1644,26 @@ static void ide_legacy_init_one(u8 *idx,
+ 		irq  = 15;
  	}
  
-@@ -35,6 +52,7 @@ static int __init ide_4drives_init(void)
- 		ide_init_port_hw(mate, &hw);
- 		mate->drives[0].select.all ^= 0x20;
- 		mate->drives[1].select.all ^= 0x20;
-+		mate->mmio = 1;
- 		idx[1] = mate->index;
++	if (!request_region(base, 8, d->name)) {
++		printk(KERN_ERR "%s: I/O resource 0x%lX-0x%lX not free.\n",
++				d->name, base, base + 7);
++		return;
++	}
++
++	if (!request_region(ctl, 1, d->name)) {
++		printk(KERN_ERR "%s: I/O resource 0x%lX not free.\n",
++				d->name, ctl);
++		release_region(base, 8);
++		return;
++	}
++
+ 	ide_std_init_ports(hw, base, ctl);
+ 	hw->irq = irq;
  
- 		if (hwif) {
+ 	hwif = ide_find_port_slot(d);
+ 	if (hwif) {
+ 		ide_init_port_hw(hwif, hw);
++		hwif->mmio = 1;
+ 		if (config)
+ 			hwif->config_data = config;
+ 		idx[port_no] = hwif->index;
+Index: b/drivers/ide/legacy/ali14xx.c
+===================================================================
+--- a/drivers/ide/legacy/ali14xx.c
++++ b/drivers/ide/legacy/ali14xx.c
+@@ -49,6 +49,8 @@
+ 
+ #include <asm/io.h>
+ 
++#define DRV_NAME "ali14xx"
++
+ /* port addresses for auto-detection */
+ #define ALI_NUM_PORTS 4
+ static const int ports[ALI_NUM_PORTS] __initdata =
+@@ -197,6 +199,7 @@ static const struct ide_port_ops ali14xx
+ };
+ 
+ static const struct ide_port_info ali14xx_port_info = {
++	.name			= DRV_NAME,
+ 	.chipset		= ide_ali14xx,
+ 	.port_ops		= &ali14xx_port_ops,
+ 	.host_flags		= IDE_HFLAG_NO_DMA | IDE_HFLAG_NO_AUTOTUNE,
+Index: b/drivers/ide/legacy/dtc2278.c
+===================================================================
+--- a/drivers/ide/legacy/dtc2278.c
++++ b/drivers/ide/legacy/dtc2278.c
+@@ -16,6 +16,8 @@
+ 
+ #include <asm/io.h>
+ 
++#define DRV_NAME "dtc2278"
++
+ /*
+  * Changing this #undef to #define may solve start up problems in some systems.
+  */
+@@ -91,6 +93,7 @@ static const struct ide_port_ops dtc2278
+ };
+ 
+ static const struct ide_port_info dtc2278_port_info __initdata = {
++	.name			= DRV_NAME,
+ 	.chipset		= ide_dtc2278,
+ 	.port_ops		= &dtc2278_port_ops,
+ 	.host_flags		= IDE_HFLAG_SERIALIZE |
+Index: b/drivers/ide/legacy/ht6560b.c
+===================================================================
+--- a/drivers/ide/legacy/ht6560b.c
++++ b/drivers/ide/legacy/ht6560b.c
+@@ -335,6 +335,7 @@ static const struct ide_port_ops ht6560b
+ };
+ 
+ static const struct ide_port_info ht6560b_port_info __initdata = {
++	.name			= DRV_NAME,
+ 	.chipset		= ide_ht6560b,
+ 	.port_ops		= &ht6560b_port_ops,
+ 	.host_flags		= IDE_HFLAG_SERIALIZE | /* is this needed? */
+Index: b/drivers/ide/legacy/qd65xx.c
+===================================================================
+--- a/drivers/ide/legacy/qd65xx.c
++++ b/drivers/ide/legacy/qd65xx.c
+@@ -37,6 +37,8 @@
+ #include <asm/system.h>
+ #include <asm/io.h>
+ 
++#define DRV_NAME "qd65xx"
++
+ #include "qd65xx.h"
+ 
+ /*
+@@ -317,6 +319,7 @@ static const struct ide_port_ops qd6580_
+ };
+ 
+ static const struct ide_port_info qd65xx_port_info __initdata = {
++	.name			= DRV_NAME,
+ 	.chipset		= ide_qd65xx,
+ 	.host_flags		= IDE_HFLAG_IO_32BIT |
+ 				  IDE_HFLAG_NO_DMA |
+Index: b/drivers/ide/legacy/umc8672.c
+===================================================================
+--- a/drivers/ide/legacy/umc8672.c
++++ b/drivers/ide/legacy/umc8672.c
+@@ -51,6 +51,8 @@
+ 
+ #include <asm/io.h>
+ 
++#define DRV_NAME "umc8672"
++
+ /*
+  * Default speeds.  These can be changed with "auto-tune" and/or hdparm.
+  */
+@@ -125,6 +127,7 @@ static const struct ide_port_ops umc8672
+ };
+ 
+ static const struct ide_port_info umc8672_port_info __initdata = {
++	.name			= DRV_NAME,
+ 	.chipset		= ide_umc8672,
+ 	.port_ops		= &umc8672_port_ops,
+ 	.host_flags		= IDE_HFLAG_NO_DMA | IDE_HFLAG_NO_AUTOTUNE,
