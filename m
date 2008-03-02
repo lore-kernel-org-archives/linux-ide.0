@@ -1,107 +1,156 @@
-From: Michael Tokarev <mjt@tls.msk.ru>
-Subject: Re: Setting up md-raid5: observations, errors, questions
-Date: Mon, 03 Mar 2008 00:56:29 +0300
-Message-ID: <47CB228D.5020709@msgid.tls.msk.ru>
-References: <bb145bd20803020423m14efea1by6e3e38bb8d0decb8@mail.gmail.com>	 <47CAC5BF.6060600@msgid.tls.msk.ru>	 <bb145bd20803020832x744c2674nd0a6a30e445b5453@mail.gmail.com>	 <47CAF30F.7040502@msgid.tls.msk.ru> <bb145bd20803021319o28df011sab954aa58a1c01be@mail.gmail.com>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: [PATCH 02/24] ide-tape: remove pipeline-specific code from idetape_add_chrdev_write_request
+Date: Mon, 3 Mar 2008 00:16:29 +0100
+Message-ID: <200803030016.30122.bzolnier@gmail.com>
+References: <1204361928-30229-1-git-send-email-petkovbb@gmail.com> <200803021933.06012.bzolnier@gmail.com> <20080302211953.GD4836@gollum.tnic>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <bb145bd20803021319o28df011sab954aa58a1c01be@mail.gmail.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: Christian Pernegger <pernegger@gmail.com>
-Cc: linux-raid@vger.kernel.org, linux-ide@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from ug-out-1314.google.com ([66.249.92.168]:4051 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754489AbYCBXDd (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 2 Mar 2008 18:03:33 -0500
+Received: by ug-out-1314.google.com with SMTP id z38so1641832ugc.16
+        for <linux-ide@vger.kernel.org>; Sun, 02 Mar 2008 15:03:31 -0800 (PST)
+In-Reply-To: <20080302211953.GD4836@gollum.tnic>
+Content-Disposition: inline
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-
-Christian Pernegger wrote:
-[]
->>  First, try to disable bitmaps on the raid array
-
-It has been pointed out recently here on linux-raid that internal bitmap
-doesn't work well:
-
-Message-ID: <47C44DDB.3050201@free.fr>
-Date:	Tue, 26 Feb 2008 18:35:23 +0100
-From:	Hubert Verstraete <hubskml@free.fr>
-To:	Neil Brown <neilb@suse.de>, linux-raid@vger.kernel.org
-Subject: internal bitmap size
-
-Hi Neil,
-
-Neil Brown wrote:
- > For now, you will have to live with a smallish bitmap, which probably
- > isn't a real problem.  With 19078 bits, you will still get a
- > several-thousand-fold increase it resync speed after a crash
- > (i.e. hours become seconds) and to some extent, fewer bits are better
- > and you have to update them less.
- >
- > I've haven't made any measurements to see what size bitmap is
- > ideal... maybe someone should :-)
-
-I've made some tries with a 4 250GB disks RAID-5 array and the write
-speed is really ugly with the default internal bitmap size.
-Setting a bigger bitmap chunk size (16 MB for example) creates a small
-bitmap. The write speed is then almost the same as when there is no
-bitmap, which is great. And as you said, the resync is a matter of
-seconds (or minutes) instead of hours (without bitmap).
-With such a setting, I've got both a nice write speed and a nice resync
-speed. That's where I would look at to find MY ideal bitmap size.
-....
+To: petkovbb@gmail.com
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
 
-> Maybe I did that by accident for the various vmstat data for different
-> RAID levels I posted previously. At least I forgot to explicitely
-> specify a bitmap for those tests (see above).
+On Sunday 02 March 2008, Borislav Petkov wrote:
+> On Sun, Mar 02, 2008 at 07:33:05PM +0100, Bartlomiej Zolnierkiewicz wrote:
+> > On Saturday 01 March 2008, Borislav Petkov wrote:
+> > > Instead of plugging the request into the pipeline, queue it straight on the
+> > > device's request queue through idetape_queue_rw_tail().
+> > > 
+> > > Signed-off-by: Borislav Petkov <petkovbb@gmail.com>
+> > > ---
+> > >  drivers/ide/ide-tape.c |   81 ++---------------------------------------------
+> > >  1 files changed, 4 insertions(+), 77 deletions(-)
+> > > 
+> > > diff --git a/drivers/ide/ide-tape.c b/drivers/ide/ide-tape.c
+> > > index 792c76e..abf3efa 100644
+> > > --- a/drivers/ide/ide-tape.c
+> > > +++ b/drivers/ide/ide-tape.c
+> > > @@ -2123,12 +2123,6 @@ static int idetape_queue_rw_tail(ide_drive_t *drive, int cmd, int blocks,
+> > >  
+> > >  	debug_log(DBG_SENSE, "%s: cmd=%d\n", __func__, cmd);
+> > >  
+> > > -	if (test_bit(IDETAPE_FLAG_PIPELINE_ACTIVE, &tape->flags)) {
+> > > -		printk(KERN_ERR "ide-tape: bug: the pipeline is active in %s\n",
+> > > -				__func__);
+> > > -		return (0);
+> > > -	}
+> > > -
+> > >  	idetape_init_rq(&rq, cmd);
+> > >  	rq.rq_disk = tape->disk;
+> > >  	rq.special = (void *)bh;
+> > > @@ -2140,10 +2134,9 @@ static int idetape_queue_rw_tail(ide_drive_t *drive, int cmd, int blocks,
+> > >  	if ((cmd & (REQ_IDETAPE_READ | REQ_IDETAPE_WRITE)) == 0)
+> > >  		return 0;
+> > >  
+> > > -	if (tape->merge_stage)
+> > > -		idetape_init_merge_stage(tape);
+> > >  	if (rq.errors == IDETAPE_ERROR_GENERAL)
+> > >  		return -EIO;
+> > > +
+> > >  	return (tape->blk_size * (blocks-rq.current_nr_sectors));
+> > >  }
+> > 
+> > These two changes to idetape_queue_rw_tail() don't look correct
+> > as the pipeline mode is still used by read requests.
 > 
-> It's my understanding that the bitmap is a raid chunk level journal to
-> speed up recovery, correct? Doing that reduces the window during which
-> a second disk can die with catastrophic consequences -> bitmaps are a
-> good thing, especially on an array where a full rebuild takes hours.
-> Seeing as the primary purpose of the raid5 is fault tolerance I could
-> live with a performance penalty but why is it *that* slow?
+> Wrt first hunk read rq pipeline functionality is removed in the following
+> patch. Would it then be better to merge the two patches? Actually, do we need
 
-Umm..  You mixed it all ;)
+Merging patches together would cause increased complexity.
 
-Bitmap is a place (stored somewhere... ;) where each equally-sized
-block of the array has a single bit of information - namely, if that
-block has been written recently (which means it was dirty) or not.
-So for each block (which is in no way related to chunk size etc!)
-we've an on/off switch, telling us if the said block has to be
-re-syncronized if we need to perform re-syncronisation of data -
-for example, in case of power loss -- only those blocks marked
-"dirty" in the bitmap needs to be recalculated and rewritten,
-not the whole array.
+The best solution would be to move this hunk to the patch which removes
+IDETAPE_FLAG_PIPELINE_ACTIVE flag.
 
-This has nothing to do with window between first and second disk
-failure.  Once first disk fails, bitmap is of no use anymore,
-because you will need a replacement disk, which has to be
-resyncronized in whole, because it's shiny new.  Bitmap only
-helps for unclean shutdown, and only if there was no recent write
-activity (which hasn't been "comitted" by md layer and the array
-hasn't been re-marked as clean - it happens every 0.21 sec by
-default - see /sys/block/mdN/md/safe_mode_delay).
+> to keep the driver functional in between the patches of those series for
+> the purposes of git bisection or only compile-testing it is enough? Cause
 
-> If I put the bitmap on an external drive it will be a lot faster - but
-> what happens, when the bitmap "goes away" (because that disk fails,
-> isn't accessible, etc)?
-> Is it goodbye array or is the worst case a full resync? How well is
-> the external bitmap supported?
-> (That same consideration kept me from using external journals for ext3.)
+We want to keep the driver functional in between the patches, especially
+given that it shouldn't be much more difficult to do so.
 
-If the bitmap is unaccessible, it's handled as there was no bitmap
-at all - ie, if the array was dirty, it will be resynced as a whole;
-if it was clean, nothing will be done.  Bitmap gives a set of blocks
-to OMIT from resyncronisation, and if that information is unavailable...
+> after applying the whole series you get pipelined mode ripped out anyway and
+> intermittent states with partially functional pipeline are of no importance, no?
 
-Yes, external bitmaps are supported and working.  It doesn't mean
-they're faster however - I tried placing a bitmap into a tmpfs (just
-for testing) - and discovered about 95% drop in speed compared to the
-case with internal bitmap (ie, only 5% speed when bitmap is on tmpfs -
-bitmap size was the same).  It was long (more than a year) ago so things
-may have changed already.
+We always want fully bisectable patches:
 
+- if the patch series accidentaly completely breaks the code we want to be
+  able narrow it down to the guilty change
 
-I highly doubt chunk size makes any difference.  Bitmap is the primary
-suspect here.
+- if the patch series causes some regressions (ie. worse performance) we
+  also want to see which exact change caused it
 
-/mjt
+[ Nothing changes here and removal of pipeline functionality can't be an
+  excuse for not sticking to the standard procedure. ]
+
+> Wrt the second one you're right, this one should stay in for now until
+> tape->merge_stage has been removed.
+> 
+> > > @@ -2210,81 +2203,15 @@ static void idetape_wait_first_stage(ide_drive_t *drive)
+> > >  	spin_unlock_irqrestore(&tape->lock, flags);
+> > >  }
+> > >  
+> > > -/*
+> > > - * Try to add a character device originated write request to our pipeline. In
+> > > - * case we don't succeed, we revert to non-pipelined operation mode for this
+> > > - * request. In order to accomplish that, we
+> > > - *
+> > > - * 1. Try to allocate a new pipeline stage.
+> > > - * 2. If we can't, wait for more and more requests to be serviced and try again
+> > > - * each time.
+> > > - * 3. If we still can't allocate a stage, fallback to non-pipelined operation
+> > > - * mode for this request.
+> > > - */
+> > > +/* Queue up a character device originated write request. */
+> > >  static int idetape_add_chrdev_write_request(ide_drive_t *drive, int blocks)
+> > >  {
+> > >  	idetape_tape_t *tape = drive->driver_data;
+> > > -	idetape_stage_t *new_stage;
+> > > -	unsigned long flags;
+> > > -	struct request *rq;
+> > >  
+> > >  	debug_log(DBG_CHRDEV, "Enter %s\n", __func__);
+> > >  
+> > > -	/* Attempt to allocate a new stage. Beware possible race conditions. */
+> > > -	while ((new_stage = idetape_kmalloc_stage(tape)) == NULL) {
+> > > -		spin_lock_irqsave(&tape->lock, flags);
+> > > -		if (test_bit(IDETAPE_FLAG_PIPELINE_ACTIVE, &tape->flags)) {
+> > > -			idetape_wait_for_request(drive, tape->active_data_rq);
+> > > -			spin_unlock_irqrestore(&tape->lock, flags);
+> > > -		} else {
+> > > -			spin_unlock_irqrestore(&tape->lock, flags);
+> > > -			idetape_plug_pipeline(drive);
+> > > -			if (test_bit(IDETAPE_FLAG_PIPELINE_ACTIVE,
+> > > -					&tape->flags))
+> > > -				continue;
+> > 
+> > Can all the above code be safely removed (are you sure that there are no
+> > hidden interactions)?  Even if so I would prefer that it is left intact by
+> > this patch to ease the review.
+> 
+> This code does exactly what the comment above explains: it tries to free
+> the pipeline for yet another request by plugging it with the already queued
+> ones and if it can't do so it simply queues the request in non-pipelined
+> mode. What the patch does is remove the plugging and waiting. If we
+> leave this intact we'll be missing the point of the whole exercise.
+
+idetape_empty_write_pipeline() which is called for _reads_ calls
+idetape_add_chrdev_write_request() - could you tell if there are none
+hidden interactions caused by not waiting for the active request to
+finish?
+
+[ I don't know and it is really not obvious from looking at ide-tape.c
+  (it is quite complicated code) - that is why I want to play it safe. ]
+
+Thanks,
+Bart
