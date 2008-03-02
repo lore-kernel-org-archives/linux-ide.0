@@ -1,65 +1,35 @@
-From: "Christian Pernegger" <pernegger@gmail.com>
-Subject: Re: Setting up md-raid5: observations, errors, questions
-Date: Sun, 2 Mar 2008 14:24:04 +0100
-Message-ID: <bb145bd20803020524y7b7cca01ma0b638a430c2f2f2@mail.gmail.com>
-References: <bb145bd20803020423m14efea1by6e3e38bb8d0decb8@mail.gmail.com>
-	 <alpine.DEB.1.00.0803020741150.13994@p34.internal.lan>
-	 <bb145bd20803020456g54be4bcbg1cf7aed132ac7944@mail.gmail.com>
-	 <alpine.DEB.1.00.0803020802370.18550@p34.internal.lan>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+From: bugme-daemon@bugzilla.kernel.org
+Subject: [Bug 10142] DMA crash with via82cxxx module
+Date: Sun,  2 Mar 2008 05:37:58 -0800 (PST)
+Message-ID: <20080302133758.58434108067@picon.linux-foundation.org>
+References: <bug-10142-11633@http.bugzilla.kernel.org/>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from el-out-1112.google.com ([209.85.162.183]:38882 "EHLO
-	el-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753918AbYCBNYI (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 2 Mar 2008 08:24:08 -0500
-Received: by el-out-1112.google.com with SMTP id v27so1098143ele.17
-        for <linux-ide@vger.kernel.org>; Sun, 02 Mar 2008 05:24:05 -0800 (PST)
-In-Reply-To: <alpine.DEB.1.00.0803020802370.18550@p34.internal.lan>
-Content-Disposition: inline
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:56763 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751314AbYCBNia (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 2 Mar 2008 08:38:30 -0500
+Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
+	by smtp1.linux-foundation.org (8.14.2/8.14.2/Debian-2build1) with ESMTP id m22Dc1EJ013527
+	for <linux-ide@vger.kernel.org>; Sun, 2 Mar 2008 05:38:02 -0800
+In-Reply-To: <bug-10142-11633@http.bugzilla.kernel.org/>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-raid@vger.kernel.org
-Cc: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
->  You could try to change cables and such but you've already cc'd linux-ide,
->  AFAIK it can/could be a chipset/related issue and the guys who work on NCQ
->  etc are working on the problem is the last I heard..
->
->  You should try and narrow down the problem, is it always the same drive
->  that has that problem every time?  Does it occur if you do a check on the
->  RAID 5 array or only when building?  etc..
+http://bugzilla.kernel.org/show_bug.cgi?id=10142
 
-Assuming you're talking about the HSM violation error ... I got that
-exactly once (yet) in the situation described (sometime after the
-writing phase of badblocks). Nothing since and certainly not the spew
-others are reporting.
 
-My primary concern now is the second problem - seems like any access
-to the raid array makes the machine unusable. I can type/edit a
-command at the bash prompt normally but as soon as I hit enter it just
-hangs there. If the command is trivial, say cat, I might get a result
-a few minutes later.
 
-bonnie++ results are in:
 
-Version 1.03c       ------Sequential Output------ --Sequential Input- --Random-
-                    -Per Chr- --Block-- -Rewrite- -Per Chr- --Block-- --Seeks--
-Machine        Size K/sec %CP K/sec %CP K/sec %CP K/sec %CP K/sec %CP  /sec %CP
-1024k            4G           16282   5 13359   3           57373   7 149.0   0
-                    ------Sequential Create------ --------Random Create--------
-                    -Create-- --Read--- -Delete-- -Create-- --Read--- -Delete--
-              files  /sec %CP  /sec %CP  /sec %CP  /sec %CP  /sec %CP  /sec %CP
-                 16 +++++ +++ +++++ +++ +++++ +++ +++++ +++ +++++ +++ +++++ +++
 
-Something is definitely not right ... :-(
+------- Comment #1 from bzolnier@gmail.com  2008-03-02 05:37 -------
+- Which kernel version is it?
 
-As in, an old array of 300GB IDE Maxtors has 4x the seq writes, bus
-capped (105MB/s, plain PCI) reads and 3x the IOs. And it doesn't block
-the machine. Granted, there's the crypto but on my other (non-raid)
-boxes the performance impact just isn't there.
+- Do you have kernel log of the crash?
+  [ photo of the screen will be fine ]
 
-Any help appreciated, as it is the box has expensive-paperweight status.
 
-C.
+-- 
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug, or are watching the assignee.
