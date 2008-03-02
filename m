@@ -1,47 +1,35 @@
-From: Adrian Bunk <bunk@kernel.org>
-Subject: ide_register_hw(): buggy code
-Date: Sun, 2 Mar 2008 17:19:24 +0200
-Message-ID: <20080302151924.GJ25835@cs181133002.pp.htv.fi>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+From: bugme-daemon@bugzilla.kernel.org
+Subject: [Bug 10142] DMA crash with via82cxxx module
+Date: Sun,  2 Mar 2008 07:24:57 -0800 (PST)
+Message-ID: <20080302152457.47F5F108065@picon.linux-foundation.org>
+References: <bug-10142-11633@http.bugzilla.kernel.org/>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp5.pp.htv.fi ([213.243.153.39]:60053 "EHLO smtp5.pp.htv.fi"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751256AbYCBPUy (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 2 Mar 2008 10:20:54 -0500
-Content-Disposition: inline
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:51630 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750785AbYCBPZ1 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 2 Mar 2008 10:25:27 -0500
+Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
+	by smtp1.linux-foundation.org (8.14.2/8.14.2/Debian-2build1) with ESMTP id m22FP0Mn023202
+	for <linux-ide@vger.kernel.org>; Sun, 2 Mar 2008 07:25:02 -0800
+In-Reply-To: <bug-10142-11633@http.bugzilla.kernel.org/>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-The Coverity checker spotted the following bogus change to 
-ide_register_hw() in commit 9e016a719209d95338e314b46c3012cc7feaaeec:
+http://bugzilla.kernel.org/show_bug.cgi?id=10142
 
-<--  snip  -->
 
-...
-+               hwif = ide_deprecated_find_port(hw->io_ports[IDE_DATA_OFFSET]);
-+               index = hwif->index;
-+               if (hwif)
-+                       goto found;
-                for (index = 0; index < MAX_HWIFS; index++)
-...
 
-<--  snip  -->
 
-It's impossible to reach the for() loop without Oopsing before.
 
-Can you either fix this for 2.6.25 or push your patch that removes 
-ide_register_hw() for 2.6.25?
+------- Comment #5 from qrees@poczta.fm  2008-03-02 07:24 -------
+Because I have vt8233 chipset and this module is responsible for DMA support on
+this chipset (at least I think so). When I turn off DMA system is stable. This
+might be some other module, but it's definitely something with DMA on vt8233
+chipset.
 
-cu
-Adrian
 
 -- 
-
-       "Is there not promise of rain?" Ling Tan asked suddenly out
-        of the darkness. There had been need of rain for many days.
-       "Only a promise," Lao Er said.
-                                       Pearl S. Buck - Dragon Seed
-
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug, or are watching the assignee.
