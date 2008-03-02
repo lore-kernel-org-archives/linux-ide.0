@@ -1,52 +1,65 @@
-From: bugme-daemon@bugzilla.kernel.org
-Subject: [Bug 10142] New: DMA crash with via82cxxx module
-Date: Sun,  2 Mar 2008 04:58:16 -0800 (PST)
-Message-ID: <bug-10142-11633@http.bugzilla.kernel.org/>
+From: "Christian Pernegger" <pernegger@gmail.com>
+Subject: Re: Setting up md-raid5: observations, errors, questions
+Date: Sun, 2 Mar 2008 14:24:04 +0100
+Message-ID: <bb145bd20803020524y7b7cca01ma0b638a430c2f2f2@mail.gmail.com>
+References: <bb145bd20803020423m14efea1by6e3e38bb8d0decb8@mail.gmail.com>
+	 <alpine.DEB.1.00.0803020741150.13994@p34.internal.lan>
+	 <bb145bd20803020456g54be4bcbg1cf7aed132ac7944@mail.gmail.com>
+	 <alpine.DEB.1.00.0803020802370.18550@p34.internal.lan>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:37201 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752435AbYCBNH6 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 2 Mar 2008 08:07:58 -0500
-Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
-	by smtp1.linux-foundation.org (8.14.2/8.14.2/Debian-2build1) with ESMTP id m22CwKVf011079
-	for <linux-ide@vger.kernel.org>; Sun, 2 Mar 2008 04:58:21 -0800
+Received: from el-out-1112.google.com ([209.85.162.183]:38882 "EHLO
+	el-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753918AbYCBNYI (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 2 Mar 2008 08:24:08 -0500
+Received: by el-out-1112.google.com with SMTP id v27so1098143ele.17
+        for <linux-ide@vger.kernel.org>; Sun, 02 Mar 2008 05:24:05 -0800 (PST)
+In-Reply-To: <alpine.DEB.1.00.0803020802370.18550@p34.internal.lan>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: linux-raid@vger.kernel.org
+Cc: linux-ide@vger.kernel.org
 
-http://bugzilla.kernel.org/show_bug.cgi?id=10142
+>  You could try to change cables and such but you've already cc'd linux-ide,
+>  AFAIK it can/could be a chipset/related issue and the guys who work on NCQ
+>  etc are working on the problem is the last I heard..
+>
+>  You should try and narrow down the problem, is it always the same drive
+>  that has that problem every time?  Does it occur if you do a check on the
+>  RAID 5 array or only when building?  etc..
 
-           Summary: DMA crash with via82cxxx module
-           Product: IO/Storage
-           Version: 2.5
-     KernelVersion: 2.*
-          Platform: All
-        OS/Version: Linux
-              Tree: Mainline
-            Status: NEW
-          Severity: high
-          Priority: P1
-         Component: IDE
-        AssignedTo: io_ide@kernel-bugs.osdl.org
-        ReportedBy: qrees@poczta.fm
+Assuming you're talking about the HSM violation error ... I got that
+exactly once (yet) in the situation described (sometime after the
+writing phase of badblocks). Nothing since and certainly not the spew
+others are reporting.
 
+My primary concern now is the second problem - seems like any access
+to the raid array makes the machine unusable. I can type/edit a
+command at the bash prompt normally but as soon as I hit enter it just
+hangs there. If the command is trivial, say cat, I might get a result
+a few minutes later.
 
-Latest working kernel version: all without via82cxxx module
-Earliest failing kernel version: all with via82cxxx module
-Distribution: all
-Hardware Environment: via8233 chipset
-Software Environment: any
-Problem Description: System crashes when DMA is on. The problem is via82cxxx 
-module. When it's disabled system doesn't crash. The problem is that, when is
-disabled there is no DMA, so performance is just horrible... Due to this it's
-not even possible to find anything in system logs.
+bonnie++ results are in:
 
-Steps to reproduce: Make sure DMA is on. Copy big file (so it takes longer than
-few seconds ;) ) and play music at the same time (or anything that involves
-disk use).
+Version 1.03c       ------Sequential Output------ --Sequential Input- --Random-
+                    -Per Chr- --Block-- -Rewrite- -Per Chr- --Block-- --Seeks--
+Machine        Size K/sec %CP K/sec %CP K/sec %CP K/sec %CP K/sec %CP  /sec %CP
+1024k            4G           16282   5 13359   3           57373   7 149.0   0
+                    ------Sequential Create------ --------Random Create--------
+                    -Create-- --Read--- -Delete-- -Create-- --Read--- -Delete--
+              files  /sec %CP  /sec %CP  /sec %CP  /sec %CP  /sec %CP  /sec %CP
+                 16 +++++ +++ +++++ +++ +++++ +++ +++++ +++ +++++ +++ +++++ +++
 
+Something is definitely not right ... :-(
 
--- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug, or are watching the assignee.
+As in, an old array of 300GB IDE Maxtors has 4x the seq writes, bus
+capped (105MB/s, plain PCI) reads and 3x the IOs. And it doesn't block
+the machine. Granted, there's the crypto but on my other (non-raid)
+boxes the performance impact just isn't there.
+
+Any help appreciated, as it is the box has expensive-paperweight status.
+
+C.
