@@ -1,51 +1,52 @@
-From: Justin Piszcz <jpiszcz@lucidpixels.com>
-Subject: Re: Setting up md-raid5: observations, errors, questions
-Date: Sun, 2 Mar 2008 08:03:54 -0500 (EST)
-Message-ID: <alpine.DEB.1.00.0803020802370.18550@p34.internal.lan>
-References: <bb145bd20803020423m14efea1by6e3e38bb8d0decb8@mail.gmail.com>  <alpine.DEB.1.00.0803020741150.13994@p34.internal.lan> <bb145bd20803020456g54be4bcbg1cf7aed132ac7944@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+From: bugme-daemon@bugzilla.kernel.org
+Subject: [Bug 10142] New: DMA crash with via82cxxx module
+Date: Sun,  2 Mar 2008 04:58:16 -0800 (PST)
+Message-ID: <bug-10142-11633@http.bugzilla.kernel.org/>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from lucidpixels.com ([75.144.35.66]:46107 "EHLO lucidpixels.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752372AbYCBNDz (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 2 Mar 2008 08:03:55 -0500
-In-Reply-To: <bb145bd20803020456g54be4bcbg1cf7aed132ac7944@mail.gmail.com>
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:37201 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752435AbYCBNH6 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 2 Mar 2008 08:07:58 -0500
+Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
+	by smtp1.linux-foundation.org (8.14.2/8.14.2/Debian-2build1) with ESMTP id m22CwKVf011079
+	for <linux-ide@vger.kernel.org>; Sun, 2 Mar 2008 04:58:21 -0800
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Christian Pernegger <pernegger@gmail.com>
-Cc: linux-raid@vger.kernel.org, linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
+
+http://bugzilla.kernel.org/show_bug.cgi?id=10142
+
+           Summary: DMA crash with via82cxxx module
+           Product: IO/Storage
+           Version: 2.5
+     KernelVersion: 2.*
+          Platform: All
+        OS/Version: Linux
+              Tree: Mainline
+            Status: NEW
+          Severity: high
+          Priority: P1
+         Component: IDE
+        AssignedTo: io_ide@kernel-bugs.osdl.org
+        ReportedBy: qrees@poczta.fm
 
 
+Latest working kernel version: all without via82cxxx module
+Earliest failing kernel version: all with via82cxxx module
+Distribution: all
+Hardware Environment: via8233 chipset
+Software Environment: any
+Problem Description: System crashes when DMA is on. The problem is via82cxxx 
+module. When it's disabled system doesn't crash. The problem is that, when is
+disabled there is no DMA, so performance is just horrible... Due to this it's
+not even possible to find anything in system logs.
 
-On Sun, 2 Mar 2008, Christian Pernegger wrote:
+Steps to reproduce: Make sure DMA is on. Copy big file (so it takes longer than
+few seconds ;) ) and play music at the same time (or anything that involves
+disk use).
 
->>  Disable NCQ and your problem will go away.
->
-> Thank you. Just out of interest - which problem and why?
->
->>  echo 1 > /sys/block/$i/device/queue_depth
->
-> I get access denied even as root. FWIW the value is at 1 for the 4
-> disks in the raid anyway. The SCSI disk has value 8, which is probably
-> irrelevant.
->
-> For completeness' sake:
->
-> mdadm version: mdadm - v2.6.4 - 19th October 2007
-> raid setup command: mdadm --create /dev/md0 --verbose --metadata=1.0
-> --homehost=jesus -n4 -c1024 -l5 --bitmap=internal --name tb-storage
-> -ayes /dev/sd[bcde]
-> cryptsetup command: cryptsetup luksFormat /dev/md0 --align-payload=2048
->
-> Any other suggestions on any of the issues?
->
-> Thanks,
 
-You could try to change cables and such but you've already cc'd linux-ide, 
-AFAIK it can/could be a chipset/related issue and the guys who work on NCQ 
-etc are working on the problem is the last I heard..
-
-You should try and narrow down the problem, is it always the same drive 
-that has that problem every time?  Does it occur if you do a check on the 
-RAID 5 array or only when building?  etc..
+-- 
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug, or are watching the assignee.
