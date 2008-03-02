@@ -1,52 +1,101 @@
-From: Pavel Machek <pavel@ucw.cz>
-Subject: Re: [RFC] Disk shock protection (revisited)
-Date: Sun, 24 Feb 2008 19:03:39 +0100
-Message-ID: <20080224180339.GA3861@ucw.cz>
-References: <87skzgd1zk.fsf@denkblock.local> <20080226123946.75dbe3d2@core> <87mypl8p49.fsf@denkblock.local> <20080228111349.6831925c@core>
+From: "Christian Pernegger" <pernegger@gmail.com>
+Subject: Setting up md-raid5: observations, errors, questions
+Date: Sun, 2 Mar 2008 13:23:32 +0100
+Message-ID: <bb145bd20803020423m14efea1by6e3e38bb8d0decb8@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from gprs189-60.eurotel.cz ([160.218.189.60]:2465 "EHLO spitz.ucw.cz"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1753025AbYCBKPN (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 2 Mar 2008 05:15:13 -0500
+Received: from el-out-1112.google.com ([209.85.162.177]:3481 "EHLO
+	el-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750834AbYCBMXd (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 2 Mar 2008 07:23:33 -0500
+Received: by el-out-1112.google.com with SMTP id v27so1067725ele.17
+        for <linux-ide@vger.kernel.org>; Sun, 02 Mar 2008 04:23:33 -0800 (PST)
 Content-Disposition: inline
-In-Reply-To: <20080228111349.6831925c@core>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: Elias Oltmanns <eo@nebensachen.de>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Jens Axboe <jens.axboe@oracle.com>
+To: linux-raid@vger.kernel.org
+Cc: linux-ide@vger.kernel.org
 
-Hi!
+Hi all!
 
-> > > That sounds like a non starter. What if the box is busy, what if the
-> > > daemon or something you touch needs memory and causes paging ?
-> > 
-> > The daemon runs mlock'd anyway, so there won't be any need for paging
-> 
-> mlock does not guarantee anything of that form. A syscall by an mlocked
-> process which causes a memory allocation can cause paging of another
-> process on the system.
+I'm not doing this for the first time but there were a few interesting
+/ worrying points during the setup process and I'd rather clear those
+up now.
 
-Well... but you can be careful about the syscalls, right?
+Hardware:
+Tyan Thunder K8W (S2885)
+Dual Opteron 254, 2GB (2x2x512MB) RAM, 2x Promise SATA II TX4, Adaptec 29160
+4x WD RE2-GP 1TB on the Promise (for raid5)
+1x Maxtor Atlas 15K II on the Adaptec (system disk)
 
-Anyway, active protection is 'best effort' anyway. There's not enough
-time to park heads if you drop the machine without tilting it first...
-and we have been running with no protection for years now...
+OS:
+Debian testing-amd64
+linux-2.6.22-3
+mke2fs 1.40.6
+mdadm
 
-> > stays in memory all the time, it can go ahead and notify the kernel that
-> > the disk heads should be unloaded. The kernel takes care to insert the
-> > idle immediate command at the head of the queue. Am I missing something?
-> 
-> Yes - the fact we may well have bounced off the floor already.
+I did a badblocks -v -s -t random -w on all future RAID disks in
+parallel to test / burn-in.
+Result: no bad blocks, decent speed (vmstat: 148MB/s total read,
+220MB/s total write), BUT the following error (once):
 
-Well, shit happens. Even notebook with parked harddrive is not
-guaranteed to survive the fall.
-							Pavel
--- 
-(english) http://www.livejournal.com/~pavelmachek
-(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
+ata2.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2
+ata2.00: (port_status 0x20080000)
+ata2.00: cmd 25/00:80:80:a1:55/00:00:3a:00:00/e0 tag 0 cdb 0x0 data 65536 in
+         res 50/00:00:ff:a1:55/00:00:3a:00:00/e0 Emask 0x2 (HSM violation)
+ata2: soft resetting port
+ata2: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+ata2.00: configured for UDMA/133
+ata2: EH complete
+sd 2:0:0:0: [sdc] 1953525168 512-byte hardware sectors (1000205 MB)
+sd 2:0:0:0: [sdc] Write Protect is off
+sd 2:0:0:0: [sdc] Mode Sense: 00 3a 00 00
+sd 2:0:0:0: [sdc] Write cache: enabled, read cache: enabled, doesn't
+support DPO or FUA
 
--- 
-(english) http://www.livejournal.com/~pavelmachek
-(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
+All four disks were beyond the first (random write) phase, but that's
+all I can say as I had it running overnight. The "HSM violation" error
+is all over Google but I couldn't find anything conlusive (= that I
+could understand).
+
+Ignoring the error I went on to create the array:
+
+[exact command unavailable, see below. RAID5, 4 disks, 1024K chunk
+size, internal bitmap, V1 superblock]
+
+Went fine, only mdadm segfaulted:
+
+mdadm[3295]: segfault at 0000000000000000 rip 0000000000412d2c rsp
+00007fff9f31b5d0 error 4
+
+This did only show up in dmesg so I'm not sure exactly when. Either
+right after the create or after a first attempt at a create where I
+had used -N instead of --name, which it didn't like (error message).
+Recreated the array, just to be sure (same command as above).
+
+Tried creating a filesystem:
+
+mke2fs -E stride=256 -j -L tb-storage -m1 -T largfile4 /dev/md0
+
+That was glacially slow, "writing inode tables" went up about 3-4/sec
+(22357 total). Since I had forgotten the crypto layer anyway I
+CTRL-Ced that attempt and added it:
+
+[exact command unavailable, see below. Used 2048 (512byte sectors) for
+LUKS payload alignment, which should land on it chunk boundaries]
+
+OK. Back to the fs again, same command, different device. Still
+glacially slow (and still running), only now the whole box is at a
+standstill, too. cat /proc/cpuinfo takes about 3 minutes (!) to
+complete, I'm still waiting for top to launch (15min and counting).
+I'll leave mke2fs running for now ...
+
+
+So, is all this normal? What did I do wrong, what can I do better?
+
+
+Cheers,
+
+C.
