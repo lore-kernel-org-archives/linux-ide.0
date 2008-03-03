@@ -1,36 +1,34 @@
-From: "Christian Pernegger" <pernegger@gmail.com>
-Subject: Re: Setting up md-raid5: observations, errors, questions
-Date: Mon, 3 Mar 2008 21:19:49 +0100
-Message-ID: <bb145bd20803031219i3e42a70bl6f0d070c03749a82@mail.gmail.com>
-References: <bb145bd20803020423m14efea1by6e3e38bb8d0decb8@mail.gmail.com>
-	 <alpine.DEB.1.00.0803020741150.13994@p34.internal.lan>
-	 <bb145bd20803020456g54be4bcbg1cf7aed132ac7944@mail.gmail.com>
-	 <alpine.DEB.1.00.0803020802370.18550@p34.internal.lan>
-	 <bb145bd20803020524y7b7cca01ma0b638a430c2f2f2@mail.gmail.com>
-	 <47CC3C79.6060707@tmr.com>
+From: Stefan Richter <stefanr@s5r6.in-berlin.de>
+Subject: Re: [BUG] 2.6.25-rc2-git3 broke cdrecord
+Date: Mon, 03 Mar 2008 22:41:33 +0100
+Message-ID: <47CC708D.9020504@s5r6.in-berlin.de>
+References: <20080302233415.GA6258@Pilar>	 <18379.18297.838050.536473@harpo.it.uu.se>	 <tkrat.468fd04c47ae1a2a@s5r6.in-berlin.de>	 <20080303172641Z.fujita.tomonori@lab.ntt.co.jp>	 <47CBC014.9090309@s5r6.in-berlin.de>	 <47CC37CA.1040407@s5r6.in-berlin.de> <9ea470500803031000o223e7cbcl160ce776c54db1a9@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <47CC3C79.6060707@tmr.com>
-Content-Disposition: inline
-Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
-Cc: linux-ide@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from einhorn.in-berlin.de ([192.109.42.8]:33061 "EHLO
+	einhorn.in-berlin.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1762689AbYCCVmB (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 3 Mar 2008 16:42:01 -0500
+In-Reply-To: <9ea470500803031000o223e7cbcl160ce776c54db1a9@mail.gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: petkovbb@gmail.com
+Cc: Stefan Richter <stefanr@s5r6.in-berlin.de>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, mikpe@it.uu.se, crmafra2@gmail.com, linux-kernel@vger.kernel.org, James.Bottomley@hansenpartnership.com, htejun@gmail.com, jens.axboe@oracle.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 
->  > Assuming you're talking about the HSM violation error ... I got that
->  > exactly once (yet) in the situation described (sometime after the
->  > writing phase of badblocks). Nothing since and certainly not the spew
->  > others are reporting.
->  >
->  >
->  Are you by any chance running quota?
+Boris Petkov wrote:
+>>  >> Stefan Richter <stefanr@s5r6.in-berlin.de> wrote:
+>>  >>> CD burning still fails for me via ide-cd,
+...
+> we have fixed a similar bug to yours and the patch went in after
+> 2.6.25-rc3 - more specifically
+> bcd88ac3b2ff2eae3d0fa57a6b02d4fce5392f32 - so please test current git head wrt
+> burning with ide-cd.
 
-No, sorry ... next guess :-)
-
-Ah, why?
-
-Thanks,
-
-C.
+I tested 2.6.25-rc3-git4 now, plus Tomo's block layer patch.
+Burning with wodim over ide-cd works now.  Thanks everybody,
+-- 
+Stefan Richter
+-=====-==--- --== ---==
+http://arcgraph.de/sr/
