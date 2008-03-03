@@ -1,135 +1,48 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: [PATCH] libata,libsas: expose ata_sas_change_queue_depth() and use
-	it
-Date: Mon, 03 Mar 2008 11:27:28 -0600
-Message-ID: <1204565248.3043.32.camel@localhost.localdomain>
+From: Stefan Richter <stefanr@s5r6.in-berlin.de>
+Subject: Re: [BUG] 2.6.25-rc2-git3 broke cdrecord
+Date: Mon, 03 Mar 2008 18:39:22 +0100
+Message-ID: <47CC37CA.1040407@s5r6.in-berlin.de>
+References: <20080302233415.GA6258@Pilar>	<18379.18297.838050.536473@harpo.it.uu.se>	<tkrat.468fd04c47ae1a2a@s5r6.in-berlin.de> <20080303172641Z.fujita.tomonori@lab.ntt.co.jp> <47CBC014.9090309@s5r6.in-berlin.de>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:41334 "EHLO
-	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1760981AbYCCR1b (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 3 Mar 2008 12:27:31 -0500
+Received: from einhorn.in-berlin.de ([192.109.42.8]:46225 "EHLO
+	einhorn.in-berlin.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756412AbYCCRkN (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 3 Mar 2008 12:40:13 -0500
+In-Reply-To: <47CBC014.9090309@s5r6.in-berlin.de>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide <linux-ide@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
+To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Cc: mikpe@it.uu.se, crmafra2@gmail.com, linux-kernel@vger.kernel.org, James.Bottomley@HansenPartnership.com, htejun@gmail.com, jens.axboe@oracle.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 
-The current libsas implementation of change_queue_depth() only really
-pays attention to the SAS queuing requirements.  If we plumb in a libata
-variant, we can make sure we're doing correct queue depth modifications
-on SATA devices.
+I wrote:
+> FUJITA Tomonori wrote:
+>> On Mon, 3 Mar 2008 02:48:23 +0100 (CET)
+>> Stefan Richter <stefanr@s5r6.in-berlin.de> wrote:
+>>> CD burning still fails for me via ide-cd, although in a
+>>> different way than without the patch.  (Without the patch, ide-cd also
+>>> fails like described by you for SATA.)
+>>>
+>>> With the patch, the failure is as follows.  I don't know if this is
+>>> related to the data length arithmetic or something entirely different;
+>>> all I learned so far is that 2.6.24 works.  Application log from
+>>> 2.6.25-rc3 + Tejun's patch + Gentoo's cdrkit-1.1.6 + k3b:
+>>
+>> Can you try the following patch?
+>>
+>> http://lkml.org/lkml/2008/3/2/218
+> 
+> Fails just like with Tejun's patch, alas.
 
-Signed-off-by: James Bottomley <James.Bottomley@HansenPartnership.com>
+What I see may very well be an ide-cd specific problem which is perhaps 
+already fixed in Linus' tree.  I need to update and retest.
 
----
-
-diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-index 0562b0a..d99403c 100644
---- a/drivers/ata/libata-scsi.c
-+++ b/drivers/ata/libata-scsi.c
-@@ -962,13 +962,14 @@ void ata_scsi_slave_destroy(struct scsi_device *sdev)
- }
- 
- /**
-- *	ata_scsi_change_queue_depth - SCSI callback for queue depth config
-+ *	ata_sas_change_queue_depth - SAS callback for queue depth config
-  *	@sdev: SCSI device to configure queue depth for
-+ *	@dev: The ATA device whose depth is to be changed
-  *	@queue_depth: new queue depth
-  *
-- *	This is libata standard hostt->change_queue_depth callback.
-- *	SCSI will call into this callback when user tries to set queue
-- *	depth via sysfs.
-+ *	This is standard hostt->change_queue_depth callback for SAS
-+ *	devices using libata for SATA tasks.  SCSI will call into this
-+ *	callback when user tries to set queue depth via sysfs.
-  *
-  *	LOCKING:
-  *	SCSI layer (we don't care)
-@@ -976,16 +977,16 @@ void ata_scsi_slave_destroy(struct scsi_device *sdev)
-  *	RETURNS:
-  *	Newly configured queue depth.
-  */
--int ata_scsi_change_queue_depth(struct scsi_device *sdev, int queue_depth)
-+int ata_sas_change_queue_depth(struct scsi_device *sdev,
-+			       struct ata_device *dev,
-+			       int queue_depth)
- {
--	struct ata_port *ap = ata_shost_to_port(sdev->host);
--	struct ata_device *dev;
-+	struct ata_port *ap = dev->link->ap;
- 	unsigned long flags;
- 
- 	if (queue_depth < 1 || queue_depth == sdev->queue_depth)
- 		return sdev->queue_depth;
- 
--	dev = ata_scsi_find_dev(ap, sdev);
- 	if (!dev || !ata_dev_enabled(dev))
- 		return sdev->queue_depth;
- 
-@@ -1009,6 +1010,35 @@ int ata_scsi_change_queue_depth(struct scsi_device *sdev, int queue_depth)
- 	scsi_adjust_queue_depth(sdev, MSG_SIMPLE_TAG, queue_depth);
- 	return queue_depth;
- }
-+EXPORT_SYMBOL_GPL(ata_sas_change_queue_depth);
-+
-+/**
-+ *	ata_scsi_change_queue_depth - SCSI callback for queue depth config
-+ *	@sdev: SCSI device to configure queue depth for
-+ *	@queue_depth: new queue depth
-+ *
-+ *	This is libata standard hostt->change_queue_depth callback.
-+ *	SCSI will call into this callback when user tries to set queue
-+ *	depth via sysfs.
-+ *
-+ *	LOCKING:
-+ *	SCSI layer (we don't care)
-+ *
-+ *	RETURNS:
-+ *	Newly configured queue depth.
-+ */
-+int ata_scsi_change_queue_depth(struct scsi_device *sdev, int queue_depth)
-+{
-+	struct ata_port *ap = ata_shost_to_port(sdev->host);
-+	struct ata_device *dev;
-+
-+	if (queue_depth < 1 || queue_depth == sdev->queue_depth)
-+		return sdev->queue_depth;
-+
-+	dev = ata_scsi_find_dev(ap, sdev);
-+
-+	return ata_sas_change_queue_depth(sdev, dev, queue_depth);
-+}
- 
- /* XXX: for spindown warning */
- static void ata_delayed_done_timerfn(unsigned long arg)
-diff --git a/drivers/scsi/libsas/sas_scsi_host.c b/drivers/scsi/libsas/sas_scsi_host.c
-index 601ec5b..99a6dee 100644
---- a/drivers/scsi/libsas/sas_scsi_host.c
-+++ b/drivers/scsi/libsas/sas_scsi_host.c
-@@ -823,6 +833,10 @@ void sas_slave_destroy(struct scsi_device *scsi_dev)
- int sas_change_queue_depth(struct scsi_device *scsi_dev, int new_depth)
- {
- 	int res = min(new_depth, SAS_MAX_QD);
-+	struct domain_device *dev = sdev_to_domain_dev(scsi_dev);
-+
-+	if (dev_is_sata(dev))
-+		return ata_sas_change_queue_depth(scsi_dev, dev->sata_dev.ap->link.device, res);
- 
- 	if (scsi_dev->tagged_supported)
- 		scsi_adjust_queue_depth(scsi_dev, scsi_get_tag_type(scsi_dev),
-diff --git a/include/linux/libata.h b/include/linux/libata.h
-index a05f600..b5c75aa 100644
---- a/include/linux/libata.h
-+++ b/include/linux/libata.h
-@@ -913,6 +913,7 @@ extern int ata_scsi_slave_config(struct scsi_device *sdev);
- extern void ata_scsi_slave_destroy(struct scsi_device *sdev);
- extern int ata_scsi_change_queue_depth(struct scsi_device *sdev,
- 				       int queue_depth);
-+int ata_sas_change_queue_depth(struct scsi_device *, struct ata_device *, int);
- extern struct ata_device *ata_dev_pair(struct ata_device *adev);
- extern int ata_do_set_mode(struct ata_link *link, struct ata_device **r_failed_dev);
- extern u8 ata_irq_on(struct ata_port *ap);
-
-
+(In any case, your patch fixes CD writing over SBP-2 and, judging from 
+the failure modes I got, is necessary for ide-cd as well.  Or Tejun's 
+patch or whatever you guys will come up with.)
+-- 
+Stefan Richter
+-=====-==--- --== ---==
+http://arcgraph.de/sr/
