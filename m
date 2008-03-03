@@ -1,55 +1,114 @@
-From: FUJITA Tomonori <tomof@acm.org>
-Subject: Re: [PATCH] block: fix residual byte count handling
-Date: Mon, 3 Mar 2008 23:52:04 +0900
-Message-ID: <20080303235207S.tomof@acm.org>
-References: <47CC036C.2060902@gmail.com>
-	<20080303230121M.tomof@acm.org>
-	<47CC09B6.6090709@gmail.com>
+From: "Peter Teoh" <htmldeveloper@gmail.com>
+Subject: Re: ide_register_hw(): buggy code
+Date: Tue, 4 Mar 2008 00:03:00 +0800
+Message-ID: <804dabb00803030803v1dbbb33fh6779b8c4d072a908@mail.gmail.com>
+References: <20080302151924.GJ25835@cs181133002.pp.htv.fi>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <47CC09B6.6090709@gmail.com>
-Sender: linux-scsi-owner@vger.kernel.org
-To: htejun@gmail.com, jens.axboe@oracle.com
-Cc: tomof@acm.org, fujita.tomonori@lab.ntt.co.jp, James.Bottomley@HansenPartnership.com, efault@gmx.de, akpm@linux-foundation.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, jgarzik@pobox.com
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from gv-out-0910.google.com ([216.239.58.190]:41083 "EHLO
+	gv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752779AbYCCQDE (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 3 Mar 2008 11:03:04 -0500
+Received: by gv-out-0910.google.com with SMTP id s4so65897gve.37
+        for <linux-ide@vger.kernel.org>; Mon, 03 Mar 2008 08:03:02 -0800 (PST)
+In-Reply-To: <20080302151924.GJ25835@cs181133002.pp.htv.fi>
+Content-Disposition: inline
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Adrian Bunk <bunk@kernel.org>
+Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Mon, 03 Mar 2008 23:22:46 +0900
-Tejun Heo <htejun@gmail.com> wrote:
+On Sun, Mar 2, 2008 at 11:19 PM, Adrian Bunk <bunk@kernel.org> wrote:
+> The Coverity checker spotted the following bogus change to
+>  ide_register_hw() in commit 9e016a719209d95338e314b46c3012cc7feaaeec:
+>
+>  <--  snip  -->
+>
+>  ...
+>  +               hwif = ide_deprecated_find_port(hw->io_ports[IDE_DATA_OFFSET]);
+>  +               index = hwif->index;
+>  +               if (hwif)
+>  +                       goto found;
+>                 for (index = 0; index < MAX_HWIFS; index++)
+>  ...
+>
+>  <--  snip  -->
+>
+>  It's impossible to reach the for() loop without Oopsing before.
+>
+>  Can you either fix this for 2.6.25 or push your patch that removes
+>  ide_register_hw() for 2.6.25?
+>
 
-> FUJITA Tomonori wrote:
-> >> At the end of blk_rq_map_user() together with data_len / extra_len
-> >> mangling or were you talking about James' original patch?
-> > 
-> > With my patch, at the end of blk_rq_map_user, we have:
-> > 
-> > 	if (len & queue_dma_alignment(q)) {
-> > 		unsigned int pad_len = (queue_dma_alignment(q) & ~len) + 1;
-> > 
-> > 		rq->extra_len += pad_len;
-> > 	}
-> > 
-> > 
-> > So no change as compared with 2.6.24?
-> 
-> Oh.. you killed sg list manipulation.  Many controllers do allow odd
-> bytes as the last sg entry but not all.  Also, if you append drain
+My question is:
 
-Until 2.6.24, these drivers have taken care about the issue by
-themselves. There is no change as compared with 2.6.24.
+a.   why is "retry=1", and then the do while loop always end up the
+loop being one round executed only?   Why not just remove the while
+loop entirely?
 
+b.   not sure if your statement above implied this, but checking for
+hwif!=0 should be before index.  ???
 
-> buffer after it, it ends up with unaligned sg entry in the middle and
-> rq->data_len + rq->extra_len will overrun the sg entry after the drain
-> page which is really dangerous.
+c.   "index = hwif->index;" should not be there, but after "found".
+Is that correct?
 
-The drivers know that they use drain buffer. They can take care about
-themselves on this too. If we want to do explicitly, we could have
-rq->pad_len and rq->drain_len instead of rq->extra_len, though I think
-that we are fine without these values because these drivers already
-tell the block layer what they want and know that the block layer
-gives it.
+int ide_register_hw(hw_regs_t *hw, void (*quirkproc)(ide_drive_t *),
+                    ide_hwif_t **hwifp)
+{
+        int index, retry = 1;
+        ide_hwif_t *hwif;
+        u8 idx[4] = { 0xff, 0xff, 0xff, 0xff };
+
+        do {
+                hwif = ide_deprecated_find_port(hw->io_ports[IDE_DATA_OFFSET]);
+                index = hwif->index;
+                if (hwif)
+                        goto found;
+                for (index = 0; index < MAX_HWIFS; index++)
+                        ide_unregister(index, 1, 1);
+        } while (retry--);
+        return -1;
+found:
+        if (hwif->present)
 
 
-Jens, want's your verdict on this?
+The patch I am thinking goes something like this:
+
+--- ide/ide.c   2008-03-03 20:10:28.000000000 +0800
++++ ide/ide_new.c       2008-03-04 00:09:46.000000000 +0800
+@@ -661,20 +661,18 @@ EXPORT_SYMBOL_GPL(ide_deprecated_find_po
+ int ide_register_hw(hw_regs_t *hw, void (*quirkproc)(ide_drive_t *),
+                    ide_hwif_t **hwifp)
+ {
+-       int index, retry = 1;
++       int index;
+        ide_hwif_t *hwif;
+        u8 idx[4] = { 0xff, 0xff, 0xff, 0xff };
+
+-       do {
+-               hwif = ide_deprecated_find_port(hw->io_ports[IDE_DATA_OFFSET]);
+-               index = hwif->index;
+-               if (hwif)
+-                       goto found;
+-               for (index = 0; index < MAX_HWIFS; index++)
+-                       ide_unregister(index, 1, 1);
+-       } while (retry--);
++       hwif = ide_deprecated_find_port(hw->io_ports[IDE_DATA_OFFSET]);
++       if (hwif)
++               goto found;
++       for (index = 0; index < MAX_HWIFS; index++)
++               ide_unregister(index, 1, 1);
+        return -1;
+ found:
++       index = hwif->index;
+        if (hwif->present)
+                ide_unregister(index, 0, 1);
+        else if (!hwif->hold)
+
+Please comment.
+
+-- 
+Regards,
+Peter Teoh
