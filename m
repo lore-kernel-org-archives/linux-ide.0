@@ -1,143 +1,124 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH] block: separate out padding from alignment
-Date: Mon, 03 Mar 2008 15:10:28 +0900
-Message-ID: <47CB9654.2000109@gmail.com>
-References: <47C8F4FC.1040505@gmail.com>	<20080302235223X.tomof@acm.org>	<47CB6508.3040206@gmail.com> <20080303125940T.fujita.tomonori@lab.ntt.co.jp> <47CB79E9.8000505@gmail.com> <47CB95C2.40309@gmail.com>
+From: Borislav Petkov <petkovbb@googlemail.com>
+Subject: Re: [PATCH 02/24] ide-tape: remove pipeline-specific code from
+	idetape_add_chrdev_write_request
+Date: Mon, 3 Mar 2008 07:43:39 +0100
+Message-ID: <20080303064339.GG4836@gollum.tnic>
+References: <1204361928-30229-1-git-send-email-petkovbb@gmail.com> <200803021933.06012.bzolnier@gmail.com> <20080302211953.GD4836@gollum.tnic> <200803030016.30122.bzolnier@gmail.com>
+Reply-To: petkovbb@gmail.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <47CB95C2.40309@gmail.com>
-Sender: linux-scsi-owner@vger.kernel.org
-To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Cc: tomof@acm.org, jens.axboe@oracle.com, James.Bottomley@HansenPartnership.com, efault@gmx.de, akpm@linux-foundation.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, jgarzik@pobox.com
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from ug-out-1314.google.com ([66.249.92.173]:29346 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751256AbYCCGnx (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 3 Mar 2008 01:43:53 -0500
+Received: by ug-out-1314.google.com with SMTP id z38so1825117ugc.16
+        for <linux-ide@vger.kernel.org>; Sun, 02 Mar 2008 22:43:51 -0800 (PST)
+Content-Disposition: inline
+In-Reply-To: <200803030016.30122.bzolnier@gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Block layer alignment was used for two different purposes - memory
-alignment and padding.  This causes problems in lower layers because
-drivers which only require memory alignment ends up with adjusted
-rq->data_len.  Separate out padding such that padding occurs iff
-driver explicitly requests it.
+On Mon, Mar 03, 2008 at 12:16:29AM +0100, Bartlomiej Zolnierkiewicz wro=
+te:
+>=20
+> On Sunday 02 March 2008, Borislav Petkov wrote:
+> > On Sun, Mar 02, 2008 at 07:33:05PM +0100, Bartlomiej Zolnierkiewicz=
+ wrote:
+> > > On Saturday 01 March 2008, Borislav Petkov wrote:
+> > > > Instead of plugging the request into the pipeline, queue it str=
+aight on the
+> > > > device's request queue through idetape_queue_rw_tail().
+> > > >=20
+> > > > Signed-off-by: Borislav Petkov <petkovbb@gmail.com>
+> > > > ---
+> > > >  drivers/ide/ide-tape.c |   81 ++------------------------------=
+---------------
+> > > >  1 files changed, 4 insertions(+), 77 deletions(-)
+> > > >=20
+> > > > diff --git a/drivers/ide/ide-tape.c b/drivers/ide/ide-tape.c
+> > > > index 792c76e..abf3efa 100644
+> > > > --- a/drivers/ide/ide-tape.c
+> > > > +++ b/drivers/ide/ide-tape.c
+> > > > @@ -2123,12 +2123,6 @@ static int idetape_queue_rw_tail(ide_dri=
+ve_t *drive, int cmd, int blocks,
+> > > > =20
+> > > >  	debug_log(DBG_SENSE, "%s: cmd=3D%d\n", __func__, cmd);
+> > > > =20
+> > > > -	if (test_bit(IDETAPE_FLAG_PIPELINE_ACTIVE, &tape->flags)) {
+> > > > -		printk(KERN_ERR "ide-tape: bug: the pipeline is active in %s=
+\n",
+> > > > -				__func__);
+> > > > -		return (0);
+> > > > -	}
+> > > > -
+> > > >  	idetape_init_rq(&rq, cmd);
+> > > >  	rq.rq_disk =3D tape->disk;
+> > > >  	rq.special =3D (void *)bh;
+> > > > @@ -2140,10 +2134,9 @@ static int idetape_queue_rw_tail(ide_dri=
+ve_t *drive, int cmd, int blocks,
+> > > >  	if ((cmd & (REQ_IDETAPE_READ | REQ_IDETAPE_WRITE)) =3D=3D 0)
+> > > >  		return 0;
+> > > > =20
+> > > > -	if (tape->merge_stage)
+> > > > -		idetape_init_merge_stage(tape);
+> > > >  	if (rq.errors =3D=3D IDETAPE_ERROR_GENERAL)
+> > > >  		return -EIO;
+> > > > +
+> > > >  	return (tape->blk_size * (blocks-rq.current_nr_sectors));
+> > > >  }
+> > >=20
+> > > These two changes to idetape_queue_rw_tail() don't look correct
+> > > as the pipeline mode is still used by read requests.
+> >=20
+> > Wrt first hunk read rq pipeline functionality is removed in the fol=
+lowing
+> > patch. Would it then be better to merge the two patches? Actually, =
+do we need
+>=20
+> Merging patches together would cause increased complexity.
+>=20
+> The best solution would be to move this hunk to the patch which remov=
+es
+> IDETAPE_FLAG_PIPELINE_ACTIVE flag.
+>=20
+> > to keep the driver functional in between the patches of those serie=
+s for
+> > the purposes of git bisection or only compile-testing it is enough?=
+ Cause
+>=20
+> We want to keep the driver functional in between the patches, especia=
+lly
+> given that it shouldn't be much more difficult to do so.
+>=20
+> > after applying the whole series you get pipelined mode ripped out a=
+nyway and
+> > intermittent states with partially functional pipeline are of no im=
+portance, no?
+>=20
+> We always want fully bisectable patches:
+>=20
+> - if the patch series accidentaly completely breaks the code we want =
+to be
+>   able narrow it down to the guilty change
+>=20
+> - if the patch series causes some regressions (ie. worse performance)=
+ we
+>   also want to see which exact change caused it
+>=20
+> [ Nothing changes here and removal of pipeline functionality can't be=
+ an
+>   excuse for not sticking to the standard procedure. ]
 
-Signed-off-by: Tejun Heo <htejun@gmail.com>
----
-As wrote before, the major problem was that drivers which don't want
-size adjustment got it acciedentally by mixing up aligning and padding
-which are two conceptually separate things.  Let padding occur iff the
-driver explicitly requested it.  This makes both parties happy.
+Ok this changes the approach vector :). Will redo the patches from this=
+ angle
+and send them in small b(i|y)tes :) in order to review them easier/fast=
+er.
 
- block/blk-map.c           |   16 +++++++++-------
- block/blk-settings.c      |   17 +++++++++++++++++
- drivers/ata/libata-scsi.c |    3 ++-
- include/linux/blkdev.h    |    2 ++
- 4 files changed, 30 insertions(+), 8 deletions(-)
-
-Index: work/block/blk-settings.c
-===================================================================
---- work.orig/block/blk-settings.c
-+++ work/block/blk-settings.c
-@@ -293,6 +293,23 @@ void blk_queue_stack_limits(struct reque
- EXPORT_SYMBOL(blk_queue_stack_limits);
- 
- /**
-+ * blk_queue_dma_pad - set pad mask
-+ * @q:     the request queue for the device
-+ * @mask:  pad mask
-+ *
-+ * Set pad mask.  Direct IO requests are padded to the mask specified.
-+ *
-+ * Appending pad buffer to a request modifies ->data_len such that it
-+ * includes the pad buffer.  The original requested data length can be
-+ * obtained using blk_rq_raw_data_len().
-+ **/
-+void blk_queue_dma_pad(struct request_queue *q, unsigned int mask)
-+{
-+	q->dma_pad_mask = mask;
-+}
-+EXPORT_SYMBOL(blk_queue_dma_pad);
-+
-+/**
-  * blk_queue_dma_drain - Set up a drain buffer for excess dma.
-  *
-  * @q:  the request queue for the device
-Index: work/block/blk-map.c
-===================================================================
---- work.orig/block/blk-map.c
-+++ work/block/blk-map.c
-@@ -43,6 +43,7 @@ static int __blk_rq_map_user(struct requ
- 			     void __user *ubuf, unsigned int len)
- {
- 	unsigned long uaddr;
-+	unsigned int alignment;
- 	struct bio *bio, *orig_bio;
- 	int reading, ret;
- 
-@@ -53,8 +54,8 @@ static int __blk_rq_map_user(struct requ
- 	 * direct dma. else, set up kernel bounce buffers
- 	 */
- 	uaddr = (unsigned long) ubuf;
--	if (!(uaddr & queue_dma_alignment(q)) &&
--	    !(len & queue_dma_alignment(q)))
-+	alignment = queue_dma_alignment(q) | q->dma_pad_mask;
-+	if (!(uaddr & alignment) && !(len & alignment))
- 		bio = bio_map_user(q, NULL, uaddr, len, reading);
- 	else
- 		bio = bio_copy_user(q, uaddr, len, reading);
-@@ -141,15 +142,16 @@ int blk_rq_map_user(struct request_queue
- 
- 	/*
- 	 * __blk_rq_map_user() copies the buffers if starting address
--	 * or length isn't aligned.  As the copied buffer is always
--	 * page aligned, we know that there's enough room for padding.
--	 * Extend the last bio and update rq->data_len accordingly.
-+	 * or length isn't aligned to dma_pad_mask.  As the copied
-+	 * buffer is always page aligned, we know that there's enough
-+	 * room for padding.  Extend the last bio and update
-+	 * rq->data_len accordingly.
- 	 *
- 	 * On unmap, bio_uncopy_user() will use unmodified
- 	 * bio_map_data pointed to by bio->bi_private.
- 	 */
--	if (len & queue_dma_alignment(q)) {
--		unsigned int pad_len = (queue_dma_alignment(q) & ~len) + 1;
-+	if (len & q->dma_pad_mask) {
-+		unsigned int pad_len = (q->dma_pad_mask & ~len) + 1;
- 		struct bio *bio = rq->biotail;
- 
- 		bio->bi_io_vec[bio->bi_vcnt - 1].bv_len += pad_len;
-Index: work/include/linux/blkdev.h
-===================================================================
---- work.orig/include/linux/blkdev.h
-+++ work/include/linux/blkdev.h
-@@ -362,6 +362,7 @@ struct request_queue
- 	unsigned long		seg_boundary_mask;
- 	void			*dma_drain_buffer;
- 	unsigned int		dma_drain_size;
-+	unsigned int		dma_pad_mask;
- 	unsigned int		dma_alignment;
- 
- 	struct blk_queue_tag	*queue_tags;
-@@ -707,6 +708,7 @@ extern void blk_queue_max_hw_segments(st
- extern void blk_queue_max_segment_size(struct request_queue *, unsigned int);
- extern void blk_queue_hardsect_size(struct request_queue *, unsigned short);
- extern void blk_queue_stack_limits(struct request_queue *t, struct request_queue *b);
-+extern void blk_queue_dma_pad(struct request_queue *, unsigned int);
- extern int blk_queue_dma_drain(struct request_queue *q,
- 			       dma_drain_needed_fn *dma_drain_needed,
- 			       void *buf, unsigned int size);
-Index: work/drivers/ata/libata-scsi.c
-===================================================================
---- work.orig/drivers/ata/libata-scsi.c
-+++ work/drivers/ata/libata-scsi.c
-@@ -862,9 +862,10 @@ static int ata_scsi_dev_config(struct sc
- 		struct request_queue *q = sdev->request_queue;
- 		void *buf;
- 
--		/* set the min alignment */
-+		/* set the min alignment and padding */
- 		blk_queue_update_dma_alignment(sdev->request_queue,
- 					       ATA_DMA_PAD_SZ - 1);
-+		blk_queue_dma_pad(sdev->request_queue, ATA_DMA_PAD_SZ - 1);
- 
- 		/* configure draining */
- 		buf = kmalloc(ATAPI_MAX_DRAIN, q->bounce_gfp | GFP_KERNEL);
+Thanks.
+--=20
+Regards/Gru=DF,
+    Boris.
