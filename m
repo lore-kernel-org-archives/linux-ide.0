@@ -1,77 +1,40 @@
-From: "Christian Pernegger" <pernegger@gmail.com>
-Subject: Re: Setting up md-raid5: observations, errors, questions
-Date: Mon, 3 Mar 2008 09:38:35 +0100
-Message-ID: <bb145bd20803030038o905e1feib1c1ad42c1b4b042@mail.gmail.com>
-References: <bb145bd20803020423m14efea1by6e3e38bb8d0decb8@mail.gmail.com>
-	 <47CAC5BF.6060600@msgid.tls.msk.ru>
-	 <bb145bd20803020832x744c2674nd0a6a30e445b5453@mail.gmail.com>
-	 <47CAF30F.7040502@msgid.tls.msk.ru>
-	 <bb145bd20803021319o28df011sab954aa58a1c01be@mail.gmail.com>
-	 <47CB228D.5020709@msgid.tls.msk.ru>
-	 <bb145bd20803021617j1b15c667j96d3ee12829ee75a@mail.gmail.com>
-	 <47CB694B.9000807@msgid.tls.msk.ru>
+From: Stefan Richter <stefanr@s5r6.in-berlin.de>
+Subject: Re: [BUG] 2.6.25-rc2-git3 broke cdrecord
+Date: Mon, 03 Mar 2008 10:08:36 +0100
+Message-ID: <47CBC014.9090309@s5r6.in-berlin.de>
+References: <20080302233415.GA6258@Pilar>	<18379.18297.838050.536473@harpo.it.uu.se>	<tkrat.468fd04c47ae1a2a@s5r6.in-berlin.de> <20080303172641Z.fujita.tomonori@lab.ntt.co.jp>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wr-out-0506.google.com ([64.233.184.227]:63112 "EHLO
-	wr-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753121AbYCCIih (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 3 Mar 2008 03:38:37 -0500
-Received: by wr-out-0506.google.com with SMTP id c49so9822926wra.21
-        for <linux-ide@vger.kernel.org>; Mon, 03 Mar 2008 00:38:36 -0800 (PST)
-In-Reply-To: <47CB694B.9000807@msgid.tls.msk.ru>
-Content-Disposition: inline
+Received: from einhorn.in-berlin.de ([192.109.42.8]:41806 "EHLO
+	einhorn.in-berlin.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752522AbYCCJJy (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 3 Mar 2008 04:09:54 -0500
+In-Reply-To: <20080303172641Z.fujita.tomonori@lab.ntt.co.jp>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-raid@vger.kernel.org
-Cc: linux-ide@vger.kernel.org
+To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Cc: mikpe@it.uu.se, crmafra2@gmail.com, linux-kernel@vger.kernel.org, James.Bottomley@HansenPartnership.com, htejun@gmail.com, jens.axboe@oracle.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 
->  You know how raid5 process writes, right?
+FUJITA Tomonori wrote:
+> On Mon, 3 Mar 2008 02:48:23 +0100 (CET)
+> Stefan Richter <stefanr@s5r6.in-berlin.de> wrote:
+>> CD burning still fails for me via ide-cd, although in a
+>> different way than without the patch.  (Without the patch, ide-cd also
+>> fails like described by you for SATA.)
+>>
+>> With the patch, the failure is as follows.  I don't know if this is
+>> related to the data length arithmetic or something entirely different;
+>> all I learned so far is that 2.6.24 works.  Application log from
+>> 2.6.25-rc3 + Tejun's patch + Gentoo's cdrkit-1.1.6 + k3b:
+> 
+> Can you try the following patch?
+> 
+> http://lkml.org/lkml/2008/3/2/218
 
-Yes. What I'd forgotten, though, is that even with --assume-clean it's
-still basically in degraded mode so testing writes at most serves as a
-comparison between the different setups. This seems to be a common
-late night error :)
-
->  So the bigger your chunk size is, the less chances you have to perform
->  full-stripe write, just because "large, properly aligned" writes are
->  much less frequent than "smaller, unaligned" ones
-
-I had expected that the sequential dd-writes would be automatically
-combined to write full stripes, yet they also go down massively with
-increased chunk size.
-
->  You can get best results when writing WITHOUT a filesystem
->  (directly to /dev/mdFOO) with dd and blocksize equal to the
->  total strip size (chunk size * number of data disks, or
->  16k * 3 ..... 1M * 3, since in your raid 3 disks are data
->  in each strip)
-
-I didn't use an fs for the dd tests, but 4*chunk size, which was
-stupid. Still, I would have expected some combining to be going on
-even at that level.
-
->  md stripe-cache makes huge difference, for obvious reasons.
-
-Will experiment with that as well, thanks. Any other caches?
-
->  unless your usage pattern will be special and optimized for such a
->  setup, don't try to choose large chunk size for raid456.
-
-I think I will be revising my test script to actually create a small
-fs at the start of the device and run some tests in that. Note to
-self: need a good load simulator ... ...
-
->  I had no time to investigate, and now I don't have a hardware to test
->  again.  In theory it should work, but I guess only a few people are
->  using [external bitmaps] if at all - most are using internal bitmaps.
-
-I'd rather not use a feature where the probability that a bug will
-bite me first is that high. :)
-
-FWIW, using smaller bitmaps REALLY helps. Tests forthcoming.
-
-Thanks,
-
-C.
+Fails just like with Tejun's patch, alas.
+-- 
+Stefan Richter
+-=====-==--- --== ---==
+http://arcgraph.de/sr/
