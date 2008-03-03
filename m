@@ -1,33 +1,41 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH] block: separate out padding from alignment
-Date: Mon, 03 Mar 2008 12:27:07 -0600
-Message-ID: <1204568827.3043.33.camel@localhost.localdomain>
-References: <47C8F4FC.1040505@gmail.com>	<20080302235223X.tomof@acm.org>
-	 <47CB6508.3040206@gmail.com>
-	 <20080303125940T.fujita.tomonori@lab.ntt.co.jp>
-	 <47CB79E9.8000505@gmail.com> <47CB95C2.40309@gmail.com>
-	 <47CB9654.2000109@gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <47CB9654.2000109@gmail.com>
-Sender: linux-scsi-owner@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, tomof@acm.org, jens.axboe@oracle.com, efault@gmx.de, akpm@linux-foundation.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, jgarzik@pobox.com
+From: bugme-daemon@bugzilla.kernel.org
+Subject: [Bug 10159] 2.6.25-rc2 IDE + smartd = hang
+Date: Mon,  3 Mar 2008 11:05:44 -0800 (PST)
+Message-ID: <20080303190544.73254108067@picon.linux-foundation.org>
+References: <bug-10159-11633@http.bugzilla.kernel.org/>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:44728 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755142AbYCCTLp (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 3 Mar 2008 14:11:45 -0500
+Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
+	by smtp1.linux-foundation.org (8.14.2/8.14.2/Debian-2build1) with ESMTP id m23JBNuA008065
+	for <linux-ide@vger.kernel.org>; Mon, 3 Mar 2008 11:11:24 -0800
+In-Reply-To: <bug-10159-11633@http.bugzilla.kernel.org/>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-On Mon, 2008-03-03 at 15:10 +0900, Tejun Heo wrote:
-> Block layer alignment was used for two different purposes - memory
-> alignment and padding.  This causes problems in lower layers because
-> drivers which only require memory alignment ends up with adjusted
-> rq->data_len.  Separate out padding such that padding occurs iff
-> driver explicitly requests it.
-
-This puts the libsas SMP handler back into a working state again.
-
-Thanks,
-
-James
+http://bugzilla.kernel.org/show_bug.cgi?id=10159
 
 
+bunk@kernel.org changed:
+
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+             Status|NEW                         |RESOLVED
+         Resolution|                            |DUPLICATE
+
+
+
+
+------- Comment #1 from bunk@kernel.org  2008-03-03 11:05 -------
+
+
+*** This bug has been marked as a duplicate of bug 10086 ***
+
+
+-- 
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug, or are watching the assignee.
