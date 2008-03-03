@@ -1,115 +1,38 @@
-From: "Christian Pernegger" <pernegger@gmail.com>
-Subject: Re: Setting up md-raid5: observations, errors, questions
-Date: Mon, 3 Mar 2008 01:17:34 +0100
-Message-ID: <bb145bd20803021617j1b15c667j96d3ee12829ee75a@mail.gmail.com>
-References: <bb145bd20803020423m14efea1by6e3e38bb8d0decb8@mail.gmail.com>
-	 <47CAC5BF.6060600@msgid.tls.msk.ru>
-	 <bb145bd20803020832x744c2674nd0a6a30e445b5453@mail.gmail.com>
-	 <47CAF30F.7040502@msgid.tls.msk.ru>
-	 <bb145bd20803021319o28df011sab954aa58a1c01be@mail.gmail.com>
-	 <47CB228D.5020709@msgid.tls.msk.ru>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+From: bugme-daemon@bugzilla.kernel.org
+Subject: [Bug 10086] 2.6.25-rc2 + smartd = hang
+Date: Sun,  2 Mar 2008 17:38:28 -0800 (PST)
+Message-ID: <20080303013828.87C77108069@picon.linux-foundation.org>
+References: <bug-10086-11633@http.bugzilla.kernel.org/>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from el-out-1112.google.com ([209.85.162.177]:29911 "EHLO
-	el-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759977AbYCCARh (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 2 Mar 2008 19:17:37 -0500
-Received: by el-out-1112.google.com with SMTP id v27so1478040ele.17
-        for <linux-ide@vger.kernel.org>; Sun, 02 Mar 2008 16:17:36 -0800 (PST)
-In-Reply-To: <47CB228D.5020709@msgid.tls.msk.ru>
-Content-Disposition: inline
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:47533 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1761293AbYCCBi5 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 2 Mar 2008 20:38:57 -0500
+Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
+	by smtp1.linux-foundation.org (8.14.2/8.14.2/Debian-2build1) with ESMTP id m231cXjQ008370
+	for <linux-ide@vger.kernel.org>; Sun, 2 Mar 2008 17:38:34 -0800
+In-Reply-To: <bug-10086-11633@http.bugzilla.kernel.org/>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-raid@vger.kernel.org
-Cc: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
->  I highly doubt chunk size makes any difference.  Bitmap is the primary
->  suspect here.
-
-Some tests:
-
-raid5, chunk size goes from 16k to 1m. arrays created with --assume-clean
-
-dd-tests
-========
-
-read / write 4GB in 4-chunk blocks directly on the md device.
-
-dd-read
--------
-unaffected by bitmap as expected
-gets MUCH better with inc. chunk size			 71 -> 219 MS/s
-reads go up near theoretical bus maximum (266MB/s)
-the maximum total reached via parallel single-disk reads is 220 MB/s
-
-Conclusion: reads are fine
-
-dd-write
---------
-with bitmap: gets SLOWLY worse with inc. chunk size	 30 ->  27 MB/s
-without bitmap: gets MUCH worse with inc chunk size	100 ->  59 MB/s
-
-Conclusion: needs explanation / tuning
-
-even omitting the bitmap the writes just touch 100 MB/s, more like 80
-on any chunk size with nice reads.
-why would it get worse? Anything tunable here?
-the maximum total reached via parallel single-disk writes is 150 MB/s
+http://bugzilla.kernel.org/show_bug.cgi?id=10086
 
 
-mke2fs-tests
-============
-
-create ext3 fs with correct stride, get a 10-second vmstat average 10
-seconds in and abort the mke2fs
-
-with bitmap: goes down SLOWLY from 64k chunks		 17 ->  13 MB/s
-without bitmap: gets MUCH worse with inc. chunk size	 80 ->  34 MB/s
-
-Conclusion: needs explanation / tuning
-
-the maximum total reached via parallel single-disk mke2fs is 150 MB/s.
 
 
-Comments welcome.
 
-Next step: smaller bitmap
-When the performance seems normal I'll revisit the responsiveness-issue.
+------- Comment #2 from rjw@sisk.pl  2008-03-02 17:38 -------
+Exposed by:
 
->  Umm..  You mixed it all ;)
->  Bitmap is a place (stored somewhere... ;) where each equally-sized
->  block of the array has a single bit of information - namely, if that
->  block has been written recently (which means it was dirty) or not.
->  So for each block (which is in no way related to chunk size etc!)
+commit 852738f39258deafb3d89c187cb1a4050820d555
+Author: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Date:   Sat Jan 26 20:13:12 2008 +0100
 
-Aren't these blocks-represented-by-a-bit-in-the-bitmap called chunks,
-too? Sorry for the confusion.
+    ide: convert "empty" REQ_TYPE_ATA_CMD requests to use REQ_TYPE_ATA_TASKFILE
 
->  This has nothing to do with window between first and second disk
->  failure.  Once first disk fails, bitmap is of no use anymore,
->  because you will need a replacement disk, which has to be
->  resyncronized in whole,
 
-Yes, that makes sense. Still sounds useful, since a lot of my
-"failures" have been of the intermittent (SATA cables / connectors,
-port resets, slow bad-sector remap) variety.
-
->  If the bitmap is unaccessible, it's handled as there was no bitmap
->  at all - ie, if the array was dirty, it will be resynced as a whole;
->  if it was clean, nothing will be done.
-
-Ok, good to hear. In theory that's the sane mode of operation, in
-practice it might just have been that the array refuses to assemble
-without its bitmap.
-
->  Yes, external bitmaps are supported and working.  It doesn't mean
->  they're faster however - I tried placing a bitmap into a tmpfs (just
->  for testing) - and discovered about 95% drop in speed
-
-Interesting ... what are external bitmaps good for, then?
-
-Thank you, I appreciate your patience.
-
-C.
+-- 
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug, or are watching the assignee.
