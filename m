@@ -1,34 +1,36 @@
-From: bugme-daemon@bugzilla.kernel.org
-Subject: [Bug 10159] 2.6.25-rc2 IDE + smartd = hang
-Date: Mon,  3 Mar 2008 11:05:52 -0800 (PST)
-Message-ID: <20080303190552.D60D211D113@picon.linux-foundation.org>
-References: <bug-10159-11633@http.bugzilla.kernel.org/>
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:39709 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1757611AbYCCTLq (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 3 Mar 2008 14:11:46 -0500
-Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
-	by smtp1.linux-foundation.org (8.14.2/8.14.2/Debian-2build1) with ESMTP id m23JBP0R008083
-	for <linux-ide@vger.kernel.org>; Mon, 3 Mar 2008 11:11:26 -0800
-In-Reply-To: <bug-10159-11633@http.bugzilla.kernel.org/>
-Sender: linux-ide-owner@vger.kernel.org
+From: "Christian Pernegger" <pernegger@gmail.com>
+Subject: Re: Setting up md-raid5: observations, errors, questions
+Date: Mon, 3 Mar 2008 21:19:49 +0100
+Message-ID: <bb145bd20803031219i3e42a70bl6f0d070c03749a82@mail.gmail.com>
+References: <bb145bd20803020423m14efea1by6e3e38bb8d0decb8@mail.gmail.com>
+	 <alpine.DEB.1.00.0803020741150.13994@p34.internal.lan>
+	 <bb145bd20803020456g54be4bcbg1cf7aed132ac7944@mail.gmail.com>
+	 <alpine.DEB.1.00.0803020802370.18550@p34.internal.lan>
+	 <bb145bd20803020524y7b7cca01ma0b638a430c2f2f2@mail.gmail.com>
+	 <47CC3C79.6060707@tmr.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <47CC3C79.6060707@tmr.com>
+Content-Disposition: inline
+Sender: linux-raid-owner@vger.kernel.org
+To: linux-raid@vger.kernel.org
+Cc: linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
 
-http://bugzilla.kernel.org/show_bug.cgi?id=10159
+>  > Assuming you're talking about the HSM violation error ... I got that
+>  > exactly once (yet) in the situation described (sometime after the
+>  > writing phase of badblocks). Nothing since and certainly not the spew
+>  > others are reporting.
+>  >
+>  >
+>  Are you by any chance running quota?
 
+No, sorry ... next guess :-)
 
-bunk@kernel.org changed:
+Ah, why?
 
-           What    |Removed                     |Added
-----------------------------------------------------------------------------
-             Status|RESOLVED                    |CLOSED
+Thanks,
 
-
-
-
--- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug, or are watching the assignee.
+C.
