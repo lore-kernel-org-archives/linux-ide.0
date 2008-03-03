@@ -1,56 +1,77 @@
-From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: Re: [PATCH] block: fix residual byte count handling
-Date: Mon, 03 Mar 2008 17:26:23 +0900
-Message-ID: <20080303172623O.fujita.tomonori@lab.ntt.co.jp>
-References: <47CB6508.3040206@gmail.com>
-	<20080303125940T.fujita.tomonori@lab.ntt.co.jp>
-	<47CB79E9.8000505@gmail.com>
+From: "Christian Pernegger" <pernegger@gmail.com>
+Subject: Re: Setting up md-raid5: observations, errors, questions
+Date: Mon, 3 Mar 2008 09:38:35 +0100
+Message-ID: <bb145bd20803030038o905e1feib1c1ad42c1b4b042@mail.gmail.com>
+References: <bb145bd20803020423m14efea1by6e3e38bb8d0decb8@mail.gmail.com>
+	 <47CAC5BF.6060600@msgid.tls.msk.ru>
+	 <bb145bd20803020832x744c2674nd0a6a30e445b5453@mail.gmail.com>
+	 <47CAF30F.7040502@msgid.tls.msk.ru>
+	 <bb145bd20803021319o28df011sab954aa58a1c01be@mail.gmail.com>
+	 <47CB228D.5020709@msgid.tls.msk.ru>
+	 <bb145bd20803021617j1b15c667j96d3ee12829ee75a@mail.gmail.com>
+	 <47CB694B.9000807@msgid.tls.msk.ru>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from tama555.ecl.ntt.co.jp ([129.60.39.106]:43781 "EHLO
-	tama555.ecl.ntt.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752830AbYCCI2Y (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 3 Mar 2008 03:28:24 -0500
-In-Reply-To: <47CB79E9.8000505@gmail.com>
+Received: from wr-out-0506.google.com ([64.233.184.227]:63112 "EHLO
+	wr-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753121AbYCCIih (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 3 Mar 2008 03:38:37 -0500
+Received: by wr-out-0506.google.com with SMTP id c49so9822926wra.21
+        for <linux-ide@vger.kernel.org>; Mon, 03 Mar 2008 00:38:36 -0800 (PST)
+In-Reply-To: <47CB694B.9000807@msgid.tls.msk.ru>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: htejun@gmail.com
-Cc: fujita.tomonori@lab.ntt.co.jp, tomof@acm.org, jens.axboe@oracle.com, James.Bottomley@HansenPartnership.com, efault@gmx.de, akpm@linux-foundation.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, jgarzik@pobox.com
+To: linux-raid@vger.kernel.org
+Cc: linux-ide@vger.kernel.org
 
-On Mon, 03 Mar 2008 13:09:13 +0900
-Tejun Heo <htejun@gmail.com> wrote:
+>  You know how raid5 process writes, right?
 
-> FUJITA Tomonori wrote:
-> >> - I think bugs caused by using raw_data_len instead of data_len are more
-> >> subtle than the other way around.  Using data_len instead of
-> >> raw_data_len usually affects the application layer while using
-> >> raw_data_len instead of data_len affects the DMA engine and transport layer.
-> > 
-> > If we add extra_len, we can get what raw_data_len and data_len
-> > provide.
-> > 
-> > I can't see what changing the meaning of rq->data_len (and
-> > investigating all the block drivers) gives us.
-> 
-> No matter which way you go, you change the meaning of rq->data_len and
-> you MUST inspect rq->data_len usage whichever way you go.
+Yes. What I'd forgotten, though, is that even with --assume-clean it's
+still basically in degraded mode so testing writes at most serves as a
+comparison between the different setups. This seems to be a common
+late night error :)
 
-The patch doens't change that rq->data_len means the true data
-length. But yeah, it breaks rq->data_len == sum(sg). So it might break
-some drivers.
+>  So the bigger your chunk size is, the less chances you have to perform
+>  full-stripe write, just because "large, properly aligned" writes are
+>  much less frequent than "smaller, unaligned" ones
 
+I had expected that the sequential dd-writes would be automatically
+combined to write full stripes, yet they also go down massively with
+increased chunk size.
 
-> Apply your patch and try to do sg IO on IDE cdrom w/ various
-> transfer lengths.
+>  You can get best results when writing WITHOUT a filesystem
+>  (directly to /dev/mdFOO) with dd and blocksize equal to the
+>  total strip size (chunk size * number of data disks, or
+>  16k * 3 ..... 1M * 3, since in your raid 3 disks are data
+>  in each strip)
 
-I've just tried the patch with both ata and libata and it seems to
-work.
+I didn't use an fs for the dd tests, but 4*chunk size, which was
+stupid. Still, I would have expected some combining to be going on
+even at that level.
 
-For anyone hitting this problem, please try the following patch:
+>  md stripe-cache makes huge difference, for obvious reasons.
 
-http://lkml.org/lkml/2008/3/2/218
+Will experiment with that as well, thanks. Any other caches?
 
+>  unless your usage pattern will be special and optimized for such a
+>  setup, don't try to choose large chunk size for raid456.
+
+I think I will be revising my test script to actually create a small
+fs at the start of the device and run some tests in that. Note to
+self: need a good load simulator ... ...
+
+>  I had no time to investigate, and now I don't have a hardware to test
+>  again.  In theory it should work, but I guess only a few people are
+>  using [external bitmaps] if at all - most are using internal bitmaps.
+
+I'd rather not use a feature where the probability that a bug will
+bite me first is that high. :)
+
+FWIW, using smaller bitmaps REALLY helps. Tests forthcoming.
 
 Thanks,
+
+C.
