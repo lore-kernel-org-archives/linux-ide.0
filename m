@@ -1,103 +1,47 @@
-From: bugme-daemon@bugzilla.kernel.org
-Subject: [Bug 9904] ASUS DVD-E616A - drive side 80-wire cable detection failed
-Date: Mon,  3 Mar 2008 04:13:55 -0800 (PST)
-Message-ID: <20080303121355.C2035108065@picon.linux-foundation.org>
-References: <bug-9904-11633@http.bugzilla.kernel.org/>
+From: FUJITA Tomonori <tomof@acm.org>
+Subject: Re: [PATCH] block: fix residual byte count handling
+Date: Mon, 3 Mar 2008 21:17:28 +0900
+Message-ID: <20080303211727P.tomof@acm.org>
+References: <47CB79E9.8000505@gmail.com>
+	<20080303172623O.fujita.tomonori@lab.ntt.co.jp>
+	<47CBC309.7090106@gmail.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:38016 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751785AbYCCMOY (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 3 Mar 2008 07:14:24 -0500
-Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
-	by smtp1.linux-foundation.org (8.14.2/8.14.2/Debian-2build1) with ESMTP id m23CE3Tx026995
-	for <linux-ide@vger.kernel.org>; Mon, 3 Mar 2008 04:14:04 -0800
-In-Reply-To: <bug-9904-11633@http.bugzilla.kernel.org/>
+Received: from mo10.iij4u.or.jp ([210.138.174.78]:36699 "EHLO mo10.iij4u.or.jp"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752017AbYCCMYZ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 3 Mar 2008 07:24:25 -0500
+In-Reply-To: <47CBC309.7090106@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: htejun@gmail.com
+Cc: fujita.tomonori@lab.ntt.co.jp, tomof@acm.org, jens.axboe@oracle.com, James.Bottomley@HansenPartnership.com, efault@gmx.de, akpm@linux-foundation.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, jgarzik@pobox.comfujita.tomonori@lab.ntt.co.jp
 
-http://bugzilla.kernel.org/show_bug.cgi?id=9904
+On Mon, 03 Mar 2008 18:21:13 +0900
+Tejun Heo <htejun@gmail.com> wrote:
 
+> FUJITA Tomonori wrote:
+> >>> I can't see what changing the meaning of rq->data_len (and
+> >>> investigating all the block drivers) gives us.
+> >> No matter which way you go, you change the meaning of rq->data_len and
+> >> you MUST inspect rq->data_len usage whichever way you go.
+> > 
+> > The patch doens't change that rq->data_len means the true data
+> > length. But yeah, it breaks rq->data_len == sum(sg). So it might break
+> > some drivers.
+> 
+> Yeah, that's what I was saying.  You end up breaking one of the two
+> assumptions.  As sglist is getting modified for any driver if it has DMA
+> alignment set, whether rq->data_len is adjusted together or not, sglist
+> and data_len usages have to be audited.
 
+My patch (well, James' original approach) doesn't affect drivers that
+don't use drain buffer. rq->data_len still means the true data length
+and rq->data_len is equal to sum(sg) for them. So right now we need to
+audit only libata.
 
-
-
-------- Comment #9 from Manfred.Knick@T-Online.de  2008-03-03 04:13 -------
-(In reply to comment #7)
-> hdparm --Istdout /dev/hda ?
-
- hdparm --Istdout /dev/hd[a,b]
-
-/dev/hda:
-85c0 0000 0000 0000 0000 0000 0000 0000
-0000 0000 2020 2020 2020 2020 2020 2020
-2020 2020 2020 2020 3453 0080 0000 312e
-3033 2020 2020 504c 4558 544f 5220 4456
-442d 524f 4d20 5058 2d31 3330 4120 2020
-2020 2020 2020 2020 2020 2020 2020 0000
-0000 0f00 0000 0200 0200 0006 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0007
-0003 0078 0078 0078 0078 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0218 4000 4000 0218 0000 4000
-043f 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-
-/dev/hdb:
-85c0 0000 0000 0000 0000 0000 0000 0000
-0000 0000 2020 2020 2020 2020 2020 2020
-2020 3234 3530 3937 0000 0000 0000 312e
-3037 2020 2020 504c 4558 544f 5220 4456
-4452 2020 2050 582d 3736 3041 2020 2020
-2020 2020 2020 2020 2020 2020 2020 0000
-0000 0f00 0000 0400 0200 0006 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0007
-0003 0078 0078 0078 0078 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0078 0000 0000 0000 0000 0000 0000 0000
-101f 0000 0000 0000 0000 6b00 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-
-
--- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug, or are watching the assignee.
+But your patch changes the meaning of rq->data_len. It affects all the
+drivers. So it breaks non libata stuff, like the SMP handler. We need
+to audit all the drivers.
