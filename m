@@ -1,50 +1,41 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [BUG] 2.6.25-rc2-git3 broke cdrecord
-Date: Mon, 03 Mar 2008 19:29:27 +0900
-Message-ID: <47CBD307.2070603@gmail.com>
-References: <20080302233415.GA6258@Pilar>	<18379.18297.838050.536473@harpo.it.uu.se>	<tkrat.468fd04c47ae1a2a@s5r6.in-berlin.de>	<20080303172641Z.fujita.tomonori@lab.ntt.co.jp>	<47CBC014.9090309@s5r6.in-berlin.de>	<18379.51360.744676.894510@harpo.it.uu.se> <18379.53492.171481.255371@harpo.it.uu.se>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <18379.53492.171481.255371@harpo.it.uu.se>
-Sender: linux-scsi-owner@vger.kernel.org
-To: Mikael Pettersson <mikpe@it.uu.se>
-Cc: Stefan Richter <stefanr@s5r6.in-berlin.de>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, crmafra2@gmail.com, linux-kernel@vger.kernel.org, James.Bottomley@HansenPartnership.com, jens.axboe@oracle.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+From: bugme-daemon@bugzilla.kernel.org
+Subject: [Bug 9904] ASUS DVD-E616A - drive side 80-wire cable detection failed
+Date: Mon,  3 Mar 2008 03:08:27 -0800 (PST)
+Message-ID: <20080303110827.C4954108065@picon.linux-foundation.org>
+References: <bug-9904-11633@http.bugzilla.kernel.org/>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:45051 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1760926AbYCCLI3 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 3 Mar 2008 06:08:29 -0500
+Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
+	by smtp1.linux-foundation.org (8.14.2/8.14.2/Debian-2build1) with ESMTP id m23B8Y4F021276
+	for <linux-ide@vger.kernel.org>; Mon, 3 Mar 2008 03:08:36 -0800
+In-Reply-To: <bug-9904-11633@http.bugzilla.kernel.org/>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-Mikael Pettersson wrote:
-> Mikael Pettersson writes:
->  > Stefan Richter writes:
->  >  > FUJITA Tomonori wrote:
->  >  > > On Mon, 3 Mar 2008 02:48:23 +0100 (CET)
->  >  > > Stefan Richter <stefanr@s5r6.in-berlin.de> wrote:
->  >  > >> CD burning still fails for me via ide-cd, although in a
->  >  > >> different way than without the patch.  (Without the patch, ide-cd also
->  >  > >> fails like described by you for SATA.)
->  >  > >>
->  >  > >> With the patch, the failure is as follows.  I don't know if this is
->  >  > >> related to the data length arithmetic or something entirely different;
->  >  > >> all I learned so far is that 2.6.24 works.  Application log from
->  >  > >> 2.6.25-rc3 + Tejun's patch + Gentoo's cdrkit-1.1.6 + k3b:
->  >  > > 
->  >  > > Can you try the following patch?
->  >  > > 
->  >  > > http://lkml.org/lkml/2008/3/2/218
->  >  > 
->  >  > Fails just like with Tejun's patch, alas.
->  > 
->  > At this point I must confess I feel very uneasy about this situation.
->  > 
->  > Dare I suggest the perhaps hereditary solution of reverting these
->  > changes and doing them right after 2.6.25 final?
-> 
-> Doh! s/hereditary/heretical/
+http://bugzilla.kernel.org/show_bug.cgi?id=9904
 
-Please lemme track down a bit deeper.  I can reproduce seemingly similar
-problem here.
 
-Thanks.
+
+
+
+------- Comment #4 from Manfred.Knick@T-Online.de  2008-03-03 03:08 -------
+(In reply to comment #2)
+> James, you are using different host driver so most likely this is not the same
+> bug - please open a new bugzilla entry and post dmesg command output.
+
+Just another example - maybe it helps:
+
+ASUS M2N-SLI Deluxe with NVidia nForce 570 SLI MCP
+
+Primary Master: Plextor PX-130A - fails to detect 80-wire
+Primary Slave:  Plextor PX-760A + succeeds
+
 
 -- 
-tejun
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug, or are watching the assignee.
