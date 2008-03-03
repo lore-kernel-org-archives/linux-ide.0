@@ -1,48 +1,74 @@
-From: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Subject: Re: [BUG] 2.6.25-rc2-git3 broke cdrecord
-Date: Mon, 03 Mar 2008 18:39:22 +0100
-Message-ID: <47CC37CA.1040407@s5r6.in-berlin.de>
-References: <20080302233415.GA6258@Pilar>	<18379.18297.838050.536473@harpo.it.uu.se>	<tkrat.468fd04c47ae1a2a@s5r6.in-berlin.de> <20080303172641Z.fujita.tomonori@lab.ntt.co.jp> <47CBC014.9090309@s5r6.in-berlin.de>
+From: Bill Davidsen <davidsen@tmr.com>
+Subject: Re: Setting up md-raid5: observations, errors, questions
+Date: Mon, 03 Mar 2008 12:59:21 -0500
+Message-ID: <47CC3C79.6060707@tmr.com>
+References: <bb145bd20803020423m14efea1by6e3e38bb8d0decb8@mail.gmail.com>	 <alpine.DEB.1.00.0803020741150.13994@p34.internal.lan>	 <bb145bd20803020456g54be4bcbg1cf7aed132ac7944@mail.gmail.com>	 <alpine.DEB.1.00.0803020802370.18550@p34.internal.lan> <bb145bd20803020524y7b7cca01ma0b638a430c2f2f2@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from einhorn.in-berlin.de ([192.109.42.8]:46225 "EHLO
-	einhorn.in-berlin.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756412AbYCCRkN (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 3 Mar 2008 12:40:13 -0500
-In-Reply-To: <47CBC014.9090309@s5r6.in-berlin.de>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <bb145bd20803020524y7b7cca01ma0b638a430c2f2f2@mail.gmail.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: Christian Pernegger <pernegger@gmail.com>
+Cc: linux-raid@vger.kernel.org, linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Cc: mikpe@it.uu.se, crmafra2@gmail.com, linux-kernel@vger.kernel.org, James.Bottomley@HansenPartnership.com, htejun@gmail.com, jens.axboe@oracle.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 
-I wrote:
-> FUJITA Tomonori wrote:
->> On Mon, 3 Mar 2008 02:48:23 +0100 (CET)
->> Stefan Richter <stefanr@s5r6.in-berlin.de> wrote:
->>> CD burning still fails for me via ide-cd, although in a
->>> different way than without the patch.  (Without the patch, ide-cd also
->>> fails like described by you for SATA.)
->>>
->>> With the patch, the failure is as follows.  I don't know if this is
->>> related to the data length arithmetic or something entirely different;
->>> all I learned so far is that 2.6.24 works.  Application log from
->>> 2.6.25-rc3 + Tejun's patch + Gentoo's cdrkit-1.1.6 + k3b:
+Christian Pernegger wrote:
+>>  You could try to change cables and such but you've already cc'd linux-ide,
+>>  AFAIK it can/could be a chipset/related issue and the guys who work on NCQ
+>>  etc are working on the problem is the last I heard..
 >>
->> Can you try the following patch?
->>
->> http://lkml.org/lkml/2008/3/2/218
-> 
-> Fails just like with Tejun's patch, alas.
+>>  You should try and narrow down the problem, is it always the same drive
+>>  that has that problem every time?  Does it occur if you do a check on the
+>>  RAID 5 array or only when building?  etc..
+>>     
+>
+> Assuming you're talking about the HSM violation error ... I got that
+> exactly once (yet) in the situation described (sometime after the
+> writing phase of badblocks). Nothing since and certainly not the spew
+> others are reporting.
+>
+>   
+Are you by any chance running quota?
 
-What I see may very well be an ide-cd specific problem which is perhaps 
-already fixed in Linus' tree.  I need to update and retest.
+> My primary concern now is the second problem - seems like any access
+> to the raid array makes the machine unusable. I can type/edit a
+> command at the bash prompt normally but as soon as I hit enter it just
+> hangs there. If the command is trivial, say cat, I might get a result
+> a few minutes later.
+>
+> bonnie++ results are in:
+>
+> Version 1.03c       ------Sequential Output------ --Sequential Input- --Random-
+>                     -Per Chr- --Block-- -Rewrite- -Per Chr- --Block-- --Seeks--
+> Machine        Size K/sec %CP K/sec %CP K/sec %CP K/sec %CP K/sec %CP  /sec %CP
+> 1024k            4G           16282   5 13359   3           57373   7 149.0   0
+>                     ------Sequential Create------ --------Random Create--------
+>                     -Create-- --Read--- -Delete-- -Create-- --Read--- -Delete--
+>               files  /sec %CP  /sec %CP  /sec %CP  /sec %CP  /sec %CP  /sec %CP
+>                  16 +++++ +++ +++++ +++ +++++ +++ +++++ +++ +++++ +++ +++++ +++
+>
+> Something is definitely not right ... :-(
+>
+> As in, an old array of 300GB IDE Maxtors has 4x the seq writes, bus
+> capped (105MB/s, plain PCI) reads and 3x the IOs. And it doesn't block
+> the machine. Granted, there's the crypto but on my other (non-raid)
+> boxes the performance impact just isn't there.
+>
+> Any help appreciated, as it is the box has expensive-paperweight status.
+>
+> C.
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
+>   
 
-(In any case, your patch fixes CD writing over SBP-2 and, judging from 
-the failure modes I got, is necessary for ide-cd as well.  Or Tejun's 
-patch or whatever you guys will come up with.)
+
 -- 
-Stefan Richter
--=====-==--- --== ---==
-http://arcgraph.de/sr/
+Bill Davidsen <davidsen@tmr.com>
+  "Woe unto the statesman who makes war without a reason that will still
+  be valid when the war is over..." Otto von Bismark 
+
+
