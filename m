@@ -1,60 +1,37 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCH] block: fix residual byte count handling
-Date: Tue, 04 Mar 2008 07:44:13 +0900
-Message-ID: <47CC7F3D.4010605@gmail.com>
-References: <47CC036C.2060902@gmail.com>	<20080303230121M.tomof@acm.org>	<47CC09B6.6090709@gmail.com> <20080303235207S.tomof@acm.org>
+From: "Rune Torgersen" <runet@innovsys.com>
+Subject: RE: locking problem in sata_sil24?
+Date: Mon, 3 Mar 2008 16:44:41 -0600
+Message-ID: <DCEAAC0833DD314AB0B58112AD99B93B0410A575@ismail.innsys.innovsys.com>
+References: <DCEAAC0833DD314AB0B58112AD99B93B0410A524@ismail.innsys.innovsys.com> <1204583866.21545.31.camel@pasglop>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <20080303235207S.tomof@acm.org>
-Sender: linux-scsi-owner@vger.kernel.org
-To: FUJITA Tomonori <tomof@acm.org>
-Cc: jens.axboe@oracle.com, fujita.tomonori@lab.ntt.co.jp, James.Bottomley@HansenPartnership.com, efault@gmx.de, akpm@linux-foundation.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, jgarzik@pobox.com
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from smtp.innovsys.com ([66.115.232.196]:30726 "EHLO
+	mail.innovsys.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1753557AbYCCWoo convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 3 Mar 2008 17:44:44 -0500
+Content-class: urn:content-classes:message
+In-Reply-To: <1204583866.21545.31.camel@pasglop>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: benh@kernel.crashing.org
+Cc: linuxppc-dev@ozlabs.org, linux-ide@vger.kernel.org
 
-FUJITA Tomonori wrote:
-> On Mon, 03 Mar 2008 23:22:46 +0900
-> Tejun Heo <htejun@gmail.com> wrote:
-> 
->> FUJITA Tomonori wrote:
->>>> At the end of blk_rq_map_user() together with data_len / extra_len
->>>> mangling or were you talking about James' original patch?
->>> With my patch, at the end of blk_rq_map_user, we have:
->>>
->>> 	if (len & queue_dma_alignment(q)) {
->>> 		unsigned int pad_len = (queue_dma_alignment(q) & ~len) + 1;
->>>
->>> 		rq->extra_len += pad_len;
->>> 	}
->>>
->>>
->>> So no change as compared with 2.6.24?
->> Oh.. you killed sg list manipulation.  Many controllers do allow odd
->> bytes as the last sg entry but not all.  Also, if you append drain
-> 
-> Until 2.6.24, these drivers have taken care about the issue by
-> themselves. There is no change as compared with 2.6.24.
+Benjamin Herrenschmidt wrote:
+> On Mon, 2008-03-03 at 16:10 -0600, Rune Torgersen wrote:
+>> Hi I am trying to get PREEMPT_RT pach to wokr on my 2.6.24 kernel,
 
-Yeah, libata did its own padding and needed to add draining.  Private
-implementation was complex as hell and James suggested moving them to
-block layer.  Are you suggesting moving them back to drivers?
+> What core is in the 8280 ? At this stage, I wouldn't rule out a bug in
+> the lockdep patches, I need to do more work on them.
 
->> buffer after it, it ends up with unaligned sg entry in the middle and
->> rq->data_len + rq->extra_len will overrun the sg entry after the drain
->> page which is really dangerous.
-> 
-> The drivers know that they use drain buffer. They can take care about
-> themselves on this too. If we want to do explicitly, we could have
-> rq->pad_len and rq->drain_len instead of rq->extra_len, though I think
-> that we are fine without these values because these drivers already
-> tell the block layer what they want and know that the block layer
-> gives it.
+Should be an 603e
+adn revision (from u-boot)
+CPU:   MPC8280 (HiP7 Rev 14, Mask 1.0 1K49M) at 447.897 MHz
 
-So, if a driver has requested aligning and draining, the driver should
-extend the sg entry before the last one by the alignment if draining was
-used for the request and extent the last sg if the draining wasn't used.
- I'd rather just implement them in the drivers.
 
--- 
-tejun
+
+I am currently compiling a LOCKDEP kernel for my x86 desktop, as it has
+the exact same SiliconImage controller on a card, so I'll see if it gets
+a similar detection.
