@@ -1,64 +1,44 @@
-From: Jens Axboe <jens.axboe@oracle.com>
-Subject: Re: [PATCH] block: fix residual byte count handling
-Date: Tue, 4 Mar 2008 19:17:36 +0100
-Message-ID: <20080304181736.GP6704@kernel.dk>
-References: <20080304085944.GG6704@kernel.dk> <20080304180648W.fujita.tomonori@lab.ntt.co.jp> <20080304182228Z.fujita.tomonori@lab.ntt.co.jp> <20080304093536.GH6704@kernel.dk> <1204634238.5997.5.camel@homer.simson.net> <20080304123939.GM6704@kernel.dk> <1204634619.17258.0.camel@homer.simson.net> <1204635515.17258.12.camel@homer.simson.net> <20080304130307.GN6704@kernel.dk> <1204640722.5783.10.camel@homer.simson.net>
+From: Mark Lord <liml@rtr.ca>
+Subject: Re: Sata-MV, Intergated Sata Device Support
+Date: Tue, 04 Mar 2008 13:26:18 -0500
+Message-ID: <47CD944A.2090903@rtr.ca>
+References: <1176673884.5109.30.camel@Desktop> <47C35203.20402@garzik.org> <47C3585D.8070701@rtr.ca> <47C35A85.3020307@garzik.org> <alpine.DEB.0.99.0802260024400.22022@ubuntu-saeed.il.marvell.com> <47C43655.1050907@rtr.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from brick.kernel.dk ([87.55.233.238]:17354 "EHLO kernel.dk"
+Received: from rtr.ca ([76.10.145.34]:3323 "EHLO mail.rtr.ca"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758733AbYCDSRl (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 4 Mar 2008 13:17:41 -0500
-Content-Disposition: inline
-In-Reply-To: <1204640722.5783.10.camel@homer.simson.net>
+	id S1756819AbYCDS0U (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 4 Mar 2008 13:26:20 -0500
+In-Reply-To: <47C43655.1050907@rtr.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mike Galbraith <efault@gmx.de>
-Cc: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, htejun@gmail.com, tomof@acm.org, James.Bottomley@HansenPartnership.com, akpm@linux-foundation.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, jgarzik@pobox.com, bzolnier@gmail.com
+To: saeed <saeed@marvell.com>
+Cc: Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org, jon@ngndg.com, LKML <linux-kernel@vger.kernel.org>
 
-On Tue, Mar 04 2008, Mike Galbraith wrote:
+Mark Lord wrote:
+> saeed wrote:
+>>
+>> On Mon, 25 Feb 2008, Jeff Garzik wrote:
+>>
+>>>> ...
+>>>>
+>>>> Saeed:  isn't this what your SOC patches already implemented for us?
+>>>> As near as I can tell, sata_mv now already has support for the 60x1C0.
+>>> Saeed's stuff didn't support PCI though, and Jon Li is definitely 
+>>> talking
+>>> about PCI...
+>> yes, my patch added support for the SoC sata like in the 5182, and 
+>> this is what Jon Li was concerned about. he mentioneded the 60x1C0 pci 
+>> device just to suggest to use it's code for the SoC sata as it is very 
+>> similar.
+> ..
 > 
-> On Tue, 2008-03-04 at 14:03 +0100, Jens Axboe wrote:
+> I don't think I understand your english there.
 > 
-> > Re-read my original mail! It states that you should just pull:
-> > 
-> > git://git.kernel.dk/linux-2.6-block.git for-linus
-> > 
-> > into your linus branch, or just create a test branch off linus' master
-> > and pull into that. IOW, it's the for-linus branch that you should pull,
-> > nothing else.
-> 
-> Well, I had a good reason.  You know how to un-pull, I know how to
-> un-remote to get back to pristine after I'm done testing... guaranteed
-> without whimpering pathetically on the git list ;-)
+> Does the current sata_mv driver work as-is with the chipset this person wants?
+> If not, then exactly what has to change to make it work?
+..
 
-OK, if you're on master, it's pretty easy:
-
-$ git branch test-branch
-$ git checkout test-branch
-$ git pull git://git.kernel.dk/linux-2.6-block.git for-linus
-
-[build, boot, test]
-$ git checkout master
-$ git branch -D test-branch
-
-> Anyway, I checked out the one with the big-fat-hint in it's name
-> (block-for-linus/for-linus).
-> Same error.  Git this morning with patches...
-> 	restore_meaning_of_data_len.diff
-> 	seperate_out_padding_from_alignment.diff
-> ...reverted restored me to the originally reported k3b error, nothing
-> new noted.
-> 
-> If I tested the wrong branch, whack me upside the head, and I'll follow
-> your pull destructions, and figure out how to un-pull later.
-
-for-linus is the right branch, but I'm just a little worried that you
-didn't test what you think you tested. What does cat .git/HEAD say? If
-that is a ref to a file (eg refs/heads/master), what does that file
-contain?
-
--- 
-Jens Axboe
-
+Saeed ??
