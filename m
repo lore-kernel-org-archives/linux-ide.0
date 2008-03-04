@@ -1,30 +1,50 @@
-From: Anders Eriksson <aeriksson@fastmail.fm>
-Subject: Re: -rc3 regression (was Re: 2.6.25-rc2 + smartd = hang )
-Date: Tue, 04 Mar 2008 16:25:32 +0100
-Message-ID: <20080304152532.C06932DC027@tippex.mynet.homeunix.org>
-References: <20080222165122.8D2BB93C12F@tippex.mynet.homeunix.org> <20080228143854.6350093C855@tippex.mynet.homeunix.org> <200803040116.42764.bzolnier@gmail.com> <200803040133.07736.bzolnier@gmail.com> <20080304095701.DDF762DC027@tippex.mynet.homeunix.org>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH] block: fix residual byte count handling
+Date: Tue, 04 Mar 2008 10:04:55 -0600
+Message-ID: <1204646695.3091.14.camel@localhost.localdomain>
+References: <20080304175302T.fujita.tomonori@lab.ntt.co.jp>
+	 <20080304085944.GG6704@kernel.dk>
+	 <20080304180648W.fujita.tomonori@lab.ntt.co.jp>
+	 <20080304182228Z.fujita.tomonori@lab.ntt.co.jp>
+	 <20080304093536.GH6704@kernel.dk>
+	 <1204634238.5997.5.camel@homer.simson.net>
+	 <20080304123939.GM6704@kernel.dk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ch-smtp02.sth.basefarm.net ([80.76.149.213]:51810 "EHLO
-	ch-smtp02.sth.basefarm.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1764846AbYCDP0Z (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 4 Mar 2008 10:26:25 -0500
-In-reply-to: <20080304095701.DDF762DC027@tippex.mynet.homeunix.org> 
+Received: from accolon.hansenpartnership.com ([76.243.235.52]:33185 "EHLO
+	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755218AbYCDQFO (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 4 Mar 2008 11:05:14 -0500
+In-Reply-To: <20080304123939.GM6704@kernel.dk>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Anders Eriksson <aeriksson@fastmail.fm>
-Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Jeff Garzik <jeff@garzik.org>, linux-kernel@vger.kernel.org, Linux IDE mailing list <linux-ide@vger.kernel.org>, Jens Axboe <jens.axboe@oracle.com>
+To: Jens Axboe <jens.axboe@oracle.com>
+Cc: Mike Galbraith <efault@gmx.de>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, htejun@gmail.com, tomof@acm.org, akpm@linux-foundation.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, jgarzik@pobox.com, bzolnier@gmail.com
 
+On Tue, 2008-03-04 at 13:39 +0100, Jens Axboe wrote:
+> On Tue, Mar 04 2008, Mike Galbraith wrote:
+> > 
+> > On Tue, 2008-03-04 at 10:35 +0100, Jens Axboe wrote:
+> > 
+> > > Looks excellent to me, has a variant of this been tested as OK by the
+> > > users reporting the regression?
+> > 
+> > K3b burning seems to be a nogo here.  This is git pulled this morning
+> > though, so it's a somewhat different tree than previously tested fwtw.
+> 
+> can you please try git as of this morning without any patches applied,
+> and then pull
+> 
+> git://git.kernel.dk/linux-2.6-block.git for-linus
+> 
+> into that and see if that works?
 
-aeriksson@fastmail.fm said:
->> I need some sleep...  this patch is not going to help (though disabling
->> PREEMPT may be worth a try).  Sorry for the confusion.
+Works for me with the SAS SMP handler.  Both input request and output
+response frame sizes are picked up and returned with the correct
+residues.
 
-> Ok, I'll drop the patch and, recompile without PREEMPT. 
-
-Tested with PREEMPT_NONE. No change.
-
-/A
+James
 
 
