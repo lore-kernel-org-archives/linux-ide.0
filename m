@@ -1,50 +1,45 @@
-From: Jeremy Jackson <jerj@coplanar.net>
-Subject: hdparm -W 0 2.6.24.3 causing XFS shutdown on IO Error
-Date: Tue, 04 Mar 2008 17:22:14 -0500
-Message-ID: <1204669334.7633.42.camel@ragnarok>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: -rc3 regression (was Re: 2.6.25-rc2 + smartd = hang )
+Date: Wed, 5 Mar 2008 00:13:39 +0100
+Message-ID: <200803050013.39247.bzolnier@gmail.com>
+References: <20080222165122.8D2BB93C12F@tippex.mynet.homeunix.org> <20080304095701.DDF762DC027@tippex.mynet.homeunix.org> <200803042346.21403.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from titan.coplanar.net ([70.47.139.2]:40934 "EHLO
-	titan.coplanar.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751206AbYCDWgX (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 4 Mar 2008 17:36:23 -0500
-Received: from [70.47.139.174] ([70.47.139.174])
-	(authenticated bits=0)
-	by titan.coplanar.net (8.14.1/8.14.1/Debian-8ubuntu1) with ESMTP id m24MMEpo029583
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NOT)
-	for <linux-ide@vger.kernel.org>; Tue, 4 Mar 2008 17:22:16 -0500
+Received: from ug-out-1314.google.com ([66.249.92.171]:43687 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932933AbYCDXCC (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 4 Mar 2008 18:02:02 -0500
+Received: by ug-out-1314.google.com with SMTP id z38so2947019ugc.16
+        for <linux-ide@vger.kernel.org>; Tue, 04 Mar 2008 15:02:00 -0800 (PST)
+In-Reply-To: <200803042346.21403.bzolnier@gmail.com>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: IDE/ATA development list <linux-ide@vger.kernel.org>
+To: Anders Eriksson <aeriksson@fastmail.fm>
+Cc: Jeff Garzik <jeff@garzik.org>, linux-kernel@vger.kernel.org, Linux IDE mailing list <linux-ide@vger.kernel.org>, Jens Axboe <jens.axboe@oracle.com>
 
-using sata_nv ADMA mode, on CK804 Ultra, motherboard Tyan S2865, I am
-trying to disable the write cache for data integrity.
+On Tuesday 04 March 2008, Bartlomiej Zolnierkiewicz wrote:
 
-Drives are Seagate ST3500830AS FwRev=3.AAC
-or Seagate ST35000630AS 
+> I must admit that after auditing the patch & code for n-th time I still fail
+> to see the source of the problem (especialy now that the theory about exposing
+> races in the tuning code has also failed) as the _only_ changes introduced by
+> the guilty commit are that we are using different rq->cmd_type and testing for
+> rq->special instead of rq->buffer but both should be NULL. [ as it can be seen
+> be looking at ide_cmd_ioctl(), execute_drive_cmd() and ide_end_drive_cmd() ]
+> 
+> If anybody has some ideas on what could be wrong please help, in the meantime
+> I'm going to take a look at smartd code...
 
-Using md-raid1 + LVM2
+This is getting more interesting as smartd doesn't seem to be using "empty"
+HDIO_DRIVE_CMD requests at all!
 
-Kernel is Ubuntu/Hardy 2.6.24-11.17
+[ IOW the guilty commit should have zero influence on smartd. ]
 
-To reproduce,
+Anders, could you send me ide-taskfile.s (make drivers/ide/ide-taskfile.s)
+from before and after the commit?  Maybe it is simply a compiler bug...
 
-# hdparm -W 0 /dev/sda ; hdparm -W 0 /dev/sdb
-# touch /tmp/foo
-# sync
-
-sometimes XFS shutsdown, sometimes machine hard reboots, no serial
-console msgs.
-
-I'm not sure where to begin, so anyone who has an idea let me know what
-info is needed.
-
--- 
-Jeremy Jackson
-Coplanar Networks
-(519)489-4903
-http://www.coplanar.net
-jerj@coplanar.net
-
+Thanks.
+Bart
