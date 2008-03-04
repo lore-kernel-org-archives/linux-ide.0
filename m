@@ -1,89 +1,64 @@
-From: Tejun Heo <htejun@gmail.com>
+From: Jens Axboe <jens.axboe@oracle.com>
 Subject: Re: [PATCH] block: fix residual byte count handling
-Date: Wed, 05 Mar 2008 02:59:30 +0900
-Message-ID: <47CD8E02.1020207@gmail.com>
-References: <20080304175302T.fujita.tomonori@lab.ntt.co.jp> <20080304085944.GG6704@kernel.dk> <20080304180648W.fujita.tomonori@lab.ntt.co.jp> <20080304182228Z.fujita.tomonori@lab.ntt.co.jp> <20080304093536.GH6704@kernel.dk> <1204634238.5997.5.camel@homer.simson.net> <20080304123939.GM6704@kernel.dk> <fqk15l$lgq$1@ger.gmane.org>
+Date: Tue, 4 Mar 2008 19:17:36 +0100
+Message-ID: <20080304181736.GP6704@kernel.dk>
+References: <20080304085944.GG6704@kernel.dk> <20080304180648W.fujita.tomonori@lab.ntt.co.jp> <20080304182228Z.fujita.tomonori@lab.ntt.co.jp> <20080304093536.GH6704@kernel.dk> <1204634238.5997.5.camel@homer.simson.net> <20080304123939.GM6704@kernel.dk> <1204634619.17258.0.camel@homer.simson.net> <1204635515.17258.12.camel@homer.simson.net> <20080304130307.GN6704@kernel.dk> <1204640722.5783.10.camel@homer.simson.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from gv-out-0910.google.com ([216.239.58.186]:52140 "EHLO
-	gv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757999AbYCDR7m (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 4 Mar 2008 12:59:42 -0500
-Received: by gv-out-0910.google.com with SMTP id s4so662286gve.37
-        for <linux-ide@vger.kernel.org>; Tue, 04 Mar 2008 09:59:40 -0800 (PST)
-In-Reply-To: <fqk15l$lgq$1@ger.gmane.org>
+Received: from brick.kernel.dk ([87.55.233.238]:17354 "EHLO kernel.dk"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758733AbYCDSRl (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 4 Mar 2008 13:17:41 -0500
+Content-Disposition: inline
+In-Reply-To: <1204640722.5783.10.camel@homer.simson.net>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: walt <w41ter@gmail.com>
-Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Mike Galbraith <efault@gmx.de>
+Cc: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, htejun@gmail.com, tomof@acm.org, James.Bottomley@HansenPartnership.com, akpm@linux-foundation.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, jgarzik@pobox.com, bzolnier@gmail.com
 
-walt wrote:
-> Jens Axboe wrote:
->> On Tue, Mar 04 2008, Mike Galbraith wrote:
->>> On Tue, 2008-03-04 at 10:35 +0100, Jens Axboe wrote:
->>>
->>>> Looks excellent to me, has a variant of this been tested as OK by the
->>>> users reporting the regression?
->>> K3b burning seems to be a nogo here.  This is git pulled this morning
->>> though, so it's a somewhat different tree than previously tested fwtw.
->>
->> can you please try git as of this morning without any patches applied,
->> and then pull
->>
->> git://git.kernel.dk/linux-2.6-block.git for-linus
->>
->> into that and see if that works?
+On Tue, Mar 04 2008, Mike Galbraith wrote:
 > 
-> Unfortunately this doesn't fix a problem I've discussed off-list with
-> Kiyoshi Ueda, who suggested that I should follow this thread and try
-> any patches posted here.
+> On Tue, 2008-03-04 at 14:03 +0100, Jens Axboe wrote:
 > 
-> Here is what happens when I try to mount a CD (before and after I
-> pull 'for-linus'):
+> > Re-read my original mail! It states that you should just pull:
+> > 
+> > git://git.kernel.dk/linux-2.6-block.git for-linus
+> > 
+> > into your linus branch, or just create a test branch off linus' master
+> > and pull into that. IOW, it's the for-linus branch that you should pull,
+> > nothing else.
 > 
-> hdc: ide_cd_check_ireason: wrong transfer direction!
-> cdrom: failed setting lba address space
-> hdc: status error: status=0x58 { DriveReady SeekComplete DataRequest }
-> ide: failed opcode was: unknown
-> hdc: drive not ready for command
-> hdc: status error: status=0x58 { DriveReady SeekComplete DataRequest }
-> ide: failed opcode was: unknown
-> hdc: drive not ready for command
-> hdc: status error: status=0x58 { DriveReady SeekComplete DataRequest }
-> ide: failed opcode was: unknown
-> hdc: drive not ready for command
-> hdc: status error: status=0x58 { DriveReady SeekComplete DataRequest }
-> ide: failed opcode was: unknown
-> hdc: drive not ready for command
-> hdc: status error: status=0x58 { DriveReady SeekComplete DataRequest }
-> ide: failed opcode was: unknown
-> hdc: drive not ready for command
-> hdc: status error: status=0x58 { DriveReady SeekComplete DataRequest }
-> ide: failed opcode was: unknown
-> hdc: drive not ready for command
-> hdc: status error: status=0x58 { DriveReady SeekComplete DataRequest }
-> ide: failed opcode was: unknown
-> hdc: drive not ready for command
-> hdc: status error: status=0x58 { DriveReady SeekComplete DataRequest }
-> ide: failed opcode was: unknown
-> hdc: drive not ready for command
-> hdc: status timeout: status=0xd0 { Busy }
-> ide: failed opcode was: unknown
-> hdc: DMA disabled
-> hdc: drive not ready for command
-> hdc: ATAPI reset complete
-> ISO 9660 Extensions: Microsoft Joliet Level 3
-> ISOFS: changing to secondary root
-> VFS: busy inodes on changed media.
-> 
-> The mount can take from 5 seconds on up to a minute or so before the
-> CD can be accessed.
+> Well, I had a good reason.  You know how to un-pull, I know how to
+> un-remote to get back to pristine after I'm done testing... guaranteed
+> without whimpering pathetically on the git list ;-)
 
-Which version did you try?  There was a recent IDE bug fix which
-affected CD recording.  Commit bcd88ac3b2ff2eae3d0fa57a6b02d4fce5392f32
-which is included in 2.6.25-rc3.  Also, did 2.6.24 work?
+OK, if you're on master, it's pretty easy:
+
+$ git branch test-branch
+$ git checkout test-branch
+$ git pull git://git.kernel.dk/linux-2.6-block.git for-linus
+
+[build, boot, test]
+$ git checkout master
+$ git branch -D test-branch
+
+> Anyway, I checked out the one with the big-fat-hint in it's name
+> (block-for-linus/for-linus).
+> Same error.  Git this morning with patches...
+> 	restore_meaning_of_data_len.diff
+> 	seperate_out_padding_from_alignment.diff
+> ...reverted restored me to the originally reported k3b error, nothing
+> new noted.
+> 
+> If I tested the wrong branch, whack me upside the head, and I'll follow
+> your pull destructions, and figure out how to un-pull later.
+
+for-linus is the right branch, but I'm just a little worried that you
+didn't test what you think you tested. What does cat .git/HEAD say? If
+that is a ref to a file (eg refs/heads/master), what does that file
+contain?
 
 -- 
-tejun
+Jens Axboe
+
