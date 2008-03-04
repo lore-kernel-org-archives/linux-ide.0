@@ -1,36 +1,28 @@
 From: Tejun Heo <htejun@gmail.com>
 Subject: Re: [PATCH] block: fix residual byte count handling
-Date: Tue, 04 Mar 2008 18:29:22 +0900
-Message-ID: <47CD1672.1030907@gmail.com>
-References: <47CC7F3D.4010605@gmail.com> <20080304111056X.tomof@acm.org> <47CCB4D8.8090600@gmail.com> <20080304175302T.fujita.tomonori@lab.ntt.co.jp> <20080304085944.GG6704@kernel.dk>
+Date: Tue, 04 Mar 2008 18:30:56 +0900
+Message-ID: <47CD16D0.1020000@gmail.com>
+References: <20080304175302T.fujita.tomonori@lab.ntt.co.jp>	<20080304085944.GG6704@kernel.dk>	<20080304180648W.fujita.tomonori@lab.ntt.co.jp> <20080304182228Z.fujita.tomonori@lab.ntt.co.jp>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.178]:1755 "EHLO
+Received: from wa-out-1112.google.com ([209.85.146.176]:8352 "EHLO
 	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753000AbYCDJ33 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 4 Mar 2008 04:29:29 -0500
-Received: by wa-out-1112.google.com with SMTP id v27so716293wah.23
-        for <linux-ide@vger.kernel.org>; Tue, 04 Mar 2008 01:29:29 -0800 (PST)
-In-Reply-To: <20080304085944.GG6704@kernel.dk>
+	with ESMTP id S1752362AbYCDJbG (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 4 Mar 2008 04:31:06 -0500
+Received: by wa-out-1112.google.com with SMTP id v27so717188wah.23
+        for <linux-ide@vger.kernel.org>; Tue, 04 Mar 2008 01:31:06 -0800 (PST)
+In-Reply-To: <20080304182228Z.fujita.tomonori@lab.ntt.co.jp>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jens Axboe <jens.axboe@oracle.com>
-Cc: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, tomof@acm.org, James.Bottomley@HansenPartnership.com, efault@gmx.de, akpm@linux-foundation.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, jgarzik@pobox.com, bzolnier@gmail.com
+To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Cc: jens.axboe@oracle.com, tomof@acm.org, James.Bottomley@HansenPartnership.com, efault@gmx.de, akpm@linux-foundation.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, jgarzik@pobox.com, bzolnier@gmail.com
 
-Hello, Jens.
+FUJITA Tomonori wrote:
+> OK, I've updated his patch. Tejun, can you audit this?
 
-Jens Axboe wrote:
-> I completely agree with you, ->data_len meaning true data length is way
-> cleaner imho. Only the driver should care for the padded length, all
-> other parts of the kernel only need to know what they actually got.
-
-Oh well, I guess I'm the one with strange taste he
-re.  My logic is that the only thing below the block layer is the driver
-which requested size adjustment.  This means residual bytes calculation
-is pushed to low level drivers which isn't anything major but still.
-Anyways, I'll review FUJITA's modified patch.
+Looks good to me.
 
 Thanks.
 
