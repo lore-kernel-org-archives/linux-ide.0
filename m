@@ -1,61 +1,56 @@
-From: Kiyoshi Ueda <k-ueda@ct.jp.nec.com>
-Subject: Re: [PATCH] block: fix residual byte count handling
-Date: Tue, 04 Mar 2008 14:42:40 -0500 (EST)
-Message-ID: <20080304.144240.71085240.k-ueda@ct.jp.nec.com>
-References: <1204634238.5997.5.camel@homer.simson.net>
-	<20080304123939.GM6704@kernel.dk>
-	<fqk15l$lgq$1@ger.gmane.org>
+From: Mark Lord <liml@rtr.ca>
+Subject: Re: Sata-MV, Intergated Sata Device Support
+Date: Tue, 04 Mar 2008 16:18:37 -0500
+Message-ID: <47CDBCAD.9040303@rtr.ca>
+References: <1176673884.5109.30.camel@Desktop> <47C35203.20402@garzik.org>	 <47C3585D.8070701@rtr.ca> <47C35A85.3020307@garzik.org>	 <alpine.DEB.0.99.0802260024400.22022@ubuntu-saeed.il.marvell.com>	 <47C43655.1050907@rtr.ca> <57e2b00803041042k67f7b1c6ge8da83efaf1aa9f6@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:51161 "EHLO mx1.redhat.com"
+Received: from rtr.ca ([76.10.145.34]:4686 "EHLO mail.rtr.ca"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1765937AbYCDTm1 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 4 Mar 2008 14:42:27 -0500
-In-Reply-To: <fqk15l$lgq$1@ger.gmane.org>
+	id S1752986AbYCDVSl (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 4 Mar 2008 16:18:41 -0500
+In-Reply-To: <57e2b00803041042k67f7b1c6ge8da83efaf1aa9f6@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: w41ter@gmail.com
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: Byron Bradley <byron.bbradley@gmail.com>
+Cc: saeed <saeed@marvell.com>, Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org, jon@ngndg.com, LKML <linux-kernel@vger.kernel.org>
 
-Hi,
-
-On Tue, 04 Mar 2008 09:34:56 -0800, walt wrote:
-> Jens Axboe wrote:
-> > On Tue, Mar 04 2008, Mike Galbraith wrote:
-> >> On Tue, 2008-03-04 at 10:35 +0100, Jens Axboe wrote:
-> >>
-> >>> Looks excellent to me, has a variant of this been tested as OK by the
-> >>> users reporting the regression?
-> >> K3b burning seems to be a nogo here.  This is git pulled this morning
-> >> though, so it's a somewhat different tree than previously tested fwtw.
-> >
-> > can you please try git as of this morning without any patches applied,
-> > and then pull
-> >
-> > git://git.kernel.dk/linux-2.6-block.git for-linus
-> >
-> > into that and see if that works?
+Byron Bradley wrote:
+> On Tue, Feb 26, 2008 at 3:55 PM, Mark Lord <liml@rtr.ca> wrote:
+>> saeed wrote:
+>>  >
+>>  > On Mon, 25 Feb 2008, Jeff Garzik wrote:
+>>  >
+>>  >>> ...
+>>  >>>
+>>  >>> Saeed:  isn't this what your SOC patches already implemented for us?
+>>  >>> As near as I can tell, sata_mv now already has support for the 60x1C0.
+>>  >> Saeed's stuff didn't support PCI though, and Jon Li is definitely talking
+>>  >> about PCI...
+>>  > yes, my patch added support for the SoC sata like in the 5182, and this
+>>  > is what Jon Li was concerned about. he mentioneded the 60x1C0 pci device
+>>  > just to suggest to use it's code for the SoC sata as it is very similar.
+>>  ..
+>>
+>>  I don't think I understand your english there.
+>>
+>>  Does the current sata_mv driver work as-is with the chipset this person wants?
+>>  If not, then exactly what has to change to make it work?
 > 
-> Unfortunately this doesn't fix a problem I've discussed off-list with
-> Kiyoshi Ueda, who suggested that I should follow this thread and try
-> any patches posted here.
- 
-I think there was misunderstanding between us.
-On off-list, I meant:
-  o Your original problem was CD burning, and it looked same problem
-    being discussed on this thread, according to this message:
+> Jon Li was one of the people who started porting Linux to the Marvell
+> Orion 88F5182 before Marvell did it. sata_mv does now work on the
+> device Jon was talking about. When this was sent I think we were
+> unsure whether it could work over PCI or just the system bus which
+> probably confused things a little.
+..
 
-> cdrecord: Warning: controller returns zero sized CD capabilities page.
-> cdrecord: Warning: controller returns wrong page 0 for CD capabilities page (2A). 
+Thanks for pointing this out.
 
-    So I suggested you to watch this thread and try patches of this
-    thread for CD burning problem.
+So, no further action required -- it already works now.
 
-  o The problem of ide_cd_check_ireason looked different from
-    CD burning one.
-    So I suggested you to report it as a different problem.
+Got that, Jeff?
 
-Thanks,
-Kiyoshi Ueda
+Cheers
+
