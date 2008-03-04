@@ -1,72 +1,113 @@
-From: Denys Dmytriyenko <denis@denix.org>
-Subject: Re: sata_sil24 stability and performance
-Date: Mon, 03 Mar 2008 19:22:15 -0500
-Message-ID: <20080304002215.GA13317@denix.org>
-References: <20080219020916.GA29902@denix.org> <20080219043659.GA11936@jim.sh>
- <47BAF677.5000602@rtr.ca> <20080302061453.GA7291@denix.org>
- <005d01c87c4c$0d01f550$4d0fa8c0@M2007> <47CC9197.9050609@gmail.com>
+From: "Peter Teoh" <htmldeveloper@gmail.com>
+Subject: Re: ide_register_hw(): buggy code
+Date: Tue, 4 Mar 2008 09:01:51 +0800
+Message-ID: <804dabb00803031701g368a7082q248cc2b05e762fa1@mail.gmail.com>
+References: <20080302151924.GJ25835@cs181133002.pp.htv.fi>
+	 <804dabb00803030803v1dbbb33fh6779b8c4d072a908@mail.gmail.com>
+	 <200803032329.32020.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/mixed;
+	boundary="----=_Part_13841_10618570.1204592511459"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from vms042pub.verizon.net ([206.46.252.42]:64808 "EHLO
-	vms042pub.verizon.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758976AbYCDAWR (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 3 Mar 2008 19:22:17 -0500
-Received: from gandalf.denix.org ([71.255.237.139])
- by vms042.mailsrvcs.net (Sun Java System Messaging Server 6.2-6.01 (built Apr
- 3 2006)) with ESMTPA id <0JX600D3ZJP45VD1@vms042.mailsrvcs.net> for
- linux-ide@vger.kernel.org; Mon, 03 Mar 2008 18:22:17 -0600 (CST)
-In-reply-to: <47CC9197.9050609@gmail.com>
-Content-disposition: inline
+Received: from wf-out-1314.google.com ([209.85.200.173]:55230 "EHLO
+	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751976AbYCDBBx (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 3 Mar 2008 20:01:53 -0500
+Received: by wf-out-1314.google.com with SMTP id 28so546545wff.4
+        for <linux-ide@vger.kernel.org>; Mon, 03 Mar 2008 17:01:51 -0800 (PST)
+In-Reply-To: <200803032329.32020.bzolnier@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Gabor FUNK <FUNK.Gabor@hunetkft.hu>, linux-ide@vger.kernel.org, Jim Paris <jim@jtan.com>, Mark Lord <liml@rtr.ca>
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: Adrian Bunk <bunk@kernel.org>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Tue, Mar 04, 2008 at 09:02:31AM +0900, Tejun Heo wrote:
-> Hello, Gabor.
-> 
-> Gabor FUNK wrote:
-> > I have/had a similar (hard resetting) problem (2+8 disks, kernel
-> > 2.6.24), see thread:
-> > http://www.mail-archive.com/linux-ide@vger.kernel.org/msg15950.html
-> > 
-> > I tried replacing the PSU and also run the system with two 650W PSU-s,
-> > also failed. I also think that PSU shouldn't be the problem as I see they
-> > eat much less in operation than at spinup.
-> 
-> It's not that simple tho.  Some PSUs which happily spin up all the
-> drives simultaneously have problems maintaining stable operation
-> afterwards.  Anyways, if you used two separate PSUs, and didn't see any
-> change in failure pattern (ie. drives connected to certain PSU fails or
-> swapping to which PSU the board is connected alleviates the problem),
-> it's probably safe to say it's not PSU problem.
+------=_Part_13841_10618570.1204592511459
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
-Gabor,
+On Tue, Mar 4, 2008 at 6:29 AM, Bartlomiej Zolnierkiewicz
+<bzolnier@gmail.com> wrote:
+>
+>  Hi,
+>
+>
+>  On Monday 03 March 2008, Peter Teoh wrote:
+>  > On Sun, Mar 2, 2008 at 11:19 PM, Adrian Bunk <bunk@kernel.org> wrote:
+>  > > The Coverity checker spotted the following bogus change to
+>  > >  ide_register_hw() in commit 9e016a719209d95338e314b46c3012cc7feaaeec:
+>  > >
+>  > >  <--  snip  -->
+>  > >
+>  > >  ...
+>  > >  +               hwif = ide_deprecated_find_port(hw->io_ports[IDE_DATA_OFFSET]);
+>  > >  +               index = hwif->index;
+>  > >  +               if (hwif)
+>  > >  +                       goto found;
+>  > >                 for (index = 0; index < MAX_HWIFS; index++)
+>  > >  ...
+>  > >
+>  > >  <--  snip  -->
+>  > >
+>  > >  It's impossible to reach the for() loop without Oopsing before.
+>
+>  [ iff free hwif is not found (unlikely case) ]
+>
+>
+>  > >  Can you either fix this for 2.6.25 or push your patch that removes
+>  > >  ide_register_hw() for 2.6.25?
+>  > >
+>  >
+>  > My question is:
+>  >
+>  > a.   why is "retry=1", and then the do while loop always end up the
+>  > loop being one round executed only?   Why not just remove the while
+>  > loop entirely?
+>
+>  the whole ide_register_hw() is already gone in IDE tree
+>  (these patches are scheduled for 2.6.26)
+>
+>
+>  > b.   not sure if your statement above implied this, but checking for
+>  > hwif!=0 should be before index.  ???
+>  >
+>  > c.   "index = hwif->index;" should not be there, but after "found".
+>  > Is that correct?
+>
+>  Yes, could you please re-do your patch to contain:
+>
+>  - only 'hwif->index' change
+>  - proper patch description
+>  - Signed-off-by: line
+>
+>  so I could merge it?
 
-I am pretty much convinced at this point that my exceptions/resetting
-problem is due to the PSU. I've been testing different configurations
-lately and was able to get stable system powering 14 (!) drives by both
-PSUs together. The limiting factor is Amps on a single +12V rail:
-Coolermaster 750 limits single rail to 19A (6 drives @ 2.8A/drive) and
-my old Enermax 550 has 24A limit (8 drives @ 2.8A/drive). Even though
-Coolermaster 750 has 4 rails, the wiring is not optimal and only 1 rail
-is available for the hard drives...
 
-See item #8 here:
-http://www.pcpower.com/technology/myths/
+Description:
 
-I am going to try their single-rail Silencer 750, rated at 60A.
+Relocating the index to come after finding the hwif pointer.
 
-That said, I'm still puzzled with the low write performance issue.
+Thanks.
 
-Tejun,
-
-As one of the Gurus on this list, can you suggest any tweaks/settings
-to try out to improve/resolve my 17 MB/s write speed limit?
-
-I played with different PCI latencies, read FAQ topic on 32-bit
-I/O support in libata and ran out of ideas... Please help :)
-
+-- 
 Regards,
-Denys
+Peter Teoh
+
+------=_Part_13841_10618570.1204592511459
+Content-Type: text/x-patch; name=relocating_deriving_index.patch
+Content-Transfer-Encoding: base64
+X-Attachment-Id: f_fddrmdxt0
+Content-Disposition: attachment; filename=relocating_deriving_index.patch
+
+U2lnbmVkLW9mZi1ieTogUGV0ZXIgVGVvaCA8aHRtbGRldmVsb3BlckBnbWFpbC5jb20+CgotLS0g
+ZHJpdmVycy9pZGUvaWRlLmMub3JpZwkyMDA4LTAzLTA0IDA4OjI2OjExLjAwMDAwMDAwMCArMDgw
+MAorKysgZHJpdmVycy9pZGUvaWRlLmMJMjAwOC0wMy0wNCAwOTowNzo0NC4wMDAwMDAwMDAgKzA4
+MDAKQEAgLTY2Nyw3ICs2NjcsNiBAQCBpbnQgaWRlX3JlZ2lzdGVyX2h3KGh3X3JlZ3NfdCAqaHcs
+IHZvaWQgCiAKIAlkbyB7CiAJCWh3aWYgPSBpZGVfZGVwcmVjYXRlZF9maW5kX3BvcnQoaHctPmlv
+X3BvcnRzW0lERV9EQVRBX09GRlNFVF0pOwotCQlpbmRleCA9IGh3aWYtPmluZGV4OwogCQlpZiAo
+aHdpZikKIAkJCWdvdG8gZm91bmQ7CiAJCWZvciAoaW5kZXggPSAwOyBpbmRleCA8IE1BWF9IV0lG
+UzsgaW5kZXgrKykKQEAgLTY3NSw2ICs2NzQsNyBAQCBpbnQgaWRlX3JlZ2lzdGVyX2h3KGh3X3Jl
+Z3NfdCAqaHcsIHZvaWQgCiAJfSB3aGlsZSAocmV0cnktLSk7CiAJcmV0dXJuIC0xOwogZm91bmQ6
+CisJaW5kZXggPSBod2lmLT5pbmRleDsKIAlpZiAoaHdpZi0+cHJlc2VudCkKIAkJaWRlX3VucmVn
+aXN0ZXIoaW5kZXgsIDAsIDEpOwogCWVsc2UgaWYgKCFod2lmLT5ob2xkKQo=
+------=_Part_13841_10618570.1204592511459--
