@@ -1,12 +1,12 @@
 From: akpm@linux-foundation.org
-Subject: [patch 1/3] libata: isolate and rework cable logic
-Date: Tue, 04 Mar 2008 15:16:16 -0800
-Message-ID: <200803042316.m24NGG37002480@imap1.linux-foundation.org>
+Subject: [patch 3/3] pata: "I do not think it means, what you think it means."
+Date: Tue, 04 Mar 2008 15:16:17 -0800
+Message-ID: <200803042316.m24NGI7k002489@imap1.linux-foundation.org>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:58553 "EHLO
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:52858 "EHLO
 	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S933697AbYCDXRh (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 4 Mar 2008 18:17:37 -0500
+	by vger.kernel.org with ESMTP id S934935AbYCDXRf (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 4 Mar 2008 18:17:35 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: jeff@garzik.org
@@ -14,76 +14,84 @@ Cc: linux-ide@vger.kernel.org, akpm@linux-foundation.org, alan@lxorguk.ukuu.org.
 
 From: Alan Cox <alan@lxorguk.ukuu.org.uk>
 
+When masking mask out the modes that are unsupported not the ones that are
+supported.  This makes life happier.
+
+[akpm@linux-foundation.org: coding-style fixes]
 Signed-off-by: Alan Cox <alan@redhat.com>
+Cc: Jeff Garzik <jeff@garzik.org>
 Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
 ---
 
- drivers/ata/libata-core.c |   48 +++++++++++++++++++++++++++++++++---
- 1 file changed, 44 insertions(+), 4 deletions(-)
+ drivers/ata/pata_hpt366.c      |    6 +++---
+ drivers/ata/pata_hpt37x.c      |    6 +++---
+ drivers/ata/pata_serverworks.c |    2 +-
+ 3 files changed, 7 insertions(+), 7 deletions(-)
 
-diff -puN drivers/ata/libata-core.c~libata-isolate-and-rework-cable-logic drivers/ata/libata-core.c
---- a/drivers/ata/libata-core.c~libata-isolate-and-rework-cable-logic
-+++ a/drivers/ata/libata-core.c
-@@ -4274,6 +4274,49 @@ static int ata_is_40wire(struct ata_devi
- }
+diff -puN drivers/ata/pata_hpt366.c~pata-i-do-not-think-it-means-what-you-think-it-means drivers/ata/pata_hpt366.c
+--- a/drivers/ata/pata_hpt366.c~pata-i-do-not-think-it-means-what-you-think-it-means
++++ a/drivers/ata/pata_hpt366.c
+@@ -27,7 +27,7 @@
+ #include <linux/libata.h>
  
- /**
-+ *	cable_is_40wire		-	40/80/SATA decider
-+ *	@ap: port to consider
-+ *
-+ *	This function encapsulates the policy for speed management
-+ *	in one place. At the moment we don't cache the result but
-+ *	there is a good case for setting ap->cbl to the result when
-+ *	we are called with unknown cables (and figuring out if it
-+ *	impacts hotplug at all).
-+ *
-+ *	Return 1 if the cable appears to be 40 wire.
-+ */
-+
-+static int cable_is_40wire(struct ata_port *ap)
-+{
-+	struct ata_link *link;
-+	struct ata_device *dev;
-+
-+	/* If the controller thinks we are 40 wire, we are */
-+	if (ap->cbl == ATA_CBL_PATA40)
-+		return 1;
-+	/* If the controller thinks we are 80 wire, we are */
-+	if (ap->cbl == ATA_CBL_PATA80 || ap->cbl == ATA_CBL_SATA)
-+		return 0;
-+	/* If the controller doesn't know we scan
-+
-+	   - Note: We look for all 40 wire detects at this point.
-+	     Any 80 wire detect is taken to be 80 wire cable
-+	     because
-+	     - In many setups only the one drive (slave if present)
-+               will give a valid detect
-+             - If you have a non detect capable drive you don't
-+               want it to colour the choice
-+        */
-+	ata_port_for_each_link(link, ap) {
-+		ata_link_for_each_dev(dev, link) {
-+			if (!ata_is_40wire(dev))
-+				return 0;
-+		}
-+	}
-+	return 1;
-+}
-+
-+/**
-  *	ata_dev_xfermask - Compute supported xfermask of the given device
-  *	@dev: Device to compute xfermask for
-  *
-@@ -4341,10 +4384,7 @@ static void ata_dev_xfermask(struct ata_
- 	 */
- 	if (xfer_mask & (0xF8 << ATA_SHIFT_UDMA))
- 		/* UDMA/44 or higher would be available */
--		if ((ap->cbl == ATA_CBL_PATA40) ||
--		    (ata_is_40wire(dev) &&
--		    (ap->cbl == ATA_CBL_PATA_UNK ||
--		     ap->cbl == ATA_CBL_PATA80))) {
-+		if (cable_is_40wire(ap)) {
- 			ata_dev_printk(dev, KERN_WARNING,
- 				 "limited to UDMA/33 due to 40-wire cable\n");
- 			xfer_mask &= ~(0xF8 << ATA_SHIFT_UDMA);
+ #define DRV_NAME	"pata_hpt366"
+-#define DRV_VERSION	"0.6.1"
++#define DRV_VERSION	"0.6.2"
+ 
+ struct hpt_clock {
+ 	u8	xfer_speed;
+@@ -180,9 +180,9 @@ static unsigned long hpt366_filter(struc
+ 		if (hpt_dma_blacklisted(adev, "UDMA",  bad_ata33))
+ 			mask &= ~ATA_MASK_UDMA;
+ 		if (hpt_dma_blacklisted(adev, "UDMA3", bad_ata66_3))
+-			mask &= ~(0x07 << ATA_SHIFT_UDMA);
++			mask &= ~(0xF8 << ATA_SHIFT_UDMA);
+ 		if (hpt_dma_blacklisted(adev, "UDMA4", bad_ata66_4))
+-			mask &= ~(0x0F << ATA_SHIFT_UDMA);
++			mask &= ~(0xF0 << ATA_SHIFT_UDMA);
+ 	}
+ 	return ata_pci_default_filter(adev, mask);
+ }
+diff -puN drivers/ata/pata_hpt37x.c~pata-i-do-not-think-it-means-what-you-think-it-means drivers/ata/pata_hpt37x.c
+--- a/drivers/ata/pata_hpt37x.c~pata-i-do-not-think-it-means-what-you-think-it-means
++++ a/drivers/ata/pata_hpt37x.c
+@@ -24,7 +24,7 @@
+ #include <linux/libata.h>
+ 
+ #define DRV_NAME	"pata_hpt37x"
+-#define DRV_VERSION	"0.6.9"
++#define DRV_VERSION	"0.6.11"
+ 
+ struct hpt_clock {
+ 	u8	xfer_speed;
+@@ -281,7 +281,7 @@ static unsigned long hpt370_filter(struc
+ 		if (hpt_dma_blacklisted(adev, "UDMA", bad_ata33))
+ 			mask &= ~ATA_MASK_UDMA;
+ 		if (hpt_dma_blacklisted(adev, "UDMA100", bad_ata100_5))
+-			mask &= ~(0x1F << ATA_SHIFT_UDMA);
++			mask &= ~(0xE0 << ATA_SHIFT_UDMA);
+ 	}
+ 	return ata_pci_default_filter(adev, mask);
+ }
+@@ -297,7 +297,7 @@ static unsigned long hpt370a_filter(stru
+ {
+ 	if (adev->class == ATA_DEV_ATA) {
+ 		if (hpt_dma_blacklisted(adev, "UDMA100", bad_ata100_5))
+-			mask &= ~ (0x1F << ATA_SHIFT_UDMA);
++			mask &= ~(0xE0 << ATA_SHIFT_UDMA);
+ 	}
+ 	return ata_pci_default_filter(adev, mask);
+ }
+diff -puN drivers/ata/pata_serverworks.c~pata-i-do-not-think-it-means-what-you-think-it-means drivers/ata/pata_serverworks.c
+--- a/drivers/ata/pata_serverworks.c~pata-i-do-not-think-it-means-what-you-think-it-means
++++ a/drivers/ata/pata_serverworks.c
+@@ -226,7 +226,7 @@ static unsigned long serverworks_csb_fil
+ 
+ 	for (i = 0; (p = csb_bad_ata100[i]) != NULL; i++) {
+ 		if (!strcmp(p, model_num))
+-			mask &= ~(0x1F << ATA_SHIFT_UDMA);
++			mask &= ~(0xE0 << ATA_SHIFT_UDMA);
+ 	}
+ 	return ata_pci_default_filter(adev, mask);
+ }
 _
