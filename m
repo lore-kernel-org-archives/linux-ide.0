@@ -1,113 +1,84 @@
-From: "Peter Teoh" <htmldeveloper@gmail.com>
-Subject: Re: ide_register_hw(): buggy code
-Date: Tue, 4 Mar 2008 09:01:51 +0800
-Message-ID: <804dabb00803031701g368a7082q248cc2b05e762fa1@mail.gmail.com>
-References: <20080302151924.GJ25835@cs181133002.pp.htv.fi>
-	 <804dabb00803030803v1dbbb33fh6779b8c4d072a908@mail.gmail.com>
-	 <200803032329.32020.bzolnier@gmail.com>
+From: FUJITA Tomonori <tomof@acm.org>
+Subject: Re: [PATCH] block: fix residual byte count handling
+Date: Tue, 4 Mar 2008 11:11:15 +0900
+Message-ID: <20080304111056X.tomof@acm.org>
+References: <47CC09B6.6090709@gmail.com>
+	<20080303235207S.tomof@acm.org>
+	<47CC7F3D.4010605@gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
-	boundary="----=_Part_13841_10618570.1204592511459"
+Content-Type: Text/Plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wf-out-1314.google.com ([209.85.200.173]:55230 "EHLO
-	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751976AbYCDBBx (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 3 Mar 2008 20:01:53 -0500
-Received: by wf-out-1314.google.com with SMTP id 28so546545wff.4
-        for <linux-ide@vger.kernel.org>; Mon, 03 Mar 2008 17:01:51 -0800 (PST)
-In-Reply-To: <200803032329.32020.bzolnier@gmail.com>
+Received: from mo10.iij4u.or.jp ([210.138.174.78]:33738 "EHLO mo10.iij4u.or.jp"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752497AbYCDCM1 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 3 Mar 2008 21:12:27 -0500
+In-Reply-To: <47CC7F3D.4010605@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: Adrian Bunk <bunk@kernel.org>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: htejun@gmail.com
+Cc: tomof@acm.org, jens.axboe@oracle.com, fujita.tomonori@lab.ntt.co.jp, James.Bottomley@HansenPartnership.com, efault@gmx.de, akpm@linux-foundation.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, jgarzik@pobox.com
 
-------=_Part_13841_10618570.1204592511459
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+On Tue, 04 Mar 2008 07:44:13 +0900
+Tejun Heo <htejun@gmail.com> wrote:
 
-On Tue, Mar 4, 2008 at 6:29 AM, Bartlomiej Zolnierkiewicz
-<bzolnier@gmail.com> wrote:
->
->  Hi,
->
->
->  On Monday 03 March 2008, Peter Teoh wrote:
->  > On Sun, Mar 2, 2008 at 11:19 PM, Adrian Bunk <bunk@kernel.org> wrote:
->  > > The Coverity checker spotted the following bogus change to
->  > >  ide_register_hw() in commit 9e016a719209d95338e314b46c3012cc7feaaeec:
->  > >
->  > >  <--  snip  -->
->  > >
->  > >  ...
->  > >  +               hwif = ide_deprecated_find_port(hw->io_ports[IDE_DATA_OFFSET]);
->  > >  +               index = hwif->index;
->  > >  +               if (hwif)
->  > >  +                       goto found;
->  > >                 for (index = 0; index < MAX_HWIFS; index++)
->  > >  ...
->  > >
->  > >  <--  snip  -->
->  > >
->  > >  It's impossible to reach the for() loop without Oopsing before.
->
->  [ iff free hwif is not found (unlikely case) ]
->
->
->  > >  Can you either fix this for 2.6.25 or push your patch that removes
->  > >  ide_register_hw() for 2.6.25?
->  > >
->  >
->  > My question is:
->  >
->  > a.   why is "retry=1", and then the do while loop always end up the
->  > loop being one round executed only?   Why not just remove the while
->  > loop entirely?
->
->  the whole ide_register_hw() is already gone in IDE tree
->  (these patches are scheduled for 2.6.26)
->
->
->  > b.   not sure if your statement above implied this, but checking for
->  > hwif!=0 should be before index.  ???
->  >
->  > c.   "index = hwif->index;" should not be there, but after "found".
->  > Is that correct?
->
->  Yes, could you please re-do your patch to contain:
->
->  - only 'hwif->index' change
->  - proper patch description
->  - Signed-off-by: line
->
->  so I could merge it?
+> FUJITA Tomonori wrote:
+> > On Mon, 03 Mar 2008 23:22:46 +0900
+> > Tejun Heo <htejun@gmail.com> wrote:
+> > 
+> >> FUJITA Tomonori wrote:
+> >>>> At the end of blk_rq_map_user() together with data_len / extra_len
+> >>>> mangling or were you talking about James' original patch?
+> >>> With my patch, at the end of blk_rq_map_user, we have:
+> >>>
+> >>> 	if (len & queue_dma_alignment(q)) {
+> >>> 		unsigned int pad_len = (queue_dma_alignment(q) & ~len) + 1;
+> >>>
+> >>> 		rq->extra_len += pad_len;
+> >>> 	}
+> >>>
+> >>>
+> >>> So no change as compared with 2.6.24?
+> >> Oh.. you killed sg list manipulation.  Many controllers do allow odd
+> >> bytes as the last sg entry but not all.  Also, if you append drain
+> > 
+> > Until 2.6.24, these drivers have taken care about the issue by
+> > themselves. There is no change as compared with 2.6.24.
+> 
+> Yeah, libata did its own padding and needed to add draining.  Private
+> implementation was complex as hell and James suggested moving them to
+> block layer.  Are you suggesting moving them back to drivers?
+
+No, I'm not. I've been working on the IOMMUs to remove such
+workarounds in LLDs.
+
+What drivers need to do on this is just adding a padding length, that
+is, drivers don't need to change the structure of the sg list (like
+splitting a sg entry), right? And it doesn't break the SAS drivers
+that support SATAPI, does it?
+
+But I agree that drivers want to get a complete sglist so I'm fine
+with adjusting sglist entries in the block layer with your secode
+patch (separate out padding from alignment). As we discussed, I'm fine
+with breaking sum(sg) == rq->data_len as long as rq->data_len means
+the true data length.
 
 
-Description:
+> >> buffer after it, it ends up with unaligned sg entry in the middle and
+> >> rq->data_len + rq->extra_len will overrun the sg entry after the drain
+> >> page which is really dangerous.
+> > 
+> > The drivers know that they use drain buffer. They can take care about
+> > themselves on this too. If we want to do explicitly, we could have
+> > rq->pad_len and rq->drain_len instead of rq->extra_len, though I think
+> > that we are fine without these values because these drivers already
+> > tell the block layer what they want and know that the block layer
+> > gives it.
+> 
+> So, if a driver has requested aligning and draining, the driver should
+> extend the sg entry before the last one by the alignment if draining was
+> used for the request and extent the last sg if the draining wasn't used.
+>  I'd rather just implement them in the drivers.
 
-Relocating the index to come after finding the hwif pointer.
-
-Thanks.
-
--- 
-Regards,
-Peter Teoh
-
-------=_Part_13841_10618570.1204592511459
-Content-Type: text/x-patch; name=relocating_deriving_index.patch
-Content-Transfer-Encoding: base64
-X-Attachment-Id: f_fddrmdxt0
-Content-Disposition: attachment; filename=relocating_deriving_index.patch
-
-U2lnbmVkLW9mZi1ieTogUGV0ZXIgVGVvaCA8aHRtbGRldmVsb3BlckBnbWFpbC5jb20+CgotLS0g
-ZHJpdmVycy9pZGUvaWRlLmMub3JpZwkyMDA4LTAzLTA0IDA4OjI2OjExLjAwMDAwMDAwMCArMDgw
-MAorKysgZHJpdmVycy9pZGUvaWRlLmMJMjAwOC0wMy0wNCAwOTowNzo0NC4wMDAwMDAwMDAgKzA4
-MDAKQEAgLTY2Nyw3ICs2NjcsNiBAQCBpbnQgaWRlX3JlZ2lzdGVyX2h3KGh3X3JlZ3NfdCAqaHcs
-IHZvaWQgCiAKIAlkbyB7CiAJCWh3aWYgPSBpZGVfZGVwcmVjYXRlZF9maW5kX3BvcnQoaHctPmlv
-X3BvcnRzW0lERV9EQVRBX09GRlNFVF0pOwotCQlpbmRleCA9IGh3aWYtPmluZGV4OwogCQlpZiAo
-aHdpZikKIAkJCWdvdG8gZm91bmQ7CiAJCWZvciAoaW5kZXggPSAwOyBpbmRleCA8IE1BWF9IV0lG
-UzsgaW5kZXgrKykKQEAgLTY3NSw2ICs2NzQsNyBAQCBpbnQgaWRlX3JlZ2lzdGVyX2h3KGh3X3Jl
-Z3NfdCAqaHcsIHZvaWQgCiAJfSB3aGlsZSAocmV0cnktLSk7CiAJcmV0dXJuIC0xOwogZm91bmQ6
-CisJaW5kZXggPSBod2lmLT5pbmRleDsKIAlpZiAoaHdpZi0+cHJlc2VudCkKIAkJaWRlX3VucmVn
-aXN0ZXIoaW5kZXgsIDAsIDEpOwogCWVsc2UgaWYgKCFod2lmLT5ob2xkKQo=
-------=_Part_13841_10618570.1204592511459--
+The block layer extends the sg entry? The drivers just adjust
+sg->length?
