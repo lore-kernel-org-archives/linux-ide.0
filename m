@@ -1,75 +1,55 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH] blk: missing add of padded bytes to io completion byte
-	 count
-Date: Wed, 05 Mar 2008 09:21:24 -0600
-Message-ID: <1204730484.3047.10.camel@localhost.localdomain>
-References: <47CD7C05.1080707@gmail.com> <20080305041914V.tomof@acm.org>
-	 <47CDDC31.4070806@gmail.com>
-	 <20080305092619Y.fujita.tomonori@lab.ntt.co.jp>
-	 <47CE72EF.7050302@panasas.com> <20080305123317.GI6704@kernel.dk>
-	 <47CE9634.6040501@panasas.com> <20080305124857.GJ6704@kernel.dk>
-	 <47CEA40F.6050903@gmail.com>  <20080305135121.GK6704@kernel.dk>
+From: "Bartlomiej Zolnierkiewicz" <bzolnier@gmail.com>
+Subject: Re: [patch 3/3] pata: "I do not think it means, what you think it means."
+Date: Wed, 5 Mar 2008 17:13:49 +0100
+Message-ID: <58cb370e0803050813q6cb1082cy7e540a77993f3dd6@mail.gmail.com>
+References: <200803042316.m24NGI7k002489@imap1.linux-foundation.org>
+	 <20080304173058.7679b7c8.akpm@linux-foundation.org>
+	 <20080305115610.397b3ea3@the-village.bc.nu>
+	 <200803051421.14167.bzolnier@gmail.com>
+	 <20080305143949.1f56017c@the-village.bc.nu>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:48320 "EHLO
-	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752790AbYCEPV3 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 5 Mar 2008 10:21:29 -0500
-In-Reply-To: <20080305135121.GK6704@kernel.dk>
+Received: from fk-out-0910.google.com ([209.85.128.185]:26370 "EHLO
+	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756144AbYCEQNw (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 5 Mar 2008 11:13:52 -0500
+Received: by fk-out-0910.google.com with SMTP id z23so1545088fkz.5
+        for <linux-ide@vger.kernel.org>; Wed, 05 Mar 2008 08:13:50 -0800 (PST)
+In-Reply-To: <20080305143949.1f56017c@the-village.bc.nu>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jens Axboe <jens.axboe@oracle.com>
-Cc: Tejun Heo <htejun@gmail.com>, Boaz Harrosh <bharrosh@panasas.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Mike Galbraith <efault@gmx.de>, tomof@acm.org, akpm@linux-foundation.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, jgarzik@pobox.com, bzolnier@gmail.com
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: Andrew Morton <akpm@linux-foundation.org>, jeff@garzik.org, linux-ide@vger.kernel.org, alan@redhat.com, linux-kernel@vger.kernel.org
 
-On Wed, 2008-03-05 at 14:51 +0100, Jens Axboe wrote:
-> On Wed, Mar 05 2008, Tejun Heo wrote:
-> > This is getting insanely subtle.  Let's say there's PIO driver which
-> > transfer certain sized chunks at a time and completes request partially
-> > after completing each chunk and the driver uses draining to eat up
-> > whatever excess data, which seems like a legit use case to me.  But it
-> > won't work because __end_that_request_first() will terminate when it
-> > reaches reaches the 'true' transfer size.  That's just broken API.  FWIW,
-> > 
-> > Nacked-by: Tejun Heo <htejun@gmail.com>
-> 
-> Yeah, I think I may have gone a bit overboard in applying this so
-> quickly. It's just not a good interface, silently adding the extra
-> length if asked to complete more. It may even happen right now, for a
-> driver that does no padding (it probably wont do any harm here either,
-> but still).
-> 
-> I'll try and see if I can come up with something cleaner.
-> 
-> My basic design paradigm for this is that the _driver_ (or mid layer, if
-> SCSI wants to handle it) should care about the padding. So make it easy
-> for them to pad, but have it 'unrolled' by completion time. We should
-> NOT need any extra_len checks or additions in the block/ directory,
-> period.
+On Wed, Mar 5, 2008 at 3:39 PM, Alan Cox <alan@lxorguk.ukuu.org.uk> wrote:
+> > There is strange coincidence with being on the blacklist and FIFO corruption.
+>  >
+>  > https://bugzilla.redhat.com/show_bug.cgi?id=433557
+>  >
+>  > Bugzilla Bug 433557: Data corrupion with Fedora8 on HPT370 disk controller (Abit BX133 mobo)
+>  >
+>  > IBM-DTLA-307030 is on the blacklist....
+>
+>  I wish it was more than a co-incidence but the trace shows it dropped
+>  speed as expected.
 
-Right, that's why my original proposal was to do nothing for padding
-(other than ensure the driver could adjust the length if it wanted to)
-and to add an extra element always for draining, which the driver could
-ignore.  It basically pushed the use paradigm onto the driver.
+the trace shows only ST380011A (ata1) dropping speed...
 
-If we want the use paradigm shared between block and driver, then I
-think the best approach is to keep all the bios the same (so not adjust
-for padding), but do adjust in the blk_rq_map_sg().  That way we have
-the padding and draining unwind information by comparing with the bio.
+I would suggest that you ask Wojciech to test the patch
+(unless it has already happend).
 
-For passing on to the driver:  req->data_len still needs to be the input
-(bio) lenght.  req->extra_len can record how much padding and draining
-was added.  The completion length also needs to be in terms of the true
-(bio) length.  Now, here's the subtlety.  Because of the way transfers
-work, we expect the padded length not to contribute to overrun (because
-it represents transfers that were successfully completed at the correct
-length), but we *do* expect drain usage to be recorded as overrun.
-However, if we keep the bios intact, we have all the information to make
-this determination in the block layer at completion time, with the
-expectation that the lower layers report the exact amount they
-transferred.
+>  > for OSB4 yes but...
+>  >
+>  > /* Seagate Barracuda ATA IV Family drives in UDMA mode 5
+>  >  * can overrun their FIFOs when used with the CSB5 */
+>
+>  Which gives you a CRC error according to my notes
 
-James
+I have no documentation / errata for ServerWorks chipsets (everything is
+NDA-ed) or the hardware in question so I'll trust your opinion on this.
 
-
+Thanks,
+Bart
