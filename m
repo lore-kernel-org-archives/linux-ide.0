@@ -1,96 +1,134 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: sata_sil24 stability and performance
-Date: Wed, 05 Mar 2008 17:11:31 +0900
-Message-ID: <47CE55B3.6070701@gmail.com>
-References: <20080219020916.GA29902@denix.org> <20080219043659.GA11936@jim.sh> <47BAF677.5000602@rtr.ca> <20080302061453.GA7291@denix.org> <005d01c87c4c$0d01f550$4d0fa8c0@M2007> <47CC9197.9050609@gmail.com> <20080304002215.GA13317@denix.org> <47CCC1C6.5010600@gmail.com> <20080304062942.GA14335@denix.org>
+From: Boaz Harrosh <bharrosh@panasas.com>
+Subject: [PATCH] blk: missing add of padded bytes to io completion byte count
+Date: Wed, 05 Mar 2008 12:16:15 +0200
+Message-ID: <47CE72EF.7050302@panasas.com>
+References: <47CD7C05.1080707@gmail.com>	<20080305041914V.tomof@acm.org>	<47CDDC31.4070806@gmail.com> <20080305092619Y.fujita.tomonori@lab.ntt.co.jp>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.176]:26227 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751455AbYCEILu (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 5 Mar 2008 03:11:50 -0500
-Received: by wa-out-1112.google.com with SMTP id v27so1500229wah.23
-        for <linux-ide@vger.kernel.org>; Wed, 05 Mar 2008 00:11:47 -0800 (PST)
-In-Reply-To: <20080304062942.GA14335@denix.org>
+Received: from bzq-219-195-70.pop.bezeqint.net ([62.219.195.70]:48087 "EHLO
+	bh-buildlin2.bhalevy.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1761529AbYCEK1V (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 5 Mar 2008 05:27:21 -0500
+In-Reply-To: <20080305092619Y.fujita.tomonori@lab.ntt.co.jp>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Denys Dmytriyenko <denis@denix.org>
-Cc: Gabor FUNK <FUNK.Gabor@hunetkft.hu>, linux-ide@vger.kernel.org, Jim Paris <jim@jtan.com>, Mark Lord <liml@rtr.ca>
+To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Tejun Heo <htejun@gmail.com>, Mike Galbraith <efault@gmx.de>, jens.axboe@oracle.com, James.Bottomley@HansenPartnership.com
+Cc: tomof@acm.org, akpm@linux-foundation.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, jgarzik@pobox.com, bzolnier@gmail.com
 
-Denys Dmytriyenko wrote:
-> I've got the first exception (but not reset) in several days running in
-> the above configuration:
+On Wed, Mar 05 2008 at 2:26 +0200, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp> wrote:
+> On Wed, 05 Mar 2008 08:33:05 +0900
+> Tejun Heo <htejun@gmail.com> wrote:
 > 
-> Mar  3 19:09:04 [kernel] ata1.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x0
-> Mar  3 19:09:04 [kernel] ata1.00: irq_stat 0x00020002, device error via D2H FIS
-> Mar  3 19:09:04 [kernel] ata1.00: cmd ef/42:fe:00:00:00/00:00:00:00:00/40 tag 0 cdb 0x0 data 0
-> Mar  3 19:09:04 [kernel]          res 51/04:fe:00:00:00/00:00:00:00:00/40 Emask 0x1 (device error)
-> Mar  3 19:09:04 [kernel] ata1.00: configured for UDMA/100
-> Mar  3 19:09:04 [kernel] ata1: EH complete
-> Mar  3 19:09:04 [kernel] sd 0:0:0:0: [sda] 976773168 512-byte hardware sectors (500108 MB)
-> Mar  3 19:09:04 [kernel] sd 0:0:0:0: [sda] Write Protect is off
-> Mar  3 19:09:04 [kernel] sd 0:0:0:0: [sda] Mode Sense: 00 3a 00 00
-> Mar  3 19:09:04 [kernel] sd 0:0:0:0: [sda] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+>> FUJITA Tomonori wrote:
+>>> Hmm, does SCSI mid-layer need to care about how many bytes the block
+>>> layer allocates? I don't think that extra_len is NOT good_bytes.
+>>>
+>>> I think that the block layer had better take care about it (fix
+>>> __end_that_request_first?).
+>> Yeah, probably calling completion functions w/o bytes count is the right
+>> thing to do but what I was talking about was what could break when the
+>> semantics of rq->data_len changed.  If we keep rq->data_len() ==
+>> sum(sg), we keep it business as usual for all the rest except for the
+>> device application layer if we don't we do the reverse and SCSI midlayer
+>> completion was a good example, I think.
 > 
-> Is it something I should be worried about?
-
-That's the drive rejecting acoustic setting command probably because the
-drive doesn't support it.  Nothing to worry about.  More recent kernels
-won't whine about those anymore.
-
->>> As one of the Gurus on this list, can you suggest any tweaks/settings
->>> to try out to improve/resolve my 17 MB/s write speed limit?
->> How did you test?  W/ dd?  hdparm?
+> sglist is a low-level I/O representation for device drivers. SCSI
+> midlayer should not care about sglist. We should not fix SCSI midlayer
+> for rq->data_len != sum(sg) change (so I can't agree with your
+> diagrams in another mail).
 > 
-> # hdparm -t /dev/sda
+> When if we change a rule, we need to fix something.
 > 
-> /dev/sda:
->  Timing buffered disk reads:  170 MB in  3.03 seconds =  56.16 MB/sec
-
-This doesn't look too bad.
-
-> # dd if=/dev/zero of=file bs=100M count=20
-> 20+0 records in
-> 20+0 records out
-> 2097152000 bytes (2.1 GB) copied, 117.053 s, 17.9 MB/s
+> If we keep rq->data_len == sum(sg), we need to fix the device
+> application layer. If we keep rq->data_len == the true data length, we
+> need to fix the low-level drivers.
 > 
-> # dd if=file of=file1 bs=100M count=20
-> 20+0 records in
-> 20+0 records out
-> 2097152000 bytes (2.1 GB) copied, 161.721 s, 13.0 MB/s
+> Now I'm fine with the commit e97a294ef6938512b655b1abf17656cf2b26f709
+> since we are in -rc stages. But I plan to send a patch to revert it
+> and fix this issue in the block layer. I'd like to test it in -mm for
+> a while.
 
-Write seems awfully sluggish.  Does turning off NCQ help?  You can turn
-off NCQ by echoing 1 to /sys/block/sdX/device/queue_depth.  Also, which
-kernel is this test result from?
+No this commit is a serious bug, and the only fix is like you suggested
+in __end_that_request_first. This is because it breaks that scsi-ml loop
+where scsi_bufflen() can be less then blk_rq_bytes(). In that case this 
+commit is a data corruption.
 
-> # dd if=file of=/dev/null bs=100M count=20
-> 20+0 records in
-> 20+0 records out
-> 2097152000 bytes (2.1 GB) copied, 34.6141 s, 60.6 MB/s
-
-Read looks okay.
-
-> A similar drive in an ICH7 box shows more consistent results:
+> Only sglist stuff in SCSI midlayer is scsi_req_map_sg now. As you
+> know, we really want to remove it.
 > 
-> # hdparm -t /dev/sda
 > 
-> /dev/sda:
->  Timing buffered disk reads:  182 MB in  3.01 seconds =  60.48 MB/sec
+>> Things going the other way is fine with me but I at least want to hear a
+>> valid rationale.  Till now all I got is "because that's the true size"
+>> which doesn't really make much sense to me.
 > 
-> # dd if=/dev/zero of=file bs=100M count=100
-> 100+0 records in
-> 100+0 records out
-> 10485760000 bytes (10 GB) copied, 242.908 s, 43.2 MB/s
-> 
-> # dd if=file of=/dev/null bs=100M count=100
-> 100+0 records in
-> 100+0 records out
-> 10485760000 bytes (10 GB) copied, 211.132 s, 49.7 MB/s
+> Most of users of request structure care about only the real data
+> length, don't care about padding and drain length. Why do they bother
+> to use a helper function to get the real data length?
+> --
 
-Hmmm... indeed.  Same kernel version?  Can you post "hdparm -I" results
-of both drives?
+Submitted is the right fix to this problem, as pointed out by TOMO.
+Please test it solves the CD burning problem.
+(The patch includes the revert of commit e97a294e)
+---
+From: Boaz Harrosh <bharrosh@panasas.com>
+Date: Wed, 5 Mar 2008 12:07:12 +0200
+Subject: [PATCH] blk: missing add of padded bytes to io completion byte count
 
+the commit e97a294ef6938512b655b1abf17656cf2b26f709 was very wrong. This is
+because scsi-ml supports the ability to split a request into smaller chunks,
+in which case scsi_bufflen() is smaller then request length. Then at completion
+time the remainder can be issued as a new scsi command. In that case the above
+commit is a data corruption.
+
+Also in this fix all users of block layer are taken care of, and not only
+scsi devices.
+
+Signed-off-by: Boaz Harrosh <bharrosh@panasas.com>
+Signed-off-by: Benny Halevy <bhalevy@panasas.com>
+---
+ block/blk-core.c    |    4 ++++
+ drivers/scsi/scsi.c |    2 +-
+ 2 files changed, 5 insertions(+), 1 deletions(-)
+
+diff --git a/block/blk-core.c b/block/blk-core.c
+index 2a438a9..37fcccc 100644
+--- a/block/blk-core.c
++++ b/block/blk-core.c
+@@ -1549,6 +1549,9 @@ static int __end_that_request_first(struct request *req, int error,
+ 			     nr_bytes >> 9, req->sector);
+ 	}
+ 
++	if (nr_bytes >= blk_rq_bytes(req))
++		nr_bytes += req->extra_len;
++
+ 	total_bytes = bio_nbytes = 0;
+ 	while ((bio = req->bio) != NULL) {
+ 		int nbytes;
+@@ -1616,6 +1619,7 @@ static int __end_that_request_first(struct request *req, int error,
+ 	if (!req->bio)
+ 		return 0;
+ 
++	BUG_ON(total_bytes >= blk_rq_bytes(req));
+ 	/*
+ 	 * if the request wasn't completed, update state
+ 	 */
+diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
+index e5c6f6a..fecba05 100644
+--- a/drivers/scsi/scsi.c
++++ b/drivers/scsi/scsi.c
+@@ -757,7 +757,7 @@ void scsi_finish_command(struct scsi_cmnd *cmd)
+ 				"Notifying upper driver of completion "
+ 				"(result %x)\n", cmd->result));
+ 
+-	good_bytes = scsi_bufflen(cmd) + cmd->request->extra_len;
++	good_bytes = scsi_bufflen(cmd);
+         if (cmd->request->cmd_type != REQ_TYPE_BLOCK_PC) {
+ 		drv = scsi_cmd_to_driver(cmd);
+ 		if (drv->done)
 -- 
-tejun
+1.5.3.3
+
+
+
