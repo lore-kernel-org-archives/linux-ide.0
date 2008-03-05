@@ -1,71 +1,104 @@
-From: Zan Lynx <zlynx@acm.org>
-Subject: Re: [patch 3/3] pata: "I do not think it means, what you think it
-	means."
-Date: Wed, 05 Mar 2008 11:33:53 -0700
-Message-ID: <1204742033.6408.37.camel@localhost>
-References: <200803042316.m24NGI7k002489@imap1.linux-foundation.org>
-	 <20080304173058.7679b7c8.akpm@linux-foundation.org>
-	 <20080305115610.397b3ea3@the-village.bc.nu>
-	 <200803051421.14167.bzolnier@gmail.com>
-	 <m3ir015du5.fsf@maximus.localdomain>
-	 <58cb370e0803050846t7dbd65d6ocfec7ca5e93aa6db@mail.gmail.com>
-	 <m3ejap5cvz.fsf@maximus.localdomain>
-	 <58cb370e0803050922p7695771cq393120ed5906efb7@mail.gmail.com>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: [PATCH 3/3] ide: remove ->cds field from ide_hwif_t
+Date: Thu, 6 Mar 2008 00:02:45 +0100
+Message-ID: <200803060002.45507.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-fbh5dxq7PBazqw0zVNmd"
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from threatwall.zlynx.org ([199.45.143.218]:33778 "EHLO zlynx.org"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751976AbYCESeY (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 5 Mar 2008 13:34:24 -0500
-In-Reply-To: <58cb370e0803050922p7695771cq393120ed5906efb7@mail.gmail.com>
+Received: from ug-out-1314.google.com ([66.249.92.172]:55897 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758810AbYCEWwK (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 5 Mar 2008 17:52:10 -0500
+Received: by ug-out-1314.google.com with SMTP id z38so3517410ugc.16
+        for <linux-ide@vger.kernel.org>; Wed, 05 Mar 2008 14:52:09 -0800 (PST)
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: Krzysztof Halasa <khc@pm.waw.pl>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Andrew Morton <akpm@linux-foundation.org>, jeff@garzik.org, linux-ide@vger.kernel.org, alan@redhat.com, linux-kernel@vger.kernel.org
+To: linux-ide@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
 
+* Use hwif->name instead of cds->name in ide_allocate_dma_engine().
 
---=-fbh5dxq7PBazqw0zVNmd
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+* Use pci_name(dev) instead of cds->name in init_dma_pdc202xx().
 
+* Remove no longer needed ->cds field from ide_hwif_t.
 
-On Wed, 2008-03-05 at 18:22 +0100, Bartlomiej Zolnierkiewicz wrote:
-> On Wed, Mar 5, 2008 at 5:55 PM, Krzysztof Halasa <khc@pm.waw.pl> wrote:
-> > "Bartlomiej Zolnierkiewicz" <bzolnier@gmail.com> writes:
-> >
-> >
-> > > [ Actually, I'm not surprised as we are getting patches/reports for m=
-uch
-> >  >   older/buggier hardware...  After all we are doing Linux not some o=
-ther
-> >  >   OS whose every release obsoletes the old hardware. ;-) ]
-> >
-> >  It isn't just about old/buggy hardware (personally I'm using much
-> >  older items). The DTLA disks had "rather" short MTBF, with something
-> >  like 30% returns in the first year after purchase, according to a
-> >  friendly distributor. Despite firmware upgrades, they were unfixable.
->=20
-> Ah, you meant that it was a DeathStar drive... well, a lucky survivor...
+There should be no functional changes caused by this patch.
 
-In my experience what they needed was proper cooling.  I have a 3ware
-RAID-5 array of 4 120 GB DeskStar drives still working.  In a nice RAID
-enclosure with fans, not tucked next to an overclocked video card and
-the power supply.
---=20
-Zan Lynx <zlynx@acm.org>
+Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+---
+ drivers/ide/ide-dma.c          |    2 +-
+ drivers/ide/pci/pdc202xx_old.c |    5 +++--
+ drivers/ide/setup-pci.c        |    1 -
+ include/linux/ide.h            |    2 --
+ 4 files changed, 4 insertions(+), 6 deletions(-)
 
---=-fbh5dxq7PBazqw0zVNmd
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.7 (GNU/Linux)
-
-iD8DBQBHzueRolqWs/Y4NLwRAoRlAJ9TsH/GuNS7piBUtbOkcLH0YKnKoACglXYZ
-U7PUdSAr5/DqvfuG4HMMs54=
-=QYWQ
------END PGP SIGNATURE-----
-
---=-fbh5dxq7PBazqw0zVNmd--
-
+Index: b/drivers/ide/ide-dma.c
+===================================================================
+--- a/drivers/ide/ide-dma.c
++++ b/drivers/ide/ide-dma.c
+@@ -833,7 +833,7 @@ static int ide_allocate_dma_engine(ide_h
+ 		return 0;
+ 
+ 	printk(KERN_ERR "%s: -- Error, unable to allocate DMA table.\n",
+-	       hwif->cds->name);
++			hwif->name);
+ 
+ 	return 1;
+ }
+Index: b/drivers/ide/pci/pdc202xx_old.c
+===================================================================
+--- a/drivers/ide/pci/pdc202xx_old.c
++++ b/drivers/ide/pci/pdc202xx_old.c
+@@ -288,6 +288,7 @@ static void __devinit init_hwif_pdc202xx
+ 
+ static void __devinit init_dma_pdc202xx(ide_hwif_t *hwif, unsigned long dmabase)
+ {
++	struct pci_dev *dev = to_pci_dev(hwif->dev);
+ 	u8 udma_speed_flag = 0, primary_mode = 0, secondary_mode = 0;
+ 
+ 	if (hwif->channel) {
+@@ -300,14 +301,14 @@ static void __devinit init_dma_pdc202xx(
+ 	secondary_mode	= inb(dmabase | 0x1b);
+ 	printk(KERN_INFO "%s: (U)DMA Burst Bit %sABLED " \
+ 		"Primary %s Mode " \
+-		"Secondary %s Mode.\n", hwif->cds->name,
++		"Secondary %s Mode.\n", pci_name(dev),
+ 		(udma_speed_flag & 1) ? "EN" : "DIS",
+ 		(primary_mode & 1) ? "MASTER" : "PCI",
+ 		(secondary_mode & 1) ? "MASTER" : "PCI" );
+ 
+ 	if (!(udma_speed_flag & 1)) {
+ 		printk(KERN_INFO "%s: FORCING BURST BIT 0x%02x->0x%02x ",
+-			hwif->cds->name, udma_speed_flag,
++			pci_name(dev), udma_speed_flag,
+ 			(udma_speed_flag|1));
+ 		outb(udma_speed_flag | 1, dmabase | 0x1f);
+ 		printk("%sACTIVE\n", (inb(dmabase | 0x1f) & 1) ? "" : "IN");
+Index: b/drivers/ide/setup-pci.c
+===================================================================
+--- a/drivers/ide/setup-pci.c
++++ b/drivers/ide/setup-pci.c
+@@ -321,7 +321,6 @@ static ide_hwif_t *ide_hwif_configure(st
+ 	ide_init_port_hw(hwif, &hw);
+ 
+ 	hwif->dev = &dev->dev;
+-	hwif->cds = d;
+ 
+ 	return hwif;
+ }
+Index: b/include/linux/ide.h
+===================================================================
+--- a/include/linux/ide.h
++++ b/include/linux/ide.h
+@@ -447,8 +447,6 @@ typedef struct hwif_s {
+ 
+ 	struct device *dev;
+ 
+-	const struct ide_port_info *cds;	/* chipset device struct */
+-
+ 	ide_ack_intr_t *ack_intr;
+ 
+ 	void (*rw_disk)(ide_drive_t *, struct request *);
