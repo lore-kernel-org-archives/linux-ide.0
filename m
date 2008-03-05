@@ -1,64 +1,118 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCH] block: fix residual byte count handling
-Date: Wed, 05 Mar 2008 09:44:01 +0900
-Message-ID: <47CDECD1.6070601@gmail.com>
-References: <47CD7C05.1080707@gmail.com>	<20080305041914V.tomof@acm.org>	<47CDDC31.4070806@gmail.com> <20080305092619Y.fujita.tomonori@lab.ntt.co.jp>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: [patch 3/3] pata: "I do not think it means, what you think it means."
+Date: Wed, 5 Mar 2008 02:34:40 +0100
+Message-ID: <200803050234.40594.bzolnier@gmail.com>
+References: <200803042316.m24NGI7k002489@imap1.linux-foundation.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain;
+  charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <20080305092619Y.fujita.tomonori@lab.ntt.co.jp>
-Sender: linux-scsi-owner@vger.kernel.org
-To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Cc: tomof@acm.org, efault@gmx.de, jens.axboe@oracle.com, James.Bottomley@HansenPartnership.com, akpm@linux-foundation.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, jgarzik@pobox.com, bzolnier@gmail.com
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from ug-out-1314.google.com ([66.249.92.170]:49334 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S935155AbYCEBVr (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 4 Mar 2008 20:21:47 -0500
+Received: by ug-out-1314.google.com with SMTP id z38so3004124ugc.16
+        for <linux-ide@vger.kernel.org>; Tue, 04 Mar 2008 17:21:46 -0800 (PST)
+In-Reply-To: <200803042316.m24NGI7k002489@imap1.linux-foundation.org>
+Content-Disposition: inline
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: akpm@linux-foundation.org
+Cc: jeff@garzik.org, linux-ide@vger.kernel.org, alan@lxorguk.ukuu.org.uk, alan@redhat.com, linux-kernel@vger.kernel.org
 
-Hello,
 
-FUJITA Tomonori wrote:
-> sglist is a low-level I/O representation for device drivers. SCSI
-> midlayer should not care about sglist. We should not fix SCSI midlayer
-> for rq->data_len != sum(sg) change (so I can't agree with your
-> diagrams in another mail).
+Jeff,
 
-But that's not the way things currently are.
+Could we get this merged ASAP (it was first posted on 26th February)?
 
-> When if we change a rule, we need to fix something.
+This patch fixes data corruption for libata PATA ServerWorks and HPT drivers.
+
+[ IDE users are already leaving happy life since they are not affected
+  (modes masking has always worked correctly in the original drivers)...
+
+  Can we make life happy also for libata PATA users? :) ]
+
+On Wednesday 05 March 2008, akpm@linux-foundation.org wrote:
+> From: Alan Cox <alan@lxorguk.ukuu.org.uk>
 > 
-> If we keep rq->data_len == sum(sg), we need to fix the device
-> application layer. If we keep rq->data_len == the true data length, we
-> need to fix the low-level drivers.
-
-Basically everything under block layer.
-
-> Now I'm fine with the commit e97a294ef6938512b655b1abf17656cf2b26f709
-> since we are in -rc stages. But I plan to send a patch to revert it
-> and fix this issue in the block layer. I'd like to test it in -mm for
-> a while.
+> When masking mask out the modes that are unsupported not the ones that are
+> supported.  This makes life happier.
 > 
-> Only sglist stuff in SCSI midlayer is scsi_req_map_sg now. As you
-> know, we really want to remove it.
-
-If the way forward is to make anything but the low level drivers not
-care about sglist, in the long term, the current scheme is fine but I
-still don't think this way of doing things is safe one.  We're affecting
-large portion of code based on what things should be in future not what
-they currently are.
-
->> Things going the other way is fine with me but I at least want to hear a
->> valid rationale.  Till now all I got is "because that's the true size"
->> which doesn't really make much sense to me.
+> [akpm@linux-foundation.org: coding-style fixes]
+> Signed-off-by: Alan Cox <alan@redhat.com>
+> Cc: Jeff Garzik <jeff@garzik.org>
+> Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
+> ---
 > 
-> Most of users of request structure care about only the real data
-> length, don't care about padding and drain length. Why do they bother
-> to use a helper function to get the real data length?
-
-I think this is where the difference comes from.  To me it seems
-internal usage seems more wide-spread and more delicate and not too many
-care about the true size and when they do only in well defined places.
-Maybe it comes from the difference between your most and my most.
-
-Thanks.
-
--- 
-tejun
+>  drivers/ata/pata_hpt366.c      |    6 +++---
+>  drivers/ata/pata_hpt37x.c      |    6 +++---
+>  drivers/ata/pata_serverworks.c |    2 +-
+>  3 files changed, 7 insertions(+), 7 deletions(-)
+> 
+> diff -puN drivers/ata/pata_hpt366.c~pata-i-do-not-think-it-means-what-you-think-it-means drivers/ata/pata_hpt366.c
+> --- a/drivers/ata/pata_hpt366.c~pata-i-do-not-think-it-means-what-you-think-it-means
+> +++ a/drivers/ata/pata_hpt366.c
+> @@ -27,7 +27,7 @@
+>  #include <linux/libata.h>
+>  
+>  #define DRV_NAME	"pata_hpt366"
+> -#define DRV_VERSION	"0.6.1"
+> +#define DRV_VERSION	"0.6.2"
+>  
+>  struct hpt_clock {
+>  	u8	xfer_speed;
+> @@ -180,9 +180,9 @@ static unsigned long hpt366_filter(struc
+>  		if (hpt_dma_blacklisted(adev, "UDMA",  bad_ata33))
+>  			mask &= ~ATA_MASK_UDMA;
+>  		if (hpt_dma_blacklisted(adev, "UDMA3", bad_ata66_3))
+> -			mask &= ~(0x07 << ATA_SHIFT_UDMA);
+> +			mask &= ~(0xF8 << ATA_SHIFT_UDMA);
+>  		if (hpt_dma_blacklisted(adev, "UDMA4", bad_ata66_4))
+> -			mask &= ~(0x0F << ATA_SHIFT_UDMA);
+> +			mask &= ~(0xF0 << ATA_SHIFT_UDMA);
+>  	}
+>  	return ata_pci_default_filter(adev, mask);
+>  }
+> diff -puN drivers/ata/pata_hpt37x.c~pata-i-do-not-think-it-means-what-you-think-it-means drivers/ata/pata_hpt37x.c
+> --- a/drivers/ata/pata_hpt37x.c~pata-i-do-not-think-it-means-what-you-think-it-means
+> +++ a/drivers/ata/pata_hpt37x.c
+> @@ -24,7 +24,7 @@
+>  #include <linux/libata.h>
+>  
+>  #define DRV_NAME	"pata_hpt37x"
+> -#define DRV_VERSION	"0.6.9"
+> +#define DRV_VERSION	"0.6.11"
+>  
+>  struct hpt_clock {
+>  	u8	xfer_speed;
+> @@ -281,7 +281,7 @@ static unsigned long hpt370_filter(struc
+>  		if (hpt_dma_blacklisted(adev, "UDMA", bad_ata33))
+>  			mask &= ~ATA_MASK_UDMA;
+>  		if (hpt_dma_blacklisted(adev, "UDMA100", bad_ata100_5))
+> -			mask &= ~(0x1F << ATA_SHIFT_UDMA);
+> +			mask &= ~(0xE0 << ATA_SHIFT_UDMA);
+>  	}
+>  	return ata_pci_default_filter(adev, mask);
+>  }
+> @@ -297,7 +297,7 @@ static unsigned long hpt370a_filter(stru
+>  {
+>  	if (adev->class == ATA_DEV_ATA) {
+>  		if (hpt_dma_blacklisted(adev, "UDMA100", bad_ata100_5))
+> -			mask &= ~ (0x1F << ATA_SHIFT_UDMA);
+> +			mask &= ~(0xE0 << ATA_SHIFT_UDMA);
+>  	}
+>  	return ata_pci_default_filter(adev, mask);
+>  }
+> diff -puN drivers/ata/pata_serverworks.c~pata-i-do-not-think-it-means-what-you-think-it-means drivers/ata/pata_serverworks.c
+> --- a/drivers/ata/pata_serverworks.c~pata-i-do-not-think-it-means-what-you-think-it-means
+> +++ a/drivers/ata/pata_serverworks.c
+> @@ -226,7 +226,7 @@ static unsigned long serverworks_csb_fil
+>  
+>  	for (i = 0; (p = csb_bad_ata100[i]) != NULL; i++) {
+>  		if (!strcmp(p, model_num))
+> -			mask &= ~(0x1F << ATA_SHIFT_UDMA);
+> +			mask &= ~(0xE0 << ATA_SHIFT_UDMA);
+>  	}
+>  	return ata_pci_default_filter(adev, mask);
+>  }
