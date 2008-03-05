@@ -1,188 +1,157 @@
-From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: Re: [PATCH] blk: missing add of padded bytes to io completion byte
- count
-Date: Wed, 05 Mar 2008 14:46:44 +0200
-Message-ID: <47CE9634.6040501@panasas.com>
-References: <47CD7C05.1080707@gmail.com> <20080305041914V.tomof@acm.org> <47CDDC31.4070806@gmail.com> <20080305092619Y.fujita.tomonori@lab.ntt.co.jp> <47CE72EF.7050302@panasas.com> <20080305123317.GI6704@kernel.dk>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: [git patches] libata fixes
+Date: Wed, 5 Mar 2008 07:57:52 -0500
+Message-ID: <20080305125752.GA28494@havoc.gtf.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from bzq-219-195-70.pop.bezeqint.net ([62.219.195.70]:35008 "EHLO
-	bh-buildlin2.bhalevy.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751140AbYCEMx3 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 5 Mar 2008 07:53:29 -0500
-In-Reply-To: <20080305123317.GI6704@kernel.dk>
+Received: from havoc.gtf.org ([69.61.125.42]:49513 "EHLO havoc.gtf.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756597AbYCEM57 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 5 Mar 2008 07:57:59 -0500
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jens Axboe <jens.axboe@oracle.com>
-Cc: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Tejun Heo <htejun@gmail.com>, Mike Galbraith <efault@gmx.de>, James.Bottomley@HansenPartnership.com, tomof@acm.org, akpm@linux-foundation.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, jgarzik@pobox.com, bzolnier@gmail.com
+To: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>
+Cc: linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
 
-On Wed, Mar 05 2008 at 14:33 +0200, Jens Axboe <jens.axboe@oracle.com> wrote:
-> On Wed, Mar 05 2008, Boaz Harrosh wrote:
->> On Wed, Mar 05 2008 at 2:26 +0200, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp> wrote:
->>> On Wed, 05 Mar 2008 08:33:05 +0900
->>> Tejun Heo <htejun@gmail.com> wrote:
->>>
->>>> FUJITA Tomonori wrote:
->>>>> Hmm, does SCSI mid-layer need to care about how many bytes the block
->>>>> layer allocates? I don't think that extra_len is NOT good_bytes.
->>>>>
->>>>> I think that the block layer had better take care about it (fix
->>>>> __end_that_request_first?).
->>>> Yeah, probably calling completion functions w/o bytes count is the right
->>>> thing to do but what I was talking about was what could break when the
->>>> semantics of rq->data_len changed.  If we keep rq->data_len() ==
->>>> sum(sg), we keep it business as usual for all the rest except for the
->>>> device application layer if we don't we do the reverse and SCSI midlayer
->>>> completion was a good example, I think.
->>> sglist is a low-level I/O representation for device drivers. SCSI
->>> midlayer should not care about sglist. We should not fix SCSI midlayer
->>> for rq->data_len != sum(sg) change (so I can't agree with your
->>> diagrams in another mail).
->>>
->>> When if we change a rule, we need to fix something.
->>>
->>> If we keep rq->data_len == sum(sg), we need to fix the device
->>> application layer. If we keep rq->data_len == the true data length, we
->>> need to fix the low-level drivers.
->>>
->>> Now I'm fine with the commit e97a294ef6938512b655b1abf17656cf2b26f709
->>> since we are in -rc stages. But I plan to send a patch to revert it
->>> and fix this issue in the block layer. I'd like to test it in -mm for
->>> a while.
->> No this commit is a serious bug, and the only fix is like you suggested
->> in __end_that_request_first. This is because it breaks that scsi-ml loop
->> where scsi_bufflen() can be less then blk_rq_bytes(). In that case this 
->> commit is a data corruption.
->>
->>> Only sglist stuff in SCSI midlayer is scsi_req_map_sg now. As you
->>> know, we really want to remove it.
->>>
->>>
->>>> Things going the other way is fine with me but I at least want to hear a
->>>> valid rationale.  Till now all I got is "because that's the true size"
->>>> which doesn't really make much sense to me.
->>> Most of users of request structure care about only the real data
->>> length, don't care about padding and drain length. Why do they bother
->>> to use a helper function to get the real data length?
->>> --
->> Submitted is the right fix to this problem, as pointed out by TOMO.
->> Please test it solves the CD burning problem.
->> (The patch includes the revert of commit e97a294e)
->> ---
->> From: Boaz Harrosh <bharrosh@panasas.com>
->> Date: Wed, 5 Mar 2008 12:07:12 +0200
->> Subject: [PATCH] blk: missing add of padded bytes to io completion byte count
->>
->> the commit e97a294ef6938512b655b1abf17656cf2b26f709 was very wrong. This is
->> because scsi-ml supports the ability to split a request into smaller chunks,
->> in which case scsi_bufflen() is smaller then request length. Then at completion
->> time the remainder can be issued as a new scsi command. In that case the above
->> commit is a data corruption.
-> 
-> We needed something for -rc4, so it had to be rushed a bit...
-> 
->> Also in this fix all users of block layer are taken care of, and not only
->> scsi devices.
->>
->> Signed-off-by: Boaz Harrosh <bharrosh@panasas.com>
->> Signed-off-by: Benny Halevy <bhalevy@panasas.com>
->> ---
->>  block/blk-core.c    |    4 ++++
->>  drivers/scsi/scsi.c |    2 +-
->>  2 files changed, 5 insertions(+), 1 deletions(-)
->>
->> diff --git a/block/blk-core.c b/block/blk-core.c
->> index 2a438a9..37fcccc 100644
->> --- a/block/blk-core.c
->> +++ b/block/blk-core.c
->> @@ -1549,6 +1549,9 @@ static int __end_that_request_first(struct request *req, int error,
->>  			     nr_bytes >> 9, req->sector);
->>  	}
->>  
->> +	if (nr_bytes >= blk_rq_bytes(req))
->> +		nr_bytes += req->extra_len;
->> +
->>  	total_bytes = bio_nbytes = 0;
->>  	while ((bio = req->bio) != NULL) {
->>  		int nbytes;
->> @@ -1616,6 +1619,7 @@ static int __end_that_request_first(struct request *req, int error,
->>  	if (!req->bio)
->>  		return 0;
->>  
->> +	BUG_ON(total_bytes >= blk_rq_bytes(req));
-> 
-> Make that a WARN_ON() first please. It's indeed a bug, but it wont be
-> critical and it's not fair killing everything since this padding stuff
-> is so fresh and may still need a tweak or two.
-> 
-> I'd be fine with making it a BUG_ON() post 2.6.25.
-> 
-Updated, you are absolutely right, thanks.
 
-Will you commit below patch for 2.6.25? I know that, at the time, I have 
-seen this scsi-ml-loop in action on a sata drive here in the lab, on an 
-x86_64 machine. The current solution will silently corrupt data, which 
-is very hard to find.
+Please pull from 'upstream-linus' branch of
+master.kernel.org:/pub/scm/linux/kernel/git/jgarzik/libata-dev.git upstream-linus
 
-Boaz
----
-From: Boaz Harrosh <bharrosh@panasas.com>
-Date: Wed, 5 Mar 2008 12:07:12 +0200
-Subject: [PATCH] blk: missing add of padded bytes to io completion byte count
+to receive the following updates:
 
-the commit e97a294ef6938512b655b1abf17656cf2b26f709 was very wrong. This is
-because scsi-ml supports the ability to split a request into smaller chunks,
-in which case scsi_bufflen() is smaller then request length. Then at completion
-time the remainder can be issued as a new scsi command. In that case the above
-commit is a data corruption.
+ drivers/ata/ahci.c             |   14 +++++++++++++-
+ drivers/ata/pata_hpt366.c      |    6 +++---
+ drivers/ata/pata_hpt37x.c      |    6 +++---
+ drivers/ata/pata_serverworks.c |    2 +-
+ 4 files changed, 20 insertions(+), 8 deletions(-)
 
-Also in this fix all users of block layer are taken care of, and not only
-scsi devices.
+Alan Cox (1):
+      pata_hpt*, pata_serverworks: fix UDMA masking
 
-Signed-off-by: Boaz Harrosh <bharrosh@panasas.com>
-Signed-off-by: Benny Halevy <bhalevy@panasas.com>
----
- block/blk-core.c    |    4 ++++
- drivers/scsi/scsi.c |    2 +-
- 2 files changed, 5 insertions(+), 1 deletions(-)
+Jeff Garzik (1):
+      ahci: work around ATI SB600 h/w quirk
 
-diff --git a/block/blk-core.c b/block/blk-core.c
-index 2a438a9..c82e68a 100644
---- a/block/blk-core.c
-+++ b/block/blk-core.c
-@@ -1549,6 +1549,9 @@ static int __end_that_request_first(struct request *req, int error,
- 			     nr_bytes >> 9, req->sector);
- 	}
+diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+index 1db93b6..8a49835 100644
+--- a/drivers/ata/ahci.c
++++ b/drivers/ata/ahci.c
+@@ -186,6 +186,7 @@ enum {
+ 	AHCI_HFLAG_NO_MSI		= (1 << 5), /* no PCI MSI */
+ 	AHCI_HFLAG_NO_PMP		= (1 << 6), /* no PMP */
+ 	AHCI_HFLAG_NO_HOTPLUG		= (1 << 7), /* ignore PxSERR.DIAG.N */
++	AHCI_HFLAG_SECT255		= (1 << 8), /* max 255 sectors */
  
-+	if (nr_bytes >= blk_rq_bytes(req))
-+		nr_bytes += req->extra_len;
+ 	/* ap->flags bits */
+ 
+@@ -255,6 +256,7 @@ static void ahci_vt8251_error_handler(struct ata_port *ap);
+ static void ahci_p5wdh_error_handler(struct ata_port *ap);
+ static void ahci_post_internal_cmd(struct ata_queued_cmd *qc);
+ static int ahci_port_resume(struct ata_port *ap);
++static void ahci_dev_config(struct ata_device *dev);
+ static unsigned int ahci_fill_sg(struct ata_queued_cmd *qc, void *cmd_tbl);
+ static void ahci_fill_cmd_slot(struct ahci_port_priv *pp, unsigned int tag,
+ 			       u32 opts);
+@@ -294,6 +296,8 @@ static const struct ata_port_operations ahci_ops = {
+ 	.check_altstatus	= ahci_check_status,
+ 	.dev_select		= ata_noop_dev_select,
+ 
++	.dev_config		= ahci_dev_config,
 +
- 	total_bytes = bio_nbytes = 0;
- 	while ((bio = req->bio) != NULL) {
- 		int nbytes;
-@@ -1616,6 +1619,7 @@ static int __end_that_request_first(struct request *req, int error,
- 	if (!req->bio)
- 		return 0;
+ 	.tf_read		= ahci_tf_read,
  
-+	WARN_ON(total_bytes >= blk_rq_bytes(req));
- 	/*
- 	 * if the request wasn't completed, update state
- 	 */
-diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
-index e5c6f6a..fecba05 100644
---- a/drivers/scsi/scsi.c
-+++ b/drivers/scsi/scsi.c
-@@ -757,7 +757,7 @@ void scsi_finish_command(struct scsi_cmnd *cmd)
- 				"Notifying upper driver of completion "
- 				"(result %x)\n", cmd->result));
+ 	.qc_defer		= sata_pmp_qc_defer_cmd_switch,
+@@ -425,7 +429,7 @@ static const struct ata_port_info ahci_port_info[] = {
+ 	/* board_ahci_sb600 */
+ 	{
+ 		AHCI_HFLAGS	(AHCI_HFLAG_IGN_SERR_INTERNAL |
+-				 AHCI_HFLAG_32BIT_ONLY | AHCI_HFLAG_NO_PMP),
++				 AHCI_HFLAG_SECT255 | AHCI_HFLAG_NO_PMP),
+ 		.flags		= AHCI_FLAG_COMMON,
+ 		.link_flags	= AHCI_LFLAG_COMMON,
+ 		.pio_mask	= 0x1f, /* pio0-4 */
+@@ -1176,6 +1180,14 @@ static void ahci_init_controller(struct ata_host *host)
+ 	VPRINTK("HOST_CTL 0x%x\n", tmp);
+ }
  
--	good_bytes = scsi_bufflen(cmd) + cmd->request->extra_len;
-+	good_bytes = scsi_bufflen(cmd);
-         if (cmd->request->cmd_type != REQ_TYPE_BLOCK_PC) {
- 		drv = scsi_cmd_to_driver(cmd);
- 		if (drv->done)
--- 
-1.5.3.3
-
++static void ahci_dev_config(struct ata_device *dev)
++{
++	struct ahci_host_priv *hpriv = dev->link->ap->host->private_data;
++
++	if (hpriv->flags & AHCI_HFLAG_SECT255)
++		dev->max_sectors = 255;
++}
++
+ static unsigned int ahci_dev_classify(struct ata_port *ap)
+ {
+ 	void __iomem *port_mmio = ahci_port_base(ap);
+diff --git a/drivers/ata/pata_hpt366.c b/drivers/ata/pata_hpt366.c
+index 0713872..a742efa 100644
+--- a/drivers/ata/pata_hpt366.c
++++ b/drivers/ata/pata_hpt366.c
+@@ -27,7 +27,7 @@
+ #include <linux/libata.h>
+ 
+ #define DRV_NAME	"pata_hpt366"
+-#define DRV_VERSION	"0.6.1"
++#define DRV_VERSION	"0.6.2"
+ 
+ struct hpt_clock {
+ 	u8	xfer_speed;
+@@ -180,9 +180,9 @@ static unsigned long hpt366_filter(struct ata_device *adev, unsigned long mask)
+ 		if (hpt_dma_blacklisted(adev, "UDMA",  bad_ata33))
+ 			mask &= ~ATA_MASK_UDMA;
+ 		if (hpt_dma_blacklisted(adev, "UDMA3", bad_ata66_3))
+-			mask &= ~(0x07 << ATA_SHIFT_UDMA);
++			mask &= ~(0xF8 << ATA_SHIFT_UDMA);
+ 		if (hpt_dma_blacklisted(adev, "UDMA4", bad_ata66_4))
+-			mask &= ~(0x0F << ATA_SHIFT_UDMA);
++			mask &= ~(0xF0 << ATA_SHIFT_UDMA);
+ 	}
+ 	return ata_pci_default_filter(adev, mask);
+ }
+diff --git a/drivers/ata/pata_hpt37x.c b/drivers/ata/pata_hpt37x.c
+index 68eb349..9a10878 100644
+--- a/drivers/ata/pata_hpt37x.c
++++ b/drivers/ata/pata_hpt37x.c
+@@ -24,7 +24,7 @@
+ #include <linux/libata.h>
+ 
+ #define DRV_NAME	"pata_hpt37x"
+-#define DRV_VERSION	"0.6.9"
++#define DRV_VERSION	"0.6.11"
+ 
+ struct hpt_clock {
+ 	u8	xfer_speed;
+@@ -281,7 +281,7 @@ static unsigned long hpt370_filter(struct ata_device *adev, unsigned long mask)
+ 		if (hpt_dma_blacklisted(adev, "UDMA", bad_ata33))
+ 			mask &= ~ATA_MASK_UDMA;
+ 		if (hpt_dma_blacklisted(adev, "UDMA100", bad_ata100_5))
+-			mask &= ~(0x1F << ATA_SHIFT_UDMA);
++			mask &= ~(0xE0 << ATA_SHIFT_UDMA);
+ 	}
+ 	return ata_pci_default_filter(adev, mask);
+ }
+@@ -297,7 +297,7 @@ static unsigned long hpt370a_filter(struct ata_device *adev, unsigned long mask)
+ {
+ 	if (adev->class == ATA_DEV_ATA) {
+ 		if (hpt_dma_blacklisted(adev, "UDMA100", bad_ata100_5))
+-			mask &= ~ (0x1F << ATA_SHIFT_UDMA);
++			mask &= ~(0xE0 << ATA_SHIFT_UDMA);
+ 	}
+ 	return ata_pci_default_filter(adev, mask);
+ }
+diff --git a/drivers/ata/pata_serverworks.c b/drivers/ata/pata_serverworks.c
+index 9c523fb..a589c0f 100644
+--- a/drivers/ata/pata_serverworks.c
++++ b/drivers/ata/pata_serverworks.c
+@@ -226,7 +226,7 @@ static unsigned long serverworks_csb_filter(struct ata_device *adev, unsigned lo
+ 
+ 	for (i = 0; (p = csb_bad_ata100[i]) != NULL; i++) {
+ 		if (!strcmp(p, model_num))
+-			mask &= ~(0x1F << ATA_SHIFT_UDMA);
++			mask &= ~(0xE0 << ATA_SHIFT_UDMA);
+ 	}
+ 	return ata_pci_default_filter(adev, mask);
+ }
