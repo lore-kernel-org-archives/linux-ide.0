@@ -1,50 +1,45 @@
-From: bugme-daemon@bugzilla.kernel.org
-Subject: [Bug 10185] New: Commit 9f10d9ee breaks CD mounting/burning
-Date: Thu,  6 Mar 2008 14:59:09 -0800 (PST)
-Message-ID: <bug-10185-11633@http.bugzilla.kernel.org/>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: Correct use of  ap->lock  versus  ap->host->lock ?
+Date: Fri, 07 Mar 2008 08:04:01 +0900
+Message-ID: <47D07861.5030306@gmail.com>
+References: <47D01232.1000106@rtr.ca> <47D01D4B.8000506@pobox.com> <47D02642.8040907@rtr.ca> <47D028C5.9070509@rtr.ca> <47D02CC0.6080609@pobox.com> <47D033F5.9090303@garzik.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:36664 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752967AbYCFW7h (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 6 Mar 2008 17:59:37 -0500
-Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
-	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id m26MxVWJ014399
-	for <linux-ide@vger.kernel.org>; Thu, 6 Mar 2008 14:59:33 -0800
+Received: from gv-out-0910.google.com ([216.239.58.188]:34285 "EHLO
+	gv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751463AbYCFXEN (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 6 Mar 2008 18:04:13 -0500
+Received: by gv-out-0910.google.com with SMTP id s4so92569gve.37
+        for <linux-ide@vger.kernel.org>; Thu, 06 Mar 2008 15:04:09 -0800 (PST)
+In-Reply-To: <47D033F5.9090303@garzik.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: Mark Lord <liml@rtr.ca>, Alan Cox <alan@redhat.com>, IDE/ATA development list <linux-ide@vger.kernel.org>
 
-http://bugzilla.kernel.org/show_bug.cgi?id=10185
+Jeff Garzik wrote:
+> Jeff Garzik wrote:
+>> You need to perform your own LLD-specific locking analysis to see if
+>> it is safe to do, e.g. __mv_stop_dma() rather than mv_stop_dma().
+> 
+> And speaking as the probable author of some of the code that takes a
+> lock during EH in sata_mv....   reinforcing that the above quoted
+> statement is true.
+> 
+> Generally I would put in a lock during EH around register or data
+> manipulations that were locked elsewhere in the driver, thus
+> guaranteeing such code is safe.
+> 
+> However, it may also be the case that such a lock during EH is
+> unnecessary because command submission machinery is disabled.  I chose a
+> path that potentially added more locking, but was much easier to verify
+> correct.
 
-           Summary: Commit 9f10d9ee breaks CD mounting/burning
-           Product: IO/Storage
-           Version: 2.5
-     KernelVersion: commit 9f10d9ee0ac6d79d7bc8b9a158bf4a29322d84d3
-          Platform: All
-        OS/Version: Linux
-              Tree: Mainline
-            Status: NEW
-          Severity: normal
-          Priority: P1
-         Component: IDE
-        AssignedTo: io_ide@kernel-bugs.osdl.org
-        ReportedBy: rjw@sisk.pl
-OtherBugsDependingO 9832
-             nThis:
-        Regression: 1
-
-
-Submitter       : walt <w41ter@gmail.com>
-Date            : 2008-03-06 1:16
-References      : http://marc.info/?t=120476623500003&r=1&w=2
-Handled-By      : Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Patch           : http://marc.info/?l=linux-kernel&m=120483868101033&w=2
-
-This entry is being used for tracking a regression from 2.6.24.  Please don't
-close it until the problem is fixed in the mainline.
-
+I think it's generally safe not to grab any locks during resets as all
+the submission machinery && the interrupt handler are shut down, so it
+should be safe to go lockless.  There may be exceptions tho.
 
 -- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug, or are watching the assignee.
+tejun
