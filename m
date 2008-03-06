@@ -1,96 +1,121 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: sata_sil24 stability and performance
-Date: Thu, 06 Mar 2008 13:25:06 +0900
-Message-ID: <47CF7222.7060702@gmail.com>
-References: <20080219020916.GA29902@denix.org> <20080219043659.GA11936@jim.sh> <47BAF677.5000602@rtr.ca> <20080302061453.GA7291@denix.org> <005d01c87c4c$0d01f550$4d0fa8c0@M2007> <47CC9197.9050609@gmail.com> <20080304002215.GA13317@denix.org> <47CCC1C6.5010600@gmail.com> <20080304062942.GA14335@denix.org> <47CE55B3.6070701@gmail.com> <20080306041454.GA7242@denix.org>
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Subject: Re: [PATCH] blk: missing add of padded bytes to io completion byte
+	 count
+Date: Thu, 06 Mar 2008 13:41:46 +0900
+Message-ID: <20080306134146A.fujita.tomonori@lab.ntt.co.jp>
+References: <47CEA40F.6050903@gmail.com>
+	<20080305135121.GK6704@kernel.dk>
+	<1204730484.3047.10.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from gv-out-0910.google.com ([216.239.58.188]:65526 "EHLO
-	gv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753517AbYCFEZR (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 5 Mar 2008 23:25:17 -0500
-Received: by gv-out-0910.google.com with SMTP id s4so1359530gve.37
-        for <linux-ide@vger.kernel.org>; Wed, 05 Mar 2008 20:25:15 -0800 (PST)
-In-Reply-To: <20080306041454.GA7242@denix.org>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <1204730484.3047.10.camel@localhost.localdomain>
+Sender: linux-scsi-owner@vger.kernel.org
+To: James.Bottomley@HansenPartnership.com
+Cc: jens.axboe@oracle.com, htejun@gmail.com, bharrosh@panasas.com, fujita.tomonori@lab.ntt.co.jp, efault@gmx.de, tomof@acm.org, akpm@linux-foundation.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, jgarzik@pobox.com, bzolnier@gmail.com
 List-Id: linux-ide@vger.kernel.org
-To: Denys Dmytriyenko <denis@denix.org>
-Cc: Gabor FUNK <FUNK.Gabor@hunetkft.hu>, linux-ide@vger.kernel.org, Jim Paris <jim@jtan.com>, Mark Lord <liml@rtr.ca>
 
-Denys Dmytriyenko wrote:
-> On Wed, Mar 05, 2008 at 05:11:31PM +0900, Tejun Heo wrote:
->> That's the drive rejecting acoustic setting command probably because the
->> drive doesn't support it.  Nothing to worry about.  More recent kernels
->> won't whine about those anymore.
-> 
-> Oh, thanks. I forgot that I tried to change acoustic setting.
-> 
->>> # dd if=/dev/zero of=file bs=100M count=20
->>> 20+0 records in
->>> 20+0 records out
->>> 2097152000 bytes (2.1 GB) copied, 117.053 s, 17.9 MB/s
->>>
->>> # dd if=file of=file1 bs=100M count=20
->>> 20+0 records in
->>> 20+0 records out
->>> 2097152000 bytes (2.1 GB) copied, 161.721 s, 13.0 MB/s
->> Write seems awfully sluggish.  Does turning off NCQ help?  You can turn
->> off NCQ by echoing 1 to /sys/block/sdX/device/queue_depth.  Also, which
->> kernel is this test result from?
-> 
-> Turning off NCQ does not help. I am currently on 2.6.23.9, but I just tried
-> 2.6.25-rc4 and it is the same.
-> 
->>> A similar drive in an ICH7 box shows more consistent results:
->>>
->>> # hdparm -t /dev/sda
->>>
->>> /dev/sda:
->>>  Timing buffered disk reads:  182 MB in  3.01 seconds =  60.48 MB/sec
->>>
->>> # dd if=/dev/zero of=file bs=100M count=100
->>> 100+0 records in
->>> 100+0 records out
->>> 10485760000 bytes (10 GB) copied, 242.908 s, 43.2 MB/s
->>>
->>> # dd if=file of=/dev/null bs=100M count=100
->>> 100+0 records in
->>> 100+0 records out
->>> 10485760000 bytes (10 GB) copied, 211.132 s, 49.7 MB/s
->> Hmmm... indeed.  Same kernel version?  Can you post "hdparm -I" results
->> of both drives?
-> 
-> The kernel on the second box is also 2.6.23.9. Here are hdparm results for
-> identical drives:
-> 
-> 1. Connected to SiI 3124/sata_sil24 w/ slow write:
-> 
-> # hdparm -I /dev/sda
-> 
-> /dev/sda:
-> 
-> ATA device, with non-removable media
->         Model Number:       WDC WD1600JS-75NCB1
->         Serial Number:      WD-WCANM1344866
->         Firmware Revision:  10.02E01
-> 
-> # hdparm -I /dev/sda
-> 
-> /dev/sda:
-> 
-> ATA device, with non-removable media
->         Model Number:       WDC WD1600JS-75NCB1
->         Serial Number:      WD-WCANM1356774
->         Firmware Revision:  10.02E01
-> 
-> Also, few months ago instead of sata_sil24 I had my drives connected to
-> sata_mv (Supermicro 8-port) and performance was normal...
+On Wed, 05 Mar 2008 09:21:24 -0600
+James Bottomley <James.Bottomley@HansenPartnership.com> wrote:
 
-Everything seems okay.  I wonder where the difference is.  Does "dd
-if=/dev/zero of=file oflags=direct bs=1M" make any difference?  And can
-you vacate a raw partition and try it on there?
+> On Wed, 2008-03-05 at 14:51 +0100, Jens Axboe wrote:
+> > On Wed, Mar 05 2008, Tejun Heo wrote:
+> > > This is getting insanely subtle.  Let's say there's PIO driver which
+> > > transfer certain sized chunks at a time and completes request partially
+> > > after completing each chunk and the driver uses draining to eat up
+> > > whatever excess data, which seems like a legit use case to me.  But it
+> > > won't work because __end_that_request_first() will terminate when it
+> > > reaches reaches the 'true' transfer size.  That's just broken API.  FWIW,
+> > > 
+> > > Nacked-by: Tejun Heo <htejun@gmail.com>
+> > 
+> > Yeah, I think I may have gone a bit overboard in applying this so
+> > quickly. It's just not a good interface, silently adding the extra
+> > length if asked to complete more. It may even happen right now, for a
+> > driver that does no padding (it probably wont do any harm here either,
+> > but still).
+> > 
+> > I'll try and see if I can come up with something cleaner.
+> > 
+> > My basic design paradigm for this is that the _driver_ (or mid layer, if
+> > SCSI wants to handle it) should care about the padding. So make it easy
+> > for them to pad, but have it 'unrolled' by completion time. We should
+> > NOT need any extra_len checks or additions in the block/ directory,
+> > period.
+> 
+> Right, that's why my original proposal was to do nothing for padding
+> (other than ensure the driver could adjust the length if it wanted to)
+> and to add an extra element always for draining, which the driver could
+> ignore.  It basically pushed the use paradigm onto the driver.
+> 
+> If we want the use paradigm shared between block and driver, then I
+> think the best approach is to keep all the bios the same (so not adjust
+> for padding), but do adjust in the blk_rq_map_sg().  That way we have
+> the padding and draining unwind information by comparing with the bio.
 
--- 
-tejun
+Adjusting only sg in blk_rq_map_sg (like drain) looks much
+better. This works with libata for me.
+
+diff --git a/block/blk-map.c b/block/blk-map.c
+index c07d9c8..e949969 100644
+--- a/block/blk-map.c
++++ b/block/blk-map.c
+@@ -140,26 +140,6 @@ int blk_rq_map_user(struct request_queue *q, struct request *rq,
+ 		ubuf += ret;
+ 	}
+ 
+-	/*
+-	 * __blk_rq_map_user() copies the buffers if starting address
+-	 * or length isn't aligned to dma_pad_mask.  As the copied
+-	 * buffer is always page aligned, we know that there's enough
+-	 * room for padding.  Extend the last bio and update
+-	 * rq->data_len accordingly.
+-	 *
+-	 * On unmap, bio_uncopy_user() will use unmodified
+-	 * bio_map_data pointed to by bio->bi_private.
+-	 */
+-	if (len & q->dma_pad_mask) {
+-		unsigned int pad_len = (q->dma_pad_mask & ~len) + 1;
+-		struct bio *tail = rq->biotail;
+-
+-		tail->bi_io_vec[tail->bi_vcnt - 1].bv_len += pad_len;
+-		tail->bi_size += pad_len;
+-
+-		rq->extra_len += pad_len;
+-	}
+-
+ 	rq->buffer = rq->data = NULL;
+ 	return 0;
+ unmap_rq:
+diff --git a/block/blk-merge.c b/block/blk-merge.c
+index 0f58616..2a81c87 100644
+--- a/block/blk-merge.c
++++ b/block/blk-merge.c
+@@ -220,6 +220,13 @@ new_segment:
+ 		bvprv = bvec;
+ 	} /* segments in rq */
+ 
++	if (sg && (q->dma_pad_mask & rq->data_len)) {
++		unsigned int pad_len = (q->dma_pad_mask & ~rq->data_len) + 1;
++
++		sg->length += pad_len;
++		rq->extra_len += pad_len;
++	}
++
+ 	if (q->dma_drain_size && q->dma_drain_needed(rq)) {
+ 		if (rq->cmd_flags & REQ_RW)
+ 			memset(q->dma_drain_buffer, 0, q->dma_drain_size);
+diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
+index e5c6f6a..fecba05 100644
+--- a/drivers/scsi/scsi.c
++++ b/drivers/scsi/scsi.c
+@@ -757,7 +757,7 @@ void scsi_finish_command(struct scsi_cmnd *cmd)
+ 				"Notifying upper driver of completion "
+ 				"(result %x)\n", cmd->result));
+ 
+-	good_bytes = scsi_bufflen(cmd) + cmd->request->extra_len;
++	good_bytes = scsi_bufflen(cmd);
+         if (cmd->request->cmd_type != REQ_TYPE_BLOCK_PC) {
+ 		drv = scsi_cmd_to_driver(cmd);
+ 		if (drv->done)
