@@ -1,66 +1,34 @@
-From: walt <w41ter@gmail.com>
-Subject: Commit 9f10d9ee breaks CD mounting/burning
-Date: Wed, 05 Mar 2008 17:16:51 -0800
-Message-ID: <fqngjf$cjf$1@ger.gmane.org>
+From: Krzysztof Halasa <khc@pm.waw.pl>
+Subject: Re: [patch 3/3] pata: "I do not think it means, what you think it means."
+Date: Thu, 06 Mar 2008 02:33:29 +0100
+Message-ID: <m37iggbpqu.fsf@maximus.localdomain>
+References: <200803042316.m24NGI7k002489@imap1.linux-foundation.org>
+	<20080304173058.7679b7c8.akpm@linux-foundation.org>
+	<20080305115610.397b3ea3@the-village.bc.nu>
+	<200803051421.14167.bzolnier@gmail.com>
+	<m3ir015du5.fsf@maximus.localdomain>
+	<58cb370e0803050846t7dbd65d6ocfec7ca5e93aa6db@mail.gmail.com>
+	<m3ejap5cvz.fsf@maximus.localdomain>
+	<58cb370e0803050922p7695771cq393120ed5906efb7@mail.gmail.com>
+	<1204742033.6408.37.camel@localhost>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from main.gmane.org ([80.91.229.2]:36401 "EHLO ciao.gmane.org"
+Received: from khc.piap.pl ([195.187.100.11]:45930 "EHLO khc.piap.pl"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759124AbYCFBPh (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 5 Mar 2008 20:15:37 -0500
-Received: from list by ciao.gmane.org with local (Exim 4.43)
-	id 1JX4hp-000219-RD
-	for linux-ide@vger.kernel.org; Thu, 06 Mar 2008 01:15:33 +0000
-Received: from adsl-69-234-213-79.dsl.irvnca.pacbell.net ([69.234.213.79])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-ide@vger.kernel.org>; Thu, 06 Mar 2008 01:15:33 +0000
-Received: from w41ter by adsl-69-234-213-79.dsl.irvnca.pacbell.net with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-ide@vger.kernel.org>; Thu, 06 Mar 2008 01:15:33 +0000
+	id S1758499AbYCFBda (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 5 Mar 2008 20:33:30 -0500
+In-Reply-To: <1204742033.6408.37.camel@localhost> (Zan Lynx's message of "Wed\, 05 Mar 2008 11\:33\:53 -0700")
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
+To: Zan Lynx <zlynx@acm.org>
+Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Andrew Morton <akpm@linux-foundation.org>, jeff@garzik.org, linux-ide@vger.kernel.org, alan@redhat.com, linux-kernel@vger.kernel.org
 
-Hi Bartolmiej,
+Zan Lynx <zlynx@acm.org> writes:
 
-For me, this commit causes the problem it's intended to fix:
+> In my experience what they needed was proper cooling.  I have a 3ware
+> RAID-5 array of 4 120 GB DeskStar drives still working.
 
-commit 9f10d9ee0ac6d79d7bc8b9a158bf4a29322d84d3
-Author: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Date:   Tue Feb 26 21:50:35 2008 +0100
-
-     ide-cd: fix 'ireason' handling for REQ_TYPE_ATA_PC requests
-
-     This fixes some hangs caused by not finishing the transfer before ending
-     the request and also makes use of 'ireason == 1' quirk for spurious IRQs.
-
-When I mount a CD there is a long delay, and I see this error message:
-
-hdc: ide_cd_check_ireason: wrong transfer direction!
-cdrom: failed setting lba address space
-hdc: status error: status=0x58 { DriveReady SeekComplete DataRequest }
-ide: failed opcode was: unknown
-hdc: drive not ready for command
-<repeated many times>
-
-When I revert this commit everything works properly again, including
-CD burning.
-
-Here is the drive info:
-
-hdc: TSSTcorpCD/DVDW SH-S182M, ATAPI CD/DVD-ROM drive
-hdc: host max PIO5 wanted PIO255(auto-tune) selected PIO4
-hdc: UDMA/33 mode selected
-hdc: ATAPI 48X DVD-ROM DVD-R-RAM CD-R/RW drive, 2048kB Cache
-Uniform CD-ROM driver Revision: 3.20
-hdc: UDMA/33 mode selected
-
-I'm happy to try patches or supply more info, just let me know
-what you need.
-
-Thanks.
-
+I think the largest "deathstars" (75GXP?) were 75 GB.
+-- 
+Krzysztof Halasa
