@@ -1,33 +1,59 @@
-From: Mark Lord <liml@rtr.ca>
-Subject: Re: [patch 3/3] pata: "I do not think it means, what you think it
- means."
-Date: Thu, 06 Mar 2008 10:00:49 -0500
-Message-ID: <47D00721.3070002__11199.9682187617$1204815757$gmane$org@rtr.ca>
-References: <200803042316.m24NGI7k002489@imap1.linux-foundation.org> <20080304173058.7679b7c8.akpm@linux-foundation.org> <20080305115610.397b3ea3@the-village.bc.nu> <200803051421.14167.bzolnier@gmail.com> <m3ir015du5.fsf@maximus.localdomain> <58cb370e0803050846t7dbd65d6ocfec7ca5e93aa6db@mail.gmail.com> <m3ejap5cvz.fsf@maximus.localdomain> <58cb370e0803050922p7695771cq393120ed5906efb7@mail.gmail.com> <1204742033.6408.37.camel@localhost> <m37iggbpqu.fsf@maximus.localdomain> <20080306111304.GK531@sci.fi> <47D006A1.8070000@rtr.ca>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: ata_ram driver
+Date: Thu, 06 Mar 2008 09:28:21 -0600
+Message-ID: <1204817301.3062.3.camel@localhost.localdomain>
+References: <20080222200951.GI16995@parisc-linux.org>
+	 <47BF3E54.9050609@rtr.ca>  <47CFA9A6.2040506@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([76.10.145.34]:2762 "EHLO mail.rtr.ca"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756705AbYCFPAv (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 6 Mar 2008 10:00:51 -0500
-In-Reply-To: <47D006A1.8070000@rtr.ca>
+Received: from accolon.hansenpartnership.com ([76.243.235.52]:51853 "EHLO
+	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752752AbYCFP20 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 6 Mar 2008 10:28:26 -0500
+In-Reply-To: <47CFA9A6.2040506@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: =?UTF-8?B?VmlsbGUgU3lyasOkbMOk?= <syrjala@sci.fi>, Krzysztof Halasa <khc@pm.waw.pl>, Zan Lynx <zlynx@acm.org>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Alan Cox <alan@lxorguk.u>
+To: Tejun Heo <htejun@gmail.com>
+Cc: Mark Lord <liml@rtr.ca>, Matthew Wilcox <matthew@wil.cx>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Mark Lord wrote:
->
-> The original Deathstar ailment had nothing to do with firmware or cooling.
-> But rather, a bad batch of chips that IBM had the misfortune to use a 
-> lot of.
+On Thu, 2008-03-06 at 17:21 +0900, Tejun Heo wrote:
+> Mark Lord wrote:
+> > Matthew Wilcox wrote:
+> >> I've ported the scsi_ram driver [1] to libata.  It could use a lot more
+> >> work -- there's a lot of stuff in the identify page that I haven't
+> >> filled in, and there's a lot of commands it doesn't even try to execute.
+> >>
+> >> For example, when you unload the driver, you get the mildly disturbing
+> >> messages:
+> >>
+> >> sd 12:0:0:0: [sdb] Stopping disk
+> >> sd 12:0:0:0: [sdb] START_STOP FAILED
+> >> sd 12:0:0:0: [sdb] Result: hostbyte=DID_BAD_TARGET
+> >> driverbyte=DRIVER_OK,SUGGEST_OK
+> >>
+> > ..
+> > 
+> > I see messages like those with *established* libata drivers from time to
+> > time.
+> > It could just be a bug in the shutdown sequence, somewhere between libata,
+> > SCSI, block layer, and the device model in general.  Or not.
 > 
-> The chips would grow tiny internal whiskers over a period of 2+ years,
-> and eventually short circuit themselves.
-...
+> It's because of the sequence of events.  Currently, driver unload
+> sequence is the same as when the device is hot unplugged.  libata
+> detects that the device is gone and disables it and report it to SCSI
+> layer.  SCSI layer takes over and tries to kill the SCSI device and tell
+> sd to shutdown and sd issues START_STOP to shutdown which fails w/
+> DID_BAD_TARGET because the matching ATA device is already gone.  I've
+> left it that way because I'm not sure whether spinning down the drive on
+> driver unload is the correct thing to do.  The message is annoying tho.
 
-Oddly enough, the Wikipedia entry doesn't include this information,
-but does talk about other failure modes of the 75GXP series.
+Um, it's not supposed to happen that way.  Your signal that a disk is
+gone is slave destroy ... and we don't call that until after the target
+has been processed.  Devices are supposed to stay online (if possible)
+from slave alloc to slave destroy.
 
-Cheers
+James
+
+
