@@ -1,47 +1,67 @@
-From: "peerchen" <peerchen@gmail.com>
-Subject: [PATCH] ahci: add the Device IDs of nvidia MCP7B AHCI controller to ahci.c
-Date: Thu, 6 Mar 2008 21:22:41 +0800
-Message-ID: <200803062122359218883@gmail.com>
+From: Jens Axboe <jens.axboe@oracle.com>
+Subject: Re: [PATCH] blk: missing add of padded bytes to io completion byte   count
+Date: Thu, 6 Mar 2008 14:41:39 +0100
+Message-ID: <20080306134138.GF17940@kernel.dk>
+References: <47CEA40F.6050903@gmail.com> <20080305135121.GK6704@kernel.dk> <1204730484.3047.10.camel@localhost.localdomain> <20080306134146A.fujita.tomonori@lab.ntt.co.jp>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="gb2312"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rn-out-0910.google.com ([64.233.170.190]:3652 "EHLO
-	rn-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760273AbYCFNWs (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 6 Mar 2008 08:22:48 -0500
-Received: by rn-out-0910.google.com with SMTP id v46so970852rnb.15
-        for <linux-ide@vger.kernel.org>; Thu, 06 Mar 2008 05:22:44 -0800 (PST)
+Received: from brick.kernel.dk ([87.55.233.238]:12246 "EHLO kernel.dk"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751523AbYCFNlm (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 6 Mar 2008 08:41:42 -0500
+Content-Disposition: inline
+In-Reply-To: <20080306134146A.fujita.tomonori@lab.ntt.co.jp>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-kernel <linux-kernel@vger.kernel.org>, linux-ide <linux-ide@vger.kernel.org>
-Cc: akpm <akpm@linux-foundation.org>, jeff <jeff@garzik.org>
+To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Cc: James.Bottomley@HansenPartnership.com, htejun@gmail.com, bharrosh@panasas.com, efault@gmx.de, tomof@acm.org, akpm@linux-foundation.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, jgarzik@pobox.com, bzolnier@gmail.com
 
-Add the device IDs of nvidia MCP79 AHCI controller to ahci.c
+On Thu, Mar 06 2008, FUJITA Tomonori wrote:
+> On Wed, 05 Mar 2008 09:21:24 -0600
+> James Bottomley <James.Bottomley@HansenPartnership.com> wrote:
+> 
+> > On Wed, 2008-03-05 at 14:51 +0100, Jens Axboe wrote:
+> > > On Wed, Mar 05 2008, Tejun Heo wrote:
+> > > > This is getting insanely subtle.  Let's say there's PIO driver which
+> > > > transfer certain sized chunks at a time and completes request partially
+> > > > after completing each chunk and the driver uses draining to eat up
+> > > > whatever excess data, which seems like a legit use case to me.  But it
+> > > > won't work because __end_that_request_first() will terminate when it
+> > > > reaches reaches the 'true' transfer size.  That's just broken API.  FWIW,
+> > > > 
+> > > > Nacked-by: Tejun Heo <htejun@gmail.com>
+> > > 
+> > > Yeah, I think I may have gone a bit overboard in applying this so
+> > > quickly. It's just not a good interface, silently adding the extra
+> > > length if asked to complete more. It may even happen right now, for a
+> > > driver that does no padding (it probably wont do any harm here either,
+> > > but still).
+> > > 
+> > > I'll try and see if I can come up with something cleaner.
+> > > 
+> > > My basic design paradigm for this is that the _driver_ (or mid layer, if
+> > > SCSI wants to handle it) should care about the padding. So make it easy
+> > > for them to pad, but have it 'unrolled' by completion time. We should
+> > > NOT need any extra_len checks or additions in the block/ directory,
+> > > period.
+> > 
+> > Right, that's why my original proposal was to do nothing for padding
+> > (other than ensure the driver could adjust the length if it wanted to)
+> > and to add an extra element always for draining, which the driver could
+> > ignore.  It basically pushed the use paradigm onto the driver.
+> > 
+> > If we want the use paradigm shared between block and driver, then I
+> > think the best approach is to keep all the bios the same (so not adjust
+> > for padding), but do adjust in the blk_rq_map_sg().  That way we have
+> > the padding and draining unwind information by comparing with the bio.
+> 
+> Adjusting only sg in blk_rq_map_sg (like drain) looks much
+> better. This works with libata for me.
 
-Signed-off-by: Peer Chen <peerchen@gmail.com>
----
---- linux-2.6.25-rc4/drivers/ata/ahci.c.orig	2008-03-04 21:46:30.000000000 -0500
-+++ linux-2.6.25-rc4/drivers/ata/ahci.c	2008-03-04 21:50:42.000000000 -0500
-@@ -563,6 +563,18 @@ static const struct pci_device_id ahci_p
- 	{ PCI_VDEVICE(NVIDIA, 0x0abd), board_ahci },		/* MCP79 */
- 	{ PCI_VDEVICE(NVIDIA, 0x0abe), board_ahci },		/* MCP79 */
- 	{ PCI_VDEVICE(NVIDIA, 0x0abf), board_ahci },		/* MCP79 */
-+	{ PCI_VDEVICE(NVIDIA, 0x0bc8), board_ahci },		/* MCP7B */
-+	{ PCI_VDEVICE(NVIDIA, 0x0bc9), board_ahci },		/* MCP7B */
-+	{ PCI_VDEVICE(NVIDIA, 0x0bca), board_ahci },		/* MCP7B */
-+	{ PCI_VDEVICE(NVIDIA, 0x0bcb), board_ahci },		/* MCP7B */
-+	{ PCI_VDEVICE(NVIDIA, 0x0bcc), board_ahci },		/* MCP7B */
-+	{ PCI_VDEVICE(NVIDIA, 0x0bcd), board_ahci },		/* MCP7B */
-+	{ PCI_VDEVICE(NVIDIA, 0x0bce), board_ahci },		/* MCP7B */
-+	{ PCI_VDEVICE(NVIDIA, 0x0bcf), board_ahci },		/* MCP7B */
-+	{ PCI_VDEVICE(NVIDIA, 0x0bd0), board_ahci },		/* MCP7B */
-+	{ PCI_VDEVICE(NVIDIA, 0x0bd1), board_ahci },		/* MCP7B */
-+	{ PCI_VDEVICE(NVIDIA, 0x0bd2), board_ahci },		/* MCP7B */
-+	{ PCI_VDEVICE(NVIDIA, 0x0bd3), board_ahci },		/* MCP7B */
- 
- 	/* SiS */
- 	{ PCI_VDEVICE(SI, 0x1184), board_ahci }, /* SiS 966 */
--
+Looks like a much better solution to me. Anyone have any valid
+objections against moving the padding to the sg map time?
+
+-- 
+Jens Axboe
 
