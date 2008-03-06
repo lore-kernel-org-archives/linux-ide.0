@@ -1,382 +1,98 @@
-From: Florian Fainelli <florian.fainelli@telecomint.eu>
-Subject: [PATCH] Add support for the RB500 PATA CompactFlash
-Date: Thu, 6 Mar 2008 12:25:21 +0100
-Message-ID: <200803061225.22340.florian.fainelli@telecomint.eu>
+From: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
+Subject: Re: Unknown SATA PIIX PCI device ID 0x29b6
+Date: Thu, 6 Mar 2008 12:57:32 +0100 (CET)
+Message-ID: <Pine.LNX.4.64.0803061248070.5670@axis700.grange>
+References: <Pine.LNX.4.64.0802282306190.10087@axis700.grange>
+ <20080228225603.2764bfd1@core> <Pine.LNX.4.64.0802290010320.10498@axis700.grange>
+ <47CFADDF.20200@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mx1.minet.net ([157.159.40.25]:34459 "EHLO mx1.minet.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759677AbYCFLev (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 6 Mar 2008 06:34:51 -0500
-Content-Disposition: inline
+Received: from mail.gmx.net ([213.165.64.20]:35494 "HELO mail.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1757742AbYCFL5X (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 6 Mar 2008 06:57:23 -0500
+In-Reply-To: <47CFADDF.20200@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: jeff@garzik.org
-Cc: linux-ide@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-kernel@vger.kernel.org, Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org
 
-(please CC me, I am not on the list).
----
-This patch adds support for the PATA compatible
-CompactFlash controller we can find on the
-Mikrotik RouterBoard 500. The driver references
-some code which can be found in the linux-mips
-Routerboard 500 support.
+On Thu, 6 Mar 2008, Tejun Heo wrote:
 
-Signed-off-by: Florian Fainelli <florian.fainelli@telecomint.eu>
-Signed-off-by: Juhos Gabor <juhosg@openwrt.org>
+> Guennadi Liakhovetski wrote:
+> > Indeed! It was in "IDE" mode, and 2 out of the 3 chips were handled by the 
+> > piix driver (btw, why did Intel put 3 different SATA controllers on one 
+> > board?). I switched it to AHCI mode (the third possibility is RAID) and 
+> > indeed a kernel with (only) ahci driver managed to bring them up! 
+> > Although, the eSATA link was "slow to respond":
+> > 
+> > ata4: port is slow to respond, please be patient (Status 0x80)
+> > ata4: softreset failed (device not ready)
+> > ata4: port is slow to respond, please be patient (Status 0x80)
+> > ata4: softreset failed (device not ready)
+> > ata4: port is slow to respond, please be patient (Status 0x80)
+> > ata4: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+> > ata4.00: ATA-7: WDC WD1600BB-00RDA0, 20.00K20, max UDMA/100
+> > ata4.00: 312581808 sectors, multi 16: LBA48
+> > ata4.00: applying bridge limits
+> > ata4.00: configured for UDMA/100
+> > 
+> > but then it did manage it. Is such a delay normal?
+> 
+> If you hotplugged it, sometimes drives don't respond too well and takes
+> a few retries to talk to it.
+
+I've seen this messages both on cold- and hot-plug.
+
+> How long did the whole thing take?
+
+Here's a hot-plug log:
+
+Mar  4 15:04:28 6a kernel: ata4: exception Emask 0x10 SAct 0x0 SErr 0x4050000 action 0xa frozen
+Mar  4 15:04:28 6a kernel: ata4: irq_stat 0x00000040, connection status changed
+Mar  4 15:04:28 6a kernel: ata4: SError: { PHYRdyChg CommWake DevExch }Mar  4 15:04:28 6a kernel: ata4: hard resetting link
+Mar  4 15:04:38 6a kernel: ata4: softreset failed (device not ready)
+Mar  4 15:04:38 6a kernel: ata4: hard resetting link
+Mar  4 15:04:48 6a kernel: ata4: softreset failed (device not ready)
+Mar  4 15:04:48 6a kernel: ata4: hard resetting link
+Mar  4 15:04:55 6a kernel: ata4: port is slow to respond, please be patient (Status 0x80)
+Mar  4 15:05:20 6a kernel: ata4: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+Mar  4 15:05:20 6a kernel: ata4.00: ATA-7: WDC WD1600BB-00RDA0, 20.00K20, max UDMA/100
+Mar  4 15:05:20 6a kernel: ata4.00: 312581808 sectors, multi 0: LBA48
+Mar  4 15:05:20 6a kernel: ata4.00: applying bridge limits
+Mar  4 15:05:20 6a kernel: ata4.00: configured for UDMA/100
+Mar  4 15:05:20 6a kernel: ata4: EH complete
+Mar  4 15:05:20 6a kernel: scsi 3:0:0:0: Direct-Access     ATA      WDC WD1600BB-00R 20.0 PQ: 0 ANSI: 5
+Mar  4 15:05:20 6a kernel: sd 3:0:0:0: [sdb] 312581808 512-byte hardware sectors (160042 MB)
+Mar  4 15:05:20 6a kernel: sd 3:0:0:0: [sdb] Write Protect is off
+Mar  4 15:05:20 6a kernel: sd 3:0:0:0: [sdb] Mode Sense: 00 3a 00 00
+Mar  4 15:05:20 6a kernel: sd 3:0:0:0: [sdb] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+Mar  4 15:05:20 6a kernel: sd 3:0:0:0: [sdb] 312581808 512-byte hardware sectors (160042 MB)
+Mar  4 15:05:20 6a kernel: sd 3:0:0:0: [sdb] Write Protect is off
+Mar  4 15:05:20 6a kernel: sd 3:0:0:0: [sdb] Mode Sense: 00 3a 00 00
+Mar  4 15:05:20 6a kernel: sd 3:0:0:0: [sdb] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+Mar  4 15:05:20 6a kernel:  sdb: sdb1 sdb2
+Mar  4 15:05:20 6a kernel: sd 3:0:0:0: [sdb] Attached SCSI disk
+Mar  4 15:05:20 6a kernel: sd 3:0:0:0: Attached scsi generic sg2 type 0
+
+Looks like almost a minute to me? On another occurence I see about 1.5 
+minutes, then "port is slow to respond, please be patient (Status 0x80)" 
+has been repeated 3 times. On cold-plug also 3 times, I think, about the 
+same time then (time is not updated in the log).
+
+> And is it always like that?
+
+So far - yes.
+
+> > One more question, what do UDMA numbers mean in SATA context? The internal 
+> > SATA disk is "ata1.00: configured for UDMA/133", but should be SATA-2.
+> 
+> 1.00 is port 1 device 00 and UDMA numbers don't mean much to SATA devices.
+
+Sorry, I actually meant to ask what "UDMA/133" means for a SATA link?
+
+Thanks
+Guennadi
 ---
-diff --git a/drivers/ata/Kconfig b/drivers/ata/Kconfig
-index ba8f7f4..e469647 100644
---- a/drivers/ata/Kconfig
-+++ b/drivers/ata/Kconfig
-@@ -538,6 +538,15 @@ config PATA_RADISYS
- 
- 	  If unsure, say N.
- 
-+config PATA_RB500
-+	tristate "RouterBoard 500 PATA CompactFlash support"
-+	depends on MIKROTIK_RB500
-+	help
-+	  This option enables support for the RouterBoard 500
-+	  PATA CompactFlash controller.
-+
-+	  If unsure, say N.
-+
- config PATA_RZ1000
- 	tristate "PC Tech RZ1000 PATA support"
- 	depends on PCI
-diff --git a/drivers/ata/Makefile b/drivers/ata/Makefile
-index 701651e..0511e6f 100644
---- a/drivers/ata/Makefile
-+++ b/drivers/ata/Makefile
-@@ -55,6 +55,7 @@ obj-$(CONFIG_PATA_PDC2027X)	+= pata_pdc2027x.o
- obj-$(CONFIG_PATA_PDC_OLD)	+= pata_pdc202xx_old.o
- obj-$(CONFIG_PATA_QDI)		+= pata_qdi.o
- obj-$(CONFIG_PATA_RADISYS)	+= pata_radisys.o
-+obj-$(CONFIG_PATA_RB500)	+= pata_rb500_cf.o
- obj-$(CONFIG_PATA_RZ1000)	+= pata_rz1000.o
- obj-$(CONFIG_PATA_SC1200)	+= pata_sc1200.o
- obj-$(CONFIG_PATA_SERVERWORKS)	+= pata_serverworks.o
-diff --git a/drivers/ata/pata_rb500_cf.c b/drivers/ata/pata_rb500_cf.c
-new file mode 100644
-index 0000000..4ce9b03
---- /dev/null
-+++ b/drivers/ata/pata_rb500_cf.c
-@@ -0,0 +1,314 @@
-+/*
-+ *  A low-level PATA driver to handle a Compact Flash connected on the
-+ *  Mikrotik's RouterBoard 532 board.
-+ *
-+ *  Copyright (C) 2007 Gabor Juhos <juhosg at openwrt.org>
-+ *  Copyright (C) 2008 Florian Fainelli <florian@openwrt.org>
-+ *
-+ *  This file was based on: drivers/ata/pata_ixp4xx_cf.c
-+ *	Copyright (C) 2006-07 Tower Technologies
-+ *	Author: Alessandro Zummo <a.zummo@towertech.it>
-+ *
-+ *  Also was based on the driver for Linux 2.4.xx published by Mikrotik for
-+ *  their RouterBoard 1xx and 5xx series devices. The original Mikrotik code
-+ *  seems not to have a license.
-+ *
-+ *  This program is free software; you can redistribute it and/or modify
-+ *  it under the terms of the GNU General Public License version 2 as
-+ *  published by the Free Software Foundation.
-+ *
-+ */
-+
-+#include <linux/kernel.h>
-+#include <linux/module.h>
-+#include <linux/platform_device.h>
-+
-+#include <linux/io.h>
-+#include <linux/interrupt.h>
-+#include <linux/irq.h>
-+
-+#include <linux/libata.h>
-+#include <scsi/scsi_host.h>
-+
-+#include <asm/gpio.h>
-+
-+#define DRV_NAME	"pata-rb500-cf"
-+#define DRV_VERSION	"0.1.0"
-+#define DRV_DESC	"PATA driver for RouterBOARD 532 Compact Flash"
-+
-+#define RB500_CF_MAXPORTS	1
-+#define RB500_CF_IO_DELAY	400
-+
-+#define RB500_CF_REG_CMD	0x0800
-+#define RB500_CF_REG_CTRL	0x080E
-+#define RB500_CF_REG_DATA	0x0C00
-+
-+struct rb500_cf_info {
-+	void __iomem	*iobase;
-+	unsigned int	gpio_line;
-+	int		frozen;
-+	unsigned int	irq;
-+};
-+
-+/* ------------------------------------------------------------------------ */
-+
-+static inline void rb500_pata_finish_io(struct ata_port *ap)
-+{
-+	struct ata_host *ah = ap->host;
-+	struct rb500_cf_info *info = ah->private_data;
-+
-+	ata_altstatus(ap);
-+	ndelay(RB500_CF_IO_DELAY);
-+
-+	set_irq_type(info->irq, IRQ_TYPE_LEVEL_HIGH);
-+}
-+
-+static void rb500_pata_exec_command(struct ata_port *ap,
-+				const struct ata_taskfile *tf)
-+{
-+	writeb(tf->command, ap->ioaddr.command_addr);
-+	rb500_pata_finish_io(ap);
-+}
-+
-+static void rb500_pata_data_xfer(struct ata_device *adev, unsigned char *buf,
-+				unsigned int buflen, int write_data)
-+{
-+	struct ata_port *ap = adev->link->ap;
-+	void __iomem *ioaddr = ap->ioaddr.data_addr;
-+
-+	if (write_data) {
-+		for (; buflen > 0; buflen--, buf++)
-+			writeb(*buf, ioaddr);
-+	} else {
-+		for (; buflen > 0; buflen--, buf++)
-+			*buf = readb(ioaddr);
-+	}
-+
-+	rb500_pata_finish_io(adev->link->ap);
-+}
-+
-+static void rb500_pata_freeze(struct ata_port *ap)
-+{
-+	struct rb500_cf_info *info = ap->host->private_data;
-+
-+	info->frozen = 1;
-+}
-+
-+static void rb500_pata_thaw(struct ata_port *ap)
-+{
-+	struct rb500_cf_info *info = ap->host->private_data;
-+
-+	info->frozen = 0;
-+}
-+
-+static irqreturn_t rb500_pata_irq_handler(int irq, void *dev_instance)
-+{
-+	struct ata_host *ah = dev_instance;
-+	struct rb500_cf_info *info = ah->private_data;
-+
-+	if (gpio_get_value(info->gpio_line)) {
-+		set_irq_type(info->irq, IRQ_TYPE_LEVEL_LOW);
-+		if (!info->frozen)
-+			ata_interrupt(info->irq, dev_instance);
-+	} else {
-+		set_irq_type(info->irq, IRQ_TYPE_LEVEL_HIGH);
-+	}
-+
-+	return IRQ_HANDLED;
-+}
-+
-+static void rb500_pata_irq_clear(struct ata_port *ap)
-+{
-+}
-+
-+static int rb500_pata_port_start(struct ata_port *ap)
-+{
-+	return 0;
-+}
-+
-+static struct ata_port_operations rb500_pata_port_ops = {
-+	.tf_load		= ata_tf_load,
-+	.tf_read		= ata_tf_read,
-+
-+	.exec_command		= rb500_pata_exec_command,
-+	.check_status 		= ata_check_status,
-+	.dev_select 		= ata_std_dev_select,
-+
-+	.data_xfer		= rb500_pata_data_xfer,
-+
-+	.qc_prep 		= ata_qc_prep,
-+	.qc_issue		= ata_qc_issue_prot,
-+
-+	.freeze			= rb500_pata_freeze,
-+	.thaw			= rb500_pata_thaw,
-+	.error_handler		= ata_bmdma_error_handler,
-+
-+	.irq_handler		= rb500_pata_irq_handler,
-+	.irq_clear		= rb500_pata_irq_clear,
-+	.irq_on			= ata_irq_on,
-+
-+	.port_start		= rb500_pata_port_start,
-+};
-+
-+/* ------------------------------------------------------------------------ */
-+
-+static struct scsi_host_template rb500_pata_sht = {
-+	.module			= THIS_MODULE,
-+	.name			= DRV_NAME,
-+	.ioctl			= ata_scsi_ioctl,
-+	.queuecommand		= ata_scsi_queuecmd,
-+	.slave_configure	= ata_scsi_slave_config,
-+	.slave_destroy		= ata_scsi_slave_destroy,
-+	.bios_param		= ata_std_bios_param,
-+	.proc_name		= DRV_NAME,
-+
-+	.can_queue		= ATA_DEF_QUEUE,
-+	.this_id		= ATA_SHT_THIS_ID,
-+	.sg_tablesize		= LIBATA_MAX_PRD,
-+	.dma_boundary		= ATA_DMA_BOUNDARY,
-+	.cmd_per_lun		= ATA_SHT_CMD_PER_LUN,
-+	.emulated		= ATA_SHT_EMULATED,
-+	.use_clustering		= ATA_SHT_USE_CLUSTERING,
-+};
-+
-+/* ------------------------------------------------------------------------ */
-+
-+static void rb500_pata_setup_ports(struct ata_host *ah)
-+{
-+	struct rb500_cf_info *info = ah->private_data;
-+	struct ata_port *ap;
-+
-+	ap = ah->ports[0];
-+
-+	ap->ops		= &rb500_pata_port_ops;
-+	ap->pio_mask	= 0x1f; /* PIO4 */
-+	ap->flags	= ATA_FLAG_NO_LEGACY | ATA_FLAG_MMIO;
-+
-+	ap->ioaddr.cmd_addr	= info->iobase + RB500_CF_REG_CMD;
-+	ap->ioaddr.ctl_addr	= info->iobase + RB500_CF_REG_CTRL;
-+	ap->ioaddr.altstatus_addr = info->iobase + RB500_CF_REG_CTRL;
-+
-+	ata_std_ports(&ap->ioaddr);
-+
-+	ap->ioaddr.data_addr	= info->iobase + RB500_CF_REG_DATA;
-+}
-+
-+static __devinit int rb500_pata_driver_probe(struct platform_device *pdev)
-+{
-+	unsigned int irq;
-+	int gpio;
-+	struct resource *res;
-+	struct ata_host *ah;
-+	struct rb500_cf_info *info;
-+	int ret;
-+
-+	res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
-+	if (!res) {
-+		dev_err(&pdev->dev, "no IOMEM resource found\n");
-+		return -EINVAL;
-+	}
-+
-+	irq = platform_get_irq(pdev, 0);
-+	if (irq <= 0) {
-+		dev_err(&pdev->dev, "no IRQ resource found\n");
-+		return -ENOENT;
-+	}
-+
-+	gpio = irq_to_gpio(irq);
-+	if (gpio < 0) {
-+		dev_err(&pdev->dev, "no GPIO found for irq%d\n", irq);
-+		return -ENOENT;
-+	}
-+
-+	ret = gpio_request(gpio, DRV_NAME);
-+	if (ret) {
-+		dev_err(&pdev->dev, "GPIO request failed\n");
-+		return ret;
-+	}
-+
-+	/* allocate host */
-+	ah = ata_host_alloc(&pdev->dev, RB500_CF_MAXPORTS);
-+	if (!ah)
-+		return -ENOMEM;
-+
-+	platform_set_drvdata(pdev, ah);
-+
-+	info = devm_kzalloc(&pdev->dev, sizeof(*info), GFP_KERNEL);
-+	if (!info)
-+		return -ENOMEM;
-+
-+	ah->private_data = info;
-+	info->gpio_line = gpio;
-+	info->irq = irq;
-+
-+	info->iobase = devm_ioremap_nocache(&pdev->dev, res->start,
-+				res->end - res->start + 1);
-+	if (!info->iobase)
-+		return -ENOMEM;
-+
-+	ret = gpio_direction_input(gpio);
-+	if (ret) {
-+		dev_err(&pdev->dev, "unable to set GPIO direction, err=%d\n",
-+				ret);
-+		goto err_free_gpio;
-+	}
-+
-+	rb500_pata_setup_ports(ah);
-+
-+	ret = ata_host_activate(ah, irq, rb500_pata_irq_handler,
-+				IRQF_TRIGGER_LOW, &rb500_pata_sht);
-+	if (ret)
-+		goto err_free_gpio;
-+
-+	return 0;
-+
-+err_free_gpio:
-+	gpio_free(gpio);
-+
-+	return ret;
-+}
-+
-+static __devexit int rb500_pata_driver_remove(struct platform_device *pdev)
-+{
-+	struct ata_host *ah = platform_get_drvdata(pdev);
-+	struct rb500_cf_info *info = ah->private_data;
-+
-+	ata_host_detach(ah);
-+	gpio_free(info->gpio_line);
-+
-+	return 0;
-+}
-+
-+static struct platform_driver rb500_pata_platform_driver = {
-+	.probe		= rb500_pata_driver_probe,
-+	.remove		= __devexit_p(rb500_pata_driver_remove),
-+	.driver	 = {
-+		.name   = DRV_NAME,
-+		.owner  = THIS_MODULE,
-+	},
-+};
-+
-+/* ------------------------------------------------------------------------ */
-+
-+#define DRV_INFO DRV_DESC " version " DRV_VERSION
-+
-+static int __init rb500_pata_module_init(void)
-+{
-+	printk(KERN_INFO DRV_INFO "\n");
-+
-+	return platform_driver_register(&rb500_pata_platform_driver);
-+}
-+
-+static void __exit rb500_pata_module_exit(void)
-+{
-+	platform_driver_unregister(&rb500_pata_platform_driver);
-+}
-+
-+MODULE_AUTHOR("Gabor Juhos <juhosg at openwrt.org>");
-+MODULE_AUTHOR("Florian Fainelli <florian@openwrt.org>");
-+MODULE_DESCRIPTION(DRV_DESC);
-+MODULE_VERSION(DRV_VERSION);
-+MODULE_LICENSE("GPL");
-+
-+module_init(rb500_pata_module_init);
-+module_exit(rb500_pata_module_exit);
+Guennadi Liakhovetski
