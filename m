@@ -1,55 +1,58 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: Re: ata_ram driver
-Date: Thu, 06 Mar 2008 17:21:58 +0900
-Message-ID: <47CFA9A6.2040506@gmail.com>
-References: <20080222200951.GI16995@parisc-linux.org> <47BF3E54.9050609@rtr.ca>
+Subject: Re: Problem with pata_amd/sata_nv on ASRock Penryn1600SLI-110dB board
+Date: Thu, 06 Mar 2008 17:32:50 +0900
+Message-ID: <47CFAC32.6000103@gmail.com>
+References: <20080224225322.061dc654@alkaid.a.lan>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from gv-out-0910.google.com ([216.239.58.187]:3886 "EHLO
-	gv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752450AbYCFIWJ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 6 Mar 2008 03:22:09 -0500
-Received: by gv-out-0910.google.com with SMTP id s4so1409418gve.37
-        for <linux-ide@vger.kernel.org>; Thu, 06 Mar 2008 00:22:06 -0800 (PST)
-In-Reply-To: <47BF3E54.9050609@rtr.ca>
+Received: from wa-out-1112.google.com ([209.85.146.182]:28997 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750740AbYCFIc6 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 6 Mar 2008 03:32:58 -0500
+Received: by wa-out-1112.google.com with SMTP id v27so2129858wah.23
+        for <linux-ide@vger.kernel.org>; Thu, 06 Mar 2008 00:32:57 -0800 (PST)
+In-Reply-To: <20080224225322.061dc654@alkaid.a.lan>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark Lord <liml@rtr.ca>
-Cc: Matthew Wilcox <matthew@wil.cx>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Andreas Bierfert <andreas.bierfert@lowlatency.de>
+Cc: linux-ide@vger.kernel.org
 
-Mark Lord wrote:
-> Matthew Wilcox wrote:
->> I've ported the scsi_ram driver [1] to libata.  It could use a lot more
->> work -- there's a lot of stuff in the identify page that I haven't
->> filled in, and there's a lot of commands it doesn't even try to execute.
->>
->> For example, when you unload the driver, you get the mildly disturbing
->> messages:
->>
->> sd 12:0:0:0: [sdb] Stopping disk
->> sd 12:0:0:0: [sdb] START_STOP FAILED
->> sd 12:0:0:0: [sdb] Result: hostbyte=DID_BAD_TARGET
->> driverbyte=DRIVER_OK,SUGGEST_OK
->>
-> ..
+Andreas Bierfert wrote:
+> Hi there,
 > 
-> I see messages like those with *established* libata drivers from time to
-> time.
-> It could just be a bug in the shutdown sequence, somewhere between libata,
-> SCSI, block layer, and the device model in general.  Or not.
+> I got the above mentioned board [1] two weeks ago with a Q6600 cpu. I am running
+> Fedora 8 x86_64. While using 2.6.23, the attached cdrom/dvd drives went all
+> crazy together with a nice error message of the hdd from time to time.
+> 
+> After switching to 2.6.24 the cd drives were useful again but the hdd error
+> still occurs, effectively in the worst case making the system fs unusable and
+> requiring a hard reset. The error seems to appear randomly and I cannot
+> reproduce it by causing e.g. high disk usage...
+> 
+> See http://lowlatency.de/kbug/{dmesg,error,lspci} for the 2.6.23 and
+> http://lowlatency.de/kbug/{dmesg,error,lspci}-2.6.24 for the corresponding logs.
+> 
+> I first thought the bug was related to the pata drives so I switched some drives
+> around to only have sata hdds and only the cd/dvd drives on the pata controller
+> (see http://lowlatency.de/kbug/dmesg-newest). Still the same error (just other
+> ata numbers of course) for the hdd. Just to note => it also is a different
+> hdd so I would rule out defective hardware. Current setup is with these
+> harddisks http://lowlatency.de/kbug/hdparamI and I am still seeing the error.
+> 
+> Also tried with noapic parameter set at boot time.
+> 
+> Would be cool if anyone has some clues. If more information or tests are needed
+> let me know.
+> 
+> Best Regards,
+> Andreas Bierfert
+> 
+> [1] - http://www.asrock.com/mb/overview.asp?Model=Penryn1600SLI-110dB
 
-It's because of the sequence of events.  Currently, driver unload
-sequence is the same as when the device is hot unplugged.  libata
-detects that the device is gone and disables it and report it to SCSI
-layer.  SCSI layer takes over and tries to kill the SCSI device and tell
-sd to shutdown and sd issues START_STOP to shutdown which fails w/
-DID_BAD_TARGET because the matching ATA device is already gone.  I've
-left it that way because I'm not sure whether spinning down the drive on
-driver unload is the correct thing to do.  The message is annoying tho.
-
-Thanks.
+Does running "hal-disable-polling /dev/sr0" and "hal-disable-polling
+/dev/sr1" after boot remove the problems and keep the drives usable?
 
 -- 
 tejun
