@@ -1,48 +1,47 @@
-From: Tuomas Jormola <tj@solitudo.net>
-Subject: Re: PROBLEM: SATA hotplugging not working with nForce MCP61
-Date: Thu, 6 Mar 2008 20:29:49 +0200
-Message-ID: <1457A39C-25F5-41A0-BB35-FE086D105C43@solitudo.net>
-References: <20080128074336.GB2736@solitudo.net> <47A3FFB4.2010509@gmail.com> <20080202173723.GA26461@solitudo.net> <47A4F956.6030005@gmail.com> <20080203174655.GA19915@solitudo.net> <47A621FB.40206@garzik.org>
-Mime-Version: 1.0 (Apple Message framework v919.2)
-Content-Type: text/plain; charset=US-ASCII; format=flowed; delsp=yes
-Content-Transfer-Encoding: 7bit
+From: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
+Subject: Re: Unknown SATA PIIX PCI device ID 0x29b6
+Date: Thu, 6 Mar 2008 19:40:17 +0100 (CET)
+Message-ID: <Pine.LNX.4.64.0803061925190.8669@axis700.grange>
+References: <Pine.LNX.4.64.0802282306190.10087@axis700.grange>
+ <20080228225603.2764bfd1@core> <Pine.LNX.4.64.0802290010320.10498@axis700.grange>
+ <47CFADDF.20200@gmail.com> <Pine.LNX.4.64.0803061248070.5670@axis700.grange>
+ <39B20DF628532344BC7A2692CB6AEE0702679018@orsmsx420.amr.corp.intel.com>
+ <47D03272.9080209@garzik.org>
+Mime-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from emh03.mail.saunalahti.fi ([62.142.5.109]:36960 "EHLO
-	emh03.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752008AbYCFShR (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 6 Mar 2008 13:37:17 -0500
-In-Reply-To: <47A621FB.40206@garzik.org>
+Received: from mail.gmx.net ([213.165.64.20]:42475 "HELO mail.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1752652AbYCFSkB (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 6 Mar 2008 13:40:01 -0500
+In-Reply-To: <47D03272.9080209@garzik.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Jeff Garzik <jeff@garzik.org>
-Cc: Tejun Heo <htejun@gmail.com>, linux-ide@vger.kernel.org, Robert Hancock <hancockr@shaw.ca>
+Cc: "Gaston, Jason D" <jason.d.gaston@intel.com>, Tejun Heo <htejun@gmail.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
+On Thu, 6 Mar 2008, Jeff Garzik wrote:
 
-On 3 Feb 2008, at 22:20, Jeff Garzik wrote:
+> Gaston, Jason D wrote:
+> > If you disable the IDE Redirection in BIOS on that system, the 0x29b6
+> > controller should not appear.  If you are not using this, it would be
+> > interesting to see if this effects what you are seeing.
+> 
+> I think its fair to say that a certain amount of Linux users will inevitably
+> have this option enabled in their BIOS.  We should have a plan to deal with
+> this sanely...?
 
-> Tuomas Jormola wrote:
->> On Sun, Feb 03, 2008 at 08:14:30AM +0900, Tejun Heo wrote:
->>> Tuomas Jormola wrote:
->>>> 00:08.0 IDE interface [0101]: nVidia Corporation MCP61 SATA  
->>>> Controller [10de:03f6] (rev a2)
->>>> 00:08.1 IDE interface [0101]: nVidia Corporation MCP61 SATA  
->>>> Controller [10de:03f6] (rev a2)
->>> That's MCP61 which is GENERIC variant in sata_nv which does not  
->>> support
->>> hotplugging.  Robert, is this hardware restriction or do we just  
->>> need
->>> more info?
->> Ok, so I guess it's not a bug per se. By reading [1] I was under
->> impression that all the chips supported by sata_nv driver would also
->> support hotplugging.
->> [1] http://linux-ata.org/driver-status.html#nvidia
->
-> Like NVIDIA noted, we need to add support for it...
-Ok, I've raised a bug report about this.
-http://bugzilla.kernel.org/show_bug.cgi?id=10182
+Sorry, I am afraid, I caused a bit of confusion here. 0x29b6 I had when 
+BIOS configuration was set to "IDE". Then I couldn't use the 0x29b6 at 
+all, and therefore couldn't access the external eSATA disk at all. Then I 
+switched to AHCI, now all SATA hosts are on PCI ID 0x2922 and 0x29b6 is 
+also there as an IDE host unused...
 
--- 
-Tuomas Jormola <tj@solitudo.net>
+So, now BIOS is set to "AHCI", all SATA hosts - internal and external are 
+on PCI ID 0x2922, and external needs a minute to start up, but then it 
+works fine.
 
-
-
+Thanks
+Guennadi
+---
+Guennadi Liakhovetski
