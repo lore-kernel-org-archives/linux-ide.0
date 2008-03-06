@@ -1,67 +1,56 @@
-From: Jens Axboe <jens.axboe@oracle.com>
-Subject: Re: [PATCH] blk: missing add of padded bytes to io completion byte   count
-Date: Thu, 6 Mar 2008 14:41:39 +0100
-Message-ID: <20080306134138.GF17940@kernel.dk>
-References: <47CEA40F.6050903@gmail.com> <20080305135121.GK6704@kernel.dk> <1204730484.3047.10.camel@localhost.localdomain> <20080306134146A.fujita.tomonori@lab.ntt.co.jp>
+From: Mark Lord <liml@rtr.ca>
+Subject: Re: [patch 3/3] pata: "I do not think it means, what you think it
+ means."
+Date: Thu, 06 Mar 2008 09:58:41 -0500
+Message-ID: <47D006A1.8070000@rtr.ca>
+References: <200803042316.m24NGI7k002489@imap1.linux-foundation.org> <20080304173058.7679b7c8.akpm@linux-foundation.org> <20080305115610.397b3ea3@the-village.bc.nu> <200803051421.14167.bzolnier@gmail.com> <m3ir015du5.fsf@maximus.localdomain> <58cb370e0803050846t7dbd65d6ocfec7ca5e93aa6db@mail.gmail.com> <m3ejap5cvz.fsf@maximus.localdomain> <58cb370e0803050922p7695771cq393120ed5906efb7@mail.gmail.com> <1204742033.6408.37.camel@localhost> <m37iggbpqu.fsf@maximus.localdomain> <20080306111304.GK531@sci.fi>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from brick.kernel.dk ([87.55.233.238]:12246 "EHLO kernel.dk"
+Received: from rtr.ca ([76.10.145.34]:1078 "EHLO mail.rtr.ca"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751523AbYCFNlm (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 6 Mar 2008 08:41:42 -0500
-Content-Disposition: inline
-In-Reply-To: <20080306134146A.fujita.tomonori@lab.ntt.co.jp>
+	id S1757927AbYCFO6n (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 6 Mar 2008 09:58:43 -0500
+In-Reply-To: <20080306111304.GK531@sci.fi>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Cc: James.Bottomley@HansenPartnership.com, htejun@gmail.com, bharrosh@panasas.com, efault@gmx.de, tomof@acm.org, akpm@linux-foundation.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, jgarzik@pobox.com, bzolnier@gmail.com
+To: =?UTF-8?B?VmlsbGUgU3lyasOkbMOk?= <syrjala@sci.fi>, Krzysztof Halasa <khc@pm.waw.pl>, Zan Lynx <zlynx@acm.org>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Alan Cox <alan@lxorguk.u>
 
-On Thu, Mar 06 2008, FUJITA Tomonori wrote:
-> On Wed, 05 Mar 2008 09:21:24 -0600
-> James Bottomley <James.Bottomley@HansenPartnership.com> wrote:
-> 
-> > On Wed, 2008-03-05 at 14:51 +0100, Jens Axboe wrote:
-> > > On Wed, Mar 05 2008, Tejun Heo wrote:
-> > > > This is getting insanely subtle.  Let's say there's PIO driver which
-> > > > transfer certain sized chunks at a time and completes request partially
-> > > > after completing each chunk and the driver uses draining to eat up
-> > > > whatever excess data, which seems like a legit use case to me.  But it
-> > > > won't work because __end_that_request_first() will terminate when it
-> > > > reaches reaches the 'true' transfer size.  That's just broken API.  FWIW,
-> > > > 
-> > > > Nacked-by: Tejun Heo <htejun@gmail.com>
-> > > 
-> > > Yeah, I think I may have gone a bit overboard in applying this so
-> > > quickly. It's just not a good interface, silently adding the extra
-> > > length if asked to complete more. It may even happen right now, for a
-> > > driver that does no padding (it probably wont do any harm here either,
-> > > but still).
-> > > 
-> > > I'll try and see if I can come up with something cleaner.
-> > > 
-> > > My basic design paradigm for this is that the _driver_ (or mid layer, if
-> > > SCSI wants to handle it) should care about the padding. So make it easy
-> > > for them to pad, but have it 'unrolled' by completion time. We should
-> > > NOT need any extra_len checks or additions in the block/ directory,
-> > > period.
-> > 
-> > Right, that's why my original proposal was to do nothing for padding
-> > (other than ensure the driver could adjust the length if it wanted to)
-> > and to add an extra element always for draining, which the driver could
-> > ignore.  It basically pushed the use paradigm onto the driver.
-> > 
-> > If we want the use paradigm shared between block and driver, then I
-> > think the best approach is to keep all the bios the same (so not adjust
-> > for padding), but do adjust in the blk_rq_map_sg().  That way we have
-> > the padding and draining unwind information by comparing with the bio.
-> 
-> Adjusting only sg in blk_rq_map_sg (like drain) looks much
-> better. This works with libata for me.
+Ville Syrj=C3=A4l=C3=A4 wrote:
+> On Thu, Mar 06, 2008 at 02:33:29AM +0100, Krzysztof Halasa wrote:
+>> Zan Lynx <zlynx@acm.org> writes:
+>>
+>>> In my experience what they needed was proper cooling.  I have a 3wa=
+re
+>>> RAID-5 array of 4 120 GB DeskStar drives still working.
+>> I think the largest "deathstars" (75GXP?) were 75 GB.
+>=20
+> AFAIK there were basically two series of deathstars. The original
+> DTLA<something> and the more recent IC35<something>. The IC35 series
+> were bigger (120GB is the most common size I've seen for those).
+> Proper cooling and firmware upgrade usually fixed the deathstarness o=
+n
+> both series. I still have some of both, not in active use for a year =
+or
+> two but still working. As a strange coincidence I was just pulling ou=
+t
+> some old data from them yesterday.
+=2E.
 
-Looks like a much better solution to me. Anyone have any valid
-objections against moving the padding to the sg map time?
+The original Deathstar ailment had nothing to do with firmware or cooli=
+ng.
+But rather, a bad batch of chips that IBM had the misfortune to use a l=
+ot of.
 
--- 
-Jens Axboe
+The chips would grow tiny internal whiskers over a period of 2+ years,
+and eventually short circuit themselves.
+
+My last one died here just a few weeks ago, after sitting on the shelf
+for nearly all of it's life.  Never more than perhaps 40 power-on hours=
+ total,
+and never enough to get very warm.
+
+Cheers
 
