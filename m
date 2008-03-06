@@ -1,53 +1,50 @@
-From: Krzysztof Halasa <khc@pm.waw.pl>
-Subject: Re: [patch 3/3] pata: "I do not think it means, what you think it means."
-Date: Thu, 06 Mar 2008 23:10:46 +0100
-Message-ID: <m3ablbqza1.fsf@maximus.localdomain>
-References: <200803042316.m24NGI7k002489@imap1.linux-foundation.org>
-	<20080304173058.7679b7c8.akpm@linux-foundation.org>
-	<20080305115610.397b3ea3@the-village.bc.nu>
-	<200803051421.14167.bzolnier@gmail.com>
-	<m3ir015du5.fsf@maximus.localdomain>
-	<58cb370e0803050846t7dbd65d6ocfec7ca5e93aa6db@mail.gmail.com>
-	<m3ejap5cvz.fsf@maximus.localdomain>
-	<58cb370e0803050922p7695771cq393120ed5906efb7@mail.gmail.com>
-	<1204742033.6408.37.camel@localhost>
-	<m37iggbpqu.fsf@maximus.localdomain> <20080306111304.GK531@sci.fi>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-2
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+From: bugme-daemon@bugzilla.kernel.org
+Subject: [Bug 10185] New: Commit 9f10d9ee breaks CD mounting/burning
+Date: Thu,  6 Mar 2008 14:59:09 -0800 (PST)
+Message-ID: <bug-10185-11633@http.bugzilla.kernel.org/>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from khc.piap.pl ([195.187.100.11]:53567 "EHLO khc.piap.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756354AbYCFWKt convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 6 Mar 2008 17:10:49 -0500
-In-Reply-To: <20080306111304.GK531@sci.fi> ("Ville =?iso-8859-2?Q?Syrj=E4l?=
- =?iso-8859-2?Q?=E4=22's?= message of "Thu\, 6 Mar 2008 13\:13\:04 +0200")
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:36664 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752967AbYCFW7h (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 6 Mar 2008 17:59:37 -0500
+Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
+	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id m26MxVWJ014399
+	for <linux-ide@vger.kernel.org>; Thu, 6 Mar 2008 14:59:33 -0800
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Ville =?iso-8859-2?Q?Syrj=E4l=E4?= <syrjala@sci.fi>
-Cc: Zan Lynx <zlynx@acm.org>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Andrew Morton <akpm@linux-foundation.org>, jeff@garzik.org, linux-ide@vger.kernel.org, alan@redhat.com, linux-kernel@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-Ville Syrj=E4l=E4 <syrjala@sci.fi> writes:
+http://bugzilla.kernel.org/show_bug.cgi?id=10185
 
-> AFAIK there were basically two series of deathstars. The original
-> DTLA<something> and the more recent IC35<something>.
+           Summary: Commit 9f10d9ee breaks CD mounting/burning
+           Product: IO/Storage
+           Version: 2.5
+     KernelVersion: commit 9f10d9ee0ac6d79d7bc8b9a158bf4a29322d84d3
+          Platform: All
+        OS/Version: Linux
+              Tree: Mainline
+            Status: NEW
+          Severity: normal
+          Priority: P1
+         Component: IDE
+        AssignedTo: io_ide@kernel-bugs.osdl.org
+        ReportedBy: rjw@sisk.pl
+OtherBugsDependingO 9832
+             nThis:
+        Regression: 1
 
-Said friendly distributor recognizes only one deathstar line.
-Personally I lost only two such drives, 45 GB I think. My only IC35
-(still) produces some strange noises but it was like this from the
-beginning and I guess it's normal. IC25 (?, 2.5") still working, too -
-noises are a bit different than on IC35.
 
-> Proper cooling and firmware upgrade usually fixed the deathstarness o=
-n
-> both series.
+Submitter       : walt <w41ter@gmail.com>
+Date            : 2008-03-06 1:16
+References      : http://marc.info/?t=120476623500003&r=1&w=2
+Handled-By      : Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Patch           : http://marc.info/?l=linux-kernel&m=120483868101033&w=2
 
-Nope, DTLAs were not field-fixable, I think it was some problem with
-drive electronics. Anyway replacements from IBM were dying the same
-death, firmware upgrades or not, brand new or repaired, temperature or
-not.
+This entry is being used for tracking a regression from 2.6.24.  Please don't
+close it until the problem is fixed in the mainline.
 
-Perhaps there were other problems with them (switching while writing
-to medium IIRC) - a different story.
---=20
-Krzysztof Halasa
+
+-- 
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug, or are watching the assignee.
