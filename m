@@ -1,59 +1,34 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: ata_ram driver
-Date: Thu, 06 Mar 2008 09:28:21 -0600
-Message-ID: <1204817301.3062.3.camel@localhost.localdomain>
-References: <20080222200951.GI16995@parisc-linux.org>
-	 <47BF3E54.9050609@rtr.ca>  <47CFA9A6.2040506@gmail.com>
+From: Mark Lord <liml@rtr.ca>
+Subject: Correct use of  ap->lock  versus  ap->host->lock ?
+Date: Thu, 06 Mar 2008 10:48:02 -0500
+Message-ID: <47D01232.1000106@rtr.ca>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:51853 "EHLO
-	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752752AbYCFP20 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 6 Mar 2008 10:28:26 -0500
-In-Reply-To: <47CFA9A6.2040506@gmail.com>
+Received: from rtr.ca ([76.10.145.34]:4220 "EHLO mail.rtr.ca"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758656AbYCFPsE (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 6 Mar 2008 10:48:04 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Mark Lord <liml@rtr.ca>, Matthew Wilcox <matthew@wil.cx>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>, Jeff Garzik <jgarzik@pobox.com>, Alan Cox <alan@redhat.com>, IDE/ATA development list <linux-ide@vger.kernel.org>
 
-On Thu, 2008-03-06 at 17:21 +0900, Tejun Heo wrote:
-> Mark Lord wrote:
-> > Matthew Wilcox wrote:
-> >> I've ported the scsi_ram driver [1] to libata.  It could use a lot more
-> >> work -- there's a lot of stuff in the identify page that I haven't
-> >> filled in, and there's a lot of commands it doesn't even try to execute.
-> >>
-> >> For example, when you unload the driver, you get the mildly disturbing
-> >> messages:
-> >>
-> >> sd 12:0:0:0: [sdb] Stopping disk
-> >> sd 12:0:0:0: [sdb] START_STOP FAILED
-> >> sd 12:0:0:0: [sdb] Result: hostbyte=DID_BAD_TARGET
-> >> driverbyte=DRIVER_OK,SUGGEST_OK
-> >>
-> > ..
-> > 
-> > I see messages like those with *established* libata drivers from time to
-> > time.
-> > It could just be a bug in the shutdown sequence, somewhere between libata,
-> > SCSI, block layer, and the device model in general.  Or not.
-> 
-> It's because of the sequence of events.  Currently, driver unload
-> sequence is the same as when the device is hot unplugged.  libata
-> detects that the device is gone and disables it and report it to SCSI
-> layer.  SCSI layer takes over and tries to kill the SCSI device and tell
-> sd to shutdown and sd issues START_STOP to shutdown which fails w/
-> DID_BAD_TARGET because the matching ATA device is already gone.  I've
-> left it that way because I'm not sure whether spinning down the drive on
-> driver unload is the correct thing to do.  The message is annoying tho.
+Jeff / Tejun / Alan,
 
-Um, it's not supposed to happen that way.  Your signal that a disk is
-gone is slave destroy ... and we don't call that until after the target
-has been processed.  Devices are supposed to stay online (if possible)
-from slave alloc to slave destroy.
+I'm trying to sort out the spinlocks in sata_mv.
 
-James
+In some places, the existing code uses ap->lock.
+But in others, notably the interrupt handling, it uses ap->host->lock.
 
+This looks buggy to me, and I'm wondering how to make it bulletproof.
 
+The interrupt handler for each port should really be using ap->lock, right?
+But accesses to the host-level (shared among ports) interrupt registers
+probably requires ap->host->lock.  Right again?
+
+>From a libata core point of view, what does ap->host->lock protect?
+
+???
+
+Thanks
