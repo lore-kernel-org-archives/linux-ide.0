@@ -1,69 +1,55 @@
-From: walt <w41ter@gmail.com>
-Subject: Re: Commit 9f10d9ee breaks CD mounting/burning
-Date: Thu, 06 Mar 2008 16:21:53 -0800
-Message-ID: <47D08AA1.4020003@gmail.com>
-References: <fqngjf$cjf$1@ger.gmane.org> <200803062235.00396.bzolnier@gmail.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: ata_ram driver
+Date: Thu, 06 Mar 2008 18:22:33 -0600
+Message-ID: <1204849353.3062.107.camel@localhost.localdomain>
+References: <20080222200951.GI16995@parisc-linux.org>
+	 <47BF3E54.9050609@rtr.ca>  <47CFA9A6.2040506@gmail.com>
+	 <1204817301.3062.3.camel@localhost.localdomain>
+	 <47D08478.8010700@gmail.com>
+	 <1204848119.3062.94.camel@localhost.localdomain>
+	 <47D08892.3080209@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ti-out-0910.google.com ([209.85.142.186]:50476 "EHLO
-	ti-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757062AbYCGAU5 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 6 Mar 2008 19:20:57 -0500
-Received: by ti-out-0910.google.com with SMTP id 28so205269tif.23
-        for <linux-ide@vger.kernel.org>; Thu, 06 Mar 2008 16:20:55 -0800 (PST)
-In-Reply-To: <200803062235.00396.bzolnier@gmail.com>
+Received: from accolon.hansenpartnership.com ([76.243.235.52]:37444 "EHLO
+	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1759569AbYCGAWi (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 6 Mar 2008 19:22:38 -0500
+In-Reply-To: <47D08892.3080209@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, Borislav Petkov <petkovbb@googlemail.com>
+To: Tejun Heo <htejun@gmail.com>
+Cc: Mark Lord <liml@rtr.ca>, Matthew Wilcox <matthew@wil.cx>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Jeff Garzik <jeff@garzik.org>
 
-Bartlomiej Zolnierkiewicz wrote:
-> On Thursday 06 March 2008, walt wrote:
->> Hi Bartolmiej,
->>
->> For me, this commit causes the problem it's intended to fix:
->>
->> commit 9f10d9ee0ac6d79d7bc8b9a158bf4a29322d84d3
->> Author: Bartlomiej Zolnierkiewicz<bzolnier@gmail.com>
->> Date:   Tue Feb 26 21:50:35 2008 +0100
->>
->>       ide-cd: fix 'ireason' handling for REQ_TYPE_ATA_PC requests
+On Fri, 2008-03-07 at 09:13 +0900, Tejun Heo wrote:
+> James Bottomley wrote:
+> >> * Driver unload: Dealt the same way as hot unplugging.
+> > 
+> > This is the problem case: driver unloading should have a
+> > scsi_remove_host() in its path.  This is the trigger that sends out the
+> > flushes/stops and calls slave_destroy.  scsi_remove_host() doesn't
+> > actually return until all the destroys are completed, so it makes module
+> > unloading wait until everything is properly shut down.
+> > 
+> >> Making driver unload like explicit unplug request is possible but it
+> >> will mean that drives will be spun down on driver unload, which can be
+> >> annoying to developers. 
+> > 
+> > You have a sysfs flag to prevent that, don't you?
+> 
+> Yeap, sure.  It's the combination of things that always made me put this
+> off.  Is there a function I can call to just shutdown the host instead
+> of destroying it?
+
+Not really ... the process of unbinding the ULDs causes their remove
+methods to call shudown.  It is possible to separate this in the ULDS;
+but the original design was to make remove and shutdown be similar for
+the very reason that if you're removing the driver with unflushed data
+in the cache, we'd really like it flushed (flush is called from
+shutdown) because you have no way to talk to the device after this
+without reinserting the driver.
+
+James
 
 
-> Does the following patch help?
->
-> [ Borislav, please take a look and double check that it is OK. ]
->
-> From: Bartlomiej Zolnierkiewicz<bzolnier@gmail.com>
-> Subject: [PATCH] ide-cd: mark REQ_TYPE_ATA_PC write requests with REQ_RW flag
->
-> It turned out that REQ_TYPE_ATA_PC write requests were not marked as such
-> (the previous commit assumed them to be).
->
-> Reported-by: walt<w41ter@gmail.com>
-> Cc: Borislav Petkov<petkovbb@googlemail.com>
-> Signed-off-by: Bartlomiej Zolnierkiewicz<bzolnier@gmail.com>
-> ---
->   drivers/ide/ide-cd_ioctl.c |    4 ++++
->   1 file changed, 4 insertions(+)
->
-> Index: b/drivers/ide/ide-cd_ioctl.c
-> ===================================================================
-> --- a/drivers/ide/ide-cd_ioctl.c
-> +++ b/drivers/ide/ide-cd_ioctl.c
-> @@ -457,6 +457,10 @@ int ide_cdrom_packet(struct cdrom_device
->   	   layer. the packet must be complete, as we do not
->   	   touch it at all. */
->   	ide_cd_init_rq(drive,&req);
-> +
-> +	if (cgc->data_direction == CGC_DATA_WRITE)
-> +		req.cmd_flags |= REQ_RW;
-> +
->   	memcpy(req.cmd, cgc->cmd, CDROM_PACKET_SIZE);
->   	if (cgc->sense)
->   		memset(cgc->sense, 0, sizeof(struct request_sense));
->
-
-It's perfect, thanks!
