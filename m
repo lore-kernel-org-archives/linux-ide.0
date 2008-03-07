@@ -1,26 +1,39 @@
-From: Frans Pop <elendil@planet.nl>
-Subject: Re: extra bytes written to SATA DVD drive on kernel 2.6.23 till 2.6.24.2
-Date: Fri, 07 Mar 2008 20:52:13 +0100
-Message-ID: <E1JXic1-0000Yo-K8@faramir.fjphome.nl>
-References: <200802252005.22663.gml@inode.at> <200803011329.11315.gml@inode.at> <47D0FF67.8050503@gmail.com> <47D0FF67.8050503@gmail.com> <200803072009.22551.gml@inode.at>
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S932449AbYCGTwa@vger.kernel.org>
-In-reply-To: <200803072009.22551.gml@inode.at>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Gerold Jury <gml@inode.at>
-Cc: efault@gmx.de, htejun@gmail.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, vsu@altlinux.ru
+From: bugme-daemon@bugzilla.kernel.org
+Subject: [Bug 10142] DMA crash with via82cxxx module
+Date: Fri,  7 Mar 2008 12:09:39 -0800 (PST)
+Message-ID: <20080307200939.38BE811D109@picon.linux-foundation.org>
+References: <bug-10142-11633@http.bugzilla.kernel.org/>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:48616 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1764612AbYCGUJl (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 7 Mar 2008 15:09:41 -0500
+Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
+	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id m27KA50g006371
+	for <linux-ide@vger.kernel.org>; Fri, 7 Mar 2008 12:10:06 -0800
+In-Reply-To: <bug-10142-11633@http.bugzilla.kernel.org/>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-Gerold Jury wrote:
-> 0001ffe0  e0 ff e1 ff e2 ff e3 ff  e4 ff e5 ff e6 ff e7 ff  |................|
-> 0001fff0  e8 ff e9 ff ea ff eb ff  ec ff ed ff ee ff ef ff  |................|
-> 00020000  2a 00 00 00 00 40 00 00  40 00 00 00 00 40 00 00  |*....@..@....@..|
+http://bugzilla.kernel.org/show_bug.cgi?id=10142
 
-Looks broken here too.
 
-> 00020010  08 ff 09 ff 0a ff 0b ff  08 ff 09 ff 0a ff 0b ff  |................|
-> 00020020  00 00 01 00 02 00 03 00  04 00 05 00 06 00 07 00  |................|
 
-It also seems like part gets repeated after the break in both cases.
 
-Cheers,
-FJP
+
+------- Comment #11 from bzolnier@gmail.com  2008-03-07 12:09 -------
+| And about "drive not ready for command" error. This is related to Benq DVD
+| drive, and is discribed here:
+| https://bugs.launchpad.net/ubuntu/+source/linux/+bug/182996. I've
+disconnected
+| Benq drive and system did boot.
+
+Thanks but I was asking specifically for narrowing down this problem (since it
+looks like regression) - this would greatly help us in fixing it.
+
+
+-- 
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug, or are watching the assignee.
