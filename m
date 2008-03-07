@@ -1,60 +1,42 @@
-From: LCID Fire <lcid-fire@gmx.net>
-Subject: Frequent ATA errors
-Date: Fri, 07 Mar 2008 20:49:22 +0100
-Message-ID: <47D19C42.60301@gmx.net>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+From: bugme-daemon@bugzilla.kernel.org
+Subject: [Bug 10142] DMA crash with via82cxxx module
+Date: Fri,  7 Mar 2008 11:49:50 -0800 (PST)
+Message-ID: <20080307194950.796EC11D108@picon.linux-foundation.org>
+References: <bug-10142-11633@http.bugzilla.kernel.org/>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.gmx.net ([213.165.64.20]:60942 "HELO mail.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1757070AbYCGTtZ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 7 Mar 2008 14:49:25 -0500
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:40648 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1757070AbYCGTuW (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 7 Mar 2008 14:50:22 -0500
+Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
+	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id m27JoGxs004417
+	for <linux-ide@vger.kernel.org>; Fri, 7 Mar 2008 11:50:18 -0800
+In-Reply-To: <bug-10142-11633@http.bugzilla.kernel.org/>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
 
-Hi.
-I have a big problem. Since 2.6.22 I keep getting ata errors. Most of
-the time my computer (Intel P965 Chipset) ran fine - but then suddenly
-it began to stutter - the mouse was only moving very little and all
-input was lagged like hell. The only chance to get rid of this is to
-restart.
-It has continued to my current 2.6.24. In between there were times
-(kernel revisions) when it was better - meaning the error did only occur
-every few days or so. With the current 2.6.24 I have it almost every
-hour - I restarted my computer 10 times today alone. The errors look
-like the following:
+http://bugzilla.kernel.org/show_bug.cgi?id=10142
 
-[27536.340215] ata9.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2
-frozen
-[27536.340225] ata9.00: cmd a0/00:00:00:00:00/00:00:00:00:00/a0 tag 0
-[27536.340226]          cdb 00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00
-[27536.340228]          res 40/00:03:00:00:00/00:00:00:00:00/b0 Emask
-0x4 (timeout)
-[27536.340231] ata9.00: status: { DRDY }
-[27536.340250] ata9: soft resetting link
-[27536.996008] ata9.00: configured for PIO0
-[27537.159874] ata9.01: configured for UDMA/25
-[27537.159885] ata9: EH complete
 
-or
 
-[ 1001.987309] ata9.01: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2
-frozen
-[ 1001.987319] ata9.01: cmd a0/00:00:00:00:00/00:00:00:00:00/b0 tag 0
-[ 1001.987320]          cdb 00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00
-[ 1001.987322]          res 40/00:03:00:00:00/00:00:00:00:00/b0 Emask
-0x4 (timeout)
-[ 1001.987325] ata9.01: status: { DRDY }
-[ 1001.987343] ata9: soft resetting link
-[ 1002.643096] ata9.00: configured for UDMA/25
-[ 1002.806958] ata9.01: configured for UDMA/33
-[ 1002.806967] ata9: EH complete
 
-Does anybody have a clue what is wrong here? It seems to me that it has
-a problem with the ide channel since I cannot remember it ever saying
-anything about any UDMA/100+ drives.
 
-Regards
-Andreas
+------- Comment #10 from qrees@poczta.fm  2008-03-07 11:49 -------
+Ok, I've tested kernel version 2.6.24.8 and it didn't creash, but it's doesn't
+mean that it won't crash later. I'll test it for a week or so and see if it
+works fine. The problem with testing is that system may crash after few minutes
+or after few weeks. Even if finding kernel with git bisect might take only few
+iterations, one iteration may take very long time... I haven't found any
+software that always makes system crash...
+
+And about "drive not ready for command" error. This is related to Benq DVD
+drive, and is discribed here:
+https://bugs.launchpad.net/ubuntu/+source/linux/+bug/182996. I've disconnected
+Benq drive and system did boot.
+
+
+-- 
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug, or are watching the assignee.
