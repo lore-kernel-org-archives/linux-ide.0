@@ -1,106 +1,62 @@
-From: Jose Alberto Reguero <jareguero@telefonica.net>
-Subject: Re: Problem with ahci and a external sata disk
-Date: Fri, 7 Mar 2008 15:15:43 +0100
-Message-ID: <200803071515.43686.jareguero@telefonica.net>
-References: <200802191646.39277.jareguero@telefonica.net> <47CFA2E0.5030304@gmail.com> <200803071403.43113.jareguero@telefonica.net>
+From: Mark Lord <liml@rtr.ca>
+Subject: Re: SATA HDD password problem
+Date: Fri, 07 Mar 2008 09:45:04 -0500
+Message-ID: <47D154F0.50607@rtr.ca>
+References: <Pine.LNX.4.64.0803051143450.27209@Soyuz-KT.TeNet.Odessa.UA> <47CE9264.1010600@garzik.org> <Pine.LNX.4.64.0803051443500.28213@Soyuz-KT.TeNet.Odessa.UA> <47CFBDB6.8040400@gmail.com> <Pine.LNX.4.64.0803061417540.5200@Soyuz-KT.TeNet.Odessa.UA> <47D0BC5A.9000208@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-15
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outmailhost.telefonica.net ([213.4.149.242]:23808 "EHLO
-	ctsmtpout3.frontal.correo" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1759678AbYCGOP7 convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 7 Mar 2008 09:15:59 -0500
-In-Reply-To: <200803071403.43113.jareguero@telefonica.net>
-Content-Disposition: inline
+Received: from rtr.ca ([76.10.145.34]:2861 "EHLO mail.rtr.ca"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752128AbYCGOpH (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 7 Mar 2008 09:45:07 -0500
+In-Reply-To: <47D0BC5A.9000208@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Tejun Heo <htejun@gmail.com>
-Cc: linux-ide@vger.kernel.org
+Cc: "Rus V. Brushkoff" <rus@SoyuzKT.Od.UA>, Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org
 
-El Viernes, 7 de Marzo de 2008, Jose Alberto Reguero escribi=F3:
-> El Jueves, 6 de Marzo de 2008, Tejun Heo escribi=F3:
-> > Jose Alberto Reguero wrote:
-> > > When I try to make a ext3 fs in the disk I got a lot of erros:
-> >
-> > Can you please try 2.6.25-rc4 and see whether it behaves any
-> > differently.  The initial errors should be about the same but EH sh=
-ould
-> > slow the PHY to 1.5Gbps quickly and that seems to solve many PHY re=
-lated
-> > problems on eSATA connectors.
-> >
-> > Thanks.
->
-> I try with kernel 2.6.25-rc4 but when the limiting speed to 1.5g the =
-device
-> can't recover.
-> I try whith the option:
-> options libata force=3D4:1.5g
-> and works, but the speed is limited until:
-> ata4.00: limiting speed to UDMA/33:PIO4
-> and still have some errors.
->
-> Do you know what Transfer mode   I must try in  libata force to not h=
-ave
-> erros?
->
-> Thanks.
->
-> Jose Alberto
->
+Tejun Heo wrote:
+> Hello, Rus.
+> Rus V. Brushkoff wrote:
+...
+>> [Hors]:root:~ # hdparm -K 1 /dev/sda
+>>
+>> /dev/sda:
+>>  setting drive keep features to 1 (on)
+>>  HDIO_DRIVE_CMD(keepsettings) failed: Input/output error
+>> .....
+> 
+> Those two are different ones.  These are to keep software setting over
+> soft resets and doesn't have much to do with SSP.  Mark, maybe we need
+> to add a feature to hdparm to configure SSP?
+..
 
-[root@jar Pls]# hdparm -I /dev/sdd
+MMmm..  yes, there are a bunch of newish things there, specificially for SATA.
+I'll extend hdparm to give access to changing those things.
+..
+>> :To solve the problem, ATA added Software Setting Preservation
+>> :featureset, which makes the drive remember configurations over
+>> :hardresets but it's an optional feature and not all drives implement it.
+>> : I think having SSP support in the drive is the only sane way to support
+>> :password locking on SATA; otherwise, the drive can just go away while
+>> :the system is running.  That said, it would be nice to have a parameter
+>> :to force SRST or no reset at all for odd cases.
+>>
+>>  Hmm, if someone enable SSP in the drive after password unlock - does this 
+>> mean that it will be unlocked forever ? Or drive can distinguish between 
+>> power-on and hard-reset states ?
+> 
+> SSP by default stays on, so once unlocked it will stay unlocked as long
+> as power stays applied.  On power loss, it gets locked again.  On
+> reboots, the BIOS can always lock it again if it wants to.
+..
 
-/dev/sdd:
+The problem here, is that SSP itself gets turned-OFF after COMMRESET.
+It does preserve settings over the COMMRESET, but it then has to be
+renewed (re-issued by the driver) for things to survive a subsequent
+COMMRESET after the first one.   This has to go into libata,
+as it's not something we can control entirely from hdparm.
 
-ATA device, with non-removable media
-        Model Number:       Seagate FreeAgent Pro
-        Serial Number:      5QD3Q2AZ
-        Firmware Revision:  3.AFM
-Standards:
-        Used: ATA/ATAPI-6 T13 1410D revision 1
-        Supported: 6 5 4
-Configuration:
-        Logical         max     current
-        cylinders       16383   0
-        heads           16      0
-        sectors/track   63      0
-        --
-        LBA    user addressable sectors:  268435455
-        LBA48  user addressable sectors: 1465149168
-        device size with M =3D 1024*1024:      715404 MBytes
-        device size with M =3D 1000*1000:      750156 MBytes (750 GB)
-Capabilities:
-        LBA, IORDY(cannot be disabled)
-        Standby timer values: spec'd by Vendor, with device specific mi=
-nimum
-        R/W multiple sector transfer: Max =3D 1   Current =3D 0
-        DMA: mdma0 mdma1 mdma2 udma0 udma1 udma2 udma3 udma4 udma5 *udm=
-a6
-             Cycle time: min=3D120ns recommended=3D120ns
-        PIO: pio0 pio1 pio2 pio3 pio4
-             Cycle time: no flow control=3D120ns  IORDY flow control=3D=
-120ns
-Commands/features:
-        Enabled Supported:
-           *    SMART feature set
-           *    Power Management feature set
-           *    Write cache
-           *    48-bit Address feature set
-           *    Mandatory FLUSH_CACHE
-           *    FLUSH_CACHE_EXT
-           *    SMART self-test
-           *    WRITE_{DMA|MULTIPLE}_FUA_EXT
-           *    SATA-I signaling speed (1.5Gb/s)
-           *    SATA-II signaling speed (3.0Gb/s)
-Integrity word not set (found 0x0000, expected 0x23a5)
-
-I noticed that :
-  R/W multiple sector transfer: Max =3D 1   Current =3D 0
-
-It is important?
-
-Jose Alberto
-
+??
