@@ -1,127 +1,150 @@
 From: Elias Oltmanns <eo@nebensachen.de>
-Subject: Re: [RFC] Disk shock protection (revisited)
-Date: Fri, 07 Mar 2008 19:03:36 +0100
-Message-ID: <87bq5qfm2v.fsf@denkblock.local>
+Subject: [PATCH 3/4] disk-protect: Add a REQ_TYPE_LINUX_BLOCK request handler
+	to libata
+Date: Fri, 07 Mar 2008 19:26:14 +0100
+Message-ID: <20080307181750.9981.16714.stgit@denkblock.local>
 References: <87skzgd1zk.fsf@denkblock.local> <20080226123946.75dbe3d2@core>
 	<87mypl8p49.fsf@denkblock.local> <20080228111349.6831925c@core>
+	<87bq5qfm2v.fsf@denkblock.local>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nebensachen.de ([195.34.83.29]:40420 "EHLO mail.nebensachen.de"
+Received: from nebensachen.de ([195.34.83.29]:59645 "EHLO mail.nebensachen.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752351AbYCGSVS (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 7 Mar 2008 13:21:18 -0500
+	id S1762597AbYCGS0E (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 7 Mar 2008 13:26:04 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Alan Cox <alan@lxorguk.ukuu.org.uk>
 Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Jens Axboe <jens.axboe@oracle.com>
 
-Alan Cox <alan@lxorguk.ukuu.org.uk> wrote:
-[...]
->> there. As for responsiveness under heavy load, I'm not quite sure I get
->> your meaning. On my system, at least, the only way I have managed to
->> decrease responsiveness noticeably is to cause a lot of I/O operations
->
-> It depends a lot on hardware but you can certainly get user space delays
-> in seconds as an extreme worst case.
->
->> stays in memory all the time, it can go ahead and notify the kernel that
->> the disk heads should be unloaded. The kernel takes care to insert the
->> idle immediate command at the head of the queue. Am I missing something?
->
-> Yes - the fact we may well have bounced off the floor already.
+Defines a generic handler to be used as the lb_request_fn() callback for
+libata managed hosts. Support for REQ_LB_OP_FREEZE and REQ_LB_OP_THAW is
+included as well.
 
-Well, with or without shock protection it can't get any worse by then,
-can it? But in all those cases where the system manages to get the heads
-of the platter in time, the owner may be greatful for this feature.
+Signed-off-by: Elias Oltmanns <eo@nebensachen.de>
+---
 
->
->> happens to have access to more than one accelerometer. Right now, I don't
->> feel quite up to the job to write a dedicated kernel module that
->> replaces the daemon and is designed in a sufficiently generic way to
->
-> Thats fine - nothing says a user space daemon isn't a good starting point.
+ drivers/ata/ahci.c        |    1 +
+ drivers/ata/ata_piix.c    |    1 +
+ drivers/ata/libata-scsi.c |   53 +++++++++++++++++++++++++++++++++++++++++++++
+ include/linux/blkdev.h    |    2 ++
+ include/linux/libata.h    |    1 +
+ 5 files changed, 58 insertions(+), 0 deletions(-)
 
-A starting point it is then.
+diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+index 54f38c2..324c4fa 100644
+--- a/drivers/ata/ahci.c
++++ b/drivers/ata/ahci.c
+@@ -273,6 +273,7 @@ static struct scsi_host_template ahci_sht = {
+ 	.name			= DRV_NAME,
+ 	.ioctl			= ata_scsi_ioctl,
+ 	.queuecommand		= ata_scsi_queuecmd,
++	.lb_request_fn		= ata_scsi_lb_request_fn,
+ 	.change_queue_depth	= ata_scsi_change_queue_depth,
+ 	.can_queue		= AHCI_MAX_CMDS - 1,
+ 	.this_id		= ATA_SHT_THIS_ID,
+diff --git a/drivers/ata/ata_piix.c b/drivers/ata/ata_piix.c
+index b406b39..c2b7ad7 100644
+--- a/drivers/ata/ata_piix.c
++++ b/drivers/ata/ata_piix.c
+@@ -283,6 +283,7 @@ static struct scsi_host_template piix_sht = {
+ 	.name			= DRV_NAME,
+ 	.ioctl			= ata_scsi_ioctl,
+ 	.queuecommand		= ata_scsi_queuecmd,
++	.lb_request_fn		= ata_scsi_lb_request_fn,
+ 	.can_queue		= ATA_DEF_QUEUE,
+ 	.this_id		= ATA_SHT_THIS_ID,
+ 	.sg_tablesize		= LIBATA_MAX_PRD,
+diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+index d0fd762..df25aa4 100644
+--- a/drivers/ata/libata-scsi.c
++++ b/drivers/ata/libata-scsi.c
+@@ -3123,6 +3123,59 @@ void ata_scsi_simulate(struct ata_device *dev, struct scsi_cmnd *cmd,
+ 	}
+ }
+ 
++/**
++ *	ata_scsi_lb_request_fn - process block request for libata-managed device
++ *	@req: REQ_TYPE_LINUX_BLOCK request to be processed
++ *
++ *	This function is the default handler for REQ_TYPE_LINUX_BLOCK
++ *	requests in libata.
++ *
++ *	LOCKING:
++ *	Releases queue lock, and obtains host lock.
++ *
++ *	RETURNS:
++ *	SUCCESS if opcode is known to us, FAILED otherwise.
++ */
++
++int ata_scsi_lb_request_fn(struct request *req)
++{
++	struct request_queue *q = req->q;
++	struct scsi_device *sdev = q->queuedata;
++	struct Scsi_Host *shost = sdev->host;
++	struct ata_port *ap = ata_shost_to_port(shost);
++	struct ata_device *dev;
++	int rc = SUCCESS;
++
++	spin_unlock(q->queue_lock);
++	spin_lock(ap->lock);
++
++	dev = ata_scsi_find_dev(ap, sdev);
++	if (unlikely(!dev)) {
++		req->errors = -ENXIO;
++		goto out;
++	}
++
++	switch (req->cmd[0]) {
++	case REQ_LB_OP_FREEZE:
++		ata_scsi_protect_dev(dev);
++		break;
++
++	case REQ_LB_OP_THAW:
++		ata_scsi_unprotect_dev(dev);
++		break;
++
++	default:
++		rc = FAILED;
++		goto out;
++	}
++
++out:
++	spin_unlock(ap->lock);
++	spin_lock(q->queue_lock);
++	return rc;
++}
++EXPORT_SYMBOL_GPL(ata_scsi_lb_request_fn);
++
+ int ata_scsi_add_hosts(struct ata_host *host, struct scsi_host_template *sht)
+ {
+ 	int i, rc;
+diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
+index 5955b57..1854a69 100644
+--- a/include/linux/blkdev.h
++++ b/include/linux/blkdev.h
+@@ -164,6 +164,8 @@ enum {
+ 	 */
+ 	REQ_LB_OP_EJECT	= 0x40,		/* eject request */
+ 	REQ_LB_OP_FLUSH = 0x41,		/* flush device */
++	REQ_LB_OP_FREEZE = 0x42,	/* freeze queue (protect device) */
++	REQ_LB_OP_THAW	= 0x3,		/* thaw queue */
+ };
+ 
+ /*
+diff --git a/include/linux/libata.h b/include/linux/libata.h
+index 2db23c3..4e97964 100644
+--- a/include/linux/libata.h
++++ b/include/linux/libata.h
+@@ -809,6 +809,7 @@ extern void ata_host_init(struct ata_host *, struct device *,
+ extern int ata_scsi_detect(struct scsi_host_template *sht);
+ extern int ata_scsi_ioctl(struct scsi_device *dev, int cmd, void __user *arg);
+ extern int ata_scsi_queuecmd(struct scsi_cmnd *cmd, void (*done)(struct scsi_cmnd *));
++extern int ata_scsi_lb_request_fn(struct request *req);
+ extern void ata_sas_port_destroy(struct ata_port *);
+ extern struct ata_port *ata_sas_port_alloc(struct ata_host *,
+ 					   struct ata_port_info *, struct Scsi_Host *);
 
->
->> > Yep. Pity the worst case completion time for an IDE I/O is 60 seconds or
->> > so.
->> 
->> Well, the low level driver would have to make sure that no requests are
->> accepted after the idle immediate command has been received. The block
->
-> No doesn't work like that. The command currently being processed on IDE
-> can take up to 60 seconds to complete. Idle immediate (on the devices it
-> works for - it hangs some) is very special in that it can be used in some
-> cases to interrupt a running command sequence. It requires a significant
-> amount of work in the driver layer to then clean up and requeue the
-> partial command and to know if it is possible to do so.
 
-This business of aborting commands is exactly what I haven't a clue
-about. At first I thought I could do something similar to
-ata_do_link_abort but I obviously want to avoid the need for a soft
-reset before issuing idle immediate. How am I to go about it?
-
->
->> and freezing the block layer queue eventually in order to stop
->> the request_fn() from being called needlessly. Once the specified time
->> is up or if the daemon writes 0 to that sysfs attrribute before that
->> time, it is kernel space code again that takes care that normal
->> operation is resumed.
->
-> I think we have three things here
->
-> 1.	A general queue freeze scheme from user space
-> 2.	A general implementation of a queue freeze that stops further
-> command issuing while the queue is blocked
-> 3.	The ability for devices to provide a function to be called
-> when a queue freeze is done (ie idle immediate and the like)
->
-> The fine details of how you abort an ATA command don't actually matter
-> for an initial implementation and can be written once the core stuff is
-> right.
->
-[...]
->> Yes, I thought as much. I just haven't quite worked out yet where or how
->> I am supposed to introduce libata specific sysfs attributes since this
->> seems to be left to the scsi midlayer so far.
->
-> The scsi midlayer is the main manager of queues so that seems sane - and
-> if you've got the basic queue freeze logic right then one assumes it will
-> work for scsi too.
-
-Basic queue freezing certainly will. But we'll need attributes specific
-to ATA so the user can determine whether
-1. idle immediate should be issued (if supported) on queue freeze
-   events;
-2. idle immediate is supported on this particular device even though
-   dev->id doesn't say so;
-3. idle immediate is malfunctioning and should be avoided even though
-   dev->id reports support for that feature;
-4. (perhaps we should drop that): use standby immediate if idle
-   immediate isn't supported for some reason.
-
-I'm going to send a first draft of a patch series in reply to this
-email. It is a stripped down version intended to get the general idea
-across. The first of these four patches will eventually need to be
-modified to actually abort in flight commands and clear up the mess
-afterwards. However, first and foremost I'd like to draw your attention
-to the use of REQ_TYPE_LINUX_BLOCK requests as demonstrated in the other
-three patches. The question is whether the underlying concept is right.
-Although the question how to handle REQ_TYPE_LINUX_BLOCK requests in the
-scsi subsystem has been raised on the linux-scsi ml, it has never been
-answered really because this request type was deemed unsuitable for the
-application in question. See, for instance, the thread starting at [1].
-My patch approach has been partly inspired by the patch discussed there.
-Before I raise this issue yet again, I'd like to know whether
-REQ_TYPE_LINUX_BLOCK is the right choice for my application in your
-opinion or whether another mechanism might be more suitable as James
-suggested a while ago (see [2]).
-
-Regards,
-
-Elias
-
-[1] http://permalink.gmane.org/gmane.linux.scsi/30049
-[2] http://permalink.gmane.org/gmane.linux.scsi/37951
