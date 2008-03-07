@@ -1,8 +1,8 @@
 From: Elias Oltmanns <eo@nebensachen.de>
-Subject: [PATCH 3/4] disk-protect: Add a REQ_TYPE_LINUX_BLOCK request handler
-	to libata
-Date: Fri, 07 Mar 2008 19:26:14 +0100
-Message-ID: <20080307181750.9981.16714.stgit@denkblock.local>
+Subject: [PATCH 2/4] disk-protect: SCSI support for REQ_TYPE_LINUX_BLOCK
+	requests
+Date: Fri, 07 Mar 2008 19:25:48 +0100
+Message-ID: <20080307181750.9981.73383.stgit@denkblock.local>
 References: <87skzgd1zk.fsf@denkblock.local> <20080226123946.75dbe3d2@core>
 	<87mypl8p49.fsf@denkblock.local> <20080228111349.6831925c@core>
 	<87bq5qfm2v.fsf@denkblock.local>
@@ -10,141 +10,185 @@ Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nebensachen.de ([195.34.83.29]:59645 "EHLO mail.nebensachen.de"
+Received: from nebensachen.de ([195.34.83.29]:40775 "EHLO mail.nebensachen.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1762597AbYCGS0E (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 7 Mar 2008 13:26:04 -0500
+	id S1761378AbYCGSZt (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 7 Mar 2008 13:25:49 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Alan Cox <alan@lxorguk.ukuu.org.uk>
 Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Jens Axboe <jens.axboe@oracle.com>
 
-Defines a generic handler to be used as the lb_request_fn() callback for
-libata managed hosts. Support for REQ_LB_OP_FREEZE and REQ_LB_OP_THAW is
-included as well.
+Add the necessary infrastructure to the SCSI midlayer so it can handle
+REQ_TYPE_LINUX_BLOCK requests. It is rather simple at this stage and may
+have to be adapted as new REQ_LB_OP* commands are introduced.
 
 Signed-off-by: Elias Oltmanns <eo@nebensachen.de>
 ---
 
- drivers/ata/ahci.c        |    1 +
- drivers/ata/ata_piix.c    |    1 +
- drivers/ata/libata-scsi.c |   53 +++++++++++++++++++++++++++++++++++++++++++++
- include/linux/blkdev.h    |    2 ++
- include/linux/libata.h    |    1 +
- 5 files changed, 58 insertions(+), 0 deletions(-)
+ drivers/scsi/scsi_lib.c  |   56 ++++++++++++++++++++++++++++++++++++++++++++--
+ drivers/scsi/sd.c        |    9 +++++++
+ include/linux/blkdev.h   |    1 +
+ include/scsi/scsi_host.h |   22 ++++++++++++++++++
+ 4 files changed, 86 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
-index 54f38c2..324c4fa 100644
---- a/drivers/ata/ahci.c
-+++ b/drivers/ata/ahci.c
-@@ -273,6 +273,7 @@ static struct scsi_host_template ahci_sht = {
- 	.name			= DRV_NAME,
- 	.ioctl			= ata_scsi_ioctl,
- 	.queuecommand		= ata_scsi_queuecmd,
-+	.lb_request_fn		= ata_scsi_lb_request_fn,
- 	.change_queue_depth	= ata_scsi_change_queue_depth,
- 	.can_queue		= AHCI_MAX_CMDS - 1,
- 	.this_id		= ATA_SHT_THIS_ID,
-diff --git a/drivers/ata/ata_piix.c b/drivers/ata/ata_piix.c
-index b406b39..c2b7ad7 100644
---- a/drivers/ata/ata_piix.c
-+++ b/drivers/ata/ata_piix.c
-@@ -283,6 +283,7 @@ static struct scsi_host_template piix_sht = {
- 	.name			= DRV_NAME,
- 	.ioctl			= ata_scsi_ioctl,
- 	.queuecommand		= ata_scsi_queuecmd,
-+	.lb_request_fn		= ata_scsi_lb_request_fn,
- 	.can_queue		= ATA_DEF_QUEUE,
- 	.this_id		= ATA_SHT_THIS_ID,
- 	.sg_tablesize		= LIBATA_MAX_PRD,
-diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-index d0fd762..df25aa4 100644
---- a/drivers/ata/libata-scsi.c
-+++ b/drivers/ata/libata-scsi.c
-@@ -3123,6 +3123,59 @@ void ata_scsi_simulate(struct ata_device *dev, struct scsi_cmnd *cmd,
- 	}
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index a9ac5b1..c25201b 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -1448,12 +1448,30 @@ static void scsi_kill_request(struct request *req, struct request_queue *q)
+ 	__scsi_done(cmd);
  }
  
-+/**
-+ *	ata_scsi_lb_request_fn - process block request for libata-managed device
-+ *	@req: REQ_TYPE_LINUX_BLOCK request to be processed
-+ *
-+ *	This function is the default handler for REQ_TYPE_LINUX_BLOCK
-+ *	requests in libata.
-+ *
-+ *	LOCKING:
-+ *	Releases queue lock, and obtains host lock.
-+ *
-+ *	RETURNS:
-+ *	SUCCESS if opcode is known to us, FAILED otherwise.
-+ */
-+
-+int ata_scsi_lb_request_fn(struct request *req)
++static void scsi_finish_lb_req(struct request *req)
 +{
 +	struct request_queue *q = req->q;
 +	struct scsi_device *sdev = q->queuedata;
-+	struct Scsi_Host *shost = sdev->host;
-+	struct ata_port *ap = ata_shost_to_port(shost);
-+	struct ata_device *dev;
-+	int rc = SUCCESS;
++	unsigned long flags;
 +
-+	spin_unlock(q->queue_lock);
-+	spin_lock(ap->lock);
-+
-+	dev = ata_scsi_find_dev(ap, sdev);
-+	if (unlikely(!dev)) {
-+		req->errors = -ENXIO;
-+		goto out;
-+	}
-+
-+	switch (req->cmd[0]) {
-+	case REQ_LB_OP_FREEZE:
-+		ata_scsi_protect_dev(dev);
-+		break;
-+
-+	case REQ_LB_OP_THAW:
-+		ata_scsi_unprotect_dev(dev);
-+		break;
-+
-+	default:
-+		rc = FAILED;
-+		goto out;
-+	}
-+
-+out:
-+	spin_unlock(ap->lock);
-+	spin_lock(q->queue_lock);
-+	return rc;
++	spin_lock_irqsave(q->queue_lock, flags);
++	end_that_request_last(req, 1);
++	spin_unlock_irqrestore(q->queue_lock, flags);
++	put_device(&sdev->sdev_gendev);
 +}
-+EXPORT_SYMBOL_GPL(ata_scsi_lb_request_fn);
 +
- int ata_scsi_add_hosts(struct ata_host *host, struct scsi_host_template *sht)
+ static void scsi_softirq_done(struct request *rq)
  {
- 	int i, rc;
+ 	struct scsi_cmnd *cmd = rq->completion_data;
+-	unsigned long wait_for = (cmd->allowed + 1) * cmd->timeout_per_command;
++	unsigned long wait_for;
+ 	int disposition;
+ 
++	if (blk_lb_request(rq)) {
++		scsi_finish_lb_req(rq);
++		return;
++	}
++
++	wait_for = (cmd->allowed + 1) * cmd->timeout_per_command;
+ 	INIT_LIST_HEAD(&cmd->eh_entry);
+ 
+ 	disposition = scsi_decide_disposition(cmd);
+@@ -1483,6 +1501,24 @@ static void scsi_softirq_done(struct request *rq)
+ 	}
+ }
+ 
++static void scsi_exec_lb_req(struct request *req)
++{
++	struct scsi_device *sdev = req->q->queuedata;
++	struct scsi_host_template *shostt = sdev->host->hostt;
++	int rc;
++
++	if (shostt->lb_request_fn)
++		rc = shostt->lb_request_fn(req);
++	else
++		rc = FAILED;
++
++	if (rc == FAILED)
++		req->errors = -EIO;
++	else if (rc == QUEUED)
++		return;
++	blk_complete_request(req);
++}
++
+ /*
+  * Function:    scsi_request_fn()
+  *
+@@ -1525,7 +1561,23 @@ static void scsi_request_fn(struct request_queue *q)
+ 		 * accept it.
+ 		 */
+ 		req = elv_next_request(q);
+-		if (!req || !scsi_dev_queue_ready(q, sdev))
++		if (!req)
++			break;
++
++		/*
++		 * We do not account for linux blk req in the device
++		 * or host busy accounting because it is not necessarily
++		 * a scsi command that is sent to some object. The lower
++		 * level can translate it into a request/scsi_cmnd, if
++		 * necessary, and then queue that up using REQ_TYPE_BLOCK_PC.
++		 */
++		if (blk_lb_request(req)) {
++			blkdev_dequeue_request(req);
++			scsi_exec_lb_req(req);
++			continue;
++		}
++
++		if (!scsi_dev_queue_ready(q, sdev))
+ 			break;
+ 
+ 		if (unlikely(!scsi_device_online(sdev))) {
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index cfd859a..1be9821 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -357,6 +357,15 @@ static int sd_prep_fn(struct request_queue *q, struct request *rq)
+ 	if (rq->cmd_type == REQ_TYPE_BLOCK_PC) {
+ 		ret = scsi_setup_blk_pc_cmnd(sdp, rq);
+ 		goto out;
++	} else if (rq->cmd_type == REQ_TYPE_LINUX_BLOCK) {
++		get_device(&sdp->sdev_gendev);
++		/*
++		 * Since these requests don't need preparation, we'll
++		 * basically just accept them unconditionally at this
++		 * point.
++		 */
++		ret = BLKPREP_OK;
++		goto out;
+ 	} else if (rq->cmd_type != REQ_TYPE_FS) {
+ 		ret = BLKPREP_KILL;
+ 		goto out;
 diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
-index 5955b57..1854a69 100644
+index d18ee67..5955b57 100644
 --- a/include/linux/blkdev.h
 +++ b/include/linux/blkdev.h
-@@ -164,6 +164,8 @@ enum {
- 	 */
- 	REQ_LB_OP_EJECT	= 0x40,		/* eject request */
- 	REQ_LB_OP_FLUSH = 0x41,		/* flush device */
-+	REQ_LB_OP_FREEZE = 0x42,	/* freeze queue (protect device) */
-+	REQ_LB_OP_THAW	= 0x3,		/* thaw queue */
- };
+@@ -521,6 +521,7 @@ enum {
  
- /*
-diff --git a/include/linux/libata.h b/include/linux/libata.h
-index 2db23c3..4e97964 100644
---- a/include/linux/libata.h
-+++ b/include/linux/libata.h
-@@ -809,6 +809,7 @@ extern void ata_host_init(struct ata_host *, struct device *,
- extern int ata_scsi_detect(struct scsi_host_template *sht);
- extern int ata_scsi_ioctl(struct scsi_device *dev, int cmd, void __user *arg);
- extern int ata_scsi_queuecmd(struct scsi_cmnd *cmd, void (*done)(struct scsi_cmnd *));
-+extern int ata_scsi_lb_request_fn(struct request *req);
- extern void ata_sas_port_destroy(struct ata_port *);
- extern struct ata_port *ata_sas_port_alloc(struct ata_host *,
- 					   struct ata_port_info *, struct Scsi_Host *);
+ #define blk_fs_request(rq)	((rq)->cmd_type == REQ_TYPE_FS)
+ #define blk_pc_request(rq)	((rq)->cmd_type == REQ_TYPE_BLOCK_PC)
++#define blk_lb_request(rq)	((rq)->cmd_type == REQ_TYPE_LINUX_BLOCK)
+ #define blk_special_request(rq)	((rq)->cmd_type == REQ_TYPE_SPECIAL)
+ #define blk_sense_request(rq)	((rq)->cmd_type == REQ_TYPE_SENSE)
+ 
+diff --git a/include/scsi/scsi_host.h b/include/scsi/scsi_host.h
+index 0fd4746..c2946d0 100644
+--- a/include/scsi/scsi_host.h
++++ b/include/scsi/scsi_host.h
+@@ -8,6 +8,7 @@
+ #include <linux/mutex.h>
+ 
+ struct request_queue;
++struct request;
+ struct block_device;
+ struct completion;
+ struct module;
+@@ -152,6 +153,27 @@ struct scsi_host_template {
+ 				  void (*done)(struct scsi_cmnd *));
+ 
+ 	/*
++	 * The lb_request_fn function is used to pass
++	 * REQ_TYPE_LINUX_BLOCK requests to the LLDD. The return value
++	 * FAILED indicates that the command opcode has not been known
++	 * by lb_request_fn. In contrast, the return value SUCCESS
++	 * means that the opcode has been recognised and the request
++	 * has been processed accordingly. Note, however, that SUCCESS
++	 * does not necessarily mean that all actions have been
++	 * performed successfully; errors are recorded in req->errors.
++	 * lb_request_fn can also return QUEUED in order to prevent
++	 * midlayer from enqueueng the request for completion.
++	 * Obviously, the LLDD must take care that the request will be
++	 * completed by means of blk_complete_request eventually.
++	 *
++	 * Status: OPTIONAL
++	 */
++	/* TODO: We might need to accept a return value NEEDS_RETRY some
++	 * time.
++	 */
++	int (* lb_request_fn)(struct request *req);
++
++	/*
+ 	 * This is an error handling strategy routine.  You don't need to
+ 	 * define one of these if you don't want to - there is a default
+ 	 * routine that is present that should work in most cases.  For those
 
 
