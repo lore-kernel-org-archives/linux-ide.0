@@ -1,33 +1,53 @@
-From: Andi Kleen <andi@firstfloor.org>
-Subject: Re: Correct use of  ap->lock  versus  ap->host->lock ?
-Date: 07 Mar 2008 12:47:27 +0100
-Message-ID: <878x0ug3hs.fsf@basil.nowhere.org>
-References: <47D01232.1000106@rtr.ca> <47D01D4B.8000506@pobox.com>
-	<47D02642.8040907@rtr.ca> <47D029BF.8040000@pobox.com>
-	<47D02BB2.9000609@rtr.ca> <47D03080.8070405@pobox.com>
-	<47D035D6.1060604@rtr.ca> <47D036DF.1050200@pobox.com>
+From: Jose Alberto Reguero <jareguero@telefonica.net>
+Subject: Re: Problem with ahci and a external sata disk
+Date: Fri, 7 Mar 2008 14:03:42 +0100
+Message-ID: <200803071403.43113.jareguero@telefonica.net>
+References: <200802191646.39277.jareguero@telefonica.net> <47CFA2E0.5030304@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=iso-8859-15
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp-out03.alice-dsl.net ([88.44.63.5]:18067 "EHLO
-	smtp-out03.alice-dsl.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752301AbYCGMEX (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 7 Mar 2008 07:04:23 -0500
-In-Reply-To: <47D036DF.1050200@pobox.com>
+Received: from outmailhost.telefonica.net ([213.4.149.242]:42719 "EHLO
+	ctsmtpout2.frontal.correo" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1757363AbYCGNDq convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 7 Mar 2008 08:03:46 -0500
+In-Reply-To: <47CFA2E0.5030304@gmail.com>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: Mark Lord <liml@rtr.ca>, Tejun Heo <htejun@gmail.com>, Alan Cox <alan@redhat.com>, IDE/ATA development list <linux-ide@vger.kernel.org>
+To: Tejun Heo <htejun@gmail.com>
+Cc: linux-ide@vger.kernel.org
 
-Jeff Garzik <jgarzik@pobox.com> writes:
+El Jueves, 6 de Marzo de 2008, Tejun Heo escribi=F3:
+> Jose Alberto Reguero wrote:
+> > When I try to make a ext3 fs in the disk I got a lot of erros:
+>
+> Can you please try 2.6.25-rc4 and see whether it behaves any
+> differently.  The initial errors should be about the same but EH shou=
+ld
+> slow the PHY to 1.5Gbps quickly and that seems to solve many PHY rela=
+ted
+> problems on eSATA connectors.
+>
+> Thanks.
 
-> Mark Lord wrote:
-> > The big difference here, is that a single SATA controller in a system
-> > can have up to eight quasi-independent ports.  So when we lock, we block
-> > activity on all 8 interfaces, rather than just the one we care about.
-> 
->   ...hence the mention of multi-port NICs.
+I try with kernel 2.6.25-rc4 but when the limiting speed to 1.5g the de=
+vice=20
+can't recover.
+I try whith the option:
+options libata force=3D4:1.5g
+and works, but the speed is limited until:
+ata4.00: limiting speed to UDMA/33:PIO4
+and still have some errors.
 
-Multi port nics typically have one spinlock per port though, don't they?
+Do you know what Transfer mode   I must try in  libata force to not hav=
+e=20
+erros?
 
--Andi
+Thanks.
+
+Jose Alberto
+
+hdparm -I
+
