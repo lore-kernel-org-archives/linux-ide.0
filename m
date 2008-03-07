@@ -1,7 +1,8 @@
 From: Elias Oltmanns <eo@nebensachen.de>
-Subject: [PATCH 1/4] disk-protect: Add disk shock protection helpers to libata
-Date: Fri, 07 Mar 2008 19:25:16 +0100
-Message-ID: <20080307181750.9981.88028.stgit@denkblock.local>
+Subject: [PATCH 4/4] disk-protect: Add a generic block layer queue freezing
+	facility
+Date: Fri, 07 Mar 2008 19:26:41 +0100
+Message-ID: <20080307181750.9981.1330.stgit@denkblock.local>
 References: <87skzgd1zk.fsf@denkblock.local> <20080226123946.75dbe3d2@core>
 	<87mypl8p49.fsf@denkblock.local> <20080228111349.6831925c@core>
 	<87bq5qfm2v.fsf@denkblock.local>
@@ -9,237 +10,234 @@ Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nebensachen.de ([195.34.83.29]:40761 "EHLO mail.nebensachen.de"
+Received: from nebensachen.de ([195.34.83.29]:59664 "EHLO mail.nebensachen.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757310AbYCGSZo (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 7 Mar 2008 13:25:44 -0500
+	id S1762635AbYCGS0X (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 7 Mar 2008 13:26:23 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Alan Cox <alan@lxorguk.ukuu.org.uk>
 Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Jens Axboe <jens.axboe@oracle.com>
 
-This patch adds some helper functions to libata in order to provide low
-level suport for disk shock protection. The user interface to this
-functionality will be implemented in the block layer in a subsequent patch.
+This patch provides a generic way to freeze the request queue of a block
+device temporarily. This functionality is exposed to user space via sysfs.
 
 Signed-off-by: Elias Oltmanns <eo@nebensachen.de>
 ---
 
- drivers/ata/libata-core.c |   69 +++++++++++++++++++++++++++++++++++++++++++++
- drivers/ata/libata-eh.c   |    9 ++++++
- drivers/ata/libata-scsi.c |   31 ++++++++++++++++++++
- drivers/ata/libata.h      |    1 +
- include/linux/ata.h       |   12 ++++++++
- include/linux/libata.h    |    4 ++-
- 6 files changed, 125 insertions(+), 1 deletions(-)
+ block/ll_rw_blk.c      |  140 ++++++++++++++++++++++++++++++++++++++++++++++++
+ include/linux/blkdev.h |    7 ++
+ 2 files changed, 147 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index 6380726..74c3e7e 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -6634,6 +6634,75 @@ int ata_port_start(struct ata_port *ap)
- }
+diff --git a/block/ll_rw_blk.c b/block/ll_rw_blk.c
+index 8b91994..2626007 100644
+--- a/block/ll_rw_blk.c
++++ b/block/ll_rw_blk.c
+@@ -39,6 +39,8 @@
  
- /**
-+ *	ata_protect_dev - Stop I/O to device and unload disk heads
-+ *	@dev: Device to be protected
-+ *
-+ *	Issue an IDLE IMMEDIATE command with UNLOAD FEATURE.
-+ *
-+ *	LOCKING:
-+ *	Kernel thread context (may sleep)
-+ *
-+ *	RETURNS:
-+ *	0 on success, -EIO on failure.
-+ */
-+int ata_protect_dev(struct ata_device *dev)
+ static void blk_unplug_work(struct work_struct *work);
+ static void blk_unplug_timeout(unsigned long data);
++static void blk_unfreeze_work(struct work_struct *work);
++static void blk_unfreeze_timeout(unsigned long data);
+ static void drive_stat_acct(struct request *rq, int new_io);
+ static void init_request_from_bio(struct request *req, struct bio *bio);
+ static int __make_request(struct request_queue *q, struct bio *bio);
+@@ -231,6 +233,13 @@ void blk_queue_make_request(struct request_queue * q, make_request_fn * mfn)
+ 	q->unplug_timer.function = blk_unplug_timeout;
+ 	q->unplug_timer.data = (unsigned long)q;
+ 
++	q->max_unfreeze = 30;
++
++	INIT_WORK(&q->unfreeze_work, blk_unfreeze_work);
++
++	q->unfreeze_timer.function = blk_unfreeze_timeout;
++	q->unfreeze_timer.data = (unsigned long)q;
++
+ 	/*
+ 	 * by default assume old behaviour and bounce for any highmem page
+ 	 */
+@@ -1861,6 +1870,7 @@ struct request_queue *blk_alloc_queue_node(gfp_t gfp_mask, int node_id)
+ 	}
+ 
+ 	init_timer(&q->unplug_timer);
++	init_timer(&q->unfreeze_timer);
+ 
+ 	kobject_set_name(&q->kobj, "%s", "queue");
+ 	q->kobj.ktype = &queue_ktype;
+@@ -1975,6 +1985,93 @@ int blk_get_queue(struct request_queue *q)
+ 
+ EXPORT_SYMBOL(blk_get_queue);
+ 
++static void issue_queue_freeze_cmd(struct request_queue *q, int thaw)
 +{
-+	struct ata_port *ap = dev->link->ap;
-+	struct ata_taskfile tf;
++	struct request *rq;
 +	unsigned long flags;
-+	unsigned int err_mask;
-+	int unload = ata_id_has_unload(dev->id);
-+	/* We need a mechanism to set unload to 1 for devices that
-+	 * support the unload feature of idle immediate but don't
-+	 * report that capability in dev->id. Is dev->horkage or
-+	 * dev->flags the right place for such a flag?
-+	 */
 +
-+	spin_lock_irqsave(ap->lock, flags);
-+	if (unlikely(!(dev->flags & ATA_DFLAG_PROTECTED))) {
-+		spin_unlock_irqrestore(ap->lock, flags);
-+		goto out;
++	rq = blk_get_request(q, 0, GFP_NOIO);
++	if (!rq)
++		return;
++	rq->cmd_type = REQ_TYPE_LINUX_BLOCK;
++	rq->cmd_len = 1;
++	rq->cmd_flags |= REQ_NOMERGE | REQ_SOFTBARRIER;
++	if (thaw)
++		rq->cmd[0] = REQ_LB_OP_THAW;
++	else
++		rq->cmd[0] = REQ_LB_OP_FREEZE;
++	rq->rq_disk = NULL;
++	rq->sense = NULL;
++	rq->sense_len = 0;
++	rq->retries = 5;
++	rq->timeout = HZ;
++	spin_lock_irqsave(q->queue_lock, flags);
++	__elv_add_request(q, rq, ELEVATOR_INSERT_FRONT, 0);
++	if (thaw)
++		blk_start_queue(q);
++	else {
++		blk_stop_queue(q);
++		q->request_fn(q);
 +	}
-+	spin_unlock_irqrestore(ap->lock, flags);
++	spin_unlock_irqrestore(q->queue_lock, flags);
++}
 +
-+	ata_tf_init(dev, &tf);
-+	tf.flags |= ATA_TFLAG_DEVICE | ATA_TFLAG_ISADDR;
-+	tf.protocol |= ATA_PROT_NODATA;
-+	if (unload) {
-+		tf.command = ATA_CMD_IDLEIMMEDIATE;
-+		tf.feature = 0x44;
-+		tf.lbal = 0x4c;
-+		tf.lbam = 0x4e;
-+		tf.lbah = 0x55;
-+	} else
-+		tf.command = ATA_CMD_STANDBYNOW1;
++static void blk_unfreeze_work(struct work_struct *work)
++{
++	struct request_queue *q = container_of(work, struct request_queue,
++					       unfreeze_work);
++	int pending;
 +
-+	err_mask = ata_exec_internal(dev, &tf, NULL, DMA_NONE, NULL, 0, 0);
-+	if (err_mask)
-+		goto abort;
++	pending = timer_pending(&q->unfreeze_timer);
++	if (!pending)
++		issue_queue_freeze_cmd(q, 1);
++}
 +
-+	if (unload) {
-+		if (tf.lbal == 0xc4)
-+			ata_dev_printk(dev, KERN_DEBUG,
-+				       "head parked\n");
-+		else
-+			goto abort;
-+	} else
-+		ata_dev_printk(dev, KERN_DEBUG,
-+			       "head park not requested, used standby\n");
++static void blk_unfreeze_timeout(unsigned long data)
++{
++	struct request_queue *q = (struct request_queue *) data;
 +
-+out:
-+	return 0;
-+
-+abort:
-+	ata_dev_printk(dev, KERN_DEBUG, "head NOT parked\n");
-+	spin_lock_irqsave(ap->lock, flags);
-+	dev->flags &= ~ATA_DFLAG_PROTECTED;
-+	spin_unlock_irqrestore(ap->lock, flags);
-+	return -EIO;
++	kblockd_schedule_work(&q->unfreeze_work);
 +}
 +
 +/**
-  *	ata_dev_init - Initialize an ata_device structure
-  *	@dev: Device structure to initialize
-  *
-diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
-index 21a81cd..edb92dc 100644
---- a/drivers/ata/libata-eh.c
-+++ b/drivers/ata/libata-eh.c
-@@ -2584,6 +2584,15 @@ int ata_eh_recover(struct ata_port *ap, ata_prereset_fn_t prereset,
- 			ata_link_for_each_dev(dev, link)
- 				ata_dev_enable_pm(dev, ap->pm_policy);
- 
-+		ata_link_for_each_dev(dev, link)
-+			if (ehc->i.dev_action[dev->devno] & ATA_EH_PROTECT) {
-+				ata_eh_about_to_do(link, dev, ATA_EH_PROTECT);
-+				rc = ata_protect_dev(dev);
-+				if (rc)
-+					goto dev_fail;
-+				ata_eh_done(link, dev, ATA_EH_PROTECT);
-+			}
++ * blk_freeze_queue - (un)freeze queue and manage the queue unfreeze timer
++ * @q:		queue to be (un)frozen
++ * @second:	number of seconds to freeze the queue for
++ *
++ * Description: This function (re)sets the unfreeze timer of a request
++ *    queue. When a timer is started / stopped (not just modified),
++ *    then low level drivers are notified about this event.
++ */
++static int blk_freeze_queue(struct request_queue *q, unsigned int seconds)
++{
++	int thaw, rc;
 +
- 		/* this link is okay now */
- 		ehc->i.flags = 0;
- 		continue;
-diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-index 14daf48..d0fd762 100644
---- a/drivers/ata/libata-scsi.c
-+++ b/drivers/ata/libata-scsi.c
-@@ -856,6 +856,34 @@ static void ata_scsi_dev_config(struct scsi_device *sdev,
- 	}
++	if (seconds > 0) {
++		if (seconds > q->max_unfreeze)
++			seconds = q->max_unfreeze;
++		/* set / reset the thaw timer */
++		rc = !mod_timer(&q->unfreeze_timer,
++				msecs_to_jiffies(seconds*1000) + jiffies);
++		thaw = 0;
++		if (rc && blk_queue_stopped(q)) {
++			/* Someone else has stopped the queue already.
++			 * Best leave it alone.
++			 */
++			del_timer(&q->unfreeze_timer);
++			rc = 0;
++		}
++	} else {
++		rc = del_timer(&q->unfreeze_timer);
++		thaw = 1;
++	}
++
++	if (rc)
++		issue_queue_freeze_cmd(q, thaw);
++
++	return rc;
++}
++
+ static inline void blk_free_request(struct request_queue *q, struct request *rq)
+ {
+ 	if (rq->cmd_flags & REQ_ELVPRIV)
+@@ -4080,6 +4177,42 @@ static ssize_t queue_max_hw_sectors_show(struct request_queue *q, char *page)
+ 	return queue_var_show(max_hw_sectors_kb, (page));
  }
  
-+static void ata_scsi_protect_dev(struct ata_device *dev)
++/*
++ * When reading the 'protect' attribute, we return seconds remaining
++ * before the unfreeze timeout expires.
++ */
++static ssize_t queue_protect_show(struct request_queue *q, char *page)
 +{
-+	struct ata_link *link = dev->link;
-+	struct ata_eh_info *ehi = &link->eh_info;
++	unsigned int seconds = 0;
 +
-+	if (dev->flags & ATA_DFLAG_PROTECTED)
-+		return;
-+
-+	dev->flags |= ATA_DFLAG_PROTECTED;
-+	ehi->dev_action[dev->devno] |= ATA_EH_PROTECT;
-+	ehi->flags |= ATA_EHI_QUIET;
-+	ata_port_schedule_eh(link->ap);
++	if (blk_queue_stopped(q) && timer_pending(&q->unfreeze_timer))
++		/*
++		 * Adding 1 in order to guarantee nonzero value until timer
++		 * has actually expired.
++		 */
++		seconds = jiffies_to_msecs(q->unfreeze_timer.expires
++					   - jiffies) / 1000 + 1;
++	return queue_var_show(seconds, (page));
 +}
 +
-+static void ata_scsi_unprotect_dev(struct ata_device *dev)
++/*
++ * When writing to the 'protect' attribute, input is the number of
++ * seconds to freeze the queue for. We call a helper function to park
++ * the heads and freeze/block the queue, then we make a block layer
++ * call to setup the thaw timeout. If input is 0, then the queue will
++ * be thawed by that helper function immediately.
++ */
++static ssize_t queue_protect_store(struct request_queue *q,
++				   const char *page, size_t count)
 +{
-+	struct ata_link *link = dev->link;
-+	struct ata_eh_info *ehi = &link->eh_info;
++	unsigned long seconds;
 +
-+	if (!(dev->flags & ATA_DFLAG_PROTECTED))
-+		return;
-+	dev->flags &= ~ATA_DFLAG_PROTECTED;
++	queue_var_store(&seconds, page, count);
++	blk_freeze_queue(q, seconds);
 +
-+	ehi->dev_action[dev->devno] |= ATA_EH_REVALIDATE;
-+	ehi->flags |= ATA_EHI_QUIET;
-+	ata_port_schedule_eh(link->ap);
++	return count;
 +}
 +
- /**
-  *	ata_scsi_slave_config - Set SCSI device attributes
-  *	@sdev: SCSI device to examine
-@@ -1517,6 +1545,9 @@ static int ata_scsi_translate(struct ata_device *dev, struct scsi_cmnd *cmd,
  
- 	VPRINTK("ENTER\n");
+ static struct queue_sysfs_entry queue_requests_entry = {
+ 	.attr = {.name = "nr_requests", .mode = S_IRUGO | S_IWUSR },
+@@ -4110,12 +4243,19 @@ static struct queue_sysfs_entry queue_iosched_entry = {
+ 	.store = elv_iosched_store,
+ };
  
-+	if (unlikely(dev->flags & ATA_DFLAG_PROTECTED))
-+		return SCSI_MLQUEUE_DEVICE_BUSY;
++static struct queue_sysfs_entry queue_protect_entry = {
++	.attr = { .name = "protect", .mode = S_IRUGO | S_IWUSR },
++	.show = queue_protect_show,
++	.store = queue_protect_store,
++};
 +
- 	qc = ata_scsi_qc_new(dev, cmd, done);
- 	if (!qc)
- 		goto err_mem;
-diff --git a/drivers/ata/libata.h b/drivers/ata/libata.h
-index bbe59c2..807cf2f 100644
---- a/drivers/ata/libata.h
-+++ b/drivers/ata/libata.h
-@@ -95,6 +95,7 @@ extern void ata_dev_select(struct ata_port *ap, unsigned int device,
-                            unsigned int wait, unsigned int can_sleep);
- extern void swap_buf_le16(u16 *buf, unsigned int buf_words);
- extern int ata_flush_cache(struct ata_device *dev);
-+extern int ata_protect_dev(struct ata_device *dev);
- extern void ata_dev_init(struct ata_device *dev);
- extern void ata_link_init(struct ata_port *ap, struct ata_link *link, int pmp);
- extern int sata_link_init_spd(struct ata_link *link);
-diff --git a/include/linux/ata.h b/include/linux/ata.h
-index e672e80..aa16cbb 100644
---- a/include/linux/ata.h
-+++ b/include/linux/ata.h
-@@ -395,6 +395,18 @@ struct ata_taskfile {
+ static struct attribute *default_attrs[] = {
+ 	&queue_requests_entry.attr,
+ 	&queue_ra_entry.attr,
+ 	&queue_max_hw_sectors_entry.attr,
+ 	&queue_max_sectors_entry.attr,
+ 	&queue_iosched_entry.attr,
++	&queue_protect_entry.attr,
+ 	NULL,
+ };
  
- #define ata_id_cdb_intr(id)	(((id)[0] & 0x60) == 0x20)
+diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
+index 1854a69..082e2d3 100644
+--- a/include/linux/blkdev.h
++++ b/include/linux/blkdev.h
+@@ -385,6 +385,13 @@ struct request_queue
+ 	unsigned long		unplug_delay;	/* After this many jiffies */
+ 	struct work_struct	unplug_work;
  
-+static inline int ata_id_has_unload(const u16 *id)
-+{
-+	/* ATA-7 specifies two places to indicate unload feature support.
-+	 * Since I don't really understand the difference, I'll just check
-+	 * both and only return zero if none of them indicates otherwise. */
-+	if ((id[84] & 0xC000) == 0x4000 && id[84] & (1 << 13))
-+		return id[84] & (1 << 13);
-+	if ((id[87] & 0xC000) == 0x4000)
-+		return id[87] & (1 << 13);
-+	return 0;
-+}
++	/*
++	 * Auto-unfreeze state
++	 */
++	struct timer_list	unfreeze_timer;
++	int			max_unfreeze;	/* At most this many seconds */
++	struct work_struct	unfreeze_work;
 +
- static inline bool ata_id_has_hipm(const u16 *id)
- {
- 	u16 val = id[76];
-diff --git a/include/linux/libata.h b/include/linux/libata.h
-index 124033c..2db23c3 100644
---- a/include/linux/libata.h
-+++ b/include/linux/libata.h
-@@ -147,6 +147,7 @@ enum {
+ 	struct backing_dev_info	backing_dev_info;
  
- 	ATA_DFLAG_DETACH	= (1 << 16),
- 	ATA_DFLAG_DETACHED	= (1 << 17),
-+	ATA_DFLAG_PROTECTED	= (1 << 18),
- 
- 	ATA_DEV_UNKNOWN		= 0,	/* unknown device */
- 	ATA_DEV_ATA		= 1,	/* ATA device */
-@@ -299,9 +300,10 @@ enum {
- 	ATA_EH_SOFTRESET	= (1 << 1),
- 	ATA_EH_HARDRESET	= (1 << 2),
- 	ATA_EH_ENABLE_LINK	= (1 << 3),
-+	ATA_EH_PROTECT		= (1 << 4),
- 
- 	ATA_EH_RESET_MASK	= ATA_EH_SOFTRESET | ATA_EH_HARDRESET,
--	ATA_EH_PERDEV_MASK	= ATA_EH_REVALIDATE,
-+	ATA_EH_PERDEV_MASK	= ATA_EH_REVALIDATE | ATA_EH_PROTECT,
- 
- 	/* ata_eh_info->flags */
- 	ATA_EHI_HOTPLUGGED	= (1 << 0),  /* could have been hotplugged */
+ 	/*
 
 
