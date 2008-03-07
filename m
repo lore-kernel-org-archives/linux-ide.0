@@ -1,88 +1,149 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: Unknown SATA PIIX PCI device ID 0x29b6
-Date: Fri, 07 Mar 2008 13:51:50 +0900
-Message-ID: <47D0C9E6.8090301@gmail.com>
-References: <Pine.LNX.4.64.0802282306190.10087@axis700.grange> <20080228225603.2764bfd1@core> <Pine.LNX.4.64.0802290010320.10498@axis700.grange> <47CFADDF.20200@gmail.com> <Pine.LNX.4.64.0803061248070.5670@axis700.grange>
+From: Borislav Petkov <petkovbb@googlemail.com>
+Subject: Re: Commit 9f10d9ee breaks CD mounting/burning
+Date: Fri, 7 Mar 2008 06:48:25 +0100
+Message-ID: <20080307054825.GA19778@gollum.tnic>
+References: <200803062235.00396.bzolnier@gmail.com>
+Reply-To: petkovbb@gmail.com
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------010401000509030904090105"
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rn-out-0910.google.com ([64.233.170.189]:14146 "EHLO
-	rn-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752945AbYCGEwB (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 6 Mar 2008 23:52:01 -0500
-Received: by rn-out-0910.google.com with SMTP id v46so551036rnb.15
-        for <linux-ide@vger.kernel.org>; Thu, 06 Mar 2008 20:52:00 -0800 (PST)
-In-Reply-To: <Pine.LNX.4.64.0803061248070.5670@axis700.grange>
+Received: from fg-out-1718.google.com ([72.14.220.158]:10554 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751697AbYCGFsq (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 7 Mar 2008 00:48:46 -0500
+Received: by fg-out-1718.google.com with SMTP id e21so348632fga.17
+        for <linux-ide@vger.kernel.org>; Thu, 06 Mar 2008 21:48:43 -0800 (PST)
+Content-Disposition: inline
+In-Reply-To: <200803062235.00396.bzolnier@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-kernel@vger.kernel.org, Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: walt <w41ter@gmail.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-This is a multi-part message in MIME format.
---------------010401000509030904090105
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+On Thu, Mar 06, 2008 at 10:35:00PM +0100, Bartlomiej Zolnierkiewicz wro=
+te:
+>=20
+> On Thursday 06 March 2008, walt wrote:
+> > Hi Bartolmiej,
+> >=20
+> > For me, this commit causes the problem it's intended to fix:
+> >=20
+> > commit 9f10d9ee0ac6d79d7bc8b9a158bf4a29322d84d3
+> > Author: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+> > Date:   Tue Feb 26 21:50:35 2008 +0100
+> >=20
+> >      ide-cd: fix 'ireason' handling for REQ_TYPE_ATA_PC requests
+> >=20
+> >      This fixes some hangs caused by not finishing the transfer bef=
+ore ending
+> >      the request and also makes use of 'ireason =3D=3D 1' quirk for=
+ spurious IRQs.
+> >=20
+> > When I mount a CD there is a long delay, and I see this error messa=
+ge:
+> >=20
+> > hdc: ide_cd_check_ireason: wrong transfer direction!
+> > cdrom: failed setting lba address space
+> > hdc: status error: status=3D0x58 { DriveReady SeekComplete DataRequ=
+est }
+> > ide: failed opcode was: unknown
+> > hdc: drive not ready for command
+> > <repeated many times>
+> >=20
+> > When I revert this commit everything works properly again, includin=
+g
+> > CD burning.
+> >=20
+> > Here is the drive info:
+> >=20
+> > hdc: TSSTcorpCD/DVDW SH-S182M, ATAPI CD/DVD-ROM drive
+> > hdc: host max PIO5 wanted PIO255(auto-tune) selected PIO4
+> > hdc: UDMA/33 mode selected
+> > hdc: ATAPI 48X DVD-ROM DVD-R-RAM CD-R/RW drive, 2048kB Cache
+> > Uniform CD-ROM driver Revision: 3.20
+> > hdc: UDMA/33 mode selected
+> >=20
+> > I'm happy to try patches or supply more info, just let me know
+> > what you need.
+>=20
+> Does the following patch help?
+>=20
+> [ Borislav, please take a look and double check that it is OK. ]
+>=20
+> From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+> Subject: [PATCH] ide-cd: mark REQ_TYPE_ATA_PC write requests with REQ=
+_RW flag
+>=20
+> On Thursday 06 March 2008, walt wrote:
+>=20
+> > For me, this commit causes the problem it's intended to fix:
+> >=20
+> > commit 9f10d9ee0ac6d79d7bc8b9a158bf4a29322d84d3
+> > Author: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+> > Date:   Tue Feb 26 21:50:35 2008 +0100
+> >=20
+> >      ide-cd: fix 'ireason' handling for REQ_TYPE_ATA_PC requests
+> >=20
+> >      This fixes some hangs caused by not finishing the transfer bef=
+ore ending
+> >      the request and also makes use of 'ireason =3D=3D 1' quirk for=
+ spurious IRQs.
+> >=20
+> > When I mount a CD there is a long delay, and I see this error messa=
+ge:
+> >=20
+> > hdc: ide_cd_check_ireason: wrong transfer direction!
+> > cdrom: failed setting lba address space
+> > hdc: status error: status=3D0x58 { DriveReady SeekComplete DataRequ=
+est }
+> > ide: failed opcode was: unknown
+> > hdc: drive not ready for command
+> > <repeated many times>
+> >=20
+> > When I revert this commit everything works properly again, includin=
+g
+> > CD burning.
+>=20
+> It turned out that REQ_TYPE_ATA_PC write requests were not marked as =
+such
+> (the previous commit assumed them to be).
+>=20
+> Reported-by: walt <w41ter@gmail.com>
+> Cc: Borislav Petkov <petkovbb@googlemail.com>
+> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+> ---
+>  drivers/ide/ide-cd_ioctl.c |    4 ++++
+>  1 file changed, 4 insertions(+)
+>=20
+> Index: b/drivers/ide/ide-cd_ioctl.c
+> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+> --- a/drivers/ide/ide-cd_ioctl.c
+> +++ b/drivers/ide/ide-cd_ioctl.c
+> @@ -457,6 +457,10 @@ int ide_cdrom_packet(struct cdrom_device
+>  	   layer. the packet must be complete, as we do not
+>  	   touch it at all. */
+>  	ide_cd_init_rq(drive, &req);
+> +
+> +	if (cgc->data_direction =3D=3D CGC_DATA_WRITE)
+> +		req.cmd_flags |=3D REQ_RW;
+> +
+>  	memcpy(req.cmd, cgc->cmd, CDROM_PACKET_SIZE);
+>  	if (cgc->sense)
+>  		memset(cgc->sense, 0, sizeof(struct request_sense));
 
-Guennadi Liakhovetski wrote:
-> Mar  4 15:04:28 6a kernel: ata4: exception Emask 0x10 SAct 0x0 SErr 0x4050000 action 0xa frozen
-> Mar  4 15:04:28 6a kernel: ata4: irq_stat 0x00000040, connection status changed
-> Mar  4 15:04:28 6a kernel: ata4: SError: { PHYRdyChg CommWake DevExch }Mar  4 15:04:28 6a kernel: ata4: hard resetting link
-> Mar  4 15:04:38 6a kernel: ata4: softreset failed (device not ready)
-> Mar  4 15:04:38 6a kernel: ata4: hard resetting link
-> Mar  4 15:04:48 6a kernel: ata4: softreset failed (device not ready)
-> Mar  4 15:04:48 6a kernel: ata4: hard resetting link
-> Mar  4 15:04:55 6a kernel: ata4: port is slow to respond, please be patient (Status 0x80)
-> Mar  4 15:05:20 6a kernel: ata4: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+Here's how i understand it (and correct me if i'm wrong):
 
-That's unusually long but if you look at the last reset try.  It began
-at @48 and the device comes up after 32secs without the driver taking
-further action, which might indicate that the device actually took that
-long.  Hmmm.. maybe it's having problem establishing link at 3Gbps.
+req.cmd_flags & 0x1 (i.e. the least sig. bit) was remaining unset for w=
+rite requests
+and that's why the ireason check in the interrupt handler was failing l=
+oudly.
+This sets it correctly so that rq_data_dir(rq) evaluates to the correct=
+ data
+direction of the request, no?
 
-> Looks like almost a minute to me? On another occurence I see about 1.5 
-> minutes, then "port is slow to respond, please be patient (Status 0x80)" 
-> has been repeated 3 times. On cold-plug also 3 times, I think, about the 
-> same time then (time is not updated in the log).
-
-I see.  Does the attached patch make any difference?
-
->> And is it always like that?
-> 
-> So far - yes.
-> 
->>> One more question, what do UDMA numbers mean in SATA context? The internal 
->>> SATA disk is "ata1.00: configured for UDMA/133", but should be SATA-2.
->> 1.00 is port 1 device 00 and UDMA numbers don't mean much to SATA devices.
-> 
-> Sorry, I actually meant to ask what "UDMA/133" means for a SATA link?
-
-That doesn't really mean much to native SATA devices.  That's just
-something we're carrying over from PATA days.
-
-Thanks.
-
--- 
-tejun
-
---------------010401000509030904090105
-Content-Type: text/x-patch;
- name="force-1.5.patch"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="force-1.5.patch"
-
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index 4fbcce7..abebdcc 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -6712,6 +6712,7 @@ int sata_link_init_spd(struct ata_link *link)
- 	spd = (scontrol >> 4) & 0xf;
- 	if (spd)
- 		link->hw_sata_spd_limit &= (1 << spd) - 1;
-+	link->hw_sata_spd_limit = 1;
- 
- 	ata_force_spd_limit(link);
- 
-
---------------010401000509030904090105--
+--=20
+Regards/Gru=DF,
+    Boris.
