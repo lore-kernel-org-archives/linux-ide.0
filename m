@@ -1,54 +1,57 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: Re: Problem with ahci and a external sata disk
-Date: Sat, 08 Mar 2008 09:42:46 +0900
-Message-ID: <47D1E106.2020501@gmail.com>
-References: <200802191646.39277.jareguero@telefonica.net> <200803071403.43113.jareguero@telefonica.net> <200803071515.43686.jareguero@telefonica.net> <200803072333.12877.jareguero@telefonica.net>
+Subject: Re: SATA HDD password problem
+Date: Sat, 08 Mar 2008 09:51:40 +0900
+Message-ID: <47D1E31C.3020109@gmail.com>
+References: <Pine.LNX.4.64.0803051143450.27209@Soyuz-KT.TeNet.Odessa.UA> <47CE9264.1010600@garzik.org> <Pine.LNX.4.64.0803051443500.28213@Soyuz-KT.TeNet.Odessa.UA> <47CFBDB6.8040400@gmail.com> <Pine.LNX.4.64.0803061417540.5200@Soyuz-KT.TeNet.Odessa.UA> <47D0BC5A.9000208@gmail.com> <47D154F0.50607@rtr.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-15
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rv-out-0910.google.com ([209.85.198.190]:34517 "EHLO
-	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753791AbYCHAmx (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 7 Mar 2008 19:42:53 -0500
-Received: by rv-out-0910.google.com with SMTP id k20so397233rvb.1
-        for <linux-ide@vger.kernel.org>; Fri, 07 Mar 2008 16:42:52 -0800 (PST)
-In-Reply-To: <200803072333.12877.jareguero@telefonica.net>
+Received: from wx-out-0506.google.com ([66.249.82.238]:43720 "EHLO
+	wx-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751541AbYCHAvv (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 7 Mar 2008 19:51:51 -0500
+Received: by wx-out-0506.google.com with SMTP id h31so824045wxd.4
+        for <linux-ide@vger.kernel.org>; Fri, 07 Mar 2008 16:51:50 -0800 (PST)
+In-Reply-To: <47D154F0.50607@rtr.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jose Alberto Reguero <jareguero@telefonica.net>
-Cc: linux-ide@vger.kernel.org
+To: Mark Lord <liml@rtr.ca>
+Cc: "Rus V. Brushkoff" <rus@SoyuzKT.Od.UA>, Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org
 
-Jose Alberto Reguero wrote:
->> I noticed that :
->>   R/W multiple sector transfer: Max = 1   Current = 0
+Mark Lord wrote:
+>>>  Hmm, if someone enable SSP in the drive after password unlock - does
+>>> this mean that it will be unlocked forever ? Or drive can distinguish
+>>> between power-on and hard-reset states ?
 >>
->> It is important?
-
-Nope, it's just for PIOs.
-
-> I did more tests. I put:
+>> SSP by default stays on, so once unlocked it will stay unlocked as long
+>> as power stays applied.  On power loss, it gets locked again.  On
+>> reboots, the BIOS can always lock it again if it wants to.
+> ..
 > 
-> options libata force=4:1.5g,udma0
-> 
-> and the ICRC errors still appear. But only writing. I try with the device at 
-> top speed(3G) and reading the errors don't appear.
+> The problem here, is that SSP itself gets turned-OFF after COMMRESET.
+> It does preserve settings over the COMMRESET, but it then has to be
+> renewed (re-issued by the driver) for things to survive a subsequent
+> COMMRESET after the first one.   This has to go into libata,
+> as it's not something we can control entirely from hdparm.
 
-UDMA mode shouldn't affect anything unless the drive is actually PATA
-bridged over SATA and configuring lower UDMA mode makes it transfer data
-slower and changes transfer pattern on the link.
+The following is from ACS8 SSP feature set description.
 
-> Another thing is that when limiting the speed to 1.5G, the real read speed 
-> don't seem to change and is about 2 times the read speed that I have with a 
-> SATA-I device. Is like limiting the speed to 1.5G don't do nothing. 
+  Software settings preservation may be enabled or disabled using SET
+  FEATURES with a Count field of 06h. If a device supports software
+  settings preservation, the feature shall be enabled by default.  See
+  SATA 2.6 for more information.
 
-1.5Gbps means 150Mbytes/s and harddrives are yet to reach such
-performance level, so 1.5 or 3.0 doesn't really make any difference
-performance-wise yet.
+And the following is from enable/disable SSP description (7.48.18.7).
 
-> I will try the disk in a SATA-I port.
+  The enable/disable state for software settings preservation shall
+  persist across software reset. The enable/disable state for software
+  settings preservation shall be reset to its default state upon
+  COMRESET. The host may disable software settings preservation in
+  order to not preserve software settings across COMRESET.
 
-Can you also give a shot at shorter cable?
+So, the default state being enabled and COMRESET always returning it
+to default.  I don't think libata needs to take further action.
 
 Thanks.
 
