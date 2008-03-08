@@ -1,138 +1,56 @@
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-Subject: Re: Commit 9f10d9ee breaks CD mounting/burning
-Date: Sat, 8 Mar 2008 00:35:26 +0100
-Message-ID: <200803080035.27244.rjw@sisk.pl>
-References: <200803062235.00396.bzolnier@gmail.com> <20080307214934.GB19778@gollum.tnic> <200803072345.15585.bzolnier@gmail.com>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: Problem with ahci and a external sata disk
+Date: Sat, 08 Mar 2008 09:42:46 +0900
+Message-ID: <47D1E106.2020501@gmail.com>
+References: <200802191646.39277.jareguero@telefonica.net> <200803071403.43113.jareguero@telefonica.net> <200803071515.43686.jareguero@telefonica.net> <200803072333.12877.jareguero@telefonica.net>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset=iso-8859-15
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1763564AbYCGXhR@vger.kernel.org>
-In-Reply-To: <200803072345.15585.bzolnier@gmail.com>
-Content-Disposition: inline
-Sender: linux-kernel-owner@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: petkovbb@gmail.com, walt <w41ter@gmail.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from rv-out-0910.google.com ([209.85.198.190]:34517 "EHLO
+	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753791AbYCHAmx (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 7 Mar 2008 19:42:53 -0500
+Received: by rv-out-0910.google.com with SMTP id k20so397233rvb.1
+        for <linux-ide@vger.kernel.org>; Fri, 07 Mar 2008 16:42:52 -0800 (PST)
+In-Reply-To: <200803072333.12877.jareguero@telefonica.net>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Jose Alberto Reguero <jareguero@telefonica.net>
+Cc: linux-ide@vger.kernel.org
 
-On Friday, 7 of March 2008, Bartlomiej Zolnierkiewicz wrote:
-> On Friday 07 March 2008, Borislav Petkov wrote:
-> > On Fri, Mar 07, 2008 at 09:39:43PM +0100, Bartlomiej Zolnierkiewicz wrote:
-> > > On Friday 07 March 2008, Borislav Petkov wrote:
-> > > > On Thu, Mar 06, 2008 at 10:35:00PM +0100, Bartlomiej Zolnierkiewicz wrote:
-> > > > > 
-> > > > > On Thursday 06 March 2008, walt wrote:
-> > > > > > Hi Bartolmiej,
-> > > > > > 
-> > > > > > For me, this commit causes the problem it's intended to fix:
-> > > > > > 
-> > > > > > commit 9f10d9ee0ac6d79d7bc8b9a158bf4a29322d84d3
-> > > > > > Author: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-> > > > > > Date:   Tue Feb 26 21:50:35 2008 +0100
-> > > > > > 
-> > > > > >      ide-cd: fix 'ireason' handling for REQ_TYPE_ATA_PC requests
-> > > > > > 
-> > > > > >      This fixes some hangs caused by not finishing the transfer before ending
-> > > > > >      the request and also makes use of 'ireason == 1' quirk for spurious IRQs.
-> > > > > > 
-> > > > > > When I mount a CD there is a long delay, and I see this error message:
-> > > > > > 
-> > > > > > hdc: ide_cd_check_ireason: wrong transfer direction!
-> > > > > > cdrom: failed setting lba address space
-> > > > > > hdc: status error: status=0x58 { DriveReady SeekComplete DataRequest }
-> > > > > > ide: failed opcode was: unknown
-> > > > > > hdc: drive not ready for command
-> > > > > > <repeated many times>
-> > > > > > 
-> > > > > > When I revert this commit everything works properly again, including
-> > > > > > CD burning.
-> > > > > > 
-> > > > > > Here is the drive info:
-> > > > > > 
-> > > > > > hdc: TSSTcorpCD/DVDW SH-S182M, ATAPI CD/DVD-ROM drive
-> > > > > > hdc: host max PIO5 wanted PIO255(auto-tune) selected PIO4
-> > > > > > hdc: UDMA/33 mode selected
-> > > > > > hdc: ATAPI 48X DVD-ROM DVD-R-RAM CD-R/RW drive, 2048kB Cache
-> > > > > > Uniform CD-ROM driver Revision: 3.20
-> > > > > > hdc: UDMA/33 mode selected
-> > > > > > 
-> > > > > > I'm happy to try patches or supply more info, just let me know
-> > > > > > what you need.
-> > > > > 
-> > > > > Does the following patch help?
-> > > > > 
-> > > > > [ Borislav, please take a look and double check that it is OK. ]
-> > > > > 
-> > > > > From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-> > > > > Subject: [PATCH] ide-cd: mark REQ_TYPE_ATA_PC write requests with REQ_RW flag
-> > > > > 
-> > > > > On Thursday 06 March 2008, walt wrote:
-> > > > > 
-> > > > > > For me, this commit causes the problem it's intended to fix:
-> > > > > > 
-> > > > > > commit 9f10d9ee0ac6d79d7bc8b9a158bf4a29322d84d3
-> > > > > > Author: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-> > > > > > Date:   Tue Feb 26 21:50:35 2008 +0100
-> > > > > > 
-> > > > > >      ide-cd: fix 'ireason' handling for REQ_TYPE_ATA_PC requests
-> > > > > > 
-> > > > > >      This fixes some hangs caused by not finishing the transfer before ending
-> > > > > >      the request and also makes use of 'ireason == 1' quirk for spurious IRQs.
-> > > > > > 
-> > > > > > When I mount a CD there is a long delay, and I see this error message:
-> > > > > > 
-> > > > > > hdc: ide_cd_check_ireason: wrong transfer direction!
-> > > > > > cdrom: failed setting lba address space
-> > > > > > hdc: status error: status=0x58 { DriveReady SeekComplete DataRequest }
-> > > > > > ide: failed opcode was: unknown
-> > > > > > hdc: drive not ready for command
-> > > > > > <repeated many times>
-> > > > > > 
-> > > > > > When I revert this commit everything works properly again, including
-> > > > > > CD burning.
-> > > > > 
-> > > > > It turned out that REQ_TYPE_ATA_PC write requests were not marked as such
-> > > > > (the previous commit assumed them to be).
-> > > > > 
-> > > > > Reported-by: walt <w41ter@gmail.com>
-> > > > > Cc: Borislav Petkov <petkovbb@googlemail.com>
-> > > > > Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-> > > > > ---
-> > > > >  drivers/ide/ide-cd_ioctl.c |    4 ++++
-> > > > >  1 file changed, 4 insertions(+)
-> > > > > 
-> > > > > Index: b/drivers/ide/ide-cd_ioctl.c
-> > > > > ===================================================================
-> > > > > --- a/drivers/ide/ide-cd_ioctl.c
-> > > > > +++ b/drivers/ide/ide-cd_ioctl.c
-> > > > > @@ -457,6 +457,10 @@ int ide_cdrom_packet(struct cdrom_device
-> > > > >  	   layer. the packet must be complete, as we do not
-> > > > >  	   touch it at all. */
-> > > > >  	ide_cd_init_rq(drive, &req);
-> > > > > +
-> > > > > +	if (cgc->data_direction == CGC_DATA_WRITE)
-> > > > > +		req.cmd_flags |= REQ_RW;
-> > > > > +
-> > > > >  	memcpy(req.cmd, cgc->cmd, CDROM_PACKET_SIZE);
-> > > > >  	if (cgc->sense)
-> > > > >  		memset(cgc->sense, 0, sizeof(struct request_sense));
-> > > > 
-> > > > Here's how i understand it (and correct me if i'm wrong):
-> > > > 
-> > > > req.cmd_flags & 0x1 (i.e. the least sig. bit) was remaining unset for write requests
-> > > > and that's why the ireason check in the interrupt handler was failing loudly.
-> > > > This sets it correctly so that rq_data_dir(rq) evaluates to the correct data
-> > > > direction of the request, no?
-> > > 
-> > > Yep.
-> > > 
-> > > Thanks for checking it, I'll push the patch to Linus.
-> > 
-> > Cool, can we close http://bugzilla.kernel.org/show_bug.cgi?id=10185 now?
+Jose Alberto Reguero wrote:
+>> I noticed that :
+>>   R/W multiple sector transfer: Max = 1   Current = 0
+>>
+>> It is important?
+
+Nope, it's just for PIOs.
+
+> I did more tests. I put:
 > 
-> I suppose that Rafael would prefer to close it when patch hits the mainline.
+> options libata force=4:1.5g,udma0
+> 
+> and the ICRC errors still appear. But only writing. I try with the device at 
+> top speed(3G) and reading the errors don't appear.
 
-That's correct.
+UDMA mode shouldn't affect anything unless the drive is actually PATA
+bridged over SATA and configuring lower UDMA mode makes it transfer data
+slower and changes transfer pattern on the link.
 
-Thanks,
-Rafael
+> Another thing is that when limiting the speed to 1.5G, the real read speed 
+> don't seem to change and is about 2 times the read speed that I have with a 
+> SATA-I device. Is like limiting the speed to 1.5G don't do nothing. 
+
+1.5Gbps means 150Mbytes/s and harddrives are yet to reach such
+performance level, so 1.5 or 3.0 doesn't really make any difference
+performance-wise yet.
+
+> I will try the disk in a SATA-I port.
+
+Can you also give a shot at shorter cable?
+
+Thanks.
+
+-- 
+tejun
