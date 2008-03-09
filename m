@@ -1,38 +1,86 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: Frequent ATA errors
-Date: Sun, 09 Mar 2008 15:46:36 +0900
-Message-ID: <47D387CC.20906@gmail.com>
-References: <47D19C42.60301@gmx.net>
+From: Andrey Borzenkov <arvidjaar@mail.ru>
+Subject: Re: [Regression] 2.6.25-rc4-git3: Handling of audio CDs broken on pata_ali
+Date: Sun, 09 Mar 2008 10:38:23 +0300
+Message-ID: <20080309073824.902DC82CF2E@smtp04.mtu.ru>
+References: <200803082246.47987.rjw@sisk.pl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rv-out-0910.google.com ([209.85.198.189]:14236 "EHLO
-	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750718AbYCIGqm (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 9 Mar 2008 01:46:42 -0500
-Received: by rv-out-0910.google.com with SMTP id k20so739439rvb.1
-        for <linux-ide@vger.kernel.org>; Sat, 08 Mar 2008 22:46:42 -0800 (PST)
-In-Reply-To: <47D19C42.60301@gmx.net>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7Bit
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1753151AbYCIHik@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "Rafael J. Wysocki" <rjw@sisk.pl>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: LCID Fire <lcid-fire@gmx.net>
-Cc: linux-ide@vger.kernel.org
 
-LCID Fire wrote:
-> Hi.
-> I have a big problem. Since 2.6.22 I keep getting ata errors. Most of
-> the time my computer (Intel P965 Chipset) ran fine - but then suddenly
-> it began to stutter - the mouse was only moving very little and all
-> input was lagged like hell. The only chance to get rid of this is to
-> restart.
-> It has continued to my current 2.6.24. In between there were times
-> (kernel revisions) when it was better - meaning the error did only occur
-> every few days or so. With the current 2.6.24 I have it almost every
-> hour - I restarted my computer 10 times today alone. The errors look
-> like the following:
+Rafael J. Wysocki wrote:
 
-Does "hal-disable-polling /dev/sr0" help?
+> Hi,
+> 
+> On one of my test boxes I'm unable to do just about anything with audio
+> CDs using the current -git (2.6.24 is fine in that respect on the same
+> box).
+> 
+> When an audio CD is inserted into the drive, I get the following errors in
+> dmesg and nothing more happens (quite obviously):
+> 
+> ata1.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 frozen
+> ata1.00: cmd a0/01:00:00:10:00/00:00:00:00:00/a0 tag 0 dma 16400 in
+>          cdb 42 02 40 01 00 00 00 00  10 00 00 00 00 00 00 00
+>          res 40/00:00:00:18:00/00:00:00:00:00/a0 Emask 0x4 (timeout)
+> ata1.00: status: { DRDY }
+> ata1: soft resetting link
+> ata1.00: configured for UDMA/33
+> ata1: EH complete
+> ata1.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 frozen
+> ata1.00: cmd a0/01:00:00:10:00/00:00:00:00:00/a0 tag 0 dma 16400 in
+>          cdb 42 02 40 01 00 00 00 00  10 00 00 00 00 00 00 00
+>          res 40/00:00:00:18:00/00:00:00:00:00/a0 Emask 0x4 (timeout)
+> ata1.00: status: { DRDY }
+> ata1: port is slow to respond, please be patient (Status 0x80)
+> ata1: device not ready (errno=-16), forcing hardreset
+> ata1: soft resetting link
+> ata1.00: qc timeout (cmd 0xa1)
+> ata1.00: failed to IDENTIFY (I/O error, err_mask=0x4)
+> ata1.00: revalidation failed (errno=-5)
+> ata1: failed to recover some devices, retrying in 5 secs
+> ata1: port is slow to respond, please be patient (Status 0x80)
+> ata1: device not ready (errno=-16), forcing hardreset
+> ata1: soft resetting link
+> ata1.00: qc timeout (cmd 0xa1)
+> ata1.00: failed to IDENTIFY (I/O error, err_mask=0x4)
+> ata1.00: revalidation failed (errno=-5)
+> ata1: failed to recover some devices, retrying in 5 secs
+> ata1: port is slow to respond, please be patient (Status 0x80)
+> ata1: device not ready (errno=-16), forcing hardreset
+> ata1: soft resetting link
+> ata1.00: qc timeout (cmd 0xa1)
+> ata1.00: failed to IDENTIFY (I/O error, err_mask=0x4)
+> ata1.00: revalidation failed (errno=-5)
+> ata1.00: disabled
+> 
+> where ata1 is:
+> 
+> scsi0 : pata_ali
+> scsi1 : pata_ali
 
--- 
-tejun
+Oh, is it only with audio CDs? I am unable to use DVD on pata_ali in DMA at
+all. Have you tried to disable ATAPI DMA (libata.dma=1)?
+
+
+> ata1: PATA max UDMA/133 cmd 0x1f0 ctl 0x3f6 bmdma 0xff00 irq 14
+> ata2: PATA max UDMA/133 cmd 0x170 ctl 0x376 bmdma 0xff08 irq 15
+> ata1.00: ATAPI: TSSTcorpCD/DVDW SH-S182M, SB03, max UDMA/33
+> ata1.00: configured for UDMA/33
+> scsi 0:0:0:0: CD-ROM            TSSTcorp CD/DVDW SH-S182M SB03 PQ: 0 ANSI:
+> 5
+> 
+> (full dmesg attached).
+> 
+> I can't reproduce this problem on my other test boxes, so I think it's
+> related to pata_ali rather than anything else.
+> 
+> In principle I can try to find the commit that caused this problem to
+> occur, but that would be rather tedious, so if anyone has any ideas of
+> what's up, please let me know.
+> 
+> Thanks,
+> Rafael
