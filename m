@@ -1,46 +1,253 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH #upstream-fixes] libata: don't allow sysfs read access to
- force param
-Date: Sun, 09 Mar 2008 20:21:53 +0900
-Message-ID: <47D3C851.8030401@gmail.com>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: [PATCH 1/7] au1xxx-ide: fix MWDMA support
+Date: Sun, 9 Mar 2008 16:28:22 +0100
+Message-ID: <200803091628.23094.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rv-out-0910.google.com ([209.85.198.184]:8485 "EHLO
-	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751740AbYCILWA (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 9 Mar 2008 07:22:00 -0400
-Received: by rv-out-0910.google.com with SMTP id k20so790670rvb.1
-        for <linux-ide@vger.kernel.org>; Sun, 09 Mar 2008 04:21:59 -0700 (PDT)
+Received: from fg-out-1718.google.com ([72.14.220.157]:15146 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752057AbYCIPYd (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 9 Mar 2008 11:24:33 -0400
+Received: by fg-out-1718.google.com with SMTP id e21so1558400fga.17
+        for <linux-ide@vger.kernel.org>; Sun, 09 Mar 2008 08:24:31 -0700 (PDT)
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>, IDE/ATA development list <linux-ide@vger.kernel.org>
-Cc: Eric Sesterhenn <snakebyte@gmx.de>
+To: linux-ide@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
 
-Buffer for force param is deallocated after initialization, so trying
-to read it via sysfs results in oops.  Don't allow read access to the
-param node.
+Always use "fast" MWDMA support and remove dma_{black,white}_list
+(they were based on completely bogus ->ide_dma_check implementation
+which didn't set neither the host controller timings nor the device
+for the desired transfer mode).
 
-Spotted by Eric Sesterhenn.
-
-Signed-off-by: Tejun Heo <htejun@gmail.com>
-Cc: Eric Sesterhenn <snakebyte@gmx.de>
+Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 ---
- drivers/ata/libata-core.c |    3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ Documentation/mips/AU1xxx_IDE.README      |   46 ----------------------------
+ drivers/ide/mips/au1xxx-ide.c             |   49 +-----------------------------
+ include/asm-mips/mach-au1x00/au1xxx_ide.h |   42 -------------------------
+ 3 files changed, 2 insertions(+), 135 deletions(-)
 
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index 4fbcce7..e399eaa 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -106,7 +106,8 @@ static struct ata_force_ent *ata_force_tbl;
- static int ata_force_tbl_size;
+Index: b/Documentation/mips/AU1xxx_IDE.README
+===================================================================
+--- a/Documentation/mips/AU1xxx_IDE.README
++++ b/Documentation/mips/AU1xxx_IDE.README
+@@ -46,8 +46,6 @@ Two files are introduced:
  
- static char ata_force_param_buf[PAGE_SIZE] __initdata;
--module_param_string(force, ata_force_param_buf, sizeof(ata_force_param_buf), 0444);
-+/* param_buf is thrown away after initialization, disallow read */
-+module_param_string(force, ata_force_param_buf, sizeof(ata_force_param_buf), 0);
- MODULE_PARM_DESC(force, "Force ATA configurations including cable type, link speed and transfer mode (see Documentation/kernel-parameters.txt for details)");
+   a) 'include/asm-mips/mach-au1x00/au1xxx_ide.h'
+      containes : struct _auide_hwif
+-                 struct drive_list_entry dma_white_list
+-                 struct drive_list_entry dma_black_list
+                  timing parameters for PIO mode 0/1/2/3/4
+                  timing parameters for MWDMA 0/1/2
  
- int atapi_enabled = 1;
+@@ -63,12 +61,6 @@ Four configs variables are introduced:
+   CONFIG_BLK_DEV_IDE_AU1XXX_SEQTS_PER_RQ - maximum transfer size
+                                            per descriptor
+ 
+-If MWDMA is enabled and the connected hard disc is not on the white list, the
+-kernel switches to a "safe mwdma mode" at boot time. In this mode the IDE
+-performance is substantial slower then in full speed mwdma. In this case
+-please add your hard disc to the white list (follow instruction from 'ADD NEW
+-HARD DISC TO WHITE OR BLACK LIST' section).
+-
+ 
+ SUPPORTED IDE MODES
+ -------------------
+@@ -120,44 +112,6 @@ CONFIG_IDEDMA_AUTO=y
+ Also undefine 'IDE_AU1XXX_BURSTMODE' in 'drivers/ide/mips/au1xxx-ide.c' to
+ disable the burst support on DBDMA controller.
+ 
+-ADD NEW HARD DISC TO WHITE OR BLACK LIST
+-----------------------------------------
+-
+-Step 1 : detect the model name of your hard disc
+-
+-  a) connect your hard disc to the AU1XXX
+-
+-  b) boot your kernel and get the hard disc model.
+-
+-     Example boot log:
+-
+-     --snipped--
+-     Uniform Multi-Platform E-IDE driver Revision: 7.00alpha2
+-     ide: Assuming 50MHz system bus speed for PIO modes; override with idebus=xx
+-     Au1xxx IDE(builtin) configured for MWDMA2
+-     Probing IDE interface ide0...
+-     hda: Maxtor 6E040L0, ATA DISK drive
+-     ide0 at 0xac800000-0xac800007,0xac8001c0 on irq 64
+-     hda: max request size: 64KiB
+-     hda: 80293248 sectors (41110 MB) w/2048KiB Cache, CHS=65535/16/63, (U)DMA
+-     --snipped--
+-
+-     In this example 'Maxtor 6E040L0'.
+-
+-Step  2 : edit 'include/asm-mips/mach-au1x00/au1xxx_ide.h'
+-
+-  Add your hard disc to the dma_white_list or dma_black_list structur.
+-
+-Step 3 : Recompile the kernel
+-
+-  Enable MWDMA support in the kernel configuration. Recompile the kernel and
+-  reboot.
+-
+-Step 4 : Tests
+-
+-  If you have add a hard disc to the white list, please run some stress tests
+-  for verification.
+-
+ 
+ ACKNOWLEDGMENTS
+ ---------------
+Index: b/drivers/ide/mips/au1xxx-ide.c
+===================================================================
+--- a/drivers/ide/mips/au1xxx-ide.c
++++ b/drivers/ide/mips/au1xxx-ide.c
+@@ -54,7 +54,6 @@
+ #define IDE_AU1XXX_BURSTMODE	1
+ 
+ static _auide_hwif auide_hwif;
+-static int dbdma_init_done;
+ 
+ #if defined(CONFIG_BLK_DEV_IDE_AU1XXX_PIO_DBDMA)
+ 
+@@ -320,35 +319,6 @@ static int auide_dma_setup(ide_drive_t *
+ 	return 0;
+ }
+ 
+-static u8 auide_mdma_filter(ide_drive_t *drive)
+-{
+-	/*
+-	 * FIXME: ->white_list and ->black_list are based on completely bogus
+-	 * ->ide_dma_check implementation which didn't set neither the host
+-	 * controller timings nor the device for the desired transfer mode.
+-	 *
+-	 * They should be either removed or 0x00 MWDMA mask should be
+-	 * returned for devices on the ->black_list.
+-	 */
+-
+-	if (dbdma_init_done == 0) {
+-		auide_hwif.white_list = ide_in_drive_list(drive->id,
+-							  dma_white_list);
+-		auide_hwif.black_list = ide_in_drive_list(drive->id,
+-							  dma_black_list);
+-		auide_hwif.drive = drive;
+-		auide_ddma_init(&auide_hwif);
+-		dbdma_init_done = 1;
+-	}
+-
+-	/* Is the drive in our DMA black list? */
+-	if (auide_hwif.black_list)
+-		printk(KERN_WARNING "%s: Disabling DMA for %s (blacklisted)\n",
+-				    drive->name, drive->id->model);
+-
+-	return drive->hwif->mwdma_mask;
+-}
+-
+ static int auide_dma_test_irq(ide_drive_t *drive)
+ {	
+ 	if (drive->waiting_for_dma == 0)
+@@ -425,17 +395,8 @@ static int auide_ddma_init(_auide_hwif *
+ 
+ 	dev_id   = AU1XXX_ATA_DDMA_REQ;
+ 
+-	if (auide->white_list || auide->black_list) {
+-		tsize    = 8;
+-		devwidth = 32;
+-	}
+-	else { 
+-		tsize    = 1;
+-		devwidth = 16;
+-		
+-		printk(KERN_ERR "au1xxx-ide: %s is not on ide driver whitelist.\n",auide_hwif.drive->id->model);
+-		printk(KERN_ERR "            please read 'Documentation/mips/AU1xxx_IDE.README'");
+-	}
++	tsize    =  8; /*  1 */
++	devwidth = 32; /* 16 */
+ 
+ #ifdef IDE_AU1XXX_BURSTMODE 
+ 	flags = DEV_FLAGS_SYNC | DEV_FLAGS_BURSTABLE;
+@@ -551,9 +512,6 @@ static void auide_setup_ports(hw_regs_t 
+ static const struct ide_port_ops au1xxx_port_ops = {
+ 	.set_pio_mode		= au1xxx_set_pio_mode,
+ 	.set_dma_mode		= auide_set_dma_mode,
+-#ifdef CONFIG_BLK_DEV_IDE_AU1XXX_MDMA2_DBDMA
+-	.mdma_filter		= auide_mdma_filter,
+-#endif
+ };
+ 
+ static const struct ide_port_info au1xxx_port_info = {
+@@ -652,10 +610,7 @@ static int au_ide_probe(struct device *d
+ 	auide_hwif.hwif                 = hwif;
+ 	hwif->hwif_data                 = &auide_hwif;
+ 
+-#ifdef CONFIG_BLK_DEV_IDE_AU1XXX_PIO_DBDMA           
+ 	auide_ddma_init(&auide_hwif);
+-	dbdma_init_done = 1;
+-#endif
+ 
+ 	idx[0] = hwif->index;
+ 
+Index: b/include/asm-mips/mach-au1x00/au1xxx_ide.h
+===================================================================
+--- a/include/asm-mips/mach-au1x00/au1xxx_ide.h
++++ b/include/asm-mips/mach-au1x00/au1xxx_ide.h
+@@ -70,7 +70,6 @@ typedef struct
+         ide_hwif_t              *hwif;
+ #ifdef CONFIG_BLK_DEV_IDE_AU1XXX_MDMA2_DBDMA
+         ide_drive_t             *drive;
+-        u8                      white_list, black_list;
+         struct dbdma_cmd        *dma_table_cpu;
+         dma_addr_t              dma_table_dma;
+ #endif
+@@ -81,47 +80,6 @@ typedef struct
+ #endif
+ } _auide_hwif;
+ 
+-#ifdef CONFIG_BLK_DEV_IDE_AU1XXX_MDMA2_DBDMA
+-/* HD white list */
+-static const struct drive_list_entry dma_white_list [] = {
+-/*
+- * Hitachi
+- */
+-        { "HITACHI_DK14FA-20"    ,       NULL            },
+-        { "HTS726060M9AT00"      ,       NULL            },
+-/*
+- * Maxtor
+- */
+-        { "Maxtor 6E040L0"      ,       NULL            },
+-        { "Maxtor 6Y080P0"      ,       NULL            },
+-        { "Maxtor 6Y160P0"      ,       NULL            },
+-/*
+- * Seagate
+- */
+-        { "ST3120026A"          ,       NULL            },
+-        { "ST320014A"           ,       NULL            },
+-        { "ST94011A"            ,       NULL            },
+-        { "ST340016A"           ,       NULL            },
+-/*
+- * Western Digital
+- */
+-        { "WDC WD400UE-00HCT0"  ,       NULL            },
+-        { "WDC WD400JB-00JJC0"  ,       NULL            },
+-        { NULL                  ,       NULL            }
+-};
+-
+-/* HD black list */
+-static const struct drive_list_entry dma_black_list [] = {
+-/*
+- * Western Digital
+- */
+-        { "WDC WD100EB-00CGH0"  ,       NULL            },
+-        { "WDC WD200BB-00AUA1"  ,       NULL            },
+-        { "WDC AC24300L"        ,       NULL            },
+-        { NULL                  ,       NULL            }
+-};
+-#endif
+-
+ /* function prototyping */
+ u8 auide_inb(unsigned long port);
+ u16 auide_inw(unsigned long port);
