@@ -1,33 +1,32 @@
-From: bugme-daemon@bugzilla.kernel.org
-Subject: [Bug 9994] atiixp ide timeouts
-Date: Sun,  9 Mar 2008 12:55:35 -0700 (PDT)
-Message-ID: <20080309195535.CC407108064@picon.linux-foundation.org>
-References: <bug-9994-11633@http.bugzilla.kernel.org/>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: Re: [PATCH 1/7] ide: don't display "BIOS" settings in ide_setup_dma()
+Date: Sun, 09 Mar 2008 23:13:55 +0300
+Message-ID: <47D44503.6060006@ru.mvista.com>
+References: <200803082229.34542.bzolnier@gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:57210 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751085AbYCIT4H (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 9 Mar 2008 15:56:07 -0400
-Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
-	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id m29JuAQv014843
-	for <linux-ide@vger.kernel.org>; Sun, 9 Mar 2008 12:56:11 -0700
-In-Reply-To: <bug-9994-11633@http.bugzilla.kernel.org/>
+Received: from h155.mvista.com ([63.81.120.155]:36938 "EHLO imap.sh.mvista.com"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1753291AbYCIUMk (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 9 Mar 2008 16:12:40 -0400
+In-Reply-To: <200803082229.34542.bzolnier@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-http://bugzilla.kernel.org/show_bug.cgi?id=9994
+Bartlomiej Zolnierkiewicz wrote:
 
+> Nowadays BIOS info is not very useful and only confuses users since:
 
+> - IDE always tries to use DMA
 
+> - BIOS info may not be accurate with modular IDE/libata
 
+> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 
-------- Comment #4 from jan.fikar@psi.ch  2008-03-09 12:55 -------
-I am afraid I missed the bug at least once, so the result is wrong :(
-I'll check 2.6.25-rc4 first and then I'll try to redo the bisection.
+Acked-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
 
-
--- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug, or are watching the assignee.
+MBR, Sergei
