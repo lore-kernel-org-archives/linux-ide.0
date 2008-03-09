@@ -1,86 +1,46 @@
-From: Andrey Borzenkov <arvidjaar@mail.ru>
-Subject: Re: [Regression] 2.6.25-rc4-git3: Handling of audio CDs broken on pata_ali
-Date: Sun, 09 Mar 2008 10:38:23 +0300
-Message-ID: <20080309073824.902DC82CF2E@smtp04.mtu.ru>
-References: <200803082246.47987.rjw@sisk.pl>
+From: Tejun Heo <htejun@gmail.com>
+Subject: [PATCH #upstream-fixes] libata: don't allow sysfs read access to
+ force param
+Date: Sun, 09 Mar 2008 20:21:53 +0900
+Message-ID: <47D3C851.8030401@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7Bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1753151AbYCIHik@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: "Rafael J. Wysocki" <rjw@sisk.pl>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from rv-out-0910.google.com ([209.85.198.184]:8485 "EHLO
+	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751740AbYCILWA (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 9 Mar 2008 07:22:00 -0400
+Received: by rv-out-0910.google.com with SMTP id k20so790670rvb.1
+        for <linux-ide@vger.kernel.org>; Sun, 09 Mar 2008 04:21:59 -0700 (PDT)
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>, IDE/ATA development list <linux-ide@vger.kernel.org>
+Cc: Eric Sesterhenn <snakebyte@gmx.de>
 
-Rafael J. Wysocki wrote:
+Buffer for force param is deallocated after initialization, so trying
+to read it via sysfs results in oops.  Don't allow read access to the
+param node.
 
-> Hi,
-> 
-> On one of my test boxes I'm unable to do just about anything with audio
-> CDs using the current -git (2.6.24 is fine in that respect on the same
-> box).
-> 
-> When an audio CD is inserted into the drive, I get the following errors in
-> dmesg and nothing more happens (quite obviously):
-> 
-> ata1.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 frozen
-> ata1.00: cmd a0/01:00:00:10:00/00:00:00:00:00/a0 tag 0 dma 16400 in
->          cdb 42 02 40 01 00 00 00 00  10 00 00 00 00 00 00 00
->          res 40/00:00:00:18:00/00:00:00:00:00/a0 Emask 0x4 (timeout)
-> ata1.00: status: { DRDY }
-> ata1: soft resetting link
-> ata1.00: configured for UDMA/33
-> ata1: EH complete
-> ata1.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 frozen
-> ata1.00: cmd a0/01:00:00:10:00/00:00:00:00:00/a0 tag 0 dma 16400 in
->          cdb 42 02 40 01 00 00 00 00  10 00 00 00 00 00 00 00
->          res 40/00:00:00:18:00/00:00:00:00:00/a0 Emask 0x4 (timeout)
-> ata1.00: status: { DRDY }
-> ata1: port is slow to respond, please be patient (Status 0x80)
-> ata1: device not ready (errno=-16), forcing hardreset
-> ata1: soft resetting link
-> ata1.00: qc timeout (cmd 0xa1)
-> ata1.00: failed to IDENTIFY (I/O error, err_mask=0x4)
-> ata1.00: revalidation failed (errno=-5)
-> ata1: failed to recover some devices, retrying in 5 secs
-> ata1: port is slow to respond, please be patient (Status 0x80)
-> ata1: device not ready (errno=-16), forcing hardreset
-> ata1: soft resetting link
-> ata1.00: qc timeout (cmd 0xa1)
-> ata1.00: failed to IDENTIFY (I/O error, err_mask=0x4)
-> ata1.00: revalidation failed (errno=-5)
-> ata1: failed to recover some devices, retrying in 5 secs
-> ata1: port is slow to respond, please be patient (Status 0x80)
-> ata1: device not ready (errno=-16), forcing hardreset
-> ata1: soft resetting link
-> ata1.00: qc timeout (cmd 0xa1)
-> ata1.00: failed to IDENTIFY (I/O error, err_mask=0x4)
-> ata1.00: revalidation failed (errno=-5)
-> ata1.00: disabled
-> 
-> where ata1 is:
-> 
-> scsi0 : pata_ali
-> scsi1 : pata_ali
+Spotted by Eric Sesterhenn.
 
-Oh, is it only with audio CDs? I am unable to use DVD on pata_ali in DMA at
-all. Have you tried to disable ATAPI DMA (libata.dma=1)?
+Signed-off-by: Tejun Heo <htejun@gmail.com>
+Cc: Eric Sesterhenn <snakebyte@gmx.de>
+---
+ drivers/ata/libata-core.c |    3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-
-> ata1: PATA max UDMA/133 cmd 0x1f0 ctl 0x3f6 bmdma 0xff00 irq 14
-> ata2: PATA max UDMA/133 cmd 0x170 ctl 0x376 bmdma 0xff08 irq 15
-> ata1.00: ATAPI: TSSTcorpCD/DVDW SH-S182M, SB03, max UDMA/33
-> ata1.00: configured for UDMA/33
-> scsi 0:0:0:0: CD-ROM            TSSTcorp CD/DVDW SH-S182M SB03 PQ: 0 ANSI:
-> 5
-> 
-> (full dmesg attached).
-> 
-> I can't reproduce this problem on my other test boxes, so I think it's
-> related to pata_ali rather than anything else.
-> 
-> In principle I can try to find the commit that caused this problem to
-> occur, but that would be rather tedious, so if anyone has any ideas of
-> what's up, please let me know.
-> 
-> Thanks,
-> Rafael
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index 4fbcce7..e399eaa 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -106,7 +106,8 @@ static struct ata_force_ent *ata_force_tbl;
+ static int ata_force_tbl_size;
+ 
+ static char ata_force_param_buf[PAGE_SIZE] __initdata;
+-module_param_string(force, ata_force_param_buf, sizeof(ata_force_param_buf), 0444);
++/* param_buf is thrown away after initialization, disallow read */
++module_param_string(force, ata_force_param_buf, sizeof(ata_force_param_buf), 0);
+ MODULE_PARM_DESC(force, "Force ATA configurations including cable type, link speed and transfer mode (see Documentation/kernel-parameters.txt for details)");
+ 
+ int atapi_enabled = 1;
