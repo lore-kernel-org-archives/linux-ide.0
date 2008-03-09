@@ -1,253 +1,298 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH 1/7] au1xxx-ide: fix MWDMA support
-Date: Sun, 9 Mar 2008 16:28:22 +0100
-Message-ID: <200803091628.23094.bzolnier@gmail.com>
+Subject: [PATCH 2/7] ide: do complete DMA setup in ->init_dma method
+Date: Sun, 9 Mar 2008 16:29:18 +0100
+Message-ID: <200803091629.18569.bzolnier@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
   charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.157]:15146 "EHLO
+Received: from fg-out-1718.google.com ([72.14.220.155]:16266 "EHLO
 	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752057AbYCIPYd (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 9 Mar 2008 11:24:33 -0400
-Received: by fg-out-1718.google.com with SMTP id e21so1558400fga.17
-        for <linux-ide@vger.kernel.org>; Sun, 09 Mar 2008 08:24:31 -0700 (PDT)
+	with ESMTP id S1752060AbYCIPYe (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 9 Mar 2008 11:24:34 -0400
+Received: by fg-out-1718.google.com with SMTP id e21so1558405fga.17
+        for <linux-ide@vger.kernel.org>; Sun, 09 Mar 2008 08:24:32 -0700 (PDT)
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
 Cc: linux-kernel@vger.kernel.org
 
-Always use "fast" MWDMA support and remove dma_{black,white}_list
-(they were based on completely bogus ->ide_dma_check implementation
-which didn't set neither the host controller timings nor the device
-for the desired transfer mode).
+* Make ide_hwif_setup_dma() return an error value.
+
+* Pass 'const struct ide_port_info *d' instead of 'unsigned long dmabase'
+  to ->init_dma method and make it return an error value.
+
+* Rename ide_get_or_set_dma_base() to ide_pci_dma_base(),
+  change ordering of its arguments and then export it.
+
+* Export ide_pci_set_master().
+
+* Do complete DMA setup inside ->init_dma method and update ->init_dma
+  users accordingly.
+
+* Sanitize code for DMA setup in ide_init_port().
 
 Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 ---
- Documentation/mips/AU1xxx_IDE.README      |   46 ----------------------------
- drivers/ide/mips/au1xxx-ide.c             |   49 +-----------------------------
- include/asm-mips/mach-au1x00/au1xxx_ide.h |   42 -------------------------
- 3 files changed, 2 insertions(+), 135 deletions(-)
+ drivers/ide/ide-probe.c    |   21 +++++++++++++++------
+ drivers/ide/pci/alim15x3.c |   27 +++++++++++++++++++++------
+ drivers/ide/pci/hpt366.c   |   27 +++++++++++++++++++++------
+ drivers/ide/setup-pci.c    |   31 ++++++++++++++-----------------
+ include/linux/ide.h        |   11 +++++++----
+ 5 files changed, 78 insertions(+), 39 deletions(-)
 
-Index: b/Documentation/mips/AU1xxx_IDE.README
+Index: b/drivers/ide/ide-probe.c
 ===================================================================
---- a/Documentation/mips/AU1xxx_IDE.README
-+++ b/Documentation/mips/AU1xxx_IDE.README
-@@ -46,8 +46,6 @@ Two files are introduced:
+--- a/drivers/ide/ide-probe.c
++++ b/drivers/ide/ide-probe.c
+@@ -1353,9 +1353,6 @@ static void ide_init_port(ide_hwif_t *hw
+ 	if (d->init_iops)
+ 		d->init_iops(hwif);
  
-   a) 'include/asm-mips/mach-au1x00/au1xxx_ide.h'
-      containes : struct _auide_hwif
--                 struct drive_list_entry dma_white_list
--                 struct drive_list_entry dma_black_list
-                  timing parameters for PIO mode 0/1/2/3/4
-                  timing parameters for MWDMA 0/1/2
+-	if ((d->host_flags & IDE_HFLAG_NO_DMA) == 0)
+-		ide_hwif_setup_dma(hwif, d);
+-
+ 	if ((!hwif->irq && (d->host_flags & IDE_HFLAG_LEGACY_IRQS)) ||
+ 	    (d->host_flags & IDE_HFLAG_FORCE_LEGACY_IRQS))
+ 		hwif->irq = port ? 15 : 14;
+@@ -1374,9 +1371,21 @@ static void ide_init_port(ide_hwif_t *hw
+ 	hwif->mwdma_mask = d->mwdma_mask;
+ 	hwif->ultra_mask = d->udma_mask;
  
-@@ -63,12 +61,6 @@ Four configs variables are introduced:
-   CONFIG_BLK_DEV_IDE_AU1XXX_SEQTS_PER_RQ - maximum transfer size
-                                            per descriptor
+-	/* reset DMA masks only for SFF-style DMA controllers */
+-	if ((d->host_flags & IDE_HFLAG_NO_DMA) == 0 && hwif->dma_base == 0)
+-		hwif->swdma_mask = hwif->mwdma_mask = hwif->ultra_mask = 0;
++	if ((d->host_flags & IDE_HFLAG_NO_DMA) == 0) {
++		int rc;
++
++		if (d->init_dma)
++			rc = d->init_dma(hwif, d);
++		else
++			rc = ide_hwif_setup_dma(hwif, d);
++
++		if (rc < 0) {
++			printk(KERN_INFO "%s: DMA disabled\n", hwif->name);
++			hwif->swdma_mask = 0;
++			hwif->mwdma_mask = 0;
++			hwif->ultra_mask = 0;
++		}
++	}
  
--If MWDMA is enabled and the connected hard disc is not on the white list, the
--kernel switches to a "safe mwdma mode" at boot time. In this mode the IDE
--performance is substantial slower then in full speed mwdma. In this case
--please add your hard disc to the white list (follow instruction from 'ADD NEW
--HARD DISC TO WHITE OR BLACK LIST' section).
--
- 
- SUPPORTED IDE MODES
- -------------------
-@@ -120,44 +112,6 @@ CONFIG_IDEDMA_AUTO=y
- Also undefine 'IDE_AU1XXX_BURSTMODE' in 'drivers/ide/mips/au1xxx-ide.c' to
- disable the burst support on DBDMA controller.
- 
--ADD NEW HARD DISC TO WHITE OR BLACK LIST
------------------------------------------
--
--Step 1 : detect the model name of your hard disc
--
--  a) connect your hard disc to the AU1XXX
--
--  b) boot your kernel and get the hard disc model.
--
--     Example boot log:
--
--     --snipped--
--     Uniform Multi-Platform E-IDE driver Revision: 7.00alpha2
--     ide: Assuming 50MHz system bus speed for PIO modes; override with idebus=xx
--     Au1xxx IDE(builtin) configured for MWDMA2
--     Probing IDE interface ide0...
--     hda: Maxtor 6E040L0, ATA DISK drive
--     ide0 at 0xac800000-0xac800007,0xac8001c0 on irq 64
--     hda: max request size: 64KiB
--     hda: 80293248 sectors (41110 MB) w/2048KiB Cache, CHS=65535/16/63, (U)DMA
--     --snipped--
--
--     In this example 'Maxtor 6E040L0'.
--
--Step  2 : edit 'include/asm-mips/mach-au1x00/au1xxx_ide.h'
--
--  Add your hard disc to the dma_white_list or dma_black_list structur.
--
--Step 3 : Recompile the kernel
--
--  Enable MWDMA support in the kernel configuration. Recompile the kernel and
--  reboot.
--
--Step 4 : Tests
--
--  If you have add a hard disc to the white list, please run some stress tests
--  for verification.
--
- 
- ACKNOWLEDGMENTS
- ---------------
-Index: b/drivers/ide/mips/au1xxx-ide.c
+ 	if (d->host_flags & IDE_HFLAG_RQSIZE_256)
+ 		hwif->rqsize = 256;
+Index: b/drivers/ide/pci/alim15x3.c
 ===================================================================
---- a/drivers/ide/mips/au1xxx-ide.c
-+++ b/drivers/ide/mips/au1xxx-ide.c
-@@ -54,7 +54,6 @@
- #define IDE_AU1XXX_BURSTMODE	1
+--- a/drivers/ide/pci/alim15x3.c
++++ b/drivers/ide/pci/alim15x3.c
+@@ -723,17 +723,32 @@ static void __devinit init_hwif_ali15x3 
+ /**
+  *	init_dma_ali15x3	-	set up DMA on ALi15x3
+  *	@hwif: IDE interface
+- *	@dmabase: DMA interface base PCI address
++ *	@d: IDE port info
+  *
+- *	Set up the DMA functionality on the ALi 15x3. For the ALi
+- *	controllers this is generic so we can let the generic code do
+- *	the actual work.
++ *	Set up the DMA functionality on the ALi 15x3.
+  */
  
- static _auide_hwif auide_hwif;
--static int dbdma_init_done;
- 
- #if defined(CONFIG_BLK_DEV_IDE_AU1XXX_PIO_DBDMA)
- 
-@@ -320,35 +319,6 @@ static int auide_dma_setup(ide_drive_t *
- 	return 0;
+-static void __devinit init_dma_ali15x3 (ide_hwif_t *hwif, unsigned long dmabase)
++static int __devinit init_dma_ali15x3(ide_hwif_t *hwif,
++				      const struct ide_port_info *d)
+ {
++	struct pci_dev *dev = to_pci_dev(hwif->dev);
++	unsigned long base = ide_pci_dma_base(hwif, d);
++
++	if (base == 0 || ide_pci_set_master(dev, d->name) < 0)
++		return -1;
++
+ 	if (!hwif->channel)
+-		outb(inb(dmabase + 2) & 0x60, dmabase + 2);
++		outb(inb(base + 2) & 0x60, base + 2);
++
++	printk(KERN_INFO "    %s: BM-DMA at 0x%04lx-0x%04lx\n",
++			 hwif->name, base, base + 7);
++
++	if (ide_allocate_dma_engine(hwif))
++		return -1;
++
++	ide_setup_dma(hwif, base);
++
++	return 0;
  }
  
--static u8 auide_mdma_filter(ide_drive_t *drive)
--{
--	/*
--	 * FIXME: ->white_list and ->black_list are based on completely bogus
--	 * ->ide_dma_check implementation which didn't set neither the host
--	 * controller timings nor the device for the desired transfer mode.
--	 *
--	 * They should be either removed or 0x00 MWDMA mask should be
--	 * returned for devices on the ->black_list.
--	 */
--
--	if (dbdma_init_done == 0) {
--		auide_hwif.white_list = ide_in_drive_list(drive->id,
--							  dma_white_list);
--		auide_hwif.black_list = ide_in_drive_list(drive->id,
--							  dma_black_list);
--		auide_hwif.drive = drive;
--		auide_ddma_init(&auide_hwif);
--		dbdma_init_done = 1;
--	}
--
--	/* Is the drive in our DMA black list? */
--	if (auide_hwif.black_list)
--		printk(KERN_WARNING "%s: Disabling DMA for %s (blacklisted)\n",
--				    drive->name, drive->id->model);
--
--	return drive->hwif->mwdma_mask;
--}
--
- static int auide_dma_test_irq(ide_drive_t *drive)
- {	
- 	if (drive->waiting_for_dma == 0)
-@@ -425,17 +395,8 @@ static int auide_ddma_init(_auide_hwif *
- 
- 	dev_id   = AU1XXX_ATA_DDMA_REQ;
- 
--	if (auide->white_list || auide->black_list) {
--		tsize    = 8;
--		devwidth = 32;
--	}
--	else { 
--		tsize    = 1;
--		devwidth = 16;
--		
--		printk(KERN_ERR "au1xxx-ide: %s is not on ide driver whitelist.\n",auide_hwif.drive->id->model);
--		printk(KERN_ERR "            please read 'Documentation/mips/AU1xxx_IDE.README'");
--	}
-+	tsize    =  8; /*  1 */
-+	devwidth = 32; /* 16 */
- 
- #ifdef IDE_AU1XXX_BURSTMODE 
- 	flags = DEV_FLAGS_SYNC | DEV_FLAGS_BURSTABLE;
-@@ -551,9 +512,6 @@ static void auide_setup_ports(hw_regs_t 
- static const struct ide_port_ops au1xxx_port_ops = {
- 	.set_pio_mode		= au1xxx_set_pio_mode,
- 	.set_dma_mode		= auide_set_dma_mode,
--#ifdef CONFIG_BLK_DEV_IDE_AU1XXX_MDMA2_DBDMA
--	.mdma_filter		= auide_mdma_filter,
--#endif
- };
- 
- static const struct ide_port_info au1xxx_port_info = {
-@@ -652,10 +610,7 @@ static int au_ide_probe(struct device *d
- 	auide_hwif.hwif                 = hwif;
- 	hwif->hwif_data                 = &auide_hwif;
- 
--#ifdef CONFIG_BLK_DEV_IDE_AU1XXX_PIO_DBDMA           
- 	auide_ddma_init(&auide_hwif);
--	dbdma_init_done = 1;
--#endif
- 
- 	idx[0] = hwif->index;
- 
-Index: b/include/asm-mips/mach-au1x00/au1xxx_ide.h
+ static const struct ide_port_ops ali_port_ops = {
+Index: b/drivers/ide/pci/hpt366.c
 ===================================================================
---- a/include/asm-mips/mach-au1x00/au1xxx_ide.h
-+++ b/include/asm-mips/mach-au1x00/au1xxx_ide.h
-@@ -70,7 +70,6 @@ typedef struct
-         ide_hwif_t              *hwif;
- #ifdef CONFIG_BLK_DEV_IDE_AU1XXX_MDMA2_DBDMA
-         ide_drive_t             *drive;
--        u8                      white_list, black_list;
-         struct dbdma_cmd        *dma_table_cpu;
-         dma_addr_t              dma_table_dma;
- #endif
-@@ -81,47 +80,6 @@ typedef struct
- #endif
- } _auide_hwif;
+--- a/drivers/ide/pci/hpt366.c
++++ b/drivers/ide/pci/hpt366.c
+@@ -1327,14 +1327,17 @@ static void __devinit init_hwif_hpt366(i
+ 		hwif->dma_lost_irq	= &hpt366_dma_lost_irq;
+ }
  
--#ifdef CONFIG_BLK_DEV_IDE_AU1XXX_MDMA2_DBDMA
--/* HD white list */
--static const struct drive_list_entry dma_white_list [] = {
--/*
-- * Hitachi
-- */
--        { "HITACHI_DK14FA-20"    ,       NULL            },
--        { "HTS726060M9AT00"      ,       NULL            },
--/*
-- * Maxtor
-- */
--        { "Maxtor 6E040L0"      ,       NULL            },
--        { "Maxtor 6Y080P0"      ,       NULL            },
--        { "Maxtor 6Y160P0"      ,       NULL            },
--/*
-- * Seagate
-- */
--        { "ST3120026A"          ,       NULL            },
--        { "ST320014A"           ,       NULL            },
--        { "ST94011A"            ,       NULL            },
--        { "ST340016A"           ,       NULL            },
--/*
-- * Western Digital
-- */
--        { "WDC WD400UE-00HCT0"  ,       NULL            },
--        { "WDC WD400JB-00JJC0"  ,       NULL            },
--        { NULL                  ,       NULL            }
--};
+-static void __devinit init_dma_hpt366(ide_hwif_t *hwif, unsigned long dmabase)
++static int __devinit init_dma_hpt366(ide_hwif_t *hwif,
++				     const struct ide_port_info *d)
+ {
+ 	struct pci_dev *dev = to_pci_dev(hwif->dev);
+-	u8 masterdma	= 0, slavedma	= 0;
+-	u8 dma_new	= 0, dma_old	= 0;
+-	unsigned long flags;
++	unsigned long flags, base = ide_pci_dma_base(hwif, d);
++	u8 dma_old, dma_new, masterdma = 0, slavedma = 0;
+ 
+-	dma_old = inb(dmabase + 2);
++	if (base == 0 || ide_pci_set_master(dev, d->name) < 0)
++		return -1;
++
++	dma_old = inb(base + 2);
+ 
+ 	local_irq_save(flags);
+ 
+@@ -1345,9 +1348,21 @@ static void __devinit init_dma_hpt366(id
+ 	if (masterdma & 0x30)	dma_new |= 0x20;
+ 	if ( slavedma & 0x30)	dma_new |= 0x40;
+ 	if (dma_new != dma_old)
+-		outb(dma_new, dmabase + 2);
++		outb(dma_new, base + 2);
+ 
+ 	local_irq_restore(flags);
++
++	printk(KERN_INFO "    %s: BM-DMA at 0x%04lx-0x%04lx\n",
++			 hwif->name, base, base + 7);
++
++	hwif->extra_base = base + (hwif->channel ? 8 : 16);
++
++	if (ide_allocate_dma_engine(hwif))
++		return -1;
++
++	ide_setup_dma(hwif, base);
++
++	return 0;
+ }
+ 
+ static void __devinit hpt374_init(struct pci_dev *dev, struct pci_dev *dev2)
+Index: b/drivers/ide/setup-pci.c
+===================================================================
+--- a/drivers/ide/setup-pci.c
++++ b/drivers/ide/setup-pci.c
+@@ -72,16 +72,16 @@ static void ide_pci_clear_simplex(unsign
+ }
+ 
+ /**
+- *	ide_get_or_set_dma_base		-	setup BMIBA
+- *	@d: IDE port info
++ *	ide_pci_dma_base	-	setup BMIBA
+  *	@hwif: IDE interface
++ *	@d: IDE port info
+  *
+  *	Fetch the DMA Bus-Master-I/O-Base-Address (BMIBA) from PCI space.
+  *	Where a device has a partner that is already in DMA mode we check
+  *	and enforce IDE simplex rules.
+  */
+ 
+-static unsigned long ide_get_or_set_dma_base(const struct ide_port_info *d, ide_hwif_t *hwif)
++unsigned long ide_pci_dma_base(ide_hwif_t *hwif, const struct ide_port_info *d)
+ {
+ 	struct pci_dev *dev = to_pci_dev(hwif->dev);
+ 	unsigned long dma_base = 0;
+@@ -132,11 +132,12 @@ static unsigned long ide_get_or_set_dma_
+ out:
+ 	return dma_base;
+ }
++EXPORT_SYMBOL_GPL(ide_pci_dma_base);
+ 
+ /*
+  * Set up BM-DMA capability (PnP BIOS should have done this)
+  */
+-static int ide_pci_set_master(struct pci_dev *dev, const char *name)
++int ide_pci_set_master(struct pci_dev *dev, const char *name)
+ {
+ 	u16 pcicmd;
+ 
+@@ -155,6 +156,7 @@ static int ide_pci_set_master(struct pci
+ 
+ 	return 0;
+ }
++EXPORT_SYMBOL_GPL(ide_pci_set_master);
+ #endif /* CONFIG_BLK_DEV_IDEDMA_PCI */
+ 
+ void ide_setup_pci_noise(struct pci_dev *dev, const struct ide_port_info *d)
+@@ -359,20 +361,17 @@ static ide_hwif_t *ide_hwif_configure(st
+  *	state
+  */
+ 
+-void ide_hwif_setup_dma(ide_hwif_t *hwif, const struct ide_port_info *d)
++int ide_hwif_setup_dma(ide_hwif_t *hwif, const struct ide_port_info *d)
+ {
+ 	struct pci_dev *dev = to_pci_dev(hwif->dev);
+ 
+ 	if ((d->host_flags & IDE_HFLAG_NO_AUTODMA) == 0 ||
+ 	    ((dev->class >> 8) == PCI_CLASS_STORAGE_IDE &&
+ 	     (dev->class & 0x80))) {
+-		unsigned long base = ide_get_or_set_dma_base(d, hwif);
++		unsigned long base = ide_pci_dma_base(hwif, d);
+ 
+ 		if (base == 0 || ide_pci_set_master(dev, d->name) < 0)
+-			goto out_disabled;
 -
--/* HD black list */
--static const struct drive_list_entry dma_black_list [] = {
--/*
-- * Western Digital
-- */
--        { "WDC WD100EB-00CGH0"  ,       NULL            },
--        { "WDC WD200BB-00AUA1"  ,       NULL            },
--        { "WDC AC24300L"        ,       NULL            },
--        { NULL                  ,       NULL            }
--};
--#endif
--
- /* function prototyping */
- u8 auide_inb(unsigned long port);
- u16 auide_inw(unsigned long port);
+-		if (d->init_dma)
+-			d->init_dma(hwif, base);
++			return -1;
+ 
+ 		if (hwif->mmio)
+ 			printk(KERN_INFO "    %s: MMIO-DMA\n", hwif->name);
+@@ -382,15 +381,13 @@ void ide_hwif_setup_dma(ide_hwif_t *hwif
+ 
+ 		hwif->extra_base = base + (hwif->channel ? 8 : 16);
+ 
+-		if (ide_allocate_dma_engine(hwif) == 0)
+-			ide_setup_dma(hwif, base);
+-	}
++		if (ide_allocate_dma_engine(hwif))
++			return -1;
+ 
+-	return;
++		ide_setup_dma(hwif, base);
++	}
+ 
+-out_disabled:
+-	printk(KERN_INFO "%s: Bus-Master DMA disabled (BIOS) on %s\n",
+-			 d->name, pci_name(dev));
++	return 0;
+ }
+ #endif /* CONFIG_BLK_DEV_IDEDMA_PCI */
+ 
+Index: b/include/linux/ide.h
+===================================================================
+--- a/include/linux/ide.h
++++ b/include/linux/ide.h
+@@ -1009,10 +1009,12 @@ void ide_pci_setup_ports(struct pci_dev 
+ void ide_setup_pci_noise(struct pci_dev *, const struct ide_port_info *);
+ 
+ #ifdef CONFIG_BLK_DEV_IDEDMA_PCI
+-void ide_hwif_setup_dma(ide_hwif_t *, const struct ide_port_info *);
++int ide_pci_set_master(struct pci_dev *, const char *);
++unsigned long ide_pci_dma_base(ide_hwif_t *, const struct ide_port_info *);
++int ide_hwif_setup_dma(ide_hwif_t *, const struct ide_port_info *);
+ #else
+-static inline void ide_hwif_setup_dma(ide_hwif_t *hwif,
+-				      const struct ide_port_info *d) { }
++static inline int ide_hwif_setup_dma(ide_hwif_t *hwif,
++				     const struct ide_port_info *d) { }
+ #endif
+ 
+ extern void default_hwif_iops(ide_hwif_t *);
+@@ -1105,7 +1107,8 @@ struct ide_port_info {
+ 	unsigned int		(*init_chipset)(struct pci_dev *, const char *);
+ 	void			(*init_iops)(ide_hwif_t *);
+ 	void                    (*init_hwif)(ide_hwif_t *);
+-	void			(*init_dma)(ide_hwif_t *, unsigned long);
++	int			(*init_dma)(ide_hwif_t *,
++					    const struct ide_port_info *);
+ 
+ 	const struct ide_port_ops	*port_ops;
+ 
