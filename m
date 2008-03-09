@@ -1,298 +1,106 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH 2/7] ide: do complete DMA setup in ->init_dma method
-Date: Sun, 9 Mar 2008 16:29:18 +0100
-Message-ID: <200803091629.18569.bzolnier@gmail.com>
+Subject: [PATCH 3/7] ide-pmac: use ->init_dma method
+Date: Sun, 9 Mar 2008 16:30:13 +0100
+Message-ID: <200803091630.13785.bzolnier@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
   charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.155]:16266 "EHLO
+Received: from fg-out-1718.google.com ([72.14.220.156]:14093 "EHLO
 	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752060AbYCIPYe (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 9 Mar 2008 11:24:34 -0400
-Received: by fg-out-1718.google.com with SMTP id e21so1558405fga.17
-        for <linux-ide@vger.kernel.org>; Sun, 09 Mar 2008 08:24:32 -0700 (PDT)
+	with ESMTP id S1752078AbYCIPYf (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 9 Mar 2008 11:24:35 -0400
+Received: by fg-out-1718.google.com with SMTP id e21so1558399fga.17
+        for <linux-ide@vger.kernel.org>; Sun, 09 Mar 2008 08:24:34 -0700 (PDT)
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, Benjamin Herrenschmidt <benh@kernel.crashing.org>
 
-* Make ide_hwif_setup_dma() return an error value.
+* Move pmif->dma_regs check from pmac_ide_setup_device() to
+  pmac_ide_init_dma().
 
-* Pass 'const struct ide_port_info *d' instead of 'unsigned long dmabase'
-  to ->init_dma method and make it return an error value.
+* Get 'pmif' from 'hwif->hwif_data' in pmac_ide_init_dma() and replace
+  'pmac_ide_hwif_t *pmif' argument by 'const struct ide_port_info *d'.
 
-* Rename ide_get_or_set_dma_base() to ide_pci_dma_base(),
-  change ordering of its arguments and then export it.
+* Add pmac_ide_init_dma() implementation for CONFIG_BLK_DEV_IDEDMA_PMAC=n
+  case and convert the driver to use ->init_dma method.
 
-* Export ide_pci_set_master().
-
-* Do complete DMA setup inside ->init_dma method and update ->init_dma
-  users accordingly.
-
-* Sanitize code for DMA setup in ide_init_port().
-
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
 Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 ---
- drivers/ide/ide-probe.c    |   21 +++++++++++++++------
- drivers/ide/pci/alim15x3.c |   27 +++++++++++++++++++++------
- drivers/ide/pci/hpt366.c   |   27 +++++++++++++++++++++------
- drivers/ide/setup-pci.c    |   31 ++++++++++++++-----------------
- include/linux/ide.h        |   11 +++++++----
- 5 files changed, 78 insertions(+), 39 deletions(-)
+ drivers/ide/ppc/pmac.c |   20 ++++++++++++--------
+ 1 file changed, 12 insertions(+), 8 deletions(-)
 
-Index: b/drivers/ide/ide-probe.c
+Index: b/drivers/ide/ppc/pmac.c
 ===================================================================
---- a/drivers/ide/ide-probe.c
-+++ b/drivers/ide/ide-probe.c
-@@ -1353,9 +1353,6 @@ static void ide_init_port(ide_hwif_t *hw
- 	if (d->init_iops)
- 		d->init_iops(hwif);
- 
--	if ((d->host_flags & IDE_HFLAG_NO_DMA) == 0)
--		ide_hwif_setup_dma(hwif, d);
--
- 	if ((!hwif->irq && (d->host_flags & IDE_HFLAG_LEGACY_IRQS)) ||
- 	    (d->host_flags & IDE_HFLAG_FORCE_LEGACY_IRQS))
- 		hwif->irq = port ? 15 : 14;
-@@ -1374,9 +1371,21 @@ static void ide_init_port(ide_hwif_t *hw
- 	hwif->mwdma_mask = d->mwdma_mask;
- 	hwif->ultra_mask = d->udma_mask;
- 
--	/* reset DMA masks only for SFF-style DMA controllers */
--	if ((d->host_flags & IDE_HFLAG_NO_DMA) == 0 && hwif->dma_base == 0)
--		hwif->swdma_mask = hwif->mwdma_mask = hwif->ultra_mask = 0;
-+	if ((d->host_flags & IDE_HFLAG_NO_DMA) == 0) {
-+		int rc;
-+
-+		if (d->init_dma)
-+			rc = d->init_dma(hwif, d);
-+		else
-+			rc = ide_hwif_setup_dma(hwif, d);
-+
-+		if (rc < 0) {
-+			printk(KERN_INFO "%s: DMA disabled\n", hwif->name);
-+			hwif->swdma_mask = 0;
-+			hwif->mwdma_mask = 0;
-+			hwif->ultra_mask = 0;
-+		}
-+	}
- 
- 	if (d->host_flags & IDE_HFLAG_RQSIZE_256)
- 		hwif->rqsize = 256;
-Index: b/drivers/ide/pci/alim15x3.c
-===================================================================
---- a/drivers/ide/pci/alim15x3.c
-+++ b/drivers/ide/pci/alim15x3.c
-@@ -723,17 +723,32 @@ static void __devinit init_hwif_ali15x3 
- /**
-  *	init_dma_ali15x3	-	set up DMA on ALi15x3
-  *	@hwif: IDE interface
-- *	@dmabase: DMA interface base PCI address
-+ *	@d: IDE port info
-  *
-- *	Set up the DMA functionality on the ALi 15x3. For the ALi
-- *	controllers this is generic so we can let the generic code do
-- *	the actual work.
-+ *	Set up the DMA functionality on the ALi 15x3.
+--- a/drivers/ide/ppc/pmac.c
++++ b/drivers/ide/ppc/pmac.c
+@@ -409,7 +409,7 @@ kauai_lookup_timing(struct kauai_timing*
   */
+ #define IDE_WAKEUP_DELAY	(1*HZ)
  
--static void __devinit init_dma_ali15x3 (ide_hwif_t *hwif, unsigned long dmabase)
-+static int __devinit init_dma_ali15x3(ide_hwif_t *hwif,
-+				      const struct ide_port_info *d)
+-static int pmac_ide_setup_dma(pmac_ide_hwif_t *pmif, ide_hwif_t *hwif);
++static int pmac_ide_init_dma(ide_hwif_t *, const struct ide_port_info *);
+ static int pmac_ide_build_dmatable(ide_drive_t *drive, struct request *rq);
+ static void pmac_ide_selectproc(ide_drive_t *drive);
+ static void pmac_ide_kauai_selectproc(ide_drive_t *drive);
+@@ -931,11 +931,11 @@ static const struct ide_port_ops pmac_id
+ };
+ 
+ static const struct ide_port_info pmac_port_info = {
++	.init_dma		= pmac_ide_init_dma,
+ 	.chipset		= ide_pmac,
+ 	.port_ops		= &pmac_ide_port_ops,
+ 	.host_flags		= IDE_HFLAG_SET_PIO_MODE_KEEP_DMA |
+ 				  IDE_HFLAG_POST_SET_MODE |
+-				  IDE_HFLAG_NO_DMA | /* no SFF-style DMA */
+ 				  IDE_HFLAG_UNMASK_IRQS,
+ 	.pio_mask		= ATA_PIO4,
+ 	.mwdma_mask		= ATA_MWDMA2,
+@@ -1067,10 +1067,7 @@ pmac_ide_setup_device(pmac_ide_hwif_t *p
+ #ifdef CONFIG_BLK_DEV_IDEDMA_PMAC
+ 	if (pmif->cable_80 == 0)
+ 		d.udma_mask &= ATA_UDMA2;
+-	/* has a DBDMA controller channel */
+-	if (pmif->dma_regs == 0 || pmac_ide_setup_dma(pmif, hwif) < 0)
+ #endif
+-		d.udma_mask = d.mwdma_mask = 0;
+ 
+ 	idx[0] = hwif->index;
+ 
+@@ -1677,14 +1674,16 @@ pmac_ide_dma_lost_irq (ide_drive_t *driv
+  * Allocate the data structures needed for using DMA with an interface
+  * and fill the proper list of functions pointers
+  */
+-static int __devinit pmac_ide_setup_dma(pmac_ide_hwif_t *pmif, ide_hwif_t *hwif)
++static int __devinit pmac_ide_init_dma(ide_hwif_t *hwif,
++				       const struct ide_port_info *d)
  {
-+	struct pci_dev *dev = to_pci_dev(hwif->dev);
-+	unsigned long base = ide_pci_dma_base(hwif, d);
-+
-+	if (base == 0 || ide_pci_set_master(dev, d->name) < 0)
-+		return -1;
-+
- 	if (!hwif->channel)
--		outb(inb(dmabase + 2) & 0x60, dmabase + 2);
-+		outb(inb(base + 2) & 0x60, base + 2);
-+
-+	printk(KERN_INFO "    %s: BM-DMA at 0x%04lx-0x%04lx\n",
-+			 hwif->name, base, base + 7);
-+
-+	if (ide_allocate_dma_engine(hwif))
-+		return -1;
-+
-+	ide_setup_dma(hwif, base);
-+
-+	return 0;
- }
- 
- static const struct ide_port_ops ali_port_ops = {
-Index: b/drivers/ide/pci/hpt366.c
-===================================================================
---- a/drivers/ide/pci/hpt366.c
-+++ b/drivers/ide/pci/hpt366.c
-@@ -1327,14 +1327,17 @@ static void __devinit init_hwif_hpt366(i
- 		hwif->dma_lost_irq	= &hpt366_dma_lost_irq;
- }
- 
--static void __devinit init_dma_hpt366(ide_hwif_t *hwif, unsigned long dmabase)
-+static int __devinit init_dma_hpt366(ide_hwif_t *hwif,
-+				     const struct ide_port_info *d)
- {
++	pmac_ide_hwif_t *pmif = (pmac_ide_hwif_t *)hwif->hwif_data;
  	struct pci_dev *dev = to_pci_dev(hwif->dev);
--	u8 masterdma	= 0, slavedma	= 0;
--	u8 dma_new	= 0, dma_old	= 0;
--	unsigned long flags;
-+	unsigned long flags, base = ide_pci_dma_base(hwif, d);
-+	u8 dma_old, dma_new, masterdma = 0, slavedma = 0;
  
--	dma_old = inb(dmabase + 2);
-+	if (base == 0 || ide_pci_set_master(dev, d->name) < 0)
-+		return -1;
-+
-+	dma_old = inb(base + 2);
- 
- 	local_irq_save(flags);
- 
-@@ -1345,9 +1348,21 @@ static void __devinit init_dma_hpt366(id
- 	if (masterdma & 0x30)	dma_new |= 0x20;
- 	if ( slavedma & 0x30)	dma_new |= 0x40;
- 	if (dma_new != dma_old)
--		outb(dma_new, dmabase + 2);
-+		outb(dma_new, base + 2);
- 
- 	local_irq_restore(flags);
-+
-+	printk(KERN_INFO "    %s: BM-DMA at 0x%04lx-0x%04lx\n",
-+			 hwif->name, base, base + 7);
-+
-+	hwif->extra_base = base + (hwif->channel ? 8 : 16);
-+
-+	if (ide_allocate_dma_engine(hwif))
-+		return -1;
-+
-+	ide_setup_dma(hwif, base);
-+
-+	return 0;
- }
- 
- static void __devinit hpt374_init(struct pci_dev *dev, struct pci_dev *dev2)
-Index: b/drivers/ide/setup-pci.c
-===================================================================
---- a/drivers/ide/setup-pci.c
-+++ b/drivers/ide/setup-pci.c
-@@ -72,16 +72,16 @@ static void ide_pci_clear_simplex(unsign
- }
- 
- /**
-- *	ide_get_or_set_dma_base		-	setup BMIBA
-- *	@d: IDE port info
-+ *	ide_pci_dma_base	-	setup BMIBA
-  *	@hwif: IDE interface
-+ *	@d: IDE port info
-  *
-  *	Fetch the DMA Bus-Master-I/O-Base-Address (BMIBA) from PCI space.
-  *	Where a device has a partner that is already in DMA mode we check
-  *	and enforce IDE simplex rules.
-  */
- 
--static unsigned long ide_get_or_set_dma_base(const struct ide_port_info *d, ide_hwif_t *hwif)
-+unsigned long ide_pci_dma_base(ide_hwif_t *hwif, const struct ide_port_info *d)
- {
- 	struct pci_dev *dev = to_pci_dev(hwif->dev);
- 	unsigned long dma_base = 0;
-@@ -132,11 +132,12 @@ static unsigned long ide_get_or_set_dma_
- out:
- 	return dma_base;
- }
-+EXPORT_SYMBOL_GPL(ide_pci_dma_base);
- 
- /*
-  * Set up BM-DMA capability (PnP BIOS should have done this)
-  */
--static int ide_pci_set_master(struct pci_dev *dev, const char *name)
-+int ide_pci_set_master(struct pci_dev *dev, const char *name)
- {
- 	u16 pcicmd;
- 
-@@ -155,6 +156,7 @@ static int ide_pci_set_master(struct pci
+ 	/* We won't need pci_dev if we switch to generic consistent
+ 	 * DMA routines ...
+ 	 */
+-	if (dev == NULL)
++	if (dev == NULL || pmif->dma_regs == 0)
+ 		return -ENODEV;
+ 	/*
+ 	 * Allocate space for the DBDMA commands.
+@@ -1714,7 +1713,12 @@ static int __devinit pmac_ide_setup_dma(
  
  	return 0;
  }
-+EXPORT_SYMBOL_GPL(ide_pci_set_master);
- #endif /* CONFIG_BLK_DEV_IDEDMA_PCI */
- 
- void ide_setup_pci_noise(struct pci_dev *dev, const struct ide_port_info *d)
-@@ -359,20 +361,17 @@ static ide_hwif_t *ide_hwif_configure(st
-  *	state
-  */
- 
--void ide_hwif_setup_dma(ide_hwif_t *hwif, const struct ide_port_info *d)
-+int ide_hwif_setup_dma(ide_hwif_t *hwif, const struct ide_port_info *d)
- {
- 	struct pci_dev *dev = to_pci_dev(hwif->dev);
- 
- 	if ((d->host_flags & IDE_HFLAG_NO_AUTODMA) == 0 ||
- 	    ((dev->class >> 8) == PCI_CLASS_STORAGE_IDE &&
- 	     (dev->class & 0x80))) {
--		unsigned long base = ide_get_or_set_dma_base(d, hwif);
-+		unsigned long base = ide_pci_dma_base(hwif, d);
- 
- 		if (base == 0 || ide_pci_set_master(dev, d->name) < 0)
--			goto out_disabled;
 -
--		if (d->init_dma)
--			d->init_dma(hwif, base);
-+			return -1;
++#else
++static int __devinit pmac_ide_init_dma(ide_hwif_t *hwif,
++				       const struct ide_port_info *d)
++{
++	return -EOPNOTSUPP;
++}
+ #endif /* CONFIG_BLK_DEV_IDEDMA_PMAC */
  
- 		if (hwif->mmio)
- 			printk(KERN_INFO "    %s: MMIO-DMA\n", hwif->name);
-@@ -382,15 +381,13 @@ void ide_hwif_setup_dma(ide_hwif_t *hwif
- 
- 		hwif->extra_base = base + (hwif->channel ? 8 : 16);
- 
--		if (ide_allocate_dma_engine(hwif) == 0)
--			ide_setup_dma(hwif, base);
--	}
-+		if (ide_allocate_dma_engine(hwif))
-+			return -1;
- 
--	return;
-+		ide_setup_dma(hwif, base);
-+	}
- 
--out_disabled:
--	printk(KERN_INFO "%s: Bus-Master DMA disabled (BIOS) on %s\n",
--			 d->name, pci_name(dev));
-+	return 0;
- }
- #endif /* CONFIG_BLK_DEV_IDEDMA_PCI */
- 
-Index: b/include/linux/ide.h
-===================================================================
---- a/include/linux/ide.h
-+++ b/include/linux/ide.h
-@@ -1009,10 +1009,12 @@ void ide_pci_setup_ports(struct pci_dev 
- void ide_setup_pci_noise(struct pci_dev *, const struct ide_port_info *);
- 
- #ifdef CONFIG_BLK_DEV_IDEDMA_PCI
--void ide_hwif_setup_dma(ide_hwif_t *, const struct ide_port_info *);
-+int ide_pci_set_master(struct pci_dev *, const char *);
-+unsigned long ide_pci_dma_base(ide_hwif_t *, const struct ide_port_info *);
-+int ide_hwif_setup_dma(ide_hwif_t *, const struct ide_port_info *);
- #else
--static inline void ide_hwif_setup_dma(ide_hwif_t *hwif,
--				      const struct ide_port_info *d) { }
-+static inline int ide_hwif_setup_dma(ide_hwif_t *hwif,
-+				     const struct ide_port_info *d) { }
- #endif
- 
- extern void default_hwif_iops(ide_hwif_t *);
-@@ -1105,7 +1107,8 @@ struct ide_port_info {
- 	unsigned int		(*init_chipset)(struct pci_dev *, const char *);
- 	void			(*init_iops)(ide_hwif_t *);
- 	void                    (*init_hwif)(ide_hwif_t *);
--	void			(*init_dma)(ide_hwif_t *, unsigned long);
-+	int			(*init_dma)(ide_hwif_t *,
-+					    const struct ide_port_info *);
- 
- 	const struct ide_port_ops	*port_ops;
- 
+ module_init(pmac_ide_probe);
