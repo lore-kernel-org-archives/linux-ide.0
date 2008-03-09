@@ -1,167 +1,158 @@
 From: Borislav Petkov <petkovbb@googlemail.com>
-Subject: [PATCH 4/4] ide-tape: remove pipeline-specific code from idetape_add_chrdev_read_request()
-Date: Sun,  9 Mar 2008 18:10:32 +0100
-Message-ID: <1205082632-3418-5-git-send-email-petkovbb@gmail.com>
+Subject: [PATCH 2/4] ide-tape: remove pipeline-specific code from idetape_add_chrdev_write_request
+Date: Sun,  9 Mar 2008 18:10:30 +0100
+Message-ID: <1205082632-3418-3-git-send-email-petkovbb@gmail.com>
 References: <1205082632-3418-1-git-send-email-petkovbb@gmail.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.170]:60985 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755089AbYCIRKl (ORCPT
+Received: from py-out-1112.google.com ([64.233.166.182]:8690 "EHLO
+	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755101AbYCIRKl (ORCPT
 	<rfc822;linux-ide@vger.kernel.org>); Sun, 9 Mar 2008 13:10:41 -0400
-Received: by ug-out-1314.google.com with SMTP id z38so4732686ugc.16
-        for <linux-ide@vger.kernel.org>; Sun, 09 Mar 2008 10:10:39 -0700 (PDT)
+Received: by py-out-1112.google.com with SMTP id u52so2193448pyb.10
+        for <linux-ide@vger.kernel.org>; Sun, 09 Mar 2008 10:10:40 -0700 (PDT)
 In-Reply-To: <1205082632-3418-1-git-send-email-petkovbb@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: bzolnier@gmail.com
 Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Borislav Petkov <petkovbb@gmail.com>
 
-In order to do away with queueing read requests on the pipeline, several things
-have to be done:
+Refrain from adding more write requests to the pipeline and queue them
+directly on the device's request queue instead. Prior to that flush all
+penging stages in the pipeline through idetape_wait_for_pipeline().
 
-1. Do not allocate additional pipeline stages in idetape_init_read() until
-(tape->nr_stages < max_stages) and do only read operation preparations. As a
-collateral result, idetape_add_stage_tail() becomes unused so remove it.
-
-2. Wait for all queued pipeline requests to complete before queueing
-the read request's buffer directly thru idetape_queue_rw_tail()
-
-3. Do next request buffer allocation (tape->merge_stage)
+The remaining pipeline stage allocation code is used for the next current
+pipeline stage (tape->merge_stage) and data buffer for an upcoming
+request. The so allocated pipeline stage is rewired into the tape struct
+thru idetape_switch_buffers() and used during the next request for
+copying user data into it (see e.g. idetape_chrdev_write()). In case the
+allocation fails, the current request is still attempted prior to failing.
 
 Signed-off-by: Borislav Petkov <petkovbb@gmail.com>
 ---
- drivers/ide/ide-tape.c |   81 +++++++++++++-----------------------------------
- 1 files changed, 22 insertions(+), 59 deletions(-)
+ drivers/ide/ide-tape.c |  103 ++++++++++++------------------------------------
+ 1 files changed, 26 insertions(+), 77 deletions(-)
 
 diff --git a/drivers/ide/ide-tape.c b/drivers/ide/ide-tape.c
-index a06d83f..5afcbf4 100644
+index 32ba6c8..46a5f95 100644
 --- a/drivers/ide/ide-tape.c
 +++ b/drivers/ide/ide-tape.c
-@@ -1673,29 +1673,6 @@ static void idetape_switch_buffers(idetape_tape_t *tape, idetape_stage_t *stage)
- 	idetape_init_merge_stage(tape);
+@@ -2194,83 +2194,6 @@ static void idetape_wait_first_stage(ide_drive_t *drive)
  }
  
--/* Add a new stage at the end of the pipeline. */
--static void idetape_add_stage_tail(ide_drive_t *drive, idetape_stage_t *stage)
+ /*
+- * Try to add a character device originated write request to our pipeline. In
+- * case we don't succeed, we revert to non-pipelined operation mode for this
+- * request. In order to accomplish that, we
+- *
+- * 1. Try to allocate a new pipeline stage.
+- * 2. If we can't, wait for more and more requests to be serviced and try again
+- * each time.
+- * 3. If we still can't allocate a stage, fallback to non-pipelined operation
+- * mode for this request.
+- */
+-static int idetape_add_chrdev_write_request(ide_drive_t *drive, int blocks)
 -{
 -	idetape_tape_t *tape = drive->driver_data;
--	unsigned long flags;
--
--	debug_log(DBG_PROCS, "Enter %s\n", __func__);
--
--	spin_lock_irqsave(&tape->lock, flags);
--	stage->next = NULL;
--	if (tape->last_stage != NULL)
--		tape->last_stage->next = stage;
--	else
--		tape->first_stage = stage;
--		tape->next_stage  = stage;
--	tape->last_stage = stage;
--	if (tape->next_stage == NULL)
--		tape->next_stage = tape->last_stage;
--	tape->nr_stages++;
--	tape->nr_pending_stages++;
--	spin_unlock_irqrestore(&tape->lock, flags);
--}
--
- /* Install a completion in a pending request and sleep until it is serviced. The
-  * caller should ensure that the request will not be serviced before we install
-  * the completion (usually by disabling interrupts).
-@@ -2219,10 +2196,7 @@ static void idetape_empty_write_pipeline(ide_drive_t *drive)
- static int idetape_init_read(ide_drive_t *drive, int max_stages)
- {
- 	idetape_tape_t *tape = drive->driver_data;
 -	idetape_stage_t *new_stage;
--	struct request rq;
- 	int bytes_read;
--	u16 blocks = *(u16 *)&tape->caps[12];
- 
- 	/* Initialize read operation */
- 	if (tape->chrdev_dir != IDETAPE_DIR_READ) {
-@@ -2258,21 +2232,7 @@ static int idetape_init_read(ide_drive_t *drive, int max_stages)
- 			}
- 		}
- 	}
--	idetape_init_rq(&rq, REQ_IDETAPE_READ);
--	rq.sector = tape->first_frame;
--	rq.nr_sectors = blocks;
--	rq.current_nr_sectors = blocks;
--	if (!test_bit(IDETAPE_FLAG_PIPELINE_ERR, &tape->flags) &&
--	    tape->nr_stages < max_stages) {
--		new_stage = __idetape_kmalloc_stage(tape, 0, 0);
--		while (new_stage != NULL) {
--			new_stage->rq = rq;
--			idetape_add_stage_tail(drive, new_stage);
--			if (tape->nr_stages >= max_stages)
--				break;
--			new_stage = __idetape_kmalloc_stage(tape, 0, 0);
+-	unsigned long flags;
+-	struct request *rq;
+-
+-	debug_log(DBG_CHRDEV, "Enter %s\n", __func__);
+-
+-	/* Attempt to allocate a new stage. Beware possible race conditions. */
+-	while ((new_stage = __idetape_kmalloc_stage(tape, 0, 0)) == NULL) {
+-		spin_lock_irqsave(&tape->lock, flags);
+-		if (test_bit(IDETAPE_FLAG_PIPELINE_ACTIVE, &tape->flags)) {
+-			idetape_wait_for_request(drive, tape->active_data_rq);
+-			spin_unlock_irqrestore(&tape->lock, flags);
+-		} else {
+-			spin_unlock_irqrestore(&tape->lock, flags);
+-			idetape_plug_pipeline(drive);
+-			if (test_bit(IDETAPE_FLAG_PIPELINE_ACTIVE,
+-					&tape->flags))
+-				continue;
+-			/*
+-			 * The machine is short on memory. Fallback to non-
+-			 * pipelined operation mode for this request.
+-			 */
+-			return idetape_queue_rw_tail(drive, REQ_IDETAPE_WRITE,
+-						blocks, tape->merge_stage->bh);
 -		}
 -	}
-+
- 	if (!test_bit(IDETAPE_FLAG_PIPELINE_ACTIVE, &tape->flags)) {
- 		if (tape->nr_pending_stages >= 3 * max_stages / 4) {
- 			tape->measure_insert_time = 1;
-@@ -2292,7 +2252,7 @@ static int idetape_init_read(ide_drive_t *drive, int max_stages)
- static int idetape_add_chrdev_read_request(ide_drive_t *drive, int blocks)
- {
- 	idetape_tape_t *tape = drive->driver_data;
--	unsigned long flags;
-+	idetape_stage_t *new_stage;
- 	struct request *rq_ptr;
- 	int bytes_read;
- 
-@@ -2302,31 +2262,34 @@ static int idetape_add_chrdev_read_request(ide_drive_t *drive, int blocks)
- 	if (test_bit(IDETAPE_FLAG_FILEMARK, &tape->flags))
- 		return 0;
- 
--	/* Wait for the next block to reach the head of the pipeline. */
- 	idetape_init_read(drive, tape->max_stages);
--	if (tape->first_stage == NULL) {
--		if (test_bit(IDETAPE_FLAG_PIPELINE_ERR, &tape->flags))
--			return 0;
--		return idetape_queue_rw_tail(drive, REQ_IDETAPE_READ, blocks,
--					tape->merge_stage->bh);
+-	rq = &new_stage->rq;
+-	idetape_init_rq(rq, REQ_IDETAPE_WRITE);
+-	/* Doesn't actually matter - We always assume sequential access */
+-	rq->sector = tape->first_frame;
+-	rq->current_nr_sectors = blocks;
+-	rq->nr_sectors = blocks;
+-
+-	idetape_switch_buffers(tape, new_stage);
+-	idetape_add_stage_tail(drive, new_stage);
+-	tape->pipeline_head++;
+-	idetape_calculate_speeds(drive);
+-
+-	/*
+-	 * Estimate whether the tape has stopped writing by checking if our
+-	 * write pipeline is currently empty. If we are not writing anymore,
+-	 * wait for the pipeline to be almost completely full (90%) before
+-	 * starting to service requests, so that we will be able to keep up with
+-	 * the higher speeds of the tape.
+-	 */
+-	if (!test_bit(IDETAPE_FLAG_PIPELINE_ACTIVE, &tape->flags)) {
+-		if (tape->nr_stages >= tape->max_stages * 9 / 10 ||
+-			tape->nr_stages >= tape->max_stages -
+-			tape->uncontrolled_pipeline_head_speed * 3 * 1024 /
+-			tape->blk_size) {
+-			tape->measure_insert_time = 1;
+-			tape->insert_time = jiffies;
+-			tape->insert_size = 0;
+-			tape->insert_speed = 0;
+-			idetape_plug_pipeline(drive);
+-		}
 -	}
--	idetape_wait_first_stage(drive);
--	rq_ptr = &tape->first_stage->rq;
--	bytes_read = tape->blk_size * (rq_ptr->nr_sectors -
--					rq_ptr->current_nr_sectors);
--	rq_ptr->nr_sectors = 0;
--	rq_ptr->current_nr_sectors = 0;
+-	if (test_and_clear_bit(IDETAPE_FLAG_PIPELINE_ERR, &tape->flags))
+-		/* Return a deferred error */
+-		return -EIO;
+-	return blocks;
+-}
+-
+-/*
+  * Wait until all pending pipeline requests are serviced. Typically called on
+  * device close.
+  */
+@@ -2289,6 +2212,32 @@ static void idetape_wait_for_pipeline(ide_drive_t *drive)
+ 	}
+ }
  
++/* Queue up a character device originated write request. */
++static int idetape_add_chrdev_write_request(ide_drive_t *drive, int blocks)
++{
++	idetape_tape_t *tape = drive->driver_data;
++	idetape_stage_t *new_stage;
++
++	debug_log(DBG_CHRDEV, "Enter %s\n", __func__);
++
 +	idetape_wait_for_pipeline(drive);
 +
-+	if (test_bit(IDETAPE_FLAG_PIPELINE_ERR, &tape->flags))
-+		return 0;
++	idetape_queue_rw_tail(drive, REQ_IDETAPE_WRITE, blocks,
++			      tape->merge_stage->bh);
++	__idetape_kfree_stage(tape->merge_stage);
 +
-+	bytes_read = idetape_queue_rw_tail(drive, REQ_IDETAPE_READ, blocks,
-+					   tape->merge_stage->bh);
++	new_stage = __idetape_kmalloc_stage(tape, 0, 0);
++	if (!new_stage) {
++		printk(KERN_ERR "ide-tape: %s: cannot alloc request buffer.\n",
++			__func__);
++		return -ENOMEM;
++	}
 +
-+	rq_ptr = &tape->merge_stage->rq;
- 	if (rq_ptr->errors == IDETAPE_ERROR_EOD)
- 		return 0;
- 	else {
--		idetape_switch_buffers(tape, tape->first_stage);
- 		if (rq_ptr->errors == IDETAPE_ERROR_FILEMARK)
- 			set_bit(IDETAPE_FLAG_FILEMARK, &tape->flags);
--		spin_lock_irqsave(&tape->lock, flags);
--		idetape_remove_stage_head(drive);
--		spin_unlock_irqrestore(&tape->lock, flags);
++	idetape_switch_buffers(tape, new_stage);
 +
-+		__idetape_kfree_stage(tape->merge_stage);
++	return blocks;
++}
 +
-+		new_stage = __idetape_kmalloc_stage(tape, 0, 0);
-+		if (!new_stage) {
-+			printk(KERN_ERR "ide-tape: %s: cannot alloc request "
-+					"buffer.\n", __func__);
-+			return -ENOMEM;
-+		}
-+		idetape_switch_buffers(tape, new_stage);
- 	}
-+
- 	if (bytes_read > blocks * tape->blk_size) {
- 		printk(KERN_ERR "ide-tape: bug: trying to return more bytes"
- 				" than requested\n");
+ static void idetape_empty_write_pipeline(ide_drive_t *drive)
+ {
+ 	idetape_tape_t *tape = drive->driver_data;
 -- 
 1.5.4.1
 
