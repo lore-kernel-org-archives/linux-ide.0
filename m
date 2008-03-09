@@ -1,61 +1,80 @@
-From: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
-Subject: Re: Unknown SATA PIIX PCI device ID 0x29b6
-Date: Sun, 9 Mar 2008 22:24:04 +0100 (CET)
-Message-ID: <Pine.LNX.4.64.0803092221560.7385@axis700.grange>
-References: <Pine.LNX.4.64.0802282306190.10087@axis700.grange>
- <20080228225603.2764bfd1@core> <Pine.LNX.4.64.0802290010320.10498@axis700.grange>
- <47CFADDF.20200@gmail.com> <Pine.LNX.4.64.0803061248070.5670@axis700.grange>
- <47D0C9E6.8090301@gmail.com> <Pine.LNX.4.64.0803082345000.6749@axis700.grange>
- <47D3723B.3040700@gmail.com>
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+Subject: Re: [Regression] 2.6.25-rc4-git3: Handling of audio CDs broken on pata_ali
+Date: Mon, 10 Mar 2008 00:12:27 +0100
+Message-ID: <200803100012.27520.rjw@sisk.pl>
+References: <200803082246.47987.rjw@sisk.pl> <20080309073824.902DC82CF2E@smtp04.mtu.ru>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.gmx.net ([213.165.64.20]:49243 "HELO mail.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1752828AbYCIVYF (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 9 Mar 2008 17:24:05 -0400
-In-Reply-To: <47D3723B.3040700@gmail.com>
+Received: from ogre.sisk.pl ([217.79.144.158]:52087 "EHLO ogre.sisk.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751314AbYCIXNb (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 9 Mar 2008 19:13:31 -0400
+In-Reply-To: <20080309073824.902DC82CF2E@smtp04.mtu.ru>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-kernel@vger.kernel.org, Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org
+To: Andrey Borzenkov <arvidjaar@mail.ru>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-On Sun, 9 Mar 2008, Tejun Heo wrote:
-
-> Guennadi Liakhovetski wrote:
-> > On Fri, 7 Mar 2008, Tejun Heo wrote:
-> > 
-> >>> Looks like almost a minute to me? On another occurence I see about 1.5 
-> >>> minutes, then "port is slow to respond, please be patient (Status 0x80)" 
-> >>> has been repeated 3 times. On cold-plug also 3 times, I think, about the 
-> >>> same time then (time is not updated in the log).
-> >> I see.  Does the attached patch make any difference?
-> > 
-> > diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-> > index 4fbcce7..abebdcc 100644
-> > --- a/drivers/ata/libata-core.c
-> > +++ b/drivers/ata/libata-core.c
-> > @@ -6712,6 +6712,7 @@ int sata_link_init_spd(struct ata_link *link)
-> >  	spd = (scontrol >> 4) & 0xf;
-> >  	if (spd)
-> >  		link->hw_sata_spd_limit &= (1 << spd) - 1;
-> > +	link->hw_sata_spd_limit = 1;
-> >  
-> >  	ata_force_spd_limit(link);
-> >  
-> > Hm, this would force 1.5Gbps on all ports and devices, right? Cannot I 
-> > just boot with "libata.force=4:1.5Gbps"?
+On Sunday, 9 of March 2008, Andrey Borzenkov wrote:
+> Rafael J. Wysocki wrote:
 > 
-> Yeap, you can do that.  Wasn't sure you were using .25-rc or .24.
+> > Hi,
+> > 
+> > On one of my test boxes I'm unable to do just about anything with audio
+> > CDs using the current -git (2.6.24 is fine in that respect on the same
+> > box).
+> > 
+> > When an audio CD is inserted into the drive, I get the following errors in
+> > dmesg and nothing more happens (quite obviously):
+> > 
+> > ata1.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 frozen
+> > ata1.00: cmd a0/01:00:00:10:00/00:00:00:00:00/a0 tag 0 dma 16400 in
+> >          cdb 42 02 40 01 00 00 00 00  10 00 00 00 00 00 00 00
+> >          res 40/00:00:00:18:00/00:00:00:00:00/a0 Emask 0x4 (timeout)
+> > ata1.00: status: { DRDY }
+> > ata1: soft resetting link
+> > ata1.00: configured for UDMA/33
+> > ata1: EH complete
+> > ata1.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 frozen
+> > ata1.00: cmd a0/01:00:00:10:00/00:00:00:00:00/a0 tag 0 dma 16400 in
+> >          cdb 42 02 40 01 00 00 00 00  10 00 00 00 00 00 00 00
+> >          res 40/00:00:00:18:00/00:00:00:00:00/a0 Emask 0x4 (timeout)
+> > ata1.00: status: { DRDY }
+> > ata1: port is slow to respond, please be patient (Status 0x80)
+> > ata1: device not ready (errno=-16), forcing hardreset
+> > ata1: soft resetting link
+> > ata1.00: qc timeout (cmd 0xa1)
+> > ata1.00: failed to IDENTIFY (I/O error, err_mask=0x4)
+> > ata1.00: revalidation failed (errno=-5)
+> > ata1: failed to recover some devices, retrying in 5 secs
+> > ata1: port is slow to respond, please be patient (Status 0x80)
+> > ata1: device not ready (errno=-16), forcing hardreset
+> > ata1: soft resetting link
+> > ata1.00: qc timeout (cmd 0xa1)
+> > ata1.00: failed to IDENTIFY (I/O error, err_mask=0x4)
+> > ata1.00: revalidation failed (errno=-5)
+> > ata1: failed to recover some devices, retrying in 5 secs
+> > ata1: port is slow to respond, please be patient (Status 0x80)
+> > ata1: device not ready (errno=-16), forcing hardreset
+> > ata1: soft resetting link
+> > ata1.00: qc timeout (cmd 0xa1)
+> > ata1.00: failed to IDENTIFY (I/O error, err_mask=0x4)
+> > ata1.00: revalidation failed (errno=-5)
+> > ata1.00: disabled
+> > 
+> > where ata1 is:
+> > 
+> > scsi0 : pata_ali
+> > scsi1 : pata_ali
+> 
+> Oh, is it only with audio CDs? I am unable to use DVD on pata_ali in DMA at
+> all. Have you tried to disable ATAPI DMA (libata.dma=1)?
 
-Yctually it was 2.6.24 before, rebuilt 2.6.25-rc4, booted as above, it did 
-say:
+Data CDs seem to work fine here.
 
-ata4: FORCE: PHY spd limit set to 1.5Gbps
-
-but hot-plugging the drive still took 50 seconds to recover.
-
-Thanks
-Guennadi
----
-Guennadi Liakhovetski
+Thanks,
+Rafael
