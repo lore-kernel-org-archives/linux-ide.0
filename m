@@ -1,80 +1,113 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH 4/4] ide: add struct ide_port_ops
-Date: Sun, 09 Mar 2008 20:43:48 +0300
-Message-ID: <47D421D4.4060008@ru.mvista.com>
-References: <200802232116.31811.bzolnier@gmail.com>
+From: "Rus V. Brushkoff" <rus@SoyuzKT.Od.UA>
+Subject: Re: SATA HDD password problem
+Date: Sun, 9 Mar 2008 19:42:14 +0200 (EET)
+Message-ID: <Pine.LNX.4.64.0803091938210.28462@Soyuz-KT.TeNet.Odessa.UA>
+References: <Pine.LNX.4.64.0803051143450.27209@Soyuz-KT.TeNet.Odessa.UA>
+ <47CE9264.1010600@garzik.org> <Pine.LNX.4.64.0803051443500.28213@Soyuz-KT.TeNet.Odessa.UA>
+ <47CFBDB6.8040400@gmail.com> <Pine.LNX.4.64.0803061417540.5200@Soyuz-KT.TeNet.Odessa.UA>
+ <47D0BC5A.9000208@gmail.com> <Pine.LNX.4.64.0803071038380.12026@Soyuz-KT.TeNet.Odessa.UA>
+ <47D1E91D.8090704@gmail.com> <Pine.LNX.4.64.0803081801120.23474@Soyuz-KT.TeNet.Odessa.UA>
+ <47D371F5.1020804@gmail.com> <47D3720D.7040004@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: MULTIPART/MIXED; BOUNDARY="655616-1087342942-1205084534=:28462"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from h155.mvista.com ([63.81.120.155]:36353 "EHLO imap.sh.mvista.com"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752088AbYCIRmc (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 9 Mar 2008 13:42:32 -0400
-In-Reply-To: <200802232116.31811.bzolnier@gmail.com>
+Received: from Te.NeT.UA ([195.138.80.34]:37810 "EHLO te.net.ua"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752057AbYCIRmV (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 9 Mar 2008 13:42:21 -0400
+In-Reply-To: <47D3720D.7040004@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org, Mark Lord <liml@rtr.ca>
 
-Bartlomiej Zolnierkiewicz wrote:
+  This message is in MIME format.  The first part should be readable text,
+  while the remaining parts are likely unreadable without MIME-aware tools.
 
-> * Move hooks for port/host specific methods from ide_hwif_t to
->   'struct ide_port_ops'.
+--655616-1087342942-1205084534=:28462
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 
-> * Add 'const struct ide_port_ops *port_ops' to 'struct ide_port_info'
->   and ide_hwif_t.
+On Sun, 9 Mar 2008, Tejun Heo wrote:
 
-> * Update host drivers and core code accordingly.
+:Oh, and if it does, please post the result of "hdparm -I" after booting.
 
-> While at it:
+ Wow, with this patch all works like a sharm ! hdparm -I output attached. 
+If something has to be send for bogus acer phoenix bios writers - I can do 
+this dirty job with special pleasure ;)
 
-> * Rename ata66_*() cable detect functions to *_cable_detect() to match
->   the standard naming. (Suggested by Sergei Shtylyov)
+:
 
-> Cc: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+		Rus
+--655616-1087342942-1205084534=:28462
+Content-Type: TEXT/PLAIN; charset=US-ASCII; name=boot.ok
+Content-Transfer-Encoding: BASE64
+Content-ID: <Pine.LNX.4.64.0803091942140.28462@Soyuz-KT.TeNet.Odessa.UA>
+Content-Description: 
+Content-Disposition: attachment; filename=boot.ok
 
-Acked-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+DQovZGV2L3NkYToNCg0KQVRBIGRldmljZSwgd2l0aCBub24tcmVtb3ZhYmxl
+IG1lZGlhDQoJTW9kZWwgTnVtYmVyOiAgICAgICBXREMgV0QyNTAwQkVWUy0y
+MlVTVDAgICAgICAgICAgICAgICAgICAgDQoJU2VyaWFsIE51bWJlcjogICAg
+ICBXRC1XWEVYMDdHOTAyODgNCglGaXJtd2FyZSBSZXZpc2lvbjogIDAxLjAx
+QTAxDQpTdGFuZGFyZHM6DQoJU3VwcG9ydGVkOiA4IDcgNiA1IA0KCUxpa2Vs
+eSB1c2VkOiA4DQpDb25maWd1cmF0aW9uOg0KCUxvZ2ljYWwJCW1heAljdXJy
+ZW50DQoJY3lsaW5kZXJzCTE2MzgzCTE2MzgzDQoJaGVhZHMJCTE2CTE2DQoJ
+c2VjdG9ycy90cmFjawk2Mwk2Mw0KCS0tDQoJQ0hTIGN1cnJlbnQgYWRkcmVz
+c2FibGUgc2VjdG9yczogICAxNjUxNDA2NA0KCUxCQSAgICB1c2VyIGFkZHJl
+c3NhYmxlIHNlY3RvcnM6ICAyNjg0MzU0NTUNCglMQkE0OCAgdXNlciBhZGRy
+ZXNzYWJsZSBzZWN0b3JzOiAgNDg4Mzk3MTY4DQoJZGV2aWNlIHNpemUgd2l0
+aCBNID0gMTAyNCoxMDI0OiAgICAgIDIzODQ3NSBNQnl0ZXMNCglkZXZpY2Ug
+c2l6ZSB3aXRoIE0gPSAxMDAwKjEwMDA6ICAgICAgMjUwMDU5IE1CeXRlcyAo
+MjUwIEdCKQ0KQ2FwYWJpbGl0aWVzOg0KCUxCQSwgSU9SRFkoY2FuIGJlIGRp
+c2FibGVkKQ0KCVF1ZXVlIGRlcHRoOiAzMg0KCVN0YW5kYnkgdGltZXIgdmFs
+dWVzOiBzcGVjJ2QgYnkgU3RhbmRhcmQsIHdpdGggZGV2aWNlIHNwZWNpZmlj
+IG1pbmltdW0NCglSL1cgbXVsdGlwbGUgc2VjdG9yIHRyYW5zZmVyOiBNYXgg
+PSAxNglDdXJyZW50ID0gMTYNCglBZHZhbmNlZCBwb3dlciBtYW5hZ2VtZW50
+IGxldmVsOiAxMjgNCglSZWNvbW1lbmRlZCBhY291c3RpYyBtYW5hZ2VtZW50
+IHZhbHVlOiAxMjgsIGN1cnJlbnQgdmFsdWU6IDI1NA0KCURNQTogbWRtYTAg
+bWRtYTEgbWRtYTIgdWRtYTAgdWRtYTEgdWRtYTIgdWRtYTMgdWRtYTQgdWRt
+YTUgKnVkbWE2IA0KCSAgICAgQ3ljbGUgdGltZTogbWluPTEyMG5zIHJlY29t
+bWVuZGVkPTEyMG5zDQoJUElPOiBwaW8wIHBpbzEgcGlvMiBwaW8zIHBpbzQg
+DQoJICAgICBDeWNsZSB0aW1lOiBubyBmbG93IGNvbnRyb2w9MTIwbnMgIElP
+UkRZIGZsb3cgY29udHJvbD0xMjBucw0KQ29tbWFuZHMvZmVhdHVyZXM6DQoJ
+RW5hYmxlZAlTdXBwb3J0ZWQ6DQoJICAgKglTTUFSVCBmZWF0dXJlIHNldA0K
+CSAgICoJU2VjdXJpdHkgTW9kZSBmZWF0dXJlIHNldA0KCSAgICoJUG93ZXIg
+TWFuYWdlbWVudCBmZWF0dXJlIHNldA0KCSAgICoJV3JpdGUgY2FjaGUNCgkg
+ICAqCUxvb2stYWhlYWQNCgkgICAqCUhvc3QgUHJvdGVjdGVkIEFyZWEgZmVh
+dHVyZSBzZXQNCgkgICAqCVdSSVRFX0JVRkZFUiBjb21tYW5kDQoJICAgKglS
+RUFEX0JVRkZFUiBjb21tYW5kDQoJICAgKglOT1AgY21kDQoJICAgKglET1dO
+TE9BRF9NSUNST0NPREUNCgkgICAqCUFkdmFuY2VkIFBvd2VyIE1hbmFnZW1l
+bnQgZmVhdHVyZSBzZXQNCgkgICAgCVNFVF9NQVggc2VjdXJpdHkgZXh0ZW5z
+aW9uDQoJICAgIAlBdXRvbWF0aWMgQWNvdXN0aWMgTWFuYWdlbWVudCBmZWF0
+dXJlIHNldA0KCSAgICoJNDgtYml0IEFkZHJlc3MgZmVhdHVyZSBzZXQNCgkg
+ICAqCURldmljZSBDb25maWd1cmF0aW9uIE92ZXJsYXkgZmVhdHVyZSBzZXQN
+CgkgICAqCU1hbmRhdG9yeSBGTFVTSF9DQUNIRQ0KCSAgICoJRkxVU0hfQ0FD
+SEVfRVhUDQoJICAgKglTTUFSVCBlcnJvciBsb2dnaW5nDQoJICAgKglTTUFS
+VCBzZWxmLXRlc3QNCgkgICAqCUdlbmVyYWwgUHVycG9zZSBMb2dnaW5nIGZl
+YXR1cmUgc2V0DQoJICAgKglXUklURV97RE1BfE1VTFRJUExFfV9GVUFfRVhU
+DQoJICAgKgk2NC1iaXQgV29ybGQgd2lkZSBuYW1lDQoJICAgKglJRExFX0lN
+TUVESUFURSB3aXRoIFVOTE9BRA0KCSAgICoJU2VnbWVudGVkIERPV05MT0FE
+X01JQ1JPQ09ERQ0KCSAgICoJU0FUQS1JIHNpZ25hbGluZyBzcGVlZCAoMS41
+R2IvcykNCgkgICAqCU5hdGl2ZSBDb21tYW5kIFF1ZXVlaW5nIChOQ1EpDQoJ
+ICAgKglIb3N0LWluaXRpYXRlZCBpbnRlcmZhY2UgcG93ZXIgbWFuYWdlbWVu
+dA0KCSAgICoJUGh5IGV2ZW50IGNvdW50ZXJzDQoJICAgIAlETUEgU2V0dXAg
+QXV0by1BY3RpdmF0ZSBvcHRpbWl6YXRpb24NCgkgICAgCURldmljZS1pbml0
+aWF0ZWQgaW50ZXJmYWNlIHBvd2VyIG1hbmFnZW1lbnQNCgkgICAgCVNvZnR3
+YXJlIHNldHRpbmdzIHByZXNlcnZhdGlvbg0KCSAgICoJU01BUlQgQ29tbWFu
+ZCBUcmFuc3BvcnQgKFNDVCkgZmVhdHVyZSBzZXQNCgkgICAqCVNDVCBMb25n
+IFNlY3RvciBBY2Nlc3MgKEFDMSkNCgkgICAqCVNDVCBMQkEgU2VnbWVudCBB
+Y2Nlc3MgKEFDMikNCgkgICAqCVNDVCBFcnJvciBSZWNvdmVyeSBDb250cm9s
+IChBQzMpDQoJICAgKglTQ1QgRmVhdHVyZXMgQ29udHJvbCAoQUM0KQ0KCSAg
+ICoJU0NUIERhdGEgVGFibGVzIChBQzUpDQoJICAgIAl1bmtub3duIDIwNlsx
+Ml0gKHZlbmRvciBzcGVjaWZpYykNCgkgICAgCXVua25vd24gMjA2WzEzXSAo
+dmVuZG9yIHNwZWNpZmljKQ0KU2VjdXJpdHk6IA0KCU1hc3RlciBwYXNzd29y
+ZCByZXZpc2lvbiBjb2RlID0gNjUyOTcNCgkJc3VwcG9ydGVkDQoJCWVuYWJs
+ZWQNCglub3QJbG9ja2VkDQoJCWZyb3plbg0KCW5vdAlleHBpcmVkOiBzZWN1
+cml0eSBjb3VudA0KCW5vdAlzdXBwb3J0ZWQ6IGVuaGFuY2VkIGVyYXNlDQoJ
+U2VjdXJpdHkgbGV2ZWwgaGlnaA0KCTg4bWluIGZvciBTRUNVUklUWSBFUkFT
+RSBVTklULiANCkxvZ2ljYWwgVW5pdCBXV04gRGV2aWNlIElkZW50aWZpZXI6
+IDUwMDE0ZWUyNTYwMzE5NjENCglOQUEJCTogNQ0KCUlFRUUgT1VJCTogMTRl
+ZQ0KCVVuaXF1ZSBJRAk6IDI1NjAzMTk2MQ0KQ2hlY2tzdW06IGNvcnJlY3QN
+Cg==
 
-> Index: b/drivers/ide/pci/scc_pata.c
-> ===================================================================
-> --- a/drivers/ide/pci/scc_pata.c
-> +++ b/drivers/ide/pci/scc_pata.c
-> @@ -675,24 +675,27 @@ static void __devinit init_hwif_scc(ide_
->  
->  	hwif->dma_setup = scc_dma_setup;
->  	hwif->ide_dma_end = scc_ide_dma_end;
-> -	hwif->set_pio_mode = scc_set_pio_mode;
-> -	hwif->set_dma_mode = scc_set_dma_mode;
->  	hwif->ide_dma_test_irq = scc_dma_test_irq;
-> -	hwif->udma_filter = scc_udma_filter;
->  
->  	if (in_be32((void __iomem *)(hwif->config_data + 0xff0)) & CCKCTRL_ATACLKOEN)
->  		hwif->ultra_mask = ATA_UDMA6; /* 133MHz */
->  	else
->  		hwif->ultra_mask = ATA_UDMA5; /* 100MHz */
-> -
-> -	hwif->cable_detect = scc_cable_detect;
->  }
->  
-> +static const struct ide_port_ops scc_port_ops = {
-> +	.set_pio_mode		= scc_set_pio_mode,
-> +	.set_dma_mode		= scc_set_dma_mode,
-> +	.udma_filter		= scc_udma_filter,
-> +	.cable_detect		= scc_cable_detect,
-> +};
-> +
->  #define DECLARE_SCC_DEV(name_str)			\
->    {							\
->        .name		= name_str,			\
->        .init_iops	= init_iops_scc,		\
->        .init_hwif	= init_hwif_scc,		\
-> +      .port_ops		= &scc_port_ops,		\
->        .host_flags	= IDE_HFLAG_SINGLE,		\
->        .pio_mask		= ATA_PIO4,			\
->    }
-
-    Hm, this file makes use of some strange indentation...
-
-MBR, Sergei
+--655616-1087342942-1205084534=:28462--
