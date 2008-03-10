@@ -1,40 +1,47 @@
-From: Daniel Schroeder <sec@dschroeder.info>
-Subject: Re: [MCP-55] IDE problem after bios update
-Date: Mon, 10 Mar 2008 21:08:55 +0100
-Message-ID: <47D59557.6040904@dschroeder.info>
-References: <47BF2942.90901@dschroeder.info> <20080222195833.37c88767@core>
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+Subject: Re: [Regression] 2.6.25-rc4-git3: Handling of audio CDs broken on pata_ali
+Date: Mon, 10 Mar 2008 22:36:30 +0100
+Message-ID: <200803102236.30790.rjw@sisk.pl>
+References: <200803082246.47987.rjw@sisk.pl> <47D4E78A.10507@gmail.com> <47D523A1.7070808@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain;
+  charset="iso-8859-15"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.126.179]:50373 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751118AbYCJUJG (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 10 Mar 2008 16:09:06 -0400
-In-Reply-To: <20080222195833.37c88767@core>
+Received: from ogre.sisk.pl ([217.79.144.158]:57984 "EHLO ogre.sisk.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750967AbYCJVhs (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 10 Mar 2008 17:37:48 -0400
+In-Reply-To: <47D523A1.7070808@gmail.com>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: linux-ide@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: Andrey Borzenkov <arvidjaar@mail.ru>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-Alan Cox wrote:
-> On Fri, 22 Feb 2008 20:57:54 +0100
-> Daniel Schroeder <sec@dschroeder.info> wrote:
+On Monday, 10 of March 2008, Tejun Heo wrote:
+> Tejun Heo wrote:
+> > Tejun Heo wrote:
+> >> Rafael J. Wysocki wrote:
+> >>>>> where ata1 is:
+> >>>>>
+> >>>>> scsi0 : pata_ali
+> >>>>> scsi1 : pata_ali
+> >>>> Oh, is it only with audio CDs? I am unable to use DVD on pata_ali in DMA at
+> >>>> all. Have you tried to disable ATAPI DMA (libata.dma=1)?
+> >>> Data CDs seem to work fine here.
+> >> * Does booting into runlevel 1, putting in an audio cd and running
+> >> cdparanoia give the same result?
+> >>
+> >> * Does setting module parameter libata.force to "1.00:pio4" make any
+> >> difference?
+> > 
+> > Oh, never mind.  I have a hunch.  I'll report back in a while.
+> > 
 > 
->> hi there,
->>
->> this is an asus m2n32-sli deluxe with nvidia chipset. After updating the 
->> bios from 1503 to 1701 following in dmesg, and ide drive doesn't work.
->> Kernel is 2.6.24.2
-> 
-> If it broke with the BIOS change you need to report it to the BIOS vendor
-> 
-> Feb 21 22:37:02 isla-magica NFORCE-MCP55: IDE port disabled
-> 
-reported to bios vendor. Usual "turn it off and on again", "reset cmos 
-and install the newest chipset driver from nvidia.de"
+> Does the attached patch fix the problem?
 
-this is a link to the same or similar problem and the following command 
-"hdparm -w /dev/hda" resurrects my drive.
+Yes, it does.  Please push upstream.
 
-https://bugs.launchpad.net/ubuntu/+source/linux/+bug/182996/comments/4
+Thanks,
+Rafael
