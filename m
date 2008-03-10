@@ -1,73 +1,120 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH 2/5] ide: mark special "ide0=" kernel parameters as obsoleted
-Date: Tue, 11 Mar 2008 00:46:37 +0100
-Message-ID: <200803110046.37923.bzolnier@gmail.com>
+Subject: [PATCH 3/5] ide: add "ignore_cable" kernel parameter
+Date: Tue, 11 Mar 2008 00:47:08 +0100
+Message-ID: <200803110047.08125.bzolnier@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
   charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.170]:14687 "EHLO
+Received: from ug-out-1314.google.com ([66.249.92.169]:13123 "EHLO
 	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752360AbYCJXeh (ORCPT
+	with ESMTP id S1752547AbYCJXeh (ORCPT
 	<rfc822;linux-ide@vger.kernel.org>); Mon, 10 Mar 2008 19:34:37 -0400
-Received: by ug-out-1314.google.com with SMTP id z38so5009594ugc.16
-        for <linux-ide@vger.kernel.org>; Mon, 10 Mar 2008 16:34:35 -0700 (PDT)
+Received: by ug-out-1314.google.com with SMTP id z38so5009592ugc.16
+        for <linux-ide@vger.kernel.org>; Mon, 10 Mar 2008 16:34:37 -0700 (PDT)
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
 Cc: linux-kernel@vger.kernel.org
 
-Mark "ide0=ali14xx|cmd640_vlb|dtc2278|ht6560b|qd65xx|umc8672" kernel
-parameters as obsoleted (per host driver replacements have been available
-for a long time).
+Add "ignore_cable" kernel parameter:
+
+* "ide_core.ignore_cable=[interface_number]" boot option if IDE is built-in
+  (i.e. "ide_core.ignore_cable=1" to force ignoring cable for "ide1")
+
+* "ignore_cable=[interface_number]" module parameter (for ide_core module)
+  if IDE is compiled as module
 
 Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 ---
- drivers/ide/ide.c |   12 ++++++------
- 1 file changed, 6 insertions(+), 6 deletions(-)
+ Documentation/ide/ide.txt |   15 ++++++++++-----
+ drivers/ide/ide.c         |   34 ++++++++++++++++++++++++++++++++++
+ 2 files changed, 44 insertions(+), 5 deletions(-)
 
+Index: b/Documentation/ide/ide.txt
+===================================================================
+--- a/Documentation/ide/ide.txt
++++ b/Documentation/ide/ide.txt
+@@ -242,11 +242,6 @@ Summary of ide driver parameters for ker
+ 
+  "idex=reset"		: reset interface after probe
+ 
+- "idex=ata66"		: informs the interface that it has an 80c cable
+-			  for chipsets that are ATA-66 capable, but the
+-			  ability to bit test for detection is currently
+-			  unknown.
+-
+  "ide=reverse"		: formerly called to pci sub-system, but now local.
+ 
+ The following are valid ONLY on ide0, which usually corresponds
+@@ -275,6 +270,16 @@ are detected automatically).
+ You also need to use "probe" kernel parameter for ide-4drives driver
+ (support for IDE generic chipset with four drives on one port).
+ 
++To force ignoring cable detection (this should be needed only if you're using
++short 40-wires cable which cannot be automatically detected - if this is not
++a case please report it as a bug instead) use "ignore_cable" kernel parameter:
++
++* "ide_core.ignore_cable=[interface_number]" boot option if IDE is built-in
++  (i.e. "ide_core.ignore_cable=1" to force ignoring cable for "ide1")
++
++* "ignore_cable=[interface_number]" module parameter (for ide_core module)
++  if IDE is compiled as module
++
+ ================================================================================
+ 
+ Some Terminology
 Index: b/drivers/ide/ide.c
 ===================================================================
 --- a/drivers/ide/ide.c
 +++ b/drivers/ide/ide.c
-@@ -1038,32 +1038,32 @@ static int __init ide_setup(char *s)
- #ifdef CONFIG_BLK_DEV_ALI14XX
- 			case -17: /* "ali14xx" */
- 				probe_ali14xx = 1;
--				goto done;
-+				goto obsolete_option;
- #endif
- #ifdef CONFIG_BLK_DEV_UMC8672
- 			case -16: /* "umc8672" */
- 				probe_umc8672 = 1;
--				goto done;
-+				goto obsolete_option;
- #endif
- #ifdef CONFIG_BLK_DEV_DTC2278
- 			case -15: /* "dtc2278" */
- 				probe_dtc2278 = 1;
--				goto done;
-+				goto obsolete_option;
- #endif
- #ifdef CONFIG_BLK_DEV_CMD640
- 			case -14: /* "cmd640_vlb" */
- 				cmd640_vlb = 1;
--				goto done;
-+				goto obsolete_option;
- #endif
- #ifdef CONFIG_BLK_DEV_HT6560B
- 			case -13: /* "ht6560b" */
- 				probe_ht6560b = 1;
--				goto done;
-+				goto obsolete_option;
- #endif
- #ifdef CONFIG_BLK_DEV_QD65XX
- 			case -12: /* "qd65xx" */
- 				probe_qd65xx = 1;
--				goto done;
-+				goto obsolete_option;
- #endif
- #ifdef CONFIG_BLK_DEV_4DRIVES
- 			case -11: /* "four" drives on one set of ports */
+@@ -1257,6 +1257,38 @@ struct class ide_port_class = {
+ 	.release	= ide_port_class_release,
+ };
+ 
++static unsigned int ide_ignore_cable;
++
++static int ide_set_ignore_cable(const char *s, struct kernel_param *kp)
++{
++	unsigned long i = simple_strtoul(s, NULL, 0);
++
++	if (i >= MAX_HWIFS)
++		return -EINVAL;
++
++	ide_ignore_cable |= (1 << i);
++
++	return 0;
++}
++
++module_param_call(ignore_cable, ide_set_ignore_cable, NULL, NULL, 0);
++MODULE_PARM_DESC(ignore_cable, "ignore cable detection");
++
++static void __init ide_apply_params(void)
++{
++	int i;
++
++	for (i = 0; i < MAX_HWIFS; i++) {
++		ide_hwif_t *hwif = &ide_hwifs[i];
++
++		if (ide_ignore_cable & (1 << i)) {
++			printk(KERN_INFO "ide: ignoring cable detection for "
++					 "ide%d\n", i);
++			hwif->cbl = ATA_CBL_PATA40_SHORT;
++		}
++	}
++}
++
+ /*
+  * This is gets invoked once during initialization, to set *everything* up
+  */
+@@ -1285,6 +1317,8 @@ static int __init ide_init(void)
+ 
+ 	proc_ide_create();
+ 
++	ide_apply_params();
++
+ 	return 0;
+ 
+ out_port_class:
