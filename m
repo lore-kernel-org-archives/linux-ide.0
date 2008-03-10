@@ -1,63 +1,43 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: Unknown SATA PIIX PCI device ID 0x29b6
-Date: Mon, 10 Mar 2008 22:05:53 +0900
-Message-ID: <47D53231.30107@gmail.com>
-References: <Pine.LNX.4.64.0802282306190.10087@axis700.grange> <20080228225603.2764bfd1@core> <Pine.LNX.4.64.0802290010320.10498@axis700.grange> <47CFADDF.20200@gmail.com> <Pine.LNX.4.64.0803061248070.5670@axis700.grange> <47D0C9E6.8090301@gmail.com> <Pine.LNX.4.64.0803082345000.6749@axis700.grange> <47D3723B.3040700@gmail.com> <Pine.LNX.4.64.0803092221560.7385@axis700.grange> <47D485EC.1060103@gmail.com> <Pine.LNX.4.64.0803100821440.3948@axis700.grange>
+From: "Christian Pernegger" <pernegger@gmail.com>
+Subject: Re: Setting up md-raid5: observations, errors, questions
+Date: Mon, 10 Mar 2008 15:03:41 +0100
+Message-ID: <bb145bd20803100703m68ebd193xce959f2e1b6566cd@mail.gmail.com>
+References: <bb145bd20803020423m14efea1by6e3e38bb8d0decb8@mail.gmail.com>
+	 <bb145bd20803020832x744c2674nd0a6a30e445b5453@mail.gmail.com>
+	 <47CAF30F.7040502@msgid.tls.msk.ru>
+	 <bb145bd20803021319o28df011sab954aa58a1c01be@mail.gmail.com>
+	 <47CB228D.5020709@msgid.tls.msk.ru>
+	 <bb145bd20803021617j1b15c667j96d3ee12829ee75a@mail.gmail.com>
+	 <47CB694B.9000807@msgid.tls.msk.ru>
+	 <bb145bd20803030038o905e1feib1c1ad42c1b4b042@mail.gmail.com>
+	 <bb145bd20803040854i33796bb7n8de956b0d90b76d9@mail.gmail.com>
+	 <bb145bd20803042238y5c2d1164o8cac7be9880b550b@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------050508050404020705010406"
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1753822AbYCJNGV@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.64.0803100821440.3948@axis700.grange>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-kernel@vger.kernel.org, Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <bb145bd20803042238y5c2d1164o8cac7be9880b550b@mail.gmail.com>
+Content-Disposition: inline
+Sender: linux-raid-owner@vger.kernel.org
+To: linux-raid@vger.kernel.org
+Cc: linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
-This is a multi-part message in MIME format.
---------------050508050404020705010406
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Dropping linux-ide as the HSM violation error was not reproducible
+even a second time and I have since switched controllers from Promise
+SATA300 TX4s (sata_promise) to Dawicontrol 4320 RAIDs (sil_3124 /
+sata_sil24).
 
-Guennadi Liakhovetski wrote:
-> On Mon, 10 Mar 2008, Tejun Heo wrote:
-> 
->>> Yctually it was 2.6.24 before, rebuilt 2.6.25-rc4, booted as above, it did 
->>> say:
->>>
->>> ata4: FORCE: PHY spd limit set to 1.5Gbps
->>>
->>> but hot-plugging the drive still took 50 seconds to recover.
->> How about cold plugging?
-> 
-> Same.
+BTW the latter can have it's fakeraid firmware disabled via jumper,
+which also skips any long option ROM / init sequences during boot.
+When doing streaming seqential reads | writes on all four disk block
+devices in parallel I get close to 300MB/s in both cases, which is the
+limit for both the disk and controller hardware. Great driver!
 
-Does the attached patch help?
+Before it starts sounding too much like spam - I've only been pounding
+the setup for a week, so no idea if it's really stable. Also I haven't
+tested for data corruption yet :)
 
--- 
-tejun
+Cheers,
 
---------------050508050404020705010406
-Content-Type: text/plain;
- name="debug"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="debug"
-
----
- drivers/ata/ahci.c |    1 +
- 1 file changed, 1 insertion(+)
-
-Index: tree2/drivers/ata/ahci.c
-===================================================================
---- tree2.orig/drivers/ata/ahci.c
-+++ tree2/drivers/ata/ahci.c
-@@ -397,6 +397,7 @@ static const struct ata_port_operations 
- static const struct ata_port_info ahci_port_info[] = {
- 	/* board_ahci */
- 	{
-+		AHCI_HFLAGS	(AHCI_HFLAG_NO_PMP),
- 		.flags		= AHCI_FLAG_COMMON,
- 		.link_flags	= AHCI_LFLAG_COMMON,
- 		.pio_mask	= 0x1f, /* pio0-4 */
-
---------------050508050404020705010406--
+C.
