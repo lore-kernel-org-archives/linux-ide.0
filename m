@@ -1,59 +1,100 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: Re: Unknown SATA PIIX PCI device ID 0x29b6
-Date: Mon, 10 Mar 2008 09:50:52 +0900
-Message-ID: <47D485EC.1060103@gmail.com>
-References: <Pine.LNX.4.64.0802282306190.10087@axis700.grange> <20080228225603.2764bfd1@core> <Pine.LNX.4.64.0802290010320.10498@axis700.grange> <47CFADDF.20200@gmail.com> <Pine.LNX.4.64.0803061248070.5670@axis700.grange> <47D0C9E6.8090301@gmail.com> <Pine.LNX.4.64.0803082345000.6749@axis700.grange> <47D3723B.3040700@gmail.com> <Pine.LNX.4.64.0803092221560.7385@axis700.grange>
+Subject: [PATCH #upstream-fixes] ahci: implement skip_host_reset parameter
+Date: Mon, 10 Mar 2008 10:25:25 +0900
+Message-ID: <47D48E05.4090001@gmail.com>
+References: <Pine.LNX.4.64.0803051143450.27209@Soyuz-KT.TeNet.Odessa.UA> <47CE9264.1010600@garzik.org> <Pine.LNX.4.64.0803051443500.28213@Soyuz-KT.TeNet.Odessa.UA> <47CFBDB6.8040400@gmail.com> <Pine.LNX.4.64.0803061417540.5200@Soyuz-KT.TeNet.Odessa.UA> <47D0BC5A.9000208@gmail.com> <Pine.LNX.4.64.0803071038380.12026@Soyuz-KT.TeNet.Odessa.UA> <47D1E91D.8090704@gmail.com> <Pine.LNX.4.64.0803081801120.23474@Soyuz-KT.TeNet.Odessa.UA> <47D371F5.1020804@gmail.com> <47D3720D.7040004@gmail.com> <Pine.LNX.4.64.0803091938210.28462@Soyuz-KT.TeNet.Odessa.UA>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wf-out-1314.google.com ([209.85.200.175]:47921 "EHLO
-	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751777AbYCJAu6 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 9 Mar 2008 20:50:58 -0400
-Received: by wf-out-1314.google.com with SMTP id 28so1610397wff.4
-        for <linux-ide@vger.kernel.org>; Sun, 09 Mar 2008 17:50:57 -0700 (PDT)
-In-Reply-To: <Pine.LNX.4.64.0803092221560.7385@axis700.grange>
+Received: from wa-out-1112.google.com ([209.85.146.176]:58286 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752084AbYCJBZf (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 9 Mar 2008 21:25:35 -0400
+Received: by wa-out-1112.google.com with SMTP id v27so1996038wah.23
+        for <linux-ide@vger.kernel.org>; Sun, 09 Mar 2008 18:25:35 -0700 (PDT)
+In-Reply-To: <Pine.LNX.4.64.0803091938210.28462@Soyuz-KT.TeNet.Odessa.UA>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-kernel@vger.kernel.org, Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org
+To: "Rus V. Brushkoff" <rus@SoyuzKT.Od.UA>, Jeff Garzik <jeff@garzik.org>
+Cc: linux-ide@vger.kernel.org, Mark Lord <liml@rtr.ca>
 
-Guennadi Liakhovetski wrote:
-> On Sun, 9 Mar 2008, Tejun Heo wrote:
-> 
->> Guennadi Liakhovetski wrote:
->>> On Fri, 7 Mar 2008, Tejun Heo wrote:
->>>
->>>>> Looks like almost a minute to me? On another occurence I see about 1.5 
->>>>> minutes, then "port is slow to respond, please be patient (Status 0x80)" 
->>>>> has been repeated 3 times. On cold-plug also 3 times, I think, about the 
->>>>> same time then (time is not updated in the log).
->>>> I see.  Does the attached patch make any difference?
->>> diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
->>> index 4fbcce7..abebdcc 100644
->>> --- a/drivers/ata/libata-core.c
->>> +++ b/drivers/ata/libata-core.c
->>> @@ -6712,6 +6712,7 @@ int sata_link_init_spd(struct ata_link *link)
->>>  	spd = (scontrol >> 4) & 0xf;
->>>  	if (spd)
->>>  		link->hw_sata_spd_limit &= (1 << spd) - 1;
->>> +	link->hw_sata_spd_limit = 1;
->>>  
->>>  	ata_force_spd_limit(link);
->>>  
->>> Hm, this would force 1.5Gbps on all ports and devices, right? Cannot I 
->>> just boot with "libata.force=4:1.5Gbps"?
->> Yeap, you can do that.  Wasn't sure you were using .25-rc or .24.
-> 
-> Yctually it was 2.6.24 before, rebuilt 2.6.25-rc4, booted as above, it did 
-> say:
-> 
-> ata4: FORCE: PHY spd limit set to 1.5Gbps
-> 
-> but hot-plugging the drive still took 50 seconds to recover.
+Under certain circumstances (SSP turned off by the BIOS) and for
+debugging purposes, skipping global controller reset is helpful.  Add
+a kernel parameter for it.
 
-How about cold plugging?
+Signed-off-by: Tejun Heo <htejun@gmail.com>
+---
+ drivers/ata/ahci.c |   48 +++++++++++++++++++++++++++++-------------------
+ 1 file changed, 29 insertions(+), 19 deletions(-)
 
--- 
-tejun
+diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+index 70a0f07..fb1af0f 100644
+--- a/drivers/ata/ahci.c
++++ b/drivers/ata/ahci.c
+@@ -49,6 +49,10 @@
+ #define DRV_NAME	"ahci"
+ #define DRV_VERSION	"3.0"
+ 
++static int ahci_skip_host_reset;
++module_param_named(skip_host_reset, ahci_skip_host_reset, int, 0444);
++MODULE_PARM_DESC(skip_host_reset, "skip global host reset (0=don't skip, 1=skip)");
++
+ static int ahci_enable_alpm(struct ata_port *ap,
+ 		enum link_pm policy);
+ static void ahci_disable_alpm(struct ata_port *ap);
+@@ -1057,29 +1061,35 @@ static int ahci_reset_controller(struct ata_host *host)
+ 	ahci_enable_ahci(mmio);
+ 
+ 	/* global controller reset */
+-	tmp = readl(mmio + HOST_CTL);
+-	if ((tmp & HOST_RESET) == 0) {
+-		writel(tmp | HOST_RESET, mmio + HOST_CTL);
+-		readl(mmio + HOST_CTL); /* flush */
+-	}
++	if (!ahci_skip_host_reset) {
++		tmp = readl(mmio + HOST_CTL);
++		if ((tmp & HOST_RESET) == 0) {
++			writel(tmp | HOST_RESET, mmio + HOST_CTL);
++			readl(mmio + HOST_CTL); /* flush */
++		}
+ 
+-	/* reset must complete within 1 second, or
+-	 * the hardware should be considered fried.
+-	 */
+-	ssleep(1);
++		/* reset must complete within 1 second, or
++		 * the hardware should be considered fried.
++		 */
++		ssleep(1);
+ 
+-	tmp = readl(mmio + HOST_CTL);
+-	if (tmp & HOST_RESET) {
+-		dev_printk(KERN_ERR, host->dev,
+-			   "controller reset failed (0x%x)\n", tmp);
+-		return -EIO;
+-	}
++		tmp = readl(mmio + HOST_CTL);
++		if (tmp & HOST_RESET) {
++			dev_printk(KERN_ERR, host->dev,
++				   "controller reset failed (0x%x)\n", tmp);
++			return -EIO;
++		}
+ 
+-	/* turn on AHCI mode */
+-	ahci_enable_ahci(mmio);
++		/* turn on AHCI mode */
++		ahci_enable_ahci(mmio);
+ 
+-	/* some registers might be cleared on reset.  restore initial values */
+-	ahci_restore_initial_config(host);
++		/* Some registers might be cleared on reset.  Restore
++		 * initial values.
++		 */
++		ahci_restore_initial_config(host);
++	} else
++		dev_printk(KERN_INFO, host->dev,
++			   "skipping global host reset\n");
+ 
+ 	if (pdev->vendor == PCI_VENDOR_ID_INTEL) {
+ 		u16 tmp16;
