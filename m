@@ -1,43 +1,62 @@
-From: "Christian Pernegger" <pernegger@gmail.com>
-Subject: Re: Setting up md-raid5: observations, errors, questions
-Date: Mon, 10 Mar 2008 15:03:41 +0100
-Message-ID: <bb145bd20803100703m68ebd193xce959f2e1b6566cd@mail.gmail.com>
-References: <bb145bd20803020423m14efea1by6e3e38bb8d0decb8@mail.gmail.com>
-	 <bb145bd20803020832x744c2674nd0a6a30e445b5453@mail.gmail.com>
-	 <47CAF30F.7040502@msgid.tls.msk.ru>
-	 <bb145bd20803021319o28df011sab954aa58a1c01be@mail.gmail.com>
-	 <47CB228D.5020709@msgid.tls.msk.ru>
-	 <bb145bd20803021617j1b15c667j96d3ee12829ee75a@mail.gmail.com>
-	 <47CB694B.9000807@msgid.tls.msk.ru>
-	 <bb145bd20803030038o905e1feib1c1ad42c1b4b042@mail.gmail.com>
-	 <bb145bd20803040854i33796bb7n8de956b0d90b76d9@mail.gmail.com>
-	 <bb145bd20803042238y5c2d1164o8cac7be9880b550b@mail.gmail.com>
+From: Chuck Ebbert <cebbert@redhat.com>
+Subject: Re: [Regression] 2.6.25-rc4-git3: Handling of audio CDs broken on
+ pata_ali
+Date: Mon, 10 Mar 2008 12:30:43 -0400
+Message-ID: <47D56233.10801@redhat.com>
+References: <200803082246.47987.rjw@sisk.pl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <bb145bd20803042238y5c2d1164o8cac7be9880b550b@mail.gmail.com>
-Content-Disposition: inline
-Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
-Cc: linux-ide@vger.kernel.org
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1754868AbYCJQcp@vger.kernel.org>
+In-Reply-To: <200803082246.47987.rjw@sisk.pl>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: LKML <linux-kernel@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>, Jeff Garzik <jeff@garzik.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-ide@vger.kernel.org, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 List-Id: linux-ide@vger.kernel.org
 
-Dropping linux-ide as the HSM violation error was not reproducible
-even a second time and I have since switched controllers from Promise
-SATA300 TX4s (sata_promise) to Dawicontrol 4320 RAIDs (sil_3124 /
-sata_sil24).
+On 03/08/2008 04:46 PM, Rafael J. Wysocki wrote:
+> Hi,
+> 
+> On one of my test boxes I'm unable to do just about anything with audio CDs
+> using the current -git (2.6.24 is fine in that respect on the same box).
+> 
+> When an audio CD is inserted into the drive, I get the following errors in
+> dmesg and nothing more happens (quite obviously):
+> 
+> ata1.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 frozen
+> ata1.00: cmd a0/01:00:00:10:00/00:00:00:00:00/a0 tag 0 dma 16400 in
+>          cdb 42 02 40 01 00 00 00 00  10 00 00 00 00 00 00 00
+>          res 40/00:00:00:18:00/00:00:00:00:00/a0 Emask 0x4 (timeout)
+> ata1.00: status: { DRDY }
+> ata1: soft resetting link
+> ata1.00: configured for UDMA/33
+> ata1: EH complete
+> ata1.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 frozen
+> ata1.00: cmd a0/01:00:00:10:00/00:00:00:00:00/a0 tag 0 dma 16400 in
+>          cdb 42 02 40 01 00 00 00 00  10 00 00 00 00 00 00 00
+>          res 40/00:00:00:18:00/00:00:00:00:00/a0 Emask 0x4 (timeout)
+> ata1.00: status: { DRDY }
+> ata1: port is slow to respond, please be patient (Status 0x80)
+> ata1: device not ready (errno=-16), forcing hardreset
+> ata1: soft resetting link
+> ata1.00: qc timeout (cmd 0xa1)
+> ata1.00: failed to IDENTIFY (I/O error, err_mask=0x4)
+> ata1.00: revalidation failed (errno=-5)
+> ata1: failed to recover some devices, retrying in 5 secs
+> ata1: port is slow to respond, please be patient (Status 0x80)
+> ata1: device not ready (errno=-16), forcing hardreset
+> ata1: soft resetting link
+> ata1.00: qc timeout (cmd 0xa1)
+> ata1.00: failed to IDENTIFY (I/O error, err_mask=0x4)
+> ata1.00: revalidation failed (errno=-5)
+> ata1: failed to recover some devices, retrying in 5 secs
+> ata1: port is slow to respond, please be patient (Status 0x80)
+> ata1: device not ready (errno=-16), forcing hardreset
+> ata1: soft resetting link
+> ata1.00: qc timeout (cmd 0xa1)
+> ata1.00: failed to IDENTIFY (I/O error, err_mask=0x4)
+> ata1.00: revalidation failed (errno=-5)
+> ata1.00: disabled
+> 
 
-BTW the latter can have it's fakeraid firmware disabled via jumper,
-which also skips any long option ROM / init sequences during boot.
-When doing streaming seqential reads | writes on all four disk block
-devices in parallel I get close to 300MB/s in both cases, which is the
-limit for both the disk and controller hardware. Great driver!
-
-Before it starts sounding too much like spam - I've only been pounding
-the setup for a week, so no idea if it's really stable. Also I haven't
-tested for data corruption yet :)
-
-Cheers,
-
-C.
+We still have DMA totally disabled on pata_ali in Fedora.
