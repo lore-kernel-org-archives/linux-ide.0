@@ -1,42 +1,71 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: Re: Unknown SATA PIIX PCI device ID 0x29b6
-Date: Tue, 11 Mar 2008 19:35:29 +0900
-Message-ID: <47D66071.7010906@gmail.com>
-References: <Pine.LNX.4.64.0802282306190.10087@axis700.grange> <20080228225603.2764bfd1@core> <Pine.LNX.4.64.0802290010320.10498@axis700.grange> <47CFADDF.20200@gmail.com> <Pine.LNX.4.64.0803061248070.5670@axis700.grange> <47D0C9E6.8090301@gmail.com> <Pine.LNX.4.64.0803082345000.6749@axis700.grange> <47D3723B.3040700@gmail.com> <Pine.LNX.4.64.0803092221560.7385@axis700.grange> <47D485EC.1060103@gmail.com> <Pine.LNX.4.64.0803100821440.3948@axis700.grange> <47D53231.30107@gmail.com> <Pine.LNX.4.64.0803111058090.5503@axis700.grange>
+Subject: [PATCH] devres: implement pcim_iomap_regions_request_all()
+Date: Tue, 11 Mar 2008 19:51:38 +0900
+Message-ID: <47D6643A.6060001@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.182]:3040 "EHLO
+Received: from wa-out-1112.google.com ([209.85.146.179]:46582 "EHLO
 	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751138AbYCKKfg (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 11 Mar 2008 06:35:36 -0400
-Received: by wa-out-1112.google.com with SMTP id v27so2778448wah.23
-        for <linux-ide@vger.kernel.org>; Tue, 11 Mar 2008 03:35:35 -0700 (PDT)
-In-Reply-To: <Pine.LNX.4.64.0803111058090.5503@axis700.grange>
+	with ESMTP id S1751382AbYCKKvo (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 11 Mar 2008 06:51:44 -0400
+Received: by wa-out-1112.google.com with SMTP id v27so2784709wah.23
+        for <linux-ide@vger.kernel.org>; Tue, 11 Mar 2008 03:51:44 -0700 (PDT)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-kernel@vger.kernel.org, Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, linux-pci@atrey.karlin.mff.cuni.cz, Linux Kernel <linux-kernel@vger.kernel.org>, Greg KH <greg@kr>
 
-Hello,
+Some drivers need to reserve all PCI BARs to prevent other drivers
+misusing unoccupied BARs.  pcim_iomap_regions_request_all() requests
+all BARs and iomap specified BARs.
 
-Guennadi Liakhovetski wrote:
-> Well, I am not sure, whether it helps, tried booting with both 1.5Gbps and 
-> this patch, it recovers now within 30 sec in both cold- and hot-plug 
-> cases. To really state, that it has improved from about 55 sec down to 30 
-> sec one would need more testing. Is this the kind of improvement you 
-> expected?
+Signed-off-by: Tejun Heo <htejun@gmail.com>
+Cc: Greg Kroah-Hartman <gregkh@suse.de>
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: Jeff Garzik <jeff@garzik.org>
+---
+After acked, it's probably best to push this through libata-dev as
+that's the only user for now.
 
-Not really.  :-P
+Thanks.
 
-> Can it be, that with this hardware it just cannot get better? 
-> Remember, the disk is an external eSATA enclosure with a (relatively new) 
-> PATA disk inside.
+ lib/devres.c |   25 +++++++++++++++++++++++++
+ 1 file changed, 25 insertions(+)
 
-Can you try out a shorter cable?  I had a lot of troubles with eSATA +
-long cable + PMP combinations.  Using shorter cable usually solves the
-problem for me.
-
--- 
-tejun
+Index: work/lib/devres.c
+===================================================================
+--- work.orig/lib/devres.c
++++ work/lib/devres.c
+@@ -298,6 +298,31 @@ int pcim_iomap_regions(struct pci_dev *p
+ EXPORT_SYMBOL(pcim_iomap_regions);
+ 
+ /**
++ * pcim_iomap_regions_request_all - Request all BARs and iomap specified ones
++ * @pdev: PCI device to map IO resources for
++ * @mask: Mask of BARs to iomap
++ * @name: Name used when requesting regions
++ *
++ * Request all PCI BARs and iomap regions specified by @mask.
++ */
++int pcim_iomap_regions_request_all(struct pci_dev *pdev, u16 mask,
++				   const char *name)
++{
++	int request_mask = ((1 << 6) - 1) & ~mask;
++	int rc;
++
++	rc = pci_request_selected_regions(pdev, request_mask, name);
++	if (rc)
++		return rc;
++
++	rc = pcim_iomap_regions(pdev, mask, name);
++	if (rc)
++		pci_release_selected_regions(pdev, request_mask);
++	return rc;
++}
++EXPORT_SYMBOL(pcim_iomap_regions_request_all);
++
++/**
+  * pcim_iounmap_regions - Unmap and release PCI BARs
+  * @pdev: PCI device to map IO resources for
+  * @mask: Mask of BARs to unmap and release
