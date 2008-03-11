@@ -1,50 +1,39 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [Build Failure] 2.6.25-rc5-mm1 Build fails with allmodconfig probe_4drives undefined
-Date: Tue, 11 Mar 2008 20:36:07 +0100
-Message-ID: <200803112036.08007.bzolnier@gmail.com>
-References: <20080311011434.ad8c8d7d.akpm@linux-foundation.org> <47D68126.40109@linux.vnet.ibm.com> <20080311111958.c0d3188d.akpm@linux-foundation.org>
+From: Greg KH <greg@kroah.com>
+Subject: Re: [PATCH] devres: implement pcim_iomap_regions_request_all()
+Date: Tue, 11 Mar 2008 11:18:35 -0700
+Message-ID: <20080311181835.GA27567@kroah.com>
+References: <47D6643A.6060001@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.154]:58993 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751617AbYCKTXs (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 11 Mar 2008 15:23:48 -0400
-Received: by fg-out-1718.google.com with SMTP id e21so2528615fga.17
-        for <linux-ide@vger.kernel.org>; Tue, 11 Mar 2008 12:23:47 -0700 (PDT)
-In-Reply-To: <20080311111958.c0d3188d.akpm@linux-foundation.org>
+Received: from pentafluge.infradead.org ([213.146.154.40]:58068 "EHLO
+	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751625AbYCKTyg (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 11 Mar 2008 15:54:36 -0400
 Content-Disposition: inline
+In-Reply-To: <47D6643A.6060001@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: Kamalesh Babulal <kamalesh@linux.vnet.ibm.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, apw@shadowen.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: Jeff Garzik <jeff@garzik.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, linux-pci@atrey.karlin.mff.cuni.cz, Linux Kernel <linux-kernel@vger.kernel.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>
 
-On Tuesday 11 March 2008, Andrew Morton wrote:
-> On Tue, 11 Mar 2008 18:25:02 +0530
-> Kamalesh Babulal <kamalesh@linux.vnet.ibm.com> wrote:
+On Tue, Mar 11, 2008 at 07:51:38PM +0900, Tejun Heo wrote:
+> Some drivers need to reserve all PCI BARs to prevent other drivers
+> misusing unoccupied BARs.  pcim_iomap_regions_request_all() requests
+> all BARs and iomap specified BARs.
 > 
-> >   MODPOST 2279 modules
-> > ERROR: "probe_4drives" [drivers/ide/ide-core.ko] undefined!
-> 
-> Caused by ide-mm-ide-add-ide-4drives-host-driver-take-3.patch.  Applying
-> that patch alone to current mainline causes the above error after i386
-> `make allmodconfig'.
-> 
-> Just exporting the symbol doesn't fix it, so something funny is going on.
+> Signed-off-by: Tejun Heo <htejun@gmail.com>
+> Cc: Greg Kroah-Hartman <gregkh@suse.de>
+> Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>
+> Cc: Jeff Garzik <jeff@garzik.org>
+> ---
+> After acked, it's probably best to push this through libata-dev as
+> that's the only user for now.
 
-toolchain?  [ standard F7 system w/ updates here ]
+Acked-by: Greg Kroah-Hartman <gregkh@suse.de>
 
-> probe_4drives should not be initialised to zero.
-> 
-> probe_4drives should not be declared extern in drivers/ide/ide.c - please
-> declare it in a header which is included by the definition site and by all
-> users.
+Feel free to push this through the libata-dev tree.
 
-I was aware of the warnings and this was only temporary (it is already fixed
-by to-be-posted-today patch which removes deprecated "idex=" kernel parameters
-and makes _all_ probe_* variables static).
+thanks,
 
-Thanks,
-Bart
+greg k-h
