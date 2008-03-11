@@ -1,132 +1,111 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH 1/3] ide: remove obsoleted "hdx=noautotune" kernel parameter
-Date: Tue, 11 Mar 2008 21:30:49 +0100
-Message-ID: <200803112130.49698.bzolnier@gmail.com>
+From: Harvey Harrison <harvey.harrison@gmail.com>
+Subject: [PATCH 4/6] ide: use clamp_val macro instead of FIT macro
+Date: Tue, 11 Mar 2008 14:12:00 -0700
+Message-ID: <1205269920.22317.36.camel@brick>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.158]:42069 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751148AbYCKUTI (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 11 Mar 2008 16:19:08 -0400
-Received: by fg-out-1718.google.com with SMTP id e21so2546213fga.17
-        for <linux-ide@vger.kernel.org>; Tue, 11 Mar 2008 13:19:07 -0700 (PDT)
-Content-Disposition: inline
+Received: from wa-out-1112.google.com ([209.85.146.177]:36164 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758017AbYCKVMD (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 11 Mar 2008 17:12:03 -0400
+Received: by wa-out-1112.google.com with SMTP id v27so3033371wah.23
+        for <linux-ide@vger.kernel.org>; Tue, 11 Mar 2008 14:12:02 -0700 (PDT)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, LKML <linux-kernel@vger.kernel.org>, linux-ide <linux-ide@vger.kernel.org>
 
-Remove obsoleted "hdx=noautotune" kernel parameter
-(it has been obsoleted since 1 Nov 2004).
+Use the kernel-provided clamp_val macro rather than an ide-specific
+FIT macro.  FIT() was always called with constant range arguments
+which makes this safe.
 
-Then make ide_hwif_t.autotune a single bit flag
-and remove no longer needed IDE_TUNE_* defines.
-
-Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Signed-off-by: Harvey Harrison <harvey.harrison@gmail.com>
 ---
- drivers/ide/ide-cd.c    |    4 +---
- drivers/ide/ide-probe.c |   10 ++--------
- drivers/ide/ide.c       |    7 ++-----
- include/linux/ide.h     |    9 +--------
- 4 files changed, 6 insertions(+), 24 deletions(-)
+ drivers/ide/ide-timing.h    |    1 -
+ drivers/ide/pci/amd74xx.c   |   14 +++++++-------
+ drivers/ide/pci/via82cxxx.c |   14 +++++++-------
+ 3 files changed, 14 insertions(+), 15 deletions(-)
 
-Index: b/drivers/ide/ide-cd.c
-===================================================================
---- a/drivers/ide/ide-cd.c
-+++ b/drivers/ide/ide-cd.c
-@@ -1909,9 +1909,7 @@ static int ide_cdrom_setup(ide_drive_t *
- 	/* set correct block size */
- 	blk_queue_hardsect_size(drive->queue, CD_FRAMESIZE);
+diff --git a/drivers/ide/ide-timing.h b/drivers/ide/ide-timing.h
+index 3b12ffe..2e91c58 100644
+--- a/drivers/ide/ide-timing.h
++++ b/drivers/ide/ide-timing.h
+@@ -95,7 +95,6 @@ static struct ide_timing ide_timing[] = {
+ #define IDE_TIMING_UDMA		0x80
+ #define IDE_TIMING_ALL		0xff
  
--	if (drive->autotune == IDE_TUNE_DEFAULT ||
--	    drive->autotune == IDE_TUNE_AUTO)
--		drive->dsc_overlap = (drive->next != drive);
-+	drive->dsc_overlap = (drive->next != drive);
+-#define FIT(v,vmin,vmax)	max_t(short,min_t(short,v,vmax),vmin)
+ #define ENOUGH(v,unit)		(((v)-1)/(unit)+1)
+ #define EZ(v,unit)		((v)?ENOUGH(v,unit):0)
  
- 	if (ide_cdrom_register(drive, nslots)) {
- 		printk(KERN_ERR "%s: %s failed to register device with the"
-Index: b/drivers/ide/ide-probe.c
-===================================================================
---- a/drivers/ide/ide-probe.c
-+++ b/drivers/ide/ide-probe.c
-@@ -472,9 +472,7 @@ static int do_probe (ide_drive_t *drive,
- 		if (stat == (BUSY_STAT | READY_STAT))
- 			return 4;
+diff --git a/drivers/ide/pci/amd74xx.c b/drivers/ide/pci/amd74xx.c
+index 2ef890c..b5f9194 100644
+--- a/drivers/ide/pci/amd74xx.c
++++ b/drivers/ide/pci/amd74xx.c
+@@ -53,20 +53,20 @@ static void amd_set_speed(struct pci_dev *dev, u8 dn, u8 udma_mask,
+ 	u8 t = 0, offset = amd_offset(dev);
  
--		if ((rc == 1 && cmd == WIN_PIDENTIFY) &&
--			((drive->autotune == IDE_TUNE_DEFAULT) ||
--			(drive->autotune == IDE_TUNE_AUTO))) {
-+		if (rc == 1 && cmd == WIN_PIDENTIFY) {
- 			printk(KERN_ERR "%s: no response (status = 0x%02x), "
- 					"resetting drive\n", drive->name, stat);
- 			msleep(50);
-@@ -828,13 +826,9 @@ static void ide_port_tune_devices(ide_hw
- 		ide_drive_t *drive = &hwif->drives[unit];
+ 	pci_read_config_byte(dev, AMD_ADDRESS_SETUP + offset, &t);
+-	t = (t & ~(3 << ((3 - dn) << 1))) | ((FIT(timing->setup, 1, 4) - 1) << ((3 - dn) << 1));
++	t = (t & ~(3 << ((3 - dn) << 1))) | ((clamp_val(timing->setup, 1, 4) - 1) << ((3 - dn) << 1));
+ 	pci_write_config_byte(dev, AMD_ADDRESS_SETUP + offset, t);
  
- 		if (drive->present) {
--			if (drive->autotune == IDE_TUNE_AUTO)
-+			if (drive->autotune)
- 				ide_set_max_pio(drive);
+ 	pci_write_config_byte(dev, AMD_8BIT_TIMING + offset + (1 - (dn >> 1)),
+-		((FIT(timing->act8b, 1, 16) - 1) << 4) | (FIT(timing->rec8b, 1, 16) - 1));
++		((clamp_val(timing->act8b, 1, 16) - 1) << 4) | (clamp_val(timing->rec8b, 1, 16) - 1));
  
--			if (drive->autotune != IDE_TUNE_DEFAULT &&
--			    drive->autotune != IDE_TUNE_AUTO)
--				continue;
--
- 			drive->nice1 = 1;
+ 	pci_write_config_byte(dev, AMD_DRIVE_TIMING + offset + (3 - dn),
+-		((FIT(timing->active, 1, 16) - 1) << 4) | (FIT(timing->recover, 1, 16) - 1));
++		((clamp_val(timing->active, 1, 16) - 1) << 4) | (clamp_val(timing->recover, 1, 16) - 1));
  
- 			if (hwif->dma_ops)
-Index: b/drivers/ide/ide.c
-===================================================================
---- a/drivers/ide/ide.c
-+++ b/drivers/ide/ide.c
-@@ -910,7 +910,7 @@ static int __init ide_setup(char *s)
- 	if (s[0] == 'h' && s[1] == 'd' && s[2] >= 'a' && s[2] <= max_drive) {
- 		const char *hd_words[] = {
- 			"none", "noprobe", "nowerr", "cdrom", "nodma",
--			"autotune", "noautotune", "-8", "-9", "-10",
-+			"autotune", "-7", "-8", "-9", "-10",
- 			"noflush", "remap", "remap63", "scsi", NULL };
- 		unit = s[2] - 'a';
- 		hw   = unit / MAX_DRIVES;
-@@ -939,10 +939,7 @@ static int __init ide_setup(char *s)
- 				drive->nodma = 1;
- 				goto done;
- 			case -6: /* "autotune" */
--				drive->autotune = IDE_TUNE_AUTO;
--				goto obsolete_option;
--			case -7: /* "noautotune" */
--				drive->autotune = IDE_TUNE_NOAUTO;
-+				drive->autotune = 1;
- 				goto obsolete_option;
- 			case -11: /* noflush */
- 				drive->noflush = 1;
-Index: b/include/linux/ide.h
-===================================================================
---- a/include/linux/ide.h
-+++ b/include/linux/ide.h
-@@ -49,13 +49,6 @@ typedef unsigned char	byte;	/* used ever
- #define ERROR_RECAL	1	/* Recalibrate every 2nd retry */
+ 	switch (udma_mask) {
+-	case ATA_UDMA2: t = timing->udma ? (0xc0 | (FIT(timing->udma, 2, 5) - 2)) : 0x03; break;
+-	case ATA_UDMA4: t = timing->udma ? (0xc0 | amd_cyc2udma[FIT(timing->udma, 2, 10)]) : 0x03; break;
+-	case ATA_UDMA5: t = timing->udma ? (0xc0 | amd_cyc2udma[FIT(timing->udma, 1, 10)]) : 0x03; break;
+-	case ATA_UDMA6: t = timing->udma ? (0xc0 | amd_cyc2udma[FIT(timing->udma, 1, 15)]) : 0x03; break;
++	case ATA_UDMA2: t = timing->udma ? (0xc0 | (clamp_val(timing->udma, 2, 5) - 2)) : 0x03; break;
++	case ATA_UDMA4: t = timing->udma ? (0xc0 | amd_cyc2udma[clamp_val(timing->udma, 2, 10)]) : 0x03; break;
++	case ATA_UDMA5: t = timing->udma ? (0xc0 | amd_cyc2udma[clamp_val(timing->udma, 1, 10)]) : 0x03; break;
++	case ATA_UDMA6: t = timing->udma ? (0xc0 | amd_cyc2udma[clamp_val(timing->udma, 1, 15)]) : 0x03; break;
+ 	default: return;
+ 	}
  
- /*
-- * Tune flags
-- */
--#define IDE_TUNE_NOAUTO		2
--#define IDE_TUNE_AUTO		1
--#define IDE_TUNE_DEFAULT	0
--
--/*
-  * state flags
-  */
+diff --git a/drivers/ide/pci/via82cxxx.c b/drivers/ide/pci/via82cxxx.c
+index 9004e75..8665048 100644
+--- a/drivers/ide/pci/via82cxxx.c
++++ b/drivers/ide/pci/via82cxxx.c
+@@ -120,21 +120,21 @@ static void via_set_speed(ide_hwif_t *hwif, u8 dn, struct ide_timing *timing)
  
-@@ -329,7 +322,7 @@ typedef struct ide_drive_s {
- 	unsigned atapi_overlap	: 1;	/* ATAPI overlap (not supported) */
- 	unsigned doorlocking	: 1;	/* for removable only: door lock/unlock works */
- 	unsigned nodma		: 1;	/* disallow DMA */
--	unsigned autotune	: 2;	/* 0=default, 1=autotune, 2=noautotune */
-+	unsigned autotune	: 1;	/* 0=default, 1=autotune */
- 	unsigned remap_0_to_1	: 1;	/* 0=noremap, 1=remap 0->1 (for EZDrive) */
- 	unsigned blocked        : 1;	/* 1=powermanagment told us not to do anything, so sleep nicely */
- 	unsigned vdma		: 1;	/* 1=doing PIO over DMA 0=doing normal DMA */
+ 	if (~vdev->via_config->flags & VIA_BAD_AST) {
+ 		pci_read_config_byte(dev, VIA_ADDRESS_SETUP, &t);
+-		t = (t & ~(3 << ((3 - dn) << 1))) | ((FIT(timing->setup, 1, 4) - 1) << ((3 - dn) << 1));
++		t = (t & ~(3 << ((3 - dn) << 1))) | ((clamp_val(timing->setup, 1, 4) - 1) << ((3 - dn) << 1));
+ 		pci_write_config_byte(dev, VIA_ADDRESS_SETUP, t);
+ 	}
+ 
+ 	pci_write_config_byte(dev, VIA_8BIT_TIMING + (1 - (dn >> 1)),
+-		((FIT(timing->act8b, 1, 16) - 1) << 4) | (FIT(timing->rec8b, 1, 16) - 1));
++		((clamp_val(timing->act8b, 1, 16) - 1) << 4) | (clamp_val(timing->rec8b, 1, 16) - 1));
+ 
+ 	pci_write_config_byte(dev, VIA_DRIVE_TIMING + (3 - dn),
+-		((FIT(timing->active, 1, 16) - 1) << 4) | (FIT(timing->recover, 1, 16) - 1));
++		((clamp_val(timing->active, 1, 16) - 1) << 4) | (clamp_val(timing->recover, 1, 16) - 1));
+ 
+ 	switch (vdev->via_config->udma_mask) {
+-	case ATA_UDMA2: t = timing->udma ? (0xe0 | (FIT(timing->udma, 2, 5) - 2)) : 0x03; break;
+-	case ATA_UDMA4: t = timing->udma ? (0xe8 | (FIT(timing->udma, 2, 9) - 2)) : 0x0f; break;
+-	case ATA_UDMA5: t = timing->udma ? (0xe0 | (FIT(timing->udma, 2, 9) - 2)) : 0x07; break;
+-	case ATA_UDMA6: t = timing->udma ? (0xe0 | (FIT(timing->udma, 2, 9) - 2)) : 0x07; break;
++	case ATA_UDMA2: t = timing->udma ? (0xe0 | (clamp_val(timing->udma, 2, 5) - 2)) : 0x03; break;
++	case ATA_UDMA4: t = timing->udma ? (0xe8 | (clamp_val(timing->udma, 2, 9) - 2)) : 0x0f; break;
++	case ATA_UDMA5: t = timing->udma ? (0xe0 | (clamp_val(timing->udma, 2, 9) - 2)) : 0x07; break;
++	case ATA_UDMA6: t = timing->udma ? (0xe0 | (clamp_val(timing->udma, 2, 9) - 2)) : 0x07; break;
+ 	default: return;
+ 	}
+ 
+-- 
+1.5.4.4.592.g32d4c
+
+
