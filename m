@@ -1,31 +1,41 @@
 From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH] pata_ixp4xx_cf: support single chip-select operation
-Date: Mon, 10 Mar 2008 20:51:55 -0400
-Message-ID: <47D5D7AB.6060508@garzik.org>
-References: <20080306051915.GA18841@cloud.net.au>
+Subject: Re: [PATCH] ahci: add the Device IDs of nvidia MCP7B AHCI controller
+ to ahci.c
+Date: Mon, 10 Mar 2008 20:51:47 -0400
+Message-ID: <47D5D7A3.1030705@garzik.org>
+References: <200803062122359218883@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=GB2312
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:50866 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755211AbYCKAv5 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 10 Mar 2008 20:51:57 -0400
-In-Reply-To: <20080306051915.GA18841@cloud.net.au>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1755907AbYCKAw0@vger.kernel.org>
+In-Reply-To: <200803062122359218883@gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: peerchen <peerchen@gmail.com>
+Cc: linux-kernel <linux-kernel@vger.kernel.org>, linux-ide <linux-ide@vger.kernel.org>, akpm <akpm@linux-foundation.org>
 List-Id: linux-ide@vger.kernel.org
-To: Hamish Moffatt <hamish@cloud.net.au>, linux-ide@vger.kernel.org
 
-Hamish Moffatt wrote:
-> Compact flash cards require two chip selects, and pata_ixp4xx_cf
-> currently maps these to two IXP4XX chip selects. On our board we use a
-> single IXP4XX CS line and decode an address line to split it into two.
+peerchen wrote:
+> Add the device IDs of nvidia MCP79 AHCI controller to ahci.c
 > 
-> This patch allows this by allowing you to specify the second CS region
-> as an offset from the first.
-> 
-> Signed-off-by: Hamish Moffatt <hamish@cloud.net.au>
+> Signed-off-by: Peer Chen <peerchen@gmail.com>
+> ---
+> --- linux-2.6.25-rc4/drivers/ata/ahci.c.orig	2008-03-04 21:46:30.000000000 -0500
+> +++ linux-2.6.25-rc4/drivers/ata/ahci.c	2008-03-04 21:50:42.000000000 -0500
+> @@ -563,6 +563,18 @@ static const struct pci_device_id ahci_p
+>  	{ PCI_VDEVICE(NVIDIA, 0x0abd), board_ahci },		/* MCP79 */
+>  	{ PCI_VDEVICE(NVIDIA, 0x0abe), board_ahci },		/* MCP79 */
+>  	{ PCI_VDEVICE(NVIDIA, 0x0abf), board_ahci },		/* MCP79 */
+> +	{ PCI_VDEVICE(NVIDIA, 0x0bc8), board_ahci },		/* MCP7B */
+> +	{ PCI_VDEVICE(NVIDIA, 0x0bc9), board_ahci },		/* MCP7B */
+> +	{ PCI_VDEVICE(NVIDIA, 0x0bca), board_ahci },		/* MCP7B */
+> +	{ PCI_VDEVICE(NVIDIA, 0x0bcb), board_ahci },		/* MCP7B */
+> +	{ PCI_VDEVICE(NVIDIA, 0x0bcc), board_ahci },		/* MCP7B */
+> +	{ PCI_VDEVICE(NVIDIA, 0x0bcd), board_ahci },		/* MCP7B */
+> +	{ PCI_VDEVICE(NVIDIA, 0x0bce), board_ahci },		/* MCP7B */
+> +	{ PCI_VDEVICE(NVIDIA, 0x0bcf), board_ahci },		/* MCP7B */
+> +	{ PCI_VDEVICE(NVIDIA, 0x0bd0), board_ahci },		/* MCP7B */
+> +	{ PCI_VDEVICE(NVIDIA, 0x0bd1), board_ahci },		/* MCP7B */
+> +	{ PCI_VDEVICE(NVIDIA, 0x0bd2), board_ahci },		/* MCP7B */
+> +	{ PCI_VDEVICE(NVIDIA, 0x0bd3), board_ahci },		/* MCP7B */
 
 applied
-
-
