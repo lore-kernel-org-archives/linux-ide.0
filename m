@@ -1,38 +1,35 @@
-From: bugme-daemon@bugzilla.kernel.org
-Subject: [Bug 9994] atiixp ide timeouts
-Date: Tue, 11 Mar 2008 10:16:52 -0700 (PDT)
-Message-ID: <20080311171652.AD4C211D111@picon.linux-foundation.org>
-References: <bug-9994-11633@http.bugzilla.kernel.org/>
+From: Andrew Morton <akpm@linux-foundation.org>
+Subject: Re: [Build Failure] 2.6.25-rc5-mm1 Build fails with allmodconfig
+ probe_4drives undefined
+Date: Tue, 11 Mar 2008 10:41:37 -0700
+Message-ID: <20080311104137.3c6b3f22.akpm@linux-foundation.org>
+References: <20080311011434.ad8c8d7d.akpm@linux-foundation.org>
+	<47D68126.40109@linux.vnet.ibm.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:39648 "EHLO
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:47812 "EHLO
 	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754649AbYCKR0z (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 11 Mar 2008 13:26:55 -0400
-Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
-	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id m2BHR6QX018378
-	for <linux-ide@vger.kernel.org>; Tue, 11 Mar 2008 10:27:07 -0700
-In-Reply-To: <bug-9994-11633@http.bugzilla.kernel.org/>
+	by vger.kernel.org with ESMTP id S1754314AbYCKRmB (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 11 Mar 2008 13:42:01 -0400
+In-Reply-To: <47D68126.40109@linux.vnet.ibm.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Kamalesh Babulal <kamalesh@linux.vnet.ibm.com>
+Cc: linux-kernel@vger.kernel.org, bzolnier@gmail.com, linux-ide@vger.kernel.org, apw@shadowen.org
 
-http://bugzilla.kernel.org/show_bug.cgi?id=9994
+On Tue, 11 Mar 2008 18:25:02 +0530
+Kamalesh Babulal <kamalesh@linux.vnet.ibm.com> wrote:
 
+> The 2.6.25-rc5-mm1 kernel build fails with allmodconfig 
+> 
+>   MODPOST 2279 modules
+> ERROR: "probe_4drives" [drivers/ide/ide-core.ko] undefined!
 
-dsd@gentoo.org changed:
+Yes, it has been doing this for a while.  But apparently it doesn't happen
+for Bart with just his patch queue.  <slightlypeeved>If your subssytem
+fails in my tree, that doesn't automatically make it my
+problem</slightlypeeved>
 
-           What    |Removed                     |Added
-----------------------------------------------------------------------------
-                 CC|                            |kernel@gentoo.org
-
-
-
-
-------- Comment #5 from dsd@gentoo.org  2008-03-11 10:16 -------
-original downstream report: http://bugs.gentoo.org/show_bug.cgi?id=209786
-
-
--- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug, or are watching the assignee.
+I'll take a look, see what went wrong.
