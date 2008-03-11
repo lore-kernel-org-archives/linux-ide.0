@@ -1,152 +1,186 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH 5/5] libata: kill ata_ehi_schedule_probe()
-Date: Tue, 11 Mar 2008 12:41:43 +0900
-Message-ID: <12052069031224-git-send-email-htejun@gmail.com>
+Subject: [PATCH 4/5] libata: kill ATA_LFLAG_SKIP_D2H_BSY
+Date: Tue, 11 Mar 2008 12:41:42 +0900
+Message-ID: <12052069032723-git-send-email-htejun@gmail.com>
 References: <12052069033338-git-send-email-htejun@gmail.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.183]:36603 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754399AbYCKDl4 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 10 Mar 2008 23:41:56 -0400
-Received: by wa-out-1112.google.com with SMTP id v27so2611787wah.23
-        for <linux-ide@vger.kernel.org>; Mon, 10 Mar 2008 20:41:55 -0700 (PDT)
+Received: from wx-out-0506.google.com ([66.249.82.230]:23595 "EHLO
+	wx-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753947AbYCKDly (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 10 Mar 2008 23:41:54 -0400
+Received: by wx-out-0506.google.com with SMTP id h31so2280947wxd.4
+        for <linux-ide@vger.kernel.org>; Mon, 10 Mar 2008 20:41:51 -0700 (PDT)
 In-Reply-To: <12052069033338-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: jeff@garzik.org, linux-ide@vger.kernel.org
 Cc: mikpe@it.uu.se, Tejun Heo <htejun@gmail.com>
 
-ata_ehi_schedule_probe() was created to hide details of link-resuming
-reset magic.  Now that all the softreset workarounds are gone,
-scheduling probe is very simple - set probe_mask and request RESET.
-Kill ata_ehi_schedule_probe() and open code it.  This also increases
-consistency as ata_ehi_schedule_probe() couldn't cover individual
-device probings so they were open-coded even when the helper existed.
+Some controllers can't reliably record the initial D2H FIS after SATA
+link is brought online for whatever reason.  Advanced controllers
+which don't have traditional TF register based interface often have
+this problem as they don't really have the TF registers to update
+while the controller and link are being initialized.
 
-While at it, define ATA_ALL_DEVICES as mask of all possible devices on
-a link and always use it when requesting probe on link level for
-simplicity and consistency.  Setting extra bits in the probe_mask
-doesn't hurt anybody.
+SKIP_D2H_BSY works around the problem by skipping the wait for device
+readiness before issuing SRST, so for such controllers libata issues
+SRST blindly and hopes for the best.
+
+Now that libata defaults to hardreset, this workaround is no longer
+necessary.  For controllers which have support for hardreset, SRST is
+never issued by itself.  It is only issued as follow-up SRST for
+device classification and PMP initialization, so there's no need to
+wait for it from prereset.
+
+Kill ATA_LFLAG_SKIP_D2H_BSY.
 
 Signed-off-by: Tejun Heo <htejun@gmail.com>
 ---
- drivers/ata/libata-core.c |    3 +--
- drivers/ata/libata-eh.c   |    2 +-
- drivers/ata/libata-pmp.c  |   12 ++++++++----
- drivers/ata/libata-scsi.c |    2 +-
- include/linux/libata.h    |   12 ++++--------
- 5 files changed, 15 insertions(+), 16 deletions(-)
+ drivers/ata/ahci.c        |    6 ------
+ drivers/ata/libata-core.c |    6 ++----
+ drivers/ata/sata_fsl.c    |    2 --
+ drivers/ata/sata_sil24.c  |    4 ----
+ include/linux/libata.h    |    2 --
+ 5 files changed, 2 insertions(+), 18 deletions(-)
 
+diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+index 087efc6..44946bd 100644
+--- a/drivers/ata/ahci.c
++++ b/drivers/ata/ahci.c
+@@ -192,7 +192,6 @@ enum {
+ 					  ATA_FLAG_MMIO | ATA_FLAG_PIO_DMA |
+ 					  ATA_FLAG_ACPI_SATA | ATA_FLAG_AN |
+ 					  ATA_FLAG_IPM,
+-	AHCI_LFLAG_COMMON		= ATA_LFLAG_SKIP_D2H_BSY,
+ 
+ 	ICH_MAP				= 0x90, /* ICH MAP register */
+ };
+@@ -398,7 +397,6 @@ static const struct ata_port_info ahci_port_info[] = {
+ 	/* board_ahci */
+ 	{
+ 		.flags		= AHCI_FLAG_COMMON,
+-		.link_flags	= AHCI_LFLAG_COMMON,
+ 		.pio_mask	= 0x1f, /* pio0-4 */
+ 		.udma_mask	= ATA_UDMA6,
+ 		.port_ops	= &ahci_ops,
+@@ -407,7 +405,6 @@ static const struct ata_port_info ahci_port_info[] = {
+ 	{
+ 		AHCI_HFLAGS	(AHCI_HFLAG_NO_NCQ | AHCI_HFLAG_NO_PMP),
+ 		.flags		= AHCI_FLAG_COMMON,
+-		.link_flags	= AHCI_LFLAG_COMMON,
+ 		.pio_mask	= 0x1f, /* pio0-4 */
+ 		.udma_mask	= ATA_UDMA6,
+ 		.port_ops	= &ahci_vt8251_ops,
+@@ -416,7 +413,6 @@ static const struct ata_port_info ahci_port_info[] = {
+ 	{
+ 		AHCI_HFLAGS	(AHCI_HFLAG_IGN_IRQ_IF_ERR),
+ 		.flags		= AHCI_FLAG_COMMON,
+-		.link_flags	= AHCI_LFLAG_COMMON,
+ 		.pio_mask	= 0x1f, /* pio0-4 */
+ 		.udma_mask	= ATA_UDMA6,
+ 		.port_ops	= &ahci_ops,
+@@ -426,7 +422,6 @@ static const struct ata_port_info ahci_port_info[] = {
+ 		AHCI_HFLAGS	(AHCI_HFLAG_IGN_SERR_INTERNAL |
+ 				 AHCI_HFLAG_32BIT_ONLY | AHCI_HFLAG_NO_PMP),
+ 		.flags		= AHCI_FLAG_COMMON,
+-		.link_flags	= AHCI_LFLAG_COMMON,
+ 		.pio_mask	= 0x1f, /* pio0-4 */
+ 		.udma_mask	= ATA_UDMA6,
+ 		.port_ops	= &ahci_ops,
+@@ -437,7 +432,6 @@ static const struct ata_port_info ahci_port_info[] = {
+ 				 AHCI_HFLAG_MV_PATA),
+ 		.flags		= ATA_FLAG_SATA | ATA_FLAG_NO_LEGACY |
+ 				  ATA_FLAG_MMIO | ATA_FLAG_PIO_DMA,
+-		.link_flags	= AHCI_LFLAG_COMMON,
+ 		.pio_mask	= 0x1f, /* pio0-4 */
+ 		.udma_mask	= ATA_UDMA6,
+ 		.port_ops	= &ahci_ops,
 diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index a731298..410f1ea 100644
+index af76d8b..a731298 100644
 --- a/drivers/ata/libata-core.c
 +++ b/drivers/ata/libata-core.c
-@@ -7067,8 +7067,7 @@ int ata_host_register(struct ata_host *host, struct scsi_host_template *sht)
- 			/* kick EH for boot probing */
- 			spin_lock_irqsave(ap->lock, flags);
- 
--			ehi->probe_mask =
--				(1 << ata_link_max_devices(&ap->link)) - 1;
-+			ehi->probe_mask |= ATA_ALL_DEVICES;
- 			ehi->action |= ATA_EH_RESET;
- 			ehi->flags |= ATA_EHI_NO_AUTOPSY | ATA_EHI_QUIET;
- 
-diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
-index bef9187..64418f1 100644
---- a/drivers/ata/libata-eh.c
-+++ b/drivers/ata/libata-eh.c
-@@ -1746,7 +1746,7 @@ static void ata_eh_link_autopsy(struct ata_link *link)
- 		ata_eh_analyze_serror(link);
- 	} else if (rc != -EOPNOTSUPP) {
- 		/* SError read failed, force reset and probing */
--		ata_ehi_schedule_probe(&ehc->i);
-+		ehc->i.probe_mask |= ATA_ALL_DEVICES;
- 		ehc->i.action |= ATA_EH_RESET;
- 		ehc->i.err_mask |= AC_ERR_OTHER;
- 	}
-diff --git a/drivers/ata/libata-pmp.c b/drivers/ata/libata-pmp.c
-index ba3ad46..2e9eea8 100644
---- a/drivers/ata/libata-pmp.c
-+++ b/drivers/ata/libata-pmp.c
-@@ -435,7 +435,7 @@ static int sata_pmp_init_links(struct ata_port *ap, int nr_ports)
- 		struct ata_eh_context *ehc = &link->eh_context;
- 
- 		link->flags = 0;
--		ehc->i.probe_mask |= 1;
-+		ehc->i.probe_mask |= ATA_ALL_DEVICES;
- 		ehc->i.action |= ATA_EH_RESET;
+@@ -3691,10 +3691,8 @@ int ata_std_prereset(struct ata_link *link, unsigned long deadline)
+ 					"link for reset (errno=%d)\n", rc);
  	}
  
-@@ -831,8 +831,12 @@ static int sata_pmp_eh_recover_pmp(struct ata_port *ap,
- 		ata_eh_thaw_port(ap);
+-	/* Wait for !BSY if the controller can wait for the first D2H
+-	 * Reg FIS and we don't know that no device is attached.
+-	 */
+-	if (!(link->flags & ATA_LFLAG_SKIP_D2H_BSY) && !ata_link_offline(link)) {
++	/* wait for !BSY if we don't know that no device is attached */
++	if (!ata_link_offline(link)) {
+ 		rc = ata_wait_ready(ap, deadline);
+ 		if (rc && rc != -ENODEV) {
+ 			ata_link_printk(link, KERN_WARNING, "device not ready "
+diff --git a/drivers/ata/sata_fsl.c b/drivers/ata/sata_fsl.c
+index f6dcb1f..47a9084 100644
+--- a/drivers/ata/sata_fsl.c
++++ b/drivers/ata/sata_fsl.c
+@@ -35,7 +35,6 @@ enum {
+ 	SATA_FSL_HOST_FLAGS	= (ATA_FLAG_SATA | ATA_FLAG_NO_LEGACY |
+ 				ATA_FLAG_MMIO | ATA_FLAG_PIO_DMA |
+ 				ATA_FLAG_NCQ),
+-	SATA_FSL_HOST_LFLAGS	= ATA_LFLAG_SKIP_D2H_BSY,
  
- 		/* PMP is reset, SErrors cannot be trusted, scan all */
--		ata_port_for_each_link(tlink, ap)
--			ata_ehi_schedule_probe(&tlink->eh_context.i);
-+		ata_port_for_each_link(tlink, ap) {
-+			struct ata_eh_context *ehc = &tlink->eh_context;
-+
-+			ehc->i.probe_mask |= ATA_ALL_DEVICES;
-+			ehc->i.action |= ATA_EH_RESET;
-+		}
- 	}
+ 	SATA_FSL_MAX_CMDS	= SATA_FSL_QUEUE_DEPTH,
+ 	SATA_FSL_CMD_HDR_SIZE	= 16,	/* 4 DWORDS */
+@@ -1252,7 +1251,6 @@ static const struct ata_port_operations sata_fsl_ops = {
+ static const struct ata_port_info sata_fsl_port_info[] = {
+ 	{
+ 	 .flags = SATA_FSL_HOST_FLAGS,
+-	 .link_flags = SATA_FSL_HOST_LFLAGS,
+ 	 .pio_mask = 0x1f,	/* pio 0-4 */
+ 	 .udma_mask = 0x7f,	/* udma 0-6 */
+ 	 .port_ops = &sata_fsl_ops,
+diff --git a/drivers/ata/sata_sil24.c b/drivers/ata/sata_sil24.c
+index 4855eb2..64cdde5 100644
+--- a/drivers/ata/sata_sil24.c
++++ b/drivers/ata/sata_sil24.c
+@@ -254,7 +254,6 @@ enum {
+ 				  ATA_FLAG_MMIO | ATA_FLAG_PIO_DMA |
+ 				  ATA_FLAG_NCQ | ATA_FLAG_ACPI_SATA |
+ 				  ATA_FLAG_AN | ATA_FLAG_PMP,
+-	SIL24_COMMON_LFLAGS	= ATA_LFLAG_SKIP_D2H_BSY,
+ 	SIL24_FLAG_PCIX_IRQ_WOC	= (1 << 24), /* IRQ loss errata on PCI-X */
  
- 	/* If revalidation is requested, revalidate and reconfigure;
-@@ -847,7 +851,7 @@ static int sata_pmp_eh_recover_pmp(struct ata_port *ap,
- 		tries--;
- 
- 		if (rc == -ENODEV) {
--			ehc->i.probe_mask |= 1;
-+			ehc->i.probe_mask |= ATA_ALL_DEVICES;
- 			detach = 1;
- 			/* give it just two more chances */
- 			tries = min(tries, 2);
-diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-index d938b26..b4c5ca1 100644
---- a/drivers/ata/libata-scsi.c
-+++ b/drivers/ata/libata-scsi.c
-@@ -3448,7 +3448,7 @@ static int ata_scsi_user_scan(struct Scsi_Host *shost, unsigned int channel,
- 
- 		ata_port_for_each_link(link, ap) {
- 			struct ata_eh_info *ehi = &link->eh_info;
--			ehi->probe_mask |= (1 << ata_link_max_devices(link)) - 1;
-+			ehi->probe_mask |= ATA_ALL_DEVICES;
- 			ehi->action |= ATA_EH_RESET;
- 		}
- 	} else {
+ 	IRQ_STAT_4PORTS		= 0xf,
+@@ -449,7 +448,6 @@ static const struct ata_port_info sil24_port_info[] = {
+ 	{
+ 		.flags		= SIL24_COMMON_FLAGS | SIL24_NPORTS2FLAG(4) |
+ 				  SIL24_FLAG_PCIX_IRQ_WOC,
+-		.link_flags	= SIL24_COMMON_LFLAGS,
+ 		.pio_mask	= 0x1f,			/* pio0-4 */
+ 		.mwdma_mask	= 0x07,			/* mwdma0-2 */
+ 		.udma_mask	= ATA_UDMA5,		/* udma0-5 */
+@@ -458,7 +456,6 @@ static const struct ata_port_info sil24_port_info[] = {
+ 	/* sil_3132 */
+ 	{
+ 		.flags		= SIL24_COMMON_FLAGS | SIL24_NPORTS2FLAG(2),
+-		.link_flags	= SIL24_COMMON_LFLAGS,
+ 		.pio_mask	= 0x1f,			/* pio0-4 */
+ 		.mwdma_mask	= 0x07,			/* mwdma0-2 */
+ 		.udma_mask	= ATA_UDMA5,		/* udma0-5 */
+@@ -467,7 +464,6 @@ static const struct ata_port_info sil24_port_info[] = {
+ 	/* sil_3131/sil_3531 */
+ 	{
+ 		.flags		= SIL24_COMMON_FLAGS | SIL24_NPORTS2FLAG(1),
+-		.link_flags	= SIL24_COMMON_LFLAGS,
+ 		.pio_mask	= 0x1f,			/* pio0-4 */
+ 		.mwdma_mask	= 0x07,			/* mwdma0-2 */
+ 		.udma_mask	= ATA_UDMA5,		/* udma0-5 */
 diff --git a/include/linux/libata.h b/include/linux/libata.h
-index 5de2ee3..a7882a2 100644
+index 2e289a3..5de2ee3 100644
 --- a/include/linux/libata.h
 +++ b/include/linux/libata.h
-@@ -122,6 +122,8 @@ enum {
+@@ -162,8 +162,6 @@ enum {
+ 	ATA_DEV_NONE		= 9,	/* no device */
  
- 	ATAPI_MAX_DRAIN		= 16 << 10,
- 
-+	ATA_ALL_DEVICES		= (1 << ATA_MAX_DEVICES) - 1,
-+
- 	ATA_SHT_EMULATED	= 1,
- 	ATA_SHT_CMD_PER_LUN	= 1,
- 	ATA_SHT_THIS_ID		= -1,
-@@ -1095,17 +1097,11 @@ extern void ata_ehi_push_desc(struct ata_eh_info *ehi, const char *fmt, ...)
- 	__attribute__ ((format (printf, 2, 3)));
- extern void ata_ehi_clear_desc(struct ata_eh_info *ehi);
- 
--static inline void ata_ehi_schedule_probe(struct ata_eh_info *ehi)
--{
--	ehi->action |= ATA_EH_RESET;
--	ehi->probe_mask |= (1 << ATA_MAX_DEVICES) - 1;
--}
--
- static inline void ata_ehi_hotplugged(struct ata_eh_info *ehi)
- {
--	ata_ehi_schedule_probe(ehi);
-+	ehi->probe_mask |= (1 << ATA_MAX_DEVICES) - 1;
- 	ehi->flags |= ATA_EHI_HOTPLUGGED;
--	ehi->action |= ATA_EH_ENABLE_LINK;
-+	ehi->action |= ATA_EH_RESET | ATA_EH_ENABLE_LINK;
- 	ehi->err_mask |= AC_ERR_ATA_BUS;
- }
- 
+ 	/* struct ata_link flags */
+-	ATA_LFLAG_SKIP_D2H_BSY	= (1 << 1), /* can't wait for the first D2H
+-					     * Register FIS clearing BSY */
+ 	ATA_LFLAG_NO_SRST	= (1 << 2), /* avoid softreset */
+ 	ATA_LFLAG_ASSUME_ATA	= (1 << 3), /* assume ATA class */
+ 	ATA_LFLAG_ASSUME_SEMB	= (1 << 4), /* assume SEMB class */
 -- 
 1.5.2.4
 
