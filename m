@@ -1,71 +1,47 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH] devres: implement pcim_iomap_regions_request_all()
-Date: Tue, 11 Mar 2008 19:51:38 +0900
-Message-ID: <47D6643A.6060001@gmail.com>
+Subject: [PATCH libata-dev#upstream-fixes] ahci: request all PCI BARs
+Date: Tue, 11 Mar 2008 19:52:31 +0900
+Message-ID: <47D6646F.9070109@gmail.com>
+References: <47D6643A.6060001@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.179]:46582 "EHLO
+Received: from wa-out-1112.google.com ([209.85.146.182]:46557 "EHLO
 	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751382AbYCKKvo (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 11 Mar 2008 06:51:44 -0400
-Received: by wa-out-1112.google.com with SMTP id v27so2784709wah.23
-        for <linux-ide@vger.kernel.org>; Tue, 11 Mar 2008 03:51:44 -0700 (PDT)
+	with ESMTP id S1752367AbYCKKwh (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 11 Mar 2008 06:52:37 -0400
+Received: by wa-out-1112.google.com with SMTP id v27so2785086wah.23
+        for <linux-ide@vger.kernel.org>; Tue, 11 Mar 2008 03:52:37 -0700 (PDT)
+In-Reply-To: <47D6643A.6060001@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Jeff Garzik <jeff@garzik.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, linux-pci@atrey.karlin.mff.cuni.cz, Linux Kernel <linux-kernel@vger.kernel.org>, Greg KH <greg@kr>
 
-Some drivers need to reserve all PCI BARs to prevent other drivers
-misusing unoccupied BARs.  pcim_iomap_regions_request_all() requests
-all BARs and iomap specified BARs.
+ahci is often implemented with accompanying SFF compatible interface
+and legacy IDE driver may attach to the legacy IO ports when the
+controller is already claimed by ahci and vice-versa.  This patch
+makes ahci use pcim_iomap_regions_request_all() so that all IO regions
+are claimed on attach.
 
 Signed-off-by: Tejun Heo <htejun@gmail.com>
-Cc: Greg Kroah-Hartman <gregkh@suse.de>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: Jeff Garzik <jeff@garzik.org>
 ---
-After acked, it's probably best to push this through libata-dev as
-that's the only user for now.
+ drivers/ata/ahci.c |    5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
 
-Thanks.
-
- lib/devres.c |   25 +++++++++++++++++++++++++
- 1 file changed, 25 insertions(+)
-
-Index: work/lib/devres.c
+Index: work/drivers/ata/ahci.c
 ===================================================================
---- work.orig/lib/devres.c
-+++ work/lib/devres.c
-@@ -298,6 +298,31 @@ int pcim_iomap_regions(struct pci_dev *p
- EXPORT_SYMBOL(pcim_iomap_regions);
+--- work.orig/drivers/ata/ahci.c
++++ work/drivers/ata/ahci.c
+@@ -2234,7 +2234,10 @@ static int ahci_init_one(struct pci_dev 
+ 	if (rc)
+ 		return rc;
  
- /**
-+ * pcim_iomap_regions_request_all - Request all BARs and iomap specified ones
-+ * @pdev: PCI device to map IO resources for
-+ * @mask: Mask of BARs to iomap
-+ * @name: Name used when requesting regions
-+ *
-+ * Request all PCI BARs and iomap regions specified by @mask.
-+ */
-+int pcim_iomap_regions_request_all(struct pci_dev *pdev, u16 mask,
-+				   const char *name)
-+{
-+	int request_mask = ((1 << 6) - 1) & ~mask;
-+	int rc;
-+
-+	rc = pci_request_selected_regions(pdev, request_mask, name);
-+	if (rc)
-+		return rc;
-+
-+	rc = pcim_iomap_regions(pdev, mask, name);
-+	if (rc)
-+		pci_release_selected_regions(pdev, request_mask);
-+	return rc;
-+}
-+EXPORT_SYMBOL(pcim_iomap_regions_request_all);
-+
-+/**
-  * pcim_iounmap_regions - Unmap and release PCI BARs
-  * @pdev: PCI device to map IO resources for
-  * @mask: Mask of BARs to unmap and release
+-	rc = pcim_iomap_regions(pdev, 1 << AHCI_PCI_BAR, DRV_NAME);
++	/* AHCI controllers often implement SFF compatible interface.
++	 * Grab all PCI BARs just in case.
++	 */
++	rc = pcim_iomap_regions_request_all(pdev, 1 << AHCI_PCI_BAR, DRV_NAME);
+ 	if (rc == -EBUSY)
+ 		pcim_pin_device(pdev);
+ 	if (rc)
