@@ -1,1745 +1,2175 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH 9/9] libata: make reset related methods proper port operations
-Date: Tue, 11 Mar 2008 21:06:05 +0900
-Message-ID: <1205237168407-git-send-email-htejun@gmail.com>
+Subject: [PATCH 4/9] libata: implement and use SHT initializers
+Date: Tue, 11 Mar 2008 21:06:00 +0900
+Message-ID: <12052371673311-git-send-email-htejun@gmail.com>
 References: <12052371651181-git-send-email-htejun@gmail.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.178]:45118 "EHLO
+Received: from wa-out-1112.google.com ([209.85.146.179]:45030 "EHLO
 	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757366AbYCKMGY (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 11 Mar 2008 08:06:24 -0400
-Received: by wa-out-1112.google.com with SMTP id v27so2814323wah.23
-        for <linux-ide@vger.kernel.org>; Tue, 11 Mar 2008 05:06:24 -0700 (PDT)
+	with ESMTP id S1753396AbYCKMGR (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 11 Mar 2008 08:06:17 -0400
+Received: by wa-out-1112.google.com with SMTP id v27so2814319wah.23
+        for <linux-ide@vger.kernel.org>; Tue, 11 Mar 2008 05:06:16 -0700 (PDT)
 In-Reply-To: <12052371651181-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: jeff@garzik.org, linux-ide@vger.kernel.org, liml@rtr.ca, alan@lxorguk.ukuu.org.uk, kngregertsen@norway.atmel.com, sonic.adi@gmail.com, rmk@arm.linux.org.uk, alessandro.zummo@towertech
 Cc: Tejun Heo <htejun@gmail.com>
 
-Currently reset methods are not specified directly in the
-ata_port_operations table.  If a LLD wants to use custom reset
-methods, it should construct and use a error_handler which uses those
-reset methods.  It's done this way for two reasons.
+libata lets low level drivers build scsi_host_template and register it
+to the SCSI layer.  This allows low level drivers high level of
+flexibility but also burdens them with lots of boilerplate entries.
 
-First, the ops table already contained too many methods and adding
-four more of them would noticeably increase the amount of necessary
-boilerplate code all over low level drivers.
+This patch implements SHT initializers which can be used to initialize
+all the boilerplate entries in a sht.  Three variants of them are
+implemented - BASE, BMDMA and NCQ - for different types of drivers.
+Note that entries can be overriden by putting individual initializers
+after the helper macro.
 
-Second, as ->error_handler uses those reset methods, it can get
-confusing.  ie. By overriding ->error_handler, those reset ops can be
-made useless making layering a bit hazy.
-
-Now that ops table uses inheritance, the first problem doesn't exist
-anymore.  The second isn't completely solved but is relieved by
-providing default values - most drivers can just override what it has
-implemented and don't have to concern itself about higher level
-callbacks.  In fact, there currently is no driver which actually
-modifies error handling behavior.  Drivers which override
-->error_handler just wraps the standard error handler only to prepare
-the controller for EH.  I don't think making ops layering strict has
-any noticeable benefit.
-
-This patch makes ->prereset, ->softreset, ->hardreset, ->postreset and
-their PMP counterparts propoer ops.  Default ops are provided in the
-base ops tables and drivers are converted to override individual reset
-methods instead of creating custom error_handler.
-
-* ata_std_error_handler() doesn't use sata_std_hardreset() if SCRs
-  aren't accessible.  sata_promise doesn't need to use separate
-  error_handlers for PATA and SATA anymore.
-
-* softreset is broken for sata_inic162x and sata_sx4.  As libata now
-  always prefers hardreset, this doesn't really matter but the ops are
-  forced to NULL using ATA_OP_NULL for documentation purpose.
-
-* pata_hpt374 needs to use different prereset for the first and second
-  PCI functions.  This used to be done by branching from
-  hpt374_error_handler().  The proper way to do this is to use
-  separate ops and port_info tables for each function.  Converted.
+All sht tables are identical before and after this patch.
 
 Signed-off-by: Tejun Heo <htejun@gmail.com>
 ---
- drivers/ata/ahci.c          |   53 ++++++++++++------------------------
- drivers/ata/ata_piix.c      |   21 +++-----------
- drivers/ata/libata-core.c   |   14 ++++++++-
- drivers/ata/libata-eh.c     |   25 +++++++++++++++++
- drivers/ata/libata-pmp.c    |   47 ++++++++-------------------------
- drivers/ata/libata-sff.c    |   49 +++++++++++-----------------------
- drivers/ata/pata_artop.c    |   34 +----------------------
- drivers/ata/pata_atiixp.c   |    7 +----
- drivers/ata/pata_bf54x.c    |   14 +--------
- drivers/ata/pata_efar.c     |   15 +----------
- drivers/ata/pata_hpt37x.c   |   61 ++++++++++++++-----------------------------
- drivers/ata/pata_hpt3x2n.c  |   16 +----------
- drivers/ata/pata_icside.c   |    8 +-----
- drivers/ata/pata_it8213.c   |   15 +----------
- drivers/ata/pata_mpc52xx.c  |   10 -------
- drivers/ata/pata_mpiix.c    |   16 +----------
- drivers/ata/pata_ns87410.c  |   16 +----------
- drivers/ata/pata_oldpiix.c  |   16 +----------
- drivers/ata/pata_opti.c     |   17 +-----------
- drivers/ata/pata_optidma.c  |   17 +-----------
- drivers/ata/pata_pdc2027x.c |   19 +------------
- drivers/ata/pata_scc.c      |   15 ++--------
- drivers/ata/pata_sis.c      |   15 +----------
- drivers/ata/pata_sl82c105.c |    8 +-----
- drivers/ata/pata_triflex.c  |    7 +----
- drivers/ata/pata_via.c      |   14 +---------
- drivers/ata/pdc_adma.c      |   11 ++-----
- drivers/ata/sata_fsl.c      |   12 +--------
- drivers/ata/sata_inic162x.c |    5 ++-
- drivers/ata/sata_mv.c       |   16 +++++-----
- drivers/ata/sata_nv.c       |   17 +++--------
- drivers/ata/sata_promise.c  |   22 +++------------
- drivers/ata/sata_qstor.c    |    6 +++-
- drivers/ata/sata_sil24.c    |   18 +++++++++---
- drivers/ata/sata_via.c      |   10 +-----
- drivers/scsi/ipr.c          |    3 +-
- include/linux/libata.h      |   19 +++++++------
- 37 files changed, 186 insertions(+), 502 deletions(-)
+ drivers/ata/ahci.c              |   15 +---------
+ drivers/ata/ata_generic.c       |   16 +----------
+ drivers/ata/ata_piix.c          |   16 +----------
+ drivers/ata/pata_acpi.c         |   17 +-----------
+ drivers/ata/pata_ali.c          |   16 +----------
+ drivers/ata/pata_amd.c          |   16 +----------
+ drivers/ata/pata_artop.c        |   16 +----------
+ drivers/ata/pata_at32.c         |   16 +----------
+ drivers/ata/pata_atiixp.c       |   15 +---------
+ drivers/ata/pata_bf54x.c        |   14 +---------
+ drivers/ata/pata_cmd640.c       |   16 +----------
+ drivers/ata/pata_cmd64x.c       |   16 +----------
+ drivers/ata/pata_cs5520.c       |   15 +---------
+ drivers/ata/pata_cs5530.c       |   17 +----------
+ drivers/ata/pata_cs5535.c       |   16 +----------
+ drivers/ata/pata_cs5536.c       |   16 +----------
+ drivers/ata/pata_cypress.c      |   16 +----------
+ drivers/ata/pata_efar.c         |   16 +----------
+ drivers/ata/pata_hpt366.c       |   16 +----------
+ drivers/ata/pata_hpt37x.c       |   16 +----------
+ drivers/ata/pata_hpt3x2n.c      |   16 +----------
+ drivers/ata/pata_hpt3x3.c       |   16 +----------
+ drivers/ata/pata_icside.c       |   14 +---------
+ drivers/ata/pata_isapnp.c       |   16 +----------
+ drivers/ata/pata_it8213.c       |   16 +----------
+ drivers/ata/pata_it821x.c       |   16 +----------
+ drivers/ata/pata_ixp4xx_cf.c    |   16 +----------
+ drivers/ata/pata_jmicron.c      |   17 +-----------
+ drivers/ata/pata_legacy.c       |   16 +----------
+ drivers/ata/pata_marvell.c      |   17 +-----------
+ drivers/ata/pata_mpc52xx.c      |   16 +----------
+ drivers/ata/pata_mpiix.c        |   16 +----------
+ drivers/ata/pata_netcell.c      |   17 +-----------
+ drivers/ata/pata_ninja32.c      |   16 +----------
+ drivers/ata/pata_ns87410.c      |   16 +----------
+ drivers/ata/pata_ns87415.c      |   16 +----------
+ drivers/ata/pata_oldpiix.c      |   16 +----------
+ drivers/ata/pata_opti.c         |   16 +----------
+ drivers/ata/pata_optidma.c      |   16 +----------
+ drivers/ata/pata_pcmcia.c       |   16 +----------
+ drivers/ata/pata_pdc2027x.c     |   16 +----------
+ drivers/ata/pata_pdc202xx_old.c |   16 +----------
+ drivers/ata/pata_platform.c     |   16 +----------
+ drivers/ata/pata_qdi.c          |   16 +----------
+ drivers/ata/pata_radisys.c      |   16 +----------
+ drivers/ata/pata_rb500_cf.c     |   17 +-----------
+ drivers/ata/pata_rz1000.c       |   16 +----------
+ drivers/ata/pata_sc1200.c       |   17 +----------
+ drivers/ata/pata_scc.c          |   16 +----------
+ drivers/ata/pata_serverworks.c  |   16 +----------
+ drivers/ata/pata_sil680.c       |   16 +----------
+ drivers/ata/pata_sis.c          |   16 +----------
+ drivers/ata/pata_sl82c105.c     |   16 +----------
+ drivers/ata/pata_triflex.c      |   16 +----------
+ drivers/ata/pata_via.c          |   16 +----------
+ drivers/ata/pata_winbond.c      |   16 +----------
+ drivers/ata/pdc_adma.c          |   14 +---------
+ drivers/ata/sata_fsl.c          |   14 +---------
+ drivers/ata/sata_inic162x.c     |   16 +----------
+ drivers/ata/sata_mv.c           |   28 +-----------------
+ drivers/ata/sata_nv.c           |   42 ++--------------------------
+ drivers/ata/sata_promise.c      |   14 +---------
+ drivers/ata/sata_qstor.c        |   14 +---------
+ drivers/ata/sata_sil.c          |   16 +----------
+ drivers/ata/sata_sil24.c        |   14 +---------
+ drivers/ata/sata_sis.c          |   16 +----------
+ drivers/ata/sata_svw.c          |   16 +----------
+ drivers/ata/sata_sx4.c          |   14 +---------
+ drivers/ata/sata_uli.c          |   16 +----------
+ drivers/ata/sata_via.c          |   16 +----------
+ drivers/ata/sata_vsc.c          |   16 +----------
+ include/linux/libata.h          |   57 +++++++++++++++++++++++++++++++++++++++
+ 72 files changed, 133 insertions(+), 1086 deletions(-)
 
 diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
-index e536c9b..8f2a1e0 100644
+index 16a21b8..9999258 100644
 --- a/drivers/ata/ahci.c
 +++ b/drivers/ata/ahci.c
-@@ -248,9 +248,18 @@ static void ahci_freeze(struct ata_port *ap);
- static void ahci_thaw(struct ata_port *ap);
- static void ahci_pmp_attach(struct ata_port *ap);
- static void ahci_pmp_detach(struct ata_port *ap);
-+static int ahci_softreset(struct ata_link *link, unsigned int *class,
-+			  unsigned long deadline);
-+static int ahci_hardreset(struct ata_link *link, unsigned int *class,
-+			  unsigned long deadline);
-+static int ahci_vt8251_hardreset(struct ata_link *link, unsigned int *class,
-+				 unsigned long deadline);
-+static int ahci_p5wdh_hardreset(struct ata_link *link, unsigned int *class,
-+				unsigned long deadline);
-+static void ahci_postreset(struct ata_link *link, unsigned int *class);
-+static int ahci_pmp_softreset(struct ata_link *link, unsigned int *class,
-+			      unsigned long deadline);
- static void ahci_error_handler(struct ata_port *ap);
--static void ahci_vt8251_error_handler(struct ata_port *ap);
--static void ahci_p5wdh_error_handler(struct ata_port *ap);
- static void ahci_post_internal_cmd(struct ata_queued_cmd *qc);
- static int ahci_port_resume(struct ata_port *ap);
- static void ahci_dev_config(struct ata_device *dev);
-@@ -289,6 +298,10 @@ static struct ata_port_operations ahci_ops = {
- 
- 	.freeze			= ahci_freeze,
- 	.thaw			= ahci_thaw,
-+	.softreset		= ahci_softreset,
-+	.hardreset		= ahci_hardreset,
-+	.postreset		= ahci_postreset,
-+	.pmp_softreset		= ahci_pmp_softreset,
- 	.error_handler		= ahci_error_handler,
- 	.post_internal_cmd	= ahci_post_internal_cmd,
- 	.dev_config		= ahci_dev_config,
-@@ -310,12 +323,12 @@ static struct ata_port_operations ahci_ops = {
- 
- static struct ata_port_operations ahci_vt8251_ops = {
- 	.inherits		= &ahci_ops,
--	.error_handler		= ahci_vt8251_error_handler,
-+	.hardreset		= ahci_vt8251_hardreset,
+@@ -58,7 +58,6 @@ enum {
+ 	AHCI_MAX_PORTS		= 32,
+ 	AHCI_MAX_SG		= 168, /* hardware max is 64K */
+ 	AHCI_DMA_BOUNDARY	= 0xffffffff,
+-	AHCI_USE_CLUSTERING	= 1,
+ 	AHCI_MAX_CMDS		= 32,
+ 	AHCI_CMD_SZ		= 32,
+ 	AHCI_CMD_SLOT_SZ	= AHCI_MAX_CMDS * AHCI_CMD_SZ,
+@@ -270,22 +269,10 @@ static struct class_device_attribute *ahci_shost_attrs[] = {
  };
  
- static struct ata_port_operations ahci_p5wdh_ops = {
- 	.inherits		= &ahci_ops,
--	.error_handler		= ahci_p5wdh_error_handler,
-+	.hardreset		= ahci_p5wdh_hardreset,
+ static struct scsi_host_template ahci_sht = {
+-	.module			= THIS_MODULE,
+-	.name			= DRV_NAME,
+-	.ioctl			= ata_scsi_ioctl,
+-	.queuecommand		= ata_scsi_queuecmd,
+-	.change_queue_depth	= ata_scsi_change_queue_depth,
++	ATA_NCQ_SHT(DRV_NAME),
+ 	.can_queue		= AHCI_MAX_CMDS - 1,
+-	.this_id		= ATA_SHT_THIS_ID,
+ 	.sg_tablesize		= AHCI_MAX_SG,
+-	.cmd_per_lun		= ATA_SHT_CMD_PER_LUN,
+-	.emulated		= ATA_SHT_EMULATED,
+-	.use_clustering		= AHCI_USE_CLUSTERING,
+-	.proc_name		= DRV_NAME,
+ 	.dma_boundary		= AHCI_DMA_BOUNDARY,
+-	.slave_configure	= ata_scsi_slave_config,
+-	.slave_destroy		= ata_scsi_slave_destroy,
+-	.bios_param		= ata_std_bios_param,
+ 	.shost_attrs		= ahci_shost_attrs,
  };
  
- #define AHCI_HFLAGS(flags)	.private_data	= (void *)(flags)
-@@ -1771,37 +1784,7 @@ static void ahci_error_handler(struct ata_port *ap)
- 		ahci_start_engine(ap);
- 	}
- 
--	/* perform recovery */
--	sata_pmp_do_eh(ap, ata_std_prereset, ahci_softreset,
--		       ahci_hardreset, ahci_postreset,
--		       sata_pmp_std_prereset, ahci_pmp_softreset,
--		       sata_pmp_std_hardreset, sata_pmp_std_postreset);
--}
--
--static void ahci_vt8251_error_handler(struct ata_port *ap)
--{
--	if (!(ap->pflags & ATA_PFLAG_FROZEN)) {
--		/* restart engine */
--		ahci_stop_engine(ap);
--		ahci_start_engine(ap);
--	}
--
--	/* perform recovery */
--	ata_do_eh(ap, ata_std_prereset, ahci_softreset, ahci_vt8251_hardreset,
--		  ahci_postreset);
--}
--
--static void ahci_p5wdh_error_handler(struct ata_port *ap)
--{
--	if (!(ap->pflags & ATA_PFLAG_FROZEN)) {
--		/* restart engine */
--		ahci_stop_engine(ap);
--		ahci_start_engine(ap);
--	}
--
--	/* perform recovery */
--	ata_do_eh(ap, ata_std_prereset, ahci_softreset, ahci_p5wdh_hardreset,
--		  ahci_postreset);
-+	sata_pmp_error_handler(ap);
+diff --git a/drivers/ata/ata_generic.c b/drivers/ata/ata_generic.c
+index db4c3cb..5c64ce1 100644
+--- a/drivers/ata/ata_generic.c
++++ b/drivers/ata/ata_generic.c
+@@ -95,21 +95,7 @@ static int generic_set_mode(struct ata_link *link, struct ata_device **unused)
  }
  
- static void ahci_post_internal_cmd(struct ata_queued_cmd *qc)
+ static struct scsi_host_template generic_sht = {
+-	.module			= THIS_MODULE,
+-	.name			= DRV_NAME,
+-	.ioctl			= ata_scsi_ioctl,
+-	.queuecommand		= ata_scsi_queuecmd,
+-	.can_queue		= ATA_DEF_QUEUE,
+-	.this_id		= ATA_SHT_THIS_ID,
+-	.sg_tablesize		= LIBATA_MAX_PRD,
+-	.cmd_per_lun		= ATA_SHT_CMD_PER_LUN,
+-	.emulated		= ATA_SHT_EMULATED,
+-	.use_clustering		= ATA_SHT_USE_CLUSTERING,
+-	.proc_name		= DRV_NAME,
+-	.dma_boundary		= ATA_DMA_BOUNDARY,
+-	.slave_configure	= ata_scsi_slave_config,
+-	.slave_destroy		= ata_scsi_slave_destroy,
+-	.bios_param		= ata_std_bios_param,
++	ATA_BMDMA_SHT(DRV_NAME),
+ };
+ 
+ static struct ata_port_operations generic_port_ops = {
 diff --git a/drivers/ata/ata_piix.c b/drivers/ata/ata_piix.c
-index bb46b61..eafb984 100644
+index 067760a..9f887b2 100644
 --- a/drivers/ata/ata_piix.c
 +++ b/drivers/ata/ata_piix.c
-@@ -162,15 +162,16 @@ struct piix_host_priv {
- 
- static int piix_init_one(struct pci_dev *pdev,
- 			 const struct pci_device_id *ent);
--static void piix_pata_error_handler(struct ata_port *ap);
-+static int piix_pata_prereset(struct ata_link *link, unsigned long deadline);
- static void piix_set_piomode(struct ata_port *ap, struct ata_device *adev);
- static void piix_set_dmamode(struct ata_port *ap, struct ata_device *adev);
- static void ich_set_dmamode(struct ata_port *ap, struct ata_device *adev);
- static int ich_pata_cable_detect(struct ata_port *ap);
- static u8 piix_vmw_bmdma_status(struct ata_port *ap);
-+static int piix_sidpr_hardreset(struct ata_link *link, unsigned int *class,
-+				unsigned long deadline);
- static int piix_sidpr_scr_read(struct ata_port *ap, unsigned int reg, u32 *val);
- static int piix_sidpr_scr_write(struct ata_port *ap, unsigned int reg, u32 val);
--static void piix_sidpr_error_handler(struct ata_port *ap);
- #ifdef CONFIG_PM
- static int piix_pci_device_suspend(struct pci_dev *pdev, pm_message_t mesg);
- static int piix_pci_device_resume(struct pci_dev *pdev);
-@@ -299,7 +300,7 @@ static struct ata_port_operations piix_pata_ops = {
- 	.cable_detect		= ata_cable_40wire,
- 	.set_piomode		= piix_set_piomode,
- 	.set_dmamode		= piix_set_dmamode,
--	.error_handler		= piix_pata_error_handler,
-+	.prereset		= piix_pata_prereset,
+@@ -291,21 +291,7 @@ static struct pci_driver piix_pci_driver = {
  };
  
- static struct ata_port_operations piix_vmw_ops = {
-@@ -319,9 +320,9 @@ static struct ata_port_operations piix_sata_ops = {
- 
- static struct ata_port_operations piix_sidpr_sata_ops = {
- 	.inherits		= &piix_sata_ops,
-+	.hardreset		= piix_sidpr_hardreset,
- 	.scr_read		= piix_sidpr_scr_read,
- 	.scr_write		= piix_sidpr_scr_write,
--	.error_handler		= piix_sidpr_error_handler,
+ static struct scsi_host_template piix_sht = {
+-	.module			= THIS_MODULE,
+-	.name			= DRV_NAME,
+-	.ioctl			= ata_scsi_ioctl,
+-	.queuecommand		= ata_scsi_queuecmd,
+-	.can_queue		= ATA_DEF_QUEUE,
+-	.this_id		= ATA_SHT_THIS_ID,
+-	.sg_tablesize		= LIBATA_MAX_PRD,
+-	.cmd_per_lun		= ATA_SHT_CMD_PER_LUN,
+-	.emulated		= ATA_SHT_EMULATED,
+-	.use_clustering		= ATA_SHT_USE_CLUSTERING,
+-	.proc_name		= DRV_NAME,
+-	.dma_boundary		= ATA_DMA_BOUNDARY,
+-	.slave_configure	= ata_scsi_slave_config,
+-	.slave_destroy		= ata_scsi_slave_destroy,
+-	.bios_param		= ata_std_bios_param,
++	ATA_BMDMA_SHT(DRV_NAME),
  };
  
- static const struct piix_map_db ich5_map_db = {
-@@ -645,12 +646,6 @@ static int piix_pata_prereset(struct ata_link *link, unsigned long deadline)
- 	return ata_std_prereset(link, deadline);
+ static const struct ata_port_operations piix_pata_ops = {
+diff --git a/drivers/ata/pata_acpi.c b/drivers/ata/pata_acpi.c
+index bdc3b9d..187545c 100644
+--- a/drivers/ata/pata_acpi.c
++++ b/drivers/ata/pata_acpi.c
+@@ -232,22 +232,7 @@ static int pacpi_port_start(struct ata_port *ap)
  }
  
--static void piix_pata_error_handler(struct ata_port *ap)
--{
--	ata_bmdma_drive_eh(ap, piix_pata_prereset, ata_std_softreset, NULL,
--			   ata_std_postreset);
--}
--
- /**
-  *	piix_set_piomode - Initialize host controller PATA PIO timings
-  *	@ap: Port whose timings we are configuring
-@@ -1057,12 +1052,6 @@ static int piix_sidpr_hardreset(struct ata_link *link, unsigned int *class,
- 	return -EAGAIN;
- }
- 
--static void piix_sidpr_error_handler(struct ata_port *ap)
--{
--	ata_bmdma_drive_eh(ap, ata_std_prereset, ata_std_softreset,
--			   piix_sidpr_hardreset, ata_std_postreset);
--}
--
- #ifdef CONFIG_PM
- static int piix_broken_suspend(void)
- {
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index e64c080..482765f 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -76,6 +76,10 @@ const unsigned long sata_deb_timing_long[]		= { 100, 2000, 5000 };
- 
- const struct ata_port_operations ata_base_port_ops = {
- 	.irq_clear		= ata_noop_irq_clear,
-+	.prereset		= ata_std_prereset,
-+	.hardreset		= sata_std_hardreset,
-+	.postreset		= ata_std_postreset,
-+	.error_handler		= ata_std_error_handler,
+ static struct scsi_host_template pacpi_sht = {
+-	.module			= THIS_MODULE,
+-	.name			= DRV_NAME,
+-	.ioctl			= ata_scsi_ioctl,
+-	.queuecommand		= ata_scsi_queuecmd,
+-	.can_queue		= ATA_DEF_QUEUE,
+-	.this_id		= ATA_SHT_THIS_ID,
+-	.sg_tablesize		= LIBATA_MAX_PRD,
+-	.cmd_per_lun		= ATA_SHT_CMD_PER_LUN,
+-	.emulated		= ATA_SHT_EMULATED,
+-	.use_clustering		= ATA_SHT_USE_CLUSTERING,
+-	.proc_name		= DRV_NAME,
+-	.dma_boundary		= ATA_DMA_BOUNDARY,
+-	.slave_configure	= ata_scsi_slave_config,
+-	.slave_destroy		= ata_scsi_slave_destroy,
+-	/* Use standard CHS mapping rules */
+-	.bios_param		= ata_std_bios_param,
++	ATA_BMDMA_SHT(DRV_NAME),
  };
  
- const struct ata_port_operations sata_port_ops = {
-@@ -83,6 +87,11 @@ const struct ata_port_operations sata_port_ops = {
+ static const struct ata_port_operations pacpi_ops = {
+diff --git a/drivers/ata/pata_ali.c b/drivers/ata/pata_ali.c
+index 8a9044c..af028a6 100644
+--- a/drivers/ata/pata_ali.c
++++ b/drivers/ata/pata_ali.c
+@@ -301,21 +301,7 @@ static int ali_check_atapi_dma(struct ata_queued_cmd *qc)
+ }
  
- 	.qc_defer		= ata_std_qc_defer,
- 	.dev_select		= ata_noop_dev_select,
-+
-+	.pmp_prereset		= sata_pmp_std_prereset,
-+	.pmp_hardreset		= sata_pmp_std_hardreset,
-+	.pmp_postreset		= sata_pmp_std_postreset,
-+	.error_handler		= sata_pmp_error_handler,
+ static struct scsi_host_template ali_sht = {
+-	.module			= THIS_MODULE,
+-	.name			= DRV_NAME,
+-	.ioctl			= ata_scsi_ioctl,
+-	.queuecommand		= ata_scsi_queuecmd,
+-	.can_queue		= ATA_DEF_QUEUE,
+-	.this_id		= ATA_SHT_THIS_ID,
+-	.sg_tablesize		= LIBATA_MAX_PRD,
+-	.cmd_per_lun		= ATA_SHT_CMD_PER_LUN,
+-	.emulated		= ATA_SHT_EMULATED,
+-	.use_clustering		= ATA_SHT_USE_CLUSTERING,
+-	.proc_name		= DRV_NAME,
+-	.dma_boundary		= ATA_DMA_BOUNDARY,
+-	.slave_configure	= ata_scsi_slave_config,
+-	.slave_destroy		= ata_scsi_slave_destroy,
+-	.bios_param		= ata_std_bios_param,
++	ATA_BMDMA_SHT(DRV_NAME),
  };
  
- const struct ata_port_operations sata_pmp_port_ops = {
-@@ -97,6 +106,7 @@ const struct ata_port_operations ata_sff_port_ops = {
- 
- 	.freeze			= ata_bmdma_freeze,
- 	.thaw			= ata_bmdma_thaw,
-+	.softreset		= ata_std_softreset,
- 	.error_handler		= ata_bmdma_error_handler,
- 	.post_internal_cmd	= ata_bmdma_post_internal_cmd,
- 
-@@ -7886,7 +7896,6 @@ EXPORT_SYMBOL_GPL(ata_bmdma_status);
- EXPORT_SYMBOL_GPL(ata_bmdma_stop);
- EXPORT_SYMBOL_GPL(ata_bmdma_freeze);
- EXPORT_SYMBOL_GPL(ata_bmdma_thaw);
--EXPORT_SYMBOL_GPL(ata_bmdma_drive_eh);
- EXPORT_SYMBOL_GPL(ata_bmdma_error_handler);
- EXPORT_SYMBOL_GPL(ata_bmdma_post_internal_cmd);
- EXPORT_SYMBOL_GPL(ata_port_probe);
-@@ -7956,7 +7965,7 @@ EXPORT_SYMBOL_GPL(sata_pmp_qc_defer_cmd_switch);
- EXPORT_SYMBOL_GPL(sata_pmp_std_prereset);
- EXPORT_SYMBOL_GPL(sata_pmp_std_hardreset);
- EXPORT_SYMBOL_GPL(sata_pmp_std_postreset);
--EXPORT_SYMBOL_GPL(sata_pmp_do_eh);
-+EXPORT_SYMBOL_GPL(sata_pmp_error_handler);
- 
- EXPORT_SYMBOL_GPL(__ata_ehi_push_desc);
- EXPORT_SYMBOL_GPL(ata_ehi_push_desc);
-@@ -7975,6 +7984,7 @@ EXPORT_SYMBOL_GPL(ata_eh_thaw_port);
- EXPORT_SYMBOL_GPL(ata_eh_qc_complete);
- EXPORT_SYMBOL_GPL(ata_eh_qc_retry);
- EXPORT_SYMBOL_GPL(ata_do_eh);
-+EXPORT_SYMBOL_GPL(ata_std_error_handler);
- EXPORT_SYMBOL_GPL(ata_irq_on);
- EXPORT_SYMBOL_GPL(ata_dev_try_classify);
- 
-diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
-index 611ecb1..bd69afc 100644
---- a/drivers/ata/libata-eh.c
-+++ b/drivers/ata/libata-eh.c
-@@ -2814,6 +2814,7 @@ void ata_eh_finish(struct ata_port *ap)
- /**
-  *	ata_do_eh - do standard error handling
-  *	@ap: host port to handle error for
-+ *
-  *	@prereset: prereset method (can be NULL)
-  *	@softreset: softreset method (can be NULL)
-  *	@hardreset: hardreset method (can be NULL)
-@@ -2844,6 +2845,30 @@ void ata_do_eh(struct ata_port *ap, ata_prereset_fn_t prereset,
- 	ata_eh_finish(ap);
+ /*
+diff --git a/drivers/ata/pata_amd.c b/drivers/ata/pata_amd.c
+index 5e1bc13..90d786d 100644
+--- a/drivers/ata/pata_amd.c
++++ b/drivers/ata/pata_amd.c
+@@ -353,21 +353,7 @@ static void nv_host_stop(struct ata_host *host)
  }
  
-+/**
-+ *	ata_std_error_handler - standard error handler
-+ *	@ap: host port to handle error for
-+ *
-+ *	Standard error handler
-+ *
-+ *	LOCKING:
-+ *	Kernel thread context (may sleep).
-+ */
-+void ata_std_error_handler(struct ata_port *ap)
-+{
-+	struct ata_port_operations *ops = ap->ops;
-+	ata_reset_fn_t hardreset = ops->hardreset;
-+
-+	/* sata_std_hardreset is inherited to all drivers from
-+	 * ata_base_port_ops.  Ignore it if SCR access is not
-+	 * available.
-+	 */
-+	if (hardreset == sata_std_hardreset && !sata_scr_valid(&ap->link))
-+		hardreset = NULL;
-+
-+	ata_do_eh(ap, ops->prereset, ops->softreset, hardreset, ops->postreset);
-+}
-+
- #ifdef CONFIG_PM
- /**
-  *	ata_eh_handle_port_suspend - perform port suspend operation
-diff --git a/drivers/ata/libata-pmp.c b/drivers/ata/libata-pmp.c
-index 39e036c..a7cb149 100644
---- a/drivers/ata/libata-pmp.c
-+++ b/drivers/ata/libata-pmp.c
-@@ -962,14 +962,6 @@ static int sata_pmp_handle_link_fail(struct ata_link *link, int *link_tries)
- /**
-  *	sata_pmp_eh_recover - recover PMP-enabled port
-  *	@ap: ATA port to recover
-- *	@prereset: prereset method (can be NULL)
-- *	@softreset: softreset method
-- *	@hardreset: hardreset method
-- *	@postreset: postreset method (can be NULL)
-- *	@pmp_prereset: PMP prereset method (can be NULL)
-- *	@pmp_softreset: PMP softreset method (can be NULL)
-- *	@pmp_hardreset: PMP hardreset method (can be NULL)
-- *	@pmp_postreset: PMP postreset method (can be NULL)
-  *
-  *	Drive EH recovery operation for PMP enabled port @ap.  This
-  *	function recovers host and PMP ports with proper retrials and
-@@ -982,12 +974,9 @@ static int sata_pmp_handle_link_fail(struct ata_link *link, int *link_tries)
-  *	RETURNS:
-  *	0 on success, -errno on failure.
-  */
--static int sata_pmp_eh_recover(struct ata_port *ap,
--		ata_prereset_fn_t prereset, ata_reset_fn_t softreset,
--		ata_reset_fn_t hardreset, ata_postreset_fn_t postreset,
--		ata_prereset_fn_t pmp_prereset, ata_reset_fn_t pmp_softreset,
--		ata_reset_fn_t pmp_hardreset, ata_postreset_fn_t pmp_postreset)
-+static int sata_pmp_eh_recover(struct ata_port *ap)
- {
-+	struct ata_port_operations *ops = ap->ops;
- 	int pmp_tries, link_tries[SATA_PMP_MAX_PORTS];
- 	struct ata_link *pmp_link = &ap->link;
- 	struct ata_device *pmp_dev = pmp_link->device;
-@@ -1005,8 +994,8 @@ static int sata_pmp_eh_recover(struct ata_port *ap,
-  retry:
- 	/* PMP attached? */
- 	if (!ap->nr_pmp_links) {
--		rc = ata_eh_recover(ap, prereset, softreset, hardreset,
--				    postreset, NULL);
-+		rc = ata_eh_recover(ap, ops->prereset, ops->softreset,
-+				    ops->hardreset, ops->postreset, NULL);
- 		if (rc) {
- 			ata_link_for_each_dev(dev, &ap->link)
- 				ata_dev_disable(dev);
-@@ -1024,8 +1013,8 @@ static int sata_pmp_eh_recover(struct ata_port *ap,
- 	}
+ static struct scsi_host_template amd_sht = {
+-	.module			= THIS_MODULE,
+-	.name			= DRV_NAME,
+-	.ioctl			= ata_scsi_ioctl,
+-	.queuecommand		= ata_scsi_queuecmd,
+-	.can_queue		= ATA_DEF_QUEUE,
+-	.this_id		= ATA_SHT_THIS_ID,
+-	.sg_tablesize		= LIBATA_MAX_PRD,
+-	.cmd_per_lun		= ATA_SHT_CMD_PER_LUN,
+-	.emulated		= ATA_SHT_EMULATED,
+-	.use_clustering		= ATA_SHT_USE_CLUSTERING,
+-	.proc_name		= DRV_NAME,
+-	.dma_boundary		= ATA_DMA_BOUNDARY,
+-	.slave_configure	= ata_scsi_slave_config,
+-	.slave_destroy		= ata_scsi_slave_destroy,
+-	.bios_param		= ata_std_bios_param,
++	ATA_BMDMA_SHT(DRV_NAME),
+ };
  
- 	/* recover pmp */
--	rc = sata_pmp_eh_recover_pmp(ap, prereset, softreset, hardreset,
--				     postreset);
-+	rc = sata_pmp_eh_recover_pmp(ap, ops->prereset, ops->softreset,
-+				     ops->hardreset, ops->postreset);
- 	if (rc)
- 		goto pmp_fail;
- 
-@@ -1035,8 +1024,8 @@ static int sata_pmp_eh_recover(struct ata_port *ap,
- 		goto pmp_fail;
- 
- 	/* recover links */
--	rc = ata_eh_recover(ap, pmp_prereset, pmp_softreset, pmp_hardreset,
--			    pmp_postreset, &link);
-+	rc = ata_eh_recover(ap, ops->pmp_prereset, ops->pmp_softreset,
-+			    ops->pmp_hardreset, ops->pmp_postreset, &link);
- 	if (rc)
- 		goto link_fail;
- 
-@@ -1132,16 +1121,8 @@ static int sata_pmp_eh_recover(struct ata_port *ap,
- }
- 
- /**
-- *	sata_pmp_do_eh - do standard error handling for PMP-enabled host
-+ *	sata_pmp_error_handler - do standard error handling for PMP-enabled host
-  *	@ap: host port to handle error for
-- *	@prereset: prereset method (can be NULL)
-- *	@softreset: softreset method
-- *	@hardreset: hardreset method
-- *	@postreset: postreset method (can be NULL)
-- *	@pmp_prereset: PMP prereset method (can be NULL)
-- *	@pmp_softreset: PMP softreset method (can be NULL)
-- *	@pmp_hardreset: PMP hardreset method (can be NULL)
-- *	@pmp_postreset: PMP postreset method (can be NULL)
-  *
-  *	Perform standard error handling sequence for PMP-enabled host
-  *	@ap.
-@@ -1149,16 +1130,10 @@ static int sata_pmp_eh_recover(struct ata_port *ap,
-  *	LOCKING:
-  *	Kernel thread context (may sleep).
-  */
--void sata_pmp_do_eh(struct ata_port *ap,
--		ata_prereset_fn_t prereset, ata_reset_fn_t softreset,
--		ata_reset_fn_t hardreset, ata_postreset_fn_t postreset,
--		ata_prereset_fn_t pmp_prereset, ata_reset_fn_t pmp_softreset,
--		ata_reset_fn_t pmp_hardreset, ata_postreset_fn_t pmp_postreset)
-+void sata_pmp_error_handler(struct ata_port *ap)
- {
- 	ata_eh_autopsy(ap);
- 	ata_eh_report(ap);
--	sata_pmp_eh_recover(ap, prereset, softreset, hardreset, postreset,
--			    pmp_prereset, pmp_softreset, pmp_hardreset,
--			    pmp_postreset);
-+	sata_pmp_eh_recover(ap);
- 	ata_eh_finish(ap);
- }
-diff --git a/drivers/ata/libata-sff.c b/drivers/ata/libata-sff.c
-index 6223ec0..2a229a1 100644
---- a/drivers/ata/libata-sff.c
-+++ b/drivers/ata/libata-sff.c
-@@ -396,28 +396,21 @@ void ata_bmdma_thaw(struct ata_port *ap)
- }
- 
- /**
-- *	ata_bmdma_drive_eh - Perform EH with given methods for BMDMA controller
-+ *	ata_bmdma_error_handler - Stock error handler for BMDMA controller
-  *	@ap: port to handle error for
-- *	@prereset: prereset method (can be NULL)
-- *	@softreset: softreset method (can be NULL)
-- *	@hardreset: hardreset method (can be NULL)
-- *	@postreset: postreset method (can be NULL)
-  *
-- *	Handle error for ATA BMDMA controller.  It can handle both
-+ *	Stock error handler for BMDMA controller.  It can handle both
-  *	PATA and SATA controllers.  Many controllers should be able to
-  *	use this EH as-is or with some added handling before and
-  *	after.
-  *
-- *	This function is intended to be used for constructing
-- *	->error_handler callback by low level drivers.
-- *
-  *	LOCKING:
-  *	Kernel thread context (may sleep)
-  */
--void ata_bmdma_drive_eh(struct ata_port *ap, ata_prereset_fn_t prereset,
--			ata_reset_fn_t softreset, ata_reset_fn_t hardreset,
--			ata_postreset_fn_t postreset)
-+void ata_bmdma_error_handler(struct ata_port *ap)
- {
-+	ata_reset_fn_t softreset = ap->ops->softreset;
-+	ata_reset_fn_t hardreset = ap->ops->hardreset;
- 	struct ata_queued_cmd *qc;
- 	unsigned long flags;
- 	int thaw = 0;
-@@ -460,29 +453,19 @@ void ata_bmdma_drive_eh(struct ata_port *ap, ata_prereset_fn_t prereset,
- 		ata_eh_thaw_port(ap);
- 
- 	/* PIO and DMA engines have been stopped, perform recovery */
--	ata_do_eh(ap, prereset, softreset, hardreset, postreset);
--}
--
--/**
-- *	ata_bmdma_error_handler - Stock error handler for BMDMA controller
-- *	@ap: port to handle error for
-- *
-- *	Stock error handler for BMDMA controller.
-- *
-- *	LOCKING:
-- *	Kernel thread context (may sleep)
-- */
--void ata_bmdma_error_handler(struct ata_port *ap)
--{
--	ata_reset_fn_t softreset = NULL, hardreset = NULL;
- 
--	if (ap->ioaddr.ctl_addr)
--		softreset = ata_std_softreset;
--	if (sata_scr_valid(&ap->link))
--		hardreset = sata_std_hardreset;
-+	/* ata_std_softreset and sata_std_hardreset are inherited to
-+	 * all SFF drivers from ata_sff_port_ops.  Ignore softreset if
-+	 * ctl isn't accessible.  Ignore hardreset if SCR access isn't
-+	 * available.
-+	 */
-+	if (softreset == ata_std_softreset && !ap->ioaddr.ctl_addr)
-+		softreset = NULL;
-+	if (hardreset == sata_std_hardreset && !sata_scr_valid(&ap->link))
-+		hardreset = NULL;
- 
--	ata_bmdma_drive_eh(ap, ata_std_prereset, softreset, hardreset,
--			   ata_std_postreset);
-+	ata_do_eh(ap, ap->ops->prereset, softreset, hardreset,
-+		  ap->ops->postreset);
- }
- 
- /**
+ static struct ata_port_operations amd33_port_ops = {
 diff --git a/drivers/ata/pata_artop.c b/drivers/ata/pata_artop.c
-index ebd15ca..b6d8c4d 100644
+index a238c7b..7bfb7e8 100644
 --- a/drivers/ata/pata_artop.c
 +++ b/drivers/ata/pata_artop.c
-@@ -56,21 +56,6 @@ static int artop6210_pre_reset(struct ata_link *link, unsigned long deadline)
+@@ -314,21 +314,7 @@ static void artop6260_set_dmamode (struct ata_port *ap, struct ata_device *adev)
  }
  
- /**
-- *	artop6210_error_handler - Probe specified port on PATA host controller
-- *	@ap: Port to probe
-- *
-- *	LOCKING:
-- *	None (inherited from caller).
-- */
--
--static void artop6210_error_handler(struct ata_port *ap)
--{
--	ata_bmdma_drive_eh(ap, artop6210_pre_reset,
--				    ata_std_softreset, NULL,
--				    ata_std_postreset);
--}
--
--/**
-  *	artop6260_pre_reset	-	check for 40/80 pin
-  *	@link: link
-  *	@deadline: deadline jiffies for the operation
-@@ -114,21 +99,6 @@ static int artop6260_cable_detect(struct ata_port *ap)
+ static struct scsi_host_template artop_sht = {
+-	.module			= THIS_MODULE,
+-	.name			= DRV_NAME,
+-	.ioctl			= ata_scsi_ioctl,
+-	.queuecommand		= ata_scsi_queuecmd,
+-	.can_queue		= ATA_DEF_QUEUE,
+-	.this_id		= ATA_SHT_THIS_ID,
+-	.sg_tablesize		= LIBATA_MAX_PRD,
+-	.cmd_per_lun		= ATA_SHT_CMD_PER_LUN,
+-	.emulated		= ATA_SHT_EMULATED,
+-	.use_clustering		= ATA_SHT_USE_CLUSTERING,
+-	.proc_name		= DRV_NAME,
+-	.dma_boundary		= ATA_DMA_BOUNDARY,
+-	.slave_configure	= ata_scsi_slave_config,
+-	.slave_destroy		= ata_scsi_slave_destroy,
+-	.bios_param		= ata_std_bios_param,
++	ATA_BMDMA_SHT(DRV_NAME),
+ };
+ 
+ static const struct ata_port_operations artop6210_ops = {
+diff --git a/drivers/ata/pata_at32.c b/drivers/ata/pata_at32.c
+index 27c959f..d7b7b7f 100644
+--- a/drivers/ata/pata_at32.c
++++ b/drivers/ata/pata_at32.c
+@@ -167,21 +167,7 @@ static void pata_at32_set_piomode(struct ata_port *ap, struct ata_device *adev)
  }
  
- /**
-- *	artop6260_error_handler - Probe specified port on PATA host controller
-- *	@ap: Port to probe
-- *
-- *	LOCKING:
-- *	None (inherited from caller).
-- */
--
--static void artop6260_error_handler(struct ata_port *ap)
--{
--	ata_bmdma_drive_eh(ap, artop6260_pre_reset,
--				    ata_std_softreset, NULL,
--				    ata_std_postreset);
--}
--
--/**
-  *	artop6210_load_piomode - Load a set of PATA PIO timings
-  *	@ap: Port whose timings we are configuring
-  *	@adev: Device
-@@ -322,7 +292,7 @@ static struct ata_port_operations artop6210_ops = {
- 	.cable_detect		= ata_cable_40wire,
- 	.set_piomode		= artop6210_set_piomode,
- 	.set_dmamode		= artop6210_set_dmamode,
--	.error_handler		= artop6210_error_handler,
-+	.prereset		= artop6210_pre_reset,
+ static struct scsi_host_template at32_sht = {
+-	.module			= THIS_MODULE,
+-	.name			= DRV_NAME,
+-	.ioctl			= ata_scsi_ioctl,
+-	.queuecommand		= ata_scsi_queuecmd,
+-	.can_queue		= ATA_DEF_QUEUE,
+-	.this_id		= ATA_SHT_THIS_ID,
+-	.sg_tablesize		= LIBATA_MAX_PRD,
+-	.cmd_per_lun		= ATA_SHT_CMD_PER_LUN,
+-	.emulated		= ATA_SHT_EMULATED,
+-	.use_clustering		= ATA_SHT_USE_CLUSTERING,
+-	.proc_name		= DRV_NAME,
+-	.dma_boundary		= ATA_DMA_BOUNDARY,
+-	.slave_configure	= ata_scsi_slave_config,
+-	.slave_destroy		= ata_scsi_slave_destroy,
+-	.bios_param		= ata_std_bios_param,
++	ATA_PIO_SHT(DRV_NAME),
  };
  
- static struct ata_port_operations artop6260_ops = {
-@@ -330,7 +300,7 @@ static struct ata_port_operations artop6260_ops = {
- 	.cable_detect		= artop6260_cable_detect,
- 	.set_piomode		= artop6260_set_piomode,
- 	.set_dmamode		= artop6260_set_dmamode,
--	.error_handler		= artop6260_error_handler,
-+	.prereset		= artop6260_pre_reset,
- };
- 
- 
+ static struct ata_port_operations at32_port_ops = {
 diff --git a/drivers/ata/pata_atiixp.c b/drivers/ata/pata_atiixp.c
-index 0bea7e7..56a65ba 100644
+index 408bdc1..645c472 100644
 --- a/drivers/ata/pata_atiixp.c
 +++ b/drivers/ata/pata_atiixp.c
-@@ -48,11 +48,6 @@ static int atiixp_pre_reset(struct ata_link *link, unsigned long deadline)
- 	return ata_std_prereset(link, deadline);
+@@ -221,21 +221,8 @@ static void atiixp_bmdma_stop(struct ata_queued_cmd *qc)
  }
  
--static void atiixp_error_handler(struct ata_port *ap)
--{
--	ata_bmdma_drive_eh(ap, atiixp_pre_reset, ata_std_softreset, NULL,   ata_std_postreset);
--}
--
- static int atiixp_cable_detect(struct ata_port *ap)
- {
- 	struct pci_dev *pdev = to_pci_dev(ap->host->dev);
-@@ -235,7 +230,7 @@ static struct ata_port_operations atiixp_port_ops = {
- 	.cable_detect	= atiixp_cable_detect,
- 	.set_piomode	= atiixp_set_piomode,
- 	.set_dmamode	= atiixp_set_dmamode,
--	.error_handler	= atiixp_error_handler,
-+	.prereset	= atiixp_pre_reset,
+ static struct scsi_host_template atiixp_sht = {
+-	.module			= THIS_MODULE,
+-	.name			= DRV_NAME,
+-	.ioctl			= ata_scsi_ioctl,
+-	.queuecommand		= ata_scsi_queuecmd,
+-	.can_queue		= ATA_DEF_QUEUE,
+-	.this_id		= ATA_SHT_THIS_ID,
++	ATA_BMDMA_SHT(DRV_NAME),
+ 	.sg_tablesize		= LIBATA_DUMB_MAX_PRD,
+-	.cmd_per_lun		= ATA_SHT_CMD_PER_LUN,
+-	.emulated		= ATA_SHT_EMULATED,
+-	.use_clustering		= ATA_SHT_USE_CLUSTERING,
+-	.proc_name		= DRV_NAME,
+-	.dma_boundary		= ATA_DMA_BOUNDARY,
+-	.slave_configure	= ata_scsi_slave_config,
+-	.slave_destroy		= ata_scsi_slave_destroy,
+-	.bios_param		= ata_std_bios_param,
  };
  
- static int atiixp_init_one(struct pci_dev *dev, const struct pci_device_id *id)
+ static struct ata_port_operations atiixp_port_ops = {
 diff --git a/drivers/ata/pata_bf54x.c b/drivers/ata/pata_bf54x.c
-index 7a22ef4..eea275a 100644
+index 146c202..6c75fca 100644
 --- a/drivers/ata/pata_bf54x.c
 +++ b/drivers/ata/pata_bf54x.c
-@@ -1314,17 +1314,6 @@ static void bfin_std_postreset(struct ata_link *link, unsigned int *classes)
- 	write_atapi_register(base, ATA_REG_CTRL, ap->ctl);
+@@ -1357,21 +1357,9 @@ static int bfin_port_start(struct ata_port *ap)
  }
  
--/**
-- *	bfin_error_handler - Stock error handler for DMA controller
-- *	@ap: port to handle error for
-- */
--
--static void bfin_error_handler(struct ata_port *ap)
--{
--	ata_bmdma_drive_eh(ap, ata_std_prereset, bfin_std_softreset, NULL,
--			   bfin_std_postreset);
--}
--
- static void bfin_port_stop(struct ata_port *ap)
- {
- 	dev_dbg(ap->dev, "in atapi port stop\n");
-@@ -1385,7 +1374,8 @@ static const struct ata_port_operations bfin_pata_ops = {
+ static struct scsi_host_template bfin_sht = {
+-	.module			= THIS_MODULE,
+-	.name			= DRV_NAME,
+-	.ioctl			= ata_scsi_ioctl,
+-	.queuecommand		= ata_scsi_queuecmd,
+-	.can_queue		= ATA_DEF_QUEUE,
+-	.this_id		= ATA_SHT_THIS_ID,
++	ATA_BASE_SHT(DRV_NAME),
+ 	.sg_tablesize		= SG_NONE,
+-	.cmd_per_lun		= ATA_SHT_CMD_PER_LUN,
+-	.emulated		= ATA_SHT_EMULATED,
+-	.use_clustering		= ATA_SHT_USE_CLUSTERING,
+-	.proc_name		= DRV_NAME,
+ 	.dma_boundary		= ATA_DMA_BOUNDARY,
+-	.slave_configure	= ata_scsi_slave_config,
+-	.slave_destroy		= ata_scsi_slave_destroy,
+-	.bios_param		= ata_std_bios_param,
+ };
  
- 	.freeze			= bfin_bmdma_freeze,
- 	.thaw			= bfin_bmdma_thaw,
--	.error_handler		= bfin_error_handler,
-+	.softreset		= bfin_std_softreset,
-+	.postreset		= bfin_std_postreset,
- 	.post_internal_cmd	= bfin_bmdma_stop,
+ static const struct ata_port_operations bfin_pata_ops = {
+diff --git a/drivers/ata/pata_cmd640.c b/drivers/ata/pata_cmd640.c
+index 0ef1d1d..26562b8 100644
+--- a/drivers/ata/pata_cmd640.c
++++ b/drivers/ata/pata_cmd640.c
+@@ -166,21 +166,7 @@ static int cmd640_port_start(struct ata_port *ap)
+ }
  
- 	.irq_clear		= bfin_irq_clear,
+ static struct scsi_host_template cmd640_sht = {
+-	.module			= THIS_MODULE,
+-	.name			= DRV_NAME,
+-	.ioctl			= ata_scsi_ioctl,
+-	.queuecommand		= ata_scsi_queuecmd,
+-	.can_queue		= ATA_DEF_QUEUE,
+-	.this_id		= ATA_SHT_THIS_ID,
+-	.sg_tablesize		= LIBATA_MAX_PRD,
+-	.cmd_per_lun		= ATA_SHT_CMD_PER_LUN,
+-	.emulated		= ATA_SHT_EMULATED,
+-	.use_clustering		= ATA_SHT_USE_CLUSTERING,
+-	.proc_name		= DRV_NAME,
+-	.dma_boundary		= ATA_DMA_BOUNDARY,
+-	.slave_configure	= ata_scsi_slave_config,
+-	.slave_destroy		= ata_scsi_slave_destroy,
+-	.bios_param		= ata_std_bios_param,
++	ATA_BMDMA_SHT(DRV_NAME),
+ };
+ 
+ static struct ata_port_operations cmd640_port_ops = {
+diff --git a/drivers/ata/pata_cmd64x.c b/drivers/ata/pata_cmd64x.c
+index e8c1262..6aea05c 100644
+--- a/drivers/ata/pata_cmd64x.c
++++ b/drivers/ata/pata_cmd64x.c
+@@ -266,21 +266,7 @@ static void cmd646r1_bmdma_stop(struct ata_queued_cmd *qc)
+ }
+ 
+ static struct scsi_host_template cmd64x_sht = {
+-	.module			= THIS_MODULE,
+-	.name			= DRV_NAME,
+-	.ioctl			= ata_scsi_ioctl,
+-	.queuecommand		= ata_scsi_queuecmd,
+-	.can_queue		= ATA_DEF_QUEUE,
+-	.this_id		= ATA_SHT_THIS_ID,
+-	.sg_tablesize		= LIBATA_MAX_PRD,
+-	.cmd_per_lun		= ATA_SHT_CMD_PER_LUN,
+-	.emulated		= ATA_SHT_EMULATED,
+-	.use_clustering		= ATA_SHT_USE_CLUSTERING,
+-	.proc_name		= DRV_NAME,
+-	.dma_boundary		= ATA_DMA_BOUNDARY,
+-	.slave_configure	= ata_scsi_slave_config,
+-	.slave_destroy		= ata_scsi_slave_destroy,
+-	.bios_param		= ata_std_bios_param,
++	ATA_BMDMA_SHT(DRV_NAME),
+ };
+ 
+ static struct ata_port_operations cmd64x_port_ops = {
+diff --git a/drivers/ata/pata_cs5520.c b/drivers/ata/pata_cs5520.c
+index 44ad2c9..7e64309 100644
+--- a/drivers/ata/pata_cs5520.c
++++ b/drivers/ata/pata_cs5520.c
+@@ -140,21 +140,8 @@ static void cs5520_set_piomode(struct ata_port *ap, struct ata_device *adev)
+ }
+ 
+ static struct scsi_host_template cs5520_sht = {
+-	.module			= THIS_MODULE,
+-	.name			= DRV_NAME,
+-	.ioctl			= ata_scsi_ioctl,
+-	.queuecommand		= ata_scsi_queuecmd,
+-	.can_queue		= ATA_DEF_QUEUE,
+-	.this_id		= ATA_SHT_THIS_ID,
++	ATA_BMDMA_SHT(DRV_NAME),
+ 	.sg_tablesize		= LIBATA_DUMB_MAX_PRD,
+-	.cmd_per_lun		= ATA_SHT_CMD_PER_LUN,
+-	.emulated		= ATA_SHT_EMULATED,
+-	.use_clustering		= ATA_SHT_USE_CLUSTERING,
+-	.proc_name		= DRV_NAME,
+-	.dma_boundary		= ATA_DMA_BOUNDARY,
+-	.slave_configure	= ata_scsi_slave_config,
+-	.slave_destroy		= ata_scsi_slave_destroy,
+-	.bios_param		= ata_std_bios_param,
+ };
+ 
+ static struct ata_port_operations cs5520_port_ops = {
+diff --git a/drivers/ata/pata_cs5530.c b/drivers/ata/pata_cs5530.c
+index f876aed..0bb03da 100644
+--- a/drivers/ata/pata_cs5530.c
++++ b/drivers/ata/pata_cs5530.c
+@@ -161,21 +161,8 @@ static unsigned int cs5530_qc_issue_prot(struct ata_queued_cmd *qc)
+ }
+ 
+ static struct scsi_host_template cs5530_sht = {
+-	.module			= THIS_MODULE,
+-	.name			= DRV_NAME,
+-	.ioctl			= ata_scsi_ioctl,
+-	.queuecommand		= ata_scsi_queuecmd,
+-	.can_queue		= ATA_DEF_QUEUE,
+-	.this_id		= ATA_SHT_THIS_ID,
+-	.sg_tablesize		= LIBATA_DUMB_MAX_PRD,
+-	.cmd_per_lun		= ATA_SHT_CMD_PER_LUN,
+-	.emulated		= ATA_SHT_EMULATED,
+-	.use_clustering		= ATA_SHT_USE_CLUSTERING,
+-	.proc_name		= DRV_NAME,
+-	.dma_boundary		= ATA_DMA_BOUNDARY,
+-	.slave_configure	= ata_scsi_slave_config,
+-	.slave_destroy		= ata_scsi_slave_destroy,
+-	.bios_param		= ata_std_bios_param,
++	ATA_BMDMA_SHT(DRV_NAME),
++	.sg_tablesize	= LIBATA_DUMB_MAX_PRD,
+ };
+ 
+ static struct ata_port_operations cs5530_port_ops = {
+diff --git a/drivers/ata/pata_cs5535.c b/drivers/ata/pata_cs5535.c
+index 0132453..48a1834 100644
+--- a/drivers/ata/pata_cs5535.c
++++ b/drivers/ata/pata_cs5535.c
+@@ -158,21 +158,7 @@ static void cs5535_set_dmamode(struct ata_port *ap, struct ata_device *adev)
+ }
+ 
+ static struct scsi_host_template cs5535_sht = {
+-	.module			= THIS_MODULE,
+-	.name			= DRV_NAME,
+-	.ioctl			= ata_scsi_ioctl,
+-	.queuecommand		= ata_scsi_queuecmd,
+-	.can_queue		= ATA_DEF_QUEUE,
+-	.this_id		= ATA_SHT_THIS_ID,
+-	.sg_tablesize		= LIBATA_MAX_PRD,
+-	.cmd_per_lun		= ATA_SHT_CMD_PER_LUN,
+-	.emulated		= ATA_SHT_EMULATED,
+-	.use_clustering		= ATA_SHT_USE_CLUSTERING,
+-	.proc_name		= DRV_NAME,
+-	.dma_boundary		= ATA_DMA_BOUNDARY,
+-	.slave_configure	= ata_scsi_slave_config,
+-	.slave_destroy		= ata_scsi_slave_destroy,
+-	.bios_param		= ata_std_bios_param,
++	ATA_BMDMA_SHT(DRV_NAME),
+ };
+ 
+ static struct ata_port_operations cs5535_port_ops = {
+diff --git a/drivers/ata/pata_cs5536.c b/drivers/ata/pata_cs5536.c
+index 391aa88..f02d910 100644
+--- a/drivers/ata/pata_cs5536.c
++++ b/drivers/ata/pata_cs5536.c
+@@ -221,21 +221,7 @@ static void cs5536_set_dmamode(struct ata_port *ap, struct ata_device *adev)
+ }
+ 
+ static struct scsi_host_template cs5536_sht = {
+-	.module			= THIS_MODULE,
+-	.name			= DRV_NAME,
+-	.ioctl			= ata_scsi_ioctl,
+-	.queuecommand		= ata_scsi_queuecmd,
+-	.can_queue		= ATA_DEF_QUEUE,
+-	.this_id		= ATA_SHT_THIS_ID,
+-	.sg_tablesize		= LIBATA_MAX_PRD,
+-	.cmd_per_lun		= ATA_SHT_CMD_PER_LUN,
+-	.emulated		= ATA_SHT_EMULATED,
+-	.use_clustering		= ATA_SHT_USE_CLUSTERING,
+-	.proc_name		= DRV_NAME,
+-	.dma_boundary		= ATA_DMA_BOUNDARY,
+-	.slave_configure	= ata_scsi_slave_config,
+-	.slave_destroy		= ata_scsi_slave_destroy,
+-	.bios_param		= ata_std_bios_param,
++	ATA_BMDMA_SHT(DRV_NAME),
+ };
+ 
+ static struct ata_port_operations cs5536_port_ops = {
+diff --git a/drivers/ata/pata_cypress.c b/drivers/ata/pata_cypress.c
+index fc5f9c4..07fa1ab 100644
+--- a/drivers/ata/pata_cypress.c
++++ b/drivers/ata/pata_cypress.c
+@@ -110,21 +110,7 @@ static void cy82c693_set_dmamode(struct ata_port *ap, struct ata_device *adev)
+ }
+ 
+ static struct scsi_host_template cy82c693_sht = {
+-	.module			= THIS_MODULE,
+-	.name			= DRV_NAME,
+-	.ioctl			= ata_scsi_ioctl,
+-	.queuecommand		= ata_scsi_queuecmd,
+-	.can_queue		= ATA_DEF_QUEUE,
+-	.this_id		= ATA_SHT_THIS_ID,
+-	.sg_tablesize		= LIBATA_MAX_PRD,
+-	.cmd_per_lun		= ATA_SHT_CMD_PER_LUN,
+-	.emulated		= ATA_SHT_EMULATED,
+-	.use_clustering		= ATA_SHT_USE_CLUSTERING,
+-	.proc_name		= DRV_NAME,
+-	.dma_boundary		= ATA_DMA_BOUNDARY,
+-	.slave_configure	= ata_scsi_slave_config,
+-	.slave_destroy		= ata_scsi_slave_destroy,
+-	.bios_param		= ata_std_bios_param,
++	ATA_BMDMA_SHT(DRV_NAME),
+ };
+ 
+ static struct ata_port_operations cy82c693_port_ops = {
 diff --git a/drivers/ata/pata_efar.c b/drivers/ata/pata_efar.c
-index 2f5b484..1d839a5 100644
+index dc33220..8700d9d 100644
 --- a/drivers/ata/pata_efar.c
 +++ b/drivers/ata/pata_efar.c
-@@ -49,19 +49,6 @@ static int efar_pre_reset(struct ata_link *link, unsigned long deadline)
+@@ -233,21 +233,7 @@ static void efar_set_dmamode (struct ata_port *ap, struct ata_device *adev)
  }
  
- /**
-- *	efar_probe_reset - Probe specified port on PATA host controller
-- *	@ap: Port to probe
-- *
-- *	LOCKING:
-- *	None (inherited from caller).
-- */
--
--static void efar_error_handler(struct ata_port *ap)
--{
--	ata_bmdma_drive_eh(ap, efar_pre_reset, ata_std_softreset, NULL, ata_std_postreset);
--}
--
--/**
-  *	efar_cable_detect	-	check for 40/80 pin
-  *	@ap: Port
-  *
-@@ -241,7 +228,7 @@ static struct ata_port_operations efar_ops = {
- 	.cable_detect		= efar_cable_detect,
- 	.set_piomode		= efar_set_piomode,
- 	.set_dmamode		= efar_set_dmamode,
--	.error_handler		= efar_error_handler,
-+	.prereset		= efar_pre_reset,
+ static struct scsi_host_template efar_sht = {
+-	.module			= THIS_MODULE,
+-	.name			= DRV_NAME,
+-	.ioctl			= ata_scsi_ioctl,
+-	.queuecommand		= ata_scsi_queuecmd,
+-	.can_queue		= ATA_DEF_QUEUE,
+-	.this_id		= ATA_SHT_THIS_ID,
+-	.sg_tablesize		= LIBATA_MAX_PRD,
+-	.cmd_per_lun		= ATA_SHT_CMD_PER_LUN,
+-	.emulated		= ATA_SHT_EMULATED,
+-	.use_clustering		= ATA_SHT_USE_CLUSTERING,
+-	.proc_name		= DRV_NAME,
+-	.dma_boundary		= ATA_DMA_BOUNDARY,
+-	.slave_configure	= ata_scsi_slave_config,
+-	.slave_destroy		= ata_scsi_slave_destroy,
+-	.bios_param		= ata_std_bios_param,
++	ATA_BMDMA_SHT(DRV_NAME),
  };
  
+ static const struct ata_port_operations efar_ops = {
+diff --git a/drivers/ata/pata_hpt366.c b/drivers/ata/pata_hpt366.c
+index a820890..a30028d 100644
+--- a/drivers/ata/pata_hpt366.c
++++ b/drivers/ata/pata_hpt366.c
+@@ -290,21 +290,7 @@ static void hpt366_set_dmamode(struct ata_port *ap, struct ata_device *adev)
+ }
  
+ static struct scsi_host_template hpt36x_sht = {
+-	.module			= THIS_MODULE,
+-	.name			= DRV_NAME,
+-	.ioctl			= ata_scsi_ioctl,
+-	.queuecommand		= ata_scsi_queuecmd,
+-	.can_queue		= ATA_DEF_QUEUE,
+-	.this_id		= ATA_SHT_THIS_ID,
+-	.sg_tablesize		= LIBATA_MAX_PRD,
+-	.cmd_per_lun		= ATA_SHT_CMD_PER_LUN,
+-	.emulated		= ATA_SHT_EMULATED,
+-	.use_clustering		= ATA_SHT_USE_CLUSTERING,
+-	.proc_name		= DRV_NAME,
+-	.dma_boundary		= ATA_DMA_BOUNDARY,
+-	.slave_configure	= ata_scsi_slave_config,
+-	.slave_destroy		= ata_scsi_slave_destroy,
+-	.bios_param		= ata_std_bios_param,
++	ATA_BMDMA_SHT(DRV_NAME),
+ };
+ 
+ /*
 diff --git a/drivers/ata/pata_hpt37x.c b/drivers/ata/pata_hpt37x.c
-index fb37e3a..c10fcd3 100644
+index 2ddcd07..7d6fac4 100644
 --- a/drivers/ata/pata_hpt37x.c
 +++ b/drivers/ata/pata_hpt37x.c
-@@ -341,19 +341,7 @@ static int hpt37x_pre_reset(struct ata_link *link, unsigned long deadline)
- 	return ata_std_prereset(link, deadline);
- }
+@@ -619,21 +619,7 @@ static void hpt37x_bmdma_stop(struct ata_queued_cmd *qc)
  
--/**
-- *	hpt37x_error_handler	-	reset the hpt374
-- *	@ap: ATA port to reset
-- *
-- *	Perform probe for HPT37x, except for HPT374 channel 2
-- */
--
--static void hpt37x_error_handler(struct ata_port *ap)
--{
--	ata_bmdma_drive_eh(ap, hpt37x_pre_reset, ata_std_softreset, NULL, ata_std_postreset);
--}
--
--static int hpt374_pre_reset(struct ata_link *link, unsigned long deadline)
-+static int hpt374_fn1_pre_reset(struct ata_link *link, unsigned long deadline)
- {
- 	static const struct pci_bits hpt37x_enable_bits[] = {
- 		{ 0x50, 1, 0x04, 0x04 },
-@@ -390,25 +378,6 @@ static int hpt374_pre_reset(struct ata_link *link, unsigned long deadline)
- }
  
- /**
-- *	hpt374_error_handler	-	reset the hpt374
-- *	@classes:
-- *
-- *	The 374 cable detect is a little different due to the extra
-- *	channels. The function 0 channels work like usual but function 1
-- *	is special
-- */
--
--static void hpt374_error_handler(struct ata_port *ap)
--{
--	struct pci_dev *pdev = to_pci_dev(ap->host->dev);
--
--	if (!(PCI_FUNC(pdev->devfn) & 1))
--		hpt37x_error_handler(ap);
--	else
--		ata_bmdma_drive_eh(ap, hpt374_pre_reset, ata_std_softreset, NULL, ata_std_postreset);
--}
--
--/**
-  *	hpt370_set_piomode		-	PIO setup
-  *	@ap: ATA interface
-  *	@adev: device on the interface
-@@ -635,7 +604,7 @@ static struct ata_port_operations hpt370_port_ops = {
- 	.mode_filter	= hpt370_filter,
- 	.set_piomode	= hpt370_set_piomode,
- 	.set_dmamode	= hpt370_set_dmamode,
--	.error_handler	= hpt37x_error_handler,
-+	.prereset	= hpt37x_pre_reset,
+ static struct scsi_host_template hpt37x_sht = {
+-	.module			= THIS_MODULE,
+-	.name			= DRV_NAME,
+-	.ioctl			= ata_scsi_ioctl,
+-	.queuecommand		= ata_scsi_queuecmd,
+-	.can_queue		= ATA_DEF_QUEUE,
+-	.this_id		= ATA_SHT_THIS_ID,
+-	.sg_tablesize		= LIBATA_MAX_PRD,
+-	.cmd_per_lun		= ATA_SHT_CMD_PER_LUN,
+-	.emulated		= ATA_SHT_EMULATED,
+-	.use_clustering		= ATA_SHT_USE_CLUSTERING,
+-	.proc_name		= DRV_NAME,
+-	.dma_boundary		= ATA_DMA_BOUNDARY,
+-	.slave_configure	= ata_scsi_slave_config,
+-	.slave_destroy		= ata_scsi_slave_destroy,
+-	.bios_param		= ata_std_bios_param,
++	ATA_BMDMA_SHT(DRV_NAME),
  };
  
  /*
-@@ -659,17 +628,17 @@ static struct ata_port_operations hpt372_port_ops = {
- 
- 	.set_piomode	= hpt372_set_piomode,
- 	.set_dmamode	= hpt372_set_dmamode,
--	.error_handler	= hpt37x_error_handler,
-+	.prereset	= hpt37x_pre_reset,
- };
- 
- /*
-  *	Configuration for HPT374. Mode setting works like 372 and friends
-- *	but we have a different cable detection procedure.
-+ *	but we have a different cable detection procedure for function 1.
-  */
- 
--static struct ata_port_operations hpt374_port_ops = {
-+static struct ata_port_operations hpt374_fn1_port_ops = {
- 	.inherits	= &hpt372_port_ops,
--	.error_handler	= hpt374_error_handler,
-+	.prereset	= hpt374_fn1_pre_reset,
- };
- 
- /**
-@@ -821,13 +790,20 @@ static int hpt37x_init_one(struct pci_dev *dev, const struct pci_device_id *id)
- 		.udma_mask = ATA_UDMA6,
- 		.port_ops = &hpt372_port_ops
- 	};
--	/* HPT374 - UDMA100 */
--	static const struct ata_port_info info_hpt374 = {
-+	/* HPT374 - UDMA100, function 1 uses different prereset method */
-+	static const struct ata_port_info info_hpt374_fn0 = {
-+		.flags = ATA_FLAG_SLAVE_POSS,
-+		.pio_mask = 0x1f,
-+		.mwdma_mask = 0x07,
-+		.udma_mask = ATA_UDMA5,
-+		.port_ops = &hpt372_port_ops
-+	};
-+	static const struct ata_port_info info_hpt374_fn1 = {
- 		.flags = ATA_FLAG_SLAVE_POSS,
- 		.pio_mask = 0x1f,
- 		.mwdma_mask = 0x07,
- 		.udma_mask = ATA_UDMA5,
--		.port_ops = &hpt374_port_ops
-+		.port_ops = &hpt374_fn1_port_ops
- 	};
- 
- 	static const int MHz[4] = { 33, 40, 50, 66 };
-@@ -912,7 +888,10 @@ static int hpt37x_init_one(struct pci_dev *dev, const struct pci_device_id *id)
- 				break;
- 			case PCI_DEVICE_ID_TTI_HPT374:
- 				chip_table = &hpt374;
--				ppi[0] = &info_hpt374;
-+				if (!(PCI_FUNC(dev->devfn) & 1))
-+					*ppi = &info_hpt374_fn0;
-+				else
-+					*ppi = &info_hpt374_fn1;
- 				break;
- 			default:
- 				printk(KERN_ERR "pata_hpt37x: PCI table is bogus please report (%d).\n", dev->device);
 diff --git a/drivers/ata/pata_hpt3x2n.c b/drivers/ata/pata_hpt3x2n.c
-index c774be9..cd44ee3 100644
+index 3a517cb..aa380c4 100644
 --- a/drivers/ata/pata_hpt3x2n.c
 +++ b/drivers/ata/pata_hpt3x2n.c
-@@ -148,7 +148,7 @@ static int hpt3x2n_cable_detect(struct ata_port *ap)
-  *	Reset the hardware and state machine,
-  */
- 
--static int hpt3xn_pre_reset(struct ata_link *link, unsigned long deadline)
-+static int hpt3x2n_pre_reset(struct ata_link *link, unsigned long deadline)
- {
- 	struct ata_port *ap = link->ap;
- 	struct pci_dev *pdev = to_pci_dev(ap->host->dev);
-@@ -160,18 +160,6 @@ static int hpt3xn_pre_reset(struct ata_link *link, unsigned long deadline)
+@@ -339,21 +339,7 @@ static unsigned int hpt3x2n_qc_issue_prot(struct ata_queued_cmd *qc)
  }
  
- /**
-- *	hpt3x2n_error_handler	-	probe the hpt3x2n bus
-- *	@ap: ATA port to reset
-- *
-- *	Perform the probe reset handling for the 3x2N
-- */
--
--static void hpt3x2n_error_handler(struct ata_port *ap)
--{
--	ata_bmdma_drive_eh(ap, hpt3xn_pre_reset, ata_std_softreset, NULL, ata_std_postreset);
--}
--
--/**
-  *	hpt3x2n_set_piomode		-	PIO setup
-  *	@ap: ATA interface
-  *	@adev: device on the interface
-@@ -355,7 +343,7 @@ static struct ata_port_operations hpt3x2n_port_ops = {
- 	.cable_detect	= hpt3x2n_cable_detect,
- 	.set_piomode	= hpt3x2n_set_piomode,
- 	.set_dmamode	= hpt3x2n_set_dmamode,
--	.error_handler	= hpt3x2n_error_handler,
-+	.prereset	= hpt3x2n_pre_reset,
+ static struct scsi_host_template hpt3x2n_sht = {
+-	.module			= THIS_MODULE,
+-	.name			= DRV_NAME,
+-	.ioctl			= ata_scsi_ioctl,
+-	.queuecommand		= ata_scsi_queuecmd,
+-	.can_queue		= ATA_DEF_QUEUE,
+-	.this_id		= ATA_SHT_THIS_ID,
+-	.sg_tablesize		= LIBATA_MAX_PRD,
+-	.cmd_per_lun		= ATA_SHT_CMD_PER_LUN,
+-	.emulated		= ATA_SHT_EMULATED,
+-	.use_clustering		= ATA_SHT_USE_CLUSTERING,
+-	.proc_name		= DRV_NAME,
+-	.dma_boundary		= ATA_DMA_BOUNDARY,
+-	.slave_configure	= ata_scsi_slave_config,
+-	.slave_destroy		= ata_scsi_slave_destroy,
+-	.bios_param		= ata_std_bios_param,
++	ATA_BMDMA_SHT(DRV_NAME),
  };
  
- /**
+ /*
+diff --git a/drivers/ata/pata_hpt3x3.c b/drivers/ata/pata_hpt3x3.c
+index c09f95a..9837ab0 100644
+--- a/drivers/ata/pata_hpt3x3.c
++++ b/drivers/ata/pata_hpt3x3.c
+@@ -102,21 +102,7 @@ static int hpt3x3_atapi_dma(struct ata_queued_cmd *qc)
+ }
+ 
+ static struct scsi_host_template hpt3x3_sht = {
+-	.module			= THIS_MODULE,
+-	.name			= DRV_NAME,
+-	.ioctl			= ata_scsi_ioctl,
+-	.queuecommand		= ata_scsi_queuecmd,
+-	.can_queue		= ATA_DEF_QUEUE,
+-	.this_id		= ATA_SHT_THIS_ID,
+-	.sg_tablesize		= LIBATA_MAX_PRD,
+-	.cmd_per_lun		= ATA_SHT_CMD_PER_LUN,
+-	.emulated		= ATA_SHT_EMULATED,
+-	.use_clustering		= ATA_SHT_USE_CLUSTERING,
+-	.proc_name		= DRV_NAME,
+-	.dma_boundary		= ATA_DMA_BOUNDARY,
+-	.slave_configure	= ata_scsi_slave_config,
+-	.slave_destroy		= ata_scsi_slave_destroy,
+-	.bios_param		= ata_std_bios_param,
++	ATA_BMDMA_SHT(DRV_NAME),
+ };
+ 
+ static struct ata_port_operations hpt3x3_port_ops = {
 diff --git a/drivers/ata/pata_icside.c b/drivers/ata/pata_icside.c
-index ff16b0e..13d43e9 100644
+index e1230ca..88a1c7a 100644
 --- a/drivers/ata/pata_icside.c
 +++ b/drivers/ata/pata_icside.c
-@@ -332,12 +332,6 @@ static void pata_icside_postreset(struct ata_link *link, unsigned int *classes)
- 	}
- }
+@@ -305,21 +305,9 @@ static int icside_dma_init(struct pata_icside_info *info)
  
--static void pata_icside_error_handler(struct ata_port *ap)
--{
--	ata_bmdma_drive_eh(ap, ata_std_prereset, ata_std_softreset, NULL,
--			   pata_icside_postreset);
--}
--
- static struct ata_port_operations pata_icside_port_ops = {
- 	.inherits		= &ata_sff_port_ops,
- 	/* no need to build any PRD tables for DMA */
-@@ -350,7 +344,7 @@ static struct ata_port_operations pata_icside_port_ops = {
  
- 	.cable_detect		= ata_cable_40wire,
- 	.set_dmamode		= pata_icside_set_dmamode,
--	.error_handler		= pata_icside_error_handler,
-+	.postreset		= pata_icside_postreset,
- 	.post_internal_cmd	= pata_icside_bmdma_stop,
+ static struct scsi_host_template pata_icside_sht = {
+-	.module			= THIS_MODULE,
+-	.name			= DRV_NAME,
+-	.ioctl			= ata_scsi_ioctl,
+-	.queuecommand		= ata_scsi_queuecmd,
+-	.can_queue		= ATA_DEF_QUEUE,
+-	.this_id		= ATA_SHT_THIS_ID,
++	ATA_BASE_SHT(DRV_NAME),
+ 	.sg_tablesize		= PATA_ICSIDE_MAX_SG,
+-	.cmd_per_lun		= ATA_SHT_CMD_PER_LUN,
+-	.emulated		= ATA_SHT_EMULATED,
+-	.use_clustering		= ATA_SHT_USE_CLUSTERING,
+-	.proc_name		= DRV_NAME,
+ 	.dma_boundary		= ~0, /* no dma boundaries */
+-	.slave_configure	= ata_scsi_slave_config,
+-	.slave_destroy		= ata_scsi_slave_destroy,
+-	.bios_param		= ata_std_bios_param,
  };
  
+ static void pata_icside_postreset(struct ata_link *link, unsigned int *classes)
+diff --git a/drivers/ata/pata_isapnp.c b/drivers/ata/pata_isapnp.c
+index ef561de..91ca4d5 100644
+--- a/drivers/ata/pata_isapnp.c
++++ b/drivers/ata/pata_isapnp.c
+@@ -20,21 +20,7 @@
+ #define DRV_VERSION "0.2.2"
+ 
+ static struct scsi_host_template isapnp_sht = {
+-	.module			= THIS_MODULE,
+-	.name			= DRV_NAME,
+-	.ioctl			= ata_scsi_ioctl,
+-	.queuecommand		= ata_scsi_queuecmd,
+-	.can_queue		= ATA_DEF_QUEUE,
+-	.this_id		= ATA_SHT_THIS_ID,
+-	.sg_tablesize		= LIBATA_MAX_PRD,
+-	.cmd_per_lun		= ATA_SHT_CMD_PER_LUN,
+-	.emulated		= ATA_SHT_EMULATED,
+-	.use_clustering		= ATA_SHT_USE_CLUSTERING,
+-	.proc_name		= DRV_NAME,
+-	.dma_boundary		= ATA_DMA_BOUNDARY,
+-	.slave_configure	= ata_scsi_slave_config,
+-	.slave_destroy		= ata_scsi_slave_destroy,
+-	.bios_param		= ata_std_bios_param,
++	ATA_PIO_SHT(DRV_NAME),
+ };
+ 
+ static struct ata_port_operations isapnp_port_ops = {
 diff --git a/drivers/ata/pata_it8213.c b/drivers/ata/pata_it8213.c
-index d23a46b..84ab89e 100644
+index 25c49c2..678a05b 100644
 --- a/drivers/ata/pata_it8213.c
 +++ b/drivers/ata/pata_it8213.c
-@@ -44,19 +44,6 @@ static int it8213_pre_reset(struct ata_link *link, unsigned long deadline)
+@@ -243,21 +243,7 @@ static void it8213_set_dmamode (struct ata_port *ap, struct ata_device *adev)
  }
  
- /**
-- *	it8213_error_handler - Probe specified port on PATA host controller
-- *	@ap: Port to probe
-- *
-- *	LOCKING:
-- *	None (inherited from caller).
-- */
--
--static void it8213_error_handler(struct ata_port *ap)
--{
--	ata_bmdma_drive_eh(ap, it8213_pre_reset, ata_std_softreset, NULL, ata_std_postreset);
--}
--
--/**
-  *	it8213_cable_detect	-	check for 40/80 pin
-  *	@ap: Port
-  *
-@@ -252,7 +239,7 @@ static struct ata_port_operations it8213_ops = {
- 	.cable_detect		= it8213_cable_detect,
- 	.set_piomode		= it8213_set_piomode,
- 	.set_dmamode		= it8213_set_dmamode,
--	.error_handler		= it8213_error_handler,
-+	.prereset		= it8213_pre_reset,
+ static struct scsi_host_template it8213_sht = {
+-	.module			= THIS_MODULE,
+-	.name			= DRV_NAME,
+-	.ioctl			= ata_scsi_ioctl,
+-	.queuecommand		= ata_scsi_queuecmd,
+-	.can_queue		= ATA_DEF_QUEUE,
+-	.this_id		= ATA_SHT_THIS_ID,
+-	.sg_tablesize		= LIBATA_MAX_PRD,
+-	.cmd_per_lun		= ATA_SHT_CMD_PER_LUN,
+-	.emulated		= ATA_SHT_EMULATED,
+-	.use_clustering		= ATA_SHT_USE_CLUSTERING,
+-	.proc_name		= DRV_NAME,
+-	.dma_boundary		= ATA_DMA_BOUNDARY,
+-	.slave_configure	= ata_scsi_slave_config,
+-	.slave_destroy		= ata_scsi_slave_destroy,
+-	.bios_param		= ata_std_bios_param,
++	ATA_BMDMA_SHT(DRV_NAME),
  };
  
+ static const struct ata_port_operations it8213_ops = {
+diff --git a/drivers/ata/pata_it821x.c b/drivers/ata/pata_it821x.c
+index 3181e2c..491ea69 100644
+--- a/drivers/ata/pata_it821x.c
++++ b/drivers/ata/pata_it821x.c
+@@ -632,21 +632,7 @@ static int it821x_port_start(struct ata_port *ap)
+ }
  
+ static struct scsi_host_template it821x_sht = {
+-	.module			= THIS_MODULE,
+-	.name			= DRV_NAME,
+-	.ioctl			= ata_scsi_ioctl,
+-	.queuecommand		= ata_scsi_queuecmd,
+-	.can_queue		= ATA_DEF_QUEUE,
+-	.this_id		= ATA_SHT_THIS_ID,
+-	.sg_tablesize		= LIBATA_MAX_PRD,
+-	.cmd_per_lun		= ATA_SHT_CMD_PER_LUN,
+-	.emulated		= ATA_SHT_EMULATED,
+-	.use_clustering		= ATA_SHT_USE_CLUSTERING,
+-	.proc_name		= DRV_NAME,
+-	.dma_boundary		= ATA_DMA_BOUNDARY,
+-	.slave_configure	= ata_scsi_slave_config,
+-	.slave_destroy		= ata_scsi_slave_destroy,
+-	.bios_param		= ata_std_bios_param,
++	ATA_BMDMA_SHT(DRV_NAME),
+ };
+ 
+ static struct ata_port_operations it821x_smart_port_ops = {
+diff --git a/drivers/ata/pata_ixp4xx_cf.c b/drivers/ata/pata_ixp4xx_cf.c
+index 6eb8cc9..b7e8e82 100644
+--- a/drivers/ata/pata_ixp4xx_cf.c
++++ b/drivers/ata/pata_ixp4xx_cf.c
+@@ -88,21 +88,7 @@ static unsigned int ixp4xx_mmio_data_xfer(struct ata_device *dev,
+ }
+ 
+ static struct scsi_host_template ixp4xx_sht = {
+-	.module			= THIS_MODULE,
+-	.name			= DRV_NAME,
+-	.ioctl			= ata_scsi_ioctl,
+-	.queuecommand		= ata_scsi_queuecmd,
+-	.can_queue		= ATA_DEF_QUEUE,
+-	.this_id		= ATA_SHT_THIS_ID,
+-	.sg_tablesize		= LIBATA_MAX_PRD,
+-	.cmd_per_lun		= ATA_SHT_CMD_PER_LUN,
+-	.emulated		= ATA_SHT_EMULATED,
+-	.use_clustering		= ATA_SHT_USE_CLUSTERING,
+-	.proc_name		= DRV_NAME,
+-	.dma_boundary		= ATA_DMA_BOUNDARY,
+-	.slave_configure	= ata_scsi_slave_config,
+-	.slave_destroy		= ata_scsi_slave_destroy,
+-	.bios_param		= ata_std_bios_param,
++	ATA_PIO_SHT(DRV_NAME),
+ };
+ 
+ static struct ata_port_operations ixp4xx_port_ops = {
+diff --git a/drivers/ata/pata_jmicron.c b/drivers/ata/pata_jmicron.c
+index 7d36fa8..69781af 100644
+--- a/drivers/ata/pata_jmicron.c
++++ b/drivers/ata/pata_jmicron.c
+@@ -122,22 +122,7 @@ static void jmicron_error_handler(struct ata_port *ap)
+ /* No PIO or DMA methods needed for this device */
+ 
+ static struct scsi_host_template jmicron_sht = {
+-	.module			= THIS_MODULE,
+-	.name			= DRV_NAME,
+-	.ioctl			= ata_scsi_ioctl,
+-	.queuecommand		= ata_scsi_queuecmd,
+-	.can_queue		= ATA_DEF_QUEUE,
+-	.this_id		= ATA_SHT_THIS_ID,
+-	.sg_tablesize		= LIBATA_MAX_PRD,
+-	.cmd_per_lun		= ATA_SHT_CMD_PER_LUN,
+-	.emulated		= ATA_SHT_EMULATED,
+-	.use_clustering		= ATA_SHT_USE_CLUSTERING,
+-	.proc_name		= DRV_NAME,
+-	.dma_boundary		= ATA_DMA_BOUNDARY,
+-	.slave_configure	= ata_scsi_slave_config,
+-	.slave_destroy		= ata_scsi_slave_destroy,
+-	/* Use standard CHS mapping rules */
+-	.bios_param		= ata_std_bios_param,
++	ATA_BMDMA_SHT(DRV_NAME),
+ };
+ 
+ static const struct ata_port_operations jmicron_ops = {
+diff --git a/drivers/ata/pata_legacy.c b/drivers/ata/pata_legacy.c
+index 6ac02f7..5329b95 100644
+--- a/drivers/ata/pata_legacy.c
++++ b/drivers/ata/pata_legacy.c
+@@ -208,21 +208,7 @@ static int legacy_set_mode(struct ata_link *link, struct ata_device **unused)
+ }
+ 
+ static struct scsi_host_template legacy_sht = {
+-	.module			= THIS_MODULE,
+-	.name			= DRV_NAME,
+-	.ioctl			= ata_scsi_ioctl,
+-	.queuecommand		= ata_scsi_queuecmd,
+-	.can_queue		= ATA_DEF_QUEUE,
+-	.this_id		= ATA_SHT_THIS_ID,
+-	.sg_tablesize		= LIBATA_MAX_PRD,
+-	.cmd_per_lun		= ATA_SHT_CMD_PER_LUN,
+-	.emulated		= ATA_SHT_EMULATED,
+-	.use_clustering		= ATA_SHT_USE_CLUSTERING,
+-	.proc_name		= DRV_NAME,
+-	.dma_boundary		= ATA_DMA_BOUNDARY,
+-	.slave_configure	= ata_scsi_slave_config,
+-	.slave_destroy		= ata_scsi_slave_destroy,
+-	.bios_param		= ata_std_bios_param,
++	ATA_PIO_SHT(DRV_NAME),
+ };
+ 
+ /*
+diff --git a/drivers/ata/pata_marvell.c b/drivers/ata/pata_marvell.c
+index c4ee9b4..9de6e42 100644
+--- a/drivers/ata/pata_marvell.c
++++ b/drivers/ata/pata_marvell.c
+@@ -92,22 +92,7 @@ static void marvell_error_handler(struct ata_port *ap)
+ /* No PIO or DMA methods needed for this device */
+ 
+ static struct scsi_host_template marvell_sht = {
+-	.module			= THIS_MODULE,
+-	.name			= DRV_NAME,
+-	.ioctl			= ata_scsi_ioctl,
+-	.queuecommand		= ata_scsi_queuecmd,
+-	.can_queue		= ATA_DEF_QUEUE,
+-	.this_id		= ATA_SHT_THIS_ID,
+-	.sg_tablesize		= LIBATA_MAX_PRD,
+-	.cmd_per_lun		= ATA_SHT_CMD_PER_LUN,
+-	.emulated		= ATA_SHT_EMULATED,
+-	.use_clustering		= ATA_SHT_USE_CLUSTERING,
+-	.proc_name		= DRV_NAME,
+-	.dma_boundary		= ATA_DMA_BOUNDARY,
+-	.slave_configure	= ata_scsi_slave_config,
+-	.slave_destroy		= ata_scsi_slave_destroy,
+-	/* Use standard CHS mapping rules */
+-	.bios_param		= ata_std_bios_param,
++	ATA_BMDMA_SHT(DRV_NAME),
+ };
+ 
+ static const struct ata_port_operations marvell_ops = {
 diff --git a/drivers/ata/pata_mpc52xx.c b/drivers/ata/pata_mpc52xx.c
-index ac7c082..fec9319 100644
+index fefe71d..4117b61 100644
 --- a/drivers/ata/pata_mpc52xx.c
 +++ b/drivers/ata/pata_mpc52xx.c
-@@ -255,15 +255,6 @@ mpc52xx_ata_dev_select(struct ata_port *ap, unsigned int device)
- 	ata_std_dev_select(ap,device);
- }
+@@ -265,21 +265,7 @@ mpc52xx_ata_error_handler(struct ata_port *ap)
  
--static void
--mpc52xx_ata_error_handler(struct ata_port *ap)
--{
--	ata_bmdma_drive_eh(ap, ata_std_prereset, ata_std_softreset, NULL,
--			ata_std_postreset);
--}
--
--
--
+ 
  static struct scsi_host_template mpc52xx_ata_sht = {
- 	ATA_PIO_SHT(DRV_NAME),
- };
-@@ -273,7 +264,6 @@ static struct ata_port_operations mpc52xx_ata_port_ops = {
- 	.dev_select		= mpc52xx_ata_dev_select,
- 	.cable_detect		= ata_cable_40wire,
- 	.set_piomode		= mpc52xx_ata_set_piomode,
--	.error_handler		= mpc52xx_ata_error_handler,
- 	.post_internal_cmd	= ATA_OP_NULL,
+-	.module			= THIS_MODULE,
+-	.name			= DRV_NAME,
+-	.ioctl			= ata_scsi_ioctl,
+-	.queuecommand		= ata_scsi_queuecmd,
+-	.can_queue		= ATA_DEF_QUEUE,
+-	.this_id		= ATA_SHT_THIS_ID,
+-	.sg_tablesize		= LIBATA_MAX_PRD,
+-	.cmd_per_lun		= ATA_SHT_CMD_PER_LUN,
+-	.emulated		= ATA_SHT_EMULATED,
+-	.use_clustering		= ATA_SHT_USE_CLUSTERING,
+-	.proc_name		= DRV_NAME,
+-	.dma_boundary		= ATA_DMA_BOUNDARY,
+-	.slave_configure	= ata_scsi_slave_config,
+-	.slave_destroy		= ata_scsi_slave_destroy,
+-	.bios_param		= ata_std_bios_param,
++	ATA_PIO_SHT(DRV_NAME),
  };
  
+ static struct ata_port_operations mpc52xx_ata_port_ops = {
 diff --git a/drivers/ata/pata_mpiix.c b/drivers/ata/pata_mpiix.c
-index dab54f8..1b9d0d4 100644
+index ced6372..e8e6837 100644
 --- a/drivers/ata/pata_mpiix.c
 +++ b/drivers/ata/pata_mpiix.c
-@@ -59,20 +59,6 @@ static int mpiix_pre_reset(struct ata_link *link, unsigned long deadline)
+@@ -151,21 +151,7 @@ static unsigned int mpiix_qc_issue_prot(struct ata_queued_cmd *qc)
  }
  
- /**
-- *	mpiix_error_handler		-	probe reset
-- *	@ap: ATA port
-- *
-- *	Perform the ATA probe and bus reset sequence plus specific handling
-- *	for this hardware. The MPIIX has the enable bits in a different place
-- *	to PIIX4 and friends. As a pure PIO device it has no cable detect
-- */
--
--static void mpiix_error_handler(struct ata_port *ap)
--{
--	ata_bmdma_drive_eh(ap, mpiix_pre_reset, ata_std_softreset, NULL, ata_std_postreset);
--}
--
--/**
-  *	mpiix_set_piomode	-	set initial PIO mode data
-  *	@ap: ATA interface
-  *	@adev: ATA device
-@@ -159,7 +145,7 @@ static struct ata_port_operations mpiix_port_ops = {
- 	.qc_issue	= mpiix_qc_issue_prot,
- 	.cable_detect	= ata_cable_40wire,
- 	.set_piomode	= mpiix_set_piomode,
--	.error_handler	= mpiix_error_handler,
-+	.prereset	= mpiix_pre_reset,
+ static struct scsi_host_template mpiix_sht = {
+-	.module			= THIS_MODULE,
+-	.name			= DRV_NAME,
+-	.ioctl			= ata_scsi_ioctl,
+-	.queuecommand		= ata_scsi_queuecmd,
+-	.can_queue		= ATA_DEF_QUEUE,
+-	.this_id		= ATA_SHT_THIS_ID,
+-	.sg_tablesize		= LIBATA_MAX_PRD,
+-	.cmd_per_lun		= ATA_SHT_CMD_PER_LUN,
+-	.emulated		= ATA_SHT_EMULATED,
+-	.use_clustering		= ATA_SHT_USE_CLUSTERING,
+-	.proc_name		= DRV_NAME,
+-	.dma_boundary		= ATA_DMA_BOUNDARY,
+-	.slave_configure	= ata_scsi_slave_config,
+-	.slave_destroy		= ata_scsi_slave_destroy,
+-	.bios_param		= ata_std_bios_param,
++	ATA_PIO_SHT(DRV_NAME),
  };
  
- static int mpiix_init_one(struct pci_dev *dev, const struct pci_device_id *id)
+ static struct ata_port_operations mpiix_port_ops = {
+diff --git a/drivers/ata/pata_netcell.c b/drivers/ata/pata_netcell.c
+index 9fd1a84..11f200a 100644
+--- a/drivers/ata/pata_netcell.c
++++ b/drivers/ata/pata_netcell.c
+@@ -21,22 +21,7 @@
+ /* No PIO or DMA methods needed for this device */
+ 
+ static struct scsi_host_template netcell_sht = {
+-	.module			= THIS_MODULE,
+-	.name			= DRV_NAME,
+-	.ioctl			= ata_scsi_ioctl,
+-	.queuecommand		= ata_scsi_queuecmd,
+-	.can_queue		= ATA_DEF_QUEUE,
+-	.this_id		= ATA_SHT_THIS_ID,
+-	.sg_tablesize		= LIBATA_MAX_PRD,
+-	.cmd_per_lun		= ATA_SHT_CMD_PER_LUN,
+-	.emulated		= ATA_SHT_EMULATED,
+-	.use_clustering		= ATA_SHT_USE_CLUSTERING,
+-	.proc_name		= DRV_NAME,
+-	.dma_boundary		= ATA_DMA_BOUNDARY,
+-	.slave_configure	= ata_scsi_slave_config,
+-	.slave_destroy		= ata_scsi_slave_destroy,
+-	/* Use standard CHS mapping rules */
+-	.bios_param		= ata_std_bios_param,
++	ATA_BMDMA_SHT(DRV_NAME),
+ };
+ 
+ static const struct ata_port_operations netcell_ops = {
+diff --git a/drivers/ata/pata_ninja32.c b/drivers/ata/pata_ninja32.c
+index 15dd649..ce3b07c 100644
+--- a/drivers/ata/pata_ninja32.c
++++ b/drivers/ata/pata_ninja32.c
+@@ -79,21 +79,7 @@ static void ninja32_dev_select(struct ata_port *ap, unsigned int device)
+ }
+ 
+ static struct scsi_host_template ninja32_sht = {
+-	.module			= THIS_MODULE,
+-	.name			= DRV_NAME,
+-	.ioctl			= ata_scsi_ioctl,
+-	.queuecommand		= ata_scsi_queuecmd,
+-	.can_queue		= ATA_DEF_QUEUE,
+-	.this_id		= ATA_SHT_THIS_ID,
+-	.sg_tablesize		= LIBATA_MAX_PRD,
+-	.cmd_per_lun		= ATA_SHT_CMD_PER_LUN,
+-	.emulated		= ATA_SHT_EMULATED,
+-	.use_clustering		= ATA_SHT_USE_CLUSTERING,
+-	.proc_name		= DRV_NAME,
+-	.dma_boundary		= ATA_DMA_BOUNDARY,
+-	.slave_configure	= ata_scsi_slave_config,
+-	.slave_destroy		= ata_scsi_slave_destroy,
+-	.bios_param		= ata_std_bios_param,
++	ATA_BMDMA_SHT(DRV_NAME),
+ };
+ 
+ static struct ata_port_operations ninja32_port_ops = {
 diff --git a/drivers/ata/pata_ns87410.c b/drivers/ata/pata_ns87410.c
-index 5a043e4..4d2eefe 100644
+index d182bdf..d2f85f1 100644
 --- a/drivers/ata/pata_ns87410.c
 +++ b/drivers/ata/pata_ns87410.c
-@@ -54,20 +54,6 @@ static int ns87410_pre_reset(struct ata_link *link, unsigned long deadline)
+@@ -144,21 +144,7 @@ static unsigned int ns87410_qc_issue_prot(struct ata_queued_cmd *qc)
  }
  
- /**
-- *	ns87410_error_handler		-	probe reset
-- *	@ap: ATA port
-- *
-- *	Perform the ATA probe and bus reset sequence plus specific handling
-- *	for this hardware. The MPIIX has the enable bits in a different place
-- *	to PIIX4 and friends. As a pure PIO device it has no cable detect
-- */
--
--static void ns87410_error_handler(struct ata_port *ap)
--{
--	ata_bmdma_drive_eh(ap, ns87410_pre_reset, ata_std_softreset, NULL, ata_std_postreset);
--}
--
--/**
-  *	ns87410_set_piomode	-	set initial PIO mode data
-  *	@ap: ATA interface
-  *	@adev: ATA device
-@@ -152,7 +138,7 @@ static struct ata_port_operations ns87410_port_ops = {
- 	.qc_issue	= ns87410_qc_issue_prot,
- 	.cable_detect	= ata_cable_40wire,
- 	.set_piomode	= ns87410_set_piomode,
--	.error_handler	= ns87410_error_handler,
-+	.prereset	= ns87410_pre_reset,
+ static struct scsi_host_template ns87410_sht = {
+-	.module			= THIS_MODULE,
+-	.name			= DRV_NAME,
+-	.ioctl			= ata_scsi_ioctl,
+-	.queuecommand		= ata_scsi_queuecmd,
+-	.can_queue		= ATA_DEF_QUEUE,
+-	.this_id		= ATA_SHT_THIS_ID,
+-	.sg_tablesize		= LIBATA_MAX_PRD,
+-	.cmd_per_lun		= ATA_SHT_CMD_PER_LUN,
+-	.emulated		= ATA_SHT_EMULATED,
+-	.use_clustering		= ATA_SHT_USE_CLUSTERING,
+-	.proc_name		= DRV_NAME,
+-	.dma_boundary		= ATA_DMA_BOUNDARY,
+-	.slave_configure	= ata_scsi_slave_config,
+-	.slave_destroy		= ata_scsi_slave_destroy,
+-	.bios_param		= ata_std_bios_param,
++	ATA_PIO_SHT(DRV_NAME),
  };
  
- static int ns87410_init_one(struct pci_dev *dev, const struct pci_device_id *id)
+ static struct ata_port_operations ns87410_port_ops = {
+diff --git a/drivers/ata/pata_ns87415.c b/drivers/ata/pata_ns87415.c
+index 93eb958..78d6344 100644
+--- a/drivers/ata/pata_ns87415.c
++++ b/drivers/ata/pata_ns87415.c
+@@ -366,21 +366,7 @@ static const struct ata_port_operations ns87415_pata_ops = {
+ };
+ 
+ static struct scsi_host_template ns87415_sht = {
+-	.module			= THIS_MODULE,
+-	.name			= DRV_NAME,
+-	.ioctl			= ata_scsi_ioctl,
+-	.queuecommand		= ata_scsi_queuecmd,
+-	.can_queue		= ATA_DEF_QUEUE,
+-	.this_id		= ATA_SHT_THIS_ID,
+-	.sg_tablesize		= LIBATA_MAX_PRD,
+-	.cmd_per_lun		= ATA_SHT_CMD_PER_LUN,
+-	.emulated		= ATA_SHT_EMULATED,
+-	.use_clustering		= ATA_SHT_USE_CLUSTERING,
+-	.proc_name		= DRV_NAME,
+-	.dma_boundary		= ATA_DMA_BOUNDARY,
+-	.slave_configure	= ata_scsi_slave_config,
+-	.slave_destroy		= ata_scsi_slave_destroy,
+-	.bios_param		= ata_std_bios_param,
++	ATA_BMDMA_SHT(DRV_NAME),
+ };
+ 
+ 
 diff --git a/drivers/ata/pata_oldpiix.c b/drivers/ata/pata_oldpiix.c
-index 7001b75..c1da79a 100644
+index 44da09a..45f9b3e 100644
 --- a/drivers/ata/pata_oldpiix.c
 +++ b/drivers/ata/pata_oldpiix.c
-@@ -51,20 +51,6 @@ static int oldpiix_pre_reset(struct ata_link *link, unsigned long deadline)
- }
+@@ -220,21 +220,7 @@ static unsigned int oldpiix_qc_issue_prot(struct ata_queued_cmd *qc)
  
- /**
-- *	oldpiix_pata_error_handler - Probe specified port on PATA host controller
-- *	@ap: Port to probe
-- *	@classes:
-- *
-- *	LOCKING:
-- *	None (inherited from caller).
-- */
--
--static void oldpiix_pata_error_handler(struct ata_port *ap)
--{
--	ata_bmdma_drive_eh(ap, oldpiix_pre_reset, ata_std_softreset, NULL, ata_std_postreset);
--}
--
--/**
-  *	oldpiix_set_piomode - Initialize host controller PATA PIO timings
-  *	@ap: Port whose timings we are configuring
-  *	@adev: Device whose timings we are configuring
-@@ -229,7 +215,7 @@ static struct ata_port_operations oldpiix_pata_ops = {
- 	.cable_detect		= ata_cable_40wire,
- 	.set_piomode		= oldpiix_set_piomode,
- 	.set_dmamode		= oldpiix_set_dmamode,
--	.error_handler		= oldpiix_pata_error_handler,
-+	.prereset		= oldpiix_pre_reset,
+ 
+ static struct scsi_host_template oldpiix_sht = {
+-	.module			= THIS_MODULE,
+-	.name			= DRV_NAME,
+-	.ioctl			= ata_scsi_ioctl,
+-	.queuecommand		= ata_scsi_queuecmd,
+-	.can_queue		= ATA_DEF_QUEUE,
+-	.this_id		= ATA_SHT_THIS_ID,
+-	.sg_tablesize		= LIBATA_MAX_PRD,
+-	.cmd_per_lun		= ATA_SHT_CMD_PER_LUN,
+-	.emulated		= ATA_SHT_EMULATED,
+-	.use_clustering		= ATA_SHT_USE_CLUSTERING,
+-	.proc_name		= DRV_NAME,
+-	.dma_boundary		= ATA_DMA_BOUNDARY,
+-	.slave_configure	= ata_scsi_slave_config,
+-	.slave_destroy		= ata_scsi_slave_destroy,
+-	.bios_param		= ata_std_bios_param,
++	ATA_BMDMA_SHT(DRV_NAME),
  };
  
- 
+ static const struct ata_port_operations oldpiix_pata_ops = {
 diff --git a/drivers/ata/pata_opti.c b/drivers/ata/pata_opti.c
-index 5a5f20e..4ddd03a 100644
+index 1e865f1..1deacfa 100644
 --- a/drivers/ata/pata_opti.c
 +++ b/drivers/ata/pata_opti.c
-@@ -68,21 +68,6 @@ static int opti_pre_reset(struct ata_link *link, unsigned long deadline)
+@@ -165,21 +165,7 @@ static void opti_set_piomode(struct ata_port *ap, struct ata_device *adev)
  }
  
- /**
-- *	opti_probe_reset		-	probe reset
-- *	@ap: ATA port
-- *
-- *	Perform the ATA probe and bus reset sequence plus specific handling
-- *	for this hardware. The Opti needs little handling - we have no UDMA66
-- *	capability that needs cable detection. All we must do is check the port
-- *	is enabled.
-- */
--
--static void opti_error_handler(struct ata_port *ap)
--{
--	ata_bmdma_drive_eh(ap, opti_pre_reset, ata_std_softreset, NULL, ata_std_postreset);
--}
--
--/**
-  *	opti_write_reg		-	control register setup
-  *	@ap: ATA port
-  *	@value: value
-@@ -172,7 +157,7 @@ static struct ata_port_operations opti_port_ops = {
- 	.inherits	= &ata_sff_port_ops,
- 	.cable_detect	= ata_cable_40wire,
- 	.set_piomode	= opti_set_piomode,
--	.error_handler	= opti_error_handler,
-+	.prereset	= opti_pre_reset,
+ static struct scsi_host_template opti_sht = {
+-	.module			= THIS_MODULE,
+-	.name			= DRV_NAME,
+-	.ioctl			= ata_scsi_ioctl,
+-	.queuecommand		= ata_scsi_queuecmd,
+-	.can_queue		= ATA_DEF_QUEUE,
+-	.this_id		= ATA_SHT_THIS_ID,
+-	.sg_tablesize		= LIBATA_MAX_PRD,
+-	.cmd_per_lun		= ATA_SHT_CMD_PER_LUN,
+-	.emulated		= ATA_SHT_EMULATED,
+-	.use_clustering		= ATA_SHT_USE_CLUSTERING,
+-	.proc_name		= DRV_NAME,
+-	.dma_boundary		= ATA_DMA_BOUNDARY,
+-	.slave_configure	= ata_scsi_slave_config,
+-	.slave_destroy		= ata_scsi_slave_destroy,
+-	.bios_param		= ata_std_bios_param,
++	ATA_PIO_SHT(DRV_NAME),
  };
  
- static int opti_init_one(struct pci_dev *dev, const struct pci_device_id *id)
+ static struct ata_port_operations opti_port_ops = {
 diff --git a/drivers/ata/pata_optidma.c b/drivers/ata/pata_optidma.c
-index ba2819f..36ac147 100644
+index 3f9d035..7495758 100644
 --- a/drivers/ata/pata_optidma.c
 +++ b/drivers/ata/pata_optidma.c
-@@ -68,21 +68,6 @@ static int optidma_pre_reset(struct ata_link *link, unsigned long deadline)
+@@ -350,21 +350,7 @@ static int optidma_set_mode(struct ata_link *link, struct ata_device **r_failed)
  }
  
- /**
-- *	optidma_probe_reset		-	probe reset
-- *	@ap: ATA port
-- *
-- *	Perform the ATA probe and bus reset sequence plus specific handling
-- *	for this hardware. The Opti needs little handling - we have no UDMA66
-- *	capability that needs cable detection. All we must do is check the port
-- *	is enabled.
-- */
--
--static void optidma_error_handler(struct ata_port *ap)
--{
--	ata_bmdma_drive_eh(ap, optidma_pre_reset, ata_std_softreset, NULL, ata_std_postreset);
--}
--
--/**
-  *	optidma_unlock		-	unlock control registers
-  *	@ap: ATA port
-  *
-@@ -359,7 +344,7 @@ static struct ata_port_operations optidma_port_ops = {
- 	.set_piomode	= optidma_set_pio_mode,
- 	.set_dmamode	= optidma_set_dma_mode,
- 	.set_mode	= optidma_set_mode,
--	.error_handler	= optidma_error_handler,
-+	.prereset	= optidma_pre_reset,
+ static struct scsi_host_template optidma_sht = {
+-	.module			= THIS_MODULE,
+-	.name			= DRV_NAME,
+-	.ioctl			= ata_scsi_ioctl,
+-	.queuecommand		= ata_scsi_queuecmd,
+-	.can_queue		= ATA_DEF_QUEUE,
+-	.this_id		= ATA_SHT_THIS_ID,
+-	.sg_tablesize		= LIBATA_MAX_PRD,
+-	.cmd_per_lun		= ATA_SHT_CMD_PER_LUN,
+-	.emulated		= ATA_SHT_EMULATED,
+-	.use_clustering		= ATA_SHT_USE_CLUSTERING,
+-	.proc_name		= DRV_NAME,
+-	.dma_boundary		= ATA_DMA_BOUNDARY,
+-	.slave_configure	= ata_scsi_slave_config,
+-	.slave_destroy		= ata_scsi_slave_destroy,
+-	.bios_param		= ata_std_bios_param,
++	ATA_BMDMA_SHT(DRV_NAME),
  };
  
- static struct ata_port_operations optiplus_port_ops = {
+ static struct ata_port_operations optidma_port_ops = {
+diff --git a/drivers/ata/pata_pcmcia.c b/drivers/ata/pata_pcmcia.c
+index 9881a9e..c05b36c 100644
+--- a/drivers/ata/pata_pcmcia.c
++++ b/drivers/ata/pata_pcmcia.c
+@@ -128,21 +128,7 @@ static unsigned int ata_data_xfer_8bit(struct ata_device *dev,
+ 
+ 
+ static struct scsi_host_template pcmcia_sht = {
+-	.module			= THIS_MODULE,
+-	.name			= DRV_NAME,
+-	.ioctl			= ata_scsi_ioctl,
+-	.queuecommand		= ata_scsi_queuecmd,
+-	.can_queue		= ATA_DEF_QUEUE,
+-	.this_id		= ATA_SHT_THIS_ID,
+-	.sg_tablesize		= LIBATA_MAX_PRD,
+-	.cmd_per_lun		= ATA_SHT_CMD_PER_LUN,
+-	.emulated		= ATA_SHT_EMULATED,
+-	.use_clustering		= ATA_SHT_USE_CLUSTERING,
+-	.proc_name		= DRV_NAME,
+-	.dma_boundary		= ATA_DMA_BOUNDARY,
+-	.slave_configure	= ata_scsi_slave_config,
+-	.slave_destroy		= ata_scsi_slave_destroy,
+-	.bios_param		= ata_std_bios_param,
++	ATA_PIO_SHT(DRV_NAME),
+ };
+ 
+ static struct ata_port_operations pcmcia_port_ops = {
 diff --git a/drivers/ata/pata_pdc2027x.c b/drivers/ata/pata_pdc2027x.c
-index f619c20..d235c9f 100644
+index 511c89b..229d9ac 100644
 --- a/drivers/ata/pata_pdc2027x.c
 +++ b/drivers/ata/pata_pdc2027x.c
-@@ -63,7 +63,7 @@ enum {
+@@ -129,21 +129,7 @@ static struct pci_driver pdc2027x_pci_driver = {
  };
  
- static int pdc2027x_init_one(struct pci_dev *pdev, const struct pci_device_id *ent);
--static void pdc2027x_error_handler(struct ata_port *ap);
-+static int pdc2027x_prereset(struct ata_link *link, unsigned long deadline);
- static void pdc2027x_set_piomode(struct ata_port *ap, struct ata_device *adev);
- static void pdc2027x_set_dmamode(struct ata_port *ap, struct ata_device *adev);
- static int pdc2027x_check_atapi_dma(struct ata_queued_cmd *qc);
-@@ -136,7 +136,7 @@ static struct ata_port_operations pdc2027x_pata100_ops = {
- 	.inherits		= &ata_bmdma_port_ops,
- 	.check_atapi_dma	= pdc2027x_check_atapi_dma,
- 	.cable_detect		= pdc2027x_cable_detect,
--	.error_handler		= pdc2027x_error_handler,
-+	.prereset		= pdc2027x_prereset,
+ static struct scsi_host_template pdc2027x_sht = {
+-	.module			= THIS_MODULE,
+-	.name			= DRV_NAME,
+-	.ioctl			= ata_scsi_ioctl,
+-	.queuecommand		= ata_scsi_queuecmd,
+-	.can_queue		= ATA_DEF_QUEUE,
+-	.this_id		= ATA_SHT_THIS_ID,
+-	.sg_tablesize		= LIBATA_MAX_PRD,
+-	.cmd_per_lun		= ATA_SHT_CMD_PER_LUN,
+-	.emulated		= ATA_SHT_EMULATED,
+-	.use_clustering		= ATA_SHT_USE_CLUSTERING,
+-	.proc_name		= DRV_NAME,
+-	.dma_boundary		= ATA_DMA_BOUNDARY,
+-	.slave_configure	= ata_scsi_slave_config,
+-	.slave_destroy		= ata_scsi_slave_destroy,
+-	.bios_param		= ata_std_bios_param,
++	ATA_BMDMA_SHT(DRV_NAME),
  };
  
- static struct ata_port_operations pdc2027x_pata133_ops = {
-@@ -252,21 +252,6 @@ static int pdc2027x_prereset(struct ata_link *link, unsigned long deadline)
+ static struct ata_port_operations pdc2027x_pata100_ops = {
+diff --git a/drivers/ata/pata_pdc202xx_old.c b/drivers/ata/pata_pdc202xx_old.c
+index 3ed8667..564ee07 100644
+--- a/drivers/ata/pata_pdc202xx_old.c
++++ b/drivers/ata/pata_pdc202xx_old.c
+@@ -262,21 +262,7 @@ static int pdc2026x_check_atapi_dma(struct ata_queued_cmd *qc)
  }
  
- /**
-- *	pdc2027x_error_handler - Perform reset on PATA port and classify
-- *	@ap: Port to reset
-- *
-- *	Reset PATA phy and classify attached devices.
-- *
-- *	LOCKING:
-- *	None (inherited from caller).
-- */
+ static struct scsi_host_template pdc202xx_sht = {
+-	.module			= THIS_MODULE,
+-	.name			= DRV_NAME,
+-	.ioctl			= ata_scsi_ioctl,
+-	.queuecommand		= ata_scsi_queuecmd,
+-	.can_queue		= ATA_DEF_QUEUE,
+-	.this_id		= ATA_SHT_THIS_ID,
+-	.sg_tablesize		= LIBATA_MAX_PRD,
+-	.cmd_per_lun		= ATA_SHT_CMD_PER_LUN,
+-	.emulated		= ATA_SHT_EMULATED,
+-	.use_clustering		= ATA_SHT_USE_CLUSTERING,
+-	.proc_name		= DRV_NAME,
+-	.dma_boundary		= ATA_DMA_BOUNDARY,
+-	.slave_configure	= ata_scsi_slave_config,
+-	.slave_destroy		= ata_scsi_slave_destroy,
+-	.bios_param		= ata_std_bios_param,
++	ATA_BMDMA_SHT(DRV_NAME),
+ };
+ 
+ static struct ata_port_operations pdc2024x_port_ops = {
+diff --git a/drivers/ata/pata_platform.c b/drivers/ata/pata_platform.c
+index 602f556..cd2d03a 100644
+--- a/drivers/ata/pata_platform.c
++++ b/drivers/ata/pata_platform.c
+@@ -47,21 +47,7 @@ static int pata_platform_set_mode(struct ata_link *link, struct ata_device **unu
+ }
+ 
+ static struct scsi_host_template pata_platform_sht = {
+-	.module			= THIS_MODULE,
+-	.name			= DRV_NAME,
+-	.ioctl			= ata_scsi_ioctl,
+-	.queuecommand		= ata_scsi_queuecmd,
+-	.can_queue		= ATA_DEF_QUEUE,
+-	.this_id		= ATA_SHT_THIS_ID,
+-	.sg_tablesize		= LIBATA_MAX_PRD,
+-	.cmd_per_lun		= ATA_SHT_CMD_PER_LUN,
+-	.emulated		= ATA_SHT_EMULATED,
+-	.use_clustering		= ATA_SHT_USE_CLUSTERING,
+-	.proc_name		= DRV_NAME,
+-	.dma_boundary		= ATA_DMA_BOUNDARY,
+-	.slave_configure	= ata_scsi_slave_config,
+-	.slave_destroy		= ata_scsi_slave_destroy,
+-	.bios_param		= ata_std_bios_param,
++	ATA_PIO_SHT(DRV_NAME),
+ };
+ 
+ static struct ata_port_operations pata_platform_port_ops = {
+diff --git a/drivers/ata/pata_qdi.c b/drivers/ata/pata_qdi.c
+index 60238d5..ccb8682 100644
+--- a/drivers/ata/pata_qdi.c
++++ b/drivers/ata/pata_qdi.c
+@@ -154,21 +154,7 @@ static unsigned int qdi_data_xfer(struct ata_device *dev, unsigned char *buf,
+ }
+ 
+ static struct scsi_host_template qdi_sht = {
+-	.module			= THIS_MODULE,
+-	.name			= DRV_NAME,
+-	.ioctl			= ata_scsi_ioctl,
+-	.queuecommand		= ata_scsi_queuecmd,
+-	.can_queue		= ATA_DEF_QUEUE,
+-	.this_id		= ATA_SHT_THIS_ID,
+-	.sg_tablesize		= LIBATA_MAX_PRD,
+-	.cmd_per_lun		= ATA_SHT_CMD_PER_LUN,
+-	.emulated		= ATA_SHT_EMULATED,
+-	.use_clustering		= ATA_SHT_USE_CLUSTERING,
+-	.proc_name		= DRV_NAME,
+-	.dma_boundary		= ATA_DMA_BOUNDARY,
+-	.slave_configure	= ata_scsi_slave_config,
+-	.slave_destroy		= ata_scsi_slave_destroy,
+-	.bios_param		= ata_std_bios_param,
++	ATA_PIO_SHT(DRV_NAME),
+ };
+ 
+ static struct ata_port_operations qdi6500_port_ops = {
+diff --git a/drivers/ata/pata_radisys.c b/drivers/ata/pata_radisys.c
+index 8109b08..3981bf8 100644
+--- a/drivers/ata/pata_radisys.c
++++ b/drivers/ata/pata_radisys.c
+@@ -185,21 +185,7 @@ static unsigned int radisys_qc_issue_prot(struct ata_queued_cmd *qc)
+ 
+ 
+ static struct scsi_host_template radisys_sht = {
+-	.module			= THIS_MODULE,
+-	.name			= DRV_NAME,
+-	.ioctl			= ata_scsi_ioctl,
+-	.queuecommand		= ata_scsi_queuecmd,
+-	.can_queue		= ATA_DEF_QUEUE,
+-	.this_id		= ATA_SHT_THIS_ID,
+-	.sg_tablesize		= LIBATA_MAX_PRD,
+-	.cmd_per_lun		= ATA_SHT_CMD_PER_LUN,
+-	.emulated		= ATA_SHT_EMULATED,
+-	.use_clustering		= ATA_SHT_USE_CLUSTERING,
+-	.proc_name		= DRV_NAME,
+-	.dma_boundary		= ATA_DMA_BOUNDARY,
+-	.slave_configure	= ata_scsi_slave_config,
+-	.slave_destroy		= ata_scsi_slave_destroy,
+-	.bios_param		= ata_std_bios_param,
++	ATA_BMDMA_SHT(DRV_NAME),
+ };
+ 
+ static const struct ata_port_operations radisys_pata_ops = {
+diff --git a/drivers/ata/pata_rb500_cf.c b/drivers/ata/pata_rb500_cf.c
+index 22cb9e1..4543c98 100644
+--- a/drivers/ata/pata_rb500_cf.c
++++ b/drivers/ata/pata_rb500_cf.c
+@@ -142,22 +142,7 @@ static struct ata_port_operations rb500_pata_port_ops = {
+ /* ------------------------------------------------------------------------ */
+ 
+ static struct scsi_host_template rb500_pata_sht = {
+-	.module			= THIS_MODULE,
+-	.name			= DRV_NAME,
+-	.ioctl			= ata_scsi_ioctl,
+-	.queuecommand		= ata_scsi_queuecmd,
+-	.slave_configure	= ata_scsi_slave_config,
+-	.slave_destroy		= ata_scsi_slave_destroy,
+-	.bios_param		= ata_std_bios_param,
+-	.proc_name		= DRV_NAME,
 -
--static void pdc2027x_error_handler(struct ata_port *ap)
--{
--	ata_bmdma_drive_eh(ap, pdc2027x_prereset, ata_std_softreset, NULL, ata_std_postreset);
--}
--
--/**
-  *	pdc2720x_mode_filter	-	mode selection filter
-  *	@adev: ATA device
-  *	@mask: list of modes proposed
+-	.can_queue		= ATA_DEF_QUEUE,
+-	.this_id		= ATA_SHT_THIS_ID,
+-	.sg_tablesize		= LIBATA_MAX_PRD,
+-	.dma_boundary		= ATA_DMA_BOUNDARY,
+-	.cmd_per_lun		= ATA_SHT_CMD_PER_LUN,
+-	.emulated		= ATA_SHT_EMULATED,
+-	.use_clustering		= ATA_SHT_USE_CLUSTERING,
++	ATA_PIO_SHT(DRV_NAME),
+ };
+ 
+ /* ------------------------------------------------------------------------ */
+diff --git a/drivers/ata/pata_rz1000.c b/drivers/ata/pata_rz1000.c
+index 75b2521..80909a6 100644
+--- a/drivers/ata/pata_rz1000.c
++++ b/drivers/ata/pata_rz1000.c
+@@ -53,21 +53,7 @@ static int rz1000_set_mode(struct ata_link *link, struct ata_device **unused)
+ 
+ 
+ static struct scsi_host_template rz1000_sht = {
+-	.module			= THIS_MODULE,
+-	.name			= DRV_NAME,
+-	.ioctl			= ata_scsi_ioctl,
+-	.queuecommand		= ata_scsi_queuecmd,
+-	.can_queue		= ATA_DEF_QUEUE,
+-	.this_id		= ATA_SHT_THIS_ID,
+-	.sg_tablesize		= LIBATA_MAX_PRD,
+-	.cmd_per_lun		= ATA_SHT_CMD_PER_LUN,
+-	.emulated		= ATA_SHT_EMULATED,
+-	.use_clustering		= ATA_SHT_USE_CLUSTERING,
+-	.proc_name		= DRV_NAME,
+-	.dma_boundary		= ATA_DMA_BOUNDARY,
+-	.slave_configure	= ata_scsi_slave_config,
+-	.slave_destroy		= ata_scsi_slave_destroy,
+-	.bios_param		= ata_std_bios_param,
++	ATA_PIO_SHT(DRV_NAME),
+ };
+ 
+ static struct ata_port_operations rz1000_port_ops = {
+diff --git a/drivers/ata/pata_sc1200.c b/drivers/ata/pata_sc1200.c
+index 725a858..38ce6e1 100644
+--- a/drivers/ata/pata_sc1200.c
++++ b/drivers/ata/pata_sc1200.c
+@@ -179,21 +179,8 @@ static unsigned int sc1200_qc_issue_prot(struct ata_queued_cmd *qc)
+ }
+ 
+ static struct scsi_host_template sc1200_sht = {
+-	.module			= THIS_MODULE,
+-	.name			= DRV_NAME,
+-	.ioctl			= ata_scsi_ioctl,
+-	.queuecommand		= ata_scsi_queuecmd,
+-	.can_queue		= ATA_DEF_QUEUE,
+-	.this_id		= ATA_SHT_THIS_ID,
+-	.sg_tablesize		= LIBATA_DUMB_MAX_PRD,
+-	.cmd_per_lun		= ATA_SHT_CMD_PER_LUN,
+-	.emulated		= ATA_SHT_EMULATED,
+-	.use_clustering		= ATA_SHT_USE_CLUSTERING,
+-	.proc_name		= DRV_NAME,
+-	.dma_boundary		= ATA_DMA_BOUNDARY,
+-	.slave_configure	= ata_scsi_slave_config,
+-	.slave_destroy		= ata_scsi_slave_destroy,
+-	.bios_param		= ata_std_bios_param,
++	ATA_BMDMA_SHT(DRV_NAME),
++	.sg_tablesize	= LIBATA_DUMB_MAX_PRD,
+ };
+ 
+ static struct ata_port_operations sc1200_port_ops = {
 diff --git a/drivers/ata/pata_scc.c b/drivers/ata/pata_scc.c
-index 033d1f3..07f2d7a 100644
+index 6c016de..1833e9e 100644
 --- a/drivers/ata/pata_scc.c
 +++ b/drivers/ata/pata_scc.c
-@@ -905,17 +905,6 @@ static void scc_std_postreset(struct ata_link *link, unsigned int *classes)
+@@ -968,21 +968,7 @@ static void scc_port_stop (struct ata_port *ap)
  }
  
- /**
-- *	scc_error_handler - Stock error handler for BMDMA controller
-- *	@ap: port to handle error for
-- */
--
--static void scc_error_handler (struct ata_port *ap)
--{
--	ata_bmdma_drive_eh(ap, scc_pata_prereset, scc_std_softreset, NULL,
--			   scc_std_postreset);
--}
--
--/**
-  *	scc_bmdma_irq_clear - Clear PCI IDE BMDMA interrupt.
-  *	@ap: Port associated with this ATA transaction.
-  *
-@@ -992,7 +981,9 @@ static const struct ata_port_operations scc_pata_ops = {
- 	.data_xfer		= scc_data_xfer,
+ static struct scsi_host_template scc_sht = {
+-	.module			= THIS_MODULE,
+-	.name			= DRV_NAME,
+-	.ioctl			= ata_scsi_ioctl,
+-	.queuecommand		= ata_scsi_queuecmd,
+-	.can_queue		= ATA_DEF_QUEUE,
+-	.this_id		= ATA_SHT_THIS_ID,
+-	.sg_tablesize		= LIBATA_MAX_PRD,
+-	.cmd_per_lun		= ATA_SHT_CMD_PER_LUN,
+-	.emulated		= ATA_SHT_EMULATED,
+-	.use_clustering		= ATA_SHT_USE_CLUSTERING,
+-	.proc_name		= DRV_NAME,
+-	.dma_boundary		= ATA_DMA_BOUNDARY,
+-	.slave_configure	= ata_scsi_slave_config,
+-	.slave_destroy		= ata_scsi_slave_destroy,
+-	.bios_param		= ata_std_bios_param,
++	ATA_BMDMA_SHT(DRV_NAME),
+ };
  
- 	.freeze			= scc_bmdma_freeze,
--	.error_handler		= scc_error_handler,
-+	.prereset		= scc_pata_prereset,
-+	.softreset		= scc_std_softreset,
-+	.postreset		= scc_std_postreset,
- 	.post_internal_cmd	= scc_bmdma_stop,
+ static const struct ata_port_operations scc_pata_ops = {
+diff --git a/drivers/ata/pata_serverworks.c b/drivers/ata/pata_serverworks.c
+index 6702df3..318a369 100644
+--- a/drivers/ata/pata_serverworks.c
++++ b/drivers/ata/pata_serverworks.c
+@@ -298,21 +298,7 @@ static void serverworks_set_dmamode(struct ata_port *ap, struct ata_device *adev
+ }
  
- 	.irq_clear		= scc_bmdma_irq_clear,
+ static struct scsi_host_template serverworks_sht = {
+-	.module			= THIS_MODULE,
+-	.name			= DRV_NAME,
+-	.ioctl			= ata_scsi_ioctl,
+-	.queuecommand		= ata_scsi_queuecmd,
+-	.can_queue		= ATA_DEF_QUEUE,
+-	.this_id		= ATA_SHT_THIS_ID,
+-	.sg_tablesize		= LIBATA_MAX_PRD,
+-	.cmd_per_lun		= ATA_SHT_CMD_PER_LUN,
+-	.emulated		= ATA_SHT_EMULATED,
+-	.use_clustering		= ATA_SHT_USE_CLUSTERING,
+-	.proc_name		= DRV_NAME,
+-	.dma_boundary		= ATA_DMA_BOUNDARY,
+-	.slave_configure	= ata_scsi_slave_config,
+-	.slave_destroy		= ata_scsi_slave_destroy,
+-	.bios_param		= ata_std_bios_param,
++	ATA_BMDMA_SHT(DRV_NAME),
+ };
+ 
+ static struct ata_port_operations serverworks_osb4_port_ops = {
+diff --git a/drivers/ata/pata_sil680.c b/drivers/ata/pata_sil680.c
+index ecdaebe..6ebf6f7 100644
+--- a/drivers/ata/pata_sil680.c
++++ b/drivers/ata/pata_sil680.c
+@@ -192,21 +192,7 @@ static void sil680_set_dmamode(struct ata_port *ap, struct ata_device *adev)
+ }
+ 
+ static struct scsi_host_template sil680_sht = {
+-	.module			= THIS_MODULE,
+-	.name			= DRV_NAME,
+-	.ioctl			= ata_scsi_ioctl,
+-	.queuecommand		= ata_scsi_queuecmd,
+-	.can_queue		= ATA_DEF_QUEUE,
+-	.this_id		= ATA_SHT_THIS_ID,
+-	.sg_tablesize		= LIBATA_MAX_PRD,
+-	.cmd_per_lun		= ATA_SHT_CMD_PER_LUN,
+-	.emulated		= ATA_SHT_EMULATED,
+-	.use_clustering		= ATA_SHT_USE_CLUSTERING,
+-	.proc_name		= DRV_NAME,
+-	.dma_boundary		= ATA_DMA_BOUNDARY,
+-	.slave_configure	= ata_scsi_slave_config,
+-	.slave_destroy		= ata_scsi_slave_destroy,
+-	.bios_param		= ata_std_bios_param,
++	ATA_BMDMA_SHT(DRV_NAME),
+ };
+ 
+ static struct ata_port_operations sil680_port_ops = {
 diff --git a/drivers/ata/pata_sis.c b/drivers/ata/pata_sis.c
-index 28abfc2..793e671 100644
+index abda90f..dcd8457 100644
 --- a/drivers/ata/pata_sis.c
 +++ b/drivers/ata/pata_sis.c
-@@ -161,19 +161,6 @@ static int sis_pre_reset(struct ata_link *link, unsigned long deadline)
+@@ -514,21 +514,7 @@ static void sis_133_set_dmamode (struct ata_port *ap, struct ata_device *adev)
+ }
  
- 
- /**
-- *	sis_error_handler - Probe specified port on PATA host controller
-- *	@ap: Port to probe
-- *
-- *	LOCKING:
-- *	None (inherited from caller).
-- */
--
--static void sis_error_handler(struct ata_port *ap)
--{
--	ata_bmdma_drive_eh(ap, sis_pre_reset, ata_std_softreset, NULL, ata_std_postreset);
--}
--
--/**
-  *	sis_set_fifo	-	Set RWP fifo bits for this device
-  *	@ap: Port
-  *	@adev: Device
-@@ -526,7 +513,7 @@ static struct ata_port_operations sis_133_for_sata_ops = {
- 
- static struct ata_port_operations sis_base_ops = {
- 	.inherits		= &ata_bmdma_port_ops,
--	.error_handler		= sis_error_handler,
-+	.prereset		= sis_pre_reset,
+ static struct scsi_host_template sis_sht = {
+-	.module			= THIS_MODULE,
+-	.name			= DRV_NAME,
+-	.ioctl			= ata_scsi_ioctl,
+-	.queuecommand		= ata_scsi_queuecmd,
+-	.can_queue		= ATA_DEF_QUEUE,
+-	.this_id		= ATA_SHT_THIS_ID,
+-	.sg_tablesize		= LIBATA_MAX_PRD,
+-	.cmd_per_lun		= ATA_SHT_CMD_PER_LUN,
+-	.emulated		= ATA_SHT_EMULATED,
+-	.use_clustering		= ATA_SHT_USE_CLUSTERING,
+-	.proc_name		= DRV_NAME,
+-	.dma_boundary		= ATA_DMA_BOUNDARY,
+-	.slave_configure	= ata_scsi_slave_config,
+-	.slave_destroy		= ata_scsi_slave_destroy,
+-	.bios_param		= ata_std_bios_param,
++	ATA_BMDMA_SHT(DRV_NAME),
  };
  
- static struct ata_port_operations sis_133_ops = {
+ static const struct ata_port_operations sis_133_ops = {
 diff --git a/drivers/ata/pata_sl82c105.c b/drivers/ata/pata_sl82c105.c
-index 1d97f92..bee11ca 100644
+index 6c37181..ece366b 100644
 --- a/drivers/ata/pata_sl82c105.c
 +++ b/drivers/ata/pata_sl82c105.c
-@@ -64,12 +64,6 @@ static int sl82c105_pre_reset(struct ata_link *link, unsigned long deadline)
+@@ -235,21 +235,7 @@ static int sl82c105_qc_defer(struct ata_queued_cmd *qc)
  }
  
- 
--static void sl82c105_error_handler(struct ata_port *ap)
--{
--	ata_bmdma_drive_eh(ap, sl82c105_pre_reset, ata_std_softreset, NULL, ata_std_postreset);
--}
--
--
- /**
-  *	sl82c105_configure_piomode	-	set chip PIO timing
-  *	@ap: ATA interface
-@@ -245,7 +239,7 @@ static struct ata_port_operations sl82c105_port_ops = {
- 	.bmdma_stop	= sl82c105_bmdma_stop,
- 	.cable_detect	= ata_cable_40wire,
- 	.set_piomode	= sl82c105_set_piomode,
--	.error_handler	= sl82c105_error_handler,
-+	.prereset	= sl82c105_pre_reset,
+ static struct scsi_host_template sl82c105_sht = {
+-	.module			= THIS_MODULE,
+-	.name			= DRV_NAME,
+-	.ioctl			= ata_scsi_ioctl,
+-	.queuecommand		= ata_scsi_queuecmd,
+-	.can_queue		= ATA_DEF_QUEUE,
+-	.this_id		= ATA_SHT_THIS_ID,
+-	.sg_tablesize		= LIBATA_MAX_PRD,
+-	.cmd_per_lun		= ATA_SHT_CMD_PER_LUN,
+-	.emulated		= ATA_SHT_EMULATED,
+-	.use_clustering		= ATA_SHT_USE_CLUSTERING,
+-	.proc_name		= DRV_NAME,
+-	.dma_boundary		= ATA_DMA_BOUNDARY,
+-	.slave_configure	= ata_scsi_slave_config,
+-	.slave_destroy		= ata_scsi_slave_destroy,
+-	.bios_param		= ata_std_bios_param,
++	ATA_BMDMA_SHT(DRV_NAME),
  };
  
- /**
+ static struct ata_port_operations sl82c105_port_ops = {
 diff --git a/drivers/ata/pata_triflex.c b/drivers/ata/pata_triflex.c
-index f07b0e5..bd546a3 100644
+index 403eafc..5105699 100644
 --- a/drivers/ata/pata_triflex.c
 +++ b/drivers/ata/pata_triflex.c
-@@ -71,11 +71,6 @@ static int triflex_prereset(struct ata_link *link, unsigned long deadline)
+@@ -180,21 +180,7 @@ static void triflex_bmdma_stop(struct ata_queued_cmd *qc)
+ }
  
- 
- 
--static void triflex_error_handler(struct ata_port *ap)
--{
--	ata_bmdma_drive_eh(ap, triflex_prereset, ata_std_softreset, NULL, ata_std_postreset);
--}
--
- /**
-  *	triflex_load_timing		-	timing configuration
-  *	@ap: ATA interface
-@@ -189,7 +184,7 @@ static struct ata_port_operations triflex_port_ops = {
- 	.bmdma_stop	= triflex_bmdma_stop,
- 	.cable_detect	= ata_cable_40wire,
- 	.set_piomode	= triflex_set_piomode,
--	.error_handler	= triflex_error_handler,
-+	.prereset	= triflex_prereset,
+ static struct scsi_host_template triflex_sht = {
+-	.module			= THIS_MODULE,
+-	.name			= DRV_NAME,
+-	.ioctl			= ata_scsi_ioctl,
+-	.queuecommand		= ata_scsi_queuecmd,
+-	.can_queue		= ATA_DEF_QUEUE,
+-	.this_id		= ATA_SHT_THIS_ID,
+-	.sg_tablesize		= LIBATA_MAX_PRD,
+-	.cmd_per_lun		= ATA_SHT_CMD_PER_LUN,
+-	.emulated		= ATA_SHT_EMULATED,
+-	.use_clustering		= ATA_SHT_USE_CLUSTERING,
+-	.proc_name		= DRV_NAME,
+-	.dma_boundary		= ATA_DMA_BOUNDARY,
+-	.slave_configure	= ata_scsi_slave_config,
+-	.slave_destroy		= ata_scsi_slave_destroy,
+-	.bios_param		= ata_std_bios_param,
++	ATA_BMDMA_SHT(DRV_NAME),
  };
  
- static int triflex_init_one(struct pci_dev *dev, const struct pci_device_id *id)
+ static struct ata_port_operations triflex_port_ops = {
 diff --git a/drivers/ata/pata_via.c b/drivers/ata/pata_via.c
-index f4092cb..2928fa1 100644
+index 24430f7..a7bc860 100644
 --- a/drivers/ata/pata_via.c
 +++ b/drivers/ata/pata_via.c
-@@ -215,18 +215,6 @@ static int via_pre_reset(struct ata_link *link, unsigned long deadline)
+@@ -335,21 +335,7 @@ static void via_set_dmamode(struct ata_port *ap, struct ata_device *adev)
+ }
  
- 
- /**
-- *	via_error_handler		-	reset for VIA chips
-- *	@ap: ATA port
-- *
-- *	Handle the reset callback for the later chips with cable detect
-- */
--
--static void via_error_handler(struct ata_port *ap)
--{
--	ata_bmdma_drive_eh(ap, via_pre_reset, ata_std_softreset, NULL, ata_std_postreset);
--}
--
--/**
-  *	via_do_set_mode	-	set initial PIO mode data
-  *	@ap: ATA interface
-  *	@adev: ATA device
-@@ -343,7 +331,7 @@ static struct ata_port_operations via_port_ops = {
- 	.cable_detect	= via_cable_detect,
- 	.set_piomode	= via_set_piomode,
- 	.set_dmamode	= via_set_dmamode,
--	.error_handler	= via_error_handler,
-+	.prereset	= via_pre_reset,
+ static struct scsi_host_template via_sht = {
+-	.module			= THIS_MODULE,
+-	.name			= DRV_NAME,
+-	.ioctl			= ata_scsi_ioctl,
+-	.queuecommand		= ata_scsi_queuecmd,
+-	.can_queue		= ATA_DEF_QUEUE,
+-	.this_id		= ATA_SHT_THIS_ID,
+-	.sg_tablesize		= LIBATA_MAX_PRD,
+-	.cmd_per_lun		= ATA_SHT_CMD_PER_LUN,
+-	.emulated		= ATA_SHT_EMULATED,
+-	.use_clustering		= ATA_SHT_USE_CLUSTERING,
+-	.proc_name		= DRV_NAME,
+-	.dma_boundary		= ATA_DMA_BOUNDARY,
+-	.slave_configure	= ata_scsi_slave_config,
+-	.slave_destroy		= ata_scsi_slave_destroy,
+-	.bios_param		= ata_std_bios_param,
++	ATA_BMDMA_SHT(DRV_NAME),
  };
  
- static struct ata_port_operations via_port_ops_noirq = {
+ static struct ata_port_operations via_port_ops = {
+diff --git a/drivers/ata/pata_winbond.c b/drivers/ata/pata_winbond.c
+index 5318248..9bafae9 100644
+--- a/drivers/ata/pata_winbond.c
++++ b/drivers/ata/pata_winbond.c
+@@ -122,21 +122,7 @@ static unsigned int winbond_data_xfer(struct ata_device *dev,
+ }
+ 
+ static struct scsi_host_template winbond_sht = {
+-	.module			= THIS_MODULE,
+-	.name			= DRV_NAME,
+-	.ioctl			= ata_scsi_ioctl,
+-	.queuecommand		= ata_scsi_queuecmd,
+-	.can_queue		= ATA_DEF_QUEUE,
+-	.this_id		= ATA_SHT_THIS_ID,
+-	.sg_tablesize		= LIBATA_MAX_PRD,
+-	.cmd_per_lun		= ATA_SHT_CMD_PER_LUN,
+-	.emulated		= ATA_SHT_EMULATED,
+-	.use_clustering		= ATA_SHT_USE_CLUSTERING,
+-	.proc_name		= DRV_NAME,
+-	.dma_boundary		= ATA_DMA_BOUNDARY,
+-	.slave_configure	= ata_scsi_slave_config,
+-	.slave_destroy		= ata_scsi_slave_destroy,
+-	.bios_param		= ata_std_bios_param,
++	ATA_PIO_SHT(DRV_NAME),
+ };
+ 
+ static struct ata_port_operations winbond_port_ops = {
 diff --git a/drivers/ata/pdc_adma.c b/drivers/ata/pdc_adma.c
-index a570614..5ed065d 100644
+index bc2d12a..fdf62de 100644
 --- a/drivers/ata/pdc_adma.c
 +++ b/drivers/ata/pdc_adma.c
-@@ -140,7 +140,7 @@ static void adma_bmdma_stop(struct ata_queued_cmd *qc);
- static u8 adma_bmdma_status(struct ata_port *ap);
- static void adma_freeze(struct ata_port *ap);
- static void adma_thaw(struct ata_port *ap);
--static void adma_error_handler(struct ata_port *ap);
-+static int adma_prereset(struct ata_link *link, unsigned long deadline);
+@@ -143,21 +143,9 @@ static void adma_thaw(struct ata_port *ap);
+ static void adma_error_handler(struct ata_port *ap);
  
  static struct scsi_host_template adma_ata_sht = {
- 	ATA_BASE_SHT(DRV_NAME),
-@@ -166,7 +166,8 @@ static struct ata_port_operations adma_ata_ops = {
+-	.module			= THIS_MODULE,
+-	.name			= DRV_NAME,
+-	.ioctl			= ata_scsi_ioctl,
+-	.queuecommand		= ata_scsi_queuecmd,
+-	.slave_configure	= ata_scsi_slave_config,
+-	.slave_destroy		= ata_scsi_slave_destroy,
+-	.bios_param		= ata_std_bios_param,
+-	.proc_name		= DRV_NAME,
+-	.can_queue		= ATA_DEF_QUEUE,
+-	.this_id		= ATA_SHT_THIS_ID,
++	ATA_BASE_SHT(DRV_NAME),
+ 	.sg_tablesize		= LIBATA_MAX_PRD,
+ 	.dma_boundary		= ADMA_DMA_BOUNDARY,
+-	.cmd_per_lun		= ATA_SHT_CMD_PER_LUN,
+-	.use_clustering		= ENABLE_CLUSTERING,
+-	.emulated		= ATA_SHT_EMULATED,
+ };
  
- 	.freeze			= adma_freeze,
- 	.thaw			= adma_thaw,
--	.error_handler		= adma_error_handler,
-+	.prereset		= adma_prereset,
-+	.softreset		= ata_std_softreset,
- 
- 	.port_start		= adma_port_start,
- 	.port_stop		= adma_port_stop,
-@@ -292,12 +293,6 @@ static int adma_prereset(struct ata_link *link, unsigned long deadline)
- 	return ata_std_prereset(link, deadline);
- }
- 
--static void adma_error_handler(struct ata_port *ap)
--{
--	ata_do_eh(ap, adma_prereset, ata_std_softreset, NULL,
--		  ata_std_postreset);
--}
--
- static int adma_fill_sg(struct ata_queued_cmd *qc)
- {
- 	struct scatterlist *sg;
+ static const struct ata_port_operations adma_ata_ops = {
 diff --git a/drivers/ata/sata_fsl.c b/drivers/ata/sata_fsl.c
-index ca74a59..ad064df 100644
+index 53ea883..f616ff8 100644
 --- a/drivers/ata/sata_fsl.c
 +++ b/drivers/ata/sata_fsl.c
-@@ -912,16 +912,6 @@ err:
- 	return -EIO;
- }
+@@ -1191,22 +1191,10 @@ static int sata_fsl_init_controller(struct ata_host *host)
+  * scsi mid-layer and libata interface structures
+  */
+ static struct scsi_host_template sata_fsl_sht = {
+-	.module = THIS_MODULE,
+-	.name = "sata_fsl",
+-	.ioctl = ata_scsi_ioctl,
+-	.queuecommand = ata_scsi_queuecmd,
+-	.change_queue_depth = ata_scsi_change_queue_depth,
++	ATA_NCQ_SHT("sata_fsl"),
+ 	.can_queue = SATA_FSL_QUEUE_DEPTH,
+-	.this_id = ATA_SHT_THIS_ID,
+ 	.sg_tablesize = SATA_FSL_MAX_PRD_USABLE,
+-	.cmd_per_lun = ATA_SHT_CMD_PER_LUN,
+-	.emulated = ATA_SHT_EMULATED,
+-	.use_clustering = ATA_SHT_USE_CLUSTERING,
+-	.proc_name = "sata_fsl",
+ 	.dma_boundary = ATA_DMA_BOUNDARY,
+-	.slave_configure = ata_scsi_slave_config,
+-	.slave_destroy = ata_scsi_slave_destroy,
+-	.bios_param = ata_std_bios_param,
+ };
  
--static void sata_fsl_error_handler(struct ata_port *ap)
--{
--
--	DPRINTK("in xx_error_handler\n");
--
--	/* perform recovery */
--	ata_do_eh(ap, ata_std_prereset, sata_fsl_softreset, sata_std_hardreset,
--		  ata_std_postreset);
--}
--
- static void sata_fsl_post_internal_cmd(struct ata_queued_cmd *qc)
- {
- 	if (qc->flags & ATA_QCFLAG_FAILED)
-@@ -1213,7 +1203,7 @@ static const struct ata_port_operations sata_fsl_ops = {
- 
- 	.freeze = sata_fsl_freeze,
- 	.thaw = sata_fsl_thaw,
--	.error_handler = sata_fsl_error_handler,
-+	.softreset = sata_fsl_softreset,
- 	.post_internal_cmd = sata_fsl_post_internal_cmd,
- 
- 	.port_start = sata_fsl_port_start,
+ static const struct ata_port_operations sata_fsl_ops = {
 diff --git a/drivers/ata/sata_inic162x.c b/drivers/ata/sata_inic162x.c
-index 047f80f..ba1c099 100644
+index 74f1436..bb853df 100644
 --- a/drivers/ata/sata_inic162x.c
 +++ b/drivers/ata/sata_inic162x.c
-@@ -452,8 +452,7 @@ static void inic_error_handler(struct ata_port *ap)
- 	spin_unlock_irqrestore(ap->lock, flags);
+@@ -109,21 +109,7 @@ struct inic_port_priv {
+ };
  
- 	/* PIO and DMA engines have been stopped, perform recovery */
--	ata_do_eh(ap, ata_std_prereset, NULL, inic_hardreset,
--		  ata_std_postreset);
-+	ata_std_error_handler(ap);
- }
+ static struct scsi_host_template inic_sht = {
+-	.module			= THIS_MODULE,
+-	.name			= DRV_NAME,
+-	.ioctl			= ata_scsi_ioctl,
+-	.queuecommand		= ata_scsi_queuecmd,
+-	.can_queue		= ATA_DEF_QUEUE,
+-	.this_id		= ATA_SHT_THIS_ID,
+-	.sg_tablesize		= LIBATA_MAX_PRD,
+-	.cmd_per_lun		= ATA_SHT_CMD_PER_LUN,
+-	.emulated		= ATA_SHT_EMULATED,
+-	.use_clustering		= ATA_SHT_USE_CLUSTERING,
+-	.proc_name		= DRV_NAME,
+-	.dma_boundary		= ATA_DMA_BOUNDARY,
+-	.slave_configure	= ata_scsi_slave_config,
+-	.slave_destroy		= ata_scsi_slave_destroy,
+-	.bios_param		= ata_std_bios_param,
++	ATA_BMDMA_SHT(DRV_NAME),
+ };
  
- static void inic_post_internal_cmd(struct ata_queued_cmd *qc)
-@@ -532,6 +531,8 @@ static struct ata_port_operations inic_port_ops = {
- 
- 	.freeze			= inic_freeze,
- 	.thaw			= inic_thaw,
-+	.softreset		= ATA_OP_NULL,	/* softreset is broken */
-+	.hardreset		= inic_hardreset,
- 	.error_handler		= inic_error_handler,
- 	.post_internal_cmd	= inic_post_internal_cmd,
- 	.dev_config		= inic_dev_config,
+ static const int scr_map[] = {
 diff --git a/drivers/ata/sata_mv.c b/drivers/ata/sata_mv.c
-index f341a82..9a89390 100644
+index 4685bce..52d41ed 100644
 --- a/drivers/ata/sata_mv.c
 +++ b/drivers/ata/sata_mv.c
-@@ -470,7 +470,10 @@ static void mv_port_stop(struct ata_port *ap);
- static void mv_qc_prep(struct ata_queued_cmd *qc);
- static void mv_qc_prep_iie(struct ata_queued_cmd *qc);
- static unsigned int mv_qc_issue(struct ata_queued_cmd *qc);
--static void mv_error_handler(struct ata_port *ap);
-+static int mv_prereset(struct ata_link *link, unsigned long deadline);
-+static int mv_hardreset(struct ata_link *link, unsigned int *class,
-+			unsigned long deadline);
-+static void mv_postreset(struct ata_link *link, unsigned int *classes);
- static void mv_eh_freeze(struct ata_port *ap);
- static void mv_eh_thaw(struct ata_port *ap);
- static void mv6_dev_config(struct ata_device *dev);
-@@ -534,7 +537,10 @@ static struct ata_port_operations mv5_ops = {
+@@ -514,40 +514,16 @@ static int __mv_stop_dma(struct ata_port *ap);
+  * PRDs for 64K boundaries in mv_fill_sg().
+  */
+ static struct scsi_host_template mv5_sht = {
+-	.module			= THIS_MODULE,
+-	.name			= DRV_NAME,
+-	.ioctl			= ata_scsi_ioctl,
+-	.queuecommand		= ata_scsi_queuecmd,
+-	.can_queue		= ATA_DEF_QUEUE,
+-	.this_id		= ATA_SHT_THIS_ID,
++	ATA_BASE_SHT(DRV_NAME),
+ 	.sg_tablesize		= MV_MAX_SG_CT / 2,
+-	.cmd_per_lun		= ATA_SHT_CMD_PER_LUN,
+-	.emulated		= ATA_SHT_EMULATED,
+-	.use_clustering		= 1,
+-	.proc_name		= DRV_NAME,
+ 	.dma_boundary		= MV_DMA_BOUNDARY,
+-	.slave_configure	= ata_scsi_slave_config,
+-	.slave_destroy		= ata_scsi_slave_destroy,
+-	.bios_param		= ata_std_bios_param,
+ };
  
- 	.freeze			= mv_eh_freeze,
- 	.thaw			= mv_eh_thaw,
--	.error_handler		= mv_error_handler,
-+	.prereset		= mv_prereset,
-+	.hardreset		= mv_hardreset,
-+	.postreset		= mv_postreset,
-+	.error_handler		= ata_std_error_handler, /* avoid SFF EH */
- 	.post_internal_cmd	= ATA_OP_NULL,
+ static struct scsi_host_template mv6_sht = {
+-	.module			= THIS_MODULE,
+-	.name			= DRV_NAME,
+-	.ioctl			= ata_scsi_ioctl,
+-	.queuecommand		= ata_scsi_queuecmd,
+-	.change_queue_depth	= ata_scsi_change_queue_depth,
++	ATA_NCQ_SHT(DRV_NAME),
+ 	.can_queue		= MV_MAX_Q_DEPTH - 1,
+-	.this_id		= ATA_SHT_THIS_ID,
+ 	.sg_tablesize		= MV_MAX_SG_CT / 2,
+-	.cmd_per_lun		= ATA_SHT_CMD_PER_LUN,
+-	.emulated		= ATA_SHT_EMULATED,
+-	.use_clustering		= 1,
+-	.proc_name		= DRV_NAME,
+ 	.dma_boundary		= MV_DMA_BOUNDARY,
+-	.slave_configure	= ata_scsi_slave_config,
+-	.slave_destroy		= ata_scsi_slave_destroy,
+-	.bios_param		= ata_std_bios_param,
+ };
  
- 	.scr_read		= mv5_scr_read,
-@@ -2415,12 +2421,6 @@ static void mv_postreset(struct ata_link *link, unsigned int *classes)
- 	iowrite8(ap->ctl, ap->ioaddr.ctl_addr);
- }
- 
--static void mv_error_handler(struct ata_port *ap)
--{
--	ata_do_eh(ap, mv_prereset, ata_std_softreset,
--		  mv_hardreset, mv_postreset);
--}
--
- static void mv_eh_freeze(struct ata_port *ap)
- {
- 	struct mv_host_priv *hpriv = ap->host->private_data;
+ static const struct ata_port_operations mv5_ops = {
 diff --git a/drivers/ata/sata_nv.c b/drivers/ata/sata_nv.c
-index 5637b08..b2eb572 100644
+index bd5b6c3..9e2b4ce 100644
 --- a/drivers/ata/sata_nv.c
 +++ b/drivers/ata/sata_nv.c
-@@ -309,7 +309,8 @@ static void nv_nf2_freeze(struct ata_port *ap);
- static void nv_nf2_thaw(struct ata_port *ap);
- static void nv_ck804_freeze(struct ata_port *ap);
- static void nv_ck804_thaw(struct ata_port *ap);
--static void nv_error_handler(struct ata_port *ap);
-+static int nv_hardreset(struct ata_link *link, unsigned int *class,
-+			unsigned long deadline);
- static int nv_adma_slave_config(struct scsi_device *sdev);
- static int nv_adma_check_atapi_dma(struct ata_queued_cmd *qc);
- static void nv_adma_qc_prep(struct ata_queued_cmd *qc);
-@@ -406,7 +407,7 @@ static struct scsi_host_template nv_swncq_sht = {
- 
- static struct ata_port_operations nv_generic_ops = {
- 	.inherits		= &ata_bmdma_port_ops,
--	.error_handler		= nv_error_handler,
-+	.hardreset		= nv_hardreset,
- 	.scr_read		= nv_scr_read,
- 	.scr_write		= nv_scr_write,
+@@ -385,59 +385,23 @@ static struct pci_driver nv_pci_driver = {
  };
-@@ -1599,12 +1600,6 @@ static int nv_hardreset(struct ata_link *link, unsigned int *class,
- 	return sata_std_hardreset(link, &dummy, deadline);
- }
  
--static void nv_error_handler(struct ata_port *ap)
--{
--	ata_bmdma_drive_eh(ap, ata_std_prereset, ata_std_softreset,
--			   nv_hardreset, ata_std_postreset);
--}
--
- static void nv_adma_error_handler(struct ata_port *ap)
- {
- 	struct nv_adma_port_priv *pp = ap->private_data;
-@@ -1658,8 +1653,7 @@ static void nv_adma_error_handler(struct ata_port *ap)
- 		readw(mmio + NV_ADMA_CTL);	/* flush posted write */
- 	}
+ static struct scsi_host_template nv_sht = {
+-	.module			= THIS_MODULE,
+-	.name			= DRV_NAME,
+-	.ioctl			= ata_scsi_ioctl,
+-	.queuecommand		= ata_scsi_queuecmd,
+-	.can_queue		= ATA_DEF_QUEUE,
+-	.this_id		= ATA_SHT_THIS_ID,
+-	.sg_tablesize		= LIBATA_MAX_PRD,
+-	.cmd_per_lun		= ATA_SHT_CMD_PER_LUN,
+-	.emulated		= ATA_SHT_EMULATED,
+-	.use_clustering		= ATA_SHT_USE_CLUSTERING,
+-	.proc_name		= DRV_NAME,
+-	.dma_boundary		= ATA_DMA_BOUNDARY,
+-	.slave_configure	= ata_scsi_slave_config,
+-	.slave_destroy		= ata_scsi_slave_destroy,
+-	.bios_param		= ata_std_bios_param,
++	ATA_BMDMA_SHT(DRV_NAME),
+ };
  
--	ata_bmdma_drive_eh(ap, ata_std_prereset, ata_std_softreset,
--			   nv_hardreset, ata_std_postreset);
-+	ata_bmdma_error_handler(ap);
- }
+ static struct scsi_host_template nv_adma_sht = {
+-	.module			= THIS_MODULE,
+-	.name			= DRV_NAME,
+-	.ioctl			= ata_scsi_ioctl,
+-	.queuecommand		= ata_scsi_queuecmd,
+-	.change_queue_depth	= ata_scsi_change_queue_depth,
++	ATA_NCQ_SHT(DRV_NAME),
+ 	.can_queue		= NV_ADMA_MAX_CPBS,
+-	.this_id		= ATA_SHT_THIS_ID,
+ 	.sg_tablesize		= NV_ADMA_SGTBL_TOTAL_LEN,
+-	.cmd_per_lun		= ATA_SHT_CMD_PER_LUN,
+-	.emulated		= ATA_SHT_EMULATED,
+-	.use_clustering		= ATA_SHT_USE_CLUSTERING,
+-	.proc_name		= DRV_NAME,
+ 	.dma_boundary		= NV_ADMA_DMA_BOUNDARY,
+ 	.slave_configure	= nv_adma_slave_config,
+-	.slave_destroy		= ata_scsi_slave_destroy,
+-	.bios_param		= ata_std_bios_param,
+ };
  
- static void nv_swncq_qc_to_dq(struct ata_port *ap, struct ata_queued_cmd *qc)
-@@ -1785,8 +1779,7 @@ static void nv_swncq_error_handler(struct ata_port *ap)
- 		ehc->i.action |= ATA_EH_RESET;
- 	}
+ static struct scsi_host_template nv_swncq_sht = {
+-	.module			= THIS_MODULE,
+-	.name			= DRV_NAME,
+-	.ioctl			= ata_scsi_ioctl,
+-	.queuecommand		= ata_scsi_queuecmd,
+-	.change_queue_depth	= ata_scsi_change_queue_depth,
++	ATA_NCQ_SHT(DRV_NAME),
+ 	.can_queue		= ATA_MAX_QUEUE,
+-	.this_id		= ATA_SHT_THIS_ID,
+ 	.sg_tablesize		= LIBATA_MAX_PRD,
+-	.cmd_per_lun		= ATA_SHT_CMD_PER_LUN,
+-	.emulated		= ATA_SHT_EMULATED,
+-	.use_clustering		= ATA_SHT_USE_CLUSTERING,
+-	.proc_name		= DRV_NAME,
+ 	.dma_boundary		= ATA_DMA_BOUNDARY,
+ 	.slave_configure	= nv_swncq_slave_config,
+-	.slave_destroy		= ata_scsi_slave_destroy,
+-	.bios_param		= ata_std_bios_param,
+ };
  
--	ata_bmdma_drive_eh(ap, ata_std_prereset, ata_std_softreset,
--			   nv_hardreset, ata_std_postreset);
-+	ata_bmdma_error_handler(ap);
- }
- 
- #ifdef CONFIG_PM
+ static const struct ata_port_operations nv_generic_ops = {
 diff --git a/drivers/ata/sata_promise.c b/drivers/ata/sata_promise.c
-index e725f78..39b8022 100644
+index f251a5f..a6d0196 100644
 --- a/drivers/ata/sata_promise.c
 +++ b/drivers/ata/sata_promise.c
-@@ -146,8 +146,7 @@ static void pdc_irq_clear(struct ata_port *ap);
- static unsigned int pdc_qc_issue_prot(struct ata_queued_cmd *qc);
- static void pdc_freeze(struct ata_port *ap);
- static void pdc_thaw(struct ata_port *ap);
--static void pdc_pata_error_handler(struct ata_port *ap);
--static void pdc_sata_error_handler(struct ata_port *ap);
-+static void pdc_error_handler(struct ata_port *ap);
- static void pdc_post_internal_cmd(struct ata_queued_cmd *qc);
- static int pdc_pata_cable_detect(struct ata_port *ap);
+@@ -153,21 +153,9 @@ static int pdc_pata_cable_detect(struct ata_port *ap);
  static int pdc_sata_cable_detect(struct ata_port *ap);
-@@ -171,12 +170,12 @@ static const struct ata_port_operations pdc_common_ops = {
- 	.freeze			= pdc_freeze,
- 	.thaw			= pdc_thaw,
- 	.post_internal_cmd	= pdc_post_internal_cmd,
-+	.error_handler		= pdc_error_handler,
+ 
+ static struct scsi_host_template pdc_ata_sht = {
+-	.module			= THIS_MODULE,
+-	.name			= DRV_NAME,
+-	.ioctl			= ata_scsi_ioctl,
+-	.queuecommand		= ata_scsi_queuecmd,
+-	.can_queue		= ATA_DEF_QUEUE,
+-	.this_id		= ATA_SHT_THIS_ID,
++	ATA_BASE_SHT(DRV_NAME),
+ 	.sg_tablesize		= PDC_MAX_PRD,
+-	.cmd_per_lun		= ATA_SHT_CMD_PER_LUN,
+-	.emulated		= ATA_SHT_EMULATED,
+-	.use_clustering		= ATA_SHT_USE_CLUSTERING,
+-	.proc_name		= DRV_NAME,
+ 	.dma_boundary		= ATA_DMA_BOUNDARY,
+-	.slave_configure	= ata_scsi_slave_config,
+-	.slave_destroy		= ata_scsi_slave_destroy,
+-	.bios_param		= ata_std_bios_param,
  };
  
- static struct ata_port_operations pdc_sata_ops = {
- 	.inherits		= &pdc_common_ops,
- 	.cable_detect		= pdc_sata_cable_detect,
--	.error_handler		= pdc_sata_error_handler,
- 	.scr_read		= pdc_sata_scr_read,
- 	.scr_write		= pdc_sata_scr_write,
- 	.port_start		= pdc_sata_port_start,
-@@ -191,7 +190,6 @@ static struct ata_port_operations pdc_old_sata_ops = {
- static struct ata_port_operations pdc_pata_ops = {
- 	.inherits		= &pdc_common_ops,
- 	.cable_detect		= pdc_pata_cable_detect,
--	.error_handler		= pdc_pata_error_handler,
- 	.port_start		= pdc_common_port_start,
- };
- 
-@@ -612,24 +610,12 @@ static void pdc_thaw(struct ata_port *ap)
- 	readl(mmio + PDC_CTLSTAT); /* flush */
- }
- 
--static void pdc_common_error_handler(struct ata_port *ap, ata_reset_fn_t hardreset)
-+static void pdc_error_handler(struct ata_port *ap)
- {
- 	if (!(ap->pflags & ATA_PFLAG_FROZEN))
- 		pdc_reset_port(ap);
- 
--	/* perform recovery */
--	ata_do_eh(ap, ata_std_prereset, ata_std_softreset, hardreset,
--		  ata_std_postreset);
--}
--
--static void pdc_pata_error_handler(struct ata_port *ap)
--{
--	pdc_common_error_handler(ap, NULL);
--}
--
--static void pdc_sata_error_handler(struct ata_port *ap)
--{
--	pdc_common_error_handler(ap, sata_std_hardreset);
-+	ata_std_error_handler(ap);
- }
- 
- static void pdc_post_internal_cmd(struct ata_queued_cmd *qc)
+ static const struct ata_port_operations pdc_sata_ops = {
 diff --git a/drivers/ata/sata_qstor.c b/drivers/ata/sata_qstor.c
-index 107ef09..2ceb099 100644
+index 3c8e97f..2566d09 100644
 --- a/drivers/ata/sata_qstor.c
 +++ b/drivers/ata/sata_qstor.c
-@@ -123,6 +123,7 @@ static void qs_bmdma_stop(struct ata_queued_cmd *qc);
- static u8 qs_bmdma_status(struct ata_port *ap);
- static void qs_freeze(struct ata_port *ap);
- static void qs_thaw(struct ata_port *ap);
-+static int qs_prereset(struct ata_link *link, unsigned long deadline);
+@@ -126,21 +126,9 @@ static void qs_thaw(struct ata_port *ap);
  static void qs_error_handler(struct ata_port *ap);
  
  static struct scsi_host_template qs_ata_sht = {
-@@ -142,6 +143,8 @@ static struct ata_port_operations qs_ata_ops = {
- 
- 	.freeze			= qs_freeze,
- 	.thaw			= qs_thaw,
-+	.prereset		= qs_prereset,
-+	.softreset		= ATA_OP_NULL,
- 	.error_handler		= qs_error_handler,
- 	.post_internal_cmd	= ATA_OP_NULL,
- 
-@@ -250,8 +253,7 @@ static int qs_scr_read(struct ata_port *ap, unsigned int sc_reg, u32 *val)
- static void qs_error_handler(struct ata_port *ap)
- {
- 	qs_enter_reg_mode(ap);
--	ata_do_eh(ap, qs_prereset, NULL, sata_std_hardreset,
--		  ata_std_postreset);
-+	ata_std_error_handler(ap);
- }
- 
- static int qs_scr_write(struct ata_port *ap, unsigned int sc_reg, u32 val)
-diff --git a/drivers/ata/sata_sil24.c b/drivers/ata/sata_sil24.c
-index 363fb90..67df1d7 100644
---- a/drivers/ata/sata_sil24.c
-+++ b/drivers/ata/sata_sil24.c
-@@ -352,6 +352,14 @@ static void sil24_pmp_attach(struct ata_port *ap);
- static void sil24_pmp_detach(struct ata_port *ap);
- static void sil24_freeze(struct ata_port *ap);
- static void sil24_thaw(struct ata_port *ap);
-+static int sil24_softreset(struct ata_link *link, unsigned int *class,
-+			   unsigned long deadline);
-+static int sil24_hardreset(struct ata_link *link, unsigned int *class,
-+			   unsigned long deadline);
-+static int sil24_pmp_softreset(struct ata_link *link, unsigned int *class,
-+			       unsigned long deadline);
-+static int sil24_pmp_hardreset(struct ata_link *link, unsigned int *class,
-+			       unsigned long deadline);
- static void sil24_error_handler(struct ata_port *ap);
- static void sil24_post_internal_cmd(struct ata_queued_cmd *qc);
- static int sil24_port_start(struct ata_port *ap);
-@@ -402,6 +410,10 @@ static struct ata_port_operations sil24_ops = {
- 
- 	.freeze			= sil24_freeze,
- 	.thaw			= sil24_thaw,
-+	.softreset		= sil24_softreset,
-+	.hardreset		= sil24_hardreset,
-+	.pmp_softreset		= sil24_pmp_softreset,
-+	.pmp_hardreset		= sil24_pmp_hardreset,
- 	.error_handler		= sil24_error_handler,
- 	.post_internal_cmd	= sil24_post_internal_cmd,
- 	.dev_config		= sil24_dev_config,
-@@ -1181,11 +1193,7 @@ static void sil24_error_handler(struct ata_port *ap)
- 	if (sil24_init_port(ap))
- 		ata_eh_freeze_port(ap);
- 
--	/* perform recovery */
--	sata_pmp_do_eh(ap, ata_std_prereset, sil24_softreset, sil24_hardreset,
--		       ata_std_postreset, sata_pmp_std_prereset,
--		       sil24_pmp_softreset, sil24_pmp_hardreset,
--		       sata_pmp_std_postreset);
-+	sata_pmp_error_handler(ap);
- 
- 	pp->do_port_rst = 0;
- }
-diff --git a/drivers/ata/sata_via.c b/drivers/ata/sata_via.c
-index 6326bcf..402fd73 100644
---- a/drivers/ata/sata_via.c
-+++ b/drivers/ata/sata_via.c
-@@ -71,7 +71,7 @@ static int svia_init_one(struct pci_dev *pdev, const struct pci_device_id *ent);
- static int svia_scr_read(struct ata_port *ap, unsigned int sc_reg, u32 *val);
- static int svia_scr_write(struct ata_port *ap, unsigned int sc_reg, u32 val);
- static void svia_noop_freeze(struct ata_port *ap);
--static void vt6420_error_handler(struct ata_port *ap);
-+static int vt6420_prereset(struct ata_link *link, unsigned long deadline);
- static int vt6421_pata_cable_detect(struct ata_port *ap);
- static void vt6421_set_pio_mode(struct ata_port *ap, struct ata_device *adev);
- static void vt6421_set_dma_mode(struct ata_port *ap, struct ata_device *adev);
-@@ -106,7 +106,7 @@ static struct scsi_host_template svia_sht = {
- static struct ata_port_operations vt6420_sata_ops = {
- 	.inherits		= &ata_bmdma_port_ops,
- 	.freeze			= svia_noop_freeze,
--	.error_handler		= vt6420_error_handler,
-+	.prereset		= vt6420_prereset,
+-	.module			= THIS_MODULE,
+-	.name			= DRV_NAME,
+-	.ioctl			= ata_scsi_ioctl,
+-	.queuecommand		= ata_scsi_queuecmd,
+-	.can_queue		= ATA_DEF_QUEUE,
+-	.this_id		= ATA_SHT_THIS_ID,
++	ATA_BASE_SHT(DRV_NAME),
+ 	.sg_tablesize		= QS_MAX_PRD,
+-	.cmd_per_lun		= ATA_SHT_CMD_PER_LUN,
+-	.emulated		= ATA_SHT_EMULATED,
+-	.use_clustering		= ENABLE_CLUSTERING,
+-	.proc_name		= DRV_NAME,
+ 	.dma_boundary		= QS_DMA_BOUNDARY,
+-	.slave_configure	= ata_scsi_slave_config,
+-	.slave_destroy		= ata_scsi_slave_destroy,
+-	.bios_param		= ata_std_bios_param,
  };
  
- static struct ata_port_operations vt6421_pata_ops = {
-@@ -247,12 +247,6 @@ static int vt6420_prereset(struct ata_link *link, unsigned long deadline)
- 	return 0;
- }
+ static const struct ata_port_operations qs_ata_ops = {
+diff --git a/drivers/ata/sata_sil.c b/drivers/ata/sata_sil.c
+index 53f0bae..738c1a8 100644
+--- a/drivers/ata/sata_sil.c
++++ b/drivers/ata/sata_sil.c
+@@ -167,21 +167,7 @@ static struct pci_driver sil_pci_driver = {
+ };
  
--static void vt6420_error_handler(struct ata_port *ap)
--{
--	ata_bmdma_drive_eh(ap, vt6420_prereset, ata_std_softreset, NULL,
--			   ata_std_postreset);
--}
--
- static int vt6421_pata_cable_detect(struct ata_port *ap)
- {
- 	struct pci_dev *pdev = to_pci_dev(ap->host->dev);
-diff --git a/drivers/scsi/ipr.c b/drivers/scsi/ipr.c
-index c72014a..79fd243 100644
---- a/drivers/scsi/ipr.c
-+++ b/drivers/scsi/ipr.c
-@@ -3937,7 +3937,7 @@ static int __ipr_eh_dev_reset(struct scsi_cmnd * scsi_cmd)
- 	if (ipr_is_gata(res) && res->sata_port) {
- 		ap = res->sata_port->ap;
- 		spin_unlock_irq(scsi_cmd->device->host->host_lock);
--		ata_do_eh(ap, NULL, NULL, ipr_sata_reset, NULL);
-+		ata_std_error_handler(ap);
- 		spin_lock_irq(scsi_cmd->device->host->host_lock);
+ static struct scsi_host_template sil_sht = {
+-	.module			= THIS_MODULE,
+-	.name			= DRV_NAME,
+-	.ioctl			= ata_scsi_ioctl,
+-	.queuecommand		= ata_scsi_queuecmd,
+-	.can_queue		= ATA_DEF_QUEUE,
+-	.this_id		= ATA_SHT_THIS_ID,
+-	.sg_tablesize		= LIBATA_MAX_PRD,
+-	.cmd_per_lun		= ATA_SHT_CMD_PER_LUN,
+-	.emulated		= ATA_SHT_EMULATED,
+-	.use_clustering		= ATA_SHT_USE_CLUSTERING,
+-	.proc_name		= DRV_NAME,
+-	.dma_boundary		= ATA_DMA_BOUNDARY,
+-	.slave_configure	= ata_scsi_slave_config,
+-	.slave_destroy		= ata_scsi_slave_destroy,
+-	.bios_param		= ata_std_bios_param,
++	ATA_BMDMA_SHT(DRV_NAME),
+ };
  
- 		list_for_each_entry(ipr_cmd, &ioa_cfg->pending_q, queue) {
-@@ -5275,6 +5275,7 @@ static struct ata_port_operations ipr_sata_ops = {
- 	.check_altstatus = ipr_ata_check_altstatus,
- 	.dev_select = ata_noop_dev_select,
- 	.phy_reset = ipr_ata_phy_reset,
-+	.hardreset = ipr_sata_reset,
- 	.post_internal_cmd = ipr_ata_post_internal,
- 	.tf_read = ipr_tf_read,
- 	.qc_prep = ata_noop_qc_prep,
+ static const struct ata_port_operations sil_ops = {
+diff --git a/drivers/ata/sata_sil24.c b/drivers/ata/sata_sil24.c
+index b85464d..7fa6395 100644
+--- a/drivers/ata/sata_sil24.c
++++ b/drivers/ata/sata_sil24.c
+@@ -384,22 +384,10 @@ static struct pci_driver sil24_pci_driver = {
+ };
+ 
+ static struct scsi_host_template sil24_sht = {
+-	.module			= THIS_MODULE,
+-	.name			= DRV_NAME,
+-	.ioctl			= ata_scsi_ioctl,
+-	.queuecommand		= ata_scsi_queuecmd,
+-	.change_queue_depth	= ata_scsi_change_queue_depth,
++	ATA_NCQ_SHT(DRV_NAME),
+ 	.can_queue		= SIL24_MAX_CMDS,
+-	.this_id		= ATA_SHT_THIS_ID,
+ 	.sg_tablesize		= SIL24_MAX_SGE,
+-	.cmd_per_lun		= ATA_SHT_CMD_PER_LUN,
+-	.emulated		= ATA_SHT_EMULATED,
+-	.use_clustering		= ATA_SHT_USE_CLUSTERING,
+-	.proc_name		= DRV_NAME,
+ 	.dma_boundary		= ATA_DMA_BOUNDARY,
+-	.slave_configure	= ata_scsi_slave_config,
+-	.slave_destroy		= ata_scsi_slave_destroy,
+-	.bios_param		= ata_std_bios_param,
+ };
+ 
+ static const struct ata_port_operations sil24_ops = {
+diff --git a/drivers/ata/sata_sis.c b/drivers/ata/sata_sis.c
+index a8adef9..4becb7f 100644
+--- a/drivers/ata/sata_sis.c
++++ b/drivers/ata/sata_sis.c
+@@ -86,21 +86,7 @@ static struct pci_driver sis_pci_driver = {
+ };
+ 
+ static struct scsi_host_template sis_sht = {
+-	.module			= THIS_MODULE,
+-	.name			= DRV_NAME,
+-	.ioctl			= ata_scsi_ioctl,
+-	.queuecommand		= ata_scsi_queuecmd,
+-	.can_queue		= ATA_DEF_QUEUE,
+-	.this_id		= ATA_SHT_THIS_ID,
+-	.sg_tablesize		= LIBATA_MAX_PRD,
+-	.cmd_per_lun		= ATA_SHT_CMD_PER_LUN,
+-	.emulated		= ATA_SHT_EMULATED,
+-	.use_clustering		= ATA_SHT_USE_CLUSTERING,
+-	.proc_name		= DRV_NAME,
+-	.dma_boundary		= ATA_DMA_BOUNDARY,
+-	.slave_configure	= ata_scsi_slave_config,
+-	.slave_destroy		= ata_scsi_slave_destroy,
+-	.bios_param		= ata_std_bios_param,
++	ATA_BMDMA_SHT(DRV_NAME),
+ };
+ 
+ static const struct ata_port_operations sis_ops = {
+diff --git a/drivers/ata/sata_svw.c b/drivers/ata/sata_svw.c
+index 5ee0abb..b87343b 100644
+--- a/drivers/ata/sata_svw.c
++++ b/drivers/ata/sata_svw.c
+@@ -327,24 +327,10 @@ static int k2_sata_proc_info(struct Scsi_Host *shost, char *page, char **start,
+ 
+ 
+ static struct scsi_host_template k2_sata_sht = {
+-	.module			= THIS_MODULE,
+-	.name			= DRV_NAME,
+-	.ioctl			= ata_scsi_ioctl,
+-	.queuecommand		= ata_scsi_queuecmd,
+-	.can_queue		= ATA_DEF_QUEUE,
+-	.this_id		= ATA_SHT_THIS_ID,
+-	.sg_tablesize		= LIBATA_MAX_PRD,
+-	.cmd_per_lun		= ATA_SHT_CMD_PER_LUN,
+-	.emulated		= ATA_SHT_EMULATED,
+-	.use_clustering		= ATA_SHT_USE_CLUSTERING,
+-	.proc_name		= DRV_NAME,
+-	.dma_boundary		= ATA_DMA_BOUNDARY,
+-	.slave_configure	= ata_scsi_slave_config,
+-	.slave_destroy		= ata_scsi_slave_destroy,
++	ATA_BMDMA_SHT(DRV_NAME),
+ #ifdef CONFIG_PPC_OF
+ 	.proc_info		= k2_sata_proc_info,
+ #endif
+-	.bios_param		= ata_std_bios_param,
+ };
+ 
+ 
+diff --git a/drivers/ata/sata_sx4.c b/drivers/ata/sata_sx4.c
+index e3d56bc..1802f92 100644
+--- a/drivers/ata/sata_sx4.c
++++ b/drivers/ata/sata_sx4.c
+@@ -236,21 +236,9 @@ static unsigned int pdc20621_qc_issue_prot(struct ata_queued_cmd *qc);
+ 
+ 
+ static struct scsi_host_template pdc_sata_sht = {
+-	.module			= THIS_MODULE,
+-	.name			= DRV_NAME,
+-	.ioctl			= ata_scsi_ioctl,
+-	.queuecommand		= ata_scsi_queuecmd,
+-	.can_queue		= ATA_DEF_QUEUE,
+-	.this_id		= ATA_SHT_THIS_ID,
++	ATA_BASE_SHT(DRV_NAME),
+ 	.sg_tablesize		= LIBATA_MAX_PRD,
+-	.cmd_per_lun		= ATA_SHT_CMD_PER_LUN,
+-	.emulated		= ATA_SHT_EMULATED,
+-	.use_clustering		= ATA_SHT_USE_CLUSTERING,
+-	.proc_name		= DRV_NAME,
+ 	.dma_boundary		= ATA_DMA_BOUNDARY,
+-	.slave_configure	= ata_scsi_slave_config,
+-	.slave_destroy		= ata_scsi_slave_destroy,
+-	.bios_param		= ata_std_bios_param,
+ };
+ 
+ static const struct ata_port_operations pdc_20621_ops = {
+diff --git a/drivers/ata/sata_uli.c b/drivers/ata/sata_uli.c
+index f7fc045..764d706 100644
+--- a/drivers/ata/sata_uli.c
++++ b/drivers/ata/sata_uli.c
+@@ -76,21 +76,7 @@ static struct pci_driver uli_pci_driver = {
+ };
+ 
+ static struct scsi_host_template uli_sht = {
+-	.module			= THIS_MODULE,
+-	.name			= DRV_NAME,
+-	.ioctl			= ata_scsi_ioctl,
+-	.queuecommand		= ata_scsi_queuecmd,
+-	.can_queue		= ATA_DEF_QUEUE,
+-	.this_id		= ATA_SHT_THIS_ID,
+-	.sg_tablesize		= LIBATA_MAX_PRD,
+-	.cmd_per_lun		= ATA_SHT_CMD_PER_LUN,
+-	.emulated		= ATA_SHT_EMULATED,
+-	.use_clustering		= ATA_SHT_USE_CLUSTERING,
+-	.proc_name		= DRV_NAME,
+-	.dma_boundary		= ATA_DMA_BOUNDARY,
+-	.slave_configure	= ata_scsi_slave_config,
+-	.slave_destroy		= ata_scsi_slave_destroy,
+-	.bios_param		= ata_std_bios_param,
++	ATA_BMDMA_SHT(DRV_NAME),
+ };
+ 
+ static const struct ata_port_operations uli_ops = {
+diff --git a/drivers/ata/sata_via.c b/drivers/ata/sata_via.c
+index f66ffd7..9be877c 100644
+--- a/drivers/ata/sata_via.c
++++ b/drivers/ata/sata_via.c
+@@ -100,21 +100,7 @@ static struct pci_driver svia_pci_driver = {
+ };
+ 
+ static struct scsi_host_template svia_sht = {
+-	.module			= THIS_MODULE,
+-	.name			= DRV_NAME,
+-	.ioctl			= ata_scsi_ioctl,
+-	.queuecommand		= ata_scsi_queuecmd,
+-	.can_queue		= ATA_DEF_QUEUE,
+-	.this_id		= ATA_SHT_THIS_ID,
+-	.sg_tablesize		= LIBATA_MAX_PRD,
+-	.cmd_per_lun		= ATA_SHT_CMD_PER_LUN,
+-	.emulated		= ATA_SHT_EMULATED,
+-	.use_clustering		= ATA_SHT_USE_CLUSTERING,
+-	.proc_name		= DRV_NAME,
+-	.dma_boundary		= ATA_DMA_BOUNDARY,
+-	.slave_configure	= ata_scsi_slave_config,
+-	.slave_destroy		= ata_scsi_slave_destroy,
+-	.bios_param		= ata_std_bios_param,
++	ATA_BMDMA_SHT(DRV_NAME),
+ };
+ 
+ static const struct ata_port_operations vt6420_sata_ops = {
+diff --git a/drivers/ata/sata_vsc.c b/drivers/ata/sata_vsc.c
+index 099a2ba..fd6855f 100644
+--- a/drivers/ata/sata_vsc.c
++++ b/drivers/ata/sata_vsc.c
+@@ -300,21 +300,7 @@ out:
+ 
+ 
+ static struct scsi_host_template vsc_sata_sht = {
+-	.module			= THIS_MODULE,
+-	.name			= DRV_NAME,
+-	.ioctl			= ata_scsi_ioctl,
+-	.queuecommand		= ata_scsi_queuecmd,
+-	.can_queue		= ATA_DEF_QUEUE,
+-	.this_id		= ATA_SHT_THIS_ID,
+-	.sg_tablesize		= LIBATA_MAX_PRD,
+-	.cmd_per_lun		= ATA_SHT_CMD_PER_LUN,
+-	.emulated		= ATA_SHT_EMULATED,
+-	.use_clustering		= ATA_SHT_USE_CLUSTERING,
+-	.proc_name		= DRV_NAME,
+-	.dma_boundary		= ATA_DMA_BOUNDARY,
+-	.slave_configure	= ata_scsi_slave_config,
+-	.slave_destroy		= ata_scsi_slave_destroy,
+-	.bios_param		= ata_std_bios_param,
++	ATA_BMDMA_SHT(DRV_NAME),
+ };
+ 
+ 
 diff --git a/include/linux/libata.h b/include/linux/libata.h
-index 4f61beb..148102e 100644
+index 7e211cd..45c40a2 100644
 --- a/include/linux/libata.h
 +++ b/include/linux/libata.h
-@@ -691,6 +691,14 @@ struct ata_port_operations {
- 
- 	void (*freeze)(struct ata_port *ap);
- 	void (*thaw)(struct ata_port *ap);
-+	ata_prereset_fn_t	prereset;
-+	ata_reset_fn_t		softreset;
-+	ata_reset_fn_t		hardreset;
-+	ata_postreset_fn_t	postreset;
-+	ata_prereset_fn_t	pmp_prereset;
-+	ata_reset_fn_t		pmp_softreset;
-+	ata_reset_fn_t		pmp_hardreset;
-+	ata_postreset_fn_t	pmp_postreset;
- 	void (*error_handler)(struct ata_port *ap);
- 	void (*post_internal_cmd)(struct ata_queued_cmd *qc);
- 
-@@ -906,10 +914,6 @@ extern void ata_bmdma_irq_clear(struct ata_port *ap);
- extern void ata_noop_irq_clear(struct ata_port *ap);
- extern void ata_bmdma_freeze(struct ata_port *ap);
- extern void ata_bmdma_thaw(struct ata_port *ap);
--extern void ata_bmdma_drive_eh(struct ata_port *ap, ata_prereset_fn_t prereset,
--			       ata_reset_fn_t softreset,
--			       ata_reset_fn_t hardreset,
--			       ata_postreset_fn_t postreset);
- extern void ata_bmdma_error_handler(struct ata_port *ap);
- extern void ata_bmdma_post_internal_cmd(struct ata_queued_cmd *qc);
- extern int ata_hsm_move(struct ata_port *ap, struct ata_queued_cmd *qc,
-@@ -1053,11 +1057,7 @@ extern int sata_pmp_std_prereset(struct ata_link *link, unsigned long deadline);
- extern int sata_pmp_std_hardreset(struct ata_link *link, unsigned int *class,
- 				  unsigned long deadline);
- extern void sata_pmp_std_postreset(struct ata_link *link, unsigned int *class);
--extern void sata_pmp_do_eh(struct ata_port *ap,
--		ata_prereset_fn_t prereset, ata_reset_fn_t softreset,
--		ata_reset_fn_t hardreset, ata_postreset_fn_t postreset,
--		ata_prereset_fn_t pmp_prereset, ata_reset_fn_t pmp_softreset,
--		ata_reset_fn_t pmp_hardreset, ata_postreset_fn_t pmp_postreset);
-+extern void sata_pmp_error_handler(struct ata_port *ap);
- 
- /*
-  * EH
-@@ -1077,6 +1077,7 @@ extern void ata_eh_qc_retry(struct ata_queued_cmd *qc);
- extern void ata_do_eh(struct ata_port *ap, ata_prereset_fn_t prereset,
- 		      ata_reset_fn_t softreset, ata_reset_fn_t hardreset,
+@@ -1068,6 +1068,63 @@ extern void ata_do_eh(struct ata_port *ap, ata_prereset_fn_t prereset,
  		      ata_postreset_fn_t postreset);
-+extern void ata_std_error_handler(struct ata_port *ap);
  
  /*
-  * Base operations to inherit from and initializers for sht
++ * Base operations to inherit from and initializers for sht
++ *
++ * Operations
++ *
++ * base  : Common to all libata drivers.
++ * sata  : SATA controllers w/ native interface.
++ * pmp   : SATA controllers w/ PMP support.
++ * sff   : SFF ATA controllers w/o BMDMA support.
++ * bmdma : SFF ATA controllers w/ BMDMA support.
++ *
++ * sht initializers
++ *
++ * BASE  : Common to all libata drivers.  The user must set
++ *	   sg_tablesize and dma_boundary.
++ * PIO   : SFF ATA controllers w/ only PIO support.
++ * BMDMA : SFF ATA controllers w/ BMDMA support.  sg_tablesize and
++ *	   dma_boundary are set to BMDMA limits.
++ * NCQ   : SATA controllers supporting NCQ.  The user must set
++ *	   sg_tablesize, dma_boundary and can_queue.
++ */
++extern const struct ata_port_operations ata_base_port_ops;
++extern const struct ata_port_operations sata_port_ops;
++extern const struct ata_port_operations sata_pmp_port_ops;
++extern const struct ata_port_operations ata_sff_port_ops;
++extern const struct ata_port_operations ata_bmdma_port_ops;
++
++#define ATA_BASE_SHT(drv_name)					\
++	.module			= THIS_MODULE,			\
++	.name			= drv_name,			\
++	.ioctl			= ata_scsi_ioctl,		\
++	.queuecommand		= ata_scsi_queuecmd,		\
++	.can_queue		= ATA_DEF_QUEUE,		\
++	.this_id		= ATA_SHT_THIS_ID,		\
++	.cmd_per_lun		= ATA_SHT_CMD_PER_LUN,		\
++	.emulated		= ATA_SHT_EMULATED,		\
++	.use_clustering		= ATA_SHT_USE_CLUSTERING,	\
++	.proc_name		= drv_name,			\
++	.slave_configure	= ata_scsi_slave_config,	\
++	.slave_destroy		= ata_scsi_slave_destroy,	\
++	.bios_param		= ata_std_bios_param
++
++/* PIO only, sg_tablesize and dma_boundary limits can be removed */
++#define ATA_PIO_SHT(drv_name)					\
++	ATA_BASE_SHT(drv_name),					\
++	.sg_tablesize		= LIBATA_MAX_PRD,		\
++	.dma_boundary		= ATA_DMA_BOUNDARY
++
++#define ATA_BMDMA_SHT(drv_name)					\
++	ATA_BASE_SHT(drv_name),					\
++	.sg_tablesize		= LIBATA_MAX_PRD,		\
++	.dma_boundary		= ATA_DMA_BOUNDARY
++
++#define ATA_NCQ_SHT(drv_name)					\
++	ATA_BASE_SHT(drv_name),					\
++	.change_queue_depth	= ata_scsi_change_queue_depth
++
++/*
+  * printk helpers
+  */
+ #define ata_port_printk(ap, lv, fmt, args...) \
 -- 
 1.5.2.4
 
