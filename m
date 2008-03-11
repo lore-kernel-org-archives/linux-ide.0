@@ -1,50 +1,58 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [Regression] 2.6.25-rc4-git3: Handling of audio CDs broken on
- pata_ali
-Date: Tue, 11 Mar 2008 11:31:50 +0900
-Message-ID: <47D5EF16.8080509@gmail.com>
-References: <200803082246.47987.rjw@sisk.pl> <47D4E78A.10507@gmail.com> <47D523A1.7070808@gmail.com> <200803102236.30790.rjw@sisk.pl>
+Subject: [PATCH #upstream-fixes] libata: use atapi_cmd_type() to determine
+ cmd type instead of transfer size
+Date: Tue, 11 Mar 2008 11:35:00 +0900
+Message-ID: <47D5EFD4.2090801@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-15
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.177]:57954 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752661AbYCKCcF (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 10 Mar 2008 22:32:05 -0400
-Received: by wa-out-1112.google.com with SMTP id v27so2586535wah.23
-        for <linux-ide@vger.kernel.org>; Mon, 10 Mar 2008 19:32:05 -0700 (PDT)
-In-Reply-To: <200803102236.30790.rjw@sisk.pl>
+Received: from wr-out-0506.google.com ([64.233.184.224]:62314 "EHLO
+	wr-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751450AbYCKCfK (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 10 Mar 2008 22:35:10 -0400
+Received: by wr-out-0506.google.com with SMTP id 50so1172095wra.13
+        for <linux-ide@vger.kernel.org>; Mon, 10 Mar 2008 19:35:07 -0700 (PDT)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: Andrey Borzenkov <arvidjaar@mail.ru>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, "Rafael J. Wysocki" <rjw@sisk.pl>
 
-Rafael J. Wysocki wrote:
-> On Monday, 10 of March 2008, Tejun Heo wrote:
->> Tejun Heo wrote:
->>> Tejun Heo wrote:
->>>> Rafael J. Wysocki wrote:
->>>>>>> where ata1 is:
->>>>>>>
->>>>>>> scsi0 : pata_ali
->>>>>>> scsi1 : pata_ali
->>>>>> Oh, is it only with audio CDs? I am unable to use DVD on pata_ali in DMA at
->>>>>> all. Have you tried to disable ATAPI DMA (libata.dma=1)?
->>>>> Data CDs seem to work fine here.
->>>> * Does booting into runlevel 1, putting in an audio cd and running
->>>> cdparanoia give the same result?
->>>>
->>>> * Does setting module parameter libata.force to "1.00:pio4" make any
->>>> difference?
->>> Oh, never mind.  I have a hunch.  I'll report back in a while.
->>>
->> Does the attached patch fix the problem?
-> 
-> Yes, it does.  Please push upstream.
+pata_ali and pata_it821x were using qc->nbytes to determine whether a
+command is data transfer type or not.  As now qc->nbytes can be
+extended by padding and draining buffers, this tests are not useful
+anymore.  Use atapi_cmd_type() instead.
 
-Thanks for testing.  Will do.
+Signed-off-by: Tejun Heo <htejun@gmail.com>
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: Rafael J. Wysocki <rjw@sisk.pl>
+---
+ drivers/ata/pata_ali.c    |    2 +-
+ drivers/ata/pata_it821x.c |    2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
 
-
--- 
-tejun
+diff --git a/drivers/ata/pata_ali.c b/drivers/ata/pata_ali.c
+index 7e68edf..8786455 100644
+--- a/drivers/ata/pata_ali.c
++++ b/drivers/ata/pata_ali.c
+@@ -295,7 +295,7 @@ static void ali_lock_sectors(struct ata_device *adev)
+ static int ali_check_atapi_dma(struct ata_queued_cmd *qc)
+ {
+ 	/* If its not a media command, its not worth it */
+-	if (qc->nbytes < 2048)
++	if (atapi_cmd_type(qc->cdb[0]) == ATAPI_MISC)
+ 		return -EOPNOTSUPP;
+ 	return 0;
+ }
+diff --git a/drivers/ata/pata_it821x.c b/drivers/ata/pata_it821x.c
+index 109ddd4..f751749 100644
+--- a/drivers/ata/pata_it821x.c
++++ b/drivers/ata/pata_it821x.c
+@@ -564,7 +564,7 @@ static int it821x_check_atapi_dma(struct ata_queued_cmd *qc)
+ 	struct it821x_dev *itdev = ap->private_data;
+ 
+ 	/* Only use dma for transfers to/from the media. */
+-	if (qc->nbytes < 2048)
++	if (atapi_cmd_type(qc->cdb[0]) == ATAPI_MISC)
+ 		return -EOPNOTSUPP;
+ 
+ 	/* No ATAPI DMA in smart mode */
