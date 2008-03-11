@@ -1,39 +1,50 @@
-From: Greg KH <greg@kroah.com>
-Subject: Re: [PATCH] devres: implement pcim_iomap_regions_request_all()
-Date: Tue, 11 Mar 2008 11:18:35 -0700
-Message-ID: <20080311181835.GA27567@kroah.com>
-References: <47D6643A.6060001@gmail.com>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: [PATCH 00/10] sg buffer copy helper functions
+Date: Tue, 11 Mar 2008 16:09:26 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44L0.0803111543220.26916-100000@iolanthe.rowland.org>
+References: <20080311070956E.tomof@acm.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:58068 "EHLO
-	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751625AbYCKTyg (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 11 Mar 2008 15:54:36 -0400
-Content-Disposition: inline
-In-Reply-To: <47D6643A.6060001@gmail.com>
+Received: from iolanthe.rowland.org ([192.131.102.54]:55186 "HELO
+	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1751974AbYCKUJa (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 11 Mar 2008 16:09:30 -0400
+In-Reply-To: <20080311070956E.tomof@acm.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Jeff Garzik <jeff@garzik.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, linux-pci@atrey.karlin.mff.cuni.cz, Linux Kernel <linux-kernel@vger.kernel.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>
+To: FUJITA Tomonori <tomof@acm.org>
+Cc: bharrosh@panasas.com, linux-ide@vger.kernel.org, fujita.tomonori@lab.ntt.co.jp, linux-scsi@vger.kernel.org, James.Bottomley@HansenPartnership.com, jens.axboe@oracle.com, dougg@torque.net, Geert.Uytterhoeven@sonycom.com, tony.luck@intel.com, Mark_Salyzyn@adaptec.com, ed.lin@promise.com, linuxraid@amcc.com, linux-usb@vger.kernel.org
 
-On Tue, Mar 11, 2008 at 07:51:38PM +0900, Tejun Heo wrote:
-> Some drivers need to reserve all PCI BARs to prevent other drivers
-> misusing unoccupied BARs.  pcim_iomap_regions_request_all() requests
-> all BARs and iomap specified BARs.
+On Tue, 11 Mar 2008, FUJITA Tomonori wrote:
+
+> On Mon, 10 Mar 2008 16:10:36 +0200
+> Boaz Harrosh <bharrosh@panasas.com> wrote:
+
+> > Have you had a look at drivers/usb/storage/protocol.c usb_stor_access_xfer_buf() ?
+> > It looks like it could also use these, but there they have a twist where they want
+> > to do it in parts. Do you think that the code there could also use the helpers 
+> > presented here somehow? (I know that one of the USB guys was asking about it)
 > 
-> Signed-off-by: Tejun Heo <htejun@gmail.com>
-> Cc: Greg Kroah-Hartman <gregkh@suse.de>
-> Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>
-> Cc: Jeff Garzik <jeff@garzik.org>
-> ---
-> After acked, it's probably best to push this through libata-dev as
-> that's the only user for now.
+> I've not. If the USB people are eager to use the new APIs, I'll try
+> though I prefer to keep them simple.
 
-Acked-by: Greg Kroah-Hartman <gregkh@suse.de>
+It would be great if the code could be removed from usb-storage and put
+in a central library.  The problem is, as Boaz mentioned, that some of
+the subdrivers need to transfer their data in pieces.
 
-Feel free to push this through the libata-dev tree.
+It may be that the device is able to send or receive only a few blocks 
+at a time, or it may be that the blocks aren't stored in continguous 
+locations on the device.  Either way, the drivers need to do multiple 
+transfers, each starting from where the previous one left off.
 
-thanks,
+It shouldn't be too hard to adjust your code to make this work.  
+Instead of passing sgl and nents directly to sg_copy_buffer(), pass a
+pointer to a structure containing fields for sgl, nents, n, sg_off, and
+sg_copy.  Then the caller could retain the ending values for use in a
+later call.
 
-greg k-h
+Does this sound reasonable?
+
+Alan Stern
+
