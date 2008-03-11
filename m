@@ -1,889 +1,150 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH 1/5] libata: prefer hardreset
-Date: Tue, 11 Mar 2008 13:27:30 +0900
-Message-ID: <12052096543612-git-send-email-htejun@gmail.com>
+Subject: [PATCH 5/5] libata: kill ata_ehi_schedule_probe()
+Date: Tue, 11 Mar 2008 13:27:34 +0900
+Message-ID: <1205209655924-git-send-email-htejun@gmail.com>
 References: <12052096544056-git-send-email-htejun@gmail.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.180]:21814 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752035AbYCKE1m (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 11 Mar 2008 00:27:42 -0400
-Received: by wa-out-1112.google.com with SMTP id v27so2628807wah.23
-        for <linux-ide@vger.kernel.org>; Mon, 10 Mar 2008 21:27:41 -0700 (PDT)
+Received: from hs-out-0708.google.com ([64.233.178.249]:20757 "EHLO
+	hs-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751947AbYCKE1q (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 11 Mar 2008 00:27:46 -0400
+Received: by hs-out-0708.google.com with SMTP id 4so1686001hsl.5
+        for <linux-ide@vger.kernel.org>; Mon, 10 Mar 2008 21:27:45 -0700 (PDT)
 In-Reply-To: <12052096544056-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: jeff@garzik.org, linux-ide@vger.kernel.org
 Cc: mikpe@it.uu.se, Tejun Heo <htejun@gmail.com>
 
-When both soft and hard resets are available, libata preferred
-softreset till now.  The logic behind it was to be softer to devices;
-however, this doesn't really help much.  Rationales for the change:
+ata_ehi_schedule_probe() was created to hide details of link-resuming
+reset magic.  Now that all the softreset workarounds are gone,
+scheduling probe is very simple - set probe_mask and request RESET.
+Kill ata_ehi_schedule_probe() and open code it.  This also increases
+consistency as ata_ehi_schedule_probe() couldn't cover individual
+device probings so they were open-coded even when the helper existed.
 
-* BIOS may freeze lock certain things during boot and softreset can't
-  unlock those.  This by itself is okay but during operation PHY event
-  or other error conditions can trigger hardreset and the device may
-  end up with different configuration.
-
-  For example, after a hardreset, previously unlockable HPA can be
-  unlocked resulting in different device size and thus revalidation
-  failure.  Similar condition can occur during or after resume.
-
-* Certain ATAPI devices require hardreset to recover after certain
-  error conditions.  On PATA, this is done by issuing the DEVICE RESET
-  command.  On SATA, COMRESET has equivalent effect.  The problem is
-  that DEVICE RESET needs its own execution protocol.
-
-  For SFF controllers with bare TF access, it can be easily
-  implemented but more advanced controllers (e.g. ahci and sata_sil24)
-  require specialized implementations.  Simply using hardreset solves
-  the problem nicely.
-
-* COMRESET initialization sequence is the norm in SATA land and many
-  SATA devices don't work properly if only SRST is used.  For example,
-  some PMPs behave this way and libata works around by always issuing
-  hardreset if the host supports PMP.
-
-  Like the above example, libata has developed a number of mechanisms
-  aiming to promote softreset to hardreset if softreset is not going
-  to work.  This approach is time consuming and error prone.
-
-  Also, note that, dependingon how you read the specs, it could be
-  argued that PMP fan-out ports require COMRESET to start operation.
-  In fact, all the PMPs on the market except one don't work properly
-  if COMRESET is not issued to fan-out ports after PMP reset.
-
-* COMRESET is an integral part of SATA connection and any working
-  device should be able to handle COMRESET properly.  After all, it's
-  the way to signal hardreset during reboot.  This is the most used
-  and recommended (at least by the ahci spec) method of resetting
-  devices.
-
-So, this patch makes libata prefer hardreset over softreset by making
-the following changes.
-
-* Rename ATA_EH_RESET_MASK to ATA_EH_RESET and use it whereever
-  ATA_EH_{SOFT|HARD}RESET used to be used.  ATA_EH_{SOFT|HARD}RESET is
-  now only used to tell prereset whether soft or hard reset will be
-  issued.
-
-* Strip out now unneeded promote-to-hardreset logics from
-  ata_eh_reset(), ata_std_prereset(), sata_pmp_std_prereset() and
-  other places.
+While at it, define ATA_ALL_DEVICES as mask of all possible devices on
+a link and always use it when requesting probe on link level for
+simplicity and consistency.  Setting extra bits in the probe_mask
+doesn't hurt anybody.
 
 Signed-off-by: Tejun Heo <htejun@gmail.com>
 ---
- drivers/ata/ahci.c        |   10 ++--
- drivers/ata/libata-core.c |   19 ++-------
- drivers/ata/libata-eh.c   |   99 ++++++++++++++++-----------------------------
- drivers/ata/libata-pmp.c  |   28 ++++---------
- drivers/ata/libata-scsi.c |    4 +-
- drivers/ata/sata_fsl.c    |    2 +-
- drivers/ata/sata_mv.c     |   31 ++++----------
- drivers/ata/sata_nv.c     |   12 +++---
- drivers/ata/sata_sil24.c  |   54 ++++++++++++------------
- drivers/ata/sata_via.c    |    2 +-
- include/linux/libata.h    |    8 ++--
- 11 files changed, 101 insertions(+), 168 deletions(-)
+ drivers/ata/libata-core.c |    3 +--
+ drivers/ata/libata-eh.c   |    2 +-
+ drivers/ata/libata-pmp.c  |   12 ++++++++----
+ drivers/ata/libata-scsi.c |    2 +-
+ include/linux/libata.h    |   12 ++++--------
+ 5 files changed, 15 insertions(+), 16 deletions(-)
 
-diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
-index 6978469..b88b38a 100644
---- a/drivers/ata/ahci.c
-+++ b/drivers/ata/ahci.c
-@@ -1638,7 +1638,7 @@ static void ahci_error_intr(struct ata_port *ap, u32 irq_stat)
- 		u32 *unk = (u32 *)(pp->rx_fis + RX_FIS_UNK);
- 
- 		active_ehi->err_mask |= AC_ERR_HSM;
--		active_ehi->action |= ATA_EH_SOFTRESET;
-+		active_ehi->action |= ATA_EH_RESET;
- 		ata_ehi_push_desc(active_ehi,
- 				  "unknown FIS %08x %08x %08x %08x" ,
- 				  unk[0], unk[1], unk[2], unk[3]);
-@@ -1646,19 +1646,19 @@ static void ahci_error_intr(struct ata_port *ap, u32 irq_stat)
- 
- 	if (ap->nr_pmp_links && (irq_stat & PORT_IRQ_BAD_PMP)) {
- 		active_ehi->err_mask |= AC_ERR_HSM;
--		active_ehi->action |= ATA_EH_SOFTRESET;
-+		active_ehi->action |= ATA_EH_RESET;
- 		ata_ehi_push_desc(active_ehi, "incorrect PMP");
- 	}
- 
- 	if (irq_stat & (PORT_IRQ_HBUS_ERR | PORT_IRQ_HBUS_DATA_ERR)) {
- 		host_ehi->err_mask |= AC_ERR_HOST_BUS;
--		host_ehi->action |= ATA_EH_SOFTRESET;
-+		host_ehi->action |= ATA_EH_RESET;
- 		ata_ehi_push_desc(host_ehi, "host bus error");
- 	}
- 
- 	if (irq_stat & PORT_IRQ_IF_ERR) {
- 		host_ehi->err_mask |= AC_ERR_ATA_BUS;
--		host_ehi->action |= ATA_EH_SOFTRESET;
-+		host_ehi->action |= ATA_EH_RESET;
- 		ata_ehi_push_desc(host_ehi, "interface fatal error");
- 	}
- 
-@@ -1746,7 +1746,7 @@ static void ahci_port_intr(struct ata_port *ap)
- 	/* while resetting, invalid completions are expected */
- 	if (unlikely(rc < 0 && !resetting)) {
- 		ehi->err_mask |= AC_ERR_HSM;
--		ehi->action |= ATA_EH_SOFTRESET;
-+		ehi->action |= ATA_EH_RESET;
- 		ata_port_freeze(ap);
- 	}
- }
 diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index 4bbe31f..b3ebc3e 100644
+index 18925ed..4b64edd 100644
 --- a/drivers/ata/libata-core.c
 +++ b/drivers/ata/libata-core.c
-@@ -3901,17 +3901,6 @@ int ata_std_prereset(struct ata_link *link, unsigned long deadline)
- 	const unsigned long *timing = sata_ehc_deb_timing(ehc);
- 	int rc;
+@@ -7108,8 +7108,7 @@ int ata_host_register(struct ata_host *host, struct scsi_host_template *sht)
+ 			/* kick EH for boot probing */
+ 			spin_lock_irqsave(ap->lock, flags);
  
--	/* handle link resume */
--	if ((ehc->i.flags & ATA_EHI_RESUME_LINK) &&
--	    (link->flags & ATA_LFLAG_HRST_TO_RESUME))
--		ehc->i.action |= ATA_EH_HARDRESET;
--
--	/* Some PMPs don't work with only SRST, force hardreset if PMP
--	 * is supported.
--	 */
--	if (ap->flags & ATA_FLAG_PMP)
--		ehc->i.action |= ATA_EH_HARDRESET;
--
- 	/* if we're about to do hardreset, nothing more to do */
- 	if (ehc->i.action & ATA_EH_HARDRESET)
- 		return 0;
-@@ -6007,9 +5996,9 @@ void ata_qc_issue(struct ata_queued_cmd *qc)
- 		if (ata_sg_setup(qc))
- 			goto sg_err;
- 
--	/* if device is sleeping, schedule softreset and abort the link */
-+	/* if device is sleeping, schedule reset and abort the link */
- 	if (unlikely(qc->dev->flags & ATA_DFLAG_SLEEPING)) {
--		link->eh_info.action |= ATA_EH_SOFTRESET;
-+		link->eh_info.action |= ATA_EH_RESET;
- 		ata_ehi_push_desc(&link->eh_info, "waking up from sleep");
- 		ata_link_abort(link);
- 		return;
-@@ -6586,7 +6575,7 @@ int ata_host_suspend(struct ata_host *host, pm_message_t mesg)
-  */
- void ata_host_resume(struct ata_host *host)
- {
--	ata_host_request_pm(host, PMSG_ON, ATA_EH_SOFTRESET,
-+	ata_host_request_pm(host, PMSG_ON, ATA_EH_RESET,
- 			    ATA_EHI_NO_AUTOPSY | ATA_EHI_QUIET, 0);
- 	host->dev->power.power_state = PMSG_ON;
- 
-@@ -7123,7 +7112,7 @@ int ata_host_register(struct ata_host *host, struct scsi_host_template *sht)
- 
- 			ehi->probe_mask =
- 				(1 << ata_link_max_devices(&ap->link)) - 1;
--			ehi->action |= ATA_EH_SOFTRESET;
-+			ehi->action |= ATA_EH_RESET;
+-			ehi->probe_mask =
+-				(1 << ata_link_max_devices(&ap->link)) - 1;
++			ehi->probe_mask |= ATA_ALL_DEVICES;
+ 			ehi->action |= ATA_EH_RESET;
  			ehi->flags |= ATA_EHI_NO_AUTOPSY | ATA_EHI_QUIET;
  
- 			ap->pflags &= ~ATA_PFLAG_INITIALIZING;
 diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
-index 681252f..2dd0a2b 100644
+index 5969471..611ecb1 100644
 --- a/drivers/ata/libata-eh.c
 +++ b/drivers/ata/libata-eh.c
-@@ -1079,16 +1079,9 @@ void ata_eh_about_to_do(struct ata_link *link, struct ata_device *dev,
- 
- 	spin_lock_irqsave(ap->lock, flags);
- 
--	/* Reset is represented by combination of actions and EHI
--	 * flags.  Suck in all related bits before clearing eh_info to
--	 * avoid losing requested action.
--	 */
--	if (action & ATA_EH_RESET_MASK) {
--		ehc->i.action |= ehi->action & ATA_EH_RESET_MASK;
-+	/* suck in and clear reset modifier */
-+	if (action & ATA_EH_RESET) {
- 		ehc->i.flags |= ehi->flags & ATA_EHI_RESET_MODIFIER_MASK;
--
--		/* make sure all reset actions are cleared & clear EHI flags */
--		action |= ATA_EH_RESET_MASK;
- 		ehi->flags &= ~ATA_EHI_RESET_MODIFIER_MASK;
- 	}
- 
-@@ -1117,11 +1110,9 @@ void ata_eh_done(struct ata_link *link, struct ata_device *dev,
- {
- 	struct ata_eh_context *ehc = &link->eh_context;
- 
--	/* if reset is complete, clear all reset actions & reset modifier */
--	if (action & ATA_EH_RESET_MASK) {
--		action |= ATA_EH_RESET_MASK;
-+	/* if reset is complete, clear reset modifier */
-+	if (action & ATA_EH_RESET)
- 		ehc->i.flags &= ~ATA_EHI_RESET_MODIFIER_MASK;
--	}
- 
- 	ata_eh_clear_action(link, dev, &ehc->i, action);
- }
-@@ -1329,20 +1320,20 @@ static void ata_eh_analyze_serror(struct ata_link *link)
- 
- 	if (serror & SERR_PERSISTENT) {
- 		err_mask |= AC_ERR_ATA_BUS;
--		action |= ATA_EH_HARDRESET;
-+		action |= ATA_EH_RESET;
- 	}
- 	if (serror &
- 	    (SERR_DATA_RECOVERED | SERR_COMM_RECOVERED | SERR_DATA)) {
- 		err_mask |= AC_ERR_ATA_BUS;
--		action |= ATA_EH_SOFTRESET;
-+		action |= ATA_EH_RESET;
- 	}
- 	if (serror & SERR_PROTOCOL) {
- 		err_mask |= AC_ERR_HSM;
--		action |= ATA_EH_SOFTRESET;
-+		action |= ATA_EH_RESET;
- 	}
- 	if (serror & SERR_INTERNAL) {
- 		err_mask |= AC_ERR_SYSTEM;
--		action |= ATA_EH_HARDRESET;
-+		action |= ATA_EH_RESET;
- 	}
- 
- 	/* Determine whether a hotplug event has occurred.  Both
-@@ -1448,7 +1439,7 @@ static unsigned int ata_eh_analyze_tf(struct ata_queued_cmd *qc,
- 
- 	if ((stat & (ATA_BUSY | ATA_DRQ | ATA_DRDY)) != ATA_DRDY) {
- 		qc->err_mask |= AC_ERR_HSM;
--		return ATA_EH_SOFTRESET;
-+		return ATA_EH_RESET;
- 	}
- 
- 	if (stat & (ATA_ERR | ATA_DF))
-@@ -1484,7 +1475,7 @@ static unsigned int ata_eh_analyze_tf(struct ata_queued_cmd *qc,
- 	}
- 
- 	if (qc->err_mask & (AC_ERR_HSM | AC_ERR_TIMEOUT | AC_ERR_ATA_BUS))
--		action |= ATA_EH_SOFTRESET;
-+		action |= ATA_EH_RESET;
- 
- 	return action;
- }
-@@ -1685,7 +1676,7 @@ static unsigned int ata_eh_speed_down(struct ata_device *dev,
- 	if (verdict & ATA_EH_SPDN_SPEED_DOWN) {
- 		/* speed down SATA link speed if possible */
- 		if (sata_down_spd_limit(link) == 0) {
--			action |= ATA_EH_HARDRESET;
-+			action |= ATA_EH_RESET;
- 			goto done;
- 		}
- 
-@@ -1705,7 +1696,7 @@ static unsigned int ata_eh_speed_down(struct ata_device *dev,
- 			dev->spdn_cnt++;
- 
- 			if (ata_down_xfermask_limit(dev, sel) == 0) {
--				action |= ATA_EH_SOFTRESET;
-+				action |= ATA_EH_RESET;
- 				goto done;
- 			}
- 		}
-@@ -1719,7 +1710,7 @@ static unsigned int ata_eh_speed_down(struct ata_device *dev,
- 	    (dev->xfer_shift != ATA_SHIFT_PIO)) {
- 		if (ata_down_xfermask_limit(dev, ATA_DNXFER_FORCE_PIO) == 0) {
- 			dev->spdn_cnt = 0;
--			action |= ATA_EH_SOFTRESET;
-+			action |= ATA_EH_RESET;
- 			goto done;
- 		}
- 	}
-@@ -1764,9 +1755,9 @@ static void ata_eh_link_autopsy(struct ata_link *link)
- 		ehc->i.serror |= serror;
+@@ -1746,7 +1746,7 @@ static void ata_eh_link_autopsy(struct ata_link *link)
  		ata_eh_analyze_serror(link);
  	} else if (rc != -EOPNOTSUPP) {
--		/* SError read failed, force hardreset and probing */
-+		/* SError read failed, force reset and probing */
- 		ata_ehi_schedule_probe(&ehc->i);
--		ehc->i.action |= ATA_EH_HARDRESET;
-+		ehc->i.action |= ATA_EH_RESET;
+ 		/* SError read failed, force reset and probing */
+-		ata_ehi_schedule_probe(&ehc->i);
++		ehc->i.probe_mask |= ATA_ALL_DEVICES;
+ 		ehc->i.action |= ATA_EH_RESET;
  		ehc->i.err_mask |= AC_ERR_OTHER;
  	}
- 
-@@ -1814,7 +1805,7 @@ static void ata_eh_link_autopsy(struct ata_link *link)
- 	/* enforce default EH actions */
- 	if (ap->pflags & ATA_PFLAG_FROZEN ||
- 	    all_err_mask & (AC_ERR_HSM | AC_ERR_TIMEOUT))
--		ehc->i.action |= ATA_EH_SOFTRESET;
-+		ehc->i.action |= ATA_EH_RESET;
- 	else if (((eflags & ATA_EFLAG_IS_IO) && all_err_mask) ||
- 		 (!(eflags & ATA_EFLAG_IS_IO) && (all_err_mask & ~AC_ERR_DEV)))
- 		ehc->i.action |= ATA_EH_REVALIDATE;
-@@ -2118,7 +2109,6 @@ int ata_eh_reset(struct ata_link *link, int classify,
- 	int try = 0;
- 	struct ata_device *dev;
- 	unsigned long deadline, now;
--	unsigned int tmp_action;
- 	ata_reset_fn_t reset;
- 	unsigned long flags;
- 	u32 sstatus;
-@@ -2129,7 +2119,7 @@ int ata_eh_reset(struct ata_link *link, int classify,
- 	ap->pflags |= ATA_PFLAG_RESETTING;
- 	spin_unlock_irqrestore(ap->lock, flags);
- 
--	ata_eh_about_to_do(link, NULL, ehc->i.action & ATA_EH_RESET_MASK);
-+	ata_eh_about_to_do(link, NULL, ATA_EH_RESET);
- 
- 	ata_link_for_each_dev(dev, link) {
- 		/* If we issue an SRST then an ATA drive (not ATAPI)
-@@ -2159,17 +2149,15 @@ int ata_eh_reset(struct ata_link *link, int classify,
- 		goto done;
- 	}
- 
--	/* Determine which reset to use and record in ehc->i.action.
--	 * prereset() may examine and modify it.
--	 */
--	if (softreset && (!hardreset || (!(lflags & ATA_LFLAG_NO_SRST) &&
--					 !sata_set_spd_needed(link) &&
--					 !(ehc->i.action & ATA_EH_HARDRESET))))
--		tmp_action = ATA_EH_SOFTRESET;
--	else
--		tmp_action = ATA_EH_HARDRESET;
--
--	ehc->i.action = (ehc->i.action & ~ATA_EH_RESET_MASK) | tmp_action;
-+	/* prefer hardreset */
-+	ehc->i.action &= ~ATA_EH_RESET;
-+	if (hardreset) {
-+		reset = hardreset;
-+		ehc->i.action = ATA_EH_HARDRESET;
-+	} else {
-+		reset = softreset;
-+		ehc->i.action = ATA_EH_SOFTRESET;
-+	}
- 
- 	if (prereset) {
- 		rc = prereset(link, jiffies + ATA_EH_PRERESET_TIMEOUT);
-@@ -2177,7 +2165,7 @@ int ata_eh_reset(struct ata_link *link, int classify,
- 			if (rc == -ENOENT) {
- 				ata_link_printk(link, KERN_DEBUG,
- 						"port disabled. ignoring.\n");
--				ehc->i.action &= ~ATA_EH_RESET_MASK;
-+				ehc->i.action &= ~ATA_EH_RESET;
- 
- 				ata_link_for_each_dev(dev, link)
- 					classes[dev->devno] = ATA_DEV_NONE;
-@@ -2190,12 +2178,8 @@ int ata_eh_reset(struct ata_link *link, int classify,
- 		}
- 	}
- 
--	/* prereset() might have modified ehc->i.action */
--	if (ehc->i.action & ATA_EH_HARDRESET)
--		reset = hardreset;
--	else if (ehc->i.action & ATA_EH_SOFTRESET)
--		reset = softreset;
--	else {
-+	/* prereset() might have cleared ATA_EH_RESET */
-+	if (!(ehc->i.action & ATA_EH_RESET)) {
- 		/* prereset told us not to reset, bang classes and return */
- 		ata_link_for_each_dev(dev, link)
- 			classes[dev->devno] = ATA_DEV_NONE;
-@@ -2203,14 +2187,6 @@ int ata_eh_reset(struct ata_link *link, int classify,
- 		goto out;
- 	}
- 
--	/* did prereset() screw up?  if so, fix up to avoid oopsing */
--	if (!reset) {
--		if (softreset)
--			reset = softreset;
--		else
--			reset = hardreset;
--	}
--
-  retry:
- 	deadline = jiffies + ata_eh_reset_timeouts[try++];
- 
-@@ -2240,7 +2216,7 @@ int ata_eh_reset(struct ata_link *link, int classify,
- 			goto fail;
- 		}
- 
--		ata_eh_about_to_do(link, NULL, ATA_EH_RESET_MASK);
-+		ata_eh_about_to_do(link, NULL, ATA_EH_RESET);
- 		rc = ata_do_reset(link, reset, classes, deadline);
- 	}
- 
-@@ -2290,7 +2266,7 @@ int ata_eh_reset(struct ata_link *link, int classify,
- 		postreset(link, classes);
- 
- 	/* reset successful, schedule revalidation */
--	ata_eh_done(link, NULL, ehc->i.action & ATA_EH_RESET_MASK);
-+	ata_eh_done(link, NULL, ATA_EH_RESET);
- 	ehc->i.action |= ATA_EH_REVALIDATE;
- 
- 	rc = 0;
-@@ -2548,7 +2524,7 @@ static int ata_eh_schedule_probe(struct ata_device *dev)
- 	ata_eh_detach_dev(dev);
- 	ata_dev_init(dev);
- 	ehc->did_probe_mask |= (1 << dev->devno);
--	ehc->i.action |= ATA_EH_SOFTRESET;
-+	ehc->i.action |= ATA_EH_RESET;
- 	ehc->saved_xfer_mode[dev->devno] = 0;
- 	ehc->saved_ncq_enabled &= ~(1 << dev->devno);
- 
-@@ -2592,12 +2568,7 @@ static int ata_eh_handle_dev_fail(struct ata_device *dev, int err)
- 
- 		return 1;
- 	} else {
--		/* soft didn't work?  be haaaaard */
--		if (ehc->i.flags & ATA_EHI_DID_RESET)
--			ehc->i.action |= ATA_EH_HARDRESET;
--		else
--			ehc->i.action |= ATA_EH_SOFTRESET;
--
-+		ehc->i.action |= ATA_EH_RESET;
- 		return 0;
- 	}
- }
-@@ -2690,7 +2661,7 @@ int ata_eh_recover(struct ata_port *ap, ata_prereset_fn_t prereset,
- 			ehc->i.action = 0;
- 
- 		/* do we need to reset? */
--		if (ehc->i.action & ATA_EH_RESET_MASK)
-+		if (ehc->i.action & ATA_EH_RESET)
- 			reset = 1;
- 
- 		ata_link_for_each_dev(dev, link)
-@@ -2708,7 +2679,7 @@ int ata_eh_recover(struct ata_port *ap, ata_prereset_fn_t prereset,
- 		ata_port_for_each_link(link, ap) {
- 			struct ata_eh_context *ehc = &link->eh_context;
- 
--			if (!(ehc->i.action & ATA_EH_RESET_MASK))
-+			if (!(ehc->i.action & ATA_EH_RESET))
- 				continue;
- 
- 			rc = ata_eh_reset(link, ata_link_nr_vacant(link),
 diff --git a/drivers/ata/libata-pmp.c b/drivers/ata/libata-pmp.c
-index d91f509..8439fc8 100644
+index df1d325..39e036c 100644
 --- a/drivers/ata/libata-pmp.c
 +++ b/drivers/ata/libata-pmp.c
-@@ -194,15 +194,6 @@ int sata_pmp_std_prereset(struct ata_link *link, unsigned long deadline)
- 	const unsigned long *timing = sata_ehc_deb_timing(ehc);
- 	int rc;
- 
--	/* force HRST? */
--	if (link->flags & ATA_LFLAG_NO_SRST)
--		ehc->i.action |= ATA_EH_HARDRESET;
--
--	/* handle link resume */
--	if ((ehc->i.flags & ATA_EHI_RESUME_LINK) &&
--	    (link->flags & ATA_LFLAG_HRST_TO_RESUME))
--		ehc->i.action |= ATA_EH_HARDRESET;
--
- 	/* if we're about to do hardreset, nothing more to do */
- 	if (ehc->i.action & ATA_EH_HARDRESET)
- 		return 0;
-@@ -445,7 +436,7 @@ static int sata_pmp_init_links(struct ata_port *ap, int nr_ports)
+@@ -435,7 +435,7 @@ static int sata_pmp_init_links(struct ata_port *ap, int nr_ports)
+ 		struct ata_eh_context *ehc = &link->eh_context;
  
  		link->flags = 0;
- 		ehc->i.probe_mask |= 1;
--		ehc->i.action |= ATA_EH_SOFTRESET;
-+		ehc->i.action |= ATA_EH_RESET;
- 		ehc->i.flags |= ATA_EHI_RESUME_LINK;
+-		ehc->i.probe_mask |= 1;
++		ehc->i.probe_mask |= ATA_ALL_DEVICES;
+ 		ehc->i.action |= ATA_EH_RESET;
  	}
  
-@@ -840,13 +831,12 @@ static int sata_pmp_eh_recover_pmp(struct ata_port *ap,
-  retry:
- 	ehc->classes[0] = ATA_DEV_UNKNOWN;
+@@ -831,8 +831,12 @@ static int sata_pmp_eh_recover_pmp(struct ata_port *ap,
+ 		ata_eh_thaw_port(ap);
  
--	if (ehc->i.action & ATA_EH_RESET_MASK) {
-+	if (ehc->i.action & ATA_EH_RESET) {
- 		struct ata_link *tlink;
- 
- 		ata_eh_freeze_port(ap);
- 
- 		/* reset */
--		ehc->i.action = ATA_EH_HARDRESET;
- 		rc = ata_eh_reset(link, 0, prereset, softreset, hardreset,
- 				  postreset);
- 		if (rc) {
-@@ -890,11 +880,11 @@ static int sata_pmp_eh_recover_pmp(struct ata_port *ap,
- 				reval_failed = 1;
- 
- 			ata_dev_printk(dev, KERN_WARNING,
--				       "retrying hardreset%s\n",
-+				       "retrying reset%s\n",
- 				       sleep ? " in 5 secs" : "");
- 			if (sleep)
- 				ssleep(5);
--			ehc->i.action |= ATA_EH_HARDRESET;
+ 		/* PMP is reset, SErrors cannot be trusted, scan all */
+-		ata_port_for_each_link(tlink, ap)
+-			ata_ehi_schedule_probe(&tlink->eh_context.i);
++		ata_port_for_each_link(tlink, ap) {
++			struct ata_eh_context *ehc = &tlink->eh_context;
++
++			ehc->i.probe_mask |= ATA_ALL_DEVICES;
 +			ehc->i.action |= ATA_EH_RESET;
- 			goto retry;
- 		} else {
- 			ata_dev_printk(dev, KERN_ERR, "failed to recover PMP "
-@@ -938,10 +928,8 @@ static int sata_pmp_eh_handle_disabled_links(struct ata_port *ap)
- 		/* Some PMPs require hardreset sequence to get
- 		 * SError.N working.
- 		 */
--		if ((link->flags & ATA_LFLAG_HRST_TO_RESUME) &&
--		    (link->eh_context.i.flags & ATA_EHI_RESUME_LINK))
--			sata_link_hardreset(link, sata_deb_timing_normal,
--					    jiffies + ATA_TMOUT_INTERNAL_QUICK);
-+		sata_link_hardreset(link, sata_deb_timing_normal,
-+				    jiffies + ATA_TMOUT_INTERNAL_QUICK);
- 
- 		/* unconditionally clear SError.N */
- 		rc = sata_scr_write(link, SCR_ERROR, SERR_PHYRDY_CHG);
-@@ -1124,7 +1112,7 @@ static int sata_pmp_eh_recover(struct ata_port *ap,
- 
-  link_fail:
- 	if (sata_pmp_handle_link_fail(link, link_tries)) {
--		pmp_ehc->i.action |= ATA_EH_HARDRESET;
-+		pmp_ehc->i.action |= ATA_EH_RESET;
- 		goto retry;
++		}
  	}
  
-@@ -1142,7 +1130,7 @@ static int sata_pmp_eh_recover(struct ata_port *ap,
- 	if (--pmp_tries) {
- 		ata_port_printk(ap, KERN_WARNING,
- 				"failed to recover PMP, retrying in 5 secs\n");
--		pmp_ehc->i.action |= ATA_EH_HARDRESET;
-+		pmp_ehc->i.action |= ATA_EH_RESET;
- 		ssleep(5);
- 		goto retry;
- 	}
+ 	/* If revalidation is requested, revalidate and reconfigure;
+@@ -847,7 +851,7 @@ static int sata_pmp_eh_recover_pmp(struct ata_port *ap,
+ 		tries--;
+ 
+ 		if (rc == -ENODEV) {
+-			ehc->i.probe_mask |= 1;
++			ehc->i.probe_mask |= ATA_ALL_DEVICES;
+ 			detach = 1;
+ 			/* give it just two more chances */
+ 			tries = min(tries, 2);
 diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-index 8f0e8f2..3270d21 100644
+index d3b8291..5dd3877 100644
 --- a/drivers/ata/libata-scsi.c
 +++ b/drivers/ata/libata-scsi.c
-@@ -3500,7 +3500,7 @@ static int ata_scsi_user_scan(struct Scsi_Host *shost, unsigned int channel,
+@@ -3499,7 +3499,7 @@ static int ata_scsi_user_scan(struct Scsi_Host *shost, unsigned int channel,
+ 
  		ata_port_for_each_link(link, ap) {
  			struct ata_eh_info *ehi = &link->eh_info;
- 			ehi->probe_mask |= (1 << ata_link_max_devices(link)) - 1;
--			ehi->action |= ATA_EH_SOFTRESET;
-+			ehi->action |= ATA_EH_RESET;
+-			ehi->probe_mask |= (1 << ata_link_max_devices(link)) - 1;
++			ehi->probe_mask |= ATA_ALL_DEVICES;
+ 			ehi->action |= ATA_EH_RESET;
  		}
  	} else {
- 		struct ata_device *dev = ata_find_dev(ap, devno);
-@@ -3508,7 +3508,7 @@ static int ata_scsi_user_scan(struct Scsi_Host *shost, unsigned int channel,
- 		if (dev) {
- 			struct ata_eh_info *ehi = &dev->link->eh_info;
- 			ehi->probe_mask |= 1 << dev->devno;
--			ehi->action |= ATA_EH_SOFTRESET;
-+			ehi->action |= ATA_EH_RESET;
- 			ehi->flags |= ATA_EHI_RESUME_LINK;
- 		} else
- 			rc = -EINVAL;
-diff --git a/drivers/ata/sata_fsl.c b/drivers/ata/sata_fsl.c
-index 07791a7..7749e04 100644
---- a/drivers/ata/sata_fsl.c
-+++ b/drivers/ata/sata_fsl.c
-@@ -996,7 +996,7 @@ static void sata_fsl_error_intr(struct ata_port *ap)
- 	/* handle fatal errors */
- 	if (hstatus & FATAL_ERROR_DECODE) {
- 		err_mask |= AC_ERR_ATA_BUS;
--		action |= ATA_EH_SOFTRESET;
-+		action |= ATA_EH_RESET;
- 		/* how will fatal error interrupts be completed ?? */
- 		freeze = 1;
- 	}
-diff --git a/drivers/ata/sata_mv.c b/drivers/ata/sata_mv.c
-index 6ebebde..a4944c8 100644
---- a/drivers/ata/sata_mv.c
-+++ b/drivers/ata/sata_mv.c
-@@ -1524,14 +1524,14 @@ static void mv_err_intr(struct ata_port *ap, struct ata_queued_cmd *qc)
- 			EDMA_ERR_CRQB_PAR | EDMA_ERR_CRPB_PAR |
- 			EDMA_ERR_INTRL_PAR)) {
- 		err_mask |= AC_ERR_ATA_BUS;
--		action |= ATA_EH_HARDRESET;
-+		action |= ATA_EH_RESET;
- 		ata_ehi_push_desc(ehi, "parity error");
- 	}
- 	if (edma_err_cause & (EDMA_ERR_DEV_DCON | EDMA_ERR_DEV_CON)) {
- 		ata_ehi_hotplugged(ehi);
- 		ata_ehi_push_desc(ehi, edma_err_cause & EDMA_ERR_DEV_DCON ?
- 			"dev disconnect" : "dev connect");
--		action |= ATA_EH_HARDRESET;
-+		action |= ATA_EH_RESET;
- 	}
- 
- 	if (IS_GEN_I(hpriv)) {
-@@ -1555,7 +1555,7 @@ static void mv_err_intr(struct ata_port *ap, struct ata_queued_cmd *qc)
- 			sata_scr_read(&ap->link, SCR_ERROR, &serr);
- 			sata_scr_write_flush(&ap->link, SCR_ERROR, serr);
- 			err_mask = AC_ERR_ATA_BUS;
--			action |= ATA_EH_HARDRESET;
-+			action |= ATA_EH_RESET;
- 		}
- 	}
- 
-@@ -1564,7 +1564,7 @@ static void mv_err_intr(struct ata_port *ap, struct ata_queued_cmd *qc)
- 
- 	if (!err_mask) {
- 		err_mask = AC_ERR_OTHER;
--		action |= ATA_EH_HARDRESET;
-+		action |= ATA_EH_RESET;
- 	}
- 
- 	ehi->serror |= serr;
-@@ -1780,7 +1780,7 @@ static void mv_pci_error(struct ata_host *host, void __iomem *mmio)
- 				ata_ehi_push_desc(ehi,
- 					"PCI err cause 0x%08x", err_cause);
- 			err_mask = AC_ERR_HOST_BUS;
--			ehi->action = ATA_EH_HARDRESET;
-+			ehi->action = ATA_EH_RESET;
- 			qc = ata_qc_from_tag(ap, ap->link.active_tag);
- 			if (qc)
- 				qc->err_mask |= err_mask;
-@@ -2449,28 +2449,13 @@ static int mv_prereset(struct ata_link *link, unsigned long deadline)
- {
- 	struct ata_port *ap = link->ap;
- 	struct mv_port_priv *pp	= ap->private_data;
--	struct ata_eh_context *ehc = &link->eh_context;
--	int rc;
- 
--	rc = mv_stop_dma(ap);
--	if (rc)
--		ehc->i.action |= ATA_EH_HARDRESET;
-+	mv_stop_dma(ap);
- 
--	if (!(pp->pp_flags & MV_PP_FLAG_HAD_A_RESET)) {
-+	if (!(pp->pp_flags & MV_PP_FLAG_HAD_A_RESET))
- 		pp->pp_flags |= MV_PP_FLAG_HAD_A_RESET;
--		ehc->i.action |= ATA_EH_HARDRESET;
--	}
--
--	/* if we're about to do hardreset, nothing more to do */
--	if (ehc->i.action & ATA_EH_HARDRESET)
--		return 0;
--
--	if (ata_link_online(link))
--		rc = ata_wait_ready(ap, deadline);
--	else
--		rc = -ENODEV;
- 
--	return rc;
-+	return 0;
- }
- 
- static int mv_hardreset(struct ata_link *link, unsigned int *class,
-diff --git a/drivers/ata/sata_nv.c b/drivers/ata/sata_nv.c
-index ed5473b..ce02e15 100644
---- a/drivers/ata/sata_nv.c
-+++ b/drivers/ata/sata_nv.c
-@@ -929,7 +929,7 @@ static int nv_adma_check_cpb(struct ata_port *ap, int cpb_num, int force_err)
- 					"notifier for tag %d with no cmd?\n",
- 					cpb_num);
- 			ehi->err_mask |= AC_ERR_HSM;
--			ehi->action |= ATA_EH_SOFTRESET;
-+			ehi->action |= ATA_EH_RESET;
- 			ata_port_freeze(ap);
- 			return 1;
- 		}
-@@ -1892,7 +1892,7 @@ static void nv_swncq_error_handler(struct ata_port *ap)
- 
- 	if (ap->link.sactive) {
- 		nv_swncq_ncq_stop(ap);
--		ehc->i.action |= ATA_EH_HARDRESET;
-+		ehc->i.action |= ATA_EH_RESET;
- 	}
- 
- 	ata_bmdma_drive_eh(ap, ata_std_prereset, ata_std_softreset,
-@@ -2173,7 +2173,7 @@ static int nv_swncq_sdbfis(struct ata_port *ap)
- 		ata_ehi_clear_desc(ehi);
- 		ata_ehi_push_desc(ehi, "BMDMA stat 0x%x", host_stat);
- 		ehi->err_mask |= AC_ERR_HOST_BUS;
--		ehi->action |= ATA_EH_SOFTRESET;
-+		ehi->action |= ATA_EH_RESET;
- 		return -EINVAL;
- 	}
- 
-@@ -2188,7 +2188,7 @@ static int nv_swncq_sdbfis(struct ata_port *ap)
- 		ata_ehi_push_desc(ehi, "illegal SWNCQ:qc_active transition"
- 				  "(%08x->%08x)", pp->qc_active, sactive);
- 		ehi->err_mask |= AC_ERR_HSM;
--		ehi->action |= ATA_EH_HARDRESET;
-+		ehi->action |= ATA_EH_RESET;
- 		return -EINVAL;
- 	}
- 	for (i = 0; i < ATA_MAX_QUEUE; i++) {
-@@ -2324,7 +2324,7 @@ static void nv_swncq_host_interrupt(struct ata_port *ap, u16 fis)
- 		ata_ehi_push_desc(ehi, "Ata error. fis:0x%X", fis);
- 		ehi->err_mask |= AC_ERR_DEV;
- 		ehi->serror |= serror;
--		ehi->action |= ATA_EH_SOFTRESET;
-+		ehi->action |= ATA_EH_RESET;
- 		ata_port_freeze(ap);
- 		return;
- 	}
-@@ -2356,7 +2356,7 @@ static void nv_swncq_host_interrupt(struct ata_port *ap, u16 fis)
- 		if (pp->ncq_flags & (ncq_saw_sdb | ncq_saw_backout)) {
- 			ata_ehi_push_desc(ehi, "illegal fis transaction");
- 			ehi->err_mask |= AC_ERR_HSM;
--			ehi->action |= ATA_EH_HARDRESET;
-+			ehi->action |= ATA_EH_RESET;
- 			goto irq_error;
- 		}
- 
-diff --git a/drivers/ata/sata_sil24.c b/drivers/ata/sata_sil24.c
-index df7988d..aa8d032 100644
---- a/drivers/ata/sata_sil24.c
-+++ b/drivers/ata/sata_sil24.c
-@@ -286,45 +286,45 @@ static struct sil24_cerr_info {
- 				    "device error via D2H FIS" },
- 	[PORT_CERR_SDB]		= { AC_ERR_DEV, 0,
- 				    "device error via SDB FIS" },
--	[PORT_CERR_DATA]	= { AC_ERR_ATA_BUS, ATA_EH_SOFTRESET,
-+	[PORT_CERR_DATA]	= { AC_ERR_ATA_BUS, ATA_EH_RESET,
- 				    "error in data FIS" },
--	[PORT_CERR_SEND]	= { AC_ERR_ATA_BUS, ATA_EH_SOFTRESET,
-+	[PORT_CERR_SEND]	= { AC_ERR_ATA_BUS, ATA_EH_RESET,
- 				    "failed to transmit command FIS" },
--	[PORT_CERR_INCONSISTENT] = { AC_ERR_HSM, ATA_EH_SOFTRESET,
-+	[PORT_CERR_INCONSISTENT] = { AC_ERR_HSM, ATA_EH_RESET,
- 				     "protocol mismatch" },
--	[PORT_CERR_DIRECTION]	= { AC_ERR_HSM, ATA_EH_SOFTRESET,
-+	[PORT_CERR_DIRECTION]	= { AC_ERR_HSM, ATA_EH_RESET,
- 				    "data directon mismatch" },
--	[PORT_CERR_UNDERRUN]	= { AC_ERR_HSM, ATA_EH_SOFTRESET,
-+	[PORT_CERR_UNDERRUN]	= { AC_ERR_HSM, ATA_EH_RESET,
- 				    "ran out of SGEs while writing" },
--	[PORT_CERR_OVERRUN]	= { AC_ERR_HSM, ATA_EH_SOFTRESET,
-+	[PORT_CERR_OVERRUN]	= { AC_ERR_HSM, ATA_EH_RESET,
- 				    "ran out of SGEs while reading" },
--	[PORT_CERR_PKT_PROT]	= { AC_ERR_HSM, ATA_EH_SOFTRESET,
-+	[PORT_CERR_PKT_PROT]	= { AC_ERR_HSM, ATA_EH_RESET,
- 				    "invalid data directon for ATAPI CDB" },
--	[PORT_CERR_SGT_BOUNDARY] = { AC_ERR_SYSTEM, ATA_EH_SOFTRESET,
-+	[PORT_CERR_SGT_BOUNDARY] = { AC_ERR_SYSTEM, ATA_EH_RESET,
- 				     "SGT not on qword boundary" },
--	[PORT_CERR_SGT_TGTABRT]	= { AC_ERR_HOST_BUS, ATA_EH_SOFTRESET,
-+	[PORT_CERR_SGT_TGTABRT]	= { AC_ERR_HOST_BUS, ATA_EH_RESET,
- 				    "PCI target abort while fetching SGT" },
--	[PORT_CERR_SGT_MSTABRT]	= { AC_ERR_HOST_BUS, ATA_EH_SOFTRESET,
-+	[PORT_CERR_SGT_MSTABRT]	= { AC_ERR_HOST_BUS, ATA_EH_RESET,
- 				    "PCI master abort while fetching SGT" },
--	[PORT_CERR_SGT_PCIPERR]	= { AC_ERR_HOST_BUS, ATA_EH_SOFTRESET,
-+	[PORT_CERR_SGT_PCIPERR]	= { AC_ERR_HOST_BUS, ATA_EH_RESET,
- 				    "PCI parity error while fetching SGT" },
--	[PORT_CERR_CMD_BOUNDARY] = { AC_ERR_SYSTEM, ATA_EH_SOFTRESET,
-+	[PORT_CERR_CMD_BOUNDARY] = { AC_ERR_SYSTEM, ATA_EH_RESET,
- 				     "PRB not on qword boundary" },
--	[PORT_CERR_CMD_TGTABRT]	= { AC_ERR_HOST_BUS, ATA_EH_SOFTRESET,
-+	[PORT_CERR_CMD_TGTABRT]	= { AC_ERR_HOST_BUS, ATA_EH_RESET,
- 				    "PCI target abort while fetching PRB" },
--	[PORT_CERR_CMD_MSTABRT]	= { AC_ERR_HOST_BUS, ATA_EH_SOFTRESET,
-+	[PORT_CERR_CMD_MSTABRT]	= { AC_ERR_HOST_BUS, ATA_EH_RESET,
- 				    "PCI master abort while fetching PRB" },
--	[PORT_CERR_CMD_PCIPERR]	= { AC_ERR_HOST_BUS, ATA_EH_SOFTRESET,
-+	[PORT_CERR_CMD_PCIPERR]	= { AC_ERR_HOST_BUS, ATA_EH_RESET,
- 				    "PCI parity error while fetching PRB" },
--	[PORT_CERR_XFR_UNDEF]	= { AC_ERR_HOST_BUS, ATA_EH_SOFTRESET,
-+	[PORT_CERR_XFR_UNDEF]	= { AC_ERR_HOST_BUS, ATA_EH_RESET,
- 				    "undefined error while transferring data" },
--	[PORT_CERR_XFR_TGTABRT]	= { AC_ERR_HOST_BUS, ATA_EH_SOFTRESET,
-+	[PORT_CERR_XFR_TGTABRT]	= { AC_ERR_HOST_BUS, ATA_EH_RESET,
- 				    "PCI target abort while transferring data" },
--	[PORT_CERR_XFR_MSTABRT]	= { AC_ERR_HOST_BUS, ATA_EH_SOFTRESET,
-+	[PORT_CERR_XFR_MSTABRT]	= { AC_ERR_HOST_BUS, ATA_EH_RESET,
- 				    "PCI master abort while transferring data" },
--	[PORT_CERR_XFR_PCIPERR]	= { AC_ERR_HOST_BUS, ATA_EH_SOFTRESET,
-+	[PORT_CERR_XFR_PCIPERR]	= { AC_ERR_HOST_BUS, ATA_EH_RESET,
- 				    "PCI parity error while transferring data" },
--	[PORT_CERR_SENDSERVICE]	= { AC_ERR_HSM, ATA_EH_SOFTRESET,
-+	[PORT_CERR_SENDSERVICE]	= { AC_ERR_HSM, ATA_EH_RESET,
- 				    "FIS received while sending service FIS" },
- };
- 
-@@ -616,7 +616,7 @@ static int sil24_init_port(struct ata_port *ap)
- 
- 	if ((tmp & (PORT_CS_INIT | PORT_CS_RDY)) != PORT_CS_RDY) {
- 		pp->do_port_rst = 1;
--		ap->link.eh_context.i.action |= ATA_EH_HARDRESET;
-+		ap->link.eh_context.i.action |= ATA_EH_RESET;
- 		return -EIO;
- 	}
- 
-@@ -1022,7 +1022,7 @@ static void sil24_error_intr(struct ata_port *ap)
- 
- 	if (irq_stat & PORT_IRQ_UNK_FIS) {
- 		ehi->err_mask |= AC_ERR_HSM;
--		ehi->action |= ATA_EH_SOFTRESET;
-+		ehi->action |= ATA_EH_RESET;
- 		ata_ehi_push_desc(ehi, "unknown FIS");
- 		freeze = 1;
- 	}
-@@ -1043,7 +1043,7 @@ static void sil24_error_intr(struct ata_port *ap)
- 		 */
- 		if (ap->nr_active_links >= 3) {
- 			ehi->err_mask |= AC_ERR_OTHER;
--			ehi->action |= ATA_EH_HARDRESET;
-+			ehi->action |= ATA_EH_RESET;
- 			ata_ehi_push_desc(ehi, "PMP DMA CS errata");
- 			pp->do_port_rst = 1;
- 			freeze = 1;
-@@ -1064,7 +1064,7 @@ static void sil24_error_intr(struct ata_port *ap)
- 						  irq_stat);
- 			} else {
- 				err_mask |= AC_ERR_HSM;
--				action |= ATA_EH_HARDRESET;
-+				action |= ATA_EH_RESET;
- 				freeze = 1;
- 			}
- 		} else
-@@ -1078,12 +1078,12 @@ static void sil24_error_intr(struct ata_port *ap)
- 		if (ci && ci->desc) {
- 			err_mask |= ci->err_mask;
- 			action |= ci->action;
--			if (action & ATA_EH_RESET_MASK)
-+			if (action & ATA_EH_RESET)
- 				freeze = 1;
- 			ata_ehi_push_desc(ehi, "%s", ci->desc);
- 		} else {
- 			err_mask |= AC_ERR_OTHER;
--			action |= ATA_EH_SOFTRESET;
-+			action |= ATA_EH_RESET;
- 			freeze = 1;
- 			ata_ehi_push_desc(ehi, "unknown command error %d",
- 					  cerr);
-@@ -1153,7 +1153,7 @@ static inline void sil24_host_intr(struct ata_port *ap)
- 	if (rc < 0) {
- 		struct ata_eh_info *ehi = &ap->link.eh_info;
- 		ehi->err_mask |= AC_ERR_HSM;
--		ehi->action |= ATA_EH_SOFTRESET;
-+		ehi->action |= ATA_EH_RESET;
- 		ata_port_freeze(ap);
- 		return;
- 	}
-diff --git a/drivers/ata/sata_via.c b/drivers/ata/sata_via.c
-index 0d03f44..c0e0f1d 100644
---- a/drivers/ata/sata_via.c
-+++ b/drivers/ata/sata_via.c
-@@ -320,7 +320,7 @@ static int vt6420_prereset(struct ata_link *link, unsigned long deadline)
- 
- 	if (!online) {
- 		/* tell EH to bail */
--		ehc->i.action &= ~ATA_EH_RESET_MASK;
-+		ehc->i.action &= ~ATA_EH_RESET;
- 		return 0;
- 	}
- 
 diff --git a/include/linux/libata.h b/include/linux/libata.h
-index a05f600..618fbf2 100644
+index 95a1a86..0fef10e 100644
 --- a/include/linux/libata.h
 +++ b/include/linux/libata.h
-@@ -292,11 +292,11 @@ enum {
+@@ -122,6 +122,8 @@ enum {
  
- 	/* reset / recovery action types */
- 	ATA_EH_REVALIDATE	= (1 << 0),
--	ATA_EH_SOFTRESET	= (1 << 1),
--	ATA_EH_HARDRESET	= (1 << 2),
-+	ATA_EH_SOFTRESET	= (1 << 1), /* meaningful only in ->prereset */
-+	ATA_EH_HARDRESET	= (1 << 2), /* meaningful only in ->prereset */
-+	ATA_EH_RESET		= ATA_EH_SOFTRESET | ATA_EH_HARDRESET,
- 	ATA_EH_ENABLE_LINK	= (1 << 3),
+ 	ATAPI_MAX_DRAIN		= 16 << 10,
  
--	ATA_EH_RESET_MASK	= ATA_EH_SOFTRESET | ATA_EH_HARDRESET,
- 	ATA_EH_PERDEV_MASK	= ATA_EH_REVALIDATE,
++	ATA_ALL_DEVICES		= (1 << ATA_MAX_DEVICES) - 1,
++
+ 	ATA_SHT_EMULATED	= 1,
+ 	ATA_SHT_CMD_PER_LUN	= 1,
+ 	ATA_SHT_THIS_ID		= -1,
+@@ -1086,17 +1088,11 @@ extern void ata_ehi_push_desc(struct ata_eh_info *ehi, const char *fmt, ...)
+ 	__attribute__ ((format (printf, 2, 3)));
+ extern void ata_ehi_clear_desc(struct ata_eh_info *ehi);
  
- 	/* ata_eh_info->flags */
-@@ -1094,7 +1094,7 @@ extern void ata_ehi_clear_desc(struct ata_eh_info *ehi);
- static inline void ata_ehi_schedule_probe(struct ata_eh_info *ehi)
+-static inline void ata_ehi_schedule_probe(struct ata_eh_info *ehi)
+-{
+-	ehi->action |= ATA_EH_RESET;
+-	ehi->probe_mask |= (1 << ATA_MAX_DEVICES) - 1;
+-}
+-
+ static inline void ata_ehi_hotplugged(struct ata_eh_info *ehi)
  {
- 	ehi->flags |= ATA_EHI_RESUME_LINK;
--	ehi->action |= ATA_EH_SOFTRESET;
-+	ehi->action |= ATA_EH_RESET;
- 	ehi->probe_mask |= (1 << ATA_MAX_DEVICES) - 1;
+-	ata_ehi_schedule_probe(ehi);
++	ehi->probe_mask |= (1 << ATA_MAX_DEVICES) - 1;
+ 	ehi->flags |= ATA_EHI_HOTPLUGGED;
+-	ehi->action |= ATA_EH_ENABLE_LINK;
++	ehi->action |= ATA_EH_RESET | ATA_EH_ENABLE_LINK;
+ 	ehi->err_mask |= AC_ERR_ATA_BUS;
  }
  
 -- 
