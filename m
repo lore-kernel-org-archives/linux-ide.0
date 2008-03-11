@@ -1,35 +1,37 @@
-From: Mourad De Clerck <mourad@aquazul.com>
-Subject: nVidia MCP55 SATA hotplug support?
-Date: Tue, 11 Mar 2008 15:35:52 +0100
-Message-ID: <47D698C8.2020206@aquazul.com>
+From: Mark Lord <liml@rtr.ca>
+Subject: Re: [PATCHSET] libata: clean up scsi_host_templates and ata_port_operations,
+ take #3
+Date: Tue, 11 Mar 2008 11:09:51 -0400
+Message-ID: <47D6A0BF.4030907@rtr.ca>
+References: <12052371651181-git-send-email-htejun@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from gretel.risen.be ([88.198.7.132]:33220 "EHLO gretel.risen.be"
+Received: from rtr.ca ([76.10.145.34]:3212 "EHLO mail.rtr.ca"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753539AbYCKOfz (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 11 Mar 2008 10:35:55 -0400
+	id S1752008AbYCKPJy (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 11 Mar 2008 11:09:54 -0400
+In-Reply-To: <12052371651181-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: jeff@garzik.org, linux-ide@vger.kernel.org, alan@lxorguk.ukuu.org.uk, kngregertsen@norway.atmel.com, sonic.adi@gmail.com, rmk@arm.linux.org.uk, alessandro.zummo@towertech.it, domen.puncer@telargo.com, akira2.iguchi@toshiba.co.jp, leoli@freescale.com, florian@openwrt.org
 
-Hello,
+Tejun Heo wrote:
+> Hello, all.
+> 
+> This is the third take of cleanup-sht-ops patchset.  As the name
+> suggests it reorganizes and cleans up scsi_host_template and
+> ata_port_operation tables used by libata core and low level drivers.
+..
 
-I was wondering what the status was of MCP55 hotplug support. To be more
-specific, I'm interested in support for this device:
+I have a ton of sata_mv updates "in process" at the moment,
+and it would be *really* good to sort out this core infrastructure
+stuff before I generate upstream patches for it all -- to avoid
+one or both of us from unnecessary rework.
 
-00:05.0 IDE interface [0101]: nVidia Corporation MCP55 SATA Controller
-[10de:037f] (rev a3)
+So.. can we get this stuff upstream soon-ish, so that I can generate
+my own patches on top of it?
 
-I was led to believe by the driver feature matrix (on
-http://linux-ata.org/driver-status.html#matrix) that the sata_nv driver
-had working hotplug support. After a bit of googling, I found out that
-there was at one point a "hotplug polling" patchset by Tejun Heo to
-support it - but that was quite a long while ago.
-
-Will we see this appearing in mainline in the (near) future?
-
-Thank you,
-
--- Mourad DC
+Thanks
