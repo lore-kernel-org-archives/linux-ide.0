@@ -1,50 +1,316 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: [PATCH 00/10] sg buffer copy helper functions
-Date: Tue, 11 Mar 2008 16:09:26 -0400 (EDT)
-Message-ID: <Pine.LNX.4.44L0.0803111543220.26916-100000@iolanthe.rowland.org>
-References: <20080311070956E.tomof@acm.org>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: [PATCH] ide: remove obsoleted "idex=" kernel parameters
+Date: Tue, 11 Mar 2008 21:26:14 +0100
+Message-ID: <200803112126.14904.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from iolanthe.rowland.org ([192.131.102.54]:55186 "HELO
-	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1751974AbYCKUJa (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 11 Mar 2008 16:09:30 -0400
-In-Reply-To: <20080311070956E.tomof@acm.org>
+Received: from fk-out-0910.google.com ([209.85.128.186]:6790 "EHLO
+	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752087AbYCKUN6 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 11 Mar 2008 16:13:58 -0400
+Received: by fk-out-0910.google.com with SMTP id z23so2419816fkz.5
+        for <linux-ide@vger.kernel.org>; Tue, 11 Mar 2008 13:13:58 -0700 (PDT)
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: FUJITA Tomonori <tomof@acm.org>
-Cc: bharrosh@panasas.com, linux-ide@vger.kernel.org, fujita.tomonori@lab.ntt.co.jp, linux-scsi@vger.kernel.org, James.Bottomley@HansenPartnership.com, jens.axboe@oracle.com, dougg@torque.net, Geert.Uytterhoeven@sonycom.com, tony.luck@intel.com, Mark_Salyzyn@adaptec.com, ed.lin@promise.com, linuxraid@amcc.com, linux-usb@vger.kernel.org
+To: linux-ide@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>
 
-On Tue, 11 Mar 2008, FUJITA Tomonori wrote:
+* Remove obsoleted "idex=" kernel parameters.
 
-> On Mon, 10 Mar 2008 16:10:36 +0200
-> Boaz Harrosh <bharrosh@panasas.com> wrote:
+* Make probe_* and cmd640_vlb variables static.
 
-> > Have you had a look at drivers/usb/storage/protocol.c usb_stor_access_xfer_buf() ?
-> > It looks like it could also use these, but there they have a twist where they want
-> > to do it in parts. Do you think that the code there could also use the helpers 
-> > presented here somehow? (I know that one of the USB guys was asking about it)
-> 
-> I've not. If the USB people are eager to use the new APIs, I'll try
-> though I prefer to keep them simple.
+Cc: Andrew Morton <akpm@linux-foundation.org>
+Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+---
+Andrew, this should fix "IDE tree vs i386 allmodconfig" issue.
 
-It would be great if the code could be removed from usb-storage and put
-in a central library.  The problem is, as Boaz mentioned, that some of
-the subdrivers need to transfer their data in pieces.
+ Documentation/ide/ide.txt           |    2 
+ Documentation/kernel-parameters.txt |    4 -
+ drivers/ide/ide.c                   |  115 ------------------------------------
+ drivers/ide/legacy/ali14xx.c        |    2 
+ drivers/ide/legacy/dtc2278.c        |    2 
+ drivers/ide/legacy/ht6560b.c        |    2 
+ drivers/ide/legacy/ide-4drives.c    |    2 
+ drivers/ide/legacy/qd65xx.c         |    2 
+ drivers/ide/legacy/umc8672.c        |    2 
+ drivers/ide/pci/cmd640.c            |    5 -
+ 10 files changed, 8 insertions(+), 130 deletions(-)
 
-It may be that the device is able to send or receive only a few blocks 
-at a time, or it may be that the blocks aren't stored in continguous 
-locations on the device.  Either way, the drivers need to do multiple 
-transfers, each starting from where the previous one left off.
-
-It shouldn't be too hard to adjust your code to make this work.  
-Instead of passing sgl and nents directly to sg_copy_buffer(), pass a
-pointer to a structure containing fields for sgl, nents, n, sg_off, and
-sg_copy.  Then the caller could retain the ending values for use in a
-later call.
-
-Does this sound reasonable?
-
-Alan Stern
-
+Index: b/Documentation/ide/ide.txt
+===================================================================
+--- a/Documentation/ide/ide.txt
++++ b/Documentation/ide/ide.txt
+@@ -193,8 +193,6 @@ Summary of ide driver parameters for ker
+ 
+  "hdx="  is recognized for all "x" from "a" to "h", such as "hdc".
+ 
+- "idex=" is recognized for all "x" from "0" to "3", such as "ide1".
+-
+  "hdx=noprobe"		: drive may be present, but do not probe for it
+ 
+  "hdx=none"		: drive is NOT present, ignore cmos and do not probe
+Index: b/Documentation/kernel-parameters.txt
+===================================================================
+--- a/Documentation/kernel-parameters.txt
++++ b/Documentation/kernel-parameters.txt
+@@ -768,10 +768,6 @@ and is between 256 and 4096 characters. 
+ 			Format: ide=nodma or ide=doubler or ide=reverse
+ 			See Documentation/ide/ide.txt.
+ 
+-	ide?=		[HW] (E)IDE subsystem
+-			Format: ide?=ata66 or chipset specific parameters.
+-			See Documentation/ide/ide.txt.
+-
+ 	idebus=		[HW] (E)IDE subsystem - VLB/PCI bus speed
+ 			See Documentation/ide/ide.txt.
+ 
+Index: b/drivers/ide/ide.c
+===================================================================
+--- a/drivers/ide/ide.c
++++ b/drivers/ide/ide.c
+@@ -839,16 +839,6 @@ static int __init match_parm (char *s, c
+ 	return 0;	/* zero = nothing matched */
+ }
+ 
+-extern int probe_ali14xx;
+-extern int probe_umc8672;
+-extern int probe_dtc2278;
+-extern int probe_ht6560b;
+-extern int probe_qd65xx;
+-extern int cmd640_vlb;
+-extern int probe_4drives;
+-
+-static int __initdata is_chipset_set;
+-
+ /*
+  * ide_setup() gets called VERY EARLY during initialization,
+  * to handle kernel "command line" strings beginning with "hdx=" or "ide".
+@@ -857,14 +847,12 @@ static int __initdata is_chipset_set;
+  */
+ static int __init ide_setup(char *s)
+ {
+-	int i, vals[3];
+ 	ide_hwif_t *hwif;
+ 	ide_drive_t *drive;
+ 	unsigned int hw, unit;
++	int vals[3];
+ 	const char max_drive = 'a' + ((MAX_HWIFS * MAX_DRIVES) - 1);
+-	const char max_hwif  = '0' + (MAX_HWIFS - 1);
+ 
+-	
+ 	if (strncmp(s,"hd",2) == 0 && s[2] == '=')	/* hd= is for hd.c   */
+ 		return 0;				/* driver and not us */
+ 
+@@ -996,114 +984,13 @@ static int __init ide_setup(char *s)
+ 			printk(" -- BAD BUS SPEED! Expected value from 20 to 66");
+ 		goto done;
+ 	}
+-	/*
+-	 * Look for interface options:  "idex="
+-	 */
+-	if (s[3] >= '0' && s[3] <= max_hwif) {
+-		/*
+-		 * Be VERY CAREFUL changing this: note hardcoded indexes below
+-		 * (-8, -9, -10) are reserved to ease the hardcoding.
+-		 */
+-		static const char *ide_words[] = {
+-			"minus1", "minus2", "minus3", "minus4",
+-			"minus5", "minus6", "ata66", "minus8", "minus9",
+-			"minus10", "four", "qd65xx", "ht6560b", "cmd640_vlb",
+-			"dtc2278", "umc8672", "ali14xx", NULL };
+ 
+-		hw = s[3] - '0';
+-		hwif = &ide_hwifs[hw];
+-		i = match_parm(&s[4], ide_words, vals, 3);
+-
+-		/*
+-		 * Cryptic check to ensure chipset not already set for hwif.
+-		 * Note: we can't depend on hwif->chipset here.
+-		 */
+-		if (i >= -18 && i <= -11) {
+-			/* chipset already specified */
+-			if (is_chipset_set)
+-				goto bad_option;
+-			/* these drivers are for "ide0=" only */
+-			if (hw != 0)
+-				goto bad_hwif;
+-			is_chipset_set = 1;
+-			printk("\n");
+-		}
+-
+-		switch (i) {
+-#ifdef CONFIG_BLK_DEV_ALI14XX
+-			case -17: /* "ali14xx" */
+-				probe_ali14xx = 1;
+-				goto obsolete_option;
+-#endif
+-#ifdef CONFIG_BLK_DEV_UMC8672
+-			case -16: /* "umc8672" */
+-				probe_umc8672 = 1;
+-				goto obsolete_option;
+-#endif
+-#ifdef CONFIG_BLK_DEV_DTC2278
+-			case -15: /* "dtc2278" */
+-				probe_dtc2278 = 1;
+-				goto obsolete_option;
+-#endif
+-#ifdef CONFIG_BLK_DEV_CMD640
+-			case -14: /* "cmd640_vlb" */
+-				cmd640_vlb = 1;
+-				goto obsolete_option;
+-#endif
+-#ifdef CONFIG_BLK_DEV_HT6560B
+-			case -13: /* "ht6560b" */
+-				probe_ht6560b = 1;
+-				goto obsolete_option;
+-#endif
+-#ifdef CONFIG_BLK_DEV_QD65XX
+-			case -12: /* "qd65xx" */
+-				probe_qd65xx = 1;
+-				goto obsolete_option;
+-#endif
+-#ifdef CONFIG_BLK_DEV_4DRIVES
+-			case -11: /* "four" drives on one set of ports */
+-				probe_4drives = 1;
+-				goto obsolete_option;
+-#endif
+-			case -10: /* minus10 */
+-			case -9: /* minus9 */
+-			case -8: /* minus8 */
+-			case -6:
+-			case -4:
+-			case -3:
+-				goto bad_option;
+-			case -7: /* ata66 */
+-#ifdef CONFIG_BLK_DEV_IDEPCI
+-				/*
+-				 * Use ATA_CBL_PATA40_SHORT so drive side
+-				 * cable detection is also overriden.
+-				 */
+-				hwif->cbl = ATA_CBL_PATA40_SHORT;
+-				goto obsolete_option;
+-#else
+-				goto bad_hwif;
+-#endif
+-			case -5:
+-			case -2:
+-			case -1:
+-			case 0:
+-			case 1:
+-			case 2:
+-			case 3:
+-				goto bad_option;
+-			default:
+-				printk(" -- SUPPORT NOT CONFIGURED IN THIS KERNEL\n");
+-				return 1;
+-		}
+-	}
+ bad_option:
+ 	printk(" -- BAD OPTION\n");
+ 	return 1;
+ obsolete_option:
+ 	printk(" -- OBSOLETE OPTION, WILL BE REMOVED SOON!\n");
+ 	return 1;
+-bad_hwif:
+-	printk("-- NOT SUPPORTED ON ide%d", hw);
+ done:
+ 	printk("\n");
+ 	return 1;
+Index: b/drivers/ide/legacy/ali14xx.c
+===================================================================
+--- a/drivers/ide/legacy/ali14xx.c
++++ b/drivers/ide/legacy/ali14xx.c
+@@ -220,7 +220,7 @@ static int __init ali14xx_probe(void)
+ 	return ide_legacy_device_add(&ali14xx_port_info, 0);
+ }
+ 
+-int probe_ali14xx;
++static int probe_ali14xx;
+ 
+ module_param_named(probe, probe_ali14xx, bool, 0);
+ MODULE_PARM_DESC(probe, "probe for ALI M14xx chipsets");
+Index: b/drivers/ide/legacy/dtc2278.c
+===================================================================
+--- a/drivers/ide/legacy/dtc2278.c
++++ b/drivers/ide/legacy/dtc2278.c
+@@ -131,7 +131,7 @@ static int __init dtc2278_probe(void)
+ 	return ide_legacy_device_add(&dtc2278_port_info, 0);
+ }
+ 
+-int probe_dtc2278 = 0;
++static int probe_dtc2278;
+ 
+ module_param_named(probe, probe_dtc2278, bool, 0);
+ MODULE_PARM_DESC(probe, "probe for DTC2278xx chipsets");
+Index: b/drivers/ide/legacy/ht6560b.c
+===================================================================
+--- a/drivers/ide/legacy/ht6560b.c
++++ b/drivers/ide/legacy/ht6560b.c
+@@ -323,7 +323,7 @@ static void __init ht6560b_port_init_dev
+ 	hwif->drives[1].drive_data = t;
+ }
+ 
+-int probe_ht6560b = 0;
++static int probe_ht6560b;
+ 
+ module_param_named(probe, probe_ht6560b, bool, 0);
+ MODULE_PARM_DESC(probe, "probe for HT6560B chipset");
+Index: b/drivers/ide/legacy/ide-4drives.c
+===================================================================
+--- a/drivers/ide/legacy/ide-4drives.c
++++ b/drivers/ide/legacy/ide-4drives.c
+@@ -6,7 +6,7 @@
+ 
+ #define DRV_NAME "ide-4drives"
+ 
+-int probe_4drives;
++static int probe_4drives;
+ 
+ module_param_named(probe, probe_4drives, bool, 0);
+ MODULE_PARM_DESC(probe, "probe for generic IDE chipset with 4 drives/port");
+Index: b/drivers/ide/legacy/qd65xx.c
+===================================================================
+--- a/drivers/ide/legacy/qd65xx.c
++++ b/drivers/ide/legacy/qd65xx.c
+@@ -399,7 +399,7 @@ static int __init qd_probe(int base)
+ 	return rc;
+ }
+ 
+-int probe_qd65xx = 0;
++static int probe_qd65xx;
+ 
+ module_param_named(probe, probe_qd65xx, bool, 0);
+ MODULE_PARM_DESC(probe, "probe for QD65xx chipsets");
+Index: b/drivers/ide/legacy/umc8672.c
+===================================================================
+--- a/drivers/ide/legacy/umc8672.c
++++ b/drivers/ide/legacy/umc8672.c
+@@ -158,7 +158,7 @@ static int __init umc8672_probe(void)
+ 	return ide_legacy_device_add(&umc8672_port_info, 0);
+ }
+ 
+-int probe_umc8672;
++static int probe_umc8672;
+ 
+ module_param_named(probe, probe_umc8672, bool, 0);
+ MODULE_PARM_DESC(probe, "probe for UMC8672 chipset");
+Index: b/drivers/ide/pci/cmd640.c
+===================================================================
+--- a/drivers/ide/pci/cmd640.c
++++ b/drivers/ide/pci/cmd640.c
+@@ -111,10 +111,7 @@
+ 
+ #define DRV_NAME "cmd640"
+ 
+-/*
+- * This flag is set in ide.c by the parameter:  ide0=cmd640_vlb
+- */
+-int cmd640_vlb;
++static int cmd640_vlb;
+ 
+ /*
+  * CMD640 specific registers definition.
