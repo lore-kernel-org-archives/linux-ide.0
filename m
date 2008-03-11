@@ -1,194 +1,144 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH 2/5] libata: kill ATA_LFLAG_HRST_TO_RESUME
-Date: Tue, 11 Mar 2008 12:41:40 +0900
-Message-ID: <12052069033698-git-send-email-htejun@gmail.com>
+Subject: [PATCH 3/5] libata: kill ATA_EHI_RESUME_LINK
+Date: Tue, 11 Mar 2008 12:41:41 +0900
+Message-ID: <12052069031970-git-send-email-htejun@gmail.com>
 References: <12052069033338-git-send-email-htejun@gmail.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.183]:36603 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752153AbYCKDlu (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 10 Mar 2008 23:41:50 -0400
-Received: by wa-out-1112.google.com with SMTP id v27so2611787wah.23
-        for <linux-ide@vger.kernel.org>; Mon, 10 Mar 2008 20:41:49 -0700 (PDT)
+Received: from wx-out-0506.google.com ([66.249.82.234]:23542 "EHLO
+	wx-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752857AbYCKDlv (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 10 Mar 2008 23:41:51 -0400
+Received: by wx-out-0506.google.com with SMTP id h31so2280940wxd.4
+        for <linux-ide@vger.kernel.org>; Mon, 10 Mar 2008 20:41:50 -0700 (PDT)
 In-Reply-To: <12052069033338-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: jeff@garzik.org, linux-ide@vger.kernel.org
 Cc: mikpe@it.uu.se, Tejun Heo <htejun@gmail.com>
 
-Now that hardreset is the preferred method of resetting, there's no
-need for ATA_LFLAG_HRST_TO_RESUME flag.  Kill it.
+ATA_EHI_RESUME_LINK has two functions - promote reset to hardreset if
+ATA_LFLAG_HRST_TO_RESUME is set and preventing EH from shortcutting
+reset action when probing is requested.  The former is gone now and
+the latter can easily be achieved by making EH to perform at least one
+reset if reset is requested, which also makes more sense than
+depending on RESUME_LINK flag.
+
+As ATA_EHI_RESUME_LINK was the only EHI reset modifier, this also
+kills reset modifier handling.
 
 Signed-off-by: Tejun Heo <htejun@gmail.com>
 ---
- drivers/ata/ahci.c       |    2 +-
- drivers/ata/libata-pmp.c |   16 ----------------
- drivers/ata/sata_nv.c    |    5 -----
- drivers/ata/sata_sil.c   |    5 -----
- include/linux/libata.h   |    1 -
- 5 files changed, 1 insertions(+), 28 deletions(-)
+ drivers/ata/libata-eh.c   |   21 ++++++++-------------
+ drivers/ata/libata-pmp.c  |    1 -
+ drivers/ata/libata-scsi.c |    1 -
+ include/linux/libata.h    |    3 ---
+ 4 files changed, 8 insertions(+), 18 deletions(-)
 
-diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
-index 032b3f6..087efc6 100644
---- a/drivers/ata/ahci.c
-+++ b/drivers/ata/ahci.c
-@@ -407,7 +407,7 @@ static const struct ata_port_info ahci_port_info[] = {
- 	{
- 		AHCI_HFLAGS	(AHCI_HFLAG_NO_NCQ | AHCI_HFLAG_NO_PMP),
- 		.flags		= AHCI_FLAG_COMMON,
--		.link_flags	= AHCI_LFLAG_COMMON | ATA_LFLAG_HRST_TO_RESUME,
-+		.link_flags	= AHCI_LFLAG_COMMON,
- 		.pio_mask	= 0x1f, /* pio0-4 */
- 		.udma_mask	= ATA_UDMA6,
- 		.port_ops	= &ahci_vt8251_ops,
-diff --git a/drivers/ata/libata-pmp.c b/drivers/ata/libata-pmp.c
-index 133246b..9d17158 100644
---- a/drivers/ata/libata-pmp.c
-+++ b/drivers/ata/libata-pmp.c
-@@ -453,9 +453,6 @@ static void sata_pmp_quirks(struct ata_port *ap)
- 	if (vendor == 0x1095 && devid == 0x3726) {
- 		/* sil3726 quirks */
- 		ata_port_for_each_link(link, ap) {
--			/* SError.N need a kick in the ass to get working */
--			link->flags |= ATA_LFLAG_HRST_TO_RESUME;
+diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
+index 42f22ef..bef9187 100644
+--- a/drivers/ata/libata-eh.c
++++ b/drivers/ata/libata-eh.c
+@@ -1079,12 +1079,6 @@ void ata_eh_about_to_do(struct ata_link *link, struct ata_device *dev,
+ 
+ 	spin_lock_irqsave(ap->lock, flags);
+ 
+-	/* suck in and clear reset modifier */
+-	if (action & ATA_EH_RESET) {
+-		ehc->i.flags |= ehi->flags & ATA_EHI_RESET_MODIFIER_MASK;
+-		ehi->flags &= ~ATA_EHI_RESET_MODIFIER_MASK;
+-	}
 -
- 			/* class code report is unreliable */
- 			if (link->pmp < 5)
- 				link->flags |= ATA_LFLAG_ASSUME_ATA;
-@@ -468,9 +465,6 @@ static void sata_pmp_quirks(struct ata_port *ap)
- 	} else if (vendor == 0x1095 && devid == 0x4723) {
- 		/* sil4723 quirks */
- 		ata_port_for_each_link(link, ap) {
--			/* SError.N need a kick in the ass to get working */
--			link->flags |= ATA_LFLAG_HRST_TO_RESUME;
+ 	ata_eh_clear_action(link, dev, ehi, action);
+ 
+ 	if (!(ehc->i.flags & ATA_EHI_QUIET))
+@@ -1110,10 +1104,6 @@ void ata_eh_done(struct ata_link *link, struct ata_device *dev,
+ {
+ 	struct ata_eh_context *ehc = &link->eh_context;
+ 
+-	/* if reset is complete, clear reset modifier */
+-	if (action & ATA_EH_RESET)
+-		ehc->i.flags &= ~ATA_EHI_RESET_MODIFIER_MASK;
 -
- 			/* class code report is unreliable */
- 			if (link->pmp < 2)
- 				link->flags |= ATA_LFLAG_ASSUME_ATA;
-@@ -483,9 +477,6 @@ static void sata_pmp_quirks(struct ata_port *ap)
- 	} else if (vendor == 0x1095 && devid == 0x4726) {
- 		/* sil4726 quirks */
- 		ata_port_for_each_link(link, ap) {
--			/* SError.N need a kick in the ass to get working */
--			link->flags |= ATA_LFLAG_HRST_TO_RESUME;
--
- 			/* Class code report is unreliable and SRST
- 			 * times out under certain configurations.
- 			 * Config device can be at port 0 or 5 and
-@@ -513,13 +504,6 @@ static void sata_pmp_quirks(struct ata_port *ap)
- 		 * otherwise.  Don't try hard to recover it.
- 		 */
- 		ap->pmp_link[ap->nr_pmp_links - 1].flags |= ATA_LFLAG_NO_RETRY;
--	} else if (vendor == 0x11ab && devid == 0x4140) {
--		/* Marvell 88SM4140 quirks.  Fan-out ports require PHY
--		 * reset to work; other than that, it behaves very
--		 * nicely.
--		 */
--		ata_port_for_each_link(link, ap)
--			link->flags |= ATA_LFLAG_HRST_TO_RESUME;
- 	}
+ 	ata_eh_clear_action(link, dev, &ehc->i, action);
  }
  
-diff --git a/drivers/ata/sata_nv.c b/drivers/ata/sata_nv.c
-index ce02e15..75b7653 100644
---- a/drivers/ata/sata_nv.c
-+++ b/drivers/ata/sata_nv.c
-@@ -579,7 +579,6 @@ static const struct ata_port_info nv_port_info[] = {
- 	{
- 		.sht		= &nv_sht,
- 		.flags		= ATA_FLAG_SATA | ATA_FLAG_NO_LEGACY,
--		.link_flags	= ATA_LFLAG_HRST_TO_RESUME,
- 		.pio_mask	= NV_PIO_MASK,
- 		.mwdma_mask	= NV_MWDMA_MASK,
- 		.udma_mask	= NV_UDMA_MASK,
-@@ -590,7 +589,6 @@ static const struct ata_port_info nv_port_info[] = {
- 	{
- 		.sht		= &nv_sht,
- 		.flags		= ATA_FLAG_SATA | ATA_FLAG_NO_LEGACY,
--		.link_flags	= ATA_LFLAG_HRST_TO_RESUME,
- 		.pio_mask	= NV_PIO_MASK,
- 		.mwdma_mask	= NV_MWDMA_MASK,
- 		.udma_mask	= NV_UDMA_MASK,
-@@ -601,7 +599,6 @@ static const struct ata_port_info nv_port_info[] = {
- 	{
- 		.sht		= &nv_sht,
- 		.flags		= ATA_FLAG_SATA | ATA_FLAG_NO_LEGACY,
--		.link_flags	= ATA_LFLAG_HRST_TO_RESUME,
- 		.pio_mask	= NV_PIO_MASK,
- 		.mwdma_mask	= NV_MWDMA_MASK,
- 		.udma_mask	= NV_UDMA_MASK,
-@@ -613,7 +610,6 @@ static const struct ata_port_info nv_port_info[] = {
- 		.sht		= &nv_adma_sht,
- 		.flags		= ATA_FLAG_SATA | ATA_FLAG_NO_LEGACY |
- 				  ATA_FLAG_MMIO | ATA_FLAG_NCQ,
--		.link_flags	= ATA_LFLAG_HRST_TO_RESUME,
- 		.pio_mask	= NV_PIO_MASK,
- 		.mwdma_mask	= NV_MWDMA_MASK,
- 		.udma_mask	= NV_UDMA_MASK,
-@@ -625,7 +621,6 @@ static const struct ata_port_info nv_port_info[] = {
- 		.sht		= &nv_swncq_sht,
- 		.flags	        = ATA_FLAG_SATA | ATA_FLAG_NO_LEGACY |
- 				  ATA_FLAG_NCQ,
--		.link_flags	= ATA_LFLAG_HRST_TO_RESUME,
- 		.pio_mask	= NV_PIO_MASK,
- 		.mwdma_mask	= NV_MWDMA_MASK,
- 		.udma_mask	= NV_UDMA_MASK,
-diff --git a/drivers/ata/sata_sil.c b/drivers/ata/sata_sil.c
-index 0b8191b..7052915 100644
---- a/drivers/ata/sata_sil.c
-+++ b/drivers/ata/sata_sil.c
-@@ -60,7 +60,6 @@ enum {
+@@ -2479,6 +2469,7 @@ static int ata_link_nr_vacant(struct ata_link *link)
  
- 	SIL_DFL_PORT_FLAGS	= ATA_FLAG_SATA | ATA_FLAG_NO_LEGACY |
- 				  ATA_FLAG_MMIO,
--	SIL_DFL_LINK_FLAGS	= ATA_LFLAG_HRST_TO_RESUME,
+ static int ata_eh_skip_recovery(struct ata_link *link)
+ {
++	struct ata_port *ap = link->ap;
+ 	struct ata_eh_context *ehc = &link->eh_context;
+ 	struct ata_device *dev;
  
- 	/*
- 	 * Controller IDs
-@@ -215,7 +214,6 @@ static const struct ata_port_info sil_port_info[] = {
- 	/* sil_3112 */
- 	{
- 		.flags		= SIL_DFL_PORT_FLAGS | SIL_FLAG_MOD15WRITE,
--		.link_flags	= SIL_DFL_LINK_FLAGS,
- 		.pio_mask	= 0x1f,			/* pio0-4 */
- 		.mwdma_mask	= 0x07,			/* mwdma0-2 */
- 		.udma_mask	= ATA_UDMA5,
-@@ -225,7 +223,6 @@ static const struct ata_port_info sil_port_info[] = {
- 	{
- 		.flags		= SIL_DFL_PORT_FLAGS | SIL_FLAG_MOD15WRITE |
- 				  SIL_FLAG_NO_SATA_IRQ,
--		.link_flags	= SIL_DFL_LINK_FLAGS,
- 		.pio_mask	= 0x1f,			/* pio0-4 */
- 		.mwdma_mask	= 0x07,			/* mwdma0-2 */
- 		.udma_mask	= ATA_UDMA5,
-@@ -234,7 +231,6 @@ static const struct ata_port_info sil_port_info[] = {
- 	/* sil_3512 */
- 	{
- 		.flags		= SIL_DFL_PORT_FLAGS | SIL_FLAG_RERR_ON_DMA_ACT,
--		.link_flags	= SIL_DFL_LINK_FLAGS,
- 		.pio_mask	= 0x1f,			/* pio0-4 */
- 		.mwdma_mask	= 0x07,			/* mwdma0-2 */
- 		.udma_mask	= ATA_UDMA5,
-@@ -243,7 +239,6 @@ static const struct ata_port_info sil_port_info[] = {
- 	/* sil_3114 */
- 	{
- 		.flags		= SIL_DFL_PORT_FLAGS | SIL_FLAG_RERR_ON_DMA_ACT,
--		.link_flags	= SIL_DFL_LINK_FLAGS,
- 		.pio_mask	= 0x1f,			/* pio0-4 */
- 		.mwdma_mask	= 0x07,			/* mwdma0-2 */
- 		.udma_mask	= ATA_UDMA5,
+@@ -2486,9 +2477,13 @@ static int ata_eh_skip_recovery(struct ata_link *link)
+ 	if (link->flags & ATA_LFLAG_DISABLED)
+ 		return 1;
+ 
+-	/* thaw frozen port, resume link and recover failed devices */
+-	if ((link->ap->pflags & ATA_PFLAG_FROZEN) ||
+-	    (ehc->i.flags & ATA_EHI_RESUME_LINK) || ata_link_nr_enabled(link))
++	/* thaw frozen port and recover failed devices */
++	if ((ap->pflags & ATA_PFLAG_FROZEN) || ata_link_nr_enabled(link))
++		return 0;
++
++	/* reset at least once if reset is requested */
++	if ((ehc->i.action & ATA_EH_RESET) &&
++	    !(ehc->i.flags & ATA_EHI_DID_RESET))
+ 		return 0;
+ 
+ 	/* skip if class codes for all vacant slots are ATA_DEV_NONE */
+diff --git a/drivers/ata/libata-pmp.c b/drivers/ata/libata-pmp.c
+index 9d17158..ba3ad46 100644
+--- a/drivers/ata/libata-pmp.c
++++ b/drivers/ata/libata-pmp.c
+@@ -437,7 +437,6 @@ static int sata_pmp_init_links(struct ata_port *ap, int nr_ports)
+ 		link->flags = 0;
+ 		ehc->i.probe_mask |= 1;
+ 		ehc->i.action |= ATA_EH_RESET;
+-		ehc->i.flags |= ATA_EHI_RESUME_LINK;
+ 	}
+ 
+ 	return 0;
+diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+index ff4e176..d938b26 100644
+--- a/drivers/ata/libata-scsi.c
++++ b/drivers/ata/libata-scsi.c
+@@ -3458,7 +3458,6 @@ static int ata_scsi_user_scan(struct Scsi_Host *shost, unsigned int channel,
+ 			struct ata_eh_info *ehi = &dev->link->eh_info;
+ 			ehi->probe_mask |= 1 << dev->devno;
+ 			ehi->action |= ATA_EH_RESET;
+-			ehi->flags |= ATA_EHI_RESUME_LINK;
+ 		} else
+ 			rc = -EINVAL;
+ 	}
 diff --git a/include/linux/libata.h b/include/linux/libata.h
-index 25e6fb3..abb0fba 100644
+index abb0fba..2e289a3 100644
 --- a/include/linux/libata.h
 +++ b/include/linux/libata.h
-@@ -162,7 +162,6 @@ enum {
- 	ATA_DEV_NONE		= 9,	/* no device */
+@@ -300,7 +300,6 @@ enum {
  
- 	/* struct ata_link flags */
--	ATA_LFLAG_HRST_TO_RESUME = (1 << 0), /* hardreset to resume link */
- 	ATA_LFLAG_SKIP_D2H_BSY	= (1 << 1), /* can't wait for the first D2H
- 					     * Register FIS clearing BSY */
- 	ATA_LFLAG_NO_SRST	= (1 << 2), /* avoid softreset */
+ 	/* ata_eh_info->flags */
+ 	ATA_EHI_HOTPLUGGED	= (1 << 0),  /* could have been hotplugged */
+-	ATA_EHI_RESUME_LINK	= (1 << 1),  /* resume link (reset modifier) */
+ 	ATA_EHI_NO_AUTOPSY	= (1 << 2),  /* no autopsy */
+ 	ATA_EHI_QUIET		= (1 << 3),  /* be quiet */
+ 	ATA_EHI_LPM		= (1 << 4),  /* link power management action */
+@@ -312,7 +311,6 @@ enum {
+ 	ATA_EHI_POST_SETMODE	= (1 << 20), /* revaildating after setmode */
+ 
+ 	ATA_EHI_DID_RESET	= ATA_EHI_DID_SOFTRESET | ATA_EHI_DID_HARDRESET,
+-	ATA_EHI_RESET_MODIFIER_MASK = ATA_EHI_RESUME_LINK,
+ 
+ 	/* max tries if error condition is still set after ->error_handler */
+ 	ATA_EH_MAX_TRIES	= 5,
+@@ -1101,7 +1099,6 @@ extern void ata_ehi_clear_desc(struct ata_eh_info *ehi);
+ 
+ static inline void ata_ehi_schedule_probe(struct ata_eh_info *ehi)
+ {
+-	ehi->flags |= ATA_EHI_RESUME_LINK;
+ 	ehi->action |= ATA_EH_RESET;
+ 	ehi->probe_mask |= (1 << ATA_MAX_DEVICES) - 1;
+ }
 -- 
 1.5.2.4
 
