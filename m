@@ -1,108 +1,92 @@
-From: Borislav Petkov <petkovbb@googlemail.com>
-Subject: Re: [PATCH 1/4] ide-tape: remove tape->cache_stage
-Date: Tue, 11 Mar 2008 07:40:10 +0100
-Message-ID: <20080311064010.GA4266@gollum.tnic>
-References: <1205082632-3418-1-git-send-email-petkovbb@gmail.com> <1205082632-3418-2-git-send-email-petkovbb@gmail.com> <200803110024.51339.bzolnier@gmail.com>
-Reply-To: petkovbb@gmail.com
+From: Boaz Harrosh <bharrosh@panasas.com>
+Subject: Re: [PATCH 00/10] sg buffer copy helper functions
+Date: Tue, 11 Mar 2008 12:05:06 +0200
+Message-ID: <47D65952.2050302@panasas.com>
+References: <1205037877-12843-1-git-send-email-fujita.tomonori@lab.ntt.co.jp>	<47D5415C.3010904@panasas.com> <20080311070956E.tomof@acm.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.171]:10681 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751040AbYCKGkS (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 11 Mar 2008 02:40:18 -0400
-Received: by ug-out-1314.google.com with SMTP id z38so5041448ugc.16
-        for <linux-ide@vger.kernel.org>; Mon, 10 Mar 2008 23:40:16 -0700 (PDT)
-Content-Disposition: inline
-In-Reply-To: <200803110024.51339.bzolnier@gmail.com>
+Received: from bzq-219-195-70.pop.bezeqint.net ([62.219.195.70]:48173 "EHLO
+	bh-buildlin2.bhalevy.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752135AbYCKKHl (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 11 Mar 2008 06:07:41 -0400
+In-Reply-To: <20080311070956E.tomof@acm.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: FUJITA Tomonori <tomof@acm.org>
+Cc: linux-ide@vger.kernel.org, fujita.tomonori@lab.ntt.co.jp, linux-scsi@vger.kernel.org, James.Bottomley@HansenPartnership.com, jens.axboe@oracle.com, dougg@torque.net, Geert.Uytterhoeven@sonycom.com, tony.luck@intel.com, Mark_Salyzyn@adaptec.com, ed.lin@promise.com, linuxraid@amcc.com, linux-usb@vger.kernel.org, Alan Stern <stern@rowland.harvard.edu>, Matthew Dharm <mdharm-scsi@one-eyed-alien.net>
 
-On Tue, Mar 11, 2008 at 12:24:51AM +0100, Bartlomiej Zolnierkiewicz wro=
-te:
-> On Sunday 09 March 2008, Borislav Petkov wrote:
-> > Prior to allocating a new pipeline stage, the code checked for the =
-existence of
-> > a cached pipeline stage to use. Do away with and stick to normal pi=
-peline
-> > stages only.
-> >=20
-> > Signed-off-by: Borislav Petkov <petkovbb@gmail.com>
->=20
-> I modified it slightly while merging since AFAICS we still need to ch=
-eck
-> 'tape->nr_stages >=3D tape_max_stages' for idetape_add_chrdev_write_r=
-equest().
+On Tue, Mar 11 2008 at 0:39 +0200, FUJITA Tomonori <tomof@acm.org> wrote:
+> CC'ed linux-ide,
+> 
+> On Mon, 10 Mar 2008 16:10:36 +0200
+> Boaz Harrosh <bharrosh@panasas.com> wrote:
+> 
+>> On Sun, Mar 09 2008 at 6:44 +0200, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp> wrote:
+>>> This patchset adds new two helper functions to copy data between an SG
+>>> table and liner buffer, and converts severl LLDs to use them.
+>>>
+>>> The new APIs are used mainly in the code to spoof SCSI commands
+>>> (INQUIRY, READ CAPACITY, MODE SENSE etc), that is, LLDs build a fake
+>>> reposense and copy it to the sg list in scsi_cmnd struct. Several LLDs
+>>> have similar functions for such code. This patchset removes such
+>>> duplication.
+>>>
+>>> Another reason to do this work is that because we relaxed the default
+>>> alignment requirements (from 511 to 3) post 2.6.24, the above commands
+>>> might come with multiple scatter gather entries but several LLDs make
+>>> the assumption that such commands come with only one sg entries and
+>>> can't handle multiple sg entries. The new APIs can handle multiple sg
+>>> entries so LLDs don't need to care about anything.
+>>>
+>>> The first patch adds the new APIs to lib/scatterlist.c and the rest
+>>> are for SCSI. I like to push the whole patchset via scsi-misc (since
+>>> it's easier).
+>>>
+>>> This is against scsi-misc (a6680f71ca27ea78c4c4e577076aecb9ace476f1).
+>>>
+>>>  arch/ia64/hp/sim/simscsi.c    |   23 ++--------
+>>>  drivers/scsi/3w-9xxx.c        |   21 ++++-----
+>>>  drivers/scsi/3w-xxxx.c        |   12 +----
+>>>  drivers/scsi/aacraid/aachba.c |   49 ++++++++--------------
+>>>  drivers/scsi/ips.c            |   50 ++++-------------------
+>>>  drivers/scsi/ps3rom.c         |   92 ++++------------------------------------
+>>>  drivers/scsi/scsi_debug.c     |   79 ++++++-----------------------------
+>>>  drivers/scsi/stex.c           |   66 ++++-------------------------
+>>>  include/linux/scatterlist.h   |    5 ++
+>>>  include/scsi/scsi_cmnd.h      |   14 ++++++
+>>>  lib/scatterlist.c             |   90 ++++++++++++++++++++++++++++++++++++++++
+>>>  11 files changed, 182 insertions(+), 319 deletions(-)
+>>>
+>>>
+>> Hi Tomo. Nice cleanup, Cheers.
+>>
+>> Have you had a look at drivers/usb/storage/protocol.c usb_stor_access_xfer_buf() ?
+>> It looks like it could also use these, but there they have a twist where they want
+>> to do it in parts. Do you think that the code there could also use the helpers 
+>> presented here somehow? (I know that one of the USB guys was asking about it)
+> 
+> I've not. If the USB people are eager to use the new APIs, I'll try
+> though I prefer to keep them simple.
+> 
 
-Yep, thanks for spotting that landmine. By the way this driver is full =
-of it :).
+CC: Alan Stern <stern@rowland.harvard.edu>
+CC: Matthew Dharm <mdharm-scsi@one-eyed-alien.net>
 
-> From: Borislav Petkov <petkovbb@googlemail.com>
-> Subject: [PATCH 1/4] ide-tape: remove tape->cache_stage
->=20
-> Prior to allocating a new pipeline stage, the code checked for the ex=
-istence of
-> a cached pipeline stage to use. Do away with and stick to normal pipe=
-line
-> stages only.
->=20
-> [bart: keep idetape_kmalloc_stage() for now]
->=20
-> Signed-off-by: Borislav Petkov <petkovbb@gmail.com>
-> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-> ---
->  drivers/ide/ide-tape.c |   13 +------------
->  1 file changed, 1 insertion(+), 12 deletions(-)
->=20
-> Index: b/drivers/ide/ide-tape.c
-> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
-> --- a/drivers/ide/ide-tape.c
-> +++ b/drivers/ide/ide-tape.c
-> @@ -365,8 +365,6 @@ typedef struct ide_tape_obj {
->  	idetape_stage_t *next_stage;
->  	/* New requests will be added to the pipeline here */
->  	idetape_stage_t *last_stage;
-> -	/* Optional free stage which we can use */
-> -	idetape_stage_t *cache_stage;
->  	int pages_per_stage;
->  	/* Wasted space in each stage */
->  	int excess_bh_size;
-> @@ -1686,16 +1684,10 @@ abort:
-> =20
->  static idetape_stage_t *idetape_kmalloc_stage(idetape_tape_t *tape)
->  {
-> -	idetape_stage_t *cache_stage =3D tape->cache_stage;
-> -
->  	debug_log(DBG_PROCS, "Enter %s\n", __func__);
-> =20
->  	if (tape->nr_stages >=3D tape->max_stages)
->  		return NULL;
-> -	if (cache_stage !=3D NULL) {
-> -		tape->cache_stage =3D NULL;
-> -		return cache_stage;
-> -	}
->  	return __idetape_kmalloc_stage(tape, 0, 0);
->  }
-> =20
-> @@ -3245,10 +3237,7 @@ static int idetape_chrdev_release(struct
->  		else
->  			idetape_wait_for_pipeline(drive);
->  	}
-> -	if (tape->cache_stage !=3D NULL) {
-> -		__idetape_kfree_stage(tape->cache_stage);
-> -		tape->cache_stage =3D NULL;
-> -	}
-> +
->  	if (minor < 128 && test_bit(IDETAPE_FLAG_MEDIUM_PRESENT, &tape->fla=
-gs))
->  		(void) idetape_rewind_tape(drive);
->  	if (tape->chrdev_dir =3D=3D IDETAPE_DIR_NONE) {
+> There are other potential users of the new APIs, gdth and libata.
+> 
+> I think that gdth can use the APIs without any changes to the APIs but
+> I leave it to a gdth expert.
 
---=20
-Regards/Gru=DF,
-    Boris.
+Sure I can do that. Thanks
+
+> 
+> ata_scsi_simulate could use the new APIs but it directly builds a
+> response in the buffer of a sg list instead of building a response in
+> temporary buffer and copying it to a sg list. So the new APIs are not
+> fit for it. If libata people are fine with switching to the latter,
+> I'll send a patch.
+
+Boaz
+
