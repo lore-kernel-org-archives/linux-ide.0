@@ -1,36 +1,66 @@
-From: "Rus V. Brushkoff" <rus@SoyuzKT.Od.UA>
-Subject: Re: Remove obsoleted "idex=noprobe" kernel parameter
-Date: Wed, 12 Mar 2008 04:47:59 +0200 (EET)
-Message-ID: <Pine.LNX.4.64.0803120418580.12249@Soyuz-KT.TeNet.Odessa.UA>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: [PATCH] libata: Register for dock events when the drive is	inside
+ a dock station
+Date: Wed, 12 Mar 2008 14:15:57 +0900
+Message-ID: <47D7670D.1060600@gmail.com>
+References: <20080221115305.GB5032@homac.suse.de> <47BE26A0.2040708@gmail.com> <20080226101551.GB10721@homac.suse.de> <47C6804A.50705@gmail.com> <20080228110927.GA5745@homac.suse.de> <47C6B1B1.2040602@gmail.com> <20080228155817.GB5593@homac.suse.de> <20080228183243.GA6146@homac.suse.de> <20080228233610.GA3808@homac> <47CCCC46.6070908@gmail.com> <20080311235548.GA4089@homac>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from Te.NeT.UA ([195.138.80.34]:56966 "EHLO te.net.ua"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751697AbYCLCsJ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 11 Mar 2008 22:48:09 -0400
+Received: from qb-out-0506.google.com ([72.14.204.230]:2993 "EHLO
+	qb-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751130AbYCLFQG (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 12 Mar 2008 01:16:06 -0400
+Received: by qb-out-0506.google.com with SMTP id o24so634960qba.1
+        for <linux-ide@vger.kernel.org>; Tue, 11 Mar 2008 22:16:03 -0700 (PDT)
+In-Reply-To: <20080311235548.GA4089@homac>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
-Cc: bzolnier@gmail.com
+To: Tejun Heo <htejun@gmail.com>, Jeff Garzik <jeff@garzik.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Kristen Carlson Accardi <kristen.c.accardi@intel.com>
 
+Hello, Holger.
 
- 	Hi,
+Holger Macht wrote:
+>> dev_notify is being registered with a pointer to ap.  No wonder it causes
+> 
+> It seems this change is missing from your patch. I've attached a fixed
+> version...
 
-  Why this option is obsoleted ? It can be used on many systems when Linux 
-still tries to detect disabled in the BIOS IDE controller - you may 
-significantly reduce boot time, without bunch of the "ide reset succeed" 
-messages.
-  So embedded people use IDE as hardware interface to different 
-controlling systems - how they can tell Linux, now without "idex=noprobe" 
-option, not to probe _this_ IDE controller ?
-  So can be said about "obsoleted "idex=base[,ctl[,irq]]" kernel 
-parameters" - now nobody, who make simple custom hardware, can tell legacy 
-IDE driver about different hardware resources, which is normal for other 
-Linux subsystems - see for example LPT or most network cards kernel boot 
-parameters.
-  Its pitifully, especial for embedded people, that Linux becoming less 
-configurable system ;(
+Ah... I must have sent the wrong version of patch.  Thanks for the fix.
 
+>> strange dereferences later on.  Attached is the fixed patch.  Can you
+>> please give it a shot?
+> 
+> ...and now the good news...the new patch works flawlessly with
+> 2.6.25-rc5...
+> 
+> undocking...
+> ata5.00: disabled
+> ata5.00: detaching (SCSI 4:0:0:0)
+> ACPI: \_SB_.GDCK - undocking
+> usb 1-6: USB disconnect, address 5
+> 
+> docking...
+> ACPI: \_SB_.GDCK - docking
+> ata5: exception Emask 0x10 SAct 0x0 SErr 0x0 action 0xa frozen
+> ata5: ACPI event
+> ata5: soft resetting link
+> ata5.00: ATAPI: HL-DT-ST DVDRAM GSA-4083N, 1.08, max UDMA/33
+> ata5.00: configured for UDMA/33
+> ata5: exception Emask 0x10 SAct 0x0 SErr 0x0 action 0x1 t4
+> ata5: ACPI event
+> ata5: soft resetting link
+> ata5.00: configured for UDMA/33
+> ata5: EH complete
+> scsi 4:0:0:0: CD-ROM            HL-DT-ST DVDRAM GSA-4083N 1.08 PQ: 0 ANSI: 5
+> sr0: scsi3-mmc drive: 24x/24x writer dvd-ram cd/rw xa/form2 cdda tray
+> sr 4:0:0:0: Attached scsi CD-ROM sr0
+> sr 4:0:0:0: Attached scsi generic sg1 type 5
 
- 		Rus
+Super, I'll forward the patch upstream.
+
+Thanks.
+
+-- 
+tejun
