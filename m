@@ -1,48 +1,32 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [PATCH 4/4] ide-tape: remove pipeline-specific code from idetape_add_chrdev_read_request()
-Date: Wed, 12 Mar 2008 14:51:23 +0100
-Message-ID: <200803121451.23925.bzolnier@gmail.com>
-References: <1205082632-3418-1-git-send-email-petkovbb@gmail.com> <200803110025.51072.bzolnier@gmail.com> <20080312055803.GD4266@gollum.tnic>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [PATCH #upstream-fixes] libata: use atapi_cmd_type() to
+ determine cmd type instead of transfer size
+Date: Wed, 12 Mar 2008 13:18:50 +0000
+Message-ID: <20080312131850.330765aa@the-village.bc.nu>
+References: <47D5EFD4.2090801@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.190]:47915 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750929AbYCLNhg (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 12 Mar 2008 09:37:36 -0400
-Received: by nf-out-0910.google.com with SMTP id g13so1152627nfb.21
-        for <linux-ide@vger.kernel.org>; Wed, 12 Mar 2008 06:37:35 -0700 (PDT)
-In-Reply-To: <20080312055803.GD4266@gollum.tnic>
-Content-Disposition: inline
+Received: from zux006-051-205.adsl.green.ch ([81.6.51.205]:10915 "EHLO
+	the-village.bc.nu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751130AbYCLNjz (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 12 Mar 2008 09:39:55 -0400
+In-Reply-To: <47D5EFD4.2090801@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: petkovbb@gmail.com
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: Jeff Garzik <jeff@garzik.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, "Rafael J. Wysocki" <rjw@sisk.pl>
 
+On Tue, 11 Mar 2008 11:35:00 +0900
+Tejun Heo <htejun@gmail.com> wrote:
 
-Hi,
+> pata_ali and pata_it821x were using qc->nbytes to determine whether a
+> command is data transfer type or not.  As now qc->nbytes can be
+> extended by padding and draining buffers, this tests are not useful
+> anymore.  Use atapi_cmd_type() instead.
 
-On Wednesday 12 March 2008, Borislav Petkov wrote:
+NAK
 
-[...]
-
-> > > the read request's buffer directly thru idetape_queue_rw_tail()
-> > > 
-> > > 3. Do next request buffer allocation (tape->merge_stage)
-> > 
-> > Isn't idetape_init_read() taking care of 3.?
-> 
-> i wanted to have the whole handling at one place and let _init_read() only
-> prepare the read. Now we don't allocate any new tape->merge_stage anymore,
-> which is wrong. Originally, this happened in _init_read(), however, if we do
-> idetape_queue_rw_tail(), we should alloc the new stage _after_ queueing the
-
-The original driver doesn't do this - it just calls idetape_queue_rw_tail(),
-could it be a bug in the original driver?
-
-[ ditto for idetape_queue_rw_tail() for writes ]
-
-> request, which means it cannot happen _init_read() now and should take place
-> afterwards, i.e. as it was in the original patch, or?
+The it821x case really seems to be about bytes transferred not command
+type. ALi one looks fine
