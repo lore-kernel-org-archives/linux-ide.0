@@ -1,86 +1,36 @@
-From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: Re: [PATCH 00/10] sg buffer copy helper functions
-Date: Wed, 12 Mar 2008 11:24:21 +0900
-Message-ID: <20080312112421X.fujita.tomonori@lab.ntt.co.jp>
-References: <Pine.LNX.4.44L0.0803111543220.26916-100000@iolanthe.rowland.org>
-	<20080312091400V.fujita.tomonori@lab.ntt.co.jp>
-	<20080312092856P.fujita.tomonori@lab.ntt.co.jp>
+From: "Rus V. Brushkoff" <rus@SoyuzKT.Od.UA>
+Subject: Re: Remove obsoleted "idex=noprobe" kernel parameter
+Date: Wed, 12 Mar 2008 04:47:59 +0200 (EET)
+Message-ID: <Pine.LNX.4.64.0803120418580.12249@Soyuz-KT.TeNet.Odessa.UA>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <20080312092856P.fujita.tomonori@lab.ntt.co.jp>
-Sender: linux-scsi-owner@vger.kernel.org
-To: stern@rowland.harvard.edu
-Cc: tomof@acm.org, bharrosh@panasas.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, James.Bottomley@HansenPartnership.com, jens.axboe@oracle.com, dougg@torque.net, Geert.Uytterhoeven@sonycom.com, tony.luck@intel.com, Mark_Salyzyn@adaptec.com, ed.lin@promise.com, linuxraid@amcc.com, linux-usb@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from Te.NeT.UA ([195.138.80.34]:56966 "EHLO te.net.ua"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751697AbYCLCsJ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 11 Mar 2008 22:48:09 -0400
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
+Cc: bzolnier@gmail.com
 
-On Wed, 12 Mar 2008 09:28:56 +0900
-FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp> wrote:
 
-> On Wed, 12 Mar 2008 09:14:00 +0900
-> FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp> wrote:
-> 
-> > On Tue, 11 Mar 2008 16:09:26 -0400 (EDT)
-> > Alan Stern <stern@rowland.harvard.edu> wrote:
-> > 
-> > > On Tue, 11 Mar 2008, FUJITA Tomonori wrote:
-> > > 
-> > > > On Mon, 10 Mar 2008 16:10:36 +0200
-> > > > Boaz Harrosh <bharrosh@panasas.com> wrote:
-> > > 
-> > > > > Have you had a look at drivers/usb/storage/protocol.c usb_stor_access_xfer_buf() ?
-> > > > > It looks like it could also use these, but there they have a twist where they want
-> > > > > to do it in parts. Do you think that the code there could also use the helpers 
-> > > > > presented here somehow? (I know that one of the USB guys was asking about it)
-> > > > 
-> > > > I've not. If the USB people are eager to use the new APIs, I'll try
-> > > > though I prefer to keep them simple.
-> > > 
-> > > It would be great if the code could be removed from usb-storage and put
-> > > in a central library.  The problem is, as Boaz mentioned, that some of
-> > > the subdrivers need to transfer their data in pieces.
-> > 
-> > I'm fine with add a trick for USB to the APIs as long as USB people
-> > inspect and test the trick ;)
-> > 
-> > 
-> > > It may be that the device is able to send or receive only a few blocks 
-> > > at a time, or it may be that the blocks aren't stored in continguous 
-> > > locations on the device.  Either way, the drivers need to do multiple 
-> > > transfers, each starting from where the previous one left off.
-> > > 
-> > > It shouldn't be too hard to adjust your code to make this work.  
-> > > Instead of passing sgl and nents directly to sg_copy_buffer(), pass a
-> > > pointer to a structure containing fields for sgl, nents, n, sg_off, and
-> > > sg_copy.  Then the caller could retain the ending values for use in a
-> > > later call.
-> > > 
-> > > Does this sound reasonable?
-> > 
-> > How about this?
-> > 
-> > diff --git a/include/linux/scatterlist.h b/include/linux/scatterlist.h
-> > index a3d567a..8951e3c 100644
-> > --- a/include/linux/scatterlist.h
-> > +++ b/include/linux/scatterlist.h
-> > @@ -213,6 +213,13 @@ int __sg_alloc_table(struct sg_table *, unsigned int, unsigned int, gfp_t,
-> >  		     sg_alloc_fn *);
-> >  int sg_alloc_table(struct sg_table *, unsigned int, gfp_t);
-> >  
-> > +int sg_copy_buffer(struct scatterlist **sgl, unsigned int nents,
-> > +		   unsigned long *offset, void *buf, int buflen, int to_buffer);
-> > +int sg_copy_from_buffer(struct scatterlist *sgl, unsigned int nents,
-> > +			void *buf, int buflen);
-> > +int sg_copy_to_buffer(struct scatterlist *sgl, unsigned int nents,
-> > +		      void *buf, int buflen);
-> > +
-> 
-> It enables us to simplify usb_stor_access_xfer_buf like this, I think
-> (it's not tested).
+ 	Hi,
 
-I fixed some minor issues (comments, warning, etc) and I've uploaded
-the patchset:
+  Why this option is obsoleted ? It can be used on many systems when Linux 
+still tries to detect disabled in the BIOS IDE controller - you may 
+significantly reduce boot time, without bunch of the "ide reset succeed" 
+messages.
+  So embedded people use IDE as hardware interface to different 
+controlling systems - how they can tell Linux, now without "idex=noprobe" 
+option, not to probe _this_ IDE controller ?
+  So can be said about "obsoleted "idex=base[,ctl[,irq]]" kernel 
+parameters" - now nobody, who make simple custom hardware, can tell legacy 
+IDE driver about different hardware resources, which is normal for other 
+Linux subsystems - see for example LPT or most network cards kernel boot 
+parameters.
+  Its pitifully, especial for embedded people, that Linux becoming less 
+configurable system ;(
 
-git://git.kernel.org/pub/scm/linux/kernel/git/tomo/linux-2.6-misc.git sg-copy
 
+ 		Rus
