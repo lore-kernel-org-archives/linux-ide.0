@@ -1,32 +1,41 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [PATCH #upstream-fixes] libata: use atapi_cmd_type() to
- determine cmd type instead of transfer size
-Date: Wed, 12 Mar 2008 13:18:50 +0000
-Message-ID: <20080312131850.330765aa@the-village.bc.nu>
-References: <47D5EFD4.2090801@gmail.com>
+From: "Rus V. Brushkoff" <rus@SoyuzKT.Od.UA>
+Subject: Re: Remove obsoleted "idex=noprobe" kernel parameter
+Date: Wed, 12 Mar 2008 15:54:49 +0200 (EET)
+Message-ID: <Pine.LNX.4.64.0803121553390.13066@Soyuz-KT.TeNet.Odessa.UA>
+References: <Pine.LNX.4.64.0803120418580.12249@Soyuz-KT.TeNet.Odessa.UA>
+ <200803121435.30213.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from zux006-051-205.adsl.green.ch ([81.6.51.205]:10915 "EHLO
-	the-village.bc.nu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751130AbYCLNjz (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 12 Mar 2008 09:39:55 -0400
-In-Reply-To: <47D5EFD4.2090801@gmail.com>
+Received: from Te.NeT.UA ([195.138.80.34]:35613 "EHLO te.net.ua"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751143AbYCLNy4 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 12 Mar 2008 09:54:56 -0400
+In-Reply-To: <200803121435.30213.bzolnier@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Jeff Garzik <jeff@garzik.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: linux-ide@vger.kernel.org
 
-On Tue, 11 Mar 2008 11:35:00 +0900
-Tejun Heo <htejun@gmail.com> wrote:
+On Wed, 12 Mar 2008, Bartlomiej Zolnierkiewicz wrote:
 
-> pata_ali and pata_it821x were using qc->nbytes to determine whether a
-> command is data transfer type or not.  As now qc->nbytes can be
-> extended by padding and draining buffers, this tests are not useful
-> anymore.  Use atapi_cmd_type() instead.
+Hi,
 
-NAK
+:>   Why this option is obsoleted ? It can be used on many systems when Linux 
+:"hdx=noprobe" skips probing given IDE device, if given for all devices
+:on the contoller, the controller will be not probed at all
+:[ "hdx=noprobe" will be converted soon to "ide_core.noprobe=" parameter
+:  as we _need_ to re-do parameters handling because the old interface
+:  ("hdx=" / "idex=") is not compatible with the IDE warm-plug support ]
 
-The it821x case really seems to be about bytes transferred not command
-type. ALi one looks fine
+Oh, thats good, some chance is left ;)
+
+:It still can be done - just they way of doing it will change:
+: *      echo -n "0x168:0x36e:10" > /sys/class/ide_generic/add
+
+Thanks for clarifying.
+
+:
+:
+
+		Rus
