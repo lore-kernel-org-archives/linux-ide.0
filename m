@@ -1,51 +1,48 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [PATCH 2/4] ide-tape: remove pipeline-specific code from idetape_add_chrdev_write_request
-Date: Wed, 12 Mar 2008 14:51:32 +0100
-Message-ID: <200803121451.33058.bzolnier@gmail.com>
-References: <1205082632-3418-1-git-send-email-petkovbb@gmail.com> <200803110025.19650.bzolnier@gmail.com> <20080312054156.GC4266@gollum.tnic>
+Subject: Re: [PATCH 4/4] ide-tape: remove pipeline-specific code from idetape_add_chrdev_read_request()
+Date: Wed, 12 Mar 2008 14:51:23 +0100
+Message-ID: <200803121451.23925.bzolnier@gmail.com>
+References: <1205082632-3418-1-git-send-email-petkovbb@gmail.com> <200803110025.51072.bzolnier@gmail.com> <20080312055803.GD4266@gollum.tnic>
 Mime-Version: 1.0
 Content-Type: text/plain;
   charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.152]:38555 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751778AbYCLNhi (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 12 Mar 2008 09:37:38 -0400
-Received: by fg-out-1718.google.com with SMTP id e21so2893765fga.17
-        for <linux-ide@vger.kernel.org>; Wed, 12 Mar 2008 06:37:36 -0700 (PDT)
-In-Reply-To: <20080312054156.GC4266@gollum.tnic>
+Received: from nf-out-0910.google.com ([64.233.182.190]:47915 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750929AbYCLNhg (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 12 Mar 2008 09:37:36 -0400
+Received: by nf-out-0910.google.com with SMTP id g13so1152627nfb.21
+        for <linux-ide@vger.kernel.org>; Wed, 12 Mar 2008 06:37:35 -0700 (PDT)
+In-Reply-To: <20080312055803.GD4266@gollum.tnic>
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: petkovbb@gmail.com
 Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
+
+Hi,
+
 On Wednesday 12 March 2008, Borislav Petkov wrote:
-> On Tue, Mar 11, 2008 at 12:25:19AM +0100, Bartlomiej Zolnierkiewicz wrote:
-> > On Sunday 09 March 2008, Borislav Petkov wrote:
-> > > Refrain from adding more write requests to the pipeline and queue them
-> > > directly on the device's request queue instead. Prior to that flush all
-> > > penging stages in the pipeline through idetape_wait_for_pipeline().
+
+[...]
+
+> > > the read request's buffer directly thru idetape_queue_rw_tail()
+> > > 
+> > > 3. Do next request buffer allocation (tape->merge_stage)
 > > 
-> > I would prefer to keep the original code for now
-> > (it has some subtle differences).
+> > Isn't idetape_init_read() taking care of 3.?
 > 
-> Well, if you mean by this the while-loop below, the original code offloads
-> the pipeline gradually, stage-wise, until allocation succeeds, in contrast to
-> idetape_wait_for_pipeline() which iterates over all pending stages and flushes
-> them all in one go.
-> 
-> At a certain in point in time, however, the driver might land at the unlikely
-> state of still having some stages left in the pipeline while queueing all
-> incoming requests on the rq queue. Therefore, i'd prefer to make sure the
+> i wanted to have the whole handling at one place and let _init_read() only
+> prepare the read. Now we don't allocate any new tape->merge_stage anymore,
+> which is wrong. Originally, this happened in _init_read(), however, if we do
+> idetape_queue_rw_tail(), we should alloc the new stage _after_ queueing the
 
-This is what could happen with the unmodified driver code also.
+The original driver doesn't do this - it just calls idetape_queue_rw_tail(),
+could it be a bug in the original driver?
 
-[ thus given that pipeline code goes away completely soon there is no point
-  in changing the original behavior (unless of course it is buggy and I just
-  fail to see it) ]
+[ ditto for idetape_queue_rw_tail() for writes ]
 
-> pipeline is empty before queueing. What is more, it is flushed only once, if
-> ever, so idetape_wait_for_pipeline() simply returns in subsequent calls and no
-> considerable performance penalties are imposed here.
+> request, which means it cannot happen _init_read() now and should take place
+> afterwards, i.e. as it was in the original patch, or?
