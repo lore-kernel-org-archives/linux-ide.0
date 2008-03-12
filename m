@@ -1,66 +1,178 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCH] libata: Register for dock events when the drive is	inside
- a dock station
-Date: Wed, 12 Mar 2008 14:15:57 +0900
-Message-ID: <47D7670D.1060600@gmail.com>
-References: <20080221115305.GB5032@homac.suse.de> <47BE26A0.2040708@gmail.com> <20080226101551.GB10721@homac.suse.de> <47C6804A.50705@gmail.com> <20080228110927.GA5745@homac.suse.de> <47C6B1B1.2040602@gmail.com> <20080228155817.GB5593@homac.suse.de> <20080228183243.GA6146@homac.suse.de> <20080228233610.GA3808@homac> <47CCCC46.6070908@gmail.com> <20080311235548.GA4089@homac>
+Subject: [PATCH libata-dev#upstream-fixes] libata-acpi: improve dock event
+ handling
+Date: Wed, 12 Mar 2008 14:24:43 +0900
+Message-ID: <47D7691B.3080107@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from qb-out-0506.google.com ([72.14.204.230]:2993 "EHLO
+Received: from qb-out-0506.google.com ([72.14.204.226]:17413 "EHLO
 	qb-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751130AbYCLFQG (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 12 Mar 2008 01:16:06 -0400
-Received: by qb-out-0506.google.com with SMTP id o24so634960qba.1
-        for <linux-ide@vger.kernel.org>; Tue, 11 Mar 2008 22:16:03 -0700 (PDT)
-In-Reply-To: <20080311235548.GA4089@homac>
+	with ESMTP id S1751241AbYCLFYv (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 12 Mar 2008 01:24:51 -0400
+Received: by qb-out-0506.google.com with SMTP id e11so2762595qbe.15
+        for <linux-ide@vger.kernel.org>; Tue, 11 Mar 2008 22:24:50 -0700 (PDT)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>, Jeff Garzik <jeff@garzik.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Kristen Carlson Accardi <kristen.c.accardi@intel.com>
+To: hmacht@suse.de, Jeff Garzik <jeff@garzik.org>, IDE/ATA development list <linux-ide@vger.kernel.org>
 
-Hello, Holger.
+Improve ACPI hotplug handling such that dock event is handled properly.
 
-Holger Macht wrote:
->> dev_notify is being registered with a pointer to ap.  No wonder it causes
-> 
-> It seems this change is missing from your patch. I've attached a fixed
-> version...
+* Register handlers for dock events.
 
-Ah... I must have sent the wrong version of patch.  Thanks for the fix.
+* Directly detach device on EJECT_REQUEST instead of signaling hotplug
+  event.  This prevents libata from accessing severed controller
+  and/or device.
 
->> strange dereferences later on.  Attached is the fixed patch.  Can you
->> please give it a shot?
-> 
-> ...and now the good news...the new patch works flawlessly with
-> 2.6.25-rc5...
-> 
-> undocking...
-> ata5.00: disabled
-> ata5.00: detaching (SCSI 4:0:0:0)
-> ACPI: \_SB_.GDCK - undocking
-> usb 1-6: USB disconnect, address 5
-> 
-> docking...
-> ACPI: \_SB_.GDCK - docking
-> ata5: exception Emask 0x10 SAct 0x0 SErr 0x0 action 0xa frozen
-> ata5: ACPI event
-> ata5: soft resetting link
-> ata5.00: ATAPI: HL-DT-ST DVDRAM GSA-4083N, 1.08, max UDMA/33
-> ata5.00: configured for UDMA/33
-> ata5: exception Emask 0x10 SAct 0x0 SErr 0x0 action 0x1 t4
-> ata5: ACPI event
-> ata5: soft resetting link
-> ata5.00: configured for UDMA/33
-> ata5: EH complete
-> scsi 4:0:0:0: CD-ROM            HL-DT-ST DVDRAM GSA-4083N 1.08 PQ: 0 ANSI: 5
-> sr0: scsi3-mmc drive: 24x/24x writer dvd-ram cd/rw xa/form2 cdda tray
-> sr 4:0:0:0: Attached scsi CD-ROM sr0
-> sr 4:0:0:0: Attached scsi generic sg1 type 5
+* While at it, use named constants for ACPI events and move uevent
+  signaling inside host lock.
 
-Super, I'll forward the patch upstream.
+Original patch and testing by Holger Macht.
 
-Thanks.
+Signed-off-by: Tejun Heo <htejun@gmail.com>
+Cc: Holger Macht <hmacht@suse.de>
+---
+ drivers/ata/libata-acpi.c |   96 +++++++++++++++++++++++++++++++++-------------
+ 1 file changed, 69 insertions(+), 27 deletions(-)
 
--- 
-tejun
+diff --git a/drivers/ata/libata-acpi.c b/drivers/ata/libata-acpi.c
+index 0770cb7..bf98a56 100644
+--- a/drivers/ata/libata-acpi.c
++++ b/drivers/ata/libata-acpi.c
+@@ -118,45 +118,77 @@ static void ata_acpi_associate_ide_port(struct ata_port *ap)
+ 		ap->pflags |= ATA_PFLAG_INIT_GTM_VALID;
+ }
+ 
+-static void ata_acpi_handle_hotplug(struct ata_port *ap, struct kobject *kobj,
++static void ata_acpi_handle_hotplug(struct ata_port *ap, struct ata_device *dev,
+ 				    u32 event)
+ {
+ 	char event_string[12];
+ 	char *envp[] = { event_string, NULL };
+-	struct ata_eh_info *ehi = &ap->link.eh_info;
+-
+-	if (event == 0 || event == 1) {
+-	       unsigned long flags;
+-	       spin_lock_irqsave(ap->lock, flags);
+-	       ata_ehi_clear_desc(ehi);
+-	       ata_ehi_push_desc(ehi, "ACPI event");
+-	       ata_ehi_hotplugged(ehi);
+-	       ata_port_freeze(ap);
+-	       spin_unlock_irqrestore(ap->lock, flags);
++	struct ata_eh_info *ehi;
++	struct kobject *kobj = NULL;
++	int wait = 0;
++	unsigned long flags;
++
++	if (!ap)
++		ap = dev->link->ap;
++	ehi = &ap->link.eh_info;
++
++	spin_lock_irqsave(ap->lock, flags);
++
++	switch (event) {
++	case ACPI_NOTIFY_BUS_CHECK:
++	case ACPI_NOTIFY_DEVICE_CHECK:
++		ata_ehi_push_desc(ehi, "ACPI event");
++		ata_ehi_hotplugged(ehi);
++		ata_port_freeze(ap);
++		break;
++
++	case ACPI_NOTIFY_EJECT_REQUEST:
++		ata_ehi_push_desc(ehi, "ACPI event");
++		if (dev)
++			dev->flags |= ATA_DFLAG_DETACH;
++		else {
++			struct ata_link *tlink;
++			struct ata_device *tdev;
++
++			ata_port_for_each_link(tlink, ap)
++				ata_link_for_each_dev(tdev, tlink)
++					tdev->flags |= ATA_DFLAG_DETACH;
++		}
++
++		ata_port_schedule_eh(ap);
++		wait = 1;
++		break;
+ 	}
+ 
++	if (dev) {
++		if (dev->sdev)
++			kobj = &dev->sdev->sdev_gendev.kobj;
++	} else
++		kobj = &ap->dev->kobj;
++
+ 	if (kobj) {
+ 		sprintf(event_string, "BAY_EVENT=%d", event);
+ 		kobject_uevent_env(kobj, KOBJ_CHANGE, envp);
+ 	}
++
++	spin_unlock_irqrestore(ap->lock, flags);
++
++	if (wait)
++		ata_port_wait_eh(ap);
+ }
+ 
+ static void ata_acpi_dev_notify(acpi_handle handle, u32 event, void *data)
+ {
+ 	struct ata_device *dev = data;
+-	struct kobject *kobj = NULL;
+ 
+-	if (dev->sdev)
+-		kobj = &dev->sdev->sdev_gendev.kobj;
+-
+-	ata_acpi_handle_hotplug(dev->link->ap, kobj, event);
++	ata_acpi_handle_hotplug(NULL, dev, event);
+ }
+ 
+ static void ata_acpi_ap_notify(acpi_handle handle, u32 event, void *data)
+ {
+ 	struct ata_port *ap = data;
+ 
+-	ata_acpi_handle_hotplug(ap, &ap->dev->kobj, event);
++	ata_acpi_handle_hotplug(ap, NULL, event);
+ }
+ 
+ /**
+@@ -191,20 +223,30 @@ void ata_acpi_associate(struct ata_host *host)
+ 		else
+ 			ata_acpi_associate_ide_port(ap);
+ 
+-		if (ap->acpi_handle)
+-			acpi_install_notify_handler (ap->acpi_handle,
+-						     ACPI_SYSTEM_NOTIFY,
+-						     ata_acpi_ap_notify,
+-						     ap);
++		if (ap->acpi_handle) {
++			acpi_install_notify_handler(ap->acpi_handle,
++						    ACPI_SYSTEM_NOTIFY,
++						    ata_acpi_ap_notify, ap);
++#if defined(CONFIG_ACPI_DOCK) || defined(CONFIG_ACPI_DOCK_MODULE)
++			/* we might be on a docking station */
++			register_hotplug_dock_device(ap->acpi_handle,
++						     ata_acpi_ap_notify, ap);
++#endif
++		}
+ 
+ 		for (j = 0; j < ata_link_max_devices(&ap->link); j++) {
+ 			struct ata_device *dev = &ap->link.device[j];
+ 
+-			if (dev->acpi_handle)
+-				acpi_install_notify_handler (dev->acpi_handle,
+-							     ACPI_SYSTEM_NOTIFY,
+-							     ata_acpi_dev_notify,
+-							     dev);
++			if (dev->acpi_handle) {
++				acpi_install_notify_handler(dev->acpi_handle,
++						ACPI_SYSTEM_NOTIFY,
++						ata_acpi_dev_notify, dev);
++#if defined(CONFIG_ACPI_DOCK) || defined(CONFIG_ACPI_DOCK_MODULE)
++				/* we might be on a docking station */
++				register_hotplug_dock_device(dev->acpi_handle,
++						ata_acpi_dev_notify, dev);
++#endif
++			}
+ 		}
+ 	}
+ }
