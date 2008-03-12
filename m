@@ -1,66 +1,51 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: Remove obsoleted "idex=noprobe" kernel parameter
-Date: Wed, 12 Mar 2008 14:35:30 +0100
-Message-ID: <200803121435.30213.bzolnier@gmail.com>
-References: <Pine.LNX.4.64.0803120418580.12249@Soyuz-KT.TeNet.Odessa.UA>
+Subject: Re: [PATCH 2/4] ide-tape: remove pipeline-specific code from idetape_add_chrdev_write_request
+Date: Wed, 12 Mar 2008 14:51:32 +0100
+Message-ID: <200803121451.33058.bzolnier@gmail.com>
+References: <1205082632-3418-1-git-send-email-petkovbb@gmail.com> <200803110025.19650.bzolnier@gmail.com> <20080312054156.GC4266@gollum.tnic>
 Mime-Version: 1.0
 Content-Type: text/plain;
   charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mu-out-0910.google.com ([209.85.134.186]:43901 "EHLO
-	mu-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751138AbYCLNVZ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 12 Mar 2008 09:21:25 -0400
-Received: by mu-out-0910.google.com with SMTP id i10so8280964mue.5
-        for <linux-ide@vger.kernel.org>; Wed, 12 Mar 2008 06:21:23 -0700 (PDT)
-In-Reply-To: <Pine.LNX.4.64.0803120418580.12249@Soyuz-KT.TeNet.Odessa.UA>
+Received: from fg-out-1718.google.com ([72.14.220.152]:38555 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751778AbYCLNhi (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 12 Mar 2008 09:37:38 -0400
+Received: by fg-out-1718.google.com with SMTP id e21so2893765fga.17
+        for <linux-ide@vger.kernel.org>; Wed, 12 Mar 2008 06:37:36 -0700 (PDT)
+In-Reply-To: <20080312054156.GC4266@gollum.tnic>
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "Rus V. Brushkoff" <rus@soyuzkt.od.ua>
-Cc: linux-ide@vger.kernel.org
+To: petkovbb@gmail.com
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-
-Hi,
-
-On Wednesday 12 March 2008, Rus V. Brushkoff wrote:
+On Wednesday 12 March 2008, Borislav Petkov wrote:
+> On Tue, Mar 11, 2008 at 12:25:19AM +0100, Bartlomiej Zolnierkiewicz wrote:
+> > On Sunday 09 March 2008, Borislav Petkov wrote:
+> > > Refrain from adding more write requests to the pipeline and queue them
+> > > directly on the device's request queue instead. Prior to that flush all
+> > > penging stages in the pipeline through idetape_wait_for_pipeline().
+> > 
+> > I would prefer to keep the original code for now
+> > (it has some subtle differences).
 > 
->  	Hi,
+> Well, if you mean by this the while-loop below, the original code offloads
+> the pipeline gradually, stage-wise, until allocation succeeds, in contrast to
+> idetape_wait_for_pipeline() which iterates over all pending stages and flushes
+> them all in one go.
 > 
->   Why this option is obsoleted ? It can be used on many systems when Linux 
-> still tries to detect disabled in the BIOS IDE controller - you may 
-> significantly reduce boot time, without bunch of the "ide reset succeed" 
-> messages.
->   So embedded people use IDE as hardware interface to different 
-> controlling systems - how they can tell Linux, now without "idex=noprobe" 
-> option, not to probe _this_ IDE controller ?
+> At a certain in point in time, however, the driver might land at the unlikely
+> state of still having some stages left in the pipeline while queueing all
+> incoming requests on the rq queue. Therefore, i'd prefer to make sure the
 
-"hdx=noprobe" skips probing given IDE device, if given for all devices
-on the contoller, the controller will be not probed at all
+This is what could happen with the unmodified driver code also.
 
-[ "hdx=noprobe" will be converted soon to "ide_core.noprobe=" parameter
-  as we _need_ to re-do parameters handling because the old interface
-  ("hdx=" / "idex=") is not compatible with the IDE warm-plug support ]
+[ thus given that pipeline code goes away completely soon there is no point
+  in changing the original behavior (unless of course it is buggy and I just
+  fail to see it) ]
 
->   So can be said about "obsoleted "idex=base[,ctl[,irq]]" kernel 
-> parameters" - now nobody, who make simple custom hardware, can tell legacy 
-> IDE driver about different hardware resources, which is normal for other 
-> Linux subsystems - see for example LPT or most network cards kernel boot 
-> parameters.
-
-It still can be done - just they way of doing it will change:
-
-/*
- * For special cases new interfaces may be added using sysfs, i.e.
- *
- *      echo -n "0x168:0x36e:10" > /sys/class/ide_generic/add
- *
- * will add an interface using I/O ports 0x168-0x16f/0x36e and IRQ 10.
- */
-
-[ however the preferred solution is to add resources for your custom IDE as
-  a platform resources so ide_platform host driver can use it automatically ]
-
-Thanks,
-Bart
+> pipeline is empty before queueing. What is more, it is flushed only once, if
+> ever, so idetape_wait_for_pipeline() simply returns in subsequent calls and no
+> considerable performance penalties are imposed here.
