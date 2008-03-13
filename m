@@ -1,40 +1,45 @@
-From: bugme-daemon@bugzilla.kernel.org
-Subject: [Bug 10239] PLEXTOR DVDR PX-740A drive not ready for command
-Date: Thu, 13 Mar 2008 13:37:40 -0700 (PDT)
-Message-ID: <20080313203740.D19D1108066@picon.linux-foundation.org>
-References: <bug-10239-11633@http.bugzilla.kernel.org/>
+From: Richard Scobie <richard@sauce.co.nz>
+Subject: Re: Useful benchmarking tools for RAID
+Date: Fri, 14 Mar 2008 10:14:16 +1300
+Message-ID: <47D99928.9010200@sauce.co.nz>
+References: <1205360878.30451.134.camel@atlantis.cc.ndsu.nodak.edu> <18393.37268.150207.688089@tree.ty.sabi.co.uk>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:36680 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754532AbYCMUhm (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 13 Mar 2008 16:37:42 -0400
-Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
-	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id m2DKcWZh003784
-	for <linux-ide@vger.kernel.org>; Thu, 13 Mar 2008 13:38:34 -0700
-In-Reply-To: <bug-10239-11633@http.bugzilla.kernel.org/>
+Received: from smtp.sauce.co.nz ([210.48.49.72]:42626 "EHLO smtp.sauce.co.nz"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752856AbYCMVTm (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 13 Mar 2008 17:19:42 -0400
+Received: from [192.168.4.111] (unknown [192.168.4.111])
+	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
+	(No client certificate requested)
+	by smtp22.sauce.co.nz (Postfix) with ESMTP id 85501288265
+	for <linux-ide@vger.kernel.org>; Fri, 14 Mar 2008 10:12:18 +1300 (NZDT)
+In-Reply-To: <18393.37268.150207.688089@tree.ty.sabi.co.uk>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
 
-http://bugzilla.kernel.org/show_bug.cgi?id=10239
+Peter Grandi wrote:
 
+> for example. XFS also has the advantages that it supports write
+> barriers (but not sure if the one in 2.6.18 already does), so you
+> could probably enable the host adapter cache, and that it handles
+> well very parallel access patterns. It has the disadvantage that
+> it can require several GB of memory to 'fsck' (like 1GB per 1TB
+> of filesystem, or more), and does not work as well with lots of
+> small files (while ReiserFS is very good, and JFS not too bad).
 
+This no longer need be the case, (xfs_repair memory usage).
 
+Improvements were made in xfs_repair 2.9.2 and later - quoting one of 
+the develpoers:
 
+"Right now, I can repair a 9TB filesystem with ~150 million inodes
+in 2GB of RAM without going to swap using xfs_repair 2.9.4 and
+with no custom/tuning/config options."
 
-------- Comment #3 from bzolnier@gmail.com  2008-03-13 13:37 -------
-| [ Also: is the drive connected to the "other" cable end (_not_ in the middle)
-|   when used as master? ]
+Regards,
 
-One more thing - please also verify that the cable is plugged correctly (not in
-the reverse order) - the connector farer from the middle one (blue one) should
-go to the controller.
-
-[ Sorry for asking so many stupid questions but I would really like to exclude
-  hardware configuration issue first. ]
-
-
--- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug, or are watching the assignee.
+Richard
