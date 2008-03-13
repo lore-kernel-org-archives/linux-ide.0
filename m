@@ -1,14 +1,16 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH 1/12] ali14xx: add "vlb_clock=" parameter
-Date: Thu, 13 Mar 2008 23:43:52 +0100
-Message-ID: <20080313224352.7051.44005.sendpatchset@localhost.localdomain>
+Subject: [PATCH 2/12] ht6560b: add "vlb_clock=" parameter
+Date: Thu, 13 Mar 2008 23:43:59 +0100
+Message-ID: <20080313224359.7051.8198.sendpatchset@localhost.localdomain>
+References: <20080313224352.7051.44005.sendpatchset@localhost.localdomain>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from fk-out-0910.google.com ([209.85.128.190]:64877 "EHLO
-	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752279AbYCMW3N (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 13 Mar 2008 18:29:13 -0400
-Received: by fk-out-0910.google.com with SMTP id z23so3586994fkz.5
-        for <linux-ide@vger.kernel.org>; Thu, 13 Mar 2008 15:29:10 -0700 (PDT)
+Received: from fg-out-1718.google.com ([72.14.220.157]:14483 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756830AbYCMW3R (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 13 Mar 2008 18:29:17 -0400
+Received: by fg-out-1718.google.com with SMTP id e21so3539392fga.17
+        for <linux-ide@vger.kernel.org>; Thu, 13 Mar 2008 15:29:17 -0700 (PDT)
+In-Reply-To: <20080313224352.7051.44005.sendpatchset@localhost.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
@@ -18,38 +20,40 @@ Add "vlb_clock=" parameter for specifying VLB clock frequency (in MHz).
 
 Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 ---
- drivers/ide/legacy/ali14xx.c |    7 ++++++-
- 1 file changed, 6 insertions(+), 1 deletion(-)
+ drivers/ide/legacy/ht6560b.c |    9 +++++++--
+ 1 file changed, 7 insertions(+), 2 deletions(-)
 
-Index: b/drivers/ide/legacy/ali14xx.c
+Index: b/drivers/ide/legacy/ht6560b.c
 ===================================================================
---- a/drivers/ide/legacy/ali14xx.c
-+++ b/drivers/ide/legacy/ali14xx.c
-@@ -51,6 +51,8 @@
- 
- #define DRV_NAME "ali14xx"
+--- a/drivers/ide/legacy/ht6560b.c
++++ b/drivers/ide/legacy/ht6560b.c
+@@ -116,6 +116,8 @@
+ #define HT_TIMING(drivea) (u8)((drivea)->drive_data & 0x00ff)
+ #define HT_TIMING_DEFAULT 0xff
  
 +static int vlb_clock;
 +
- /* port addresses for auto-detection */
- #define ALI_NUM_PORTS 4
- static const int ports[ALI_NUM_PORTS] __initdata =
-@@ -116,7 +118,7 @@ static void ali14xx_set_pio_mode(ide_dri
- 	int time1, time2;
- 	u8 param1, param2, param3, param4;
- 	unsigned long flags;
+ /*
+  * This routine handles interface switching for the peculiar hardware design
+  * on the F.G.I./Holtek HT-6560B VLB IDE interface.
+@@ -212,8 +214,8 @@ static u8 ht_pio2timings(ide_drive_t *dr
+ {
+ 	int active_time, recovery_time;
+ 	int active_cycles, recovery_cycles;
 -	int bus_speed = system_bus_clock();
+-	
 +	int bus_speed = vlb_clock ? vlb_clock : system_bus_clock();
++
+         if (pio) {
+ 		unsigned int cycle_time;
  
- 	/* calculate timing, according to PIO mode */
- 	time1 = ide_pio_cycle_time(drive, pio);
-@@ -225,6 +227,9 @@ static int probe_ali14xx;
- module_param_named(probe, probe_ali14xx, bool, 0);
- MODULE_PARM_DESC(probe, "probe for ALI M14xx chipsets");
+@@ -328,6 +330,9 @@ static int probe_ht6560b;
+ module_param_named(probe, probe_ht6560b, bool, 0);
+ MODULE_PARM_DESC(probe, "probe for HT6560B chipset");
  
 +module_param(vlb_clock, int, 0);
 +MODULE_PARM_DESC(vlb_clock, "VLB clock frequency (in MHz)");
 +
- static int __init ali14xx_init(void)
- {
- 	if (probe_ali14xx == 0)
+ static const struct ide_port_ops ht6560b_port_ops = {
+ 	.port_init_devs		= ht6560b_port_init_devs,
+ 	.set_pio_mode		= ht6560b_set_pio_mode,
