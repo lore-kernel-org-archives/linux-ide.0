@@ -1,64 +1,105 @@
-From: Borislav Petkov <petkovbb@googlemail.com>
-Subject: Re: [PATCH 4/4] ide-tape: remove pipeline-specific code from
-	idetape_add_chrdev_read_request()
-Date: Thu, 13 Mar 2008 07:19:37 +0100
-Message-ID: <20080313061937.GG4266@gollum.tnic>
-References: <1205082632-3418-1-git-send-email-petkovbb@gmail.com> <200803110025.51072.bzolnier@gmail.com> <20080312055803.GD4266@gollum.tnic> <200803121451.23925.bzolnier@gmail.com>
-Reply-To: petkovbb@gmail.com
+From: Richard Genoud <richard.genoud@gmail.com>
+Subject: [BUG] PLEXTOR DVDR PX-740A drive not ready for command
+Date: Thu, 13 Mar 2008 10:43:27 +0100
+Message-ID: <47D8F73F.4090501@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hu-out-0506.google.com ([72.14.214.233]:37676 "EHLO
-	hu-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751482AbYCMGTw (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 13 Mar 2008 02:19:52 -0400
-Received: by hu-out-0506.google.com with SMTP id 19so2312147hue.21
-        for <linux-ide@vger.kernel.org>; Wed, 12 Mar 2008 23:19:50 -0700 (PDT)
-Content-Disposition: inline
-In-Reply-To: <200803121451.23925.bzolnier@gmail.com>
+Received: from fg-out-1718.google.com ([72.14.220.159]:16027 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754896AbYCMJnt (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 13 Mar 2008 05:43:49 -0400
+Received: by fg-out-1718.google.com with SMTP id e21so3291643fga.17
+        for <linux-ide@vger.kernel.org>; Thu, 13 Mar 2008 02:43:46 -0700 (PDT)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: bzolnier@gmail.com
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Wed, Mar 12, 2008 at 02:51:23PM +0100, Bartlomiej Zolnierkiewicz wro=
-te:
->=20
-> Hi,
->=20
-> On Wednesday 12 March 2008, Borislav Petkov wrote:
->=20
-> [...]
->=20
-> > > > the read request's buffer directly thru idetape_queue_rw_tail()
-> > > >=20
-> > > > 3. Do next request buffer allocation (tape->merge_stage)
-> > >=20
-> > > Isn't idetape_init_read() taking care of 3.?
-> >=20
-> > i wanted to have the whole handling at one place and let _init_read=
-() only
-> > prepare the read. Now we don't allocate any new tape->merge_stage a=
-nymore,
-> > which is wrong. Originally, this happened in _init_read(), however,=
- if we do
-> > idetape_queue_rw_tail(), we should alloc the new stage _after_ queu=
-eing the
->=20
-> The original driver doesn't do this - it just calls idetape_queue_rw_=
-tail(),
-> could it be a bug in the original driver?
+Hi!
+On ubuntu bug tracker, there's some bug reports about DVD drives that don't respond anymore.
 
-Damn, i see it now, idetape_queue_rw_tail() queues the request and then=
- simply
-_reuses_ the tape->merge_stage buffer by doing
+The affected drives are:
+PLEXTOR DVDR PX-740A
+BENQ DVD DD DW1620
+PHILIPS DVDR14P
+SS-SAMSUNG SCR-3232
+Matsushita SR-8584-B
+(for now)
 
-        if (tape->merge_stage)
-		idetape_init_merge_stage(tape);
+the error message is :
+hda: status error: error=0x00 { }
+ide: failed opcode was: unknown
+hda: drive not ready for command
+hda: status error: status 0x59 { DriveReady SeekComplete DataRequest Error }
 
-so no need for reallocation. Whew! :)
+more details on the ubuntu bug-tracker:
+https://bugs.launchpad.net/bugs/179336
+https://bugs.launchpad.net/bugs/182996
+https://bugs.launchpad.net/bugs/181561
 
---=20
-Regards/Gru=DF,
-    Boris.
+I bisect to find out where the bug was and I found that this commit is:
+
+b140b99c413ce410197cfcd4014e757cd745226a is first bad commit
+commit b140b99c413ce410197cfcd4014e757cd745226a
+Author: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Date:   Sat Oct 13 17:47:51 2007 +0200
+
+    ide: change master/slave IDENTIFY order
+    
+    Need to probe slave device first to make it release PDIAG-
+    (this is required for correct device side cable detection).
+    
+    Based on libata commit f31f0cc2f0b7527072d94d02da332d9bb8d7d94c.
+    
+    Thanks to Craig for testing this patch.
+    
+    Cc: Craig Block <chblock3@yahoo.com>
+    Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+
+:040000 040000 fa17f9e66a6e551184b1ec00049cea6fb87f7a1c 89a175312afe235fbdb04a3a593a4b981bdd9188 M      drivers
+
+
+
+The bisect log is:
+
+git-bisect start
+# good: [bbf25010f1a6b761914430f5fca081ec8c7accd1] Linux 2.6.23
+git-bisect good bbf25010f1a6b761914430f5fca081ec8c7accd1
+# bad: [c9927c2bf4f45bb85e8b502ab3fb79ad6483c244] Linux 2.6.24-rc1
+git-bisect bad c9927c2bf4f45bb85e8b502ab3fb79ad6483c244
+# bad: [9ac52315d4cf5f561f36dabaf0720c00d3553162] sched: guest CPU accounting: add guest-CPU /proc/<pid>/stat fields
+git-bisect bad 9ac52315d4cf5f561f36dabaf0720c00d3553162
+# good: [038a5008b2f395c85e6e71d6ddf3c684e7c405b0] Merge branch 'master' of git://git.kernel.org/pub/scm/linux/kernel/git/davem/net-2.6
+git-bisect good 038a5008b2f395c85e6e71d6ddf3c684e7c405b0
+# good: [782e3b3b3804c38d5130c7f21d7ec7bf6709023f] Fix up more bio fallout
+git-bisect good 782e3b3b3804c38d5130c7f21d7ec7bf6709023f
+# good: [1b9778dae71dc64d3678d766c0f1fbed79c80f9f] KVM: Keep track of missed timer irq injections
+git-bisect good 1b9778dae71dc64d3678d766c0f1fbed79c80f9f
+# bad: [bcd11eaa222fce31d0b59cdbfdf9b8c47067f15a] Merge git://git.kernel.org/pub/scm/linux/kernel/git/bart/ide-2.6
+git-bisect bad bcd11eaa222fce31d0b59cdbfdf9b8c47067f15a
+# good: [c5d6471ff9172e4d8f7a5b484b459c56904ae1f0] fallout from DECLARE_MAC_BUF patches
+git-bisect good c5d6471ff9172e4d8f7a5b484b459c56904ae1f0
+# good: [59d8235be2ab38ddaffbe9137385095a5e8b0a77] [JFFS2] Fix unpoint length
+git-bisect good 59d8235be2ab38ddaffbe9137385095a5e8b0a77
+# good: [3749c66c67fb5c257771815c186bc32290cacf44] Merge branch 'for-linus' of git://git.kernel.org/pub/scm/linux/kernel/git/avi/kvm
+git-bisect good 3749c66c67fb5c257771815c186bc32290cacf44
+# bad: [b9d9e61abb85ecf4e4aa55328b21eac17840a3fb] sgiioc4: add missing ->dma_base check
+git-bisect bad b9d9e61abb85ecf4e4aa55328b21eac17840a3fb
+# good: [aedea5910ce44fea79e2c517bb22e0006372156f] ide-pmac: remove pmac_ide_do_setfeature() (take 2)
+git-bisect good aedea5910ce44fea79e2c517bb22e0006372156f
+# good: [249aa4ff1778b318346d8ba4a7fa62c169a29410] cs5535: check ide_config_drive_speed() return value
+git-bisect good 249aa4ff1778b318346d8ba4a7fa62c169a29410
+# bad: [b140b99c413ce410197cfcd4014e757cd745226a] ide: change master/slave IDENTIFY order
+git-bisect bad b140b99c413ce410197cfcd4014e757cd745226a
+# good: [88b2b32babd46cd54d2de4d17eb869aea3383e11] ide: move ide_config_drive_speed() calls to upper layers (take 2)
+git-bisect good 88b2b32babd46cd54d2de4d17eb869aea3383e11
+
+If you need me to do some more tests, just ask.
+
+regards,
+
+Richard Genoud.
+
+
