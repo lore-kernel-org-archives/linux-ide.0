@@ -1,42 +1,51 @@
-From: Holger Macht <hmacht@suse.de>
-Subject: Re: [PATCH libata-dev#upstream-fixes] libata-acpi: improve dock
-	event handling
-Date: Thu, 13 Mar 2008 19:19:46 +0100
-Message-ID: <20080313181946.GD26183@homac.suse.de>
-References: <47D7691B.3080107@gmail.com>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: [PATCH 00/10] sg buffer copy helper functions
+Date: Thu, 13 Mar 2008 14:32:59 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44L0.0803131420090.5744-100000@iolanthe.rowland.org>
+References: <20080313085733M.tomof@acm.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:56109 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753421AbYCMSSN (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 13 Mar 2008 14:18:13 -0400
-Content-Disposition: inline
-In-Reply-To: <47D7691B.3080107@gmail.com>
+Received: from iolanthe.rowland.org ([192.131.102.54]:47877 "HELO
+	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1751798AbYCMSdB (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 13 Mar 2008 14:33:01 -0400
+In-Reply-To: <20080313085733M.tomof@acm.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Jeff Garzik <jeff@garzik.org>, IDE/ATA development list <linux-ide@vger.kernel.org>
+To: FUJITA Tomonori <tomof@acm.org>
+Cc: fujita.tomonori@lab.ntt.co.jp, bharrosh@panasas.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, James.Bottomley@HansenPartnership.com, jens.axboe@oracle.com, dougg@torque.net, Geert.Uytterhoeven@sonycom.com, tony.luck@intel.com, Mark_Salyzyn@adaptec.com, ed.lin@promise.com, linuxraid@amcc.com, linux-usb@vger.kernel.orgfujita.tomonori@lab.ntt.co.jp
 
-On Wed 12. Mar - 14:24:43, Tejun Heo wrote:
-> Improve ACPI hotplug handling such that dock event is handled properly.
-> 
-> * Register handlers for dock events.
-> 
-> * Directly detach device on EJECT_REQUEST instead of signaling hotplug
->   event.  This prevents libata from accessing severed controller
->   and/or device.
-> 
-> * While at it, use named constants for ACPI events and move uevent
->   signaling inside host lock.
-> 
-> Original patch and testing by Holger Macht.
+On Thu, 13 Mar 2008, FUJITA Tomonori wrote:
 
-Grrrr, unfortunately, the patch still seems to be not perfect:
-  http://marc.info/?l=linux-acpi&m=120543202908662&w=2
+> > > +	for_each_sg(*sgl, sg, nents, i) {
+> > 
+> > Will there be a problem in subsequent calls if *sgl has been
+> > incremented but nents hasn't been changed?  Maybe nents needs to be a 
+> > pointer also.
+> 
+> usb_stor_access_xfer_buf doesn't check scsi_sg_count (the number of sg
+> entries). It assumes that callers take care about the issue.
+> 
+> If you want nents to be a pointer, I'm fine with it.
 
-Are you sure access to the device (/dev/srX) is locked before
-ata_acpi_dev_notify() returns?
+If nents doesn't change then for_each_sg() won't work right.  There 
+could be an alternative macro:
 
-Regards,
-	Holger
+/*
+ * Loop over each sg element, stopping at the end of the chain
+ */
+#define for_each_sg_all(sglist, sg, __i)	\
+	for (__i = 0, sg = (sglist); sg; __i++, sg = sg_next(sg))
+
+If you added this macro to include/linux/scatterlist.h and used it
+instead of for_each_sg() then you can get rid of nents entirely.  
+However I'm not sure whether this would be safe.  Do people sometimes 
+use a subset of the entries in a scatterlist?
+
+If it isn't safe then nents would have to be passed as a pointer too.  
+At this stage I think it would be better to encapsulate sgl, offset, 
+and nents in a single structure than to pass multiple pointers.
+
+Alan Stern
+
