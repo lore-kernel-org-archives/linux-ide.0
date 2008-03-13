@@ -1,42 +1,42 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: [PATCH 00/10] sg buffer copy helper functions
-Date: Thu, 13 Mar 2008 14:34:37 -0400 (EDT)
-Message-ID: <Pine.LNX.4.44L0.0803131433100.5744-100000@iolanthe.rowland.org>
-References: <20080313091848X.tomof@acm.org>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: Re: [PATCH 4/4] ide: constify struct ide_dma_ops
+Date: Thu, 13 Mar 2008 21:44:39 +0300
+Message-ID: <47D97617.1020907@ru.mvista.com>
+References: <200803091702.18521.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from iolanthe.rowland.org ([192.131.102.54]:39067 "HELO
-	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1754014AbYCMSeh (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 13 Mar 2008 14:34:37 -0400
-In-Reply-To: <20080313091848X.tomof@acm.org>
+Received: from homer.mvista.com ([63.81.120.155]:35439 "EHLO
+	imap.sh.mvista.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1752167AbYCMSnX (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 13 Mar 2008 14:43:23 -0400
+In-Reply-To: <200803091702.18521.bzolnier@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: FUJITA Tomonori <tomof@acm.org>
-Cc: fujita.tomonori@lab.ntt.co.jp, bharrosh@panasas.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, James.Bottomley@HansenPartnership.com, jens.axboe@oracle.com, dougg@torque.net, Geert.Uytterhoeven@sonycom.com, tony.luck@intel.com, Mark_Salyzyn@adaptec.com, ed.lin@promise.com, linuxraid@amcc.com, linux-usb@vger.kernel.orgfujita.tomonori@lab.ntt.co.jp
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Thu, 13 Mar 2008, FUJITA Tomonori wrote:
+Hello.
 
-> On Thu, 13 Mar 2008 09:03:26 +0900
-> FUJITA Tomonori <tomof@acm.org> wrote:
-> 
-> > > There are two problems.  One is the types of the arguments and return 
-> > > value.
-> > 
-> > They should be ok with the updated patch.
-> > 
-> > 
-> > > The other is that local interrupts need to be disabled.
-> > 
-> > Can you disable local interrupts here?
-> 
-> I meant, are you fine with disabling local interrupts here?
-> 
-> If you don't like that, we need to add another argument and seveal
-> 'if' to sg_copy_buffer. But I prefer to keep it simple.
+Bartlomiej Zolnierkiewicz wrote:
 
-Disabling local interrupts in usb_stor_access_xfer_buf() is okay.
+> * Export ide_dma_exec_cmd() and __ide_dma_test_irq().
 
-Alan Stern
+> * Constify struct ide_dma_ops.
 
+> * Always set hwif->dma_ops to &sff_dma_ops in ide_setup_dma()
+>   (it is later overriden by ide_init_port() if needed) and drop
+>   'const struct ide_port_info *d' argument.
+
+> While at it:
+
+> * Rename __ide_dma_test_irq() to __ide_dma_test_irq().
+
+    I'd have expected that you also rename __ide_dma_end() to ide_dma_end()...
+
+> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+
+Acked-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+
+MBR, Sergei
