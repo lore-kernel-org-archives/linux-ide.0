@@ -1,16 +1,16 @@
 From: Alan Stern <stern@rowland.harvard.edu>
 Subject: Re: [PATCH 00/10] sg buffer copy helper functions
-Date: Thu, 13 Mar 2008 14:32:59 -0400 (EDT)
-Message-ID: <Pine.LNX.4.44L0.0803131420090.5744-100000@iolanthe.rowland.org>
-References: <20080313085733M.tomof@acm.org>
+Date: Thu, 13 Mar 2008 14:34:37 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44L0.0803131433100.5744-100000@iolanthe.rowland.org>
+References: <20080313091848X.tomof@acm.org>
 Mime-Version: 1.0
 Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from iolanthe.rowland.org ([192.131.102.54]:47877 "HELO
+Received: from iolanthe.rowland.org ([192.131.102.54]:39067 "HELO
 	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1751798AbYCMSdB (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 13 Mar 2008 14:33:01 -0400
-In-Reply-To: <20080313085733M.tomof@acm.org>
+	with SMTP id S1754014AbYCMSeh (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 13 Mar 2008 14:34:37 -0400
+In-Reply-To: <20080313091848X.tomof@acm.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: FUJITA Tomonori <tomof@acm.org>
@@ -18,34 +18,25 @@ Cc: fujita.tomonori@lab.ntt.co.jp, bharrosh@panasas.com, linux-ide@vger.kernel.o
 
 On Thu, 13 Mar 2008, FUJITA Tomonori wrote:
 
-> > > +	for_each_sg(*sgl, sg, nents, i) {
+> On Thu, 13 Mar 2008 09:03:26 +0900
+> FUJITA Tomonori <tomof@acm.org> wrote:
+> 
+> > > There are two problems.  One is the types of the arguments and return 
+> > > value.
 > > 
-> > Will there be a problem in subsequent calls if *sgl has been
-> > incremented but nents hasn't been changed?  Maybe nents needs to be a 
-> > pointer also.
+> > They should be ok with the updated patch.
+> > 
+> > 
+> > > The other is that local interrupts need to be disabled.
+> > 
+> > Can you disable local interrupts here?
 > 
-> usb_stor_access_xfer_buf doesn't check scsi_sg_count (the number of sg
-> entries). It assumes that callers take care about the issue.
+> I meant, are you fine with disabling local interrupts here?
 > 
-> If you want nents to be a pointer, I'm fine with it.
+> If you don't like that, we need to add another argument and seveal
+> 'if' to sg_copy_buffer. But I prefer to keep it simple.
 
-If nents doesn't change then for_each_sg() won't work right.  There 
-could be an alternative macro:
-
-/*
- * Loop over each sg element, stopping at the end of the chain
- */
-#define for_each_sg_all(sglist, sg, __i)	\
-	for (__i = 0, sg = (sglist); sg; __i++, sg = sg_next(sg))
-
-If you added this macro to include/linux/scatterlist.h and used it
-instead of for_each_sg() then you can get rid of nents entirely.  
-However I'm not sure whether this would be safe.  Do people sometimes 
-use a subset of the entries in a scatterlist?
-
-If it isn't safe then nents would have to be passed as a pointer too.  
-At this stage I think it would be better to encapsulate sgl, offset, 
-and nents in a single structure than to pass multiple pointers.
+Disabling local interrupts in usb_stor_access_xfer_buf() is okay.
 
 Alan Stern
 
