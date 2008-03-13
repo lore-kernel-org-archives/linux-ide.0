@@ -1,42 +1,64 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: NCQ change  on 2007-12-07
-Date: Thu, 13 Mar 2008 12:28:10 +0900
-Message-ID: <47D89F4A.7090008@gmail.com>
-References: <D8AE5DC69BFCA64989BE8E46BCF0047303B24F2E@MAPLE.conncoll.edu> <47D76B7D.8010808@gmail.com> <D8AE5DC69BFCA64989BE8E46BCF0047303B24F2F@MAPLE.conncoll.edu> <47D89A58.6010301@shaw.ca>
+From: Borislav Petkov <petkovbb@googlemail.com>
+Subject: Re: [PATCH 4/4] ide-tape: remove pipeline-specific code from
+	idetape_add_chrdev_read_request()
+Date: Thu, 13 Mar 2008 07:19:37 +0100
+Message-ID: <20080313061937.GG4266@gollum.tnic>
+References: <1205082632-3418-1-git-send-email-petkovbb@gmail.com> <200803110025.51072.bzolnier@gmail.com> <20080312055803.GD4266@gollum.tnic> <200803121451.23925.bzolnier@gmail.com>
+Reply-To: petkovbb@gmail.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.178]:9749 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751143AbYCMD2P (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 12 Mar 2008 23:28:15 -0400
-Received: by wa-out-1112.google.com with SMTP id v27so3762378wah.23
-        for <linux-ide@vger.kernel.org>; Wed, 12 Mar 2008 20:28:15 -0700 (PDT)
-In-Reply-To: <47D89A58.6010301@shaw.ca>
+Received: from hu-out-0506.google.com ([72.14.214.233]:37676 "EHLO
+	hu-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751482AbYCMGTw (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 13 Mar 2008 02:19:52 -0400
+Received: by hu-out-0506.google.com with SMTP id 19so2312147hue.21
+        for <linux-ide@vger.kernel.org>; Wed, 12 Mar 2008 23:19:50 -0700 (PDT)
+Content-Disposition: inline
+In-Reply-To: <200803121451.23925.bzolnier@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Robert Hancock <hancockr@shaw.ca>
-Cc: "Lanstein, Alex C" <aclan@conncoll.edu>, linux-ide@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-Hello,
+On Wed, Mar 12, 2008 at 02:51:23PM +0100, Bartlomiej Zolnierkiewicz wro=
+te:
+>=20
+> Hi,
+>=20
+> On Wednesday 12 March 2008, Borislav Petkov wrote:
+>=20
+> [...]
+>=20
+> > > > the read request's buffer directly thru idetape_queue_rw_tail()
+> > > >=20
+> > > > 3. Do next request buffer allocation (tape->merge_stage)
+> > >=20
+> > > Isn't idetape_init_read() taking care of 3.?
+> >=20
+> > i wanted to have the whole handling at one place and let _init_read=
+() only
+> > prepare the read. Now we don't allocate any new tape->merge_stage a=
+nymore,
+> > which is wrong. Originally, this happened in _init_read(), however,=
+ if we do
+> > idetape_queue_rw_tail(), we should alloc the new stage _after_ queu=
+eing the
+>=20
+> The original driver doesn't do this - it just calls idetape_queue_rw_=
+tail(),
+> could it be a bug in the original driver?
 
-Robert Hancock wrote:
-> I don't think the driver is to blame for this one. CPB resp_flags of 2
-> indicates the controller says that tag is "released", i.e. drive has
-> been given the command but not completed. If it's timing out in that
-> state, either the NCQ implementation is bad enough that it allows
-> certain queued commands to starve for over 30 seconds, or the drive is
-> just forgetting about them entirely.
-> 
-> Unfortunately, if the firmware revision does indeed appear the same on
-> both sets of drives, the only automated way we could likely address the
-> problem would be to blacklist NCQ on all of those drives of that
-> model/revision..
+Damn, i see it now, idetape_queue_rw_tail() queues the request and then=
+ simply
+_reuses_ the tape->merge_stage buffer by doing
 
-Hmm... it's weird that this problem hasn't been reported on other
-controllers.  Lanstein, can you be persuaded into trying out another NCQ
-capable controller?
+        if (tape->merge_stage)
+		idetape_init_merge_stage(tape);
 
--- 
-tejun
+so no need for reallocation. Whew! :)
+
+--=20
+Regards/Gru=DF,
+    Boris.
