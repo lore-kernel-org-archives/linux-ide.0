@@ -1,60 +1,57 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH 12/12] ide: mark "idebus=" kernel parameter as obsoleted
-Date: Thu, 13 Mar 2008 23:45:07 +0100
-Message-ID: <20080313224507.7051.33673.sendpatchset@localhost.localdomain>
+Subject: [PATCH 8/12] cy82c693: add "pci_clock=" parameter
+Date: Thu, 13 Mar 2008 23:44:39 +0100
+Message-ID: <20080313224439.7051.79036.sendpatchset@localhost.localdomain>
 References: <20080313224352.7051.44005.sendpatchset@localhost.localdomain>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from fk-out-0910.google.com ([209.85.128.189]:2414 "EHLO
-	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756911AbYCMWa1 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 13 Mar 2008 18:30:27 -0400
-Received: by fk-out-0910.google.com with SMTP id z23so3587497fkz.5
-        for <linux-ide@vger.kernel.org>; Thu, 13 Mar 2008 15:30:25 -0700 (PDT)
+Received: from fg-out-1718.google.com ([72.14.220.156]:13615 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758367AbYCMW36 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 13 Mar 2008 18:29:58 -0400
+Received: by fg-out-1718.google.com with SMTP id e21so3539470fga.17
+        for <linux-ide@vger.kernel.org>; Thu, 13 Mar 2008 15:29:57 -0700 (PDT)
 In-Reply-To: <20080313224352.7051.44005.sendpatchset@localhost.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
 Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-kernel@vger.kernel.org
 
-We have per host driver "vlb|pci|cmd_clock=" parameters now.
+Add "pci_clock=" parameter for specifying PCI bus clock frequency (in MHz).
 
 Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 ---
- Documentation/ide/ide.txt |   10 ----------
- drivers/ide/ide.c         |    2 +-
- 2 files changed, 1 insertion(+), 11 deletions(-)
+ drivers/ide/pci/cy82c693.c |    7 ++++++-
+ 1 file changed, 6 insertions(+), 1 deletion(-)
 
-Index: b/Documentation/ide/ide.txt
+Index: b/drivers/ide/pci/cy82c693.c
 ===================================================================
---- a/Documentation/ide/ide.txt
-+++ b/Documentation/ide/ide.txt
-@@ -214,16 +214,6 @@ Summary of ide driver parameters for ker
+--- a/drivers/ide/pci/cy82c693.c
++++ b/drivers/ide/pci/cy82c693.c
+@@ -98,6 +98,8 @@
+ #define CY82C963_MIN_BUS_SPEED	25
+ #define CY82C963_MAX_BUS_SPEED	33
  
-  "hdx=nodma"		: disallow DMA
++static int pci_clock;
++
+ /* the struct for the PIO mode timings */
+ typedef struct pio_clocks_s {
+ 	u8	address_time;	/* Address setup (clocks) */
+@@ -136,7 +138,7 @@ static int calc_clk(int time, int bus_sp
+ static void compute_clocks(u8 pio, pio_clocks_t *p_pclk)
+ {
+ 	int clk1, clk2;
+-	int bus_speed = system_bus_clock();	/* get speed of PCI bus */
++	int bus_speed = pci_clock ? pci_clock : system_bus_clock();
  
-- "idebus=xx"		: inform IDE driver of VESA/PCI bus speed in MHz,
--			  where "xx" is between 20 and 66 inclusive,
--			  used when tuning chipset PIO modes.
--			  For PCI bus, 25 is correct for a P75 system,
--			  30 is correct for P90,P120,P180 systems,
--			  and 33 is used for P100,P133,P166 systems.
--			  If in doubt, use idebus=33 for PCI.
--			  As for VLB, it is safest to not specify it.
--			  Bigger values are safer than smaller ones.
--
-  "ide=reverse"		: formerly called to pci sub-system, but now local.
+ 	/* we don't check against CY82C693's min and max speed,
+ 	 * so you can play with the idebus=xx parameter
+@@ -447,6 +449,9 @@ static int __init cy82c693_ide_init(void
  
- The following are valid ONLY on ide0, which usually corresponds
-Index: b/drivers/ide/ide.c
-===================================================================
---- a/drivers/ide/ide.c
-+++ b/drivers/ide/ide.c
-@@ -979,7 +979,7 @@ static int __init ide_setup(char *s)
- 			idebus_parameter = vals[0];
- 		} else
- 			printk(" -- BAD BUS SPEED! Expected value from 20 to 66");
--		goto done;
-+		goto obsolete_option;
- 	}
+ module_init(cy82c693_ide_init);
  
- bad_option:
++module_param(pci_clock, int, 0);
++MODULE_PARM_DESC(pci_clock, "PCI bus clock frequency (in MHz)");
++
+ MODULE_AUTHOR("Andreas Krebs, Andre Hedrick");
+ MODULE_DESCRIPTION("PCI driver module for the Cypress CY82C693 IDE");
+ MODULE_LICENSE("GPL");
