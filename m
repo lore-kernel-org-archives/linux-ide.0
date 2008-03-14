@@ -1,40 +1,65 @@
-From: bugme-daemon@bugzilla.kernel.org
-Subject: [Bug 10239] PLEXTOR DVDR PX-740A drive not ready for command
-Date: Fri, 14 Mar 2008 01:40:46 -0700 (PDT)
-Message-ID: <20080314084046.30F59108064@picon.linux-foundation.org>
-References: <bug-10239-11633@http.bugzilla.kernel.org/>
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:52674 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751672AbYCNIlR (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 14 Mar 2008 04:41:17 -0400
-Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
-	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id m2E8feps027118
-	for <linux-ide@vger.kernel.org>; Fri, 14 Mar 2008 01:41:41 -0700
-In-Reply-To: <bug-10239-11633@http.bugzilla.kernel.org/>
-Sender: linux-ide-owner@vger.kernel.org
+From: FUJITA Tomonori <tomof@acm.org>
+Subject: Re: [PATCH 00/10] sg buffer copy helper functions
+Date: Fri, 14 Mar 2008 18:35:37 +0900
+Message-ID: <20080314183434J.tomof@acm.org>
+References: <20080313085733M.tomof@acm.org>
+	<Pine.LNX.4.44L0.0803131420090.5744-100000@iolanthe.rowland.org>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <Pine.LNX.4.44L0.0803131420090.5744-100000@iolanthe.rowland.org>
+Sender: linux-scsi-owner@vger.kernel.org
+To: stern@rowland.harvard.edu
+Cc: tomof@acm.org, fujita.tomonori@lab.ntt.co.jp, bharrosh@panasas.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, James.Bottomley@HansenPartnership.com, jens.axboe@oracle.com, dougg@torque.net, Geert.Uytterhoeven@sonycom.com, tony.luck@intel.com, Mark_Salyzyn@adaptec.com, ed.lin@promise.com, linuxraid@amcc.com, linux-usb@vger.kernel.orgfujita.tomonori@lab.ntt.co.jp
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
 
-http://bugzilla.kernel.org/show_bug.cgi?id=10239
+On Thu, 13 Mar 2008 14:32:59 -0400 (EDT)
+Alan Stern <stern@rowland.harvard.edu> wrote:
+
+> On Thu, 13 Mar 2008, FUJITA Tomonori wrote:
+> 
+> > > > +	for_each_sg(*sgl, sg, nents, i) {
+> > > 
+> > > Will there be a problem in subsequent calls if *sgl has been
+> > > incremented but nents hasn't been changed?  Maybe nents needs to be a 
+> > > pointer also.
+> > 
+> > usb_stor_access_xfer_buf doesn't check scsi_sg_count (the number of sg
+> > entries). It assumes that callers take care about the issue.
+> > 
+> > If you want nents to be a pointer, I'm fine with it.
+> 
+> If nents doesn't change then for_each_sg() won't work right.  There 
+> could be an alternative macro:
+
+Oops, I thought that for_each_sg is defined like:
+
+#define for_each_sg(sglist, sg, nr, __i)	\
+	for (__i = 0, sg = (sglist); __i < (nr) && sg; __i++, sg = sg_next(sg))
 
 
+> /*
+>  * Loop over each sg element, stopping at the end of the chain
+>  */
+> #define for_each_sg_all(sglist, sg, __i)	\
+> 	for (__i = 0, sg = (sglist); sg; __i++, sg = sg_next(sg))
+> 
+> If you added this macro to include/linux/scatterlist.h and used it
+> instead of for_each_sg() then you can get rid of nents entirely.  
+> However I'm not sure whether this would be safe.  Do people sometimes 
+> use a subset of the entries in a scatterlist?
+
+IIRC, some drivers do that (though they might use sg_next).
 
 
+I don't think that we add a new macro just for this function. We could
+change for_each_sg in the above way or we could just do in
+usb_stor_access_xfer_buf
 
-------- Comment #5 from richard.genoud@gmail.com  2008-03-14 01:40 -------
-(In reply to comment #3)
-> One more thing - please also verify that the cable is plugged correctly (not in
-> the reverse order) - the connector farer from the middle one (blue one) should
-> go to the controller.
-yes, it is.
-
-> [ Sorry for asking so many stupid questions but I would really like to exclude
->   hardware configuration issue first. ]
-It's all right, everything should be double-checked.
+for (i = 0, sg = *sgl; i < nents && sg; i++, sg = sg_next(sg))
 
 
--- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug, or are watching the assignee.
+> If it isn't safe then nents would have to be passed as a pointer too.  
+> At this stage I think it would be better to encapsulate sgl, offset, 
+> and nents in a single structure than to pass multiple pointers.
