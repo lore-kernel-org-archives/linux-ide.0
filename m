@@ -1,65 +1,63 @@
-From: FUJITA Tomonori <tomof@acm.org>
+From: Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>
 Subject: Re: [PATCH 00/10] sg buffer copy helper functions
-Date: Fri, 14 Mar 2008 18:35:37 +0900
-Message-ID: <20080314183434J.tomof@acm.org>
-References: <20080313085733M.tomof@acm.org>
-	<Pine.LNX.4.44L0.0803131420090.5744-100000@iolanthe.rowland.org>
+Date: Fri, 14 Mar 2008 10:46:52 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44L0.0803141036150.4478-100000@iolanthe.rowland.org>
+References: <20080314183434J.tomof@acm.org>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.44L0.0803131420090.5744-100000@iolanthe.rowland.org>
-Sender: linux-scsi-owner@vger.kernel.org
-To: stern@rowland.harvard.edu
-Cc: tomof@acm.org, fujita.tomonori@lab.ntt.co.jp, bharrosh@panasas.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, James.Bottomley@HansenPartnership.com, jens.axboe@oracle.com, dougg@torque.net, Geert.Uytterhoeven@sonycom.com, tony.luck@intel.com, Mark_Salyzyn@adaptec.com, ed.lin@promise.com, linuxraid@amcc.com, linux-usb@vger.kernel.orgfujita.tomonori@lab.ntt.co.jp
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <20080314183434J.tomof-HInyCGIudOg@public.gmane.org>
+Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: FUJITA Tomonori <tomof-HInyCGIudOg@public.gmane.org>
+Cc: fujita.tomonori-Zyj7fXuS5i5L9jVzuh4AOg@public.gmane.org, bharrosh-C4P08NqkoRlBDgjK7y7TUQ@public.gmane.org, linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, James.Bottomley-d9PhHud1JfjCXq6kfMZ53/egYHeGw8Jk@public.gmane.org, jens.axboe-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, dougg-c4O3jRSCrQ+sTnJN9+BGXg@public.gmane.org, Geert.Uytterhoeven-osDt5Q4Chk1BDgjK7y7TUQ@public.gmane.org, tony.luck-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, Mark_Salyzyn-ugMvIWC9OiRBDgjK7y7TUQ@public.gmane.org, ed.lin-XjgVRL3kVzRBDgjK7y7TUQ@public.gmane.org, linuxraid-6mNVq6Owofk@public.gmane.org, linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.orgfujita.tomonori-Zyj7fXuS5i5L9jVzuh4AOg@public.gmane.org
 List-Id: linux-ide@vger.kernel.org
 
-On Thu, 13 Mar 2008 14:32:59 -0400 (EDT)
-Alan Stern <stern@rowland.harvard.edu> wrote:
+On Fri, 14 Mar 2008, FUJITA Tomonori wrote:
 
-> On Thu, 13 Mar 2008, FUJITA Tomonori wrote:
+> > If nents doesn't change then for_each_sg() won't work right.  There 
+> > could be an alternative macro:
 > 
-> > > > +	for_each_sg(*sgl, sg, nents, i) {
-> > > 
-> > > Will there be a problem in subsequent calls if *sgl has been
-> > > incremented but nents hasn't been changed?  Maybe nents needs to be a 
-> > > pointer also.
+> Oops, I thought that for_each_sg is defined like:
+> 
+> #define for_each_sg(sglist, sg, nr, __i)	\
+> 	for (__i = 0, sg = (sglist); __i < (nr) && sg; __i++, sg = sg_next(sg))
+> 
+> 
+> > /*
+> >  * Loop over each sg element, stopping at the end of the chain
+> >  */
+> > #define for_each_sg_all(sglist, sg, __i)	\
+> > 	for (__i = 0, sg = (sglist); sg; __i++, sg = sg_next(sg))
 > > 
-> > usb_stor_access_xfer_buf doesn't check scsi_sg_count (the number of sg
-> > entries). It assumes that callers take care about the issue.
-> > 
-> > If you want nents to be a pointer, I'm fine with it.
+> > If you added this macro to include/linux/scatterlist.h and used it
+> > instead of for_each_sg() then you can get rid of nents entirely.  
+> > However I'm not sure whether this would be safe.  Do people sometimes 
+> > use a subset of the entries in a scatterlist?
 > 
-> If nents doesn't change then for_each_sg() won't work right.  There 
-> could be an alternative macro:
+> IIRC, some drivers do that (though they might use sg_next).
 
-Oops, I thought that for_each_sg is defined like:
+But will usb-storage ever receive a scatterlist like that?  For 
+example, if there are three 4096-byte entries in the list, but the 
+transfer length is 8192 and nents is 2, then there could be a problem.
 
-#define for_each_sg(sglist, sg, nr, __i)	\
-	for (__i = 0, sg = (sglist); __i < (nr) && sg; __i++, sg = sg_next(sg))
+(This could happen if some software layer preallocated an sg chain and
+used it over and over again, each time setting nents to whatever value
+was needed for a particular transfer.)
 
-
-> /*
->  * Loop over each sg element, stopping at the end of the chain
->  */
-> #define for_each_sg_all(sglist, sg, __i)	\
-> 	for (__i = 0, sg = (sglist); sg; __i++, sg = sg_next(sg))
+> I don't think that we add a new macro just for this function. We could
+> change for_each_sg in the above way or we could just do in
+> usb_stor_access_xfer_buf
 > 
-> If you added this macro to include/linux/scatterlist.h and used it
-> instead of for_each_sg() then you can get rid of nents entirely.  
-> However I'm not sure whether this would be safe.  Do people sometimes 
-> use a subset of the entries in a scatterlist?
+> for (i = 0, sg = *sgl; i < nents && sg; i++, sg = sg_next(sg))
 
-IIRC, some drivers do that (though they might use sg_next).
+This wouldn't be safe in the example I just mentioned if the
+usb-storage driver tried to do three transfers, each of 4096 bytes.  
+All three would succeed, but in fact the third call shouldn't transfer
+any data.
 
+Alan Stern
 
-I don't think that we add a new macro just for this function. We could
-change for_each_sg in the above way or we could just do in
-usb_stor_access_xfer_buf
-
-for (i = 0, sg = *sgl; i < nents && sg; i++, sg = sg_next(sg))
-
-
-> If it isn't safe then nents would have to be passed as a pointer too.  
-> At this stage I think it would be better to encapsulate sgl, offset, 
-> and nents in a single structure than to pass multiple pointers.
+--
+To unsubscribe from this list: send the line "unsubscribe linux-usb" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
