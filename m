@@ -1,27 +1,35 @@
 From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [PATCH 1/12] ali14xx: add "vlb_clock=" parameter
-Date: Sat, 15 Mar 2008 12:36:14 +0000
-Message-ID: <20080315123614.6c548306@the-village.bc.nu>
-References: <20080313224352.7051.44005.sendpatchset@localhost.localdomain>
+Subject: Re: [RFC] Disk shock protection (revisited)
+Date: Sat, 15 Mar 2008 14:30:58 +0000
+Message-ID: <20080315143058.78a407f6@the-village.bc.nu>
+References: <87skzgd1zk.fsf@denkblock.local>
+	<20080226123946.75dbe3d2@core>
+	<87mypl8p49.fsf@denkblock.local>
+	<20080228111349.6831925c@core>
+	<87bq5qfm2v.fsf@denkblock.local>
+	<8763vq8ynk.fsf@denkblock.local>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:44960 "EHLO
-	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751706AbYCOM5o (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 15 Mar 2008 08:57:44 -0400
-In-Reply-To: <20080313224352.7051.44005.sendpatchset@localhost.localdomain>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1753012AbYCOOx4@vger.kernel.org>
+In-Reply-To: <8763vq8ynk.fsf@denkblock.local>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Elias Oltmanns <eo@nebensachen.de>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Jens Axboe <jens.axboe@oracle.com>
 List-Id: linux-ide@vger.kernel.org
-Cc: linux-ide@vger.kernel.org, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-kernel@vger.kernel.org
 
-On Thu, 13 Mar 2008 23:43:52 +0100
-Bartlomiej Zolnierkiewicz <bzolnier@gmail.com> wrote:
+On Thu, 13 Mar 2008 15:51:59 +0100
+Elias Oltmanns <eo@nebensachen.de> wrote:
 
-> Add "vlb_clock=" parameter for specifying VLB clock frequency (in MHz).
+> Elias Oltmanns <eo@nebensachen.de> wrote:
+> [...]
+> > I'm going to send a first draft of a patch series in reply to this
+> > email. It is a stripped down version intended to get the general idea
+> > across.
 > 
-> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+> Have you had got round to looking at these patches yet?
 
-Surely this value should be set once per system (ditto for PCI) not
-something you have to set in each specific driver on the box ?
+I've spent almost all of the last two weeks at or travelling to/from
+conferences so no.
+
+Alan
