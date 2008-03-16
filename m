@@ -1,52 +1,78 @@
-From: Jiri Slaby <jirislaby@gmail.com>
-Subject: [PATCH 1/1] IDE: fix ide.h compiler warning
-Date: Sun, 16 Mar 2008 17:02:40 +0100
-Message-ID: <1205683360-1454-1-git-send-email-jirislaby@gmail.com>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: [PATCH 00/10] sg buffer copy helper functions
+Date: Sun, 16 Mar 2008 13:18:07 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44L0.0803161304240.4171-100000@iolanthe.rowland.org>
+References: <20080316205500I.tomof@acm.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp.wellnetcz.com ([212.24.148.102]:58658 "EHLO WNmonitoring"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752043AbYCPQlG (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 16 Mar 2008 12:41:06 -0400
+Received: from iolanthe.rowland.org ([192.131.102.54]:42304 "HELO
+	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1751697AbYCPRSJ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 16 Mar 2008 13:18:09 -0400
+In-Reply-To: <20080316205500I.tomof@acm.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-Cc: linux-ide@vger.kernel.org, Jiri Slaby <jirislaby@gmail.com>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Cc: tomof@acm.org, bharrosh@panasas.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, James.Bottomley@HansenPartnership.com, jens.axboe@oracle.com, dougg@torque.net, Geert.Uytterhoeven@sonycom.com, tony.luck@intel.com, Mark_Salyzyn@adaptec.com, ed.lin@promise.com, linuxraid@amcc.com, linux-usb@vger.kernel.org
 
-=46ix following compiler warning by returning EINVAL
-In file included from ANYTHING-INCLUDING-IDE.H:45:
-include/linux/ide.h: In function =E2=80=98ide_hwif_setup_dma=E2=80=99:
-include/linux/ide.h:1022: warning: no return statement in function retu=
-rning non-void
+On Sun, 16 Mar 2008, FUJITA Tomonori wrote:
 
-This fix is only for CONFIG_BLK_DEV_IDEDMA_PCI=3Dn configs and is intro=
-duced by
-ide: do complete DMA setup in ->init_dma method.
+> On Fri, 14 Mar 2008 10:46:52 -0400 (EDT)
+> Alan Stern <stern@rowland.harvard.edu> wrote:
+> 
+> > On Fri, 14 Mar 2008, FUJITA Tomonori wrote:
+> > 
+> > > > If nents doesn't change then for_each_sg() won't work right.  There 
+> > > > could be an alternative macro:
+> > > 
+> > > Oops, I thought that for_each_sg is defined like:
+> > > 
+> > > #define for_each_sg(sglist, sg, nr, __i)	\
+> > > 	for (__i = 0, sg = (sglist); __i < (nr) && sg; __i++, sg = sg_next(sg))
+> > > 
+> > > 
+> > > > /*
+> > > >  * Loop over each sg element, stopping at the end of the chain
+> > > >  */
+> > > > #define for_each_sg_all(sglist, sg, __i)	\
+> > > > 	for (__i = 0, sg = (sglist); sg; __i++, sg = sg_next(sg))
+> > > > 
+> > > > If you added this macro to include/linux/scatterlist.h and used it
+> > > > instead of for_each_sg() then you can get rid of nents entirely.  
+> > > > However I'm not sure whether this would be safe.  Do people sometimes 
+> > > > use a subset of the entries in a scatterlist?
+> > > 
+> > > IIRC, some drivers do that (though they might use sg_next).
+> > 
+> > But will usb-storage ever receive a scatterlist like that?  For 
+> > example, if there are three 4096-byte entries in the list, but the 
+> > transfer length is 8192 and nents is 2, then there could be a problem.
+> 
+> If LLDs don't use the padding or drain buffer feature (USB uses
+> neither), scsi midlayer doesn't send such (that is, the block layer
+> doesn't create such).
 
-Signed-off-by: Jiri Slaby <jirislaby@gmail.com>
-Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
----
- include/linux/ide.h |    5 ++++-
- 1 files changed, 4 insertions(+), 1 deletions(-)
+Then it should be okay to open-code that loop and test whether sg is 
+NULL.
 
-diff --git a/include/linux/ide.h b/include/linux/ide.h
-index 83ddaf0..bd8d751 100644
---- a/include/linux/ide.h
-+++ b/include/linux/ide.h
-@@ -1016,7 +1016,10 @@ unsigned long ide_pci_dma_base(ide_hwif_t *, con=
-st struct ide_port_info *);
- int ide_hwif_setup_dma(ide_hwif_t *, const struct ide_port_info *);
- #else
- static inline int ide_hwif_setup_dma(ide_hwif_t *hwif,
--				     const struct ide_port_info *d) { }
-+				     const struct ide_port_info *d)
-+{
-+	return -EINVAL;
-+}
- #endif
-=20
- extern void default_hwif_iops(ide_hwif_t *);
---=20
-1.5.4.1
+> As I explained above, it should be safe with USB. But in general, LLDs
+> should not rely on a scatterlist about how much data they transfer.
+
+True.  Let's add a comment explaining the situation.  For example:
+
+	/* If this routine is called multiple times for a single
+	 * scatterlist, the nents value will not be updated properly.
+	 * Transfers will stop when the end of the list is reached,
+	 * which might not be correct in cases where nents is less than
+	 * the actual number of entries in the list.  However, if 
+	 * drivers are careful not to use multiple calls to transfer
+	 * more data than was requested then this will be safe.
+	 */
+	for (sg = *sgl; nents > 0 && sg; --nents, sg = sg_next(sg)) {
+
+When this change is made, we will be able to convert usb-storage over 
+to using your library routine.
+
+Alan Stern
 
