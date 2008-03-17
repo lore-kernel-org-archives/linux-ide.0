@@ -1,15 +1,15 @@
 From: Borislav Petkov <petkovbb@googlemail.com>
-Subject: [PATCH 13/17] ide-tape: remove pipelined mode tape control flags
-Date: Mon, 17 Mar 2008 07:41:26 +0100
-Message-ID: <1205736090-4435-14-git-send-email-petkovbb@gmail.com>
+Subject: [PATCH 07/17] ide-tape: remove idetape_remove_stage_head()
+Date: Mon, 17 Mar 2008 07:41:20 +0100
+Message-ID: <1205736090-4435-8-git-send-email-petkovbb@gmail.com>
 References: <1205736090-4435-1-git-send-email-petkovbb@gmail.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hu-out-0506.google.com ([72.14.214.233]:30015 "EHLO
+Received: from hu-out-0506.google.com ([72.14.214.232]:29859 "EHLO
 	hu-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753223AbYCQGli (ORCPT
+	with ESMTP id S1753188AbYCQGli (ORCPT
 	<rfc822;linux-ide@vger.kernel.org>); Mon, 17 Mar 2008 02:41:38 -0400
-Received: by hu-out-0506.google.com with SMTP id 19so3301578hue.21
-        for <linux-ide@vger.kernel.org>; Sun, 16 Mar 2008 23:41:38 -0700 (PDT)
+Received: by hu-out-0506.google.com with SMTP id 19so3301623hue.21
+        for <linux-ide@vger.kernel.org>; Sun, 16 Mar 2008 23:41:37 -0700 (PDT)
 In-Reply-To: <1205736090-4435-1-git-send-email-petkovbb@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
@@ -18,86 +18,80 @@ Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Borislav Petkov <pe
 
 Signed-off-by: Borislav Petkov <petkovbb@gmail.com>
 ---
- drivers/ide/ide-tape.c |   34 +++++-----------------------------
- 1 files changed, 5 insertions(+), 29 deletions(-)
+ drivers/ide/ide-tape.c |   39 ---------------------------------------
+ 1 files changed, 0 insertions(+), 39 deletions(-)
 
 diff --git a/drivers/ide/ide-tape.c b/drivers/ide/ide-tape.c
-index 5535356..1464383 100644
+index 5a6b657..7e0f4fa 100644
 --- a/drivers/ide/ide-tape.c
 +++ b/drivers/ide/ide-tape.c
-@@ -204,19 +204,15 @@ enum {
- 	/* 0 When the tape position is unknown */
- 	IDETAPE_FLAG_ADDRESS_VALID	= (1 <<	1),
- 	/* Device already opened */
--	IDETAPE_FLAG_BUSY			= (1 << 2),
--	/* Error detected in a pipeline stage */
--	IDETAPE_FLAG_PIPELINE_ERR	= (1 <<	3),
-+	IDETAPE_FLAG_BUSY		= (1 << 2),
- 	/* Attempt to auto-detect the current user block size */
--	IDETAPE_FLAG_DETECT_BS		= (1 << 4),
-+	IDETAPE_FLAG_DETECT_BS		= (1 << 3),
- 	/* Currently on a filemark */
--	IDETAPE_FLAG_FILEMARK		= (1 << 5),
-+	IDETAPE_FLAG_FILEMARK		= (1 << 4),
- 	/* DRQ interrupt device */
--	IDETAPE_FLAG_DRQ_INTERRUPT	= (1 << 6),
--	/* pipeline active */
--	IDETAPE_FLAG_PIPELINE_ACTIVE	= (1 << 7),
-+	IDETAPE_FLAG_DRQ_INTERRUPT	= (1 << 5),
- 	/* 0 = no tape is loaded, so we don't rewind after ejecting */
--	IDETAPE_FLAG_MEDIUM_PRESENT	= (1 << 8),
-+	IDETAPE_FLAG_MEDIUM_PRESENT	= (1 << 6),
- };
+@@ -692,41 +692,6 @@ static void idetape_kfree_stage(idetape_tape_t *tape, idetape_stage_t *stage)
+ }
  
- /* A pipeline stage. */
-@@ -1721,12 +1717,6 @@ static int idetape_queue_rw_tail(ide_drive_t *drive, int cmd, int blocks,
- 
- 	debug_log(DBG_SENSE, "%s: cmd=%d\n", __func__, cmd);
- 
--	if (test_bit(IDETAPE_FLAG_PIPELINE_ACTIVE, &tape->flags)) {
--		printk(KERN_ERR "ide-tape: bug: the pipeline is active in %s\n",
--				__func__);
--		return (0);
--	}
+ /*
+- * Remove tape->first_stage from the pipeline. The caller should avoid race
+- * conditions.
+- */
+-static void idetape_remove_stage_head(ide_drive_t *drive)
+-{
+-	idetape_tape_t *tape = drive->driver_data;
+-	idetape_stage_t *stage;
 -
- 	idetape_init_rq(&rq, cmd);
- 	rq.rq_disk = tape->disk;
- 	rq.special = (void *)bh;
-@@ -1832,14 +1822,6 @@ static int idetape_init_read(ide_drive_t *drive, int max_stages)
- 		}
+-	debug_log(DBG_PROCS, "Enter %s\n", __func__);
+-
+-	if (tape->first_stage == NULL) {
+-		printk(KERN_ERR "ide-tape: bug: tape->first_stage is NULL\n");
+-		return;
+-	}
+-	if (tape->active_stage == tape->first_stage) {
+-		printk(KERN_ERR "ide-tape: bug: Trying to free our active "
+-				"pipeline stage\n");
+-		return;
+-	}
+-	stage = tape->first_stage;
+-	tape->first_stage = stage->next;
+-	idetape_kfree_stage(tape, stage);
+-	tape->nr_stages--;
+-	if (tape->first_stage == NULL) {
+-		tape->last_stage = NULL;
+-		if (tape->next_stage != NULL)
+-			printk(KERN_ERR "ide-tape: bug: tape->next_stage !="
+-					" NULL\n");
+-		if (tape->nr_stages)
+-			printk(KERN_ERR "ide-tape: bug: nr_stages should be 0 "
+-					"now\n");
+-	}
+-}
+-
+-/*
+  * This will free all the pipeline stages starting from new_last_stage->next
+  * to the end of the list, and point tape->last_stage to new_last_stage.
+  */
+@@ -762,7 +727,6 @@ static int idetape_end_request(ide_drive_t *drive, int uptodate, int nr_sects)
+ 	idetape_tape_t *tape = drive->driver_data;
+ 	unsigned long flags;
+ 	int error;
+-	int remove_stage = 0;
+ 	idetape_stage_t *active_stage;
+ 
+ 	debug_log(DBG_PROCS, "Enter %s\n", __func__);
+@@ -790,7 +754,6 @@ static int idetape_end_request(ide_drive_t *drive, int uptodate, int nr_sects)
+ 		tape->active_data_rq = NULL;
+ 		tape->nr_pending_stages--;
+ 		if (rq->cmd[0] & REQ_IDETAPE_WRITE) {
+-			remove_stage = 1;
+ 			if (error) {
+ 				set_bit(IDETAPE_FLAG_PIPELINE_ERR,
+ 					&tape->flags);
+@@ -831,8 +794,6 @@ static int idetape_end_request(ide_drive_t *drive, int uptodate, int nr_sects)
  	}
+ 	ide_end_drive_cmd(drive, 0, 0);
  
--	if (!test_bit(IDETAPE_FLAG_PIPELINE_ACTIVE, &tape->flags)) {
--		if (tape->nr_pending_stages >= 3 * max_stages / 4) {
--			tape->measure_insert_time = 1;
--			tape->insert_time = jiffies;
--			tape->insert_size = 0;
--			tape->insert_speed = 0;
--		}
--	}
- 	return 0;
- }
- 
-@@ -1859,9 +1841,6 @@ static int idetape_add_chrdev_read_request(ide_drive_t *drive, int blocks)
- 
- 	idetape_init_read(drive, tape->max_stages);
- 
--	if (test_bit(IDETAPE_FLAG_PIPELINE_ERR, &tape->flags))
--		return 0;
--
- 	return idetape_queue_rw_tail(drive, REQ_IDETAPE_READ, blocks,
- 				     tape->merge_stage->bh);
- }
-@@ -2425,9 +2404,6 @@ static int idetape_chrdev_open(struct inode *inode, struct file *filp)
- 	if (!test_bit(IDETAPE_FLAG_ADDRESS_VALID, &tape->flags))
- 		(void)idetape_rewind_tape(drive);
- 
--	if (tape->chrdev_dir != IDETAPE_DIR_READ)
--		clear_bit(IDETAPE_FLAG_PIPELINE_ERR, &tape->flags);
--
- 	/* Read block size and write protect status from drive. */
- 	ide_tape_get_bsize_from_bdesc(drive);
- 
+-	if (remove_stage)
+-		idetape_remove_stage_head(drive);
+ 	if (tape->active_data_rq == NULL)
+ 		clear_bit(IDETAPE_FLAG_PIPELINE_ACTIVE, &tape->flags);
+ 	spin_unlock_irqrestore(&tape->lock, flags);
 -- 
 1.5.4.1
 
