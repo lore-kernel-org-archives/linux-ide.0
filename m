@@ -1,71 +1,103 @@
 From: Borislav Petkov <petkovbb@googlemail.com>
-Subject: [PATCH 06/17] ide-tape: remove idetape_pipeline_size()
-Date: Mon, 17 Mar 2008 07:41:19 +0100
-Message-ID: <1205736090-4435-7-git-send-email-petkovbb@gmail.com>
+Subject: [PATCH 13/17] ide-tape: remove pipelined mode tape control flags
+Date: Mon, 17 Mar 2008 07:41:26 +0100
+Message-ID: <1205736090-4435-14-git-send-email-petkovbb@gmail.com>
 References: <1205736090-4435-1-git-send-email-petkovbb@gmail.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hu-out-0506.google.com ([72.14.214.232]:29797 "EHLO
+Received: from hu-out-0506.google.com ([72.14.214.233]:30015 "EHLO
 	hu-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752768AbYCQGlg (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 17 Mar 2008 02:41:36 -0400
-Received: by hu-out-0506.google.com with SMTP id 19so3301577hue.21
-        for <linux-ide@vger.kernel.org>; Sun, 16 Mar 2008 23:41:36 -0700 (PDT)
+	with ESMTP id S1753223AbYCQGli (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 17 Mar 2008 02:41:38 -0400
+Received: by hu-out-0506.google.com with SMTP id 19so3301578hue.21
+        for <linux-ide@vger.kernel.org>; Sun, 16 Mar 2008 23:41:38 -0700 (PDT)
 In-Reply-To: <1205736090-4435-1-git-send-email-petkovbb@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: bzolnier@gmail.com
 Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Borislav Petkov <petkovbb@gmail.com>
 
-The computation of the block offset of the the tape position (MTIOCPOS,
-MTIOCGET) is not influenced by the stages queued in the pipeline anymore but by
-the size of the current buffer which is going to be sent to the drive.
-
 Signed-off-by: Borislav Petkov <petkovbb@gmail.com>
 ---
- drivers/ide/ide-tape.c |   23 +----------------------
- 1 files changed, 1 insertions(+), 22 deletions(-)
+ drivers/ide/ide-tape.c |   34 +++++-----------------------------
+ 1 files changed, 5 insertions(+), 29 deletions(-)
 
 diff --git a/drivers/ide/ide-tape.c b/drivers/ide/ide-tape.c
-index 3b324bb..5a6b657 100644
+index 5535356..1464383 100644
 --- a/drivers/ide/ide-tape.c
 +++ b/drivers/ide/ide-tape.c
-@@ -2128,27 +2128,6 @@ static void idetape_pad_zeros(ide_drive_t *drive, int bcount)
+@@ -204,19 +204,15 @@ enum {
+ 	/* 0 When the tape position is unknown */
+ 	IDETAPE_FLAG_ADDRESS_VALID	= (1 <<	1),
+ 	/* Device already opened */
+-	IDETAPE_FLAG_BUSY			= (1 << 2),
+-	/* Error detected in a pipeline stage */
+-	IDETAPE_FLAG_PIPELINE_ERR	= (1 <<	3),
++	IDETAPE_FLAG_BUSY		= (1 << 2),
+ 	/* Attempt to auto-detect the current user block size */
+-	IDETAPE_FLAG_DETECT_BS		= (1 << 4),
++	IDETAPE_FLAG_DETECT_BS		= (1 << 3),
+ 	/* Currently on a filemark */
+-	IDETAPE_FLAG_FILEMARK		= (1 << 5),
++	IDETAPE_FLAG_FILEMARK		= (1 << 4),
+ 	/* DRQ interrupt device */
+-	IDETAPE_FLAG_DRQ_INTERRUPT	= (1 << 6),
+-	/* pipeline active */
+-	IDETAPE_FLAG_PIPELINE_ACTIVE	= (1 << 7),
++	IDETAPE_FLAG_DRQ_INTERRUPT	= (1 << 5),
+ 	/* 0 = no tape is loaded, so we don't rewind after ejecting */
+-	IDETAPE_FLAG_MEDIUM_PRESENT	= (1 << 8),
++	IDETAPE_FLAG_MEDIUM_PRESENT	= (1 << 6),
+ };
+ 
+ /* A pipeline stage. */
+@@ -1721,12 +1717,6 @@ static int idetape_queue_rw_tail(ide_drive_t *drive, int cmd, int blocks,
+ 
+ 	debug_log(DBG_SENSE, "%s: cmd=%d\n", __func__, cmd);
+ 
+-	if (test_bit(IDETAPE_FLAG_PIPELINE_ACTIVE, &tape->flags)) {
+-		printk(KERN_ERR "ide-tape: bug: the pipeline is active in %s\n",
+-				__func__);
+-		return (0);
+-	}
+-
+ 	idetape_init_rq(&rq, cmd);
+ 	rq.rq_disk = tape->disk;
+ 	rq.special = (void *)bh;
+@@ -1832,14 +1822,6 @@ static int idetape_init_read(ide_drive_t *drive, int max_stages)
+ 		}
  	}
+ 
+-	if (!test_bit(IDETAPE_FLAG_PIPELINE_ACTIVE, &tape->flags)) {
+-		if (tape->nr_pending_stages >= 3 * max_stages / 4) {
+-			tape->measure_insert_time = 1;
+-			tape->insert_time = jiffies;
+-			tape->insert_size = 0;
+-			tape->insert_speed = 0;
+-		}
+-	}
+ 	return 0;
  }
  
--static int idetape_pipeline_size(ide_drive_t *drive)
--{
--	idetape_tape_t *tape = drive->driver_data;
--	idetape_stage_t *stage;
--	struct request *rq;
--	int size = 0;
+@@ -1859,9 +1841,6 @@ static int idetape_add_chrdev_read_request(ide_drive_t *drive, int blocks)
+ 
+ 	idetape_init_read(drive, tape->max_stages);
+ 
+-	if (test_bit(IDETAPE_FLAG_PIPELINE_ERR, &tape->flags))
+-		return 0;
 -
--	idetape_wait_for_pipeline(drive);
--	stage = tape->first_stage;
--	while (stage != NULL) {
--		rq = &stage->rq;
--		size += tape->blk_size * (rq->nr_sectors -
--				rq->current_nr_sectors);
--		if (rq->errors == IDETAPE_ERROR_FILEMARK)
--			size += tape->blk_size;
--		stage = stage->next;
--	}
--	size += tape->merge_stage_size;
--	return size;
--}
+ 	return idetape_queue_rw_tail(drive, REQ_IDETAPE_READ, blocks,
+ 				     tape->merge_stage->bh);
+ }
+@@ -2425,9 +2404,6 @@ static int idetape_chrdev_open(struct inode *inode, struct file *filp)
+ 	if (!test_bit(IDETAPE_FLAG_ADDRESS_VALID, &tape->flags))
+ 		(void)idetape_rewind_tape(drive);
+ 
+-	if (tape->chrdev_dir != IDETAPE_DIR_READ)
+-		clear_bit(IDETAPE_FLAG_PIPELINE_ERR, &tape->flags);
 -
- /*
-  * Rewinds the tape to the Beginning Of the current Partition (BOP). We
-  * currently support only one partition.
-@@ -2580,7 +2559,7 @@ static int idetape_chrdev_ioctl(struct inode *inode, struct file *file,
- 		idetape_flush_tape_buffers(drive);
- 	}
- 	if (cmd == MTIOCGET || cmd == MTIOCPOS) {
--		block_offset = idetape_pipeline_size(drive) /
-+		block_offset = tape->merge_stage_size /
- 			(tape->blk_size * tape->user_bs_factor);
- 		position = idetape_read_position(drive);
- 		if (position < 0)
+ 	/* Read block size and write protect status from drive. */
+ 	ide_tape_get_bsize_from_bdesc(drive);
+ 
 -- 
 1.5.4.1
 
