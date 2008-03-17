@@ -1,32 +1,32 @@
-From: Mourad De Clerck <mourad@aquazul.com>
-Subject: Re: Marvell 6121 SATA support?
-Date: Mon, 17 Mar 2008 15:13:56 +0100
-Message-ID: <47DE7CA4.7060601@aquazul.com>
-References: <47D6945F.3080201@aquazul.com> <47D697B0.90009@garzik.org> <200803112310.32589.jareguero@telefonica.net> <200803132322.24308.jareguero@telefonica.net> <47DE6487.4040409@garzik.org>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [PATCH libata-dev#upstream-fixes] libata: PCI device should be
+ powered up before being accessed
+Date: Mon, 17 Mar 2008 15:00:01 +0000
+Message-ID: <20080317150001.552904bd@core>
+References: <47D667DA.8050905@gmail.com>
+	<47DE6300.4070004@garzik.org>
+	<47DE65A5.8030704@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from gretel.risen.be ([88.198.7.132]:34399 "EHLO gretel.risen.be"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752787AbYCQOOA (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 17 Mar 2008 10:14:00 -0400
-In-Reply-To: <47DE6487.4040409@garzik.org>
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:33276 "EHLO
+	lxorguk.ukuu.org.uk" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751030AbYCQPOs (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 17 Mar 2008 11:14:48 -0400
+In-Reply-To: <47DE65A5.8030704@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: Jose Alberto Reguero <jareguero@telefonica.net>, linux-ide@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: Jeff Garzik <jeff@garzik.org>, IDE/ATA development list <linux-ide@vger.kernel.org>
 
-On 17/03/08 13:31, Jeff Garzik wrote:
-> Jose Alberto Reguero wrote:
->> Attached is a patch against 2.6.25-rc5 kernel to add suport for
->> Marvell 6121 SATA.
+
+> > Did Alan ACK this?
 > 
-> applied, thanks for cleaning that up
-> 
+> ISTR he did.  Alan?
 
-Thank you both,
+Sorry I've been travelling most of the past 2 weeks. I'm all for this
+going into .26. If it causes any problems (unlikely) we'll just fix them
+in -mm before hand.
 
-Mourad DC
-
-
+Alan
