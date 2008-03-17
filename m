@@ -1,35 +1,32 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: [PATCH 00/10] sg buffer copy helper functions
-Date: Mon, 17 Mar 2008 10:06:36 -0400 (EDT)
-Message-ID: <Pine.LNX.4.44L0.0803171002230.3463-100000@iolanthe.rowland.org>
-References: <20080317122350F.tomof@acm.org>
+From: Mourad De Clerck <mourad@aquazul.com>
+Subject: Re: Marvell 6121 SATA support?
+Date: Mon, 17 Mar 2008 15:13:56 +0100
+Message-ID: <47DE7CA4.7060601@aquazul.com>
+References: <47D6945F.3080201@aquazul.com> <47D697B0.90009@garzik.org> <200803112310.32589.jareguero@telefonica.net> <200803132322.24308.jareguero@telefonica.net> <47DE6487.4040409@garzik.org>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <20080317122350F.tomof@acm.org>
-Sender: linux-scsi-owner@vger.kernel.org
-To: FUJITA Tomonori <tomof@acm.org>
-Cc: fujita.tomonori@lab.ntt.co.jp, bharrosh@panasas.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, James.Bottomley@HansenPartnership.com, jens.axboe@oracle.com, dougg@torque.net, Geert.Uytterhoeven@sonycom.com, tony.luck@intel.com, Mark_Salyzyn@adaptec.com, ed.lin@promise.com, linuxraid@amcc.com, linux-usb@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from gretel.risen.be ([88.198.7.132]:34399 "EHLO gretel.risen.be"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752787AbYCQOOA (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 17 Mar 2008 10:14:00 -0400
+In-Reply-To: <47DE6487.4040409@garzik.org>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: Jose Alberto Reguero <jareguero@telefonica.net>, linux-ide@vger.kernel.org
 
-On Mon, 17 Mar 2008, FUJITA Tomonori wrote:
-
-> For me, it would be much better to fix USB drivers since LLDs should
-> not rely on a scatterlist about how much data they transfer, as I
-> said. If LLDs do that, they are broken. It's not good to add such a
-> workaround to the common API for broken LLDs.
+On 17/03/08 13:31, Jeff Garzik wrote:
+> Jose Alberto Reguero wrote:
+>> Attached is a patch against 2.6.25-rc5 kernel to add suport for
+>> Marvell 6121 SATA.
 > 
-> USB drivers should do something like this if they definitely need to
-> call this API multiple times:
+> applied, thanks for cleaning that up
 > 
->      done = sg_copy_buffer(buffer, scsi_bufflen(sc) - us->done_length,
->      us->done_length += done;
 
-The USB drivers don't need to be fixed; they are already correct.
+Thank you both,
 
-But if you are going to export a library routine for general use then
-it should be written to fail gracefully -- it should not be able to
-cause an invalid memory access.
+Mourad DC
 
-Alan Stern
 
