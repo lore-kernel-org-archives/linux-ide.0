@@ -1,81 +1,35 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCH libata-dev#upstream-fixes] libata: PCI device should be
- powered up before being accessed
-Date: Mon, 17 Mar 2008 21:35:49 +0900
-Message-ID: <47DE65A5.8030704@gmail.com>
-References: <47D667DA.8050905@gmail.com> <47DE6300.4070004@garzik.org>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: [PATCH 00/10] sg buffer copy helper functions
+Date: Mon, 17 Mar 2008 10:06:36 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44L0.0803171002230.3463-100000@iolanthe.rowland.org>
+References: <20080317122350F.tomof@acm.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rn-out-0910.google.com ([64.233.170.190]:16594 "EHLO
-	rn-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753164AbYCQMgH (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 17 Mar 2008 08:36:07 -0400
-Received: by rn-out-0910.google.com with SMTP id v46so3058465rnb.15
-        for <linux-ide@vger.kernel.org>; Mon, 17 Mar 2008 05:36:02 -0700 (PDT)
-In-Reply-To: <47DE6300.4070004@garzik.org>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <20080317122350F.tomof@acm.org>
+Sender: linux-scsi-owner@vger.kernel.org
+To: FUJITA Tomonori <tomof@acm.org>
+Cc: fujita.tomonori@lab.ntt.co.jp, bharrosh@panasas.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, James.Bottomley@HansenPartnership.com, jens.axboe@oracle.com, dougg@torque.net, Geert.Uytterhoeven@sonycom.com, tony.luck@intel.com, Mark_Salyzyn@adaptec.com, ed.lin@promise.com, linuxraid@amcc.com, linux-usb@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: IDE/ATA development list <linux-ide@vger.kernel.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>
 
-Jeff Garzik wrote:
-> Tejun Heo wrote:
->> PCI device should be powered up or powered up before its PCI regsiters
->> are accessed.  Although PCI configuration register access is allowed
->> in D3hot, PCI device is free to reset its status when transiting from
->> D3hot to D0 causing configuration data to change.
->>
->> Many libata SFF drivers which use ata_pci_init_one() read and update
->> configuration registers before calling ata_pci_init_one() which
->> enables the PCI device.  Also, in resume paths, some drivers access
->> registers without resuming the PCI device.
->>
->> This patch adds a call to pcim_enable_device() in init path if
->> register is accessed before calling ata_pci_init_one() and make resume
->> paths first resume PCI devices, access PCI configuration regiters then
->> resume ATA host.
->>
->> While at it...
->>
->> * cmd640 was strange in that it set ->resume even when CONFIG_PM is
->>   not.  This is by-product of minimal build fix.  Updated.
->>
->> * In cs5530, Don't BUG() on reinit failure.  Just whine and fail
->>   resume.
->>
->> Signed-off-by: Tejun Heo <htejun@gmail.com>
->> ---
->>  drivers/ata/pata_ali.c         |   14 +++++++++++++-
->>  drivers/ata/pata_amd.c         |   16 +++++++++++++++-
->>  drivers/ata/pata_artop.c       |    5 +++++
->>  drivers/ata/pata_cmd640.c      |   21 ++++++++++++++++-----
->>  drivers/ata/pata_cmd64x.c      |   15 ++++++++++++++-
->>  drivers/ata/pata_cs5520.c      |   15 ++++++++++++++-
->>  drivers/ata/pata_cs5530.c      |   18 ++++++++++++++++--
->>  drivers/ata/pata_hpt366.c      |   14 +++++++++++++-
->>  drivers/ata/pata_hpt37x.c      |    5 +++++
->>  drivers/ata/pata_hpt3x2n.c     |    5 +++++
->>  drivers/ata/pata_it821x.c      |   14 +++++++++++++-
->>  drivers/ata/pata_netcell.c     |    5 +++++
->>  drivers/ata/pata_ns87415.c     |    6 ++++++
->>  drivers/ata/pata_optidma.c     |    5 +++++
->>  drivers/ata/pata_serverworks.c |   19 ++++++++++++++++---
->>  drivers/ata/pata_sil680.c      |   13 +++++++++++--
->>  drivers/ata/pata_sis.c         |    6 +++++-
->>  drivers/ata/pata_sl82c105.c    |    5 +++++
->>  drivers/ata/pata_via.c         |   14 +++++++++++++-
->>  19 files changed, 195 insertions(+), 20 deletions(-)
+On Mon, 17 Mar 2008, FUJITA Tomonori wrote:
+
+> For me, it would be much better to fix USB drivers since LLDs should
+> not rely on a scatterlist about how much data they transfer, as I
+> said. If LLDs do that, they are broken. It's not good to add such a
+> workaround to the common API for broken LLDs.
 > 
-> Did Alan ACK this?
+> USB drivers should do something like this if they definitely need to
+> call this API multiple times:
+> 
+>      done = sg_copy_buffer(buffer, scsi_bufflen(sc) - us->done_length,
+>      us->done_length += done;
 
-ISTR he did.  Alan?
+The USB drivers don't need to be fixed; they are already correct.
 
-> Can this wait until 2.6.26, or is it important for 2.6.25?
+But if you are going to export a library routine for general use then
+it should be written to fail gracefully -- it should not be able to
+cause an invalid memory access.
 
-We've been okay till now.  I don't think it's pressing enough to push
-this for 2.6.25 at this point.
+Alan Stern
 
--- 
-tejun
