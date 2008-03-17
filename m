@@ -1,66 +1,72 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: Subject should be [PATCHSET libata-dev#upstream-fixes] libata:
- prefer hardreset, take #3
-Date: Mon, 17 Mar 2008 18:36:20 +0900
-Message-ID: <47DE3B94.2090501@gmail.com>
-References: <12052096544056-git-send-email-htejun@gmail.com>	<47D60A9E.1060609@gmail.com>	<18397.39466.462694.412688@harpo.it.uu.se>	<47DDB898.6050001@gmail.com> <18398.10615.977550.334382@harpo.it.uu.se>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [PATCH libata-dev#upstream-fixes] libata: PCI device should be
+ powered up before being accessed
+Date: Mon, 17 Mar 2008 08:24:32 -0400
+Message-ID: <47DE6300.4070004@garzik.org>
+References: <47D667DA.8050905@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.183]:35604 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752876AbYCQJg0 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 17 Mar 2008 05:36:26 -0400
-Received: by wa-out-1112.google.com with SMTP id v27so6284012wah.23
-        for <linux-ide@vger.kernel.org>; Mon, 17 Mar 2008 02:36:26 -0700 (PDT)
-In-Reply-To: <18398.10615.977550.334382@harpo.it.uu.se>
+Received: from srv5.dvmed.net ([207.36.208.214]:47500 "EHLO mail.dvmed.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753238AbYCQMYf (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 17 Mar 2008 08:24:35 -0400
+In-Reply-To: <47D667DA.8050905@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mikael Pettersson <mikpe@it.uu.se>
-Cc: jeff@garzik.org, linux-ide@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: IDE/ATA development list <linux-ide@vger.kernel.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>
 
-Mikael Pettersson wrote:
->  > > With this patch in place the hard reset conversion does seem to
->  > > work Ok on a SATA300 TX4 card.
->  > [--snip--]
->  > > +	for(i = 0; i < 4/*XXX: how to detect # ports?*/ && host->ports[i] != ap; ++i)
->  > 
->  > host->n_ports?
->  > 
->  > > +		;
->  > > +	if (i >= 4) {
->  > > +		printk(KERN_ERR "%s: unable to map ap to ata_no\n", __FUNCTION__);
->  > > +		return sata_std_hardreset(link, class, deadline);
->  > > +	}
->  > > +	ata_no = pdc_port_no_to_ata_no(i, is_sataii_tx4);
->  > > +
->  > > +	hotplug_status = readl(mmio_base + hotplug_offset);
->  > > +
->  > > +	/* clear hotplug flags, mask hotplug ints */
->  > > +	hotplug_status |= (0x11 << ata_no);
->  > > +	hotplug_status |= (0x11 << ata_no) << 16;
->  > > +	writel(hotplug_status, mmio_base + hotplug_offset);
->  > > +	readl(mmio_base + hotplug_offset); /* flush */
->  > 
->  > I think this belongs to ->freeze().
->  > 
->  > > +	ret = sata_std_hardreset(link, class, deadline);
->  > > +
->  > > +	/* clear hotplug flags, unmask hotplug ints */
->  > > +	hotplug_status &= ~((0x11 << ata_no) << 16);
->  > > +	writel(hotplug_status, mmio_base + hotplug_offset);
->  > > +	readl(mmio_base + hotplug_offset); /* flush */
->  > 
->  > And this to ->thaw().
+Tejun Heo wrote:
+> PCI device should be powered up or powered up before its PCI regsiters
+> are accessed.  Although PCI configuration register access is allowed
+> in D3hot, PCI device is free to reset its status when transiting from
+> D3hot to D0 causing configuration data to change.
 > 
-> Thanks, I'll try these suggestions. Expect a new patch in a couple of days.
+> Many libata SFF drivers which use ata_pci_init_one() read and update
+> configuration registers before calling ata_pci_init_one() which
+> enables the PCI device.  Also, in resume paths, some drivers access
+> registers without resuming the PCI device.
+> 
+> This patch adds a call to pcim_enable_device() in init path if
+> register is accessed before calling ata_pci_init_one() and make resume
+> paths first resume PCI devices, access PCI configuration regiters then
+> resume ATA host.
+> 
+> While at it...
+> 
+> * cmd640 was strange in that it set ->resume even when CONFIG_PM is
+>   not.  This is by-product of minimal build fix.  Updated.
+> 
+> * In cs5530, Don't BUG() on reinit failure.  Just whine and fail
+>   resume.
+> 
+> Signed-off-by: Tejun Heo <htejun@gmail.com>
+> ---
+>  drivers/ata/pata_ali.c         |   14 +++++++++++++-
+>  drivers/ata/pata_amd.c         |   16 +++++++++++++++-
+>  drivers/ata/pata_artop.c       |    5 +++++
+>  drivers/ata/pata_cmd640.c      |   21 ++++++++++++++++-----
+>  drivers/ata/pata_cmd64x.c      |   15 ++++++++++++++-
+>  drivers/ata/pata_cs5520.c      |   15 ++++++++++++++-
+>  drivers/ata/pata_cs5530.c      |   18 ++++++++++++++++--
+>  drivers/ata/pata_hpt366.c      |   14 +++++++++++++-
+>  drivers/ata/pata_hpt37x.c      |    5 +++++
+>  drivers/ata/pata_hpt3x2n.c     |    5 +++++
+>  drivers/ata/pata_it821x.c      |   14 +++++++++++++-
+>  drivers/ata/pata_netcell.c     |    5 +++++
+>  drivers/ata/pata_ns87415.c     |    6 ++++++
+>  drivers/ata/pata_optidma.c     |    5 +++++
+>  drivers/ata/pata_serverworks.c |   19 ++++++++++++++++---
+>  drivers/ata/pata_sil680.c      |   13 +++++++++++--
+>  drivers/ata/pata_sis.c         |    6 +++++-
+>  drivers/ata/pata_sl82c105.c    |    5 +++++
+>  drivers/ata/pata_via.c         |   14 +++++++++++++-
+>  19 files changed, 195 insertions(+), 20 deletions(-)
 
-I'll update the patchset such that promise won't use hardreset by
-default so that cleanup-sht-ops patchset can go in.  I'll merge your
-change when you're ready (shouldn't require too much massaging anyway).
+Did Alan ACK this?
 
-Thanks.
+Can this wait until 2.6.26, or is it important for 2.6.25?
 
--- 
-tejun
+
