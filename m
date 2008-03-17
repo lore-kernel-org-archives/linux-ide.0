@@ -1,139 +1,105 @@
 From: Borislav Petkov <petkovbb@googlemail.com>
-Subject: [PATCH 08/17] ide-tape: remove pipeline-specific code from idetape_end_request()
-Date: Mon, 17 Mar 2008 07:41:21 +0100
-Message-ID: <1205736090-4435-9-git-send-email-petkovbb@gmail.com>
+Subject: [PATCH 11/17] ide-tape: remove pipeline-specific code from idetape_setup
+Date: Mon, 17 Mar 2008 07:41:24 +0100
+Message-ID: <1205736090-4435-12-git-send-email-petkovbb@gmail.com>
 References: <1205736090-4435-1-git-send-email-petkovbb@gmail.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hu-out-0506.google.com ([72.14.214.239]:30077 "EHLO
+Received: from hu-out-0506.google.com ([72.14.214.225]:30005 "EHLO
 	hu-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753119AbYCQGli (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 17 Mar 2008 02:41:38 -0400
-Received: by hu-out-0506.google.com with SMTP id 19so3301618hue.21
-        for <linux-ide@vger.kernel.org>; Sun, 16 Mar 2008 23:41:36 -0700 (PDT)
+	with ESMTP id S1753321AbYCQGlk (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 17 Mar 2008 02:41:40 -0400
+Received: by hu-out-0506.google.com with SMTP id 19so3301584hue.21
+        for <linux-ide@vger.kernel.org>; Sun, 16 Mar 2008 23:41:39 -0700 (PDT)
 In-Reply-To: <1205736090-4435-1-git-send-email-petkovbb@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: bzolnier@gmail.com
 Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Borislav Petkov <petkovbb@gmail.com>
 
-As a side effect, remove unused idetape_kfree_stage() and
-idetape_abort_pipeline()
-
 Signed-off-by: Borislav Petkov <petkovbb@gmail.com>
 ---
- drivers/ide/ide-tape.c |   83 ------------------------------------------------
- 1 files changed, 0 insertions(+), 83 deletions(-)
+ drivers/ide/ide-tape.c |   40 ++++------------------------------------
+ 1 files changed, 4 insertions(+), 36 deletions(-)
 
 diff --git a/drivers/ide/ide-tape.c b/drivers/ide/ide-tape.c
-index 7e0f4fa..3eeb5c0 100644
+index c612c8c..0056a26 100644
 --- a/drivers/ide/ide-tape.c
 +++ b/drivers/ide/ide-tape.c
-@@ -686,37 +686,6 @@ static void __idetape_kfree_stage(idetape_stage_t *stage)
- 	kfree(stage);
- }
- 
--static void idetape_kfree_stage(idetape_tape_t *tape, idetape_stage_t *stage)
--{
--	__idetape_kfree_stage(stage);
--}
--
--/*
-- * This will free all the pipeline stages starting from new_last_stage->next
-- * to the end of the list, and point tape->last_stage to new_last_stage.
-- */
--static void idetape_abort_pipeline(ide_drive_t *drive,
--				   idetape_stage_t *new_last_stage)
--{
--	idetape_tape_t *tape = drive->driver_data;
--	idetape_stage_t *stage = new_last_stage->next;
--	idetape_stage_t *nstage;
--
--	debug_log(DBG_PROCS, "%s: Enter %s\n", tape->name, __func__);
--
--	while (stage) {
--		nstage = stage->next;
--		idetape_kfree_stage(tape, stage);
--		--tape->nr_stages;
--		--tape->nr_pending_stages;
--		stage = nstage;
--	}
--	if (new_last_stage)
--		new_last_stage->next = NULL;
--	tape->last_stage = new_last_stage;
--	tape->next_stage = NULL;
--}
--
- /*
-  * Finish servicing a request and insert a pending pipeline request into the
-  * main device queue.
-@@ -725,9 +694,7 @@ static int idetape_end_request(ide_drive_t *drive, int uptodate, int nr_sects)
+@@ -2690,11 +2690,10 @@ static inline void idetape_add_settings(ide_drive_t *drive) { ; }
+  */
+ static void idetape_setup(ide_drive_t *drive, idetape_tape_t *tape, int minor)
  {
- 	struct request *rq = HWGROUP(drive)->rq;
- 	idetape_tape_t *tape = drive->driver_data;
--	unsigned long flags;
- 	int error;
--	idetape_stage_t *active_stage;
+-	unsigned long t1, tmid, tn, t;
++	unsigned long t;
+ 	int speed;
+ 	int stage_size;
+ 	u8 gcw[2];
+-	struct sysinfo si;
+ 	u16 *ctl = (u16 *)&tape->caps[12];
  
- 	debug_log(DBG_PROCS, "Enter %s\n", __func__);
+ 	spin_lock_init(&tape->lock);
+@@ -2719,10 +2718,6 @@ static void idetape_setup(ide_drive_t *drive, idetape_tape_t *tape, int minor)
+ 	if (((gcw[0] & 0x60) >> 5) == 1)
+ 		set_bit(IDETAPE_FLAG_DRQ_INTERRUPT, &tape->flags);
  
-@@ -745,58 +712,8 @@ static int idetape_end_request(ide_drive_t *drive, int uptodate, int nr_sects)
- 		return 0;
+-	tape->min_pipeline = 10;
+-	tape->max_pipeline = 10;
+-	tape->max_stages   = 10;
+-
+ 	idetape_get_inquiry_results(drive);
+ 	idetape_get_mode_sense_results(drive);
+ 	ide_tape_get_bsize_from_bdesc(drive);
+@@ -2740,36 +2735,10 @@ static void idetape_setup(ide_drive_t *drive, idetape_tape_t *tape, int minor)
+ 		tape->excess_bh_size = PAGE_SIZE - stage_size % PAGE_SIZE;
  	}
  
--	spin_lock_irqsave(&tape->lock, flags);
--
--	/* The request was a pipelined data transfer request */
--	if (tape->active_data_rq == rq) {
--		active_stage = tape->active_stage;
--		tape->active_stage = NULL;
--		tape->active_data_rq = NULL;
--		tape->nr_pending_stages--;
--		if (rq->cmd[0] & REQ_IDETAPE_WRITE) {
--			if (error) {
--				set_bit(IDETAPE_FLAG_PIPELINE_ERR,
--					&tape->flags);
--				if (error == IDETAPE_ERROR_EOD)
--					idetape_abort_pipeline(drive,
--								active_stage);
--			}
--		} else if (rq->cmd[0] & REQ_IDETAPE_READ) {
--			if (error == IDETAPE_ERROR_EOD) {
--				set_bit(IDETAPE_FLAG_PIPELINE_ERR,
--					&tape->flags);
--				idetape_abort_pipeline(drive, active_stage);
--			}
--		}
--		if (tape->next_stage != NULL) {
--			idetape_activate_next_stage(drive);
--
--			/* Insert the next request into the request queue. */
--			(void)ide_do_drive_cmd(drive, tape->active_data_rq,
--						ide_end);
--		} else if (!error) {
--			/*
--			 * This is a part of the feedback loop which tries to
--			 * find the optimum number of stages. We are starting
--			 * from a minimum maximum number of stages, and if we
--			 * sense that the pipeline is empty, we try to increase
--			 * it, until we reach the user compile time memory
--			 * limit.
--			 */
--			int i = (tape->max_pipeline - tape->min_pipeline) / 10;
--
--			tape->max_stages += max(i, 1);
--			tape->max_stages = max(tape->max_stages,
--						tape->min_pipeline);
--			tape->max_stages = min(tape->max_stages,
--						tape->max_pipeline);
--		}
--	}
- 	ide_end_drive_cmd(drive, 0, 0);
+-	/* Select the "best" DSC read/write polling freq and pipeline size. */
++	/* select the "best" DSC read/write polling freq */
+ 	speed = max(*(u16 *)&tape->caps[14], *(u16 *)&tape->caps[8]);
  
--	if (tape->active_data_rq == NULL)
--		clear_bit(IDETAPE_FLAG_PIPELINE_ACTIVE, &tape->flags);
--	spin_unlock_irqrestore(&tape->lock, flags);
- 	return 0;
- }
+-	tape->max_stages = speed * 1000 * 10 / tape->stage_size;
+-
+-	/* Limit memory use for pipeline to 10% of physical memory */
+-	si_meminfo(&si);
+-	if (tape->max_stages * tape->stage_size >
+-			si.totalram * si.mem_unit / 10)
+-		tape->max_stages =
+-			si.totalram * si.mem_unit / (10 * tape->stage_size);
+-
+-	tape->max_stages   = min(tape->max_stages, IDETAPE_MAX_PIPELINE_STAGES);
+-	tape->min_pipeline = min(tape->max_stages, IDETAPE_MIN_PIPELINE_STAGES);
+-	tape->max_pipeline =
+-		min(tape->max_stages * 2, IDETAPE_MAX_PIPELINE_STAGES);
+-	if (tape->max_stages == 0) {
+-		tape->max_stages   = 1;
+-		tape->min_pipeline = 1;
+-		tape->max_pipeline = 1;
+-	}
+-
+-	t1 = (tape->stage_size * HZ) / (speed * 1000);
+-	tmid = (*(u16 *)&tape->caps[16] * 32 * HZ) / (speed * 125);
+-	tn = (IDETAPE_FIFO_THRESHOLD * tape->stage_size * HZ) / (speed * 1000);
+-
+-	if (tape->max_stages)
+-		t = tn;
+-	else
+-		t = t1;
++	t = (tape->stage_size * HZ) / (speed * 1000);
+ 
+ 	/*
+ 	 * Ensure that the number we got makes sense; limit it within
+@@ -2779,11 +2748,10 @@ static void idetape_setup(ide_drive_t *drive, idetape_tape_t *tape, int minor)
+ 				min_t(unsigned long, t, IDETAPE_DSC_RW_MAX),
+ 				IDETAPE_DSC_RW_MIN);
+ 	printk(KERN_INFO "ide-tape: %s <-> %s: %dKBps, %d*%dkB buffer, "
+-		"%dkB pipeline, %lums tDSC%s\n",
++		"%lums tDSC%s\n",
+ 		drive->name, tape->name, *(u16 *)&tape->caps[14],
+ 		(*(u16 *)&tape->caps[16] * 512) / tape->stage_size,
+ 		tape->stage_size / 1024,
+-		tape->max_stages * tape->stage_size / 1024,
+ 		tape->best_dsc_rw_freq * 1000 / HZ,
+ 		drive->using_dma ? ", DMA":"");
  
 -- 
 1.5.4.1
