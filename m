@@ -1,87 +1,42 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: 2.6.24.X: SATA/AHCI related boot delay. - not with 2.6.24.3
-Date: Wed, 19 Mar 2008 12:27:54 +0900
-Message-ID: <47E0883A.9010507@gmail.com>
-References: <200803091922.33083.volker.armin.hemmann@tu-clausthal.de> <200803181159.48327.volker.armin.hemmann@tu-clausthal.de> <47DFBBE2.7050304@gmail.com> <200803181433.12584.volker.armin.hemmann@tu-clausthal.de> <47E087DF.7070101@gmail.com>
+From: Mark Lord <liml@rtr.ca>
+Subject: Re: sata_sil24 stability and performance
+Date: Tue, 18 Mar 2008 16:06:55 -0400
+Message-ID: <47E020DF.9030900@rtr.ca>
+References: <20080304002215.GA13317@denix.org> <47CCC1C6.5010600@gmail.com> <20080304062942.GA14335@denix.org> <47CE55B3.6070701@gmail.com> <20080306041454.GA7242@denix.org> <47CF7222.7060702@gmail.com> <20080306065513.GE7150@denix.org> <47CF9880.4080900@gmail.com> <20080315214347.GA1511@denix.org> <47DDE0ED.6040304@rtr.ca> <20080318001513.GA2389@denix.org> <47DF4070.3040507@gmail.com> <47E02090.80000@rtr.ca>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------030907010109040300020502"
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wf-out-1314.google.com ([209.85.200.169]:35148 "EHLO
-	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756866AbYCSThh (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 19 Mar 2008 15:37:37 -0400
-Received: by wf-out-1314.google.com with SMTP id 28so582579wff.4
-        for <linux-ide@vger.kernel.org>; Wed, 19 Mar 2008 12:37:36 -0700 (PDT)
-In-Reply-To: <47E087DF.7070101@gmail.com>
+Received: from rtr.ca ([76.10.145.34]:3806 "EHLO mail.rtr.ca"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755368AbYCSToN (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 19 Mar 2008 15:44:13 -0400
+In-Reply-To: <47E02090.80000@rtr.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Volker Armin Hemmann <volker.armin.hemmann@tu-clausthal.de>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: Denys Dmytriyenko <denis@denix.org>, Gabor FUNK <FUNK.Gabor@hunetkft.hu>, linux-ide@vger.kernel.org, Jim Paris <jim@jtan.com>
 
-This is a multi-part message in MIME format.
---------------030907010109040300020502
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 8bit
-
-Tejun Heo wrote:
-> Volker Armin Hemmann wrote:
->> On Dienstag, 18. März 2008, Tejun Heo wrote:
->>>  failed message on reboots).
->>>
->>>> Of course, I booted and rebooted several times. And it stays.
->>>>
->>>> Maybe it is the hardware. But I replaced the cables already and smart
->>>> says the disk is ok.
->>> Does the attached patch make any difference?
->> patching file drivers/ata/ahci.c
->> Hunk #1 succeeded at 397 (offset -5 lines).
->> Hunk #2 succeeded at 1819 (offset -45 lines).
+Mark Lord wrote:
+> Tejun Heo wrote:
+>> Denys Dmytriyenko wrote:
+> ..
+>>> Mar 14 23:51:55 [kernel] ata3: failed to read log page 10h (errno=-2)
+>>> Mar 14 23:51:55 [kernel] ata3.00: exception Emask 0x1 SAct 0x3f SErr 
+>>> 0x0 action 0x0
+>>> Mar 14 23:51:55 [kernel] ata3.00: irq_stat 0x00020002, device error 
+>>> via SDB FIS
+>>
+>> This one is different.  The drive reported device error but the driver
+>> couldn't get more information about the error (log page 10h contains it).
+> ..
 > 
-> It's okay.  It's because I was lazy and generated the patch against
-> devel tree.
-> 
->> built&booted, same results as allways. With non-raid setting, IDENTIFY error 
->> on cold boot and sofreset error on reboot:
->> (with patch, without nosmi):
-> 
-> Oh... I see.  I made a mistake.  In ahci.c, what I intended was making
-> ahci_softreset NULL not ahci_hardreset.  Can you please change that and
-> test again?
-> 
+> That, is one of the known errata that has yet to be fixed in the driver.
+> The READ LOG EXT command cannot be used in the normal fashion after an 
+> NCQ error.
+..
 
-Just in case, here's the updated patch.
+Whoops.. scratch that.. I thought Denys was trialing sata_mv there,
+not sata_sil24 as it turns out.
 
--- 
-tejun
-
---------------030907010109040300020502
-Content-Type: text/x-patch;
- name="ahci-no-srst.patch"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="ahci-no-srst.patch"
-
-diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
-index 6978469..46b7e48 100644
---- a/drivers/ata/ahci.c
-+++ b/drivers/ata/ahci.c
-@@ -402,6 +402,7 @@ static const struct ata_port_operations ahci_p5wdh_ops = {
- static const struct ata_port_info ahci_port_info[] = {
- 	/* board_ahci */
- 	{
-+		AHCI_HFLAGS	(AHCI_HFLAG_NO_PMP),
- 		.flags		= AHCI_FLAG_COMMON,
- 		.link_flags	= AHCI_LFLAG_COMMON,
- 		.pio_mask	= 0x1f, /* pio0-4 */
-@@ -1862,7 +1863,7 @@ static void ahci_error_handler(struct ata_port *ap)
- 	}
- 
- 	/* perform recovery */
--	sata_pmp_do_eh(ap, ata_std_prereset, ahci_softreset,
-+	sata_pmp_do_eh(ap, ata_std_prereset, NULL/*ahci_softreset*/,
- 		       ahci_hardreset, ahci_postreset,
- 		       sata_pmp_std_prereset, ahci_pmp_softreset,
- 		       sata_pmp_std_hardreset, sata_pmp_std_postreset);
-
---------------030907010109040300020502--
+-ml
