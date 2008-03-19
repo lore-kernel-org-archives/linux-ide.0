@@ -1,47 +1,39 @@
-From: Jan Kasprzak <kas@fi.muni.cz>
-Subject: Re: Regression: kernel 2.6.24{,.1} ahci problem, does not boot (resend)
-Date: Tue, 18 Mar 2008 15:01:16 +0100
-Message-ID: <20080318140116.GC8480@fi.muni.cz>
-References: <20080214184700.0bd3837d@highlander.home.lan> <47B4D02E.9030101@gmail.com> <20080215191215.430ee2e0@highlander.home.lan> <47BCE71F.2000309@gmail.com> <20080221172757.44882428@highlander.home.lan> <20080317210045.GG3189@fi.muni.cz>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+From: bugme-daemon@bugzilla.kernel.org
+Subject: [Bug 10086] 2.6.25-rc2 + smartd = hang
+Date: Wed, 19 Mar 2008 01:49:11 -0700 (PDT)
+Message-ID: <20080319084911.BCCF2108070@picon.linux-foundation.org>
+References: <bug-10086-11633@http.bugzilla.kernel.org/>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from minas.ics.muni.cz ([147.251.4.40]:60084 "EHLO minas.ics.muni.cz"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753013AbYCROBX (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 18 Mar 2008 10:01:23 -0400
-Content-Disposition: inline
-In-Reply-To: <20080317210045.GG3189@fi.muni.cz>
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:57532 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752951AbYCSTYo (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 19 Mar 2008 15:24:44 -0400
+Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
+	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id m2J8oRPU013141
+	for <linux-ide@vger.kernel.org>; Wed, 19 Mar 2008 01:50:29 -0700
+In-Reply-To: <bug-10086-11633@http.bugzilla.kernel.org/>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Malte =?iso-8859-1?Q?Schr=F6der?= <maltesch@gmx.de>
-Cc: Tejun Heo <htejun@gmail.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-Jan Kasprzak wrote:
-: Malte Schr=C3=B6der wrote:
-: : I "solved" the problem by updating the BIOS. It now works perfectly=
-=2E I
-: : thought I had mailed that .. maybe I forgot.
-:=20
-: 	I have the same problem (ASUS M2R32-MVP board with SB600 chipset,
-: Athlon64 X2), but I am already using the latest BIOS for this mainboa=
-rd.
+http://bugzilla.kernel.org/show_bug.cgi?id=10086
 
-	Sorry for the noise, there is even newer BIOS (dated Mar 01),
-and with this BIOS my mainboard works in AHCI mode even with 2.6.25-rc6=
-=2E
 
--Yenya
+bunk@kernel.org changed:
 
---=20
-| Jan "Yenya" Kasprzak  <kas at {fi.muni.cz - work | yenya.net - privat=
-e}> |
-| GPG: ID 1024/D3498839      Fingerprint 0D99A7FB206605D7 8B35FCDE05B18=
-A5E |
-| http://www.fi.muni.cz/~kas/    Journal: http://www.fi.muni.cz/~kas/bl=
-og/ |
->>  If you find yourself arguing with Alan Cox, you=E2=80=99re _probabl=
-y_ wrong.  <<
->>     --James Morris in "How and Why You Should Become a Kernel Hacker=
-"  <<
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+             Status|NEW                         |CLOSED
+         Resolution|                            |CODE_FIX
+
+
+
+
+------- Comment #4 from bunk@kernel.org  2008-03-19 01:49 -------
+fixed by commit 6c3c3158a81d6a92d335dd27ad9eb43f6b4c664b
+
+
+-- 
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug, or are watching the assignee.
