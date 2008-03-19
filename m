@@ -1,44 +1,56 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: Re: Regression: kernel 2.6.24{,.1} ahci problem, does not boot (resend)
-Date: Wed, 19 Mar 2008 12:24:18 +0900
-Message-ID: <47E08762.9090704@gmail.com>
-References: <20080214184700.0bd3837d@highlander.home.lan> <47B4D02E.9030101@gmail.com> <20080215191215.430ee2e0@highlander.home.lan> <47BCE71F.2000309@gmail.com> <20080221172757.44882428@highlander.home.lan> <20080317210045.GG3189@fi.muni.cz> <20080318140116.GC8480@fi.muni.cz>
+Subject: Re: [PATCH libata-dev#upstream-fixes] libata-acpi: improve dock	event
+ handling
+Date: Wed, 19 Mar 2008 15:44:10 +0900
+Message-ID: <47E0B63A.4090801@gmail.com>
+References: <47D7691B.3080107@gmail.com> <20080313181946.GD26183@homac.suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rn-out-0910.google.com ([64.233.170.185]:31567 "EHLO
-	rn-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S938604AbYCSVr0 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 19 Mar 2008 17:47:26 -0400
-Received: by rn-out-0910.google.com with SMTP id v46so600865rnb.15
-        for <linux-ide@vger.kernel.org>; Wed, 19 Mar 2008 14:47:24 -0700 (PDT)
-In-Reply-To: <20080318140116.GC8480@fi.muni.cz>
+Received: from el-out-1112.google.com ([209.85.162.177]:18120 "EHLO
+	el-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757101AbYCSXBg (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 19 Mar 2008 19:01:36 -0400
+Received: by el-out-1112.google.com with SMTP id v27so544983ele.17
+        for <linux-ide@vger.kernel.org>; Wed, 19 Mar 2008 16:01:34 -0700 (PDT)
+In-Reply-To: <20080313181946.GD26183@homac.suse.de>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jan Kasprzak <kas@fi.muni.cz>
-Cc: =?UTF-8?B?TWFsdGUgU2NocsO2ZGVy?= <maltesch@gmx.de>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>, Jeff Garzik <jeff@garzik.org>, IDE/ATA development list <linux-ide@vger.kernel.org>
 
-Jan Kasprzak wrote:
-> Jan Kasprzak wrote:
-> : Malte Schr=C3=B6der wrote:
-> : : I "solved" the problem by updating the BIOS. It now works perfect=
-ly. I
-> : : thought I had mailed that .. maybe I forgot.
-> :=20
-> : 	I have the same problem (ASUS M2R32-MVP board with SB600 chipset,
-> : Athlon64 X2), but I am already using the latest BIOS for this mainb=
-oard.
->=20
-> 	Sorry for the noise, there is even newer BIOS (dated Mar 01),
-> and with this BIOS my mainboard works in AHCI mode even with 2.6.25-r=
-c6.
+Hello,
 
-Hmm... I still wanna know why it got broke in the first place.  The onl=
-y
-thing I can think of is IRQ routing problem in which case pci=3Dnomsi o=
-r
-irqpoll should help.  Any chance you can test the old BIOS?
+Holger Macht wrote:
+> On Wed 12. Mar - 14:24:43, Tejun Heo wrote:
+>> Improve ACPI hotplug handling such that dock event is handled properly.
+>>
+>> * Register handlers for dock events.
+>>
+>> * Directly detach device on EJECT_REQUEST instead of signaling hotplug
+>>   event.  This prevents libata from accessing severed controller
+>>   and/or device.
+>>
+>> * While at it, use named constants for ACPI events and move uevent
+>>   signaling inside host lock.
+>>
+>> Original patch and testing by Holger Macht.
+> 
+> Grrrr, unfortunately, the patch still seems to be not perfect:
+>   http://marc.info/?l=linux-acpi&m=120543202908662&w=2
+> 
+> Are you sure access to the device (/dev/srX) is locked before
+> ata_acpi_dev_notify() returns?
 
---=20
+Sorry about the delay.  I'm fairly sure /dev/srX goes away before
+ata_acpi_handle_hotplug() returns.  ata_port_wait_eh() waits for EH to
+complete and the EH run triggered by ata_port_schedule_eh() above
+disables the device, so any command issued after that will be aborted
+with BAD_TARGET.  Can you capture kernel log of such lock up?  If so, it
+would be very helpful to sprinkle some printks around and see what
+actually goes on.
+
+Thanks.
+
+-- 
 tejun
