@@ -1,112 +1,68 @@
-From: "davor emard" <davoremard@gmail.com>
-Subject: AHCI SATA DVD writing issue
-Date: Thu, 20 Mar 2008 12:16:58 +0100
-Message-ID: <beee72200803200416j2c744450v8b21cf6fe029ff1a@mail.gmail.com>
+From: FUJITA Tomonori <tomof@acm.org>
+Subject: Re: [PATCH] blk: missing add of padded bytes to io completion byte
+   count
+Date: Thu, 20 Mar 2008 21:54:51 +0900
+Message-ID: <200803201254.m2KCstCa031594@mbox.iij4u.or.jp>
+References: <1204730484.3047.10.camel@localhost.localdomain>
+	<20080306134146A.fujita.tomonori@lab.ntt.co.jp>
+	<20080306134138.GF17940@kernel.dk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.183]:14257 "EHLO
-	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752362AbYCTLRA (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 20 Mar 2008 07:17:00 -0400
-Received: by py-out-1112.google.com with SMTP id u52so1145785pyb.10
-        for <linux-ide@vger.kernel.org>; Thu, 20 Mar 2008 04:16:59 -0700 (PDT)
-Content-Disposition: inline
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <20080306134138.GF17940@kernel.dk>
+Sender: linux-scsi-owner@vger.kernel.org
+To: jens.axboe@oracle.com
+Cc: fujita.tomonori@lab.ntt.co.jp, James.Bottomley@HansenPartnership.com, htejun@gmail.com, bharrosh@panasas.com, efault@gmx.de, tomof@acm.org, akpm@linux-foundation.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, jgarzik@pobox.com, bzolnier@gmail.com
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
 
-HI
-I've seen your mail in kernel ahci.c and I'm not sure if I addressed
-the right place to report thos but you are my starting point :-)
+From: Jens Axboe <jens.axboe@oracle.com>
+Subject: Re: [PATCH] blk: missing add of padded bytes to io completion byte   count
+Date: Thu, 6 Mar 2008 14:41:39 +0100
 
-I have sata dvd writer issues. Have tried pioneer dvr215 and optiarc 7173S
-connected on intel and marvell 6145 port. I updated the motherboard
-bios (that has some marvell firmware onboard) up to the latest.
-marvell sata port gave me the better results but not too good
-both sata's are ahci compliant, so using ahci.c driver in kernel.
+> On Thu, Mar 06 2008, FUJITA Tomonori wrote:
+> > On Wed, 05 Mar 2008 09:21:24 -0600
+> > James Bottomley <James.Bottomley@HansenPartnership.com> wrote:
+> > 
+> > > On Wed, 2008-03-05 at 14:51 +0100, Jens Axboe wrote:
+> > > > On Wed, Mar 05 2008, Tejun Heo wrote:
+> > > > > This is getting insanely subtle.  Let's say there's PIO driver which
+> > > > > transfer certain sized chunks at a time and completes request partially
+> > > > > after completing each chunk and the driver uses draining to eat up
+> > > > > whatever excess data, which seems like a legit use case to me.  But it
+> > > > > won't work because __end_that_request_first() will terminate when it
+> > > > > reaches reaches the 'true' transfer size.  That's just broken API.  FWIW,
+> > > > > 
+> > > > > Nacked-by: Tejun Heo <htejun@gmail.com>
+> > > > 
+> > > > Yeah, I think I may have gone a bit overboard in applying this so
+> > > > quickly. It's just not a good interface, silently adding the extra
+> > > > length if asked to complete more. It may even happen right now, for a
+> > > > driver that does no padding (it probably wont do any harm here either,
+> > > > but still).
+> > > > 
+> > > > I'll try and see if I can come up with something cleaner.
+> > > > 
+> > > > My basic design paradigm for this is that the _driver_ (or mid layer, if
+> > > > SCSI wants to handle it) should care about the padding. So make it easy
+> > > > for them to pad, but have it 'unrolled' by completion time. We should
+> > > > NOT need any extra_len checks or additions in the block/ directory,
+> > > > period.
+> > > 
+> > > Right, that's why my original proposal was to do nothing for padding
+> > > (other than ensure the driver could adjust the length if it wanted to)
+> > > and to add an extra element always for draining, which the driver could
+> > > ignore.  It basically pushed the use paradigm onto the driver.
+> > > 
+> > > If we want the use paradigm shared between block and driver, then I
+> > > think the best approach is to keep all the bios the same (so not adjust
+> > > for padding), but do adjust in the blk_rq_map_sg().  That way we have
+> > > the padding and draining unwind information by comparing with the bio.
+> > 
+> > Adjusting only sg in blk_rq_map_sg (like drain) looks much
+> > better. This works with libata for me.
+> 
+> Looks like a much better solution to me. Anyone have any valid
+> objections against moving the padding to the sg map time?
 
-I compiled 2.6.24.3 on amd64 but the similar problems existed even before
-on earlier kernels from 2.6.20 when when I started trying with this
-and now I think It's my duty to start reporting this at last
-
-I tried scsi cdrom with and without support for vendor-specific ioctls
-doesn't matter
-
-On intel sata hardware I cannot flash optiarc drive from linux
-(drive not detected).
-
-On marvell 6145 sata flashing works to the optiarc drive
-(program autodetects the drive from sg and sr-mod driver).
-Flash program on linux also detects the pioneer but the linux
-flashing support is not stable to this program so I haven't tried it
-
-I can also write correct iso image from pioneer and optiarc using
-growisofs -Z /dev/scd0=image.iso
-I can mount the disc with pioneer
-mount /dev/scd0 /mnt and it works
-I cannot do the mount with optiarc, mount waits a long
-time and in kernel log appears something like
-
-Mar 19 01:18:32 emard kernel: ata6.00: exception Emask 0x0 SAct 0x0
-SErr 0x0 action 0x2 f
-Mar 19 01:18:32 emard kernel: ata6.00: cmd
-a0/00:00:00:08:00/00:00:00:00:00/a0 tag 0 pio
-Mar 19 01:18:32 emard kernel: cdb ac 00 00 00 00 00 00 00 00
-01 03 00 00 00 00
-Mar 19 01:18:32 emard kernel: res
-40/00:03:00:00:00/00:00:00:00:00/a0 Emask 0x4
-Mar 19 01:18:32 emard kernel: ata6.00: status: { DRDY }
-
-and once this appears, both optiarc and pioneer connected refuse
-to work with messages like
-
-Mar 19 01:18:32 emard kernel: ata6: hard resetting link
-Mar 19 01:18:34 emard kernel: ata6: failed to reset engine (errno=-5)
-Mar 19 01:18:34 emard kernel: ata6: SATA link up 1.5 Gbps (SStatus 113
-SControl 300)
-Mar 19 01:19:04 emard kernel: ata6.00: qc timeout (cmd 0xa1)
-Mar 19 01:19:04 emard kernel: ata6.00: failed to IDENTIFY (I/O error,
-err_mask=0x4)
-Mar 19 01:19:04 emard kernel: ata6.00: revalidation failed (errno=-5)
-Mar 19 01:19:04 emard kernel: ata6: failed to recover some devices,
-retrying in 5 secs
-Mar 19 01:19:09 emard kernel: ata6: hard resetting link
-
-I need to reboot to get them "working" again
-
-Also using the dvd from wodim is particularly very broken.
-if I try to autodetect pionner
-wodim dev=/dev/scd0 -scanbus
-it will produce in the log something like
-
-Mar 19 01:18:32 emard kernel: ata6.00: exception Emask 0x0 SAct 0x0
-SErr 0x0 action 0x2 f
-Mar 19 01:18:32 emard kernel: ata6.00: cmd
-a0/00:00:00:08:00/00:00:00:00:00/a0 tag 0 pio
-Mar 19 01:18:32 emard kernel: cdb ac 00 00 00 00 00 00 00 00
-01 03 00 00 00 00
-Mar 19 01:18:32 emard kernel: res
-40/00:03:00:00:00/00:00:00:00:00/a0 Emask 0x4
-Mar 19 01:18:32 emard kernel: ata6.00: status: { DRDY }
-
-and after a long time, wodim will even print correct device and
-capabilities of pioneer, but nothing else on sata will work from
-this point (unless I reboot again).
-
-Any following wodim dev=/dev/scd0 -scanbus
-will report nothing and of course drives will not work from this point on
-
-if I use wodim to autodetect optiarc
-wodim dev=/dev/scd1 -scanbus
-then it will report above sata exception but after some shorter
-pause then drive will be correctly detected with wodim gives me
-a hard scsi error report, but the drive will continue being autodetectable
-so following wodim dev=/dev/scd1 -scanbus will again report the optiarc
-device correctly
-
-What do you say, is it easy to get rid of this ata exception errors that
-hose up the sata bus?
-
-Best regards, Davor
+What's the situation with this fix?
