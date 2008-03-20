@@ -1,68 +1,45 @@
-From: FUJITA Tomonori <tomof@acm.org>
-Subject: Re: [PATCH] blk: missing add of padded bytes to io completion byte
-   count
-Date: Thu, 20 Mar 2008 21:54:51 +0900
-Message-ID: <200803201254.m2KCstCa031594@mbox.iij4u.or.jp>
-References: <1204730484.3047.10.camel@localhost.localdomain>
-	<20080306134146A.fujita.tomonori@lab.ntt.co.jp>
-	<20080306134138.GF17940@kernel.dk>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [PATCH 1/4] disk-protect: Add disk shock protection helpers to
+ libata
+Date: Thu, 20 Mar 2008 14:13:48 +0000
+Message-ID: <20080320141348.7a5ca570@core>
+References: <87skzgd1zk.fsf@denkblock.local>
+	<20080226123946.75dbe3d2@core>
+	<87mypl8p49.fsf@denkblock.local>
+	<20080228111349.6831925c@core>
+	<87bq5qfm2v.fsf@denkblock.local>
+	<20080307181750.9981.88028.stgit@denkblock.local>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <20080306134138.GF17940@kernel.dk>
-Sender: linux-scsi-owner@vger.kernel.org
-To: jens.axboe@oracle.com
-Cc: fujita.tomonori@lab.ntt.co.jp, James.Bottomley@HansenPartnership.com, htejun@gmail.com, bharrosh@panasas.com, efault@gmx.de, tomof@acm.org, akpm@linux-foundation.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, jgarzik@pobox.com, bzolnier@gmail.com
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:46435 "EHLO
+	lxorguk.ukuu.org.uk" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1753949AbYCTO3Z (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 20 Mar 2008 10:29:25 -0400
+In-Reply-To: <20080307181750.9981.88028.stgit@denkblock.local>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Elias Oltmanns <eo@nebensachen.de>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Jens Axboe <jens.axboe@oracle.com>
 
-From: Jens Axboe <jens.axboe@oracle.com>
-Subject: Re: [PATCH] blk: missing add of padded bytes to io completion byte   count
-Date: Thu, 6 Mar 2008 14:41:39 +0100
+> +	err_mask = ata_exec_internal(dev, &tf, NULL, DMA_NONE, NULL, 0, 0);
+> +	if (err_mask)
+> +		goto abort;
 
-> On Thu, Mar 06 2008, FUJITA Tomonori wrote:
-> > On Wed, 05 Mar 2008 09:21:24 -0600
-> > James Bottomley <James.Bottomley@HansenPartnership.com> wrote:
-> > 
-> > > On Wed, 2008-03-05 at 14:51 +0100, Jens Axboe wrote:
-> > > > On Wed, Mar 05 2008, Tejun Heo wrote:
-> > > > > This is getting insanely subtle.  Let's say there's PIO driver which
-> > > > > transfer certain sized chunks at a time and completes request partially
-> > > > > after completing each chunk and the driver uses draining to eat up
-> > > > > whatever excess data, which seems like a legit use case to me.  But it
-> > > > > won't work because __end_that_request_first() will terminate when it
-> > > > > reaches reaches the 'true' transfer size.  That's just broken API.  FWIW,
-> > > > > 
-> > > > > Nacked-by: Tejun Heo <htejun@gmail.com>
-> > > > 
-> > > > Yeah, I think I may have gone a bit overboard in applying this so
-> > > > quickly. It's just not a good interface, silently adding the extra
-> > > > length if asked to complete more. It may even happen right now, for a
-> > > > driver that does no padding (it probably wont do any harm here either,
-> > > > but still).
-> > > > 
-> > > > I'll try and see if I can come up with something cleaner.
-> > > > 
-> > > > My basic design paradigm for this is that the _driver_ (or mid layer, if
-> > > > SCSI wants to handle it) should care about the padding. So make it easy
-> > > > for them to pad, but have it 'unrolled' by completion time. We should
-> > > > NOT need any extra_len checks or additions in the block/ directory,
-> > > > period.
-> > > 
-> > > Right, that's why my original proposal was to do nothing for padding
-> > > (other than ensure the driver could adjust the length if it wanted to)
-> > > and to add an extra element always for draining, which the driver could
-> > > ignore.  It basically pushed the use paradigm onto the driver.
-> > > 
-> > > If we want the use paradigm shared between block and driver, then I
-> > > think the best approach is to keep all the bios the same (so not adjust
-> > > for padding), but do adjust in the blk_rq_map_sg().  That way we have
-> > > the padding and draining unwind information by comparing with the bio.
-> > 
-> > Adjusting only sg in blk_rq_map_sg (like drain) looks much
-> > better. This works with libata for me.
-> 
-> Looks like a much better solution to me. Anyone have any valid
-> objections against moving the padding to the sg map time?
+We assume you never use ata_exec_internal on a "live" to block layer
+device, so this doesn't work for the general case. In the EH handler for
+unparking it should be fine as the EH thread runs with the drive queue
+shut down.
 
-What's the situation with this fix?
+
+> +static inline int ata_id_has_unload(const u16 *id)
+> +{
+> +	/* ATA-7 specifies two places to indicate unload feature support.
+> +	 * Since I don't really understand the difference, I'll just check
+> +	 * both and only return zero if none of them indicates otherwise. */
+
+Probably wise and we can fix that once it is obvious what reality is
+using.
+
+>
