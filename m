@@ -1,76 +1,53 @@
-From: osb972ww-linuxczmil@yahoo.com
-Subject: Re: Fw: 2.6.24.X: SATA/AHCI related boot delay. - not with 2.6.24.3
-Date: Fri, 21 Mar 2008 08:12:32 -0700 (PDT)
-Message-ID: <810485.52126.qm@web34507.mail.mud.yahoo.com>
+From: Jan Kasprzak <kas@fi.muni.cz>
+Subject: Re: Regression: kernel 2.6.24{,.1} ahci problem, does not boot (resend)
+Date: Fri, 21 Mar 2008 17:43:20 +0100
+Message-ID: <20080321164320.GA32699@fi.muni.cz>
+References: <20080214184700.0bd3837d@highlander.home.lan> <47B4D02E.9030101@gmail.com> <20080215191215.430ee2e0@highlander.home.lan> <47BCE71F.2000309@gmail.com> <20080221172757.44882428@highlander.home.lan> <20080317210045.GG3189@fi.muni.cz> <20080318140116.GC8480@fi.muni.cz> <47E08762.9090704@gmail.com> <20080319061958.GK3189@fi.muni.cz> <47E0B46C.6030302@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from web34507.mail.mud.yahoo.com ([66.163.178.173]:26948 "HELO
-	web34507.mail.mud.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1756033AbYCUPMd (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 21 Mar 2008 11:12:33 -0400
+Received: from minas.ics.muni.cz ([147.251.4.40]:34679 "EHLO minas.ics.muni.cz"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757706AbYCUQnZ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 21 Mar 2008 12:43:25 -0400
+Content-Disposition: inline
+In-Reply-To: <47E0B46C.6030302@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Tejun Heo <htejun@gmail.com>
-Cc: linux-kernel@vger.kernel.org, IDE/ATA development list <linux-ide@vger.kernel.org>
+Cc: Malte =?iso-8859-1?Q?Schr=F6der?= <maltesch@gmx.de>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
+Tejun Heo wrote:
+: Jan Kasprzak wrote:
+: > Tejun Heo wrote:
+: > : Hmm... I still wanna know why it got broke in the first place.  T=
+he only
+: > : thing I can think of is IRQ routing problem in which case pci=3Dn=
+omsi or
+: > : irqpoll should help.  Any chance you can test the old BIOS?
+: >=20
+: > 	Yes, I can. What data are you interested in? Boot logs with
+: > pci=3Dnomsi and irqpoll ? Anything else?
+:=20
+: pci=3Dnomsi, then, irqpoll should be enough for now.
+:=20
+	I have tried to do this, but unfortunately ASUS BIOS flash
+utility does not let me to downgrade to the 0906 bios, where the proble=
+m
+occurs. It lets me only downgrade from 1101 to 100x, but not to 0906
+(even when called from the 100x BIOS).
 
-Tejun, Alan,
+-Yenya
 
-   Everything works when I disable the USB in the bios settings.  I was also able to remove the irqpoll kernel parameter after turning off bios USB. The particularly interesting thing is that the USB mouse still works, as does a USB 2.0 drive I have connected.  The Compact Flash drive at /dev/sda works fine, and the connected SATA drive works as well, though I need to do some testing to see how well these devices are performing. 
-
-Using the irqpoll also made things work except for once.  In that case, I got the same errors, delayed bootup, and missing SATA drive.
-
-Is there a new "hdparm like" tool for working with the new drives/drivers to be able to read/set parameters, run various tests, etc?
-
-This motherboard is an IBT MB899 mini-ITX.
-
-Thanks for the guidance with this!
-
-C. W. Wright
-
-
-
-
------ Original Message ----
-> From: Tejun Heo <htejun@gmail.com>
-> To: osb972ww-linuxczmil@yahoo.com
-> Cc: linux-kernel@vger.kernel.org; IDE/ATA development list <linux-ide@vger.kernel.org>
-> Sent: Friday, March 21, 2008 5:56:10 AM
-> Subject: Re: Fw: 2.6.24.X: SATA/AHCI related boot delay. - not with 2.6.24.3
-> 
-> Hello,
-> 
-> osb972ww-linuxczmil@yahoo.com wrote:
-> > setting irqpoll fixed both problems, and there are no "nasty grams"
-> > in dmesg now.   The original reason I was trying to use the hdparm -u
-> > on /dev/sda was because it was hanging for a few seconds when doing
-> > writes to the CFdisk, and in the past that was the kind of thing that
-> > hdparm -u would generally fix.
-> 
-> libata drivers don't need or support hdparm -u settings.
-> 
-> >  Now with the irqpoll kernel option,
-> > the /dev/sdb SATA drive was found, and I can mount it and write to
-> > it.  The CFcard /dev/sda is also responding to writes better than
-> > before.
-> > 
-> > Thanks for the suggestion to use irqpoll.    What is the problem
-> > within the driver(s) that is requiring irqpoll. ?
-> 
-> Well, IRQ 18 is taken offline during USB initialization.  The IRQ is
-> shared with the SATA controller, so SATA controller doesn't work either.
->  It isn't clear why the IRQ handler is taken offline.  It could be the
-> USB controller but can also be the SATA controller.  Does not loading
-> usb driver make any difference?
-> 
-> -- 
-> tejun
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-ide" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
-
-
-
+--=20
+| Jan "Yenya" Kasprzak  <kas at {fi.muni.cz - work | yenya.net - privat=
+e}> |
+| GPG: ID 1024/D3498839      Fingerprint 0D99A7FB206605D7 8B35FCDE05B18=
+A5E |
+| http://www.fi.muni.cz/~kas/    Journal: http://www.fi.muni.cz/~kas/bl=
+og/ |
+>>  If you find yourself arguing with Alan Cox, you=E2=80=99re _probabl=
+y_ wrong.  <<
+>>     --James Morris in "How and Why You Should Become a Kernel Hacker=
+"  <<
