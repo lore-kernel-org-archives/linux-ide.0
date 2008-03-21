@@ -1,33 +1,35 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: 2.6.24.X: SATA/AHCI related boot delay. - not with 2.6.24.3
-Date: Fri, 21 Mar 2008 10:42:37 +0000
-Message-ID: <20080321104237.72379e41@core>
-References: <217535.99274.qm@web34505.mail.mud.yahoo.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+From: bugme-daemon@bugzilla.kernel.org
+Subject: [Bug 10086] 2.6.25-rc2 + smartd = hang
+Date: Fri, 21 Mar 2008 04:24:58 -0700 (PDT)
+Message-ID: <20080321112458.8156811D10A@picon.linux-foundation.org>
+References: <bug-10086-11633@http.bugzilla.kernel.org/>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:41605 "EHLO
-	lxorguk.ukuu.org.uk" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1754031AbYCUK6F (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 21 Mar 2008 06:58:05 -0400
-In-Reply-To: <217535.99274.qm@web34505.mail.mud.yahoo.com>
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:57228 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753899AbYCULZa (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 21 Mar 2008 07:25:30 -0400
+Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
+	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id m2LBOwY8016133
+	for <linux-ide@vger.kernel.org>; Fri, 21 Mar 2008 04:24:59 -0700
+In-Reply-To: <bug-10086-11633@http.bugzilla.kernel.org/>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: osb972ww-linuxczmil@yahoo.com
-Cc: Tejun Heo <htejun@gmail.com>, linux-kernel@vger.kernel.org, IDE/ATA development list <linux-ide@vger.kernel.org>
+To: linux-ide@vger.kernel.org
 
-On Thu, 20 Mar 2008 20:04:13 -0700 (PDT)
-osb972ww-linuxczmil@yahoo.com wrote:
+http://bugzilla.kernel.org/show_bug.cgi?id=10086
 
-> 
-> HI Tejun,
-> 
->   setting irqpoll fixed both problems, and there are no "nasty grams" in dmesg now.   The original reason I was trying to use the hdparm -u on /dev/sda was because it was hanging for a few seconds when doing writes to the CFdisk, and in the past that was the kind of thing that hdparm -u would generally fix.   Now with the irqpoll kernel option, the /dev/sdb SATA drive was found, and I can mount it and write to it.  The CFcard /dev/sda is also responding to writes better than before.
-> 
-> Thanks for the suggestion to use irqpoll.    What is the problem within the driver(s) that is requiring irqpoll. ?
 
-irqpoll works around BIOS bugs not driver bugs (well generally speaking
-anyway).
 
-Alan
+
+
+------- Comment #7 from bzolnier@gmail.com  2008-03-21 04:24 -------
+Some of SMART commands completed out with error (ERR bit is set in device
+status) and the old code just didn't care to report it.  I would say that the
+new behavior is the correct one but we may have to disable error reporting for
+special commands by default if these messages become too annoying.
+
+
+-- 
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug, or are watching the assignee.
