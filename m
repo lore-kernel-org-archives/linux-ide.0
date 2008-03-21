@@ -1,36 +1,40 @@
-From: bugme-daemon@bugzilla.kernel.org
-Subject: [Bug 10086] 2.6.25-rc2 + smartd = hang
-Date: Fri, 21 Mar 2008 04:33:20 -0700 (PDT)
-Message-ID: <20080321113320.DE21A11D10A@picon.linux-foundation.org>
-References: <bug-10086-11633@http.bugzilla.kernel.org/>
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:37092 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754027AbYCULdw (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 21 Mar 2008 07:33:52 -0400
-Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
-	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id m2LBXKGd016680
-	for <linux-ide@vger.kernel.org>; Fri, 21 Mar 2008 04:33:22 -0700
-In-Reply-To: <bug-10086-11633@http.bugzilla.kernel.org/>
-Sender: linux-ide-owner@vger.kernel.org
+From: Oliver Neukum <oliver@neukum.org>
+Subject: Re: [ugly patch] Save .15W-.5W by AHCI powersaving
+Date: Fri, 21 Mar 2008 08:49:56 +0100
+Message-ID: <200803210849.58035.oliver@neukum.org>
+References: <20080225134558.GA1611@elf.ucw.cz> <47C34081.5090205@rtr.ca>
+	<47C34472.3090706@garzik.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
+Return-path: <linux-pm-bounces@lists.linux-foundation.org>
+In-Reply-To: <47C34472.3090706@garzik.org>
+Content-Disposition: inline
+List-Unsubscribe: <https://lists.linux-foundation.org/mailman/listinfo/linux-pm>,
+	<mailto:linux-pm-request@lists.linux-foundation.org?subject=unsubscribe>
+List-Archive: <http://lists.linux-foundation.org/pipermail/linux-pm>
+List-Post: <mailto:linux-pm@lists.linux-foundation.org>
+List-Help: <mailto:linux-pm-request@lists.linux-foundation.org?subject=help>
+List-Subscribe: <https://lists.linux-foundation.org/mailman/listinfo/linux-pm>,
+	<mailto:linux-pm-request@lists.linux-foundation.org?subject=subscribe>
+Sender: linux-pm-bounces@lists.linux-foundation.org
+Errors-To: linux-pm-bounces@lists.linux-foundation.org
+To: linux-pm@lists.linux-foundation.org
+Cc: linux-ide@vger.kernel.org, Linux-pm mailing list <linux-pm@lists.osdl.org>, kernel list <linux-kernel@vger.kernel.org>, Jeff Garzik <jeff@garzik.org>, Mark Lord <liml@rtr.ca>
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
 
-http://bugzilla.kernel.org/show_bug.cgi?id=10086
+Am Montag, 25. Februar 2008 23:42:58 schrieb Jeff Garzik:
+> > This is cool enough that we really ought to do a hardware-independent
+> > version, so that all SATA interfaces could benefit. =A0Especially ata_p=
+iix,
+> > but others too.
+> =
 
+> BTW we can also save power by allowing the user to choose to disable =
 
+> hotplugging support. =A0Then we can power down PHYs that are not in use.
 
+Can't we power them up periodically to check for new hardware?
 
-
-------- Comment #8 from bzolnier@gmail.com  2008-03-21 04:33 -------
-Update: actually the old code also did check ERR bit so it is something else...
-
-If you add "#define DEBUG" to ide-taskfile.c and re-build/re-test we will know
-which command is the failing one (please be warned that the output will become
-quite verbose).
-
-
--- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug, or are watching the assignee.
+	Regards
+		Oliver
