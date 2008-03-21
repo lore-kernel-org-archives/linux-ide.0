@@ -1,48 +1,52 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: Fw: 2.6.24.X: SATA/AHCI related boot delay. - not with 2.6.24.3
-Date: Fri, 21 Mar 2008 18:56:10 +0900
-Message-ID: <47E3863A.1010700@gmail.com>
-References: <217535.99274.qm@web34505.mail.mud.yahoo.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+From: bugme-daemon@bugzilla.kernel.org
+Subject: [Bug 10296] New: System freezes after I/O on pata_jmicron device
+Date: Fri, 21 Mar 2008 02:58:57 -0700 (PDT)
+Message-ID: <bug-10296-11633@http.bugzilla.kernel.org/>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.176]:40832 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753443AbYCUJ4S (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 21 Mar 2008 05:56:18 -0400
-Received: by wa-out-1112.google.com with SMTP id v27so1554226wah.23
-        for <linux-ide@vger.kernel.org>; Fri, 21 Mar 2008 02:56:15 -0700 (PDT)
-In-Reply-To: <217535.99274.qm@web34505.mail.mud.yahoo.com>
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:36659 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753077AbYCUJ7a (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 21 Mar 2008 05:59:30 -0400
+Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
+	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id m2L9wv1t010666
+	for <linux-ide@vger.kernel.org>; Fri, 21 Mar 2008 02:58:58 -0700
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: osb972ww-linuxczmil@yahoo.com
-Cc: linux-kernel@vger.kernel.org, IDE/ATA development list <linux-ide@vger.kernel.org>
+To: linux-ide@vger.kernel.org
 
-Hello,
+http://bugzilla.kernel.org/show_bug.cgi?id=10296
 
-osb972ww-linuxczmil@yahoo.com wrote:
-> setting irqpoll fixed both problems, and there are no "nasty grams"
-> in dmesg now.   The original reason I was trying to use the hdparm -u
-> on /dev/sda was because it was hanging for a few seconds when doing
-> writes to the CFdisk, and in the past that was the kind of thing that
-> hdparm -u would generally fix.
+           Summary: System freezes after I/O on pata_jmicron device
+           Product: IO/Storage
+           Version: 2.5
+     KernelVersion: 2.6.24.3
+          Platform: All
+        OS/Version: Linux
+              Tree: Mainline
+            Status: NEW
+          Severity: normal
+          Priority: P1
+         Component: IDE
+        AssignedTo: io_ide@kernel-bugs.osdl.org
+        ReportedBy: jniklast@web.de
 
-libata drivers don't need or support hdparm -u settings.
 
->  Now with the irqpoll kernel option,
-> the /dev/sdb SATA drive was found, and I can mount it and write to
-> it.  The CFcard /dev/sda is also responding to writes better than
-> before.
-> 
-> Thanks for the suggestion to use irqpoll.    What is the problem
-> within the driver(s) that is requiring irqpoll. ?
+Latest working kernel version: 2.6.23.17
+Earliest failing kernel version: 2.6.24.0
+Distribution: Gentoo
+Hardware Environment: JMicron 20360/20363 AHCI Controller (rev 02) on Asus P5W
+DH Deluxe Mainboard (Intel 975X + ICH7R chipset)
+Software Environment: gcc 4.1.2, binutils 2.18, glibc 2.6.1-r0
+Problem Description:
+I have pata_jmicron as a module and use a IDE-Harddisk on the JMicron
+controller. Whenever I do some I/O on that harddisk the I/O waiting load goes
+up within a few seconds until it is at or close to 100% which renders the
+system unusable. Magic SysRq makes a graceful reboot possible sometimes.
+Steps to reproduce:
+1. Do some I/O on a IDE-Harddisk which uses pata_jmicron
 
-Well, IRQ 18 is taken offline during USB initialization.  The IRQ is
-shared with the SATA controller, so SATA controller doesn't work either.
- It isn't clear why the IRQ handler is taken offline.  It could be the
-USB controller but can also be the SATA controller.  Does not loading
-usb driver make any difference?
 
 -- 
-tejun
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug, or are watching the assignee.
