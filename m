@@ -1,40 +1,76 @@
-From: Oliver Neukum <oliver@neukum.org>
-Subject: Re: [ugly patch] Save .15W-.5W by AHCI powersaving
-Date: Fri, 21 Mar 2008 08:49:56 +0100
-Message-ID: <200803210849.58035.oliver@neukum.org>
-References: <20080225134558.GA1611@elf.ucw.cz> <47C34081.5090205@rtr.ca>
-	<47C34472.3090706@garzik.org>
+From: osb972ww-linuxczmil@yahoo.com
+Subject: Re: Fw: 2.6.24.X: SATA/AHCI related boot delay. - not with 2.6.24.3
+Date: Fri, 21 Mar 2008 08:12:32 -0700 (PDT)
+Message-ID: <810485.52126.qm@web34507.mail.mud.yahoo.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-pm-bounces@lists.linux-foundation.org>
-In-Reply-To: <47C34472.3090706@garzik.org>
-Content-Disposition: inline
-List-Unsubscribe: <https://lists.linux-foundation.org/mailman/listinfo/linux-pm>,
-	<mailto:linux-pm-request@lists.linux-foundation.org?subject=unsubscribe>
-List-Archive: <http://lists.linux-foundation.org/pipermail/linux-pm>
-List-Post: <mailto:linux-pm@lists.linux-foundation.org>
-List-Help: <mailto:linux-pm-request@lists.linux-foundation.org?subject=help>
-List-Subscribe: <https://lists.linux-foundation.org/mailman/listinfo/linux-pm>,
-	<mailto:linux-pm-request@lists.linux-foundation.org?subject=subscribe>
-Sender: linux-pm-bounces@lists.linux-foundation.org
-Errors-To: linux-pm-bounces@lists.linux-foundation.org
-To: linux-pm@lists.linux-foundation.org
-Cc: linux-ide@vger.kernel.org, Linux-pm mailing list <linux-pm@lists.osdl.org>, kernel list <linux-kernel@vger.kernel.org>, Jeff Garzik <jeff@garzik.org>, Mark Lord <liml@rtr.ca>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from web34507.mail.mud.yahoo.com ([66.163.178.173]:26948 "HELO
+	web34507.mail.mud.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1756033AbYCUPMd (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 21 Mar 2008 11:12:33 -0400
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: linux-kernel@vger.kernel.org, IDE/ATA development list <linux-ide@vger.kernel.org>
 
-Am Montag, 25. Februar 2008 23:42:58 schrieb Jeff Garzik:
-> > This is cool enough that we really ought to do a hardware-independent
-> > version, so that all SATA interfaces could benefit. =A0Especially ata_p=
-iix,
-> > but others too.
-> =
 
-> BTW we can also save power by allowing the user to choose to disable =
+Tejun, Alan,
 
-> hotplugging support. =A0Then we can power down PHYs that are not in use.
+   Everything works when I disable the USB in the bios settings.  I was also able to remove the irqpoll kernel parameter after turning off bios USB. The particularly interesting thing is that the USB mouse still works, as does a USB 2.0 drive I have connected.  The Compact Flash drive at /dev/sda works fine, and the connected SATA drive works as well, though I need to do some testing to see how well these devices are performing. 
 
-Can't we power them up periodically to check for new hardware?
+Using the irqpoll also made things work except for once.  In that case, I got the same errors, delayed bootup, and missing SATA drive.
 
-	Regards
-		Oliver
+Is there a new "hdparm like" tool for working with the new drives/drivers to be able to read/set parameters, run various tests, etc?
+
+This motherboard is an IBT MB899 mini-ITX.
+
+Thanks for the guidance with this!
+
+C. W. Wright
+
+
+
+
+----- Original Message ----
+> From: Tejun Heo <htejun@gmail.com>
+> To: osb972ww-linuxczmil@yahoo.com
+> Cc: linux-kernel@vger.kernel.org; IDE/ATA development list <linux-ide@vger.kernel.org>
+> Sent: Friday, March 21, 2008 5:56:10 AM
+> Subject: Re: Fw: 2.6.24.X: SATA/AHCI related boot delay. - not with 2.6.24.3
+> 
+> Hello,
+> 
+> osb972ww-linuxczmil@yahoo.com wrote:
+> > setting irqpoll fixed both problems, and there are no "nasty grams"
+> > in dmesg now.   The original reason I was trying to use the hdparm -u
+> > on /dev/sda was because it was hanging for a few seconds when doing
+> > writes to the CFdisk, and in the past that was the kind of thing that
+> > hdparm -u would generally fix.
+> 
+> libata drivers don't need or support hdparm -u settings.
+> 
+> >  Now with the irqpoll kernel option,
+> > the /dev/sdb SATA drive was found, and I can mount it and write to
+> > it.  The CFcard /dev/sda is also responding to writes better than
+> > before.
+> > 
+> > Thanks for the suggestion to use irqpoll.    What is the problem
+> > within the driver(s) that is requiring irqpoll. ?
+> 
+> Well, IRQ 18 is taken offline during USB initialization.  The IRQ is
+> shared with the SATA controller, so SATA controller doesn't work either.
+>  It isn't clear why the IRQ handler is taken offline.  It could be the
+> USB controller but can also be the SATA controller.  Does not loading
+> usb driver make any difference?
+> 
+> -- 
+> tejun
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-ide" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+
+
+
