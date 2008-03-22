@@ -1,87 +1,106 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH 3/8] ide: remove IDE_HFLAG_NO_AUTOTUNE host flag
-Date: Sat, 22 Mar 2008 23:06:39 +0100
-Message-ID: <20080322220639.17636.80893.sendpatchset@localhost.localdomain>
+Subject: [PATCH 4/8] ide: remove obsoleted "hdx=autotune" kernel parameter
+Date: Sat, 22 Mar 2008 23:06:46 +0100
+Message-ID: <20080322220646.17636.51978.sendpatchset@localhost.localdomain>
 References: <20080322220623.17636.44337.sendpatchset@localhost.localdomain>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mu-out-0910.google.com ([209.85.134.190]:30158 "EHLO
-	mu-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757955AbYCVVvn (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 22 Mar 2008 17:51:43 -0400
-Received: by mu-out-0910.google.com with SMTP id i10so2579712mue.5
-        for <linux-ide@vger.kernel.org>; Sat, 22 Mar 2008 14:51:40 -0700 (PDT)
+Received: from ug-out-1314.google.com ([66.249.92.175]:3989 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758059AbYCVVvs (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 22 Mar 2008 17:51:48 -0400
+Received: by ug-out-1314.google.com with SMTP id z38so1853340ugc.16
+        for <linux-ide@vger.kernel.org>; Sat, 22 Mar 2008 14:51:48 -0700 (PDT)
 In-Reply-To: <20080322220623.17636.44337.sendpatchset@localhost.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
 Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-kernel@vger.kernel.org
 
-* Don't set IDE_HFLAG_NO_AUTOTUNE host flag in sgiioc4 and icside
-  host drivers - there is no need for it as they don't implement
-  ->set_pio_mode method.
+* Remove obsoleted "hdx=autotune" kernel parameter
+  (we always auto-tune PIO if possible nowadays).
 
-* Remove no longer needed IDE_HFLAG_NO_AUTOTUNE host flag.
-
-There should be no functional changes caused by this patch.
+* Remove no longer needed ide_drive_t.autotune flag.
 
 Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 ---
- drivers/ide/arm/icside.c  |    3 +--
- drivers/ide/ide-probe.c   |    3 +--
- drivers/ide/pci/sgiioc4.c |    1 -
- include/linux/ide.h       |    2 --
- 4 files changed, 2 insertions(+), 7 deletions(-)
+ Documentation/ide/ide.txt |    7 -------
+ drivers/ide/ide-probe.c   |    4 +---
+ drivers/ide/ide.c         |    5 +----
+ include/linux/ide.h       |    1 -
+ 4 files changed, 2 insertions(+), 15 deletions(-)
 
-Index: b/drivers/ide/arm/icside.c
+Index: b/Documentation/ide/ide.txt
 ===================================================================
---- a/drivers/ide/arm/icside.c
-+++ b/drivers/ide/arm/icside.c
-@@ -480,8 +480,7 @@ static const struct ide_port_info icside
- 	.init_dma		= icside_dma_off_init,
- 	.port_ops		= &icside_v6_no_dma_port_ops,
- 	.dma_ops		= &icside_v6_dma_ops,
--	.host_flags		= IDE_HFLAG_SERIALIZE |
--				  IDE_HFLAG_NO_AUTOTUNE,
-+	.host_flags		= IDE_HFLAG_SERIALIZE,
- 	.mwdma_mask		= ATA_MWDMA2,
- 	.swdma_mask		= ATA_SWDMA2,
- };
+--- a/Documentation/ide/ide.txt
++++ b/Documentation/ide/ide.txt
+@@ -196,13 +196,6 @@ Summary of ide driver parameters for ker
+ 
+  "hdx=cyl,head,sect"	: disk drive is present, with specified geometry
+ 
+- "hdx=autotune"		: driver will attempt to tune interface speed
+-			  to the fastest PIO mode supported,
+-			  if possible for this drive only.
+-			  Not fully supported by all chipset types,
+-			  and quite likely to cause trouble with
+-			  older/odd IDE drives.
+-
+  "hdx=nodma"		: disallow DMA
+ 
+  "ide=doubler"		: probe/support IDE doublers on Amiga
 Index: b/drivers/ide/ide-probe.c
 ===================================================================
 --- a/drivers/ide/ide-probe.c
 +++ b/drivers/ide/ide-probe.c
-@@ -1324,8 +1324,7 @@ static void ide_port_init_devices(ide_hw
+@@ -826,8 +826,7 @@ static void ide_port_tune_devices(ide_hw
+ 		ide_drive_t *drive = &hwif->drives[unit];
+ 
+ 		if (drive->present) {
+-			if (drive->autotune)
+-				ide_set_max_pio(drive);
++			ide_set_max_pio(drive);
+ 
+ 			drive->nice1 = 1;
+ 
+@@ -1324,7 +1323,6 @@ static void ide_port_init_devices(ide_hw
  			drive->unmask = 1;
  		if (hwif->host_flags & IDE_HFLAG_NO_UNMASK_IRQS)
  			drive->no_unmask = 1;
--		if ((hwif->host_flags & IDE_HFLAG_NO_AUTOTUNE) == 0)
--			drive->autotune = 1;
-+		drive->autotune = 1;
+-		drive->autotune = 1;
  	}
  
  	if (port_ops && port_ops->port_init_devs)
-Index: b/drivers/ide/pci/sgiioc4.c
+Index: b/drivers/ide/ide.c
 ===================================================================
---- a/drivers/ide/pci/sgiioc4.c
-+++ b/drivers/ide/pci/sgiioc4.c
-@@ -573,7 +573,6 @@ static const struct ide_port_info sgiioc
- 	.init_dma		= ide_dma_sgiioc4,
- 	.port_ops		= &sgiioc4_port_ops,
- 	.dma_ops		= &sgiioc4_dma_ops,
--	.host_flags		= IDE_HFLAG_NO_AUTOTUNE,
- 	.mwdma_mask		= ATA_MWDMA2_ONLY,
- };
- 
+--- a/drivers/ide/ide.c
++++ b/drivers/ide/ide.c
+@@ -851,7 +851,7 @@ static int __init ide_setup(char *s)
+ 	if (s[0] == 'h' && s[1] == 'd' && s[2] >= 'a' && s[2] <= max_drive) {
+ 		const char *hd_words[] = {
+ 			"none", "noprobe", "nowerr", "cdrom", "nodma",
+-			"autotune", "-7", "-8", "-9", "-10",
++			"-6", "-7", "-8", "-9", "-10",
+ 			"noflush", "remap", "remap63", "scsi", NULL };
+ 		unit = s[2] - 'a';
+ 		hw   = unit / MAX_DRIVES;
+@@ -879,9 +879,6 @@ static int __init ide_setup(char *s)
+ 			case -5: /* nodma */
+ 				drive->nodma = 1;
+ 				goto done;
+-			case -6: /* "autotune" */
+-				drive->autotune = 1;
+-				goto obsolete_option;
+ 			case -11: /* noflush */
+ 				drive->noflush = 1;
+ 				goto done;
 Index: b/include/linux/ide.h
 ===================================================================
 --- a/include/linux/ide.h
 +++ b/include/linux/ide.h
-@@ -1062,8 +1062,6 @@ enum {
- 	IDE_HFLAG_NO_DMA		= (1 << 14),
- 	/* check if host is PCI IDE device before allowing DMA */
- 	IDE_HFLAG_NO_AUTODMA		= (1 << 15),
--	/* don't autotune PIO */
--	IDE_HFLAG_NO_AUTOTUNE		= (1 << 16),
- 	/* host is CS5510/CS5520 */
- 	IDE_HFLAG_CS5520		= IDE_HFLAG_VDMA,
- 	/* no LBA48 */
+@@ -322,7 +322,6 @@ typedef struct ide_drive_s {
+ 	unsigned atapi_overlap	: 1;	/* ATAPI overlap (not supported) */
+ 	unsigned doorlocking	: 1;	/* for removable only: door lock/unlock works */
+ 	unsigned nodma		: 1;	/* disallow DMA */
+-	unsigned autotune	: 1;	/* 0=default, 1=autotune */
+ 	unsigned remap_0_to_1	: 1;	/* 0=noremap, 1=remap 0->1 (for EZDrive) */
+ 	unsigned blocked        : 1;	/* 1=powermanagment told us not to do anything, so sleep nicely */
+ 	unsigned vdma		: 1;	/* 1=doing PIO over DMA 0=doing normal DMA */
