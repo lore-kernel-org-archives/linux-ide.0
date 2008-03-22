@@ -1,72 +1,212 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH 8/8] ide: cleanup init_ide_data()
-Date: Sat, 22 Mar 2008 23:07:15 +0100
-Message-ID: <20080322220715.17636.8976.sendpatchset@localhost.localdomain>
+Subject: [PATCH 5/8] ide: add "nodma|noflush|noprobe|nowerr=" parameters
+Date: Sat, 22 Mar 2008 23:06:53 +0100
+Message-ID: <20080322220653.17636.69237.sendpatchset@localhost.localdomain>
 References: <20080322220623.17636.44337.sendpatchset@localhost.localdomain>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.174]:4232 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754317AbYCVVwT (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 22 Mar 2008 17:52:19 -0400
-Received: by ug-out-1314.google.com with SMTP id z38so1853339ugc.16
-        for <linux-ide@vger.kernel.org>; Sat, 22 Mar 2008 14:52:18 -0700 (PDT)
+Received: from fg-out-1718.google.com ([72.14.220.159]:4782 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758180AbYCVVv7 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 22 Mar 2008 17:51:59 -0400
+Received: by fg-out-1718.google.com with SMTP id l27so2069717fgb.17
+        for <linux-ide@vger.kernel.org>; Sat, 22 Mar 2008 14:51:55 -0700 (PDT)
 In-Reply-To: <20080322220623.17636.44337.sendpatchset@localhost.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
 Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-kernel@vger.kernel.org
 
-* Remove no longer need init_ide_data() call from ide_setup().
+* Add "nodma|noflush|noprobe|nowerr=" parameters.
 
-* Cleanup init_ide_data().
+* Obsolete "hdx=noprobe|none|nowerr|nodma|noflush" kernel parameters.
 
 Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 ---
- drivers/ide/ide.c |   24 ------------------------
- 1 file changed, 24 deletions(-)
+ Documentation/ide/ide.txt |   26 +++++++--------
+ drivers/ide/ide.c         |   79 +++++++++++++++++++++++++++++++++++++++++++---
+ 2 files changed, 88 insertions(+), 17 deletions(-)
 
+Index: b/Documentation/ide/ide.txt
+===================================================================
+--- a/Documentation/ide/ide.txt
++++ b/Documentation/ide/ide.txt
+@@ -99,10 +99,10 @@ with hd.c but not with ide.c), then an c
+ for each drive for which you'd like the drive to skip the hardware
+ probe/identification sequence.  For example:
+ 
+-	hdb=noprobe
++	ide_core.noprobe=0.1
+ or
+ 	hdc=768,16,32
+-	hdc=noprobe
++	ide_core.noprobe=1.0
+ 
+ Note that when only one IDE device is attached to an interface, it should be
+ jumpered as "single" or "master", *not* "slave".  Many folks have had
+@@ -174,9 +174,7 @@ to /etc/modprobe.conf.
+ 
+ When ide.c is used as a module, you can pass command line parameters to the
+ driver using the "options=" keyword to insmod, while replacing any ',' with
+-';'.  For example:
+-
+-	insmod ide.o options="hda=nodma hdb=nodma"
++';'.
+ 
+ 
+ ================================================================================
+@@ -186,18 +184,10 @@ Summary of ide driver parameters for ker
+ 
+  "hdx="  is recognized for all "x" from "a" to "u", such as "hdc".
+ 
+- "hdx=noprobe"		: drive may be present, but do not probe for it
+-
+- "hdx=none"		: drive is NOT present, ignore cmos and do not probe
+-
+- "hdx=nowerr"		: ignore the WRERR_STAT bit on this drive
+-
+  "hdx=cdrom"		: drive is present, and is a cdrom drive
+ 
+  "hdx=cyl,head,sect"	: disk drive is present, with specified geometry
+ 
+- "hdx=nodma"		: disallow DMA
+-
+  "ide=doubler"		: probe/support IDE doublers on Amiga
+ 
+ There may be more options than shown -- use the source, Luke!
+@@ -230,6 +220,16 @@ a case please report it as a bug instead
+ * "ignore_cable=[interface_number]" module parameter (for ide_core module)
+   if IDE is compiled as module
+ 
++Other kernel parameters for ide_core are:
++
++* "nodma=[interface_number.device_number]" to disallow DMA for a device
++
++* "noflush=[interface_number.device_number]" to disable flush requests
++
++* "noprobe=[interface_number.device_number]" to skip probing
++
++* "nowerr=[interface_number.device_number]" to ignore the WRERR_STAT bit
++
+ ================================================================================
+ 
+ Some Terminology
 Index: b/drivers/ide/ide.c
 ===================================================================
 --- a/drivers/ide/ide.c
 +++ b/drivers/ide/ide.c
-@@ -157,32 +157,9 @@ static void ide_port_init_devices_data(i
+@@ -866,10 +866,10 @@ static int __init ide_setup(char *s)
+ 			case -1: /* "none" */
+ 			case -2: /* "noprobe" */
+ 				drive->noprobe = 1;
+-				goto done;
++				goto obsolete_option;
+ 			case -3: /* "nowerr" */
+ 				drive->bad_wstat = BAD_R_STAT;
+-				goto done;
++				goto obsolete_option;
+ 			case -4: /* "cdrom" */
+ 				drive->present = 1;
+ 				drive->media = ide_cdrom;
+@@ -878,10 +878,10 @@ static int __init ide_setup(char *s)
+ 				goto done;
+ 			case -5: /* nodma */
+ 				drive->nodma = 1;
+-				goto done;
++				goto obsolete_option;
+ 			case -11: /* noflush */
+ 				drive->noflush = 1;
+-				goto done;
++				goto obsolete_option;
+ 			case -12: /* "remap" */
+ 				drive->remap_0_to_1 = 1;
+ 				goto obsolete_option;
+@@ -1061,6 +1061,72 @@ EXPORT_SYMBOL_GPL(ide_pci_clk);
+ module_param_named(pci_clock, ide_pci_clk, int, 0);
+ MODULE_PARM_DESC(pci_clock, "PCI bus clock frequency (in MHz)");
+ 
++static int ide_set_dev_param_mask(const char *s, struct kernel_param *kp)
++{
++	int a, b, i, j = 1;
++	unsigned int *dev_param_mask = (unsigned int *)kp->arg;
++
++	if (sscanf(s, "%d.%d:%d", &a, &b, &j) != 3 &&
++	    sscanf(s, "%d.%d", &a, &b) != 2)
++		return -EINVAL;
++
++	i = a * MAX_DRIVES + b;
++
++	if (i >= MAX_HWIFS * MAX_DRIVES || j < 0 || j > 1)
++		return -EINVAL;
++
++	if (j)
++		*dev_param_mask |= (1 << i);
++	else
++		*dev_param_mask &= (1 << i);
++
++	return 0;
++}
++
++static unsigned int ide_nodma;
++
++module_param_call(nodma, ide_set_dev_param_mask, NULL, &ide_nodma, 0);
++MODULE_PARM_DESC(nodma, "disallow DMA for a device");
++
++static unsigned int ide_noflush;
++
++module_param_call(noflush, ide_set_dev_param_mask, NULL, &ide_noflush, 0);
++MODULE_PARM_DESC(noflush, "disable flush requests for a device");
++
++static unsigned int ide_noprobe;
++
++module_param_call(noprobe, ide_set_dev_param_mask, NULL, &ide_noprobe, 0);
++MODULE_PARM_DESC(noprobe, "skip probing for a device");
++
++static unsigned int ide_nowerr;
++
++module_param_call(nowerr, ide_set_dev_param_mask, NULL, &ide_nowerr, 0);
++MODULE_PARM_DESC(nowerr, "ignore the WRERR_STAT bit for a device");
++
++static void ide_dev_apply_params(ide_drive_t *drive)
++{
++	int i = drive->hwif->index * MAX_DRIVES + drive->select.b.unit;
++
++	if (ide_nodma & (1 << i)) {
++		printk(KERN_INFO "ide: disallowing DMA for %s\n", drive->name);
++		drive->nodma = 1;
++	}
++	if (ide_noflush & (1 << i)) {
++		printk(KERN_INFO "ide: disabling flush requests for %s\n",
++				 drive->name);
++		drive->noflush = 1;
++	}
++	if (ide_noprobe & (1 << i)) {
++		printk(KERN_INFO "ide: skipping probe for %s\n", drive->name);
++		drive->noprobe = 1;
++	}
++	if (ide_nowerr & (1 << i)) {
++		printk(KERN_INFO "ide: ignoring the WRERR_STAT bit for %s\n",
++				 drive->name);
++		drive->bad_wstat = BAD_R_STAT;
++	}
++}
++
+ static unsigned int ide_ignore_cable;
+ 
+ static int ide_set_ignore_cable(const char *s, struct kernel_param *kp)
+@@ -1086,11 +1152,16 @@ MODULE_PARM_DESC(ignore_cable, "ignore c
+ 
+ void ide_port_apply_params(ide_hwif_t *hwif)
+ {
++	int i;
++
+ 	if (ide_ignore_cable & (1 << hwif->index)) {
+ 		printk(KERN_INFO "ide: ignoring cable detection for %s\n",
+ 				 hwif->name);
+ 		hwif->cbl = ATA_CBL_PATA40_SHORT;
  	}
++
++	for (i = 0; i < MAX_DRIVES; i++)
++		ide_dev_apply_params(&hwif->drives[i]);
  }
  
--/*
-- * init_ide_data() sets reasonable default values into all fields
-- * of all instances of the hwifs and drives, but only on the first call.
-- * Subsequent calls have no effect (they don't wipe out anything).
-- *
-- * This routine is normally called at driver initialization time,
-- * but may also be called MUCH earlier during kernel "command-line"
-- * parameter processing.  As such, we cannot depend on any other parts
-- * of the kernel (such as memory allocation) to be functioning yet.
-- *
-- * This is too bad, as otherwise we could dynamically allocate the
-- * ide_drive_t structs as needed, rather than always consuming memory
-- * for the max possible number (MAX_HWIFS * MAX_DRIVES) of them.
-- *
-- * FIXME: We should stuff the setup data into __init and copy the
-- * relevant hwifs/allocate them properly during boot.
-- */
--#define MAGIC_COOKIE 0x12345678
- static void __init init_ide_data (void)
- {
- 	unsigned int index;
--	static unsigned long magic_cookie = MAGIC_COOKIE;
--
--	if (magic_cookie != MAGIC_COOKIE)
--		return;		/* already initialized */
--	magic_cookie = 0;
- 
- 	/* Initialise all interface structures */
- 	for (index = 0; index < MAX_HWIFS; ++index) {
-@@ -733,7 +710,6 @@ EXPORT_SYMBOL(generic_ide_ioctl);
- static int __init ide_setup(char *s)
- {
- 	printk(KERN_INFO "ide_setup: %s", s);
--	init_ide_data ();
- 
- #ifdef CONFIG_BLK_DEV_IDEDOUBLER
- 	if (!strcmp(s, "ide=doubler")) {
+ /*
