@@ -1,106 +1,35 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH 2/3] ide: mark "idebus=" kernel parameter as obsoleted (take 2)
-Date: Sat, 22 Mar 2008 17:22:44 +0100
-Message-ID: <200803221722.44733.bzolnier@gmail.com>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: Re: [PATCH 1/3] ide: add "vlb|pci_clock=" parameter
+Date: Sat, 22 Mar 2008 20:31:32 +0300
+Message-ID: <47E54274.8020805@ru.mvista.com>
+References: <200803221722.11689.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.157]:41752 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752630AbYCVQJd (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 22 Mar 2008 12:09:33 -0400
-Received: by fg-out-1718.google.com with SMTP id l27so1940595fgb.17
-        for <linux-ide@vger.kernel.org>; Sat, 22 Mar 2008 09:09:31 -0700 (PDT)
-Content-Disposition: inline
+Received: from h155.mvista.com ([63.81.120.155]:10726 "EHLO imap.sh.mvista.com"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1753774AbYCVRaO (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 22 Mar 2008 13:30:14 -0400
+In-Reply-To: <200803221722.11689.bzolnier@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Alan Cox <alan@lxorguk.ukuu.org.uk>
 
-We have "vlb|pci_clock=" parameters now.
+Bartlomiej Zolnierkiewicz wrote:
 
-Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
----
- Documentation/ide/ide.txt   |   10 ----------
- drivers/ide/ide.c           |    2 +-
- drivers/ide/legacy/qd65xx.c |    2 --
- drivers/ide/pci/cy82c693.c  |    2 --
- drivers/ide/pci/opti621.c   |    3 +--
- 5 files changed, 2 insertions(+), 17 deletions(-)
+> * Add "vlb_clock=" parameter for specifying VLB clock frequency (in MHz).
 
-Index: b/Documentation/ide/ide.txt
-===================================================================
---- a/Documentation/ide/ide.txt
-+++ b/Documentation/ide/ide.txt
-@@ -205,16 +205,6 @@ Summary of ide driver parameters for ker
- 
-  "hdx=nodma"		: disallow DMA
- 
-- "idebus=xx"		: inform IDE driver of VESA/PCI bus speed in MHz,
--			  where "xx" is between 20 and 66 inclusive,
--			  used when tuning chipset PIO modes.
--			  For PCI bus, 25 is correct for a P75 system,
--			  30 is correct for P90,P120,P180 systems,
--			  and 33 is used for P100,P133,P166 systems.
--			  If in doubt, use idebus=33 for PCI.
--			  As for VLB, it is safest to not specify it.
--			  Bigger values are safer than smaller ones.
--
-  "ide=doubler"		: probe/support IDE doublers on Amiga
- 
- There may be more options than shown -- use the source, Luke!
-Index: b/drivers/ide/ide.c
-===================================================================
---- a/drivers/ide/ide.c
-+++ b/drivers/ide/ide.c
-@@ -969,7 +969,7 @@ static int __init ide_setup(char *s)
- 			idebus_parameter = vals[0];
- 		} else
- 			printk(" -- BAD BUS SPEED! Expected value from 20 to 66");
--		goto done;
-+		goto obsolete_option;
- 	}
- 
- bad_option:
-Index: b/drivers/ide/legacy/qd65xx.c
-===================================================================
---- a/drivers/ide/legacy/qd65xx.c
-+++ b/drivers/ide/legacy/qd65xx.c
-@@ -11,8 +11,6 @@
-  *
-  * QDI QD6500/QD6580 EIDE controller fast support
-  *
-- * Please set local bus speed using kernel parameter idebus
-- * 	for example, "idebus=33" stands for 33Mhz VLbus
-  * To activate controller support, use "ide0=qd65xx"
-  * To enable tuning, use "hda=autotune hdb=autotune"
-  * To enable 2nd channel tuning (qd6580 only), use "hdc=autotune hdd=autotune"
-Index: b/drivers/ide/pci/cy82c693.c
-===================================================================
---- a/drivers/ide/pci/cy82c693.c
-+++ b/drivers/ide/pci/cy82c693.c
-@@ -18,8 +18,6 @@
-  *   hdparm -t reports 8.17 MB/sec at about 6% CPU usage for the DTTA
-  * - this is my first linux driver, so there's probably a lot  of room
-  *   for optimizations and bug fixing, so feel free to do it.
-- * - use idebus=xx parameter to set PCI bus speed - needed to calc
-- *   timings for PIO modes (default will be 40)
-  * - if using PIO mode it's a good idea to set the PIO mode and
-  *   32-bit I/O support (if possible), e.g. hdparm -p2 -c1 /dev/hda
-  * - I had some problems with my IBM DHEA with PIO modes < 2
-Index: b/drivers/ide/pci/opti621.c
-===================================================================
---- a/drivers/ide/pci/opti621.c
-+++ b/drivers/ide/pci/opti621.c
-@@ -53,8 +53,7 @@
-  * If you then set the second drive to another PIO, the old value
-  * (automatically selected) will be overrided by yours.
-  * There is a 25/33MHz switch in configuration
-- * register, but driver is written for use at any frequency which get
-- * (use idebus=xx to select PCI bus speed).
-+ * register, but driver is written for use at any frequency.
-  *
-  * Version 0.1, Nov 8, 1996
-  * by Jaromir Koutek, for 2.1.8.
+> * Add "pci_clock=" parameter for specifying PCI bus clock frequency (in MHz).
+
+> While at it:
+
+> * qd65xx.c: rename {active,recovery}_cycle variables to {act,rec}_cyc.
+
+> Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>
+> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+
+Acked-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+
+MBR, Sergei
