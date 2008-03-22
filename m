@@ -1,54 +1,38 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: Fw: 2.6.24.X: SATA/AHCI related boot delay. - not with 2.6.24.3
-Date: Sat, 22 Mar 2008 17:18:40 +0900
-Message-ID: <47E4C0E0.4080307@gmail.com>
-References: <810485.52126.qm@web34507.mail.mud.yahoo.com>
+From: Ingo Molnar <mingo@elte.hu>
+Subject: Re: 2.6.25-rc6-git6: Reported regressions from 2.6.24
+Date: Sat, 22 Mar 2008 12:11:44 +0100
+Message-ID: <20080322111144.GB13264@elte.hu>
+References: <200803220259.48534.rjw@sisk.pl> <47E4745D.3090902@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wf-out-1314.google.com ([209.85.200.169]:25532 "EHLO
-	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753368AbYCVISs (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 22 Mar 2008 04:18:48 -0400
-Received: by wf-out-1314.google.com with SMTP id 28so1964806wff.4
-        for <linux-ide@vger.kernel.org>; Sat, 22 Mar 2008 01:18:48 -0700 (PDT)
-In-Reply-To: <810485.52126.qm@web34507.mail.mud.yahoo.com>
+Received: from mx3.mail.elte.hu ([157.181.1.138]:33395 "EHLO mx3.mail.elte.hu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753415AbYCVLMN (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 22 Mar 2008 07:12:13 -0400
+Content-Disposition: inline
+In-Reply-To: <47E4745D.3090902@garzik.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: osb972ww-linuxczmil@yahoo.com
-Cc: linux-kernel@vger.kernel.org, IDE/ATA development list <linux-ide@vger.kernel.org>
+To: Jeff Garzik <jeff@garzik.org>
+Cc: Linux IDE mailing list <linux-ide@vger.kernel.org>, "Rafael J. Wysocki" <rjw@sisk.pl>, LKML <linux-kernel@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, "Su, Henry" <Henry.Su@amd.com>, "Cai, Crane" <Crane.Cai@amd.com>, Shane Huang <Shane.Huang@amd.com>, Thomas Gleixner <tglx@linutronix.de>
 
-Hello,
 
-osb972ww-linuxczmil@yahoo.com wrote:
-> Tejun, Alan,
-> 
-> Everything works when I disable the USB in the bios settings.  I was
-> also able to remove the irqpoll kernel parameter after turning off
-> bios USB. The particularly interesting thing is that the USB mouse
-> still works, as does a USB 2.0 drive I have connected.  The Compact
-> Flash drive at /dev/sda works fine, and the connected SATA drive
-> works as well, though I need to do some testing to see how well these
-> devices are performing.
+* Jeff Garzik <jeff@garzik.org> wrote:
 
-Hmmm.. Can you please file a bug report against USB subsystem on
-bugzilla.kernel.org and cc me?  USB on your system is triggering IRQ storm.
+>> Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=9412
+>> Subject		: Since commit 'x86: enable iommu_merge by default' (948062683004d13ca21c8c05ac052d387978a449) 2.6 is no go on SB600 AHCI
+>> Submitter	: Srihari Vijayaraghavan <sriharivijayaraghavan@yahoo.com.au>
+>> Date		: 2007-11-19 14:43 (124 days old)
+>
+> This one seems to imply that the workaround approved by AMD/ATI didn't 
+> work...
+>
+> (AMD folks CC'd...)
 
-> Using the irqpoll also made things work except for once.  In that
-> case, I got the same errors, delayed bootup, and missing SATA drive.
+note, the 'Subject' is wrong, we resolved the original regression on 
+2007-11-26, 7 days after it was reported. This is about a bug with 
+similar symptoms, reopened 10 days ago. Jeff, could you please change 
+the bugzilla entry so that it reflects that it's an SB600 problem?
 
-Hmmm.. Do you have logs?
-
-> Is there a new "hdparm like" tool for working with the new
-> drives/drivers to be able to read/set parameters, run various tests,
-> etc?
-
-hdparm will still be the utility of choice but libata doesn't allow many
-settings IDE used to and libata probably will never implement some of
-IDE's tunables.  Is there any specific setting you have in mind?
-
-Thanks.
-
--- 
-tejun
+	Ingo
