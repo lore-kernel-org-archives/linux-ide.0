@@ -1,54 +1,57 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH #upstream-fixes] libata: improve HPA error handling
-Date: Sun, 23 Mar 2008 21:05:15 +0900
-Message-ID: <47E6477B.1020805@gmail.com>
+Subject: Re: [PATCH 2.6.25-rc6] sata_promise: fix hardreset hotplug quirk
+Date: Sun, 23 Mar 2008 21:07:30 +0900
+Message-ID: <47E64802.4040507@gmail.com>
+References: <200803221421.m2MEL1oY021558@harpo.it.uu.se>	<47E5CCC3.3000301@gmail.com> <18406.12612.194477.944676@harpo.it.uu.se>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.182]:23346 "EHLO
+Received: from wa-out-1112.google.com ([209.85.146.182]:29376 "EHLO
 	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755029AbYCWMFZ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 23 Mar 2008 08:05:25 -0400
-Received: by wa-out-1112.google.com with SMTP id v27so2805957wah.23
-        for <linux-ide@vger.kernel.org>; Sun, 23 Mar 2008 05:05:25 -0700 (PDT)
+	with ESMTP id S1759091AbYCWMHg (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 23 Mar 2008 08:07:36 -0400
+Received: by wa-out-1112.google.com with SMTP id v27so2806866wah.23
+        for <linux-ide@vger.kernel.org>; Sun, 23 Mar 2008 05:07:35 -0700 (PDT)
+In-Reply-To: <18406.12612.194477.944676@harpo.it.uu.se>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>, IDE/ATA development list <linux-ide@vger.kernel.org>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>
+To: Mikael Pettersson <mikpe@it.uu.se>
+Cc: jeff@garzik.org, kurt@roeckx.be, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-There's no point in retrying and eventually failing device detection
-when the device rejects READ_NATIVE_MAX[_EXT].  Disable HPA unlocking
-if READ_NATIVE_MAX[_EXT] is rejected as done when SET_MAX[_EXT] is
-rejected.
+Mikael Pettersson wrote:
+>  > Actually, this is common to many SATA controllers.  Lots of them raise
+>  > PHY event or hotplug interrupt during COMRESET and they all plug PHY
+>  > events from ->freeze.
+> 
+> Hmm, no I didn't know that. It's still undocumented, but perhaps
+> shouldn't be called a "quirk" if it's as common as you say.
 
-This allows some old drives to work even if they aren't blacklisted.
+Yeap, it's common behavior.  "quirk" would be a bit unfair to promise. :-)
 
-Signed-off-by: Tejun Heo <htejun@gmail.com>
----
- drivers/ata/libata-core.c |    8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+>  > > Although SATA hotplug status and control is per-port, it resides in
+>  > > a single register shared by all ports. Therefore accesses to it must
+>  > > be serialised: the controller's host->lock is used for that. The
+>  > > interrupt handler is also adjusted so its hotplug register accesses
+>  > > are inside the region protected by host->lock.
+>  > 
+>  > Hmmm... This is supposed to be handled by setting ap->lock appropriately
+>  > and ap->lock already is initialized to &host->lock, so sticking with
+>  > ap->lock is the right thing to do.
+> 
+> I'll check this. The code relies on the lock being shared by all ports,
+> so at a minimum it will need a comment stating that requirement.
 
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index 4bbe31f..db1c65c 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -1416,12 +1416,12 @@ static int ata_hpa_resize(struct ata_device *dev)
- 	/* read native max address */
- 	rc = ata_read_native_max_address(dev, &native_sectors);
- 	if (rc) {
--		/* If HPA isn't going to be unlocked, skip HPA
--		 * resizing from the next try.
-+		/* If device aborted the command or HPA isn't going to
-+		 * be unlocked, skip HPA resizing.
- 		 */
--		if (!ata_ignore_hpa) {
-+		if (rc == -EACCES || !ata_ignore_hpa) {
- 			ata_dev_printk(dev, KERN_WARNING, "HPA support seems "
--				       "broken, will skip HPA handling\n");
-+				       "broken, skipping HPA handling\n");
- 			dev->horkage |= ATA_HORKAGE_BROKEN_HPA;
- 
- 			/* we can continue if device aborted the command */
-diff --git a/drivers/ata/libata-sff.c b/drivers/ata/libata-sff.c
+That's the default assumption all other LLDs depend on.  I agree it
+needs documentation.
 
+>  > ->freeze() is called with ap->lock held, trying to lock host->lock
+>  > inside pdc_sata_enable/disable_hotplug() will result in deadlock.  Have
+>  > you tested w/ SMP configuration or spinlock debugging turned on?
+> 
+> No, I'll do that and fix whatever damage occurs.
+
+Thanks.
+
+-- 
+tejun
