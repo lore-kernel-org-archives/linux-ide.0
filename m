@@ -1,57 +1,45 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCH 2.6.25-rc6] sata_promise: fix hardreset hotplug quirk
-Date: Sun, 23 Mar 2008 21:07:30 +0900
-Message-ID: <47E64802.4040507@gmail.com>
-References: <200803221421.m2MEL1oY021558@harpo.it.uu.se>	<47E5CCC3.3000301@gmail.com> <18406.12612.194477.944676@harpo.it.uu.se>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [PATCH #upstream-fixes] libata: assume no device is attached if
+ both IDENTIFYs are aborted
+Date: Sun, 23 Mar 2008 12:46:09 +0000
+Message-ID: <20080323124609.6e3b04cc@core>
+References: <47E5F5D5.6050203@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.182]:29376 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759091AbYCWMHg (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 23 Mar 2008 08:07:36 -0400
-Received: by wa-out-1112.google.com with SMTP id v27so2806866wah.23
-        for <linux-ide@vger.kernel.org>; Sun, 23 Mar 2008 05:07:35 -0700 (PDT)
-In-Reply-To: <18406.12612.194477.944676@harpo.it.uu.se>
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:34084 "EHLO
+	lxorguk.ukuu.org.uk" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1761948AbYCWNCK convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 23 Mar 2008 09:02:10 -0400
+In-Reply-To: <47E5F5D5.6050203@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mikael Pettersson <mikpe@it.uu.se>
-Cc: jeff@garzik.org, kurt@roeckx.be, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: Jeff Garzik <jeff@garzik.org>, jb.faq@gmx.de, IDE/ATA development list <linux-ide@vger.kernel.org>
 
-Mikael Pettersson wrote:
->  > Actually, this is common to many SATA controllers.  Lots of them raise
->  > PHY event or hotplug interrupt during COMRESET and they all plug PHY
->  > events from ->freeze.
-> 
-> Hmm, no I didn't know that. It's still undocumented, but perhaps
-> shouldn't be called a "quirk" if it's as common as you say.
+On Sun, 23 Mar 2008 15:16:53 +0900
+Tejun Heo <htejun@gmail.com> wrote:
 
-Yeap, it's common behavior.  "quirk" would be a bit unfair to promise. :-)
+> This is to fix bugzilla #10254.  QSI cdrom attached to pata_sis as
+> secondary master appears as phantom device for the slave.
+> Interestingly, instead of not setting DRQ after IDENTIFY which
+> triggers NODEV_HINT, it aborts both IDENTIFY and IDENTIFY PACKET whic=
+h
+> makes EH retry.
+>=20
+> Modify EH such that it assumes no device is attached if both flavors
+> of IDENTIFY are aborted by the device.  There really isn't much point
+> in retrying when the device actively aborts the commands.
+>=20
+> While at it, convert NODEV detection message to ata_dev_printk() to
+> help debugging obscure detection problems.
+>=20
+> This problem was reported by Jan B=C3=BCcken.
+>=20
+> Signed-off-by: Tejun Heo <htejun@gmail.com>
+> Cc: Jan B=C3=BCcken <jb.faq@gmx.de>
+> ---
+> Alan, does this look okay?
 
->  > > Although SATA hotplug status and control is per-port, it resides in
->  > > a single register shared by all ports. Therefore accesses to it must
->  > > be serialised: the controller's host->lock is used for that. The
->  > > interrupt handler is also adjusted so its hotplug register accesses
->  > > are inside the region protected by host->lock.
->  > 
->  > Hmmm... This is supposed to be handled by setting ap->lock appropriately
->  > and ap->lock already is initialized to &host->lock, so sticking with
->  > ap->lock is the right thing to do.
-> 
-> I'll check this. The code relies on the lock being shared by all ports,
-> so at a minimum it will need a comment stating that requirement.
-
-That's the default assumption all other LLDs depend on.  I agree it
-needs documentation.
-
->  > ->freeze() is called with ap->lock held, trying to lock host->lock
->  > inside pdc_sata_enable/disable_hotplug() will result in deadlock.  Have
->  > you tested w/ SMP configuration or spinlock debugging turned on?
-> 
-> No, I'll do that and fix whatever damage occurs.
-
-Thanks.
-
--- 
-tejun
+Acked-by: Alan Cox <alan@redhat.com>
