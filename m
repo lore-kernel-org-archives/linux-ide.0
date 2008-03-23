@@ -1,205 +1,99 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH 7/8] ide: remove obsoleted "hdx=" kernel parameters
-Date: Sat, 22 Mar 2008 23:07:08 +0100
-Message-ID: <20080322220708.17636.97707.sendpatchset@localhost.localdomain>
-References: <20080322220623.17636.44337.sendpatchset@localhost.localdomain>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: [PATCH 2.6.25-rc6] sata_promise: fix hardreset hotplug quirk
+Date: Sun, 23 Mar 2008 12:21:39 +0900
+Message-ID: <47E5CCC3.3000301@gmail.com>
+References: <200803221421.m2MEL1oY021558@harpo.it.uu.se>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.174]:4232 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758266AbYCVVwK (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 22 Mar 2008 17:52:10 -0400
-Received: by ug-out-1314.google.com with SMTP id z38so1853339ugc.16
-        for <linux-ide@vger.kernel.org>; Sat, 22 Mar 2008 14:52:09 -0700 (PDT)
-In-Reply-To: <20080322220623.17636.44337.sendpatchset@localhost.localdomain>
+Received: from wf-out-1314.google.com ([209.85.200.173]:53906 "EHLO
+	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753507AbYCWDVt (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 22 Mar 2008 23:21:49 -0400
+Received: by wf-out-1314.google.com with SMTP id 28so2351792wff.4
+        for <linux-ide@vger.kernel.org>; Sat, 22 Mar 2008 20:21:49 -0700 (PDT)
+In-Reply-To: <200803221421.m2MEL1oY021558@harpo.it.uu.se>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
-Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-kernel@vger.kernel.org
+To: Mikael Pettersson <mikpe@it.uu.se>
+Cc: jeff@garzik.org, kurt@roeckx.be, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-* Remove obsoleted "hdx=" kernel parameters.
+Hello, Mikael.
 
-* Remove no longer used stridx() and match_parm().
+Mikael Pettersson wrote:
+> There is an undocumented hardware quirk in Promise's SATA controllers,
+> where a SATA COMRESET causes the controller to signal hotplug events.
+> These unexpected interrupts confuse libata's error handler and cause
+> a sequence of failed reset attempts until EH finally gives up.
 
-Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
----
- Documentation/kernel-parameters.txt |    3 
- drivers/ide/ide.c                   |  139 ------------------------------------
- 2 files changed, 1 insertion(+), 141 deletions(-)
+Actually, this is common to many SATA controllers.  Lots of them raise
+PHY event or hotplug interrupt during COMRESET and they all plug PHY
+events from ->freeze.
 
-Index: b/Documentation/kernel-parameters.txt
-===================================================================
---- a/Documentation/kernel-parameters.txt
-+++ b/Documentation/kernel-parameters.txt
-@@ -708,9 +708,6 @@ and is between 256 and 4096 characters. 
- 	hd=		[EIDE] (E)IDE hard drive subsystem geometry
- 			Format: <cyl>,<head>,<sect>
- 
--	hd?=		[HW] (E)IDE subsystem
--	hd?lun=		See Documentation/ide/ide.txt.
--
- 	highmem=nn[KMG]	[KNL,BOOT] forces the highmem zone to have an exact
- 			size of <nn>. This works even on boxes that have no
- 			highmem otherwise. This also works to reduce highmem
-Index: b/drivers/ide/ide.c
-===================================================================
---- a/drivers/ide/ide.c
-+++ b/drivers/ide/ide.c
-@@ -725,89 +725,13 @@ set_val:
- EXPORT_SYMBOL(generic_ide_ioctl);
- 
- /*
-- * stridx() returns the offset of c within s,
-- * or -1 if c is '\0' or not found within s.
-- */
--static int __init stridx (const char *s, char c)
--{
--	char *i = strchr(s, c);
--	return (i && c) ? i - s : -1;
--}
--
--/*
-- * match_parm() does parsing for ide_setup():
-- *
-- * 1. the first char of s must be '='.
-- * 2. if the remainder matches one of the supplied keywords,
-- *     the index (1 based) of the keyword is negated and returned.
-- * 3. if the remainder is a series of no more than max_vals numbers
-- *     separated by commas, the numbers are saved in vals[] and a
-- *     count of how many were saved is returned.  Base10 is assumed,
-- *     and base16 is allowed when prefixed with "0x".
-- * 4. otherwise, zero is returned.
-- */
--static int __init match_parm (char *s, const char *keywords[], int vals[], int max_vals)
--{
--	static const char *decimal = "0123456789";
--	static const char *hex = "0123456789abcdef";
--	int i, n;
--
--	if (*s++ == '=') {
--		/*
--		 * Try matching against the supplied keywords,
--		 * and return -(index+1) if we match one
--		 */
--		if (keywords != NULL) {
--			for (i = 0; *keywords != NULL; ++i) {
--				if (!strcmp(s, *keywords++))
--					return -(i+1);
--			}
--		}
--		/*
--		 * Look for a series of no more than "max_vals"
--		 * numeric values separated by commas, in base10,
--		 * or base16 when prefixed with "0x".
--		 * Return a count of how many were found.
--		 */
--		for (n = 0; (i = stridx(decimal, *s)) >= 0;) {
--			vals[n] = i;
--			while ((i = stridx(decimal, *++s)) >= 0)
--				vals[n] = (vals[n] * 10) + i;
--			if (*s == 'x' && !vals[n]) {
--				while ((i = stridx(hex, *++s)) >= 0)
--					vals[n] = (vals[n] * 0x10) + i;
--			}
--			if (++n == max_vals)
--				break;
--			if (*s == ',' || *s == ';')
--				++s;
--		}
--		if (!*s)
--			return n;
--	}
--	return 0;	/* zero = nothing matched */
--}
--
--/*
-  * ide_setup() gets called VERY EARLY during initialization,
-- * to handle kernel "command line" strings beginning with "hdx=" or "ide".
-+ * to handle kernel "command line" strings beginning with "ide".
-  *
-  * Remember to update Documentation/ide/ide.txt if you change something here.
-  */
- static int __init ide_setup(char *s)
- {
--	ide_hwif_t *hwif;
--	ide_drive_t *drive;
--	unsigned int hw, unit;
--	int vals[3];
--	const char max_drive = 'a' + ((MAX_HWIFS * MAX_DRIVES) - 1);
--
--	if (strncmp(s,"hd",2) == 0 && s[2] == '=')	/* hd= is for hd.c   */
--		return 0;				/* driver and not us */
--
--	if (strncmp(s, "ide", 3) && strncmp(s, "hd", 2))
--		return 0;
--
- 	printk(KERN_INFO "ide_setup: %s", s);
- 	init_ide_data ();
- 
-@@ -845,67 +769,6 @@ static int __init ide_setup(char *s)
- 	}
- #endif /* CONFIG_BLK_DEV_IDEACPI */
- 
--	/*
--	 * Look for drive options:  "hdx="
--	 */
--	if (s[0] == 'h' && s[1] == 'd' && s[2] >= 'a' && s[2] <= max_drive) {
--		const char *hd_words[] = {
--			"none", "noprobe", "nowerr", "cdrom", "nodma",
--			"-6", "-7", "-8", "-9", "-10",
--			"noflush", "remap", "remap63", "scsi", NULL };
--		unit = s[2] - 'a';
--		hw   = unit / MAX_DRIVES;
--		unit = unit % MAX_DRIVES;
--		hwif = &ide_hwifs[hw];
--		drive = &hwif->drives[unit];
--		if (strncmp(s + 4, "ide-", 4) == 0) {
--			strlcpy(drive->driver_req, s + 4, sizeof(drive->driver_req));
--			goto obsolete_option;
--		}
--		switch (match_parm(&s[3], hd_words, vals, 3)) {
--			case -1: /* "none" */
--			case -2: /* "noprobe" */
--				drive->noprobe = 1;
--				goto obsolete_option;
--			case -3: /* "nowerr" */
--				drive->bad_wstat = BAD_R_STAT;
--				goto obsolete_option;
--			case -4: /* "cdrom" */
--				drive->present = 1;
--				drive->media = ide_cdrom;
--				/* an ATAPI device ignores DRDY */
--				drive->ready_stat = 0;
--				goto obsolete_option;
--			case -5: /* nodma */
--				drive->nodma = 1;
--				goto obsolete_option;
--			case -11: /* noflush */
--				drive->noflush = 1;
--				goto obsolete_option;
--			case -12: /* "remap" */
--				drive->remap_0_to_1 = 1;
--				goto obsolete_option;
--			case -13: /* "remap63" */
--				drive->sect0 = 63;
--				goto obsolete_option;
--			case -14: /* "scsi" */
--				drive->scsi = 1;
--				goto obsolete_option;
--			case 3: /* cyl,head,sect */
--				drive->media	= ide_disk;
--				drive->ready_stat = READY_STAT;
--				drive->cyl	= drive->bios_cyl  = vals[0];
--				drive->head	= drive->bios_head = vals[1];
--				drive->sect	= drive->bios_sect = vals[2];
--				drive->present	= 1;
--				drive->forced_geom = 1;
--				goto obsolete_option;
--			default:
--				goto bad_option;
--		}
--	}
--
--bad_option:
- 	printk(" -- BAD OPTION\n");
- 	return 1;
- obsolete_option:
+> Although SATA hotplug status and control is per-port, it resides in
+> a single register shared by all ports. Therefore accesses to it must
+> be serialised: the controller's host->lock is used for that. The
+> interrupt handler is also adjusted so its hotplug register accesses
+> are inside the region protected by host->lock.
+
+Hmmm... This is supposed to be handled by setting ap->lock appropriately
+and ap->lock already is initialized to &host->lock, so sticking with
+ap->lock is the right thing to do.
+
+> +static void pdc_sata_disable_hotplug(const struct ata_port *ap)
+> +{
+> +	struct ata_host *host = ap->host;
+> +	void __iomem *host_mmio = host->iomap[PDC_MMIO_BAR];
+> +	unsigned int hotplug_offset = pdc_sata_hotplug_offset(ap);
+> +	unsigned int ata_no = pdc_sata_ata_port_to_ata_no(ap);
+> +	u32 hotplug_status;
+> +
+> +	spin_lock(&host->lock);
+> +
+> +	hotplug_status = readl(host_mmio + hotplug_offset);
+> +	hotplug_status |= 0x11 << (ata_no + 16);
+> +	writel(hotplug_status, host_mmio + hotplug_offset);
+> +	readl(host_mmio + hotplug_offset); /* flush */
+> +
+> +	spin_unlock(&host->lock);
+> +}
+> +
+> +static void pdc_sata_enable_hotplug(const struct ata_port *ap)
+> +{
+> +	struct ata_host *host = ap->host;
+> +	void __iomem *host_mmio = host->iomap[PDC_MMIO_BAR];
+> +	unsigned int hotplug_offset = pdc_sata_hotplug_offset(ap);
+> +	unsigned int ata_no = pdc_sata_ata_port_to_ata_no(ap);
+> +	u32 hotplug_status;
+> +
+> +	spin_lock(&host->lock);
+> +
+> +	hotplug_status = readl(host_mmio + hotplug_offset);
+> +	hotplug_status |= 0x11 << ata_no;
+> +	hotplug_status &= ~(0x11 << (ata_no + 16));
+> +	writel(hotplug_status, host_mmio + hotplug_offset);
+> +	readl(host_mmio + hotplug_offset); /* flush */
+> +
+> +	spin_unlock(&host->lock);
+> +}
+> +
+>  static void pdc_freeze(struct ata_port *ap)
+>  {
+>  	void __iomem *mmio = ap->ioaddr.cmd_addr;
+> @@ -643,6 +717,12 @@ static void pdc_freeze(struct ata_port *
+>  	readl(mmio + PDC_CTLSTAT); /* flush */
+>  }
+>  
+> +static void pdc_sata_freeze(struct ata_port *ap)
+> +{
+> +	pdc_sata_disable_hotplug(ap);
+> +	pdc_freeze(ap);
+> +}
+
+->freeze() is called with ap->lock held, trying to lock host->lock
+inside pdc_sata_enable/disable_hotplug() will result in deadlock.  Have
+you tested w/ SMP configuration or spinlock debugging turned on?
+
+-- 
+tejun
