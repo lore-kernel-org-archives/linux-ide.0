@@ -1,241 +1,86 @@
-From: Mikael Pettersson <mikpe@it.uu.se>
-Subject: [PATCH 2.6.25-rc6] sata_promise: fix hardreset hotplug events, take 2
-Date: Sun, 23 Mar 2008 18:41:01 +0100
-Message-ID: <18406.38445.717175.664615@harpo.it.uu.se>
-References: <200803221421.m2MEL1oY021558@harpo.it.uu.se>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: [PATCH 1/3] gayle: add "doubler" parameter
+Date: Sun, 23 Mar 2008 21:27:30 +0100
+Message-ID: <200803232127.30323.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from aun.it.uu.se ([130.238.12.36]:55862 "EHLO aun.it.uu.se"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754027AbYCWRlQ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 23 Mar 2008 13:41:16 -0400
-In-Reply-To: <200803221421.m2MEL1oY021558@harpo.it.uu.se>
+Received: from fg-out-1718.google.com ([72.14.220.159]:33897 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756114AbYCWUQy (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 23 Mar 2008 16:16:54 -0400
+Received: by fg-out-1718.google.com with SMTP id l27so2596098fgb.17
+        for <linux-ide@vger.kernel.org>; Sun, 23 Mar 2008 13:16:53 -0700 (PDT)
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: jeff@garzik.org
-Cc: htejun@gmail.com, kurt@roeckx.be, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: linux-ide@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, Geert Uytterhoeven <geert@linux-m68k.org>
 
-A Promise SATA controller will signal hotplug events when a hard
-reset (COMRESET) is done on a port. These events aren't masked by
-the driver, and the unexpected interrupts will cause a sequence
-of failed reset attempts util libata's EH finally gives up.
+* Add "doubler" parameter to enable support for IDE doublers.
 
-This has not been a common problem so far, but the pending libata
-hardreset-by-default changes makes it a critical issue.
+* Obsolete "ide=doubler" kernel parameter.
 
-The solution is to disable hotplug events before a reset, and to
-reenable them afterwards. (Promise's driver does this too.)
-
-This patch adds SATA-specific versions of ->freeze() and ->thaw()
-that also disable and enable hotplug events. PATA ports continue
-to use the old versions of ->freeze() and ->thaw().
-
-Accesses to the hotplug register must be serialised via host->lock.
-We rely on ap->lock == &ap->host->lock and that libata takes this
-lock before ->freeze() and ->thaw(). Document this requirement.
-The interrupt handler is adjusted so its hotplug register accesses
-are inside the region protected by host->lock.
-
-Tested on various chips (SATA300TX4, SATA300TX2plus, SATAII150TX4,
-FastTrack TX4000) with various combinations of SATA and PATA disks,
-with and without the pending hardreset-by-default changes.
-
-Signed-off-by: Mikael Pettersson <mikpe@it.uu.se>
+Cc: Geert Uytterhoeven <geert@linux-m68k.org>
+Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 ---
-Changes since previous version:
-- rephrase the problem description to avoid calling it a HW quirk,
-  the behaviour is apparently standard
-- fix double locking bug found by Tejun, now tested with SMP kernel
-- document locking rules for the global hotplug register
-- inline the hotplug enable/disable code in freeze/thaw
+ Documentation/ide/ide.txt  |    9 +++------
+ drivers/ide/ide.c          |    2 +-
+ drivers/ide/legacy/gayle.c |    2 ++
+ 3 files changed, 6 insertions(+), 7 deletions(-)
 
- drivers/ata/sata_promise.c |  109 ++++++++++++++++++++++++++++++++++++---------
- 1 file changed, 88 insertions(+), 21 deletions(-)
-
-diff -rupN linux-2.6.25-rc6/drivers/ata/sata_promise.c linux-2.6.25-rc6.sata_promise-fix-hardreset-hotplug-events/drivers/ata/sata_promise.c
---- linux-2.6.25-rc6/drivers/ata/sata_promise.c	2008-03-22 12:53:32.000000000 +0100
-+++ linux-2.6.25-rc6.sata_promise-fix-hardreset-hotplug-events/drivers/ata/sata_promise.c	2008-03-23 15:20:27.000000000 +0100
-@@ -46,7 +46,7 @@
- #include "sata_promise.h"
+Index: b/Documentation/ide/ide.txt
+===================================================================
+--- a/Documentation/ide/ide.txt
++++ b/Documentation/ide/ide.txt
+@@ -181,12 +181,6 @@ driver using the "options=" keyword to i
+ Summary of ide driver parameters for kernel command line
+ --------------------------------------------------------
  
- #define DRV_NAME	"sata_promise"
--#define DRV_VERSION	"2.11"
-+#define DRV_VERSION	"2.12"
+- "ide=doubler"		: probe/support IDE doublers on Amiga
+-
+-There may be more options than shown -- use the source, Luke!
+-
+-Everything else is rejected with a "BAD OPTION" message.
+-
+ For legacy IDE VLB host drivers (ali14xx/dtc2278/ht6560b/qd65xx/umc8672)
+ you need to explicitly enable probing by using "probe" kernel parameter,
+ i.e. to enable probing for ALI M14xx chipsets (ali14xx host driver) use:
+@@ -203,6 +197,9 @@ are detected automatically).
+ You also need to use "probe" kernel parameter for ide-4drives driver
+ (support for IDE generic chipset with four drives on one port).
  
- enum {
- 	PDC_MAX_PORTS		= 4,
-@@ -145,7 +145,9 @@ static int pdc_old_sata_check_atapi_dma(
- static void pdc_irq_clear(struct ata_port *ap);
- static unsigned int pdc_qc_issue_prot(struct ata_queued_cmd *qc);
- static void pdc_freeze(struct ata_port *ap);
-+static void pdc_sata_freeze(struct ata_port *ap);
- static void pdc_thaw(struct ata_port *ap);
-+static void pdc_sata_thaw(struct ata_port *ap);
- static void pdc_pata_error_handler(struct ata_port *ap);
- static void pdc_sata_error_handler(struct ata_port *ap);
- static void pdc_post_internal_cmd(struct ata_queued_cmd *qc);
-@@ -180,8 +182,8 @@ static const struct ata_port_operations 
++To enable support for IDE doublers on Amiga use "doubler" kernel parameter
++for gayle host driver (i.e. "gayle.doubler" if the driver is built-in).
++
+ To force ignoring cable detection (this should be needed only if you're using
+ short 40-wires cable which cannot be automatically detected - if this is not
+ a case please report it as a bug instead) use "ignore_cable" kernel parameter:
+Index: b/drivers/ide/ide.c
+===================================================================
+--- a/drivers/ide/ide.c
++++ b/drivers/ide/ide.c
+@@ -717,7 +717,7 @@ static int __init ide_setup(char *s)
  
- 	.qc_prep		= pdc_qc_prep,
- 	.qc_issue		= pdc_qc_issue_prot,
--	.freeze			= pdc_freeze,
--	.thaw			= pdc_thaw,
-+	.freeze			= pdc_sata_freeze,
-+	.thaw			= pdc_sata_thaw,
- 	.error_handler		= pdc_sata_error_handler,
- 	.post_internal_cmd	= pdc_post_internal_cmd,
- 	.cable_detect		= pdc_sata_cable_detect,
-@@ -205,8 +207,8 @@ static const struct ata_port_operations 
- 
- 	.qc_prep		= pdc_qc_prep,
- 	.qc_issue		= pdc_qc_issue_prot,
--	.freeze			= pdc_freeze,
--	.thaw			= pdc_thaw,
-+	.freeze			= pdc_sata_freeze,
-+	.thaw			= pdc_sata_thaw,
- 	.error_handler		= pdc_sata_error_handler,
- 	.post_internal_cmd	= pdc_post_internal_cmd,
- 	.cable_detect		= pdc_sata_cable_detect,
-@@ -631,6 +633,41 @@ static void pdc_qc_prep(struct ata_queue
+ 		printk(" : Enabled support for IDE doublers\n");
+ 		ide_doubler = 1;
+-		return 1;
++		goto obsolete_option;
  	}
- }
+ #endif /* CONFIG_BLK_DEV_IDEDOUBLER */
  
-+static int pdc_is_sataii_tx4(unsigned long flags)
-+{
-+	const unsigned long mask = PDC_FLAG_GEN_II | PDC_FLAG_4_PORTS;
-+	return (flags & mask) == mask;
-+}
-+
-+static unsigned int pdc_port_no_to_ata_no(unsigned int port_no,
-+					  int is_sataii_tx4)
-+{
-+	static const unsigned char sataii_tx4_port_remap[4] = { 3, 1, 0, 2};
-+	return is_sataii_tx4 ? sataii_tx4_port_remap[port_no] : port_no;
-+}
-+
-+static unsigned int pdc_sata_nr_ports(const struct ata_port *ap)
-+{
-+	return (ap->flags & PDC_FLAG_4_PORTS) ? 4 : 2;
-+}
-+
-+static unsigned int pdc_sata_ata_port_to_ata_no(const struct ata_port *ap)
-+{
-+	const struct ata_host *host = ap->host;
-+	unsigned int nr_ports = pdc_sata_nr_ports(ap);
-+	unsigned int i;
-+
-+	for(i = 0; i < nr_ports && host->ports[i] != ap; ++i)
-+		;
-+	BUG_ON(i >= nr_ports);
-+	return pdc_port_no_to_ata_no(i, pdc_is_sataii_tx4(ap->flags));
-+}
-+
-+static unsigned int pdc_sata_hotplug_offset(const struct ata_port *ap)
-+{
-+	return (ap->flags & PDC_FLAG_GEN_II) ? PDC2_SATA_PLUG_CSR : PDC_SATA_PLUG_CSR;
-+}	
-+
- static void pdc_freeze(struct ata_port *ap)
- {
- 	void __iomem *mmio = ap->ioaddr.cmd_addr;
-@@ -643,6 +680,29 @@ static void pdc_freeze(struct ata_port *
- 	readl(mmio + PDC_CTLSTAT); /* flush */
- }
+Index: b/drivers/ide/legacy/gayle.c
+===================================================================
+--- a/drivers/ide/legacy/gayle.c
++++ b/drivers/ide/legacy/gayle.c
+@@ -63,6 +63,8 @@
+ #define GAYLE_HAS_CONTROL_REG	(!ide_doubler)
+ #define GAYLE_IDEREG_SIZE	(ide_doubler ? 0x1000 : 0x2000)
+ int ide_doubler = 0;	/* support IDE doublers? */
++module_param_named(doubler, ide_doubler, bool, 0);
++MODULE_PARM_DESC(doubler, "enable support for IDE doublers");
+ #endif /* CONFIG_BLK_DEV_IDEDOUBLER */
  
-+static void pdc_sata_freeze(struct ata_port *ap)
-+{
-+	struct ata_host *host = ap->host;
-+	void __iomem *host_mmio = host->iomap[PDC_MMIO_BAR];
-+	unsigned int hotplug_offset = pdc_sata_hotplug_offset(ap);
-+	unsigned int ata_no = pdc_sata_ata_port_to_ata_no(ap);
-+	u32 hotplug_status;
-+
-+	/* Disable hotplug events on this port.
-+	 *
-+	 * Locking:
-+	 * 1) hotplug register accesses must be serialised via host->lock
-+	 * 2) ap->lock == &ap->host->lock
-+	 * 3) ->freeze() and ->thaw() are called with ap->lock held
-+	 */
-+	hotplug_status = readl(host_mmio + hotplug_offset);
-+	hotplug_status |= 0x11 << (ata_no + 16);
-+	writel(hotplug_status, host_mmio + hotplug_offset);
-+	readl(host_mmio + hotplug_offset); /* flush */
-+
-+	pdc_freeze(ap);
-+}
-+
- static void pdc_thaw(struct ata_port *ap)
- {
- 	void __iomem *mmio = ap->ioaddr.cmd_addr;
-@@ -658,6 +718,26 @@ static void pdc_thaw(struct ata_port *ap
- 	readl(mmio + PDC_CTLSTAT); /* flush */
- }
  
-+static void pdc_sata_thaw(struct ata_port *ap)
-+{
-+	struct ata_host *host = ap->host;
-+	void __iomem *host_mmio = host->iomap[PDC_MMIO_BAR];
-+	unsigned int hotplug_offset = pdc_sata_hotplug_offset(ap);
-+	unsigned int ata_no = pdc_sata_ata_port_to_ata_no(ap);
-+	u32 hotplug_status;
-+
-+	pdc_thaw(ap);
-+
-+	/* Enable hotplug events on this port.
-+	 * Locking: see pdc_sata_freeze().
-+	 */
-+	hotplug_status = readl(host_mmio + hotplug_offset);
-+	hotplug_status |= 0x11 << ata_no;
-+	hotplug_status &= ~(0x11 << (ata_no + 16));
-+	writel(hotplug_status, host_mmio + hotplug_offset);
-+	readl(host_mmio + hotplug_offset); /* flush */
-+}
-+
- static void pdc_common_error_handler(struct ata_port *ap, ata_reset_fn_t hardreset)
- {
- 	if (!(ap->pflags & ATA_PFLAG_FROZEN))
-@@ -765,19 +845,6 @@ static void pdc_irq_clear(struct ata_por
- 	readl(mmio + PDC_INT_SEQMASK);
- }
- 
--static int pdc_is_sataii_tx4(unsigned long flags)
--{
--	const unsigned long mask = PDC_FLAG_GEN_II | PDC_FLAG_4_PORTS;
--	return (flags & mask) == mask;
--}
--
--static unsigned int pdc_port_no_to_ata_no(unsigned int port_no,
--					  int is_sataii_tx4)
--{
--	static const unsigned char sataii_tx4_port_remap[4] = { 3, 1, 0, 2};
--	return is_sataii_tx4 ? sataii_tx4_port_remap[port_no] : port_no;
--}
--
- static irqreturn_t pdc_interrupt(int irq, void *dev_instance)
- {
- 	struct ata_host *host = dev_instance;
-@@ -799,6 +866,8 @@ static irqreturn_t pdc_interrupt(int irq
- 
- 	mmio_base = host->iomap[PDC_MMIO_BAR];
- 
-+	spin_lock(&host->lock);
-+
- 	/* read and clear hotplug flags for all ports */
- 	if (host->ports[0]->flags & PDC_FLAG_GEN_II)
- 		hotplug_offset = PDC2_SATA_PLUG_CSR;
-@@ -814,11 +883,9 @@ static irqreturn_t pdc_interrupt(int irq
- 
- 	if (mask == 0xffffffff && hotplug_status == 0) {
- 		VPRINTK("QUICK EXIT 2\n");
--		return IRQ_NONE;
-+		goto done_irq;
- 	}
- 
--	spin_lock(&host->lock);
--
- 	mask &= 0xffff;		/* only 16 tags possible */
- 	if (mask == 0 && hotplug_status == 0) {
- 		VPRINTK("QUICK EXIT 3\n");
