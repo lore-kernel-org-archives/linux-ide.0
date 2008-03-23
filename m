@@ -1,99 +1,41 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCH 2.6.25-rc6] sata_promise: fix hardreset hotplug quirk
-Date: Sun, 23 Mar 2008 12:21:39 +0900
-Message-ID: <47E5CCC3.3000301@gmail.com>
-References: <200803221421.m2MEL1oY021558@harpo.it.uu.se>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+From: bugme-daemon@bugzilla.kernel.org
+Subject: [Bug 10086] 2.6.25-rc2 + smartd = hang
+Date: Sat, 22 Mar 2008 21:11:10 -0700 (PDT)
+Message-ID: <20080323041110.D9E1C11D108@picon.linux-foundation.org>
+References: <bug-10086-11633@http.bugzilla.kernel.org/>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wf-out-1314.google.com ([209.85.200.173]:53906 "EHLO
-	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753507AbYCWDVt (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 22 Mar 2008 23:21:49 -0400
-Received: by wf-out-1314.google.com with SMTP id 28so2351792wff.4
-        for <linux-ide@vger.kernel.org>; Sat, 22 Mar 2008 20:21:49 -0700 (PDT)
-In-Reply-To: <200803221421.m2MEL1oY021558@harpo.it.uu.se>
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:38186 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750727AbYCWELO (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 23 Mar 2008 00:11:14 -0400
+Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
+	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id m2N4BAJg007177
+	for <linux-ide@vger.kernel.org>; Sat, 22 Mar 2008 21:11:13 -0700
+In-Reply-To: <bug-10086-11633@http.bugzilla.kernel.org/>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mikael Pettersson <mikpe@it.uu.se>
-Cc: jeff@garzik.org, kurt@roeckx.be, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-Hello, Mikael.
+http://bugzilla.kernel.org/show_bug.cgi?id=10086
 
-Mikael Pettersson wrote:
-> There is an undocumented hardware quirk in Promise's SATA controllers,
-> where a SATA COMRESET causes the controller to signal hotplug events.
-> These unexpected interrupts confuse libata's error handler and cause
-> a sequence of failed reset attempts until EH finally gives up.
 
-Actually, this is common to many SATA controllers.  Lots of them raise
-PHY event or hotplug interrupt during COMRESET and they all plug PHY
-events from ->freeze.
 
-> Although SATA hotplug status and control is per-port, it resides in
-> a single register shared by all ports. Therefore accesses to it must
-> be serialised: the controller's host->lock is used for that. The
-> interrupt handler is also adjusted so its hotplug register accesses
-> are inside the region protected by host->lock.
 
-Hmmm... This is supposed to be handled by setting ap->lock appropriately
-and ap->lock already is initialized to &host->lock, so sticking with
-ap->lock is the right thing to do.
 
-> +static void pdc_sata_disable_hotplug(const struct ata_port *ap)
-> +{
-> +	struct ata_host *host = ap->host;
-> +	void __iomem *host_mmio = host->iomap[PDC_MMIO_BAR];
-> +	unsigned int hotplug_offset = pdc_sata_hotplug_offset(ap);
-> +	unsigned int ata_no = pdc_sata_ata_port_to_ata_no(ap);
-> +	u32 hotplug_status;
-> +
-> +	spin_lock(&host->lock);
-> +
-> +	hotplug_status = readl(host_mmio + hotplug_offset);
-> +	hotplug_status |= 0x11 << (ata_no + 16);
-> +	writel(hotplug_status, host_mmio + hotplug_offset);
-> +	readl(host_mmio + hotplug_offset); /* flush */
-> +
-> +	spin_unlock(&host->lock);
-> +}
-> +
-> +static void pdc_sata_enable_hotplug(const struct ata_port *ap)
-> +{
-> +	struct ata_host *host = ap->host;
-> +	void __iomem *host_mmio = host->iomap[PDC_MMIO_BAR];
-> +	unsigned int hotplug_offset = pdc_sata_hotplug_offset(ap);
-> +	unsigned int ata_no = pdc_sata_ata_port_to_ata_no(ap);
-> +	u32 hotplug_status;
-> +
-> +	spin_lock(&host->lock);
-> +
-> +	hotplug_status = readl(host_mmio + hotplug_offset);
-> +	hotplug_status |= 0x11 << ata_no;
-> +	hotplug_status &= ~(0x11 << (ata_no + 16));
-> +	writel(hotplug_status, host_mmio + hotplug_offset);
-> +	readl(host_mmio + hotplug_offset); /* flush */
-> +
-> +	spin_unlock(&host->lock);
-> +}
-> +
->  static void pdc_freeze(struct ata_port *ap)
->  {
->  	void __iomem *mmio = ap->ioaddr.cmd_addr;
-> @@ -643,6 +717,12 @@ static void pdc_freeze(struct ata_port *
->  	readl(mmio + PDC_CTLSTAT); /* flush */
->  }
->  
-> +static void pdc_sata_freeze(struct ata_port *ap)
-> +{
-> +	pdc_sata_disable_hotplug(ap);
-> +	pdc_freeze(ap);
-> +}
+------- Comment #9 from gordonfarquharson@gmail.com  2008-03-22 21:11 -------
+I added "#define DEBUG" to ide-taskfile.c, but there is no additional output.
+The debug messages do exist in ide_core.ko:
 
-->freeze() is called with ap->lock held, trying to lock host->lock
-inside pdc_sata_enable/disable_hotplug() will result in deadlock.  Have
-you tested w/ SMP configuration or spinlock debugging turned on?
+$ strings drivers/ide/ide-core.ko | grep feat
+%s: tf: feat 0x%02x nsect 0x%02x lbal 0x%02x lbam 0x%02x lbah 0x%02x dev 0x%02x
+cmd 0x%02x
+$ strings drivers/ide/ide-core.ko | grep hob
+%s: hob: nsect 0x%02x lbal 0x%02x lbam 0x%02x lbah 0x%02x
+
+It appears as if ide_tf_load() is never called.
+
 
 -- 
-tejun
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug, or are watching the assignee.
