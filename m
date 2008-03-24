@@ -1,34 +1,39 @@
-From: bugme-daemon@bugzilla.kernel.org
-Subject: [Bug 10086] 2.6.25-rc2 + smartd = hang
-Date: Mon, 24 Mar 2008 08:08:27 -0700 (PDT)
-Message-ID: <20080324150827.0D22211D10A@picon.linux-foundation.org>
-References: <bug-10086-11633@http.bugzilla.kernel.org/>
+From: "Gregor Jasny" <gjasny@googlemail.com>
+Subject: Burning CDs as user produces coasters (Plextor drive)
+Date: Mon, 24 Mar 2008 18:39:22 +0100
+Message-ID: <9d2cd630803241039m79c47754v6562404133a61274@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:40031 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1759332AbYCXPI7 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 24 Mar 2008 11:08:59 -0400
-Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
-	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id m2OF8RLr005487
-	for <linux-ide@vger.kernel.org>; Mon, 24 Mar 2008 08:08:28 -0700
-In-Reply-To: <bug-10086-11633@http.bugzilla.kernel.org/>
+Received: from ug-out-1314.google.com ([66.249.92.172]:36912 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760085AbYCXRja (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 24 Mar 2008 13:39:30 -0400
+Received: by ug-out-1314.google.com with SMTP id z38so2166475ugc.16
+        for <linux-ide@vger.kernel.org>; Mon, 24 Mar 2008 10:39:25 -0700 (PDT)
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org
 
-http://bugzilla.kernel.org/show_bug.cgi?id=10086
+Hi,
 
+since some time burning ISO CD images as user fails.
+Wodim stops during OPC and the kernel prints some messages:
 
+scsi: unknown opcode 0xe9
+scsi: unknown opcode 0xed
+scsi: unknown opcode 0xf5
+scsi: unknown opcode 0xeb
 
+If I burn as root, everything works fine. The used CD writer is a
+"PLEXTOR  DVDR   PX-712A   1.09". I've seen in the wodim/cdrecord
+sources that plextor drives are handled different from other drives.
 
+Do you know what the above listed commands are for?
+Maybe they could be included in blk_verify_command?
+If your'e not sure about the dangerousness maybe as a config option?
 
-------- Comment #15 from bzolnier@gmail.com  2008-03-24 08:08 -------
-Error messages should be sufficient to determine the "guilty" commit (or the
-commit changing error reporting - which should also give us more insight into
-the issue).
-
-
--- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug, or are watching the assignee.
+Thanks,
+Gregor
