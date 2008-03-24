@@ -1,195 +1,262 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH 3/5] ide: make ide_unregister() take 'ide_hwif_t *' as an argument
-Date: Mon, 24 Mar 2008 19:53:37 +0100
-Message-ID: <20080324185337.15320.23504.sendpatchset@localhost.localdomain>
+Subject: [PATCH 4/5] ide: fix hwif-s initialization
+Date: Mon, 24 Mar 2008 19:53:44 +0100
+Message-ID: <20080324185344.15320.99641.sendpatchset@localhost.localdomain>
 References: <20080324185324.15320.23248.sendpatchset@localhost.localdomain>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from fk-out-0910.google.com ([209.85.128.190]:42853 "EHLO
-	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1762397AbYCXSig (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 24 Mar 2008 14:38:36 -0400
-Received: by fk-out-0910.google.com with SMTP id 19so3711912fkr.5
-        for <linux-ide@vger.kernel.org>; Mon, 24 Mar 2008 11:38:34 -0700 (PDT)
+Received: from fg-out-1718.google.com ([72.14.220.155]:36760 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1762768AbYCXSim (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 24 Mar 2008 14:38:42 -0400
+Received: by fg-out-1718.google.com with SMTP id l27so3068164fgb.17
+        for <linux-ide@vger.kernel.org>; Mon, 24 Mar 2008 11:38:41 -0700 (PDT)
 In-Reply-To: <20080324185324.15320.23248.sendpatchset@localhost.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
 Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-kernel@vger.kernel.org
 
-* Make ide_unregister() take 'ide_hwif_t *hwif' instead of 'unsigned int
-  index' (hwif->index) as an argument and update all users accordingly.
+* Add ide_hwifs[] entry initialization to ide_find_port_slot()
+  and remove ide_init_port_data() calls from host drivers.
 
-While at it:
+* Unexport ide_init_port_data().
 
-* Remove unnecessary checks for hwif != NULL from ide-pnp.c::idepnp_remove()
-  and delkin_cb.c::delkin_cb_remove().
-
-* Remove needless hwif->chipset assignment from scc_pata.c::scc_remove().
+* Remove no longer needed init_ide_data().
 
 Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 ---
- drivers/ide/arm/rapide.c          |    2 +-
- drivers/ide/ide-pnp.c             |    5 +----
- drivers/ide/ide.c                 |   11 ++++-------
- drivers/ide/legacy/ide-cs.c       |    2 +-
- drivers/ide/legacy/ide_platform.c |    2 +-
- drivers/ide/mips/au1xxx-ide.c     |    2 +-
- drivers/ide/pci/delkin_cb.c       |    3 +--
- drivers/ide/pci/scc_pata.c        |    3 +--
- include/linux/ide.h               |    2 +-
- 9 files changed, 12 insertions(+), 20 deletions(-)
+ drivers/ide/arm/bast-ide.c     |    1 -
+ drivers/ide/arm/palm_bk3710.c  |    1 -
+ drivers/ide/cris/ide-cris.c    |    2 +-
+ drivers/ide/h8300/ide-h8300.c  |    1 -
+ drivers/ide/ide-pnp.c          |    1 -
+ drivers/ide/ide-probe.c        |   10 +++++++---
+ drivers/ide/ide.c              |   15 ---------------
+ drivers/ide/legacy/buddha.c    |    1 -
+ drivers/ide/legacy/falconide.c |    1 -
+ drivers/ide/legacy/gayle.c     |    1 -
+ drivers/ide/legacy/ide-cs.c    |    1 -
+ drivers/ide/legacy/macide.c    |    1 -
+ drivers/ide/legacy/q40ide.c    |    1 -
+ drivers/ide/pci/delkin_cb.c    |    1 -
+ 14 files changed, 8 insertions(+), 30 deletions(-)
 
-Index: b/drivers/ide/arm/rapide.c
+Index: b/drivers/ide/arm/bast-ide.c
 ===================================================================
---- a/drivers/ide/arm/rapide.c
-+++ b/drivers/ide/arm/rapide.c
-@@ -75,7 +75,7 @@ static void __devexit rapide_remove(stru
+--- a/drivers/ide/arm/bast-ide.c
++++ b/drivers/ide/arm/bast-ide.c
+@@ -49,7 +49,6 @@ static int __init bastide_register(unsig
  
- 	ecard_set_drvdata(ec, NULL);
+ 	i = hwif->index;
  
--	ide_unregister(hwif->index);
-+	ide_unregister(hwif);
+-	ide_init_port_data(hwif, i);
+ 	ide_init_port_hw(hwif, &hw);
+ 	hwif->port_ops = NULL;
  
- 	ecard_release_resources(ec);
- }
+Index: b/drivers/ide/arm/palm_bk3710.c
+===================================================================
+--- a/drivers/ide/arm/palm_bk3710.c
++++ b/drivers/ide/arm/palm_bk3710.c
+@@ -398,7 +398,6 @@ static int __devinit palm_bk3710_probe(s
+ 
+ 	i = hwif->index;
+ 
+-	ide_init_port_data(hwif, i);
+ 	ide_init_port_hw(hwif, &hw);
+ 
+ 	hwif->mmio = 1;
+Index: b/drivers/ide/cris/ide-cris.c
+===================================================================
+--- a/drivers/ide/cris/ide-cris.c
++++ b/drivers/ide/cris/ide-cris.c
+@@ -811,7 +811,7 @@ static int __init init_e100_ide(void)
+ 		hwif = ide_find_port();
+ 		if (hwif == NULL)
+ 			continue;
+-		ide_init_port_data(hwif, hwif->index);
++
+ 		ide_init_port_hw(hwif, &hw);
+ 
+ 		hwif->ata_input_data = &cris_ide_input_data;
+Index: b/drivers/ide/h8300/ide-h8300.c
+===================================================================
+--- a/drivers/ide/h8300/ide-h8300.c
++++ b/drivers/ide/h8300/ide-h8300.c
+@@ -105,7 +105,6 @@ static int __init h8300_ide_init(void)
+ 	}
+ 
+ 	index = hwif->index;
+-	ide_init_port_data(hwif, index);
+ 	ide_init_port_hw(hwif, &hw);
+ 	hwif_setup(hwif);
+ 	printk(KERN_INFO "ide%d: H8/300 generic IDE interface\n", index);
 Index: b/drivers/ide/ide-pnp.c
 ===================================================================
 --- a/drivers/ide/ide-pnp.c
 +++ b/drivers/ide/ide-pnp.c
-@@ -82,10 +82,7 @@ static void idepnp_remove(struct pnp_dev
- {
- 	ide_hwif_t *hwif = pnp_get_drvdata(dev);
+@@ -61,7 +61,6 @@ static int idepnp_probe(struct pnp_dev *
+ 		u8 index = hwif->index;
+ 		u8 idx[4] = { index, 0xff, 0xff, 0xff };
  
--	if (hwif)
--		ide_unregister(hwif->index);
--	else
--		printk(KERN_ERR "idepnp: Unable to remove device, please report.\n");
-+	ide_unregister(hwif);
+-		ide_init_port_data(hwif, index);
+ 		ide_init_port_hw(hwif, &hw);
  
- 	release_region(pnp_port_start(dev, 1), 1);
- 	release_region(pnp_port_start(dev, 0), 8);
+ 		printk(KERN_INFO "ide%d: generic PnP IDE interface\n", index);
+Index: b/drivers/ide/ide-probe.c
+===================================================================
+--- a/drivers/ide/ide-probe.c
++++ b/drivers/ide/ide-probe.c
+@@ -1478,22 +1478,26 @@ ide_hwif_t *ide_find_port_slot(const str
+ 		for (; i < MAX_HWIFS; i++) {
+ 			hwif = &ide_hwifs[i];
+ 			if (hwif->chipset == ide_unknown)
+-				return hwif;
++				goto out_found;
+ 		}
+ 	} else {
+ 		for (i = 2; i < MAX_HWIFS; i++) {
+ 			hwif = &ide_hwifs[i];
+ 			if (hwif->chipset == ide_unknown)
+-				return hwif;
++				goto out_found;
+ 		}
+ 		for (i = 0; i < 2 && i < MAX_HWIFS; i++) {
+ 			hwif = &ide_hwifs[i];
+ 			if (hwif->chipset == ide_unknown)
+-				return hwif;
++				goto out_found;
+ 		}
+ 	}
+ 
+ 	return NULL;
++
++out_found:
++	ide_init_port_data(hwif, i);
++	return hwif;
+ }
+ EXPORT_SYMBOL_GPL(ide_find_port_slot);
+ 
 Index: b/drivers/ide/ide.c
 ===================================================================
 --- a/drivers/ide/ide.c
 +++ b/drivers/ide/ide.c
-@@ -229,7 +229,7 @@ EXPORT_SYMBOL_GPL(ide_port_unregister_de
+@@ -121,7 +121,6 @@ void ide_init_port_data(ide_hwif_t *hwif
  
- /**
-  *	ide_unregister		-	free an IDE interface
-- *	@index: index of interface (will change soon to a pointer)
-+ *	@index: IDE interface
-  *
-  *	Perform the final unregister of an IDE interface. At the moment
-  *	we don't refcount interfaces so this will also get split up.
-@@ -249,19 +249,16 @@ EXPORT_SYMBOL_GPL(ide_port_unregister_de
-  *	This is raving bonkers.
-  */
+ 	ide_port_init_devices_data(hwif);
+ }
+-EXPORT_SYMBOL_GPL(ide_init_port_data);
  
--void ide_unregister(unsigned int index)
-+void ide_unregister(ide_hwif_t *hwif)
+ static void ide_port_init_devices_data(ide_hwif_t *hwif)
  {
--	ide_hwif_t *hwif, *g;
-+	ide_hwif_t *g;
- 	ide_hwgroup_t *hwgroup;
- 	int irq_count = 0;
+@@ -151,18 +150,6 @@ static void ide_port_init_devices_data(i
+ 	}
+ }
  
--	BUG_ON(index >= MAX_HWIFS);
+-static void __init init_ide_data (void)
+-{
+-	unsigned int index;
 -
- 	BUG_ON(in_interrupt());
- 	BUG_ON(irqs_disabled());
- 	mutex_lock(&ide_cfg_mtx);
- 	spin_lock_irq(&ide_lock);
--	hwif = &ide_hwifs[index];
- 	if (!hwif->present)
- 		goto abort;
- 	__ide_port_unregister_devices(hwif);
-@@ -302,7 +299,7 @@ void ide_unregister(unsigned int index)
- 		ide_release_dma_engine(hwif);
+-	/* Initialise all interface structures */
+-	for (index = 0; index < MAX_HWIFS; ++index) {
+-		ide_hwif_t *hwif = &ide_hwifs[index];
+-
+-		ide_init_port_data(hwif, index);
+-	}
+-}
+-
+ void ide_remove_port_from_hwgroup(ide_hwif_t *hwif)
+ {
+ 	ide_hwgroup_t *hwgroup = hwif->hwgroup;
+@@ -1024,8 +1011,6 @@ static int __init ide_init(void)
+ 	}
+ 	ide_port_class->dev_release = ide_port_class_release;
  
- 	/* restore hwif data to pristine status */
--	ide_init_port_data(hwif, index);
-+	ide_init_port_data(hwif, hwif->index);
+-	init_ide_data();
+-
+ 	proc_ide_create();
  
- abort:
- 	spin_unlock_irq(&ide_lock);
+ 	return 0;
+Index: b/drivers/ide/legacy/buddha.c
+===================================================================
+--- a/drivers/ide/legacy/buddha.c
++++ b/drivers/ide/legacy/buddha.c
+@@ -225,7 +225,6 @@ fail_base2:
+ 			if (hwif) {
+ 				u8 index = hwif->index;
+ 
+-				ide_init_port_data(hwif, index);
+ 				ide_init_port_hw(hwif, &hw);
+ 
+ 				idx[i] = index;
+Index: b/drivers/ide/legacy/falconide.c
+===================================================================
+--- a/drivers/ide/legacy/falconide.c
++++ b/drivers/ide/legacy/falconide.c
+@@ -87,7 +87,6 @@ static int __init falconide_init(void)
+ 		u8 index = hwif->index;
+ 		u8 idx[4] = { index, 0xff, 0xff, 0xff };
+ 
+-		ide_init_port_data(hwif, index);
+ 		ide_init_port_hw(hwif, &hw);
+ 
+ 		ide_get_lock(NULL, NULL);
+Index: b/drivers/ide/legacy/gayle.c
+===================================================================
+--- a/drivers/ide/legacy/gayle.c
++++ b/drivers/ide/legacy/gayle.c
+@@ -182,7 +182,6 @@ found:
+ 	if (hwif) {
+ 	    u8 index = hwif->index;
+ 
+-	    ide_init_port_data(hwif, index);
+ 	    ide_init_port_hw(hwif, &hw);
+ 
+ 	    idx[i] = index;
 Index: b/drivers/ide/legacy/ide-cs.c
 ===================================================================
 --- a/drivers/ide/legacy/ide-cs.c
 +++ b/drivers/ide/legacy/ide-cs.c
-@@ -386,7 +386,7 @@ void ide_release(struct pcmcia_device *l
-     if (info->ndev) {
- 	/* FIXME: if this fails we need to queue the cleanup somehow
- 	   -- need to investigate the required PCMCIA magic */
--	ide_unregister(hwif->index);
-+	ide_unregister(hwif);
-     }
-     info->ndev = 0;
+@@ -183,7 +183,6 @@ static ide_hwif_t *idecs_register(unsign
  
-Index: b/drivers/ide/legacy/ide_platform.c
+     i = hwif->index;
+ 
+-    ide_init_port_data(hwif, i);
+     ide_init_port_hw(hwif, &hw);
+     hwif->port_ops = &idecs_port_ops;
+ 
+Index: b/drivers/ide/legacy/macide.c
 ===================================================================
---- a/drivers/ide/legacy/ide_platform.c
-+++ b/drivers/ide/legacy/ide_platform.c
-@@ -120,7 +120,7 @@ static int __devexit plat_ide_remove(str
- {
- 	ide_hwif_t *hwif = pdev->dev.driver_data;
+--- a/drivers/ide/legacy/macide.c
++++ b/drivers/ide/legacy/macide.c
+@@ -125,7 +125,6 @@ static int __init macide_init(void)
+ 		u8 index = hwif->index;
+ 		u8 idx[4] = { index, 0xff, 0xff, 0xff };
  
--	ide_unregister(hwif->index);
-+	ide_unregister(hwif);
+-		ide_init_port_data(hwif, index);
+ 		ide_init_port_hw(hwif, &hw);
  
- 	return 0;
- }
-Index: b/drivers/ide/mips/au1xxx-ide.c
+ 		ide_device_add(idx, NULL);
+Index: b/drivers/ide/legacy/q40ide.c
 ===================================================================
---- a/drivers/ide/mips/au1xxx-ide.c
-+++ b/drivers/ide/mips/au1xxx-ide.c
-@@ -631,7 +631,7 @@ static int au_ide_remove(struct device *
- 	ide_hwif_t *hwif = dev_get_drvdata(dev);
- 	_auide_hwif *ahwif = &auide_hwif;
+--- a/drivers/ide/legacy/q40ide.c
++++ b/drivers/ide/legacy/q40ide.c
+@@ -139,7 +139,6 @@ static int __init q40ide_init(void)
  
--	ide_unregister(hwif->index);
-+	ide_unregister(hwif);
+ 	hwif = ide_find_port();
+ 	if (hwif) {
+-		ide_init_port_data(hwif, hwif->index);
+ 		ide_init_port_hw(hwif, &hw);
  
- 	iounmap((void *)ahwif->regbase);
- 
+ 		idx[i] = hwif->index;
 Index: b/drivers/ide/pci/delkin_cb.c
 ===================================================================
 --- a/drivers/ide/pci/delkin_cb.c
 +++ b/drivers/ide/pci/delkin_cb.c
-@@ -119,8 +119,7 @@ delkin_cb_remove (struct pci_dev *dev)
- {
- 	ide_hwif_t *hwif = pci_get_drvdata(dev);
+@@ -87,7 +87,6 @@ delkin_cb_probe (struct pci_dev *dev, co
  
--	if (hwif)
--		ide_unregister(hwif->index);
-+	ide_unregister(hwif);
+ 	i = hwif->index;
  
- 	pci_release_regions(dev);
- 	pci_disable_device(dev);
-Index: b/drivers/ide/pci/scc_pata.c
-===================================================================
---- a/drivers/ide/pci/scc_pata.c
-+++ b/drivers/ide/pci/scc_pata.c
-@@ -730,9 +730,8 @@ static void __devexit scc_remove(struct 
- 		hwif->dmatable_cpu = NULL;
- 	}
+-	ide_init_port_data(hwif, i);
+ 	ide_init_port_hw(hwif, &hw);
+ 	hwif->port_ops = &delkin_cb_port_ops;
  
--	ide_unregister(hwif->index);
-+	ide_unregister(hwif);
- 
--	hwif->chipset = ide_unknown;
- 	iounmap((void*)ports->dma);
- 	iounmap((void*)ports->ctl);
- 	pci_release_selected_regions(dev, (1 << 2) - 1);
-Index: b/include/linux/ide.h
-===================================================================
---- a/include/linux/ide.h
-+++ b/include/linux/ide.h
-@@ -1205,7 +1205,7 @@ static inline void ide_acpi_set_state(id
- #endif
- 
- void ide_remove_port_from_hwgroup(ide_hwif_t *);
--void ide_unregister(unsigned int);
-+void ide_unregister(ide_hwif_t *);
- 
- void ide_register_region(struct gendisk *);
- void ide_unregister_region(struct gendisk *);
