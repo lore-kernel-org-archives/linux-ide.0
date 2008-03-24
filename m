@@ -1,51 +1,58 @@
-From: bugme-daemon@bugzilla.kernel.org
-Subject: [Bug 10086] 2.6.25-rc2 + smartd = hang
-Date: Sun, 23 Mar 2008 15:11:16 -0700 (PDT)
-Message-ID: <20080323221116.E8261108039@picon.linux-foundation.org>
-References: <bug-10086-11633@http.bugzilla.kernel.org/>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: [PATCH 2.6.25-rc6] sata_promise: fix hardreset hotplug events,
+ take 2
+Date: Mon, 24 Mar 2008 11:19:32 +0900
+Message-ID: <47E70FB4.4010802@gmail.com>
+References: <200803221421.m2MEL1oY021558@harpo.it.uu.se> <18406.38445.717175.664615@harpo.it.uu.se>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:53943 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753386AbYCWWLT (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 23 Mar 2008 18:11:19 -0400
-Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
-	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id m2NMBH1A003717
-	for <linux-ide@vger.kernel.org>; Sun, 23 Mar 2008 15:11:18 -0700
-In-Reply-To: <bug-10086-11633@http.bugzilla.kernel.org/>
+Received: from wa-out-1112.google.com ([209.85.146.182]:49831 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754844AbYCXCTj (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 23 Mar 2008 22:19:39 -0400
+Received: by wa-out-1112.google.com with SMTP id v27so3163114wah.23
+        for <linux-ide@vger.kernel.org>; Sun, 23 Mar 2008 19:19:39 -0700 (PDT)
+In-Reply-To: <18406.38445.717175.664615@harpo.it.uu.se>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Mikael Pettersson <mikpe@it.uu.se>
+Cc: jeff@garzik.org, kurt@roeckx.be, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-http://bugzilla.kernel.org/show_bug.cgi?id=10086
+Mikael Pettersson wrote:
+> A Promise SATA controller will signal hotplug events when a hard
+> reset (COMRESET) is done on a port. These events aren't masked by
+> the driver, and the unexpected interrupts will cause a sequence
+> of failed reset attempts util libata's EH finally gives up.
+> 
+> This has not been a common problem so far, but the pending libata
+> hardreset-by-default changes makes it a critical issue.
+> 
+> The solution is to disable hotplug events before a reset, and to
+> reenable them afterwards. (Promise's driver does this too.)
+> 
+> This patch adds SATA-specific versions of ->freeze() and ->thaw()
+> that also disable and enable hotplug events. PATA ports continue
+> to use the old versions of ->freeze() and ->thaw().
+> 
+> Accesses to the hotplug register must be serialised via host->lock.
+> We rely on ap->lock == &ap->host->lock and that libata takes this
+> lock before ->freeze() and ->thaw(). Document this requirement.
+> The interrupt handler is adjusted so its hotplug register accesses
+> are inside the region protected by host->lock.
+> 
+> Tested on various chips (SATA300TX4, SATA300TX2plus, SATAII150TX4,
+> FastTrack TX4000) with various combinations of SATA and PATA disks,
+> with and without the pending hardreset-by-default changes.
+> 
+> Signed-off-by: Mikael Pettersson <mikpe@it.uu.se>
 
+Acked-by: Tejun Heo <htejun@gmail.com>
 
-
-
-
-------- Comment #13 from bzolnier@gmail.com  2008-03-23 15:11 -------
-Thanks, from looking at the log:
-
-| hda: tf: feat 0xd8 nsect 0x00 lbal 0x01 lbam 0x4f lbah 0xc2 dev 0x00 cmd 0xb0
-| hda: hob: nsect 0x00 lbal 0x00 lbam 0x00 lbah 0x00
-| hda: tf: feat 0x00 nsect 0x00 lbal 0x00 lbam 0x00 lbah 0x00 dev 0x00 cmd 0xb0
-| hda: hob: nsect 0x00 lbal 0x00 lbam 0x00 lbah 0x00
-
-We got SMART command (cmd 0xb0) with all other registers set to 0x00 and it is
-(theoretically) impossible to get it through HDIO_DRIVE_CMD (since
-ide_cmd_ioctl() always sets lbam to 0x4f and lbah to 0xc2).  Maybe it was
-passed through HDIO_DRIVE_TASK or HDIO_DRIVE_TASKFILE or we have the bug
-somewhere (N.B. the behavior of erroing it is correct if the user-space
-actually requested such command)...
-
-It seems to be a distinct problem from the one that was hit by Anders and later
-fixed by Linus.  Could you try git-bisecting it, please?
-
-| hda: task_no_data_intr: status=0x51 { DriveReady SeekComplete Error }
-| hda: task_no_data_intr: error=0x04 { DriveStatusError }
-| ide: failed opcode was: 0xb0
-
+Jeff, do you want to merge this first?  If so, I'll update the
+prefer-hardreset and cleanup-sht-ops patchsets; otherwise, I'll massage
+this patch a bit so that it fits on top of those two patchsets.
 
 -- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug, or are watching the assignee.
+tejun
