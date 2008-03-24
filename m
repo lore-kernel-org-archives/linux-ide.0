@@ -1,39 +1,118 @@
-From: "Gregor Jasny" <gjasny@googlemail.com>
-Subject: Burning CDs as user produces coasters (Plextor drive)
-Date: Mon, 24 Mar 2008 18:39:22 +0100
-Message-ID: <9d2cd630803241039m79c47754v6562404133a61274@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: [PATCH 2/5] ide: sanitize ide_unregister() usage
+Date: Mon, 24 Mar 2008 19:53:30 +0100
+Message-ID: <20080324185330.15320.19056.sendpatchset@localhost.localdomain>
+References: <20080324185324.15320.23248.sendpatchset@localhost.localdomain>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.172]:36912 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760085AbYCXRja (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 24 Mar 2008 13:39:30 -0400
-Received: by ug-out-1314.google.com with SMTP id z38so2166475ugc.16
-        for <linux-ide@vger.kernel.org>; Mon, 24 Mar 2008 10:39:25 -0700 (PDT)
-Content-Disposition: inline
+Received: from fg-out-1718.google.com ([72.14.220.154]:35228 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1761459AbYCXSi2 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 24 Mar 2008 14:38:28 -0400
+Received: by fg-out-1718.google.com with SMTP id l27so3068219fgb.17
+        for <linux-ide@vger.kernel.org>; Mon, 24 Mar 2008 11:38:27 -0700 (PDT)
+In-Reply-To: <20080324185324.15320.23248.sendpatchset@localhost.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
+Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-kernel@vger.kernel.org
 
-Hi,
+* Remove ide_unregister() call from ide_exit()
+  (host drivers take care of unregistering hwif-s themselves).
 
-since some time burning ISO CD images as user fails.
-Wodim stops during OPC and the kernel prints some messages:
+* Remove ide_unregister() call from probe methods of
+  bast-ide, palm_bk3710, ide-cs and delkin_cb host drivers
+  (ide_find_port() returns only free ide_hwifs[] entries).
 
-scsi: unknown opcode 0xe9
-scsi: unknown opcode 0xed
-scsi: unknown opcode 0xf5
-scsi: unknown opcode 0xeb
+Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+---
+ drivers/ide/arm/bast-ide.c    |    6 +-----
+ drivers/ide/arm/palm_bk3710.c |    6 +-----
+ drivers/ide/ide.c             |    5 -----
+ drivers/ide/legacy/ide-cs.c   |    6 +-----
+ drivers/ide/pci/delkin_cb.c   |    6 +-----
+ 5 files changed, 4 insertions(+), 25 deletions(-)
 
-If I burn as root, everything works fine. The used CD writer is a
-"PLEXTOR  DVDR   PX-712A   1.09". I've seen in the wodim/cdrecord
-sources that plextor drives are handled different from other drives.
-
-Do you know what the above listed commands are for?
-Maybe they could be included in blk_verify_command?
-If your'e not sure about the dangerousness maybe as a config option?
-
-Thanks,
-Gregor
+Index: b/drivers/ide/arm/bast-ide.c
+===================================================================
+--- a/drivers/ide/arm/bast-ide.c
++++ b/drivers/ide/arm/bast-ide.c
+@@ -49,11 +49,7 @@ static int __init bastide_register(unsig
+ 
+ 	i = hwif->index;
+ 
+-	if (hwif->present)
+-		ide_unregister(i);
+-	else
+-		ide_init_port_data(hwif, i);
+-
++	ide_init_port_data(hwif, i);
+ 	ide_init_port_hw(hwif, &hw);
+ 	hwif->port_ops = NULL;
+ 
+Index: b/drivers/ide/arm/palm_bk3710.c
+===================================================================
+--- a/drivers/ide/arm/palm_bk3710.c
++++ b/drivers/ide/arm/palm_bk3710.c
+@@ -398,11 +398,7 @@ static int __devinit palm_bk3710_probe(s
+ 
+ 	i = hwif->index;
+ 
+-	if (hwif->present)
+-		ide_unregister(i);
+-	else
+-		ide_init_port_data(hwif, i);
+-
++	ide_init_port_data(hwif, i);
+ 	ide_init_port_hw(hwif, &hw);
+ 
+ 	hwif->mmio = 1;
+Index: b/drivers/ide/ide.c
+===================================================================
+--- a/drivers/ide/ide.c
++++ b/drivers/ide/ide.c
+@@ -1041,11 +1041,6 @@ out_port_class:
+ 
+ static void __exit ide_exit(void)
+ {
+-	int index;
+-
+-	for (index = 0; index < MAX_HWIFS; ++index)
+-		ide_unregister(index);
+-
+ 	proc_ide_destroy();
+ 
+ 	class_destroy(ide_port_class);
+Index: b/drivers/ide/legacy/ide-cs.c
+===================================================================
+--- a/drivers/ide/legacy/ide-cs.c
++++ b/drivers/ide/legacy/ide-cs.c
+@@ -183,11 +183,7 @@ static ide_hwif_t *idecs_register(unsign
+ 
+     i = hwif->index;
+ 
+-    if (hwif->present)
+-	ide_unregister(i);
+-    else
+-	ide_init_port_data(hwif, i);
+-
++    ide_init_port_data(hwif, i);
+     ide_init_port_hw(hwif, &hw);
+     hwif->port_ops = &idecs_port_ops;
+ 
+Index: b/drivers/ide/pci/delkin_cb.c
+===================================================================
+--- a/drivers/ide/pci/delkin_cb.c
++++ b/drivers/ide/pci/delkin_cb.c
+@@ -87,11 +87,7 @@ delkin_cb_probe (struct pci_dev *dev, co
+ 
+ 	i = hwif->index;
+ 
+-	if (hwif->present)
+-		ide_unregister(i);
+-	else
+-		ide_init_port_data(hwif, i);
+-
++	ide_init_port_data(hwif, i);
+ 	ide_init_port_hw(hwif, &hw);
+ 	hwif->port_ops = &delkin_cb_port_ops;
+ 
