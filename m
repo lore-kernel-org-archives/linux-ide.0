@@ -1,36 +1,67 @@
-From: "H. Peter Anvin" <hpa@zytor.com>
-Subject: Re: What to do about the 2TB limit on HDIO_GETGEO ?
-Date: Tue, 25 Mar 2008 13:36:51 -0700
-Message-ID: <47E96263.9000808@zytor.com>
-References: <47E875AD.1000901@rtr.ca>	<47E87942.2020409@rtr.ca>	<47E88A13.70808@zytor.com>	<47E90019.3050006@rtr.ca>	<47E90458.7030801@zytor.com>	<47E9383F.3050908@rtr.ca>	<20080325192515.GA24234@suse.de> <20080325123454.4eba7644.randy.dunlap@oracle.com>
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+Subject: Re: [PATCH] ata-acpi: don't call _GTF for disabled drive
+Date: Tue, 25 Mar 2008 21:50:20 +0100
+Message-ID: <200803252150.20609.rjw@sisk.pl>
+References: <1206435045.23794.13.camel@sli10-desk.sh.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain;
+  charset="iso-8859-15"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from terminus.zytor.com ([198.137.202.10]:49061 "EHLO
-	terminus.zytor.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751120AbYCYUi0 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 25 Mar 2008 16:38:26 -0400
-In-Reply-To: <20080325123454.4eba7644.randy.dunlap@oracle.com>
+Received: from ogre.sisk.pl ([217.79.144.158]:34715 "EHLO ogre.sisk.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752621AbYCYUua (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 25 Mar 2008 16:50:30 -0400
+In-Reply-To: <1206435045.23794.13.camel@sli10-desk.sh.intel.com>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Randy Dunlap <randy.dunlap@oracle.com>
-Cc: Greg KH <gregkh@suse.de>, Mark Lord <lkml@rtr.ca>, Jens Axboe <axboe@kernel.dk>, Jeff Garzik <jgarzik@pobox.com>, Tejun Heo <htejun@gmail.com>, Linus Torvalds <torvalds@osdl.org>, Andrew Morton <akpm@linux-foundation.org>, Linux Kernel <linux-kernel@vger.kernel.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
+To: Shaohua Li <shaohua.li@intel.com>
+Cc: linux acpi <linux-acpi@vger.kernel.org>, linux-ide <linux-ide@vger.kernel.org>, Len Brown <lenb@kernel.org>, Jeff Garzik <jgarzik@pobox.com>
 
-Randy Dunlap wrote:
->>
->> Come on people, adding symlinks for device major:minor numbers in sysfs
->> to save a few 10s of lines of userspace code?  Can things get sillier?
->>
->> You can add a single udev rule to probably build these in a tree in /dev
->> if you really need such a thing...
->>
->> And what's wrong with your new ioctl recomendation?
+On Tuesday, 25 of March 2008, Shaohua Li wrote:
+> I got below log after a S3 resume in a ASUS A6VC laptop. The system has
+> only one IDE drive. It appears there is no reason calling _GTF for
+> disabled drive.
 > 
-> Ah, there's some sanity.  :)
+> ACPI Error (dsopcode-0483): Attempt to CreateField of length zero [20070126]
+> ACPI Error (psparse-0537): Method parse/execution failed [\_SB_.PCI0.IDE0.RATA] (Node df822a7c), AE_AML_OPERAND_VALUE
+> ACPI Error (psparse-0537): Method parse/execution failed [\_SB_.PCI0.IDE0.CHN1.DRV0._GTF] (Node df822bd0), AE_AML_OPERAND_VALUE
+> ata2.00: _GTF evaluation failed (AE 0x3006)
+> ACPI Error (dsopcode-0483): Attempt to CreateField of length zero [20070126]
+> ACPI Error (psparse-0537): Method parse/execution failed [\_SB_.PCI0.IDE0.RATA] (Node df822a7c), AE_AML_OPERAND_VALUE
+> ACPI Error (psparse-0537): Method parse/execution failed [\_SB_.PCI0.IDE0.CHN1.DRV1._GTF] (Node df822b94), AE_AML_OPERAND_VALUE
+> ata2.01: _GTF evaluation failed (AE 0x3006)
+> 
+> Signed-off-by: Shaohua Li <shaohua.li@intel.com>
+> 
+> diff --git a/drivers/ata/libata-acpi.c b/drivers/ata/libata-acpi.c
+> index bf98a56..7cbf023 100644
+> --- a/drivers/ata/libata-acpi.c
+> +++ b/drivers/ata/libata-acpi.c
+> @@ -839,7 +839,8 @@ void ata_acpi_on_resume(struct ata_port *ap)
+>  		 */
+>  		ata_link_for_each_dev(dev, &ap->link) {
+>  			ata_acpi_clear_gtf(dev);
+
+Hmm.  What is the effect of calling ata_acpi_clear_gtf() on a disabled device? 
+
+> -			if (ata_dev_get_GTF(dev, NULL) >= 0)
+> +			if (ata_dev_enabled(dev) &&
+> +			    ata_dev_get_GTF(dev, NULL) >= 0)
+>  				dev->flags |= ATA_DFLAG_ACPI_PENDING;
+>  		}
+>  	} else {
+> @@ -849,7 +850,8 @@ void ata_acpi_on_resume(struct ata_port *ap)
+>  		 */
+>  		ata_link_for_each_dev(dev, &ap->link) {
+>  			ata_acpi_clear_gtf(dev);
+> -			dev->flags |= ATA_DFLAG_ACPI_PENDING;
+> +			if (ata_dev_enabled(dev))
+> +				dev->flags |= ATA_DFLAG_ACPI_PENDING;
+>  		}
+>  	}
+>  }
 > 
 
-It's not so much an issue of a few tens of lines of user space code, but 
-rather the fact that something that should be O(1) is currently O(n).
-
-	-hpa
+Rafael
