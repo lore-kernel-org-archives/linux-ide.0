@@ -1,14 +1,14 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH 15/27] libata: move generic hardreset code from sata_sff_hardreset() to sata_link_hardreset()
-Date: Tue, 25 Mar 2008 22:16:53 +0900
-Message-ID: <12064510273824-git-send-email-htejun@gmail.com>
+Subject: [PATCH 06/27] libata: kill ata_chk_status()
+Date: Tue, 25 Mar 2008 22:16:44 +0900
+Message-ID: <12064510261000-git-send-email-htejun@gmail.com>
 References: <1206451025926-git-send-email-htejun@gmail.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wr-out-0506.google.com ([64.233.184.236]:16486 "EHLO
-	wr-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754823AbYCYNRj (ORCPT
+Received: from rv-out-0910.google.com ([209.85.198.191]:60507 "EHLO
+	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754794AbYCYNRj (ORCPT
 	<rfc822;linux-ide@vger.kernel.org>); Tue, 25 Mar 2008 09:17:39 -0400
-Received: by wr-out-0506.google.com with SMTP id c48so2257952wra.1
+Received: by rv-out-0910.google.com with SMTP id k20so1755484rvb.1
         for <linux-ide@vger.kernel.org>; Tue, 25 Mar 2008 06:17:39 -0700 (PDT)
 In-Reply-To: <1206451025926-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
@@ -16,358 +16,286 @@ List-Id: linux-ide@vger.kernel.org
 To: jeff@garzik.org, linux-ide@vger.kernel.org, liml@rtr.ca, alan@lxorguk.ukuu.org.uk, James.Bottomley@HansenPartnership.com, brking@us.ibm.com, ashish.kalra@freescale.com, leoli@freescale.com
 Cc: Tejun Heo <htejun@gmail.com>
 
-sata_sff_hardreset() contains link readiness wait logic which isn't
-SFF specific.  Move that part into sata_link_hardreset(), which now
-takes two more parameters - @online and @check_ready.  Both are
-optional.  The former is out parameter for link onlineness after
-reset.  The latter is used to wait for link readiness after hardreset.
-
-Users of sata_link_hardreset() is updated to use new funtionality and
-ahci_hardreset() is updated to use sata_link_hardreset() instead of
-sata_sff_hardreset().  This doesn't really cause any behavior change.
+ata_chk_status() just calls ops->check_status and it only adds
+confusion with other status functions.  Kill it.
 
 Signed-off-by: Tejun Heo <htejun@gmail.com>
 ---
- drivers/ata/ahci.c        |   35 ++++++++++++++++++-------------
- drivers/ata/ata_piix.c    |    2 +-
- drivers/ata/libata-core.c |   50 ++++++++++++++++++++++++++++++++++++++++++++-
- drivers/ata/libata-pmp.c  |    7 +++--
- drivers/ata/libata-sff.c  |   49 ++++++++------------------------------------
- include/linux/libata.h    |   10 ++++++++-
- 6 files changed, 92 insertions(+), 61 deletions(-)
+ drivers/ata/libata-sff.c    |   22 +++++++++++-----------
+ drivers/ata/pata_bf54x.c    |    2 +-
+ drivers/ata/pata_scc.c      |    2 +-
+ drivers/ata/sata_inic162x.c |   10 +++++-----
+ drivers/ata/sata_sil.c      |    6 +++---
+ drivers/ata/sata_via.c      |    2 +-
+ drivers/ata/sata_vsc.c      |    2 +-
+ include/linux/libata.h      |    7 +------
+ 8 files changed, 24 insertions(+), 29 deletions(-)
 
-diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
-index 7e251a2..0f553aa 100644
---- a/drivers/ata/ahci.c
-+++ b/drivers/ata/ahci.c
-@@ -1343,10 +1343,12 @@ static int ahci_softreset(struct ata_link *link, unsigned int *class,
- static int ahci_hardreset(struct ata_link *link, unsigned int *class,
- 			  unsigned long deadline)
- {
-+	const unsigned long *timing = sata_ehc_deb_timing(&link->eh_context);
- 	struct ata_port *ap = link->ap;
- 	struct ahci_port_priv *pp = ap->private_data;
- 	u8 *d2h_fis = pp->rx_fis + RX_FIS_D2H_REG;
- 	struct ata_taskfile tf;
-+	bool online;
- 	int rc;
- 
- 	DPRINTK("ENTER\n");
-@@ -1358,14 +1360,14 @@ static int ahci_hardreset(struct ata_link *link, unsigned int *class,
- 	tf.command = 0x80;
- 	ata_tf_to_fis(&tf, 0, 0, d2h_fis);
- 
--	rc = sata_sff_hardreset(link, class, deadline);
-+	rc = sata_link_hardreset(link, timing, deadline, &online,
-+				 ahci_check_ready);
- 
- 	ahci_start_engine(ap);
- 
--	if (rc == 0 && ata_link_online(link))
-+	*class = ATA_DEV_NONE;
-+	if (online)
- 		*class = ahci_dev_classify(ap);
--	if (rc != -EAGAIN && *class == ATA_DEV_UNKNOWN)
--		*class = ATA_DEV_NONE;
- 
- 	DPRINTK("EXIT, rc=%d, class=%u\n", rc, *class);
- 	return rc;
-@@ -1376,6 +1378,7 @@ static int ahci_vt8251_hardreset(struct ata_link *link, unsigned int *class,
- {
- 	struct ata_port *ap = link->ap;
- 	u32 serror;
-+	bool online;
- 	int rc;
- 
- 	DPRINTK("ENTER\n");
-@@ -1383,7 +1386,7 @@ static int ahci_vt8251_hardreset(struct ata_link *link, unsigned int *class,
- 	ahci_stop_engine(ap);
- 
- 	rc = sata_link_hardreset(link, sata_ehc_deb_timing(&link->eh_context),
--				 deadline);
-+				 deadline, &online, NULL);
- 
- 	/* vt8251 needs SError cleared for the port to operate */
- 	ahci_scr_read(ap, SCR_ERROR, &serror);
-@@ -1396,7 +1399,8 @@ static int ahci_vt8251_hardreset(struct ata_link *link, unsigned int *class,
- 	/* vt8251 doesn't clear BSY on signature FIS reception,
- 	 * request follow-up softreset.
- 	 */
--	return rc ?: -EAGAIN;
-+	*class = ATA_DEV_NONE;
-+	return online ? -EAGAIN : rc;
- }
- 
- static int ahci_p5wdh_hardreset(struct ata_link *link, unsigned int *class,
-@@ -1406,6 +1410,7 @@ static int ahci_p5wdh_hardreset(struct ata_link *link, unsigned int *class,
- 	struct ahci_port_priv *pp = ap->private_data;
- 	u8 *d2h_fis = pp->rx_fis + RX_FIS_D2H_REG;
- 	struct ata_taskfile tf;
-+	bool online;
- 	int rc;
- 
- 	ahci_stop_engine(ap);
-@@ -1416,13 +1421,10 @@ static int ahci_p5wdh_hardreset(struct ata_link *link, unsigned int *class,
- 	ata_tf_to_fis(&tf, 0, 0, d2h_fis);
- 
- 	rc = sata_link_hardreset(link, sata_ehc_deb_timing(&link->eh_context),
--				 deadline);
-+				 deadline, &online, NULL);
- 
- 	ahci_start_engine(ap);
- 
--	if (rc || ata_link_offline(link))
--		return rc;
--
- 	/* The pseudo configuration device on SIMG4726 attached to
- 	 * ASUS P5W-DH Deluxe doesn't send signature FIS after
- 	 * hardreset if no device is attached to the first downstream
-@@ -1436,11 +1438,14 @@ static int ahci_p5wdh_hardreset(struct ata_link *link, unsigned int *class,
- 	 * have to be reset again.  For most cases, this should
- 	 * suffice while making probing snappish enough.
- 	 */
--	rc = ata_wait_after_reset(link, jiffies + 2 * HZ, ahci_check_ready);
--	if (rc)
--		ahci_kick_engine(ap, 0);
--
--	return 0;
-+	if (online) {
-+		rc = ata_wait_after_reset(link, jiffies + 2 * HZ,
-+					  ahci_check_ready);
-+		if (rc)
-+			ahci_kick_engine(ap, 0);
-+	}
-+	*class = ATA_DEV_NONE;
-+	return rc;
- }
- 
- static void ahci_postreset(struct ata_link *link, unsigned int *class)
-diff --git a/drivers/ata/ata_piix.c b/drivers/ata/ata_piix.c
-index aa66848..16cb5b2 100644
---- a/drivers/ata/ata_piix.c
-+++ b/drivers/ata/ata_piix.c
-@@ -1036,7 +1036,7 @@ static int piix_sidpr_hardreset(struct ata_link *link, unsigned int *class,
- 	int rc;
- 
- 	/* do hardreset */
--	rc = sata_link_hardreset(link, timing, deadline);
-+	rc = sata_link_hardreset(link, timing, deadline, NULL, NULL);
- 	if (rc) {
- 		ata_link_printk(link, KERN_ERR,
- 				"COMRESET failed (errno=%d)\n", rc);
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index 9064b3e..6982b91 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -3519,8 +3519,18 @@ int ata_std_prereset(struct ata_link *link, unsigned long deadline)
-  *	@link: link to reset
-  *	@timing: timing parameters { interval, duratinon, timeout } in msec
-  *	@deadline: deadline jiffies for the operation
-+ *	@online: optional out parameter indicating link onlineness
-+ *	@check_ready: optional callback to check link readiness
-  *
-  *	SATA phy-reset @link using DET bits of SControl register.
-+ *	After hardreset, link readiness is waited upon using
-+ *	ata_wait_ready() if @check_ready is specified.  LLDs are
-+ *	allowed to not specify @check_ready and wait itself after this
-+ *	function returns.  Device classification is LLD's
-+ *	responsibility.
-+ *
-+ *	*@online is set to one iff reset succeeded and @link is online
-+ *	after reset.
-  *
-  *	LOCKING:
-  *	Kernel thread context (may sleep)
-@@ -3529,13 +3539,17 @@ int ata_std_prereset(struct ata_link *link, unsigned long deadline)
-  *	0 on success, -errno otherwise.
-  */
- int sata_link_hardreset(struct ata_link *link, const unsigned long *timing,
--			unsigned long deadline)
-+			unsigned long deadline,
-+			bool *online, int (*check_ready)(struct ata_link *))
- {
- 	u32 scontrol;
- 	int rc;
- 
- 	DPRINTK("ENTER\n");
- 
-+	if (online)
-+		*online = false;
-+
- 	if (sata_set_spd_needed(link)) {
- 		/* SATA spec says nothing about how to reconfigure
- 		 * spd.  To be on the safe side, turn off phy during
-@@ -3569,7 +3583,41 @@ int sata_link_hardreset(struct ata_link *link, const unsigned long *timing,
- 
- 	/* bring link back */
- 	rc = sata_link_resume(link, timing, deadline);
-+	if (rc)
-+		goto out;
-+	/* if link is offline nothing more to do */
-+	if (ata_link_offline(link))
-+		goto out;
-+
-+	/* Link is online.  From this point, -ENODEV too is an error. */
-+	if (online)
-+		*online = true;
-+
-+	if ((link->ap->flags & ATA_FLAG_PMP) && ata_is_host_link(link)) {
-+		/* If PMP is supported, we have to do follow-up SRST.
-+		 * Some PMPs don't send D2H Reg FIS after hardreset if
-+		 * the first port is empty.  Wait only for
-+		 * ATA_TMOUT_PMP_SRST_WAIT.
-+		 */
-+		if (check_ready) {
-+			unsigned long pmp_deadline;
-+
-+			pmp_deadline = jiffies + ATA_TMOUT_PMP_SRST_WAIT;
-+			if (time_after(pmp_deadline, deadline))
-+				pmp_deadline = deadline;
-+			ata_wait_ready(link, pmp_deadline, check_ready);
-+		}
-+		rc = -EAGAIN;
-+		goto out;
-+	}
-+
-+	rc = 0;
-+	if (check_ready)
-+		rc = ata_wait_ready(link, deadline, check_ready);
-  out:
-+	if (rc && rc != -EAGAIN)
-+		ata_link_printk(link, KERN_ERR,
-+				"COMRESET failed (errno=%d)\n", rc);
- 	DPRINTK("EXIT, rc=%d\n", rc);
- 	return rc;
- }
-diff --git a/drivers/ata/libata-pmp.c b/drivers/ata/libata-pmp.c
-index a7cb149..7f1a87f 100644
---- a/drivers/ata/libata-pmp.c
-+++ b/drivers/ata/libata-pmp.c
-@@ -239,13 +239,14 @@ int sata_pmp_std_hardreset(struct ata_link *link, unsigned int *class,
- 			   unsigned long deadline)
- {
- 	const unsigned long *timing = sata_ehc_deb_timing(&link->eh_context);
-+	bool online;
- 	u32 tmp;
- 	int rc;
- 
- 	DPRINTK("ENTER\n");
- 
- 	/* do hardreset */
--	rc = sata_link_hardreset(link, timing, deadline);
-+	rc = sata_link_hardreset(link, timing, deadline, &online, NULL);
- 	if (rc) {
- 		ata_link_printk(link, KERN_ERR,
- 				"COMRESET failed (errno=%d)\n", rc);
-@@ -261,7 +262,7 @@ int sata_pmp_std_hardreset(struct ata_link *link, unsigned int *class,
- 	}
- 
- 	/* if device is present, follow up with srst to wait for !BSY */
--	if (ata_link_online(link))
-+	if (online)
- 		rc = -EAGAIN;
-  out:
- 	/* if SCR isn't accessible, we need to reset the PMP */
-@@ -916,7 +917,7 @@ static int sata_pmp_eh_handle_disabled_links(struct ata_port *ap)
- 		 * SError.N working.
- 		 */
- 		sata_link_hardreset(link, sata_deb_timing_normal,
--				    jiffies + ATA_TMOUT_INTERNAL_QUICK);
-+				jiffies + ATA_TMOUT_INTERNAL_QUICK, NULL, NULL);
- 
- 		/* unconditionally clear SError.N */
- 		rc = sata_scr_write(link, SCR_ERROR, SERR_PHYRDY_CHG);
 diff --git a/drivers/ata/libata-sff.c b/drivers/ata/libata-sff.c
-index 78912c5..0b97e84 100644
+index add54f5..5208ca2 100644
 --- a/drivers/ata/libata-sff.c
 +++ b/drivers/ata/libata-sff.c
-@@ -1921,50 +1921,19 @@ int ata_sff_softreset(struct ata_link *link, unsigned int *classes,
- int sata_sff_hardreset(struct ata_link *link, unsigned int *class,
- 		       unsigned long deadline)
+@@ -290,7 +290,7 @@ int ata_busy_sleep(struct ata_port *ap,
+ 	while (status != 0xff && (status & ATA_BUSY) &&
+ 	       time_before(jiffies, timeout)) {
+ 		msleep(50);
+-		status = ata_chk_status(ap);
++		status = ap->ops->check_status(ap);
+ 	}
+ 
+ 	if (status == 0xff)
+@@ -326,7 +326,7 @@ int ata_wait_ready(struct ata_port *ap, unsigned long deadline)
+ 	int warned = 0;
+ 
+ 	while (1) {
+-		u8 status = ata_chk_status(ap);
++		u8 status = ap->ops->check_status(ap);
+ 		unsigned long now = jiffies;
+ 
+ 		if (!(status & ATA_BUSY))
+@@ -1486,7 +1486,7 @@ inline unsigned int ata_host_intr(struct ata_port *ap,
+ 		goto idle_irq;
+ 
+ 	/* check main status, clearing INTRQ */
+-	status = ata_chk_status(ap);
++	status = ap->ops->check_status(ap);
+ 	if (unlikely(status & ATA_BUSY))
+ 		goto idle_irq;
+ 
+@@ -1506,7 +1506,7 @@ idle_irq:
+ 
+ #ifdef ATA_IRQ_TRAP
+ 	if ((ap->stats.idle_irq % 1000) == 0) {
+-		ata_chk_status(ap);
++		ap->ops->check_status(ap);
+ 		ap->ops->irq_clear(ap);
+ 		ata_port_printk(ap, KERN_WARNING, "irq trap\n");
+ 		return 1;
+@@ -1582,7 +1582,7 @@ void ata_bmdma_freeze(struct ata_port *ap)
+ 	 * ATA_NIEN manipulation.  Also, many controllers fail to mask
+ 	 * previously pending IRQ on ATA_NIEN assertion.  Clear it.
+ 	 */
+-	ata_chk_status(ap);
++	ap->ops->check_status(ap);
+ 
+ 	ap->ops->irq_clear(ap);
+ }
+@@ -1599,7 +1599,7 @@ void ata_bmdma_freeze(struct ata_port *ap)
+ void ata_bmdma_thaw(struct ata_port *ap)
  {
--	struct ata_port *ap = link->ap;
--	const unsigned long *timing = sata_ehc_deb_timing(&link->eh_context);
-+	struct ata_eh_context *ehc = &link->eh_context;
-+	const unsigned long *timing = sata_ehc_deb_timing(ehc);
-+	bool online;
- 	int rc;
+ 	/* clear & re-enable interrupts */
+-	ata_chk_status(ap);
++	ap->ops->check_status(ap);
+ 	ap->ops->irq_clear(ap);
+ 	ap->ops->irq_on(ap);
+ }
+@@ -1709,7 +1709,7 @@ unsigned int ata_dev_try_classify(struct ata_device *dev, int present,
+ 			class = ATA_DEV_ATA;
+ 		else
+ 			class = ATA_DEV_NONE;
+-	} else if ((class == ATA_DEV_ATA) && (ata_chk_status(ap) == 0))
++	} else if ((class == ATA_DEV_ATA) && (ap->ops->check_status(ap) == 0))
+ 		class = ATA_DEV_NONE;
  
--	DPRINTK("ENTER\n");
--
--	/* do hardreset */
--	rc = sata_link_hardreset(link, timing, deadline);
--	if (rc) {
--		ata_link_printk(link, KERN_ERR,
--				"COMRESET failed (errno=%d)\n", rc);
--		return rc;
--	}
--
--	/* TODO: phy layer with polling, timeouts, etc. */
--	if (ata_link_offline(link)) {
--		*class = ATA_DEV_NONE;
--		DPRINTK("EXIT, link offline\n");
--		return 0;
--	}
--
--	/* If PMP is supported, we have to do follow-up SRST.  Note
--	 * that some PMPs don't send D2H Reg FIS after hardreset at
--	 * all if the first port is empty.  Wait for it just for a
--	 * second and request follow-up SRST.
--	 */
--	if (ap->flags & ATA_FLAG_PMP) {
--		ata_sff_wait_after_reset(link, 1, jiffies + HZ);
--		return -EAGAIN;
--	}
--
--	/* wait for the link to become online */
--	rc = ata_sff_wait_after_reset(link, 1, deadline);
--	/* link occupied, -ENODEV too is an error */
--	if (rc) {
--		ata_link_printk(link, KERN_ERR,
--				"COMRESET failed (errno=%d)\n", rc);
--		return rc;
--	}
--
--	*class = ata_sff_dev_classify(link->device, 1, NULL);
-+	rc = sata_link_hardreset(link, timing, deadline, &online,
-+				 ata_sff_check_ready);
-+	*class = ATA_DEV_NONE;
-+	if (online)
-+		*class = ata_sff_dev_classify(link->device, 1, NULL);
+ 	return class;
+@@ -1820,7 +1820,7 @@ void ata_wait_after_reset(struct ata_port *ap, unsigned long deadline)
+ 	 */
+ 	if (ap->flags & ATA_FLAG_SATA) {
+ 		while (1) {
+-			u8 status = ata_chk_status(ap);
++			u8 status = ap->ops->check_status(ap);
  
- 	DPRINTK("EXIT, class=%u\n", *class);
--	return 0;
-+	return rc;
+ 			if (status != 0xff || time_after(jiffies, deadline))
+ 				return;
+@@ -1851,7 +1851,7 @@ static int ata_bus_softreset(struct ata_port *ap, unsigned int devmask,
+ 	 * the bus shows 0xFF because the odd clown forgets the D7
+ 	 * pulldown resistor.
+ 	 */
+-	if (ata_chk_status(ap) == 0xFF)
++	if (ap->ops->check_status(ap) == 0xFF)
+ 		return -ENODEV;
+ 
+ 	return ata_bus_post_reset(ap, devmask, deadline);
+@@ -2035,7 +2035,7 @@ void ata_bmdma_error_handler(struct ata_port *ap)
+ 	}
+ 
+ 	ata_altstatus(ap);
+-	ata_chk_status(ap);
++	ap->ops->check_status(ap);
+ 	ap->ops->irq_clear(ap);
+ 
+ 	spin_unlock_irqrestore(ap->lock, flags);
+@@ -2726,7 +2726,6 @@ EXPORT_SYMBOL_GPL(ata_sff_port_ops);
+ EXPORT_SYMBOL_GPL(ata_bmdma_port_ops);
+ EXPORT_SYMBOL_GPL(ata_qc_prep);
+ EXPORT_SYMBOL_GPL(ata_dumb_qc_prep);
+-EXPORT_SYMBOL_GPL(ata_pci_default_filter);
+ EXPORT_SYMBOL_GPL(ata_std_dev_select);
+ EXPORT_SYMBOL_GPL(ata_check_status);
+ EXPORT_SYMBOL_GPL(ata_altstatus);
+@@ -2755,6 +2754,7 @@ EXPORT_SYMBOL_GPL(ata_bmdma_error_handler);
+ EXPORT_SYMBOL_GPL(ata_bmdma_post_internal_cmd);
+ EXPORT_SYMBOL_GPL(ata_sff_port_start);
+ EXPORT_SYMBOL_GPL(ata_std_ports);
++EXPORT_SYMBOL_GPL(ata_pci_default_filter);
+ EXPORT_SYMBOL_GPL(ata_bmdma_setup);
+ EXPORT_SYMBOL_GPL(ata_bmdma_start);
+ EXPORT_SYMBOL_GPL(ata_bmdma_stop);
+diff --git a/drivers/ata/pata_bf54x.c b/drivers/ata/pata_bf54x.c
+index eea275a..457ac80 100644
+--- a/drivers/ata/pata_bf54x.c
++++ b/drivers/ata/pata_bf54x.c
+@@ -1264,7 +1264,7 @@ static void bfin_bmdma_freeze(struct ata_port *ap)
+ 	 * ATA_NIEN manipulation.  Also, many controllers fail to mask
+ 	 * previously pending IRQ on ATA_NIEN assertion.  Clear it.
+ 	 */
+-	ata_chk_status(ap);
++	ap->ops->check_status(ap);
+ 
+ 	bfin_irq_clear(ap);
+ }
+diff --git a/drivers/ata/pata_scc.c b/drivers/ata/pata_scc.c
+index 07f2d7a..85d3363 100644
+--- a/drivers/ata/pata_scc.c
++++ b/drivers/ata/pata_scc.c
+@@ -854,7 +854,7 @@ static void scc_bmdma_freeze (struct ata_port *ap)
+ 	 * ATA_NIEN manipulation.  Also, many controllers fail to mask
+ 	 * previously pending IRQ on ATA_NIEN assertion.  Clear it.
+ 	 */
+-	ata_chk_status(ap);
++	ap->ops->check_status(ap);
+ 
+ 	ap->ops->irq_clear(ap);
+ }
+diff --git a/drivers/ata/sata_inic162x.c b/drivers/ata/sata_inic162x.c
+index ba1c099..12fbf38 100644
+--- a/drivers/ata/sata_inic162x.c
++++ b/drivers/ata/sata_inic162x.c
+@@ -267,14 +267,14 @@ static void inic_host_intr(struct ata_port *ap)
+ 			ata_qc_from_tag(ap, ap->link.active_tag);
+ 
+ 		if (unlikely(!qc || (qc->tf.flags & ATA_TFLAG_POLLING))) {
+-			ata_chk_status(ap);	/* clear ATA interrupt */
++			ap->ops->check_status(ap); /* clear ATA interrupt */
+ 			return;
+ 		}
+ 
+ 		if (likely(ata_host_intr(ap, qc)))
+ 			return;
+ 
+-		ata_chk_status(ap);	/* clear ATA interrupt */
++		ap->ops->check_status(ap); /* clear ATA interrupt */
+ 		ata_port_printk(ap, KERN_WARNING, "unhandled "
+ 				"interrupt, irq_stat=%x\n", irq_stat);
+ 		return;
+@@ -351,7 +351,7 @@ static unsigned int inic_qc_issue(struct ata_queued_cmd *qc)
+ 	 */
+ 	if (unlikely(qc->tf.command == ATA_CMD_ID_ATA ||
+ 		     qc->tf.command == ATA_CMD_ID_ATAPI)) {
+-		u8 stat = ata_chk_status(ap);
++		u8 stat = ap->ops->check_status(ap);
+ 		if (stat == 0x7f || stat == 0xff)
+ 			return AC_ERR_HSM;
+ 	}
+@@ -365,7 +365,7 @@ static void inic_freeze(struct ata_port *ap)
+ 
+ 	__inic_set_pirq_mask(ap, PIRQ_MASK_FREEZE);
+ 
+-	ata_chk_status(ap);
++	ap->ops->check_status(ap);
+ 	writeb(0xff, port_base + PORT_IRQ_STAT);
+ 
+ 	readb(port_base + PORT_IRQ_STAT); /* flush */
+@@ -375,7 +375,7 @@ static void inic_thaw(struct ata_port *ap)
+ {
+ 	void __iomem *port_base = inic_port_base(ap);
+ 
+-	ata_chk_status(ap);
++	ap->ops->check_status(ap);
+ 	writeb(0xff, port_base + PORT_IRQ_STAT);
+ 
+ 	__inic_set_pirq_mask(ap, PIRQ_MASK_OTHER);
+diff --git a/drivers/ata/sata_sil.c b/drivers/ata/sata_sil.c
+index eac7ca7..659dfcb 100644
+--- a/drivers/ata/sata_sil.c
++++ b/drivers/ata/sata_sil.c
+@@ -369,7 +369,7 @@ static void sil_host_intr(struct ata_port *ap, u32 bmdma2)
+ 
+ 	if (unlikely(!qc || (qc->tf.flags & ATA_TFLAG_POLLING))) {
+ 		/* this sometimes happens, just clear IRQ */
+-		ata_chk_status(ap);
++		ap->ops->check_status(ap);
+ 		return;
+ 	}
+ 
+@@ -405,7 +405,7 @@ static void sil_host_intr(struct ata_port *ap, u32 bmdma2)
+ 	}
+ 
+ 	/* check main status, clearing INTRQ */
+-	status = ata_chk_status(ap);
++	status = ap->ops->check_status(ap);
+ 	if (unlikely(status & ATA_BUSY))
+ 		goto err_hsm;
+ 
+@@ -480,7 +480,7 @@ static void sil_thaw(struct ata_port *ap)
+ 	u32 tmp;
+ 
+ 	/* clear IRQ */
+-	ata_chk_status(ap);
++	ap->ops->check_status(ap);
+ 	ata_bmdma_irq_clear(ap);
+ 
+ 	/* turn on SATA IRQ if supported */
+diff --git a/drivers/ata/sata_via.c b/drivers/ata/sata_via.c
+index 402fd73..4bc6e84 100644
+--- a/drivers/ata/sata_via.c
++++ b/drivers/ata/sata_via.c
+@@ -173,7 +173,7 @@ static void svia_noop_freeze(struct ata_port *ap)
+ 	/* Some VIA controllers choke if ATA_NIEN is manipulated in
+ 	 * certain way.  Leave it alone and just clear pending IRQ.
+ 	 */
+-	ata_chk_status(ap);
++	ap->ops->check_status(ap);
+ 	ata_bmdma_irq_clear(ap);
  }
  
- /**
+diff --git a/drivers/ata/sata_vsc.c b/drivers/ata/sata_vsc.c
+index 8045a72..fb3a887 100644
+--- a/drivers/ata/sata_vsc.c
++++ b/drivers/ata/sata_vsc.c
+@@ -251,7 +251,7 @@ static void vsc_port_intr(u8 port_status, struct ata_port *ap)
+ 	 * simply clear the interrupt
+ 	 */
+ 	if (unlikely(!handled))
+-		ata_chk_status(ap);
++		ap->ops->check_status(ap);
+ }
+ 
+ /*
 diff --git a/include/linux/libata.h b/include/linux/libata.h
-index 2638e35..b51aaba 100644
+index 3884285..af7195c 100644
 --- a/include/linux/libata.h
 +++ b/include/linux/libata.h
-@@ -260,6 +260,13 @@ enum {
- 	 */
- 	ATA_WAIT_AFTER_RESET_MSECS = 150,
+@@ -1420,11 +1420,6 @@ extern int ata_pci_init_one(struct pci_dev *pdev,
+ 			    struct scsi_host_template *sht, void *host_priv);
+ #endif /* CONFIG_PCI */
  
-+	/* If PMP is supported, we have to do follow-up SRST.  As some
-+	 * PMPs don't send D2H Reg FIS after hardreset, LLDs are
-+	 * advised to wait only for the following duration before
-+	 * doing SRST.
-+	 */
-+	ATA_TMOUT_PMP_SRST_WAIT	= 1 * HZ,
-+
- 	/* ATA bus states */
- 	BUS_UNKNOWN		= 0,
- 	BUS_DMA			= 1,
-@@ -842,7 +849,8 @@ extern int sata_link_debounce(struct ata_link *link,
- extern int sata_link_resume(struct ata_link *link, const unsigned long *params,
- 			    unsigned long deadline);
- extern int sata_link_hardreset(struct ata_link *link,
--			const unsigned long *timing, unsigned long deadline);
-+			const unsigned long *timing, unsigned long deadline,
-+			bool *online, int (*check_ready)(struct ata_link *));
- extern void ata_std_postreset(struct ata_link *link, unsigned int *classes);
- extern void ata_port_disable(struct ata_port *);
+-static inline u8 ata_chk_status(struct ata_port *ap)
+-{
+-	return ap->ops->check_status(ap);
+-}
+-
+ /**
+  *	ata_pause - Flush writes and pause 400 nanoseconds.
+  *	@ap: Port to wait for.
+@@ -1458,7 +1453,7 @@ static inline u8 ata_busy_wait(struct ata_port *ap, unsigned int bits,
+ 
+ 	do {
+ 		udelay(10);
+-		status = ata_chk_status(ap);
++		status = ap->ops->check_status(ap);
+ 		max--;
+ 	} while (status != 0xff && (status & bits) && (max > 0));
  
 -- 
 1.5.2.4
