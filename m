@@ -1,161 +1,344 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH 20/27] libata: add qc_fill_rtf port operation
-Date: Tue, 25 Mar 2008 22:16:58 +0900
-Message-ID: <12064510282219-git-send-email-htejun@gmail.com>
+Subject: [PATCH 22/27] libata: replace tf_read with qc_fill_rtf for non-SFF drivers
+Date: Tue, 25 Mar 2008 22:17:00 +0900
+Message-ID: <12064510283026-git-send-email-htejun@gmail.com>
 References: <1206451025926-git-send-email-htejun@gmail.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wx-out-0506.google.com ([66.249.82.232]:15483 "EHLO
-	wx-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754967AbYCYNRm (ORCPT
+Received: from rv-out-0910.google.com ([209.85.198.191]:60507 "EHLO
+	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755037AbYCYNRm (ORCPT
 	<rfc822;linux-ide@vger.kernel.org>); Tue, 25 Mar 2008 09:17:42 -0400
-Received: by wx-out-0506.google.com with SMTP id h31so3539072wxd.4
-        for <linux-ide@vger.kernel.org>; Tue, 25 Mar 2008 06:17:41 -0700 (PDT)
+Received: by rv-out-0910.google.com with SMTP id k20so1755484rvb.1
+        for <linux-ide@vger.kernel.org>; Tue, 25 Mar 2008 06:17:42 -0700 (PDT)
 In-Reply-To: <1206451025926-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: jeff@garzik.org, linux-ide@vger.kernel.org, liml@rtr.ca, alan@lxorguk.ukuu.org.uk, James.Bottomley@HansenPartnership.com, brking@us.ibm.com, ashish.kalra@freescale.com, leoli@freescale.com
 Cc: Tejun Heo <htejun@gmail.com>
 
-On command completion, ata_qc_complete() directly called ops->tf_read
-to fill qc->result_tf.  This patch adds ops->qc_fill_rtf to replace
-hardcoded ops->tf_read usage.
+Now that all SFF stuff is separated out of core layer, core layer
+doesn't call ops->tf_read directly.  It gets called only via
+ops->qc_fill_rtf() for non-SFF drivers.  This patch directly
+implements private ops->qc_fill_rtf() for non-SFF controllers and kill
+ops->tf_read().
 
-ata_sff_qc_fill_rtf() which uses ops->tf_read to fill result_tf is
-implemented and set in ata_base_port_ops and other ops tables which
-don't inherit from ata_base_port_ops, so this patch doesn't introduce
-any behavior change.
+This is much cleaner for non-SFF controllers as some of them have to
+cache SFF register values in private data structure and report the
+cached values via ops->tf_read().  Also, ops->tf_read() gets nasty for
+controllers which don't have clear notion of TF registers when
+operation is not in progress.
 
-ops->qc_fill_rtf() is similar to ops->sff_tf_read() but can only be
-called when a command finishes.  As some non-SFF controllers don't
-have TF registers defined unless they're associated with in-flight
-commands, this limited operation makes life easier for those drivers
-and help lifting SFF assumptions from libata core layer.
+As this change makes default ops->qc_fill_rtf unnecessary, move
+ata_sff_qc_fill_rtf() form ata_base_port_ops to ata_sff_port_ops where
+it belongs.
 
 Signed-off-by: Tejun Heo <htejun@gmail.com>
 ---
- drivers/ata/libata-core.c     |    3 ++-
- drivers/ata/libata-sff.c      |   20 ++++++++++++++++++++
- drivers/ata/sata_sx4.c        |    1 +
- drivers/scsi/ipr.c            |    1 +
- drivers/scsi/libsas/sas_ata.c |    1 +
- include/linux/libata.h        |    2 ++
- 6 files changed, 27 insertions(+), 1 deletions(-)
+ drivers/ata/ahci.c            |   21 +++++++-------
+ drivers/ata/libata-core.c     |    1 -
+ drivers/ata/libata-sff.c      |    1 +
+ drivers/ata/sata_fsl.c        |   24 ++++++++++------
+ drivers/ata/sata_sil24.c      |    8 -----
+ drivers/scsi/ipr.c            |   59 +++++++++++++++++++++--------------------
+ drivers/scsi/libsas/sas_ata.c |   17 ++++++-----
+ 7 files changed, 66 insertions(+), 65 deletions(-)
 
+diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+index 1389c64..ad5b6f3 100644
+--- a/drivers/ata/ahci.c
++++ b/drivers/ata/ahci.c
+@@ -243,9 +243,9 @@ static int ahci_scr_read(struct ata_port *ap, unsigned int sc_reg, u32 *val);
+ static int ahci_scr_write(struct ata_port *ap, unsigned int sc_reg, u32 val);
+ static int ahci_init_one(struct pci_dev *pdev, const struct pci_device_id *ent);
+ static unsigned int ahci_qc_issue(struct ata_queued_cmd *qc);
++static bool ahci_qc_fill_rtf(struct ata_queued_cmd *qc);
+ static int ahci_port_start(struct ata_port *ap);
+ static void ahci_port_stop(struct ata_port *ap);
+-static void ahci_tf_read(struct ata_port *ap, struct ata_taskfile *tf);
+ static void ahci_qc_prep(struct ata_queued_cmd *qc);
+ static u8 ahci_check_status(struct ata_port *ap);
+ static void ahci_freeze(struct ata_port *ap);
+@@ -295,10 +295,10 @@ static struct ata_port_operations ahci_ops = {
+ 	.sff_check_status	= ahci_check_status,
+ 	.sff_check_altstatus	= ahci_check_status,
+ 
+-	.sff_tf_read		= ahci_tf_read,
+ 	.qc_defer		= sata_pmp_qc_defer_cmd_switch,
+ 	.qc_prep		= ahci_qc_prep,
+ 	.qc_issue		= ahci_qc_issue,
++	.qc_fill_rtf		= ahci_qc_fill_rtf,
+ 
+ 	.freeze			= ahci_freeze,
+ 	.thaw			= ahci_thaw,
+@@ -1473,14 +1473,6 @@ static u8 ahci_check_status(struct ata_port *ap)
+ 	return readl(mmio + PORT_TFDATA) & 0xFF;
+ }
+ 
+-static void ahci_tf_read(struct ata_port *ap, struct ata_taskfile *tf)
+-{
+-	struct ahci_port_priv *pp = ap->private_data;
+-	u8 *d2h_fis = pp->rx_fis + RX_FIS_D2H_REG;
+-
+-	ata_tf_from_fis(d2h_fis, tf);
+-}
+-
+ static unsigned int ahci_fill_sg(struct ata_queued_cmd *qc, void *cmd_tbl)
+ {
+ 	struct scatterlist *sg;
+@@ -1779,6 +1771,15 @@ static unsigned int ahci_qc_issue(struct ata_queued_cmd *qc)
+ 	return 0;
+ }
+ 
++static bool ahci_qc_fill_rtf(struct ata_queued_cmd *qc)
++{
++	struct ahci_port_priv *pp = qc->ap->private_data;
++	u8 *d2h_fis = pp->rx_fis + RX_FIS_D2H_REG;
++
++	ata_tf_from_fis(d2h_fis, &qc->result_tf);
++	return true;
++}
++
+ static void ahci_freeze(struct ata_port *ap)
+ {
+ 	void __iomem *port_mmio = ahci_port_base(ap);
 diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index d99929c..cf7b9e5 100644
+index 9a14be2..fad12d7 100644
 --- a/drivers/ata/libata-core.c
 +++ b/drivers/ata/libata-core.c
-@@ -74,6 +74,7 @@ const unsigned long sata_deb_timing_hotplug[]		= {  25,  500, 2000 };
+@@ -74,7 +74,6 @@ const unsigned long sata_deb_timing_hotplug[]		= {  25,  500, 2000 };
  const unsigned long sata_deb_timing_long[]		= { 100, 2000, 5000 };
  
  const struct ata_port_operations ata_base_port_ops = {
-+	.qc_fill_rtf		= ata_sff_qc_fill_rtf,
+-	.qc_fill_rtf		= ata_sff_qc_fill_rtf,
  	.prereset		= ata_std_prereset,
  	.postreset		= ata_std_postreset,
  	.error_handler		= ata_std_error_handler,
-@@ -4484,7 +4485,7 @@ static void fill_result_tf(struct ata_queued_cmd *qc)
- 	struct ata_port *ap = qc->ap;
- 
- 	qc->result_tf.flags = qc->tf.flags;
--	ap->ops->sff_tf_read(ap, &qc->result_tf);
-+	ap->ops->qc_fill_rtf(qc);
- }
- 
- static void ata_verify_xfer(struct ata_queued_cmd *qc)
 diff --git a/drivers/ata/libata-sff.c b/drivers/ata/libata-sff.c
-index 5be8a60..5ae813f 100644
+index 5ae813f..8e6c78a 100644
 --- a/drivers/ata/libata-sff.c
 +++ b/drivers/ata/libata-sff.c
-@@ -1408,6 +1408,25 @@ unsigned int ata_sff_qc_issue(struct ata_queued_cmd *qc)
+@@ -44,6 +44,7 @@ const struct ata_port_operations ata_sff_port_ops = {
+ 
+ 	.qc_prep		= ata_sff_qc_prep,
+ 	.qc_issue		= ata_sff_qc_issue,
++	.qc_fill_rtf		= ata_sff_qc_fill_rtf,
+ 
+ 	.freeze			= ata_sff_freeze,
+ 	.thaw			= ata_sff_thaw,
+diff --git a/drivers/ata/sata_fsl.c b/drivers/ata/sata_fsl.c
+index 1996050..646cb28 100644
+--- a/drivers/ata/sata_fsl.c
++++ b/drivers/ata/sata_fsl.c
+@@ -464,6 +464,20 @@ static unsigned int sata_fsl_qc_issue(struct ata_queued_cmd *qc)
+ 	return 0;
+ }
+ 
++static bool sata_fsl_qc_fill_rtf(struct ata_queued_cmd *qc)
++{
++	struct sata_fsl_port_priv *pp = qc->ap->private_data;
++	struct sata_fsl_host_priv *host_priv = qc->ap->host->private_data;
++	void __iomem *hcr_base = host_priv->hcr_base;
++	unsigned int tag = sata_fsl_tag(qc->tag, hcr_base);
++	struct command_desc *cd;
++
++	cd = pp->cmdentry + tag;
++
++	ata_tf_from_fis(cd->sfis, &qc->result_tf);
++	return true;
++}
++
+ static int sata_fsl_scr_write(struct ata_port *ap, unsigned int sc_reg_in,
+ 			       u32 val)
+ {
+@@ -580,13 +594,6 @@ static u8 sata_fsl_check_status(struct ata_port *ap)
+ 	return pp->tf.command;
+ }
+ 
+-static void sata_fsl_tf_read(struct ata_port *ap, struct ata_taskfile *tf)
+-{
+-	struct sata_fsl_port_priv *pp = ap->private_data;
+-
+-	*tf = pp->tf;
+-}
+-
+ static int sata_fsl_port_start(struct ata_port *ap)
+ {
+ 	struct device *dev = ap->host->dev;
+@@ -1193,10 +1200,9 @@ static const struct ata_port_operations sata_fsl_ops = {
+ 	.sff_check_status = sata_fsl_check_status,
+ 	.sff_check_altstatus = sata_fsl_check_status,
+ 
+-	.sff_tf_read = sata_fsl_tf_read,
+-
+ 	.qc_prep = sata_fsl_qc_prep,
+ 	.qc_issue = sata_fsl_qc_issue,
++	.qc_fill_rtf = sata_fsl_qc_fill_rtf,
+ 
+ 	.scr_read = sata_fsl_scr_read,
+ 	.scr_write = sata_fsl_scr_write,
+diff --git a/drivers/ata/sata_sil24.c b/drivers/ata/sata_sil24.c
+index 79952f8..51a7c06 100644
+--- a/drivers/ata/sata_sil24.c
++++ b/drivers/ata/sata_sil24.c
+@@ -344,7 +344,6 @@ static void sil24_dev_config(struct ata_device *dev);
+ static u8 sil24_check_status(struct ata_port *ap);
+ static int sil24_scr_read(struct ata_port *ap, unsigned sc_reg, u32 *val);
+ static int sil24_scr_write(struct ata_port *ap, unsigned sc_reg, u32 val);
+-static void sil24_tf_read(struct ata_port *ap, struct ata_taskfile *tf);
+ static int sil24_qc_defer(struct ata_queued_cmd *qc);
+ static void sil24_qc_prep(struct ata_queued_cmd *qc);
+ static unsigned int sil24_qc_issue(struct ata_queued_cmd *qc);
+@@ -404,7 +403,6 @@ static struct ata_port_operations sil24_ops = {
+ 
+ 	.sff_check_status	= sil24_check_status,
+ 	.sff_check_altstatus	= sil24_check_status,
+-	.sff_tf_read		= sil24_tf_read,
+ 	.qc_defer		= sil24_qc_defer,
+ 	.qc_prep		= sil24_qc_prep,
+ 	.qc_issue		= sil24_qc_issue,
+@@ -533,12 +531,6 @@ static int sil24_scr_write(struct ata_port *ap, unsigned sc_reg, u32 val)
+ 	return -EINVAL;
+ }
+ 
+-static void sil24_tf_read(struct ata_port *ap, struct ata_taskfile *tf)
+-{
+-	struct sil24_port_priv *pp = ap->private_data;
+-	*tf = pp->tf;
+-}
+-
+ static void sil24_config_port(struct ata_port *ap)
+ {
+ 	void __iomem *port = ap->ioaddr.cmd_addr;
+diff --git a/drivers/scsi/ipr.c b/drivers/scsi/ipr.c
+index 2ecd329..b079f6c 100644
+--- a/drivers/scsi/ipr.c
++++ b/drivers/scsi/ipr.c
+@@ -5041,33 +5041,6 @@ static void ipr_ata_post_internal(struct ata_queued_cmd *qc)
  }
  
  /**
-+ *	ata_sff_qc_fill_rtf - fill result TF using ->sff_tf_read
-+ *	@qc: qc to fill result TF for
+- * ipr_tf_read - Read the current ATA taskfile for the ATA port
+- * @ap:	ATA port
+- * @tf:	destination ATA taskfile
+- *
+- * Return value:
+- * 	none
+- **/
+-static void ipr_tf_read(struct ata_port *ap, struct ata_taskfile *tf)
+-{
+-	struct ipr_sata_port *sata_port = ap->private_data;
+-	struct ipr_ioasa_gata *g = &sata_port->ioasa;
+-
+-	tf->feature = g->error;
+-	tf->nsect = g->nsect;
+-	tf->lbal = g->lbal;
+-	tf->lbam = g->lbam;
+-	tf->lbah = g->lbah;
+-	tf->device = g->device;
+-	tf->command = g->status;
+-	tf->hob_nsect = g->hob_nsect;
+-	tf->hob_lbal = g->hob_lbal;
+-	tf->hob_lbam = g->hob_lbam;
+-	tf->hob_lbah = g->hob_lbah;
+-	tf->ctl = g->alt_status;
+-}
+-
+-/**
+  * ipr_copy_sata_tf - Copy a SATA taskfile to an IOA data structure
+  * @regs:	destination
+  * @tf:	source ATA taskfile
+@@ -5245,6 +5218,35 @@ static unsigned int ipr_qc_issue(struct ata_queued_cmd *qc)
+ }
+ 
+ /**
++ * ipr_qc_fill_rtf - Read result TF
++ * @qc: ATA queued command
 + *
-+ *	@qc is finished and result TF needs to be filled.  Fill it
-+ *	using ->sff_tf_read.
-+ *
-+ *	LOCKING:
-+ *	spin_lock_irqsave(host lock)
-+ *
-+ *	RETURNS:
-+ *	true indicating that result TF is successfully filled.
-+ */
-+bool ata_sff_qc_fill_rtf(struct ata_queued_cmd *qc)
++ * Return value:
++ * 	true
++ **/
++static bool ipr_qc_fill_rtf(struct ata_queued_cmd *qc)
 +{
-+	qc->ap->ops->sff_tf_read(qc->ap, &qc->result_tf);
++	struct ipr_sata_port *sata_port = qc->ap->private_data;
++	struct ipr_ioasa_gata *g = &sata_port->ioasa;
++	struct ata_taskfile *tf = &qc->result_tf;
++
++	tf->feature = g->error;
++	tf->nsect = g->nsect;
++	tf->lbal = g->lbal;
++	tf->lbam = g->lbam;
++	tf->lbah = g->lbah;
++	tf->device = g->device;
++	tf->command = g->status;
++	tf->hob_nsect = g->hob_nsect;
++	tf->hob_lbal = g->hob_lbal;
++	tf->hob_lbam = g->hob_lbam;
++	tf->hob_lbah = g->hob_lbah;
++	tf->ctl = g->alt_status;
++
 +	return true;
 +}
 +
 +/**
-  *	ata_sff_host_intr - Handle host interrupt for given (port, task)
-  *	@ap: Port on which interrupt arrived (possibly...)
-  *	@qc: Taskfile currently active in engine
-@@ -2724,6 +2743,7 @@ EXPORT_SYMBOL_GPL(ata_sff_irq_on);
- EXPORT_SYMBOL_GPL(ata_sff_irq_clear);
- EXPORT_SYMBOL_GPL(ata_sff_hsm_move);
- EXPORT_SYMBOL_GPL(ata_sff_qc_issue);
-+EXPORT_SYMBOL_GPL(ata_sff_qc_fill_rtf);
- EXPORT_SYMBOL_GPL(ata_sff_host_intr);
- EXPORT_SYMBOL_GPL(ata_sff_interrupt);
- EXPORT_SYMBOL_GPL(ata_sff_freeze);
-diff --git a/drivers/ata/sata_sx4.c b/drivers/ata/sata_sx4.c
-index 6e90be0..637635d 100644
---- a/drivers/ata/sata_sx4.c
-+++ b/drivers/ata/sata_sx4.c
-@@ -251,6 +251,7 @@ static struct ata_port_operations pdc_20621_ops = {
- 	.phy_reset		= pdc_20621_phy_reset,
- 	.qc_prep		= pdc20621_qc_prep,
- 	.qc_issue		= pdc20621_qc_issue,
-+	.qc_fill_rtf		= ata_sff_qc_fill_rtf,
- 	.sff_data_xfer		= ata_sff_data_xfer,
- 	.eng_timeout		= pdc_eng_timeout,
- 	.sff_irq_clear		= pdc20621_irq_clear,
-diff --git a/drivers/scsi/ipr.c b/drivers/scsi/ipr.c
-index 5bddae1..2ecd329 100644
---- a/drivers/scsi/ipr.c
-+++ b/drivers/scsi/ipr.c
-@@ -5280,6 +5280,7 @@ static struct ata_port_operations ipr_sata_ops = {
- 	.sff_tf_read = ipr_tf_read,
+  * ipr_ata_check_status - Return last ATA status
+  * @ap:	ATA port
+  *
+@@ -5277,10 +5279,9 @@ static struct ata_port_operations ipr_sata_ops = {
+ 	.phy_reset = ipr_ata_phy_reset,
+ 	.hardreset = ipr_sata_reset,
+ 	.post_internal_cmd = ipr_ata_post_internal,
+-	.sff_tf_read = ipr_tf_read,
  	.qc_prep = ata_noop_qc_prep,
  	.qc_issue = ipr_qc_issue,
-+	.qc_fill_rtf = ata_sff_qc_fill_rtf,
+-	.qc_fill_rtf = ata_sff_qc_fill_rtf,
++	.qc_fill_rtf = ipr_qc_fill_rtf,
  	.port_start = ata_sas_port_start,
  	.port_stop = ata_sas_port_stop
  };
 diff --git a/drivers/scsi/libsas/sas_ata.c b/drivers/scsi/libsas/sas_ata.c
-index a1664b8..2ec2558 100644
+index 2ec2558..e81f2fd 100644
 --- a/drivers/scsi/libsas/sas_ata.c
 +++ b/drivers/scsi/libsas/sas_ata.c
-@@ -356,6 +356,7 @@ static struct ata_port_operations sas_sata_ops = {
- 	.sff_tf_read		= sas_ata_tf_read,
+@@ -225,6 +225,14 @@ static unsigned int sas_ata_qc_issue(struct ata_queued_cmd *qc)
+ 	return 0;
+ }
+ 
++static bool sas_ata_qc_fill_rtf(struct ata_queued_cmd *qc)
++{
++	struct domain_device *dev = qc->ap->private_data;
++
++	memcpy(&qc->result_tf, &dev->sata_dev.tf, sizeof(qc->result_tf));
++	return true;
++}
++
+ static u8 sas_ata_check_status(struct ata_port *ap)
+ {
+ 	struct domain_device *dev = ap->private_data;
+@@ -292,12 +300,6 @@ static void sas_ata_post_internal(struct ata_queued_cmd *qc)
+ 	}
+ }
+ 
+-static void sas_ata_tf_read(struct ata_port *ap, struct ata_taskfile *tf)
+-{
+-	struct domain_device *dev = ap->private_data;
+-	memcpy(tf, &dev->sata_dev.tf, sizeof (*tf));
+-}
+-
+ static int sas_ata_scr_write(struct ata_port *ap, unsigned int sc_reg_in,
+ 			      u32 val)
+ {
+@@ -353,10 +355,9 @@ static struct ata_port_operations sas_sata_ops = {
+ 	.sff_dev_select		= ata_noop_dev_select,
+ 	.phy_reset		= sas_ata_phy_reset,
+ 	.post_internal_cmd	= sas_ata_post_internal,
+-	.sff_tf_read		= sas_ata_tf_read,
  	.qc_prep		= ata_noop_qc_prep,
  	.qc_issue		= sas_ata_qc_issue,
-+	.qc_fill_rtf		= ata_sff_qc_fill_rtf,
+-	.qc_fill_rtf		= ata_sff_qc_fill_rtf,
++	.qc_fill_rtf		= sas_ata_qc_fill_rtf,
  	.port_start		= ata_sas_port_start,
  	.port_stop		= ata_sas_port_stop,
  	.scr_read		= sas_ata_scr_read,
-diff --git a/include/linux/libata.h b/include/linux/libata.h
-index e232140..8b381ce 100644
---- a/include/linux/libata.h
-+++ b/include/linux/libata.h
-@@ -713,6 +713,7 @@ struct ata_port_operations {
- 	int  (*check_atapi_dma)(struct ata_queued_cmd *qc);
- 	void (*qc_prep)(struct ata_queued_cmd *qc);
- 	unsigned int (*qc_issue)(struct ata_queued_cmd *qc);
-+	bool (*qc_fill_rtf)(struct ata_queued_cmd *qc);
- 
- 	/*
- 	 * Configuration and exception handling
-@@ -1403,6 +1404,7 @@ extern void ata_sff_irq_clear(struct ata_port *ap);
- extern int ata_sff_hsm_move(struct ata_port *ap, struct ata_queued_cmd *qc,
- 			    u8 status, int in_wq);
- extern unsigned int ata_sff_qc_issue(struct ata_queued_cmd *qc);
-+extern bool ata_sff_qc_fill_rtf(struct ata_queued_cmd *qc);
- extern unsigned int ata_sff_host_intr(struct ata_port *ap,
- 				      struct ata_queued_cmd *qc);
- extern irqreturn_t ata_sff_interrupt(int irq, void *dev_instance);
 -- 
 1.5.2.4
 
