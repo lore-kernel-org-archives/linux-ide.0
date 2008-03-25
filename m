@@ -1,67 +1,40 @@
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-Subject: Re: [PATCH] ata-acpi: don't call _GTF for disabled drive
-Date: Tue, 25 Mar 2008 21:50:20 +0100
-Message-ID: <200803252150.20609.rjw@sisk.pl>
-References: <1206435045.23794.13.camel@sli10-desk.sh.intel.com>
+From: Theodore Tso <tytso@MIT.EDU>
+Subject: Re: What to do about the 2TB limit on HDIO_GETGEO ?
+Date: Tue, 25 Mar 2008 16:51:17 -0400
+Message-ID: <20080325205117.GP16358@mit.edu>
+References: <47E875AD.1000901@rtr.ca> <alpine.LFD.1.00.0803242254020.2775@woody.linux-foundation.org> <47E8FF58.8050209@rtr.ca> <47E90CDA.600@emc.com> <20080325153423.GD16721@parisc-linux.org> <47E91EE2.9080801@emc.com> <20080325164750.GG16358@mit.edu>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ogre.sisk.pl ([217.79.144.158]:34715 "EHLO ogre.sisk.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752621AbYCYUua (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 25 Mar 2008 16:50:30 -0400
-In-Reply-To: <1206435045.23794.13.camel@sli10-desk.sh.intel.com>
+Received: from BISCAYNE-ONE-STATION.MIT.EDU ([18.7.7.80]:34610 "EHLO
+	biscayne-one-station.mit.edu" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752497AbYCYU5O (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 25 Mar 2008 16:57:14 -0400
 Content-Disposition: inline
+In-Reply-To: <20080325164750.GG16358@mit.edu>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Shaohua Li <shaohua.li@intel.com>
-Cc: linux acpi <linux-acpi@vger.kernel.org>, linux-ide <linux-ide@vger.kernel.org>, Len Brown <lenb@kernel.org>, Jeff Garzik <jgarzik@pobox.com>
+To: Ric Wheeler <ric@emc.com>, Matthew Wilcox <matthew@wil.cx>, Mark Lord <lkml@rtr.ca>, Linus Torvalds <torvalds@linux-foundation.org>, Jens Axboe <axboe@kernel.dk>, Jeff Garzik <jgarzik>
 
-On Tuesday, 25 of March 2008, Shaohua Li wrote:
-> I got below log after a S3 resume in a ASUS A6VC laptop. The system has
-> only one IDE drive. It appears there is no reason calling _GTF for
-> disabled drive.
+On Tue, Mar 25, 2008 at 12:47:50PM -0400, Theodore Tso wrote:
 > 
-> ACPI Error (dsopcode-0483): Attempt to CreateField of length zero [20070126]
-> ACPI Error (psparse-0537): Method parse/execution failed [\_SB_.PCI0.IDE0.RATA] (Node df822a7c), AE_AML_OPERAND_VALUE
-> ACPI Error (psparse-0537): Method parse/execution failed [\_SB_.PCI0.IDE0.CHN1.DRV0._GTF] (Node df822bd0), AE_AML_OPERAND_VALUE
-> ata2.00: _GTF evaluation failed (AE 0x3006)
-> ACPI Error (dsopcode-0483): Attempt to CreateField of length zero [20070126]
-> ACPI Error (psparse-0537): Method parse/execution failed [\_SB_.PCI0.IDE0.RATA] (Node df822a7c), AE_AML_OPERAND_VALUE
-> ACPI Error (psparse-0537): Method parse/execution failed [\_SB_.PCI0.IDE0.CHN1.DRV1._GTF] (Node df822b94), AE_AML_OPERAND_VALUE
-> ata2.01: _GTF evaluation failed (AE 0x3006)
-> 
-> Signed-off-by: Shaohua Li <shaohua.li@intel.com>
-> 
-> diff --git a/drivers/ata/libata-acpi.c b/drivers/ata/libata-acpi.c
-> index bf98a56..7cbf023 100644
-> --- a/drivers/ata/libata-acpi.c
-> +++ b/drivers/ata/libata-acpi.c
-> @@ -839,7 +839,8 @@ void ata_acpi_on_resume(struct ata_port *ap)
->  		 */
->  		ata_link_for_each_dev(dev, &ap->link) {
->  			ata_acpi_clear_gtf(dev);
+> Well 2TB, assuming a 4k blocksize, means a block bitmap is 512 megs.
+> So at least for ext3, 4GB should be just enough, unless you hit
+> certainly really nasty complicated corruptions (i.e. large number of
+> blocks claimed by more than one inode, which can happen if an inode
+> table is written to the wrong location on disk --- on top of some
+> other portion of the inode table), or if the filesystem has a large
+> number of files with hard links (such as the case with certain backup
+> programs).
 
-Hmm.  What is the effect of calling ata_acpi_clear_gtf() on a disabled device? 
+Whoops, screwed up my math.  The block bitmap for a 2TB filesystem is
+64 megs, not 512 megs.  2*41 / 2**12 / 2**3 == 2**26, or 64mb.  E2fsck
+in the worst case will allocate 5 inode bitmaps and 3 block bitmaps,
+plus various arrays for directory blocks and keeping track of
+refcounts (which are optimized for counnts of 0 and 1, so lots of hard
+links will blow up your memory usage, although we do have a tdb option
+which helps in that particular case).  So I'd say that most of the
+time 3GB of address space should really be enough for a 2TB raid
+array, unless you get really pathalogical corruption cases.
 
-> -			if (ata_dev_get_GTF(dev, NULL) >= 0)
-> +			if (ata_dev_enabled(dev) &&
-> +			    ata_dev_get_GTF(dev, NULL) >= 0)
->  				dev->flags |= ATA_DFLAG_ACPI_PENDING;
->  		}
->  	} else {
-> @@ -849,7 +850,8 @@ void ata_acpi_on_resume(struct ata_port *ap)
->  		 */
->  		ata_link_for_each_dev(dev, &ap->link) {
->  			ata_acpi_clear_gtf(dev);
-> -			dev->flags |= ATA_DFLAG_ACPI_PENDING;
-> +			if (ata_dev_enabled(dev))
-> +				dev->flags |= ATA_DFLAG_ACPI_PENDING;
->  		}
->  	}
->  }
-> 
-
-Rafael
+							- Ted
