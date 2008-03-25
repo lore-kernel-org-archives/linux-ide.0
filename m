@@ -1,32 +1,61 @@
 From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH #upstream-fixes 1/2] libata: implement ata_qc_raw_nbytes()
-Date: Mon, 24 Mar 2008 22:26:25 -0400
-Message-ID: <47E862D1.2040701@garzik.org>
-References: <47D5EFD4.2090801@gmail.com> <47DE63C8.2000006@garzik.org> <47DF81AF.7080000@gmail.com>
+Subject: Re: [PATCH 2.6.25-rc6] sata_promise: fix hardreset hotplug events,
+ take 2
+Date: Mon, 24 Mar 2008 22:31:55 -0400
+Message-ID: <47E8641B.3030309@garzik.org>
+References: <200803221421.m2MEL1oY021558@harpo.it.uu.se> <18406.38445.717175.664615@harpo.it.uu.se>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:49180 "EHLO mail.dvmed.net"
+Received: from srv5.dvmed.net ([207.36.208.214]:56431 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753548AbYCYC02 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 24 Mar 2008 22:26:28 -0400
-In-Reply-To: <47DF81AF.7080000@gmail.com>
+	id S1757216AbYCYCb7 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 24 Mar 2008 22:31:59 -0400
+In-Reply-To: <18406.38445.717175.664615@harpo.it.uu.se>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: IDE/ATA development list <linux-ide@vger.kernel.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Mikael Pettersson <mikpe@it.uu.se>
+Cc: htejun@gmail.com, kurt@roeckx.be, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Tejun Heo wrote:
-> Implement ata_qc_raw_nbytes() which determines the raw user-requested
-> size of a PC command.
+Mikael Pettersson wrote:
+> A Promise SATA controller will signal hotplug events when a hard
+> reset (COMRESET) is done on a port. These events aren't masked by
+> the driver, and the unexpected interrupts will cause a sequence
+> of failed reset attempts util libata's EH finally gives up.
 > 
-> Signed-off-by: Tejun Heo <htejun@gmail.com>
+> This has not been a common problem so far, but the pending libata
+> hardreset-by-default changes makes it a critical issue.
+> 
+> The solution is to disable hotplug events before a reset, and to
+> reenable them afterwards. (Promise's driver does this too.)
+> 
+> This patch adds SATA-specific versions of ->freeze() and ->thaw()
+> that also disable and enable hotplug events. PATA ports continue
+> to use the old versions of ->freeze() and ->thaw().
+> 
+> Accesses to the hotplug register must be serialised via host->lock.
+> We rely on ap->lock == &ap->host->lock and that libata takes this
+> lock before ->freeze() and ->thaw(). Document this requirement.
+> The interrupt handler is adjusted so its hotplug register accesses
+> are inside the region protected by host->lock.
+> 
+> Tested on various chips (SATA300TX4, SATA300TX2plus, SATAII150TX4,
+> FastTrack TX4000) with various combinations of SATA and PATA disks,
+> with and without the pending hardreset-by-default changes.
+> 
+> Signed-off-by: Mikael Pettersson <mikpe@it.uu.se>
 > ---
->  drivers/ata/libata-scsi.c |   14 +++++++++++---
->  include/linux/libata.h    |    8 +++++++-
->  2 files changed, 18 insertions(+), 4 deletions(-)
+> Changes since previous version:
+> - rephrase the problem description to avoid calling it a HW quirk,
+>   the behaviour is apparently standard
+> - fix double locking bug found by Tejun, now tested with SMP kernel
+> - document locking rules for the global hotplug register
+> - inline the hotplug enable/disable code in freeze/thaw
+> 
+>  drivers/ata/sata_promise.c |  109 ++++++++++++++++++++++++++++++++++++---------
+>  1 file changed, 88 insertions(+), 21 deletions(-)
 
-applied 1-2
+applied
 
 
