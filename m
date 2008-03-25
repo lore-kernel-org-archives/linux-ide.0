@@ -1,28 +1,45 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH 2.6.25-rc6] sata_promise: fix hardreset hotplug events,
- take 2
-Date: Mon, 24 Mar 2008 23:53:04 -0400
-Message-ID: <47E87720.8060204@garzik.org>
-References: <200803221421.m2MEL1oY021558@harpo.it.uu.se> <18406.38445.717175.664615@harpo.it.uu.se> <47E70FB4.4010802@gmail.com> <47E86442.8030708@garzik.org> <47E86580.6050206@gmail.com> <47E87261.4020603@gmail.com>
+From: Mark Lord <lkml@rtr.ca>
+Subject: What to do about the 2TB limit on HDIO_GETGEO ?
+Date: Tue, 25 Mar 2008 00:02:10 -0400
+Message-ID: <47E87942.2020409@rtr.ca>
+References: <47E875AD.1000901@rtr.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:58585 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755615AbYCYDxK (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 24 Mar 2008 23:53:10 -0400
-In-Reply-To: <47E87261.4020603@gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <47E875AD.1000901@rtr.ca>
+Sender: linux-scsi-owner@vger.kernel.org
+To: Jens Axboe <axboe@kernel.dk>, Jeff Garzik <jgarzik@pobox.com>, Tejun Heo <htejun@gmail.com>, Greg KH <gregkh@suse.de>
+Cc: Linus Torvalds <torvalds@osdl.org>, Andrew Morton <akpm@linux-foundation.org>, Linux Kernel <linux-kernel@vger.kernel.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Mikael Pettersson <mikpe@it.uu.se>, kurt@roeckx.be, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Tejun Heo wrote:
-> * prefer-hardreset patchset
-> * PCI-device-should-be-powered-up-before-being-accssed patch
-> * cleanup-sht-ops patchset
+(resending .. forgot to copy the lists originally)
 
+We have a problem coming down the pipeline.
 
-pulled, thanks
+Practically all utilities that care about it,
+use ioctl(fd, HDIO_GETGEO) to determine the starting
+sector offset of a hard disk partition.
 
+SCSI, libata, IDE, USB, Firewire.. you name it.
+
+The return value uses "unsigned long",
+which on a 32-bit system limits drive offsets to 2TB.
+
+There will be single drives exceeding this limit within
+the next 12 months or less, and we already have RAID arrays
+that exceed 2TB.
+
+So.. what's the replacement for HDIO_GETGEO on 32-bits ?
+
+One candidate might seem to be the existing /sys/block/dev/partition/start
+which I expect is already 64-bit friendly.
+
+But this requires about 150 lines of somewhat complex C code to access,
+using only the dev_t (from stat(2) on a file) as a starting point,
+or less if one relies upon the udev device name matching the sysfs device name.
+
+Is it time now for HDIO_GETGEO64 to make an appearance?
+Similar to how the existing BLKGETSIZE64 is supplanting BLKGETSIZE ?
+
+??
