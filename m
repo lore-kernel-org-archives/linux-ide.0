@@ -1,28 +1,33 @@
-From: Andrew Morton <akpm@linux-foundation.org>
+From: "H. Peter Anvin" <hpa@zytor.com>
 Subject: Re: What to do about the 2TB limit on HDIO_GETGEO ?
-Date: Mon, 24 Mar 2008 21:19:25 -0700
-Message-ID: <20080324211925.dcd25237.akpm@linux-foundation.org>
-References: <47E875AD.1000901@rtr.ca>
-	<47E87942.2020409@rtr.ca>
+Date: Mon, 24 Mar 2008 22:13:55 -0700
+Message-ID: <47E88A13.70808@zytor.com>
+References: <47E875AD.1000901@rtr.ca> <47E87942.2020409@rtr.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:51542 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750733AbYCYEUo (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 25 Mar 2008 00:20:44 -0400
+Return-path: <linux-scsi-owner@vger.kernel.org>
 In-Reply-To: <47E87942.2020409@rtr.ca>
-Sender: linux-ide-owner@vger.kernel.org
-List-Id: linux-ide@vger.kernel.org
+Sender: linux-scsi-owner@vger.kernel.org
 To: Mark Lord <lkml@rtr.ca>
-Cc: Jens Axboe <axboe@kernel.dk>, Jeff Garzik <jgarzik@pobox.com>, Tejun Heo <htejun@gmail.com>, Greg KH <gregkh@suse.de>, Linus Torvalds <torvalds@linux-foundation.org>, Linux Kernel <linux-kernel@vger.kernel.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
+Cc: Jens Axboe <axboe@kernel.dk>, Jeff Garzik <jgarzik@pobox.com>, Tejun Heo <htejun@gmail.com>, Greg KH <gregkh@suse.de>, Linus Torvalds <torvalds@osdl.org>, Andrew Morton <akpm@linux-foundation.org>, Linux Kernel <linux-kernel@vger.kernel.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
+List-Id: linux-ide@vger.kernel.org
 
-On Tue, 25 Mar 2008 00:02:10 -0400 Mark Lord <lkml@rtr.ca> wrote:
-
+Mark Lord wrote:
+> 
+> One candidate might seem to be the existing /sys/block/dev/partition/start
+> which I expect is already 64-bit friendly.
+> 
+> But this requires about 150 lines of somewhat complex C code to access,
+> using only the dev_t (from stat(2) on a file) as a starting point,
+> or less if one relies upon the udev device name matching the sysfs 
+> device name.
+> 
 > Is it time now for HDIO_GETGEO64 to make an appearance?
 > Similar to how the existing BLKGETSIZE64 is supplanting BLKGETSIZE ?
+> 
 
-That sounds useful.
+Probably a better thing to have would be a way to look up block devices 
+in sysfs by device number.
 
-But you're the one who has investigated this - please make a recommendation?
+	-hpa
