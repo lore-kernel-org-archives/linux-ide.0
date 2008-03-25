@@ -1,34 +1,53 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH 3/8] ide: remove IDE_HFLAG_NO_AUTOTUNE host flag
-Date: Tue, 25 Mar 2008 19:49:18 +0300
-Message-ID: <47E92D0E.6040901@ru.mvista.com>
-References: <20080322220623.17636.44337.sendpatchset@localhost.localdomain> <20080322220639.17636.80893.sendpatchset@localhost.localdomain>
+From: Theodore Tso <tytso@MIT.EDU>
+Subject: Re: What to do about the 2TB limit on HDIO_GETGEO ?
+Date: Tue, 25 Mar 2008 12:47:50 -0400
+Message-ID: <20080325164750.GG16358@mit.edu>
+References: <47E875AD.1000901@rtr.ca> <alpine.LFD.1.00.0803242254020.2775@woody.linux-foundation.org> <47E8FF58.8050209@rtr.ca> <47E90CDA.600@emc.com> <20080325153423.GD16721@parisc-linux.org> <47E91EE2.9080801@emc.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from gateway-1237.mvista.com ([63.81.120.155]:46210 "EHLO
-	imap.sh.mvista.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752170AbYCYQry (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 25 Mar 2008 12:47:54 -0400
-In-Reply-To: <20080322220639.17636.80893.sendpatchset@localhost.localdomain>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <47E91EE2.9080801@emc.com>
+Sender: linux-scsi-owner@vger.kernel.org
+To: Ric Wheeler <ric@emc.com>
+Cc: Matthew Wilcox <matthew@wil.cx>, Mark Lord <lkml@rtr.ca>, Linus Torvalds <torvalds@linux-foundation.org>, Jens Axboe <axboe@kernel.dk>, Jeff Garzik <jgarzik@pobox.com>, Tejun Heo <htejun@gmail.com>, Greg KH l <gregkh@suse.de>, Andrew Morton <akpm@linux-foundation.org>, Linux Kernel <linux-kernel@vger.kernel.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Bartlomiej Zolnierkiewicz wrote:
+On Tue, Mar 25, 2008 at 11:48:50AM -0400, Ric Wheeler wrote:
+>> Don't those devices run into trouble with fsck?  The amount of memory
+>> you need to fsck a device is obviously going to depend on the filesystem,
+>> but it has to grow with device size, and I'm not sure that 4GB is enough
+>> virtual address space to fsck 2TB.
 
-> * Don't set IDE_HFLAG_NO_AUTOTUNE host flag in sgiioc4 and icside
->   host drivers - there is no need for it as they don't implement
->   ->set_pio_mode method.
+Well 2TB, assuming a 4k blocksize, means a block bitmap is 512 megs.
+So at least for ext3, 4GB should be just enough, unless you hit
+certainly really nasty complicated corruptions (i.e. large number of
+blocks claimed by more than one inode, which can happen if an inode
+table is written to the wrong location on disk --- on top of some
+other portion of the inode table), or if the filesystem has a large
+number of files with hard links (such as the case with certain backup
+programs).
 
-> * Remove no longer needed IDE_HFLAG_NO_AUTOTUNE host flag.
+The plan is to implement some kind of run-length encoding to compress
+the in-memory requirements for storing the bitmaps, but that hasn't
+been coded yet.  If someone is a staff programmer for one of these
+bookshelf NAS manufacturers is interested in implementing such a
+beast, they should talk to me; I've thought quite a bit about the
+design, and I just need a minion to implement it.  :-)
 
-> There should be no functional changes caused by this patch.
+> Absolutely - they more or less hit a stonewall once the disk has any 
+> trouble and you need to fsck.  On the other hand, this might be merciful 
+> since on 64 bit boxes, we will let you run the fsck and watch it run for a 
+> week or so before you despair ;-)
+>
+> On a serious note, fsck time tends to track more the number of active 
+> inodes, so you can fsck a large file system if you use it to store large 
+> files (especially if you use a file system with dynamic inode creation or 
+> something like the uninitialized ext4 inodes).
 
-> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+And ext4 extents will help because it reduces the number of indirect
+blocks you have to read, which will significantly reduce the fsck
+time.  So there will be improvements on the horizon.
 
-Acked-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+       	  	     		     	- Ted
 
-MBR, Sergei
