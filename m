@@ -1,154 +1,327 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH 21/27] libata: drop @finish_qc from ata_qc_complete_multiple()
-Date: Tue, 25 Mar 2008 22:16:59 +0900
-Message-ID: <12064510281611-git-send-email-htejun@gmail.com>
+Subject: [PATCH 23/27] libata: remove check_status from non-SFF drivers
+Date: Tue, 25 Mar 2008 22:17:01 +0900
+Message-ID: <1206451029812-git-send-email-htejun@gmail.com>
 References: <1206451025926-git-send-email-htejun@gmail.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wx-out-0506.google.com ([66.249.82.232]:15483 "EHLO
-	wx-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755790AbYCYNR6 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 25 Mar 2008 09:17:58 -0400
-Received: by wx-out-0506.google.com with SMTP id h31so3539072wxd.4
-        for <linux-ide@vger.kernel.org>; Tue, 25 Mar 2008 06:17:57 -0700 (PDT)
+Received: from rv-out-0910.google.com ([209.85.198.184]:62821 "EHLO
+	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755392AbYCYNRo (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 25 Mar 2008 09:17:44 -0400
+Received: by rv-out-0910.google.com with SMTP id k20so1755541rvb.1
+        for <linux-ide@vger.kernel.org>; Tue, 25 Mar 2008 06:17:44 -0700 (PDT)
 In-Reply-To: <1206451025926-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: jeff@garzik.org, linux-ide@vger.kernel.org, liml@rtr.ca, alan@lxorguk.ukuu.org.uk, James.Bottomley@HansenPartnership.com, brking@us.ibm.com, ashish.kalra@freescale.com, leoli@freescale.com
 Cc: Tejun Heo <htejun@gmail.com>
 
-ata_qc_complete_multiple() took @finish_qc and called it on every qc
-before completing it.  This was to give opportunity to update TF cache
-before ata_qc_complete() tries to fill result_tf.  Now that result TF
-is a separate operation, this is no longer necessary.
-
-Update sata_sil24, which was the only user of this mechanism, such
-that it implements its own ops->qc_fill_rtf() and drop @finish_qc from
-ata_qc_complete_multiple().
+Now that all SFF stuff is separated out of core layer, core layer
+doesn't call ops->[alt_]check_status().  In fact, no one calls them
+for non-SFF drivers anymore.  Kill them.
 
 Signed-off-by: Tejun Heo <htejun@gmail.com>
 ---
- drivers/ata/ahci.c        |    2 +-
- drivers/ata/libata-core.c |    6 +-----
- drivers/ata/sata_sil24.c  |   19 +++++++++----------
- include/linux/libata.h    |    3 +--
- 4 files changed, 12 insertions(+), 18 deletions(-)
+ drivers/ata/ahci.c            |   14 +--------
+ drivers/ata/sata_fsl.c        |   60 +++--------------------------------------
+ drivers/ata/sata_sil24.c      |   17 +----------
+ drivers/scsi/ipr.c            |   28 -------------------
+ drivers/scsi/libsas/sas_ata.c |    8 -----
+ 5 files changed, 8 insertions(+), 119 deletions(-)
 
 diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
-index 3071a23..1389c64 100644
+index ad5b6f3..9642a71 100644
 --- a/drivers/ata/ahci.c
 +++ b/drivers/ata/ahci.c
-@@ -1696,7 +1696,7 @@ static void ahci_port_intr(struct ata_port *ap)
- 	else
- 		qc_active = readl(port_mmio + PORT_CMD_ISSUE);
+@@ -247,7 +247,6 @@ static bool ahci_qc_fill_rtf(struct ata_queued_cmd *qc);
+ static int ahci_port_start(struct ata_port *ap);
+ static void ahci_port_stop(struct ata_port *ap);
+ static void ahci_qc_prep(struct ata_queued_cmd *qc);
+-static u8 ahci_check_status(struct ata_port *ap);
+ static void ahci_freeze(struct ata_port *ap);
+ static void ahci_thaw(struct ata_port *ap);
+ static void ahci_pmp_attach(struct ata_port *ap);
+@@ -292,9 +291,6 @@ static struct scsi_host_template ahci_sht = {
+ static struct ata_port_operations ahci_ops = {
+ 	.inherits		= &sata_pmp_port_ops,
  
--	rc = ata_qc_complete_multiple(ap, qc_active, NULL);
-+	rc = ata_qc_complete_multiple(ap, qc_active);
- 
- 	/* while resetting, invalid completions are expected */
- 	if (unlikely(rc < 0 && !resetting)) {
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index cf7b9e5..9a14be2 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -4595,7 +4595,6 @@ void ata_qc_complete(struct ata_queued_cmd *qc)
-  *	ata_qc_complete_multiple - Complete multiple qcs successfully
-  *	@ap: port in question
-  *	@qc_active: new qc_active mask
-- *	@finish_qc: LLDD callback invoked before completing a qc
-  *
-  *	Complete in-flight commands.  This functions is meant to be
-  *	called from low-level driver's interrupt routine to complete
-@@ -4608,8 +4607,7 @@ void ata_qc_complete(struct ata_queued_cmd *qc)
-  *	RETURNS:
-  *	Number of completed commands on success, -errno otherwise.
-  */
--int ata_qc_complete_multiple(struct ata_port *ap, u32 qc_active,
--			     void (*finish_qc)(struct ata_queued_cmd *))
-+int ata_qc_complete_multiple(struct ata_port *ap, u32 qc_active)
+-	.sff_check_status	= ahci_check_status,
+-	.sff_check_altstatus	= ahci_check_status,
+-
+ 	.qc_defer		= sata_pmp_qc_defer_cmd_switch,
+ 	.qc_prep		= ahci_qc_prep,
+ 	.qc_issue		= ahci_qc_issue,
+@@ -1185,11 +1181,12 @@ static int ahci_kick_engine(struct ata_port *ap, int force_restart)
  {
- 	int nr_done = 0;
- 	u32 done_mask;
-@@ -4630,8 +4628,6 @@ int ata_qc_complete_multiple(struct ata_port *ap, u32 qc_active,
- 			continue;
+ 	void __iomem *port_mmio = ap->ioaddr.cmd_addr;
+ 	struct ahci_host_priv *hpriv = ap->host->private_data;
++	u8 status = readl(port_mmio + PORT_TFDATA) & 0xFF;
+ 	u32 tmp;
+ 	int busy, rc;
  
- 		if ((qc = ata_qc_from_tag(ap, i))) {
--			if (finish_qc)
--				finish_qc(qc);
+ 	/* do we need to kick the port? */
+-	busy = ahci_check_status(ap) & (ATA_BUSY | ATA_DRQ);
++	busy = status & (ATA_BUSY | ATA_DRQ);
+ 	if (!busy && !force_restart)
+ 		return 0;
+ 
+@@ -1466,13 +1463,6 @@ static int ahci_pmp_softreset(struct ata_link *link, unsigned int *class,
+ 	return ahci_do_softreset(link, class, link->pmp, deadline);
+ }
+ 
+-static u8 ahci_check_status(struct ata_port *ap)
+-{
+-	void __iomem *mmio = ap->ioaddr.cmd_addr;
+-
+-	return readl(mmio + PORT_TFDATA) & 0xFF;
+-}
+-
+ static unsigned int ahci_fill_sg(struct ata_queued_cmd *qc, void *cmd_tbl)
+ {
+ 	struct scatterlist *sg;
+diff --git a/drivers/ata/sata_fsl.c b/drivers/ata/sata_fsl.c
+index 646cb28..cfe4677 100644
+--- a/drivers/ata/sata_fsl.c
++++ b/drivers/ata/sata_fsl.c
+@@ -244,17 +244,6 @@ struct sata_fsl_port_priv {
+ 	dma_addr_t cmdslot_paddr;
+ 	struct command_desc *cmdentry;
+ 	dma_addr_t cmdentry_paddr;
+-
+-	/*
+-	 * SATA FSL controller has a Status FIS which should contain the
+-	 * received D2H FIS & taskfile registers. This SFIS is present in
+-	 * the command descriptor, and to have a ready reference to it,
+-	 * we are caching it here, quite similar to what is done in H/W on
+-	 * AHCI compliant devices by copying taskfile fields to a 32-bit
+-	 * register.
+-	 */
+-
+-	struct ata_taskfile tf;
+ };
+ 
+ /*
+@@ -569,31 +558,6 @@ static void sata_fsl_thaw(struct ata_port *ap)
+ 		ioread32(hcr_base + HCONTROL), ioread32(hcr_base + HSTATUS));
+ }
+ 
+-/*
+- * NOTE : 1st D2H FIS from device does not update sfis in command descriptor.
+- */
+-static inline void sata_fsl_cache_taskfile_from_d2h_fis(struct ata_queued_cmd
+-							*qc,
+-							struct ata_port *ap)
+-{
+-	struct sata_fsl_port_priv *pp = ap->private_data;
+-	struct sata_fsl_host_priv *host_priv = ap->host->private_data;
+-	void __iomem *hcr_base = host_priv->hcr_base;
+-	unsigned int tag = sata_fsl_tag(qc->tag, hcr_base);
+-	struct command_desc *cd;
+-
+-	cd = pp->cmdentry + tag;
+-
+-	ata_tf_from_fis(cd->sfis, &pp->tf);
+-}
+-
+-static u8 sata_fsl_check_status(struct ata_port *ap)
+-{
+-	struct sata_fsl_port_priv *pp = ap->private_data;
+-
+-	return pp->tf.command;
+-}
+-
+ static int sata_fsl_port_start(struct ata_port *ap)
+ {
+ 	struct device *dev = ap->host->dev;
+@@ -1004,10 +968,9 @@ static void sata_fsl_error_intr(struct ata_port *ap)
+ 	/* record error info */
+ 	qc = ata_qc_from_tag(ap, link->active_tag);
+ 
+-	if (qc) {
+-		sata_fsl_cache_taskfile_from_d2h_fis(qc, qc->ap);
++	if (qc)
+ 		qc->err_mask |= err_mask;
+-	} else
++	else
+ 		ehi->err_mask |= err_mask;
+ 
+ 	ehi->action |= action;
+@@ -1020,14 +983,6 @@ static void sata_fsl_error_intr(struct ata_port *ap)
+ 		ata_port_abort(ap);
+ }
+ 
+-static void sata_fsl_qc_complete(struct ata_queued_cmd *qc)
+-{
+-	if (qc->flags & ATA_QCFLAG_RESULT_TF) {
+-		DPRINTK("xx_qc_complete called\n");
+-		sata_fsl_cache_taskfile_from_d2h_fis(qc, qc->ap);
+-	}
+-}
+-
+ static void sata_fsl_host_intr(struct ata_port *ap)
+ {
+ 	struct ata_link *link = &ap->link;
+@@ -1068,10 +1023,8 @@ static void sata_fsl_host_intr(struct ata_port *ap)
+ 		for (i = 0; i < SATA_FSL_QUEUE_DEPTH; i++) {
+ 			if (qc_active & (1 << i)) {
+ 				qc = ata_qc_from_tag(ap, i);
+-				if (qc) {
+-					sata_fsl_qc_complete(qc);
++				if (qc)
+ 					ata_qc_complete(qc);
+-				}
+ 				DPRINTK
+ 				    ("completing ncq cmd,tag=%d,CC=0x%x,CA=0x%x\n",
+ 				     i, ioread32(hcr_base + CC),
+@@ -1087,10 +1040,8 @@ static void sata_fsl_host_intr(struct ata_port *ap)
+ 		DPRINTK("completing non-ncq cmd, tag=%d,CC=0x%x\n",
+ 			link->active_tag, ioread32(hcr_base + CC));
+ 
+-		if (qc) {
+-			sata_fsl_qc_complete(qc);
++		if (qc)
  			ata_qc_complete(qc);
- 			nr_done++;
- 		}
+-		}
+ 	} else {
+ 		/* Spurious Interrupt!! */
+ 		DPRINTK("spurious interrupt!!, CC = 0x%x\n",
+@@ -1197,9 +1148,6 @@ static struct scsi_host_template sata_fsl_sht = {
+ static const struct ata_port_operations sata_fsl_ops = {
+ 	.inherits = &sata_port_ops,
+ 
+-	.sff_check_status = sata_fsl_check_status,
+-	.sff_check_altstatus = sata_fsl_check_status,
+-
+ 	.qc_prep = sata_fsl_qc_prep,
+ 	.qc_issue = sata_fsl_qc_issue,
+ 	.qc_fill_rtf = sata_fsl_qc_fill_rtf,
 diff --git a/drivers/ata/sata_sil24.c b/drivers/ata/sata_sil24.c
-index fc9d48c..79952f8 100644
+index 51a7c06..15a4067 100644
 --- a/drivers/ata/sata_sil24.c
 +++ b/drivers/ata/sata_sil24.c
-@@ -348,6 +348,7 @@ static void sil24_tf_read(struct ata_port *ap, struct ata_taskfile *tf);
+@@ -336,12 +336,10 @@ static struct sil24_cerr_info {
+ struct sil24_port_priv {
+ 	union sil24_cmd_block *cmd_block;	/* 32 cmd blocks */
+ 	dma_addr_t cmd_block_dma;		/* DMA base addr for them */
+-	struct ata_taskfile tf;			/* Cached taskfile registers */
+ 	int do_port_rst;
+ };
+ 
+ static void sil24_dev_config(struct ata_device *dev);
+-static u8 sil24_check_status(struct ata_port *ap);
+ static int sil24_scr_read(struct ata_port *ap, unsigned sc_reg, u32 *val);
+ static int sil24_scr_write(struct ata_port *ap, unsigned sc_reg, u32 val);
  static int sil24_qc_defer(struct ata_queued_cmd *qc);
- static void sil24_qc_prep(struct ata_queued_cmd *qc);
- static unsigned int sil24_qc_issue(struct ata_queued_cmd *qc);
-+static bool sil24_qc_fill_rtf(struct ata_queued_cmd *qc);
- static void sil24_pmp_attach(struct ata_port *ap);
- static void sil24_pmp_detach(struct ata_port *ap);
- static void sil24_freeze(struct ata_port *ap);
-@@ -407,6 +408,7 @@ static struct ata_port_operations sil24_ops = {
+@@ -401,8 +399,6 @@ static struct scsi_host_template sil24_sht = {
+ static struct ata_port_operations sil24_ops = {
+ 	.inherits		= &sata_pmp_port_ops,
+ 
+-	.sff_check_status	= sil24_check_status,
+-	.sff_check_altstatus	= sil24_check_status,
  	.qc_defer		= sil24_qc_defer,
  	.qc_prep		= sil24_qc_prep,
  	.qc_issue		= sil24_qc_issue,
-+	.qc_fill_rtf		= sil24_qc_fill_rtf,
- 
- 	.freeze			= sil24_freeze,
- 	.thaw			= sil24_thaw,
-@@ -914,6 +916,12 @@ static unsigned int sil24_qc_issue(struct ata_queued_cmd *qc)
- 	return 0;
+@@ -492,12 +488,6 @@ static void sil24_read_tf(struct ata_port *ap, int tag, struct ata_taskfile *tf)
+ 	ata_tf_from_fis(fis, tf);
  }
  
-+static bool sil24_qc_fill_rtf(struct ata_queued_cmd *qc)
-+{
-+	sil24_read_tf(qc->ap, qc->tag, &qc->result_tf);
-+	return true;
-+}
-+
- static void sil24_pmp_attach(struct ata_port *ap)
- {
- 	sil24_config_pmp(ap, 1);
-@@ -1098,15 +1106,6 @@ static void sil24_error_intr(struct ata_port *ap)
- 	}
- }
- 
--static void sil24_finish_qc(struct ata_queued_cmd *qc)
+-static u8 sil24_check_status(struct ata_port *ap)
 -{
--	struct ata_port *ap = qc->ap;
 -	struct sil24_port_priv *pp = ap->private_data;
--
--	if (qc->flags & ATA_QCFLAG_RESULT_TF)
--		sil24_read_tf(ap, qc->tag, &pp->tf);
+-	return pp->tf.command;
 -}
 -
- static inline void sil24_host_intr(struct ata_port *ap)
- {
- 	void __iomem *port = ap->ioaddr.cmd_addr;
-@@ -1131,7 +1130,7 @@ static inline void sil24_host_intr(struct ata_port *ap)
- 	}
+ static int sil24_scr_map[] = {
+ 	[SCR_CONTROL]	= 0,
+ 	[SCR_STATUS]	= 1,
+@@ -1074,10 +1064,9 @@ static void sil24_error_intr(struct ata_port *ap)
+ 		}
  
- 	qc_active = slot_stat & ~HOST_SSTAT_ATTN;
--	rc = ata_qc_complete_multiple(ap, qc_active, sil24_finish_qc);
-+	rc = ata_qc_complete_multiple(ap, qc_active);
- 	if (rc > 0)
- 		return;
- 	if (rc < 0) {
-diff --git a/include/linux/libata.h b/include/linux/libata.h
-index 8b381ce..03f4ae3 100644
---- a/include/linux/libata.h
-+++ b/include/linux/libata.h
-@@ -921,8 +921,7 @@ extern void ata_id_string(const u16 *id, unsigned char *s,
- extern void ata_id_c_string(const u16 *id, unsigned char *s,
- 			    unsigned int ofs, unsigned int len);
- extern void ata_qc_complete(struct ata_queued_cmd *qc);
--extern int ata_qc_complete_multiple(struct ata_port *ap, u32 qc_active,
--				    void (*finish_qc)(struct ata_queued_cmd *));
-+extern int ata_qc_complete_multiple(struct ata_port *ap, u32 qc_active);
- extern void ata_scsi_simulate(struct ata_device *dev, struct scsi_cmnd *cmd,
- 			      void (*done)(struct scsi_cmnd *));
- extern int ata_std_bios_param(struct scsi_device *sdev,
+ 		/* record error info */
+-		if (qc) {
+-			sil24_read_tf(ap, qc->tag, &pp->tf);
++		if (qc)
+ 			qc->err_mask |= err_mask;
+-		} else
++		else
+ 			ehi->err_mask |= err_mask;
+ 
+ 		ehi->action |= action;
+@@ -1210,8 +1199,6 @@ static int sil24_port_start(struct ata_port *ap)
+ 	if (!pp)
+ 		return -ENOMEM;
+ 
+-	pp->tf.command = ATA_DRDY;
+-
+ 	cb = dmam_alloc_coherent(dev, cb_size, &cb_dma, GFP_KERNEL);
+ 	if (!cb)
+ 		return -ENOMEM;
+diff --git a/drivers/scsi/ipr.c b/drivers/scsi/ipr.c
+index b079f6c..5a95ea7 100644
+--- a/drivers/scsi/ipr.c
++++ b/drivers/scsi/ipr.c
+@@ -5246,35 +5246,7 @@ static bool ipr_qc_fill_rtf(struct ata_queued_cmd *qc)
+ 	return true;
+ }
+ 
+-/**
+- * ipr_ata_check_status - Return last ATA status
+- * @ap:	ATA port
+- *
+- * Return value:
+- * 	ATA status
+- **/
+-static u8 ipr_ata_check_status(struct ata_port *ap)
+-{
+-	struct ipr_sata_port *sata_port = ap->private_data;
+-	return sata_port->ioasa.status;
+-}
+-
+-/**
+- * ipr_ata_check_altstatus - Return last ATA altstatus
+- * @ap:	ATA port
+- *
+- * Return value:
+- * 	Alt ATA status
+- **/
+-static u8 ipr_ata_check_altstatus(struct ata_port *ap)
+-{
+-	struct ipr_sata_port *sata_port = ap->private_data;
+-	return sata_port->ioasa.alt_status;
+-}
+-
+ static struct ata_port_operations ipr_sata_ops = {
+-	.sff_check_status = ipr_ata_check_status,
+-	.sff_check_altstatus = ipr_ata_check_altstatus,
+ 	.sff_dev_select = ata_noop_dev_select,
+ 	.phy_reset = ipr_ata_phy_reset,
+ 	.hardreset = ipr_sata_reset,
+diff --git a/drivers/scsi/libsas/sas_ata.c b/drivers/scsi/libsas/sas_ata.c
+index e81f2fd..5c114bb 100644
+--- a/drivers/scsi/libsas/sas_ata.c
++++ b/drivers/scsi/libsas/sas_ata.c
+@@ -233,12 +233,6 @@ static bool sas_ata_qc_fill_rtf(struct ata_queued_cmd *qc)
+ 	return true;
+ }
+ 
+-static u8 sas_ata_check_status(struct ata_port *ap)
+-{
+-	struct domain_device *dev = ap->private_data;
+-	return dev->sata_dev.tf.command;
+-}
+-
+ static void sas_ata_phy_reset(struct ata_port *ap)
+ {
+ 	struct domain_device *dev = ap->private_data;
+@@ -350,8 +344,6 @@ static int sas_ata_scr_read(struct ata_port *ap, unsigned int sc_reg_in,
+ }
+ 
+ static struct ata_port_operations sas_sata_ops = {
+-	.sff_check_status	= sas_ata_check_status,
+-	.sff_check_altstatus	= sas_ata_check_status,
+ 	.sff_dev_select		= ata_noop_dev_select,
+ 	.phy_reset		= sas_ata_phy_reset,
+ 	.post_internal_cmd	= sas_ata_post_internal,
 -- 
 1.5.2.4
 
