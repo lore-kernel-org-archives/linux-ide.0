@@ -1,101 +1,53 @@
-From: Bodo Eggert <7eggert@gmx.de>
-Subject: Re: What to do about the 2TB limit on HDIO_GETGEO ?
-Date: Wed, 26 Mar 2008 12:30:40 +0100
-Message-ID: <E1JeTq5-00018y-MO__7382.85248303345$1206531131$gmane$org@be1.7eggert.dyndns.org>
-References: <abhxL-xC-7@gated-at.bofh.it> <abhRd-1bf-15@gated-at.bofh.it> <ablib-2zv-65@gated-at.bofh.it> <abn0B-735-35@gated-at.bofh.it> <abna7-7jK-3@gated-at.bofh.it> <abo6b-11J-9@gated-at.bofh.it> <aboSP-2Wf-29@gated-at.bofh.it> <aboSP-2Wf-27@gated-at.bofh.it> <abqrq-6eX-29@gated-at.bofh.it> <abqrq-6eX-27@gated-at.bofh.it> <abqKM-6Ka-13@gated-at.bofh.it>
-Reply-To: 7eggert@gmx.de
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: [PATCH] pata_atiixp: Simplex clear
+Date: Wed, 26 Mar 2008 11:35:03 +0000
+Message-ID: <20080326113503.7c0218ce@core>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7Bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.126.187]:50871 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753210AbYCZLbJ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 26 Mar 2008 07:31:09 -0400
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:34734 "EHLO
+	lxorguk.ukuu.org.uk" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1755246AbYCZLvs (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 26 Mar 2008 07:51:48 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Greg KH <gregkh@suse.de>, "H. Peter Anvin" <hpa@zytor.com>, Randy Dunlap <randy.dunlap@oracle.com>, Mark Lord <lkml@rtr.ca>, Jens Axboe <axboe@kernel.dk>, Jeff Garzik <jgarzik@pobox.c>
+To: akpm@osdl.org, jeff@garzik.org, linux-ide@vger.kernel.org
 
-Greg KH <gregkh@suse.de> wrote:
-> On Tue, Mar 25, 2008 at 04:05:32PM -0700, H. Peter Anvin wrote:
+Some of the other quirks changes seem to have left some users with the
+simplex bits mis-set by the time the driver loads. Clear simplex mode
+before we probe the controller therefore
 
->>> How does this have anything to do with boot times?  Do you really have a
->>> foolish shell script that iteratorates over every single disk in the
->>> sysfs tree for every disk?  What does it do that for?
->>
->> Any time you want to get the sysfs information for a filesystem which is
->> already mounted, that's what you're forced to do.
->>
->>> I thought we were talking about 2TB disks here, with a proposed new
->>> ioctl, not foolishness of boot scripts...
->>
->> I pointed out that having a way to map device numbers to sysfs directories
->> would have the same effect, *and* would be usable for other purposes.  I'd
->> rather see that than a new ioctl, and another, and another...
-> 
-> Again, a simple udev rule will give you that today if you really want
-> it...
+Signed-off-by: Alan Cox <alan@redhat.com>
 
-So e.g. lilo should depend on sysfs and *a*special*configuration* of udev,
-while the admin MUST NOT use mknod'ed device files nor manually create
-symlinks pointing to them, and not use relative path names?
-That's plain stupid.
-
-> And I think 'udevinfo' can be used to retrieve this information as well.
-
-$ udevinfo /dev/hda
-missing option
-$ udevinfo /dev/hda --help
-Usage: udevinfo OPTIONS
-  --query=<type>    query database for the specified value:
-    name            name of device node
-    symlink         pointing to node
-    path            sysfs device path
-    env             the device related imported environment
-    all             all values
-
-  --path=<devpath>  sysfs device path used for query or chain
-  --name=<name>     node or symlink name used for query
-
-  --root            prepend to query result or print udev_root
-  --attribute-walk  print all SYSFS_attributes along the device chain
-  --export-db       export the content of the udev database
-  --help            print this text
-$ udevinfo --name=/dev/hda
-missing option
-$ udevinfo --name=/dev/hda --query=all
-P: /block/hda
-N: hda
-S: disk/by-id/ata-Maxtor_2F040L0_F1748ZQE
-S: disk/by-path/pci-0000:00:0f.0-ide-0:0
-E: DEVTYPE=disk
-E: ID_TYPE=disk
-E: ID_MODEL=Maxtor_2F040L0
-E: ID_SERIAL=F1748ZQE
-E: ID_REVISION=VAM51JJ0
-E: ID_BUS=ata
-E: ID_PATH=pci-0000:00:0f.0-ide-0:0
-
-
-As you can see, it gives no major:minor information. But it is in the DB:
-
-$ cd /dev/.udev/db
-$ grep -l hda * 2>/dev/null
-\x2fblock\x2fhda
-\x2fblock\x2fhda\x2fhda1
-$ cat "\x2fblock\x2fhda"
-N:hda
-S:disk/by-id/ata-Maxtor_2F040L0_F1748ZQE
-S:disk/by-path/pci-0000:00:0f.0-ide-0:0
-M:3:0
-E:DEVTYPE=disk
-E:ID_TYPE=disk
-E:ID_MODEL=Maxtor_2F040L0
-E:ID_SERIAL=F1748ZQE
-E:ID_REVISION=VAM51JJ0
-E:ID_BUS=ata
-E:ID_PATH=pci-0000:00:0f.0-ide-0:0
-
-What a great tool - for making linux look bad.
-
-
+diff -u --new-file --recursive --exclude-from /usr/src/exclude linux.vanilla-2.6.25-rc5-mm1/drivers/ata/pata_atiixp.c linux-2.6.25-rc5-mm1/drivers/ata/pata_atiixp.c
+--- linux.vanilla-2.6.25-rc5-mm1/drivers/ata/pata_atiixp.c	2008-03-18 15:52:08.000000000 +0000
++++ linux-2.6.25-rc5-mm1/drivers/ata/pata_atiixp.c	2008-03-26 09:41:09.000000000 +0000
+@@ -22,7 +22,7 @@
+ #include <linux/libata.h>
+ 
+ #define DRV_NAME "pata_atiixp"
+-#define DRV_VERSION "0.4.6"
++#define DRV_VERSION "0.4.7"
+ 
+ enum {
+ 	ATIIXP_IDE_PIO_TIMING	= 0x40,
+@@ -282,6 +282,9 @@
+ 		.port_ops = &atiixp_port_ops
+ 	};
+ 	const struct ata_port_info *ppi[] = { &info, NULL };
++	/* Some of the quirk reconfiguration messes up the simplex
++	   flag, so clear it again */
++	ata_pci_clear_simplex(dev);
+ 	return ata_pci_init_one(dev, ppi);
+ }
+ 
+@@ -318,7 +321,7 @@
+ }
+ 
+ MODULE_AUTHOR("Alan Cox");
+-MODULE_DESCRIPTION("low-level driver for ATI IXP200/300/400");
++MODULE_DESCRIPTION("low-level driver for ATI IXP series");
+ MODULE_LICENSE("GPL");
+ MODULE_DEVICE_TABLE(pci, atiixp);
+ MODULE_VERSION(DRV_VERSION);
