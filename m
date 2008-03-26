@@ -1,30 +1,159 @@
-From: "H. Peter Anvin" <hpa@zytor.com>
-Subject: Re: What to do about the 2TB limit on HDIO_GETGEO ?
-Date: Tue, 25 Mar 2008 23:04:49 -0700
-Message-ID: <47E9E781.4000901@zytor.com>
-References: <47E875AD.1000901@rtr.ca> <47E87942.2020409@rtr.ca> <47E88A13.70808@zytor.com> <47E90019.3050006@rtr.ca> <47E90458.7030801@zytor.com> <47E9383F.3050908@rtr.ca> <20080325192515.GA24234@suse.de> <47E99A02.7040903@rtr.ca> <47E99EBE.7010708@gmail.com> <20080326033804.GA27925@suse.de> <47E9D017.5080305@gmail.com>
+From: Tejun Heo <htejun@gmail.com>
+Subject: [PATCH #upstream] ata_piix: don't attach to ICH6M in ahci mode
+Date: Wed, 26 Mar 2008 15:46:58 +0900
+Message-ID: <47E9F162.3010806@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1754078AbYCZGFk@vger.kernel.org>
-In-Reply-To: <47E9D017.5080305@gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Greg KH <gregkh@suse.de>, Mark Lord <lkml@rtr.ca>, Jens Axboe <axboe@kernel.dk>, Jeff Garzik <jgarzik@pobox.com>, Linus Torvalds <torvalds@osdl.org>, Andrew Morton <akpm@linux-foundation.org>, Linux Kernel <linux-kernel@vger.kernel.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from qb-out-0506.google.com ([72.14.204.238]:8855 "EHLO
+	qb-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751330AbYCZGrI (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 26 Mar 2008 02:47:08 -0400
+Received: by qb-out-0506.google.com with SMTP id e11so4263591qbe.15
+        for <linux-ide@vger.kernel.org>; Tue, 25 Mar 2008 23:47:05 -0700 (PDT)
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, romal@gmx.de
 
-Tejun Heo wrote:
-> 
->> Since when is the major:minor view of devices the "standard" one that
->> userspace uses?  Last I looked, userspace uses symlinks and lots of
->> other ways of directly accessing block devices in /dev/, and does not
->> rely on major:minor.
-> 
-> The fact that major:minor is the unique identifier of a device makes it
-> a bit special compared to other names on filesystem.
-> 
+ata_piix when attached to ICH6M in AHCI mode doesn't provide any
+benefit over using ahci and has detection problems.  Don't let
+ata_piix claim ICH6M if it's in AHCI mode.
 
-In particular, stat() and friends returns the device number, not a 
-device name.
+This change makes ICH6R the only one which ata_piix can attach to even
+when it's in ahci mode which is necessary as some devices don't work
+properly under ahci mode.  Drop PIIX_FLAG_AHCI and match the
+controller directly so that piix_disable_ahci() is called only for it.
 
-	-hpa
+This change makes PIIX_SCC no longer used and it gets dropped too.
+
+This fixes bz 9491.
+
+Signed-off-by: Tejun Heo <htejun@gmail.com>
+Cc: Robert M. Albrecht <romal@gmx.de>
+---
+ drivers/ata/ata_piix.c |   43 ++++++++++++++++++++-----------------------
+ 1 file changed, 20 insertions(+), 23 deletions(-)
+
+diff --git a/drivers/ata/ata_piix.c b/drivers/ata/ata_piix.c
+index fae8404..8ba8f5a 100644
+--- a/drivers/ata/ata_piix.c
++++ b/drivers/ata/ata_piix.c
+@@ -100,13 +100,11 @@ enum {
+ 	PIIX_IOCFG		= 0x54, /* IDE I/O configuration register */
+ 	ICH5_PMR		= 0x90, /* port mapping register */
+ 	ICH5_PCS		= 0x92,	/* port control and status */
+-	PIIX_SCC		= 0x0A, /* sub-class code register */
+ 	PIIX_SIDPR_BAR		= 5,
+ 	PIIX_SIDPR_LEN		= 16,
+ 	PIIX_SIDPR_IDX		= 0,
+ 	PIIX_SIDPR_DATA		= 4,
+ 
+-	PIIX_FLAG_AHCI		= (1 << 27), /* AHCI possible */
+ 	PIIX_FLAG_CHECKINTR	= (1 << 28), /* make sure PCI INTx enabled */
+ 	PIIX_FLAG_SIDPR		= (1 << 29), /* SATA idx/data pair regs */
+ 
+@@ -237,8 +235,10 @@ static const struct pci_device_id piix_pci_tbl[] = {
+ 	{ 0x8086, 0x2651, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich6_sata },
+ 	/* 82801FR/FRW (ICH6R/ICH6RW) */
+ 	{ 0x8086, 0x2652, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich6_sata_ahci },
+-	/* 82801FBM ICH6M (ICH6R with only port 0 and 2 implemented) */
+-	{ 0x8086, 0x2653, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich6m_sata_ahci },
++	/* 82801FBM ICH6M (ICH6R with only port 0 and 2 implemented).
++	 * Attach iff the controller is in IDE mode. */
++	{ 0x8086, 0x2653, PCI_ANY_ID, PCI_ANY_ID,
++	  PCI_CLASS_STORAGE_IDE << 8, 0xffff00, ich6m_sata_ahci },
+ 	/* 82801GB/GR/GH (ICH7, identical to ICH6) */
+ 	{ 0x8086, 0x27c0, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich6_sata_ahci },
+ 	/* 2801GBM/GHM (ICH7M, identical to ICH6M) */
+@@ -626,7 +626,7 @@ static struct ata_port_info piix_port_info[] = {
+ 
+ 	[ich6_sata_ahci] =
+ 	{
+-		.flags		= PIIX_SATA_FLAGS | PIIX_FLAG_AHCI,
++		.flags		= PIIX_SATA_FLAGS,
+ 		.pio_mask	= 0x1f,	/* pio0-4 */
+ 		.mwdma_mask	= 0x07, /* mwdma0-2 */
+ 		.udma_mask	= ATA_UDMA6,
+@@ -635,7 +635,7 @@ static struct ata_port_info piix_port_info[] = {
+ 
+ 	[ich6m_sata_ahci] =
+ 	{
+-		.flags		= PIIX_SATA_FLAGS | PIIX_FLAG_AHCI,
++		.flags		= PIIX_SATA_FLAGS,
+ 		.pio_mask	= 0x1f,	/* pio0-4 */
+ 		.mwdma_mask	= 0x07, /* mwdma0-2 */
+ 		.udma_mask	= ATA_UDMA6,
+@@ -644,8 +644,7 @@ static struct ata_port_info piix_port_info[] = {
+ 
+ 	[ich8_sata_ahci] =
+ 	{
+-		.flags		= PIIX_SATA_FLAGS | PIIX_FLAG_AHCI |
+-				  PIIX_FLAG_SIDPR,
++		.flags		= PIIX_SATA_FLAGS | PIIX_FLAG_SIDPR,
+ 		.pio_mask	= 0x1f,	/* pio0-4 */
+ 		.mwdma_mask	= 0x07, /* mwdma0-2 */
+ 		.udma_mask	= ATA_UDMA6,
+@@ -654,8 +653,7 @@ static struct ata_port_info piix_port_info[] = {
+ 
+ 	[ich8_2port_sata] =
+ 	{
+-		.flags		= PIIX_SATA_FLAGS | PIIX_FLAG_AHCI |
+-				  PIIX_FLAG_SIDPR,
++		.flags		= PIIX_SATA_FLAGS | PIIX_FLAG_SIDPR,
+ 		.pio_mask	= 0x1f,	/* pio0-4 */
+ 		.mwdma_mask	= 0x07, /* mwdma0-2 */
+ 		.udma_mask	= ATA_UDMA6,
+@@ -664,7 +662,7 @@ static struct ata_port_info piix_port_info[] = {
+ 
+ 	[tolapai_sata_ahci] =
+ 	{
+-		.flags		= PIIX_SATA_FLAGS | PIIX_FLAG_AHCI,
++		.flags		= PIIX_SATA_FLAGS,
+ 		.pio_mask	= 0x1f,	/* pio0-4 */
+ 		.mwdma_mask	= 0x07, /* mwdma0-2 */
+ 		.udma_mask	= ATA_UDMA6,
+@@ -673,8 +671,7 @@ static struct ata_port_info piix_port_info[] = {
+ 
+ 	[ich8m_apple_sata_ahci] =
+ 	{
+-		.flags		= PIIX_SATA_FLAGS | PIIX_FLAG_AHCI |
+-				  PIIX_FLAG_SIDPR,
++		.flags		= PIIX_SATA_FLAGS | PIIX_FLAG_SIDPR,
+ 		.pio_mask	= 0x1f,	/* pio0-4 */
+ 		.mwdma_mask	= 0x07, /* mwdma0-2 */
+ 		.udma_mask	= ATA_UDMA6,
+@@ -1633,6 +1630,16 @@ static int __devinit piix_init_one(struct pci_dev *pdev,
+ 	if (rc)
+ 		return rc;
+ 
++	/* ICH6R may be driven by either ata_piix or ahci driver
++	 * regardless of BIOS configuration.  Make sure AHCI mode is
++	 * off.
++	 */
++	if (pdev->vendor == PCI_VENDOR_ID_INTEL && pdev->device == 0x2652) {
++		int rc = piix_disable_ahci(pdev);
++		if (rc)
++			return rc;
++	}
++
+ 	/* SATA map init can change port_info, do it before prepping host */
+ 	hpriv = devm_kzalloc(dev, sizeof(*hpriv), GFP_KERNEL);
+ 	if (!hpriv)
+@@ -1648,16 +1655,6 @@ static int __devinit piix_init_one(struct pci_dev *pdev,
+ 	host->private_data = hpriv;
+ 
+ 	/* initialize controller */
+-	if (port_flags & PIIX_FLAG_AHCI) {
+-		u8 tmp;
+-		pci_read_config_byte(pdev, PIIX_SCC, &tmp);
+-		if (tmp == PIIX_AHCI_DEVICE) {
+-			rc = piix_disable_ahci(pdev);
+-			if (rc)
+-				return rc;
+-		}
+-	}
+-
+ 	if (port_flags & ATA_FLAG_SATA) {
+ 		piix_init_pcs(host, piix_map_db_table[ent->driver_data]);
+ 		piix_init_sidpr(host);
