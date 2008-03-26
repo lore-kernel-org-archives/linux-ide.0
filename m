@@ -1,159 +1,169 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH #upstream] ata_piix: don't attach to ICH6M in ahci mode
-Date: Wed, 26 Mar 2008 15:46:58 +0900
-Message-ID: <47E9F162.3010806@gmail.com>
+Subject: [PATCH #upstream] ata_piix: kill ich6_sata_ahci and clean up
+Date: Wed, 26 Mar 2008 16:00:58 +0900
+Message-ID: <47E9F4AA.1000401@gmail.com>
+References: <47E9F162.3010806@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from qb-out-0506.google.com ([72.14.204.238]:8855 "EHLO
-	qb-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751330AbYCZGrI (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 26 Mar 2008 02:47:08 -0400
-Received: by qb-out-0506.google.com with SMTP id e11so4263591qbe.15
-        for <linux-ide@vger.kernel.org>; Tue, 25 Mar 2008 23:47:05 -0700 (PDT)
+Received: from po-out-1718.google.com ([72.14.252.153]:64566 "EHLO
+	po-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750717AbYCZHBI (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 26 Mar 2008 03:01:08 -0400
+Received: by po-out-1718.google.com with SMTP id b23so5586089poe.1
+        for <linux-ide@vger.kernel.org>; Wed, 26 Mar 2008 00:01:05 -0700 (PDT)
+In-Reply-To: <47E9F162.3010806@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Jeff Garzik <jeff@garzik.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, romal@gmx.de
 
-ata_piix when attached to ICH6M in AHCI mode doesn't provide any
-benefit over using ahci and has detection problems.  Don't let
-ata_piix claim ICH6M if it's in AHCI mode.
-
-This change makes ICH6R the only one which ata_piix can attach to even
-when it's in ahci mode which is necessary as some devices don't work
-properly under ahci mode.  Drop PIIX_FLAG_AHCI and match the
-controller directly so that piix_disable_ahci() is called only for it.
-
-This change makes PIIX_SCC no longer used and it gets dropped too.
-
-This fixes bz 9491.
+ich6_sata_ahci and ich6_sata are identical.  Kill ich6_sata_ahci and
+drop _ahci postfixes from controller ids, which doesn't really mean
+anything at this point.
 
 Signed-off-by: Tejun Heo <htejun@gmail.com>
-Cc: Robert M. Albrecht <romal@gmx.de>
 ---
- drivers/ata/ata_piix.c |   43 ++++++++++++++++++++-----------------------
- 1 file changed, 20 insertions(+), 23 deletions(-)
+ drivers/ata/ata_piix.c |   61 ++++++++++++++++++++-----------------------------
+ 1 file changed, 25 insertions(+), 36 deletions(-)
 
-diff --git a/drivers/ata/ata_piix.c b/drivers/ata/ata_piix.c
-index fae8404..8ba8f5a 100644
---- a/drivers/ata/ata_piix.c
-+++ b/drivers/ata/ata_piix.c
-@@ -100,13 +100,11 @@ enum {
- 	PIIX_IOCFG		= 0x54, /* IDE I/O configuration register */
- 	ICH5_PMR		= 0x90, /* port mapping register */
- 	ICH5_PCS		= 0x92,	/* port control and status */
--	PIIX_SCC		= 0x0A, /* sub-class code register */
- 	PIIX_SIDPR_BAR		= 5,
- 	PIIX_SIDPR_LEN		= 16,
- 	PIIX_SIDPR_IDX		= 0,
- 	PIIX_SIDPR_DATA		= 4,
+Index: work/drivers/ata/ata_piix.c
+===================================================================
+--- work.orig/drivers/ata/ata_piix.c
++++ work/drivers/ata/ata_piix.c
+@@ -138,12 +138,11 @@ enum piix_controller_ids {
+ 	ich_pata_100,		/* ICH up to UDMA 100 */
+ 	ich5_sata,
+ 	ich6_sata,
+-	ich6_sata_ahci,
+-	ich6m_sata_ahci,
+-	ich8_sata_ahci,
++	ich6m_sata,
++	ich8_sata,
+ 	ich8_2port_sata,
+-	ich8m_apple_sata_ahci,	/* locks up on second port enable */
+-	tolapai_sata_ahci,
++	ich8m_apple_sata,	/* locks up on second port enable */
++	tolapai_sata,
+ 	piix_pata_vmw,			/* PIIX4 for VMware, spurious DMA_ERR */
+ };
  
--	PIIX_FLAG_AHCI		= (1 << 27), /* AHCI possible */
- 	PIIX_FLAG_CHECKINTR	= (1 << 28), /* make sure PCI INTx enabled */
- 	PIIX_FLAG_SIDPR		= (1 << 29), /* SATA idx/data pair regs */
- 
-@@ -237,8 +235,10 @@ static const struct pci_device_id piix_pci_tbl[] = {
+@@ -234,27 +233,27 @@ static const struct pci_device_id piix_p
+ 	/* 82801FB/FW (ICH6/ICH6W) */
  	{ 0x8086, 0x2651, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich6_sata },
  	/* 82801FR/FRW (ICH6R/ICH6RW) */
- 	{ 0x8086, 0x2652, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich6_sata_ahci },
--	/* 82801FBM ICH6M (ICH6R with only port 0 and 2 implemented) */
--	{ 0x8086, 0x2653, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich6m_sata_ahci },
-+	/* 82801FBM ICH6M (ICH6R with only port 0 and 2 implemented).
-+	 * Attach iff the controller is in IDE mode. */
-+	{ 0x8086, 0x2653, PCI_ANY_ID, PCI_ANY_ID,
-+	  PCI_CLASS_STORAGE_IDE << 8, 0xffff00, ich6m_sata_ahci },
+-	{ 0x8086, 0x2652, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich6_sata_ahci },
++	{ 0x8086, 0x2652, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich6_sata },
+ 	/* 82801FBM ICH6M (ICH6R with only port 0 and 2 implemented).
+ 	 * Attach iff the controller is in IDE mode. */
+ 	{ 0x8086, 0x2653, PCI_ANY_ID, PCI_ANY_ID,
+-	  PCI_CLASS_STORAGE_IDE << 8, 0xffff00, ich6m_sata_ahci },
++	  PCI_CLASS_STORAGE_IDE << 8, 0xffff00, ich6m_sata },
  	/* 82801GB/GR/GH (ICH7, identical to ICH6) */
- 	{ 0x8086, 0x27c0, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich6_sata_ahci },
+-	{ 0x8086, 0x27c0, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich6_sata_ahci },
++	{ 0x8086, 0x27c0, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich6_sata },
  	/* 2801GBM/GHM (ICH7M, identical to ICH6M) */
-@@ -626,7 +626,7 @@ static struct ata_port_info piix_port_info[] = {
+-	{ 0x8086, 0x27c4, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich6m_sata_ahci },
++	{ 0x8086, 0x27c4, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich6m_sata },
+ 	/* Enterprise Southbridge 2 (631xESB/632xESB) */
+-	{ 0x8086, 0x2680, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich6_sata_ahci },
++	{ 0x8086, 0x2680, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich6_sata },
+ 	/* SATA Controller 1 IDE (ICH8) */
+-	{ 0x8086, 0x2820, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich8_sata_ahci },
++	{ 0x8086, 0x2820, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich8_sata },
+ 	/* SATA Controller 2 IDE (ICH8) */
+ 	{ 0x8086, 0x2825, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich8_2port_sata },
+ 	/* Mobile SATA Controller IDE (ICH8M) */
+-	{ 0x8086, 0x2828, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich8_sata_ahci },
++	{ 0x8086, 0x2828, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich8_sata },
+ 	/* Mobile SATA Controller IDE (ICH8M), Apple */
+-	{ 0x8086, 0x2828, 0x106b, 0x00a0, 0, 0, ich8m_apple_sata_ahci },
++	{ 0x8086, 0x2828, 0x106b, 0x00a0, 0, 0, ich8m_apple_sata },
+ 	/* SATA Controller IDE (ICH9) */
+-	{ 0x8086, 0x2920, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich8_sata_ahci },
++	{ 0x8086, 0x2920, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich8_sata },
+ 	/* SATA Controller IDE (ICH9) */
+ 	{ 0x8086, 0x2921, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich8_2port_sata },
+ 	/* SATA Controller IDE (ICH9) */
+@@ -264,15 +263,15 @@ static const struct pci_device_id piix_p
+ 	/* SATA Controller IDE (ICH9M) */
+ 	{ 0x8086, 0x292d, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich8_2port_sata },
+ 	/* SATA Controller IDE (ICH9M) */
+-	{ 0x8086, 0x292e, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich8_sata_ahci },
++	{ 0x8086, 0x292e, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich8_sata },
+ 	/* SATA Controller IDE (Tolapai) */
+-	{ 0x8086, 0x5028, PCI_ANY_ID, PCI_ANY_ID, 0, 0, tolapai_sata_ahci },
++	{ 0x8086, 0x5028, PCI_ANY_ID, PCI_ANY_ID, 0, 0, tolapai_sata },
+ 	/* SATA Controller IDE (ICH10) */
+-	{ 0x8086, 0x3a00, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich8_sata_ahci },
++	{ 0x8086, 0x3a00, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich8_sata },
+ 	/* SATA Controller IDE (ICH10) */
+ 	{ 0x8086, 0x3a06, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich8_2port_sata },
+ 	/* SATA Controller IDE (ICH10) */
+-	{ 0x8086, 0x3a20, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich8_sata_ahci },
++	{ 0x8086, 0x3a20, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich8_sata },
+ 	/* SATA Controller IDE (ICH10) */
+ 	{ 0x8086, 0x3a26, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich8_2port_sata },
  
- 	[ich6_sata_ahci] =
+@@ -553,12 +552,11 @@ static const struct piix_map_db tolapai_
+ static const struct piix_map_db *piix_map_db_table[] = {
+ 	[ich5_sata]		= &ich5_map_db,
+ 	[ich6_sata]		= &ich6_map_db,
+-	[ich6_sata_ahci]	= &ich6_map_db,
+-	[ich6m_sata_ahci]	= &ich6m_map_db,
+-	[ich8_sata_ahci]	= &ich8_map_db,
++	[ich6m_sata]		= &ich6m_map_db,
++	[ich8_sata]		= &ich8_map_db,
+ 	[ich8_2port_sata]	= &ich8_2port_map_db,
+-	[ich8m_apple_sata_ahci]	= &ich8m_apple_map_db,
+-	[tolapai_sata_ahci]	= &tolapai_map_db,
++	[ich8m_apple_sata]	= &ich8m_apple_map_db,
++	[tolapai_sata]		= &tolapai_map_db,
+ };
+ 
+ static struct ata_port_info piix_port_info[] = {
+@@ -624,7 +622,7 @@ static struct ata_port_info piix_port_in
+ 		.port_ops	= &piix_sata_ops,
+ 	},
+ 
+-	[ich6_sata_ahci] =
++	[ich6m_sata] =
  	{
--		.flags		= PIIX_SATA_FLAGS | PIIX_FLAG_AHCI,
-+		.flags		= PIIX_SATA_FLAGS,
+ 		.flags		= PIIX_SATA_FLAGS,
  		.pio_mask	= 0x1f,	/* pio0-4 */
- 		.mwdma_mask	= 0x07, /* mwdma0-2 */
- 		.udma_mask	= ATA_UDMA6,
-@@ -635,7 +635,7 @@ static struct ata_port_info piix_port_info[] = {
+@@ -633,16 +631,7 @@ static struct ata_port_info piix_port_in
+ 		.port_ops	= &piix_sata_ops,
+ 	},
  
- 	[ich6m_sata_ahci] =
- 	{
--		.flags		= PIIX_SATA_FLAGS | PIIX_FLAG_AHCI,
-+		.flags		= PIIX_SATA_FLAGS,
- 		.pio_mask	= 0x1f,	/* pio0-4 */
- 		.mwdma_mask	= 0x07, /* mwdma0-2 */
- 		.udma_mask	= ATA_UDMA6,
-@@ -644,8 +644,7 @@ static struct ata_port_info piix_port_info[] = {
- 
- 	[ich8_sata_ahci] =
- 	{
--		.flags		= PIIX_SATA_FLAGS | PIIX_FLAG_AHCI |
--				  PIIX_FLAG_SIDPR,
-+		.flags		= PIIX_SATA_FLAGS | PIIX_FLAG_SIDPR,
- 		.pio_mask	= 0x1f,	/* pio0-4 */
- 		.mwdma_mask	= 0x07, /* mwdma0-2 */
- 		.udma_mask	= ATA_UDMA6,
-@@ -654,8 +653,7 @@ static struct ata_port_info piix_port_info[] = {
- 
- 	[ich8_2port_sata] =
- 	{
--		.flags		= PIIX_SATA_FLAGS | PIIX_FLAG_AHCI |
--				  PIIX_FLAG_SIDPR,
-+		.flags		= PIIX_SATA_FLAGS | PIIX_FLAG_SIDPR,
- 		.pio_mask	= 0x1f,	/* pio0-4 */
- 		.mwdma_mask	= 0x07, /* mwdma0-2 */
- 		.udma_mask	= ATA_UDMA6,
-@@ -664,7 +662,7 @@ static struct ata_port_info piix_port_info[] = {
- 
- 	[tolapai_sata_ahci] =
- 	{
--		.flags		= PIIX_SATA_FLAGS | PIIX_FLAG_AHCI,
-+		.flags		= PIIX_SATA_FLAGS,
- 		.pio_mask	= 0x1f,	/* pio0-4 */
- 		.mwdma_mask	= 0x07, /* mwdma0-2 */
- 		.udma_mask	= ATA_UDMA6,
-@@ -673,8 +671,7 @@ static struct ata_port_info piix_port_info[] = {
- 
- 	[ich8m_apple_sata_ahci] =
- 	{
--		.flags		= PIIX_SATA_FLAGS | PIIX_FLAG_AHCI |
--				  PIIX_FLAG_SIDPR,
-+		.flags		= PIIX_SATA_FLAGS | PIIX_FLAG_SIDPR,
- 		.pio_mask	= 0x1f,	/* pio0-4 */
- 		.mwdma_mask	= 0x07, /* mwdma0-2 */
- 		.udma_mask	= ATA_UDMA6,
-@@ -1633,6 +1630,16 @@ static int __devinit piix_init_one(struct pci_dev *pdev,
- 	if (rc)
- 		return rc;
- 
-+	/* ICH6R may be driven by either ata_piix or ahci driver
-+	 * regardless of BIOS configuration.  Make sure AHCI mode is
-+	 * off.
-+	 */
-+	if (pdev->vendor == PCI_VENDOR_ID_INTEL && pdev->device == 0x2652) {
-+		int rc = piix_disable_ahci(pdev);
-+		if (rc)
-+			return rc;
-+	}
-+
- 	/* SATA map init can change port_info, do it before prepping host */
- 	hpriv = devm_kzalloc(dev, sizeof(*hpriv), GFP_KERNEL);
- 	if (!hpriv)
-@@ -1648,16 +1655,6 @@ static int __devinit piix_init_one(struct pci_dev *pdev,
- 	host->private_data = hpriv;
- 
- 	/* initialize controller */
--	if (port_flags & PIIX_FLAG_AHCI) {
--		u8 tmp;
--		pci_read_config_byte(pdev, PIIX_SCC, &tmp);
--		if (tmp == PIIX_AHCI_DEVICE) {
--			rc = piix_disable_ahci(pdev);
--			if (rc)
--				return rc;
--		}
--	}
+-	[ich6m_sata_ahci] =
+-	{
+-		.flags		= PIIX_SATA_FLAGS,
+-		.pio_mask	= 0x1f,	/* pio0-4 */
+-		.mwdma_mask	= 0x07, /* mwdma0-2 */
+-		.udma_mask	= ATA_UDMA6,
+-		.port_ops	= &piix_sata_ops,
+-	},
 -
- 	if (port_flags & ATA_FLAG_SATA) {
- 		piix_init_pcs(host, piix_map_db_table[ent->driver_data]);
- 		piix_init_sidpr(host);
+-	[ich8_sata_ahci] =
++	[ich8_sata] =
+ 	{
+ 		.flags		= PIIX_SATA_FLAGS | PIIX_FLAG_SIDPR,
+ 		.pio_mask	= 0x1f,	/* pio0-4 */
+@@ -660,7 +649,7 @@ static struct ata_port_info piix_port_in
+ 		.port_ops	= &piix_sata_ops,
+ 	},
+ 
+-	[tolapai_sata_ahci] =
++	[tolapai_sata] =
+ 	{
+ 		.flags		= PIIX_SATA_FLAGS,
+ 		.pio_mask	= 0x1f,	/* pio0-4 */
+@@ -669,7 +658,7 @@ static struct ata_port_info piix_port_in
+ 		.port_ops	= &piix_sata_ops,
+ 	},
+ 
+-	[ich8m_apple_sata_ahci] =
++	[ich8m_apple_sata] =
+ 	{
+ 		.flags		= PIIX_SATA_FLAGS | PIIX_FLAG_SIDPR,
+ 		.pio_mask	= 0x1f,	/* pio0-4 */
