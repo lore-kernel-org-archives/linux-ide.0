@@ -1,66 +1,53 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: What to do about the 2TB limit on HDIO_GETGEO ?
-Date: Wed, 26 Mar 2008 09:54:22 +0900
-Message-ID: <47E99EBE.7010708@gmail.com>
-References: <47E875AD.1000901@rtr.ca> <47E87942.2020409@rtr.ca> <47E88A13.70808@zytor.com> <47E90019.3050006@rtr.ca> <47E90458.7030801@zytor.com> <47E9383F.3050908@rtr.ca> <20080325192515.GA24234@suse.de> <47E99A02.7040903@rtr.ca>
+From: Shaohua Li <shaohua.li@intel.com>
+Subject: Re: [PATCH] ata-acpi: don't call _GTF for disabled drive
+Date: Wed, 26 Mar 2008 09:13:16 +0800
+Message-ID: <1206493996.14062.0.camel@sli10-desk.sh.intel.com>
+References: <1206435045.23794.13.camel@sli10-desk.sh.intel.com>
+	 <200803252150.20609.rjw@sisk.pl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <47E99A02.7040903@rtr.ca>
-Sender: linux-scsi-owner@vger.kernel.org
-To: Mark Lord <lkml@rtr.ca>
-Cc: Greg KH <gregkh@suse.de>, "H. Peter Anvin" <hpa@zytor.com>, Jens Axboe <axboe@kernel.dk>, Jeff Garzik <jgarzik@pobox.com>, Linus Torvalds <torvalds@osdl.org>, Andrew Morton <akpm@linux-foundation.org>, Linux Kernel <linux-kernel@vger.kernel.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mga02.intel.com ([134.134.136.20]:61130 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752424AbYCZBNW (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 25 Mar 2008 21:13:22 -0400
+In-Reply-To: <200803252150.20609.rjw@sisk.pl>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: "Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: linux acpi <linux-acpi@vger.kernel.org>, linux-ide <linux-ide@vger.kernel.org>, Len Brown <lenb@kernel.org>, Jeff Garzik <jgarzik@pobox.com>
 
-Hello,
 
-Mark Lord wrote:
-> So have we.  sysfs is a total nightmare to extract information from
-> under program / script control.  The idea presented in this thread,
-> is to have it cross-index the contents with a method that actually
-> makes it easy to access in many common scenarios, without requiring
-> huge gobs of code in user space.  Or in kernel space.
+On Tue, 2008-03-25 at 21:50 +0100, Rafael J. Wysocki wrote:
+> On Tuesday, 25 of March 2008, Shaohua Li wrote:
+> > I got below log after a S3 resume in a ASUS A6VC laptop. The system has
+> > only one IDE drive. It appears there is no reason calling _GTF for
+> > disabled drive.
+> > 
+> > ACPI Error (dsopcode-0483): Attempt to CreateField of length zero [20070126]
+> > ACPI Error (psparse-0537): Method parse/execution failed [\_SB_.PCI0.IDE0.RATA] (Node df822a7c), AE_AML_OPERAND_VALUE
+> > ACPI Error (psparse-0537): Method parse/execution failed [\_SB_.PCI0.IDE0.CHN1.DRV0._GTF] (Node df822bd0), AE_AML_OPERAND_VALUE
+> > ata2.00: _GTF evaluation failed (AE 0x3006)
+> > ACPI Error (dsopcode-0483): Attempt to CreateField of length zero [20070126]
+> > ACPI Error (psparse-0537): Method parse/execution failed [\_SB_.PCI0.IDE0.RATA] (Node df822a7c), AE_AML_OPERAND_VALUE
+> > ACPI Error (psparse-0537): Method parse/execution failed [\_SB_.PCI0.IDE0.CHN1.DRV1._GTF] (Node df822b94), AE_AML_OPERAND_VALUE
+> > ata2.01: _GTF evaluation failed (AE 0x3006)
+> > 
+> > Signed-off-by: Shaohua Li <shaohua.li@intel.com>
+> > 
+> > diff --git a/drivers/ata/libata-acpi.c b/drivers/ata/libata-acpi.c
+> > index bf98a56..7cbf023 100644
+> > --- a/drivers/ata/libata-acpi.c
+> > +++ b/drivers/ata/libata-acpi.c
+> > @@ -839,7 +839,8 @@ void ata_acpi_on_resume(struct ata_port *ap)
+> >  		 */
+> >  		ata_link_for_each_dev(dev, &ap->link) {
+> >  			ata_acpi_clear_gtf(dev);
 > 
-> And it's not just a few 10s of lines of code currently,
-> but rather about 80-100 lines just to find the correct device subdir,
-> and *then* a few more 10s of lines of code to retrieve the value.
-> 
-> In a bulletproof fashion, that is.  Sure it can be slightly smaller
-> if niceties such as error checking/handling are omitted.
-> 
-> There's no guarantee that udev is present, and even if it were present,
-> there's no guarantee that the names in /dev/ will match /sysfs/ pathnames,
-> since udev is very configurable to do otherwise.
-> 
-> So lookups are by dev_t, which sysfs has no simple or even easy way
-> of accomplishing.  O(n) at a minimum.
-> 
-> If we make it easier to access, then more programs will use it
-> rather than us having to expand our tricky binary ioctl interfaces.
-> 
-> Isn't that part of the idea of sysfs -- to limit the need for new ioctls ?
+> Hmm.  What is the effect of calling ata_acpi_clear_gtf() on a disabled device? 
+No effect, just free some memory if there is.
 
-The questions are...
+Thanks,
+Shaohua
 
-1. Are we gonna push sysfs as the primary interface and not provide an
-alternative interface (ioctl here) which can provide equivalent
-information?  There are people running their systems w/o sysfs but I
-think we're getting closer to this everyday.
-
-2. Is udev an essential part of all systems?  I'm not sure about this
-one.  Lots of small machines run w/o udev and I think udev is a bit too
-high level to depend on for every system.
-
-If both #1 and #2 are true, I agree with Mark that we need an easy to
-map from device number to matching sysfs nodes.  Tools which are used
-early during boot and emergency sessions need this mapping and many of
-them are minimal C program w/o much dependency for a good reason.
-Requiring each of them to implement their own way to map device node to
-sysfs node is too awkward.
-
-Probably something like /sys/class/block/MAJ:MIN or
-/sys/class/devnums/bMAJ:MIN?
-
--- 
-tejun
