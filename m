@@ -1,80 +1,92 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCHSET #upstream] libata: improve FLUSH error handling
-Date: Thu, 27 Mar 2008 19:14:22 +0900
-Message-ID: <12066128663306-git-send-email-htejun@gmail.com>
+Subject: [PATCH 1/4] libata: make ata_tf_to_lba[48]() generic
+Date: Thu, 27 Mar 2008 19:14:23 +0900
+Message-ID: <12066128661215-git-send-email-htejun@gmail.com>
+References: <12066128663306-git-send-email-htejun@gmail.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.180]:1228 "EHLO
+Received: from wa-out-1112.google.com ([209.85.146.177]:65503 "EHLO
 	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755276AbYC0KOg (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 27 Mar 2008 06:14:36 -0400
-Received: by wa-out-1112.google.com with SMTP id v27so4737774wah.23
-        for <linux-ide@vger.kernel.org>; Thu, 27 Mar 2008 03:14:33 -0700 (PDT)
+	with ESMTP id S1752508AbYC0KOf (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 27 Mar 2008 06:14:35 -0400
+Received: by wa-out-1112.google.com with SMTP id v27so4737766wah.23
+        for <linux-ide@vger.kernel.org>; Thu, 27 Mar 2008 03:14:34 -0700 (PDT)
+In-Reply-To: <12066128663306-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: jeff@garzik.org, linux-ide@vger.kernel.org, alan@lxorguk.ukuu.org.uk, liml@rtr.ca
+Cc: Tejun Heo <htejun@gmail.com>
 
-Hello, all.
+ata_tf_to_lba[48]() currently return LBA in tf + 1 for
+ata_read_native_max_address().  Make them return LBA and make it
+global so that it can be used to read LBA off TF for other purposes.
+ata_read_native_max_address() now adds 1 itself.
 
-I was going through mailbox and saw Alan's patch[A] which didn't get
-the love it deserved.  It turned out that ata_flush_cache() function
-the patch modifies had been dead for some time.  I ended up re-doing
-it in the EH framework and it turned out okay.
+Signed-off-by: Tejun Heo <htejun@gmail.com>
+---
+ drivers/ata/libata-core.c |   12 ++++++------
+ drivers/ata/libata.h      |    2 ++
+ 2 files changed, 8 insertions(+), 6 deletions(-)
 
-After the patchset, on FLUSH failure, the following is done.
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index 4851988..1a8601f 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -1255,7 +1255,7 @@ static u64 ata_id_n_sectors(const u16 *id)
+ 	}
+ }
+ 
+-static u64 ata_tf_to_lba48(struct ata_taskfile *tf)
++u64 ata_tf_to_lba48(const struct ata_taskfile *tf)
+ {
+ 	u64 sectors = 0;
+ 
+@@ -1266,10 +1266,10 @@ static u64 ata_tf_to_lba48(struct ata_taskfile *tf)
+ 	sectors |= (tf->lbam & 0xff) << 8;
+ 	sectors |= (tf->lbal & 0xff);
+ 
+-	return ++sectors;
++	return sectors;
+ }
+ 
+-static u64 ata_tf_to_lba(struct ata_taskfile *tf)
++u64 ata_tf_to_lba(const struct ata_taskfile *tf)
+ {
+ 	u64 sectors = 0;
+ 
+@@ -1278,7 +1278,7 @@ static u64 ata_tf_to_lba(struct ata_taskfile *tf)
+ 	sectors |= (tf->lbam & 0xff) << 8;
+ 	sectors |= (tf->lbal & 0xff);
+ 
+-	return ++sectors;
++	return sectors;
+ }
+ 
+ /**
+@@ -1323,9 +1323,9 @@ static int ata_read_native_max_address(struct ata_device *dev, u64 *max_sectors)
+ 	}
+ 
+ 	if (lba48)
+-		*max_sectors = ata_tf_to_lba48(&tf);
++		*max_sectors = ata_tf_to_lba48(&tf) + 1;
+ 	else
+-		*max_sectors = ata_tf_to_lba(&tf);
++		*max_sectors = ata_tf_to_lba(&tf) + 1;
+ 	if (dev->horkage & ATA_HORKAGE_HPA_SIZE)
+ 		(*max_sectors)--;
+ 	return 0;
+diff --git a/drivers/ata/libata.h b/drivers/ata/libata.h
+index aa884f7..20edee0 100644
+--- a/drivers/ata/libata.h
++++ b/drivers/ata/libata.h
+@@ -61,6 +61,8 @@ extern int libata_fua;
+ extern int libata_noacpi;
+ extern int libata_allow_tpm;
+ extern void ata_force_cbl(struct ata_port *ap);
++extern u64 ata_tf_to_lba(const struct ata_taskfile *tf);
++extern u64 ata_tf_to_lba48(const struct ata_taskfile *tf);
+ extern struct ata_queued_cmd *ata_qc_new_init(struct ata_device *dev);
+ extern int ata_build_rw_tf(struct ata_taskfile *tf, struct ata_device *dev,
+ 			   u64 block, u32 n_block, unsigned int tf_flags,
+-- 
+1.5.2.4
 
-  1. It's always retried with longer timeout (60s for now) after
-     failure.
-
-  2. If the device is making progress by retrying, humor it for longer
-     (20 tries for now).
-
-  3. If the device is fails the command with the same failed sector,
-     retry fewer times (log2 of the original number of tries).
-
-  4. If retried FLUSH fails for something other than device error,
-     don't keep retrying.  We're likely wasting time.
-
-As the code is being smart against retrying needlessly, it won't be
-too dangerous to increase the 20 tries (taken from Alan's patch) but I
-think it's as good as any other random number.  If anyone knows any
-meaningful number, please chime in.  The same goes for 60 secs timeout
-too.
-
-I made a debug patch to trigger timeouts and device errors on FLUSH.
-I'll post the patch as a reply.  It adds the following four module
-params which can be written runtime via /sys/module/libata/parameters.
-
-  flush_dbg_do_timeout:
-	If non-zero value is written, the specfied number of FLUSHes
-	will be timed out.
-
-  flush_dbg_do_deverr:
-	If non-zero value is written, the specfied number of FLUSHes
-	will be terminated with device error.
-
-  flush_dbg_fail_sector:
-	The failed sector for the next deverr.
-
-  flush_dbg_fail_increment:
-        Number of sectors to add to fail_sector after each deverr.
-
-I tested different scenarios and it all seems to work fine but it
-would be really great if someone can test this on a (hmmm....) live
-dying drive.
-
-This patchet is for #upstream but generated on top of
-
-  #upstream-fixes (4cde32fc4b32e96a99063af3183acdfd54c563f0)
-+ [1] libata: ATA_EHI_LPM should be ATA_EH_LPM
-
-as there is a humongous patchset pending review #upstream.  Once this
-gets acked, I'll move it over to #upstream.  It shouldn't interfere
-too much anyway.
-
-Thanks.
-
---
-tejun
-
-[A] http://article.gmane.org/gmane.linux.ide/28835
-[1] http://article.gmane.org/gmane.linux.ide/30077
