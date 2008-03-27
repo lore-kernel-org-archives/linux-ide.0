@@ -1,82 +1,80 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH 2/4] libata: implement ATA_QCFLAG_RETRY
-Date: Thu, 27 Mar 2008 19:14:24 +0900
-Message-ID: <12066128663552-git-send-email-htejun@gmail.com>
-References: <12066128663306-git-send-email-htejun@gmail.com>
+Subject: [PATCHSET #upstream] libata: improve FLUSH error handling
+Date: Thu, 27 Mar 2008 19:14:22 +0900
+Message-ID: <12066128663306-git-send-email-htejun@gmail.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.177]:65503 "EHLO
+Received: from wa-out-1112.google.com ([209.85.146.180]:1228 "EHLO
 	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751378AbYC0KOd (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 27 Mar 2008 06:14:33 -0400
-Received: by wa-out-1112.google.com with SMTP id v27so4737766wah.23
-        for <linux-ide@vger.kernel.org>; Thu, 27 Mar 2008 03:14:31 -0700 (PDT)
-In-Reply-To: <12066128663306-git-send-email-htejun@gmail.com>
+	with ESMTP id S1755276AbYC0KOg (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 27 Mar 2008 06:14:36 -0400
+Received: by wa-out-1112.google.com with SMTP id v27so4737774wah.23
+        for <linux-ide@vger.kernel.org>; Thu, 27 Mar 2008 03:14:33 -0700 (PDT)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: jeff@garzik.org, linux-ide@vger.kernel.org, alan@lxorguk.ukuu.org.uk, liml@rtr.ca
-Cc: Tejun Heo <htejun@gmail.com>
 
-Currently whether a command should be retried after failure is
-determined inside ata_eh_finish().  Add ATA_QCFLAG_RETRY and move the
-logic into ata_eh_autopsy().  This makes things clearer and helps
-extending retry determination logic.
+Hello, all.
 
-Signed-off-by: Tejun Heo <htejun@gmail.com>
----
- drivers/ata/libata-eh.c |   18 ++++++++----------
- include/linux/libata.h  |    1 +
- 2 files changed, 9 insertions(+), 10 deletions(-)
+I was going through mailbox and saw Alan's patch[A] which didn't get
+the love it deserved.  It turned out that ata_flush_cache() function
+the patch modifies had been dead for some time.  I ended up re-doing
+it in the EH framework and it turned out okay.
 
-diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
-index a583032..5f3d294 100644
---- a/drivers/ata/libata-eh.c
-+++ b/drivers/ata/libata-eh.c
-@@ -1804,6 +1804,11 @@ static void ata_eh_link_autopsy(struct ata_link *link)
- 		if (qc->flags & ATA_QCFLAG_SENSE_VALID)
- 			qc->err_mask &= ~(AC_ERR_DEV | AC_ERR_OTHER);
- 
-+		/* determine whether the command is worth retrying */
-+		if (!(qc->err_mask & AC_ERR_INVALID) &&
-+		    ((qc->flags & ATA_QCFLAG_IO) || qc->err_mask != AC_ERR_DEV))
-+			qc->flags |= ATA_QCFLAG_RETRY;
-+
- 		/* accumulate error info */
- 		ehc->i.dev = qc->dev;
- 		all_err_mask |= qc->err_mask;
-@@ -2817,18 +2822,11 @@ void ata_eh_finish(struct ata_port *ap)
- 			/* FIXME: Once EH migration is complete,
- 			 * generate sense data in this function,
- 			 * considering both err_mask and tf.
--			 *
--			 * There's no point in retrying invalid
--			 * (detected by libata) and non-IO device
--			 * errors (rejected by device).  Finish them
--			 * immediately.
- 			 */
--			if ((qc->err_mask & AC_ERR_INVALID) ||
--			    (!(qc->flags & ATA_QCFLAG_IO) &&
--			     qc->err_mask == AC_ERR_DEV))
--				ata_eh_qc_complete(qc);
--			else
-+			if (qc->flags & ATA_QCFLAG_RETRY)
- 				ata_eh_qc_retry(qc);
-+			else
-+				ata_eh_qc_complete(qc);
- 		} else {
- 			if (qc->flags & ATA_QCFLAG_SENSE_VALID) {
- 				ata_eh_qc_complete(qc);
-diff --git a/include/linux/libata.h b/include/linux/libata.h
-index b064bfe..d06dd12 100644
---- a/include/linux/libata.h
-+++ b/include/linux/libata.h
-@@ -225,6 +225,7 @@ enum {
- 	ATA_QCFLAG_RESULT_TF	= (1 << 4), /* result TF requested */
- 	ATA_QCFLAG_CLEAR_EXCL	= (1 << 5), /* clear excl_link on completion */
- 	ATA_QCFLAG_QUIET	= (1 << 6), /* don't report device error */
-+	ATA_QCFLAG_RETRY	= (1 << 7), /* retry after failure */
- 
- 	ATA_QCFLAG_FAILED	= (1 << 16), /* cmd failed and is owned by EH */
- 	ATA_QCFLAG_SENSE_VALID	= (1 << 17), /* sense data valid */
--- 
-1.5.2.4
+After the patchset, on FLUSH failure, the following is done.
 
+  1. It's always retried with longer timeout (60s for now) after
+     failure.
+
+  2. If the device is making progress by retrying, humor it for longer
+     (20 tries for now).
+
+  3. If the device is fails the command with the same failed sector,
+     retry fewer times (log2 of the original number of tries).
+
+  4. If retried FLUSH fails for something other than device error,
+     don't keep retrying.  We're likely wasting time.
+
+As the code is being smart against retrying needlessly, it won't be
+too dangerous to increase the 20 tries (taken from Alan's patch) but I
+think it's as good as any other random number.  If anyone knows any
+meaningful number, please chime in.  The same goes for 60 secs timeout
+too.
+
+I made a debug patch to trigger timeouts and device errors on FLUSH.
+I'll post the patch as a reply.  It adds the following four module
+params which can be written runtime via /sys/module/libata/parameters.
+
+  flush_dbg_do_timeout:
+	If non-zero value is written, the specfied number of FLUSHes
+	will be timed out.
+
+  flush_dbg_do_deverr:
+	If non-zero value is written, the specfied number of FLUSHes
+	will be terminated with device error.
+
+  flush_dbg_fail_sector:
+	The failed sector for the next deverr.
+
+  flush_dbg_fail_increment:
+        Number of sectors to add to fail_sector after each deverr.
+
+I tested different scenarios and it all seems to work fine but it
+would be really great if someone can test this on a (hmmm....) live
+dying drive.
+
+This patchet is for #upstream but generated on top of
+
+  #upstream-fixes (4cde32fc4b32e96a99063af3183acdfd54c563f0)
++ [1] libata: ATA_EHI_LPM should be ATA_EH_LPM
+
+as there is a humongous patchset pending review #upstream.  Once this
+gets acked, I'll move it over to #upstream.  It shouldn't interfere
+too much anyway.
+
+Thanks.
+
+--
+tejun
+
+[A] http://article.gmane.org/gmane.linux.ide/28835
+[1] http://article.gmane.org/gmane.linux.ide/30077
