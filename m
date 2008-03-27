@@ -1,33 +1,34 @@
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: Re: What to do about the 2TB limit on HDIO_GETGEO ?
-Date: Thu, 27 Mar 2008 13:05:10 -0600
-Message-ID: <20080327190510.GO16721@parisc-linux.org>
-References: <47E87942.2020409@rtr.ca> <47E88A13.70808@zytor.com> <47E90019.3050006@rtr.ca> <47E90458.7030801@zytor.com> <47E9383F.3050908@rtr.ca> <20080325192515.GA24234@suse.de> <20080325123454.4eba7644.randy.dunlap@oracle.com> <47E96263.9000808@zytor.com> <20080325212032.GA24495@suse.de> <47E96E15.7020105@zytor.com>
+From: David Brownell <david-b@pacbell.net>
+Subject: Re: some minor issues with 2.6.25-rc6-git7-default
+Date: Thu, 27 Mar 2008 12:16:18 -0700
+Message-ID: <200803271216.18672.david-b@pacbell.net>
+References: <213294492@web.de> <20080326131346.39efee07.randy.dunlap@oracle.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from palinux.external.hp.com ([192.25.206.14]:33827 "EHLO
-	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756132AbYC0TFN (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 27 Mar 2008 15:05:13 -0400
+Content-Type: text/plain;
+  charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-acpi-owner@vger.kernel.org>
+In-Reply-To: <20080326131346.39efee07.randy.dunlap@oracle.com>
 Content-Disposition: inline
-In-Reply-To: <47E96E15.7020105@zytor.com>
-Sender: linux-ide-owner@vger.kernel.org
+Sender: linux-acpi-owner@vger.kernel.org
+To: Randy Dunlap <randy.dunlap@oracle.com>, Andrew Morton <akpm@linux-foundation.org>
+Cc: devzero@web.de, "Rafael J. Wysocki" <rjw@sisk.pl>, alan@lxorguk.ukuu.org.uk, greg@kroah.com, lenb@kernel.org, linux-acpi@vger.kernel.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mtd@lists.infradead.org
 List-Id: linux-ide@vger.kernel.org
-To: "H. Peter Anvin" <hpa@zytor.com>
-Cc: Greg KH <gregkh@suse.de>, Randy Dunlap <randy.dunlap@oracle.com>, Mark Lord <lkml@rtr.ca>, Jens Axboe <axboe@kernel.dk>, Jeff Garzik <jgarzik@pobox.com>, Tejun Heo <htejun@gmail.com>, Linus Torvalds <torvalds@osdl.org>, Andrew Morton <akpm@linux-foundation.org>, Linux Kernel <linux-kernel@vger.kernel.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
 
-On Tue, Mar 25, 2008 at 02:26:45PM -0700, H. Peter Anvin wrote:
-> Well, when dealing with shell scripts a O(n) very easily becomes O(n^2). 
->  For the stuff that I, personally, do, it's not a big deal, but people 
-> with large number of disks have serious gripes with our boot times.
+On Wednesday 26 March 2008, Randy Dunlap wrote:
+> 
+> > > uh, "known problem": multiple rtc drivers are being run.
+> > > 
+> > > I don't really understand why we haven't been able to fix this - there have
+> > > been numerous reports..
+> > 
+> > i will take a closer look to determine how/when this happens.
+> 
+> I thought that David B. sent a (Kconfig ?) patch for this...
 
-This should be a solved problem with scsi_mod.scan=async (or equivalent
-compile option).  Are people still complaining about it, and if so, have
-they tried this option?
+He did.  In fact, one with a weak "nudge users away from this"
+and then a stronger "don't effing allow it" update.  That's all
+in the MM tree.
 
--- 
-Intel are signing my paycheques ... these opinions are still mine
-"Bill, look, we understand that you're interested in selling us this
-operating system, but compare it to ours.  We can't possibly take such
-a retrograde step."
+- Dave
+
