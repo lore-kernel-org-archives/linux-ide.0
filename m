@@ -1,117 +1,98 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH 15/18] ide: remove broken/dangerous HDIO_[UNREGISTER,SCAN]_HWIF
- ioctls
-Date: Thu, 27 Mar 2008 20:38:50 +0300
-Message-ID: <47EBDBAA.2020308@ru.mvista.com>
-References: <20080208004421.17746.32557.sendpatchset@localhost.localdomain> <20080208004606.17746.90799.sendpatchset@localhost.localdomain>
+From: Ric Wheeler <ric@emc.com>
+Subject: Re: [PATCHSET #upstream] libata: improve FLUSH error handling
+Date: Thu, 27 Mar 2008 13:51:00 -0400
+Message-ID: <47EBDE84.1070802@emc.com>
+References: <12066128663306-git-send-email-htejun@gmail.com>
+Reply-To: ric@emc.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from homer.mvista.com ([63.81.120.155]:15099 "EHLO
-	imap.sh.mvista.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1756314AbYC0Rh1 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 27 Mar 2008 13:37:27 -0400
-In-Reply-To: <20080208004606.17746.90799.sendpatchset@localhost.localdomain>
+Received: from mexforward.lss.emc.com ([128.222.32.20]:40054 "EHLO
+	mexforward.lss.emc.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754589AbYC0R7c (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 27 Mar 2008 13:59:32 -0400
+In-Reply-To: <12066128663306-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: linux-ide@vger.kernel.org, linuxppc-dev@ozlabs.org, linux-kernel@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: jeff@garzik.org, linux-ide@vger.kernel.org, alan@lxorguk.ukuu.org.uk, liml@rtr.ca
 
-Bartlomiej Zolnierkiewicz wrote:
 
-> hdparm explicitely marks HDIO_[UNREGISTER,SCAN]_HWIF ioctls as DANGEROUS
-> and given the number of bugs we can assume that there are no real users:
 
-> * DMA has no chance of working because DMA resources are released by
->   ide_unregister() and they are never allocated again.
+Tejun Heo wrote:
+> Hello, all.
+> 
+> I was going through mailbox and saw Alan's patch[A] which didn't get
+> the love it deserved.  It turned out that ata_flush_cache() function
+> the patch modifies had been dead for some time.  I ended up re-doing
+> it in the EH framework and it turned out okay.
+> 
+> After the patchset, on FLUSH failure, the following is done.
+> 
+>   1. It's always retried with longer timeout (60s for now) after
+>      failure.
+> 
+>   2. If the device is making progress by retrying, humor it for longer
+>      (20 tries for now).
+> 
+>   3. If the device is fails the command with the same failed sector,
+>      retry fewer times (log2 of the original number of tries).
+> 
+>   4. If retried FLUSH fails for something other than device error,
+>      don't keep retrying.  We're likely wasting time.
 
-> * Since ide_init_hwif_ports() is used for ->io_ports[] setup the ioctls
->   don't work for almost all hosts with "non-standard" (== non ISA-like)
->   layout of IDE taskfile registers (there is a lot of such host drivers).
+Are we sure that it is ever the right thing to do to reissue a flush command?
 
-> * ide_port_init_devices() is not called when probing IDE devices so:
->   - drive->autotune is never set and IDE host/devices are not programmed
->     for the correct PIO/DMA transfer modes (=> possible data corruption)
->   - host specific I/O 32-bit and IRQ unmasking settings are not applied
->     (=> possible data corruption)
->   - host specific ->port_init_devs method is not called (=> no luck with
->     ht6560b, qd65xx and opti621 host drivers)
+I am worried that this might be much closer to the media error class of device 
+errors than something that will benefit from a retry of any type.
 
-> * ->rw_disk method is not preserved (=> no HPT3xxN chipsets support).
+Also, I am unclear as to how we measure the progress of the device if the flush 
+command has failed?
 
-> * ->serialized flag is not preserved (=> possible data corruption when
->    using icside, aec62xx (ATP850UF chipset), cmd640, cs5530, hpt366
->    (HPT3xxN chipsets), rz1000, sc1200, dtc2278 and ht6560b host drivers).
 
-> * ->ack_intr method is not preserved (=> needed by ide-cris, buddha,
->   gayle and macide host drivers).
 
-> * ->sata_scr[] and sata_misc[] is cleared by ide_unregister() and it
->   isn't initialized again (SiI3112 support needs them).
+> As the code is being smart against retrying needlessly, it won't be
+> too dangerous to increase the 20 tries (taken from Alan's patch) but I
+> think it's as good as any other random number.  If anyone knows any
+> meaningful number, please chime in.  The same goes for 60 secs timeout
+> too.
+> 
+> I made a debug patch to trigger timeouts and device errors on FLUSH.
+> I'll post the patch as a reply.  It adds the following four module
+> params which can be written runtime via /sys/module/libata/parameters.
+> 
+>   flush_dbg_do_timeout:
+> 	If non-zero value is written, the specfied number of FLUSHes
+> 	will be timed out.
+> 
+>   flush_dbg_do_deverr:
+> 	If non-zero value is written, the specfied number of FLUSHes
+> 	will be terminated with device error.
+> 
+>   flush_dbg_fail_sector:
+> 	The failed sector for the next deverr.
+> 
+>   flush_dbg_fail_increment:
+>         Number of sectors to add to fail_sector after each deverr.
+> 
+> I tested different scenarios and it all seems to work fine but it
+> would be really great if someone can test this on a (hmmm....) live
+> dying drive.
+> 
+> This patchet is for #upstream but generated on top of
+> 
+>   #upstream-fixes (4cde32fc4b32e96a99063af3183acdfd54c563f0)
+> + [1] libata: ATA_EHI_LPM should be ATA_EH_LPM
+> 
+> as there is a humongous patchset pending review #upstream.  Once this
+> gets acked, I'll move it over to #upstream.  It shouldn't interfere
+> too much anyway.
+> 
+> Thanks.
+> 
 
-> * To issue an ioctl() there need to be at least one IDE device present
->   in the system.
+We have access to a fair number of flaky drives, I can see if we can test some 
+of this...
 
-> * ->cable_detect method is not preserved + it is not called when probing
->   IDE devices so cable detection is broken (however since DMA support is
->   also broken it doesn't really matter ;-).
-
-> * Some objects which may have already been freed in ide_unregister()
->   are restored by ide_hwif_restore() (i.e. ->hwgroup).
-
-> * ide_register_hw() may unregister unrelated IDE ports if free ide_hwifs[]
->   slot cannot be found.
-
-> * When IDE host drivers are modular unregistered port may be re-used by
->   different host driver that owned it first causing subtle bugs.
-
-> Since we now have a proper warm-plug support remove these ioctls,
-> then remove no longer needed:
-> - ide_register_hw() and ide_hwif_restore() functions
-> - 'init_default' and 'restore' arguments of ide_unregister()
-> - zeroeing of hwif->{dma,extra}_* fields in ide_unregister()
-
-> As an added bonus IDE core code size shrinks by ~3kB (x86-32).
-
-> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-
-Acked-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-
-> Index: b/drivers/ide/ide-pnp.c
-> ===================================================================
-> --- a/drivers/ide/ide-pnp.c
-> +++ b/drivers/ide/ide-pnp.c
-[...]
-> @@ -655,52 +530,6 @@ void ide_init_port_hw(ide_hwif_t *hwif, 
->  }
->  EXPORT_SYMBOL_GPL(ide_init_port_hw);
->  
-> -/**
-> - *	ide_register_hw		-	register IDE interface
-> - *	@hw: hardware registers
-> - *	@quirkproc: quirkproc function
-> - *	@hwifp: pointer to returned hwif
-> - *
-> - *	Register an IDE interface, specifying exactly the registers etc.
-> - *
-> - *	Returns -1 on error.
-> - */
-> -
-> -static int ide_register_hw(hw_regs_t *hw, void (*quirkproc)(ide_drive_t *),
-> -			   ide_hwif_t **hwifp)
-> -{
-> -	int index, retry = 1;
-> -	ide_hwif_t *hwif;
-> -	u8 idx[4] = { 0xff, 0xff, 0xff, 0xff };
-> -
-> -	do {
-> -		hwif = ide_find_port(hw->io_ports[IDE_DATA_OFFSET]);
-> -		index = hwif->index;
-> -		if (hwif)
-> -			goto found;
-
-    Hm, I remember there was a patch that fixed the above bug where hwif is 
-dereferenced before being checked for NULL, I wonder how come it was lost?
-
-WBR, Sergei
+ric
