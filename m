@@ -1,30 +1,37 @@
-From: Greg KH <gregkh@suse.de>
-Subject: Re: What to do about the 2TB limit on HDIO_GETGEO ?
-Date: Thu, 27 Mar 2008 08:15:28 -0700
-Message-ID: <20080327151528.GB13661@suse.de>
-References: <abna7-7jK-3@gated-at.bofh.it> <abo6b-11J-9@gated-at.bofh.it> <aboSP-2Wf-29@gated-at.bofh.it> <aboSP-2Wf-27@gated-at.bofh.it> <abqrq-6eX-29@gated-at.bofh.it> <abqrq-6eX-27@gated-at.bofh.it> <abqKM-6Ka-13@gated-at.bofh.it> <E1JeTq5-00018y-MO@be1.7eggert.dyndns.org> <20080327035257.GB9566@suse.de> <47EBB322.6000402@rtr.ca>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [PATCHSET #upstream] libata: improve FLUSH error handling
+Date: Thu, 27 Mar 2008 15:31:00 +0000
+Message-ID: <20080327153100.6d834986@core>
+References: <12066128663306-git-send-email-htejun@gmail.com>
+	<47EBAE2B.8070102@rtr.ca>
+	<47EBB09F.9070607@rtr.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:54495 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753433AbYC0PQ1 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 27 Mar 2008 11:16:27 -0400
-Content-Disposition: inline
-In-Reply-To: <47EBB322.6000402@rtr.ca>
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:49875 "EHLO
+	lxorguk.ukuu.org.uk" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1756069AbYC0PsF (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 27 Mar 2008 11:48:05 -0400
+In-Reply-To: <47EBB09F.9070607@rtr.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark Lord <lkml@rtr.ca>
-Cc: Bodo Eggert <7eggert@gmx.de>, "H. Peter Anvin" <hpa@zytor.com>, Randy Dunlap <randy.dunlap@oracle.com>, Jens Axboe <axboe@kernel.dk>, Jeff Garzik <jgarzik@pobox.com>, Tejun Heo <htejun@gmail.com>, Linus Torvalds <torvalds@osdl.org>, Andrew Morton <akpm@linux-foundation.org>, Linux Kernel <linux-kernel@vger.kernel.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
+To: Mark Lord <liml@rtr.ca>
+Cc: Tejun Heo <htejun@gmail.com>, jeff@garzik.org, linux-ide@vger.kernel.org
 
-On Thu, Mar 27, 2008 at 10:45:54AM -0400, Mark Lord wrote:
-> Greg KH wrote:
->>
->> If sysfs is stupid, then use an ioctl, have I objected to that?
-> ..
->
-> Well, at this point it certainly seems a lot simpler
-> than trying to get the sysfs "maintainers" to improve it.
+> In 18 years of IDE/ATA development,
+> I have *never* seen a hard disk drive report a WRITE error.
 
-I'm sorry, have I missed a patch that was submitted that adds this new
-functionality?
+You don't try hard enough. Also a cache flush write error is more likely
+than a write reporting the error, because with caching enabled the disk
+only finds out when it comes to try and flush or you do.
+
+> Which makes sense, if you think about it -- it's rewriting the sector
+> with new ECC info, so it *should* succeed.  The only case where it won't,
+> is if the sector has been marked as "bad" internally, and the drive is
+> too dumb to try anyways after it runs out of remap space.
+
+Or you have a drive with raid optimised firmware, a magneto-optical or
+other similar cases.
+
+Alan
