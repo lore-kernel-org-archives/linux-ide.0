@@ -1,45 +1,39 @@
-From: "H. Peter Anvin" <hpa@zytor.com>
-Subject: Re: What to do about the 2TB limit on HDIO_GETGEO ?
-Date: Thu, 27 Mar 2008 12:38:56 -0700
-Message-ID: <47EBF7D0.6000901@zytor.com>
-References: <47E875AD.1000901@rtr.ca> <47E87942.2020409@rtr.ca>	 <47E88A13.70808@zytor.com> <47E90019.3050006@rtr.ca>	 <47E90458.7030801@zytor.com> <47E9383F.3050908@rtr.ca>	 <20080325192515.GA24234@suse.de> <47E99A02.7040903@rtr.ca>	 <47E99EBE.7010708@gmail.com> <3ae72650803271229h6e188de1t81ccfb64e5d3a214@mail.gmail.com>
+From: Ric Wheeler <ric@emc.com>
+Subject: Re: [PATCHSET #upstream] libata: improve FLUSH error handling
+Date: Thu, 27 Mar 2008 16:23:54 -0400
+Message-ID: <47EC025A.1070004@emc.com>
+References: <12066128663306-git-send-email-htejun@gmail.com> <47EBAE2B.8070102@rtr.ca> <47EBDF36.5080504@emc.com> <47EBED0A.8020201@garzik.org>
+Reply-To: ric@emc.com
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from terminus.zytor.com ([198.137.202.10]:58895 "EHLO
-	terminus.zytor.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755859AbYC0TkO (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 27 Mar 2008 15:40:14 -0400
-In-Reply-To: <3ae72650803271229h6e188de1t81ccfb64e5d3a214@mail.gmail.com>
+Received: from mexforward.lss.emc.com ([128.222.32.20]:43468 "EHLO
+	mexforward.lss.emc.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760136AbYC0Ube (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 27 Mar 2008 16:31:34 -0400
+In-Reply-To: <47EBED0A.8020201@garzik.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Kay Sievers <kay.sievers@vrfy.org>
-Cc: Tejun Heo <htejun@gmail.com>, Mark Lord <lkml@rtr.ca>, Greg KH <gregkh@suse.de>, Jens Axboe <axboe@kernel.dk>, Jeff Garzik <jgarzik@pobox.com>, Linus Torvalds <torvalds@osdl.org>, Andrew Morton <akpm@linux-foundation.org>, Linux Kernel <linux-kernel@vger.kernel.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
+To: Jeff Garzik <jeff@garzik.org>
+Cc: Mark Lord <liml@rtr.ca>, Tejun Heo <htejun@gmail.com>, linux-ide@vger.kernel.org, alan@lxorguk.ukuu.org.uk
 
-Kay Sievers wrote:
->>
->>  Probably something like /sys/class/block/MAJ:MIN
-> 
-> "Devices directories" are not supposed to contain duplicate entries.
-> It would slow-down, or may even break things.
-> 
->> or /sys/class/devnums/bMAJ:MIN?
-> 
-> These are no devices belonging to the class "devnums", so it may
-> confuse things which crawl these directories to get "all devices".
-> Current coldplug-like setups will likely add duplicate devices with
-> the wrong subsystem. There are also bus-devices with have a dev_t, and
-> that will make them show up in /sys/class, which might confuse some
-> tools too.
-> 
-> I guess we will need to find some other solution as a /sys/class/ for
-> that. And we must prefix the links with 'c' and 'b' because dev_t is
-> not unique across char and block devices.
-> 
 
-It doesn't really seem to be to belong under class at all.  I would 
-suggest /sys/dev/char/ and /sys/dev/block/, for char and block respectively.
+Jeff Garzik wrote:
+> Ric Wheeler wrote:
+>> I think that the 30 seconds was meant to be that worst case time for 
+>> the drive to respond to a command. We try to push vendors to respond 
+>> in much less time than that (it's important to get things like the 
+>> fast fail path for RAID working correctly), say something like 10-15 
+>> seconds.
+> 
+> 
+> Multiple vendors say the FLUSH CACHE worst case can exceed 30 seconds 
+> though...
+> 
+>     Jeff
 
-	-hpa
+That might be true, but in that case, I still think we should never retry the 
+flush ;-)
 
+ric
