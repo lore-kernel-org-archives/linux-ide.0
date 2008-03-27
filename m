@@ -1,59 +1,24 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH #upstream] pata_scc: fix compile warning
-Date: Thu, 27 Mar 2008 19:44:24 +0900
-Message-ID: <47EB7A88.6090004@gmail.com>
-References: <20080327151331.e11d3665.sfr@canb.auug.org.au>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Linux ATA support now has a wiki
+Date: Thu, 27 Mar 2008 09:19:34 -0400
+Message-ID: <47EB9EE6.4050505@garzik.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.178]:20253 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751065AbYC0Koc (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 27 Mar 2008 06:44:32 -0400
-Received: by wa-out-1112.google.com with SMTP id v27so4749656wah.23
-        for <linux-ide@vger.kernel.org>; Thu, 27 Mar 2008 03:44:32 -0700 (PDT)
-In-Reply-To: <20080327151331.e11d3665.sfr@canb.auug.org.au>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1760287AbYC0NTu@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Linux IDE mailing list <linux-ide@vger.kernel.org>
+Cc: LKML <linux-kernel@vger.kernel.org>
 List-Id: linux-ide@vger.kernel.org
-To: Stephen Rothwell <sfr@canb.auug.org.au>
-Cc: Jeff Garzik <jeff@garzik.org>, linux-next@vger.kernel.org, IDE/ATA development list <linux-ide@vger.kernel.org>
 
-Missed one during mass conversion (dc14c0c5).  Fix it.  Spotted by
-Stephen Rothwell.
+By popular request, libata (and all other ATA-related info) has a wiki:
 
-Signed-off-by: Tejun Heo <htejun@gmail.com>
-Cc: Stephen Rothwell <sfr@canb.auug.org.au>
----
-Stephen Rothwell wrote:
-> Hi Jeff, Tejun (Heo?  I am sorry if I chose the wrong name),
+	http://ata.wiki.kernel.org/
 
-Yeap, Tejun is fine.
+The content on http://linux-ata.org/ will be moved over to the wiki as 
+time permits.  I moved over several pages, but the big ones -- hardware 
+and software status -- are not yet moved.
 
-> Today's build of linux-next produces this warning:
-> 
-> drivers/ata/pata_scc.c:1002: warning: initialization discards qualifiers from pointer target type
-> 
-> Presumably caused by commit dc14c0c5012855bfc9a5f76056b92f198d52834c
-> ("libata: implement and use ops inheritance").
+Contribute away!
 
-Thanks for spotting this.  I couldn't compile test platform specific
-ones.  Hmm... pata_scc doesn't seem to have platform dependencies,
-maybe we can drop PPC_CELLEB dependency.
-
- drivers/ata/pata_scc.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/ata/pata_scc.c b/drivers/ata/pata_scc.c
-index 07f2d7a..f6a6ce1 100644
---- a/drivers/ata/pata_scc.c
-+++ b/drivers/ata/pata_scc.c
-@@ -960,7 +960,7 @@ static struct scsi_host_template scc_sht = {
- 	ATA_BMDMA_SHT(DRV_NAME),
- };
- 
--static const struct ata_port_operations scc_pata_ops = {
-+static struct ata_port_operations scc_pata_ops = {
- 	.inherits		= &ata_bmdma_port_ops,
- 
- 	.set_piomode		= scc_set_piomode,
+	Jeff
