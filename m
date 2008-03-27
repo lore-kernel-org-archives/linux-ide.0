@@ -1,98 +1,77 @@
 From: Ric Wheeler <ric@emc.com>
 Subject: Re: [PATCHSET #upstream] libata: improve FLUSH error handling
-Date: Thu, 27 Mar 2008 13:51:00 -0400
-Message-ID: <47EBDE84.1070802@emc.com>
-References: <12066128663306-git-send-email-htejun@gmail.com>
+Date: Thu, 27 Mar 2008 13:53:58 -0400
+Message-ID: <47EBDF36.5080504@emc.com>
+References: <12066128663306-git-send-email-htejun@gmail.com> <47EBAE2B.8070102@rtr.ca>
 Reply-To: ric@emc.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mexforward.lss.emc.com ([128.222.32.20]:40054 "EHLO
+Received: from mexforward.lss.emc.com ([128.222.32.20]:40858 "EHLO
 	mexforward.lss.emc.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754589AbYC0R7c (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 27 Mar 2008 13:59:32 -0400
-In-Reply-To: <12066128663306-git-send-email-htejun@gmail.com>
+	with ESMTP id S1754165AbYC0SBp (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 27 Mar 2008 14:01:45 -0400
+In-Reply-To: <47EBAE2B.8070102@rtr.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: jeff@garzik.org, linux-ide@vger.kernel.org, alan@lxorguk.ukuu.org.uk, liml@rtr.ca
+To: Mark Lord <liml@rtr.ca>
+Cc: Tejun Heo <htejun@gmail.com>, jeff@garzik.org, linux-ide@vger.kernel.org, alan@lxorguk.ukuu.org.uk
 
 
 
-Tejun Heo wrote:
-> Hello, all.
+Mark Lord wrote:
+> Tejun Heo wrote:
+>>
+>> As the code is being smart against retrying needlessly, it won't be
+>> too dangerous to increase the 20 tries (taken from Alan's patch) but I
+>> think it's as good as any other random number.  If anyone knows any
+>> meaningful number, please chime in.  The same goes for 60 secs timeout
+>> too.
+> ..
 > 
-> I was going through mailbox and saw Alan's patch[A] which didn't get
-> the love it deserved.  It turned out that ata_flush_cache() function
-> the patch modifies had been dead for some time.  I ended up re-doing
-> it in the EH framework and it turned out okay.
+> I really think that we should enforce a strict upper limit on the time
+> that can be spent inside the flush-cache near-infinite loop being 
+> introduced.
 > 
-> After the patchset, on FLUSH failure, the following is done.
+> Some things rely on I/O completing or failing in a time deterministic 
+> manner.
 > 
->   1. It's always retried with longer timeout (60s for now) after
->      failure.
+> Really, the entire flush + retries etc.. should never, ever, be permitted
+> to take more than XX seconds total.  Not 60 seconds per retry, but XX 
+> seconds
+> total for the original command + however many retries we can fit in there.
 > 
->   2. If the device is making progress by retrying, humor it for longer
->      (20 tries for now).
+> As for the value of XX, well.. make it a sysfs attribute, with a default
+> of something "sensible".   The time bounds is really dependent upon how
+> quickly the drive can empty its onboard cache, or how large a cache it has.
 > 
->   3. If the device is fails the command with the same failed sector,
->      retry fewer times (log2 of the original number of tries).
+> Figure the biggest drives will have no more than, say 64MB of cache for
+> many years (biggest SATA drive now uses 16MB).  Assuming near-worst case
+> I/O size of 4KB, that's 16384 I/O operations, if none were adjacent on 
+> disk.
 > 
->   4. If retried FLUSH fails for something other than device error,
->      don't keep retrying.  We're likely wasting time.
-
-Are we sure that it is ever the right thing to do to reissue a flush command?
-
-I am worried that this might be much closer to the media error class of device 
-errors than something that will benefit from a retry of any type.
-
-Also, I am unclear as to how we measure the progress of the device if the flush 
-command has failed?
-
-
-
-> As the code is being smart against retrying needlessly, it won't be
-> too dangerous to increase the 20 tries (taken from Alan's patch) but I
-> think it's as good as any other random number.  If anyone knows any
-> meaningful number, please chime in.  The same goes for 60 secs timeout
-> too.
+> What's the average access time these days?  Say.. 20ms worst case for any
+> drive with a cache that huge?   That's unrealistically slow for data that's
+> already in the drive cache, but .. 16384 * .020 seconds = 328 seconds.
 > 
-> I made a debug patch to trigger timeouts and device errors on FLUSH.
-> I'll post the patch as a reply.  It adds the following four module
-> params which can be written runtime via /sys/module/libata/parameters.
+> Absolute theoretical worst case for a drive with a buffer 4X the largest
+> current size:  328 seconds.  Not taking into account having bad-sector
+> retries for each of those I/O blocks, but *nobody* is going to wait
+> that long anyway.  They'll have long since pulled the power cord or 
+> reached for the BIG RED BUTTON.
 > 
->   flush_dbg_do_timeout:
-> 	If non-zero value is written, the specfied number of FLUSHes
-> 	will be timed out.
+> On a 16MB cache drive, that number would be 328 / 4 = 82 seconds.
 > 
->   flush_dbg_do_deverr:
-> 	If non-zero value is written, the specfied number of FLUSHes
-> 	will be terminated with device error.
+> That's what I'd put for the limit.
+> But we could be slighly nonsensical and agree upon 120 seconds.  :)
 > 
->   flush_dbg_fail_sector:
-> 	The failed sector for the next deverr.
-> 
->   flush_dbg_fail_increment:
->         Number of sectors to add to fail_sector after each deverr.
-> 
-> I tested different scenarios and it all seems to work fine but it
-> would be really great if someone can test this on a (hmmm....) live
-> dying drive.
-> 
-> This patchet is for #upstream but generated on top of
-> 
->   #upstream-fixes (4cde32fc4b32e96a99063af3183acdfd54c563f0)
-> + [1] libata: ATA_EHI_LPM should be ATA_EH_LPM
-> 
-> as there is a humongous patchset pending review #upstream.  Once this
-> gets acked, I'll move it over to #upstream.  It shouldn't interfere
-> too much anyway.
-> 
-> Thanks.
+> Cheers
 > 
 
-We have access to a fair number of flaky drives, I can see if we can test some 
-of this...
+I think that the 30 seconds was meant to be that worst case time for the drive 
+to respond to a command. We try to push vendors to respond in much less time 
+than that (it's important to get things like the fast fail path for RAID working 
+correctly), say something like 10-15 seconds.
 
 ric
