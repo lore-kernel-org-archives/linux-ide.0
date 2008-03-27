@@ -1,64 +1,60 @@
 From: Mark Lord <liml@rtr.ca>
 Subject: Re: [PATCHSET #upstream] libata: improve FLUSH error handling
-Date: Thu, 27 Mar 2008 10:24:43 -0400
-Message-ID: <47EBAE2B.8070102@rtr.ca>
-References: <12066128663306-git-send-email-htejun@gmail.com>
+Date: Thu, 27 Mar 2008 10:35:11 -0400
+Message-ID: <47EBB09F.9070607@rtr.ca>
+References: <12066128663306-git-send-email-htejun@gmail.com> <47EBAE2B.8070102@rtr.ca>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([76.10.145.34]:4203 "EHLO mail.rtr.ca"
+Received: from rtr.ca ([76.10.145.34]:2286 "EHLO mail.rtr.ca"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755752AbYC0OYp (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 27 Mar 2008 10:24:45 -0400
-In-Reply-To: <12066128663306-git-send-email-htejun@gmail.com>
+	id S1759874AbYC0OfM (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 27 Mar 2008 10:35:12 -0400
+In-Reply-To: <47EBAE2B.8070102@rtr.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Tejun Heo <htejun@gmail.com>
 Cc: jeff@garzik.org, linux-ide@vger.kernel.org, alan@lxorguk.ukuu.org.uk
 
-Tejun Heo wrote:
->
-> As the code is being smart against retrying needlessly, it won't be
-> too dangerous to increase the 20 tries (taken from Alan's patch) but I
-> think it's as good as any other random number.  If anyone knows any
-> meaningful number, please chime in.  The same goes for 60 secs timeout
-> too.
+Mark Lord wrote:
+..
+> Absolute theoretical worst case for a drive with a buffer 4X the largest
+> current size:  328 seconds.  Not taking into account having bad-sector
+> retries for each of those I/O blocks, but *nobody* is going to wait
+> that long anyway.  They'll have long since pulled the power cord or 
+> reached for the BIG RED BUTTON.
 ..
 
-I really think that we should enforce a strict upper limit on the time
-that can be spent inside the flush-cache near-infinite loop being introduced.
+Speaking of which.. these are all WRITEs.
 
-Some things rely on I/O completing or failing in a time deterministic manner.
+In 18 years of IDE/ATA development,
+I have *never* seen a hard disk drive report a WRITE error.
 
-Really, the entire flush + retries etc.. should never, ever, be permitted
-to take more than XX seconds total.  Not 60 seconds per retry, but XX seconds
-total for the original command + however many retries we can fit in there.
+Which makes sense, if you think about it -- it's rewriting the sector
+with new ECC info, so it *should* succeed.  The only case where it won't,
+is if the sector has been marked as "bad" internally, and the drive is
+too dumb to try anyways after it runs out of remap space.
 
-As for the value of XX, well.. make it a sysfs attribute, with a default
-of something "sensible".   The time bounds is really dependent upon how
-quickly the drive can empty its onboard cache, or how large a cache it has.
+In which case we've already lost data, and taking more than a hundred
+and twenty seconds isn't going to make a serious difference.
 
-Figure the biggest drives will have no more than, say 64MB of cache for
-many years (biggest SATA drive now uses 16MB).  Assuming near-worst case
-I/O size of 4KB, that's 16384 I/O operations, if none were adjacent on disk.
+Mmm.. anyone got a spare modern-ish drive to risk destroying?
+Say, one of the few still-functioning DeathStars, or an buggy-NCQ Maxtor ?
 
-What's the average access time these days?  Say.. 20ms worst case for any
-drive with a cache that huge?   That's unrealistically slow for data that's
-already in the drive cache, but .. 16384 * .020 seconds = 328 seconds.
+If so, it might be fun to try and produce a no-more-remaps scenario on it.
+One could use "hdparm --make-bad-sector" to corrupt a few hundred/thousand
+sectors in a row (sequentially numbered).
 
-Absolute theoretical worst case for a drive with a buffer 4X the largest
-current size:  328 seconds.  Not taking into account having bad-sector
-retries for each of those I/O blocks, but *nobody* is going to wait
-that long anyway.  They'll have long since pulled the power cord or 
-reached for the BIG RED BUTTON.
+Then loop and attempt to read from them individually with "hdparm --read-sector"
+(should fail on all, but it might force the drive to remap them).
 
-On a 16MB cache drive, that number would be 328 / 4 = 82 seconds.
+Then finally try and write back to them with "hdparm --write-sector",
+and see if a WRITE ERROR is ever reported.  Maybe time the individual WRITEs
+to see if any of them take more than a few milliseconds.
 
-That's what I'd put for the limit.
-But we could be slighly nonsensical and agree upon 120 seconds.  :)
+Perhaps try this whole thing with/without the write cache enabled.
+
+Mmm...
 
 Cheers
-
-
-
