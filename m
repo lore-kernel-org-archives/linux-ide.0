@@ -1,31 +1,47 @@
-From: "H. Peter Anvin" <hpa@zytor.com>
-Subject: Re: What to do about the 2TB limit on HDIO_GETGEO ?
-Date: Wed, 26 Mar 2008 21:57:55 -0700
-Message-ID: <47EB2953.4070301@zytor.com>
-References: <ablib-2zv-65@gated-at.bofh.it> <abn0B-735-35@gated-at.bofh.it> <abna7-7jK-3@gated-at.bofh.it> <abo6b-11J-9@gated-at.bofh.it> <aboSP-2Wf-29@gated-at.bofh.it> <aboSP-2Wf-27@gated-at.bofh.it> <abqrq-6eX-29@gated-at.bofh.it> <abqrq-6eX-27@gated-at.bofh.it> <abqKM-6Ka-13@gated-at.bofh.it> <E1JeTq5-00018y-MO@be1.7eggert.dyndns.org> <20080327035257.GB9566@suse.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+From: akpm@linux-foundation.org
+Subject: [patch for 2.6.25? 1/1] pata_sil680: only enable MMIO on Cell blades
+Date: Thu, 27 Mar 2008 00:46:45 -0700
+Message-ID: <200803270746.m2R7kjIL024193@imap1.linux-foundation.org>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from terminus.zytor.com ([198.137.202.10]:35812 "EHLO
-	terminus.zytor.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751361AbYC0FAU (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 27 Mar 2008 01:00:20 -0400
-In-Reply-To: <20080327035257.GB9566@suse.de>
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:37594 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754805AbYC0HrS (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 27 Mar 2008 03:47:18 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Greg KH <gregkh@suse.de>
-Cc: Bodo Eggert <7eggert@gmx.de>, Randy Dunlap <randy.dunlap@oracle.com>, Mark Lord <lkml@rtr.ca>, Jens Axboe <axboe@kernel.dk>, Jeff Garzik <jgarzik@pobox.com>, Tejun Heo <htejun@gmail.com>, Linus Torvalds <torvalds@osdl.org>, Andrew Morton <akpm@linux-foundation.org>, Linux Kernel <linux-kernel@vger.kernel.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
+To: jeff@garzik.org
+Cc: linux-ide@vger.kernel.org, akpm@linux-foundation.org, benh@ozlabs.org, alan@redhat.com, benh@kernel.crashing.org
 
-Greg KH wrote:
->> So e.g. lilo should depend on sysfs and *a*special*configuration* of udev,
->> while the admin MUST NOT use mknod'ed device files nor manually create
->> symlinks pointing to them, and not use relative path names?
->> That's plain stupid.
-> 
-> If sysfs is stupid, then use an ioctl, have I objected to that?
+From: Benjamin Herrenschmidt <benh@ozlabs.org>
 
-I think he's objecting to the dependency on udev configuration, not to 
-sysfs.
+There have been reported regressions of the SIL 680 driver when using MMIO, so
+this makes it only try MMIO on Cell blades where it's known to be necessary
+(the host bridge doesn't do PIO on these).
 
-	-hpa
+We'll try to find the root problem with MMIO separately.
+
+Signed-off-by: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Acked-by: Alan Cox <alan@redhat.com>
+Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
+---
+
+ drivers/ata/pata_sil680.c |    6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
+
+diff -puN drivers/ata/pata_sil680.c~pata_sil680-only-enable-mmio-on-cell-blades drivers/ata/pata_sil680.c
+--- a/drivers/ata/pata_sil680.c~pata_sil680-only-enable-mmio-on-cell-blades
++++ a/drivers/ata/pata_sil680.c
+@@ -229,7 +229,11 @@ static u8 sil680_init_chip(struct pci_de
+ 	dev_dbg(&pdev->dev, "sil680: BA5_EN = %d clock = %02X\n",
+ 		tmpbyte & 1, tmpbyte & 0x30);
+ 
+-	*try_mmio = (tmpbyte & 1) || pci_resource_start(pdev, 5);
++	*try_mmio = 0;
++#ifdef CONFIG_PPC
++	if (machine_is(cell))
++		*try_mmio = (tmpbyte & 1) || pci_resource_start(pdev, 5);
++#endif
+ 
+ 	switch(tmpbyte & 0x30) {
+ 		case 0x00:
+_
