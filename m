@@ -1,37 +1,44 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: Understanding libata error messages
-Date: Thu, 27 Mar 2008 14:51:15 -0400
-Message-ID: <47EBECA3.6010909@garzik.org>
-References: <47EBCD5C.1040402@garzik.org> <47EBE211.1050802@kcore.org>
+From: "Kay Sievers" <kay.sievers@vrfy.org>
+Subject: Re: What to do about the 2TB limit on HDIO_GETGEO ?
+Date: Thu, 27 Mar 2008 19:51:58 +0100
+Message-ID: <3ae72650803271151k5a7b5c4cn5078b3bdf6a9c87a@mail.gmail.com>
+References: <47E875AD.1000901@rtr.ca> <47E87942.2020409@rtr.ca>
+	 <47E88A13.70808@zytor.com> <47E90019.3050006@rtr.ca>
+	 <47E90458.7030801@zytor.com> <47E9383F.3050908@rtr.ca>
+	 <20080325192515.GA24234@suse.de> <47E99A02.7040903@rtr.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:39492 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755254AbYC0SvQ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 27 Mar 2008 14:51:16 -0400
-In-Reply-To: <47EBE211.1050802@kcore.org>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <47E99A02.7040903@rtr.ca>
+Content-Disposition: inline
+Sender: linux-scsi-owner@vger.kernel.org
+To: Mark Lord <lkml@rtr.ca>
+Cc: Greg KH <gregkh@suse.de>, "H. Peter Anvin" <hpa@zytor.com>, Jens Axboe <axboe@kernel.dk>, Jeff Garzik <jgarzik@pobox.com>, Tejun Heo <htejun@gmail.com>, Linus Torvalds <torvalds@osdl.org>, Andrew Morton <akpm@linux-foundation.org>, Linux Kernel <linux-kernel@vger.kernel.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
 List-Id: linux-ide@vger.kernel.org
-To: Jan De Luyck <ml_linuxkernel_20060528@kcore.org>
-Cc: Linux IDE mailing list <linux-ide@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>
 
-Jan De Luyck wrote:
-> Jeff Garzik wrote:
->> I wrote a new wiki page that assists users in understanding the goop 
->> that libata spits out into your dmesg:
->>
->> http://ata.wiki.kernel.org/index.php/Libata_error_messages
-> 
-> Is this url still operational? It gives me a 404...
+On Wed, Mar 26, 2008 at 1:34 AM, Mark Lord <lkml@rtr.ca> wrote:
+> Greg KH wrote:
+>  > On Tue, Mar 25, 2008 at 01:37:03PM -0400, Mark Lord wrote:
+>
+> >> Perhaps Greg will chime in.
+>  >
+>  > I've been waiting to see if sanity will take hold of anyone here.
+>  ..
+>
+>  So have we.  sysfs is a total nightmare to extract information from
+>  under program / script control.  The idea presented in this thread,
+>  is to have it cross-index the contents with a method that actually
+>  makes it easy to access in many common scenarios, without requiring
+>  huge gobs of code in user space.  Or in kernel space.
+>
+>  And it's not just a few 10s of lines of code currently,
+>  but rather about 80-100 lines just to find the correct device subdir,
+>  and *then* a few more 10s of lines of code to retrieve the value.
 
-Give it another try, an admin tried (and then reverted) a quick experiment.
+Hmm, 100 lines? What else do you need?
 
-Sorry!
+  $ grep -l 8:3 /sys/class/block/*/dev
+  /sys/class/block/sdc/dev
 
-	Jeff
-
-
-
-
+Kay
