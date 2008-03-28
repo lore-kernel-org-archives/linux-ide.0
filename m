@@ -1,49 +1,35 @@
-From: Kristen Carlson Accardi <kristen.c.accardi@intel.com>
-Subject: Re: [patch 2/2] libata: power off unused ports
-Date: Fri, 28 Mar 2008 10:00:52 -0700
-Message-ID: <20080328100052.70c8c55c@appleyard>
-References: <20080325221646.567639335@intel.com>
-	<20080325152813.0b34761f@appleyard>
-	<87fxubl2dv.fsf@basil.nowhere.org>
-Reply-To: kristen.c.accardi@intel.com
+From: Mark Lord <liml@rtr.ca>
+Subject: Re: [PATCH 15/18] ide: remove broken/dangerous HDIO_[UNREGISTER,SCAN]_HWIF
+ ioctls
+Date: Fri, 28 Mar 2008 15:14:36 -0400
+Message-ID: <47ED439C.9030400@rtr.ca>
+References: <20080208004421.17746.32557.sendpatchset@localhost.localdomain> <20080208004606.17746.90799.sendpatchset@localhost.localdomain> <47EBDBAA.2020308@ru.mvista.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:38332 "EHLO mga11.intel.com"
+Received: from rtr.ca ([76.10.145.34]:1983 "EHLO mail.rtr.ca"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753498AbYC1RGo (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 28 Mar 2008 13:06:44 -0400
-In-Reply-To: <87fxubl2dv.fsf@basil.nowhere.org>
+	id S1757818AbYC1TOh (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 28 Mar 2008 15:14:37 -0400
+In-Reply-To: <47EBDBAA.2020308@ru.mvista.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Andi Kleen <andi@firstfloor.org>
-Cc: jeff@garzik.org, linux-ide@vger.kernel.org, arjan@linux.intel.com
+To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-ide@vger.kernel.org, linuxppc-dev@ozlabs.org, linux-kernel@vger.kernel.org
 
-On 28 Mar 2008 08:43:40 +0100
-Andi Kleen <andi@firstfloor.org> wrote:
+Sergei Shtylyov wrote:
+> Bartlomiej Zolnierkiewicz wrote:
+> 
+>> hdparm explicitely marks HDIO_[UNREGISTER,SCAN]_HWIF ioctls as DANGEROUS
+>> and given the number of bugs we can assume that there are no real users:
+..
 
-> Kristen Carlson Accardi <kristen.c.accardi@intel.com> writes:
-> 
-> > If a port doesn't support hot plug, there's no reason to keep the phy powered
-> > on unoccupied ports.  
-> 
-> Would it be possible to add some writable sysfs attribute for this too?
-> 
-> A lot of ports support hot plug, but the users knows they will never actually
-> hot plug anything there. Exposing it to sysfs would make sense so 
-> someone could make a conscious decision to save these watts by sacrifying
-> hotplug-support.
-> 
-> -Andi
-> 
+There is the odd user of these, actually.
 
-I had thought about extending the sysfs interface for link power 
-management to include a new value: off.  Right now we have
-min_power, medium_power, and max_performance - we could add
-a value for just "off" which means the port is inactive -
-but then we'd have to change all the sysfs stuff to check
-and see if the user is turning the port back on after it's
-been off and then re-init everything, so it might be a large
-effort, so if we did that I'd say it should be a separate
-effort from this patch series.
+But the most recent to email me (a few weeks ago),
+reported that the SCAN function was no longer working on his kernel.
+
+I'll remove the -R and -U flags completely from hdparm-8.7.
+
+Cheers
