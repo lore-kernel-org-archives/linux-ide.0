@@ -1,46 +1,89 @@
 From: akpm@linux-foundation.org
-Subject: [patch 3/3] ata: SWNCQ should be enabled by default
+Subject: [patch 2/3] libata: isolate and rework cable logic
 Date: Fri, 28 Mar 2008 14:33:46 -0700
-Message-ID: <200803282133.m2SLXlWk011463@imap1.linux-foundation.org>
+Message-ID: <200803282133.m2SLXkSw011460@imap1.linux-foundation.org>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:60777 "EHLO
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:46381 "EHLO
 	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1757557AbYC1Vd7 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 28 Mar 2008 17:33:59 -0400
+	by vger.kernel.org with ESMTP id S1758470AbYC1VeM (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 28 Mar 2008 17:34:12 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: jeff@garzik.org
-Cc: linux-ide@vger.kernel.org, akpm@linux-foundation.org, zboszor@dunaweb.hu, hancockr@shaw.ca
+Cc: linux-ide@vger.kernel.org, akpm@linux-foundation.org, alan@lxorguk.ukuu.org.uk, alan@redhat.com
 
-From: Zoltan Boszormenyi <zboszor@dunaweb.hu>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
 
-unchangelogged patch.
-
-Signed-off-by: Zoltan Boszormenyi <zboszor@dunaweb.hu>
-Cc: Robert Hancock <hancockr@shaw.ca>
+Signed-off-by: Alan Cox <alan@redhat.com>
 Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
 ---
 
- drivers/ata/sata_nv.c |    4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/ata/libata-core.c |   48 +++++++++++++++++++++++++++++++++---
+ 1 file changed, 44 insertions(+), 4 deletions(-)
 
-diff -puN drivers/ata/sata_nv.c~ata-swncq-should-be-enabled-by-default drivers/ata/sata_nv.c
---- a/drivers/ata/sata_nv.c~ata-swncq-should-be-enabled-by-default
-+++ a/drivers/ata/sata_nv.c
-@@ -532,7 +532,7 @@ MODULE_DEVICE_TABLE(pci, nv_pci_tbl);
- MODULE_VERSION(DRV_VERSION);
+diff -puN drivers/ata/libata-core.c~libata-isolate-and-rework-cable-logic drivers/ata/libata-core.c
+--- a/drivers/ata/libata-core.c~libata-isolate-and-rework-cable-logic
++++ a/drivers/ata/libata-core.c
+@@ -4536,6 +4536,49 @@ static int ata_is_40wire(struct ata_devi
+ }
  
- static int adma_enabled = 1;
--static int swncq_enabled;
-+static int swncq_enabled = 1;
- 
- static void nv_adma_register_mode(struct ata_port *ap)
- {
-@@ -2485,5 +2485,5 @@ module_exit(nv_exit);
- module_param_named(adma, adma_enabled, bool, 0444);
- MODULE_PARM_DESC(adma, "Enable use of ADMA (Default: true)");
- module_param_named(swncq, swncq_enabled, bool, 0444);
--MODULE_PARM_DESC(swncq, "Enable use of SWNCQ (Default: false)");
-+MODULE_PARM_DESC(swncq, "Enable use of SWNCQ (Default: true)");
- 
+ /**
++ *	cable_is_40wire		-	40/80/SATA decider
++ *	@ap: port to consider
++ *
++ *	This function encapsulates the policy for speed management
++ *	in one place. At the moment we don't cache the result but
++ *	there is a good case for setting ap->cbl to the result when
++ *	we are called with unknown cables (and figuring out if it
++ *	impacts hotplug at all).
++ *
++ *	Return 1 if the cable appears to be 40 wire.
++ */
++
++static int cable_is_40wire(struct ata_port *ap)
++{
++	struct ata_link *link;
++	struct ata_device *dev;
++
++	/* If the controller thinks we are 40 wire, we are */
++	if (ap->cbl == ATA_CBL_PATA40)
++		return 1;
++	/* If the controller thinks we are 80 wire, we are */
++	if (ap->cbl == ATA_CBL_PATA80 || ap->cbl == ATA_CBL_SATA)
++		return 0;
++	/* If the controller doesn't know we scan
++
++	   - Note: We look for all 40 wire detects at this point.
++	     Any 80 wire detect is taken to be 80 wire cable
++	     because
++	     - In many setups only the one drive (slave if present)
++               will give a valid detect
++             - If you have a non detect capable drive you don't
++               want it to colour the choice
++        */
++	ata_port_for_each_link(link, ap) {
++		ata_link_for_each_dev(dev, link) {
++			if (!ata_is_40wire(dev))
++				return 0;
++		}
++	}
++	return 1;
++}
++
++/**
+  *	ata_dev_xfermask - Compute supported xfermask of the given device
+  *	@dev: Device to compute xfermask for
+  *
+@@ -4603,10 +4646,7 @@ static void ata_dev_xfermask(struct ata_
+ 	 */
+ 	if (xfer_mask & (0xF8 << ATA_SHIFT_UDMA))
+ 		/* UDMA/44 or higher would be available */
+-		if ((ap->cbl == ATA_CBL_PATA40) ||
+-		    (ata_is_40wire(dev) &&
+-		    (ap->cbl == ATA_CBL_PATA_UNK ||
+-		     ap->cbl == ATA_CBL_PATA80))) {
++		if (cable_is_40wire(ap)) {
+ 			ata_dev_printk(dev, KERN_WARNING,
+ 				 "limited to UDMA/33 due to 40-wire cable\n");
+ 			xfer_mask &= ~(0xF8 << ATA_SHIFT_UDMA);
 _
