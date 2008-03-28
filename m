@@ -1,55 +1,107 @@
-From: Mark Lord <liml@rtr.ca>
-Subject: Re: Need help understanding SATA error message.
-Date: Fri, 28 Mar 2008 11:49:03 -0400
-Message-ID: <47ED136F.9010501@rtr.ca>
-References: <Pine.LNX.4.61.0803271554050.5510@envy.nxs.se>
+From: Kim Phillips <kim.phillips@freescale.com>
+Subject: [PATCH 3/3] sata_fsl: reduce compatibility to fsl,pq-sata
+Date: Fri, 28 Mar 2008 10:51:33 -0500
+Message-ID: <20080328105133.43eb4fb1.kim.phillips@freescale.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([76.10.145.34]:3929 "EHLO mail.rtr.ca"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753067AbYC1PtG (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 28 Mar 2008 11:49:06 -0400
-In-Reply-To: <Pine.LNX.4.61.0803271554050.5510@envy.nxs.se>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linuxppc-dev-bounces+glppd-linuxppc64-dev=m.gmane.org@ozlabs.org>
+List-Unsubscribe: <https://ozlabs.org/mailman/listinfo/linuxppc-dev>,
+	<mailto:linuxppc-dev-request@ozlabs.org?subject=unsubscribe>
+List-Archive: <http://ozlabs.org/pipermail/linuxppc-dev>
+List-Post: <mailto:linuxppc-dev@ozlabs.org>
+List-Help: <mailto:linuxppc-dev-request@ozlabs.org?subject=help>
+List-Subscribe: <https://ozlabs.org/mailman/listinfo/linuxppc-dev>,
+	<mailto:linuxppc-dev-request@ozlabs.org?subject=subscribe>
+Sender: linuxppc-dev-bounces+glppd-linuxppc64-dev=m.gmane.org@ozlabs.org
+Errors-To: linuxppc-dev-bounces+glppd-linuxppc64-dev=m.gmane.org@ozlabs.org
+To: linuxppc-dev@ozlabs.org, Kumar Gala <galak@kernel.crashing.org>
+Cc: linux-ide@vger.kernel.org, jgarzik@pobox.com
 List-Id: linux-ide@vger.kernel.org
-To: Tomas Lund <tlund@nxs.se>
-Cc: linux-ide@vger.kernel.org
 
-Tomas Lund wrote:
-> Hello,
-> 
-> I have a SuperMicro X7SBi with ICH9R SATA running 64bit linux 2.6.24.4. 
-> I have 4 1TB disks connected to the motherboard, and one of the disks is 
-> logging an error message. Everything is brand new, and hooked up just a 
-> few weeks ago.
-..
-> ata2.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x0
-> ata2.00: irq_stat 0x40000001
-> ata2.00: cmd ea/00:00:00:00:00/00:00:00:00:00/a0 tag 0
->          res 51/04:00:0a:24:f9/00:00:00:00:00/a9 Emask 0x1 (device error)
-> ata2.00: status: { DRDY ERR }
-> ata2.00: error: { ABRT }
-..
->   Commands leading to the command that caused the error were:
->   CR FR SC SN CL CH DH DC   Powered_Up_Time  Command/Feature_Name
->   -- -- -- -- -- -- -- --  ----------------  --------------------
->   ea 00 00 00 00 00 00 08      03:56:15.157  FLUSH CACHE EXIT
->   61 08 00 3f 59 70 74 08      03:56:15.157  [RESERVED FOR SERIAL ATA]
->   ea 00 00 00 00 00 00 08      03:56:15.157  FLUSH CACHE EXIT
->   ea 00 00 00 00 00 00 08      03:56:00.377  FLUSH CACHE EXIT
->   61 08 00 3f 59 70 74 08      03:56:00.377  [RESERVED FOR SERIAL ATA]
-..
+as prescribed in Documentation/powerpc/booting-without-of.txt.
 
-The SMART log shows that 0xea was a "FLUSH CACHE EXT" (not "EXIT", duh..)
-command, which is what libata issues when it wants to ensure that all
-cached data has been written to the drive.
+Signed-off-by: Kim Phillips <kim.phillips@freescale.com>
+Cc: Jeff Garzik <jgarzik@pobox.com>
+---
+ arch/powerpc/boot/dts/mpc8377_mds.dts |    4 ++--
+ arch/powerpc/boot/dts/mpc8379_mds.dts |    8 ++++----
+ drivers/ata/sata_fsl.c                |    5 +----
+ 3 files changed, 7 insertions(+), 10 deletions(-)
 
-This particular drive is reporting that it doesn't understand the command.
-Peculiar that, because all modern large drives implement it.
-
-What does hdparm --Istdout give for that specific drive,
-and then again for one of your three "good" drives ?
-
-Cheers
+diff --git a/arch/powerpc/boot/dts/mpc8377_mds.dts b/arch/powerpc/boot/dts/mpc8377_mds.dts
+index 49c05e9..eac8e1b 100644
+--- a/arch/powerpc/boot/dts/mpc8377_mds.dts
++++ b/arch/powerpc/boot/dts/mpc8377_mds.dts
+@@ -255,14 +255,14 @@
+ 		};
+ 
+ 		sata@18000 {
+-			compatible = "fsl,mpc8379-sata";
++			compatible = "fsl,mpc8379-sata", "fsl,pq-sata";
+ 			reg = <0x18000 0x1000>;
+ 			interrupts = <44 0x8>;
+ 			interrupt-parent = <&ipic>;
+ 		};
+ 
+ 		sata@19000 {
+-			compatible = "fsl,mpc8379-sata";
++			compatible = "fsl,mpc8379-sata", "fsl,pq-sata";
+ 			reg = <0x19000 0x1000>;
+ 			interrupts = <45 0x8>;
+ 			interrupt-parent = <&ipic>;
+diff --git a/arch/powerpc/boot/dts/mpc8379_mds.dts b/arch/powerpc/boot/dts/mpc8379_mds.dts
+index fdb4a92..6f78a9f 100644
+--- a/arch/powerpc/boot/dts/mpc8379_mds.dts
++++ b/arch/powerpc/boot/dts/mpc8379_mds.dts
+@@ -255,28 +255,28 @@
+ 		};
+ 
+ 		sata@18000 {
+-			compatible = "fsl,mpc8379-sata";
++			compatible = "fsl,mpc8379-sata", "fsl,pq-sata";
+ 			reg = <0x18000 0x1000>;
+ 			interrupts = <44 0x8>;
+ 			interrupt-parent = <&ipic>;
+ 		};
+ 
+ 		sata@19000 {
+-			compatible = "fsl,mpc8379-sata";
++			compatible = "fsl,mpc8379-sata", "fsl,pq-sata";
+ 			reg = <0x19000 0x1000>;
+ 			interrupts = <45 0x8>;
+ 			interrupt-parent = <&ipic>;
+ 		};
+ 
+ 		sata@1a000 {
+-			compatible = "fsl,mpc8379-sata";
++			compatible = "fsl,mpc8379-sata", "fsl,pq-sata";
+ 			reg = <0x1a000 0x1000>;
+ 			interrupts = <46 0x8>;
+ 			interrupt-parent = <&ipic>;
+ 		};
+ 
+ 		sata@1b000 {
+-			compatible = "fsl,mpc8379-sata";
++			compatible = "fsl,mpc8379-sata", "fsl,pq-sata";
+ 			reg = <0x1b000 0x1000>;
+ 			interrupts = <47 0x8>;
+ 			interrupt-parent = <&ipic>;
+diff --git a/drivers/ata/sata_fsl.c b/drivers/ata/sata_fsl.c
+index 07791a7..4c19855 100644
+--- a/drivers/ata/sata_fsl.c
++++ b/drivers/ata/sata_fsl.c
+@@ -1348,10 +1348,7 @@ static int sata_fsl_remove(struct of_device *ofdev)
+ 
+ static struct of_device_id fsl_sata_match[] = {
+ 	{
+-		.compatible = "fsl,mpc8315-sata",
+-	},
+-	{
+-		.compatible = "fsl,mpc8379-sata",
++		.compatible = "fsl,pq-sata",
+ 	},
+ 	{},
+ };
+-- 
+1.5.4.4.481.g5075
