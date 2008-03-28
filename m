@@ -1,60 +1,45 @@
-From: akpm@linux-foundation.org
-Subject: [patch 1/2] pata_atiixp: simplex clear
-Date: Fri, 28 Mar 2008 14:33:55 -0700
-Message-ID: <200803282133.m2SLXupx011467@imap1.linux-foundation.org>
+From: Tomas Lund <tlund@nxs.se>
+Subject: Re: Need help understanding SATA error message.
+Date: Fri, 28 Mar 2008 23:21:30 +0100 (CET)
+Message-ID: <Pine.LNX.4.61.0803282315330.5510@envy.nxs.se>
+References: <Pine.LNX.4.61.0803271554050.5510@envy.nxs.se> <47ED136F.9010501@rtr.ca>
+ <47ED15D2.3080403@rtr.ca>
+Mime-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:46150 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755436AbYC1Ve1 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 28 Mar 2008 17:34:27 -0400
+Received: from envy.nxs.se ([212.247.200.182]:42216 "EHLO envy.nxs.se"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753625AbYC1WVn (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 28 Mar 2008 18:21:43 -0400
+In-Reply-To: <47ED15D2.3080403@rtr.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: jeff@garzik.org
-Cc: linux-ide@vger.kernel.org, akpm@linux-foundation.org, alan@lxorguk.ukuu.org.uk, alan@redhat.com
+To: Mark Lord <liml@rtr.ca>
+Cc: linux-ide@vger.kernel.org
 
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+On Fri, 28 Mar 2008, Mark Lord wrote:
 
-Some of the other quirks changes seem to have left some users with the simplex
-bits mis-set by the time the driver loads.  Clear simplex mode before we probe
-the controller therefore.
+> Mark Lord wrote:
+>
+> Duh..  actually, we were just discussing this very error in another 
+> thread. The drive is really telling us that it hit an unrecoverable 
+> WRITE error at sector 0a:24:f9 on the drive.  Bad sector.
 
-Signed-off-by: Alan Cox <alan@redhat.com>
-Cc: Jeff Garzik <jeff@garzik.org>
-Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
----
+Aha, ok :(
 
- drivers/ata/pata_atiixp.c |    7 +++++--
- 1 file changed, 5 insertions(+), 2 deletions(-)
+> There are patches queued up for 2.6.26 to automatically resume the cache 
+> flush after the failed sector, but you'll still lose data at that 
+> sector.
 
-diff -puN drivers/ata/pata_atiixp.c~pata_atiixp-simplex-clear drivers/ata/pata_atiixp.c
---- a/drivers/ata/pata_atiixp.c~pata_atiixp-simplex-clear
-+++ a/drivers/ata/pata_atiixp.c
-@@ -22,7 +22,7 @@
- #include <linux/libata.h>
- 
- #define DRV_NAME "pata_atiixp"
--#define DRV_VERSION "0.4.6"
-+#define DRV_VERSION "0.4.7"
- 
- enum {
- 	ATIIXP_IDE_PIO_TIMING	= 0x40,
-@@ -243,6 +243,9 @@ static int atiixp_init_one(struct pci_de
- 		.port_ops = &atiixp_port_ops
- 	};
- 	const struct ata_port_info *ppi[] = { &info, NULL };
-+	/* Some of the quirk reconfiguration messes up the simplex
-+	   flag, so clear it again */
-+	ata_pci_clear_simplex(dev);
- 	return ata_pci_init_one(dev, ppi, &atiixp_sht, NULL);
- }
- 
-@@ -279,7 +282,7 @@ static void __exit atiixp_exit(void)
- }
- 
- MODULE_AUTHOR("Alan Cox");
--MODULE_DESCRIPTION("low-level driver for ATI IXP200/300/400");
-+MODULE_DESCRIPTION("low-level driver for ATI IXP series");
- MODULE_LICENSE("GPL");
- MODULE_DEVICE_TABLE(pci, atiixp);
- MODULE_VERSION(DRV_VERSION);
-_
+Lucky for me, there is no data yet on the system yet!
+
+> Time for a low-level reformat, if the manufacturer has a utility for 
+> that. Otherwise, RMA it.
+
+The drive is brand spanking new, less than 3 weeks, its going back!
+
+I do however wonder, what is an "unrecoverable write error", does it mean 
+it even failed to re-allocate it? Reallocated_Sector_Ct is still 0 
+according to smartcl...
+
+//tlund
