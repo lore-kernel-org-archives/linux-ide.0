@@ -1,46 +1,27 @@
-From: Tejun Heo <htejun@gmail.com>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
 Subject: Re: [PATCHSET #upstream] libata: improve FLUSH error handling
-Date: Fri, 28 Mar 2008 17:53:58 +0900
-Message-ID: <47ECB226.40009@gmail.com>
-References: <12066128663306-git-send-email-htejun@gmail.com>	<47EBAE2B.8070102@rtr.ca> <87bq4zl29s.fsf@basil.nowhere.org>	<47ECACBB.2060207@gmail.com> <873aqbkzde.fsf@basil.nowhere.org>
+Date: Fri, 28 Mar 2008 09:48:09 +0000
+Message-ID: <20080328094809.63f1de36@core>
+References: <12066128663306-git-send-email-htejun@gmail.com>
+	<47EBDE84.1070802@emc.com>
+	<47EC51C3.1080104@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hs-out-0708.google.com ([64.233.178.246]:3992 "EHLO
-	hs-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751370AbYC1IyO (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 28 Mar 2008 04:54:14 -0400
-Received: by hs-out-0708.google.com with SMTP id 4so129654hsl.5
-        for <linux-ide@vger.kernel.org>; Fri, 28 Mar 2008 01:54:14 -0700 (PDT)
-In-Reply-To: <873aqbkzde.fsf@basil.nowhere.org>
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:45608 "EHLO
+	lxorguk.ukuu.org.uk" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1750999AbYC1KGN (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 28 Mar 2008 06:06:13 -0400
+In-Reply-To: <47EC51C3.1080104@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Andi Kleen <andi@firstfloor.org>
-Cc: Mark Lord <liml@rtr.ca>, jeff@garzik.org, linux-ide@vger.kernel.org, alan@lxorguk.ukuu.org.uk
+To: Tejun Heo <htejun@gmail.com>
+Cc: ric@emc.com, jeff@garzik.org, linux-ide@vger.kernel.org, liml@rtr.ca
 
-Hello,
+> Yes by reporting the first failing sector.  Probably it's better to test
+> failed > last_failed than failed == last_failed.
 
-Andi Kleen wrote:
-> Tejun Heo <htejun@gmail.com> writes:
-> 
->> Regarding the boot time exception, which
->> version was it and do you have logs?
-> 
-> I tried first 2.6.25-rc4 and then 2.6.24 (similar behaviour).
-
-Hmmm...
-
-> My impression was also that the exception handling was very 
-> heavy handed -- is it really needed to always reset the link
-> on each error? 
-
-It depends on the type of error.  For things like state machine 
-violation and timeouts, I think it's safer to reset.
-
-> I'll send you full logs (huge) in separate mail.
-
-Alright.
-
--- 
-tejun
+Flush is not guaranteed to occur in LBA order, so I don't believe "first"
+in this case means LBA order first but first block in the write out order
+the drive picks.
