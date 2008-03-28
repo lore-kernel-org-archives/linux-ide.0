@@ -1,32 +1,32 @@
 From: Andi Kleen <andi@firstfloor.org>
-Subject: Re: [patch 2/2] libata: power off unused ports
-Date: 28 Mar 2008 08:43:40 +0100
-Message-ID: <87fxubl2dv.fsf@basil.nowhere.org>
-References: <20080325221646.567639335@intel.com>
-	<20080325152813.0b34761f@appleyard>
+Subject: Re: [PATCHSET #upstream] libata: improve FLUSH error handling
+Date: 28 Mar 2008 08:46:07 +0100
+Message-ID: <87bq4zl29s.fsf@basil.nowhere.org>
+References: <12066128663306-git-send-email-htejun@gmail.com>
+	<47EBAE2B.8070102@rtr.ca>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp-out02.alice-dsl.net ([88.44.60.12]:18465 "EHLO
-	smtp-out02.alice-dsl.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751432AbYC1Hnp (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 28 Mar 2008 03:43:45 -0400
-In-Reply-To: <20080325152813.0b34761f@appleyard>
+Received: from smtp-out01.alice-dsl.net ([88.44.60.11]:23732 "EHLO
+	smtp-out01.alice-dsl.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751688AbYC1HqK (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 28 Mar 2008 03:46:10 -0400
+In-Reply-To: <47EBAE2B.8070102@rtr.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Kristen Carlson Accardi <kristen.c.accardi@intel.com>
-Cc: jeff@garzik.org, linux-ide@vger.kernel.org, arjan@linux.intel.com
+To: Mark Lord <liml@rtr.ca>
+Cc: Tejun Heo <htejun@gmail.com>, jeff@garzik.org, linux-ide@vger.kernel.org, alan@lxorguk.ukuu.org.uk
 
-Kristen Carlson Accardi <kristen.c.accardi@intel.com> writes:
+Mark Lord <liml@rtr.ca> writes:
+> 
+> Really, the entire flush + retries etc.. should never, ever, be permitted
+> to take more than XX seconds total.  Not 60 seconds per retry, but XX seconds
+> total for the original command + however many retries we can fit in there.
 
-> If a port doesn't support hot plug, there's no reason to keep the phy powered
-> on unoccupied ports.  
-
-Would it be possible to add some writable sysfs attribute for this too?
-
-A lot of ports support hot plug, but the users knows they will never actually
-hot plug anything there. Exposing it to sysfs would make sense so 
-someone could make a conscious decision to save these watts by sacrifying
-hotplug-support.
+I fully agree. Also please make that user limit settable use module_param too,
+not only sysfs. I recently had the pleasure to deal with a failing disk
+which started to spew errors already on device probing and it somewhat
+annoyed me that that slowed down boot up time that much. Perhaps the default
+during device probing should be also lower?
 
 -Andi
