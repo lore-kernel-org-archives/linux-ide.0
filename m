@@ -1,52 +1,49 @@
-From: Tomas Lund <tlund@nxs.se>
-Subject: Re: Need help understanding SATA error message.
-Date: Fri, 28 Mar 2008 15:28:26 +0100 (CET)
-Message-ID: <Pine.LNX.4.61.0803281519550.5510@envy.nxs.se>
-References: <Pine.LNX.4.61.0803271554050.5510@envy.nxs.se> <47ECF555.6050000@garzik.org>
+From: Ric Wheeler <ric@emc.com>
+Subject: Re: [PATCHSET #upstream] libata: improve FLUSH error handling
+Date: Fri, 28 Mar 2008 10:53:53 -0400
+Message-ID: <47ED0681.4090003@emc.com>
+References: <12066128663306-git-send-email-htejun@gmail.com> <47EBAE2B.8070102@rtr.ca> <47EBB09F.9070607@rtr.ca> <47EC5079.5020105@gmail.com> <47EC58F6.3070601@rtr.ca> <47ECF47A.2040508@emc.com> <47ED061F.2070701@gmail.com>
+Reply-To: ric@emc.com
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from envy.nxs.se ([212.247.200.182]:47035 "EHLO envy.nxs.se"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751027AbYC1O2j (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 28 Mar 2008 10:28:39 -0400
-In-Reply-To: <47ECF555.6050000@garzik.org>
+Received: from mexforward.lss.emc.com ([128.222.32.20]:50366 "EHLO
+	mexforward.lss.emc.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753831AbYC1O4r (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 28 Mar 2008 10:56:47 -0400
+In-Reply-To: <47ED061F.2070701@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: linux-ide@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: Mark Lord <liml@rtr.ca>, jeff@garzik.org, linux-ide@vger.kernel.org, alan@lxorguk.ukuu.org.uk
 
-On Fri, 28 Mar 2008, Jeff Garzik wrote:
+Tejun Heo wrote:
+> Ric Wheeler wrote:
+>> I think that is a really important knob to have. Not just for RAID
+>> systems, but we use the FLUSH_CACHE on systems without barriers mainly
+>> when we power down & do the unmounts, etc.
+>>
+>> If you hit a bad block during power down of a laptop, I can image that
+>> have a worst case of (30?) seconds is infinitely better than multiple
+>> minutes ;-)
+> 
+> Fully finishing FLUSH CACHE requires command repetition.  Not fully
+> finishing FLUSH CACHE on shutdown means sure data loss.  Given that
+> FLUSH CACHE failure is very rare and it's repeatedly retried if and only
+> if the device actively indicates failure, I'm not too sure.  Also note
+> that if FLUSH CACHE fails, you cannot even trust the FS journal.  Things
+> can get silently corrupt.
+> 
 
-> Tomas Lund wrote:
->> 
->> I have a SuperMicro X7SBi with ICH9R SATA running 64bit linux 2.6.24.4. 
->> I have 4 1TB disks connected to the motherboard, and one of the disks 
->> is logging an error message. Everything is brand new, and hooked up 
->> just a few weeks ago.
->> 
->> S.M.A.R.T. shows no errors (see output from "smartctl -a" at the bottom 
->> of this email) after running both a short and long offline selftest, 
->> and my question is if its possible to tell from this error message what 
->> the problem is. The result "51/04:00:0a:24:f9" is a bit crypting to me, 
->> and it would be nice to know what the problem actually is before 
->> returning the disk.
->
-> What a coincidence :)  The ata wiki, just created yesterday, had a new 
-> page added yesterday:
->
-> 	http://ata.wiki.kernel.org/index.php/Libata_error_messages
+I do agree with the above, we should try to get the FLUSH done according 
+to spec, I meant to argue that we should bound the time spent. If my 
+laptop spends more than 30? 60? 120? seconds trying to flush a write 
+cache, I will probably be looking for a way to force it to power down ;-)
 
-Heh, yeah, now I know that the controller sent the command "ea" to the 
-disk, and that the disk has indicated a device error, but I am afraid it 
-doesnt really tell me alot more than i already knew, ie: not alot. :)
+It is also worth noting that most users of ext3 run without barriers 
+enabled (and the drive write cache enabled) which means that we test 
+this corruption path on any non-UPS power failure.
 
-All arguments to this "ea" command seems to have been 0? And the error has 
-"status = 0x51" listing som LBA location on the disk where the error 
-occured?
+ric
 
-Sorry, but I dont know enough about the protocol to understand most of 
-this, could you please help me decode it futher?
-
-Best regards,
-Tomas
