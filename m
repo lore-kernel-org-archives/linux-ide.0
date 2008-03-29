@@ -1,38 +1,41 @@
-From: Zoltan Boszormenyi <zboszor@dunaweb.hu>
-Subject: Re: [patch 3/3] ata: SWNCQ should be enabled by default
-Date: Sat, 29 Mar 2008 19:22:01 +0100
-Message-ID: <47EE88C9.3020805@dunaweb.hu>
-References: <200803282133.m2SLXlWk011463@imap1.linux-foundation.org> <47EE465E.80401@gmail.com>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: [PATCH] ide: fix defining SUPPORT_VLB_SYNC
+Date: Sat, 29 Mar 2008 19:58:21 +0100
+Message-ID: <200803291958.22010.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.dunaweb.hu ([81.17.184.3]:43010 "EHLO mail.dunaweb.hu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753461AbYC2S2e convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 29 Mar 2008 14:28:34 -0400
-In-Reply-To: <47EE465E.80401@gmail.com>
+Received: from fg-out-1718.google.com ([72.14.220.159]:43493 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753765AbYC2Sny (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 29 Mar 2008 14:43:54 -0400
+Received: by fg-out-1718.google.com with SMTP id l27so905032fgb.17
+        for <linux-ide@vger.kernel.org>; Sat, 29 Mar 2008 11:43:52 -0700 (PDT)
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: akpm@linux-foundation.org, jeff@garzik.org, linux-ide@vger.kernel.org, hancockr@shaw.ca
+To: linux-ide@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
 
-Tejun Heo =EDrta:
-> akpm@linux-foundation.org wrote:
->> From: Zoltan Boszormenyi <zboszor@dunaweb.hu>
->>
->> unchangelogged patch.
->>
->> Signed-off-by: Zoltan Boszormenyi <zboszor@dunaweb.hu>
->> Cc: Robert Hancock <hancockr@shaw.ca>
->> Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
->
-> Nacked-by: Tejun Heo <htejun@gmail.com>
->
-> Sorry, there are remaining issues to resolve before enabling ADMA by=20
-> default.
+We need to check for CONFIG_{CRIS,FRV} not {CRIS,FRV}.
 
-Sorry, this is NOT ADMA. SWNCQ is completely independent from ADMA.
+Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+---
+ include/linux/ide.h |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-
+Index: b/include/linux/ide.h
+===================================================================
+--- a/include/linux/ide.h
++++ b/include/linux/ide.h
+@@ -26,7 +26,7 @@
+ #include <asm/semaphore.h>
+ #include <asm/mutex.h>
+ 
+-#if defined(CRIS) || defined(FRV)
++#if defined(CONFIG_CRIS) || defined(CONFIG_FRV)
+ # define SUPPORT_VLB_SYNC 0
+ #else
+ # define SUPPORT_VLB_SYNC 1
