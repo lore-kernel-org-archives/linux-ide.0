@@ -1,38 +1,38 @@
-From: Haavard Skinnemoen <haavard.skinnemoen@atmel.com>
-Subject: Re: linux-next: Tree for March 29
-Date: Sat, 29 Mar 2008 19:12:55 +0100
-Message-ID: <20080329191255.7312e036@hskinnemo-gx620.norway.atmel.com>
-References: <20080329223354.304e2722.sfr@canb.auug.org.au>
+From: Zoltan Boszormenyi <zboszor@dunaweb.hu>
+Subject: Re: [patch 3/3] ata: SWNCQ should be enabled by default
+Date: Sat, 29 Mar 2008 19:22:01 +0100
+Message-ID: <47EE88C9.3020805@dunaweb.hu>
+References: <200803282133.m2SLXlWk011463@imap1.linux-foundation.org> <47EE465E.80401@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1754932AbYC2SNT@vger.kernel.org>
-In-Reply-To: <20080329223354.304e2722.sfr@canb.auug.org.au>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Stephen Rothwell <sfr@canb.auug.org.au>
-Cc: linux-next@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, netdev@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail.dunaweb.hu ([81.17.184.3]:43010 "EHLO mail.dunaweb.hu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753461AbYC2S2e convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 29 Mar 2008 14:28:34 -0400
+In-Reply-To: <47EE465E.80401@gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: akpm@linux-foundation.org, jeff@garzik.org, linux-ide@vger.kernel.org, hancockr@shaw.ca
 
-Stephen Rothwell <sfr@canb.auug.org.au> wrote:
-> Status of my local build tests is at
-> http://kisskb.ellerman.id.au/linux-next.  If maintainers want to give
-> advice about cross compilers/configs that work, we are always open to add
-> more builds.
+Tejun Heo =EDrta:
+> akpm@linux-foundation.org wrote:
+>> From: Zoltan Boszormenyi <zboszor@dunaweb.hu>
+>>
+>> unchangelogged patch.
+>>
+>> Signed-off-by: Zoltan Boszormenyi <zboszor@dunaweb.hu>
+>> Cc: Robert Hancock <hancockr@shaw.ca>
+>> Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
+>
+> Nacked-by: Tejun Heo <htejun@gmail.com>
+>
+> Sorry, there are remaining issues to resolve before enabling ADMA by=20
+> default.
 
-I see both avr32 builds currently fail, but for different
-reasons...none of which is avr32-specific as far as I can tell.
+Sorry, this is NOT ADMA. SWNCQ is completely independent from ADMA.
 
-defconfig fails with
 
-drivers/ata/libata-core.c:127: error: 'ata_pci_default_filter' undeclared here (not in a function)
-
-which seems to be due to CONFIG_ATA && !CONFIG_PCI
-
-allnoconfig fails with
-
-include/linux/netdevice.h:843: error: implicit declaration of function 'dev_net'
-
-which seems to be because the definition of dev_net is inside #ifdef
-CONFIG_NET, while next_net_device, which calls it, is not.
-
-Haavard
