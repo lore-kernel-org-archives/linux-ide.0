@@ -1,98 +1,54 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: [git patches] libata fixes
-Date: Sat, 29 Mar 2008 16:09:52 -0400
-Message-ID: <20080329200952.GA5206@havoc.gtf.org>
+From: Mark Lord <liml@rtr.ca>
+Subject: Re: Marvell 6141 support
+Date: Sat, 29 Mar 2008 16:46:42 -0400
+Message-ID: <47EEAAB2.2060404@rtr.ca>
+References: <1205578981.3107.18.camel@localhost.localdomain> <loom.20080324T074551-373@post.gmane.org> <47EE3DBF.4070300@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from havoc.gtf.org ([69.61.125.42]:53741 "EHLO havoc.gtf.org"
+Received: from rtr.ca ([76.10.145.34]:1122 "EHLO mail.rtr.ca"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754168AbYC2UJx (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 29 Mar 2008 16:09:53 -0400
-Content-Disposition: inline
+	id S1754444AbYC2Uqp (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 29 Mar 2008 16:46:45 -0400
+In-Reply-To: <47EE3DBF.4070300@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>
-Cc: linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
+To: Tejun Heo <htejun@gmail.com>
+Cc: Micael Beronius <micael.beronius@abc.se>, linux-ide@vger.kernel.org
 
+Tejun Heo wrote:
+> Micael Beronius wrote:
+>> Andy Sturrock <linux-kernel <at> sturrock.org> writes:
+>>
+>>> Hi Jeff,
+>>>
+>>> The patch you submitted back in May 2007 you called "Add Marvell 6141
+>>> ..
+>>
+>>> Initially all seems fine, I can see the attached drives in /dev and
+>>> fdisk and mkfs.ext3 seem to work OK.  Then I tried putting the drives 
+>>> into a RAID 5 array using
+>>> mdadm and it all went pear-shaped - see output from dmesg etc attached.
+>>
+>>
+>> Hi Andy, I am not Jeff, unforturnately... :) But I just wanted to 
+>> confirm that what you have seen is exactly what I learned and posted 
+>> last summer (2007-08-04 10:11:48 GMT). At the time, I tried all 
+>> kernels and branches I could get my hands on.
+>>
+>> Also I would not mind helping, but similar to you, I have not any 
+>> knowledge about the sata subsystem. But I can certainly test etc.
+>>
+>> In order to get into trouble, it seams that exercising more than one 
+>> disk at the same time on the interface "does it". - i.e. one doesn't 
+>> have to go raid.
+> 
+> Mark is currently working on improving sata_mv support.  Mark, are you 
+> working on ahci flavored marvells too?
+..
 
-Please pull from 'upstream-linus' branch of
-master.kernel.org:/pub/scm/linux/kernel/git/jgarzik/libata-dev.git upstream-linus
+Nope.  No plans to, either.
 
-to receive the following updates:
+Cheers
 
- drivers/ata/libata-core.c |    2 +-
- drivers/ata/libata-eh.c   |    2 +-
- drivers/ata/pata_sil680.c |    6 +++++-
- include/linux/libata.h    |    2 +-
- 4 files changed, 8 insertions(+), 4 deletions(-)
-
-Benjamin Herrenschmidt (1):
-      pata_sil680: only enable MMIO on Cell blades
-
-Tejun Heo (1):
-      libata: ATA_EHI_LPM should be ATA_EH_LPM
-
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index c4248b3..4851988 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -972,7 +972,7 @@ static void ata_dev_disable_pm(struct ata_device *dev)
- void ata_lpm_schedule(struct ata_port *ap, enum link_pm policy)
- {
- 	ap->pm_policy = policy;
--	ap->link.eh_info.action |= ATA_EHI_LPM;
-+	ap->link.eh_info.action |= ATA_EH_LPM;
- 	ap->link.eh_info.flags |= ATA_EHI_NO_AUTOPSY;
- 	ata_port_schedule_eh(ap);
- }
-diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
-index 681252f..a583032 100644
---- a/drivers/ata/libata-eh.c
-+++ b/drivers/ata/libata-eh.c
-@@ -2748,7 +2748,7 @@ int ata_eh_recover(struct ata_port *ap, ata_prereset_fn_t prereset,
- 			ehc->i.flags &= ~ATA_EHI_SETMODE;
- 		}
- 
--		if (ehc->i.action & ATA_EHI_LPM)
-+		if (ehc->i.action & ATA_EH_LPM)
- 			ata_link_for_each_dev(dev, link)
- 				ata_dev_enable_pm(dev, ap->pm_policy);
- 
-diff --git a/drivers/ata/pata_sil680.c b/drivers/ata/pata_sil680.c
-index 503245a..3988e44 100644
---- a/drivers/ata/pata_sil680.c
-+++ b/drivers/ata/pata_sil680.c
-@@ -269,7 +269,11 @@ static u8 sil680_init_chip(struct pci_dev *pdev, int *try_mmio)
- 	dev_dbg(&pdev->dev, "sil680: BA5_EN = %d clock = %02X\n",
- 		tmpbyte & 1, tmpbyte & 0x30);
- 
--	*try_mmio = (tmpbyte & 1) || pci_resource_start(pdev, 5);
-+	*try_mmio = 0;
-+#ifdef CONFIG_PPC
-+	if (machine_is(cell))
-+		*try_mmio = (tmpbyte & 1) || pci_resource_start(pdev, 5);
-+#endif
- 
- 	switch(tmpbyte & 0x30) {
- 		case 0x00:
-diff --git a/include/linux/libata.h b/include/linux/libata.h
-index 269cdba..b064bfe 100644
---- a/include/linux/libata.h
-+++ b/include/linux/libata.h
-@@ -295,6 +295,7 @@ enum {
- 	ATA_EH_SOFTRESET	= (1 << 1),
- 	ATA_EH_HARDRESET	= (1 << 2),
- 	ATA_EH_ENABLE_LINK	= (1 << 3),
-+	ATA_EH_LPM		= (1 << 4),  /* link power management action */
- 
- 	ATA_EH_RESET_MASK	= ATA_EH_SOFTRESET | ATA_EH_HARDRESET,
- 	ATA_EH_PERDEV_MASK	= ATA_EH_REVALIDATE,
-@@ -304,7 +305,6 @@ enum {
- 	ATA_EHI_RESUME_LINK	= (1 << 1),  /* resume link (reset modifier) */
- 	ATA_EHI_NO_AUTOPSY	= (1 << 2),  /* no autopsy */
- 	ATA_EHI_QUIET		= (1 << 3),  /* be quiet */
--	ATA_EHI_LPM		= (1 << 4),  /* link power management action */
- 
- 	ATA_EHI_DID_SOFTRESET	= (1 << 16), /* already soft-reset this port */
- 	ATA_EHI_DID_HARDRESET	= (1 << 17), /* already soft-reset this port */
