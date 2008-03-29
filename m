@@ -1,14 +1,14 @@
 From: Borislav Petkov <petkovbb@googlemail.com>
-Subject: [PATCH 4/5] ide-tape: improve buffer pages freeing strategy
-Date: Sat, 29 Mar 2008 18:46:08 +0100
-Message-ID: <1206812769-10065-5-git-send-email-petkovbb@gmail.com>
+Subject: [PATCH 1/5] ide-tape: improve buffer allocation strategy
+Date: Sat, 29 Mar 2008 18:46:05 +0100
+Message-ID: <1206812769-10065-2-git-send-email-petkovbb@gmail.com>
 References: <1206812769-10065-1-git-send-email-petkovbb@gmail.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.168]:51420 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753087AbYC2Rp7 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 29 Mar 2008 13:45:59 -0400
-Received: by ug-out-1314.google.com with SMTP id z38so136817ugc.16
+Received: from py-out-1112.google.com ([64.233.166.177]:24309 "EHLO
+	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752138AbYC2Rp6 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 29 Mar 2008 13:45:58 -0400
+Received: by py-out-1112.google.com with SMTP id u52so1147944pyb.10
         for <linux-ide@vger.kernel.org>; Sat, 29 Mar 2008 10:45:57 -0700 (PDT)
 In-Reply-To: <1206812769-10065-1-git-send-email-petkovbb@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
@@ -16,106 +16,145 @@ List-Id: linux-ide@vger.kernel.org
 To: bzolnier@gmail.com
 Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Borislav Petkov <petkovbb@gmail.com>
 
-Instead of freeing pages one by one, free them 2^order-wise. Also, mv
-__idetape_kfree_stage() to ide_tape_kfree_buffer().
+Instead of allocating pages for the buffer one by one, take advantage of the
+buddy alloc system and request them 2^order at a time. This increases the chance
+for bigger buffer parts to be contigious and reduces loop iteration count. While
+at it, rename function __idetape_kmalloc_stage() to ide_tape_kmalloc_buffer().
 
 Signed-off-by: Borislav Petkov <petkovbb@gmail.com>
 ---
- drivers/ide/ide-tape.c |   37 +++++++++++++++++++------------------
- 1 files changed, 19 insertions(+), 18 deletions(-)
+ drivers/ide/ide-tape.c |   58 +++++++++++++++++++++++++++++------------------
+ 1 files changed, 36 insertions(+), 22 deletions(-)
 
 diff --git a/drivers/ide/ide-tape.c b/drivers/ide/ide-tape.c
-index cf4351c..dcaefef 100644
+index 6752d47..b5ec669 100644
 --- a/drivers/ide/ide-tape.c
 +++ b/drivers/ide/ide-tape.c
-@@ -583,20 +583,21 @@ static void idetape_analyze_error(ide_drive_t *drive, u8 *sense)
- 	}
+@@ -1290,20 +1290,20 @@ out:
  }
  
--/* Free a stage along with its related buffers completely. */
--static void __idetape_kfree_stage(idetape_stage_t *stage)
-+/* Free data buffers completely. */
-+static void ide_tape_kfree_buffer(idetape_stage_t *stage)
+ /*
+- * The function below uses __get_free_page to allocate a pipeline stage, along
+- * with all the necessary small buffers which together make a buffer of size
++ * The function below uses __get_free_pages to allocate a data buffer of size
+  * tape->stage_size (or a bit more). We attempt to combine sequential pages as
+  * much as possible.
+  *
+- * It returns a pointer to the new allocated stage, or NULL if we can't (or
+- * don't want to) allocate a stage.
++ * It returns a pointer to the newly allocated buffer, or NULL in case of
++ * failure.
+  */
+-static idetape_stage_t *__idetape_kmalloc_stage(idetape_tape_t *tape, int full,
++static idetape_stage_t *ide_tape_kmalloc_buffer(idetape_tape_t *tape, int full,
+ 						int clear)
  {
- 	struct idetape_bh *prev_bh, *bh = stage->bh;
--	int size;
--
--	while (bh != NULL) {
--		if (bh->b_data != NULL) {
--			size = (int) bh->b_size;
--			while (size > 0) {
--				free_page((unsigned long) bh->b_data);
--				size -= PAGE_SIZE;
--				bh->b_data += PAGE_SIZE;
--			}
+ 	idetape_stage_t *stage;
+ 	struct idetape_bh *prev_bh, *bh;
+ 	int pages = tape->pages_per_stage;
++	unsigned int order, b_allocd;
+ 	char *b_data = NULL;
+ 
+ 	stage = kmalloc(sizeof(idetape_stage_t), GFP_KERNEL);
+@@ -1315,32 +1315,43 @@ static idetape_stage_t *__idetape_kmalloc_stage(idetape_tape_t *tape, int full,
+ 	bh = stage->bh;
+ 	if (bh == NULL)
+ 		goto abort;
+-	bh->b_reqnext = NULL;
+-	bh->b_data = (char *) __get_free_page(GFP_KERNEL);
 +
-+	while (bh) {
-+		u32 size = bh->b_size;
++	order = fls(pages) - 1;
++	bh->b_data = (char *) __get_free_pages(GFP_KERNEL, order);
+ 	if (!bh->b_data)
+ 		goto abort;
++	b_allocd = (1 << order) * PAGE_SIZE;
++	pages &= (order-1);
 +
-+		while (size) {
-+			unsigned int order = fls(size >> PAGE_SHIFT)-1;
+ 	if (clear)
+-		memset(bh->b_data, 0, PAGE_SIZE);
+-	bh->b_size = PAGE_SIZE;
++		memset(bh->b_data, 0, b_allocd);
++	bh->b_reqnext = NULL;
++	bh->b_size = b_allocd;
+ 	atomic_set(&bh->b_count, full ? bh->b_size : 0);
+ 
+-	while (--pages) {
+-		b_data = (char *) __get_free_page(GFP_KERNEL);
++	while (pages) {
++		order = fls(pages) - 1;
++		b_data = (char *) __get_free_pages(GFP_KERNEL, order);
+ 		if (!b_data)
+ 			goto abort;
++		b_allocd = (1 << order) * PAGE_SIZE;
 +
-+			if (bh->b_data)
-+				free_pages((unsigned long)bh->b_data, order);
+ 		if (clear)
+-			memset(b_data, 0, PAGE_SIZE);
+-		if (bh->b_data == b_data + PAGE_SIZE) {
+-			bh->b_size += PAGE_SIZE;
+-			bh->b_data -= PAGE_SIZE;
++			memset(b_data, 0, b_allocd);
 +
-+			size &= (order-1);
++		/* newly allocated page frames below buffer header or ...*/
++		if (bh->b_data == b_data + b_allocd) {
++			bh->b_size += b_allocd;
++			bh->b_data -= b_allocd;
+ 			if (full)
+-				atomic_add(PAGE_SIZE, &bh->b_count);
++				atomic_add(b_allocd, &bh->b_count);
+ 			continue;
+ 		}
++		/* they are above the header */
+ 		if (b_data == bh->b_data + bh->b_size) {
+-			bh->b_size += PAGE_SIZE;
++			bh->b_size += b_allocd;
+ 			if (full)
+-				atomic_add(PAGE_SIZE, &bh->b_count);
++				atomic_add(b_allocd, &bh->b_count);
+ 			continue;
  		}
  		prev_bh = bh;
- 		bh = bh->b_reqnext;
-@@ -1373,7 +1374,7 @@ static idetape_stage_t *ide_tape_kmalloc_buffer(idetape_tape_t *tape, int full,
+@@ -1351,10 +1362,13 @@ static idetape_stage_t *__idetape_kmalloc_stage(idetape_tape_t *tape, int full,
+ 		}
+ 		bh->b_reqnext = NULL;
+ 		bh->b_data = b_data;
+-		bh->b_size = PAGE_SIZE;
++		bh->b_size = b_allocd;
+ 		atomic_set(&bh->b_count, full ? bh->b_size : 0);
+ 		prev_bh->b_reqnext = bh;
++
++		pages &= (order-1);
+ 	}
++
+ 	bh->b_size -= tape->excess_bh_size;
+ 	if (full)
  		atomic_sub(tape->excess_bh_size, &bh->b_count);
- 	return stage;
- abort:
--	__idetape_kfree_stage(stage);
-+	ide_tape_kfree_buffer(stage);
- 	return NULL;
- }
+@@ -1837,7 +1851,7 @@ static int idetape_init_read(ide_drive_t *drive)
+ 					 " 0 now\n");
+ 			tape->merge_stage_size = 0;
+ 		}
+-		tape->merge_stage = __idetape_kmalloc_stage(tape, 0, 0);
++		tape->merge_stage = ide_tape_kmalloc_buffer(tape, 0, 0);
+ 		if (!tape->merge_stage)
+ 			return -ENOMEM;
+ 		tape->chrdev_dir = IDETAPE_DIR_READ;
+@@ -2115,7 +2129,7 @@ static ssize_t idetape_chrdev_write(struct file *file, const char __user *buf,
+ 				"should be 0 now\n");
+ 			tape->merge_stage_size = 0;
+ 		}
+-		tape->merge_stage = __idetape_kmalloc_stage(tape, 0, 0);
++		tape->merge_stage = ide_tape_kmalloc_buffer(tape, 0, 0);
+ 		if (!tape->merge_stage)
+ 			return -ENOMEM;
+ 		tape->chrdev_dir = IDETAPE_DIR_WRITE;
+@@ -2495,7 +2509,7 @@ static void idetape_write_release(ide_drive_t *drive, unsigned int minor)
+ 	idetape_tape_t *tape = drive->driver_data;
  
-@@ -1649,7 +1650,7 @@ static int __idetape_discard_read_pipeline(ide_drive_t *drive)
- 	clear_bit(IDETAPE_FLAG_FILEMARK, &tape->flags);
- 	tape->merge_stage_size = 0;
- 	if (tape->merge_stage != NULL) {
--		__idetape_kfree_stage(tape->merge_stage);
-+		ide_tape_kfree_buffer(tape->merge_stage);
- 		tape->merge_stage = NULL;
- 	}
- 
-@@ -1828,7 +1829,7 @@ static void idetape_empty_write_pipeline(ide_drive_t *drive)
- 		tape->merge_stage_size = 0;
- 	}
- 	if (tape->merge_stage != NULL) {
--		__idetape_kfree_stage(tape->merge_stage);
-+		ide_tape_kfree_buffer(tape->merge_stage);
- 		tape->merge_stage = NULL;
- 	}
- 	tape->chrdev_dir = IDETAPE_DIR_NONE;
-@@ -1866,7 +1867,7 @@ static int idetape_init_read(ide_drive_t *drive)
- 							REQ_IDETAPE_READ, 0,
- 							tape->merge_stage->bh);
- 			if (bytes_read < 0) {
--				__idetape_kfree_stage(tape->merge_stage);
-+				ide_tape_kfree_buffer(tape->merge_stage);
- 				tape->merge_stage = NULL;
- 				tape->chrdev_dir = IDETAPE_DIR_NONE;
- 				return bytes_read;
-@@ -2145,7 +2146,7 @@ static ssize_t idetape_chrdev_write(struct file *file, const char __user *buf,
- 							REQ_IDETAPE_WRITE, 0,
- 							tape->merge_stage->bh);
- 			if (retval < 0) {
--				__idetape_kfree_stage(tape->merge_stage);
-+				ide_tape_kfree_buffer(tape->merge_stage);
- 				tape->merge_stage = NULL;
- 				tape->chrdev_dir = IDETAPE_DIR_NONE;
- 				return retval;
-@@ -2512,7 +2513,7 @@ static void idetape_write_release(ide_drive_t *drive, unsigned int minor)
+ 	idetape_empty_write_pipeline(drive);
+-	tape->merge_stage = __idetape_kmalloc_stage(tape, 1, 0);
++	tape->merge_stage = ide_tape_kmalloc_buffer(tape, 1, 0);
  	if (tape->merge_stage != NULL) {
  		idetape_pad_zeros(drive, tape->blk_size *
  				(tape->user_bs_factor - 1));
--		__idetape_kfree_stage(tape->merge_stage);
-+		ide_tape_kfree_buffer(tape->merge_stage);
- 		tape->merge_stage = NULL;
- 	}
- 	idetape_write_filemark(drive);
 -- 
 1.5.4.1
 
