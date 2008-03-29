@@ -1,49 +1,51 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: Re: 2.6.24.3: regular sata drive resets - worrisome?
-Date: Sat, 29 Mar 2008 21:58:34 +0900
-Message-ID: <47EE3CFA.2000707@gmail.com>
-References: <200803201518.32109.hpj@urpla.net> <20080320214830.6d39876d.akpm@linux-foundation.org>
+Subject: Re: Marvell 6141 support
+Date: Sat, 29 Mar 2008 22:01:51 +0900
+Message-ID: <47EE3DBF.4070300@gmail.com>
+References: <1205578981.3107.18.camel@localhost.localdomain> <loom.20080324T074551-373@post.gmane.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.181]:1935 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751380AbYC2M6m (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 29 Mar 2008 08:58:42 -0400
-Received: by wa-out-1112.google.com with SMTP id v27so863278wah.23
-        for <linux-ide@vger.kernel.org>; Sat, 29 Mar 2008 05:58:42 -0700 (PDT)
-In-Reply-To: <20080320214830.6d39876d.akpm@linux-foundation.org>
+Received: from wf-out-1314.google.com ([209.85.200.168]:31496 "EHLO
+	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750918AbYC2NCU (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 29 Mar 2008 09:02:20 -0400
+Received: by wf-out-1314.google.com with SMTP id 28so629086wff.4
+        for <linux-ide@vger.kernel.org>; Sat, 29 Mar 2008 06:02:19 -0700 (PDT)
+In-Reply-To: <loom.20080324T074551-373@post.gmane.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: Hans-Peter Jansen <hpj@urpla.net>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: Micael Beronius <micael.beronius@abc.se>
+Cc: linux-ide@vger.kernel.org, Mark Lord <liml@rtr.ca>
 
-Hello, Hans.
-
-Andrew Morton wrote:
->> since I upgraded to 2.6.24.3 on one of my production systems, I see 
->> regular device resets like these:
+Micael Beronius wrote:
+> Andy Sturrock <linux-kernel <at> sturrock.org> writes:
+> 
+>> Hi Jeff,
 >>
->> Mar 20 14:33:03 lisa5 kernel: ata2.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 frozen
->> Mar 20 14:33:03 lisa5 kernel: ata2.00: cmd ea/00:00:00:00:00/00:00:00:00:00/a0 tag 0
->> Mar 20 14:33:03 lisa5 kernel:          res 40/00:00:01:4f:c2/00:00:00:00:00/00 Emask 0x4 (timeout)
+>> The patch you submitted back in May 2007 you called "Add Marvell 6141
+>> ..
+> 
+>> Initially all seems fine, I can see the attached drives in /dev and
+>> fdisk and mkfs.ext3 seem to work OK.  
+>> Then I tried putting the drives into a RAID 5 array using
+>> mdadm and it all went pear-shaped - see output from dmesg etc attached.
+> 
+> 
+> Hi Andy, I am not Jeff, unforturnately... :) But I just wanted to confirm that 
+> what you have seen is exactly what I learned and posted last summer (2007-08-04 
+> 10:11:48 GMT). At the time, I tried all kernels and branches I could get my 
+> hands on.
+> 
+> Also I would not mind helping, but similar to you, I have not any knowledge 
+> about the sata subsystem. But I can certainly test etc.
+> 
+> In order to get into trouble, it seams that exercising more than one disk at 
+> the same time on the interface "does it". - i.e. one doesn't have to go raid.
 
-Ouch, timeout on FLUSH_EXT.  Are all errors on cmd ea?
-
->> Should I be worried? smartd doesn't show anything suspicious on those.
-
-Can you please post the result of "smartctl -a /dev/sdX"?
-
->> It's been 4 samsung drives at all hanging on a sata sil 3124:
-
-FLUSH_EXT timing out usually indicates that the drive is having problem 
-writing out what it has in its cache to the media.  There was one case 
-where FLUSH_EXT timeout was caused by the driver failing to switch 
-controller back from NCQ mode before issuing FLUSH_EXT but that was on 
-sata_nv.  There hasn't been any similar problem on sata_sil24.
-
-Thanks.
+Mark is currently working on improving sata_mv support.  Mark, are you 
+working on ahci flavored marvells too?
 
 -- 
 tejun
