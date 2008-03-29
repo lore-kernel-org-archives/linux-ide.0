@@ -1,81 +1,98 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [git patches] IDE fixes
-Date: Sat, 29 Mar 2008 20:01:17 +0100
-Message-ID: <200803292001.17584.bzolnier@gmail.com>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: [git patches] libata fixes
+Date: Sat, 29 Mar 2008 16:09:52 -0400
+Message-ID: <20080329200952.GA5206@havoc.gtf.org>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.156]:50233 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755966AbYC2Srn (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 29 Mar 2008 14:47:43 -0400
-Received: by fg-out-1718.google.com with SMTP id l27so906607fgb.17
-        for <linux-ide@vger.kernel.org>; Sat, 29 Mar 2008 11:47:41 -0700 (PDT)
+Received: from havoc.gtf.org ([69.61.125.42]:53741 "EHLO havoc.gtf.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754168AbYC2UJx (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 29 Mar 2008 16:09:53 -0400
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Stephen Rothwell <sfr@canb.auug.org.au>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>
+Cc: linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
 
 
-Linus, please pull from:
-
-master.kernel.org:/pub/scm/linux/kernel/git/bart/ide-2.6.git/
+Please pull from 'upstream-linus' branch of
+master.kernel.org:/pub/scm/linux/kernel/git/jgarzik/libata-dev.git upstream-linus
 
 to receive the following updates:
 
- drivers/ide/ide-iops.c  |    1 +
- drivers/ide/ide-probe.c |    5 +++--
- include/linux/ide.h     |    2 +-
- 3 files changed, 5 insertions(+), 3 deletions(-)
+ drivers/ata/libata-core.c |    2 +-
+ drivers/ata/libata-eh.c   |    2 +-
+ drivers/ata/pata_sil680.c |    6 +++++-
+ include/linux/libata.h    |    2 +-
+ 4 files changed, 8 insertions(+), 4 deletions(-)
 
+Benjamin Herrenschmidt (1):
+      pata_sil680: only enable MMIO on Cell blades
 
-Bartlomiej Zolnierkiewicz (2):
-      Revert "ide: change master/slave IDENTIFY order"
-      ide: fix defining SUPPORT_VLB_SYNC
+Tejun Heo (1):
+      libata: ATA_EHI_LPM should be ATA_EH_LPM
 
-
-diff --git a/drivers/ide/ide-iops.c b/drivers/ide/ide-iops.c
-index c419266..01b9220 100644
---- a/drivers/ide/ide-iops.c
-+++ b/drivers/ide/ide-iops.c
-@@ -595,6 +595,7 @@ u8 eighty_ninty_three (ide_drive_t *drive)
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index c4248b3..4851988 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -972,7 +972,7 @@ static void ata_dev_disable_pm(struct ata_device *dev)
+ void ata_lpm_schedule(struct ata_port *ap, enum link_pm policy)
+ {
+ 	ap->pm_policy = policy;
+-	ap->link.eh_info.action |= ATA_EHI_LPM;
++	ap->link.eh_info.action |= ATA_EH_LPM;
+ 	ap->link.eh_info.flags |= ATA_EHI_NO_AUTOPSY;
+ 	ata_port_schedule_eh(ap);
+ }
+diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
+index 681252f..a583032 100644
+--- a/drivers/ata/libata-eh.c
++++ b/drivers/ata/libata-eh.c
+@@ -2748,7 +2748,7 @@ int ata_eh_recover(struct ata_port *ap, ata_prereset_fn_t prereset,
+ 			ehc->i.flags &= ~ATA_EHI_SETMODE;
+ 		}
  
- 	/*
- 	 * FIXME:
-+	 * - change master/slave IDENTIFY order
- 	 * - force bit13 (80c cable present) check also for !ivb devices
- 	 *   (unless the slave device is pre-ATA3)
- 	 */
-diff --git a/drivers/ide/ide-probe.c b/drivers/ide/ide-probe.c
-index 194ecb0..47a1149 100644
---- a/drivers/ide/ide-probe.c
-+++ b/drivers/ide/ide-probe.c
-@@ -774,9 +774,10 @@ static int ide_probe_port(ide_hwif_t *hwif)
- 		printk(KERN_DEBUG "%s: Wait for ready failed before probe !\n", hwif->name);
+-		if (ehc->i.action & ATA_EHI_LPM)
++		if (ehc->i.action & ATA_EH_LPM)
+ 			ata_link_for_each_dev(dev, link)
+ 				ata_dev_enable_pm(dev, ap->pm_policy);
  
- 	/*
--	 * Need to probe slave device first to make it release PDIAG-.
-+	 * Second drive should only exist if first drive was found,
-+	 * but a lot of cdrom drives are configured as single slaves.
- 	 */
--	for (unit = MAX_DRIVES - 1; unit >= 0; unit--) {
-+	for (unit = 0; unit < MAX_DRIVES; ++unit) {
- 		ide_drive_t *drive = &hwif->drives[unit];
- 		drive->dn = (hwif->channel ? 2 : 0) + unit;
- 		(void) probe_for_drive(drive);
-diff --git a/include/linux/ide.h b/include/linux/ide.h
-index a3b69c1..bc26b2f 100644
---- a/include/linux/ide.h
-+++ b/include/linux/ide.h
-@@ -26,7 +26,7 @@
- #include <asm/semaphore.h>
- #include <asm/mutex.h>
+diff --git a/drivers/ata/pata_sil680.c b/drivers/ata/pata_sil680.c
+index 503245a..3988e44 100644
+--- a/drivers/ata/pata_sil680.c
++++ b/drivers/ata/pata_sil680.c
+@@ -269,7 +269,11 @@ static u8 sil680_init_chip(struct pci_dev *pdev, int *try_mmio)
+ 	dev_dbg(&pdev->dev, "sil680: BA5_EN = %d clock = %02X\n",
+ 		tmpbyte & 1, tmpbyte & 0x30);
  
--#if defined(CRIS) || defined(FRV)
-+#if defined(CONFIG_CRIS) || defined(CONFIG_FRV)
- # define SUPPORT_VLB_SYNC 0
- #else
- # define SUPPORT_VLB_SYNC 1
+-	*try_mmio = (tmpbyte & 1) || pci_resource_start(pdev, 5);
++	*try_mmio = 0;
++#ifdef CONFIG_PPC
++	if (machine_is(cell))
++		*try_mmio = (tmpbyte & 1) || pci_resource_start(pdev, 5);
++#endif
+ 
+ 	switch(tmpbyte & 0x30) {
+ 		case 0x00:
+diff --git a/include/linux/libata.h b/include/linux/libata.h
+index 269cdba..b064bfe 100644
+--- a/include/linux/libata.h
++++ b/include/linux/libata.h
+@@ -295,6 +295,7 @@ enum {
+ 	ATA_EH_SOFTRESET	= (1 << 1),
+ 	ATA_EH_HARDRESET	= (1 << 2),
+ 	ATA_EH_ENABLE_LINK	= (1 << 3),
++	ATA_EH_LPM		= (1 << 4),  /* link power management action */
+ 
+ 	ATA_EH_RESET_MASK	= ATA_EH_SOFTRESET | ATA_EH_HARDRESET,
+ 	ATA_EH_PERDEV_MASK	= ATA_EH_REVALIDATE,
+@@ -304,7 +305,6 @@ enum {
+ 	ATA_EHI_RESUME_LINK	= (1 << 1),  /* resume link (reset modifier) */
+ 	ATA_EHI_NO_AUTOPSY	= (1 << 2),  /* no autopsy */
+ 	ATA_EHI_QUIET		= (1 << 3),  /* be quiet */
+-	ATA_EHI_LPM		= (1 << 4),  /* link power management action */
+ 
+ 	ATA_EHI_DID_SOFTRESET	= (1 << 16), /* already soft-reset this port */
+ 	ATA_EHI_DID_HARDRESET	= (1 << 17), /* already soft-reset this port */
