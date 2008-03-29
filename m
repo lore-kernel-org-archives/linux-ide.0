@@ -1,45 +1,43 @@
-From: Tomas Lund <tlund@nxs.se>
-Subject: Re: Need help understanding SATA error message.
-Date: Fri, 28 Mar 2008 23:21:30 +0100 (CET)
-Message-ID: <Pine.LNX.4.61.0803282315330.5510@envy.nxs.se>
-References: <Pine.LNX.4.61.0803271554050.5510@envy.nxs.se> <47ED136F.9010501@rtr.ca>
- <47ED15D2.3080403@rtr.ca>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: [patch 1/3] git-libata: fix CONFIG_PCI=n build
+Date: Sat, 29 Mar 2008 10:04:19 +0900
+Message-ID: <47ED9593.3040100@gmail.com>
+References: <200803282133.m2SLXj7h011457@imap1.linux-foundation.org>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from envy.nxs.se ([212.247.200.182]:42216 "EHLO envy.nxs.se"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753625AbYC1WVn (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 28 Mar 2008 18:21:43 -0400
-In-Reply-To: <47ED15D2.3080403@rtr.ca>
+Received: from rv-out-0910.google.com ([209.85.198.185]:27122 "EHLO
+	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755676AbYC2BEZ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 28 Mar 2008 21:04:25 -0400
+Received: by rv-out-0910.google.com with SMTP id k20so275518rvb.1
+        for <linux-ide@vger.kernel.org>; Fri, 28 Mar 2008 18:04:25 -0700 (PDT)
+In-Reply-To: <200803282133.m2SLXj7h011457@imap1.linux-foundation.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark Lord <liml@rtr.ca>
-Cc: linux-ide@vger.kernel.org
+To: akpm@linux-foundation.org
+Cc: jeff@garzik.org, linux-ide@vger.kernel.org
 
-On Fri, 28 Mar 2008, Mark Lord wrote:
+akpm@linux-foundation.org wrote:
+> From: Andrew Morton <akpm@linux-foundation.org>
+> 
+> sh allmodconfig:
+> 
+> drivers/ata/libata-core.c:127: error: `ata_pci_default_filter' undeclared here (not in a function)
+> drivers/ata/libata-core.c:127: error: initializer element is not constant
+> drivers/ata/libata-core.c:127: error: (near initialization for `ata_bmdma_port_ops.mode_filter')
+> 
+> Cc: Tejun Heo <htejun@gmail.com>
+> Cc: Jeff Garzik <jeff@garzik.org>
+> Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
 
-> Mark Lord wrote:
->
-> Duh..  actually, we were just discussing this very error in another 
-> thread. The drive is really telling us that it hit an unrecoverable 
-> WRITE error at sector 0a:24:f9 on the drive.  Bad sector.
+There's a pending patch to pull ata_pci_default_filter() out of 
+CONFIG_PCI as there's nothing PCI specific about it but this is a 
+correct fix.  Jeff, if you're gonna merge the modularize-SFF patchset, 
+this one isn't necessary.  If not, please go ahead and merge this.
 
-Aha, ok :(
+Thanks.
 
-> There are patches queued up for 2.6.26 to automatically resume the cache 
-> flush after the failed sector, but you'll still lose data at that 
-> sector.
-
-Lucky for me, there is no data yet on the system yet!
-
-> Time for a low-level reformat, if the manufacturer has a utility for 
-> that. Otherwise, RMA it.
-
-The drive is brand spanking new, less than 3 weeks, its going back!
-
-I do however wonder, what is an "unrecoverable write error", does it mean 
-it even failed to re-allocate it? Reallocated_Sector_Ct is still 0 
-according to smartcl...
-
-//tlund
+-- 
+tejun
