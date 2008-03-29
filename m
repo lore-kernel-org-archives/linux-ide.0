@@ -1,54 +1,47 @@
-From: Tomas Lund <tlund@nxs.se>
-Subject: Re: Need help understanding SATA error message.
-Date: Sat, 29 Mar 2008 11:39:46 +0100 (CET)
-Message-ID: <Pine.LNX.4.61.0803291128030.5510@envy.nxs.se>
-References: <Pine.LNX.4.61.0803271554050.5510@envy.nxs.se> <47ED136F.9010501@rtr.ca>
- <47ED15D2.3080403@rtr.ca> <Pine.LNX.4.61.0803282315330.5510@envy.nxs.se>
- <47EDBD6D.1020207@rtr.ca>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: nVidia MCP55 SATA hotplug support?
+Date: Sat, 29 Mar 2008 21:14:03 +0900
+Message-ID: <47EE328B.9030000@gmail.com>
+References: <47D698C8.2020206@aquazul.com> <loom.20080313T211921-877@post.gmane.org>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from envy.nxs.se ([212.247.200.182]:35683 "EHLO envy.nxs.se"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752326AbYC2Kj6 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 29 Mar 2008 06:39:58 -0400
-In-Reply-To: <47EDBD6D.1020207@rtr.ca>
+Received: from wa-out-1112.google.com ([209.85.146.181]:1591 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751015AbYC2MOM (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 29 Mar 2008 08:14:12 -0400
+Received: by wa-out-1112.google.com with SMTP id v27so844786wah.23
+        for <linux-ide@vger.kernel.org>; Sat, 29 Mar 2008 05:14:12 -0700 (PDT)
+In-Reply-To: <loom.20080313T211921-877@post.gmane.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark Lord <liml@rtr.ca>
-Cc: linux-ide@vger.kernel.org
+To: Christian Spindler <csp@inode.at>
+Cc: linux-ide@vger.kernel.org, Robert Hancock <hancockr@shaw.ca>
 
-On Fri, 28 Mar 2008, Mark Lord wrote:
+Christian Spindler wrote:
+> My hardware is:
+> 
+> 00:0e.0 IDE interface: nVidia Corporation MCP55 SATA Controller (rev a2)
+> 00:0e.1 IDE interface: nVidia Corporation MCP55 SATA Controller (rev a2)
+> 00:0e.2 IDE interface: nVidia Corporation MCP55 SATA Controller (rev a2)
+> 
+> And hotplug does not work, too.
+> 
+> 
+> chrisi@mars:~$ lsmod | grep sata
+> sata_sil24             15236  0 
+> sata_nv                20612  2 
+> libata                125168  3 sata_sil24,sata_nv,ata_generic
+> 
+> 
+> There are no info in dmesg wenn plug or un-plug a drive.
+> On Windows hotplug works.
+> 
+> Does anybody knows hot to activate hotplug?
 
-> One thing to try, to verify that my interpretation was correct, is to 
-> try and read that exact sector.  It should fail, I think.
->
-> The hex values are in low:middle:high order, so that translates to 
-> 0xf9240a, or decimal 16327690.
->
-> So you could try this, with the latest hdparm (from sourceforge.net):
->
->  hdparm --read-sector 16327689
->  hdparm --read-sector 16327690
->  hdparm --read-sector 16327691
->
-> At least one of those ought to fail, if we've done this correctly.
+sata_nv.swncq=1 will get you the hotplug interrupts along with NCQ 
+support.  It might not be completely stable tho.
 
-envy:/usr/src/hdparm-8.6# for i in 16327689 16327690 16327691 ; do ./hdparm --read-sector $i /dev/sdb ; done | egrep ^reading
-reading sector 16327689: succeeded
-reading sector 16327690: succeeded
-reading sector 16327691: succeeded
-
-(and just to be sure, i also tried 664825 (ie: 0x0a24f9 instead), works 
-fine too.)
-
-On Fri, 28 Mar 2008, Mark Lord wrote:
-
->  cat /dev/zero > /dev/sdX
->  sync
->  hdparm -F /dev/sdX
-
-kicked disk from array and running it now. didnt want to wait for results 
-before i posted this because of the hdparm --read-sector results...
-
-//tlund
+-- 
+tejun
