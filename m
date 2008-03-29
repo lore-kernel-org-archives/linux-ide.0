@@ -1,54 +1,87 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: Re: Analysis of EH on Andi's dying disk and stuff to discuss about
-Date: Sun, 30 Mar 2008 08:35:58 +0900
-Message-ID: <47EED25E.4010805@gmail.com>
-References: <20080328093055.GA16736@basil.nowhere.org> <47EDECE5.50309@gmail.com> <47EEAC3F.2070004@rtr.ca> <47EEB0B4.2050808@garzik.org>
+Subject: Re: [patch 1/2] pata_atiixp: simplex clear
+Date: Sun, 30 Mar 2008 08:48:29 +0900
+Message-ID: <47EED54D.7040301@gmail.com>
+References: <200803282133.m2SLXupx011467@imap1.linux-foundation.org> <47EE6B2C.5010903@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wf-out-1314.google.com ([209.85.200.174]:6531 "EHLO
+Received: from wf-out-1314.google.com ([209.85.200.169]:28198 "EHLO
 	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750913AbYC2XgE (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 29 Mar 2008 19:36:04 -0400
-Received: by wf-out-1314.google.com with SMTP id 28so863884wff.4
-        for <linux-ide@vger.kernel.org>; Sat, 29 Mar 2008 16:36:03 -0700 (PDT)
-In-Reply-To: <47EEB0B4.2050808@garzik.org>
+	with ESMTP id S1750815AbYC2Xsg (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 29 Mar 2008 19:48:36 -0400
+Received: by wf-out-1314.google.com with SMTP id 28so867670wff.4
+        for <linux-ide@vger.kernel.org>; Sat, 29 Mar 2008 16:48:36 -0700 (PDT)
+In-Reply-To: <47EE6B2C.5010903@garzik.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Jeff Garzik <jeff@garzik.org>
-Cc: Mark Lord <liml@rtr.ca>, Andi Kleen <andi@firstfloor.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, IDE/ATA development list <linux-ide@vger.kernel.org>, ric@emc.com
+Cc: alan@lxorguk.ukuu.org.uk, akpm@linux-foundation.org, linux-ide@vger.kernel.org, alan@redhat.com
 
 Jeff Garzik wrote:
-> Mark Lord wrote:
->> Tejun Heo wrote:
->> ..
+> akpm@linux-foundation.org wrote:
+>> From: Alan Cox <alan@lxorguk.ukuu.org.uk>
 >>
->>>    So, to handle the common cases better, libata EH times out resets
->>>    quickly.  The first two tries are 10 seconds each and most devices
->>>    get reset properly before it hits the end of the second reset try
->>>    even if it needs to spin up.  What takes the longest is the third
->> ..
+>> Some of the other quirks changes seem to have left some users with the 
+>> simplex
+>> bits mis-set by the time the driver loads.  Clear simplex mode before 
+>> we probe
+>> the controller therefore.
 >>
->> I think that 10 seconds timeout is just *slightly* too short.
->> There are drives here somewhere, that always fail the first attempt
->> because they take about 12 seconds to spin-up and begin communicating.
+>> Signed-off-by: Alan Cox <alan@redhat.com>
+>> Cc: Jeff Garzik <jeff@garzik.org>
+>> Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
+>> ---
+>>
+>>  drivers/ata/pata_atiixp.c |    7 +++++--
+>>  1 file changed, 5 insertions(+), 2 deletions(-)
+>>
+>> diff -puN drivers/ata/pata_atiixp.c~pata_atiixp-simplex-clear 
+>> drivers/ata/pata_atiixp.c
+>> --- a/drivers/ata/pata_atiixp.c~pata_atiixp-simplex-clear
+>> +++ a/drivers/ata/pata_atiixp.c
+>> @@ -22,7 +22,7 @@
+>>  #include <linux/libata.h>
+>>  
+>>  #define DRV_NAME "pata_atiixp"
+>> -#define DRV_VERSION "0.4.6"
+>> +#define DRV_VERSION "0.4.7"
+>>  
+>>  enum {
+>>      ATIIXP_IDE_PIO_TIMING    = 0x40,
+>> @@ -243,6 +243,9 @@ static int atiixp_init_one(struct pci_de
+>>          .port_ops = &atiixp_port_ops
+>>      };
+>>      const struct ata_port_info *ppi[] = { &info, NULL };
+>> +    /* Some of the quirk reconfiguration messes up the simplex
+>> +       flag, so clear it again */
+>> +    ata_pci_clear_simplex(dev);
+>>      return ata_pci_init_one(dev, ppi, &atiixp_sht, NULL);
 > 
-> Also, ATAPI sometimes takes quite a while to respond, I've seen, when 
-> media is in the driver.
+> This patch triggered an audit which led me to... bug city.
+> 
+> 1) This call occurs before resources are guaranteed to be present, which 
+> happens when pci[m]_enable_device() is called.
+> 
+> 2) Auditing the other ata_pci_clear_simplex() uses, it seems the others 
+> are equally broken.
+> 
+> 3) Further, looking at pata_amd, I notice that the resume code twiddles 
+> bits before the PCI device is even bought into D0 state!
+> 
+> 4) ata_pci_clear_simplex() does its work before resources are mapped, 
+> and assumes PCI IDE and PCI BAR #4 behavior.  This works at present, but 
+> is less robust than it could be.
+> 
+> 
+> Anyway, my suggestion would be to add a "post-enable" function pointer 
+> to ata_pci_init_one() arguments, and call ata_pci_clear_simplex() from 
+> that hook.  That would permit this patch and other 
+> ata_pci_clear_simplex() callsites to be fixed.
 
-The goal there was to get, say, 90% of devices in the first reset and 
-then the rest of sane ones in the second reset and idiots in the third 
-reset.  As long as resets don't interfere with the device preparing for 
-readiness as is the case for harddrive spinning up, this works just 
-fine.  If there are devices which have to restart prepping for readiness 
-on each reset, this can be a problem (those fall into the idiot category).
-
-I personally have never seen such a device yet but if there's an ATAPI 
-device which doesn't respond to reset till it has spun up the media and 
-recognized it, it could be a problem.  I have to say that would be a 
-pretty stupid way to implement reset.  Jeff, do you remember which drive 
-it was?
+Jeff, already fixed in upstream by commit 
+1a5c8724e2f8239c6890a95fc87d0ae04edac001.
 
 -- 
 tejun
