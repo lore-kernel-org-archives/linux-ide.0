@@ -1,33 +1,40 @@
-From: Mark Lord <liml@rtr.ca>
+From: Jeff Garzik <jeff@garzik.org>
 Subject: Re: Analysis of EH on Andi's dying disk and stuff to discuss about
-Date: Sat, 29 Mar 2008 16:53:19 -0400
-Message-ID: <47EEAC3F.2070004@rtr.ca>
-References: <20080328093055.GA16736@basil.nowhere.org> <47EDECE5.50309@gmail.com>
+Date: Sat, 29 Mar 2008 17:12:20 -0400
+Message-ID: <47EEB0B4.2050808@garzik.org>
+References: <20080328093055.GA16736@basil.nowhere.org> <47EDECE5.50309@gmail.com> <47EEAC3F.2070004@rtr.ca>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([76.10.145.34]:1975 "EHLO mail.rtr.ca"
+Received: from srv5.dvmed.net ([207.36.208.214]:39722 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754251AbYC2UxU (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 29 Mar 2008 16:53:20 -0400
-In-Reply-To: <47EDECE5.50309@gmail.com>
+	id S1753041AbYC2VM2 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 29 Mar 2008 17:12:28 -0400
+In-Reply-To: <47EEAC3F.2070004@rtr.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Andi Kleen <andi@firstfloor.org>, Jeff Garzik <jeff@garzik.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, IDE/ATA development list <linux-ide@vger.kernel.org>, ric@emc.com
+To: Mark Lord <liml@rtr.ca>
+Cc: Tejun Heo <htejun@gmail.com>, Andi Kleen <andi@firstfloor.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, IDE/ATA development list <linux-ide@vger.kernel.org>, ric@emc.com
 
-Tejun Heo wrote:
-..
+Mark Lord wrote:
+> Tejun Heo wrote:
+> ..
+> 
+>>    So, to handle the common cases better, libata EH times out resets
+>>    quickly.  The first two tries are 10 seconds each and most devices
+>>    get reset properly before it hits the end of the second reset try
+>>    even if it needs to spin up.  What takes the longest is the third
+> ..
+> 
+> I think that 10 seconds timeout is just *slightly* too short.
+> There are drives here somewhere, that always fail the first attempt
+> because they take about 12 seconds to spin-up and begin communicating.
 
->    So, to handle the common cases better, libata EH times out resets
->    quickly.  The first two tries are 10 seconds each and most devices
->    get reset properly before it hits the end of the second reset try
->    even if it needs to spin up.  What takes the longest is the third
-..
+Also, ATAPI sometimes takes quite a while to respond, I've seen, when 
+media is in the driver.
 
-I think that 10 seconds timeout is just *slightly* too short.
-There are drives here somewhere, that always fail the first attempt
-because they take about 12 seconds to spin-up and begin communicating.
+	Jeff
 
-Cheers
+
+
