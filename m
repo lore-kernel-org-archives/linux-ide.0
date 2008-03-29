@@ -1,52 +1,34 @@
 From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [patch 2/2] pata_amd: fix sparse warning
-Date: Sat, 29 Mar 2008 12:17:08 -0400
-Message-ID: <47EE6B84.4070907@garzik.org>
-References: <200803282133.m2SLXutE011470@imap1.linux-foundation.org>
+Subject: Re: [PATCH #upstream-fixes] libata: ATA_EHI_LPM should be ATA_EH_LPM
+Date: Sat, 29 Mar 2008 12:40:10 -0400
+Message-ID: <47EE70EA.4000306@garzik.org>
+References: <47EB6ACA.2030507@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:38342 "EHLO mail.dvmed.net"
+Received: from srv5.dvmed.net ([207.36.208.214]:37246 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752523AbYC2QRL (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 29 Mar 2008 12:17:11 -0400
-In-Reply-To: <200803282133.m2SLXutE011470@imap1.linux-foundation.org>
+	id S1752490AbYC2QkN (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 29 Mar 2008 12:40:13 -0400
+In-Reply-To: <47EB6ACA.2030507@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: akpm@linux-foundation.org
-Cc: linux-ide@vger.kernel.org, harvey.harrison@gmail.com, alan@lxorguk.ukuu.org.uk
+To: Tejun Heo <htejun@gmail.com>
+Cc: Kristen Carlson Accardi <kristen.c.accardi@intel.com>, IDE/ATA development list <linux-ide@vger.kernel.org>
 
-akpm@linux-foundation.org wrote:
-> From: Harvey Harrison <harvey.harrison@gmail.com>
+Tejun Heo wrote:
+> EH actions are ATA_EH_* not ATA_EHI_*.  Rename ATA_EHI_LPM to
+> ATA_EH_LPM.
 > 
-> Current code is essentially choosing between dividing by 1 or
-> dividing by two, make the conditions a little more obvious.
-> 
-> As a bonus, removes a sparse error:
-> drivers/ata/pata_amd.c:59:11: warning: symbol '__x' shadows an earlier one
-> drivers/ata/pata_amd.c:59:11: originally declared here
-> 
-> Signed-off-by: Harvey Harrison <harvey.harrison@gmail.com>
-> Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>
-> Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
+> Signed-off-by: Tejun Heo <htejun@gmail.com>
+> Cc: Kristen Carlson Accardi <kristen.c.accardi@intel.com>
 > ---
-> 
->  drivers/ata/pata_amd.c |    4 +++-
->  1 file changed, 3 insertions(+), 1 deletion(-)
-> 
-> diff -puN drivers/ata/pata_amd.c~pata_amd-fix-sparse-warning drivers/ata/pata_amd.c
-> --- a/drivers/ata/pata_amd.c~pata_amd-fix-sparse-warning
-> +++ a/drivers/ata/pata_amd.c
-> @@ -56,7 +56,9 @@ static void timing_setup(struct ata_port
->  	u8 t;
->  
->  	T = 1000000000 / amd_clock;
-> -	UT = T / min_t(int, max_t(int, clock, 1), 2);
-> +	UT = T;
-> +	if (clock >= 2)
-> +		UT = T / 2;
+> drivers/ata/libata-core.c |    2 +-
+> drivers/ata/libata-eh.c   |    2 +-
+> include/linux/libata.h    |    2 +-
+> 3 files changed, 3 insertions(+), 3 deletions(-)
 
-Why assign UT twice, potentially?
+applied
 
 
