@@ -1,34 +1,83 @@
-From: "=?ISO-8859-1?Q?Pablo_P=E9rez?=" <lkmdigital@gmail.com>
-Subject: Re: Marvell 6121 SATA support?
-Date: Sat, 29 Mar 2008 21:50:18 -0300
-Message-ID: <ba6970fb0803291750lccff487s6325534f625a994f@mail.gmail.com>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: 2.6.24.3: regular sata drive resets - worrisome?
+Date: Sun, 30 Mar 2008 09:54:23 +0900
+Message-ID: <47EEE4BF.5080609@gmail.com>
+References: <200803201518.32109.hpj@urpla.net> <20080320214830.6d39876d.akpm@linux-foundation.org> <47EE3CFA.2000707@gmail.com> <200803300114.40096.hpj@urpla.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rv-out-0910.google.com ([209.85.198.184]:47704 "EHLO
-	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750918AbYC3AuT convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 29 Mar 2008 20:50:19 -0400
-Received: by rv-out-0910.google.com with SMTP id k20so520508rvb.1
-        for <linux-ide@vger.kernel.org>; Sat, 29 Mar 2008 17:50:18 -0700 (PDT)
-Content-Disposition: inline
+Received: from wa-out-1112.google.com ([209.85.146.181]:65140 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751089AbYC3Aya (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 29 Mar 2008 20:54:30 -0400
+Received: by wa-out-1112.google.com with SMTP id v27so1159724wah.23
+        for <linux-ide@vger.kernel.org>; Sat, 29 Mar 2008 17:54:28 -0700 (PDT)
+In-Reply-To: <200803300114.40096.hpj@urpla.net>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Hans-Peter Jansen <hpj@urpla.net>
+Cc: Andrew Morton <akpm@linux-foundation.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-Hello, I have an Asus M2V motherboard which has two SATA controllers,
-one of them is SATA1 (from Via), the second is SATA2 (Marvell 6121).
+Hello,
 
-I have already installed Debian testing into a disk connected to SATA1
-but would prefer to use the SATA2 controller.
+Hans-Peter Jansen wrote:
+>>>> Should I be worried? smartd doesn't show anything suspicious on those.
+>> Can you please post the result of "smartctl -a /dev/sdX"?
+> 
+> Here's the last smart report from two of the offending drives. As noted 
+> before, I did the hardware reorganization, replaced the dog slow 3ware 
+> 9500S-8 and the SiI 3124 with a single Areca 1130 and retired the drives 
+> for now, but a nephew already showed interest. What do you think, can I 
+> cede those drives with a clear conscience? The Hardware_ECC_Recovered
+> values are really worrisome, aren't they?
 
-Right now Debian testing boots a 2.6.24-1-486 kernel.
+Different vendors use different scales for the raw values.  The value is 
+still pegged at the highest so it could be those raw values are okay or 
+that the vendor just doesn't update value field accordingly.  My P120 
+says 0 for the raw value and 904635 for hardware ECC recovered so there 
+is some difference.  What do other non-failing drives say about those 
+values?
 
-Can you tell me how to apply that patch you mentioned before? Should I
-upgrade to a newer kernel?
+> SMART Attributes Data Structure revision number: 16
+> Vendor Specific SMART Attributes with Thresholds:
+> ID# ATTRIBUTE_NAME          FLAG     VALUE WORST THRESH TYPE      UPDATED  WHEN_FAILED RAW_VALUE
+>   1 Raw_Read_Error_Rate     0x000f   100   100   051    Pre-fail  Always       -       82
+>   3 Spin_Up_Time            0x0007   100   100   025    Pre-fail  Always       -       5952
+>   4 Start_Stop_Count        0x0032   100   100   000    Old_age   Always       -       23
+>   5 Reallocated_Sector_Ct   0x0033   253   253   010    Pre-fail  Always       -       0
+>   7 Seek_Error_Rate         0x000f   253   253   051    Pre-fail  Always       -       0
+>   8 Seek_Time_Performance   0x0025   253   253   015    Pre-fail  Offline      -       0
+>   9 Power_On_Hours          0x0032   100   100   000    Old_age   Always       -       17647
+>  10 Spin_Retry_Count        0x0033   253   253   051    Pre-fail  Always       -       0
+>  11 Calibration_Retry_Count 0x0012   253   002   000    Old_age   Always       -       0
+>  12 Power_Cycle_Count       0x0032   100   100   000    Old_age   Always       -       19
+> 190 Airflow_Temperature_Cel 0x0022   124   124   000    Old_age   Always       -       38
+> 194 Temperature_Celsius     0x0022   124   124   000    Old_age   Always       -       38
+> 195 Hardware_ECC_Recovered  0x001a   100   100   000    Old_age   Always       -       162956700
+> 196 Reallocated_Event_Count 0x0032   253   253   000    Old_age   Always       -       0
+> 197 Current_Pending_Sector  0x0012   253   253   000    Old_age   Always       -       0
+> 198 Offline_Uncorrectable   0x0030   253   253   000    Old_age   Offline      -       0
+> 199 UDMA_CRC_Error_Count    0x003e   200   200   000    Old_age   Always       -       0
+> 200 Multi_Zone_Error_Rate   0x000a   253   100   000    Old_age   Always       -       0
+> 201 Soft_Read_Error_Rate    0x000a   100   100   000    Old_age   Always       -       0
+> 202 TA_Increase_Count       0x0032   253   253   000    Old_age   Always       -       0
 
-Thanks
----
-Pablo P=E9rez Ben=EDtez
-http://virtualdebian.blogspot.com
+Hmmm... If the drive is failing FLUSHs, I would expect to see elevated 
+reallocation counters and maybe some pending counts.  Aieee.. weird.
+
+>>>> It's been 4 samsung drives at all hanging on a sata sil 3124:
+>> FLUSH_EXT timing out usually indicates that the drive is having problem
+>> writing out what it has in its cache to the media.  There was one case
+>> where FLUSH_EXT timeout was caused by the driver failing to switch
+>> controller back from NCQ mode before issuing FLUSH_EXT but that was on
+>> sata_nv.  There hasn't been any similar problem on sata_sil24.
+> 
+> Hmm, I didn't noticed any data distortions, and if there where, they live
+> on as copies in their new home.. 
+
+It should have appeared as read errors.  Maybe the drive successfully 
+wrote those sectors after 30+ secs timeout.
+
+-- 
+tejun
