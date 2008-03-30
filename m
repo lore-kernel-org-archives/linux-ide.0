@@ -1,58 +1,70 @@
 From: Adrian Bunk <bunk@kernel.org>
-Subject: [2.6 patch] libata-acpi.c: remove unneeded #if's
-Date: Mon, 31 Mar 2008 02:05:30 +0300
-Message-ID: <20080330230530.GN28445@cs181133002.pp.htv.fi>
+Subject: [RFC: 2.6 patch] make ata_eh_qc_retry() static
+Date: Mon, 31 Mar 2008 02:05:56 +0300
+Message-ID: <20080330230556.GV28445@cs181133002.pp.htv.fi>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp4.pp.htv.fi ([213.243.153.38]:54552 "EHLO smtp4.pp.htv.fi"
+Received: from smtp4.pp.htv.fi ([213.243.153.38]:54563 "EHLO smtp4.pp.htv.fi"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751661AbYC3XFm (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 30 Mar 2008 19:05:42 -0400
+	id S1756496AbYC3XGI (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 30 Mar 2008 19:06:08 -0400
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>, Jeff Garzik <jeff@garzik.org>
+To: jgarzik@pobox.com
 Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-These #if's are unneeded since they:
-- did anyway not handle the CONFIG_ACPI_DOCK_MODULE case correctly and
-- this is already handled in include/acpi/acpi_drivers.h and
-- it's now correctly handled in kconfig.
+This patch makes the needlessly global ata_eh_qc_retry() static.
 
 Signed-off-by: Adrian Bunk <bunk@kernel.org>
 
 ---
 
- drivers/ata/libata-acpi.c |    4 ----
- 1 file changed, 4 deletions(-)
+This patch has been sent on:
+- 1 Mar 2008
 
-2a7326b50cd80e6570803d4efb7bc15e029e61e3 diff --git a/drivers/ata/libata-acpi.c b/drivers/ata/libata-acpi.c
-index bf98a56..1db912e 100644
---- a/drivers/ata/libata-acpi.c
-+++ b/drivers/ata/libata-acpi.c
-@@ -227,11 +227,9 @@ void ata_acpi_associate(struct ata_host *host)
- 			acpi_install_notify_handler(ap->acpi_handle,
- 						    ACPI_SYSTEM_NOTIFY,
- 						    ata_acpi_ap_notify, ap);
--#if defined(CONFIG_ACPI_DOCK) || defined(CONFIG_ACPI_DOCK_MODULE)
- 			/* we might be on a docking station */
- 			register_hotplug_dock_device(ap->acpi_handle,
- 						     ata_acpi_ap_notify, ap);
--#endif
- 		}
+ drivers/ata/libata-core.c |    1 -
+ drivers/ata/libata-eh.c   |    2 +-
+ include/linux/libata.h    |    1 -
+ 3 files changed, 1 insertion(+), 3 deletions(-)
+
+cc00162dc4939d15b078f4cc2e8827b2d70a90db foobar
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index b3d01c5..774ca30 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -7882,7 +7882,6 @@ EXPORT_SYMBOL_GPL(sata_async_notification);
+ EXPORT_SYMBOL_GPL(ata_eh_freeze_port);
+ EXPORT_SYMBOL_GPL(ata_eh_thaw_port);
+ EXPORT_SYMBOL_GPL(ata_eh_qc_complete);
+-EXPORT_SYMBOL_GPL(ata_eh_qc_retry);
+ EXPORT_SYMBOL_GPL(ata_do_eh);
+ EXPORT_SYMBOL_GPL(ata_irq_on);
+ EXPORT_SYMBOL_GPL(ata_dev_try_classify);
+diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
+index 698ce2c..90caf08 100644
+--- a/drivers/ata/libata-eh.c
++++ b/drivers/ata/libata-eh.c
+@@ -1015,7 +1015,7 @@ void ata_eh_qc_complete(struct ata_queued_cmd *qc)
+  *	scmd->retries is decremented for commands which get retried
+  *	due to unrelated failures (qc->err_mask is zero).
+  */
+-void ata_eh_qc_retry(struct ata_queued_cmd *qc)
++static void ata_eh_qc_retry(struct ata_queued_cmd *qc)
+ {
+ 	struct scsi_cmnd *scmd = qc->scsicmd;
+ 	if (!qc->err_mask && scmd->retries)
+diff --git a/include/linux/libata.h b/include/linux/libata.h
+index a05f600..b626f27 100644
+--- a/include/linux/libata.h
++++ b/include/linux/libata.h
+@@ -1058,7 +1058,6 @@ extern void ata_eh_freeze_port(struct ata_port *ap);
+ extern void ata_eh_thaw_port(struct ata_port *ap);
  
- 		for (j = 0; j < ata_link_max_devices(&ap->link); j++) {
-@@ -241,11 +239,9 @@ void ata_acpi_associate(struct ata_host *host)
- 				acpi_install_notify_handler(dev->acpi_handle,
- 						ACPI_SYSTEM_NOTIFY,
- 						ata_acpi_dev_notify, dev);
--#if defined(CONFIG_ACPI_DOCK) || defined(CONFIG_ACPI_DOCK_MODULE)
- 				/* we might be on a docking station */
- 				register_hotplug_dock_device(dev->acpi_handle,
- 						ata_acpi_dev_notify, dev);
--#endif
- 			}
- 		}
- 	}
+ extern void ata_eh_qc_complete(struct ata_queued_cmd *qc);
+-extern void ata_eh_qc_retry(struct ata_queued_cmd *qc);
+ 
+ extern void ata_do_eh(struct ata_port *ap, ata_prereset_fn_t prereset,
+ 		      ata_reset_fn_t softreset, ata_reset_fn_t hardreset,
 
