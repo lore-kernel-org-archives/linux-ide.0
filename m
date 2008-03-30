@@ -1,38 +1,41 @@
-From: Tomas Lund <tlund@nxs.se>
-Subject: Re: Need help understanding SATA error message.
-Date: Sun, 30 Mar 2008 17:01:52 +0200 (CEST)
-Message-ID: <Pine.LNX.4.61.0803301659300.5510@envy.nxs.se>
-References: <Pine.LNX.4.61.0803271554050.5510@envy.nxs.se> <47ED136F.9010501@rtr.ca>
- <47ED15D2.3080403@rtr.ca> <Pine.LNX.4.61.0803282315330.5510@envy.nxs.se>
- <47EDBC87.8090109@rtr.ca>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: [PATCH 1/5] ide-h8300: 32-bit I/O is unsupported
+Date: Sun, 30 Mar 2008 17:10:45 +0200
+Message-ID: <200803301710.45286.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from envy.nxs.se ([212.247.200.182]:46597 "EHLO envy.nxs.se"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751558AbYC3PCF (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 30 Mar 2008 11:02:05 -0400
-In-Reply-To: <47EDBC87.8090109@rtr.ca>
+Received: from ug-out-1314.google.com ([66.249.92.172]:13117 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752386AbYC3Pca (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 30 Mar 2008 11:32:30 -0400
+Received: by ug-out-1314.google.com with SMTP id z38so296945ugc.16
+        for <linux-ide@vger.kernel.org>; Sun, 30 Mar 2008 08:32:29 -0700 (PDT)
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark Lord <liml@rtr.ca>
-Cc: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
 
-On Fri, 28 Mar 2008, Mark Lord wrote:
+This host driver doesn't support 32-bit I/O (it sets hwif->INSL/OUTSL
+to NULL) so IDE_HFLAG_NO_IO_32BIT host flag needs to be set.
 
-> One thing to try, if you have 12000 seconds to spare, :) is to simply 
-> try this:
->
->  cat /dev/zero > /dev/sdX
->  sync
->  hdparm -F /dev/sdX
->
-> And see if that completes without error. If it does, then the drive may 
-> be fine.
->
-> Software bugs are always possible, but do seem unlikely in this case. 
-> But then, so does a hardware failure seem unlikely on a new drive.
+Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+---
+ drivers/ide/h8300/ide-h8300.c |    1 +
+ 1 file changed, 1 insertion(+)
 
-completed without errors, no sectors reallocated...
-
-//tlund
+Index: b/drivers/ide/h8300/ide-h8300.c
+===================================================================
+--- a/drivers/ide/h8300/ide-h8300.c
++++ b/drivers/ide/h8300/ide-h8300.c
+@@ -107,6 +107,7 @@ static int __init h8300_ide_init(void)
+ 	index = hwif->index;
+ 	ide_init_port_hw(hwif, &hw);
+ 	hwif_setup(hwif);
++	hwif->host_flags = IDE_HFLAG_NO_IO_32BIT;
+ 	printk(KERN_INFO "ide%d: H8/300 generic IDE interface\n", index);
+ 
+ 	idx[0] = index;
