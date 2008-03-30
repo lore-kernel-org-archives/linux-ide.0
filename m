@@ -1,83 +1,76 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: 2.6.24.3: regular sata drive resets - worrisome?
-Date: Sun, 30 Mar 2008 09:54:23 +0900
-Message-ID: <47EEE4BF.5080609@gmail.com>
-References: <200803201518.32109.hpj@urpla.net> <20080320214830.6d39876d.akpm@linux-foundation.org> <47EE3CFA.2000707@gmail.com> <200803300114.40096.hpj@urpla.net>
+From: Robert Hancock <hancockr@shaw.ca>
+Subject: Re: [patch 3/3] ata: SWNCQ should be enabled by default
+Date: Sat, 29 Mar 2008 19:06:12 -0600
+Message-ID: <47EEE784.8090909@shaw.ca>
+References: <200803282133.m2SLXlWk011463@imap1.linux-foundation.org>
+ <47EE465E.80401@gmail.com> <47EE88C9.3020805@dunaweb.hu>
+ <47EEDACA.4060400@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.181]:65140 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751089AbYC3Aya (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 29 Mar 2008 20:54:30 -0400
-Received: by wa-out-1112.google.com with SMTP id v27so1159724wah.23
-        for <linux-ide@vger.kernel.org>; Sat, 29 Mar 2008 17:54:28 -0700 (PDT)
-In-Reply-To: <200803300114.40096.hpj@urpla.net>
+Received: from idcmail-mo1so.shaw.ca ([24.71.223.10]:28676 "EHLO
+	pd3mo3so.prod.shaw.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752324AbYC3BG4 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 29 Mar 2008 21:06:56 -0400
+Received: from pd3mr2so.prod.shaw.ca
+ (pd3mr2so-qfe3.prod.shaw.ca [10.0.141.178]) by l-daemon
+ (Sun ONE Messaging Server 6.0 HotFix 1.01 (built Mar 15 2004))
+ with ESMTP id <0JYI00FSSR2O3F30@l-daemon> for linux-ide@vger.kernel.org; Sat,
+ 29 Mar 2008 19:06:24 -0600 (MDT)
+Received: from pn2ml8so.prod.shaw.ca ([10.0.121.152])
+ by pd3mr2so.prod.shaw.ca (Sun Java System Messaging Server 6.2-7.05 (built Sep
+ 5 2006)) with ESMTP id <0JYI00ENQR2OHX70@pd3mr2so.prod.shaw.ca> for
+ linux-ide@vger.kernel.org; Sat, 29 Mar 2008 19:06:25 -0600 (MDT)
+Received: from [192.168.1.113] ([70.64.130.4])
+ by l-daemon (Sun ONE Messaging Server 6.0 HotFix 1.01 (built Mar 15 2004))
+ with ESMTP id <0JYI00CAKR2NLU50@l-daemon> for linux-ide@vger.kernel.org; Sat,
+ 29 Mar 2008 19:06:23 -0600 (MDT)
+In-reply-to: <47EEDACA.4060400@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Hans-Peter Jansen <hpj@urpla.net>
-Cc: Andrew Morton <akpm@linux-foundation.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: Zoltan Boszormenyi <zboszor@dunaweb.hu>, akpm@linux-foundation.org, jeff@garzik.org, linux-ide@vger.kernel.org, Kuan Luo <kluo@nvidia.com>, Peer Chen <pchen@nvidia.com>
 
-Hello,
+Tejun Heo wrote:
+> Zoltan Boszormenyi wrote:
+>> Tejun Heo =EDrta:
+>>> akpm@linux-foundation.org wrote:
+>>>> From: Zoltan Boszormenyi <zboszor@dunaweb.hu>
+>>>>
+>>>> unchangelogged patch.
+>>>>
+>>>> Signed-off-by: Zoltan Boszormenyi <zboszor@dunaweb.hu>
+>>>> Cc: Robert Hancock <hancockr@shaw.ca>
+>>>> Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
+>>>
+>>> Nacked-by: Tejun Heo <htejun@gmail.com>
+>>>
+>>> Sorry, there are remaining issues to resolve before enabling ADMA b=
+y=20
+>>> default.
+>>
+>> Sorry, this is NOT ADMA. SWNCQ is completely independent from ADMA.
+>=20
+> Heh, right.  Sorry about that.  I disabled ADMA on the distro I work =
+for=20
+> and somehow ADMA was disabled on mainline too.  :-)
+>=20
+> Robert, is SWNCQ safe to turn on by default?  I personally think it's=
+=20
+> better to prefer safety over performance or optional features and giv=
+en=20
+> the history of NCQ support on nv satas, I feel a bit more cautious.
+>=20
+> Maybe we can enable SWNCQ on -mm and devel branches and disable it la=
+te=20
+> in release cycle for 2.6.26 for a trial?
 
-Hans-Peter Jansen wrote:
->>>> Should I be worried? smartd doesn't show anything suspicious on those.
->> Can you please post the result of "smartctl -a /dev/sdX"?
-> 
-> Here's the last smart report from two of the offending drives. As noted 
-> before, I did the hardware reorganization, replaced the dog slow 3ware 
-> 9500S-8 and the SiI 3124 with a single Areca 1130 and retired the drives 
-> for now, but a nephew already showed interest. What do you think, can I 
-> cede those drives with a clear conscience? The Hardware_ECC_Recovered
-> values are really worrisome, aren't they?
+I haven't seen any problem reports, but with it disabled by default mos=
+t=20
+people haven't tried it. The only way to really know is to try turning=20
+it on by default and see what shakes out.
 
-Different vendors use different scales for the raw values.  The value is 
-still pegged at the highest so it could be those raw values are okay or 
-that the vendor just doesn't update value field accordingly.  My P120 
-says 0 for the raw value and 904635 for hardware ECC recovered so there 
-is some difference.  What do other non-failing drives say about those 
-values?
-
-> SMART Attributes Data Structure revision number: 16
-> Vendor Specific SMART Attributes with Thresholds:
-> ID# ATTRIBUTE_NAME          FLAG     VALUE WORST THRESH TYPE      UPDATED  WHEN_FAILED RAW_VALUE
->   1 Raw_Read_Error_Rate     0x000f   100   100   051    Pre-fail  Always       -       82
->   3 Spin_Up_Time            0x0007   100   100   025    Pre-fail  Always       -       5952
->   4 Start_Stop_Count        0x0032   100   100   000    Old_age   Always       -       23
->   5 Reallocated_Sector_Ct   0x0033   253   253   010    Pre-fail  Always       -       0
->   7 Seek_Error_Rate         0x000f   253   253   051    Pre-fail  Always       -       0
->   8 Seek_Time_Performance   0x0025   253   253   015    Pre-fail  Offline      -       0
->   9 Power_On_Hours          0x0032   100   100   000    Old_age   Always       -       17647
->  10 Spin_Retry_Count        0x0033   253   253   051    Pre-fail  Always       -       0
->  11 Calibration_Retry_Count 0x0012   253   002   000    Old_age   Always       -       0
->  12 Power_Cycle_Count       0x0032   100   100   000    Old_age   Always       -       19
-> 190 Airflow_Temperature_Cel 0x0022   124   124   000    Old_age   Always       -       38
-> 194 Temperature_Celsius     0x0022   124   124   000    Old_age   Always       -       38
-> 195 Hardware_ECC_Recovered  0x001a   100   100   000    Old_age   Always       -       162956700
-> 196 Reallocated_Event_Count 0x0032   253   253   000    Old_age   Always       -       0
-> 197 Current_Pending_Sector  0x0012   253   253   000    Old_age   Always       -       0
-> 198 Offline_Uncorrectable   0x0030   253   253   000    Old_age   Offline      -       0
-> 199 UDMA_CRC_Error_Count    0x003e   200   200   000    Old_age   Always       -       0
-> 200 Multi_Zone_Error_Rate   0x000a   253   100   000    Old_age   Always       -       0
-> 201 Soft_Read_Error_Rate    0x000a   100   100   000    Old_age   Always       -       0
-> 202 TA_Increase_Count       0x0032   253   253   000    Old_age   Always       -       0
-
-Hmmm... If the drive is failing FLUSHs, I would expect to see elevated 
-reallocation counters and maybe some pending counts.  Aieee.. weird.
-
->>>> It's been 4 samsung drives at all hanging on a sata sil 3124:
->> FLUSH_EXT timing out usually indicates that the drive is having problem
->> writing out what it has in its cache to the media.  There was one case
->> where FLUSH_EXT timeout was caused by the driver failing to switch
->> controller back from NCQ mode before issuing FLUSH_EXT but that was on
->> sata_nv.  There hasn't been any similar problem on sata_sil24.
-> 
-> Hmm, I didn't noticed any data distortions, and if there where, they live
-> on as copies in their new home.. 
-
-It should have appeared as read errors.  Maybe the drive successfully 
-wrote those sectors after 30+ secs timeout.
-
--- 
-tejun
+I'd vote to enable it by default in -mm and 2.6.26-rc and see what happ=
+ens.
