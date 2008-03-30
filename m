@@ -1,151 +1,297 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH 5/6] ide: add IDE_HFLAG_MMIO host flag
-Date: Sun, 30 Mar 2008 21:43:56 +0200
-Message-ID: <200803302143.56792.bzolnier@gmail.com>
+Subject: [PATCH 6/6] ide: remove ->INS{W,L} and ->OUTS{W,L} methods
+Date: Sun, 30 Mar 2008 21:44:42 +0200
+Message-ID: <200803302144.43011.bzolnier@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
   charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.159]:30633 "EHLO
+Received: from fg-out-1718.google.com ([72.14.220.159]:30659 "EHLO
 	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752988AbYC3Tau (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 30 Mar 2008 15:30:50 -0400
-Received: by fg-out-1718.google.com with SMTP id l27so1476461fgb.17
-        for <linux-ide@vger.kernel.org>; Sun, 30 Mar 2008 12:30:48 -0700 (PDT)
+	with ESMTP id S1753021AbYC3Tav (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 30 Mar 2008 15:30:51 -0400
+Received: by fg-out-1718.google.com with SMTP id l27so1476470fgb.17
+        for <linux-ide@vger.kernel.org>; Sun, 30 Mar 2008 12:30:49 -0700 (PDT)
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
 Cc: linux-kernel@vger.kernel.org
 
-Add IDE_HFLAG_MMIO host flag and set it for hosts which use
-default_hwif_mmiops().
+* Use ins{w,l}()/outs{w,l}() and __ide_mm_ins{w,l}()/__ide_mm_outs{w,l}()
+  directly in ata_{in,out}put_data() (by using IDE_HFLAG_MMIO host flag to
+  decide which I/O ops are required).
+
+* Remove no longer needed ->INS{W,L} and ->OUTS{W,L} methods (ide-h8300,
+  au1xxx-ide and scc_pata implement their own ->{in,out}put_data methods).
+
+There should be no functional changes caused by this patch.
 
 Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 ---
- drivers/ide/arm/icside.c          |    2 +-
- drivers/ide/arm/palm_bk3710.c     |    1 +
- drivers/ide/arm/rapide.c          |    1 +
- drivers/ide/legacy/ide_platform.c |    4 +++-
- drivers/ide/mips/swarm.c          |    1 +
- drivers/ide/pci/sgiioc4.c         |    1 +
- drivers/ide/pci/siimage.c         |    1 +
- drivers/ide/ppc/pmac.c            |    1 +
- include/linux/ide.h               |    2 ++
- 9 files changed, 12 insertions(+), 2 deletions(-)
+ drivers/ide/h8300/ide-h8300.c |    4 -
+ drivers/ide/ide-iops.c        |  114 +++++++++++++++++-------------------------
+ drivers/ide/mips/au1xxx-ide.c |    3 -
+ drivers/ide/pci/scc_pata.c    |    4 -
+ include/linux/ide.h           |    4 -
+ 5 files changed, 48 insertions(+), 81 deletions(-)
 
-Index: b/drivers/ide/arm/icside.c
+Index: b/drivers/ide/h8300/ide-h8300.c
 ===================================================================
---- a/drivers/ide/arm/icside.c
-+++ b/drivers/ide/arm/icside.c
-@@ -481,7 +481,7 @@ static const struct ide_port_info icside
- 	.init_dma		= icside_dma_off_init,
- 	.port_ops		= &icside_v6_no_dma_port_ops,
- 	.dma_ops		= &icside_v6_dma_ops,
--	.host_flags		= IDE_HFLAG_SERIALIZE,
-+	.host_flags		= IDE_HFLAG_SERIALIZE | IDE_HFLAG_MMIO,
- 	.mwdma_mask		= ATA_MWDMA2,
- 	.swdma_mask		= ATA_SWDMA2,
- };
-Index: b/drivers/ide/arm/palm_bk3710.c
+--- a/drivers/ide/h8300/ide-h8300.c
++++ b/drivers/ide/h8300/ide-h8300.c
+@@ -88,11 +88,7 @@ static inline void hwif_setup(ide_hwif_t
+ 	hwif->output_data = h8300_output_data;
+ 
+ 	hwif->OUTW  = mm_outw;
+-	hwif->OUTSW = mm_outsw;
+ 	hwif->INW   = mm_inw;
+-	hwif->INSW  = mm_insw;
+-	hwif->OUTSL = NULL;
+-	hwif->INSL  = NULL;
+ }
+ 
+ static int __init h8300_ide_init(void)
+Index: b/drivers/ide/ide-iops.c
 ===================================================================
---- a/drivers/ide/arm/palm_bk3710.c
-+++ b/drivers/ide/arm/palm_bk3710.c
-@@ -342,6 +342,7 @@ static const struct ide_port_ops palm_bk
- static const struct ide_port_info __devinitdata palm_bk3710_port_info = {
- 	.init_dma		= palm_bk3710_init_dma,
- 	.port_ops		= &palm_bk3710_ports_ops,
-+	.host_flags		= IDE_HFLAG_MMIO,
- 	.pio_mask		= ATA_PIO4,
- 	.udma_mask		= ATA_UDMA4,	/* (input clk 99MHz) */
- 	.mwdma_mask		= ATA_MWDMA2,
-Index: b/drivers/ide/arm/rapide.c
-===================================================================
---- a/drivers/ide/arm/rapide.c
-+++ b/drivers/ide/arm/rapide.c
-@@ -53,6 +53,7 @@ rapide_probe(struct expansion_card *ec, 
+--- a/drivers/ide/ide-iops.c
++++ b/drivers/ide/ide-iops.c
+@@ -42,16 +42,6 @@ static u16 ide_inw (unsigned long port)
+ 	return (u16) inw(port);
+ }
  
- 		ide_init_port_hw(hwif, &hw);
+-static void ide_insw (unsigned long port, void *addr, u32 count)
+-{
+-	insw(port, addr, count);
+-}
+-
+-static void ide_insl (unsigned long port, void *addr, u32 count)
+-{
+-	insl(port, addr, count);
+-}
+-
+ static void ide_outb (u8 val, unsigned long port)
+ {
+ 	outb(val, port);
+@@ -67,27 +57,13 @@ static void ide_outw (u16 val, unsigned 
+ 	outw(val, port);
+ }
  
-+		hwif->host_flags = IDE_HFLAG_MMIO;
- 		default_hwif_mmiops(hwif);
+-static void ide_outsw (unsigned long port, void *addr, u32 count)
+-{
+-	outsw(port, addr, count);
+-}
+-
+-static void ide_outsl (unsigned long port, void *addr, u32 count)
+-{
+-	outsl(port, addr, count);
+-}
+-
+ void default_hwif_iops (ide_hwif_t *hwif)
+ {
+ 	hwif->OUTB	= ide_outb;
+ 	hwif->OUTBSYNC	= ide_outbsync;
+ 	hwif->OUTW	= ide_outw;
+-	hwif->OUTSW	= ide_outsw;
+-	hwif->OUTSL	= ide_outsl;
+ 	hwif->INB	= ide_inb;
+ 	hwif->INW	= ide_inw;
+-	hwif->INSW	= ide_insw;
+-	hwif->INSL	= ide_insl;
+ }
  
- 		idx[0] = hwif->index;
-Index: b/drivers/ide/legacy/ide_platform.c
-===================================================================
---- a/drivers/ide/legacy/ide_platform.c
-+++ b/drivers/ide/legacy/ide_platform.c
-@@ -101,8 +101,10 @@ static int __devinit plat_ide_probe(stru
+ /*
+@@ -104,16 +80,6 @@ static u16 ide_mm_inw (unsigned long por
+ 	return (u16) readw((void __iomem *) port);
+ }
  
- 	ide_init_port_hw(hwif, &hw);
+-static void ide_mm_insw (unsigned long port, void *addr, u32 count)
+-{
+-	__ide_mm_insw((void __iomem *) port, addr, count);
+-}
+-
+-static void ide_mm_insl (unsigned long port, void *addr, u32 count)
+-{
+-	__ide_mm_insl((void __iomem *) port, addr, count);
+-}
+-
+ static void ide_mm_outb (u8 value, unsigned long port)
+ {
+ 	writeb(value, (void __iomem *) port);
+@@ -129,16 +95,6 @@ static void ide_mm_outw (u16 value, unsi
+ 	writew(value, (void __iomem *) port);
+ }
  
--	if (mmio)
-+	if (mmio) {
-+		hwif->host_flags = IDE_HFLAG_MMIO;
- 		default_hwif_mmiops(hwif);
+-static void ide_mm_outsw (unsigned long port, void *addr, u32 count)
+-{
+-	__ide_mm_outsw((void __iomem *) port, addr, count);
+-}
+-
+-static void ide_mm_outsl (unsigned long port, void *addr, u32 count)
+-{
+-	__ide_mm_outsl((void __iomem *) port, addr, count);
+-}
+-
+ void default_hwif_mmiops (ide_hwif_t *hwif)
+ {
+ 	hwif->OUTB	= ide_mm_outb;
+@@ -146,12 +102,8 @@ void default_hwif_mmiops (ide_hwif_t *hw
+ 	   this one is controller specific! */
+ 	hwif->OUTBSYNC	= ide_mm_outbsync;
+ 	hwif->OUTW	= ide_mm_outw;
+-	hwif->OUTSW	= ide_mm_outsw;
+-	hwif->OUTSL	= ide_mm_outsl;
+ 	hwif->INB	= ide_mm_inb;
+ 	hwif->INW	= ide_mm_inw;
+-	hwif->INSW	= ide_mm_insw;
+-	hwif->INSL	= ide_mm_insl;
+ }
+ 
+ EXPORT_SYMBOL(default_hwif_mmiops);
+@@ -202,24 +154,39 @@ static void ata_input_data(ide_drive_t *
+ 	struct ide_io_ports *io_ports = &hwif->io_ports;
+ 	unsigned long data_addr = io_ports->data_addr;
+ 	u8 io_32bit = drive->io_32bit;
++	u8 mmio = (hwif->host_flags & IDE_HFLAG_MMIO) ? 1 : 0;
+ 
+ 	len++;
+ 
+ 	if (io_32bit) {
+-		if (io_32bit & 2) {
+-			unsigned long flags;
++		unsigned long uninitialized_var(flags);
+ 
++		if (io_32bit & 2) {
+ 			local_irq_save(flags);
+ 			ata_vlb_sync(drive, io_ports->nsect_addr);
+-			hwif->INSL(data_addr, buf, len / 4);
++		}
++
++		if (mmio)
++			__ide_mm_insl((void __iomem *)data_addr, buf, len / 4);
++		else
++			insl(data_addr, buf, len / 4);
++
++		if (io_32bit & 2)
+ 			local_irq_restore(flags);
+-		} else
+-			hwif->INSL(data_addr, buf, len / 4);
+ 
+-		if ((len & 3) >= 2)
+-			hwif->INSW(data_addr, (u8 *)buf + (len & ~3), 1);
+-	} else
+-		hwif->INSW(data_addr, buf, len / 2);
++		if ((len & 3) >= 2) {
++			if (mmio)
++				__ide_mm_insw((void __iomem *)data_addr,
++						(u8 *)buf + (len & ~3), 1);
++			else
++				insw(data_addr, (u8 *)buf + (len & ~3), 1);
++		}
++	} else {
++		if (mmio)
++			__ide_mm_insw((void __iomem *)data_addr, buf, len / 2);
++		else
++			insw(data_addr, buf, len / 2);
 +	}
+ }
  
- 	idx[0] = hwif->index;
+ /*
+@@ -231,22 +198,37 @@ static void ata_output_data(ide_drive_t 
+ 	struct ide_io_ports *io_ports = &hwif->io_ports;
+ 	unsigned long data_addr = io_ports->data_addr;
+ 	u8 io_32bit = drive->io_32bit;
++	u8 mmio = (hwif->host_flags & IDE_HFLAG_MMIO) ? 1 : 0;
  
-Index: b/drivers/ide/mips/swarm.c
+ 	if (io_32bit) {
+-		if (io_32bit & 2) {
+-			unsigned long flags;
++		unsigned long uninitialized_var(flags);
+ 
++		if (io_32bit & 2) {
+ 			local_irq_save(flags);
+ 			ata_vlb_sync(drive, io_ports->nsect_addr);
+-			hwif->OUTSL(data_addr, buf, len / 4);
++		}
++
++		if (mmio)
++			__ide_mm_outsl((void __iomem *)data_addr, buf, len / 4);
++		else
++			outsl(data_addr, buf, len / 4);
++
++		if (io_32bit & 2)
+ 			local_irq_restore(flags);
+-		} else
+-			hwif->OUTSL(data_addr, buf, len / 4);
+ 
+-		if ((len & 3) >= 2)
+-			hwif->OUTSW(data_addr, (u8 *)buf + (len & ~3), 1);
+-	} else
+-		hwif->OUTSW(data_addr, buf, len / 2);
++		if ((len & 3) >= 2) {
++			if (mmio)
++				__ide_mm_outsw((void __iomem *)data_addr,
++						 (u8 *)buf + (len & ~3), 1);
++			else
++				outsw(data_addr, (u8 *)buf + (len & ~3), 1);
++		}
++	} else {
++		if (mmio)
++			__ide_mm_outsw((void __iomem *)data_addr, buf, len / 2);
++		else
++			outsw(data_addr, buf, len / 2);
++	}
+ }
+ 
+ void default_hwif_transport(ide_hwif_t *hwif)
+Index: b/drivers/ide/mips/au1xxx-ide.c
 ===================================================================
---- a/drivers/ide/mips/swarm.c
-+++ b/drivers/ide/mips/swarm.c
-@@ -109,6 +109,7 @@ static int __devinit swarm_ide_probe(str
- 	base = ioremap(offset, size);
- 
- 	/* Setup MMIO ops.  */
-+	hwif->host_flags = IDE_HFLAG_MMIO;
- 	default_hwif_mmiops(hwif);
- 
- 	hwif->chipset = ide_generic;
-Index: b/drivers/ide/pci/sgiioc4.c
+--- a/drivers/ide/mips/au1xxx-ide.c
++++ b/drivers/ide/mips/au1xxx-ide.c
+@@ -613,9 +613,6 @@ static int au_ide_probe(struct device *d
+ #ifdef CONFIG_BLK_DEV_IDE_AU1XXX_PIO_DBDMA	
+ 	hwif->input_data  = au1xxx_input_data;
+ 	hwif->output_data = au1xxx_output_data;
+-
+-	hwif->INSW                      = auide_insw;
+-	hwif->OUTSW                     = auide_outsw;
+ #endif
+ 	hwif->select_data               = 0;    /* no chipset-specific code */
+ 	hwif->config_data               = 0;    /* no chipset-specific code */
+Index: b/drivers/ide/pci/scc_pata.c
 ===================================================================
---- a/drivers/ide/pci/sgiioc4.c
-+++ b/drivers/ide/pci/sgiioc4.c
-@@ -573,6 +573,7 @@ static const struct ide_port_info sgiioc
- 	.init_dma		= ide_dma_sgiioc4,
- 	.port_ops		= &sgiioc4_port_ops,
- 	.dma_ops		= &sgiioc4_dma_ops,
-+	.host_flags		= IDE_HFLAG_MMIO,
- 	.mwdma_mask		= ATA_MWDMA2_ONLY,
- };
+--- a/drivers/ide/pci/scc_pata.c
++++ b/drivers/ide/pci/scc_pata.c
+@@ -624,13 +624,9 @@ static void __devinit init_mmio_iops_scc
  
-Index: b/drivers/ide/pci/siimage.c
-===================================================================
---- a/drivers/ide/pci/siimage.c
-+++ b/drivers/ide/pci/siimage.c
-@@ -630,6 +630,7 @@ static void __devinit init_mmio_iops_sii
- 	 *	Fill in the basic HWIF bits
- 	 */
+ 	hwif->INB = scc_ide_inb;
+ 	hwif->INW = scc_ide_inw;
+-	hwif->INSW = scc_ide_insw;
+-	hwif->INSL = scc_ide_insl;
+ 	hwif->OUTB = scc_ide_outb;
+ 	hwif->OUTBSYNC = scc_ide_outbsync;
+ 	hwif->OUTW = scc_ide_outw;
+-	hwif->OUTSW = scc_ide_outsw;
+-	hwif->OUTSL = scc_ide_outsl;
  
-+	hwif->host_flags |= IDE_HFLAG_MMIO;
- 	default_hwif_mmiops(hwif);
- 	hwif->hwif_data			= addr;
- 
-Index: b/drivers/ide/ppc/pmac.c
-===================================================================
---- a/drivers/ide/ppc/pmac.c
-+++ b/drivers/ide/ppc/pmac.c
-@@ -942,6 +942,7 @@ static const struct ide_port_info pmac_p
- 	.host_flags		= IDE_HFLAG_SET_PIO_MODE_KEEP_DMA |
- 				  IDE_HFLAG_POST_SET_MODE |
- 				  IDE_HFLAG_UNMASK_IRQS,
-+				  IDE_HFLAG_MMIO,
- 	.pio_mask		= ATA_PIO4,
- 	.mwdma_mask		= ATA_MWDMA2,
- };
+ 	io_ports->data_addr	= dma_base + 0x20;
+ 	io_ports->error_addr	= dma_base + 0x24;
 Index: b/include/linux/ide.h
 ===================================================================
 --- a/include/linux/ide.h
 +++ b/include/linux/ide.h
-@@ -1057,6 +1057,8 @@ enum {
- 	IDE_HFLAG_NO_DMA		= (1 << 14),
- 	/* check if host is PCI IDE device before allowing DMA */
- 	IDE_HFLAG_NO_AUTODMA		= (1 << 15),
-+	/* host uses MMIO */
-+	IDE_HFLAG_MMIO			= (1 << 16),
- 	/* host is CS5510/CS5520 */
- 	IDE_HFLAG_CS5520		= IDE_HFLAG_VDMA,
- 	/* no LBA48 */
+@@ -477,13 +477,9 @@ typedef struct hwif_s {
+ 	void (*OUTB)(u8 addr, unsigned long port);
+ 	void (*OUTBSYNC)(ide_drive_t *drive, u8 addr, unsigned long port);
+ 	void (*OUTW)(u16 addr, unsigned long port);
+-	void (*OUTSW)(unsigned long port, void *addr, u32 count);
+-	void (*OUTSL)(unsigned long port, void *addr, u32 count);
+ 
+ 	u8  (*INB)(unsigned long port);
+ 	u16 (*INW)(unsigned long port);
+-	void (*INSW)(unsigned long port, void *addr, u32 count);
+-	void (*INSL)(unsigned long port, void *addr, u32 count);
+ 
+ 	/* dma physical region descriptor table (cpu view) */
+ 	unsigned int	*dmatable_cpu;
