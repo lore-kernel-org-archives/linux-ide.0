@@ -1,63 +1,80 @@
-From: Adrian Bunk <bunk@kernel.org>
-Subject: [2.6.25 patch] sound/oss/ac97_codec.c: restore MODULE_LICENSE
-Date: Sun, 30 Mar 2008 19:53:23 +0300
-Message-ID: <20080330165323.GA1575@cs181133002.pp.htv.fi>
-References: <213384793@web.de>
+From: Geert Uytterhoeven <geert@linux-m68k.org>
+Subject: Re: [PATCH 5/5] falconide/q40ide: add ->atapi_*put_bytes and
+ ->ata_*put_data methods
+Date: Sun, 30 Mar 2008 20:18:40 +0200 (CEST)
+Message-ID: <Pine.LNX.4.64.0803302012560.16372@anakin>
+References: <200803301714.04527.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Return-path: <linux-acpi-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <213384793@web.de>
-Sender: linux-acpi-owner@vger.kernel.org
-To: devzero@web.de, Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Randy Dunlap <randy.dunlap@oracle.com>, Andrew Morton <akpm@linux-foundation.org>, alan@lxorguk.ukuu.org.uk, david-b@pacbell.net, greg@kroah.com, lenb@kernel.org, linux-acpi@vger.kernel.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mtd@lists.infradead.org, "Rafael J. Wysocki" <rjw@sisk.pl>
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from yorgi.telenet-ops.be ([195.130.133.69]:34847 "EHLO
+	yorgi.telenet-ops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752262AbYC3STQ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 30 Mar 2008 14:19:16 -0400
+Received: from winston.telenet-ops.be (winston.telenet-ops.be [195.130.137.75])
+	by yorgi.telenet-ops.be (Postfix) with ESMTP id CCEE86815ED
+	for <linux-ide@vger.kernel.org>; Sun, 30 Mar 2008 20:19:14 +0200 (CEST)
+In-Reply-To: <200803301714.04527.bzolnier@gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: linux-ide@vger.kernel.org, Linux Kernel Development <linux-kernel@vger.kernel.org>, Linux/m68k <linux-m68k@vger.kernel.org>, Michael Schmitz <schmitz@debian.org>
 
-On Wed, Mar 26, 2008 at 09:51:34PM +0100, devzero@web.de wrote:
-> > Can you post the full kernel log up to this BUG?
-> > It should show that causes the Taint.
+	Hi Bart,
+
+On Sun, 30 Mar 2008, Bartlomiej Zolnierkiewicz wrote:
+> * Add ->atapi_{in,out}put_bytes and ->ata_{in,out}put_data methods to
+>   falconide and q40ide host drivers (->ata_* methods are implemented on
+>   top of ->atapi_* methods so they also do byte-swapping now).
 > 
-> oh - yes:
-> 
-> Mar 23 09:12:20 opensuse103 kernel: ac97_codec: module license 'unspecified' taints kernel.
-> 
-> modinfo ac97_codec
-> filename:       /lib/modules/2.6.25-rc6-git7-default/kernel/sound/oss/ac97_codec.ko
-> srcversion:     8665939D5E471F7E331BB3E
-> depends:
-> vermagic:       2.6.25-rc6-git7-default SMP mod_unload 586
-> 
-> 
-> seems MODULE_LICENSE is missing in ./sound/oss/ac97_codec.c !?
->...
+> * Cleanup atapi_{in,out}put_bytes().
 
-My fault, fix below.
+Thanks!
 
-> regards
-> roland
+One remaining issue (for which the fix has never been submitted upstream so
+far) with Atari and Q40 is that due to the byteswapped interface, the driveid
+is also byteswapped, so it has to be unswapped again in ide_fix_driveid().
 
-cu
-Adrian
+Here's a very old and unclean but working patch:
 
-
-<--  snip  -->
-
-
-I accidentally removed the MODULE_LICENSE("GPL") from sound/oss/ac97_codec.c
-
-Spotted by Roland <devzero@web.de>.
-
-Signed-off-by: Adrian Bunk <bunk@kernel.org>
-
----
-c4f4fee537525836680163622dc15b045f551d40 diff --git a/sound/oss/ac97_codec.c b/sound/oss/ac97_codec.c
-index 87a6726..b63839e 100644
---- a/sound/oss/ac97_codec.c
-+++ b/sound/oss/ac97_codec.c
-@@ -1202,3 +1202,5 @@ static int pt101_init(struct ac97_codec * codec)
+--- a/drivers/ide/ide-iops.c
++++ b/drivers/ide/ide-iops.c
+@@ -284,6 +284,23 @@ void ide_fix_driveid (struct hd_driveid 
+ 	int i;
+ 	u16 *stringcast;
  
- EXPORT_SYMBOL(ac97_probe_codec);
- 
-+MODULE_LICENSE("GPL");
++#ifdef __mc68000__
++	if (!MACH_IS_AMIGA && !MACH_IS_MAC && !MACH_IS_Q40 && !MACH_IS_ATARI)
++		return;
 +
++#ifdef M68K_IDE_SWAPW
++	if (M68K_IDE_SWAPW) {	/* fix bus byteorder first */
++		u_char *p = (u_char *)id;
++		u_char t;
++		for (i = 0; i < 512; i += 2) {
++			t = p[i];
++			p[i] = p[i+1];
++			p[i+1] = t;
++		}
++	}
++#endif
++#endif /* __mc68000__ */
++
+ 	id->config         = __le16_to_cpu(id->config);
+ 	id->cyls           = __le16_to_cpu(id->cyls);
+ 	id->reserved2      = __le16_to_cpu(id->reserved2);
 
+Note that include/asm-m68k/ide.h has
+
+    #define M68K_IDE_SWAPW  (MACH_IS_Q40 || MACH_IS_ATARI)
+
+Gr{oetje,eeting}s,
+
+						Geert
+
+--
+Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
+
+In personal conversations with technical people, I call myself a hacker. But
+when I'm talking to journalists I just say "programmer" or something like that.
+							    -- Linus Torvalds
