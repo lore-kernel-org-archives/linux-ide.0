@@ -1,35 +1,34 @@
-From: Roman Zippel <zippel@linux-m68k.org>
-Subject: Re: [PATCH 5/5] falconide/q40ide: add ->atapi_*put_bytes and
- ->ata_*put_data methods
-Date: Tue, 1 Apr 2008 00:02:02 +0200 (CEST)
-Message-ID: <Pine.LNX.4.64.0803312353320.26791@localhost.localdomain>
-References: <200803312341.08271.zippel@linux-m68k.org> <20080331224318.4768c050@core>
+From: Mark Lord <liml@rtr.ca>
+Subject: [PATCH 0/5] sata_mv cleanups
+Date: Mon, 31 Mar 2008 19:27:43 -0400
+Message-ID: <47F1736F.8020104@rtr.ca>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp-vbr9.xs4all.nl ([194.109.24.29]:1930 "EHLO
-	smtp-vbr9.xs4all.nl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752541AbYCaWCs (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 31 Mar 2008 18:02:48 -0400
-In-Reply-To: <20080331224318.4768c050@core>
+Received: from rtr.ca ([76.10.145.34]:1560 "EHLO mail.rtr.ca"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751350AbYCaX1p (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 31 Mar 2008 19:27:45 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: Geert Uytterhoeven <geert@linux-m68k.org>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-ide@vger.kernel.org, Linux Kernel Development <linux-kernel@vger.kernel.org>, Linux/m68k <linux-m68k@vger.kernel.org>, Michael Schmitz <schmitz@debian.org>
+To: IDE/ATA development list <linux-ide@vger.kernel.org>, Jeff Garzik <jgarzik@pobox.com>, Tejun Heo <htejun@gmail.com>
 
-Hi,
+Here are five new patches for sata_mv.
+These serve to clean things up in preparation
+for the PMP patches which will follow.
 
-On Mon, 31 Mar 2008, Alan Cox wrote:
+Hopefully nothing controversial here.
 
-> > That would require an additional data copy and a double byteswap on machines 
-> > which are not that fast in first place...
-> 
-> So use the blitter ;)
-> 
-> At this point the future is not Commode Amiga or Atari TT and we risk
-> mess in core code for obscure platforms ?
+01_sata_mv_cosmetics.patch
+02_sata_mv_clean_up_stop_edma.patch
+03_sata_mv_fix_ifcfg_handling.patch
+04_sata_mv_new_hardreset_handler.patch
+05_sata_mv_remove_phy_reset_and_postreset.patch
 
-We have worse mess and a _single_ simple hook which helps a small platform 
-and doesn't hurt others doesn't sound that bad.
+I generated these against Jeff's upstream branch as of today.
 
-bye, Roman
+Please let me know ASAP of any issues, as there's a bunch of
+PMP patches for sata_mv hot on the heels of these ones.
+
+Thanks
