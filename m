@@ -1,40 +1,43 @@
-From: bugme-daemon@bugzilla.kernel.org
-Subject: [Bug 10370] mount failed on ubuntu-8.04_ppc
-Date: Mon, 31 Mar 2008 06:58:43 -0700 (PDT)
-Message-ID: <20080331135843.50DE110803A@picon.linux-foundation.org>
-References: <bug-10370-11633@http.bugzilla.kernel.org/>
+From: Mark Lord <liml@rtr.ca>
+Subject: Re: Need help understanding SATA error message.
+Date: Mon, 31 Mar 2008 10:53:07 -0400
+Message-ID: <47F0FAD3.9060001@rtr.ca>
+References: <Pine.LNX.4.61.0803271554050.5510@envy.nxs.se> <47ED136F.9010501@rtr.ca> <47ED15D2.3080403@rtr.ca> <Pine.LNX.4.61.0803282315330.5510@envy.nxs.se> <47EDBC87.8090109@rtr.ca> <Pine.LNX.4.61.0803301659300.5510@envy.nxs.se> <47F0376F.2090000@gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:34147 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750719AbYCaN7O (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 31 Mar 2008 09:59:14 -0400
-Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
-	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id m2VDwh9n002243
-	for <linux-ide@vger.kernel.org>; Mon, 31 Mar 2008 06:58:44 -0700
-In-Reply-To: <bug-10370-11633@http.bugzilla.kernel.org/>
+Received: from rtr.ca ([76.10.145.34]:2157 "EHLO mail.rtr.ca"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755186AbYCaOxI (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 31 Mar 2008 10:53:08 -0400
+In-Reply-To: <47F0376F.2090000@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: Tomas Lund <tlund@nxs.se>, linux-ide@vger.kernel.org
 
-http://bugzilla.kernel.org/show_bug.cgi?id=10370
+> XXXXX wrote (by private email):
+> On Fri, Mar 28, 2008 at 9:59 AM, Mark Lord <liml@rtr.ca> wrote:
+>> >  Duh..  actually, we were just discussing this very error in another thread.
+>> >  The drive is really telling us that it hit an unrecoverable WRITE error
+>> >  at sector 0a:24:f9 on the drive.  Bad sector.
+>> >
+>> >  There are patches queued up for 2.6.26 to automatically resume the cache
+>> >  flush after the failed sector, but you'll still lose data at that sector.
+>> >
+>> >  Time for a low-level reformat, if the manufacturer has a utility for that.
+>> >  Otherwise, RMA it.
+> 
+> The response to an unrecoverable sector shouldn't be 51/04 if the
+> flush fails, it should be 51/10 or 51/40.
+> 
+> 51/04 would be the response if the FLUSH CACHE command was issued when
+> there were still outstanding NCQ commands active.
+..
 
+Tejun:  I see we have another thread as well with FLUSH errors.
+I really doubt that these are bad drives.
+There's very likely a bug in libata / LLD there someplace.
 
-bbpetkov@yahoo.de changed:
-
-           What    |Removed                     |Added
-----------------------------------------------------------------------------
-                 CC|                            |bbpetkov@yahoo.de
-
-
-
-
-------- Comment #6 from bbpetkov@yahoo.de  2008-03-31 06:58 -------
-You're not supposed to mount an audio cdrom since it has no filesystem on it as
-your log suggests. If you want to access it, do so without mounting it. See
-http://www.tldp.org/HOWTO/CDROM-HOWTO/index.html for details.
-
-
--- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug, or are watching the assignee.
+-ml
