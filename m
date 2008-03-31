@@ -1,14 +1,14 @@
 From: Adrian Bunk <bunk@kernel.org>
-Subject: [2.6.25 patch] ide/legacy/macide: add MODULE_LICENSE
-Date: Mon, 31 Mar 2008 12:08:03 +0300
-Message-ID: <20080331090803.GO28445@cs181133002.pp.htv.fi>
+Subject: [2.6.25 patch] ide/legacy/gayle.c: add MODULE_LICENSE
+Date: Mon, 31 Mar 2008 12:07:57 +0300
+Message-ID: <20080331090757.GL28445@cs181133002.pp.htv.fi>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp5.pp.htv.fi ([213.243.153.39]:51847 "EHLO smtp5.pp.htv.fi"
+Received: from smtp5.pp.htv.fi ([213.243.153.39]:51821 "EHLO smtp5.pp.htv.fi"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756187AbYCaJIS (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 31 Mar 2008 05:08:18 -0400
+	id S1756097AbYCaJIL (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 31 Mar 2008 05:08:11 -0400
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
@@ -20,14 +20,14 @@ Now that it can be built modular it needs a MODULE_LICENSE.
 Signed-off-by: Adrian Bunk <bunk@kernel.org>
 
 ---
-dddf696c7717b48663dab4feb2b599c8f6d05553 diff --git a/drivers/ide/legacy/macide.c b/drivers/ide/legacy/macide.c
-index 9a79098..eaf5dbe 100644
---- a/drivers/ide/legacy/macide.c
-+++ b/drivers/ide/legacy/macide.c
-@@ -137,3 +137,5 @@ static int __init macide_init(void)
+4bd68e53bc0477dd694b87acacc27bac412b9bf4 diff --git a/drivers/ide/legacy/gayle.c b/drivers/ide/legacy/gayle.c
+index b7d8109..e3b4638 100644
+--- a/drivers/ide/legacy/gayle.c
++++ b/drivers/ide/legacy/gayle.c
+@@ -195,3 +195,5 @@ found:
  }
  
- module_init(macide_init);
+ module_init(gayle_init);
 +
 +MODULE_LICENSE("GPL");
 
