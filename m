@@ -1,32 +1,55 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [patch 3/3] ata: SWNCQ should be enabled by default
-Date: Mon, 31 Mar 2008 13:34:31 +0900
-Message-ID: <47F069D7.3010702@gmail.com>
-References: <200803282133.m2SLXlWk011463@imap1.linux-foundation.org> <47EE465E.80401@gmail.com> <47EE88C9.3020805@dunaweb.hu> <47EEDACA.4060400@gmail.com> <15F501D1A78BD343BE8F4D8DB854566B1BFE2AF1@hkemmail01.nvidia.com>
+From: Geert Uytterhoeven <geert@linux-m68k.org>
+Subject: Re: [PATCH 5/5] falconide/q40ide: add ->atapi_*put_bytes and
+ ->ata_*put_data methods
+Date: Mon, 31 Mar 2008 07:53:34 +0200 (CEST)
+Message-ID: <Pine.LNX.4.64.0803310750230.6871@anakin>
+References: <200803301714.04527.bzolnier@gmail.com> <Pine.LNX.4.64.0803302012560.16372@anakin>
+ <200803302134.42569.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.179]:7287 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751610AbYCaEel (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 31 Mar 2008 00:34:41 -0400
-Received: by wa-out-1112.google.com with SMTP id v27so1825447wah.23
-        for <linux-ide@vger.kernel.org>; Sun, 30 Mar 2008 21:34:40 -0700 (PDT)
-In-Reply-To: <15F501D1A78BD343BE8F4D8DB854566B1BFE2AF1@hkemmail01.nvidia.com>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1754841AbYCaFxu@vger.kernel.org>
+In-Reply-To: <200803302134.42569.bzolnier@gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: linux-ide@vger.kernel.org, Linux Kernel Development <linux-kernel@vger.kernel.org>, Linux/m68k <linux-m68k@vger.kernel.org>, Michael Schmitz <schmitz@debian.org>
 List-Id: linux-ide@vger.kernel.org
-To: Kuan Luo <kluo@nvidia.com>
-Cc: Zoltan Boszormenyi <zboszor@dunaweb.hu>, Robert Hancock <hancockr@shaw.ca>, akpm@linux-foundation.org, jeff@garzik.org, linux-ide@vger.kernel.org, Peer Chen <pchen@nvidia.com>
 
-Kuan Luo wrote:
-> For ADMA, I lean to disable it for default because stability is more
-> important to our customers. At least, bug in this link:
-> http://www.gossamer-threads.com/lists/linux/kernel/885929  is not
-> resolved.
+On Sun, 30 Mar 2008, Bartlomiej Zolnierkiewicz wrote:
+> On Sunday 30 March 2008, Geert Uytterhoeven wrote:
+> > On Sun, 30 Mar 2008, Bartlomiej Zolnierkiewicz wrote:
+> > > * Add ->atapi_{in,out}put_bytes and ->ata_{in,out}put_data methods to
+> > >   falconide and q40ide host drivers (->ata_* methods are implemented on
+> > >   top of ->atapi_* methods so they also do byte-swapping now).
+> > > 
+> > > * Cleanup atapi_{in,out}put_bytes().
+> > 
+> > Thanks!
+> > 
+> > One remaining issue (for which the fix has never been submitted upstream so
+> > far) with Atari and Q40 is that due to the byteswapped interface, the driveid
+> > is also byteswapped, so it has to be unswapped again in ide_fix_driveid().
+> 
+> My patch causes unswapping for _all_ data coming from the device so I wonder
+> whether the ide_fix_driveid() fix is still needed?
 
-Robert, what do you think?  Should we disable ADMA by default from 
-2.6.26-rcX?
+I'll give it a try on Aranym...
 
--- 
-tejun
+> [ I now recall some discussion that we shouldn't un-swap fs requests because
+>   of how the things were done in the past fs itself is stored byte-swapped on
+>   the disk - if this is the case I will recast the patch to pass rq to
+>   ->ata_*put_data in ide_pio_sector() and check rq->cmd_type == REQ_TYPE_FS
+>   in falconide/q40ide_*put_data() to decide whether to unswap data or not ]
+
+Yes, the data on the disk is stored byte-swapped.
+So it's only the drive ID and packet commands that should be swapped.
+
+Gr{oetje,eeting}s,
+
+						Geert
+
+--
+Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
+
+In personal conversations with technical people, I call myself a hacker. But
+when I'm talking to journalists I just say "programmer" or something like that.
+							    -- Linus Torvalds
