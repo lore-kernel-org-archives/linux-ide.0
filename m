@@ -1,31 +1,29 @@
-From: Roman Zippel <zippel@linux-m68k.org>
-Subject: Re: [PATCH 5/5] falconide/q40ide: add ->atapi_*put_bytes and ->ata_*put_data methods
-Date: Mon, 31 Mar 2008 22:41:06 +0100
-Message-ID: <200803312341.08271.zippel@linux-m68k.org>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [PATCH 5/5] falconide/q40ide: add ->atapi_*put_bytes and
+ ->ata_*put_data methods
+Date: Mon, 31 Mar 2008 22:43:18 +0100
+Message-ID: <20080331224318.4768c050@core>
+References: <200803312341.08271.zippel@linux-m68k.org>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1758417AbYCaVlt@vger.kernel.org>
-Content-Disposition: inline
-Sender: linux-kernel-owner@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: Geert Uytterhoeven <geert@linux-m68k.org>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-ide@vger.kernel.org, Linux Kernel Development <linux-kernel@vger.kernel.org>, Linux/m68k <linux-m68k@vger.kernel.org>, Michael Schmitz <schmitz@debian.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:48610 "EHLO
+	lxorguk.ukuu.org.uk" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1756632AbYCaVoe (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 31 Mar 2008 17:44:34 -0400
+In-Reply-To: <200803312341.08271.zippel@linux-m68k.org>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Roman Zippel <zippel@linux-m68k.org>
+Cc: Geert Uytterhoeven <geert@linux-m68k.org>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-ide@vger.kernel.org, Linux Kernel Development <linux-kernel@vger.kernel.org>, Linux/m68k <linux-m68k@vger.kernel.org>, Michael Schmitz <schmitz@debian.org>
 
-Hi,
+> That would require an additional data copy and a double byteswap on machines 
+> which are not that fast in first place...
 
-On Monday 31. March 2008, Alan Cox wrote:
+So use the blitter ;)
 
-> > Yes, the data on the disk is stored byte-swapped.
-> > So it's only the drive ID and packet commands that should be swapped.
->
-> If you are storing the data on disk byte swapped then reverse the logic
-> in the driver so you don't need hacks for un-swapping commands and write
-> a bytesewap device mapper layer in the right place. Then you can even
-> move disks around.
+At this point the future is not Commode Amiga or Atari TT and we risk
+mess in core code for obscure platforms ?
 
-That would require an additional data copy and a double byteswap on machines 
-which are not that fast in first place...
-
-bye, Roman
+Alan
