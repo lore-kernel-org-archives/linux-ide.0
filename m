@@ -1,72 +1,32 @@
-From: David Miller <davem@davemloft.net>
-Subject: Re: linux-next: Tree for March 29
-Date: Mon, 31 Mar 2008 00:28:36 -0700 (PDT)
-Message-ID: <20080331.002836.159833482.davem@davemloft.net>
-References: <20080329223354.304e2722.sfr@canb.auug.org.au>
-	<20080329191255.7312e036@hskinnemo-gx620.norway.atmel.com>
-	<20080330135502.ee27f8a4.sfr@canb.auug.org.au>
+From: Adrian Bunk <bunk@kernel.org>
+Subject: [2.6.25 patch] ide/ppc/mpc8xx.c: add MODULE_LICENSE
+Date: Mon, 31 Mar 2008 12:07:43 +0300
+Message-ID: <20080331090743.GG28445@cs181133002.pp.htv.fi>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
-Return-path: <netdev-owner@vger.kernel.org>
-In-Reply-To: <20080330135502.ee27f8a4.sfr@canb.auug.org.au>
-Sender: netdev-owner@vger.kernel.org
-To: sfr@canb.auug.org.au
-Cc: haavard.skinnemoen@atmel.com, linux-next@vger.kernel.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, netdev@vger.kernel.org
+Content-Type: text/plain; charset=utf-8
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from smtp5.pp.htv.fi ([213.243.153.39]:51804 "EHLO smtp5.pp.htv.fi"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755216AbYCaJH6 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 31 Mar 2008 05:07:58 -0400
+Content-Disposition: inline
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: bzolnier@gmail.com
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Sam Ravnborg <sam@ravnborg.org>
 
-From: Stephen Rothwell <sfr@canb.auug.org.au>
-Date: Sun, 30 Mar 2008 13:55:02 +1100
+Now that it can be built modular it needs a MODULE_LICENSE.
 
-> Hi Haavard,
-> 
-> On Sat, 29 Mar 2008 19:12:55 +0100 Haavard Skinnemoen <haavard.skinnemoen@atmel.com> wrote:
-> >
-> > allnoconfig fails with
-> > 
-> > include/linux/netdevice.h:843: error: implicit declaration of function 'dev_net'
-> > 
-> > which seems to be because the definition of dev_net is inside #ifdef
-> > CONFIG_NET, while next_net_device, which calls it, is not.
-> 
-> Thanks for tracking these down.
+Signed-off-by: Adrian Bunk <bunk@kernel.org>
 
-I've checked in the following to net-2.6.26 to fix this, thanks:
-
-commit 3edf8fa5ccf10688a9280b5cbca8ed3947c42866
-Author: David S. Miller <davem@davemloft.net>
-Date:   Mon Mar 31 00:28:14 2008 -0700
-
-    [NET]: Fix allnoconfig build on powerpc and avr32
-    
-    As reported by Haavard Skinnemoen and Stephen Rothwell:
-    
-    > allnoconfig fails with
-    >
-    > include/linux/netdevice.h:843: error: implicit declaration of function 'dev_net'
-    >
-    > which seems to be because the definition of dev_net is inside #ifdef
-    > CONFIG_NET, while next_net_device, which calls it, is not.
-    
-    Signed-off-by: David S. Miller <davem@davemloft.net>
-
-diff --git a/include/linux/netdevice.h b/include/linux/netdevice.h
-index 8576ca9..993758f 100644
---- a/include/linux/netdevice.h
-+++ b/include/linux/netdevice.h
-@@ -827,6 +827,7 @@ struct packet_type {
- extern rwlock_t				dev_base_lock;		/* Device list lock */
- 
- 
-+#ifdef CONFIG_NET
- #define for_each_netdev(net, d)		\
- 		list_for_each_entry(d, &(net)->dev_base_head, dev_list)
- #define for_each_netdev_safe(net, d, n)	\
-@@ -850,6 +851,7 @@ static inline struct net_device *first_net_device(struct net *net)
- 	return list_empty(&net->dev_base_head) ? NULL :
- 		net_device_entry(net->dev_base_head.next);
+---
+6697627a251c333407e8df17f34edabc7e9b2d22 diff --git a/drivers/ide/ppc/mpc8xx.c b/drivers/ide/ppc/mpc8xx.c
+index 38fbfb8..ebaba01 100644
+--- a/drivers/ide/ppc/mpc8xx.c
++++ b/drivers/ide/ppc/mpc8xx.c
+@@ -853,3 +853,5 @@ static int __init mpc8xx_ide_probe(void)
  }
-+#endif
  
- extern int 			netdev_boot_setup_check(struct net_device *dev);
- extern unsigned long		netdev_boot_base(const char *prefix, int unit);
+ module_init(mpc8xx_ide_probe);
++
++MODULE_LICENSE("GPL");
