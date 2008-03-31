@@ -1,57 +1,72 @@
-From: Geert Uytterhoeven <geert@linux-m68k.org>
-Subject: Re: [PATCH 5/5] falconide/q40ide: add ->atapi_*put_bytes and
- ->ata_*put_data methods
-Date: Mon, 31 Mar 2008 08:04:16 +0200 (CEST)
-Message-ID: <Pine.LNX.4.64.0803310803350.6871@anakin>
-References: <200803301714.04527.bzolnier@gmail.com> <Pine.LNX.4.64.0803302012560.16372@anakin>
- <200803302134.42569.bzolnier@gmail.com> <Pine.LNX.4.64.0803310750230.6871@anakin>
+From: David Miller <davem@davemloft.net>
+Subject: Re: linux-next: Tree for March 29
+Date: Mon, 31 Mar 2008 00:28:36 -0700 (PDT)
+Message-ID: <20080331.002836.159833482.davem@davemloft.net>
+References: <20080329223354.304e2722.sfr@canb.auug.org.au>
+	<20080329191255.7312e036@hskinnemo-gx620.norway.atmel.com>
+	<20080330135502.ee27f8a4.sfr@canb.auug.org.au>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from yorgi.telenet-ops.be ([195.130.133.69]:36674 "EHLO
-	yorgi.telenet-ops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751934AbYCaGEu (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 31 Mar 2008 02:04:50 -0400
-Received: from monty.telenet-ops.be (monty.telenet-ops.be [195.130.132.56])
-	by yorgi.telenet-ops.be (Postfix) with ESMTP id 592A9588148
-	for <linux-ide@vger.kernel.org>; Mon, 31 Mar 2008 08:04:49 +0200 (CEST)
-In-Reply-To: <Pine.LNX.4.64.0803310750230.6871@anakin>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: Text/Plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
+Return-path: <netdev-owner@vger.kernel.org>
+In-Reply-To: <20080330135502.ee27f8a4.sfr@canb.auug.org.au>
+Sender: netdev-owner@vger.kernel.org
+To: sfr@canb.auug.org.au
+Cc: haavard.skinnemoen@atmel.com, linux-next@vger.kernel.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, netdev@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: linux-ide@vger.kernel.org, Linux Kernel Development <linux-kernel@vger.kernel.org>, Linux/m68k <linux-m68k@vger.kernel.org>, Michael Schmitz <schmitz@debian.org>
 
-On Mon, 31 Mar 2008, Geert Uytterhoeven wrote:
-> On Sun, 30 Mar 2008, Bartlomiej Zolnierkiewicz wrote:
-> > On Sunday 30 March 2008, Geert Uytterhoeven wrote:
-> > > On Sun, 30 Mar 2008, Bartlomiej Zolnierkiewicz wrote:
-> > > > * Add ->atapi_{in,out}put_bytes and ->ata_{in,out}put_data methods to
-> > > >   falconide and q40ide host drivers (->ata_* methods are implemented on
-> > > >   top of ->atapi_* methods so they also do byte-swapping now).
-> > > > 
-> > > > * Cleanup atapi_{in,out}put_bytes().
-> > > 
-> > > Thanks!
-> > > 
-> > > One remaining issue (for which the fix has never been submitted upstream so
-> > > far) with Atari and Q40 is that due to the byteswapped interface, the driveid
-> > > is also byteswapped, so it has to be unswapped again in ide_fix_driveid().
-> > 
-> > My patch causes unswapping for _all_ data coming from the device so I wonder
-> > whether the ide_fix_driveid() fix is still needed?
+From: Stephen Rothwell <sfr@canb.auug.org.au>
+Date: Sun, 30 Mar 2008 13:55:02 +1100
+
+> Hi Haavard,
 > 
-> I'll give it a try on Aranym...
+> On Sat, 29 Mar 2008 19:12:55 +0100 Haavard Skinnemoen <haavard.skinnemoen@atmel.com> wrote:
+> >
+> > allnoconfig fails with
+> > 
+> > include/linux/netdevice.h:843: error: implicit declaration of function 'dev_net'
+> > 
+> > which seems to be because the definition of dev_net is inside #ifdef
+> > CONFIG_NET, while next_net_device, which calls it, is not.
+> 
+> Thanks for tracking these down.
 
-Oops, just applying this series of 5 patches is not sufficient, I get
-lots of rejects...
+I've checked in the following to net-2.6.26 to fix this, thanks:
 
-Gr{oetje,eeting}s,
+commit 3edf8fa5ccf10688a9280b5cbca8ed3947c42866
+Author: David S. Miller <davem@davemloft.net>
+Date:   Mon Mar 31 00:28:14 2008 -0700
 
-						Geert
+    [NET]: Fix allnoconfig build on powerpc and avr32
+    
+    As reported by Haavard Skinnemoen and Stephen Rothwell:
+    
+    > allnoconfig fails with
+    >
+    > include/linux/netdevice.h:843: error: implicit declaration of function 'dev_net'
+    >
+    > which seems to be because the definition of dev_net is inside #ifdef
+    > CONFIG_NET, while next_net_device, which calls it, is not.
+    
+    Signed-off-by: David S. Miller <davem@davemloft.net>
 
---
-Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
-
-In personal conversations with technical people, I call myself a hacker. But
-when I'm talking to journalists I just say "programmer" or something like that.
-							    -- Linus Torvalds
+diff --git a/include/linux/netdevice.h b/include/linux/netdevice.h
+index 8576ca9..993758f 100644
+--- a/include/linux/netdevice.h
++++ b/include/linux/netdevice.h
+@@ -827,6 +827,7 @@ struct packet_type {
+ extern rwlock_t				dev_base_lock;		/* Device list lock */
+ 
+ 
++#ifdef CONFIG_NET
+ #define for_each_netdev(net, d)		\
+ 		list_for_each_entry(d, &(net)->dev_base_head, dev_list)
+ #define for_each_netdev_safe(net, d, n)	\
+@@ -850,6 +851,7 @@ static inline struct net_device *first_net_device(struct net *net)
+ 	return list_empty(&net->dev_base_head) ? NULL :
+ 		net_device_entry(net->dev_base_head.next);
+ }
++#endif
+ 
+ extern int 			netdev_boot_setup_check(struct net_device *dev);
+ extern unsigned long		netdev_boot_base(const char *prefix, int unit);
