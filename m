@@ -1,16 +1,16 @@
 From: bugme-daemon@bugzilla.kernel.org
 Subject: [Bug 10370] mount failed on ubuntu-8.04_ppc
-Date: Mon, 31 Mar 2008 06:11:18 -0700 (PDT)
-Message-ID: <20080331131118.E273510803A@picon.linux-foundation.org>
+Date: Mon, 31 Mar 2008 06:12:57 -0700 (PDT)
+Message-ID: <20080331131257.8623610803E@picon.linux-foundation.org>
 References: <bug-10370-11633@http.bugzilla.kernel.org/>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:57722 "EHLO
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:35493 "EHLO
 	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754387AbYCaNLu (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 31 Mar 2008 09:11:50 -0400
+	by vger.kernel.org with ESMTP id S1753470AbYCaNN3 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 31 Mar 2008 09:13:29 -0400
 Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
-	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id m2VDBIT1029955
-	for <linux-ide@vger.kernel.org>; Mon, 31 Mar 2008 06:11:20 -0700
+	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id m2VDCv92030093
+	for <linux-ide@vger.kernel.org>; Mon, 31 Mar 2008 06:12:58 -0700
 In-Reply-To: <bug-10370-11633@http.bugzilla.kernel.org/>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
@@ -19,18 +19,13 @@ To: linux-ide@vger.kernel.org
 http://bugzilla.kernel.org/show_bug.cgi?id=10370
 
 
-bunk@kernel.org changed:
-
-           What    |Removed                     |Added
-----------------------------------------------------------------------------
-                 CC|                            |bunk@kernel.org
-         AssignedTo|scsi_drivers-gdt-           |io_ide@kernel-bugs.osdl.org
-                   |scsi@kernel-bugs.osdl.org   |
-          Component|GDT SCSI                    |IDE
-            Product|SCSI Drivers                |IO/Storage
-         Regression|0                           |1
 
 
+
+------- Comment #1 from pbarnabe@gmail.com  2008-03-31 06:12 -------
+Created an attachment (id=15529)
+ --> (http://bugzilla.kernel.org/attachment.cgi?id=15529&action=view)
+dmesg.log
 
 
 -- 
