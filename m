@@ -1,36 +1,39 @@
-From: bugme-daemon@bugzilla.kernel.org
-Subject: [Bug 10086] 2.6.25-rc2 + smartd = hang
-Date: Mon, 31 Mar 2008 23:26:29 -0700 (PDT)
-Message-ID: <20080401062629.9F50610803F@picon.linux-foundation.org>
-References: <bug-10086-11633@http.bugzilla.kernel.org/>
+From: Michael Schmitz <schmitz@smaragd.biophys.uni-duesseldorf.de>
+Subject: Re: [PATCH 5/5] falconide/q40ide: add ->atapi_*put_bytes and
+ ->ata_*put_data methods
+Date: Tue, 01 Apr 2008 05:20:56 +0200 (CEST)
+Message-ID: <Pine.LNX.4.44.0804010512010.22211-100000@smaragd.biophys.uni-duesseldorf.de>
+References: <20080331224318.4768c050@core>
+Mime-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:55188 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751551AbYDAG0b (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 1 Apr 2008 02:26:31 -0400
-Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
-	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id m316QTad010782
-	for <linux-ide@vger.kernel.org>; Mon, 31 Mar 2008 23:26:30 -0700
-In-Reply-To: <bug-10086-11633@http.bugzilla.kernel.org/>
+Received: from mail.rz.uni-duesseldorf.de ([134.99.128.30]:33633 "EHLO
+	mail.rz.uni-duesseldorf.de" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751922AbYDAGri (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 1 Apr 2008 02:47:38 -0400
+In-reply-to: <20080331224318.4768c050@core>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: Roman Zippel <zippel@linux-m68k.org>, Geert Uytterhoeven <geert@linux-m68k.org>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-ide@vger.kernel.org, Linux Kernel Development <linux-kernel@vger.kernel.org>, Linux/m68k <linux-m68k@vger.kernel.org>, Michael Schmitz <schmitz@debian.org>
 
-http://bugzilla.kernel.org/show_bug.cgi?id=10086
+Hi,
+
+> > That would require an additional data copy and a double byteswap on machines
+> > which are not that fast in first place...
+>
+> So use the blitter ;)
+>
+> At this point the future is not Commode Amiga or Atari TT and we risk
+> mess in core code for obscure platforms ?
+
+The Amiga isn't affected by this. Only Falcon and Q40 (Atari) are.
+
+Sorry for the mess in core code - ist there any other way for only driveid
+and packet data getting swapped? And can we actually use the device mapper
+to byte-swap the root partition?
+
+	Michael
 
 
-
-
-
-------- Comment #16 from gordonfarquharson@gmail.com  2008-03-31 23:26 -------
-Sorry for the delay in tackling this issue. The regression I see was introduced
-between 2.6.24 and 2.6.25-rc1. I have not been able to narrow it down further
-(yet) because the kernels I build using git bisect don't boot on my machine.
-I'm currently trying to find a commit before -rc1 that does boot, but I thought
-that I'd send an update.
-
-
--- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug, or are watching the assignee.
