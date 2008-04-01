@@ -1,45 +1,36 @@
-From: "Kuan Luo" <kluo@nvidia.com>
-Subject: RE: [patch 3/3] ata: SWNCQ should be enabled by default
-Date: Tue, 1 Apr 2008 13:24:51 +0800
-Message-ID: <15F501D1A78BD343BE8F4D8DB854566B1BFE2AF4@hkemmail01.nvidia.com>
-References: <200803282133.m2SLXlWk011463@imap1.linux-foundation.org> <47EE465E.80401@gmail.com> <47EE88C9.3020805@dunaweb.hu> <47EEDACA.4060400@gmail.com> <15F501D1A78BD343BE8F4D8DB854566B1BFE2AF1@hkemmail01.nvidia.com> <47F069D7.3010702@gmail.com> <47F1A888.3020706@shaw.ca> <47F1AADC.1080104@shaw.ca>
-Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+From: bugme-daemon@bugzilla.kernel.org
+Subject: [Bug 10086] 2.6.25-rc2 + smartd = hang
+Date: Mon, 31 Mar 2008 23:26:29 -0700 (PDT)
+Message-ID: <20080401062629.9F50610803F@picon.linux-foundation.org>
+References: <bug-10086-11633@http.bugzilla.kernel.org/>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hqemgate04.nvidia.com ([216.228.112.152]:13037 "EHLO
-	hqemgate04.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751461AbYDAF03 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 1 Apr 2008 01:26:29 -0400
-In-Reply-To: <47F1AADC.1080104@shaw.ca>
-Content-class: urn:content-classes:message
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:55188 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751551AbYDAG0b (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 1 Apr 2008 02:26:31 -0400
+Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
+	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id m316QTad010782
+	for <linux-ide@vger.kernel.org>; Mon, 31 Mar 2008 23:26:30 -0700
+In-Reply-To: <bug-10086-11633@http.bugzilla.kernel.org/>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Robert Hancock <hancockr@shaw.ca>
-Cc: Tejun Heo <htejun@gmail.com>, Zoltan Boszormenyi <zboszor@dunaweb.hu>, akpm@linux-foundation.org, jeff@garzik.org, linux-ide@vger.kernel.org, Peer Chen <pchen@nvidia.com>, Allen Martin <AMartin@nvidia.com>
+To: linux-ide@vger.kernel.org
 
-Robert wrote:
-> -Hotplug/hot-unplug fails to work properly, hotplug interrupts not 
-> raised (seemingly only on certain boards/configurations as I can't 
-> duplicate this problem). 
-> http://bugzilla.kernel.org/show_bug.cgi?id=8421
-> 
-I occasionly encountered this problem in one port under certain system,
-but didn't see this issue under other systems in the same mainboard.
-After adding the operation of manually clearing the added/removed
-interrupt bit in NV_INT_STATUS_CK804 register 
-in nv_adma_interrupt function,  i saw some improvement.  
+http://bugzilla.kernel.org/show_bug.cgi?id=10086
 
-The key problem is that no one who knows this controller comes to help
-to solve these issue.
-Given this disadvantage, i think disabling it maybe is a good choice.
-I don't know whether we need to continue to provide patch for adma after
-disabling adma function.
- 
------------------------------------------------------------------------------------
-This email message is for the sole use of the intended recipient(s) and may contain
-confidential information.  Any unauthorized review, use, disclosure or distribution
-is prohibited.  If you are not the intended recipient, please contact the sender by
-reply email and destroy all copies of the original message.
------------------------------------------------------------------------------------
+
+
+
+
+------- Comment #16 from gordonfarquharson@gmail.com  2008-03-31 23:26 -------
+Sorry for the delay in tackling this issue. The regression I see was introduced
+between 2.6.24 and 2.6.25-rc1. I have not been able to narrow it down further
+(yet) because the kernels I build using git bisect don't boot on my machine.
+I'm currently trying to find a commit before -rc1 that does boot, but I thought
+that I'd send an update.
+
+
+-- 
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug, or are watching the assignee.
