@@ -1,61 +1,35 @@
-From: Tomas Lund <tlund@nxs.se>
-Subject: Re: Need help understanding SATA error message.
-Date: Tue, 1 Apr 2008 09:11:44 +0200 (CEST)
-Message-ID: <Pine.LNX.4.61.0804010834280.5510@envy.nxs.se>
-References: <Pine.LNX.4.61.0803271554050.5510@envy.nxs.se> <47ED136F.9010501@rtr.ca>
- <47ED15D2.3080403@rtr.ca> <Pine.LNX.4.61.0803282315330.5510@envy.nxs.se>
- <47EDBC87.8090109@rtr.ca> <Pine.LNX.4.61.0803301659300.5510@envy.nxs.se>
- <47F0376F.2090000@gmail.com> <47F0FAD3.9060001@rtr.ca> <47F18127.8070509@gmail.com>
- <47F19764.9080705@rtr.ca>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [PATCH 5/5] falconide/q40ide: add ->atapi_*put_bytes and
+ ->ata_*put_data methods
+Date: Tue, 1 Apr 2008 09:12:40 +0100
+Message-ID: <20080401091240.420b3aeb@core>
+References: <20080331224318.4768c050@core>
+	<Pine.LNX.4.44.0804010512010.22211-100000@smaragd.biophys.uni-duesseldorf.de>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from envy.nxs.se ([212.247.200.182]:49853 "EHLO envy.nxs.se"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751963AbYDAHL4 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 1 Apr 2008 03:11:56 -0400
-In-Reply-To: <47F19764.9080705@rtr.ca>
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:59142 "EHLO
+	lxorguk.ukuu.org.uk" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1752437AbYDAIOB (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 1 Apr 2008 04:14:01 -0400
+In-Reply-To: <Pine.LNX.4.44.0804010512010.22211-100000@smaragd.biophys.uni-duesseldorf.de>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark Lord <liml@rtr.ca>
-Cc: linux-ide@vger.kernel.org
+To: Michael Schmitz <schmitz@smaragd.biophys.uni-duesseldorf.de>
+Cc: Roman Zippel <zippel@linux-m68k.org>, Geert Uytterhoeven <geert@linux-m68k.org>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-ide@vger.kernel.org, Linux Kernel Development <linux-kernel@vger.kernel.org>, Linux/m68k <linux-m68k@vger.kernel.org>, Michael Schmitz <schmitz@debian.org>
 
-On Mon, 31 Mar 2008, Mark Lord wrote:
+> Sorry for the mess in core code - ist there any other way for only driveid
+> and packet data getting swapped? And can we actually use the device mapper
+> to byte-swap the root partition?
 
-> Mmm.. the one Tomas Lund has is on what appears to be AHCI (ICH9R).
+Device Mapper can certainly support that if needed - I don't think it has
+a swab target currently but byteswapped is just a very bad crypto
+algorithm so you can use dm crypt target as a reference. Might not be a
+bad idea just to make the media shareable.
 
-Yes, indeed:
+The only other way I can see to do it would be to split the ATA transfer
+functions into two sets one for media data and one for other stuff - but
+then how do you handle iso9660 cd ?
 
-# lspci -v -nn -s 00:1f.2
-00:1f.2 SATA controller [0106]: Intel Corporation 82801IR/IO/IH (ICH9R/DO/DH) 6 port SATA AHCI Controller [8086:2922] (rev 02) (prog-if 01 [AHCI 1.0])
-         Subsystem: Super Micro Computer Inc Unknown device [15d9:d180]
-         Flags: bus master, 66MHz, medium devsel, latency 0, IRQ 379
-         I/O ports at 1c30 [size=8]
-         I/O ports at 1c24 [size=4]
-         I/O ports at 1c28 [size=8]
-         I/O ports at 1c20 [size=4]
-         I/O ports at 18e0 [size=32]
-         Memory at d8601000 (32-bit, non-prefetchable) [size=2K]
-         Capabilities: [80] Message Signalled Interrupts: Mask- 64bit- Queue=0/4 Enable+
-         Capabilities: [70] Power Management version 3
-         Capabilities: [a8] #12 [0010]
-         Capabilities: [b0] #13 [0306]
-
-(dmesg output available at http://tlund.pp.se/envy4_dmesg.txt)
-
-> Tomas, if you move the "problem drive" to another port, does the error 
-> follow the drive, or stay with the same port?
->
-> (Hopefully you can try that)
-
-Yes, the drive has already been moved, and the problem did indeed move 
-with the drive. However, I am currently stressing the drives by copying 
-large amounts of files, in paralel sessions, and issuing "sync" every 30 
-seconds, and I have not seen the error since Mar 28 18:17 (current time 
-here is Apr 1 09:10).
-
-The system does not have any data on it yet, and I am not really in a 
-hurry to get it into production. Willing to try anything to track this 
-problem down.
-
-//tlund
+Alan
