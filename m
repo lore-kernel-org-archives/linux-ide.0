@@ -1,65 +1,70 @@
-From: Mark Lord <liml@rtr.ca>
-Subject: Re: [PATCH 2/5] sata_mv clean up mv_stop_edma usage
-Date: Wed, 02 Apr 2008 15:47:31 -0400
-Message-ID: <47F3E2D3.5020409@rtr.ca>
-References: <47F1736F.8020104@rtr.ca> <47F17510.7060902@rtr.ca> <47F2E88E.4000401@gmail.com> <47F3DF6D.8050803@rtr.ca> <47F3E1B4.90609@pobox.com>
+From: lsorense@csclub.uwaterloo.ca (Lennart Sorensen)
+Subject: Re: No IDE drivers loaded for Toshiba Satellite 320 CDS
+Date: Wed, 2 Apr 2008 15:49:38 -0400
+Message-ID: <20080402194938.GI24237@csclub.uwaterloo.ca>
+References: <200804021524.27222.elendil@planet.nl> <200804021629.41153.elendil@planet.nl> <20080402154636.GH24237@csclub.uwaterloo.ca> <200804021820.04610.elendil@planet.nl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([76.10.145.34]:1102 "EHLO mail.rtr.ca"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757231AbYDBTrc (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 2 Apr 2008 15:47:32 -0400
-In-Reply-To: <47F3E1B4.90609@pobox.com>
+Received: from caffeine.csclub.uwaterloo.ca ([129.97.134.17]:60121 "EHLO
+	caffeine.csclub.uwaterloo.ca" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1757632AbYDBTtj (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 2 Apr 2008 15:49:39 -0400
+Content-Disposition: inline
+In-Reply-To: <200804021820.04610.elendil@planet.nl>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: Tejun Heo <htejun@gmail.com>, IDE/ATA development list <linux-ide@vger.kernel.org>
+To: Frans Pop <elendil@planet.nl>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 
-Jeff Garzik wrote:
-> Mark Lord wrote:
->> Tejun Heo wrote:
->>> Hello, Mark.
->>>
->>> Mark Lord wrote:
->>>> -    /* now properly wait for the eDMA to stop */
->>>> -    for (i = 1000; i > 0; i--) {
->>>> -        reg = readl(port_mmio + EDMA_CMD_OFS);
->>>> +    /* Wait for the chip to confirm eDMA is off. */
->>>> +    for (i = 10000; i > 0; i--) {
->>>> +        u32 reg = readl(port_mmio + EDMA_CMD_OFS);
->>>>         if (!(reg & EDMA_EN))
->>>> -            break;
->>>> -
->>>> -        udelay(100);
->>>> -    }
->>>> -
->>>> -    if (reg & EDMA_EN) {
->>>> -        ata_port_printk(ap, KERN_ERR, "Unable to stop eDMA\n");
->>>> -        err = -EIO;
->>>> +            return 0;
->>>> +        udelay(10);
->>>
->>> Unless the hardware calls for really short polling interval, I think 
->>> it's generally better to limit polling with jiffies and using 
->>> msleep() instead of delays.
->> ..
->>
->> Oh, absolutely.  I was just leaving Jeff's (?) original udelay() in there
->> for now, to avoid another possible failure while testing the new stuff.
->>
->> But if we can *guarantee* that .qc_issue and .port_stop are
->> always invoked only from thread context, then.. no problemo.
+On Wed, Apr 02, 2008 at 06:20:03PM +0200, Frans Pop wrote:
+> Well, what the installer used to do for Sarge and Etch was basically to load 
+> _all_ drivers (including ide-generic) manually by default, which is totally 
+> useless as most devices are perfectly autodetected nowadays. It also wastes 
+> memory as you'd end up having a lot of unused drivers in memory.
 > 
-> qc_issue is inside spin_lock_irqsave()
-..
+> Post-etch we decided to change that and currently drivers are only loaded if 
+> autodetected (with some exceptions, such as for sparc sbus and hppa bus). 
+> We were aware that this could cause some regressions, but so far this is the 
+> first real report.
+> 
+> Another change in Debian since Etch is that initramfs-tools no longer loads 
+> ide-generic by default, which IMO is also a good thing. We can easily make 
+> it load ide-generic when needed, but for that again we first have to know 
+> that it _is_ needed.
 
-Okay, let's leave it alone for now.
-Perhaps later it can be reworked again to find
-a way to busy wait without messing up other stuff.
+Well, my educated guess (and that's all it is) is that any system with a
+386, 486 or pentium might have an ISA based IDE controller.  For that
+matter I used to have an ISA based IDE controller on my sound card in a
+PPro, although that one was PnP capable (although I always ran with that
+disabled because it sucked).
 
-Nearly all of the time it exits rapidly anyway.
+Essentially if you have an ISA bus there could be an IDE controller
+there.  No way to really know without probing the standard IDE ports,
+which is pretty much what ide-generic does as far as I can tell.  I
+think many architectures other than x86 also have generic IDE
+controllers that are supported as long as ide-generic is loaded with the
+architecture specific code having defined the ports to look at.
 
-Cheers
+> Yes, that could be one way to implement it: load it and then check if that 
+> added any devices.
 
+Well even if you see other disks doesn't mean you don't also have an old
+IDE controller you want to use, so probably load it and see if it finds
+any disks is the best bet after loading all the other probeable drivers
+first.
+
+> That would still leave us with the problem of not knowing whether it needs 
+> to be added for initramfs-tools or not.
+> 
+> If there are no other suggestions, I guess we'll go with a "load and check" 
+> implementation. Thanks a lot for your input.
+
+I think that's the best you can do.
+
+> Anybody know how other distributions deal with this?
+
+I gave up other distributions for Debian in 1999, so I can't help there.
+
+-- 
+Len Sorensen
