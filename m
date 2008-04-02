@@ -1,139 +1,61 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: 2.6.24.X: SATA/AHCI related boot delay. - not with 2.6.24.3
-Date: Wed, 02 Apr 2008 12:57:44 +0900
-Message-ID: <47F30438.40506@gmail.com>
-References: <200803091922.33083.volker.armin.hemmann@tu-clausthal.de> <200803191108.18577.volker.armin.hemmann@tu-clausthal.de> <47E0FC47.8040902@gmail.com> <200803191455.14380.volker.armin.hemmann@tu-clausthal.de>
+From: Tomas Lund <tlund@nxs.se>
+Subject: Re: Need help understanding SATA error message.
+Date: Wed, 2 Apr 2008 07:17:24 +0200 (CEST)
+Message-ID: <Pine.LNX.4.61.0804020705120.5510@envy.nxs.se>
+References: <Pine.LNX.4.61.0803271554050.5510@envy.nxs.se> <47ED136F.9010501@rtr.ca>
+ <47ED15D2.3080403@rtr.ca> <Pine.LNX.4.61.0803282315330.5510@envy.nxs.se>
+ <47EDBC87.8090109@rtr.ca> <Pine.LNX.4.61.0803301659300.5510@envy.nxs.se>
+ <47F0376F.2090000@gmail.com> <47F0FAD3.9060001@rtr.ca> <47F18127.8070509@gmail.com>
+ <47F19764.9080705@rtr.ca> <Pine.LNX.4.61.0804010834280.5510@envy.nxs.se>
+ <47F224F9.40906@rtr.ca> <47F25FAD.1090200@gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------080301080803060304050302"
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wf-out-1314.google.com ([209.85.200.173]:2133 "EHLO
-	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754333AbYDBD5w (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 1 Apr 2008 23:57:52 -0400
-Received: by wf-out-1314.google.com with SMTP id 28so2421243wff.4
-        for <linux-ide@vger.kernel.org>; Tue, 01 Apr 2008 20:57:52 -0700 (PDT)
-In-Reply-To: <200803191455.14380.volker.armin.hemmann@tu-clausthal.de>
+Received: from envy.nxs.se ([212.247.200.182]:47408 "EHLO envy.nxs.se"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751074AbYDBFRh (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 2 Apr 2008 01:17:37 -0400
+In-Reply-To: <47F25FAD.1090200@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Volker Armin Hemmann <volker.armin.hemmann@tu-clausthal.de>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: Mark Lord <liml@rtr.ca>, linux-ide@vger.kernel.org
 
-This is a multi-part message in MIME format.
---------------080301080803060304050302
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 8bit
+On Wed, 2 Apr 2008, Tejun Heo wrote:
 
-Volker Armin Hemmann wrote:
->On Mittwoch, 19. März 2008, Tejun Heo wrote:
->> Volker Armin Hemmann wrote:
->>> On Mittwoch, 19. März 2008, Tejun Heo wrote:
->>>> x UDMA/133 abar m8192@0xf9dfc000 port 0xf9dfc200
->>>>
->>>>> irq 315
->>>>> [   38.125479] ata4: SATA max UDMA/133 abar m8192@0xf9dfc000 port
->>>>> 0xf9dfc280 irq 315
->>>>> [   38.597035] ata1: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
->>>>> [   38.597732] ata1.00: ATA-7: WDC WD1600JS-00MHB1, 10.02E01, max
->>>>> UDMA/133 [   38.597775] ata1.00: 312581808 sectors, multi 16: LBA48
->>>>> [   38.598405] ata1.00: configured for UDMA/133
->>>>> [   39.069342] ata2: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
->>>>> [   39.084225] ata2.00: ATA-8: SAMSUNG HD501LJ, CR100-12, max UDMA7
->>>>> [   39.084264] ata2.00: 976773168 sectors, multi 16: LBA48 NCQ (depth
->>>>> 0/32) [   39.086268] ata2.00: configured for UDMA/133
->>>> So, just to confirm.  With the updated patch, you don't see any problem,
->>>> right?
->>> Correct. With the updated patch I don't see problems in 'non-raid' mode.
->>> AHCI mode still has problems without nosmi. But that is an entirely
->>> different problem, right?
->> Yeap, can you please post the result of "lspci -nn"?
-> 
-> with AHCI+nosmi, 2.6.24.3:
-> 00:0a.0 SATA controller [0106]: nVidia Corporation MCP65 AHCI Controller 
-> [10de:044d] (rev a1)
+> I've never really seen transmission errors resulting in FLUSH failure. 
+> All that needs to be transferred is the opcode and according to the 
+> SMART log, the drive got the command right but still aborted it.  The 
+> only thing I can think of right now is that dd over the whole disk put 
+> sanity into the disk but it's just a wild speculation.
 
-Sorry about the long delay.  Can you please test the attached patch in 
-both ahci and non-ahci modes w/o pci=nomsi and post resulting boot logs?
+The entire disk was overwriten from /dev/zero once, no errors and no 
+re-allocated sectors.
 
-> I booted into systemrescuecd (which is the easiest way to get the error and be 
-> able to safe the stuff) - lspci is of course identical, but /proc/interrupts 
-> is not.
-> 
-> 2.6.24.3:
-> cat /proc/interrupts
->            CPU0       CPU1
->   0:         57          1   IO-APIC-edge      timer
->   1:          1        544   IO-APIC-edge      i8042
->   8:          0          1   IO-APIC-edge      rtc
->   9:          0          1   IO-APIC-fasteoi   acpi
->  12:          0          3   IO-APIC-edge      i8042
->  17:         22      21598   IO-APIC-fasteoi   nvidia
->  18:          0          0   IO-APIC-fasteoi   EMU10K1
->  19:          5       1132   IO-APIC-fasteoi   eth0
->  22:         30      21627   IO-APIC-fasteoi   ehci_hcd:usb1
->  23:         29      23078   IO-APIC-fasteoi   ahci
-> NMI:          0          0   Non-maskable interrupts
-> LOC:      41299      60204   Local timer interrupts
-> RES:      14872      22506   Rescheduling interrupts
-> CAL:       1783        173   function call interrupts
-> TLB:       2668       2406   TLB shootdowns
-> TRM:          0          0   Thermal event interrupts
-> THR:          0          0   Threshold APIC interrupts
-> SPU:          0          0   Spurious interrupts
-> ERR:          0
+> Yeap, I would love to see whether the problem reproduces itself when 
+> moved back to the original port.
 
-Does the 2.6.24.3 kernel have MSI turned on?
+Please note that this problem did start with the disk on the third port, 
+and that it is currently on the second port. same errors on both port, but 
+only with this specific disk. the three other disks have not logged any 
+errors.
 
-Thanks.
+I got 3 errors during the night, first one (same again) pasted here:
 
--- 
-tejun
+Apr  2 04:14:17 envy kernel: ata2.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x0
+Apr  2 04:14:17 envy kernel: ata2.00: irq_stat 0x40000001
+Apr  2 04:14:17 envy kernel: ata2.00: cmd ea/00:00:00:00:00/00:00:00:00:00/a0 tag 0
+Apr  2 04:14:17 envy kernel:          res 51/04:00:0a:24:f9/00:00:00:00:00/a9 Emask 0x1 (device error)
+Apr  2 04:14:17 envy kernel: ata2.00: status: { DRDY ERR }
+Apr  2 04:14:17 envy kernel: ata2.00: error: { ABRT }
+Apr  2 04:14:17 envy kernel: ata2.00: configured for UDMA/133
+Apr  2 04:14:18 envy kernel: ata2: EH complete
+Apr  2 04:14:18 envy kernel: sd 1:0:0:0: [sdb] 1953525168 512-byte hardware sectors (1000205 MB)
+Apr  2 04:14:18 envy kernel: sd 1:0:0:0: [sdb] Write Protect is off
+Apr  2 04:14:18 envy kernel: sd 1:0:0:0: [sdb] Mode Sense: 00 3a 00 00
+Apr  2 04:14:18 envy kernel: sd 1:0:0:0: [sdb] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
 
---------------080301080803060304050302
-Content-Type: text/x-patch;
- name="mcp65-ahci-debug.patch"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="mcp65-ahci-debug.patch"
+There has been some other errors aswell, i am uploading the entire 
+"kern.log" to http://tlund.pp.se/envy4_kern.txt
 
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index 4851988..930fe22 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -7134,7 +7134,7 @@ int ata_host_register(struct ata_host *host, struct scsi_host_template *sht)
- 			ehi->probe_mask =
- 				(1 << ata_link_max_devices(&ap->link)) - 1;
- 			ehi->action |= ATA_EH_SOFTRESET;
--			ehi->flags |= ATA_EHI_NO_AUTOPSY | ATA_EHI_QUIET;
-+			ehi->flags |= ATA_EHI_NO_AUTOPSY/* | ATA_EHI_QUIET*/;
- 
- 			ap->pflags &= ~ATA_PFLAG_INITIALIZING;
- 			ap->pflags |= ATA_PFLAG_LOADING;
-diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
-index a583032..bbf9273 100644
---- a/drivers/ata/libata-eh.c
-+++ b/drivers/ata/libata-eh.c
-@@ -2190,6 +2190,8 @@ int ata_eh_reset(struct ata_link *link, int classify,
- 		}
- 	}
- 
-+	ehc->i.action |= ATA_EH_HARDRESET;
-+
- 	/* prereset() might have modified ehc->i.action */
- 	if (ehc->i.action & ATA_EH_HARDRESET)
- 		reset = hardreset;
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index e887aa4..a43be09 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -1855,6 +1855,8 @@ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_BROADCOM,
- DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_BROADCOM,
- 			PCI_DEVICE_ID_TIGON3_5715S,
- 			quirk_msi_intx_disable_bug);
-+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_NVIDIA, 0x044d,
-+			quirk_msi_intx_disable_bug);
- 
- DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_ATI, 0x4390,
- 			quirk_msi_intx_disable_ati_bug);
-
---------------080301080803060304050302--
+//tlund
