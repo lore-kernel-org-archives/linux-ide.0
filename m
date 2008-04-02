@@ -1,49 +1,48 @@
-From: Mark Lord <liml@rtr.ca>
-Subject: Re: [PATCH 4/5] sata_mv new mv_sata_hardreset handler
-Date: Wed, 02 Apr 2008 15:51:04 -0400
-Message-ID: <47F3E3A8.10309@rtr.ca>
-References: <47F1736F.8020104@rtr.ca> <47F1755F.9000303@rtr.ca> <47F2F002.9070401@gmail.com>
+From: lsorense@csclub.uwaterloo.ca (Lennart Sorensen)
+Subject: Re: No IDE drivers loaded for Toshiba Satellite 320 CDS
+Date: Wed, 2 Apr 2008 16:05:49 -0400
+Message-ID: <20080402200549.GC24239@csclub.uwaterloo.ca>
+References: <200804021524.27222.elendil@planet.nl> <200804021833.49295.linux@rainbow-software.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([76.10.145.34]:1105 "EHLO mail.rtr.ca"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1760543AbYDBTvF (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 2 Apr 2008 15:51:05 -0400
-In-Reply-To: <47F2F002.9070401@gmail.com>
+Received: from caffeine.csclub.uwaterloo.ca ([129.97.134.17]:42179 "EHLO
+	caffeine.csclub.uwaterloo.ca" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755344AbYDBUFu (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 2 Apr 2008 16:05:50 -0400
+Content-Disposition: inline
+In-Reply-To: <200804021833.49295.linux@rainbow-software.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: IDE/ATA development list <linux-ide@vger.kernel.org>, Jeff Garzik <jgarzik@pobox.com>
+To: Ondrej Zary <linux@rainbow-software.org>
+Cc: Frans Pop <elendil@planet.nl>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 
-Tejun Heo wrote:
-> Mark Lord wrote:
-..
->> +    /* FIXME:
->> +     * Except for the outer do-while construct below, this function
->> +     * is an exact clone of sata_std_hardreset() from libata-core.c.
->> +     *
->> +     * Once this driver is stable, we should re-org libata so we can 
->> share
->> +     * more of that code, rather than duplicating so much of it here
->> +     * and in other drivers.
->> +     */
+On Wed, Apr 02, 2008 at 06:33:46PM +0200, Ondrej Zary wrote:
+> On Wednesday 02 April 2008 15:24:26 Frans Pop wrote:
+> > Output of lspci -nn:
+> > 00:00.0 Host bridge [0600]: Toshiba America Info Systems CPU to PCI bridge
+> > [1179:0601] (rev a0)
+> > 00:04.0 VGA compatible controller [0300]: Chips and Technologies F65555
+> > HiQVPro [102c:00e5] (rev c6)
+> > 00:0b.0 USB Controller [0c03]: NEC Corporation USB [1033:0035] (rev 02)
+> > 00:11.0 Communication controller [0780]: Toshiba America Info Systems FIR
+> > Port [1179:0701] (rev 21)
+> > 00:13.0 CardBus bridge [0607]: Toshiba America Info Systems ToPIC97
+> > [1179:060f] (rev 20)
+> > 00:13.1 CardBus bridge [0607]: Toshiba America Info Systems ToPIC97
+> > [1179:060f] (rev 20)
 > 
-> After modularize patchsets, sata_link_hardreset() does all the chores 
-> needed around hardreset and sata_mv should be able to just build a loop 
-> around it.
-..
+> Looks like the controller is not a separate PCI device. Toshiba provides Bus 
+> Mastering driver for Windows 95:
+> http://209.167.114.38/support/download/files_Archive/Index/windows_95_files.htm
+> 
+> So the controller probably can do DMA but it's not a standard IDE controller. 
+> And looks like there's no driver in the kernel for it.
 
-Mmm... I don't see how this helps.
+I don't think that bus master package is for that machine.  The
+datasheet for it mentioned PIO4 max.  I think the BUSIDE.EXE is for
+machines with the early PIIX controller (which that particular machine
+clearly doesn't have since it has no PCI IDE controller).
 
-The bulk of mv_sata_hardreset() is from sata_std_hardreset().
-
-The only part those two do *not* have in common, is that
-sata_mv needs to do it's own equivalent of sata_link_hardreset(),
-so sata_link_hardreset() cannot be reused here.  Wrapper or not.
-
-Now, if we had a per-LLD .link_hardreset op, defaulting to sata_link_hardreset,
-then this would be trivial.
-
-??
+-- 
+Len Sorensen
