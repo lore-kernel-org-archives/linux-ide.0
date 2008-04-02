@@ -1,61 +1,73 @@
-From: Tomas Lund <tlund@nxs.se>
-Subject: Re: Need help understanding SATA error message.
-Date: Wed, 2 Apr 2008 07:17:24 +0200 (CEST)
-Message-ID: <Pine.LNX.4.61.0804020705120.5510@envy.nxs.se>
-References: <Pine.LNX.4.61.0803271554050.5510@envy.nxs.se> <47ED136F.9010501@rtr.ca>
- <47ED15D2.3080403@rtr.ca> <Pine.LNX.4.61.0803282315330.5510@envy.nxs.se>
- <47EDBC87.8090109@rtr.ca> <Pine.LNX.4.61.0803301659300.5510@envy.nxs.se>
- <47F0376F.2090000@gmail.com> <47F0FAD3.9060001@rtr.ca> <47F18127.8070509@gmail.com>
- <47F19764.9080705@rtr.ca> <Pine.LNX.4.61.0804010834280.5510@envy.nxs.se>
- <47F224F9.40906@rtr.ca> <47F25FAD.1090200@gmail.com>
+From: "Gordon Farquharson" <gordonfarquharson@gmail.com>
+Subject: 2.5.25 regression from 2.6.24: smartctl fails to access drive
+Date: Wed, 2 Apr 2008 00:00:11 -0600
+Message-ID: <97a0a9ac0804012300qeb3e63gbb7e30ffa1ccdb70@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from envy.nxs.se ([212.247.200.182]:47408 "EHLO envy.nxs.se"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751074AbYDBFRh (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 2 Apr 2008 01:17:37 -0400
-In-Reply-To: <47F25FAD.1090200@gmail.com>
+Received: from an-out-0708.google.com ([209.85.132.242]:42438 "EHLO
+	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751501AbYDBGAN (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 2 Apr 2008 02:00:13 -0400
+Received: by an-out-0708.google.com with SMTP id d31so650485and.103
+        for <linux-ide@vger.kernel.org>; Tue, 01 Apr 2008 23:00:12 -0700 (PDT)
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Mark Lord <liml@rtr.ca>, linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
+Cc: bzolnier@gmail.com
 
-On Wed, 2 Apr 2008, Tejun Heo wrote:
+On a GLAN Tank (arm/mach-iop32x) smartctl fails with kernel versions
+2.6.25-rc1 and later with the following error messages:
 
-> I've never really seen transmission errors resulting in FLUSH failure. 
-> All that needs to be transferred is the opcode and according to the 
-> SMART log, the drive got the command right but still aborted it.  The 
-> only thing I can think of right now is that dd over the whole disk put 
-> sanity into the disk but it's just a wild speculation.
+hda: task_no_data_intr: status=0x51 { DriveReady SeekComplete Error }
+hda: task_no_data_intr: error=0x04 { DriveStatusError }
+ide: failed opcode was: 0xb0
 
-The entire disk was overwriten from /dev/zero once, no errors and no 
-re-allocated sectors.
+smartctl does not fail with kernel version 2.6.24 on this platform.
+The version of smartctl is the same for both kernel tests.
 
-> Yeap, I would love to see whether the problem reproduces itself when 
-> moved back to the original port.
+This issue has been discussed in
+http://bugzilla.kernel.org/show_bug.cgi?id=10086 and based on the
+tests conducted, Bartlomiej Zolnierkiewicz wrote,
 
-Please note that this problem did start with the disk on the third port, 
-and that it is currently on the second port. same errors on both port, but 
-only with this specific disk. the three other disks have not logged any 
-errors.
+<--- quote --->
 
-I got 3 errors during the night, first one (same again) pasted here:
+Thanks, from looking at the log:
 
-Apr  2 04:14:17 envy kernel: ata2.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x0
-Apr  2 04:14:17 envy kernel: ata2.00: irq_stat 0x40000001
-Apr  2 04:14:17 envy kernel: ata2.00: cmd ea/00:00:00:00:00/00:00:00:00:00/a0 tag 0
-Apr  2 04:14:17 envy kernel:          res 51/04:00:0a:24:f9/00:00:00:00:00/a9 Emask 0x1 (device error)
-Apr  2 04:14:17 envy kernel: ata2.00: status: { DRDY ERR }
-Apr  2 04:14:17 envy kernel: ata2.00: error: { ABRT }
-Apr  2 04:14:17 envy kernel: ata2.00: configured for UDMA/133
-Apr  2 04:14:18 envy kernel: ata2: EH complete
-Apr  2 04:14:18 envy kernel: sd 1:0:0:0: [sdb] 1953525168 512-byte hardware sectors (1000205 MB)
-Apr  2 04:14:18 envy kernel: sd 1:0:0:0: [sdb] Write Protect is off
-Apr  2 04:14:18 envy kernel: sd 1:0:0:0: [sdb] Mode Sense: 00 3a 00 00
-Apr  2 04:14:18 envy kernel: sd 1:0:0:0: [sdb] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+| hda: tf: feat 0xd8 nsect 0x00 lbal 0x01 lbam 0x4f lbah 0xc2 dev 0x00 cmd 0xb0
+| hda: hob: nsect 0x00 lbal 0x00 lbam 0x00 lbah 0x00
+| hda: tf: feat 0x00 nsect 0x00 lbal 0x00 lbam 0x00 lbah 0x00 dev 0x00 cmd 0xb0
+| hda: hob: nsect 0x00 lbal 0x00 lbam 0x00 lbah 0x00
 
-There has been some other errors aswell, i am uploading the entire 
-"kern.log" to http://tlund.pp.se/envy4_kern.txt
+We got SMART command (cmd 0xb0) with all other registers set to 0x00 and it is
+(theoretically) impossible to get it through HDIO_DRIVE_CMD (since
+ide_cmd_ioctl() always sets lbam to 0x4f and lbah to 0xc2).  Maybe it was
+passed through HDIO_DRIVE_TASK or HDIO_DRIVE_TASKFILE or we have the bug
+somewhere (N.B. the behavior of erroing it is correct if the user-space
+actually requested such command)...
 
-//tlund
+It seems to be a distinct problem from the one that was hit by Anders and later
+fixed by Linus.  Could you try git-bisecting it, please?
+
+<--- end quote --->
+
+Since then, I manually found that the problem commit occurred between
+2.6.24 and 2.6.25-rc1. At that point, I started using git-bisect, but
+all kernels I have tested so far fail to boot on the GLAN Tank.
+
+Unfortunately, I won't have access to the hardware for the next two
+and half weeks, and I have run out of time to track down the commit
+that is causing the kernels to fail to boot and therefore also the
+commit that is causing smartctl to fail. I wanted to post this message
+to the mailing list as a record of the work done to date and so that I
+can pick up this problem when I have access to the hardware again.
+
+Sorry for not being able to track this problem down before 2.6.25 is released.
+
+Gordon
+
+-- 
+Gordon Farquharson
+GnuPG Key ID: 32D6D676
