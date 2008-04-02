@@ -1,28 +1,35 @@
-From: lsorense@csclub.uwaterloo.ca (Lennart Sorensen)
+From: Ondrej Zary <linux@rainbow-software.org>
 Subject: Re: No IDE drivers loaded for Toshiba Satellite 320 CDS
-Date: Wed, 2 Apr 2008 16:22:25 -0400
-Message-ID: <20080402202225.GJ24237@csclub.uwaterloo.ca>
-References: <200804021524.27222.elendil@planet.nl> <200804021833.49295.linux@rainbow-software.org> <20080402200549.GC24239@csclub.uwaterloo.ca> <200804022210.26736.linux@rainbow-software.org>
+Date: Wed, 2 Apr 2008 22:34:58 +0200
+Message-ID: <200804022235.01433.linux@rainbow-software.org>
+References: <200804021524.27222.elendil@planet.nl> <200804022210.26736.linux@rainbow-software.org> <20080402202225.GJ24237@csclub.uwaterloo.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from caffeine.csclub.uwaterloo.ca ([129.97.134.17]:54611 "EHLO
-	caffeine.csclub.uwaterloo.ca" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1763034AbYDBUW0 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 2 Apr 2008 16:22:26 -0400
+Received: from mail.atlantis.sk ([80.94.52.35]:45384 "EHLO mail.atlantis.sk"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1763079AbYDBUfI (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 2 Apr 2008 16:35:08 -0400
+In-Reply-To: <20080402202225.GJ24237@csclub.uwaterloo.ca>
 Content-Disposition: inline
-In-Reply-To: <200804022210.26736.linux@rainbow-software.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Ondrej Zary <linux@rainbow-software.org>
+To: Lennart Sorensen <lsorense@csclub.uwaterloo.ca>
 Cc: Frans Pop <elendil@planet.nl>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 
-On Wed, Apr 02, 2008 at 10:10:23PM +0200, Ondrej Zary wrote:
-> I mean S320BIDE.EXE - that's for this machine only.
+On Wednesday 02 April 2008 22:22:25 Lennart Sorensen wrote:
+> On Wed, Apr 02, 2008 at 10:10:23PM +0200, Ondrej Zary wrote:
+> > I mean S320BIDE.EXE - that's for this machine only.
+>
+> Hmm, I missed that one.  I wonder how they do it.  Well ISA did support
+> bus mastering DMA although it seems rare to implement it.  Or it could
+> be VLB style.
 
-Hmm, I missed that one.  I wonder how they do it.  Well ISA did support
-bus mastering DMA although it seems rare to implement it.  Or it could
-be VLB style.
+I suspect that the IDE controller is integrated into the Toshiba chipset but 
+does not appear as a separate PCI device. It could be controlled by some 
+registers of the "host-bridge" or some other device.
 
 -- 
-Len Sorensen
+Ondrej Zary
