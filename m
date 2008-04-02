@@ -1,71 +1,40 @@
-From: Andrew Morton <akpm@linux-foundation.org>
-Subject: Re: [Bugme-new] [Bug 10379] New: when unloading ahci driver on ATI
- SB700 controller and Western digital cavier 160 GB Hard drive cache is not
- flushed to the media
-Date: Tue, 1 Apr 2008 23:04:21 -0700
-Message-ID: <20080401230421.04a4592e.akpm@linux-foundation.org>
-References: <bug-10379-10286@http.bugzilla.kernel.org/>
+From: "Gordon Farquharson" <gordonfarquharson@gmail.com>
+Subject: Re: 2.5.25 regression from 2.6.24: smartctl fails to access drive
+Date: Wed, 2 Apr 2008 00:06:03 -0600
+Message-ID: <97a0a9ac0804012306h18c83defk99231717100b7a70@mail.gmail.com>
+References: <97a0a9ac0804012300qeb3e63gbb7e30ffa1ccdb70@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:56919 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752000AbYDBGE3 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 2 Apr 2008 02:04:29 -0400
-In-Reply-To: <bug-10379-10286@http.bugzilla.kernel.org/>
+Received: from hs-out-0708.google.com ([64.233.178.240]:25073 "EHLO
+	hs-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751501AbYDBGGF (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 2 Apr 2008 02:06:05 -0400
+Received: by hs-out-0708.google.com with SMTP id 4so2000297hsl.5
+        for <linux-ide@vger.kernel.org>; Tue, 01 Apr 2008 23:06:03 -0700 (PDT)
+In-Reply-To: <97a0a9ac0804012300qeb3e63gbb7e30ffa1ccdb70@mail.gmail.com>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
-Cc: bugme-daemon@bugzilla.kernel.org, syed.azam@hp.com
+Cc: bzolnier@gmail.com
 
-On Tue,  1 Apr 2008 22:41:06 -0700 (PDT) bugme-daemon@bugzilla.kernel.org wrote:
+Hi All
 
-> http://bugzilla.kernel.org/show_bug.cgi?id=10379
-> 
->            Summary: when unloading ahci driver on ATI SB700 controller and
->                     Western digital cavier 160 GB Hard drive cache is not
->                     flushed to the media
->            Product: Drivers
->            Version: 2.5
->      KernelVersion: 2.6.23.11
->           Platform: All
->         OS/Version: Linux
->               Tree: Mainline
->             Status: NEW
->           Severity: normal
->           Priority: P1
->          Component: Other
->         AssignedTo: drivers_other@kernel-bugs.osdl.org
->         ReportedBy: syed.azam@hp.com
-> 
-> 
-> Latest working kernel version:unknown
-> Earliest failing kernel version:2.6.23.11
-> Distribution:vanilla kernel
-> Hardware Environment: ATI SB700 and Western digital 160 GB HD in legacy ide
-> mode using ahci/atiixp
-> Software Environment: AHCI
-> Problem Description:
-> rmmod ahci (no syncronization of sda)
-> modprobe ahci (drive is reset)
-> 
-> the painful soloution is to rmmod and modprobe ahci driver
-> 
-> The need to remove the ahci module is there because some small data writes are
-> not flushed to the media even after sync command is issued. if Reboot is issued
-> it works but if you lose power or suddenly switch off using power button the
-> writes which allegdley already returned success are not yet commited to media.
-> 
-> MS Windows does not have this issue.
-> 
-> HD experts told me that comreset is needed.
-> 
-> 
-> 
-> 
-> 
-> 
-> Steps to reproduce:
-> 
+On Wed, Apr 2, 2008 at 12:00 AM, Gordon Farquharson
+<gordonfarquharson@gmail.com> wrote:
 
+>  Since then, I manually found that the problem commit occurred between
+>  2.6.24 and 2.6.25-rc1. At that point, I started using git-bisect, but
+>  all kernels I have tested so far fail to boot on the GLAN Tank.
+
+Update: commit 4383f18b7f94a4d668c5eec68645c75d44556235 does boot, but
+smartctl fails with this kernel. I may have time to do a couple of
+more git-bisects.
+
+Gordon
+
+-- 
+Gordon Farquharson
+GnuPG Key ID: 32D6D676
