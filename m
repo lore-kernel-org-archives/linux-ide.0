@@ -1,68 +1,60 @@
-From: Frans Pop <elendil@planet.nl>
+From: Ondrej Zary <linux@rainbow-software.org>
 Subject: Re: No IDE drivers loaded for Toshiba Satellite 320 CDS
-Date: Wed, 2 Apr 2008 18:20:03 +0200
-Message-ID: <200804021820.04610.elendil@planet.nl>
-References: <200804021524.27222.elendil@planet.nl> <200804021629.41153.elendil@planet.nl> <20080402154636.GH24237@csclub.uwaterloo.ca>
+Date: Wed, 2 Apr 2008 18:33:46 +0200
+Message-ID: <200804021833.49295.linux@rainbow-software.org>
+References: <200804021524.27222.elendil@planet.nl>
 Mime-Version: 1.0
 Content-Type: text/plain;
   charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from cpsmtpo-eml03.kpnxchange.com ([213.75.38.152]:58090 "EHLO
-	cpsmtpo-eml03.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756483AbYDBQUJ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 2 Apr 2008 12:20:09 -0400
-In-Reply-To: <20080402154636.GH24237@csclub.uwaterloo.ca>
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1759215AbYDBQeQ@vger.kernel.org>
+In-Reply-To: <200804021524.27222.elendil@planet.nl>
 Content-Disposition: inline
-Sender: linux-ide-owner@vger.kernel.org
-List-Id: linux-ide@vger.kernel.org
-To: Lennart Sorensen <lsorense@csclub.uwaterloo.ca>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Frans Pop <elendil@planet.nl>
 Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+List-Id: linux-ide@vger.kernel.org
 
-On Wednesday 02 April 2008, Lennart Sorensen wrote:
-> I am sure the debian installer used to always load ide-generic after
-> trying everything else.  There was probably a reason for that.  You
-> never have been able to detect isa devices releably (even after pnp was
-> invented).
-
-Well, what the installer used to do for Sarge and Etch was basically to load 
-_all_ drivers (including ide-generic) manually by default, which is totally 
-useless as most devices are perfectly autodetected nowadays. It also wastes 
-memory as you'd end up having a lot of unused drivers in memory.
-
-Post-etch we decided to change that and currently drivers are only loaded if 
-autodetected (with some exceptions, such as for sparc sbus and hppa bus). 
-We were aware that this could cause some regressions, but so far this is the 
-first real report.
-
-Another change in Debian since Etch is that initramfs-tools no longer loads 
-ide-generic by default, which IMO is also a good thing. We can easily make 
-it load ide-generic when needed, but for that again we first have to know 
-that it _is_ needed.
-
-> > But to have the installer itself automatically load ide-generic for the
-> > user, we'd still have to somehow recognize that we need the driver.
-> > Any ideas/suggestions what to look for?
+On Wednesday 02 April 2008 15:24:26 Frans Pop wrote:
+> Hi,
 >
-> If you can't see any other disks, load it.
+> We've received an installation report for Debian for an older system where
+> no IDE driver gets loaded. The system does not have any IDE device listed
+> in lspci. When ide-generic is modprobed manually, both the CD and hard disk
+> work fine.
+>
+> Any suggestions on how such a system could be recognized?
+> If we could do that, the installation system could take responsibility for
+> loading ide-generic and making sure it is included in the initrd.
+>
+> Or even better, any chance to make the kernel/udev load ide-generic
+> automatically for this system?
+>
+> See http://bugs.debian.org/472487 for details. I can get additional info
+> from the owner of the system if needed.
+>
+> Cheers,
+> FJP
+>
+> Output of lspci -nn:
+> 00:00.0 Host bridge [0600]: Toshiba America Info Systems CPU to PCI bridge
+> [1179:0601] (rev a0)
+> 00:04.0 VGA compatible controller [0300]: Chips and Technologies F65555
+> HiQVPro [102c:00e5] (rev c6)
+> 00:0b.0 USB Controller [0c03]: NEC Corporation USB [1033:0035] (rev 02)
+> 00:11.0 Communication controller [0780]: Toshiba America Info Systems FIR
+> Port [1179:0701] (rev 21)
+> 00:13.0 CardBus bridge [0607]: Toshiba America Info Systems ToPIC97
+> [1179:060f] (rev 20)
+> 00:13.1 CardBus bridge [0607]: Toshiba America Info Systems ToPIC97
+> [1179:060f] (rev 20)
 
-Yes, that could be one way to implement it: load it and then check if that 
-added any devices.
+Looks like the controller is not a separate PCI device. Toshiba provides Bus 
+Mastering driver for Windows 95:
+http://209.167.114.38/support/download/files_Archive/Index/windows_95_files.htm
 
-> Heck load it last no matter 
-> what since any supported IDE ports should have already had their driver
-> loaded, so worst case it does nothing in which case the autoclean of
-> unneeded kernel modules could remove it again, and best case it finds an
-> old isa/vlb style IDE controller on the standard port numbers and works
-> with it.
+So the controller probably can do DMA but it's not a standard IDE controller. 
+And looks like there's no driver in the kernel for it.
 
-That would still leave us with the problem of not knowing whether it needs 
-to be added for initramfs-tools or not.
-
-If there are no other suggestions, I guess we'll go with a "load and check" 
-implementation. Thanks a lot for your input.
-
-Anybody know how other distributions deal with this?
-
-Cheers,
-FJP
+-- 
+Ondrej Zary
