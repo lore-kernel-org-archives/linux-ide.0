@@ -1,40 +1,100 @@
-From: "Gordon Farquharson" <gordonfarquharson@gmail.com>
-Subject: Re: 2.5.25 regression from 2.6.24: smartctl fails to access drive
-Date: Wed, 2 Apr 2008 00:06:03 -0600
-Message-ID: <97a0a9ac0804012306h18c83defk99231717100b7a70@mail.gmail.com>
-References: <97a0a9ac0804012300qeb3e63gbb7e30ffa1ccdb70@mail.gmail.com>
+From: Andrew Morton <akpm@linux-foundation.org>
+Subject: Re: Again... DMA speed too slow
+Date: Wed, 2 Apr 2008 00:16:40 -0700
+Message-ID: <20080402001640.41c103a7.akpm@linux-foundation.org>
+References: <20080330235357.20a54963@werewolf>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hs-out-0708.google.com ([64.233.178.240]:25073 "EHLO
-	hs-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751501AbYDBGGF (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 2 Apr 2008 02:06:05 -0400
-Received: by hs-out-0708.google.com with SMTP id 4so2000297hsl.5
-        for <linux-ide@vger.kernel.org>; Tue, 01 Apr 2008 23:06:03 -0700 (PDT)
-In-Reply-To: <97a0a9ac0804012300qeb3e63gbb7e30ffa1ccdb70@mail.gmail.com>
-Content-Disposition: inline
-Sender: linux-ide-owner@vger.kernel.org
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1761027AbYDBHRm@vger.kernel.org>
+In-Reply-To: <20080330235357.20a54963@werewolf>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "=?ISO-8859-1?Q? J.A._Magall=F3n ?=" <jamagallon@ono.com>
+Cc: "Linux-Kernel, " <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
-Cc: bzolnier@gmail.com
 
-Hi All
+On Sun, 30 Mar 2008 23:53:57 +0200 "J.A. Magall=F3n" <jamagallon@ono.co=
+m> wrote:
 
-On Wed, Apr 2, 2008 at 12:00 AM, Gordon Farquharson
-<gordonfarquharson@gmail.com> wrote:
+> Hi all...
+>=20
+> I have tried to burn some data from the commandline with wodim (since=
+ time
+> ago I just used beasero...), and I have noticed this (media is CD, no=
+t DVD):
+>=20
+> Vendor_info    : 'HL-DT-ST'
+> Identification : 'DVDRAM GSA-H10N '
+> Revision       : 'JL12'
+> Device seems to be: Generic mmc2 DVD-R/DVD-RW.
+> Using generic SCSI-3/mmc   CD-R/CD-RW driver (mmc_cdr).
+> Driver flags   : MMC-3 SWABAUDIO BURNFREE
+> Supported modes: TAO PACKET SAO SAO/R96P SAO/R96R RAW/R16 RAW/R96P RA=
+W/R96R
+> Speed set to 8467 KB/s
+> wodim: DMA speed too slow (OK for 5x). Cannot write at speed 48x.
+> Starting to write CD/DVD at speed  48.0 in real TAO mode for single s=
+ession.
+>=20
+> I just can burn CDs at 5x ??
+> But then the program tries to write at 48x.
+> It the DMA message really true ?
+>=20
+> Accodring to wodim -prcap:
+>=20
+>   Maximum read  speed: 22161 kB/s (CD 125x, DVD 16x)
+>   Current read  speed: 22161 kB/s (CD 125x, DVD 16x)
+>   Maximum write speed: 11080 kB/s (CD  62x, DVD  8x)
+>   Current write speed: 11080 kB/s (CD  62x, DVD  8x)
+>   Rotational control selected: CLV/PCAV
+>   Buffer size in KB: 2048
+>   Copy management revision supported: 1
+>   Number of supported write speeds: 3
+>   Write speed # 0: 11080 kB/s CLV/PCAV (CD  62x, DVD  8x)
+>   Write speed # 1:  5540 kB/s CLV/PCAV (CD  31x, DVD  4x)
+>   Write speed # 2:  3324 kB/s CLV/PCAV (CD  18x, DVD  2x)
+>=20
+> Why the tests in wodim say that DMA to the drive is slow ?
+>=20
+> Kernel is 2.6.24.4.
+> The drive is controlled by libata+sata_promise:
+>=20
+> sata_promise 0000:03:04.0: version 2.11
+> ACPI: PCI Interrupt 0000:03:04.0[A] -> GSI 23 (level, low) -> IRQ 17
+> scsi6 : sata_promise
+> scsi7 : sata_promise
+> scsi8 : sata_promise
+> ata5: SATA max UDMA/133 mmio m4096@0xf6029000 port 0xf6029200 irq 17
+> ata6: SATA max UDMA/133 mmio m4096@0xf6029000 port 0xf6029280 irq 17
+> ata7: PATA max UDMA/133 mmio m4096@0xf6029000 port 0xf6029300 irq 17
+> ata5: SATA link down (SStatus 0 SControl 300)
+> ata6: SATA link down (SStatus 0 SControl 0)
+> ata7.00: ATA-6: ST3120022A, 3.06, max UDMA/100
+> ata7.00: 234441648 sectors, multi 0: LBA48
+> ata7.01: ATAPI: HL-DT-ST DVDRAM GSA-H10N, JL12, max UDMA/33
+> ata7.00: configured for UDMA/100
+> ata7.01: configured for UDMA/33
+> scsi 8:0:0:0: Direct-Access     ATA      ST3120022A       3.06 PQ: 0 =
+ANSI: 5
+> sd 8:0:0:0: [sdd] 234441648 512-byte hardware sectors (120034 MB)
+> sd 8:0:0:0: [sdd] Write Protect is off
+> sd 8:0:0:0: [sdd] Mode Sense: 00 3a 00 00
+> sd 8:0:0:0: [sdd] Write cache: enabled, read cache: enabled, doesn't =
+support DPO or FUA
+> sd 8:0:0:0: [sdd] 234441648 512-byte hardware sectors (120034 MB)
+> sd 8:0:0:0: [sdd] Write Protect is off
+> sd 8:0:0:0: [sdd] Mode Sense: 00 3a 00 00
+> sd 8:0:0:0: [sdd] Write cache: enabled, read cache: enabled, doesn't =
+support DPO or FUA
+>  sdd: sdd1
+> sd 8:0:0:0: [sdd] Attached SCSI disk
+> sd 8:0:0:0: Attached scsi generic sg3 type 0
+> scsi 8:0:1:0: CD-ROM            HL-DT-ST DVDRAM GSA-H10N  JL12 PQ: 0 =
+ANSI: 5
+> sr0: scsi3-mmc drive: 48x/48x writer dvd-ram cd/rw xa/form2 cdda tray
+>=20
+> UDMA/33 on the burner should be ok for 48x (150x48 =3D 7.2 MB/s) ?
+> Or just 16x, as I read elsewhere ?
+>=20
 
->  Since then, I manually found that the problem commit occurred between
->  2.6.24 and 2.6.25-rc1. At that point, I started using git-bisect, but
->  all kernels I have tested so far fail to boot on the GLAN Tank.
-
-Update: commit 4383f18b7f94a4d668c5eec68645c75d44556235 does boot, but
-smartctl fails with this kernel. I may have time to do a couple of
-more git-bisects.
-
-Gordon
-
--- 
-Gordon Farquharson
-GnuPG Key ID: 32D6D676
+Please always cc linux-ide on ata-related bug reports.
