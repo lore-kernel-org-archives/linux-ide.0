@@ -1,61 +1,43 @@
-From: lsorense@csclub.uwaterloo.ca (Lennart Sorensen)
+From: Frans Pop <elendil@planet.nl>
 Subject: Re: No IDE drivers loaded for Toshiba Satellite 320 CDS
-Date: Wed, 2 Apr 2008 09:57:29 -0400
-Message-ID: <20080402135729.GB24239@csclub.uwaterloo.ca>
-References: <200804021524.27222.elendil@planet.nl>
+Date: Wed, 2 Apr 2008 16:29:40 +0200
+Message-ID: <200804021629.41153.elendil@planet.nl>
+References: <200804021524.27222.elendil@planet.nl> <20080402135729.GB24239@csclub.uwaterloo.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from caffeine.csclub.uwaterloo.ca ([129.97.134.17]:33597 "EHLO
-	caffeine.csclub.uwaterloo.ca" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753073AbYDBN5a (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 2 Apr 2008 09:57:30 -0400
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1758601AbYDBO3z@vger.kernel.org>
+In-Reply-To: <20080402135729.GB24239@csclub.uwaterloo.ca>
 Content-Disposition: inline
-In-Reply-To: <200804021524.27222.elendil@planet.nl>
-Sender: linux-ide-owner@vger.kernel.org
-List-Id: linux-ide@vger.kernel.org
-To: Frans Pop <elendil@planet.nl>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Lennart Sorensen <lsorense@csclub.uwaterloo.ca>
 Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+List-Id: linux-ide@vger.kernel.org
 
-On Wed, Apr 02, 2008 at 03:24:26PM +0200, Frans Pop wrote:
-> We've received an installation report for Debian for an older system where
-> no IDE driver gets loaded. The system does not have any IDE device listed in
-> lspci. When ide-generic is modprobed manually, both the CD and hard disk
-> work fine.
-> 
-> Any suggestions on how such a system could be recognized?
-> If we could do that, the installation system could take responsibility for
-> loading ide-generic and making sure it is included in the initrd.
-> 
-> Or even better, any chance to make the kernel/udev load ide-generic
-> automatically for this system?
-> 
-> See http://bugs.debian.org/472487 for details. I can get additional info
-> from the owner of the system if needed.
-> 
-> Cheers,
-> FJP
-> 
-> Output of lspci -nn:
-> 00:00.0 Host bridge [0600]: Toshiba America Info Systems CPU to PCI bridge [1179:0601] 
-> (rev a0)
-> 00:04.0 VGA compatible controller [0300]: Chips and Technologies F65555 HiQVPro 
-> [102c:00e5] (rev c6)
-> 00:0b.0 USB Controller [0c03]: NEC Corporation USB [1033:0035] (rev 02)
-> 00:11.0 Communication controller [0780]: Toshiba America Info Systems FIR Port 
-> [1179:0701] (rev 21)
-> 00:13.0 CardBus bridge [0607]: Toshiba America Info Systems ToPIC97 [1179:060f] (rev 
-> 20)
-> 00:13.1 CardBus bridge [0607]: Toshiba America Info Systems ToPIC97 [1179:060f] (rev 
-> 20)
+On Wednesday 02 April 2008, Lennart Sorensen wrote:
+> How old is that system?
 
-How old is that system?  Maybe the IDE isn't even PCI based.  That would
-explain why nothing shows in lspci, but the IDE ports are still present
-and working.
+Not sure. As the system only has 32MB RAM I'd say sometime late 1990s.
 
-One could always just manually tell the system to always load
-ide-generic, since deciding what to load does seem to be a userspace
-choice these days.
+> Maybe the IDE isn't even PCI based.  That would explain why nothing shows
+> in lspci, but the IDE ports are still present and working.
 
--- 
-Len Sorensen
+Could be. What would it be then? ISA? Any way to recognize that?
+
+I did find a product page, but it's low on real specs:
+http://www.toshiba.ca/web/product.grp?lg=en&section=1&group=223&product=1605
+
+> One could always just manually tell the system to always load
+> ide-generic, since deciding what to load does seem to be a userspace
+> choice these days.
+
+Well, in the Debian Installer we prefer to load things automatically 
+whenever possible. If the kernel does not do it, that's fine.
+
+But to have the installer itself automatically load ide-generic for the 
+user, we'd still have to somehow recognize that we need the driver.
+Any ideas/suggestions what to look for?
+
+Cheers,
+FJP
