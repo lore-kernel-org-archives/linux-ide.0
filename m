@@ -1,47 +1,29 @@
 From: Frans Pop <elendil@planet.nl>
-Subject: No IDE drivers loaded for Toshiba Satellite 320 CDS
-Date: Wed, 2 Apr 2008 15:24:26 +0200
-Message-ID: <200804021524.27222.elendil@planet.nl>
+Subject: Re: No IDE drivers loaded for Toshiba Satellite 320 CDS
+Date: Wed, 2 Apr 2008 15:27:18 +0200
+Message-ID: <200804021527.19367.elendil@planet.nl>
+References: <200804021524.27222.elendil@planet.nl>
 Mime-Version: 1.0
 Content-Type: text/plain;
-  charset="us-ascii"
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1756009AbYDBNYp@vger.kernel.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from hpsmtp-eml14.kpnxchange.com ([213.75.38.114]:20316 "EHLO
+	hpsmtp-eml14.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1756277AbYDBN1V (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 2 Apr 2008 09:27:21 -0400
+In-Reply-To: <200804021524.27222.elendil@planet.nl>
 Content-Disposition: inline
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-ide-owner@vger.kernel.org
+List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
 Cc: linux-kernel@vger.kernel.org, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-List-Id: linux-ide@vger.kernel.org
 
-Hi,
+On Wednesday 02 April 2008, Frans Pop wrote:
+> We've received an installation report for Debian for an older system
+> where no IDE driver gets loaded. The system does not have any IDE device
+> listed in lspci. When ide-generic is modprobed manually, both the CD and
+> hard disk work fine.
 
-We've received an installation report for Debian for an older system where
-no IDE driver gets loaded. The system does not have any IDE device listed in
-lspci. When ide-generic is modprobed manually, both the CD and hard disk
-work fine.
-
-Any suggestions on how such a system could be recognized?
-If we could do that, the installation system could take responsibility for
-loading ide-generic and making sure it is included in the initrd.
-
-Or even better, any chance to make the kernel/udev load ide-generic
-automatically for this system?
-
-See http://bugs.debian.org/472487 for details. I can get additional info
-from the owner of the system if needed.
-
-Cheers,
-FJP
-
-Output of lspci -nn:
-00:00.0 Host bridge [0600]: Toshiba America Info Systems CPU to PCI bridge [1179:0601] 
-(rev a0)
-00:04.0 VGA compatible controller [0300]: Chips and Technologies F65555 HiQVPro 
-[102c:00e5] (rev c6)
-00:0b.0 USB Controller [0c03]: NEC Corporation USB [1033:0035] (rev 02)
-00:11.0 Communication controller [0780]: Toshiba America Info Systems FIR Port 
-[1179:0701] (rev 21)
-00:13.0 CardBus bridge [0607]: Toshiba America Info Systems ToPIC97 [1179:060f] (rev 
-20)
-00:13.1 CardBus bridge [0607]: Toshiba America Info Systems ToPIC97 [1179:060f] (rev 
-20)
+Forgot to mention that the kernel used was 2.6.22. A retry with 2.6.24 
+should be possible if needed.
