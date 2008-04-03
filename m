@@ -1,32 +1,45 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: Unknown SATA PIIX PCI device ID 0x29b6
-Date: Fri, 04 Apr 2008 01:03:10 +0900
-Message-ID: <47F4FFBE.8050800@gmail.com>
-References: <Pine.LNX.4.64.0802282306190.10087@axis700.grange> <20080228225603.2764bfd1@core> <Pine.LNX.4.64.0802290010320.10498@axis700.grange> <47CFADDF.20200@gmail.com> <Pine.LNX.4.64.0803061248070.5670@axis700.grange> <39B20DF628532344BC7A2692CB6AEE0702679018@orsmsx420.amr.corp.intel.com> <47D03272.9080209@garzik.org> <39B20DF628532344BC7A2692CB6AEE070283295C@orsmsx420.amr.corp.intel.com> <47F42862.1030406@gmail.com> <39B20DF628532344BC7A2692CB6AEE0702832B5B@orsmsx420.amr.corp.intel.com>
+From: Frans Pop <elendil@planet.nl>
+Subject: Re: No IDE drivers loaded for Toshiba Satellite 320 CDS
+Date: Thu, 3 Apr 2008 19:47:06 +0200
+Message-ID: <200804031947.07674.elendil@planet.nl>
+References: <200804021524.27222.elendil@planet.nl> <200804021820.04610.elendil@planet.nl> <20080402194938.GI24237@csclub.uwaterloo.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rn-out-0910.google.com ([64.233.170.185]:39526 "EHLO
-	rn-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755091AbYDCQDR (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 3 Apr 2008 12:03:17 -0400
-Received: by rn-out-0910.google.com with SMTP id e24so2141359rng.1
-        for <linux-ide@vger.kernel.org>; Thu, 03 Apr 2008 09:03:16 -0700 (PDT)
-In-Reply-To: <39B20DF628532344BC7A2692CB6AEE0702832B5B@orsmsx420.amr.corp.intel.com>
+Received: from hpsmtp-eml11.kpnxchange.com ([213.75.38.111]:50769 "EHLO
+	hpsmtp-eml11.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754655AbYDCRrK (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 3 Apr 2008 13:47:10 -0400
+In-Reply-To: <20080402194938.GI24237@csclub.uwaterloo.ca>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "Gaston, Jason D" <jason.d.gaston@intel.com>
-Cc: Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org
+To: Lennart Sorensen <lsorense@csclub.uwaterloo.ca>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 
-Gaston, Jason D wrote:
-> IDER is a controller, in this case, in the MCH/Northbridge that
-> redirects a virtual drive across the LAN and presents it as a local IDE
-> drive.  This is part of the Intel AMT managability engine.  You can
-> point it to a physical drive, .iso or a .img file on the remote system.
+On Wednesday 02 April 2008, Lennart Sorensen wrote:
+> > Yes, that could be one way to implement it: load it and then check if
+> > that added any devices.
+>
+> Well even if you see other disks doesn't mean you don't also have an old
+> IDE controller you want to use, so probably load it and see if it finds
+> any disks is the best bet after loading all the other probeable drivers
+> first.
 
-Ah... fancy.  You can just make it PATA if doesn't have SCR access and 
-supports slave device and use ata_cable_unknown() for ->cbl_detect.
+I've decided (at least for now) to only do this f /sys/bus/isa is present.
+I added a check to see if there are additional devices in /sys/block after 
+loading ide-generic to decide whether or not to also include it in the 
+initrd for the installed system.
 
--- 
-tejun
+/sys/bus/isa is present for this machine so it works even if (as Ondrej 
+suggests) the controller is not actually on the ISA bus. We can always 
+extend the test if it turns out systems without ISA bus are also affected.
+
+I'll also send out a call for testing specifically for this issue.
+
+Thanks to you and Ondrej for the discussion.
+
+Cheers,
+FJP
