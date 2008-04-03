@@ -1,35 +1,77 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [PATCH 1/5] ide-tape: improve buffer allocation strategy
-Date: Thu, 3 Apr 2008 23:32:29 +0200
-Message-ID: <200804032332.29380.bzolnier@gmail.com>
-References: <1206812769-10065-1-git-send-email-petkovbb@gmail.com> <1206812769-10065-2-git-send-email-petkovbb@gmail.com>
+From: Tilman Schmidt <tilman@imap.cc>
+Subject: Re: 2.6.25-rc8-mm1: Intel SATA boot failure
+Date: Fri, 04 Apr 2008 01:08:19 +0200
+Message-ID: <47F56363.4090002@imap.cc>
+References: <20080401213214.8fbb6d6b.akpm@linux-foundation.org>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=pgp-sha1;
+ protocol="application/pgp-signature";
+ boundary="------------enig32A17F2F33F1E2B20B399749"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.191]:58461 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760831AbYDCVuP (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 3 Apr 2008 17:50:15 -0400
-Received: by nf-out-0910.google.com with SMTP id g13so1521755nfb.21
-        for <linux-ide@vger.kernel.org>; Thu, 03 Apr 2008 14:50:14 -0700 (PDT)
-In-Reply-To: <1206812769-10065-2-git-send-email-petkovbb@gmail.com>
-Content-Disposition: inline
+Received: from out4.smtp.messagingengine.com ([66.111.4.28]:54458 "EHLO
+	out4.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751044AbYDCXIf (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 3 Apr 2008 19:08:35 -0400
+In-Reply-To: <20080401213214.8fbb6d6b.akpm@linux-foundation.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Borislav Petkov <petkovbb@googlemail.com>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Borislav Petkov <petkovbb@gmail.com>
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>
+
+This is an OpenPGP/MIME signed message (RFC 2440 and 3156)
+--------------enig32A17F2F33F1E2B20B399749
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: quoted-printable
+
+Andrew Morton schrieb:
+> ftp://ftp.kernel.org/pub/linux/kernel/people/akpm/patches/2.6/2.6.25-rc=
+8/2.6.25-rc8-mm1/
+
+This fails to come up on my development machine, apparently because it
+has trouble accessing the SATA hard disks.
+Hardware: Intel Pentium D940, Intel DQ965GF board, two SATA hard disks.
+Some unusual things I noticed during the boot process:
+
+- a message "doing fast boot" that looked unfamiliar; unfortunately
+  it scrolled off too quickly to note its context
+
+- for each of the two SATA ports in use, a message
+  "SATA port is slow to respond, please be patient"
+  accompanied by about 10 secs wait
+
+- it actually got past the point where it mounts the root file system,
+  so it must have thought it could access the disks
+
+- finally, the system hung completely after the SUSE startup messages
+
+  Setting current sysctl status from /etc/sysctl.conf
+  net.ipv4.icmp_echo_ignore_broadcasts =3D 1
+
+  with a dead keyboard and I had to hit the Win^Wreset button.
+
+- After rebooting into 2.6.24-rc8 (which works fine), nothing had been
+  written to the disks, not even the dmesg output which SUSE usually
+  dumps into /var/log/boot.msg early during startup.
+
+Before I try booting that kernel again, any instructions on what to
+watch out for? Is netconsole usable again? Other ideas?
+
+Regards,
+Tilman
 
 
-Hi,
+--------------enig32A17F2F33F1E2B20B399749
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
 
-On Saturday 29 March 2008, Borislav Petkov wrote:
-> Instead of allocating pages for the buffer one by one, take advantage of the
-> buddy alloc system and request them 2^order at a time. This increases the chance
-> for bigger buffer parts to be contigious and reduces loop iteration count. While
-> at it, rename function __idetape_kmalloc_stage() to ide_tape_kmalloc_buffer().
-> 
-> Signed-off-by: Borislav Petkov <petkovbb@gmail.com>
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.4-svn0 (GNU/Linux)
+Comment: Using GnuPG with SUSE - http://enigmail.mozdev.org
 
-applied patches #1-4
+iD8DBQFH9WNuQ3+did9BuFsRArtwAJ9oDWistx1H0H5+6+H1dQcpVWdidwCdHboc
+KkAIEyX9FxnAqcH5NayPaOY=
+=EgLX
+-----END PGP SIGNATURE-----
+
+--------------enig32A17F2F33F1E2B20B399749--
