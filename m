@@ -1,45 +1,57 @@
-From: Frans Pop <elendil@planet.nl>
-Subject: Re: No IDE drivers loaded for Toshiba Satellite 320 CDS
-Date: Thu, 3 Apr 2008 19:47:06 +0200
-Message-ID: <200804031947.07674.elendil@planet.nl>
-References: <200804021524.27222.elendil@planet.nl> <200804021820.04610.elendil@planet.nl> <20080402194938.GI24237@csclub.uwaterloo.ca>
+From: "Gaston, Jason D" <jason.d.gaston@intel.com>
+Subject: RE: Unknown SATA PIIX PCI device ID 0x29b6
+Date: Thu, 3 Apr 2008 11:01:31 -0700
+Message-ID: <39B20DF628532344BC7A2692CB6AEE0702832D5D@orsmsx420.amr.corp.intel.com>
+References: <Pine.LNX.4.64.0802282306190.10087@axis700.grange> <20080228225603.2764bfd1@core> <Pine.LNX.4.64.0802290010320.10498@axis700.grange> <47CFADDF.20200@gmail.com> <Pine.LNX.4.64.0803061248070.5670@axis700.grange> <39B20DF628532344BC7A2692CB6AEE0702679018@orsmsx420.amr.corp.intel.com> <47D03272.9080209@garzik.org> <39B20DF628532344BC7A2692CB6AEE070283295C@orsmsx420.amr.corp.intel.com> <47F42862.1030406@gmail.com> <39B20DF628532344BC7A2692CB6AEE0702832B5B@orsmsx420.amr.corp.intel.com> <47F50001.50204@garzik.org>
 Mime-Version: 1.0
 Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hpsmtp-eml11.kpnxchange.com ([213.75.38.111]:50769 "EHLO
-	hpsmtp-eml11.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754655AbYDCRrK (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 3 Apr 2008 13:47:10 -0400
-In-Reply-To: <20080402194938.GI24237@csclub.uwaterloo.ca>
-Content-Disposition: inline
+Received: from mga03.intel.com ([143.182.124.21]:15224 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754663AbYDCSLj convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 3 Apr 2008 14:11:39 -0400
+Content-class: urn:content-classes:message
+In-Reply-To: <47F50001.50204@garzik.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Lennart Sorensen <lsorense@csclub.uwaterloo.ca>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+To: Jeff Garzik <jeff@garzik.org>
+Cc: Tejun Heo <htejun@gmail.com>, linux-ide@vger.kernel.org
 
-On Wednesday 02 April 2008, Lennart Sorensen wrote:
-> > Yes, that could be one way to implement it: load it and then check if
-> > that added any devices.
+>Gaston, Jason D wrote:
+>> IDER is a controller, in this case, in the MCH/Northbridge that
+>> redirects a virtual drive across the LAN and presents it as 
+>a local IDE
+>> drive.  This is part of the Intel AMT managability engine.  You can
+>> point it to a physical drive, .iso or a .img file on the 
+>remote system.
 >
-> Well even if you see other disks doesn't mean you don't also have an old
-> IDE controller you want to use, so probably load it and see if it finds
-> any disks is the best bet after loading all the other probeable drivers
-> first.
+>
+>Since this is a new, non-PATA, non-SATA controller/device setup, there 
+>are a few general questions,
+>
+>- what to do about cable detection?  unless it matters, we 
+>could simply 
+>assume a fixed cable type, since its a virtual link.
+>
+>- what is the proper reset method?  to kick a device (and controller) 
+>into action, we will COMRESET via the SATA phy, or at the very 
+>least SRST.
+>
+>- is set-xfer-mode properly emulated?  normally we look at the ATA 
+>device's IDENTIFY DEVICE page, and choose a transfer xfer from 
+>that info.
+>
+>	Jeff
 
-I've decided (at least for now) to only do this f /sys/bus/isa is present.
-I added a check to see if there are additional devices in /sys/block after 
-loading ide-generic to decide whether or not to also include it in the 
-initrd for the installed system.
+The datasheet for the Intel(3) 3 Series Chipset Family is up on
+intel.com.  
+Here is a direct link:
+http://download.intel.com/design/chipsets/datashts/31696602.pdf  
+It looks like section 9.3 has the details for the IDER.  This is
+somewhat over my head, can you help me with this?
 
-/sys/bus/isa is present for this machine so it works even if (as Ondrej 
-suggests) the controller is not actually on the ISA bus. We can always 
-extend the test if it turns out systems without ISA bus are also affected.
+Thanks,
 
-I'll also send out a call for testing specifically for this issue.
-
-Thanks to you and Ondrej for the discussion.
-
-Cheers,
-FJP
+Jason
