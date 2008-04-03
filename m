@@ -1,44 +1,74 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: Re: Unknown SATA PIIX PCI device ID 0x29b6
-Date: Thu, 03 Apr 2008 09:44:18 +0900
-Message-ID: <47F42862.1030406@gmail.com>
-References: <Pine.LNX.4.64.0802282306190.10087@axis700.grange> <20080228225603.2764bfd1@core> <Pine.LNX.4.64.0802290010320.10498@axis700.grange> <47CFADDF.20200@gmail.com> <Pine.LNX.4.64.0803061248070.5670@axis700.grange> <39B20DF628532344BC7A2692CB6AEE0702679018@orsmsx420.amr.corp.intel.com> <47D03272.9080209@garzik.org> <39B20DF628532344BC7A2692CB6AEE070283295C@orsmsx420.amr.corp.intel.com>
+Subject: Re: [PATCH 2/5] sata_mv clean up mv_stop_edma usage
+Date: Thu, 03 Apr 2008 09:47:27 +0900
+Message-ID: <47F4291F.6030601@gmail.com>
+References: <47F1736F.8020104@rtr.ca> <47F17510.7060902@rtr.ca> <47F2E88E.4000401@gmail.com> <47F3DF6D.8050803@rtr.ca> <47F3E1B4.90609@pobox.com> <47F3E2D3.5020409@rtr.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wf-out-1314.google.com ([209.85.200.175]:59447 "EHLO
-	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758954AbYDCAoZ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 2 Apr 2008 20:44:25 -0400
-Received: by wf-out-1314.google.com with SMTP id 28so2881617wff.4
-        for <linux-ide@vger.kernel.org>; Wed, 02 Apr 2008 17:44:24 -0700 (PDT)
-In-Reply-To: <39B20DF628532344BC7A2692CB6AEE070283295C@orsmsx420.amr.corp.intel.com>
+Received: from el-out-1112.google.com ([209.85.162.177]:30256 "EHLO
+	el-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760831AbYDCAre (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 2 Apr 2008 20:47:34 -0400
+Received: by el-out-1112.google.com with SMTP id v27so1498572ele.17
+        for <linux-ide@vger.kernel.org>; Wed, 02 Apr 2008 17:47:33 -0700 (PDT)
+In-Reply-To: <47F3E2D3.5020409@rtr.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "Gaston, Jason D" <jason.d.gaston@intel.com>
-Cc: Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org
+To: Mark Lord <liml@rtr.ca>
+Cc: Jeff Garzik <jgarzik@pobox.com>, IDE/ATA development list <linux-ide@vger.kernel.org>
 
-Gaston, Jason D wrote:
->> Gaston, Jason D wrote:
->>> If you disable the IDE Redirection in BIOS on that system, the 0x29b6
->>> controller should not appear.  If you are not using this, it would be
->>> interesting to see if this effects what you are seeing.
+Mark Lord wrote:
+> Jeff Garzik wrote:
+>> Mark Lord wrote:
+>>> Tejun Heo wrote:
+>>>> Hello, Mark.
+>>>>
+>>>> Mark Lord wrote:
+>>>>> -    /* now properly wait for the eDMA to stop */
+>>>>> -    for (i = 1000; i > 0; i--) {
+>>>>> -        reg = readl(port_mmio + EDMA_CMD_OFS);
+>>>>> +    /* Wait for the chip to confirm eDMA is off. */
+>>>>> +    for (i = 10000; i > 0; i--) {
+>>>>> +        u32 reg = readl(port_mmio + EDMA_CMD_OFS);
+>>>>>         if (!(reg & EDMA_EN))
+>>>>> -            break;
+>>>>> -
+>>>>> -        udelay(100);
+>>>>> -    }
+>>>>> -
+>>>>> -    if (reg & EDMA_EN) {
+>>>>> -        ata_port_printk(ap, KERN_ERR, "Unable to stop eDMA\n");
+>>>>> -        err = -EIO;
+>>>>> +            return 0;
+>>>>> +        udelay(10);
+>>>>
+>>>> Unless the hardware calls for really short polling interval, I think 
+>>>> it's generally better to limit polling with jiffies and using 
+>>>> msleep() instead of delays.
+>>> ..
+>>>
+>>> Oh, absolutely.  I was just leaving Jeff's (?) original udelay() in 
+>>> there
+>>> for now, to avoid another possible failure while testing the new stuff.
+>>>
+>>> But if we can *guarantee* that .qc_issue and .port_stop are
+>>> always invoked only from thread context, then.. no problemo.
 >>
->> I think its fair to say that a certain amount of Linux users will 
->> inevitably have this option enabled in their BIOS.  We should have a 
->> plan to deal with this sanely...?
+>> qc_issue is inside spin_lock_irqsave()
+> ..
 > 
-> I was able to add the IDER Contoller DeviceID to ata_generic.c and it
-> seemed to work fine.  I was also able to add it to ata_piix.c as a SATA
-> Controler and it seemed to work ok as well.  However, when I tried to
-> add it to ata_piix.c as a PATA Controller if failed cable detection.  I
-> guess this would be expected as it is a Virtual IDE contoller.
+> Okay, let's leave it alone for now.
+> Perhaps later it can be reworked again to find
+> a way to busy wait without messing up other stuff.
 > 
-> Where is the correct place to add support for IDE Redirection
-> Contollers?
+> Nearly all of the time it exits rapidly anyway.
 
-What's IDE redirection?  SATA appearing as IDE?
+Aikk... right, it's called from the issue path too.  In that case, 
+udelay() is the only way to go.
+
+Thanks.
 
 -- 
 tejun
