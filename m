@@ -1,57 +1,45 @@
-From: "Gaston, Jason D" <jason.d.gaston@intel.com>
-Subject: RE: Unknown SATA PIIX PCI device ID 0x29b6
-Date: Thu, 3 Apr 2008 11:01:31 -0700
-Message-ID: <39B20DF628532344BC7A2692CB6AEE0702832D5D@orsmsx420.amr.corp.intel.com>
-References: <Pine.LNX.4.64.0802282306190.10087@axis700.grange> <20080228225603.2764bfd1@core> <Pine.LNX.4.64.0802290010320.10498@axis700.grange> <47CFADDF.20200@gmail.com> <Pine.LNX.4.64.0803061248070.5670@axis700.grange> <39B20DF628532344BC7A2692CB6AEE0702679018@orsmsx420.amr.corp.intel.com> <47D03272.9080209@garzik.org> <39B20DF628532344BC7A2692CB6AEE070283295C@orsmsx420.amr.corp.intel.com> <47F42862.1030406@gmail.com> <39B20DF628532344BC7A2692CB6AEE0702832B5B@orsmsx420.amr.corp.intel.com> <47F50001.50204@garzik.org>
+From: lsorense@csclub.uwaterloo.ca (Lennart Sorensen)
+Subject: Re: No IDE drivers loaded for Toshiba Satellite 320 CDS
+Date: Thu, 3 Apr 2008 15:31:22 -0400
+Message-ID: <20080403193122.GQ24237@csclub.uwaterloo.ca>
+References: <200804021524.27222.elendil@planet.nl> <200804021820.04610.elendil@planet.nl> <20080402194938.GI24237@csclub.uwaterloo.ca> <200804031947.07674.elendil@planet.nl>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:15224 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754663AbYDCSLj convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 3 Apr 2008 14:11:39 -0400
-Content-class: urn:content-classes:message
-In-Reply-To: <47F50001.50204@garzik.org>
+Received: from caffeine.csclub.uwaterloo.ca ([129.97.134.17]:50952 "EHLO
+	caffeine.csclub.uwaterloo.ca" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755421AbYDCTbe (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 3 Apr 2008 15:31:34 -0400
+Content-Disposition: inline
+In-Reply-To: <200804031947.07674.elendil@planet.nl>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: Tejun Heo <htejun@gmail.com>, linux-ide@vger.kernel.org
+To: Frans Pop <elendil@planet.nl>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 
->Gaston, Jason D wrote:
->> IDER is a controller, in this case, in the MCH/Northbridge that
->> redirects a virtual drive across the LAN and presents it as 
->a local IDE
->> drive.  This is part of the Intel AMT managability engine.  You can
->> point it to a physical drive, .iso or a .img file on the 
->remote system.
->
->
->Since this is a new, non-PATA, non-SATA controller/device setup, there 
->are a few general questions,
->
->- what to do about cable detection?  unless it matters, we 
->could simply 
->assume a fixed cable type, since its a virtual link.
->
->- what is the proper reset method?  to kick a device (and controller) 
->into action, we will COMRESET via the SATA phy, or at the very 
->least SRST.
->
->- is set-xfer-mode properly emulated?  normally we look at the ATA 
->device's IDENTIFY DEVICE page, and choose a transfer xfer from 
->that info.
->
->	Jeff
+On Thu, Apr 03, 2008 at 07:47:06PM +0200, Frans Pop wrote:
+> I've decided (at least for now) to only do this f /sys/bus/isa is present.
+> I added a check to see if there are additional devices in /sys/block after 
+> loading ide-generic to decide whether or not to also include it in the 
+> initrd for the installed system.
 
-The datasheet for the Intel(3) 3 Series Chipset Family is up on
-intel.com.  
-Here is a direct link:
-http://download.intel.com/design/chipsets/datashts/31696602.pdf  
-It looks like section 9.3 has the details for the IDER.  This is
-somewhat over my head, can you help me with this?
+I am just wondering if arm, m68k, etc might have IDE ports that work
+with ide-generic.  I have no idea to be quite honest.
 
-Thanks,
+> /sys/bus/isa is present for this machine so it works even if (as Ondrej 
+> suggests) the controller is not actually on the ISA bus. We can always 
+> extend the test if it turns out systems without ISA bus are also affected.
 
-Jason
+Hmm, I must admit my newest x86 does in fact not have a /sys/bus/isa.  I
+guess it really does not have anything left resembling ISA.
+
+> I'll also send out a call for testing specifically for this issue.
+
+I can certainly give the installer a shot on my 486, if I can manage to
+boot it somehow.  Any floppy images for the installer around anymore? :)
+
+Do I have to put a disk image on a harddisk and boot from that?  CD and
+network boot are not an option.
+
+-- 
+Len Sorensen
