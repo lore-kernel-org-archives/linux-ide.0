@@ -1,133 +1,70 @@
-From: Volker Armin Hemmann <volker.armin.hemmann@tu-clausthal.de>
-Subject: Re: 2.6.24.X: SATA/AHCI related boot delay. - not with 2.6.24.3
-Date: Thu, 3 Apr 2008 13:47:20 +0200
-Message-ID: <200804031347.20352.volker.armin.hemmann@tu-clausthal.de>
-References: <200803091922.33083.volker.armin.hemmann@tu-clausthal.de> <200804030704.21480.volker.armin.hemmann@tu-clausthal.de> <47F46A74.504@gmail.com>
+From: Mark Lord <liml@rtr.ca>
+Subject: Re: [PATCH 4/5] sata_mv new mv_sata_hardreset handler
+Date: Thu, 03 Apr 2008 10:01:37 -0400
+Message-ID: <47F4E341.9080609@rtr.ca>
+References: <47F1736F.8020104@rtr.ca> <47F1755F.9000303@rtr.ca> <47F2F002.9070401@gmail.com> <47F3E3A8.10309@rtr.ca> <47F429B0.7020204@gmail.com> <47F44572.5010100@rtr.ca> <47F44BCB.7030005@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from poseidon.rz.tu-clausthal.de ([139.174.2.21]:50143 "EHLO
-	poseidon.rz.tu-clausthal.de" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754789AbYDCLsA convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 3 Apr 2008 07:48:00 -0400
-In-Reply-To: <47F46A74.504@gmail.com>
-Content-Disposition: inline
+Received: from rtr.ca ([76.10.145.34]:1627 "EHLO mail.rtr.ca"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756869AbYDCOBj (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 3 Apr 2008 10:01:39 -0400
+In-Reply-To: <47F44BCB.7030005@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Tejun Heo <htejun@gmail.com>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Peer Chen <pchen@nvidia.com>, Kuan Luo <kluo@nvidia.com>
+Cc: IDE/ATA development list <linux-ide@vger.kernel.org>, Jeff Garzik <jgarzik@pobox.com>
 
-On Donnerstag, 3. April 2008, Tejun Heo wrote:
-> Hello, Volker.
+Tejun Heo wrote:
+> Mark Lord wrote:
+>>> The MV specific part is retry-if-offline w/ lower link speed, right? 
+>>> You can do that just as well by looping outside of 
+>>> sata_link_hardreset().  
+>> ..
+>>
+>> Yes, the code already has a loop "outside of sata_link_hardreset()"
+>> for the speed errata handling.  So nothing new there.
+>>
+>> And the rest of that routine is a line-by-line clone of 
+>> ata_std_hardreset().
+>> This is smaller than what other drivers have cloned for these routines,
+>> and a lot better than the old code from sata_mv that it replaces.
+>>
+>> The comment in my patch above is just a reminder that someday we could
+>> go back in and address those things.  In *all* LLDs, not just sata_mv.
+>>
+>> I guess I'd better stop adding such comments in the future..  :)
+>>
+>> Still think it needs any changes ?
+> 
+> The modularize patchset is not in libata-dev#upstream yet.  Please take 
+> a look at the following.
+> 
+> http://git.kernel.org/?p=linux/kernel/git/tj/libata-dev.git;a=blob;f=drivers/ata/libata-core.c;h=7646523899c0bac8b06d2d0bfcde428e4583e04d;hb=731e61759c56d564322d56b9ff6f393fda1fbec4#l3533 
 >
-> Volker Armin Hemmann wrote:
-> >>> In short, no changes at all.
-> >>
-> >> Thanks for confirming.
-> >>
-> >> Peer, Kuan.  Volker is reporting detection problems on MCP65 AHCI.
-> >> The followings are what we've discovered till now.
-> >>
-> >> 1. When the controller is put into non-raid mode in BIOS
-> >>
-> >>   * If softreset is used, either the softreset itself or IDENTIFY
-> >>     following it times out once.  On retrial, it works fine.  It
-> >>     doesn't matter whether the SRST is issued by itself or as
-> >>     follow-up-srst after hardreset.  Using only hardreset works fine.
-> >>
-> >>   * The controller doesn't indicate MSI capability and MSI isn't used
-> >>     by default.
-> >>
-> >> 2. When the controller is put into ahci mode in BIOS
-> >>
-> >>   * SRST works fine.
-> >>
-> >>   * The controller indicates MSI capability but MSI doesn't work
-> >>     properly resulting in IRQ delivery failure.  Adding
-> >>     intx_disable_bug quirk doesn't help.
-> >>
-> >> I've performed similar test on MCP67 and everything worked fine on it.
-> >>
-> >> Both problems (SRST and MSI) can be worked around but I need more
-> >> information to work around those.
-> >>
-> >> * Which chips are affected?  Are there proper fixes?
-> >>
-> >> * For the MSI problem, is it system wide problem or local to the ahci
-> >>   controller?
-> >
-> > I rebooted with non-raid set, without pci=nomsi
-> >
-> > this is cat /proc/interrupts:
-> >           CPU0       CPU1
-> >   0:         57          1   IO-APIC-edge      timer
-> >   1:          0         81   IO-APIC-edge      i8042
-> >   8:          0          1   IO-APIC-edge      rtc
-> >   9:          0          1   IO-APIC-fasteoi   acpi
-> >  12:          0          3   IO-APIC-edge      i8042
-> >  17:          2       2868   IO-APIC-fasteoi   nvidia
-> >  18:          0          0   IO-APIC-fasteoi   EMU10K1
-> >  22:          4        745   IO-APIC-fasteoi   ehci_hcd:usb1
-> > 314:          0        158   PCI-MSI-edge      eth0
-> > 315:          7      12769   PCI-MSI-edge      ahci
-> >
-> > as you can see, only the sata controller and the network uses msi.
-> >
-> > And networking works - or I wouldn't be able to send you this mail.
->
-> I guess the ahci controller works too.  This is getting confusing, so
-> MSI doesn't work iff the controller is configured as ahci in BIOS?
+> I meant that you wouldn't need to copy the post-reset stuff and just 
+> could loop around new sata_link_hardreset() after the patchset.  I 
+> thought about breaking sata_link_hardreset() into two such that the 
+> post-reset part can be used separately but couldn't find any in-tree 
+> driver which would need such function.
+..
 
-that is correct, if I set it to 'ahci' in bios, no interrupts are delivered.
+Ah well, that's all of no use then, because sata_mv has to go upstream now for 2.6.26.
+People have been waiting for this driver to improve for a very long time now.
 
->From systemrescuecd, ahci in bios, no nomsi:
-           CPU0       CPU1       
-  0:        147          1   IO-APIC-edge      timer
-  1:          0        607   IO-APIC-edge      i8042
-  8:          0         61   IO-APIC-edge      rtc
-  9:          0          1   IO-APIC-fasteoi   acpi
- 12:          0          4   IO-APIC-edge      i8042
- 14:          0          0   IO-APIC-edge      libata
- 15:          0          0   IO-APIC-edge      libata
- 18:          0         16   IO-APIC-fasteoi   aic7xxx
- 21:          0          0   IO-APIC-fasteoi   ohci_hcd:usb2
- 22:          2       8428   IO-APIC-fasteoi   ehci_hcd:usb1
-1274:          0          0   PCI-MSI-edge      ahci
-1275:          0        222   PCI-MSI-edge      eth0
-NMI:          0          0   Non-maskable interrupts
-LOC:      14777      16785   Local timer interrupts
-RES:       7250       6100   Rescheduling interrupts
-CAL:         41         52   function call interrupts
-TLB:       1866       1876   TLB shootdowns
-TRM:          0          0   Thermal event interrupts
-THR:          0          0   Threshold APIC interrupts
-SPU:          0          0   Spurious interrupts
-ERR:          6
+Given the time lag of the submission pipeline I'm forced to use for it,
+there likely is not enough time left to wait for another major rework
+of libata, and then rework sata_mv to match.
 
-With my 'own' kernel, AHCI has interrupt 315. I will try and make a more 
-monolithic kernel so I might be able to boot from a usb-flash device.
-.
-.
-.
-which didn't work. Hm, I am too stupid for that today...
+Basically, anything I do to sata_mv has to be tested here first,
+then broken into Jeff-size bites, fed to Marvell, approved by them,
+then posted here, then reworked according to the whims of the day,
+then resent to Marvell, reapproved by them, then reposted here, ...
 
+It just takes too long overall.
 
->
-> > I will reboot from systemresucecd later today and post some results with
-> > ahci-mode set, no nomsi. Just can't try patches that way.
->
-> Is sytemrescuecd using the same kernel?  Otherwise, it will only add
-> more to the confusion.
-
-almost.  A heavily patched 2.6.24.2. That is why I don't sent a dmesg ... just 
-cat /proc/interrupts. I can send you lspci -vv and dmesg from systemrescuecd 
-if you want.
-
-Glueck Auf,
-Volker
-
-
+Cheers 
+ 
 
