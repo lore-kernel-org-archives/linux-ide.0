@@ -1,45 +1,80 @@
-From: lsorense@csclub.uwaterloo.ca (Lennart Sorensen)
-Subject: Re: No IDE drivers loaded for Toshiba Satellite 320 CDS
-Date: Thu, 3 Apr 2008 15:31:22 -0400
-Message-ID: <20080403193122.GQ24237@csclub.uwaterloo.ca>
-References: <200804021524.27222.elendil@planet.nl> <200804021820.04610.elendil@planet.nl> <20080402194938.GI24237@csclub.uwaterloo.ca> <200804031947.07674.elendil@planet.nl>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: [PATCH 5/5] ide-tape: remove the last remains of pipelining
+Date: Fri, 4 Apr 2008 00:04:50 +0200
+Message-ID: <200804040004.50531.bzolnier@gmail.com>
+References: <1206812769-10065-1-git-send-email-petkovbb@gmail.com> <1206812769-10065-6-git-send-email-petkovbb@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+  charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from caffeine.csclub.uwaterloo.ca ([129.97.134.17]:50952 "EHLO
-	caffeine.csclub.uwaterloo.ca" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755421AbYDCTbe (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 3 Apr 2008 15:31:34 -0400
+Received: from fk-out-0910.google.com ([209.85.128.190]:14363 "EHLO
+	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760858AbYDCVuU (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 3 Apr 2008 17:50:20 -0400
+Received: by fk-out-0910.google.com with SMTP id 19so4513213fkr.5
+        for <linux-ide@vger.kernel.org>; Thu, 03 Apr 2008 14:50:18 -0700 (PDT)
+In-Reply-To: <1206812769-10065-6-git-send-email-petkovbb@gmail.com>
 Content-Disposition: inline
-In-Reply-To: <200804031947.07674.elendil@planet.nl>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Frans Pop <elendil@planet.nl>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+To: Borislav Petkov <petkovbb@googlemail.com>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Borislav Petkov <petkovbb@gmail.com>
 
-On Thu, Apr 03, 2008 at 07:47:06PM +0200, Frans Pop wrote:
-> I've decided (at least for now) to only do this f /sys/bus/isa is present.
-> I added a check to see if there are additional devices in /sys/block after 
-> loading ide-generic to decide whether or not to also include it in the 
-> initrd for the installed system.
 
-I am just wondering if arm, m68k, etc might have IDE ports that work
-with ide-generic.  I have no idea to be quite honest.
+On Saturday 29 March 2008, Borislav Petkov wrote:
+> This patch converts the tape->merge_stage pipeline stage into tape->bh, a singly
+> linked list of idetape_bh's, each of which is a tag attached to one or more pages
+> serving as a data buffer for chrdev requests. In particular,
+> 
+> 1. makes tape->bh the data buffer of size tape->buffer_size which is computed
+> from the Continuous Transfer Limit value in the caps page and the tape block
+> size. The chrdev rw routines use this buffer as an intermediary location to
+> shuffle data to and from.
 
-> /sys/bus/isa is present for this machine so it works even if (as Ondrej 
-> suggests) the controller is not actually on the ISA bus. We can always 
-> extend the test if it turns out systems without ISA bus are also affected.
+ide-tape supports write buffering (if number of bytes written to character
+device is < tape->buffer_size) and it seems to be the main reason behind
+tape->merge_stage.  It seems that this feature gets killed by the above
+change (we may actually want to kill it later in order to implement direct
+mapping of user pages but this shouldn't be done unless really necessary
+since it may negatively affect performance of some "poorly" written apps).
 
-Hmm, I must admit my newest x86 does in fact not have a /sys/bus/isa.  I
-guess it really does not have anything left resembling ISA.
+Also:
+tape->bh serves as the current bh pointer in idetape_chrdev_{read,write}()
+so it doesn't seem like we can mix it with merge_stage->bh (OTOH we should
+be fine with having tape->merge_bh).
 
-> I'll also send out a call for testing specifically for this issue.
+> 2. mv tape->merge_stage_size => tape->cur_buf_size as it contains the offset
+> within tape->bh
+> 
+> 3. get rid of pipeline stage idetape_stage_t, tape->merge_stage
+> and pipeline-related functions __idetape_discard_read_pipeline(),
+> idetape_discard_read_pipeline(), idetape_empty_write_pipeline()
 
-I can certainly give the installer a shot on my 486, if I can manage to
-boot it somehow.  Any floppy images for the installer around anymore? :)
+Existing tape->merge_stage is first taken care of at the beggining of
+idetape_chrdev_{read,write}() and only then the new one is allocated,
+the above functions play important part in handling write buffering
+(which is _independent_ from pipelined-mode) and idetape_discard...()
+seems to play some part in tape positioning for some ioctls - I worry
+that they can't be just simply deleted.
 
-Do I have to put a disk image on a harddisk and boot from that?  CD and
-network boot are not an option.
+> 4. code chunk "if (tape->merge_stage_size) {...}" in idetape_chrdev_read() is not
+> needed since tape->merge_stage_size, tape->cur_buf_size resp., is zeroed out in
+> idetape_init_read() couple of lines above
 
--- 
-Len Sorensen
+Unless the previous user request was also idetape_chrdev_read() since in this
+case idetape_init_read() returns early and existing ->merge_stage is re-used.
+
+[...]
+
+I like very much the general direction that this patch is going but the above
+details need to be taken care of.  I suggest splitting the patch on many
+smaller ones (i.e. starting with 'tape->merge_stage -> tape->merge_bh', then
+inlining __idetape_discard_read_pipeline() etc.) so we may closely review
+such fine-grained and _obvious_ steps.
+
+[ ide-tape got _much_ better after your rewrites but some old parts are still
+  quite puzzling & mined with gotchas - we shouldn't let guard down yet. ;) ]
+
+Thanks,
+Bart
