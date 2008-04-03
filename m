@@ -1,61 +1,57 @@
-From: Mark Lord <liml@rtr.ca>
-Subject: Re: [PATCH 4/5] sata_mv new mv_sata_hardreset handler
-Date: Thu, 03 Apr 2008 11:05:04 -0400
-Message-ID: <47F4F220.5050102@rtr.ca>
-References: <47F1736F.8020104@rtr.ca> <47F1755F.9000303@rtr.ca> <47F2F002.9070401@gmail.com> <47F3E3A8.10309@rtr.ca> <47F429B0.7020204@gmail.com> <47F44572.5010100@rtr.ca> <47F44BCB.7030005@gmail.com> <47F4E341.9080609@rtr.ca> <47F4E3E4.5080706@rtr.ca> <47F4E530.5040901@gmail.com> <47F4E7E3.2030108@rtr.ca> <47F4EB49.8030706@gmail.com>
+From: "Gaston, Jason D" <jason.d.gaston@intel.com>
+Subject: RE: Unknown SATA PIIX PCI device ID 0x29b6
+Date: Thu, 3 Apr 2008 08:16:05 -0700
+Message-ID: <39B20DF628532344BC7A2692CB6AEE0702832B5B@orsmsx420.amr.corp.intel.com>
+References: <Pine.LNX.4.64.0802282306190.10087@axis700.grange> <20080228225603.2764bfd1@core> <Pine.LNX.4.64.0802290010320.10498@axis700.grange> <47CFADDF.20200@gmail.com> <Pine.LNX.4.64.0803061248070.5670@axis700.grange> <39B20DF628532344BC7A2692CB6AEE0702679018@orsmsx420.amr.corp.intel.com> <47D03272.9080209@garzik.org> <39B20DF628532344BC7A2692CB6AEE070283295C@orsmsx420.amr.corp.intel.com> <47F42862.1030406@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([76.10.145.34]:3279 "EHLO mail.rtr.ca"
+Received: from mga11.intel.com ([192.55.52.93]:65479 "EHLO mga11.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756498AbYDCPFG (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 3 Apr 2008 11:05:06 -0400
-In-Reply-To: <47F4EB49.8030706@gmail.com>
+	id S1757021AbYDCPRs convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 3 Apr 2008 11:17:48 -0400
+Content-class: urn:content-classes:message
+In-Reply-To: <47F42862.1030406@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Tejun Heo <htejun@gmail.com>
-Cc: IDE/ATA development list <linux-ide@vger.kernel.org>, Jeff Garzik <jgarzik@pobox.com>
+Cc: Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org
 
-Tejun Heo wrote:
-> Mark Lord wrote:
->> Mmm.. I still need a way to handle access to the port-multiplier 
->> registers.
->> We never did resolve that one fully on the earlier pass.
-> 
-> Yeah, I thought about that during the API change.  I think we should one 
-> of the following two.
-> 
-> 1. Separate out actual reset part from ata_sff_softreset() and use it in 
-> sata_mv so that sata_mv can do...
-> 
-> mv_srst()
-> {
->     check onlineness;
->     set up PMP reg;
->     return ata_sff_do_softreset();
-> }
-> 
-> 2. Move link onlineness test before softreset into EH.  It's common to 
-> all drivers anyway.  This will allow mv to do.
-..
+>>> Gaston, Jason D wrote:
+>>>> If you disable the IDE Redirection in BIOS on that system, 
+>the 0x29b6
+>>>> controller should not appear.  If you are not using this, 
+>it would be
+>>>> interesting to see if this effects what you are seeing.
+>>>
+>>> I think its fair to say that a certain amount of Linux users will 
+>>> inevitably have this option enabled in their BIOS.  We 
+>should have a 
+>>> plan to deal with this sanely...?
+>> 
+>> I was able to add the IDER Contoller DeviceID to ata_generic.c and it
+>> seemed to work fine.  I was also able to add it to 
+>ata_piix.c as a SATA
+>> Controler and it seemed to work ok as well.  However, when I tried to
+>> add it to ata_piix.c as a PATA Controller if failed cable 
+>detection.  I
+>> guess this would be expected as it is a Virtual IDE contoller.
+>> 
+>> Where is the correct place to add support for IDE Redirection
+>> Contollers?
+>
+>What's IDE redirection?  SATA appearing as IDE?
+>
+>-- 
+>tejun
 
-Can we get just this part upstream Real Soon Now?
-The sata_mv pmp stuff is ready to go, except for this one issue.
+IDER is a controller, in this case, in the MCH/Northbridge that
+redirects a virtual drive across the LAN and presents it as a local IDE
+drive.  This is part of the Intel AMT managability engine.  You can
+point it to a physical drive, .iso or a .img file on the remote system.
 
-Thanks
+Thanks,
 
-
-> mv_srst()
-> {
->     set up PMP reg;
->     return ata_sff_softreset();
-> }
-> 
-> I like #2 better but there can be exotic cases where link onlineness 
-> can't be tested before the link is actually reset.  I don't think it 
-> will really matter because hardreset is present and preferred if link 
-> onlineness test is valid && hardreset doesn't care about link onlineness.
-..
-
-
+Jason
