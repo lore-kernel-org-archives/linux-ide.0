@@ -1,96 +1,53 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH 12/27] libata: restructure SFF post-reset readiness waits
-Date: Fri, 04 Apr 2008 02:58:01 -0400
-Message-ID: <47F5D179.5010705@garzik.org>
-References: <1206451025926-git-send-email-htejun@gmail.com> <1206451027353-git-send-email-htejun@gmail.com>
+From: Frans Pop <elendil@planet.nl>
+Subject: Re: No IDE drivers loaded for Toshiba Satellite 320 CDS
+Date: Fri, 4 Apr 2008 08:59:16 +0200
+Message-ID: <200804040859.17187.elendil@planet.nl>
+References: <200804021524.27222.elendil@planet.nl> <200804031947.07674.elendil@planet.nl> <20080403193122.GQ24237@csclub.uwaterloo.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:56705 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755522AbYDDG6R (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 4 Apr 2008 02:58:17 -0400
-In-Reply-To: <1206451027353-git-send-email-htejun@gmail.com>
+Received: from hpsmtp-eml14.kpnxchange.com ([213.75.38.114]:33298 "EHLO
+	hpsmtp-eml14.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752646AbYDDG7W (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 4 Apr 2008 02:59:22 -0400
+In-Reply-To: <20080403193122.GQ24237@csclub.uwaterloo.ca>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: linux-ide@vger.kernel.org, liml@rtr.ca, alan@lxorguk.ukuu.org.uk, James.Bottomley@HansenPartnership.com, brking@us.ibm.com, ashish.kalra@freescale.com, leoli@freescale.com
+To: Lennart Sorensen <lsorense@csclub.uwaterloo.ca>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Tejun Heo wrote:
-> Previously, post-softreset readiness is waited as follows.
-> 
-> 1. ata_sff_wait_after_reset() waits for 150ms and then for
->    ATA_TMOUT_FF_WAIT if status is 0xff and other conditions meet.
-> 
-> 2. ata_bus_softreset() finishes with -ENODEV if status is still 0xff.
->    If not, continue to #3.
-> 
-> 3. ata_bus_post_reset() waits readiness of dev0 and/or dev1 depending
->    on devmask using ata_sff_wait_ready().
-> 
-> And for post-hardreset readiness,
-> 
-> 1. ata_sff_wait_after_reset() waits for 150ms and then for
->    ATA_TMOUT_FF_WAIT if status is 0xff and other conditions meet.
-> 
-> 2. sata_sff_hardreset waits for device readiness using
->    ata_sff_wait_ready().
-> 
-> This patch merges and unifies post-reset readiness waits into
-> ata_sff_wait_ready() and ata_sff_wait_after_reset().
-> 
-> ATA_TMOUT_FF_WAIT handling is merged into ata_sff_wait_ready().  If TF
-> status is 0xff, link status is unknown and the port is SATA, it will
-> continue polling till ATA_TMOUT_FF_WAIT.
-> 
-> ata_sff_wait_after_reset() is updated to perform the following steps.
-> 
-> 1. waits for 150ms.
-> 
-> 2. waits for dev0 readiness using ata_sff_wait_ready().  Note that
->    this is done regardless of devmask, as ata_sff_wait_ready() handles
->    0xff status correctly, this preserves the original behavior except
->    that it may wait longer after softreset if link is online but
->    status is 0xff.  This behavior change is very unlikely to cause any
->    actual difference and is intended.  It brings softreset behavior to
->    that of hardreset.
-> 
-> 3. waits for dev1 readiness just the same way ata_bus_post_reset() did.
-> 
-> Now both soft and hard resets call ata_sff_wait_after_reset() after
-> reset to wait for readiness after resets.  As
-> ata_sff_wait_after_reset() contains calls to ->sff_dev_select(),
-> explicit call near the end of sata_sff_hardreset() is removed.
-> 
-> This change makes reset implementation simpler and more consistent.
-> 
-> While at it, make the magical 150ms wait post-reset wait duration a
-> constant and ata_sff_wait_ready() and ata_sff_wait_after_reset() take
-> @link instead of @ap.  This is to make them consistent with other
-> reset helpers and ease core changes.
-> 
-> pata_scc is updated accordingly.
-> 
-> Signed-off-by: Tejun Heo <htejun@gmail.com>
-> ---
->  drivers/ata/ahci.c          |   11 +--
->  drivers/ata/libata-sff.c    |  161 ++++++++++++++++++-------------------------
->  drivers/ata/pata_scc.c      |   91 ++++++++++++++-----------
->  drivers/ata/sata_inic162x.c |    6 +-
->  drivers/ata/sata_via.c      |    2 +-
->  include/linux/libata.h      |   18 ++++-
->  6 files changed, 139 insertions(+), 150 deletions(-)
+On Thursday 03 April 2008, Lennart Sorensen wrote:
+> I am just wondering if arm, m68k, etc might have IDE ports that work
+> with ide-generic.  I have no idea to be quite honest.
 
-This could definitely use some focused PATA testing...  master/slave and 
-slave-only setups can be tricky and annoying, and this area is very very 
-fragile.
+I plan to mention other arches in the call for testing, so I guess we'll 
+find out.
 
-I'm applying, but just a note to watch for bug reports related to 
-probing caused by this (hopefully none...)
+> I can certainly give the installer a shot on my 486, if I can manage to
+> boot it somehow.  Any floppy images for the installer around anymore? :)
 
-	Jeff
+Of course there are ;-)
+http://ftp.debian.org/debian/dists/lenny/main/installer-i386/current/images/floppy/
 
+These use 2.6.22. They don't have the fix I just implemented though. If the 
+IDE controller is not detected, try booting the installer with 
+hw-detect/load-ide=true
+The daily built images, which do have the fix, use 2.6.24, but the increase 
+in the size of the kernel causes the boot floppy to be too big so 
+installing from floppy is currently not possible. We're working on fixing 
+that.
 
+> Do I have to put a disk image on a harddisk and boot from that?
 
+That's an alternative. Use either the netboot or hd-media images for that, 
+and it means that you could use a daily image. With the hd-media images 
+you'll also need to copy a CD image on the hard disk.
 
+Cheers,
+FJP
+
+(Apologies to the list for the somewhat OT post, suggest we follow up 
+privately if needed.)
