@@ -1,61 +1,48 @@
 From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCHSET #upstream] libata: modularize PMP support, take #1
-Date: Fri, 04 Apr 2008 03:47:54 -0400
-Message-ID: <47F5DD2A.9010604@garzik.org>
-References: <1206451517133-git-send-email-htejun@gmail.com>
+Subject: Re: [PATCH #upstream 1/3] libata/pdc_adma: make SFF EH handle non-bmdma
+ SFF drivers and standardize pdc_adma ops
+Date: Fri, 04 Apr 2008 03:50:57 -0400
+Message-ID: <47F5DDE1.4000808@garzik.org>
+References: <47E8F15F.50601@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:41341 "EHLO mail.dvmed.net"
+Received: from srv5.dvmed.net ([207.36.208.214]:48834 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757409AbYDDHr4 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 4 Apr 2008 03:47:56 -0400
-In-Reply-To: <1206451517133-git-send-email-htejun@gmail.com>
+	id S1752682AbYDDHvA (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 4 Apr 2008 03:51:00 -0400
+In-Reply-To: <47E8F15F.50601@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Tejun Heo <htejun@gmail.com>
-Cc: linux-ide@vger.kernel.org, liml@rtr.ca
+Cc: Mark Lord <liml@rtr.ca>, IDE/ATA development list <linux-ide@vger.kernel.org>
 
 Tejun Heo wrote:
-> Hello, all.
+> pdc_adma has interface similar to SFF but has its own DMA interface.
+> It currently implements noop bmdma ops to avoid crashing
+> ata_bmdma_error_handler() which BTW actually is EH for SFF drivers.
 > 
-> This patchset modularizes PMP support and contains the following three
-> patches.
+> This patch makes ata_bmdma_error_handler() dereference bmdma ops iff
+> bmdma_addr is initialized as done in ata_bmdma_post_internal_cmd.
+> This change allows pdc_adma to standardize ops and use SFF
+> error_handler and post_internal_cmd.
 > 
->   mails/0001-libata-separate-PMP-support-code-from-core-code.patch
->   mails/0002-libata-implement-PMP-helpers.patch
->   mails/0003-libata-make-PMP-support-optional.patch
+> Signed-off-by: Tejun Heo <htejun@gmail.com>
+> Cc: Mark Lord <liml@rtr.ca>
+> ---
+> This patch series in on top of #cleanup-sht-ops (ed75ba53) and not for
+> #upstream-fixes.  Tested with pdc_adma controllers Mark sent me. :-)
 > 
-> LLDs which support PMP don't depend on PMP.  If PMP is turned on,
-> those LLDs support PMP, if PMP is off, they don't.  The size of
-> libata.ko on x86_64 w all debugging options off change like the
-> following.
-> 
-> 		ON-DISK		LOADED
-> +SFF+PMP	226k		157k
-> +SFF-PMP	204k		141k
-> -SFF+PMP	193k		133k
-> -SFF-PMP	171k		117k
-> 
-> Both ahci and sata_sil24 have been verified to work w/ PMP turned on
-> and off.
-> 
-> This patchset is on top of
-> 
->   upstream-fixes (4cde32fc4b32e96a99063af3183acdfd54c563f0)
-> + prefer-hardreset (990d6db0af21830681157317ab58c10f80277cb8)
-> + cleanup-sht-ops (ed75ba53c883bc7a63fa1b60c63f33fcf395e751)
-> + [1] cleanup-pdc_adma
-> + [2] modularize-SFF-support patchset, take #1
-> 
-> This patchset is available as git tree.
-> 
->   http://git.kernel.org/?p=linux/kernel/git/tj/libata-dev.git;a=shortlog;h=modularize-PMP
->   git://git.kernel.org/pub/scm/linux/kernel/git/tj/libata-dev.git modularize-PMP
+>  drivers/ata/libata-sff.c |    3 ++-
+>  drivers/ata/pdc_adma.c   |   16 ++--------------
+>  2 files changed, 4 insertions(+), 15 deletions(-)
 
-ACK patchset
+applied 1-3
 
-will pull after a resync with #upstream
+I realize now that the lack of this patchset (broken ordering on my 
+part) probably caused the previously-emailed-about compile breakage. 
+sorry!  I'll pull the rest after a resync, since I ack'd that 27-patch 
+patchset.
 
 
