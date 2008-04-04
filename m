@@ -1,33 +1,37 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH 5/5] sata_mv remove mv_phy_reset and mv_postreset
-Date: Fri, 04 Apr 2008 04:02:00 -0400
-Message-ID: <47F5E078.6040703@pobox.com>
-References: <47F1736F.8020104@rtr.ca> <47F17592.8070002@rtr.ca>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: linux-next: libata/avr32 build failure
+Date: Fri, 04 Apr 2008 04:06:56 -0400
+Message-ID: <47F5E1A0.4060905@garzik.org>
+References: <20080404171040.d3d64c2d.sfr@canb.auug.org.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:40285 "EHLO mail.dvmed.net"
+Received: from srv5.dvmed.net ([207.36.208.214]:58892 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752707AbYDDICD (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 4 Apr 2008 04:02:03 -0400
-In-Reply-To: <47F17592.8070002@rtr.ca>
+	id S1752574AbYDDIH1 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 4 Apr 2008 04:07:27 -0400
+In-Reply-To: <20080404171040.d3d64c2d.sfr@canb.auug.org.au>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark Lord <liml@rtr.ca>, Tejun Heo <htejun@gmail.com>
-Cc: IDE/ATA development list <linux-ide@vger.kernel.org>
+To: Stephen Rothwell <sfr@canb.auug.org.au>
+Cc: linux-next@vger.kernel.org, Haavard Skinnemoen <hskinnemoen@atmel.com>, Randy Dunlap <randy.dunlap@oracle.com>, linux-ide@vger.kernel.org
 
-Mark Lord wrote:
-> Remove the now unused mv_phy_reset() code,
-> as well as the unnecessary mv_postreset() function.
+Stephen Rothwell wrote:
+> Hi Jeff,
 > 
-> Signed-off-by: Mark Lord <mlord@pobox.com>
+> For a while the linux-next build for avr32 defconfig (and others) has
+> been failing like this:
+> 
+> drivers/ata/libata-core.c:127: error: 'ata_pci_default_filter' undeclared here (not in a function)
+> 
+> It seems to be because the declaration of ata_pci_default_filter is
+> protected by CONFIG_PCI but the usage above is protected by CONFIG_ATA
+> only.
+> 
+> Also reported by Randy Dunlap (on March 26) and Haavard Skinnemoen (on
+> March 29).
 
-ACK patches 4-5
+fixed being pushed right now (patch from Tejun fixed it)
 
-However, I would prefer to finish merging Tejun's honkin' huge 
-modularize patchsets, and then request that you rediff&resend sata_mv 
-patches 4 and 5
-
-Having already ack'd it, I'll push Tejun's resync as soon as I receive it.
 
