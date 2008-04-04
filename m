@@ -1,64 +1,51 @@
-From: Stephen Rothwell <sfr@canb.auug.org.au>
-Subject: Re: linux-next: libata/avr32 build failure
-Date: Fri, 4 Apr 2008 17:14:15 +1100
-Message-ID: <20080404171415.c47a3067.sfr@canb.auug.org.au>
-References: <20080404171040.d3d64c2d.sfr@canb.auug.org.au>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [PATCH #upstrema-fixes] libata: fix IDENTIFY order in ata_bus_probe()
+Date: Fri, 04 Apr 2008 02:46:48 -0400
+Message-ID: <47F5CED8.6010900@garzik.org>
+References: <47F2E2D3.6050100@gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; protocol="application/pgp-signature";
- micalg="PGP-SHA1";
- boundary="Signature=_Fri__4_Apr_2008_17_14_15_+1100_l7we_J3eAg7a.isX"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from chilli.pcug.org.au ([203.10.76.44]:52853 "EHLO smtps.tip.net.au"
+Received: from srv5.dvmed.net ([207.36.208.214]:55808 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751566AbYDDGOX (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 4 Apr 2008 02:14:23 -0400
-In-Reply-To: <20080404171040.d3d64c2d.sfr@canb.auug.org.au>
+	id S1753277AbYDDGrO (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 4 Apr 2008 02:47:14 -0400
+In-Reply-To: <47F2E2D3.6050100@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>, Tejun Heo <htejun@gmail.com>
-Cc: linux-next@vger.kernel.org, Haavard Skinnemoen <hskinnemoen@atmel.com>, Randy Dunlap <randy.dunlap@oracle.com>, linux-ide@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: IDE/ATA development list <linux-ide@vger.kernel.org>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 
---Signature=_Fri__4_Apr_2008_17_14_15_+1100_l7we_J3eAg7a.isX
-Content-Type: text/plain; charset=US-ASCII
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Tejun Heo wrote:
+> From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+> 
+> Commit f58229f8060055b08b34008ea08f31de1e2f003c accidentally made
+> ata_bus_probe() not use reverse order probing.  Fix it.
+> 
+> There currently isn't any PATA driver which uses obsolete
+> ata_bus_probe() path, so this patch is mainly for correctness.
+> 
+> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+> Signed-off-by: Tejun Heo <htejun@gmail.com>
+> ---
+> drivers/ata/libata-core.c |    2 +-
+> 1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+> index 4851988..2db5c9c 100644
+> --- a/drivers/ata/libata-core.c
+> +++ b/drivers/ata/libata-core.c
+> @@ -2660,7 +2660,7 @@ int ata_bus_probe(struct ata_port *ap)
+>        specific sequence bass-ackwards so that PDIAG- is released by
+>        the slave device */
+> 
+> -    ata_link_for_each_dev(dev, &ap->link) {
+> +    ata_link_for_each_dev_reverse(dev, &ap->link) {
+>         if (tries[dev->devno])
+>             dev->class = classes[dev->devno];
+> 
 
-Hi Jeff,
+applied
 
-On Fri, 4 Apr 2008 17:10:40 +1100 Stephen Rothwell <sfr@canb.auug.org.au> w=
-rote:
->
-> For a while the linux-next build for avr32 defconfig (and others) has
-> been failing like this:
->=20
-> drivers/ata/libata-core.c:127: error: 'ata_pci_default_filter' undeclared=
- here (not in a function)
->=20
-> It seems to be because the declaration of ata_pci_default_filter is
-> protected by CONFIG_PCI but the usage above is protected by CONFIG_ATA
-> only.
->=20
-> Also reported by Randy Dunlap (on March 26) and Haavard Skinnemoen (on
-> March 29).
 
-The bug looks like it was introduced by commit
-dc14c0c5012855bfc9a5f76056b92f198d52834c ("libata: implement and use ops
-inheritance").
-
---=20
-Cheers,
-Stephen Rothwell                    sfr@canb.auug.org.au
-http://www.canb.auug.org.au/~sfr/
-
---Signature=_Fri__4_Apr_2008_17_14_15_+1100_l7we_J3eAg7a.isX
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.6 (GNU/Linux)
-
-iD8DBQFH9cc6TgG2atn1QN8RAgjWAKCR319dCcdMaw3g1Y0kSAJ8ZudA9wCfRp7+
-ouohT5Jvg1Utjbak+j4iMG4=
-=kvrS
------END PGP SIGNATURE-----
-
---Signature=_Fri__4_Apr_2008_17_14_15_+1100_l7we_J3eAg7a.isX--
