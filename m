@@ -1,62 +1,55 @@
-From: Andrew Morton <akpm@linux-foundation.org>
-Subject: Re: 2.6.25-rc8-mm1: Intel SATA boot failure
-Date: Thu, 3 Apr 2008 16:17:33 -0700
-Message-ID: <20080403161733.c05dac53.akpm@linux-foundation.org>
-References: <20080401213214.8fbb6d6b.akpm@linux-foundation.org>
-	<47F56363.4090002@imap.cc>
+From: Stephen Rothwell <sfr@canb.auug.org.au>
+Subject: linux-next: libata/avr32 build failure
+Date: Fri, 4 Apr 2008 17:10:40 +1100
+Message-ID: <20080404171040.d3d64c2d.sfr@canb.auug.org.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; protocol="application/pgp-signature";
+ micalg="PGP-SHA1";
+ boundary="Signature=_Fri__4_Apr_2008_17_10_40_+1100_E5B_ZXbA0=U.irKz"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:54132 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751519AbYDCXSV (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 3 Apr 2008 19:18:21 -0400
-In-Reply-To: <47F56363.4090002@imap.cc>
+Received: from chilli.pcug.org.au ([203.10.76.44]:54518 "EHLO smtps.tip.net.au"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751519AbYDDGKr (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 4 Apr 2008 02:10:47 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tilman Schmidt <tilman@imap.cc>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, jgarzik@pobox.com
+To: Jeff Garzik <jeff@garzik.org>
+Cc: linux-next@vger.kernel.org, Haavard Skinnemoen <hskinnemoen@atmel.com>, Randy Dunlap <randy.dunlap@oracle.com>, linux-ide@vger.kernel.org
 
-On Fri, 04 Apr 2008 01:08:19 +0200
-Tilman Schmidt <tilman@imap.cc> wrote:
+--Signature=_Fri__4_Apr_2008_17_10_40_+1100_E5B_ZXbA0=U.irKz
+Content-Type: text/plain; charset=US-ASCII
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-> Andrew Morton schrieb:
-> > ftp://ftp.kernel.org/pub/linux/kernel/people/akpm/patches/2.6/2.6.25-rc8/2.6.25-rc8-mm1/
-> 
-> This fails to come up on my development machine, apparently because it
-> has trouble accessing the SATA hard disks.
-> Hardware: Intel Pentium D940, Intel DQ965GF board, two SATA hard disks.
-> Some unusual things I noticed during the boot process:
-> 
-> - a message "doing fast boot" that looked unfamiliar; unfortunately
->   it scrolled off too quickly to note its context
-> 
-> - for each of the two SATA ports in use, a message
->   "SATA port is slow to respond, please be patient"
->   accompanied by about 10 secs wait
-> 
-> - it actually got past the point where it mounts the root file system,
->   so it must have thought it could access the disks
-> 
-> - finally, the system hung completely after the SUSE startup messages
-> 
->   Setting current sysctl status from /etc/sysctl.conf
->   net.ipv4.icmp_echo_ignore_broadcasts = 1
-> 
->   with a dead keyboard and I had to hit the Win^Wreset button.
-> 
-> - After rebooting into 2.6.24-rc8 (which works fine), nothing had been
->   written to the disks, not even the dmesg output which SUSE usually
->   dumps into /var/log/boot.msg early during startup.
-> 
-> Before I try booting that kernel again, any instructions on what to
-> watch out for? Is netconsole usable again?
+Hi Jeff,
 
-Yes, netconsole is usable again ;)
+For a while the linux-next build for avr32 defconfig (and others) has
+been failing like this:
 
-> Other ideas?
+drivers/ata/libata-core.c:127: error: 'ata_pci_default_filter' undeclared h=
+ere (not in a function)
 
-Usual stuff: `diff -u dmesg-2.6.25-rc8 dmesg-2.6.25-rc8-mm1'.  Bisection.
+It seems to be because the declaration of ata_pci_default_filter is
+protected by CONFIG_PCI but the usage above is protected by CONFIG_ATA
+only.
 
-Thanks.
+Also reported by Randy Dunlap (on March 26) and Haavard Skinnemoen (on
+March 29).
+
+--=20
+Cheers,
+Stephen Rothwell                    sfr@canb.auug.org.au
+http://www.canb.auug.org.au/~sfr/
+
+--Signature=_Fri__4_Apr_2008_17_10_40_+1100_E5B_ZXbA0=U.irKz
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.6 (GNU/Linux)
+
+iD8DBQFH9cZkTgG2atn1QN8RAvtiAKCLjy7PGDCnyp14UlzIx3ccy51sNwCgj/wN
+EKI44ib/n0oKM4zePLAi8fw=
+=2NWY
+-----END PGP SIGNATURE-----
+
+--Signature=_Fri__4_Apr_2008_17_10_40_+1100_E5B_ZXbA0=U.irKz--
