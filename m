@@ -1,85 +1,61 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: sata_via
-Date: Fri, 04 Apr 2008 18:04:24 -0400
-Message-ID: <47F6A5E8.1030602@garzik.org>
-References: <47F694C8.8020507@wesmo.com>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: [patch 3/3] ata: SWNCQ should be enabled by default
+Date: Sat, 05 Apr 2008 09:00:06 +0900
+Message-ID: <47F6C106.2080202@gmail.com>
+References: <200803282133.m2SLXlWk011463@imap1.linux-foundation.org> <47EE465E.80401@gmail.com> <47EE88C9.3020805@dunaweb.hu> <47EEDACA.4060400@gmail.com> <15F501D1A78BD343BE8F4D8DB854566B1BFE2AF1@hkemmail01.nvidia.com> <47F069D7.3010702@gmail.com> <47F1A888.3020706@shaw.ca> <47F1AADC.1080104@shaw.ca> <15F501D1A78BD343BE8F4D8DB854566B1BFE2AF4@hkemmail01.nvidia.com> <47F5E271.10903@garzik.org> <47F63C77.9010202@shaw.ca>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1753648AbYDDWEn@vger.kernel.org>
-In-Reply-To: <47F694C8.8020507@wesmo.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Rich West <Rich.West@wesmo.com>
-Cc: linux-kernel@vger.kernel.org, Linux IDE mailing list <linux-ide@vger.kernel.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from wr-out-0506.google.com ([64.233.184.233]:59683 "EHLO
+	wr-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751405AbYDEAAO (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 4 Apr 2008 20:00:14 -0400
+Received: by wr-out-0506.google.com with SMTP id c48so285837wra.1
+        for <linux-ide@vger.kernel.org>; Fri, 04 Apr 2008 17:00:12 -0700 (PDT)
+In-Reply-To: <47F63C77.9010202@shaw.ca>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Robert Hancock <hancockr@shaw.ca>
+Cc: Jeff Garzik <jeff@garzik.org>, Kuan Luo <kluo@nvidia.com>, Zoltan Boszormenyi <zboszor@dunaweb.hu>, akpm@linux-foundation.org, linux-ide@vger.kernel.org, Peer Chen <pchen@nvidia.com>, Allen Martin <AMartin@nvidia.com>
 
-Rich West wrote:
-> On my mythtv backend system, the recordings volume tends to get pounded
-> rather hard (up to 5 recordings (some HD) at once with multiple frontend
-> systems reading from that same volume).  I recently (4 months ago)
-> upgraded the system to a motherboard that happened to have the VIA
-> chipset on it.
+Robert Hancock wrote:
+> Jeff Garzik wrote:
+>> Kuan Luo wrote:
+>>> Robert wrote:
+>>>> -Hotplug/hot-unplug fails to work properly, hotplug interrupts not 
+>>>> raised (seemingly only on certain boards/configurations as I can't 
+>>>> duplicate this problem). 
+>>>> http://bugzilla.kernel.org/show_bug.cgi?id=8421
+>>>>
+>>> I occasionly encountered this problem in one port under certain system,
+>>> but didn't see this issue under other systems in the same mainboard.
+>>> After adding the operation of manually clearing the added/removed
+>>> interrupt bit in NV_INT_STATUS_CK804 register in nv_adma_interrupt 
+>>> function,  i saw some improvement. The key problem is that no one who 
+>>> knows this controller comes to help
+>>> to solve these issue.
+>>> Given this disadvantage, i think disabling it maybe is a good choice.
+>>> I don't know whether we need to continue to provide patch for adma after
+>>> disabling adma function.
+>>
+>> Is there any hope of getting permission for me to (a) give the NV ADMA 
+>> documentation to Robert, or (b) posting the ADMA PDF on 
+>> http://gkernel.sourceforge.net/specs/ ?
+>>
+>> I strongly encourage vendors -- especially with chips at or past 
+>> end-of-life -- to help customers and developers by permitting posting 
+>> at http://gkernel.sourceforge.net/specs/
+>>
+>> Thanks,
+>>
+>>     Jeff
 > 
-> Since that time, I have had some bizarre problems with that volume. 
-> After a seemingly random amount of time, the kernel would report an
-> error with the volume and put it in read-only mode.  However, it would
-> not really be in read-only mode, but it would be completely
-> inaccessible.  Unmounting the volume would be successful, but
-> re-mounting the volume would fail.
-> 
-> I've replaced the drive (with an identical one), tested memory, changed
-> filesystems (it was LVM + ext3, then just ext3) and the problem persists.
-> 
-> Running 2.6.24.4-64 (Fedora 8).
-> 
-> A larger snippet from the messages log is (dmesg gets cleared after 
-> reboot):
-> Apr  3 16:47:27 mythtv1 kernel: ata4.00: exception Emask 0x0 SAct 0x0
-> SErr 0x0 action 0x2 frozen
-> Apr  3 16:47:27 mythtv1 kernel: ata4.00: cmd
-> c8/00:00:77:31:21/00:00:00:00:00/e1 tag 0 dma 131072 in
-> Apr  3 16:47:27 mythtv1 kernel:          res
-> 40/00:01:00:4f:c2/00:00:00:00:00/00 Emask 0x4 (timeout)
-> Apr  3 16:47:27 mythtv1 kernel: ata4.00: status: { DRDY }
-> Apr  3 16:47:27 mythtv1 kernel: ata4: soft resetting link
-> Apr  3 16:47:57 mythtv1 kernel: ata4.00: qc timeout (cmd 0x27)
-> Apr  3 16:47:57 mythtv1 kernel: ata4.00: failed to read native max
-> address (err_mask=0x4)
-> Apr  3 16:47:57 mythtv1 kernel: ata4.00: HPA support seems broken, will
-> skip HPA handling
-> Apr  3 16:47:57 mythtv1 kernel: ata4.00: revalidation failed (errno=-5)
-> Apr  3 16:47:57 mythtv1 kernel: ata4: failed to recover some devices,
-> retrying in 5 secs
-> Apr  3 16:48:02 mythtv1 kernel: ata4: soft resetting link
-> Apr  3 16:48:02 mythtv1 kernel: ata4.00: configured for UDMA/133
-> Apr  3 16:48:02 mythtv1 kernel: ata4: EH complete
-> Apr  3 16:49:02 mythtv1 kernel: ata4.00: exception Emask 0x0 SAct 0x0
-> SErr 0x0 action 0x2 frozen
-> Apr  3 16:49:02 mythtv1 kernel: ata4.00: cmd
-> c8/00:00:77:31:21/00:00:00:00:00/e1 tag 0 dma 131072 in
-> Apr  3 16:49:02 mythtv1 kernel:          res
-> 40/00:01:00:4f:c2/00:00:00:00:00/00 Emask 0x4 (timeout)
-> Apr  3 16:49:02 mythtv1 kernel: ata4.00: status: { DRDY }
-> Apr  3 16:49:02 mythtv1 kernel: ata4: soft resetting link
-> Apr  3 16:49:03 mythtv1 kernel: ata4.00: configured for UDMA/133
-> Apr  3 16:49:03 mythtv1 kernel: ata4: EH complete
-> 
-> It is almost as if I am hitting some bug that is causing the drive to
-> fall off, but I really don't know where else to look or where else to
-> turn...
-> 
-> I'm tempted to just go back to using a PATA drive (smaller.  :(  ) to
-> avoid the problem.  I'm just at a loss as to how it can actually be solved.
+> I would second that call. It's been suggested that 3rd party IP was what 
+> inhibited this, I don't know if that is the case or not. But it would be 
+> a very nice gesture if NVIDIA would do what it takes to make this possible.
 
-This timeout/DRDY message has been a common one recently.  Some of the 
-issues causing this may be resolved in 2.6.25-rc, can you try that?
+/me thirds.
 
-Also, if you could build and test some older kernels to see when this 
-behavior first appeared, that would be quite helpful.
-
-Overall, a timeout _might_ be a problem with libata (the kernel SATA 
-drivers), or it _might_ be a problem with your system's interrupt 
-delivery (sometimes an ACPI or BIOS problem).  Try booting with 'noapic' 
-or 'acpi=off'.
-
-	Jeff
+-- 
+tejun
