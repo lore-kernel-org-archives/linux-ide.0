@@ -1,58 +1,52 @@
-From: Johann Felix Soden <johfel@gmx.de>
-Subject: [PATCH] ata/sata_fsl: Remove unused variable in sata_fsl_probe
-Date: Sun, 06 Apr 2008 15:10:54 +0200
-Message-ID: <1207487454.17097.2.camel@localhost>
+From: Joe Perches <joe@perches.com>
+Subject: [PATCH] drivers/ata/sata_via.c - Eliminate "may be used
+	uninitialized" warning
+Date: Sun, 06 Apr 2008 14:45:20 -0700
+Message-ID: <1207518320.1803.52.camel@localhost>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.gmx.net ([213.165.64.20]:37750 "HELO mail.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1751747AbYDFNLE (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 6 Apr 2008 09:11:04 -0400
+Received: from 136-022.dsl.labridge.com ([206.117.136.22]:1927 "EHLO
+	mail.perches.com" rhost-flags-OK-FAIL-OK-OK) by vger.kernel.org
+	with ESMTP id S1754275AbYDFVpx (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 6 Apr 2008 17:45:53 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: linux-ide@vger.kernel.org, Daniel =?ISO-8859-1?Q?Marjam=E4ki?= <danielm77@spray.se>
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: linux-ide <linux-ide@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>
 
-=46rom: Johann Felix Soden <johfel@users.sourceforge.net>
+Called by svia_init_one with a temporary,
+so there's no effective code change.
 
-In sata_fsl_probe memory is allocated but never used or deallocated.
-=46ixes: http://bugzilla.kernel.org/show_bug.cgi?id=3D10404
+Signed-off-by: Joe Perches <joe@perches.com>
 
-Thanks to Daniel Marjam=C3=A4ki for the bug report.
+ drivers/ata/sata_via.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
 
-Reported-by: Daniel Marjam=C3=A4ki <danielm77@spray.se>
-Signed-off-by: Johann Felix Soden <johfel@users.sourceforge.net>
----
- drivers/ata/sata_fsl.c |    3 ---
- 1 files changed, 0 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/ata/sata_fsl.c b/drivers/ata/sata_fsl.c
-index 4c19855..9d1e3ca 100644
---- a/drivers/ata/sata_fsl.c
-+++ b/drivers/ata/sata_fsl.c
-@@ -1256,7 +1256,6 @@ static int sata_fsl_probe(struct of_device *ofdev=
-,
- 	void __iomem *ssr_base =3D NULL;
- 	void __iomem *csr_base =3D NULL;
- 	struct sata_fsl_host_priv *host_priv =3D NULL;
--	struct resource *r;
- 	int irq;
+diff --git a/drivers/ata/sata_via.c b/drivers/ata/sata_via.c
+index 0d03f44..e01d2b1 100644
+--- a/drivers/ata/sata_via.c
++++ b/drivers/ata/sata_via.c
+@@ -406,10 +406,9 @@ static int vt6420_prepare_host(struct pci_dev *pdev, struct ata_host **r_host)
  	struct ata_host *host;
-=20
-@@ -1266,8 +1265,6 @@ static int sata_fsl_probe(struct of_device *ofdev=
-,
- 	dev_printk(KERN_INFO, &ofdev->dev,
- 		   "Sata FSL Platform/CSB Driver init\n");
-=20
--	r =3D kmalloc(sizeof(struct resource), GFP_KERNEL);
--
- 	hcr_base =3D of_iomap(ofdev->node, 0);
- 	if (!hcr_base)
- 		goto error_exit_with_cleanup;
---=20
-1.5.4.5
-
+ 	int rc;
+ 
+-	rc = ata_pci_prepare_sff_host(pdev, ppi, &host);
++	rc = ata_pci_prepare_sff_host(pdev, ppi, r_host);
+ 	if (rc)
+ 		return rc;
+-	*r_host = host;
+ 
+ 	rc = pcim_iomap_regions(pdev, 1 << 5, DRV_NAME);
+ 	if (rc) {
+@@ -417,6 +416,7 @@ static int vt6420_prepare_host(struct pci_dev *pdev, struct ata_host **r_host)
+ 		return rc;
+ 	}
+ 
++	host = *r_host;
+ 	host->ports[0]->ioaddr.scr_addr = svia_scr_addr(host->iomap[5], 0);
+ 	host->ports[1]->ioaddr.scr_addr = svia_scr_addr(host->iomap[5], 1);
+ 
 
 
