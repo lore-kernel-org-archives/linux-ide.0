@@ -1,39 +1,59 @@
-From: Adrian Bunk <bunk@kernel.org>
+From: Joe Perches <joe@perches.com>
 Subject: Re: [PATCH] drivers/ata/sata_via.c - Eliminate "may be used
 	uninitialized" warning
-Date: Mon, 7 Apr 2008 00:50:54 +0300
-Message-ID: <20080406215054.GI30987@cs181133002.pp.htv.fi>
+Date: Sun, 06 Apr 2008 15:00:07 -0700
+Message-ID: <1207519207.1803.60.camel@localhost>
 References: <1207518320.1803.52.camel@localhost>
+	 <20080406215054.GI30987@cs181133002.pp.htv.fi>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp6.pp.htv.fi ([213.243.153.40]:38022 "EHLO smtp6.pp.htv.fi"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753640AbYDFVv1 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 6 Apr 2008 17:51:27 -0400
-Content-Disposition: inline
-In-Reply-To: <1207518320.1803.52.camel@localhost>
+Received: from 136-022.dsl.labridge.com ([206.117.136.22]:1945 "EHLO
+	mail.perches.com" rhost-flags-OK-FAIL-OK-OK) by vger.kernel.org
+	with ESMTP id S1753535AbYDFWA7 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 6 Apr 2008 18:00:59 -0400
+In-Reply-To: <20080406215054.GI30987@cs181133002.pp.htv.fi>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Joe Perches <joe@perches.com>
+To: Adrian Bunk <bunk@kernel.org>
 Cc: Jeff Garzik <jgarzik@pobox.com>, linux-ide <linux-ide@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>
 
-On Sun, Apr 06, 2008 at 02:45:20PM -0700, Joe Perches wrote:
-> Called by svia_init_one with a temporary,
-> so there's no effective code change.
->...
+On Mon, 2008-04-07 at 00:50 +0300, Adrian Bunk wrote:
+> On Sun, Apr 06, 2008 at 02:45:20PM -0700, Joe Perches wrote:
+> > Called by svia_init_one with a temporary,
+> > so there's no effective code change.
+> I'm not getting any warning here.
+> Are you using an older gcc?
 
-I'm not getting any warning here.
+Yes.  Slightly less than 4.3.0
 
-Are you using an older gcc?
+$ gcc --version
+gcc (GCC) 4.2.2 20071128 (prerelease) (4.2.2-3.1mdv2008.0)
 
-cu
-Adrian
+$ git-show
+commit 6fdf5e67fe8d3c83500dad9acae985132c2459a3
+Merge: abd24df... e64a3cf...
+Author: Linus Torvalds <torvalds@linux-foundation.org>
+Date:   Fri Apr 4 15:09:44 2008 -0700
 
--- 
+    Merge branch 'upstream' of git://git.kernel.org/pub/scm/linux/kerne=
+l/git/ralf/upstream-linus
+   =20
+    * 'upstream' of git://git.kernel.org/pub/scm/linux/kernel/git/ralf/=
+upstream-linus:
+      [MIPS] Make KGDB compile on UP
+      [MIPS] Pb1200: Fix header breakage
 
-       "Is there not promise of rain?" Ling Tan asked suddenly out
-        of the darkness. There had been need of rain for many days.
-       "Only a promise," Lao Er said.
-                                       Pearl S. Buck - Dragon Seed
+$ make defconfig
+[]
+$ make clean
+[]
+$ make drivers/ata/sata_via.o
+[]
+  CC      drivers/ata/sata_via.o
+drivers/ata/sata_via.c: In function =E2=80=98svia_init_one=E2=80=99:
+drivers/ata/sata_via.c:504: warning: =E2=80=98host=E2=80=99 may be used=
+ uninitialized in this function
+
 
