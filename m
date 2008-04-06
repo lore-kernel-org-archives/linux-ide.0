@@ -1,37 +1,39 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: sata_via
-Date: Sat, 05 Apr 2008 17:51:31 -0400
-Message-ID: <47F7F463.2060402@garzik.org>
-References: <47F694C8.8020507@wesmo.com> <47F6A5E8.1030602@garzik.org>	 <47F6BD55.3090708@wesmo.com> <5699f8f00804050015kb1ebb1cpf3ab8b587580fffd@mail.gmail.com> <47F7982E.5080701@wesmo.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+From: bugme-daemon@bugzilla.kernel.org
+Subject: [Bug 7553] growisofs trapped in "disk sleep" mode, after finishing writing a DVD
+Date: Sat,  5 Apr 2008 20:30:30 -0700 (PDT)
+Message-ID: <20080406033030.6C074108063@picon.linux-foundation.org>
+References: <bug-7553-11633@http.bugzilla.kernel.org/>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:40853 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753625AbYDEVvi (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 5 Apr 2008 17:51:38 -0400
-In-Reply-To: <47F7982E.5080701@wesmo.com>
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:42372 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751694AbYDFDbE (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 5 Apr 2008 23:31:04 -0400
+Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
+	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id m363UUFr015940
+	for <linux-ide@vger.kernel.org>; Sat, 5 Apr 2008 20:30:31 -0700
+In-Reply-To: <bug-7553-11633@http.bugzilla.kernel.org/>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Rich West <Rich.West@wesmo.com>
-Cc: Wander Winkelhorst <w.winkelhorst@gmail.com>, linux-kernel@vger.kernel.org, Linux IDE mailing list <linux-ide@vger.kernel.org>
+To: linux-ide@vger.kernel.org
 
-Rich West wrote:
-> I was only curious as to what turning off power management support would 
-> buy with regard to the sata timeout issue.
+http://bugzilla.kernel.org/show_bug.cgi?id=7553
 
 
-ACPI is not only power management.  It is all the information your 
-hardware conveys to your OS, about the setup and workings of your hardware.
+protasnb@gmail.com changed:
 
-Without ACPI, non-PM things like SMP, laptop dock/undock, and many other 
-gadgets fail to function (or are configured sub-optimally).
-
-ACPI sets up interrupt routing, and Linux history is _loaded_ with 
-_years_ of problem reports that appear as timeouts, only to be resolved 
-as ACPI interrupt bugs (aka BIOS bugs, since ACPI tables come from BIOS).
-
-	Jeff
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+                 CC|                            |protasnb@gmail.com
 
 
+
+
+------- Comment #9 from protasnb@gmail.com  2008-04-05 20:30 -------
+Mongoose, can you please re-test with current kernel.
+Thanks.
+
+
+-- 
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug, or are watching the assignee.
