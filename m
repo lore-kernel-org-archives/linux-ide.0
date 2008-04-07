@@ -1,51 +1,41 @@
-From: Adrian Bunk <bunk@kernel.org>
-Subject: Re: [PATCH] drivers/ata/sata_via.c - Eliminate "may be used
-	uninitialized" warning
-Date: Mon, 7 Apr 2008 10:53:57 +0300
-Message-ID: <20080407075357.GB20257@cs181133002.pp.htv.fi>
-References: <1207518320.1803.52.camel@localhost> <20080406215054.GI30987@cs181133002.pp.htv.fi> <1207519207.1803.60.camel@localhost>
+From: Tejun Heo <htejun@gmail.com>
+Subject: [GIT PULL REQUEST #upstream] Please pull modularize patchsets
+Date: Mon, 07 Apr 2008 23:09:40 +0900
+Message-ID: <47FA2B24.8060502@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1755270AbYDGHyp@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1207519207.1803.60.camel@localhost>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Joe Perches <joe@perches.com>
-Cc: Jeff Garzik <jgarzik@pobox.com>, linux-ide <linux-ide@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from wa-out-1112.google.com ([209.85.146.180]:42962 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752776AbYDGOJq (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 7 Apr 2008 10:09:46 -0400
+Received: by wa-out-1112.google.com with SMTP id v27so1326034wah.23
+        for <linux-ide@vger.kernel.org>; Mon, 07 Apr 2008 07:09:46 -0700 (PDT)
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>, IDE/ATA development list <linux-ide@vger.kernel.org>
 
-On Sun, Apr 06, 2008 at 03:00:07PM -0700, Joe Perches wrote:
-> On Mon, 2008-04-07 at 00:50 +0300, Adrian Bunk wrote:
-> > On Sun, Apr 06, 2008 at 02:45:20PM -0700, Joe Perches wrote:
-> > > Called by svia_init_one with a temporary,
-> > > so there's no effective code change.
-> > I'm not getting any warning here.
-> > Are you using an older gcc?
-> 
-> Yes.  Slightly less than 4.3.0
-> 
-> $ gcc --version
-> gcc (GCC) 4.2.2 20071128 (prerelease) (4.2.2-3.1mdv2008.0)
->...
+Hello, Jeff.
 
-I've reproduced the warning with 4.2 but not with the 4.3 in Debian 
-unstable.
+Please pull from modularize-PMP branch which contains updated versions
+of both modularize-SFF[1] and modularize-PMP[2] patchsets.  Other than
+minor compile fixes due to new patches on top of #upstream, there
+wasn't any change so I'm not posting the updated patches.
 
-Jeff is the one to decide about this specific patch.
+The git tree is located at...
 
-Independent from this specific patch my opinion is that considering that 
-we support 7 different release series of gcc aiming for a warning free 
-compilation with the latest gcc is a good goal, but aiming for a warning 
-free compilation with all supported gcc release series is not worth it
-(especially considering that patches that fix such warnings might even 
-introduce new bugs).
+  ssh://master.kernel.org/pub/scm/linux/kernel/git/tj/libata-dev.git modularize-PMP
 
-cu
-Adrian
+And, hopefully, in the following public repos pretty soon.
+
+  http://git.kernel.org/?p=linux/kernel/git/tj/libata-dev.git;a=shortlog;h=modularize-PMP
+  git://git.kernel.org/pub/scm/linux/kernel/git/tj/libata-dev.git modularize-PMP
+
+Thanks.
 
 -- 
+tejun
 
-       "Is there not promise of rain?" Ling Tan asked suddenly out
-        of the darkness. There had been need of rain for many days.
-       "Only a promise," Lao Er said.
-                                       Pearl S. Buck - Dragon Seed
+[1] http://thread.gmane.org/gmane.linux.ide/29981
+[2] http://thread.gmane.org/gmane.linux.ide/30009
