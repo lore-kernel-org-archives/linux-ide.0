@@ -1,169 +1,314 @@
 From: Borislav Petkov <petkovbb@googlemail.com>
-Subject: [PATCH 2/6] ide-tape: mv idetape_discard_read_pipeline ide_tape_discard_merge_buffer
-Date: Mon,  7 Apr 2008 06:45:00 +0200
-Message-ID: <1207543504-27888-3-git-send-email-petkovbb@gmail.com>
+Subject: [PATCH 5/6] ide-tape: remove tape->merge_stage
+Date: Mon,  7 Apr 2008 06:45:03 +0200
+Message-ID: <1207543504-27888-6-git-send-email-petkovbb@gmail.com>
 References: <1207543504-27888-1-git-send-email-petkovbb@gmail.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.155]:39013 "EHLO
+Received: from fg-out-1718.google.com ([72.14.220.154]:37338 "EHLO
 	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751129AbYDGEot (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 7 Apr 2008 00:44:49 -0400
-Received: by fg-out-1718.google.com with SMTP id l27so1273834fgb.17
-        for <linux-ide@vger.kernel.org>; Sun, 06 Apr 2008 21:44:46 -0700 (PDT)
+	with ESMTP id S1751985AbYDGEox (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 7 Apr 2008 00:44:53 -0400
+Received: by fg-out-1718.google.com with SMTP id l27so1273833fgb.17
+        for <linux-ide@vger.kernel.org>; Sun, 06 Apr 2008 21:44:52 -0700 (PDT)
 In-Reply-To: <1207543504-27888-1-git-send-email-petkovbb@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: bzolnier@gmail.com
 Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Borislav Petkov <petkovbb@gmail.com>
 
-Also, rename its __-low level helper too.
+Get rid of the pipeline merge stage but retain the chrdev req caching
+functionality by using a merge buffer tape->merge_bh which is flushed in chunks
+of several blocks at a time. Also, remove last references to pipelining, e.g.
+typedef idetape_stage_s.
 
 Signed-off-by: Borislav Petkov <petkovbb@gmail.com>
 ---
- drivers/ide/ide-tape.c |   34 +++++++++++++++++-----------------
- 1 files changed, 17 insertions(+), 17 deletions(-)
+ drivers/ide/ide-tape.c |  107 ++++++++++++++++++++---------------------------
+ 1 files changed, 46 insertions(+), 61 deletions(-)
 
 diff --git a/drivers/ide/ide-tape.c b/drivers/ide/ide-tape.c
-index 0cd0684..ecc11c1 100644
+index d7fee6e..78a76a0 100644
 --- a/drivers/ide/ide-tape.c
 +++ b/drivers/ide/ide-tape.c
-@@ -1641,7 +1641,7 @@ static int idetape_create_prevent_cmd(ide_drive_t *drive,
- 	return 1;
+@@ -215,13 +215,6 @@ enum {
+ 	IDETAPE_FLAG_MEDIUM_PRESENT	= (1 << 6),
+ };
+ 
+-/* A pipeline stage. */
+-typedef struct idetape_stage_s {
+-	struct request rq;			/* The corresponding request */
+-	struct idetape_bh *bh;			/* The data buffers */
+-	struct idetape_stage_s *next;		/* Pointer to the next stage */
+-} idetape_stage_t;
+-
+ /*
+  * Most of our global data which we need to save even as we leave the driver due
+  * to an interrupt or a timer event is stored in the struct defined below.
+@@ -309,9 +302,11 @@ typedef struct ide_tape_obj {
+ 
+ 	/* Data buffer size chosen based on the tape's recommendation */
+ 	int buffer_size;
+-	idetape_stage_t *merge_stage;
++	/* merge buffer */
++	struct idetape_bh *merge_bh;
+ 	/* size of the merge buffer */
+ 	int merge_bh_size;
++	/* pointer to current buffer head within the merge buffer */
+ 	struct idetape_bh *bh;
+ 	char *b_data;
+ 	int b_count;
+@@ -585,9 +580,9 @@ static void idetape_analyze_error(ide_drive_t *drive, u8 *sense)
  }
  
--static void __idetape_discard_read_pipeline(ide_drive_t *drive)
-+static void __ide_tape_discard_merge_buffer(ide_drive_t *drive)
+ /* Free data buffers completely. */
+-static void ide_tape_kfree_buffer(idetape_stage_t *stage)
++static void ide_tape_kfree_buffer(idetape_tape_t *tape)
  {
- 	idetape_tape_t *tape = drive->driver_data;
+-	struct idetape_bh *prev_bh, *bh = stage->bh;
++	struct idetape_bh *prev_bh, *bh = tape->merge_bh;
  
-@@ -1672,7 +1672,7 @@ static int idetape_position_tape(ide_drive_t *drive, unsigned int block,
- 	struct ide_atapi_pc pc;
- 
- 	if (tape->chrdev_dir == IDETAPE_DIR_READ)
--		__idetape_discard_read_pipeline(drive);
-+		__ide_tape_discard_merge_buffer(drive);
- 	idetape_wait_ready(drive, 60 * 5 * HZ);
- 	idetape_create_locate_cmd(drive, &pc, block, partition, skip);
- 	retval = idetape_queue_pc_tail(drive, &pc);
-@@ -1683,19 +1683,19 @@ static int idetape_position_tape(ide_drive_t *drive, unsigned int block,
- 	return (idetape_queue_pc_tail(drive, &pc));
+ 	while (bh) {
+ 		u32 size = bh->b_size;
+@@ -605,7 +600,7 @@ static void ide_tape_kfree_buffer(idetape_stage_t *stage)
+ 		bh = bh->b_reqnext;
+ 		kfree(prev_bh);
+ 	}
+-	kfree(stage);
++	kfree(tape->merge_bh);
  }
  
--static void idetape_discard_read_pipeline(ide_drive_t *drive,
-+static void ide_tape_discard_merge_buffer(ide_drive_t *drive,
- 					  int restore_position)
+ static int idetape_end_request(ide_drive_t *drive, int uptodate, int nr_sects)
+@@ -1299,22 +1294,16 @@ out:
+  * It returns a pointer to the newly allocated buffer, or NULL in case of
+  * failure.
+  */
+-static idetape_stage_t *ide_tape_kmalloc_buffer(idetape_tape_t *tape, int full,
+-						int clear)
++static struct idetape_bh *ide_tape_kmalloc_buffer(idetape_tape_t *tape,
++						  int full, int clear)
  {
- 	idetape_tape_t *tape = drive->driver_data;
- 	int seek, position;
+-	idetape_stage_t *stage;
+-	struct idetape_bh *prev_bh, *bh;
++	struct idetape_bh *prev_bh, *bh, *merge_bh;
+ 	int pages = tape->pages_per_buffer;
+ 	unsigned int order, b_allocd;
+ 	char *b_data = NULL;
  
--	__idetape_discard_read_pipeline(drive);
-+	__ide_tape_discard_merge_buffer(drive);
- 	if (restore_position) {
- 		position = idetape_read_position(drive);
- 		seek = position > 0 ? position : 0;
- 		if (idetape_position_tape(drive, seek, 0, 0)) {
- 			printk(KERN_INFO "ide-tape: %s: position_tape failed in"
--					 " discard_pipeline()\n", tape->name);
-+					 " %s\n", tape->name, __func__);
- 			return;
+-	stage = kmalloc(sizeof(idetape_stage_t), GFP_KERNEL);
+-	if (!stage)
+-		return NULL;
+-	stage->next = NULL;
+-
+-	stage->bh = kmalloc(sizeof(struct idetape_bh), GFP_KERNEL);
+-	bh = stage->bh;
++	merge_bh = kmalloc(sizeof(struct idetape_bh), GFP_KERNEL);
++	bh = merge_bh;
+ 	if (bh == NULL)
+ 		goto abort;
+ 
+@@ -1374,9 +1363,9 @@ static idetape_stage_t *ide_tape_kmalloc_buffer(idetape_tape_t *tape, int full,
+ 	bh->b_size -= tape->excess_bh_size;
+ 	if (full)
+ 		atomic_sub(tape->excess_bh_size, &bh->b_count);
+-	return stage;
++	return merge_bh;
+ abort:
+-	ide_tape_kfree_buffer(stage);
++	ide_tape_kfree_buffer(tape);
+ 	return NULL;
+ }
+ 
+@@ -1444,11 +1433,11 @@ static int idetape_copy_stage_to_user(idetape_tape_t *tape, char __user *buf,
+ 	return ret;
+ }
+ 
+-static void idetape_init_merge_stage(idetape_tape_t *tape)
++static void idetape_init_merge_buffer(idetape_tape_t *tape)
+ {
+-	struct idetape_bh *bh = tape->merge_stage->bh;
++	struct idetape_bh *bh = tape->merge_bh;
++	tape->bh = tape->merge_bh;
+ 
+-	tape->bh = bh;
+ 	if (tape->chrdev_dir == IDETAPE_DIR_WRITE)
+ 		atomic_set(&bh->b_count, 0);
+ 	else {
+@@ -1651,9 +1640,9 @@ static void __ide_tape_discard_merge_buffer(ide_drive_t *drive)
+ 
+ 	clear_bit(IDETAPE_FLAG_FILEMARK, &tape->flags);
+ 	tape->merge_bh_size = 0;
+-	if (tape->merge_stage != NULL) {
+-		ide_tape_kfree_buffer(tape->merge_stage);
+-		tape->merge_stage = NULL;
++	if (tape->merge_bh != NULL) {
++		ide_tape_kfree_buffer(tape);
++		tape->merge_bh = NULL;
+ 	}
+ 
+ 	tape->chrdev_dir = IDETAPE_DIR_NONE;
+@@ -1725,8 +1714,8 @@ static int idetape_queue_rw_tail(ide_drive_t *drive, int cmd, int blocks,
+ 	if ((cmd & (REQ_IDETAPE_READ | REQ_IDETAPE_WRITE)) == 0)
+ 		return 0;
+ 
+-	if (tape->merge_stage)
+-		idetape_init_merge_stage(tape);
++	if (tape->merge_bh)
++		idetape_init_merge_buffer(tape);
+ 	if (rq.errors == IDETAPE_ERROR_GENERAL)
+ 		return -EIO;
+ 	return (tape->blk_size * (blocks-rq.current_nr_sectors));
+@@ -1777,7 +1766,7 @@ static int idetape_add_chrdev_write_request(ide_drive_t *drive, int blocks)
+ 	debug_log(DBG_CHRDEV, "Enter %s\n", __func__);
+ 
+ 	return idetape_queue_rw_tail(drive, REQ_IDETAPE_WRITE,
+-				     blocks, tape->merge_stage->bh);
++				     blocks, tape->merge_bh);
+ }
+ 
+ static void ide_tape_flush_merge_buffer(ide_drive_t *drive)
+@@ -1787,7 +1776,7 @@ static void ide_tape_flush_merge_buffer(ide_drive_t *drive)
+ 	struct idetape_bh *bh;
+ 
+ 	if (tape->chrdev_dir != IDETAPE_DIR_WRITE) {
+-		printk(KERN_ERR "ide-tape: bug: Trying to empty write pipeline,"
++		printk(KERN_ERR "ide-tape: bug: Trying to empty merge buffer"
+ 				" but we are not writing.\n");
+ 		return;
+ 	}
+@@ -1827,9 +1816,9 @@ static void ide_tape_flush_merge_buffer(ide_drive_t *drive)
+ 		(void) idetape_add_chrdev_write_request(drive, blocks);
+ 		tape->merge_bh_size = 0;
+ 	}
+-	if (tape->merge_stage != NULL) {
+-		ide_tape_kfree_buffer(tape->merge_stage);
+-		tape->merge_stage = NULL;
++	if (tape->merge_bh != NULL) {
++		ide_tape_kfree_buffer(tape);
++		tape->merge_bh = NULL;
+ 	}
+ 	tape->chrdev_dir = IDETAPE_DIR_NONE;
+ }
+@@ -1845,13 +1834,13 @@ static int idetape_init_read(ide_drive_t *drive)
+ 			ide_tape_flush_merge_buffer(drive);
+ 			idetape_flush_tape_buffers(drive);
  		}
+-		if (tape->merge_stage || tape->merge_bh_size) {
++		if (tape->merge_bh || tape->merge_bh_size) {
+ 			printk(KERN_ERR "ide-tape: merge_bh_size should be"
+ 					 " 0 now\n");
+ 			tape->merge_bh_size = 0;
+ 		}
+-		tape->merge_stage = ide_tape_kmalloc_buffer(tape, 0, 0);
+-		if (!tape->merge_stage)
++		tape->merge_bh = ide_tape_kmalloc_buffer(tape, 0, 0);
++		if (!tape->merge_bh)
+ 			return -ENOMEM;
+ 		tape->chrdev_dir = IDETAPE_DIR_READ;
+ 
+@@ -1864,10 +1853,10 @@ static int idetape_init_read(ide_drive_t *drive)
+ 		if (drive->dsc_overlap) {
+ 			bytes_read = idetape_queue_rw_tail(drive,
+ 							REQ_IDETAPE_READ, 0,
+-							tape->merge_stage->bh);
++							tape->merge_bh);
+ 			if (bytes_read < 0) {
+-				ide_tape_kfree_buffer(tape->merge_stage);
+-				tape->merge_stage = NULL;
++				ide_tape_kfree_buffer(tape);
++				tape->merge_bh = NULL;
+ 				tape->chrdev_dir = IDETAPE_DIR_NONE;
+ 				return bytes_read;
+ 			}
+@@ -1891,7 +1880,7 @@ static int idetape_add_chrdev_read_request(ide_drive_t *drive, int blocks)
+ 	idetape_init_read(drive);
+ 
+ 	return idetape_queue_rw_tail(drive, REQ_IDETAPE_READ, blocks,
+-				     tape->merge_stage->bh);
++				     tape->merge_bh);
+ }
+ 
+ static void idetape_pad_zeros(ide_drive_t *drive, int bcount)
+@@ -1903,7 +1892,7 @@ static void idetape_pad_zeros(ide_drive_t *drive, int bcount)
+ 	while (bcount) {
+ 		unsigned int count;
+ 
+-		bh = tape->merge_stage->bh;
++		bh = tape->merge_bh;
+ 		count = min(tape->buffer_size, bcount);
+ 		bcount -= count;
+ 		blocks = count / tape->blk_size;
+@@ -1915,7 +1904,7 @@ static void idetape_pad_zeros(ide_drive_t *drive, int bcount)
+ 			bh = bh->b_reqnext;
+ 		}
+ 		idetape_queue_rw_tail(drive, REQ_IDETAPE_WRITE, blocks,
+-				      tape->merge_stage->bh);
++				      tape->merge_bh);
  	}
-@@ -1996,7 +1996,7 @@ static int idetape_space_over_filemarks(ide_drive_t *drive, short mt_op,
- 		tape->merge_stage_size = 0;
- 		if (test_and_clear_bit(IDETAPE_FLAG_FILEMARK, &tape->flags))
- 			++count;
--		idetape_discard_read_pipeline(drive, 0);
-+		ide_tape_discard_merge_buffer(drive, 0);
+ }
+ 
+@@ -2000,10 +1989,6 @@ static int idetape_space_over_filemarks(ide_drive_t *drive, short mt_op,
+ 		ide_tape_discard_merge_buffer(drive, 0);
  	}
  
- 	/*
-@@ -2121,7 +2121,7 @@ static ssize_t idetape_chrdev_write(struct file *file, const char __user *buf,
- 	/* Initialize write operation */
+-	/*
+-	 * The filemark was not found in our internal pipeline;	now we can issue
+-	 * the space command.
+-	 */
+ 	switch (mt_op) {
+ 	case MTFSF:
+ 	case MTBSF:
+@@ -2123,16 +2108,16 @@ static ssize_t idetape_chrdev_write(struct file *file, const char __user *buf,
  	if (tape->chrdev_dir != IDETAPE_DIR_WRITE) {
  		if (tape->chrdev_dir == IDETAPE_DIR_READ)
--			idetape_discard_read_pipeline(drive, 1);
-+			ide_tape_discard_merge_buffer(drive, 1);
- 		if (tape->merge_stage || tape->merge_stage_size) {
- 			printk(KERN_ERR "ide-tape: merge_stage_size "
+ 			ide_tape_discard_merge_buffer(drive, 1);
+-		if (tape->merge_stage || tape->merge_bh_size) {
++		if (tape->merge_bh || tape->merge_bh_size) {
+ 			printk(KERN_ERR "ide-tape: merge_bh_size "
  				"should be 0 now\n");
-@@ -2246,7 +2246,7 @@ static int idetape_mtioctop(ide_drive_t *drive, short mt_op, int mt_count)
- 	case MTWEOF:
- 		if (tape->write_prot)
- 			return -EACCES;
--		idetape_discard_read_pipeline(drive, 1);
-+		ide_tape_discard_merge_buffer(drive, 1);
- 		for (i = 0; i < mt_count; i++) {
- 			retval = idetape_write_filemark(drive);
- 			if (retval)
-@@ -2254,12 +2254,12 @@ static int idetape_mtioctop(ide_drive_t *drive, short mt_op, int mt_count)
+ 			tape->merge_bh_size = 0;
  		}
- 		return 0;
- 	case MTREW:
--		idetape_discard_read_pipeline(drive, 0);
-+		ide_tape_discard_merge_buffer(drive, 0);
- 		if (idetape_rewind_tape(drive))
- 			return -EIO;
- 		return 0;
- 	case MTLOAD:
--		idetape_discard_read_pipeline(drive, 0);
-+		ide_tape_discard_merge_buffer(drive, 0);
- 		idetape_create_load_unload_cmd(drive, &pc,
- 					       IDETAPE_LU_LOAD_MASK);
- 		return idetape_queue_pc_tail(drive, &pc);
-@@ -2274,7 +2274,7 @@ static int idetape_mtioctop(ide_drive_t *drive, short mt_op, int mt_count)
- 				if (!idetape_queue_pc_tail(drive, &pc))
- 					tape->door_locked = DOOR_UNLOCKED;
- 		}
--		idetape_discard_read_pipeline(drive, 0);
-+		ide_tape_discard_merge_buffer(drive, 0);
- 		idetape_create_load_unload_cmd(drive, &pc,
- 					      !IDETAPE_LU_LOAD_MASK);
- 		retval = idetape_queue_pc_tail(drive, &pc);
-@@ -2282,10 +2282,10 @@ static int idetape_mtioctop(ide_drive_t *drive, short mt_op, int mt_count)
- 			clear_bit(IDETAPE_FLAG_MEDIUM_PRESENT, &tape->flags);
- 		return retval;
- 	case MTNOP:
--		idetape_discard_read_pipeline(drive, 0);
-+		ide_tape_discard_merge_buffer(drive, 0);
- 		return idetape_flush_tape_buffers(drive);
- 	case MTRETEN:
--		idetape_discard_read_pipeline(drive, 0);
-+		ide_tape_discard_merge_buffer(drive, 0);
- 		idetape_create_load_unload_cmd(drive, &pc,
- 			IDETAPE_LU_RETENSION_MASK | IDETAPE_LU_LOAD_MASK);
- 		return idetape_queue_pc_tail(drive, &pc);
-@@ -2307,11 +2307,11 @@ static int idetape_mtioctop(ide_drive_t *drive, short mt_op, int mt_count)
- 			set_bit(IDETAPE_FLAG_DETECT_BS, &tape->flags);
- 		return 0;
- 	case MTSEEK:
--		idetape_discard_read_pipeline(drive, 0);
-+		ide_tape_discard_merge_buffer(drive, 0);
- 		return idetape_position_tape(drive,
- 			mt_count * tape->user_bs_factor, tape->partition, 0);
- 	case MTSETPART:
--		idetape_discard_read_pipeline(drive, 0);
-+		ide_tape_discard_merge_buffer(drive, 0);
- 		return idetape_position_tape(drive, 0, mt_count, 0);
- 	case MTFSR:
- 	case MTBSR:
-@@ -2393,7 +2393,7 @@ static int idetape_chrdev_ioctl(struct inode *inode, struct file *file,
- 		return 0;
- 	default:
- 		if (tape->chrdev_dir == IDETAPE_DIR_READ)
--			idetape_discard_read_pipeline(drive, 1);
-+			ide_tape_discard_merge_buffer(drive, 1);
- 		return idetape_blkdev_ioctl(drive, cmd, arg);
- 	}
- }
-@@ -2535,7 +2535,7 @@ static int idetape_chrdev_release(struct inode *inode, struct file *filp)
- 		idetape_write_release(drive, minor);
- 	if (tape->chrdev_dir == IDETAPE_DIR_READ) {
- 		if (minor < 128)
--			idetape_discard_read_pipeline(drive, 1);
-+			ide_tape_discard_merge_buffer(drive, 1);
- 	}
+-		tape->merge_stage = ide_tape_kmalloc_buffer(tape, 0, 0);
+-		if (!tape->merge_stage)
++		tape->merge_bh = ide_tape_kmalloc_buffer(tape, 0, 0);
++		if (!tape->merge_bh)
+ 			return -ENOMEM;
+ 		tape->chrdev_dir = IDETAPE_DIR_WRITE;
+-		idetape_init_merge_stage(tape);
++		idetape_init_merge_buffer(tape);
  
- 	if (minor < 128 && test_bit(IDETAPE_FLAG_MEDIUM_PRESENT, &tape->flags))
+ 		/*
+ 		 * Issue a write 0 command to ensure that DSC handshake is
+@@ -2143,10 +2128,10 @@ static ssize_t idetape_chrdev_write(struct file *file, const char __user *buf,
+ 		if (drive->dsc_overlap) {
+ 			ssize_t retval = idetape_queue_rw_tail(drive,
+ 							REQ_IDETAPE_WRITE, 0,
+-							tape->merge_stage->bh);
++							tape->merge_bh);
+ 			if (retval < 0) {
+-				ide_tape_kfree_buffer(tape->merge_stage);
+-				tape->merge_stage = NULL;
++				ide_tape_kfree_buffer(tape);
++				tape->merge_bh = NULL;
+ 				tape->chrdev_dir = IDETAPE_DIR_NONE;
+ 				return retval;
+ 			}
+@@ -2508,12 +2493,12 @@ static void idetape_write_release(ide_drive_t *drive, unsigned int minor)
+ 	idetape_tape_t *tape = drive->driver_data;
+ 
+ 	ide_tape_flush_merge_buffer(drive);
+-	tape->merge_stage = ide_tape_kmalloc_buffer(tape, 1, 0);
+-	if (tape->merge_stage != NULL) {
++	tape->merge_bh = ide_tape_kmalloc_buffer(tape, 1, 0);
++	if (tape->merge_bh != NULL) {
+ 		idetape_pad_zeros(drive, tape->blk_size *
+ 				(tape->user_bs_factor - 1));
+-		ide_tape_kfree_buffer(tape->merge_stage);
+-		tape->merge_stage = NULL;
++		ide_tape_kfree_buffer(tape);
++		tape->merge_bh = NULL;
+ 	}
+ 	idetape_write_filemark(drive);
+ 	idetape_flush_tape_buffers(drive);
 -- 
 1.5.4.1
 
