@@ -1,39 +1,56 @@
-From: Benjamin Herrenschmidt <benh@ozlabs.org>
-Subject: [PATCH] ata: Fix pata SIL680 build on arch/ppc
-Date: Wed, 09 Apr 2008 07:51:07 +1000
-Message-ID: <20080408215204.73730DE0A8@ozlabs.org>
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ozlabs.org ([203.10.76.45]:60320 "EHLO ozlabs.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753326AbYDHVwG (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 8 Apr 2008 17:52:06 -0400
-Sender: linux-ide-owner@vger.kernel.org
+From: "Peter Gervai" <grinapo@gmail.com>
+Subject: Re: Hard freeze / interrupt-related death / instability
+Date: Wed, 9 Apr 2008 00:02:09 +0200
+Message-ID: <d55656c10804081502s52c61c7eo623cd9b6255613bb@mail.gmail.com>
+References: <d55656c10804080627r6cb7ba2ao37476b602e4f157e@mail.gmail.com>
+	 <1207687673.3091.12.camel@linux-2bdv.site>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-acpi-owner@vger.kernel.org>
+In-Reply-To: <1207687673.3091.12.camel@linux-2bdv.site>
+Content-Disposition: inline
+Sender: linux-acpi-owner@vger.kernel.org
+To: trenn@suse.de
+Cc: linux-acpi <linux-acpi@vger.kernel.org>, linux-ide <linux-ide@vger.kernel.org>
 List-Id: linux-ide@vger.kernel.org
-To: jgarzik@pobox.com
-Cc: linuxppc-dev@ozlabs.org, Linux IDE <linux-ide@vger.kernel.org>
 
-Commit 0f436eff54f90419ac1b8accfb3e6e17c4b49a4e breaks build on
-arch/ppc as it doesn't implement the machine_is() macro.
+On Tue, Apr 8, 2008 at 10:47 PM, Thomas Renninger <trenn@suse.de> wrote:
+> Hi,
+>
+>  I expect this is more a ata/ahci or chipset problem (this is ICH7,
+>  right?),
 
-This fixes it by using CONFIG_PPC_MERGE instead which represents
-arch/powerpc only, while CONFIG_PPC is set for both.
+Yes.
 
-Signed-off-by: Benjamin Herrenschmidt <benh@kernel.crashing.org>
----
+>  maybe ide list has an idea or has seen something similar already?
 
- Index: linux-work/drivers/ata/pata_sil680.c
-===================================================================
- drivers/ata/pata_sil680.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Good point, let's see.
 
---- linux-work.orig/drivers/ata/pata_sil680.c	2008-04-09 07:47:23.000000000 +1000
-+++ linux-work/drivers/ata/pata_sil680.c	2008-04-09 07:47:29.000000000 +1000
-@@ -270,7 +270,7 @@ static u8 sil680_init_chip(struct pci_de
- 		tmpbyte & 1, tmpbyte & 0x30);
- 
- 	*try_mmio = 0;
--#ifdef CONFIG_PPC
-+#ifdef CONFIG_PPC_MERGE
- 	if (machine_is(cell))
- 		*try_mmio = (tmpbyte & 1) || pci_resource_start(pdev, 5);
- #endif
+>  Two more little comments below.
+
+>  > Then one page started to suggest to play with acpi switches on boot, and I went
+>  > on. The results:
+>  >
+>  > #irqpoll                        - dies eventually
+>  > #noapic irqpoll pci=nommconf    - dies eventually
+>  > #pci=noacpi                     - dies eventually
+>  > #noacpi                         - dies eventually, but it took longest (3 days)
+>  >
+>  > #acpi=off                       - uniprocessor, ok
+>  > #noapic acpi=off                - uniprocessor, ok
+>  What means uniprocessor?
+>  Also added nosmp or maxcpus=1?
+
+Oh, maybe forgot to explain this one (copypaste from my grub menu.lst
+:)). It means the machine didn't freeze but the kernel completely
+ignored the second core of the dual core cpu, basically seem to have
+ignored SMP capability altogether. I did not use nosmp or maxcpu since
+I do want to use them all. :)
+
+>  Maybe pci=nomsi helps?
+
+I note that, and try it the next time.
+
+Thanks,
+Peter
