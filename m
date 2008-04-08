@@ -1,49 +1,47 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: DRDY errors again
-Date: Tue, 08 Apr 2008 11:59:51 -0400
-Message-ID: <47FB9677.30109@garzik.org>
-References: <20080408171311.69441c8b@werewolf>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+From: bugme-daemon@bugzilla.kernel.org
+Subject: [Bug 10425] Problem with pata_marvell kernel module : kernel 2.6.24.4 in Mandriva 2008.1 RC2 don't detect my IDE harddisk connected to a Marvell 88SE6111 IDE Controller
+Date: Tue,  8 Apr 2008 09:13:21 -0700 (PDT)
+Message-ID: <20080408161321.50CBE108038@picon.linux-foundation.org>
+References: <bug-10425-11633@http.bugzilla.kernel.org/>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:48721 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754668AbYDHP7y (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 8 Apr 2008 11:59:54 -0400
-In-Reply-To: <20080408171311.69441c8b@werewolf>
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:56857 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752388AbYDHQNY (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 8 Apr 2008 12:13:24 -0400
+Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
+	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id m38GDLRF013377
+	for <linux-ide@vger.kernel.org>; Tue, 8 Apr 2008 09:13:22 -0700
+In-Reply-To: <bug-10425-11633@http.bugzilla.kernel.org/>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: =?ISO-8859-1?Q?=22J=2EA=2E_Magall=F3n=22?= <jamagallon@ono.com>
-Cc: "Linux-Kernel, " <linux-kernel@vger.kernel.org>, Linux IDE mailing list <linux-ide@vger.kernel.org>
+To: linux-ide@vger.kernel.org
 
-J.A. Magall=F3n wrote:
-> scsi4 : ata_piix
-> scsi5 : ata_piix
-> ata3: SATA max UDMA/133 cmd 0xc000 ctl 0xc400 bmdma 0xd000 irq 18
-> ata4: SATA max UDMA/133 cmd 0xc800 ctl 0xcc00 bmdma 0xd008 irq 18
-
-> ata4.00: ATA-8: ST3500820AS, SD25, max UDMA/133
-> ata4.00: 976773168 sectors, multi 16: LBA48 NCQ (depth 0/32)
-> ata4.00: configured for UDMA/133
-
-> ata4.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 frozen
-> ata4.00: cmd b0/d8:00:00:4f:c2/00:00:00:00:00/00 tag 0
->          res 40/00:01:00:4f:c2/00:00:00:00:00/00 Emask 0x4 (timeout)
-> ata4.00: status: { DRDY }
-
-Can you bisect to see when this problem starts?  I'm pretty sure it's=20
-software, either interrupt-related or the libata driver itself.
-
-See http://ata.wiki.kernel.org/index.php/Libata_error_messages for a=20
-full explanation of that error message.
-
-Most notable:  "DRDY" =3D=3D device ready =3D=3D device says everything=
- is OK,=20
-from it's perspective.  "timeout" usually means an interrupt wasn't=20
-delivered from your ATA controller, when we were expecting one.
-
-	Jeff
+http://bugzilla.kernel.org/show_bug.cgi?id=10425
 
 
+alan@lxorguk.ukuu.org.uk changed:
+
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+         AssignedTo|io_ide@kernel-bugs.osdl.org |alan@lxorguk.ukuu.org.uk
+             Status|NEW                         |ASSIGNED
+
+
+
+
+------- Comment #1 from alan@lxorguk.ukuu.org.uk  2008-04-08 09:13 -------
+The driver has only been tested with the chipsets listed. I've been unable to
+extract documentation from Marvell to support the others. If you can work with
+the Mandrake people and verify that the relevant identifier works then that
+would be useful and the id can then get added for the 6111. 
+
+The newer chips sort of do AHCI so are handled better by the AHCI driver
+(6141/6145) now it has some workarounds for where they differ from the
+standard.
+
+
+-- 
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug, or are watching the assignee.
+You are the assignee for the bug, or are watching the assignee.
