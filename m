@@ -1,78 +1,114 @@
-From: Richard Zidlicky <rz@linux-m68k.org>
-Subject: Re: [PATCH 5/5] falconide/q40ide: add ->atapi_*put_bytes and
-	->ata_*put_data methods
-Date: Tue, 8 Apr 2008 11:40:29 +0200
-Message-ID: <20080408094029.GA1005@linux-m68k.org>
-References: <200803301714.04527.bzolnier@gmail.com> <200803302134.42569.bzolnier@gmail.com> <Pine.LNX.4.64.0803310750230.6871@anakin> <200804072113.42441.bzolnier@gmail.com>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: Re: [PATCH] ide: make ide_pci_check_iomem() actually work
+Date: Tue, 08 Apr 2008 15:45:35 +0400
+Message-ID: <47FB5ADF.20608@ru.mvista.com>
+References: <200804072027.17520.sshtylyov@ru.mvista.com> <200804072246.40223.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from fk-out-0910.google.com ([209.85.128.185]:45369 "EHLO
-	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753446AbYDHJgl (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 8 Apr 2008 05:36:41 -0400
-Received: by fk-out-0910.google.com with SMTP id 19so2564405fkr.5
-        for <linux-ide@vger.kernel.org>; Tue, 08 Apr 2008 02:36:35 -0700 (PDT)
-Content-Disposition: inline
-In-Reply-To: <200804072113.42441.bzolnier@gmail.com>
+Received: from homer.mvista.com ([63.81.120.155]:39391 "EHLO
+	imap.sh.mvista.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1752221AbYDHLqR (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 8 Apr 2008 07:46:17 -0400
+In-Reply-To: <200804072246.40223.bzolnier@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: Geert Uytterhoeven <geert@linux-m68k.org>, linux-ide@vger.kernel.org, Linux Kernel Development <linux-kernel@vger.kernel.org>, Linux/m68k <linux-m68k@vger.kernel.org>, Michael Schmitz <schmitz@debian.org>
+Cc: linux-ide@vger.kernel.org
 
-On Mon, Apr 07, 2008 at 09:13:42PM +0200, Bartlomiej Zolnierkiewicz wrote:
+Hello.
 
-> 
-> v2:
-> * Add 'struct request *rq' argument to ->ata_{in,out}put_data methods
->   and don't byte-swap disk fs requests (we shouldn't un-swap fs requests
->   because fs itself is stored byte-swapped on the disk) - this is how
->   things were done before the patch (ideally device mapper should be
->   used instead but it would break existing setups and would have some
->   performance impact).
+Bartlomiej Zolnierkiewicz wrote:
 
-I like the part about checking 'struct request *rq', will make a  clean
-distinction between ide command data and ide disk/medium data which is badly
-needed.
+>>This function didn't actually check if a given BAR is in I/O space because of
+>>using the bogus PCI_BASE_ADDRESS_IO_MASK (which equals ~3) to test the resource
+>>flags instead of IORESOURCE_IO -- fix this, make ide_hwif_configure() check the
+>>results failing if necessary, and move the printk() call to the failure path.
 
-However, not only FS data is byteswapped, complete disk including partition
-table and everything else is. Will "rq->cmd_type == REQ_TYPE_FS" also catch
-all these cases?
+> This change is OK in itself but I worry that ide_pci_check_iomem() may now
+> return "false" errors (bogus PCI_BASE_ADDRESS_IO_MASK check resulted in MEM
+> resources always surviving ide_pci_check_iomem() calls before the fix) for
+> some host drivers (siimage, scc_pata...) resulting in failed initialization.
 
+    The SiI chips do have normal I/O resources at BAR0..BAR3. As for scc_pata, 
+the control should not even get there because BAR0..BAR3 are *not* IDE 
+command/control block bases on this chip (BAR0/1 are control/DMA bases if you 
+look into setup_mmio_scc()) but they are treated as such by the code 
+immediately following ide_pci_check_iomem() calls in ide_hwif_configure(), 
+i.e. we might have an error here. The same can be said about the PowerMAC 
+driver which has all its MMIO registers at BAR0.
 
+> How's about removing this dead/broken function instead for now?
 
-> Index: b/drivers/ide/legacy/falconide.c
-> ===================================================================
-> --- a/drivers/ide/legacy/falconide.c
-> +++ b/drivers/ide/legacy/falconide.c
-> @@ -44,6 +44,36 @@
->  int falconide_intr_lock;
->  EXPORT_SYMBOL(falconide_intr_lock);
->  
-> +static void falconide_atapi_input_bytes(ide_drive_t *drive, void *buf,
-> +					unsigned int len)
-> +{
-> +	insw_swapw(drive->hwif->io_ports.data_addr, buf, (len + 1) / 2);
-> +}
-> +
-> +static void falconide_atapi_output_bytes(ide_drive_t *drive, void *buf,
-> +					 unsigned int len)
-> +{
-> +	outsw_swapw(drive->hwif->io_ports.data_addr, buf, (len + 1) / 2);
-> +}
-> +
-> +static void falconide_ata_input_data(ide_drive_t *drive, struct request *rq,
-> +				     void *buf, unsigned int wcount)
-> +{
-> +	if (drive->media == ide_disk && rq && rq->cmd_type == REQ_TYPE_FS)
-> +		return insw(drive->hwif->io_ports.data_addr, buf, wcount * 2);
-> +
-> +	falconide_atapi_input_bytes(drive, buf, wcount * 4);
-> +}
+    If we indeed have a MMIO problem here, it's not in this function but in 
+its callers.
 
-this will still do double swapping for disk access, although this is very
-easier to fix once the distinction between ide and disk data works fine.
+> Thanks,
+> Bart
 
-So IMHO despite the little concerns this is the way to go.
+>>Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
 
-Richard
+>>---
+>>The patch is against today's Linus' tree...
+
+>> drivers/ide/setup-pci.c |   23 ++++++++++++-----------
+>> 1 files changed, 12 insertions(+), 11 deletions(-)
+
+>>Index: linux-2.6/drivers/ide/setup-pci.c
+>>===================================================================
+>>--- linux-2.6.orig/drivers/ide/setup-pci.c
+>>+++ linux-2.6/drivers/ide/setup-pci.c
+>>@@ -312,11 +312,12 @@ static int ide_pci_configure(struct pci_
+>>  *	@d: IDE port info
+>>  *	@bar: BAR number
+>>  *
+>>- *	Checks if a BAR is configured and points to MMIO space. If so
+>>- *	print an error and return an error code. Otherwise return 0
+>>+ *	Checks if a BAR is configured and points to MMIO space. If so,
+>>+ *	return an error code. Otherwise return 0
+>>  */
+>> 
+>>-static int ide_pci_check_iomem(struct pci_dev *dev, const struct ide_port_info *d, int bar)
+>>+static int ide_pci_check_iomem(struct pci_dev *dev, const struct ide_port_info *d,
+>>+			       int bar)
+>> {
+>> 	ulong flags = pci_resource_flags(dev, bar);
+>> 	
+>>@@ -324,14 +325,11 @@ static int ide_pci_check_iomem(struct pc
+>> 	if (!flags || pci_resource_len(dev, bar) == 0)
+>> 		return 0;
+>> 
+>>-	/* I/O space */		
+>>-	if(flags & PCI_BASE_ADDRESS_IO_MASK)
+>>+	/* I/O space */
+>>+	if (flags & IORESOURCE_IO)
+>> 		return 0;
+>> 		
+>> 	/* Bad */
+>>-	printk(KERN_ERR "%s: IO baseregs (BIOS) are reported "
+>>-			"as MEM, report to "
+>>-			"<andre@linux-ide.org>.\n", d->name);
+>> 	return -EINVAL;
+>> }
+>> 
+>>@@ -360,9 +358,12 @@ static ide_hwif_t *ide_hwif_configure(st
+>> 	struct hw_regs_s hw;
+>> 
+>> 	if ((d->host_flags & IDE_HFLAG_ISA_PORTS) == 0) {
+>>-		/*  Possibly we should fail if these checks report true */
+>>-		ide_pci_check_iomem(dev, d, 2*port);
+>>-		ide_pci_check_iomem(dev, d, 2*port+1);
+>>+		if (ide_pci_check_iomem(dev, d, 2 * port) ||
+>>+		    ide_pci_check_iomem(dev, d, 2 * port + 1)) {
+>>+			printk(KERN_ERR "%s: I/O baseregs (BIOS) are reported "
+>>+					"as MEM for port %d!\n", d->name, port);
+>>+			return NULL;
+>>+		}
+>>  
+>> 		ctl  = pci_resource_start(dev, 2*port+1);
+>> 		base = pci_resource_start(dev, 2*port);
+
+    Above's the code that I was talking about...
+
+WBR, Sergei
