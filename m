@@ -1,84 +1,57 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH 3/3] siimage: remove proc_reports_siimage()
-Date: Wed, 9 Apr 2008 20:52:41 +0200
-Message-ID: <200804092052.41806.bzolnier@gmail.com>
+From: "Tvrtko A. Ursulin" <tvrtko@ursulin.net>
+Subject: Western Digital GreenPower drives and Linux
+Date: Wed, 9 Apr 2008 21:18:35 +0100
+Message-ID: <200804092118.35501.tvrtko@ursulin.net>
 Mime-Version: 1.0
 Content-Type: text/plain;
-  charset="iso-8859-1"
+  charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.191]:55005 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753659AbYDISic (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 9 Apr 2008 14:38:32 -0400
-Received: by nf-out-0910.google.com with SMTP id g13so1239007nfb.21
-        for <linux-ide@vger.kernel.org>; Wed, 09 Apr 2008 11:38:31 -0700 (PDT)
+Received: from mk-outboundfilter-4.mail.uk.tiscali.com ([212.74.114.32]:20529
+	"EHLO mk-outboundfilter-4.mail.uk.tiscali.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1757376AbYDIU2R (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 9 Apr 2008 16:28:17 -0400
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
+To: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-* proc_reports_siimage() is now only called by init_chipset_siimage()
-  so inline it there.
 
-* Use array instead of switch statement for reporting clock modes.
+Hi all,
 
-There should be no functional changes caused by this patch.
+The subject may be a bit misleading since I haven't investigated the whole 
+issue under other OS-es (nor do I plan to), but this is how the story goes..
 
-Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
----
- drivers/ide/pci/siimage.c |   33 ++++++++-------------------------
- 1 file changed, 8 insertions(+), 25 deletions(-)
+Those fancy new WD GreenPower drives seem to be heavily suffering from the 
+rapidly increasing head load/unload problem. And the bad thing is they don't 
+respond to 'hdparm -B', which would mean (I think) their power management 
+behaviour is solely up to their firmware.
 
-Index: b/drivers/ide/pci/siimage.c
-===================================================================
---- a/drivers/ide/pci/siimage.c
-+++ b/drivers/ide/pci/siimage.c
-@@ -440,30 +440,6 @@ static void sil_sata_pre_reset(ide_drive
- }
- 
- /**
-- *	proc_reports_siimage		-	add siimage controller to proc
-- *	@dev: PCI device
-- *	@clocking: SCSC value
-- *	@name: controller name
-- *
-- *	Report the clocking mode of the controller and add it to
-- *	the /proc interface layer
-- */
-- 
--static void proc_reports_siimage (struct pci_dev *dev, u8 clocking, const char *name)
--{
--	if (!pdev_is_sata(dev)) {
--		printk(KERN_INFO "%s: BASE CLOCK ", name);
--		clocking &= 0x03;
--		switch (clocking) {
--			case 0x03: printk("DISABLED!\n"); break;
--			case 0x02: printk("== 2X PCI\n"); break;
--			case 0x01: printk("== 133\n"); break;
--			case 0x00: printk("== 100\n"); break;
--		}
--	}
--}
--
--/**
-  *	setup_mmio_siimage	-	switch an SI controller into MMIO
-  *	@dev: PCI device we are configuring
-  *	@name: device name
-@@ -585,7 +561,14 @@ static unsigned int __devinit init_chips
- 		writel(0x00680000, ioaddr + 0x1C8);
- 	}
- 
--	proc_reports_siimage(dev, tmp >> 4, name);
-+	/* report the clocking mode of the controller */
-+	if (!pdev_is_sata(dev)) {
-+		static const char *clk_str[] =
-+			{ "== 100", "== 133", "== 2X PCI", "DISABLED!" };
-+
-+		tmp >>= 4;
-+		printk(KERN_INFO "%s: BASE CLOCK %s\n", name, clk_str[tmp & 3]);
-+	}
- 
- 	return 0;
- }
+I got one of them (WD5000AACS) recently and to my horror after less than three 
+days of being power on this is what I saw:
+
+9 Power_On_Hours       0x0032 100 100 000 Old_age Always  - 66
+193 Load_Cycle_Count 0x0032 197 197 000 Old_age  Always  - 10233
+
+At this rate the disk would reach it's design limit for load/unload cycles in 
+around 80 days. Not good - so I implemented a lame workaround of keeping disk 
+busy every couple of seconds - hopefully that won't kill it sooner that 
+unloads would..
+
+I am also currently talking with first line of WD's tech support trying to get 
+some data on how exactly those drives manage head unloading, but that may not 
+lead anywhere useful.
+
+So in parallel I decided to ask here to see if someone knows something about 
+this?
+
+If it matters, I am running vanilla 2.6.24 on that box and sata_sil is driving 
+that disk. Otherwise it is a pretty basic Ubuntu 7.10, a mix of ext3 and jfs 
+filesystems, all mounted with noatime. More detailed information available on 
+request.
+
+Tvrtko
+
+
+
+
