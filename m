@@ -1,43 +1,71 @@
-From: Richard Zidlicky <rz@linux-m68k.org>
-Subject: Re: [PATCH 5/5] falconide/q40ide: add ->atapi_*put_bytes and
-	->ata_*put_data methods
-Date: Wed, 9 Apr 2008 20:13:14 +0200
-Message-ID: <20080409181314.GA999@linux-m68k.org>
-References: <200803301714.04527.bzolnier@gmail.com> <200803302134.42569.bzolnier@gmail.com> <Pine.LNX.4.64.0803310750230.6871@anakin> <200804072113.42441.bzolnier@gmail.com> <20080408094029.GA1005@linux-m68k.org> <alpine.DEB.1.00.0804090337110.19638@zirkon.biophys.uni-duesseldorf.de>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: [PATCH] siimage: fix kernel oops on PPC 44x
+Date: Wed, 9 Apr 2008 20:14:01 +0200
+Message-ID: <200804092014.01643.bzolnier@gmail.com>
+References: <200804080005.03683.sshtylyov@ru.mvista.com> <200804072330.00610.bzolnier@gmail.com> <47FB6EA5.4070606@ru.mvista.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.158]:24278 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755911AbYDISJI (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 9 Apr 2008 14:09:08 -0400
-Received: by fg-out-1718.google.com with SMTP id l27so2421210fgb.17
-        for <linux-ide@vger.kernel.org>; Wed, 09 Apr 2008 11:09:06 -0700 (PDT)
+Received: from fk-out-0910.google.com ([209.85.128.184]:62222 "EHLO
+	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751744AbYDISiY (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 9 Apr 2008 14:38:24 -0400
+Received: by fk-out-0910.google.com with SMTP id 19so3447519fkr.5
+        for <linux-ide@vger.kernel.org>; Wed, 09 Apr 2008 11:38:23 -0700 (PDT)
+In-Reply-To: <47FB6EA5.4070606@ru.mvista.com>
 Content-Disposition: inline
-In-Reply-To: <alpine.DEB.1.00.0804090337110.19638@zirkon.biophys.uni-duesseldorf.de>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Michael Schmitz <schmitz@zirkon.biophys.uni-duesseldorf.de>
-Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Geert Uytterhoeven <geert@linux-m68k.org>, linux-ide@vger.kernel.org, Linux Kernel Development <linux-kernel@vger.kernel.org>, Linux/m68k <linux-m68k@vger.kernel.org>, Michael Schmitz <schmitz@debian.org>
+To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Cc: linux-ide@vger.kernel.org, linuxppc-dev@ozlabs.org
 
-On Wed, Apr 09, 2008 at 03:40:34AM +0200, Michael Schmitz wrote:
-
-> > However, not only FS data is byteswapped, complete disk including partition
-> > table and everything else is. Will "rq->cmd_type == REQ_TYPE_FS" also catch
-> > all these cases?
+On Tuesday 08 April 2008, Sergei Shtylyov wrote:
+> Bartlomiej Zolnierkiewicz wrote:
 > 
->  IIRC only identify data (and perhaps ATAPI data) need to be byteswapped 
->  twice (or not at all), so REQ_TYPE_FS should catch all other cases.
+> >>Fix kernel oops due to machine check occuring in init_chipset_siimage() on PPC
+> >>44x platforms.  These 32-bit CPUs have 36-bit physical address and PCI I/O and
+> >>memory spaces are mapped beyond 4 GB; arch/ppc/ code has a fixup in ioremap()
+> >>that creates an illusion of the PCI I/O and memory resources being mapped below
+> >>4 GB, while arch/powerpc/ code got rid of this fixup with PPC 44x having instead
+> >>CONFIG_RESOURCES_64BIT=y -- this causes the resources to be truncated to 32-bit
+> >>'unsigned long' type in this driver, and so non-existant memory being ioremap'ed
+> >>and then accessed...
+> 
+> >>Thanks to Valentine Barshak for providing an initial patch and explanations.
+> 
+> >>Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+> 
+> > applied and pushed to Linus, thanks!
+> 
+> > I guess that it would be worth to audit the rest of IDE code for
+> 
+>     Already done. Some drivers, like sgiioc4, scc_pata, and pmac are prone to
+> that at least in theory.  Although I doubt that they ever get used in such
+> environments as PPC 44x platform kernels, i.e. 32-bit kernel and PCI mapped 
+> beyond 4 GB.
+> 
+> > pci_resource_{start,end}() vs 'unsigned long' occurences and fix them.
+> 
+>     There are quite a lot of those overall but they only pose danger if the 
+> resource in question is in memory space since the I/O space always uses 
+> 'unsigned long' addresses. So, IDE core and drivers using only I/O resources 
+> should not be prone to that kind of issue.
 
-my main worry is whether REQ_TYPE_FS is set even when using raw disk access,
-eg reading partition table or raw partitions.
+Thanks for taking a look (good to hear that we are fine for now).
 
-The partition table initialisation is one of the reasons why using dmapper
-would be a major pain btw.
+> > [ Even if they work at the moment they are just bugs waiting to happened
+> >   when we add support for some new platforms or rewrite the code... ]
 
->  (Good catch about ATAPI there, BTW - I never thought about that, and ISTR 
->  that IDE CD-ROMs never worked in Linux. That would be the reason why..)
+I still think that it is worth to switch to always using resource_size_t
+with pci_resource{start,end}() - increase of the code size should be minimal
+and negligable (also it would happen only for CONFIG_RESOURCES_64BIT=y)
+but in the return we will keep the code consistent and hint people who're
+writing new code (and are looking at the existing code as a base).
 
-IDE CDROM works perfectly on the Q40?
+[ this is kernel-wide comment, w.r.t. to IDE - I'll try updating it when
+  I have some time (unless of course somebody sends me a patch earlier :) ]
 
-Richard
+Thanks,
+Bart
