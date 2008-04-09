@@ -1,56 +1,48 @@
-From: Zhao Yakui <yakui.zhao@intel.com>
-Subject: Re: Hard freeze / interrupt-related death / instability
-Date: Wed, 09 Apr 2008 17:40:09 +0800
-Message-ID: <1207734009.16101.5.camel@yakui_zhao.sh.intel.com>
-References: <d55656c10804080627r6cb7ba2ao37476b602e4f157e@mail.gmail.com>
-	 <1207687673.3091.12.camel@linux-2bdv.site>
-	 <d55656c10804081502s52c61c7eo623cd9b6255613bb@mail.gmail.com>
-	 <47FBEE45.8010900@gmail.com>
+From: Michael Schmitz <schmitz@zirkon.biophys.uni-duesseldorf.de>
+Subject: Re: [PATCH 5/5] falconide/q40ide: add ->atapi_*put_bytes and
+ ->ata_*put_data methods
+Date: Wed, 09 Apr 2008 03:40:34 +0200 (CEST)
+Message-ID: <alpine.DEB.1.00.0804090337110.19638@zirkon.biophys.uni-duesseldorf.de>
+References: <200803301714.04527.bzolnier@gmail.com>
+ <200803302134.42569.bzolnier@gmail.com>
+ <Pine.LNX.4.64.0803310750230.6871@anakin>
+ <200804072113.42441.bzolnier@gmail.com> <20080408094029.GA1005@linux-m68k.org>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-acpi-owner@vger.kernel.org>
-In-Reply-To: <47FBEE45.8010900@gmail.com>
-Sender: linux-acpi-owner@vger.kernel.org
-To: Alexey Starikovskiy <aystarik@gmail.com>, Peter Gervai <grinapo@gmail.com>
-Cc: trenn@suse.de, linux-acpi <linux-acpi@vger.kernel.org>, linux-ide <linux-ide@vger.kernel.org>
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Transfer-Encoding: 7BIT
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail.rz.uni-duesseldorf.de ([134.99.128.30]:46773 "EHLO
+	mail.rz.uni-duesseldorf.de" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751868AbYDICPW (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 8 Apr 2008 22:15:22 -0400
+In-reply-to: <20080408094029.GA1005@linux-m68k.org>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Richard Zidlicky <rz@linux-m68k.org>
+Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Geert Uytterhoeven <geert@linux-m68k.org>, linux-ide@vger.kernel.org, Linux Kernel Development <linux-kernel@vger.kernel.org>, Linux/m68k <linux-m68k@vger.kernel.org>, Michael Schmitz <schmitz@debian.org>
 
-On Wed, 2008-04-09 at 02:14 +0400, Alexey Starikovskiy wrote:
-> Peter Gervai wrote:
-> >
-> >>  > #acpi=off                       - uniprocessor, ok
-> >>  > #noapic acpi=off                - uniprocessor, ok
-> >>  What means uniprocessor?
-> >>  Also added nosmp or maxcpus=1?
-> >>     
-> >
-> > Oh, maybe forgot to explain this one (copypaste from my grub menu.lst
-> > :)). It means the machine didn't freeze but the kernel completely
-> > ignored the second core of the dual core cpu, basically seem to have
-> > ignored SMP capability altogether. I did not use nosmp or maxcpu since
-> > I do want to use them all. :)
-> >
-> >   
-> This is expected, there are two ways to find second CPU -- with MP 
-> tables and ACPI.
-> New machines do not carry MP tables, so if you disable ACPI, second CPU 
-> remains
-> unknown to the system.
-> 
-What Alexey said is right. There is no MPS table on this laptop. And
-when acpi is disabled, the second CPU will be unknown to the system.
+Hi,
 
-Will you please attach the acpidump output? (
-Latest pmtools can be found at
-http://www.kernel.org/pub/linux/kernel/people/lenb/acpi/utils/ )
+>> v2:
+>> * Add 'struct request *rq' argument to ->ata_{in,out}put_data methods
+>>   and don't byte-swap disk fs requests (we shouldn't un-swap fs requests
+>>   because fs itself is stored byte-swapped on the disk) - this is how
+>>   things were done before the patch (ideally device mapper should be
+>>   used instead but it would break existing setups and would have some
+>>   performance impact).
+>
+> I like the part about checking 'struct request *rq', will make a  clean
+> distinction between ide command data and ide disk/medium data which is badly
+> needed.
+>
+> However, not only FS data is byteswapped, complete disk including partition
+> table and everything else is. Will "rq->cmd_type == REQ_TYPE_FS" also catch
+> all these cases?
 
-Will you please try the boot option of "noapic acpi_irq_nobalance" ?
-Thanks.
+IIRC only identify data (and perhaps ATAPI data) need to be byteswapped 
+twice (or not at all), so REQ_TYPE_FS should catch all other cases.
 
+(Good catch about ATAPI there, BTW - I never thought about that, and ISTR 
+that IDE CD-ROMs never worked in Linux. That would be the reason why..)
 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-acpi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
+ 	Michael
