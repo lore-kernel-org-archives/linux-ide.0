@@ -1,14 +1,15 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+From: Kumar Gala <galak@kernel.crashing.org>
 Subject: Re: [PATCH 6/13] devres: implement managed iomap interface
-Date: Thu, 10 Apr 2008 20:56:12 +0400
-Message-ID: <47FE46AC.5000901@ru.mvista.com>
+Date: Thu, 10 Apr 2008 12:44:12 -0500
+Message-ID: <59A939C7-75AF-4C0F-8199-4C31D174AEA9@kernel.crashing.org>
 References: <11684073371547-git-send-email-htejun@gmail.com>	<47FA4FD2.8060808@ru.mvista.com>
 	<47FB85CB.2070506@gmail.com> <47FB8751.3040301@ru.mvista.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
+	<47FE46AC.5000901@ru.mvista.com>
+Mime-Version: 1.0 (Apple Message framework v919.2)
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"; DelSp="yes"
 Content-Transfer-Encoding: 7bit
 Return-path: <linuxppc-dev-bounces+glppd-linuxppc64-dev=m.gmane.org@ozlabs.org>
-In-Reply-To: <47FB8751.3040301@ru.mvista.com>
+In-Reply-To: <47FE46AC.5000901@ru.mvista.com>
 List-Unsubscribe: <https://ozlabs.org/mailman/options/linuxppc-dev>,
 	<mailto:linuxppc-dev-request@ozlabs.org?subject=unsubscribe>
 List-Archive: <http://ozlabs.org/pipermail/linuxppc-dev>
@@ -18,36 +19,43 @@ List-Subscribe: <https://ozlabs.org/mailman/listinfo/linuxppc-dev>,
 	<mailto:linuxppc-dev-request@ozlabs.org?subject=subscribe>
 Sender: linuxppc-dev-bounces+glppd-linuxppc64-dev=m.gmane.org@ozlabs.org
 Errors-To: linuxppc-dev-bounces+glppd-linuxppc64-dev=m.gmane.org@ozlabs.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: linux-ide@vger.kernel.org, gregkh@suse.de, linux-kernel@vger.kernel.org, linuxppc-dev@ozlabs.org, jgarzik@pobox.com, alan@lxorguk.ukuu.org.uk
+To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Cc: Tejun Heo <htejun@gmail.com>, linux-ide@vger.kernel.org, gregkh@suse.de, linux-kernel@vger.kernel.org, linuxppc-dev@ozlabs.org, jgarzik@pobox.com, alan@lxorguk.ukuu.org.uk
 List-Id: linux-ide@vger.kernel.org
 
-Hello, I wrote:
 
->>>    Those functions are going to break on 32-bit platforms with 
->>> extended physical address (well, that's starting with Pentiums which 
->>> had 36-bit PAE :-) AND devices mapped beyond 4 GB (e.g. PowerPC 
->>> 44x).  You should have used resource_size_t for the 'offset' 
->>> parameter. As this most probably means that libata is broken on such 
->>> platforms, I'm going to submit a patch...
+On Apr 10, 2008, at 11:56 AM, Sergei Shtylyov wrote:
+> Hello, I wrote:
+>
+>>>>   Those functions are going to break on 32-bit platforms with  
+>>>> extended physical address (well, that's starting with Pentiums  
+>>>> which had 36-bit PAE :-) AND devices mapped beyond 4 GB (e.g.  
+>>>> PowerPC 44x).  You should have used resource_size_t for the  
+>>>> 'offset' parameter. As this most probably means that libata is  
+>>>> broken on such platforms, I'm going to submit a patch...
+>
+>>   It's broken with drivers using MMIO, I meant to say.
+>
+>   Oops, I meant PCI drivers here, at least for the time being. And  
+> it looks like that was a false alarm. :-]
+>
+>>> Yeah, right please go ahead.  But I wonder whether any BIOS was  
+>>> actually crazy enough to map mmio region above 4G on 32bit machine.
+>
+>>   This is a *hardware* mapping on some non-x86 platforms (like PPC  
+>> 44x or MIPS Alchemy). The arch/ppc/ and arch/mips/ kernels have  
+>> special hooks called from ioremap() which help create an illusion  
+>> that the PCI memory space on such platforms (not only it) is mapped  
+>> below 4 GB; arch/powerpc/ kernel doesn't do this anymore -- hence  
+>> this newly encountered issue.
+>
+>   I thought that pcim_iomap() used devm_ioremap() or something --  
+> which of course turned to be wrong. devm_ioremap() alone is yet safe  
+> since there are no users for it amongst PPC 44x platform device  
+> drivers...
 
->    It's broken with drivers using MMIO, I meant to say.
+but there is no reason not to make it work properly.  For example I  
+believe libata uses devm_* and the fsl SATA driver (non-PCI) will need  
+to work in cases similar to the 44x.
 
-    Oops, I meant PCI drivers here, at least for the time being. And it looks 
-like that was a false alarm. :-]
-
->> Yeah, right please go ahead.  But I wonder whether any BIOS was 
->> actually crazy enough to map mmio region above 4G on 32bit machine.
-
->    This is a *hardware* mapping on some non-x86 platforms (like PPC 44x 
-> or MIPS Alchemy). The arch/ppc/ and arch/mips/ kernels have special 
-> hooks called from ioremap() which help create an illusion that the PCI 
-> memory space on such platforms (not only it) is mapped below 4 GB; 
-> arch/powerpc/ kernel doesn't do this anymore -- hence this newly 
-> encountered issue.
-
-    I thought that pcim_iomap() used devm_ioremap() or something -- which of 
-course turned to be wrong. devm_ioremap() alone is yet safe since there are no 
-users for it amongst PPC 44x platform device drivers...
-
-MBR, Sergei
+- k
