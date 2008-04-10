@@ -1,47 +1,50 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCH] sata_svw: 0x0241 has 8 ports not 4
-Date: Thu, 10 Apr 2008 10:46:06 +0900
-Message-ID: <47FD715E.30808@gmail.com>
-References: <47FD6574.8020202@gmail.com> <1207790498.12357.25.camel@pasglop>
+From: "Tvrtko A. Ursulin" <tvrtko@ursulin.net>
+Subject: Re: Western Digital GreenPower drives and Linux
+Date: Thu, 10 Apr 2008 08:48:08 +0100
+Message-ID: <200804100848.08442.tvrtko@ursulin.net>
+References: <200804092118.35501.tvrtko@ursulin.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain;
+  charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wx-out-0506.google.com ([66.249.82.235]:10299 "EHLO
-	wx-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752268AbYDJBqZ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 9 Apr 2008 21:46:25 -0400
-Received: by wx-out-0506.google.com with SMTP id h31so2873992wxd.4
-        for <linux-ide@vger.kernel.org>; Wed, 09 Apr 2008 18:46:24 -0700 (PDT)
-In-Reply-To: <1207790498.12357.25.camel@pasglop>
+Received: from mk-outboundfilter-4.mail.uk.tiscali.com ([212.74.114.32]:56264
+	"EHLO mk-outboundfilter-4.mail.uk.tiscali.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753871AbYDJHrh (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 10 Apr 2008 03:47:37 -0400
+In-Reply-To: <200804092118.35501.tvrtko@ursulin.net>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: benh@kernel.crashing.org
-Cc: Jeff Garzik <jeff@garzik.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, y_honda_@d1.dion.ne.jp
+To: linux-ide@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
 
-Benjamin Herrenschmidt wrote:
-> On Thu, 2008-04-10 at 09:55 +0900, Tejun Heo wrote:
->> From: Yohei Honda <y_honda_@d1.dion.ne.jp>
->>
->> 0x0241 has 8 ports not 4.
->>
->> Reported by Yohei Honda on kernel bz 10424.
->>
->> Signed-off-by: Tejun Heo <htejun@gmail.com>
->> Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
->> ---
->> Benjamin, can you please verify this is correct?
-> 
-> I can't as I don't have any spec for these... All I can say is that the
-> Apple one has 4 ports and is is 0x0240.
-> 
-> So If you are reasonably confident the 0x0241 has 8, then feel free to
-> apply the patch.
+On Wednesday 09 April 2008 21:18:35 Tvrtko A. Ursulin wrote:
+> I got one of them (WD5000AACS) recently and to my horror after less than
+> three days of being power on this is what I saw:
+>
+> 9 Power_On_Hours       0x0032 100 100 000 Old_age Always  - 66
+> 193 Load_Cycle_Count 0x0032 197 197 000 Old_age  Always  - 10233
+>
+> At this rate the disk would reach it's design limit for load/unload cycles
+> in around 80 days. Not good - so I implemented a lame workaround of keeping
+> disk busy every couple of seconds - hopefully that won't kill it sooner
+> that unloads would..
+>
+> I am also currently talking with first line of WD's tech support trying to
+> get some data on how exactly those drives manage head unloading, but that
+> may not lead anywhere useful.
 
-Hmmm.. Honda apparently has the hardware and this change works for him. 
-  I think that should be good enough.  Jeff, can you please merge this?
+I got back from WD's tech support and received a DOS utility which can control 
+this drive feature, apparently using vendor specific commands. With it head 
+unload timer can be disabled or set to a period between 100ms and 25.5s. 
 
-Thanks.
+Of course I asked for more than a DOS utility, but the question really is how 
+was this feature intended to work with Windows for example, is there 
+something there which would prevent such rapid load/unload cycle growth, and 
+why isn't it documented somewhere?
 
--- 
-tejun
+I am kind off hoping that someone from WD is reading this list and will notice 
+this in case my effort with tech support fails.
+
+Tvrtko
