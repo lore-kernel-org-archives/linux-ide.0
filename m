@@ -1,75 +1,53 @@
-From: "Christian Pernegger" <pernegger@gmail.com>
-Subject: Re: Western Digital GreenPower drives and Linux
-Date: Thu, 10 Apr 2008 17:01:38 +0200
-Message-ID: <bb145bd20804100801y157b4a34m82f084d27f1e0586@mail.gmail.com>
-References: <200804092118.35501.tvrtko@ursulin.net>
-	 <200804100848.08442.tvrtko@ursulin.net>
-	 <1207831481.1514.8.camel@localhost>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: Re: [PATCH 6/13] devres: implement managed iomap interface
+Date: Thu, 10 Apr 2008 20:56:12 +0400
+Message-ID: <47FE46AC.5000901@ru.mvista.com>
+References: <11684073371547-git-send-email-htejun@gmail.com>	<47FA4FD2.8060808@ru.mvista.com>
+	<47FB85CB.2070506@gmail.com> <47FB8751.3040301@ru.mvista.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from el-out-1112.google.com ([209.85.162.177]:64391 "EHLO
-	el-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759325AbYDJPBk (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 10 Apr 2008 11:01:40 -0400
-Received: by el-out-1112.google.com with SMTP id v27so29152ele.17
-        for <linux-ide@vger.kernel.org>; Thu, 10 Apr 2008 08:01:39 -0700 (PDT)
-In-Reply-To: <1207831481.1514.8.camel@localhost>
-Content-Disposition: inline
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linuxppc-dev-bounces+glppd-linuxppc64-dev=m.gmane.org@ozlabs.org>
+In-Reply-To: <47FB8751.3040301@ru.mvista.com>
+List-Unsubscribe: <https://ozlabs.org/mailman/options/linuxppc-dev>,
+	<mailto:linuxppc-dev-request@ozlabs.org?subject=unsubscribe>
+List-Archive: <http://ozlabs.org/pipermail/linuxppc-dev>
+List-Post: <mailto:linuxppc-dev@ozlabs.org>
+List-Help: <mailto:linuxppc-dev-request@ozlabs.org?subject=help>
+List-Subscribe: <https://ozlabs.org/mailman/listinfo/linuxppc-dev>,
+	<mailto:linuxppc-dev-request@ozlabs.org?subject=subscribe>
+Sender: linuxppc-dev-bounces+glppd-linuxppc64-dev=m.gmane.org@ozlabs.org
+Errors-To: linuxppc-dev-bounces+glppd-linuxppc64-dev=m.gmane.org@ozlabs.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: linux-ide@vger.kernel.org, gregkh@suse.de, linux-kernel@vger.kernel.org, linuxppc-dev@ozlabs.org, jgarzik@pobox.com, alan@lxorguk.ukuu.org.uk
 List-Id: linux-ide@vger.kernel.org
-To: "Tvrtko A. Ursulin" <tvrtko@ursulin.net>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-[ Keep me CCd on this, please. ]
+Hello, I wrote:
 
->  Those fancy new WD GreenPower drives seem to be heavily suffering from the
->  rapidly increasing head load/unload problem. [...] I got one of them
->  (WD5000AACS) recently and to my horror [...]
+>>>    Those functions are going to break on 32-bit platforms with 
+>>> extended physical address (well, that's starting with Pentiums which 
+>>> had 36-bit PAE :-) AND devices mapped beyond 4 GB (e.g. PowerPC 
+>>> 44x).  You should have used resource_size_t for the 'offset' 
+>>> parameter. As this most probably means that libata is broken on such 
+>>> platforms, I'm going to submit a patch...
 
-I have the same disks, only with more warranty and supposedly
-"enterprise" firmware (WD1000FYPS). The bug is the same, though, on
-all four of them (~ 9 cycles /hour):
+>    It's broken with drivers using MMIO, I meant to say.
 
-  9 Power_On_Hours          0x0032   099   099   000    Old_age
-Always       -       917
-193 Load_Cycle_Count        0x0032   198   198   000    Old_age
-Always       -       8025
+    Oops, I meant PCI drivers here, at least for the time being. And it looks 
+like that was a false alarm. :-]
 
-  9 Power_On_Hours          0x0032   099   099   000    Old_age
-Always       -       906
-193 Load_Cycle_Count        0x0032   198   198   000    Old_age
-Always       -       7908
+>> Yeah, right please go ahead.  But I wonder whether any BIOS was 
+>> actually crazy enough to map mmio region above 4G on 32bit machine.
 
-  9 Power_On_Hours          0x0032   099   099   000    Old_age
-Always       -       907
-193 Load_Cycle_Count        0x0032   198   198   000    Old_age
-Always       -       8051
+>    This is a *hardware* mapping on some non-x86 platforms (like PPC 44x 
+> or MIPS Alchemy). The arch/ppc/ and arch/mips/ kernels have special 
+> hooks called from ioremap() which help create an illusion that the PCI 
+> memory space on such platforms (not only it) is mapped below 4 GB; 
+> arch/powerpc/ kernel doesn't do this anymore -- hence this newly 
+> encountered issue.
 
-  9 Power_On_Hours          0x0032   099   099   000    Old_age
-Always       -       918
-193 Load_Cycle_Count        0x0032   198   198   000    Old_age
-Always       -       7869
+    I thought that pcim_iomap() used devm_ioremap() or something -- which of 
+course turned to be wrong. devm_ioremap() alone is yet safe since there are no 
+users for it amongst PPC 44x platform device drivers...
 
->  I got the _DOS_ utility from WD which issues vendor specific commands to
->  control that feature.
-
-Have they confirmed it's a bug? I have no idea how often the disks
-should do that.
-
->  [...] With it the unload feature can be either disabled or timer set from
->  100ms to 25.5 seconds. But obviously I can't try it...
-
-Why? Using a DOS boot disk once would not be that bad as a workaround,
-would it? Or is the setting not persistent? Either way I'd prefer to
-be able to leave the feature on (in usable form), eventually.
-
-The bigger question is - why the rapid loads / unloads? In my case the
-disks are idle hours at a time. No system files on there, just bulk
-data. Does / could the controller (sata_sil24 in my case) have any
-influence on this kind of power management?
-
-Thanks,
-
-C.
+MBR, Sergei
