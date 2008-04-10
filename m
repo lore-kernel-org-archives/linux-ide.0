@@ -1,72 +1,64 @@
-From: Kumar Gala <galak@kernel.crashing.org>
-Subject: Re: [PATCH 6/13] devres: implement managed iomap interface
-Date: Thu, 10 Apr 2008 14:40:52 -0500
-Message-ID: <A567023C-17FC-402D-9394-29DFFA816891@kernel.crashing.org>
-References: <11684073371547-git-send-email-htejun@gmail.com>	<47FA4FD2.8060808@ru.mvista.com>
-	<47FB85CB.2070506@gmail.com> <47FB8751.3040301@ru.mvista.com>
-	<47FE46AC.5000901@ru.mvista.com>
-	<59A939C7-75AF-4C0F-8199-4C31D174AEA9@kernel.crashing.org>
-	<47FE5B76.40409@ru.mvista.com>
-Mime-Version: 1.0 (Apple Message framework v919.2)
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"; DelSp="yes"
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: [PATCH 2/3] ide-{floppy,tape,scsi}: 400ns delay is required after executing the command
+Date: Thu, 10 Apr 2008 22:26:48 +0200
+Message-ID: <200804102226.48763.bzolnier@gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
-Return-path: <linuxppc-dev-bounces+glppd-linuxppc64-dev=m.gmane.org@ozlabs.org>
-In-Reply-To: <47FE5B76.40409@ru.mvista.com>
-List-Unsubscribe: <https://ozlabs.org/mailman/options/linuxppc-dev>,
-	<mailto:linuxppc-dev-request@ozlabs.org?subject=unsubscribe>
-List-Archive: <http://ozlabs.org/pipermail/linuxppc-dev>
-List-Post: <mailto:linuxppc-dev@ozlabs.org>
-List-Help: <mailto:linuxppc-dev-request@ozlabs.org?subject=help>
-List-Subscribe: <https://ozlabs.org/mailman/listinfo/linuxppc-dev>,
-	<mailto:linuxppc-dev-request@ozlabs.org?subject=subscribe>
-Sender: linuxppc-dev-bounces+glppd-linuxppc64-dev=m.gmane.org@ozlabs.org
-Errors-To: linuxppc-dev-bounces+glppd-linuxppc64-dev=m.gmane.org@ozlabs.org
-To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Cc: Tejun Heo <htejun@gmail.com>, linux-ide@vger.kernel.org, gregkh@suse.de, linux-kernel@vger.kernel.org, linuxppc-dev@ozlabs.org, jgarzik@pobox.com, alan@lxorguk.ukuu.org.uk
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mu-out-0910.google.com ([209.85.134.184]:19658 "EHLO
+	mu-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757879AbYDJUMP (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 10 Apr 2008 16:12:15 -0400
+Received: by mu-out-0910.google.com with SMTP id i10so212464mue.5
+        for <linux-ide@vger.kernel.org>; Thu, 10 Apr 2008 13:12:11 -0700 (PDT)
+Content-Disposition: inline
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
 
+Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+---
+ drivers/ide/ide-floppy.c |    1 +
+ drivers/ide/ide-tape.c   |    1 +
+ drivers/scsi/ide-scsi.c  |    1 +
+ 3 files changed, 3 insertions(+)
 
-On Apr 10, 2008, at 1:24 PM, Sergei Shtylyov wrote:
-> Kumar Gala wrote:
->
->>>>>>  Those functions are going to break on 32-bit platforms with   
->>>>>> extended physical address (well, that's starting with Pentiums   
->>>>>> which had 36-bit PAE :-) AND devices mapped beyond 4 GB (e.g.   
->>>>>> PowerPC 44x).  You should have used resource_size_t for the   
->>>>>> 'offset' parameter. As this most probably means that libata is   
->>>>>> broken on such platforms, I'm going to submit a patch...
->
->>>>  It's broken with drivers using MMIO, I meant to say.
->
->>>  Oops, I meant PCI drivers here, at least for the time being. And   
->>> it looks like that was a false alarm. :-]
->
->>>>> Yeah, right please go ahead.  But I wonder whether any BIOS was   
->>>>> actually crazy enough to map mmio region above 4G on 32bit  
->>>>> machine.
->
->>>>  This is a *hardware* mapping on some non-x86 platforms (like  
->>>> PPC  44x or MIPS Alchemy). The arch/ppc/ and arch/mips/ kernels  
->>>> have  special hooks called from ioremap() which help create an  
->>>> illusion  that the PCI memory space on such platforms (not only  
->>>> it) is mapped  below 4 GB; arch/powerpc/ kernel doesn't do this  
->>>> anymore -- hence  this newly encountered issue.
->
->>>  I thought that pcim_iomap() used devm_ioremap() or something --   
->>> which of course turned to be wrong. devm_ioremap() alone is yet  
->>> safe  since there are no users for it amongst PPC 44x platform  
->>> device  drivers...
->
->> but there is no reason not to make it work properly.  For example  
->> I  believe libata uses devm_* and the fsl SATA driver (non-PCI)  
->> will need  to work in cases similar to the 44x.
->
->   Well, as for sata_fsl, it calls of_iomap() which does The Right  
-> Thing.
-
-Fair, but I don't see why we should introduce new APIs that are  
-already "broken".  We went through a lot of effort to clean up and  
-introduce resource_t (and clearly still have some bugs) for the >32- 
-bit physical address problem.
-
-- k
+Index: b/drivers/ide/ide-floppy.c
+===================================================================
+--- a/drivers/ide/ide-floppy.c
++++ b/drivers/ide/ide-floppy.c
+@@ -698,6 +698,7 @@ static ide_startstop_t idefloppy_issue_p
+ 		/* Issue the packet command */
+ 		hwif->OUTBSYNC(drive, WIN_PACKETCMD,
+ 			       hwif->io_ports.command_addr);
++		ndelay(400);
+ 		return (*pkt_xfer_routine) (drive);
+ 	}
+ }
+Index: b/drivers/ide/ide-tape.c
+===================================================================
+--- a/drivers/ide/ide-tape.c
++++ b/drivers/ide/ide-tape.c
+@@ -1058,6 +1058,7 @@ static ide_startstop_t idetape_issue_pc(
+ 	} else {
+ 		hwif->OUTBSYNC(drive, WIN_PACKETCMD,
+ 			       hwif->io_ports.command_addr);
++		ndelay(400);
+ 		return idetape_transfer_pc(drive);
+ 	}
+ }
+Index: b/drivers/scsi/ide-scsi.c
+===================================================================
+--- a/drivers/scsi/ide-scsi.c
++++ b/drivers/scsi/ide-scsi.c
+@@ -576,6 +576,7 @@ static ide_startstop_t idescsi_issue_pc(
+ 		/* Issue the packet command */
+ 		hwif->OUTBSYNC(drive, WIN_PACKETCMD,
+ 			       hwif->io_ports.command_addr);
++		ndelay(400);
+ 		return idescsi_transfer_pc(drive);
+ 	}
+ }
