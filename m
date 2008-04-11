@@ -1,30 +1,51 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: Re: 2.6.24.X: SATA/AHCI related boot delay. - not with 2.6.24.3
-Date: Fri, 11 Apr 2008 15:06:14 +0900
-Message-ID: <47FEFFD6.3070902@gmail.com>
-References: <200803091922.33083.volker.armin.hemmann@tu-clausthal.de> <200803191455.14380.volker.armin.hemmann@tu-clausthal.de> <47F30438.40506@gmail.com> <200804021909.41609.volker.armin.hemmann@tu-clausthal.de> <47F43766.2070207@gmail.com> <15F501D1A78BD343BE8F4D8DB854566B2600DE6E@hkemmail01.nvidia.com>
+Subject: Re: Need help understanding SATA error message.
+Date: Fri, 11 Apr 2008 15:16:41 +0900
+Message-ID: <47FF0249.5040901@gmail.com>
+References: <Pine.LNX.4.61.0803271554050.5510@envy.nxs.se> <47ED136F.9010501@rtr.ca> <47ED15D2.3080403@rtr.ca> <Pine.LNX.4.61.0803282315330.5510@envy.nxs.se> <47EDBC87.8090109@rtr.ca> <Pine.LNX.4.61.0803301659300.5510@envy.nxs.se> <47F0376F.2090000@gmail.com> <47F0FAD3.9060001@rtr.ca> <47F18127.8070509@gmail.com> <47F19764.9080705@rtr.ca> <Pine.LNX.4.61.0804010834280.5510@envy.nxs.se> <47F224F9.40906@rtr.ca> <47F25FAD.1090200@gmail.com> <Pine.LNX.4.61.0804020705120.5510@envy.nxs.se> <Pine.LNX.4.61.0804031237420.5510@envy.nxs.se>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from qb-out-0506.google.com ([72.14.204.230]:62644 "EHLO
-	qb-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754167AbYDKGGU (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 11 Apr 2008 02:06:20 -0400
-Received: by qb-out-0506.google.com with SMTP id e11so378913qbe.15
-        for <linux-ide@vger.kernel.org>; Thu, 10 Apr 2008 23:06:20 -0700 (PDT)
-In-Reply-To: <15F501D1A78BD343BE8F4D8DB854566B2600DE6E@hkemmail01.nvidia.com>
+Received: from po-out-1718.google.com ([72.14.252.158]:10076 "EHLO
+	po-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752910AbYDKGQw (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 11 Apr 2008 02:16:52 -0400
+Received: by po-out-1718.google.com with SMTP id y22so530868pof.1
+        for <linux-ide@vger.kernel.org>; Thu, 10 Apr 2008 23:16:51 -0700 (PDT)
+In-Reply-To: <Pine.LNX.4.61.0804031237420.5510@envy.nxs.se>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Peer Chen <pchen@nvidia.com>
-Cc: Volker Armin Hemmann <volker.armin.hemmann@tu-clausthal.de>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Kuan Luo <kluo@nvidia.com>
+To: Tomas Lund <tlund@nxs.se>
+Cc: linux-ide@vger.kernel.org
 
-Peer Chen wrote:
-> I didn't find this issue on my MCP65 board but my chip revision is
-> 0xa3 and yours is 0xa1, I'll try to find if there is any useful
-> information between two version chip for this issue.
+Tomas Lund wrote:
+> On Wed, 2 Apr 2008, Tomas Lund wrote:
+> 
+>> Apr  2 04:14:17 envy kernel: ata2.00: exception Emask 0x0 SAct 0x0 
+>> SErr 0x0 action 0x0
+>> Apr  2 04:14:17 envy kernel: ata2.00: irq_stat 0x40000001
+>> Apr  2 04:14:17 envy kernel: ata2.00: cmd 
+>> ea/00:00:00:00:00/00:00:00:00:00/a0 tag 0
+>> Apr  2 04:14:17 envy kernel:          res 
+>> 51/04:00:0a:24:f9/00:00:00:00:00/a9 Emask 0x1 (device error)
+>> Apr  2 04:14:17 envy kernel: ata2.00: status: { DRDY ERR }
+>> Apr  2 04:14:17 envy kernel: ata2.00: error: { ABRT }
+>> Apr  2 04:14:17 envy kernel: ata2.00: configured for UDMA/133
+>> Apr  2 04:14:18 envy kernel: ata2: EH complete
+>> Apr  2 04:14:18 envy kernel: sd 1:0:0:0: [sdb] 1953525168 512-byte 
+>> hardware sectors (1000205 MB)
+>> Apr  2 04:14:18 envy kernel: sd 1:0:0:0: [sdb] Write Protect is off
+>> Apr  2 04:14:18 envy kernel: sd 1:0:0:0: [sdb] Mode Sense: 00 3a 00 00
+>> Apr  2 04:14:18 envy kernel: sd 1:0:0:0: [sdb] Write cache: enabled, 
+>> read cache: enabled, doesn't support DPO or FUA
+> 
+> The errors continue to occur at random interval, even after i stoped the 
+> copy-alot-of-files-and-sync stresstest.
+> 
+> Any other ideas or things to try?
 
-Any progress?
+Looks like a broken drive to me.  Can you put it on a different controller?
 
 -- 
 tejun
