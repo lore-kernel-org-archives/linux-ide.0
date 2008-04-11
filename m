@@ -1,51 +1,56 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: Need help understanding SATA error message.
-Date: Fri, 11 Apr 2008 15:16:41 +0900
-Message-ID: <47FF0249.5040901@gmail.com>
-References: <Pine.LNX.4.61.0803271554050.5510@envy.nxs.se> <47ED136F.9010501@rtr.ca> <47ED15D2.3080403@rtr.ca> <Pine.LNX.4.61.0803282315330.5510@envy.nxs.se> <47EDBC87.8090109@rtr.ca> <Pine.LNX.4.61.0803301659300.5510@envy.nxs.se> <47F0376F.2090000@gmail.com> <47F0FAD3.9060001@rtr.ca> <47F18127.8070509@gmail.com> <47F19764.9080705@rtr.ca> <Pine.LNX.4.61.0804010834280.5510@envy.nxs.se> <47F224F9.40906@rtr.ca> <47F25FAD.1090200@gmail.com> <Pine.LNX.4.61.0804020705120.5510@envy.nxs.se> <Pine.LNX.4.61.0804031237420.5510@envy.nxs.se>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+From: bugme-daemon@bugzilla.kernel.org
+Subject: [Bug 9994] atiixp ide timeouts
+Date: Fri, 11 Apr 2008 02:40:43 -0700 (PDT)
+Message-ID: <20080411094043.82BE311D107@picon.linux-foundation.org>
+References: <bug-9994-11633@http.bugzilla.kernel.org/>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from po-out-1718.google.com ([72.14.252.158]:10076 "EHLO
-	po-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752910AbYDKGQw (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 11 Apr 2008 02:16:52 -0400
-Received: by po-out-1718.google.com with SMTP id y22so530868pof.1
-        for <linux-ide@vger.kernel.org>; Thu, 10 Apr 2008 23:16:51 -0700 (PDT)
-In-Reply-To: <Pine.LNX.4.61.0804031237420.5510@envy.nxs.se>
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:52984 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1756803AbYDKJlp (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 11 Apr 2008 05:41:45 -0400
+Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
+	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id m3B9fB1P013794
+	for <linux-ide@vger.kernel.org>; Fri, 11 Apr 2008 02:41:12 -0700
+In-Reply-To: <bug-9994-11633@http.bugzilla.kernel.org/>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tomas Lund <tlund@nxs.se>
-Cc: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-Tomas Lund wrote:
-> On Wed, 2 Apr 2008, Tomas Lund wrote:
-> 
->> Apr  2 04:14:17 envy kernel: ata2.00: exception Emask 0x0 SAct 0x0 
->> SErr 0x0 action 0x0
->> Apr  2 04:14:17 envy kernel: ata2.00: irq_stat 0x40000001
->> Apr  2 04:14:17 envy kernel: ata2.00: cmd 
->> ea/00:00:00:00:00/00:00:00:00:00/a0 tag 0
->> Apr  2 04:14:17 envy kernel:          res 
->> 51/04:00:0a:24:f9/00:00:00:00:00/a9 Emask 0x1 (device error)
->> Apr  2 04:14:17 envy kernel: ata2.00: status: { DRDY ERR }
->> Apr  2 04:14:17 envy kernel: ata2.00: error: { ABRT }
->> Apr  2 04:14:17 envy kernel: ata2.00: configured for UDMA/133
->> Apr  2 04:14:18 envy kernel: ata2: EH complete
->> Apr  2 04:14:18 envy kernel: sd 1:0:0:0: [sdb] 1953525168 512-byte 
->> hardware sectors (1000205 MB)
->> Apr  2 04:14:18 envy kernel: sd 1:0:0:0: [sdb] Write Protect is off
->> Apr  2 04:14:18 envy kernel: sd 1:0:0:0: [sdb] Mode Sense: 00 3a 00 00
->> Apr  2 04:14:18 envy kernel: sd 1:0:0:0: [sdb] Write cache: enabled, 
->> read cache: enabled, doesn't support DPO or FUA
-> 
-> The errors continue to occur at random interval, even after i stoped the 
-> copy-alot-of-files-and-sync stresstest.
-> 
-> Any other ideas or things to try?
+http://bugzilla.kernel.org/show_bug.cgi?id=9994
 
-Looks like a broken drive to me.  Can you put it on a different controller?
+
+
+
+
+------- Comment #6 from jan.fikar@psi.ch  2008-04-11 02:40 -------
+The latest results are not very good...
+Bisecting and waiting for at least 24 hours leads to a different wrong result:
+
+f435a91e66e7776f0c73fca5af3cb87c61130ed6 is first bad commit
+commit f435a91e66e7776f0c73fca5af3cb87c61130ed6
+Author: Ralf Baechle <ralf@linux-mips.org>
+Date:   Thu Dec 6 17:15:57 2007 +0000
+
+    [MIPS] BCM1480: Fix interrupt routing, take 2.
+
+    Signed-off-by: Ralf Baechle <ralf@linux-mips.org>
+
+:040000 040000 73dbf425d802ab4d4a1c6fd4776df2b9d0086043 
+0fa229550fa638511ff9f9edde20f0329d650174 M      arch
+
+Then I tried kernel 2.6.25-rc6 and unfortunately I still see the error,
+although it seems to be triggered even less often. One time I saw a single DMA
+timeout in 4 days without disabling DMA. Second time after three days and last
+time I saw the real problem, so a lot of timeouts, resets and disabling DMA on
+hda during two days.
+
+
+Is there a possibility to try only atiixp related patches instead of the
+bisecting? If I need to wait let's say 5 days, bisecting would take in the
+worst case two months :(
+
 
 -- 
-tejun
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug, or are watching the assignee.
