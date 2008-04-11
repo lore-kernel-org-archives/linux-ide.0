@@ -1,64 +1,30 @@
 From: Tejun Heo <htejun@gmail.com>
 Subject: Re: 2.6.24.X: SATA/AHCI related boot delay. - not with 2.6.24.3
-Date: Fri, 11 Apr 2008 15:05:58 +0900
-Message-ID: <47FEFFC6.4@gmail.com>
-References: <200803091922.33083.volker.armin.hemmann@tu-clausthal.de> <200804030704.21480.volker.armin.hemmann@tu-clausthal.de> <47F46A74.504@gmail.com> <200804031347.20352.volker.armin.hemmann@tu-clausthal.de>
+Date: Fri, 11 Apr 2008 15:06:14 +0900
+Message-ID: <47FEFFD6.3070902@gmail.com>
+References: <200803091922.33083.volker.armin.hemmann@tu-clausthal.de> <200803191455.14380.volker.armin.hemmann@tu-clausthal.de> <47F30438.40506@gmail.com> <200804021909.41609.volker.armin.hemmann@tu-clausthal.de> <47F43766.2070207@gmail.com> <15F501D1A78BD343BE8F4D8DB854566B2600DE6E@hkemmail01.nvidia.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1757859AbYDKGG3@vger.kernel.org>
-In-Reply-To: <200804031347.20352.volker.armin.hemmann@tu-clausthal.de>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Volker Armin Hemmann <volker.armin.hemmann@tu-clausthal.de>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Peer Chen <pchen@nvidia.com>, Kuan Luo <kluo@nvidia.com>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from qb-out-0506.google.com ([72.14.204.230]:62644 "EHLO
+	qb-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754167AbYDKGGU (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 11 Apr 2008 02:06:20 -0400
+Received: by qb-out-0506.google.com with SMTP id e11so378913qbe.15
+        for <linux-ide@vger.kernel.org>; Thu, 10 Apr 2008 23:06:20 -0700 (PDT)
+In-Reply-To: <15F501D1A78BD343BE8F4D8DB854566B2600DE6E@hkemmail01.nvidia.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Peer Chen <pchen@nvidia.com>
+Cc: Volker Armin Hemmann <volker.armin.hemmann@tu-clausthal.de>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Kuan Luo <kluo@nvidia.com>
 
-Volker Armin Hemmann wrote:
-> From systemrescuecd, ahci in bios, no nomsi:
->            CPU0       CPU1       
->   0:        147          1   IO-APIC-edge      timer
->   1:          0        607   IO-APIC-edge      i8042
->   8:          0         61   IO-APIC-edge      rtc
->   9:          0          1   IO-APIC-fasteoi   acpi
->  12:          0          4   IO-APIC-edge      i8042
->  14:          0          0   IO-APIC-edge      libata
->  15:          0          0   IO-APIC-edge      libata
->  18:          0         16   IO-APIC-fasteoi   aic7xxx
->  21:          0          0   IO-APIC-fasteoi   ohci_hcd:usb2
->  22:          2       8428   IO-APIC-fasteoi   ehci_hcd:usb1
-> 1274:          0          0   PCI-MSI-edge      ahci
-> 1275:          0        222   PCI-MSI-edge      eth0
-> NMI:          0          0   Non-maskable interrupts
-> LOC:      14777      16785   Local timer interrupts
-> RES:       7250       6100   Rescheduling interrupts
-> CAL:         41         52   function call interrupts
-> TLB:       1866       1876   TLB shootdowns
-> TRM:          0          0   Thermal event interrupts
-> THR:          0          0   Threshold APIC interrupts
-> SPU:          0          0   Spurious interrupts
-> ERR:          6
-> 
-> With my 'own' kernel, AHCI has interrupt 315. I will try and make a more 
-> monolithic kernel so I might be able to boot from a usb-flash device.
-> .
-> .
-> .
-> which didn't work. Hm, I am too stupid for that today...
+Peer Chen wrote:
+> I didn't find this issue on my MCP65 board but my chip revision is
+> 0xa3 and yours is 0xa1, I'll try to find if there is any useful
+> information between two version chip for this issue.
 
-Hmmm...
-
->>> I will reboot from systemresucecd later today and post some results with
->>> ahci-mode set, no nomsi. Just can't try patches that way.
->> Is sytemrescuecd using the same kernel?  Otherwise, it will only add
->> more to the confusion.
-> 
-> almost.  A heavily patched 2.6.24.2. That is why I don't sent a dmesg ... just 
-> cat /proc/interrupts. I can send you lspci -vv and dmesg from systemrescuecd 
-> if you want.
-
-Aiee.... Can you please try 2.6.25-rc8 with both configurations?  And 
-w/o systemrescuecd?  Just seeing whether things mount properly or not is 
-good enough.  There isn't much risk of losing data.
+Any progress?
 
 -- 
 tejun
