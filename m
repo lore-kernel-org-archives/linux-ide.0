@@ -1,78 +1,267 @@
-From: devzero@web.de
-Subject: Re: Western Digital GreenPower drives and Linux
-Date: Fri, 11 Apr 2008 00:36:45 +0200
-Message-ID: <234148243@web.de>
+From: Mark Lord <liml@rtr.ca>
+Subject: [PATCH] sata_mv rework hardreset sequence
+Date: Thu, 10 Apr 2008 20:21:39 -0400
+Message-ID: <47FEAF13.5050605@rtr.ca>
+References: <47F1736F.8020104@rtr.ca> <47F17592.8070002@rtr.ca> <47F5E078.6040703@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-15
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from fmmailgate04.web.de ([217.72.192.242]:47478 "EHLO
-	fmmailgate04.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752389AbYDJWgr (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 10 Apr 2008 18:36:47 -0400
+Received: from rtr.ca ([76.10.145.34]:2260 "EHLO mail.rtr.ca"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751036AbYDKAVl (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 10 Apr 2008 20:21:41 -0400
+In-Reply-To: <47F5E078.6040703@pobox.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: lkml@metanurb.dk, pernegger@gmail.com, tvrtko@ursulin.net
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: Tejun Heo <htejun@gmail.com>, IDE/ATA development list <linux-ide@vger.kernel.org>
 
-i also have such a drive (damn, if i knew that saving some Watts would hurt...) - and i measured ~100 load_cycle_count per hour, which is _way_ to much, imho.
-if we trust the spec, the disk would be dead after ~1year.
-
-it seems that "intellipark" is not that intelligent as it should be and a little bit too agressive.
-
-from what i have found, the time for parking the heads is much below the linux kernel flush interval (which seems to be at 30secs),  so i think the best thing to do is tuning either dirty_expire_centisecs and dirty_writeback_centisecs  (defaults to 3000/500 on my system)  or tune the disk parking interval , so that the disks own interval is greater than the linux flush interval.
-
-i also openend an SR at WD - will see if they will recommend that dos utility, too.
-
->I got back from WD's tech support and received a DOS utility which can control 
->this drive feature, apparently using vendor specific commands. With it head 
->unload timer can be disabled or set to a period between 100ms and 25.5s. 
-
-doh - so that disk always is faster with parking it`s heads than linux default flush interval !?
-btw - is that dos utility available for download somewhere?
-
-regards
-roland
+Jeff Garzik wrote:
+> Mark Lord wrote:
+>> Remove the now unused mv_phy_reset() code,
+>> as well as the unnecessary mv_postreset() function.
+>>
+>> Signed-off-by: Mark Lord <mlord@pobox.com>
+> 
+> ACK patches 4-5
+> 
+> However, I would prefer to finish merging Tejun's honkin' huge 
+> modularize patchsets, and then request that you rediff&resend sata_mv 
+> patches 4 and 5
 
 
+This patch replaces the earlier patches 04/05.
 
-List:       linux-kernel
-Subject:    Re: Western Digital GreenPower drives and Linux
-From:       "Tvrtko A. Ursulin" <tvrtko () ursulin ! net>
-Date:       2008-04-10 7:48:08
-Message-ID: 200804100848.08442.tvrtko () ursulin ! net
-[Download message RAW]
+* * *
 
-On Wednesday 09 April 2008 21:18:35 Tvrtko A. Ursulin wrote:
-> I got one of them (WD5000AACS) recently and to my horror after less than
-> three days of being power on this is what I saw:
->
-> 9 Power_On_Hours       0x0032 100 100 000 Old_age Always  - 66
-> 193 Load_Cycle_Count 0x0032 197 197 000 Old_age  Always  - 10233
->
-> At this rate the disk would reach it's design limit for load/unload cycles
-> in around 80 days. Not good - so I implemented a lame workaround of keeping
-> disk busy every couple of seconds - hopefully that won't kill it sooner
-> that unloads would..
->
-> I am also currently talking with first line of WD's tech support trying to
-> get some data on how exactly those drives manage head unloading, but that
-> may not lead anywhere useful.
+Rework and simplify sata_mv's hardreset code to take advantage
+of libata improvements since it was first coded.
 
-I got back from WD's tech support and received a DOS utility which can control 
-this drive feature, apparently using vendor specific commands. With it head 
-unload timer can be disabled or set to a period between 100ms and 25.5s. 
+Also, get rid of the now unnecessary prereset, postreset, and phy_reset functions.
 
-Of course I asked for more than a DOS utility, but the question really is how 
-was this feature intended to work with Windows for example, is there 
-something there which would prevent such rapid load/unload cycle growth, and 
-why isn't it documented somewhere?
+This patch also paves the way for subsequent pmp support patches,
+which will follow once this one passes muster.
 
-I am kind off hoping that someone from WD is reading this list and will notice 
-this in case my effort with tech support fails.
+Signed-off-by: Mark Lord <mlord@pobox.com>
 
-Tvrtko
-_________________________________________________________________________
-In 5 Schritten zur eigenen Homepage. Jetzt Domain sichern und gestalten! 
-Nur 3,99 EUR/Monat! http://www.maildomain.web.de/?mc=021114
-
+--- upstream/linux/drivers/ata/sata_mv.c	2008-04-10 14:30:27.000000000 -0400
++++ new/linux/drivers/ata/sata_mv.c	2008-04-10 14:31:01.000000000 -0400
+@@ -478,10 +478,8 @@
+ static void mv_qc_prep(struct ata_queued_cmd *qc);
+ static void mv_qc_prep_iie(struct ata_queued_cmd *qc);
+ static unsigned int mv_qc_issue(struct ata_queued_cmd *qc);
+-static int mv_prereset(struct ata_link *link, unsigned long deadline);
+ static int mv_hardreset(struct ata_link *link, unsigned int *class,
+ 			unsigned long deadline);
+-static void mv_postreset(struct ata_link *link, unsigned int *classes);
+ static void mv_eh_freeze(struct ata_port *ap);
+ static void mv_eh_thaw(struct ata_port *ap);
+ static void mv6_dev_config(struct ata_device *dev);
+@@ -545,9 +543,7 @@
+ 
+ 	.freeze			= mv_eh_freeze,
+ 	.thaw			= mv_eh_thaw,
+-	.prereset		= mv_prereset,
+ 	.hardreset		= mv_hardreset,
+-	.postreset		= mv_postreset,
+ 	.error_handler		= ata_std_error_handler, /* avoid SFF EH */
+ 	.post_internal_cmd	= ATA_OP_NULL,
+ 
+@@ -1904,7 +1900,6 @@
+ 	 * (but doesn't say what the problem might be).  So we first try
+ 	 * to disable the EDMA engine before doing the ATA_RST operation.
+ 	 */
+-	mv_stop_edma_engine(port_mmio);
+ 	mv_reset_channel(hpriv, mmio, port);
+ 
+ 	ZERO(0x028);	/* command */
+@@ -2184,7 +2179,6 @@
+ 	 * (but doesn't say what the problem might be).  So we first try
+ 	 * to disable the EDMA engine before doing the ATA_RST operation.
+ 	 */
+-	mv_stop_edma_engine(port_mmio);
+ 	mv_reset_channel(hpriv, mmio, port);
+ 
+ 	ZERO(0x028);		/* command */
+@@ -2261,6 +2255,7 @@
+ {
+ 	void __iomem *port_mmio = mv_port_base(mmio, port_no);
+ 
++	mv_stop_edma_engine(port_mmio);
+ 	writelfl(ATA_RST, port_mmio + EDMA_CMD_OFS);
+ 
+ 	if (!IS_GEN_I(hpriv)) {
+@@ -2282,116 +2277,6 @@
+ 		mdelay(1);
+ }
+ 
+-/**
+- *      mv_phy_reset - Perform eDMA reset followed by COMRESET
+- *      @ap: ATA channel to manipulate
+- *
+- *      Part of this is taken from __sata_phy_reset and modified to
+- *      not sleep since this routine gets called from interrupt level.
+- *
+- *      LOCKING:
+- *      Inherited from caller.  This is coded to safe to call at
+- *      interrupt level, i.e. it does not sleep.
+- */
+-static void mv_phy_reset(struct ata_port *ap, unsigned int *class,
+-			 unsigned long deadline)
+-{
+-	struct mv_port_priv *pp	= ap->private_data;
+-	struct mv_host_priv *hpriv = ap->host->private_data;
+-	void __iomem *port_mmio = mv_ap_base(ap);
+-	int retry = 5;
+-	u32 sstatus;
+-
+-	VPRINTK("ENTER, port %u, mmio 0x%p\n", ap->port_no, port_mmio);
+-
+-#ifdef DEBUG
+-	{
+-		u32 sstatus, serror, scontrol;
+-
+-		mv_scr_read(ap, SCR_STATUS, &sstatus);
+-		mv_scr_read(ap, SCR_ERROR, &serror);
+-		mv_scr_read(ap, SCR_CONTROL, &scontrol);
+-		DPRINTK("S-regs after ATA_RST: SStat 0x%08x SErr 0x%08x "
+-			"SCtrl 0x%08x\n", sstatus, serror, scontrol);
+-	}
+-#endif
+-
+-	/* Issue COMRESET via SControl */
+-comreset_retry:
+-	sata_scr_write_flush(&ap->link, SCR_CONTROL, 0x301);
+-	msleep(1);
+-
+-	sata_scr_write_flush(&ap->link, SCR_CONTROL, 0x300);
+-	msleep(20);
+-
+-	do {
+-		sata_scr_read(&ap->link, SCR_STATUS, &sstatus);
+-		if (((sstatus & 0x3) == 3) || ((sstatus & 0x3) == 0))
+-			break;
+-
+-		msleep(1);
+-	} while (time_before(jiffies, deadline));
+-
+-	/* work around errata */
+-	if (IS_GEN_II(hpriv) &&
+-	    (sstatus != 0x0) && (sstatus != 0x113) && (sstatus != 0x123) &&
+-	    (retry-- > 0))
+-		goto comreset_retry;
+-
+-#ifdef DEBUG
+-	{
+-		u32 sstatus, serror, scontrol;
+-
+-		mv_scr_read(ap, SCR_STATUS, &sstatus);
+-		mv_scr_read(ap, SCR_ERROR, &serror);
+-		mv_scr_read(ap, SCR_CONTROL, &scontrol);
+-		DPRINTK("S-regs after PHY wake: SStat 0x%08x SErr 0x%08x "
+-			"SCtrl 0x%08x\n", sstatus, serror, scontrol);
+-	}
+-#endif
+-
+-	if (ata_link_offline(&ap->link)) {
+-		*class = ATA_DEV_NONE;
+-		return;
+-	}
+-
+-	/* even after SStatus reflects that device is ready,
+-	 * it seems to take a while for link to be fully
+-	 * established (and thus Status no longer 0x80/0x7F),
+-	 * so we poll a bit for that, here.
+-	 */
+-	retry = 20;
+-	while (1) {
+-		u8 drv_stat = ata_sff_check_status(ap);
+-		if ((drv_stat != 0x80) && (drv_stat != 0x7f))
+-			break;
+-		msleep(500);
+-		if (retry-- <= 0)
+-			break;
+-		if (time_after(jiffies, deadline))
+-			break;
+-	}
+-
+-	/* FIXME: if we passed the deadline, the following
+-	 * code probably produces an invalid result
+-	 */
+-
+-	/* finally, read device signature from TF registers */
+-	*class = ata_sff_dev_classify(ap->link.device, 1, NULL);
+-
+-	writelfl(0, port_mmio + EDMA_ERR_IRQ_CAUSE_OFS);
+-
+-	WARN_ON(pp->pp_flags & MV_PP_FLAG_EDMA_EN);
+-
+-	VPRINTK("EXIT\n");
+-}
+-
+-static int mv_prereset(struct ata_link *link, unsigned long deadline)
+-{
+-	mv_stop_edma(link->ap);
+-	return 0;
+-}
+-
+ static int mv_hardreset(struct ata_link *link, unsigned int *class,
+ 			unsigned long deadline)
+ {
+@@ -2399,34 +2284,33 @@
+ 	struct mv_host_priv *hpriv = ap->host->private_data;
+ 	struct mv_port_priv *pp = ap->private_data;
+ 	void __iomem *mmio = hpriv->base;
++	int rc, attempts = 0, extra = 0;
++	u32 sstatus;
++	bool online;
+ 
+ 	mv_reset_channel(hpriv, mmio, ap->port_no);
+ 	pp->pp_flags &= ~MV_PP_FLAG_EDMA_EN;
+-	mv_phy_reset(ap, class, deadline);
+-
+-	return 0;
+-}
+-
+-static void mv_postreset(struct ata_link *link, unsigned int *classes)
+-{
+-	struct ata_port *ap = link->ap;
+-	u32 serr;
+ 
+-	/* print link status */
+-	sata_print_link_status(link);
++	/* Workaround for errata FEr SATA#10 (part 2) */
++	do {
++		const unsigned long *timing = sata_ehc_deb_timing(&link->eh_context);
+ 
+-	/* clear SError */
+-	sata_scr_read(link, SCR_ERROR, &serr);
+-	sata_scr_write_flush(link, SCR_ERROR, serr);
+-
+-	/* bail out if no device is present */
+-	if (classes[0] == ATA_DEV_NONE && classes[1] == ATA_DEV_NONE) {
+-		DPRINTK("EXIT, no device\n");
+-		return;
+-	}
++		rc = sata_link_hardreset(link, timing, deadline + extra, &online, NULL);
++		if (rc) {
++			ata_link_printk(link, KERN_ERR,
++					"COMRESET failed (errno=%d)\n", rc);
++			return rc;
++		}
++		sata_scr_read(link, SCR_STATUS, &sstatus);
++		if (!IS_GEN_I(hpriv) && ++attempts >= 5 && sstatus == 0x121) {
++			/* Force 1.5gb/s link speed and try again */
++			mv_setup_ifctl(mv_ap_base(ap), 0);
++			if (time_after(jiffies + HZ, deadline))
++				extra = HZ; /* only extend it once, max */
++		}
++	} while (sstatus != 0x0 && sstatus != 0x113 && sstatus != 0x123);
+ 
+-	/* set up device control */
+-	iowrite8(ap->ctl, ap->ioaddr.ctl_addr);
++	return online ? -EAGAIN : rc;
+ }
+ 
+ static void mv_eh_freeze(struct ata_port *ap)
