@@ -1,41 +1,35 @@
-From: "Tvrtko A. Ursulin" <tvrtko@ursulin.net>
-Subject: Re: Western Digital GreenPower drives and Linux
-Date: Fri, 11 Apr 2008 22:00:28 +0100
-Message-ID: <200804112200.28854.tvrtko@ursulin.net>
-References: <234148243@web.de>
+From: Kurt Roeckx <kurt@roeckx.be>
+Subject: Re: [PATCH 2.6.25-rc6] sata_promise: fix hardreset hotplug events,
+	take 2
+Date: Fri, 11 Apr 2008 23:11:21 +0200
+Message-ID: <20080411211121.GA30781@roeckx.be>
+References: <200803221421.m2MEL1oY021558@harpo.it.uu.se> <18406.38445.717175.664615@harpo.it.uu.se>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mk-outboundfilter-5-a-2.mail.uk.tiscali.com ([212.74.114.4]:57971
-	"EHLO mk-outboundfilter-5-a-2.mail.uk.tiscali.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1760110AbYDKU75 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 11 Apr 2008 16:59:57 -0400
-In-Reply-To: <234148243@web.de>
+Received: from yergi.telenet-ops.be ([195.130.132.36]:40991 "EHLO
+	yergi.telenet-ops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1761920AbYDKVLd (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 11 Apr 2008 17:11:33 -0400
+Received: from wilson.telenet-ops.be (unknown [195.130.132.42])
+	by yergi.telenet-ops.be (Postfix) with ESMTP id B81455CA4F9
+	for <linux-ide@vger.kernel.org>; Fri, 11 Apr 2008 23:11:43 +0200 (CEST)
 Content-Disposition: inline
+In-Reply-To: <18406.38445.717175.664615@harpo.it.uu.se>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: devzero@web.de
-Cc: lkml@metanurb.dk, pernegger@gmail.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Andi Kleen <andi@firstfloor.org>
+To: Mikael Pettersson <mikpe@it.uu.se>
+Cc: linux-ide@vger.kernel.org
+
+On Sun, Mar 23, 2008 at 06:41:01PM +0100, Mikael Pettersson wrote:
+> A Promise SATA controller will signal hotplug events when a hard
+> reset (COMRESET) is done on a port. These events aren't masked by
+> the driver, and the unexpected interrupts will cause a sequence
+> of failed reset attempts util libata's EH finally gives up.
+
+I've tried tried a 2.6.25-rc8 kernel which should contain the patch.
+I'm still seeing my problem about the hotplug events.
 
 
-> >I got back from WD's tech support and received a DOS utility which can
-> > control this drive feature, apparently using vendor specific commands.
-> > With it head unload timer can be disabled or set to a period between
-> > 100ms and 25.5s.
+Kurt
 
-Followup with some good news.
-
-Head unload timer settings seems to be persistent across powering off. Having 
-set it to a maximum value of 25.5 seconds my disk is now behaving much more 
-reasonable.
-
-To actually do it I used FreeDOS floppy image burnt on a CD-RW as a bootable 
-image plus wdidle3.exe in the filesystem itself. 
-
-BTW, WD's tech support has gone silent so chances for an easier solution are 
-not so great.
-
-Tvrtko
