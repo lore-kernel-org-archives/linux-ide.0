@@ -1,96 +1,32 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH 5/5] ide: remove ->dma_prdtable field from ide_hwif_t
-Date: Sat, 12 Apr 2008 21:05:42 +0200
-Message-ID: <200804122105.42636.bzolnier@gmail.com>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: Re: [PATCH 4/5] ide: remove ->dma_vendor{1,3} fields from ide_hwif_t
+Date: Sat, 12 Apr 2008 22:55:00 +0400
+Message-ID: <48010584.3020406@ru.mvista.com>
+References: <200804122105.09585.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.156]:16865 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756128AbYDLSvp (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 12 Apr 2008 14:51:45 -0400
-Received: by fg-out-1718.google.com with SMTP id l27so857243fgb.17
-        for <linux-ide@vger.kernel.org>; Sat, 12 Apr 2008 11:51:44 -0700 (PDT)
-Content-Disposition: inline
+Received: from h155.mvista.com ([63.81.120.155]:45184 "EHLO imap.sh.mvista.com"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1755970AbYDLSzn (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 12 Apr 2008 14:55:43 -0400
+In-Reply-To: <200804122105.09585.bzolnier@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-* Use 'hwif->dma_base + {4,8}' instead of hwif->dma_prdtable in
-  {ide,scc}_dma_setup().
+Bartlomiej Zolnierkiewicz wrote:
 
-* Remove no longer needed ->dma_prdtable field from ide_hwif_t.
+> * Use 'hwif->dma_base + {1,3}' instead of hwif->dma_vendor{1,3} in
+>   pdc202xx_new host driver.
 
-While at it:
+> * Remove no longer needed ->dma_vendor{1,3} fields from ide_hwif_t.
 
-* Use ATA_DMA_TABLE_OFS define.
+> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 
-Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
----
- drivers/ide/ide-dma.c      |    7 +++----
- drivers/ide/pci/scc_pata.c |    3 +--
- include/linux/ide.h        |    1 -
- 3 files changed, 4 insertions(+), 7 deletions(-)
+Acked-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
 
-Index: b/drivers/ide/ide-dma.c
-===================================================================
---- a/drivers/ide/ide-dma.c
-+++ b/drivers/ide/ide-dma.c
-@@ -464,9 +464,10 @@ int ide_dma_setup(ide_drive_t *drive)
- 
- 	/* PRD table */
- 	if (hwif->mmio)
--		writel(hwif->dmatable_dma, (void __iomem *)hwif->dma_prdtable);
-+		writel(hwif->dmatable_dma,
-+		       (void __iomem *)(hwif->dma_base + ATA_DMA_TABLE_OFS));
- 	else
--		outl(hwif->dmatable_dma, hwif->dma_prdtable);
-+		outl(hwif->dmatable_dma, hwif->dma_base + ATA_DMA_TABLE_OFS);
- 
- 	/* specify r/w */
- 	hwif->OUTB(reading, hwif->dma_command);
-@@ -860,8 +861,6 @@ void ide_setup_dma(ide_hwif_t *hwif, uns
- 		hwif->dma_command	= hwif->dma_base + 0;
- 	if (!hwif->dma_status)
- 		hwif->dma_status	= hwif->dma_base + 2;
--	if (!hwif->dma_prdtable)
--		hwif->dma_prdtable	= hwif->dma_base + 4;
- 
- 	hwif->dma_ops = &sff_dma_ops;
- }
-Index: b/drivers/ide/pci/scc_pata.c
-===================================================================
---- a/drivers/ide/pci/scc_pata.c
-+++ b/drivers/ide/pci/scc_pata.c
-@@ -304,7 +304,7 @@ static int scc_dma_setup(ide_drive_t *dr
- 	}
- 
- 	/* PRD table */
--	out_be32((void __iomem *)hwif->dma_prdtable, hwif->dmatable_dma);
-+	out_be32((void __iomem *)(hwif->dma_base + 8), hwif->dmatable_dma);
- 
- 	/* specify r/w */
- 	out_be32((void __iomem *)hwif->dma_command, reading);
-@@ -804,7 +804,6 @@ static void __devinit init_hwif_scc(ide_
- 
- 	hwif->dma_command = hwif->dma_base;
- 	hwif->dma_status = hwif->dma_base + 0x04;
--	hwif->dma_prdtable = hwif->dma_base + 0x08;
- 
- 	/* PTERADD */
- 	out_be32((void __iomem *)(hwif->dma_base + 0x018), hwif->dmatable_dma);
-Index: b/include/linux/ide.h
-===================================================================
---- a/include/linux/ide.h
-+++ b/include/linux/ide.h
-@@ -511,7 +511,6 @@ typedef struct hwif_s {
- 	unsigned long	dma_base;	/* base addr for dma ports */
- 	unsigned long	dma_command;	/* dma command register */
- 	unsigned long	dma_status;	/* dma status register */
--	unsigned long	dma_prdtable;	/* actual prd table address */
- 
- 	unsigned long	config_data;	/* for use by chipset-specific code */
- 	unsigned long	select_data;	/* for use by chipset-specific code */
+MBR, Sergei
+
