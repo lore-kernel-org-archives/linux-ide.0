@@ -1,71 +1,75 @@
 From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [patch 2/2] libata: power off unused ports
-Date: Sat, 12 Apr 2008 00:28:13 -0400
-Message-ID: <48003A5D.9000306@garzik.org>
-References: <20080325221646.567639335@intel.com> <20080325152813.0b34761f@appleyard>
+Subject: Re: [patch 1/2] pata_atiixp: simplex clear
+Date: Sat, 12 Apr 2008 00:33:21 -0400
+Message-ID: <48003B91.4070701@garzik.org>
+References: <200803282133.m2SLXupx011467@imap1.linux-foundation.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:37207 "EHLO mail.dvmed.net"
+Received: from srv5.dvmed.net ([207.36.208.214]:33823 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756147AbYDLE2P (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 12 Apr 2008 00:28:15 -0400
-In-Reply-To: <20080325152813.0b34761f@appleyard>
+	id S1751039AbYDLEdZ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 12 Apr 2008 00:33:25 -0400
+In-Reply-To: <200803282133.m2SLXupx011467@imap1.linux-foundation.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Kristen Carlson Accardi <kristen.c.accardi@intel.com>
-Cc: linux-ide@vger.kernel.org, arjan@linux.intel.com
+To: akpm@linux-foundation.org
+Cc: linux-ide@vger.kernel.org, alan@lxorguk.ukuu.org.uk, alan@redhat.com, Tejun Heo <htejun@gmail.com>
 
-Kristen Carlson Accardi wrote:
-> If a port doesn't support hot plug, there's no reason to keep the phy powered
-> on unoccupied ports.  
+akpm@linux-foundation.org wrote:
+> From: Alan Cox <alan@lxorguk.ukuu.org.uk>
 > 
-> Signed-off-by:  Kristen Carlson Accardi <kristen.c.accardi@intel.com>
+> Some of the other quirks changes seem to have left some users with the simplex
+> bits mis-set by the time the driver loads.  Clear simplex mode before we probe
+> the controller therefore.
 > 
-> Index: linux-2.6.25-rc3/drivers/ata/ahci.c
-> ===================================================================
-> --- linux-2.6.25-rc3.orig/drivers/ata/ahci.c
-> +++ linux-2.6.25-rc3/drivers/ata/ahci.c
-> @@ -52,6 +52,7 @@
->  static int ahci_enable_alpm(struct ata_port *ap,
->  		enum link_pm policy);
->  static void ahci_disable_alpm(struct ata_port *ap);
-> +static int ahci_is_hotplug_capable(struct ata_port *ap);
+> Signed-off-by: Alan Cox <alan@redhat.com>
+> Cc: Jeff Garzik <jeff@garzik.org>
+> Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
+> ---
+> 
+>  drivers/ata/pata_atiixp.c |    7 +++++--
+>  1 file changed, 5 insertions(+), 2 deletions(-)
+> 
+> diff -puN drivers/ata/pata_atiixp.c~pata_atiixp-simplex-clear drivers/ata/pata_atiixp.c
+> --- a/drivers/ata/pata_atiixp.c~pata_atiixp-simplex-clear
+> +++ a/drivers/ata/pata_atiixp.c
+> @@ -22,7 +22,7 @@
+>  #include <linux/libata.h>
+>  
+>  #define DRV_NAME "pata_atiixp"
+> -#define DRV_VERSION "0.4.6"
+> +#define DRV_VERSION "0.4.7"
 >  
 >  enum {
->  	AHCI_PCI_BAR		= 5,
-> @@ -163,6 +164,7 @@ enum {
->  	PORT_CMD_ASP		= (1 << 27), /* Aggressive Slumber/Partial */
->  	PORT_CMD_ALPE		= (1 << 26), /* Aggressive Link PM enable */
->  	PORT_CMD_ATAPI		= (1 << 24), /* Device is ATAPI */
-> +	PORT_CMD_HPCP		= (1 << 18), /* port is hot plug capable */
+>  	ATIIXP_IDE_PIO_TIMING	= 0x40,
+> @@ -243,6 +243,9 @@ static int atiixp_init_one(struct pci_de
+>  		.port_ops = &atiixp_port_ops
+>  	};
+>  	const struct ata_port_info *ppi[] = { &info, NULL };
+> +	/* Some of the quirk reconfiguration messes up the simplex
+> +	   flag, so clear it again */
+> +	ata_pci_clear_simplex(dev);
+>  	return ata_pci_init_one(dev, ppi, &atiixp_sht, NULL);
+>  }
+>  
+> @@ -279,7 +282,7 @@ static void __exit atiixp_exit(void)
+>  }
+>  
+>  MODULE_AUTHOR("Alan Cox");
+> -MODULE_DESCRIPTION("low-level driver for ATI IXP200/300/400");
+> +MODULE_DESCRIPTION("low-level driver for ATI IXP series");
+>  MODULE_LICENSE("GPL");
+>  MODULE_DEVICE_TABLE(pci, atiixp);
 
-Under which conditions is this bit set?
+Since I saw some automated akpm mail about this...  this patch is 
+obsolete.  Needs ata_pci_bmdma_clear_simplex() at least.
 
-The conclusion reached by this patch seems correct, but I am not sure 
-about the premise...
+Also, Tejun, you had some thoughts on this?
 
-I was under the impression that AHCI ports were hotplug capable, from 
-libata's point of view, simply due to the fundamentals of SATA.
-
-
-
-Thinking about the bigger pictures, powering off the phy is something we 
-want to do in a lot more cases than this, but there is a stumbling 
-block:  we wander into the realm of policy.
-
-For most users most of the time, empty SATA ports are needlessly 
-powered.  The problem is that, at any given moment, a device may be 
-hot-plugged, so we must be ready for that.  We need some way for the 
-user to let the driver know that they will not be hotplugging anything 
-anytime soon, permitting power savings to be enabled.
-
-A compromise solution that avoids adding a userspace "knob" has also 
-been proposed (by Tejun, I think?):  power up the phy every N seconds, 
-check for device, power down phy if nothing.  That should provide some 
-power savings, though not as much as with a "knob" switched to "hotplug: 
-off"
+In current #upstream, we still call ata_pci_bmdma_clear_simplex() before 
+pcim_enable_device() in some cases, so the problem remains...
 
 	Jeff
 
