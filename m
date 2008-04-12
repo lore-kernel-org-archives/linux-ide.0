@@ -1,26 +1,65 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: Promise TX4 performance problems
-Date: Sat, 12 Apr 2008 16:26:28 +0100
-Message-ID: <20080412162628.334d66f1@core>
-References: <cdcaea5a0804120556w6ef4479fi86c05a4613b12a97@mail.gmail.com>
+From: "Mike Snitzer" <snitzer@gmail.com>
+Subject: Re: Western Digital GreenPower drives and Linux
+Date: Sat, 12 Apr 2008 11:56:02 -0400
+Message-ID: <170fa0d20804120856w786b625cv41af33072605dab7@mail.gmail.com>
+References: <234148243@web.de> <200804112200.28854.tvrtko@ursulin.net>
+	 <170fa0d20804112019h73928c99paadcc363539fea9c@mail.gmail.com>
+	 <200804120811.12468.tvrtko@ursulin.net>
+	 <170fa0d20804120820x1eced1ebl47b6a2f6593ea029@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:45406 "EHLO
-	lxorguk.ukuu.org.uk" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751997AbYDLPaY (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 12 Apr 2008 11:30:24 -0400
-In-Reply-To: <cdcaea5a0804120556w6ef4479fi86c05a4613b12a97@mail.gmail.com>
+Received: from wf-out-1314.google.com ([209.85.200.173]:15067 "EHLO
+	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753403AbYDLP4F (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 12 Apr 2008 11:56:05 -0400
+Received: by wf-out-1314.google.com with SMTP id 28so915743wff.4
+        for <linux-ide@vger.kernel.org>; Sat, 12 Apr 2008 08:56:03 -0700 (PDT)
+In-Reply-To: <170fa0d20804120820x1eced1ebl47b6a2f6593ea029@mail.gmail.com>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Marko Koivusalo <marko.koivusalo@gmail.com>
-Cc: jgarzik@pobox.com, linux-ide@vger.kernel.org
+To: "Tvrtko A. Ursulin" <tvrtko@ursulin.net>
+Cc: devzero@web.de, lkml@metanurb.dk, pernegger@gmail.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Andi Kleen <andi@firstfloor.org>
 
-> replacement card (HPT rr174x) that has binary-wrapper drivers only
-> (sigh) and I'm unable to compile them in 2.6.24.4.
+On Sat, Apr 12, 2008 at 11:20 AM, Mike Snitzer <snitzer@gmail.com> wrote:
+>
+> On Sat, Apr 12, 2008 at 3:11 AM, Tvrtko A. Ursulin <tvrtko@ursulin.net> wrote:
+>  > On Saturday 12 April 2008 04:19:33 Mike Snitzer wrote:
+>  >  > Any chance you could make your iso available for the freedos w/
+>  >  > wdidle3.exe bootable cd?
+>  >  >
+>  >  > I can't track down wdidle3.exe on wdc.com; they have "Data Lifeguard"
+>  >  > and such but I have no idea if the wdidle3.exe is buried in those
+>  >  > downloads.
+>  >
+>  >  According to the licence which comes with that thing distribution is not
+>  >  allowed. Also it wouldn't be bad if more people contacted WD about it so that
+>  >  they figure out they at least need to make it available as a download, if not
+>  >  something better.
+>
+>  Just an FYI, I had a look at my counters for a 1TB GP I've had in
+>  always-on service (expansion drive for my tivo; which runs Linux) for
+>  6 months.  I'm not seeing any issues, Load_Cycle_Count is quite low.
+>
+>  Device Model:     WDC WD10EACS-32ZJB0
+>  Firmware Version: 01.01B01
+>
+>    9 Power_On_Hours          0x0032   094   094   000    Old_age
+>  Always       -       4763
+>   12 Power_Cycle_Count       0x0032   100   100   000    Old_age
+>  Always       -       7
+>  193 Load_Cycle_Count        0x0032   200   200   000    Old_age
+>  Always       -       9
+>
+>  Given the Tivo is constantly doing IO it must've prevented the disk
+>  from ever spinning down.
 
-Isn't the 174x just a marvell with different PCI identifiers ?
+Turns out 'wdidle3 /R' on my drive reported:
+"Idle3 Timer is disabled"
 
-The dmesg output and hdparm -t values for that controller/device would be
-useful just as a guide to low level behaviour
+I took no explicit action to disable it 6 months ago. It strikes me as
+odd that WD would disable the Idle3 timer in firmware given the whole
+"GreenPower" campaign but I was pleasantly surprised; others may be
+too...
