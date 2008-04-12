@@ -1,65 +1,34 @@
-From: "Mike Snitzer" <snitzer@gmail.com>
-Subject: Re: Western Digital GreenPower drives and Linux
-Date: Sat, 12 Apr 2008 11:56:02 -0400
-Message-ID: <170fa0d20804120856w786b625cv41af33072605dab7@mail.gmail.com>
-References: <234148243@web.de> <200804112200.28854.tvrtko@ursulin.net>
-	 <170fa0d20804112019h73928c99paadcc363539fea9c@mail.gmail.com>
-	 <200804120811.12468.tvrtko@ursulin.net>
-	 <170fa0d20804120820x1eced1ebl47b6a2f6593ea029@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+From: bugme-daemon@bugzilla.kernel.org
+Subject: [Bug 10436] Compact Flash HD: dma and seek_error/badCRC problems
+Date: Sat, 12 Apr 2008 09:53:03 -0700 (PDT)
+Message-ID: <20080412165303.1C9C6108038@picon.linux-foundation.org>
+References: <bug-10436-11633@http.bugzilla.kernel.org/>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wf-out-1314.google.com ([209.85.200.173]:15067 "EHLO
-	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753403AbYDLP4F (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 12 Apr 2008 11:56:05 -0400
-Received: by wf-out-1314.google.com with SMTP id 28so915743wff.4
-        for <linux-ide@vger.kernel.org>; Sat, 12 Apr 2008 08:56:03 -0700 (PDT)
-In-Reply-To: <170fa0d20804120820x1eced1ebl47b6a2f6593ea029@mail.gmail.com>
-Content-Disposition: inline
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:40619 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753123AbYDLQxF (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 12 Apr 2008 12:53:05 -0400
+Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
+	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id m3CGr3tE011259
+	for <linux-ide@vger.kernel.org>; Sat, 12 Apr 2008 09:53:05 -0700
+In-Reply-To: <bug-10436-11633@http.bugzilla.kernel.org/>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "Tvrtko A. Ursulin" <tvrtko@ursulin.net>
-Cc: devzero@web.de, lkml@metanurb.dk, pernegger@gmail.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Andi Kleen <andi@firstfloor.org>
+To: linux-ide@vger.kernel.org
 
-On Sat, Apr 12, 2008 at 11:20 AM, Mike Snitzer <snitzer@gmail.com> wrote:
->
-> On Sat, Apr 12, 2008 at 3:11 AM, Tvrtko A. Ursulin <tvrtko@ursulin.net> wrote:
->  > On Saturday 12 April 2008 04:19:33 Mike Snitzer wrote:
->  >  > Any chance you could make your iso available for the freedos w/
->  >  > wdidle3.exe bootable cd?
->  >  >
->  >  > I can't track down wdidle3.exe on wdc.com; they have "Data Lifeguard"
->  >  > and such but I have no idea if the wdidle3.exe is buried in those
->  >  > downloads.
->  >
->  >  According to the licence which comes with that thing distribution is not
->  >  allowed. Also it wouldn't be bad if more people contacted WD about it so that
->  >  they figure out they at least need to make it available as a download, if not
->  >  something better.
->
->  Just an FYI, I had a look at my counters for a 1TB GP I've had in
->  always-on service (expansion drive for my tivo; which runs Linux) for
->  6 months.  I'm not seeing any issues, Load_Cycle_Count is quite low.
->
->  Device Model:     WDC WD10EACS-32ZJB0
->  Firmware Version: 01.01B01
->
->    9 Power_On_Hours          0x0032   094   094   000    Old_age
->  Always       -       4763
->   12 Power_Cycle_Count       0x0032   100   100   000    Old_age
->  Always       -       7
->  193 Load_Cycle_Count        0x0032   200   200   000    Old_age
->  Always       -       9
->
->  Given the Tivo is constantly doing IO it must've prevented the disk
->  from ever spinning down.
+http://bugzilla.kernel.org/show_bug.cgi?id=10436
 
-Turns out 'wdidle3 /R' on my drive reported:
-"Idle3 Timer is disabled"
 
-I took no explicit action to disable it 6 months ago. It strikes me as
-odd that WD would disable the Idle3 timer in firmware given the whole
-"GreenPower" campaign but I was pleasantly surprised; others may be
-too...
+
+
+
+------- Comment #7 from marco@absence.it  2008-04-12 09:53 -------
+It didn't worked. I tried a couple of patch and many boot parameters but it
+still work with udma2. Moreover, hda is now shown as sda: what's happening with
+libata?
+
+
+-- 
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug, or are watching the assignee.
