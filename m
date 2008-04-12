@@ -1,62 +1,93 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH 3/4] ide: add struct ide_dma_ops
-Date: Sat, 12 Apr 2008 21:54:06 +0400
-Message-ID: <4800F73E.3000802@ru.mvista.com>
-References: <200803091700.46136.bzolnier@gmail.com> <200803181512.50134.bzolnier@gmail.com> <47FF636E.4070903@ru.mvista.com> <200804121432.03366.bzolnier@gmail.com>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: [PATCH 2/5] ide: skip "VLB sync" if host uses MMIO
+Date: Sat, 12 Apr 2008 21:03:51 +0200
+Message-ID: <200804122103.51449.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from h155.mvista.com ([63.81.120.155]:44892 "EHLO imap.sh.mvista.com"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1755032AbYDLRyt (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 12 Apr 2008 13:54:49 -0400
-In-Reply-To: <200804121432.03366.bzolnier@gmail.com>
+Received: from fg-out-1718.google.com ([72.14.220.159]:18079 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755907AbYDLSvm (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 12 Apr 2008 14:51:42 -0400
+Received: by fg-out-1718.google.com with SMTP id l27so857246fgb.17
+        for <linux-ide@vger.kernel.org>; Sat, 12 Apr 2008 11:51:41 -0700 (PDT)
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: linux-ide@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
 
-Hello.
+* Skip "VLB sync" in ata_{in,out}put_data() if host uses MMIO.
 
-Bartlomiej Zolnierkiewicz wrote:
+* Use I/O ops directly in ata_vlb_sync() an drop no longer needed
+  'ide_drive_t *drive' argument.
 
->>>>   Now where is the code which selects the correct dma_ops for the 
+Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+---
+ drivers/ide/ide-iops.c |   20 ++++++++++----------
+ 1 file changed, 10 insertions(+), 10 deletions(-)
 
->>>>>HPT36x/370/372/372N chip with device ID 4 I'm asking you?  :-) 
-
->>>fixed
-
->>    Not actually... :-/
-
-> Arghhh.  I see now that the HPT370/370A needs a special handling...
-
-    Yes, and a lot of. :-)
-
-> (HPT372/372N has already been handled by 'idx++')
-
-    Didn't grasp this at first - the init. code grew somewhat convoluted...
-
-> [...]
-
->>>@@ -1483,6 +1489,7 @@ static const struct ide_port_info hpt366
->>> 		.enablebits	= {{0x50,0x04,0x04}, {0x54,0x04,0x04}},
->>> 		.udma_mask	= ATA_UDMA5,
->>> 		.port_ops	= &hpt3xx_port_ops,
->>>+		.dma_ops	= &hpt370_dma_ops,
-
->>    Wrong -- HPT374 should have hpt37x_dma_ops...
-
-> Yep, thanks for catching it.
-
-> interdiff between v2->v3:
-
-> [...]
-> v3:
-> * Two bugs slipped in v2 (noticed by Sergei):
->   - use correct DMA ops for HPT374 (for real this time)
->   - handle HPT370/HPT370A properly
-
-Acked-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-
-MBR, Sergei
+Index: b/drivers/ide/ide-iops.c
+===================================================================
+--- a/drivers/ide/ide-iops.c
++++ b/drivers/ide/ide-iops.c
+@@ -227,11 +227,11 @@ static void ide_tf_read(ide_drive_t *dri
+  * of the sector count register location, with interrupts disabled
+  * to ensure that the reads all happen together.
+  */
+-static void ata_vlb_sync(ide_drive_t *drive, unsigned long port)
++static void ata_vlb_sync(unsigned long port)
+ {
+-	(void) HWIF(drive)->INB(port);
+-	(void) HWIF(drive)->INB(port);
+-	(void) HWIF(drive)->INB(port);
++	(void)inb(port);
++	(void)inb(port);
++	(void)inb(port);
+ }
+ 
+ /*
+@@ -255,9 +255,9 @@ static void ata_input_data(ide_drive_t *
+ 	if (io_32bit) {
+ 		unsigned long uninitialized_var(flags);
+ 
+-		if (io_32bit & 2) {
++		if ((io_32bit & 2) && !mmio) {
+ 			local_irq_save(flags);
+-			ata_vlb_sync(drive, io_ports->nsect_addr);
++			ata_vlb_sync(io_ports->nsect_addr);
+ 		}
+ 
+ 		if (mmio)
+@@ -265,7 +265,7 @@ static void ata_input_data(ide_drive_t *
+ 		else
+ 			insl(data_addr, buf, len / 4);
+ 
+-		if (io_32bit & 2)
++		if ((io_32bit & 2) && !mmio)
+ 			local_irq_restore(flags);
+ 
+ 		if ((len & 3) >= 2) {
+@@ -298,9 +298,9 @@ static void ata_output_data(ide_drive_t 
+ 	if (io_32bit) {
+ 		unsigned long uninitialized_var(flags);
+ 
+-		if (io_32bit & 2) {
++		if ((io_32bit & 2) && !mmio) {
+ 			local_irq_save(flags);
+-			ata_vlb_sync(drive, io_ports->nsect_addr);
++			ata_vlb_sync(io_ports->nsect_addr);
+ 		}
+ 
+ 		if (mmio)
+@@ -308,7 +308,7 @@ static void ata_output_data(ide_drive_t 
+ 		else
+ 			outsl(data_addr, buf, len / 4);
+ 
+-		if (io_32bit & 2)
++		if ((io_32bit & 2) && !mmio)
+ 			local_irq_restore(flags);
+ 
+ 		if ((len & 3) >= 2) {
