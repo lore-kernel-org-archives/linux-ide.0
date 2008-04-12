@@ -1,85 +1,108 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [PATCH 3/4] ide: add struct ide_dma_ops
-Date: Sat, 12 Apr 2008 14:32:03 +0200
-Message-ID: <200804121432.03366.bzolnier@gmail.com>
-References: <200803091700.46136.bzolnier@gmail.com> <200803181512.50134.bzolnier@gmail.com> <47FF636E.4070903@ru.mvista.com>
-Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+Subject: [PATCH 1/9] ide: factor out debugging code from ide_tf_load()
+Date: Sat, 12 Apr 2008 14:34:01 +0200
+Message-ID: <20080412123401.18751.17246.sendpatchset@localhost.localdomain>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.157]:19745 "EHLO
+Received: from fg-out-1718.google.com ([72.14.220.152]:19942 "EHLO
 	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757786AbYDLMRQ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 12 Apr 2008 08:17:16 -0400
-Received: by fg-out-1718.google.com with SMTP id l27so741850fgb.17
-        for <linux-ide@vger.kernel.org>; Sat, 12 Apr 2008 05:17:15 -0700 (PDT)
-In-Reply-To: <47FF636E.4070903@ru.mvista.com>
-Content-Disposition: inline
+	with ESMTP id S1758352AbYDLMRy (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 12 Apr 2008 08:17:54 -0400
+Received: by fg-out-1718.google.com with SMTP id l27so742003fgb.17
+        for <linux-ide@vger.kernel.org>; Sat, 12 Apr 2008 05:17:53 -0700 (PDT)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: linux-ide@vger.kernel.org
+Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-kernel@vger.kernel.org
 
+Factor out debugging code from ide_tf_load() to ide_tf_dump() helper
+and update ide_tf_load() users accordingly.
 
-Hi,
+Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+---
+ drivers/ide/ide-io.c       |    1 +
+ drivers/ide/ide-taskfile.c |   29 +++++++++++++++++------------
+ include/linux/ide.h        |    2 ++
+ 3 files changed, 20 insertions(+), 12 deletions(-)
 
-On Friday 11 April 2008, Sergei Shtylyov wrote:
-> Hello.
-> 
-> Bartlomiej Zolnierkiewicz wrote:
-> 
-> >>    Now where is the code which selects the correct dma_ops for the 
-> >>> HPT36x/370/372/372N chip with device ID 4 I'm asking you?  :-) 
-> 
-> > fixed
-> 
->     Not actually... :-/
-
-Arghhh.  I see now that the HPT370/370A needs a special handling...
-(HPT372/372N has already been handled by 'idx++')
-
-[...]
-
-> > @@ -1483,6 +1489,7 @@ static const struct ide_port_info hpt366
-> >  		.enablebits	= {{0x50,0x04,0x04}, {0x54,0x04,0x04}},
-> >  		.udma_mask	= ATA_UDMA5,
-> >  		.port_ops	= &hpt3xx_port_ops,
-> > +		.dma_ops	= &hpt370_dma_ops,
-> 
->     Wrong -- HPT374 should have hpt37x_dma_ops...
-
-Yep, thanks for catching it.
-
-interdiff between v2->v3:
-
-[...]
-v3:
-* Two bugs slipped in v2 (noticed by Sergei):
-  - use correct DMA ops for HPT374 (for real this time)
-  - handle HPT370/HPT370A properly
-
-[...]
-diff -u b/drivers/ide/pci/hpt366.c b/drivers/ide/pci/hpt366.c
---- b/drivers/ide/pci/hpt366.c
-+++ b/drivers/ide/pci/hpt366.c
-@@ -1489,7 +1489,7 @@
- 		.enablebits	= {{0x50,0x04,0x04}, {0x54,0x04,0x04}},
- 		.udma_mask	= ATA_UDMA5,
- 		.port_ops	= &hpt3xx_port_ops,
--		.dma_ops	= &hpt370_dma_ops,
-+		.dma_ops	= &hpt37x_dma_ops,
- 		.host_flags	= IDE_HFLAGS_HPT3XX,
- 		.pio_mask	= ATA_PIO4,
- 		.mwdma_mask	= ATA_MWDMA2,
-@@ -1563,6 +1563,10 @@
- 	d.name = info->chip_name;
- 	d.udma_mask = info->udma_mask;
+Index: b/drivers/ide/ide-io.c
+===================================================================
+--- a/drivers/ide/ide-io.c
++++ b/drivers/ide/ide-io.c
+@@ -1680,6 +1680,7 @@ void ide_pktcmd_tf_load(ide_drive_t *dri
+ 	task.tf.lbam    = bcount & 0xff;
+ 	task.tf.lbah    = (bcount >> 8) & 0xff;
  
-+	/* fixup ->dma_ops for HPT370/HPT370A */
-+	if (info == &hpt370 || info == &hpt370a)
-+		d.dma_ops = &hpt370_dma_ops;
++	ide_tf_dump(drive->name, &task.tf);
+ 	ide_tf_load(drive, &task);
+ }
+ 
+Index: b/drivers/ide/ide-taskfile.c
+===================================================================
+--- a/drivers/ide/ide-taskfile.c
++++ b/drivers/ide/ide-taskfile.c
+@@ -33,26 +33,29 @@
+ #include <asm/uaccess.h>
+ #include <asm/io.h>
+ 
+-void ide_tf_load(ide_drive_t *drive, ide_task_t *task)
++void ide_tf_dump(const char *s, struct ide_taskfile *tf)
+ {
+-	ide_hwif_t *hwif = drive->hwif;
+-	struct ide_io_ports *io_ports = &hwif->io_ports;
+-	struct ide_taskfile *tf = &task->tf;
+-	u8 HIHI = (task->tf_flags & IDE_TFLAG_LBA48) ? 0xE0 : 0xEF;
+-
+-	if (task->tf_flags & IDE_TFLAG_FLAGGED)
+-		HIHI = 0xFF;
+-
+ #ifdef DEBUG
+ 	printk("%s: tf: feat 0x%02x nsect 0x%02x lbal 0x%02x "
+ 		"lbam 0x%02x lbah 0x%02x dev 0x%02x cmd 0x%02x\n",
+-		drive->name, tf->feature, tf->nsect, tf->lbal,
++		s, tf->feature, tf->nsect, tf->lbal,
+ 		tf->lbam, tf->lbah, tf->device, tf->command);
+ 	printk("%s: hob: nsect 0x%02x lbal 0x%02x "
+ 		"lbam 0x%02x lbah 0x%02x\n",
+-		drive->name, tf->hob_nsect, tf->hob_lbal,
++		s, tf->hob_nsect, tf->hob_lbal,
+ 		tf->hob_lbam, tf->hob_lbah);
+ #endif
++}
 +
- 	pci_set_drvdata(dev, (void *)info);
++void ide_tf_load(ide_drive_t *drive, ide_task_t *task)
++{
++	ide_hwif_t *hwif = drive->hwif;
++	struct ide_io_ports *io_ports = &hwif->io_ports;
++	struct ide_taskfile *tf = &task->tf;
++	u8 HIHI = (task->tf_flags & IDE_TFLAG_LBA48) ? 0xE0 : 0xEF;
++
++	if (task->tf_flags & IDE_TFLAG_FLAGGED)
++		HIHI = 0xFF;
  
- 	if (info == &hpt36x || info == &hpt374)
+ 	ide_set_irq(drive, 1);
+ 
+@@ -149,8 +152,10 @@ ide_startstop_t do_rw_taskfile (ide_driv
+ 	if (task->tf_flags & IDE_TFLAG_FLAGGED)
+ 		task->tf_flags |= IDE_TFLAG_FLAGGED_SET_IN_FLAGS;
+ 
+-	if ((task->tf_flags & IDE_TFLAG_DMA_PIO_FALLBACK) == 0)
++	if ((task->tf_flags & IDE_TFLAG_DMA_PIO_FALLBACK) == 0) {
++		ide_tf_dump(drive->name, tf);
+ 		ide_tf_load(drive, task);
++	}
+ 
+ 	switch (task->data_phase) {
+ 	case TASKFILE_MULTI_OUT:
+Index: b/include/linux/ide.h
+===================================================================
+--- a/include/linux/ide.h
++++ b/include/linux/ide.h
+@@ -949,6 +949,8 @@ typedef struct ide_task_s {
+ 	void			*special;	/* valid_t generally */
+ } ide_task_t;
+ 
++void ide_tf_dump(const char *, struct ide_taskfile *);
++
+ void ide_tf_load(ide_drive_t *, ide_task_t *);
+ void ide_tf_read(ide_drive_t *, ide_task_t *);
+ 
