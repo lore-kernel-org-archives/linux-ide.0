@@ -1,51 +1,63 @@
-From: Elias Oltmanns <eo@nebensachen.de>
-Subject: Re: Current qc_defer implementation may lead to infinite recursion
-Date: Sat, 12 Apr 2008 10:02:30 +0200
-Message-ID: <87mynz4i21.fsf@denkblock.local>
-References: <87ir0w4rzo.fsf@denkblock.local> <47AFD7C1.7070204@gmail.com>
-	<871w7k9b8y.fsf@denkblock.local> <47B00AA1.3010104@gmail.com>
-	<87r6fj2lsx.fsf@denkblock.local> <47B0F2E0.9020204@gmail.com>
-	<877iha3621.fsf@denkblock.local> <47B1614B.5020209@gmail.com>
-	<871w7i33yb.fsf@denkblock.local> <47B19768.8000006@gmail.com>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: 2.6.25-rc8-mm2: CONFIG_ATA_SFF: panic involving	mount_block_root
+ and down the road
+Date: Sat, 12 Apr 2008 06:02:21 -0400
+Message-ID: <480088AD.1040904@garzik.org>
+References: <20080410203354.f0a6f464.akpm@linux-foundation.org> <20080411234345.GA4742@martell.zuzino.mipt.ru> <20080412005917.GA4742@martell.zuzino.mipt.ru> <20080412065248.GA8849@cs181133002.pp.htv.fi>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nebensachen.de ([195.34.83.29]:59958 "EHLO mail.nebensachen.de"
+Received: from srv5.dvmed.net ([207.36.208.214]:34061 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754029AbYDLIC1 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 12 Apr 2008 04:02:27 -0400
-In-Reply-To: <47B19768.8000006@gmail.com> (Tejun Heo's message of "Tue, 12 Feb
-	2008 21:56:08 +0900")
+	id S1756457AbYDLKCh (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 12 Apr 2008 06:02:37 -0400
+In-Reply-To: <20080412065248.GA8849@cs181133002.pp.htv.fi>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: linux-ide@vger.kernel.org
+To: Adrian Bunk <bunk@kernel.org>
+Cc: Alexey Dobriyan <adobriyan@gmail.com>, Tejun Heo <htejun@gmail.com>, Jeff Garzik <jgarzik@redhat.com>, Andrew Morton <akpm@linux-foundation.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-Tejun Heo <htejun@gmail.com> wrote:
-> Elias Oltmanns wrote:
->> Tejun Heo <htejun@gmail.com> wrote:
->>> Elias Oltmanns wrote:
->>>> This proves that piix_qc_defer() has declined the same command 100
->>>> times in succession. However, this will only happen if the status of
->>>> all the commands enqueued for one port hasn't changed in the
->>>> meantime. This suggests to me that the threads scheduled for command
->>>> execution and completion aren't served for some reason. Any ideas?
->>> Blocked counts of 1 will cause busy looping because when blk_run_queue()
->>> returns because it's recursing too deep, it schedules unplug work right
->>> away, so it will easily loop 100 times.  Max blocked counts should be
->>> adjusted to two (needs some testing before actually submitting the
->>> change).  But that still shouldn't cause any lock up.  What happens if
->>> you remove the 100 times limit?  Does the machine hang on IO?
->> 
->> Yes, it does. In fact, I had already verified that before sending the
->> previous email.
->
-> Hmmm.... it's supposed not to lock up although it can cause busy wait.
+Adrian Bunk wrote:
+> On Sat, Apr 12, 2008 at 04:59:17AM +0400, Alexey Dobriyan wrote:
+>> On Sat, Apr 12, 2008 at 03:43:45AM +0400, Alexey Dobriyan wrote:
+>>> Pekka fixed SLUB for me, and now core2 box survives up and including to
+>>> not finding / :
+>>>
+>>> Setup is SATA disk with plain old partitions, nothing lvmancy:
+>>>
+>>> 	/dev/sda2 on / type ext3 (rw,noatime)
+>>>
+>>> CONFIG_ATA=y
+>>> CONFIG_ATA_ACPI=y
+>>> CONFIG_SATA_AHCI=y
+>>> CONFIG_ATA_PIIX=y
+>>> CONFIG_PATA_JMICRON=y
+>>>
+>>> sda1 is for swap.
+>>>
+>>>
+>>> [    3.920000] NET: Registered protocol family 1
+>>> [    3.920000] VFS: Cannot open root device "sda2" or unknown-block(0,0)
+>> The winner is partly me, partly git-libata-all.
+>>
+>> The latter introduced CONFIG_ATA_SFF option and put more or less every
+>> SATA and PATA driver under it. The former honestly answered N to when
+>> ATA_SFF popped up and failed to check existence of ATA_PIIX and
+>> PATA_JMICRON in failing .config .
+>>
+>> Now raise hands those who knew that your ATA controller is SFF
+>> compliant.
+> 
+> Is there any technical reason why we have to bother users with the 
+> ATA_SFF option at all?
+> 
+> It sounds like a perfect canndidate for being select'ed.
 
-The same problem still exitst in 2.6.25-rc9. As I understand, not all
-configurations are affected. So, perhaps I should bring this to the
-attention of those who are working on the scheduler. What do you think?
+'default y' is appropriate, but option that is used to disable a major 
+swath of legacy code unneeded on modern FIS-based SATA platforms like AHCI.
 
-Regards,
+	Jeff
 
-Elias
+
+
