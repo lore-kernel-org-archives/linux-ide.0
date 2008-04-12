@@ -1,206 +1,68 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH 9/9] ide: remove ->INW and ->OUTW methods
-Date: Sat, 12 Apr 2008 14:34:58 +0200
-Message-ID: <20080412123458.18751.70346.sendpatchset@localhost.localdomain>
-References: <20080412123401.18751.17246.sendpatchset@localhost.localdomain>
+From: "Marko Koivusalo" <marko.koivusalo@gmail.com>
+Subject: Promise TX4 performance problems
+Date: Sat, 12 Apr 2008 15:56:33 +0300
+Message-ID: <cdcaea5a0804120556w6ef4479fi86c05a4613b12a97@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.152]:19942 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1761792AbYDLMSu (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 12 Apr 2008 08:18:50 -0400
-Received: by fg-out-1718.google.com with SMTP id l27so742003fgb.17
-        for <linux-ide@vger.kernel.org>; Sat, 12 Apr 2008 05:18:49 -0700 (PDT)
-In-Reply-To: <20080412123401.18751.17246.sendpatchset@localhost.localdomain>
+Received: from an-out-0708.google.com ([209.85.132.246]:41077 "EHLO
+	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757004AbYDLM4g (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 12 Apr 2008 08:56:36 -0400
+Received: by an-out-0708.google.com with SMTP id d31so213091and.103
+        for <linux-ide@vger.kernel.org>; Sat, 12 Apr 2008 05:56:33 -0700 (PDT)
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
-Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-kernel@vger.kernel.org
+To: jgarzik@pobox.com
+Cc: linux-ide@vger.kernel.org
 
-* Remove no longer used ->INW and ->OUTW methods.
+Hello,
 
-While at it:
+I'm unfortunate owner of Promise TX4 SATA300 (rev2). In Feb 2007 my
+raid started to drop drives under heavy load. Back then it was not
+known to hapend because of TX4 asic bug or at least I was unable to
+find such information at the time. And the card had worked fine for a
+year or so. Well eventually I ended up replacing whole home server
+piece by piece and finally deemed that the TX4 was propably broken.
 
-* scc_pata.c: scc_ide_{out,in}w() is called only in scc_tf_{load,read}()
-  so inline it there.
+Now a year later and after finding out that asic bug was found & fixed
+I thought to utilize TX4 once more. I'm currently running driver from
+kernel 2.6.24.4 which I had to backport into 2.6.23.1 due my TX4
+replacement card (HPT rr174x) that has binary-wrapper drivers only
+(sigh) and I'm unable to compile them in 2.6.24.4.
 
-Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
----
- drivers/ide/cris/ide-cris.c   |    2 --
- drivers/ide/h8300/ide-h8300.c |    3 ---
- drivers/ide/ide-iops.c        |   24 ------------------------
- drivers/ide/pci/scc_pata.c    |   19 +++----------------
- include/linux/ide.h           |    2 --
- 5 files changed, 3 insertions(+), 47 deletions(-)
+However the problem with Promise TX4 is now extremely poor
+performance, it writes around 5.2MB/s  with average CPU utilization of
+3.2 on my 2.4GHz p4 (measured over 12 hours).
 
-Index: b/drivers/ide/cris/ide-cris.c
-===================================================================
---- a/drivers/ide/cris/ide-cris.c
-+++ b/drivers/ide/cris/ide-cris.c
-@@ -903,10 +903,8 @@ static int __init init_e100_ide(void)
- 		hwif->output_data = cris_output_data;
- 
- 		hwif->OUTB = &cris_ide_outb;
--		hwif->OUTW = &cris_ide_outw;
- 		hwif->OUTBSYNC = &cris_ide_outbsync;
- 		hwif->INB = &cris_ide_inb;
--		hwif->INW = &cris_ide_inw;
- 		hwif->cbl = ATA_CBL_PATA40;
- 
- 		idx[h] = hwif->index;
-Index: b/drivers/ide/h8300/ide-h8300.c
-===================================================================
---- a/drivers/ide/h8300/ide-h8300.c
-+++ b/drivers/ide/h8300/ide-h8300.c
-@@ -174,9 +174,6 @@ static inline void hwif_setup(ide_hwif_t
- 
- 	hwif->input_data  = h8300_input_data;
- 	hwif->output_data = h8300_output_data;
--
--	hwif->OUTW  = mm_outw;
--	hwif->INW   = mm_inw;
- }
- 
- static int __init h8300_ide_init(void)
-Index: b/drivers/ide/ide-iops.c
-===================================================================
---- a/drivers/ide/ide-iops.c
-+++ b/drivers/ide/ide-iops.c
-@@ -37,11 +37,6 @@ static u8 ide_inb (unsigned long port)
- 	return (u8) inb(port);
- }
- 
--static u16 ide_inw (unsigned long port)
--{
--	return (u16) inw(port);
--}
--
- static void ide_outb (u8 val, unsigned long port)
- {
- 	outb(val, port);
-@@ -52,18 +47,11 @@ static void ide_outbsync (ide_drive_t *d
- 	outb(addr, port);
- }
- 
--static void ide_outw (u16 val, unsigned long port)
--{
--	outw(val, port);
--}
--
- void default_hwif_iops (ide_hwif_t *hwif)
- {
- 	hwif->OUTB	= ide_outb;
- 	hwif->OUTBSYNC	= ide_outbsync;
--	hwif->OUTW	= ide_outw;
- 	hwif->INB	= ide_inb;
--	hwif->INW	= ide_inw;
- }
- 
- /*
-@@ -75,11 +63,6 @@ static u8 ide_mm_inb (unsigned long port
- 	return (u8) readb((void __iomem *) port);
- }
- 
--static u16 ide_mm_inw (unsigned long port)
--{
--	return (u16) readw((void __iomem *) port);
--}
--
- static void ide_mm_outb (u8 value, unsigned long port)
- {
- 	writeb(value, (void __iomem *) port);
-@@ -90,20 +73,13 @@ static void ide_mm_outbsync (ide_drive_t
- 	writeb(value, (void __iomem *) port);
- }
- 
--static void ide_mm_outw (u16 value, unsigned long port)
--{
--	writew(value, (void __iomem *) port);
--}
--
- void default_hwif_mmiops (ide_hwif_t *hwif)
- {
- 	hwif->OUTB	= ide_mm_outb;
- 	/* Most systems will need to override OUTBSYNC, alas however
- 	   this one is controller specific! */
- 	hwif->OUTBSYNC	= ide_mm_outbsync;
--	hwif->OUTW	= ide_mm_outw;
- 	hwif->INB	= ide_mm_inb;
--	hwif->INW	= ide_mm_inw;
- }
- 
- EXPORT_SYMBOL(default_hwif_mmiops);
-Index: b/drivers/ide/pci/scc_pata.c
-===================================================================
---- a/drivers/ide/pci/scc_pata.c
-+++ b/drivers/ide/pci/scc_pata.c
-@@ -126,12 +126,6 @@ static u8 scc_ide_inb(unsigned long port
- 	return (u8)data;
- }
- 
--static u16 scc_ide_inw(unsigned long port)
--{
--	u32 data = in_be32((void*)port);
--	return (u16)data;
--}
--
- static void scc_ide_insw(unsigned long port, void *addr, u32 count)
- {
- 	u16 *ptr = (u16 *)addr;
-@@ -154,11 +148,6 @@ static void scc_ide_outb(u8 addr, unsign
- 	out_be32((void*)port, addr);
- }
- 
--static void scc_ide_outw(u16 addr, unsigned long port)
--{
--	out_be32((void*)port, addr);
--}
--
- static void
- scc_ide_outbsync(ide_drive_t * drive, u8 addr, unsigned long port)
- {
-@@ -586,8 +575,8 @@ static void scc_tf_load(ide_drive_t *dri
- 	ide_set_irq(drive, 1);
- 
- 	if (task->tf_flags & IDE_TFLAG_OUT_DATA)
--		scc_ide_outw((tf->hob_data << 8) | tf->data,
--			     io_ports->data_addr);
-+		out_be32((void *)io_ports->data_addr,
-+			 (tf->hob_data << 8) | tf->data);
- 
- 	if (task->tf_flags & IDE_TFLAG_OUT_HOB_FEATURE)
- 		scc_ide_outb(tf->hob_feature, io_ports->feature_addr);
-@@ -622,7 +611,7 @@ static void scc_tf_read(ide_drive_t *dri
- 	struct ide_taskfile *tf = &task->tf;
- 
- 	if (task->tf_flags & IDE_TFLAG_IN_DATA) {
--		u16 data = scc_ide_inw(io_ports->data_addr);
-+		u16 data = (u16)in_be32((void *)io_ports->data_addr);
- 
- 		tf->data = data & 0xff;
- 		tf->hob_data = (data >> 8) & 0xff;
-@@ -710,10 +699,8 @@ static void __devinit init_mmio_iops_scc
- 	hwif->output_data = scc_output_data;
- 
- 	hwif->INB = scc_ide_inb;
--	hwif->INW = scc_ide_inw;
- 	hwif->OUTB = scc_ide_outb;
- 	hwif->OUTBSYNC = scc_ide_outbsync;
--	hwif->OUTW = scc_ide_outw;
- 
- 	io_ports->data_addr	= dma_base + 0x20;
- 	io_ports->error_addr	= dma_base + 0x24;
-Index: b/include/linux/ide.h
-===================================================================
---- a/include/linux/ide.h
-+++ b/include/linux/ide.h
-@@ -484,10 +484,8 @@ typedef struct hwif_s {
- 
- 	void (*OUTB)(u8 addr, unsigned long port);
- 	void (*OUTBSYNC)(ide_drive_t *drive, u8 addr, unsigned long port);
--	void (*OUTW)(u16 addr, unsigned long port);
- 
- 	u8  (*INB)(unsigned long port);
--	u16 (*INW)(unsigned long port);
- 
- 	/* dma physical region descriptor table (cpu view) */
- 	unsigned int	*dmatable_cpu;
+First thought was that DMA is not enabled, but according to hdparm it
+is. My plan to use this for RAID once again is doomed unless solution
+is found.
+
+I think iostat revealed something out of ordinary:
+
+avg-cpu:  %user   %nice %system %iowait  %steal   %idle
+           0.00    0.00    0.00  100.00    0.00    0.00
+
+Device:         rrqm/s   wrqm/s     r/s     w/s    rMB/s    wMB/s
+avgrq-sz avgqu-sz   await  svctm  %util
+sdh               0.00  4640.00    0.00    8.00     0.00     3.94
+1008.00   134.82 4807.00 125.50 100.40
+
+For non TX4 devices these numbers are quite different. Full details
+and other possibly related info can be found at
+http://pastebin.com/f40f5ae27
+
+Perhaps the asic patch made things this slow? If so, no wonder that it
+hides problem that occurs only under heavy load?
+
+I'm building unmodified 2.6.24.4 kernel to test this, but I doubt my
+few lines of backporting are cause of this slowness.
+
+Since I somewhat need to get this working, I'm ready to test patches
+and so on. Any ideas or comments ?
+
+--
+Marko Koivusalo
