@@ -1,63 +1,85 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: 2.6.25-rc8-mm2: CONFIG_ATA_SFF: panic involving	mount_block_root
- and down the road
-Date: Sat, 12 Apr 2008 06:02:21 -0400
-Message-ID: <480088AD.1040904@garzik.org>
-References: <20080410203354.f0a6f464.akpm@linux-foundation.org> <20080411234345.GA4742@martell.zuzino.mipt.ru> <20080412005917.GA4742@martell.zuzino.mipt.ru> <20080412065248.GA8849@cs181133002.pp.htv.fi>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: [PATCH 3/4] ide: add struct ide_dma_ops
+Date: Sat, 12 Apr 2008 14:32:03 +0200
+Message-ID: <200804121432.03366.bzolnier@gmail.com>
+References: <200803091700.46136.bzolnier@gmail.com> <200803181512.50134.bzolnier@gmail.com> <47FF636E.4070903@ru.mvista.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:34061 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756457AbYDLKCh (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 12 Apr 2008 06:02:37 -0400
-In-Reply-To: <20080412065248.GA8849@cs181133002.pp.htv.fi>
+Received: from fg-out-1718.google.com ([72.14.220.157]:19745 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757786AbYDLMRQ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 12 Apr 2008 08:17:16 -0400
+Received: by fg-out-1718.google.com with SMTP id l27so741850fgb.17
+        for <linux-ide@vger.kernel.org>; Sat, 12 Apr 2008 05:17:15 -0700 (PDT)
+In-Reply-To: <47FF636E.4070903@ru.mvista.com>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Adrian Bunk <bunk@kernel.org>
-Cc: Alexey Dobriyan <adobriyan@gmail.com>, Tejun Heo <htejun@gmail.com>, Jeff Garzik <jgarzik@redhat.com>, Andrew Morton <akpm@linux-foundation.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Adrian Bunk wrote:
-> On Sat, Apr 12, 2008 at 04:59:17AM +0400, Alexey Dobriyan wrote:
->> On Sat, Apr 12, 2008 at 03:43:45AM +0400, Alexey Dobriyan wrote:
->>> Pekka fixed SLUB for me, and now core2 box survives up and including to
->>> not finding / :
->>>
->>> Setup is SATA disk with plain old partitions, nothing lvmancy:
->>>
->>> 	/dev/sda2 on / type ext3 (rw,noatime)
->>>
->>> CONFIG_ATA=y
->>> CONFIG_ATA_ACPI=y
->>> CONFIG_SATA_AHCI=y
->>> CONFIG_ATA_PIIX=y
->>> CONFIG_PATA_JMICRON=y
->>>
->>> sda1 is for swap.
->>>
->>>
->>> [    3.920000] NET: Registered protocol family 1
->>> [    3.920000] VFS: Cannot open root device "sda2" or unknown-block(0,0)
->> The winner is partly me, partly git-libata-all.
->>
->> The latter introduced CONFIG_ATA_SFF option and put more or less every
->> SATA and PATA driver under it. The former honestly answered N to when
->> ATA_SFF popped up and failed to check existence of ATA_PIIX and
->> PATA_JMICRON in failing .config .
->>
->> Now raise hands those who knew that your ATA controller is SFF
->> compliant.
+
+Hi,
+
+On Friday 11 April 2008, Sergei Shtylyov wrote:
+> Hello.
 > 
-> Is there any technical reason why we have to bother users with the 
-> ATA_SFF option at all?
+> Bartlomiej Zolnierkiewicz wrote:
 > 
-> It sounds like a perfect canndidate for being select'ed.
+> >>    Now where is the code which selects the correct dma_ops for the 
+> >>> HPT36x/370/372/372N chip with device ID 4 I'm asking you?  :-) 
+> 
+> > fixed
+> 
+>     Not actually... :-/
 
-'default y' is appropriate, but option that is used to disable a major 
-swath of legacy code unneeded on modern FIS-based SATA platforms like AHCI.
+Arghhh.  I see now that the HPT370/370A needs a special handling...
+(HPT372/372N has already been handled by 'idx++')
 
-	Jeff
+[...]
 
+> > @@ -1483,6 +1489,7 @@ static const struct ide_port_info hpt366
+> >  		.enablebits	= {{0x50,0x04,0x04}, {0x54,0x04,0x04}},
+> >  		.udma_mask	= ATA_UDMA5,
+> >  		.port_ops	= &hpt3xx_port_ops,
+> > +		.dma_ops	= &hpt370_dma_ops,
+> 
+>     Wrong -- HPT374 should have hpt37x_dma_ops...
 
+Yep, thanks for catching it.
 
+interdiff between v2->v3:
+
+[...]
+v3:
+* Two bugs slipped in v2 (noticed by Sergei):
+  - use correct DMA ops for HPT374 (for real this time)
+  - handle HPT370/HPT370A properly
+
+[...]
+diff -u b/drivers/ide/pci/hpt366.c b/drivers/ide/pci/hpt366.c
+--- b/drivers/ide/pci/hpt366.c
++++ b/drivers/ide/pci/hpt366.c
+@@ -1489,7 +1489,7 @@
+ 		.enablebits	= {{0x50,0x04,0x04}, {0x54,0x04,0x04}},
+ 		.udma_mask	= ATA_UDMA5,
+ 		.port_ops	= &hpt3xx_port_ops,
+-		.dma_ops	= &hpt370_dma_ops,
++		.dma_ops	= &hpt37x_dma_ops,
+ 		.host_flags	= IDE_HFLAGS_HPT3XX,
+ 		.pio_mask	= ATA_PIO4,
+ 		.mwdma_mask	= ATA_MWDMA2,
+@@ -1563,6 +1563,10 @@
+ 	d.name = info->chip_name;
+ 	d.udma_mask = info->udma_mask;
+ 
++	/* fixup ->dma_ops for HPT370/HPT370A */
++	if (info == &hpt370 || info == &hpt370a)
++		d.dma_ops = &hpt370_dma_ops;
++
+ 	pci_set_drvdata(dev, (void *)info);
+ 
+ 	if (info == &hpt36x || info == &hpt374)
