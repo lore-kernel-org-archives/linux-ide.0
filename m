@@ -1,42 +1,39 @@
 From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH] libata: cable logic
-Date: Sat, 12 Apr 2008 00:35:23 -0400
-Message-ID: <48003C0B.20405@garzik.org>
-References: <20080408163750.32efc439@core>
+Subject: Re: [PATCH #upstream] libata: make EH fail gracefully if no reset
+ method is available
+Date: Sat, 12 Apr 2008 01:18:15 -0400
+Message-ID: <48004617.9030808@garzik.org>
+References: <47A040E2.1050801@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:40285 "EHLO mail.dvmed.net"
+Received: from srv5.dvmed.net ([207.36.208.214]:37484 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752461AbYDLEff (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 12 Apr 2008 00:35:35 -0400
-In-Reply-To: <20080408163750.32efc439@core>
+	id S1751692AbYDLFSS (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 12 Apr 2008 01:18:18 -0400
+In-Reply-To: <47A040E2.1050801@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: akpm@osdl.org, linux-ide@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: IDE/ATA development list <linux-ide@vger.kernel.org>
 
-Alan Cox wrote:
-> The cable detect isolation patch inadvertently removed 40 wire short
-> cable handling. Put it back
+Tejun Heo wrote:
+> When no reset method is available, libata currently oopses.  Although
+> the condition can't happen unless there's a bug in a low level driver,
+> oopsing isn't the best way to report the error condition.  Complain,
+> dump stack and fail reset instead.
 > 
-> Signed-off-by: Alan Cox <alan@redhat.com>
+> Signed-off-by: Tejun Heo <htejun@gmail.com>
+> ---
+> This patch is on top of
 > 
-> diff -u --new-file --recursive --exclude-from /usr/src/exclude linux.vanilla-2.6.25-rc8-mm1/drivers/ata/libata-core.c linux-2.6.25-rc8-mm1/drivers/ata/libata-core.c
-> --- linux.vanilla-2.6.25-rc8-mm1/drivers/ata/libata-core.c	2008-04-08 11:34:51.000000000 +0100
-> +++ linux-2.6.25-rc8-mm1/drivers/ata/libata-core.c	2008-04-08 12:01:30.000000000 +0100
-> @@ -4559,6 +4564,10 @@
->  	/* If the controller thinks we are 80 wire, we are */
->  	if (ap->cbl == ATA_CBL_PATA80 || ap->cbl == ATA_CBL_SATA)
->  		return 0;
-> +	/* If the system is known to be 40 wire short cable (eg laptop),
-> +	   then we allow 80 wire modes even if the drive isn't sure */
-> +	if (ap->cbl == ATA_CBL_PATA40_SHORT)
-> +		return 0;
->  	/* If the controller doesn't know we scan
->  
->  	   - Note: We look for all 40 wire detects at this point.
+> upstream (a984f58dd97f22f5113700322fed311a0ee29947)
+> + prefer-hardreset patchset
+>   http://thread.gmane.org/gmane.linux.ide/27447
+> 
+>  drivers/ata/libata-eh.c |    7 ++++++-
+>  1 files changed, 6 insertions(+), 1 deletions(-)
 
 applied
 
