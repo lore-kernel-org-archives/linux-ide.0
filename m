@@ -1,41 +1,46 @@
-From: bugme-daemon@bugzilla.kernel.org
-Subject: [Bug 10436] Compact Flash HD: dma and seek_error/badCRC problems
-Date: Sat, 12 Apr 2008 13:51:05 -0700 (PDT)
-Message-ID: <20080412205105.5BE62108038@picon.linux-foundation.org>
-References: <bug-10436-11633@http.bugzilla.kernel.org/>
+From: Mikael Pettersson <mikpe@it.uu.se>
+Subject: Re: Promise TX4 performance problems
+Date: Sat, 12 Apr 2008 23:56:41 +0200
+Message-ID: <18433.12313.976468.250059@harpo.it.uu.se>
+References: <cdcaea5a0804120556w6ef4479fi86c05a4613b12a97@mail.gmail.com>
+	<20080412162628.334d66f1@core>
+	<cdcaea5a0804121350n167b3715y4a0e52d543253423@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:38889 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752073AbYDLUvI (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 12 Apr 2008 16:51:08 -0400
-Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
-	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id m3CKp5HN026946
-	for <linux-ide@vger.kernel.org>; Sat, 12 Apr 2008 13:51:07 -0700
-In-Reply-To: <bug-10436-11633@http.bugzilla.kernel.org/>
+Received: from aun.it.uu.se ([130.238.12.36]:48850 "EHLO aun.it.uu.se"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751816AbYDLV4y (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 12 Apr 2008 17:56:54 -0400
+In-Reply-To: <cdcaea5a0804121350n167b3715y4a0e52d543253423@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Marko Koivusalo <marko.koivusalo@gmail.com>
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, mikpe@it.uu.se, linux-ide@vger.kernel.org
 
-http://bugzilla.kernel.org/show_bug.cgi?id=10436
+Marko Koivusalo writes:
+ > I compiled 2.6.25-rc9 and ran some more tests.
+ > 
+ > hdparm -t /dev/sdd
+ > 
+ > /dev/sdd:
+ >  Timing buffered disk reads:  228 MB in  3.01 seconds =  75.66 MB/sec
+ > 
+ > So aparantly read speeds are just fine. However write speeds are still
+ > very slow.
+ > 
+ > dd if=/dev/zero of=1gb bs=1M count=1024
+ > 1073741824 bytes (1.1 GB) copied, 107.068 s, 10.0 MB/s
 
+That includes overheads from whatever file system / raid layers
+you have on top of the device. Please do the dd straight to
+/dev/sdd or /dev/sdd1.
 
-marco@absence.it changed:
+Also, I note that while you have an Intel 845 chipset, your kernel
+doesn't mention either the local APIC or the I/O APIC. I would have
+expected both to be present; using them typically results in less
+IRQ sharing and lower IRQ handling overheads. Might be worthwhile
+to try to enable them.
 
-           What    |Removed                     |Added
-----------------------------------------------------------------------------
-             Status|NEW                         |CLOSED
-         Resolution|                            |PATCH_ALREADY_AVAILABLE
-
-
-
-
-------- Comment #9 from marco@absence.it  2008-04-12 13:51 -------
-Halt! Finally I got it working! I had to manually insert the new code but then
-everything went fine then. Now we can close this bug (hoping to see this this
-patch in the upstream kernel).
-
-
--- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug, or are watching the assignee.
+/Mikael
