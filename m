@@ -1,47 +1,50 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: 2.6.24.X: SATA/AHCI related boot delay. - not with 2.6.24.3
-Date: Fri, 11 Apr 2008 21:42:59 -0400
-Message-ID: <480013A3.1010502@garzik.org>
-References: <200803091922.33083.volker.armin.hemmann@tu-clausthal.de> <200804031347.20352.volker.armin.hemmann@tu-clausthal.de> <47FEFFC6.4@gmail.com> <200804111355.55364.volker.armin.hemmann@tu-clausthal.de> <48000FF8.300@gmail.com>
+From: "Mike Snitzer" <snitzer@gmail.com>
+Subject: Re: Western Digital GreenPower drives and Linux
+Date: Fri, 11 Apr 2008 23:19:33 -0400
+Message-ID: <170fa0d20804112019h73928c99paadcc363539fea9c@mail.gmail.com>
+References: <234148243@web.de> <200804112200.28854.tvrtko@ursulin.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:54405 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755827AbYDLBnC (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 11 Apr 2008 21:43:02 -0400
-In-Reply-To: <48000FF8.300@gmail.com>
+Received: from wf-out-1314.google.com ([209.85.200.170]:11377 "EHLO
+	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756815AbYDLDTe (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 11 Apr 2008 23:19:34 -0400
+Received: by wf-out-1314.google.com with SMTP id 28so754616wff.4
+        for <linux-ide@vger.kernel.org>; Fri, 11 Apr 2008 20:19:33 -0700 (PDT)
+In-Reply-To: <200804112200.28854.tvrtko@ursulin.net>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Volker Armin Hemmann <volker.armin.hemmann@tu-clausthal.de>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Peer Chen <pchen@nvidia.com>, Kuan Luo <kluo@nvidia.com>
+To: "Tvrtko A. Ursulin" <tvrtko@ursulin.net>
+Cc: devzero@web.de, lkml@metanurb.dk, pernegger@gmail.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Andi Kleen <andi@firstfloor.org>
 
-Tejun Heo wrote:
-> Volker Armin Hemmann wrote:
->> Hi,
->>
->>> Aiee.... Can you please try 2.6.25-rc8 with both configurations?  And
->>> w/o systemrescuecd?  Just seeing whether things mount properly or not is
->>> good enough.  There isn't much risk of losing data.
->>
->> 2.6.25-rc8 is a 'no change'. AHCI+pci=nomsi boots, AHCI without hangs.
->> with AHCI I also get this:
->>
->> [    0.363828] ------------[ cut here ]------------
->> [    0.363828] WARNING: at drivers/ata/ahci.c:645 
->> ahci_init_one+0x190/0xa3a()
->> [    0.363828] Modules linked in:
->> [    0.363828] Pid: 1, comm: swapper Not tainted 2.6.25-rc8 #2
-> 
-> Heh.. that's AHCI_EN not getting set.  Peer, any ideas?  The driver set 
-> AHCI_EN in the HOST_CTL register but on reading back it's still clear.
+On Fri, Apr 11, 2008 at 5:00 PM, Tvrtko A. Ursulin <tvrtko@ursulin.net> wrote:
+>
+>  > >I got back from WD's tech support and received a DOS utility which can
+>  > > control this drive feature, apparently using vendor specific commands.
+>  > > With it head unload timer can be disabled or set to a period between
+>  > > 100ms and 25.5s.
+>
+>  Followup with some good news.
+>
+>  Head unload timer settings seems to be persistent across powering off. Having
+>  set it to a maximum value of 25.5 seconds my disk is now behaving much more
+>  reasonable.
+>
+>  To actually do it I used FreeDOS floppy image burnt on a CD-RW as a bootable
+>  image plus wdidle3.exe in the filesystem itself.
+>
+>  BTW, WD's tech support has gone silent so chances for an easier solution are
+>  not so great.
 
-Possibly the hardware is not idle?  I wonder if the BIOS is doing 
-anything with the IDE interface.  _Probably_ not, but that is certainly 
-a situation where switching to AHCI can be a problem for certain AHCI chips.
+Any chance you could make your iso available for the freedos w/
+wdidle3.exe bootable cd?
 
-	Jeff
+I can't track down wdidle3.exe on wdc.com; they have "Data Lifeguard"
+and such but I have no idea if the wdidle3.exe is buried in those
+downloads.
 
-
-
+thanks,
+Mike
