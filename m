@@ -1,68 +1,54 @@
-From: "Marko Koivusalo" <marko.koivusalo@gmail.com>
-Subject: Promise TX4 performance problems
-Date: Sat, 12 Apr 2008 15:56:33 +0300
-Message-ID: <cdcaea5a0804120556w6ef4479fi86c05a4613b12a97@mail.gmail.com>
+From: "Mike Snitzer" <snitzer@gmail.com>
+Subject: Re: Western Digital GreenPower drives and Linux
+Date: Sat, 12 Apr 2008 11:20:28 -0400
+Message-ID: <170fa0d20804120820x1eced1ebl47b6a2f6593ea029@mail.gmail.com>
+References: <234148243@web.de> <200804112200.28854.tvrtko@ursulin.net>
+	 <170fa0d20804112019h73928c99paadcc363539fea9c@mail.gmail.com>
+	 <200804120811.12468.tvrtko@ursulin.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from an-out-0708.google.com ([209.85.132.246]:41077 "EHLO
-	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757004AbYDLM4g (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 12 Apr 2008 08:56:36 -0400
-Received: by an-out-0708.google.com with SMTP id d31so213091and.103
-        for <linux-ide@vger.kernel.org>; Sat, 12 Apr 2008 05:56:33 -0700 (PDT)
+Received: from wf-out-1314.google.com ([209.85.200.175]:31334 "EHLO
+	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752814AbYDLPU3 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 12 Apr 2008 11:20:29 -0400
+Received: by wf-out-1314.google.com with SMTP id 28so905000wff.4
+        for <linux-ide@vger.kernel.org>; Sat, 12 Apr 2008 08:20:28 -0700 (PDT)
+In-Reply-To: <200804120811.12468.tvrtko@ursulin.net>
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: jgarzik@pobox.com
-Cc: linux-ide@vger.kernel.org
+To: "Tvrtko A. Ursulin" <tvrtko@ursulin.net>
+Cc: devzero@web.de, lkml@metanurb.dk, pernegger@gmail.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Andi Kleen <andi@firstfloor.org>
 
-Hello,
+On Sat, Apr 12, 2008 at 3:11 AM, Tvrtko A. Ursulin <tvrtko@ursulin.net> wrote:
+> On Saturday 12 April 2008 04:19:33 Mike Snitzer wrote:
+>  > Any chance you could make your iso available for the freedos w/
+>  > wdidle3.exe bootable cd?
+>  >
+>  > I can't track down wdidle3.exe on wdc.com; they have "Data Lifeguard"
+>  > and such but I have no idea if the wdidle3.exe is buried in those
+>  > downloads.
+>
+>  According to the licence which comes with that thing distribution is not
+>  allowed. Also it wouldn't be bad if more people contacted WD about it so that
+>  they figure out they at least need to make it available as a download, if not
+>  something better.
 
-I'm unfortunate owner of Promise TX4 SATA300 (rev2). In Feb 2007 my
-raid started to drop drives under heavy load. Back then it was not
-known to hapend because of TX4 asic bug or at least I was unable to
-find such information at the time. And the card had worked fine for a
-year or so. Well eventually I ended up replacing whole home server
-piece by piece and finally deemed that the TX4 was propably broken.
+Just an FYI, I had a look at my counters for a 1TB GP I've had in
+always-on service (expansion drive for my tivo; which runs Linux) for
+6 months.  I'm not seeing any issues, Load_Cycle_Count is quite low.
 
-Now a year later and after finding out that asic bug was found & fixed
-I thought to utilize TX4 once more. I'm currently running driver from
-kernel 2.6.24.4 which I had to backport into 2.6.23.1 due my TX4
-replacement card (HPT rr174x) that has binary-wrapper drivers only
-(sigh) and I'm unable to compile them in 2.6.24.4.
+Device Model:     WDC WD10EACS-32ZJB0
+Firmware Version: 01.01B01
 
-However the problem with Promise TX4 is now extremely poor
-performance, it writes around 5.2MB/s  with average CPU utilization of
-3.2 on my 2.4GHz p4 (measured over 12 hours).
+   9 Power_On_Hours          0x0032   094   094   000    Old_age
+Always       -       4763
+ 12 Power_Cycle_Count       0x0032   100   100   000    Old_age
+Always       -       7
+193 Load_Cycle_Count        0x0032   200   200   000    Old_age
+Always       -       9
 
-First thought was that DMA is not enabled, but according to hdparm it
-is. My plan to use this for RAID once again is doomed unless solution
-is found.
-
-I think iostat revealed something out of ordinary:
-
-avg-cpu:  %user   %nice %system %iowait  %steal   %idle
-           0.00    0.00    0.00  100.00    0.00    0.00
-
-Device:         rrqm/s   wrqm/s     r/s     w/s    rMB/s    wMB/s
-avgrq-sz avgqu-sz   await  svctm  %util
-sdh               0.00  4640.00    0.00    8.00     0.00     3.94
-1008.00   134.82 4807.00 125.50 100.40
-
-For non TX4 devices these numbers are quite different. Full details
-and other possibly related info can be found at
-http://pastebin.com/f40f5ae27
-
-Perhaps the asic patch made things this slow? If so, no wonder that it
-hides problem that occurs only under heavy load?
-
-I'm building unmodified 2.6.24.4 kernel to test this, but I doubt my
-few lines of backporting are cause of this slowness.
-
-Since I somewhat need to get this working, I'm ready to test patches
-and so on. Any ideas or comments ?
-
---
-Marko Koivusalo
+Given the Tivo is constantly doing IO it must've prevented the disk
+from ever spinning down.
