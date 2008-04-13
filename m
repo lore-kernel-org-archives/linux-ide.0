@@ -1,33 +1,44 @@
-From: Adrian Bunk <bunk@kernel.org>
-Subject: status of ETRAX_IDE?
-Date: Sun, 13 Apr 2008 21:36:29 +0300
-Message-ID: <20080413183629.GA21204@cs181133002.pp.htv.fi>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Commit 6856ebbf3e46c8184cec15f59d6436692f85d8ba causes libsas
+	panic on SATA DVD
+Date: Sun, 13 Apr 2008 17:19:05 -0500
+Message-ID: <1208125145.4707.63.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp4.pp.htv.fi ([213.243.153.38]:55387 "EHLO smtp4.pp.htv.fi"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753491AbYDMSh3 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 13 Apr 2008 14:37:29 -0400
-Content-Disposition: inline
+Received: from accolon.hansenpartnership.com ([76.243.235.52]:45977 "EHLO
+	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751590AbYDMWTM (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 13 Apr 2008 18:19:12 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: bzolnier@gmail.com, starvik@axis.com, jesper.nilsson@axis.com
-Cc: dev-etrax@axis.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: linux-ide <linux-ide@vger.kernel.org>
 
-ETRAX_IDE was marked as broken last year with the comment
-"it doesn't even compile currently".
+This patch:
 
-Is there some not yet merged update pending that will make it usable 
-again or should I send a patch to remove it?
+commit 6856ebbf3e46c8184cec15f59d6436692f85d8ba
+Author: Tejun Heo <htejun@gmail.com>
+Date:   Mon Apr 7 22:47:20 2008 +0900
 
-cu
-Adrian
+    libata: replace tf_read with qc_fill_rtf for non-SFF drivers
 
--- 
+Takes away our libsas port_ops->sff_tf_read
 
-       "Is there not promise of rain?" Ling Tan asked suddenly out
-        of the darkness. There had been need of rain for many days.
-       "Only a promise," Lao Er said.
-                                       Pearl S. Buck - Dragon Seed
+However, as soon as we get into atapi_request_sense() we hit
+
+#ifdef CONFIG_ATA_SFF
+	ap->ops->sff_tf_read(ap, &qc->tf);
+#endif
+
+And panic.
+
+atapi_request_sense seems to be unavoidable if we hit an AC_ERR_DEV in
+atapi_qc_complete
+
+How is this supposed to work?
+
+James
+
 
