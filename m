@@ -1,64 +1,86 @@
-From: "Marko Koivusalo" <marko.koivusalo@gmail.com>
-Subject: Re: Promise TX4 performance problems
-Date: Sun, 13 Apr 2008 02:20:38 +0300
-Message-ID: <cdcaea5a0804121620x6fe3dd55w5deeb3021d256793@mail.gmail.com>
-References: <cdcaea5a0804120556w6ef4479fi86c05a4613b12a97@mail.gmail.com>
-	 <20080412162628.334d66f1@core>
-	 <cdcaea5a0804121350n167b3715y4a0e52d543253423@mail.gmail.com>
-	 <18433.12313.976468.250059@harpo.it.uu.se>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: [patch 1/2] pata_atiixp: simplex clear
+Date: Sun, 13 Apr 2008 09:39:51 +0900
+Message-ID: <48015657.9060306@gmail.com>
+References: <200803282133.m2SLXupx011467@imap1.linux-foundation.org> <48003B91.4070701@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from an-out-0708.google.com ([209.85.132.249]:46042 "EHLO
-	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753063AbYDLXUj (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 12 Apr 2008 19:20:39 -0400
-Received: by an-out-0708.google.com with SMTP id d31so259232and.103
-        for <linux-ide@vger.kernel.org>; Sat, 12 Apr 2008 16:20:38 -0700 (PDT)
-In-Reply-To: <18433.12313.976468.250059@harpo.it.uu.se>
-Content-Disposition: inline
+Received: from wf-out-1314.google.com ([209.85.200.171]:59282 "EHLO
+	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753245AbYDMAj7 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 12 Apr 2008 20:39:59 -0400
+Received: by wf-out-1314.google.com with SMTP id 28so1040641wff.4
+        for <linux-ide@vger.kernel.org>; Sat, 12 Apr 2008 17:39:58 -0700 (PDT)
+In-Reply-To: <48003B91.4070701@garzik.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mikael Pettersson <mikpe@it.uu.se>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-ide@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: akpm@linux-foundation.org, linux-ide@vger.kernel.org, alan@lxorguk.ukuu.org.uk, alan@redhat.com
 
->  That includes overheads from whatever file system / raid layers
->  you have on top of the device. Please do the dd straight to
->  /dev/sdd or /dev/sdd1.
->
->  Also, I note that while you have an Intel 845 chipset, your kernel
->  doesn't mention either the local APIC or the I/O APIC. I would have
->  expected both to be present; using them typically results in less
->  IRQ sharing and lower IRQ handling overheads. Might be worthwhile
->  to try to enable them.
->
->  /Mikael
+Jeff Garzik wrote:
+> akpm@linux-foundation.org wrote:
+>> From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+>>
+>> Some of the other quirks changes seem to have left some users with the 
+>> simplex
+>> bits mis-set by the time the driver loads.  Clear simplex mode before 
+>> we probe
+>> the controller therefore.
+>>
+>> Signed-off-by: Alan Cox <alan@redhat.com>
+>> Cc: Jeff Garzik <jeff@garzik.org>
+>> Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
+>> ---
+>>
+>>  drivers/ata/pata_atiixp.c |    7 +++++--
+>>  1 file changed, 5 insertions(+), 2 deletions(-)
+>>
+>> diff -puN drivers/ata/pata_atiixp.c~pata_atiixp-simplex-clear 
+>> drivers/ata/pata_atiixp.c
+>> --- a/drivers/ata/pata_atiixp.c~pata_atiixp-simplex-clear
+>> +++ a/drivers/ata/pata_atiixp.c
+>> @@ -22,7 +22,7 @@
+>>  #include <linux/libata.h>
+>>  
+>>  #define DRV_NAME "pata_atiixp"
+>> -#define DRV_VERSION "0.4.6"
+>> +#define DRV_VERSION "0.4.7"
+>>  
+>>  enum {
+>>      ATIIXP_IDE_PIO_TIMING    = 0x40,
+>> @@ -243,6 +243,9 @@ static int atiixp_init_one(struct pci_de
+>>          .port_ops = &atiixp_port_ops
+>>      };
+>>      const struct ata_port_info *ppi[] = { &info, NULL };
+>> +    /* Some of the quirk reconfiguration messes up the simplex
+>> +       flag, so clear it again */
+>> +    ata_pci_clear_simplex(dev);
+>>      return ata_pci_init_one(dev, ppi, &atiixp_sht, NULL);
+>>  }
+>>  
+>> @@ -279,7 +282,7 @@ static void __exit atiixp_exit(void)
+>>  }
+>>  
+>>  MODULE_AUTHOR("Alan Cox");
+>> -MODULE_DESCRIPTION("low-level driver for ATI IXP200/300/400");
+>> +MODULE_DESCRIPTION("low-level driver for ATI IXP series");
+>>  MODULE_LICENSE("GPL");
+>>  MODULE_DEVICE_TABLE(pci, atiixp);
+> 
+> Since I saw some automated akpm mail about this...  this patch is 
+> obsolete.  Needs ata_pci_bmdma_clear_simplex() at least.
+> 
+> Also, Tejun, you had some thoughts on this?
 
-I think I've figured out what's the problem.
+That was about calling pci functions before enabling them.
 
-Measuring directly from device performance increased up to 13MB/s.
-After enabling APIC & I/O APIC it was up to 18MB/s. I tried to yank
-all other controllers but it didn't have any effect. This ruled out
-pretty much everything except the Promise TX4 .. and the HDD itself. I
-tried to plug disk into motherboard controller (HPT374) and it gives
-me exactly same write performance ... 18MB/s.
+> In current #upstream, we still call ata_pci_bmdma_clear_simplex() before 
+> pcim_enable_device() in some cases, so the problem remains...
 
-Apparently this brand new 1 Tt Western Digital is either amazingly
-slow on write or I have faulty unit.
+Care to point where?  It should be easy to fix.  Just adding 
+pcim_enable_device() early in the init function should do.
 
-Model number: WDC WD1000FYPS-01ZKB0
-Model name: Western Digital RE2-GP (Green Power)
-
-Western Digitals Specification for the drive state:
-Transfer Rate (Buffer To Disk)	84 MB/s (Sustained)
-
-Uh, I'm a little puzzled .. what to do next .. I don't think I want to
-have drive with real world 5-10MB/s write performance .. replacing it
-trough warranty may be troublesome since it works fine otherwise.
-Perhaps I'll contact WD directly ...
-
-It would seem to be as always, problems is where you least expect it to be.
-
---
-Marko Koivusalo
+-- 
+tejun
