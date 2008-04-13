@@ -1,102 +1,55 @@
-From: "Tvrtko A. Ursulin" <tvrtko@ursulin.net>
-Subject: Re: libata errors with smartctl on 2.6.24, WD3200AAKS and nVidia AHCI
-Date: Sun, 13 Apr 2008 08:34:13 +0100
-Message-ID: <200804130834.14257.tvrtko@ursulin.net>
-References: <200804092130.07149.tvrtko@ursulin.net> <480179D3.8070707@gmail.com>
+From: Niels <zorglub_olsen@hotmail.com>
+Subject: Re: Western Digital GreenPower drives and Linux
+Date: Sun, 13 Apr 2008 10:30:28 +0200
+Message-ID: <ftsgb5$qi0$1@ger.gmane.org>
+References: <234148243@web.de> <200804112200.28854.tvrtko@ursulin.net> <170fa0d20804112019h73928c99paadcc363539fea9c@mail.gmail.com> <200804120811.12468.tvrtko@ursulin.net> <170fa0d20804120820x1eced1ebl47b6a2f6593ea029@mail.gmail.com> <170fa0d20804120856w786b625cv41af33072605dab7@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mk-outboundfilter-3.mail.uk.tiscali.com ([212.74.114.23]:17631
-	"EHLO mk-outboundfilter-3.mail.uk.tiscali.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751569AbYDMHdk (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 13 Apr 2008 03:33:40 -0400
-In-Reply-To: <480179D3.8070707@gmail.com>
-Content-Disposition: inline
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7Bit
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1757442AbYDMIaz@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-kernel@vger.kernel.org
+Cc: linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Sunday 13 April 2008 04:11:15 Tejun Heo wrote:
-> Is auto spindown configured for the drive?
+On Saturday 12 April 2008 17:56, Mike Snitzer wrote:
 
-I don't think so - it's a 3.5" drive with no special PM features - but how to 
-tell?
+[snip]
+> 
+> Turns out 'wdidle3 /R' on my drive reported:
+> "Idle3 Timer is disabled"
+> 
+> I took no explicit action to disable it 6 months ago. It strikes me as
+> odd that WD would disable the Idle3 timer in firmware given the whole
+> "GreenPower" campaign but I was pleasantly surprised; others may be
+> too...
 
-Tvrtko
+A data point from me. I have two of these, sda is 400GB and has root, boot,
+swap and home partitions, sdb is 1TB and has one big partition. They're in
+my desktop machine, which is usually powered on in the morning and off in
+the evening. It's two months old.
 
-root@sol:~# hdparm -i /dev/sda
+sda:
 
-/dev/sda:
+9 Power_On_Hours          0x0032   099   099   000    Old_age  
+Always       -       785
+12 Power_Cycle_Count       0x0032   100   100   000    Old_age  
+Always       -       141
+193 Load_Cycle_Count        0x0032   200   200   000    Old_age  
+Always       -       144
 
- Model=WDC WD3200AAKS-00VYA0                   , FwRev=12.01B02, SerialNo=     
-WD-WCARW0059893
- Config={ HardSect NotMFM HdSw>15uSec SpinMotCtl Fixed DTR>5Mbs FmtGapReq }
- RawCHS=16383/16/63, TrkSize=0, SectSize=0, ECCbytes=50
- BuffType=unknown, BuffSize=16384kB, MaxMultSect=16, MultSect=?0?
- CurCHS=16383/16/63, CurSects=16514064, LBA=yes, LBAsects=268435455
- IORDY=on/off, tPIO={min:120,w/IORDY:120}, tDMA={min:120,rec:120}
- PIO modes:  pio0 pio3 pio4
- DMA modes:  mdma0 mdma1 mdma2
- UDMA modes: udma0 udma1 udma2 udma3 udma4 udma5
- AdvancedPM=no WriteCache=enabled
- Drive conforms to: Unspecified:  ATA/ATAPI-1,2,3,4,5,6,7
+sdb:
 
- * signifies the current active mode
+9 Power_On_Hours          0x0032   099   099   000    Old_age  
+Always       -       749
+12 Power_Cycle_Count       0x0032   100   100   000    Old_age  
+Always       -       122
+193 Load_Cycle_Count        0x0032   195   195   000    Old_age  
+Always       -       17276
 
-root@sol:~# sdparm -a /dev/sda
-    /dev/sda: ATA       WDC WD3200AAKS-0  12.0
-Read write error recovery mode page:
-  AWRE        1
-  ARRE        0
-  TB          0
-  RC          0
-  EER         0
-  PER         0
-  DTE         0
-  DCR         0
-  RRC         0
-  COR_S       0
-  HOC         0
-  DSOC        0
-  WRC         0
-  RTL         0
-Caching (SBC) mode page:
-  IC          0
-  ABPF        0
-  CAP         0
-  DISC        0
-  SIZE        0
-  WCE         1
-  MF          0
-  RCD         0
-  DRRP        0
-  WRP         0
-  DPTL        0
-  MIPF        0
-  MAPF        0
-  MAPFC       0
-  FSW         0
-  LBCSS       0
-  DRA         0
-  NV_DIS      0
-  NCS         0
-  CSS         0
-Control mode page:
-  TST         0
-  TMF_ONLY    0
-  D_SENSE     0
-  GLTSD       1
-  RLEC        0
-  QAM         0
-  QERR        0
-  RAC         0
-  UA_INTLCK   0
-  SWP         0
-  ATO         0
-  TAS         0
-  AUTOLOAD    0
-  BTP        -1
-  ESTCT      30
+
+The last of these numbers seems fairly high, compared to what others in this
+thread have reported, especially considering that the disk is quite new.
+
+
+//Niels
