@@ -1,55 +1,62 @@
-From: Niels <zorglub_olsen@hotmail.com>
-Subject: Re: Western Digital GreenPower drives and Linux
-Date: Sun, 13 Apr 2008 10:30:28 +0200
-Message-ID: <ftsgb5$qi0$1@ger.gmane.org>
-References: <234148243@web.de> <200804112200.28854.tvrtko@ursulin.net> <170fa0d20804112019h73928c99paadcc363539fea9c@mail.gmail.com> <200804120811.12468.tvrtko@ursulin.net> <170fa0d20804120820x1eced1ebl47b6a2f6593ea029@mail.gmail.com> <170fa0d20804120856w786b625cv41af33072605dab7@mail.gmail.com>
+From: Frans Pop <elendil@planet.nl>
+Subject: Re: No IDE drivers loaded for Toshiba Satellite 320 CDS
+Date: Sun, 13 Apr 2008 15:59:20 +0200
+Message-ID: <200804131559.21664.elendil@planet.nl>
+References: <200804021524.27222.elendil@planet.nl> <200804031947.07674.elendil@planet.nl> <48017248.4030600@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7Bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1757442AbYDMIaz@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org
-Cc: linux-ide@vger.kernel.org
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from hpsmtp-eml15.kpnxchange.com ([213.75.38.115]:1832 "EHLO
+	hpsmtp-eml15.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1757190AbYDMN70 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 13 Apr 2008 09:59:26 -0400
+In-Reply-To: <48017248.4030600@gmail.com>
+Content-Disposition: inline
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: Lennart Sorensen <lsorense@csclub.uwaterloo.ca>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 
-On Saturday 12 April 2008 17:56, Mike Snitzer wrote:
+On Sunday 13 April 2008, Tejun Heo wrote:
+> Please be advised that some modern controllers are dual interfaced.
+> Native one and legacy one.  The legacy one is SFF compliant and
+> depending on configuration may appear at legacy IO addresses, so if you
+> aren't careful, you can end up with two drivers driving the same
+> hardware which usually doesn't end too well.  Loading generic drivers
+> w/o knowing that it's needed is quite dangerous.  I would strongly
+> advise against it.
 
-[snip]
-> 
-> Turns out 'wdidle3 /R' on my drive reported:
-> "Idle3 Timer is disabled"
-> 
-> I took no explicit action to disable it 6 months ago. It strikes me as
-> odd that WD would disable the Idle3 timer in firmware given the whole
-> "GreenPower" campaign but I was pleasantly surprised; others may be
-> too...
+I totally agree. The problem being discussed here is exactly how to know it 
+is needed. If you have better suggestions for that, I'd appreciate it.
 
-A data point from me. I have two of these, sda is 400GB and has root, boot,
-swap and home partitions, sdb is 1TB and has one big partition. They're in
-my desktop machine, which is usually powered on in the morning and off in
-the evening. It's two months old.
+As you specifically say "modern controllers", I suspect that the problem is 
+limited as I guess those are fairly unlikely to be found in machines that 
+have an ISA bus.
 
-sda:
+I also think the way I've implemented in the Debian installer should be 
+relatively safe:
+1) ide-generic is only loaded _after_ any otherwise detected modules
+2) it is only loaded if an ISA bus is present
+3) it is only included in the initrd for the installed system if loading it
+   in the installer resulted in additional block devices appearing
 
-9 Power_On_Hours          0x0032   099   099   000    Old_age  
-Always       -       785
-12 Power_Cycle_Count       0x0032   100   100   000    Old_age  
-Always       -       141
-193 Load_Cycle_Count        0x0032   200   200   000    Old_age  
-Always       -       144
+I would unload ide-generic in the installer if no additional block devices 
+appear, but unfortunately that's not possible as it is marked "permanent".
 
-sdb:
+By loading it after any other drivers I expect there will be no issues 
+during the installation (as the other driver will already have claimed the 
+device). Making sure it is only loaded for the installed system if actually 
+needed should avoid problems there.
 
-9 Power_On_Hours          0x0032   099   099   000    Old_age  
-Always       -       749
-12 Power_Cycle_Count       0x0032   100   100   000    Old_age  
-Always       -       122
-193 Load_Cycle_Count        0x0032   195   195   000    Old_age  
-Always       -       17276
+ATM I can only see this causing problems in systems that need both 
+ide-generic and some other driver as adding ide-generic in the initrd is 
+likely to result in it being loaded before that other driver.
 
+Again, if anyone has a better suggestion how to implement this (preferably 
+without asking the user whether he has a device that needs ide-generic, 
+which most users are unlikely to know anyway), I'd appreciate it.
 
-The last of these numbers seems fairly high, compared to what others in this
-thread have reported, especially considering that the disk is quite new.
-
-
-//Niels
+Cheers,
+FJP
