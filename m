@@ -1,123 +1,131 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: libata errors with smartctl on 2.6.24, WD3200AAKS and nVidia
- AHCI
-Date: Sun, 13 Apr 2008 12:11:15 +0900
-Message-ID: <480179D3.8070707@gmail.com>
-References: <200804092130.07149.tvrtko@ursulin.net>
+From: "Justin Mattock" <justinmattock@gmail.com>
+Subject: Re: sda
+Date: Sun, 13 Apr 2008 04:17:12 +0000
+Message-ID: <dd18b0c30804122117hc0cd548v6cbef5d2c0c0ce5e@mail.gmail.com>
+References: <dd18b0c30804021244k1d44a48hc05ea88552104a71@mail.gmail.com>
+	 <48016F54.5070405@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.181]:23509 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753068AbYDMDLh (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 12 Apr 2008 23:11:37 -0400
-Received: by wa-out-1112.google.com with SMTP id m16so1410244waf.23
-        for <linux-ide@vger.kernel.org>; Sat, 12 Apr 2008 20:11:36 -0700 (PDT)
-In-Reply-To: <200804092130.07149.tvrtko@ursulin.net>
+Received: from an-out-0708.google.com ([209.85.132.249]:52916 "EHLO
+	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750700AbYDMERN (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 13 Apr 2008 00:17:13 -0400
+Received: by an-out-0708.google.com with SMTP id d31so276676and.103
+        for <linux-ide@vger.kernel.org>; Sat, 12 Apr 2008 21:17:12 -0700 (PDT)
+In-Reply-To: <48016F54.5070405@gmail.com>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "Tvrtko A. Ursulin" <tvrtko@ursulin.net>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: linux-ide@vger.kernel.org
 
-Tvrtko A. Ursulin wrote:
-> Hi all,
-> 
-> When running smartctl to get the attributes readout libata seems to get
-> really confused on my system. After a timeout it recovers without apparent
-> ill-effect, but the reported values are complete rubbish. Unfortunately I don't
-> remember if this is a regression or it was always like this..
-> 
-> I have attached some data below, but if more is needed just shout!
-> 
-> Regards,
-> 
-> Tvrtko
-> 
-> root@sol:~# uname -a
-> Linux sol 2.6.24.3 #4 SMP PREEMPT Sat Mar 8 12:57:56 GMT 2008 x86_64 GNU/Linux
-> 
-> root@sol:~# smartctl -A /dev/sda
-> smartctl version 5.37 [x86_64-unknown-linux-gnu] Copyright (C) 2002-6 Bruce Allen
-> Home page is http://smartmontools.sourceforge.net/
-> 
-> === START OF READ SMART DATA SECTION ===
-> SMART Attributes Data Structure revision number: 17018
-> Vendor Specific SMART Attributes with Thresholds:
-> ID# ATTRIBUTE_NAME          FLAG     VALUE WORST THRESH TYPE      UPDATED  WHEN_FAILED RAW_VALUE
-> 255 Unknown_Attribute       0x373f   200   016   063    Pre-fail  Always   In_the_past 69269232549888
->  45 Unknown_Attribute       0x4344   087   082   068    Old_age   Offline      -       61779704492097
->  51 Unknown_Attribute       0x0039   000   000   057    Pre-fail  Offline  FAILING_NOW 52987850404480
->  66 Unknown_Attribute       0x3231   048   068   049    Pre-fail  Offline  FAILING_NOW 55350388793431
->  48 Unknown_Attribute       0x4130   065   083   048    Old_age   Offline      -       71675860037707
->  32 Unknown_Attribute       0x2030   032   032   048    Old_age   Offline  FAILING_NOW 35322350018592
->  32 Unknown_Attribute       0x2020   032   032   032    Old_age   Offline  FAILING_NOW 550026354720
->  16 Unknown_Attribute       0x3f00   000   016   000    Old_age   Offline  FAILING_NOW 280379760114684
-> 255 Unknown_Attribute       0x000f   000   007   015    Pre-fail  Always   FAILING_NOW 131943408599808
-> 120 Unknown_Attribute       0x7800   000   000   000    Old_age   Offline  FAILING_NOW 0
->  64 Unknown_Attribute       0xfe00   001   000   000    Old_age   Offline  In_the_past 39030002838272
-> 104 Unknown_Attribute       0x4174   188   035   116    Old_age   Offline  In_the_past 48379254046529
-> 225 Load_Cycle_Count        0x484e   000   085   078    Old_age   Always   FAILING_NOW 86
-> 144 Unknown_Attribute       0x0016   000   000   022    Old_age   Always   FAILING_NOW 0
-> 
-> 
-> 
-> [ 7846.128079] ata2.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 frozen
-> [ 7846.128086] ata2.00: cmd b0/da:00:00:4f:c2/00:00:00:00:00/00 tag 0
-> [ 7846.128087]          res 40/00:01:b4:4f:c2/00:00:00:00:00/00 Emask 0x4 (timeout)
-> [ 7846.128090] ata2.00: status: { DRDY }
-> [ 7846.128096] ata2: hard resetting link
-> [ 7846.735912] ata2: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-> [ 7846.760523] ata2.00: configured for UDMA/133
-> [ 7846.760530] ata2: EH complete
-> [ 7846.760546] sd 1:0:0:0: [sda] 625142448 512-byte hardware sectors (320073 MB)
-> [ 7846.760556] sd 1:0:0:0: [sda] Write Protect is off
-> [ 7846.760558] sd 1:0:0:0: [sda] Mode Sense: 00 3a 00 00
-> [ 7846.760571] sd 1:0:0:0: [sda] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
-> [ 7852.748405] ata2.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 frozen
-> [ 7852.748412] ata2.00: cmd b0/d1:01:01:4f:c2/00:00:00:00:00/00 tag 0 pio 512 in
-> [ 7852.748413]          res 40/00:01:b4:4f:c2/00:00:00:00:00/00 Emask 0x4 (timeout)
-> [ 7852.748416] ata2.00: status: { DRDY }
-> [ 7852.748421] ata2: hard resetting link
-> [ 7853.356244] ata2: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-> [ 7853.378276] ata2.00: configured for UDMA/133
-> [ 7853.378284] ata2: EH complete
-> [ 7853.378416] sd 1:0:0:0: [sda] 625142448 512-byte hardware sectors (320073 MB)
-> [ 7853.378519] sd 1:0:0:0: [sda] Write Protect is off
-> [ 7853.378521] sd 1:0:0:0: [sda] Mode Sense: 00 3a 00 00
-> [ 7853.378761] sd 1:0:0:0: [sda] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
-> 
-> 00:0e.0 SATA controller: nVidia Corporation Unknown device 07f4 (rev a2) (prog-if 01 [AHCI 1.0])
->         Subsystem: Giga-byte Technology Unknown device b002
->         Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B-
->         Status: Cap+ 66MHz+ UDF- FastB2B+ ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR-
->         Latency: 0 (750ns min, 250ns max)
->         Interrupt: pin A routed to IRQ 316
->         Region 0: I/O ports at 09f0 [size=8]
->         Region 1: I/O ports at 0bf0 [size=4]
->         Region 2: I/O ports at 0970 [size=8]
->         Region 3: I/O ports at 0b70 [size=4]
->         Region 4: I/O ports at dc00 [size=16]
->         Region 5: Memory at e5104000 (32-bit, non-prefetchable) [size=8K]
->         Capabilities: [44] Power Management version 2
->                 Flags: PMEClk- DSI- D1- D2- AuxCurrent=0mA PME(D0-,D1-,D2-,D3hot-,D3cold-)
->                 Status: D0 PME-Enable- DSel=0 DScale=0 PME-
->         Capabilities: [8c] #12 [0010]
->         Capabilities: [b0] Message Signalled Interrupts: Mask- 64bit+ Queue=0/3 Enable+
->                 Address: 00000000fee0100c  Data: 4181
-> 
-> root@sol:~# lsscsi
-> [1:0:0:0]    disk    ATA      WDC WD3200AAKS-0 12.0  /dev/sda
-> [2:0:0:0]    cd/dvd  TSSTcorp CDDVDW SH-S203N  SB01  /dev/scd0
-> 
-> 
-> root@sol:~# lsmod | grep -e "a[th][ac]"
-> ahci                   27524  8
-> ata_generic             6404  0
-> libata                152048  2 ahci,ata_generic
-> scsi_mod              152752  5 firewire_sbp2,sg,sr_mod,sd_mod,libata
+On Sun, Apr 13, 2008 at 2:26 AM, Tejun Heo <htejun@gmail.com> wrote:
+> Justin Mattock wrote:
+>
+> > Hello; hopefully this is the correct e-mail for libata.  I compiled
+> > 2.6.25-rc8 on a macbook pro 15' ati chipset using nubuntu. when
+> > performing
+> > echo mem > /sys/power/state simultaneously I'm noticing on the third time:
+> >
+> > [ 2332.951249] sd 2:0:1:0: [sda] Starting disk
+> > [ 2313.224530] ata1.00: ACPI cmd ef/03:0c:00:00:00:a0 filtered out
+> > [ 2313.224532] ata1.00: ACPI cmd ef/03:44:00:00:00:a0 filtered out
+> > [ 2313.391129] ata1.00: configured for UDMA/66
+> > [ 2314.187258] ata3.01: NODEV after polling detection
+> > [ 2314.187262] ata3.01: revalidation failed (errno=-2)
+> > [ 2314.187266] ata3: failed to recover some devices, retrying in 5 secs
+> > [ 2319.368648] ata3.01: ACPI cmd ef/03:0c:00:00:00:b0 filtered out
+> > [ 2319.368654] ata3.01: ACPI cmd ef/03:45:00:00:00:b0 filtered out
+> > [ 2319.382275] ata3.01: configured for UDMA/100
+> > [ 2319.400505] sd 2:0:1:0: [sda] 234441648 512-byte hardware sectors
+> (120034 MB)
+> > [ 2319.400505] sd 2:0:1:0: [sda] Write Protect is off
+> > [ 2319.400505] sd 2:0:1:0: [sda] Mode Sense: 00 3a 00 00
+> > [ 2319.400505] sd 2:0:1:0: [sda] Write cache: enabled, read cache:
+> > enabled, doesn't support DPO or FUA
+> >
+> > revalidation error=-2
+> > attached is dmesg from the test
+> >
+>
+>  Can you please post the result of "lspci -nn".  The error per-se is okay.
+> The drive failed to respond to IDENTIFY at the first try but on retrial it
+> responded okay.
+>
+>  --
+>  tejun
+>
 
-Is auto spindown configured for the drive?
+Hello; Thank you for the response.
+I guess you can say I have a tendancy to freak out or panic with
+little things like that,
+below is lspci -nn.
+
+
+
+
+00:00.0 Host bridge [0600]: Intel Corporation Mobile 945GM/PM/GMS,
+943/940GML and 945GT Express Memory Controller Hub [8086:27a0] (rev
+03)
+00:01.0 PCI bridge [0604]: Intel Corporation Mobile 945GM/PM/GMS,
+943/940GML and 945GT Express PCI Express Root Port [8086:27a1] (rev
+03)
+00:07.0 Performance counters [1101]: Intel Corporation Unknown device
+[8086:27a3] (rev 03)
+00:1b.0 Audio device [0403]: Intel Corporation 82801G (ICH7 Family)
+High Definition Audio Controller [8086:27d8] (rev 02)
+00:1c.0 PCI bridge [0604]: Intel Corporation 82801G (ICH7 Family) PCI
+Express Port 1 [8086:27d0] (rev 02)
+00:1c.1 PCI bridge [0604]: Intel Corporation 82801G (ICH7 Family) PCI
+Express Port 2 [8086:27d2] (rev 02)
+00:1c.2 PCI bridge [0604]: Intel Corporation 82801G (ICH7 Family) PCI
+Express Port 3 [8086:27d4] (rev 02)
+00:1d.0 USB Controller [0c03]: Intel Corporation 82801G (ICH7 Family)
+USB UHCI Controller #1 [8086:27c8] (rev 02)
+00:1d.1 USB Controller [0c03]: Intel Corporation 82801G (ICH7 Family)
+USB UHCI Controller #2 [8086:27c9] (rev 02)
+00:1d.2 USB Controller [0c03]: Intel Corporation 82801G (ICH7 Family)
+USB UHCI Controller #3 [8086:27ca] (rev 02)
+00:1d.3 USB Controller [0c03]: Intel Corporation 82801G (ICH7 Family)
+USB UHCI Controller #4 [8086:27cb] (rev 02)
+00:1d.7 USB Controller [0c03]: Intel Corporation 82801G (ICH7 Family)
+USB2 EHCI Controller [8086:27cc] (rev 02)
+00:1e.0 PCI bridge [0604]: Intel Corporation 82801 Mobile PCI Bridge
+[8086:2448] (rev e2)
+00:1f.0 ISA bridge [0601]: Intel Corporation 82801GBM (ICH7-M) LPC
+Interface Bridge [8086:27b9] (rev 02)
+00:1f.1 IDE interface [0101]: Intel Corporation 82801G (ICH7 Family)
+IDE Controller [8086:27df] (rev 02)
+00:1f.2 IDE interface [0101]: Intel Corporation 82801GBM/GHM (ICH7
+Family) SATA IDE Controller [8086:27c4] (rev 02)
+00:1f.3 SMBus [0c05]: Intel Corporation 82801G (ICH7 Family) SMBus
+Controller [8086:27da] (rev 02)
+01:00.0 VGA compatible controller [0300]: ATI Technologies Inc M56P
+[Radeon Mobility X1600] [1002:71c5]
+02:00.0 Ethernet controller [0200]: Marvell Technology Group Ltd.
+88E8053 PCI-E Gigabit Ethernet Controller [11ab:4362] (rev 22)
+03:00.0 Network controller [0280]: Atheros Communications, Inc. AR5418
+802.11abgn Wireless PCI Express Adapter [168c:0024] (rev 01)
+0c:03.0 FireWire (IEEE 1394) [0c00]: Texas Instruments TSB82AA2
+IEEE-1394b Link Layer Controller [104c:8025] (rev 01)
+
+
+Besides the SATA drive, with the PATA ATAPI drive, I'm running a
+little test of playing a DVD, then performing a suspend, upon wakeup
+The movie becomes choppy;
+"Basically what I can see over here is"; when the system is wokenup
+whatever is left in the ram or memory continues to play, In the meantime
+the PATA drive from what I can hear, moves around a little bit thinks
+for a second, then starts turning fast, but by then whatever was in
+the ram or memory has played, causing the playback to be out of sync,
+resulting in a choppy feed.
+Idealistically I would like to take the media player, and have it wait
+for the DVD to catch up then start playback, Or see If when suspend
+occurs (if possible)the lens in the PATA keeps the position, then upon
+resume PATA resumes, Or If this is already available try and enable
+that feature.
 
 -- 
-tejun
+Justin P. Mattock
