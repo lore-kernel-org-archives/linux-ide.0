@@ -1,67 +1,102 @@
-From: Rich West <Rich.West@wesmo.com>
-Subject: Re: sata_via
-Date: Sun, 13 Apr 2008 00:36:16 -0400
-Message-ID: <48018DC0.6080407@wesmo.com>
-References: <47F694C8.8020507@wesmo.com> <47F6A5E8.1030602@garzik.org>	 <47F6BD55.3090708@wesmo.com> <5699f8f00804050015kb1ebb1cpf3ab8b587580fffd@mail.gmail.com> <47F7982E.5080701@wesmo.com> <47F7F463.2060402@garzik.org> <480173CB.5070805@gmail.com> <480189DB.9050900@wesmo.com>
+From: "Tvrtko A. Ursulin" <tvrtko@ursulin.net>
+Subject: Re: libata errors with smartctl on 2.6.24, WD3200AAKS and nVidia AHCI
+Date: Sun, 13 Apr 2008 08:34:13 +0100
+Message-ID: <200804130834.14257.tvrtko@ursulin.net>
+References: <200804092130.07149.tvrtko@ursulin.net> <480179D3.8070707@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain;
+  charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from static-151-204-187-166.pskn.east.verizon.net ([151.204.187.166]:55318
-	"EHLO wesmo.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750838AbYDMFAU (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 13 Apr 2008 01:00:20 -0400
-Received: from cranium.wesmo.com (localhost.localdomain [127.0.0.1])
-	by wesmo.com  with ESMTP id m3D507U0019347
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <linux-ide@vger.kernel.org>; Sun, 13 Apr 2008 01:00:18 -0400
-Received: (from defang@localhost)
-	by cranium.wesmo.com (8.14.2/8.14.1/Submit) id m3D4aKVR017865
-	for <linux-ide@vger.kernel.org>; Sun, 13 Apr 2008 00:36:20 -0400
-In-Reply-To: <480189DB.9050900@wesmo.com>
+Received: from mk-outboundfilter-3.mail.uk.tiscali.com ([212.74.114.23]:17631
+	"EHLO mk-outboundfilter-3.mail.uk.tiscali.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751569AbYDMHdk (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 13 Apr 2008 03:33:40 -0400
+In-Reply-To: <480179D3.8070707@gmail.com>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Tejun Heo <htejun@gmail.com>
-Cc: Jeff Garzik <jeff@garzik.org>, Wander Winkelhorst <w.winkelhorst@gmail.com>, linux-kernel@vger.kernel.org, Linux IDE mailing list <linux-ide@vger.kernel.org>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Rich West wrote:
-> Tejun Heo wrote:
->> Jeff Garzik wrote:
->>> Rich West wrote:
->>>> I was only curious as to what turning off power management support 
->>>> would buy with regard to the sata timeout issue.
->>>
->>>
->>> ACPI is not only power management.  It is all the information your 
->>> hardware conveys to your OS, about the setup and workings of your 
->>> hardware.
->>>
->>> Without ACPI, non-PM things like SMP, laptop dock/undock, and many 
->>> other gadgets fail to function (or are configured sub-optimally).
->>>
->>> ACPI sets up interrupt routing, and Linux history is _loaded_ with 
->>> _years_ of problem reports that appear as timeouts, only to be 
->>> resolved as ACPI interrupt bugs (aka BIOS bugs, since ACPI tables 
->>> come from BIOS).
->>
->> Also, please give a shot at the sacred "irqpoll".
->
-> I've had bad luck in the past (with other machiens) when adding 
-> "irqpoll" in that it had locked up the entire machine (not this one, 
-> but others) after a very short period of time.  My only attempt at 
-> using it, though, was to try to address an X server related issue, but 
-> this is a non-user machine, so X isn't necessary, and, hence, it's at 
-> runlevel 3 all of the time.
->
-> So far, noapic and acpi=off seem to be working.. The system has been 
-> up 8 days without any problems.. previously, a problem with the SATA 
-> drive (details of which were part of the first few messages in this 
-> thread) would surface anywhere between 15 minutes and 5-7 days after a 
-> reboot.
->
-> However, since I started this email, I tried firing up X (with noapci 
-> and acpi=off both set), the machine locks up entirely.
+On Sunday 13 April 2008 04:11:15 Tejun Heo wrote:
+> Is auto spindown configured for the drive?
 
-Although a reboot with irqpoll set managed to fix that X problem. :)
+I don't think so - it's a 3.5" drive with no special PM features - but how to 
+tell?
 
--Rich
+Tvrtko
+
+root@sol:~# hdparm -i /dev/sda
+
+/dev/sda:
+
+ Model=WDC WD3200AAKS-00VYA0                   , FwRev=12.01B02, SerialNo=     
+WD-WCARW0059893
+ Config={ HardSect NotMFM HdSw>15uSec SpinMotCtl Fixed DTR>5Mbs FmtGapReq }
+ RawCHS=16383/16/63, TrkSize=0, SectSize=0, ECCbytes=50
+ BuffType=unknown, BuffSize=16384kB, MaxMultSect=16, MultSect=?0?
+ CurCHS=16383/16/63, CurSects=16514064, LBA=yes, LBAsects=268435455
+ IORDY=on/off, tPIO={min:120,w/IORDY:120}, tDMA={min:120,rec:120}
+ PIO modes:  pio0 pio3 pio4
+ DMA modes:  mdma0 mdma1 mdma2
+ UDMA modes: udma0 udma1 udma2 udma3 udma4 udma5
+ AdvancedPM=no WriteCache=enabled
+ Drive conforms to: Unspecified:  ATA/ATAPI-1,2,3,4,5,6,7
+
+ * signifies the current active mode
+
+root@sol:~# sdparm -a /dev/sda
+    /dev/sda: ATA       WDC WD3200AAKS-0  12.0
+Read write error recovery mode page:
+  AWRE        1
+  ARRE        0
+  TB          0
+  RC          0
+  EER         0
+  PER         0
+  DTE         0
+  DCR         0
+  RRC         0
+  COR_S       0
+  HOC         0
+  DSOC        0
+  WRC         0
+  RTL         0
+Caching (SBC) mode page:
+  IC          0
+  ABPF        0
+  CAP         0
+  DISC        0
+  SIZE        0
+  WCE         1
+  MF          0
+  RCD         0
+  DRRP        0
+  WRP         0
+  DPTL        0
+  MIPF        0
+  MAPF        0
+  MAPFC       0
+  FSW         0
+  LBCSS       0
+  DRA         0
+  NV_DIS      0
+  NCS         0
+  CSS         0
+Control mode page:
+  TST         0
+  TMF_ONLY    0
+  D_SENSE     0
+  GLTSD       1
+  RLEC        0
+  QAM         0
+  QERR        0
+  RAC         0
+  UA_INTLCK   0
+  SWP         0
+  ATO         0
+  TAS         0
+  AUTOLOAD    0
+  BTP        -1
+  ESTCT      30
