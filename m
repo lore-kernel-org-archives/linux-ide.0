@@ -1,134 +1,100 @@
-From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: Re: [PATCH 4/4] block: add large command support
-Date: Tue, 15 Apr 2008 07:33:33 +0900
-Message-ID: <20080415073300D.tomof@acm.org>
-References: <1208170266-1676-4-git-send-email-fujita.tomonori@lab.ntt.co.jp>
-	<1208170266-1676-5-git-send-email-fujita.tomonori@lab.ntt.co.jp>
-	<20080414144154.GB10288@osc.edu>
+From: Kristen Carlson Accardi <kristen.c.accardi@intel.com>
+Subject: Re: [patch 2/2] libata: power off unused ports
+Date: Mon, 14 Apr 2008 16:11:22 -0700
+Message-ID: <20080414161122.03b2211d@appleyard>
+References: <20080325221646.567639335@intel.com>
+	<20080325152813.0b34761f@appleyard>
+	<48003A5D.9000306@garzik.org>
+Reply-To: kristen.c.accardi@intel.com
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <20080414144154.GB10288@osc.edu>
-Sender: linux-scsi-owner@vger.kernel.org
-To: pw@osc.edu
-Cc: fujita.tomonori@lab.ntt.co.jp, linux-scsi@vger.kernel.org, bharrosh@panasas.com, jens.axboe@oracle.com, linux-ide@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mga02.intel.com ([134.134.136.20]:13287 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751381AbYDNXRj (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 14 Apr 2008 19:17:39 -0400
+In-Reply-To: <48003A5D.9000306@garzik.org>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: linux-ide@vger.kernel.org, arjan@linux.intel.com
 
-On Mon, 14 Apr 2008 10:41:54 -0400
-Pete Wyckoff <pw@osc.edu> wrote:
+On Sat, 12 Apr 2008 00:28:13 -0400
+Jeff Garzik <jeff@garzik.org> wrote:
 
-> fujita.tomonori@lab.ntt.co.jp wrote on Mon, 14 Apr 2008 19:50 +0900:
-> > This patch changes rq->cmd from the static array to a pointer to
-> > support large commands.
+> Kristen Carlson Accardi wrote:
+> > If a port doesn't support hot plug, there's no reason to keep the phy powered
+> > on unoccupied ports.  
 > > 
-> > We rarely handle large commands. So for optimization, a struct request
-> > still has a static array for a command. rq_init sets rq->cmd pointer
-> > to the static array.
+> > Signed-off-by:  Kristen Carlson Accardi <kristen.c.accardi@intel.com>
 > > 
-> > Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-> > Cc: Jens Axboe <jens.axboe@oracle.com>
-> [..]
-> > diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
-> > index b3a58ad..5710ae4 100644
-> > --- a/include/linux/blkdev.h
-> > +++ b/include/linux/blkdev.h
-> > @@ -215,8 +215,9 @@ struct request {
-> >  	/*
-> >  	 * when request is used as a packet command carrier
-> >  	 */
-> > -	unsigned int cmd_len;
-> > -	unsigned char cmd[BLK_MAX_CDB];
-> > +	unsigned short cmd_len;
-> > +	unsigned char __cmd[BLK_MAX_CDB];
-> > +	unsigned char *cmd;
+> > Index: linux-2.6.25-rc3/drivers/ata/ahci.c
+> > ===================================================================
+> > --- linux-2.6.25-rc3.orig/drivers/ata/ahci.c
+> > +++ linux-2.6.25-rc3/drivers/ata/ahci.c
+> > @@ -52,6 +52,7 @@
+> >  static int ahci_enable_alpm(struct ata_port *ap,
+> >  		enum link_pm policy);
+> >  static void ahci_disable_alpm(struct ata_port *ap);
+> > +static int ahci_is_hotplug_capable(struct ata_port *ap);
 > >  
-> >  	unsigned int data_len;
-> >  	unsigned int extra_len;	/* length of alignment and padding */
-> > @@ -812,6 +813,13 @@ static inline void put_dev_sector(Sector p)
-> >  	page_cache_release(p.v);
-> >  }
-> >  
-> > +static inline void rq_set_cmd(struct request *rq, unsigned char *cmd,
-> > +			      unsigned short cmd_len)
-> > +{
-> > +	rq->cmd = cmd;
-> > +	rq->cmd_len = cmd_len;
-> > +}
+> >  enum {
+> >  	AHCI_PCI_BAR		= 5,
+> > @@ -163,6 +164,7 @@ enum {
+> >  	PORT_CMD_ASP		= (1 << 27), /* Aggressive Slumber/Partial */
+> >  	PORT_CMD_ALPE		= (1 << 26), /* Aggressive Link PM enable */
+> >  	PORT_CMD_ATAPI		= (1 << 24), /* Device is ATAPI */
+> > +	PORT_CMD_HPCP		= (1 << 18), /* port is hot plug capable */
 > 
-> Here's one way this will be used, in a patched bsg that understands
-> large commands.  Complication is the need to copy and hold onto the
-> big command across the duration of the request.
+> Under which conditions is this bit set?
 > 
-> Submit time is fairly clean:
+> The conclusion reached by this patch seems correct, but I am not sure 
+> about the premise...
 > 
-> 	/* buf, len from user request */
-> 	rq = blk_get_request(..);
-> 	rq->cmd_len = len;
-> 	if (len > BLK_MAX_CDB) {
-> 		rq->cmd = kmalloc(len);
-> 		if (rq->cmd == NULL)
-> 			goto out;
-> 	}
-> 	copy_from_user(rq->cmd, buf, len);
+> I was under the impression that AHCI ports were hotplug capable, from 
+> libata's point of view, simply due to the fundamentals of SATA.
+
+The HPCP bit is set by the BIOS to indicate policy for that port.
+For example, a server may set this bit to indicate that there are
+removable drive bays on it.  A laptop may not set this bit because nobody
+is going to open it up and yank out the cable while it's running.  It is
+safe to use this bit to figure out whether or not it's worth checking
+for hot plug events on that port in practice, although you are right it
+is physically possible for us to still do hot plug if we just pop open
+the machine and go for it.
+
 > 
-> Completion time needs to know when to free rq->cmd:
 > 
-> 	if (rq->cmd_len > BLK_MAX_CDB)
-> 		kfree(rq->cmd);
-> 	blk_put_request(rq);
 > 
-> Could use (rq->cmd != rq->__cmd) instead, but nothing had better
-> ever touch rq->cmd_len.
+> Thinking about the bigger pictures, powering off the phy is something we 
+> want to do in a lot more cases than this, but there is a stumbling 
+> block:  we wander into the realm of policy.
 > 
-> I don't think the helper rq_set_cmd() will be very useful, as the
-> caller (bsg) must think about allocation of the command buffer if it
-> is big.
+> For most users most of the time, empty SATA ports are needlessly 
+> powered.  The problem is that, at any given moment, a device may be 
+> hot-plugged, so we must be ready for that.  We need some way for the 
+> user to let the driver know that they will not be hotplugging anything 
+> anytime soon, permitting power savings to be enabled.
+> 
+> A compromise solution that avoids adding a userspace "knob" has also 
+> been proposed (by Tejun, I think?):  power up the phy every N seconds, 
+> check for device, power down phy if nothing.  That should provide some 
+> power savings, though not as much as with a "knob" switched to "hotplug: 
+> off"
+> 
+> 	Jeff
+> 
+>
 
-Yeah, I think so. If you need large command support, you need to know
-how to handle it for now. Now only bsg supports large commands. So I
-guess that nobody complains about the current interface.
-
-
-> One option would be to handle allocation/freeing of the big command
-> in rq_set_... functions, but I don't think you want to constrain the
-> interface like that.
-
-Or, you can change blk_get_request to take the command length
-argument. But I don't think that such is the right approach.
-
-
-> Boaz's concern about big rq->cmd_len still worries me, although I
-> think this approach is better and worth solving bugs in drivers as
-> they arise.  It only matters in the case that someone adds, say, a
-> bsg interface to all block devices though.  The queuecommand of ub
-> shows a good example of how this will break.
-
-Yes, a bsg hook will need to handle large commands. I don't see any
-problem about it. All a hook needs to do is just looking at the legnth
-and dropping or executing the command. And of course, we are unlikely
-to add a bsg device to all the block devices.
-
-As I said, if we want to govern the command length in a common place,
-we can have the limit of the command length in request queues. It's
-clear than an implicit checking with two lengths, cmd_len and
-ext_cdb_len.
-
-I thought about adding the code to check the command length in UB. But
-I thought that we were unlikely to create bsg devices for ub. Common
-people use USB_STORAGE rather than UB, I guess.
-
-
-> In sum, this is a cleaner approach, and a bit easier for callers
-> with long commands to deal with.  And you could get rid of the
-> trivial helper.
-
-Yeah, it's a cleaner design, that's main point, I think.
-
-
-BTW, have you had a chance to try the bsg patches to fix the problems
-that you reported? I think that Mike and I analyzed the problem
-correctly and the patches works for me, but it would be nice if you
-can confirm that they also work for you.
-
-Thanks,
+I think that for the common case - we should use HPCP to determine if
+the suggested use of the port is for hot plug.  I can see your point
+about wanting to give the user the option to just disregard the intended
+use of the port and do what they want, but I say we don't make that
+the default behavior.  And, I don't like the idea of adding another
+wakeup in the driver to do polling - seems like 99% of users are
+going to be just fine with a knob - and that they should only
+have to use the knob to override the default (or how bout a 
+module param?).  I don't think we should compromise power for a 
+feature that most people are unlikely to use (if HPCP is not set).
+ 
