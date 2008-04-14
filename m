@@ -1,59 +1,54 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: [PATCH] Au1200: IDE driver build fix
-Date: Mon, 14 Apr 2008 23:03:04 +0400
-Message-ID: <200804142303.04661.sshtylyov@ru.mvista.com>
+From: Adrian Bunk <bunk@kernel.org>
+Subject: [2.6 patch] xtensa: don't offer ATA
+Date: Mon, 14 Apr 2008 22:55:21 +0300
+Message-ID: <20080414195521.GB26885@cs181133002.pp.htv.fi>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-mips-bounce@linux-mips.org>
+Content-Type: text/plain; charset=utf-8
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from smtp6.pp.htv.fi ([213.243.153.40]:38664 "EHLO smtp6.pp.htv.fi"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753130AbYDNT41 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 14 Apr 2008 15:56:27 -0400
 Content-Disposition: inline
-Sender: linux-mips-bounce@linux-mips.org
-Errors-to: linux-mips-bounce@linux-mips.org
-To: bzolnier@gmail.com
-Cc: linux-ide@vger.kernel.org, linux-mips@linux-mips.org
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: chris@zankel.net, jgarzik@pobox.com
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-The driver fails to compile with CONFIG_BLK_DEV_IDE_AU1XXX_MDMA2_DBDMA enabled:
+Trying to build libata for xtensa fails with the following error:
 
-drivers/ide/mips/au1xxx-ide.c: In function `auide_build_dmatable':
-drivers/ide/mips/au1xxx-ide.c:256: error: implicit declaration of function
-`sg_virt'
-drivers/ide/mips/au1xxx-ide.c:275: error: implicit declaration of function
-`sg_next'
-drivers/ide/mips/au1xxx-ide.c:275: warning: assignment makes pointer from
-integer without a cast
+<--  snip  -->
 
-Fix this by including <linux/scatterlist.h>. While at it, remove the #include's
-without which the driver happily builds.
+...
+  CC [M]  drivers/ata/libata-core.o
+/home/bunk/linux/kernel-2.6/git/linux-2.6/drivers/ata/libata-core.c: In function 'ata_devchk':
+/home/bunk/linux/kernel-2.6/git/linux-2.6/drivers/ata/libata-core.c:1034: error: implicit declaration of function 'iowrite8'
+/home/bunk/linux/kernel-2.6/git/linux-2.6/drivers/ata/libata-core.c:1043: error: implicit declaration of function 'ioread8'
+/home/bunk/linux/kernel-2.6/git/linux-2.6/drivers/ata/libata-core.c: In function 'ata_data_xfer':
+/home/bunk/linux/kernel-2.6/git/linux-2.6/drivers/ata/libata-core.c:5027: error: implicit declaration of function 'ioread16_rep'
+/home/bunk/linux/kernel-2.6/git/linux-2.6/drivers/ata/libata-core.c:5029: error: implicit declaration of function 'iowrite16_rep'
+/home/bunk/linux/kernel-2.6/git/linux-2.6/drivers/ata/libata-core.c:5037: error: implicit declaration of function 'ioread16'
+/home/bunk/linux/kernel-2.6/git/linux-2.6/drivers/ata/libata-core.c:5041: error: implicit declaration of function 'iowrite16'
+/home/bunk/linux/kernel-2.6/git/linux-2.6/drivers/ata/libata-core.c: In function 'ata_wait_register':
+/home/bunk/linux/kernel-2.6/git/linux-2.6/drivers/ata/libata-core.c:7700: error: implicit declaration of function 'ioread32'
+make[3]: *** [drivers/ata/libata-core.o] Error 1
 
-Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+<--  snip  -->
 
- drivers/ide/mips/au1xxx-ide.c |    9 +--------
- 1 files changed, 1 insertion(+), 8 deletions(-)
+Signed-off-by: Adrian Bunk <bunk@kernel.org>
 
-Index: linux-2.6/drivers/ide/mips/au1xxx-ide.c
-===================================================================
---- linux-2.6.orig/drivers/ide/mips/au1xxx-ide.c
-+++ linux-2.6/drivers/ide/mips/au1xxx-ide.c
-@@ -32,19 +32,12 @@
- #include <linux/kernel.h>
- #include <linux/delay.h>
- #include <linux/platform_device.h>
--
- #include <linux/init.h>
- #include <linux/ide.h>
--#include <linux/sysdev.h>
--
--#include <linux/dma-mapping.h>
-+#include <linux/scatterlist.h>
- 
--#include "ide-timing.h"
--
--#include <asm/io.h>
- #include <asm/mach-au1x00/au1xxx.h>
- #include <asm/mach-au1x00/au1xxx_dbdma.h>
--
- #include <asm/mach-au1x00/au1xxx_ide.h>
- 
- #define DRV_NAME	"au1200-ide"
+---
+aa579e7ab065e41a9d1e27e1f4b7af6b0508018c diff --git a/drivers/ata/Kconfig b/drivers/ata/Kconfig
+index 25aba69..f34e9d1 100644
+--- a/drivers/ata/Kconfig
++++ b/drivers/ata/Kconfig
+@@ -6,7 +6,7 @@ menuconfig ATA
+ 	tristate "Serial ATA (prod) and Parallel ATA (experimental) drivers"
+ 	depends on HAS_IOMEM
+ 	depends on BLOCK
+-	depends on !(M32R || M68K) || BROKEN
++	depends on !(M32R || M68K || XTENSA) || BROKEN
+ 	depends on !SUN4 || BROKEN
+ 	select SCSI
+ 	---help---
+
