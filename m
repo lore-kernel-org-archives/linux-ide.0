@@ -1,54 +1,79 @@
-From: Adrian Bunk <bunk@kernel.org>
-Subject: [2.6 patch] xtensa: don't offer ATA
-Date: Mon, 14 Apr 2008 22:55:21 +0300
-Message-ID: <20080414195521.GB26885@cs181133002.pp.htv.fi>
+From: Mark Lord <liml@rtr.ca>
+Subject: sata_mv & pmp support
+Date: Mon, 14 Apr 2008 16:52:57 -0400
+Message-ID: <4803C429.6070201@rtr.ca>
+References: <47FA4AFF.2010209@gmail.com> <48003C04.4040508@garzik.org> <48023462.1050305@rtr.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp6.pp.htv.fi ([213.243.153.40]:38664 "EHLO smtp6.pp.htv.fi"
+Received: from rtr.ca ([76.10.145.34]:3960 "EHLO mail.rtr.ca"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753130AbYDNT41 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 14 Apr 2008 15:56:27 -0400
-Content-Disposition: inline
+	id S1753471AbYDNUw7 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 14 Apr 2008 16:52:59 -0400
+In-Reply-To: <48023462.1050305@rtr.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: chris@zankel.net, jgarzik@pobox.com
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: Jeff Garzik <jeff@garzik.org>, IDE/ATA development list <linux-ide@vger.kernel.org>
 
-Trying to build libata for xtensa fails with the following error:
+> Tejun Heo wrote:
+>Currently, SATA softresets should do link onlineness check before
+>actually performing SRST protocol but it doesn't really belong to
+>softreset.
+>
+>This patch moves onlineness check in softreset to ata_eh_reset() and
+>ata_eh_followup_srst_needed() to clean up code and help future sata_mv
+>changes which need clear separation between SCR and TF accesses. 
 
-<--  snip  -->
+Jeff Garzik wrote:
+>Mark, let us know how we stand WRT sata_mv PMP needs, this should help.
+ 
+Mark Lord wrote:
+> I plan to spend Monday updating the sata_mv PMP support over
+> to the newly restructured libata helpers from Tejun, so we'll
+> know for sure at that time.  Should be good, though.
 
-...
-  CC [M]  drivers/ata/libata-core.o
-/home/bunk/linux/kernel-2.6/git/linux-2.6/drivers/ata/libata-core.c: In function 'ata_devchk':
-/home/bunk/linux/kernel-2.6/git/linux-2.6/drivers/ata/libata-core.c:1034: error: implicit declaration of function 'iowrite8'
-/home/bunk/linux/kernel-2.6/git/linux-2.6/drivers/ata/libata-core.c:1043: error: implicit declaration of function 'ioread8'
-/home/bunk/linux/kernel-2.6/git/linux-2.6/drivers/ata/libata-core.c: In function 'ata_data_xfer':
-/home/bunk/linux/kernel-2.6/git/linux-2.6/drivers/ata/libata-core.c:5027: error: implicit declaration of function 'ioread16_rep'
-/home/bunk/linux/kernel-2.6/git/linux-2.6/drivers/ata/libata-core.c:5029: error: implicit declaration of function 'iowrite16_rep'
-/home/bunk/linux/kernel-2.6/git/linux-2.6/drivers/ata/libata-core.c:5037: error: implicit declaration of function 'ioread16'
-/home/bunk/linux/kernel-2.6/git/linux-2.6/drivers/ata/libata-core.c:5041: error: implicit declaration of function 'iowrite16'
-/home/bunk/linux/kernel-2.6/git/linux-2.6/drivers/ata/libata-core.c: In function 'ata_wait_register':
-/home/bunk/linux/kernel-2.6/git/linux-2.6/drivers/ata/libata-core.c:7700: error: implicit declaration of function 'ioread32'
-make[3]: *** [drivers/ata/libata-core.o] Error 1
+Well, I've spent much of the day porting to the new interfaces,
+and then trying to get things working again.
 
-<--  snip  -->
+One port multiplier card turned out to be totally dead.
+It was never found (today) by libata, and got quite hot for some reason.
+Since it is probably now toast, I've set it aside.
 
-Signed-off-by: Adrian Bunk <bunk@kernel.org>
+The other port multiplier here is different, and was not used
+in the first round of tests.  So far, it gets detected by libata,
+but I'm temporarily stuck on the old issue of libata not finding
+any of the connected drives.  So I probably don't have the myriad
+of pre/hard/soft/pmp/post reset handlers configured just right yet.
 
----
-aa579e7ab065e41a9d1e27e1f4b7af6b0508018c diff --git a/drivers/ata/Kconfig b/drivers/ata/Kconfig
-index 25aba69..f34e9d1 100644
---- a/drivers/ata/Kconfig
-+++ b/drivers/ata/Kconfig
-@@ -6,7 +6,7 @@ menuconfig ATA
- 	tristate "Serial ATA (prod) and Parallel ATA (experimental) drivers"
- 	depends on HAS_IOMEM
- 	depends on BLOCK
--	depends on !(M32R || M68K) || BROKEN
-+	depends on !(M32R || M68K || XTENSA) || BROKEN
- 	depends on !SUN4 || BROKEN
- 	select SCSI
- 	---help---
+To establish some kind of baseline, I'm going to reimplement the
+pmp_read/write hooks I used to have, and see if things come alive
+again with those.  And then figure out again what has to change
+to get rid of them.
+
+
+Tejun:
+
+Do you have any recommendations on exactly what should be in
+mv_pmp_softreset() and mv_softreset() and mv_hardreset() under this scheme?
+
+My basic attempt was to try this:
+
+No prereset or postreset handlers of any kind.
+
+mv_hardreset():  as in the hardreset rework patch (yet to be picked up
+by Jeff), plus a call to mv_select_pmp(link->ap, SATA_PMP_CTRL_PORT)
+before the sata_link_hardreset() wrapper loop.
+
+mv_softreset():
+First do mv_select_pmp(link->ap, SATA_PMP_CTRL_PORT),
+and then call ata_sff_softreset().
+
+mv_pmp_softreset():
+First do mv_select_pmp(link->ap, link->pmp),
+and then call ata_sff_softreset().
+
+Resets of the pmp ports always fail with SRST failed (errno=-16).
+
 
