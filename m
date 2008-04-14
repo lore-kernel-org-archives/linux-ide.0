@@ -1,91 +1,88 @@
-From: "Gabor FUNK" <FUNK.Gabor@hunetkft.hu>
-Subject: Re: sata_sil24 stability and performance
-Date: Mon, 14 Apr 2008 12:55:43 +0200
-Message-ID: <01ee01c89e1e$4c488e10$4d0fa8c0@M2007>
-References: <20080306065513.GE7150@denix.org> <47CF9880.4080900@gmail.com> <20080315214347.GA1511@denix.org> <47DDE0ED.6040304@rtr.ca> <20080318001513.GA2389@denix.org> <47DF4070.3040507@gmail.com> <20080318045316.GA3959@denix.org> <47DF63C1.5090205@gmail.com> <20080320223736.GA19940@denix.org> <47E2FECB.3080602@gmail.com> <20080414011913.GA19751@denix.org>
-Mime-Version: 1.0
-Content-Type: text/plain;
-	format=flowed;
-	charset="ISO-8859-1";
-	reply-type=original
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ns1.huweb.hu ([62.112.193.37]:49338 "EHLO ns1.huweb.hu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752282AbYDNK5j (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 14 Apr 2008 06:57:39 -0400
-Sender: linux-ide-owner@vger.kernel.org
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Subject: [PATCH 4/4] block: add large command support
+Date: Mon, 14 Apr 2008 19:50:37 +0900
+Message-ID: <1208170266-1676-5-git-send-email-fujita.tomonori@lab.ntt.co.jp>
+References: <20080414010112W.tomof@acm.org>
+ <1208170266-1676-1-git-send-email-fujita.tomonori@lab.ntt.co.jp>
+ <1208170266-1676-2-git-send-email-fujita.tomonori@lab.ntt.co.jp>
+ <1208170266-1676-3-git-send-email-fujita.tomonori@lab.ntt.co.jp>
+ <1208170266-1676-4-git-send-email-fujita.tomonori@lab.ntt.co.jp>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <1208170266-1676-4-git-send-email-fujita.tomonori@lab.ntt.co.jp>
+Sender: linux-scsi-owner@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: bharrosh@panasas.com, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Jens Axboe <jens.axboe@oracle.com>, linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Denys Dmytriyenko <denis@denix.org>, Tejun Heo <htejun@gmail.com>
-Cc: Mark Lord <liml@rtr.ca>, linux-ide@vger.kernel.org, Jim Paris <jim@jtan.com>, Richard Bland <r.bland@espo.org>
 
-Since you brought it up, several days ago I got informed,
-that the "original problem" (exception/hard resetting port)
-could be related to kernel option IRQBALANCE.
-See more at:
-http://forums.gentoo.org:80/viewtopic-t-641372-highlight-.html
+This patch changes rq->cmd from the static array to a pointer to
+support large commands.
 
-As Dmytri and me as well both replaced the MB finally which
-now runs fine, we will probably not going to "play" again with
-this, but if anyone runs into this in the near future, this can be a
-thing to try. I can imagine that this could've helped, as in my
-case failing was purely limited one controller [*4 disks] at the
-time, eg. no other disk on other controller, nor just only one
-or some disk on a controller, but all disks on only 1 controller.
+We rarely handle large commands. So for optimization, a struct request
+still has a static array for a command. rq_init sets rq->cmd pointer
+to the static array.
 
-And if anyone have any theoretical imagination why it could be
-the cause - and where to fix :-] - don't hesitate to write...
+Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Cc: Jens Axboe <jens.axboe@oracle.com>
+---
+ block/blk-core.c       |    1 +
+ drivers/ide/ide-io.c   |    1 +
+ include/linux/blkdev.h |   12 ++++++++++--
+ 3 files changed, 12 insertions(+), 2 deletions(-)
 
-Cheers,
-
-G.
-
-
-
------ Original Message ----- 
-From: "Denys Dmytriyenko" <denis@denix.org>
-To: "Tejun Heo" <htejun@gmail.com>
-Cc: "Mark Lord" <liml@rtr.ca>; "Gabor FUNK" <FUNK.Gabor@hunetkft.hu>; 
-<linux-ide@vger.kernel.org>; "Jim Paris" <jim@jtan.com>
-Sent: Monday, April 14, 2008 3:19 AM
-Subject: Re: sata_sil24 stability and performance
-
-
-> Tejun et al,
->
-> I wanted to thank you all for the support you provided. I ended up 
-> replacing
-> MoBo+CPU to Intel based ones (and previously mentioned single-rail PSU) 
-> and
-> now everything works rock solid for over a week now! Thanks again.
->
->> > BTW, issuing "smartctl -a" on a drive in standby, throws this 
->> > exception:
->> >
->> > Mar 20 18:16:53 [kernel] ata10.00: exception Emask 0x0 SAct 0x0 SErr 
->> > 0x0 action 0x2 frozen
->> > Mar 20 18:16:53 [kernel] ata10.00: cmd 
->> > b0/da:00:00:4f:c2/00:00:00:00:00/00 tag 0 cdb 0x0 data 0
->> > Mar 20 18:16:53 [kernel]          res 
->> > 40/00:01:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
->> > Mar 20 18:16:53 [kernel] ata10: soft resetting port
->> > Mar 20 18:16:54 [kernel] ata10: SATA link up 3.0 Gbps (SStatus 123 
->> > SControl 300)
->> > Mar 20 18:16:54 [kernel] ata10.00: configured for UDMA/100
->> > Mar 20 18:16:54 [kernel] ata10: EH complete
->> > Mar 20 18:16:54 [kernel] sd 9:0:0:0: [sdj] 976773168 512-byte hardware 
->> > sectors (500108 MB)
->> > Mar 20 18:16:54 [kernel] sd 9:0:0:0: [sdj] Write Protect is off
->> > Mar 20 18:16:54 [kernel] sd 9:0:0:0: [sdj] Mode Sense: 00 3a 00 00
->> > Mar 20 18:16:54 [kernel] sd 9:0:0:0: [sdj] Write cache: enabled, read 
->> > cache: enabled, doesn't support DPO or FUA
->>
->> Which kernel version and how did you put the drive into sleep?
->
-> This timeout exception is still there - 2.6.24.4, drive goes to sleep on
-> timeout of 30 minutes (hdpram -S 241)
->
-> -- 
-> Denys
-> 
+diff --git a/block/blk-core.c b/block/blk-core.c
+index 6669238..6f0968f 100644
+--- a/block/blk-core.c
++++ b/block/blk-core.c
+@@ -132,6 +132,7 @@ void rq_init(struct request_queue *q, struct request *rq)
+ 	rq->errors = 0;
+ 	rq->ref_count = 1;
+ 	rq->cmd_len = 0;
++	rq->cmd = rq->__cmd;
+ 	memset(rq->cmd, 0, BLK_MAX_CDB);
+ 	rq->data_len = 0;
+ 	rq->extra_len = 0;
+diff --git a/drivers/ide/ide-io.c b/drivers/ide/ide-io.c
+index 7153796..bac5ea1 100644
+--- a/drivers/ide/ide-io.c
++++ b/drivers/ide/ide-io.c
+@@ -1595,6 +1595,7 @@ void ide_init_drive_cmd (struct request *rq)
+ {
+ 	memset(rq, 0, sizeof(*rq));
+ 	rq->ref_count = 1;
++	rq->cmd = rq->__cmd;
+ }
+ 
+ EXPORT_SYMBOL(ide_init_drive_cmd);
+diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
+index b3a58ad..5710ae4 100644
+--- a/include/linux/blkdev.h
++++ b/include/linux/blkdev.h
+@@ -215,8 +215,9 @@ struct request {
+ 	/*
+ 	 * when request is used as a packet command carrier
+ 	 */
+-	unsigned int cmd_len;
+-	unsigned char cmd[BLK_MAX_CDB];
++	unsigned short cmd_len;
++	unsigned char __cmd[BLK_MAX_CDB];
++	unsigned char *cmd;
+ 
+ 	unsigned int data_len;
+ 	unsigned int extra_len;	/* length of alignment and padding */
+@@ -812,6 +813,13 @@ static inline void put_dev_sector(Sector p)
+ 	page_cache_release(p.v);
+ }
+ 
++static inline void rq_set_cmd(struct request *rq, unsigned char *cmd,
++			      unsigned short cmd_len)
++{
++	rq->cmd = cmd;
++	rq->cmd_len = cmd_len;
++}
++
+ struct work_struct;
+ int kblockd_schedule_work(struct work_struct *work);
+ void kblockd_flush_work(struct work_struct *work);
+-- 
+1.5.4.2
 
