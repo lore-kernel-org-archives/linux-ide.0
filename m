@@ -1,87 +1,218 @@
-From: Volker Armin Hemmann <volker.armin.hemmann@tu-clausthal.de>
-Subject: Re: 2.6.24.X: SATA/AHCI related boot delay. - not with 2.6.24.3
-Date: Mon, 14 Apr 2008 23:12:32 +0200
-Message-ID: <200804142312.32991.volker.armin.hemmann@tu-clausthal.de>
-References: <200803091922.33083.volker.armin.hemmann@tu-clausthal.de> <200804140841.32477.volker.armin.hemmann@tu-clausthal.de> <15F501D1A78BD343BE8F4D8DB854566B26C12206@hkemmail01.nvidia.com>
+From: devzero@web.de
+Subject: Re: sata io freeze, 2.6.18 and also 2.6.24 [the real culprit]
+Date: Tue, 15 Apr 2008 00:03:39 +0200
+Message-ID: <238986828@web.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: text/plain; charset=iso-8859-15
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hades.rz.tu-clausthal.de ([139.174.2.20]:54568 "EHLO
-	hades.rz.tu-clausthal.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759172AbYDNVMh convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 14 Apr 2008 17:12:37 -0400
-In-Reply-To: <15F501D1A78BD343BE8F4D8DB854566B26C12206@hkemmail01.nvidia.com>
-Content-Disposition: inline
+Received: from fmmailgate04.web.de ([217.72.192.242]:37016 "EHLO
+	fmmailgate04.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751038AbYDNWDl convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 14 Apr 2008 18:03:41 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Peer Chen <pchen@nvidia.com>
-Cc: Jeff Garzik <jeff@garzik.org>, Tejun Heo <htejun@gmail.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Kuan Luo <kluo@nvidia.com>
+To: Luis Sousa <ls.luis_sousa@yahoo.com.br>
+Cc: jeff@garzik.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Hi,
+so - you told, you have your disk attached to this controller:
 
-On Montag, 14. April 2008, Peer Chen wrote:
-> Volker,
-> I mean add msleep(x) function between writel(HOST_AHCI_EN, mmio + HOS=
-T_CTL)
-> and readl(mmio + HOST_CTL) cause we ever met a bug that writing data =
-to the
-> AHCI BAR5 but need a delay to get correct read back value. But forget=
- it,
-> looks like it's not the same case here. Which mode do you set(ahci or
-> non-raid) when you encountered the issue that the AHCI_EN bit failed =
-to
-> set? I found we have workaround for AHCI_EN bit setting in our Bios
-> programming guide for AHCI mode.
+00:0f.0 RAID bus controller: VIA Technologies, Inc. VIA VT6420 SATA RAI=
+D Controller (rev 80)
+	Subsystem: Micro-Star International Co., Ltd. Unknown device 0430
+	Flags: bus master, medium devsel, latency 32, IRQ 16
+	I/O ports at ec00 [size=3D8]
+	I/O ports at e800 [size=3D4]
+	I/O ports at e400 [size=3D8]
+	I/O ports at e000 [size=3D4]
+	I/O ports at dc00 [size=3D16]
+	I/O ports at d800 [size=3D256]
+	Capabilities: <access denied>
 
-you mean this?
+and use sata_via module - and your system works stable with nosmp, but =
+freezes very soon on heavy i/o with smp. disabling dma makes no differe=
+nce.
 
-[    0.363828] ------------[ cut here ]------------
-[    0.363828] WARNING: at drivers/ata/ahci.c:645 ahci_init_one+0x190/0=
-xa3a()
-[    0.363828] Modules linked in:
-[    0.363828] Pid: 1, comm: swapper Not tainted 2.6.25-rc8 #2
-[    0.363828]
-[    0.363828] Call Trace:
-[    0.363828]  [<ffffffff8022c5a5>] warn_on_slowpath+0x51/0x63
-[    0.363832]  [<ffffffff80220061>] __ioremap+0x8/0x197
-[    0.363872]  [<ffffffff803921f4>] pci_conf1_read+0xb2/0xbd
-[    0.363911]  [<ffffffff802f3316>] pcim_iomap_release+0x0/0x2c
-[    0.363950]  [<ffffffff802f3316>] pcim_iomap_release+0x0/0x2c
-[    0.363989]  [<ffffffff803471a9>] devres_find+0x4b/0x65
-[    0.364028]  [<ffffffff8036e4cd>] ahci_init_one+0x190/0xa3a
-[    0.364067]  [<ffffffff802af837>] sysfs_addrm_finish+0x1d/0x209
-[    0.364107]  [<ffffffff80284014>] ifind+0x34/0x8d
-[    0.364145]  [<ffffffff802af54e>] sysfs_find_dirent+0x1b/0x2f
-[    0.364184]  [<ffffffff802eb75d>] ida_get_new_above+0xf0/0x180
-[    0.364223]  [<ffffffff802af837>] sysfs_addrm_finish+0x1d/0x209
-[    0.364263]  [<ffffffff802b0378>] sysfs_create_link+0xb6/0x102
-[    0.364303]  [<ffffffff802f8664>] pci_device_probe+0x4c/0x72
-[    0.364342]  [<ffffffff80344c48>] driver_probe_device+0xb5/0x132
-[    0.364381]  [<ffffffff80344ddb>] __driver_attach+0x6f/0xaf
-[    0.364419]  [<ffffffff80344d6c>] __driver_attach+0x0/0xaf
-[    0.364458]  [<ffffffff80344d6c>] __driver_attach+0x0/0xaf
-[    0.364498]  [<ffffffff8034400a>] bus_for_each_dev+0x44/0x6f
-[    0.364538]  [<ffffffff802a9b57>] proc_match+0x23/0x2d
-[    0.364576]  [<ffffffff80344876>] bus_add_driver+0xae/0x1f4
-[    0.364614]  [<ffffffff8034500a>] driver_register+0x59/0xce
-[    0.364654]  [<ffffffff802f88a5>] __pci_register_driver+0x4a/0x7d
-[    0.364701]  [<ffffffff804e56b8>] kernel_init+0x14f/0x2b9
-[    0.364740]  [<ffffffff8020be98>] child_rip+0xa/0x12
-[    0.364779]  [<ffffffff804e5569>] kernel_init+0x0/0x2b9
-[    0.364817]  [<ffffffff8020be8e>] child_rip+0x0/0x12
-[    0.364854]
-[    0.364891] ---[ end trace ea9d541113ecaf1e ]---
+correct ?
 
-this happened with AHCI mode set in bios, pci=3Dnomsi as kernel boot pa=
-rameter=20
-and kernel 2.6.25-rc8.
+then i assume this could be an smp issue, probably a bug in sata_via an=
+d may need further investigation.
 
-Something similar looking happened without pci=3Dnomsi, but in that cas=
-e I could=20
-not scroll back to even make a picture because of the kernel panic (roo=
-tfs=20
-not found).
+there seem no noticeable changes in that driver since 2.6.24 - but mayb=
+e it`s worth trying 2.6.25-rc9 to see if it behaves different?
+absolutely nothing in dmesg on freeze ?=20
+maybe you could try catching some message with attaching serial console=
+?
+how reliably can you crash that box with lots of i/o ? just random cras=
+hes or after a certain amount of data written/read ?
+could you try if just reading from the raw blockdevice makes a differnc=
+e ? (dd if=3D/dev/sda of=3D/dev/zero)
 
-Gl=FCck Auf
-Volker
+
+
+
+> -----Urspr=FCngliche Nachricht-----
+> Von: "Luis Sousa" <ls.luis_sousa@yahoo.com.br>
+> Gesendet: 14.04.08 12:14:26
+> An: devzero@web.de
+> CC: linux-kernel@vger.kernel.org
+> Betreff: Re: sata io freeze, 2.6.18 and also 2.6.24 [the real culprit=
+]
+
+
+>=20
+> Hello,
+>=20
+> I did as planned, and I dare to say now, with
+> relative certainty, that the reason I have had all
+> these instabilities, including application crashes,
+> sneaky corrupt backups, and the dreaded freezes
+> every other day was SMP and HyperThreading not working
+> properly. Booting with nosmp gives me a stable system.
+> Booting only with the sata-related arguments had
+> the system freeze overnight.
+>=20
+> Sincerely,
+> --
+> Luis Sousa
+>=20
+> --- devzero@web.de escreveu:
+>=20
+> > hi luis,=20
+> >=20
+> > glad that it worked - but let us better call this a possible workar=
+ound, not a solution.
+> >=20
+> > mind that you loose lots of performance with this, because all i/o =
+is handled by the cpu
+> > now.
+> >=20
+> > > If everything goes well, I'll reduce the command line
+> > > in order to narrow the problem further down.
+> >=20
+> > yes, please!
+> >=20
+> > regards
+> > roland
+> >=20
+> >=20
+> > > -----Urspr=FCngliche Nachricht-----
+> > > Von: "Luis Sousa" <ls.luis_sousa@yahoo.com.br>
+> > > Gesendet: 12.04.08 17:34:39
+> > > An: devzero@web.de
+> > > CC: linux-kernel@vger.kernel.org
+> > > Betreff: Re: sata io freeze, 2.6.18 and also 2.6.24 [POSSIBLE SOL=
+UTION]
+> >=20
+> >=20
+> > >=20
+> > > Hello all,
+> > >=20
+> > > Thanks to valuable help from roland, I was able to
+> > > boot with the following options:
+> > >=20
+> > > ``nosmp ide=3Dnodma libata.dma=3D0''
+> > >=20
+> > > after what I ran an agressive stability test for a
+> > > while, with no problem whatsoever. Maybe it's too
+> > > soon to say, but I have a good feeling this time. It
+> > > seems roland figured it out.
+> > >=20
+> > > If everything goes well, I'll reduce the command line
+> > > in order to narrow the problem further down.
+> > >=20
+> > > (and indeed, this is a hyper-threading single core CPU)
+> > >=20
+> > > Sincerely,
+> > > --
+> > > Luis Sousa
+> > >=20
+> > > --- devzero@web.de escreveu:
+> > >=20
+> > > > did you try UP-kernel or tried booting with "nosmp" and does th=
+at make any difference
+> > ?
+> > > >=20
+> > > > >This is a 2-processor CPU:
+> > > > ># cat /proc/cpuinfo=20
+> > > > >processor       : 0
+> > > > >vendor_id       : GenuineIntel
+> > > > >cpu family      : 15
+> > > > >model           : 4
+> > > > >model name      : Intel(R) Pentium(R) 4 CPU 3.00GHz
+> > > >=20
+> > > > most likely this just "appears" as 2-way processor , but i=B4m =
+quite sure this is just
+> > a
+> > > > single-core CPU, but with HyperThreading enabled.
+> > > >=20
+> > > >=20
+> > > > regards
+> > > > roland
+> > > >=20
+> > > >=20
+> > > >=20
+> > > > List:       linux-kernel
+> > > > Subject:    sata io freeze, 2.6.18 and also 2.6.24
+> > > > From:       Luis Sousa <ls.luis_sousa () yahoo ! com ! br>
+> > > > Date:       2008-03-28 22:24:48
+> > > > Message-ID: 739784.81690.qm () web46009 ! mail ! sp1 ! yahoo ! =
+com
+> > > > [Download message RAW]
+> > > >=20
+> > > > Hello,
+> > > >=20
+> > > > I've been having consistent hard system freezes for a
+> > > > long time, every 2 days or so, and finally decided to
+> > > > move to the most recent stable kernel. Unfortunatelly
+> > > > that didn't fix it. The freezes seem to be io-related;
+> > > > they started since I moved my drive to sata. They seem
+> > > > to happen mostly when there's an io-intensive operation,
+> > > > like extracting a big archive; a reboot is needed.
+> > > >=20
+> > > > Nothing ever shows up in the logs.
+> > > >=20
+> > > > I'm using the following drive:
+> > > >=20
+> > > > ATA device, with non-removable media
+> > > >         Model Number:       MAXTOR STM3160215AS                =
+    =20
+> > > >         Serial Number:      6RA2TMJ4
+> > > >         Firmware Revision:  3.AAD  =20
+> > > >=20
+> > > > Linux localhost 2.6.24.4 #4 SMP Fri Mar 28 14:51:50 BRT 2008 i6=
+86 GNU/Linux
+> > > >=20
+> > > > This is a 2-processor CPU:
+> > > >=20
+> > > > # cat /proc/cpuinfo=20
+> > > > processor       : 0
+> > > > vendor_id       : GenuineIntel
+> > > > cpu family      : 15
+> > > > model           : 4
+> > > > model name      : Intel(R) Pentium(R) 4 CPU 3.00GHz
+> > > > stepping        : 9
+> > > > cpu MHz         : 3013.697
+> > > > cache size      : 1024 KB
+> > > >=20
+> > > > (same goes for processor : 1)
+> > > >=20
+> > > > Sincerely,
+> > > > --
+> > > > Luis Sousa
+>=20
+>=20
+>=20
+>       Abra sua conta no Yahoo! Mail, o =FAnico sem limite de espa=E7o=
+ para armazenamento!
+> http://br.mail.yahoo.com/
+>=20
+>=20
+
+
+_______________________________________________________________________=
+__
+In 5 Schritten zur eigenen Homepage. Jetzt Domain sichern und gestalten=
+!=20
+Nur 3,99 EUR/Monat! http://www.maildomain.web.de/?mc=3D021114
+
