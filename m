@@ -1,104 +1,44 @@
-From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: Re: [PATCH 4/4] block: add large command support
-Date: Mon, 14 Apr 2008 21:08:32 +0900
-Message-ID: <20080414210826Y.tomof@acm.org>
-References: <1208170266-1676-4-git-send-email-fujita.tomonori@lab.ntt.co.jp>
-	<1208170266-1676-5-git-send-email-fujita.tomonori@lab.ntt.co.jp>
-	<20080414112919.GF12774@kernel.dk>
+From: Mikael Starvik <mikael.starvik@axis.com>
+Subject: RE: status of ETRAX_IDE?
+Date: Mon, 14 Apr 2008 14:50:19 +0200
+Message-ID: <4BEA3FF3CAA35E408EA55C7BE2E61D050D3FB020@xmail3.se.axis.com>
+References: <20080413183629.GA21204@cs181133002.pp.htv.fi>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mo11.iij4u.or.jp ([210.138.174.79]:36743 "EHLO mo11.iij4u.or.jp"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753261AbYDNMJI (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 14 Apr 2008 08:09:08 -0400
-In-Reply-To: <20080414112919.GF12774@kernel.dk>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1757956AbYDNNCs@vger.kernel.org>
+In-Reply-To: <20080413183629.GA21204@cs181133002.pp.htv.fi>
+Content-Language: en-US
+Sender: linux-kernel-owner@vger.kernel.org
+To: 'Adrian Bunk' <bunk@kernel.org>, "bzolnier@gmail.com" <bzolnier@gmail.com>, Jesper Nilsson <Jesper.Nilsson@axis.com>
+Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 List-Id: linux-ide@vger.kernel.org
-To: jens.axboe@oracle.com
-Cc: fujita.tomonori@lab.ntt.co.jp, linux-scsi@vger.kernel.org, bharrosh@panasas.com, linux-ide@vger.kernel.org
 
-On Mon, 14 Apr 2008 13:29:20 +0200
-Jens Axboe <jens.axboe@oracle.com> wrote:
+You can remove it for now and we will resubmit a new if/when we get around
+to fix it.
 
-> On Mon, Apr 14 2008, FUJITA Tomonori wrote:
-> > This patch changes rq->cmd from the static array to a pointer to
-> > support large commands.
-> > 
-> > We rarely handle large commands. So for optimization, a struct request
-> > still has a static array for a command. rq_init sets rq->cmd pointer
-> > to the static array.
-> > 
-> > Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-> > Cc: Jens Axboe <jens.axboe@oracle.com>
-> > ---
-> >  block/blk-core.c       |    1 +
-> >  drivers/ide/ide-io.c   |    1 +
-> >  include/linux/blkdev.h |   12 ++++++++++--
-> >  3 files changed, 12 insertions(+), 2 deletions(-)
-> > 
-> > diff --git a/block/blk-core.c b/block/blk-core.c
-> > index 6669238..6f0968f 100644
-> > --- a/block/blk-core.c
-> > +++ b/block/blk-core.c
-> > @@ -132,6 +132,7 @@ void rq_init(struct request_queue *q, struct request *rq)
-> >  	rq->errors = 0;
-> >  	rq->ref_count = 1;
-> >  	rq->cmd_len = 0;
-> > +	rq->cmd = rq->__cmd;
-> >  	memset(rq->cmd, 0, BLK_MAX_CDB);
-> >  	rq->data_len = 0;
-> >  	rq->extra_len = 0;
-> > diff --git a/drivers/ide/ide-io.c b/drivers/ide/ide-io.c
-> > index 7153796..bac5ea1 100644
-> > --- a/drivers/ide/ide-io.c
-> > +++ b/drivers/ide/ide-io.c
-> > @@ -1595,6 +1595,7 @@ void ide_init_drive_cmd (struct request *rq)
-> >  {
-> >  	memset(rq, 0, sizeof(*rq));
-> >  	rq->ref_count = 1;
-> > +	rq->cmd = rq->__cmd;
-> >  }
-> >  
-> >  EXPORT_SYMBOL(ide_init_drive_cmd);
-> > diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
-> > index b3a58ad..5710ae4 100644
-> > --- a/include/linux/blkdev.h
-> > +++ b/include/linux/blkdev.h
-> > @@ -215,8 +215,9 @@ struct request {
-> >  	/*
-> >  	 * when request is used as a packet command carrier
-> >  	 */
-> > -	unsigned int cmd_len;
-> > -	unsigned char cmd[BLK_MAX_CDB];
-> > +	unsigned short cmd_len;
-> > +	unsigned char __cmd[BLK_MAX_CDB];
-> > +	unsigned char *cmd;
-> >  
-> >  	unsigned int data_len;
-> >  	unsigned int extra_len;	/* length of alignment and padding */
-> > @@ -812,6 +813,13 @@ static inline void put_dev_sector(Sector p)
-> >  	page_cache_release(p.v);
-> >  }
-> >  
-> > +static inline void rq_set_cmd(struct request *rq, unsigned char *cmd,
-> > +			      unsigned short cmd_len)
-> > +{
-> > +	rq->cmd = cmd;
-> > +	rq->cmd_len = cmd_len;
-> > +}
-> > +
-> 
-> This is 100% identical to what I suggested be done instead, so of course
-> I agree with this.
+/Mikael
 
-Yeah, I think that it's the most straightforward. We have one value to
-represent one item, the length of command. We can access to rq->cmd
-and rq->cmd_len as before.
+-----Original Message-----
+From: Adrian Bunk [mailto:bunk@kernel.org]
+Sent: Sunday, April 13, 2008 8:36 PM
+To: bzolnier@gmail.com; Mikael Starvik; Jesper Nilsson
+Cc: dev-etrax; linux-ide@vger.kernel.org; linux-kernel@vger.kernel.org
+Subject: status of ETRAX_IDE?
 
-I don't see how it's is dangerous to have a single value to represent
-the length of command though changing rq->cmd from the static array to
-a pointer to support large commands is tricky. It's possible that I
-overlooked something that uses the block layer in an uncommon way as
-ide does.
+
+ETRAX_IDE was marked as broken last year with the comment
+"it doesn't even compile currently".
+
+Is there some not yet merged update pending that will make it usable
+again or should I send a patch to remove it?
+
+cu
+Adrian
+
+--
+
+       "Is there not promise of rain?" Ling Tan asked suddenly out
+        of the darkness. There had been need of rain for many days.
+       "Only a promise," Lao Er said.
+                                       Pearl S. Buck - Dragon Seed
