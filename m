@@ -1,61 +1,59 @@
-From: Adrian Bunk <bunk@kernel.org>
-Subject: [2.6 patch] libata-acpi.c: remove unneeded #if's
-Date: Mon, 14 Apr 2008 21:40:40 +0300
-Message-ID: <20080414184040.GC6695@cs181133002.pp.htv.fi>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: [PATCH] Au1200: IDE driver build fix
+Date: Mon, 14 Apr 2008 23:03:04 +0400
+Message-ID: <200804142303.04661.sshtylyov@ru.mvista.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp6.pp.htv.fi ([213.243.153.40]:42842 "EHLO smtp6.pp.htv.fi"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759114AbYDNSpo (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 14 Apr 2008 14:45:44 -0400
+Content-Type: text/plain;
+  charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-mips-bounce@linux-mips.org>
 Content-Disposition: inline
-Sender: linux-ide-owner@vger.kernel.org
+Sender: linux-mips-bounce@linux-mips.org
+Errors-to: linux-mips-bounce@linux-mips.org
+To: bzolnier@gmail.com
+Cc: linux-ide@vger.kernel.org, linux-mips@linux-mips.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>, Jeff Garzik <jeff@garzik.org>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-These #if's are unneeded since they:
-- did anyway not handle the CONFIG_ACPI_DOCK_MODULE case correctly and
-- this is already handled in include/acpi/acpi_drivers.h and
-- it's now correctly handled in kconfig.
+The driver fails to compile with CONFIG_BLK_DEV_IDE_AU1XXX_MDMA2_DBDMA enabled:
 
-Signed-off-by: Adrian Bunk <bunk@kernel.org>
+drivers/ide/mips/au1xxx-ide.c: In function `auide_build_dmatable':
+drivers/ide/mips/au1xxx-ide.c:256: error: implicit declaration of function
+`sg_virt'
+drivers/ide/mips/au1xxx-ide.c:275: error: implicit declaration of function
+`sg_next'
+drivers/ide/mips/au1xxx-ide.c:275: warning: assignment makes pointer from
+integer without a cast
 
----
+Fix this by including <linux/scatterlist.h>. While at it, remove the #include's
+without which the driver happily builds.
 
-This patch has been sent on:
-- 31 Mar 2008
+Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
 
- drivers/ata/libata-acpi.c |    4 ----
- 1 file changed, 4 deletions(-)
+ drivers/ide/mips/au1xxx-ide.c |    9 +--------
+ 1 files changed, 1 insertion(+), 8 deletions(-)
 
-2a7326b50cd80e6570803d4efb7bc15e029e61e3 diff --git a/drivers/ata/libata-acpi.c b/drivers/ata/libata-acpi.c
-index bf98a56..1db912e 100644
---- a/drivers/ata/libata-acpi.c
-+++ b/drivers/ata/libata-acpi.c
-@@ -227,11 +227,9 @@ void ata_acpi_associate(struct ata_host *host)
- 			acpi_install_notify_handler(ap->acpi_handle,
- 						    ACPI_SYSTEM_NOTIFY,
- 						    ata_acpi_ap_notify, ap);
--#if defined(CONFIG_ACPI_DOCK) || defined(CONFIG_ACPI_DOCK_MODULE)
- 			/* we might be on a docking station */
- 			register_hotplug_dock_device(ap->acpi_handle,
- 						     ata_acpi_ap_notify, ap);
--#endif
- 		}
+Index: linux-2.6/drivers/ide/mips/au1xxx-ide.c
+===================================================================
+--- linux-2.6.orig/drivers/ide/mips/au1xxx-ide.c
++++ linux-2.6/drivers/ide/mips/au1xxx-ide.c
+@@ -32,19 +32,12 @@
+ #include <linux/kernel.h>
+ #include <linux/delay.h>
+ #include <linux/platform_device.h>
+-
+ #include <linux/init.h>
+ #include <linux/ide.h>
+-#include <linux/sysdev.h>
+-
+-#include <linux/dma-mapping.h>
++#include <linux/scatterlist.h>
  
- 		for (j = 0; j < ata_link_max_devices(&ap->link); j++) {
-@@ -241,11 +239,9 @@ void ata_acpi_associate(struct ata_host *host)
- 				acpi_install_notify_handler(dev->acpi_handle,
- 						ACPI_SYSTEM_NOTIFY,
- 						ata_acpi_dev_notify, dev);
--#if defined(CONFIG_ACPI_DOCK) || defined(CONFIG_ACPI_DOCK_MODULE)
- 				/* we might be on a docking station */
- 				register_hotplug_dock_device(dev->acpi_handle,
- 						ata_acpi_dev_notify, dev);
--#endif
- 			}
- 		}
- 	}
-
+-#include "ide-timing.h"
+-
+-#include <asm/io.h>
+ #include <asm/mach-au1x00/au1xxx.h>
+ #include <asm/mach-au1x00/au1xxx_dbdma.h>
+-
+ #include <asm/mach-au1x00/au1xxx_ide.h>
+ 
+ #define DRV_NAME	"au1200-ide"
