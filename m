@@ -1,86 +1,74 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: Re: Commit 6856ebbf3e46c8184cec15f59d6436692f85d8ba causes libsas
-	panic on SATA DVD
-Date: Mon, 14 Apr 2008 09:35:41 +0900
-Message-ID: <1208133341.2755.5.camel@htj.dyndns.org>
-References: <1208125145.4707.63.camel@localhost.localdomain>
-	 <1208126165.4707.66.camel@localhost.localdomain>
+Subject: Re: sata_via
+Date: Mon, 14 Apr 2008 09:39:47 +0900
+Message-ID: <1208133587.2755.8.camel@htj.dyndns.org>
+References: <47F694C8.8020507@wesmo.com> <47F6A5E8.1030602@garzik.org>
+	 <47F6BD55.3090708@wesmo.com>
+	 <5699f8f00804050015kb1ebb1cpf3ab8b587580fffd@mail.gmail.com>
+	 <47F7982E.5080701@wesmo.com> <47F7F463.2060402@garzik.org>
+	 <480173CB.5070805@gmail.com> <480189DB.9050900@wesmo.com>
+	 <48018DC0.6080407@wesmo.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rv-out-0708.google.com ([209.85.198.247]:5598 "EHLO
+Received: from rv-out-0708.google.com ([209.85.198.251]:7362 "EHLO
 	rv-out-0506.google.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752964AbYDNAfr (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 13 Apr 2008 20:35:47 -0400
-Received: by rv-out-0506.google.com with SMTP id k29so480998rvb.1
-        for <linux-ide@vger.kernel.org>; Sun, 13 Apr 2008 17:35:47 -0700 (PDT)
-In-Reply-To: <1208126165.4707.66.camel@localhost.localdomain>
+	with ESMTP id S1752964AbYDNAj7 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 13 Apr 2008 20:39:59 -0400
+Received: by rv-out-0506.google.com with SMTP id k29so481593rvb.1
+        for <linux-ide@vger.kernel.org>; Sun, 13 Apr 2008 17:39:59 -0700 (PDT)
+In-Reply-To: <48018DC0.6080407@wesmo.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: linux-ide <linux-ide@vger.kernel.org>
+To: Rich West <Rich.West@wesmo.com>, Thomas Renninger <trenn@suse.de>
+Cc: Jeff Garzik <jeff@garzik.org>, Wander Winkelhorst <w.winkelhorst@gmail.com>, linux-kernel@vger.kernel.org, Linux IDE mailing list <linux-ide@vger.kernel.org>
 
-Hello, James.
+Hi,
 
-
-On Sun, 2008-04-13 at 17:36 -0500, James Bottomley wrote:
-> On Sun, 2008-04-13 at 17:19 -0500, James Bottomley wrote:
-> > This patch:
-> > 
-> > commit 6856ebbf3e46c8184cec15f59d6436692f85d8ba
-> > Author: Tejun Heo <htejun@gmail.com>
-> > Date:   Mon Apr 7 22:47:20 2008 +0900
-> > 
-> >     libata: replace tf_read with qc_fill_rtf for non-SFF drivers
-> > 
-> > Takes away our libsas port_ops->sff_tf_read
-> > 
-> > However, as soon as we get into atapi_request_sense() we hit
-> > 
-> > #ifdef CONFIG_ATA_SFF
-> > 	ap->ops->sff_tf_read(ap, &qc->tf);
-> > #endif
-> > 
-> > And panic.
-> > 
-> > atapi_request_sense seems to be unavoidable if we hit an AC_ERR_DEV in
-> > atapi_qc_complete
-> > 
-> > How is this supposed to work?
-
-Ah.. Right.  I forgot sas was non-SFF + old EH there.
-
-> This is the patch that fixes the panic for me.  It looks like this was
-> just an oversight in the conversion to qc_fill_rtf.
+On Sun, 2008-04-13 at 00:36 -0400, Rich West wrote:
+> Rich West wrote:
+> > Tejun Heo wrote:
+> >> Jeff Garzik wrote:
+> >>> Rich West wrote:
+> >>>> I was only curious as to what turning off power management support 
+> >>>> would buy with regard to the sata timeout issue.
+> >>>
+> >>>
+> >>> ACPI is not only power management.  It is all the information your 
+> >>> hardware conveys to your OS, about the setup and workings of your 
+> >>> hardware.
+> >>>
+> >>> Without ACPI, non-PM things like SMP, laptop dock/undock, and many 
+> >>> other gadgets fail to function (or are configured sub-optimally).
+> >>>
+> >>> ACPI sets up interrupt routing, and Linux history is _loaded_ with 
+> >>> _years_ of problem reports that appear as timeouts, only to be 
+> >>> resolved as ACPI interrupt bugs (aka BIOS bugs, since ACPI tables 
+> >>> come from BIOS).
+> >>
+> >> Also, please give a shot at the sacred "irqpoll".
+> >
+> > I've had bad luck in the past (with other machiens) when adding 
+> > "irqpoll" in that it had locked up the entire machine (not this one, 
+> > but others) after a very short period of time.  My only attempt at 
+> > using it, though, was to try to address an X server related issue, but 
+> > this is a non-user machine, so X isn't necessary, and, hence, it's at 
+> > runlevel 3 all of the time.
+> >
+> > So far, noapic and acpi=off seem to be working.. The system has been 
+> > up 8 days without any problems.. previously, a problem with the SATA 
+> > drive (details of which were part of the first few messages in this 
+> > thread) would surface anywhere between 15 minutes and 5-7 days after a 
+> > reboot.
+> >
+> > However, since I started this email, I tried firing up X (with noapci 
+> > and acpi=off both set), the machine locks up entirely.
 > 
-> James
-> 
-> ---
-> 
-> diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-> index b195d82..8b72c64 100644
-> --- a/drivers/ata/libata-scsi.c
-> +++ b/drivers/ata/libata-scsi.c
-> @@ -2390,9 +2390,7 @@ static void atapi_request_sense(struct ata_queued_cmd *qc)
->  	/* FIXME: is this needed? */
->  	memset(cmd->sense_buffer, 0, SCSI_SENSE_BUFFERSIZE);
->  
-> -#ifdef CONFIG_ATA_SFF
-> -	ap->ops->sff_tf_read(ap, &qc->tf);
-> -#endif
-> +	ap->ops->qc_fill_rtf(qc);
->  
->  	/* fill these in, for the case where they are -not- overwritten */
->  	cmd->sense_buffer[0] = 0x70;
+> Although a reboot with irqpoll set managed to fix that X problem. :)
 > 
 
-I think what's more appropriate is to just add
-
-  if (ap->ops->sff_tf_read)
-
-on top of it or just kill it altogether.  TF is already read when the
-original command failed with CHECK SENSE.  Will send a patch.
+IRQ routing seems hosed on your machine.  Thomas any ideas?
 
 -- 
 tejun
