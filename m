@@ -1,64 +1,106 @@
-From: "Peer Chen" <pchen@nvidia.com>
-Subject: RE: 2.6.24.X: SATA/AHCI related boot delay. - not with 2.6.24.3
-Date: Mon, 14 Apr 2008 16:11:34 +0800
-Message-ID: <15F501D1A78BD343BE8F4D8DB854566B26C12206@hkemmail01.nvidia.com>
-References: <200803091922.33083.volker.armin.hemmann@tu-clausthal.de> <480013A3.1010502@garzik.org> <15F501D1A78BD343BE8F4D8DB854566B26C11B8C@hkemmail01.nvidia.com> <200804140841.32477.volker.armin.hemmann@tu-clausthal.de>
+From: Thomas Renninger <trenn@suse.de>
+Subject: Re: sata_via
+Date: Mon, 14 Apr 2008 10:13:22 +0200
+Message-ID: <1208160803.1784.14.camel@queen.suse.de>
+References: <47F694C8.8020507@wesmo.com> <47F6A5E8.1030602@garzik.org>
+	 <47F6BD55.3090708@wesmo.com>
+	 <5699f8f00804050015kb1ebb1cpf3ab8b587580fffd@mail.gmail.com>
+	 <47F7982E.5080701@wesmo.com> <47F7F463.2060402@garzik.org>
+	 <480173CB.5070805@gmail.com> <480189DB.9050900@wesmo.com>
+	 <48018DC0.6080407@wesmo.com>  <1208133587.2755.8.camel@htj.dyndns.org>
+Reply-To: trenn@suse.de
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hqemgate03.nvidia.com ([216.228.112.145]:11581 "EHLO
-	hqemgate03.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757101AbYDNILq convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 14 Apr 2008 04:11:46 -0400
-In-Reply-To: <200804140841.32477.volker.armin.hemmann@tu-clausthal.de>
-Content-class: urn:content-classes:message
+Received: from mx2.suse.de ([195.135.220.15]:49902 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755901AbYDNIN1 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 14 Apr 2008 04:13:27 -0400
+In-Reply-To: <1208133587.2755.8.camel@htj.dyndns.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Volker Armin Hemmann <volker.armin.hemmann@tu-clausthal.de>
-Cc: Jeff Garzik <jeff@garzik.org>, Tejun Heo <htejun@gmail.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Kuan Luo <kluo@nvidia.com>
+To: Tejun Heo <htejun@gmail.com>
+Cc: Rich West <Rich.West@wesmo.com>, Jeff Garzik <jeff@garzik.org>, Wander Winkelhorst <w.winkelhorst@gmail.com>, linux-kernel@vger.kernel.org, Linux IDE mailing list <linux-ide@vger.kernel.org>, Peter Gervai <grinapo@gmail.com>, Marin Mitov <mitov@issp.bas.bg>
 
-Volker,
-I mean add msleep(x) function between writel(HOST_AHCI_EN, mmio + HOST_=
-CTL) and readl(mmio + HOST_CTL) cause we ever met a bug that writing da=
-ta to the AHCI BAR5 but need a delay to get correct read back value. Bu=
-t forget it, looks like it's not the same case here.
-Which mode do you set(ahci or non-raid) when you encountered the issue =
-that the AHCI_EN bit failed to set? I found we have workaround for AHCI=
-_EN bit setting in our Bios programming guide for AHCI mode.
+On Mon, 2008-04-14 at 09:39 +0900, Tejun Heo wrote:
+> Hi,
+> 
+> On Sun, 2008-04-13 at 00:36 -0400, Rich West wrote:
+> > Rich West wrote:
+> > > Tejun Heo wrote:
+> > >> Jeff Garzik wrote:
+> > >>> Rich West wrote:
+> > >>>> I was only curious as to what turning off power management support 
+> > >>>> would buy with regard to the sata timeout issue.
+> > >>>
+> > >>>
+> > >>> ACPI is not only power management.  It is all the information your 
+> > >>> hardware conveys to your OS, about the setup and workings of your 
+> > >>> hardware.
+> > >>>
+> > >>> Without ACPI, non-PM things like SMP, laptop dock/undock, and many 
+> > >>> other gadgets fail to function (or are configured sub-optimally).
+> > >>>
+> > >>> ACPI sets up interrupt routing, and Linux history is _loaded_ with 
+> > >>> _years_ of problem reports that appear as timeouts, only to be 
+> > >>> resolved as ACPI interrupt bugs (aka BIOS bugs, since ACPI tables 
+> > >>> come from BIOS).
+> > >>
+> > >> Also, please give a shot at the sacred "irqpoll".
+> > >
+> > > I've had bad luck in the past (with other machiens) when adding 
+> > > "irqpoll" in that it had locked up the entire machine (not this one, 
+> > > but others) after a very short period of time.  My only attempt at 
+> > > using it, though, was to try to address an X server related issue, but 
+> > > this is a non-user machine, so X isn't necessary, and, hence, it's at 
+> > > runlevel 3 all of the time.
+> > >
+> > > So far, noapic and acpi=off seem to be working.. The system has been 
+> > > up 8 days without any problems.. previously, a problem with the SATA 
+> > > drive (details of which were part of the first few messages in this 
+> > > thread) would surface anywhere between 15 minutes and 5-7 days after a 
+> > > reboot.
+> > >
+> > > However, since I started this email, I tried firing up X (with noapci 
+> > > and acpi=off both set), the machine locks up entirely.
+> > 
+> > Although a reboot with irqpoll set managed to fix that X problem. :)
+> > 
+> 
+> IRQ routing seems hosed on your machine.  Thomas any ideas?
 
-BRs
-Peer Chen
+Not really.
+First, I'd try to be able to reproduce this more quickly, an IO
+benchmark or similar (bonnie?).
 
------Original Message-----
-=46rom: Volker Armin Hemmann [mailto:volker.armin.hemmann@tu-clausthal.=
-de]=20
-Sent: Monday, April 14, 2008 2:42 PM
-To: Peer Chen
-Cc: Jeff Garzik; Tejun Heo; linux-kernel@vger.kernel.org; linux-ide@vge=
-r.kernel.org; Kuan Luo
-Subject: Re: 2.6.24.X: SATA/AHCI related boot delay. - not with 2.6.24.=
-3
 
-On Montag, 14. April 2008, Peer Chen wrote:
-> Volker,
-> Could you add a delay between setting AHCI_EN and reading back functi=
-on?
->
+----------------------------------------------
+Peter Gervai posted a similar report recently, Elias Oltmanns had an
+idea (on linux-ide or linux-acpi list):
+Subject: Re: Hard freeze / interrupt-related death / instability
+Wed, 09 Apr 2008
 
-if you tell me how to?
+(but Tejun was already involved into that, at least in the link posted
+there, but reading it up might be worth it).
+Is this the same problem?
 
-Gl=FCck Auf
-Volker
+----------------------------------------------
+Marin Mitov answered in this thread (only answering to lkml, truncating
+the CC list..., got overseen?):
+Hi Rich,
 
------------------------------------------------------------------------=
-------------
-This email message is for the sole use of the intended recipient(s) and=
- may contain
-confidential information.  Any unauthorized review, use, disclosure or =
-distribution
-is prohibited.  If you are not the intended recipient, please contact t=
-he sender by
-reply email and destroy all copies of the original message.
------------------------------------------------------------------------=
-------------
+What is the output of command:
+
+grep CONFIG_IRQBALANCE .config
+
+If:
+
+CONFIG_IRQBALANCE=y
+
+try disabling it.
+----------------------------------------------
+
+
+   Thomas
+
