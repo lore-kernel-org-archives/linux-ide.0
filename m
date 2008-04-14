@@ -1,54 +1,50 @@
-From: Denys Dmytriyenko <denis@denix.org>
-Subject: Re: sata_sil24 stability and performance
-Date: Sun, 13 Apr 2008 21:19:13 -0400
-Message-ID: <20080414011913.GA19751@denix.org>
-References: <20080306065513.GE7150@denix.org> <47CF9880.4080900@gmail.com>
- <20080315214347.GA1511@denix.org> <47DDE0ED.6040304@rtr.ca>
- <20080318001513.GA2389@denix.org> <47DF4070.3040507@gmail.com>
- <20080318045316.GA3959@denix.org> <47DF63C1.5090205@gmail.com>
- <20080320223736.GA19940@denix.org> <47E2FECB.3080602@gmail.com>
+From: Andrew Morton <akpm@linux-foundation.org>
+Subject: Re: 2.6.25-rc8-mm1: Intel SATA boot failure
+Date: Sun, 13 Apr 2008 19:05:56 -0700
+Message-ID: <20080413190556.69ed0dde.akpm@linux-foundation.org>
+References: <20080401213214.8fbb6d6b.akpm@linux-foundation.org>
+	<47F56363.4090002@imap.cc>
+	<20080403161733.c05dac53.akpm@linux-foundation.org>
+	<4802A538.9040107@imap.cc>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from vms173001pub.verizon.net ([206.46.173.1]:40447 "EHLO
-	vms173001pub.verizon.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752147AbYDNBTe (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 13 Apr 2008 21:19:34 -0400
-Received: from gandalf.denix.org ([71.255.236.124]) by vms173001.mailsrvcs.net
- (Sun Java System Messaging Server 6.2-6.01 (built Apr  3 2006))
- with ESMTPA id <0JZA0065OJO192R1@vms173001.mailsrvcs.net> for
- linux-ide@vger.kernel.org; Sun, 13 Apr 2008 20:19:14 -0500 (CDT)
-In-reply-to: <47E2FECB.3080602@gmail.com>
-Content-disposition: inline
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:42429 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753776AbYDNCGg (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 13 Apr 2008 22:06:36 -0400
+In-Reply-To: <4802A538.9040107@imap.cc>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Mark Lord <liml@rtr.ca>, Gabor FUNK <FUNK.Gabor@hunetkft.hu>, linux-ide@vger.kernel.org, Jim Paris <jim@jtan.com>
+To: Tilman Schmidt <tilman@imap.cc>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, jgarzik@pobox.com, Steven French <sfrench@us.ibm.com>
 
-Tejun et al,
+On Mon, 14 Apr 2008 02:28:40 +0200 Tilman Schmidt <tilman@imap.cc> wrote:
 
-I wanted to thank you all for the support you provided. I ended up replacing 
-MoBo+CPU to Intel based ones (and previously mentioned single-rail PSU) and 
-now everything works rock solid for over a week now! Thanks again.
-
-> > BTW, issuing "smartctl -a" on a drive in standby, throws this exception:
-> > 
-> > Mar 20 18:16:53 [kernel] ata10.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 frozen
-> > Mar 20 18:16:53 [kernel] ata10.00: cmd b0/da:00:00:4f:c2/00:00:00:00:00/00 tag 0 cdb 0x0 data 0 
-> > Mar 20 18:16:53 [kernel]          res 40/00:01:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
-> > Mar 20 18:16:53 [kernel] ata10: soft resetting port
-> > Mar 20 18:16:54 [kernel] ata10: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-> > Mar 20 18:16:54 [kernel] ata10.00: configured for UDMA/100
-> > Mar 20 18:16:54 [kernel] ata10: EH complete
-> > Mar 20 18:16:54 [kernel] sd 9:0:0:0: [sdj] 976773168 512-byte hardware sectors (500108 MB)
-> > Mar 20 18:16:54 [kernel] sd 9:0:0:0: [sdj] Write Protect is off
-> > Mar 20 18:16:54 [kernel] sd 9:0:0:0: [sdj] Mode Sense: 00 3a 00 00
-> > Mar 20 18:16:54 [kernel] sd 9:0:0:0: [sdj] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+> Final report, seeing -mm2 is out:
 > 
-> Which kernel version and how did you put the drive into sleep?
+> - Netconsole works. (grumblestupidsusefirewallgrumble)
+> 
+> - The hang during boot only happens with kernels compiled with
+>   CONFIG_CIFS_EXPERIMENTAL=y
+>   It also doesn't always happen at the same point in the boot sequence.
+>   I'm suspecting it might be triggered by some network packet.
+>   Anyway, it's obviously *not* a SATA problem.
+>   (That was just me jumping to conclusions, because ...)
 
-This timeout exception is still there - 2.6.24.4, drive goes to sleep on 
-timeout of 30 minutes (hdpram -S 241)
+I don't remember seeing a report of the CIFS hang.
 
--- 
-Denys
+It might be caused by
+bkl-removal-convert-cifs-over-to-unlocked_ioctl.patch, but it's hard to see
+how that could affect things before userspace has started.
+
+> - That leaves only the messages
+> 
+>   ata1: port is slow to respond, please be patient (Status 0x80)
+>   ata1: COMRESET failed (errno=-16)
+> 
+>   and accompanying delays during boot, for each installed SATA disk.
+>   I'll try to find the time to retest this with 2.6.25-rc8-mm2.
+
+That would be good, thanks.
