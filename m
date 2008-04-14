@@ -1,79 +1,91 @@
-From: "Peter Gervai" <grinapo@gmail.com>
-Subject: Re: sata_via
-Date: Mon, 14 Apr 2008 10:32:08 +0200
-Message-ID: <d55656c10804140132l6be8dd21s1a073efc3ce0b956@mail.gmail.com>
-References: <47F694C8.8020507@wesmo.com> <47F6BD55.3090708@wesmo.com>
-	 <5699f8f00804050015kb1ebb1cpf3ab8b587580fffd@mail.gmail.com>
-	 <47F7982E.5080701@wesmo.com> <47F7F463.2060402@garzik.org>
-	 <480173CB.5070805@gmail.com> <480189DB.9050900@wesmo.com>
-	 <48018DC0.6080407@wesmo.com> <1208133587.2755.8.camel@htj.dyndns.org>
-	 <1208160803.1784.14.camel@queen.suse.de>
+From: "Gabor FUNK" <FUNK.Gabor@hunetkft.hu>
+Subject: Re: sata_sil24 stability and performance
+Date: Mon, 14 Apr 2008 12:55:43 +0200
+Message-ID: <01ee01c89e1e$4c488e10$4d0fa8c0@M2007>
+References: <20080306065513.GE7150@denix.org> <47CF9880.4080900@gmail.com> <20080315214347.GA1511@denix.org> <47DDE0ED.6040304@rtr.ca> <20080318001513.GA2389@denix.org> <47DF4070.3040507@gmail.com> <20080318045316.GA3959@denix.org> <47DF63C1.5090205@gmail.com> <20080320223736.GA19940@denix.org> <47E2FECB.3080602@gmail.com> <20080414011913.GA19751@denix.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain;
+	format=flowed;
+	charset="ISO-8859-1";
+	reply-type=original
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wf-out-1314.google.com ([209.85.200.172]:19031 "EHLO
-	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756368AbYDNIcI (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 14 Apr 2008 04:32:08 -0400
-Received: by wf-out-1314.google.com with SMTP id 28so1441329wff.4
-        for <linux-ide@vger.kernel.org>; Mon, 14 Apr 2008 01:32:08 -0700 (PDT)
-In-Reply-To: <1208160803.1784.14.camel@queen.suse.de>
-Content-Disposition: inline
+Received: from ns1.huweb.hu ([62.112.193.37]:49338 "EHLO ns1.huweb.hu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752282AbYDNK5j (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 14 Apr 2008 06:57:39 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: trenn@suse.de
-Cc: Tejun Heo <htejun@gmail.com>, Rich West <Rich.West@wesmo.com>, Jeff Garzik <jeff@garzik.org>, Wander Winkelhorst <w.winkelhorst@gmail.com>, linux-kernel@vger.kernel.org, Linux IDE mailing list <linux-ide@vger.kernel.org>, Marin Mitov <mitov@issp.bas.bg>
+To: Denys Dmytriyenko <denis@denix.org>, Tejun Heo <htejun@gmail.com>
+Cc: Mark Lord <liml@rtr.ca>, linux-ide@vger.kernel.org, Jim Paris <jim@jtan.com>, Richard Bland <r.bland@espo.org>
 
-On Mon, Apr 14, 2008 at 10:13 AM, Thomas Renninger <trenn@suse.de> wrote:
+Since you brought it up, several days ago I got informed,
+that the "original problem" (exception/hard resetting port)
+could be related to kernel option IRQBALANCE.
+See more at:
+http://forums.gentoo.org:80/viewtopic-t-641372-highlight-.html
 
->  > IRQ routing seems hosed on your machine.  Thomas any ideas?
+As Dmytri and me as well both replaced the MB finally which
+now runs fine, we will probably not going to "play" again with
+this, but if anyone runs into this in the near future, this can be a
+thing to try. I can imagine that this could've helped, as in my
+case failing was purely limited one controller [*4 disks] at the
+time, eg. no other disk on other controller, nor just only one
+or some disk on a controller, but all disks on only 1 controller.
+
+And if anyone have any theoretical imagination why it could be
+the cause - and where to fix :-] - don't hesitate to write...
+
+Cheers,
+
+G.
+
+
+
+----- Original Message ----- 
+From: "Denys Dmytriyenko" <denis@denix.org>
+To: "Tejun Heo" <htejun@gmail.com>
+Cc: "Mark Lord" <liml@rtr.ca>; "Gabor FUNK" <FUNK.Gabor@hunetkft.hu>; 
+<linux-ide@vger.kernel.org>; "Jim Paris" <jim@jtan.com>
+Sent: Monday, April 14, 2008 3:19 AM
+Subject: Re: sata_sil24 stability and performance
+
+
+> Tejun et al,
 >
->  Not really.
->  First, I'd try to be able to reproduce this more quickly, an IO
->  benchmark or similar (bonnie?).
+> I wanted to thank you all for the support you provided. I ended up 
+> replacing
+> MoBo+CPU to Intel based ones (and previously mentioned single-rail PSU) 
+> and
+> now everything works rock solid for over a week now! Thanks again.
 >
+>> > BTW, issuing "smartctl -a" on a drive in standby, throws this 
+>> > exception:
+>> >
+>> > Mar 20 18:16:53 [kernel] ata10.00: exception Emask 0x0 SAct 0x0 SErr 
+>> > 0x0 action 0x2 frozen
+>> > Mar 20 18:16:53 [kernel] ata10.00: cmd 
+>> > b0/da:00:00:4f:c2/00:00:00:00:00/00 tag 0 cdb 0x0 data 0
+>> > Mar 20 18:16:53 [kernel]          res 
+>> > 40/00:01:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
+>> > Mar 20 18:16:53 [kernel] ata10: soft resetting port
+>> > Mar 20 18:16:54 [kernel] ata10: SATA link up 3.0 Gbps (SStatus 123 
+>> > SControl 300)
+>> > Mar 20 18:16:54 [kernel] ata10.00: configured for UDMA/100
+>> > Mar 20 18:16:54 [kernel] ata10: EH complete
+>> > Mar 20 18:16:54 [kernel] sd 9:0:0:0: [sdj] 976773168 512-byte hardware 
+>> > sectors (500108 MB)
+>> > Mar 20 18:16:54 [kernel] sd 9:0:0:0: [sdj] Write Protect is off
+>> > Mar 20 18:16:54 [kernel] sd 9:0:0:0: [sdj] Mode Sense: 00 3a 00 00
+>> > Mar 20 18:16:54 [kernel] sd 9:0:0:0: [sdj] Write cache: enabled, read 
+>> > cache: enabled, doesn't support DPO or FUA
+>>
+>> Which kernel version and how did you put the drive into sleep?
 >
->  ----------------------------------------------
->  Peter Gervai posted a similar report recently, Elias Oltmanns had an
->  idea (on linux-ide or linux-acpi list):
->  Subject: Re: Hard freeze / interrupt-related death / instability
->  Wed, 09 Apr 2008
+> This timeout exception is still there - 2.6.24.4, drive goes to sleep on
+> timeout of 30 minutes (hdpram -S 241)
 >
->  (but Tejun was already involved into that, at least in the link posted
->  there, but reading it up might be worth it).
->  Is this the same problem?
+> -- 
+> Denys
+> 
 
-Mmhm, as I was (kindly) cc'd I reply my results so far, but since
-there was a mention of IRQBALANCE, I checked myself, since I was
-pretty sure I have switched that off:
-# zegrep IRQ /proc/config.gz
-CONFIG_GENERIC_HARDIRQS=y
-CONFIG_GENERIC_IRQ_PROBE=y
-CONFIG_GENERIC_PENDING_IRQ=y
-CONFIG_IRQBALANCE=y
-CONFIG_HT_IRQ=y
-CONFIG_IDEPCI_SHARE_IRQ=y
-CONFIG_HPET_RTC_IRQ=y
-CONFIG_TRACE_IRQFLAGS_SUPPORT=y
-# CONFIG_DEBUG_SHIRQ is not set
-
-Darn, I'd say. I go and switch balancer off, it doesn't really do much
-good for me anyway. (What about userland balancer, does it hose things
-as well?)
-
-But apart from that I'm runnig under " pci=nomsi " for the last 4 days
-without a freeze (which usually occured every 1-2 days, but I'll wait
-for more, and I will try to bonnie++ myself in the meantime). It did
-not freeze under "acpi_irq_balance" either for 6 days, but the machine
-overall felt a bit jerky (pretty ugly irq overlaps I guess).
-
-If any of you prefer me to run under other options, or to apply that
-patch I was advised to, I'll just do that. Just voice yourself.  (I
-have an open request for "noapic acpi_irq_nobalance" and the patch.)
-
-Thanks for your time, as always (and I try to share mine :)).
-
--- 
- byte-byte,
- grin
