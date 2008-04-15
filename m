@@ -1,60 +1,41 @@
-From: "Justin Mattock" <justinmattock@gmail.com>
-Subject: Re: sda
-Date: Tue, 15 Apr 2008 06:26:52 +0000
-Message-ID: <dd18b0c30804142326w16988956w484c05468807351e@mail.gmail.com>
-References: <dd18b0c30804021244k1d44a48hc05ea88552104a71@mail.gmail.com>
-	 <48016F54.5070405@gmail.com>
-	 <dd18b0c30804122117hc0cd548v6cbef5d2c0c0ce5e@mail.gmail.com>
-	 <48041E2A.9000602@gmail.com>
-	 <dd18b0c30804142227j7ff1723bp6afabfffa6882f1d@mail.gmail.com>
-	 <480443EA.7030901@gmail.com>
+From: Andrew Morton <akpm@linux-foundation.org>
+Subject: Re: What to do about the 2TB limit on HDIO_GETGEO ?
+Date: Tue, 15 Apr 2008 00:18:28 -0700
+Message-ID: <20080415001828.b0c9ed64.akpm@linux-foundation.org>
+References: <47E875AD.1000901@rtr.ca>
+	<47E88A13.70808@zytor.com>
+	<47E90019.3050006@rtr.ca>
+	<47E90458.7030801@zytor.com>
+	<47E9383F.3050908@rtr.ca>
+	<20080325192515.GA24234@suse.de>
+	<47E99A02.7040903@rtr.ca>
+	<47E99EBE.7010708@gmail.com>
+	<3ae72650803271229h6e188de1t81ccfb64e5d3a214@mail.gmail.com>
+	<47EBF7D0.6000901@zytor.com>
+	<e9c3a7c20804111625w68b21b24p6fbd85864713d62f@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from an-out-0708.google.com ([209.85.132.241]:20134 "EHLO
-	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755024AbYDOG0x (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 15 Apr 2008 02:26:53 -0400
-Received: by an-out-0708.google.com with SMTP id d31so503727and.103
-        for <linux-ide@vger.kernel.org>; Mon, 14 Apr 2008 23:26:52 -0700 (PDT)
-In-Reply-To: <480443EA.7030901@gmail.com>
-Content-Disposition: inline
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <e9c3a7c20804111625w68b21b24p6fbd85864713d62f@mail.gmail.com>
+Sender: linux-scsi-owner@vger.kernel.org
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: "H. Peter Anvin" <hpa@zytor.com>, Kay Sievers <kay.sievers@vrfy.org>, Tejun Heo <htejun@gmail.com>, Mark Lord <lkml@rtr.ca>, Greg KH <gregkh@suse.de>, Jens Axboe <axboe@kernel.dk>, Jeff Garzik <jgarzik@pobox.com>, Linus Torvalds <torvalds@linux-foundation.org>, Linux Kernel <linux-kernel@vger.kernel.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: linux-ide@vger.kernel.org, Mark Lord <liml@rtr.ca>
 
-On Tue, Apr 15, 2008 at 5:58 AM, Tejun Heo <htejun@gmail.com> wrote:
-> Hello,
->
->
->  Justin Mattock wrote:
->
-> > Yes the media plays just fine.
-> > Overrall this isn't a huge issue for me, It was something I noticed
-> > when switching to osx and linux,
-> > Causing enough attention for me to ask the question on how I can have
-> > the the dvd react properly upon resume.
-> > but not enough to loose sleep over.
+On Fri, 11 Apr 2008 16:25:32 -0700 "Dan Williams" <dan.j.williams@intel.com> wrote:
+
+> >  It doesn't really seem to be to belong under class at all.  I would suggest
+> > /sys/dev/char/ and /sys/dev/block/, for char and block respectively.
 > >
+> 
+> This thread fizzled out without a patch... here goes:
+> 
+> ...
 >
->  Yeah, I'd like to see the problem fixed too.  It seems more like a problem
-> in the media player tho.  The driver and kernel are (after a bit of delay)
-> able to deliver the data at normal speed but the media player can't recover
-> from the hiccup for some reason.  I think the best course of action is to
-> file a bug report against the distro you're using.  The bug will likely find
-> its way toward upstream.
->
->  Thanks.
->
->  --
->  tejun
->
+> sysfs: add /sys/dev/{char,block} to lookup sysfs path by major:minor
 
-Yeah this would be nice to see working, a cool feature to have.
-I'll file a bug report, and in good timing the problem will be resolved.
-regards;
+Crickets are chirping and I can't remember what the conclusion to all this
+was.  In fact the thread was more than ten-deep so I probably fell asleep.
 
--- 
-Justin P. Mattock
+I queued it up so that others cannot do the same ;)
