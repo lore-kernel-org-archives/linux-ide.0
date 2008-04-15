@@ -1,85 +1,199 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [2.6 patch] PCMCIA mustn't select HAVE_IDE
-Date: Wed, 16 Apr 2008 01:26:10 +0200
-Message-ID: <200804160126.11116.bzolnier@gmail.com>
-References: <20080414141659.GF6695@cs181133002.pp.htv.fi>
-	<20080415221002.GL1677@cs181133002.pp.htv.fi>
-	<20080415223928.GH5676@flint.arm.linux.org.uk>
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Subject: Re: [PATCH 4/4] block: add large command support
+Date: Wed, 16 Apr 2008 07:57:43 +0900
+Message-ID: <20080416075743R.fujita.tomonori@lab.ntt.co.jp>
+References: <1208170266-1676-5-git-send-email-fujita.tomonori@lab.ntt.co.jp>
+	<20080414112919.GF12774@kernel.dk>
+	<200804160050.54842.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-pcmcia-bounces+glkpd-linux-pcmcia=m.gmane.org@lists.infradead.org>
-In-Reply-To: <20080415223928.GH5676@flint.arm.linux.org.uk>
-Content-Disposition: inline
-List-Unsubscribe: <http://lists.infradead.org/mailman/listinfo/linux-pcmcia>,
-	<mailto:linux-pcmcia-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-pcmcia>
-List-Post: <mailto:linux-pcmcia@lists.infradead.org>
-List-Help: <mailto:linux-pcmcia-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-pcmcia>,
-	<mailto:linux-pcmcia-request@lists.infradead.org?subject=subscribe>
-Sender: linux-pcmcia-bounces@lists.infradead.org
-Errors-To: linux-pcmcia-bounces+glkpd-linux-pcmcia=m.gmane.org@lists.infradead.org
-To: Russell King <rmk+lkml@arm.linux.org.uk>
-Cc: linux-ide@vger.kernel.org, Adrian Bunk <bunk@kernel.org>, linux-pcmcia@lists.infradead.org, Sam Ravnborg <sam@ravnborg.org>, linux-kernel@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <200804160050.54842.bzolnier@gmail.com>
+Sender: linux-scsi-owner@vger.kernel.org
+To: bzolnier@gmail.com
+Cc: jens.axboe@oracle.com, fujita.tomonori@lab.ntt.co.jp, linux-scsi@vger.kernel.org, bharrosh@panasas.com, linux-ide@vger.kernel.org, akpm@linux-foundation.org
 List-Id: linux-ide@vger.kernel.org
 
-On Wednesday 16 April 2008, Russell King wrote:
-> On Wed, Apr 16, 2008 at 01:10:02AM +0300, Adrian Bunk wrote:
-> > On Tue, Apr 15, 2008 at 11:03:45PM +0100, Russell King wrote:
-> > > On Wed, Apr 16, 2008 at 12:52:23AM +0300, Adrian Bunk wrote:
-> > >...
-> > > So this is a only impacting ARM wrt. PCMCIA, and given that ARM supplies
-> > > an asm/ide.h, it's _entirely_ reasonable that if a platform has PCMCIA
-> > > then it supports IDE.
-> > > 
-> > > > We could simply always select HAVE_IDE on arm instead of manually 
-> > > > setting which platforms could possibly get IDE support (e.g. are there
-> > > > any boards with PCI slots for which HAVE_IDE is currently not 
-> > > > selected?).
-> > > 
-> > > You could, if there was a demand for it.  As no one has added that,
-> > > I conclude that its less common for people to stick an IDE controller
-> > > into a PCI backplane.
-> > 
-> > People can always enable code for stuff they don't use.
-> > 
-> > But instead of having 14 ARM platforms plus PCMCIA (which is offered 
-> > unconditionally on all ARM platforms...) select HAVE_IDE it's simpler
-> > to select it once for all ARM platforms.
+On Wed, 16 Apr 2008 00:50:54 +0200
+Bartlomiej Zolnierkiewicz <bzolnier@gmail.com> wrote:
 
-Please send me a patch doing this, it should be safe for current IDE tree.
-
-> That would seem logical, but Bart objects to that idea.
-
-I don't remember the background but I think it was needed because of badly
-perplexed ide_init_hwif_ports() and friends in <asm/ide.h> vs <linux/ide.h>
-(almost all this stuff is gone in IDE tree for 2.6.26)...
-
-Ok, I found the patch:
-
-http://git.kernel.org/?p=linux/kernel/git/tglx/history.git;a=commitdiff;h=4b3b8ee5db374b76608537e061f2efd90e21179d
-
-[ tglx's history tree since it is from May 2004. ]
-
-> However, consider that we're gradually transitioning over to being
-> exclusively libata only.
 > 
-> > > In fact, there are only three classes of ARM platforms which have PCI
-> > > selected but not HAVE_IDE - IOP13xx, IXP2000, and Orion.  I suspect
-> > > the only reason they don't select it because they now use the ATA code
-> > > rather than the old IDE code - that's certainly true of Orion.
-> > 
-> > The libata options are offered unconditionally on all platforms...
+> Hi,
 > 
-> It wasn't *my* choice to restrict IDE on ARM.  See Bart for that
-> decision.
+> On Monday 14 April 2008, Jens Axboe wrote:
+> > On Mon, Apr 14 2008, FUJITA Tomonori wrote:
+> > > This patch changes rq->cmd from the static array to a pointer to
+> > > support large commands.
+> > > 
+> > > We rarely handle large commands. So for optimization, a struct request
+> > > still has a static array for a command. rq_init sets rq->cmd pointer
+> > > to the static array.
+> > > 
+> > > Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+> > > Cc: Jens Axboe <jens.axboe@oracle.com>
+> > > ---
+> > >  block/blk-core.c       |    1 +
+> > >  drivers/ide/ide-io.c   |    1 +
+> > >  include/linux/blkdev.h |   12 ++++++++++--
+> > >  3 files changed, 12 insertions(+), 2 deletions(-)
+> > > 
+> > > diff --git a/block/blk-core.c b/block/blk-core.c
+> > > index 6669238..6f0968f 100644
+> > > --- a/block/blk-core.c
+> > > +++ b/block/blk-core.c
+> > > @@ -132,6 +132,7 @@ void rq_init(struct request_queue *q, struct request *rq)
+> > >  	rq->errors = 0;
+> > >  	rq->ref_count = 1;
+> > >  	rq->cmd_len = 0;
+> > > +	rq->cmd = rq->__cmd;
+> > >  	memset(rq->cmd, 0, BLK_MAX_CDB);
+> > >  	rq->data_len = 0;
+> > >  	rq->extra_len = 0;
+> > > diff --git a/drivers/ide/ide-io.c b/drivers/ide/ide-io.c
+> > > index 7153796..bac5ea1 100644
+> > > --- a/drivers/ide/ide-io.c
+> > > +++ b/drivers/ide/ide-io.c
+> > > @@ -1595,6 +1595,7 @@ void ide_init_drive_cmd (struct request *rq)
+> > >  {
+> > >  	memset(rq, 0, sizeof(*rq));
+> > >  	rq->ref_count = 1;
+> > > +	rq->cmd = rq->__cmd;
+> > >  }
+> 
+> Tomo, some more changes are needed:
+> 
+> Please think about all _static_/dynamic allocations of 'struct request'
+> used together with REQ_TYPE_SPECIAL etc., i.e.
 
-It could be that I did the poor job of explaining things back then
-but I also didn't like the fact that I needed to restrict the IDE
-choice on ARM - the change in question was _necessary_ to start
-converting IDE drivers to become real, independent, modular host
-drivers and as a preparation for adding proper warm-plug support.
+I think that using struct request allocated statically is wrong from
+the perspective of the block layer design, that is, you always need to
+use blk_get_request. I think that except ide, everyone does.
 
-Thanks,
-Bart
+I try to convert ide to use blk_get_request properly if you want.
+
+
+> static void idetape_init_rq(struct request *rq, u8 cmd)
+> 
+> [ rq can be from privately allocated driver's "stack" so no rq_init() ]
+> 
+> {
+> 	memset(rq, 0, sizeof(*rq));
+> 	rq->cmd_type = REQ_TYPE_SPECIAL;
+> 	rq->cmd[0] = cmd;
+> }
+> 
+> in ide-tape.c or REQ_TYPE_SENSE in ide-cd.c:
+
+Thanks, I overlooked this. As I did for ide_init_drive_cmd, we need:
+
+
++	rq->cmd = rq->__cmd;
+
+
+> static void cdrom_queue_request_sense(ide_drive_t *drive, void *sense,
+>                                       struct request *failed_command)
+> {
+>         struct cdrom_info *info         = drive->driver_data;
+>         struct request *rq              = &info->request_sense_request;
+> 
+>         if (sense == NULL)
+>                 sense = &info->sense_data;
+> 
+>         /* stuff the sense request in front of our current request */
+>         ide_cd_init_rq(drive, rq);
+> 
+>         rq->data = sense;
+>         rq->cmd[0] = GPCMD_REQUEST_SENSE;
+>         rq->cmd[4] = rq->data_len = 18;
+> 
+>         rq->cmd_type = REQ_TYPE_SENSE;
+> 
+>         /* NOTE! Save the failed command in "rq->buffer" */
+>         rq->buffer = (void *) failed_command;
+> 
+>         (void) ide_do_drive_cmd(drive, rq, ide_preempt);
+> }
+
+This should work since I put the above hack to ide_init_drive_cmd (I
+tested the patchset with an ide cdrom drive).
+
+
+> > >  EXPORT_SYMBOL(ide_init_drive_cmd);
+> > > diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
+> > > index b3a58ad..5710ae4 100644
+> > > --- a/include/linux/blkdev.h
+> > > +++ b/include/linux/blkdev.h
+> > > @@ -215,8 +215,9 @@ struct request {
+> > >  	/*
+> > >  	 * when request is used as a packet command carrier
+> > >  	 */
+> > > -	unsigned int cmd_len;
+> > > -	unsigned char cmd[BLK_MAX_CDB];
+> > > +	unsigned short cmd_len;
+> > > +	unsigned char __cmd[BLK_MAX_CDB];
+> > > +	unsigned char *cmd;
+> 
+> The source issue lies here:
+> 
+> rq->cmd _silently_ becomes something else and unconverted code will happily
+> compile without even a _single_ warning (+ memory corruption / oops later).
+> 
+> This is _guaranteed_ to cause problems:
+> 
+> - overlooked code (like the IDE code above, with the current approach
+>   you have to _manually_ audit all code and still _can't_ be sure about
+>   the result)
+
+As far as I know, only ide does that.
+
+
+> - unmerged code from other trees (i.e., I _have_ WIP patches mapping
+>   REQ_TYPE_TASKFILE requests onto rq->cmd)
+> 
+> - out of tree code (in theory we don't care but in this specific
+>   case there is no reason to break things silently)
+
+Again, I think that we can say that we need to use the block layer
+properly, struct request always needs to be allocated via
+blk_get_request.
+
+
+> Please just add new field instead (cost should be negligable and if
+> we're concerned about it I see no problem with using unnamed union like
+> it was done by Boaz). 
+> 
+> [ Probably it is also worth to add new length field instead of re-using
+>   ->cmd_len, just to stay on the safe side (+ for better consistency). ]
+
+As we discussed, we don't like that hack:
+
+http://marc.info/?t=120724777800003&r=1&w=2
+
+
+> > >  	unsigned int data_len;
+> > >  	unsigned int extra_len;	/* length of alignment and padding */
+> > > @@ -812,6 +813,13 @@ static inline void put_dev_sector(Sector p)
+> > >  	page_cache_release(p.v);
+> > >  }
+> > >  
+> > > +static inline void rq_set_cmd(struct request *rq, unsigned char *cmd,
+> > > +			      unsigned short cmd_len)
+> > > +{
+> > > +	rq->cmd = cmd;
+> > > +	rq->cmd_len = cmd_len;
+> > > +}
+> > > +
+> > 
+> > This is 100% identical to what I suggested be done instead, so of course
+> > I agree with this.
+> 
+> Jens, I see that you've applied this patch to block tree
+> - please revert it for now, it needs to be re-designed.
+> 
+> Thanks,
+> Bart
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
