@@ -1,70 +1,65 @@
-From: Mark Lord <liml@rtr.ca>
-Subject: Re: [patch 2/2] libata: power off unused ports
-Date: Tue, 15 Apr 2008 15:02:40 -0400
-Message-ID: <4804FBD0.8060900@rtr.ca>
-References: <20080325221646.567639335@intel.com>	<20080325152813.0b34761f@appleyard>	<48003A5D.9000306@garzik.org> <20080414161122.03b2211d@appleyard>
+From: Russell King - ARM Linux <linux@arm.linux.org.uk>
+Subject: Re: [patch 2/2] ARM/RPC: Use HAVE_PATA_PLATFORM to select pata platform driver
+Date: Tue, 15 Apr 2008 20:56:50 +0100
+Message-ID: <20080415195650.GA32097@flint.arm.linux.org.uk>
+References: <20080415144325.363175912@fluff.org.uk> <20080415144512.009318607@fluff.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([76.10.145.34]:2352 "EHLO mail.rtr.ca"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753972AbYDOTCm (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 15 Apr 2008 15:02:42 -0400
-In-Reply-To: <20080414161122.03b2211d@appleyard>
+Received: from caramon.arm.linux.org.uk ([78.32.30.218]:37189 "EHLO
+	caramon.arm.linux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754060AbYDOT5O (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 15 Apr 2008 15:57:14 -0400
+Content-Disposition: inline
+In-Reply-To: <20080415144512.009318607@fluff.org.uk>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: kristen.c.accardi@intel.com
-Cc: Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org, arjan@linux.intel.com
+To: Ben Dooks <ben-linux@fluff.org>
+Cc: Linux IDE List <linux-ide@vger.kernel.org>, Linux ARM Kernel <linux-arm-kernel@lists.arm.linux.org.uk>
 
-Kristen Carlson Accardi wrote:
-> On Sat, 12 Apr 2008 00:28:13 -0400
-> Jeff Garzik <jeff@garzik.org> wrote:
-..
->> Thinking about the bigger pictures, powering off the phy is something we 
->> want to do in a lot more cases than this, but there is a stumbling 
->> block:  we wander into the realm of policy.
->>
->> For most users most of the time, empty SATA ports are needlessly 
->> powered.  The problem is that, at any given moment, a device may be 
->> hot-plugged, so we must be ready for that.  We need some way for the 
->> user to let the driver know that they will not be hotplugging anything 
->> anytime soon, permitting power savings to be enabled.
->>
->> A compromise solution that avoids adding a userspace "knob" has also 
->> been proposed (by Tejun, I think?):  power up the phy every N seconds, 
->> check for device, power down phy if nothing.  That should provide some 
->> power savings, though not as much as with a "knob" switched to "hotplug: 
->> off"
-..
+On Tue, Apr 15, 2008 at 03:43:27PM +0100, Ben Dooks wrote:
+> Use HAVE_PATA_PLATFORM for ARCH_RPC 
+> 
+> Cc: Linux ARM Kernel <linux-arm-kernel@lists.arm.linux.org.uk>
+> Signed-off-by: Ben Dooks <ben-linux@fluff.org>
 
-How long does a poll actually take, in real time?
-Probably a hundred milliseconds or two, to see if the PHY syncs up?
+Acked-by: Russell King <rmk+kernel@arm.linux.org.uk>
 
-So with a knob set to, say 2 seconds (sysfs), then this would
-save 90% of the power of a permanent "off".  That's pretty good,
-and setting that same knob to "infinity" (-1 ?) would achieve 100%.
-Definitely a good way to go, IMHO.
-
-> I think that for the common case - we should use HPCP to determine if
-> the suggested use of the port is for hot plug.  I can see your point
-> about wanting to give the user the option to just disregard the intended
-> use of the port and do what they want, but I say we don't make that
-> the default behavior.  And, I don't like the idea of adding another
-> wakeup in the driver to do polling - seems like 99% of users are
-> going to be just fine with a knob - and that they should only
-> have to use the knob to override the default (or how bout a 
-> module param?).  I don't think we should compromise power for a 
-> feature that most people are unlikely to use (if HPCP is not set).
-..
-
-I worry that this is far too x86 / vendor specific.
-Most of the SATA ports I have here, for example, probably lack this HPCP bit
-even on x86, and on other arch's it likely doesn't exist at all, right?
-
-For arch/system/device that does have HPCP implemented, then sure,
-it could be used to automatically tweak the sysfs knob.
-But from userspace perhaps, rather than kernel ?
-
-Thanks
-
+> PATCH FOLLOWS
+> KernelVersion: 2.6.24-git12
+> 
+> Index: linux-2.6.25-rc9-ata1/arch/arm/Kconfig
+> ===================================================================
+> --- linux-2.6.25-rc9-ata1.orig/arch/arm/Kconfig	2008-04-15 12:10:02.000000000 +0100
+> +++ linux-2.6.25-rc9-ata1/arch/arm/Kconfig	2008-04-15 15:27:53.000000000 +0100
+> @@ -411,6 +411,7 @@ config ARCH_RPC
+>  	select FIQ
+>  	select TIMER_ACORN
+>  	select ARCH_MAY_HAVE_PC_FDC
+> +	select HAVE_PATA_PLATFORM
+>  	select ISA_DMA_API
+>  	select NO_IOPORT
+>  	select HAVE_IDE
+> Index: linux-2.6.25-rc9-ata1/drivers/ata/Kconfig
+> ===================================================================
+> --- linux-2.6.25-rc9-ata1.orig/drivers/ata/Kconfig	2008-04-15 15:27:48.000000000 +0100
+> +++ linux-2.6.25-rc9-ata1/drivers/ata/Kconfig	2008-04-15 15:27:53.000000000 +0100
+> @@ -634,7 +634,7 @@ config HAVE_PATA_PLATFORM
+>  
+>  config PATA_PLATFORM
+>  	tristate "Generic platform device PATA support"
+> -	depends on EMBEDDED || ARCH_RPC || PPC || HAVE_PATA_PLATFORM
+> +	depends on EMBEDDED || PPC || HAVE_PATA_PLATFORM
+>  	help
+>  	  This option enables support for generic directly connected ATA
+>  	  devices commonly found on embedded systems.
+> 
+> -- 
+> Ben (ben@fluff.org, http://www.fluff.org/)
+> 
+>   'a smiley only costs 4 bytes'
+> 
+> -------------------------------------------------------------------
+> List admin: http://lists.arm.linux.org.uk/mailman/listinfo/linux-arm-kernel
+> FAQ:        http://www.arm.linux.org.uk/mailinglists/faq.php
+> Etiquette:  http://www.arm.linux.org.uk/mailinglists/etiquette.php
