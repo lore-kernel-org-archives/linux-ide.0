@@ -1,35 +1,56 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [2.6 patch] libata-acpi.c: remove unneeded #if's
-Date: Tue, 15 Apr 2008 11:07:42 +0900
-Message-ID: <48040DEE.30005@gmail.com>
-References: <20080414184040.GC6695@cs181133002.pp.htv.fi>
+Subject: Re: No IDE drivers loaded for Toshiba Satellite 320 CDS
+Date: Tue, 15 Apr 2008 11:37:26 +0900
+Message-ID: <480414E6.2090205@gmail.com>
+References: <200804021524.27222.elendil@planet.nl>	<200804021820.04610.elendil@planet.nl>	<20080402194938.GI24237@csclub.uwaterloo.ca>	<200804031947.07674.elendil@planet.nl>	<48017248.4030600@gmail.com>	<20080414134734.GB7385@csclub.uwaterloo.ca> <20080414145302.4239b0b9@core>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wx-out-0506.google.com ([66.249.82.229]:55486 "EHLO
-	wx-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1761921AbYDOCHt (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 14 Apr 2008 22:07:49 -0400
-Received: by wx-out-0506.google.com with SMTP id h31so1354595wxd.4
-        for <linux-ide@vger.kernel.org>; Mon, 14 Apr 2008 19:07:49 -0700 (PDT)
-In-Reply-To: <20080414184040.GC6695@cs181133002.pp.htv.fi>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1764210AbYDOChr@vger.kernel.org>
+In-Reply-To: <20080414145302.4239b0b9@core>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: Lennart Sorensen <lsorense@csclub.uwaterloo.ca>, Frans Pop <elendil@planet.nl>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 List-Id: linux-ide@vger.kernel.org
-To: Adrian Bunk <bunk@kernel.org>
-Cc: Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Adrian Bunk wrote:
-> These #if's are unneeded since they:
-> - did anyway not handle the CONFIG_ACPI_DOCK_MODULE case correctly and
-> - this is already handled in include/acpi/acpi_drivers.h and
-> - it's now correctly handled in kconfig.
+Alan Cox wrote:
+>> If a driver supports a device with dual interfaces, then it better
+>> reserve both sets of ports to prevent the generic driver from trying to
+>> use them.
 > 
-> Signed-off-by: Adrian Bunk <bunk@kernel.org>
+> That isn't the problem. The generic driver doesn't know if there is
+> another valid driver for the ports - how can it - and the other driver
+> may not be loaded first so cannot reserve the ports. If you load the
+> generic driver last then you should be fine, and the link order for IDE
+> and libata puts acpi, pci generic and legacy at the end for good reason.
+> 
+> Libata pata_legacy has some smarts in this area but they are only good
+> for the common cases.
 
-The lesser ifdefs the better.  Acked-by: Tejun Heo <htejun@gmail.com>
+Always loading generic or ata_generic used to be safe.  It's still 
+pretty safe but not as much as before.  Nowadays, there are good number 
+of controllers which have dual interfaces.  Usually an ahci interface 
+and a legacy one but there are other controllers which also implement 
+dual interface.
 
-Thank you.
+Because PCI BARs usually contain IO regions for legacy interface in PCI 
+BAR 0-4, the native driver can work it out by claiming all PCI BARs on 
+attach, which I learned the hard way after seeing the generic driver 
+borking the native one on certain configurations.  The thing I'm worried 
+about is that there are a lot of vendors making this type of controllers 
+nowadays and a lot of BIOS implementations for each of them.  And of 
+course each BIOS implementation has its own many ways of configuring the 
+dual mode (or more thanks to fake RAIDs) controller.
+
+I wouldn't be too surprised if one of those plethora of configurations 
+gets the compatible IO port and BAR configurations mismatched. 
+Especially when the controller is put into native mode.  It's entirely 
+possible to leave the compatible IO ports enabled while not setting the 
+PCI BARs accordingly.  Some of them might even think that's better to 
+prevent IDE drivers from attaching to it.
+
+So, I don't really want to depend on that.  I don't know.  Do I sound 
+paranoid?
 
 -- 
 tejun
