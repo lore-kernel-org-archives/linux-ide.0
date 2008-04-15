@@ -1,125 +1,64 @@
-From: Akira Iguchi <akira2.iguchi@toshiba.co.jp>
-Subject: [PATCH] scc_pata.c: do setup itself instead of ide_setup_pci_device ()
-Date: Tue, 15 Apr 2008 12:15:08 +0900
-Message-ID: <200804150314.m3F3EDX7007038@toshiba.co.jp>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: sda
+Date: Tue, 15 Apr 2008 12:16:58 +0900
+Message-ID: <48041E2A.9000602@gmail.com>
+References: <dd18b0c30804021244k1d44a48hc05ea88552104a71@mail.gmail.com>	 <48016F54.5070405@gmail.com> <dd18b0c30804122117hc0cd548v6cbef5d2c0c0ce5e@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linuxppc-dev-bounces+glppd-linuxppc64-dev=m.gmane.org@ozlabs.org>
-List-Unsubscribe: <https://ozlabs.org/mailman/options/linuxppc-dev>,
-	<mailto:linuxppc-dev-request@ozlabs.org?subject=unsubscribe>
-List-Archive: <http://ozlabs.org/pipermail/linuxppc-dev>
-List-Post: <mailto:linuxppc-dev@ozlabs.org>
-List-Help: <mailto:linuxppc-dev-request@ozlabs.org?subject=help>
-List-Subscribe: <https://ozlabs.org/mailman/listinfo/linuxppc-dev>,
-	<mailto:linuxppc-dev-request@ozlabs.org?subject=subscribe>
-Sender: linuxppc-dev-bounces+glppd-linuxppc64-dev=m.gmane.org@ozlabs.org
-Errors-To: linuxppc-dev-bounces+glppd-linuxppc64-dev=m.gmane.org@ozlabs.org
-To: bzolnier@gmail.com
-Cc: linux-ide@vger.kernel.org, linuxppc-dev@ozlabs.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from rv-out-0708.google.com ([209.85.198.240]:64781 "EHLO
+	rv-out-0506.google.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1763628AbYDODRF (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 14 Apr 2008 23:17:05 -0400
+Received: by rv-out-0506.google.com with SMTP id k29so770452rvb.1
+        for <linux-ide@vger.kernel.org>; Mon, 14 Apr 2008 20:17:04 -0700 (PDT)
+In-Reply-To: <dd18b0c30804122117hc0cd548v6cbef5d2c0c0ce5e@mail.gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Justin Mattock <justinmattock@gmail.com>
+Cc: linux-ide@vger.kernel.org, Mark Lord <liml@rtr.ca>
 
-scc_pata has the different BAR configuration and using ide_setup_pci_device()
-is inappropriate. 
-(ide_setup_pci_device() expects a normal PCI IDE controller with
-BAR0..BAR3 either non-existant or being primary/secondary port bases
-in I/O space.)
+Hello,
 
-This patch do all needed setup itself instead of calling ide_setup_pci_device().
+Justin Mattock wrote:
+>>  Can you please post the result of "lspci -nn".  The error per-se is okay.
+>> The drive failed to respond to IDENTIFY at the first try but on retrial it
+>> responded okay.
+> 
+> Hello; Thank you for the response.
+> I guess you can say I have a tendancy to freak out or panic with
+> little things like that,
+> below is lspci -nn.
 
-Signed-off-by: Kou Ishizaki <kou.ishizaki@toshiba.co.jp>
-Signed-off-by: Akira Iguchi <akira2.iguchi@toshiba.co.jp>
----
+Hmm... ICH7.  I recently had a different bug report on < ICH7 (don't 
+remember whether it was 4, 5 or 6).  In that case, the drive went 
+completely offline after resume.  It never came back after retries.  It 
+seemed like the device needed hardreset after waking up from sleep which 
+we currently only support for >= ICH8).
 
---- linux-2.6.25-rc1/drivers/ide/pci/scc_pata.c	2008-02-11 07:18:14.000000000 +0900
-+++ linux-2.6.25-rc1_mod/drivers/ide/pci/scc_pata.c	2008-04-15 11:45:25.000000000 +0900
-@@ -523,6 +523,42 @@ static int setup_mmio_scc (struct pci_de
- 	return -ENOMEM;
- }
- 
-+static int scc_ide_setup_pci_device(struct pci_dev *dev, const struct ide_port_info *d)
-+{
-+	struct scc_ports *ports = pci_get_drvdata(dev);
-+	ide_hwif_t *hwif = NULL;
-+	hw_regs_t hw;
-+	u8 idx[4] = { 0xff, 0xff, 0xff, 0xff };
-+	int i;
-+
-+	for (i = 0; i < MAX_HWIFS; i++) {
-+		hwif = &ide_hwifs[i];
-+		if (hwif->chipset == ide_unknown)
-+			break; /* pick an unused entry */
-+	}
-+	if (i == MAX_HWIFS) {
-+		printk(KERN_ERR "%s: too many IDE interfaces, no room in table\n", 
-+		       SCC_PATA_NAME);
-+		return -ENOMEM;
-+	}
-+
-+	memset(&hw, 0, sizeof(hw));
-+	for (i = IDE_DATA_OFFSET; i <= IDE_CONTROL_OFFSET; i++)
-+		hw.io_ports[i] = ports->dma + 0x20 + i * 4;
-+	hw.irq = dev->irq;
-+	hw.dev = &dev->dev;
-+	hw.chipset = ide_pci;
-+	ide_init_port_hw(hwif, &hw);
-+	hwif->dev = &dev->dev;
-+	hwif->cds = d;
-+	
-+	idx[0] = hwif->index;
-+
-+	ide_device_add(idx, d);
-+
-+	return 0;
-+}
-+
- /**
-  *	init_setup_scc	-	set up an SCC PATA Controller
-  *	@dev: PCI device
-@@ -545,10 +581,13 @@ static int __devinit init_setup_scc(stru
- 	struct scc_ports *ports;
- 	int rc;
- 
-+	rc = pci_enable_device(dev);
-+	if (rc)
-+		goto end;
-+
- 	rc = setup_mmio_scc(dev, d->name);
--	if (rc < 0) {
--		return rc;
--	}
-+	if (rc < 0)
-+		goto end;
- 
- 	ports = pci_get_drvdata(dev);
- 	ctl_base = ports->ctl;
-@@ -583,7 +622,10 @@ static int __devinit init_setup_scc(stru
- 	out_be32((void*)mode_port, MODE_JCUSFEN);
- 	out_be32((void*)intmask_port, INTMASK_MSK);
- 
--	return ide_setup_pci_device(dev, d);
-+	rc = scc_ide_setup_pci_device(dev, d);
-+
-+ end:
-+	return rc;
- }
- 
- /**
-@@ -610,17 +652,6 @@ static void __devinit init_mmio_iops_scc
- 	hwif->OUTSW = scc_ide_outsw;
- 	hwif->OUTSL = scc_ide_outsl;
- 
--	hwif->io_ports[IDE_DATA_OFFSET] = dma_base + 0x20;
--	hwif->io_ports[IDE_ERROR_OFFSET] = dma_base + 0x24;
--	hwif->io_ports[IDE_NSECTOR_OFFSET] = dma_base + 0x28;
--	hwif->io_ports[IDE_SECTOR_OFFSET] = dma_base + 0x2c;
--	hwif->io_ports[IDE_LCYL_OFFSET] = dma_base + 0x30;
--	hwif->io_ports[IDE_HCYL_OFFSET] = dma_base + 0x34;
--	hwif->io_ports[IDE_SELECT_OFFSET] = dma_base + 0x38;
--	hwif->io_ports[IDE_STATUS_OFFSET] = dma_base + 0x3c;
--	hwif->io_ports[IDE_CONTROL_OFFSET] = dma_base + 0x40;
--
--	hwif->irq = dev->irq;
- 	hwif->dma_base = dma_base;
- 	hwif->config_data = ports->ctl;
- 	hwif->mmio = 1;
+Mark, you played with the hardreset bits in PCS (right?) register.  What 
+do you think about adding it?  Last time I played with it, the presence 
+detection seemed unreliable so hotplug might not work too well but as 
+long as the hardreset itself works we can augment it with follow up srst 
+for cases like this.
+
+> Besides the SATA drive, with the PATA ATAPI drive, I'm running a
+> little test of playing a DVD, then performing a suspend, upon wakeup
+> The movie becomes choppy;
+> "Basically what I can see over here is"; when the system is wokenup
+> whatever is left in the ram or memory continues to play, In the meantime
+> the PATA drive from what I can hear, moves around a little bit thinks
+> for a second, then starts turning fast, but by then whatever was in
+> the ram or memory has played, causing the playback to be out of sync,
+> resulting in a choppy feed.
+> Idealistically I would like to take the media player, and have it wait
+> for the DVD to catch up then start playback, Or see If when suspend
+> occurs (if possible)the lens in the PATA keeps the position, then upon
+> resume PATA resumes, Or If this is already available try and enable
+> that feature.
+
+What happens if you stop the playing and restart it?  Does it play okay?
+
+-- 
+tejun
