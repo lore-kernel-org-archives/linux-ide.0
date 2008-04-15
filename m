@@ -1,53 +1,82 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: What to do about the 2TB limit on HDIO_GETGEO ?
-Date: Tue, 15 Apr 2008 09:20:02 -0500
-Message-ID: <1208269202.3131.3.camel@localhost.localdomain>
-References: <47E875AD.1000901@rtr.ca> <47E88A13.70808@zytor.com>
-	 <47E90019.3050006@rtr.ca> <47E90458.7030801@zytor.com>
-	 <47E9383F.3050908@rtr.ca> <20080325192515.GA24234@suse.de>
-	 <47E99A02.7040903@rtr.ca> <47E99EBE.7010708@gmail.com>
-	 <3ae72650803271229h6e188de1t81ccfb64e5d3a214@mail.gmail.com>
-	 <47EBF7D0.6000901@zytor.com>
-	 <e9c3a7c20804111625w68b21b24p6fbd85864713d62f@mail.gmail.com>
-	 <20080415001828.b0c9ed64.akpm@linux-foundation.org>
+From: lsorense@csclub.uwaterloo.ca (Lennart Sorensen)
+Subject: Re: No IDE drivers loaded for Toshiba Satellite 320 CDS
+Date: Tue, 15 Apr 2008 10:47:48 -0400
+Message-ID: <20080415144748.GO7385@csclub.uwaterloo.ca>
+References: <200804021524.27222.elendil@planet.nl> <200804021820.04610.elendil@planet.nl> <20080402194938.GI24237@csclub.uwaterloo.ca> <200804031947.07674.elendil@planet.nl> <48017248.4030600@gmail.com> <20080414134734.GB7385@csclub.uwaterloo.ca> <20080414145302.4239b0b9@core> <480414E6.2090205@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:52492 "EHLO
-	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754510AbYDOOUI (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 15 Apr 2008 10:20:08 -0400
-In-Reply-To: <20080415001828.b0c9ed64.akpm@linux-foundation.org>
+Received: from caffeine.csclub.uwaterloo.ca ([129.97.134.17]:57388 "EHLO
+	caffeine.csclub.uwaterloo.ca" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1765419AbYDOOrt (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 15 Apr 2008 10:47:49 -0400
+Content-Disposition: inline
+In-Reply-To: <480414E6.2090205@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: Dan Williams <dan.j.williams@intel.com>, "H. Peter Anvin" <hpa@zytor.com>, Kay Sievers <kay.sievers@vrfy.org>, Tejun Heo <htejun@gmail.com>, Mark Lord <lkml@rtr.ca>, Greg KH <gregkh@suse.de>, Jens Axboe <axboe@kernel.dk>, Jeff Garzik <jgarzik@pobox.com>, Linus Torvalds <torvalds@linux-foundation.org>, Linux Kernel <linux-kernel@vger.kernel.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
+To: Tejun Heo <htejun@gmail.com>
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, Frans Pop <elendil@planet.nl>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 
-On Tue, 2008-04-15 at 00:18 -0700, Andrew Morton wrote:
-> On Fri, 11 Apr 2008 16:25:32 -0700 "Dan Williams" <dan.j.williams@intel.com> wrote:
-> 
-> > >  It doesn't really seem to be to belong under class at all.  I would suggest
-> > > /sys/dev/char/ and /sys/dev/block/, for char and block respectively.
-> > >
-> > 
-> > This thread fizzled out without a patch... here goes:
-> > 
-> > ...
+On Tue, Apr 15, 2008 at 11:37:26AM +0900, Tejun Heo wrote:
+> Alan Cox wrote:
+> >>If a driver supports a device with dual interfaces, then it better
+> >>reserve both sets of ports to prevent the generic driver from trying to
+> >>use them.
 > >
-> > sysfs: add /sys/dev/{char,block} to lookup sysfs path by major:minor
+> >That isn't the problem. The generic driver doesn't know if there is
+> >another valid driver for the ports - how can it - and the other driver
+> >may not be loaded first so cannot reserve the ports. If you load the
+> >generic driver last then you should be fine, and the link order for IDE
+> >and libata puts acpi, pci generic and legacy at the end for good reason.
+> >
+> >Libata pata_legacy has some smarts in this area but they are only good
+> >for the common cases.
 > 
-> Crickets are chirping and I can't remember what the conclusion to all this
-> was.  In fact the thread was more than ten-deep so I probably fell asleep.
+> Always loading generic or ata_generic used to be safe.  It's still 
+> pretty safe but not as much as before.  Nowadays, there are good number 
+> of controllers which have dual interfaces.  Usually an ahci interface 
+> and a legacy one but there are other controllers which also implement 
+> dual interface.
 > 
-> I queued it up so that others cannot do the same ;)
+> Because PCI BARs usually contain IO regions for legacy interface in PCI 
+> BAR 0-4, the native driver can work it out by claiming all PCI BARs on 
+> attach, which I learned the hard way after seeing the generic driver 
+> borking the native one on certain configurations.  The thing I'm worried 
+> about is that there are a lot of vendors making this type of controllers 
+> nowadays and a lot of BIOS implementations for each of them.  And of 
+> course each BIOS implementation has its own many ways of configuring the 
+> dual mode (or more thanks to fake RAIDs) controller.
+> 
+> I wouldn't be too surprised if one of those plethora of configurations 
+> gets the compatible IO port and BAR configurations mismatched. 
+> Especially when the controller is put into native mode.  It's entirely 
+> possible to leave the compatible IO ports enabled while not setting the 
+> PCI BARs accordingly.  Some of them might even think that's better to 
+> prevent IDE drivers from attaching to it.
+> 
+> So, I don't really want to depend on that.  I don't know.  Do I sound 
+> paranoid?
 
-The expressed preference was simply to expand the ioctl (or add a new
-one that got the required information without having to go through the
-old HDIOGETGEO path to extract the value from a fictitious geometry).
+Yes.  After all you would quickly see a problem if you built a kernel
+with all the IDE drivers built in, which some people do.  In that case
+ide generic is always activated last and anything bad that would happen
+with loading a module would happen built in too.
 
-Greg was a bit sceptical of the value of the above proposal ...
+I think it is the wrong place to worry about problems.  If a native
+driver takes control of a chip, it is that drivers responsibility to
+reserve any relevant ports on that chip sufficiently to prevent another
+driver from messing with it that doesn't know anything about that chip.
+If the native driver doesn't load at all, then ide-generic ought to try
+and drive the chip if it has legacy ports.
 
-James
+So my opinion is that making life easy to those machines with legacy ide
+ports is a good thing, while trying to be overly paranoid about one
+driver potentially hitting a bug in another driver is just silly.  Why
+couldn't two native ide drivers potentially go looking for the same
+ports too?  Are you sure no native driver uses the legacy IDE port
+numbers to control a chip in native mode?  Finding bugs is good since
+then they can be fixed.  Trying to prevent hitting bugs (which shouldn't
+be there in the first place) doesn't seem useful.
 
-
+-- 
+Len Sorensen
