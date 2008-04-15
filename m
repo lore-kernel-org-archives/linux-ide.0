@@ -1,43 +1,56 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [PATCH] Pb1200/DBAu1200: fix bad IDE resource size
-Date: Tue, 15 Apr 2008 23:09:11 +0200
-Message-ID: <200804152309.11471.bzolnier@gmail.com>
-References: <200804152044.32912.sshtylyov@ru.mvista.com>
+From: Adrian Bunk <bunk@kernel.org>
+Subject: Re: [2.6 patch] PCMCIA mustn't select HAVE_IDE
+Date: Wed, 16 Apr 2008 00:23:26 +0300
+Message-ID: <20080415212326.GF1677@cs181133002.pp.htv.fi>
+References: <20080414141659.GF6695@cs181133002.pp.htv.fi> <20080414175344.GA15028@uranus.ravnborg.org> <200804152215.34904.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from fk-out-0910.google.com ([209.85.128.189]:59155 "EHLO
-	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754388AbYDOVT7 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 15 Apr 2008 17:19:59 -0400
-Received: by fk-out-0910.google.com with SMTP id 19so2407243fkr.5
-        for <linux-ide@vger.kernel.org>; Tue, 15 Apr 2008 14:19:56 -0700 (PDT)
-In-Reply-To: <200804152044.32912.sshtylyov@ru.mvista.com>
+Content-Type: text/plain; charset=utf-8
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S932903AbYDOVYy@vger.kernel.org>
 Content-Disposition: inline
-Sender: linux-ide-owner@vger.kernel.org
+In-Reply-To: <200804152215.34904.bzolnier@gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: Sam Ravnborg <sam@ravnborg.org>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linux-pcmcia@lists.infradead.org, Russell King <rmk@arm.linux.org.uk>
 List-Id: linux-ide@vger.kernel.org
-To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Cc: linux-mips@linux-mips.org, linux-ide@vger.kernel.org, ralf@linux-mips.org
 
-On Tuesday 15 April 2008, Sergei Shtylyov wrote:
-> The header files for the Pb1200/DBAu1200 boards have wrong definition for the
-> IDE interface's  decoded range length -- it should be 512 bytes according to
-> what the IDE driver does.  In addition, the IDE platform device claims 1 byte
-> too many for its memory resource -- fix the platform code and the IDE driver
-> in accordance.
+On Tue, Apr 15, 2008 at 10:15:34PM +0200, Bartlomiej Zolnierkiewicz wrote:
+> On Monday 14 April 2008, Sam Ravnborg wrote:
+> > On Mon, Apr 14, 2008 at 05:16:59PM +0300, Adrian Bunk wrote:
+> > > It's plain wrong for PCMCIA to select HAVE_IDE that implies e.g. the 
+> > > availability of an asm/ide.h
+> > > 
+> > > Signed-off-by: Adrian Bunk <bunk@kernel.org>
+> > > 
+> > > ---
+> > > 9cdb66112488bc0c6e1d528444d3ba30d5b0487f diff --git a/drivers/pcmcia/Kconfig b/drivers/pcmcia/Kconfig
+> > > index 8b22281..519b4ff 100644
+> > > --- a/drivers/pcmcia/Kconfig
+> > > +++ b/drivers/pcmcia/Kconfig
+> > > @@ -38,7 +38,6 @@ config PCMCIA_DEBUG
+> > >  config PCMCIA
+> > >  	tristate "16-bit PCMCIA support"
+> > >  	select CRC32
+> > > -	select HAVE_IDE
+> > >  	default y
+> > 
+> > I did this when introducing HAVE_IDE.
+> > But I do not recall why and the rationale for removing it
+> > seems fine to me.
 > 
-> Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-> 
-> ---
-> I'm not sure thru which tree this should go -- probably thru Linux/MIPS one...
+> IIRC it was needed for some arm platforms which don't select HAVE_IDE
+> explicetely but I don't know if this is still the case, pinging Russell.
 
-Well, since I've been already merging the other au1xxx-ide patches
-to IDE tree I've also applied this one while at it...
+It's definitely bogus since it can cause compile breakage on 
+architectures like avr32.
 
->  arch/mips/au1000/common/platform.c    |    2 +-
->  drivers/ide/mips/au1xxx-ide.c         |    7 ++++---
->  include/asm-mips/mach-db1x00/db1200.h |    4 ++--
->  include/asm-mips/mach-pb1x00/pb1200.h |    4 ++--
->  4 files changed, 9 insertions(+), 8 deletions(-)
+And whatever it should have fixed should be fixed properly.
+
+cu
+Adrian
+
+-- 
+
+       "Is there not promise of rain?" Ling Tan asked suddenly out
+        of the darkness. There had been need of rain for many days.
+       "Only a promise," Lao Er said.
+                                       Pearl S. Buck - Dragon Seed
