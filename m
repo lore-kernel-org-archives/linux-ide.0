@@ -1,118 +1,40 @@
-From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: Re: [PATCH 4/4] block: add large command support
-Date: Tue, 15 Apr 2008 10:45:52 +0300
-Message-ID: <48045D30.5070406@panasas.com>
-References: <20080414010112W.tomof@acm.org> <1208170266-1676-1-git-send-email-fujita.tomonori@lab.ntt.co.jp> <1208170266-1676-2-git-send-email-fujita.tomonori@lab.ntt.co.jp> <1208170266-1676-3-git-send-email-fujita.tomonori@lab.ntt.co.jp> <1208170266-1676-4-git-send-email-fujita.tomonori@lab.ntt.co.jp> <1208170266-1676-5-git-send-email-fujita.tomonori@lab.ntt.co.jp> <20080414144154.GB10288@osc.edu>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: No IDE drivers loaded for Toshiba Satellite 320 CDS
+Date: Tue, 15 Apr 2008 11:04:19 +0100
+Message-ID: <20080415110419.785a75ee@core>
+References: <200804021524.27222.elendil@planet.nl>
+	<200804021820.04610.elendil@planet.nl>
+	<20080402194938.GI24237@csclub.uwaterloo.ca>
+	<200804031947.07674.elendil@planet.nl>
+	<48017248.4030600@gmail.com>
+	<20080414134734.GB7385@csclub.uwaterloo.ca>
+	<20080414145302.4239b0b9@core>
+	<480414E6.2090205@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from bzq-219-195-70.pop.bezeqint.net ([62.219.195.70]:38469 "EHLO
-	bh-buildlin2.bhalevy.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752783AbYDOHqY (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 15 Apr 2008 03:46:24 -0400
-In-Reply-To: <20080414144154.GB10288@osc.edu>
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:55184 "EHLO
+	lxorguk.ukuu.org.uk" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1756292AbYDOKIz (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 15 Apr 2008 06:08:55 -0400
+In-Reply-To: <480414E6.2090205@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Pete Wyckoff <pw@osc.edu>
-Cc: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, linux-scsi@vger.kernel.org, Jens Axboe <jens.axboe@oracle.com>, linux-ide@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: Lennart Sorensen <lsorense@csclub.uwaterloo.ca>, Frans Pop <elendil@planet.nl>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 
-On Mon, Apr 14 2008 at 17:41 +0300, Pete Wyckoff <pw@osc.edu> wrote:
-> fujita.tomonori@lab.ntt.co.jp wrote on Mon, 14 Apr 2008 19:50 +0900:
->> This patch changes rq->cmd from the static array to a pointer to
->> support large commands.
->>
->> We rarely handle large commands. So for optimization, a struct request
->> still has a static array for a command. rq_init sets rq->cmd pointer
->> to the static array.
->>
->> Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
->> Cc: Jens Axboe <jens.axboe@oracle.com>
-> [..]
->> diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
->> index b3a58ad..5710ae4 100644
->> --- a/include/linux/blkdev.h
->> +++ b/include/linux/blkdev.h
->> @@ -215,8 +215,9 @@ struct request {
->>  	/*
->>  	 * when request is used as a packet command carrier
->>  	 */
->> -	unsigned int cmd_len;
->> -	unsigned char cmd[BLK_MAX_CDB];
->> +	unsigned short cmd_len;
->> +	unsigned char __cmd[BLK_MAX_CDB];
->> +	unsigned char *cmd;
->>  
->>  	unsigned int data_len;
->>  	unsigned int extra_len;	/* length of alignment and padding */
->> @@ -812,6 +813,13 @@ static inline void put_dev_sector(Sector p)
->>  	page_cache_release(p.v);
->>  }
->>  
->> +static inline void rq_set_cmd(struct request *rq, unsigned char *cmd,
->> +			      unsigned short cmd_len)
->> +{
->> +	rq->cmd = cmd;
->> +	rq->cmd_len = cmd_len;
->> +}
-> 
-> Here's one way this will be used, in a patched bsg that understands
-> large commands.  Complication is the need to copy and hold onto the
-> big command across the duration of the request.
-> 
-> Submit time is fairly clean:
-> 
-> 	/* buf, len from user request */
-> 	rq = blk_get_request(..);
-> 	rq->cmd_len = len;
-> 	if (len > BLK_MAX_CDB) {
-> 		rq->cmd = kmalloc(len);
-> 		if (rq->cmd == NULL)
-> 			goto out;
-> 	}
-> 	copy_from_user(rq->cmd, buf, len);
-> 
-> Completion time needs to know when to free rq->cmd:
-> 
-> 	if (rq->cmd_len > BLK_MAX_CDB)
-> 		kfree(rq->cmd);
-> 	blk_put_request(rq);
-> 
-> Could use (rq->cmd != rq->__cmd) instead, but nothing had better
-> ever touch rq->cmd_len.
-> 
+> Always loading generic or ata_generic used to be safe.  It's still 
+> pretty safe but not as much as before.  Nowadays, there are good number 
 
-Don't do any of that please. The 16 bytes buffer at request is eventually
-going away. Just always allocate and call rq_set_cmd(). This way we are
-free to change in the future, and users code need not change.
+ata_generic is always safe unless you force it to grab every class
+device. By default it grabs only those devices we know obey the class
+interface well enough and for which we have no proper driver (usually
+because there are no documents). Ditto for ide/pci/generic.
 
-And better then kmalloc the space for the command, is if you have
-a structure that governs your request, just allocate a 
-SCSI_MAX_VARLEN_CDB_SIZE (260) bytes array at your structure and always
-use that.
+The trickier one is pata_legacy, which tries to be smart and knows about
+the known exception so *should* always be safe. The old IDE legacy driver
+lacks these smarts so in some cases will do the wrong thing even if
+loaded last.
 
-> I don't think the helper rq_set_cmd() will be very useful, as the
-> caller (bsg) must think about allocation of the command buffer if it
-> is big.
-> 
-> One option would be to handle allocation/freeing of the big command
-> in rq_set_... functions, but I don't think you want to constrain the
-> interface like that.
-> 
-> Boaz's concern about big rq->cmd_len still worries me, although I
-> think this approach is better and worth solving bugs in drivers as
-> they arise.  It only matters in the case that someone adds, say, a
-> bsg interface to all block devices though.  The queuecommand of ub
-> shows a good example of how this will break.
-> 
-> In sum, this is a cleaner approach, and a bit easier for callers
-> with long commands to deal with.  And you could get rid of the
-> trivial helper.
-> 
-
-Don't. Please use the set helper it will give us future compatibility.
-
-> 		-- Pete
-> --
-
-Boaz
+Alan
