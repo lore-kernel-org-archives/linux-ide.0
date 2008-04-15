@@ -1,57 +1,168 @@
-From: Adrian Bunk <bunk@kernel.org>
-Subject: Re: [2.6 patch] PCMCIA mustn't select HAVE_IDE
-Date: Wed, 16 Apr 2008 01:10:02 +0300
-Message-ID: <20080415221002.GL1677@cs181133002.pp.htv.fi>
-References: <20080414141659.GF6695@cs181133002.pp.htv.fi> <20080414175344.GA15028@uranus.ravnborg.org> <200804152215.34904.bzolnier@gmail.com> <20080415212326.GF1677@cs181133002.pp.htv.fi> <20080415212822.GE5676@flint.arm.linux.org.uk> <20080415214203.GF5676@flint.arm.linux.org.uk> <20080415215223.GK1677@cs181133002.pp.htv.fi> <20080415220344.GG5676@flint.arm.linux.org.uk>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: [PATCH 4/4] block: add large command support
+Date: Wed, 16 Apr 2008 00:50:54 +0200
+Message-ID: <200804160050.54842.bzolnier@gmail.com>
+References: <20080414010112W.tomof@acm.org> <1208170266-1676-5-git-send-email-fujita.tomonori@lab.ntt.co.jp> <20080414112919.GF12774@kernel.dk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp4.pp.htv.fi ([213.243.153.38]:58374 "EHLO smtp4.pp.htv.fi"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754107AbYDOWLO (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 15 Apr 2008 18:11:14 -0400
+Received: from fg-out-1718.google.com ([72.14.220.156]:63343 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753411AbYDOWfl (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 15 Apr 2008 18:35:41 -0400
+Received: by fg-out-1718.google.com with SMTP id l27so2163843fgb.17
+        for <linux-ide@vger.kernel.org>; Tue, 15 Apr 2008 15:35:39 -0700 (PDT)
+In-Reply-To: <20080414112919.GF12774@kernel.dk>
 Content-Disposition: inline
-In-Reply-To: <20080415220344.GG5676@flint.arm.linux.org.uk>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Sam Ravnborg <sam@ravnborg.org>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linux-pcmcia@lists.infradead.org
+To: Jens Axboe <jens.axboe@oracle.com>
+Cc: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, linux-scsi@vger.kernel.org, bharrosh@panasas.com, linux-ide@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>
 
-On Tue, Apr 15, 2008 at 11:03:45PM +0100, Russell King wrote:
-> On Wed, Apr 16, 2008 at 12:52:23AM +0300, Adrian Bunk wrote:
->...
-> So this is a only impacting ARM wrt. PCMCIA, and given that ARM supplies
-> an asm/ide.h, it's _entirely_ reasonable that if a platform has PCMCIA
-> then it supports IDE.
+
+Hi,
+
+On Monday 14 April 2008, Jens Axboe wrote:
+> On Mon, Apr 14 2008, FUJITA Tomonori wrote:
+> > This patch changes rq->cmd from the static array to a pointer to
+> > support large commands.
+> > 
+> > We rarely handle large commands. So for optimization, a struct request
+> > still has a static array for a command. rq_init sets rq->cmd pointer
+> > to the static array.
+> > 
+> > Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+> > Cc: Jens Axboe <jens.axboe@oracle.com>
+> > ---
+> >  block/blk-core.c       |    1 +
+> >  drivers/ide/ide-io.c   |    1 +
+> >  include/linux/blkdev.h |   12 ++++++++++--
+> >  3 files changed, 12 insertions(+), 2 deletions(-)
+> > 
+> > diff --git a/block/blk-core.c b/block/blk-core.c
+> > index 6669238..6f0968f 100644
+> > --- a/block/blk-core.c
+> > +++ b/block/blk-core.c
+> > @@ -132,6 +132,7 @@ void rq_init(struct request_queue *q, struct request *rq)
+> >  	rq->errors = 0;
+> >  	rq->ref_count = 1;
+> >  	rq->cmd_len = 0;
+> > +	rq->cmd = rq->__cmd;
+> >  	memset(rq->cmd, 0, BLK_MAX_CDB);
+> >  	rq->data_len = 0;
+> >  	rq->extra_len = 0;
+> > diff --git a/drivers/ide/ide-io.c b/drivers/ide/ide-io.c
+> > index 7153796..bac5ea1 100644
+> > --- a/drivers/ide/ide-io.c
+> > +++ b/drivers/ide/ide-io.c
+> > @@ -1595,6 +1595,7 @@ void ide_init_drive_cmd (struct request *rq)
+> >  {
+> >  	memset(rq, 0, sizeof(*rq));
+> >  	rq->ref_count = 1;
+> > +	rq->cmd = rq->__cmd;
+> >  }
+
+Tomo, some more changes are needed:
+
+Please think about all _static_/dynamic allocations of 'struct request'
+used together with REQ_TYPE_SPECIAL etc., i.e.
+
+static void idetape_init_rq(struct request *rq, u8 cmd)
+
+[ rq can be from privately allocated driver's "stack" so no rq_init() ]
+
+{
+	memset(rq, 0, sizeof(*rq));
+	rq->cmd_type = REQ_TYPE_SPECIAL;
+	rq->cmd[0] = cmd;
+}
+
+in ide-tape.c or REQ_TYPE_SENSE in ide-cd.c:
+
+static void cdrom_queue_request_sense(ide_drive_t *drive, void *sense,
+                                      struct request *failed_command)
+{
+        struct cdrom_info *info         = drive->driver_data;
+        struct request *rq              = &info->request_sense_request;
+
+        if (sense == NULL)
+                sense = &info->sense_data;
+
+        /* stuff the sense request in front of our current request */
+        ide_cd_init_rq(drive, rq);
+
+        rq->data = sense;
+        rq->cmd[0] = GPCMD_REQUEST_SENSE;
+        rq->cmd[4] = rq->data_len = 18;
+
+        rq->cmd_type = REQ_TYPE_SENSE;
+
+        /* NOTE! Save the failed command in "rq->buffer" */
+        rq->buffer = (void *) failed_command;
+
+        (void) ide_do_drive_cmd(drive, rq, ide_preempt);
+}
+
+> >  EXPORT_SYMBOL(ide_init_drive_cmd);
+> > diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
+> > index b3a58ad..5710ae4 100644
+> > --- a/include/linux/blkdev.h
+> > +++ b/include/linux/blkdev.h
+> > @@ -215,8 +215,9 @@ struct request {
+> >  	/*
+> >  	 * when request is used as a packet command carrier
+> >  	 */
+> > -	unsigned int cmd_len;
+> > -	unsigned char cmd[BLK_MAX_CDB];
+> > +	unsigned short cmd_len;
+> > +	unsigned char __cmd[BLK_MAX_CDB];
+> > +	unsigned char *cmd;
+
+The source issue lies here:
+
+rq->cmd _silently_ becomes something else and unconverted code will happily
+compile without even a _single_ warning (+ memory corruption / oops later).
+
+This is _guaranteed_ to cause problems:
+
+- overlooked code (like the IDE code above, with the current approach
+  you have to _manually_ audit all code and still _can't_ be sure about
+  the result)
+
+- unmerged code from other trees (i.e., I _have_ WIP patches mapping
+  REQ_TYPE_TASKFILE requests onto rq->cmd)
+
+- out of tree code (in theory we don't care but in this specific
+  case there is no reason to break things silently)
+
+Please just add new field instead (cost should be negligable and if
+we're concerned about it I see no problem with using unnamed union like
+it was done by Boaz). 
+
+[ Probably it is also worth to add new length field instead of re-using
+  ->cmd_len, just to stay on the safe side (+ for better consistency). ]
+
+> >  	unsigned int data_len;
+> >  	unsigned int extra_len;	/* length of alignment and padding */
+> > @@ -812,6 +813,13 @@ static inline void put_dev_sector(Sector p)
+> >  	page_cache_release(p.v);
+> >  }
+> >  
+> > +static inline void rq_set_cmd(struct request *rq, unsigned char *cmd,
+> > +			      unsigned short cmd_len)
+> > +{
+> > +	rq->cmd = cmd;
+> > +	rq->cmd_len = cmd_len;
+> > +}
+> > +
 > 
-> > We could simply always select HAVE_IDE on arm instead of manually 
-> > setting which platforms could possibly get IDE support (e.g. are there
-> > any boards with PCI slots for which HAVE_IDE is currently not 
-> > selected?).
-> 
-> You could, if there was a demand for it.  As no one has added that,
-> I conclude that its less common for people to stick an IDE controller
-> into a PCI backplane.
+> This is 100% identical to what I suggested be done instead, so of course
+> I agree with this.
 
-People can always enable code for stuff they don't use.
+Jens, I see that you've applied this patch to block tree
+- please revert it for now, it needs to be re-designed.
 
-But instead of having 14 ARM platforms plus PCMCIA (which is offered 
-unconditionally on all ARM platforms...) select HAVE_IDE it's simpler
-to select it once for all ARM platforms.
-
-> In fact, there are only three classes of ARM platforms which have PCI
-> selected but not HAVE_IDE - IOP13xx, IXP2000, and Orion.  I suspect
-> the only reason they don't select it because they now use the ATA code
-> rather than the old IDE code - that's certainly true of Orion.
-
-The libata options are offered unconditionally on all platforms...
-
-cu
-Adrian
-
--- 
-
-       "Is there not promise of rain?" Ling Tan asked suddenly out
-        of the darkness. There had been need of rain for many days.
-       "Only a promise," Lao Er said.
-                                       Pearl S. Buck - Dragon Seed
-
+Thanks,
+Bart
