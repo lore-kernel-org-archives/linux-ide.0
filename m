@@ -1,35 +1,55 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: Re: No IDE drivers loaded for Toshiba Satellite 320 CDS
-Date: Wed, 16 Apr 2008 08:25:57 +0900
-Message-ID: <48053985.8080702@gmail.com>
-References: <200804021524.27222.elendil@planet.nl>	<200804021820.04610.elendil@planet.nl>	<20080402194938.GI24237@csclub.uwaterloo.ca>	<200804031947.07674.elendil@planet.nl>	<48017248.4030600@gmail.com>	<20080414134734.GB7385@csclub.uwaterloo.ca>	<20080414145302.4239b0b9@core>	<480414E6.2090205@gmail.com> <20080415110419.785a75ee@core>
+Subject: Re: sda
+Date: Wed, 16 Apr 2008 08:36:20 +0900
+Message-ID: <48053BF4.8060809@gmail.com>
+References: <dd18b0c30804021244k1d44a48hc05ea88552104a71@mail.gmail.com>	 <48016F54.5070405@gmail.com> <dd18b0c30804122117hc0cd548v6cbef5d2c0c0ce5e@mail.gmail.com> <48041E2A.9000602@gmail.com> <4804B388.5090509@rtr.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1758681AbYDOX0V@vger.kernel.org>
-In-Reply-To: <20080415110419.785a75ee@core>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: Lennart Sorensen <lsorense@csclub.uwaterloo.ca>, Frans Pop <elendil@planet.nl>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from rv-out-0708.google.com ([209.85.198.247]:32503 "EHLO
+	rv-out-0506.google.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1761569AbYDOXg0 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 15 Apr 2008 19:36:26 -0400
+Received: by rv-out-0506.google.com with SMTP id k29so994494rvb.1
+        for <linux-ide@vger.kernel.org>; Tue, 15 Apr 2008 16:36:25 -0700 (PDT)
+In-Reply-To: <4804B388.5090509@rtr.ca>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Mark Lord <liml@rtr.ca>
+Cc: Justin Mattock <justinmattock@gmail.com>, linux-ide@vger.kernel.org
 
-Alan Cox wrote:
->> Always loading generic or ata_generic used to be safe.  It's still 
->> pretty safe but not as much as before.  Nowadays, there are good number 
-> 
-> ata_generic is always safe unless you force it to grab every class
-> device. By default it grabs only those devices we know obey the class
-> interface well enough and for which we have no proper driver (usually
-> because there are no documents). Ditto for ide/pci/generic.
-> 
-> The trickier one is pata_legacy, which tries to be smart and knows about
-> the known exception so *should* always be safe. The old IDE legacy driver
-> lacks these smarts so in some cases will do the wrong thing even if
-> loaded last.
+Hello,
 
-Right, I was thinking about drivers/ide/ide-generic.c which just grabs 
-every known legacy IO ports.  This actually caused rather serious 
-problems on some ATI controllers under certain configurations.  :-(
+Mark Lord wrote:
+> What I did back in 2007 was, implement hot plug/unplug for ICH5,
+> done by polling the PCS bits.
+> 
+> It works, and is reportedly quite reliable, even though there is still a
+> tiny theoretical loophole where the chipset could lock up.
+> 
+> The glitch on ICH5, at least, is that the PCS bits work fine for detecting
+> drive insertions, but not drive removals.  To detect a drive removal,
+> one has to first toggle the enable line (1..0..1) in PCS, and then wait
+> for the PHY to try and sync up afterwards (microseconds).
+
+Having hardreset around is helpful whether hotplugging works or not. 
+Can you please tell me more about the theoretical loophole?
+
+> The code didn't go upstream because it conflicted somewhat with the pending
+> hotplug polling framework you had in development at the time.  :)
+> 
+> What's the scoop with that now, anyways?  The sata_mv driver will 
+> eventually
+> want hotplug polling to deal with port multiplier ports -- it cannot use 
+> AN.
+
+Heh... That was blocked on sysfs nodes and as time goes by it went down 
+through the rabbit hole.  MV can't do AN?  Have you taken a look at how 
+ahci implements AN?  It doesn't really support AN.  It just looks at 
+what FIS it received and tries to emulate the notification, which BTW 
+isn't 100% accurate as the receive area can be overwritten 
+asynchronously but it works good enough.  Maybe MV can do similar?
 
 -- 
 tejun
