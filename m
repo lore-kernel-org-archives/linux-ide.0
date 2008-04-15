@@ -1,17 +1,21 @@
-From: Adrian Bunk <bunk@kernel.org>
+From: Russell King <rmk+lkml@arm.linux.org.uk>
 Subject: Re: [2.6 patch] PCMCIA mustn't select HAVE_IDE
-Date: Wed, 16 Apr 2008 00:23:26 +0300
-Message-ID: <20080415212326.GF1677@cs181133002.pp.htv.fi>
+Date: Tue, 15 Apr 2008 22:26:16 +0100
+Message-ID: <20080415212616.GD5676@flint.arm.linux.org.uk>
 References: <20080414141659.GF6695@cs181133002.pp.htv.fi> <20080414175344.GA15028@uranus.ravnborg.org> <200804152215.34904.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S932903AbYDOVYy@vger.kernel.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from caramon.arm.linux.org.uk ([78.32.30.218]:37008 "EHLO
+	caramon.arm.linux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754692AbYDOV0t (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 15 Apr 2008 17:26:49 -0400
 Content-Disposition: inline
 In-Reply-To: <200804152215.34904.bzolnier@gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: Sam Ravnborg <sam@ravnborg.org>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linux-pcmcia@lists.infradead.org, Russell King <rmk@arm.linux.org.uk>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: Sam Ravnborg <sam@ravnborg.org>, Adrian Bunk <bunk@kernel.org>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linux-pcmcia@lists.infradead.org
 
 On Tue, Apr 15, 2008 at 10:15:34PM +0200, Bartlomiej Zolnierkiewicz wrote:
 > On Monday 14 April 2008, Sam Ravnborg wrote:
@@ -40,17 +44,14 @@ On Tue, Apr 15, 2008 at 10:15:34PM +0200, Bartlomiej Zolnierkiewicz wrote:
 > IIRC it was needed for some arm platforms which don't select HAVE_IDE
 > explicetely but I don't know if this is still the case, pinging Russell.
 
-It's definitely bogus since it can cause compile breakage on 
-architectures like avr32.
+If that is so then it is so - the only way to find out is work out
+why we ended up with HAVE_IDE and what it was transformed from.
 
-And whatever it should have fixed should be fixed properly.
-
-cu
-Adrian
+To just ask me whether it's still the case, I've absolutely no idea -
+there's no way in hell for me to be able to track these kinds of
+dependencies.
 
 -- 
-
-       "Is there not promise of rain?" Ling Tan asked suddenly out
-        of the darkness. There had been need of rain for many days.
-       "Only a promise," Lao Er said.
-                                       Pearl S. Buck - Dragon Seed
+Russell King
+ Linux kernel    2.6 ARM Linux   - http://www.arm.linux.org.uk/
+ maintainer of:
