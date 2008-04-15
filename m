@@ -1,36 +1,36 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: Re: sata_via
-Date: Tue, 15 Apr 2008 11:40:33 +0900
-Message-ID: <480415A1.9090004@gmail.com>
-References: <47F694C8.8020507@wesmo.com> <47F6A5E8.1030602@garzik.org>	 <47F6BD55.3090708@wesmo.com>	 <5699f8f00804050015kb1ebb1cpf3ab8b587580fffd@mail.gmail.com>	 <47F7982E.5080701@wesmo.com> <47F7F463.2060402@garzik.org>	 <480173CB.5070805@gmail.com> <480189DB.9050900@wesmo.com>	 <48018DC0.6080407@wesmo.com>  <1208133587.2755.8.camel@htj.dyndns.org> <1208160803.1784.14.camel@queen.suse.de>
+Subject: Re: libata errors with smartctl on 2.6.24, WD3200AAKS and nVidia
+ AHCI
+Date: Tue, 15 Apr 2008 12:10:57 +0900
+Message-ID: <48041CC1.1030909@gmail.com>
+References: <200804092130.07149.tvrtko@ursulin.net> <480179D3.8070707@gmail.com> <200804130834.14257.tvrtko@ursulin.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.179]:30354 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760306AbYDOCkm (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 14 Apr 2008 22:40:42 -0400
-Received: by wa-out-1112.google.com with SMTP id m16so2811631waf.23
-        for <linux-ide@vger.kernel.org>; Mon, 14 Apr 2008 19:40:39 -0700 (PDT)
-In-Reply-To: <1208160803.1784.14.camel@queen.suse.de>
+Received: from wf-out-1314.google.com ([209.85.200.172]:61119 "EHLO
+	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1761465AbYDODLT (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 14 Apr 2008 23:11:19 -0400
+Received: by wf-out-1314.google.com with SMTP id 28so1784457wff.4
+        for <linux-ide@vger.kernel.org>; Mon, 14 Apr 2008 20:11:16 -0700 (PDT)
+In-Reply-To: <200804130834.14257.tvrtko@ursulin.net>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: trenn@suse.de
-Cc: Rich West <Rich.West@wesmo.com>, Jeff Garzik <jeff@garzik.org>, Wander Winkelhorst <w.winkelhorst@gmail.com>, linux-kernel@vger.kernel.org, Linux IDE mailing list <linux-ide@vger.kernel.org>, Peter Gervai <grinapo@gmail.com>, Marin Mitov <mitov@issp.bas.bg>
+To: "Tvrtko A. Ursulin" <tvrtko@ursulin.net>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Thomas Renninger wrote:
-> ----------------------------------------------
-> Peter Gervai posted a similar report recently, Elias Oltmanns had an
-> idea (on linux-ide or linux-acpi list):
-> Subject: Re: Hard freeze / interrupt-related death / instability
-> Wed, 09 Apr 2008
+Tvrtko A. Ursulin wrote:
+> On Sunday 13 April 2008 04:11:15 Tejun Heo wrote:
+>> Is auto spindown configured for the drive?
 > 
-> (but Tejun was already involved into that, at least in the link posted
-> there, but reading it up might be worth it).
-> Is this the same problem?
+> I don't think so - it's a 3.5" drive with no special PM features - but how to 
+> tell?
 
-Can't really tell.  Didn't look like a low level driver problem tho.
+Hmm... Can you please post the result of "smartctl --version" and 
+"smartctl -a > out 2>&1" and dmesg after the smartctl command?
+
+Thanks.
 
 -- 
 tejun
