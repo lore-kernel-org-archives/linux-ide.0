@@ -1,81 +1,124 @@
-From: Russell King <rmk+lkml@arm.linux.org.uk>
+From: Adrian Bunk <bunk@kernel.org>
 Subject: Re: [2.6 patch] PCMCIA mustn't select HAVE_IDE
-Date: Tue, 15 Apr 2008 22:42:03 +0100
-Message-ID: <20080415214203.GF5676@flint.arm.linux.org.uk>
-References: <20080414141659.GF6695@cs181133002.pp.htv.fi> <20080414175344.GA15028@uranus.ravnborg.org> <200804152215.34904.bzolnier@gmail.com> <20080415212326.GF1677@cs181133002.pp.htv.fi> <20080415212822.GE5676@flint.arm.linux.org.uk>
+Date: Wed, 16 Apr 2008 00:52:23 +0300
+Message-ID: <20080415215223.GK1677@cs181133002.pp.htv.fi>
+References: <20080414141659.GF6695@cs181133002.pp.htv.fi>
+	<20080414175344.GA15028@uranus.ravnborg.org>
+	<200804152215.34904.bzolnier@gmail.com>
+	<20080415212326.GF1677@cs181133002.pp.htv.fi>
+	<20080415212822.GE5676@flint.arm.linux.org.uk>
+	<20080415214203.GF5676@flint.arm.linux.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from caramon.arm.linux.org.uk ([78.32.30.218]:49971 "EHLO
-	caramon.arm.linux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753646AbYDOVmb (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 15 Apr 2008 17:42:31 -0400
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-pcmcia-bounces+glkpd-linux-pcmcia=m.gmane.org@lists.infradead.org>
 Content-Disposition: inline
-In-Reply-To: <20080415212822.GE5676@flint.arm.linux.org.uk>
-Sender: linux-ide-owner@vger.kernel.org
+In-Reply-To: <20080415214203.GF5676@flint.arm.linux.org.uk>
+List-Unsubscribe: <http://lists.infradead.org/mailman/listinfo/linux-pcmcia>,
+	<mailto:linux-pcmcia-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-pcmcia>
+List-Post: <mailto:linux-pcmcia@lists.infradead.org>
+List-Help: <mailto:linux-pcmcia-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-pcmcia>,
+	<mailto:linux-pcmcia-request@lists.infradead.org?subject=subscribe>
+Sender: linux-pcmcia-bounces@lists.infradead.org
+Errors-To: linux-pcmcia-bounces+glkpd-linux-pcmcia=m.gmane.org@lists.infradead.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Sam Ravnborg <sam@ravnborg.org>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linux-pcmcia@lists.infradead.org
 List-Id: linux-ide@vger.kernel.org
-To: Adrian Bunk <bunk@kernel.org>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Sam Ravnborg <sam@ravnborg.org>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linux-pcmcia@l
 
-On Tue, Apr 15, 2008 at 10:28:22PM +0100, Russell King wrote:
-> On Wed, Apr 16, 2008 at 12:23:26AM +0300, Adrian Bunk wrote:
-> > On Tue, Apr 15, 2008 at 10:15:34PM +0200, Bartlomiej Zolnierkiewicz wrote:
-> > > On Monday 14 April 2008, Sam Ravnborg wrote:
-> > > > On Mon, Apr 14, 2008 at 05:16:59PM +0300, Adrian Bunk wrote:
-> > > > > It's plain wrong for PCMCIA to select HAVE_IDE that implies e.g. the 
-> > > > > availability of an asm/ide.h
+On Tue, Apr 15, 2008 at 10:42:03PM +0100, Russell King wrote:
+> On Tue, Apr 15, 2008 at 10:28:22PM +0100, Russell King wrote:
+> > On Wed, Apr 16, 2008 at 12:23:26AM +0300, Adrian Bunk wrote:
+> > > On Tue, Apr 15, 2008 at 10:15:34PM +0200, Bartlomiej Zolnierkiewicz wrote:
+> > > > On Monday 14 April 2008, Sam Ravnborg wrote:
+> > > > > On Mon, Apr 14, 2008 at 05:16:59PM +0300, Adrian Bunk wrote:
+> > > > > > It's plain wrong for PCMCIA to select HAVE_IDE that implies e.g. the 
+> > > > > > availability of an asm/ide.h
+> > > > > > 
+> > > > > > Signed-off-by: Adrian Bunk <bunk@kernel.org>
+> > > > > > 
+> > > > > > ---
+> > > > > > 9cdb66112488bc0c6e1d528444d3ba30d5b0487f diff --git a/drivers/pcmcia/Kconfig b/drivers/pcmcia/Kconfig
+> > > > > > index 8b22281..519b4ff 100644
+> > > > > > --- a/drivers/pcmcia/Kconfig
+> > > > > > +++ b/drivers/pcmcia/Kconfig
+> > > > > > @@ -38,7 +38,6 @@ config PCMCIA_DEBUG
+> > > > > >  config PCMCIA
+> > > > > >  	tristate "16-bit PCMCIA support"
+> > > > > >  	select CRC32
+> > > > > > -	select HAVE_IDE
+> > > > > >  	default y
 > > > > > 
-> > > > > Signed-off-by: Adrian Bunk <bunk@kernel.org>
-> > > > > 
-> > > > > ---
-> > > > > 9cdb66112488bc0c6e1d528444d3ba30d5b0487f diff --git a/drivers/pcmcia/Kconfig b/drivers/pcmcia/Kconfig
-> > > > > index 8b22281..519b4ff 100644
-> > > > > --- a/drivers/pcmcia/Kconfig
-> > > > > +++ b/drivers/pcmcia/Kconfig
-> > > > > @@ -38,7 +38,6 @@ config PCMCIA_DEBUG
-> > > > >  config PCMCIA
-> > > > >  	tristate "16-bit PCMCIA support"
-> > > > >  	select CRC32
-> > > > > -	select HAVE_IDE
-> > > > >  	default y
+> > > > > I did this when introducing HAVE_IDE.
+> > > > > But I do not recall why and the rationale for removing it
+> > > > > seems fine to me.
 > > > > 
-> > > > I did this when introducing HAVE_IDE.
-> > > > But I do not recall why and the rationale for removing it
-> > > > seems fine to me.
+> > > > IIRC it was needed for some arm platforms which don't select HAVE_IDE
+> > > > explicetely but I don't know if this is still the case, pinging Russell.
 > > > 
-> > > IIRC it was needed for some arm platforms which don't select HAVE_IDE
-> > > explicetely but I don't know if this is still the case, pinging Russell.
+> > > It's definitely bogus since it can cause compile breakage on 
+> > > architectures like avr32.
+> > > 
+> > > And whatever it should have fixed should be fixed properly.
 > > 
-> > It's definitely bogus since it can cause compile breakage on 
-> > architectures like avr32.
-> > 
-> > And whatever it should have fixed should be fixed properly.
+> > I'd suggest backing out the entire change which introduced HAVE_IDE then -
+> > rather than doing it piecemeal and bringing up questions about it which
+> > are unanswerable (which is the case of Bart's question of me.)
 > 
-> I'd suggest backing out the entire change which introduced HAVE_IDE then -
-> rather than doing it piecemeal and bringing up questions about it which
-> are unanswerable (which is the case of Bart's question of me.)
+> Looking back at the original change:
+> 
+> -if PCMCIA || ARCH_CLPS7500 || ARCH_IOP32X || ARCH_IOP33X || ARCH_IXP4XX \
+> -       || ARCH_L7200 || ARCH_LH7A40X || ARCH_PXA || ARCH_RPC \
+> -       || ARCH_S3C2410 || ARCH_SA1100 || ARCH_SHARK || FOOTBRIDGE \
+> -       || ARCH_IXP23XX
+>  source "drivers/ide/Kconfig"
+> -endif
+> 
+> was what was done to ARM's Kconfig.  So, if we're going to be doing
+> anything with the 'select HAVE_IDE', it should be:
+> 
+>  config PCMCIA
+>         tristate "16-bit PCMCIA support"
+>         select CRC32
+> -	select HAVE_IDE
+> +	select HAVE_IDE if ARM
+>...
 
-Looking back at the original change:
+The commit that added the PCMCIA dependency was:
 
--if PCMCIA || ARCH_CLPS7500 || ARCH_IOP32X || ARCH_IOP33X || ARCH_IXP4XX \
--       || ARCH_L7200 || ARCH_LH7A40X || ARCH_PXA || ARCH_RPC \
--       || ARCH_S3C2410 || ARCH_SA1100 || ARCH_SHARK || FOOTBRIDGE \
--       || ARCH_IXP23XX
- source "drivers/ide/Kconfig"
--endif
+commit bb011b8e8eded247cb71cb6d10e47517aacbd542
+Author: David Brownell <david-b@net.rmk.(none)>
+Date:   Sun Jun 12 23:26:05 2005 +0100
 
-was what was done to ARM's Kconfig.  So, if we're going to be doing
-anything with the 'select HAVE_IDE', it should be:
+    [PATCH] ARM: 2709/1: Systems with PCMCIA should also see IDE options (for CompactFlash memories)
+    
+    Patch from David Brownell
+    
+    The ARM generic Kconfig filters out IDE options ... except for
+    an error prone ARMload of special cases.
+    This adds one general case to the systems that will offer IDE options:
+    kernels with PCMCIA support, which probably want to use IDE to access
+    CompactFlash cards.  This might allow many (most?) of the other cases
+    to disappear, for systems that only see IDE hardware through CF cards.
+    Right now this one patch is used to gate access to CF cards, including
+    MicroDrives, for both omap_cf and at91_cf drivers.
+    
+    Signed-off-by: David Brownell
+    Signed-off-by: Russell King <rmk+kernel@arm.linux.org.uk>
 
- config PCMCIA
-        tristate "16-bit PCMCIA support"
-        select CRC32
--	select HAVE_IDE
-+	select HAVE_IDE if ARM
 
-Or, as I've already said, we revert all of the HAVE_IDE change, and ARM
-continues avoiding drivers/Kconfig.
+
+We could simply always select HAVE_IDE on arm instead of manually 
+setting which platforms could possibly get IDE support (e.g. are there
+any boards with PCI slots for which HAVE_IDE is currently not 
+selected?).
+
+cu
+Adrian
 
 -- 
-Russell King
- Linux kernel    2.6 ARM Linux   - http://www.arm.linux.org.uk/
- maintainer of:
+
+       "Is there not promise of rain?" Ling Tan asked suddenly out
+        of the darkness. There had been need of rain for many days.
+       "Only a promise," Lao Er said.
+                                       Pearl S. Buck - Dragon Seed
