@@ -1,47 +1,68 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: sata_mv & pmp support
-Date: Thu, 17 Apr 2008 07:19:43 +0900
-Message-ID: <48067B7F.1030702@gmail.com>
-References: <47FA4AFF.2010209@gmail.com> <48003C04.4040508@garzik.org> <48023462.1050305@rtr.ca> <4803C429.6070201@rtr.ca> <4803C850.9010901@rtr.ca> <48040DC8.1050907@gmail.com> <48050904.1040808@rtr.ca> <48050CA1.5010800@rtr.ca> <48052E08.5040306@gmail.com> <480531DB.3020602@rtr.ca> <48055E7C.1060004@rtr.ca> <48056016.6020900@gmail.com> <4805F4E6.7020903@rtr.ca> <48061E10.4000604@rtr.ca>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: [PATCH] ide-h8300: add ->{in,out}put_data methods (take 2)
+Date: Thu, 17 Apr 2008 00:17:48 +0200
+Message-ID: <200804170017.48201.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wf-out-1314.google.com ([209.85.200.172]:39452 "EHLO
-	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751803AbYDPWTt (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 16 Apr 2008 18:19:49 -0400
-Received: by wf-out-1314.google.com with SMTP id 28so2581617wff.4
-        for <linux-ide@vger.kernel.org>; Wed, 16 Apr 2008 15:19:49 -0700 (PDT)
-In-Reply-To: <48061E10.4000604@rtr.ca>
+Received: from nf-out-0910.google.com ([64.233.182.184]:58378 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754963AbYDPW1x (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 16 Apr 2008 18:27:53 -0400
+Received: by nf-out-0910.google.com with SMTP id g13so830983nfb.21
+        for <linux-ide@vger.kernel.org>; Wed, 16 Apr 2008 15:27:52 -0700 (PDT)
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark Lord <liml@rtr.ca>
-Cc: Jeff Garzik <jeff@garzik.org>, IDE/ATA development list <linux-ide@vger.kernel.org>
+To: linux-ide@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
 
-Mark Lord wrote:
->> So I ought to be able to insert (for debug purposes only) a msleep(3000)
->> at an appropriate location in the code, and suddenly see this problem 
->> go away?
->>
->> Not for upstream -- the eventual hotplug support in sata_mv is the 
->> real solution.
->> But just to confirm that this is indeed the issue.
-> ..
-> 
-> Heh.. darned near exactly 3 seconds does it, alright.
 
-Heh... 3 secs sounds right.  Yeah, that was the slowest I've ever seen. 
-  Maybe we need to extend reset timings.
+v2:
 
-> Okay, I won't fuss over this for now -- it works if the PM is plugged in
-> at boot (because the BIOS fiddles it first), and it works when warmplugged
-> so long as sata_mv is unloaded and reloaded.
-> 
-> This will get fixed completely with the hotplug support fixes coming 
-> later this week.
+* Update ->{in,out}_data methods to take 'struct request *rq' argument.
 
-Great.
+There should be no functional changes caused by this patch.
 
--- 
-tejun
+Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+---
+replacement patch for the one in the IDE tree
+
+ drivers/ide/h8300/ide-h8300.c |   15 +++++++++++++++
+ 1 file changed, 15 insertions(+)
+
+Index: b/drivers/ide/h8300/ide-h8300.c
+===================================================================
+--- a/drivers/ide/h8300/ide-h8300.c
++++ b/drivers/ide/h8300/ide-h8300.c
+@@ -56,6 +56,18 @@ static void mm_insw(unsigned long addr, 
+ 		*bp = bswap(*(volatile u16 *)addr);
+ }
+ 
++static void h8300_input_data(ide_drive_t *drive, struct request *rq,
++			     void *buf, unsigned int len)
++{
++	mm_insw(drive->hwif->io_ports.data_addr, buf, (len + 1) / 2);
++}
++
++static void h8300_output_data(ide_drive_t *drive, struct request *rq,
++			      void *buf, unsigned int len)
++{
++	mm_outsw(drive->hwif->io_ports.data_addr, buf, (len + 1) / 2);
++}
++
+ #define H8300_IDE_GAP (2)
+ 
+ static inline void hw_setup(hw_regs_t *hw)
+@@ -74,6 +86,9 @@ static inline void hwif_setup(ide_hwif_t
+ {
+ 	default_hwif_iops(hwif);
+ 
++	hwif->input_data  = h8300_input_data;
++	hwif->output_data = h8300_output_data;
++
+ 	hwif->OUTW  = mm_outw;
+ 	hwif->OUTSW = mm_outsw;
+ 	hwif->INW   = mm_inw;
