@@ -1,33 +1,42 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH 2/6] scc_pata: add ->{in,out}put_data methods
-Date: Wed, 16 Apr 2008 21:35:38 +0400
-Message-ID: <480638EA.2000708@ru.mvista.com>
-References: <200803302141.06106.bzolnier@gmail.com>
+From: "Christian Pernegger" <pernegger@gmail.com>
+Subject: Re: Western Digital GreenPower drives and Linux
+Date: Wed, 16 Apr 2008 19:59:24 +0200
+Message-ID: <bb145bd20804161059u4fe45debs22adf337fef143aa@mail.gmail.com>
+References: <200804092118.35501.tvrtko@ursulin.net>
+	 <4805E59E.1020607@aitel.hist.no>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1763689AbYDPRg2@vger.kernel.org>
-In-Reply-To: <200803302141.06106.bzolnier@gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from wx-out-0506.google.com ([66.249.82.239]:48474 "EHLO
+	wx-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756894AbYDPR7a (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 16 Apr 2008 13:59:30 -0400
+Received: by wx-out-0506.google.com with SMTP id h31so1923563wxd.4
+        for <linux-ide@vger.kernel.org>; Wed, 16 Apr 2008 10:59:25 -0700 (PDT)
+In-Reply-To: <4805E59E.1020607@aitel.hist.no>
+Content-Disposition: inline
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Helge Hafting <helge.hafting@aitel.hist.no>
+Cc: "Tvrtko A. Ursulin" <tvrtko@ursulin.net>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Bartlomiej Zolnierkiewicz wrote:
+> > At this rate the disk would reach it's design limit for load/unload cycles
+> in around 80 days.
 
-> There should be no functional changes caused by this patch.
+Design *minimum* for load/unload cycles is reportedly 600K cycles,
+that would give me over 7.5 years of 24/7 operation, which I can live
+with in cheap high capacity drives that have only 5 years of warranty
+anyway.
 
-> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Support wouldn't say if the behavior is considered normal, though ...
 
-> Index: b/drivers/ide/pci/scc_pata.c
-> ===================================================================
-> --- a/drivers/ide/pci/scc_pata.c
-> +++ b/drivers/ide/pci/scc_pata.c
-> @@ -574,6 +574,36 @@ static int __devinit init_setup_scc(stru
->  	return ide_setup_pci_device(dev, d);
->  }
+Will set the timeout to 25sec using the DOS kludge and see what
+happens ... doubt it will help much, though. I'd much rather like to
+know what causes the drives to load heads again so soon after the
+unload. With the usage pattern of these drives they should stay
+unloaded most of the time here.
 
-    This patch in the pata-2.6 series doesn't apply anymore after the patch 
-getting rid of ide_setup_pci_device() call was merged.
+Being able to set the timeout online via hdparm would be nice, too :)
 
-WBR, Sergei
+C.
