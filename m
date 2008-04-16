@@ -1,53 +1,93 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH] scc_pata: use ide_find_port()
-Date: Thu, 17 Apr 2008 00:03:10 +0200
-Message-ID: <200804170003.10503.bzolnier@gmail.com>
+Subject: [PATCH] scc_pata: add ->{in,out}put_data methods (take 2)
+Date: Thu, 17 Apr 2008 00:09:39 +0200
+Message-ID: <200804170009.39454.bzolnier@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
   charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from fk-out-0910.google.com ([209.85.128.190]:15618 "EHLO
-	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752150AbYDPW1q (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 16 Apr 2008 18:27:46 -0400
-Received: by fk-out-0910.google.com with SMTP id 19so3013115fkr.5
-        for <linux-ide@vger.kernel.org>; Wed, 16 Apr 2008 15:27:45 -0700 (PDT)
+Received: from mu-out-0910.google.com ([209.85.134.185]:8526 "EHLO
+	mu-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753385AbYDPW1x (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 16 Apr 2008 18:27:53 -0400
+Received: by mu-out-0910.google.com with SMTP id w9so1112404mue.5
+        for <linux-ide@vger.kernel.org>; Wed, 16 Apr 2008 15:27:48 -0700 (PDT)
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, Kou Ishizaki <kou.ishizaki@toshiba.co.jp>, Akira Iguchi <akira2.iguchi@toshiba.co.jp>, Stephen Rothwell <sfr@canb.auug.org.au>
+Cc: linux-kernel@vger.kernel.org, Stephen Rothwell <sfr@canb.auug.org.au>, Kou Ishizaki <kou.ishizaki@toshiba.co.jp>, Akira Iguchi <akira2.iguchi@toshiba.co.jp>, Sergei Shtylyov <sshtylyov@ru.mvista.com>
 
+
+v2:
+
+* Update ->{in,out}_data methods to take 'struct request *rq' argument
+  (thanks to Stephen Rothwell for catching it).
 
 There should be no functional changes caused by this patch.
 
 Cc: Kou Ishizaki <kou.ishizaki@toshiba.co.jp>
 Cc: Akira Iguchi <akira2.iguchi@toshiba.co.jp>
 Cc: Stephen Rothwell <sfr@canb.auug.org.au>
+Cc: Sergei Shtylyov <sshtylyov@ru.mvista.com>
 Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 ---
-goes after "sgiioc4: use ide_find_port()" patch into IDE tree
+replacement patch for the one in the IDE tree
 
- drivers/ide/pci/scc_pata.c |    8 ++------
- 1 file changed, 2 insertions(+), 6 deletions(-)
+ drivers/ide/pci/scc_pata.c |   35 +++++++++++++++++++++++++++++++++++
+ 1 file changed, 35 insertions(+)
 
 Index: b/drivers/ide/pci/scc_pata.c
 ===================================================================
 --- a/drivers/ide/pci/scc_pata.c
 +++ b/drivers/ide/pci/scc_pata.c
-@@ -534,12 +534,8 @@ static int scc_ide_setup_pci_device(stru
- 	u8 idx[4] = { 0xff, 0xff, 0xff, 0xff };
- 	int i;
+@@ -612,6 +612,38 @@ static int __devinit init_setup_scc(stru
+ 	return rc;
+ }
  
--	for (i = 0; i < MAX_HWIFS; i++) {
--		hwif = &ide_hwifs[i];
--		if (hwif->chipset == ide_unknown)
--			break; /* pick an unused entry */
--	}
--	if (i == MAX_HWIFS) {
-+	hwif = ide_find_port();
-+	if (hwif == NULL) {
- 		printk(KERN_ERR "%s: too many IDE interfaces, "
- 				"no room in table\n", SCC_PATA_NAME);
- 		return -ENOMEM;
++static void scc_input_data(ide_drive_t *drive, struct request *rq,
++			   void *buf, unsigned int len)
++{
++	unsigned long data_addr = drive->hwif->io_ports.data_addr;
++
++	len++;
++
++	if (drive->io_32bit) {
++		scc_ide_insl(data_addr, buf, len / 4);
++
++		if ((len & 3) >= 2)
++			scc_ide_insw(data_addr, (u8 *)buf + (len & ~3), 1);
++	} else
++		scc_ide_insw(data_addr, buf, len / 2);
++}
++
++static void scc_output_data(ide_drive_t *drive,  struct request *rq,
++			    void *buf, unsigned int len)
++{
++	unsigned long data_addr = drive->hwif->io_ports.data_addr;
++
++	len++;
++
++	if (drive->io_32bit) {
++		scc_ide_outsl(data_addr, buf, len / 4);
++
++		if ((len & 3) >= 2)
++			scc_ide_outsw(data_addr, (u8 *)buf + (len & ~3), 1);
++	} else
++		scc_ide_outsw(data_addr, buf, len / 2);
++}
++
+ /**
+  *	init_mmio_iops_scc	-	set up the iops for MMIO
+  *	@hwif: interface to set up
+@@ -626,6 +658,9 @@ static void __devinit init_mmio_iops_scc
+ 
+ 	ide_set_hwifdata(hwif, ports);
+ 
++	hwif->input_data  = scc_input_data;
++	hwif->output_data = scc_output_data;
++
+ 	hwif->INB = scc_ide_inb;
+ 	hwif->INW = scc_ide_inw;
+ 	hwif->INSW = scc_ide_insw;
