@@ -1,57 +1,50 @@
 From: Mark Lord <liml@rtr.ca>
 Subject: Re: sata_mv & pmp support
-Date: Wed, 16 Apr 2008 08:37:46 -0400
-Message-ID: <4805F31A.3010105@rtr.ca>
-References: <47FA4AFF.2010209@gmail.com> <48003C04.4040508@garzik.org> <48023462.1050305@rtr.ca> <4803C429.6070201@rtr.ca> <4803C850.9010901@rtr.ca> <48040DC8.1050907@gmail.com> <48050904.1040808@rtr.ca> <48050CA1.5010800@rtr.ca> <48052E08.5040306@gmail.com> <480531DB.3020602@rtr.ca> <48055E7C.1060004@rtr.ca> <48056016.6020900@gmail.com>
+Date: Wed, 16 Apr 2008 08:43:18 -0400
+Message-ID: <4805F466.2040500@rtr.ca>
+References: <47FA4AFF.2010209@gmail.com> <4803C429.6070201@rtr.ca>	 <4803C850.9010901@rtr.ca> <48040DC8.1050907@gmail.com>	 <48050904.1040808@rtr.ca> <48050CA1.5010800@rtr.ca>	 <48052E08.5040306@gmail.com> <480531DB.3020602@rtr.ca>	 <48055E7C.1060004@rtr.ca> <48056016.6020900@gmail.com> <e7510f760804160005p4590f272pe6bd07836e4a5beb@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([76.10.145.34]:1320 "EHLO mail.rtr.ca"
+Received: from rtr.ca ([76.10.145.34]:2265 "EHLO mail.rtr.ca"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755678AbYDPMhs (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 16 Apr 2008 08:37:48 -0400
-In-Reply-To: <48056016.6020900@gmail.com>
+	id S1757785AbYDPMnT (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 16 Apr 2008 08:43:19 -0400
+In-Reply-To: <e7510f760804160005p4590f272pe6bd07836e4a5beb@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Jeff Garzik <jeff@garzik.org>, IDE/ATA development list <linux-ide@vger.kernel.org>
+To: Gwendal Grignou <gwendal@google.com>
+Cc: Tejun Heo <htejun@gmail.com>, Jeff Garzik <jeff@garzik.org>, IDE/ATA development list <linux-ide@vger.kernel.org>
 
-Tejun Heo wrote:
-> Mark Lord wrote:
+Gwendal Grignou wrote:
+> At reset time, according to the SATA state machine in SATA spec
+> [16.3.3.5.1] A PM waits for a FIS from the host to port 0xF to be
+> fully initialized. If for any reason the PM does not issue PHYRDY fast
+> enough or other problem the host decide there is no device on the
+> port, it will not issue a FIS, and the PM will never be seen.
 ..
->> I've just noticed that, if I unplug/replug the host-side SATA cable
->> on the Sil3726 PM, and *then* "insmod sata_mv", the PM is not found.
->>
->> If I then simply do "rmmod sata_mv ; insmod sata_mv", then the PM is 
->> found.
->>
->> This happens with the original hardreset code from Jeff,
->> as well as the updated sata_mv code that I've posted earlier.
->> So it is not anything I've broken (recently :) ).
->>
->> Very strange.. I wonder if it also happens with the Marvell PM,
->> except I don't have one here to test with at the moment.
->>
->> Ever heard of anything strange like that?
+
+Yes, nothing special there -- libata does all of that (and more).
+
+
+> A PM will not send asynchronous notification for itself, only to devices
+> connected to it [and the host controller must be able to handle it].
 > 
-> IIRC, ICH8 ahci + 4726 fails the initial reset sequence because the PMP 
-> comes up after the hardreset code times out, which triggers another EH 
-> iteration which works out fine.  If the problem is caused by the PMP not 
-> responding fast enough, it should cause a hotplug event afterwards. 
-> Maybe there's a race condition where hotplug events can be lost?
+> Maybe polling SATA port could help?
 ..
 
-Ah.. perhaps that could be it.  I've temporarily disabled the hotplug
-detection in sata_mv, because it is broken at present and interfered
-with PMP support during earlier testing.
+That's what Tejun meant by a "hotplug even afterwards".
+Except he was referring to the hotplug mechanism in the host side
+chipset/driver, which is based on PHYRDY, not on any form of AN from the PM.
 
-It is next on the list of things to fix (this week, hopefully) as part
-of the IRQ/EH handling overhaul in sata_mv.
+So the issue is likely that we simply will need hotplug support
+in sata_mv before this specific unplug/replug Sil PM works.
 
-But strange that the driver always finds it on a simple rmmod/insmod reload.
+No big deal, then -- IRQ/EH/hotplug patches are next in the pipeline
+for sata_mv, later this week if all goes well.
 
-??
+Cheers
 
 
 
