@@ -1,55 +1,193 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: sda
-Date: Wed, 16 Apr 2008 08:36:20 +0900
-Message-ID: <48053BF4.8060809@gmail.com>
-References: <dd18b0c30804021244k1d44a48hc05ea88552104a71@mail.gmail.com>	 <48016F54.5070405@gmail.com> <dd18b0c30804122117hc0cd548v6cbef5d2c0c0ce5e@mail.gmail.com> <48041E2A.9000602@gmail.com> <4804B388.5090509@rtr.ca>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: [PATCH 4/4] block: add large command support
+Date: Wed, 16 Apr 2008 02:22:09 +0200
+Message-ID: <200804160222.10408.bzolnier@gmail.com>
+References: <1208170266-1676-5-git-send-email-fujita.tomonori@lab.ntt.co.jp> <200804160050.54842.bzolnier@gmail.com> <20080416075743R.fujita.tomonori@lab.ntt.co.jp>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rv-out-0708.google.com ([209.85.198.247]:32503 "EHLO
-	rv-out-0506.google.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1761569AbYDOXg0 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 15 Apr 2008 19:36:26 -0400
-Received: by rv-out-0506.google.com with SMTP id k29so994494rvb.1
-        for <linux-ide@vger.kernel.org>; Tue, 15 Apr 2008 16:36:25 -0700 (PDT)
-In-Reply-To: <4804B388.5090509@rtr.ca>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <20080416075743R.fujita.tomonori@lab.ntt.co.jp>
+Content-Disposition: inline
+Sender: linux-scsi-owner@vger.kernel.org
+To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Cc: jens.axboe@oracle.com, linux-scsi@vger.kernel.org, bharrosh@panasas.com, linux-ide@vger.kernel.org, akpm@linux-foundation.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark Lord <liml@rtr.ca>
-Cc: Justin Mattock <justinmattock@gmail.com>, linux-ide@vger.kernel.org
 
-Hello,
-
-Mark Lord wrote:
-> What I did back in 2007 was, implement hot plug/unplug for ICH5,
-> done by polling the PCS bits.
+On Wednesday 16 April 2008, FUJITA Tomonori wrote:
+> On Wed, 16 Apr 2008 00:50:54 +0200
+> Bartlomiej Zolnierkiewicz <bzolnier@gmail.com> wrote:
 > 
-> It works, and is reportedly quite reliable, even though there is still a
-> tiny theoretical loophole where the chipset could lock up.
+> > 
+> > Hi,
+> > 
+> > On Monday 14 April 2008, Jens Axboe wrote:
+> > > On Mon, Apr 14 2008, FUJITA Tomonori wrote:
+> > > > This patch changes rq->cmd from the static array to a pointer to
+> > > > support large commands.
+> > > > 
+> > > > We rarely handle large commands. So for optimization, a struct request
+> > > > still has a static array for a command. rq_init sets rq->cmd pointer
+> > > > to the static array.
+> > > > 
+> > > > Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+> > > > Cc: Jens Axboe <jens.axboe@oracle.com>
+> > > > ---
+> > > >  block/blk-core.c       |    1 +
+> > > >  drivers/ide/ide-io.c   |    1 +
+> > > >  include/linux/blkdev.h |   12 ++++++++++--
+> > > >  3 files changed, 12 insertions(+), 2 deletions(-)
+> > > > 
+> > > > diff --git a/block/blk-core.c b/block/blk-core.c
+> > > > index 6669238..6f0968f 100644
+> > > > --- a/block/blk-core.c
+> > > > +++ b/block/blk-core.c
+> > > > @@ -132,6 +132,7 @@ void rq_init(struct request_queue *q, struct request *rq)
+> > > >  	rq->errors = 0;
+> > > >  	rq->ref_count = 1;
+> > > >  	rq->cmd_len = 0;
+> > > > +	rq->cmd = rq->__cmd;
+> > > >  	memset(rq->cmd, 0, BLK_MAX_CDB);
+> > > >  	rq->data_len = 0;
+> > > >  	rq->extra_len = 0;
+> > > > diff --git a/drivers/ide/ide-io.c b/drivers/ide/ide-io.c
+> > > > index 7153796..bac5ea1 100644
+> > > > --- a/drivers/ide/ide-io.c
+> > > > +++ b/drivers/ide/ide-io.c
+> > > > @@ -1595,6 +1595,7 @@ void ide_init_drive_cmd (struct request *rq)
+> > > >  {
+> > > >  	memset(rq, 0, sizeof(*rq));
+> > > >  	rq->ref_count = 1;
+> > > > +	rq->cmd = rq->__cmd;
+> > > >  }
+> > 
+> > Tomo, some more changes are needed:
+> > 
+> > Please think about all _static_/dynamic allocations of 'struct request'
+> > used together with REQ_TYPE_SPECIAL etc., i.e.
 > 
-> The glitch on ICH5, at least, is that the PCS bits work fine for detecting
-> drive insertions, but not drive removals.  To detect a drive removal,
-> one has to first toggle the enable line (1..0..1) in PCS, and then wait
-> for the PHY to try and sync up afterwards (microseconds).
+> I think that using struct request allocated statically is wrong from
+> the perspective of the block layer design, that is, you always need to
+> use blk_get_request. I think that except ide, everyone does.
 
-Having hardreset around is helpful whether hotplugging works or not. 
-Can you please tell me more about the theoretical loophole?
+There still are some others like:
 
-> The code didn't go upstream because it conflicted somewhat with the pending
-> hotplug polling framework you had in development at the time.  :)
+- scsi/scsi_error.c::scsi_reset_provider()
+
+- paride/pd.c::pd_special_command()
+
+but yeah, IDE has the most users left.
+
+> I try to convert ide to use blk_get_request properly if you want.
+
+I would love to see the patches.
+
+> > static void idetape_init_rq(struct request *rq, u8 cmd)
+> > 
+> > [ rq can be from privately allocated driver's "stack" so no rq_init() ]
+> > 
+> > {
+> > 	memset(rq, 0, sizeof(*rq));
+> > 	rq->cmd_type = REQ_TYPE_SPECIAL;
+> > 	rq->cmd[0] = cmd;
+> > }
+> > 
+> > in ide-tape.c or REQ_TYPE_SENSE in ide-cd.c:
 > 
-> What's the scoop with that now, anyways?  The sata_mv driver will 
-> eventually
-> want hotplug polling to deal with port multiplier ports -- it cannot use 
-> AN.
+> Thanks, I overlooked this. As I did for ide_init_drive_cmd, we need:
+> 
+> 
+> +	rq->cmd = rq->__cmd;
+> 
+> 
+> > static void cdrom_queue_request_sense(ide_drive_t *drive, void *sense,
+> >                                       struct request *failed_command)
+> > {
+> >         struct cdrom_info *info         = drive->driver_data;
+> >         struct request *rq              = &info->request_sense_request;
+> > 
+> >         if (sense == NULL)
+> >                 sense = &info->sense_data;
+> > 
+> >         /* stuff the sense request in front of our current request */
+> >         ide_cd_init_rq(drive, rq);
+> > 
+> >         rq->data = sense;
+> >         rq->cmd[0] = GPCMD_REQUEST_SENSE;
+> >         rq->cmd[4] = rq->data_len = 18;
+> > 
+> >         rq->cmd_type = REQ_TYPE_SENSE;
+> > 
+> >         /* NOTE! Save the failed command in "rq->buffer" */
+> >         rq->buffer = (void *) failed_command;
+> > 
+> >         (void) ide_do_drive_cmd(drive, rq, ide_preempt);
+> > }
+> 
+> This should work since I put the above hack to ide_init_drive_cmd (I
+> tested the patchset with an ide cdrom drive).
 
-Heh... That was blocked on sysfs nodes and as time goes by it went down 
-through the rabbit hole.  MV can't do AN?  Have you taken a look at how 
-ahci implements AN?  It doesn't really support AN.  It just looks at 
-what FIS it received and tries to emulate the notification, which BTW 
-isn't 100% accurate as the receive area can be overwritten 
-asynchronously but it works good enough.  Maybe MV can do similar?
+Indeed, it is called by ide_cd_init_rq() (I blame 2AM).
 
--- 
-tejun
+> > > >  EXPORT_SYMBOL(ide_init_drive_cmd);
+> > > > diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
+> > > > index b3a58ad..5710ae4 100644
+> > > > --- a/include/linux/blkdev.h
+> > > > +++ b/include/linux/blkdev.h
+> > > > @@ -215,8 +215,9 @@ struct request {
+> > > >  	/*
+> > > >  	 * when request is used as a packet command carrier
+> > > >  	 */
+> > > > -	unsigned int cmd_len;
+> > > > -	unsigned char cmd[BLK_MAX_CDB];
+> > > > +	unsigned short cmd_len;
+> > > > +	unsigned char __cmd[BLK_MAX_CDB];
+> > > > +	unsigned char *cmd;
+> > 
+> > The source issue lies here:
+> > 
+> > rq->cmd _silently_ becomes something else and unconverted code will happily
+> > compile without even a _single_ warning (+ memory corruption / oops later).
+> > 
+> > This is _guaranteed_ to cause problems:
+> > 
+> > - overlooked code (like the IDE code above, with the current approach
+> >   you have to _manually_ audit all code and still _can't_ be sure about
+> >   the result)
+> 
+> As far as I know, only ide does that.
+
+Well, if there are others you'll learn about them the hard-way... ;-)
+
+[ The thing is that you can avoid answering this question completely
+  with the "ugly" approach. ]
+
+> > - unmerged code from other trees (i.e., I _have_ WIP patches mapping
+> >   REQ_TYPE_TASKFILE requests onto rq->cmd)
+> > 
+> > - out of tree code (in theory we don't care but in this specific
+> >   case there is no reason to break things silently)
+> 
+> Again, I think that we can say that we need to use the block layer
+> properly, struct request always needs to be allocated via
+> blk_get_request.
+
+Hmm, in this case some code asserting that only blk_bet_request()
+requests allowed in the block layer would be useful.
+
+> > Please just add new field instead (cost should be negligable and if
+> > we're concerned about it I see no problem with using unnamed union like
+> > it was done by Boaz). 
+> > 
+> > [ Probably it is also worth to add new length field instead of re-using
+> >   ->cmd_len, just to stay on the safe side (+ for better consistency). ]
+> 
+> As we discussed, we don't like that hack:
+> 
+> http://marc.info/?t=120724777800003&r=1&w=2
+
+If you audit+fixup IDE I'm also fine with non-"hack" solution.
+
+Thanks,
+Bart
