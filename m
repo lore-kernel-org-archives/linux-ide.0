@@ -1,34 +1,33 @@
-From: Frans Pop <elendil@planet.nl>
-Subject: Re: No IDE drivers loaded for Toshiba Satellite 320 CDS
-Date: Wed, 16 Apr 2008 20:08:26 +0200
-Message-ID: <200804162008.27655.elendil@planet.nl>
-References: <200804021524.27222.elendil@planet.nl> <20080415144748.GO7385@csclub.uwaterloo.ca> <48053AD1.8010007@gmail.com>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: Re: [PATCH 3/9] ide: add ->tf_load and ->tf_read methods
+Date: Wed, 16 Apr 2008 22:12:50 +0400
+Message-ID: <480641A2.1080004@ru.mvista.com>
+References: <20080412123401.18751.17246.sendpatchset@localhost.localdomain> <20080412123415.18751.51136.sendpatchset@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hpsmtp-eml17.kpnxchange.com ([213.75.38.117]:22750 "EHLO
-	hpsmtp-eml17.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750958AbYDPSIa (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 16 Apr 2008 14:08:30 -0400
-In-Reply-To: <48053AD1.8010007@gmail.com>
-Content-Disposition: inline
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1753709AbYDPSNl@vger.kernel.org>
+In-Reply-To: <20080412123415.18751.51136.sendpatchset@localhost.localdomain>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Lennart Sorensen <lsorense@csclub.uwaterloo.ca>, Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 
-On Wednesday 16 April 2008, Tejun Heo wrote:
-> Yeah, theoretically, you're right.  The problem is that what breaks when
-> things go wrong.  If you don't probe generic ports by default, harddisks
-> won't be detected on some legacy systems but you can always prompt the
-> user about loading the generic driver.  If you probe generic ports by
-> default, when things go wrong, you break modern machines in an
-> unrecoverable (w/o reset) way.  I'd rather choose bothering the user on
-> legacy machines.
+Bartlomiej Zolnierkiewicz wrote:
 
-The problem here is determining whether a machine is "legacy" or not.
-So far in this discussion I've seen no suggestions how to do that (except 
-maybe for my test whether /sys/bus/isa is present), which would mean asking 
-_all_ users, and that's a damned ugly option.
+> * Add ->tf_load and ->tf_read methods to ide_hwif_t and set the default
+>   methods in default_hwif_transport().
+
+    It's not clear to me what do we gain with addign such methods...
+
+> * Use ->tf_{load,read} instead o calling ide_tf_{load,read}() directly.
+
+> * Make ide_tf_{load,read}() static.
+
+> There should be no functional changes caused by this patch.
+
+> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+
+Acked-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+
+MBR, Sergei
