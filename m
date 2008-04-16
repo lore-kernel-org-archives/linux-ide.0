@@ -1,48 +1,49 @@
-From: Mark Lord <liml@rtr.ca>
-Subject: [PATCH 07/07] sata_mv add temporary 3 second init delay for SiliconImage
- PMs
-Date: Wed, 16 Apr 2008 15:01:19 -0400
-Message-ID: <48064CFF.4080106@rtr.ca>
-References: <48064BCC.5070505@rtr.ca> <48064BF3.8010301@rtr.ca> <48064C15.9090109@rtr.ca> <48064C45.4070208@rtr.ca> <48064C7B.500@rtr.ca> <48064CC1.40203@rtr.ca>
+From: "Tvrtko A. Ursulin" <tvrtko@ursulin.net>
+Subject: Re: Western Digital GreenPower drives and Linux
+Date: Wed, 16 Apr 2008 20:46:33 +0100
+Message-ID: <200804162046.33245.tvrtko@ursulin.net>
+References: <200804092118.35501.tvrtko@ursulin.net> <4805E59E.1020607@aitel.hist.no>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain;
+  charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([76.10.145.34]:2670 "EHLO mail.rtr.ca"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750847AbYDPTBU (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 16 Apr 2008 15:01:20 -0400
-In-Reply-To: <48064CC1.40203@rtr.ca>
+Received: from mk-outboundfilter-3.mail.uk.tiscali.com ([212.74.114.23]:35328
+	"EHLO mk-outboundfilter-3.mail.uk.tiscali.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750847AbYDPTpq (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 16 Apr 2008 15:45:46 -0400
+In-Reply-To: <4805E59E.1020607@aitel.hist.no>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>, Tejun Heo <htejun@gmail.com>, IDE/ATA development list <linux-ide@vger.kernel.org>
+To: Helge Hafting <helge.hafting@aitel.hist.no>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-sata_mv does not yet fully support hotplug (coming soon, though).
-This means that the driver may not find a Silicon Image port-multiplier
-when first loaded, because those devices take in exceess of 3 seconds
-to sync up the SATA PHY (most devices do this in mere microseconds).
+On Wednesday 16 April 2008 12:40:14 Helge Hafting wrote:
+> Tvrtko A. Ursulin wrote:
+> > 9 Power_On_Hours       0x0032 100 100 000 Old_age Always  - 66
+> > 193 Load_Cycle_Count 0x0032 197 197 000 Old_age  Always  - 10233
+> >
+> > At this rate the disk would reach it's design limit for load/unload
+> > cycles in around 80 days. Not good - so I implemented a lame workaround
+> > of keeping disk busy every couple of seconds - hopefully that won't kill
+> > it sooner that unloads would..
+>
+> Yuck, how stupid!
+> But the solution is simple. Make sure to get a warranty of much more
+> than 80 days. Use RAID-1 (or backup often).
+> Just let those disks destroy themselves (they _are_ faulty) and
+> get new ones all the time.  As long as they make them this stupid, you
+> won't have to buy new disks again. Free warranty replacements forever.
 
-So, as a short-term interim measure, here we insert a 3-second pause
-on initial driver load, once per controller board (not once per port!),
-to allow the Silicon Image port-multipliers to be detected later.
+:) I am not so enthusiastic about fiddling with my NAS box every couple of 
+months.
 
-This will be removed again (soon!) once hotplug is fully implemented/working.
+> To be a bit more constructive, tell them about this strategy. Perhaps
+> they get
+> busy fixing the firmware?
 
-Signed-off-by: Mark Lord <mlord@pobox.com>
+I have suggested exactly what you say - unfortunately the conversation has 
+gone cold since. Maybe they are busy already. :)
 
---- old/drivers/ata/sata_mv.c	2008-04-16 11:53:35.000000000 -0400
-+++ linux/drivers/ata/sata_mv.c	2008-04-16 11:51:47.000000000 -0400
-@@ -2105,6 +2105,13 @@
- 		printk(KERN_ERR DRV_NAME ": can't clear global reset\n");
- 		rc = 1;
- 	}
-+	/*
-+	 * Temporary: wait 3 seconds before port-probing can happen,
-+	 * so that we don't miss finding sleepy SilXXXX port-multipliers.
-+	 * This can go away once hotplug is fully/correctly implemented.
-+	 */
-+	if (rc == 0)
-+		msleep(3000);
- done:
- 	return rc;
- }
+Tvrtko
