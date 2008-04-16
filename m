@@ -1,42 +1,34 @@
-From: "Christian Pernegger" <pernegger@gmail.com>
-Subject: Re: Western Digital GreenPower drives and Linux
-Date: Wed, 16 Apr 2008 19:59:24 +0200
-Message-ID: <bb145bd20804161059u4fe45debs22adf337fef143aa@mail.gmail.com>
-References: <200804092118.35501.tvrtko@ursulin.net>
-	 <4805E59E.1020607@aitel.hist.no>
+From: Frans Pop <elendil@planet.nl>
+Subject: Re: No IDE drivers loaded for Toshiba Satellite 320 CDS
+Date: Wed, 16 Apr 2008 20:08:26 +0200
+Message-ID: <200804162008.27655.elendil@planet.nl>
+References: <200804021524.27222.elendil@planet.nl> <20080415144748.GO7385@csclub.uwaterloo.ca> <48053AD1.8010007@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wx-out-0506.google.com ([66.249.82.239]:48474 "EHLO
-	wx-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756894AbYDPR7a (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 16 Apr 2008 13:59:30 -0400
-Received: by wx-out-0506.google.com with SMTP id h31so1923563wxd.4
-        for <linux-ide@vger.kernel.org>; Wed, 16 Apr 2008 10:59:25 -0700 (PDT)
-In-Reply-To: <4805E59E.1020607@aitel.hist.no>
+Received: from hpsmtp-eml17.kpnxchange.com ([213.75.38.117]:22750 "EHLO
+	hpsmtp-eml17.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750958AbYDPSIa (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 16 Apr 2008 14:08:30 -0400
+In-Reply-To: <48053AD1.8010007@gmail.com>
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Helge Hafting <helge.hafting@aitel.hist.no>
-Cc: "Tvrtko A. Ursulin" <tvrtko@ursulin.net>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: Lennart Sorensen <lsorense@csclub.uwaterloo.ca>, Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 
-> > At this rate the disk would reach it's design limit for load/unload cycles
-> in around 80 days.
+On Wednesday 16 April 2008, Tejun Heo wrote:
+> Yeah, theoretically, you're right.  The problem is that what breaks when
+> things go wrong.  If you don't probe generic ports by default, harddisks
+> won't be detected on some legacy systems but you can always prompt the
+> user about loading the generic driver.  If you probe generic ports by
+> default, when things go wrong, you break modern machines in an
+> unrecoverable (w/o reset) way.  I'd rather choose bothering the user on
+> legacy machines.
 
-Design *minimum* for load/unload cycles is reportedly 600K cycles,
-that would give me over 7.5 years of 24/7 operation, which I can live
-with in cheap high capacity drives that have only 5 years of warranty
-anyway.
-
-Support wouldn't say if the behavior is considered normal, though ...
-
-Will set the timeout to 25sec using the DOS kludge and see what
-happens ... doubt it will help much, though. I'd much rather like to
-know what causes the drives to load heads again so soon after the
-unload. With the usage pattern of these drives they should stay
-unloaded most of the time here.
-
-Being able to set the timeout online via hdparm would be nice, too :)
-
-C.
+The problem here is determining whether a machine is "legacy" or not.
+So far in this discussion I've seen no suggestions how to do that (except 
+maybe for my test whether /sys/bus/isa is present), which would mean asking 
+_all_ users, and that's a damned ugly option.
