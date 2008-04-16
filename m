@@ -1,234 +1,246 @@
 From: Mark Lord <liml@rtr.ca>
-Subject: [PATCH 05/07] sata_mv add basic port multiplier support
-Date: Wed, 16 Apr 2008 14:59:07 -0400
-Message-ID: <48064C7B.500@rtr.ca>
-References: <48064BCC.5070505@rtr.ca> <48064BF3.8010301@rtr.ca> <48064C15.9090109@rtr.ca> <48064C45.4070208@rtr.ca>
+Subject: [PATCH 01/07] sata_mv hardreset rework
+Date: Wed, 16 Apr 2008 14:56:12 -0400
+Message-ID: <48064BCC.5070505@rtr.ca>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([76.10.145.34]:2661 "EHLO mail.rtr.ca"
+Received: from rtr.ca ([76.10.145.34]:2713 "EHLO mail.rtr.ca"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751359AbYDPS7J (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 16 Apr 2008 14:59:09 -0400
-In-Reply-To: <48064C45.4070208@rtr.ca>
+	id S1751308AbYDPS4P (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 16 Apr 2008 14:56:15 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Jeff Garzik <jgarzik@pobox.com>, Tejun Heo <htejun@gmail.com>, IDE/ATA development list <linux-ide@vger.kernel.org>
 
-Add basic port-multiplier support to sata_mv.
-This works in Command-based-switching mode for Gen-II chipsets,
-and in FIS-based-switching mode for Gen-IIe chipsets.
+Rework and simplify sata_mv's hardreset code to take advantage
+of libata improvements since it was first coded.
 
-Error handling remains at the primary port level for now
-(works okay, but not great).  This will get fixed in a subsequent
-patch series for IRQ/EH handling fixes.  There are also some
-known NCQ/PMP errata to be dealt with in the near future,
-once we have this basic PMP support in place.
+Also, get rid of the now unnecessary prereset, postreset, and phy_reset functions.
+
+This patch also paves the way for subsequent pmp support patches,
+which will follow once this one passes muster.
 
 Signed-off-by: Mark Lord <mlord@pobox.com>
 
---- old/drivers/ata/sata_mv.c	2008-04-15 18:23:09.000000000 -0400
-+++ linux/drivers/ata/sata_mv.c	2008-04-15 18:32:31.000000000 -0400
-@@ -40,7 +40,7 @@
+--- old/drivers/ata/sata_mv.c	2008-04-10 14:30:27.000000000 -0400
++++ linux/drivers/ata/sata_mv.c	2008-04-10 14:31:01.000000000 -0400
+@@ -478,10 +478,8 @@
+ static void mv_qc_prep(struct ata_queued_cmd *qc);
+ static void mv_qc_prep_iie(struct ata_queued_cmd *qc);
+ static unsigned int mv_qc_issue(struct ata_queued_cmd *qc);
+-static int mv_prereset(struct ata_link *link, unsigned long deadline);
+ static int mv_hardreset(struct ata_link *link, unsigned int *class,
+ 			unsigned long deadline);
+-static void mv_postreset(struct ata_link *link, unsigned int *classes);
+ static void mv_eh_freeze(struct ata_port *ap);
+ static void mv_eh_thaw(struct ata_port *ap);
+ static void mv6_dev_config(struct ata_device *dev);
+@@ -545,9 +543,7 @@
  
-   5) Investigate problems with PCI Message Signalled Interrupts (MSI).
+ 	.freeze			= mv_eh_freeze,
+ 	.thaw			= mv_eh_thaw,
+-	.prereset		= mv_prereset,
+ 	.hardreset		= mv_hardreset,
+-	.postreset		= mv_postreset,
+ 	.error_handler		= ata_std_error_handler, /* avoid SFF EH */
+ 	.post_internal_cmd	= ATA_OP_NULL,
  
--  6) Add port multiplier support (intermediate)
-+  6) Cache frequently-accessed registers in mv_port_priv to reduce overhead.
- 
-   7) Fix/reenable hot plug/unplug (should happen as a side-effect of (2) above).
- 
-@@ -528,6 +528,12 @@
- static int mv_stop_edma_engine(void __iomem *port_mmio);
- static void mv_edma_cfg(struct ata_port *ap, int want_ncq);
- 
-+static void mv_pmp_select(struct ata_port *ap, int pmp);
-+static int mv_pmp_hardreset(struct ata_link *link, unsigned int *class,
-+				unsigned long deadline);
-+static int  mv_softreset(struct ata_link *link, unsigned int *class,
-+				unsigned long deadline);
-+
- /* .sg_tablesize is (MV_MAX_SG_CT / 2) in the structures below
-  * because we have to allow room for worst case splitting of
-  * PRDs for 64K boundaries in mv_fill_sg().
-@@ -566,14 +572,20 @@
- 
- static struct ata_port_operations mv6_ops = {
- 	.inherits		= &mv5_ops,
--	.qc_defer		= ata_std_qc_defer,
-+	.qc_defer		= sata_pmp_qc_defer_cmd_switch,
- 	.dev_config             = mv6_dev_config,
- 	.scr_read		= mv_scr_read,
- 	.scr_write		= mv_scr_write,
-+
-+	.pmp_hardreset		= mv_pmp_hardreset,
-+	.pmp_softreset		= mv_softreset,
-+	.softreset		= mv_softreset,
-+	.error_handler		= sata_pmp_error_handler,
- };
- 
- static struct ata_port_operations mv_iie_ops = {
- 	.inherits		= &mv6_ops,
-+	.qc_defer		= ata_std_qc_defer, /* FIS-based switching */
- 	.dev_config		= ATA_OP_NULL,
- 	.qc_prep		= mv_qc_prep_iie,
- };
-@@ -599,6 +611,7 @@
- 	},
- 	{  /* chip_604x */
- 		.flags		= MV_COMMON_FLAGS | MV_6XXX_FLAGS |
-+				  ATA_FLAG_PMP | ATA_FLAG_ACPI_SATA |
- 				  ATA_FLAG_NCQ,
- 		.pio_mask	= 0x1f,	/* pio0-4 */
- 		.udma_mask	= ATA_UDMA6,
-@@ -606,6 +619,7 @@
- 	},
- 	{  /* chip_608x */
- 		.flags		= MV_COMMON_FLAGS | MV_6XXX_FLAGS |
-+				  ATA_FLAG_PMP | ATA_FLAG_ACPI_SATA |
- 				  ATA_FLAG_NCQ | MV_FLAG_DUAL_HC,
- 		.pio_mask	= 0x1f,	/* pio0-4 */
- 		.udma_mask	= ATA_UDMA6,
-@@ -613,6 +627,7 @@
- 	},
- 	{  /* chip_6042 */
- 		.flags		= MV_COMMON_FLAGS | MV_6XXX_FLAGS |
-+				  ATA_FLAG_PMP | ATA_FLAG_ACPI_SATA |
- 				  ATA_FLAG_NCQ,
- 		.pio_mask	= 0x1f,	/* pio0-4 */
- 		.udma_mask	= ATA_UDMA6,
-@@ -620,6 +635,7 @@
- 	},
- 	{  /* chip_7042 */
- 		.flags		= MV_COMMON_FLAGS | MV_6XXX_FLAGS |
-+				  ATA_FLAG_PMP | ATA_FLAG_ACPI_SATA |
- 				  ATA_FLAG_NCQ,
- 		.pio_mask	= 0x1f,	/* pio0-4 */
- 		.udma_mask	= ATA_UDMA6,
-@@ -627,6 +643,7 @@
- 	},
- 	{  /* chip_soc */
- 		.flags		= MV_COMMON_FLAGS | MV_6XXX_FLAGS |
-+				  ATA_FLAG_PMP | ATA_FLAG_ACPI_SATA |
- 				  ATA_FLAG_NCQ | MV_FLAG_SOC,
- 		.pio_mask	= 0x1f,	/* pio0-4 */
- 		.udma_mask	= ATA_UDMA6,
-@@ -1006,12 +1023,42 @@
- static void mv6_dev_config(struct ata_device *adev)
- {
- 	/*
-+	 * Deal with Gen-II ("mv6") hardware quirks/restrictions:
-+	 *
-+	 * Gen-II does not support NCQ over a port multiplier
-+	 *  (no FIS-based switching).
-+	 *
- 	 * We don't have hob_nsect when doing NCQ commands on Gen-II.
- 	 * See mv_qc_prep() for more info.
+@@ -1904,7 +1900,6 @@
+ 	 * (but doesn't say what the problem might be).  So we first try
+ 	 * to disable the EDMA engine before doing the ATA_RST operation.
  	 */
--	if (adev->flags & ATA_DFLAG_NCQ)
--		if (adev->max_sectors > ATA_MAX_SECTORS)
-+	if (adev->flags & ATA_DFLAG_NCQ) {
-+		if (sata_pmp_attached(adev->link->ap))
-+			adev->flags &= ~ATA_DFLAG_NCQ;
-+		else if (adev->max_sectors > ATA_MAX_SECTORS)
- 			adev->max_sectors = ATA_MAX_SECTORS;
-+	}
-+}
-+
-+static void mv_config_fbs(void __iomem *port_mmio, int enable_fbs)
-+{
-+	u32 old_fcfg, new_fcfg, old_ltmode, new_ltmode;
-+	/*
-+	 * Various bit settings required for operation
-+	 * in FIS-based switching (fbs) mode on GenIIe:
-+	 */
-+	old_fcfg   = readl(port_mmio + FIS_CFG_OFS);
-+	old_ltmode = readl(port_mmio + LTMODE_OFS);
-+	if (enable_fbs) {
-+		new_fcfg   = old_fcfg   |  FIS_CFG_SINGLE_SYNC;
-+		new_ltmode = old_ltmode |  LTMODE_BIT8;
-+	} else { /* disable fbs */
-+		new_fcfg   = old_fcfg   & ~FIS_CFG_SINGLE_SYNC;
-+		new_ltmode = old_ltmode & ~LTMODE_BIT8;
-+	}
-+	if (new_fcfg != old_fcfg)
-+		writelfl(new_fcfg, port_mmio + FIS_CFG_OFS);
-+	if (new_ltmode != old_ltmode)
-+		writelfl(new_ltmode, port_mmio + LTMODE_OFS);
- }
+-	mv_stop_edma_engine(port_mmio);
+ 	mv_reset_channel(hpriv, mmio, port);
  
- static void mv_edma_cfg(struct ata_port *ap, int want_ncq)
-@@ -1035,6 +1082,13 @@
- 		cfg |= (1 << 22);	/* enab 4-entry host queue cache */
- 		cfg |= (1 << 18);	/* enab early completion */
- 		cfg |= (1 << 17);	/* enab cut-through (dis stor&forwrd) */
-+
-+		if (want_ncq && sata_pmp_attached(ap)) {
-+			cfg |= EDMA_CFG_EDMA_FBS; /* FIS-based switching */
-+			mv_config_fbs(port_mmio, 1);
-+		} else {
-+			mv_config_fbs(port_mmio, 0);
-+		}
- 	}
+ 	ZERO(0x028);	/* command */
+@@ -2184,7 +2179,6 @@
+ 	 * (but doesn't say what the problem might be).  So we first try
+ 	 * to disable the EDMA engine before doing the ATA_RST operation.
+ 	 */
+-	mv_stop_edma_engine(port_mmio);
+ 	mv_reset_channel(hpriv, mmio, port);
  
- 	if (want_ncq) {
-@@ -1240,6 +1294,7 @@
- 		flags |= CRQB_FLAG_READ;
- 	WARN_ON(MV_MAX_Q_DEPTH <= qc->tag);
- 	flags |= qc->tag << CRQB_TAG_SHIFT;
-+	flags |= (qc->dev->link->pmp & 0xf) << CRQB_PMP_SHIFT;
+ 	ZERO(0x028);		/* command */
+@@ -2261,6 +2255,7 @@
+ {
+ 	void __iomem *port_mmio = mv_port_base(mmio, port_no);
  
- 	/* get current queue index from software */
- 	in_index = pp->req_idx & MV_MAX_Q_DEPTH_MASK;
-@@ -1331,6 +1386,7 @@
- 	WARN_ON(MV_MAX_Q_DEPTH <= qc->tag);
- 	flags |= qc->tag << CRQB_TAG_SHIFT;
- 	flags |= qc->tag << CRQB_HOSTQ_SHIFT;
-+	flags |= (qc->dev->link->pmp & 0xf) << CRQB_PMP_SHIFT;
++	mv_stop_edma_engine(port_mmio);
+ 	writelfl(ATA_RST, port_mmio + EDMA_CMD_OFS);
  
- 	/* get current queue index from software */
- 	in_index = pp->req_idx & MV_MAX_Q_DEPTH_MASK;
-@@ -1394,6 +1450,7 @@
- 		 * shadow block, etc registers.
- 		 */
- 		mv_stop_edma(ap);
-+		mv_pmp_select(ap, qc->dev->link->pmp);
- 		return ata_sff_qc_issue(qc);
- 	}
- 
-@@ -2289,6 +2346,34 @@
+ 	if (!IS_GEN_I(hpriv)) {
+@@ -2282,116 +2277,6 @@
  		mdelay(1);
  }
  
-+static void mv_pmp_select(struct ata_port *ap, int pmp)
-+{
-+	if (sata_pmp_supported(ap)) {
-+		void __iomem *port_mmio = mv_ap_base(ap);
-+		u32 reg = readl(port_mmio + SATA_IFCTL_OFS);
-+		int old = reg & 0xf;
-+
-+		if (old != pmp) {
-+			reg = (reg & ~0xf) | pmp;
-+			writelfl(reg, port_mmio + SATA_IFCTL_OFS);
-+		}
-+	}
-+}
-+
-+static int mv_pmp_hardreset(struct ata_link *link, unsigned int *class,
-+				unsigned long deadline)
-+{
-+	mv_pmp_select(link->ap, sata_srst_pmp(link));
-+	return sata_std_hardreset(link, class, deadline);
-+}
-+
-+static int mv_softreset(struct ata_link *link, unsigned int *class,
-+				unsigned long deadline)
-+{
-+	mv_pmp_select(link->ap, sata_srst_pmp(link));
-+	return ata_sff_softreset(link, class, deadline);
-+}
-+
+-/**
+- *      mv_phy_reset - Perform eDMA reset followed by COMRESET
+- *      @ap: ATA channel to manipulate
+- *
+- *      Part of this is taken from __sata_phy_reset and modified to
+- *      not sleep since this routine gets called from interrupt level.
+- *
+- *      LOCKING:
+- *      Inherited from caller.  This is coded to safe to call at
+- *      interrupt level, i.e. it does not sleep.
+- */
+-static void mv_phy_reset(struct ata_port *ap, unsigned int *class,
+-			 unsigned long deadline)
+-{
+-	struct mv_port_priv *pp	= ap->private_data;
+-	struct mv_host_priv *hpriv = ap->host->private_data;
+-	void __iomem *port_mmio = mv_ap_base(ap);
+-	int retry = 5;
+-	u32 sstatus;
+-
+-	VPRINTK("ENTER, port %u, mmio 0x%p\n", ap->port_no, port_mmio);
+-
+-#ifdef DEBUG
+-	{
+-		u32 sstatus, serror, scontrol;
+-
+-		mv_scr_read(ap, SCR_STATUS, &sstatus);
+-		mv_scr_read(ap, SCR_ERROR, &serror);
+-		mv_scr_read(ap, SCR_CONTROL, &scontrol);
+-		DPRINTK("S-regs after ATA_RST: SStat 0x%08x SErr 0x%08x "
+-			"SCtrl 0x%08x\n", sstatus, serror, scontrol);
+-	}
+-#endif
+-
+-	/* Issue COMRESET via SControl */
+-comreset_retry:
+-	sata_scr_write_flush(&ap->link, SCR_CONTROL, 0x301);
+-	msleep(1);
+-
+-	sata_scr_write_flush(&ap->link, SCR_CONTROL, 0x300);
+-	msleep(20);
+-
+-	do {
+-		sata_scr_read(&ap->link, SCR_STATUS, &sstatus);
+-		if (((sstatus & 0x3) == 3) || ((sstatus & 0x3) == 0))
+-			break;
+-
+-		msleep(1);
+-	} while (time_before(jiffies, deadline));
+-
+-	/* work around errata */
+-	if (IS_GEN_II(hpriv) &&
+-	    (sstatus != 0x0) && (sstatus != 0x113) && (sstatus != 0x123) &&
+-	    (retry-- > 0))
+-		goto comreset_retry;
+-
+-#ifdef DEBUG
+-	{
+-		u32 sstatus, serror, scontrol;
+-
+-		mv_scr_read(ap, SCR_STATUS, &sstatus);
+-		mv_scr_read(ap, SCR_ERROR, &serror);
+-		mv_scr_read(ap, SCR_CONTROL, &scontrol);
+-		DPRINTK("S-regs after PHY wake: SStat 0x%08x SErr 0x%08x "
+-			"SCtrl 0x%08x\n", sstatus, serror, scontrol);
+-	}
+-#endif
+-
+-	if (ata_link_offline(&ap->link)) {
+-		*class = ATA_DEV_NONE;
+-		return;
+-	}
+-
+-	/* even after SStatus reflects that device is ready,
+-	 * it seems to take a while for link to be fully
+-	 * established (and thus Status no longer 0x80/0x7F),
+-	 * so we poll a bit for that, here.
+-	 */
+-	retry = 20;
+-	while (1) {
+-		u8 drv_stat = ata_sff_check_status(ap);
+-		if ((drv_stat != 0x80) && (drv_stat != 0x7f))
+-			break;
+-		msleep(500);
+-		if (retry-- <= 0)
+-			break;
+-		if (time_after(jiffies, deadline))
+-			break;
+-	}
+-
+-	/* FIXME: if we passed the deadline, the following
+-	 * code probably produces an invalid result
+-	 */
+-
+-	/* finally, read device signature from TF registers */
+-	*class = ata_sff_dev_classify(ap->link.device, 1, NULL);
+-
+-	writelfl(0, port_mmio + EDMA_ERR_IRQ_CAUSE_OFS);
+-
+-	WARN_ON(pp->pp_flags & MV_PP_FLAG_EDMA_EN);
+-
+-	VPRINTK("EXIT\n");
+-}
+-
+-static int mv_prereset(struct ata_link *link, unsigned long deadline)
+-{
+-	mv_stop_edma(link->ap);
+-	return 0;
+-}
+-
  static int mv_hardreset(struct ata_link *link, unsigned int *class,
  			unsigned long deadline)
  {
+@@ -2399,34 +2284,33 @@
+ 	struct mv_host_priv *hpriv = ap->host->private_data;
+ 	struct mv_port_priv *pp = ap->private_data;
+ 	void __iomem *mmio = hpriv->base;
++	int rc, attempts = 0, extra = 0;
++	u32 sstatus;
++	bool online;
+ 
+ 	mv_reset_channel(hpriv, mmio, ap->port_no);
+ 	pp->pp_flags &= ~MV_PP_FLAG_EDMA_EN;
+-	mv_phy_reset(ap, class, deadline);
+-
+-	return 0;
+-}
+-
+-static void mv_postreset(struct ata_link *link, unsigned int *classes)
+-{
+-	struct ata_port *ap = link->ap;
+-	u32 serr;
+ 
+-	/* print link status */
+-	sata_print_link_status(link);
++	/* Workaround for errata FEr SATA#10 (part 2) */
++	do {
++		const unsigned long *timing = sata_ehc_deb_timing(&link->eh_context);
+ 
+-	/* clear SError */
+-	sata_scr_read(link, SCR_ERROR, &serr);
+-	sata_scr_write_flush(link, SCR_ERROR, serr);
+-
+-	/* bail out if no device is present */
+-	if (classes[0] == ATA_DEV_NONE && classes[1] == ATA_DEV_NONE) {
+-		DPRINTK("EXIT, no device\n");
+-		return;
+-	}
++		rc = sata_link_hardreset(link, timing, deadline + extra, &online, NULL);
++		if (rc) {
++			ata_link_printk(link, KERN_ERR,
++					"COMRESET failed (errno=%d)\n", rc);
++			return rc;
++		}
++		sata_scr_read(link, SCR_STATUS, &sstatus);
++		if (!IS_GEN_I(hpriv) && ++attempts >= 5 && sstatus == 0x121) {
++			/* Force 1.5gb/s link speed and try again */
++			mv_setup_ifctl(mv_ap_base(ap), 0);
++			if (time_after(jiffies + HZ, deadline))
++				extra = HZ; /* only extend it once, max */
++		}
++	} while (sstatus != 0x0 && sstatus != 0x113 && sstatus != 0x123);
+ 
+-	/* set up device control */
+-	iowrite8(ap->ctl, ap->ioaddr.ctl_addr);
++	return online ? -EAGAIN : rc;
+ }
+ 
+ static void mv_eh_freeze(struct ata_port *ap)
