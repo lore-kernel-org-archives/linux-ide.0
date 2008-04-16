@@ -1,48 +1,282 @@
 From: Mark Lord <liml@rtr.ca>
-Subject: Re: sata_mv & pmp support
-Date: Tue, 15 Apr 2008 22:03:40 -0400
-Message-ID: <48055E7C.1060004@rtr.ca>
-References: <47FA4AFF.2010209@gmail.com> <48003C04.4040508@garzik.org> <48023462.1050305@rtr.ca> <4803C429.6070201@rtr.ca> <4803C850.9010901@rtr.ca> <48040DC8.1050907@gmail.com> <48050904.1040808@rtr.ca> <48050CA1.5010800@rtr.ca> <48052E08.5040306@gmail.com> <480531DB.3020602@rtr.ca>
+Subject: Re: [PATCH] sata_mv rework hardreset sequence
+Date: Tue, 15 Apr 2008 21:17:41 -0400
+Message-ID: <480553B5.30507@rtr.ca>
+References: <47F1736F.8020104@rtr.ca> <47F17592.8070002@rtr.ca> <47F5E078.6040703@pobox.com> <47FEAF13.5050605@rtr.ca>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([76.10.145.34]:4324 "EHLO mail.rtr.ca"
+Received: from rtr.ca ([76.10.145.34]:4467 "EHLO mail.rtr.ca"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752951AbYDPCDl (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 15 Apr 2008 22:03:41 -0400
-In-Reply-To: <480531DB.3020602@rtr.ca>
+	id S1759741AbYDPBRm (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 15 Apr 2008 21:17:42 -0400
+In-Reply-To: <47FEAF13.5050605@rtr.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Jeff Garzik <jeff@garzik.org>, IDE/ATA development list <linux-ide@vger.kernel.org>
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: Tejun Heo <htejun@gmail.com>, IDE/ATA development list <linux-ide@vger.kernel.org>
 
 Mark Lord wrote:
->
-> Yeah, I'm happy now.  :)
+> Jeff Garzik wrote:
+>> Mark Lord wrote:
+>>> Remove the now unused mv_phy_reset() code,
+>>> as well as the unnecessary mv_postreset() function.
+>>>
+>>> Signed-off-by: Mark Lord <mlord@pobox.com>
+>>
+>> ACK patches 4-5
+>>
+>> However, I would prefer to finish merging Tejun's honkin' huge 
+>> modularize patchsets, and then request that you rediff&resend sata_mv 
+>> patches 4 and 5
 > 
-> It seems very rock solid, actually, at least on the one PM I have that works.
-> The Fed-Ex guy is due tomorrow with a fresh Marvell PM for me,
-> but I might send some stuff out for #upstream in the interim.
 > 
-> Still gotta reboot/retest with a 60x1 chipset first, though.
+> This patch replaces the earlier patches 04/05.
 ..
 
-Both command-based and FIS-based switching seem to work just fine.
-But there is a problem, maybe you could help with ?
+Jeff -- drop this patch for now.
+I'll resubmit it as part of the upcoming PMP patches.
 
-I've just noticed that, if I unplug/replug the host-side SATA cable
-on the Sil3726 PM, and *then* "insmod sata_mv", the PM is not found.
+Thanks
 
-If I then simply do "rmmod sata_mv ; insmod sata_mv", then the PM is found.
 
-This happens with the original hardreset code from Jeff,
-as well as the updated sata_mv code that I've posted earlier.
-So it is not anything I've broken (recently :) ).
 
-Very strange.. I wonder if it also happens with the Marvell PM,
-except I don't have one here to test with at the moment.
+> 
+> * * *
+> 
+> Rework and simplify sata_mv's hardreset code to take advantage
+> of libata improvements since it was first coded.
+> 
+> Also, get rid of the now unnecessary prereset, postreset, and phy_reset 
+> functions.
+> 
+> This patch also paves the way for subsequent pmp support patches,
+> which will follow once this one passes muster.
+> 
+> Signed-off-by: Mark Lord <mlord@pobox.com>
+> 
+> --- upstream/linux/drivers/ata/sata_mv.c    2008-04-10 
+> 14:30:27.000000000 -0400
+> +++ new/linux/drivers/ata/sata_mv.c    2008-04-10 14:31:01.000000000 -0400
+> @@ -478,10 +478,8 @@
+> static void mv_qc_prep(struct ata_queued_cmd *qc);
+> static void mv_qc_prep_iie(struct ata_queued_cmd *qc);
+> static unsigned int mv_qc_issue(struct ata_queued_cmd *qc);
+> -static int mv_prereset(struct ata_link *link, unsigned long deadline);
+> static int mv_hardreset(struct ata_link *link, unsigned int *class,
+>             unsigned long deadline);
+> -static void mv_postreset(struct ata_link *link, unsigned int *classes);
+> static void mv_eh_freeze(struct ata_port *ap);
+> static void mv_eh_thaw(struct ata_port *ap);
+> static void mv6_dev_config(struct ata_device *dev);
+> @@ -545,9 +543,7 @@
+> 
+>     .freeze            = mv_eh_freeze,
+>     .thaw            = mv_eh_thaw,
+> -    .prereset        = mv_prereset,
+>     .hardreset        = mv_hardreset,
+> -    .postreset        = mv_postreset,
+>     .error_handler        = ata_std_error_handler, /* avoid SFF EH */
+>     .post_internal_cmd    = ATA_OP_NULL,
+> 
+> @@ -1904,7 +1900,6 @@
+>      * (but doesn't say what the problem might be).  So we first try
+>      * to disable the EDMA engine before doing the ATA_RST operation.
+>      */
+> -    mv_stop_edma_engine(port_mmio);
+>     mv_reset_channel(hpriv, mmio, port);
+> 
+>     ZERO(0x028);    /* command */
+> @@ -2184,7 +2179,6 @@
+>      * (but doesn't say what the problem might be).  So we first try
+>      * to disable the EDMA engine before doing the ATA_RST operation.
+>      */
+> -    mv_stop_edma_engine(port_mmio);
+>     mv_reset_channel(hpriv, mmio, port);
+> 
+>     ZERO(0x028);        /* command */
+> @@ -2261,6 +2255,7 @@
+> {
+>     void __iomem *port_mmio = mv_port_base(mmio, port_no);
+> 
+> +    mv_stop_edma_engine(port_mmio);
+>     writelfl(ATA_RST, port_mmio + EDMA_CMD_OFS);
+> 
+>     if (!IS_GEN_I(hpriv)) {
+> @@ -2282,116 +2277,6 @@
+>         mdelay(1);
+> }
+> 
+> -/**
+> - *      mv_phy_reset - Perform eDMA reset followed by COMRESET
+> - *      @ap: ATA channel to manipulate
+> - *
+> - *      Part of this is taken from __sata_phy_reset and modified to
+> - *      not sleep since this routine gets called from interrupt level.
+> - *
+> - *      LOCKING:
+> - *      Inherited from caller.  This is coded to safe to call at
+> - *      interrupt level, i.e. it does not sleep.
+> - */
+> -static void mv_phy_reset(struct ata_port *ap, unsigned int *class,
+> -             unsigned long deadline)
+> -{
+> -    struct mv_port_priv *pp    = ap->private_data;
+> -    struct mv_host_priv *hpriv = ap->host->private_data;
+> -    void __iomem *port_mmio = mv_ap_base(ap);
+> -    int retry = 5;
+> -    u32 sstatus;
+> -
+> -    VPRINTK("ENTER, port %u, mmio 0x%p\n", ap->port_no, port_mmio);
+> -
+> -#ifdef DEBUG
+> -    {
+> -        u32 sstatus, serror, scontrol;
+> -
+> -        mv_scr_read(ap, SCR_STATUS, &sstatus);
+> -        mv_scr_read(ap, SCR_ERROR, &serror);
+> -        mv_scr_read(ap, SCR_CONTROL, &scontrol);
+> -        DPRINTK("S-regs after ATA_RST: SStat 0x%08x SErr 0x%08x "
+> -            "SCtrl 0x%08x\n", sstatus, serror, scontrol);
+> -    }
+> -#endif
+> -
+> -    /* Issue COMRESET via SControl */
+> -comreset_retry:
+> -    sata_scr_write_flush(&ap->link, SCR_CONTROL, 0x301);
+> -    msleep(1);
+> -
+> -    sata_scr_write_flush(&ap->link, SCR_CONTROL, 0x300);
+> -    msleep(20);
+> -
+> -    do {
+> -        sata_scr_read(&ap->link, SCR_STATUS, &sstatus);
+> -        if (((sstatus & 0x3) == 3) || ((sstatus & 0x3) == 0))
+> -            break;
+> -
+> -        msleep(1);
+> -    } while (time_before(jiffies, deadline));
+> -
+> -    /* work around errata */
+> -    if (IS_GEN_II(hpriv) &&
+> -        (sstatus != 0x0) && (sstatus != 0x113) && (sstatus != 0x123) &&
+> -        (retry-- > 0))
+> -        goto comreset_retry;
+> -
+> -#ifdef DEBUG
+> -    {
+> -        u32 sstatus, serror, scontrol;
+> -
+> -        mv_scr_read(ap, SCR_STATUS, &sstatus);
+> -        mv_scr_read(ap, SCR_ERROR, &serror);
+> -        mv_scr_read(ap, SCR_CONTROL, &scontrol);
+> -        DPRINTK("S-regs after PHY wake: SStat 0x%08x SErr 0x%08x "
+> -            "SCtrl 0x%08x\n", sstatus, serror, scontrol);
+> -    }
+> -#endif
+> -
+> -    if (ata_link_offline(&ap->link)) {
+> -        *class = ATA_DEV_NONE;
+> -        return;
+> -    }
+> -
+> -    /* even after SStatus reflects that device is ready,
+> -     * it seems to take a while for link to be fully
+> -     * established (and thus Status no longer 0x80/0x7F),
+> -     * so we poll a bit for that, here.
+> -     */
+> -    retry = 20;
+> -    while (1) {
+> -        u8 drv_stat = ata_sff_check_status(ap);
+> -        if ((drv_stat != 0x80) && (drv_stat != 0x7f))
+> -            break;
+> -        msleep(500);
+> -        if (retry-- <= 0)
+> -            break;
+> -        if (time_after(jiffies, deadline))
+> -            break;
+> -    }
+> -
+> -    /* FIXME: if we passed the deadline, the following
+> -     * code probably produces an invalid result
+> -     */
+> -
+> -    /* finally, read device signature from TF registers */
+> -    *class = ata_sff_dev_classify(ap->link.device, 1, NULL);
+> -
+> -    writelfl(0, port_mmio + EDMA_ERR_IRQ_CAUSE_OFS);
+> -
+> -    WARN_ON(pp->pp_flags & MV_PP_FLAG_EDMA_EN);
+> -
+> -    VPRINTK("EXIT\n");
+> -}
+> -
+> -static int mv_prereset(struct ata_link *link, unsigned long deadline)
+> -{
+> -    mv_stop_edma(link->ap);
+> -    return 0;
+> -}
+> -
+> static int mv_hardreset(struct ata_link *link, unsigned int *class,
+>             unsigned long deadline)
+> {
+> @@ -2399,34 +2284,33 @@
+>     struct mv_host_priv *hpriv = ap->host->private_data;
+>     struct mv_port_priv *pp = ap->private_data;
+>     void __iomem *mmio = hpriv->base;
+> +    int rc, attempts = 0, extra = 0;
+> +    u32 sstatus;
+> +    bool online;
+> 
+>     mv_reset_channel(hpriv, mmio, ap->port_no);
+>     pp->pp_flags &= ~MV_PP_FLAG_EDMA_EN;
+> -    mv_phy_reset(ap, class, deadline);
+> -
+> -    return 0;
+> -}
+> -
+> -static void mv_postreset(struct ata_link *link, unsigned int *classes)
+> -{
+> -    struct ata_port *ap = link->ap;
+> -    u32 serr;
+> 
+> -    /* print link status */
+> -    sata_print_link_status(link);
+> +    /* Workaround for errata FEr SATA#10 (part 2) */
+> +    do {
+> +        const unsigned long *timing = 
+> sata_ehc_deb_timing(&link->eh_context);
+> 
+> -    /* clear SError */
+> -    sata_scr_read(link, SCR_ERROR, &serr);
+> -    sata_scr_write_flush(link, SCR_ERROR, serr);
+> -
+> -    /* bail out if no device is present */
+> -    if (classes[0] == ATA_DEV_NONE && classes[1] == ATA_DEV_NONE) {
+> -        DPRINTK("EXIT, no device\n");
+> -        return;
+> -    }
+> +        rc = sata_link_hardreset(link, timing, deadline + extra, 
+> &online, NULL);
+> +        if (rc) {
+> +            ata_link_printk(link, KERN_ERR,
+> +                    "COMRESET failed (errno=%d)\n", rc);
+> +            return rc;
+> +        }
+> +        sata_scr_read(link, SCR_STATUS, &sstatus);
+> +        if (!IS_GEN_I(hpriv) && ++attempts >= 5 && sstatus == 0x121) {
+> +            /* Force 1.5gb/s link speed and try again */
+> +            mv_setup_ifctl(mv_ap_base(ap), 0);
+> +            if (time_after(jiffies + HZ, deadline))
+> +                extra = HZ; /* only extend it once, max */
+> +        }
+> +    } while (sstatus != 0x0 && sstatus != 0x113 && sstatus != 0x123);
+> 
+> -    /* set up device control */
+> -    iowrite8(ap->ctl, ap->ioaddr.ctl_addr);
+> +    return online ? -EAGAIN : rc;
+> }
+> 
+> static void mv_eh_freeze(struct ata_port *ap)
 
-Ever heard of anything strange like that?
-
-??
