@@ -1,33 +1,33 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH 3/9] ide: add ->tf_load and ->tf_read methods
-Date: Wed, 16 Apr 2008 22:12:50 +0400
-Message-ID: <480641A2.1080004@ru.mvista.com>
-References: <20080412123401.18751.17246.sendpatchset@localhost.localdomain> <20080412123415.18751.51136.sendpatchset@localhost.localdomain>
+From: Mark Lord <lkml@rtr.ca>
+Subject: Re: Western Digital GreenPower drives and Linux
+Date: Wed, 16 Apr 2008 14:18:55 -0400
+Message-ID: <4806430F.3070201@rtr.ca>
+References: <200804092118.35501.tvrtko@ursulin.net>	 <4805E59E.1020607@aitel.hist.no> <bb145bd20804161059u4fe45debs22adf337fef143aa@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1753709AbYDPSNl@vger.kernel.org>
-In-Reply-To: <20080412123415.18751.51136.sendpatchset@localhost.localdomain>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from rtr.ca ([76.10.145.34]:1576 "EHLO mail.rtr.ca"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750735AbYDPSS5 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 16 Apr 2008 14:18:57 -0400
+In-Reply-To: <bb145bd20804161059u4fe45debs22adf337fef143aa@mail.gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Christian Pernegger <pernegger@gmail.com>
+Cc: Helge Hafting <helge.hafting@aitel.hist.no>, "Tvrtko A. Ursulin" <tvrtko@ursulin.net>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Bartlomiej Zolnierkiewicz wrote:
+Christian Pernegger wrote:
+>
+> Will set the timeout to 25sec using the DOS kludge and see what
+> happens ... doubt it will help much, though. I'd much rather like to
+> know what causes the drives to load heads again so soon after the
+> unload. With the usage pattern of these drives they should stay
+> unloaded most of the time here.
+> 
+> Being able to set the timeout online via hdparm would be nice, too :)
+..
 
-> * Add ->tf_load and ->tf_read methods to ide_hwif_t and set the default
->   methods in default_hwif_transport().
+That can be arranged.  I just need a copy of the DOS utility that does it now.
 
-    It's not clear to me what do we gain with addign such methods...
-
-> * Use ->tf_{load,read} instead o calling ide_tf_{load,read}() directly.
-
-> * Make ide_tf_{load,read}() static.
-
-> There should be no functional changes caused by this patch.
-
-> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-
-Acked-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-
-MBR, Sergei
+Cheers
