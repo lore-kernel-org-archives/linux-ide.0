@@ -1,7 +1,8 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH] ide: remove ->cds field from ide_hwif_t (take 2)
-Date: Thu, 17 Apr 2008 00:08:31 +0200
-Message-ID: <200804170008.31774.bzolnier@gmail.com>
+Subject: Re: [PATCH 4/4] block: add large command support
+Date: Thu, 17 Apr 2008 00:28:32 +0200
+Message-ID: <200804170028.32476.bzolnier@gmail.com>
+References: <1208170266-1676-5-git-send-email-fujita.tomonori@lab.ntt.co.jp> <4805C209.6040606@panasas.com> <20080416094244.GC12774@kernel.dk>
 Mime-Version: 1.0
 Content-Type: text/plain;
   charset="iso-8859-1"
@@ -9,119 +10,152 @@ Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
 Received: from fk-out-0910.google.com ([209.85.128.190]:15618 "EHLO
 	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753242AbYDPW1s (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 16 Apr 2008 18:27:48 -0400
+	with ESMTP id S1755083AbYDPW1y (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 16 Apr 2008 18:27:54 -0400
 Received: by fk-out-0910.google.com with SMTP id 19so3013115fkr.5
-        for <linux-ide@vger.kernel.org>; Wed, 16 Apr 2008 15:27:47 -0700 (PDT)
+        for <linux-ide@vger.kernel.org>; Wed, 16 Apr 2008 15:27:53 -0700 (PDT)
+In-Reply-To: <20080416094244.GC12774@kernel.dk>
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, Stephen Rothwell <sfr@canb.auug.org.au>, Kou Ishizaki <kou.ishizaki@toshiba.co.jp>, Akira Iguchi <akira2.iguchi@toshiba.co.jp>
+To: Jens Axboe <jens.axboe@oracle.com>
+Cc: Boaz Harrosh <bharrosh@panasas.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, akpm@linux-foundation.org
 
+On Wednesday 16 April 2008, Jens Axboe wrote:
+> On Wed, Apr 16 2008, Boaz Harrosh wrote:
+> > On Wed, Apr 16 2008 at 11:33 +0300, Jens Axboe <jens.axboe@oracle.com> wrote:
+> > > On Wed, Apr 16 2008, FUJITA Tomonori wrote:
+> > >> On Wed, 16 Apr 2008 00:50:54 +0200
+> > >> Bartlomiej Zolnierkiewicz <bzolnier@gmail.com> wrote:
+> > >>
+> > >>> Hi,
+> > >>>
+> > >>> On Monday 14 April 2008, Jens Axboe wrote:
+> > >>>> On Mon, Apr 14 2008, FUJITA Tomonori wrote:
+> > >>>>> This patch changes rq->cmd from the static array to a pointer to
+> > >>>>> support large commands.
+> > >>>>>
+> > >>>>> We rarely handle large commands. So for optimization, a struct request
+> > >>>>> still has a static array for a command. rq_init sets rq->cmd pointer
+> > >>>>> to the static array.
+> > >>>>>
+> > >>>>> Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+> > >>>>> Cc: Jens Axboe <jens.axboe@oracle.com>
+> > >>>>> ---
+> > >>>>>  block/blk-core.c       |    1 +
+> > >>>>>  drivers/ide/ide-io.c   |    1 +
+> > >>>>>  include/linux/blkdev.h |   12 ++++++++++--
+> > >>>>>  3 files changed, 12 insertions(+), 2 deletions(-)
+> > >>>>>
+> > >>>>> diff --git a/block/blk-core.c b/block/blk-core.c
+> > >>>>> index 6669238..6f0968f 100644
+> > >>>>> --- a/block/blk-core.c
+> > >>>>> +++ b/block/blk-core.c
+> > >>>>> @@ -132,6 +132,7 @@ void rq_init(struct request_queue *q, struct request *rq)
+> > >>>>>  	rq->errors = 0;
+> > >>>>>  	rq->ref_count = 1;
+> > >>>>>  	rq->cmd_len = 0;
+> > >>>>> +	rq->cmd = rq->__cmd;
+> > >>>>>  	memset(rq->cmd, 0, BLK_MAX_CDB);
+> > >>>>>  	rq->data_len = 0;
+> > >>>>>  	rq->extra_len = 0;
+> > >>>>> diff --git a/drivers/ide/ide-io.c b/drivers/ide/ide-io.c
+> > >>>>> index 7153796..bac5ea1 100644
+> > >>>>> --- a/drivers/ide/ide-io.c
+> > >>>>> +++ b/drivers/ide/ide-io.c
+> > >>>>> @@ -1595,6 +1595,7 @@ void ide_init_drive_cmd (struct request *rq)
+> > >>>>>  {
+> > >>>>>  	memset(rq, 0, sizeof(*rq));
+> > >>>>>  	rq->ref_count = 1;
+> > >>>>> +	rq->cmd = rq->__cmd;
+> > >>>>>  }
+> > >>> Tomo, some more changes are needed:
+> > >>>
+> > >>> Please think about all _static_/dynamic allocations of 'struct request'
+> > >>> used together with REQ_TYPE_SPECIAL etc., i.e.
+> > >> I think that using struct request allocated statically is wrong from
+> > >> the perspective of the block layer design, that is, you always need to
+> > >> use blk_get_request. I think that except ide, everyone does.
+> > >>
+> > >> I try to convert ide to use blk_get_request properly if you want.
+> > > 
+> > > That would be best, but the on-stack allocation has the benefit that
+> > > it'll always work. So until we can completely get rid of that, lets just
+> > > make it a hard rule that ANY rq allocation MUST call rq_init(). It's a
+> > > lot saner than doing a memset() anyway.
 
-* Use hwif->name instead of cds->name in ide_allocate_dma_engine().
+Sounds OK to me.
 
-* Use pci_name(dev) instead of cds->name in init_dma_pdc202xx().
+> > Just a patch that I had for ages since the bad old request bidi times,
+> > perhaps is also good today. (rebased to for-2.6.26 branch)
+> > ---
+> > From: Boaz Harrosh <bharrosh@panasas.com>
+> > Date: Wed, 16 Apr 2008 12:05:33 +0300
+> > Subject: [PATCH] Initialize all members of struct request in rq_init
+> > 
+> > Before, every member added/removed from struct request would entitle a change
+> > to rq_init, for initialization. Now all members are default to zero and only
+> > the none zero members are specifically initialized.
+> > 
+> > Users that need requests on the stack or pre-allocated, must call rq_init()
+> > before use.
+> > 
+> > Signed-off-by: Boaz Harrosh <bharrosh@panasas.com>
+> > ---
+> >  block/blk-core.c |   22 ++--------------------
+> >  1 files changed, 2 insertions(+), 20 deletions(-)
+> > 
+> > diff --git a/block/blk-core.c b/block/blk-core.c
+> > index 6f0968f..3f4c563 100644
+> > --- a/block/blk-core.c
+> > +++ b/block/blk-core.c
+> > @@ -113,36 +113,18 @@ EXPORT_SYMBOL(blk_get_backing_dev_info);
+> >   */
+> >  void rq_init(struct request_queue *q, struct request *rq)
+> >  {
+> > +	memset(rq, 0, sizeof(*rq));
+> >  	INIT_LIST_HEAD(&rq->queuelist);
+> >  	INIT_LIST_HEAD(&rq->donelist);
+> >  	rq->q = q;
+> >  	rq->sector = rq->hard_sector = (sector_t) -1;
+> > -	rq->nr_sectors = rq->hard_nr_sectors = 0;
+> > -	rq->current_nr_sectors = rq->hard_cur_sectors = 0;
+> > -	rq->bio = rq->biotail = NULL;
+> >  	INIT_HLIST_NODE(&rq->hash);
+> >  	RB_CLEAR_NODE(&rq->rb_node);
+> > -	rq->rq_disk = NULL;
+> > -	rq->nr_phys_segments = 0;
+> > -	rq->nr_hw_segments = 0;
+> > -	rq->ioprio = 0;
+> > -	rq->special = NULL;
+> > -	rq->buffer = NULL;
+> >  	rq->tag = -1;
+> > -	rq->errors = 0;
+> >  	rq->ref_count = 1;
+> > -	rq->cmd_len = 0;
+> >  	rq->cmd = rq->__cmd;
+> > -	memset(rq->cmd, 0, BLK_MAX_CDB);
+> > -	rq->data_len = 0;
+> > -	rq->extra_len = 0;
+> > -	rq->sense_len = 0;
+> > -	rq->data = NULL;
+> > -	rq->sense = NULL;
+> > -	rq->end_io = NULL;
+> > -	rq->end_io_data = NULL;
+> > -	rq->next_rq = NULL;
+> >  }
+> > +EXPORT_SYMBOL(rq_init);
+> >  
+> >  static void req_bio_endio(struct request *rq, struct bio *bio,
+> >  			  unsigned int nbytes, int error)
+> > -- 
+> > 1.5.3.3
+> > 
+> 
+> Totally agree, if we expand rq_init() to all users (including on stack),
+> this must be included as well.
 
-* Remove no longer needed ->cds field from ide_hwif_t.
+Completely, totally and fully agreed...
 
-v2:
-
-* scc_pata.c also needs to be updated now (noticed by Stephen Rothwell).
-
-There should be no functional changes caused by this patch.
-
-Cc: Kou Ishizaki <kou.ishizaki@toshiba.co.jp>
-Cc: Akira Iguchi <akira2.iguchi@toshiba.co.jp>
-Cc: Stephen Rothwell <sfr@canb.auug.org.au>
-Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
----
-replacement patch for the one in the IDE tree
-
- drivers/ide/ide-dma.c          |    2 +-
- drivers/ide/pci/pdc202xx_old.c |    5 +++--
- drivers/ide/pci/scc_pata.c     |    1 -
- drivers/ide/setup-pci.c        |    1 -
- include/linux/ide.h            |    2 --
- 5 files changed, 4 insertions(+), 7 deletions(-)
-
-Index: b/drivers/ide/ide-dma.c
-===================================================================
---- a/drivers/ide/ide-dma.c
-+++ b/drivers/ide/ide-dma.c
-@@ -833,7 +833,7 @@ static int ide_allocate_dma_engine(ide_h
- 		return 0;
- 
- 	printk(KERN_ERR "%s: -- Error, unable to allocate DMA table.\n",
--	       hwif->cds->name);
-+			hwif->name);
- 
- 	return 1;
- }
-Index: b/drivers/ide/pci/pdc202xx_old.c
-===================================================================
---- a/drivers/ide/pci/pdc202xx_old.c
-+++ b/drivers/ide/pci/pdc202xx_old.c
-@@ -288,6 +288,7 @@ static void __devinit init_hwif_pdc202xx
- 
- static void __devinit init_dma_pdc202xx(ide_hwif_t *hwif, unsigned long dmabase)
- {
-+	struct pci_dev *dev = to_pci_dev(hwif->dev);
- 	u8 udma_speed_flag = 0, primary_mode = 0, secondary_mode = 0;
- 
- 	if (hwif->channel) {
-@@ -300,14 +301,14 @@ static void __devinit init_dma_pdc202xx(
- 	secondary_mode	= inb(dmabase | 0x1b);
- 	printk(KERN_INFO "%s: (U)DMA Burst Bit %sABLED " \
- 		"Primary %s Mode " \
--		"Secondary %s Mode.\n", hwif->cds->name,
-+		"Secondary %s Mode.\n", pci_name(dev),
- 		(udma_speed_flag & 1) ? "EN" : "DIS",
- 		(primary_mode & 1) ? "MASTER" : "PCI",
- 		(secondary_mode & 1) ? "MASTER" : "PCI" );
- 
- 	if (!(udma_speed_flag & 1)) {
- 		printk(KERN_INFO "%s: FORCING BURST BIT 0x%02x->0x%02x ",
--			hwif->cds->name, udma_speed_flag,
-+			pci_name(dev), udma_speed_flag,
- 			(udma_speed_flag|1));
- 		outb(udma_speed_flag | 1, dmabase | 0x1f);
- 		printk("%sACTIVE\n", (inb(dmabase | 0x1f) & 1) ? "" : "IN");
-Index: b/drivers/ide/pci/scc_pata.c
-===================================================================
---- a/drivers/ide/pci/scc_pata.c
-+++ b/drivers/ide/pci/scc_pata.c
-@@ -535,7 +535,6 @@ static int scc_ide_setup_pci_device(stru
- 	hw.chipset = ide_pci;
- 	ide_init_port_hw(hwif, &hw);
- 	hwif->dev = &dev->dev;
--	hwif->cds = d;
- 
- 	idx[0] = hwif->index;
- 
-Index: b/drivers/ide/setup-pci.c
-===================================================================
---- a/drivers/ide/setup-pci.c
-+++ b/drivers/ide/setup-pci.c
-@@ -322,7 +322,6 @@ static ide_hwif_t *ide_hwif_configure(st
- 	ide_init_port_hw(hwif, &hw);
- 
- 	hwif->dev = &dev->dev;
--	hwif->cds = d;
- 
- 	return hwif;
- }
-Index: b/include/linux/ide.h
-===================================================================
---- a/include/linux/ide.h
-+++ b/include/linux/ide.h
-@@ -447,8 +447,6 @@ typedef struct hwif_s {
- 
- 	struct device *dev;
- 
--	const struct ide_port_info *cds;	/* chipset device struct */
--
- 	ide_ack_intr_t *ack_intr;
- 
- 	void (*rw_disk)(ide_drive_t *, struct request *);
+Thanks,
+Bart
