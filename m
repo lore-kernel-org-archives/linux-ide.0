@@ -1,150 +1,53 @@
-From: Jens Axboe <jens.axboe@oracle.com>
-Subject: Re: [PATCH 4/4] block: add large command support
-Date: Wed, 16 Apr 2008 11:42:45 +0200
-Message-ID: <20080416094244.GC12774@kernel.dk>
-References: <1208170266-1676-5-git-send-email-fujita.tomonori@lab.ntt.co.jp> <20080414112919.GF12774@kernel.dk> <200804160050.54842.bzolnier@gmail.com> <20080416075743R.fujita.tomonori@lab.ntt.co.jp> <20080416083305.GY12774@kernel.dk> <4805C209.6040606@panasas.com>
+From: Helge Hafting <helge.hafting@aitel.hist.no>
+Subject: Re: Western Digital GreenPower drives and Linux
+Date: Wed, 16 Apr 2008 13:40:14 +0200
+Message-ID: <4805E59E.1020607@aitel.hist.no>
+References: <200804092118.35501.tvrtko@ursulin.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <4805C209.6040606@panasas.com>
-Sender: linux-scsi-owner@vger.kernel.org
-To: Boaz Harrosh <bharrosh@panasas.com>
-Cc: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, bzolnier@gmail.com, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, akpm@linux-foundation.org
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from embla.aitel.hist.no ([158.38.50.22]:38879 "EHLO
+	embla.aitel.hist.no" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758709AbYDPLvS (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 16 Apr 2008 07:51:18 -0400
+In-Reply-To: <200804092118.35501.tvrtko@ursulin.net>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: "Tvrtko A. Ursulin" <tvrtko@ursulin.net>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Wed, Apr 16 2008, Boaz Harrosh wrote:
-> On Wed, Apr 16 2008 at 11:33 +0300, Jens Axboe <jens.axboe@oracle.com> wrote:
-> > On Wed, Apr 16 2008, FUJITA Tomonori wrote:
-> >> On Wed, 16 Apr 2008 00:50:54 +0200
-> >> Bartlomiej Zolnierkiewicz <bzolnier@gmail.com> wrote:
-> >>
-> >>> Hi,
-> >>>
-> >>> On Monday 14 April 2008, Jens Axboe wrote:
-> >>>> On Mon, Apr 14 2008, FUJITA Tomonori wrote:
-> >>>>> This patch changes rq->cmd from the static array to a pointer to
-> >>>>> support large commands.
-> >>>>>
-> >>>>> We rarely handle large commands. So for optimization, a struct request
-> >>>>> still has a static array for a command. rq_init sets rq->cmd pointer
-> >>>>> to the static array.
-> >>>>>
-> >>>>> Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-> >>>>> Cc: Jens Axboe <jens.axboe@oracle.com>
-> >>>>> ---
-> >>>>>  block/blk-core.c       |    1 +
-> >>>>>  drivers/ide/ide-io.c   |    1 +
-> >>>>>  include/linux/blkdev.h |   12 ++++++++++--
-> >>>>>  3 files changed, 12 insertions(+), 2 deletions(-)
-> >>>>>
-> >>>>> diff --git a/block/blk-core.c b/block/blk-core.c
-> >>>>> index 6669238..6f0968f 100644
-> >>>>> --- a/block/blk-core.c
-> >>>>> +++ b/block/blk-core.c
-> >>>>> @@ -132,6 +132,7 @@ void rq_init(struct request_queue *q, struct request *rq)
-> >>>>>  	rq->errors = 0;
-> >>>>>  	rq->ref_count = 1;
-> >>>>>  	rq->cmd_len = 0;
-> >>>>> +	rq->cmd = rq->__cmd;
-> >>>>>  	memset(rq->cmd, 0, BLK_MAX_CDB);
-> >>>>>  	rq->data_len = 0;
-> >>>>>  	rq->extra_len = 0;
-> >>>>> diff --git a/drivers/ide/ide-io.c b/drivers/ide/ide-io.c
-> >>>>> index 7153796..bac5ea1 100644
-> >>>>> --- a/drivers/ide/ide-io.c
-> >>>>> +++ b/drivers/ide/ide-io.c
-> >>>>> @@ -1595,6 +1595,7 @@ void ide_init_drive_cmd (struct request *rq)
-> >>>>>  {
-> >>>>>  	memset(rq, 0, sizeof(*rq));
-> >>>>>  	rq->ref_count = 1;
-> >>>>> +	rq->cmd = rq->__cmd;
-> >>>>>  }
-> >>> Tomo, some more changes are needed:
-> >>>
-> >>> Please think about all _static_/dynamic allocations of 'struct request'
-> >>> used together with REQ_TYPE_SPECIAL etc., i.e.
-> >> I think that using struct request allocated statically is wrong from
-> >> the perspective of the block layer design, that is, you always need to
-> >> use blk_get_request. I think that except ide, everyone does.
-> >>
-> >> I try to convert ide to use blk_get_request properly if you want.
-> > 
-> > That would be best, but the on-stack allocation has the benefit that
-> > it'll always work. So until we can completely get rid of that, lets just
-> > make it a hard rule that ANY rq allocation MUST call rq_init(). It's a
-> > lot saner than doing a memset() anyway.
-> > 
-> 
-> Just a patch that I had for ages since the bad old request bidi times,
-> perhaps is also good today. (rebased to for-2.6.26 branch)
-> ---
-> From: Boaz Harrosh <bharrosh@panasas.com>
-> Date: Wed, 16 Apr 2008 12:05:33 +0300
-> Subject: [PATCH] Initialize all members of struct request in rq_init
-> 
-> Before, every member added/removed from struct request would entitle a change
-> to rq_init, for initialization. Now all members are default to zero and only
-> the none zero members are specifically initialized.
-> 
-> Users that need requests on the stack or pre-allocated, must call rq_init()
-> before use.
-> 
-> Signed-off-by: Boaz Harrosh <bharrosh@panasas.com>
-> ---
->  block/blk-core.c |   22 ++--------------------
->  1 files changed, 2 insertions(+), 20 deletions(-)
-> 
-> diff --git a/block/blk-core.c b/block/blk-core.c
-> index 6f0968f..3f4c563 100644
-> --- a/block/blk-core.c
-> +++ b/block/blk-core.c
-> @@ -113,36 +113,18 @@ EXPORT_SYMBOL(blk_get_backing_dev_info);
->   */
->  void rq_init(struct request_queue *q, struct request *rq)
->  {
-> +	memset(rq, 0, sizeof(*rq));
->  	INIT_LIST_HEAD(&rq->queuelist);
->  	INIT_LIST_HEAD(&rq->donelist);
->  	rq->q = q;
->  	rq->sector = rq->hard_sector = (sector_t) -1;
-> -	rq->nr_sectors = rq->hard_nr_sectors = 0;
-> -	rq->current_nr_sectors = rq->hard_cur_sectors = 0;
-> -	rq->bio = rq->biotail = NULL;
->  	INIT_HLIST_NODE(&rq->hash);
->  	RB_CLEAR_NODE(&rq->rb_node);
-> -	rq->rq_disk = NULL;
-> -	rq->nr_phys_segments = 0;
-> -	rq->nr_hw_segments = 0;
-> -	rq->ioprio = 0;
-> -	rq->special = NULL;
-> -	rq->buffer = NULL;
->  	rq->tag = -1;
-> -	rq->errors = 0;
->  	rq->ref_count = 1;
-> -	rq->cmd_len = 0;
->  	rq->cmd = rq->__cmd;
-> -	memset(rq->cmd, 0, BLK_MAX_CDB);
-> -	rq->data_len = 0;
-> -	rq->extra_len = 0;
-> -	rq->sense_len = 0;
-> -	rq->data = NULL;
-> -	rq->sense = NULL;
-> -	rq->end_io = NULL;
-> -	rq->end_io_data = NULL;
-> -	rq->next_rq = NULL;
->  }
-> +EXPORT_SYMBOL(rq_init);
->  
->  static void req_bio_endio(struct request *rq, struct bio *bio,
->  			  unsigned int nbytes, int error)
-> -- 
-> 1.5.3.3
-> 
+Tvrtko A. Ursulin wrote:
+> Hi all,
+>
+> The subject may be a bit misleading since I haven't investigated the whole 
+> issue under other OS-es (nor do I plan to), but this is how the story goes..
+>
+> Those fancy new WD GreenPower drives seem to be heavily suffering from the 
+> rapidly increasing head load/unload problem. And the bad thing is they don't 
+> respond to 'hdparm -B', which would mean (I think) their power management 
+> behaviour is solely up to their firmware.
+>
+> I got one of them (WD5000AACS) recently and to my horror after less than three 
+> days of being power on this is what I saw:
+>
+> 9 Power_On_Hours       0x0032 100 100 000 Old_age Always  - 66
+> 193 Load_Cycle_Count 0x0032 197 197 000 Old_age  Always  - 10233
+>
+> At this rate the disk would reach it's design limit for load/unload cycles in 
+> around 80 days. Not good - so I implemented a lame workaround of keeping disk 
+> busy every couple of seconds - hopefully that won't kill it sooner that 
+> unloads would..
+>   
+Yuck, how stupid!
+But the solution is simple. Make sure to get a warranty of much more
+than 80 days. Use RAID-1 (or backup often).
+Just let those disks destroy themselves (they _are_ faulty) and
+get new ones all the time.  As long as they make them this stupid, you won't
+have to buy new disks again. Free warranty replacements forever.
 
-Totally agree, if we expand rq_init() to all users (including on stack),
-this must be included as well.
+To be a bit more constructive, tell them about this strategy. Perhaps 
+they get
+busy fixing the firmware?
 
--- 
-Jens Axboe
-
+Helge Hafting
