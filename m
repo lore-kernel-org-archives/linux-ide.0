@@ -1,43 +1,60 @@
-From: lsorense@csclub.uwaterloo.ca (Lennart Sorensen)
-Subject: Re: No IDE drivers loaded for Toshiba Satellite 320 CDS
-Date: Thu, 17 Apr 2008 10:05:06 -0400
-Message-ID: <20080417140506.GC7385@csclub.uwaterloo.ca>
-References: <200804021524.27222.elendil@planet.nl> <20080415144748.GO7385@csclub.uwaterloo.ca> <48053AD1.8010007@gmail.com> <200804162008.27655.elendil@planet.nl> <480679D3.7030705@gmail.com>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: [2.6 patch] xtensa: don't offer ATA
+Date: Thu, 17 Apr 2008 15:39:29 -0400
+Message-ID: <4807A771.2020405@pobox.com>
+References: <20080414195521.GB26885@cs181133002.pp.htv.fi>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1762248AbYDQOF0@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <480679D3.7030705@gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1754152AbYDQTj5@vger.kernel.org>
+In-Reply-To: <20080414195521.GB26885@cs181133002.pp.htv.fi>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Frans Pop <elendil@planet.nl>, Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+To: Adrian Bunk <bunk@kernel.org>
+Cc: chris@zankel.net, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
-On Thu, Apr 17, 2008 at 07:12:35AM +0900, Tejun Heo wrote:
-> Asking when no harddisk is detected w/ the option to choose it 
-> explicitly should do for most cases.  No?
+Adrian Bunk wrote:
+> Trying to build libata for xtensa fails with the following error:
+> 
+> <--  snip  -->
+> 
+> ...
+>   CC [M]  drivers/ata/libata-core.o
+> /home/bunk/linux/kernel-2.6/git/linux-2.6/drivers/ata/libata-core.c: In function 'ata_devchk':
+> /home/bunk/linux/kernel-2.6/git/linux-2.6/drivers/ata/libata-core.c:1034: error: implicit declaration of function 'iowrite8'
+> /home/bunk/linux/kernel-2.6/git/linux-2.6/drivers/ata/libata-core.c:1043: error: implicit declaration of function 'ioread8'
+> /home/bunk/linux/kernel-2.6/git/linux-2.6/drivers/ata/libata-core.c: In function 'ata_data_xfer':
+> /home/bunk/linux/kernel-2.6/git/linux-2.6/drivers/ata/libata-core.c:5027: error: implicit declaration of function 'ioread16_rep'
+> /home/bunk/linux/kernel-2.6/git/linux-2.6/drivers/ata/libata-core.c:5029: error: implicit declaration of function 'iowrite16_rep'
+> /home/bunk/linux/kernel-2.6/git/linux-2.6/drivers/ata/libata-core.c:5037: error: implicit declaration of function 'ioread16'
+> /home/bunk/linux/kernel-2.6/git/linux-2.6/drivers/ata/libata-core.c:5041: error: implicit declaration of function 'iowrite16'
+> /home/bunk/linux/kernel-2.6/git/linux-2.6/drivers/ata/libata-core.c: In function 'ata_wait_register':
+> /home/bunk/linux/kernel-2.6/git/linux-2.6/drivers/ata/libata-core.c:7700: error: implicit declaration of function 'ioread32'
+> make[3]: *** [drivers/ata/libata-core.o] Error 1
+> 
+> <--  snip  -->
+> 
+> Signed-off-by: Adrian Bunk <bunk@kernel.org>
+> 
+> ---
+> aa579e7ab065e41a9d1e27e1f4b7af6b0508018c diff --git a/drivers/ata/Kconfig b/drivers/ata/Kconfig
+> index 25aba69..f34e9d1 100644
+> --- a/drivers/ata/Kconfig
+> +++ b/drivers/ata/Kconfig
+> @@ -6,7 +6,7 @@ menuconfig ATA
+>  	tristate "Serial ATA (prod) and Parallel ATA (experimental) drivers"
+>  	depends on HAS_IOMEM
+>  	depends on BLOCK
+> -	depends on !(M32R || M68K) || BROKEN
+> +	depends on !(M32R || M68K || XTENSA) || BROKEN
+>  	depends on !SUN4 || BROKEN
+>  	select SCSI
 
-I suppose it might, although I could still see an older machine have a
-PCI controller as well as an ISA legacy controller on an ISA sound card,
-and might even have a CDROM drive connected to the sound card.  Not very
-likely though, but not imposible.  In that case you might detect the HD
-connected to the HD, but not the CDROM connected to the sound card.
-That might be confusing to the user.  On the other hand anyone running
-such old hardware might just have a pretty good idea what they are doing
-and could run in expert mode and tell the installer to also load the
-generic driver.
+XTENSA offers HAS_IOMEM but not iomem functions?  That seems like the 
+problem to me.
 
-I still think the correct solution is to always try loading it, posibly
-with a boot option to make the installer not do so for any machines that
-have issues with that.  Any such machines should then have bug reports
-filed so that the driver that runs their chipset's IDE controller in a
-native mode can ensure they reserve the legacy IDE ports so that nothing
-else (like the generic driver) can go poking at them.
+Overall, we should not be adding specific arches to an exclusion list, 
+we should defining HAS_IOFOO or MISSING_IOFOO or another symbol in the 
+appropriate arch.
 
-After all I thought the whole point of all the ports listed in
-/proc/ioports was to indicate which io ports were currently reserved by
-which driver so that no other driver could try to access them.  If it
-doesn't in fact work that way then it probably should.
-
--- 
-Len Sorensen
+	Jeff
