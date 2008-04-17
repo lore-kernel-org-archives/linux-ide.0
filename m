@@ -1,36 +1,37 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH] ata-acpi: don't call _GTF for disabled drive
-Date: Thu, 17 Apr 2008 15:57:00 -0400
-Message-ID: <4807AB8C.70303@pobox.com>
-References: <1206435045.23794.13.camel@sli10-desk.sh.intel.com>
+From: Willy Tarreau <w@1wt.eu>
+Subject: Re: [PATCH 1/2] libata: implement ATA_IOC_GET_IO32/ATA_IOC_SET_IO32 ioctls
+Date: Thu, 17 Apr 2008 21:46:51 +0200
+Message-ID: <20080417194651.GA5783@1wt.eu>
+References: <20080217211810.GA15001@1wt.eu> <20080217211922.GA15327@1wt.eu> <4807A9B0.3010108@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-acpi-owner@vger.kernel.org>
-In-Reply-To: <1206435045.23794.13.camel@sli10-desk.sh.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
-To: Shaohua Li <shaohua.li@intel.com>
-Cc: linux acpi <linux-acpi@vger.kernel.org>, linux-ide <linux-ide@vger.kernel.org>, Len Brown <lenb@kernel.org>, "Rafael J. Wysocki" <rjw@sisk.pl>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1755281AbYDQT6p@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <4807A9B0.3010108@garzik.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
-Shaohua Li wrote:
-> I got below log after a S3 resume in a ASUS A6VC laptop. The system has
-> only one IDE drive. It appears there is no reason calling _GTF for
-> disabled drive.
+On Thu, Apr 17, 2008 at 03:49:04PM -0400, Jeff Garzik wrote:
+> Willy Tarreau wrote:
+> >>From 40a8174d27cb9d93b859bc073c8f075b9ff71578 Mon Sep 17 00:00:00 2001
+> >From: Willy Tarreau <w@1wt.eu>
+> >Date: Sun, 17 Feb 2008 21:11:46 +0100
+> >Subject: [PATCH 1/2] libata: implement ATA_IOC_GET_IO32/ATA_IOC_SET_IO32 
+> >ioctls
+> >
+> >This patch implements the aforementionned ioctls and get/set the
+> >new ATA_DFLAG_32BIT_PIO ata flag accordingly for the device. It
+> >only supports values 0 and 1 (disable/enable), as I have no plan
+> >to implement the sync VLB transfers.
+> >
+> >Signed-off-by: Willy Tarreau <w@1wt.eu>
 > 
-> ACPI Error (dsopcode-0483): Attempt to CreateField of length zero [20070126]
-> ACPI Error (psparse-0537): Method parse/execution failed [\_SB_.PCI0.IDE0.RATA] (Node df822a7c), AE_AML_OPERAND_VALUE
-> ACPI Error (psparse-0537): Method parse/execution failed [\_SB_.PCI0.IDE0.CHN1.DRV0._GTF] (Node df822bd0), AE_AML_OPERAND_VALUE
-> ata2.00: _GTF evaluation failed (AE 0x3006)
-> ACPI Error (dsopcode-0483): Attempt to CreateField of length zero [20070126]
-> ACPI Error (psparse-0537): Method parse/execution failed [\_SB_.PCI0.IDE0.RATA] (Node df822a7c), AE_AML_OPERAND_VALUE
-> ACPI Error (psparse-0537): Method parse/execution failed [\_SB_.PCI0.IDE0.CHN1.DRV1._GTF] (Node df822b94), AE_AML_OPERAND_VALUE
-> ata2.01: _GTF evaluation failed (AE 0x3006)
-> 
-> Signed-off-by: Shaohua Li <shaohua.li@intel.com>
+> this patch should be combined into the second patch, because it's not 
+> much use without both
 
-well, no comments at all from anyone, even after a solicitation.  sigh...
+OK will do and resend. I will also add Alan's Acked line.
 
-applied
-
-
+Regards,
+Willy
