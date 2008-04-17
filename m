@@ -1,117 +1,144 @@
-From: Roel Kluin <12o3l@tiscali.nl>
-Subject: Re: [PATCH 3/6] IDE: ide-cd: fix test unsigned var < 0
-Date: Thu, 17 Apr 2008 13:04:55 +0200
-Message-ID: <48072ED7.7030002@tiscali.nl>
-References: <48055F1A.9020706@tiscali.nl>	 <200804170040.07397.bzolnier@gmail.com> <4806C952.6030102@tiscali.nl> <9ea470500804170212md8ce430p42b3c1787ba95631@mail.gmail.com>
+From: "Bartlomiej Zolnierkiewicz" <bzolnier@gmail.com>
+Subject: Re: [PATCH 4/4] block: add large command support
+Date: Thu, 17 Apr 2008 13:55:48 +0200
+Message-ID: <58cb370e0804170455i58a8165fuc4b675c034217bd5@mail.gmail.com>
+References: <20080416075743R.fujita.tomonori@lab.ntt.co.jp>
+	 <20080416083305.GY12774@kernel.dk> <4805C209.6040606@panasas.com>
+	 <20080417123218V.tomof@acm.org> <20080417070704.GO12774@kernel.dk>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S932247AbYDQLFS@vger.kernel.org>
-In-Reply-To: <9ea470500804170212md8ce430p42b3c1787ba95631@mail.gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: petkovbb@gmail.com
-Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-ide@vger.kernel.org, lkml <linux-kernel@vger.kernel.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from fk-out-0910.google.com ([209.85.128.188]:26411 "EHLO
+	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752750AbYDQLzu (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 17 Apr 2008 07:55:50 -0400
+Received: by fk-out-0910.google.com with SMTP id 19so50771fkr.5
+        for <linux-ide@vger.kernel.org>; Thu, 17 Apr 2008 04:55:49 -0700 (PDT)
+In-Reply-To: <20080417070704.GO12774@kernel.dk>
+Content-Disposition: inline
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Jens Axboe <jens.axboe@oracle.com>
+Cc: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, bharrosh@panasas.com, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, akpm@linux-foundation.org
 
-Boris Petkov wrote:
+On Thu, Apr 17, 2008 at 9:07 AM, Jens Axboe <jens.axboe@oracle.com> wrote:
+>
+> On Thu, Apr 17 2008, FUJITA Tomonori wrote:
+>  > On Wed, 16 Apr 2008 12:08:25 +0300
+>  > Boaz Harrosh <bharrosh@panasas.com> wrote:
+>  >
+>  > > On Wed, Apr 16 2008 at 11:33 +0300, Jens Axboe <jens.axboe@oracle.com> wrote:
+>  > > > On Wed, Apr 16 2008, FUJITA Tomonori wrote:
+>  > > >> On Wed, 16 Apr 2008 00:50:54 +0200
+>  > > >> Bartlomiej Zolnierkiewicz <bzolnier@gmail.com> wrote:
+>  > > >>
+>  > > >>> Hi,
+>  > > >>>
+>  > > >>> On Monday 14 April 2008, Jens Axboe wrote:
+>  > > >>>> On Mon, Apr 14 2008, FUJITA Tomonori wrote:
+>  > > >>>>> This patch changes rq->cmd from the static array to a pointer to
+>  > > >>>>> support large commands.
+>  > > >>>>>
+>  > > >>>>> We rarely handle large commands. So for optimization, a struct request
+>  > > >>>>> still has a static array for a command. rq_init sets rq->cmd pointer
+>  > > >>>>> to the static array.
+>  > > >>>>>
+>  > > >>>>> Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+>  > > >>>>> Cc: Jens Axboe <jens.axboe@oracle.com>
+>  > > >>>>> ---
+>  > > >>>>>  block/blk-core.c       |    1 +
+>  > > >>>>>  drivers/ide/ide-io.c   |    1 +
+>  > > >>>>>  include/linux/blkdev.h |   12 ++++++++++--
+>  > > >>>>>  3 files changed, 12 insertions(+), 2 deletions(-)
+>  > > >>>>>
+>  > > >>>>> diff --git a/block/blk-core.c b/block/blk-core.c
+>  > > >>>>> index 6669238..6f0968f 100644
+>  > > >>>>> --- a/block/blk-core.c
+>  > > >>>>> +++ b/block/blk-core.c
+>  > > >>>>> @@ -132,6 +132,7 @@ void rq_init(struct request_queue *q, struct request *rq)
+>  > > >>>>>       rq->errors = 0;
+>  > > >>>>>       rq->ref_count = 1;
+>  > > >>>>>       rq->cmd_len = 0;
+>  > > >>>>> +     rq->cmd = rq->__cmd;
+>  > > >>>>>       memset(rq->cmd, 0, BLK_MAX_CDB);
+>  > > >>>>>       rq->data_len = 0;
+>  > > >>>>>       rq->extra_len = 0;
+>  > > >>>>> diff --git a/drivers/ide/ide-io.c b/drivers/ide/ide-io.c
+>  > > >>>>> index 7153796..bac5ea1 100644
+>  > > >>>>> --- a/drivers/ide/ide-io.c
+>  > > >>>>> +++ b/drivers/ide/ide-io.c
+>  > > >>>>> @@ -1595,6 +1595,7 @@ void ide_init_drive_cmd (struct request *rq)
+>  > > >>>>>  {
+>  > > >>>>>       memset(rq, 0, sizeof(*rq));
+>  > > >>>>>       rq->ref_count = 1;
+>  > > >>>>> +     rq->cmd = rq->__cmd;
+>  > > >>>>>  }
+>  > > >>> Tomo, some more changes are needed:
+>  > > >>>
+>  > > >>> Please think about all _static_/dynamic allocations of 'struct request'
+>  > > >>> used together with REQ_TYPE_SPECIAL etc., i.e.
+>  > > >> I think that using struct request allocated statically is wrong from
+>  > > >> the perspective of the block layer design, that is, you always need to
+>  > > >> use blk_get_request. I think that except ide, everyone does.
+>  > > >>
+>  > > >> I try to convert ide to use blk_get_request properly if you want.
+>  > > >
+>  > > > That would be best, but the on-stack allocation has the benefit that
+>  > > > it'll always work. So until we can completely get rid of that, lets just
+>  > > > make it a hard rule that ANY rq allocation MUST call rq_init(). It's a
+>  > > > lot saner than doing a memset() anyway.
+>  > > >
+>  > >
+>  > > Just a patch that I had for ages since the bad old request bidi times,
+>  > > perhaps is also good today. (rebased to for-2.6.26 branch)
+>  > > ---
+>  > > From: Boaz Harrosh <bharrosh@panasas.com>
+>  > > Date: Wed, 16 Apr 2008 12:05:33 +0300
+>  > > Subject: [PATCH] Initialize all members of struct request in rq_init
+>  > >
+>  > > Before, every member added/removed from struct request would entitle a change
+>  > > to rq_init, for initialization. Now all members are default to zero and only
+>  > > the none zero members are specifically initialized.
+>  > >
+>  > > Users that need requests on the stack or pre-allocated, must call rq_init()
+>  > > before use.
+>  > >
+>  > > Signed-off-by: Boaz Harrosh <bharrosh@panasas.com>
+>  > > ---
+>  > >  block/blk-core.c |   22 ++--------------------
+>  > >  1 files changed, 2 insertions(+), 20 deletions(-)
+>  > >
+>  > > diff --git a/block/blk-core.c b/block/blk-core.c
+>  > > index 6f0968f..3f4c563 100644
+>  > > --- a/block/blk-core.c
+>  > > +++ b/block/blk-core.c
+>  > > @@ -113,36 +113,18 @@ EXPORT_SYMBOL(blk_get_backing_dev_info);
+>  > >   */
+>  > >  void rq_init(struct request_queue *q, struct request *rq)
+>  > >  {
+>  > > +   memset(rq, 0, sizeof(*rq));
+>  >
+>  > Hmm, rq_init comment says:
+>  >
+>  > /*
+>  >  * We can't just memset() the structure, since the allocation path
+>  >  * already stored some information in the request.
+>  >  */
+>  >
+>  > I think that we can't initialize rq->cmd_flags here.
+>
+>  That is correct, the patch wont work as-is. The principle of clearing
+>  every member except block internal is sound and should be applied,
+>  though.
 
-> I'd rather keep the "unsigned long bio_sectors;" part and do something
-> of the likes of:
-> 
-> bio_sectors = bio_sectors(failed_command->bio);
-> 
-> 
-> (remove the "if (bio_sectors < 4)"-test)
-> 
-> ... and later...
-> 
-> sector &= ~(max(bio_sectors - 1, 3));
-> 
-> which is, IMO, more readable.
-> 
-> Roel, would you redo your patch please? Thanks.
+While we're at it we may fix it as well (preferably in another pre-patch):
 
-While at it I also cleaned up some whitespace
----
-Clean up cdrom_analyze_sense_data()
+- move setting rq->cmd_flags from blk_alloc_request() to the callers
+  (this is only get_request() ATM)
 
-Signed-off-by: Roel Kluin <12o3l@tiscali.nl>
----
-diff --git a/drivers/ide/ide-cd.c b/drivers/ide/ide-cd.c
-index a60f5df..df9bf0d 100644
---- a/drivers/ide/ide-cd.c
-+++ b/drivers/ide/ide-cd.c
-@@ -133,65 +133,61 @@ static int cdrom_log_sense(ide_drive_t *drive, struct request *rq,
- 		default:
- 			log = 1;
- 			break;
- 	}
- 	return log;
- }
- 
--static
--void cdrom_analyze_sense_data(ide_drive_t *drive,
-+static void cdrom_analyze_sense_data(ide_drive_t *drive,
- 			      struct request *failed_command,
- 			      struct request_sense *sense)
- {
- 	unsigned long sector;
- 	unsigned long bio_sectors;
--	unsigned long valid;
- 	struct cdrom_info *info = drive->driver_data;
- 
- 	if (!cdrom_log_sense(drive, failed_command, sense))
- 		return;
- 
- 	/*
- 	 * If a read toc is executed for a CD-R or CD-RW medium where
- 	 * the first toc has not been recorded yet, it will fail with
- 	 * 05/24/00 (which is a confusing error)
- 	 */
- 	if (failed_command && failed_command->cmd[0] == GPCMD_READ_TOC_PMA_ATIP)
- 		if (sense->sense_key == 0x05 && sense->asc == 0x24)
- 			return;
- 
-- 	if (sense->error_code == 0x70) {	/* Current Error */
-- 		switch(sense->sense_key) {
-+	if (sense->error_code == 0x70) {	/* Current Error */
-+		switch (sense->sense_key) {
- 		case MEDIUM_ERROR:
- 		case VOLUME_OVERFLOW:
- 		case ILLEGAL_REQUEST:
- 			if (!sense->valid)
- 				break;
- 			if (failed_command == NULL ||
- 					!blk_fs_request(failed_command))
- 				break;
- 			sector = (sense->information[0] << 24) |
- 				 (sense->information[1] << 16) |
- 				 (sense->information[2] <<  8) |
- 				 (sense->information[3]);
- 
--			bio_sectors = bio_sectors(failed_command->bio);
--			if (bio_sectors < 4)
--				bio_sectors = 4;
- 			if (drive->queue->hardsect_size == 2048)
- 				sector <<= 2;	/* Device sector size is 2K */
--			sector &= ~(bio_sectors -1);
--			valid = (sector - failed_command->sector) << 9;
-+
-+			bio_sectors = bio_sectors(failed_command->bio);
-+			sector &= ~(max(bio_sectors - 1, 3));
- 
- 			if (sector < get_capacity(info->disk) &&
- 				drive->probed_capacity - sector < 4 * 75) {
- 				set_capacity(info->disk, sector);
- 			}
-- 		}
-- 	}
-+		}
-+	}
- 
- 	ide_cd_log_error(drive->name, failed_command, sense);
- }
- 
- /*
-  * Initialize a ide-cd packet command request
-  */
+- re-order setting rq->cmd_flags vs calling rq_init() in get_request(),
+  queue_lfush() and  start_ordered()
+
+Thanks,
+Bart
