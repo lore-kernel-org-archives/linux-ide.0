@@ -1,37 +1,29 @@
-From: Willy Tarreau <w@1wt.eu>
-Subject: Re: [PATCH 1/2] libata: implement ATA_IOC_GET_IO32/ATA_IOC_SET_IO32 ioctls
-Date: Thu, 17 Apr 2008 21:46:51 +0200
-Message-ID: <20080417194651.GA5783@1wt.eu>
-References: <20080217211810.GA15001@1wt.eu> <20080217211922.GA15327@1wt.eu> <4807A9B0.3010108@garzik.org>
+From: Richard Scobie <richard@sauce.co.nz>
+Subject: Hot swapping drives
+Date: Fri, 18 Apr 2008 09:31:45 +1200
+Message-ID: <4807C1C1.4070808@sauce.co.nz>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1755281AbYDQT6p@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <4807A9B0.3010108@garzik.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from smtp.sauce.co.nz ([210.48.49.72]:40940 "EHLO smtp.sauce.co.nz"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752088AbYDQVaG (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 17 Apr 2008 17:30:06 -0400
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-On Thu, Apr 17, 2008 at 03:49:04PM -0400, Jeff Garzik wrote:
-> Willy Tarreau wrote:
-> >>From 40a8174d27cb9d93b859bc073c8f075b9ff71578 Mon Sep 17 00:00:00 2001
-> >From: Willy Tarreau <w@1wt.eu>
-> >Date: Sun, 17 Feb 2008 21:11:46 +0100
-> >Subject: [PATCH 1/2] libata: implement ATA_IOC_GET_IO32/ATA_IOC_SET_IO32 
-> >ioctls
-> >
-> >This patch implements the aforementionned ioctls and get/set the
-> >new ATA_DFLAG_32BIT_PIO ata flag accordingly for the device. It
-> >only supports values 0 and 1 (disable/enable), as I have no plan
-> >to implement the sync VLB transfers.
-> >
-> >Signed-off-by: Willy Tarreau <w@1wt.eu>
-> 
-> this patch should be combined into the second patch, because it's not 
-> much use without both
+Apologies if this is the wrong list for this.
 
-OK will do and resend. I will also add Alan's Acked line.
+I have a SAS backplane filled with 16 SATA drives.
+
+Assuming a drive is unmounted or failed and removed from an md array, is 
+it safe to directly pull the drive and insert a new one, or are there 
+other commands required in order to remove power from it first?
+
+Just concerned about electrical damage to drive/backplane here.
 
 Regards,
-Willy
+
+Richard
