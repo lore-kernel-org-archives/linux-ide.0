@@ -1,37 +1,36 @@
 From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH 01/07] sata_mv hardreset rework
-Date: Thu, 17 Apr 2008 15:57:12 -0400
-Message-ID: <4807AB98.4070707@pobox.com>
-References: <48064BCC.5070505@rtr.ca>
+Subject: Re: [PATCH] ata-acpi: don't call _GTF for disabled drive
+Date: Thu, 17 Apr 2008 15:57:00 -0400
+Message-ID: <4807AB8C.70303@pobox.com>
+References: <1206435045.23794.13.camel@sli10-desk.sh.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:34270 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752703AbYDQT5Q (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 17 Apr 2008 15:57:16 -0400
-In-Reply-To: <48064BCC.5070505@rtr.ca>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-acpi-owner@vger.kernel.org>
+In-Reply-To: <1206435045.23794.13.camel@sli10-desk.sh.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
+To: Shaohua Li <shaohua.li@intel.com>
+Cc: linux acpi <linux-acpi@vger.kernel.org>, linux-ide <linux-ide@vger.kernel.org>, Len Brown <lenb@kernel.org>, "Rafael J. Wysocki" <rjw@sisk.pl>
 List-Id: linux-ide@vger.kernel.org
-To: Mark Lord <liml@rtr.ca>
-Cc: Tejun Heo <htejun@gmail.com>, IDE/ATA development list <linux-ide@vger.kernel.org>
 
-Mark Lord wrote:
-> Rework and simplify sata_mv's hardreset code to take advantage
-> of libata improvements since it was first coded.
+Shaohua Li wrote:
+> I got below log after a S3 resume in a ASUS A6VC laptop. The system has
+> only one IDE drive. It appears there is no reason calling _GTF for
+> disabled drive.
 > 
-> Also, get rid of the now unnecessary prereset, postreset, and phy_reset 
-> functions.
+> ACPI Error (dsopcode-0483): Attempt to CreateField of length zero [20070126]
+> ACPI Error (psparse-0537): Method parse/execution failed [\_SB_.PCI0.IDE0.RATA] (Node df822a7c), AE_AML_OPERAND_VALUE
+> ACPI Error (psparse-0537): Method parse/execution failed [\_SB_.PCI0.IDE0.CHN1.DRV0._GTF] (Node df822bd0), AE_AML_OPERAND_VALUE
+> ata2.00: _GTF evaluation failed (AE 0x3006)
+> ACPI Error (dsopcode-0483): Attempt to CreateField of length zero [20070126]
+> ACPI Error (psparse-0537): Method parse/execution failed [\_SB_.PCI0.IDE0.RATA] (Node df822a7c), AE_AML_OPERAND_VALUE
+> ACPI Error (psparse-0537): Method parse/execution failed [\_SB_.PCI0.IDE0.CHN1.DRV1._GTF] (Node df822b94), AE_AML_OPERAND_VALUE
+> ata2.01: _GTF evaluation failed (AE 0x3006)
 > 
-> This patch also paves the way for subsequent pmp support patches,
-> which will follow once this one passes muster.
-> 
-> Signed-off-by: Mark Lord <mlord@pobox.com>
-> 
-> --- old/drivers/ata/sata_mv.c    2008-04-10 14:30:27.000000000 -0400
-> +++ linux/drivers/ata/sata_mv.c    2008-04-10 14:31:01.000000000 -0400
+> Signed-off-by: Shaohua Li <shaohua.li@intel.com>
 
-applied 1-7
+well, no comments at all from anyone, even after a solicitation.  sigh...
+
+applied
 
 
