@@ -1,130 +1,107 @@
-From: Jens Axboe <jens.axboe@oracle.com>
-Subject: Re: [PATCH 4/4] block: add large command support
-Date: Thu, 17 Apr 2008 09:07:05 +0200
-Message-ID: <20080417070704.GO12774@kernel.dk>
-References: <20080416075743R.fujita.tomonori@lab.ntt.co.jp> <20080416083305.GY12774@kernel.dk> <4805C209.6040606@panasas.com> <20080417123218V.tomof@acm.org>
+From: Elias Oltmanns <eo@nebensachen.de>
+Subject: Re: Prevent busy looping
+Date: Thu, 17 Apr 2008 10:50:20 +0200
+Message-ID: <87ve2gc1bn.fsf@denkblock.local>
+References: <20080416151305.8788.63912.stgit@denkblock.local>
+	<20080416163152.GK12774@kernel.dk> <87r6d5l9pb.fsf@denkblock.local>
+	<20080417071335.GR12774@kernel.dk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from brick.kernel.dk ([87.55.233.238]:4881 "EHLO kernel.dk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752356AbYDQHHJ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 17 Apr 2008 03:07:09 -0400
-Content-Disposition: inline
-In-Reply-To: <20080417123218V.tomof@acm.org>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: multipart/mixed; boundary="=-=-="
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Sender: linux-scsi-owner@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, Jens Axboe <jens.axboe@oracle.com>
+Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Cc: bharrosh@panasas.com, bzolnier@gmail.com, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, akpm@linux-foundation.org
 
-On Thu, Apr 17 2008, FUJITA Tomonori wrote:
-> On Wed, 16 Apr 2008 12:08:25 +0300
-> Boaz Harrosh <bharrosh@panasas.com> wrote:
-> 
-> > On Wed, Apr 16 2008 at 11:33 +0300, Jens Axboe <jens.axboe@oracle.com> wrote:
-> > > On Wed, Apr 16 2008, FUJITA Tomonori wrote:
-> > >> On Wed, 16 Apr 2008 00:50:54 +0200
-> > >> Bartlomiej Zolnierkiewicz <bzolnier@gmail.com> wrote:
-> > >>
-> > >>> Hi,
-> > >>>
-> > >>> On Monday 14 April 2008, Jens Axboe wrote:
-> > >>>> On Mon, Apr 14 2008, FUJITA Tomonori wrote:
-> > >>>>> This patch changes rq->cmd from the static array to a pointer to
-> > >>>>> support large commands.
-> > >>>>>
-> > >>>>> We rarely handle large commands. So for optimization, a struct request
-> > >>>>> still has a static array for a command. rq_init sets rq->cmd pointer
-> > >>>>> to the static array.
-> > >>>>>
-> > >>>>> Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-> > >>>>> Cc: Jens Axboe <jens.axboe@oracle.com>
-> > >>>>> ---
-> > >>>>>  block/blk-core.c       |    1 +
-> > >>>>>  drivers/ide/ide-io.c   |    1 +
-> > >>>>>  include/linux/blkdev.h |   12 ++++++++++--
-> > >>>>>  3 files changed, 12 insertions(+), 2 deletions(-)
-> > >>>>>
-> > >>>>> diff --git a/block/blk-core.c b/block/blk-core.c
-> > >>>>> index 6669238..6f0968f 100644
-> > >>>>> --- a/block/blk-core.c
-> > >>>>> +++ b/block/blk-core.c
-> > >>>>> @@ -132,6 +132,7 @@ void rq_init(struct request_queue *q, struct request *rq)
-> > >>>>>  	rq->errors = 0;
-> > >>>>>  	rq->ref_count = 1;
-> > >>>>>  	rq->cmd_len = 0;
-> > >>>>> +	rq->cmd = rq->__cmd;
-> > >>>>>  	memset(rq->cmd, 0, BLK_MAX_CDB);
-> > >>>>>  	rq->data_len = 0;
-> > >>>>>  	rq->extra_len = 0;
-> > >>>>> diff --git a/drivers/ide/ide-io.c b/drivers/ide/ide-io.c
-> > >>>>> index 7153796..bac5ea1 100644
-> > >>>>> --- a/drivers/ide/ide-io.c
-> > >>>>> +++ b/drivers/ide/ide-io.c
-> > >>>>> @@ -1595,6 +1595,7 @@ void ide_init_drive_cmd (struct request *rq)
-> > >>>>>  {
-> > >>>>>  	memset(rq, 0, sizeof(*rq));
-> > >>>>>  	rq->ref_count = 1;
-> > >>>>> +	rq->cmd = rq->__cmd;
-> > >>>>>  }
-> > >>> Tomo, some more changes are needed:
-> > >>>
-> > >>> Please think about all _static_/dynamic allocations of 'struct request'
-> > >>> used together with REQ_TYPE_SPECIAL etc., i.e.
-> > >> I think that using struct request allocated statically is wrong from
-> > >> the perspective of the block layer design, that is, you always need to
-> > >> use blk_get_request. I think that except ide, everyone does.
-> > >>
-> > >> I try to convert ide to use blk_get_request properly if you want.
-> > > 
-> > > That would be best, but the on-stack allocation has the benefit that
-> > > it'll always work. So until we can completely get rid of that, lets just
-> > > make it a hard rule that ANY rq allocation MUST call rq_init(). It's a
-> > > lot saner than doing a memset() anyway.
-> > > 
-> > 
-> > Just a patch that I had for ages since the bad old request bidi times,
-> > perhaps is also good today. (rebased to for-2.6.26 branch)
-> > ---
-> > From: Boaz Harrosh <bharrosh@panasas.com>
-> > Date: Wed, 16 Apr 2008 12:05:33 +0300
-> > Subject: [PATCH] Initialize all members of struct request in rq_init
-> > 
-> > Before, every member added/removed from struct request would entitle a change
-> > to rq_init, for initialization. Now all members are default to zero and only
-> > the none zero members are specifically initialized.
-> > 
-> > Users that need requests on the stack or pre-allocated, must call rq_init()
-> > before use.
-> > 
-> > Signed-off-by: Boaz Harrosh <bharrosh@panasas.com>
-> > ---
-> >  block/blk-core.c |   22 ++--------------------
-> >  1 files changed, 2 insertions(+), 20 deletions(-)
-> > 
-> > diff --git a/block/blk-core.c b/block/blk-core.c
-> > index 6f0968f..3f4c563 100644
-> > --- a/block/blk-core.c
-> > +++ b/block/blk-core.c
-> > @@ -113,36 +113,18 @@ EXPORT_SYMBOL(blk_get_backing_dev_info);
-> >   */
-> >  void rq_init(struct request_queue *q, struct request *rq)
-> >  {
-> > +	memset(rq, 0, sizeof(*rq));
-> 
-> Hmm, rq_init comment says:
-> 
-> /*
->  * We can't just memset() the structure, since the allocation path
->  * already stored some information in the request.
->  */
-> 
-> I think that we can't initialize rq->cmd_flags here.
+--=-=-=
 
-That is correct, the patch wont work as-is. The principle of clearing
-every member except block internal is sound and should be applied,
-though.
+Jens Axboe <jens.axboe@oracle.com> wrote:
+> On Thu, Apr 17 2008, Elias Oltmanns wrote:
+>> Jens Axboe <jens.axboe@oracle.com> wrote:
+>> > On Wed, Apr 16 2008, Elias Oltmanns wrote:
+>> >> blk_run_queue() as well as blk_start_queue() plug the device on reentry
+>> >> and schedule blk_unplug_work() right afterwards. However,
+>> >> blk_plug_device() takes care of that already and makes sure that there is
+>> >> a short delay before blk_unplug_work() is scheduled. This is important
+>> >> to prevent busy looping and possibly system lockups as observed here:
+>> >> <http://permalink.gmane.org/gmane.linux.ide/28351>.
+>> >
+>> > If you call blk_start_queue() and blk_run_queue(), you better mean it.
+>> > There should be no delay. The only reason it does blk_plug_device() is
+>> > so that the work queue function will actually do some work.
+>> 
+>> Well, I'm mainly concerned with blk_run_queue(). In a comment it says
+>> that it should recurse only once so as not to overrun the stack. On my
+>> machine, however, immediate rescheduling may have exactly as disastrous
+>> consequences as an overrunning stack would have since the system locks
+>> up completely.
+>> 
+>> Just to get this straight: Are low level drivers allowed to rely on
+>> blk_run_queue() that there will be no loops or do they have to make sure
+>> that this function is not called from the request_fn() of the same
+>> queue?
+>
+> It's not really designed for being called recursively. Which isn't the
+> problem imo, the problem is SCSI apparently being dumb and calling
+> blk_run_queue() all the time. blk_run_queue() must run the queue NOW. If
+> SCSI wants something like 'run the queue in a bit', it should use
+> blk_plug_device() instead.
 
--- 
-Jens Axboe
+James would probably argue that this is alright as long as
+max_device_blocked and max_host_blocked are bigger than one.
 
+>
+>> > In the newer kernels we just do:
+>> >
+>> >         set_bit(QUEUE_FLAG_PLUGGED, &q->queue_flags);
+>> >         kblockd_schedule_work(q, &q->unplug_work);
+>> >
+>> > instead, which is much better.
+>> 
+>> Only as long as it doesn't get called from the request_fn() of the same
+>> queue. Otherwise, there may be no chance for other threads to clear the
+>> condition that caused blk_run_queue() to be called in the first place.
+>
+> Broken usage.
+
+Right. Tejun, would it be possible to apply the patch below (2.6.25) or
+do you see any alternative?
+
+Regards,
+
+Elias
+
+
+--=-=-=
+Content-Type: text/x-patch
+Content-Disposition: inline; filename=adjust-blocked-counters.patch
+
+---
+
+ drivers/ata/libata-scsi.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+index 1579539..ce865e9 100644
+--- a/drivers/ata/libata-scsi.c
++++ b/drivers/ata/libata-scsi.c
+@@ -831,7 +831,7 @@ static void ata_scsi_sdev_config(struct scsi_device *sdev)
+ 	 * prevent SCSI midlayer from automatically deferring
+ 	 * requests.
+ 	 */
+-	sdev->max_device_blocked = 1;
++	sdev->max_device_blocked = 2;
+ }
+ 
+ /**
+@@ -3206,7 +3206,7 @@ int ata_scsi_add_hosts(struct ata_host *host, struct scsi_host_template *sht)
+ 		 * Set host_blocked to 1 to prevent SCSI midlayer from
+ 		 * automatically deferring requests.
+ 		 */
+-		shost->max_host_blocked = 1;
++		shost->max_host_blocked = 2;
+ 
+ 		rc = scsi_add_host(ap->scsi_host, ap->host->dev);
+ 		if (rc)
+
+--=-=-=--
