@@ -1,61 +1,47 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH] libata-core: set debug logging via module param
-Date: Fri, 18 Apr 2008 16:18:01 +0400
-Message-ID: <48089179.40503@ru.mvista.com>
-References: <20080417230406.GA6266@dhcp-210.hsv.redhat.com>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: IDE allmodconfig: probe_4drives error
+Date: Sat, 19 Apr 2008 01:18:22 +0200
+Message-ID: <200804190118.23089.bzolnier@gmail.com>
+References: <48092593.4040700@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from h155.mvista.com ([63.81.120.155]:10826 "EHLO imap.sh.mvista.com"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752271AbYDRMSp (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 18 Apr 2008 08:18:45 -0400
-In-Reply-To: <20080417230406.GA6266@dhcp-210.hsv.redhat.com>
+Received: from fg-out-1718.google.com ([72.14.220.157]:7660 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751761AbYDRXCV (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 18 Apr 2008 19:02:21 -0400
+Received: by fg-out-1718.google.com with SMTP id l27so671823fgb.17
+        for <linux-ide@vger.kernel.org>; Fri, 18 Apr 2008 16:02:19 -0700 (PDT)
+In-Reply-To: <48092593.4040700@garzik.org>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: David Milburn <dmilburn@redhat.com>
-Cc: jeff@garzik.org, linux-ide@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: Linux IDE mailing list <linux-ide@vger.kernel.org>
 
-Hello.
+On Saturday 19 April 2008, Jeff Garzik wrote:
+> allmodconfig on i386 from latest linux-2.6.git (the one w/ the kgdb 
+> build error):
+> 
+> WARNING: modpost: Found 15 section mismatch(es).
+> To see full details build your kernel with:
+> 'make CONFIG_DEBUG_SECTION_MISMATCH=y'
+>    UPD     include/linux/compile.h
+>    Building modules, stage 2.
+> Root device is (9, 0)
+> Setup is 12536 bytes (padded to 12800 bytes).
+> System is 1896 kB
+> CRC 116c83e7
+> Kernel: arch/x86/boot/bzImage is ready  (#1)
+> ERROR: "probe_4drives" [drivers/ide/ide-core.ko] undefined!
+> [...]
 
-David Milburn wrote:
+Heh, this is the "magical" error that Andrew hit before [1],
+it will get auto-fixed by next IDE update.
 
-> Set debug level using ata_logging_level module parameter.
+[1] http://www.gossamer-threads.com/lists/linux/kernel/892459#892459
 
-> Signed-off-by David Milburn <dmilburn@redhat.com>
-
-> diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-> index 733eb94..3fac7f7 100644
-> --- a/drivers/ata/libata-core.c
-> +++ b/drivers/ata/libata-core.c
-> @@ -158,6 +158,10 @@ int libata_allow_tpm = 0;
->  module_param_named(allow_tpm, libata_allow_tpm, int, 0444);
->  MODULE_PARM_DESC(allow_tpm, "Permit the use of TPM commands");
->  
-> +unsigned int ata_logging_level;
-> +module_param(ata_logging_level, int, 0444);
-> +MODULE_PARM_DESC(ata_logging_level, "Bit mask of logging levels");
-> +
->  MODULE_AUTHOR("Jeff Garzik");
->  MODULE_DESCRIPTION("Library module for ATA devices");
->  MODULE_LICENSE("GPL");
-> @@ -5190,14 +5194,8 @@ struct ata_port *ata_port_alloc(struct ata_host *host)
->  	ap->dev = host->dev;
->  	ap->last_ctl = 0xFF;
->  
-> -#if defined(ATA_VERBOSE_DEBUG)
-> -	/* turn on all debugging levels */
-> -	ap->msg_enable = 0x00FF;
-> -#elif defined(ATA_DEBUG)
-> -	ap->msg_enable = ATA_MSG_DRV | ATA_MSG_INFO | ATA_MSG_CTL | ATA_MSG_WARN | ATA_MSG_ERR;
-> -#else
-> -	ap->msg_enable = ATA_MSG_DRV | ATA_MSG_ERR | ATA_MSG_WARN;
-> -#endif
-> +	/* set debugging level */
-> +	ap->msg_enable = ata_logging_level;
-
-    This sets the default mask to show no log messages instead of ATA_MSG_DRV 
-| ATA_MSG_ERR | ATA_MSG_WARN as it was before the patch.
-
-WBR, Sergei
+Thanks,
+Bart
