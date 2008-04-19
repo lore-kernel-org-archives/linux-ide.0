@@ -1,29 +1,27 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH 1/3] siimage: do clocking register posting earlier in
- setup_mmio_siimage()
-Date: Sat, 19 Apr 2008 20:48:16 +0400
-Message-ID: <480A2250.20201@ru.mvista.com>
-References: <200804092051.01552.bzolnier@gmail.com>
+From: Mark Lord <liml@rtr.ca>
+Subject: [PATCH 0/8] sata_mv interrupt/eh fixes etc..
+Date: Sat, 19 Apr 2008 14:42:54 -0400
+Message-ID: <480A3D2E.4040503@rtr.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1756621AbYDSQtQ@vger.kernel.org>
-In-Reply-To: <200804092051.01552.bzolnier@gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from rtr.ca ([76.10.145.34]:3963 "EHLO mail.rtr.ca"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755900AbYDSSmv (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 19 Apr 2008 14:42:51 -0400
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>, Tejun Heo <htejun@gmail.com>, IDE/ATA development list <linux-ide@vger.kernel.org>
 
-Bartlomiej Zolnierkiewicz wrote:
+Here are eight more patches for sata_mv.
 
-> Do clocking register posting earlier in setup_mmio_siimage()
-> to match code in init_chipset_siimage().
+The focus this time is on a revamp of the interrupt and error handling code,
+and re-enabling hotplug (primary ports only) at the end.
 
-> This is a preparation for the next patch which merges PCI and MMIO
-> code paths together.
+The Marvell chips cannot support Asynchronous Notification (AN)
+due to errata issues, so hotplug on PM ports is not supported for now.
+Hotplug on PM ports would require Tejun's HP polling framework.
 
-> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cheers
 
-Acked-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-
-MBR, Sergei
