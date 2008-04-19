@@ -1,47 +1,44 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: IDE allmodconfig: probe_4drives error
-Date: Sat, 19 Apr 2008 01:18:22 +0200
-Message-ID: <200804190118.23089.bzolnier@gmail.com>
-References: <48092593.4040700@garzik.org>
+From: Russell King <rmk+lkml@arm.linux.org.uk>
+Subject: Re: [2.6 patch] ARM: always select HAVE_IDE
+Date: Sat, 19 Apr 2008 12:33:56 +0100
+Message-ID: <20080419113356.GA6974@flint.arm.linux.org.uk>
+References: <20080414141659.GF6695@cs181133002.pp.htv.fi> <20080415221002.GL1677@cs181133002.pp.htv.fi> <20080415223928.GH5676@flint.arm.linux.org.uk> <200804160126.11116.bzolnier@gmail.com> <20080417093753.GF1677@cs181133002.pp.htv.fi> <20080417095916.GD1449@flint.arm.linux.org.uk> <20080417104836.GH1677@cs181133002.pp.htv.fi> <20080417110005.GE1449@flint.arm.linux.org.uk> <20080417132507.GA9314@cs181133002.pp.htv.fi>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.157]:7660 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751761AbYDRXCV (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 18 Apr 2008 19:02:21 -0400
-Received: by fg-out-1718.google.com with SMTP id l27so671823fgb.17
-        for <linux-ide@vger.kernel.org>; Fri, 18 Apr 2008 16:02:19 -0700 (PDT)
-In-Reply-To: <48092593.4040700@garzik.org>
+Received: from caramon.arm.linux.org.uk ([78.32.30.218]:42242 "EHLO
+	caramon.arm.linux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753968AbYDSLed (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 19 Apr 2008 07:34:33 -0400
 Content-Disposition: inline
+In-Reply-To: <20080417132507.GA9314@cs181133002.pp.htv.fi>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: Linux IDE mailing list <linux-ide@vger.kernel.org>
+To: Adrian Bunk <bunk@kernel.org>
+Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Sam Ravnborg <sam@ravnborg.org>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linux-pcmcia@lists.infradead.org
 
-On Saturday 19 April 2008, Jeff Garzik wrote:
-> allmodconfig on i386 from latest linux-2.6.git (the one w/ the kgdb 
-> build error):
+On Thu, Apr 17, 2008 at 04:25:07PM +0300, Adrian Bunk wrote:
+> You have a point that one might argue that avr32 should also select 
+> HAVE_IDE and get an asm/ide.h .
 > 
-> WARNING: modpost: Found 15 section mismatch(es).
-> To see full details build your kernel with:
-> 'make CONFIG_DEBUG_SECTION_MISMATCH=y'
->    UPD     include/linux/compile.h
->    Building modules, stage 2.
-> Root device is (9, 0)
-> Setup is 12536 bytes (padded to 12800 bytes).
-> System is 1896 kB
-> CRC 116c83e7
-> Kernel: arch/x86/boot/bzImage is ready  (#1)
-> ERROR: "probe_4drives" [drivers/ide/ide-core.ko] undefined!
-> [...]
+> The main difference between avr32 and arm is that on arm there are a 
+> bunch of platforms that actually want to use drivers/ide/ at the moment, 
+> and the fine-grained select's we have at the moment don't bring any real 
+> gain.
+> 
+> I do actually not care much how this gets resolved (we could even 
+> ditch HAVE_IDE and provide asm/ide.h on all architectures) if there's 
+> general agreement that this is the way to go.
 
-Heh, this is the "magical" error that Andrew hit before [1],
-it will get auto-fixed by next IDE update.
+That is probably a more correct approach.
 
-[1] http://www.gossamer-threads.com/lists/linux/kernel/892459#892459
+Consider that if you do have PCMCIA, then you can plug a CF card in and,
+therefore, you have an IDE interface in the system.  So, selecting
+HAVE_IDE if PCMCIA is enabled is entirely reasonable.  What isn't so
+reasonable is not providing asm/ide.h if your architecture has the
+possibility of supporting PCMCIA.
 
-Thanks,
-Bart
+-- 
+Russell King
+ Linux kernel    2.6 ARM Linux   - http://www.arm.linux.org.uk/
+ maintainer of:
