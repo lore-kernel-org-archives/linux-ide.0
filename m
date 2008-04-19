@@ -1,68 +1,145 @@
-From: Mark Lord <liml@rtr.ca>
-Subject: Re: WARNING: at drivers/ata/libata-sff.c:1016
-Date: Sat, 19 Apr 2008 08:01:21 -0400
-Message-ID: <4809DF11.2010309@rtr.ca>
-References: <4807F96F.8060500@rtr.ca> <48093681.7050100@rtr.ca>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: Re: [PATCH 2/3] siimage: add sil_* I/O ops
+Date: Sat, 19 Apr 2008 21:17:26 +0400
+Message-ID: <480A2926.6050404@ru.mvista.com>
+References: <200804092051.33163.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([76.10.145.34]:3261 "EHLO mail.rtr.ca"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754150AbYDSMBY (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 19 Apr 2008 08:01:24 -0400
-In-Reply-To: <48093681.7050100@rtr.ca>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1758985AbYDSRSU@vger.kernel.org>
+In-Reply-To: <200804092051.33163.bzolnier@gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>, IDE/ATA development list <linux-ide@vger.kernel.org>, Jeff Garzik <jgarzik@pobox.com>
 
-Mark Lord wrote:
->
-> Mmmm.. got another one, slightly different line perhaps,
-> though maybe it just moved around (latest libata-dev#upstream this 
-> morning).
-> 
-> 
-> ata201: SATA link down (SStatus 0 SControl 300)
-> ata202: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-> ------------[ cut here ]------------
-> WARNING: at drivers/ata/libata-sff.c:1211 ata_sff_hsm_move+0x595/0x628()
-..
-> [ata_pio_task+168/185] ata_pio_task+0xa8/0xb9 
-..
-> ata202.15: failed to read PMP GSCR[0] (Emask=0x10)
-> ata202: failed to recover some devices, retrying in 5 secs
-> ata202: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-..
+Bartlomiej Zolnierkiewicz wrote:
 
-That's from here in libata-sff.c:1211:
+> Add sil_iowrite{8,16,32}() and sil_ioread{8,16}() helpers, then use them to
+> merge code accessing configuration registers through PCI and MMIO together.
 
-        case HSM_ST_LAST:
-                if (unlikely(!ata_ok(status))) {
-                        qc->err_mask |= __ac_err_mask(status);
-                        ap->hsm_task_state = HSM_ST_ERR;
-                        goto fsm_start;
-                }
-                /* no more data to transfer */
-                DPRINTK("ata%u: dev %u command complete, drv_stat 0x%x\n",
-                        ap->print_id, qc->dev->devno, status);
- >>>>>>         WARN_ON(qc->err_mask);
-                ap->hsm_task_state = HSM_ST_IDLE;
-		...
-I thought that maybe this might have been my LLD (sata_mv) noticing that
-the device (PM in this case) got unplugged mid-stride, and set the qc->err_mask
-for it.  But te LLD doesn't touch polled PIO commands, and there was no log
-message from the LLD preceding this one, or following it either.
+   Sigh, my coding style cleanup patch heavily clashed with this one, so I had 
+to recast it...
 
-However, there were three of these same WARN_ONs in a row,
-so perhaps libata-eh was just cancelling the outstanding commands
-or something, and ???.
+> [ because of this SATA initialization bits from setup_mmio_siimage() are
+>   moved to init_chipset_siimage() ]
 
-No big deal, it didn't crash or anything, and I was abusively unplugging/replugging
-things rather rapidly at the time.  :)
+> This also cuts code size a bit:
 
-Expect to see the sata_mv IRQ/EH/hotplug patches here in a day or three,
-after I wind them up and through Marvell's people first.
+>    text    data     bss     dec     hex filename
+>    4437     164       0    4601    11f9 drivers/ide/pci/siimage.o.before
+>    3979     164       0    4143    102f drivers/ide/pci/siimage.o.after
 
-I'm beginning to *like* this driver, and might actually have to remove
-the "HIGHLY EXPERIMENTAL" label from it soon-ish.  :)
+    Good work. :-)
+
+> While at it:
+
+> * Use I/O ops directly instead of using ->IN{B,W} and ->OUT{B,W}.
+
+> * Fixup CodingStyle in setup_mmio_siimage().
+
+> * Rename 'tmpbyte' variable to 'tmp' in init_chipset_siimage().
+
+> There should be no functional changes caused by this patch.
+
+> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+
+Acked-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+
+> Index: b/drivers/ide/pci/siimage.c
+> ===================================================================
+> --- a/drivers/ide/pci/siimage.c
+> +++ b/drivers/ide/pci/siimage.c
+> @@ -2,7 +2,7 @@
+>   * Copyright (C) 2001-2002	Andre Hedrick <andre@linux-ide.org>
+>   * Copyright (C) 2003		Red Hat <alan@redhat.com>
+>   * Copyright (C) 2007		MontaVista Software, Inc.
+> - * Copyright (C) 2007		Bartlomiej Zolnierkiewicz
+> + * Copyright (C) 2007-2008	Bartlomiej Zolnierkiewicz
+>   *
+>   *  May be copied or modified under the terms of the GNU General Public License
+>   *
+> @@ -124,6 +124,54 @@ static inline unsigned long siimage_seld
+>  	return base;
+>  }
+>  
+> +static u8 sil_ioread8(struct pci_dev *dev, unsigned long addr)
+> +{
+> +	u8 tmp = 0;
+> +
+> +	if (pci_get_drvdata(dev))
+> +		tmp = readb((void __iomem *)addr);
+> +	else
+> +		pci_read_config_byte(dev, addr, &tmp);
+> +
+> +	return tmp;
+> +}
+> +
+> +static u16 sil_ioread16(struct pci_dev *dev, unsigned long addr)
+> +{
+> +	u16 tmp = 0;
+> +
+> +	if (pci_get_drvdata(dev))
+> +		tmp = readw((void __iomem *)addr);
+> +	else
+> +		pci_read_config_word(dev, addr, &tmp);
+> +
+> +	return tmp;
+> +}
+> +
+> +static void sil_iowrite8(struct pci_dev *dev, u8 val, unsigned long addr)
+> +{
+> +	if (pci_get_drvdata(dev))
+> +		writeb(val, (void __iomem *)addr);
+> +	else
+> +		pci_write_config_byte(dev, addr, val);
+> +}
+> +
+> +static void sil_iowrite16(struct pci_dev *dev, u16 val, unsigned long addr)
+> +{
+> +	if (pci_get_drvdata(dev))
+> +		writew(val, (void __iomem *)addr);
+> +	else
+> +		pci_write_config_word(dev, addr, val);
+> +}
+> +
+> +static void sil_iowrite32(struct pci_dev *dev, u32 val, unsigned long addr)
+> +{
+> +	if (pci_get_drvdata(dev))
+> +		writel(val, (void __iomem *)addr);
+> +	else
+> +		pci_write_config_dword(dev, addr, val);
+> +}
+> +
+
+    I think this could be further imporoved -- since we have to call 
+pci_get_drvdata() in the accessors anyway, we could have used it to get the 
+MMIO base right there, and thus be freed from the necessity to add it to the 
+MMIO offset in the callers and also most probably from having it copied to 
+hwif->hwif_data.
+
+> @@ -203,36 +249,20 @@ static void sil_set_pio_mode(ide_drive_t
+[...]
+> +	mode |= (unit ? 0x10 : 0x01);
+
+    Useless parens -- I'm getting rid of them in my patch anyway...
+
+> @@ -557,50 +513,80 @@ static unsigned int setup_mmio_siimage (
+[...]
+> +	sil_iowrite8(dev,        0x72, base + 0xA1);
+> +	sil_iowrite16(dev,     0x328A, base + 0xA2);
+> +	sil_iowrite32(dev, 0x62DD62DD, base + 0xA4);
+> +	sil_iowrite32(dev, 0x43924392, base + 0xA8);
+> +	sil_iowrite32(dev, 0x40094009, base + 0xAC);
+> +	sil_iowrite8(dev,        0x72, base ? (base + 0xE1) : 0xB1);
+> +	sil_iowrite16(dev,     0x328A, base ? (base + 0xE2) : 0xB2);
+> +	sil_iowrite32(dev, 0x62DD62DD, base ? (base + 0xE4) : 0xB4);
+> +	sil_iowrite32(dev, 0x43924392, base ? (base + 0xE8) : 0xB8);
+> +	sil_iowrite32(dev, 0x40094009, base ? (base + 0xEC) : 0xBC);
+> +
+
+    Sigh, I was going to send a patch getting rid of these writes altogether 
+last year -- there should be no point in setting PIO/DMA/UDMA timings here.
+Maybe I'll submit it...
+
+MBR, Sergei
