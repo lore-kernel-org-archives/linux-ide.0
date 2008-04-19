@@ -1,42 +1,68 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH] libata: fix boot panic with SATAPI devices on non-SFF
-	HBAs
-Date: Sat, 19 Apr 2008 09:08:39 -0500
-Message-ID: <1208614119.3280.8.camel@localhost.localdomain>
-References: <1208542728.3063.25.camel@localhost.localdomain>
-	 <fucsch$ah0$1@ger.gmane.org>
+From: Mark Lord <liml@rtr.ca>
+Subject: Re: WARNING: at drivers/ata/libata-sff.c:1016
+Date: Sat, 19 Apr 2008 08:01:21 -0400
+Message-ID: <4809DF11.2010309@rtr.ca>
+References: <4807F96F.8060500@rtr.ca> <48093681.7050100@rtr.ca>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <fucsch$ah0$1@ger.gmane.org>
-Sender: linux-scsi-owner@vger.kernel.org
-To: walt <w41ter@gmail.com>
-Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from rtr.ca ([76.10.145.34]:3261 "EHLO mail.rtr.ca"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754150AbYDSMBY (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 19 Apr 2008 08:01:24 -0400
+In-Reply-To: <48093681.7050100@rtr.ca>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>, IDE/ATA development list <linux-ide@vger.kernel.org>, Jeff Garzik <jgarzik@pobox.com>
 
-On Sat, 2008-04-19 at 06:34 -0700, walt wrote:
-> James Bottomley wrote:
-> > Current 2.6.25 git head now panics reliably on boot if you have a SATAPI
-> > device connected.
-> >
-> > The problem was introduced by the libata merge trying to pull out all
-> > the SFF code into a separate module...
+Mark Lord wrote:
+>
+> Mmmm.. got another one, slightly different line perhaps,
+> though maybe it just moved around (latest libata-dev#upstream this 
+> morning).
 > 
-> Hi James,
 > 
-> When I saw your commit I thought it would fix the panic introduced by Tejun's
-> commit <305d2a1a>, but no luck.
-> 
-> I have a pata drive connected to a sata controller using a plugin adapter.
-> After Tejun's commit the kernel panics with unknown-block (8,9) instead of
-> mounting /dev/sda9.  Is this the scenario your patch is intended to fix?
+> ata201: SATA link down (SStatus 0 SControl 300)
+> ata202: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+> ------------[ cut here ]------------
+> WARNING: at drivers/ata/libata-sff.c:1211 ata_sff_hsm_move+0x595/0x628()
+..
+> [ata_pio_task+168/185] ata_pio_task+0xa8/0xb9 
+..
+> ata202.15: failed to read PMP GSCR[0] (Emask=0x10)
+> ata202: failed to recover some devices, retrying in 5 secs
+> ata202: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+..
 
-If it's a panic with a SATA drive, then no it wouldn't ... the problem I
-fixed was in SATAPI only (That's CD/DVD/Tape devices).  If you actually
-post the boot log and panic, linux-ide and Tejun might be able to help.
-Your brief snippet indicates the controller isn't finding sda, I think.
+That's from here in libata-sff.c:1211:
 
-James
+        case HSM_ST_LAST:
+                if (unlikely(!ata_ok(status))) {
+                        qc->err_mask |= __ac_err_mask(status);
+                        ap->hsm_task_state = HSM_ST_ERR;
+                        goto fsm_start;
+                }
+                /* no more data to transfer */
+                DPRINTK("ata%u: dev %u command complete, drv_stat 0x%x\n",
+                        ap->print_id, qc->dev->devno, status);
+ >>>>>>         WARN_ON(qc->err_mask);
+                ap->hsm_task_state = HSM_ST_IDLE;
+		...
+I thought that maybe this might have been my LLD (sata_mv) noticing that
+the device (PM in this case) got unplugged mid-stride, and set the qc->err_mask
+for it.  But te LLD doesn't touch polled PIO commands, and there was no log
+message from the LLD preceding this one, or following it either.
 
+However, there were three of these same WARN_ONs in a row,
+so perhaps libata-eh was just cancelling the outstanding commands
+or something, and ???.
 
+No big deal, it didn't crash or anything, and I was abusively unplugging/replugging
+things rather rapidly at the time.  :)
+
+Expect to see the sata_mv IRQ/EH/hotplug patches here in a day or three,
+after I wind them up and through Marvell's people first.
+
+I'm beginning to *like* this driver, and might actually have to remove
+the "HIGHLY EXPERIMENTAL" label from it soon-ish.  :)
