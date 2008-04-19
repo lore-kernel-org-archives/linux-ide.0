@@ -1,215 +1,197 @@
 From: Mark Lord <liml@rtr.ca>
-Subject: REPOST: [PATCH 4/8] sata_mv simplify request/response queue handling
-Date: Sat, 19 Apr 2008 15:06:40 -0400
-Message-ID: <480A42C0.90703@rtr.ca>
-References: <480A3D2E.4040503@rtr.ca> <480A3E23.1060901@rtr.ca>
+Subject: REPOST: [PATCH 5/8] sata_mv tidy host controller interrupt handling
+Date: Sat, 19 Apr 2008 15:07:18 -0400
+Message-ID: <480A42E6.60808@rtr.ca>
+References: <480A3D2E.4040503@rtr.ca> <480A3F5F.9030008@rtr.ca>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([76.10.145.34]:3145 "EHLO mail.rtr.ca"
+Received: from rtr.ca ([76.10.145.34]:2527 "EHLO mail.rtr.ca"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752212AbYDSTGg (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 19 Apr 2008 15:06:36 -0400
-In-Reply-To: <480A3E23.1060901@rtr.ca>
+	id S1755791AbYDSTHP (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 19 Apr 2008 15:07:15 -0400
+In-Reply-To: <480A3F5F.9030008@rtr.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Jeff Garzik <jgarzik@pobox.com>, Tejun Heo <htejun@gmail.com>, IDE/ATA development list <linux-ide@vger.kernel.org>
 
 Here it is again, minus the checkpatch.pl complaint: 
 
-Try and simplify handling of the request/response queues.
+Tidy up host controller interrupt handling, by moving the weirdo
+bit shifting from mv_interrupt() to mv_host_intr().
 
-Maintain the cached copies of queue indexes in a fully-masked state,
-rather than having each use of them have to do the masking.
+This lets us take advantage of the MV_PORT_TO_SHIFT_AND_HARDPORT() macro
+from an earlier patch to greatly simplify the port numbering logic.
 
-Split off handling of a single crpb response into a separate function,
-to reduce complexity in the main mv_process_crpb_entries() routine.
+Also, defer reading the hc_irq_cause (one per hc) until it is
+actually proven to be needed.  This may save a microsecond or
+so per interrupt, on average (a later patchset will further reduce
+unnecessary register reads throughout the driver).
 
-Ignore the rarely-valid error bits from the crpb status field,
-as we already handle that information in mv_err_intr().
-
-For now, preserve the rest of the original logic.
-A later patch will deal with fixing that separately.
+Apart from that, we still leave the actual IRQ handling logic alone.
+Subsequent patches in this series will address that.
 
 Signed-off-by: Mark Lord <mlord@pobox.com>
 
---- old/drivers/ata/sata_mv.c	2008-04-19 13:06:31.000000000 -0400
-+++ linux/drivers/ata/sata_mv.c	2008-04-19 13:21:28.000000000 -0400
-@@ -800,7 +800,8 @@
- 	/*
- 	 * initialize request queue
- 	 */
--	index = (pp->req_idx & MV_MAX_Q_DEPTH_MASK) << EDMA_REQ_Q_PTR_SHIFT;
-+	pp->req_idx &= MV_MAX_Q_DEPTH_MASK;	/* paranoia */
-+	index = pp->req_idx << EDMA_REQ_Q_PTR_SHIFT;
- 
- 	WARN_ON(pp->crqb_dma & 0x3ff);
- 	writel((pp->crqb_dma >> 16) >> 16, port_mmio + EDMA_REQ_Q_BASE_HI_OFS);
-@@ -816,7 +817,8 @@
- 	/*
- 	 * initialize response queue
- 	 */
--	index = (pp->resp_idx & MV_MAX_Q_DEPTH_MASK) << EDMA_RSP_Q_PTR_SHIFT;
-+	pp->resp_idx &= MV_MAX_Q_DEPTH_MASK;	/* paranoia */
-+	index = pp->resp_idx << EDMA_RSP_Q_PTR_SHIFT;
- 
- 	WARN_ON(pp->crpb_dma & 0xff);
- 	writel((pp->crpb_dma >> 16) >> 16, port_mmio + EDMA_RSP_Q_BASE_HI_OFS);
-@@ -1308,7 +1310,7 @@
- 	flags |= (qc->dev->link->pmp & 0xf) << CRQB_PMP_SHIFT;
- 
- 	/* get current queue index from software */
--	in_index = pp->req_idx & MV_MAX_Q_DEPTH_MASK;
-+	in_index = pp->req_idx;
- 
- 	pp->crqb[in_index].sg_addr =
- 		cpu_to_le32(pp->sg_tbl_dma[qc->tag] & 0xffffffff);
-@@ -1400,7 +1402,7 @@
- 	flags |= (qc->dev->link->pmp & 0xf) << CRQB_PMP_SHIFT;
- 
- 	/* get current queue index from software */
--	in_index = pp->req_idx & MV_MAX_Q_DEPTH_MASK;
-+	in_index = pp->req_idx;
- 
- 	crqb = (struct mv_crqb_iie *) &pp->crqb[in_index];
- 	crqb->addr = cpu_to_le32(pp->sg_tbl_dma[qc->tag] & 0xffffffff);
-@@ -1467,9 +1469,8 @@
- 
- 	mv_start_dma(ap, port_mmio, pp, qc->tf.protocol);
- 
--	pp->req_idx++;
--
--	in_index = (pp->req_idx & MV_MAX_Q_DEPTH_MASK) << EDMA_REQ_Q_PTR_SHIFT;
-+	pp->req_idx = (pp->req_idx + 1) & MV_MAX_Q_DEPTH_MASK;
-+	in_index = pp->req_idx << EDMA_REQ_Q_PTR_SHIFT;
- 
- 	/* and write the request in pointer to kick the EDMA to life */
- 	writelfl((pp->crqb_dma & EDMA_REQ_Q_BASE_LO_MASK) | in_index,
-@@ -1603,70 +1604,72 @@
- 	ata_qc_complete(qc);
- }
- 
--static void mv_intr_edma(struct ata_port *ap)
-+static void mv_process_crpb_response(struct ata_port *ap,
-+		struct mv_crpb *response, unsigned int tag, int ncq_enabled)
-+{
-+	struct ata_queued_cmd *qc = ata_qc_from_tag(ap, tag);
-+
-+	if (qc) {
-+		u8 ata_status;
-+		u16 edma_status = le16_to_cpu(response->flags);
-+		/*
-+		 * edma_status from a response queue entry:
-+		 *   LSB is from EDMA_ERR_IRQ_CAUSE_OFS (non-NCQ only).
-+		 *   MSB is saved ATA status from command completion.
-+		 */
-+		if (!ncq_enabled) {
-+			u8 err_cause = edma_status & 0xff & ~EDMA_ERR_DEV;
-+			if (err_cause) {
-+				/*
-+				 * Error will be seen/handled by mv_err_intr().
-+				 * So do nothing at all here.
-+				 */
-+				return;
-+			}
-+		}
-+		ata_status = edma_status >> CRPB_FLAG_STATUS_SHIFT;
-+		qc->err_mask |= ac_err_mask(ata_status);
-+		ata_qc_complete(qc);
-+	} else {
-+		ata_port_printk(ap, KERN_ERR, "%s: no qc for tag=%d\n",
-+				__func__, tag);
-+	}
-+}
-+
-+static void mv_process_crpb_entries(struct ata_port *ap, struct mv_port_priv *pp)
+--- old/drivers/ata/sata_mv.c	2008-04-19 13:21:28.000000000 -0400
++++ linux/drivers/ata/sata_mv.c	2008-04-19 13:36:17.000000000 -0400
+@@ -1689,50 +1689,48 @@
+  *      LOCKING:
+  *      Inherited from caller.
+  */
+-static void mv_host_intr(struct ata_host *host, u32 relevant, unsigned int hc)
++static int mv_host_intr(struct ata_host *host, u32 main_cause)
  {
- 	void __iomem *port_mmio = mv_ap_base(ap);
- 	struct mv_host_priv *hpriv = ap->host->private_data;
--	struct mv_port_priv *pp = ap->private_data;
--	struct ata_queued_cmd *qc;
--	u32 out_index, in_index;
-+	u32 in_index;
- 	bool work_done = false;
-+	int ncq_enabled = (pp->pp_flags & MV_PP_FLAG_NCQ_EN);
- 
--	/* get h/w response queue pointer */
-+	/* Get the hardware queue position index */
- 	in_index = (readl(port_mmio + EDMA_RSP_Q_IN_PTR_OFS)
- 			>> EDMA_RSP_Q_PTR_SHIFT) & MV_MAX_Q_DEPTH_MASK;
- 
--	while (1) {
--		u16 status;
-+	/* Process new responses from since the last time we looked */
-+	while (in_index != pp->resp_idx) {
- 		unsigned int tag;
-+		struct mv_crpb *response = &pp->crpb[pp->resp_idx];
- 
--		/* get s/w response queue last-read pointer, and compare */
--		out_index = pp->resp_idx & MV_MAX_Q_DEPTH_MASK;
--		if (in_index == out_index)
--			break;
-+		pp->resp_idx = (pp->resp_idx + 1) & MV_MAX_Q_DEPTH_MASK;
- 
--		/* 50xx: get active ATA command */
--		if (IS_GEN_I(hpriv))
-+		if (IS_GEN_I(hpriv)) {
-+			/* 50xx: no NCQ, only one command active at a time */
- 			tag = ap->link.active_tag;
+ 	struct mv_host_priv *hpriv = host->private_data;
+-	void __iomem *mmio = hpriv->base;
+-	void __iomem *hc_mmio = mv_hc_base(mmio, hc);
+-	u32 hc_irq_cause;
+-	int port, port0, last_port;
 -
--		/* Gen II/IIE: get active ATA command via tag, to enable
--		 * support for queueing.  this works transparently for
--		 * queued and non-queued modes.
--		 */
--		else
--			tag = le16_to_cpu(pp->crpb[out_index].id) & 0x1f;
+-	if (hc == 0)
+-		port0 = 0;
+-	else
+-		port0 = MV_PORTS_PER_HC;
 -
--		qc = ata_qc_from_tag(ap, tag);
+-	if (HAS_PCI(host))
+-		last_port = port0 + MV_PORTS_PER_HC;
+-	else
+-		last_port = port0 + hpriv->n_ports;
+-	/* we'll need the HC success int register in most cases */
+-	hc_irq_cause = readl(hc_mmio + HC_IRQ_CAUSE_OFS);
+-	if (!hc_irq_cause)
+-		return;
 -
--		/* For non-NCQ mode, the lower 8 bits of status
--		 * are from EDMA_ERR_IRQ_CAUSE_OFS,
--		 * which should be zero if all went well.
--		 */
--		status = le16_to_cpu(pp->crpb[out_index].flags);
--		if ((status & 0xff) && !(pp->pp_flags & MV_PP_FLAG_NCQ_EN)) {
--			mv_err_intr(ap, qc);
--			return;
--		}
+-	writelfl(~hc_irq_cause, hc_mmio + HC_IRQ_CAUSE_OFS);
++	void __iomem *mmio = hpriv->base, *hc_mmio = NULL;
++	u32 hc_irq_cause = 0;
++	unsigned int handled = 0, port;
+ 
+-	VPRINTK("ENTER, hc%u relevant=0x%08x HC IRQ cause=0x%08x\n",
+-		hc, relevant, hc_irq_cause);
 -
--		/* and finally, complete the ATA command */
--		if (qc) {
--			qc->err_mask |=
--				ac_err_mask(status >> CRPB_FLAG_STATUS_SHIFT);
--			ata_qc_complete(qc);
-+		} else {
-+			/* Gen II/IIE: get command tag from CRPB entry */
-+			tag = le16_to_cpu(response->id) & 0x1f;
+-	for (port = port0; port < last_port; port++) {
++	for (port = 0; port < hpriv->n_ports; port++) {
+ 		struct ata_port *ap = host->ports[port];
+ 		struct mv_port_priv *pp;
+-		int have_err_bits, hardport, shift;
+-
+-		if ((!ap) || (ap->flags & ATA_FLAG_DISABLED))
++		unsigned int shift, hardport, port_cause;
++		/*
++		 * When we move to the second hc, flag our cached
++		 * copies of hc_mmio (and hc_irq_cause) as invalid again.
++		 */
++		if (port == MV_PORTS_PER_HC)
++			hc_mmio = NULL;
++		/*
++		 * Do nothing if port is not interrupting or is disabled:
++		 */
++		MV_PORT_TO_SHIFT_AND_HARDPORT(port, shift, hardport);
++		port_cause = (main_cause >> shift) & (DONE_IRQ | ERR_IRQ);
++		if (!port_cause || !ap || (ap->flags & ATA_FLAG_DISABLED))
+ 			continue;
++		/*
++		 * Each hc within the host has its own hc_irq_cause register.
++		 * We defer reading it until we know we need it, right now:
++		 *
++		 * FIXME later: we don't really need to read this register
++		 * (some logic changes required below if we go that way),
++		 * because it doesn't tell us anything new.  But we do need
++		 * to write to it, outside the top of this loop,
++		 * to reset the interrupt triggers for next time.
++		 */
++		if (!hc_mmio) {
++			hc_mmio = mv_hc_base_from_port(mmio, port);
++			hc_irq_cause = readl(hc_mmio + HC_IRQ_CAUSE_OFS);
++			writelfl(~hc_irq_cause, hc_mmio + HC_IRQ_CAUSE_OFS);
++			handled = 1;
++		}
+ 
+-		pp = ap->private_data;
+-
+-		shift = port << 1;		/* (port * 2) */
+-		if (port >= MV_PORTS_PER_HC)
+-			shift++;	/* skip bit 8 in the HC Main IRQ reg */
+-
+-		have_err_bits = ((ERR_IRQ << shift) & relevant);
+-
+-		if (unlikely(have_err_bits)) {
++		if (unlikely(port_cause & ERR_IRQ)) {
+ 			struct ata_queued_cmd *qc;
+ 
+ 			qc = ata_qc_from_tag(ap, ap->link.active_tag);
+@@ -1743,8 +1741,7 @@
+ 			continue;
  		}
+ 
+-		hardport = mv_hardport_from_port(port); /* range 0..3 */
 -
--		/* advance software response queue pointer, to
--		 * indicate (after the loop completes) to hardware
--		 * that we have consumed a response queue entry.
--		 */
-+		mv_process_crpb_response(ap, response, tag, ncq_enabled);
- 		work_done = true;
--		pp->resp_idx++;
- 	}
- 
- 	/* Update the software queue position index in hardware */
- 	if (work_done)
- 		writelfl((pp->crpb_dma & EDMA_RSP_Q_BASE_LO_MASK) |
--			 (out_index << EDMA_RSP_Q_PTR_SHIFT),
-+			 (pp->resp_idx << EDMA_RSP_Q_PTR_SHIFT),
- 			 port_mmio + EDMA_RSP_Q_OUT_PTR_OFS);
- }
- 
-@@ -1744,7 +1747,7 @@
- 
++		pp = ap->private_data;
  		if (pp->pp_flags & MV_PP_FLAG_EDMA_EN) {
  			if ((DMA_IRQ << hardport) & hc_irq_cause)
--				mv_intr_edma(ap);
-+				mv_process_crpb_entries(ap, pp);
- 		} else {
- 			if ((DEV_IRQ << hardport) & hc_irq_cause)
+ 				mv_process_crpb_entries(ap, pp);
+@@ -1753,10 +1750,10 @@
  				mv_intr_pio(ap);
+ 		}
+ 	}
+-	VPRINTK("EXIT\n");
++	return handled;
+ }
+ 
+-static void mv_pci_error(struct ata_host *host, void __iomem *mmio)
++static int mv_pci_error(struct ata_host *host, void __iomem *mmio)
+ {
+ 	struct mv_host_priv *hpriv = host->private_data;
+ 	struct ata_port *ap;
+@@ -1794,6 +1791,7 @@
+ 			ata_port_freeze(ap);
+ 		}
+ 	}
++	return 1;	/* handled */
+ }
+ 
+ /**
+@@ -1814,8 +1812,7 @@
+ {
+ 	struct ata_host *host = dev_instance;
+ 	struct mv_host_priv *hpriv = host->private_data;
+-	unsigned int hc, handled = 0, n_hcs;
+-	void __iomem *mmio = hpriv->base;
++	unsigned int handled = 0;
+ 	u32 main_cause, main_mask;
+ 
+ 	spin_lock(&host->lock);
+@@ -1825,26 +1822,12 @@
+ 	 * Deal with cases where we either have nothing pending, or have read
+ 	 * a bogus register value which can indicate HW removal or PCI fault.
+ 	 */
+-	if (!(main_cause & main_mask) || (main_cause == 0xffffffffU))
+-		goto out_unlock;
+-
+-	n_hcs = mv_get_hc_count(host->ports[0]->flags);
+-
+-	if (unlikely((main_cause & PCI_ERR) && HAS_PCI(host))) {
+-		mv_pci_error(host, mmio);
+-		handled = 1;
+-		goto out_unlock;	/* skip all other HC irq handling */
+-	}
+-
+-	for (hc = 0; hc < n_hcs; hc++) {
+-		u32 relevant = main_cause & (HC0_IRQ_PEND << (hc * HC_SHIFT));
+-		if (relevant) {
+-			mv_host_intr(host, relevant, hc);
+-			handled = 1;
+-		}
++	if ((main_cause & main_mask) && (main_cause != 0xffffffffU)) {
++		if (unlikely((main_cause & PCI_ERR) && HAS_PCI(host)))
++			handled = mv_pci_error(host, hpriv->base);
++		else
++			handled = mv_host_intr(host, main_cause);
+ 	}
+-
+-out_unlock:
+ 	spin_unlock(&host->lock);
+ 	return IRQ_RETVAL(handled);
+ }
