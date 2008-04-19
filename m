@@ -1,576 +1,366 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: [PATCH] siimage: coding style cleanup
-Date: Sat, 19 Apr 2008 22:37:57 +0400
-Message-ID: <200804192237.57543.sshtylyov@ru.mvista.com>
+From: Mark Lord <liml@rtr.ca>
+Subject: [PATCH 1/8] sata_mv more cosmetics
+Date: Sat, 19 Apr 2008 14:43:42 -0400
+Message-ID: <480A3D5E.8090206@rtr.ca>
+References: <480A3D2E.4040503@rtr.ca>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtsoft3.corbina.net ([85.21.88.6]:14062 "EHLO
-	buildserver.ru.mvista.com" rhost-flags-OK-FAIL-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1755436AbYDSSii (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 19 Apr 2008 14:38:38 -0400
-Content-Disposition: inline
+Received: from rtr.ca ([76.10.145.34]:3968 "EHLO mail.rtr.ca"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755995AbYDSSnk (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 19 Apr 2008 14:43:40 -0400
+In-Reply-To: <480A3D2E.4040503@rtr.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: bzolnier@gmail.com
-Cc: linux-ide@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>, Tejun Heo <htejun@gmail.com>, IDE/ATA development list <linux-ide@vger.kernel.org>
 
-Fix 18 errors and several warnings given by checkpatch.pl:
+More cosmetic cleanups prior to the interrupt/error handling logic changes.
 
-- use of C99 // comments;
+Signed-off-by: Mark Lord <mlord@pobox.com>
 
-- trailing whitespace;
-
-- 'switch' and 'case' not at the same indentation level;
-
-- no space before the open parenthesis of the 'if' and 'switch' statements;
-
-- space between function name and open parenthesis (though I have introduced
-  such warnins in some places since the code looks prettier with the spaces);
-
-- including <asm/io.h> instead of <linux/io.h>;
-
-- line over 80 characters.
-
-I addition to these changes, also do the following:
-
-- make the arrays in sil_set_pio_mode() 'static', and make the arrays in
-  sil_set_dma_mode() 'static const';
-
-- change the string of the 'if' statements into the 'switch' statement in
-  sil_pata_udma_filter();
-
-- drop the needless '==' operators from the 'if' statements where a condition
-  is a mere bit test;
-
-- remove needless initializer for the 'tmp' variable in init_chipset_siimage();
-
-- beautify groups of the variable initializers and assignment operators;
-
-- add new line after variable definitions;
-
-- remove new line between the comment and the statements it refers to;
-
-- remove needless curly braces and parentheses;
-
-- fix typos, capitalize acronyms, etc. in the comments...
-
-Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-
----
-The patch is aginst the top of the pata-2.6 patchset...
-
- drivers/ide/pci/siimage.c |  214 ++++++++++++++++++++++------------------------
- 1 files changed, 105 insertions(+), 109 deletions(-)
-
-Index: linux-2.6/drivers/ide/pci/siimage.c
-===================================================================
---- linux-2.6.orig/drivers/ide/pci/siimage.c
-+++ linux-2.6/drivers/ide/pci/siimage.c
-@@ -1,7 +1,7 @@
- /*
-  * Copyright (C) 2001-2002	Andre Hedrick <andre@linux-ide.org>
-  * Copyright (C) 2003		Red Hat <alan@redhat.com>
-- * Copyright (C) 2007		MontaVista Software, Inc.
-+ * Copyright (C) 2007-2008	MontaVista Software, Inc.
-  * Copyright (C) 2007-2008	Bartlomiej Zolnierkiewicz
-  *
-  *  May be copied or modified under the terms of the GNU General Public License
-@@ -42,25 +42,24 @@
- #include <linux/hdreg.h>
- #include <linux/ide.h>
- #include <linux/init.h>
+--- old/drivers/ata/sata_mv.c	2008-04-18 09:31:15.000000000 -0400
++++ linux/drivers/ata/sata_mv.c	2008-04-19 13:01:22.000000000 -0400
+@@ -123,11 +123,11 @@
+ 	MV_MAX_SG_CT		= 256,
+ 	MV_SG_TBL_SZ		= (16 * MV_MAX_SG_CT),
+ 
+-	MV_PORTS_PER_HC		= 4,
+-	/* == (port / MV_PORTS_PER_HC) to determine HC from 0-7 port */
++	/* Determine hc from 0-7 port: hc = port >> MV_PORT_HC_SHIFT */
+ 	MV_PORT_HC_SHIFT	= 2,
+-	/* == (port % MV_PORTS_PER_HC) to determine hard port from 0-7 port */
+-	MV_PORT_MASK		= 3,
++	MV_PORTS_PER_HC		= (1 << MV_PORT_HC_SHIFT), /* 4 */
++	/* Determine hc port from 0-7 port: hardport = port & MV_PORT_MASK */
++	MV_PORT_MASK		= (MV_PORTS_PER_HC - 1),   /* 3 */
+ 
+ 	/* Host Flags */
+ 	MV_FLAG_DUAL_HC		= (1 << 30),  /* two SATA Host Controllers */
+@@ -187,8 +187,8 @@
+ 	HC_MAIN_IRQ_MASK_OFS	= 0x1d64,
+ 	HC_SOC_MAIN_IRQ_CAUSE_OFS = 0x20020,
+ 	HC_SOC_MAIN_IRQ_MASK_OFS = 0x20024,
+-	PORT0_ERR		= (1 << 0),	/* shift by port # */
+-	PORT0_DONE		= (1 << 1),	/* shift by port # */
++	ERR_IRQ			= (1 << 0),	/* shift by port # */
++	DONE_IRQ		= (1 << 1),	/* shift by port # */
+ 	HC0_IRQ_PEND		= 0x1ff,	/* bits 0-8 = HC0's ports */
+ 	HC_SHIFT		= 9,		/* bits 9-17 = HC1's ports */
+ 	PCI_ERR			= (1 << 18),
+@@ -214,8 +214,8 @@
+ 	HC_CFG_OFS		= 0,
+ 
+ 	HC_IRQ_CAUSE_OFS	= 0x14,
+-	CRPB_DMA_DONE		= (1 << 0),	/* shift by port # */
+-	HC_IRQ_COAL		= (1 << 4),	/* IRQ coalescing */
++	DMA_IRQ			= (1 << 0),	/* shift by port # */
++	HC_COAL_IRQ		= (1 << 4),	/* IRQ coalescing */
+ 	DEV_IRQ			= (1 << 8),	/* shift by port # */
+ 
+ 	/* Shadow block registers */
+@@ -348,6 +348,8 @@
+ 	EDMA_IORDY_TMOUT	= 0x34,
+ 	EDMA_ARB_CFG		= 0x38,
+ 
++	GEN_II_NCQ_MAX_SECTORS	= 256,		/* max sects/io on Gen2 w/NCQ */
++
+ 	/* Host private flags (hp_flags) */
+ 	MV_HP_FLAG_MSI		= (1 << 0),
+ 	MV_HP_ERRATA_50XXB0	= (1 << 1),
+@@ -718,11 +720,6 @@
+ 	(void) readl(addr);	/* flush to avoid PCI posted write */
+ }
+ 
+-static inline void __iomem *mv_hc_base(void __iomem *base, unsigned int hc)
+-{
+-	return (base + MV_SATAHC0_REG_BASE + (hc * MV_SATAHC_REG_SZ));
+-}
 -
--#include <asm/io.h>
-+#include <linux/io.h>
- 
- /**
-  *	pdev_is_sata		-	check if device is SATA
-  *	@pdev:	PCI device to check
-- *	
-+ *
-  *	Returns true if this is a SATA controller
-  */
-- 
-+
- static int pdev_is_sata(struct pci_dev *pdev)
+ static inline unsigned int mv_hc_from_port(unsigned int port)
  {
- #ifdef CONFIG_BLK_DEV_IDE_SATA
--	switch(pdev->device) {
--		case PCI_DEVICE_ID_SII_3112:
--		case PCI_DEVICE_ID_SII_1210SA:
--			return 1;
--		case PCI_DEVICE_ID_SII_680:
--			return 0;
-+	switch (pdev->device) {
-+	case PCI_DEVICE_ID_SII_3112:
-+	case PCI_DEVICE_ID_SII_1210SA:
-+		return 1;
-+	case PCI_DEVICE_ID_SII_680:
-+		return 0;
+ 	return port >> MV_PORT_HC_SHIFT;
+@@ -733,6 +730,11 @@
+ 	return port & MV_PORT_MASK;
+ }
+ 
++static inline void __iomem *mv_hc_base(void __iomem *base, unsigned int hc)
++{
++	return (base + MV_SATAHC0_REG_BASE + (hc * MV_SATAHC_REG_SZ));
++}
++
+ static inline void __iomem *mv_hc_base_from_port(void __iomem *base,
+ 						 unsigned int port)
+ {
+@@ -833,9 +835,9 @@
  	}
- 	BUG();
- #endif
-@@ -70,10 +69,10 @@ static int pdev_is_sata(struct pci_dev *
- /**
-  *	is_sata			-	check if hwif is SATA
-  *	@hwif:	interface to check
-- *	
-+ *
-  *	Returns true if this is a SATA controller
-  */
-- 
-+
- static inline int is_sata(ide_hwif_t *hwif)
- {
- 	return pdev_is_sata(to_pci_dev(hwif->dev));
-@@ -86,21 +85,22 @@ static inline int is_sata(ide_hwif_t *hw
-  *
-  *	Turn a config register offset into the right address in either
-  *	PCI space or MMIO space to access the control register in question
-- *	Thankfully this is a configuration operation so isnt performance
-- *	criticial. 
-+ *	Thankfully this is a configuration operation, so isn't performance
-+ *	critical.
-  */
-- 
-+
- static unsigned long siimage_selreg(ide_hwif_t *hwif, int r)
- {
- 	unsigned long base = (unsigned long)hwif->hwif_data;
-+
- 	base += 0xA0 + r;
--	if(hwif->mmio)
--		base += (hwif->channel << 6);
-+	if (hwif->mmio)
-+		base += hwif->channel << 6;
- 	else
--		base += (hwif->channel << 4);
-+		base += hwif->channel << 4;
- 	return base;
- }
--	
-+
- /**
-  *	siimage_seldev		-	return register base
-  *	@hwif: interface
-@@ -110,16 +110,17 @@ static unsigned long siimage_selreg(ide_
-  *	PCI space or MMIO space to access the control register in question
-  *	including accounting for the unit shift.
-  */
-- 
-+
- static inline unsigned long siimage_seldev(ide_drive_t *drive, int r)
- {
- 	ide_hwif_t *hwif	= HWIF(drive);
--	unsigned long base = (unsigned long)hwif->hwif_data;
-+	unsigned long base	= (unsigned long)hwif->hwif_data;
-+
- 	base += 0xA0 + r;
--	if(hwif->mmio)
--		base += (hwif->channel << 6);
-+	if (hwif->mmio)
-+		base += hwif->channel << 6;
- 	else
--		base += (hwif->channel << 4);
-+		base += hwif->channel << 4;
- 	base |= drive->select.b.unit << drive->select.b.unit;
- 	return base;
- }
-@@ -184,21 +185,26 @@ static void sil_iowrite32(struct pci_dev
+ 	if (!(pp->pp_flags & MV_PP_FLAG_EDMA_EN)) {
+ 		struct mv_host_priv *hpriv = ap->host->private_data;
+-		int hard_port = mv_hardport_from_port(ap->port_no);
++		int hardport = mv_hardport_from_port(ap->port_no);
+ 		void __iomem *hc_mmio = mv_hc_base_from_port(
+-					mv_host_base(ap->host), hard_port);
++					mv_host_base(ap->host), hardport);
+ 		u32 hc_irq_cause, ipending;
  
- static u8 sil_pata_udma_filter(ide_drive_t *drive)
- {
--	ide_hwif_t *hwif = drive->hwif;
--	struct pci_dev *dev = to_pci_dev(hwif->dev);
--	unsigned long base = (unsigned long) hwif->hwif_data;
--	u8 mask = 0, scsc;
-+	ide_hwif_t *hwif	= drive->hwif;
-+	struct pci_dev *dev	= to_pci_dev(hwif->dev);
-+	unsigned long base	= (unsigned long)hwif->hwif_data;
-+	u8 scsc, mask		= 0;
+ 		/* clear EDMA event indicators, if any */
+@@ -843,8 +845,7 @@
  
- 	scsc = sil_ioread8(dev, base + (hwif->mmio ? 0x4A : 0x8A));
- 
--	if ((scsc & 0x30) == 0x10)	/* 133 */
-+	switch (scsc & 0x30) {
-+	case 0x10:	/* 133 */
- 		mask = ATA_UDMA6;
--	else if ((scsc & 0x30) == 0x20)	/* 2xPCI */
-+		break;
-+	case 0x20:	/* 2xPCI */
- 		mask = ATA_UDMA6;
--	else if ((scsc & 0x30) == 0x00)	/* 100 */
-+		break;
-+	case 0x00:	/* 100 */
- 		mask = ATA_UDMA5;
--	else 	/* Disabled ? */
-+		break;
-+	default: 	/* Disabled ? */
- 		BUG();
-+	}
- 
- 	return mask;
- }
-@@ -220,8 +226,8 @@ static u8 sil_sata_udma_filter(ide_drive
- 
- static void sil_set_pio_mode(ide_drive_t *drive, u8 pio)
- {
--	const u16 tf_speed[]	= { 0x328a, 0x2283, 0x1281, 0x10c3, 0x10c1 };
--	const u16 data_speed[]	= { 0x328a, 0x2283, 0x1104, 0x10c3, 0x10c1 };
-+	static const u16 tf_speed[]   = { 0x328a, 0x2283, 0x1281, 0x10c3, 0x10c1 };
-+	static const u16 data_speed[] = { 0x328a, 0x2283, 0x1104, 0x10c3, 0x10c1 };
- 
- 	ide_hwif_t *hwif	= HWIF(drive);
- 	struct pci_dev *dev	= to_pci_dev(hwif->dev);
-@@ -229,7 +235,7 @@ static void sil_set_pio_mode(ide_drive_t
- 	u32 speedt		= 0;
- 	u16 speedp		= 0;
- 	unsigned long addr	= siimage_seldev(drive, 0x04);
--	unsigned long tfaddr	= siimage_selreg(hwif, 0x02);
-+	unsigned long tfaddr	= siimage_selreg(hwif,	0x02);
- 	unsigned long base	= (unsigned long)hwif->hwif_data;
- 	u8 tf_pio		= pio;
- 	u8 addr_mask		= hwif->channel ? (hwif->mmio ? 0xF4 : 0x84)
-@@ -261,7 +267,7 @@ static void sil_set_pio_mode(ide_drive_t
- 
- 	mode = sil_ioread8(dev, base + addr_mask);
- 	mode &= ~(unit ? 0x30 : 0x03);
--	mode |= (unit ? 0x10 : 0x01);
-+	mode |= unit ? 0x10 : 0x01;
- 	sil_iowrite8(dev, mode, base + addr_mask);
- }
- 
-@@ -275,44 +281,43 @@ static void sil_set_pio_mode(ide_drive_t
- 
- static void sil_set_dma_mode(ide_drive_t *drive, const u8 speed)
- {
--	u8 ultra6[]		= { 0x0F, 0x0B, 0x07, 0x05, 0x03, 0x02, 0x01 };
--	u8 ultra5[]		= { 0x0C, 0x07, 0x05, 0x04, 0x02, 0x01 };
--	u16 dma[]		= { 0x2208, 0x10C2, 0x10C1 };
-+	static const u8 ultra6[] = { 0x0F, 0x0B, 0x07, 0x05, 0x03, 0x02, 0x01 };
-+	static const u8 ultra5[] = { 0x0C, 0x07, 0x05, 0x04, 0x02, 0x01 };
-+	static const u16 dma[]	 = { 0x2208, 0x10C2, 0x10C1 };
- 
- 	ide_hwif_t *hwif	= HWIF(drive);
- 	struct pci_dev *dev	= to_pci_dev(hwif->dev);
- 	u16 ultra = 0, multi	= 0;
- 	u8 mode = 0, unit	= drive->select.b.unit;
- 	unsigned long base	= (unsigned long)hwif->hwif_data;
--	u8 scsc = 0, addr_mask	= ((hwif->channel) ?
--				    ((hwif->mmio) ? 0xF4 : 0x84) :
--				    ((hwif->mmio) ? 0xB4 : 0x80));
--				    
-+	u8 scsc = 0, addr_mask	= hwif->channel ?
-+					(hwif->mmio ? 0xF4 : 0x84) :
-+					(hwif->mmio ? 0xB4 : 0x80);
- 	unsigned long ma	= siimage_seldev(drive, 0x08);
- 	unsigned long ua	= siimage_seldev(drive, 0x0C);
- 
--	scsc = sil_ioread8(dev, base + (hwif->mmio ? 0x4A : 0x8A));
--	mode = sil_ioread8(dev, base + addr_mask);
-+	scsc  = sil_ioread8 (dev, base + (hwif->mmio ? 0x4A : 0x8A));
-+	mode  = sil_ioread8 (dev, base + addr_mask);
- 	multi = sil_ioread16(dev, ma);
- 	ultra = sil_ioread16(dev, ua);
- 
--	mode &= ~((unit) ? 0x30 : 0x03);
-+	mode  &= ~(unit ? 0x30 : 0x03);
- 	ultra &= ~0x3F;
- 	scsc = ((scsc & 0x30) == 0x00) ? 0 : 1;
- 
- 	scsc = is_sata(hwif) ? 1 : scsc;
- 
- 	if (speed >= XFER_UDMA_0) {
--		multi = dma[2];
--		ultra |= (scsc ? ultra6[speed - XFER_UDMA_0] :
--				 ultra5[speed - XFER_UDMA_0]);
--		mode |= (unit ? 0x30 : 0x03);
-+		multi  = dma[2];
-+		ultra |= scsc ? ultra6[speed - XFER_UDMA_0] :
-+				ultra5[speed - XFER_UDMA_0];
-+		mode  |= unit ? 0x30 : 0x03;
- 	} else {
- 		multi = dma[speed - XFER_MW_DMA_0];
--		mode |= (unit ? 0x20 : 0x02);
-+		mode |= unit ? 0x20 : 0x02;
+ 		/* clear EDMA interrupt indicator, if any */
+ 		hc_irq_cause = readl(hc_mmio + HC_IRQ_CAUSE_OFS);
+-		ipending = (DEV_IRQ << hard_port) |
+-				(CRPB_DMA_DONE << hard_port);
++		ipending = (DEV_IRQ | DMA_IRQ) << hardport;
+ 		if (hc_irq_cause & ipending) {
+ 			writelfl(hc_irq_cause & ~ipending,
+ 				 hc_mmio + HC_IRQ_CAUSE_OFS);
+@@ -860,7 +861,6 @@
+ 		writelfl(EDMA_EN, port_mmio + EDMA_CMD_OFS);
+ 		pp->pp_flags |= MV_PP_FLAG_EDMA_EN;
  	}
- 
--	sil_iowrite8(dev, mode, base + addr_mask);
-+	sil_iowrite8 (dev, mode, base + addr_mask);
- 	sil_iowrite16(dev, multi, ma);
- 	sil_iowrite16(dev, ultra, ua);
- }
-@@ -326,13 +331,14 @@ static int siimage_io_dma_test_irq(ide_d
- 	unsigned long addr	= siimage_selreg(hwif, 1);
- 
- 	/* return 1 if INTR asserted */
--	if ((hwif->INB(hwif->dma_status) & 4) == 4)
-+	if (hwif->INB(hwif->dma_status) & 4)
- 		return 1;
- 
- 	/* return 1 if Device INTR asserted */
- 	pci_read_config_byte(dev, addr, &dma_altstat);
- 	if (dma_altstat & 8)
--		return 0;	//return 1;
-+		return 0;	/* return 1; */
-+
- 	return 0;
- }
- 
-@@ -352,9 +358,9 @@ static int siimage_mmio_dma_test_irq(ide
- 		= (void __iomem *)hwif->sata_scr[SATA_ERROR_OFFSET];
- 
- 	if (sata_error_addr) {
--		unsigned long base = (unsigned long)hwif->hwif_data;
--		u32 ext_stat = readl((void __iomem *)(base + 0x10));
--		u8 watchdog = 0;
-+		unsigned long base	= (unsigned long)hwif->hwif_data;
-+		u32 ext_stat		= readl((void __iomem *)(base + 0x10));
-+		u8 watchdog		= 0;
- 
- 		if (ext_stat & ((hwif->channel) ? 0x40 : 0x10)) {
- 			u32 sata_error = readl(sata_error_addr);
-@@ -363,25 +369,22 @@ static int siimage_mmio_dma_test_irq(ide
- 			watchdog = (sata_error & 0x00680000) ? 1 : 0;
- 			printk(KERN_WARNING "%s: sata_error = 0x%08x, "
- 				"watchdog = %d, %s\n",
--				drive->name, sata_error, watchdog,
--				__func__);
--
--		} else {
-+				drive->name, sata_error, watchdog, __func__);
-+		} else
- 			watchdog = (ext_stat & 0x8000) ? 1 : 0;
--		}
--		ext_stat >>= 16;
- 
-+		ext_stat >>= 16;
- 		if (!(ext_stat & 0x0404) && !watchdog)
- 			return 0;
- 	}
- 
- 	/* return 1 if INTR asserted */
--	if ((readb((void __iomem *)hwif->dma_status) & 0x04) == 0x04)
-+	if (readb((void __iomem *)hwif->dma_status) & 0x04)
- 		return 1;
- 
- 	/* return 1 if Device INTR asserted */
--	if ((readb((void __iomem *)addr) & 8) == 8)
--		return 0;	//return 1;
-+	if (readb((void __iomem *)addr) & 8)
-+		return 0;	/* return 1; */
- 
- 	return 0;
- }
-@@ -440,33 +443,32 @@ static void sil_sata_pre_reset(ide_drive
+-	WARN_ON(!(EDMA_EN & readl(port_mmio + EDMA_CMD_OFS)));
  }
  
  /**
-- *	setup_mmio_siimage	-	switch an SI controller into MMIO
-+ *	setup_mmio_siimage	-	switch controller into MMIO mode
-  *	@dev: PCI device we are configuring
-  *	@name: device name
-  *
-- *	Attempt to put the device into mmio mode. There are some slight
-- *	complications here with certain systems where the mmio bar isnt
-- *	mapped so we have to be sure we can fall back to I/O.
-+ *	Attempt to put the device into MMIO mode. There are some slight
-+ *	complications here with certain systems where the MMIO BAR isn't
-+ *	mapped, so we have to be sure that we can fall back to I/O.
-  */
-- 
--static unsigned int setup_mmio_siimage (struct pci_dev *dev, const char *name)
-+
-+static unsigned int setup_mmio_siimage(struct pci_dev *dev, const char *name)
- {
- 	resource_size_t bar5	= pci_resource_start(dev, 5);
- 	unsigned long barsize	= pci_resource_len(dev, 5);
- 	void __iomem *ioaddr;
+@@ -1032,10 +1032,16 @@
+ 	 * See mv_qc_prep() for more info.
+ 	 */
+ 	if (adev->flags & ATA_DFLAG_NCQ) {
+-		if (sata_pmp_attached(adev->link->ap))
++		if (sata_pmp_attached(adev->link->ap)) {
+ 			adev->flags &= ~ATA_DFLAG_NCQ;
+-		else if (adev->max_sectors > ATA_MAX_SECTORS)
+-			adev->max_sectors = ATA_MAX_SECTORS;
++			ata_dev_printk(adev, KERN_INFO,
++				"NCQ disabled for command-based switching\n");
++		} else if (adev->max_sectors > GEN_II_NCQ_MAX_SECTORS) {
++			adev->max_sectors = GEN_II_NCQ_MAX_SECTORS;
++			ata_dev_printk(adev, KERN_INFO,
++				"max_sectors limited to %u for NCQ\n",
++				adev->max_sectors);
++		}
+ 	}
+ }
+ 
+@@ -1489,12 +1495,11 @@
+ 
+ 	edma_err_cause = readl(port_mmio + EDMA_ERR_IRQ_CAUSE_OFS);
+ 
+-	ata_ehi_push_desc(ehi, "edma_err 0x%08x", edma_err_cause);
++	ata_ehi_push_desc(ehi, "edma_err_cause=%08x", edma_err_cause);
  
  	/*
--	 *	Drop back to PIO if we can't map the mmio. Some
--	 *	systems seem to get terminally confused in the PCI
--	 *	spaces.
-+	 *	Drop back to PIO if we can't map the MMIO. Some	systems
-+	 *	seem to get terminally confused in the PCI spaces.
+-	 * all generations share these EDMA error cause bits
++	 * All generations share these EDMA error cause bits:
  	 */
- 	if (!request_mem_region(bar5, barsize, name)) {
--		printk(KERN_WARNING "siimage: IDE controller MMIO ports not available.\n");
-+		printk(KERN_WARNING "siimage: IDE controller MMIO ports not "
-+				    "available.\n");
- 		return 0;
+-
+ 	if (edma_err_cause & EDMA_ERR_DEV)
+ 		err_mask |= AC_ERR_DEV;
+ 	if (edma_err_cause & (EDMA_ERR_D_PAR | EDMA_ERR_PRD_PAR |
+@@ -1511,23 +1516,22 @@
+ 		action |= ATA_EH_RESET;
  	}
  
- 	ioaddr = ioremap(bar5, barsize);
--
- 	if (ioaddr == NULL) {
- 		release_mem_region(bar5, barsize);
- 		return 0;
-@@ -484,23 +486,23 @@ static unsigned int setup_mmio_siimage (
-  *	@name: device name
-  *
-  *	Perform the initial PCI set up for this device. Attempt to switch
-- *	to 133MHz clocking if the system isn't already set up to do it.
-+ *	to 133 MHz clocking if the system isn't already set up to do it.
-  */
- 
--static unsigned int __devinit init_chipset_siimage(struct pci_dev *dev, const char *name)
-+static unsigned int __devinit init_chipset_siimage(struct pci_dev *dev,
-+						   const char *name)
- {
- 	unsigned long base, scsc_addr;
- 	void __iomem *ioaddr = NULL;
--	u8 rev = dev->revision, tmp = 0, BA5_EN = 0;
-+	u8 rev = dev->revision, tmp, BA5_EN;
- 
- 	pci_write_config_byte(dev, PCI_CACHE_LINE_SIZE, rev ? 1 : 255);
- 
- 	pci_read_config_byte(dev, 0x8A, &BA5_EN);
- 
--	if ((BA5_EN & 0x01) || pci_resource_start(dev, 5)) {
-+	if ((BA5_EN & 0x01) || pci_resource_start(dev, 5))
- 		if (setup_mmio_siimage(dev, name))
- 			ioaddr = pci_get_drvdata(dev);
--	}
- 
- 	base = (unsigned long)ioaddr;
- 
-@@ -527,7 +529,7 @@ static unsigned int __devinit init_chips
- 
- 	switch (tmp & 0x30) {
- 	case 0x00:
--		/* On 100MHz clocking, try and switch to 133MHz */
-+		/* On 100 MHz clocking, try and switch to 133 MHz */
- 		sil_iowrite8(dev, tmp | 0x10, scsc_addr);
- 		break;
- 	case 0x30:
-@@ -543,12 +545,12 @@ static unsigned int __devinit init_chips
- 
- 	tmp = sil_ioread8(dev, scsc_addr);
- 
--	sil_iowrite8(dev,        0x72, base + 0xA1);
-+	sil_iowrite8 (dev,       0x72, base + 0xA1);
- 	sil_iowrite16(dev,     0x328A, base + 0xA2);
- 	sil_iowrite32(dev, 0x62DD62DD, base + 0xA4);
- 	sil_iowrite32(dev, 0x43924392, base + 0xA8);
- 	sil_iowrite32(dev, 0x40094009, base + 0xAC);
--	sil_iowrite8(dev,        0x72, base ? (base + 0xE1) : 0xB1);
-+	sil_iowrite8 (dev,       0x72, base ? (base + 0xE1) : 0xB1);
- 	sil_iowrite16(dev,     0x328A, base ? (base + 0xE2) : 0xB2);
- 	sil_iowrite32(dev, 0x62DD62DD, base ? (base + 0xE4) : 0xB4);
- 	sil_iowrite32(dev, 0x43924392, base ? (base + 0xE8) : 0xB8);
-@@ -579,8 +581,7 @@ static unsigned int __devinit init_chips
-  *
-  *	The basic setup here is fairly simple, we can use standard MMIO
-  *	operations. However we do have to set the taskfile register offsets
-- *	by hand as there isnt a standard defined layout for them this
-- *	time.
-+ *	by hand as there isnt a standard defined layout for them this time.
-  *
-  *	The hardware supports buffered taskfiles and also some rather nice
-  *	extended PRD tables. For better SI3112 support use the libata driver
-@@ -591,24 +592,21 @@ static void __devinit init_mmio_iops_sii
- 	struct pci_dev *dev	= to_pci_dev(hwif->dev);
- 	void *addr		= pci_get_drvdata(dev);
- 	u8 ch			= hwif->channel;
--	unsigned long		base;
--
- 	struct ide_io_ports *io_ports = &hwif->io_ports;
-+	unsigned long base;
- 
- 	/*
--	 *	Fill in the basic HWIF bits
-+	 *	Fill in the basic hwif bits
- 	 */
--
- 	hwif->host_flags |= IDE_HFLAG_MMIO;
- 	default_hwif_mmiops(hwif);
--	hwif->hwif_data			= addr;
-+	hwif->hwif_data	= addr;
- 
- 	/*
- 	 *	Now set up the hw. We have to do this ourselves as
- 	 *	the MMIO layout isnt the same as the standard port
- 	 *	based I/O
- 	 */
--
- 	memset(io_ports, 0, sizeof(*io_ports));
- 
- 	base = (unsigned long)addr;
-@@ -621,7 +619,7 @@ static void __devinit init_mmio_iops_sii
- 	 *	The buffered task file doesn't have status/control
- 	 *	so we can't currently use it sanely since we want to
- 	 *	use LBA48 mode.
--	 */	
++	/*
++	 * Gen-I has a different SELF_DIS bit,
++	 * different FREEZE bits, and no SERR bit:
 +	 */
- 	io_ports->data_addr	= base;
- 	io_ports->error_addr	= base + 1;
- 	io_ports->nsect_addr	= base + 2;
-@@ -650,19 +648,17 @@ static void __devinit init_mmio_iops_sii
- 
- static int is_dev_seagate_sata(ide_drive_t *drive)
- {
--	const char *s = &drive->id->model[0];
--	unsigned len;
+ 	if (IS_GEN_I(hpriv)) {
+ 		eh_freeze_mask = EDMA_EH_FREEZE_5;
 -
--	len = strnlen(s, sizeof(drive->id->model));
-+	const char *s	= &drive->id->model[0];
-+	unsigned len	= strnlen(s, sizeof(drive->id->model));
- 
--	if ((len > 4) && (!memcmp(s, "ST", 2))) {
-+	if ((len > 4) && (!memcmp(s, "ST", 2)))
- 		if ((!memcmp(s + len - 2, "AS", 2)) ||
- 		    (!memcmp(s + len - 3, "ASL", 3))) {
- 			printk(KERN_INFO "%s: applying pessimistic Seagate "
- 					 "errata fix\n", drive->name);
- 			return 1;
+ 		if (edma_err_cause & EDMA_ERR_SELF_DIS_5) {
+-			pp = ap->private_data;
+ 			pp->pp_flags &= ~MV_PP_FLAG_EDMA_EN;
+ 			ata_ehi_push_desc(ehi, "EDMA self-disable");
  		}
--	}
-+
- 	return 0;
+ 	} else {
+ 		eh_freeze_mask = EDMA_EH_FREEZE;
+-
+ 		if (edma_err_cause & EDMA_ERR_SELF_DIS) {
+-			pp = ap->private_data;
+ 			pp->pp_flags &= ~MV_PP_FLAG_EDMA_EN;
+ 			ata_ehi_push_desc(ehi, "EDMA self-disable");
+ 		}
+-
+ 		if (edma_err_cause & EDMA_ERR_SERR) {
+ 			sata_scr_read(&ap->link, SCR_ERROR, &serr);
+ 			sata_scr_write_flush(&ap->link, SCR_ERROR, serr);
+@@ -1640,6 +1644,7 @@
+ 		pp->resp_idx++;
+ 	}
+ 
++	/* Update the software queue position index in hardware */
+ 	if (work_done)
+ 		writelfl((pp->crpb_dma & EDMA_RSP_Q_BASE_LO_MASK) |
+ 			 (out_index << EDMA_RSP_Q_PTR_SHIFT),
+@@ -1692,7 +1697,7 @@
+ 	for (port = port0; port < last_port; port++) {
+ 		struct ata_port *ap = host->ports[port];
+ 		struct mv_port_priv *pp;
+-		int have_err_bits, hard_port, shift;
++		int have_err_bits, hardport, shift;
+ 
+ 		if ((!ap) || (ap->flags & ATA_FLAG_DISABLED))
+ 			continue;
+@@ -1703,7 +1708,7 @@
+ 		if (port >= MV_PORTS_PER_HC)
+ 			shift++;	/* skip bit 8 in the HC Main IRQ reg */
+ 
+-		have_err_bits = ((PORT0_ERR << shift) & relevant);
++		have_err_bits = ((ERR_IRQ << shift) & relevant);
+ 
+ 		if (unlikely(have_err_bits)) {
+ 			struct ata_queued_cmd *qc;
+@@ -1716,13 +1721,13 @@
+ 			continue;
+ 		}
+ 
+-		hard_port = mv_hardport_from_port(port); /* range 0..3 */
++		hardport = mv_hardport_from_port(port); /* range 0..3 */
+ 
+ 		if (pp->pp_flags & MV_PP_FLAG_EDMA_EN) {
+-			if ((CRPB_DMA_DONE << hard_port) & hc_irq_cause)
++			if ((DMA_IRQ << hardport) & hc_irq_cause)
+ 				mv_intr_edma(ap);
+ 		} else {
+-			if ((DEV_IRQ << hard_port) & hc_irq_cause)
++			if ((DEV_IRQ << hardport) & hc_irq_cause)
+ 				mv_intr_pio(ap);
+ 		}
+ 	}
+@@ -1789,30 +1794,28 @@
+ 	struct mv_host_priv *hpriv = host->private_data;
+ 	unsigned int hc, handled = 0, n_hcs;
+ 	void __iomem *mmio = hpriv->base;
+-	u32 irq_stat, irq_mask;
++	u32 main_cause, main_mask;
+ 
+-	/* Note to self: &host->lock == &ap->host->lock == ap->lock */
+ 	spin_lock(&host->lock);
+-
+-	irq_stat = readl(hpriv->main_cause_reg_addr);
+-	irq_mask = readl(hpriv->main_mask_reg_addr);
+-
+-	/* check the cases where we either have nothing pending or have read
+-	 * a bogus register value which can indicate HW removal or PCI fault
++	main_cause = readl(hpriv->main_cause_reg_addr);
++	main_mask  = readl(hpriv->main_mask_reg_addr);
++	/*
++	 * Deal with cases where we either have nothing pending, or have read
++	 * a bogus register value which can indicate HW removal or PCI fault.
+ 	 */
+-	if (!(irq_stat & irq_mask) || (0xffffffffU == irq_stat))
++	if (!(main_cause & main_mask) || (main_cause == 0xffffffffU))
+ 		goto out_unlock;
+ 
+ 	n_hcs = mv_get_hc_count(host->ports[0]->flags);
+ 
+-	if (unlikely((irq_stat & PCI_ERR) && HAS_PCI(host))) {
++	if (unlikely((main_cause & PCI_ERR) && HAS_PCI(host))) {
+ 		mv_pci_error(host, mmio);
+ 		handled = 1;
+ 		goto out_unlock;	/* skip all other HC irq handling */
+ 	}
+ 
+ 	for (hc = 0; hc < n_hcs; hc++) {
+-		u32 relevant = irq_stat & (HC0_IRQ_PEND << (hc * HC_SHIFT));
++		u32 relevant = main_cause & (HC0_IRQ_PEND << (hc * HC_SHIFT));
+ 		if (relevant) {
+ 			mv_host_intr(host, relevant, hc);
+ 			handled = 1;
+@@ -1821,7 +1824,6 @@
+ 
+ out_unlock:
+ 	spin_unlock(&host->lock);
+-
+ 	return IRQ_RETVAL(handled);
  }
  
-@@ -713,15 +709,14 @@ static void __devinit init_iops_siimage(
-  *	sil_cable_detect	-	cable detection
-  *	@hwif: interface to check
-  *
-- *	Check for the presence of an ATA66 capable cable on the
-- *	interface.
-+ *	Check for the presence of an ATA66 capable cable on the interface.
-  */
- 
- static u8 __devinit sil_cable_detect(ide_hwif_t *hwif)
+@@ -2406,8 +2408,8 @@
  {
--	struct pci_dev *dev = to_pci_dev(hwif->dev);
--	unsigned long addr = siimage_selreg(hwif, 0);
--	u8 ata66 = sil_ioread8(dev, addr);
-+	struct pci_dev *dev	= to_pci_dev(hwif->dev);
-+	unsigned long addr	= siimage_selreg(hwif, 0);
-+	u8 ata66		= sil_ioread8(dev, addr);
+ 	struct mv_host_priv *hpriv = ap->host->private_data;
+ 	unsigned int hc = (ap->port_no > 3) ? 1 : 0;
+-	u32 tmp, mask;
+ 	unsigned int shift;
++	u32 main_mask;
  
- 	return (ata66 & 0x01) ? ATA_CBL_PATA80 : ATA_CBL_PATA40;
+ 	/* FIXME: handle coalescing completion events properly */
+ 
+@@ -2415,11 +2417,10 @@
+ 	if (hc > 0)
+ 		shift++;
+ 
+-	mask = 0x3 << shift;
+-
+ 	/* disable assertion of portN err, done events */
+-	tmp = readl(hpriv->main_mask_reg_addr);
+-	writelfl(tmp & ~mask, hpriv->main_mask_reg_addr);
++	main_mask = readl(hpriv->main_mask_reg_addr);
++	main_mask &= ~((DONE_IRQ | ERR_IRQ) << shift);
++	writelfl(main_mask, hpriv->main_mask_reg_addr);
  }
-@@ -767,15 +762,16 @@ static const struct ide_port_info siimag
- };
+ 
+ static void mv_eh_thaw(struct ata_port *ap)
+@@ -2429,8 +2430,8 @@
+ 	unsigned int hc = (ap->port_no > 3) ? 1 : 0;
+ 	void __iomem *hc_mmio = mv_hc_base(mmio, hc);
+ 	void __iomem *port_mmio = mv_ap_base(ap);
+-	u32 tmp, mask, hc_irq_cause;
+ 	unsigned int shift, hc_port_no = ap->port_no;
++	u32 main_mask, hc_irq_cause;
+ 
+ 	/* FIXME: handle coalescing completion events properly */
+ 
+@@ -2440,20 +2441,18 @@
+ 		hc_port_no -= 4;
+ 	}
+ 
+-	mask = 0x3 << shift;
+-
+ 	/* clear EDMA errors on this port */
+ 	writel(0, port_mmio + EDMA_ERR_IRQ_CAUSE_OFS);
+ 
+ 	/* clear pending irq events */
+ 	hc_irq_cause = readl(hc_mmio + HC_IRQ_CAUSE_OFS);
+-	hc_irq_cause &= ~(1 << hc_port_no);	/* clear CRPB-done */
+-	hc_irq_cause &= ~(1 << (hc_port_no + 8)); /* clear Device int */
++	hc_irq_cause &= ~((DEV_IRQ | DMA_IRQ) << hc_port_no);
+ 	writel(hc_irq_cause, hc_mmio + HC_IRQ_CAUSE_OFS);
+ 
+ 	/* enable assertion of portN err, done events */
+-	tmp = readl(hpriv->main_mask_reg_addr);
+-	writelfl(tmp | mask, hpriv->main_mask_reg_addr);
++	main_mask = readl(hpriv->main_mask_reg_addr);
++	main_mask |= ((DONE_IRQ | ERR_IRQ) << shift);
++	writelfl(main_mask, hpriv->main_mask_reg_addr);
+ }
  
  /**
-- *	siimage_init_one	-	pci layer discovery entry
-+ *	siimage_init_one	-	PCI layer discovery entry
-  *	@dev: PCI device
-  *	@id: ident table entry
-  *
-  *	Called by the PCI code when it finds an SI680 or SI3112 controller.
-  *	We then use the IDE PCI generic helper to do most of the work.
-  */
-- 
--static int __devinit siimage_init_one(struct pci_dev *dev, const struct pci_device_id *id)
+@@ -2664,19 +2663,17 @@
+ 
+ 	rc = mv_chip_id(host, board_idx);
+ 	if (rc)
+-	goto done;
++		goto done;
+ 
+ 	if (HAS_PCI(host)) {
+-		hpriv->main_cause_reg_addr = hpriv->base +
+-		  HC_MAIN_IRQ_CAUSE_OFS;
+-		hpriv->main_mask_reg_addr = hpriv->base + HC_MAIN_IRQ_MASK_OFS;
++		hpriv->main_cause_reg_addr = mmio + HC_MAIN_IRQ_CAUSE_OFS;
++		hpriv->main_mask_reg_addr  = mmio + HC_MAIN_IRQ_MASK_OFS;
+ 	} else {
+-		hpriv->main_cause_reg_addr = hpriv->base +
+-		  HC_SOC_MAIN_IRQ_CAUSE_OFS;
+-		hpriv->main_mask_reg_addr = hpriv->base +
+-		  HC_SOC_MAIN_IRQ_MASK_OFS;
++		hpriv->main_cause_reg_addr = mmio + HC_SOC_MAIN_IRQ_CAUSE_OFS;
++		hpriv->main_mask_reg_addr  = mmio + HC_SOC_MAIN_IRQ_MASK_OFS;
+ 	}
+-	/* global interrupt mask */
 +
-+static int __devinit siimage_init_one(struct pci_dev *dev,
-+				      const struct pci_device_id *id)
- {
- 	struct ide_port_info d;
- 	u8 idx = id->driver_data;
-
++	/* global interrupt mask: 0 == mask everything */
+ 	writel(0, hpriv->main_mask_reg_addr);
+ 
+ 	n_hc = mv_get_hc_count(host->ports[0]->flags);
