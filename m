@@ -1,41 +1,78 @@
-From: British National Lottery Board <paulgautie1@bellnet.ca>
-Subject: 2008 Winners
-Date: Sun, 20 Apr 2008 14:19:11 -0400
-Message-ID: <6k1gas$12brei@toip40-bus.srvr.bell.ca>
-Reply-To: mr.royphilclaimdept8@yahoo.ie
+From: "J.A. =?UTF-8?B?TWFnYWxsw7Nu?=" <jamagallon@ono.com>
+Subject: Re: DRDY errors again
+Date: Mon, 21 Apr 2008 00:41:26 +0200
+Message-ID: <20080421004126.3191dbfe@werewolf.home>
+References: <20080408171311.69441c8b@werewolf>
+	<47FB9677.30109@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from tomts23.bellnexxia.net ([209.226.175.185]:59713 "EHLO
-	tomts23-srv.bellnexxia.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751066AbYDTSTN convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 20 Apr 2008 14:19:13 -0400
-Received: from toip40-bus.srvr.bell.ca ([67.69.240.41])
-          by tomts23-srv.bellnexxia.net
-          (InterMail vM.5.01.06.13 201-253-122-130-113-20050324) with ESMTP
-          id <20080420181911.KELG1531.tomts23-srv.bellnexxia.net@toip40-bus.srvr.bell.ca>
-          for <linux-ide@vger.kernel.org>; Sun, 20 Apr 2008 14:19:11 -0400
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1756151AbYDTWlj@vger.kernel.org>
+In-Reply-To: <47FB9677.30109@garzik.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-ide@vger.kernel.org, Linux-Kernel <linux-kernel@vger.kernel.org>Linus-IDE <linux-ide@vger.kernel.org>
 List-Id: linux-ide@vger.kernel.org
-To: info@winners.org
 
-Attn: Winner,You won the sum of =A31,000,000.00 GBP  in our SeasonalE-m=
-ail Programme Award.For claims,contact Mr. Roy Phil
-Email: mr.royphilclaimsdept2@yahoo.ie
+On Tue, 08 Apr 2008 11:59:51 -0400, Jeff Garzik <jeff@garzik.org> wrote=
+:
 
-Provide the Following Information
+> J.A. Magall=C3=B3n wrote:
+> > scsi4 : ata_piix
+> > scsi5 : ata_piix
+> > ata3: SATA max UDMA/133 cmd 0xc000 ctl 0xc400 bmdma 0xd000 irq 18
+> > ata4: SATA max UDMA/133 cmd 0xc800 ctl 0xcc00 bmdma 0xd008 irq 18
+>=20
+> > ata4.00: ATA-8: ST3500820AS, SD25, max UDMA/133
+> > ata4.00: 976773168 sectors, multi 16: LBA48 NCQ (depth 0/32)
+> > ata4.00: configured for UDMA/133
+>=20
+> > ata4.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 frozen
+> > ata4.00: cmd b0/d8:00:00:4f:c2/00:00:00:00:00/00 tag 0
+> >          res 40/00:01:00:4f:c2/00:00:00:00:00/00 Emask 0x4 (timeout=
+)
+> > ata4.00: status: { DRDY }
+>=20
 
-1:Full Name
-2:Country
-3:Home Address
-4:Sex
-5:Age
-6ccupation
-7:Tel
-8:Nationality
+I'm still trying to dig this...
 
-Regards,
-Mrs. Felicia Merold
-Online Co-Ordinator
+After googling sometime I saw several reports like mine (it looks like =
+a too
+common problem). In those repots, kernel messages were a bit different =
+from
+mine. For example, from http://marc.info/?l=3Dlinux-kernel&m=3D11949875=
+5206823&w=3D2:
+
+ata1.00: status: { DRDY }
+ata1: soft resetting link
+ata1: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+ata1.00: configured for UDMA/133
+ata1: EH complete
+
+Why I don't have any "SATA link up..." message ?
+
+And at device init, some logs read like:
+
+ata1.00: ATA-8: WDC WD2500BEVS-22UST0, 01.01A01, max UDMA/133
+ata1.00: 488397168 sectors, multi 16: LBA48 NCQ (depth 31/32)
+ata1.00: configured for UDMA/133
+
+Mine is like:
+
+ata3.00: ATA-8: WDC WD3200AVJS-63WDA0, 12.01B02, max UDMA/133
+ata3.00: 625142448 sectors, multi 16: LBA48 NCQ (depth 0/32)  <=3D=3D=3D=
+=3D=3D 0, not 31 ??
+ata3.00: configured for UDMA/133
+ata4.00: ATA-8: ST3500820AS, SD25, max UDMA/133
+ata4.00: 976773168 sectors, multi 16: LBA48 NCQ (depth 0/32)  <=3D=3D=3D=
+=3D=3D 0, not 31 ??
+ata4.00: configured for UDMA/133
+
+Just to see if I have some strange behaviour...
+
+--=20
+J.A. Magallon <jamagallon()ono!com>     \               Software is lik=
+e sex:
+                                         \         It's better when it'=
+s free
+Mandriva Linux release 2008.1 (Cooker) for i586
+Linux 2.6.23-jam05 (gcc 4.2.2 20071128 (4.2.2-2mdv2008.1)) SMP PREEMPT
