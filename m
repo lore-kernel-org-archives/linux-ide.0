@@ -1,78 +1,57 @@
-From: "J.A. =?UTF-8?B?TWFnYWxsw7Nu?=" <jamagallon@ono.com>
-Subject: Re: DRDY errors again
-Date: Mon, 21 Apr 2008 00:41:26 +0200
-Message-ID: <20080421004126.3191dbfe@werewolf.home>
-References: <20080408171311.69441c8b@werewolf>
-	<47FB9677.30109@garzik.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1756151AbYDTWlj@vger.kernel.org>
-In-Reply-To: <47FB9677.30109@garzik.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: linux-ide@vger.kernel.org, Linux-Kernel <linux-kernel@vger.kernel.org>Linus-IDE <linux-ide@vger.kernel.org>
+From: Dan McGee <dpmcgee@gmail.com>
+Subject: [PATCH] ata_piix: add Asus Eee 701 controller to short cable list
+Date: Sun, 20 Apr 2008 23:52:02 -0500
+Message-ID: <1208753522-10540-1-git-send-email-dpmcgee@gmail.com>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from py-out-1112.google.com ([64.233.166.176]:29014 "EHLO
+	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751321AbYDUEwG (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 21 Apr 2008 00:52:06 -0400
+Received: by py-out-1112.google.com with SMTP id u52so2403484pyb.10
+        for <linux-ide@vger.kernel.org>; Sun, 20 Apr 2008 21:52:06 -0700 (PDT)
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: jgarzik@pobox.com
+Cc: linux-ide@vger.kernel.org, Dan McGee <dpmcgee@gmail.com>
 
-On Tue, 08 Apr 2008 11:59:51 -0400, Jeff Garzik <jeff@garzik.org> wrote=
-:
+The drive is directly soldered to the controller, so there is no cable at
+all. Remove the 40-wire assumption so the drive can operate at max speed.
 
-> J.A. Magall=C3=B3n wrote:
-> > scsi4 : ata_piix
-> > scsi5 : ata_piix
-> > ata3: SATA max UDMA/133 cmd 0xc000 ctl 0xc400 bmdma 0xd000 irq 18
-> > ata4: SATA max UDMA/133 cmd 0xc800 ctl 0xcc00 bmdma 0xd008 irq 18
->=20
-> > ata4.00: ATA-8: ST3500820AS, SD25, max UDMA/133
-> > ata4.00: 976773168 sectors, multi 16: LBA48 NCQ (depth 0/32)
-> > ata4.00: configured for UDMA/133
->=20
-> > ata4.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 frozen
-> > ata4.00: cmd b0/d8:00:00:4f:c2/00:00:00:00:00/00 tag 0
-> >          res 40/00:01:00:4f:c2/00:00:00:00:00/00 Emask 0x4 (timeout=
-)
-> > ata4.00: status: { DRDY }
->=20
+Before patch:
+$ dd if=/dev/sda of=/dev/null bs=2M count=64 iflag=direct
+134217728 bytes (134 MB) copied, 5.29612 s, 25.3 MB/s
 
-I'm still trying to dig this...
+After patch:
+$ dd if=/dev/sda of=/dev/null bs=2M count=64 iflag=direct
+134217728 bytes (134 MB) copied, 3.94955 s, 34.0 MB/s
 
-After googling sometime I saw several reports like mine (it looks like =
-a too
-common problem). In those repots, kernel messages were a bit different =
-from
-mine. For example, from http://marc.info/?l=3Dlinux-kernel&m=3D11949875=
-5206823&w=3D2:
+Signed-off-by: Dan McGee <dpmcgee@gmail.com>
+---
 
-ata1.00: status: { DRDY }
-ata1: soft resetting link
-ata1: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
-ata1.00: configured for UDMA/133
-ata1: EH complete
+I sent this to the linux-kernel ML earlier along with what seemed to be
+the maintainer from recent git-log, but I failed at reading the comments
+at the top of the file, so I'm resending it to you guys too. Sorry about
+that.
 
-Why I don't have any "SATA link up..." message ?
+Original Message-Id: <1208747007-9791-1-git-send-email-dpmcgee@gmail.com>
 
-And at device init, some logs read like:
+-Dan
 
-ata1.00: ATA-8: WDC WD2500BEVS-22UST0, 01.01A01, max UDMA/133
-ata1.00: 488397168 sectors, multi 16: LBA48 NCQ (depth 31/32)
-ata1.00: configured for UDMA/133
+ drivers/ata/ata_piix.c |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
 
-Mine is like:
+diff --git a/drivers/ata/ata_piix.c b/drivers/ata/ata_piix.c
+index b7c38ee..ea2c764 100644
+--- a/drivers/ata/ata_piix.c
++++ b/drivers/ata/ata_piix.c
+@@ -573,6 +573,7 @@ static const struct ich_laptop ich_laptop[] = {
+ 	{ 0x27DF, 0x1043, 0x1267 },	/* ICH7 on Asus W5F */
+ 	{ 0x27DF, 0x103C, 0x30A1 },	/* ICH7 on HP Compaq nc2400 */
+ 	{ 0x24CA, 0x1025, 0x0061 },	/* ICH4 on ACER Aspire 2023WLMi */
++	{ 0x2653, 0x1043, 0x82D8 },	/* ICH6M on Asus Eee 701 */
+ 	/* end marker */
+ 	{ 0, }
+ };
+-- 
+1.5.5.1
 
-ata3.00: ATA-8: WDC WD3200AVJS-63WDA0, 12.01B02, max UDMA/133
-ata3.00: 625142448 sectors, multi 16: LBA48 NCQ (depth 0/32)  <=3D=3D=3D=
-=3D=3D 0, not 31 ??
-ata3.00: configured for UDMA/133
-ata4.00: ATA-8: ST3500820AS, SD25, max UDMA/133
-ata4.00: 976773168 sectors, multi 16: LBA48 NCQ (depth 0/32)  <=3D=3D=3D=
-=3D=3D 0, not 31 ??
-ata4.00: configured for UDMA/133
-
-Just to see if I have some strange behaviour...
-
---=20
-J.A. Magallon <jamagallon()ono!com>     \               Software is lik=
-e sex:
-                                         \         It's better when it'=
-s free
-Mandriva Linux release 2008.1 (Cooker) for i586
-Linux 2.6.23-jam05 (gcc 4.2.2 20071128 (4.2.2-2mdv2008.1)) SMP PREEMPT
