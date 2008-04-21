@@ -1,53 +1,68 @@
 From: Adrian Bunk <bunk@kernel.org>
-Subject: [2.6 patch] make sata_set_spd_needed() static
-Date: Mon, 21 Apr 2008 11:51:17 +0300
-Message-ID: <20080421085117.GC26897@cs181133002.pp.htv.fi>
+Subject: [2.6 patch] remove ata_cable_sata()
+Date: Mon, 21 Apr 2008 11:51:31 +0300
+Message-ID: <20080421085131.GE26897@cs181133002.pp.htv.fi>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp6.pp.htv.fi ([213.243.153.40]:41199 "EHLO smtp6.pp.htv.fi"
+Received: from smtp4.pp.htv.fi ([213.243.153.38]:36269 "EHLO smtp4.pp.htv.fi"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759078AbYDUIvq (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 21 Apr 2008 04:51:46 -0400
+	id S1758357AbYDUIv7 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 21 Apr 2008 04:51:59 -0400
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>, Jeff Garzik <jgarzik@redhat.com>
+To: Tejun Heo <htejun@gmail.com>, jgarzik@pobox.com
 Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-sata_set_spd_needed() can now become static.
+This patch removes the no longer used ata_cable_sata()
 
 Signed-off-by: Adrian Bunk <bunk@kernel.org>
 
 ---
 
- drivers/ata/libata-core.c |    2 +-
- drivers/ata/libata.h      |    1 -
- 2 files changed, 1 insertion(+), 2 deletions(-)
+ drivers/ata/libata-core.c |   13 -------------
+ include/linux/libata.h    |    1 -
+ 2 files changed, 14 deletions(-)
 
-bb4bcf58edb56a5fc9d7401046adcafcffff46a6 diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index 4b918d7..8c2bb65 100644
+7da50f40b2e2a1db9e8d506e65082e90a6eb4ae5 diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index a84df42..0f8807f 100644
 --- a/drivers/ata/libata-core.c
 +++ b/drivers/ata/libata-core.c
-@@ -2761,7 +2761,7 @@ static int __sata_set_spd_needed(struct ata_link *link, u32 *scontrol)
-  *	RETURNS:
-  *	1 if SATA spd configuration is needed, 0 otherwise.
-  */
--int sata_set_spd_needed(struct ata_link *link)
-+static int sata_set_spd_needed(struct ata_link *link)
- {
- 	u32 scontrol;
+@@ -2432,18 +2432,6 @@ int ata_cable_ignore(struct ata_port *ap)
+ }
  
-diff --git a/drivers/ata/libata.h b/drivers/ata/libata.h
-index 4aeeabb..ae2cfd9 100644
---- a/drivers/ata/libata.h
-+++ b/drivers/ata/libata.h
-@@ -101,7 +101,6 @@ extern int ata_dev_revalidate(struct ata_device *dev, unsigned int new_class,
- 			      unsigned int readid_flags);
- extern int ata_dev_configure(struct ata_device *dev);
- extern int sata_down_spd_limit(struct ata_link *link);
--extern int sata_set_spd_needed(struct ata_link *link);
- extern int ata_down_xfermask_limit(struct ata_device *dev, unsigned int sel);
- extern void ata_sg_clean(struct ata_queued_cmd *qc);
- extern void ata_qc_free(struct ata_queued_cmd *qc);
+ /**
+- *	ata_cable_sata	-	return SATA cable type
+- *	@ap: port
+- *
+- *	Helper method for drivers which have SATA cables
+- */
+-
+-int ata_cable_sata(struct ata_port *ap)
+-{
+-	return ATA_CBL_SATA;
+-}
+-
+-/**
+  *	ata_bus_probe - Reset and probe ATA bus
+  *	@ap: Bus to probe
+  *
+@@ -6295,4 +6283,3 @@ EXPORT_SYMBOL_GPL(ata_cable_40wire);
+ EXPORT_SYMBOL_GPL(ata_cable_80wire);
+ EXPORT_SYMBOL_GPL(ata_cable_unknown);
+ EXPORT_SYMBOL_GPL(ata_cable_ignore);
+-EXPORT_SYMBOL_GPL(ata_cable_sata);
+diff --git a/include/linux/libata.h b/include/linux/libata.h
+index 9836213..84618df 100644
+--- a/include/linux/libata.h
++++ b/include/linux/libata.h
+@@ -943,7 +943,6 @@ extern int ata_do_set_mode(struct ata_link *link, struct ata_device **r_failed_d
+ 
+ extern int ata_cable_40wire(struct ata_port *ap);
+ extern int ata_cable_80wire(struct ata_port *ap);
+-extern int ata_cable_sata(struct ata_port *ap);
+ extern int ata_cable_ignore(struct ata_port *ap);
+ extern int ata_cable_unknown(struct ata_port *ap);
+ 
 
