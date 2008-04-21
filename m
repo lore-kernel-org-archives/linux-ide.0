@@ -1,57 +1,61 @@
-From: Dan McGee <dpmcgee@gmail.com>
-Subject: [PATCH] ata_piix: add Asus Eee 701 controller to short cable list
-Date: Sun, 20 Apr 2008 23:52:02 -0500
-Message-ID: <1208753522-10540-1-git-send-email-dpmcgee@gmail.com>
+From: Adrian Bunk <bunk@kernel.org>
+Subject: [2.6 patch] make sata_print_link_status() static
+Date: Mon, 21 Apr 2008 11:51:11 +0300
+Message-ID: <20080421085111.GB26897@cs181133002.pp.htv.fi>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.176]:29014 "EHLO
-	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751321AbYDUEwG (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 21 Apr 2008 00:52:06 -0400
-Received: by py-out-1112.google.com with SMTP id u52so2403484pyb.10
-        for <linux-ide@vger.kernel.org>; Sun, 20 Apr 2008 21:52:06 -0700 (PDT)
+Received: from smtp4.pp.htv.fi ([213.243.153.38]:36146 "EHLO smtp4.pp.htv.fi"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1759037AbYDUIvo (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 21 Apr 2008 04:51:44 -0400
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: jgarzik@pobox.com
-Cc: linux-ide@vger.kernel.org, Dan McGee <dpmcgee@gmail.com>
+To: Mark Lord <mlord@pobox.com>, Jeff Garzik <jgarzik@redhat.com>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-The drive is directly soldered to the controller, so there is no cable at
-all. Remove the 40-wire assumption so the drive can operate at max speed.
+sata_print_link_status() can now become static.
 
-Before patch:
-$ dd if=/dev/sda of=/dev/null bs=2M count=64 iflag=direct
-134217728 bytes (134 MB) copied, 5.29612 s, 25.3 MB/s
+Signed-off-by: Adrian Bunk <bunk@kernel.org>
 
-After patch:
-$ dd if=/dev/sda of=/dev/null bs=2M count=64 iflag=direct
-134217728 bytes (134 MB) copied, 3.94955 s, 34.0 MB/s
-
-Signed-off-by: Dan McGee <dpmcgee@gmail.com>
 ---
 
-I sent this to the linux-kernel ML earlier along with what seemed to be
-the maintainer from recent git-log, but I failed at reading the comments
-at the top of the file, so I'm resending it to you guys too. Sorry about
-that.
+ drivers/ata/libata-core.c |    3 +--
+ include/linux/libata.h    |    1 -
+ 2 files changed, 1 insertion(+), 3 deletions(-)
 
-Original Message-Id: <1208747007-9791-1-git-send-email-dpmcgee@gmail.com>
-
--Dan
-
- drivers/ata/ata_piix.c |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
-
-diff --git a/drivers/ata/ata_piix.c b/drivers/ata/ata_piix.c
-index b7c38ee..ea2c764 100644
---- a/drivers/ata/ata_piix.c
-+++ b/drivers/ata/ata_piix.c
-@@ -573,6 +573,7 @@ static const struct ich_laptop ich_laptop[] = {
- 	{ 0x27DF, 0x1043, 0x1267 },	/* ICH7 on Asus W5F */
- 	{ 0x27DF, 0x103C, 0x30A1 },	/* ICH7 on HP Compaq nc2400 */
- 	{ 0x24CA, 0x1025, 0x0061 },	/* ICH4 on ACER Aspire 2023WLMi */
-+	{ 0x2653, 0x1043, 0x82D8 },	/* ICH6M on Asus Eee 701 */
- 	/* end marker */
- 	{ 0, }
- };
--- 
-1.5.5.1
+017dd9ea17af28a805e099c245ae1f8991eb6b5a diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index 1686773..4b918d7 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -2605,7 +2605,7 @@ void ata_port_probe(struct ata_port *ap)
+  *	LOCKING:
+  *	None.
+  */
+-void sata_print_link_status(struct ata_link *link)
++static void sata_print_link_status(struct ata_link *link)
+ {
+ 	u32 sstatus, scontrol, tmp;
+ 
+@@ -6197,7 +6197,6 @@ EXPORT_SYMBOL_GPL(ata_host_detach);
+ EXPORT_SYMBOL_GPL(ata_sg_init);
+ EXPORT_SYMBOL_GPL(ata_qc_complete);
+ EXPORT_SYMBOL_GPL(ata_qc_complete_multiple);
+-EXPORT_SYMBOL_GPL(sata_print_link_status);
+ EXPORT_SYMBOL_GPL(atapi_cmd_type);
+ EXPORT_SYMBOL_GPL(ata_tf_to_fis);
+ EXPORT_SYMBOL_GPL(ata_tf_from_fis);
+diff --git a/include/linux/libata.h b/include/linux/libata.h
+index 2d8874b..84618df 100644
+--- a/include/linux/libata.h
++++ b/include/linux/libata.h
+@@ -847,7 +847,6 @@ static inline int ata_port_is_dummy(struct ata_port *ap)
+ 	return ap->ops == &ata_dummy_port_ops;
+ }
+ 
+-extern void sata_print_link_status(struct ata_link *link);
+ extern void ata_port_probe(struct ata_port *);
+ extern int sata_set_spd(struct ata_link *link);
+ extern int ata_std_prereset(struct ata_link *link, unsigned long deadline);
 
