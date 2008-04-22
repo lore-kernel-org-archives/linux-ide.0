@@ -1,91 +1,122 @@
 From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: [PATCH 03/11] ide-taskfile: use blk_get_request in the ide_do_drive_cmd path
-Date: Tue, 22 Apr 2008 09:26:34 +0900
-Message-ID: <1208824002-3596-4-git-send-email-fujita.tomonori@lab.ntt.co.jp>
+Subject: [PATCH 01/11] ide: use blk_get_request in the ide_do_drive_cmd path using ide_wait
+Date: Tue, 22 Apr 2008 09:26:32 +0900
+Message-ID: <1208824002-3596-2-git-send-email-fujita.tomonori@lab.ntt.co.jp>
 References: <1208824002-3596-1-git-send-email-fujita.tomonori@lab.ntt.co.jp>
- <1208824002-3596-2-git-send-email-fujita.tomonori@lab.ntt.co.jp>
- <1208824002-3596-3-git-send-email-fujita.tomonori@lab.ntt.co.jp>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mo11.iij4u.or.jp ([210.138.174.79]:43208 "EHLO mo11.iij4u.or.jp"
+Received: from mo10.iij4u.or.jp ([210.138.174.78]:49522 "EHLO mo10.iij4u.or.jp"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759187AbYDVA2A (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 21 Apr 2008 20:28:00 -0400
-In-Reply-To: <1208824002-3596-3-git-send-email-fujita.tomonori@lab.ntt.co.jp>
+	id S1759185AbYDVA17 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 21 Apr 2008 20:27:59 -0400
+In-Reply-To: <1208824002-3596-1-git-send-email-fujita.tomonori@lab.ntt.co.jp>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
 Cc: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 
 This replaces struct request on the stack with blk_get_request in the
-ide_do_drive_cmd path that uses ide_wait.
+ide_do_drive_cmd path using ide_wait.
 
 Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
 Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 ---
- drivers/ide/ide-taskfile.c |   29 ++++++++++++++---------------
- 1 files changed, 14 insertions(+), 15 deletions(-)
+ drivers/ide/ide.c |   33 +++++++++++++++++----------------
+ 1 files changed, 17 insertions(+), 16 deletions(-)
 
-diff --git a/drivers/ide/ide-taskfile.c b/drivers/ide/ide-taskfile.c
-index 155cc90..fac7fad 100644
---- a/drivers/ide/ide-taskfile.c
-+++ b/drivers/ide/ide-taskfile.c
-@@ -530,12 +530,11 @@ static ide_startstop_t pre_task_out_intr(ide_drive_t *drive, struct request *rq)
+diff --git a/drivers/ide/ide.c b/drivers/ide/ide.c
+index 917c72d..c5b33f5 100644
+--- a/drivers/ide/ide.c
++++ b/drivers/ide/ide.c
+@@ -626,7 +626,8 @@ out:
  
- int ide_raw_taskfile(ide_drive_t *drive, ide_task_t *task, u8 *buf, u16 nsect)
+ int set_pio_mode(ide_drive_t *drive, int arg)
  {
 -	struct request rq;
 +	struct request *rq;
++
  
--	memset(&rq, 0, sizeof(rq));
--	rq.ref_count = 1;
+ 	if (arg < 0 || arg > 255)
+ 		return -EINVAL;
+@@ -637,12 +638,12 @@ int set_pio_mode(ide_drive_t *drive, int arg)
+ 	if (drive->special.b.set_tune)
+ 		return -EBUSY;
+ 
+-	ide_init_drive_cmd(&rq);
 -	rq.cmd_type = REQ_TYPE_ATA_TASKFILE;
--	rq.buffer = buf;
 +	rq = blk_get_request(drive->queue, READ, __GFP_WAIT);
 +	rq->cmd_type = REQ_TYPE_ATA_TASKFILE;
-+	rq->buffer = buf;
  
- 	/*
- 	 * (ks) We transfer currently only whole sectors.
-@@ -543,16 +542,16 @@ int ide_raw_taskfile(ide_drive_t *drive, ide_task_t *task, u8 *buf, u16 nsect)
- 	 * if we would find a solution to transfer any size.
- 	 * To support special commands like READ LONG.
- 	 */
--	rq.hard_nr_sectors = rq.nr_sectors = nsect;
--	rq.hard_cur_sectors = rq.current_nr_sectors = nsect;
-+	rq->hard_nr_sectors = rq->nr_sectors = nsect;
-+	rq->hard_cur_sectors = rq->current_nr_sectors = nsect;
- 
- 	if (task->tf_flags & IDE_TFLAG_WRITE)
--		rq.cmd_flags |= REQ_RW;
-+		rq->cmd_flags |= REQ_RW;
- 
--	rq.special = task;
--	task->rq = &rq;
-+	rq->special = task;
-+	task->rq = rq;
- 
--	return ide_do_drive_cmd(drive, &rq, ide_wait);
-+	return ide_do_drive_cmd(drive, rq, ide_wait);
+ 	drive->tune_req = (u8) arg;
+ 	drive->special.b.set_tune = 1;
+-	(void) ide_do_drive_cmd(drive, &rq, ide_wait);
++	ide_do_drive_cmd(drive, rq, ide_wait);
+ 	return 0;
  }
  
- EXPORT_SYMBOL(ide_raw_taskfile);
-@@ -778,12 +777,12 @@ int ide_cmd_ioctl (ide_drive_t *drive, unsigned int cmd, unsigned long arg)
- 	struct hd_driveid *id = drive->id;
+@@ -680,7 +681,7 @@ static int generic_ide_suspend(struct device *dev, pm_message_t mesg)
+ {
+ 	ide_drive_t *drive = dev->driver_data;
+ 	ide_hwif_t *hwif = HWIF(drive);
+-	struct request rq;
++	struct request *rq;
+ 	struct request_pm_state rqpm;
+ 	ide_task_t args;
+ 	int ret;
+@@ -689,18 +690,18 @@ static int generic_ide_suspend(struct device *dev, pm_message_t mesg)
+ 	if (!(drive->dn % 2))
+ 		ide_acpi_get_timing(hwif);
  
- 	if (NULL == (void *) arg) {
--		struct request rq;
-+		struct request *rq;
+-	memset(&rq, 0, sizeof(rq));
+ 	memset(&rqpm, 0, sizeof(rqpm));
+ 	memset(&args, 0, sizeof(args));
+-	rq.cmd_type = REQ_TYPE_PM_SUSPEND;
+-	rq.special = &args;
+-	rq.data = &rqpm;
++	rq = blk_get_request(drive->queue, READ, __GFP_WAIT);
++	rq->cmd_type = REQ_TYPE_PM_SUSPEND;
++	rq->special = &args;
++	rq->data = &rqpm;
+ 	rqpm.pm_step = ide_pm_state_start_suspend;
+ 	if (mesg.event == PM_EVENT_PRETHAW)
+ 		mesg.event = PM_EVENT_FREEZE;
+ 	rqpm.pm_state = mesg.event;
  
--		ide_init_drive_cmd(&rq);
--		rq.cmd_type = REQ_TYPE_ATA_TASKFILE;
-+		rq = blk_get_request(drive->queue, READ, __GFP_WAIT);
-+		rq->cmd_type = REQ_TYPE_ATA_TASKFILE;
+-	ret = ide_do_drive_cmd(drive, &rq, ide_wait);
++	ret = ide_do_drive_cmd(drive, rq, ide_wait);
+ 	/* only call ACPI _PS3 after both drivers are suspended */
+ 	if (!ret && (((drive->dn % 2) && hwif->drives[0].present
+ 		 && hwif->drives[1].present)
+@@ -714,7 +715,7 @@ static int generic_ide_resume(struct device *dev)
+ {
+ 	ide_drive_t *drive = dev->driver_data;
+ 	ide_hwif_t *hwif = HWIF(drive);
+-	struct request rq;
++	struct request *rq;
+ 	struct request_pm_state rqpm;
+ 	ide_task_t args;
+ 	int err;
+@@ -727,16 +728,16 @@ static int generic_ide_resume(struct device *dev)
  
--		return ide_do_drive_cmd(drive, &rq, ide_wait);
-+		return ide_do_drive_cmd(drive, rq, ide_wait);
- 	}
+ 	ide_acpi_exec_tfs(drive);
  
- 	if (copy_from_user(args, (void __user *)arg, 4))
+-	memset(&rq, 0, sizeof(rq));
+ 	memset(&rqpm, 0, sizeof(rqpm));
+ 	memset(&args, 0, sizeof(args));
+-	rq.cmd_type = REQ_TYPE_PM_RESUME;
+-	rq.special = &args;
+-	rq.data = &rqpm;
++	rq = blk_get_request(drive->queue, READ, __GFP_WAIT);
++	rq->cmd_type = REQ_TYPE_PM_RESUME;
++	rq->special = &args;
++	rq->data = &rqpm;
+ 	rqpm.pm_step = ide_pm_state_start_resume;
+ 	rqpm.pm_state = PM_EVENT_ON;
+ 
+-	err = ide_do_drive_cmd(drive, &rq, ide_head_wait);
++	err = ide_do_drive_cmd(drive, rq, ide_head_wait);
+ 
+ 	if (err == 0 && dev->driver) {
+ 		ide_driver_t *drv = to_ide_driver(dev->driver);
 -- 
 1.5.4.2
 
