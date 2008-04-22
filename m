@@ -1,34 +1,37 @@
-From: Jens Axboe <jens.axboe@oracle.com>
-Subject: Re: [2.6 patch] select ATA_SFF
-Date: Tue, 22 Apr 2008 13:39:27 +0200
-Message-ID: <20080422113927.GA12774@kernel.dk>
-References: <20080421213147.GH2633@cs181133002.pp.htv.fi>
+From: Volker Armin Hemmann <volker.armin.hemmann@tu-clausthal.de>
+Subject: Re: 2.6.24.X: SATA/AHCI related boot delay. - not with 2.6.24.3
+Date: Tue, 22 Apr 2008 14:44:55 +0200
+Message-ID: <200804221444.55483.volker.armin.hemmann@tu-clausthal.de>
+References: <200803091922.33083.volker.armin.hemmann@tu-clausthal.de> <200804191548.04013.volker.armin.hemmann@tu-clausthal.de> <15F501D1A78BD343BE8F4D8DB854566B277C048A@hkemmail01.nvidia.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from brick.kernel.dk ([87.55.233.238]:22939 "EHLO kernel.dk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751003AbYDVLjd (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 22 Apr 2008 07:39:33 -0400
+Received: from poseidon.rz.tu-clausthal.de ([139.174.2.21]:54942 "EHLO
+	poseidon.rz.tu-clausthal.de" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753167AbYDVMo7 convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 22 Apr 2008 08:44:59 -0400
+In-Reply-To: <15F501D1A78BD343BE8F4D8DB854566B277C048A@hkemmail01.nvidia.com>
 Content-Disposition: inline
-In-Reply-To: <20080421213147.GH2633@cs181133002.pp.htv.fi>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Adrian Bunk <bunk@kernel.org>
-Cc: Jeff Garzik <jeff@garzik.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: Peer Chen <pchen@nvidia.com>
+Cc: Jeff Garzik <jeff@garzik.org>, Tejun Heo <htejun@gmail.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Kuan Luo <kluo@nvidia.com>
 
-On Tue, Apr 22 2008, Adrian Bunk wrote:
-> Making ATA_SFF a user-visible option with the drivers needing it
-> depending on it caused the following problems:
-> - people lose their driver when accidentally disabling it
-> - people not requiring it needlessly enable it
-> 
-> Fortunately, we don't have to bother the user with this option at all
-> since we can simply select it when it's required.
+On Dienstag, 22. April 2008, Peer Chen wrote:
+> Looks like the BIOS trap had been applied, GHC.AE suppose should be s=
+et
+> correctly. Volker, could you try to set the AE twice in the driver or=
+ using
+> mmapper to set the AE manually to check if AE will be set correctly o=
+r not?
 
-Hear hear, the newly introduced ATA_SFF config is a mess, this is much
-better.
+emm, I am totally out of my depth here. I don't even know what you are =
+talking=20
+about. If you explain me in nice, little word or even better, with exam=
+ples,=20
+what I shall try, I will happily do so.
 
--- 
-Jens Axboe
-
+Gl=FCck Auf,
+Volker
