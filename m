@@ -1,132 +1,56 @@
 From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH 1/5] ide: add ide_pad_transfer() helper
-Date: Tue, 22 Apr 2008 20:12:41 +0400
-Message-ID: <480E0E79.3060401@ru.mvista.com>
-References: <200804122103.15491.bzolnier@gmail.com>
+Subject: Re: [PATCH 3/5] scc_pata: add ->dma_host_set and ->dma_start methods
+Date: Tue, 22 Apr 2008 20:28:53 +0400
+Message-ID: <480E1245.4000300@ru.mvista.com>
+References: <200804122104.26846.bzolnier@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from h155.mvista.com ([63.81.120.155]:31632 "EHLO imap.sh.mvista.com"
+Received: from h155.mvista.com ([63.81.120.155]:31787 "EHLO imap.sh.mvista.com"
 	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1753841AbYDVQNS (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 22 Apr 2008 12:13:18 -0400
-In-Reply-To: <200804122103.15491.bzolnier@gmail.com>
+	id S1752133AbYDVQ3a (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 22 Apr 2008 12:29:30 -0400
+In-Reply-To: <200804122104.26846.bzolnier@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Borislav Petkov <petkovbb@gmail.com>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
 Bartlomiej Zolnierkiewicz wrote:
 
-> * Add ide_pad_transfer() helper (which uses ->{in,out}put_data methods
->   internally so the transfer is also padded to drive+host requirements)
->   and use it instead of ide_atapi_{write_zeros,discard_data}().
+> Add ->dma_host_set and ->dma_start methods (+ __scc_dma_end() helper)
+> so scc_ide_{in,out}b() can be used directly.
 
-> * Remove no longer needed ide_atapi_{write_zeros,discard_data}().
+    In fact, you could have used in/out_be32() instead like the rest of the 
+code in this driver...
 
-> Cc: Borislav Petkov <petkovbb@gmail.com>
+> There should be no functional changes caused by this patch.
+
 > Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 
 Acked-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
 
-> Index: b/drivers/ide/ide-tape.c
+> Index: b/drivers/ide/pci/scc_pata.c
 > ===================================================================
-> --- a/drivers/ide/ide-tape.c
-> +++ b/drivers/ide/ide-tape.c
-> @@ -395,7 +395,7 @@ static void idetape_input_buffers(ide_dr
->  		if (bh == NULL) {
->  			printk(KERN_ERR "ide-tape: bh == NULL in "
->  				"idetape_input_buffers\n");
-> -			ide_atapi_discard_data(drive, bcount);
-> +			ide_pad_transfer(drive, 0, bcount);
->  			return;
->  		}
->  		count = min(
-> @@ -871,7 +871,7 @@ static ide_startstop_t idetape_pc_intr(i
->  				printk(KERN_ERR "ide-tape: The tape wants to "
->  					"send us more data than expected "
->  					"- discarding data\n");
-> -				ide_atapi_discard_data(drive, bcount);
-> +				ide_pad_transfer(drive, 0, bcount);
->  				ide_set_handler(drive, &idetape_pc_intr,
->  						IDETAPE_WAIT_CMD, NULL);
->  				return ide_started;
-> Index: b/drivers/scsi/ide-scsi.c
-> ===================================================================
-> --- a/drivers/scsi/ide-scsi.c
-> +++ b/drivers/scsi/ide-scsi.c
-> @@ -164,7 +164,7 @@ static void idescsi_input_buffers(ide_dr
->  
->  	if (bcount) {
->  		printk (KERN_ERR "ide-scsi: scatter gather table too small, discarding data\n");
-> -		ide_atapi_discard_data(drive, bcount);
-> +		ide_pad_transfer(drive, 0, bcount);
->  	}
+> --- a/drivers/ide/pci/scc_pata.c
+> +++ b/drivers/ide/pci/scc_pata.c
+> @@ -260,6 +260,20 @@ static void scc_set_dma_mode(ide_drive_t
+>  	out_be32((void __iomem *)udenvt_port, reg);
 >  }
 >  
-> @@ -201,7 +201,7 @@ static void idescsi_output_buffers(ide_d
->  
->  	if (bcount) {
->  		printk (KERN_ERR "ide-scsi: scatter gather table too small, padding with zeros\n");
-> -		ide_atapi_write_zeros(drive, bcount);
-> +		ide_pad_transfer(drive, 1, bcount);
->  	}
->  }
->  
-> @@ -438,7 +438,7 @@ static ide_startstop_t idescsi_pc_intr (
->  				}
->  				pc->xferred += temp;
->  				pc->cur_pos += temp;
-> -				ide_atapi_discard_data(drive, bcount - temp);
-> +				ide_pad_transfer(drive, 0, bcount - temp);
->  				ide_set_handler(drive, &idescsi_pc_intr, get_timeout(pc), idescsi_expiry);
->  				return ide_started;
->  			}
-> Index: b/include/linux/ide.h
-> ===================================================================
-> --- a/include/linux/ide.h
-> +++ b/include/linux/ide.h
-> @@ -816,6 +816,8 @@ void ide_execute_command(ide_drive_t *, 
->  
->  void ide_execute_pkt_cmd(ide_drive_t *);
->  
-> +void ide_pad_transfer(ide_drive_t *, int, int);
-> +
->  ide_startstop_t __ide_error(ide_drive_t *, struct request *, u8, u8);
->  
->  ide_startstop_t ide_error (ide_drive_t *drive, const char *msg, byte stat);
-> @@ -1346,27 +1348,4 @@ static inline u8 ide_read_error(ide_driv
->  
->  	return hwif->INB(hwif->io_ports.error_addr);
->  }
-> -
-> -/*
-> - * Too bad. The drive wants to send us data which we are not ready to accept.
-> - * Just throw it away.
-> - */
-> -static inline void ide_atapi_discard_data(ide_drive_t *drive, unsigned bcount)
-> -{
-> -	ide_hwif_t *hwif = drive->hwif;
-> -
-> -	/* FIXME: use ->input_data */
-> -	while (bcount--)
-> -		(void)hwif->INB(hwif->io_ports.data_addr);
-> -}
-> -
-> -static inline void ide_atapi_write_zeros(ide_drive_t *drive, unsigned bcount)
-> -{
-> -	ide_hwif_t *hwif = drive->hwif;
-> -
-> -	/* FIXME: use ->output_data */
-> -	while (bcount--)
-> -		hwif->OUTB(0, hwif->io_ports.data_addr);
-> -}
-> -
->  #endif /* _IDE_H */
+> +static void scc_dma_host_set(ide_drive_t *drive, int on)
+> +{
+> +	ide_hwif_t *hwif = drive->hwif;
+> +	u8 unit = (drive->select.b.unit & 0x01);
 
-    I doubt that these ever worked as expected since you can't hope that the 
-IDE data transfers are 8-bit if you use 8-bit I/O -- they will be 16-bit 
-anyway.  So, this patch is not just a cleanup, it's fixing a bug. :-)
+    Needless parens.
+
+> +	u8 dma_stat = scc_ide_inb(hwif->dma_status);
+> +
+> +	if (on)
+> +		dma_stat |= (1 << (5 + unit));
+
+   Again...
 
 MBR, Sergei
