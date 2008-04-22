@@ -1,39 +1,42 @@
-From: James Courtier-Dutton <James@superbug.co.uk>
-Subject: Re: [PATCH] siimage: coding style cleanup (take 2)
-Date: Tue, 22 Apr 2008 18:11:04 +0100
-Message-ID: <480E1C28.6090307@superbug.co.uk>
-References: <200804222056.38802.sshtylyov@ru.mvista.com>
+From: Marin Mitov <mitov@issp.bas.bg>
+Subject: [PATCH] pci_try_set_mwi() in sata_promise
+Date: Tue, 22 Apr 2008 21:26:56 +0300
+Message-ID: <200804222126.56321.mitov@issp.bas.bg>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain;
+  charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from anchor-post-37.mail.demon.net ([194.217.242.87]:41396 "EHLO
-	anchor-post-37.mail.demon.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751557AbYDVRLL (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 22 Apr 2008 13:11:11 -0400
-In-Reply-To: <200804222056.38802.sshtylyov@ru.mvista.com>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1762156AbYDVS04@vger.kernel.org>
+Content-Disposition: inline
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-kernel@vger.kernel.org
+Cc: Jeff Garzik <jgarzik@pobox.com>, Mikael Pettersson <mikpe@it.uu.se>, linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Cc: bzolnier@gmail.com, linux-ide@vger.kernel.org
 
-Sergei Shtylyov wrote:
->
->  	/* return 1 if Device INTR asserted */
->  	pci_read_config_byte(dev, addr, &dma_altstat);
->  	if (dma_altstat & 8)
-> -		return 0;	//return 1;
-> +		return 0;	/* return 1; */
-> +
->  	return 0;
->  }
->  
->   
-This bit of code looks strange.
-The comment says return 1, but the return has been commented to return 0.
-But, if we return 0, why bother with the if test anyway?
+Hi all,
 
-James
+The BIOS (Asus A8V Deluxe) is setting incorrectly PCI
+Cache Line Size Register (as seen in lspci -vvv output), 
+so try to correct it by pci_try_set_mwi(pdev).
 
+Marin Mitov
+----------------------------------------------------------
+Enable Memory-Write-and-Invalidate in sata_promise driver and 
+get rid of strange BIOS-set value for cache line size register.
 
+According to Documentation/pci.txt:  "This enables...
+...and also ensures that the cache line size register
+is set correctly".
 
+Signed-off-by: Marin Mitov <mitov@issp.bas.bg>
+----------------------------------------------------------
+--- a/drivers/ata/sata_promise.c	2008-04-22 13:09:15.000000000 +0300
++++ b/drivers/ata/sata_promise.c	2008-04-22 13:11:01.000000000 +0300
+@@ -1114,6 +1114,7 @@ static int pdc_ata_init_one(struct pci_d
+
+ 	/* start host, request IRQ and attach */
+ 	pci_set_master(pdev);
++	pci_try_set_mwi(pdev);
+ 	return ata_host_activate(host, pdev->irq, pdc_interrupt, IRQF_SHARED,
+ 				 &pdc_ata_sht);
+ }
