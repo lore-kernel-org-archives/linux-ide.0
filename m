@@ -1,42 +1,143 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [2.6 patch] select ATA_SFF
-Date: Tue, 22 Apr 2008 22:54:21 +0400
-Message-ID: <480E345D.9090406@ru.mvista.com>
-References: <20080421213147.GH2633@cs181133002.pp.htv.fi> <480DE3C4.5@ru.mvista.com> <480DE6F5.8060403@gmail.com> <480DE9E8.2070809@ru.mvista.com> <480DEB1F.5060500@gmail.com> <480DF7B7.9030000@rtr.ca> <480DF876.7070800@gmail.com> <480DF9BD.1080104@rtr.ca> <480DFE76.8000809@ru.mvista.com>
+From: Dmitri Vorobiev <dmitri.vorobiev@gmail.com>
+Subject: Re: [REGRESSION][linux-next] ide0: failed to initialize IDE interface
+Date: Tue, 22 Apr 2008 23:47:22 +0400
+Message-ID: <480E40CA.4020301@gmail.com>
+References: <90edad820804220334taea7660n27c3d41e25c4946b@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=KOI8-R
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from h155.mvista.com ([63.81.120.155]:34179 "EHLO imap.sh.mvista.com"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1765323AbYDVSy7 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 22 Apr 2008 14:54:59 -0400
-In-Reply-To: <480DFE76.8000809@ru.mvista.com>
+Received: from mu-out-0910.google.com ([209.85.134.187]:2764 "EHLO
+	mu-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755574AbYDVTro (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 22 Apr 2008 15:47:44 -0400
+Received: by mu-out-0910.google.com with SMTP id i10so2063098mue.1
+        for <linux-ide@vger.kernel.org>; Tue, 22 Apr 2008 12:47:42 -0700 (PDT)
+In-Reply-To: <90edad820804220334taea7660n27c3d41e25c4946b@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Cc: Mark Lord <liml@rtr.ca>, Tejun Heo <htejun@gmail.com>, Jeff Garzik <jeff@garzik.org>, Adrian Bunk <bunk@kernel.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Alan Cox <alan@lxorguk.ukuu.org.uk>
+To: Dmitri Vorobiev <dmitri.vorobiev@gmail.com>
+Cc: linux-kernel@vger.kernel.org, bzolnier@gmail.com, linux-ide@vger.kernel.org
 
-Hello, I wrote:
+Ping!
 
->> I suppose.   If we were needlessly pedantic, then perhaps
->> the libata-bmdma.c should be renamed to libata-sff.c,
+Having IDE broken in one of my most frequently used test setups is
+serious enough for me to try to get more attention.
 
-    It *was* renamed to libata-sff.c, back in 2006. :-)
+Anyone among the IDE people has noticed the regression?
 
->> and the libata-sff.c should be renamed libata-tf.c
+Thanks,
+Dmitri
 
-    Not before splitting SFF-8038i stuff from it.
+P.S. I'm not subscribed to linux-ide, so please Cc: me on reply.
 
->> But there's probably been a document or two since then,
->> where the SFF folks have documented the TF interfaces, too.
-
->    Don't know, at least I haven't encountered such spec. Unless you mean 
-> SFF-8020i (ATAPI CD-ROM spec).
-
-    I've looked thru the list of their spec. and it didn't seem to have any 
-about taskfile specifically. SFF-8070 (ATAPI CD-RW) refers to ATA/PI-4 for 
-that matter.
-
-MBR, Sergei
+Dmitri Vorobiev wrote:
+> Hi Bart,
+> 
+> I got the following IDE error while trying to boot the linux-next tree
+> using a Qemu-emulated MIPS Malta board:
+> 
+> [    0.000000] Linux version 2.6.25 (dmitri.vorobiev@amber.auriga.ru)
+> (gcc version 3.4.4) #14 PREEMPT Tue Apr 22 13:09:11 MSD 2008
+> [    0.000000]
+> [    0.000000] LINUX started...
+> [    0.000000] console [early0] enabled
+> [    0.000000] CPU revision is: 00019300 (MIPS 24K)
+> [    0.000000] FPU revision is: 00739300
+> [    0.000000] registering PCI controller with io_map_base unset
+> [    0.000000] Determined physical RAM map:
+> [    0.000000]  memory: 00001000 @ 00000000 (reserved)
+> [    0.000000]  memory: 000ef000 @ 00001000 (ROM data)
+> [    0.000000]  memory: 002bf000 @ 000f0000 (reserved)
+> [    0.000000]  memory: 07c50000 @ 003af000 (usable)
+> [    0.000000] Wasting 30176 bytes for tracking 943 unused pages
+> [    0.000000] Zone PFN ranges:
+> [    0.000000]   DMA             0 ->     4096
+> [    0.000000]   Normal       4096 ->    32767
+> [    0.000000] Movable zone start PFN for each node
+> [    0.000000] early_node_map[1] active PFN ranges
+> [    0.000000]     0:        0 ->    32767
+> [    0.004000] Built 1 zonelists in Zone order, mobility grouping on.
+> Total pages: 32512
+> [    0.004000] Kernel command line: rd_start=0x803af000
+> rd_size=2908011 led_blink_period=5 root=/dev/hda1 console=ttyS0
+> [    0.004000] Primary instruction cache 2kB, VIPT, 2-way, linesize 16 bytes.
+> [    0.004000] Primary data cache 2kB, 2-way, VIPT, no aliases,
+> linesize 16 bytes
+> [    0.004000] Synthesized clear page handler (26 instructions).
+> [    0.004000] Synthesized copy page handler (46 instructions).
+> [    0.004000] Cache parity protection enabled
+> [    0.004000] PID hash table entries: 512 (order: 9, 2048 bytes)
+> [    0.004000] CPU frequency 199.99 MHz
+> [    0.004000] Dentry cache hash table entries: 16384 (order: 4, 65536 bytes)
+> [    0.004000] Inode-cache hash table entries: 8192 (order: 3, 32768 bytes)
+> [    0.016001] Memory: 125992k/127296k available (2008k kernel code,
+> 1128k reserved, 388k data, 136k init, 0k highmem)
+> [    0.108006] Mount-cache hash table entries: 512
+> [    0.120007] net_namespace: 152 bytes
+> [    0.124007] NET: Registered protocol family 16
+> [    0.140008] pci 0000:00:0a.3: quirk: region 1100-110f claimed by PIIX4 SMB
+> [    0.144009] PCI: Ignore bogus resource 2 [0:0] of 0000:00:00.0
+> [    0.144009] PCI: Ignore bogus resource 4 [0:0] of 0000:00:00.0
+> [    0.164010] NET: Registered protocol family 2
+> [    0.204012] IP route cache hash table entries: 1024 (order: 0, 4096 bytes)
+> [    0.204012] TCP established hash table entries: 4096 (order: 3, 32768 bytes)
+> [    0.208013] TCP bind hash table entries: 4096 (order: 2, 16384 bytes)
+> [    0.208013] TCP: Hash tables configured (established 4096 bind 4096)
+> [    0.208013] TCP reno registered
+> [    0.228014] io scheduler noop registered (default)
+> [    0.232014] rtc: SRM (post-2000) epoch (2000) detected
+> [    0.232014] Real Time Clock Driver v1.12ac
+> [    0.232014] Serial: 8250/16550 driver $Revision: 1.90 $ 4 ports,
+> IRQ sharing disabled
+> [    0.240015] serial8250.2: ttyS0 at I/O 0x3f8 (irq = 4) is a 16450
+> [    0.240015] console handover: boot [early0] -> real [ttyS0]
+> [    0.244015] serial8250.2: ttyS2 at MMIO 0x1f000900 (irq = 18) is a 16450
+> [    0.252015] loop: module loaded
+> [    0.252015] pcnet32.c:v1.34 14.Aug.2007 tsbogend@alpha.franken.de
+> [    0.256016] pcnet32: PCnet/PCI II 79C970A at 0x1020,
+> 52:54:00:12:34:56 assigned IRQ 10.
+> [    0.260016] eth0: registered as PCnet/PCI II 79C970A
+> [    0.260016] pcnet32: 1 cards_found.
+> [    0.260016] Uniform Multi-Platform E-IDE driver
+> [    1.172073] ide0: DISABLED, NO IRQ
+> [    1.172073] ide0: failed to initialize IDE interface
+> [    1.176073] TCP cubic registered
+> [    1.176073] NET: Registered protocol family 1
+> [    1.176073] NET: Registered protocol family 17
+> [    1.180073] RPC: Registered udp transport module.
+> [    1.180073] RPC: Registered tcp transport module.
+> [    1.184074] md: Autodetecting RAID arrays.
+> [    1.188074] md: Scanned 0 and added 0 devices.
+> [    1.188074] md: autorun ...
+> [    1.188074] md: ... autorun DONE.
+> [    1.188074] Root-NFS: No NFS server available, giving up.
+> [    1.188074] VFS: Unable to mount root fs via NFS, trying floppy.
+> [    1.192074] VFS: Cannot open root device "hda1" or unknown-block(2,0)
+> [    1.192074] Please append a correct "root=" boot option; here are
+> the available partitions:
+> [    1.192074] Kernel panic - not syncing: VFS: Unable to mount root
+> fs on unknown-block(2,0)
+> 
+> This error was bisected to the following commit:
+> 
+> commit fb56dbc95e05415a0c967ece13f927dd50c254bc
+> Author: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+> Date:   Mon Apr 21 11:44:02 2008 +1000
+> 
+>     ide: fix hwif-s initialization
+> 
+>     * Add ide_hwifs[] entry initialization to ide_find_port_slot()
+>       and remove ide_init_port_data() calls from host drivers.
+> 
+>     * Unexport ide_init_port_data().
+> 
+>     * Remove no longer needed init_ide_data().
+> 
+>     Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+> 
+> My .config if attached to this email.
+> 
+> Thanks,
+> Dmitri Vorobiev
 
