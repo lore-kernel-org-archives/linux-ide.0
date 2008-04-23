@@ -1,50 +1,57 @@
-From: "Grant Grundler" <grundler@google.com>
-Subject: Re: [PATCH] pci_try_set_mwi() in sata_promise
-Date: Wed, 23 Apr 2008 07:46:49 -0700
-Message-ID: <da824cf30804230746o74e8de0bxbcb31d4b13e98b6@mail.gmail.com>
-References: <200804222126.56321.mitov@issp.bas.bg>
-	 <18446.60365.156326.246875@harpo.it.uu.se>
-	 <200804231633.24603.mitov@issp.bas.bg>
+From: Boaz Harrosh <bharrosh@panasas.com>
+Subject: [RFC 0/5] block large commands support continue
+Date: Wed, 23 Apr 2008 17:50:42 +0300
+Message-ID: <480F4CC2.7070804@panasas.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1752556AbYDWOre@vger.kernel.org>
-In-Reply-To: <200804231633.24603.mitov@issp.bas.bg>
-Content-Disposition: inline
-Sender: linux-kernel-owner@vger.kernel.org
-To: Marin Mitov <mitov@issp.bas.bg>
-Cc: Mikael Pettersson <mikpe@it.uu.se>, linux-kernel@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from bzq-219-195-70.pop.bezeqint.net ([62.219.195.70]:33719 "EHLO
+	bh-buildlin2.bhalevy.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751203AbYDWOwF (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 23 Apr 2008 10:52:05 -0400
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-
-On Wed, Apr 23, 2008 at 6:33 AM, Marin Mitov <mitov@issp.bas.bg> wrote:
-...
->  > 2. What improvement does that pci_try_set_mwi() cause? Speed? Fewer errors?
->
->  May be speed, but practically hardly observable.
-
-I expect the difference to be in available memory BW.
-MWI (Memory Write Invalidate) allows the IO controller to write
-partial cachlines without having to do a read/modify/write sequence.
-R/W/M means the cacheline has to cross the memory bus twice.
-The difference in performance will depend on how often the
-Promise SATA controller was doing partial cachline
-transactions with the wrong cacheline size.
-
-This should be measurable if you run a memory test at the same time
-as you stress the SATA controller with fio. Re-read the same 128KB block
-repeatedly from the Promise controller (I'm expecting that to be cached)
-and measure the available memory BW (e.g. see lmbench for a memtest).
-Repeat with MWI enabled.
+To: Jens Axboe <jens.axboe@oracle.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Pete Wyckoff <pw@osc.edu>, linux-scsi <linux-scsi@vger.kernel.org>, Linux-ide <linux-ide@vger.kernel.org>
 
 
->  > 3. Why call pci_try_set_mwi()? Can't you set the cache line size directly?
->
->  pci_set_cacheline_size() is NOT exported, while pci_try_set_mwi() IS and
-> sets (as a side effect) the cache line size.
+The support for large commands was dropped from the for-2.6.26 branch
+and will probably not get accepted into next kernel.
 
-Setting the cachline size only makes sense if MWI is enabled.
-Drivers should not longer directly set the cacheline size since it might
-not be what they think it is.
+I have tried to take all comments from Jens and Bart. and incorporate
+it into a new patchset. This is basically Tomo's patchset but with
+proposed changes.
 
-hth,
-grant
+They are based on current linux-block/master. They will probably conflict with
+latest patch sent by Tomo for the blk_get_request(). Once those patches
+get accepted at some git tree, (Where will that be?), I will rebase these
+on top of them. Please CC me of any progress.
+
+[PATCH 1/5] block: no need to initialize rq->cmd
+  This is 2 of Tomo's patches squashed together as they are
+  small and do the same. Tomo is this OK?
+
+[PATCH 2/5] block: replace sizeof(rq->cmd) with BLK_MAX_CDB
+  Tomos patch rebased to here
+
+[PATCH 3/5] block: Export rq_init, rename to blk_init_rq
+[PATCH 4/5] block: Use new blk_init_rq
+  These patches are basically what Jens and Bart has suggested, that with
+  a small code change to blk-core.c we can memset at rq_init() and only set
+  none zero members. We can also export that initializer and use it all over
+  the ide tree where ever requests don't come from a request queue. (OK also
+  at scsi_error.c)
+
+[PATCH 5/5] block: add large command support
+  Now that all initialization goes through one place Tomos large command support
+  is trivial.
+
+Bart. This is mostly ide changes, so please if you can test it. I do not have
+any legacy IDE devices here at the office, it is all new sata stuff.
+
+I hope we can put this, and later the scsi stuff, on some tree that can be tested
+at -mm and hopefully be ready for 2.6.27
+
+Thanks
+Boaz
