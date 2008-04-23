@@ -1,52 +1,150 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [2.6 patch] select ATA_SFF
-Date: Wed, 23 Apr 2008 11:16:53 +0900
-Message-ID: <480E9C15.6080103@gmail.com>
-References: <20080421213147.GH2633@cs181133002.pp.htv.fi> <480DE3C4.5@ru.mvista.com> <480DE6F5.8060403@gmail.com> <480DE9E8.2070809@ru.mvista.com> <480DEB1F.5060500@gmail.com> <480DF7B7.9030000@rtr.ca> <480DF876.7070800@gmail.com> <480DF9BD.1080104@rtr.ca> <480DFE76.8000809@ru.mvista.com> <480E345D.9090406@ru.mvista.com>
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Subject: [PATCH] ide-scsi: remove kmalloced struct request
+Date: Wed, 23 Apr 2008 11:44:39 +0900
+Message-ID: <20080423114425E.tomof@acm.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from po-out-1718.google.com ([72.14.252.155]:43504 "EHLO
-	po-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753732AbYDWCSn (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 22 Apr 2008 22:18:43 -0400
-Received: by po-out-1718.google.com with SMTP id y22so152500pof.1
-        for <linux-ide@vger.kernel.org>; Tue, 22 Apr 2008 19:17:21 -0700 (PDT)
-In-Reply-To: <480E345D.9090406@ru.mvista.com>
+Received: from mo10.iij4u.or.jp ([210.138.174.78]:49566 "EHLO mo10.iij4u.or.jp"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757447AbYDWCo6 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 22 Apr 2008 22:44:58 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Cc: Mark Lord <liml@rtr.ca>, Jeff Garzik <jeff@garzik.org>, Adrian Bunk <bunk@kernel.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Alan Cox <alan@lxorguk.ukuu.org.uk>
+To: linux-scsi@vger.kernel.org
+Cc: bzolnier@gmail.com, linux-ide@vger.kernel.org
 
-Sergei Shtylyov wrote:
-> Hello, I wrote:
-> 
->>> I suppose.   If we were needlessly pedantic, then perhaps
->>> the libata-bmdma.c should be renamed to libata-sff.c,
-> 
->    It *was* renamed to libata-sff.c, back in 2006. :-)
-> 
->>> and the libata-sff.c should be renamed libata-tf.c
-> 
->    Not before splitting SFF-8038i stuff from it.
-> 
->>> But there's probably been a document or two since then,
->>> where the SFF folks have documented the TF interfaces, too.
-> 
->>    Don't know, at least I haven't encountered such spec. Unless you 
->> mean SFF-8020i (ATAPI CD-ROM spec).
-> 
->    I've looked thru the list of their spec. and it didn't seem to have 
-> any about taskfile specifically. SFF-8070 (ATAPI CD-RW) refers to 
-> ATA/PI-4 for that matter.
+This converts ide-scsi to use blk_get/put_request instead of
+kmalloc/kfree as discussed in the large command support thread:
 
-Aik... We can do s/sff/tf/ and leave bmdma alone to avoid even more 
-confusion but sff has meant tf base interface for quite some time now in 
-libata and I think it'll be better to remember that sff is the new tf. 
-Sorry about the mess.
+http://marc.info/?l=linux-scsi&m=120817161219068&w=2
 
-Thanks.
+This patch is a sequel to my patchset to remove struct request on the
+stack:
 
+http://marc.info/?l=linux-ide&m=120882410712466&w=2
+
+===
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Subject: [PATCH] ide-scsi: remove kmalloced struct request
+
+This converts ide-scsi to use blk_get/put_request instead of
+kmalloc/kfree.
+
+Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+---
+ drivers/scsi/ide-scsi.c |   25 +++++++++++++++----------
+ 1 files changed, 15 insertions(+), 10 deletions(-)
+
+diff --git a/drivers/scsi/ide-scsi.c b/drivers/scsi/ide-scsi.c
+index 93c3fc2..45bfe0f 100644
+--- a/drivers/scsi/ide-scsi.c
++++ b/drivers/scsi/ide-scsi.c
+@@ -222,15 +222,15 @@ static int idescsi_check_condition(ide_drive_t *drive,
+ 
+ 	/* stuff a sense request in front of our current request */
+ 	pc = kzalloc(sizeof(struct ide_atapi_pc), GFP_ATOMIC);
+-	rq = kmalloc(sizeof(struct request), GFP_ATOMIC);
++	rq = blk_get_request(drive->queue, READ, GFP_ATOMIC);
+ 	buf = kzalloc(SCSI_SENSE_BUFFERSIZE, GFP_ATOMIC);
+ 	if (!pc || !rq || !buf) {
+ 		kfree(buf);
+-		kfree(rq);
++		if (rq)
++			blk_put_request(rq);
+ 		kfree(pc);
+ 		return -ENOMEM;
+ 	}
+-	ide_init_drive_cmd(rq);
+ 	rq->special = (char *) pc;
+ 	pc->rq = rq;
+ 	pc->buf = buf;
+@@ -246,6 +246,7 @@ static int idescsi_check_condition(ide_drive_t *drive,
+ 		ide_scsi_hex_dump(pc->c, 6);
+ 	}
+ 	rq->rq_disk = scsi->disk;
++	rq->ref_count++;
+ 	return ide_do_drive_cmd(drive, rq, ide_preempt);
+ }
+ 
+@@ -307,7 +308,7 @@ static int idescsi_end_request (ide_drive_t *drive, int uptodate, int nrsecs)
+ 			SCSI_SENSE_BUFFERSIZE);
+ 		kfree(pc->buf);
+ 		kfree(pc);
+-		kfree(rq);
++		blk_put_request(rq);
+ 		pc = opc;
+ 		rq = pc->rq;
+ 		pc->scsi_cmd->result = (CHECK_CONDITION << 1) |
+@@ -338,7 +339,7 @@ static int idescsi_end_request (ide_drive_t *drive, int uptodate, int nrsecs)
+ 	pc->done(pc->scsi_cmd);
+ 	spin_unlock_irqrestore(host->host_lock, flags);
+ 	kfree(pc);
+-	kfree(rq);
++	blk_put_request(rq);
+ 	scsi->pc = NULL;
+ 	return 0;
+ }
+@@ -751,6 +752,7 @@ static int idescsi_queue (struct scsi_cmnd *cmd,
+ 	ide_drive_t *drive = scsi->drive;
+ 	struct request *rq = NULL;
+ 	struct ide_atapi_pc *pc = NULL;
++	int write = cmd->sc_data_direction == DMA_TO_DEVICE;
+ 
+ 	if (!drive) {
+ 		scmd_printk (KERN_ERR, cmd, "drive not present\n");
+@@ -758,7 +760,7 @@ static int idescsi_queue (struct scsi_cmnd *cmd,
+ 	}
+ 	scsi = drive_to_idescsi(drive);
+ 	pc = kmalloc(sizeof(struct ide_atapi_pc), GFP_ATOMIC);
+-	rq = kmalloc(sizeof(struct request), GFP_ATOMIC);
++	rq = blk_get_request(drive->queue, write, GFP_ATOMIC);
+ 	if (rq == NULL || pc == NULL) {
+ 		printk (KERN_ERR "ide-scsi: %s: out of memory\n", drive->name);
+ 		goto abort;
+@@ -786,17 +788,18 @@ static int idescsi_queue (struct scsi_cmnd *cmd,
+ 		}
+ 	}
+ 
+-	ide_init_drive_cmd (rq);
+ 	rq->special = (char *) pc;
+ 	rq->cmd_type = REQ_TYPE_SPECIAL;
+ 	spin_unlock_irq(host->host_lock);
+ 	rq->rq_disk = scsi->disk;
++	rq->ref_count++;
+ 	(void) ide_do_drive_cmd (drive, rq, ide_end);
+ 	spin_lock_irq(host->host_lock);
+ 	return 0;
+ abort:
+ 	kfree (pc);
+-	kfree (rq);
++	if (rq)
++		blk_put_request(rq);
+ 	cmd->result = DID_ERROR << 16;
+ 	done(cmd);
+ 	return 0;
+@@ -844,7 +847,9 @@ static int idescsi_eh_abort (struct scsi_cmnd *cmd)
+ 
+ 		if (blk_sense_request(scsi->pc->rq))
+ 			kfree(scsi->pc->buf);
+-		kfree(scsi->pc->rq);
++		/* we need to call blk_put_request twice. */
++		blk_put_request(scsi->pc->rq);
++		blk_put_request(scsi->pc->rq);
+ 		kfree(scsi->pc);
+ 		scsi->pc = NULL;
+ 
+@@ -896,7 +901,7 @@ static int idescsi_eh_reset (struct scsi_cmnd *cmd)
+ 		kfree(scsi->pc->buf);
+ 	kfree(scsi->pc);
+ 	scsi->pc = NULL;
+-	kfree(req);
++	blk_put_request(req);
+ 
+ 	/* now nuke the drive queue */
+ 	while ((req = elv_next_request(drive->queue))) {
 -- 
-tejun
+1.5.4.2
+
