@@ -1,36 +1,42 @@
-From: Marc Dionne <marc.c.dionne@gmail.com>
-Subject: Re: [PATCH #upstream-fixes] sata_nv: make hardreset return -EAGAIN on
- success
-Date: Wed, 23 Apr 2008 06:44:09 -0400
-Message-ID: <480F12F9.9050601@gmail.com>
-References: <480EA97D.8080704@gmail.com>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: Re: [2.6 patch] select ATA_SFF
+Date: Wed, 23 Apr 2008 15:16:46 +0400
+Message-ID: <480F1A9E.6080003@ru.mvista.com>
+References: <20080421213147.GH2633@cs181133002.pp.htv.fi> <480DE3C4.5@ru.mvista.com> <480DE6F5.8060403@gmail.com> <480DE9E8.2070809@ru.mvista.com> <480DEB1F.5060500@gmail.com> <480DF7B7.9030000@rtr.ca> <480DF876.7070800@gmail.com> <480DF9BD.1080104@rtr.ca> <480DFE76.8000809@ru.mvista.com> <480E345D.9090406@ru.mvista.com> <480E9C15.6080103@gmail.com> <480EB930.1040308@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from relais.videotron.ca ([24.201.245.36]:19695 "EHLO
-	relais.videotron.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751789AbYDWKoY (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 23 Apr 2008 06:44:24 -0400
-Received: from [192.168.111.2] ([24.200.107.105])
- by VL-MH-MR002.ip.videotron.ca
- (Sun Java(tm) System Messaging Server 6.3-4.01 (built Aug  3 2007; 32bit))
- with ESMTP id <0JZR00LZEXTZ3Q76@VL-MH-MR002.ip.videotron.ca> for
- linux-ide@vger.kernel.org; Wed, 23 Apr 2008 06:44:23 -0400 (EDT)
-In-reply-to: <480EA97D.8080704@gmail.com>
+Received: from h155.mvista.com ([63.81.120.155]:48365 "EHLO imap.sh.mvista.com"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751211AbYDWLRZ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 23 Apr 2008 07:17:25 -0400
+In-Reply-To: <480EB930.1040308@garzik.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Petr Vandrovec <vandrove@vc.cvut.cz>, Roland Dreier <rdreier@cisco.com>, IDE/ATA development list <linux-ide@vger.kernel.org>, Jeff Garzik <jeff@garzik.org>
+To: Jeff Garzik <jeff@garzik.org>
+Cc: Tejun Heo <htejun@gmail.com>, Mark Lord <liml@rtr.ca>, Adrian Bunk <bunk@kernel.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Alan Cox <alan@lxorguk.ukuu.org.uk>
 
-Tejun Heo wrote:
-> sata_nv hardreset can't classify but was left out while unifying
-> follow-up SRST request mechanism[1].  This caused detection failures
-> on those controllers.  Fix it.
-This works fine for me on CK804.
+Jeff Garzik wrote:
 
-Thanks,
-Marc
+>> Aik... We can do s/sff/tf/ and leave bmdma alone to avoid even more 
+>> confusion but sff has meant tf base interface for quite some time now 
+>> in libata and I think it'll be better to remember that sff is the new 
+>> tf. Sorry about the mess.
 
-Tested-by: Marc Dionne <marc.c.dionne@gmail.com>
+> This renaming was discussed at the time on lkml and linux-ide, the 
+> patches and git pushes were CC'd, and I do not recall these complaints 
+> being raised at the time.
 
+    I wasn't watching libata activity even to such a small extent that I'm 
+doing it now, and I haven't found the discussion now.
+
+> At this point, it's too ingrained in libata.  Another rename would IMO 
+> just cause more needless churn.
+
+    Well, renaming -bmdma to -sff was logical.  What's not so logical is that 
+module covering not only BMDMA activities but also taskfile access.
+
+>     Jeff
+
+MBR, Sergei
