@@ -1,94 +1,60 @@
-From: John Keller <jpk@sgi.com>
-Subject: ide0: DISABLED, NO IRQ
-Date: Tue, 22 Apr 2008 16:42:49 -0500 (CDT)
-Message-ID: <200804222142.m3MLgoAx034693@fcbayern.americas.sgi.com>
+From: "kyle" <kylewong@southa.com>
+Subject: ahci performance problem? (much slower than sil24)
+Date: Wed, 23 Apr 2008 09:29:33 +0800
+Message-ID: <000a01c8a4e1$7c9a6830$0a01a8c0@kylecea1512a3f>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+	format=flowed;
+	charset="big5";
+	reply-type=original
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from netops-testserver-3-out.sgi.com ([192.48.171.28]:42783 "EHLO
-	relay.sgi.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752810AbYDVVmw (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 22 Apr 2008 17:42:52 -0400
+Received: from sitar.i-cable.com ([203.83.115.100]:41661 "HELO
+	sitar.i-cable.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1758467AbYDWBgS (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 22 Apr 2008 21:36:18 -0400
+Received: from kylecea1512a3f (cm218-254-60-144.hkcable.com.hk [218.254.60.144])
+	by xenon.i-cable.com (8.13.5/8.13.5) with SMTP id m3N1TZP1025733
+	for <linux-ide@vger.kernel.org>; Wed, 23 Apr 2008 09:29:36 +0800 (CST)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
-Cc: jpk@sgi.com
 
-When running the latest -mm kernel on our ia64 SN simulator,
-we are seeing the following error, which results in a failed boot.
+Hi,
 
+I've built a new machine with Intel Desktop Board DQ35JO, Intel E2160 CPU, 
+and 8 x Seagate ST3500320AS 500MB SATA harddisks. 6 of the 8 harddisks are 
+connected to the motherboard's SATA ports, while the remaining 2 are 
+connected to a 2 ports PCI-E card with sil24.
 
-Uniform Multi-Platform E-IDE driver
-Unknown Chipset addr = 0x000000028c000000 @ 96938783, PC = 0xa000000100302420
-ide0: DISABLED, NO IRQ
-ide0: failed to initialize IDE interface
-mice: PS/2 mouse device common for all mice
-VFS: Cannot open root device "hda2" or unknown-block(0,0)
-Please append a correct "root=" boot option; here are the available partitions:
+kernel is 2.6.24.5, have tried fedora kernel 2.6.23.1-42 and 2.6.24.4-64, 
+all give the same result.
 
+sda,b,c .... to sdf are running ahci driver, sdg and sdh are running sil24 
+driver
 
--------------
+hdparm -t /dev/sd{a-f} give around 45-46MB/sec
+hdparm -t /dev/sdg and sdh give over 105MB/sec
 
-We also see this error when booting real hardware (we did not see it
-in the past), though the boot is successful in this case.
+had updated to latest BIOS, no change in hdparm test b4/after update.
+hdparm -i:
 
-For what it's worth, the following hack allows our simulator to boot.
-My knowledge of the ide code is little to none, so I don't claim this
-is a real fix, but hopefully it will give some insight into what
-the problem might be.
-
-
-John Keller
-jpk@sgi.com
------------
-
-
-Index: linux/drivers/ide/ide-generic.c
-===================================================================
---- linux.orig/drivers/ide/ide-generic.c        2008-04-22 15:57:38.000000000 -0500
-+++ linux/drivers/ide/ide-generic.c     2008-04-22 16:12:28.575628712 -0500
-@@ -124,7 +124,9 @@ static int __init ide_generic_init(void)
-
-                        memset(&hw, 0, sizeof(hw));
-                        ide_std_init_ports(&hw, io_addr, io_addr + 0x206);
-+#if 0          /* Don't set default irq value, so autoprobe will be done. */
-                        hw.irq = ide_default_irq(io_addr);
-+#endif
-                        ide_init_port_hw(hwif, &hw);
-
-                        idx[i] = i;
-Index: linux/drivers/ide/ide.c
-===================================================================
---- linux.orig/drivers/ide/ide.c        2008-04-22 15:57:38.000000000 -0500
-+++ linux/drivers/ide/ide.c     2008-04-22 16:10:18.123372600 -0500
-@@ -98,8 +98,11 @@ static void ide_port_init_devices_data(i
-  */
- void ide_init_port_data(ide_hwif_t *hwif, unsigned int index)
- {
-+#if 0  /* This is called multiple times for the same hwif,
-+        * because ide_find_port() returns the same hwif. */
-        /* bulk initialize hwif & drive info with zeros */
-        memset(hwif, 0, sizeof(ide_hwif_t));
-+#endif
-
-        /* fill in any non-zero initial values */
-        hwif->index     = index;
-
----------
-
-Output when booting with the above hack....
+[root@localhost boot]# hdparm -i /dev/sda
+/dev/sda:
+ Model=ST3500320AS                             , FwRev=SD15    , SerialNo=
+      9QM2Q7F4
+ Config={ HardSect NotMFM HdSw>15uSec Fixed DTR>10Mbs RotSpdTol>.5% }
+ RawCHS=16383/16/63, TrkSize=0, SectSize=0, ECCbytes=4
+ BuffType=unknown, BuffSize=0kB, MaxMultSect=16, MultSect=?16?
+ CurCHS=16383/16/63, CurSects=16514064, LBA=yes, LBAsects=268435455
+ IORDY=on/off, tPIO={min:120,w/IORDY:120}, tDMA={min:120,rec:120}
+ PIO modes:  pio0 pio1 pio2 pio3 pio4
+ DMA modes:  mdma0 mdma1 mdma2
+ UDMA modes: udma0 udma1 udma2 udma3 udma4 udma5
+ AdvancedPM=no WriteCache=enabled
+ Drive conforms to: unknown:  ATA/ATAPI-4,5,6,7
+ * signifies the current active mode
 
 
-Uniform Multi-Platform E-IDE driver
-Medusa disk: 8-bit read from 01f7 = 50 {DISK}
-hda: Generic 1234, ATA DISK drive
-ide0 at 0x1f0-0x1f7,0x3f6 on irq 224
-hda: max request size: 128KiB
-hda: 614400 sectors (314 MB) w/256KiB Cache, CHS=600/16/64
- hda: hda1 hda2
-mice: PS/2 mouse device common for all mice
-VFS: Mounted root (ext2 filesystem) readonly.
-Freeing unused kernel memory: 1888kB freed
-bash-2.05b# 
+
 
