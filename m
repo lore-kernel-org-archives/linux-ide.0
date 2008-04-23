@@ -1,125 +1,52 @@
-From: "kyle" <kylewong@southa.com>
-Subject: Re: ahci performance problem? (much slower than sil24)
-Date: Wed, 23 Apr 2008 09:51:29 +0800
-Message-ID: <006801c8a4e4$8ef99840$0a01a8c0@kylecea1512a3f>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: [2.6 patch] select ATA_SFF
+Date: Wed, 23 Apr 2008 11:16:53 +0900
+Message-ID: <480E9C15.6080103@gmail.com>
+References: <20080421213147.GH2633@cs181133002.pp.htv.fi> <480DE3C4.5@ru.mvista.com> <480DE6F5.8060403@gmail.com> <480DE9E8.2070809@ru.mvista.com> <480DEB1F.5060500@gmail.com> <480DF7B7.9030000@rtr.ca> <480DF876.7070800@gmail.com> <480DF9BD.1080104@rtr.ca> <480DFE76.8000809@ru.mvista.com> <480E345D.9090406@ru.mvista.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	format=flowed;
-	charset="big5";
-	reply-type=original
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from crux.i-cable.com ([203.83.115.104]:39178 "HELO crux.i-cable.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1755727AbYDWBvr (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 22 Apr 2008 21:51:47 -0400
-Received: from kylecea1512a3f (cm218-254-60-144.hkcable.com.hk [218.254.60.144])
-	by xenon.i-cable.com (8.13.5/8.13.5) with SMTP id m3N1pV1h028280
-	for <linux-ide@vger.kernel.org>; Wed, 23 Apr 2008 09:51:35 +0800 (CST)
+Received: from po-out-1718.google.com ([72.14.252.155]:43504 "EHLO
+	po-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753732AbYDWCSn (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 22 Apr 2008 22:18:43 -0400
+Received: by po-out-1718.google.com with SMTP id y22so152500pof.1
+        for <linux-ide@vger.kernel.org>; Tue, 22 Apr 2008 19:17:21 -0700 (PDT)
+In-Reply-To: <480E345D.9090406@ru.mvista.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Cc: Mark Lord <liml@rtr.ca>, Jeff Garzik <jeff@garzik.org>, Adrian Bunk <bunk@kernel.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Alan Cox <alan@lxorguk.ukuu.org.uk>
 
-Sorry again, please cc me if possible as I'm not subscribed. Thanks
-
------ Original Message ----- 
-From: "kyle" <kylewong@southa.com>
-To: <linux-ide@vger.kernel.org>
-Sent: Wednesday, April 23, 2008 9:37 AM
-Subject: ahci performance problem? (much slower than sil24)
-
-
-> Sorry ... pressed the wrong key and sent the unfinished email ...
->
-> Hi,
-> I've built a new machine with Intel Desktop Board DQ35JO, Intel E2160 CPU,
-> and 8 x Seagate ST3500320AS 500MB SATA harddisks. 6 of the 8 harddisks are
-> connected to the motherboard's SATA ports, while the remaining 2 are
-> connected to a 2 ports PCI-E card with sil24.
->
-> kernel is 2.6.24.5, have tried fedora kernel 2.6.23.1-42 and 2.6.24.4-64,
-> all give the same result.
->
-> sda,b,c .... to sdf are running ahci driver, sdg and sdh are running sil24
-> driver
->
-> hdparm -t /dev/sd{a-f} give around 45-46MB/sec
-> [root@localhost log]# hdparm -t /dev/sda
-> /dev/sda:
-> Timing buffered disk reads:  140 MB in  3.02 seconds =  46.42 MB/sec
->
-> hdparm -t /dev/sdg and sdh give over 105MB/sec
-> [root@localhost log]# hdparm -t /dev/sdg
-> /dev/sdg:
-> Timing buffered disk reads:  316 MB in  3.01 seconds = 105.13 MB/sec
->
-> had updated to latest BIOS, no change in hdparm test b4/after update.
-> hdparm -i:
->
-> [root@localhost boot]# hdparm -i /dev/sda
-> /dev/sda:
-> Model=ST3500320AS                             , FwRev=SD15    , SerialNo=
->      9QM2Q7F4
-> Config={ HardSect NotMFM HdSw>15uSec Fixed DTR>10Mbs RotSpdTol>.5% }
-> RawCHS=16383/16/63, TrkSize=0, SectSize=0, ECCbytes=4
-> BuffType=unknown, BuffSize=0kB, MaxMultSect=16, MultSect=?16?
-> CurCHS=16383/16/63, CurSects=16514064, LBA=yes, LBAsects=268435455
-> IORDY=on/off, tPIO={min:120,w/IORDY:120}, tDMA={min:120,rec:120}
-> PIO modes:  pio0 pio1 pio2 pio3 pio4
-> DMA modes:  mdma0 mdma1 mdma2
-> UDMA modes: udma0 udma1 udma2 udma3 udma4 udma5
-> AdvancedPM=no WriteCache=enabled
-> Drive conforms to: unknown:  ATA/ATAPI-4,5,6,7
-> * signifies the current active mode
->
-> [root@localhost boot]# hdparm -i /dev/sdb
->
-> /dev/sdb:
->
-> Model=ST3500320AS                             , FwRev=SD15    , SerialNo=
->      9QM2H18H
-> Config={ HardSect NotMFM HdSw>15uSec Fixed DTR>10Mbs RotSpdTol>.5% }
-> RawCHS=16383/16/63, TrkSize=0, SectSize=0, ECCbytes=4
-> BuffType=unknown, BuffSize=0kB, MaxMultSect=16, MultSect=?16?
-> CurCHS=16383/16/63, CurSects=16514064, LBA=yes, LBAsects=268435455
-> IORDY=on/off, tPIO={min:120,w/IORDY:120}, tDMA={min:120,rec:120}
-> PIO modes:  pio0 pio1 pio2 pio3 pio4
-> DMA modes:  mdma0 mdma1 mdma2
-> UDMA modes: udma0 udma1 udma2 udma3 udma4 udma5
-> AdvancedPM=no WriteCache=enabled
-> Drive conforms to: unknown:  ATA/ATAPI-4,5,6,7
->
-> * signifies the current active mode
->
-> ...........................
->
-> [root@localhost boot]# hdparm -i /dev/sdg
->
-> /dev/sdg:
->
-> Model=ST3500320AS                             , FwRev=SD15    , SerialNo=
->      9QM2LE0C
-> Config={ HardSect NotMFM HdSw>15uSec Fixed DTR>10Mbs RotSpdTol>.5% }
-> RawCHS=16383/16/63, TrkSize=0, SectSize=0, ECCbytes=4
-> BuffType=unknown, BuffSize=0kB, MaxMultSect=16, MultSect=?16?
-> CurCHS=16383/16/63, CurSects=16514064, LBA=yes, LBAsects=268435455
-> IORDY=on/off, tPIO={min:120,w/IORDY:120}, tDMA={min:120,rec:120}
-> PIO modes:  pio0 pio1 pio2 pio3 pio4
-> DMA modes:  mdma0 mdma1 mdma2
-> UDMA modes: udma0 udma1 udma2 udma3 udma4 *udma5
-> AdvancedPM=no WriteCache=enabled
-> Drive conforms to: unknown:  ATA/ATAPI-4,5,6,7
->
-> * signifies the current active mode
->
-> attached dmesg
->
-> Please help, thank you very much
->
-> Regards,
-> Kyle
->
->
->
+Sergei Shtylyov wrote:
+> Hello, I wrote:
 > 
+>>> I suppose.   If we were needlessly pedantic, then perhaps
+>>> the libata-bmdma.c should be renamed to libata-sff.c,
+> 
+>    It *was* renamed to libata-sff.c, back in 2006. :-)
+> 
+>>> and the libata-sff.c should be renamed libata-tf.c
+> 
+>    Not before splitting SFF-8038i stuff from it.
+> 
+>>> But there's probably been a document or two since then,
+>>> where the SFF folks have documented the TF interfaces, too.
+> 
+>>    Don't know, at least I haven't encountered such spec. Unless you 
+>> mean SFF-8020i (ATAPI CD-ROM spec).
+> 
+>    I've looked thru the list of their spec. and it didn't seem to have 
+> any about taskfile specifically. SFF-8070 (ATAPI CD-RW) refers to 
+> ATA/PI-4 for that matter.
 
+Aik... We can do s/sff/tf/ and leave bmdma alone to avoid even more 
+confusion but sff has meant tf base interface for quite some time now in 
+libata and I think it'll be better to remember that sff is the new tf. 
+Sorry about the mess.
+
+Thanks.
+
+-- 
+tejun
