@@ -1,45 +1,69 @@
-From: Jens Axboe <jens.axboe@oracle.com>
-Subject: Re: [PATCH 00/11] removing the on-stack struct request
-Date: Wed, 23 Apr 2008 09:43:18 +0200
-Message-ID: <20080423074318.GZ12774@kernel.dk>
-References: <1208824002-3596-1-git-send-email-fujita.tomonori@lab.ntt.co.jp> <58cb370e0804220214va6b7379tfa5b18acf36fd1a7@mail.gmail.com> <20080423074010.GA8221@gollum.tnic>
+From: Mikael Pettersson <mikpe@it.uu.se>
+Subject: Re: [PATCH] pci_try_set_mwi() in sata_promise
+Date: Wed, 23 Apr 2008 09:57:01 +0200
+Message-ID: <18446.60365.156326.246875@harpo.it.uu.se>
+References: <200804222126.56321.mitov@issp.bas.bg>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from brick.kernel.dk ([87.55.233.238]:26292 "EHLO kernel.dk"
+Received: from aun.it.uu.se ([130.238.12.36]:54070 "EHLO aun.it.uu.se"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751033AbYDWHnW (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 23 Apr 2008 03:43:22 -0400
-Content-Disposition: inline
-In-Reply-To: <20080423074010.GA8221@gollum.tnic>
+	id S1751119AbYDWH53 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 23 Apr 2008 03:57:29 -0400
+In-Reply-To: <200804222126.56321.mitov@issp.bas.bg>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: petkovbb@gmail.com
-Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, linux-ide@vger.kernel.org
+To: Marin Mitov <mitov@issp.bas.bg>
+Cc: linux-kernel@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>, Mikael Pettersson <mikpe@it.uu.se>, linux-ide@vger.kernel.org
 
-On Wed, Apr 23 2008, Borislav Petkov wrote:
-> On Tue, Apr 22, 2008 at 11:14:28AM +0200, Bartlomiej Zolnierkiewicz wrote:
-> 
-> [..]
-> 
-> > Looks promising but probably I'll not be able to review it properly
-> > this week (I'm busy with my real job) and the next week (I'll be busy
-> > with pushing overdue IDE updates).  OTOH I'm hoping that Borislav
-> > would be able to take a look in the meantime.
-> 
-> Yep, they're quite straight-forward and look fine except some
-> nitpicking i sent in separate mails. FWIW, this is what we wanted to
-> do initially but Jens didn't agree to that at the time. I guess, it's
-> because i probably didn't express myself clearly enough then. See
-> http://kerneltrap.org/mailarchive/linux-kernel/2008/3/1/1037974 for
-> the whole discussion.
+Marin Mitov writes:
+ > Hi all,
+ > 
+ > The BIOS (Asus A8V Deluxe) is setting incorrectly PCI
+ > Cache Line Size Register (as seen in lspci -vvv output), 
+ > so try to correct it by pci_try_set_mwi(pdev).
+ > 
+ > Marin Mitov
+ > ----------------------------------------------------------
+ > Enable Memory-Write-and-Invalidate in sata_promise driver and 
+ > get rid of strange BIOS-set value for cache line size register.
+ > 
+ > According to Documentation/pci.txt:  "This enables...
+ > ...and also ensures that the cache line size register
+ > is set correctly".
+ > 
+ > Signed-off-by: Marin Mitov <mitov@issp.bas.bg>
+ > ----------------------------------------------------------
+ > --- a/drivers/ata/sata_promise.c	2008-04-22 13:09:15.000000000 +0300
+ > +++ b/drivers/ata/sata_promise.c	2008-04-22 13:11:01.000000000 +0300
+ > @@ -1114,6 +1114,7 @@ static int pdc_ata_init_one(struct pci_d
+ > 
+ >  	/* start host, request IRQ and attach */
+ >  	pci_set_master(pdev);
+ > +	pci_try_set_mwi(pdev);
+ >  	return ata_host_activate(host, pdev->irq, pdc_interrupt, IRQF_SHARED,
+ >  				 &pdc_ata_sht);
+ >  }
+ > 
 
-The cases that do ide_wait can clearly use __GFP_WAIT, and then there
-are no issues. My worry was with current paths that allocate the request
-on stack from interrupt context, where you cannot block for mempool
-allocation. Perhaps such paths don't exist in ide (anymore?), if not
-then there are no objections from me.
+Not enough information here.
 
--- 
-Jens Axboe
+0. Please post lspci -vvvx including all PCI devices.
+1. What consequence does the incorrect cache line size setting have?
+2. What improvement does that pci_try_set_mwi() cause? Speed? Fewer errors?
+3. Why call pci_try_set_mwi()? Can't you set the cache line size directly?
+4. You write "try to correct it". So the "fix" might not work? Then what?
+5. Is the problem specific for the Promise chip? That is:
+   a) are any other built-in PCI devices affected by this BIOS bug?
+   b) if you add a PCI card (of any kind), does it also
+      get the incorrect cache line size setting?
+6. Are you running the latest BIOS?
 
+To me it sounds like this is a generic PCI bug on that
+machine, and so should be handled by the kernel's PCI layer.
+But if the problem really is specific to the built-in Promise
+chip on that machine, then I can see why a workaround in
+sata_promise could be appropriate.
+
+/Mikael
