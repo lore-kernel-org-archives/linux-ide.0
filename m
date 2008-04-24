@@ -1,56 +1,77 @@
-From: Volker Armin Hemmann <volker.armin.hemmann@tu-clausthal.de>
-Subject: Re: [PATCH] ahci: retry enabling AHCI a few times before spitting out WARN_ON()
-Date: Thu, 24 Apr 2008 06:32:38 +0200
-Message-ID: <200804240632.39182.volker.armin.hemmann@tu-clausthal.de>
-References: <480F231A.7020401@gmail.com> <200804240615.23463.volker.armin.hemmann@tu-clausthal.de> <48100A8B.4000102@gmail.com>
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Subject: Re: [RFC 0/5] block large commands support continue
+Date: Thu, 24 Apr 2008 13:31:21 +0900
+Message-ID: <20080424133118Q.tomof@acm.org>
+References: <480F4CC2.7070804@panasas.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: Text/Plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hades.rz.tu-clausthal.de ([139.174.2.20]:57021 "EHLO
-	hades.rz.tu-clausthal.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752301AbYDXEcn convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 24 Apr 2008 00:32:43 -0400
-In-Reply-To: <48100A8B.4000102@gmail.com>
-Content-Disposition: inline
+Received: from mo11.iij4u.or.jp ([210.138.174.79]:36022 "EHLO mo11.iij4u.or.jp"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751275AbYDXEdR (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 24 Apr 2008 00:33:17 -0400
+In-Reply-To: <480F4CC2.7070804@panasas.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Jeff Garzik <jeff@garzik.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, Peer Chen <pchen@nvidia.com>
+To: bharrosh@panasas.com
+Cc: jens.axboe@oracle.com, fujita.tomonori@lab.ntt.co.jp, bzolnier@gmail.com, James.Bottomley@HansenPartnership.com, pw@osc.edu, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
 
-On Donnerstag, 24. April 2008, Tejun Heo wrote:
-> Volker Armin Hemmann wrote:
-> > emm, even without the double slashes I get the same message:
-> > git fetch
-> > git://git.kernel.org/pub/scm/linux/kernel/git/jgarzik/libata-dev.gi=
-t
-> > upstream:upstream
-> > fatal: Not a git repository
-> >
-> > git fetch
-> > git://git.kernel.org/pub/scm/linux/kernel/git/jgarzik/libata-dev.gi=
-t
-> > fatal: Not a git repository
->
-> Hmm... strange.
->
->  > git --version
->
-> git version 1.5.2.4
->
->  > git fetch -v
->
-> git://git.kernel.org/pub/scm/linux/kernel/git/jgarzik/libata-dev.git
-> upstream:upstream
-> * refs/heads/upstream: same as branch 'upstream' of
-> git://git.kernel.org/pub/scm/linux/kernel/git/jgarzik/libata-dev
->    commit: 48feb3c
+On Wed, 23 Apr 2008 17:50:42 +0300
+Boaz Harrosh <bharrosh@panasas.com> wrote:
 
-Jim got me on the right track. I was just very stupid - not surprising,=
- I=20
-should sleep for 6  hours now ;)
+> 
+> The support for large commands was dropped from the for-2.6.26 branch
+> and will probably not get accepted into next kernel.
+> 
+> I have tried to take all comments from Jens and Bart. and incorporate
+> it into a new patchset. This is basically Tomo's patchset but with
+> proposed changes.
 
-I will report back later today,
+Have you seen the patchset to remove request on the stack?
 
-Gl=FCck Auf,
-Volker
+http://marc.info/?l=linux-ide&m=120882410712466&w=2
+
+
+> They are based on current linux-block/master. They will probably conflict with
+> latest patch sent by Tomo for the blk_get_request(). Once those patches
+> get accepted at some git tree, (Where will that be?), I will rebase these
+> on top of them. Please CC me of any progress.
+> 
+> [PATCH 1/5] block: no need to initialize rq->cmd
+>   This is 2 of Tomo's patches squashed together as they are
+>   small and do the same. Tomo is this OK?
+> 
+> [PATCH 2/5] block: replace sizeof(rq->cmd) with BLK_MAX_CDB
+>   Tomos patch rebased to here
+> 
+> [PATCH 3/5] block: Export rq_init, rename to blk_init_rq
+> [PATCH 4/5] block: Use new blk_init_rq
+>   These patches are basically what Jens and Bart has suggested, that with
+>   a small code change to blk-core.c we can memset at rq_init() and only set
+>   none zero members. We can also export that initializer and use it all over
+>   the ide tree where ever requests don't come from a request queue. (OK also
+>   at scsi_error.c)
+
++void blk_init_rq(struct request_queue *q, struct request *rq, int cmd_flags)
+
+Hmm, would it be better to modify the block layer to let rq_init just
+memset() the request structure?
+
+
+> [PATCH 5/5] block: add large command support
+>   Now that all initialization goes through one place Tomos large command support
+>   is trivial.
+> 
+> Bart. This is mostly ide changes, so please if you can test it. I do not have
+> any legacy IDE devices here at the office, it is all new sata stuff.
+> 
+> I hope we can put this, and later the scsi stuff, on some tree that can be tested
+> at -mm and hopefully be ready for 2.6.27
+> 
+> Thanks
+> Boaz
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
