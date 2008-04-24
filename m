@@ -1,94 +1,54 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH #upstream-fixes] sata_sis: SCR accessors should return -EINVAL
- when the requested SCR isn't available
-Date: Thu, 24 Apr 2008 10:52:44 +0900
-Message-ID: <480FE7EC.4030002@gmail.com>
+From: Mark Lord <liml@rtr.ca>
+Subject: Re: [PATCH] libata-eh copy result_tf flags from outgoing tf
+Date: Wed, 23 Apr 2008 22:24:41 -0400
+Message-ID: <480FEF69.8000407@rtr.ca>
+References: <480F9D29.4070603@rtr.ca> <480FB4AF.2060907@gmail.com> <480FC82F.8080404@rtr.ca> <480FDC0D.60302@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rv-out-0708.google.com ([209.85.198.250]:63280 "EHLO
-	rv-out-0506.google.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1750952AbYDXBww (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 23 Apr 2008 21:52:52 -0400
-Received: by rv-out-0506.google.com with SMTP id k29so1675890rvb.1
-        for <linux-ide@vger.kernel.org>; Wed, 23 Apr 2008 18:52:51 -0700 (PDT)
+Received: from rtr.ca ([76.10.145.34]:3066 "EHLO mail.rtr.ca"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752951AbYDXCYp (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 23 Apr 2008 22:24:45 -0400
+In-Reply-To: <480FDC0D.60302@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>, kaber@trash.net, IDE/ATA development list <linux-ide@vger.kernel.org>
+To: Tejun Heo <htejun@gmail.com>
+Cc: Jeff Garzik <jgarzik@pobox.com>, IDE/ATA development list <linux-ide@vger.kernel.org>
 
-sis_scr_cfg_read() can't access SError and was incorrectly returning
--1 instead of -EINVAL.  This went unnoticed because SError used to be
-cleared in @postreset() and it didn't care about how scr_read() failed
-but commit ac371987 moved SError clearing into sata_link_resume() and
-SCR access failure other than -EINVAL is considered an error condition
-and exposes the incorrect return value bug as detection failure.  Fix
-it.
+Tejun Heo wrote:
+> Mark Lord wrote:
+>>> Maybe it's better to set ATA_TFLAG_LBA48 | ATA_TFLAG_ISADDR | 
+>>> ATA_TFLAG_DEVICE?  After all, all fields are available after that 
+>>> memcpy().
+>> ..
+>>
+>> I just did it the same way as the standard version in libata-core does 
+>> it.
+>> In this particular case, we know it was NCQ, so we know that the original
+>> tf->flags have (ATA_TFLAG_LBA48|ATA_TFLAG_ISADDR|ATA_TFLAG_DEVICE) set.
+>>
+>> I figured better to copy than just overwrite, because new flags might 
+>> come along.
+> 
+> Those flags are to tell which parts of the TF are valid or should be 
+> read in case of TFLAG_LBA48.  So, a TF after tf_read should always have 
+> TFLAG_ISADDR and TFLAG_DEVICE.  TFLAG_LBA48 works both ways.  If it was 
+> set when tf_read is called the higher part of LBA is read and the 
+> resulting tf should have TFLAG_LBA48 set.  But yeah the original code 
+> isn't like that.  If you can fix it up together with the NCQ path, it 
+> would be great.
+..
 
-Also, scsi_scr_cfg_write() was incorrectly returning 0 after it
-ignored the request to write to SError.  Make it also return -EINVAL.
+No, I'm not going to touch the mainline path.  tf_read is used to read
+the taskfile, but it doesn't always contain an LBA address, so I'm not so
+sure that forcing TFLAG_ISADDR is always correct.
 
-This was bisected and reported by Patrick McHardy.
+And since I don't know that code as well as you, I don't want to end up
+having to help debug something that might break as a result.
 
-Signed-off-by: Tejun Heo <htejun@gmail.com>
-Cc: Patrick McHardy <kaber@trash.net>
----
- drivers/ata/sata_sis.c |   12 +++++++-----
- 1 file changed, 7 insertions(+), 5 deletions(-)
+This may warrant two patches.. one to fix the NCQ bug (already posted),
+and perhaps another from you or Jeff if you want to change the behaviour.
 
-diff --git a/drivers/ata/sata_sis.c b/drivers/ata/sata_sis.c
-index 6b8e45b..1010b30 100644
---- a/drivers/ata/sata_sis.c
-+++ b/drivers/ata/sata_sis.c
-@@ -142,7 +142,7 @@ static u32 sis_scr_cfg_read(struct ata_port *ap, unsigned int sc_reg, u32 *val)
- 	u8 pmr;
- 
- 	if (sc_reg == SCR_ERROR) /* doesn't exist in PCI cfg space */
--		return 0xffffffff;
-+		return -EINVAL;
- 
- 	pci_read_config_byte(pdev, SIS_PMR, &pmr);
- 
-@@ -158,14 +158,14 @@ static u32 sis_scr_cfg_read(struct ata_port *ap, unsigned int sc_reg, u32 *val)
- 	return 0;
- }
- 
--static void sis_scr_cfg_write(struct ata_port *ap, unsigned int sc_reg, u32 val)
-+static int sis_scr_cfg_write(struct ata_port *ap, unsigned int sc_reg, u32 val)
- {
- 	struct pci_dev *pdev = to_pci_dev(ap->host->dev);
- 	unsigned int cfg_addr = get_scr_cfg_addr(ap, sc_reg);
- 	u8 pmr;
- 
- 	if (sc_reg == SCR_ERROR) /* doesn't exist in PCI cfg space */
--		return;
-+		return -EINVAL;
- 
- 	pci_read_config_byte(pdev, SIS_PMR, &pmr);
- 
-@@ -174,6 +174,8 @@ static void sis_scr_cfg_write(struct ata_port *ap, unsigned int sc_reg, u32 val)
- 	if ((pdev->device == 0x0182) || (pdev->device == 0x0183) ||
- 	    (pdev->device == 0x1182) || (pmr & SIS_PMR_COMBINED))
- 		pci_write_config_dword(pdev, cfg_addr+0x10, val);
-+
-+	return 0;
- }
- 
- static int sis_scr_read(struct ata_port *ap, unsigned int sc_reg, u32 *val)
-@@ -211,14 +213,14 @@ static int sis_scr_write(struct ata_port *ap, unsigned int sc_reg, u32 val)
- 	pci_read_config_byte(pdev, SIS_PMR, &pmr);
- 
- 	if (ap->flags & SIS_FLAG_CFGSCR)
--		sis_scr_cfg_write(ap, sc_reg, val);
-+		return sis_scr_cfg_write(ap, sc_reg, val);
- 	else {
- 		iowrite32(val, ap->ioaddr.scr_addr + (sc_reg * 4));
- 		if ((pdev->device == 0x0182) || (pdev->device == 0x0183) ||
- 		    (pdev->device == 0x1182) || (pmr & SIS_PMR_COMBINED))
- 			iowrite32(val, ap->ioaddr.scr_addr + (sc_reg * 4)+0x10);
-+		return 0;
- 	}
--	return 0;
- }
- 
- static int sis_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
+Cheers
