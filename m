@@ -1,52 +1,39 @@
-From: Volker Armin Hemmann <volker.armin.hemmann@tu-clausthal.de>
-Subject: Re: [PATCH] ahci: retry enabling AHCI a few times before spitting out WARN_ON()
-Date: Thu, 24 Apr 2008 05:28:30 +0200
-Message-ID: <200804240528.30511.volker.armin.hemmann@tu-clausthal.de>
-References: <480F231A.7020401@gmail.com> <200804240351.13586.volker.armin.hemmann@tu-clausthal.de> <480FF70B.6050600@gmail.com>
+From: Patrick McHardy <kaber@trash.net>
+Subject: Re: [PATCH #upstream-fixes] sata_sis: SCR accessors should return
+ -EINVAL when the requested SCR isn't available
+Date: Thu, 24 Apr 2008 05:30:51 +0200
+Message-ID: <480FFEEB.2060705@trash.net>
+References: <480FE7EC.4030002@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-15; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hades.rz.tu-clausthal.de ([139.174.2.20]:59823 "EHLO
-	hades.rz.tu-clausthal.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752789AbYDXD3Q convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 23 Apr 2008 23:29:16 -0400
-In-Reply-To: <480FF70B.6050600@gmail.com>
-Content-Disposition: inline
+Received: from stinky.trash.net ([213.144.137.162]:55420 "EHLO
+	stinky.trash.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753111AbYDXDaq (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 23 Apr 2008 23:30:46 -0400
+In-Reply-To: <480FE7EC.4030002@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Tejun Heo <htejun@gmail.com>
-Cc: Jeff Garzik <jeff@garzik.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, Peer Chen <pchen@nvidia.com>
+Cc: Jeff Garzik <jeff@garzik.org>, IDE/ATA development list <linux-ide@vger.kernel.org>
 
-On Donnerstag, 24. April 2008, Tejun Heo wrote:
+Tejun Heo wrote:
+> sis_scr_cfg_read() can't access SError and was incorrectly returning
+> -1 instead of -EINVAL.  This went unnoticed because SError used to be
+> cleared in @postreset() and it didn't care about how scr_read() failed
+> but commit ac371987 moved SError clearing into sata_link_resume() and
+> SCR access failure other than -EINVAL is considered an error condition
+> and exposes the incorrect return value bug as detection failure.  Fix
+> it.
+> 
+> Also, scsi_scr_cfg_write() was incorrectly returning 0 after it
+> ignored the request to write to SError.  Make it also return -EINVAL.
+> 
+> This was bisected and reported by Patrick McHardy.
+> 
+> Signed-off-by: Tejun Heo <htejun@gmail.com>
+> Cc: Patrick McHardy <kaber@trash.net>
 
->
-> Ah.. right.  The patch is for libata-dev#upstream branch which contai=
-ns
-> ahci_enable_ahci() refactoring change.  You'll need to get the latest
-> linux-2.6 git tree which contains it.
 
-which isn't -git4
-
-*sigh*
-
-then I did:
-git clone git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux-=
-2.6.git
-Initialized empty Git repository in /usr/src/linux-2.6/.git/
-remote: Counting objects: 761806, done.
-remote: Compressing objects: 100% (130538/130538), done.
-remote: Total 761806 (delta 633235), reused 758782 (delta 630257)
-Receiving objects: 100% (761806/761806), 179.18 MiB | 10975 KiB/s, done=
-=2E
-Resolving deltas: 100% (633235/633235), done.
-Checking out files: 100% (23886/23886), done.
-
-cd linux-2.6
-patch -p1 < ../ahci.patch
-patching file drivers/ata/ahci.c
-Hunk #1 FAILED at 556.
-1 out of 1 hunk FAILED -- saving rejects to file drivers/ata/ahci.c.rej
-
-Gl=FCck Auf,
-Volker
+Tested and works fine, thanks Tejun.
