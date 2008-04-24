@@ -1,52 +1,78 @@
-From: Mark Lord <liml@rtr.ca>
-Subject: Re: [PATCH] libata-eh copy result_tf flags from outgoing tf
-Date: Wed, 23 Apr 2008 19:37:19 -0400
-Message-ID: <480FC82F.8080404@rtr.ca>
-References: <480F9D29.4070603@rtr.ca> <480FB4AF.2060907@gmail.com>
+From: Volker Armin Hemmann <volker.armin.hemmann@tu-clausthal.de>
+Subject: Re: [PATCH] ahci: retry enabling AHCI a few times before spitting out WARN_ON()
+Date: Thu, 24 Apr 2008 02:24:09 +0200
+Message-ID: <200804240224.09518.volker.armin.hemmann@tu-clausthal.de>
+References: <480F231A.7020401@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([76.10.145.34]:2545 "EHLO mail.rtr.ca"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753412AbYDWXhL (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 23 Apr 2008 19:37:11 -0400
-In-Reply-To: <480FB4AF.2060907@gmail.com>
+Received: from hades.rz.tu-clausthal.de ([139.174.2.20]:50233 "EHLO
+	hades.rz.tu-clausthal.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751752AbYDXAYR (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 23 Apr 2008 20:24:17 -0400
+In-Reply-To: <480F231A.7020401@gmail.com>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Tejun Heo <htejun@gmail.com>
-Cc: Jeff Garzik <jgarzik@pobox.com>, IDE/ATA development list <linux-ide@vger.kernel.org>
+Cc: Jeff Garzik <jeff@garzik.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, Peer Chen <pchen@nvidia.com>
 
-Tejun Heo wrote:
-> Mark Lord wrote:
->> Fix mis-reporting of NCQ errors by copying tf->flags to result_tf->flags
->> in libata-eh.  This allows ata_gen_ata_sense() to report the failed
->> block number correctly to SCSI after a media error during NCQ.
->>
->> This patch may also be a candidate for backporting to earlier kernels.
->> Without this fix, SCSI will fail I/O on the entire request rather
->> than just the bad sector.  That can be bad for a request that was
->> merged from many independent read reads from different tasks.
->>
->> Signed-off-by: Mark Lord <mlord@pobox.com>
->>
->> --- upstream/drivers/ata/libata-eh.c    2008-04-18 09:31:15.000000000 
->> -0400
->> +++ linux/drivers/ata/libata-eh.c    2008-04-23 16:25:38.000000000 -0400
->> @@ -1402,6 +1402,7 @@
->>     /* we've got the perpetrator, condemn it */
->>     qc = __ata_qc_from_tag(ap, tag);
->>     memcpy(&qc->result_tf, &tf, sizeof(tf));
->> +    qc->result_tf.flags = qc->tf.flags;
-> 
-> Maybe it's better to set ATA_TFLAG_LBA48 | ATA_TFLAG_ISADDR | 
-> ATA_TFLAG_DEVICE?  After all, all fields are available after that memcpy().
-..
+Hi,
 
-I just did it the same way as the standard version in libata-core does it.
-In this particular case, we know it was NCQ, so we know that the original
-tf->flags have (ATA_TFLAG_LBA48|ATA_TFLAG_ISADDR|ATA_TFLAG_DEVICE) set.
+patch -p1 <  ../ahci.patch
+patching file drivers/ata/ahci.c
+Hunk #1 FAILED at 556.
+1 out of 1 hunk FAILED -- saving rejects to file drivers/ata/ahci.c.rej
 
-I figured better to copy than just overwrite, because new flags might come along.
+cat drivers/ata/ahci.c.rej
+***************
+*** 556,571 ****
 
-Cheers
+  static void ahci_enable_ahci(void __iomem *mmio)
+  {
+         u32 tmp;
+
+         /* turn on AHCI_EN */
+         tmp = readl(mmio + HOST_CTL);
+-        if (!(tmp & HOST_AHCI_EN)) {
+                 tmp |= HOST_AHCI_EN;
+                 writel(tmp, mmio + HOST_CTL);
+                 tmp = readl(mmio + HOST_CTL);   /* flush && sanity check */
+-                WARN_ON(!(tmp & HOST_AHCI_EN));
+         }
+  }
+
+  /**
+--- 556,582 ----
+
+  static void ahci_enable_ahci(void __iomem *mmio)
+  {
++        int i;
+         u32 tmp;
+
+         /* turn on AHCI_EN */
+         tmp = readl(mmio + HOST_CTL);
++        if (tmp & HOST_AHCI_EN)
++                return;
++
++        /* Some controllers need AHCI_EN to be written multiple times.
++         * Try a few times before giving up.
++         */
++        for (i = 0; i < 5; i++) {
+                 tmp |= HOST_AHCI_EN;
+                 writel(tmp, mmio + HOST_CTL);
+                 tmp = readl(mmio + HOST_CTL);   /* flush && sanity check */
++                if (tmp & HOST_AHCI_EN)
++                        return;
++                msleep(10);
+         }
++
++        WARN_ON(1);
+  }
+
+  /**
+
+
+with 2.6.25+reiser4.
