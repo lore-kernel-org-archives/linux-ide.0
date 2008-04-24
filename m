@@ -1,84 +1,44 @@
-From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: Re: [RFC 0/5] block large commands support continue
-Date: Fri, 25 Apr 2008 00:17:27 +0900
-Message-ID: <20080425001725K.tomof@acm.org>
-References: <20080424133118Q.tomof@acm.org>
-	<20080424151925A.tomof@acm.org>
-	<20080424104930.GU12774@kernel.dk>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: Re: [2.6 patch] select ATA_SFF
+Date: Thu, 24 Apr 2008 19:30:08 +0400
+Message-ID: <4810A780.9040508@ru.mvista.com>
+References: <20080421213147.GH2633@cs181133002.pp.htv.fi>	<480DE3C4.5@ru.mvista.com>	<480DE6F5.8060403@gmail.com>	<480DE9E8.2070809@ru.mvista.com>	<480DEB1F.5060500@gmail.com>	<20080424123541.09e5ef96@the-village.bc.nu>	<481080EA.7010107@ru.mvista.com> <20080424152758.789e024c@the-village.bc.nu>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mo10.iij4u.or.jp ([210.138.174.78]:47377 "EHLO mo10.iij4u.or.jp"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1762830AbYDXPVc (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 24 Apr 2008 11:21:32 -0400
-In-Reply-To: <20080424104930.GU12774@kernel.dk>
+Received: from homer.mvista.com ([63.81.120.155]:1080 "EHLO imap.sh.mvista.com"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1764994AbYDXPas (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 24 Apr 2008 11:30:48 -0400
+In-Reply-To: <20080424152758.789e024c@the-village.bc.nu>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: jens.axboe@oracle.com
-Cc: fujita.tomonori@lab.ntt.co.jp, bharrosh@panasas.com, bzolnier@gmail.com, James.Bottomley@HansenPartnership.com, pw@osc.edu, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: Tejun Heo <htejun@gmail.com>, Jeff Garzik <jeff@garzik.org>, Adrian Bunk <bunk@kernel.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-On Thu, 24 Apr 2008 12:49:30 +0200
-Jens Axboe <jens.axboe@oracle.com> wrote:
+Alan Cox wrote:
 
-> On Thu, Apr 24 2008, FUJITA Tomonori wrote:
-> > On Thu, 24 Apr 2008 13:31:21 +0900
-> > FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp> wrote:
-> > 
-> > > On Wed, 23 Apr 2008 17:50:42 +0300
-> > > Boaz Harrosh <bharrosh@panasas.com> wrote:
-> > > 
-> > > > 
-> > > > The support for large commands was dropped from the for-2.6.26 branch
-> > > > and will probably not get accepted into next kernel.
-> > > > 
-> > > > I have tried to take all comments from Jens and Bart. and incorporate
-> > > > it into a new patchset. This is basically Tomo's patchset but with
-> > > > proposed changes.
-> > > 
-> > > Have you seen the patchset to remove request on the stack?
-> > > 
-> > > http://marc.info/?l=linux-ide&m=120882410712466&w=2
-> > > 
-> > > 
-> > > > They are based on current linux-block/master. They will probably conflict with
-> > > > latest patch sent by Tomo for the blk_get_request(). Once those patches
-> > > > get accepted at some git tree, (Where will that be?), I will rebase these
-> > > > on top of them. Please CC me of any progress.
-> > > > 
-> > > > [PATCH 1/5] block: no need to initialize rq->cmd
-> > > >   This is 2 of Tomo's patches squashed together as they are
-> > > >   small and do the same. Tomo is this OK?
-> > > > 
-> > > > [PATCH 2/5] block: replace sizeof(rq->cmd) with BLK_MAX_CDB
-> > > >   Tomos patch rebased to here
-> > > > 
-> > > > [PATCH 3/5] block: Export rq_init, rename to blk_init_rq
-> > > > [PATCH 4/5] block: Use new blk_init_rq
-> > > >   These patches are basically what Jens and Bart has suggested, that with
-> > > >   a small code change to blk-core.c we can memset at rq_init() and only set
-> > > >   none zero members. We can also export that initializer and use it all over
-> > > >   the ide tree where ever requests don't come from a request queue. (OK also
-> > > >   at scsi_error.c)
-> > > 
-> > > +void blk_init_rq(struct request_queue *q, struct request *rq, int cmd_flags)
-> > > 
-> > > Hmm, would it be better to modify the block layer to let rq_init just
-> > > memset() the request structure?
-> > 
-> > I think, if we move rq_init to blk_alloc_request from get_request,
-> > rq_init can just memset() the structure.
-> > 
-> > Then we can export rq_init and rq_init works for everyone.
-> 
-> Wont work, see the io scheduler set_request() functions.
+>>    If you mean SFF-8038i (which can indeed be named "SFF/Intel"), it
+>>documents *only* BMDMA.  If you mean something else, please be more precise.
 
-Sorry, can you be more specific?
+> It documents where the PIO spaces are mapped, the class codes and then
 
-Only cfq uses set_request for now. cfq_set_request uses rq->cmd_flags
-and stores information at rq->elevator_private and
-rq->elevator_private2.
+    I'd like to know what do you mean by "it" since it's certainly not in 
+8038i spec I have.
 
-The patch does memset() the request structure and sets up
-rq->cmd_flags, and then elv_set_request. Doesn't it work?
+> documents the rest by inheriting it from the other specs. That makes it
+> the definitive spec for PCI "standard" controllers both PIO and DMA and
+
+    That looks like ""Intel PCI IDE Controller Specification".
+
+> it is indeed followed literally by just about every PCI ATA controller
+> except the CS5520
+
+    You probaly mean PC targeted controllers, since quite many non-PC chips do 
+ignore that spec (IOC4, PowerMac, Toshiba SCC)... As for CS5520, what's the 
+deviation here -- BMDMA regisrters at BAR2 only?
+
+> Alan
+
+MBR, Sergei
