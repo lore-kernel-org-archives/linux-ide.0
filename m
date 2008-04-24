@@ -1,78 +1,46 @@
-From: Volker Armin Hemmann <volker.armin.hemmann@tu-clausthal.de>
-Subject: Re: [PATCH] ahci: retry enabling AHCI a few times before spitting out WARN_ON()
-Date: Thu, 24 Apr 2008 02:24:09 +0200
-Message-ID: <200804240224.09518.volker.armin.hemmann@tu-clausthal.de>
-References: <480F231A.7020401@gmail.com>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: [PATCH] libata-eh copy result_tf flags from outgoing tf
+Date: Thu, 24 Apr 2008 10:02:05 +0900
+Message-ID: <480FDC0D.60302@gmail.com>
+References: <480F9D29.4070603@rtr.ca> <480FB4AF.2060907@gmail.com> <480FC82F.8080404@rtr.ca>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hades.rz.tu-clausthal.de ([139.174.2.20]:50233 "EHLO
-	hades.rz.tu-clausthal.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751752AbYDXAYR (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 23 Apr 2008 20:24:17 -0400
-In-Reply-To: <480F231A.7020401@gmail.com>
-Content-Disposition: inline
+Received: from rv-out-0708.google.com ([209.85.198.243]:39557 "EHLO
+	rv-out-0506.google.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1753894AbYDXBCM (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 23 Apr 2008 21:02:12 -0400
+Received: by rv-out-0506.google.com with SMTP id k29so1665595rvb.1
+        for <linux-ide@vger.kernel.org>; Wed, 23 Apr 2008 18:02:12 -0700 (PDT)
+In-Reply-To: <480FC82F.8080404@rtr.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Jeff Garzik <jeff@garzik.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, Peer Chen <pchen@nvidia.com>
+To: Mark Lord <liml@rtr.ca>
+Cc: Jeff Garzik <jgarzik@pobox.com>, IDE/ATA development list <linux-ide@vger.kernel.org>
 
-Hi,
+Mark Lord wrote:
+>> Maybe it's better to set ATA_TFLAG_LBA48 | ATA_TFLAG_ISADDR | 
+>> ATA_TFLAG_DEVICE?  After all, all fields are available after that 
+>> memcpy().
+> ..
+> 
+> I just did it the same way as the standard version in libata-core does it.
+> In this particular case, we know it was NCQ, so we know that the original
+> tf->flags have (ATA_TFLAG_LBA48|ATA_TFLAG_ISADDR|ATA_TFLAG_DEVICE) set.
+> 
+> I figured better to copy than just overwrite, because new flags might 
+> come along.
 
-patch -p1 <  ../ahci.patch
-patching file drivers/ata/ahci.c
-Hunk #1 FAILED at 556.
-1 out of 1 hunk FAILED -- saving rejects to file drivers/ata/ahci.c.rej
+Those flags are to tell which parts of the TF are valid or should be 
+read in case of TFLAG_LBA48.  So, a TF after tf_read should always have 
+TFLAG_ISADDR and TFLAG_DEVICE.  TFLAG_LBA48 works both ways.  If it was 
+set when tf_read is called the higher part of LBA is read and the 
+resulting tf should have TFLAG_LBA48 set.  But yeah the original code 
+isn't like that.  If you can fix it up together with the NCQ path, it 
+would be great.
 
-cat drivers/ata/ahci.c.rej
-***************
-*** 556,571 ****
+Thanks.
 
-  static void ahci_enable_ahci(void __iomem *mmio)
-  {
-         u32 tmp;
-
-         /* turn on AHCI_EN */
-         tmp = readl(mmio + HOST_CTL);
--        if (!(tmp & HOST_AHCI_EN)) {
-                 tmp |= HOST_AHCI_EN;
-                 writel(tmp, mmio + HOST_CTL);
-                 tmp = readl(mmio + HOST_CTL);   /* flush && sanity check */
--                WARN_ON(!(tmp & HOST_AHCI_EN));
-         }
-  }
-
-  /**
---- 556,582 ----
-
-  static void ahci_enable_ahci(void __iomem *mmio)
-  {
-+        int i;
-         u32 tmp;
-
-         /* turn on AHCI_EN */
-         tmp = readl(mmio + HOST_CTL);
-+        if (tmp & HOST_AHCI_EN)
-+                return;
-+
-+        /* Some controllers need AHCI_EN to be written multiple times.
-+         * Try a few times before giving up.
-+         */
-+        for (i = 0; i < 5; i++) {
-                 tmp |= HOST_AHCI_EN;
-                 writel(tmp, mmio + HOST_CTL);
-                 tmp = readl(mmio + HOST_CTL);   /* flush && sanity check */
-+                if (tmp & HOST_AHCI_EN)
-+                        return;
-+                msleep(10);
-         }
-+
-+        WARN_ON(1);
-  }
-
-  /**
-
-
-with 2.6.25+reiser4.
+-- 
+tejun
