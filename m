@@ -1,26 +1,84 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [2.6 patch] remove ata_cable_sata()
-Date: Thu, 24 Apr 2008 15:50:25 +0100
-Message-ID: <20080424155025.2bcf0f9b@the-village.bc.nu>
-References: <20080421085131.GE26897@cs181133002.pp.htv.fi>
-	<20080423192243.1f117215@the-village.bc.nu>
-	<20080424104406.GB2559@cs181133002.pp.htv.fi>
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Subject: Re: [RFC 0/5] block large commands support continue
+Date: Fri, 25 Apr 2008 00:17:27 +0900
+Message-ID: <20080425001725K.tomof@acm.org>
+References: <20080424133118Q.tomof@acm.org>
+	<20080424151925A.tomof@acm.org>
+	<20080424104930.GU12774@kernel.dk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:44959 "EHLO
-	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1761939AbYDXPTT (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 24 Apr 2008 11:19:19 -0400
-In-Reply-To: <20080424104406.GB2559@cs181133002.pp.htv.fi>
+Received: from mo10.iij4u.or.jp ([210.138.174.78]:47377 "EHLO mo10.iij4u.or.jp"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1762830AbYDXPVc (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 24 Apr 2008 11:21:32 -0400
+In-Reply-To: <20080424104930.GU12774@kernel.dk>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Adrian Bunk <bunk@kernel.org>
-Cc: Tejun Heo <htejun@gmail.com>, jgarzik@pobox.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: jens.axboe@oracle.com
+Cc: fujita.tomonori@lab.ntt.co.jp, bharrosh@panasas.com, bzolnier@gmail.com, James.Bottomley@HansenPartnership.com, pw@osc.edu, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
 
-> I thought that you could simply set .flags in a driver without needing 
-> any helper for .cable_detect .
+On Thu, 24 Apr 2008 12:49:30 +0200
+Jens Axboe <jens.axboe@oracle.com> wrote:
 
-In some cases yes, but exporting the complete set provides a logical and
-complete API for drivers in case they do need to do so.
+> On Thu, Apr 24 2008, FUJITA Tomonori wrote:
+> > On Thu, 24 Apr 2008 13:31:21 +0900
+> > FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp> wrote:
+> > 
+> > > On Wed, 23 Apr 2008 17:50:42 +0300
+> > > Boaz Harrosh <bharrosh@panasas.com> wrote:
+> > > 
+> > > > 
+> > > > The support for large commands was dropped from the for-2.6.26 branch
+> > > > and will probably not get accepted into next kernel.
+> > > > 
+> > > > I have tried to take all comments from Jens and Bart. and incorporate
+> > > > it into a new patchset. This is basically Tomo's patchset but with
+> > > > proposed changes.
+> > > 
+> > > Have you seen the patchset to remove request on the stack?
+> > > 
+> > > http://marc.info/?l=linux-ide&m=120882410712466&w=2
+> > > 
+> > > 
+> > > > They are based on current linux-block/master. They will probably conflict with
+> > > > latest patch sent by Tomo for the blk_get_request(). Once those patches
+> > > > get accepted at some git tree, (Where will that be?), I will rebase these
+> > > > on top of them. Please CC me of any progress.
+> > > > 
+> > > > [PATCH 1/5] block: no need to initialize rq->cmd
+> > > >   This is 2 of Tomo's patches squashed together as they are
+> > > >   small and do the same. Tomo is this OK?
+> > > > 
+> > > > [PATCH 2/5] block: replace sizeof(rq->cmd) with BLK_MAX_CDB
+> > > >   Tomos patch rebased to here
+> > > > 
+> > > > [PATCH 3/5] block: Export rq_init, rename to blk_init_rq
+> > > > [PATCH 4/5] block: Use new blk_init_rq
+> > > >   These patches are basically what Jens and Bart has suggested, that with
+> > > >   a small code change to blk-core.c we can memset at rq_init() and only set
+> > > >   none zero members. We can also export that initializer and use it all over
+> > > >   the ide tree where ever requests don't come from a request queue. (OK also
+> > > >   at scsi_error.c)
+> > > 
+> > > +void blk_init_rq(struct request_queue *q, struct request *rq, int cmd_flags)
+> > > 
+> > > Hmm, would it be better to modify the block layer to let rq_init just
+> > > memset() the request structure?
+> > 
+> > I think, if we move rq_init to blk_alloc_request from get_request,
+> > rq_init can just memset() the structure.
+> > 
+> > Then we can export rq_init and rq_init works for everyone.
+> 
+> Wont work, see the io scheduler set_request() functions.
+
+Sorry, can you be more specific?
+
+Only cfq uses set_request for now. cfq_set_request uses rq->cmd_flags
+and stores information at rq->elevator_private and
+rq->elevator_private2.
+
+The patch does memset() the request structure and sets up
+rq->cmd_flags, and then elv_set_request. Doesn't it work?
