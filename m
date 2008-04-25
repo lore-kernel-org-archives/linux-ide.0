@@ -1,13 +1,13 @@
 From: Bryan Wu <cooloney@kernel.org>
-Subject: [PATCH 2/3] [libata/BF54x]: Fix bug - Implement bfin ata interrupt handler to avoid "irq 68 nobody cared"
-Date: Fri, 25 Apr 2008 11:37:55 +0800
-Message-ID: <1209094676-20360-3-git-send-email-cooloney@kernel.org>
+Subject: [PATCH 3/3] [libata/BF54x]: Fix compling failure bug - change variable's name according to API update
+Date: Fri, 25 Apr 2008 11:37:56 +0800
+Message-ID: <1209094676-20360-4-git-send-email-cooloney@kernel.org>
 References: <1209094676-20360-1-git-send-email-cooloney@kernel.org>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nwd2mail11.analog.com ([137.71.25.57]:63134 "EHLO
-	nwd2mail11.analog.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753284AbYDYDiS (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 24 Apr 2008 23:38:18 -0400
+Received: from nwd2mail10.analog.com ([137.71.25.55]:64404 "EHLO
+	nwd2mail10.analog.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753528AbYDYDiT (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 24 Apr 2008 23:38:19 -0400
 In-Reply-To: <1209094676-20360-1-git-send-email-cooloney@kernel.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
@@ -16,178 +16,37 @@ Cc: Sonic Zhang <sonic.zhang@analog.com>, Bryan Wu <cooloney@kernel.org>
 
 From: Sonic Zhang <sonic.zhang@analog.com>
 
-Return IRQ_HANDLED when bfin ata device is busy.
-http://blackfin.uclinux.org/gf/project/uclinux-dist/tracker/?action=TrackerItemEdit&tracker_item_id=3513
-
 Signed-off-by: Sonic Zhang <sonic.zhang@analog.com>
 Signed-off-by: Bryan Wu <cooloney@kernel.org>
 ---
- drivers/ata/pata_bf54x.c |  125 ++++++++++++++++++++++++++++++++++++++++++++--
- 1 files changed, 121 insertions(+), 4 deletions(-)
+ drivers/ata/pata_bf54x.c |    5 ++---
+ 1 files changed, 2 insertions(+), 3 deletions(-)
 
 diff --git a/drivers/ata/pata_bf54x.c b/drivers/ata/pata_bf54x.c
-index f334ba5..4142894 100644
+index 4142894..94b818e 100644
 --- a/drivers/ata/pata_bf54x.c
 +++ b/drivers/ata/pata_bf54x.c
-@@ -1272,8 +1272,8 @@ static void bfin_freeze(struct ata_port *ap)
- 
- void bfin_thaw(struct ata_port *ap)
+@@ -1342,7 +1342,7 @@ static int bfin_port_start(struct ata_port *ap)
+ inline unsigned int bfin_ata_host_intr(struct ata_port *ap,
+ 				   struct ata_queued_cmd *qc)
  {
-+	dev_dbg(ap->dev, "in atapi dma thaw\n");
- 	bfin_check_status(ap);
--	bfin_irq_clear(ap);
- 	bfin_irq_on(ap);
- }
+-	struct ata_eh_info *ehi = &ap->eh_info;
++	struct ata_eh_info *ehi = &ap->link.eh_info;
+ 	u8 status, host_stat = 0;
  
-@@ -1339,13 +1339,131 @@ static int bfin_port_start(struct ata_port *ap)
- 	return 0;
- }
+ 	VPRINTK("ata%u: protocol %d task_state %d\n",
+@@ -1443,11 +1443,10 @@ irqreturn_t bfin_ata_interrupt(int irq, void *dev_instance)
+ 		    !(ap->flags & ATA_FLAG_DISABLED)) {
+ 			struct ata_queued_cmd *qc;
  
-+inline unsigned int bfin_ata_host_intr(struct ata_port *ap,
-+				   struct ata_queued_cmd *qc)
-+{
-+	struct ata_eh_info *ehi = &ap->eh_info;
-+	u8 status, host_stat = 0;
-+
-+	VPRINTK("ata%u: protocol %d task_state %d\n",
-+		ap->print_id, qc->tf.protocol, ap->hsm_task_state);
-+
-+	/* Check whether we are expecting interrupt in this state */
-+	switch (ap->hsm_task_state) {
-+	case HSM_ST_FIRST:
-+		/* Some pre-ATAPI-4 devices assert INTRQ
-+		 * at this state when ready to receive CDB.
-+		 */
-+
-+		/* Check the ATA_DFLAG_CDB_INTR flag is enough here.
-+		 * The flag was turned on only for atapi devices.
-+		 * No need to check is_atapi_taskfile(&qc->tf) again.
-+		 */
-+		if (!(qc->dev->flags & ATA_DFLAG_CDB_INTR))
-+			goto idle_irq;
-+		break;
-+	case HSM_ST_LAST:
-+		if (qc->tf.protocol == ATA_PROT_DMA ||
-+		    qc->tf.protocol == ATAPI_PROT_DMA) {
-+			/* check status of DMA engine */
-+			host_stat = ap->ops->bmdma_status(ap);
-+			VPRINTK("ata%u: host_stat 0x%X\n",
-+				ap->print_id, host_stat);
-+
-+			/* if it's not our irq... */
-+			if (!(host_stat & ATA_DMA_INTR))
-+				goto idle_irq;
-+
-+			/* before we do anything else, clear DMA-Start bit */
-+			ap->ops->bmdma_stop(qc);
-+
-+			if (unlikely(host_stat & ATA_DMA_ERR)) {
-+				/* error when transfering data to/from memory */
-+				qc->err_mask |= AC_ERR_HOST_BUS;
-+				ap->hsm_task_state = HSM_ST_ERR;
-+			}
-+		}
-+		break;
-+	case HSM_ST:
-+		break;
-+	default:
-+		goto idle_irq;
-+	}
-+
-+	/* check altstatus */
-+	status = ap->ops->sff_check_altstatus(ap);
-+	if (status & ATA_BUSY)
-+		goto busy_ata;
-+
-+	/* check main status, clearing INTRQ */
-+	status = ap->ops->sff_check_status(ap);
-+	if (unlikely(status & ATA_BUSY))
-+		goto busy_ata;
-+
-+	/* ack bmdma irq events */
-+	ap->ops->sff_irq_clear(ap);
-+
-+	ata_sff_hsm_move(ap, qc, status, 0);
-+
-+	if (unlikely(qc->err_mask) && (qc->tf.protocol == ATA_PROT_DMA ||
-+				       qc->tf.protocol == ATAPI_PROT_DMA))
-+		ata_ehi_push_desc(ehi, "BMDMA stat 0x%x", host_stat);
-+
-+busy_ata:
-+	return 1;	/* irq handled */
-+
-+idle_irq:
-+	ap->stats.idle_irq++;
-+
-+#ifdef ATA_IRQ_TRAP
-+	if ((ap->stats.idle_irq % 1000) == 0) {
-+		ap->ops->irq_ack(ap, 0); /* debug trap */
-+		ata_port_printk(ap, KERN_WARNING, "irq trap\n");
-+		return 1;
-+	}
-+#endif
-+	return 0;	/* irq not handled */
-+}
-+
-+irqreturn_t bfin_ata_interrupt(int irq, void *dev_instance)
-+{
-+	struct ata_host *host = dev_instance;
-+	unsigned int i;
-+	unsigned int handled = 0;
-+	unsigned long flags;
-+
-+	/* TODO: make _irqsave conditional on x86 PCI IDE legacy mode */
-+	spin_lock_irqsave(&host->lock, flags);
-+
-+	for (i = 0; i < host->n_ports; i++) {
-+		struct ata_port *ap;
-+
-+		ap = host->ports[i];
-+		if (ap &&
-+		    !(ap->flags & ATA_FLAG_DISABLED)) {
-+			struct ata_queued_cmd *qc;
-+
-+			qc = ata_qc_from_tag(ap, ap->active_tag);
-+			if (qc && (!(qc->tf.flags & ATA_TFLAG_POLLING)) &&
-+			    (qc->flags & ATA_QCFLAG_ACTIVE))
-+				handled |= bfin_ata_host_intr(ap, qc);
-+
-+		}
-+	}
-+
-+	spin_unlock_irqrestore(&host->lock, flags);
-+
-+	return IRQ_RETVAL(handled);
-+}
-+
-+
- static struct scsi_host_template bfin_sht = {
- 	ATA_BASE_SHT(DRV_NAME),
- 	.sg_tablesize		= SG_NONE,
- 	.dma_boundary		= ATA_DMA_BOUNDARY,
- };
- 
--static const struct ata_port_operations bfin_pata_ops = {
-+static struct ata_port_operations bfin_pata_ops = {
- 	.inherits		= &ata_sff_port_ops,
- 
- 	.set_piomode		= bfin_set_piomode,
-@@ -1370,7 +1488,6 @@ static const struct ata_port_operations bfin_pata_ops = {
- 	.thaw			= bfin_thaw,
- 	.softreset		= bfin_softreset,
- 	.postreset		= bfin_postreset,
--	.post_internal_cmd	= bfin_bmdma_stop,
- 
- 	.sff_irq_clear		= bfin_irq_clear,
- 	.sff_irq_on		= bfin_irq_on,
-@@ -1507,7 +1624,7 @@ static int __devinit bfin_atapi_probe(struct platform_device *pdev)
+-			qc = ata_qc_from_tag(ap, ap->active_tag);
++			qc = ata_qc_from_tag(ap, ap->link.active_tag);
+ 			if (qc && (!(qc->tf.flags & ATA_TFLAG_POLLING)) &&
+ 			    (qc->flags & ATA_QCFLAG_ACTIVE))
+ 				handled |= bfin_ata_host_intr(ap, qc);
+-
+ 		}
  	}
  
- 	if (ata_host_activate(host, platform_get_irq(pdev, 0),
--		ata_sff_interrupt, IRQF_SHARED, &bfin_sht) != 0) {
-+		bfin_ata_interrupt, IRQF_SHARED, &bfin_sht) != 0) {
- 		peripheral_free_list(atapi_io_port);
- 		dev_err(&pdev->dev, "Fail to attach ATAPI device\n");
- 		return -ENODEV;
 -- 
 1.5.5
