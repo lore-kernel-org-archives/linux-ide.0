@@ -1,87 +1,55 @@
-From: "Zhao, Richard" <Richard.Zhao@amd.com>
-Subject: RE: Add BIOS/OS handoff feature to AHCI
-Date: Fri, 25 Apr 2008 09:58:33 +0800
-Message-ID: <206C6845C72CAE439DC3D9D413C571A4DC3F2B@ssuzexmb3.amd.com>
-References: <206C6845C72CAE439DC3D9D413C571A4CE9863@ssuzexmb3.amd.com> <48084DF1.8000902@garzik.org>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: [PATCH] ahci: retry enabling AHCI a few times before spitting
+ out WARN_ON()
+Date: Fri, 25 Apr 2008 10:59:02 +0900
+Message-ID: <48113AE6.6060904@gmail.com>
+References: <480F231A.7020401@gmail.com> <200804250217.34418.volker.armin.hemmann@tu-clausthal.de> <4811298A.4070903@gmail.com> <200804250317.16396.volker.armin.hemmann@tu-clausthal.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outbound-wa4.frontbridge.com ([216.32.181.16]:64651 "EHLO
-	WA4EHSOBE001.bigfish.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1755308AbYDYB6w convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 24 Apr 2008 21:58:52 -0400
-Content-Class: urn:content-classes:message
+Received: from rv-out-0708.google.com ([209.85.198.248]:63322 "EHLO
+	rv-out-0506.google.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1755608AbYDYB7I (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 24 Apr 2008 21:59:08 -0400
+Received: by rv-out-0506.google.com with SMTP id k29so1957147rvb.1
+        for <linux-ide@vger.kernel.org>; Thu, 24 Apr 2008 18:59:08 -0700 (PDT)
+In-Reply-To: <200804250317.16396.volker.armin.hemmann@tu-clausthal.de>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "Zhao, Richard" <Richard.Zhao@amd.com>, Jeff Garzik <jeff@garzik.org>
-Cc: IDE/ATA development list <linux-ide@vger.kernel.org>
+To: Volker Armin Hemmann <volker.armin.hemmann@tu-clausthal.de>
+Cc: Jeff Garzik <jeff@garzik.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, Peer Chen <pchen@nvidia.com>
 
-Adding linux-ide ......
-
-Richard
------Original Message-----
-From: Zhao, Richard 
-Sent: Friday, April 18, 2008 3:37 PM
-To: 'Jeff Garzik'
-Subject: RE: Add BIOS/OS handoff feature to AHCI
-
-You may find it in AHCI spec revision 1.2, section 10.6 .
-Can you find it?
-
-Thanks
-Richard
-
------Original Message-----
-From: Jeff Garzik [mailto:jeff@garzik.org] 
-Sent: Friday, April 18, 2008 3:30 PM
-To: Zhao, Richard
-Subject: Re: Add BIOS/OS handoff feature to AHCI
-
-Zhao, Richard wrote:
-> Hi Jeff,
+Volker Armin Hemmann wrote:
+>  static void ahci_enable_ahci(void __iomem *mmio)
+>  {
+> +       int i;
+>         u32 tmp;
 > 
->  
-> 
-> AMD's AHCI controller will have the BIOS/OS handoff feature. I'm 
-> considering to add it to ahci driver.
-> 
->  
-> 
-> EHCI also have the feature, and EHCI driver add it in 
-> drivers/usb/host/pci-quirks.c, it uses pci fixup final.
-> 
->  
-> 
-> There're two places to add the AHCI handoff support:
-> 
->    1. pci quirk.    drivers/pci/quirks.c
-> 
-> All ahci drivers will need to do nothing. But BOHC register is in
-memory 
-> mapped space, we must map it temporally. EHCI pci quirk has temp
-mapping 
-> too.
-> 
->    2. ahci driver
-> 
-> Every ahci drivers will have to implement it in probe function. I'm
-not 
-> very sure we can put it here. Perhaps PCI general driver has done too 
-> much modification of ahci controller.
-> 
->  
-> 
-> What's your opinion?
+>         /* turn on AHCI_EN */
+>         tmp = readl(mmio + HOST_CTL);
+> -       if (!(tmp & HOST_AHCI_EN)) {
+> +       if (tmp & HOST_AHCI_EN)
+> +               return;
+> +
+> +       /* Some controllers need AHCI_EN to be written multiple times.
+> +        * Try a few times before giving up.
+> +        */
+> +       for (i = 0; i < 5; i++) {
+>                 tmp |= HOST_AHCI_EN;
+>                 writel(tmp, mmio + HOST_CTL);
+>                 tmp = readl(mmio + HOST_CTL);   /* flush && sanity check */
+> -               WARN_ON(!(tmp & HOST_AHCI_EN));
+> +               if (tmp & HOST_AHCI_EN)
+> +                       return;
+> +               msleep(10);
+>         }
+> +
+> +       WARN_ON(1);
+>  }
 
-I am unfamiliar with the specific needs of BIOS hand-off in this case...
+Heh... your patch is white-space broken.  Just save whole mail to a file 
+and use filterdiff to extract patch.  Copy & pasting doesn't always work.
 
-  where may I find that information?
-
-	Jeff
-
-
-
-
-
+-- 
+tejun
