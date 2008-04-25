@@ -1,61 +1,58 @@
-From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: Re: [dm-devel] [PATCH 2/6] block: no need to initialize rq->cmd
-	with blk_get_request
-Date: Sat, 26 Apr 2008 01:54:52 +0900
-Message-ID: <20080426015440M.tomof@acm.org>
-References: <1209140607-28654-2-git-send-email-fujita.tomonori@lab.ntt.co.jp>
-	<1209140607-28654-3-git-send-email-fujita.tomonori@lab.ntt.co.jp>
-	<1209141901.3087.17.camel@localhost.localdomain>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: [PATCH 1/8] sata_mv more cosmetics
+Date: Fri, 25 Apr 2008 12:57:38 -0400
+Message-ID: <48120D82.7060009@pobox.com>
+References: <480A3D2E.4040503@rtr.ca> <480A3D5E.8090206@rtr.ca>	 <481168E7.50402@pobox.com> <4811E0B7.2060508@rtr.ca> <da824cf30804250940o4f0e0396k1696348f8d86cb77@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <1209141901.3087.17.camel@localhost.localdomain>
-Sender: linux-scsi-owner@vger.kernel.org
-To: James.Bottomley@HansenPartnership.com, dm-devel@redhat.com
-Cc: linux-scsi@vger.kernel.org, bzolnier@gmail.com, jens.axboe@oracle.com, fujita.tomonori@lab.ntt.co.jp, linux-ide@vger.kernel.org, bharrosh@panasas.com, agk@redhat.com
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from srv5.dvmed.net ([207.36.208.214]:38987 "EHLO mail.dvmed.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757386AbYDYQ5p (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 25 Apr 2008 12:57:45 -0400
+In-Reply-To: <da824cf30804250940o4f0e0396k1696348f8d86cb77@mail.gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Grant Grundler <grundler@google.com>
+Cc: Mark Lord <liml@rtr.ca>, Tejun Heo <htejun@gmail.com>, IDE/ATA development list <linux-ide@vger.kernel.org>
 
-On Fri, 25 Apr 2008 11:45:01 -0500
-James Bottomley <James.Bottomley@HansenPartnership.com> wrote:
-
-> On Sat, 2008-04-26 at 01:23 +0900, FUJITA Tomonori wrote:
-> > blk_get_request initializes rq->cmd (rq_init does) so the users don't
-> > need to do that.
-> > 
-> > The purpose of this patch is to remove sizeof(rq->cmd) and &rq->cmd,
-> > as a preparation for large command support, which changes rq->cmd from
-> > the static array to a pointer. sizeof(rq->cmd) will not make sense and
-> > &rq->cmd won't work.
-> > 
-> > Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-> > Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
-> > Cc: Alasdair G Kergon <agk@redhat.com>
-> > Cc: Jens Axboe <jens.axboe@oracle.com>
-> > ---
-> >  block/scsi_ioctl.c          |    3 ---
-> >  drivers/block/pktcdvd.c     |    2 --
-> >  drivers/cdrom/cdrom.c       |    1 -
+Grant Grundler wrote:
+> I think you can associate any names you want with whatever the
+> non-public documentation is calling the registers by adding a comment
+> in the header files where the bit masks and register offsets are defined.
+> Or vice versa. Which ever way works for you.
 > 
-> These:
-> 
-> >  drivers/md/dm-emc.c         |    2 --
-> >  drivers/md/dm-mpath-hp-sw.c |    1 -
-> >  drivers/md/dm-mpath-rdac.c  |    1 -
-> 
-> Conflict with this set of patches:
-> 
-> http://git.kernel.org/?p=linux/kernel/git/jejb/scsi-pending-2.6.git;a=summary
-> 
-> Which move the dm pieces to being request based.  The patch series
-> hasn't had an ACK yet from Alasdair, but it would be nice if you could
-> look it over and see if it needs the memsets pulling out.
-
-Seems that it needs the memsets pulling out. For example,
-
-[PATCH 2/7] scsi_dh: add lsi rdac device handler has:
-
-+	memset(&rq->cmd, 0, BLK_MAX_CDB);
+> I prefer to use the non-public register names in the code only because it
+> will be easier for Marvell engineers to participate in _maintaining_
+> this driver. I think getting involved with open source developement
+> is a good career developement experience. And the device drivers for
+> "obsolete" HW allows them to take more risks/make mistakes
+> without getting into serious trouble with the company.
 
 
-Do you want a patch against scsi-pending?
+The trouble, though, comes with following that logic in every driver, 
+making the collective body less accessible to anyone not _intimately_ 
+tied into the hardware _and_ possessing NDA'd docs.
+
+Further, it is obvious with _most_ drivers in Linux that engineers at 
+the hardware vendor do _not_ participate in maintaining drivers for 
+their older hardware, so I also wish to be careful and avoid punishing 
+the majority to help a minority.
+
+I put a significant value in having more-readable code like
+
+	status = mr32(IRQ_STAT);	/* read IRQ status from PPB */
+
+rather than
+
+	status = READ_REG(ICR5PPB);	/* read IRQ status from PPB */
+
+because the casual reader is more likely to understand the first 
+example, even though it deviates from the string of line noise some 
+engineer writing Verilog at 4:00am decided was a good register name.
+
+	Jeff
+
+
+
