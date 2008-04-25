@@ -1,151 +1,133 @@
-From: "Huang, Shane" <Shane.Huang@amd.com>
-Subject: RE: Regression: kernel 2.6.24 ahci problem, does not boot (doesn't find SATA disk, i.e. failed to IDENTIFY)
-Date: Fri, 25 Apr 2008 09:03:25 +0800
-Message-ID: <B90463BC30D2E446BA423D888DC85E5055A5EB@sshaexmb1.amd.com>
-References: <1209002065.17082.30.camel@corfu>  <480FF550.50802@gmail.com> <1209060137.21811.6.camel@corfu> <4810FDDA.5020907@gmail.com>
+From: Volker Armin Hemmann <volker.armin.hemmann@tu-clausthal.de>
+Subject: Re: [PATCH] ahci: retry enabling AHCI a few times before spitting out WARN_ON()
+Date: Fri, 25 Apr 2008 03:17:16 +0200
+Message-ID: <200804250317.16396.volker.armin.hemmann@tu-clausthal.de>
+References: <480F231A.7020401@gmail.com> <200804250217.34418.volker.armin.hemmann@tu-clausthal.de> <4811298A.4070903@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outbound-wa4.frontbridge.com ([216.32.181.16]:3575 "EHLO
-	WA4EHSOBE001.bigfish.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1753378AbYDYBDt convert rfc822-to-8bit
+Received: from poseidon.rz.tu-clausthal.de ([139.174.2.21]:57938 "EHLO
+	poseidon.rz.tu-clausthal.de" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752744AbYDYBRU convert rfc822-to-8bit
 	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 24 Apr 2008 21:03:49 -0400
-Content-Class: urn:content-classes:message
-In-Reply-To: <4810FDDA.5020907@gmail.com>
+	Thu, 24 Apr 2008 21:17:20 -0400
+In-Reply-To: <4811298A.4070903@gmail.com>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>, Guenther Thomsen <guenthert@gmail.com>
-Cc: kernel@vger.kernel.org, IDE/ATA development list <linux-ide@vger.kernel.org>, "Zhao, Richard" <Richard.Zhao@amd.com>, "Huang, Shane" <Shane.Huang@amd.com>
+To: Tejun Heo <htejun@gmail.com>
+Cc: Jeff Garzik <jeff@garzik.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, Peer Chen <pchen@nvidia.com>
 
-Tejun:
+On Freitag, 25. April 2008, Tejun Heo wrote:
+> Volker Armin Hemmann wrote:
+> > git fetch
+> > git://git.kernel.org/pub/scm/linux/kernel/git/jgarzik/libata-dev.gi=
+t
+> > upstream:upstream
+> > From git://git.kernel.org/pub/scm/linux/kernel/git/jgarzik/libata-d=
+ev
+> >  * [new branch]      upstream   -> upstream
+> > energy libata-dev # git checkout -f upstream
+> > Checking out files: 100% (1243/1243), done.
+> > Switched to branch "upstream"
+> > energy libata-dev # patch -p1 < ../ahci.patch
+> > patching file drivers/ata/ahci.c
+> > Hunk #1 FAILED at 556.
+> > 1 out of 1 hunk FAILED -- saving rejects to file drivers/ata/ahci.c=
+=2Erej
+>
+> That's really weird.
+>
+> $ git fetch -f -u
+> git://git.kernel.org/pub/scm/linux/kernel/git/jgarzik/libata-dev.git=20
+> upstream:upstream remote: Counting objects: 7151, done.
+> remote: Compressing objects: 100% (1439/1439), done.
+> Indexing 5254 objects...
+> remote: Total 5254 (delta 4424), reused 4645 (delta 3815)
+>  100% (5254/5254) done
+> Resolving 4424 deltas...
+>  100% (4424/4424) done
+> 1186 objects were added to complete this thin pack.
+> * refs/heads/upstream: forcing update to non-fast forward branch 'ups=
+tream'
+> of git://git.kernel.org/pub/scm/linux/kernel/git/jgarzik/libata-dev
+> old...new: ed75ba5...48feb3c
+> $ git checkout -f upstream
+> Checking 1203 files out...
+>  100% (1203/1203) done
+> Switched to branch "upstream"
 
-I added one patch link to that bugzilla and need Yann's verification.
 
+git clone git://git.kernel.org/pub/scm/linux/kernel/git/jgarzik/libata-=
+dev.git
+Initialized empty Git repository in /usr/src/libata-dev/.git/
+remote: Counting objects: 743097, done.
+remote: Compressing objects: 100% (127420/127420), done.
+remote: Total 743097 (delta 617111), reused 740658 (delta 614672)
+Receiving objects: 100% (743097/743097), 173.30 MiB | 7980 KiB/s, done.
+Resolving deltas: 100% (617111/617111), done.
+Checking out files: 100% (23824/23824), done.
 
-Thanks
-Shane
+energy src # cd libata-dev
 
+energy libata-dev # git fetch -f -u=20
+git://git.kernel.org/pub/scm/linux/kernel/git/jgarzik/libata-dev.git =20
+upstream:upstream
+=46rom git://git.kernel.org/pub/scm/linux/kernel/git/jgarzik/libata-dev
+ * [new branch]      upstream   -> upstream
 
-> -----Original Message-----
-> From: Tejun Heo [mailto:htejun@gmail.com] 
-> Sent: Friday, April 25, 2008 5:39 AM
-> To: Guenther Thomsen
-> Cc: kernel@vger.kernel.org; IDE/ATA development list; Huang, Shane
-> Subject: Re: Regression: kernel 2.6.24 ahci problem, does not 
-> boot (doesn't find SATA disk, i.e. failed to IDENTIFY)
-> 
-> Guenther Thomsen wrote:
-> > On Thu, 2008-04-24 at 11:49 +0900, Tejun Heo wrote:
-> >> Guenther Thomsen wrote:
-> >> > Not sure, if this issue has been resolved meanwhile. The 
-> thread I found 
-> >> > indicated only that it is believed to be an interrupt 
-> routing issue.
-> >> > 
-> >> > I ran into this issue, when upgrading Ubuntu from 7.10 (kernel 
-> >> > 2.6.22-14) to 8.04rc (kernel 2.6.24-16) and added my 
-> findings to bug 
-> >> > 219312 
-> (https://bugs.launchpad.net/ubuntu/+source/linux/+bug/219312) .
-> >> > 
-> >> > --8<--
-> >> > [ 56.463297] SCSI subsystem initialized
-> >> > [ 56.477843] ACPI: PCI Interrupt 0000:00:12.0[A] -> GSI 
-> 21 (level, low) 
-> >> > -> IRQ 21
-> >> > [ 56.478127] ahci 0000:00:12.0: controller can't do 
-> 64bit DMA, forcing 32bit
-> >> > [ 56.478178] ahci 0000:00:12.0: controller can't do PMP, 
-> turning off CAP_PMP
-> >> > [...]
-> >> > [ 57.480373] ahci 0000:00:12.0: AHCI 0001.0100 32 slots 
-> 4 ports 3Gbps 
-> >> > 0xf impl SATA mode
-> >> > [ 57.480427] ahci 0000:00:12.0: flags: ncq sntf ilck pm 
-> led clo pio slum 
-> >> > part
-> >> > [ 57.481394] scsi0 : ahci
-> >> > [ 57.481710] scsi1 : ahci
-> >> > [ 57.481873] scsi2 : ahci
-> >> > [ 57.482040] scsi3 : ahci
-> >> > [ 57.955539] ata1: SATA link up 1.5Gbps (SStatus 113 
-> SControl 300)
-> >> > [ 87.904552] ata1.00: qc timeout (cmd 0xec)
-> >> > [ 87.904608] ata1.00: failed to IDENTIFY (I/O error, 
-> err_mask=0x4)
-> >> > [ 87.904653] ata1: failed to recover some devices, 
-> retrying in 5 secs
-> >> > -->8--
-> >> > 
-> >> > A "pci=nomsi" got this kernel on its feet again, but if 
-> there is still 
-> >> > interest in kernel messages or other traces, then please 
-> let me know.
-> >>
-> >> Can you please attach full boot log and the result of "lspci -nn"?
-> >>
-> > Attached (please ignore the OOM killer towards the end - 
-> there is still 
-> > some Gnome badness in Ubuntu 8.04rc).
-> 
-> Shane can you please advise on this?  How did your previous
-> investigation go?  We need to blacklist it one way or the other.
-> 
-> Thanks.
-> 
-> 00:00.0 Host bridge [0600]: ATI Technologies Inc RD580 
-> [CrossFire Xpress 3200] Chipset Host Bridge [1002:5952]
-> 00:02.0 PCI bridge [0604]: ATI Technologies Inc RS480 PCI-X 
-> Root Port [1002:5a34]
-> 00:05.0 PCI bridge [0604]: ATI Technologies Inc RS480 PCI 
-> Bridge [1002:5a37]
-> 00:12.0 SATA controller [0106]: ATI Technologies Inc SB600 
-> Non-Raid-5 SATA [1002:4380]
-> 00:13.0 USB Controller [0c03]: ATI Technologies Inc SB600 USB 
-> (OHCI0) [1002:4387]
-> 00:13.1 USB Controller [0c03]: ATI Technologies Inc SB600 USB 
-> (OHCI1) [1002:4388]
-> 00:13.2 USB Controller [0c03]: ATI Technologies Inc SB600 USB 
-> (OHCI2) [1002:4389]
-> 00:13.3 USB Controller [0c03]: ATI Technologies Inc SB600 USB 
-> (OHCI3) [1002:438a]
-> 00:13.4 USB Controller [0c03]: ATI Technologies Inc SB600 USB 
-> (OHCI4) [1002:438b]
-> 00:13.5 USB Controller [0c03]: ATI Technologies Inc SB600 USB 
-> Controller (EHCI) [1002:4386]
-> 00:14.0 SMBus [0c05]: ATI Technologies Inc SBx00 SMBus 
-> Controller [1002:4385] (rev 13)
-> 00:14.1 IDE interface [0101]: ATI Technologies Inc SB600 IDE 
-> [1002:438c]
-> 00:14.2 Audio device [0403]: ATI Technologies Inc SBx00 
-> Azalia [1002:4383]
-> 00:14.3 ISA bridge [0601]: ATI Technologies Inc SB600 PCI to 
-> LPC Bridge [1002:438d]
-> 00:14.4 PCI bridge [0604]: ATI Technologies Inc SBx00 PCI to 
-> PCI Bridge [1002:4384]
-> 00:18.0 Host bridge [0600]: Advanced Micro Devices [AMD] K8 
-> [Athlon64/Opteron] HyperTransport Technology Configuration [1022:1100]
-> 00:18.1 Host bridge [0600]: Advanced Micro Devices [AMD] K8 
-> [Athlon64/Opteron] Address Map [1022:1101]
-> 00:18.2 Host bridge [0600]: Advanced Micro Devices [AMD] K8 
-> [Athlon64/Opteron] DRAM Controller [1022:1102]
-> 00:18.3 Host bridge [0600]: Advanced Micro Devices [AMD] K8 
-> [Athlon64/Opteron] Miscellaneous Control [1022:1103]
-> 01:00.0 VGA compatible controller [0300]: ATI Technologies 
-> Inc RV530 [Radeon X1600] [1002:71c2]
-> 01:00.1 Display controller [0380]: ATI Technologies Inc RV530 
-> [Radeon X1600] (Secondary) [1002:71e2]
-> 02:00.0 SATA controller [0106]: JMicron Technologies, Inc. 
-> JMicron 20360/20363 AHCI Controller [197b:2360] (rev 02)
-> 03:03.0 FireWire (IEEE 1394) [0c00]: VIA Technologies, Inc. 
-> IEEE 1394 Host Controller [1106:3044] (rev c0)
-> 03:04.0 Ethernet controller [0200]: Marvell Technology Group 
-> Ltd. 88E8001 Gigabit Ethernet Controller [11ab:4320] (rev 13)
-> 
-> -- 
-> tejun
-> 
-> 
+git checkout -f upstream
+Switched to branch "upstream"
 
+cat ../ahci.patch
+diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+index 739ba3f..711b5d7 100644
+--- a/drivers/ata/ahci.c
++++ b/drivers/ata/ahci.c
+@@ -556,16 +556,27 @@ static inline void __iomem *ahci_port_base(struct=
+=20
+ata_port *ap)
+
+ static void ahci_enable_ahci(void __iomem *mmio)
+ {
++       int i;
+        u32 tmp;
+
+        /* turn on AHCI_EN */
+        tmp =3D readl(mmio + HOST_CTL);
+-       if (!(tmp & HOST_AHCI_EN)) {
++       if (tmp & HOST_AHCI_EN)
++               return;
++
++       /* Some controllers need AHCI_EN to be written multiple times.
++        * Try a few times before giving up.
++        */
++       for (i =3D 0; i < 5; i++) {
+                tmp |=3D HOST_AHCI_EN;
+                writel(tmp, mmio + HOST_CTL);
+                tmp =3D readl(mmio + HOST_CTL);   /* flush && sanity ch=
+eck */
+-               WARN_ON(!(tmp & HOST_AHCI_EN));
++               if (tmp & HOST_AHCI_EN)
++                       return;
++               msleep(10);
+        }
++
++       WARN_ON(1);
+ }
+
+ /**
+energy libata-dev # patch -p1 < ../ahci.patch
+patching file drivers/ata/ahci.c
+Hunk #1 FAILED at 556.
+1 out of 1 hunk FAILED -- saving rejects to file drivers/ata/ahci.c.rej
+
+somewhere I am doing something wrong. But what?
+
+btw:
+git --version
+git version 1.5.4.5
+
+Gl=FCck Auf,
+Volkert
