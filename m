@@ -1,57 +1,50 @@
-From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: [PATCH 0/6] add large command support to the block layer
-Date: Sat, 26 Apr 2008 01:23:13 +0900
-Message-ID: <1209140607-28654-1-git-send-email-fujita.tomonori@lab.ntt.co.jp>
+From: Mark Lord <liml@rtr.ca>
+Subject: Re: libata-eh/pmp command sequence on NCQ media error
+Date: Fri, 25 Apr 2008 12:34:46 -0400
+Message-ID: <48120826.504@rtr.ca>
+References: <480F9D29.4070603@rtr.ca> <480FF229.2060808@rtr.ca> <481168FA.5020709@pobox.com> <4811E2FB.4040100@rtr.ca> <48120269.8020101@gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mo10.iij4u.or.jp ([210.138.174.78]:39515 "EHLO mo10.iij4u.or.jp"
+Received: from rtr.ca ([76.10.145.34]:1920 "EHLO mail.rtr.ca"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759190AbYDYQbV (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 25 Apr 2008 12:31:21 -0400
+	id S1751220AbYDYQes (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 25 Apr 2008 12:34:48 -0400
+In-Reply-To: <48120269.8020101@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: bzolnier@gmail.com, linux-ide@vger.kernel.org, bharrosh@panasas.com, jens.axboe@oracle.com, James.Bottomley@HansenPartnership.com, agk@redhat.com, Geert.Uytterhoeven@sonycom.com, fujita.tomonori@lab.ntt.co.jp
+To: Tejun Heo <htejun@gmail.com>
+Cc: Jeff Garzik <jgarzik@pobox.com>, IDE/ATA development list <linux-ide@vger.kernel.org>
 
-This is an updated patchset for large command support to the block
-layer:
+Tejun Heo wrote:
+> Mark Lord wrote:
+..
+>>
+>> So, for sata_mv at least, I'd kinda like to have libata-eh attempt
+>> the READ_LOG_EXT_10H before it tries to (unsuccessfully) access the
+>> per-port SCRs on the PMP.
+>>
+>> For now, I'll try and hack something into my local tree to ensure
+>> that things will actually work that way around without any other
+>> unforseen complications.
+>>
+>> But for upstream, I'm thinking maybe a HORKAGE flag or something?
+>> I'm still trying to avoid having to pull a lot of libata-eh/pmp code
+>> into sata_mv for local customizations.
+> 
+> w00t w00t I thought about that when I wrote NCQ EH.  All you have to do 
+> is to export ata_eh_analyze_ncq_error() can call it right after 
+> error_handler starts and put the controller into a working state (so 
+> that SCR accesses work again).  After it finishes, call the generic 
+> handler.  The second time around ata_eh_analyze_ncq_error() will be 
+> no-op and you should get what you want.
+..
 
-http://marc.info/?l=linux-scsi&m=120817127118449&w=2
+Really... Mmm...  :)
 
-We rarely handle large commands. So for optimization, a struct request
-still has a static array for a command. rq_init sets rq->cmd pointer
-to the static array. In short, rq_init() does
+Thanks, Tejun.  *You are The Man* !
 
-rq->cmd = rq->__cmd;
-
-So we can access to rq->cmd and rq->cmd_len as before.
-
-This change requires everyone to initialize the request in a proper
-way (that is, just doing a memset() will not work). Now we have
-rq_init() that works for any path so this patchset can cleanly convert
-users of requests on the stack or kmalloced requests to use it (the
-previous patchset does it in a hacky way):
-
-http://marc.info/?l=linux-scsi&m=120911792725876&w=2
-
-This patchset is against Jens' for-linus branch.
-
-#1-#4 patches can be applied via Jens' tree now. #5 patch is for
-IDE. It cleanly can be applied to both Bart's latest quilt tree and
-Jens' tree though Bart's quilt tree has some pending IDE patches. #4
-patch depends on #4. #6 patch depends on #1-#5.
-
-I guess that the easiest way to apply this patchset would be:
-
-1. Pushing Bart's quilt tree to mainline.
-2. Rebasing Jens' tree to mainline.
-3. Pushing this patchset via Jens' tree.
-
-Jens and Bart, let me know if I can do something to make the process
-easier.
-
-Bart, I will try to push the patchset to remove the requests on the
-stack for 2.6.27:
-
-http://marc.info/?l=linux-ide&m=120882410712466&w=2
+:)
 
 
