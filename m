@@ -1,45 +1,33 @@
-From: Harvey Harrison <harvey.harrison@gmail.com>
-Subject: libata: functions with definition should not be extern
-Date: Thu, 24 Apr 2008 18:37:34 -0700
-Message-ID: <1209087454.20088.11.camel@brick>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: Regression: kernel 2.6.24 ahci problem, does not boot (doesn't
+ find SATA disk, i.e. failed to IDENTIFY)
+Date: Fri, 25 Apr 2008 10:51:15 +0900
+Message-ID: <48113913.8090107@gmail.com>
+References: <1209002065.17082.30.camel@corfu>  <480FF550.50802@gmail.com> <1209060137.21811.6.camel@corfu> <4810FDDA.5020907@gmail.com> <B90463BC30D2E446BA423D888DC85E5055A5EB@sshaexmb1.amd.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from el-out-1112.google.com ([209.85.162.176]:64173 "EHLO
-	el-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754424AbYDYBhm (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 24 Apr 2008 21:37:42 -0400
-Received: by el-out-1112.google.com with SMTP id n30so1337789elf.21
-        for <linux-ide@vger.kernel.org>; Thu, 24 Apr 2008 18:37:41 -0700 (PDT)
+Received: from wa-out-1112.google.com ([209.85.146.176]:12956 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755891AbYDYBvX (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 24 Apr 2008 21:51:23 -0400
+Received: by wa-out-1112.google.com with SMTP id m16so5691555waf.23
+        for <linux-ide@vger.kernel.org>; Thu, 24 Apr 2008 18:51:22 -0700 (PDT)
+In-Reply-To: <B90463BC30D2E446BA423D888DC85E5055A5EB@sshaexmb1.amd.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: linux-ide <linux-ide@vger.kernel.org>
+To: "Huang, Shane" <Shane.Huang@amd.com>
+Cc: Guenther Thomsen <guenthert@gmail.com>, kernel@vger.kernel.org, IDE/ATA development list <linux-ide@vger.kernel.org>, "Zhao, Richard" <Richard.Zhao@amd.com>
 
-Noticed by sparse
-drivers/ata/libata-core.c:3380:12: warning: function 'ata_wait_after_reset' with external linkage has definition
+Huang, Shane wrote:
+> Tejun:
+> 
+> I added one patch link to that bugzilla and need Yann's verification.
 
-Signed-off-by: Harvey Harrison <harvey.harrison@gmail.com>
----
- drivers/ata/libata-core.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+Heh... Can you please give me the link?  I can't find it at the moment.
 
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index b0b00af..fe5c88b 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -3377,7 +3377,7 @@ int ata_wait_ready(struct ata_link *link, unsigned long deadline,
-  *	RETURNS:
-  *	0 if @linke is ready before @deadline; otherwise, -errno.
-  */
--extern int ata_wait_after_reset(struct ata_link *link, unsigned long deadline,
-+int ata_wait_after_reset(struct ata_link *link, unsigned long deadline,
- 				int (*check_ready)(struct ata_link *link))
- {
- 	msleep(ATA_WAIT_AFTER_RESET_MSECS);
+Thanks.
+
 -- 
-1.5.5.1.270.g89765
-
-
-
+tejun
