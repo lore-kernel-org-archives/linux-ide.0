@@ -1,104 +1,154 @@
 From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH #upstream-fixes] sata_sis: SCR accessors should return
- -EINVAL when the requested SCR isn't available
-Date: Fri, 25 Apr 2008 00:47:21 -0400
-Message-ID: <48116259.7010101@garzik.org>
-References: <480FE7EC.4030002@gmail.com>
+Subject: Re: [patch 1/2] ATA/IDE: fix platform driver hotplug/coldplug
+Date: Fri, 25 Apr 2008 00:47:31 -0400
+Message-ID: <48116263.4080008@garzik.org>
+References: <200804182041.m3IKfvSM014396@imap1.linux-foundation.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:46519 "EHLO mail.dvmed.net"
+Received: from srv5.dvmed.net ([207.36.208.214]:46528 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757013AbYDYEr1 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 25 Apr 2008 00:47:27 -0400
-In-Reply-To: <480FE7EC.4030002@gmail.com>
+	id S1756818AbYDYErj (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 25 Apr 2008 00:47:39 -0400
+In-Reply-To: <200804182041.m3IKfvSM014396@imap1.linux-foundation.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: kaber@trash.net, IDE/ATA development list <linux-ide@vger.kernel.org>
+To: akpm@linux-foundation.org
+Cc: bzolnier@gmail.com, linux-ide@vger.kernel.org, kay.sievers@vrfy.org, dbrownell@users.sourceforge.net, htejun@gmail.com
 
-Tejun Heo wrote:
-> sis_scr_cfg_read() can't access SError and was incorrectly returning
-> -1 instead of -EINVAL.  This went unnoticed because SError used to be
-> cleared in @postreset() and it didn't care about how scr_read() failed
-> but commit ac371987 moved SError clearing into sata_link_resume() and
-> SCR access failure other than -EINVAL is considered an error condition
-> and exposes the incorrect return value bug as detection failure.  Fix
-> it.
+akpm@linux-foundation.org wrote:
+> From: Kay Sievers <kay.sievers@vrfy.org>
 > 
-> Also, scsi_scr_cfg_write() was incorrectly returning 0 after it
-> ignored the request to write to SError.  Make it also return -EINVAL.
+> Since 43cc71eed1250755986da4c0f9898f9a635cb3bf, the platform modalias is
+> prefixed with "platform:".  Add MODULE_ALIAS() to the hotpluggable ATA and IDE
+> platform drivers, to re-enable auto loading.
 > 
-> This was bisected and reported by Patrick McHardy.
+> NOTE: both ata/pata_platform.c and ide/legacy/ide_platform.c claim to provide
+> "the" platform_pata driver, and there's no build-time mutual exclusion
+> mechanism.  This means that configs which enable both drivers will make some
+> trouble when hotplugging...
 > 
-> Signed-off-by: Tejun Heo <htejun@gmail.com>
-> Cc: Patrick McHardy <kaber@trash.net>
+> [dbrownell@users.sourceforge.net: more drivers, registration fixes]
+> Signed-off-by: Kay Sievers <kay.sievers@vrfy.org>
+> Signed-off-by: David Brownell <dbrownell@users.sourceforge.net>
+> Cc: Jeff Garzik <jeff@garzik.org>
+> Cc: Tejun Heo <htejun@gmail.com>
+> Acked-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+> Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
 > ---
-> drivers/ata/sata_sis.c |   12 +++++++-----
-> 1 file changed, 7 insertions(+), 5 deletions(-)
 > 
-> diff --git a/drivers/ata/sata_sis.c b/drivers/ata/sata_sis.c
-> index 6b8e45b..1010b30 100644
-> --- a/drivers/ata/sata_sis.c
-> +++ b/drivers/ata/sata_sis.c
-> @@ -142,7 +142,7 @@ static u32 sis_scr_cfg_read(struct ata_port *ap, 
-> unsigned int sc_reg, u32 *val)
->     u8 pmr;
+>  drivers/ata/pata_at32.c           |    3 +++
+>  drivers/ata/pata_bf54x.c          |    1 +
+>  drivers/ata/pata_ixp4xx_cf.c      |    1 +
+>  drivers/ata/pata_platform.c       |    1 +
+>  drivers/ata/pata_rb500_cf.c       |    3 +++
+>  drivers/ata/sata_mv.c             |    2 +-
+>  drivers/ide/arm/palm_bk3710.c     |    4 ++++
+>  drivers/ide/legacy/ide_platform.c |    2 ++
+>  8 files changed, 16 insertions(+), 1 deletion(-)
 > 
->     if (sc_reg == SCR_ERROR) /* doesn't exist in PCI cfg space */
-> -        return 0xffffffff;
-> +        return -EINVAL;
-> 
->     pci_read_config_byte(pdev, SIS_PMR, &pmr);
-> 
-> @@ -158,14 +158,14 @@ static u32 sis_scr_cfg_read(struct ata_port *ap, 
-> unsigned int sc_reg, u32 *val)
->     return 0;
-> }
-> 
-> -static void sis_scr_cfg_write(struct ata_port *ap, unsigned int sc_reg, 
-> u32 val)
-> +static int sis_scr_cfg_write(struct ata_port *ap, unsigned int sc_reg, 
-> u32 val)
-> {
->     struct pci_dev *pdev = to_pci_dev(ap->host->dev);
->     unsigned int cfg_addr = get_scr_cfg_addr(ap, sc_reg);
->     u8 pmr;
-> 
->     if (sc_reg == SCR_ERROR) /* doesn't exist in PCI cfg space */
-> -        return;
-> +        return -EINVAL;
-> 
->     pci_read_config_byte(pdev, SIS_PMR, &pmr);
-> 
-> @@ -174,6 +174,8 @@ static void sis_scr_cfg_write(struct ata_port *ap, 
-> unsigned int sc_reg, u32 val)
->     if ((pdev->device == 0x0182) || (pdev->device == 0x0183) ||
->         (pdev->device == 0x1182) || (pmr & SIS_PMR_COMBINED))
->         pci_write_config_dword(pdev, cfg_addr+0x10, val);
+> diff -puN drivers/ata/pata_at32.c~ata-ide-fix-platform-driver-hotplug-coldplug drivers/ata/pata_at32.c
+> --- a/drivers/ata/pata_at32.c~ata-ide-fix-platform-driver-hotplug-coldplug
+> +++ a/drivers/ata/pata_at32.c
+> @@ -381,6 +381,9 @@ static int __exit pata_at32_remove(struc
+>  	return 0;
+>  }
+>  
+> +/* work with hotplug and coldplug */
+> +MODULE_ALIAS("platform:at32_ide");
 > +
-> +    return 0;
-> }
-> 
-> static int sis_scr_read(struct ata_port *ap, unsigned int sc_reg, u32 *val)
-> @@ -211,14 +213,14 @@ static int sis_scr_write(struct ata_port *ap, 
-> unsigned int sc_reg, u32 val)
->     pci_read_config_byte(pdev, SIS_PMR, &pmr);
-> 
->     if (ap->flags & SIS_FLAG_CFGSCR)
-> -        sis_scr_cfg_write(ap, sc_reg, val);
-> +        return sis_scr_cfg_write(ap, sc_reg, val);
->     else {
->         iowrite32(val, ap->ioaddr.scr_addr + (sc_reg * 4));
->         if ((pdev->device == 0x0182) || (pdev->device == 0x0183) ||
->             (pdev->device == 0x1182) || (pmr & SIS_PMR_COMBINED))
->             iowrite32(val, ap->ioaddr.scr_addr + (sc_reg * 4)+0x10);
-> +        return 0;
->     }
-> -    return 0;
-> }
-> 
+>  static struct platform_driver pata_at32_driver = {
+>  	.remove	       = __exit_p(pata_at32_remove),
+>  	.driver	       = {
+> diff -puN drivers/ata/pata_bf54x.c~ata-ide-fix-platform-driver-hotplug-coldplug drivers/ata/pata_bf54x.c
+> --- a/drivers/ata/pata_bf54x.c~ata-ide-fix-platform-driver-hotplug-coldplug
+> +++ a/drivers/ata/pata_bf54x.c
+> @@ -1601,3 +1601,4 @@ MODULE_AUTHOR("Sonic Zhang <sonic.zhang@
+>  MODULE_DESCRIPTION("PATA driver for blackfin 54x ATAPI controller");
+>  MODULE_LICENSE("GPL");
+>  MODULE_VERSION(DRV_VERSION);
+> +MODULE_ALIAS("platform:" DRV_NAME);
+> diff -puN drivers/ata/pata_ixp4xx_cf.c~ata-ide-fix-platform-driver-hotplug-coldplug drivers/ata/pata_ixp4xx_cf.c
+> --- a/drivers/ata/pata_ixp4xx_cf.c~ata-ide-fix-platform-driver-hotplug-coldplug
+> +++ a/drivers/ata/pata_ixp4xx_cf.c
+> @@ -221,6 +221,7 @@ MODULE_AUTHOR("Alessandro Zummo <a.zummo
+>  MODULE_DESCRIPTION("low-level driver for ixp4xx Compact Flash PATA");
+>  MODULE_LICENSE("GPL");
+>  MODULE_VERSION(DRV_VERSION);
+> +MODULE_ALIAS("platform:" DRV_NAME);
+>  
+>  module_init(ixp4xx_pata_init);
+>  module_exit(ixp4xx_pata_exit);
+> diff -puN drivers/ata/pata_platform.c~ata-ide-fix-platform-driver-hotplug-coldplug drivers/ata/pata_platform.c
+> --- a/drivers/ata/pata_platform.c~ata-ide-fix-platform-driver-hotplug-coldplug
+> +++ a/drivers/ata/pata_platform.c
+> @@ -277,3 +277,4 @@ MODULE_AUTHOR("Paul Mundt");
+>  MODULE_DESCRIPTION("low-level driver for platform device ATA");
+>  MODULE_LICENSE("GPL");
+>  MODULE_VERSION(DRV_VERSION);
+> +MODULE_ALIAS("platform:" DRV_NAME);
+> diff -puN drivers/ata/pata_rb500_cf.c~ata-ide-fix-platform-driver-hotplug-coldplug drivers/ata/pata_rb500_cf.c
+> --- a/drivers/ata/pata_rb500_cf.c~ata-ide-fix-platform-driver-hotplug-coldplug
+> +++ a/drivers/ata/pata_rb500_cf.c
+> @@ -239,6 +239,9 @@ static __devexit int rb500_pata_driver_r
+>  	return 0;
+>  }
+>  
+> +/* work with hotplug and coldplug */
+> +MODULE_ALIAS("platform:" DRV_NAME);
+> +
+>  static struct platform_driver rb500_pata_platform_driver = {
+>  	.probe		= rb500_pata_driver_probe,
+>  	.remove		= __devexit_p(rb500_pata_driver_remove),
+> diff -puN drivers/ata/sata_mv.c~ata-ide-fix-platform-driver-hotplug-coldplug drivers/ata/sata_mv.c
+> --- a/drivers/ata/sata_mv.c~ata-ide-fix-platform-driver-hotplug-coldplug
+> +++ a/drivers/ata/sata_mv.c
+> @@ -3122,7 +3122,7 @@ MODULE_DESCRIPTION("SCSI low-level drive
+>  MODULE_LICENSE("GPL");
+>  MODULE_DEVICE_TABLE(pci, mv_pci_tbl);
+>  MODULE_VERSION(DRV_VERSION);
+> -MODULE_ALIAS("platform:sata_mv");
+> +MODULE_ALIAS("platform:" DRV_NAME);
+>  
+>  #ifdef CONFIG_PCI
+>  module_param(msi, int, 0444);
+> diff -puN drivers/ide/arm/palm_bk3710.c~ata-ide-fix-platform-driver-hotplug-coldplug drivers/ide/arm/palm_bk3710.c
+> --- a/drivers/ide/arm/palm_bk3710.c~ata-ide-fix-platform-driver-hotplug-coldplug
+> +++ a/drivers/ide/arm/palm_bk3710.c
+> @@ -409,9 +409,13 @@ out:
+>  	return -ENODEV;
+>  }
+>  
+> +/* work with hotplug and coldplug */
+> +MODULE_ALIAS("platform:palm_bk3710");
+> +
+>  static struct platform_driver platform_bk_driver = {
+>  	.driver = {
+>  		.name = "palm_bk3710",
+> +		.owner = THIS_MODULE,
+>  	},
+>  	.probe = palm_bk3710_probe,
+>  	.remove = NULL,
+> diff -puN drivers/ide/legacy/ide_platform.c~ata-ide-fix-platform-driver-hotplug-coldplug drivers/ide/legacy/ide_platform.c
+> --- a/drivers/ide/legacy/ide_platform.c~ata-ide-fix-platform-driver-hotplug-coldplug
+> +++ a/drivers/ide/legacy/ide_platform.c
+> @@ -130,6 +130,7 @@ static int __devexit plat_ide_remove(str
+>  static struct platform_driver platform_ide_driver = {
+>  	.driver = {
+>  		.name = "pata_platform",
+> +		.owner = THIS_MODULE,
+>  	},
+>  	.probe = plat_ide_probe,
+>  	.remove = __devexit_p(plat_ide_remove),
+> @@ -147,6 +148,7 @@ static void __exit platform_ide_exit(voi
+>  
+>  MODULE_DESCRIPTION("Platform IDE driver");
+>  MODULE_LICENSE("GPL");
+> +MODULE_ALIAS("platform:pata_platform");
+>  
+>  module_init(platform_ide_init);
+>  module_exit(platform_ide_exit);
 
 applied
 
