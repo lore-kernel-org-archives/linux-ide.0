@@ -1,62 +1,114 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: libata-eh/pmp command sequence on NCQ media error
-Date: Sat, 26 Apr 2008 01:10:17 +0900
-Message-ID: <48120269.8020101@gmail.com>
-References: <480F9D29.4070603@rtr.ca> <480FF229.2060808@rtr.ca> <481168FA.5020709@pobox.com> <4811E2FB.4040100@rtr.ca>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Subject: [PATCH 3/6] block: rename and export rq_init()
+Date: Sat, 26 Apr 2008 01:23:16 +0900
+Message-ID: <1209140607-28654-4-git-send-email-fujita.tomonori@lab.ntt.co.jp>
+References: <1209140607-28654-1-git-send-email-fujita.tomonori@lab.ntt.co.jp>
+ <1209140607-28654-2-git-send-email-fujita.tomonori@lab.ntt.co.jp>
+ <1209140607-28654-3-git-send-email-fujita.tomonori@lab.ntt.co.jp>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wf-out-1314.google.com ([209.85.200.169]:58024 "EHLO
-	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757440AbYDYQK0 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 25 Apr 2008 12:10:26 -0400
-Received: by wf-out-1314.google.com with SMTP id 28so2962941wff.4
-        for <linux-ide@vger.kernel.org>; Fri, 25 Apr 2008 09:10:26 -0700 (PDT)
-In-Reply-To: <4811E2FB.4040100@rtr.ca>
+Received: from mo10.iij4u.or.jp ([210.138.174.78]:39405 "EHLO mo10.iij4u.or.jp"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757831AbYDYQae (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 25 Apr 2008 12:30:34 -0400
+In-Reply-To: <1209140607-28654-3-git-send-email-fujita.tomonori@lab.ntt.co.jp>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark Lord <liml@rtr.ca>
-Cc: Jeff Garzik <jgarzik@pobox.com>, IDE/ATA development list <linux-ide@vger.kernel.org>
+To: linux-scsi@vger.kernel.org
+Cc: bzolnier@gmail.com, linux-ide@vger.kernel.org, bharrosh@panasas.com, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Jens Axboe <jens.axboe@oracle.com>
 
-Mark Lord wrote:
-> Tejun,
-> 
-> During testing of my internal version of sata_mv.c here,
-> I noticed the following:
-> 
-> With no port-multiplier attached, a media error during NCQ
-> results in an immediate READ_LOG_EXT_10H to retrieve the
-> task file for the failed I/O.
-> 
-> With a port-multiplier, there is instead a flurry of sata_pmp_read()
-> attempts.  I'm guessing that the READ_LOG_EXT_10H would normally
-> then follow those ?
-> 
-> The problem is, on most of the Marvell chips, non-data commands
-> cannot succeed after any kind of error (until after the port is reset),
-> so they fail, and we never then get to the READ_LOG_EXT_10H stage.
-> Oddly, the READ_LOG_EXT_10H command itself is okay (with some errata
-> goodness tossed in).
-> 
-> So, for sata_mv at least, I'd kinda like to have libata-eh attempt
-> the READ_LOG_EXT_10H before it tries to (unsuccessfully) access the
-> per-port SCRs on the PMP.
-> 
-> For now, I'll try and hack something into my local tree to ensure
-> that things will actually work that way around without any other
-> unforseen complications.
-> 
-> But for upstream, I'm thinking maybe a HORKAGE flag or something?
-> I'm still trying to avoid having to pull a lot of libata-eh/pmp code
-> into sata_mv for local customizations.
+This rename rq_init() blk_rq_init() and export it. Any path that hands
+the request to the block layer needs to call it to initialize the
+request.
 
-w00t w00t I thought about that when I wrote NCQ EH.  All you have to do 
-is to export ata_eh_analyze_ncq_error() can call it right after 
-error_handler starts and put the controller into a working state (so 
-that SCR accesses work again).  After it finishes, call the generic 
-handler.  The second time around ata_eh_analyze_ncq_error() will be 
-no-op and you should get what you want.
+This is a preparation for large command support, which needs to
+initialize the request in a proper way (that is, just doing a memset()
+will not work).
 
+Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Cc: Jens Axboe <jens.axboe@oracle.com>
+---
+ block/blk-barrier.c    |    4 ++--
+ block/blk-core.c       |    5 +++--
+ block/blk.h            |    1 -
+ include/linux/blkdev.h |    1 +
+ 4 files changed, 6 insertions(+), 5 deletions(-)
+
+diff --git a/block/blk-barrier.c b/block/blk-barrier.c
+index 722140a..5e2cfe9 100644
+--- a/block/blk-barrier.c
++++ b/block/blk-barrier.c
+@@ -143,7 +143,7 @@ static void queue_flush(struct request_queue *q, unsigned which)
+ 		end_io = post_flush_end_io;
+ 	}
+ 
+-	rq_init(q, rq);
++	blk_rq_init(q, rq);
+ 	rq->cmd_flags = REQ_HARDBARRIER;
+ 	rq->rq_disk = q->bar_rq.rq_disk;
+ 	rq->end_io = end_io;
+@@ -165,7 +165,7 @@ static inline struct request *start_ordered(struct request_queue *q,
+ 	blkdev_dequeue_request(rq);
+ 	q->orig_bar_rq = rq;
+ 	rq = &q->bar_rq;
+-	rq_init(q, rq);
++	blk_rq_init(q, rq);
+ 	if (bio_data_dir(q->orig_bar_rq->bio) == WRITE)
+ 		rq->cmd_flags |= REQ_RW;
+ 	if (q->ordered & QUEUE_ORDERED_FUA)
+diff --git a/block/blk-core.c b/block/blk-core.c
+index e7cdabc..a89adcc 100644
+--- a/block/blk-core.c
++++ b/block/blk-core.c
+@@ -107,7 +107,7 @@ struct backing_dev_info *blk_get_backing_dev_info(struct block_device *bdev)
+ }
+ EXPORT_SYMBOL(blk_get_backing_dev_info);
+ 
+-void rq_init(struct request_queue *q, struct request *rq)
++void blk_rq_init(struct request_queue *q, struct request *rq)
+ {
+ 	memset(rq, 0, sizeof(*rq));
+ 
+@@ -120,6 +120,7 @@ void rq_init(struct request_queue *q, struct request *rq)
+ 	rq->tag = -1;
+ 	rq->ref_count = 1;
+ }
++EXPORT_SYMBOL(blk_rq_init);
+ 
+ static void req_bio_endio(struct request *rq, struct bio *bio,
+ 			  unsigned int nbytes, int error)
+@@ -601,7 +602,7 @@ blk_alloc_request(struct request_queue *q, int rw, int priv, gfp_t gfp_mask)
+ 	if (!rq)
+ 		return NULL;
+ 
+-	rq_init(q, rq);
++	blk_rq_init(q, rq);
+ 
+ 	/*
+ 	 * first three bits are identical in rq->cmd_flags and bio->bi_rw,
+diff --git a/block/blk.h b/block/blk.h
+index ec9120f..59776ab 100644
+--- a/block/blk.h
++++ b/block/blk.h
+@@ -10,7 +10,6 @@
+ extern struct kmem_cache *blk_requestq_cachep;
+ extern struct kobj_type blk_queue_ktype;
+ 
+-void rq_init(struct request_queue *q, struct request *rq);
+ void init_request_from_bio(struct request *req, struct bio *bio);
+ void blk_rq_bio_prep(struct request_queue *q, struct request *rq,
+ 			struct bio *bio);
+diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
+index 8ca481c..d17032c 100644
+--- a/include/linux/blkdev.h
++++ b/include/linux/blkdev.h
+@@ -607,6 +607,7 @@ extern int blk_register_queue(struct gendisk *disk);
+ extern void blk_unregister_queue(struct gendisk *disk);
+ extern void register_disk(struct gendisk *dev);
+ extern void generic_make_request(struct bio *bio);
++extern void blk_rq_init(struct request_queue *q, struct request *rq);
+ extern void blk_put_request(struct request *);
+ extern void __blk_put_request(struct request_queue *, struct request *);
+ extern void blk_end_sync_rq(struct request *rq, int error);
 -- 
-tejun
+1.5.4.2
+
