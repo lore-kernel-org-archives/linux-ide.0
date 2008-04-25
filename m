@@ -1,57 +1,67 @@
 From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH] libata: make WARN_ON conditions in ata_sff_hsm_move()
- more strict
-Date: Fri, 25 Apr 2008 00:47:41 -0400
-Message-ID: <4811626D.2010607@garzik.org>
-References: <480F2214.1070807@gmail.com>
+Subject: Re: [PATCH] ahci: retry enabling AHCI a few times before spitting
+ out WARN_ON()
+Date: Fri, 25 Apr 2008 00:47:53 -0400
+Message-ID: <48116279.6080302@garzik.org>
+References: <480F231A.7020401@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:46546 "EHLO mail.dvmed.net"
+Received: from srv5.dvmed.net ([207.36.208.214]:46545 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751841AbYDYEr4 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	id S1751813AbYDYEr4 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
 	Fri, 25 Apr 2008 00:47:56 -0400
-In-Reply-To: <480F2214.1070807@gmail.com>
+In-Reply-To: <480F231A.7020401@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Tejun Heo <htejun@gmail.com>
-Cc: Mark Lord <liml@rtr.ca>, IDE/ATA development list <linux-ide@vger.kernel.org>, Albert Lee <albertcc@tw.ibm.com>
+Cc: IDE/ATA development list <linux-ide@vger.kernel.org>, Peer Chen <pchen@nvidia.com>, "Hemmann, Volker Armin" <volker.armin.hemmann@tu-clausthal.de>
 
 Tejun Heo wrote:
-> WARN_ON()'s in ata_hsm_move() was too liberal and got triggerred when
-> it shouldn't (e.g. hotplug events at the right moment).  As the HSM
-> only deals with device errors and state machine violations, make it
-> check only against them.
+> Some chips need AHCI_EN set more than once to actually set it.  Try a
+> few times before giving up and spitting out WARN_ON().
 > 
 > Signed-off-by: Tejun Heo <htejun@gmail.com>
-> Cc: Mark Lord <liml@rtr.ca>
-> Cc: Albert Lee <albertcc@tw.ibm.com>
+> Cc: Peer Chen <pchen@nvidia.com>
+> Cc: Volker Armin Hemmann <volker.armin.hemmann@tu-clausthal.de>
 > ---
-> drivers/ata/libata-sff.c |    4 ++--
-> 1 file changed, 2 insertions(+), 2 deletions(-)
+> drivers/ata/ahci.c |   15 +++++++++++++--
+> 1 file changed, 13 insertions(+), 2 deletions(-)
 > 
-> diff --git a/drivers/ata/libata-sff.c b/drivers/ata/libata-sff.c
-> index 1549952..2ec65a8 100644
-> --- a/drivers/ata/libata-sff.c
-> +++ b/drivers/ata/libata-sff.c
-> @@ -1208,7 +1208,7 @@ fsm_start:
->         DPRINTK("ata%u: dev %u command complete, drv_stat 0x%x\n",
->             ap->print_id, qc->dev->devno, status);
+> diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+> index 739ba3f..711b5d7 100644
+> --- a/drivers/ata/ahci.c
+> +++ b/drivers/ata/ahci.c
+> @@ -556,16 +556,27 @@ static inline void __iomem *ahci_port_base(struct 
+> ata_port *ap)
 > 
-> -        WARN_ON(qc->err_mask);
-> +        WARN_ON(qc->err_mask & (AC_ERR_DEV | AC_ERR_HSM));
+> static void ahci_enable_ahci(void __iomem *mmio)
+> {
+> +    int i;
+>     u32 tmp;
 > 
->         ap->hsm_task_state = HSM_ST_IDLE;
-> 
-> @@ -1222,7 +1222,7 @@ fsm_start:
->         /* make sure qc->err_mask is available to
->          * know what's wrong and recover
->          */
-> -        WARN_ON(qc->err_mask == 0);
-> +        WARN_ON(!(qc->err_mask & (AC_ERR_DEV | AC_ERR_HSM)));
-> 
->         ap->hsm_task_state = HSM_ST_IDLE;
+>     /* turn on AHCI_EN */
+>     tmp = readl(mmio + HOST_CTL);
+> -    if (!(tmp & HOST_AHCI_EN)) {
+> +    if (tmp & HOST_AHCI_EN)
+> +        return;
+> +
+> +    /* Some controllers need AHCI_EN to be written multiple times.
+> +     * Try a few times before giving up.
+> +     */
+> +    for (i = 0; i < 5; i++) {
+>         tmp |= HOST_AHCI_EN;
+>         writel(tmp, mmio + HOST_CTL);
+>         tmp = readl(mmio + HOST_CTL);    /* flush && sanity check */
+> -        WARN_ON(!(tmp & HOST_AHCI_EN));
+> +        if (tmp & HOST_AHCI_EN)
+> +            return;
+> +        msleep(10);
+>     }
+> +
+> +    WARN_ON(1);
+> }
 
 applied
 
