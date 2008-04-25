@@ -1,51 +1,28 @@
-From: "Bryan Wu" <cooloney@kernel.org>
-Subject: Re: [PATCH 2/3] [libata/BF54x]: Fix bug - Implement bfin ata interrupt handler to avoid "irq 68 nobody cared"
-Date: Fri, 25 Apr 2008 14:27:17 +0800
-Message-ID: <386072610804242327g18b28ef4wa8893c0756764103@mail.gmail.com>
-References: <1209094676-20360-1-git-send-email-cooloney@kernel.org>
-	 <1209094676-20360-3-git-send-email-cooloney@kernel.org>
-	 <48116965.7030705@pobox.com>
+From: Christian Zankel <chris@zankel.net>
+Subject: Re: [2.6 patch] xtensa: don't offer ATA
+Date: Fri, 25 Apr 2008 00:58:45 -0700
+Message-ID: <48118F35.3030102@zankel.net>
+References: <20080414195521.GB26885@cs181133002.pp.htv.fi> <4807A771.2020405@pobox.com> <20080421193927.GA2633@cs181133002.pp.htv.fi>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from yw-out-2324.google.com ([74.125.46.29]:58284 "EHLO
-	yw-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755862AbYDYG1S (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 25 Apr 2008 02:27:18 -0400
-Received: by yw-out-2324.google.com with SMTP id 5so468644ywh.1
-        for <linux-ide@vger.kernel.org>; Thu, 24 Apr 2008 23:27:18 -0700 (PDT)
-In-Reply-To: <48116965.7030705@pobox.com>
-Content-Disposition: inline
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1760691AbYDYH67@vger.kernel.org>
+In-Reply-To: <20080421193927.GA2633@cs181133002.pp.htv.fi>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Adrian Bunk <bunk@kernel.org>
+Cc: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Sonic Zhang <sonic.zhang@analog.com>
 
-On Fri, Apr 25, 2008 at 1:17 PM, Jeff Garzik <jgarzik@pobox.com> wrote:
-> Bryan Wu wrote:
->
-> > From: Sonic Zhang <sonic.zhang@analog.com>
-> >
-> > Return IRQ_HANDLED when bfin ata device is busy.
-> >
-> http://blackfin.uclinux.org/gf/project/uclinux-dist/tracker/?action=TrackerItemEdit&tracker_item_id=3513
-> >
-> > Signed-off-by: Sonic Zhang <sonic.zhang@analog.com>
-> > Signed-off-by: Bryan Wu <cooloney@kernel.org>
-> > ---
-> >  drivers/ata/pata_bf54x.c |  125
-> ++++++++++++++++++++++++++++++++++++++++++++--
-> >  1 files changed, 121 insertions(+), 4 deletions(-)
-> >
->
->  AFAICS the two new functions you add should be (a) marked 'static' and (b)
-> not marked 'inline'.
->
->  We avoid inline these days, preferring to let the compiler make the best
-> choice for that platform/CPU.
->
+Hi Adrian,
 
-No problem, I will fix it.
+Adrian Bunk wrote:
+>> XTENSA offers HAS_IOMEM but not iomem functions?  That seems like the  
+>> problem to me.
+> 
+> Chris, can you comment on this?
 
--Bryan
+Yes, the iomem functions are missing. I finally have a board that allows 
+me to test io functionality. I don't just want to add the functions 
+without having the chance to test them.
+
+-Chris
