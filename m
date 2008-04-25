@@ -1,65 +1,64 @@
 From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [2.6 patch] libata-acpi.c: remove unneeded #if's
-Date: Fri, 25 Apr 2008 00:48:20 -0400
-Message-ID: <48116294.80106@garzik.org>
-References: <20080421225035.GK2633@cs181133002.pp.htv.fi>
+Subject: Re: [PATCH #upstream-fixes] sata_nv: make hardreset return -EAGAIN
+ on success
+Date: Fri, 25 Apr 2008 00:48:13 -0400
+Message-ID: <4811628D.20605@garzik.org>
+References: <480EA97D.8080704@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:46572 "EHLO mail.dvmed.net"
+Received: from srv5.dvmed.net ([207.36.208.214]:46577 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751523AbYDYEsW (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 25 Apr 2008 00:48:22 -0400
-In-Reply-To: <20080421225035.GK2633@cs181133002.pp.htv.fi>
+	id S1753131AbYDYEs1 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 25 Apr 2008 00:48:27 -0400
+In-Reply-To: <480EA97D.8080704@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Adrian Bunk <bunk@kernel.org>
-Cc: Tejun Heo <htejun@gmail.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: marc.c.dionne@gmail.com, Petr Vandrovec <vandrove@vc.cvut.cz>, Roland Dreier <rdreier@cisco.com>, IDE/ATA development list <linux-ide@vger.kernel.org>
 
-Adrian Bunk wrote:
-> These #if's are unneeded since they:
-> - did anyway not handle the CONFIG_ACPI_DOCK_MODULE case correctly and
-> - this is already handled in include/acpi/acpi_drivers.h and
-> - it's now correctly handled in kconfig.
+Tejun Heo wrote:
+> sata_nv hardreset can't classify but was left out while unifying
+> follow-up SRST request mechanism[1].  This caused detection failures
+> on those controllers.  Fix it.
 > 
-> Signed-off-by: Adrian Bunk <bunk@kernel.org>
-> Acked-by: Tejun Heo <htejun@gmail.com>
+> Reported and bisected by Roland Dreier, Petr Vandrovec and Marc
+> Dionne.  Thanks guys.
 > 
+> [1] 305d2a1ab137d11d573319c315748a87060fe82d
+> 
+> Signed-off-by: Tejun Heo <htejun@gmail.com>
+> Cc: Roland Dreier <rdreier@cisco.com>
+> Cc: Petr Vandrovec <vandrove@vc.cvut.cz>
+> Cc: Marc Dionne <marc.c.dionne@gmail.com>
 > ---
+> It actually was a single fall out I missed.  This is the proper fix
+> and verfied on ck804.
 > 
-> This patch has been sent on:
-> - 14 Apr 2008
-> - 31 Mar 2008
+> diff --git a/drivers/ata/sata_nv.c b/drivers/ata/sata_nv.c
+> index 109b074..858f706 100644
+> --- a/drivers/ata/sata_nv.c
+> +++ b/drivers/ata/sata_nv.c
+> @@ -1591,13 +1591,16 @@ static void nv_mcp55_thaw(struct ata_port *ap)
+> static int nv_hardreset(struct ata_link *link, unsigned int *class,
+>             unsigned long deadline)
+> {
+> -    unsigned int dummy;
+> +    int rc;
 > 
->  drivers/ata/libata-acpi.c |    4 ----
->  1 file changed, 4 deletions(-)
-> 
-> 2a7326b50cd80e6570803d4efb7bc15e029e61e3 diff --git a/drivers/ata/libata-acpi.c b/drivers/ata/libata-acpi.c
-> index bf98a56..1db912e 100644
-> --- a/drivers/ata/libata-acpi.c
-> +++ b/drivers/ata/libata-acpi.c
-> @@ -227,11 +227,9 @@ void ata_acpi_associate(struct ata_host *host)
->  			acpi_install_notify_handler(ap->acpi_handle,
->  						    ACPI_SYSTEM_NOTIFY,
->  						    ata_acpi_ap_notify, ap);
-> -#if defined(CONFIG_ACPI_DOCK) || defined(CONFIG_ACPI_DOCK_MODULE)
->  			/* we might be on a docking station */
->  			register_hotplug_dock_device(ap->acpi_handle,
->  						     ata_acpi_ap_notify, ap);
-> -#endif
->  		}
->  
->  		for (j = 0; j < ata_link_max_devices(&ap->link); j++) {
-> @@ -241,11 +239,9 @@ void ata_acpi_associate(struct ata_host *host)
->  				acpi_install_notify_handler(dev->acpi_handle,
->  						ACPI_SYSTEM_NOTIFY,
->  						ata_acpi_dev_notify, dev);
-> -#if defined(CONFIG_ACPI_DOCK) || defined(CONFIG_ACPI_DOCK_MODULE)
->  				/* we might be on a docking station */
->  				register_hotplug_dock_device(dev->acpi_handle,
->  						ata_acpi_dev_notify, dev);
-> -#endif
+>     /* SATA hardreset fails to retrieve proper device signature on
+> -     * some controllers.  Don't classify on hardreset.  For more
+> -     * info, see http://bugzilla.kernel.org/show_bug.cgi?id=3352
+> +     * some controllers.  Request follow up SRST.  For more info,
+> +     * see http://bugzilla.kernel.org/show_bug.cgi?id=3352
+>      */
+> -    return sata_sff_hardreset(link, &dummy, deadline);
+> +    rc = sata_sff_hardreset(link, class, deadline);
+> +    if (rc)
+> +        return rc;
+> +    return -EAGAIN;
+> }
 
 applied
 
