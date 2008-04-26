@@ -1,143 +1,81 @@
-From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: Re: [PATCH 2/6] block: no need to initialize rq->cmd
-	with blk_get_request
-Date: Sat, 26 Apr 2008 03:35:11 +0900
-Message-ID: <20080426033504U.tomof@acm.org>
-References: <1209141901.3087.17.camel@localhost.localdomain>
-	<20080426015440M.tomof@acm.org>
-	<1209142784.3087.25.camel@localhost.localdomain>
-Reply-To: device-mapper development <dm-devel@redhat.com>
+From: Jody McIntyre <scjody@sun.com>
+Subject: sata_mv performance; impact of NCQ
+Date: Fri, 25 Apr 2008 20:16:58 -0400
+Message-ID: <20080426001657.GD17369@modernduck.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
-Return-path: <dm-devel-bounces@redhat.com>
-In-Reply-To: <1209142784.3087.25.camel@localhost.localdomain>
-List-Unsubscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
-List-Archive: <https://www.redhat.com/archives/dm-devel>
-List-Post: <mailto:dm-devel@redhat.com>
-List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
-List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=subscribe>
-Sender: dm-devel-bounces@redhat.com
-Errors-To: dm-devel-bounces@redhat.com
-To: James.Bottomley@HansenPartnership.com, dm-devel@redhat.com
-Cc: linux-scsi@vger.kernel.org, bzolnier@gmail.com, jens.axboe@oracle.com, fujita.tomonori@lab.ntt.co.jp, linux-ide@vger.kernel.org, bharrosh@panasas.com, agk@redhat.com
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7BIT
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from sca-es-mail-2.Sun.COM ([192.18.43.133]:57990 "EHLO
+	sca-es-mail-2.sun.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753767AbYDZAXU (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 25 Apr 2008 20:23:20 -0400
+Received: from fe-sfbay-10.sun.com ([192.18.43.129])
+	by sca-es-mail-2.sun.com (8.13.7+Sun/8.12.9) with ESMTP id m3Q0H0aE001487
+	for <linux-ide@vger.kernel.org>; Fri, 25 Apr 2008 17:17:00 -0700 (PDT)
+Received: from conversion-daemon.fe-sfbay-10.sun.com by fe-sfbay-10.sun.com
+ (Sun Java System Messaging Server 6.2-8.04 (built Feb 28 2007))
+ id <0JZW00301ON1OE00@fe-sfbay-10.sun.com> (original mail from scjody@sun.com)
+ for linux-ide@vger.kernel.org; Fri, 25 Apr 2008 17:17:00 -0700 (PDT)
+Received: from shinkansen.modernduck.com ([69.70.209.248])
+ by fe-sfbay-10.sun.com
+ (Sun Java System Messaging Server 6.2-8.04 (built Feb 28 2007))
+ with ESMTPSA id <0JZW002W7OSAE3B0@fe-sfbay-10.sun.com> for
+ linux-ide@vger.kernel.org; Fri, 25 Apr 2008 17:17:00 -0700 (PDT)
+Content-disposition: inline
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-On Fri, 25 Apr 2008 11:59:44 -0500
-James Bottomley <James.Bottomley@HansenPartnership.com> wrote:
+I have completed several performance tests of the Marvell SATA
+controllers (6x MV88SX6081) in a Sun x4500 (Thumper) system.  The
+complete results are available from:
+http://downloads.lustre.org/people/scjody/thumper-kernel-comparison-01.ods
 
-> On Sat, 2008-04-26 at 01:54 +0900, FUJITA Tomonori wrote:
-> > On Fri, 25 Apr 2008 11:45:01 -0500
-> > James Bottomley <James.Bottomley@HansenPartnership.com> wrote:
-> > 
-> > > On Sat, 2008-04-26 at 01:23 +0900, FUJITA Tomonori wrote:
-> > > > blk_get_request initializes rq->cmd (rq_init does) so the users don't
-> > > > need to do that.
-> > > > 
-> > > > The purpose of this patch is to remove sizeof(rq->cmd) and &rq->cmd,
-> > > > as a preparation for large command support, which changes rq->cmd from
-> > > > the static array to a pointer. sizeof(rq->cmd) will not make sense and
-> > > > &rq->cmd won't work.
-> > > > 
-> > > > Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-> > > > Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
-> > > > Cc: Alasdair G Kergon <agk@redhat.com>
-> > > > Cc: Jens Axboe <jens.axboe@oracle.com>
-> > > > ---
-> > > >  block/scsi_ioctl.c          |    3 ---
-> > > >  drivers/block/pktcdvd.c     |    2 --
-> > > >  drivers/cdrom/cdrom.c       |    1 -
-> > > 
-> > > These:
-> > > 
-> > > >  drivers/md/dm-emc.c         |    2 --
-> > > >  drivers/md/dm-mpath-hp-sw.c |    1 -
-> > > >  drivers/md/dm-mpath-rdac.c  |    1 -
-> > > 
-> > > Conflict with this set of patches:
-> > > 
-> > > http://git.kernel.org/?p=linux/kernel/git/jejb/scsi-pending-2.6.git;a=summary
-> > > 
-> > > Which move the dm pieces to being request based.  The patch series
-> > > hasn't had an ACK yet from Alasdair, but it would be nice if you could
-> > > look it over and see if it needs the memsets pulling out.
-> > 
-> > Seems that it needs the memsets pulling out. For example,
-> > 
-> > [PATCH 2/7] scsi_dh: add lsi rdac device handler has:
-> > 
-> > +	memset(&rq->cmd, 0, BLK_MAX_CDB);
-> > 
-> > 
-> > Do you want a patch against scsi-pending?
-> 
-> Yes please ...
+My ultimate goal is to replace mv_sata (the out-of-tree vendor driver)
+on RHEL 4 with sata_mv on a modern kernel, and to do this I need
+equivalent or better performance, especially on large (1MB) IOs.
 
-You can apply this for scsi-pending now.
+I note the recent changes to enable NCQ result in a net performance gain
+for 64K and 128K IOs, but due to a chipset limitation in the 6xxx series
+(according to commit f273827e2aadcf2f74a7bdc9ad715a1b20ea7dda),
+max_sectors is now limited which means we can no longer perform IOs
+greater than 128K (ENOMEM is returned from an sg write.)  Therefore
+large IO performance suffers - for example, the performance of 2.6.25
+with NCQ support removed on 1MB IOs is better than anything possible
+with stock 2.6.25 for many workloads.
 
-scsi_dh will not be merge for 2.6.26, the original patch needs to be
-merged. If scsi_dh will, then we can drop the original patch since we
-can live without the changes to scsi_ioctl.c, pktcdvd.c, and cdrom.c
-(sizeof(rq->cmd) doesn't make sense but it doesn't hurt us).
+Would it be worth re-enabling large IOs on this hardware when NCQ is
+disabled (using the queue_depth /proc variable)?  If so I'll come up
+with a patch.
 
-==
-From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: [PATCH] scsi_dh: no need to initialize rq->cmd with blk_get_request
+Does anyone know what mv_sata does about NCQ?  I see references to NCQ
+throughout the code but I don't yet understand it enough to determine
+what's going on.  mv_sata _does_ support IOs greater than 128K, which
+suggests that it does not use NCQ on this hardware at least.
 
-blk_get_request initializes rq->cmd (rq_init does) so the users don't
-need to do that.
+Any advice on areas to explore to improve sata_mv's performance?  I
+imagine I need to understand what mv_sata does differently, and plan on
+spending some time reading that code, but I'd appreciate more specific
+ideas if anyone has them.
 
-The purpose of this patch is to remove &rq->cmd, as a preparation for
-large command support, which changes rq->cmd from the static array to
-a pointer. &rq->cmd won't work.
+Details on the tests I performed:
 
-Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Cc: Jens Axboe <jens.axboe@oracle.com>
-Cc: Alasdair G Kergon <agk@redhat.com>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
----
- drivers/scsi/device_handler/scsi_dh_emc.c   |    1 -
- drivers/scsi/device_handler/scsi_dh_hp_sw.c |    1 -
- drivers/scsi/device_handler/scsi_dh_rdac.c  |    1 -
- 3 files changed, 0 insertions(+), 3 deletions(-)
+I used the sgpdd-survey tool, a low level performance test from the
+Lustre iokit.  It can be downloaded from:
+http://downloads.lustre.org/public/tools/lustre-iokit/ .  The tool
+performs timed sgp_dd commands using various IO sizes, region counts,
+and thread counts and reports aggregate bandwidth.  These results were
+then graphed using a spreadsheet.
 
-diff --git a/drivers/scsi/device_handler/scsi_dh_emc.c b/drivers/scsi/device_handler/scsi_dh_emc.c
-index 71d20c8..df7992c 100644
---- a/drivers/scsi/device_handler/scsi_dh_emc.c
-+++ b/drivers/scsi/device_handler/scsi_dh_emc.c
-@@ -258,7 +258,6 @@ static struct request *get_req(struct scsi_device *sdev, int cmd)
- 		return NULL;
- 	}
- 
--	memset(&rq->cmd, 0, BLK_MAX_CDB);
- 	rq->cmd[0] = cmd;
- 	rq->cmd_len = COMMAND_SIZE(rq->cmd[0]);
- 
-diff --git a/drivers/scsi/device_handler/scsi_dh_hp_sw.c b/drivers/scsi/device_handler/scsi_dh_hp_sw.c
-index d1b66c3..7abea59 100644
---- a/drivers/scsi/device_handler/scsi_dh_hp_sw.c
-+++ b/drivers/scsi/device_handler/scsi_dh_hp_sw.c
-@@ -91,7 +91,6 @@ static int hp_sw_activate(struct scsi_device *sdev)
- 	req->cmd_type = REQ_TYPE_BLOCK_PC;
- 	req->cmd_flags |= REQ_FAILFAST;
- 	req->cmd_len = COMMAND_SIZE(START_STOP);
--	memset(req->cmd, 0, MAX_COMMAND_SIZE);
- 	req->cmd[0] = START_STOP;
- 	req->cmd[4] = 1;	/* Start spin cycle */
- 	req->timeout = HP_SW_TIMEOUT;
-diff --git a/drivers/scsi/device_handler/scsi_dh_rdac.c b/drivers/scsi/device_handler/scsi_dh_rdac.c
-index 1bf9cf8..3af8fa9 100644
---- a/drivers/scsi/device_handler/scsi_dh_rdac.c
-+++ b/drivers/scsi/device_handler/scsi_dh_rdac.c
-@@ -214,7 +214,6 @@ static struct request *get_rdac_req(struct scsi_device *sdev,
- 		return NULL;
- 	}
- 
--	memset(&rq->cmd, 0, BLK_MAX_CDB);
- 	rq->sense = h->sense;
- 	memset(rq->sense, 0, SCSI_SENSE_BUFFERSIZE);
- 	rq->sense_len = 0;
+Note that the largest thread count measured is not the same on all
+graphs.  For some reason, write() to the sg device returns ENOMEM to
+some sgp_dd threads when large numbers of threads are run on recent
+kernels.  The problem does not exist with the RHEL 4 kernel.  I have not
+yet investigated why this happens.
+
+Cheers,
+Jody
+
 -- 
-1.5.4.2
+Jody McIntyre - Linux Kernel Engineer, Sun HPC
