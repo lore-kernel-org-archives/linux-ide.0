@@ -1,33 +1,54 @@
-From: Andrew Morton <akpm@linux-foundation.org>
-Subject: Re: [BUG REPORT, 2.6.22] sata controler failure on nforce 2 chipset
-Date: Fri, 25 Apr 2008 23:11:08 -0700
-Message-ID: <20080425231108.03dfa7cb.akpm@linux-foundation.org>
-References: <396712385.20080423011459@3d-io.com>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [PATCH] ata: Add Intel SCH PATA support
+Date: Sat, 26 Apr 2008 10:30:12 +0100
+Message-ID: <20080426103012.21dcf0fb@core>
+References: <20080426140007.63cfeede@dxy.sh.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:38189 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751836AbYDZGMB (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 26 Apr 2008 02:12:01 -0400
-In-Reply-To: <396712385.20080423011459@3d-io.com>
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:42336 "EHLO
+	lxorguk.ukuu.org.uk" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1752742AbYDZJhO (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 26 Apr 2008 05:37:14 -0400
+In-Reply-To: <20080426140007.63cfeede@dxy.sh.intel.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: speedy <speedy@3d-io.com>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: Alek Du <alek.du@intel.com>
+Cc: linux-ide@vger.kernel.org, jgarzik@pobox.com
 
-> On Wed, 23 Apr 2008 01:14:59 +0200 speedy <speedy@3d-io.com> wrote:
-> Hello Linux kernel crew,
+> +struct sch_80 {
+> +       u16 device;
+> +};
+
+That seems somewhat overkill
+
+> +       /* Check for specials - Intel SCH chipset */
+> +       while (sch->device) {
+> +               if (sch->device == pdev->device)
+> +                       return ATA_CBL_PATA80;
+> +               sch++;
+
+PATA_80 means "controller *knows* we are 80 wire". PATA_UNK means
+"controller can't do detect."
+
+> +       /* Check for specials - Intel SCH chipset */
+> +       while (sch->device) {
+> +               if (sch->device == pdev->device) {
+> +                       skip_check = 1;
+> +                       break;
+> +               }
+> +               sch++;
+
+This is horrible. If you just defined a new set of methods for your new
+controller (remembering we now have inheritance anyway) you'd just use
+the ata_sff_prereset and remove all the special casing code. At the very
+least write the routine once only;)
+
+> +       }
+> +       if (!skip_check)
+> +               if (!pci_test_config_bits(pdev, &piix_enable_bits[ap->port_no]))
+> +                       return -ENOENT;
+>         return ata_sff_prereset(link, deadline);
+>  }
 > 
->        [Consider this more as a datapoint then a bug report, as after
->        one network and one sata/southbridge issues showing up
->        interminnently, the ASRock motherboard involved will be
->        scrapped for a different one]
-> 
->        The integrated NVidia sata controller and/or the hard-drive has failed
->        during operation with the following output:
-
-2.6.22 is rather old.  Can you please retest 2.6.25?
-
-Thanks.
