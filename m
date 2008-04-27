@@ -1,7 +1,7 @@
 From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
 Subject: Re: [RFC 0/5] block large commands support continue
-Date: Sun, 27 Apr 2008 17:42:48 +0900
-Message-ID: <20080427173939F.tomof@acm.org>
+Date: Sun, 27 Apr 2008 17:42:49 +0900
+Message-ID: <20080427174325C.tomof@acm.org>
 References: <20080425093141.GK12774@kernel.dk>
 	<20080425190349I.tomof@acm.org>
 	<481438AC.2080707@panasas.com>
@@ -9,9 +9,9 @@ Mime-Version: 1.0
 Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mo10.iij4u.or.jp ([210.138.174.78]:52854 "EHLO mo10.iij4u.or.jp"
+Received: from mo11.iij4u.or.jp ([210.138.174.79]:46427 "EHLO mo11.iij4u.or.jp"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753896AbYD0Inm (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	id S1753920AbYD0Inm (ORCPT <rfc822;linux-ide@vger.kernel.org>);
 	Sun, 27 Apr 2008 04:43:42 -0400
 In-Reply-To: <481438AC.2080707@panasas.com>
 Sender: linux-ide-owner@vger.kernel.org
@@ -136,7 +136,7 @@ interface is:
 
 +void blk_init_rq(struct request_queue *q, struct request *rq, int cmd_flags)
 
-I don't like that. It's hacky. You needed that hacky inferface since
+I don't like that. It's hacky. You needed that hacky inferface because
 you didn't fix the root problem, rq_init was not able to do a full
 memset().
 
@@ -153,4 +153,4 @@ Then, we have the same interface as before:
 > If you are going to export the rq_init function then I think the name is very
 > wrong. And you have not exported it?
 
-It was renamed blk_rq_init.
+It was renamed blk_rq_init since we have lots of blk_rq_* functions.
