@@ -1,63 +1,45 @@
-From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: Re: [PATCH 6/6] block: add large command support
-Date: Sun, 27 Apr 2008 14:43:05 +0300
-Message-ID: <481466C9.70603@panasas.com>
-References: <1209140607-28654-1-git-send-email-fujita.tomonori@lab.ntt.co.jp> <1209140607-28654-2-git-send-email-fujita.tomonori@lab.ntt.co.jp> <1209140607-28654-3-git-send-email-fujita.tomonori@lab.ntt.co.jp> <1209140607-28654-4-git-send-email-fujita.tomonori@lab.ntt.co.jp> <1209140607-28654-5-git-send-email-fujita.tomonori@lab.ntt.co.jp> <1209140607-28654-6-git-send-email-fujita.tomonori@lab.ntt.co.jp> <1209140607-28654-7-git-send-email-fujita.tomonori@lab.ntt.co.jp>
+From: "Bryan Wu" <cooloney@kernel.org>
+Subject: Re: [PATCH 1/1] [libata/BF54x]: Fix bug - Implement bfin ata interrupt handler to avoid "irq 68 nobody cared" (v2)
+Date: Sun, 27 Apr 2008 21:53:58 +0800
+Message-ID: <386072610804270653vdfd2cf3g30a07ee41d6e9c0d@mail.gmail.com>
+References: <1209115165-24995-1-git-send-email-cooloney@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <1209140607-28654-7-git-send-email-fujita.tomonori@lab.ntt.co.jp>
-Sender: linux-scsi-owner@vger.kernel.org
-To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Jens Axboe <jens.axboe@oracle.com>
-Cc: linux-scsi@vger.kernel.org, bzolnier@gmail.com, linux-ide@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from yw-out-2324.google.com ([74.125.46.31]:2426 "EHLO
+	yw-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754057AbYD0NyF (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 27 Apr 2008 09:54:05 -0400
+Received: by yw-out-2324.google.com with SMTP id 5so858097ywh.1
+        for <linux-ide@vger.kernel.org>; Sun, 27 Apr 2008 06:53:58 -0700 (PDT)
+In-Reply-To: <1209115165-24995-1-git-send-email-cooloney@kernel.org>
+Content-Disposition: inline
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: jgarzik@pobox.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: Sonic Zhang <sonic.zhang@analog.com>, Bryan Wu <cooloney@kernel.org>
 
-On Fri, Apr 25 2008 at 19:23 +0300, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp> wrote:
-> This patch changes rq->cmd from the static array to a pointer to
-> support large commands.
-> 
-> We rarely handle large commands. So for optimization, a struct request
-> still has a static array for a command. rq_init sets rq->cmd pointer
-> to the static array.
-> 
-> Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-> Cc: Jens Axboe <jens.axboe@oracle.com>
+On Fri, Apr 25, 2008 at 5:19 PM, Bryan Wu <cooloney@kernel.org> wrote:
+> From: Sonic Zhang <sonic.zhang@analog.com>
+>
+>  Return IRQ_HANDLED when bfin ata device is busy.
+>  http://blackfin.uclinux.org/gf/project/uclinux-dist/tracker/?action=TrackerItemEdit&tracker_item_id=3513
+>
+>  v1-v2:
+>   - fold api breakage fixing patch together.
+>   - mark 'static', not 'inline'.
+>
+>  Signed-off-by: Sonic Zhang <sonic.zhang@analog.com>
+>  Signed-off-by: Bryan Wu <cooloney@kernel.org>
+>  ---
+>   drivers/ata/pata_bf54x.c |  124 ++++++++++++++++++++++++++++++++++++++++++++--
+>   1 files changed, 120 insertions(+), 4 deletions(-)
+>
 
-Please, if not to late, add:
-Cc: Boaz Harrosh <bharrosh@panasas.com>
+Hi Jeff,
 
-> ---
->  block/blk-core.c       |    1 +
->  include/linux/blkdev.h |    5 +++--
->  2 files changed, 4 insertions(+), 2 deletions(-)
-> 
-> diff --git a/block/blk-core.c b/block/blk-core.c
-> index a89adcc..35ae1c0 100644
-> --- a/block/blk-core.c
-> +++ b/block/blk-core.c
-> @@ -117,6 +117,7 @@ void blk_rq_init(struct request_queue *q, struct request *rq)
->  	rq->sector = rq->hard_sector = (sector_t) -1;
->  	INIT_HLIST_NODE(&rq->hash);
->  	RB_CLEAR_NODE(&rq->rb_node);
-> +	rq->cmd = rq->__cmd;
->  	rq->tag = -1;
->  	rq->ref_count = 1;
->  }
-> diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
-> index d17032c..08df1ea 100644
-> --- a/include/linux/blkdev.h
-> +++ b/include/linux/blkdev.h
-> @@ -215,8 +215,9 @@ struct request {
->  	/*
->  	 * when request is used as a packet command carrier
->  	 */
-> -	unsigned int cmd_len;
-> -	unsigned char cmd[BLK_MAX_CDB];
-> +	unsigned short cmd_len;
-> +	unsigned char __cmd[BLK_MAX_CDB];
-> +	unsigned char *cmd;
->  
->  	unsigned int data_len;
->  	unsigned int extra_len;	/* length of alignment and padding */
+Is this V2 updated patch OK for you?
 
+Thanks
+-Bryan
