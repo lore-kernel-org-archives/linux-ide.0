@@ -1,45 +1,36 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [PATCH] siimage: coding style cleanup (take 2)
-Date: Sun, 27 Apr 2008 21:34:49 +0200
-Message-ID: <200804272134.50035.bzolnier@gmail.com>
-References: <200804222056.38802.sshtylyov@ru.mvista.com> <480E1C28.6090307@superbug.co.uk>
+From: Sam Ravnborg <sam@ravnborg.org>
+Subject: Re: [2.6 patch] ARM: always select HAVE_IDE
+Date: Sun, 27 Apr 2008 22:29:29 +0200
+Message-ID: <20080427202929.GB32762@uranus.ravnborg.org>
+References: <20080414141659.GF6695@cs181133002.pp.htv.fi> <20080417110005.GE1449@flint.arm.linux.org.uk> <20080417132507.GA9314@cs181133002.pp.htv.fi> <200804272032.44273.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.159]:25296 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1763358AbYD0TyT (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 27 Apr 2008 15:54:19 -0400
-Received: by fg-out-1718.google.com with SMTP id l27so4628225fgb.17
-        for <linux-ide@vger.kernel.org>; Sun, 27 Apr 2008 12:54:18 -0700 (PDT)
-In-Reply-To: <480E1C28.6090307@superbug.co.uk>
+Received: from pasmtpa.tele.dk ([80.160.77.114]:42352 "EHLO pasmtpA.tele.dk"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750905AbYD0U24 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 27 Apr 2008 16:28:56 -0400
 Content-Disposition: inline
+In-Reply-To: <200804272032.44273.bzolnier@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: James Courtier-Dutton <James@superbug.co.uk>
-Cc: Sergei Shtylyov <sshtylyov@ru.mvista.com>, linux-ide@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: Adrian Bunk <bunk@kernel.org>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linux-pcmcia@lists.infradead.org
 
-On Tuesday 22 April 2008, James Courtier-Dutton wrote:
-> Sergei Shtylyov wrote:
-> >
-> >  	/* return 1 if Device INTR asserted */
-> >  	pci_read_config_byte(dev, addr, &dma_altstat);
-> >  	if (dma_altstat & 8)
-> > -		return 0;	//return 1;
-> > +		return 0;	/* return 1; */
-> > +
-> >  	return 0;
-> >  }
-> >  
-> >   
-> This bit of code looks strange.
-> The comment says return 1, but the return has been commented to return 0.
-> But, if we return 0, why bother with the if test anyway?
+> > 
+> > I do actually not care much how this gets resolved (we could even 
+> > ditch HAVE_IDE and provide asm/ide.h on all architectures) if there's 
+> > general agreement that this is the way to go.
+> 
+> Seems like a way to go now that all crazy IDE core code vs arch code
+> inter-dependiences have been fixed (the ideal solution would be to ditch
+> asm/ide.h completely but this requires some more time/work).
 
-Seems like we should remove this test (and the similar one in
-siimage_mmio_dma_test_irq) for now?  Care to send a patch?
+I invented HAVE_IDE in the past to make it trivial for arm to
+use drivers/Kconfig.
+And that incentive are not broken by your suggestion so fine with me.
 
-Thanks,
-Bart
+But I really do not know about s390. They were the only one
+without IDE in the past.
+
+	Sam
