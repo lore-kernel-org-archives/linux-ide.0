@@ -1,36 +1,54 @@
-From: Sam Ravnborg <sam@ravnborg.org>
-Subject: Re: [2.6 patch] ARM: always select HAVE_IDE
-Date: Sun, 27 Apr 2008 22:29:29 +0200
-Message-ID: <20080427202929.GB32762@uranus.ravnborg.org>
-References: <20080414141659.GF6695@cs181133002.pp.htv.fi> <20080417110005.GE1449@flint.arm.linux.org.uk> <20080417132507.GA9314@cs181133002.pp.htv.fi> <200804272032.44273.bzolnier@gmail.com>
+From: Alek Du <alek.du@intel.com>
+Subject: Re: [PATCH] ata: Add Intel SCH PATA support
+Date: Mon, 28 Apr 2008 09:20:56 +0800
+Message-ID: <20080428092056.1e710a45@dxy.sh.intel.com>
+References: <20080426140007.63cfeede@dxy.sh.intel.com>
+	<20080426103012.21dcf0fb@core>
+	<20080427075115.3ea40204@dxy.sh.intel.com>
+	<20080427093434.182a2137@core>
+	<20080427220315.794a6df3@dxy.sh.intel.com>
+	<20080427153111.3438dce8@core>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from pasmtpa.tele.dk ([80.160.77.114]:42352 "EHLO pasmtpA.tele.dk"
+Received: from mga09.intel.com ([134.134.136.24]:35452 "EHLO mga09.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750905AbYD0U24 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 27 Apr 2008 16:28:56 -0400
-Content-Disposition: inline
-In-Reply-To: <200804272032.44273.bzolnier@gmail.com>
+	id S1752620AbYD1B1p (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 27 Apr 2008 21:27:45 -0400
+In-Reply-To: <20080427153111.3438dce8@core>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: Adrian Bunk <bunk@kernel.org>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linux-pcmcia@lists.infradead.org
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: linux-ide@vger.kernel.org, jgarzik@pobox.com
 
-> > 
-> > I do actually not care much how this gets resolved (we could even 
-> > ditch HAVE_IDE and provide asm/ide.h on all architectures) if there's 
-> > general agreement that this is the way to go.
+On Sun, 27 Apr 2008 22:31:11 +0800
+"Alan Cox" <alan@lxorguk.ukuu.org.uk> wrote:
+
+> Re: [PATCH] ata: Add Intel SCH PATA support
 > 
-> Seems like a way to go now that all crazy IDE core code vs arch code
-> inter-dependiences have been fixed (the ideal solution would be to ditch
-> asm/ide.h completely but this requires some more time/work).
+> On Sun, 27 Apr 2008 22:03:15 +0800
+> Alek Du <alek.du@intel.com> wrote:
+> 
+> > Alan,
+> >
+> > One problem I still do not understand, if I return PATA_UNK for cable detection result, could the
+> > driver finally set the disk to UDMA5 mode if I plug in 80 wire disk?
+> 
+> You tell me - you've got the hardware documentation I assume. Assuming the
+> system implements detection then it should. If a PATA controller doesn't
+> implement any detection (cable or host side) and it does UDMA5 then I
+> believe the correct description for it is usually "broken" as people will
+> have horrible problems trying to use things like flash drives with it.
+> 
+> Alan
 
-I invented HAVE_IDE in the past to make it trivial for arm to
-use drivers/Kconfig.
-And that incentive are not broken by your suggestion so fine with me.
+The data sheet of SCH (http://download.intel.com/design/chipsets/embedded/datashts/319537.pdf) page 347 shows
+the only supported PATA registers, for those not shown should be treated as "Reserved". 
+Unfortunately, IOCFG (0x54) and port enable bits (0x41, 0x43) are all reserved.
 
-But I really do not know about s390. They were the only one
-without IDE in the past.
+Let's regard SCH PATA controller is an usually "broken" one :-), what do you suggest me to work around it?
+Force it to 40-wire pin? or use a KConfig option to select 40-wire or 80-wire?
 
-	Sam
+Thanks,
+Alek
