@@ -1,173 +1,226 @@
-From: Alek Du <alek.du@intel.com>
-Subject: [PATCH] ata: Add Intel SCH PATA support (revised)
-Date: Mon, 28 Apr 2008 12:05:17 +0800
-Message-ID: <20080428120517.3025b6c6@dxy.sh.intel.com>
-References: <20080426140007.63cfeede@dxy.sh.intel.com>
-	<20080426103012.21dcf0fb@core>
-	<20080427075115.3ea40204@dxy.sh.intel.com>
-	<20080427093434.182a2137@core>
-	<20080427220315.794a6df3@dxy.sh.intel.com>
-	<20080427153111.3438dce8@core>
+From: Tejun Heo <htejun@gmail.com>
+Subject: [PATCH #upstream-fixes 1/2] libata-scsi: clean up inquiry / mode
+ sense related functions
+Date: Mon, 28 Apr 2008 17:16:52 +0900
+Message-ID: <481587F4.6090006@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:23965 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750794AbYD1EMG (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 28 Apr 2008 00:12:06 -0400
-In-Reply-To: <20080427153111.3438dce8@core>
+Received: from wf-out-1314.google.com ([209.85.200.169]:49407 "EHLO
+	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1763335AbYD1IQ6 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 28 Apr 2008 04:16:58 -0400
+Received: by wf-out-1314.google.com with SMTP id 28so3928810wff.4
+        for <linux-ide@vger.kernel.org>; Mon, 28 Apr 2008 01:16:58 -0700 (PDT)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>, jgarzik@pobox.com
-Cc: linux-ide@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, Petr Vandrovec <petr@vmware.com>
 
-Hi Alan, Jeff
+* make ata_scsiop_*() static
+* make ata_scsi_set_sense() static and move it above its users
+* make ata_scsi_rbuf_fill() static
+* kill unused ata_scsi_badcmd()
 
-I re-write the patch according to the kind comments from Alan, I also did the test on my SCH machine. Please review it again. Thanks a lot.
-
-This patch adds Intel SCH chipsets (US15W, US15L, UL11L) PATA controller
-support.
-
-Signed-off-by: Alek Du <alek.du@intel.com>
+Signed-off-by: Tejun Heo <htejun@gmail.com>
 ---
- drivers/ata/ata_piix.c  |   29 +++++++++++++++++++++++++++++
- drivers/ide/pci/piix.c  |    2 ++
- include/linux/pci_ids.h |    2 ++
- 3 files changed, 33 insertions(+), 0 deletions(-)
+ drivers/ata/libata-scsi.c |   89 ++++++++++------------------------------------
+ drivers/ata/libata.h      |   28 --------------
+ 2 files changed, 21 insertions(+), 96 deletions(-)
 
-diff --git a/drivers/ata/ata_piix.c b/drivers/ata/ata_piix.c
-index ea2c764..863c473 100644
---- a/drivers/ata/ata_piix.c
-+++ b/drivers/ata/ata_piix.c
-@@ -136,6 +136,7 @@ enum piix_controller_ids {
- 	ich_pata_33,		/* ICH up to UDMA 33 only */
- 	ich_pata_66,		/* ICH up to 66 Mhz */
- 	ich_pata_100,		/* ICH up to UDMA 100 */
-+	sch_pata_100,		/* SCH up to UDMA 100 */
- 	ich5_sata,
- 	ich6_sata,
- 	ich6m_sata,
-@@ -164,6 +165,7 @@ static void piix_set_piomode(struct ata_port *ap, struct ata_device *adev);
- static void piix_set_dmamode(struct ata_port *ap, struct ata_device *adev);
- static void ich_set_dmamode(struct ata_port *ap, struct ata_device *adev);
- static int ich_pata_cable_detect(struct ata_port *ap);
-+static int sch_pata_cable_detect(struct ata_port *ap);
- static u8 piix_vmw_bmdma_status(struct ata_port *ap);
- static int piix_sidpr_scr_read(struct ata_port *ap, unsigned int reg, u32 *val);
- static int piix_sidpr_scr_write(struct ata_port *ap, unsigned int reg, u32 val);
-@@ -216,6 +218,8 @@ static const struct pci_device_id piix_pci_tbl[] = {
- 	{ 0x8086, 0x269E, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich_pata_100 },
- 	/* ICH8 Mobile PATA Controller */
- 	{ 0x8086, 0x2850, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich_pata_100 },
-+	/* Intel SCH PATA Controller */
-+	{ 0x8086, 0x811A, PCI_ANY_ID, PCI_ANY_ID, 0, 0, sch_pata_100 },
+Index: work/drivers/ata/libata-scsi.c
+===================================================================
+--- work.orig/drivers/ata/libata-scsi.c
++++ work/drivers/ata/libata-scsi.c
+@@ -179,6 +179,13 @@ DEVICE_ATTR(link_power_management_policy
+ 		ata_scsi_lpm_show, ata_scsi_lpm_put);
+ EXPORT_SYMBOL_GPL(dev_attr_link_power_management_policy);
  
- 	/* NOTE: The following PCI ids must be kept in sync with the
- 	 * list in drivers/pci/quirks.c.
-@@ -311,6 +315,13 @@ static struct ata_port_operations ich_pata_ops = {
- 	.set_dmamode		= ich_set_dmamode,
- };
- 
-+static struct ata_port_operations sch_pata_ops = {
-+	.inherits		= &piix_pata_ops,
-+	.cable_detect		= sch_pata_cable_detect,
-+	.prereset		= ata_sff_prereset,
-+	.set_dmamode		= ich_set_dmamode,
-+};
-+
- static struct ata_port_operations piix_sata_ops = {
- 	.inherits		= &ata_bmdma_port_ops,
- };
-@@ -470,6 +481,15 @@ static struct ata_port_info piix_port_info[] = {
- 		.port_ops	= &ich_pata_ops,
- 	},
- 
-+	[sch_pata_100] =
-+	{
-+		.flags		= PIIX_PATA_FLAGS | PIIX_FLAG_CHECKINTR,
-+		.pio_mask	= 0x1f,	/* pio0-4 */
-+		.mwdma_mask	= 0x06, /* mwdma1-2 */
-+		.udma_mask	= ATA_UDMA5, /* udma0-5 */
-+		.port_ops	= &sch_pata_ops,
-+	},
-+
- 	[ich5_sata] =
- 	{
- 		.flags		= PIIX_SATA_FLAGS,
-@@ -614,6 +634,15 @@ static int ich_pata_cable_detect(struct ata_port *ap)
- }
- 
- /**
-+ * 	Intel SCH PATA controller could not detect cable type
-+ * 	and always return ATA_CBL_PATA_UNK here.
-+ */
-+static int sch_pata_cable_detect(struct ata_port *ap)
++static void ata_scsi_set_sense(struct scsi_cmnd *cmd, u8 sk, u8 asc, u8 ascq)
 +{
-+	return ATA_CBL_PATA_UNK;
++	cmd->result = (DRIVER_SENSE << 24) | SAM_STAT_CHECK_CONDITION;
++
++	scsi_build_sense_buffer(0, cmd->sense_buffer, sk, asc, ascq);
 +}
 +
-+/**
-  *	piix_pata_prereset - prereset for PATA host controller
-  *	@link: Target link
-  *	@deadline: deadline jiffies for the operation
-diff --git a/drivers/ide/pci/piix.c b/drivers/ide/pci/piix.c
-index 21c5dd2..31607fe 100644
---- a/drivers/ide/pci/piix.c
-+++ b/drivers/ide/pci/piix.c
-@@ -380,6 +380,7 @@ static const struct ide_port_info piix_pci_info[] __devinitdata = {
- 	/* 22 */ DECLARE_ICH_DEV("ICH4",	ATA_UDMA5),
- 	/* 23 */ DECLARE_ICH_DEV("ESB2",	ATA_UDMA5),
- 	/* 24 */ DECLARE_ICH_DEV("ICH8M",	ATA_UDMA5),
-+	/* 25 */ DECLARE_ICH_DEV("SCH",		ATA_UDMA5),
- };
+ static void ata_scsi_invalid_field(struct scsi_cmnd *cmd,
+ 				   void (*done)(struct scsi_cmnd *))
+ {
+@@ -1696,10 +1703,9 @@ static inline void ata_scsi_rbuf_put(str
+  *	LOCKING:
+  *	spin_lock_irqsave(host lock)
+  */
+-
+-void ata_scsi_rbuf_fill(struct ata_scsi_args *args,
+-			unsigned int (*actor) (struct ata_scsi_args *args,
+-					       u8 *rbuf, unsigned int buflen))
++static void ata_scsi_rbuf_fill(struct ata_scsi_args *args,
++			unsigned int (*actor)(struct ata_scsi_args *args,
++					      u8 *rbuf, unsigned int buflen))
+ {
+ 	u8 *rbuf;
+ 	unsigned int buflen, rc;
+@@ -1748,9 +1754,8 @@ void ata_scsi_rbuf_fill(struct ata_scsi_
+  *	LOCKING:
+  *	spin_lock_irqsave(host lock)
+  */
+-
+-unsigned int ata_scsiop_inq_std(struct ata_scsi_args *args, u8 *rbuf,
+-			       unsigned int buflen)
++static unsigned int ata_scsiop_inq_std(struct ata_scsi_args *args, u8 *rbuf,
++				       unsigned int buflen)
+ {
+ 	u8 hdr[] = {
+ 		TYPE_DISK,
+@@ -1804,9 +1809,8 @@ unsigned int ata_scsiop_inq_std(struct a
+  *	LOCKING:
+  *	spin_lock_irqsave(host lock)
+  */
+-
+-unsigned int ata_scsiop_inq_00(struct ata_scsi_args *args, u8 *rbuf,
+-			      unsigned int buflen)
++static unsigned int ata_scsiop_inq_00(struct ata_scsi_args *args, u8 *rbuf,
++				      unsigned int buflen)
+ {
+ 	const u8 pages[] = {
+ 		0x00,	/* page 0x00, this page */
+@@ -1832,9 +1836,8 @@ unsigned int ata_scsiop_inq_00(struct at
+  *	LOCKING:
+  *	spin_lock_irqsave(host lock)
+  */
+-
+-unsigned int ata_scsiop_inq_80(struct ata_scsi_args *args, u8 *rbuf,
+-			      unsigned int buflen)
++static unsigned int ata_scsiop_inq_80(struct ata_scsi_args *args, u8 *rbuf,
++				      unsigned int buflen)
+ {
+ 	const u8 hdr[] = {
+ 		0,
+@@ -1865,9 +1868,8 @@ unsigned int ata_scsiop_inq_80(struct at
+  *	LOCKING:
+  *	spin_lock_irqsave(host lock)
+  */
+-
+-unsigned int ata_scsiop_inq_83(struct ata_scsi_args *args, u8 *rbuf,
+-			      unsigned int buflen)
++static unsigned int ata_scsiop_inq_83(struct ata_scsi_args *args, u8 *rbuf,
++				      unsigned int buflen)
+ {
+ 	int num;
+ 	const int sat_model_serial_desc_len = 68;
+@@ -1915,9 +1917,8 @@ unsigned int ata_scsiop_inq_83(struct at
+  *	LOCKING:
+  *	spin_lock_irqsave(host lock)
+  */
+-
+ static unsigned int ata_scsiop_inq_89(struct ata_scsi_args *args, u8 *rbuf,
+-			      unsigned int buflen)
++				      unsigned int buflen)
+ {
+ 	u8 pbuf[60];
+ 	struct ata_taskfile tf;
+@@ -1972,9 +1973,8 @@ static unsigned int ata_scsiop_inq_89(st
+  *	LOCKING:
+  *	spin_lock_irqsave(host lock)
+  */
+-
+-unsigned int ata_scsiop_noop(struct ata_scsi_args *args, u8 *rbuf,
+-			    unsigned int buflen)
++static unsigned int ata_scsiop_noop(struct ata_scsi_args *args, u8 *rbuf,
++				    unsigned int buflen)
+ {
+ 	VPRINTK("ENTER\n");
+ 	return 0;
+@@ -2312,53 +2312,6 @@ unsigned int ata_scsiop_report_luns(stru
+ 	return 0;
+ }
  
- /**
-@@ -453,6 +454,7 @@ static const struct pci_device_id piix_pci_tbl[] = {
- 	{ PCI_VDEVICE(INTEL, PCI_DEVICE_ID_INTEL_82801DB_1),  22 },
- 	{ PCI_VDEVICE(INTEL, PCI_DEVICE_ID_INTEL_ESB2_18),    23 },
- 	{ PCI_VDEVICE(INTEL, PCI_DEVICE_ID_INTEL_ICH8_6),     24 },
-+	{ PCI_VDEVICE(INTEL, PCI_DEVICE_ID_INTEL_SCH_IDE),    25 },
- 	{ 0, },
- };
- MODULE_DEVICE_TABLE(pci, piix_pci_tbl);
-diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
-index 70eb3c8..e5a53da 100644
---- a/include/linux/pci_ids.h
-+++ b/include/linux/pci_ids.h
-@@ -2413,6 +2413,8 @@
- #define PCI_DEVICE_ID_INTEL_82443GX_0	0x71a0
- #define PCI_DEVICE_ID_INTEL_82443GX_2	0x71a2
- #define PCI_DEVICE_ID_INTEL_82372FB_1	0x7601
-+#define PCI_DEVICE_ID_INTEL_SCH_LPC	0x8119
-+#define PCI_DEVICE_ID_INTEL_SCH_IDE	0x811a
- #define PCI_DEVICE_ID_INTEL_82454GX	0x84c4
- #define PCI_DEVICE_ID_INTEL_82450GX	0x84c5
- #define PCI_DEVICE_ID_INTEL_82451NX	0x84ca
--- 
-1.5.2.5
-
-Thanks,
-Alek
-
-
-On Sun, 27 Apr 2008 22:31:11 +0800
-"Alan Cox" <alan@lxorguk.ukuu.org.uk> wrote:
-
-> Re: [PATCH] ata: Add Intel SCH PATA support
-> 
-> On Sun, 27 Apr 2008 22:03:15 +0800
-> Alek Du <alek.du@intel.com> wrote:
-> 
-> > Alan,
-> >
-> > One problem I still do not understand, if I return PATA_UNK for cable detection result, could the
-> > driver finally set the disk to UDMA5 mode if I plug in 80 wire disk?
-> 
-> You tell me - you've got the hardware documentation I assume. Assuming the
-> system implements detection then it should. If a PATA controller doesn't
-> implement any detection (cable or host side) and it does UDMA5 then I
-> believe the correct description for it is usually "broken" as people will
-> have horrible problems trying to use things like flash drives with it.
-> 
-> Alan
+-/**
+- *	ata_scsi_set_sense - Set SCSI sense data and status
+- *	@cmd: SCSI request to be handled
+- *	@sk: SCSI-defined sense key
+- *	@asc: SCSI-defined additional sense code
+- *	@ascq: SCSI-defined additional sense code qualifier
+- *
+- *	Helper function that builds a valid fixed format, current
+- *	response code and the given sense key (sk), additional sense
+- *	code (asc) and additional sense code qualifier (ascq) with
+- *	a SCSI command status of %SAM_STAT_CHECK_CONDITION and
+- *	DRIVER_SENSE set in the upper bits of scsi_cmnd::result .
+- *
+- *	LOCKING:
+- *	Not required
+- */
+-
+-void ata_scsi_set_sense(struct scsi_cmnd *cmd, u8 sk, u8 asc, u8 ascq)
+-{
+-	cmd->result = (DRIVER_SENSE << 24) | SAM_STAT_CHECK_CONDITION;
+-
+-	scsi_build_sense_buffer(0, cmd->sense_buffer, sk, asc, ascq);
+-}
+-
+-/**
+- *	ata_scsi_badcmd - End a SCSI request with an error
+- *	@cmd: SCSI request to be handled
+- *	@done: SCSI command completion function
+- *	@asc: SCSI-defined additional sense code
+- *	@ascq: SCSI-defined additional sense code qualifier
+- *
+- *	Helper function that completes a SCSI command with
+- *	%SAM_STAT_CHECK_CONDITION, with a sense key %ILLEGAL_REQUEST
+- *	and the specified additional sense codes.
+- *
+- *	LOCKING:
+- *	spin_lock_irqsave(host lock)
+- */
+-
+-void ata_scsi_badcmd(struct scsi_cmnd *cmd, void (*done)(struct scsi_cmnd *), u8 asc, u8 ascq)
+-{
+-	DPRINTK("ENTER\n");
+-	ata_scsi_set_sense(cmd, ILLEGAL_REQUEST, asc, ascq);
+-
+-	done(cmd);
+-}
+-
+ static void atapi_sense_complete(struct ata_queued_cmd *qc)
+ {
+ 	if (qc->err_mask && ((qc->err_mask & AC_ERR_DEV) == 0)) {
+Index: work/drivers/ata/libata.h
+===================================================================
+--- work.orig/drivers/ata/libata.h
++++ work/drivers/ata/libata.h
+@@ -146,34 +146,6 @@ extern void ata_scsi_scan_host(struct at
+ extern int ata_scsi_offline_dev(struct ata_device *dev);
+ extern void ata_scsi_media_change_notify(struct ata_device *dev);
+ extern void ata_scsi_hotplug(struct work_struct *work);
+-extern unsigned int ata_scsiop_inq_std(struct ata_scsi_args *args, u8 *rbuf,
+-			       unsigned int buflen);
+-
+-extern unsigned int ata_scsiop_inq_00(struct ata_scsi_args *args, u8 *rbuf,
+-			      unsigned int buflen);
+-
+-extern unsigned int ata_scsiop_inq_80(struct ata_scsi_args *args, u8 *rbuf,
+-			      unsigned int buflen);
+-extern unsigned int ata_scsiop_inq_83(struct ata_scsi_args *args, u8 *rbuf,
+-			      unsigned int buflen);
+-extern unsigned int ata_scsiop_noop(struct ata_scsi_args *args, u8 *rbuf,
+-			    unsigned int buflen);
+-extern unsigned int ata_scsiop_sync_cache(struct ata_scsi_args *args, u8 *rbuf,
+-				  unsigned int buflen);
+-extern unsigned int ata_scsiop_mode_sense(struct ata_scsi_args *args, u8 *rbuf,
+-				  unsigned int buflen);
+-extern unsigned int ata_scsiop_read_cap(struct ata_scsi_args *args, u8 *rbuf,
+-			        unsigned int buflen);
+-extern unsigned int ata_scsiop_report_luns(struct ata_scsi_args *args, u8 *rbuf,
+-				   unsigned int buflen);
+-extern void ata_scsi_badcmd(struct scsi_cmnd *cmd,
+-			    void (*done)(struct scsi_cmnd *),
+-			    u8 asc, u8 ascq);
+-extern void ata_scsi_set_sense(struct scsi_cmnd *cmd,
+-			       u8 sk, u8 asc, u8 ascq);
+-extern void ata_scsi_rbuf_fill(struct ata_scsi_args *args,
+-                        unsigned int (*actor) (struct ata_scsi_args *args,
+-                                           u8 *rbuf, unsigned int buflen));
+ extern void ata_schedule_scsi_eh(struct Scsi_Host *shost);
+ extern void ata_scsi_dev_rescan(struct work_struct *work);
+ extern int ata_bus_probe(struct ata_port *ap);
