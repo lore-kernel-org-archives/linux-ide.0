@@ -1,34 +1,53 @@
-From: Ralf Baechle <ralf@linux-mips.org>
-Subject: Re: [ATA] Rename routerboard 500 to 532
-Date: Mon, 28 Apr 2008 12:47:30 +0100
-Message-ID: <20080428114730.GA7591@linux-mips.org>
-References: <20080428114136.GA4766@linux-mips.org>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: Re: [PATCH] Au1200: kill IDE driver function prototypes
+Date: Mon, 28 Apr 2008 18:26:29 +0400
+Message-ID: <4815DE95.9010107@ru.mvista.com>
+References: <200804142228.51987.sshtylyov@ru.mvista.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from oss.sgi.com ([192.48.170.157]:60830 "EHLO oss.sgi.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1764865AbYD1LsB (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 28 Apr 2008 07:48:01 -0400
-Received: from dl5rb.ham-radio-op.net (localhost [127.0.0.1])
-	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m3SBl5cR013468
-	for <linux-ide@vger.kernel.org>; Mon, 28 Apr 2008 04:47:10 -0700
-Content-Disposition: inline
-In-Reply-To: <20080428114136.GA4766@linux-mips.org>
+Received: from h155.mvista.com ([63.81.120.155]:5085 "EHLO imap.sh.mvista.com"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1765164AbYD1O1J (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 28 Apr 2008 10:27:09 -0400
+In-Reply-To: <200804142228.51987.sshtylyov@ru.mvista.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: linux-ide@vger.kernel.org, Florian Fainelli <florian@openwrt.org>
+To: bzolnier@gmail.com
+Cc: linux-mips@linux-mips.org, linux-ide@vger.kernel.org
 
-On Mon, Apr 28, 2008 at 12:41:36PM +0100, Ralf Baechle wrote:
-> From: Ralf Baechle <ralf@linux-mips.org>
-> Date: Mon, 28 Apr 2008 12:41:36 +0100
-> To: Jeff Garzik <jeff@garzik.org>
-> Cc: linux-ide@vger.kernel.org,
-> 	Gabor Juhos <juhosgatopenwrt.org@linux-mips.org>,
-                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Hello, I wrote:
 
-And that sort of crap happens if people put their email address in
-anti-spam disguised form into the code, grrr...
+> Fix these warnings emitted when compiling drivers/ide/mips/au1xxx-ide.c:
 
-  Ralf
+> include/asm/mach-au1x00/au1xxx_ide.h:137: warning: 'auide_tune_drive' declared 
+> `static' but never defined
+> include/asm/mach-au1x00/au1xxx_ide.h:138: warning: 'auide_tune_chipset' declared
+>  `static' but never defined
+
+> by wiping out the whole "function prototyping" section from the header file
+> <asm-mips/mach-au1x00/au1xxx_ide.h> as it mostly declared functions that are
+> already dead in the IDE driver; move the only useful prototype into the driver.
+> 
+> Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+
+> ---
+> I'm not sure thru which tree this should go -- probably thru Linux/MIPS one...
+
+> Bart, au1xxx-ide-fix-mwdma-support.patch will probably need to be updated to
+> remove that added prototype since it won't be needed anymore...
+
+    Which you haven't done either in that patch or in 
+au1xxx-ide-use-init_dma-method.patch. So, face the consequences:
+
+drivers/ide/mips/au1xxx-ide.c:456: error: conflicting types for 'auide_ddma_init'
+drivers/ide/mips/au1xxx-ide.c:51: error: previous declaration of
+'auide_ddma_init' was here
+drivers/ide/mips/au1xxx-ide.c:456: error: conflicting types for 'auide_ddma_init'
+drivers/ide/mips/au1xxx-ide.c:51: error: previous declaration of
+'auide_ddma_init' was here
+drivers/ide/mips/au1xxx-ide.c:51: warning: 'auide_ddma_init' used but never
+defined
+
+MBR, Sergei
