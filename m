@@ -1,47 +1,64 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [2.6 patch] ARM: always select HAVE_IDE
-Date: Sun, 27 Apr 2008 23:06:00 +0200
-Message-ID: <200804272306.01052.bzolnier@gmail.com>
-References: <20080414141659.GF6695@cs181133002.pp.htv.fi> <200804272032.44273.bzolnier@gmail.com> <20080427202929.GB32762@uranus.ravnborg.org>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: Re: [PATCH] Au1200: kill IDE driver function prototypes
+Date: Mon, 28 Apr 2008 22:36:35 +0400
+Message-ID: <48161933.5020200@ru.mvista.com>
+References: <200804142228.51987.sshtylyov@ru.mvista.com> <4815DE95.9010107@ru.mvista.com> <200804282046.53474.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.188]:55325 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S966176AbYD1Sah (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 28 Apr 2008 14:30:37 -0400
-Received: by nf-out-0910.google.com with SMTP id g13so1961297nfb.21
-        for <linux-ide@vger.kernel.org>; Mon, 28 Apr 2008 11:30:33 -0700 (PDT)
-In-Reply-To: <20080427202929.GB32762@uranus.ravnborg.org>
-Content-Disposition: inline
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-mips-bounce@linux-mips.org>
+In-Reply-To: <200804282046.53474.bzolnier@gmail.com>
+Sender: linux-mips-bounce@linux-mips.org
+Errors-to: linux-mips-bounce@linux-mips.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: linux-mips@linux-mips.org, linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Sam Ravnborg <sam@ravnborg.org>
-Cc: Adrian Bunk <bunk@kernel.org>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linux-pcmcia@lists.infradead.org
 
-On Sunday 27 April 2008, Sam Ravnborg wrote:
-> > > 
-> > > I do actually not care much how this gets resolved (we could even 
-> > > ditch HAVE_IDE and provide asm/ide.h on all architectures) if there's 
-> > > general agreement that this is the way to go.
-> > 
-> > Seems like a way to go now that all crazy IDE core code vs arch code
-> > inter-dependiences have been fixed (the ideal solution would be to ditch
-> > asm/ide.h completely but this requires some more time/work).
-> 
-> I invented HAVE_IDE in the past to make it trivial for arm to
-> use drivers/Kconfig.
-> And that incentive are not broken by your suggestion so fine with me.
+Bartlomiej Zolnierkiewicz wrote:
 
-Cool.
+>>>Fix these warnings emitted when compiling drivers/ide/mips/au1xxx-ide.c:
 
-> But I really do not know about s390. They were the only one
-> without IDE in the past.
+>>>include/asm/mach-au1x00/au1xxx_ide.h:137: warning: 'auide_tune_drive' declared 
+>>>`static' but never defined
+>>>include/asm/mach-au1x00/au1xxx_ide.h:138: warning: 'auide_tune_chipset' declared
+>>> `static' but never defined
 
-They don't seem to support neither PCI nor ISA so I think that we
-should just special case them (== make IDE depend on BLOCK && !S390).
+>>>by wiping out the whole "function prototyping" section from the header file
+>>><asm-mips/mach-au1x00/au1xxx_ide.h> as it mostly declared functions that are
+>>>already dead in the IDE driver; move the only useful prototype into the driver.
 
-Thanks,
-Bart
+>>>Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+
+>>>---
+>>>I'm not sure thru which tree this should go -- probably thru Linux/MIPS one...
+
+>>>Bart, au1xxx-ide-fix-mwdma-support.patch will probably need to be updated to
+>>>remove that added prototype since it won't be needed anymore...
+
+>>    Which you haven't done either in that patch or in 
+>>au1xxx-ide-use-init_dma-method.patch. So, face the consequences:
+
+>>drivers/ide/mips/au1xxx-ide.c:456: error: conflicting types for 'auide_ddma_init'
+>>drivers/ide/mips/au1xxx-ide.c:51: error: previous declaration of
+>>'auide_ddma_init' was here
+>>drivers/ide/mips/au1xxx-ide.c:456: error: conflicting types for 'auide_ddma_init'
+>>drivers/ide/mips/au1xxx-ide.c:51: error: previous declaration of
+>>'auide_ddma_init' was here
+>>drivers/ide/mips/au1xxx-ide.c:51: warning: 'auide_ddma_init' used but never
+>>defined
+
+> Sorry for that, I remember taking a look at au1xxx-ide-fix-mwdma-support.patch
+> and it was OK
+
+    This patch was a fitting place to get rid of that proto since it removed 
+the sole call because of which that proto was needed.
+
+> (now I see that it was au1xxx-ide-use-init_dma-method.patch that
+> needed an update).  I'll fix it in today's update.
+
+    TIA.
+
+> Thanks,
+> Bart
+
+MBR, Sergei
