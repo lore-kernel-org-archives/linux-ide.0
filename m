@@ -1,31 +1,66 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: sata_mv performance; impact of NCQ
-Date: Mon, 28 Apr 2008 18:53:38 +0100
-Message-ID: <20080428185338.0368ff32@core>
-References: <20080426001657.GD17369@modernduck.com>
-	<da824cf30804252013l3a62166bk5ef03fb034fd47d5@mail.gmail.com>
-	<20080428171449.GI17369@modernduck.com>
-	<48160C39.6000701@rtr.ca>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: [PATCH] Au1200: kill IDE driver function prototypes
+Date: Mon, 28 Apr 2008 20:46:53 +0200
+Message-ID: <200804282046.53474.bzolnier@gmail.com>
+References: <200804142228.51987.sshtylyov@ru.mvista.com> <4815DE95.9010107@ru.mvista.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:48104 "EHLO
-	lxorguk.ukuu.org.uk" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S934630AbYD1SBB (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 28 Apr 2008 14:01:01 -0400
-In-Reply-To: <48160C39.6000701@rtr.ca>
+Received: from fg-out-1718.google.com ([72.14.220.157]:32817 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965858AbYD1Sao (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 28 Apr 2008 14:30:44 -0400
+Received: by fg-out-1718.google.com with SMTP id l27so5041985fgb.17
+        for <linux-ide@vger.kernel.org>; Mon, 28 Apr 2008 11:30:37 -0700 (PDT)
+In-Reply-To: <4815DE95.9010107@ru.mvista.com>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark Lord <liml@rtr.ca>
-Cc: Jody McIntyre <scjody@sun.com>, Grant Grundler <grundler@google.com>, linux-ide@vger.kernel.org
+To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Cc: linux-mips@linux-mips.org, linux-ide@vger.kernel.org
 
-> Or at least that's how I understood Tejun's last explanation of it.
-> It is possible that the drive firmware in some brands may not follow
-> spec for FLUSH_CACHE_EXT, but I don't know of a specific instance of this.
 
-For an ATA device it should be ok - the standard purposefully specified
-flush cache functions in a way that was intended to stop drives lying for
-benchmarketing reasons and the like. So you should always get proper
-behaviour on any drive which implements it providing barriers are enabled
-on the fs.
+Hello,
+
+On Monday 28 April 2008, Sergei Shtylyov wrote:
+> Hello, I wrote:
+> 
+> > Fix these warnings emitted when compiling drivers/ide/mips/au1xxx-ide.c:
+> 
+> > include/asm/mach-au1x00/au1xxx_ide.h:137: warning: 'auide_tune_drive' declared 
+> > `static' but never defined
+> > include/asm/mach-au1x00/au1xxx_ide.h:138: warning: 'auide_tune_chipset' declared
+> >  `static' but never defined
+> 
+> > by wiping out the whole "function prototyping" section from the header file
+> > <asm-mips/mach-au1x00/au1xxx_ide.h> as it mostly declared functions that are
+> > already dead in the IDE driver; move the only useful prototype into the driver.
+> > 
+> > Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+> 
+> > ---
+> > I'm not sure thru which tree this should go -- probably thru Linux/MIPS one...
+> 
+> > Bart, au1xxx-ide-fix-mwdma-support.patch will probably need to be updated to
+> > remove that added prototype since it won't be needed anymore...
+> 
+>     Which you haven't done either in that patch or in 
+> au1xxx-ide-use-init_dma-method.patch. So, face the consequences:
+> 
+> drivers/ide/mips/au1xxx-ide.c:456: error: conflicting types for 'auide_ddma_init'
+> drivers/ide/mips/au1xxx-ide.c:51: error: previous declaration of
+> 'auide_ddma_init' was here
+> drivers/ide/mips/au1xxx-ide.c:456: error: conflicting types for 'auide_ddma_init'
+> drivers/ide/mips/au1xxx-ide.c:51: error: previous declaration of
+> 'auide_ddma_init' was here
+> drivers/ide/mips/au1xxx-ide.c:51: warning: 'auide_ddma_init' used but never
+> defined
+
+Sorry for that, I remember taking a look at au1xxx-ide-fix-mwdma-support.patch
+and it was OK (now I see that it was au1xxx-ide-use-init_dma-method.patch that
+needed an update).  I'll fix it in today's update.
+
+Thanks,
+Bart
