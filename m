@@ -1,41 +1,628 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [PATCH] ata: Add Intel SCH PATA support (revised)
-Date: Mon, 28 Apr 2008 10:21:01 +0100
-Message-ID: <20080428102101.3f964981@core>
-References: <20080426140007.63cfeede@dxy.sh.intel.com>
-	<20080426103012.21dcf0fb@core>
-	<20080427075115.3ea40204@dxy.sh.intel.com>
-	<20080427093434.182a2137@core>
-	<20080427220315.794a6df3@dxy.sh.intel.com>
-	<20080427153111.3438dce8@core>
-	<20080428120517.3025b6c6@dxy.sh.intel.com>
-	<20080428094123.59d055c7@core>
-	<20080428170751.097bdbe6@dxy.sh.intel.com>
+From: Ralf Baechle <ralf@linux-mips.org>
+Subject: [ATA] Rename routerboard 500 to 532
+Date: Mon, 28 Apr 2008 12:41:36 +0100
+Message-ID: <20080428114136.GA4766@linux-mips.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:56834 "EHLO
-	lxorguk.ukuu.org.uk" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752417AbYD1J2P (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 28 Apr 2008 05:28:15 -0400
-In-Reply-To: <20080428170751.097bdbe6@dxy.sh.intel.com>
+Received: from oss.sgi.com ([192.48.170.157]:60814 "EHLO oss.sgi.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1765067AbYD1LmO (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 28 Apr 2008 07:42:14 -0400
+Received: from dl5rb.ham-radio-op.net (localhost [127.0.0.1])
+	by oss.sgi.com (8.12.11.20060308/8.12.11/SuSE Linux 0.7) with ESMTP id m3SBfLC9012957
+	for <linux-ide@vger.kernel.org>; Mon, 28 Apr 2008 04:41:25 -0700
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alek Du <alek.du@intel.com>
-Cc: jgarzik@pobox.com, linux-ide@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: linux-ide@vger.kernel.org, Gabor Juhos <juhosgatopenwrt.org@linux-mips.org>, Florian Fainelli <florian@openwrt.org>
 
-On Mon, 28 Apr 2008 17:07:51 +0800
-Alek Du <alek.du@intel.com> wrote:
+The platform is actually named routerboard 532 so let's call it this.  This
+patch only rename files, Kconfig and C symbols; no functional changes.
 
-> Alan,
-> 
-> Fixed and tested, please review it:
-> 
-> This patch adds Intel SCH chipsets (US15W, US15L, UL11L) PATA controller
-> support.
-> 
-> Signed-off-by: Alek Du <alek.du@intel.com>
+Signed-off-by: Ralf Baechle <ralf@linux-mips.org>
 
-Acked-by: Alan Cox <alan@redhat.com>
+ drivers/ata/Kconfig         |    8 -
+ drivers/ata/Makefile        |    2 
+ drivers/ata/pata_rb500_cf.c |  277 --------------------------------------------
+ drivers/ata/pata_rb532_cf.c |  277 ++++++++++++++++++++++++++++++++++++++++++++
+ 4 files changed, 282 insertions(+), 282 deletions(-)
 
+Index: linux-routerboard/drivers/ata/Kconfig
+===================================================================
+--- linux-routerboard.orig/drivers/ata/Kconfig
++++ linux-routerboard/drivers/ata/Kconfig
+@@ -566,11 +566,11 @@ config PATA_RADISYS
+ 
+ 	  If unsure, say N.
+ 
+-config PATA_RB500
+-	tristate "RouterBoard 500 PATA CompactFlash support"
+-	depends on MIKROTIK_RB500
++config PATA_RB532
++	tristate "RouterBoard 532 PATA CompactFlash support"
++	depends on MIKROTIK_RB532
+ 	help
+-	  This option enables support for the RouterBoard 500
++	  This option enables support for the RouterBoard 532
+ 	  PATA CompactFlash controller.
+ 
+ 	  If unsure, say N.
+Index: linux-routerboard/drivers/ata/Makefile
+===================================================================
+--- linux-routerboard.orig/drivers/ata/Makefile
++++ linux-routerboard/drivers/ata/Makefile
+@@ -55,7 +55,7 @@ obj-$(CONFIG_PATA_PDC2027X)	+= pata_pdc2
+ obj-$(CONFIG_PATA_PDC_OLD)	+= pata_pdc202xx_old.o
+ obj-$(CONFIG_PATA_QDI)		+= pata_qdi.o
+ obj-$(CONFIG_PATA_RADISYS)	+= pata_radisys.o
+-obj-$(CONFIG_PATA_RB500)	+= pata_rb500_cf.o
++obj-$(CONFIG_PATA_RB532)	+= pata_rb532_cf.o
+ obj-$(CONFIG_PATA_RZ1000)	+= pata_rz1000.o
+ obj-$(CONFIG_PATA_SC1200)	+= pata_sc1200.o
+ obj-$(CONFIG_PATA_SERVERWORKS)	+= pata_serverworks.o
+Index: linux-routerboard/drivers/ata/pata_rb500_cf.c
+===================================================================
+--- linux-routerboard.orig/drivers/ata/pata_rb500_cf.c
++++ /dev/null
+@@ -1,277 +0,0 @@
+-/*
+- *  A low-level PATA driver to handle a Compact Flash connected on the
+- *  Mikrotik's RouterBoard 532 board.
+- *
+- *  Copyright (C) 2007 Gabor Juhos <juhosg at openwrt.org>
+- *  Copyright (C) 2008 Florian Fainelli <florian@openwrt.org>
+- *
+- *  This file was based on: drivers/ata/pata_ixp4xx_cf.c
+- *	Copyright (C) 2006-07 Tower Technologies
+- *	Author: Alessandro Zummo <a.zummo@towertech.it>
+- *
+- *  Also was based on the driver for Linux 2.4.xx published by Mikrotik for
+- *  their RouterBoard 1xx and 5xx series devices. The original Mikrotik code
+- *  seems not to have a license.
+- *
+- *  This program is free software; you can redistribute it and/or modify
+- *  it under the terms of the GNU General Public License version 2 as
+- *  published by the Free Software Foundation.
+- *
+- */
+-
+-#include <linux/kernel.h>
+-#include <linux/module.h>
+-#include <linux/platform_device.h>
+-
+-#include <linux/io.h>
+-#include <linux/interrupt.h>
+-#include <linux/irq.h>
+-
+-#include <linux/libata.h>
+-#include <scsi/scsi_host.h>
+-
+-#include <asm/gpio.h>
+-
+-#define DRV_NAME	"pata-rb500-cf"
+-#define DRV_VERSION	"0.1.0"
+-#define DRV_DESC	"PATA driver for RouterBOARD 532 Compact Flash"
+-
+-#define RB500_CF_MAXPORTS	1
+-#define RB500_CF_IO_DELAY	400
+-
+-#define RB500_CF_REG_CMD	0x0800
+-#define RB500_CF_REG_CTRL	0x080E
+-#define RB500_CF_REG_DATA	0x0C00
+-
+-struct rb500_cf_info {
+-	void __iomem	*iobase;
+-	unsigned int	gpio_line;
+-	int		frozen;
+-	unsigned int	irq;
+-};
+-
+-/* ------------------------------------------------------------------------ */
+-
+-static inline void rb500_pata_finish_io(struct ata_port *ap)
+-{
+-	struct ata_host *ah = ap->host;
+-	struct rb500_cf_info *info = ah->private_data;
+-
+-	ata_sff_altstatus(ap);
+-	ndelay(RB500_CF_IO_DELAY);
+-
+-	set_irq_type(info->irq, IRQ_TYPE_LEVEL_HIGH);
+-}
+-
+-static void rb500_pata_exec_command(struct ata_port *ap,
+-				const struct ata_taskfile *tf)
+-{
+-	writeb(tf->command, ap->ioaddr.command_addr);
+-	rb500_pata_finish_io(ap);
+-}
+-
+-static void rb500_pata_data_xfer(struct ata_device *adev, unsigned char *buf,
+-				unsigned int buflen, int write_data)
+-{
+-	struct ata_port *ap = adev->link->ap;
+-	void __iomem *ioaddr = ap->ioaddr.data_addr;
+-
+-	if (write_data) {
+-		for (; buflen > 0; buflen--, buf++)
+-			writeb(*buf, ioaddr);
+-	} else {
+-		for (; buflen > 0; buflen--, buf++)
+-			*buf = readb(ioaddr);
+-	}
+-
+-	rb500_pata_finish_io(adev->link->ap);
+-}
+-
+-static void rb500_pata_freeze(struct ata_port *ap)
+-{
+-	struct rb500_cf_info *info = ap->host->private_data;
+-
+-	info->frozen = 1;
+-}
+-
+-static void rb500_pata_thaw(struct ata_port *ap)
+-{
+-	struct rb500_cf_info *info = ap->host->private_data;
+-
+-	info->frozen = 0;
+-}
+-
+-static irqreturn_t rb500_pata_irq_handler(int irq, void *dev_instance)
+-{
+-	struct ata_host *ah = dev_instance;
+-	struct rb500_cf_info *info = ah->private_data;
+-
+-	if (gpio_get_value(info->gpio_line)) {
+-		set_irq_type(info->irq, IRQ_TYPE_LEVEL_LOW);
+-		if (!info->frozen)
+-			ata_sff_interrupt(info->irq, dev_instance);
+-	} else {
+-		set_irq_type(info->irq, IRQ_TYPE_LEVEL_HIGH);
+-	}
+-
+-	return IRQ_HANDLED;
+-}
+-
+-static struct ata_port_operations rb500_pata_port_ops = {
+-	.inherits		= &ata_sff_port_ops,
+-	.sff_exec_command	= rb500_pata_exec_command,
+-	.sff_data_xfer		= rb500_pata_data_xfer,
+-	.freeze			= rb500_pata_freeze,
+-	.thaw			= rb500_pata_thaw,
+-};
+-
+-/* ------------------------------------------------------------------------ */
+-
+-static struct scsi_host_template rb500_pata_sht = {
+-	ATA_PIO_SHT(DRV_NAME),
+-};
+-
+-/* ------------------------------------------------------------------------ */
+-
+-static void rb500_pata_setup_ports(struct ata_host *ah)
+-{
+-	struct rb500_cf_info *info = ah->private_data;
+-	struct ata_port *ap;
+-
+-	ap = ah->ports[0];
+-
+-	ap->ops		= &rb500_pata_port_ops;
+-	ap->pio_mask	= 0x1f; /* PIO4 */
+-	ap->flags	= ATA_FLAG_NO_LEGACY | ATA_FLAG_MMIO;
+-
+-	ap->ioaddr.cmd_addr	= info->iobase + RB500_CF_REG_CMD;
+-	ap->ioaddr.ctl_addr	= info->iobase + RB500_CF_REG_CTRL;
+-	ap->ioaddr.altstatus_addr = info->iobase + RB500_CF_REG_CTRL;
+-
+-	ata_sff_std_ports(&ap->ioaddr);
+-
+-	ap->ioaddr.data_addr	= info->iobase + RB500_CF_REG_DATA;
+-}
+-
+-static __devinit int rb500_pata_driver_probe(struct platform_device *pdev)
+-{
+-	unsigned int irq;
+-	int gpio;
+-	struct resource *res;
+-	struct ata_host *ah;
+-	struct rb500_cf_info *info;
+-	int ret;
+-
+-	res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
+-	if (!res) {
+-		dev_err(&pdev->dev, "no IOMEM resource found\n");
+-		return -EINVAL;
+-	}
+-
+-	irq = platform_get_irq(pdev, 0);
+-	if (irq <= 0) {
+-		dev_err(&pdev->dev, "no IRQ resource found\n");
+-		return -ENOENT;
+-	}
+-
+-	gpio = irq_to_gpio(irq);
+-	if (gpio < 0) {
+-		dev_err(&pdev->dev, "no GPIO found for irq%d\n", irq);
+-		return -ENOENT;
+-	}
+-
+-	ret = gpio_request(gpio, DRV_NAME);
+-	if (ret) {
+-		dev_err(&pdev->dev, "GPIO request failed\n");
+-		return ret;
+-	}
+-
+-	/* allocate host */
+-	ah = ata_host_alloc(&pdev->dev, RB500_CF_MAXPORTS);
+-	if (!ah)
+-		return -ENOMEM;
+-
+-	platform_set_drvdata(pdev, ah);
+-
+-	info = devm_kzalloc(&pdev->dev, sizeof(*info), GFP_KERNEL);
+-	if (!info)
+-		return -ENOMEM;
+-
+-	ah->private_data = info;
+-	info->gpio_line = gpio;
+-	info->irq = irq;
+-
+-	info->iobase = devm_ioremap_nocache(&pdev->dev, res->start,
+-				res->end - res->start + 1);
+-	if (!info->iobase)
+-		return -ENOMEM;
+-
+-	ret = gpio_direction_input(gpio);
+-	if (ret) {
+-		dev_err(&pdev->dev, "unable to set GPIO direction, err=%d\n",
+-				ret);
+-		goto err_free_gpio;
+-	}
+-
+-	rb500_pata_setup_ports(ah);
+-
+-	ret = ata_host_activate(ah, irq, rb500_pata_irq_handler,
+-				IRQF_TRIGGER_LOW, &rb500_pata_sht);
+-	if (ret)
+-		goto err_free_gpio;
+-
+-	return 0;
+-
+-err_free_gpio:
+-	gpio_free(gpio);
+-
+-	return ret;
+-}
+-
+-static __devexit int rb500_pata_driver_remove(struct platform_device *pdev)
+-{
+-	struct ata_host *ah = platform_get_drvdata(pdev);
+-	struct rb500_cf_info *info = ah->private_data;
+-
+-	ata_host_detach(ah);
+-	gpio_free(info->gpio_line);
+-
+-	return 0;
+-}
+-
+-/* work with hotplug and coldplug */
+-MODULE_ALIAS("platform:" DRV_NAME);
+-
+-static struct platform_driver rb500_pata_platform_driver = {
+-	.probe		= rb500_pata_driver_probe,
+-	.remove		= __devexit_p(rb500_pata_driver_remove),
+-	.driver	 = {
+-		.name   = DRV_NAME,
+-		.owner  = THIS_MODULE,
+-	},
+-};
+-
+-/* ------------------------------------------------------------------------ */
+-
+-#define DRV_INFO DRV_DESC " version " DRV_VERSION
+-
+-static int __init rb500_pata_module_init(void)
+-{
+-	printk(KERN_INFO DRV_INFO "\n");
+-
+-	return platform_driver_register(&rb500_pata_platform_driver);
+-}
+-
+-static void __exit rb500_pata_module_exit(void)
+-{
+-	platform_driver_unregister(&rb500_pata_platform_driver);
+-}
+-
+-MODULE_AUTHOR("Gabor Juhos <juhosg at openwrt.org>");
+-MODULE_AUTHOR("Florian Fainelli <florian@openwrt.org>");
+-MODULE_DESCRIPTION(DRV_DESC);
+-MODULE_VERSION(DRV_VERSION);
+-MODULE_LICENSE("GPL");
+-
+-module_init(rb500_pata_module_init);
+-module_exit(rb500_pata_module_exit);
+Index: linux-routerboard/drivers/ata/pata_rb532_cf.c
+===================================================================
+--- /dev/null
++++ linux-routerboard/drivers/ata/pata_rb532_cf.c
+@@ -0,0 +1,277 @@
++/*
++ *  A low-level PATA driver to handle a Compact Flash connected on the
++ *  Mikrotik's RouterBoard 532 board.
++ *
++ *  Copyright (C) 2007 Gabor Juhos <juhosg at openwrt.org>
++ *  Copyright (C) 2008 Florian Fainelli <florian@openwrt.org>
++ *
++ *  This file was based on: drivers/ata/pata_ixp4xx_cf.c
++ *	Copyright (C) 2006-07 Tower Technologies
++ *	Author: Alessandro Zummo <a.zummo@towertech.it>
++ *
++ *  Also was based on the driver for Linux 2.4.xx published by Mikrotik for
++ *  their RouterBoard 1xx and 5xx series devices. The original Mikrotik code
++ *  seems not to have a license.
++ *
++ *  This program is free software; you can redistribute it and/or modify
++ *  it under the terms of the GNU General Public License version 2 as
++ *  published by the Free Software Foundation.
++ *
++ */
++
++#include <linux/kernel.h>
++#include <linux/module.h>
++#include <linux/platform_device.h>
++
++#include <linux/io.h>
++#include <linux/interrupt.h>
++#include <linux/irq.h>
++
++#include <linux/libata.h>
++#include <scsi/scsi_host.h>
++
++#include <asm/gpio.h>
++
++#define DRV_NAME	"pata-rb532-cf"
++#define DRV_VERSION	"0.1.0"
++#define DRV_DESC	"PATA driver for RouterBOARD 532 Compact Flash"
++
++#define RB500_CF_MAXPORTS	1
++#define RB500_CF_IO_DELAY	400
++
++#define RB500_CF_REG_CMD	0x0800
++#define RB500_CF_REG_CTRL	0x080E
++#define RB500_CF_REG_DATA	0x0C00
++
++struct rb532_cf_info {
++	void __iomem	*iobase;
++	unsigned int	gpio_line;
++	int		frozen;
++	unsigned int	irq;
++};
++
++/* ------------------------------------------------------------------------ */
++
++static inline void rb532_pata_finish_io(struct ata_port *ap)
++{
++	struct ata_host *ah = ap->host;
++	struct rb532_cf_info *info = ah->private_data;
++
++	ata_sff_altstatus(ap);
++	ndelay(RB500_CF_IO_DELAY);
++
++	set_irq_type(info->irq, IRQ_TYPE_LEVEL_HIGH);
++}
++
++static void rb532_pata_exec_command(struct ata_port *ap,
++				const struct ata_taskfile *tf)
++{
++	writeb(tf->command, ap->ioaddr.command_addr);
++	rb532_pata_finish_io(ap);
++}
++
++static void rb532_pata_data_xfer(struct ata_device *adev, unsigned char *buf,
++				unsigned int buflen, int write_data)
++{
++	struct ata_port *ap = adev->link->ap;
++	void __iomem *ioaddr = ap->ioaddr.data_addr;
++
++	if (write_data) {
++		for (; buflen > 0; buflen--, buf++)
++			writeb(*buf, ioaddr);
++	} else {
++		for (; buflen > 0; buflen--, buf++)
++			*buf = readb(ioaddr);
++	}
++
++	rb532_pata_finish_io(adev->link->ap);
++}
++
++static void rb532_pata_freeze(struct ata_port *ap)
++{
++	struct rb532_cf_info *info = ap->host->private_data;
++
++	info->frozen = 1;
++}
++
++static void rb532_pata_thaw(struct ata_port *ap)
++{
++	struct rb532_cf_info *info = ap->host->private_data;
++
++	info->frozen = 0;
++}
++
++static irqreturn_t rb532_pata_irq_handler(int irq, void *dev_instance)
++{
++	struct ata_host *ah = dev_instance;
++	struct rb532_cf_info *info = ah->private_data;
++
++	if (gpio_get_value(info->gpio_line)) {
++		set_irq_type(info->irq, IRQ_TYPE_LEVEL_LOW);
++		if (!info->frozen)
++			ata_sff_interrupt(info->irq, dev_instance);
++	} else {
++		set_irq_type(info->irq, IRQ_TYPE_LEVEL_HIGH);
++	}
++
++	return IRQ_HANDLED;
++}
++
++static struct ata_port_operations rb532_pata_port_ops = {
++	.inherits		= &ata_sff_port_ops,
++	.sff_exec_command	= rb532_pata_exec_command,
++	.sff_data_xfer		= rb532_pata_data_xfer,
++	.freeze			= rb532_pata_freeze,
++	.thaw			= rb532_pata_thaw,
++};
++
++/* ------------------------------------------------------------------------ */
++
++static struct scsi_host_template rb532_pata_sht = {
++	ATA_PIO_SHT(DRV_NAME),
++};
++
++/* ------------------------------------------------------------------------ */
++
++static void rb532_pata_setup_ports(struct ata_host *ah)
++{
++	struct rb532_cf_info *info = ah->private_data;
++	struct ata_port *ap;
++
++	ap = ah->ports[0];
++
++	ap->ops		= &rb532_pata_port_ops;
++	ap->pio_mask	= 0x1f; /* PIO4 */
++	ap->flags	= ATA_FLAG_NO_LEGACY | ATA_FLAG_MMIO;
++
++	ap->ioaddr.cmd_addr	= info->iobase + RB500_CF_REG_CMD;
++	ap->ioaddr.ctl_addr	= info->iobase + RB500_CF_REG_CTRL;
++	ap->ioaddr.altstatus_addr = info->iobase + RB500_CF_REG_CTRL;
++
++	ata_sff_std_ports(&ap->ioaddr);
++
++	ap->ioaddr.data_addr	= info->iobase + RB500_CF_REG_DATA;
++}
++
++static __devinit int rb532_pata_driver_probe(struct platform_device *pdev)
++{
++	unsigned int irq;
++	int gpio;
++	struct resource *res;
++	struct ata_host *ah;
++	struct rb532_cf_info *info;
++	int ret;
++
++	res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
++	if (!res) {
++		dev_err(&pdev->dev, "no IOMEM resource found\n");
++		return -EINVAL;
++	}
++
++	irq = platform_get_irq(pdev, 0);
++	if (irq <= 0) {
++		dev_err(&pdev->dev, "no IRQ resource found\n");
++		return -ENOENT;
++	}
++
++	gpio = irq_to_gpio(irq);
++	if (gpio < 0) {
++		dev_err(&pdev->dev, "no GPIO found for irq%d\n", irq);
++		return -ENOENT;
++	}
++
++	ret = gpio_request(gpio, DRV_NAME);
++	if (ret) {
++		dev_err(&pdev->dev, "GPIO request failed\n");
++		return ret;
++	}
++
++	/* allocate host */
++	ah = ata_host_alloc(&pdev->dev, RB500_CF_MAXPORTS);
++	if (!ah)
++		return -ENOMEM;
++
++	platform_set_drvdata(pdev, ah);
++
++	info = devm_kzalloc(&pdev->dev, sizeof(*info), GFP_KERNEL);
++	if (!info)
++		return -ENOMEM;
++
++	ah->private_data = info;
++	info->gpio_line = gpio;
++	info->irq = irq;
++
++	info->iobase = devm_ioremap_nocache(&pdev->dev, res->start,
++				res->end - res->start + 1);
++	if (!info->iobase)
++		return -ENOMEM;
++
++	ret = gpio_direction_input(gpio);
++	if (ret) {
++		dev_err(&pdev->dev, "unable to set GPIO direction, err=%d\n",
++				ret);
++		goto err_free_gpio;
++	}
++
++	rb532_pata_setup_ports(ah);
++
++	ret = ata_host_activate(ah, irq, rb532_pata_irq_handler,
++				IRQF_TRIGGER_LOW, &rb532_pata_sht);
++	if (ret)
++		goto err_free_gpio;
++
++	return 0;
++
++err_free_gpio:
++	gpio_free(gpio);
++
++	return ret;
++}
++
++static __devexit int rb532_pata_driver_remove(struct platform_device *pdev)
++{
++	struct ata_host *ah = platform_get_drvdata(pdev);
++	struct rb532_cf_info *info = ah->private_data;
++
++	ata_host_detach(ah);
++	gpio_free(info->gpio_line);
++
++	return 0;
++}
++
++/* work with hotplug and coldplug */
++MODULE_ALIAS("platform:" DRV_NAME);
++
++static struct platform_driver rb532_pata_platform_driver = {
++	.probe		= rb532_pata_driver_probe,
++	.remove		= __devexit_p(rb532_pata_driver_remove),
++	.driver	 = {
++		.name   = DRV_NAME,
++		.owner  = THIS_MODULE,
++	},
++};
++
++/* ------------------------------------------------------------------------ */
++
++#define DRV_INFO DRV_DESC " version " DRV_VERSION
++
++static int __init rb532_pata_module_init(void)
++{
++	printk(KERN_INFO DRV_INFO "\n");
++
++	return platform_driver_register(&rb532_pata_platform_driver);
++}
++
++static void __exit rb532_pata_module_exit(void)
++{
++	platform_driver_unregister(&rb532_pata_platform_driver);
++}
++
++MODULE_AUTHOR("Gabor Juhos <juhosg at openwrt.org>");
++MODULE_AUTHOR("Florian Fainelli <florian@openwrt.org>");
++MODULE_DESCRIPTION(DRV_DESC);
++MODULE_VERSION(DRV_VERSION);
++MODULE_LICENSE("GPL");
++
++module_init(rb532_pata_module_init);
++module_exit(rb532_pata_module_exit);
