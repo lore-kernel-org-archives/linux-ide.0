@@ -1,41 +1,43 @@
-From: Harvey Harrison <harvey.harrison@gmail.com>
-Subject: ata: Initializer Entries defined twice
-Date: Mon, 28 Apr 2008 12:28:17 -0700
-Message-ID: <1209410897.14173.89.camel@brick>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: sata_mv performance; impact of NCQ
+Date: Mon, 28 Apr 2008 16:07:55 -0400
+Message-ID: <48162E9B.2030400@garzik.org>
+References: <20080426001657.GD17369@modernduck.com> <da824cf30804252013l3a62166bk5ef03fb034fd47d5@mail.gmail.com> <20080428171449.GI17369@modernduck.com> <48160C39.6000701@rtr.ca>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.180]:6288 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934164AbYD1T2G (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 28 Apr 2008 15:28:06 -0400
-Received: by wa-out-1112.google.com with SMTP id m16so8217528waf.23
-        for <linux-ide@vger.kernel.org>; Mon, 28 Apr 2008 12:28:06 -0700 (PDT)
+Received: from srv5.dvmed.net ([207.36.208.214]:56744 "EHLO mail.dvmed.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1765812AbYD1UIB (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 28 Apr 2008 16:08:01 -0400
+In-Reply-To: <48160C39.6000701@rtr.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: linux-ide <linux-ide@vger.kernel.org>
+To: Mark Lord <liml@rtr.ca>
+Cc: Jody McIntyre <scjody@sun.com>, Grant Grundler <grundler@google.com>, linux-ide@vger.kernel.org
 
-Jeff,
+Mark Lord wrote:
+> Jody McIntyre wrote:
+>>
+>> We turn write caching off for data integrity reasons (write reordering
+>> does bad things to journalling file systems if power is interrupted -
+>> and at the scale of many Lustre deployments, it happens often enough to
+>> be a concern.)  I'm also concerned about the effects of NCQ in this area
+>> so we'll probably turn it off anyway.
+> ..
+> 
+> I haven't done a detailed examination lately, but..
+> 
+> Both write-caching and NCQ re-ordering should be safe on Linux.
+> The kernel will issue FLUSH_CACHE_EXT commands as required to checkpoint
+> data to the disk.
 
-These have appeared in mainline recently, they are all related to
-the can_queue member which is also defined in the ATA_NCQ_SHT macro.
+It depends on the fs's use of barriers (or not).
 
-There are more warnings, (grep for ATA_NCQ_SHT) but could you suggest
-how you'd like this resolved?
-drivers/ata/ahci.c:282:2: warning: Initializer entry defined twice
-drivers/ata/ahci.c:283:3:   also defined here
-drivers/ata/sata_sil24.c:391:2: warning: Initializer entry defined twice
-drivers/ata/sata_sil24.c:392:3:   also defined here
-drivers/ata/sata_nv.c:393:2: warning: Initializer entry defined twice
-drivers/ata/sata_nv.c:397:3:   also defined here
-drivers/ata/sata_nv.c:401:2: warning: Initializer entry defined twice
-drivers/ata/sata_nv.c:405:3:   also defined here
-drivers/ata/sata_mv.c:541:2: warning: Initializer entry defined twice
-drivers/ata/sata_mv.c:542:3:   also defined here
+Without barriers, FLUSH CACHE[ EXT] isn't issued very often.
 
-Cheers,
+	Jeff
 
-Harvey
+
 
