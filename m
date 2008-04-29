@@ -1,51 +1,31 @@
-From: Alek Du <alek.du@intel.com>
-Subject: Re: [PATCH] ata: Add Intel SCH PATA support (revised)
-Date: Tue, 29 Apr 2008 11:41:16 +0800
-Message-ID: <20080429114116.38c7d56c@dxy.sh.intel.com>
-References: <20080426140007.63cfeede@dxy.sh.intel.com>
-	<20080428094123.59d055c7@core>
-	<20080428170751.097bdbe6@dxy.sh.intel.com>
-	<200804282101.33012.bzolnier@gmail.com>
-	<20080429081411.47fef877@dxy.sh.intel.com>
+From: "Scott A. Conway" <misassistant@yahoo.com>
+Subject: Status of NCQ for the Promise SATA 300 TX2Plus?
+Date: Mon, 28 Apr 2008 21:21:17 -0700 (PDT)
+Message-ID: <235005.30535.qm@web50608.mail.re2.yahoo.com>
+Reply-To: misassistant@yahoo.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:29643 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752874AbYD2DsG (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 28 Apr 2008 23:48:06 -0400
-In-Reply-To: <20080429081411.47fef877@dxy.sh.intel.com>
+Received: from web50608.mail.re2.yahoo.com ([206.190.38.95]:43191 "HELO
+	web50608.mail.re2.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1751319AbYD2E17 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 29 Apr 2008 00:27:59 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alek Du <alek.du@intel.com>
-Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>, jgarzik@pobox.com, linux-ide@vger.kernel.org
+To: jgarzik@pobox.com, mikpe@it.uu.se
+Cc: linux-ide@vger.kernel.org
 
-On Tue, 29 Apr 2008 08:14:11 +0800
-Alek Du <alek.du@intel.com> wrote:
+First, I want to thank you for producing working drivers for my card that not even Promise themselves could figure out how to make.
+I tried several times to build their drivers from source, and they always fail with stupid errors.
+I just wondered if an when you will build in Native Command Queue support, as the TX2Plus and my Maxtor SATA 300 500GB drive both support it in hardware.
+I realize that NCQ is not the be-all end-all in enhancements, but it puzzles me that a three old driver still (apparently, unless I am leaving out a compile time parameter or kernel command line parameter) does not support it.
+Oh, and if there is supposed to be a site or mailing list that I should be using instead of e-mailing here, I apologize, but it is nearly impossible to find a definitive site for the LIBATA/SATA development team.
 
-> > needs to be defined (which will lack .enablebits field but otherwise
-> > be identical to DECLARE_ICH_DEV)
-> > 
-> I do not understand here, where DECLARE_ICH_DEV() used here? I just defined a new sub_type
-> sch_pata_100, and inherit most ops from piix instead of cable_detect and prereset. 
->
+Thanks,
 
-I see now. I posted a new patch which defined DECLARE_SCH_DEV. Thanks a lot.
+-Scott
 
-> > also seems that piix_cable_detect() should be updated to check for
-> > dev->device == PCI_DEVICE_ID_INTEL_SCH_IDE and return ATA_CBL_PATA80
-> > (it is OK to use it instead of ATA_CBL_UNK in drivers/ide/ - generic
-> > cable detection code won't override drive side cable detection).
-> >
-> My first version of patch is to modify piix_cable_detect like your way. But Alan suggested
-> use this way -- it is much cleaner. And according to my test, return ATA_CBL_UNK do no harm.
-> The driver is set to UDMA5 when 80 cable is used.
->  
-> > otherwise everything looks good
-> > 
-> > Thanks,
-> > Bart
-> 
-> Thanks,
-> Alek
+
+      ____________________________________________________________________________________
+Be a better friend, newshound, and 
+know-it-all with Yahoo! Mobile.  Try it now.  http://mobile.yahoo.com/;_ylt=Ahu06i62sR8HDtDypao8Wcj9tAcJ
