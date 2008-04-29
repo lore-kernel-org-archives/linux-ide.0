@@ -1,47 +1,49 @@
 From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH #upstream-fixes] ahci: SB600 ahci can't do MSI
-Date: Tue, 29 Apr 2008 17:43:53 -0400
-Message-ID: <48179699.1020004@garzik.org>
-References: <4816C9A2.9000503@gmail.com>
+Subject: [PATCH] pata_atiixp fix PIO timing misprogramming
+Date: Tue, 29 Apr 2008 17:49:55 -0400
+Message-ID: <20080429214955.GA25164@havoc.gtf.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:40841 "EHLO mail.dvmed.net"
+Received: from havoc.gtf.org ([69.61.125.42]:44118 "EHLO havoc.gtf.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752326AbYD2Vnz (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 29 Apr 2008 17:43:55 -0400
-In-Reply-To: <4816C9A2.9000503@gmail.com>
+	id S1752957AbYD2Vt5 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 29 Apr 2008 17:49:57 -0400
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: IDE/ATA development list <linux-ide@vger.kernel.org>, Shane Huang <Shane.Huang@amd.com>
-
-Tejun Heo wrote:
-> SB600 ahci can't do MSI.  Blacklist it.
-> 
-> This fixes bz#10507.
-> 
-> Signed-off-by: Tejun Heo <htejun@gmail.com>
-> Cc: Shane Huang <Shane.Huang@amd.com>
-> ---
-> drivers/ata/ahci.c |    2 +-
-> 1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> Index: tree0/drivers/ata/ahci.c
-> ===================================================================
-> --- tree0.orig/drivers/ata/ahci.c
-> +++ tree0/drivers/ata/ahci.c
-> @@ -433,7 +433,7 @@ static const struct ata_port_info ahci_p
->     /* board_ahci_sb600 */
->     {
->         AHCI_HFLAGS    (AHCI_HFLAG_IGN_SERR_INTERNAL |
-> -                 AHCI_HFLAG_32BIT_ONLY |
-> +                 AHCI_HFLAG_32BIT_ONLY | AHCI_HFLAG_NO_MSI |
->                  AHCI_HFLAG_SECT255 | AHCI_HFLAG_NO_PMP),
->         .flags        = AHCI_FLAG_COMMON,
->         .link_flags    = AHCI_LFLAG_COMMON,
-
-applied
+To: linux-ide@vger.kernel.org
+Cc: LKML <linux-kernel@vger.kernel.org>
 
 
+commit d7b5a23fc6e85456ed00a997ff2d925fb3f0dc52
+Author: Jeff Garzik <jeff@garzik.org>
+Date:   Tue Apr 29 17:39:45 2008 -0400
+
+    [libata] pata_atiixp: fix PIO timing data misprogramming
+    
+    Use correct variable, achieve desired result...
+    
+    Spotted by LKML/linux-ide poster whose name I lost (apologies!)
+    
+    Signed-off-by: Jeff Garzik <jgarzik@redhat.com>
+
+ drivers/ata/pata_atiixp.c |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+d7b5a23fc6e85456ed00a997ff2d925fb3f0dc52
+diff --git a/drivers/ata/pata_atiixp.c b/drivers/ata/pata_atiixp.c
+index 78738fb..d7de7ba 100644
+--- a/drivers/ata/pata_atiixp.c
++++ b/drivers/ata/pata_atiixp.c
+@@ -88,8 +88,8 @@ static void atiixp_set_pio_timing(struct ata_port *ap, struct ata_device *adev,
+ 	pci_write_config_word(pdev, ATIIXP_IDE_PIO_MODE, pio_mode_data);
+ 
+ 	pci_read_config_word(pdev, ATIIXP_IDE_PIO_TIMING, &pio_timing_data);
+-	pio_mode_data &= ~(0xFF << timing_shift);
+-	pio_mode_data |= (pio_timings[pio] << timing_shift);
++	pio_timing_data &= ~(0xFF << timing_shift);
++	pio_timing_data |= (pio_timings[pio] << timing_shift);
+ 	pci_write_config_word(pdev, ATIIXP_IDE_PIO_TIMING, pio_timing_data);
+ }
+ 
