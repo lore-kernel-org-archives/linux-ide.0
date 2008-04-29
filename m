@@ -1,57 +1,69 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [PATCH] [IDE] alim15x3: disable init_hwif_ali15x3 for PowerPC
-Date: Tue, 29 Apr 2008 23:01:38 +0200
-Message-ID: <200804292301.39037.bzolnier@gmail.com>
-References: <20080429161914.GA4980@polina.dev.rtsoft.ru>
+Subject: Re: [PATCH] ide: fix crash at boot with siimage driver
+Date: Tue, 29 Apr 2008 22:53:45 +0200
+Message-ID: <200804292253.45418.bzolnier@gmail.com>
+References: <1209444576.18023.128.camel@pasglop> <4817384C.8020905@ru.mvista.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
-  charset="utf-8"
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.157]:37615 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758067AbYD2U5A (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 29 Apr 2008 16:57:00 -0400
-Received: by fg-out-1718.google.com with SMTP id l27so141636fgb.17
-        for <linux-ide@vger.kernel.org>; Tue, 29 Apr 2008 13:56:54 -0700 (PDT)
-In-Reply-To: <20080429161914.GA4980@polina.dev.rtsoft.ru>
+Received: from nf-out-0910.google.com ([64.233.182.191]:40946 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758581AbYD2U44 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 29 Apr 2008 16:56:56 -0400
+Received: by nf-out-0910.google.com with SMTP id d3so129160nfc.21
+        for <linux-ide@vger.kernel.org>; Tue, 29 Apr 2008 13:56:52 -0700 (PDT)
+In-Reply-To: <4817384C.8020905@ru.mvista.com>
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Anton Vorontsov <avorontsov@ru.mvista.com>
-Cc: linux-ide@vger.kernel.org, linuxppc-dev@ozlabs.org
+To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Cc: benh@kernel.crashing.org, Linux Kernel list <linux-kernel@vger.kernel.org>, list linux-ide <linux-ide@vger.kernel.org>
 
-On Tuesday 29 April 2008, Anton Vorontsov wrote:
-> We don't need init_hwif_ali15x3() on the PowerPC systems either.
+On Tuesday 29 April 2008, Sergei Shtylyov wrote:
+> Hello.
 > 
-> Before:
+> Benjamin Herrenschmidt wrote:
 > 
-> ALI15X3: IDE controller (0x10b9:0x5229 rev 0xc8) at  PCI slot 0001:03:1f.0
-> ALI15X3: 100% native mode on irq 19
->     ide0: BM-DMA at 0x1120-0x1127
->     ide1: BM-DMA at 0x1128-0x112f
-> hda: SONY DVD RW AW-Q170A, ATAPI CD/DVD-ROM drive
-> hda: UDMA/66 mode selected
-> ide0: Disabled unable to get IRQ 14.
-> ide0: failed to initialize IDE interface
-> ide1: Disabled unable to get IRQ 15.
-> ide1: failed to initialize IDE interface
+> > Some change to the IDE layer are causing the siimage driver to crash
+> > at boot with a NULL dereference. This is due to the sil_dma_ops not
+> > containing all the necessary pointers. I suppose it used to just
+> > "override" the defaults while now, it needs to contain everything.
 > 
-> After:
+>     Both the patch introducing 'struct ide_dma_ops' into drivers and making 
+> them 'const' were in the same batch. However, the latter patch (now commit 
+> f37afdaca711838b50ecd89b9c15fc745270d77c) erroneously missed siimage.c -- 
+> which I didn't notice when reviewing, sigh...
 > 
-> ALI15X3: IDE controller (0x10b9:0x5229 rev 0xc8) at  PCI slot 0001:03:1f.0
-> ALI15X3: 100% native mode on irq 19
->     ide0: BM-DMA at 0x1120-0x1127
->     ide1: BM-DMA at 0x1128-0x112f
-> hda: SONY DVD RW AW-Q170A, ATAPI CD/DVD-ROM drive
-> hda: UDMA/66 mode selected
-> ide0 at 0x1100-0x1107,0x110a on irq 19
-> ide1 at 0x1110-0x1117,0x111a on irq 19
-> hda: ATAPI 48X DVD-ROM DVD-R CD-R/RW drive, 2048kB Cache
-> 
-> ide0 works well, though I can't test ide1, it isn't traced out on
-> the board.
-> 
-> Signed-off-by: Anton Vorontsov <avorontsov@ru.mvista.com>
+> > Signed-off-by: Benjamin Herrenschmidt <benh@kernel.crashing.org>
 
-applied, thanks
+Applied, thanks for fixing it.
+
+> > ---
+> 
+> > Index: linux-work/drivers/ide/pci/siimage.c
+> > ===================================================================
+> > --- linux-work.orig/drivers/ide/pci/siimage.c	2008-04-29 14:44:37.000000000 +1000
+> > +++ linux-work/drivers/ide/pci/siimage.c	2008-04-29 14:44:44.000000000 +1000
+> > @@ -780,7 +780,14 @@ static const struct ide_port_ops sil_sat
+> >  };
+> >  
+> >  static struct ide_dma_ops sil_dma_ops = {
+> 
+>     Could you please make this 'const' -- the same way as the mentioned commit 
+> does in other drivers?
+
+Thanks for noticing, I took care of it while merging the patch.
+
+> > +	.dma_host_set		= ide_dma_host_set,
+> > +	.dma_setup		= ide_dma_setup,
+> > +	.dma_exec_cmd		= ide_dma_exec_cmd,
+> > +	.dma_start		= ide_dma_start,
+> > +	.dma_end		= __ide_dma_end,
+> >  	.dma_test_irq		= siimage_dma_test_irq,
+> > +	.dma_timeout		= ide_dma_timeout,
+> > +	.dma_lost_irq		= ide_dma_lost_irq,
+> >  };
+> >  
+> >  #define DECLARE_SII_DEV(name_str, p_ops)		\
