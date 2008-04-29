@@ -1,26 +1,61 @@
 From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH] ide: fix au1xxx-ide breakage
-Date: Tue, 29 Apr 2008 18:55:00 +0400
-Message-ID: <481736C4.1050205@ru.mvista.com>
-References: <200804282342.04205.bzolnier@gmail.com>
+Subject: Re: [PATCH] ide: fix crash at boot with siimage driver
+Date: Tue, 29 Apr 2008 19:01:32 +0400
+Message-ID: <4817384C.8020905@ru.mvista.com>
+References: <1209444576.18023.128.camel@pasglop>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from h155.mvista.com ([63.81.120.155]:20931 "EHLO imap.sh.mvista.com"
+Received: from h155.mvista.com ([63.81.120.155]:20985 "EHLO imap.sh.mvista.com"
 	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751737AbYD2Ozm (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 29 Apr 2008 10:55:42 -0400
-In-Reply-To: <200804282342.04205.bzolnier@gmail.com>
+	id S1754708AbYD2PCM (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 29 Apr 2008 11:02:12 -0400
+In-Reply-To: <1209444576.18023.128.camel@pasglop>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: benh@kernel.crashing.org
+Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Linux Kernel list <linux-kernel@vger.kernel.org>, list linux-ide <linux-ide@vger.kernel.org>
 
-Bartlomiej Zolnierkiewicz wrote:
+Hello.
 
-> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Benjamin Herrenschmidt wrote:
 
-Acked-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+> Some change to the IDE layer are causing the siimage driver to crash
+> at boot with a NULL dereference. This is due to the sil_dma_ops not
+> containing all the necessary pointers. I suppose it used to just
+> "override" the defaults while now, it needs to contain everything.
+
+    Both the patch introducing 'struct ide_dma_ops' into drivers and making 
+them 'const' were in the same batch. However, the latter patch (now commit 
+f37afdaca711838b50ecd89b9c15fc745270d77c) erroneously missed siimage.c -- 
+which I didn't notice when reviewing, sigh...
+
+> Signed-off-by: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+> ---
+
+> Index: linux-work/drivers/ide/pci/siimage.c
+> ===================================================================
+> --- linux-work.orig/drivers/ide/pci/siimage.c	2008-04-29 14:44:37.000000000 +1000
+> +++ linux-work/drivers/ide/pci/siimage.c	2008-04-29 14:44:44.000000000 +1000
+> @@ -780,7 +780,14 @@ static const struct ide_port_ops sil_sat
+>  };
+>  
+>  static struct ide_dma_ops sil_dma_ops = {
+
+    Could you please make this 'const' -- the same way as the mentioned commit 
+does in other drivers?
+
+> +	.dma_host_set		= ide_dma_host_set,
+> +	.dma_setup		= ide_dma_setup,
+> +	.dma_exec_cmd		= ide_dma_exec_cmd,
+> +	.dma_start		= ide_dma_start,
+> +	.dma_end		= __ide_dma_end,
+>  	.dma_test_irq		= siimage_dma_test_irq,
+> +	.dma_timeout		= ide_dma_timeout,
+> +	.dma_lost_irq		= ide_dma_lost_irq,
+>  };
+>  
+>  #define DECLARE_SII_DEV(name_str, p_ops)		\
 
 MBR, Sergei
