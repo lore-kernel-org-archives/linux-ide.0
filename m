@@ -1,42 +1,60 @@
-From: Mark Lord <liml@rtr.ca>
-Subject: Re: ata_std_qc_defer not good enough for FIS-based switching ?
-Date: Tue, 29 Apr 2008 13:17:06 -0400
-Message-ID: <48175812.7000106@rtr.ca>
-References: <48163C5D.9050605@rtr.ca> <48164AE8.4070106@rtr.ca> <481659B5.7090703@gmail.com> <48175664.5030702@rtr.ca>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: Re: [PATCH] ata: Add Intel SCH PATA support
+Date: Tue, 29 Apr 2008 21:22:59 +0400
+Message-ID: <48175973.7050307@ru.mvista.com>
+References: <20080426140007.63cfeede@dxy.sh.intel.com>	<20080426103012.21dcf0fb@core>	<20080427075115.3ea40204@dxy.sh.intel.com>	<20080427093434.182a2137@core>	<20080427220315.794a6df3@dxy.sh.intel.com>	<20080427153111.3438dce8@core> <20080428092056.1e710a45@dxy.sh.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([76.10.145.34]:3798 "EHLO mail.rtr.ca"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750989AbYD2RRH (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 29 Apr 2008 13:17:07 -0400
-In-Reply-To: <48175664.5030702@rtr.ca>
+Received: from h155.mvista.com ([63.81.120.155]:22924 "EHLO imap.sh.mvista.com"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1760237AbYD2RXj (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 29 Apr 2008 13:23:39 -0400
+In-Reply-To: <20080428092056.1e710a45@dxy.sh.intel.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Jeff Garzik <jgarzik@pobox.com>, IDE/ATA development list <linux-ide@vger.kernel.org>, Alan Cox <alan@redhat.com>
+To: Alek Du <alek.du@intel.com>
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-ide@vger.kernel.org, jgarzik@pobox.com
 
-Mark Lord wrote:
-..
-> For the first time ever, I can now *heavily* mix PIO commands
-> with NCQ/non-NCQ DMA commands, to drives on an attached PM
-> (well, two attached PMs even), and the thing doesn't croak.
-> Woo-hoo!
-..
+Alek Du wrote:
 
-Here is the simple torture test I'm using for this.
-It might be fun for others to try something similar on the other LLDs
-which have PMP support:
+>>Re: [PATCH] ata: Add Intel SCH PATA support
 
-1. QuadCore CPU, with 4GB of RAM (lots of simultaneous threads).
+>>On Sun, 27 Apr 2008 22:03:15 +0800
+>>Alek Du <alek.du@intel.com> wrote:
 
-2. In one window, do this (lots of overlapping PIO commands):
-    while ( true ) ; do for d in /dev/sd? ; do bash -c "hdparm -C $d &" ; done  ;  sleep 0.1 ; done
+>>>Alan,
 
-3. In a second window, do this (lots of overlapping DMA/NCQ reads):
-    while (true) ; do  for d in /dev/sd? ; do bash -c "hdparm -t $d &" ; done ; sleep 6 ; done
+>>>One problem I still do not understand, if I return PATA_UNK for cable detection result, could the
+>>>driver finally set the disk to UDMA5 mode if I plug in 80 wire disk?
 
-Or something like that.
+>>You tell me - you've got the hardware documentation I assume. Assuming the
+>>system implements detection then it should. If a PATA controller doesn't
+>>implement any detection (cable or host side) and it does UDMA5 then I
+>>believe the correct description for it is usually "broken" as people will
+>>have horrible problems trying to use things like flash drives with it.
 
-Cheers
+>>Alan
+> 
+> 
+> The data sheet of SCH (http://download.intel.com/design/chipsets/embedded/datashts/319537.pdf) page 347 shows
+> the only supported PATA registers, for those not shown should be treated as "Reserved". 
+> Unfortunately, IOCFG (0x54) and port enable bits (0x41, 0x43) are all reserved.
+
+    If you'd actually compared the datasheet to the driver and/or the PIIX/ICH 
+datasheets, you would have seen that SCH is not compatible to PIIX/ICH. It 
+doesn't have PIO/DMA and UDMA timing and UDMA enable registers at config. 
+space offsets 0x4x but instead has pair of drive timing registers (SCH PATA 
+controller is single-channel) controlling PIO/DMA/UDMA speeds each at 0x8x, 
+laid out completely differently: PIIX/ICH timing registers fields encoded 
+cycle counts which SCH registers fileds encode mode numbers themselves.
+
+> Let's regard SCH PATA controller is an usually "broken" one :-), what do you suggest me to work around it?
+
+    Let's regard it as the one deserving its own driver. ;-)
+
+> Thanks,
+> Alek
+
+MBR, Sergei
