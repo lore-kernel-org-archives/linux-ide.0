@@ -1,35 +1,136 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [PATCH] Re: libata: PIO bounce copies to avoid long IRQ off
- runs
-Date: Tue, 29 Apr 2008 23:01:05 +0100
-Message-ID: <20080429230105.710cd464@core>
-References: <20080429144754.7d2952c8@core>
-	<20080429220128.GA25818@havoc.gtf.org>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: [git patches] libata fixes
+Date: Tue, 29 Apr 2008 18:09:34 -0400
+Message-ID: <20080429220934.GA26422@havoc.gtf.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:45800 "EHLO
-	lxorguk.ukuu.org.uk" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1755906AbYD2WIh (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 29 Apr 2008 18:08:37 -0400
-In-Reply-To: <20080429220128.GA25818@havoc.gtf.org>
+Received: from havoc.gtf.org ([69.61.125.42]:38684 "EHLO havoc.gtf.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752626AbYD2WJf (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 29 Apr 2008 18:09:35 -0400
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: linux-ide@vger.kernel.org
+To: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>
+Cc: linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
 
-On Tue, 29 Apr 2008 18:01:28 -0400
-Jeff Garzik <jeff@garzik.org> wrote:
 
-> I would tend to prefer this version...
-> 
-> 	- allocate buffer at init time
-> 	- use lesser-used KM_IRQ1
+Please pull from 'upstream-linus' branch of
+master.kernel.org:/pub/scm/linux/kernel/git/jgarzik/libata-dev.git upstream-linus
 
-Seems reasonable enough. You actually want to deal with the buffer at run
-time however because you care about two cases
+to receive the following updates:
 
-1.	Box with no highmem - easy to do compile time
-2.	Box with no high pages allocated - kind of hairy with gcc as
-the crystal ball feature doesn't work.
+ drivers/ata/ahci.c        |    2 +-
+ drivers/ata/libata-core.c |    3 +++
+ drivers/ata/pata_atiixp.c |    4 ++--
+ drivers/ata/pata_via.c    |   11 ++++++-----
+ include/linux/libata.h    |   12 ++++++------
+ 5 files changed, 18 insertions(+), 14 deletions(-)
+
+Alan Cox (2):
+      pata_via: Fix 6410 misdetect
+      libata: More TSSTcorp pain, keep in sync with legacy IDE
+
+Jeff Garzik (2):
+      [libata] pata_atiixp: fix PIO timing data misprogramming
+      [libata] linux/libata.h: reorganize ata_device struct members a bit
+
+Tejun Heo (1):
+      ahci: SB600 ahci can't do MSI, blacklist that capability
+
+diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+index 7c4f886..8cace9a 100644
+--- a/drivers/ata/ahci.c
++++ b/drivers/ata/ahci.c
+@@ -358,7 +358,7 @@ static const struct ata_port_info ahci_port_info[] = {
+ 	/* board_ahci_sb600 */
+ 	{
+ 		AHCI_HFLAGS	(AHCI_HFLAG_IGN_SERR_INTERNAL |
+-				 AHCI_HFLAG_32BIT_ONLY |
++				 AHCI_HFLAG_32BIT_ONLY | AHCI_HFLAG_NO_MSI |
+ 				 AHCI_HFLAG_SECT255 | AHCI_HFLAG_NO_PMP),
+ 		.flags		= AHCI_FLAG_COMMON,
+ 		.pio_mask	= 0x1f, /* pio0-4 */
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index 51b7d2f..3bc4885 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -3933,6 +3933,9 @@ static const struct ata_blacklist_entry ata_device_blacklist [] = {
+ 
+ 	/* Devices which get the IVB wrong */
+ 	{ "QUANTUM FIREBALLlct10 05", "A03.0900", ATA_HORKAGE_IVB, },
++	/* Maybe we should just blacklist TSSTcorp... */
++	{ "TSSTcorp CDDVDW SH-S202H", "SB00",	  ATA_HORKAGE_IVB, },
++	{ "TSSTcorp CDDVDW SH-S202H", "SB01",	  ATA_HORKAGE_IVB, },
+ 	{ "TSSTcorp CDDVDW SH-S202J", "SB00",	  ATA_HORKAGE_IVB, },
+ 	{ "TSSTcorp CDDVDW SH-S202J", "SB01",	  ATA_HORKAGE_IVB, },
+ 	{ "TSSTcorp CDDVDW SH-S202N", "SB00",	  ATA_HORKAGE_IVB, },
+diff --git a/drivers/ata/pata_atiixp.c b/drivers/ata/pata_atiixp.c
+index 78738fb..d7de7ba 100644
+--- a/drivers/ata/pata_atiixp.c
++++ b/drivers/ata/pata_atiixp.c
+@@ -88,8 +88,8 @@ static void atiixp_set_pio_timing(struct ata_port *ap, struct ata_device *adev,
+ 	pci_write_config_word(pdev, ATIIXP_IDE_PIO_MODE, pio_mode_data);
+ 
+ 	pci_read_config_word(pdev, ATIIXP_IDE_PIO_TIMING, &pio_timing_data);
+-	pio_mode_data &= ~(0xFF << timing_shift);
+-	pio_mode_data |= (pio_timings[pio] << timing_shift);
++	pio_timing_data &= ~(0xFF << timing_shift);
++	pio_timing_data |= (pio_timings[pio] << timing_shift);
+ 	pci_write_config_word(pdev, ATIIXP_IDE_PIO_TIMING, pio_timing_data);
+ }
+ 
+diff --git a/drivers/ata/pata_via.c b/drivers/ata/pata_via.c
+index d484074..2fea6cb 100644
+--- a/drivers/ata/pata_via.c
++++ b/drivers/ata/pata_via.c
+@@ -464,11 +464,12 @@ static int via_init_one(struct pci_dev *pdev, const struct pci_device_id *id)
+ 	}
+ 	pci_dev_put(isa);
+ 
+-	/* 0x40 low bits indicate enabled channels */
+-	pci_read_config_byte(pdev, 0x40 , &enable);
+-	enable &= 3;
+-	if (enable == 0) {
+-		return -ENODEV;
++	if (!(config->flags & VIA_NO_ENABLES)) {
++		/* 0x40 low bits indicate enabled channels */
++		pci_read_config_byte(pdev, 0x40 , &enable);
++		enable &= 3;
++		if (enable == 0)
++			return -ENODEV;
+ 	}
+ 
+ 	/* Initialise the FIFO for the enabled channels. */
+diff --git a/include/linux/libata.h b/include/linux/libata.h
+index 395a523..d1dfe87 100644
+--- a/include/linux/libata.h
++++ b/include/linux/libata.h
+@@ -548,11 +548,6 @@ struct ata_device {
+ 	u64			n_sectors;	/* size of device, if ATA */
+ 	unsigned int		class;		/* ATA_DEV_xxx */
+ 
+-	union {
+-		u16		id[ATA_ID_WORDS]; /* IDENTIFY xxx DEVICE data */
+-		u32		gscr[SATA_PMP_GSCR_DWORDS]; /* PMP GSCR block */
+-	};
+-
+ 	u8			pio_mode;
+ 	u8			dma_mode;
+ 	u8			xfer_mode;
+@@ -574,8 +569,13 @@ struct ata_device {
+ 	u16			sectors;	/* Number of sectors per track */
+ 
+ 	/* error history */
+-	struct ata_ering	ering;
+ 	int			spdn_cnt;
++	struct ata_ering	ering;
++
++	union {
++		u16		id[ATA_ID_WORDS]; /* IDENTIFY xxx DEVICE data */
++		u32		gscr[SATA_PMP_GSCR_DWORDS]; /* PMP GSCR block */
++	};
+ };
+ 
+ /* Offset into struct ata_device.  Fields above it are maintained
