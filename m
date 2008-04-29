@@ -1,41 +1,64 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH #upstream-fixes] ahci: SB600 ahci can't do MSI
-Date: Tue, 29 Apr 2008 16:09:22 +0900
-Message-ID: <4816C9A2.9000503@gmail.com>
+From: Jens Axboe <jens.axboe@oracle.com>
+Subject: Re: [PATCH 0/6] add large command support to the block layer
+Date: Tue, 29 Apr 2008 09:54:24 +0200
+Message-ID: <20080429075424.GF12774@kernel.dk>
+References: <1209140607-28654-1-git-send-email-fujita.tomonori@lab.ntt.co.jp>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rv-out-0708.google.com ([209.85.198.248]:43108 "EHLO
-	rv-out-0506.google.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1750771AbYD2HJ3 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 29 Apr 2008 03:09:29 -0400
-Received: by rv-out-0506.google.com with SMTP id k29so3140386rvb.1
-        for <linux-ide@vger.kernel.org>; Tue, 29 Apr 2008 00:09:28 -0700 (PDT)
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1209140607-28654-1-git-send-email-fujita.tomonori@lab.ntt.co.jp>
+Sender: linux-scsi-owner@vger.kernel.org
+To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Cc: linux-scsi@vger.kernel.org, bzolnier@gmail.com, linux-ide@vger.kernel.org, bharrosh@panasas.com, James.Bottomley@HansenPartnership.com, agk@redhat.com, Geert.Uytterhoeven@sonycom.com
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, Shane Huang <Shane.Huang@amd.com>
 
-SB600 ahci can't do MSI.  Blacklist it.
+On Sat, Apr 26 2008, FUJITA Tomonori wrote:
+> This is an updated patchset for large command support to the block
+> layer:
+> 
+> http://marc.info/?l=linux-scsi&m=120817127118449&w=2
+> 
+> We rarely handle large commands. So for optimization, a struct request
+> still has a static array for a command. rq_init sets rq->cmd pointer
+> to the static array. In short, rq_init() does
+> 
+> rq->cmd = rq->__cmd;
+> 
+> So we can access to rq->cmd and rq->cmd_len as before.
+> 
+> This change requires everyone to initialize the request in a proper
+> way (that is, just doing a memset() will not work). Now we have
+> rq_init() that works for any path so this patchset can cleanly convert
+> users of requests on the stack or kmalloced requests to use it (the
+> previous patchset does it in a hacky way):
+> 
+> http://marc.info/?l=linux-scsi&m=120911792725876&w=2
+> 
+> This patchset is against Jens' for-linus branch.
+> 
+> #1-#4 patches can be applied via Jens' tree now. #5 patch is for
+> IDE. It cleanly can be applied to both Bart's latest quilt tree and
+> Jens' tree though Bart's quilt tree has some pending IDE patches. #4
+> patch depends on #4. #6 patch depends on #1-#5.
+> 
+> I guess that the easiest way to apply this patchset would be:
+> 
+> 1. Pushing Bart's quilt tree to mainline.
+> 2. Rebasing Jens' tree to mainline.
+> 3. Pushing this patchset via Jens' tree.
+> 
+> Jens and Bart, let me know if I can do something to make the process
+> easier.
+> 
+> Bart, I will try to push the patchset to remove the requests on the
+> stack for 2.6.27:
+> 
+> http://marc.info/?l=linux-ide&m=120882410712466&w=2
 
-This fixes bz#10507.
+I've applied all patches to the for-linus branch, it should go up
+soonish. If anyone has problems with this, please holler SOON.
 
-Signed-off-by: Tejun Heo <htejun@gmail.com>
-Cc: Shane Huang <Shane.Huang@amd.com>
----
- drivers/ata/ahci.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+-- 
+Jens Axboe
 
-Index: tree0/drivers/ata/ahci.c
-===================================================================
---- tree0.orig/drivers/ata/ahci.c
-+++ tree0/drivers/ata/ahci.c
-@@ -433,7 +433,7 @@ static const struct ata_port_info ahci_p
- 	/* board_ahci_sb600 */
- 	{
- 		AHCI_HFLAGS	(AHCI_HFLAG_IGN_SERR_INTERNAL |
--				 AHCI_HFLAG_32BIT_ONLY |
-+				 AHCI_HFLAG_32BIT_ONLY | AHCI_HFLAG_NO_MSI |
- 				 AHCI_HFLAG_SECT255 | AHCI_HFLAG_NO_PMP),
- 		.flags		= AHCI_FLAG_COMMON,
- 		.link_flags	= AHCI_LFLAG_COMMON,
