@@ -1,126 +1,102 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH] ata: Add Intel SCH PATA support (revised)
-Date: Tue, 29 Apr 2008 20:38:17 +0400
-Message-ID: <48174EF9.8020208@ru.mvista.com>
-References: <20080426140007.63cfeede@dxy.sh.intel.com>	<20080428094123.59d055c7@core>	<20080428170751.097bdbe6@dxy.sh.intel.com>	<200804282101.33012.bzolnier@gmail.com> <20080429113905.757703fd@dxy.sh.intel.com>
+From: Mark Lord <liml@rtr.ca>
+Subject: Re: ata_std_qc_defer not good enough for FIS-based switching ?
+Date: Tue, 29 Apr 2008 13:09:56 -0400
+Message-ID: <48175664.5030702@rtr.ca>
+References: <48163C5D.9050605@rtr.ca> <48164AE8.4070106@rtr.ca> <481659B5.7090703@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from h155.mvista.com ([63.81.120.155]:22259 "EHLO imap.sh.mvista.com"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752183AbYD2Qi5 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 29 Apr 2008 12:38:57 -0400
-In-Reply-To: <20080429113905.757703fd@dxy.sh.intel.com>
+Received: from rtr.ca ([76.10.145.34]:3300 "EHLO mail.rtr.ca"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753790AbYD2RJ6 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 29 Apr 2008 13:09:58 -0400
+In-Reply-To: <481659B5.7090703@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alek Du <alek.du@intel.com>
-Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>, jgarzik@pobox.com, linux-ide@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: Jeff Garzik <jgarzik@pobox.com>, IDE/ATA development list <linux-ide@vger.kernel.org>, Alan Cox <alan@redhat.com>
 
-Hello.
+Tejun Heo wrote:
+> Hello, Mark.
+> 
+> Mark Lord wrote:
+>>> Are there controllers which *can* handle such a mix (ahci, sil24 ?)
+> 
+> Yeap, sil24 can.  ahci can currently only do device based switching but 
+> ahci 2.0 can do it too.
+> 
+>>> So it looks like a I need a .qc_defer() function which examines all 
+>>> links
+>>> from the common host port for activity, and then asks for command 
+>>> deferral
+>>> when the new command has a different protocol than those that are 
+>>> outstanding.
+>>>
+>>> Weird that none of the other LLDs need this.  Or do they?
+> 
+> So, none of the others needs this.
+> 
+>> This seems (below) to work for sata_mv.  But I still wonder about 
+>> other LLDs.
+..
 
-Alek Du wrote:
+Mmm.. Found another problem with sata_mv vs. the standard .qc_defer ops:
+they don't prevent PIO commands from getting into the mix.
 
-> Modified the patch again. Add and use DECLARE_SCH_DEV instead of DECLARE_ICH_DEV
-> to avoid enable_bits. But I still use ATA_CBL_UNK, because according to my test,
-> it works fine -- it could set the disk to UDMA5 mode when using 80 wire cable.
-> Please review it again, thanks.
+So now I have this in sata_mv, for all chip versions:
 
-> This patch adds Intel SCH chipsets (US15W, US15L, UL11L) PATA controller
-> support.
+static int mv_qc_defer (struct ata_queued_cmd *qc)
+{
+	struct ata_link *link = qc->dev->link;
+	struct ata_port *ap = link->ap;
+	struct mv_port_priv *pp;
 
-> Signed-off-by: Alek Du <alek.du@intel.com>
+	/*
+	 * If the port is completely idle, then allow the new qc.
+	 */
+	if (ap->nr_active_links == 0)
+		return 0;
+	/*
+	 * If the port is not in host-queue mode (EDMA), then defer the new qc.
+	 */
+	pp = ap->private_data;
+	if (!(pp->pp_flags & MV_PP_FLAG_EDMA_EN))
+		return ATA_DEFER_PORT;
 
-    NAK this patch completely -- both libata and IDE parts.
-    Luckily, I have just had a quick look at the datasheet to which you've 
-linked and that was enough to conclude that SCH is *not* compatible to 
-ICH/PIIX family, so absolutely needs a separate driver!
+	if (pp->pp_flags & MV_PP_FLAG_NCQ_EN) {
+		/*
+		 * The host queue (EDMA) is in NCQ mode.
+		 * If the new qc is also an NCQ command,
+		 * then allow the new qc.
+		 */
+		if (qc->tf.protocol == ATA_PROT_NCQ)
+			return 0;
+	} else {
+		/*
+		 * The host queue (EDMA) is in non-NCQ, DMA mode.
+		 * If the new qc is also a non-NCQ, DMA command,
+		 * then allow the new qc.
+		 */
+		if (qc->tf.protocol == ATA_PROT_DMA)
+			return 0;
+	}
+	return ATA_DEFER_PORT;
+}
 
-> diff --git a/drivers/ata/ata_piix.c b/drivers/ata/ata_piix.c
-> index ea2c764..4ec4178 100644
-> --- a/drivers/ata/ata_piix.c
-> +++ b/drivers/ata/ata_piix.c
-> @@ -136,6 +136,7 @@ enum piix_controller_ids {
->  	ich_pata_33,		/* ICH up to UDMA 33 only */
->  	ich_pata_66,		/* ICH up to 66 Mhz */
->  	ich_pata_100,		/* ICH up to UDMA 100 */
-> +	sch_pata_100,		/* SCH up to UDMA 100 */
->  	ich5_sata,
->  	ich6_sata,
->  	ich6m_sata,
-> @@ -216,6 +217,8 @@ static const struct pci_device_id piix_pci_tbl[] = {
->  	{ 0x8086, 0x269E, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich_pata_100 },
->  	/* ICH8 Mobile PATA Controller */
->  	{ 0x8086, 0x2850, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich_pata_100 },
-> +	/* Intel SCH PATA Controller */
-> +	{ 0x8086, 0x811A, PCI_ANY_ID, PCI_ANY_ID, 0, 0, sch_pata_100 },
->  
->  	/* NOTE: The following PCI ids must be kept in sync with the
->  	 * list in drivers/pci/quirks.c.
-> @@ -311,6 +314,13 @@ static struct ata_port_operations ich_pata_ops = {
->  	.set_dmamode		= ich_set_dmamode,
->  };
->  
-> +static struct ata_port_operations sch_pata_ops = {
-> +	.inherits		= &piix_pata_ops,
-> +	.cable_detect		= ata_cable_unknown,
-> +	.prereset		= ata_sff_prereset,
-> +	.set_dmamode		= ich_set_dmamode,
 
-    The ich_set_dmamode() won't work with SCH.
+For the first time ever, I can now *heavily* mix PIO commands
+with NCQ/non-NCQ DMA commands, to drives on an attached PM
+(well, two attached PMs even), and the thing doesn't croak.
+Woo-hoo!
 
-> +};
-> +
->  static struct ata_port_operations piix_sata_ops = {
->  	.inherits		= &ata_bmdma_port_ops,
->  };
-> @@ -470,6 +480,15 @@ static struct ata_port_info piix_port_info[] = {
->  		.port_ops	= &ich_pata_ops,
->  	},
->  
-> +	[sch_pata_100] =
-> +	{
-> +		.flags		= PIIX_PATA_FLAGS | PIIX_FLAG_CHECKINTR,
-> +		.pio_mask	= 0x1f,	/* pio0-4 */
-> +		.mwdma_mask	= 0x06, /* mwdma1-2 */
 
-    Wrong, SCH does support MWDMA0, so the mask would be 0x07...
+Time to batch up some patches for Jeff.  But sadly, just in time
+to have missed his weekly visit to linux-ide.  :)
 
-> diff --git a/drivers/ide/pci/piix.c b/drivers/ide/pci/piix.c
-> index 21c5dd2..d224a67 100644
-> --- a/drivers/ide/pci/piix.c
-> +++ b/drivers/ide/pci/piix.c
-> @@ -340,6 +340,19 @@ static const struct ide_port_ops piix_port_ops = {
->  		.udma_mask	= udma, \
->  	}
->  
-> +#define DECLARE_SCH_DEV(name_str, udma) \
 
-    Well, a single instance hardly deserved its own macro, could just put the 
-whole initializer in its array slot like for MPIIX (which probably shouldn't 
-be in this driver anyway though :-)...
+I wonder if something like that is what bit sata_sil24 the other day
+when I had it plugged in, mixing DMA, NCQ, and PIO commands to drives
+on an attached PM?
 
-> +	{ \
-> +		.name		= name_str, \
-> +		.init_chipset	= init_chipset_ich, \
-
-    This method read/writes IOCFG register which as you've yourself noted is 
-missing on SCH (among with any ICH compatible registers ;-).
-
-> +		.init_hwif	= init_hwif_ich, \
-> +		.port_ops	= &piix_port_ops, \
-> +		.host_flags	= IDE_HFLAGS_PIIX, \
-> +		.pio_mask	= ATA_PIO4, \
-> +		.swdma_mask	= ATA_SWDMA2_ONLY, \
-
-    Wrong, no SWDMA support in SCH.
-
-> +		.mwdma_mask	= ATA_MWDMA12_ONLY, \
-
-    Shoud have been ATA_MWDMA2.
-
-> +		.udma_mask	= udma, \
-
-    This is fixed to AATA_UDMA5 so there was no need to parametrize...
-
-MBR, Sergei
+Cheers
