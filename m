@@ -1,46 +1,148 @@
 From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: [PATCH] pata_via: Fix 6410 misdetect
-Date: Tue, 29 Apr 2008 14:10:57 +0100
-Message-ID: <20080429141057.650e6b0a@core>
+Subject: [PATCH] libata: PIO bounce copies to avoid long IRQ off runs
+Date: Tue, 29 Apr 2008 14:47:54 +0100
+Message-ID: <20080429144754.7d2952c8@core>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:42058 "EHLO
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:39799 "EHLO
 	lxorguk.ukuu.org.uk" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751781AbYD2NS1 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 29 Apr 2008 09:18:27 -0400
+	with ESMTP id S1750977AbYD2NzX (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 29 Apr 2008 09:55:23 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: akpm@osdl.org, jeff@garzik.org, linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org, jeff@garzik.org
 
-The discrete VIA ATA chips don't have 0x40 enable bits. We check that
-properly in one location but not another. This causes some users 6410
-RAID cards to be incorrectly skipped.
+Right now with PIO transfers we can jam the box up horribly as lock IRQs
+off when the transfer is from high memory. We still have other things we
+need to fix in this area to really make a difference but this is the
+buffering side of the fix (the state machine enable/disable irq stuff is
+also needed)
 
-Would be good if this made the next kernel (may also be appropriate for
-stable)
+Currently uses kmalloc - which seems to work best, but trivial to
+allocate at init time if wanted
 
 Signed-off-by: Alan Cox <alan@redhat.com>
 
-diff -u --new-file --recursive --exclude-from /usr/src/exclude linux.vanilla-2.6.25-mm1/drivers/ata/pata_via.c linux-2.6.25-mm1/drivers/ata/pata_via.c
---- linux.vanilla-2.6.25-mm1/drivers/ata/pata_via.c	2008-04-28 11:36:48.000000000 +0100
-+++ linux-2.6.25-mm1/drivers/ata/pata_via.c	2008-04-29 10:16:07.000000000 +0100
-@@ -464,11 +464,12 @@
- 	}
- 	pci_dev_put(isa);
+diff -u --new-file --recursive --exclude-from /usr/src/exclude linux.vanilla-2.6.25-mm1/drivers/ata/libata-sff.c linux-2.6.25-mm1/drivers/ata/libata-sff.c
+--- linux.vanilla-2.6.25-mm1/drivers/ata/libata-sff.c	2008-04-28 11:36:48.000000000 +0100
++++ linux-2.6.25-mm1/drivers/ata/libata-sff.c	2008-04-28 11:42:05.000000000 +0100
+@@ -665,6 +665,62 @@
+ }
  
--	/* 0x40 low bits indicate enabled channels */
--	pci_read_config_byte(pdev, 0x40 , &enable);
--	enable &= 3;
--	if (enable == 0) {
--		return -ENODEV;
-+	if (!(config->flags & VIA_NO_ENABLES)) {
-+		/* 0x40 low bits indicate enabled channels */
-+		pci_read_config_byte(pdev, 0x40 , &enable);
-+		enable &= 3;
-+		if (enable == 0)
-+			return -ENODEV;
- 	}
+ /**
++ *	ata_bounce_pio_xfer	-	Transfer a block by PIO from high
++ *	@dev: target device
++ *	@page: highmem page
++ *	@offset: offset in page
++ *	@count: bytes to transfer
++ *	@do_write: writing if set, reading if not
++ *
++ *	Transfer a page of high memory via PIO. Whenever possible use a bounce
++ *	buffer to avoid transfers occuring with local IRQ disable
++ */
++
++static unsigned int ata_bounce_pio_xfer(struct ata_device *dev, struct page *page, 
++				  unsigned int offset, int count, int rw)
++{
++	struct ata_port *ap = dev->link->ap;
++	unsigned long flags;
++	unsigned char *zebedee;
++	unsigned char *buf;
++	unsigned int consumed;
++
++	BUG_ON(offset + count > PAGE_SIZE);
++
++	zebedee = kmalloc(count, GFP_ATOMIC);
++	if (likely(zebedee)) {
++		if (rw == WRITE) {
++			local_irq_save(flags);
++			buf = kmap_atomic(page, KM_IRQ0);
++			memcpy(zebedee, buf + offset, count);
++			kunmap_atomic(buf, KM_IRQ0);
++			local_irq_restore(flags);
++		}
++		/* do the actual data transfer */
++		consumed = ap->ops->sff_data_xfer(dev, zebedee, count, rw);
++		if (rw == READ) {
++			/* Read so bounce  data upwards */
++			local_irq_save(flags);
++			buf = kmap_atomic(page, KM_IRQ0);
++			memcpy(buf + offset, zebedee, count);
++			kunmap_atomic(buf, KM_IRQ0);
++			local_irq_restore(flags);
++		}
++		kfree(zebedee);
++	} else {
++		/* Only used when we are out of buffer memory
++		   as a last last resort */
++		local_irq_save(flags);
++		buf = kmap_atomic(page, KM_IRQ0);
++		/* do the actual data transfer */
++		consumed = ap->ops->sff_data_xfer(dev, buf + offset, count, rw);
++		kunmap_atomic(buf, KM_IRQ0);
++		local_irq_restore(flags);
++	}
++	return consumed;
++}
++
++/**
+  *	ata_pio_sector - Transfer a sector of data.
+  *	@qc: Command on going
+  *
+@@ -675,7 +731,7 @@
+  */
+ static void ata_pio_sector(struct ata_queued_cmd *qc)
+ {
+-	int do_write = (qc->tf.flags & ATA_TFLAG_WRITE);
++	int do_write = (qc->tf.flags & ATA_TFLAG_WRITE) ? WRITE : READ;
+ 	struct ata_port *ap = qc->ap;
+ 	struct page *page;
+ 	unsigned int offset;
+@@ -693,19 +749,9 @@
  
- 	/* Initialise the FIFO for the enabled channels. */
+ 	DPRINTK("data %s\n", qc->tf.flags & ATA_TFLAG_WRITE ? "write" : "read");
+ 
+-	if (PageHighMem(page)) {
+-		unsigned long flags;
+-
+-		/* FIXME: use a bounce buffer */
+-		local_irq_save(flags);
+-		buf = kmap_atomic(page, KM_IRQ0);
+-
+-		/* do the actual data transfer */
+-		ap->ops->sff_data_xfer(qc->dev, buf + offset, qc->sect_size,
+-				       do_write);
+-
+-		kunmap_atomic(buf, KM_IRQ0);
+-		local_irq_restore(flags);
++	if (PageHighMem(page) || 1 /* TEST FIXME */) {
++		ata_bounce_pio_xfer(qc->dev, page, offset, qc->sect_size,
++								do_write);
+ 	} else {
+ 		buf = page_address(page);
+ 		ap->ops->sff_data_xfer(qc->dev, buf + offset, qc->sect_size,
+@@ -830,19 +876,9 @@
+ 
+ 	DPRINTK("data %s\n", qc->tf.flags & ATA_TFLAG_WRITE ? "write" : "read");
+ 
+-	if (PageHighMem(page)) {
+-		unsigned long flags;
+-
+-		/* FIXME: use bounce buffer */
+-		local_irq_save(flags);
+-		buf = kmap_atomic(page, KM_IRQ0);
+-
+-		/* do the actual data transfer */
+-		consumed = ap->ops->sff_data_xfer(dev,  buf + offset, count, rw);
+-
+-		kunmap_atomic(buf, KM_IRQ0);
+-		local_irq_restore(flags);
+-	} else {
++	if (PageHighMem(page))
++		consumed = ata_bounce_pio_xfer(qc->dev, page, offset, count, rw);
++	else {
+ 		buf = page_address(page);
+ 		consumed = ap->ops->sff_data_xfer(dev,  buf + offset, count, rw);
+ 	}
