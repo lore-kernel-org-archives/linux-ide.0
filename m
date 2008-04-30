@@ -1,43 +1,60 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: ata_std_qc_defer not good enough for FIS-based switching ?
-Date: Wed, 30 Apr 2008 18:38:18 +0900
-Message-ID: <48183E0A.1070308@gmail.com>
-References: <48163C5D.9050605@rtr.ca> <48164AE8.4070106@rtr.ca> <481659B5.7090703@gmail.com> <48175664.5030702@rtr.ca>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: Re: [PATCH] ata: Add Intel SCH PATA support (revised)
+Date: Wed, 30 Apr 2008 15:17:18 +0400
+Message-ID: <4818553E.6040606@ru.mvista.com>
+References: <20080426140007.63cfeede@dxy.sh.intel.com>	<20080428094123.59d055c7@core>	<20080428170751.097bdbe6@dxy.sh.intel.com>	<200804282101.33012.bzolnier@gmail.com>	<20080429113905.757703fd@dxy.sh.intel.com>	<48174EF9.8020208@ru.mvista.com> <20080430104931.3aaab288@dxy.sh.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.181]:28208 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759099AbYD3JiY (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 30 Apr 2008 05:38:24 -0400
-Received: by wa-out-1112.google.com with SMTP id j37so215197waf.23
-        for <linux-ide@vger.kernel.org>; Wed, 30 Apr 2008 02:38:24 -0700 (PDT)
-In-Reply-To: <48175664.5030702@rtr.ca>
+Received: from homer.mvista.com ([63.81.120.155]:35892 "EHLO
+	imap.sh.mvista.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1757344AbYD3LR7 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 30 Apr 2008 07:17:59 -0400
+In-Reply-To: <20080430104931.3aaab288@dxy.sh.intel.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark Lord <liml@rtr.ca>
-Cc: Jeff Garzik <jgarzik@pobox.com>, IDE/ATA development list <linux-ide@vger.kernel.org>, Alan Cox <alan@redhat.com>
+To: Alek Du <alek.du@intel.com>
+Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>, jgarzik@pobox.com, linux-ide@vger.kernel.org, rob.rhoads@intel.com
 
-Mark Lord wrote:
-> For the first time ever, I can now *heavily* mix PIO commands
-> with NCQ/non-NCQ DMA commands, to drives on an attached PM
-> (well, two attached PMs even), and the thing doesn't croak.
-> Woo-hoo!
+Hello.
 
-Cool.
+Alek Du wrote:
 
-> Time to batch up some patches for Jeff.  But sadly, just in time
-> to have missed his weekly visit to linux-ide.  :)
-> 
-> I wonder if something like that is what bit sata_sil24 the other day
-> when I had it plugged in, mixing DMA, NCQ, and PIO commands to drives
-> on an attached PM?
+>>    NAK this patch completely -- both libata and IDE parts.
 
-sil24 and ahci are pretty heavily tested regarding command scheduling. 
-I'll dig into the log soon.  Please give me some time.
+   In the future it would be worth to post 2 separate patches, one for IDE and 
+one for libata -- since they should go thru the different maintainer trees.
 
-Thanks.
+>>    Luckily, I have just had a quick look at the datasheet to which you've
+>>linked and that was enough to conclude that SCH is *not* compatible to
+>>ICH/PIIX family, so absolutely needs a separate driver!
 
--- 
-tejun
+> Most registers are same
+
+    Well, if you mean the standard BMDMA and standard PCI config. space 
+registers (0x00 thru 0x3f), then those are mostly the same for the majority of 
+the PCI IDE controllers.  Why not stick your code into one of the other driver 
+instead? ;-)
+
+> except for port enable bit, IOCFG and DMA timing. Now
+
+    And also PIO and UDMA timings/enable. Actually, all the vendor-specific 
+PCI config. registers are different from PIIX/ICH -- and that's what makes the 
+PATA drivers different from each other.
+
+> I know why my patch just works -- the BIOS set the timing correctly.
+
+    Yeah, and we have the special drivers which rely on the BIOS doing all the 
+mode programming...
+
+> Thanks for point this out. I will post a separate driver patch later.
+
+    In the meantwhile the only viable solution would be to stick your code 
+into drivers/ide/pci/generic.c and drivers/ata/ata_generic.c.  No more hacks, 
+please. :-)
+
+> Thanks,
+> Alek
+
+MBR, Sergei
