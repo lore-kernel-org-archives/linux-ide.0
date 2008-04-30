@@ -1,14 +1,14 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH 10/10] sata_inic162x: update intro comment, up the version and drop EXPERIMENTAL
-Date: Wed, 30 Apr 2008 16:35:17 +0900
-Message-ID: <1209540919119-git-send-email-htejun@gmail.com>
+Subject: [PATCH 09/10] sata_inic162x: add cardbus support
+Date: Wed, 30 Apr 2008 16:35:16 +0900
+Message-ID: <12095409192606-git-send-email-htejun@gmail.com>
 References: <12095409172824-git-send-email-htejun@gmail.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rv-out-0708.google.com ([209.85.198.240]:30073 "EHLO
-	rv-out-0506.google.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1755853AbYD3Hfa (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 30 Apr 2008 03:35:30 -0400
-Received: by rv-out-0506.google.com with SMTP id k29so211428rvb.1
+Received: from py-out-1112.google.com ([64.233.166.179]:38540 "EHLO
+	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755817AbYD3Hfb (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 30 Apr 2008 03:35:31 -0400
+Received: by py-out-1112.google.com with SMTP id u52so616522pyb.10
         for <linux-ide@vger.kernel.org>; Wed, 30 Apr 2008 00:35:30 -0700 (PDT)
 In-Reply-To: <12095409172824-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
@@ -16,84 +16,131 @@ List-Id: linux-ide@vger.kernel.org
 To: jeff@garzik.org, alan@lxorguk.ukuu.org.uk, linux-ide@vger.kernel.org
 Cc: Tejun Heo <htejun@gmail.com>
 
-sata_inic162x is now ready for production use.  Bump the version,
-explain what's working and what's not and drop EXPERIMENTAL.
+When attached to cardbus, mmio region is at BAR 1.  Other than that,
+everything else is the same.  Add support for it.
 
 Signed-off-by: Tejun Heo <htejun@gmail.com>
 ---
- drivers/ata/Kconfig         |    4 ++--
- drivers/ata/sata_inic162x.c |   36 ++++++++++++++++++++++++++++--------
- 2 files changed, 30 insertions(+), 10 deletions(-)
+ drivers/ata/sata_inic162x.c |   36 ++++++++++++++++++++++++------------
+ 1 files changed, 24 insertions(+), 12 deletions(-)
 
-diff --git a/drivers/ata/Kconfig b/drivers/ata/Kconfig
-index 1c11df9..908738a 100644
---- a/drivers/ata/Kconfig
-+++ b/drivers/ata/Kconfig
-@@ -205,8 +205,8 @@ config SATA_VITESSE
- 	  If unsure, say N.
- 
- config SATA_INIC162X
--	tristate "Initio 162x SATA support (HIGHLY EXPERIMENTAL)"
--	depends on PCI && EXPERIMENTAL
-+	tristate "Initio 162x SATA support"
-+	depends on PCI
- 	help
- 	  This option enables support for Initio 162x Serial ATA.
- 
 diff --git a/drivers/ata/sata_inic162x.c b/drivers/ata/sata_inic162x.c
-index bfbd34b..2f8f1df 100644
+index ee67d6e..bfbd34b 100644
 --- a/drivers/ata/sata_inic162x.c
 +++ b/drivers/ata/sata_inic162x.c
-@@ -10,13 +10,33 @@
-  * right.  Documentation is available at initio's website but it only
-  * documents registers (not programming model).
-  *
-- * - ATA disks work.
-- * - Hotplug works.
-- * - ATAPI read works but burning doesn't.  This thing is really
-- *   peculiar about ATAPI and I couldn't figure out how ATAPI PIO and
-- *   ATAPI DMA WRITE should be programmed.  If you've got a clue, be
-- *   my guest.
-- * - Both STR and STD work.
-+ * This driver has interesting history.  The first version was written
-+ * from the documentation and a 2.4 IDE driver posted on a Taiwan
-+ * company, which didn't use any IDMA features and couldn't handle
-+ * LBA48.  The resulting driver couldn't handle LBA48 devices either
-+ * making it pretty useless.
-+ *
-+ * After a while, initio picked the driver up, renamed it to
-+ * sata_initio162x, updated it to use IDMA for ATA DMA commands and
-+ * posted it on their website.  It only used ATA_PROT_DMA for IDMA and
-+ * attaching both devices and issuing IDMA and !IDMA commands
-+ * simultaneously broke it due to PIRQ masking interaction but it did
-+ * show how to use the IDMA (ADMA + some initio specific twists)
-+ * engine.
-+ *
-+ * Then, I picked up their changes again and here's the usable driver
-+ * which uses IDMA for everything.  Everything works now including
-+ * LBA48, CD/DVD burning, suspend/resume and hotplug.  There are some
-+ * issues tho.  Result Tf is not resported properly, NCQ isn't
-+ * supported yet and CD/DVD writing works with DMA assisted PIO
-+ * protocol (which, for native SATA devices, shouldn't cause any
-+ * noticeable difference).
-+ *
-+ * Anyways, so, here's finally a working driver for inic162x.  Enjoy!
-+ *
-+ * initio: If you guys wanna improve the driver regarding result TF
-+ * access and other stuff, please feel free to contact me.  I'll be
-+ * happy to assist.
-  */
- 
- #include <linux/kernel.h>
-@@ -28,7 +48,7 @@
- #include <scsi/scsi_device.h>
- 
- #define DRV_NAME	"sata_inic162x"
--#define DRV_VERSION	"0.3"
-+#define DRV_VERSION	"0.4"
+@@ -31,7 +31,8 @@
+ #define DRV_VERSION	"0.3"
  
  enum {
- 	MMIO_BAR_PCI		= 5,
+-	MMIO_BAR		= 5,
++	MMIO_BAR_PCI		= 5,
++	MMIO_BAR_CARDBUS	= 1,
+ 
+ 	NR_PORTS		= 2,
+ 
+@@ -197,6 +198,7 @@ struct inic_pkt {
+ } __packed;
+ 
+ struct inic_host_priv {
++	void __iomem	*mmio_base;
+ 	u16		cached_hctl;
+ };
+ 
+@@ -221,7 +223,9 @@ static const int scr_map[] = {
+ 
+ static void __iomem *inic_port_base(struct ata_port *ap)
+ {
+-	return ap->host->iomap[MMIO_BAR] + ap->port_no * PORT_SIZE;
++	struct inic_host_priv *hpriv = ap->host->private_data;
++
++	return hpriv->mmio_base + ap->port_no * PORT_SIZE;
+ }
+ 
+ static void inic_reset_port(void __iomem *port_base)
+@@ -378,11 +382,11 @@ static void inic_host_intr(struct ata_port *ap)
+ static irqreturn_t inic_interrupt(int irq, void *dev_instance)
+ {
+ 	struct ata_host *host = dev_instance;
+-	void __iomem *mmio_base = host->iomap[MMIO_BAR];
++	struct inic_host_priv *hpriv = host->private_data;
+ 	u16 host_irq_stat;
+ 	int i, handled = 0;;
+ 
+-	host_irq_stat = readw(mmio_base + HOST_IRQ_STAT);
++	host_irq_stat = readw(hpriv->mmio_base + HOST_IRQ_STAT);
+ 
+ 	if (unlikely(!(host_irq_stat & HIRQ_GLOBAL)))
+ 		goto out;
+@@ -776,7 +780,6 @@ static int inic_pci_device_resume(struct pci_dev *pdev)
+ {
+ 	struct ata_host *host = dev_get_drvdata(&pdev->dev);
+ 	struct inic_host_priv *hpriv = host->private_data;
+-	void __iomem *mmio_base = host->iomap[MMIO_BAR];
+ 	int rc;
+ 
+ 	rc = ata_pci_device_do_resume(pdev);
+@@ -784,7 +787,7 @@ static int inic_pci_device_resume(struct pci_dev *pdev)
+ 		return rc;
+ 
+ 	if (pdev->dev.power.power_state.event == PM_EVENT_SUSPEND) {
+-		rc = init_controller(mmio_base, hpriv->cached_hctl);
++		rc = init_controller(hpriv->mmio_base, hpriv->cached_hctl);
+ 		if (rc)
+ 			return rc;
+ 	}
+@@ -802,6 +805,7 @@ static int inic_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 	struct ata_host *host;
+ 	struct inic_host_priv *hpriv;
+ 	void __iomem * const *iomap;
++	int mmio_bar;
+ 	int i, rc;
+ 
+ 	if (!printed_version++)
+@@ -815,22 +819,30 @@ static int inic_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 
+ 	host->private_data = hpriv;
+ 
+-	/* acquire resources and fill host */
++	/* Acquire resources and fill host.  Note that PCI and cardbus
++	 * use different BARs.
++	 */
+ 	rc = pcim_enable_device(pdev);
+ 	if (rc)
+ 		return rc;
+ 
+-	rc = pcim_iomap_regions(pdev, 1 << MMIO_BAR, DRV_NAME);
++	if (pci_resource_flags(pdev, MMIO_BAR_PCI) & IORESOURCE_MEM)
++		mmio_bar = MMIO_BAR_PCI;
++	else
++		mmio_bar = MMIO_BAR_CARDBUS;
++
++	rc = pcim_iomap_regions(pdev, 1 << mmio_bar, DRV_NAME);
+ 	if (rc)
+ 		return rc;
+ 	host->iomap = iomap = pcim_iomap_table(pdev);
+-	hpriv->cached_hctl = readw(iomap[MMIO_BAR] + HOST_CTL);
++	hpriv->mmio_base = iomap[mmio_bar];
++	hpriv->cached_hctl = readw(hpriv->mmio_base + HOST_CTL);
+ 
+ 	for (i = 0; i < NR_PORTS; i++) {
+ 		struct ata_port *ap = host->ports[i];
+ 
+-		ata_port_pbar_desc(ap, MMIO_BAR, -1, "mmio");
+-		ata_port_pbar_desc(ap, MMIO_BAR, i * PORT_SIZE, "port");
++		ata_port_pbar_desc(ap, mmio_bar, -1, "mmio");
++		ata_port_pbar_desc(ap, mmio_bar, i * PORT_SIZE, "port");
+ 	}
+ 
+ 	/* Set dma_mask.  This devices doesn't support 64bit addressing. */
+@@ -860,7 +872,7 @@ static int inic_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 		return rc;
+ 	}
+ 
+-	rc = init_controller(iomap[MMIO_BAR], hpriv->cached_hctl);
++	rc = init_controller(hpriv->mmio_base, hpriv->cached_hctl);
+ 	if (rc) {
+ 		dev_printk(KERN_ERR, &pdev->dev,
+ 			   "failed to initialize controller\n");
 -- 
 1.5.2.4
 
