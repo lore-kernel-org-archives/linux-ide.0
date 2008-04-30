@@ -1,225 +1,189 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH 05/10] sata_inic162x: kill now unused bmdma related stuff
-Date: Wed, 30 Apr 2008 16:35:12 +0900
-Message-ID: <12095409183598-git-send-email-htejun@gmail.com>
+Subject: [PATCH 07/10] sata_inic162x: use IDMA for ATAPI commands
+Date: Wed, 30 Apr 2008 16:35:14 +0900
+Message-ID: <12095409193866-git-send-email-htejun@gmail.com>
 References: <12095409172824-git-send-email-htejun@gmail.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rv-out-0708.google.com ([209.85.198.240]:30073 "EHLO
+Received: from rv-out-0708.google.com ([209.85.198.245]:29897 "EHLO
 	rv-out-0506.google.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1755537AbYD3Hf2 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 30 Apr 2008 03:35:28 -0400
-Received: by rv-out-0506.google.com with SMTP id k29so211428rvb.1
-        for <linux-ide@vger.kernel.org>; Wed, 30 Apr 2008 00:35:28 -0700 (PDT)
+	with ESMTP id S1755642AbYD3Hf3 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 30 Apr 2008 03:35:29 -0400
+Received: by rv-out-0506.google.com with SMTP id k29so211406rvb.1
+        for <linux-ide@vger.kernel.org>; Wed, 30 Apr 2008 00:35:29 -0700 (PDT)
 In-Reply-To: <12095409172824-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: jeff@garzik.org, alan@lxorguk.ukuu.org.uk, linux-ide@vger.kernel.org
 Cc: Tejun Heo <htejun@gmail.com>
 
-sata_inic162x doesn't use BMDMA anymore.  Kill bmdma related stuff.
+Use IDMA for ATAPI commands.  Write and some misc commands time out
+when executed using ATAPI_PROT_DMA but ATAPI_PROT_PIO works fine.  As
+PIO is driven by DMA too, it doesn't make any noticeable difference
+for native SATA devices.  inic_check_atapi_dma() is implemented to
+force PIO for those ATAPI commands.
 
-* prdctl manipulation
-
-* port IRQ mask manipulation
-
-* inherit ATA_BASE_SHT instead of ATA_BMDMA_SHT
-
-* BMDMA methods
+After this change, sata_inic162x issues all commands using IDMA.
 
 Signed-off-by: Tejun Heo <htejun@gmail.com>
 ---
- drivers/ata/sata_inic162x.c |  103 ++----------------------------------------
- 1 files changed, 5 insertions(+), 98 deletions(-)
+ drivers/ata/sata_inic162x.c |   81 +++++++++++++++++++++++++------------------
+ 1 files changed, 47 insertions(+), 34 deletions(-)
 
 diff --git a/drivers/ata/sata_inic162x.c b/drivers/ata/sata_inic162x.c
-index 1f105fe..094b0ed 100644
+index c132942..a31dc24 100644
 --- a/drivers/ata/sata_inic162x.c
 +++ b/drivers/ata/sata_inic162x.c
-@@ -101,9 +101,7 @@ enum {
- 	PIRQ_PENDING		= (1 << 7),  /* port IRQ pending (STAT only) */
+@@ -192,7 +192,8 @@ struct inic_prd {
  
- 	PIRQ_ERR		= PIRQ_OFFLINE | PIRQ_ONLINE | PIRQ_FATAL,
--
--	PIRQ_MASK_DMA_READ	= PIRQ_REPLY | PIRQ_ATA,
--	PIRQ_MASK_OTHER		= PIRQ_REPLY | PIRQ_COMPLETE,
-+	PIRQ_MASK_DEFAULT	= PIRQ_REPLY,
- 	PIRQ_MASK_FREEZE	= 0xff,
+ struct inic_pkt {
+ 	struct inic_cpb	cpb;
+-	struct inic_prd	prd[LIBATA_MAX_PRD];
++	struct inic_prd	prd[LIBATA_MAX_PRD + 1];	/* + 1 for cdb */
++	u8		cdb[ATAPI_CDB_LEN];
+ } __packed;
  
- 	/* PORT_PRD_CTL bits */
-@@ -206,13 +204,11 @@ struct inic_port_priv {
- 	dma_addr_t	pkt_dma;
- 	u32		*cpb_tbl;
- 	dma_addr_t	cpb_tbl_dma;
--	u8		dfl_prdctl;
--	u8		cached_prdctl;
--	u8		cached_pirq_mask;
- };
+ struct inic_host_priv {
+@@ -361,23 +362,18 @@ static void inic_host_intr(struct ata_port *ap)
+ 		goto spurious;
+ 	}
  
- static struct scsi_host_template inic_sht = {
--	ATA_BMDMA_SHT(DRV_NAME),
-+	ATA_BASE_SHT(DRV_NAME),
-+	.sg_tablesize	= LIBATA_MAX_PRD,	/* maybe it can be larger? */
- 	.dma_boundary	= INIC_DMA_BOUNDARY,
- };
+-	if (!ata_is_atapi(qc->tf.protocol)) {
+-		if (likely(idma_stat & IDMA_STAT_DONE)) {
+-			inic_stop_idma(ap);
++	if (likely(idma_stat & IDMA_STAT_DONE)) {
++		inic_stop_idma(ap);
  
-@@ -227,23 +223,6 @@ static void __iomem *inic_port_base(struct ata_port *ap)
- 	return ap->host->iomap[MMIO_BAR] + ap->port_no * PORT_SIZE;
+-			/* Depending on circumstances, device error
+-			 * isn't reported by IDMA, check it explicitly.
+-			 */
+-			if (unlikely(readb(port_base + PORT_TF_COMMAND) &
+-				     (ATA_DF | ATA_ERR)))
+-				qc->err_mask |= AC_ERR_DEV;
++		/* Depending on circumstances, device error
++		 * isn't reported by IDMA, check it explicitly.
++		 */
++		if (unlikely(readb(port_base + PORT_TF_COMMAND) &
++			     (ATA_DF | ATA_ERR)))
++			qc->err_mask |= AC_ERR_DEV;
+ 
+-			ata_qc_complete(qc);
+-			return;
+-		}
+-	} else {
+-		if (likely(ata_sff_host_intr(ap, qc)))
+-			return;
++		ata_qc_complete(qc);
++		return;
+ 	}
+ 
+  spurious:
+@@ -421,6 +417,19 @@ static irqreturn_t inic_interrupt(int irq, void *dev_instance)
+ 	return IRQ_RETVAL(handled);
  }
  
--static void __inic_set_pirq_mask(struct ata_port *ap, u8 mask)
--{
--	void __iomem *port_base = inic_port_base(ap);
--	struct inic_port_priv *pp = ap->private_data;
--
--	writeb(mask, port_base + PORT_IRQ_MASK);
--	pp->cached_pirq_mask = mask;
--}
--
--static void inic_set_pirq_mask(struct ata_port *ap, u8 mask)
--{
--	struct inic_port_priv *pp = ap->private_data;
--
--	if (pp->cached_pirq_mask != mask)
--		__inic_set_pirq_mask(ap, mask);
--}
--
- static void inic_reset_port(void __iomem *port_base)
++static int inic_check_atapi_dma(struct ata_queued_cmd *qc)
++{
++	/* For some reason ATAPI_PROT_DMA doesn't work for some
++	 * commands including writes and other misc ops.  Use PIO
++	 * protocol instead, which BTW is driven by the DMA engine
++	 * anyway, so it shouldn't make much difference for native
++	 * SATA devices.
++	 */
++	if (atapi_cmd_type(qc->cdb[0]) == READ)
++		return 0;
++	return 1;
++}
++
+ static void inic_fill_sg(struct inic_prd *prd, struct ata_queued_cmd *qc)
  {
- 	void __iomem *idma_ctl = port_base + PORT_IDMA_CTL;
-@@ -297,63 +276,6 @@ static int inic_scr_write(struct ata_port *ap, unsigned sc_reg, u32 val)
- 	return 0;
- }
+ 	struct scatterlist *sg;
+@@ -452,20 +461,21 @@ static void inic_qc_prep(struct ata_queued_cmd *qc)
+ 	struct inic_prd *prd = pkt->prd;
+ 	bool is_atapi = ata_is_atapi(qc->tf.protocol);
+ 	bool is_data = ata_is_data(qc->tf.protocol);
++	unsigned int cdb_len = 0;
  
--/*
-- * In TF mode, inic162x is very similar to SFF device.  TF registers
-- * function the same.  DMA engine behaves similary using the same PRD
-- * format as BMDMA but different command register, interrupt and event
-- * notification methods are used.  The following inic_bmdma_*()
-- * functions do the impedance matching.
-- */
--static void inic_bmdma_setup(struct ata_queued_cmd *qc)
--{
--	struct ata_port *ap = qc->ap;
--	struct inic_port_priv *pp = ap->private_data;
--	void __iomem *port_base = inic_port_base(ap);
--	int rw = qc->tf.flags & ATA_TFLAG_WRITE;
--
--	/* make sure device sees PRD table writes */
--	wmb();
--
--	/* load transfer length */
--	writel(qc->nbytes, port_base + PORT_PRD_XFERLEN);
--
--	/* turn on DMA and specify data direction */
--	pp->cached_prdctl = pp->dfl_prdctl | PRD_CTL_DMAEN;
--	if (!rw)
--		pp->cached_prdctl |= PRD_CTL_WR;
--	writeb(pp->cached_prdctl, port_base + PORT_PRD_CTL);
--
--	/* issue r/w command */
--	ap->ops->sff_exec_command(ap, &qc->tf);
--}
--
--static void inic_bmdma_start(struct ata_queued_cmd *qc)
--{
--	struct ata_port *ap = qc->ap;
--	struct inic_port_priv *pp = ap->private_data;
--	void __iomem *port_base = inic_port_base(ap);
--
--	/* start host DMA transaction */
--	pp->cached_prdctl |= PRD_CTL_START;
--	writeb(pp->cached_prdctl, port_base + PORT_PRD_CTL);
--}
--
--static void inic_bmdma_stop(struct ata_queued_cmd *qc)
--{
--	struct ata_port *ap = qc->ap;
--	struct inic_port_priv *pp = ap->private_data;
--	void __iomem *port_base = inic_port_base(ap);
--
--	/* stop DMA engine */
--	writeb(pp->dfl_prdctl, port_base + PORT_PRD_CTL);
--}
--
--static u8 inic_bmdma_status(struct ata_port *ap)
--{
--	/* event is already verified by the interrupt handler */
--	return ATA_DMA_INTR;
--}
--
- static void inic_stop_idma(struct ata_port *ap)
- {
- 	void __iomem *port_base = inic_port_base(ap);
-@@ -631,8 +553,7 @@ static void inic_freeze(struct ata_port *ap)
- {
+ 	VPRINTK("ENTER\n");
+ 
+ 	if (is_atapi)
+-		return;
++		cdb_len = qc->dev->cdb_len;
+ 
+ 	/* prepare packet, based on initio driver */
+ 	memset(pkt, 0, sizeof(struct inic_pkt));
+ 
+ 	cpb->ctl_flags = CPB_CTL_VALID | CPB_CTL_IEN;
+-	if (is_data)
++	if (is_atapi || is_data)
+ 		cpb->ctl_flags |= CPB_CTL_DATA;
+ 
+-	cpb->len = cpu_to_le32(qc->nbytes);
++	cpb->len = cpu_to_le32(qc->nbytes + cdb_len);
+ 	cpb->prd = cpu_to_le32(pp->pkt_dma + offsetof(struct inic_pkt, prd));
+ 
+ 	cpb->device = qc->tf.device;
+@@ -486,6 +496,18 @@ static void inic_qc_prep(struct ata_queued_cmd *qc)
+ 	cpb->command = qc->tf.command;
+ 	/* don't load ctl - dunno why.  it's like that in the initio driver */
+ 
++	/* setup PRD for CDB */
++	if (is_atapi) {
++		memcpy(pkt->cdb, qc->cdb, ATAPI_CDB_LEN);
++		prd->mad = cpu_to_le32(pp->pkt_dma +
++				       offsetof(struct inic_pkt, cdb));
++		prd->len = cpu_to_le16(cdb_len);
++		prd->flags = PRD_CDB | PRD_WRITE;
++		if (!is_data)
++			prd->flags |= PRD_END;
++		prd++;
++	}
++
+ 	/* setup sg table */
+ 	if (is_data)
+ 		inic_fill_sg(prd, qc);
+@@ -498,16 +520,12 @@ static unsigned int inic_qc_issue(struct ata_queued_cmd *qc)
+ 	struct ata_port *ap = qc->ap;
  	void __iomem *port_base = inic_port_base(ap);
  
--	__inic_set_pirq_mask(ap, PIRQ_MASK_FREEZE);
+-	if (!ata_is_atapi(qc->tf.protocol)) {
+-		/* fire up the ADMA engine */
+-		writew(HCTL_FTHD0, port_base + HOST_CTL);
+-		writew(IDMA_CTL_GO, port_base + PORT_IDMA_CTL);
+-		writeb(0, port_base + PORT_CPB_PTQFIFO);
++	/* fire up the ADMA engine */
++	writew(HCTL_FTHD0, port_base + HOST_CTL);
++	writew(IDMA_CTL_GO, port_base + PORT_IDMA_CTL);
++	writeb(0, port_base + PORT_CPB_PTQFIFO);
+ 
+-		return 0;
+-	}
 -
-+	writeb(PIRQ_MASK_FREEZE, port_base + PORT_IRQ_MASK);
- 	ap->ops->sff_check_status(ap);
- 	writeb(0xff, port_base + PORT_IRQ_STAT);
+-	return ata_sff_qc_issue(qc);
++	return 0;
  }
-@@ -643,8 +564,7 @@ static void inic_thaw(struct ata_port *ap)
  
- 	ap->ops->sff_check_status(ap);
- 	writeb(0xff, port_base + PORT_IRQ_STAT);
--
--	__inic_set_pirq_mask(ap, PIRQ_MASK_OTHER);
-+	writeb(PIRQ_MASK_DEFAULT, port_base + PORT_IRQ_MASK);
- }
- 
- static int inic_check_ready(struct ata_link *link)
-@@ -713,7 +633,6 @@ static int inic_hardreset(struct ata_link *link, unsigned int *class,
- static void inic_error_handler(struct ata_port *ap)
- {
- 	void __iomem *port_base = inic_port_base(ap);
--	struct inic_port_priv *pp = ap->private_data;
- 	unsigned long flags;
- 
- 	/* reset PIO HSM and stop DMA engine */
-@@ -721,7 +640,6 @@ static void inic_error_handler(struct ata_port *ap)
- 
- 	spin_lock_irqsave(ap->lock, flags);
- 	ap->hsm_task_state = HSM_ST_IDLE;
--	writeb(pp->dfl_prdctl, port_base + PORT_PRD_CTL);
- 	spin_unlock_irqrestore(ap->lock, flags);
- 
- 	/* PIO and DMA engines have been stopped, perform recovery */
-@@ -771,10 +689,8 @@ static int inic_port_resume(struct ata_port *ap)
- 
- static int inic_port_start(struct ata_port *ap)
- {
--	void __iomem *port_base = inic_port_base(ap);
- 	struct device *dev = ap->host->dev;
- 	struct inic_port_priv *pp;
--	u8 tmp;
- 	int rc;
- 
- 	/* alloc and initialize private data */
-@@ -783,11 +699,6 @@ static int inic_port_start(struct ata_port *ap)
- 		return -ENOMEM;
- 	ap->private_data = pp;
- 
--	/* default PRD_CTL value, DMAEN, WR and START off */
--	tmp = readb(port_base + PORT_PRD_CTL);
--	tmp &= ~(PRD_CTL_DMAEN | PRD_CTL_WR | PRD_CTL_START);
--	pp->dfl_prdctl = tmp;
--
- 	/* Alloc resources */
- 	rc = ata_port_start(ap);
- 	if (rc)
-@@ -811,10 +722,6 @@ static int inic_port_start(struct ata_port *ap)
+ static void inic_tf_read(struct ata_port *ap, struct ata_taskfile *tf)
+@@ -704,6 +722,7 @@ static int inic_port_start(struct ata_port *ap)
  static struct ata_port_operations inic_port_ops = {
  	.inherits		= &ata_sff_port_ops,
  
--	.bmdma_setup		= inic_bmdma_setup,
--	.bmdma_start		= inic_bmdma_start,
--	.bmdma_stop		= inic_bmdma_stop,
--	.bmdma_status		= inic_bmdma_status,
++	.check_atapi_dma	= inic_check_atapi_dma,
  	.qc_prep		= inic_qc_prep,
  	.qc_issue		= inic_qc_issue,
  	.qc_fill_rtf		= inic_qc_fill_rtf,
+@@ -723,12 +742,6 @@ static struct ata_port_operations inic_port_ops = {
+ };
+ 
+ static struct ata_port_info inic_port_info = {
+-	/* For some reason, ATAPI_PROT_PIO is broken on this
+-	 * controller, and no, PIO_POLLING does't fix it.  It somehow
+-	 * manages to report the wrong ireason and ignoring ireason
+-	 * results in machine lock up.  Tell libata to always prefer
+-	 * DMA.
+-	 */
+ 	.flags			= ATA_FLAG_SATA | ATA_FLAG_PIO_DMA,
+ 	.pio_mask		= 0x1f,	/* pio0-4 */
+ 	.mwdma_mask		= 0x07, /* mwdma0-2 */
 -- 
 1.5.2.4
 
