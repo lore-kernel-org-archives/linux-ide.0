@@ -1,136 +1,44 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: [git patches] libata fixes
-Date: Tue, 29 Apr 2008 18:09:34 -0400
-Message-ID: <20080429220934.GA26422@havoc.gtf.org>
+From: Alek Du <alek.du@intel.com>
+Subject: Re: [PATCH] ata: Add Intel SCH PATA support (revised)
+Date: Wed, 30 Apr 2008 10:49:31 +0800
+Message-ID: <20080430104931.3aaab288@dxy.sh.intel.com>
+References: <20080426140007.63cfeede@dxy.sh.intel.com>
+	<20080428094123.59d055c7@core>
+	<20080428170751.097bdbe6@dxy.sh.intel.com>
+	<200804282101.33012.bzolnier@gmail.com>
+	<20080429113905.757703fd@dxy.sh.intel.com>
+	<48174EF9.8020208@ru.mvista.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from havoc.gtf.org ([69.61.125.42]:38684 "EHLO havoc.gtf.org"
+Received: from mga14.intel.com ([143.182.124.37]:44247 "EHLO mga14.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752626AbYD2WJf (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 29 Apr 2008 18:09:35 -0400
-Content-Disposition: inline
+	id S1752825AbYD3C4W (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 29 Apr 2008 22:56:22 -0400
+In-Reply-To: <48174EF9.8020208@ru.mvista.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>
-Cc: linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
+To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>, jgarzik@pobox.com, linux-ide@vger.kernel.org, rob.rhoads@intel.com
+
+Hi Sergei,
+
+On Wed, 30 Apr 2008 00:38:17 +0800
+"Sergei Shtylyov" <sshtylyov@ru.mvista.com> wrote:
+
+>
+> 
+>     NAK this patch completely -- both libata and IDE parts.
+>     Luckily, I have just had a quick look at the datasheet to which you've
+> linked and that was enough to conclude that SCH is *not* compatible to
+> ICH/PIIX family, so absolutely needs a separate driver!
+>
+
+Most registers are same except for port enable bit, IOCFG and DMA timing. Now
+I know why my patch just works -- the BIOS set the timing correctly. Thanks
+for point this out. I will post a separate driver patch later.
 
 
-Please pull from 'upstream-linus' branch of
-master.kernel.org:/pub/scm/linux/kernel/git/jgarzik/libata-dev.git upstream-linus
-
-to receive the following updates:
-
- drivers/ata/ahci.c        |    2 +-
- drivers/ata/libata-core.c |    3 +++
- drivers/ata/pata_atiixp.c |    4 ++--
- drivers/ata/pata_via.c    |   11 ++++++-----
- include/linux/libata.h    |   12 ++++++------
- 5 files changed, 18 insertions(+), 14 deletions(-)
-
-Alan Cox (2):
-      pata_via: Fix 6410 misdetect
-      libata: More TSSTcorp pain, keep in sync with legacy IDE
-
-Jeff Garzik (2):
-      [libata] pata_atiixp: fix PIO timing data misprogramming
-      [libata] linux/libata.h: reorganize ata_device struct members a bit
-
-Tejun Heo (1):
-      ahci: SB600 ahci can't do MSI, blacklist that capability
-
-diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
-index 7c4f886..8cace9a 100644
---- a/drivers/ata/ahci.c
-+++ b/drivers/ata/ahci.c
-@@ -358,7 +358,7 @@ static const struct ata_port_info ahci_port_info[] = {
- 	/* board_ahci_sb600 */
- 	{
- 		AHCI_HFLAGS	(AHCI_HFLAG_IGN_SERR_INTERNAL |
--				 AHCI_HFLAG_32BIT_ONLY |
-+				 AHCI_HFLAG_32BIT_ONLY | AHCI_HFLAG_NO_MSI |
- 				 AHCI_HFLAG_SECT255 | AHCI_HFLAG_NO_PMP),
- 		.flags		= AHCI_FLAG_COMMON,
- 		.pio_mask	= 0x1f, /* pio0-4 */
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index 51b7d2f..3bc4885 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -3933,6 +3933,9 @@ static const struct ata_blacklist_entry ata_device_blacklist [] = {
- 
- 	/* Devices which get the IVB wrong */
- 	{ "QUANTUM FIREBALLlct10 05", "A03.0900", ATA_HORKAGE_IVB, },
-+	/* Maybe we should just blacklist TSSTcorp... */
-+	{ "TSSTcorp CDDVDW SH-S202H", "SB00",	  ATA_HORKAGE_IVB, },
-+	{ "TSSTcorp CDDVDW SH-S202H", "SB01",	  ATA_HORKAGE_IVB, },
- 	{ "TSSTcorp CDDVDW SH-S202J", "SB00",	  ATA_HORKAGE_IVB, },
- 	{ "TSSTcorp CDDVDW SH-S202J", "SB01",	  ATA_HORKAGE_IVB, },
- 	{ "TSSTcorp CDDVDW SH-S202N", "SB00",	  ATA_HORKAGE_IVB, },
-diff --git a/drivers/ata/pata_atiixp.c b/drivers/ata/pata_atiixp.c
-index 78738fb..d7de7ba 100644
---- a/drivers/ata/pata_atiixp.c
-+++ b/drivers/ata/pata_atiixp.c
-@@ -88,8 +88,8 @@ static void atiixp_set_pio_timing(struct ata_port *ap, struct ata_device *adev,
- 	pci_write_config_word(pdev, ATIIXP_IDE_PIO_MODE, pio_mode_data);
- 
- 	pci_read_config_word(pdev, ATIIXP_IDE_PIO_TIMING, &pio_timing_data);
--	pio_mode_data &= ~(0xFF << timing_shift);
--	pio_mode_data |= (pio_timings[pio] << timing_shift);
-+	pio_timing_data &= ~(0xFF << timing_shift);
-+	pio_timing_data |= (pio_timings[pio] << timing_shift);
- 	pci_write_config_word(pdev, ATIIXP_IDE_PIO_TIMING, pio_timing_data);
- }
- 
-diff --git a/drivers/ata/pata_via.c b/drivers/ata/pata_via.c
-index d484074..2fea6cb 100644
---- a/drivers/ata/pata_via.c
-+++ b/drivers/ata/pata_via.c
-@@ -464,11 +464,12 @@ static int via_init_one(struct pci_dev *pdev, const struct pci_device_id *id)
- 	}
- 	pci_dev_put(isa);
- 
--	/* 0x40 low bits indicate enabled channels */
--	pci_read_config_byte(pdev, 0x40 , &enable);
--	enable &= 3;
--	if (enable == 0) {
--		return -ENODEV;
-+	if (!(config->flags & VIA_NO_ENABLES)) {
-+		/* 0x40 low bits indicate enabled channels */
-+		pci_read_config_byte(pdev, 0x40 , &enable);
-+		enable &= 3;
-+		if (enable == 0)
-+			return -ENODEV;
- 	}
- 
- 	/* Initialise the FIFO for the enabled channels. */
-diff --git a/include/linux/libata.h b/include/linux/libata.h
-index 395a523..d1dfe87 100644
---- a/include/linux/libata.h
-+++ b/include/linux/libata.h
-@@ -548,11 +548,6 @@ struct ata_device {
- 	u64			n_sectors;	/* size of device, if ATA */
- 	unsigned int		class;		/* ATA_DEV_xxx */
- 
--	union {
--		u16		id[ATA_ID_WORDS]; /* IDENTIFY xxx DEVICE data */
--		u32		gscr[SATA_PMP_GSCR_DWORDS]; /* PMP GSCR block */
--	};
--
- 	u8			pio_mode;
- 	u8			dma_mode;
- 	u8			xfer_mode;
-@@ -574,8 +569,13 @@ struct ata_device {
- 	u16			sectors;	/* Number of sectors per track */
- 
- 	/* error history */
--	struct ata_ering	ering;
- 	int			spdn_cnt;
-+	struct ata_ering	ering;
-+
-+	union {
-+		u16		id[ATA_ID_WORDS]; /* IDENTIFY xxx DEVICE data */
-+		u32		gscr[SATA_PMP_GSCR_DWORDS]; /* PMP GSCR block */
-+	};
- };
- 
- /* Offset into struct ata_device.  Fields above it are maintained
+Thanks,
+Alek
