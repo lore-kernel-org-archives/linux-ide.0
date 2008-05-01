@@ -1,54 +1,72 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [git patches] IDE fixes
-Date: Thu, 1 May 2008 14:18:38 +0200
-Message-ID: <200805011418.39999.bzolnier@gmail.com>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: libata-eh/pmp command sequence on NCQ media error
+Date: Thu, 01 May 2008 21:24:24 +0900
+Message-ID: <4819B678.1010303@gmail.com>
+References: <480F9D29.4070603@rtr.ca> <480FF229.2060808@rtr.ca> <481168FA.5020709@pobox.com> <4811E2FB.4040100@rtr.ca> <48120269.8020101@gmail.com> <4818E5B2.1040801@rtr.ca> <4818E73D.9070201@rtr.ca> <48191422.30409@gmail.com> <48192ED5.9030402@rtr.ca> <48193138.2070306@gmail.com> <4819A85B.1090709@rtr.ca>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.185]:25789 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756055AbYEAMC7 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 1 May 2008 08:02:59 -0400
-Received: by nf-out-0910.google.com with SMTP id d3so443923nfc.21
-        for <linux-ide@vger.kernel.org>; Thu, 01 May 2008 05:02:54 -0700 (PDT)
-Content-Disposition: inline
+Received: from py-out-1112.google.com ([64.233.166.177]:14674 "EHLO
+	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753835AbYEAMYa (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 1 May 2008 08:24:30 -0400
+Received: by py-out-1112.google.com with SMTP id u52so1445377pyb.10
+        for <linux-ide@vger.kernel.org>; Thu, 01 May 2008 05:24:30 -0700 (PDT)
+In-Reply-To: <4819A85B.1090709@rtr.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Stephen Rothwell <sfr@canb.auug.org.au>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Mark Lord <liml@rtr.ca>
+Cc: Jeff Garzik <jgarzik@pobox.com>, IDE/ATA development list <linux-ide@vger.kernel.org>
 
+Mark Lord wrote:
+>>> Does the bit get set for the host link or pmp fanout links?
+>> It's only on the pmp fanout link. Dunno why it gets set, but it does.
+> ..
+> 
+> Oh, wait a sec.. I think I know what's going on.
+> We're back to the original problem in this thread again:
 
-Regression fix for some host drivers using MMIO, i.e. siimage
-(big thanks to Jeremy Kerr for the detailed bug analysis).
+Aieee...
 
+> Mark Lord wrote:
+>> With no port-multiplier attached, a media error during NCQ
+>> results in an immediate READ_LOG_EXT_10H to retrieve the
+>> task file for the failed I/O.
+>>
+>> With a port-multiplier, there is instead a flurry of sata_pmp_read()
+>> attempts.  I'm guessing that the READ_LOG_EXT_10H would normally
+>> then follow those ?
+>>
+>> The problem is, on most of the Marvell chips, non-data commands
+>> cannot succeed after any kind of error (until after the port is reset),
+>> so they fail, and we never then get to the READ_LOG_EXT_10H stage.
+>> Oddly, the READ_LOG_EXT_10H command itself is okay (with some errata
+>> goodness tossed in).
+>>
+>> So, for sata_mv at least, I'd kinda like to have libata-eh attempt
+>> the READ_LOG_EXT_10H before it tries to (unsuccessfully) access the
+>> per-port SCRs on the PMP.
+> ..
+> 
+> So what is happening now, is that libata-eh is going and attempting
+> to access the per-port SCRs *after* the READ_LOG_EXT commands.
+> And those per-port SCRs are not actually accessible:  the shadow
+> registers are misbehaving -- known errata -- and cannot be accurately
+> used without a port reset.
+> 
+> Mmm.. gotta figure out a way to mark the port for RESET,
+> without having that action taint the commands already analyzed.
+> 
+> I suppose I'll have to just clone some code from libata-eh to
+> do the READ_LOG_EXT and then qc_complete() those commands
+> before continuing.  Or something.
 
-Linus, please pull from:
+The usual way to handle this is to clear the controller state (not the 
+PHY) from ->error_handler() before calling the generic error_handler. 
+Many drivers do similar things - ahci restarts the engine, sil24 calls 
+sil24_init_port() and so on.  Does mv need PHY reset to get it working 
+again?
 
-master.kernel.org:/pub/scm/linux/kernel/git/bart/ide-2.6.git/
-
-to receive the following updates:
-
- drivers/ide/ide-probe.c |    3 ++-
- 1 files changed, 2 insertions(+), 1 deletions(-)
-
-
-Bartlomiej Zolnierkiewicz (1):
-      ide: fix early setup of hwif->host_flags
-
-
-diff --git a/drivers/ide/ide-probe.c b/drivers/ide/ide-probe.c
-index 099a0fe..591deda 100644
---- a/drivers/ide/ide-probe.c
-+++ b/drivers/ide/ide-probe.c
-@@ -1347,7 +1347,8 @@ static void ide_init_port(ide_hwif_t *hwif, unsigned int port,
- 	    (d->host_flags & IDE_HFLAG_FORCE_LEGACY_IRQS))
- 		hwif->irq = port ? 15 : 14;
- 
--	hwif->host_flags = d->host_flags;
-+	/* ->host_flags may be set by ->init_iops (or even earlier...) */
-+	hwif->host_flags |= d->host_flags;
- 	hwif->pio_mask = d->pio_mask;
- 
- 	/* ->set_pio_mode for DTC2278 is currently limited to port 0 */
+-- 
+tejun
