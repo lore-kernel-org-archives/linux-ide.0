@@ -1,44 +1,40 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: libata sata_via unusual behaviour
-Date: Thu, 1 May 2008 19:58:23 +0100
-Message-ID: <20080501195823.79786815@core>
-References: <3bbeafe90805011018o28f46794h369242ccb02b7ced@mail.gmail.com>
-	<3bbeafe90805011158n5b45283awd43a7a534ba11456@mail.gmail.com>
+From: "Gaston, Jason D" <jason.d.gaston@intel.com>
+Subject: RE: AHCI w/ATAPI device problems on Intel Tolapai
+Date: Thu, 1 May 2008 14:50:01 -0700
+Message-ID: <39B20DF628532344BC7A2692CB6AEE0702A0D2F6@orsmsx420.amr.corp.intel.com>
+References: <39B20DF628532344BC7A2692CB6AEE070294E5FA@orsmsx420.amr.corp.intel.com> <480FFAD9.5040606@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:50507 "EHLO
-	lxorguk.ukuu.org.uk" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1764345AbYEATGu (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 1 May 2008 15:06:50 -0400
-In-Reply-To: <3bbeafe90805011158n5b45283awd43a7a534ba11456@mail.gmail.com>
+Received: from mga09.intel.com ([134.134.136.24]:43944 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751006AbYEAVuw convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 1 May 2008 17:50:52 -0400
+Content-class: urn:content-classes:message
+In-Reply-To: <480FFAD9.5040606@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Paolo <paoletto@gmail.com>
-Cc: jgarzik@pobox.com, linux-ide@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org
 
-On Thu, 1 May 2008 20:58:37 +0200
-Paolo <paoletto@gmail.com> wrote:
+>Hmm.. these look like media presence polling commands from 
+>haldaemon.  I 
+>have no idea why it's failing on ahci tho.  All polling failures I've 
+>seen till now was device dependent, not controller.  You can disable 
+>media presence polling using hal-disable-polling /dev/sr0.  If you 
+>disabling polling, does the device work correctly?  ie. can 
+>you read and 
+>record using it?
+>
+>-- 
+>tejun
+>
 
-> Hello!
-> 
->  It seems that me and many others are experiencing poor sata performances
->  in the last months, probably with 2.6.20+ kernels.
-> 
->  an example of these problems is here:
-> 
->  http://ubuntuforums.org/showthread.php?p=4845777
-> 
->  unfortunately it seems that sata subsystem on linux is little to none
->  tweakable
+How do I get the hal-disable-polling utility?  I get a command not
+found.
 
-It doesn't normally need tweaking, and the hdparm numbers show that it is
-working correctly in the example you give. There may be problems higher
-up the stack but the ATA layer appears to be doing just fine.
+Thanks,
 
-Perhaps the Ubuntu engineers could be persuaded to profile their problem
-systems and identify what is causing the slow down - LVM certain has been
-problematic for some setups if LVM is in use.
-
-Alan
+Jason
