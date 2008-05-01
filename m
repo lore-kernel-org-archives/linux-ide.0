@@ -1,106 +1,146 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH #upstream-fixes] libata: improve post-reset device ready test
-Date: Thu, 01 May 2008 23:41:41 +0900
-Message-ID: <4819D6A5.2030309@gmail.com>
+Subject: [PATCH 03/10 UPDATED] sata_inic162x: update TF read handling
+Date: Thu, 01 May 2008 23:55:58 +0900
+Message-ID: <4819D9FE.9000909@gmail.com>
+References: <12095409172824-git-send-email-htejun@gmail.com> <1209540918399-git-send-email-htejun@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.180]:62300 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754134AbYEAOl5 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 1 May 2008 10:41:57 -0400
-Received: by wa-out-1112.google.com with SMTP id j37so1059508waf.23
-        for <linux-ide@vger.kernel.org>; Thu, 01 May 2008 07:41:57 -0700 (PDT)
+Received: from el-out-1112.google.com ([209.85.162.180]:27120 "EHLO
+	el-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753952AbYEAO4H (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 1 May 2008 10:56:07 -0400
+Received: by el-out-1112.google.com with SMTP id n30so402618elf.21
+        for <linux-ide@vger.kernel.org>; Thu, 01 May 2008 07:56:05 -0700 (PDT)
+In-Reply-To: <1209540918399-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>, IDE/ATA development list <linux-ide@vger.kernel.org>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>
+To: jeff@garzik.org, alan@lxorguk.ukuu.org.uk, linux-ide@vger.kernel.org
 
-Some controllers (jmb and inic162x) use 0x77 and 0x7f to indicate that
-the device isn't ready yet.  It looks like they use 0xff if device
-presence is detected but connection isn't established.  0x77 or 0x7f
-after connection is established and use the value from signature FIS
-after receiving it.
+inic162x can't reliably read back TF or at least we don't know how to
+do it yet.  The only values which seem reliable are status and error.
+This patch updates access to TF.
 
-This patch implements ata_check_ready(), which takes TF status value
-and determines whether the port is ready or not considering the above
-and other conditions, and use it in @check_ready() functions.  This is
-safe as both 0x77 and 0x7f aren't valid ready status value even though
-they have BSY bit cleared.
+* implement inic_tf_read() which reads the TF area in mmio area
 
-This fixes hot plug detection failures which can be triggered with
-certain drives if they aren't already spun up when the data connector
-is hot plugged.
+* implement custom inic_qc_fill_rtf() which only returns true if
+  status indicates device error.  it'll be returning bogus addresses
+  for device errors but it'll be able to report why it failed at
+  least.
 
-Tested on sil, sil24, ahci (jmb/ich), piix and inic162x combined with
-eight drives from all major vendors.
+* implement custom inic_check_ready() and use ata_wait_after_reset()
+  instead of the SFF version.
+
+* use inic_tf_read() for classification.
+
+This is not perfect but it fixes hotplug detection failure and at
+least makes the driver report 0's instead of random garbages while
+reporting valid status and error for device errors.
 
 Signed-off-by: Tejun Heo <htejun@gmail.com>
 ---
- drivers/ata/ahci.c       |    4 +---
- drivers/ata/libata-sff.c |    6 +-----
- include/linux/libata.h   |   15 +++++++++++++++
- 3 files changed, 17 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
-index 8cace9a..97f83fb 100644
---- a/drivers/ata/ahci.c
-+++ b/drivers/ata/ahci.c
-@@ -1267,9 +1267,7 @@ static int ahci_check_ready(struct ata_link *link)
- 	void __iomem *port_mmio = ahci_port_base(link->ap);
- 	u8 status = readl(port_mmio + PORT_TFDATA) & 0xFF;
- 
--	if (!(status & ATA_BUSY))
--		return 1;
--	return 0;
-+	return ata_check_ready(status);
+Hotplug misdetection wasn't caused by wrongly reported signature.  It
+was caused by bogus not-ready TF status value.  This patch is updated
+accordingly and the whole patchset should be applied on top of the
+following patch.
+
+  http://article.gmane.org/gmane.linux.ide/31188
+
+All other patches can be applied w/o change.  The git tree is updated.
+
+  http://git.kernel.org/?p=linux/kernel/git/tj/libata-dev.git;a=shortlog;h=inic162x
+  git://git.kernel.org/pub/scm/linux/kernel/git/tj/libata-dev.git inic162x
+
+Thanks.
+
+ drivers/ata/sata_inic162x.c |   47 ++++++++++++++++++++++++++++++++++++++++++--
+ 1 file changed, 45 insertions(+), 2 deletions(-)
+
+Index: work/drivers/ata/sata_inic162x.c
+===================================================================
+--- work.orig/drivers/ata/sata_inic162x.c
++++ work/drivers/ata/sata_inic162x.c
+@@ -410,6 +410,41 @@ static unsigned int inic_qc_issue(struct
+ 	return ata_sff_qc_issue(qc);
  }
  
- static int ahci_softreset(struct ata_link *link, unsigned int *class,
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-diff --git a/drivers/ata/libata-sff.c b/drivers/ata/libata-sff.c
-index 2ec65a8..3c2d228 100644
---- a/drivers/ata/libata-sff.c
-+++ b/drivers/ata/libata-sff.c
-@@ -314,11 +314,7 @@ static int ata_sff_check_ready(struct ata_link *link)
- {
- 	u8 status = link->ap->ops->sff_check_status(link->ap);
- 
--	if (!(status & ATA_BUSY))
--		return 1;
--	if (status == 0xff)
--		return -ENODEV;
--	return 0;
-+	return ata_check_ready(status);
- }
- 
- /**
-diff --git a/drivers/ata/sata_inic162x.c b/drivers/ata/sata_inic162x.c
-index 2f8f1df..3ead02f 100644
-diff --git a/include/linux/libata.h b/include/linux/libata.h
-index d1dfe87..95e6159 100644
---- a/include/linux/libata.h
-+++ b/include/linux/libata.h
-@@ -1381,6 +1381,21 @@ static inline struct ata_port *ata_shost_to_port(struct Scsi_Host *host)
- 	return *(struct ata_port **)&host->hostdata[0];
- }
- 
-+static inline int ata_check_ready(u8 status)
++static void inic_tf_read(struct ata_port *ap, struct ata_taskfile *tf)
 +{
-+	/* Some controllers report 0x77 or 0x7f during intermediate
-+	 * not-ready stages.
-+	 */
-+	if (status == 0x77 || status == 0x7f)
-+		return 0;
++	void __iomem *port_base = inic_port_base(ap);
 +
-+	/* 0xff indicates either no device or device not ready */
-+	if (status == 0xff)
-+		return -ENODEV;
-+
-+	return !(status & ATA_BUSY);
++	tf->feature	= readb(port_base + PORT_TF_FEATURE);
++	tf->nsect	= readb(port_base + PORT_TF_NSECT);
++	tf->lbal	= readb(port_base + PORT_TF_LBAL);
++	tf->lbam	= readb(port_base + PORT_TF_LBAM);
++	tf->lbah	= readb(port_base + PORT_TF_LBAH);
++	tf->device	= readb(port_base + PORT_TF_DEVICE);
++	tf->command	= readb(port_base + PORT_TF_COMMAND);
 +}
 +
++static bool inic_qc_fill_rtf(struct ata_queued_cmd *qc)
++{
++	struct ata_taskfile *rtf = &qc->result_tf;
++	struct ata_taskfile tf;
++
++	/* FIXME: Except for status and error, result TF access
++	 * doesn't work.  I tried reading from BAR0/2, CPB and BAR5.
++	 * None works regardless of which command interface is used.
++	 * For now return true iff status indicates device error.
++	 * This means that we're reporting bogus sector for RW
++	 * failures.  Eeekk....
++	 */
++	inic_tf_read(qc->ap, &tf);
++
++	if (!(tf.command & ATA_ERR))
++		return false;
++
++	rtf->command = tf.command;
++	rtf->feature = tf.feature;
++	return true;
++}
++
+ static void inic_freeze(struct ata_port *ap)
+ {
+ 	void __iomem *port_base = inic_port_base(ap);
+@@ -430,6 +465,13 @@ static void inic_thaw(struct ata_port *a
+ 	__inic_set_pirq_mask(ap, PIRQ_MASK_OTHER);
+ }
  
- /**************************************************************************
-  * PMP - drivers/ata/libata-pmp.c
++static int inic_check_ready(struct ata_link *link)
++{
++	void __iomem *port_base = inic_port_base(link->ap);
++
++	return ata_check_ready(readb(port_base + PORT_TF_COMMAND));
++}
++
+ /*
+  * SRST and SControl hardreset don't give valid signature on this
+  * controller.  Only controller specific hardreset mechanism works.
+@@ -465,7 +507,7 @@ static int inic_hardreset(struct ata_lin
+ 		struct ata_taskfile tf;
+ 
+ 		/* wait for link to become ready */
+-		rc = ata_sff_wait_after_reset(link, 1, deadline);
++		rc = ata_wait_after_reset(link, deadline, inic_check_ready);
+ 		/* link occupied, -ENODEV too is an error */
+ 		if (rc) {
+ 			ata_link_printk(link, KERN_WARNING, "device not ready "
+@@ -473,7 +515,7 @@ static int inic_hardreset(struct ata_lin
+ 			return rc;
+ 		}
+ 
+-		ata_sff_tf_read(ap, &tf);
++		inic_tf_read(ap, &tf);
+ 		*class = ata_dev_classify(&tf);
+ 	}
+ 
+@@ -569,6 +611,7 @@ static struct ata_port_operations inic_p
+ 	.bmdma_stop		= inic_bmdma_stop,
+ 	.bmdma_status		= inic_bmdma_status,
+ 	.qc_issue		= inic_qc_issue,
++	.qc_fill_rtf		= inic_qc_fill_rtf,
+ 
+ 	.freeze			= inic_freeze,
+ 	.thaw			= inic_thaw,
