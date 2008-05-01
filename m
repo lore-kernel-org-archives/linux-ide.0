@@ -1,7 +1,7 @@
 From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: [PATCH v2 10/13] ide-cd: remove ide_cd_init_rq
-Date: Thu,  1 May 2008 21:28:07 +0900
-Message-ID: <1209644890-12040-11-git-send-email-fujita.tomonori@lab.ntt.co.jp>
+Subject: [PATCH v2 12/13] block: remove the checking for NULL queue in blk_put_request
+Date: Thu,  1 May 2008 21:28:09 +0900
+Message-ID: <1209644890-12040-13-git-send-email-fujita.tomonori@lab.ntt.co.jp>
 References: <1209644890-12040-1-git-send-email-fujita.tomonori@lab.ntt.co.jp>
  <1209644890-12040-2-git-send-email-fujita.tomonori@lab.ntt.co.jp>
  <1209644890-12040-3-git-send-email-fujita.tomonori@lab.ntt.co.jp>
@@ -12,74 +12,54 @@ References: <1209644890-12040-1-git-send-email-fujita.tomonori@lab.ntt.co.jp>
  <1209644890-12040-8-git-send-email-fujita.tomonori@lab.ntt.co.jp>
  <1209644890-12040-9-git-send-email-fujita.tomonori@lab.ntt.co.jp>
  <1209644890-12040-10-git-send-email-fujita.tomonori@lab.ntt.co.jp>
+ <1209644890-12040-11-git-send-email-fujita.tomonori@lab.ntt.co.jp>
+ <1209644890-12040-12-git-send-email-fujita.tomonori@lab.ntt.co.jp>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mo10.iij4u.or.jp ([210.138.174.78]:49421 "EHLO mo10.iij4u.or.jp"
+Received: from mo10.iij4u.or.jp ([210.138.174.78]:49428 "EHLO mo10.iij4u.or.jp"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754683AbYEAM3T (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 1 May 2008 08:29:19 -0400
-In-Reply-To: <1209644890-12040-10-git-send-email-fujita.tomonori@lab.ntt.co.jp>
+	id S1754694AbYEAM3V (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 1 May 2008 08:29:21 -0400
+In-Reply-To: <1209644890-12040-12-git-send-email-fujita.tomonori@lab.ntt.co.jp>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
 Cc: jens.axboe@oracle.com, bzolnier@gmail.com, petkovbb@gmail.com, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
 
-ide_cd_init_rq is not used by ide-cd_ioctl any more. Only
-cdrom_queue_request_sense use it. This converts
-cdrom_queue_request_sense to use blk_rq_init directly and removes
-ide_cd_init_rq.
+Some uses blk_put_request asymmetrically, that is, they uses it with
+requests that not allocated by blk_get_request. As a result,
+blk_put_request has a hack to catch a NULL request_queue. Now such
+callers are fixed (they use blk_get_request properly). So we can
+safely remove the hack in blk_put_request.
 
 Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Cc: Borislav Petkov <petkovbb@gmail.com>
-Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: Jens Axboe <jens.axboe@oracle.com>
 ---
- drivers/ide/ide-cd.c |   14 +++-----------
- drivers/ide/ide-cd.h |    1 -
- 2 files changed, 3 insertions(+), 12 deletions(-)
+ block/blk-core.c |   12 +++---------
+ 1 files changed, 3 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/ide/ide-cd.c b/drivers/ide/ide-cd.c
-index 069fd6e..f1ee432 100644
---- a/drivers/ide/ide-cd.c
-+++ b/drivers/ide/ide-cd.c
-@@ -188,16 +188,6 @@ static void cdrom_analyze_sense_data(ide_drive_t *drive,
- 	ide_cd_log_error(drive->name, failed_command, sense);
+diff --git a/block/blk-core.c b/block/blk-core.c
+index 5d09f8c..73337ee 100644
+--- a/block/blk-core.c
++++ b/block/blk-core.c
+@@ -1043,15 +1043,9 @@ void blk_put_request(struct request *req)
+ 	unsigned long flags;
+ 	struct request_queue *q = req->q;
+ 
+-	/*
+-	 * Gee, IDE calls in w/ NULL q.  Fix IDE and remove the
+-	 * following if (q) test.
+-	 */
+-	if (q) {
+-		spin_lock_irqsave(q->queue_lock, flags);
+-		__blk_put_request(q, req);
+-		spin_unlock_irqrestore(q->queue_lock, flags);
+-	}
++	spin_lock_irqsave(q->queue_lock, flags);
++	__blk_put_request(q, req);
++	spin_unlock_irqrestore(q->queue_lock, flags);
  }
+ EXPORT_SYMBOL(blk_put_request);
  
--/* Initialize a ide-cd packet command request */
--void ide_cd_init_rq(ide_drive_t *drive, struct request *rq)
--{
--	struct cdrom_info *cd = drive->driver_data;
--
--	blk_rq_init(NULL, rq);
--	rq->cmd_type = REQ_TYPE_ATA_PC;
--	rq->rq_disk = cd->disk;
--}
--
- static void cdrom_queue_request_sense(ide_drive_t *drive, void *sense,
- 				      struct request *failed_command)
- {
-@@ -208,7 +198,9 @@ static void cdrom_queue_request_sense(ide_drive_t *drive, void *sense,
- 		sense = &info->sense_data;
- 
- 	/* stuff the sense request in front of our current request */
--	ide_cd_init_rq(drive, rq);
-+	blk_rq_init(NULL, rq);
-+	rq->cmd_type = REQ_TYPE_ATA_PC;
-+	rq->rq_disk = info->disk;
- 
- 	rq->data = sense;
- 	rq->cmd[0] = GPCMD_REQUEST_SENSE;
-diff --git a/drivers/ide/ide-cd.h b/drivers/ide/ide-cd.h
-index 13918c5..a7971d7 100644
---- a/drivers/ide/ide-cd.h
-+++ b/drivers/ide/ide-cd.h
-@@ -143,7 +143,6 @@ struct cdrom_info {
- void ide_cd_log_error(const char *, struct request *, struct request_sense *);
- 
- /* ide-cd.c functions used by ide-cd_ioctl.c */
--void ide_cd_init_rq(ide_drive_t *, struct request *);
- int ide_cd_queue_pc(ide_drive_t *, const unsigned char *, int, void *, unsigned,
- 		    struct request_sense *, int, unsigned int);
- int ide_cd_read_toc(ide_drive_t *, struct request_sense *);
 -- 
 1.5.4.2
 
