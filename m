@@ -1,36 +1,81 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: Re: libata-eh/pmp command sequence on NCQ media error
-Date: Thu, 01 May 2008 09:51:46 +0900
-Message-ID: <48191422.30409@gmail.com>
-References: <480F9D29.4070603@rtr.ca> <480FF229.2060808@rtr.ca> <481168FA.5020709@pobox.com> <4811E2FB.4040100@rtr.ca> <48120269.8020101@gmail.com> <4818E5B2.1040801@rtr.ca> <4818E73D.9070201@rtr.ca>
+Subject: [PATCH #upstream-fixes] ata_piix: verify SIDPR access before enabling
+ it
+Date: Thu, 01 May 2008 10:03:08 +0900
+Message-ID: <481916CC.3070504@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wx-out-0506.google.com ([66.249.82.235]:4172 "EHLO
-	wx-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753097AbYEAAvz (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 30 Apr 2008 20:51:55 -0400
-Received: by wx-out-0506.google.com with SMTP id h31so772265wxd.4
-        for <linux-ide@vger.kernel.org>; Wed, 30 Apr 2008 17:51:53 -0700 (PDT)
-In-Reply-To: <4818E73D.9070201@rtr.ca>
+Received: from rv-out-0708.google.com ([209.85.198.247]:44859 "EHLO
+	rv-out-0506.google.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1750901AbYEABDQ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 30 Apr 2008 21:03:16 -0400
+Received: by rv-out-0506.google.com with SMTP id k29so410800rvb.1
+        for <linux-ide@vger.kernel.org>; Wed, 30 Apr 2008 18:03:16 -0700 (PDT)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark Lord <liml@rtr.ca>
-Cc: Jeff Garzik <jgarzik@pobox.com>, IDE/ATA development list <linux-ide@vger.kernel.org>
+To: Jeff Garzik l <jeff@garzik.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, ryan.roth@ch2m.com
 
-Mark Lord wrote:
->> So why are we taking a hammer to things there?
+On certain configurations (certain macbooks), even though all the
+conditions for SIDPR access described in the datasheet are met,
+actually reading those registers just returns 0 and have no effect on
+write.  Verify SIDPR is actually working before enabling it.
 
-Hmmm... The reset action might be too heavy handed but maybe keeping 
-that categorized as ATA bus error is still a good idea so that multiple 
-errors w/ that bit set can trigger speed down.
+This is reported by Ryan Roth in bz#10512.
 
-> FWIW, this patch fixes it for me (and fixes a misleading printk).
-> Or I could just clear that bit from sata_mv before invoking EH.
-> (??)
+Signed-off-by: Tejun Heo <htejun@gmail.com>
+Cc: Ryan Roth <ryan.roth@ch2m.com>
+---
+Apple did another weird thing with ich8m in addition to the weird
+lockup on second port enable and SIDPR causes drive misdetection.
+This one probably should go to -stable too.
 
-Does the bit get set for the host link or pmp fanout links?
+Thanks.
 
--- 
-tejun
+ drivers/ata/ata_piix.c |   25 +++++++++++++++++++++++++
+ 1 file changed, 25 insertions(+)
+
+diff --git a/drivers/ata/ata_piix.c b/drivers/ata/ata_piix.c
+index ea2c764..a9027b8 100644
+--- a/drivers/ata/ata_piix.c
++++ b/drivers/ata/ata_piix.c
+@@ -1348,6 +1348,8 @@ static void __devinit piix_init_sidpr(struct ata_host *host)
+ {
+ 	struct pci_dev *pdev = to_pci_dev(host->dev);
+ 	struct piix_host_priv *hpriv = host->private_data;
++	struct ata_device *dev0 = &host->ports[0]->link.device[0];
++	u32 scontrol;
+ 	int i;
+ 
+ 	/* check for availability */
+@@ -1366,6 +1368,29 @@ static void __devinit piix_init_sidpr(struct ata_host *host)
+ 		return;
+ 
+ 	hpriv->sidpr = pcim_iomap_table(pdev)[PIIX_SIDPR_BAR];
++
++	/* SCR access via SIDPR doesn't work on some configurations.
++	 * Give it a test drive by inhibiting power save modes which
++	 * we'll do anyway.
++	 */
++	scontrol = piix_sidpr_read(dev0, SCR_CONTROL);
++
++	/* if IPM is already 3, SCR access is probably working.  Don't
++	 * un-inhibit power save modes as BIOS might have inhibited
++	 * them for a reason.
++	 */
++	if ((scontrol & 0xf00) != 0x300) {
++		scontrol |= 0x300;
++		piix_sidpr_write(dev0, SCR_CONTROL, scontrol);
++		scontrol = piix_sidpr_read(dev0, SCR_CONTROL);
++
++		if ((scontrol & 0xf00) != 0x300) {
++			dev_printk(KERN_INFO, host->dev, "SCR access via "
++				   "SIDPR is available but doesn't work\n");
++			return;
++		}
++	}
++
+ 	host->ports[0]->ops = &piix_sidpr_sata_ops;
+ 	host->ports[1]->ops = &piix_sidpr_sata_ops;
+ }
