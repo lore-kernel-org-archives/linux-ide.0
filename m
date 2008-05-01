@@ -1,7 +1,7 @@
 From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: [PATCH v2 11/13] block: convert pd_special_command to use blk_execute_rq
-Date: Thu,  1 May 2008 21:28:08 +0900
-Message-ID: <1209644890-12040-12-git-send-email-fujita.tomonori@lab.ntt.co.jp>
+Subject: [PATCH v2 13/13] block: unexport blk_end_sync_rq
+Date: Thu,  1 May 2008 21:28:10 +0900
+Message-ID: <1209644890-12040-14-git-send-email-fujita.tomonori@lab.ntt.co.jp>
 References: <1209644890-12040-1-git-send-email-fujita.tomonori@lab.ntt.co.jp>
  <1209644890-12040-2-git-send-email-fujita.tomonori@lab.ntt.co.jp>
  <1209644890-12040-3-git-send-email-fujita.tomonori@lab.ntt.co.jp>
@@ -13,61 +13,62 @@ References: <1209644890-12040-1-git-send-email-fujita.tomonori@lab.ntt.co.jp>
  <1209644890-12040-9-git-send-email-fujita.tomonori@lab.ntt.co.jp>
  <1209644890-12040-10-git-send-email-fujita.tomonori@lab.ntt.co.jp>
  <1209644890-12040-11-git-send-email-fujita.tomonori@lab.ntt.co.jp>
+ <1209644890-12040-12-git-send-email-fujita.tomonori@lab.ntt.co.jp>
+ <1209644890-12040-13-git-send-email-fujita.tomonori@lab.ntt.co.jp>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mo10.iij4u.or.jp ([210.138.174.78]:49424 "EHLO mo10.iij4u.or.jp"
+Received: from mo11.iij4u.or.jp ([210.138.174.79]:42696 "EHLO mo11.iij4u.or.jp"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754793AbYEAM3T (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 1 May 2008 08:29:19 -0400
-In-Reply-To: <1209644890-12040-11-git-send-email-fujita.tomonori@lab.ntt.co.jp>
+	id S1753639AbYEAM3V (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 1 May 2008 08:29:21 -0400
+In-Reply-To: <1209644890-12040-13-git-send-email-fujita.tomonori@lab.ntt.co.jp>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
 Cc: jens.axboe@oracle.com, bzolnier@gmail.com, petkovbb@gmail.com, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
 
-pd_special_command uses blk_put_request with struct request on the
-stack. As a result, blk_put_request needs a hack to catch a NULL
-request_queue.  This converts pd_special_command to use
-blk_execute_rq.
+All the users of blk_end_sync_rq has gone (they are converted to use
+blk_execute_rq). This unexports blk_end_sync_rq.
 
 Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
 Cc: Jens Axboe <jens.axboe@oracle.com>
 ---
- drivers/block/paride/pd.c |   20 +++++++++-----------
- 1 files changed, 9 insertions(+), 11 deletions(-)
+ block/blk-exec.c       |    3 +--
+ include/linux/blkdev.h |    1 -
+ 2 files changed, 1 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/block/paride/pd.c b/drivers/block/paride/pd.c
-index 570f3b7..5fdfa7c 100644
---- a/drivers/block/paride/pd.c
-+++ b/drivers/block/paride/pd.c
-@@ -712,19 +712,17 @@ static void do_pd_request(struct request_queue * q)
- static int pd_special_command(struct pd_unit *disk,
- 		      enum action (*func)(struct pd_unit *disk))
+diff --git a/block/blk-exec.c b/block/blk-exec.c
+index 391dd62..f7213a3 100644
+--- a/block/blk-exec.c
++++ b/block/blk-exec.c
+@@ -18,7 +18,7 @@
+  * @rq: request to complete
+  * @error: end io status of the request
+  */
+-void blk_end_sync_rq(struct request *rq, int error)
++static void blk_end_sync_rq(struct request *rq, int error)
  {
--	DECLARE_COMPLETION_ONSTACK(wait);
--	struct request rq;
-+	struct request *rq;
- 	int err = 0;
+ 	struct completion *waiting = rq->end_io_data;
  
--	blk_rq_init(NULL, &rq);
--	rq.rq_disk = disk->gd;
--	rq.end_io_data = &wait;
--	rq.end_io = blk_end_sync_rq;
--	blk_insert_request(disk->gd->queue, &rq, 0, func);
--	wait_for_completion(&wait);
--	if (rq.errors)
--		err = -EIO;
--	blk_put_request(&rq);
-+	rq = blk_get_request(disk->gd->queue, READ, __GFP_WAIT);
-+
-+	rq->cmd_type = REQ_TYPE_SPECIAL;
-+	rq->special = func;
-+
-+	err = blk_execute_rq(disk->gd->queue, disk->gd, rq, 0);
-+
-+	blk_put_request(rq);
- 	return err;
+@@ -31,7 +31,6 @@ void blk_end_sync_rq(struct request *rq, int error)
+ 	 */
+ 	complete(waiting);
  }
+-EXPORT_SYMBOL(blk_end_sync_rq);
  
+ /**
+  * blk_execute_rq_nowait - insert a request into queue for execution
+diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
+index d2a1b71..1171abd 100644
+--- a/include/linux/blkdev.h
++++ b/include/linux/blkdev.h
+@@ -623,7 +623,6 @@ extern void generic_make_request(struct bio *bio);
+ extern void blk_rq_init(struct request_queue *q, struct request *rq);
+ extern void blk_put_request(struct request *);
+ extern void __blk_put_request(struct request_queue *, struct request *);
+-extern void blk_end_sync_rq(struct request *rq, int error);
+ extern struct request *blk_get_request(struct request_queue *, int, gfp_t);
+ extern void blk_insert_request(struct request_queue *, struct request *, int, void *);
+ extern void blk_requeue_request(struct request_queue *, struct request *);
 -- 
 1.5.4.2
 
