@@ -1,73 +1,54 @@
-From: Mark Lord <liml@rtr.ca>
-Subject: Re: libata-eh/pmp command sequence on NCQ media error
-Date: Thu, 01 May 2008 07:24:11 -0400
-Message-ID: <4819A85B.1090709@rtr.ca>
-References: <480F9D29.4070603@rtr.ca> <480FF229.2060808@rtr.ca> <481168FA.5020709@pobox.com> <4811E2FB.4040100@rtr.ca> <48120269.8020101@gmail.com> <4818E5B2.1040801@rtr.ca> <4818E73D.9070201@rtr.ca> <48191422.30409@gmail.com> <48192ED5.9030402@rtr.ca> <48193138.2070306@gmail.com>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: [git patches] IDE fixes
+Date: Thu, 1 May 2008 14:18:38 +0200
+Message-ID: <200805011418.39999.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([76.10.145.34]:4303 "EHLO mail.rtr.ca"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752538AbYEALYT (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 1 May 2008 07:24:19 -0400
-In-Reply-To: <48193138.2070306@gmail.com>
+Received: from nf-out-0910.google.com ([64.233.182.185]:25789 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756055AbYEAMC7 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 1 May 2008 08:02:59 -0400
+Received: by nf-out-0910.google.com with SMTP id d3so443923nfc.21
+        for <linux-ide@vger.kernel.org>; Thu, 01 May 2008 05:02:54 -0700 (PDT)
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Jeff Garzik <jgarzik@pobox.com>, IDE/ATA development list <linux-ide@vger.kernel.org>
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Stephen Rothwell <sfr@canb.auug.org.au>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Mark Lord wrote:
-> Tejun Heo wrote:
->> Mark Lord wrote:
->>>> So why are we taking a hammer to things there?
->>
->> Hmmm... The reset action might be too heavy handed but maybe keeping 
->> that categorized as ATA bus error is still a good idea so that 
->> multiple errors w/ that bit set can trigger speed down.
->>
->>> FWIW, this patch fixes it for me (and fixes a misleading printk).
->>> Or I could just clear that bit from sata_mv before invoking EH.
->>> (??)
->>
->> Does the bit get set for the host link or pmp fanout links?
-> It's only on the pmp fanout link. Dunno why it gets set, but it does.
-..
 
-Oh, wait a sec.. I think I know what's going on.
-We're back to the original problem in this thread again:
+Regression fix for some host drivers using MMIO, i.e. siimage
+(big thanks to Jeremy Kerr for the detailed bug analysis).
 
-Mark Lord wrote:
-> With no port-multiplier attached, a media error during NCQ
-> results in an immediate READ_LOG_EXT_10H to retrieve the
-> task file for the failed I/O.
-> 
-> With a port-multiplier, there is instead a flurry of sata_pmp_read()
-> attempts.  I'm guessing that the READ_LOG_EXT_10H would normally
-> then follow those ?
-> 
-> The problem is, on most of the Marvell chips, non-data commands
-> cannot succeed after any kind of error (until after the port is reset),
-> so they fail, and we never then get to the READ_LOG_EXT_10H stage.
-> Oddly, the READ_LOG_EXT_10H command itself is okay (with some errata
-> goodness tossed in).
-> 
-> So, for sata_mv at least, I'd kinda like to have libata-eh attempt
-> the READ_LOG_EXT_10H before it tries to (unsuccessfully) access the
-> per-port SCRs on the PMP.
-..
 
-So what is happening now, is that libata-eh is going and attempting
-to access the per-port SCRs *after* the READ_LOG_EXT commands.
-And those per-port SCRs are not actually accessible:  the shadow
-registers are misbehaving -- known errata -- and cannot be accurately
-used without a port reset.
+Linus, please pull from:
 
-Mmm.. gotta figure out a way to mark the port for RESET,
-without having that action taint the commands already analyzed.
+master.kernel.org:/pub/scm/linux/kernel/git/bart/ide-2.6.git/
 
-I suppose I'll have to just clone some code from libata-eh to
-do the READ_LOG_EXT and then qc_complete() those commands
-before continuing.  Or something.
+to receive the following updates:
 
-???
+ drivers/ide/ide-probe.c |    3 ++-
+ 1 files changed, 2 insertions(+), 1 deletions(-)
+
+
+Bartlomiej Zolnierkiewicz (1):
+      ide: fix early setup of hwif->host_flags
+
+
+diff --git a/drivers/ide/ide-probe.c b/drivers/ide/ide-probe.c
+index 099a0fe..591deda 100644
+--- a/drivers/ide/ide-probe.c
++++ b/drivers/ide/ide-probe.c
+@@ -1347,7 +1347,8 @@ static void ide_init_port(ide_hwif_t *hwif, unsigned int port,
+ 	    (d->host_flags & IDE_HFLAG_FORCE_LEGACY_IRQS))
+ 		hwif->irq = port ? 15 : 14;
+ 
+-	hwif->host_flags = d->host_flags;
++	/* ->host_flags may be set by ->init_iops (or even earlier...) */
++	hwif->host_flags |= d->host_flags;
+ 	hwif->pio_mask = d->pio_mask;
+ 
+ 	/* ->set_pio_mode for DTC2278 is currently limited to port 0 */
