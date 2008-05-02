@@ -1,39 +1,39 @@
 From: Mark Lord <liml@rtr.ca>
-Subject: Re: [PATCH 12/12] sata_mv NCQ-EH for FIS-based switching
-Date: Fri, 02 May 2008 08:44:14 -0400
-Message-ID: <481B0C9E.80008@rtr.ca>
-References: <481AAF84.40501@rtr.ca> <481AAFB7.4090708@rtr.ca> <481AAFE0.9090101@rtr.ca> <481AB00A.3000206@rtr.ca> <481AB03A.60808@rtr.ca> <481AB070.9050707@rtr.ca> <481AB0A1.3040009@rtr.ca> <481AB0D2.3070103@rtr.ca> <481AB107.701@rtr.ca> <481AB12A.3030102@rtr.ca> <481AB15D.5020201@rtr.ca> <481AB189.3070705@rtr.ca> <481AB1B4.7050508@rtr.ca>
+Subject: Re: dvd writing problem
+Date: Fri, 02 May 2008 08:52:25 -0400
+Message-ID: <481B0E89.9090407@rtr.ca>
+References: <200805011135.38556.gene.heskett@gmail.com> <20080501224233.c3e11762.akpm@linux-foundation.org> <200805020821.44932.gene.heskett@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([76.10.145.34]:2254 "EHLO mail.rtr.ca"
+Received: from rtr.ca ([76.10.145.34]:4292 "EHLO mail.rtr.ca"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757724AbYEBMoQ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 2 May 2008 08:44:16 -0400
-In-Reply-To: <481AB1B4.7050508@rtr.ca>
+	id S1760627AbYEBMw0 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 2 May 2008 08:52:26 -0400
+In-Reply-To: <200805020821.44932.gene.heskett@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>, Tejun Heo <htejun@gmail.com>, IDE/ATA development list <linux-ide@vger.kernel.org>, Alan Cox <alan@redhat.com>
+To: Gene Heskett <gene.heskett@gmail.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, linux-ide@vger.kernel.org
 
-By the way.  If anyone can point out an existing EXPORTed
-"count number of one bits" in a word function, then I'll very happily
-submit a followup patch to remove this (below) and use that instead.
-
+Gene Heskett wrote:
 ..
-> +static int mv_count_pmp_links(unsigned int pmp_map)
-> +{
-> +    unsigned int link_count = 0;
-> +
-> +    while (pmp_map) {
-> +        link_count += (pmp_map & 1);
-> +        pmp_map >>= 1;
-> +    }
-> +    return link_count;
-> +} 
+>>> 7. disc is a +RW disc, so it should be re-writable.  Pick a different .iso
+>>> and start k3b again using it.  K3b goes through the motions, but 2 or 3
+>>> seconds after the real write starts with perhaps 30 megabytes *supposedly*
+>>> written, k3b gets a write error and the burn bails out, ejecting the disc
+>>> as it does.
 ..
 
-I grepped for one, but didn't find one.
-But there must be several of them already out there (?)
-Speed is unimportant here, so this version above
-has been left simple -- no table lookups.
+For this part, did you *erase* the disc before attempting to rewrite?
+This is necessary, and there's a checkbox somewhere in K3B to have it
+do so automatically.
+
+The rest of the report (no verify after write, and system lockups)
+looks much more serious.  I cannot help with those, but others here
+probably can.  It's just a matter of somebody else following your
+recipe to repeat it, and then instrumenting libata/scsi to see
+where the faults lie.
+
+Cheers
