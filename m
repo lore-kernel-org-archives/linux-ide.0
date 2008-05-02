@@ -1,153 +1,132 @@
 From: Mark Lord <liml@rtr.ca>
-Subject: [PATCH 07/12] sata_mv NCQ and SError fixes for mv_err_intr
-Date: Fri, 02 May 2008 02:12:34 -0400
-Message-ID: <481AB0D2.3070103@rtr.ca>
-References: <481AAF84.40501@rtr.ca> <481AAFB7.4090708@rtr.ca> <481AAFE0.9090101@rtr.ca> <481AB00A.3000206@rtr.ca> <481AB03A.60808@rtr.ca> <481AB070.9050707@rtr.ca> <481AB0A1.3040009@rtr.ca>
+Subject: [PATCH 08/12] sata_mv fix mv_host_intr bug for hc_irq_cause
+Date: Fri, 02 May 2008 02:13:27 -0400
+Message-ID: <481AB107.701@rtr.ca>
+References: <481AAF84.40501@rtr.ca> <481AAFB7.4090708@rtr.ca> <481AAFE0.9090101@rtr.ca> <481AB00A.3000206@rtr.ca> <481AB03A.60808@rtr.ca> <481AB070.9050707@rtr.ca> <481AB0A1.3040009@rtr.ca> <481AB0D2.3070103@rtr.ca>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([76.10.145.34]:3607 "EHLO mail.rtr.ca"
+Received: from rtr.ca ([76.10.145.34]:3609 "EHLO mail.rtr.ca"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757229AbYEBGMg (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 2 May 2008 02:12:36 -0400
-In-Reply-To: <481AB0A1.3040009@rtr.ca>
+	id S1758815AbYEBGN3 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 2 May 2008 02:13:29 -0400
+In-Reply-To: <481AB0D2.3070103@rtr.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Jeff Garzik <jgarzik@pobox.com>, Tejun Heo <htejun@gmail.com>, IDE/ATA development list <linux-ide@vger.kernel.org>
 
-Sigh.  Undo some earlier changes to mv_port_intr(),
-so that we now read/clear SError again in all cases.
-
-Arrange the top of the function to be as close as possible
-to what we need for a later update (in this series) for ERR_DEV handling.
-
-Fix things so that libata-eh can attempt a READ_LOG_EXT_10H
-in response to a failed NCQ command, by just doing a local
-mv_eh_freeze() rather than ata_port_freeze().
-
-This will now fully handle NCQ errors much of the time,
-but more fixes are needed for FBS/PMP, and for certain chip errata.
+Remove the unwanted reads of hc_irq_cause from mv_host_intr(),
+thereby removing a bug whereby we were not always reading it when needed..
 
 Signed-off-by: Mark Lord <mlord@pobox.com>
 
---- old/drivers/ata/sata_mv.c	2008-05-01 18:18:27.000000000 -0400
-+++ linux/drivers/ata/sata_mv.c	2008-05-01 18:39:27.000000000 -0400
-@@ -1627,7 +1627,7 @@
-  *      LOCKING:
-  *      Inherited from caller.
-  */
--static void mv_err_intr(struct ata_port *ap, struct ata_queued_cmd *qc)
-+static void mv_err_intr(struct ata_port *ap)
+--- old/drivers/ata/sata_mv.c	2008-05-01 20:01:29.000000000 -0400
++++ linux/drivers/ata/sata_mv.c	2008-05-01 20:15:59.000000000 -0400
+@@ -1818,48 +1818,61 @@
+ static int mv_host_intr(struct ata_host *host, u32 main_irq_cause)
  {
- 	void __iomem *port_mmio = mv_ap_base(ap);
- 	u32 edma_err_cause, eh_freeze_mask, serr = 0;
-@@ -1635,24 +1635,33 @@
- 	struct mv_host_priv *hpriv = ap->host->private_data;
- 	unsigned int action = 0, err_mask = 0;
- 	struct ata_eh_info *ehi = &ap->link.eh_info;
--
--	ata_ehi_clear_desc(ehi);
-+	struct ata_queued_cmd *qc;
-+	int abort = 0;
+ 	struct mv_host_priv *hpriv = host->private_data;
+-	void __iomem *mmio = hpriv->base, *hc_mmio = NULL;
+-	u32 hc_irq_cause = 0;
++	void __iomem *mmio = hpriv->base, *hc_mmio;
+ 	unsigned int handled = 0, port;
  
- 	/*
--	 * Read and clear the err_cause bits.  This won't actually
--	 * clear for some errors (eg. SError), but we will be doing
--	 * a hard reset in those cases regardless, which *will* clear it.
-+	 * Read and clear the SError and err_cause bits.
- 	 */
-+	sata_scr_read(&ap->link, SCR_ERROR, &serr);
-+	sata_scr_write_flush(&ap->link, SCR_ERROR, serr);
+ 	for (port = 0; port < hpriv->n_ports; port++) {
+ 		struct ata_port *ap = host->ports[port];
+ 		struct mv_port_priv *pp;
+-		unsigned int shift, hardport, port_cause;
+-		/*
+-		 * When we move to the second hc, flag our cached
+-		 * copies of hc_mmio (and hc_irq_cause) as invalid again.
+-		 */
+-		if (port == MV_PORTS_PER_HC)
+-			hc_mmio = NULL;
+-		/*
+-		 * Do nothing if port is not interrupting or is disabled:
+-		 */
++		unsigned int p, shift, hardport, port_cause;
 +
- 	edma_err_cause = readl(port_mmio + EDMA_ERR_IRQ_CAUSE_OFS);
- 	writelfl(~edma_err_cause, port_mmio + EDMA_ERR_IRQ_CAUSE_OFS);
- 
--	ata_ehi_push_desc(ehi, "edma_err_cause=%08x", edma_err_cause);
-+	ata_port_printk(ap, KERN_INFO, "%s: err_cause=%08x pp_flags=0x%x\n",
-+			__func__, edma_err_cause, pp->pp_flags);
- 
-+	qc = mv_get_active_qc(ap);
-+	ata_ehi_clear_desc(ehi);
-+	ata_ehi_push_desc(ehi, "edma_err_cause=%08x pp_flags=%08x",
-+			  edma_err_cause, pp->pp_flags);
- 	/*
- 	 * All generations share these EDMA error cause bits:
- 	 */
--	if (edma_err_cause & EDMA_ERR_DEV)
-+	if (edma_err_cause & EDMA_ERR_DEV) {
- 		err_mask |= AC_ERR_DEV;
-+		action |= ATA_EH_RESET;
-+		ata_ehi_push_desc(ehi, "dev error");
-+	}
- 	if (edma_err_cause & (EDMA_ERR_D_PAR | EDMA_ERR_PRD_PAR |
- 			EDMA_ERR_CRQB_PAR | EDMA_ERR_CRPB_PAR |
- 			EDMA_ERR_INTRL_PAR)) {
-@@ -1684,13 +1693,6 @@
- 			ata_ehi_push_desc(ehi, "EDMA self-disable");
+ 		MV_PORT_TO_SHIFT_AND_HARDPORT(port, shift, hardport);
+-		port_cause = (main_irq_cause >> shift) & (DONE_IRQ | ERR_IRQ);
+-		if (!port_cause || !ap || (ap->flags & ATA_FLAG_DISABLED))
+-			continue;
+ 		/*
+-		 * Each hc within the host has its own hc_irq_cause register.
+-		 * We defer reading it until we know we need it, right now:
+-		 *
+-		 * FIXME later: we don't really need to read this register
+-		 * (some logic changes required below if we go that way),
+-		 * because it doesn't tell us anything new.  But we do need
+-		 * to write to it, outside the top of this loop,
+-		 * to reset the interrupt triggers for next time.
++		 * Each hc within the host has its own hc_irq_cause register,
++		 * where the interrupting ports bits get ack'd.
+ 		 */
+-		if (!hc_mmio) {
++		if (hardport == 0) {	/* first port on this hc ? */
++			u32 hc_cause = (main_irq_cause >> shift) & HC0_IRQ_PEND;
++			u32 port_mask, ack_irqs;
++			/*
++			 * Skip this entire hc if nothing pending for any ports
++			 */
++			if (!hc_cause) {
++				port += MV_PORTS_PER_HC - 1;
++				continue;
++			}
++			/*
++			 * We don't need/want to read the hc_irq_cause register,
++			 * because doing so hurts performance, and
++			 * main_irq_cause already gives us everything we need.
++			 *
++			 * But we do have to *write* to the hc_irq_cause to ack
++			 * the ports that we are handling this time through.
++			 *
++			 * This requires that we create a bitmap for those
++			 * ports which interrupted us, and use that bitmap
++			 * to ack (only) those ports via hc_irq_cause.
++			 */
++			ack_irqs = 0;
++			for (p = 0; p < MV_PORTS_PER_HC; ++p) {
++				if ((port + p) >= hpriv->n_ports)
++					break;
++				port_mask = (DONE_IRQ | ERR_IRQ) << (p * 2);
++				if (hc_cause & port_mask)
++					ack_irqs |= (DMA_IRQ | DEV_IRQ) << p;
++			}
+ 			hc_mmio = mv_hc_base_from_port(mmio, port);
+-			hc_irq_cause = readl(hc_mmio + HC_IRQ_CAUSE_OFS);
+-			writelfl(~hc_irq_cause, hc_mmio + HC_IRQ_CAUSE_OFS);
++			writelfl(~ack_irqs, hc_mmio + HC_IRQ_CAUSE_OFS);
+ 			handled = 1;
  		}
- 		if (edma_err_cause & EDMA_ERR_SERR) {
--			/*
--			 * Ensure that we read our own SCR, not a pmp link SCR:
--			 */
--			ap->ops->scr_read(ap, SCR_ERROR, &serr);
--			/*
--			 * Don't clear SError here; leave it for libata-eh:
--			 */
- 			ata_ehi_push_desc(ehi, "SError=%08x", serr);
- 			err_mask |= AC_ERR_ATA_BUS;
- 			action |= ATA_EH_RESET;
-@@ -1710,10 +1712,29 @@
- 	else
- 		ehi->err_mask |= err_mask;
- 
--	if (edma_err_cause & eh_freeze_mask)
-+	if (err_mask == AC_ERR_DEV) {
-+		/*
-+		 * Cannot do ata_port_freeze() here,
-+		 * because it would kill PIO access,
-+		 * which is needed for further diagnosis.
-+		 */
-+		mv_eh_freeze(ap);
-+		abort = 1;
-+	} else if (edma_err_cause & eh_freeze_mask) {
-+		/*
-+		 * Note to self: ata_port_freeze() calls ata_port_abort()
-+		 */
- 		ata_port_freeze(ap);
--	else
--		ata_port_abort(ap);
-+	} else {
-+		abort = 1;
-+	}
-+
-+	if (abort) {
-+		if (qc)
-+			ata_link_abort(qc->dev->link);
-+		else
-+			ata_port_abort(ap);
-+	}
- }
- 
- static void mv_process_crpb_response(struct ata_port *ap,
-@@ -1740,8 +1761,9 @@
- 			}
++		port_cause = (main_irq_cause >> shift) & (DONE_IRQ | ERR_IRQ);
++		if (!port_cause)
++			continue;
+ 		/*
+ 		 * Process completed CRPB response(s) before other events.
+ 		 */
+ 		pp = ap->private_data;
+-		if (hc_irq_cause & (DMA_IRQ << hardport)) {
++		if (port_cause & DONE_IRQ) {
+ 			if (pp->pp_flags & MV_PP_FLAG_EDMA_EN)
+ 				mv_process_crpb_entries(ap, pp);
  		}
- 		ata_status = edma_status >> CRPB_FLAG_STATUS_SHIFT;
--		qc->err_mask |= ac_err_mask(ata_status);
--		ata_qc_complete(qc);
-+		if (!ac_err_mask(ata_status))
-+			ata_qc_complete(qc);
-+		/* else: leave it for mv_err_intr() */
- 	} else {
- 		ata_port_printk(ap, KERN_ERR, "%s: no qc for tag=%d\n",
- 				__func__, tag);
-@@ -1845,7 +1867,7 @@
- 		 * Handle chip-reported errors, or continue on to handle PIO.
+@@ -1868,15 +1881,15 @@
  		 */
  		if (unlikely(port_cause & ERR_IRQ)) {
--			mv_err_intr(ap, mv_get_active_qc(ap));
-+			mv_err_intr(ap);
- 		} else if (hc_irq_cause & (DEV_IRQ << hardport)) {
+ 			mv_err_intr(ap);
+-		} else if (hc_irq_cause & (DEV_IRQ << hardport)) {
++		} else {
  			if (!(pp->pp_flags & MV_PP_FLAG_EDMA_EN)) {
  				struct ata_queued_cmd *qc = mv_get_active_qc(ap);
+ 				if (qc) {
+ 					ata_sff_host_intr(ap, qc);
+ 					continue;
+ 				}
++				mv_unexpected_intr(ap);
+ 			}
+-			mv_unexpected_intr(ap);
+ 		}
+ 	}
+ 	return handled;
