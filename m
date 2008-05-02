@@ -1,102 +1,67 @@
 From: Mark Lord <liml@rtr.ca>
-Subject: [PATCH 02/12] sata_mv pci features
-Date: Fri, 02 May 2008 02:08:32 -0400
-Message-ID: <481AAFE0.9090101@rtr.ca>
-References: <481AAF84.40501@rtr.ca> <481AAFB7.4090708@rtr.ca>
+Subject: [PATCH 03/12] sata_mv wait for empty+idle
+Date: Fri, 02 May 2008 02:09:14 -0400
+Message-ID: <481AB00A.3000206@rtr.ca>
+References: <481AAF84.40501@rtr.ca> <481AAFB7.4090708@rtr.ca> <481AAFE0.9090101@rtr.ca>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([76.10.145.34]:1117 "EHLO mail.rtr.ca"
+Received: from rtr.ca ([76.10.145.34]:1120 "EHLO mail.rtr.ca"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755126AbYEBGId (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 2 May 2008 02:08:33 -0400
-In-Reply-To: <481AAFB7.4090708@rtr.ca>
+	id S1756370AbYEBGJQ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 2 May 2008 02:09:16 -0400
+In-Reply-To: <481AAFE0.9090101@rtr.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Jeff Garzik <jgarzik@pobox.com>, Tejun Heo <htejun@gmail.com>, IDE/ATA development list <linux-ide@vger.kernel.org>
 
-Some of the GenIIe EDMA optimizations should not be used
-for non-PCI (SOC) devices, and nor for certain configurations
-of conventional PCI (non PCI-X, PCIe) buses.
+When performing EH, it is recommended to wait for the EDMA engine
+to empty out requests-in-progress before disabling EDMA.
 
-Logic taken/simplified from that in the Marvell proprietary driver.
+Introduce code to poll the EDMA_STATUS register for idle/empty bits
+before disabling EDMA.  For non-EH operation, this will normally exit
+without delay, other than the register read.
+
+A later series of patches may focus on eliminating this and various
+other register reads (when possible) throughout the driver,
+but for now we're focussing on solid reliablity.
 
 Signed-off-by: Mark Lord <mlord@pobox.com>
 
---- old/drivers/ata/sata_mv.c	2008-05-01 17:48:07.000000000 -0400
-+++ linux/drivers/ata/sata_mv.c	2008-05-01 17:49:53.000000000 -0400
-@@ -361,6 +361,7 @@
- 	MV_HP_GEN_II		= (1 << 7),	/* Generation II: 60xx */
- 	MV_HP_GEN_IIE		= (1 << 8),	/* Generation IIE: 6042/7042 */
- 	MV_HP_PCIE		= (1 << 9),	/* PCIe bus/regs: 7042 */
-+	MV_HP_CUT_THROUGH	= (1 << 10),	/* can use EDMA cut-through */
- 
- 	/* Port private flags (pp_flags) */
- 	MV_PP_FLAG_EDMA_EN	= (1 << 0),	/* is EDMA engine enabled? */
-@@ -1110,8 +1111,10 @@
- 	else if (IS_GEN_IIE(hpriv)) {
- 		cfg |= (1 << 23);	/* do not mask PM field in rx'd FIS */
- 		cfg |= (1 << 22);	/* enab 4-entry host queue cache */
--		cfg |= (1 << 18);	/* enab early completion */
--		cfg |= (1 << 17);	/* enab cut-through (dis stor&forwrd) */
-+		if (HAS_PCI(ap->host))
-+			cfg |= (1 << 18);	/* enab early completion */
-+		if (hpriv->hp_flags & MV_HP_CUT_THROUGH)
-+			cfg |= (1 << 17); /* enab cut-thru (dis stor&forwrd) */
- 
- 		if (want_ncq && sata_pmp_attached(ap)) {
- 			cfg |= EDMA_CFG_EDMA_FBS; /* FIS-based switching */
-@@ -2496,6 +2499,34 @@
- 		readl(port_mmio + EDMA_ERR_IRQ_MASK_OFS));
+--- old/drivers/ata/sata_mv.c	2008-05-01 17:49:53.000000000 -0400
++++ linux/drivers/ata/sata_mv.c	2008-05-01 17:56:54.000000000 -0400
+@@ -888,6 +888,25 @@
+ 	}
  }
  
-+static unsigned int mv_in_pcix_mode(struct ata_host *host)
++static void mv_wait_for_edma_empty_idle(struct ata_port *ap)
 +{
-+	struct mv_host_priv *hpriv = host->private_data;
-+	void __iomem *mmio = hpriv->base;
-+	u32 reg;
++	void __iomem *port_mmio = mv_ap_base(ap);
++	const u32 empty_idle = (EDMA_STATUS_CACHE_EMPTY | EDMA_STATUS_IDLE);
++	const int per_loop = 5, timeout = (15 * 1000 / per_loop);
++	int i;
 +
-+	if (!HAS_PCI(host) || !IS_PCIE(hpriv))
-+		return 0;	/* not PCI-X capable */
-+	reg = readl(mmio + MV_PCI_MODE_OFS);
-+	if ((reg & MV_PCI_MODE_MASK) == 0)
-+		return 0;	/* conventional PCI mode */
-+	return 1;	/* chip is in PCI-X mode */
-+}
-+
-+static int mv_pci_cut_through_okay(struct ata_host *host)
-+{
-+	struct mv_host_priv *hpriv = host->private_data;
-+	void __iomem *mmio = hpriv->base;
-+	u32 reg;
-+
-+	if (!mv_in_pcix_mode(host)) {
-+		reg = readl(mmio + PCI_COMMAND_OFS);
-+		if (reg & PCI_COMMAND_MRDTRIG)
-+			return 0; /* not okay */
++	/*
++	 * Wait for the EDMA engine to finish transactions in progress.
++	 */
++	for (i = 0; i < timeout; ++i) {
++		u32 edma_stat = readl(port_mmio + EDMA_STATUS_OFS);
++		if ((edma_stat & empty_idle) == empty_idle)
++			break;
++		udelay(per_loop);
 +	}
-+	return 1; /* okay */
++	/* ata_port_printk(ap, KERN_INFO, "%s: %u+ usecs\n", __func__, i); */
 +}
 +
- static int mv_chip_id(struct ata_host *host, unsigned int board_idx)
- {
- 	struct pci_dev *pdev = to_pci_dev(host->dev);
-@@ -2563,7 +2594,7 @@
- 		break;
- 
- 	case chip_7042:
--		hp_flags |= MV_HP_PCIE;
-+		hp_flags |= MV_HP_PCIE | MV_HP_CUT_THROUGH;
- 		if (pdev->vendor == PCI_VENDOR_ID_TTI &&
- 		    (pdev->device == 0x2300 || pdev->device == 0x2310))
- 		{
-@@ -2597,6 +2628,8 @@
- 	case chip_6042:
- 		hpriv->ops = &mv6xxx_ops;
- 		hp_flags |= MV_HP_GEN_IIE;
-+		if (board_idx == chip_6042 && mv_pci_cut_through_okay(host))
-+			hp_flags |= MV_HP_CUT_THROUGH;
- 
- 		switch (pdev->revision) {
- 		case 0x0:
+ /**
+  *      mv_stop_edma_engine - Disable eDMA engine
+  *      @port_mmio: io base address
+@@ -920,6 +939,7 @@
+ 	if (!(pp->pp_flags & MV_PP_FLAG_EDMA_EN))
+ 		return 0;
+ 	pp->pp_flags &= ~MV_PP_FLAG_EDMA_EN;
++	mv_wait_for_edma_empty_idle(ap);
+ 	if (mv_stop_edma_engine(port_mmio)) {
+ 		ata_port_printk(ap, KERN_ERR, "Unable to stop eDMA\n");
+ 		return -EIO;
