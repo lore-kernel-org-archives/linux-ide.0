@@ -1,55 +1,87 @@
-From: Mark Lord <liml@rtr.ca>
-Subject: Re: [PATCH 03/12] sata_mv wait for empty+idle
-Date: Fri, 02 May 2008 16:09:10 -0400
-Message-ID: <481B74E6.9020908@rtr.ca>
-References: <481AAF84.40501@rtr.ca> <481AAFB7.4090708@rtr.ca>	 <481AAFE0.9090101@rtr.ca> <481AB00A.3000206@rtr.ca>	 <da824cf30805020942q27466cbbk5c7877d6caa6c3d1@mail.gmail.com>	 <481B5334.7030200@rtr.ca> <da824cf30805021139p1e859419u38d7b808e4f8a06e@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+From: akpm@linux-foundation.org
+Subject: [patch 2/3] pata_atiixp: simplex clear
+Date: Fri, 02 May 2008 13:37:41 -0700
+Message-ID: <200805022037.m42Kbfoj013533@imap1.linux-foundation.org>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([76.10.145.34]:1433 "EHLO mail.rtr.ca"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1764829AbYEBUJM (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 2 May 2008 16:09:12 -0400
-In-Reply-To: <da824cf30805021139p1e859419u38d7b808e4f8a06e@mail.gmail.com>
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:43101 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S932605AbYEBUic (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 2 May 2008 16:38:32 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Grant Grundler <grundler@google.com>
-Cc: Jeff Garzik <jgarzik@pobox.com>, Tejun Heo <htejun@gmail.com>, IDE/ATA development list <linux-ide@vger.kernel.org>
+To: jeff@garzik.org
+Cc: linux-ide@vger.kernel.org, akpm@linux-foundation.org, alan@lxorguk.ukuu.org.uk, alan@redhat.com
 
-Grant Grundler wrote:
-> On Fri, May 2, 2008 at 10:45 AM, Mark Lord <liml@rtr.ca> wrote:
->> Grant Grundler wrote:
->..
->>> BTW, I have no idea when EDMA stops on it's own or if we could
->>> safely get EDMA to stop "prematurely" (e.g. disable PCI Bus Master).
-..
->>  I don't know what you're talking about there.
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+
+Some of the other quirks changes seem to have left some users with the simplex
+bits mis-set by the time the driver loads.  Clear simplex mode before we probe
+the controller therefore.
+
+[akpm@linux-foundation.org: fix build after upstream renamed things]
+Signed-off-by: Alan Cox <alan@redhat.com>
+Cc: Jeff Garzik <jeff@garzik.org>
+
+On Sat, 29 Mar 2008 12:15:40 -0400 Jeff Garzik <jeff@garzik.org> wrote:
+> This patch triggered an audit which led me to... bug city.
 > 
-> I don't either. :)
-..
+> 1) This call occurs before resources are guaranteed to be present, which 
+> happens when pci[m]_enable_device() is called.
+> 
+> 2) Auditing the other ata_pci_clear_simplex() uses, it seems the others 
+> are equally broken.
+> 
+> 3) Further, looking at pata_amd, I notice that the resume code twiddles 
+> bits before the PCI device is even bought into D0 state!
+> 
+> 4) ata_pci_clear_simplex() does its work before resources are mapped, 
+> and assumes PCI IDE and PCI BAR #4 behavior.  This works at present, but 
+> is less robust than it could be.
+> 
+> 
+> Anyway, my suggestion would be to add a "post-enable" function pointer 
+> to ata_pci_init_one() arguments, and call ata_pci_clear_simplex() from 
+> that hook.  That would permit this patch and other 
+> ata_pci_clear_simplex() callsites to be fixed.
+> 
+> 	Jeff
+> 
 
-Well, when we hit the disable bit, it stops fairly quickly.
-The (existing) code still polls it there, but generally
-it does stop without much fuss.
+Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
+---
 
-Another way to stop it is to just go and hit EDMA_RESET (ATA_RST),
-which immediately kills everything.  The datasheet recommends against it,
-but doesn't say why (disruption to packets in flight and possibly messing
-up drive write cache and the like).
+ drivers/ata/pata_atiixp.c |    7 +++++--
+ 1 file changed, 5 insertions(+), 2 deletions(-)
 
-But the current code now tries for a more graceful shutdown,
-with firm time limits.
-
-I particularly like the new NCQ error-handling for FBS,
-which allows activity on the non-failed links to quiesce
-before beginning the EH/reset/recovery sequence.
-Much less disruptive to the non-failing drives that way.
-
-There's still an errata or two with some of the chips
-that may prevent the full EH from working there sometimes.
-The READ_LOG_EXT_10H may fail, meaning we might not report
-the failed LBA number back up the stack.  With a bit of luck,
-we'll tack that down once we learn the workaround.
-
-Cheers
+diff -puN drivers/ata/pata_atiixp.c~pata_atiixp-simplex-clear drivers/ata/pata_atiixp.c
+--- a/drivers/ata/pata_atiixp.c~pata_atiixp-simplex-clear
++++ a/drivers/ata/pata_atiixp.c
+@@ -22,7 +22,7 @@
+ #include <linux/libata.h>
+ 
+ #define DRV_NAME "pata_atiixp"
+-#define DRV_VERSION "0.4.6"
++#define DRV_VERSION "0.4.7"
+ 
+ enum {
+ 	ATIIXP_IDE_PIO_TIMING	= 0x40,
+@@ -243,6 +243,9 @@ static int atiixp_init_one(struct pci_de
+ 		.port_ops = &atiixp_port_ops
+ 	};
+ 	const struct ata_port_info *ppi[] = { &info, NULL };
++	/* Some of the quirk reconfiguration messes up the simplex flag, so
++	   clear it again */
++	ata_pci_bmdma_clear_simplex(dev);
+ 	return ata_pci_sff_init_one(dev, ppi, &atiixp_sht, NULL);
+ }
+ 
+@@ -279,7 +282,7 @@ static void __exit atiixp_exit(void)
+ }
+ 
+ MODULE_AUTHOR("Alan Cox");
+-MODULE_DESCRIPTION("low-level driver for ATI IXP200/300/400");
++MODULE_DESCRIPTION("low-level driver for ATI IXP series");
+ MODULE_LICENSE("GPL");
+ MODULE_DEVICE_TABLE(pci, atiixp);
+ MODULE_VERSION(DRV_VERSION);
+_
