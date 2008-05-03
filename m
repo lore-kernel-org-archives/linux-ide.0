@@ -1,47 +1,81 @@
-From: Robert Hancock <hancockr@shaw.ca>
-Subject: Re: Remove Asus EEE UDMA/33 limitation.
-Date: Sat, 03 May 2008 13:34:14 -0600
-Message-ID: <481CBE36.6040007@shaw.ca>
-References: <fa.tsKjLRZd5ILFUSCwKgwjuJUvN+Y@ifi.uio.no>
- <fa.l6LkASoBXPmhrri16ok+xTRwEUY@ifi.uio.no>
- <fa.ulFofhLJhFFkP/xiWxdfjwM8XDA@ifi.uio.no>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: [PATCH] ide: remove try_to_flush_leftover_data()
+Date: Sat, 3 May 2008 22:39:29 +0200
+Message-ID: <200805032239.29745.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from idcmail-mo1so.shaw.ca ([24.71.223.10]:37327 "EHLO
-	pd3mo1so.prod.shaw.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750763AbYECTeQ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 3 May 2008 15:34:16 -0400
-In-reply-to: <fa.ulFofhLJhFFkP/xiWxdfjwM8XDA@ifi.uio.no>
+Received: from fg-out-1718.google.com ([72.14.220.153]:40262 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751038AbYECUXU (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 3 May 2008 16:23:20 -0400
+Received: by fg-out-1718.google.com with SMTP id 19so1410917fgg.17
+        for <linux-ide@vger.kernel.org>; Sat, 03 May 2008 13:23:17 -0700 (PDT)
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: Matthew Garrett <mjg59@srcf.ucam.org>, Dave Jones <davej@codemonkey.org.uk>, linux-ide@vger.kernel.org, Linux Kernel <linux-kernel@vger.kernel.org>
+To: linux-ide@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
 
-Alan Cox wrote:
-> On Sat, 3 May 2008 10:58:17 +0100
-> Matthew Garrett <mjg59@srcf.ucam.org> wrote:
-> 
->> On Fri, May 02, 2008 at 11:44:58AM -0400, Dave Jones wrote:
->>
->>>  static const struct ich_laptop ich_laptop[] = {
->>>  	/* devid, subvendor, subdev */
->>> +	{ 0x2653, 0x1043, 0x82d8 },	/* ICH6M on Asus Eee PC */
->>>  	{ 0x27DF, 0x0005, 0x0280 },	/* ICH7 on Acer 5602WLMi */
->>>  	{ 0x27DF, 0x1025, 0x0102 },	/* ICH7 on Acer 5602aWLMi */
->>>  	{ 0x27DF, 0x1025, 0x0110 },	/* ICH7 on Acer 3682WLMi */
->> Don't the ACPI timing methods let us work this out without requiring 
->> machine specific knowledge? 
-> 
-> We don't currently sniff the ACPI timing data on Intel boxes - we can do
-> so and there is a library routine but I'd be worried about the usual
-> standard of BIOS code. Right now we only do it for chipsets which are so
-> braindamaged we have no other choice or where the vendor specifically
-> implemented and intended the ACPI data to be used for this (eg Nvidia)
+Just use the new & shiny ide_pad_transfer() helper instead.
 
-Given that the bootup ACPI _GTM results will be used by Windows to 
-determine the DMA mode setting with the standard Microsoft atapi.sys 
-driver which PATA controllers would typically use, and Windows is what 
-the majority of this hardware was designed to run, I think it should be 
-quite trustworthy..
+Also remove the superfluous check for 'drive->media == ide_disk'
+while at it (ide_ata_error() is used only for ide_disk devices).
+
+Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+---
+ drivers/ide/ide-io.c |   32 +++++---------------------------
+ 1 file changed, 5 insertions(+), 27 deletions(-)
+
+Index: b/drivers/ide/ide-io.c
+===================================================================
+--- a/drivers/ide/ide-io.c
++++ b/drivers/ide/ide-io.c
+@@ -358,31 +358,6 @@ void ide_end_drive_cmd (ide_drive_t *dri
+ 
+ EXPORT_SYMBOL(ide_end_drive_cmd);
+ 
+-/**
+- *	try_to_flush_leftover_data	-	flush junk
+- *	@drive: drive to flush
+- *
+- *	try_to_flush_leftover_data() is invoked in response to a drive
+- *	unexpectedly having its DRQ_STAT bit set.  As an alternative to
+- *	resetting the drive, this routine tries to clear the condition
+- *	by read a sector's worth of data from the drive.  Of course,
+- *	this may not help if the drive is *waiting* for data from *us*.
+- */
+-static void try_to_flush_leftover_data (ide_drive_t *drive)
+-{
+-	int i = (drive->mult_count ? drive->mult_count : 1) * SECTOR_WORDS;
+-
+-	if (drive->media != ide_disk)
+-		return;
+-	while (i > 0) {
+-		u32 buffer[16];
+-		u32 wcount = (i > 16) ? 16 : i;
+-
+-		i -= wcount;
+-		drive->hwif->input_data(drive, NULL, buffer, wcount * 4);
+-	}
+-}
+-
+ static void ide_kill_rq(ide_drive_t *drive, struct request *rq)
+ {
+ 	if (rq->rq_disk) {
+@@ -422,8 +397,11 @@ static ide_startstop_t ide_ata_error(ide
+ 	}
+ 
+ 	if ((stat & DRQ_STAT) && rq_data_dir(rq) == READ &&
+-	    (hwif->host_flags & IDE_HFLAG_ERROR_STOPS_FIFO) == 0)
+-		try_to_flush_leftover_data(drive);
++	    (hwif->host_flags & IDE_HFLAG_ERROR_STOPS_FIFO) == 0) {
++		int nsect = drive->mult_count ? drive->mult_count : 1;
++
++		ide_pad_transfer(drive, READ, nsect * SECTOR_SIZE);
++	}
+ 
+ 	if (rq->errors >= ERROR_MAX || blk_noretry_request(rq)) {
+ 		ide_kill_rq(drive, rq);
