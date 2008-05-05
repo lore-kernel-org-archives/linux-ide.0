@@ -1,50 +1,40 @@
-From: Geert Uytterhoeven <geert@linux-m68k.org>
-Subject: [PATCH] m68k: Fix falconide `data_adr' typo
-Date: Mon, 5 May 2008 21:15:19 +0200 (CEST)
-Message-ID: <Pine.LNX.4.64.0805052114380.15634@anakin>
+From: "Guglielmo Fanini" <g.fanini@gmail.com>
+Subject: request for SiS SATA hard disk controller 966 rev. 1183 windows driver
+Date: Mon, 5 May 2008 20:54:41 +0100
+Message-ID: <602D57F60B6F41499FD3A4E0A96AD1FD@willpc>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1761283AbYEETPl@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Linus Torvalds <torvalds@linux-foundation.org>, Andrew Morton <akpm@linux-foundation.org>
-Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-ide@vger.kernel.org, Linux Kernel Development <linux-kernel@vger.kernel.org>, Linux/m68k <linux-m68k@vger.kernel.org>
+Content-Type: text/plain;
+	format=flowed;
+	charset="iso-8859-1";
+	reply-type=original
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from nf-out-0910.google.com ([64.233.182.188]:10062 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752171AbYEETyx (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 5 May 2008 15:54:53 -0400
+Received: by nf-out-0910.google.com with SMTP id d3so1159370nfc.21
+        for <linux-ide@vger.kernel.org>; Mon, 05 May 2008 12:54:51 -0700 (PDT)
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-From: Geert Uytterhoeven <geert@linux-m68k.org>
+I found on http://www.sis.com/aboutsis/aboutsis_index05_01.htm a SATA driver 
+411a.zip but it is for chipset 966 revisions 1182, 1184, I have chip 
+revision 1183, can you ask SiS where to find the driver ?
 
-    commit 9567b349f7e7dd7e2483db99ee8e4a6fe0caca38
-    Author: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-    Date:   Mon Apr 28 23:44:36 2008 +0200
+I found on http://driver.sis.com/linux/raid/sis18x_20060508.zip
 
-    ide: merge ->atapi_*put_bytes and ->ata_*put_data methods
+static struct pci_device_id sis_pci_tbl[] = {
+ { PCI_VENDOR_ID_SI, 0x0180, PCI_ANY_ID, PCI_ANY_ID, 0, 0, sis_180 },
+ { PCI_VENDOR_ID_SI, 0x0181, PCI_ANY_ID, PCI_ANY_ID, 0, 0, sis_180 },
+ { PCI_VENDOR_ID_SI, 0x0182, PCI_ANY_ID, PCI_ANY_ID, 0, 0, sis_180 },
+ { PCI_VENDOR_ID_SI, 0x1180, PCI_ANY_ID, PCI_ANY_ID, 0, 0, sis_180 },
+ { PCI_VENDOR_ID_SI, 0x1182, PCI_ANY_ID, PCI_ANY_ID, 0, 0, sis_180 },
 
-introduced a typo (`data_adr' instead of `data_addr'), leading to a compile
-failure.
+ { PCI_VENDOR_ID_SI, 0x1183, PCI_ANY_ID, PCI_ANY_ID, 0, 0, sis_180 },
 
-Signed-off-by: Geert Uytterhoeven <geert@linux-m68k.org>
----
- drivers/ide/legacy/falconide.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ { PCI_VENDOR_ID_SI, 0x1184, PCI_ANY_ID, PCI_ANY_ID, 0, 0, sis_180 },
+ { } /* terminate list */
+}; 
 
---- a/drivers/ide/legacy/falconide.c
-+++ b/drivers/ide/legacy/falconide.c
-@@ -61,7 +61,7 @@ static void falconide_output_data(ide_dr
- 	unsigned long data_addr = drive->hwif->io_ports.data_addr;
- 
- 	if (drive->media == ide_disk && rq && rq->cmd_type == REQ_TYPE_FS)
--		return outsw(data_adr, buf, (len + 1) / 2);
-+		return outsw(data_addr, buf, (len + 1) / 2);
- 
- 	outsw_swapw(data_addr, buf, (len + 1) / 2);
- }
-
-Gr{oetje,eeting}s,
-
-						Geert
-
---
-Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
-
-In personal conversations with technical people, I call myself a hacker. But
-when I'm talking to journalists I just say "programmer" or something like that.
-							    -- Linus Torvalds
