@@ -1,40 +1,27 @@
-From: "Guglielmo Fanini" <g.fanini@gmail.com>
-Subject: request for SiS SATA hard disk controller 966 rev. 1183 windows driver
-Date: Mon, 5 May 2008 20:54:41 +0100
-Message-ID: <602D57F60B6F41499FD3A4E0A96AD1FD@willpc>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: Initio 162x SATA controllers
+Date: Mon, 5 May 2008 22:36:32 +0100
+Message-ID: <20080505223632.0b0b667b@core>
+References: <B0DB428E-D75D-4E79-A749-B6E89C19E8E5@teqcle.co.za>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	format=flowed;
-	charset="iso-8859-1";
-	reply-type=original
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.188]:10062 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752171AbYEETyx (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 5 May 2008 15:54:53 -0400
-Received: by nf-out-0910.google.com with SMTP id d3so1159370nfc.21
-        for <linux-ide@vger.kernel.org>; Mon, 05 May 2008 12:54:51 -0700 (PDT)
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:50079 "EHLO
+	lxorguk.ukuu.org.uk" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1754831AbYEEVpZ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 5 May 2008 17:45:25 -0400
+In-Reply-To: <B0DB428E-D75D-4E79-A749-B6E89C19E8E5@teqcle.co.za>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Johan van den Berg <johanvdb@teqcle.co.za>
+Cc: linux-ide@vger.kernel.org
 
-I found on http://www.sis.com/aboutsis/aboutsis_index05_01.htm a SATA driver 
-411a.zip but it is for chipset 966 revisions 1182, 1184, I have chip 
-revision 1183, can you ask SiS where to find the driver ?
+> I have read up as much as possible to start looking into hacking the  
+> driver to support LBA48. Any pointers / suggestions before I start  
+> bumping my head?
 
-I found on http://driver.sis.com/linux/raid/sis18x_20060508.zip
+Tejun committed an updated driver to the devel tree so if you pull the
+current git trees you should be able to get it to work.
 
-static struct pci_device_id sis_pci_tbl[] = {
- { PCI_VENDOR_ID_SI, 0x0180, PCI_ANY_ID, PCI_ANY_ID, 0, 0, sis_180 },
- { PCI_VENDOR_ID_SI, 0x0181, PCI_ANY_ID, PCI_ANY_ID, 0, 0, sis_180 },
- { PCI_VENDOR_ID_SI, 0x0182, PCI_ANY_ID, PCI_ANY_ID, 0, 0, sis_180 },
- { PCI_VENDOR_ID_SI, 0x1180, PCI_ANY_ID, PCI_ANY_ID, 0, 0, sis_180 },
- { PCI_VENDOR_ID_SI, 0x1182, PCI_ANY_ID, PCI_ANY_ID, 0, 0, sis_180 },
-
- { PCI_VENDOR_ID_SI, 0x1183, PCI_ANY_ID, PCI_ANY_ID, 0, 0, sis_180 },
-
- { PCI_VENDOR_ID_SI, 0x1184, PCI_ANY_ID, PCI_ANY_ID, 0, 0, sis_180 },
- { } /* terminate list */
-}; 
-
+Alan
