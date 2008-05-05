@@ -1,37 +1,33 @@
-From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: Re: [PATCH 2/3] ide: set REQ_NOMERGE request flag in
- ide_do_drive_cmd()
-Date: Mon, 5 May 2008 22:02:53 +0900
-Message-ID: <20080505204334P.tomof@acm.org>
-References: <200805031514.24727.bzolnier@gmail.com>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: Marvell 88SE6121 PATA in 2.6.25 (ahci)
+Date: Mon, 05 May 2008 10:52:59 -0400
+Message-ID: <481F1F4B.508@garzik.org>
+References: <20080505045537.GA24381@gozer.dminteractive.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mo10.iij4u.or.jp ([210.138.174.78]:50885 "EHLO mo10.iij4u.or.jp"
+Received: from srv5.dvmed.net ([207.36.208.214]:36785 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754473AbYEEND4 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 5 May 2008 09:03:56 -0400
-In-Reply-To: <200805031514.24727.bzolnier@gmail.com>
+	id S1755938AbYEEOxB (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 5 May 2008 10:53:01 -0400
+In-Reply-To: <20080505045537.GA24381@gozer.dminteractive.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: bzolnier@gmail.com
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, fujita.tomonori@lab.ntt.co.jp, petkovbb@gmail.com, jens.axboe@oracle.com
+To: Mike Hokenson <kernel+marvell@gozer.org>
+Cc: linux-ide@vger.kernel.org
 
-On Sat, 3 May 2008 15:14:24 +0200
-Bartlomiej Zolnierkiewicz <bzolnier@gmail.com> wrote:
-
-> This is a preparation for converting IDE to use blk_execute_rq().
+Mike Hokenson wrote:
+> So, I guess the AHCI driver has taken over for the PATA controller,
+> but something must not be right... The controller doesn't see link
+> and the drive doesn't show up anywhere, but the BIOS sees it fine.
 > 
-> There should be no functional changes caused by this patch.
-> 
-> Cc: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-> Cc: Borislav Petkov <petkovbb@gmail.com>
-> Cc: Jens Axboe <jens.axboe@oracle.com>
-> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-> ---
->  drivers/ide/ide-io.c |    2 ++
->  1 file changed, 2 insertions(+)
+> Any ideas? Should I disable PATA_MARVELL?
 
-I think that you can drop this since the block layer doesn't check
-REQ_NOMERGE with the way ide_do_drive_cmd queues requests.
+
+AHCI takes over the entire controller, but does not yet support PATA 
+devices.
+
+	Jeff
+
+
