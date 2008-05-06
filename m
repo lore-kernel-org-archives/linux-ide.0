@@ -1,53 +1,67 @@
-From: "Yigal Sadgat" <YSadgat1@gcte.com>
-Subject: Compact Flash Question
-Date: Tue, 6 May 2008 14:59:33 -0700
-Message-ID: <005b01c8afc4$77f4ec90$6401a8c0@techwriter>
+From: Holger Macht <hmacht@suse.de>
+Subject: Re: 2.6.25 semantic change in bay handling?
+Date: Wed, 7 May 2008 00:06:34 +0200
+Message-ID: <20080506220634.GA3466@homac>
+References: <20080505223357.GA2839@srcf.ucam.org> <20080506081347.GA8688@homac> <20080506082110.GA10355@srcf.ucam.org> <48201987.4020009@gmail.com> <20080506084625.GA10817@srcf.ucam.org> <48201C7D.1070303@gmail.com> <20080506091718.GA11617@srcf.ucam.org> <20080506183612.GE20797@homac> <20080506184828.GA22634@srcf.ucam.org>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	format=flowed;
-	charset="iso-8859-1";
-	reply-type=original
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from cdptpa-omtalb.mail.rr.com ([75.180.132.121]:57796 "EHLO
-	cdptpa-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753765AbYEFV7p (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 6 May 2008 17:59:45 -0400
+Received: from mx2.suse.de ([195.135.220.15]:40084 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757765AbYEFWE0 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 6 May 2008 18:04:26 -0400
+Content-Disposition: inline
+In-Reply-To: <20080506184828.GA22634@srcf.ucam.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
-Cc: jwboyer@linux.vnet.ibm.com, joern@logfs.org
+To: Matthew Garrett <mjg59@srcf.ucam.org>
+Cc: Tejun Heo <htejun@gmail.com>, linux-ide@vger.kernel.org, Jeff Garzik <jeff@garzik.org>, hmact@suse.de
 
-We wrote the Kernel to support CF drives (in IDE mode) several years ago but
-now there are strange things coming back from the field that compel us to go
-back and re-evaluate many design decisions.
+On Di 06. Mai - 19:48:28, Matthew Garrett wrote:
+> On Tue, May 06, 2008 at 08:36:12PM +0200, Holger Macht wrote:
+> > Hi Matthew,
+> > 
+> > ( Please TO or CC hmacht@suse.de ! )
+> 
+> Then stop setting Mail-Followup-To: :)
+> 
+> > > Hm. I'm not absolutely certain about this. Do we get a bus check 
+> > > notification after the dock has been removed? If so, I think it ought to 
+> > > be handled the same way as the internal bay (ie, signal userspace and 
+> > > let it clean up and destroy the device - if it fails to do so, then 
+> > > destroy the device when the dock is actually removed, by catching the 
+> > > bus/device check, calling the _STA method on the bay and destroying the 
+> > > device if it's present)
+> > 
+> > libata is notified through the dock driver when a dock event occurs, just
+> > before the dock driver undocks, giving no time to userspace to clean
+> > up. libata doesn't receive an additional acpi bay event.
+> 
+> That's the current situation, I'm not sure it's ideal. But I'll skip 
 
-For instance,
-(1) Can you really ignore bit(2) (CORR) in the Status register offset 7 that 
-tells
-you that the CF has detected and corrected a soft error?, etc.
-(2) An engineer at SanDisk Engineering told me NOT to do wear leveling.
-The file allocation table is written very frequently back into the flash. So
-is it really safe to assume that I don't need wear leveling???
-(3) Re. the BUSY bit in the status register (offset 7, bit D7), anybody 
-experienced
-time outs?
-(4) Re Error register (offset 1) bit D7 (BBK), again, I was told that it 
-cannot (???)
-happen since the CF performs read-after-write and it automatically switches 
-good blocks
-for bad ones... Is this correct?
+What exactly do you think is not ideal?
 
-We get many "soft" errors and I cannot wait to put my hand on a system to 
-test but
-thought I would draw on your collective experience before we dive into these 
-issues again.
+> worrying about that until I've actually got some hardware to work out 
+> how to do it properly :)
 
-Any comments would be greatly appreciated.
+Maybe this is what you're thinking of?:
+  http://marc.info/?l=linux-acpi&m=121009411900390&w=2
 
-Yigal Sadgat
-General Computer Technology (GCT)
-YSadgat1@gcte.com
+> 
+> > >>  2. Bay event: libata signals a BAY_EVENT through uevent, userspace writes
+> > >>     	       1 to /sys/.../device/delete
+> > 
+> > > In the case of an eject request, yes. In the case of a bus or device 
+> > > check, we should call _STA and then delete/hotplug the device as 
+> > > appropriate.
+> > 
+> > Yes.
+> 
+> Excellent. I /think/ the patch I sent earlier basically does this - 
+> you'll want to register a separate callback for the dock event in that 
+> case, though.
 
+I'll take a look the following days, thanks.
 
-
+Regards,
+	Holger
