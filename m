@@ -1,294 +1,38 @@
-From: Alek Du <alek.du@intel.com>
-Subject: again: [PATCH] libata: Add Intel SCH PATA Support
-Date: Tue, 6 May 2008 21:31:41 +0800
-Message-ID: <20080506213141.06b86099@dxy.sh.intel.com>
-References: <20080505172356.636649e6@dxy.sh.intel.com>
-	<481EE284.2010708@ru.mvista.com>
-	<20080505224420.44730838@dxy.sh.intel.com>
-	<481F2144.5000409@ru.mvista.com>
-	<20080506094131.4bd70c8a@dxy.sh.intel.com>
-	<48204A67.7070308@pobox.com>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [PATCH 01/10] sata_inic162x: misc clean ups
+Date: Tue, 06 May 2008 10:08:21 -0400
+Message-ID: <48206655.6060604@garzik.org>
+References: <12095409172824-git-send-email-htejun@gmail.com> <1209540918258-git-send-email-htejun@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:22893 "EHLO mga02.intel.com"
+Received: from srv5.dvmed.net ([207.36.208.214]:54069 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754230AbYEFNif convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 6 May 2008 09:38:35 -0400
-In-Reply-To: <48204A67.7070308@pobox.com>
+	id S1754570AbYEFOIY (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 6 May 2008 10:08:24 -0400
+In-Reply-To: <1209540918258-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>, Sergei Shtylyov <sshtylyov@ru.mvista.com>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: linux-ide@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: alan@lxorguk.ukuu.org.uk, linux-ide@vger.kernel.org
 
-Hi Jeff, Alan, Sergei, Bartlomiej
+Tejun Heo wrote:
+> * use larger indents for structure member definitions
+> 
+> * kill unused variable @addr in inic_scr_write()
+> 
+> * kill unnecessary flushes in inic_freeze/thaw()
+> 
+> * kill buggy explicit kfree() on devres managed port private data
+> 
+> This is in preparation of further inic162x updates.
+> 
+> Signed-off-by: Tejun Heo <htejun@gmail.com>
+> ---
+>  drivers/ata/sata_inic162x.c |   18 +++++-------------
+>  1 files changed, 5 insertions(+), 13 deletions(-)
 
-Modified again according to your good comments! Hope this time it is ok. :-)
+applied 1-10
 
 
->From 7a7f6630e32b135f6d659db8e189748b4e7fd1a4 Mon Sep 17 00:00:00 2001
-From: Alek Du <alek.du@intel.com>
-Date: Mon, 5 May 2008 14:32:04 +0800
-Subject: [PATCH] libata: Add Intel SCH PATA Support
-
-This patch adds Intel SCH chipsets (AF82US15W, AF82US15L, AF82UL11L) PATA controller
-support.
-
-Signed-off-by: Alek Du <alek.du@intel.com>
----
- drivers/ata/Kconfig    |    9 ++
- drivers/ata/Makefile   |    1 +
- drivers/ata/pata_sch.c |  206 ++++++++++++++++++++++++++++++++++++++++++++++++
- 3 files changed, 216 insertions(+), 0 deletions(-)
- create mode 100644 drivers/ata/pata_sch.c
-
-diff --git a/drivers/ata/Kconfig b/drivers/ata/Kconfig
-index 1c11df9..1a59f30 100644
---- a/drivers/ata/Kconfig
-+++ b/drivers/ata/Kconfig
-@@ -697,6 +697,15 @@ config PATA_SCC
- 
- 	  If unsure, say N.
- 
-+config PATA_SCH
-+	tristate "Intel SCH PATA support"
-+	depends on PCI
-+	help
-+	  This option enables support for Intel SCH PATA on the Intel
-+	  SCH (US15W, US15L, UL11L) series host controllers.
-+
-+	  If unsure, say N.
-+
- config PATA_BF54X
- 	tristate "Blackfin 54x ATAPI support"
- 	depends on BF542 || BF548 || BF549
-diff --git a/drivers/ata/Makefile b/drivers/ata/Makefile
-index b693d82..674965f 100644
---- a/drivers/ata/Makefile
-+++ b/drivers/ata/Makefile
-@@ -67,6 +67,7 @@ obj-$(CONFIG_PATA_SIS)		+= pata_sis.o
- obj-$(CONFIG_PATA_TRIFLEX)	+= pata_triflex.o
- obj-$(CONFIG_PATA_IXP4XX_CF)	+= pata_ixp4xx_cf.o
- obj-$(CONFIG_PATA_SCC)		+= pata_scc.o
-+obj-$(CONFIG_PATA_SCH)		+= pata_sch.o
- obj-$(CONFIG_PATA_BF54X)	+= pata_bf54x.o
- obj-$(CONFIG_PATA_PLATFORM)	+= pata_platform.o
- obj-$(CONFIG_PATA_OF_PLATFORM)	+= pata_of_platform.o
-diff --git a/drivers/ata/pata_sch.c b/drivers/ata/pata_sch.c
-new file mode 100644
-index 0000000..c8cc027
---- /dev/null
-+++ b/drivers/ata/pata_sch.c
-@@ -0,0 +1,206 @@
-+/*
-+ *  pata_sch.c - Intel SCH PATA controllers
-+ *
-+ *  Copyright (c) 2008 Alek Du <alek.du@intel.com>
-+ *
-+ *  This program is free software; you can redistribute it and/or modify
-+ *  it under the terms of the GNU General Public License 2 as published
-+ *  by the Free Software Foundation.
-+ *
-+ *  This program is distributed in the hope that it will be useful,
-+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+ *  GNU General Public License for more details.
-+ *
-+ *  You should have received a copy of the GNU General Public License
-+ *  along with this program; see the file COPYING.  If not, write to
-+ *  the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.
-+ *
-+ */
-+
-+/*
-+ *  Supports:
-+ *    Intel SCH (AF82US15W, AF82US15L, AF82UL11L) chipsets -- see spec at:
-+ *    http://download.intel.com/design/chipsets/embedded/datashts/319537.pdf
-+ */
-+
-+#include <linux/kernel.h>
-+#include <linux/module.h>
-+#include <linux/pci.h>
-+#include <linux/init.h>
-+#include <linux/blkdev.h>
-+#include <linux/delay.h>
-+#include <linux/device.h>
-+#include <scsi/scsi_host.h>
-+#include <linux/libata.h>
-+#include <linux/dmi.h>
-+
-+#define DRV_NAME	"pata_sch"
-+#define DRV_VERSION	"0.2"
-+
-+/* see SCH datasheet page 351 */
-+enum {
-+	D0TIM	= 0x80,		/* Device 0 Timing Register */
-+	D1TIM	= 0x84,		/* Device 1 Timing Register */
-+	PM	= 0x07,		/* PIO Mode Bit Mask */
-+	MDM	= (0x03 << 8),	/* Multi-word DMA Mode Bit Mask */
-+	UDM	= (0x07 << 16), /* Ultra DMA Mode Bit Mask */
-+	PPE	= (1 << 30),	/* Prefetch/Post Enable */
-+	USD	= (1 << 31),	/* Use Synchronous DMA */
-+};
-+
-+static int sch_init_one(struct pci_dev *pdev,
-+			 const struct pci_device_id *ent);
-+static void sch_set_piomode(struct ata_port *ap, struct ata_device *adev);
-+static void sch_set_dmamode(struct ata_port *ap, struct ata_device *adev);
-+
-+static const struct pci_device_id sch_pci_tbl[] = {
-+	/* Intel SCH PATA Controller */
-+	{ PCI_VDEVICE(INTEL, PCI_DEVICE_ID_INTEL_SCH_IDE), 0 },
-+	{ }	/* terminate list */
-+};
-+
-+static struct pci_driver sch_pci_driver = {
-+	.name			= DRV_NAME,
-+	.id_table		= sch_pci_tbl,
-+	.probe			= sch_init_one,
-+	.remove			= ata_pci_remove_one,
-+#ifdef CONFIG_PM
-+	.suspend		= ata_pci_device_suspend,
-+	.resume			= ata_pci_device_resume,
-+#endif
-+};
-+
-+static struct scsi_host_template sch_sht = {
-+	ATA_BMDMA_SHT(DRV_NAME),
-+};
-+
-+static struct ata_port_operations sch_pata_ops = {
-+	.inherits		= &ata_bmdma_port_ops,
-+	.cable_detect		= ata_cable_unknown,
-+	.set_piomode		= sch_set_piomode,
-+	.set_dmamode		= sch_set_dmamode,
-+};
-+
-+static struct ata_port_info sch_port_info = {
-+	.flags		= 0,
-+	.pio_mask	= ATA_PIO4,   /* pio0-4 */
-+	.mwdma_mask	= ATA_MWDMA2, /* mwdma0-2 */
-+	.udma_mask	= ATA_UDMA5,  /* udma0-5 */
-+	.port_ops	= &sch_pata_ops,
-+};
-+
-+MODULE_AUTHOR("Alek Du <alek.du@intel.com>");
-+MODULE_DESCRIPTION("SCSI low-level driver for Intel SCH PATA controllers");
-+MODULE_LICENSE("GPL");
-+MODULE_DEVICE_TABLE(pci, sch_pci_tbl);
-+MODULE_VERSION(DRV_VERSION);
-+
-+/**
-+ *	sch_set_piomode - Initialize host controller PATA PIO timings
-+ *	@ap: Port whose timings we are configuring
-+ *	@adev: ATA device
-+ *
-+ *	Set PIO mode for device, in host controller PCI config space.
-+ *
-+ *	LOCKING:
-+ *	None (inherited from caller).
-+ */
-+
-+static void sch_set_piomode(struct ata_port *ap, struct ata_device *adev)
-+{
-+	unsigned int pio	= adev->pio_mode - XFER_PIO_0;
-+	struct pci_dev *dev	= to_pci_dev(ap->host->dev);
-+	unsigned int port	= adev->devno ? D1TIM : D0TIM;
-+	unsigned int data;
-+
-+	pci_read_config_dword(dev, port, &data);
-+	/* see SCH datasheet page 351 */
-+	/* set PIO mode */
-+	data &= ~(PM | PPE);
-+	data |= pio;
-+	/* enable PPE for block device */
-+	if (adev->class == ATA_DEV_ATA)
-+		data |= PPE;
-+	pci_write_config_dword(dev, port, data);
-+}
-+
-+/**
-+ *	sch_set_dmamode - Initialize host controller PATA DMA timings
-+ *	@ap: Port whose timings we are configuring
-+ *	@adev: ATA device
-+ *
-+ *	Set MW/UDMA mode for device, in host controller PCI config space.
-+ *
-+ *	LOCKING:
-+ *	None (inherited from caller).
-+ */
-+
-+static void sch_set_dmamode(struct ata_port *ap, struct ata_device *adev)
-+{
-+	unsigned int dma_mode	= adev->dma_mode;
-+	struct pci_dev *dev	= to_pci_dev(ap->host->dev);
-+	unsigned int port	= adev->devno ? D1TIM : D0TIM;
-+	unsigned int data;
-+
-+	pci_read_config_dword(dev, port, &data);
-+	/* see SCH datasheet page 351 */
-+	if (dma_mode >= XFER_UDMA_0) {
-+		/* enable Synchronous DMA mode */
-+		data |= USD;
-+		data &= ~UDM;
-+		data |= (dma_mode - XFER_UDMA_0) << 16;
-+	} else { /* must be MWDMA mode, since we masked SWDMA already */
-+		data &= ~(USD | MDM);
-+		data |= (dma_mode - XFER_MW_DMA_0) << 8;
-+	}
-+	pci_write_config_dword(dev, port, data);
-+}
-+
-+/**
-+ *	sch_init_one - Register SCH ATA PCI device with kernel services
-+ *	@pdev: PCI device to register
-+ *	@ent: Entry in sch_pci_tbl matching with @pdev
-+ *
-+ *	LOCKING:
-+ *	Inherited from PCI layer (may sleep).
-+ *
-+ *	RETURNS:
-+ *	Zero on success, or -ERRNO value.
-+ */
-+
-+static int __devinit sch_init_one(struct pci_dev *pdev,
-+				   const struct pci_device_id *ent)
-+{
-+	static int printed_version;
-+	const struct ata_port_info *ppi[] = { &sch_port_info, NULL };
-+	struct ata_host *host;
-+	int rc;
-+
-+	if (!printed_version++)
-+		dev_printk(KERN_DEBUG, &pdev->dev,
-+			   "version " DRV_VERSION "\n");
-+
-+	/* enable device and prepare host */
-+	rc = pcim_enable_device(pdev);
-+	if (rc)
-+		return rc;
-+	rc = ata_pci_sff_prepare_host(pdev, ppi, &host);
-+	if (rc)
-+		return rc;
-+	pci_set_master(pdev);
-+	return ata_pci_sff_activate_host(host, ata_sff_interrupt, &sch_sht);
-+}
-+
-+static int __init sch_init(void)
-+{
-+	return pci_register_driver(&sch_pci_driver);
-+}
-+
-+static void __exit sch_exit(void)
-+{
-+	pci_unregister_driver(&sch_pci_driver);
-+}
-+
-+module_init(sch_init);
-+module_exit(sch_exit);
--- 
-1.5.2.5
-
-BR,
-Alek
