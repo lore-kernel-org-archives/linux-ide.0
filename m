@@ -1,115 +1,128 @@
-From: Matthew Garrett <mjg59@srcf.ucam.org>
+From: Holger Macht <hmacht@suse.de>
 Subject: Re: 2.6.25 semantic change in bay handling?
-Date: Tue, 6 May 2008 10:17:18 +0100
-Message-ID: <20080506091718.GA11617@srcf.ucam.org>
-References: <20080505223357.GA2839@srcf.ucam.org> <20080506081347.GA8688@homac> <20080506082110.GA10355@srcf.ucam.org> <48201987.4020009@gmail.com> <20080506084625.GA10817@srcf.ucam.org> <48201C7D.1070303@gmail.com>
+Date: Tue, 6 May 2008 11:26:53 +0200
+Message-ID: <20080506092653.GB4378@homac>
+References: <20080505223357.GA2839@srcf.ucam.org> <20080506081347.GA8688@homac> <20080506082110.GA10355@srcf.ucam.org> <48201987.4020009@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mjg.x.mythic-beasts.com ([93.93.128.6]:56564 "EHLO
-	vavatch.codon.org.uk" rhost-flags-OK-FAIL-OK-OK) by vger.kernel.org
-	with ESMTP id S1764220AbYEFJR1 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 6 May 2008 05:17:27 -0400
+Received: from ns1.suse.de ([195.135.220.2]:36487 "EHLO mx1.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1765557AbYEFJYs (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 6 May 2008 05:24:48 -0400
 Content-Disposition: inline
-In-Reply-To: <48201C7D.1070303@gmail.com>
+In-Reply-To: <48201987.4020009@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Tejun Heo <htejun@gmail.com>
-Cc: linux-ide@vger.kernel.org, Jeff Garzik <jeff@garzik.org>, hmacht@suse.de
+Cc: Matthew Garrett <mjg59@srcf.ucam.org>, linux-ide@vger.kernel.org, Jeff Garzik <jeff@garzik.org>
 
-On Tue, May 06, 2008 at 05:53:17PM +0900, Tejun Heo wrote:
+On Di 06. Mai - 17:40:39, Tejun Heo wrote:
+> (cc'ing Holger Macht, copying whole body for him)
+>
+> Hello, guys.
+>
 > Matthew Garrett wrote:
-> >Yeah, but I can't see an easy way of doing that. It's not enough to keep 
-> >track of the current state and assume that it's either an insertion or 
-> >removal as a result - some machines fire bus checks on resume, even if 
-> >the bay device hasn't been changed.
-> 
-> All we need is separate out the ejection case out.  For suspend, resume, 
-> attach or whatever can be handled the same way.  The problem occurs 
-> because some controllers get very unhappy when certain registers are 
-> accessed when there's no device attached to it.
+>> On Tue, May 06, 2008 at 10:13:47AM +0200, Holger Macht wrote:
+>>> On Mo 05. Mai - 23:33:57, Matthew Garrett wrote:
+>>>> 48feb3c419508487becfb9ea3afcc54c3eac6d80 appears to flag a device as 
+>
+> That should be 233f112042d0b50170212dbff99c3b34b8773cd3, right?
+>
+>>>> detached if an acpi eject request is received. In 2.6.24 and earlier, an 
+>>>> eject request merely sent an event to userland which could then cleanly 
+>>>> unmount the device and let the user know when it was safe to remove the 
+>>>> drive. Removing the device would then send another acpi request that 
+>>>> triggered the actual hotplug and bus rescan.
+>>> What second acpi request are you referring to?
+>>
+>> For bay devices, the sequence is an optional eject request (before 
+>> removal, and not implemented on all hardware) followed by either a bus or 
+>> device check request (after removal).
+>>
+>>>> This seems like a regression - it's no longer possible to ensure that a 
+>>>> bay device is cleanly unmounted. Was this really the desired behaviour? 
+>>> I'm thinking about his for several days now and looking for a proper
+>>> solution how to ensure that userland has the possibility to cleanly
+>>> unmount a device. But it's definitely no regression. Before...systems with
+>>> a bay in a dock stations simply froze hard in certain circumstances. It
+>>> was pure luck that it worked for one major kernel version or so.
+>>
+>> Ah. I think the issue here is that you're trying to treat bays in docks in 
+>> the same way as internal bays. These should probably be different 
+>> callbacks.
 
-Ok. What we probably ought to be doing then is checking the _STA method 
-on the bay when we receive a bus check. That should be sufficient for 
-determining whether the device is actually there (if so, perform a 
-hotplug) or not (flag the device as detached, don't probe). I don't have 
-the hardware here right now, but something like...
+Right, another solution I'm thinking of is to just handle those bays in
+the docks differently. Going back to the old bahaviour, thus letting full
+control to userland about deleting a bay device.
 
-diff --git a/drivers/ata/libata-acpi.c b/drivers/ata/libata-acpi.c
-index 8c1cfc6..f1d5c87 100644
---- a/drivers/ata/libata-acpi.c
-+++ b/drivers/ata/libata-acpi.c
-@@ -126,37 +126,49 @@ static void ata_acpi_handle_hotplug(struct ata_port *ap, struct ata_device *dev,
- 	struct ata_eh_info *ehi;
- 	struct kobject *kobj = NULL;
- 	int wait = 0;
--	unsigned long flags;
-+	unsigned long flags, sta;
-+	acpi_status status;
-+	acpi_handle handle;
- 
- 	if (!ap)
- 		ap = dev->link->ap;
- 	ehi = &ap->link.eh_info;
- 
-+	if (dev)
-+		handle = dev->acpi_handle;
-+	else
-+		handle = ap->handle;
-+
- 	spin_lock_irqsave(ap->lock, flags);
- 
- 	switch (event) {
- 	case ACPI_NOTIFY_BUS_CHECK:
- 	case ACPI_NOTIFY_DEVICE_CHECK:
-+		status = acpi_evaluate_integer(handle, "_STA", NULL, &sta);
-+		if (!ACPI_SUCCESS(status)) {
-+			printk(KERN_ERR "Unable to evaluate bay status\n");
-+			break;
-+		}
- 		ata_ehi_push_desc(ehi, "ACPI event");
--		ata_ehi_hotplugged(ehi);
--		ata_port_freeze(ap);
--		break;
--
--	case ACPI_NOTIFY_EJECT_REQUEST:
--		ata_ehi_push_desc(ehi, "ACPI event");
--		if (dev)
--			dev->flags |= ATA_DFLAG_DETACH;
--		else {
--			struct ata_link *tlink;
--			struct ata_device *tdev;
--
--			ata_port_for_each_link(tlink, ap)
--				ata_link_for_each_dev(tdev, tlink)
-+		if (sta) {
-+			ata_ehi_hotplugged(ehi);
-+			ata_port_freeze(ap);
-+		} else {
-+			/* The device has gone - unplug it */
-+			if (dev)
-+				dev->flags |= ATA_DFLAG_DETACH;
-+			else {
-+				struct ata_link *tlink;
-+				struct ata_device *tdev;
-+				
-+				ata_port_for_each_link(tlink, ap)
-+					ata_link_for_each_dev(tdev, tlink)
- 					tdev->flags |= ATA_DFLAG_DETACH;
-+			}
-+			wait = 1;
-+			ata_port_freeze(ap);
-+			ata_port_schedule_eh(ap);
- 		}
--
--		ata_port_schedule_eh(ap);
--		wait = 1;
- 		break;
- 	}
+For the dockstation case, we have to detach a bay on the dock
+immediately. Otherwise userland might call into a dead interface. You can
+differentiate already through the dock driver, having different callbacks
+for "dock notification" and the acpi notification for the bay device.
 
-Might work. Possibly. I'll be able to test on real hardware sometime 
-next week, but I don't have access to an ACPI dock with an internal bay. 
-I'm not sure how that case would be handled off-hand.
+>>
+>>> The only sane way for me seems that userland has to be involved before
+>>> actually triggering any event or removing any device. Something like
+>>> "savely remove this piece of hardware".
+>>
+>> That's what the eject request is for.
 
--- 
-Matthew Garrett | mjg59@srcf.ucam.org
+No. The moment when the bay event is generated, the moment the user pushes
+the lever on the bay, the user might immediately pull out the device,
+letting no chance for cleaning up...There must be an event before the user
+touches anything, to have the time to unmount etc. and then tell "now it's
+save to remove the bay device". This would also solve the "there's no bay
+event" case.
+
+>>
+>>> For this to archive, we would need another sysfs entry flagging a bay
+>>> device as "on dock station", so that userland knows what to unmount/eject
+>>> before a dock event. Userspace relying on the bay event on the device is
+>>> not a proper solution. The device may have been gone before userland
+>>> finishes his work, or as you mention, there's no bay event.
+>>
+>> Yes. The user can, of course, do bad things. That doesn't mean we should 
+>> avoid the opportunity to cleanly unmount filesystems when the user doesn't 
+>> behave pathologically.
+
+Agreed.
+
+>>
+>>>> It should be noted that not all hardware sends the eject request at all 
+>>>> (Thinkpads do, but Dell and HP laptops don't), so we can't depend on 
+>>>> receiving this when dealing with a bay event.
+>>> I don't think we depend on the event. If the device gets removed without
+>>> an appropriate event, the behaviour should be the same as before. If not,
+>>> that wasn't the intentional behaviour.
+>>
+>> What ought to be possible for dock devices is something like "Receive 
+>> eject request, clean up anything that has to be done in kernel, allow 
+>> userspace to intervene and tidy up its side of things, let userspace 
+>> signal completion, complete the undocking sequence". For internal bays, we 
+>> certainly shouldn't be detaching the device when all we've received is an 
+>> eject request.
+
+When the bay is inside the dock, it should be save to immediately remove
+the device. Userspace is in control of sending the dock event whenever it
+likes to, being able to unmount filesystems etc. before generating the
+event. Userland just needs to know which bays are in the dock.
+
+> The original change was from Holder Macht and IIRC it was to avoid machine 
+> hard lock up on certain laptops which happens when libata EH goes out to 
+> find out what happened when it receives bus/device check after removal.  
+> Maybe what should be done instead is that eject request doesn't do anything 
+> but tells acpid to unmount and delete the block device by echoing 1 to 
+> sysfs delete node.
+
+If that's acceptable, I'm ok with letting full control to userspace.
+
+Regards,
+	Holger
+
+> Hmmm... It would be perfect if we can tell whether DEVICE/BUS CHECK is in 
+> which direction (device coming or going away).
+>
+> Thanks.
+>
+
