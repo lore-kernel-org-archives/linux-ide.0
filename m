@@ -1,68 +1,61 @@
-From: "Maciej W. Rozycki" <macro@linux-mips.org>
-Subject: [PATCH] SWARM IDE: Fix up following changes to ide_hwif_t
-Date: Tue, 6 May 2008 00:40:20 +0100 (BST)
-Message-ID: <Pine.LNX.4.55.0805060031350.7061@cliff.in.clinika.pl>
-Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1761517AbYEEXks@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+From: Johan van den Berg <johanvdb@teqcle.co.za>
+Subject: Re: Initio 162x SATA controllers
+Date: Tue, 6 May 2008 02:23:19 +0200
+Message-ID: <0D15E6A9-C41F-413B-9D3F-B20342A62763@teqcle.co.za>
+References: <B0DB428E-D75D-4E79-A749-B6E89C19E8E5@teqcle.co.za> <20080505223632.0b0b667b@core>
+Mime-Version: 1.0 (Apple Message framework v919.2)
+Content-Type: text/plain; charset=US-ASCII; format=flowed; delsp=yes
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from ctb-mesg-1-2.saix.net ([196.25.240.80]:39734 "EHLO
+	ctb-mesg-1-2.saix.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755195AbYEFAX2 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 5 May 2008 20:23:28 -0400
+In-Reply-To: <20080505223632.0b0b667b@core>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: linux-ide@vger.kernel.org
 
- Following recent changes to ide_hwif_t update the SWARM IDE driver to use 
-hw_regs_t to initialize port mapping.  Plus minor layout adjustments along 
-the lines of other drivers.
+Thanks Alan
 
-Signed-off-by: Maciej W. Rozycki <macro@linux-mips.org>
----
- Fixes a build problem.  Tested succesfully at the run time.  No
-checkpatch.pl problems.  Please apply.
+I have pulled the latest git and can confirm (via some reading of the  
+code) that I have the latest patches for the inic162x  as modified by  
+Tejun Heo.
 
-  Maciej
+I have now compiled and installed 2.6.26-rc1.
 
-patch-2.6.26-rc1-20080505-swarm-ide-hw-0
-diff -up --recursive --new-file linux-2.6.26-rc1-20080505.macro/drivers/ide/mips/swarm.c linux-2.6.26-rc1-20080505/drivers/ide/mips/swarm.c
---- linux-2.6.26-rc1-20080505.macro/drivers/ide/mips/swarm.c	2008-05-05 02:55:26.000000000 +0000
-+++ linux-2.6.26-rc1-20080505/drivers/ide/mips/swarm.c	2008-05-05 23:02:04.000000000 +0000
-@@ -4,7 +4,7 @@
-  *	Author:	Manish Lachwani, mlachwani@mvista.com
-  * Copyright (C) 2004  MIPS Technologies, Inc.  All rights reserved.
-  *	Author: Maciej W. Rozycki <macro@mips.com>
-- * Copyright (c) 2006  Maciej W. Rozycki
-+ * Copyright (c) 2006, 2008  Maciej W. Rozycki
-  *
-  * This program is free software; you can redistribute it and/or
-  * modify it under the terms of the GNU General Public License
-@@ -70,8 +70,9 @@ static int __devinit swarm_ide_probe(str
- 	ide_hwif_t *hwif;
- 	u8 __iomem *base;
- 	phys_t offset, size;
-+	hw_regs_t hw;
- 	int i;
--	u8 idx[4] = { 0xff, 0xff, 0xff, 0xff };
-+	u8 idx[] = { 0xff, 0xff, 0xff, 0xff };
- 
- 	if (!SIBYTE_HAVE_IDE)
- 		return -ENODEV;
-@@ -112,14 +113,15 @@ static int __devinit swarm_ide_probe(str
- 	hwif->host_flags = IDE_HFLAG_MMIO;
- 	default_hwif_mmiops(hwif);
- 
--	hwif->chipset = ide_generic;
--
- 	for (i = 0; i <= 7; i++)
--		hwif->io_ports_array[i] =
-+		hw.io_ports_array[i] =
- 				(unsigned long)(base + ((0x1f0 + i) << 5));
--	hwif->io_ports.ctl_addr =
-+	hw.io_ports.ctl_addr =
- 				(unsigned long)(base + (0x3f6 << 5));
--	hwif->irq = K_INT_GB_IDE;
-+	hw.irq = K_INT_GB_IDE;
-+	hw.chipset = ide_generic;
-+
-+	ide_init_port_hw(hwif, &hw);
- 
- 	idx[0] = hwif->index;
- 
+My boot disk is also SATA though and connected via an onboard intel  
+chip (00:1f.2 IDE interface: Intel Corporation 82801EB (ICH5) SATA  
+Controller (rev 02)) which requires the ata_piix driver.
+
+On RHEL5 2.6.18 I am able to boot off ata_piix but not access the  
+inic162x, and on 2.6.26-rc1 I am unable to access ata_piix hardware  
+but inic162x seems to work.
+
+The issue I am experiencing with ata_piix is identical to: http://www.nabble.com/-2.6.18,19--SATA-boot-problems-(ICH6-ICH6W)-td7799939.html
+
+Any directions would be appreciated.
+
+
+Johan van den Berg
+Managing Director
+Teqcle Information Technologies (Pty.) Ltd.
+
+Email: johanvdb@teqcle.co.za
+Cel: 0732013520
+
+
+
+
+On 05 May 2008, at 11:36 PM, Alan Cox wrote:
+
+>> I have read up as much as possible to start looking into hacking the
+>> driver to support LBA48. Any pointers / suggestions before I start
+>> bumping my head?
+>
+> Tejun committed an updated driver to the devel tree so if you pull the
+> current git trees you should be able to get it to work.
+>
+> Alan
+
