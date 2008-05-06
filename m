@@ -1,36 +1,53 @@
-From: Mark Lord <liml@rtr.ca>
-Subject: Re: [PATCH 01/12] sata_mv more cosmetic changes
-Date: Tue, 06 May 2008 13:57:16 -0400
-Message-ID: <48209BFC.9010401@rtr.ca>
-References: <481AAF84.40501@rtr.ca> <481AAFB7.4090708@rtr.ca> <482066DB.7000609@pobox.com>
+From: Holger Macht <hmacht@suse.de>
+Subject: Re: 2.6.25 semantic change in bay handling?
+Date: Tue, 6 May 2008 20:36:12 +0200
+Message-ID: <20080506183612.GE20797@homac>
+References: <20080505223357.GA2839@srcf.ucam.org> <20080506081347.GA8688@homac> <20080506082110.GA10355@srcf.ucam.org> <48201987.4020009@gmail.com> <20080506084625.GA10817@srcf.ucam.org> <48201C7D.1070303@gmail.com> <20080506091718.GA11617@srcf.ucam.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([76.10.145.34]:3527 "EHLO mail.rtr.ca"
+Received: from mx2.suse.de ([195.135.220.15]:60129 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1764891AbYEFR5S (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 6 May 2008 13:57:18 -0400
-In-Reply-To: <482066DB.7000609@pobox.com>
+	id S1763654AbYEFSeE (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 6 May 2008 14:34:04 -0400
+Content-Disposition: inline
+In-Reply-To: <20080506091718.GA11617@srcf.ucam.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: Tejun Heo <htejun@gmail.com>, IDE/ATA development list <linux-ide@vger.kernel.org>
+To: Matthew Garrett <mjg59@srcf.ucam.org>
+Cc: Tejun Heo <htejun@gmail.com>, linux-ide@vger.kernel.org, Jeff Garzik <jeff@garzik.org>
 
-Jeff Garzik wrote:
-> Mark Lord wrote:
->> -- add missing _OFS to tails of register offset definitions.
-> 
-> 
-> bleh.  from the department of redundant redundancies :)  Those types of 
-> constants are usually either register bits or register offsets, and from 
->  reading the code it is always clear which is which.  IMO, _OFS is 
-> redundant.
-..
+Hi Matthew,
 
-Heh.. that's actually my opinion, too.
+( Please TO or CC hmacht@suse.de ! )
 
-But the original authors seemed to use _OFS in many places,
-so I'm just trying to create some consistency from it all.  ;)
+>> Just to make clear that we agree on the design, if so, I'll try to provide
+>> a patch:
+>> 
+>>  1. Dock event: libata immediately detaches the device
+>> 
+>>     (libata will need another sysfs flag is_on_dock userspace can query)
 
-Cheers
+> Hm. I'm not absolutely certain about this. Do we get a bus check 
+> notification after the dock has been removed? If so, I think it ought to 
+> be handled the same way as the internal bay (ie, signal userspace and 
+> let it clean up and destroy the device - if it fails to do so, then 
+> destroy the device when the dock is actually removed, by catching the 
+> bus/device check, calling the _STA method on the bay and destroying the 
+> device if it's present)
+
+libata is notified through the dock driver when a dock event occurs, just
+before the dock driver undocks, giving no time to userspace to clean
+up. libata doesn't receive an additional acpi bay event.
+
+>>  2. Bay event: libata signals a BAY_EVENT through uevent, userspace writes
+>>     	       1 to /sys/.../device/delete
+
+> In the case of an eject request, yes. In the case of a bus or device 
+> check, we should call _STA and then delete/hotplug the device as 
+> appropriate.
+
+Yes.
+
+Regards,
+	Holger
