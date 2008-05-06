@@ -1,56 +1,38 @@
-From: Matthew Garrett <mjg59@srcf.ucam.org>
-Subject: Re: 2.6.25 semantic change in bay handling?
-Date: Tue, 6 May 2008 19:48:28 +0100
-Message-ID: <20080506184828.GA22634@srcf.ucam.org>
-References: <20080505223357.GA2839@srcf.ucam.org> <20080506081347.GA8688@homac> <20080506082110.GA10355@srcf.ucam.org> <48201987.4020009@gmail.com> <20080506084625.GA10817@srcf.ucam.org> <48201C7D.1070303@gmail.com> <20080506091718.GA11617@srcf.ucam.org> <20080506183612.GE20797@homac>
+From: Ben Dooks <ben@fluff.org>
+Subject: Update on HAVE_PATA_PLATFORM patches
+Date: Tue, 6 May 2008 21:53:00 +0100
+Message-ID: <20080506205300.GD14157@trinity.fluff.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mjg.x.mythic-beasts.com ([93.93.128.6]:41514 "EHLO
-	vavatch.codon.org.uk" rhost-flags-OK-FAIL-OK-OK) by vger.kernel.org
-	with ESMTP id S1754578AbYEFSsj (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 6 May 2008 14:48:39 -0400
+Received: from trinity.fluff.org ([89.145.97.151]:37144 "EHLO
+	trinity.fluff.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752859AbYEFVgr (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 6 May 2008 17:36:47 -0400
+Received: from ben by trinity.fluff.org with local (Exim 4.50)
+	id 1JtU9k-0006Vt-Dl
+	for linux-ide@vger.kernel.org; Tue, 06 May 2008 21:53:00 +0100
 Content-Disposition: inline
-In-Reply-To: <20080506183612.GE20797@homac>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>, linux-ide@vger.kernel.org, Jeff Garzik <jeff@garzik.org>
-Cc: hmact@suse.de
+To: linux-ide@vger.kernel.org
 
-On Tue, May 06, 2008 at 08:36:12PM +0200, Holger Macht wrote:
-> Hi Matthew,
-> 
-> ( Please TO or CC hmacht@suse.de ! )
+I posted a series of patches a while ago[1,2] to change
+the platform-pata driver's Kconfig entry enabling. These
+patches seem to have been passed by for 2.6.25, and I
+would like to get a definitive answer on whether these
+can be entered for 2.6.26?
 
-Then stop setting Mail-Followup-To: :)
+Is the best thing to do to CC: at least one of the maintainers
+such as jgarzik to ensure that these aren't missed?
 
-> > Hm. I'm not absolutely certain about this. Do we get a bus check 
-> > notification after the dock has been removed? If so, I think it ought to 
-> > be handled the same way as the internal bay (ie, signal userspace and 
-> > let it clean up and destroy the device - if it fails to do so, then 
-> > destroy the device when the dock is actually removed, by catching the 
-> > bus/device check, calling the _STA method on the bay and destroying the 
-> > device if it's present)
-> 
-> libata is notified through the dock driver when a dock event occurs, just
-> before the dock driver undocks, giving no time to userspace to clean
-> up. libata doesn't receive an additional acpi bay event.
 
-That's the current situation, I'm not sure it's ideal. But I'll skip 
-worrying about that until I've actually got some hardware to work out 
-how to do it properly :)
+[1] http://marc.info/?l=linux-ide&m=120827342431100&w=2
+[2] http://marc.info/?l=linux-arm-kernel&m=120827342431096&w=2
 
-> >>  2. Bay event: libata signals a BAY_EVENT through uevent, userspace writes
-> >>     	       1 to /sys/.../device/delete
-> 
-> > In the case of an eject request, yes. In the case of a bus or device 
-> > check, we should call _STA and then delete/hotplug the device as 
-> > appropriate.
-> 
-> Yes.
-
-Excellent. I /think/ the patch I sent earlier basically does this - 
-you'll want to register a separate callback for the dock event in that 
-case, though.
 -- 
-Matthew Garrett | mjg59@srcf.ucam.org
+Ben
+
+Q:      What's a light-year?
+A:      One-third less calories than a regular year.
+
