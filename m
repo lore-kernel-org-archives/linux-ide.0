@@ -1,38 +1,53 @@
-From: Ben Dooks <ben@fluff.org>
-Subject: Update on HAVE_PATA_PLATFORM patches
-Date: Tue, 6 May 2008 21:53:00 +0100
-Message-ID: <20080506205300.GD14157@trinity.fluff.org>
+From: "Yigal Sadgat" <YSadgat1@gcte.com>
+Subject: Compact Flash Question
+Date: Tue, 6 May 2008 14:59:33 -0700
+Message-ID: <005b01c8afc4$77f4ec90$6401a8c0@techwriter>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+	format=flowed;
+	charset="iso-8859-1";
+	reply-type=original
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from trinity.fluff.org ([89.145.97.151]:37144 "EHLO
-	trinity.fluff.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752859AbYEFVgr (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 6 May 2008 17:36:47 -0400
-Received: from ben by trinity.fluff.org with local (Exim 4.50)
-	id 1JtU9k-0006Vt-Dl
-	for linux-ide@vger.kernel.org; Tue, 06 May 2008 21:53:00 +0100
-Content-Disposition: inline
+Received: from cdptpa-omtalb.mail.rr.com ([75.180.132.121]:57796 "EHLO
+	cdptpa-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753765AbYEFV7p (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 6 May 2008 17:59:45 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+Cc: jwboyer@linux.vnet.ibm.com, joern@logfs.org
 
-I posted a series of patches a while ago[1,2] to change
-the platform-pata driver's Kconfig entry enabling. These
-patches seem to have been passed by for 2.6.25, and I
-would like to get a definitive answer on whether these
-can be entered for 2.6.26?
+We wrote the Kernel to support CF drives (in IDE mode) several years ago but
+now there are strange things coming back from the field that compel us to go
+back and re-evaluate many design decisions.
 
-Is the best thing to do to CC: at least one of the maintainers
-such as jgarzik to ensure that these aren't missed?
+For instance,
+(1) Can you really ignore bit(2) (CORR) in the Status register offset 7 that 
+tells
+you that the CF has detected and corrected a soft error?, etc.
+(2) An engineer at SanDisk Engineering told me NOT to do wear leveling.
+The file allocation table is written very frequently back into the flash. So
+is it really safe to assume that I don't need wear leveling???
+(3) Re. the BUSY bit in the status register (offset 7, bit D7), anybody 
+experienced
+time outs?
+(4) Re Error register (offset 1) bit D7 (BBK), again, I was told that it 
+cannot (???)
+happen since the CF performs read-after-write and it automatically switches 
+good blocks
+for bad ones... Is this correct?
+
+We get many "soft" errors and I cannot wait to put my hand on a system to 
+test but
+thought I would draw on your collective experience before we dive into these 
+issues again.
+
+Any comments would be greatly appreciated.
+
+Yigal Sadgat
+General Computer Technology (GCT)
+YSadgat1@gcte.com
 
 
-[1] http://marc.info/?l=linux-ide&m=120827342431100&w=2
-[2] http://marc.info/?l=linux-arm-kernel&m=120827342431096&w=2
-
--- 
-Ben
-
-Q:      What's a light-year?
-A:      One-third less calories than a regular year.
 
