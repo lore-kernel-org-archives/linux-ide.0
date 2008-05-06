@@ -1,37 +1,49 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: again: [PATCH] libata: Add Intel SCH PATA Support
-Date: Tue, 6 May 2008 16:59:37 +0100
-Message-ID: <20080506165937.68ff4c6f@core>
-References: <20080505172356.636649e6@dxy.sh.intel.com>
-	<48204A67.7070308@pobox.com>
-	<20080506213141.06b86099@dxy.sh.intel.com>
-	<200805061820.42493.bzolnier@gmail.com>
+From: Linus Torvalds <torvalds@linux-foundation.org>
+Subject: Re: [git patches] libata updates
+Date: Tue, 6 May 2008 09:23:26 -0700 (PDT)
+Message-ID: <alpine.LFD.1.10.0805060919410.32269@woody.linux-foundation.org>
+References: <20080506154847.GA15299@havoc.gtf.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:56176 "EHLO
-	lxorguk.ukuu.org.uk" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1764621AbYEFQJa (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 6 May 2008 12:09:30 -0400
-In-Reply-To: <200805061820.42493.bzolnier@gmail.com>
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:47806 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752975AbYEFQXe (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 6 May 2008 12:23:34 -0400
+In-Reply-To: <20080506154847.GA15299@havoc.gtf.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: Alek Du <alek.du@intel.com>, Jeff Garzik <jgarzik@pobox.com>, Sergei Shtylyov <sshtylyov@ru.mvista.com>, linux-ide@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: Andrew Morton <akpm@linux-foundation.org>, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
 
-On Tue, 6 May 2008 18:20:42 +0200
-Bartlomiej Zolnierkiewicz <bzolnier@gmail.com> wrote:
 
-> On Tuesday 06 May 2008, Alek Du wrote:
-> > Hi Jeff, Alan, Sergei, Bartlomiej
-> > 
-> > Modified again according to your good comments! Hope this time it is ok. :-)
-> 
-> Hi,
-> 
-> Looks good, are you going to submit IDE version soon?
 
-Is there any point adding new drivers to the old IDE layer nowdays ?
+On Tue, 6 May 2008, Jeff Garzik wrote:
+>  
+> +config PATA_SCH
+> +	tristate "Intel SCH PATA support"
+> +	depends on PCI
+> +	help
+> +	  This option enables support for Intel SCH PATA on the Intel
+> +	  SCH (US15W, US15L, UL11L) series host controllers.
+> +
+> +	  If unsure, say N.
 
-Alan
+I think it would generally be good if people explained their drivers 
+better than this.
+
+If you know what the hell an SCH is, you don't *need* that help message in 
+the first place! Agreed?
+
+IOW, when adding drivers, please add help messages that actually explain 
+what the driver is from a *user* perspective, not from a chip designer 
+perspective. In this case, something like
+
+	The Intel SCH chipset is the new low-power, small-footprint 
+	embedded chipset that is generally paired with the Atom CPU and is 
+	not their normal PC chipset.
+
+or something. So that people can actually make a somewhat informed guess 
+about whether it's relevant to them or not.
+
+		Linus
