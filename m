@@ -1,41 +1,49 @@
-From: Helge Hafting <helge.hafting@aitel.hist.no>
-Subject: Re: Compact Flash Question
-Date: Wed, 07 May 2008 14:31:43 +0200
-Message-ID: <4821A12F.2020800@aitel.hist.no>
-References: <48215673.3060201@wpkg.org> <e2e108260805070044v42f596bbj39c5b52b6f0a096@mail.gmail.com> <48216039.3070001@wpkg.org>
+From: Markus Trippelsdorf <markus@trippelsdorf.de>
+Subject: Re: [git patches] libata updates - (improve post-reset device
+	ready test) regression
+Date: Wed, 7 May 2008 16:56:16 +0200
+Message-ID: <20080507145616.GA2210@gentoox2.trippelsdorf.de>
+References: <20080506154847.GA15299@havoc.gtf.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from embla.aitel.hist.no ([158.38.50.22]:60537 "EHLO
-	embla.aitel.hist.no" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754139AbYEGMbq (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 7 May 2008 08:31:46 -0400
-In-Reply-To: <48216039.3070001@wpkg.org>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1760442AbYEGO5p@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20080506154847.GA15299@havoc.gtf.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, htejun@gmail.com
 List-Id: linux-ide@vger.kernel.org
-To: Tomasz Chmielewski <mangoo@wpkg.org>
-Cc: Bart Van Assche <bart.vanassche@gmail.com>, LKML <linux-kernel@vger.kernel.org>, YSadgat1@gcte.com, linux-os@analogic.com, Alan <alan@lxorguk.ukuu.org.uk>, Linux IDE <linux-ide@vger.kernel.org>
 
-Tomasz Chmielewski wrote:
->
-> How does it work, then?
-> How can it do wear levelling over the whole CF if some (or most) area 
-> of CF is already used by our precious data/metadata?
-> It would have to know the areas where no data is stored, but it 
-> contradicts the CF <-> filesystem separation.
-It don't necessarily need to know. It can swap two used blocks, one 
-often-used and one
-rarely-used.  That way the rarely-used block is rewriten over the 
-previously busy
-block, and the busy block is moved to the rarely used area that isn't worn.
-This implies an extra write whenever a busy block is moved.  Don't know if
-anybody do this, but the technique is simple enough.
+> 
+> Tejun Heo (12):
+>       libata: improve post-reset device ready test
 
-CF-filesystem separation is necessary, for they can't know in advance what
-filesystem or partitioning scheme will be used.  (I have ext3 on CF, for 
-example...)
+This commit (78ab88f04f44bed566d51dce0c7cbfeff6449a06) causes a long
+boot delay with my onboard Promise controller. It seems like libata
+probes for a nonexisting PATA drive...
 
-Helge Hafting
+ACPI: PCI Interrupt 0000:00:08.0[A] -> GSI 18 (level, low) -> IRQ 18
+scsi0 : sata_promise
+scsi1 : sata_promise
+scsi2 : sata_promise
+ata1: SATA max UDMA/133 mmio m4096@0xfb600000 port 0xfb600200 irq 18
+ata2: SATA max UDMA/133 mmio m4096@0xfb600000 port 0xfb600280 irq 18
+ata3: PATA max UDMA/133 mmio m4096@0xfb600000 port 0xfb600300 irq 18
+ata1: SATA link down (SStatus 0 SControl 300)
+ata2: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+ata2.00: ATA-7: SAMSUNG HD753LJ, 1AA01109, max UDMA7
+ata2.00: 1465149168 sectors, multi 0: LBA48 NCQ (depth 0/32)
+ata2.00: configured for UDMA/133                                                                                          
+ata3: link is slow to respond, please be patient (ready=0)
+ata3: device not ready (errno=-16), forcing hardreset
+ata3: link is slow to respond, please be patient (ready=0)
+ata3: SRST failed (errno=-16)
+ata3: link is slow to respond, please be patient (ready=0)
+ata3: SRST failed (errno=-16)
+ata3: link is slow to respond, please be patient (ready=0)
+ata3: SRST failed (errno=-16)
+  - Last output repeated twice -
+ata3: reset failed, giving up
 
-
+-- 
+Markus
