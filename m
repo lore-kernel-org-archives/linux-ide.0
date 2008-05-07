@@ -1,47 +1,66 @@
-From: Alek Du <alek.du@intel.com>
-Subject: Re: again: [PATCH] libata: Add Intel SCH PATA Support
-Date: Wed, 7 May 2008 10:14:23 +0800
-Message-ID: <20080507101423.7259f450@dxy.sh.intel.com>
-References: <20080505172356.636649e6@dxy.sh.intel.com>
-	<48204A67.7070308@pobox.com>
-	<20080506213141.06b86099@dxy.sh.intel.com>
-	<200805061820.42493.bzolnier@gmail.com>
-	<20080506165937.68ff4c6f@core>
+From: Andrew Morton <akpm@linux-foundation.org>
+Subject: sata silliness on the Vaio
+Date: Tue, 6 May 2008 20:28:03 -0700
+Message-ID: <20080506202803.2e80957f.akpm@linux-foundation.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:22855 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752640AbYEGCVS (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 6 May 2008 22:21:18 -0400
-In-Reply-To: <20080506165937.68ff4c6f@core>
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:52608 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753828AbYEGD2G (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 6 May 2008 23:28:06 -0400
+Received: from imap1.linux-foundation.org (imap1.linux-foundation.org [140.211.169.55])
+	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id m473S40S030930
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-ide@vger.kernel.org>; Tue, 6 May 2008 20:28:05 -0700
+Received: from y.localdomain (localhost [127.0.0.1])
+	by imap1.linux-foundation.org (8.13.5.20060308/8.13.5/Debian-3ubuntu1.1) with SMTP id m473S33d009091
+	for <linux-ide@vger.kernel.org>; Tue, 6 May 2008 20:28:03 -0700
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: Jeff Garzik <jgarzik@pobox.com>, Sergei Shtylyov <sshtylyov@ru.mvista.com>, linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-Hi,
+ACPI: PCI Interrupt 0000:00:1f.1[B] -> GSI 18 (level, low) -> IRQ 18
+PCI: Setting latency timer of device 0000:00:1f.1 to 64
+scsi0 : ata_piix
+scsi1 : ata_piix
+ata1: PATA max UDMA/100 cmd 0x1f0 ctl 0x3f6 bmdma 0x1810 irq 14
+ata2: PATA max UDMA/100 cmd 0x170 ctl 0x376 bmdma 0x1818 irq 15
+ata1.00: ATAPI: MATSHITAUJ-832D, 1.02, max UDMA/33
+ata1.00: configured for UDMA/33
+ata2: port disabled. ignoring.
+scsi 0:0:0:0: CD-ROM            MATSHITA UJ-832D          1.02 PQ: 0 ANSI: 5
+ACPI: PCI Interrupt 0000:00:1f.2[B] -> GSI 18 (level, low) -> IRQ 18
+ata_piix 0000:00:1f.2: MAP [ P0 P2 -- -- ]
+PCI: Setting latency timer of device 0000:00:1f.2 to 64
+scsi2 : ata_piix
+scsi3 : ata_piix
+ata3: SATA max UDMA/133 cmd 0x18c8 ctl 0x18c0 bmdma 0x18b0 irq 18
+ata4: SATA max UDMA/133 cmd 0x18a8 ctl 0x180c bmdma 0x18b8 irq 18
+ata3.00: ATA-7: HTS541010G9SA00, MBZOC60D, max UDMA/100
+ata3.00: 195371568 sectors, multi 16: LBA48 NCQ (not used)
+ata3.00: configured for UDMA/100
+ata4: link is slow to respond, please be patient (ready=0)
+ata4: device not ready (errno=-16), forcing hardreset
+ata4: link is slow to respond, please be patient (ready=0)
+ata4: SRST failed (errno=-16)
+ata4: link is slow to respond, please be patient (ready=0)
+ata4: SRST failed (errno=-16)
+ata4: link is slow to respond, please be patient (ready=0)
+ata4: SRST failed (errno=-16)
+ata4: SRST failed (errno=-16)
+ata4: reset failed, giving up
+scsi 2:0:0:0: Direct-Access     ATA      HTS541010G9SA00  MBZO PQ: 0 ANSI: 5
+sd 2:0:0:0: [sda] 195371568 512-byte hardware sectors (100030 MB)
+sd 2:0:0:0: [sda] Write Protect is off
+sd 2:0:0:0: [sda] Mode Sense: 00 3a 00 00
+sd 2:0:0:0: [sda] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+sd 2:0:0:0: [sda] 195371568 512-byte hardware sectors (100030 MB)
 
-On Tue, 6 May 2008 16:59:37 +0100
-Alan Cox <alan@lxorguk.ukuu.org.uk> wrote:
+My Vaio now spends maybe a minute during bootup futzing around with ata
+links which aren't there.
 
-> On Tue, 6 May 2008 18:20:42 +0200
-> Bartlomiej Zolnierkiewicz <bzolnier@gmail.com> wrote:
-> 
-> > On Tuesday 06 May 2008, Alek Du wrote:
-> > > Hi Jeff, Alan, Sergei, Bartlomiej
-> > > 
-> > > Modified again according to your good comments! Hope this time it is ok. :-)
-> > 
-> > Hi,
-> > 
-> > Looks good, are you going to submit IDE version soon?
-> 
-> Is there any point adding new drivers to the old IDE layer nowdays ?
-
-Yeah, I really was hesitating to write the corresponding IDE driver for a while. If it really could help
-people who have good reason to use IDE layer instead of libata, I will do that.
-
-Thanks,
-Alek
+good dmesg: http://userweb.kernel.org/~akpm/dmesg-sony.txt
+bad dmesg: http://userweb.kernel.org/~akpm/dmesg-sony-silly.txt
+config: http://userweb.kernel.org/~akpm/config-sony.txt
