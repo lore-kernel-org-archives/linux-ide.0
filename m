@@ -1,86 +1,62 @@
-From: Johan van den Berg <johanvdb@teqcle.co.za>
-Subject: Re: sata silliness on the Vaio
-Date: Wed, 7 May 2008 08:33:54 +0200
-Message-ID: <EAED123C-68C4-4751-A691-525F6F17B7BD@teqcle.co.za>
-References: <20080506202803.2e80957f.akpm@linux-foundation.org>
-Mime-Version: 1.0 (Apple Message framework v919.2)
-Content-Type: text/plain; charset=US-ASCII; format=flowed; delsp=yes
+From: Tomasz Chmielewski <mangoo@wpkg.org>
+Subject: Re: Compact Flash Question
+Date: Wed, 07 May 2008 09:27:42 +0200
+Message-ID: <482159EE.7070108@wpkg.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ctb-mesg8.saix.net ([196.25.240.78]:45150 "EHLO
-	ctb-mesg8.saix.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756731AbYEGGeK (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 7 May 2008 02:34:10 -0400
-In-Reply-To: <20080506202803.2e80957f.akpm@linux-foundation.org>
+Received: from mail.syneticon.net ([213.239.212.131]:37246 "EHLO
+	mail2.syneticon.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757045AbYEGH1s (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 7 May 2008 03:27:48 -0400
+Received: from postfix1.syneticon.net (postfix1.syneticon.net [192.168.112.6])
+	by mail2.syneticon.net (Postfix) with ESMTP id 92F3763F9A
+	for <linux-ide@vger.kernel.org>; Wed,  7 May 2008 09:27:47 +0200 (CEST)
+Received: from localhost (filter1.syneticon.net [192.168.113.3])
+	by postfix1.syneticon.net (Postfix) with ESMTP id 9B5839381
+	for <linux-ide@vger.kernel.org>; Wed,  7 May 2008 09:27:46 +0200 (CEST)
+Received: from postfix1.syneticon.net ([192.168.113.4])
+	by localhost (mx03.syneticon.net [192.168.113.3]) (amavisd-new, port 10025)
+	with ESMTP id BfrLTb+vfqiD for <linux-ide@vger.kernel.org>;
+	Wed,  7 May 2008 09:27:44 +0200 (CEST)
+Received: from [192.168.10.145] (koln-4d0b6d9e.pool.mediaWays.net [77.11.109.158])
+	by postfix1.syneticon.net (Postfix) with ESMTP
+	for <linux-ide@vger.kernel.org>; Wed,  7 May 2008 09:27:44 +0200 (CEST)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: linux-ide@vger.kernel.org
+To: Linux IDE <linux-ide@vger.kernel.org>
 
-Exactly the same happens with me on a ata-piix
+Bart Van Assche wrote:
 
-Johan van den Berg
-Managing Director
-Teqcle Information Technologies (Pty.) Ltd.
+> For most Linux filesystems you really need wear leveling. E.g. ext3's
+> superblock is at a fixed location and gets overwritten frequently.
+> Without wear leveling you risk that the flash sector where the
+> superblock resides wears out early.
 
-Email: johanvdb@teqcle.co.za
-Cel: 0732013520
+Compact Flash (and other similar media) does wear levelling, so essentially,
+even if we write to the same fixed location, in reality, it will mostly go to a
+different area on flash each time.
+
+As Compact Flash and its wear levelling does not know about free space on the
+filesystem, the wear levelling's effectiveness can be only limited - writes
+won't spread on the whole free area of the flash.
+
+Does anyone know how wear levelling is done in these devices? Perhaps it will
+differ from a manufacturer to manufacturer, but I guess they have a free area we
+normally use to store data, and some reserved area used just for wear levelling
+and bad block handling, but that's just my guess.
 
 
+> When using ext3 on a CompactFlash, you can limit the number of writes
+> to the CompactFlash significantly by mounting the medium with
+> parameters like noatime,nodiratime,commit=300.
+
+noatime implies nodiratime, so there is no need to add the latter.
 
 
-On 07 May 2008, at 5:28 AM, Andrew Morton wrote:
+-- 
+Tomasz Chmielewski
+http://wpkg.org
 
-> ACPI: PCI Interrupt 0000:00:1f.1[B] -> GSI 18 (level, low) -> IRQ 18
-> PCI: Setting latency timer of device 0000:00:1f.1 to 64
-> scsi0 : ata_piix
-> scsi1 : ata_piix
-> ata1: PATA max UDMA/100 cmd 0x1f0 ctl 0x3f6 bmdma 0x1810 irq 14
-> ata2: PATA max UDMA/100 cmd 0x170 ctl 0x376 bmdma 0x1818 irq 15
-> ata1.00: ATAPI: MATSHITAUJ-832D, 1.02, max UDMA/33
-> ata1.00: configured for UDMA/33
-> ata2: port disabled. ignoring.
-> scsi 0:0:0:0: CD-ROM            MATSHITA UJ-832D          1.02 PQ: 0  
-> ANSI: 5
-> ACPI: PCI Interrupt 0000:00:1f.2[B] -> GSI 18 (level, low) -> IRQ 18
-> ata_piix 0000:00:1f.2: MAP [ P0 P2 -- -- ]
-> PCI: Setting latency timer of device 0000:00:1f.2 to 64
-> scsi2 : ata_piix
-> scsi3 : ata_piix
-> ata3: SATA max UDMA/133 cmd 0x18c8 ctl 0x18c0 bmdma 0x18b0 irq 18
-> ata4: SATA max UDMA/133 cmd 0x18a8 ctl 0x180c bmdma 0x18b8 irq 18
-> ata3.00: ATA-7: HTS541010G9SA00, MBZOC60D, max UDMA/100
-> ata3.00: 195371568 sectors, multi 16: LBA48 NCQ (not used)
-> ata3.00: configured for UDMA/100
-> ata4: link is slow to respond, please be patient (ready=0)
-> ata4: device not ready (errno=-16), forcing hardreset
-> ata4: link is slow to respond, please be patient (ready=0)
-> ata4: SRST failed (errno=-16)
-> ata4: link is slow to respond, please be patient (ready=0)
-> ata4: SRST failed (errno=-16)
-> ata4: link is slow to respond, please be patient (ready=0)
-> ata4: SRST failed (errno=-16)
-> ata4: SRST failed (errno=-16)
-> ata4: reset failed, giving up
-> scsi 2:0:0:0: Direct-Access     ATA      HTS541010G9SA00  MBZO PQ: 0  
-> ANSI: 5
-> sd 2:0:0:0: [sda] 195371568 512-byte hardware sectors (100030 MB)
-> sd 2:0:0:0: [sda] Write Protect is off
-> sd 2:0:0:0: [sda] Mode Sense: 00 3a 00 00
-> sd 2:0:0:0: [sda] Write cache: enabled, read cache: enabled, doesn't  
-> support DPO or FUA
-> sd 2:0:0:0: [sda] 195371568 512-byte hardware sectors (100030 MB)
->
-> My Vaio now spends maybe a minute during bootup futzing around with  
-> ata
-> links which aren't there.
->
-> good dmesg: http://userweb.kernel.org/~akpm/dmesg-sony.txt
-> bad dmesg: http://userweb.kernel.org/~akpm/dmesg-sony-silly.txt
-> config: http://userweb.kernel.org/~akpm/config-sony.txt
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-ide"  
-> in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
