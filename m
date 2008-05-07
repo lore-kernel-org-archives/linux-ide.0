@@ -1,45 +1,123 @@
-From: "Bart Van Assche" <bart.vanassche@gmail.com>
-Subject: Re: Compact Flash Question
-Date: Wed, 7 May 2008 18:46:25 +0200
-Message-ID: <e2e108260805070946t63f35e36q6960bdff11fecd8c@mail.gmail.com>
-References: <48215673.3060201@wpkg.org>
-	 <e2e108260805070044v42f596bbj39c5b52b6f0a096@mail.gmail.com>
-	 <48216039.3070001@wpkg.org> <4821A12F.2020800@aitel.hist.no>
-	 <4821C462.2000108@free.fr>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: [PATCH 5/6] ide: move IRQ unmasking out from ->tf_load method
+Date: Wed, 7 May 2008 19:44:32 +0200
+Message-ID: <200805071944.32249.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.159]:12620 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750929AbYEGQq2 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 7 May 2008 12:46:28 -0400
-Received: by fg-out-1718.google.com with SMTP id 19so265215fgg.17
-        for <linux-ide@vger.kernel.org>; Wed, 07 May 2008 09:46:26 -0700 (PDT)
-In-Reply-To: <4821C462.2000108@free.fr>
+Received: from nf-out-0910.google.com ([64.233.182.190]:25287 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755743AbYEGR3I (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 7 May 2008 13:29:08 -0400
+Received: by nf-out-0910.google.com with SMTP id d3so225826nfc.21
+        for <linux-ide@vger.kernel.org>; Wed, 07 May 2008 10:29:06 -0700 (PDT)
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: =?ISO-8859-1?Q?St=E9phane_ANCELOT?= <sancelot@free.fr>
-Cc: Helge Hafting <helge.hafting@aitel.hist.no>, Tomasz Chmielewski <mangoo@wpkg.org>, LKML <linux-kernel@vger.kernel.org>, YSadgat1@gcte.com, linux-os@analogic.com, Alan <alan@lxorguk.ukuu.org.uk>, Linux IDE <linux-ide@vger.kernel.org>, Jeff Woods <jeff@jeffwoods.us>
+To: linux-ide@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
 
-On Wed, May 7, 2008 at 5:01 PM, St=E9phane ANCELOT <sancelot@free.fr> w=
-rote:
->
-> we use  silicon systems CF  with wear leveling inside  , we write a f=
-ew
-> kb data back each 1/4 h  on it.(log /tmp files  are redirected to ram=
-)
+Move IRQ unmasking out from ->tf_load method to its users.
 
-Silicon Systems CompactFlashes are the among the most reliable
-CompactFlashes I have used in embedded devices. See also
-http://www.siliconsystems.com/silicondrive/whitepapers/SSWP03-Endurance=
--R.pdf
-for a whitepaper that explains their wear leveling and error
-correction algorithms. Furthermore, Silicon Systems has a technology
-called SiSMART that allows to monitor by how far the CompactFlash is
-worn out, such that it can be monitored whether or not it is time to
-replace the CompactFlash. (Note: I am not affiliated in any way to
-Silicon Systems.)
+There should be no functional changes caused by this patch
+(SELECT_MASK() is NOP except for hpt366, icside and sgiioc4).
 
-Bart.
+Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+---
+ drivers/ide/h8300/ide-h8300.c |    2 --
+ drivers/ide/ide-io.c          |    2 ++
+ drivers/ide/ide-iops.c        |    5 +----
+ drivers/ide/ide-taskfile.c    |    2 ++
+ drivers/ide/pci/scc_pata.c    |    2 --
+ include/linux/ide.h           |    1 +
+ 6 files changed, 6 insertions(+), 8 deletions(-)
+
+Index: b/drivers/ide/h8300/ide-h8300.c
+===================================================================
+--- a/drivers/ide/h8300/ide-h8300.c
++++ b/drivers/ide/h8300/ide-h8300.c
+@@ -52,8 +52,6 @@ static void h8300_tf_load(ide_drive_t *d
+ 	if (task->tf_flags & IDE_TFLAG_FLAGGED)
+ 		HIHI = 0xFF;
+ 
+-	ide_set_irq(drive, 1);
+-
+ 	if (task->tf_flags & IDE_TFLAG_OUT_DATA)
+ 		mm_outw((tf->hob_data << 8) | tf->data, io_ports->data_addr);
+ 
+Index: b/drivers/ide/ide-io.c
+===================================================================
+--- a/drivers/ide/ide-io.c
++++ b/drivers/ide/ide-io.c
+@@ -1576,6 +1576,8 @@ void ide_pktcmd_tf_load(ide_drive_t *dri
+ 	task.tf.lbah    = (bcount >> 8) & 0xff;
+ 
+ 	ide_tf_dump(drive->name, &task.tf);
++	ide_set_irq(drive, 1);
++	SELECT_MASK(drive, 0);
+ 	drive->hwif->tf_load(drive, &task);
+ }
+ 
+Index: b/drivers/ide/ide-iops.c
+===================================================================
+--- a/drivers/ide/ide-iops.c
++++ b/drivers/ide/ide-iops.c
+@@ -95,7 +95,7 @@ void SELECT_DRIVE (ide_drive_t *drive)
+ 	hwif->OUTB(drive->select.all, hwif->io_ports.device_addr);
+ }
+ 
+-static void SELECT_MASK(ide_drive_t *drive, int mask)
++void SELECT_MASK(ide_drive_t *drive, int mask)
+ {
+ 	const struct ide_port_ops *port_ops = drive->hwif->port_ops;
+ 
+@@ -120,9 +120,6 @@ static void ide_tf_load(ide_drive_t *dri
+ 	if (task->tf_flags & IDE_TFLAG_FLAGGED)
+ 		HIHI = 0xFF;
+ 
+-	ide_set_irq(drive, 1);
+-	SELECT_MASK(drive, 0);
+-
+ 	if (task->tf_flags & IDE_TFLAG_OUT_DATA) {
+ 		u16 data = (tf->hob_data << 8) | tf->data;
+ 
+Index: b/drivers/ide/ide-taskfile.c
+===================================================================
+--- a/drivers/ide/ide-taskfile.c
++++ b/drivers/ide/ide-taskfile.c
+@@ -109,6 +109,8 @@ ide_startstop_t do_rw_taskfile (ide_driv
+ 
+ 	if ((task->tf_flags & IDE_TFLAG_DMA_PIO_FALLBACK) == 0) {
+ 		ide_tf_dump(drive->name, tf);
++		ide_set_irq(drive, 1);
++		SELECT_MASK(drive, 0);
+ 		hwif->tf_load(drive, task);
+ 	}
+ 
+Index: b/drivers/ide/pci/scc_pata.c
+===================================================================
+--- a/drivers/ide/pci/scc_pata.c
++++ b/drivers/ide/pci/scc_pata.c
+@@ -662,8 +662,6 @@ static void scc_tf_load(ide_drive_t *dri
+ 	if (task->tf_flags & IDE_TFLAG_FLAGGED)
+ 		HIHI = 0xFF;
+ 
+-	ide_set_irq(drive, 1);
+-
+ 	if (task->tf_flags & IDE_TFLAG_OUT_DATA)
+ 		out_be32((void *)io_ports->data_addr,
+ 			 (tf->hob_data << 8) | tf->data);
+Index: b/include/linux/ide.h
+===================================================================
+--- a/include/linux/ide.h
++++ b/include/linux/ide.h
+@@ -958,6 +958,7 @@ typedef struct ide_task_s {
+ void ide_tf_dump(const char *, struct ide_taskfile *);
+ 
+ extern void SELECT_DRIVE(ide_drive_t *);
++void SELECT_MASK(ide_drive_t *, int);
+ 
+ extern int drive_is_ready(ide_drive_t *);
+ 
