@@ -1,46 +1,24 @@
-From: Markus Trippelsdorf <markus@trippelsdorf.de>
-Subject: Re: [PATCH] Re: [git patches] libata updates - (improve post-reset
-	device ready test) regression
-Date: Thu, 8 May 2008 18:18:05 +0200
-Message-ID: <20080508161805.GA3941@gentoox2.trippelsdorf.de>
-References: <20080506154847.GA15299@havoc.gtf.org> <20080507145616.GA2210@gentoox2.trippelsdorf.de> <48231DAF.7070900@garzik.org> <s5hhcd83hor.wl%tiwai@suse.de>
+From: Soeren Sonnenburg <kernel@nn7.de>
+Subject: 2.6.26-git: ata_piix link is slow to respond regression.
+Date: Thu, 08 May 2008 19:30:42 +0200
+Message-ID: <1210267842.4175.10.camel@localhost>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp-out-41.synserver.de ([217.119.50.41]:1318 "HELO
-	smtp-out-41.synserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1752487AbYEHQTM (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 8 May 2008 12:19:12 -0400
-Content-Disposition: inline
-In-Reply-To: <s5hhcd83hor.wl%tiwai@suse.de>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1758521AbYEHRbe@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-ide@vger.kernel.org, Linux Kernel <linux-kernel@vger.kernel.org>
 List-Id: linux-ide@vger.kernel.org
-To: Takashi Iwai <tiwai@suse.de>
-Cc: Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, LKML <linux-kernel@vger.kernel.org>, htejun@gmail.com, marc.c.dionne@gmail.com, dl9pf@gmx.de, bug-track@fisher-privat.net, sitsofe@yahoo.com
 
-On Thu, May 08, 2008 at 06:05:08PM +0200, Takashi Iwai wrote:
-> At Thu, 08 May 2008 11:35:11 -0400,
-> Jeff Garzik wrote:
-> > 
-> > Markus Trippelsdorf wrote:
-> > >> Tejun Heo (12):
-> > >>       libata: improve post-reset device ready test
-> > > 
-> > > This commit (78ab88f04f44bed566d51dce0c7cbfeff6449a06) causes a long
-> > > boot delay with my onboard Promise controller. It seems like libata
-> > > probes for a nonexisting PATA drive...
-> > > 
-> > 
-> > Does the attached patch fix things?
-> > 
-> > It basically reverts the patch, while still maintaining the 
-> > consolidation.  It looks like that status evaluation is not as universal 
-> > as believed.
-> 
-> Yes, the patch fixes the problem on my machine.
-> 
+Dear all,
 
-Your patch fixes the problem for me, too...
+my macbook pro1,1 I suddenly hangs when booting current mainstream with=
+:
 
--- 
-Markus
+ata_piix 0000:00:1f.2 MAP [P0 P2 -- -- ]
+link is slow to respond, please be patient =EF=BB=BF(ready=3D0)
+SRST failed =EF=BB=BF(errno=3D-1f)
+
+these errors are repeated to hard resets follow but not use.
+
+Soeren
