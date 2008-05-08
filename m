@@ -1,65 +1,66 @@
-From: "J.A. =?UTF-8?B?TWFnYWxsw7Nu?=" <jamagallon@ono.com>
+From: Marc Dionne <marc.c.dionne@gmail.com>
 Subject: Re: [PATCH] Re: [git patches] libata updates - (improve post-reset
  device ready test) regression
-Date: Thu, 8 May 2008 23:43:00 +0200
-Message-ID: <20080508234300.3c2a38af@werewolf.home>
+Date: Thu, 08 May 2008 17:51:52 -0400
+Message-ID: <482375F8.2090108@gmail.com>
 References: <20080506154847.GA15299@havoc.gtf.org>
-	<20080507145616.GA2210@gentoox2.trippelsdorf.de>
-	<48231DAF.7070900@garzik.org>
+ <20080507145616.GA2210@gentoox2.trippelsdorf.de> <48231DAF.7070900@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp.ono.com ([62.42.230.12]:18545 "EHLO resmaa05.ono.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S932636AbYEHVnK (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 8 May 2008 17:43:10 -0400
-In-Reply-To: <48231DAF.7070900@garzik.org>
+Received: from relais.videotron.ca ([24.201.245.36]:47800 "EHLO
+	relais.videotron.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1764873AbYEHVwE (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 8 May 2008 17:52:04 -0400
+In-reply-to: <48231DAF.7070900@garzik.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>, Linux-Kernel <linux-kernel@vger.kernel.org>, Linus-IDE <linux-ide@vger.kernel.org>
+To: Jeff Garzik <jeff@garzik.org>
+Cc: Markus Trippelsdorf <markus@trippelsdorf.de>, linux-ide@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, LKML <linux-kernel@vger.kernel.org>, htejun@gmail.com, Takashi Iwai <tiwai@suse.de>, dl9pf@gmx.de, bug-track@fisher-privat.net, sitsofe@yahoo.com
 
-On Thu, 08 May 2008 11:35:11 -0400, Jeff Garzik <jeff@garzik.org> wrote:
-
+08/05/08 11:35 AM, Jeff Garzik:
 > Markus Trippelsdorf wrote:
-> >> Tejun Heo (12):
-> >>       libata: improve post-reset device ready test
-> > 
-> > This commit (78ab88f04f44bed566d51dce0c7cbfeff6449a06) causes a long
-> > boot delay with my onboard Promise controller. It seems like libata
-> > probes for a nonexisting PATA drive...
-> > 
+>>> Tejun Heo (12):
+>>>       libata: improve post-reset device ready test
+>>
+>> This commit (78ab88f04f44bed566d51dce0c7cbfeff6449a06) causes a long
+>> boot delay with my onboard Promise controller. It seems like libata
+>> probes for a nonexisting PATA drive...
+>>
+>> ACPI: PCI Interrupt 0000:00:08.0[A] -> GSI 18 (level, low) -> IRQ 18
+>> scsi0 : sata_promise
+>> scsi1 : sata_promise
+>> scsi2 : sata_promise
+>> ata1: SATA max UDMA/133 mmio m4096@0xfb600000 port 0xfb600200 irq 18
+>> ata2: SATA max UDMA/133 mmio m4096@0xfb600000 port 0xfb600280 irq 18
+>> ata3: PATA max UDMA/133 mmio m4096@0xfb600000 port 0xfb600300 irq 18
+>> ata1: SATA link down (SStatus 0 SControl 300)
+>> ata2: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+>> ata2.00: ATA-7: SAMSUNG HD753LJ, 1AA01109, max UDMA7
+>> ata2.00: 1465149168 sectors, multi 0: LBA48 NCQ (depth 0/32)
+>> ata2.00: configured for 
+>> UDMA/133                                                                                          
+>> ata3: link is slow to respond, please be patient (ready=0)
+>> ata3: device not ready (errno=-16), forcing hardreset
+>> ata3: link is slow to respond, please be patient (ready=0)
+>> ata3: SRST failed (errno=-16)
+>> ata3: link is slow to respond, please be patient (ready=0)
+>> ata3: SRST failed (errno=-16)
+>> ata3: link is slow to respond, please be patient (ready=0)
+>> ata3: SRST failed (errno=-16)
+>>   - Last output repeated twice -
+>> ata3: reset failed, giving up
+> 
+> Does the attached patch fix things?
+> 
+> It basically reverts the patch, while still maintaining the 
+> consolidation.  It looks like that status evaluation is not as universal 
+> as believed.
+> 
+>     Jeff
 
-I also had this patch collected from LKML, that still applies to -git6.
-Is it really needed ?
-ref: http://marc.info/?l=linux-ide&m=120913178617926&w=2
+Yes, with the patch I get normal booting behaviour.
 
-TIA
-
---- upstream/drivers/ata/libata-eh.c	2008-04-30 17:35:36.000000000 -0400
-+++ linux/drivers/ata/libata-eh.c	2008-04-30 17:35:45.000000000 -0400
-@@ -1312,8 +1312,7 @@
- 		err_mask |= AC_ERR_ATA_BUS;
- 		action |= ATA_EH_RESET;
- 	}
--	if (serror &
--	    (SERR_DATA_RECOVERED | SERR_COMM_RECOVERED | SERR_DATA)) {
-+	if (serror & (SERR_DATA_RECOVERED | SERR_DATA)) {
- 		err_mask |= AC_ERR_ATA_BUS;
- 		action |= ATA_EH_RESET;
- 	}
-@@ -1924,7 +1923,7 @@
- 	}
- 
- 	if (ehc->i.serror)
--		ata_port_printk(ap, KERN_ERR,
-+		ata_link_printk(link, KERN_ERR,
- 		  "SError: { %s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s}\n",
- 		  ehc->i.serror & SERR_DATA_RECOVERED ? "RecovData " : "",
- 		  ehc->i.serror & SERR_COMM_RECOVERED ? "RecovComm " : "",
-
--- 
-J.A. Magallon <jamagallon()ono!com>     \               Software is like sex:
-                                         \         It's better when it's free
-Mandriva Linux release 2008.1 (Cooker) for i586
-Linux 2.6.23-jam05 (gcc 4.2.2 20071128 (4.2.2-2mdv2008.1)) SMP PREEMPT
+Thanks,
+Marc
