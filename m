@@ -1,157 +1,45 @@
-From: Kristen Carlson Accardi <kristen.c.accardi@intel.com>
-Subject: [PATCH] ata: ahci: power off unused ports
-Date: Thu, 8 May 2008 16:10:08 -0700
-Message-ID: <20080508161008.59361de5@appleyard>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: The never enfind DRDY saga
+Date: Thu, 08 May 2008 19:20:58 -0400
+Message-ID: <48238ADA.5060206@garzik.org>
+References: <20080509005111.7cf55350@werewolf.home>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:2216 "EHLO mga03.intel.com"
+Received: from srv5.dvmed.net ([207.36.208.214]:49399 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750872AbYEHXRb (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 8 May 2008 19:17:31 -0400
+	id S1752473AbYEHXVB (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 8 May 2008 19:21:01 -0400
+In-Reply-To: <20080509005111.7cf55350@werewolf.home>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: jeff@garzik.org
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: =?ISO-8859-1?Q?=22J=2EA=2E_Magall=F3n=22?= <jamagallon@ono.com>
+Cc: Linus-IDE <linux-ide@vger.kernel.org>, Linux-Kernel <linux-kernel@vger.kernel.org>
 
-power off unused ports
+J.A. Magall=F3n wrote:
+> Hi all...
+>=20
+> I'm getting again my friendly DRDY errors, this time on the new disk =
+I got
+> to replace the old one (that fortunately was still under warranty...)=
+=2E
+> This is a brand new disk, it came perfectly packaged...
+> Now it is not a Seagate, but a WD:
 
-If the port isn't either a drive bay or an external SATA port, do not 
-keep the phy powered on if the port is unoccupied. This saves .75 watts
-on most laptops.  A module parameter can be used to override this 
-behavior and allow the phy's to be powered up regardless of whether it
-has externally accessible SATA ports. 
+Note that DRDY is not an error:
 
-Signed-off-by:  Kristen Carlson Accardi <kristen.c.accardi@intel.com>
+	http://ata.wiki.kernel.org/index.php/Libata_error_messages
 
----
- drivers/ata/ahci.c        |   21 +++++++++++++++++++++
- drivers/ata/libata-core.c |   24 ++++++++++++++++++++++++
- include/linux/libata.h    |    1 +
- 3 files changed, 46 insertions(+)
+But moreover, for Serial ATA, timeouts are generally due to platform=20
+problems, irq problems, or driver problems.  When we see timeouts, we=20
+generally do not look at the hard drive as the primary cause.
 
-Index: linux-ahci-phy/drivers/ata/ahci.c
-===================================================================
---- linux-ahci-phy.orig/drivers/ata/ahci.c	2008-05-08 14:29:02.000000000 -0700
-+++ linux-ahci-phy/drivers/ata/ahci.c	2008-05-08 14:31:05.000000000 -0700
-@@ -53,9 +53,13 @@ static int ahci_skip_host_reset;
- module_param_named(skip_host_reset, ahci_skip_host_reset, int, 0444);
- MODULE_PARM_DESC(skip_host_reset, "skip global host reset (0=don't skip, 1=skip)");
- 
-+static int ahci_power_save = 1;
-+module_param_named(power_save, ahci_power_save, int, 0444);
-+MODULE_PARM_DESC(power_save, "Power off unused ports (0=don't power off, 1=power off)");
- static int ahci_enable_alpm(struct ata_port *ap,
- 		enum link_pm policy);
- static void ahci_disable_alpm(struct ata_port *ap);
-+static int ahci_is_hotplug_capable(struct ata_port *ap);
- 
- enum {
- 	AHCI_PCI_BAR		= 5,
-@@ -166,6 +170,8 @@ enum {
- 	PORT_CMD_ASP		= (1 << 27), /* Aggressive Slumber/Partial */
- 	PORT_CMD_ALPE		= (1 << 26), /* Aggressive Link PM enable */
- 	PORT_CMD_ATAPI		= (1 << 24), /* Device is ATAPI */
-+	PORT_CMD_ESP		= (1 << 21), /* External SATA Port */
-+	PORT_CMD_HPCP		= (1 << 18), /* port is hot plug capable */
- 	PORT_CMD_PMP		= (1 << 17), /* PMP attached */
- 	PORT_CMD_LIST_ON	= (1 << 15), /* cmd list DMA engine running */
- 	PORT_CMD_FIS_ON		= (1 << 14), /* FIS DMA engine running */
-@@ -1900,6 +1906,18 @@ static int ahci_pci_device_resume(struct
- }
- #endif
- 
-+static int ahci_is_hotplug_capable(struct ata_port *ap)
-+{
-+	void __iomem *port_mmio = ahci_port_base(ap);
-+	u8 cmd;
-+
-+	if (!ahci_power_save)
-+		return 1;
-+
-+	cmd = readl(port_mmio + PORT_CMD);
-+	return ((cmd & PORT_CMD_HPCP) || (cmd & PORT_CMD_ESP));
-+}
-+
- static int ahci_port_start(struct ata_port *ap)
- {
- 	struct device *dev = ap->host->dev;
-@@ -1951,6 +1969,9 @@ static int ahci_port_start(struct ata_po
- 
- 	ap->private_data = pp;
- 
-+	/* set some flags based on port capabilities */
-+	if (!ahci_is_hotplug_capable(ap))
-+		ap->flags |= ATA_FLAG_NO_HOTPLUG;
- 	/* engage engines, captain */
- 	return ahci_port_resume(ap);
- }
-Index: linux-ahci-phy/drivers/ata/libata-core.c
-===================================================================
---- linux-ahci-phy.orig/drivers/ata/libata-core.c	2008-05-08 14:28:57.000000000 -0700
-+++ linux-ahci-phy/drivers/ata/libata-core.c	2008-05-08 14:29:50.000000000 -0700
-@@ -162,6 +162,19 @@ MODULE_DESCRIPTION("Library module for A
- MODULE_LICENSE("GPL");
- MODULE_VERSION(DRV_VERSION);
- 
-+static void ata_phy_offline(struct ata_link *link)
-+{
-+	u32 scontrol;
-+	int rc;
-+
-+	/* set DET to 4 */
-+	rc = sata_scr_read(link, SCR_CONTROL, &scontrol);
-+	if (rc)
-+		return;
-+	scontrol &= ~0xf;
-+	scontrol |= (1 << 2);
-+	sata_scr_write(link, SCR_CONTROL, scontrol);
-+}
- 
- /**
-  *	ata_force_cbl - force cable type according to libata.force
-@@ -2671,6 +2684,7 @@ void ata_port_disable(struct ata_port *a
- 	ap->link.device[0].class = ATA_DEV_NONE;
- 	ap->link.device[1].class = ATA_DEV_NONE;
- 	ap->flags |= ATA_FLAG_DISABLED;
-+	ata_phy_offline(&ap->link);
- }
- 
- /**
-@@ -5609,6 +5623,8 @@ int ata_host_register(struct ata_host *h
- 		if (ap->ops->error_handler) {
- 			struct ata_eh_info *ehi = &ap->link.eh_info;
- 			unsigned long flags;
-+			int device_attached = 0;
-+			struct ata_device *dev;
- 
- 			ata_port_probe(ap);
- 
-@@ -5627,6 +5643,14 @@ int ata_host_register(struct ata_host *h
- 
- 			/* wait for EH to finish */
- 			ata_port_wait_eh(ap);
-+			ata_link_for_each_dev(dev, &ap->link)
-+				if (ata_dev_enabled(dev))
-+					device_attached++;
-+			if (!device_attached &&
-+			    (ap->flags & ATA_FLAG_NO_HOTPLUG)) {
-+				/* no device present, disable port */
-+				ata_port_disable(ap);
-+			}
- 		} else {
- 			DPRINTK("ata%u: bus probe begin\n", ap->print_id);
- 			rc = ata_bus_probe(ap);
-Index: linux-ahci-phy/include/linux/libata.h
-===================================================================
---- linux-ahci-phy.orig/include/linux/libata.h	2008-05-08 14:28:57.000000000 -0700
-+++ linux-ahci-phy/include/linux/libata.h	2008-05-08 14:29:50.000000000 -0700
-@@ -193,6 +193,7 @@ enum {
- 	ATA_FLAG_AN		= (1 << 18), /* controller supports AN */
- 	ATA_FLAG_PMP		= (1 << 19), /* controller supports PMP */
- 	ATA_FLAG_IPM		= (1 << 20), /* driver can handle IPM */
-+	ATA_FLAG_NO_HOTPLUG	= (1 << 21), /* port doesn't support HP */
- 
- 	/* The following flag belongs to ap->pflags but is kept in
- 	 * ap->flags because it's referenced in many LLDs and will be
+Have you gone through the debugging process for irq problems -- turning=
+=20
+off ACPI, noapic, etc.?
+
+	Jeff
+
+
