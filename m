@@ -1,94 +1,58 @@
-From: Jan-Simon =?iso-8859-1?q?M=F6ller?= <dl9pf@gmx.de>
-Subject: Re: [git patches] libata updates - (improve post-reset =?iso-8859-1?q?device=09ready?= test) regression
-Date: Thu, 8 May 2008 11:45:45 +0200
-Message-ID: <200805081145.46553.dl9pf@gmx.de>
-References: <20080506154847.GA15299@havoc.gtf.org> <20080507145616.GA2210@gentoox2.trippelsdorf.de> <s5hod7ixeaj.wl%tiwai@suse.de>
+From: "Bartlomiej Zolnierkiewicz" <bzolnier@gmail.com>
+Subject: Re: kernel 2.6.25 with ide driver cs5520 does not boot.
+Date: Thu, 8 May 2008 15:07:31 +0200
+Message-ID: <58cb370e0805080607n4f5de192o5a7371fd0fb1e9f8@mail.gmail.com>
+References: <20080508.165814.197343623.takada@mbf.nifty.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.gmx.net ([213.165.64.20]:58369 "HELO mail.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1752886AbYEHJpw (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 8 May 2008 05:45:52 -0400
-In-Reply-To: <s5hod7ixeaj.wl%tiwai@suse.de>
+Received: from fk-out-0910.google.com ([209.85.128.187]:22047 "EHLO
+	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758798AbYEHNHd (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 8 May 2008 09:07:33 -0400
+Received: by fk-out-0910.google.com with SMTP id 18so788989fkq.5
+        for <linux-ide@vger.kernel.org>; Thu, 08 May 2008 06:07:31 -0700 (PDT)
+In-Reply-To: <20080508.165814.197343623.takada@mbf.nifty.com>
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Takashi Iwai <tiwai@suse.de>
-Cc: Markus Trippelsdorf <markus@trippelsdorf.de>, Jeff Garzik <jeff@garzik.org>, Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, htejun@gmail.com
+To: TAKADA Yoshihito <takada@mbf.nifty.com>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-Am Mittwoch 07 Mai 2008 18:35:48 schrieben Sie:
-> At Wed, 7 May 2008 16:56:16 +0200,
-> Markus Trippelsdorf wrote:
-> > 
-> > > 
-> > > Tejun Heo (12):
-> > >       libata: improve post-reset device ready test
-> > 
-> > This commit (78ab88f04f44bed566d51dce0c7cbfeff6449a06) causes a long
-> > boot delay with my onboard Promise controller. It seems like libata
-> > probes for a nonexisting PATA drive...
-> > 
+Hi,
 
-Same here :
+On Thu, May 8, 2008 at 9:58 AM, TAKADA Yoshihito <takada@mbf.nifty.com> wrote:
+> HI, all.
+>  (please CC to me, I'm not on LKML)
+>
+>  kernel 2.6.25 with ide driver cs5520 does not boot.
+>
+>  Attached part of dmesgs as dmesgs.txt
 
-<6>ata1: SATA max UDMA/133 abar m2048@0xfc404000 port 0xfc404100 irq 4347
-<6>ata2: SATA max UDMA/133 abar m2048@0xfc404000 port 0xfc404180 irq 4347
-<6>ata3: SATA max UDMA/133 abar m2048@0xfc404000 port 0xfc404200 irq 4347
-<6>ata1: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
-<4>ata1.00: _GTF unexpected object type 0x1
-<6>ata1.00: ATA-8: WDC WD2500BEVS-22UST0, 01.01A01, max UDMA/133
-<6>ata1.00: 488397168 sectors, multi 16: LBA48 NCQ (depth 31/32)
-<4>ata1.00: _GTF unexpected object type 0x1
-<6>ata1.00: configured for UDMA/133
-<6>ata2: SATA link down (SStatus 0 SControl 300)
-<6>ata3: SATA link down (SStatus 0 SControl 300)
-<5>scsi 0:0:0:0: Direct-Access     ATA      WDC WD2500BEVS-2 01.0 PQ: 0 ANSI: 5
-<7>PM: Adding info for No Bus:target0:0:0
-<7>PM: Adding info for scsi:0:0:0:0
-<7>PM: Adding info for No Bus:0:0:0:0
-<7>ata_piix 0000:00:1f.1: version 2.12
-<6>ACPI: PCI Interrupt 0000:00:1f.1[A] -> GSI 19 (level, low) -> IRQ 19
-<7>PCI: Setting latency timer of device 0000:00:1f.1 to 64
-<6>scsi3 : ata_piix
-<7>PM: Adding info for No Bus:host3
-<7>PM: Adding info for No Bus:host3
-<6>scsi4 : ata_piix
-<7>PM: Adding info for No Bus:host4
-<7>PM: Adding info for No Bus:host4
-<6>ata4: PATA max UDMA/100 cmd 0x1f0 ctl 0x3f6 bmdma 0x1810 irq 14
-<6>ata5: PATA max UDMA/100 cmd 0x170 ctl 0x376 bmdma 0x1818 irq 15
-<6>ata4.00: ATAPI: HL-DT-ST DVDRAM GSA-T20N, WW01, max UDMA/33
-<6>ata4.00: configured for UDMA/33
-<4>ata5: link is slow to respond, please be patient (ready=0)
-<4>ata5: device not ready (errno=-16), forcing hardreset
-<4>ata5: link is slow to respond, please be patient (ready=0)
-<3>ata5: SRST failed (errno=-16)
-<4>ata5: link is slow to respond, please be patient (ready=0)
-<3>ata5: SRST failed (errno=-16)
-<4>ata5: link is slow to respond, please be patient (ready=0)
-<3>ata5: SRST failed (errno=-16)
-<3>ata5: SRST failed (errno=-16)
-<3>ata5: reset failed, giving up
-<4>isa bounce pool size: 16 pages
-<5>scsi 3:0:0:0: CD-ROM            HL-DT-ST DVDRAM GSA-T20N  WW01 PQ: 0 ANSI: 5
-<7>PM: Adding info for No Bus:target3:0:0
-<7>PM: Adding info for scsi:3:0:0:0
-<7>PM: Adding info for No Bus:3:0:0:0
-<6>SGI XFS with ACLs, security attributes, realtime, large block/inode numbers, no debug enabled
-<6>SGI XFS Quota Management subsystem
-<6>BIOS EDD facility v0.16 2004-Jun-25, 0 devices found
-<6>EDD information not available.
-<4>sys_init_module: 'edd'->init suspiciously returned 1, it should follow 0/-E convention
-<4>sys_init_module: loading module anyway...
-<4>Pid: 554, comm: modprobe Not tainted 2.6.26-rc1-linus.git-00166-gc0a1811 #1
-<4>
-<4>Call Trace:
-<4> [sys_init_module+304/428] sys_init_module+0x130/0x1ac
-<4> [system_call_after_swapgs+138/143] system_call_after_swapgs+0x8a/0x8f
-<4>
-<6>usbcore: registered new interface driver usbfs
-<6>usbcore: registered new interface driver hub
-<6>usbcore: registered new device driver usb
+CS5520 is a bit special hardware because it doesn't support "normal"
+DMA but Virtual DMA (PIO transfers between device<->host but DMA
+transfers between host<->CPU).  In 2.6.25 we added support for Virtual
+DMA to cs5520 host driver so it could be it (till 2.6.25 PIO has always
+been used - the info printed by kernel about PIO/DMA BIOS settings was
+misleading/bogus so it got removed altogether in 2.6.26-rc1).
+
+I'll double-check the code and datasheet/errata that we don't miss
+something important for proper Virtual DMA support (and if not than
+I guess that we need to disable this feature for now).
+
+In the meantime please try 2.6.26-rc1 (just to be sure that the
+problem was not caused by something else that got fixed already).
+
+>  kernel 2.6.23 with cs5520 is works correct. cs5520 scans ide0 and ide1.
+>  kernel 2.6.24 with cs5520 is works wrong, but it can boot. cs5520 scans ide0 only.
+
+[...]
+
+2.6.24 contained a bug in calculating DMA base for the second port (thus
+the error message) but it shouldn't affect anything (ide1 is still probed
+according to dmesg, please let me know if there are some devices on ide1
+that are not getting detected).
+
+Thanks,
+Bart
