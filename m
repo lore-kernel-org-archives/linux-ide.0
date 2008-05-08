@@ -1,58 +1,52 @@
-From: "Bartlomiej Zolnierkiewicz" <bzolnier@gmail.com>
-Subject: Re: kernel 2.6.25 with ide driver cs5520 does not boot.
-Date: Thu, 8 May 2008 15:07:31 +0200
-Message-ID: <58cb370e0805080607n4f5de192o5a7371fd0fb1e9f8@mail.gmail.com>
-References: <20080508.165814.197343623.takada@mbf.nifty.com>
+From: Mark Lord <liml@rtr.ca>
+Subject: Re: Compact Flash Question
+Date: Thu, 08 May 2008 09:26:37 -0400
+Message-ID: <4822FF8D.7020805@rtr.ca>
+References: <48215673.3060201@wpkg.org>	 <e2e108260805070044v42f596bbj39c5b52b6f0a096@mail.gmail.com>	 <48216039.3070001@wpkg.org> <4821A12F.2020800@aitel.hist.no>	 <4821C462.2000108@free.fr> <e2e108260805070946t63f35e36q6960bdff11fecd8c@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from fk-out-0910.google.com ([209.85.128.187]:22047 "EHLO
-	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758798AbYEHNHd (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 8 May 2008 09:07:33 -0400
-Received: by fk-out-0910.google.com with SMTP id 18so788989fkq.5
-        for <linux-ide@vger.kernel.org>; Thu, 08 May 2008 06:07:31 -0700 (PDT)
-In-Reply-To: <20080508.165814.197343623.takada@mbf.nifty.com>
-Content-Disposition: inline
+Received: from rtr.ca ([76.10.145.34]:3799 "EHLO mail.rtr.ca"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753885AbYEHN0i (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 8 May 2008 09:26:38 -0400
+In-Reply-To: <e2e108260805070946t63f35e36q6960bdff11fecd8c@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: TAKADA Yoshihito <takada@mbf.nifty.com>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: Bart Van Assche <bart.vanassche@gmail.com>
+Cc: =?UTF-8?B?U3TDqXBoYW5lIEFOQ0VMT1Q=?= <sancelot@free.fr>, Helge Hafting <helge.hafting@aitel.hist.no>, Tomasz Chmielewski <mangoo@wpkg.org>, LKML <linux-kernel@vger.kernel.org>, YSadgat1@gcte.com, linux-os@analogic.com, Alan <alan@lxorguk.ukuu.org.uk>, Linux IDE <linux-ide@vger.kernel.org>, Jeff Woods <jeff@jeffwoods.us>
 
-Hi,
+Bart Van Assche wrote:
+> On Wed, May 7, 2008 at 5:01 PM, St=C3=A9phane ANCELOT <sancelot@free.=
+fr> wrote:
+>> we use  silicon systems CF  with wear leveling inside  , we write a =
+few
+>> kb data back each 1/4 h  on it.(log /tmp files  are redirected to ra=
+m)
+>=20
+> Silicon Systems CompactFlashes are the among the most reliable
+> CompactFlashes I have used in embedded devices. See also
+> http://www.siliconsystems.com/silicondrive/whitepapers/SSWP03-Enduran=
+ce-R.pdf
+> for a whitepaper that explains their wear leveling and error
+> correction algorithms. Furthermore, Silicon Systems has a technology
+> called SiSMART that allows to monitor by how far the CompactFlash is
+> worn out, such that it can be monitored whether or not it is time to
+> replace the CompactFlash. (Note: I am not affiliated in any way to
+> Silicon Systems.)
+=2E.
 
-On Thu, May 8, 2008 at 9:58 AM, TAKADA Yoshihito <takada@mbf.nifty.com> wrote:
-> HI, all.
->  (please CC to me, I'm not on LKML)
->
->  kernel 2.6.25 with ide driver cs5520 does not boot.
->
->  Attached part of dmesgs as dmesgs.txt
+Mmm.. according to that document, the "dynamic wear leveling" devices
+might benefit from having Linux issue CF-Erase commands to unallocated =
+sectors,
+so that the onboard CF controller can then add those sectors to the wea=
+r-leveling
+rotation scheme.
 
-CS5520 is a bit special hardware because it doesn't support "normal"
-DMA but Virtual DMA (PIO transfers between device<->host but DMA
-transfers between host<->CPU).  In 2.6.25 we added support for Virtual
-DMA to cs5520 host driver so it could be it (till 2.6.25 PIO has always
-been used - the info printed by kernel about PIO/DMA BIOS settings was
-misleading/bogus so it got removed altogether in 2.6.26-rc1).
+There was discussion at LSF'08 about possible filesystem hooks that cou=
+ld
+be used for this (and other) purposes when deleting files.
 
-I'll double-check the code and datasheet/errata that we don't miss
-something important for proper Virtual DMA support (and if not than
-I guess that we need to disable this feature for now).
-
-In the meantime please try 2.6.26-rc1 (just to be sure that the
-problem was not caused by something else that got fixed already).
-
->  kernel 2.6.23 with cs5520 is works correct. cs5520 scans ide0 and ide1.
->  kernel 2.6.24 with cs5520 is works wrong, but it can boot. cs5520 scans ide0 only.
-
-[...]
-
-2.6.24 contained a bug in calculating DMA base for the second port (thus
-the error message) but it shouldn't affect anything (ide1 is still probed
-according to dmesg, please let me know if there are some devices on ide1
-that are not getting detected).
-
-Thanks,
-Bart
+Cheers
