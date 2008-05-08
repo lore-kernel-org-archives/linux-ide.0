@@ -1,50 +1,101 @@
-From: Willy Tarreau <w@1wt.eu>
-Subject: Re: Compact Flash Question
-Date: Thu, 8 May 2008 16:59:44 +0200
-Message-ID: <20080508145943.GT8474@1wt.eu>
-References: <48215673.3060201@wpkg.org> <e2e108260805070044v42f596bbj39c5b52b6f0a096@mail.gmail.com> <48216039.3070001@wpkg.org> <4821A12F.2020800@aitel.hist.no> <4821C462.2000108@free.fr> <e2e108260805070946t63f35e36q6960bdff11fecd8c@mail.gmail.com> <20080508142714.GD6957@csclub.uwaterloo.ca>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: [PATCH] Re: [git patches] libata updates - (improve post-reset device
+ ready test) regression
+Date: Thu, 08 May 2008 11:35:11 -0400
+Message-ID: <48231DAF.7070900@garzik.org>
+References: <20080506154847.GA15299@havoc.gtf.org> <20080507145616.GA2210@gentoox2.trippelsdorf.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/mixed;
+ boundary="------------030603000401050006040109"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from 1wt.eu ([62.212.114.60]:4202 "EHLO 1wt.eu"
+Received: from srv5.dvmed.net ([207.36.208.214]:43048 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1760746AbYEHPD1 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 8 May 2008 11:03:27 -0400
-Content-Disposition: inline
-In-Reply-To: <20080508142714.GD6957@csclub.uwaterloo.ca>
+	id S1756642AbYEHPfR (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 8 May 2008 11:35:17 -0400
+In-Reply-To: <20080507145616.GA2210@gentoox2.trippelsdorf.de>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Lennart Sorensen <lsorense@csclub.uwaterloo.ca>
-Cc: Bart Van Assche <bart.vanassche@gmail.com>, St?phane ANCELOT <sancelot@free.fr>, Helge Hafting <helge.hafting@aitel.hist.no>, Tomasz Chmielewski <mangoo@wpkg.org>, LKML <linux-kernel@vger.kernel.org>, YSadgat1@gcte.com, linux-os@analogic.com, Alan <alan@lxorguk.ukuu.org.uk>, Linux IDE <linux-ide@vger.kernel.org>, Jeff Woods <jeff@jeffwoods.us>
+To: Markus Trippelsdorf <markus@trippelsdorf.de>, linux-ide@vger.kernel.org
+Cc: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, LKML <linux-kernel@vger.kernel.org>, htejun@gmail.com, Takashi Iwai <tiwai@suse.de>, marc.c.dionne@gmail.com, dl9pf@gmx.de, bug-track@fisher-privat.net, sitsofe@yahoo.com
 
-On Thu, May 08, 2008 at 10:27:14AM -0400, Lennart Sorensen wrote:
-> On Wed, May 07, 2008 at 06:46:25PM +0200, Bart Van Assche wrote:
-> > Silicon Systems CompactFlashes are the among the most reliable
-> > CompactFlashes I have used in embedded devices. See also
-> > http://www.siliconsystems.com/silicondrive/whitepapers/SSWP03-Endurance-R.pdf
-> > for a whitepaper that explains their wear leveling and error
-> > correction algorithms. Furthermore, Silicon Systems has a technology
-> > called SiSMART that allows to monitor by how far the CompactFlash is
-> > worn out, such that it can be monitored whether or not it is time to
-> > replace the CompactFlash. (Note: I am not affiliated in any way to
-> > Silicon Systems.)
+This is a multi-part message in MIME format.
+--------------030603000401050006040109
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+
+Markus Trippelsdorf wrote:
+>> Tejun Heo (12):
+>>       libata: improve post-reset device ready test
 > 
-> We too have switched to Silicon Systems and are very happy with them.
-> And even industrial temperature versions are hardly expensive.  They may
-> cost more than you pay for a generic slow piece of junk at a retail
-> store, but you are getting a better card.
+> This commit (78ab88f04f44bed566d51dce0c7cbfeff6449a06) causes a long
+> boot delay with my onboard Promise controller. It seems like libata
+> probes for a nonexisting PATA drive...
+> 
+> ACPI: PCI Interrupt 0000:00:08.0[A] -> GSI 18 (level, low) -> IRQ 18
+> scsi0 : sata_promise
+> scsi1 : sata_promise
+> scsi2 : sata_promise
+> ata1: SATA max UDMA/133 mmio m4096@0xfb600000 port 0xfb600200 irq 18
+> ata2: SATA max UDMA/133 mmio m4096@0xfb600000 port 0xfb600280 irq 18
+> ata3: PATA max UDMA/133 mmio m4096@0xfb600000 port 0xfb600300 irq 18
+> ata1: SATA link down (SStatus 0 SControl 300)
+> ata2: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+> ata2.00: ATA-7: SAMSUNG HD753LJ, 1AA01109, max UDMA7
+> ata2.00: 1465149168 sectors, multi 0: LBA48 NCQ (depth 0/32)
+> ata2.00: configured for UDMA/133                                                                                          
+> ata3: link is slow to respond, please be patient (ready=0)
+> ata3: device not ready (errno=-16), forcing hardreset
+> ata3: link is slow to respond, please be patient (ready=0)
+> ata3: SRST failed (errno=-16)
+> ata3: link is slow to respond, please be patient (ready=0)
+> ata3: SRST failed (errno=-16)
+> ata3: link is slow to respond, please be patient (ready=0)
+> ata3: SRST failed (errno=-16)
+>   - Last output repeated twice -
+> ata3: reset failed, giving up
 
-Interestingly, we once got a bunch of those and had a lot of problems
-with them. Typically unbootable systems. We finally noticed that there
-was a real corruption problem, because 3 MD5s of the kernel in a row
-returned 3 different values. Our provider assured us that he never heard
-about that, and insisted that we try again on a new batch. We have had
-no trouble since. I guess we really got a bad batch. At least it was
-noticeable early in the deployment process (the worst ones being a few
-days after installation). However, we never had any problem with PQI
-industrial.
+Does the attached patch fix things?
 
-> Len Sorensen
+It basically reverts the patch, while still maintaining the 
+consolidation.  It looks like that status evaluation is not as universal 
+as believed.
 
-Willy
+	Jeff
 
+
+
+
+--------------030603000401050006040109
+Content-Type: text/plain;
+ name="patch"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="patch"
+
+diff --git a/include/linux/libata.h b/include/linux/libata.h
+index 7e206da..0f17643 100644
+--- a/include/linux/libata.h
++++ b/include/linux/libata.h
+@@ -1384,17 +1384,14 @@ static inline struct ata_port *ata_shost_to_port(struct Scsi_Host *host)
+ 
+ static inline int ata_check_ready(u8 status)
+ {
+-	/* Some controllers report 0x77 or 0x7f during intermediate
+-	 * not-ready stages.
+-	 */
+-	if (status == 0x77 || status == 0x7f)
+-		return 0;
++	if (!(status & ATA_BUSY))
++		return 1;
+ 
+ 	/* 0xff indicates either no device or device not ready */
+ 	if (status == 0xff)
+ 		return -ENODEV;
+ 
+-	return !(status & ATA_BUSY);
++	return 0;
+ }
+ 
+ 
+
+--------------030603000401050006040109--
