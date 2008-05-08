@@ -1,216 +1,157 @@
-From: "J.A. =?UTF-8?B?TWFnYWxsw7Nu?=" <jamagallon@ono.com>
-Subject: The never enfind DRDY saga
-Date: Fri, 9 May 2008 00:51:11 +0200
-Message-ID: <20080509005111.7cf55350@werewolf.home>
+From: Kristen Carlson Accardi <kristen.c.accardi@intel.com>
+Subject: [PATCH] ata: ahci: power off unused ports
+Date: Thu, 8 May 2008 16:10:08 -0700
+Message-ID: <20080508161008.59361de5@appleyard>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp.ono.com ([62.42.230.12]:5420 "EHLO resmaa05.ono.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S934199AbYEHWvR (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 8 May 2008 18:51:17 -0400
+Received: from mga03.intel.com ([143.182.124.21]:2216 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750872AbYEHXRb (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 8 May 2008 19:17:31 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Linus-IDE <linux-ide@vger.kernel.org>, Linux-Kernel <linux-kernel@vger.kernel.org>
+To: jeff@garzik.org
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Hi all...
+power off unused ports
 
-I'm getting again my friendly DRDY errors, this time on the new disk I got
-to replace the old one (that fortunately was still under warranty...).
-This is a brand new disk, it came perfectly packaged...
-Now it is not a Seagate, but a WD:
+If the port isn't either a drive bay or an external SATA port, do not 
+keep the phy powered on if the port is unoccupied. This saves .75 watts
+on most laptops.  A module parameter can be used to override this 
+behavior and allow the phy's to be powered up regardless of whether it
+has externally accessible SATA ports. 
 
-=== START OF INFORMATION SECTION ===
-Device Model:     WDC WD3200AVJS-63WDA0
-Serial Number:    WD-WCARW2347788
-Firmware Version: 12.01B02
-User Capacity:    320,072,933,376 bytes
-Device is:        Not in smartctl database [for details use: -P showall]
-ATA Version is:   8
-ATA Standard is:  Exact ATA specification draft version not indicated
-Local Time is:    Fri May  9 00:33:06 2008 CEST
-SMART support is: Available - device has SMART capability.
-SMART support is: Enabled
+Signed-off-by:  Kristen Carlson Accardi <kristen.c.accardi@intel.com>
 
-I managed to find a reliable way to reproduce the errors.
-Copying about 7Gb of data from the SATA to a SCSI disk gave me 3 errors:
+---
+ drivers/ata/ahci.c        |   21 +++++++++++++++++++++
+ drivers/ata/libata-core.c |   24 ++++++++++++++++++++++++
+ include/linux/libata.h    |    1 +
+ 3 files changed, 46 insertions(+)
 
-ata3.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x6 frozen
-ata3.00: cmd c8/00:00:b7:e9:0f/00:00:00:00:00/e2 tag 0 dma 131072 in
-         res 40/00:00:09:4f:c2/00:00:00:00:00/00 Emask 0x4 (timeout)
-ata3.00: status: { DRDY }
-ata3: soft resetting link
-ata3.00: configured for UDMA/133
-ata3: EH complete
-sd 4:0:0:0: [sdd] 625142448 512-byte hardware sectors (320073 MB)
-sd 4:0:0:0: [sdd] Write Protect is off
-sd 4:0:0:0: [sdd] Mode Sense: 00 3a 00 00
-sd 4:0:0:0: [sdd] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
-
-I got the SMART status (smartctl -a /dev/sdd > s?) before and after the errors,
-and it shows no problem:
-
-werewolf:~# diff -u s1 s2
---- s1  2008-05-09 00:33:06.000000000 +0200
-+++ s2  2008-05-09 00:36:02.000000000 +0200
-@@ -9,7 +9,7 @@
- Device is:        Not in smartctl database [for details use: -P showall]
- ATA Version is:   8
- ATA Standard is:  Exact ATA specification draft version not indicated
--Local Time is:    Fri May  9 00:33:06 2008 CEST
-+Local Time is:    Fri May  9 00:36:01 2008 CEST
- SMART support is: Available - device has SMART capability.
- SMART support is: Enabled
-
-@@ -53,16 +53,16 @@
- Vendor Specific SMART Attributes with Thresholds:
- ID# ATTRIBUTE_NAME          FLAG     VALUE WORST THRESH TYPE      UPDATED  WHEN_FAILED RAW_VALUE
-   1 Raw_Read_Error_Rate     0x000f   200   200   051    Pre-fail  Always       -       78
--  3 Spin_Up_Time            0x0003   207   159   021    Pre-fail  Always       -       2633
--  4 Start_Stop_Count        0x0032   100   100   000    Old_age   Always       -       183
-+  3 Spin_Up_Time            0x0003   218   159   021    Pre-fail  Always       -       2091
-+  4 Start_Stop_Count        0x0032   100   100   000    Old_age   Always       -       184
-   5 Reallocated_Sector_Ct   0x0033   200   200   140    Pre-fail  Always       -       0
-   7 Seek_Error_Rate         0x000e   200   200   051    Old_age   Always       -       0
-   9 Power_On_Hours          0x0032   099   099   000    Old_age   Always       -       787
-  10 Spin_Retry_Count        0x0012   100   100   051    Old_age   Always       -       0
-  11 Calibration_Retry_Count 0x0012   100   100   051    Old_age   Always       -       0
-- 12 Power_Cycle_Count       0x0032   100   100   000    Old_age   Always       -       183
--192 Power-Off_Retract_Count 0x0032   200   200   000    Old_age   Always       -       172
--193 Load_Cycle_Count        0x0032   200   200   000    Old_age   Always       -       193
-+ 12 Power_Cycle_Count       0x0032   100   100   000    Old_age   Always       -       184
-+192 Power-Off_Retract_Count 0x0032   200   200   000    Old_age   Always       -       173
-+193 Load_Cycle_Count        0x0032   200   200   000    Old_age   Always       -       194
- 194 Temperature_Celsius     0x0022   102   098   000    Old_age   Always       -       45
- 196 Reallocated_Event_Count 0x0032   200   200   000    Old_age   Always       -       0
- 197 Current_Pending_Sector  0x0012   200   200   000    Old_age   Always       -       36
-
-werewolf:~# diff -u s2 s3
---- s2  2008-05-09 00:36:02.000000000 +0200
-+++ s3  2008-05-09 00:37:42.000000000 +0200
-@@ -9,7 +9,7 @@
- Device is:        Not in smartctl database [for details use: -P showall]
- ATA Version is:   8
- ATA Standard is:  Exact ATA specification draft version not indicated
--Local Time is:    Fri May  9 00:36:01 2008 CEST
-+Local Time is:    Fri May  9 00:37:42 2008 CEST
- SMART support is: Available - device has SMART capability.
- SMART support is: Enabled
-
-@@ -54,15 +54,15 @@
- ID# ATTRIBUTE_NAME          FLAG     VALUE WORST THRESH TYPE      UPDATED  WHEN_FAILED RAW_VALUE
-   1 Raw_Read_Error_Rate     0x000f   200   200   051    Pre-fail  Always       -       78
-   3 Spin_Up_Time            0x0003   218   159   021    Pre-fail  Always       -       2091
--  4 Start_Stop_Count        0x0032   100   100   000    Old_age   Always       -       184
-+  4 Start_Stop_Count        0x0032   100   100   000    Old_age   Always       -       185
-   5 Reallocated_Sector_Ct   0x0033   200   200   140    Pre-fail  Always       -       0
-   7 Seek_Error_Rate         0x000e   200   200   051    Old_age   Always       -       0
-   9 Power_On_Hours          0x0032   099   099   000    Old_age   Always       -       787
-  10 Spin_Retry_Count        0x0012   100   100   051    Old_age   Always       -       0
-  11 Calibration_Retry_Count 0x0012   100   100   051    Old_age   Always       -       0
-- 12 Power_Cycle_Count       0x0032   100   100   000    Old_age   Always       -       184
--192 Power-Off_Retract_Count 0x0032   200   200   000    Old_age   Always       -       173
--193 Load_Cycle_Count        0x0032   200   200   000    Old_age   Always       -       194
-+ 12 Power_Cycle_Count       0x0032   100   100   000    Old_age   Always       -       185
-+192 Power-Off_Retract_Count 0x0032   200   200   000    Old_age   Always       -       174
-+193 Load_Cycle_Count        0x0032   200   200   000    Old_age   Always       -       195
- 194 Temperature_Celsius     0x0022   102   098   000    Old_age   Always       -       45
- 196 Reallocated_Event_Count 0x0032   200   200   000    Old_age   Always       -       0
- 197 Current_Pending_Sector  0x0012   200   200   000    Old_age   Always       -       36
-
-werewolf:~# diff -u s3 s4
---- s3  2008-05-09 00:37:42.000000000 +0200
-+++ s4  2008-05-09 00:39:12.000000000 +0200
-@@ -9,7 +9,7 @@
- Device is:        Not in smartctl database [for details use: -P showall]
- ATA Version is:   8
- ATA Standard is:  Exact ATA specification draft version not indicated
--Local Time is:    Fri May  9 00:37:42 2008 CEST
-+Local Time is:    Fri May  9 00:39:12 2008 CEST
- SMART support is: Available - device has SMART capability.
- SMART support is: Enabled
-
-@@ -53,16 +53,16 @@
- Vendor Specific SMART Attributes with Thresholds:
- ID# ATTRIBUTE_NAME          FLAG     VALUE WORST THRESH TYPE      UPDATED  WHEN_FAILED RAW_VALUE
-   1 Raw_Read_Error_Rate     0x000f   200   200   051    Pre-fail  Always       -       78
--  3 Spin_Up_Time            0x0003   218   159   021    Pre-fail  Always       -       2091
--  4 Start_Stop_Count        0x0032   100   100   000    Old_age   Always       -       185
-+  3 Spin_Up_Time            0x0003   223   159   021    Pre-fail  Always       -       1833
-+  4 Start_Stop_Count        0x0032   100   100   000    Old_age   Always       -       186
-   5 Reallocated_Sector_Ct   0x0033   200   200   140    Pre-fail  Always       -       0
-   7 Seek_Error_Rate         0x000e   200   200   051    Old_age   Always       -       0
-   9 Power_On_Hours          0x0032   099   099   000    Old_age   Always       -       787
-  10 Spin_Retry_Count        0x0012   100   100   051    Old_age   Always       -       0
-  11 Calibration_Retry_Count 0x0012   100   100   051    Old_age   Always       -       0
-- 12 Power_Cycle_Count       0x0032   100   100   000    Old_age   Always       -       185
--192 Power-Off_Retract_Count 0x0032   200   200   000    Old_age   Always       -       174
--193 Load_Cycle_Count        0x0032   200   200   000    Old_age   Always       -       195
-+ 12 Power_Cycle_Count       0x0032   100   100   000    Old_age   Always       -       186
-+192 Power-Off_Retract_Count 0x0032   200   200   000    Old_age   Always       -       175
-+193 Load_Cycle_Count        0x0032   200   200   000    Old_age   Always       -       196
- 194 Temperature_Celsius     0x0022   102   098   000    Old_age   Always       -       45
- 196 Reallocated_Event_Count 0x0032   200   200   000    Old_age   Always       -       0
- 197 Current_Pending_Sector  0x0012   200   200   000    Old_age   Always       -       36
-
-The disk is just spinning up and down...
-(btw, why the spin count increases but the spin time decreases???).
-I really don't uderstand. Could it be the controller going nuts ?
-Any idea ?
-I really doubt that I had got 3 faulty drives in a pack and from different
-brands.
-
-Some data:
-- kernel: 2.6.26-rc1-git6 + blk-lockin-fix + latest-semaphore-fixes
-- hadrware:
-00:1f.1 IDE interface: Intel Corporation 82801EB/ER (ICH5/ICH5R) IDE Controller (rev 02)
-00:1f.2 IDE interface: Intel Corporation 82801EB (ICH5) SATA Controller (rev 02)
-03:0a.0 RAID bus controller: Adaptec ASC-29320 U320 w/HostRAID (rev 03)
-03:0a.1 RAID bus controller: Adaptec ASC-29320 U320 w/HostRAID (rev 03)
-
-werewolf:~/soft/linux/kernel/patches/2.6.25-jam06# lsscsi -H
-[0]    aic79xx
-[1]    aic79xx
-[2]    ata_piix
-[3]    ata_piix
-[4]    ata_piix
-[5]    ata_piix
-
-werewolf:~/soft/linux/kernel/patches/2.6.25-jam06# lsscsi
-sdev_scandir_sort: left parse failed
-sdev_scandir_sort: right parse failed
-sdev_scandir_sort: left parse failed
-sdev_scandir_sort: left parse failed
-sdev_scandir_sort: right parse failed
-sdev_scandir_sort: right parse failed
-sdev_scandir_sort: right parse failed
-sdev_scandir_sort: left parse failed
-sdev_scandir_sort: right parse failed
-sdev_scandir_sort: left parse failed
-sdev_scandir_sort: right parse failed
-sdev_scandir_sort: left parse failed
-sdev_scandir_sort: left parse failed
-sdev_scandir_sort: left parse failed
-sdev_scandir_sort: right parse failed
-sdev_scandir_sort: right parse failed
-[target1:0:0]type?   vendor?  model?           rev?  -
-[target1:0:1]type?   vendor?  model?           rev?  -
-[target2:0:0]type?   vendor?  model?           rev?  -
-[target2:0:1]type?   vendor?  model?           rev?  -
-[target4:0:0]type?   vendor?  model?           rev?  -
-[1:0:0:0]    disk    SEAGATE  ST336807LW       0C01  -
-[1:0:1:0]    disk    SEAGATE  ST336807LW       0C01  -
-[2:0:0:0]    disk    ATA      ST3120022A       3.06  -
-[2:0:1:0]    cd/dvd  HL-DT-ST DVDRAM GSA-H10N  JL12  -
-[4:0:0:0]    disk    ATA      WDC WD3200AVJS-6 12.0  -
-
-(garbled output due to some bug in latest gits), but you can guess the sd? )
-
-TIA
-
--- 
-J.A. Magallon <jamagallon()ono!com>     \               Software is like sex:
-                                         \         It's better when it's free
-Mandriva Linux release 2008.1 (Cooker) for i586
-Linux 2.6.23-jam05 (gcc 4.2.2 20071128 (4.2.2-2mdv2008.1)) SMP PREEMPT
+Index: linux-ahci-phy/drivers/ata/ahci.c
+===================================================================
+--- linux-ahci-phy.orig/drivers/ata/ahci.c	2008-05-08 14:29:02.000000000 -0700
++++ linux-ahci-phy/drivers/ata/ahci.c	2008-05-08 14:31:05.000000000 -0700
+@@ -53,9 +53,13 @@ static int ahci_skip_host_reset;
+ module_param_named(skip_host_reset, ahci_skip_host_reset, int, 0444);
+ MODULE_PARM_DESC(skip_host_reset, "skip global host reset (0=don't skip, 1=skip)");
+ 
++static int ahci_power_save = 1;
++module_param_named(power_save, ahci_power_save, int, 0444);
++MODULE_PARM_DESC(power_save, "Power off unused ports (0=don't power off, 1=power off)");
+ static int ahci_enable_alpm(struct ata_port *ap,
+ 		enum link_pm policy);
+ static void ahci_disable_alpm(struct ata_port *ap);
++static int ahci_is_hotplug_capable(struct ata_port *ap);
+ 
+ enum {
+ 	AHCI_PCI_BAR		= 5,
+@@ -166,6 +170,8 @@ enum {
+ 	PORT_CMD_ASP		= (1 << 27), /* Aggressive Slumber/Partial */
+ 	PORT_CMD_ALPE		= (1 << 26), /* Aggressive Link PM enable */
+ 	PORT_CMD_ATAPI		= (1 << 24), /* Device is ATAPI */
++	PORT_CMD_ESP		= (1 << 21), /* External SATA Port */
++	PORT_CMD_HPCP		= (1 << 18), /* port is hot plug capable */
+ 	PORT_CMD_PMP		= (1 << 17), /* PMP attached */
+ 	PORT_CMD_LIST_ON	= (1 << 15), /* cmd list DMA engine running */
+ 	PORT_CMD_FIS_ON		= (1 << 14), /* FIS DMA engine running */
+@@ -1900,6 +1906,18 @@ static int ahci_pci_device_resume(struct
+ }
+ #endif
+ 
++static int ahci_is_hotplug_capable(struct ata_port *ap)
++{
++	void __iomem *port_mmio = ahci_port_base(ap);
++	u8 cmd;
++
++	if (!ahci_power_save)
++		return 1;
++
++	cmd = readl(port_mmio + PORT_CMD);
++	return ((cmd & PORT_CMD_HPCP) || (cmd & PORT_CMD_ESP));
++}
++
+ static int ahci_port_start(struct ata_port *ap)
+ {
+ 	struct device *dev = ap->host->dev;
+@@ -1951,6 +1969,9 @@ static int ahci_port_start(struct ata_po
+ 
+ 	ap->private_data = pp;
+ 
++	/* set some flags based on port capabilities */
++	if (!ahci_is_hotplug_capable(ap))
++		ap->flags |= ATA_FLAG_NO_HOTPLUG;
+ 	/* engage engines, captain */
+ 	return ahci_port_resume(ap);
+ }
+Index: linux-ahci-phy/drivers/ata/libata-core.c
+===================================================================
+--- linux-ahci-phy.orig/drivers/ata/libata-core.c	2008-05-08 14:28:57.000000000 -0700
++++ linux-ahci-phy/drivers/ata/libata-core.c	2008-05-08 14:29:50.000000000 -0700
+@@ -162,6 +162,19 @@ MODULE_DESCRIPTION("Library module for A
+ MODULE_LICENSE("GPL");
+ MODULE_VERSION(DRV_VERSION);
+ 
++static void ata_phy_offline(struct ata_link *link)
++{
++	u32 scontrol;
++	int rc;
++
++	/* set DET to 4 */
++	rc = sata_scr_read(link, SCR_CONTROL, &scontrol);
++	if (rc)
++		return;
++	scontrol &= ~0xf;
++	scontrol |= (1 << 2);
++	sata_scr_write(link, SCR_CONTROL, scontrol);
++}
+ 
+ /**
+  *	ata_force_cbl - force cable type according to libata.force
+@@ -2671,6 +2684,7 @@ void ata_port_disable(struct ata_port *a
+ 	ap->link.device[0].class = ATA_DEV_NONE;
+ 	ap->link.device[1].class = ATA_DEV_NONE;
+ 	ap->flags |= ATA_FLAG_DISABLED;
++	ata_phy_offline(&ap->link);
+ }
+ 
+ /**
+@@ -5609,6 +5623,8 @@ int ata_host_register(struct ata_host *h
+ 		if (ap->ops->error_handler) {
+ 			struct ata_eh_info *ehi = &ap->link.eh_info;
+ 			unsigned long flags;
++			int device_attached = 0;
++			struct ata_device *dev;
+ 
+ 			ata_port_probe(ap);
+ 
+@@ -5627,6 +5643,14 @@ int ata_host_register(struct ata_host *h
+ 
+ 			/* wait for EH to finish */
+ 			ata_port_wait_eh(ap);
++			ata_link_for_each_dev(dev, &ap->link)
++				if (ata_dev_enabled(dev))
++					device_attached++;
++			if (!device_attached &&
++			    (ap->flags & ATA_FLAG_NO_HOTPLUG)) {
++				/* no device present, disable port */
++				ata_port_disable(ap);
++			}
+ 		} else {
+ 			DPRINTK("ata%u: bus probe begin\n", ap->print_id);
+ 			rc = ata_bus_probe(ap);
+Index: linux-ahci-phy/include/linux/libata.h
+===================================================================
+--- linux-ahci-phy.orig/include/linux/libata.h	2008-05-08 14:28:57.000000000 -0700
++++ linux-ahci-phy/include/linux/libata.h	2008-05-08 14:29:50.000000000 -0700
+@@ -193,6 +193,7 @@ enum {
+ 	ATA_FLAG_AN		= (1 << 18), /* controller supports AN */
+ 	ATA_FLAG_PMP		= (1 << 19), /* controller supports PMP */
+ 	ATA_FLAG_IPM		= (1 << 20), /* driver can handle IPM */
++	ATA_FLAG_NO_HOTPLUG	= (1 << 21), /* port doesn't support HP */
+ 
+ 	/* The following flag belongs to ap->pflags but is kept in
+ 	 * ap->flags because it's referenced in many LLDs and will be
