@@ -1,269 +1,67 @@
 From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: sata_sx4 vs. Promise SX4060
-Date: Fri, 09 May 2008 11:15:30 -0400
-Message-ID: <48246A92.2010501@garzik.org>
-References: <fvvkbr$h60$1@ger.gmane.org>
+Subject: Port control interface (was Re: [PATCH] ata: ahci: power off unused
+ ports)
+Date: Fri, 09 May 2008 11:28:35 -0400
+Message-ID: <48246DA3.9080307@garzik.org>
+References: <20080508161008.59361de5@appleyard> <48246872.8000502@rtr.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:51873 "EHLO mail.dvmed.net"
+Received: from srv5.dvmed.net ([207.36.208.214]:49975 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753649AbYEIPPe (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 9 May 2008 11:15:34 -0400
-In-Reply-To: <fvvkbr$h60$1@ger.gmane.org>
+	id S1756047AbYEIP2l (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 9 May 2008 11:28:41 -0400
+In-Reply-To: <48246872.8000502@rtr.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Lasse Makholm <lasse.makholm@gmail.com>
-Cc: linux-ide@vger.kernel.org, Mikael Pettersson <mikpe@it.uu.se>
+To: Mark Lord <liml@rtr.ca>, Kristen Carlson Accardi <kristen.c.accardi@intel.com>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linux-scsi <linux-scsi@vger.kernel.org>
 
-Lasse Makholm wrote:
+Mark Lord wrote:
+> And a more general note:  I still believe we should have a follow-up
+> feature to this one, to enable polling for newly inserted drives.
 > 
-> Hi,
+> That would allow powering down idle ports to save money/planet/whatever,
+> but still with hotplug capability.  The polling interval should be
+> tunable in /sys, with a default of, say, once every couple of seconds.
 > 
-> I know it's been brought up here before, at least a few years ago
-> (http://search.gmane.org/?query=sx4060&group=gmane.linux.ide) but here
-> goes anyway...
-> 
-> I'm one of those semi-happy owners of a Promise SX4060 PATA RAID
-> controller which is apparently only supported for some 2.4-something
-> kernels...
-> 
-> Obviously I would a lot more happy with a 2.6 driver... :-)
-> 
-> So I've been googling high and low without much result, except finding
-> out that the SX4060 is based on the same chip (the PDC20621) as the SATA
-> 150 SX4, leading me to believe that the sata_sx4 driver is probably the
-> best bet for getting the SX4060 working under 2.6 kernels...
-> 
-> Also, this comment in sata_sx4.c seems to support this suspicion:
-> 
->     The SX4 behaves like a PATA chip, with no SATA controls or
->     knowledge whatsoever, leading to the presumption that
->     PATA<->SATA bridges exist on SX4 boards, external to the
->     PDC20621 chip itself.
-> 
-> All documentation I've been able to find on the devices indicate that 
-> they are very similar...
-> 
-> I tried hacking the driver to recognize the SX4060 board number,
-> essentially the same thing as described here:
-> http://article.gmane.org/gmane.linux.ide/5435
-> 
-> ...with similar results. The controller is recognized and it also
-> recognizes the attached drives, but it seems to have trouble 
-> initializing the DIMM and with the ATA_SET_FEATURES command...
-> 
-> With ATA_DEBUG and ATA_DEBUG_VERBOSE, I get something like this (I have 
-> the full log if someone wants to see it):
-> 
-> [  271.122187] pdc20621_dimm_init: Time Counter Register (0x44): 0xf0a6fb86
-> [  271.122250] pdc20621_dimm_init: Num counters 0xf590479 (257492089)
-> [  271.122309] pdc20621_dimm_init: 10 * Internal clk = 0x35a (858)
-> [  271.122369] pdc20621_dimm_init: 10 * Internal clk * 33 = 0x6e9a (28314)
-> [  271.122428] pdc20621_dimm_init: PLL F Param: 0x2f (47)
-> [  271.122486] pdc20621_dimm_init: pci_status: 0x8a2f1824
-> [  271.122721] pdc20621_dimm_init: Local DIMM Speed = 100
-> [  271.124883] pdc20621_dimm_init: Local DIMM Size = 64MB
-> [  271.125118] Local DIMM ECC Enabled
-> [  271.226153] 0, 0,
-> [  271.226220] 55, aa, Promise Not Yet Defined 1.1098
-> [  271.226291] 55, aa, Promise Not Yet Defined 1.1098
-> [  271.226524] pdc20621_dimm_init: Start ECC initialization
-> [  281.972847] BUG: soft lockup - CPU#0 stuck for 11s! [modprobe:6153]
-> Register and stack dump here...
-> [  293.775043] BUG: soft lockup - CPU#0 stuck for 11s! [modprobe:6153]
-> Register and stack dump here...
-> [  305.581239] BUG: soft lockup - CPU#0 stuck for 11s! [modprobe:6153]
-> Register and stack dump here...
-> [  312.567607] pdc20621_dimm_init: Finish ECC initialization
-> Lots of noise follows...
-> [  312.768567] ata5: PATA max UDMA/44 mmio m1048576@0xfe900000 dimm 
-> m32768@0xfe800000 port 0xfe900200 irq 17
-> [  312.768571] ata6: PATA max UDMA/44 mmio m1048576@0xfe900000 dimm 
-> m32768@0xfe800000 port 0xfe900280 irq 17
-> [  312.768574] ata7: PATA max UDMA/44 mmio m1048576@0xfe900000 dimm 
-> m32768@0xfe800000 port 0xfe900300 irq 17
-> [  312.768577] ata8: PATA max UDMA/44 mmio m1048576@0xfe900000 dimm 
-> m32768@0xfe800000 port 0xfe900380 irq 17
-> More noise follows...
-> [  342.918886] ata_port_flush_task: ENTER
-> [  342.918947] ata5: ata_port_flush_task: EXIT
-> [  342.918959] ata5.00: qc timeout (cmd 0xef)
-> [  342.918962] ata_dev_set_xfermode: EXIT, err_mask=4
-> [  342.919021] ata5.00: failed to set xfermode (err_mask=0x4)
-> 
-> Even more noise follows...
-> 
-> [  373.068199] ata5.00: failed to set xfermode (err_mask=0x4)
-> [  373.068260] ata5.00: limiting speed to UDMA/44:PIO3
-> [  373.068263] pdc_20621_phy_reset: ENTER
-> [  373.068320] ata_bus_reset: ENTER, host 5, port 0
-> [  373.068388] ata_bus_softreset: ata5: bus reset via SRST
-> [  373.224003] ata_dev_classify: found ATA device by sig
-> [  373.224068] ata_bus_reset: EXIT
-> [  373.224125] ata5.00: ata_dev_read_id: ENTER
-> [  373.224127] ata5: ata_dev_select: ENTER, device 0, wait 1
-> [  373.224157] ata5: ata_dev_select: ENTER, device 0, wait 1
-> [  373.224195] ata_tf_load: feat 0x0 nsect 0x0 lba 0x0 0x0 0x0
-> [  373.224253] ata_tf_load: device 0xA0
-> [  373.224321] ata_exec_command: ata5: cmd 0xEC
-> [  373.231994] ata_hsm_move: ata5: protocol 2 task_state 2 (dev_stat 0x58)
-> [  373.232057] ata_pio_sector: data read
-> [  373.232419] ata_hsm_move: ata5: protocol 2 task_state 3 (dev_stat 0x50)
-> [  373.232479] ata_hsm_move: ata5: dev 0 command complete, drv_stat 0x50
-> [  373.232562] ata_port_flush_task: ENTER
-> [  373.232618] ata5: ata_port_flush_task: EXIT
-> [  373.232622] ata5.00: ata_dev_configure: ENTER
-> [  373.232634] pdc20621_nodata_prep: ata5: ENTER
-> [  373.232692] pdc20621_ata_pkt: ENTER, dimm_sg == 0x200180, 2097536
-> [  373.232760] pdc20621_nodata_prep: ata pkt buf ofs 282, mmio copied
-> [  373.232819] pdc20621_packet_start: ata5: ENTER
-> [  373.232879] pdc20621_packet_start: submitted ofs 0x200100 (2097408), 
-> seq 1
-> [  373.232987] pdc20621_interrupt: ENTER
-> [  373.233045] pdc20621_interrupt: mask == 0x2
-> [  373.233103] pdc20621_interrupt: seq 1, port_no 0, ap de81c000, tmp 2
-> [  373.233162] pdc20621_host_intr: ENTER
-> [  373.233230] pdc20621_host_intr: BUS_NODATA (drv_stat 0x50)
-> [  373.233297] pdc20621_interrupt: seq 2, port_no 1, ap de820000, tmp 0
-> [  373.233357] pdc20621_interrupt: seq 3, port_no 2, ap de824000, tmp 0
-> [  373.233416] pdc20621_interrupt: seq 4, port_no 3, ap de828000, tmp 0
-> [  373.233475] pdc20621_interrupt: seq 5, port_no 0, ap de81c000, tmp 0
-> [  373.233535] pdc20621_interrupt: seq 6, port_no 1, ap de820000, tmp 0
-> [  373.233594] pdc20621_interrupt: seq 7, port_no 2, ap de824000, tmp 0
-> [  373.233654] pdc20621_interrupt: seq 8, port_no 3, ap de828000, tmp 0
-> [  373.233713] pdc20621_interrupt: mask == 0x2
-> [  373.233769] pdc20621_interrupt: EXIT
-> [  373.233828] ata_port_flush_task: ENTER
-> [  373.233886] ata5: ata_port_flush_task: EXIT
-> [  373.233890] ata5.00: ata_dev_configure: cfg 49:2f00 82:7c6b 83:7b09 
-> 84:4003 85:7c69 86:3a01 87:4003 88:087f
-> [  373.233894] ata_dump_id: 49==0x2f00  53==0x0007  63==0x0007 
-> 64==0x0003  75==0x0000
-> [  373.233964] ata_dump_id: 80==0x00fe  81==0x001e  82==0x7c6b 
-> 83==0x7b09  84==0x4003
-> [  373.234033] ata_dump_id: 88==0x087f  93==0x600b
-> [  373.234092] ata5.00: ATA-7: Maxtor 6Y080P0, YAR41BW0, max UDMA/133
-> [  373.234095] ata5.00: 160086528 sectors, multi 0: LBA
-> [  373.234105] ata5.00: ata_dev_configure: EXIT, drv_stat = 0x50
-> [  373.234110] ata_dev_set_xfermode: set features - xfer mode
-> [  373.234168] pdc20621_nodata_prep: ata5: ENTER
-> [  373.234226] pdc20621_ata_pkt: ENTER, dimm_sg == 0x200180, 2097536
-> [  373.234292] pdc20621_nodata_prep: ata pkt buf ofs 282, mmio copied
-> [  373.234351] pdc20621_packet_start: ata5: ENTER
-> [  373.234411] pdc20621_packet_start: submitted ofs 0x200100 (2097408), 
-> seq 1
-> [  373.234520] pdc20621_interrupt: ENTER
-> [  373.234577] pdc20621_interrupt: mask == 0x2
-> [  373.234634] pdc20621_interrupt: seq 1, port_no 0, ap de81c000, tmp 2
-> [  373.234694] pdc20621_interrupt: seq 2, port_no 1, ap de820000, tmp 0
-> [  373.234754] pdc20621_interrupt: seq 3, port_no 2, ap de824000, tmp 0
-> [  373.234813] pdc20621_interrupt: seq 4, port_no 3, ap de828000, tmp 0
-> [  373.234872] pdc20621_interrupt: seq 5, port_no 0, ap de81c000, tmp 0
-> [  373.234932] pdc20621_interrupt: seq 6, port_no 1, ap de820000, tmp 0
-> [  373.234991] pdc20621_interrupt: seq 7, port_no 2, ap de824000, tmp 0
-> [  373.235051] pdc20621_interrupt: seq 8, port_no 3, ap de828000, tmp 0
-> [  373.235110] pdc20621_interrupt: mask == 0x2
-> [  373.235166] pdc20621_interrupt: EXIT
-> Above stuff seems to happen a couple of times...
-> [  403.217240] ata_port_flush_task: ENTER
-> [  403.217301] ata5: ata_port_flush_task: EXIT
-> [  403.217313] ata5.00: qc timeout (cmd 0xef)
-> [  403.217316] ata_dev_set_xfermode: EXIT, err_mask=4
-> [  403.217375] ata5.00: failed to set xfermode (err_mask=0x4)
-> [  403.217434] ata5.00: disabled
-> It finally bombs... Same thing happens for all 4 ports...
-> 
-> While I do know my way around Linux, C and a debugger, I'm still pretty 
-> blank when it comes ATA stuff... So any tips on where to go from here 
-> would highly appreciated...
-
-Well, the hardware programming guide for SX4 is available at
-http://gkernel.sourceforge.net/specs/promise/
-
-Can you post "lspci -vvv" entry for this device?  I'm betting that the 
-SX4060 BIOS information is merely echoing what is in the PCI BARs for 
-the PCI device.
+> Thanks for working on this stuff.
 
 
-> Some questions:
-> 
-> * I guess the soft lockups during DIMM init are suspicious... Is it
->   possible that the driver got the memory map wrong? The detected
->   64 MB is correct... The SX4060 BIOS lists this information:
-> 
->     Installed Memory Address: FE800000 Size: 64M
->     Controller IRQ: 11
->     ATA IO Address: E000
->     XOR and HDMA IO Address: ED00
->     Sequence Control IO Address: EC00
->     Flash and SRAM Memory Address: FE900000
-> 
->    But I don't know how to relate this to what's in the driver
->    source...
+In the grand open source tradition of "pass the buck", I've long been 
+hoping that someone would take a few days, sit down, and hammer out the 
+policy side of this.
 
-Anything is possible when two pieces of h/w are different :)
+We -don't- want to do hotplug-active all the time -- the current default 
+in all drivers that support device hotplug -- because it needlessly 
+keeps parts active that are unused 99.9% of the time [when they are empty].
 
-You could try commenting out the DIMM init stuff in the driver 
-completely, on the hope that BIOS configured it properly.
+Admins need a generic way to control SATA ports and links from 
+userspace.  Within that, admins need to be able to set a link's hotplug 
+state among three choices:  hotplug-active [when supported], 
+hotplug-poll, and hotplug-never.  And of course, hotplug-poll's interval 
+should be tunable.
+
+And of course this control interface needs to be usable on SAS/SATA 
+cards that will be common in the future (broadsas, mvsas are early 
+examples).
 
 
-> *  Is it a reasonable assumption that SX4060 support could be achieved
->    with fairly small changes to the sata_sx4 driver? (I realize that
->    knowing exactly /what/ changes are needed is an entirely different
->    matter...)
+This is why I look askance at an AHCI BIOS flag.  That's merely a hint, 
+and potentially unreliable one at that.  It could just be describing 
+what the BIOS writer felt were the ports that _should_ be hotpluggable 
+-- i.e. not even describing what is _possible_ but someone's definition 
+of "reasonable."  The BIOS flag might even be filled with fuzz (AHCI's 
+BIOS-written registers have occasionally been shipped into the field 
+uninitialized).
 
-Dunno.  Your progress so far is a really good sign, and Promise 
-certainly re-uses designs, so it is a reasonable theory, at least...
+A better solution involves taking the BIOS flag and using that to set a 
+default policy that an admin can easily override using the 
+above-mentioned control interface.
 
-
->  * Is there any point in contacting Promise about information on this
->    device? Or would I just be wasting my time?
-
-I've been the one getting Promise to release docs, but it's a slow 
-process that (literally) has taken years.
-
-However, that said, they _do_ respond and _are_ interested.  You might 
-try promise_linux@promise.com and point out that the existing SX4 docs 
-are publicly released at http://gkernel.sourceforge.net/specs/promise/ 
-with the blessing of Chi and Sam @ Promise.
-
-
->  * Is it a correct assumption that the sata_sx4 driver knows nothing the
->    various array configurations and that it will always just see 4
->    independent drives, regardless of what arrays have been configured in
->    the BIOS?
-
-Correct.
-
-
->  * Also, is there any (easy) way to choke debug output from some ATA
->    devices, while keeping it for others? Apart from grep... :-)
-
-Alas, not at present.
-
-There is a half-finished infrastructure in libata, but messages need to 
-be moved over to it (ap->msg_enable).
-
-
->  * Would there be any useful information to gather from running the card
->    with the Promise drivers under Windows or a 2.4 kernel?
-
-<shrug>  Those are all useful tools for the toolbox, certainly.  Nothing 
-pops into my head immediately, but those are definitely tools to keep 
-around for this type of endeavor.
-
-
-> I'd be happy to put in some time and effort in moving this forward but I 
-> probably won't make much progress need some pointers from some ATA-gurus...
-
-If you are looking for generic ATA programming information, 
-http://ata.wiki.kernel.org/index.php/Developer_Resources tries to give 
-the basics.  Even if there is a broken link, you can usually google for 
-a filename to find a bazillion copies of the spec in question.
-
-Regards,
+Because in some cases, that BIOS flag might do the wrong thing, and we 
+need to give the admin an ability to undo the damage.
 
 	Jeff
 
