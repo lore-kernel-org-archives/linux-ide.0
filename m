@@ -1,35 +1,45 @@
-From: maximilian attems <max@stro.at>
-Subject: Re: [PATCH] AHCI: add Dell PowerEdge SC430 pci id
-Date: Fri, 9 May 2008 01:46:17 +0200
-Message-ID: <20080508234617.GI27599@baikonur.stro.at>
-References: <1210279228-14521-1-git-send-email-max@stro.at> <20080508233435.GA15377@srcf.ucam.org>
+From: Kristen Carlson Accardi <kristen.c.accardi@intel.com>
+Subject: Re: [PATCH] ata: ahci: power off unused ports
+Date: Thu, 8 May 2008 17:28:59 -0700
+Message-ID: <20080508172859.4b0cd9af@appleyard>
+References: <20080508161008.59361de5@appleyard>
+	<20080508233713.GB15377@srcf.ucam.org>
+	<20080508163555.51380949@appleyard>
+	<20080509001458.GA16082@srcf.ucam.org>
+Reply-To: kristen.c.accardi@intel.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from baikonur.stro.at ([213.239.196.228]:59331 "EHLO
-	baikonur.stro.at" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933470AbYEIASj (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 8 May 2008 20:18:39 -0400
-Content-Disposition: inline
-In-Reply-To: <20080508233435.GA15377@srcf.ucam.org>
+Received: from mga02.intel.com ([134.134.136.20]:10262 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752317AbYEIAgV (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 8 May 2008 20:36:21 -0400
+In-Reply-To: <20080509001458.GA16082@srcf.ucam.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Matthew Garrett <mjg59@srcf.ucam.org>
-Cc: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org
+Cc: jeff@garzik.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Fri, May 09, 2008 at 12:34:35AM +0100, Matthew Garrett wrote:
-> On Thu, May 08, 2008 at 10:40:28PM +0200, maximilian attems wrote:
-> > ATA chipset on Dell PowerEdge SC430 is identified as:
-> > 00:1f.2 IDE interface [0101]: Intel Corporation 82801GB/GR/GH (ICH7
-> > Family) Serial ATA Storage Controller IDE [8086:27c0] (rev 01)
+On Fri, 9 May 2008 01:14:58 +0100
+Matthew Garrett <mjg59@srcf.ucam.org> wrote:
+
+> On Thu, May 08, 2008 at 04:35:55PM -0700, Kristen Carlson Accardi wrote:
+> > On Fri, 9 May 2008 00:37:13 +0100
+> > Matthew Garrett <mjg59@srcf.ucam.org> wrote:
+> > > Just out of interest, is this set on laptop bays? (Are any of those even 
+> > > native SATA yet?)
 > > 
-> > Kernel load the ahci driver with NCQ support after I added it's
-> > device IDs into ahci.c.
+> > I haven't seen any yet that are.  Most of them are PATA.  I expect
+> > that will change in the future.
 > 
-> Please don't do that. The BIOS has programmed the chip into IDE mode, 
-> not AHCI mode. It seems to have also set up the AHCI BAR, but the 
-> majority of chips with this ID won't have been and so the ahci driver 
-> will fail with them. If the chip was in AHCI mode, the device ID would 
-> automatically have changed to 0x27c1.
+> Yeah. My vague concern would be that on laptops, we can probably power 
+> down the port even if it's declared as being hotplug capable - we'll 
+> probably get an out of band signal from ACPI anyway. Not an issue at the 
+> moment, but possibly something we'll hit in future.
+> 
 
-thanks for the info.
+well - when drive bays on laptops are able to be controlled by
+AHCI, they may not actually use _EJ0 or send notifications anymore, 
+since ACPI will not longer be necessary for hotplugging.  We'll have 
+to see what happens.
