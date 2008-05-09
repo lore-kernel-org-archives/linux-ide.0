@@ -1,69 +1,29 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Port control interface (was Re: [PATCH] ata: ahci: power off unused
- ports)
-Date: Fri, 09 May 2008 11:28:35 -0400
-Message-ID: <48246DA3.9080307@garzik.org>
-References: <20080508161008.59361de5@appleyard> <48246872.8000502@rtr.ca>
+From: lsorense@csclub.uwaterloo.ca (Lennart Sorensen)
+Subject: Re: [PATCH] ata: ahci: power off unused ports
+Date: Fri, 9 May 2008 11:58:31 -0400
+Message-ID: <20080509155830.GE6957@csclub.uwaterloo.ca>
+References: <20080508161008.59361de5@appleyard> <20080508233713.GB15377@srcf.ucam.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:49975 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756047AbYEIP2l (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 9 May 2008 11:28:41 -0400
-In-Reply-To: <48246872.8000502@rtr.ca>
+Received: from caffeine.csclub.uwaterloo.ca ([129.97.134.17]:39052 "EHLO
+	caffeine.csclub.uwaterloo.ca" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1761156AbYEIP6b (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 9 May 2008 11:58:31 -0400
+Content-Disposition: inline
+In-Reply-To: <20080508233713.GB15377@srcf.ucam.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark Lord <liml@rtr.ca>, Kristen Carlson Accardi <kristen.c.accardi@intel.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linux-scsi <linux-scsi@vger.kernel.org>
+To: Matthew Garrett <mjg59@srcf.ucam.org>
+Cc: Kristen Carlson Accardi <kristen.c.accardi@intel.com>, jeff@garzik.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Mark Lord wrote:
-> And a more general note:  I still believe we should have a follow-up
-> feature to this one, to enable polling for newly inserted drives.
-> 
-> That would allow powering down idle ports to save money/planet/whatever,
-> but still with hotplug capability.  The polling interval should be
-> tunable in /sys, with a default of, say, once every couple of seconds.
-> 
-> Thanks for working on this stuff.
+On Fri, May 09, 2008 at 12:37:13AM +0100, Matthew Garrett wrote:
+> Just out of interest, is this set on laptop bays? (Are any of those even 
+> native SATA yet?)
 
+My wife's Asus R1F does in fact have SATA in use for the drive bay and
+allows swapping between the DVD-RW and a second HD (or another battery
+if she had one) in that bay.  I would think many laptops do that now.
 
-In the grand open source tradition of "pass the buck", I've long been 
-hoping that someone would take a few days, sit down, and hammer out the 
-policy side of this.
-
-We -don't- want to do hotplug-active all the time -- the current default 
-in all drivers that support device hotplug -- because it needlessly 
-keeps parts active that are unused 99.9% of the time [when they are empty].
-
-Admins need a generic way to control SATA ports and links from 
-userspace.  Within that, admins need to be able to set a link's hotplug 
-state among three choices:  hotplug-active [when supported], 
-hotplug-poll, and hotplug-never.  And of course, hotplug-poll's interval 
-should be tunable.
-
-And of course this control interface needs to be usable on SAS/SATA 
-cards that will be common in the future (broadsas, mvsas are early 
-examples).
-
-
-This is why I look askance at an AHCI BIOS flag.  That's merely a hint, 
-and potentially unreliable one at that.  It could just be describing 
-what the BIOS writer felt were the ports that _should_ be hotpluggable 
--- i.e. not even describing what is _possible_ but someone's definition 
-of "reasonable."  The BIOS flag might even be filled with fuzz (AHCI's 
-BIOS-written registers have occasionally been shipped into the field 
-uninitialized).
-
-A better solution involves taking the BIOS flag and using that to set a 
-default policy that an admin can easily override using the 
-above-mentioned control interface.
-
-Because in some cases, that BIOS flag might do the wrong thing, and we 
-need to give the admin an ability to undo the damage.
-
-	Jeff
-
-
-
+-- 
+Len Sorensen
