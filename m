@@ -1,79 +1,62 @@
 From: Mark Lord <liml@rtr.ca>
-Subject: Re: [PATCH] Re: [git patches] libata updates - (improve post-reset
- device ready test) regression
-Date: Fri, 09 May 2008 10:54:09 -0400
-Message-ID: <48246591.7040209@rtr.ca>
-References: <20080506154847.GA15299@havoc.gtf.org>	<20080507145616.GA2210@gentoox2.trippelsdorf.de>	<48231DAF.7070900@garzik.org> <20080508234300.3c2a38af@werewolf.home>
+Subject: Re: [PATCH] ata: ahci: power off unused ports
+Date: Fri, 09 May 2008 11:06:26 -0400
+Message-ID: <48246872.8000502@rtr.ca>
+References: <20080508161008.59361de5@appleyard>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([76.10.145.34]:2389 "EHLO mail.rtr.ca"
+Received: from rtr.ca ([76.10.145.34]:3219 "EHLO mail.rtr.ca"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751227AbYEIOyL (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 9 May 2008 10:54:11 -0400
-In-Reply-To: <20080508234300.3c2a38af@werewolf.home>
+	id S1751224AbYEIPG1 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 9 May 2008 11:06:27 -0400
+In-Reply-To: <20080508161008.59361de5@appleyard>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: =?UTF-8?B?IkouQS4gTWFnYWxsw7NuIg==?= <jamagallon@ono.com>
-Cc: Jeff Garzik <jeff@garzik.org>, Linux-Kernel <linux-kernel@vger.kernel.org>, Linus-IDE <linux-ide@vger.kernel.org>
+To: Kristen Carlson Accardi <kristen.c.accardi@intel.com>
+Cc: jeff@garzik.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-J.A. Magall=C3=B3n wrote:
-> On Thu, 08 May 2008 11:35:11 -0400, Jeff Garzik <jeff@garzik.org> wro=
-te:
->=20
->> Markus Trippelsdorf wrote:
->>>> Tejun Heo (12):
->>>>       libata: improve post-reset device ready test
->>> This commit (78ab88f04f44bed566d51dce0c7cbfeff6449a06) causes a lon=
-g
->>> boot delay with my onboard Promise controller. It seems like libata
->>> probes for a nonexisting PATA drive...
->>>
->=20
-> I also had this patch collected from LKML, that still applies to -git=
-6.
-> Is it really needed ?
-> ref: http://marc.info/?l=3Dlinux-ide&m=3D120913178617926&w=3D2
-=2E.
-> --- upstream/drivers/ata/libata-eh.c	2008-04-30 17:35:36.000000000 -0=
-400
-> +++ linux/drivers/ata/libata-eh.c	2008-04-30 17:35:45.000000000 -0400
-> @@ -1312,8 +1312,7 @@
->  		err_mask |=3D AC_ERR_ATA_BUS;
->  		action |=3D ATA_EH_RESET;
->  	}
-> -	if (serror &
-> -	    (SERR_DATA_RECOVERED | SERR_COMM_RECOVERED | SERR_DATA)) {
-> +	if (serror & (SERR_DATA_RECOVERED | SERR_DATA)) {
->  		err_mask |=3D AC_ERR_ATA_BUS;
->  		action |=3D ATA_EH_RESET;
->  	}
+Kristen Carlson Accardi wrote:
+> power off unused ports
+> 
+> If the port isn't either a drive bay or an external SATA port, do not 
+> keep the phy powered on if the port is unoccupied. This saves .75 watts
+> on most laptops.  A module parameter can be used to override this 
+> behavior and allow the phy's to be powered up regardless of whether it
+> has externally accessible SATA ports. 
+> 
+> Signed-off-by:  Kristen Carlson Accardi <kristen.c.accardi@intel.com>
+..
+> +static void ata_phy_offline(struct ata_link *link)
+> +{
+> +	u32 scontrol;
+> +	int rc;
+> +
+> +	/* set DET to 4 */
+> +	rc = sata_scr_read(link, SCR_CONTROL, &scontrol);
+> +	if (rc)
+> +		return;
+> +	scontrol &= ~0xf;
+> +	scontrol |= (1 << 2);
+> +	sata_scr_write(link, SCR_CONTROL, scontrol);
+> +}
+..
 
-=2E.
+I don't like to be picky, but we already have an "ata_link_offline"
+function in libata, which tests *whether* a link is offline,
+as opposed to *setting* a link to be offline.
 
-The original problem I had, which prompted this patch, eventually was
-resolved in other ways.  But I do think that a hw-recovered bit in SErr=
-or
-is not a good reason to reset everything.
+So in that context, I find the name ata_phy_offline slightly confusing.
+Perhaps something like ata_set_phy_offline would make it more clear?
 
-Tejun suggested that we still want to know about such errors,
-and eventually do something if they repeat often enough.
-But doing a port/link reset every single time ?=20
+And a more general note:  I still believe we should have a follow-up
+feature to this one, to enable polling for newly inserted drives.
 
-> @@ -1924,7 +1923,7 @@
->  	}
-> =20
->  	if (ehc->i.serror)
-> -		ata_port_printk(ap, KERN_ERR,
-> +		ata_link_printk(link, KERN_ERR,
->  		  "SError: { %s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s}\n",
->  		  ehc->i.serror & SERR_DATA_RECOVERED ? "RecovData " : "",
->  		  ehc->i.serror & SERR_COMM_RECOVERED ? "RecovComm " : "",
->=20
-=2E.
+That would allow powering down idle ports to save money/planet/whatever,
+but still with hotplug capability.  The polling interval should be
+tunable in /sys, with a default of, say, once every couple of seconds.
 
-That portion of the patch is still a very good idea.
+Thanks for working on this stuff.
 
 Cheers
