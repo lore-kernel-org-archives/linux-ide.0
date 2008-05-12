@@ -1,58 +1,67 @@
 From: Mark Lord <liml@rtr.ca>
-Subject: Re: sata_mv on Orion: CONFIG_SATA_PMP=y needed even when no multiplier
-Date: Mon, 12 May 2008 11:49:06 -0400
-Message-ID: <482866F2.5040901@rtr.ca>
-References: <20080512132840.GA15711@deprecation.cyrius.com>
+Subject: Re: libata NCQ implementation questions
+Date: Mon, 12 May 2008 11:58:48 -0400
+Message-ID: <48286938.1090301@rtr.ca>
+References: <18471.32504.953679.399689@harpo.it.uu.se>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([76.10.145.34]:2523 "EHLO mail.rtr.ca"
+Received: from rtr.ca ([76.10.145.34]:3064 "EHLO mail.rtr.ca"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751309AbYELPtI (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 12 May 2008 11:49:08 -0400
-In-Reply-To: <20080512132840.GA15711@deprecation.cyrius.com>
+	id S1751419AbYELP6t (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 12 May 2008 11:58:49 -0400
+In-Reply-To: <18471.32504.953679.399689@harpo.it.uu.se>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Martin Michlmayr <tbm@cyrius.com>
-Cc: linux-ide@vger.kernel.org, nico@cam.org, buytenh@wantstofly.org, Tejun Heo <htejun@gmail.com>
+To: Mikael Pettersson <mikpe@it.uu.se>
+Cc: jgarzik@pobox.com, htejun@gmail.com, linux-ide@vger.kernel.org
 
-Martin Michlmayr wrote:
-> With 2.6.26-rc1 I have to enable CONFIG_SATA_PMP=y otherwise sata_mv
-> doesn't find a disk on my Orion based device (QNAP TS-209).  Without
-> CONFIG_SATA_PMP I get:
+Mikael Pettersson wrote:
+> I've started working on NCQ support for sata_promise,
+> and I have a few questions regarding NCQ and libata:
 > 
-> [42949381.790000] sata_mv sata_mv.0: version 1.20
-> [42949381.790000] sata_mv sata_mv.0: slots 32 ports 2
-> [42949381.800000] scsi0 : sata_mv
-> [42949381.800000] scsi1 : sata_mv
-> [42949381.810000] ata1: SATA max UDMA/133 irq 29
-> [42949381.810000] ata2: SATA max UDMA/133 irq 29
-> [42949382.170000] ata1: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-> [42949382.520000] ata2: SATA link down (SStatus 0 SControl 300)
-> [and nothing else]
-> 
-> So obviously it sees that something is connected to ata1, but it
-> doesn't actually print anything about the disk or create the device
-> node.
-> 
-> This works correctly with 2.6.25 or when I set CONFIG_SATA_PMP=y.
-> However, my device doesn't have a multiplier.
+> 1. Can I rely not seeing any non-NCQ commands while there
+>    are uncompleted NCQ commands on a port?
 ..
 
-Okay, so the "SStatus 123" means that sata_mv::mv_hardreset must
-have succeeded in finding good link status.  Great.
+No, you cannot.  So you'll have to code a .qc_defer() method
+to hold them off in that case.  For a *really* good example,
+see my recently deployed mv_qc_defer() function in sata_mv.c
+as of linux-2.6.26-rc2.
 
-After that, libata-core and pals do the actual device IDENTIFY/probing.
+> 3. Is qc->tag defined (to zero for instance) for non-NCQ commands?
+..
 
-With CONFIG_SATA_PMP=y, there's an added soft-reset done first,
-and without it, there is no soft-reset.
+The tag always has a valid value, NCQ or not.
 
-Looks like your device either needs the extra soft-reset regardless,
-or maybe just needs a little more time in the probing sequence.
+> 4. What are these "internal commands" that map to ATA_TAG_INTERNAL?
+>    Are they NCQ or not?
+..
 
-Tejun?
+Not NCQ, but a valid tag number regardless.
+libata reserves one tag for use during error-handling (EH),
+primarily for issing the READ_LOG_EXT_10H command to find out which
+NCQ command failed and what sector it failed on.
 
-I suppose we could just always ask for the extra soft-reset here (?)
 
+>    Does the existence of ATA_TAG_INTERNAL limit queue depth for NCQ?
+..
 
+Yup.  Max depth is 31 instead of 32 for most devices.
+
+> 5. Does dmam_alloc_coherent() give the same alignment guarantees
+>    that pci_alloc_consistent() does? That is, both CPU and bus
+>    addresses will be aligned to the smallest PAGE_SIZE order that
+>    fits the requested size.
+..
+
+In sata_mv, I ran into those same concerns, and ended up creating
+a couple of pools for local use by the driver.  It uses dmam_pool_create()
+(note the extra "m" in "dmam_"), dma_pool_alloc(), and dma_pool_free().
+
+If you just search for "_pool" in sata_mv, you'll find all of the calls
+(not many).  The use of "dmam_pool_create()" assures that things will be
+cleaned up properly/automatically if the controller ever "goes away".
+
+Cheers
