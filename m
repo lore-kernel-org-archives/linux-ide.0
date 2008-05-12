@@ -1,35 +1,51 @@
-From: Peter Klotz <peter.klotz@aon.at>
-Subject: Re: 2.6.24.*/2.6.25.*: attempt to access beyond end of device
-Date: Mon, 12 May 2008 17:20:37 +0200
-Message-ID: <48286045.507@aon.at>
-References: <4827D626.50903@aon.at> <20080512105942.62607f53@core>
+From: Mark Lord <liml@rtr.ca>
+Subject: Re: sata_mv on Orion: mv_err_intr when shutting down
+Date: Mon, 12 May 2008 11:39:05 -0400
+Message-ID: <48286499.9020202@rtr.ca>
+References: <20080512132611.GA15410@deprecation.cyrius.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from warsl404pip5.highway.telekom.at ([195.3.96.77]:19067 "EHLO
-	email.aon.at" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751212AbYELPUk (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 12 May 2008 11:20:40 -0400
-In-Reply-To: <20080512105942.62607f53@core>
+Received: from rtr.ca ([76.10.145.34]:3625 "EHLO mail.rtr.ca"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751686AbYELPjI (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 12 May 2008 11:39:08 -0400
+In-Reply-To: <20080512132611.GA15410@deprecation.cyrius.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: linux-ide@vger.kernel.org
+To: Martin Michlmayr <tbm@cyrius.com>
+Cc: linux-ide@vger.kernel.org, nico@cam.org, buytenh@wantstofly.org
 
-Alan Cox wrote:
-> Your Ubuntu kernel is clearing the host protected area (the BIOS has
-> marked the end part of the disk as 'reserved' - probably for an XP
-> restore partition), the base one for some reason is not.
+Martin Michlmayr wrote:
+> With 2.6.26-rc1 on an Orion based platform (QNAP TS-209) I sometimes
+> get the following during shut down:
 > 
-> Set the boot option "libata.ignore_hpa=1". That defaults to zero
-> (respecting the BIOS) so that users don't accidentally blow away BIOS
-> partitions and restore images, except apparently Ubuntu patch it the
-> other way by default.
+> [42949439.950000] qnap_ts209_power_off: triggering power-off...
+> [42949439.960000] ata1: mv_err_intr: err_cause=02000020 pp_flags=0x2
+> [42949439.970000] ata1: exception Emask 0x10 SAct 0x0 SErr 0x190002 action 0xe fro
+> 
+> I never got this with 2.6.25.  With 2.6.26-rc1 I get this message from
+> time to time, but not always.  The disk spins down properly.  I think
+> it wants to print a 3rd line because once it was printed "[42949439"
+> once but the machine got shut off because the full line was printed.
+> 
+> <tries some more>
+> 
+> I just got:
+> 
+> [42949421.700000] qnap_ts209_power_off: triggering power-off...
+> [42949421.710000] ata1: mv_err_intr: err_cause=02000020 pp_flags=0x2
+> [42949421.720000] ata1: exception Emask 0x10 SAct 0x0 SErr 0x190002 action 0xe frozen
+> [42949421.720000] ata1: edma_err_cause=02000020 pp_flags
+> 
+> Any idea?
+..
 
-Thank you very much for clarifying this behavior.
+Nothing harmful -- the SATA link is reporting that something weird
+happened on the drive end: perhaps the drive was powered down or something?
 
-Using "options libata ignore_hpa=1" and rebuilding initrd now lets 
-2.6.25.3 boot without problems.
+The code that triggers this was fixed up more after -rc1, so if you can
+still get messages like that with, say -rc2 or later, then please post them.
 
-Best regards, Peter.
+cheers
