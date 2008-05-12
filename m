@@ -1,87 +1,62 @@
-From: Peter Klotz <peter.klotz@aon.at>
-Subject: 2.6.24.*/2.6.25.*: attempt to access beyond end of device
-Date: Mon, 12 May 2008 07:31:18 +0200
-Message-ID: <4827D626.50903@aon.at>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [PATCH 1/1] [libata] pata-bf54x: Set ATAPI host state machine
+ to control IDE device terminate sequence.
+Date: Mon, 12 May 2008 10:50:14 +0100
+Message-ID: <20080512105014.05afe682@core>
+References: <1210565536-4026-1-git-send-email-cooloney@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nat-warsl417-02.aon.at ([195.3.96.120]:32732 "EHLO email.aon.at"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1750868AbYELFiJ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 12 May 2008 01:38:09 -0400
-Received: from unknown (HELO email.aon.at) ([172.18.5.231])
-          (envelope-sender <peter.klotz@aon.at>)
-          by fallback01.highway.telekom.at (qmail-ldap-1.03) with SMTP
-          for <linux-ide@vger.kernel.org>; 12 May 2008 05:31:26 -0000
-Received: from 212-183-96-220.adsl.highway.telekom.at (HELO [192.168.0.100]) ([212.183.96.220])
-          (envelope-sender <peter.klotz@aon.at>)
-          by smarthub92.highway.telekom.at (qmail-ldap-1.03) with SMTP
-          for <linux-ide@vger.kernel.org>; 12 May 2008 05:31:19 -0000
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:57881 "EHLO
+	lxorguk.ukuu.org.uk" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1760859AbYELKAr (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 12 May 2008 06:00:47 -0400
+In-Reply-To: <1210565536-4026-1-git-send-email-cooloney@kernel.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+Cc: jgarzik@pobox.com, linux-ide@vger.kernel.org, Sonic Zhang <sonic.zhang@analog.com>, Bryan Wu <cooloney@kernel.org>
 
-I compiled several kernel.org kernels (2.6.24.3, 2.6.24.7, 2.6.25.1, 
-2.6.25.3) but when booting them up the following messages appear:
+On Mon, 12 May 2008 12:12:16 +0800
+Bryan Wu <cooloney@kernel.org> wrote:
 
-  attempt to access beyond end of device
-  sda: rw=0, want=273956253, limit=268435455
-  Buffer I/O error on device sda3, logical block 39085952
-  attempt to access beyond end of device
-  sda: rw=0, want=273956254, limit=268435455
-  Buffer I/O error on device sda3, logical block 39085953
-  attempt to access beyond end of device
-...
-  attempt to access beyond end of device
-  sda: rw=0, want=273956255, limit=268435455
-  attempt to access beyond end of device
-  sda: rw=0, want=273956256, limit=268435455
-  attempt to access beyond end of device
+> From: Sonic Zhang <sonic.zhang@analog.com>
+> 
+> Set ATAPI host state machine to control IDE device terminate sequence.
+> Some IDE harddisk may assert terminate sequence in the middle of a
+> formal DMA transaction and resume later. Bit DETECT_TERM in ATAPI_CTRL
+> register determines whether the ATAPI host state machine or the kernel
+> driver should take care of this case.
+> 
+> Signed-off-by: Sonic Zhang <sonic.zhang@analog.com>
+> Signed-off-by: Bryan Wu <cooloney@kernel.org>
+
+Acked-by: Alan Cox <alan@redhat.com>
+
+(but when submitting fix typo "contorl" )
+> ---
+>  drivers/ata/pata_bf54x.c |    5 ++++-
+>  1 files changed, 4 insertions(+), 1 deletions(-)
+> 
+> diff --git a/drivers/ata/pata_bf54x.c b/drivers/ata/pata_bf54x.c
+> index 9ab8973..5551610 100644
+> --- a/drivers/ata/pata_bf54x.c
+> +++ b/drivers/ata/pata_bf54x.c
+> @@ -911,7 +911,10 @@ static void bfin_bmdma_start(struct ata_queued_cmd *qc)
+>  	/* Reset all transfer count */
+>  	ATAPI_SET_CONTROL(base, ATAPI_GET_CONTROL(base) | TFRCNT_RST);
+>  
+> -		/* Set transfer length to buffer len */
+> +	/* Set ATAPI state machine contorl in terminate sequence */
+> +	ATAPI_SET_CONTROL(base, ATAPI_GET_CONTROL(base) | END_ON_TERM);
+> +
+> +	/* Set transfer length to buffer len */
+>  	for_each_sg(qc->sg, sg, qc->n_elem, si) {
+>  		ATAPI_SET_XFER_LEN(base, (sg_dma_len(sg) >> 1));
+>  	}
 
 
-There is no problem when using the supplied kernel of Ubuntu 8.04 
-(2.6.24-16.30).
-
-I tracked the problem down to this difference in the dmesg output of the 
-bootup sequences:
-
-2.6.24-16.30 (Ubuntu 8.04):
-
-  ata1.00: HPA unlocked: 268435455 -> 312581808, native 312581808
-  ata1.00: ATA-8: SAMSUNG HM160HC, LQ100-10, max UDMA/100
-  ata1.00: 312581808 sectors, multi 16: LBA48
-
-2.6.24.7:
-
-  ata1.00: HPA detected: current 268435455, native 312581808
-  ata1.00: ATA-8: SAMSUNG HM160HC, LQ100-10, max UDMA/100
-  ata1.00: 268435455 sectors, multi 16: LBA48
-
-
-The HDD is 160GB in size, so 312581808 sectors seem much more logical 
-than 268435455 sectors. It seems that kernel.org kernels limit the HDD 
-to 128GiB.
-
-Here the "fdisk -l" output:
-
-  user@centrino:~$ sudo fdisk -l /dev/sda
-
-  Disk /dev/sda: 160.0 GB, 160041885696 bytes
-  255 heads, 63 sectors/track, 19457 cylinders
-  Units = cylinders of 16065 * 512 = 8225280 bytes
-  Disk identifier: 0x0008e799
-
-     Device Boot      Start         End      Blocks   Id  System
-  /dev/sda1   *           1          31      248976   83  Linux
-  /dev/sda2              32       14620   117186142+  83  Linux
-  /dev/sda3           14621       17053    19543072+   7  HPFS/NTFS
-
-I may have been lucky up to now because I only use partitions sda1 and 
-sda2 on this drive.
-
-Any help regarding this issue is appreciated.
-
-Please CC me since I am no list member.
-
-Best regards, Peter.
+-- 
+--
+	"Alan, I'm getting a bit worried about you."
+				-- Linus Torvalds
