@@ -1,84 +1,65 @@
-From: "Greg Freemyer" <greg.freemyer@gmail.com>
-Subject: Re: [PATCH] LBA28/LBA48 off-by-one bug in ata.h
-Date: Tue, 13 May 2008 15:06:39 -0400
-Message-ID: <87f94c370805131206xe8081a2yade9d28e2a1edd04@mail.gmail.com>
-References: <481C224F.10301@rakugaki.org>
-	 <87f94c370805041133w1cea3c85k2eb1185be6c374d8@mail.gmail.com>
+From: "Owen B. Mehegan" <owen@nerdnetworks.org>
+Subject: SATA hotplug in 2.6.17-2?
+Date: Tue, 13 May 2008 12:08:01 -0700 (PDT)
+Message-ID: <49841.71.5.1.212.1210705681.squirrel@www.nerdnetworks.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wx-out-0506.google.com ([66.249.82.225]:22414 "EHLO
-	wx-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753656AbYEMTGk (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 13 May 2008 15:06:40 -0400
-Received: by wx-out-0506.google.com with SMTP id h29so2392194wxd.4
-        for <linux-ide@vger.kernel.org>; Tue, 13 May 2008 12:06:39 -0700 (PDT)
-In-Reply-To: <87f94c370805041133w1cea3c85k2eb1185be6c374d8@mail.gmail.com>
-Content-Disposition: inline
+Received: from nerdnetworks.org ([216.93.177.252]:56694 "EHLO nerdnetworks.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756245AbYEMT21 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 13 May 2008 15:28:27 -0400
+Received: from www.nerdnetworks.org (localhost [127.0.0.1])
+	by nerdnetworks.org (Postfix) with ESMTP id 353B75D794
+	for <linux-ide@vger.kernel.org>; Tue, 13 May 2008 12:08:01 -0700 (PDT)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Taisuke Yamada <tai@rakugaki.org>
-Cc: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-On Sun, May 4, 2008 at 2:33 PM, Greg Freemyer <greg.freemyer@gmail.com> wrote:
-> On Sat, May 3, 2008 at 4:29 AM, Taisuke Yamada <tai@rakugaki.org> wrote:
->  > Hi.
->  >
->  >  I recently bought 3 HGST P7K500-series 500GB SATA drives and
->  >  had trouble accessing the block right on the LBA28-LBA48 border.
->  >  Here's how it fails (same for all 3 drives):
->  >
->  >   # dd if=/dev/sdc bs=512 count=1 skip=268435455 > /dev/null
->  >   dd: reading `/dev/sdc': Input/output error
->  >   0+0 records in
->  >   0+0 records out
->  >   0 bytes (0 B) copied, 0.288033 seconds, 0.0 kB/s
->  >   # dmesg
->  >   ata1.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x0
->  >   ata1.00: BMDMA stat 0x25
->  >   ata1.00: cmd c8/00:08:f8:ff:ff/00:00:00:00:00/ef tag 0 dma 4096 in
->  >   res 51/04:08:f8:ff:ff/00:00:00:00:00/ef Emask 0x1 (device error)
->  >   ata1.00: status: { DRDY ERR }
->  >   ata1.00: error: { ABRT }
->  >   ata1.00: configured for UDMA/33
->  >   ata1: EH complete
->  >   ...
->
->  I'm surprised to see the above.  We do lots of dd to raw SATA drive
->  activity with a large variety of drives.  Both reads and writes and
->  we've never noticed this issue.
->
->  Does it happen if you are using 4k blocks with dd?
->
->  ie. We typically read / write the entire drive but using 4k blocks.
->
->  In fact a few months ago we specifically bought about 15 drives of
->  various sizes and manufacturers and verified that we could both read
->  and write all of the sectors of the drives.
->
-Taisuke,
+I'm running Debian Etch on a SuperMicro 6024H 2U server. Specs on it can
+be viewed here:
+http://www.supermicro.com/products/system/2U/6024/SYS-6024H-T.cfm
 
-I'd like to reproduce your results and keep the drive as a test drive
-to ensure our systems work properly across the entire spectrum of
-drives.
+The system has a Marvell 88SX6081 8-port SATA controller attached to a
+6-port backplane. I currently have two drives in it, using _software_ RAID
+1 and LVM in Linux. I'm no longer sure why I didn't just use the onboard
+hardware RAID system; I think I assumed it would be easier to
+monitor/manage the RAID using the existing Linux software tools. Maybe I
+was wrong about that...
 
->From our earlier tests we had a Hitachi 7K1000 Series Model
-HDS721075KLA330 SATA 750GB drive, but it is not exhibiting the problem
-you describe.
+Earlier this year one of the drives in the system failed. No big deal - I
+got a replacement, went down to the datacenter, yanked the old one and put
+in a new one. The system didn't seem to mind this at all, but with the new
+drive in place I couldn't make the system recognize it. dmesg seemed to
+show that a drive was present, but no amount of fiddling would allow me to
+add the drive to the array and get the rebuild started. After awhile I
+read the FAQ here: http://linux-ata.org/software-status.html  This seemed
+to indicate that full hotplug support wasn't in the Linux kernel until
+2.6.19. Of course, I happen to be running 2.6.17.
 
-Can you tell me a specific Model number Hitachi drive that the current
-linux kernel is failing with.
+I ended up rebooting the box, and as soon as it came up it noticed the new
+drive, and I was able to add it into the RAID and get the rebuild started.
+I would have preferred not to have to do this though.
 
-Thanks
-Greg
+My question is this:  Can anyone confirm that my mistake was trying to do
+hotplug on a 2.6.17 kernel? Or is it possible I did something else wrong?
+My procedure was to use mdadm -f to mark the drive failed, then mdadm -r
+to remove it from the array. Then physically unplug it, and insert the new
+drive. After that I tried using the rescan-scsi-bus.sh script, which
+basically just does the echo "- - -" > /sys/class/scsi_host/host1/scan 
+stuff, and tried other things as well, but the system never saw the drive
+until I rebooted.
+
+Bonus question:  Can you point me to a set of instructions for what
+exactly I need to do on the software side to swap a drive?
+
 -- 
-Greg Freemyer
-Litigation Triage Solutions Specialist
-http://www.linkedin.com/in/gregfreemyer
-First 99 Days Litigation White Paper -
-http://www.norcrossgroup.com/forms/whitepapers/99%20Days%20whitepaper.pdf
+Owen B. Mehegan (owen@nerdnetworks.org)
 
-The Norcross Group
-The Intersection of Evidence & Technology
-http://www.norcrossgroup.com
+
+-- 
+Owen B. Mehegan (owen@nerdnetworks.org)
+
+
+
