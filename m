@@ -1,102 +1,84 @@
-From: <gregkh@suse.de>
-Subject: patch ata_piix-verify-sidpr-access-before-enabling-it.patch added to 2.6.25-stable tree
-Date: Tue, 13 May 2008 10:54:55 -0700
-Message-ID: <20080513175649.B81DB1454476@imap.suse.de>
-References: <4829500A.7060506@gmail.com>
+From: "Greg Freemyer" <greg.freemyer@gmail.com>
+Subject: Re: [PATCH] LBA28/LBA48 off-by-one bug in ata.h
+Date: Tue, 13 May 2008 15:06:39 -0400
+Message-ID: <87f94c370805131206xe8081a2yade9d28e2a1edd04@mail.gmail.com>
+References: <481C224F.10301@rakugaki.org>
+	 <87f94c370805041133w1cea3c85k2eb1185be6c374d8@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:34313 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756213AbYEMR4x (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 13 May 2008 13:56:53 -0400
-In-Reply-To: <4829500A.7060506@gmail.com>
+Received: from wx-out-0506.google.com ([66.249.82.225]:22414 "EHLO
+	wx-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753656AbYEMTGk (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 13 May 2008 15:06:40 -0400
+Received: by wx-out-0506.google.com with SMTP id h29so2392194wxd.4
+        for <linux-ide@vger.kernel.org>; Tue, 13 May 2008 12:06:39 -0700 (PDT)
+In-Reply-To: <87f94c370805041133w1cea3c85k2eb1185be6c374d8@mail.gmail.com>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: htejun@gmail.com, gregkh@suse.de, jeff@garzik.org, jgarzik@redhat.com, linux-ide@vger.kernel.org, ryan.roth@ch2m.com
-Cc: stable@kernel.org, stable-commits@vger.kernel.org
+To: Taisuke Yamada <tai@rakugaki.org>
+Cc: linux-ide@vger.kernel.org
 
+On Sun, May 4, 2008 at 2:33 PM, Greg Freemyer <greg.freemyer@gmail.com> wrote:
+> On Sat, May 3, 2008 at 4:29 AM, Taisuke Yamada <tai@rakugaki.org> wrote:
+>  > Hi.
+>  >
+>  >  I recently bought 3 HGST P7K500-series 500GB SATA drives and
+>  >  had trouble accessing the block right on the LBA28-LBA48 border.
+>  >  Here's how it fails (same for all 3 drives):
+>  >
+>  >   # dd if=/dev/sdc bs=512 count=1 skip=268435455 > /dev/null
+>  >   dd: reading `/dev/sdc': Input/output error
+>  >   0+0 records in
+>  >   0+0 records out
+>  >   0 bytes (0 B) copied, 0.288033 seconds, 0.0 kB/s
+>  >   # dmesg
+>  >   ata1.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x0
+>  >   ata1.00: BMDMA stat 0x25
+>  >   ata1.00: cmd c8/00:08:f8:ff:ff/00:00:00:00:00/ef tag 0 dma 4096 in
+>  >   res 51/04:08:f8:ff:ff/00:00:00:00:00/ef Emask 0x1 (device error)
+>  >   ata1.00: status: { DRDY ERR }
+>  >   ata1.00: error: { ABRT }
+>  >   ata1.00: configured for UDMA/33
+>  >   ata1: EH complete
+>  >   ...
+>
+>  I'm surprised to see the above.  We do lots of dd to raw SATA drive
+>  activity with a large variety of drives.  Both reads and writes and
+>  we've never noticed this issue.
+>
+>  Does it happen if you are using 4k blocks with dd?
+>
+>  ie. We typically read / write the entire drive but using 4k blocks.
+>
+>  In fact a few months ago we specifically bought about 15 drives of
+>  various sizes and manufacturers and verified that we could both read
+>  and write all of the sectors of the drives.
+>
+Taisuke,
 
-This is a note to let you know that we have just queued up the patch titled
+I'd like to reproduce your results and keep the drive as a test drive
+to ensure our systems work properly across the entire spectrum of
+drives.
 
-     Subject: ata_piix: verify SIDPR access before enabling it
+>From our earlier tests we had a Hitachi 7K1000 Series Model
+HDS721075KLA330 SATA 750GB drive, but it is not exhibiting the problem
+you describe.
 
-to the 2.6.25-stable tree.  Its filename is
+Can you tell me a specific Model number Hitachi drive that the current
+linux kernel is failing with.
 
-     ata_piix-verify-sidpr-access-before-enabling-it.patch
+Thanks
+Greg
+-- 
+Greg Freemyer
+Litigation Triage Solutions Specialist
+http://www.linkedin.com/in/gregfreemyer
+First 99 Days Litigation White Paper -
+http://www.norcrossgroup.com/forms/whitepapers/99%20Days%20whitepaper.pdf
 
-A git repo of this tree can be found at 
-    http://www.kernel.org/git/?p=linux/kernel/git/stable/stable-queue.git;a=summary
-
-
->From stable-bounces@linux.kernel.org Tue May 13 01:24:07 2008
-From: Tejun Heo <htejun@gmail.com>
-Date: Tue, 13 May 2008 17:23:38 +0900
-Subject: ata_piix: verify SIDPR access before enabling it
-To: stable@kernel.org, Jeff Garzik l <jeff@garzik.org>, IDE/ATA development list <linux-ide@vger.kernel.org>
-Message-ID: <4829500A.7060506@gmail.com>
-
-From: Tejun Heo <htejun@gmail.com>
-
-commit cb6716c879ecf49e2af344926c6a476821812061 upstream
-
-On certain configurations (certain macbooks), even though all the
-conditions for SIDPR access described in the datasheet are met,
-actually reading those registers just returns 0 and have no effect on
-write.  Verify SIDPR is actually working before enabling it.
-
-This is reported by Ryan Roth in bz#10512.
-
-Signed-off-by: Tejun Heo <htejun@gmail.com>
-Cc: Ryan Roth <ryan.roth@ch2m.com>
-Signed-off-by: Jeff Garzik <jgarzik@redhat.com>
-Signed-off-by: Greg Kroah-Hartman <gregkh@suse.de>
-
----
- drivers/ata/ata_piix.c |   25 +++++++++++++++++++++++++
- 1 file changed, 25 insertions(+)
-
---- a/drivers/ata/ata_piix.c
-+++ b/drivers/ata/ata_piix.c
-@@ -1531,6 +1531,8 @@ static void __devinit piix_init_sidpr(st
- {
- 	struct pci_dev *pdev = to_pci_dev(host->dev);
- 	struct piix_host_priv *hpriv = host->private_data;
-+	struct ata_device *dev0 = &host->ports[0]->link.device[0];
-+	u32 scontrol;
- 	int i;
- 
- 	/* check for availability */
-@@ -1549,6 +1551,29 @@ static void __devinit piix_init_sidpr(st
- 		return;
- 
- 	hpriv->sidpr = pcim_iomap_table(pdev)[PIIX_SIDPR_BAR];
-+
-+	/* SCR access via SIDPR doesn't work on some configurations.
-+	 * Give it a test drive by inhibiting power save modes which
-+	 * we'll do anyway.
-+	 */
-+	scontrol = piix_sidpr_read(dev0, SCR_CONTROL);
-+
-+	/* if IPM is already 3, SCR access is probably working.  Don't
-+	 * un-inhibit power save modes as BIOS might have inhibited
-+	 * them for a reason.
-+	 */
-+	if ((scontrol & 0xf00) != 0x300) {
-+		scontrol |= 0x300;
-+		piix_sidpr_write(dev0, SCR_CONTROL, scontrol);
-+		scontrol = piix_sidpr_read(dev0, SCR_CONTROL);
-+
-+		if ((scontrol & 0xf00) != 0x300) {
-+			dev_printk(KERN_INFO, host->dev, "SCR access via "
-+				   "SIDPR is available but doesn't work\n");
-+			return;
-+		}
-+	}
-+
- 	host->ports[0]->ops = &piix_sidpr_sata_ops;
- 	host->ports[1]->ops = &piix_sidpr_sata_ops;
- }
-
-
-Patches currently in stable-queue which might be from htejun@gmail.com are
-
-queue-2.6.25/ata_piix-verify-sidpr-access-before-enabling-it.patch
+The Norcross Group
+The Intersection of Evidence & Technology
+http://www.norcrossgroup.com
