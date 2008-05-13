@@ -1,45 +1,59 @@
-From: Mikael Pettersson <mikpe@it.uu.se>
-Subject: Re: libata NCQ implementation questions
-Date: Tue, 13 May 2008 11:25:41 +0200
-Message-ID: <18473.24213.619836.176126@harpo.it.uu.se>
-References: <18471.32504.953679.399689@harpo.it.uu.se>
-	<482953F5.1020503@gmail.com>
+From: "=?ISO-8859-1?Q?Ilpo_J=E4rvinen?=" <ilpo.jarvinen@helsinki.fi>
+Subject: Re: [PATCH 01/12] lib: create common ascii hex array
+Date: Tue, 13 May 2008 12:55:05 +0300 (EEST)
+Message-ID: <Pine.LNX.4.64.0805122218240.14152@wrl-59.cs.helsinki.fi>
+References: <1210619134.24092.51.camel@brick>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from aun.it.uu.se ([130.238.12.36]:34702 "EHLO aun.it.uu.se"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751403AbYEMJeO (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 13 May 2008 05:34:14 -0400
-In-Reply-To: <482953F5.1020503@gmail.com>
+Received: from courier.cs.helsinki.fi ([128.214.9.1]:39973 "EHLO
+	mail.cs.helsinki.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751891AbYEMJzI (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 13 May 2008 05:55:08 -0400
+In-Reply-To: <1210619134.24092.51.camel@brick>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Mikael Pettersson <mikpe@it.uu.se>, jgarzik@pobox.com, linux-ide@vger.kernel.org
+To: Harvey Harrison <harvey.harrison@gmail.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, LKML <linux-kernel@vger.kernel.org>, James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi <linux-scsi@vger.kernel.org>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-ide <linux-ide@vger.kernel.org>, linux-netdev <netdev@vger.kernel.org>, David Miller <davem@davemloft.net>, Jeff Garzik <jeff@garzik.org>, Ingo Molnar <mingo@elte.hu>, Jason Wessel <jason.wessel@windriver.com>, David Howells <dhowells@redhat.com>, "ralf@linux-mips.org" <ralf@linux-mips.org>, Paul Mundt <lethal@linux-sh.org>, Paul Mackerras <paulus@samba.org>
 
-Tejun Heo writes:
-...
- > > 4. What are these "internal commands" that map to ATA_TAG_INTERNAL?
- > >    Are they NCQ or not?
- > >    Does the existence of ATA_TAG_INTERNAL limit queue depth for NCQ?
- > 
- > Yeah, it reserves tag 31 for EH commands.  We might as well use tag 32 
- > for EH commands and let LLD map it to whatever tag it can use for EH 
- > commands but Jeff didn't like using all the tags as it makes 0xffffffff 
- > a valid status value.
- > 
- > Note that depending on LLD implementation, you might want to remap tag 
- > 31 to different hardware tag.  sata_sil24 does this mainly because it 
- > made polled execution implementation easier.
+On Mon, 12 May 2008, Harvey Harrison wrote:
 
-I think I'll remap them to 0 too. The tag ends up in a field
-in the ATA packet header that's overloaded for NCQ tags and
-non-NCQ packet "delay sequence ids". So far sata_promise has
-always set this field to 0, and set up seqid #0 as /dev/null,
-so I'm not comfortable allowing non-zero values into this field
-for non-NCQ packets.
+> Add a common hex array in hexdump.c so everyone can use it.
+> 
+> Add a common hi/lo helper to avoid the shifting masking that is
+> done to get the upper and lower nibbles of a byte value.
+> 
+> Pull the pack_hex_byte helper from kgdb as it is opencoded many
+> places in the tree that will be consolidated.
+> 
+> Signed-off-by: Harvey Harrison <harvey.harrison@gmail.com>
+> ---
+>  
+> diff --git a/include/linux/kernel.h b/include/linux/kernel.h
+> index 4d46e29..792bf0a 100644
+> --- a/include/linux/kernel.h
+> +++ b/include/linux/kernel.h
+> @@ -276,7 +276,17 @@ extern void print_hex_dump(const char *level, const char *prefix_str,
+>  				const void *buf, size_t len, bool ascii);
+>  extern void print_hex_dump_bytes(const char *prefix_str, int prefix_type,
+>  			const void *buf, size_t len);
+> -#define hex_asc(x)	"0123456789abcdef"[x]
+> +
+> +extern const char hex_asc[];
+> +#define hex_asc_lo(x)	hex_asc[((x) & 0x0f)]
+> +#define hex_asc_hi(x)	hex_asc[((x) & 0xf0) >> 4]
+> +
+> +static inline char *pack_hex_byte(char *buf, u8 byte)
+> +{
+> +	*buf++ = hex_asc_hi(byte);
+> +	*buf++ = hex_asc_lo(byte);
+> +	return buf;
+> +}
 
-Thanks,
+Any idea how much this will bloat kernel once it has, lets say 100 
+users? 5k, 10k?
 
-/Mikael
+
+-- 
+ i.
