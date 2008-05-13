@@ -1,80 +1,49 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH -stable] ata_piix: verify SIDPR access before enabling it
-Date: Tue, 13 May 2008 17:23:38 +0900
-Message-ID: <4829500A.7060506@gmail.com>
+From: Matthieu CASTET <matthieu.castet@parrot.com>
+Subject: ata_piix 2.6.25 sata failure
+Date: Tue, 13 May 2008 09:56:59 +0200
+Message-ID: <482949CB.7000208@parrot.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.183]:10723 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755336AbYEMIXr (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 13 May 2008 04:23:47 -0400
-Received: by wa-out-1112.google.com with SMTP id j37so3992069waf.23
-        for <linux-ide@vger.kernel.org>; Tue, 13 May 2008 01:23:44 -0700 (PDT)
+Received: from co203.xi-lite.net ([149.6.83.203]:52297 "EHLO
+	toronto.xi-lite.net" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1756767AbYEMIae (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 13 May 2008 04:30:34 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: stable@kernel.org, Jeff Garzik l <jeff@garzik.org>, IDE/ATA development list <linux-ide@vger.kernel.org>
+To: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-On certain configurations (certain macbooks), even though all the
-conditions for SIDPR access described in the datasheet are met,
-actually reading those registers just returns 0 and have no effect on
-write.  Verify SIDPR is actually working before enabling it.
+Hi,
 
-This is reported by Ryan Roth in bz#10512.
+the 2.6.25 from debian fail to make work the second port. I got a "SATA 
+link down (SStatus 61 Scontrol 30)" for ata2. ata1 got "SATA link up 3.0 
+Gbps (SStatus 13 SControl 30)"
+The 2.6.24 works [1]. But some previous kernel (IRRC 2.6.18) had the 
+same problem, ie ata2 doesn't work.
 
-Signed-off-by: Tejun Heo <htejun@gmail.com>
-Cc: Ryan Roth <ryan.roth@ch2m.com>
----
-This patch is now in Linus' tree and it's probably a good idea to
-include it for 2.6.25-x.
+My hardware is a intel ICH8[2]
 
-Thanks.
+Matthieu
 
-drivers/ata/ata_piix.c |   25 +++++++++++++++++++++++++
-1 file changed, 25 insertions(+)
 
-diff --git a/drivers/ata/ata_piix.c b/drivers/ata/ata_piix.c
-index ea2c764..a9027b8 100644
---- a/drivers/ata/ata_piix.c
-+++ b/drivers/ata/ata_piix.c
-@@ -1348,6 +1348,8 @@ static void __devinit piix_init_sidpr(struct ata_host *host)
-{
-	struct pci_dev *pdev = to_pci_dev(host->dev);
-	struct piix_host_priv *hpriv = host->private_data;
-+	struct ata_device *dev0 = &host->ports[0]->link.device[0];
-+	u32 scontrol;
-	int i;
 
-	/* check for availability */
-@@ -1366,6 +1368,29 @@ static void __devinit piix_init_sidpr(struct ata_host *host)
-		return;
+[1]
+scsi0 : ata_piix
+scsi1 : ata_piix
+ata1: SATA max UDMA/133 cmd 0x1f0 ctl 0x3f6 bmdma 0x11f0 irq 14
+ata2: SATA max UDMA/133 cmd 0x170 ctl 0x376 bmdma 0x11f8 irq 15
+ata1.00: ATA-7: SAMSUNG HD080HJ/P, ZH100-43, max UDMA/100
+ata1.00: 156301488 sectors, multi 16: LBA48
+ata1.00: configured for UDMA/100
+ata2.00: ATA-7: SAMSUNG HD160JJ/P, ZM100-46, max UDMA7
+ata2.00: 312581808 sectors, multi 16: LBA48 NCQ (depth 0/32)
+ata2.01: ATAPI: HL-DT-STDVD+-RW GSA-H31L, 1.05, max UDMA/100
+ata2.00: configured for UDMA/133
+ata2.01: configured for UDMA/100
 
-	hpriv->sidpr = pcim_iomap_table(pdev)[PIIX_SIDPR_BAR];
-+
-+	/* SCR access via SIDPR doesn't work on some configurations.
-+	 * Give it a test drive by inhibiting power save modes which
-+	 * we'll do anyway.
-+	 */
-+	scontrol = piix_sidpr_read(dev0, SCR_CONTROL);
-+
-+	/* if IPM is already 3, SCR access is probably working.  Don't
-+	 * un-inhibit power save modes as BIOS might have inhibited
-+	 * them for a reason.
-+	 */
-+	if ((scontrol & 0xf00) != 0x300) {
-+		scontrol |= 0x300;
-+		piix_sidpr_write(dev0, SCR_CONTROL, scontrol);
-+		scontrol = piix_sidpr_read(dev0, SCR_CONTROL);
-+
-+		if ((scontrol & 0xf00) != 0x300) {
-+			dev_printk(KERN_INFO, host->dev, "SCR access via "
-+				   "SIDPR is available but doesn't work\n");
-+			return;
-+		}
-+	}
-+
-	host->ports[0]->ops = &piix_sidpr_sata_ops;
-	host->ports[1]->ops = &piix_sidpr_sata_ops;
-}
 
+[2]
+00:1f.2 IDE interface: Intel Corporation 82801H (ICH8 Family) 4 port 
+SATA IDE Controller (rev 02)
+00:1f.2 0101: 8086:2820 (rev 02)
