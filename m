@@ -1,403 +1,100 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [git patches] IDE fixes
-Date: Wed, 14 May 2008 23:18:54 +0200
-Message-ID: <200805142318.55261.bzolnier@gmail.com>
+Subject: Re: kernel 2.6.25 with ide driver cs5520 does not boot.
+Date: Thu, 15 May 2008 00:28:04 +0200
+Message-ID: <200805150028.04625.bzolnier@gmail.com>
+References: <58cb370e0805080607n4f5de192o5a7371fd0fb1e9f8@mail.gmail.com> <20080509.215601.208967867.takada@mbf.nifty.com> <200805142244.48548.bzolnier@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
   charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1756241AbYENVFz@vger.kernel.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from nf-out-0910.google.com ([64.233.182.188]:60428 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750988AbYENWLz (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 14 May 2008 18:11:55 -0400
+Received: by nf-out-0910.google.com with SMTP id d3so61221nfc.21
+        for <linux-ide@vger.kernel.org>; Wed, 14 May 2008 15:11:54 -0700 (PDT)
+In-Reply-To: <200805142244.48548.bzolnier@gmail.com>
 Content-Disposition: inline
-Sender: linux-kernel-owner@vger.kernel.org
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Stephen Rothwell <sfr@canb.auug.org.au>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: TAKADA Yoshihito <takada@mbf.nifty.com>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
+On Wednesday 14 May 2008, Bartlomiej Zolnierkiewicz wrote:
+> On Friday 09 May 2008, TAKADA Yoshihito wrote:
+> > Hi.
+> > 
+> > From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+> > Subject: Re: kernel 2.6.25 with ide driver cs5520 does not boot.
+> > Date: Fri, 9 May 2008 11:27:53 +0200
+> > 
+> > > On Friday 09 May 2008, TAKADA Yoshihito wrote:
+> > > > Thanks for quick reply.
+> > > > 
+> > > > I tried 2.6.26rc1. It hangs same as 2.6.25.
+> > > > kernel 2.6.26rc1 with cs5520 cannot boot. cs5520 scans ide0 and ide1.
+> > > > It seems 2nd port DMA base issue was solved.
+> > > 
+> > > [...]
+> > > 
+> > > Thanks.
+> > > 
+> > > The following patch for 2.6.26-rc1 disables VDMA, please give it a try
+> > > (I haven't time to fully audit VDMA support yet but lets see if it is
+> > > the main source of the problems).
+> > 
+> > I applied the patch. But kernel was hung.
+> > And I attempt to kill IDE_HFLAG_CS5520. It cannot boot, oo.
+> > 
+> >   kill IDE_HFLAG_VDMA  : hang  
+> >   kill IDE_HFLAG_CS5520: hang
+> >   kill both flags      : boot
+> 
+> Thanks for investigating this - I forgot that currently VDMA and CS5520
+> host flags use the same bit (so it also needs to be fixed).
+> 
+> I'm going to send the following patch to Linus (please verify it):
+> 
+> From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+> Subject: [PATCH] cs5520: disable VDMA
 
-- disable Virtual DMA support in CS5520 host driver for now (it causes
-  weird system lockups, thanks to TAKADA Yoshihito for reporting the issue)
+[...]
 
-- fix up SWARM IDE for recent IDE core changes (Maciej W. Rozycki)
+Please also try 2.6.26-rc2 without the above patch but with the following
+patch applied instead - according to comments in OpenFirmware & pata_cs5520
+code 0x60 register contains bus-master enable bit, it could be that it was
+left disabled by BIOS and we need to explicitely enable it (if somebody has
+CX5510 or CX5520 datasheet please verify this + send me a copy if possible).
 
-- few obvious/trivial fixes for ALiM15x3 host driver
+---
+ drivers/ide/pci/cs5520.c |    8 ++++++++
+ 1 file changed, 8 insertions(+)
 
-- couple of obvious ide/Kconfig fixes
-
-- some code can be static now (Adrian Bunk)
-
-
-Linus, please pull from:
-
-master.kernel.org:/pub/scm/linux/kernel/git/bart/ide-2.6.git/
-
-to receive the following updates:
-
- drivers/ide/Kconfig        |   54 +++++++++-----------------------------------
- drivers/ide/ide-iops.c     |    2 +-
- drivers/ide/mips/swarm.c   |   16 +++++++-----
- drivers/ide/pci/alim15x3.c |   42 ++++++++++-----------------------
- drivers/ide/pci/cs5520.c   |    2 +-
- include/linux/ide.h        |    9 +++----
- 6 files changed, 39 insertions(+), 86 deletions(-)
-
-
-Adrian Bunk (1):
-      make ide-iops.c:SELECT_MASK() static
-
-Bartlomiej Zolnierkiewicz (6):
-      alim15x3: trivial cleanup for ali_set_pio_mode()
-      alim15x3: remove stale warning about ATI RS100 northbridge
-      alim15x3: add "wdc_udma" module parameter
-      alim15x3: remove WDC_ALI15X3 config option
-      ide/Kconfig: couple of fixes
-      cs5520: disable VDMA
-
-Maciej W. Rozycki (1):
-      SWARM IDE: Fix up following changes to ide_hwif_t
-
-
-diff --git a/drivers/ide/Kconfig b/drivers/ide/Kconfig
-index f702f91..b4f3aef 100644
---- a/drivers/ide/Kconfig
-+++ b/drivers/ide/Kconfig
-@@ -1,8 +1,6 @@
- #
- # IDE ATA ATAPI Block device driver configuration
- #
--# Andre Hedrick <andre@linux-ide.org>
--#
- 
- # Select HAVE_IDE if IDE is supported
- config HAVE_IDE
-@@ -335,7 +333,7 @@ config BLK_DEV_CMD640
- 	  This driver will work automatically in PCI based systems (most new
- 	  systems have PCI slots). But if your system uses VESA local bus
- 	  (VLB) instead of PCI, you must also supply a kernel boot parameter
--	  to enable the CMD640 bugfix/support: "ide0=cmd640_vlb". (Try "man
-+	  to enable the CMD640 bugfix/support: "cmd640.probe_vlb". (Try "man
- 	  bootparam" or see the documentation of your boot loader about how to
- 	  pass options to the kernel.)
- 
-@@ -457,27 +455,11 @@ config BLK_DEV_ALI15X3
- 	  onboard chipsets.  It also tests for Simplex mode and enables
- 	  normal dual channel support.
- 
--	  If you say Y here, you also need to say Y to "Use DMA by default
--	  when available", above.  Please read the comments at the top of
-+	  Please read the comments at the top of
- 	  <file:drivers/ide/pci/alim15x3.c>.
- 
- 	  If unsure, say N.
- 
--config WDC_ALI15X3
--	bool "ALI M15x3 WDC support (DANGEROUS)"
--	depends on BLK_DEV_ALI15X3
--	---help---
--	  This allows for UltraDMA support for WDC drives that ignore CRC
--	  checking. You are a fool for enabling this option, but there have
--	  been requests. DO NOT COMPLAIN IF YOUR DRIVE HAS FS CORRUPTION, IF
--	  YOU ENABLE THIS! No one will listen, just laugh for ignoring this
--	  SERIOUS WARNING.
--
--	  Using this option can allow WDC drives to run at ATA-4/5 transfer
--	  rates with only an ATA-2 support structure.
--
--	  SAY N!
--
- config BLK_DEV_AMD74XX
- 	tristate "AMD and nVidia IDE support"
- 	depends on !ARM
-@@ -520,9 +502,6 @@ config BLK_DEV_CY82C693
- 	  This driver adds detection and support for the CY82C693 chipset
- 	  used on Digital's PC-Alpha 164SX boards.
- 
--	  If you say Y here, you need to say Y to "Use DMA by default
--	  when available" as well.
--
- config BLK_DEV_CS5520
- 	tristate "Cyrix CS5510/20 MediaGX chipset support (VERY EXPERIMENTAL)"
- 	depends on EXPERIMENTAL
-@@ -613,13 +592,12 @@ config BLK_DEV_SC1200
- 	  National SCx200 series of embedded x86 "Geode" systems.
- 
- config BLK_DEV_PIIX
--	tristate "Intel PIIXn chipsets support"
-+	tristate "Intel PIIX/ICH chipsets support"
- 	select BLK_DEV_IDEDMA_PCI
- 	help
--	  This driver adds explicit support for Intel PIIX and ICH chips
--	  and also for the Efar Victory66 (slc90e66) chip.  This allows
--	  the kernel to change PIO, DMA and UDMA speeds and to configure
--	  the chip to optimum performance.
-+	  This driver adds explicit support for Intel PIIX and ICH chips.
-+	  This allows the kernel to change PIO, DMA and UDMA speeds and to
-+	  configure the chip to optimum performance.
- 
- config BLK_DEV_IT8213
- 	tristate "IT8213 IDE support"
-@@ -657,11 +635,7 @@ config BLK_DEV_PDC202XX_OLD
- 	  happen if the BIOS revisions of all installed cards (three-max) do
- 	  not match, the driver attempts to do dynamic tuning of the chipset
- 	  at boot-time for max-speed.  Ultra33 BIOS 1.25 or newer is required
--	  for more than one card. This card may require that you say Y to
--	  "Special UDMA Feature".
--
--	  If you say Y here, you need to say Y to "Use DMA by default when
--	  available" as well.
-+	  for more than one card.
- 
- 	  Please read the comments at the top of
- 	  <file:drivers/ide/pci/pdc202xx_old.c>.
-@@ -710,9 +684,6 @@ config BLK_DEV_SIS5513
- 	  ATA100: SiS635, SiS645, SiS650, SiS730, SiS735, SiS740,
- 	  SiS745, SiS750
- 
--	  If you say Y here, you need to say Y to "Use DMA by default when
--	  available" as well.
--
- 	  Please read the comments at the top of <file:drivers/ide/pci/sis5513.c>.
- 
- config BLK_DEV_SL82C105
-@@ -734,9 +705,6 @@ config BLK_DEV_SLC90E66
- 	  and it will handle timing cycles.  Since this is an improved
- 	  look-a-like to the PIIX4 it should be a nice addition.
- 
--	  If you say Y here, you need to say Y to "Use DMA by default when
--	  available" as well.
--
- 	  Please read the comments at the top of
- 	  <file:drivers/ide/pci/slc90e66.c>.
- 
-@@ -888,17 +856,17 @@ config BLK_DEV_IDEDOUBLER
- 	bool "Amiga IDE Doubler support (EXPERIMENTAL)"
- 	depends on BLK_DEV_GAYLE && EXPERIMENTAL
- 	---help---
--	  This driver provides support for the so-called `IDE doublers' (made
-+	  This feature provides support for the so-called `IDE doublers' (made
- 	  by various manufacturers, e.g. Eyetech) that can be connected to
- 	  the on-board IDE interface of some Amiga models. Using such an IDE
- 	  doubler, you can connect up to four instead of two IDE devices to
- 	  the Amiga's on-board IDE interface.
- 
- 	  Note that the normal Amiga Gayle IDE driver may not work correctly
--	  if you have an IDE doubler and don't enable this driver!
-+	  if you have an IDE doubler and don't enable this feature!
- 
--	  Say Y if you have an IDE doubler.  The driver is enabled at kernel
--	  runtime using the "ide=doubler" kernel boot parameter.
-+	  Say Y if you have an IDE doubler.  The feature is enabled at kernel
-+	  runtime using the "gayle.doubler" kernel boot parameter.
- 
- config BLK_DEV_BUDDHA
- 	tristate "Buddha/Catweasel/X-Surf IDE interface support (EXPERIMENTAL)"
-diff --git a/drivers/ide/ide-iops.c b/drivers/ide/ide-iops.c
-index 57d9a9a..0daf923 100644
---- a/drivers/ide/ide-iops.c
-+++ b/drivers/ide/ide-iops.c
-@@ -95,7 +95,7 @@ void SELECT_DRIVE (ide_drive_t *drive)
- 	hwif->OUTB(drive->select.all, hwif->io_ports.device_addr);
- }
- 
--void SELECT_MASK (ide_drive_t *drive, int mask)
-+static void SELECT_MASK(ide_drive_t *drive, int mask)
- {
- 	const struct ide_port_ops *port_ops = drive->hwif->port_ops;
- 
-diff --git a/drivers/ide/mips/swarm.c b/drivers/ide/mips/swarm.c
-index 712d17b..52fee3d 100644
---- a/drivers/ide/mips/swarm.c
-+++ b/drivers/ide/mips/swarm.c
-@@ -4,7 +4,7 @@
-  *	Author:	Manish Lachwani, mlachwani@mvista.com
-  * Copyright (C) 2004  MIPS Technologies, Inc.  All rights reserved.
-  *	Author: Maciej W. Rozycki <macro@mips.com>
-- * Copyright (c) 2006  Maciej W. Rozycki
-+ * Copyright (c) 2006, 2008  Maciej W. Rozycki
-  *
-  * This program is free software; you can redistribute it and/or
-  * modify it under the terms of the GNU General Public License
-@@ -70,8 +70,9 @@ static int __devinit swarm_ide_probe(struct device *dev)
- 	ide_hwif_t *hwif;
- 	u8 __iomem *base;
- 	phys_t offset, size;
-+	hw_regs_t hw;
- 	int i;
--	u8 idx[4] = { 0xff, 0xff, 0xff, 0xff };
-+	u8 idx[] = { 0xff, 0xff, 0xff, 0xff };
- 
- 	if (!SIBYTE_HAVE_IDE)
- 		return -ENODEV;
-@@ -112,14 +113,15 @@ static int __devinit swarm_ide_probe(struct device *dev)
- 	hwif->host_flags = IDE_HFLAG_MMIO;
- 	default_hwif_mmiops(hwif);
- 
--	hwif->chipset = ide_generic;
--
- 	for (i = 0; i <= 7; i++)
--		hwif->io_ports_array[i] =
-+		hw.io_ports_array[i] =
- 				(unsigned long)(base + ((0x1f0 + i) << 5));
--	hwif->io_ports.ctl_addr =
-+	hw.io_ports.ctl_addr =
- 				(unsigned long)(base + (0x3f6 << 5));
--	hwif->irq = K_INT_GB_IDE;
-+	hw.irq = K_INT_GB_IDE;
-+	hw.chipset = ide_generic;
-+
-+	ide_init_port_hw(hwif, &hw);
- 
- 	idx[0] = hwif->index;
- 
-diff --git a/drivers/ide/pci/alim15x3.c b/drivers/ide/pci/alim15x3.c
-index c1922f9..f2129d5 100644
---- a/drivers/ide/pci/alim15x3.c
-+++ b/drivers/ide/pci/alim15x3.c
-@@ -39,6 +39,16 @@
- #include <asm/io.h>
- 
- /*
-+ * Allow UDMA on M1543C-E chipset for WDC disks that ignore CRC checking
-+ * (this is DANGEROUS and could result in data corruption).
-+ */
-+static int wdc_udma;
-+
-+module_param(wdc_udma, bool, 0);
-+MODULE_PARM_DESC(wdc_udma,
-+		 "allow UDMA on M1543C-E chipset for WDC disks (DANGEROUS)");
-+
-+/*
-  *	ALi devices are not plug in. Otherwise these static values would
-  *	need to go. They ought to go away anyway
-  */
-@@ -76,11 +86,6 @@ static void ali_set_pio_mode(ide_drive_t *drive, const u8 pio)
- 		a_clc = 0;
- 	c_time = ide_pio_timings[pio].cycle_time;
- 
--#if 0
--	if ((r_clc = ((c_time - s_time - a_time) * bus_speed + 999) / 1000) >= 16)
--		r_clc = 0;
--#endif
--
- 	if (!(r_clc = (c_time * bus_speed + 999) / 1000 - a_clc - s_clc)) {
- 		r_clc = 1;
- 	} else {
-@@ -110,16 +115,6 @@ static void ali_set_pio_mode(ide_drive_t *drive, const u8 pio)
- 	pci_write_config_byte(dev, port, s_clc);
- 	pci_write_config_byte(dev, port+drive->select.b.unit+2, (a_clc << 4) | r_clc);
- 	local_irq_restore(flags);
--
--	/*
--	 * setup   active  rec
--	 * { 70,   165,    365 },   PIO Mode 0
--	 * { 50,   125,    208 },   PIO Mode 1
--	 * { 30,   100,    110 },   PIO Mode 2
--	 * { 30,   80,     70  },   PIO Mode 3 with IORDY
--	 * { 25,   70,     25  },   PIO Mode 4 with IORDY  ns
--	 * { 20,   50,     30  }    PIO Mode 5 with IORDY (nonstandard)
--	 */
- }
- 
- /**
-@@ -131,9 +126,7 @@ static void ali_set_pio_mode(ide_drive_t *drive, const u8 pio)
-  *	The actual rules for the ALi are:
-  *		No UDMA on revisions <= 0x20
-  *		Disk only for revisions < 0xC2
-- *		Not WDC drives for revisions < 0xC2
-- *
-- *	FIXME: WDC ifdef needs to die
-+ *		Not WDC drives on M1543C-E (?)
-  */
- 
- static u8 ali_udma_filter(ide_drive_t *drive)
-@@ -141,10 +134,9 @@ static u8 ali_udma_filter(ide_drive_t *drive)
- 	if (m5229_revision > 0x20 && m5229_revision < 0xC2) {
- 		if (drive->media != ide_disk)
- 			return 0;
--#ifndef CONFIG_WDC_ALI15X3
--		if (chip_is_1543c_e && strstr(drive->id->model, "WDC "))
-+		if (chip_is_1543c_e && strstr(drive->id->model, "WDC ") &&
-+		    wdc_udma == 0)
- 			return 0;
--#endif
- 	}
- 
- 	return drive->hwif->ultra_mask;
-@@ -537,17 +529,9 @@ static const struct ide_port_info ali15x3_chipset __devinitdata = {
-  
- static int __devinit alim15x3_init_one(struct pci_dev *dev, const struct pci_device_id *id)
- {
--	static struct pci_device_id ati_rs100[] = {
--		{ PCI_DEVICE(PCI_VENDOR_ID_ATI, PCI_DEVICE_ID_ATI_RS100) },
--		{ },
--	};
--
- 	struct ide_port_info d = ali15x3_chipset;
- 	u8 rev = dev->revision, idx = id->driver_data;
- 
--	if (pci_dev_present(ati_rs100))
--		printk(KERN_WARNING "alim15x3: ATI Radeon IGP Northbridge is not yet fully tested.\n");
--
- 	/* don't use LBA48 DMA on ALi devices before rev 0xC5 */
- 	if (rev <= 0xC4)
- 		d.host_flags |= IDE_HFLAG_NO_LBA48_DMA;
-diff --git a/drivers/ide/pci/cs5520.c b/drivers/ide/pci/cs5520.c
-index 17669a4..992b1cf 100644
+Index: b/drivers/ide/pci/cs5520.c
+===================================================================
 --- a/drivers/ide/pci/cs5520.c
 +++ b/drivers/ide/pci/cs5520.c
-@@ -119,6 +119,7 @@ static const struct ide_dma_ops cs5520_dma_ops = {
- 	.dma_timeout		= ide_dma_timeout,
- };
+@@ -147,6 +147,7 @@ static int __devinit cs5520_init_one(str
+ {
+ 	const struct ide_port_info *d = &cyrix_chipsets[id->driver_data];
+ 	u8 idx[4] = { 0xff, 0xff, 0xff, 0xff };
++	u8 pcicfg;
  
-+/* FIXME: VDMA is disabled because it caused system hangs */
- #define DECLARE_CS_DEV(name_str)				\
- 	{							\
- 		.name		= name_str,			\
-@@ -126,7 +127,6 @@ static const struct ide_dma_ops cs5520_dma_ops = {
- 		.dma_ops	= &cs5520_dma_ops,		\
- 		.host_flags	= IDE_HFLAG_ISA_PORTS |		\
- 				  IDE_HFLAG_CS5520 |		\
--				  IDE_HFLAG_VDMA |		\
- 				  IDE_HFLAG_NO_ATAPI_DMA |	\
- 				  IDE_HFLAG_ABUSE_SET_DMA_MODE, \
- 		.pio_mask	= ATA_PIO4,			\
-diff --git a/include/linux/ide.h b/include/linux/ide.h
-index b0135b0..f8f195c 100644
---- a/include/linux/ide.h
-+++ b/include/linux/ide.h
-@@ -965,7 +965,6 @@ typedef struct ide_task_s {
- void ide_tf_dump(const char *, struct ide_taskfile *);
+ 	ide_setup_pci_noise(dev, d);
  
- extern void SELECT_DRIVE(ide_drive_t *);
--extern void SELECT_MASK(ide_drive_t *, int);
+@@ -163,6 +164,13 @@ static int __devinit cs5520_init_one(str
+ 		return -ENODEV;
+ 	}
  
- extern int drive_is_ready(ide_drive_t *);
- 
-@@ -1058,8 +1057,8 @@ enum {
- 	IDE_HFLAG_NO_SET_MODE		= (1 << 9),
- 	/* trust BIOS for programming chipset/device for DMA */
- 	IDE_HFLAG_TRUST_BIOS_FOR_DMA	= (1 << 10),
--	/* host uses VDMA (tied with IDE_HFLAG_CS5520 for now) */
--	IDE_HFLAG_VDMA			= (1 << 11),
-+	/* host is CS5510/CS5520 */
-+	IDE_HFLAG_CS5520		= (1 << 11),
- 	/* ATAPI DMA is unsupported */
- 	IDE_HFLAG_NO_ATAPI_DMA		= (1 << 12),
- 	/* set if host is a "non-bootable" controller */
-@@ -1070,8 +1069,6 @@ enum {
- 	IDE_HFLAG_NO_AUTODMA		= (1 << 15),
- 	/* host uses MMIO */
- 	IDE_HFLAG_MMIO			= (1 << 16),
--	/* host is CS5510/CS5520 */
--	IDE_HFLAG_CS5520		= IDE_HFLAG_VDMA,
- 	/* no LBA48 */
- 	IDE_HFLAG_NO_LBA48		= (1 << 17),
- 	/* no LBA48 DMA */
-@@ -1101,6 +1098,8 @@ enum {
- 	IDE_HFLAG_NO_IO_32BIT		= (1 << 30),
- 	/* never unmask IRQs */
- 	IDE_HFLAG_NO_UNMASK_IRQS	= (1 << 31),
-+	/* host uses VDMA (disabled for now) */
-+	IDE_HFLAG_VDMA			= 0,
- };
- 
- #ifdef CONFIG_BLK_DEV_OFFBOARD
++	pci_read_config_byte(dev, 0x60, &pcicfg);
++
++	if ((pcicfg & 0x40) == 0) {
++		printk(KERN_WARNING "cs5520: DMA mode disabled. Enabling.\n");
++		pci_write_config_byte(dev, 0x60, pcicfg | 0x40);
++	}
++
+ 	/*
+ 	 *	Now the chipset is configured we can let the core
+ 	 *	do all the device setup for us
+
