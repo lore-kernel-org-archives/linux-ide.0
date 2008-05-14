@@ -1,126 +1,35 @@
-From: AndrewL733 <AndrewL733@aol.com>
-Subject: SOLVED:  Macbook Pro SATA Drives not seen in 2.6.25
-Date: Wed, 14 May 2008 08:59:54 -0400
-Message-ID: <482AE24A.1020203@aol.com>
-References: <482A5C19.6090503@aol.com> <20080514010618.2e1e510a.akpm@linux-foundation.org>
+From: Mark Lord <liml@rtr.ca>
+Subject: [PATCH 01/04] sata_mv always do softreset
+Date: Wed, 14 May 2008 09:18:12 -0400
+Message-ID: <482AE694.5080604@rtr.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from imo-m28.mx.aol.com ([64.12.137.9]:63874 "EHLO
-	imo-m28.mx.aol.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753682AbYENNAF (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 14 May 2008 09:00:05 -0400
-In-Reply-To: <20080514010618.2e1e510a.akpm@linux-foundation.org>
+Received: from rtr.ca ([76.10.145.34]:1679 "EHLO mail.rtr.ca"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753888AbYENNSN (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 14 May 2008 09:18:13 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>, Tejun Heo <htejun@gmail.com>
+Cc: Alan Cox <alan@redhat.com>, IDE/ATA development list <linux-ide@vger.kernel.org>
 
-Thanks.  The patch below solves the problem.  I applied it to 2.6.25.3.
+Always request a softreset after hardreset succeeds.
+This fixes a regression reported by Martin Michlmayr <tbm@cyrius.com>.
 
-Andrew
+Signed-off-by: Mark Lord <mlord@pobox.com>
+---
 
+For 2.6.26.
 
-Andrew Morton wrote:
-> On Tue, 13 May 2008 23:27:21 -0400 AndrewL733 <AndrewL733@aol.com> wrote:
->
->   
->> I have a couple of Macbook Pros. The newest one -- based on the Penryn 
->> Core 2 Duo with ICH8 -- will not boot with any 2.6.25 kernel (I have 
->> tried 2.6.25 and 2.6.25.3).
->>     
->
-> Let's cc linux-ide.
->
->   
->> It boots fine with 2.6.24.7 as well as with 
->> 2.6.26-rc2. It also boots fine with 2.6.22. I have specific reasons why 
->> I need to run 2.6.25 so I would appreciate any help here. It seems the 
->> SATA drives are detected, but then for each partition during bootup I see:
->>
->> ata3: SATA link down (SStatus 0 SControl 0)
->>
->> The same 2.6.25 kernels boot fine on my older Macbook Pro with ICH7 and 
->> I do not see this error.
->>
->> I would be happy to run a git bisect to help identify the issue, but if 
->> this problem is already well understood (hey, it's fixed in 2.6.26), I 
->> can think of better ways to spend my time.
->>     
->
-> The below went into 2.6.25.1 (or will do so).  It looks hopful.  Can
-> you test it please?
->
->   
->> Please copy me personally on any replies. I often subscribe to the list 
->> but it's too much mail right now. Thanks in advance.
->>     
->
-> We do that as a matter of course.  Or we should...
->
->
-> From: Tejun Heo <htejun@gmail.com>
->
-> commit cb6716c879ecf49e2af344926c6a476821812061 upstream
->
-> On certain configurations (certain macbooks), even though all the
-> conditions for SIDPR access described in the datasheet are met,
-> actually reading those registers just returns 0 and have no effect on
-> write.  Verify SIDPR is actually working before enabling it.
->
-> This is reported by Ryan Roth in bz#10512.
->
-> Signed-off-by: Tejun Heo <htejun@gmail.com>
-> Cc: Ryan Roth <ryan.roth@ch2m.com>
-> Signed-off-by: Jeff Garzik <jgarzik@redhat.com>
-> Signed-off-by: Greg Kroah-Hartman <gregkh@suse.de>
->
-> ---
->  drivers/ata/ata_piix.c |   25 +++++++++++++++++++++++++
->  1 file changed, 25 insertions(+)
->
-> --- a/drivers/ata/ata_piix.c
-> +++ b/drivers/ata/ata_piix.c
-> @@ -1531,6 +1531,8 @@ static void __devinit piix_init_sidpr(st
->  {
->     struct pci_dev *pdev = to_pci_dev(host->dev);
->     struct piix_host_priv *hpriv = host->private_data;
-> +   struct ata_device *dev0 = &host->ports[0]->link.device[0];
-> +   u32 scontrol;
->     int i;
->  
->     /* check for availability */
-> @@ -1549,6 +1551,29 @@ static void __devinit piix_init_sidpr(st
->         return;
->  
->     hpriv->sidpr = pcim_iomap_table(pdev)[PIIX_SIDPR_BAR];
-> +
-> +   /* SCR access via SIDPR doesn't work on some configurations.
-> +    * Give it a test drive by inhibiting power save modes which
-> +    * we'll do anyway.
-> +    */
-> +   scontrol = piix_sidpr_read(dev0, SCR_CONTROL);
-> +
-> +   /* if IPM is already 3, SCR access is probably working.  Don't
-> +    * un-inhibit power save modes as BIOS might have inhibited
-> +    * them for a reason.
-> +    */
-> +   if ((scontrol & 0xf00) != 0x300) {
-> +       scontrol |= 0x300;
-> +       piix_sidpr_write(dev0, SCR_CONTROL, scontrol);
-> +       scontrol = piix_sidpr_read(dev0, SCR_CONTROL);
-> +
-> +       if ((scontrol & 0xf00) != 0x300) {
-> +           dev_printk(KERN_INFO, host->dev, "SCR access via "
-> +                  "SIDPR is available but doesn't work\n");
-> +           return;
-> +       }
-> +   }
-> +
->     host->ports[0]->ops = &piix_sidpr_sata_ops;
->     host->ports[1]->ops = &piix_sidpr_sata_ops;
->  }
->
->   
-
+--- old/drivers/ata/sata_mv.c	2008-05-09 17:21:52.000000000 -0400
++++ linux/drivers/ata/sata_mv.c	2008-05-13 18:10:29.000000000 -0400
+@@ -2728,6 +2728,7 @@
+ 
+ 		rc = sata_link_hardreset(link, timing, deadline + extra,
+ 					 &online, NULL);
++		rc = online ? -EAGAIN : rc;
+ 		if (rc)
+ 			return rc;
+ 		sata_scr_read(link, SCR_STATUS, &sstatus);
