@@ -1,27 +1,30 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+From: Andrew Morton <akpm@linux-foundation.org>
 Subject: Re: [PATCH 03/12] ide: use the common ascii hex helpers
-Date: Wed, 14 May 2008 22:48:22 +0200
-Message-ID: <200805142248.22642.bzolnier@gmail.com>
+Date: Wed, 14 May 2008 13:54:21 -0700
+Message-ID: <20080514135421.03e14465.akpm@linux-foundation.org>
 References: <1210619136.24092.54.camel@brick>
+	<200805142248.22642.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.158]:47150 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751245AbYENUms (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 14 May 2008 16:42:48 -0400
-Received: by fg-out-1718.google.com with SMTP id 19so77845fgg.17
-        for <linux-ide@vger.kernel.org>; Wed, 14 May 2008 13:42:44 -0700 (PDT)
-In-Reply-To: <1210619136.24092.54.camel@brick>
-Content-Disposition: inline
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:50079 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751378AbYENUyu (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 14 May 2008 16:54:50 -0400
+In-Reply-To: <200805142248.22642.bzolnier@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Harvey Harrison <harvey.harrison@gmail.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, linux-ide <linux-ide@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: harvey.harrison@gmail.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Monday 12 May 2008, Harvey Harrison wrote:
-> Signed-off-by: Harvey Harrison <harvey.harrison@gmail.com>
+On Wed, 14 May 2008 22:48:22 +0200
+Bartlomiej Zolnierkiewicz <bzolnier@gmail.com> wrote:
 
-Acked-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+> On Monday 12 May 2008, Harvey Harrison wrote:
+> > Signed-off-by: Harvey Harrison <harvey.harrison@gmail.com>
+> 
+> Acked-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+
+I actually dropped this one because the code it's patching isn't
+there any more.
