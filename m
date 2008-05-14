@@ -1,124 +1,190 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: kernel 2.6.25 with ide driver cs5520 does not boot.
-Date: Wed, 14 May 2008 22:44:48 +0200
-Message-ID: <200805142244.48548.bzolnier@gmail.com>
-References: <58cb370e0805080607n4f5de192o5a7371fd0fb1e9f8@mail.gmail.com> <200805091127.53737.bzolnier@gmail.com> <20080509.215601.208967867.takada@mbf.nifty.com>
+From: Lasse Makholm <lasse.makholm@gmail.com>
+Subject: Re: sata_sx4 vs. Promise SX4060
+Date: Wed, 14 May 2008 22:36:12 +0200
+Message-ID: <482B4D3C.1000605@gmail.com>
+References: <fvvkbr$h60$1@ger.gmane.org> <48246A92.2010501@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.153]:8964 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750740AbYENU2R (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 14 May 2008 16:28:17 -0400
-Received: by fg-out-1718.google.com with SMTP id 19so70290fgg.17
-        for <linux-ide@vger.kernel.org>; Wed, 14 May 2008 13:28:15 -0700 (PDT)
-In-Reply-To: <20080509.215601.208967867.takada@mbf.nifty.com>
-Content-Disposition: inline
+Received: from main.gmane.org ([80.91.229.2]:55453 "EHLO ciao.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750758AbYENUgb (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 14 May 2008 16:36:31 -0400
+Received: from list by ciao.gmane.org with local (Exim 4.43)
+	id 1JwNi3-0006nt-9v
+	for linux-ide@vger.kernel.org; Wed, 14 May 2008 20:36:23 +0000
+Received: from d83-183-214-201.cust.tele2.se ([83.183.214.201])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-ide@vger.kernel.org>; Wed, 14 May 2008 20:36:23 +0000
+Received: from lasse.makholm by d83-183-214-201.cust.tele2.se with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-ide@vger.kernel.org>; Wed, 14 May 2008 20:36:23 +0000
+In-Reply-To: <48246A92.2010501@garzik.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: TAKADA Yoshihito <takada@mbf.nifty.com>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-On Friday 09 May 2008, TAKADA Yoshihito wrote:
-> Hi.
+Jeff Garzik wrote:
+> Lasse Makholm wrote:
+[SNIP]
+>> While I do know my way around Linux, C and a debugger, I'm still 
+>> pretty blank when it comes ATA stuff... So any tips on where to go 
+>> from here would highly appreciated...
 > 
-> From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-> Subject: Re: kernel 2.6.25 with ide driver cs5520 does not boot.
-> Date: Fri, 9 May 2008 11:27:53 +0200
+> Well, the hardware programming guide for SX4 is available at
+> http://gkernel.sourceforge.net/specs/promise/
+
+Cool! I've been chewing through a lot of this stuff over the past few 
+days and I'm least starting to get some idea of what I'm messing with... :-)
+
+I also browsed through your documentation on libata but it's still hard 
+for me to grasp the information without having more of an overview of 
+how it all works... I'm hoping that Essential Linux Device Drivers can 
+help me out there but my copy hasn't arrived yet... :-)
+
+> Can you post "lspci -vvv" entry for this device?  I'm betting that the 
+> SX4060 BIOS information is merely echoing what is in the PCI BARs for 
+> the PCI device.
+
+Certainly...
+
+00:0d.0 RAID bus controller: Promise Technology, Inc. PDC20621 (FastTrak
+S150 SX4/FastTrak SX4000 lite) (rev 01)
+	Subsystem: Promise Technology, Inc. PDC20621 (FastTrak S150
+SX4/FastTrak SX4000 lite)
+	Control: I/O+ Mem+ BusMaster- SpecCycle- MemWINV+ VGASnoop- ParErr-
+Stepping- SERR+ FastB2B-
+	Status: Cap+ 66MHz+ UDF- FastB2B+ ParErr- DEVSEL=medium >TAbort-
+<TAbort- <MAbort- >SERR- <PERR-
+	Interrupt: pin A routed to IRQ 17
+	Region 0: I/O ports at e000 [size=256]
+	Region 1: I/O ports at ed00 [size=256]
+	Region 2: I/O ports at ec00 [size=256]
+	Region 3: Memory at fe900000 (32-bit, non-prefetchable) [size=1M]
+	Region 4: Memory at fe800000 (32-bit, non-prefetchable) [size=32K]
+	Expansion ROM at fe700000 [disabled] [size=64K]
+	Capabilities: [60] Power Management version 1
+		Flags: PMEClk- DSI+ D1+ D2- AuxCurrent=0mA PME(D0-,D1-,D2-,D3hot-,D3cold-)
+		Status: D0 PME-Enable- DSel=0 DScale=0 PME-
+
+Looks like your assumption was correct...
+
+As far as I understand it, the 64 MB on the DIMM is accessed one 32 KB 
+page at a time through the area at fe800000. Is that correct?
+
+> You could try commenting out the DIMM init stuff in the driver 
+> completely, on the hope that BIOS configured it properly.
+
+I tried adding an msleep_interruptible(10) for every MB written in the 
+initialization loop and that seems to work pretty well... It still 
+puzzles me a bit that the problem is there at all though... Is it 
+reasonable that it takes so long to write those 64 MB?
+
+By the way, is msleep_interruptible() always safe to call?
+
+I was wondering why the init stuff is there at all... Is it to ensure 
+that content of the SDRAM is aligned with the parity bits?
+
+What exactly does this do:
+
+	/* DIMM Initialization Select/Enable (bit 18/19) */
+	data &= (~(1<<18));
+	data |= (1<<19);
+	writel(data, mmio + PDC_SDRAM_CONTROL);
+
+I couldn't find any details about it in the PDC20621 programming guides, 
+so I assume it's some basic memory-related knowledge that I don't have...
+
+I also tried writing some test patterns into the memory in the init 
+loop, reading them back out and comparing to the original (using 
+pdc20621_put_to_dimm() and pdc20621_get_from_dimm())
+
+u32 patterns[10] = {
+	0xffffffff, 0xff00ff00, 0x00ff00ff, 0xf0f0f0f0, 0x0f0f0f0f,
+	0xcccccccc, 0x33333333, 0xaaaaaaaa, 0x55555555, 0x00000000,
+};
+
+for (j = 0; j < 10; j++) {
+	tmp = patterns[j];
+	pdc20621_put_to_dimm(host, (void *) &tmp, addr, sizeof(u32));
+	pdc20621_get_from_dimm(host, (void *) &tmp, addr, sizeof(u32));
+	if (tmp != patterns[j])
+		VPRINTK("Ouch! Addr 0x%08x: 0x%08x != 0x%08x\n",
+			addr, tmp, patterns[j]);
+}
+
+...but that miserably failed... I suspect I'm missing something here... 
+Any hints?
+
+Why is a writel() always(?) followed by readl() by the way? Google 
+hasn't been able to tell me that so far...
+
+All commands (as opposed to just block transfers) are always copied to 
+the onboard DIMM before being sent to an ATA port, correct?
+
+The ATA_CMD_SET_FEATURES command still seems to be the main problem though:
+
+[ 1115.001429] ata5.00: qc timeout (cmd 0xef)
+[ 1115.001434] ata5.00: failed to set xfermode (err_mask=0x4)
+[ 1115.001437] ata5.00: disabled
+
+The error mask is AC_ERR_ATA_BUS but I don't have much of a clue as to 
+why that happens yet...
+
+> I've been the one getting Promise to release docs, but it's a slow 
+> process that (literally) has taken years.
 > 
-> > On Friday 09 May 2008, TAKADA Yoshihito wrote:
-> > > Thanks for quick reply.
-> > > 
-> > > I tried 2.6.26rc1. It hangs same as 2.6.25.
-> > > kernel 2.6.26rc1 with cs5520 cannot boot. cs5520 scans ide0 and ide1.
-> > > It seems 2nd port DMA base issue was solved.
-> > 
-> > [...]
-> > 
-> > Thanks.
-> > 
-> > The following patch for 2.6.26-rc1 disables VDMA, please give it a try
-> > (I haven't time to fully audit VDMA support yet but lets see if it is
-> > the main source of the problems).
+> However, that said, they _do_ respond and _are_ interested.  You might 
+> try promise_linux@promise.com and point out that the existing SX4 docs 
+> are publicly released at http://gkernel.sourceforge.net/specs/promise/ 
+> with the blessing of Chi and Sam @ Promise.
+
+That's really good news. I think I'll poke around some more and try to 
+get a feel for what I'm doing before I start bothering the nice folks at 
+Promise though. But I'll definitely get in touch with you if/when I 
+decide to write them...
+
+>>  * Is it a correct assumption that the sata_sx4 driver knows nothing the
+>>    various array configurations and that it will always just see 4
+>>    independent drives, regardless of what arrays have been configured in
+>>    the BIOS?
 > 
-> I applied the patch. But kernel was hung.
-> And I attempt to kill IDE_HFLAG_CS5520. It cannot boot, oo.
+> Correct.
+
+...and is it then also correct that said knowledge about array configs 
+is/belongs in the dmraid stuff?
+
+>>  * Also, is there any (easy) way to choke debug output from some ATA
+>>    devices, while keeping it for others? Apart from grep... :-)
 > 
->   kill IDE_HFLAG_VDMA  : hang  
->   kill IDE_HFLAG_CS5520: hang
->   kill both flags      : boot
+> Alas, not at present.
+> 
+> There is a half-finished infrastructure in libata, but messages need to 
+> be moved over to it (ap->msg_enable).
 
-Thanks for investigating this - I forgot that currently VDMA and CS5520
-host flags use the same bit (so it also needs to be fixed).
+OK. I might look into that... Is it lightyears from usable or would it 
+be worth looking into?
 
-I'm going to send the following patch to Linus (please verify it):
+>> I'd be happy to put in some time and effort in moving this forward but 
+>> I probably won't make much progress need some pointers from some 
+>> ATA-gurus...
+> 
+> If you are looking for generic ATA programming information, 
+> http://ata.wiki.kernel.org/index.php/Developer_Resources tries to give 
+> the basics.  Even if there is a broken link, you can usually google for 
+> a filename to find a bazillion copies of the spec in question.
 
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH] cs5520: disable VDMA
+Ah, thanks... Nice to meet you, 900+ page ATA spec! :-)
 
-Disable Virtual DMA support for now (it causes system hangs).
+Anyway, I've (again) been googling high and low in search of basic 
+"bootstrapping" knowledge about this stuff and now that I've found at 
+least some of it (I now know what a PRD is - yay!), I'm thinking that it 
+could be helpful to others...
 
-Thanks to TAKADA Yoshihito for the help with debugging the problem.
+Would be an idea maybe to create a page or two on ata.wiki.kernel.org 
+with e.g. terminology and other basic stuff?
 
-Reported-by: TAKADA Yoshihito <takada@mbf.nifty.com>
-Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
----
- drivers/ide/pci/cs5520.c |    2 +-
- include/linux/ide.h      |    8 ++++----
- 2 files changed, 5 insertions(+), 5 deletions(-)
+/Lasse
 
-Index: b/drivers/ide/pci/cs5520.c
-===================================================================
---- a/drivers/ide/pci/cs5520.c
-+++ b/drivers/ide/pci/cs5520.c
-@@ -119,6 +119,7 @@ static const struct ide_dma_ops cs5520_d
- 	.dma_timeout		= ide_dma_timeout,
- };
- 
-+/* FIXME: VDMA is disabled because it caused system hangs */
- #define DECLARE_CS_DEV(name_str)				\
- 	{							\
- 		.name		= name_str,			\
-@@ -126,7 +127,6 @@ static const struct ide_dma_ops cs5520_d
- 		.dma_ops	= &cs5520_dma_ops,		\
- 		.host_flags	= IDE_HFLAG_ISA_PORTS |		\
- 				  IDE_HFLAG_CS5520 |		\
--				  IDE_HFLAG_VDMA |		\
- 				  IDE_HFLAG_NO_ATAPI_DMA |	\
- 				  IDE_HFLAG_ABUSE_SET_DMA_MODE, \
- 		.pio_mask	= ATA_PIO4,			\
-Index: b/include/linux/ide.h
-===================================================================
---- a/include/linux/ide.h
-+++ b/include/linux/ide.h
-@@ -1058,8 +1058,8 @@ enum {
- 	IDE_HFLAG_NO_SET_MODE		= (1 << 9),
- 	/* trust BIOS for programming chipset/device for DMA */
- 	IDE_HFLAG_TRUST_BIOS_FOR_DMA	= (1 << 10),
--	/* host uses VDMA (tied with IDE_HFLAG_CS5520 for now) */
--	IDE_HFLAG_VDMA			= (1 << 11),
-+	/* host is CS5510/CS5520 */
-+	IDE_HFLAG_CS5520		= (1 << 11),
- 	/* ATAPI DMA is unsupported */
- 	IDE_HFLAG_NO_ATAPI_DMA		= (1 << 12),
- 	/* set if host is a "non-bootable" controller */
-@@ -1070,8 +1070,6 @@ enum {
- 	IDE_HFLAG_NO_AUTODMA		= (1 << 15),
- 	/* host uses MMIO */
- 	IDE_HFLAG_MMIO			= (1 << 16),
--	/* host is CS5510/CS5520 */
--	IDE_HFLAG_CS5520		= IDE_HFLAG_VDMA,
- 	/* no LBA48 */
- 	IDE_HFLAG_NO_LBA48		= (1 << 17),
- 	/* no LBA48 DMA */
-@@ -1101,6 +1099,8 @@ enum {
- 	IDE_HFLAG_NO_IO_32BIT		= (1 << 30),
- 	/* never unmask IRQs */
- 	IDE_HFLAG_NO_UNMASK_IRQS	= (1 << 31),
-+	/* host uses VDMA (disabled for now) */
-+	IDE_HFLAG_VDMA			= 0,
- };
- 
- #ifdef CONFIG_BLK_DEV_OFFBOARD
