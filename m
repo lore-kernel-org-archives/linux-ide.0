@@ -1,121 +1,51 @@
-From: AndrewL733 <AndrewL733@aol.com>
-Subject: Re: Macbook Pro SATA Drives not seen in 2.6.25
-Date: Wed, 14 May 2008 07:36:02 -0400
-Message-ID: <482ACEA2.7080300@aol.com>
-References: <482A5C19.6090503@aol.com> <20080514010618.2e1e510a.akpm@linux-foundation.org>
+From: Mark Lord <liml@rtr.ca>
+Subject: Re: Port-Multiplier hotplug support: ATA_FLAG_AN
+Date: Wed, 14 May 2008 08:46:11 -0400
+Message-ID: <482ADF13.7020701@rtr.ca>
+References: <482A1B41.50507@rtr.ca> <482A582A.7090108@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from imo-d21.mx.aol.com ([205.188.144.207]:65090 "EHLO
-	imo-d21.mx.aol.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755636AbYENLgP (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 14 May 2008 07:36:15 -0400
-In-Reply-To: <20080514010618.2e1e510a.akpm@linux-foundation.org>
+Received: from rtr.ca ([76.10.145.34]:1820 "EHLO mail.rtr.ca"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1762300AbYENMqM (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 14 May 2008 08:46:12 -0400
+In-Reply-To: <482A582A.7090108@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: Jeff Garzik <jgarzik@pobox.com>, Alan Cox <alan@redhat.com>, IDE/ATA development list <linux-ide@vger.kernel.org>
 
-Thanks, Andrew. Another question below.
-
-
-Andrew Morton wrote:
-> On Tue, 13 May 2008 23:27:21 -0400 AndrewL733 <AndrewL733@aol.com> wrote:
->
->   
->> I have a couple of Macbook Pros. The newest one -- based on the Penryn 
->> Core 2 Duo with ICH8 -- will not boot with any 2.6.25 kernel (I have 
->> tried 2.6.25 and 2.6.25.3).
->>     
->
-> Let's cc linux-ide.
->
->   
->> It boots fine with 2.6.24.7 as well as with 
->> 2.6.26-rc2. It also boots fine with 2.6.22. I have specific reasons why 
->> I need to run 2.6.25 so I would appreciate any help here. It seems the 
->> SATA drives are detected, but then for each partition during bootup I see:
+Tejun Heo wrote:
+> Mark Lord wrote:
+>> Tejun,
 >>
->> ata3: SATA link down (SStatus 0 SControl 0)
+>> Apparently the newer (GenIIe) sata_mv chips *can* support asynchronous
+>> notification without problems.  Some/all of the older ones cannot 
+>> (errata).
 >>
->> The same 2.6.25 kernels boot fine on my older Macbook Pro with ICH7 and 
->> I do not see this error.
+>> So, I've done the one-liner change in sata_mv, to add ATA_FLAG_AN to
+>> the 7042 and 6042 chips, and it all seems to work rather nicely.
 >>
->> I would be happy to run a git bisect to help identify the issue, but if 
->> this problem is already well understood (hey, it's fixed in 2.6.26), I 
->> can think of better ways to spend my time.
->>     
->
-> The below went into 2.6.25.1 (or will do so).  It looks hopful.  Can
-> you test it please?
->   
-Do you mean 2.6.25.4 ?  As I said above, I already tried 2.6.25.3 
-yesterday and it doesn't boot.
+>> Am I missing something?  Is there any other local code to sata_mv
+>> that should be provided before setting ATA_FLAG_AN ?
+>>
+>> Like I said, it works, but I just want to check whether any other
+>> pieces are expected to be present?
+> 
+> You need to call sata_async_notification() from interrupt handler after 
+> AN FIS is received.  sata_async_notification() is responsible for 
+> discerning between ATAPI and PMP ANs using SNotification and schedule 
+> appropriate actions.  If SNotification is not available && PMP is 
+> attached, it just calls ata_port_schedule_eh().  That's probably why it 
+> just worked by setting ATA_FLAG_AN.
+..
 
->
->
-> From: Tejun Heo <htejun@gmail.com>
->
-> commit cb6716c879ecf49e2af344926c6a476821812061 upstream
->
-> On certain configurations (certain macbooks), even though all the
-> conditions for SIDPR access described in the datasheet are met,
-> actually reading those registers just returns 0 and have no effect on
-> write.  Verify SIDPR is actually working before enabling it.
->
-> This is reported by Ryan Roth in bz#10512.
->
-> Signed-off-by: Tejun Heo <htejun@gmail.com>
-> Cc: Ryan Roth <ryan.roth@ch2m.com>
-> Signed-off-by: Jeff Garzik <jgarzik@redhat.com>
-> Signed-off-by: Greg Kroah-Hartman <gregkh@suse.de>
->
-> ---
->  drivers/ata/ata_piix.c |   25 +++++++++++++++++++++++++
->  1 file changed, 25 insertions(+)
->
-> --- a/drivers/ata/ata_piix.c
-> +++ b/drivers/ata/ata_piix.c
-> @@ -1531,6 +1531,8 @@ static void __devinit piix_init_sidpr(st
->  {
->     struct pci_dev *pdev = to_pci_dev(host->dev);
->     struct piix_host_priv *hpriv = host->private_data;
-> +   struct ata_device *dev0 = &host->ports[0]->link.device[0];
-> +   u32 scontrol;
->     int i;
->  
->     /* check for availability */
-> @@ -1549,6 +1551,29 @@ static void __devinit piix_init_sidpr(st
->         return;
->  
->     hpriv->sidpr = pcim_iomap_table(pdev)[PIIX_SIDPR_BAR];
-> +
-> +   /* SCR access via SIDPR doesn't work on some configurations.
-> +    * Give it a test drive by inhibiting power save modes which
-> +    * we'll do anyway.
-> +    */
-> +   scontrol = piix_sidpr_read(dev0, SCR_CONTROL);
-> +
-> +   /* if IPM is already 3, SCR access is probably working.  Don't
-> +    * un-inhibit power save modes as BIOS might have inhibited
-> +    * them for a reason.
-> +    */
-> +   if ((scontrol & 0xf00) != 0x300) {
-> +       scontrol |= 0x300;
-> +       piix_sidpr_write(dev0, SCR_CONTROL, scontrol);
-> +       scontrol = piix_sidpr_read(dev0, SCR_CONTROL);
-> +
-> +       if ((scontrol & 0xf00) != 0x300) {
-> +           dev_printk(KERN_INFO, host->dev, "SCR access via "
-> +                  "SIDPR is available but doesn't work\n");
-> +           return;
-> +       }
-> +   }
-> +
->     host->ports[0]->ops = &piix_sidpr_sata_ops;
->     host->ports[1]->ops = &piix_sidpr_sata_ops;
->  }
->
->   
+Okay, that's cool.  So mv_err_intr() now just calls sata_async_notification(),
+and then bails out without further action (if no other errors coincided),
+and the EH then runs for just that one PM link, rather than the whole port.
 
+(tested, working).
+
+Cool!
