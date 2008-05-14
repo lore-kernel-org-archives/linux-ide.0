@@ -1,25 +1,121 @@
-From: David Howells <dhowells@redhat.com>
-Subject: Re: [PATCH 01/12] lib: create common ascii hex array
-Date: Wed, 14 May 2008 12:26:10 +0100
-Message-ID: <1507.1210764370@redhat.com>
-References: <1210619134.24092.51.camel@brick>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <1210619134.24092.51.camel@brick>
-Sender: linux-scsi-owner@vger.kernel.org
-To: Harvey Harrison <harvey.harrison@gmail.com>
-Cc: dhowells@redhat.com, Andrew Morton <akpm@linux-foundation.org>, LKML <linux-kernel@vger.kernel.org>, James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi <linux-scsi@vger.kernel.org>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-ide <linux-ide@vger.kernel.org>, linux-netdev <netdev@vger.kernel.org>, David Miller <davem@davemloft.net>, Jeff Garzik <jeff@garzik.org>, Ingo Molnar <mingo@elte.hu>, Jason Wessel <jason.wessel@windriver.com>, "ralf@linux-mips.org" <ralf@linux-mips.org>, Paul Mundt <lethal@linux-sh.org>, Paul Mackerras <paulus@samba.org>
+From: AndrewL733 <AndrewL733@aol.com>
+Subject: Re: Macbook Pro SATA Drives not seen in 2.6.25
+Date: Wed, 14 May 2008 07:36:02 -0400
+Message-ID: <482ACEA2.7080300@aol.com>
+References: <482A5C19.6090503@aol.com> <20080514010618.2e1e510a.akpm@linux-foundation.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from imo-d21.mx.aol.com ([205.188.144.207]:65090 "EHLO
+	imo-d21.mx.aol.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755636AbYENLgP (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 14 May 2008 07:36:15 -0400
+In-Reply-To: <20080514010618.2e1e510a.akpm@linux-foundation.org>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-Harvey Harrison <harvey.harrison@gmail.com> wrote:
+Thanks, Andrew. Another question below.
 
-> Add a common hex array in hexdump.c so everyone can use it.
-> 
-> Add a common hi/lo helper to avoid the shifting masking that is
-> done to get the upper and lower nibbles of a byte value.
-> 
-> Pull the pack_hex_byte helper from kgdb as it is opencoded many
-> places in the tree that will be consolidated.
-> 
-> Signed-off-by: Harvey Harrison <harvey.harrison@gmail.com>
 
-Acked-by: David Howells <dhowells@redhat.com>
+Andrew Morton wrote:
+> On Tue, 13 May 2008 23:27:21 -0400 AndrewL733 <AndrewL733@aol.com> wrote:
+>
+>   
+>> I have a couple of Macbook Pros. The newest one -- based on the Penryn 
+>> Core 2 Duo with ICH8 -- will not boot with any 2.6.25 kernel (I have 
+>> tried 2.6.25 and 2.6.25.3).
+>>     
+>
+> Let's cc linux-ide.
+>
+>   
+>> It boots fine with 2.6.24.7 as well as with 
+>> 2.6.26-rc2. It also boots fine with 2.6.22. I have specific reasons why 
+>> I need to run 2.6.25 so I would appreciate any help here. It seems the 
+>> SATA drives are detected, but then for each partition during bootup I see:
+>>
+>> ata3: SATA link down (SStatus 0 SControl 0)
+>>
+>> The same 2.6.25 kernels boot fine on my older Macbook Pro with ICH7 and 
+>> I do not see this error.
+>>
+>> I would be happy to run a git bisect to help identify the issue, but if 
+>> this problem is already well understood (hey, it's fixed in 2.6.26), I 
+>> can think of better ways to spend my time.
+>>     
+>
+> The below went into 2.6.25.1 (or will do so).  It looks hopful.  Can
+> you test it please?
+>   
+Do you mean 2.6.25.4 ?  As I said above, I already tried 2.6.25.3 
+yesterday and it doesn't boot.
+
+>
+>
+> From: Tejun Heo <htejun@gmail.com>
+>
+> commit cb6716c879ecf49e2af344926c6a476821812061 upstream
+>
+> On certain configurations (certain macbooks), even though all the
+> conditions for SIDPR access described in the datasheet are met,
+> actually reading those registers just returns 0 and have no effect on
+> write.  Verify SIDPR is actually working before enabling it.
+>
+> This is reported by Ryan Roth in bz#10512.
+>
+> Signed-off-by: Tejun Heo <htejun@gmail.com>
+> Cc: Ryan Roth <ryan.roth@ch2m.com>
+> Signed-off-by: Jeff Garzik <jgarzik@redhat.com>
+> Signed-off-by: Greg Kroah-Hartman <gregkh@suse.de>
+>
+> ---
+>  drivers/ata/ata_piix.c |   25 +++++++++++++++++++++++++
+>  1 file changed, 25 insertions(+)
+>
+> --- a/drivers/ata/ata_piix.c
+> +++ b/drivers/ata/ata_piix.c
+> @@ -1531,6 +1531,8 @@ static void __devinit piix_init_sidpr(st
+>  {
+>     struct pci_dev *pdev = to_pci_dev(host->dev);
+>     struct piix_host_priv *hpriv = host->private_data;
+> +   struct ata_device *dev0 = &host->ports[0]->link.device[0];
+> +   u32 scontrol;
+>     int i;
+>  
+>     /* check for availability */
+> @@ -1549,6 +1551,29 @@ static void __devinit piix_init_sidpr(st
+>         return;
+>  
+>     hpriv->sidpr = pcim_iomap_table(pdev)[PIIX_SIDPR_BAR];
+> +
+> +   /* SCR access via SIDPR doesn't work on some configurations.
+> +    * Give it a test drive by inhibiting power save modes which
+> +    * we'll do anyway.
+> +    */
+> +   scontrol = piix_sidpr_read(dev0, SCR_CONTROL);
+> +
+> +   /* if IPM is already 3, SCR access is probably working.  Don't
+> +    * un-inhibit power save modes as BIOS might have inhibited
+> +    * them for a reason.
+> +    */
+> +   if ((scontrol & 0xf00) != 0x300) {
+> +       scontrol |= 0x300;
+> +       piix_sidpr_write(dev0, SCR_CONTROL, scontrol);
+> +       scontrol = piix_sidpr_read(dev0, SCR_CONTROL);
+> +
+> +       if ((scontrol & 0xf00) != 0x300) {
+> +           dev_printk(KERN_INFO, host->dev, "SCR access via "
+> +                  "SIDPR is available but doesn't work\n");
+> +           return;
+> +       }
+> +   }
+> +
+>     host->ports[0]->ops = &piix_sidpr_sata_ops;
+>     host->ports[1]->ops = &piix_sidpr_sata_ops;
+>  }
+>
+>   
+
