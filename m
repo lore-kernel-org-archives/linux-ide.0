@@ -1,85 +1,51 @@
-From: <gregkh@suse.de>
-Subject: patch libata-force-hardreset-if-link-is-in-powersave-mode.patch added to 2.6.25-stable tree
-Date: Thu, 15 May 2008 12:04:46 -0700
-Message-ID: <20080515195022.89DFD14540CB@imap.suse.de>
-References: <482C3751.8030206@gmail.com>
+From: bugme-daemon@bugzilla.kernel.org
+Subject: [Bug 10715] New: 2.6.25 -> 2.6.26-rc1: pcmcia flash card changed name from hda to hdc
+Date: Thu, 15 May 2008 15:56:29 -0700 (PDT)
+Message-ID: <bug-10715-11633@http.bugzilla.kernel.org/>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ns1.suse.de ([195.135.220.2]:48522 "EHLO mx1.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758379AbYEOTuZ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 15 May 2008 15:50:25 -0400
-In-Reply-To: <482C3751.8030206@gmail.com>
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:40654 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752050AbYEOW4b (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 15 May 2008 18:56:31 -0400
+Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
+	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id m4FMuTos028195
+	for <linux-ide@vger.kernel.org>; Thu, 15 May 2008 15:56:30 -0700
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: htejun@gmail.com, gregkh@suse.de, jeff@garzik.org, linux-ide@vger.kernel.org
-Cc: stable@kernel.org, stable-commits@vger.kernel.org
+To: linux-ide@vger.kernel.org
+
+http://bugzilla.kernel.org/show_bug.cgi?id=10715
+
+           Summary: 2.6.25 -> 2.6.26-rc1: pcmcia flash card changed name
+                    from hda to hdc
+           Product: IO/Storage
+           Version: 2.5
+     KernelVersion: 2.6.26-rc1
+          Platform: All
+        OS/Version: Linux
+              Tree: Mainline
+            Status: NEW
+          Severity: normal
+          Priority: P1
+         Component: IDE
+        AssignedTo: io_ide@kernel-bugs.osdl.org
+        ReportedBy: rjw@sisk.pl
+OtherBugsDependingO 10492
+             nThis:
+        Regression: 1
 
 
-This is a note to let you know that we have just queued up the patch titled
+Subject    : 2.6.25 -> 2.6.26-rc1: pcmcia flash card changed name from hda to
+hdc
+Submitter  : Pavel Machek <pavel@suse.cz>
+Date       : 2008-05-15 13:23
+References : http://marc.info/?l=linux-kernel&m=121085784809468&w=4
 
-     Subject: libata: force hardreset if link is in powersave mode
-
-to the 2.6.25-stable tree.  Its filename is
-
-     libata-force-hardreset-if-link-is-in-powersave-mode.patch
-
-A git repo of this tree can be found at 
-    http://www.kernel.org/git/?p=linux/kernel/git/stable/stable-queue.git;a=summary
+This entry is being used for tracking a regression from 2.6.25.  Please don't
+close it until the problem is fixed in the mainline.
 
 
->From stable-bounces@linux.kernel.org Thu May 15 06:15:27 2008
-From: Tejun Heo <htejun@gmail.com>
-Date: Thu, 15 May 2008 22:14:57 +0900
-Subject: libata: force hardreset if link is in powersave mode
-To: Jeff Garzik <jeff@garzik.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, stable@kernel.org
-Cc: matthieu.castet@parrot.com
-Message-ID: <482C3751.8030206@gmail.com>
-
-From: Tejun Heo <htejun@gmail.com>
-
-Inhibiting link PM mode doesn't bring the link back online if it's
-already in powersave mode.  If SRST is used in these cases, libata EH
-thinks that the link is offline and fails detection.  Force hardreset
-if link is in powersave mode.
-
-Signed-off-by: Tejun Heo <htejun@gmail.com>
-Cc: Jeff Garzik <jeff@garzik.org>
-Signed-off-by: Greg Kroah-Hartman <gregkh@suse.de>
-
----
- drivers/ata/libata-core.c |   12 ++++++++++++
- 1 file changed, 12 insertions(+)
-
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -3947,6 +3947,7 @@ int ata_std_prereset(struct ata_link *li
- 	struct ata_port *ap = link->ap;
- 	struct ata_eh_context *ehc = &link->eh_context;
- 	const unsigned long *timing = sata_ehc_deb_timing(ehc);
-+	u32 sstatus;
- 	int rc;
- 
- 	/* handle link resume */
-@@ -3960,6 +3961,17 @@ int ata_std_prereset(struct ata_link *li
- 	if (ap->flags & ATA_FLAG_PMP)
- 		ehc->i.action |= ATA_EH_HARDRESET;
- 
-+	/* if link powersave is on, force hardreset */
-+	if (sata_scr_read(link, SCR_STATUS, &sstatus) == 0) {
-+		u8 ipm = sstatus >> 8;
-+
-+		if (ipm == 2 || ipm == 6) {
-+			ata_link_printk(link, KERN_INFO, "link in powersave "
-+				"mode (ipm=%d), forcing hardreset\n", ipm);
-+			ehc->i.action |= ATA_EH_HARDRESET;
-+		}
-+	}
-+
- 	/* if we're about to do hardreset, nothing more to do */
- 	if (ehc->i.action & ATA_EH_HARDRESET)
- 		return 0;
-
-
-Patches currently in stable-queue which might be from htejun@gmail.com are
-
-queue-2.6.25/libata-force-hardreset-if-link-is-in-powersave-mode.patch
+-- 
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug, or are watching the assignee.
