@@ -1,45 +1,108 @@
-From: Matthieu CASTET <matthieu.castet@parrot.com>
+From: Tejun Heo <htejun@gmail.com>
 Subject: Re: ata_piix 2.6.25 sata failure
-Date: Thu, 15 May 2008 09:41:29 +0200
-Message-ID: <482BE929.7090009@parrot.com>
-References: <482949CB.7000208@parrot.com>
+Date: Thu, 15 May 2008 16:57:41 +0900
+Message-ID: <482BECF5.2070801@gmail.com>
+References: <482949CB.7000208@parrot.com> <482BE929.7090009@parrot.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed;
+ boundary="------------030205070405010908020403"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from co203.xi-lite.net ([149.6.83.203]:56206 "EHLO
-	toronto.xi-lite.net" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1758075AbYEOHld (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 15 May 2008 03:41:33 -0400
-In-Reply-To: <482949CB.7000208@parrot.com>
+Received: from wf-out-1314.google.com ([209.85.200.175]:9710 "EHLO
+	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752864AbYEOH5t (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 15 May 2008 03:57:49 -0400
+Received: by wf-out-1314.google.com with SMTP id 27so283139wfd.4
+        for <linux-ide@vger.kernel.org>; Thu, 15 May 2008 00:57:48 -0700 (PDT)
+In-Reply-To: <482BE929.7090009@parrot.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Tejun Heo <htejun@gmail.com>
+To: Matthieu CASTET <matthieu.castet@parrot.com>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-Hi Tejun,
+This is a multi-part message in MIME format.
+--------------030205070405010908020403
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 
 Matthieu CASTET wrote:
-> Hi,
+> Hi Tejun,
 > 
-> the 2.6.25 from debian fail to make work the second port. I got a "SATA 
-> link down (SStatus 61 Scontrol 30)" for ata2. ata1 got "SATA link up 3.0 
-> Gbps (SStatus 13 SControl 30)"
-> The 2.6.24 works [1]. But some previous kernel (IRRC 2.6.18) had the 
-> same problem, ie ata2 doesn't work.
+> Matthieu CASTET wrote:
+>> Hi,
+>>
+>> the 2.6.25 from debian fail to make work the second port. I got a 
+>> "SATA link down (SStatus 61 Scontrol 30)" for ata2. ata1 got "SATA 
+>> link up 3.0 Gbps (SStatus 13 SControl 30)"
+>> The 2.6.24 works [1]. But some previous kernel (IRRC 2.6.18) had the 
+>> same problem, ie ata2 doesn't work.
+>>
+> I saw you post a patch for macbook for correcting a bug with ata_ppiix.
+> But it doesn't seem the same problem. I don't get 0 but others values.
 > 
-I saw you post a patch for macbook for correcting a bug with ata_ppiix.
-But it doesn't seem the same problem. I don't get 0 but others values.
+> May be a problem occurs when merging the master and slave status register ?
+> 
+> 
+> Any idea how to debug this.
+> 
+> For information this happen on a HP Compaq dc7700p, and there no way on 
+> the bios to change the controller to ahci mode
 
-May be a problem occurs when merging the master and slave status register ?
+Yeah, I wrote a patch for that yesterday and forgot to actually send it. 
+  Can you please test the attached patch?
 
+-- 
+tejun
 
-Any idea how to debug this.
+--------------030205070405010908020403
+Content-Type: text/plain;
+ name="libata-force-hardreset-if-link-pm"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="libata-force-hardreset-if-link-pm"
 
-For information this happen on a HP Compaq dc7700p, and there no way on 
-the bios to change the controller to ahci mode
+From: Tejun Heo <teheo@suse.de>
+Subject: libata: force hardreset if link is in powersave mode
+References: 381795
 
+Inhibiting link PM mode doesn't bring the link back online if it's
+already in powersave mode.  If SRST is used in these cases, libata EH
+thinks that the link is offline and fails detection.  Force hardreset
+if link is in powersave mode.
 
-Thanks
+Signed-off-by: Tejun Heo <teheo@suse.de>
+---
+ drivers/ata/libata-core.c |   12 ++++++++++++
+ 1 file changed, 12 insertions(+)
 
-Matthieu
+Index: linux-2.6.25/drivers/ata/libata-core.c
+===================================================================
+--- linux-2.6.25.orig/drivers/ata/libata-core.c
++++ linux-2.6.25/drivers/ata/libata-core.c
+@@ -3960,6 +3960,7 @@ int ata_std_prereset(struct ata_link *li
+ 	struct ata_port *ap = link->ap;
+ 	struct ata_eh_context *ehc = &link->eh_context;
+ 	const unsigned long *timing = sata_ehc_deb_timing(ehc);
++	u32 sstatus;
+ 	int rc;
+ 
+ 	/* handle link resume */
+@@ -3973,6 +3974,17 @@ int ata_std_prereset(struct ata_link *li
+ 	if (ap->flags & ATA_FLAG_PMP)
+ 		ehc->i.action |= ATA_EH_HARDRESET;
+ 
++	/* if link powersave is on, force hardreset */
++	if (sata_scr_read(link, SCR_STATUS, &sstatus) == 0) {
++		u8 ipm = sstatus >> 8;
++
++		if (ipm == 2 || ipm == 6) {
++			ata_link_printk(link, KERN_INFO, "link in powersave "
++				"mode (ipm=%d), forcing hardreset\n", ipm);
++			ehc->i.action |= ATA_EH_HARDRESET;
++		}
++	}
++
+ 	/* if we're about to do hardreset, nothing more to do */
+ 	if (ehc->i.action & ATA_EH_HARDRESET)
+ 		return 0;
 
+--------------030205070405010908020403--
