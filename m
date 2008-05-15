@@ -1,77 +1,50 @@
-From: Bruce Allen <ballen@gravity.phys.uwm.edu>
-Subject: Re: [RESOLVED] Re: libata errors with smartctl on 2.6.24, WD3200AAKS
- and nVidia AHCI
-Date: Thu, 15 May 2008 00:28:34 -0500 (CDT)
-Message-ID: <Pine.LNX.4.63.0805150027090.15384@trinity.phys.uwm.edu>
-References: <alpine.BSF.1.00.0805140952250.34461@anduin.net>
- <200805140905.29426.tvrtko@ursulin.net> <482AA37C.1020604@gmail.com>
- <20080514193648.GA10651@jim.sh> <482BB1B1.9060804@gmail.com>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: ata_std_qc_defer not good enough for FIS-based switching ?
+Date: Thu, 15 May 2008 15:51:59 +0900
+Message-ID: <482BDD8F.7060506@gmail.com>
+References: <48163C5D.9050605@rtr.ca> <48164AE8.4070106@rtr.ca> <481659B5.7090703@gmail.com> <481660DD.80103@rtr.ca> <48167755.3000208@gmail.com> <4816873C.7090302@rtr.ca> <482AF322.2090605@gmail.com> <482AFB12.3040005@rtr.ca> <482AFCFA.40708@rtr.ca>
 Mime-Version: 1.0
-Content-Type: MULTIPART/MIXED; BOUNDARY="1501667129-1258738859-1210829314=:15384"
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from trinity.phys.uwm.edu ([129.89.57.159]:55629 "EHLO
-	trinity.phys.uwm.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750759AbYEOGZP (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 15 May 2008 02:25:15 -0400
-In-Reply-To: <482BB1B1.9060804@gmail.com>
+Received: from wf-out-1314.google.com ([209.85.200.175]:34106 "EHLO
+	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752544AbYEOGwH (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 15 May 2008 02:52:07 -0400
+Received: by wf-out-1314.google.com with SMTP id 27so261164wfd.4
+        for <linux-ide@vger.kernel.org>; Wed, 14 May 2008 23:52:07 -0700 (PDT)
+In-Reply-To: <482AFCFA.40708@rtr.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jim Paris <jim@jtan.com>, "Tvrtko A. Ursulin" <tvrtko@ursulin.net>, =?iso-8859-1?Q?Erik_Inge_Bols=F8?= <knan-ide@anduin.net>, Tejun Heo <htejun@gmail.com>
-Cc: linux-ide@vger.kernel.org
+To: Mark Lord <liml@rtr.ca>
+Cc: Jeff Garzik <jgarzik@pobox.com>, IDE/ATA development list <linux-ide@vger.kernel.org>, Alan Cox <alan@redhat.com>
 
-  This message is in MIME format.  The first part should be readable text,
-  while the remaining parts are likely unreadable without MIME-aware tools.
+Mark Lord wrote:
+> Mark Lord wrote:
+>> ..
+>> At the moment, I have the Sil PM plugged in, and it all behaves nicely.
+>> The previous failure was with the Marvell PM, so I'll hook that up next
+>> and retest with it.
+> ..
+> 
+> It went bonkers again.  This is with 2.6.25.
+> I'll build 2.6.26-git and try again with that shortly.
+> 
+> One thing about sata_sil24 --> it *really* doesn't like to handle
+> hotplug events while in the midst of EH.
+> 
+> I unplugged the host cable from the PM, and the EH just kept on
+> going and going.
+> 
+> I then unplugged the sata_sil24 PCIe host adapter card,
+> and it still took quite some time to give up on the Energizer Bunny 
+> routine.  :)
 
---1501667129-1258738859-1210829314=:15384
-Content-Type: TEXT/PLAIN; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 8BIT
+Heh... The retry count on the host side when PMP is attached is set 
+higher because losing the PMP means losing all devices beyond it.  I 
+agree it would be better to add a total time limit there tho.
 
-Gentlemen,
+Thanks.
 
-Please reproduce the problem, adding the command-line switch '-r ioctl,3' 
-which shows return status of various commands, then send session 
-transcript.
-
-Cheers,
- 	Bruce
-
-On Thu, 15 May 2008, Tejun Heo wrote:
-
-> Jim Paris wrote:
->> Tejun Heo wrote:
->>> Tvrtko A. Ursulin wrote:
->>>> On Wednesday 14 May 2008 08:58:56 Erik Inge Bolsø wrote:
->>>>> The drive does say
->>>>>
->>>>>         Enabled Supported:
->>>>>                 SMART feature set
->>>>>                 Security Mode feature set
->>>>>            *    Power Management feature set
->>>>>            *    Write cache
->>>>>            *    Look-ahead
->>>>> 
->>>>> ... so doesn't look like SMART is enabled on the drive.
->>>>> 
->>>>> Does the problem go away if you do a
->>>>> 
->>>>> smartctl -s on /dev/sda
->>>>> 
->>>>> first? :)
->>>> Indeed it does, shame on me for overseeing that small detail. :) 
->>> Oh... shame on me too.  :-)
->> 
->> Why didn't smartctl notice that?  In my experience it usually does
->> report when SMART is disabled.  Is the error not being properly
->> reported back to userspace maybe?  Tvrtko's original problem report
->> has lots of uninitialized (or leaked?) data, and a lot of it looks
->> like ASCII (for example his bogus RAW_VALUEs contain pieces of the
->> model number).
->
-> Let's ask Bruce.  Bruce, SMART was disabled on WD3200AAKS but smartctl -a 
-> didn't detect it and issued SMART commands anyway triggering timeouts.  Is 
-> this expected behavior?  Or is libata feeding wrong status to smartctl?
->
-> Thanks.
->
->
---1501667129-1258738859-1210829314=:15384--
+-- 
+tejun
