@@ -1,52 +1,85 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH] Palmchip BK3710 IDE driver
-Date: Thu, 15 May 2008 22:32:45 +0400
-Message-ID: <482C81CD.10402@ru.mvista.com>
-References: <200802051904.42668.asalnikov@ru.mvista.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+From: <gregkh@suse.de>
+Subject: patch libata-force-hardreset-if-link-is-in-powersave-mode.patch added to 2.6.25-stable tree
+Date: Thu, 15 May 2008 12:04:46 -0700
+Message-ID: <20080515195022.89DFD14540CB@imap.suse.de>
+References: <482C3751.8030206@gmail.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from gateway-1237.mvista.com ([63.81.120.155]:4930 "EHLO
-	imap.sh.mvista.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1754305AbYEOSdR (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 15 May 2008 14:33:17 -0400
-In-Reply-To: <200802051904.42668.asalnikov@ru.mvista.com>
+Received: from ns1.suse.de ([195.135.220.2]:48522 "EHLO mx1.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758379AbYEOTuZ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 15 May 2008 15:50:25 -0400
+In-Reply-To: <482C3751.8030206@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Anton Salnikov <asalnikov@ru.mvista.com>
-Cc: linux-ide@vger.kernel.org, bzolnier@gmail.com
+To: htejun@gmail.com, gregkh@suse.de, jeff@garzik.org, linux-ide@vger.kernel.org
+Cc: stable@kernel.org, stable-commits@vger.kernel.org
 
-Anton Salnikov wrote:
 
-> I've tested the driver on 2.6.24.
+This is a note to let you know that we have just queued up the patch titled
 
-    Unfortunately, I've never seen the platofrm device registration code until 
-now...
+     Subject: libata: force hardreset if link is in powersave mode
 
-> Signed-off-by: Anton Salnikov <asalnikov@ru.mvista.com>
+to the 2.6.25-stable tree.  Its filename is
 
-> Index: 2.6.25.ide/drivers/ide/arm/palm_bk3710.c
-> ===================================================================
-> --- /dev/null
-> +++ 2.6.25.ide/drivers/ide/arm/palm_bk3710.c
-> @@ -0,0 +1,420 @@
-[...]
-> +	mem = platform_get_resource(pdev, IORESOURCE_MEM, 0);
-> +	if (mem == NULL) {
-> +		printk(KERN_ERR "failed to get memory region resource\n");
-> +		return -ENODEV;
-> +	}
-> +	irq = platform_get_resource(pdev, IORESOURCE_IRQ, 0);
-> +	if (irq == NULL) {
-> +		printk(KERN_ERR "failed to get IRQ resource\n");
-> +		return -ENODEV;
-> +	}
-> +
-> +	base = (void *)mem->start;
+     libata-force-hardreset-if-link-is-in-powersave-mode.patch
 
-   Crrap! You shouldn't specify virtual addresses in the device resources 
-whatever arch you are using. Should've been ioremap() here. And where did only 
-my eyes were?
+A git repo of this tree can be found at 
+    http://www.kernel.org/git/?p=linux/kernel/git/stable/stable-queue.git;a=summary
 
-MBR, Sergei
+
+>From stable-bounces@linux.kernel.org Thu May 15 06:15:27 2008
+From: Tejun Heo <htejun@gmail.com>
+Date: Thu, 15 May 2008 22:14:57 +0900
+Subject: libata: force hardreset if link is in powersave mode
+To: Jeff Garzik <jeff@garzik.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, stable@kernel.org
+Cc: matthieu.castet@parrot.com
+Message-ID: <482C3751.8030206@gmail.com>
+
+From: Tejun Heo <htejun@gmail.com>
+
+Inhibiting link PM mode doesn't bring the link back online if it's
+already in powersave mode.  If SRST is used in these cases, libata EH
+thinks that the link is offline and fails detection.  Force hardreset
+if link is in powersave mode.
+
+Signed-off-by: Tejun Heo <htejun@gmail.com>
+Cc: Jeff Garzik <jeff@garzik.org>
+Signed-off-by: Greg Kroah-Hartman <gregkh@suse.de>
+
+---
+ drivers/ata/libata-core.c |   12 ++++++++++++
+ 1 file changed, 12 insertions(+)
+
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -3947,6 +3947,7 @@ int ata_std_prereset(struct ata_link *li
+ 	struct ata_port *ap = link->ap;
+ 	struct ata_eh_context *ehc = &link->eh_context;
+ 	const unsigned long *timing = sata_ehc_deb_timing(ehc);
++	u32 sstatus;
+ 	int rc;
+ 
+ 	/* handle link resume */
+@@ -3960,6 +3961,17 @@ int ata_std_prereset(struct ata_link *li
+ 	if (ap->flags & ATA_FLAG_PMP)
+ 		ehc->i.action |= ATA_EH_HARDRESET;
+ 
++	/* if link powersave is on, force hardreset */
++	if (sata_scr_read(link, SCR_STATUS, &sstatus) == 0) {
++		u8 ipm = sstatus >> 8;
++
++		if (ipm == 2 || ipm == 6) {
++			ata_link_printk(link, KERN_INFO, "link in powersave "
++				"mode (ipm=%d), forcing hardreset\n", ipm);
++			ehc->i.action |= ATA_EH_HARDRESET;
++		}
++	}
++
+ 	/* if we're about to do hardreset, nothing more to do */
+ 	if (ehc->i.action & ATA_EH_HARDRESET)
+ 		return 0;
+
+
+Patches currently in stable-queue which might be from htejun@gmail.com are
+
+queue-2.6.25/libata-force-hardreset-if-link-is-in-powersave-mode.patch
