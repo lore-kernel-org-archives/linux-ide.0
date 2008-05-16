@@ -1,34 +1,38 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [PATCH 0/2] ide: ide_do_drive_cmd cleanups
-Date: Fri, 16 May 2008 21:44:50 +0200
-Message-ID: <200805162144.50216.bzolnier@gmail.com>
-References: <1210809958-13881-1-git-send-email-fujita.tomonori@lab.ntt.co.jp>
+Subject: Re: 2.6.25 -> 2.6.26-rc1: pcmcia flash card changed name from hda to hdc
+Date: Fri, 16 May 2008 21:40:48 +0200
+Message-ID: <200805162140.49501.bzolnier@gmail.com>
+References: <20080515132313.GA1558@elf.ucw.cz>
 Mime-Version: 1.0
 Content-Type: text/plain;
-  charset="utf-8"
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from fk-out-0910.google.com ([209.85.128.187]:33836 "EHLO
-	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751909AbYEPTuL (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 16 May 2008 15:50:11 -0400
-Received: by fk-out-0910.google.com with SMTP id 18so884482fkq.5
-        for <linux-ide@vger.kernel.org>; Fri, 16 May 2008 12:50:11 -0700 (PDT)
-In-Reply-To: <1210809958-13881-1-git-send-email-fujita.tomonori@lab.ntt.co.jp>
+Received: from ik-out-1112.google.com ([66.249.90.179]:11267 "EHLO
+	ik-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752843AbYEPTuM (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 16 May 2008 15:50:12 -0400
+Received: by ik-out-1112.google.com with SMTP id c28so233888ika.5
+        for <linux-ide@vger.kernel.org>; Fri, 16 May 2008 12:50:08 -0700 (PDT)
+In-Reply-To: <20080515132313.GA1558@elf.ucw.cz>
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Cc: linux-ide@vger.kernel.org, Borislav Petkov <petkovbb@gmail.com>
+To: Pavel Machek <pavel@suse.cz>
+Cc: kernel list <linux-kernel@vger.kernel.org>, "Rafael J. Wysocki" <rjw@sisk.pl>, linux-ide@vger.kernel.org
 
-On Thursday 15 May 2008, FUJITA Tomonori wrote:
-> This is a sequel to the patchset "removing the on-stack struct request":
-> 
-> http://marc.info/?l=linux-ide&m=120964501711519&w=2
-> 
-> The patchset makes some stuff unnecessary anymore but I forgot to
-> remove them. This patchset removes them.
-> 
-> This is against Bart's latest quilt tree.
 
-Applied both patches.  Thanks!
+Hi,
+
+On Thursday 15 May 2008, Pavel Machek wrote:
+> Hi!
+> 
+> After update to 2.6.26-rc1, CF card (in pcmcia slot) moved from hda to
+> hdc on thinkpad x60 (and broke my scripts).
+> 
+> Is that intentional?
+
+Please send dmesgs for 2.6.25 and 2.6.26-rc1 so we can tell more.
+
+Thanks,
+Bart
