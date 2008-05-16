@@ -1,62 +1,34 @@
-From: Richard Bland <rbland@combinedeffort.com>
-Subject: HPA Problem in libata-core.c?
-Date: Fri, 16 May 2008 19:26:01 +0100
-Message-ID: <482DD1B9.6040408@combinedeffort.com>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: [PATCH 0/2] ide: ide_do_drive_cmd cleanups
+Date: Fri, 16 May 2008 21:44:50 +0200
+Message-ID: <200805162144.50216.bzolnier@gmail.com>
+References: <1210809958-13881-1-git-send-email-fujita.tomonori@lab.ntt.co.jp>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------010206050002040109080009"
+Content-Type: text/plain;
+  charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from c0mbinedeff0rt.demon.co.uk ([80.176.231.63]:57905 "EHLO
-	mail.combinedeffort.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753567AbYEPSzO (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 16 May 2008 14:55:14 -0400
+Received: from fk-out-0910.google.com ([209.85.128.187]:33836 "EHLO
+	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751909AbYEPTuL (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 16 May 2008 15:50:11 -0400
+Received: by fk-out-0910.google.com with SMTP id 18so884482fkq.5
+        for <linux-ide@vger.kernel.org>; Fri, 16 May 2008 12:50:11 -0700 (PDT)
+In-Reply-To: <1210809958-13881-1-git-send-email-fujita.tomonori@lab.ntt.co.jp>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: jgarzik@pobox.com
-Cc: linux-ide@vger.kernel.org
+To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Cc: linux-ide@vger.kernel.org, Borislav Petkov <petkovbb@gmail.com>
 
-This is a multi-part message in MIME format.
---------------010206050002040109080009
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+On Thursday 15 May 2008, FUJITA Tomonori wrote:
+> This is a sequel to the patchset "removing the on-stack struct request":
+> 
+> http://marc.info/?l=linux-ide&m=120964501711519&w=2
+> 
+> The patchset makes some stuff unnecessary anymore but I forgot to
+> remove them. This patchset removes them.
+> 
+> This is against Bart's latest quilt tree.
 
-Hi Jeff,
-
-Apologies if I'm way off-base here, but I was having problems unlocking 
-a HPA and took a look at the above.
-
-It seemed the code was bailing before it unlocked the HPA, but would 
-appreciate your feedback.
-
-Cheers,
-
-Rich
-
---------------010206050002040109080009
-Content-Type: text/x-patch;
- name="libata-core.patch"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="libata-core.patch"
-
---- libata-core.c~	2008-05-16 19:22:04.000000000 +0100
-+++ libata-core.c	2008-05-16 19:08:42.000000000 +0100
-@@ -1243,13 +1243,14 @@
- 				"HPA detected: current %llu, native %llu\n",
- 				(unsigned long long)sectors,
- 				(unsigned long long)native_sectors);
--		else if (native_sectors < sectors)
-+		else if (native_sectors < sectors) {
- 			ata_dev_printk(dev, KERN_WARNING,
- 				"native sectors (%llu) is smaller than "
- 				"sectors (%llu)\n",
- 				(unsigned long long)native_sectors,
- 				(unsigned long long)sectors);
--		return 0;
-+			return 0;
-+		}
- 	}
- 
- 	/* let's unlock HPA */
-
---------------010206050002040109080009--
+Applied both patches.  Thanks!
