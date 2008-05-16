@@ -1,34 +1,62 @@
-From: bugme-daemon@bugzilla.kernel.org
-Subject: [Bug 10723] linux 2.6.24 fails to mount ext3 rootfs on FUJITSU MHK2060AT
-Date: Fri, 16 May 2008 11:07:59 -0700 (PDT)
-Message-ID: <20080516180759.6FD18108035@picon.linux-foundation.org>
-References: <bug-10723-11633@http.bugzilla.kernel.org/>
+From: Richard Bland <rbland@combinedeffort.com>
+Subject: HPA Problem in libata-core.c?
+Date: Fri, 16 May 2008 19:26:01 +0100
+Message-ID: <482DD1B9.6040408@combinedeffort.com>
+Mime-Version: 1.0
+Content-Type: multipart/mixed;
+ boundary="------------010206050002040109080009"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:44922 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753130AbYEPSIb (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 16 May 2008 14:08:31 -0400
-Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
-	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id m4GI7xhG006197
-	for <linux-ide@vger.kernel.org>; Fri, 16 May 2008 11:08:00 -0700
-In-Reply-To: <bug-10723-11633@http.bugzilla.kernel.org/>
+Received: from c0mbinedeff0rt.demon.co.uk ([80.176.231.63]:57905 "EHLO
+	mail.combinedeffort.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753567AbYEPSzO (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 16 May 2008 14:55:14 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: jgarzik@pobox.com
+Cc: linux-ide@vger.kernel.org
 
-http://bugzilla.kernel.org/show_bug.cgi?id=10723
+This is a multi-part message in MIME format.
+--------------010206050002040109080009
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 
+Hi Jeff,
 
-akpm@osdl.org changed:
+Apologies if I'm way off-base here, but I was having problems unlocking 
+a HPA and took a look at the above.
 
-           What    |Removed                     |Added
-----------------------------------------------------------------------------
-         Regression|0                           |1
+It seemed the code was bailing before it unlocked the HPA, but would 
+appreciate your feedback.
 
+Cheers,
 
+Rich
 
+--------------010206050002040109080009
+Content-Type: text/x-patch;
+ name="libata-core.patch"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="libata-core.patch"
 
--- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug, or are watching the assignee.
+--- libata-core.c~	2008-05-16 19:22:04.000000000 +0100
++++ libata-core.c	2008-05-16 19:08:42.000000000 +0100
+@@ -1243,13 +1243,14 @@
+ 				"HPA detected: current %llu, native %llu\n",
+ 				(unsigned long long)sectors,
+ 				(unsigned long long)native_sectors);
+-		else if (native_sectors < sectors)
++		else if (native_sectors < sectors) {
+ 			ata_dev_printk(dev, KERN_WARNING,
+ 				"native sectors (%llu) is smaller than "
+ 				"sectors (%llu)\n",
+ 				(unsigned long long)native_sectors,
+ 				(unsigned long long)sectors);
+-		return 0;
++			return 0;
++		}
+ 	}
+ 
+ 	/* let's unlock HPA */
+
+--------------010206050002040109080009--
