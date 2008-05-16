@@ -1,328 +1,236 @@
-From: bugme-daemon@bugzilla.kernel.org
-Subject: [Bug 10723] New: linux 2.6.24 fails to mount ext3 rootfs on FUJITSU MHK2060AT
-Date: Fri, 16 May 2008 09:46:20 -0700 (PDT)
-Message-ID: <bug-10723-11633@http.bugzilla.kernel.org/>
+From: Mark Lord <liml@rtr.ca>
+Subject: Re: Port Multiplier drives not always all found on cold plug
+Date: Fri, 16 May 2008 12:46:26 -0400
+Message-ID: <482DBA62.4020209@rtr.ca>
+References: <482DB79F.2030204@rtr.ca>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:47115 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752158AbYEPQqX (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 16 May 2008 12:46:23 -0400
-Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
-	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id m4GGkLBc032554
-	for <linux-ide@vger.kernel.org>; Fri, 16 May 2008 09:46:22 -0700
+Received: from rtr.ca ([76.10.145.34]:3269 "EHLO mail.rtr.ca"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752158AbYEPQq2 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 16 May 2008 12:46:28 -0400
+In-Reply-To: <482DB79F.2030204@rtr.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>, Jeff Garzik <jgarzik@pobox.com>, Alan Cox <alan@redhat.com>, IDE/ATA development list <linux-ide@vger.kernel.org>
 
-http://bugzilla.kernel.org/show_bug.cgi?id=10723
+Mark Lord wrote:
+> Tejun,
+> 
+> Since enabling PMP support in sata_mv, there have been some recent
+> reports of not all drives being found on a PM.
+> 
+> I can reproduce this here myself, too:
+> 
+> (1) silicon image PM with four drives attached.
+> (2) power-down the PM.
+> (3) rmmod sata_mv ; modprobe sata_mv (latest upstream).
+> (4) plug (power off) PM into sata_mv card (7042 chipset).
+> (5) power on the PM.
+> (6) watch only 2-3 of the four drives get found.
+> 
+> If the PM was already powered on in advance, then all drives are found.
+> sata_mv relies entirely on libata-*.c for PMP resets/enumerations,
+> so I'm not sure that the problem is in sata_mv.
+> 
+> Any ideas?
+..
 
-           Summary: linux 2.6.24 fails to mount ext3 rootfs on FUJITSU
-                    MHK2060AT
-           Product: IO/Storage
-           Version: 2.5
-     KernelVersion: 2.6.24.1
-          Platform: All
-        OS/Version: Linux
-              Tree: Mainline
-            Status: NEW
-          Severity: normal
-          Priority: P1
-         Component: IDE
-        AssignedTo: io_ide@kernel-bugs.osdl.org
-        ReportedBy: juergen.kosel@gmx.de
+Mmmm.. one strange thing from the logs.
+sata_mv reports "unexpected device interrupt" in a few places,
+and then triggers EH to recover from it.
+This could be what is causing the PMP enumerations to partially fail.
 
+I wonder why we're getting interrupts when supposedly idle/polling ?
+Did something in libata miss reading ata_status to clear an IRQ ?
 
-Latest working kernel version:2.6.22.3 (Debian)
-Earliest failing kernel version:2.6.24.1 (from kernel.org)
-Distribution: Debian
-Hardware Environment:Laptop Compaq Armada 4120
-Software Environment: Debian Testing
-Problem Description: When booting linux 2.6.24 (and also 2.6.25) it fails to
-mount the rootfs (hda1, with the following messages:
+Here's the original (failing) log:
 
-hda: dma_timer_expiry: dma status == 0x21
-hda: DMA timeout error
-hda: DMA timeout error: status=0x58 { DriveReady SeekComplete DataRequest }
-hda: dma disabled
-ide0: reset: success
-Done.
-Begin: Mounting root file system... ...
-Begin: Running /scripts/local-top ...
-Done.
-Begin: Running /scripts/local/premount ...
-kinit: trying to resume from /dev/hda5
-Attempting manual resume
-kinit: No resume image, doing normal boot...
-resume: libcript version: 1.4.1
-Done.
-JBD: no valid journal superblock found
-EXT3-fs: error loading journal.
-mount: Mounting /dev/hda1 on /root failed: invalid argument
+[ 1222.304368] sata_mv 0000:03:00.0: version 1.20
+[ 1222.304796] ACPI: PCI Interrupt 0000:03:00.0[A] -> GSI 19 (level, low) -> IRQ 19
+[ 1222.304887] sata_mv 0000:03:00.0: Applying 60X1C0 workarounds to unknown rev
+[ 1222.304942] sata_mv 0000:03:00.0: Gen-IIE 32 slots 4 ports SCSI mode IRQ via INTx
+[ 1222.304954] PCI: Setting latency timer of device 0000:03:00.0 to 64
+[ 1222.307587] scsi14 : sata_mv
+[ 1222.307587] scsi15 : sata_mv
+[ 1222.307587] scsi16 : sata_mv
+[ 1222.307718] scsi17 : sata_mv
+[ 1222.307718] ata15: SATA max UDMA/133 mmio m1048576@0xff400000 port 0xff422000 irq 19
+[ 1222.307718] ata16: SATA max UDMA/133 mmio m1048576@0xff400000 port 0xff424000 irq 19
+[ 1222.307718] ata17: SATA max UDMA/133 mmio m1048576@0xff400000 port 0xff426000 irq 19
+[ 1222.307718] ata18: SATA max UDMA/133 mmio m1048576@0xff400000 port 0xff428000 irq 19
+[ 1222.849717] ata15: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+[ 1222.893000] ata15.00: ATA-7: ST3750640NS, 3.BAF, max UDMA/133
+[ 1222.893000] ata15.00: 1465149168 sectors, multi 0: LBA48 NCQ (depth 31/32)
+[ 1222.893000] ata15.00: failed to set xfermode (err_mask=0x40)
+[ 1222.893000] ata15: failed to recover some devices, retrying in 5 secs
+[ 1229.574577] ata15: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+[ 1229.621209] ata15.00: failed to set xfermode (err_mask=0x40)
+[ 1229.621209] ata15: limiting SATA link speed to 1.5 Gbps
+[ 1229.621209] ata15.00: limiting speed to UDMA/133:PIO3
+[ 1229.621209] ata15: failed to recover some devices, retrying in 5 secs
+[ 1236.859860] ata15: SATA link up 1.5 Gbps (SStatus 113 SControl 310)
+[ 1236.896494] ata15.00: failed to set xfermode (err_mask=0x40)
+[ 1236.896494] ata15.00: disabled
 
+Note the "unexpected device interrupt while idle" error, which triggers EH:
 
-When booting linux 2.6.22 the following could be retrieved:
-compac:~# lspci -vv
-00:00.0 Host bridge: OPTi Inc. 82C557 [Viper-M] (rev 14)
-        Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr-
-Stepping- SERR- FastB2B- DisINTx-
-        Status: Cap- 66MHz- UDF- FastB2B+ ParErr- DEVSEL=medium >TAbort-
-<TAbort- <MAbort- >SERR- <PERR- INTx-
-        Latency: 0
+[ 1237.399858] ata15: exception Emask 0x100 SAct 0x0 SErr 0x0 action 0x6 frozen t4
+[ 1237.400393] ata15: unexpected device interrupt while idle
+[ 1237.400796] ata15: hard resetting link
+[ 1237.901885] ata15: SATA link up 1.5 Gbps (SStatus 113 SControl 310)
+[ 1237.901901] ata15: EH complete
+[ 1238.385209] ata16: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+[ 1238.385183] ata16.00: ATA-8: Hitachi HDP725050GLA360, GM4OA50E, max UDMA/133
+[ 1238.385183] ata16.00: 976773168 sectors, multi 0: LBA48 NCQ (depth 31/32)
+[ 1238.385183] ata16.00: failed to set xfermode (err_mask=0x40)
+[ 1238.385183] ata16: failed to recover some devices, retrying in 5 secs
+[ 1245.329460] ata16: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+[ 1245.336654] ata16.00: failed to set xfermode (err_mask=0x40)
+[ 1245.349426] ata16: limiting SATA link speed to 1.5 Gbps
+[ 1245.349430] ata16.00: limiting speed to UDMA/133:PIO3
+[ 1245.349433] ata16: failed to recover some devices, retrying in 5 secs
+[ 1252.526624] ata16: SATA link up 1.5 Gbps (SStatus 113 SControl 310)
+[ 1252.533808] ata16.00: failed to set xfermode (err_mask=0x40)
+[ 1252.533864] ata16.00: disabled
 
-00:01.0 ISA bridge: OPTi Inc. 82C558 [Viper-M ISA+IDE] (rev 02)
-        Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr-
-Stepping- SERR- FastB2B- DisINTx-
-        Status: Cap- 66MHz- UDF- FastB2B+ ParErr- DEVSEL=medium >TAbort-
-<TAbort- <MAbort- >SERR- <PERR+ INTx-
-        Latency: 0
-        Kernel modules: ata_generic, generic
+Note the "unexpected device interrupt while idle" error, which triggers EH:
 
-00:02.0 VGA compatible controller: Cirrus Logic GD 7548 (prog-if 00 [VGA
-controller])
-        Control: I/O+ Mem+ BusMaster- SpecCycle- MemWINV- VGASnoop- ParErr-
-Stepping- SERR- FastB2B- DisINTx-
-        Status: Cap- 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort-
-<MAbort- >SERR- <PERR- INTx-
-        Interrupt: pin A routed to IRQ 0
-        Region 0: Memory at 40000000 (32-bit, non-prefetchable) [size=16M]
-        Region 1: Memory at 41000000 (32-bit, non-prefetchable) [size=16M]
-        Kernel modules: cirrusfb
+[ 1253.176196] ata16: exception Emask 0x100 SAct 0x0 SErr 0x0 action 0x6 frozen t4
+[ 1253.176290] ata16: unexpected device interrupt while idle
+[ 1253.176349] ata16: hard resetting link
+[ 1253.649543] ata16: SATA link up 1.5 Gbps (SStatus 113 SControl 310)
+[ 1253.649559] ata16: EH complete
+[ 1253.982862] ata17: SATA link down (SStatus 0 SControl 300)
+[ 1254.302862] ata18: SATA link down (SStatus 0 SControl 300)
+[ 1314.600817] ACPI: PCI interrupt for device 0000:03:00.0 disabled
+[ 1316.843654] sata_mv 0000:03:00.0: version 1.20
+[ 1316.843654] ACPI: PCI Interrupt 0000:03:00.0[A] -> GSI 19 (level, low) -> IRQ 19
+[ 1316.843654] sata_mv 0000:03:00.0: Applying 60X1C0 workarounds to unknown rev
+[ 1316.843654] sata_mv 0000:03:00.0: Gen-IIE 32 slots 4 ports SCSI mode IRQ via INTx
+[ 1316.843654] PCI: Setting latency timer of device 0000:03:00.0 to 64
+[ 1316.843654] scsi18 : sata_mv
+[ 1316.845591] scsi19 : sata_mv
+[ 1316.847159] scsi20 : sata_mv
+[ 1316.848918] scsi21 : sata_mv
+[ 1316.848918] ata19: SATA max UDMA/133 mmio m1048576@0xff400000 port 0xff422000 irq 19
+[ 1316.848918] ata20: SATA max UDMA/133 mmio m1048576@0xff400000 port 0xff424000 irq 19
+[ 1316.848918] ata21: SATA max UDMA/133 mmio m1048576@0xff400000 port 0xff426000 irq 19
+[ 1316.848918] ata22: SATA max UDMA/133 mmio m1048576@0xff400000 port 0xff428000 irq 19
+[ 1317.319523] ata19: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+[ 1317.372879] ata19.00: ATA-7: ST3750640NS, 3.BAF, max UDMA/133
+[ 1317.372886] ata19.00: 1465149168 sectors, multi 0: LBA48 NCQ (depth 31/32)
+[ 1317.449552] ata19.00: configured for UDMA/133
+[ 1318.025102] ata20: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+[ 1318.041775] ata20.00: ATA-8: Hitachi HDP725050GLA360, GM4OA50E, max UDMA/133
+[ 1318.041781] ata20.00: 976773168 sectors, multi 0: LBA48 NCQ (depth 31/32)
+[ 1318.060953] ata20.00: configured for UDMA/133
+[ 1318.396766] ata21: SATA link down (SStatus 0 SControl 300)
+[ 1318.740937] ata22: SATA link down (SStatus 0 SControl 300)
+[ 1318.590882] scsi 18:0:0:0: Direct-Access     ATA      ST3750640NS      3.BA PQ: 0 ANSI: 5
+[ 1318.590882] sd 18:0:0:0: [sdb] 1465149168 512-byte hardware sectors (750156 MB)
+[ 1318.590882] sd 18:0:0:0: [sdb] Write Protect is off
+[ 1318.590882] sd 18:0:0:0: [sdb] Mode Sense: 00 3a 00 00
+[ 1318.590882] sd 18:0:0:0: [sdb] Write cache: disabled, read cache: enabled, doesn't support DPO or FUA
+[ 1318.590882] sd 18:0:0:0: [sdb] 1465149168 512-byte hardware sectors (750156 MB)
+[ 1318.590882] sd 18:0:0:0: [sdb] Write Protect is off
+[ 1318.590882] sd 18:0:0:0: [sdb] Mode Sense: 00 3a 00 00
+[ 1318.590882] sd 18:0:0:0: [sdb] Write cache: disabled, read cache: enabled, doesn't support DPO or FUA
+[ 1318.590882]  sdb: sdb1
+[ 1318.764651] sd 18:0:0:0: [sdb] Attached SCSI disk
+[ 1318.767985] sd 18:0:0:0: Attached scsi generic sg2 type 0
+[ 1318.767985] scsi 19:0:0:0: Direct-Access     ATA      Hitachi HDP72505 GM4O PQ: 0 ANSI: 5
+[ 1318.767985] sd 19:0:0:0: [sdc] 976773168 512-byte hardware sectors (500108 MB)
+[ 1318.767985] sd 19:0:0:0: [sdc] Write Protect is off
+[ 1318.767985] sd 19:0:0:0: [sdc] Mode Sense: 00 3a 00 00
+[ 1318.767985] sd 19:0:0:0: [sdc] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+[ 1318.771070] sd 19:0:0:0: [sdc] 976773168 512-byte hardware sectors (500108 MB)
+[ 1318.771070] sd 19:0:0:0: [sdc] Write Protect is off
+[ 1318.771070] sd 19:0:0:0: [sdc] Mode Sense: 00 3a 00 00
+[ 1318.771070] sd 19:0:0:0: [sdc] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+[ 1318.771070]  sdc: sdc1
+[ 1318.795749] sd 19:0:0:0: [sdc] Attached SCSI disk
+[ 1318.795749] sd 19:0:0:0: Attached scsi generic sg3 type 0
 
-00:14.0 IDE interface: OPTi Inc. 82C621 [Viper-M/N+] (rev 12) (prog-if 80
-[Master])
-        Control: I/O+ Mem- BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr-
-Stepping- SERR- FastB2B- DisINTx-
-        Status: Cap- 66MHz- UDF- FastB2B+ ParErr- DEVSEL=medium >TAbort-
-<TAbort- <MAbort- >SERR- <PERR- INTx-
-        Latency: 0
-        Region 0: [virtual] Memory at 000001f0 (32-bit, non-prefetchable)
-[disabled] [size=8]
-        Region 1: [virtual] Memory at 000003f0 (type 3, non-prefetchable)
-[disabled] [size=1]
-        Region 2: [virtual] Memory at 00000170 (32-bit, non-prefetchable)
-[disabled] [size=8]
-        Region 3: [virtual] Memory at 00000370 (type 3, non-prefetchable)
-[disabled] [size=1]
-        Region 4: I/O ports at 1000 [size=16]
-        Kernel driver in use: Opti621_IDE
-        Kernel modules: opti621
+Those drives (above) are directly attached to the marvell controller.
+Now, below, we power on the silimage PM with four additional drives.
 
-compac:~# dmesg 
-Linux version 2.6.22-3-486 (Debian 2.6.22-6) (maks@debian.org) (gcc version
-4.1.3 20071019 (prerelease) (Debian 4.1.2-17)) #1 Mon Nov 12 07:53:08 UTC 2007
-BIOS-provided physical RAM map:
- BIOS-e801: 0000000000000000 - 000000000009f000 (usable)
- BIOS-e801: 0000000000100000 - 0000000003000000 (usable)
-48MB LOWMEM available.
-Entering add_active_range(0, 0, 12288) 0 entries of 256 used
-Zone PFN ranges:
-  DMA             0 ->     4096
-  Normal       4096 ->    12288
-early_node_map[1] active PFN ranges
-    0:        0 ->    12288
-On node 0 totalpages: 12288
-  DMA zone: 32 pages used for memmap
-  DMA zone: 0 pages reserved
-  DMA zone: 4064 pages, LIFO batch:0
-  Normal zone: 64 pages used for memmap
-  Normal zone: 8128 pages, LIFO batch:0
-DMI not present or invalid.
-Allocating PCI resources starting at 10000000 (gap: 03000000:fd000000)
-Built 1 zonelists.  Total pages: 12192
-Kernel command line: root=/dev/hda1 ro panic=5 
-No local APIC present or hardware disabled
-mapped APIC to ffffd000 (01061000)
-Initializing CPU#0
-PID hash table entries: 256 (order: 8, 1024 bytes)
-Detected 120.691 MHz processor.
-Console: colour VGA+ 80x25
-Dentry cache hash table entries: 8192 (order: 3, 32768 bytes)
-Inode-cache hash table entries: 4096 (order: 2, 16384 bytes)
-Memory: 39276k/49152k available (1656k kernel code, 9488k reserved, 650k data,
-316k init, 0k highmem)
-virtual kernel memory layout:
-    fixmap  : 0xfffb5000 - 0xfffff000   ( 296 kB)
-    vmalloc : 0xc3800000 - 0xfffb3000   ( 967 MB)
-    lowmem  : 0xc0000000 - 0xc3000000   (  48 MB)
-      .init : 0xc0344000 - 0xc0393000   ( 316 kB)
-      .data : 0xc029e27b - 0xc0340cc4   ( 650 kB)
-      .text : 0xc0100000 - 0xc029e27b   (1656 kB)
-Checking if this processor honours the WP bit even in supervisor mode... Ok.
-Calibrating delay using timer specific routine.. 242.28 BogoMIPS (lpj=484566)
-Security Framework v1.0.0 initialized
-SELinux:  Disabled at boot.
-Capability LSM initialized
-Mount-cache hash table entries: 512
-CPU: After generic identify, caps: 000001bf 00000000 00000000 00000000 00000000
-00000000 00000000
-Intel Pentium with F0 0F bug - workaround enabled.
+[ 1341.310527] ata22: exception Emask 0x10 SAct 0x0 SErr 0x4010000 action 0xe frozen
+[ 1341.312815] ata22: edma_err_cause=00000010 pp_flags=00000000, dev connect
+[ 1341.313286] ata22: SError: { PHYRdyChg DevExch }
+[ 1341.313561] ata22: hard resetting link
+[ 1342.852379] ata22: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+[ 1342.853584] ata22.15: Port Multiplier 1.1, 0x1095:0x3726 r23, 6 ports, feat 0x1/0x9
+[ 1342.855237] ata22.00: hard resetting link
+[ 1343.335991] ata22.01: hard resetting link
+[ 1344.075666] ata22.02: hard resetting link
+[ 1350.898092] ata22.15: link is slow to respond, please be patient (ready=0)
+[ 1357.122516] ata22.02: SRST failed (errno=-16)
+[ 1357.122961] ata22.02: failed to read SCR 0 (Emask=0x100)
+[ 1357.123309] ata22.02: reset failed, giving up
+[ 1357.123653] ata22.15: hard resetting link
+[ 1357.649204] ata22.15: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+[ 1357.650414] ata22.03: hard resetting link
+[ 1364.843567] ata22.15: link is slow to respond, please be patient (ready=0)
+[ 1367.988474] ata22.04: hard resetting link
+[ 1368.461807] ata22.05: hard resetting link
+[ 1368.788713] ata22.03: ATA-7: ST3400832AS, 3.03, max UDMA/133
+[ 1368.789078] ata22.03: 781422768 sectors, multi 0: LBA48 NCQ (depth 31/32)
+[ 1368.802056] ata22.03: configured for UDMA/133
+[ 1368.808714] ata22.04: ATA-7: ST3400832AS, 3.03, max UDMA/133
+[ 1368.809075] ata22.04: 781422768 sectors, multi 0: LBA48 NCQ (depth 31/32)
+[ 1368.822052] ata22.04: configured for UDMA/133
+[ 1368.822548] ata22: PMP SError.N set for some ports, repeating recovery
+[ 1368.823052] ata22.00: hard resetting link
+[ 1373.304201] ata22.00: ATA-7: ST3400832AS, 3.03, max UDMA/133
+[ 1373.304574] ata22.00: 781422768 sectors, multi 0: LBA48 NCQ (depth 31/32)
+[ 1373.317543] ata22.00: configured for UDMA/133
+[ 1373.474220] ata22.03: configured for UDMA/133
+[ 1373.488812] ata22.04: configured for UDMA/133
 
-CPU: After all inits, caps: 000001bf 00000000 00000000 00000000 00000000
-00000000 00000000
-Compat vDSO mapped to ffffe000.
-CPU: Intel Pentium 75 - 200 stepping 0c
-Checking 'hlt' instruction... OK.
-ACPI: Core revision 20070126
-ACPI Exception (tbxface-0618): AE_NO_ACPI_TABLES, While loading namespace from
-ACPI tables [20070126]
-ACPI: Unable to load the System Description Tables
-Booting paravirtualized kernel on bare hardware
-NET: Registered protocol family 16
-EISA bus registered
-PCI: PCI BIOS revision 2.10 entry at 0xf73d9, last bus=0
-PCI: Using configuration type 1
-Setting up standard PCI resources
-ACPI: Interpreter disabled.
-Linux Plug and Play Support v0.97 (c) Adam Belay
-pnp: PnP ACPI: disabled
-PnPBIOS: Scanning system for PnP BIOS support...
-PnPBIOS: Found PnP BIOS installation structure at 0xc00f5010
-PnPBIOS: PnP BIOS version 1.0, entry 0xf0000:0x1a65, dseg 0xf0000
-PnPBIOS: 18 nodes reported by PnP BIOS; 18 recorded by driver
-PCI: Probing PCI hardware
-PCI: Probing PCI hardware (bus 00)
-NET: Registered protocol family 8
-NET: Registered protocol family 20
-ACPI Error (evxfevnt-0186): Could not enable RealTimeClock event [20070126]
-ACPI Warning (evxface-0145): Could not enable fixed event 4 [20070126]
-pnp: 00:08: iomem range 0x0-0x9ffff could not be reserved
-pnp: 00:08: iomem range 0xf0000-0xfffff could not be reserved
-pnp: 00:08: iomem range 0x100000-0x2ffffff could not be reserved
-Time: tsc clocksource has been installed.
-pnp: 00:13: ioport range 0x100-0x107 has been reserved
-pnp: 00:13: ioport range 0x2a0-0x2a0 has been reserved
-pnp: 00:13: ioport range 0x370-0x371 has been reserved
-pnp: 00:13: iomem range 0xfffc0000-0xffffffff has been reserved
-NET: Registered protocol family 2
-IP route cache hash table entries: 1024 (order: 0, 4096 bytes)
-TCP established hash table entries: 2048 (order: 2, 16384 bytes)
-TCP bind hash table entries: 2048 (order: 1, 8192 bytes)
-TCP: Hash tables configured (established 2048 bind 2048)
-TCP reno registered
-checking if image is initramfs... it is
-Freeing initrd memory: 6144k freed
-audit: initializing netlink socket (disabled)
-audit(1210697492.240:1): initialized
-VFS: Disk quotas dquot_6.5.1
-Dquot-cache hash table entries: 1024 (order 0, 4096 bytes)
-io scheduler noop registered
-io scheduler anticipatory registered
-io scheduler deadline registered
-io scheduler cfq registered (default)
-Boot video device is 0000:00:02.0
-isapnp: Scanning for PnP cards...
-isapnp: No Plug & Play device found
-Serial: 8250/16550 driver $Revision: 1.90 $ 4 ports, IRQ sharing enabled
-serial8250: ttyS0 at I/O 0x3f8 (irq = 4) is a 16550A
-serial8250: ttyS2 at I/O 0x3e8 (irq = 4) is a 16550A
-00:02: ttyS0 at I/O 0x3f8 (irq = 4) is a 16550A
-00:03: ttyS2 at I/O 0x3e8 (irq = 4) is a 16550A
-RAMDISK driver initialized: 16 RAM disks of 8192K size 1024 blocksize
-PNP: PS/2 Controller [PNP0303,PNP0f0e] at 0x60,0x64 irq 1,12
-serio: i8042 KBD port at 0x60,0x64 irq 1
-serio: i8042 AUX port at 0x60,0x64 irq 12
-mice: PS/2 mouse device common for all mice
-EISA: Probing bus 0 at eisa.0
-Cannot allocate resource for EISA slot 1
-EISA: Detected 0 cards.
-TCP bic registered
-NET: Registered protocol family 1
-NET: Registered protocol family 17
-Using IPI Shortcut mode
-Freeing unused kernel memory: 316k freed
-input: AT Translated Set 2 keyboard as /class/input/input0
-thermal: Unknown symbol acpi_processor_set_thermal_limit
-Uniform Multi-Platform E-IDE driver Revision: 7.00alpha2
-ide: Assuming 33MHz system bus speed for PIO modes; override with idebus=xx
-SCSI subsystem initialized
-OPTI621: IDE controller at PCI slot 0000:00:14.0
-OPTI621: chipset revision 18
-OPTI621: not 100% native mode: will probe irqs later
-PCI: Setting latency timer of device 0000:00:14.0 to 64
-    ide0: BM-DMA at 0x1000-0x1007, BIOS settings: hda:pio, hdb:pio
-Probing IDE interface ide0...
-hda: FUJITSU MHK2060AT, ATA DISK drive
-libata version 2.21 loaded.
-ide0 at 0x1f0-0x1f7,0x3f6 on irq 14
-Floppy drive(s): fd0 is 1.44M
-FDC 0 is a post-1991 82077
-hda: max request size: 128KiB
-hda: 11733120 sectors (6007 MB) w/512KiB Cache, CHS=12416/15/63, (U)DMA
-hda: cache flushes not supported
- hda:<4>hda: dma_timer_expiry: dma status == 0x21
-hda: DMA timeout error
-hda: dma timeout error: status=0x58 { DriveReady SeekComplete DataRequest }
-ide: failed opcode was: unknown
-hda: DMA disabled
-ide0: reset: success
- hda1 hda2 <<4>hda: dma_timer_expiry: dma status == 0x21
-hda: DMA timeout error
-hda: dma timeout error: status=0x58 { DriveReady SeekComplete DataRequest }
-ide: failed opcode was: unknown
-hda: DMA disabled
-ide0: reset: success
- hda5<4>hda: dma_timer_expiry: dma status == 0x21
-hda: DMA timeout error
-hda: dma timeout error: status=0x58 { DriveReady SeekComplete DataRequest }
-ide: failed opcode was: unknown
-hda: DMA disabled
-ide0: reset: success
- hda6 >
-hda: dma_timer_expiry: dma status == 0x21
-hda: DMA timeout error
-hda: dma timeout error: status=0x58 { DriveReady SeekComplete DataRequest }
-ide: failed opcode was: unknown
-hda: DMA disabled
-ide0: reset: success
-Attempting manual resume
-swsusp: Basic memory bitmaps created
-swsusp: Basic memory bitmaps freed
-kjournald starting.  Commit interval 5 seconds
-EXT3-fs: mounted filesystem with ordered data mode.
-input: PC Speaker as /class/input/input1
-Real Time Clock Driver v1.12ac
-parport_pc 00:01: reported by Plug and Play BIOS
-parport0: PC-style at 0x378, irq 7 [PCSPP,TRISTATE,EPP]
-parport1: PC-style at 0x3bc [PCSPP,TRISTATE]
-parport2: PC-style at 0x278 [PCSPP,TRISTATE,EPP]
-input: ImPS/2 Generic Wheel Mouse as /class/input/input2
-Adding 75560k swap on /dev/hda5.  Priority:-1 extents:1 across:75560k
-EXT3 FS on hda1, internal journal
-apm: BIOS version 1.2 Flags 0x03 (Driver version 1.16ac)
-device-mapper: ioctl: 4.11.0-ioctl (2006-10-12) initialised:
-dm-devel@redhat.com
-Intel ISA PCIC probe: 
-  Cirrus PD672x ISA-to-PCMCIA at port 0x3e0 ofs 0x00, 2 sockets
-    host opts [0]: [ring] [65/6/3] [1/15/3]
-    host opts [1]: [ring] [65/6/3] [1/15/3]
-    ISA irqs (default) = 3,4,5,9,10,11 polling interval = 1000 ms
-pccard: PCMCIA card inserted into slot 1
-cs: IO port probe 0x100-0x4ff: excluding 0x200-0x207 0x220-0x22f 0x330-0x337
-0x388-0x38f 0x400-0x40f 0x480-0x48f 0x4c0-0x4df
-cs: IO port probe 0x800-0x8ff: clean.
-cs: IO port probe 0xc00-0xcff: clean.
-cs: IO port probe 0x100-0x4ff: excluding 0x200-0x207 0x220-0x22f 0x330-0x337
-0x388-0x38f 0x400-0x40f 0x480-0x48f 0x4c0-0x4df
-cs: IO port probe 0x800-0x8ff: clean.
-cs: IO port probe 0xc00-0xcff: clean.
-cs: IO port probe 0xa00-0xaff: clean.
-cs: memory probe 0x0d0000-0x0dffff: clean.
-pcmcia: registering new device pcmcia1.0
-cs: IO port probe 0xa00-0xaff: clean.
-eth0: NE2000 Compatible: io 0x300, irq 3, hw_addr 00:E0:98:98:6C:8E
-NET: Registered protocol family 10
-lo: Disabled Privacy Extensions
-compac:~# 
+Note the "unexpected device interrupt while polling" error, which triggers EH:
 
-The hardware is very old (> 10 years) so it might be dying hardware.
-But what appears suspicious to me is the fact that older linux versions
-succeed in mounting the rootfs.
+[ 1373.489906] ata22.15: exception Emask 0x100 SAct 0x0 SErr 0x0 action 0x1 t4
+[ 1373.490384] ata22.15: unexpected device interrupt while polling
+[ 1373.495008] ata22: EH complete
+[ 1373.495374] scsi 21:0:0:0: Direct-Access     ATA      ST3400832AS      3.03 PQ: 0 ANSI: 5
+[ 1373.496005] sd 21:0:0:0: [sdd] 781422768 512-byte hardware sectors (400088 MB)
+[ 1373.496048] sd 21:0:0:0: [sdd] Write Protect is off
+[ 1373.496052] sd 21:0:0:0: [sdd] Mode Sense: 00 3a 00 00
+[ 1373.496127] sd 21:0:0:0: [sdd] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+[ 1373.496418] sd 21:0:0:0: [sdd] 781422768 512-byte hardware sectors (400088 MB)
+[ 1373.496459] sd 21:0:0:0: [sdd] Write Protect is off
+[ 1373.496463] sd 21:0:0:0: [sdd] Mode Sense: 00 3a 00 00
+[ 1373.496539] sd 21:0:0:0: [sdd] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+[ 1373.496568]  sdd: sdd1
+[ 1373.516434] sd 21:0:0:0: [sdd] Attached SCSI disk
+[ 1373.517411] sd 21:0:0:0: Attached scsi generic sg4 type 0
+[ 1373.518343] scsi 21:3:0:0: Direct-Access     ATA      ST3400832AS      3.03 PQ: 0 ANSI: 5
+[ 1373.520255] sd 21:3:0:0: [sde] 781422768 512-byte hardware sectors (400088 MB)
+[ 1373.520300] sd 21:3:0:0: [sde] Write Protect is off
+[ 1373.520306] sd 21:3:0:0: [sde] Mode Sense: 00 3a 00 00
+[ 1373.520382] sd 21:3:0:0: [sde] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+[ 1373.520546] sd 21:3:0:0: [sde] 781422768 512-byte hardware sectors (400088 MB)
+[ 1373.520590] sd 21:3:0:0: [sde] Write Protect is off
+[ 1373.520595] sd 21:3:0:0: [sde] Mode Sense: 00 3a 00 00
+[ 1373.520673] sd 21:3:0:0: [sde] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+[ 1373.520703]  sde: sde1
+[ 1373.532356] sd 21:3:0:0: [sde] Attached SCSI disk
+[ 1373.532356] sd 21:3:0:0: Attached scsi generic sg5 type 0
+[ 1373.532393] scsi 21:4:0:0: Direct-Access     ATA      ST3400832AS      3.03 PQ: 0 ANSI: 5
+[ 1373.532393] sd 21:4:0:0: [sdf] 781422768 512-byte hardware sectors (400088 MB)
+[ 1373.532393] sd 21:4:0:0: [sdf] Write Protect is off
+[ 1373.532393] sd 21:4:0:0: [sdf] Mode Sense: 00 3a 00 00
+[ 1373.532393] sd 21:4:0:0: [sdf] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+[ 1373.532393] sd 21:4:0:0: [sdf] 781422768 512-byte hardware sectors (400088 MB)
+[ 1373.532393] sd 21:4:0:0: [sdf] Write Protect is off
+[ 1373.532393] sd 21:4:0:0: [sdf] Mode Sense: 00 3a 00 00
+[ 1373.532393] sd 21:4:0:0: [sdf] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+[ 1373.532423]  sdf: sdf1
+[ 1373.563088] sd 21:4:0:0: [sdf] Attached SCSI disk
+[ 1373.564928] sd 21:4:0:0: Attached scsi generic sg6 type 0
 
+Only 3/4 drives were found on the PM.
 
-Steps to reproduce:
-
-
--- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug, or are watching the assignee.
