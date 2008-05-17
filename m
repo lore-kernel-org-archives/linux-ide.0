@@ -1,47 +1,56 @@
-From: bugme-daemon@bugzilla.kernel.org
-Subject: [Bug 10723] linux 2.6.24 fails to mount ext3 rootfs on FUJITSU MHK2060AT
-Date: Sat, 17 May 2008 09:20:21 -0700 (PDT)
-Message-ID: <20080517162021.5ED5B10805F@picon.linux-foundation.org>
-References: <bug-10723-11633@http.bugzilla.kernel.org/>
+From: Mikael Pettersson <mikpe@it.uu.se>
+Subject: [PATCH 2.6.26-rc2 1/3] sata_promise: fix irq clearing buglets
+Date: Sat, 17 May 2008 18:47:35 +0200 (MEST)
+Message-ID: <200805171647.m4HGlZFW015961@harpo.it.uu.se>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:37052 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750894AbYEQQUw (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 17 May 2008 12:20:52 -0400
-Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
-	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id m4HGKLrr012601
-	for <linux-ide@vger.kernel.org>; Sat, 17 May 2008 09:20:23 -0700
-In-Reply-To: <bug-10723-11633@http.bugzilla.kernel.org/>
+Received: from aun.it.uu.se ([130.238.12.36]:48795 "EHLO aun.it.uu.se"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751309AbYEQQrp (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 17 May 2008 12:47:45 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: jeff@garzik.org
+Cc: linux-ide@vger.kernel.org
 
-http://bugzilla.kernel.org/show_bug.cgi?id=10723
+This patch fixes two bugs in sata_promise's irq status clearing paths:
+1. When clearing the irq status for a specific port, the driver
+   read the global SEQMASK register. This is wrong because that
+   clears the irq status for _all_ ports.
+2. pdc_thaw() incorrectly added the PDC_INT_SEQMASK host register
+   offset to a per-port ata engine base address. This resulted in
+   it reading the unrelated PDC_PKT_SUBMIT register, which did not
+   have the desired irq status clearing effect.
 
+In both cases the fix is to read from the port's Command/Status
+register. This also matches what Promise's own driver does.
 
+Signed-off-by: Mikael Pettersson <mikpe@it.uu.se>
+---
+ drivers/ata/sata_promise.c |    7 +++----
+ 1 file changed, 3 insertions(+), 4 deletions(-)
 
-
-
-------- Comment #6 from bzolnier@gmail.com  2008-05-17 09:20 -------
-If it is possible to mount it like ext2 but not ext3 it is quite likely to be
-fs related issue and not IDE one (DMA timeouts are an orthogonal thing as they
-are also present with 2.6.22 according to the log).
-
-In any case you should be able to narrow down the source of the problem by
-using git-bisect.  Please install git package for your distribution, get kernel
-git tree from kernel.org and do:
-
-git bisect start
-git bisect good 2.6.22
-git bisect bad 2.6.24
-
-It will select the kernel to test, compile and boot it to see if the problem is
- there.  If so do "git bisect bad" which will give you new kernel to test.  If
-the kernel works fine do "git bisect good" instead.  After few iterations you
-should find the exact commit which introduced the bug.  Thanks!
-
-
--- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug, or are watching the assignee.
+diff -rupN linux-2.6.26-rc2/drivers/ata/sata_promise.c linux-2.6.26-rc2.sata_promise-irqclear/drivers/ata/sata_promise.c
+--- linux-2.6.26-rc2/drivers/ata/sata_promise.c	2008-05-16 12:44:28.000000000 +0200
++++ linux-2.6.26-rc2.sata_promise-irqclear/drivers/ata/sata_promise.c	2008-05-17 15:02:01.000000000 +0200
+@@ -663,7 +663,7 @@ static void pdc_thaw(struct ata_port *ap
+ 	u32 tmp;
+ 
+ 	/* clear IRQ */
+-	readl(mmio + PDC_INT_SEQMASK);
++	readl(mmio + PDC_COMMAND);
+ 
+ 	/* turn IRQ back on */
+ 	tmp = readl(mmio + PDC_CTLSTAT);
+@@ -781,10 +781,9 @@ static inline unsigned int pdc_host_intr
+ 
+ static void pdc_irq_clear(struct ata_port *ap)
+ {
+-	struct ata_host *host = ap->host;
+-	void __iomem *mmio = host->iomap[PDC_MMIO_BAR];
++	void __iomem *mmio = ap->ioaddr.cmd_addr;
+ 
+-	readl(mmio + PDC_INT_SEQMASK);
++	readl(mmio + PDC_COMMAND);
+ }
+ 
+ static irqreturn_t pdc_interrupt(int irq, void *dev_instance)
