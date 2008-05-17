@@ -1,208 +1,217 @@
-From: Peter Favrholdt <linux-ide@how.dk>
-Subject: Re: Linux 2.6.24 sata_promise SATA300TX4 problems
-Date: Sat, 17 May 2008 16:28:09 +0200
-Message-ID: <482EEB79.90905@how.dk>
-References: <479B0A39.2050700@how.dk>	<18331.53035.493189.308501@harpo.it.uu.se>	<479BD2E2.2060307@how.dk> <18331.59497.908868.283142@harpo.it.uu.se> <479CC044.8010401@how.dk>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+From: bugme-daemon@bugzilla.kernel.org
+Subject: [Bug 10723] linux 2.6.24 fails to mount ext3 rootfs on FUJITSU MHK2060AT
+Date: Sat, 17 May 2008 07:57:26 -0700 (PDT)
+Message-ID: <20080517145726.A501B10805E@picon.linux-foundation.org>
+References: <bug-10723-11633@http.bugzilla.kernel.org/>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from pqueuea.post.tele.dk ([193.162.153.9]:34331 "EHLO
-	pqueuea.post.tele.dk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751167AbYEQOxQ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 17 May 2008 10:53:16 -0400
-Received: from pfepb.post.tele.dk (pfepb.post.tele.dk [195.41.46.236])
-	by pqueuea.post.tele.dk (Postfix) with ESMTP id B46ABE391B
-	for <linux-ide@vger.kernel.org>; Sat, 17 May 2008 16:29:43 +0200 (CEST)
-In-Reply-To: <479CC044.8010401@how.dk>
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:51307 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752965AbYEQO55 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 17 May 2008 10:57:57 -0400
+Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
+	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id m4HEvQ7g007227
+	for <linux-ide@vger.kernel.org>; Sat, 17 May 2008 07:57:28 -0700
+In-Reply-To: <bug-10723-11633@http.bugzilla.kernel.org/>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mikael Pettersson <mikpe@it.uu.se>, linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-Hi Mikael & list,
+http://bugzilla.kernel.org/show_bug.cgi?id=10723
 
-I have previously reported problems with my setup:
 
-SATA300TX4 + 4 Seagate Barracuda ES 500GB
 
-Just for the record: using the same setup with linux kernel 2.6.25.4 
-shows the same problem running at 3.0gbps:
 
-[  789.196047] ata1.00: exception Emask 0x0 SAct 0x0 SErr 0x1380000 
-action 0x2 frozen
-[  789.196057] ata1: SError: { 10B8B Dispar BadCRC TrStaTrns }
-[  789.196066] ata1.00: cmd c8/00:00:00:0f:e6/00:00:00:00:00/e1 tag 0 
-dma 131072 in
-[  789.196068]          res 40/00:01:09:4f:c2/00:00:00:00:00/00 Emask 
-0x4 (timeout)
-[  789.196072] ata1.00: status: { DRDY }
-[  794.565999] ata1: port is slow to respond, please be patient (Status 
-0xff)
-[  799.245997] ata1: device not ready (errno=-16), forcing hardreset
-[  799.246007] ata1: hard resetting link
-[  805.456006] ata1: port is slow to respond, please be patient (Status 
-0xff)
-[  809.295996] ata1: COMRESET failed (errno=-16)
-[  809.296006] ata1: hard resetting link
-[  815.506040] ata1: port is slow to respond, please be patient (Status 
-0xff)
-[  819.346000] ata1: COMRESET failed (errno=-16)
-[  819.346009] ata1: hard resetting link
-[  825.555998] ata1: port is slow to respond, please be patient (Status 
-0xff)
-[  854.358881] ata1: COMRESET failed (errno=-16)
-[  854.358894] ata1: limiting SATA link speed to 1.5 Gbps
-[  854.358898] ata1: hard resetting link
-[  859.368879] ata1: COMRESET failed (errno=-16)
-[  859.368888] ata1: reset failed, giving up
-[  859.368893] ata1.00: disabled
-[  859.368910] ata1: exception Emask 0x10 SAct 0x0 SErr 0x1390002 action 
-0xa frozen t4
-[  859.368913] ata1: hotplug_status 0x80
-[  859.368918] ata1: SError: { RecovComm PHYRdyChg 10B8B Dispar BadCRC 
-TrStaTrns }
-[  859.368974] ata1: hard resetting link
-[  865.978881] ata1: port is slow to respond, please be patient (Status 
-0xff)
-[  869.399061] ata1: COMRESET failed (errno=-16)
-[  869.399071] ata1: hard resetting link
-[  876.008881] ata1: port is slow to respond, please be patient (Status 
-0xff)
-[  879.428879] ata1: COMRESET failed (errno=-16)
-[  879.428889] ata1: hard resetting link
-[  886.038996] ata1: port is slow to respond, please be patient (Status 
-0xff)
-[  914.478964] ata1: COMRESET failed (errno=-16)
-[  914.478977] ata1: limiting SATA link speed to 1.5 Gbps
-[  914.478981] ata1: hard resetting link
-[  919.528881] ata1: COMRESET failed (errno=-16)
-[  919.528890] ata1: reset failed, giving up
-[  919.528903] ata1: exception Emask 0x10 SAct 0x0 SErr 0x1390002 action 
-0xa frozen t3
-[  919.528906] ata1: hotplug_status 0x80
-[  919.528911] ata1: SError: { RecovComm PHYRdyChg 10B8B Dispar BadCRC 
-TrStaTrns }
-[  919.528970] ata1: hard resetting link
-[  926.138988] ata1: port is slow to respond, please be patient (Status 
-0xff)
-[  929.559073] ata1: COMRESET failed (errno=-16)
-[  929.559083] ata1: hard resetting link
-[  936.168995] ata1: port is slow to respond, please be patient (Status 
-0xff)
-[  939.588874] ata1: COMRESET failed (errno=-16)
-[  939.588884] ata1: hard resetting link
-[  946.198886] ata1: port is slow to respond, please be patient (Status 
-0xff)
-[  974.638883] ata1: COMRESET failed (errno=-16)
-[  974.638895] ata1: limiting SATA link speed to 1.5 Gbps
-[  974.638898] ata1: hard resetting link
-[  979.688879] ata1: COMRESET failed (errno=-16)
-[  979.688890] ata1: reset failed, giving up
-[  979.688909] ata1: exception Emask 0x10 SAct 0x0 SErr 0x1390002 action 
-0xa frozen t2
-[  979.688912] ata1: hotplug_status 0x80
-[  979.688916] ata1: SError: { RecovComm PHYRdyChg 10B8B Dispar BadCRC 
-TrStaTrns }
-[  979.688967] ata1: hard resetting link
-[  986.298884] ata1: port is slow to respond, please be patient (Status 
-0xff)
-[  989.718881] ata1: COMRESET failed (errno=-16)
-[  989.718891] ata1: hard resetting link
-[  996.328887] ata1: port is slow to respond, please be patient (Status 
-0xff)
-[  999.748876] ata1: COMRESET failed (errno=-16)
-[  999.748886] ata1: hard resetting link
-[ 1006.358888] ata1: port is slow to respond, please be patient (Status 
-0xff)
-[ 1034.798882] ata1: COMRESET failed (errno=-16)
-[ 1034.798894] ata1: limiting SATA link speed to 1.5 Gbps
-[ 1034.798898] ata1: hard resetting link
-[ 1039.848875] ata1: COMRESET failed (errno=-16)
-[ 1039.848884] ata1: reset failed, giving up
-[ 1039.848905] ata1: exception Emask 0x10 SAct 0x0 SErr 0x1390002 action 
-0xa frozen t1
-[ 1039.848908] ata1: hotplug_status 0x80
-[ 1039.848912] ata1: SError: { RecovComm PHYRdyChg 10B8B Dispar BadCRC 
-TrStaTrns }
-[ 1039.848969] ata1: hard resetting link
-[ 1046.458878] ata1: port is slow to respond, please be patient (Status 
-0xff)
-[ 1049.878879] ata1: COMRESET failed (errno=-16)
-[ 1049.878889] ata1: hard resetting link
-[ 1056.488887] ata1: port is slow to respond, please be patient (Status 
-0xff)
-[ 1059.908881] ata1: COMRESET failed (errno=-16)
-[ 1059.908891] ata1: hard resetting link
-[ 1066.518879] ata1: port is slow to respond, please be patient (Status 
-0xff)
-[ 1094.958879] ata1: COMRESET failed (errno=-16)
-[ 1094.958892] ata1: limiting SATA link speed to 1.5 Gbps
-[ 1094.958896] ata1: hard resetting link
-[ 1100.008876] ata1: COMRESET failed (errno=-16)
-[ 1100.008885] ata1: reset failed, giving up
-[ 1100.008891] ata1: EH pending after 5 tries, giving up
-[ 1100.008909] sd 0:0:0:0: [sda] Result: hostbyte=0x00 driverbyte=0x08
-[ 1100.008913] sd 0:0:0:0: [sda] Sense Key : 0xb [current] [descriptor]
-[ 1100.008918] Descriptor sense data with sense descriptors (in hex):
-[ 1100.008921]         72 0b 00 00 00 00 00 0c 00 0a 80 00 00 00 00 00
-[ 1100.008928]         00 00 00 09
-[ 1100.008931] sd 0:0:0:0: [sda] ASC=0x0 ASCQ=0x0
-[ 1100.008934] end_request: I/O error, dev sda, sector 31854336
-[ 1100.008939] Buffer I/O error on device sda, logical block 3981792
-[ 1100.008944] Buffer I/O error on device sda, logical block 3981793
-[ 1100.008948] Buffer I/O error on device sda, logical block 3981794
-[ 1100.008951] Buffer I/O error on device sda, logical block 3981795
-[ 1100.008955] Buffer I/O error on device sda, logical block 3981796
-[ 1100.008958] Buffer I/O error on device sda, logical block 3981797
-[ 1100.008961] Buffer I/O error on device sda, logical block 3981798
-[ 1100.008964] Buffer I/O error on device sda, logical block 3981799
-[ 1100.008967] Buffer I/O error on device sda, logical block 3981800
-[ 1100.008970] Buffer I/O error on device sda, logical block 3981801
-[ 1100.008990] sd 0:0:0:0: rejecting I/O to offline device
-[ 1100.008998] ata1: EH complete
-[ 1100.009008] ata1.00: detaching (SCSI 0:0:0:0)
-[ 1100.009208] sd 0:0:0:0: [sda] Synchronizing SCSI cache
-[ 1100.009509] sd 0:0:0:0: [sda] Result: hostbyte=0x01 driverbyte=0x00
-[ 1100.009514] end_request: I/O error, dev sda, sector 31854592
-[ 1100.010478] sd 0:0:0:0: [sda] Result: hostbyte=0x04 driverbyte=0x00
-[ 1100.010483] sd 0:0:0:0: [sda] Stopping disk
-[ 1100.010492] sd 0:0:0:0: [sda] START_STOP FAILED
-[ 1100.010495] sd 0:0:0:0: [sda] Result: hostbyte=0x04 driverbyte=0x00
 
-Using Mikaels 1.5gbps patch produces no errors doing the same test.
+------- Comment #4 from juergen.kosel@gmx.de  2008-05-17 07:57 -------
+Hello,
 
-Best regards,
+also hda=nodma makes no difference.
+But this time I found out that it is possible to mount the rootfs from the
+initramfs busybox comandline as ext2:
 
-Peter
+Initializing CPU#0
+PID hash table entries: 256 (order: 8, 1024 bytes)
+Detected 120.687 MHz processor.
+Console: colour VGA+ 80x25
+console [tty0] enabled
+Dentry cache hash table entries: 8192 (order: 3, 32768 bytes)
+Inode-cache hash table entries: 4096 (order: 2, 16384 bytes)
+Memory: 38896k/49152k available (1747k kernel code, 9868k reserved, 711k data,
+324k init, 0k highmem)
+virtual kernel memory layout:
+    fixmap  : 0xfffb3000 - 0xfffff000   ( 304 kB)
+    vmalloc : 0xc3800000 - 0xfffb1000   ( 967 MB)
+    lowmem  : 0xc0000000 - 0xc3000000   (  48 MB)
+      .init : 0xc036a000 - 0xc03bb000   ( 324 kB)
+      .data : 0xc02b4d71 - 0xc0366bec   ( 711 kB)
+      .text : 0xc0100000 - 0xc02b4d71   (1747 kB)
+Checking if this processor honours the WP bit even in supervisor mode... Ok.
+Calibrating delay using timer specific routine.. 242.55 BogoMIPS (lpj=485115)
+Security Framework initialized
+SELinux:  Disabled at boot.
+Capability LSM initialized
+Mount-cache hash table entries: 512
+Initializing cgroup subsys ns
+Initializing cgroup subsys cpuacct
+CPU: After generic identify, caps: 000001bf 00000000 00000000 00000000 00000000
+00000000 00000000 00000000
+Intel Pentium with F0 0F bug - workaround enabled.
 
-Peter Favrholdt wrote:
-> Hi Mikael,
-> 
-> Thanks!
-> 
-> It works perfectly at 1.5Gbps :-)
-> 
-> I think that because it fails at 3Gbps it might eventually fail at 
-> 1.5Gbps also... And the error handling was not robust (in my setup with 
-> these drives at 3Gbps).
-> 
-> If I can help investigate further, I'm happy to do that. I have a spare 
-> controller card so I could try swapping them.  Do you have any 
-> suggestions for what I should try next?
-> 
-> Best regards,
-> 
-> Peter
-> 
-> Mikael Pettersson wrote:
->> Peter Favrholdt writes:
->>  > If it is not too much of a hassle, could you please make a 1.5Gbps 
->> patch  > for 2.6.24 for me to try out? If it solves the problem 
->> (without me ever  > touching the cables) we know for sure it is 
->> speed-related and not due to  > kernel version.
->>
->> No problem. I had intended to drop that patch after 2.6.24-rc8 as it
->> ought to be obsolete, but then again it might not be. It's available 
->> here:
->> <http://user.it.uu.se/~mikpe/linux/patches/2.6/patch-sata_promise-limit-sataii-to-1.5Gbps-2.6.24> 
+CPU: After all inits, caps: 000001bf 00000000 00000000 00000000 00000000
+00000000 00000000 00000000
+Compat vDSO mapped to ffffe000.
+CPU: Intel Pentium 75 - 200 stepping 0c
+Checking 'hlt' instruction... OK.
+Freeing SMP alternatives: 0k freed
+ACPI: Core revision 20070126
+ACPI Exception (tbxface-0629): AE_NO_ACPI_TABLES, While loading namespace from
+ACPI tables [20070126]
+ACPI: Unable to load the System Description Tables
+net_namespace: 64 bytes
+Booting paravirtualized kernel on bare hardware
+NET: Registered protocol family 16
+EISA bus registered
+PCI: PCI BIOS revision 2.10 entry at 0xf73d9, last bus=0
+PCI: Using configuration type 1
+Setting up standard PCI resources
+ACPI: Interpreter disabled.
+Linux Plug and Play Support v0.97 (c) Adam Belay
+pnp: PnP ACPI: disabled
+PnPBIOS: Scanning system for PnP BIOS support...
+PnPBIOS: Found PnP BIOS installation structure at 0xc00f5010
+PnPBIOS: PnP BIOS version 1.0, entry 0xf0000:0x1a65, dseg 0xf0000
+PnPBIOS: 18 nodes reported by PnP BIOS; 18 recorded by driver
+PCI: Probing PCI hardware
+PCI: Probing PCI hardware (bus 00)
+NET: Registered protocol family 8
+NET: Registered protocol family 20
+ACPI Error (evxfevnt-0186): Could not enable RealTimeClock event [20070126]
+ACPI Warning (evxface-0145): Could not enable fixed event 4 [20070126]
+Time: tsc clocksource has been installed.
+system 00:08: iomem range 0x0-0x9ffff could not be reserved
+system 00:08: iomem range 0xf0000-0xfffff could not be reserved
+system 00:08: iomem range 0x100000-0x2ffffff could not be reserved
+system 00:13: ioport range 0x100-0x107 has been reserved
+system 00:13: ioport range 0x2a0-0x2a0 has been reserved
+system 00:13: ioport range 0x370-0x371 has been reserved
+system 00:13: ioport range 0x374-0x374 has been reserved
+system 00:13: ioport range 0x400-0x47f has been reserved
+system 00:13: ioport range 0x480-0x4ff has been reserved
+system 00:13: ioport range 0xcf7-0xcf7 has been reserved
+system 00:13: iomem range 0xfffc0000-0xffffffff has been reserved
+NET: Registered protocol family 2
+IP route cache hash table entries: 1024 (order: 0, 4096 bytes)
+TCP established hash table entries: 2048 (order: 2, 16384 bytes)
+TCP bind hash table entries: 2048 (order: 1, 8192 bytes)
+TCP: Hash tables configured (established 2048 bind 2048)
+TCP reno registered
+checking if image is initramfs... it is
+Freeing initrd memory: 6372k freed
+audit: initializing netlink socket (disabled)
+audit(1211033382.013:1): initialized
+Total HugeTLB memory allocated, 0
+VFS: Disk quotas dquot_6.5.1
+Dquot-cache hash table entries: 1024 (order 0, 4096 bytes)
+io scheduler noop registered
+io scheduler anticipatory registered
+io scheduler deadline registered
+io scheduler cfq registered (default)
+Boot video device is 0000:00:02.0
+isapnp: Scanning for PnP cards...
+isapnp: No Plug & Play device found
+Serial: 8250/16550 driver $Revision: 1.90 $ 4 ports, IRQ sharing enabled
+serial8250: ttyS0 at I/O 0x3f8 (irq = 4) is a 16550A
+serial8250: ttyS2 at I/O 0x3e8 (irq = 4) is a 16550A
+00:02: ttyS0 at I/O 0x3f8 (irq = 4) is a 16550A
+00:03: ttyS2 at I/O 0x3e8 (irq = 4) is a 16550A
+RAMDISK driver initialized: 16 RAM disks of 8192K size 1024 blocksize
+PNP: PS/2 Controller [PNP0303,PNP0f0e] at 0x60,0x64 irq 1,12
+serio: i8042 KBD port at 0x60,0x64 irq 1
+serio: i8042 AUX port at 0x60,0x64 irq 12
+mice: PS/2 mouse device common for all mice
+EISA: Probing bus 0 at eisa.0
+Cannot allocate resource for EISA slot 1
+EISA: Detected 0 cards.
+cpuidle: using governor ladder
+cpuidle: using governor menu
+TCP bic registered
+NET: Registered protocol family 1
+NET: Registered protocol family 17
+Using IPI Shortcut mode
+registered taskstats version 1
+Freeing unused kernel memory: 324k freed
+input: AT Translated Set 2 keyboard as /class/input/input0
+thermal: Unknown symbol acpi_processor_set_thermal_limit
+Floppy drive(s): fd0 is 1.44M
+FDC 0 is a post-1991 82077
+Uniform Multi-Platform E-IDE driver Revision: 7.00alpha2
+ide: Assuming 33MHz system bus speed for PIO modes; override with idebus=xx
+OPTI621: IDE controller (0x1045:0xc621 rev 0x12) at  PCI slot 0000:00:14.0
+OPTI621: not 100% native mode: will probe irqs later
+PCI: Setting latency timer of device 0000:00:14.0 to 64
+    ide0: BM-DMA at 0x1000-0x1007, BIOS settings: hda:pio, hdb:pio
+OPTI621: IDE port disabled
+Probing IDE interface ide0...
+SCSI subsystem initialized
+hdb: IRQ probe failed (0xffffefb8)
+hdb: IRQ probe failed (0xffffefb8)
+libata version 3.00 loaded.
+hda: FUJITSU MHK2060AT, ATA DISK drive
+hda: host max PIO3 wanted PIO255(auto-tune) selected PIO3
+hda: Selected PIO mode 3
+ide0: master: address: 1, data: 3, recovery: 3, drdy: 2 [clk]
+ide0: slave:  address: 1, data: 1, recovery: 2, drdy: 2 [clk]
+ide0 at 0x1f0-0x1f7,0x3f6 on irq 14
+hda: max request size: 128KiB
+hda: 11733120 sectors (6007 MB) w/512KiB Cache, CHS=12416/15/63
+hda: cache flushes not supported
+ hda:<4>hda: dma_timer_expiry: dma status == 0x21
+hda: DMA timeout error
+hda: dma timeout error: status=0x58 { DriveReady SeekComplete DataRequest }
+ide: failed opcode was: unknown
+hda: DMA disabled
+ide0: reset: success
+ hda1 hda2 <<4>hda: dma_timer_expiry: dma status == 0x21
+hda: DMA timeout error
+hda: dma timeout error: status=0x58 { DriveReady SeekComplete DataRequest }
+ide: failed opcode was: unknown
+hda: DMA disabled
+ide0: reset: success
+ hda5<4>hda: dma_timer_expiry: dma status == 0x21
+hda: DMA timeout error
+hda: dma timeout error: status=0x58 { DriveReady SeekComplete DataRequest }
+ide: failed opcode was: unknown
+hda: DMA disabled
+ide0: reset: success
+ hda6 >
+hda: dma_timer_expiry: dma status == 0x21
+hda: DMA timeout error
+hda: dma timeout error: status=0x58 { DriveReady SeekComplete DataRequest }
+ide: failed opcode was: unknown
+hda: DMA disabled
+ide0: reset: success
+Attempting manual resume
+swsusp: Marking nosave pages: 000000000009f000 - 0000000000100000
+swsusp: Basic memory bitmaps created
+swsusp: Basic memory bitmaps freed
+JBD: no valid journal superblock found
+EXT3-fs: error loading journal.
+EXT2-fs warning (device hda1): ext2_fill_super: mounting ext3 filesystem as
+ext2
+init_special_inode: bogus i_mode (54130)
+init_special_inode: bogus i_mode (54130)
+init_special_inode: bogus i_mode (54130)
+init_special_inode: bogus i_mode (54130)
+init_special_inode: bogus i_mode (54130)
+init_special_inode: bogus i_mode (54130)
+init_special_inode: bogus i_mode (54130)
+JBD: no valid journal superblock found
+EXT3-fs: error loading journal.
+EXT2-fs warning (device hda1): ext2_fill_super: mounting ext3 filesystem as
+ext2
 
+
+-- 
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug, or are watching the assignee.
