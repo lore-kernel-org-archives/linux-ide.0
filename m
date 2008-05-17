@@ -1,178 +1,208 @@
-From: Paolo <paoletto@gmail.com>
-Subject: Re: libata sata_via unusual behaviour
-Date: Sat, 17 May 2008 16:45:24 +0200
-Message-ID: <3bbeafe90805170745i7f010c0frb92355042be348bd@mail.gmail.com>
-References: <3bbeafe90805011018o28f46794h369242ccb02b7ced@mail.gmail.com>
-	 <3bbeafe90805011158n5b45283awd43a7a534ba11456@mail.gmail.com>
-	 <20080501195823.79786815@core>
-	 <3bbeafe90805011216l1780cf5bm9bad77a414062643@mail.gmail.com>
-	 <20080501211019.21b0701d@core>
-	 <3bbeafe90805170656v58ad2dc5nb6c1efcf55b8f2cf@mail.gmail.com>
+From: Peter Favrholdt <linux-ide@how.dk>
+Subject: Re: Linux 2.6.24 sata_promise SATA300TX4 problems
+Date: Sat, 17 May 2008 16:28:09 +0200
+Message-ID: <482EEB79.90905@how.dk>
+References: <479B0A39.2050700@how.dk>	<18331.53035.493189.308501@harpo.it.uu.se>	<479BD2E2.2060307@how.dk> <18331.59497.908868.283142@harpo.it.uu.se> <479CC044.8010401@how.dk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.177]:9731 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754862AbYEQOpZ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 17 May 2008 10:45:25 -0400
-Received: by wa-out-1112.google.com with SMTP id j37so840397waf.23
-        for <linux-ide@vger.kernel.org>; Sat, 17 May 2008 07:45:24 -0700 (PDT)
-In-Reply-To: <3bbeafe90805170656v58ad2dc5nb6c1efcf55b8f2cf@mail.gmail.com>
-Content-Disposition: inline
+Received: from pqueuea.post.tele.dk ([193.162.153.9]:34331 "EHLO
+	pqueuea.post.tele.dk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751167AbYEQOxQ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 17 May 2008 10:53:16 -0400
+Received: from pfepb.post.tele.dk (pfepb.post.tele.dk [195.41.46.236])
+	by pqueuea.post.tele.dk (Postfix) with ESMTP id B46ABE391B
+	for <linux-ide@vger.kernel.org>; Sat, 17 May 2008 16:29:43 +0200 (CEST)
+In-Reply-To: <479CC044.8010401@how.dk>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: linux-ide@vger.kernel.org
+To: Mikael Pettersson <mikpe@it.uu.se>, linux-ide@vger.kernel.org
 
-Actually, i was curious to see how my old Pentium2 performs, so i
-tried an ubuntu gutsy on it.
-Surprising results:
+Hi Mikael & list,
 
-root@erebor:~# df
-Filesystem           1K-blocks      Used Available Use% Mounted on
-/dev/sda1             14421344   2177664  11511120  16% /
-[...]
-/dev/sda3            273522480 260268272  12230208  96% /local
+I have previously reported problems with my setup:
 
-(so one 15gb partition, and one 270gb partition, both ext3)
+SATA300TX4 + 4 Seagate Barracuda ES 500GB
 
-hdparm -tT /dev/sda
+Just for the record: using the same setup with linux kernel 2.6.25.4 
+shows the same problem running at 3.0gbps:
 
-/dev/sda:
- Timing cached reads:   158 MB in  2.00 seconds =  78.93 MB/sec
- Timing buffered disk reads:   84 MB in  3.03 seconds =  27.74 MB/sec
+[  789.196047] ata1.00: exception Emask 0x0 SAct 0x0 SErr 0x1380000 
+action 0x2 frozen
+[  789.196057] ata1: SError: { 10B8B Dispar BadCRC TrStaTrns }
+[  789.196066] ata1.00: cmd c8/00:00:00:0f:e6/00:00:00:00:00/e1 tag 0 
+dma 131072 in
+[  789.196068]          res 40/00:01:09:4f:c2/00:00:00:00:00/00 Emask 
+0x4 (timeout)
+[  789.196072] ata1.00: status: { DRDY }
+[  794.565999] ata1: port is slow to respond, please be patient (Status 
+0xff)
+[  799.245997] ata1: device not ready (errno=-16), forcing hardreset
+[  799.246007] ata1: hard resetting link
+[  805.456006] ata1: port is slow to respond, please be patient (Status 
+0xff)
+[  809.295996] ata1: COMRESET failed (errno=-16)
+[  809.296006] ata1: hard resetting link
+[  815.506040] ata1: port is slow to respond, please be patient (Status 
+0xff)
+[  819.346000] ata1: COMRESET failed (errno=-16)
+[  819.346009] ata1: hard resetting link
+[  825.555998] ata1: port is slow to respond, please be patient (Status 
+0xff)
+[  854.358881] ata1: COMRESET failed (errno=-16)
+[  854.358894] ata1: limiting SATA link speed to 1.5 Gbps
+[  854.358898] ata1: hard resetting link
+[  859.368879] ata1: COMRESET failed (errno=-16)
+[  859.368888] ata1: reset failed, giving up
+[  859.368893] ata1.00: disabled
+[  859.368910] ata1: exception Emask 0x10 SAct 0x0 SErr 0x1390002 action 
+0xa frozen t4
+[  859.368913] ata1: hotplug_status 0x80
+[  859.368918] ata1: SError: { RecovComm PHYRdyChg 10B8B Dispar BadCRC 
+TrStaTrns }
+[  859.368974] ata1: hard resetting link
+[  865.978881] ata1: port is slow to respond, please be patient (Status 
+0xff)
+[  869.399061] ata1: COMRESET failed (errno=-16)
+[  869.399071] ata1: hard resetting link
+[  876.008881] ata1: port is slow to respond, please be patient (Status 
+0xff)
+[  879.428879] ata1: COMRESET failed (errno=-16)
+[  879.428889] ata1: hard resetting link
+[  886.038996] ata1: port is slow to respond, please be patient (Status 
+0xff)
+[  914.478964] ata1: COMRESET failed (errno=-16)
+[  914.478977] ata1: limiting SATA link speed to 1.5 Gbps
+[  914.478981] ata1: hard resetting link
+[  919.528881] ata1: COMRESET failed (errno=-16)
+[  919.528890] ata1: reset failed, giving up
+[  919.528903] ata1: exception Emask 0x10 SAct 0x0 SErr 0x1390002 action 
+0xa frozen t3
+[  919.528906] ata1: hotplug_status 0x80
+[  919.528911] ata1: SError: { RecovComm PHYRdyChg 10B8B Dispar BadCRC 
+TrStaTrns }
+[  919.528970] ata1: hard resetting link
+[  926.138988] ata1: port is slow to respond, please be patient (Status 
+0xff)
+[  929.559073] ata1: COMRESET failed (errno=-16)
+[  929.559083] ata1: hard resetting link
+[  936.168995] ata1: port is slow to respond, please be patient (Status 
+0xff)
+[  939.588874] ata1: COMRESET failed (errno=-16)
+[  939.588884] ata1: hard resetting link
+[  946.198886] ata1: port is slow to respond, please be patient (Status 
+0xff)
+[  974.638883] ata1: COMRESET failed (errno=-16)
+[  974.638895] ata1: limiting SATA link speed to 1.5 Gbps
+[  974.638898] ata1: hard resetting link
+[  979.688879] ata1: COMRESET failed (errno=-16)
+[  979.688890] ata1: reset failed, giving up
+[  979.688909] ata1: exception Emask 0x10 SAct 0x0 SErr 0x1390002 action 
+0xa frozen t2
+[  979.688912] ata1: hotplug_status 0x80
+[  979.688916] ata1: SError: { RecovComm PHYRdyChg 10B8B Dispar BadCRC 
+TrStaTrns }
+[  979.688967] ata1: hard resetting link
+[  986.298884] ata1: port is slow to respond, please be patient (Status 
+0xff)
+[  989.718881] ata1: COMRESET failed (errno=-16)
+[  989.718891] ata1: hard resetting link
+[  996.328887] ata1: port is slow to respond, please be patient (Status 
+0xff)
+[  999.748876] ata1: COMRESET failed (errno=-16)
+[  999.748886] ata1: hard resetting link
+[ 1006.358888] ata1: port is slow to respond, please be patient (Status 
+0xff)
+[ 1034.798882] ata1: COMRESET failed (errno=-16)
+[ 1034.798894] ata1: limiting SATA link speed to 1.5 Gbps
+[ 1034.798898] ata1: hard resetting link
+[ 1039.848875] ata1: COMRESET failed (errno=-16)
+[ 1039.848884] ata1: reset failed, giving up
+[ 1039.848905] ata1: exception Emask 0x10 SAct 0x0 SErr 0x1390002 action 
+0xa frozen t1
+[ 1039.848908] ata1: hotplug_status 0x80
+[ 1039.848912] ata1: SError: { RecovComm PHYRdyChg 10B8B Dispar BadCRC 
+TrStaTrns }
+[ 1039.848969] ata1: hard resetting link
+[ 1046.458878] ata1: port is slow to respond, please be patient (Status 
+0xff)
+[ 1049.878879] ata1: COMRESET failed (errno=-16)
+[ 1049.878889] ata1: hard resetting link
+[ 1056.488887] ata1: port is slow to respond, please be patient (Status 
+0xff)
+[ 1059.908881] ata1: COMRESET failed (errno=-16)
+[ 1059.908891] ata1: hard resetting link
+[ 1066.518879] ata1: port is slow to respond, please be patient (Status 
+0xff)
+[ 1094.958879] ata1: COMRESET failed (errno=-16)
+[ 1094.958892] ata1: limiting SATA link speed to 1.5 Gbps
+[ 1094.958896] ata1: hard resetting link
+[ 1100.008876] ata1: COMRESET failed (errno=-16)
+[ 1100.008885] ata1: reset failed, giving up
+[ 1100.008891] ata1: EH pending after 5 tries, giving up
+[ 1100.008909] sd 0:0:0:0: [sda] Result: hostbyte=0x00 driverbyte=0x08
+[ 1100.008913] sd 0:0:0:0: [sda] Sense Key : 0xb [current] [descriptor]
+[ 1100.008918] Descriptor sense data with sense descriptors (in hex):
+[ 1100.008921]         72 0b 00 00 00 00 00 0c 00 0a 80 00 00 00 00 00
+[ 1100.008928]         00 00 00 09
+[ 1100.008931] sd 0:0:0:0: [sda] ASC=0x0 ASCQ=0x0
+[ 1100.008934] end_request: I/O error, dev sda, sector 31854336
+[ 1100.008939] Buffer I/O error on device sda, logical block 3981792
+[ 1100.008944] Buffer I/O error on device sda, logical block 3981793
+[ 1100.008948] Buffer I/O error on device sda, logical block 3981794
+[ 1100.008951] Buffer I/O error on device sda, logical block 3981795
+[ 1100.008955] Buffer I/O error on device sda, logical block 3981796
+[ 1100.008958] Buffer I/O error on device sda, logical block 3981797
+[ 1100.008961] Buffer I/O error on device sda, logical block 3981798
+[ 1100.008964] Buffer I/O error on device sda, logical block 3981799
+[ 1100.008967] Buffer I/O error on device sda, logical block 3981800
+[ 1100.008970] Buffer I/O error on device sda, logical block 3981801
+[ 1100.008990] sd 0:0:0:0: rejecting I/O to offline device
+[ 1100.008998] ata1: EH complete
+[ 1100.009008] ata1.00: detaching (SCSI 0:0:0:0)
+[ 1100.009208] sd 0:0:0:0: [sda] Synchronizing SCSI cache
+[ 1100.009509] sd 0:0:0:0: [sda] Result: hostbyte=0x01 driverbyte=0x00
+[ 1100.009514] end_request: I/O error, dev sda, sector 31854592
+[ 1100.010478] sd 0:0:0:0: [sda] Result: hostbyte=0x04 driverbyte=0x00
+[ 1100.010483] sd 0:0:0:0: [sda] Stopping disk
+[ 1100.010492] sd 0:0:0:0: [sda] START_STOP FAILED
+[ 1100.010495] sd 0:0:0:0: [sda] Result: hostbyte=0x04 driverbyte=0x00
 
-crappy results, BUT:
+Using Mikaels 1.5gbps patch produces no errors doing the same test.
 
-root@erebor:~# time cat /local/SAT/aba/bigfile.avi >/dev/null
+Best regards,
 
-real    0m24.637s
-user    0m0.236s
-sys     0m5.676s
-root@erebor:~# ls -la  /local/SAT/aba/bigfile.avi
--rw-rw-rw- 1 root root 732903424 2007-05-29 22:43 /local/SAT/aba/bigfile.avi
+Peter
 
-which means about 28mb/sec (what hdparm -t state). Here i still get
-0%id cpu, but at least it goes fast. Now: this machine has an intel
-i440bx chipset.
-The other one a Via KT600.
-
-Both of them run or ran ubuntu gutsy (now the new one has hardy, but
-before , with gutsy, i had same results)
-
-So... is sata_via buggy with via VT8237 soutbridge?
-
-
-On 5/17/08, Paolo <paoletto@gmail.com> wrote:
-> Hi Alan, hi all
->
-> so far, i did some more tests.
->
-> First of all, i'm using ext3 filesystem (and it might happen it's very
-> slow, according with my tests results)
->
-> What i did:
->
-> Trying ubuntu Hardy LiveCD (to check it's not because
-> 1) im using a hand made compiled kernel
-> 2) i might have removed some package which is actually needed for disk
-> performances
-> 3) the upgrade screwed something )
->
-> So far, from LiveCD i did the same i did before, that is:
->
-> root@ubuntu:/media/disk/movies# time cat Lo\ squalo.avi >/dev/null
->
-> real    5m16.352s
-> user    0m0.132s
-> sys     0m6.244s
-> root@ubuntu:/media/disk/movies# ls -la Lo\ squalo.avi
-> -rw-r----- 1 1000 1001 1559521280 2008-03-30 06:37 Lo squalo.avi
->
-> it means roughly those old 5mb/sec.
-> In the meanwhile i checked with top, and all the cpu cycles were taken
-> by the disk (about 98.0%wa and 0.0%id)
->
-> ok so not my fault. Maybe ext3? my volumes looks like:
-> root@rivendell:~# df
-> Filesystem           1K-blocks      Used Available Use% Mounted on
-> /dev/sda1             28834716  17088924  10281068  63% /
-> [...]
-> /dev/sda3            931618688 613099244 314519444  67% /local
->
-> So i got a 30gb partition, and a 900gb partition (roughly).
->
-> I tried to copy the file into the smaller partition ( into / )
-> and:
->
-> root@rivendell:/# time cp -rf /local/movies/Lo\ squalo.avi /
->
-> real    6m21.978s
-> user    0m0.150s
-> sys     0m18.170s
-> root@rivendell:/# time cat /Lo\ squalo.avi >/dev/null
->
-> real    1m33.913s
-> user    0m0.150s
-> sys     0m5.370s
-> root@rivendell:/# time cat /local/movies/Lo\ squalo.avi >/dev/null
->
-> real    6m13.549s
-> user    0m0.230s
-> sys     0m5.930s
->
-> During this tests, the first and the last command still showed like 98.0%wa
-> while with the second, (reading the file from the / fs) i had about
-> 50-60%wa and some idle cycles (about 20% or so, sometimes 0% but not
-> always) with about 16mb/sec transfer rate (which is still slow, to
-> me.. again, hdparm -tT shows:
-> root@rivendell:/# hdparm -tT /dev/sda
->
-> /dev/sda:
->  Timing cached reads:   476 MB in  2.00 seconds = 237.68 MB/sec
->  Timing buffered disk reads:  220 MB in  3.02 seconds =  72.80 MB/sec )
->
-> This test shows to me that it might be a filesystem issue, but still,
-> is it possible it's so expensive? i mean, even from a 30gb partition
-> (which is the norm) reading operations take almost all the cpu power
-> (even if it's finally faster).
-> Ok, my cpu is not lighting fast (AthlonXP 800mhz) but i had almost
-> better performances on a pentiumII 350mhz and 320gb IDE hard drive
-> (debian testing on ext3).
->
-> do you have any clue about what could i do to improve fs performances?
-> Thank you in advance and excuse me for the boring mail!
-> Paolo
->
-> On 5/1/08, Alan Cox <alan@lxorguk.ukuu.org.uk> wrote:
->> On Thu, 1 May 2008 21:16:24 +0200
->> Paolo <paoletto@gmail.com> wrote:
+Peter Favrholdt wrote:
+> Hi Mikael,
+> 
+> Thanks!
+> 
+> It works perfectly at 1.5Gbps :-)
+> 
+> I think that because it fails at 3Gbps it might eventually fail at 
+> 1.5Gbps also... And the error handling was not robust (in my setup with 
+> these drives at 3Gbps).
+> 
+> If I can help investigate further, I'm happy to do that. I have a spare 
+> controller card so I could try swapping them.  Do you have any 
+> suggestions for what I should try next?
+> 
+> Best regards,
+> 
+> Peter
+> 
+> Mikael Pettersson wrote:
+>> Peter Favrholdt writes:
+>>  > If it is not too much of a hassle, could you please make a 1.5Gbps 
+>> patch  > for 2.6.24 for me to try out? If it solves the problem 
+>> (without me ever  > touching the cables) we know for sure it is 
+>> speed-related and not due to  > kernel version.
 >>
->>> Umh..
->>>
->>> Thank you for your answer!
->>> Actually, i think the same. Hdparm tests shows good results.
->>
->> hdparm results mean the disk setup is ok
->>
->>> what i dont get is why the cpu load raise to keep idle to 0% like if
->>> it was pio mode, even if it is in udma6..
->>> What else could be, other than the libata layer not setted in dma
->>> (which is not)?
->>
->> Anything above the disk driver layer - file system, block queue setup
->> or something happening which causes a lot of I/O in small chunks (which
->> ruins a disks performance). This is usually distro level stuff so best
->> analysed by the distribution people.
->>
->>> ps: no, im not using LVM. But ubuntu is using their uuid stuff in
->>> fstab to boot which i quite dont know at all..
->>> maybe that?
->>
->> No that wouldn't explain it at all. The uuid/fstab stuff is just boot
->> time stuff so doesn't get in the way.
->>
->> What file system are you using ?
->>
->
+>> No problem. I had intended to drop that patch after 2.6.24-rc8 as it
+>> ought to be obsolete, but then again it might not be. It's available 
+>> here:
+>> <http://user.it.uu.se/~mikpe/linux/patches/2.6/patch-sata_promise-limit-sataii-to-1.5Gbps-2.6.24> 
+
