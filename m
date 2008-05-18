@@ -1,117 +1,113 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH 35/40] ide-tape: always log debug info in idetape_pc_intr() if debugging is enabled
-Date: Sun, 18 May 2008 20:59:43 +0200
-Message-ID: <20080518185943.5636.13887.sendpatchset@localhost.localdomain>
+Subject: [PATCH 37/40] ide-scsi: use pc->callback
+Date: Sun, 18 May 2008 21:00:00 +0200
+Message-ID: <20080518190000.5636.8620.sendpatchset@localhost.localdomain>
 References: <20080518185428.5636.77234.sendpatchset@localhost.localdomain>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from gv-out-0910.google.com ([216.239.58.185]:22495 "EHLO
-	gv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758302AbYERSmS (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 18 May 2008 14:42:18 -0400
-Received: by gv-out-0910.google.com with SMTP id e6so243542gvc.37
-        for <linux-ide@vger.kernel.org>; Sun, 18 May 2008 11:42:17 -0700 (PDT)
+Received: from fk-out-0910.google.com ([209.85.128.190]:17236 "EHLO
+	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758547AbYERSmi (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 18 May 2008 14:42:38 -0400
+Received: by fk-out-0910.google.com with SMTP id 18so1473278fkq.5
+        for <linux-ide@vger.kernel.org>; Sun, 18 May 2008 11:42:35 -0700 (PDT)
 In-Reply-To: <20080518185428.5636.77234.sendpatchset@localhost.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
 Cc: Borislav Petkov <petkovbb@gmail.com>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-kernel@vger.kernel.org
 
-Add DBG_PC_INTR debug level and use it to always log debug info
-in idetape_pc_intr() if debugging is enabled.
+* Add ide_scsi_callback() pc->callback implementation, then update
+  idescsi_check_condition() and idescsi_queue() to setup ->callback.
 
-While at it:
-
-* Use drive->name instead of tape->name.
-
-* Log device name with "DMA finished" message.
+* Convert idescsi_pc_intr() to use pc->callback.
 
 This is a preparation for adding generic ide_pc_intr() helper.
 
 Cc: Borislav Petkov <petkovbb@gmail.com>
 Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 ---
- drivers/ide/ide-tape.c |   19 ++++++++++---------
- 1 file changed, 10 insertions(+), 9 deletions(-)
+ drivers/scsi/ide-scsi.c |   32 ++++++++++++++++++++++----------
+ 1 file changed, 22 insertions(+), 10 deletions(-)
 
-Index: b/drivers/ide/ide-tape.c
+Index: b/drivers/scsi/ide-scsi.c
 ===================================================================
---- a/drivers/ide/ide-tape.c
-+++ b/drivers/ide/ide-tape.c
-@@ -56,6 +56,8 @@ enum {
- 	DBG_PROCS =		(1 << 3),
- 	/* buffer alloc info (pc_stack & rq_stack) */
- 	DBG_PCRQ_STACK =	(1 << 4),
-+	/* IRQ handler (always log debug info if debugging is on) */
-+	DBG_PC_INTR = 		(1 << 5),
- };
- 
- /* define to see debug info */
-@@ -64,7 +66,7 @@ enum {
- #if IDETAPE_DEBUG_LOG
- #define debug_log(lvl, fmt, args...)			\
- {							\
--	if (tape->debug_mask & lvl)			\
-+	if ((lvl & DBG_PC_INTR) || (tape->debug_mask & lvl)) \
- 	printk(KERN_INFO "ide-tape: " fmt, ## args);	\
+--- a/drivers/scsi/ide-scsi.c
++++ b/drivers/scsi/ide-scsi.c
+@@ -183,6 +183,24 @@ static void ide_scsi_hex_dump(u8 *data, 
+ 	print_hex_dump(KERN_CONT, "", DUMP_PREFIX_NONE, 16, 1, data, len, 0);
  }
- #else
-@@ -806,7 +808,7 @@ static ide_startstop_t idetape_pc_intr(i
- 	u16 bcount;
- 	u8 stat, ireason;
  
--	debug_log(DBG_PROCS, "Enter %s - interrupt handler\n", __func__);
-+	debug_log(DBG_PC_INTR, "Enter %s - interrupt handler\n", __func__);
++static int idescsi_end_request(ide_drive_t *, int, int);
++
++static void ide_scsi_callback(ide_drive_t *drive)
++{
++	idescsi_scsi_t *scsi = drive_to_idescsi(drive);
++	struct ide_atapi_pc *pc = scsi->pc;
++
++	if (pc->flags & PC_FLAG_TIMEDOUT)
++		debug_log("%s: got timed out packet %lu at %lu\n", __func__,
++			  pc->scsi_cmd->serial_number, jiffies);
++		/* end this request now - scsi should retry it*/
++	else if (test_bit(IDESCSI_LOG_CMD, &scsi->log))
++		printk(KERN_INFO "Packet command completed, %d bytes"
++				 " transferred\n", pc->xferred);
++
++	idescsi_end_request(drive, 1, 0);
++}
++
+ static int idescsi_check_condition(ide_drive_t *drive,
+ 		struct request *failed_cmd)
+ {
+@@ -210,6 +228,7 @@ static int idescsi_check_condition(ide_d
+ 	rq->cmd_type = REQ_TYPE_SENSE;
+ 	rq->cmd_flags |= REQ_PREEMPT;
+ 	pc->timeout = jiffies + WAIT_READY;
++	pc->callback = ide_scsi_callback;
+ 	/* NOTE! Save the failed packet command in "rq->buffer" */
+ 	rq->buffer = (void *) failed_cmd->special;
+ 	pc->scsi_cmd = ((struct ide_atapi_pc *) failed_cmd->special)->scsi_cmd;
+@@ -222,8 +241,6 @@ static int idescsi_check_condition(ide_d
+ 	return 0;
+ }
  
- 	/* Clear the interrupt */
- 	stat = ide_read_status(drive);
-@@ -818,13 +820,12 @@ static ide_startstop_t idetape_pc_intr(i
- 			pc->xferred = pc->req_xfer;
- 			idetape_update_buffers(pc);
- 		}
--		debug_log(DBG_PROCS, "DMA finished\n");
+-static int idescsi_end_request(ide_drive_t *, int, int);
 -
-+		debug_log(DBG_PC_INTR, "%s: DMA finished\n", drive->name);
+ static ide_startstop_t
+ idescsi_atapi_error(ide_drive_t *drive, struct request *rq, u8 stat, u8 err)
+ {
+@@ -350,10 +367,7 @@ static ide_startstop_t idescsi_pc_intr (
+ 	debug_log("Reached %s interrupt handler\n", __func__);
+ 
+ 	if (pc->flags & PC_FLAG_TIMEDOUT) {
+-		debug_log("%s: got timed out packet %lu at %lu\n", __func__,
+-			  pc->scsi_cmd->serial_number, jiffies);
+-		/* end this request now - scsi should retry it*/
+-		idescsi_end_request (drive, 1, 0);
++		pc->callback(drive);
+ 		return ide_stopped;
  	}
+ 	if (pc->flags & PC_FLAG_DMA_IN_PROGRESS) {
+@@ -369,14 +383,11 @@ static ide_startstop_t idescsi_pc_intr (
  
- 	/* No more interrupts */
  	if ((stat & DRQ_STAT) == 0) {
--		debug_log(DBG_SENSE, "Packet command completed, %d bytes"
-+		debug_log(DBG_PC_INTR, "Packet command completed, %d bytes"
- 				" transferred\n", pc->xferred);
- 
+ 		/* No more interrupts */
+-		if (test_bit(IDESCSI_LOG_CMD, &scsi->log))
+-			printk(KERN_INFO "Packet command completed, %d bytes"
+-					" transferred\n", pc->xferred);
  		pc->flags &= ~PC_FLAG_DMA_IN_PROGRESS;
-@@ -834,14 +835,14 @@ static ide_startstop_t idetape_pc_intr(i
- 			stat &= ~ERR_STAT;
- 		if ((stat & ERR_STAT) || (pc->flags & PC_FLAG_DMA_ERROR)) {
- 			/* Error detected */
--			debug_log(DBG_ERR, "%s: I/O error\n", tape->name);
-+			debug_log(DBG_PC_INTR, "%s: I/O error\n", drive->name);
+ 		local_irq_enable_in_hardirq();
+ 		if ((stat & ERR_STAT) || (pc->flags & PC_FLAG_DMA_ERROR))
+ 			rq->errors++;
+-		idescsi_end_request (drive, 1, 0);
++		pc->callback(drive);
+ 		return ide_stopped;
+ 	}
+ 	if (pc->flags & PC_FLAG_DMA_IN_PROGRESS) {
+@@ -718,6 +729,7 @@ static int idescsi_queue (struct scsi_cm
+ 	pc->scsi_cmd = cmd;
+ 	pc->done = done;
+ 	pc->timeout = jiffies + cmd->timeout_per_command;
++	pc->callback = ide_scsi_callback;
  
- 			if (pc->c[0] == REQUEST_SENSE) {
- 				printk(KERN_ERR "%s: I/O error in request sense"
- 						" command\n", drive->name);
- 				return ide_do_reset(drive);
- 			}
--			debug_log(DBG_ERR, "[cmd %x]: check condition\n",
-+			debug_log(DBG_PC_INTR, "[cmd %x]: check condition\n",
- 					pc->c[0]);
- 
- 			/* Retry operation */
-@@ -898,7 +899,7 @@ static ide_startstop_t idetape_pc_intr(i
- 						IDETAPE_WAIT_CMD, NULL);
- 				return ide_started;
- 			}
--			debug_log(DBG_SENSE, "The device wants to send us more "
-+			debug_log(DBG_PC_INTR, "The device wants to send us more "
- 				"data than expected - allowing transfer\n");
- 		}
- 		xferfunc = hwif->input_data;
-@@ -916,7 +917,7 @@ static ide_startstop_t idetape_pc_intr(i
- 	pc->xferred += bcount;
- 	pc->cur_pos += bcount;
- 
--	debug_log(DBG_SENSE, "[cmd %x] transferred %d bytes on that intr.\n",
-+	debug_log(DBG_PC_INTR, "[cmd %x] transferred %d bytes on that intr.\n",
- 			pc->c[0], bcount);
- 
- 	/* And set the interrupt handler again */
+ 	if (test_bit(IDESCSI_LOG_CMD, &scsi->log)) {
+ 		printk ("ide-scsi: %s: que %lu, cmd = ", drive->name, cmd->serial_number);
