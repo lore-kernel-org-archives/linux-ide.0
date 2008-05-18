@@ -1,54 +1,37 @@
-From: Geert Uytterhoeven <geert@linux-m68k.org>
-Subject: [patch 08/18] m68k: macide doesnt check for Mac
-Date: Sun, 18 May 2008 20:47:14 +0200
-Message-ID: <20080518185151.718572513@mail.of.borg>
-References: <20080518184706.631023070@mail.of.borg>
+From: Mark Lord <liml@rtr.ca>
+Subject: Re: [PATCH 09/10] sata_sil24: don't use NCQ if marvell 4140 PMP is
+ attached
+Date: Sun, 18 May 2008 17:14:01 -0400
+Message-ID: <48309C19.8090807@rtr.ca>
+References: <12111273141039-git-send-email-htejun@gmail.com> <12111273202036-git-send-email-htejun@gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from yorgi.telenet-ops.be ([195.130.133.69]:35182 "EHLO
-	yorgi.telenet-ops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1761497AbYERSy3 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 18 May 2008 14:54:29 -0400
-Received: from nelson.telenet-ops.be (nelson.telenet-ops.be [195.130.133.66])
-	by yorgi.telenet-ops.be (Postfix) with ESMTP id 04BA258A102
-	for <linux-ide@vger.kernel.org>; Sun, 18 May 2008 20:54:27 +0200 (CEST)
-Content-Disposition: inline; filename=m68k-macide-breaks-multi-platform.diff
+Received: from rtr.ca ([76.10.145.34]:3521 "EHLO mail.rtr.ca"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754069AbYERVOF (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 18 May 2008 17:14:05 -0400
+In-Reply-To: <12111273202036-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Linus Torvalds <torvalds@linux-foundation.org>, Andrew Morton <akpm@linux-foundation.org>
-Cc: linux-m68k@vger.kernel.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: jeff@garzik.org, linux-ide@vger.kernel.org
 
-From: Geert Uytterhoeven <geert@linux-m68k.org>
+Tejun Heo wrote:
+> When 4140 PMP is attached to sil24, NCQ commands to fan out port 1 and
+> 2 (0 based) often stall if commands are in progress to other ports.
+> I've tried a number of things but can't tell what's going on.  It
+> never happens w/ ahci and reportedly sata_mv which can issue NCQ
+> commands to multiple devices simultaneously like sil24 does.
+..
 
-The Macintosh IDE driver (macide) doesn't check whether it's actually running
-on Mac hardware, causing a crash if it isn't.
+Mmm.. I wonder if sil24 is somehow triggering the "proprietary switching"
+mode of the 4140 -- this mode allows command-based-switching controllers
+to actually do something similar to FIS-based switching with the 4140.
 
-Signed-off-by: Geert Uytterhoeven <geert@linux-m68k.org>
----
- drivers/ide/legacy/macide.c |    3 +++
- 1 file changed, 3 insertions(+)
+But I don't know how the 4140 decides to enter that mode..
 
---- a/drivers/ide/legacy/macide.c
-+++ b/drivers/ide/legacy/macide.c
-@@ -95,6 +95,9 @@ static int __init macide_init(void)
- 	int irq;
- 	hw_regs_t hw;
- 
-+	if (!MACH_IS_MAC)
-+		return -ENODEV;
-+
- 	switch (macintosh_config->ide_type) {
- 	case MAC_IDE_QUADRA:
- 		base = IDE_BASE;
+I'll ping the Marvell folks again on that.
 
--- 
-Gr{oetje,eeting}s,
-
-						Geert
-
---
-Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
-
-In personal conversations with technical people, I call myself a hacker. But
-when I'm talking to journalists I just say "programmer" or something like that.
-							    -- Linus Torvalds
-
+Cheers
