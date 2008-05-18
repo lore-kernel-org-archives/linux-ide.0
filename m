@@ -1,106 +1,61 @@
-From: Paolo <paoletto@gmail.com>
-Subject: Re: libata sata_via unusual behaviour
-Date: Sun, 18 May 2008 09:07:45 +0200
-Message-ID: <3bbeafe90805180007w39c9a072qe4807697136bac8@mail.gmail.com>
-References: <3bbeafe90805011018o28f46794h369242ccb02b7ced@mail.gmail.com>
-	 <3bbeafe90805011158n5b45283awd43a7a534ba11456@mail.gmail.com>
-	 <20080501195823.79786815@core>
-	 <3bbeafe90805011216l1780cf5bm9bad77a414062643@mail.gmail.com>
-	 <20080501211019.21b0701d@core>
-	 <3bbeafe90805170656v58ad2dc5nb6c1efcf55b8f2cf@mail.gmail.com>
-	 <20080517230443.2a3eedff@core>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: Unable to access drives via PortMultiplier and SATA/IDE bridge
+Date: Sun, 18 May 2008 16:21:22 +0900
+Message-ID: <482FD8F2.6050706@gmail.com>
+References: <31125479.1210696397791.JavaMail.root@elwamui-norfolk.atl.sa.earthlink.net> <482A5F48.1060901@gmail.com> <003601c8b850$60e14690$6917a8c0@parents>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.179]:26010 "EHLO
+Received: from wa-out-1112.google.com ([209.85.146.183]:57500 "EHLO
 	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751119AbYERHHp (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 18 May 2008 03:07:45 -0400
-Received: by wa-out-1112.google.com with SMTP id j37so1184862waf.23
-        for <linux-ide@vger.kernel.org>; Sun, 18 May 2008 00:07:45 -0700 (PDT)
-In-Reply-To: <20080517230443.2a3eedff@core>
-Content-Disposition: inline
+	with ESMTP id S1751434AbYERHVa (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 18 May 2008 03:21:30 -0400
+Received: by wa-out-1112.google.com with SMTP id j37so1189904waf.23
+        for <linux-ide@vger.kernel.org>; Sun, 18 May 2008 00:21:29 -0700 (PDT)
+In-Reply-To: <003601c8b850$60e14690$6917a8c0@parents>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+To: Brian & Chamaigne Scamman <scammanbc@earthlink.net>
 Cc: linux-ide@vger.kernel.org
 
-So, let me clarify a bit:
+Brian & Chamaigne Scamman wrote:
+> Tejun-
+> 
+> Sorry for the delay in getting back with you - I wanted to build a clean
+> machine and do some more testing before I replied.
+> 
+> I've installed Fedora Core 9 (2.6.25-14.fc9.i686) along with a single SiI
+> 3124-based 4 port controller.
+> 
+> As I mentioned in an earlier email, I'm using a JM20330 based SATA to IDE
+> bridge to connect an IDE solid state drive. The SSD and bridge work fine
+> when attached directly to a SATA port, but don't work when attached to a
+> port multipler (SiI 3726-based). (For reference, no problems when using
+> Windows XP)
+> 
+> After some experimentation, I found out that if I connected the port
+> multipler first (with no drive attached or a standard SATA drive) and then
+> attached the SSD/bridge drive, the drive was immediately recognized by the
+> kernel.
+> 
+> I've attached two dmesg log files:
+> - dmesg_one_drive_at_a_time.txt is when the PMP was attached with a standard
+> SATA drive on port 0 and the SSD/bridge were attached to port 1 later.
+> - dmesg_ssd_drive_only_after_pmp.txt is when the PMP was attached with the
+> SSD/bridge attached to port 0; after EH timeout, the sata cable was detached
+> from port 0 and then re-inserted.
+> 
+> I've also run cases where the PMP was attached to the computer empty (no
+> drives on any ports) and then attached the SSD/bridge with success (port
+> independent).
+> 
+> Let me know if you need more dmesg logs.
 
-i did the same test in 3 different configuration:
-"cat bigfile >/dev/null"
+sata_sil24 and libata in general have some corner cases where device 
+detection fails and I'm cooking up some patches.  Please standby a bit.
 
-3 configuration were
+Thanks.
 
-1) Machine A (the slow one) from the big partition (1000gb) - got 5mb/s
-2) Machine A from the small partition - got 16mb(s
-3) Machine B from 300gb partition - got 28mb/s
-
-Machine A: AthlonXP 800 -Via KT600 - SATA disk western digital -
-direct ext3 filesystems (no raid-no lvm-no nothing)
-
-Machine B: Pentium 2 350 - i440bx - seagate IDE drive - direct ext3 filesystems
-
-I also did another test: putting a cpu intensive process  in the
-background with nice -n 20. The test showed the process was not being
-executed almost at all, so those %wa cpu cycles are somehow cpu cycles
-since they dont let other processes execute. (in fact when i do stuff
-with the disk my system became incredibly slow)
-
-Finally  i tried the test you suggested me
-root@rivendell:~# time dd if=/dev/zero of=/tmp/testfile bs=1024000 count=1000
-1000+0 records in
-1000+0 records out
-1024000000 bytes (1,0 GB) copied, 16,9609 s, 60,4 MB/s
-
-real    0m17.119s
-user    0m0.010s
-sys     0m12.890s
-
-with a sample cpu usage of:
-Cpu(s):  0.7%us, 15.0%sy,  0.0%ni, 76.1%id,  6.6%wa,  0.0%hi,  1.7%si,  0.0%st
-
-
-root@rivendell:~# time dd if=/dev/zero of=/local/testfile bs=1024000 count=1000
-1000+0 records in
-1000+0 records out
-1024000000 bytes (1,0 GB) copied, 23,3957 s, 43,8 MB/s
-
-real    0m23.898s
-user    0m0.010s
-sys     0m14.090s
-
-with a sample cpu usage of
-Cpu(s):  1.3%us, 50.7%sy,  0.0%ni,  0.0%id, 45.4%wa,  0.7%hi,  2.0%si,  0.0%st
-
-
-( / was the 30gb partition, /local the 900gb)
-
-
-
-
-On 5/18/08, Alan Cox <alan@lxorguk.ukuu.org.uk> wrote:
->> real    5m16.352s
->> user    0m0.132s
->> sys     0m6.244s
->
-> So the CPU usage is ok
->
->> root@ubuntu:/media/disk/movies# ls -la Lo\ squalo.avi
->> -rw-r----- 1 1000 1001 1559521280 2008-03-30 06:37 Lo squalo.avi
->>
->> it means roughly those old 5mb/sec.
->> In the meanwhile i checked with top, and all the cpu cycles were taken
->> by the disk (about 98.0%wa and 0.0%id)
->
-> 98.0%wa - wait time, not CPU time.
->
-> Its still a very slow copy rate unless the disks are on the same IDE
-> channel. How is the disk set up - ext3 direct or via raid/lvm ?
->
-> Also is a copy of the movie to /dev/null slow or fast, ditto a copy
-> from /dev/zero to disk of that sort of size ?
->
-> Alan
->
+-- 
+tejun
