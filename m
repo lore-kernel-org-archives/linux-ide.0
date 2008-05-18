@@ -1,69 +1,164 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH 16/40] ide-tape: make idetape_retry_pc() void
-Date: Sun, 18 May 2008 20:56:52 +0200
-Message-ID: <20080518185652.5636.43332.sendpatchset@localhost.localdomain>
+Subject: [PATCH 19/40] ide-floppy: merge callbacks
+Date: Sun, 18 May 2008 20:57:19 +0200
+Message-ID: <20080518185719.5636.31745.sendpatchset@localhost.localdomain>
 References: <20080518185428.5636.77234.sendpatchset@localhost.localdomain>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from fk-out-0910.google.com ([209.85.128.191]:17569 "EHLO
-	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757209AbYERSj1 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 18 May 2008 14:39:27 -0400
-Received: by fk-out-0910.google.com with SMTP id 18so1473279fkq.5
-        for <linux-ide@vger.kernel.org>; Sun, 18 May 2008 11:39:26 -0700 (PDT)
+Received: from mu-out-0910.google.com ([209.85.134.185]:28172 "EHLO
+	mu-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757445AbYERSjx (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 18 May 2008 14:39:53 -0400
+Received: by mu-out-0910.google.com with SMTP id w8so773343mue.1
+        for <linux-ide@vger.kernel.org>; Sun, 18 May 2008 11:39:53 -0700 (PDT)
 In-Reply-To: <20080518185428.5636.77234.sendpatchset@localhost.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
 Cc: Borislav Petkov <petkovbb@gmail.com>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-kernel@vger.kernel.org
 
-idetape_retry_pc() always returns ide_stopped so make it void.
+From: Borislav Petkov <petkovbb@gmail.com>
+Subject: [PATCH] ide-floppy: merge callbacks
 
-There should be no functional changes caused by this patch.
+The appropriate functionality of the callback is established through querying
+the ATAPI packet command in pc->c[0].
 
-Cc: Borislav Petkov <petkovbb@gmail.com>
+While at it, simplify if (floppy->failed_pc)-branch to be found in the original
+idefloppy_request_sense_callback().
+
+Bart:
+- keep handling for blk_pc_request() requests unchanged + add FIXME
+- add uptodate variable + leave just one idefloppy_end_request() call
+- add newline to the debug message
+
+Signed-off-by: Borislav Petkov <petkovbb@gmail.com>
 Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 ---
- drivers/ide/ide-tape.c |    9 +++++----
- 1 file changed, 5 insertions(+), 4 deletions(-)
+ drivers/ide/ide-floppy.c |   71 +++++++++++++++--------------------------------
+ 1 file changed, 24 insertions(+), 47 deletions(-)
 
-Index: b/drivers/ide/ide-tape.c
+Index: b/drivers/ide/ide-floppy.c
 ===================================================================
---- a/drivers/ide/ide-tape.c
-+++ b/drivers/ide/ide-tape.c
-@@ -696,7 +696,7 @@ static void idetape_queue_pc_head(ide_dr
-  *	last packet command. We queue a request sense packet command in
-  *	the head of the request list.
-  */
--static ide_startstop_t idetape_retry_pc (ide_drive_t *drive)
-+static void idetape_retry_pc(ide_drive_t *drive)
+--- a/drivers/ide/ide-floppy.c
++++ b/drivers/ide/ide-floppy.c
+@@ -312,50 +312,38 @@ static struct request *idefloppy_next_rq
+ 	return (&floppy->rq_stack[floppy->rq_stack_index++]);
+ }
+ 
+-static void idefloppy_request_sense_callback(ide_drive_t *drive)
++static void ide_floppy_callback(ide_drive_t *drive)
  {
- 	idetape_tape_t *tape = drive->driver_data;
- 	struct ide_atapi_pc *pc;
-@@ -708,7 +708,6 @@ static ide_startstop_t idetape_retry_pc 
- 	idetape_create_request_sense_cmd(pc);
- 	set_bit(IDETAPE_FLAG_IGNORE_DSC, &tape->flags);
- 	idetape_queue_pc_head(drive, pc, rq);
--	return ide_stopped;
+ 	idefloppy_floppy_t *floppy = drive->driver_data;
+-	u8 *buf = floppy->pc->buf;
++	struct ide_atapi_pc *pc = floppy->pc;
++	int uptodate = pc->error ? 0 : 1;
+ 
+ 	debug_log("Reached %s\n", __func__);
+ 
+-	if (!floppy->pc->error) {
+-		floppy->sense_key = buf[2] & 0x0F;
+-		floppy->asc = buf[12];
+-		floppy->ascq = buf[13];
+-		floppy->progress_indication = buf[15] & 0x80 ?
+-			(u16)get_unaligned((u16 *)&buf[16]) : 0x10000;
+-
+-		if (floppy->failed_pc)
+-			debug_log("pc = %x, sense key = %x, asc = %x,"
+-					" ascq = %x\n",
+-					floppy->failed_pc->c[0],
+-					floppy->sense_key,
+-					floppy->asc,
+-					floppy->ascq);
+-		else
+-			debug_log("sense key = %x, asc = %x, ascq = %x\n",
+-					floppy->sense_key,
+-					floppy->asc,
+-					floppy->ascq);
++	if (pc->c[0] == GPCMD_READ_10 || pc->c[0] == GPCMD_WRITE_10 ||
++	    (pc->rq && blk_pc_request(pc->rq)))
++		uptodate = 1; /* FIXME */
++	else if (pc->c[0] == GPCMD_REQUEST_SENSE) {
++		u8 *buf = floppy->pc->buf;
++
++		if (!pc->error) {
++			floppy->sense_key = buf[2] & 0x0F;
++			floppy->asc = buf[12];
++			floppy->ascq = buf[13];
++			floppy->progress_indication = buf[15] & 0x80 ?
++				(u16)get_unaligned((u16 *)&buf[16]) : 0x10000;
+ 
++			if (floppy->failed_pc)
++				debug_log("pc = %x, ", floppy->failed_pc->c[0]);
+ 
+-		idefloppy_end_request(drive, 1, 0);
+-	} else {
+-		printk(KERN_ERR "Error in REQUEST SENSE itself - Aborting"
+-				" request!\n");
+-		idefloppy_end_request(drive, 0, 0);
++			debug_log("sense key = %x, asc = %x, ascq = %x\n",
++				  floppy->sense_key, floppy->asc, floppy->ascq);
++		} else
++			printk(KERN_ERR "Error in REQUEST SENSE itself - "
++					"Aborting request!\n");
+ 	}
+-}
+ 
+-/* General packet command callback function. */
+-static void idefloppy_pc_callback(ide_drive_t *drive)
+-{
+-	idefloppy_floppy_t *floppy = drive->driver_data;
+-
+-	debug_log("Reached %s\n", __func__);
+-
+-	idefloppy_end_request(drive, floppy->pc->error ? 0 : 1, 0);
++	idefloppy_end_request(drive, uptodate, 0);
+ }
+ 
+ static void idefloppy_init_pc(struct ide_atapi_pc *pc)
+@@ -366,7 +354,7 @@ static void idefloppy_init_pc(struct ide
+ 	pc->req_xfer = 0;
+ 	pc->buf = pc->pc_buf;
+ 	pc->buf_size = IDEFLOPPY_PC_BUFFER_SIZE;
+-	pc->idefloppy_callback = &idefloppy_pc_callback;
++	pc->idefloppy_callback = &ide_floppy_callback;
+ }
+ 
+ static void idefloppy_create_request_sense_cmd(struct ide_atapi_pc *pc)
+@@ -375,7 +363,6 @@ static void idefloppy_create_request_sen
+ 	pc->c[0] = GPCMD_REQUEST_SENSE;
+ 	pc->c[4] = 255;
+ 	pc->req_xfer = 18;
+-	pc->idefloppy_callback = &idefloppy_request_sense_callback;
  }
  
  /*
-@@ -784,7 +783,8 @@ static ide_startstop_t idetape_pc_intr(i
- 					pc->c[0]);
+@@ -668,14 +655,6 @@ static ide_startstop_t idefloppy_issue_p
+ 	}
+ }
  
- 			/* Retry operation */
--			return idetape_retry_pc(drive);
-+			idetape_retry_pc(drive);
-+			return ide_stopped;
- 		}
- 		pc->error = 0;
- 		if ((pc->flags & PC_FLAG_WAIT_FOR_DSC) &&
-@@ -1078,7 +1078,8 @@ static ide_startstop_t idetape_media_acc
- 				printk(KERN_ERR "ide-tape: %s: I/O error, ",
- 						tape->name);
- 			/* Retry operation */
--			return idetape_retry_pc(drive);
-+			idetape_retry_pc(drive);
-+			return ide_stopped;
- 		}
- 		pc->error = 0;
- 		if (tape->failed_pc == pc)
+-static void idefloppy_rw_callback(ide_drive_t *drive)
+-{
+-	debug_log("Reached %s\n", __func__);
+-
+-	idefloppy_end_request(drive, 1, 0);
+-	return;
+-}
+-
+ static void idefloppy_create_prevent_cmd(struct ide_atapi_pc *pc, int prevent)
+ {
+ 	debug_log("creating prevent removal command, prevent = %d\n", prevent);
+@@ -770,7 +749,6 @@ static void idefloppy_create_rw_cmd(idef
+ 	put_unaligned(cpu_to_be16(blocks), (unsigned short *)&pc->c[7]);
+ 	put_unaligned(cpu_to_be32(block), (unsigned int *) &pc->c[2]);
+ 
+-	pc->idefloppy_callback = &idefloppy_rw_callback;
+ 	pc->rq = rq;
+ 	pc->b_count = cmd == READ ? 0 : rq->bio->bi_size;
+ 	if (rq->cmd_flags & REQ_RW)
+@@ -784,7 +762,6 @@ static void idefloppy_blockpc_cmd(ideflo
+ 		struct ide_atapi_pc *pc, struct request *rq)
+ {
+ 	idefloppy_init_pc(pc);
+-	pc->idefloppy_callback = &idefloppy_rw_callback;
+ 	memcpy(pc->c, rq->cmd, sizeof(pc->c));
+ 	pc->rq = rq;
+ 	pc->b_count = rq->data_len;
