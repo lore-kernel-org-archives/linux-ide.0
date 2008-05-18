@@ -1,154 +1,180 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH 03/10] libata: move reset freeze/thaw handling into ata_eh_reset()
-Date: Mon, 19 May 2008 01:15:07 +0900
-Message-ID: <1211127315414-git-send-email-htejun@gmail.com>
+Subject: [PATCH 02/10] libata: reorganize ata_eh_reset() no reset method path
+Date: Mon, 19 May 2008 01:15:06 +0900
+Message-ID: <12111273151006-git-send-email-htejun@gmail.com>
 References: <12111273141039-git-send-email-htejun@gmail.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wf-out-1314.google.com ([209.85.200.170]:52680 "EHLO
-	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753003AbYERQPY (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 18 May 2008 12:15:24 -0400
-Received: by wf-out-1314.google.com with SMTP id 27so1010112wfd.4
-        for <linux-ide@vger.kernel.org>; Sun, 18 May 2008 09:15:23 -0700 (PDT)
+Received: from py-out-1112.google.com ([64.233.166.178]:47396 "EHLO
+	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752363AbYERQPW (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 18 May 2008 12:15:22 -0400
+Received: by py-out-1112.google.com with SMTP id u52so1493698pyb.10
+        for <linux-ide@vger.kernel.org>; Sun, 18 May 2008 09:15:22 -0700 (PDT)
 In-Reply-To: <12111273141039-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: jeff@garzik.org, linux-ide@vger.kernel.org
 Cc: liml@rtr.ca, Tejun Heo <htejun@gmail.com>
 
-Previously reset freeze/thaw handling lived outside of ata_eh_reset()
-mainly because the original PMP reset code needed the port frozen
-while resetting all the fan-out ports, which is no longer the case.
-
-This patch moves freeze/thaw handling into ata_eh_reset().
-@prereset() and @postreset() are now called w/o freezing the port
-although @prereset() an be called frozen if the port is frozen prior
-to entering ata_eh_reset().
-
-This makes code simpler and will help removing hotplug event related
-races.
+Reorganize ata_eh_reset() such that @prereset() is called even when no
+reset method is available and if block is used instead of goto to skip
+actual reset.  This makes no reset case behave better (readiness wait)
+and future changes easier.
 
 Signed-off-by: Tejun Heo <htejun@gmail.com>
 ---
- drivers/ata/libata-eh.c  |   46 ++++++++++++++++++----------------------------
- drivers/ata/libata-pmp.c |    4 ----
- 2 files changed, 18 insertions(+), 32 deletions(-)
+ drivers/ata/libata-eh.c |  102 ++++++++++++++++++++++++-----------------------
+ 1 files changed, 52 insertions(+), 50 deletions(-)
 
 diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
-index a34adc2..06a92c5 100644
+index 62e0331..a34adc2 100644
 --- a/drivers/ata/libata-eh.c
 +++ b/drivers/ata/libata-eh.c
-@@ -2170,6 +2170,9 @@ int ata_eh_reset(struct ata_link *link, int classify,
- 	/*
- 	 * Perform reset
- 	 */
-+	if (ata_is_host_link(link))
-+		ata_eh_freeze_port(ap);
-+
+@@ -2098,7 +2098,9 @@ int ata_eh_reset(struct ata_link *link, int classify,
+ 	u32 sstatus;
+ 	int rc;
+ 
+-	/* about to reset */
++	/*
++	 * Prepare to reset
++	 */
+ 	spin_lock_irqsave(ap->lock, flags);
+ 	ap->pflags |= ATA_PFLAG_RESETTING;
+ 	spin_unlock_irqrestore(ap->lock, flags);
+@@ -2124,16 +2126,8 @@ int ata_eh_reset(struct ata_link *link, int classify,
+ 			ap->ops->set_piomode(ap, dev);
+ 	}
+ 
+-	if (!softreset && !hardreset) {
+-		if (verbose)
+-			ata_link_printk(link, KERN_INFO, "no reset method "
+-					"available, skipping reset\n");
+-		if (!(lflags & ATA_LFLAG_ASSUME_CLASS))
+-			lflags |= ATA_LFLAG_ASSUME_ATA;
+-		goto done;
+-	}
+-
+ 	/* prefer hardreset */
++	reset = NULL;
+ 	ehc->i.action &= ~ATA_EH_RESET;
+ 	if (hardreset) {
+ 		reset = hardreset;
+@@ -2141,11 +2135,6 @@ int ata_eh_reset(struct ata_link *link, int classify,
+ 	} else if (softreset) {
+ 		reset = softreset;
+ 		ehc->i.action = ATA_EH_SOFTRESET;
+-	} else {
+-		ata_link_printk(link, KERN_ERR, "BUG: no reset method, "
+-				"please report to linux-ide@vger.kernel.org\n");
+-		dump_stack();
+-		return -EINVAL;
+ 	}
+ 
+ 	if (prereset) {
+@@ -2165,55 +2154,68 @@ int ata_eh_reset(struct ata_link *link, int classify,
+ 					"prereset failed (errno=%d)\n", rc);
+ 			goto out;
+ 		}
+-	}
+ 
+-	/* prereset() might have cleared ATA_EH_RESET */
+-	if (!(ehc->i.action & ATA_EH_RESET)) {
+-		/* prereset told us not to reset, bang classes and return */
+-		ata_link_for_each_dev(dev, link)
+-			classes[dev->devno] = ATA_DEV_NONE;
+-		rc = 0;
+-		goto out;
++		/* prereset() might have cleared ATA_EH_RESET.  If so,
++		 * bang classes and return.
++		 */
++		if (reset && !(ehc->i.action & ATA_EH_RESET)) {
++			ata_link_for_each_dev(dev, link)
++				classes[dev->devno] = ATA_DEV_NONE;
++			rc = 0;
++			goto out;
++		}
+ 	}
+ 
+  retry:
++	/*
++	 * Perform reset
++	 */
  	deadline = jiffies + ata_eh_reset_timeouts[try++];
  
- 	if (reset) {
-@@ -2238,6 +2241,10 @@ int ata_eh_reset(struct ata_link *link, int classify,
- 	if (sata_scr_read(link, SCR_STATUS, &sstatus) == 0)
- 		link->sata_spd = (sstatus >> 4) & 0xf;
+-	/* shut up during boot probing */
+-	if (verbose)
+-		ata_link_printk(link, KERN_INFO, "%s resetting link\n",
+-				reset == softreset ? "soft" : "hard");
++	if (reset) {
++		if (verbose)
++			ata_link_printk(link, KERN_INFO, "%s resetting link\n",
++					reset == softreset ? "soft" : "hard");
  
-+	/* thaw the port */
-+	if (ata_is_host_link(link))
-+		ata_eh_thaw_port(ap);
+-	/* mark that this EH session started with reset */
+-	if (reset == hardreset)
+-		ehc->i.flags |= ATA_EHI_DID_HARDRESET;
+-	else
+-		ehc->i.flags |= ATA_EHI_DID_SOFTRESET;
++		/* mark that this EH session started with reset */
++		if (reset == hardreset)
++			ehc->i.flags |= ATA_EHI_DID_HARDRESET;
++		else
++			ehc->i.flags |= ATA_EHI_DID_SOFTRESET;
+ 
+-	rc = ata_do_reset(link, reset, classes, deadline);
++		rc = ata_do_reset(link, reset, classes, deadline);
+ 
+-	if (reset == hardreset &&
+-	    ata_eh_followup_srst_needed(link, rc, classify, classes)) {
+-		/* okay, let's do follow-up softreset */
+-		reset = softreset;
++		if (reset == hardreset &&
++		    ata_eh_followup_srst_needed(link, rc, classify, classes)) {
++			/* okay, let's do follow-up softreset */
++			reset = softreset;
+ 
+-		if (!reset) {
+-			ata_link_printk(link, KERN_ERR,
+-					"follow-up softreset required "
+-					"but no softreset avaliable\n");
+-			rc = -EINVAL;
+-			goto fail;
++			if (!reset) {
++				ata_link_printk(link, KERN_ERR,
++						"follow-up softreset required "
++						"but no softreset avaliable\n");
++				rc = -EINVAL;
++				goto fail;
++			}
 +
- 	if (postreset)
- 		postreset(link, classes);
- 
-@@ -2589,7 +2596,7 @@ int ata_eh_recover(struct ata_port *ap, ata_prereset_fn_t prereset,
- 	struct ata_link *link;
- 	struct ata_device *dev;
- 	int nr_failed_devs, nr_disabled_devs;
--	int reset, rc;
-+	int rc;
- 	unsigned long flags;
- 
- 	DPRINTK("ENTER\n");
-@@ -2632,7 +2639,6 @@ int ata_eh_recover(struct ata_port *ap, ata_prereset_fn_t prereset,
- 	rc = 0;
- 	nr_failed_devs = 0;
- 	nr_disabled_devs = 0;
--	reset = 0;
- 
- 	/* if UNLOADING, finish immediately */
- 	if (ap->pflags & ATA_PFLAG_UNLOADING)
-@@ -2646,40 +2652,24 @@ int ata_eh_recover(struct ata_port *ap, ata_prereset_fn_t prereset,
- 		if (ata_eh_skip_recovery(link))
- 			ehc->i.action = 0;
- 
--		/* do we need to reset? */
--		if (ehc->i.action & ATA_EH_RESET)
--			reset = 1;
--
- 		ata_link_for_each_dev(dev, link)
- 			ehc->classes[dev->devno] = ATA_DEV_UNKNOWN;
- 	}
- 
- 	/* reset */
--	if (reset) {
--		/* if PMP is attached, this function only deals with
--		 * downstream links, port should stay thawed.
--		 */
--		if (!sata_pmp_attached(ap))
--			ata_eh_freeze_port(ap);
--
--		ata_port_for_each_link(link, ap) {
--			struct ata_eh_context *ehc = &link->eh_context;
-+	ata_port_for_each_link(link, ap) {
-+		struct ata_eh_context *ehc = &link->eh_context;
- 
--			if (!(ehc->i.action & ATA_EH_RESET))
--				continue;
-+		if (!(ehc->i.action & ATA_EH_RESET))
-+			continue;
- 
--			rc = ata_eh_reset(link, ata_link_nr_vacant(link),
--					  prereset, softreset, hardreset,
--					  postreset);
--			if (rc) {
--				ata_link_printk(link, KERN_ERR,
--						"reset failed, giving up\n");
--				goto out;
--			}
-+		rc = ata_eh_reset(link, ata_link_nr_vacant(link),
-+				  prereset, softreset, hardreset, postreset);
-+		if (rc) {
-+			ata_link_printk(link, KERN_ERR,
-+					"reset failed, giving up\n");
-+			goto out;
- 		}
--
--		if (!sata_pmp_attached(ap))
--			ata_eh_thaw_port(ap);
- 	}
- 
- 	/* the rest */
-diff --git a/drivers/ata/libata-pmp.c b/drivers/ata/libata-pmp.c
-index ff1822a..f3ad024 100644
---- a/drivers/ata/libata-pmp.c
-+++ b/drivers/ata/libata-pmp.c
-@@ -700,8 +700,6 @@ static int sata_pmp_eh_recover_pmp(struct ata_port *ap,
- 	if (ehc->i.action & ATA_EH_RESET) {
- 		struct ata_link *tlink;
- 
--		ata_eh_freeze_port(ap);
--
- 		/* reset */
- 		rc = ata_eh_reset(link, 0, prereset, softreset, hardreset,
- 				  postreset);
-@@ -711,8 +709,6 @@ static int sata_pmp_eh_recover_pmp(struct ata_port *ap,
- 			goto fail;
++			ata_eh_about_to_do(link, NULL, ATA_EH_RESET);
++			rc = ata_do_reset(link, reset, classes, deadline);
  		}
  
--		ata_eh_thaw_port(ap);
+-		ata_eh_about_to_do(link, NULL, ATA_EH_RESET);
+-		rc = ata_do_reset(link, reset, classes, deadline);
++		/* -EAGAIN can happen if we skipped followup SRST */
++		if (rc && rc != -EAGAIN)
++			goto fail;
++	} else {
++		if (verbose)
++			ata_link_printk(link, KERN_INFO, "no reset method "
++					"available, skipping reset\n");
++		if (!(lflags & ATA_LFLAG_ASSUME_CLASS))
++			lflags |= ATA_LFLAG_ASSUME_ATA;
+ 	}
+ 
+-	/* -EAGAIN can happen if we skipped followup SRST */
+-	if (rc && rc != -EAGAIN)
+-		goto fail;
 -
- 		/* PMP is reset, SErrors cannot be trusted, scan all */
- 		ata_port_for_each_link(tlink, ap) {
- 			struct ata_eh_context *ehc = &tlink->eh_context;
+- done:
++	/*
++	 * Post-reset processing
++	 */
+ 	ata_link_for_each_dev(dev, link) {
+ 		/* After the reset, the device state is PIO 0 and the
+ 		 * controller state is undefined.  Reset also wakes up
 -- 
 1.5.2.4
 
