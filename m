@@ -1,54 +1,39 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH 05/10] libata: ignore recovered PHY errors
-Date: Mon, 19 May 2008 01:15:09 +0900
-Message-ID: <12111273183948-git-send-email-htejun@gmail.com>
+Subject: Re: [PATCHSET #upstream-fixes] git tree available
+Date: Mon, 19 May 2008 01:29:21 +0900
+Message-ID: <48305961.2050509@gmail.com>
 References: <12111273141039-git-send-email-htejun@gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.178]:47396 "EHLO
-	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754011AbYERQP2 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 18 May 2008 12:15:28 -0400
-Received: by py-out-1112.google.com with SMTP id u52so1493698pyb.10
-        for <linux-ide@vger.kernel.org>; Sun, 18 May 2008 09:15:28 -0700 (PDT)
+Received: from rv-out-0506.google.com ([209.85.198.231]:33467 "EHLO
+	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753081AbYERQ32 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 18 May 2008 12:29:28 -0400
+Received: by rv-out-0506.google.com with SMTP id l9so1012914rvb.1
+        for <linux-ide@vger.kernel.org>; Sun, 18 May 2008 09:29:27 -0700 (PDT)
 In-Reply-To: <12111273141039-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: jeff@garzik.org, linux-ide@vger.kernel.org
-Cc: liml@rtr.ca, Tejun Heo <htejun@gmail.com>
+Cc: liml@rtr.ca, Brian & Chamaigne Scamman <scammanbc@earthlink.net>
 
-No reason to get overzealous about recovered comm and data errors.
-Some PHYs habitually sets them w/o no good reason and being draconian
-about these soft error conditions doesn't seem to help anybody.
+Git tree available at...
 
-If need ever rises, we might need to add soft PHY error condition, say
-AC_ERR_MAYBE_ATA_BUS and use it only to determine whether speed down
-is necessary but I don't think that's very likely to happen.  It's far
-more likely we'll get timeouts or fatal transmission errors if
-recovered errors are so prominent that they hamper operation.
+ http://git.kernel.org/?p=linux/kernel/git/tj/libata-dev.git;a=shortlog;h=hotplug-fixes
+ git://git.kernel.org/pub/scm/linux/kernel/git/tj/libata-dev.git hotplug-fixes
 
-Signed-off-by: Tejun Heo <htejun@gmail.com>
----
- drivers/ata/libata-eh.c |    7 +------
- 1 files changed, 1 insertions(+), 6 deletions(-)
+Brian, the original thread is
 
-diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
-index 751dad0..7894d83 100644
---- a/drivers/ata/libata-eh.c
-+++ b/drivers/ata/libata-eh.c
-@@ -1308,12 +1308,7 @@ static void ata_eh_analyze_serror(struct ata_link *link)
- 	unsigned int err_mask = 0, action = 0;
- 	u32 hotplug_mask;
- 
--	if (serror & SERR_PERSISTENT) {
--		err_mask |= AC_ERR_ATA_BUS;
--		action |= ATA_EH_RESET;
--	}
--	if (serror &
--	    (SERR_DATA_RECOVERED | SERR_COMM_RECOVERED | SERR_DATA)) {
-+	if (serror & (SERR_PERSISTENT | SERR_DATA)) {
- 		err_mask |= AC_ERR_ATA_BUS;
- 		action |= ATA_EH_RESET;
- 	}
+ http://thread.gmane.org/gmane.linux.ide/31572
+
+and it might fix your device detection problem.  Please test.
+If you don't git, patch against v2.6.26-rc2 is available at...
+
+ http://master.kernel.org/~tj/v2.6.26-rc2-to-hotplug-fixes.patch
+
+Thanks.
+
 -- 
-1.5.2.4
-
+tejun
