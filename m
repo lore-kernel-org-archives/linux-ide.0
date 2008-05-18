@@ -1,85 +1,37 @@
-From: Andrew Morton <akpm@linux-foundation.org>
-Subject: Re: [Bugme-new] [Bug 10738] New: sata_via hang and data corruption
-Date: Sat, 17 May 2008 21:59:33 -0700
-Message-ID: <20080517215933.c3ff7a10.akpm@linux-foundation.org>
-References: <bug-10738-10286@http.bugzilla.kernel.org/>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: Port Multiplier drives not always all found on cold plug
+Date: Sun, 18 May 2008 14:23:13 +0900
+Message-ID: <482FBD41.7020604@gmail.com>
+References: <482DB79F.2030204@rtr.ca> <482DBA62.4020209@rtr.ca> <482DBC5C.3020904@rtr.ca> <482DC41F.9080901@rtr.ca> <482DCD1F.4090503@rtr.ca> <482EE9E1.5000805@gmail.com> <482F16AB.1040003@rtr.ca> <482F1B5C.2000006@gmail.com> <482F2F1C.9030102@rtr.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:32905 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751124AbYERFAI (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 18 May 2008 01:00:08 -0400
-In-Reply-To: <bug-10738-10286@http.bugzilla.kernel.org/>
+Received: from wa-out-1112.google.com ([209.85.146.178]:6671 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752429AbYERFXU (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 18 May 2008 01:23:20 -0400
+Received: by wa-out-1112.google.com with SMTP id j37so1153235waf.23
+        for <linux-ide@vger.kernel.org>; Sat, 17 May 2008 22:23:19 -0700 (PDT)
+In-Reply-To: <482F2F1C.9030102@rtr.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
-Cc: bugme-daemon@bugzilla.kernel.org, rootkit85@yahoo.it
+To: Mark Lord <liml@rtr.ca>
+Cc: Jeff Garzik <jgarzik@pobox.com>, Alan Cox <alan@redhat.com>, IDE/ATA development list <linux-ide@vger.kernel.org>
 
-
-(switched to email.  Please respond via emailed reply-to-all, not via the
-bugzilla web interface).
-
-On Sat, 17 May 2008 19:11:48 -0700 (PDT) bugme-daemon@bugzilla.kernel.org wrote:
-
-> http://bugzilla.kernel.org/show_bug.cgi?id=10738
+Mark Lord wrote:
+> Tejun Heo wrote:
+>>
+>> * sil3124/32 and mv4140 combination for some reason can't do NCQ
+>>   reliably.  I don't know why.  I'll blacklist it for the time being
+>>   and contact both companies about this.
+> ..
 > 
->            Summary: sata_via hang and data corruption
->            Product: IO/Storage
->            Version: 2.5
->      KernelVersion: 2.6.25
->           Platform: All
->         OS/Version: Linux
->               Tree: Mainline
->             Status: NEW
->           Severity: high
->           Priority: P1
->          Component: Serial ATA
->         AssignedTo: jgarzik@pobox.com
->         ReportedBy: rootkit85@yahoo.it
+> MMm... I wonder if it's the "don't mix NCQ with non-NCQ" issue there ?
 > 
-> 
-> Latest working kernel version: 2.6.22 (?)
-> Earliest failing kernel version: 2.6.23 (?)
+> I'll ping my Marvell folks about that one too.
 
-So it's a regression?
+Hmm... I don't think so.  It happens when all pending commands are NCQ.
 
-> Distribution: Ubuntu
-> Hardware Environment: VIA motherboard (ASROCK P4V88), Maxtor SATA HD
-> Software Environment: Linux 2.6.25 i386
-> Problem Description: After a few minutes of usage the kernel hangs while sayng:
-> ata1.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 frozen
-> ata1.00: cmd 25/00:08:85:75:25/00:00:25:00:00/e0 tag 0 dma 4096 in
->          res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
-> ata1.00: status: { DRDY }
-> ata1: soft resetting link
-> ata1.00: configured for UDMA/133
-> ata1: EH complete
-> sd 0:0:0:0: [sda] 625142448 512-byte hardware sectors (320073 MB)
-> sd 0:0:0:0: [sda] Write Protect is off
-> sd 0:0:0:0: [sda] Mode Sense: 00 3a 00 00
-> sd 0:0:0:0: [sda] Write cache: enabled, read cache: enabled, doesn't support
-> DPO or FUA
-> ata1.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 frozen
-> ata1.00: cmd 25/00:20:6d:ae:1d/00:00:24:00:00/e0 tag 0 dma 16384 in
->          res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
-> ata1.00: status: { DRDY }
-> ata1: soft resetting link
-> ata1.00: configured for UDMA/133
-> ata1: EH complete
-> sd 0:0:0:0: [sda] 625142448 512-byte hardware sectors (320073 MB)
-> sd 0:0:0:0: [sda] Write Protect is off
-> sd 0:0:0:0: [sda] Mode Sense: 00 3a 00 00
-> sd 0:0:0:0: [sda] Write cache: enabled, read cache: enabled, doesn't support
-> DPO or FUA
-> 
-> Steps to reproduce: poweron and use the disk
-> 
-> Any hint on what can it be? I can't remember the last working kernel, will try
-> some old one soon
-> 
-
-I often have trouble working out which device driver is being used when
-a bug report comes past.  This is one such case.
-
+-- 
+tejun
