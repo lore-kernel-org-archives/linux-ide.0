@@ -1,76 +1,51 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCHSET #upstream-fixes] libata: fix a bunch of PMP related problems
-Date: Mon, 19 May 2008 01:15:04 +0900
-Message-ID: <12111273141039-git-send-email-htejun@gmail.com>
+Subject: [PATCH 08/10] libata: don't schedule LPM action seperately during probing
+Date: Mon, 19 May 2008 01:15:12 +0900
+Message-ID: <12111273201019-git-send-email-htejun@gmail.com>
+References: <12111273141039-git-send-email-htejun@gmail.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
 Received: from wf-out-1314.google.com ([209.85.200.170]:52674 "EHLO
 	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754011AbYERQPX (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 18 May 2008 12:15:23 -0400
+	with ESMTP id S1754724AbYERQP0 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 18 May 2008 12:15:26 -0400
 Received: by wf-out-1314.google.com with SMTP id 27so1010109wfd.4
-        for <linux-ide@vger.kernel.org>; Sun, 18 May 2008 09:15:23 -0700 (PDT)
+        for <linux-ide@vger.kernel.org>; Sun, 18 May 2008 09:15:26 -0700 (PDT)
+In-Reply-To: <12111273141039-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: jeff@garzik.org, linux-ide@vger.kernel.org
-Cc: liml@rtr.ca
+Cc: liml@rtr.ca, Tejun Heo <htejun@gmail.com>
 
-Hello,
+There's no reason to schedule LPM action after probing is complete
+causing another EH iteration.  Just schedule it together with probing
+itself.
 
-This patchset is started from investigating sil24 - mv4140 PMP
-detection / NCQ problems.  It soon turned out there are quite a number
-of issues lurking in the current PMP implementation.
+Signed-off-by: Tejun Heo <htejun@gmail.com>
+---
+ drivers/ata/libata-core.c |    3 +--
+ 1 files changed, 1 insertions(+), 2 deletions(-)
 
-* We still have a hole during reset where hotplug can go unnoticed.
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index ffc689d..a12a27e 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -5615,7 +5615,7 @@ int ata_host_register(struct ata_host *host, struct scsi_host_template *sht)
+ 			spin_lock_irqsave(ap->lock, flags);
+ 
+ 			ehi->probe_mask |= ATA_ALL_DEVICES;
+-			ehi->action |= ATA_EH_RESET;
++			ehi->action |= ATA_EH_RESET | ATA_EH_LPM;
+ 			ehi->flags |= ATA_EHI_NO_AUTOPSY | ATA_EHI_QUIET;
+ 
+ 			ap->pflags &= ~ATA_PFLAG_INITIALIZING;
+@@ -5648,7 +5648,6 @@ int ata_host_register(struct ata_host *host, struct scsi_host_template *sht)
+ 		struct ata_port *ap = host->ports[i];
+ 
+ 		ata_scsi_scan_host(ap, 1);
+-		ata_lpm_schedule(ap, ap->pm_policy);
+ 	}
+ 
+ 	return 0;
+-- 
+1.5.2.4
 
-* PMP r/w timeout is too short.  It's currently 250ms.  This is from
-  SIMG PMPs and was mainly to avoid longish sequential multiple
-  timeouts when access PMP regs via polled commands which is not the
-  case anymore and mv 4140 and SIMG4726 needs more time occasionally.
-
-* SDB Notify is not masked during fan-out port resets if PMP hasn't
-  been reset in that pass.  This causes PMP register access failure
-  because SDB Notify is received while PMP register write is in
-  progress for fan-out reset.  I missed this because most of my
-  testing was before PMP register access was converted to IRQ driven.
-
-* ata_lpm_schedule() is called during probe right after SCSI scan is
-  complete which schedules EH immediately, reliably triggering above
-  two on certain hardware combinations.  This by itself should be okay
-  but makes other problems more painful.
-
-* sil3124/32 and mv4140 combination for some reason can't do NCQ
-  reliably.  I don't know why.  I'll blacklist it for the time being
-  and contact both companies about this.
-
-* recovered errors shouldn't trigger resets.
-
-* SIMG4726 config device still is a real pain in the ass.
-
-This patchset contains ten patches addressing all the above issues.
-Although this patchset is rather large, it's basically bug fixes.
-
-The patchset fixes all hotplug problems I can reproduce including the
-hotplug problems on inic162x and JMB ahcis.  The only remaining issue
-is that sometimes device detection gets delayed by 30sec IDENTIFY
-timeout.  I'll prep a patchset to make EH command timeouts more
-intelligent (for #upstream).
-
-The sad part is that with PMP in the mix and the current host
-controller designs, we have inherent race condition during reset (no
-reliable way to wait for the initial D2H FIS after hardresetting
-fan-out port, so SRST races with D2H FIS) and this seems to lead to
-problems during or after reset sometimes.  We have to resort to
-intelligently timed retries to make it work bearably.
-
-Thanks.
-
- drivers/ata/libata-core.c |   40 ++++----
- drivers/ata/libata-eh.c   |  207 +++++++++++++++++++++++++---------------------
- drivers/ata/libata-pmp.c  |   44 ++++-----
- drivers/ata/libata-scsi.c |    6 -
- drivers/ata/sata_sil24.c  |   11 ++
- include/linux/libata.h    |    4
- 6 files changed, 170 insertions(+), 142 deletions(-)
-
---
-tejun
