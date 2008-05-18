@@ -1,60 +1,81 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH 02/40] ide-scsi: fix DRQ checking for DMA transfers in idescsi_pc_intr()
-Date: Sun, 18 May 2008 20:54:45 +0200
-Message-ID: <20080518185445.5636.51099.sendpatchset@localhost.localdomain>
+Subject: [PATCH 04/40] ide-scsi: fix Interrupt Reason checking in idescsi_pc_intr()
+Date: Sun, 18 May 2008 20:55:03 +0200
+Message-ID: <20080518185503.5636.98141.sendpatchset@localhost.localdomain>
 References: <20080518185428.5636.77234.sendpatchset@localhost.localdomain>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from fk-out-0910.google.com ([209.85.128.190]:17236 "EHLO
-	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755896AbYERShW (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 18 May 2008 14:37:22 -0400
-Received: by fk-out-0910.google.com with SMTP id 18so1473278fkq.5
-        for <linux-ide@vger.kernel.org>; Sun, 18 May 2008 11:37:20 -0700 (PDT)
+Received: from fg-out-1718.google.com ([72.14.220.155]:24872 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756095AbYERShi (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 18 May 2008 14:37:38 -0400
+Received: by fg-out-1718.google.com with SMTP id 19so1425123fgg.17
+        for <linux-ide@vger.kernel.org>; Sun, 18 May 2008 11:37:37 -0700 (PDT)
 In-Reply-To: <20080518185428.5636.77234.sendpatchset@localhost.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
 Cc: Borislav Petkov <petkovbb@gmail.com>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-kernel@vger.kernel.org
 
-If DRQ bit of Status Register is not cleared it is an error condition
-and should be handled accordingly (disable DMA + reset the device).
+Set PC_FLAG_WRITING pc flag in idescsi_queue() (if needed)
+and then fix Interrupt Reason checking in idescsi_pc_intr().
 
 Cc: Borislav Petkov <petkovbb@gmail.com>
 Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 ---
- drivers/scsi/ide-scsi.c |    9 ++++++++-
- 1 file changed, 8 insertions(+), 1 deletion(-)
+ drivers/scsi/ide-scsi.c |   17 +++++++++++------
+ 1 file changed, 11 insertions(+), 6 deletions(-)
 
 Index: b/drivers/scsi/ide-scsi.c
 ===================================================================
 --- a/drivers/scsi/ide-scsi.c
 +++ b/drivers/scsi/ide-scsi.c
-@@ -388,7 +388,6 @@ static ide_startstop_t idescsi_pc_intr (
- 		return ide_stopped;
+@@ -427,7 +427,15 @@ static ide_startstop_t idescsi_pc_intr (
+ 		printk(KERN_ERR "ide-scsi: CoD != 0 in idescsi_pc_intr\n");
+ 		return ide_do_reset (drive);
  	}
- 	if (pc->flags & PC_FLAG_DMA_IN_PROGRESS) {
--		pc->flags &= ~PC_FLAG_DMA_IN_PROGRESS;
- #if IDESCSI_DEBUG_LOG
- 		printk ("ide-scsi: %s: DMA complete\n", drive->name);
- #endif /* IDESCSI_DEBUG_LOG */
-@@ -404,12 +403,20 @@ static ide_startstop_t idescsi_pc_intr (
- 		if (test_bit(IDESCSI_LOG_CMD, &scsi->log))
- 			printk(KERN_INFO "Packet command completed, %d bytes"
- 					" transferred\n", pc->xferred);
-+		pc->flags &= ~PC_FLAG_DMA_IN_PROGRESS;
- 		local_irq_enable_in_hardirq();
- 		if (stat & ERR_STAT)
- 			rq->errors++;
- 		idescsi_end_request (drive, 1, 0);
- 		return ide_stopped;
- 	}
-+	if (pc->flags & PC_FLAG_DMA_IN_PROGRESS) {
-+		pc->flags &= ~PC_FLAG_DMA_IN_PROGRESS;
-+		printk(KERN_ERR "%s: The device wants to issue more interrupts "
-+				"in DMA mode\n", drive->name);
-+		ide_dma_off(drive);
+-	if (ireason & IO) {
++	if (((ireason & IO) == IO) == !!(pc->flags & PC_FLAG_WRITING)) {
++		/* Hopefully, we will never get here */
++		printk(KERN_ERR "%s: We wanted to %s, but the device wants us "
++				"to %s!\n", drive->name,
++				(ireason & IO) ? "Write" : "Read",
++				(ireason & IO) ? "Read" : "Write");
 +		return ide_do_reset(drive);
 +	}
- 	bcount = (hwif->INB(hwif->io_ports.lbah_addr) << 8) |
- 		  hwif->INB(hwif->io_ports.lbam_addr);
- 	ireason = hwif->INB(hwif->io_ports.nsect_addr);
++	if (!(pc->flags & PC_FLAG_WRITING)) {
+ 		temp = pc->xferred + bcount;
+ 		if (temp > pc->req_xfer) {
+ 			if (temp > pc->buf_size) {
+@@ -436,7 +444,6 @@ static ide_startstop_t idescsi_pc_intr (
+ 					"- discarding data\n");
+ 				temp = pc->buf_size - pc->xferred;
+ 				if (temp) {
+-					pc->flags &= ~PC_FLAG_WRITING;
+ 					if (pc->sg)
+ 						idescsi_input_buffers(drive, pc,
+ 									temp);
+@@ -457,15 +464,11 @@ static ide_startstop_t idescsi_pc_intr (
+ 			printk (KERN_NOTICE "ide-scsi: The scsi wants to send us more data than expected - allowing transfer\n");
+ #endif /* IDESCSI_DEBUG_LOG */
+ 		}
+-	}
+-	if (ireason & IO) {
+-		pc->flags &= ~PC_FLAG_WRITING;
+ 		if (pc->sg)
+ 			idescsi_input_buffers(drive, pc, bcount);
+ 		else
+ 			hwif->input_data(drive, NULL, pc->cur_pos, bcount);
+ 	} else {
+-		pc->flags |= PC_FLAG_WRITING;
+ 		if (pc->sg)
+ 			idescsi_output_buffers(drive, pc, bcount);
+ 		else
+@@ -777,6 +780,8 @@ static int idescsi_queue (struct scsi_cm
+ 
+ 	memset (pc->c, 0, 12);
+ 	pc->flags = 0;
++	if (cmd->sc_data_direction == DMA_TO_DEVICE)
++		pc->flags |= PC_FLAG_WRITING;
+ 	pc->rq = rq;
+ 	memcpy (pc->c, cmd->cmnd, cmd->cmd_len);
+ 	pc->buf = NULL;
