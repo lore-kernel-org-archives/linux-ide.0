@@ -1,2418 +1,1983 @@
-From: Andrei Gusev <ronne@list.ru>
-Subject: Re: PROBLEM: Error messages on resume from memory/disk.
-Date: Tue, 20 May 2008 02:04:40 +0400
-Message-ID: <4831F978.9050007@list.ru>
-References: <482F1765.30705@list.ru> <1211158079.11821.7.camel@yakui_zhao.sh.intel.com>
-Reply-To: ronne@list.ru
+From: Jeff Garzik <jeff@garzik.org>
+Subject: [git patches] libata updates
+Date: Mon, 19 May 2008 18:57:32 -0400
+Message-ID: <20080519225732.GA21589@havoc.gtf.org>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------090305080708080607010206"
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mx28.mail.ru ([194.67.23.67]:13470 "EHLO mx28.mail.ru"
+Received: from havoc.gtf.org ([69.61.125.42]:33087 "EHLO havoc.gtf.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754747AbYESWxT (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 19 May 2008 18:53:19 -0400
-In-Reply-To: <1211158079.11821.7.camel@yakui_zhao.sh.intel.com>
+	id S1750899AbYESW5d (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 19 May 2008 18:57:33 -0400
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Zhao Yakui <yakui.zhao@intel.com>
-Cc: bzolnier@gmail.com, linux-ide@vger.kernel.org, lenb@kernel.org, linux-acpi@vger.kernel.org
-
-This is a multi-part message in MIME format.
---------------090305080708080607010206
-Content-Type: text/plain; charset=KOI8-R; format=flowed
-Content-Transfer-Encoding: 8bit
-
-Zhao Yakui написал(а):
-> On Sat, 2008-05-17 at 21:35 +0400, Andrei Gusev wrote:
->   
->> Hello!
->>
->> I see error messages in log of my laptop on resume from memory or disk.
->>
->> There is this messages:
->>     
-> Will you please try the following commit and see whether the problem
-> still exists?
->   
-As i understood this commit include in 2.6.26-rc1, so I got 2.6.26-rc3. 
-There is no this problem!
->   
->> commit 48feb3c419508487becfb9ea3afcc54c3eac6d80
->>     
-> Author: Shaohua Li <shaohua.li@intel.com>
-> Date:   Tue Mar 25 16:50:45 2008 +0800
->
->     ata-acpi: don't call _GTF for disabled drive
->
->   
->> May 17 20:49:01 zaratustra PM: Writing back config space on device 
->> 0000:00:1f.1 at offset 9 (was 0, writing 28000000)
->> May 17 20:49:01 zaratustra PM: Writing back config space on device 
->> 0000:00:1f.1 at offset 1 (was 2800005, writing 2800007)
->> May 17 20:49:01 zaratustra ACPI: PCI Interrupt 0000:00:1f.1[A] -> GSI 18 
->> (level, low) -> IRQ 18
->> May 17 20:49:01 zaratustra PCI: Setting latency timer of device 
->> 0000:00:1f.1 to 64
->> May 17 20:49:01 zaratustra ACPI Error (dsopcode-0483): Attempt to 
->> CreateField of length zero [20070126]
->> May 17 20:49:01 zaratustra ACPI Error (psparse-0537): Method 
->> parse/execution failed [\_SB_.PCI0.IDE0.RATA] (Node de810e88), 
->> AE_AML_OPERAND_VALUE
->> May 17 20:49:01 zaratustra ACPI Error (psparse-0537): Method 
->> parse/execution failed [\_SB_.PCI0.IDE0.CHN1.DRV1._GTF] (Node de810d38), 
->> AE_AML_OPERAND_VALUE
->> May 17 20:49:01 zaratustra ata2.01: _GTF evaluation failed (AE 0x3006)
->> May 17 20:49:01 zaratustra ACPI Error (dsopcode-0483): Attempt to 
->> CreateField of length zero [20070126]
->> May 17 20:49:01 zaratustra ACPI Error (psparse-0537): Method 
->> parse/execution failed [\_SB_.PCI0.IDE0.RATA] (Node de810e88), 
->> AE_AML_OPERAND_VALUE
->> May 17 20:49:01 zaratustra ACPI Error (psparse-0537): Method 
->> parse/execution failed [\_SB_.PCI0.IDE0.CHN0.DRV1._GTF] (Node de810c48), 
->> AE_AML_OPERAND_VALUE
->> May 17 20:49:01 zaratustra ata1.01: _GTF evaluation failed (AE 0x3006)
->>
->>
->> And letter in log:
->> May 17 20:49:01 zaratustra sd 0:0:0:0: [sda] Starting disk
->> May 17 20:49:01 zaratustra ata1.00: ACPI cmd ef/03:45:00:00:00:a0 
->> filtered out
->> May 17 20:49:01 zaratustra ata1.00: ACPI cmd ef/03:0c:00:00:00:a0 
->> filtered out
->> May 17 20:49:01 zaratustra ata1.00: ACPI cmd c6/00:10:00:00:00:a0 succeeded
->> May 17 20:49:01 zaratustra ata1.00: configured for UDMA/100
->> May 17 20:49:01 zaratustra ata1.00: configured for UDMA/100
->> May 17 20:49:01 zaratustra ata1: EH complete
->> May 17 20:49:01 zaratustra sd 0:0:0:0: [sda] 156301488 512-byte hardware 
->> sectors (80026 MB)
->> May 17 20:49:01 zaratustra sd 0:0:0:0: [sda] Write Protect is off
->> May 17 20:49:01 zaratustra sd 0:0:0:0: [sda] Mode Sense: 00 3a 00 00
->> May 17 20:49:01 zaratustra sd 0:0:0:0: [sda] Write cache: enabled, read 
->> cache: enabled, doesn't support DPO or FUA
->> May 17 20:49:01 zaratustra sd 0:0:0:0: [sda] 156301488 512-byte hardware 
->> sectors (80026 MB)
->> May 17 20:49:01 zaratustra sd 0:0:0:0: [sda] Write Protect is off
->> May 17 20:49:01 zaratustra sd 0:0:0:0: [sda] Mode Sense: 00 3a 00 00
->> May 17 20:49:01 zaratustra sd 0:0:0:0: [sda] Write cache: enabled, read 
->> cache: enabled, doesn't support DPO or FUA
->> May 17 20:49:01 zaratustra ACPI: PCI Interrupt 0000:00:02.0[A] -> GSI 16 
->> (level, low) -> IRQ 16
->> May 17 20:49:01 zaratustra PM: Finishing wakeup.
->>
->>
->> The kernel version is 2.6.25.4, on 2.6.25.2 was same thing.
->> cat /proc/version:
->> Linux version 2.6.25.4 (metal@zaratustra) (gcc version 4.3.0 (GCC) ) #5 
->> Sat May 17 17:28:32 MSD 2008
->>
->> The configuration file of kernel:
->> #
->> # Automatically generated make config: don't edit
->> # Linux kernel version: 2.6.25.4
->> # Sat May 17 17:16:17 2008
->> #
->> # CONFIG_64BIT is not set
->> CONFIG_X86_32=y
->> # CONFIG_X86_64 is not set
->> CONFIG_X86=y
->> CONFIG_DEFCONFIG_LIST="arch/x86/configs/i386_defconfig"
->> # CONFIG_GENERIC_LOCKBREAK is not set
->> CONFIG_GENERIC_TIME=y
->> CONFIG_GENERIC_CMOS_UPDATE=y
->> CONFIG_CLOCKSOURCE_WATCHDOG=y
->> CONFIG_GENERIC_CLOCKEVENTS=y
->> CONFIG_GENERIC_CLOCKEVENTS_BROADCAST=y
->> CONFIG_LOCKDEP_SUPPORT=y
->> CONFIG_STACKTRACE_SUPPORT=y
->> CONFIG_HAVE_LATENCYTOP_SUPPORT=y
->> CONFIG_SEMAPHORE_SLEEPERS=y
->> CONFIG_FAST_CMPXCHG_LOCAL=y
->> CONFIG_MMU=y
->> CONFIG_ZONE_DMA=y
->> CONFIG_GENERIC_ISA_DMA=y
->> CONFIG_GENERIC_IOMAP=y
->> CONFIG_GENERIC_BUG=y
->> CONFIG_GENERIC_HWEIGHT=y
->> # CONFIG_GENERIC_GPIO is not set
->> CONFIG_ARCH_MAY_HAVE_PC_FDC=y
->> CONFIG_DMI=y
->> # CONFIG_RWSEM_GENERIC_SPINLOCK is not set
->> CONFIG_RWSEM_XCHGADD_ALGORITHM=y
->> # CONFIG_ARCH_HAS_ILOG2_U32 is not set
->> # CONFIG_ARCH_HAS_ILOG2_U64 is not set
->> CONFIG_ARCH_HAS_CPU_IDLE_WAIT=y
->> CONFIG_GENERIC_CALIBRATE_DELAY=y
->> # CONFIG_GENERIC_TIME_VSYSCALL is not set
->> CONFIG_ARCH_HAS_CPU_RELAX=y
->> # CONFIG_HAVE_SETUP_PER_CPU_AREA is not set
->> CONFIG_ARCH_HIBERNATION_POSSIBLE=y
->> CONFIG_ARCH_SUSPEND_POSSIBLE=y
->> # CONFIG_ZONE_DMA32 is not set
->> CONFIG_ARCH_POPULATES_NODE_MAP=y
->> # CONFIG_AUDIT_ARCH is not set
->> CONFIG_ARCH_SUPPORTS_AOUT=y
->> CONFIG_GENERIC_HARDIRQS=y
->> CONFIG_GENERIC_IRQ_PROBE=y
->> CONFIG_X86_BIOS_REBOOT=y
->> CONFIG_KTIME_SCALAR=y
->>
->> #
->> # General setup
->> #
->> CONFIG_EXPERIMENTAL=y
->> CONFIG_BROKEN_ON_SMP=y
->> CONFIG_INIT_ENV_ARG_LIMIT=32
->> CONFIG_LOCALVERSION=""
->> # CONFIG_LOCALVERSION_AUTO is not set
->> CONFIG_SWAP=y
->> CONFIG_SYSVIPC=y
->> CONFIG_SYSVIPC_SYSCTL=y
->> CONFIG_POSIX_MQUEUE=y
->> CONFIG_BSD_PROCESS_ACCT=y
->> CONFIG_BSD_PROCESS_ACCT_V3=y
->> # CONFIG_TASKSTATS is not set
->> # CONFIG_AUDIT is not set
->> CONFIG_IKCONFIG=y
->> CONFIG_IKCONFIG_PROC=y
->> CONFIG_LOG_BUF_SHIFT=16
->> # CONFIG_CGROUPS is not set
->> CONFIG_GROUP_SCHED=y
->> CONFIG_FAIR_GROUP_SCHED=y
->> CONFIG_RT_GROUP_SCHED=y
->> CONFIG_USER_SCHED=y
->> # CONFIG_CGROUP_SCHED is not set
->> # CONFIG_SYSFS_DEPRECATED_V2 is not set
->> # CONFIG_RELAY is not set
->> CONFIG_NAMESPACES=y
->> # CONFIG_UTS_NS is not set
->> # CONFIG_IPC_NS is not set
->> # CONFIG_USER_NS is not set
->> # CONFIG_PID_NS is not set
->> CONFIG_BLK_DEV_INITRD=y
->> CONFIG_INITRAMFS_SOURCE=""
->> # CONFIG_CC_OPTIMIZE_FOR_SIZE is not set
->> CONFIG_SYSCTL=y
->> # CONFIG_EMBEDDED is not set
->> CONFIG_UID16=y
->> CONFIG_SYSCTL_SYSCALL=y
->> CONFIG_KALLSYMS=y
->> # CONFIG_KALLSYMS_EXTRA_PASS is not set
->> CONFIG_HOTPLUG=y
->> CONFIG_PRINTK=y
->> CONFIG_BUG=y
->> CONFIG_ELF_CORE=y
->> # CONFIG_COMPAT_BRK is not set
->> CONFIG_BASE_FULL=y
->> CONFIG_FUTEX=y
->> CONFIG_ANON_INODES=y
->> CONFIG_EPOLL=y
->> CONFIG_SIGNALFD=y
->> CONFIG_TIMERFD=y
->> CONFIG_EVENTFD=y
->> CONFIG_SHMEM=y
->> CONFIG_VM_EVENT_COUNTERS=y
->> CONFIG_SLUB_DEBUG=y
->> # CONFIG_SLAB is not set
->> CONFIG_SLUB=y
->> # CONFIG_SLOB is not set
->> # CONFIG_PROFILING is not set
->> # CONFIG_MARKERS is not set
->> CONFIG_HAVE_OPROFILE=y
->> # CONFIG_KPROBES is not set
->> CONFIG_HAVE_KPROBES=y
->> CONFIG_HAVE_KRETPROBES=y
->> CONFIG_PROC_PAGE_MONITOR=y
->> CONFIG_SLABINFO=y
->> CONFIG_RT_MUTEXES=y
->> # CONFIG_TINY_SHMEM is not set
->> CONFIG_BASE_SMALL=0
->> CONFIG_MODULES=y
->> CONFIG_MODULE_UNLOAD=y
->> CONFIG_MODULE_FORCE_UNLOAD=y
->> CONFIG_MODVERSIONS=y
->> # CONFIG_MODULE_SRCVERSION_ALL is not set
->> CONFIG_KMOD=y
->> CONFIG_BLOCK=y
->> # CONFIG_LBD is not set
->> # CONFIG_BLK_DEV_IO_TRACE is not set
->> # CONFIG_LSF is not set
->> # CONFIG_BLK_DEV_BSG is not set
->>
->> #
->> # IO Schedulers
->> #
->> CONFIG_IOSCHED_NOOP=y
->> CONFIG_IOSCHED_AS=y
->> CONFIG_IOSCHED_DEADLINE=y
->> CONFIG_IOSCHED_CFQ=y
->> # CONFIG_DEFAULT_AS is not set
->> # CONFIG_DEFAULT_DEADLINE is not set
->> CONFIG_DEFAULT_CFQ=y
->> # CONFIG_DEFAULT_NOOP is not set
->> CONFIG_DEFAULT_IOSCHED="cfq"
->> CONFIG_CLASSIC_RCU=y
->>
->> #
->> # Processor type and features
->> #
->> CONFIG_TICK_ONESHOT=y
->> CONFIG_NO_HZ=y
->> # CONFIG_HIGH_RES_TIMERS is not set
->> CONFIG_GENERIC_CLOCKEVENTS_BUILD=y
->> # CONFIG_SMP is not set
->> CONFIG_X86_PC=y
->> # CONFIG_X86_ELAN is not set
->> # CONFIG_X86_VOYAGER is not set
->> # CONFIG_X86_NUMAQ is not set
->> # CONFIG_X86_SUMMIT is not set
->> # CONFIG_X86_BIGSMP is not set
->> # CONFIG_X86_VISWS is not set
->> # CONFIG_X86_GENERICARCH is not set
->> # CONFIG_X86_ES7000 is not set
->> # CONFIG_X86_RDC321X is not set
->> # CONFIG_X86_VSMP is not set
->> CONFIG_SCHED_NO_NO_OMIT_FRAME_POINTER=y
->> # CONFIG_PARAVIRT_GUEST is not set
->> # CONFIG_M386 is not set
->> # CONFIG_M486 is not set
->> # CONFIG_M586 is not set
->> # CONFIG_M586TSC is not set
->> # CONFIG_M586MMX is not set
->> # CONFIG_M686 is not set
->> # CONFIG_MPENTIUMII is not set
->> # CONFIG_MPENTIUMIII is not set
->> CONFIG_MPENTIUMM=y
->> # CONFIG_MPENTIUM4 is not set
->> # CONFIG_MK6 is not set
->> # CONFIG_MK7 is not set
->> # CONFIG_MK8 is not set
->> # CONFIG_MCRUSOE is not set
->> # CONFIG_MEFFICEON is not set
->> # CONFIG_MWINCHIPC6 is not set
->> # CONFIG_MWINCHIP2 is not set
->> # CONFIG_MWINCHIP3D is not set
->> # CONFIG_MGEODEGX1 is not set
->> # CONFIG_MGEODE_LX is not set
->> # CONFIG_MCYRIXIII is not set
->> # CONFIG_MVIAC3_2 is not set
->> # CONFIG_MVIAC7 is not set
->> # CONFIG_MPSC is not set
->> # CONFIG_MCORE2 is not set
->> # CONFIG_GENERIC_CPU is not set
->> # CONFIG_X86_GENERIC is not set
->> CONFIG_X86_CMPXCHG=y
->> CONFIG_X86_L1_CACHE_SHIFT=6
->> CONFIG_X86_XADD=y
->> CONFIG_X86_WP_WORKS_OK=y
->> CONFIG_X86_INVLPG=y
->> CONFIG_X86_BSWAP=y
->> CONFIG_X86_POPAD_OK=y
->> CONFIG_X86_GOOD_APIC=y
->> CONFIG_X86_INTEL_USERCOPY=y
->> CONFIG_X86_USE_PPRO_CHECKSUM=y
->> CONFIG_X86_P6_NOP=y
->> CONFIG_X86_TSC=y
->> CONFIG_X86_CMOV=y
->> CONFIG_X86_MINIMUM_CPU_FAMILY=6
->> CONFIG_X86_DEBUGCTLMSR=y
->> CONFIG_HPET_TIMER=y
->> CONFIG_HPET_EMULATE_RTC=y
->> # CONFIG_IOMMU_HELPER is not set
->> # CONFIG_PREEMPT_NONE is not set
->> CONFIG_PREEMPT_VOLUNTARY=y
->> # CONFIG_PREEMPT is not set
->> CONFIG_X86_UP_APIC=y
->> CONFIG_X86_UP_IOAPIC=y
->> CONFIG_X86_LOCAL_APIC=y
->> CONFIG_X86_IO_APIC=y
->> CONFIG_X86_MCE=y
->> # CONFIG_X86_MCE_NONFATAL is not set
->> # CONFIG_X86_MCE_P4THERMAL is not set
->> CONFIG_VM86=y
->> # CONFIG_TOSHIBA is not set
->> # CONFIG_I8K is not set
->> # CONFIG_X86_REBOOTFIXUPS is not set
->> CONFIG_MICROCODE=m
->> CONFIG_MICROCODE_OLD_INTERFACE=y
->> # CONFIG_X86_MSR is not set
->> CONFIG_X86_CPUID=m
->> CONFIG_NOHIGHMEM=y
->> # CONFIG_HIGHMEM4G is not set
->> # CONFIG_HIGHMEM64G is not set
->> CONFIG_PAGE_OFFSET=0xC0000000
->> # CONFIG_X86_PAE is not set
->> CONFIG_ARCH_FLATMEM_ENABLE=y
->> CONFIG_ARCH_SPARSEMEM_ENABLE=y
->> CONFIG_ARCH_SELECT_MEMORY_MODEL=y
->> CONFIG_SELECT_MEMORY_MODEL=y
->> CONFIG_FLATMEM_MANUAL=y
->> # CONFIG_DISCONTIGMEM_MANUAL is not set
->> # CONFIG_SPARSEMEM_MANUAL is not set
->> CONFIG_FLATMEM=y
->> CONFIG_FLAT_NODE_MEM_MAP=y
->> CONFIG_SPARSEMEM_STATIC=y
->> # CONFIG_SPARSEMEM_VMEMMAP_ENABLE is not set
->> CONFIG_SPLIT_PTLOCK_CPUS=4
->> # CONFIG_RESOURCES_64BIT is not set
->> CONFIG_ZONE_DMA_FLAG=1
->> CONFIG_BOUNCE=y
->> CONFIG_VIRT_TO_BUS=y
->> # CONFIG_MATH_EMULATION is not set
->> CONFIG_MTRR=y
->> # CONFIG_EFI is not set
->> # CONFIG_SECCOMP is not set
->> CONFIG_HZ_100=y
->> # CONFIG_HZ_250 is not set
->> # CONFIG_HZ_300 is not set
->> # CONFIG_HZ_1000 is not set
->> CONFIG_HZ=100
->> # CONFIG_SCHED_HRTICK is not set
->> # CONFIG_KEXEC is not set
->> CONFIG_PHYSICAL_START=0x100000
->> # CONFIG_RELOCATABLE is not set
->> CONFIG_PHYSICAL_ALIGN=0x100000
->> # CONFIG_COMPAT_VDSO is not set
->>
->> #
->> # Power management options
->> #
->> CONFIG_PM=y
->> # CONFIG_PM_LEGACY is not set
->> CONFIG_PM_DEBUG=y
->> # CONFIG_PM_VERBOSE is not set
->> CONFIG_CAN_PM_TRACE=y
->> # CONFIG_PM_TRACE_RTC is not set
->> CONFIG_PM_SLEEP=y
->> CONFIG_SUSPEND=y
->> CONFIG_SUSPEND_FREEZER=y
->> CONFIG_HIBERNATION=y
->> CONFIG_PM_STD_PARTITION="/dev/sda1"
->> CONFIG_ACPI=y
->> CONFIG_ACPI_SLEEP=y
->> # CONFIG_ACPI_PROCFS is not set
->> # CONFIG_ACPI_PROCFS_POWER is not set
->> CONFIG_ACPI_SYSFS_POWER=y
->> CONFIG_ACPI_PROC_EVENT=y
->> CONFIG_ACPI_AC=y
->> CONFIG_ACPI_BATTERY=y
->> CONFIG_ACPI_BUTTON=y
->> CONFIG_ACPI_VIDEO=y
->> CONFIG_ACPI_FAN=y
->> CONFIG_ACPI_DOCK=y
->> # CONFIG_ACPI_BAY is not set
->> CONFIG_ACPI_PROCESSOR=y
->> CONFIG_ACPI_THERMAL=y
->> # CONFIG_ACPI_WMI is not set
->> # CONFIG_ACPI_ASUS is not set
->> # CONFIG_ACPI_TOSHIBA is not set
->> # CONFIG_ACPI_CUSTOM_DSDT is not set
->> CONFIG_ACPI_BLACKLIST_YEAR=0
->> # CONFIG_ACPI_DEBUG is not set
->> CONFIG_ACPI_EC=y
->> CONFIG_ACPI_POWER=y
->> CONFIG_ACPI_SYSTEM=y
->> CONFIG_X86_PM_TIMER=y
->> # CONFIG_ACPI_CONTAINER is not set
->> CONFIG_ACPI_SBS=m
->> # CONFIG_APM is not set
->>
->> #
->> # CPU Frequency scaling
->> #
->> CONFIG_CPU_FREQ=y
->> CONFIG_CPU_FREQ_TABLE=y
->> CONFIG_CPU_FREQ_DEBUG=y
->> CONFIG_CPU_FREQ_STAT=y
->> CONFIG_CPU_FREQ_STAT_DETAILS=y
->> CONFIG_CPU_FREQ_DEFAULT_GOV_PERFORMANCE=y
->> # CONFIG_CPU_FREQ_DEFAULT_GOV_USERSPACE is not set
->> # CONFIG_CPU_FREQ_DEFAULT_GOV_ONDEMAND is not set
->> # CONFIG_CPU_FREQ_DEFAULT_GOV_CONSERVATIVE is not set
->> CONFIG_CPU_FREQ_GOV_PERFORMANCE=y
->> CONFIG_CPU_FREQ_GOV_POWERSAVE=y
->> CONFIG_CPU_FREQ_GOV_USERSPACE=y
->> CONFIG_CPU_FREQ_GOV_ONDEMAND=y
->> CONFIG_CPU_FREQ_GOV_CONSERVATIVE=y
->>
->> #
->> # CPUFreq processor drivers
->> #
->> CONFIG_X86_ACPI_CPUFREQ=y
->> # CONFIG_X86_POWERNOW_K6 is not set
->> # CONFIG_X86_POWERNOW_K7 is not set
->> # CONFIG_X86_POWERNOW_K8 is not set
->> # CONFIG_X86_GX_SUSPMOD is not set
->> # CONFIG_X86_SPEEDSTEP_CENTRINO is not set
->> # CONFIG_X86_SPEEDSTEP_ICH is not set
->> # CONFIG_X86_SPEEDSTEP_SMI is not set
->> # CONFIG_X86_P4_CLOCKMOD is not set
->> # CONFIG_X86_CPUFREQ_NFORCE2 is not set
->> # CONFIG_X86_LONGRUN is not set
->> # CONFIG_X86_LONGHAUL is not set
->> # CONFIG_X86_E_POWERSAVER is not set
->>
->> #
->> # shared options
->> #
->> # CONFIG_X86_ACPI_CPUFREQ_PROC_INTF is not set
->> # CONFIG_X86_SPEEDSTEP_LIB is not set
->> CONFIG_CPU_IDLE=y
->> CONFIG_CPU_IDLE_GOV_LADDER=y
->> CONFIG_CPU_IDLE_GOV_MENU=y
->>
->> #
->> # Bus options (PCI etc.)
->> #
->> CONFIG_PCI=y
->> # CONFIG_PCI_GOBIOS is not set
->> # CONFIG_PCI_GOMMCONFIG is not set
->> CONFIG_PCI_GODIRECT=y
->> # CONFIG_PCI_GOANY is not set
->> CONFIG_PCI_DIRECT=y
->> CONFIG_PCI_DOMAINS=y
->> # CONFIG_PCIEPORTBUS is not set
->> CONFIG_ARCH_SUPPORTS_MSI=y
->> CONFIG_PCI_MSI=y
->> # CONFIG_PCI_LEGACY is not set
->> CONFIG_HT_IRQ=y
->> CONFIG_ISA_DMA_API=y
->> # CONFIG_ISA is not set
->> # CONFIG_MCA is not set
->> # CONFIG_SCx200 is not set
->> CONFIG_PCCARD=y
->> # CONFIG_PCMCIA_DEBUG is not set
->> # CONFIG_PCMCIA is not set
->> CONFIG_CARDBUS=y
->>
->> #
->> # PC-card bridges
->> #
->> CONFIG_YENTA=y
->> CONFIG_YENTA_O2=y
->> CONFIG_YENTA_RICOH=y
->> CONFIG_YENTA_TI=y
->> CONFIG_YENTA_ENE_TUNE=y
->> CONFIG_YENTA_TOSHIBA=y
->> CONFIG_PCCARD_NONSTATIC=y
->> # CONFIG_HOTPLUG_PCI is not set
->>
->> #
->> # Executable file formats / Emulations
->> #
->> CONFIG_BINFMT_ELF=y
->> # CONFIG_BINFMT_AOUT is not set
->> CONFIG_BINFMT_MISC=m
->>
->> #
->> # Networking
->> #
->> CONFIG_NET=y
->>
->> #
->> # Networking options
->> #
->> CONFIG_PACKET=y
->> CONFIG_PACKET_MMAP=y
->> CONFIG_UNIX=y
->> CONFIG_XFRM=y
->> CONFIG_XFRM_USER=y
->> # CONFIG_XFRM_SUB_POLICY is not set
->> # CONFIG_XFRM_MIGRATE is not set
->> # CONFIG_XFRM_STATISTICS is not set
->> CONFIG_NET_KEY=y
->> # CONFIG_NET_KEY_MIGRATE is not set
->> CONFIG_INET=y
->> # CONFIG_IP_MULTICAST is not set
->> # CONFIG_IP_ADVANCED_ROUTER is not set
->> CONFIG_IP_FIB_HASH=y
->> # CONFIG_IP_PNP is not set
->> # CONFIG_NET_IPIP is not set
->> # CONFIG_NET_IPGRE is not set
->> # CONFIG_ARPD is not set
->> # CONFIG_SYN_COOKIES is not set
->> # CONFIG_INET_AH is not set
->> # CONFIG_INET_ESP is not set
->> # CONFIG_INET_IPCOMP is not set
->> # CONFIG_INET_XFRM_TUNNEL is not set
->> CONFIG_INET_TUNNEL=y
->> CONFIG_INET_XFRM_MODE_TRANSPORT=y
->> CONFIG_INET_XFRM_MODE_TUNNEL=y
->> CONFIG_INET_XFRM_MODE_BEET=y
->> CONFIG_INET_LRO=y
->> CONFIG_INET_DIAG=y
->> CONFIG_INET_TCP_DIAG=y
->> # CONFIG_TCP_CONG_ADVANCED is not set
->> CONFIG_TCP_CONG_CUBIC=y
->> CONFIG_DEFAULT_TCP_CONG="cubic"
->> # CONFIG_TCP_MD5SIG is not set
->> # CONFIG_IP_VS is not set
->> CONFIG_IPV6=y
->> # CONFIG_IPV6_PRIVACY is not set
->> # CONFIG_IPV6_ROUTER_PREF is not set
->> # CONFIG_IPV6_OPTIMISTIC_DAD is not set
->> CONFIG_INET6_AH=m
->> CONFIG_INET6_ESP=m
->> CONFIG_INET6_IPCOMP=m
->> CONFIG_IPV6_MIP6=m
->> CONFIG_INET6_XFRM_TUNNEL=m
->> CONFIG_INET6_TUNNEL=m
->> CONFIG_INET6_XFRM_MODE_TRANSPORT=y
->> CONFIG_INET6_XFRM_MODE_TUNNEL=y
->> CONFIG_INET6_XFRM_MODE_BEET=y
->> # CONFIG_INET6_XFRM_MODE_ROUTEOPTIMIZATION is not set
->> CONFIG_IPV6_SIT=y
->> # CONFIG_IPV6_TUNNEL is not set
->> # CONFIG_IPV6_MULTIPLE_TABLES is not set
->> # CONFIG_NETWORK_SECMARK is not set
->> CONFIG_NETFILTER=y
->> # CONFIG_NETFILTER_DEBUG is not set
->> # CONFIG_NETFILTER_ADVANCED is not set
->>
->> #
->> # Core Netfilter Configuration
->> #
->> CONFIG_NETFILTER_NETLINK=m
->> CONFIG_NETFILTER_NETLINK_LOG=m
->> CONFIG_NF_CONNTRACK=m
->> # CONFIG_NF_CONNTRACK_FTP is not set
->> # CONFIG_NF_CONNTRACK_IRC is not set
->> # CONFIG_NF_CONNTRACK_SIP is not set
->> # CONFIG_NF_CT_NETLINK is not set
->> # CONFIG_NETFILTER_XTABLES is not set
->>
->> #
->> # IP: Netfilter Configuration
->> #
->> # CONFIG_NF_CONNTRACK_IPV4 is not set
->> # CONFIG_IP_NF_IPTABLES is not set
->>
->> #
->> # IPv6: Netfilter Configuration
->> #
->> # CONFIG_NF_CONNTRACK_IPV6 is not set
->> # CONFIG_IP6_NF_IPTABLES is not set
->> # CONFIG_IP_DCCP is not set
->> # CONFIG_IP_SCTP is not set
->> # CONFIG_TIPC is not set
->> # CONFIG_ATM is not set
->> # CONFIG_BRIDGE is not set
->> # CONFIG_VLAN_8021Q is not set
->> # CONFIG_DECNET is not set
->> CONFIG_LLC=m
->> # CONFIG_LLC2 is not set
->> # CONFIG_IPX is not set
->> CONFIG_ATALK=m
->> CONFIG_DEV_APPLETALK=m
->> CONFIG_IPDDP=m
->> CONFIG_IPDDP_ENCAP=y
->> CONFIG_IPDDP_DECAP=y
->> # CONFIG_X25 is not set
->> # CONFIG_LAPB is not set
->> # CONFIG_ECONET is not set
->> # CONFIG_WAN_ROUTER is not set
->> # CONFIG_NET_SCHED is not set
->>
->> #
->> # Network testing
->> #
->> # CONFIG_NET_PKTGEN is not set
->> # CONFIG_HAMRADIO is not set
->> # CONFIG_CAN is not set
->> # CONFIG_IRDA is not set
->> CONFIG_BT=m
->> CONFIG_BT_L2CAP=m
->> CONFIG_BT_SCO=m
->> CONFIG_BT_RFCOMM=m
->> # CONFIG_BT_RFCOMM_TTY is not set
->> CONFIG_BT_BNEP=m
->> CONFIG_BT_BNEP_MC_FILTER=y
->> CONFIG_BT_BNEP_PROTO_FILTER=y
->> CONFIG_BT_HIDP=m
->>
->> #
->> # Bluetooth device drivers
->> #
->> CONFIG_BT_HCIUSB=m
->> CONFIG_BT_HCIUSB_SCO=y
->> # CONFIG_BT_HCIBTSDIO is not set
->> CONFIG_BT_HCIUART=m
->> CONFIG_BT_HCIUART_H4=y
->> CONFIG_BT_HCIUART_BCSP=y
->> # CONFIG_BT_HCIUART_LL is not set
->> CONFIG_BT_HCIBCM203X=m
->> CONFIG_BT_HCIBPA10X=m
->> CONFIG_BT_HCIBFUSB=m
->> CONFIG_BT_HCIVHCI=m
->> # CONFIG_AF_RXRPC is not set
->>
->> #
->> # Wireless
->> #
->> # CONFIG_CFG80211 is not set
->> CONFIG_WIRELESS_EXT=y
->> # CONFIG_MAC80211 is not set
->> CONFIG_IEEE80211=m
->> CONFIG_IEEE80211_DEBUG=y
->> CONFIG_IEEE80211_CRYPT_WEP=m
->> CONFIG_IEEE80211_CRYPT_CCMP=m
->> # CONFIG_IEEE80211_CRYPT_TKIP is not set
->> CONFIG_IEEE80211_SOFTMAC=m
->> CONFIG_IEEE80211_SOFTMAC_DEBUG=y
->> # CONFIG_RFKILL is not set
->> # CONFIG_NET_9P is not set
->>
->> #
->> # Device Drivers
->> #
->>
->> #
->> # Generic Driver Options
->> #
->> CONFIG_UEVENT_HELPER_PATH="n"
->> CONFIG_STANDALONE=y
->> CONFIG_PREVENT_FIRMWARE_BUILD=y
->> CONFIG_FW_LOADER=m
->> # CONFIG_SYS_HYPERVISOR is not set
->> # CONFIG_CONNECTOR is not set
->> # CONFIG_MTD is not set
->> # CONFIG_PARPORT is not set
->> CONFIG_PNP=y
->> # CONFIG_PNP_DEBUG is not set
->>
->> #
->> # Protocols
->> #
->> CONFIG_PNPACPI=y
->> CONFIG_BLK_DEV=y
->> # CONFIG_BLK_DEV_FD is not set
->> # CONFIG_BLK_CPQ_DA is not set
->> # CONFIG_BLK_CPQ_CISS_DA is not set
->> # CONFIG_BLK_DEV_DAC960 is not set
->> # CONFIG_BLK_DEV_UMEM is not set
->> # CONFIG_BLK_DEV_COW_COMMON is not set
->> CONFIG_BLK_DEV_LOOP=y
->> CONFIG_BLK_DEV_CRYPTOLOOP=m
->> # CONFIG_BLK_DEV_NBD is not set
->> # CONFIG_BLK_DEV_SX8 is not set
->> # CONFIG_BLK_DEV_UB is not set
->> CONFIG_BLK_DEV_RAM=m
->> CONFIG_BLK_DEV_RAM_COUNT=16
->> CONFIG_BLK_DEV_RAM_SIZE=4096
->> # CONFIG_BLK_DEV_XIP is not set
->> CONFIG_CDROM_PKTCDVD=m
->> CONFIG_CDROM_PKTCDVD_BUFFERS=8
->> CONFIG_CDROM_PKTCDVD_WCACHE=y
->> # CONFIG_ATA_OVER_ETH is not set
->> CONFIG_MISC_DEVICES=y
->> # CONFIG_IBM_ASM is not set
->> # CONFIG_PHANTOM is not set
->> # CONFIG_EEPROM_93CX6 is not set
->> # CONFIG_SGI_IOC4 is not set
->> CONFIG_TIFM_CORE=m
->> CONFIG_TIFM_7XX1=m
->> # CONFIG_ACER_WMI is not set
->> # CONFIG_ASUS_LAPTOP is not set
->> # CONFIG_FUJITSU_LAPTOP is not set
->> # CONFIG_TC1100_WMI is not set
->> # CONFIG_MSI_LAPTOP is not set
->> # CONFIG_SONY_LAPTOP is not set
->> CONFIG_THINKPAD_ACPI=m
->> CONFIG_THINKPAD_ACPI_DEBUG=y
->> # CONFIG_THINKPAD_ACPI_BAY is not set
->> # CONFIG_THINKPAD_ACPI_VIDEO is not set
->> # CONFIG_THINKPAD_ACPI_HOTKEY_POLL is not set
->> # CONFIG_INTEL_MENLOW is not set
->> # CONFIG_ENCLOSURE_SERVICES is not set
->> CONFIG_HAVE_IDE=y
->> # CONFIG_IDE is not set
->>
->> #
->> # SCSI device support
->> #
->> CONFIG_RAID_ATTRS=y
->> CONFIG_SCSI=y
->> CONFIG_SCSI_DMA=y
->> CONFIG_SCSI_TGT=m
->> # CONFIG_SCSI_NETLINK is not set
->> # CONFIG_SCSI_PROC_FS is not set
->>
->> #
->> # SCSI support type (disk, tape, CD-ROM)
->> #
->> CONFIG_BLK_DEV_SD=y
->> # CONFIG_CHR_DEV_ST is not set
->> # CONFIG_CHR_DEV_OSST is not set
->> CONFIG_BLK_DEV_SR=y
->> # CONFIG_BLK_DEV_SR_VENDOR is not set
->> CONFIG_CHR_DEV_SG=y
->> # CONFIG_CHR_DEV_SCH is not set
->>
->> #
->> # Some SCSI devices (e.g. CD jukebox) support multiple LUNs
->> #
->> CONFIG_SCSI_MULTI_LUN=y
->> # CONFIG_SCSI_CONSTANTS is not set
->> # CONFIG_SCSI_LOGGING is not set
->> CONFIG_SCSI_SCAN_ASYNC=y
->> CONFIG_SCSI_WAIT_SCAN=m
->>
->> #
->> # SCSI Transports
->> #
->> # CONFIG_SCSI_SPI_ATTRS is not set
->> # CONFIG_SCSI_FC_ATTRS is not set
->> # CONFIG_SCSI_ISCSI_ATTRS is not set
->> # CONFIG_SCSI_SAS_LIBSAS is not set
->> CONFIG_SCSI_SRP_ATTRS=y
->> CONFIG_SCSI_LOWLEVEL=y
->> # CONFIG_ISCSI_TCP is not set
->> # CONFIG_BLK_DEV_3W_XXXX_RAID is not set
->> # CONFIG_SCSI_3W_9XXX is not set
->> # CONFIG_SCSI_ACARD is not set
->> # CONFIG_SCSI_AACRAID is not set
->> # CONFIG_SCSI_AIC7XXX is not set
->> # CONFIG_SCSI_AIC7XXX_OLD is not set
->> # CONFIG_SCSI_AIC79XX is not set
->> # CONFIG_SCSI_AIC94XX is not set
->> # CONFIG_SCSI_DPT_I2O is not set
->> # CONFIG_SCSI_ADVANSYS is not set
->> # CONFIG_SCSI_ARCMSR is not set
->> # CONFIG_MEGARAID_NEWGEN is not set
->> # CONFIG_MEGARAID_LEGACY is not set
->> # CONFIG_MEGARAID_SAS is not set
->> # CONFIG_SCSI_HPTIOP is not set
->> # CONFIG_SCSI_BUSLOGIC is not set
->> # CONFIG_SCSI_DMX3191D is not set
->> # CONFIG_SCSI_EATA is not set
->> # CONFIG_SCSI_FUTURE_DOMAIN is not set
->> # CONFIG_SCSI_GDTH is not set
->> # CONFIG_SCSI_IPS is not set
->> # CONFIG_SCSI_INITIO is not set
->> # CONFIG_SCSI_INIA100 is not set
->> # CONFIG_SCSI_MVSAS is not set
->> # CONFIG_SCSI_STEX is not set
->> # CONFIG_SCSI_SYM53C8XX_2 is not set
->> # CONFIG_SCSI_IPR is not set
->> # CONFIG_SCSI_QLOGIC_1280 is not set
->> # CONFIG_SCSI_QLA_FC is not set
->> # CONFIG_SCSI_QLA_ISCSI is not set
->> # CONFIG_SCSI_LPFC is not set
->> # CONFIG_SCSI_DC395x is not set
->> # CONFIG_SCSI_DC390T is not set
->> # CONFIG_SCSI_NSP32 is not set
->> # CONFIG_SCSI_DEBUG is not set
->> # CONFIG_SCSI_SRP is not set
->> CONFIG_ATA=y
->> # CONFIG_ATA_NONSTANDARD is not set
->> CONFIG_ATA_ACPI=y
->> # CONFIG_SATA_AHCI is not set
->> # CONFIG_SATA_SVW is not set
->> CONFIG_ATA_PIIX=y
->> # CONFIG_SATA_MV is not set
->> # CONFIG_SATA_NV is not set
->> # CONFIG_PDC_ADMA is not set
->> # CONFIG_SATA_QSTOR is not set
->> # CONFIG_SATA_PROMISE is not set
->> # CONFIG_SATA_SX4 is not set
->> # CONFIG_SATA_SIL is not set
->> # CONFIG_SATA_SIL24 is not set
->> # CONFIG_SATA_SIS is not set
->> # CONFIG_SATA_ULI is not set
->> # CONFIG_SATA_VIA is not set
->> # CONFIG_SATA_VITESSE is not set
->> # CONFIG_SATA_INIC162X is not set
->> CONFIG_PATA_ACPI=m
->> # CONFIG_PATA_ALI is not set
->> # CONFIG_PATA_AMD is not set
->> # CONFIG_PATA_ARTOP is not set
->> # CONFIG_PATA_ATIIXP is not set
->> # CONFIG_PATA_CMD640_PCI is not set
->> # CONFIG_PATA_CMD64X is not set
->> # CONFIG_PATA_CS5520 is not set
->> # CONFIG_PATA_CS5530 is not set
->> # CONFIG_PATA_CS5535 is not set
->> # CONFIG_PATA_CS5536 is not set
->> # CONFIG_PATA_CYPRESS is not set
->> # CONFIG_PATA_EFAR is not set
->> CONFIG_ATA_GENERIC=y
->> # CONFIG_PATA_HPT366 is not set
->> # CONFIG_PATA_HPT37X is not set
->> # CONFIG_PATA_HPT3X2N is not set
->> # CONFIG_PATA_HPT3X3 is not set
->> # CONFIG_PATA_IT821X is not set
->> # CONFIG_PATA_IT8213 is not set
->> # CONFIG_PATA_JMICRON is not set
->> # CONFIG_PATA_TRIFLEX is not set
->> # CONFIG_PATA_MARVELL is not set
->> CONFIG_PATA_MPIIX=y
->> CONFIG_PATA_OLDPIIX=y
->> # CONFIG_PATA_NETCELL is not set
->> # CONFIG_PATA_NINJA32 is not set
->> # CONFIG_PATA_NS87410 is not set
->> # CONFIG_PATA_NS87415 is not set
->> # CONFIG_PATA_OPTI is not set
->> # CONFIG_PATA_OPTIDMA is not set
->> # CONFIG_PATA_PDC_OLD is not set
->> # CONFIG_PATA_RADISYS is not set
->> # CONFIG_PATA_RZ1000 is not set
->> # CONFIG_PATA_SC1200 is not set
->> # CONFIG_PATA_SERVERWORKS is not set
->> # CONFIG_PATA_PDC2027X is not set
->> # CONFIG_PATA_SIL680 is not set
->> # CONFIG_PATA_SIS is not set
->> # CONFIG_PATA_VIA is not set
->> # CONFIG_PATA_WINBOND is not set
->> CONFIG_MD=y
->> # CONFIG_BLK_DEV_MD is not set
->> CONFIG_BLK_DEV_DM=y
->> CONFIG_DM_DEBUG=y
->> CONFIG_DM_CRYPT=y
->> CONFIG_DM_SNAPSHOT=y
->> CONFIG_DM_MIRROR=y
->> CONFIG_DM_ZERO=y
->> CONFIG_DM_MULTIPATH=y
->> CONFIG_DM_MULTIPATH_EMC=m
->> # CONFIG_DM_MULTIPATH_RDAC is not set
->> # CONFIG_DM_MULTIPATH_HP is not set
->> # CONFIG_DM_DELAY is not set
->> CONFIG_DM_UEVENT=y
->> # CONFIG_FUSION is not set
->>
->> #
->> # IEEE 1394 (FireWire) support
->> #
->> CONFIG_FIREWIRE=y
->> CONFIG_FIREWIRE_OHCI=y
->> CONFIG_FIREWIRE_SBP2=y
->> # CONFIG_IEEE1394 is not set
->> # CONFIG_I2O is not set
->> # CONFIG_MACINTOSH_DRIVERS is not set
->> CONFIG_NETDEVICES=y
->> # CONFIG_NETDEVICES_MULTIQUEUE is not set
->> CONFIG_DUMMY=m
->> # CONFIG_BONDING is not set
->> # CONFIG_MACVLAN is not set
->> # CONFIG_EQUALIZER is not set
->> # CONFIG_TUN is not set
->> # CONFIG_VETH is not set
->> # CONFIG_NET_SB1000 is not set
->> # CONFIG_ARCNET is not set
->> # CONFIG_PHYLIB is not set
->> CONFIG_NET_ETHERNET=y
->> CONFIG_MII=y
->> # CONFIG_HAPPYMEAL is not set
->> # CONFIG_SUNGEM is not set
->> # CONFIG_CASSINI is not set
->> # CONFIG_NET_VENDOR_3COM is not set
->> # CONFIG_ENC28J60 is not set
->> # CONFIG_NET_TULIP is not set
->> # CONFIG_HP100 is not set
->> # CONFIG_IBM_NEW_EMAC_ZMII is not set
->> # CONFIG_IBM_NEW_EMAC_RGMII is not set
->> # CONFIG_IBM_NEW_EMAC_TAH is not set
->> # CONFIG_IBM_NEW_EMAC_EMAC4 is not set
->> CONFIG_NET_PCI=y
->> # CONFIG_PCNET32 is not set
->> # CONFIG_AMD8111_ETH is not set
->> # CONFIG_ADAPTEC_STARFIRE is not set
->> # CONFIG_B44 is not set
->> # CONFIG_FORCEDETH is not set
->> # CONFIG_EEPRO100 is not set
->> # CONFIG_E100 is not set
->> # CONFIG_FEALNX is not set
->> # CONFIG_NATSEMI is not set
->> # CONFIG_NE2K_PCI is not set
->> # CONFIG_8139CP is not set
->> CONFIG_8139TOO=y
->> # CONFIG_8139TOO_PIO is not set
->> # CONFIG_8139TOO_TUNE_TWISTER is not set
->> # CONFIG_8139TOO_8129 is not set
->> # CONFIG_8139_OLD_RX_RESET is not set
->> # CONFIG_R6040 is not set
->> # CONFIG_SIS900 is not set
->> # CONFIG_EPIC100 is not set
->> # CONFIG_SUNDANCE is not set
->> # CONFIG_TLAN is not set
->> # CONFIG_VIA_RHINE is not set
->> # CONFIG_SC92031 is not set
->> # CONFIG_NETDEV_1000 is not set
->> # CONFIG_NETDEV_10000 is not set
->> # CONFIG_TR is not set
->>
->> #
->> # Wireless LAN
->> #
->> # CONFIG_WLAN_PRE80211 is not set
->> # CONFIG_WLAN_80211 is not set
->>
->> #
->> # USB Network Adapters
->> #
->> # CONFIG_USB_CATC is not set
->> # CONFIG_USB_KAWETH is not set
->> # CONFIG_USB_PEGASUS is not set
->> # CONFIG_USB_RTL8150 is not set
->> # CONFIG_USB_USBNET is not set
->> # CONFIG_WAN is not set
->> # CONFIG_FDDI is not set
->> # CONFIG_HIPPI is not set
->> CONFIG_PPP=m
->> # CONFIG_PPP_MULTILINK is not set
->> CONFIG_PPP_FILTER=y
->> CONFIG_PPP_ASYNC=m
->> # CONFIG_PPP_SYNC_TTY is not set
->> CONFIG_PPP_DEFLATE=m
->> CONFIG_PPP_BSDCOMP=m
->> # CONFIG_PPP_MPPE is not set
->> # CONFIG_PPPOE is not set
->> # CONFIG_PPPOL2TP is not set
->> # CONFIG_SLIP is not set
->> CONFIG_SLHC=m
->> # CONFIG_NET_FC is not set
->> # CONFIG_NETCONSOLE is not set
->> # CONFIG_NETPOLL is not set
->> # CONFIG_NET_POLL_CONTROLLER is not set
->> # CONFIG_ISDN is not set
->> # CONFIG_PHONE is not set
->>
->> #
->> # Input device support
->> #
->> CONFIG_INPUT=y
->> # CONFIG_INPUT_FF_MEMLESS is not set
->> # CONFIG_INPUT_POLLDEV is not set
->>
->> #
->> # Userland interfaces
->> #
->> CONFIG_INPUT_MOUSEDEV=y
->> CONFIG_INPUT_MOUSEDEV_PSAUX=y
->> CONFIG_INPUT_MOUSEDEV_SCREEN_X=1280
->> CONFIG_INPUT_MOUSEDEV_SCREEN_Y=800
->> # CONFIG_INPUT_JOYDEV is not set
->> CONFIG_INPUT_EVDEV=y
->> # CONFIG_INPUT_EVBUG is not set
->>
->> #
->> # Input Device Drivers
->> #
->> CONFIG_INPUT_KEYBOARD=y
->> CONFIG_KEYBOARD_ATKBD=y
->> # CONFIG_KEYBOARD_SUNKBD is not set
->> # CONFIG_KEYBOARD_LKKBD is not set
->> # CONFIG_KEYBOARD_XTKBD is not set
->> # CONFIG_KEYBOARD_NEWTON is not set
->> # CONFIG_KEYBOARD_STOWAWAY is not set
->> CONFIG_INPUT_MOUSE=y
->> CONFIG_MOUSE_PS2=y
->> CONFIG_MOUSE_PS2_ALPS=y
->> CONFIG_MOUSE_PS2_LOGIPS2PP=y
->> CONFIG_MOUSE_PS2_SYNAPTICS=y
->> CONFIG_MOUSE_PS2_LIFEBOOK=y
->> CONFIG_MOUSE_PS2_TRACKPOINT=y
->> # CONFIG_MOUSE_PS2_TOUCHKIT is not set
->> # CONFIG_MOUSE_SERIAL is not set
->> # CONFIG_MOUSE_APPLETOUCH is not set
->> # CONFIG_MOUSE_VSXXXAA is not set
->> # CONFIG_INPUT_JOYSTICK is not set
->> # CONFIG_INPUT_TABLET is not set
->> # CONFIG_INPUT_TOUCHSCREEN is not set
->> # CONFIG_INPUT_MISC is not set
->>
->> #
->> # Hardware I/O ports
->> #
->> CONFIG_SERIO=y
->> CONFIG_SERIO_I8042=y
->> CONFIG_SERIO_SERPORT=y
->> # CONFIG_SERIO_CT82C710 is not set
->> CONFIG_SERIO_PCIPS2=y
->> CONFIG_SERIO_LIBPS2=y
->> # CONFIG_SERIO_RAW is not set
->> # CONFIG_GAMEPORT is not set
->>
->> #
->> # Character devices
->> #
->> CONFIG_VT=y
->> CONFIG_VT_CONSOLE=y
->> CONFIG_HW_CONSOLE=y
->> CONFIG_VT_HW_CONSOLE_BINDING=y
->> # CONFIG_SERIAL_NONSTANDARD is not set
->> # CONFIG_NOZOMI is not set
->>
->> #
->> # Serial drivers
->> #
->> CONFIG_SERIAL_8250=y
->> # CONFIG_SERIAL_8250_CONSOLE is not set
->> CONFIG_FIX_EARLYCON_MEM=y
->> CONFIG_SERIAL_8250_PCI=y
->> CONFIG_SERIAL_8250_PNP=y
->> CONFIG_SERIAL_8250_NR_UARTS=4
->> CONFIG_SERIAL_8250_RUNTIME_UARTS=4
->> # CONFIG_SERIAL_8250_EXTENDED is not set
->>
->> #
->> # Non-8250 serial port support
->> #
->> CONFIG_SERIAL_CORE=y
->> # CONFIG_SERIAL_JSM is not set
->> CONFIG_UNIX98_PTYS=y
->> CONFIG_LEGACY_PTYS=y
->> CONFIG_LEGACY_PTY_COUNT=256
->> # CONFIG_IPMI_HANDLER is not set
->> # CONFIG_HW_RANDOM is not set
->> CONFIG_NVRAM=m
->> CONFIG_RTC=y
->> # CONFIG_R3964 is not set
->> # CONFIG_APPLICOM is not set
->> # CONFIG_SONYPI is not set
->> # CONFIG_MWAVE is not set
->> # CONFIG_PC8736x_GPIO is not set
->> # CONFIG_NSC_GPIO is not set
->> # CONFIG_CS5535_GPIO is not set
->> # CONFIG_RAW_DRIVER is not set
->> # CONFIG_HPET is not set
->> # CONFIG_HANGCHECK_TIMER is not set
->> # CONFIG_TCG_TPM is not set
->> # CONFIG_TELCLOCK is not set
->> CONFIG_DEVPORT=y
->> CONFIG_I2C=y
->> CONFIG_I2C_BOARDINFO=y
->> CONFIG_I2C_CHARDEV=y
->>
->> #
->> # I2C Algorithms
->> #
->> CONFIG_I2C_ALGOBIT=m
->> CONFIG_I2C_ALGOPCF=m
->> CONFIG_I2C_ALGOPCA=m
->>
->> #
->> # I2C Hardware Bus support
->> #
->> # CONFIG_I2C_ALI1535 is not set
->> # CONFIG_I2C_ALI1563 is not set
->> # CONFIG_I2C_ALI15X3 is not set
->> # CONFIG_I2C_AMD756 is not set
->> # CONFIG_I2C_AMD8111 is not set
->> CONFIG_I2C_I801=y
->> # CONFIG_I2C_I810 is not set
->> # CONFIG_I2C_PIIX4 is not set
->> # CONFIG_I2C_NFORCE2 is not set
->> # CONFIG_I2C_OCORES is not set
->> # CONFIG_I2C_PARPORT_LIGHT is not set
->> # CONFIG_I2C_PROSAVAGE is not set
->> # CONFIG_I2C_SAVAGE4 is not set
->> # CONFIG_I2C_SIMTEC is not set
->> # CONFIG_SCx200_ACB is not set
->> # CONFIG_I2C_SIS5595 is not set
->> # CONFIG_I2C_SIS630 is not set
->> # CONFIG_I2C_SIS96X is not set
->> # CONFIG_I2C_TAOS_EVM is not set
->> # CONFIG_I2C_STUB is not set
->> # CONFIG_I2C_TINY_USB is not set
->> # CONFIG_I2C_VIA is not set
->> # CONFIG_I2C_VIAPRO is not set
->> # CONFIG_I2C_VOODOO3 is not set
->>
->> #
->> # Miscellaneous I2C Chip support
->> #
->> # CONFIG_DS1682 is not set
->> CONFIG_SENSORS_EEPROM=m
->> # CONFIG_SENSORS_PCF8574 is not set
->> # CONFIG_PCF8575 is not set
->> # CONFIG_SENSORS_PCF8591 is not set
->> # CONFIG_TPS65010 is not set
->> # CONFIG_SENSORS_MAX6875 is not set
->> # CONFIG_SENSORS_TSL2550 is not set
->> CONFIG_I2C_DEBUG_CORE=y
->> CONFIG_I2C_DEBUG_ALGO=y
->> CONFIG_I2C_DEBUG_BUS=y
->> CONFIG_I2C_DEBUG_CHIP=y
->>
->> #
->> # SPI support
->> #
->> CONFIG_SPI=y
->> CONFIG_SPI_MASTER=y
->>
->> #
->> # SPI Master Controller Drivers
->> #
->> CONFIG_SPI_BITBANG=y
->>
->> #
->> # SPI Protocol Masters
->> #
->> # CONFIG_SPI_AT25 is not set
->> # CONFIG_SPI_SPIDEV is not set
->> # CONFIG_SPI_TLE62X0 is not set
->> # CONFIG_W1 is not set
->> CONFIG_POWER_SUPPLY=y
->> CONFIG_POWER_SUPPLY_DEBUG=y
->> # CONFIG_PDA_POWER is not set
->> # CONFIG_BATTERY_DS2760 is not set
->> CONFIG_HWMON=y
->> # CONFIG_HWMON_VID is not set
->> # CONFIG_SENSORS_ABITUGURU is not set
->> # CONFIG_SENSORS_ABITUGURU3 is not set
->> # CONFIG_SENSORS_AD7418 is not set
->> # CONFIG_SENSORS_ADM1021 is not set
->> # CONFIG_SENSORS_ADM1025 is not set
->> # CONFIG_SENSORS_ADM1026 is not set
->> # CONFIG_SENSORS_ADM1029 is not set
->> # CONFIG_SENSORS_ADM1031 is not set
->> # CONFIG_SENSORS_ADM9240 is not set
->> # CONFIG_SENSORS_ADT7470 is not set
->> # CONFIG_SENSORS_ADT7473 is not set
->> # CONFIG_SENSORS_K8TEMP is not set
->> # CONFIG_SENSORS_ASB100 is not set
->> # CONFIG_SENSORS_ATXP1 is not set
->> # CONFIG_SENSORS_DS1621 is not set
->> # CONFIG_SENSORS_I5K_AMB is not set
->> # CONFIG_SENSORS_F71805F is not set
->> # CONFIG_SENSORS_F71882FG is not set
->> # CONFIG_SENSORS_F75375S is not set
->> # CONFIG_SENSORS_FSCHER is not set
->> # CONFIG_SENSORS_FSCPOS is not set
->> # CONFIG_SENSORS_FSCHMD is not set
->> # CONFIG_SENSORS_GL518SM is not set
->> # CONFIG_SENSORS_GL520SM is not set
->> CONFIG_SENSORS_CORETEMP=m
->> # CONFIG_SENSORS_IT87 is not set
->> # CONFIG_SENSORS_LM63 is not set
->> # CONFIG_SENSORS_LM70 is not set
->> # CONFIG_SENSORS_LM75 is not set
->> # CONFIG_SENSORS_LM77 is not set
->> # CONFIG_SENSORS_LM78 is not set
->> # CONFIG_SENSORS_LM80 is not set
->> # CONFIG_SENSORS_LM83 is not set
->> # CONFIG_SENSORS_LM85 is not set
->> # CONFIG_SENSORS_LM87 is not set
->> # CONFIG_SENSORS_LM90 is not set
->> # CONFIG_SENSORS_LM92 is not set
->> # CONFIG_SENSORS_LM93 is not set
->> # CONFIG_SENSORS_MAX1619 is not set
->> # CONFIG_SENSORS_MAX6650 is not set
->> # CONFIG_SENSORS_PC87360 is not set
->> # CONFIG_SENSORS_PC87427 is not set
->> # CONFIG_SENSORS_SIS5595 is not set
->> # CONFIG_SENSORS_DME1737 is not set
->> # CONFIG_SENSORS_SMSC47M1 is not set
->> # CONFIG_SENSORS_SMSC47M192 is not set
->> # CONFIG_SENSORS_SMSC47B397 is not set
->> # CONFIG_SENSORS_ADS7828 is not set
->> # CONFIG_SENSORS_THMC50 is not set
->> # CONFIG_SENSORS_VIA686A is not set
->> # CONFIG_SENSORS_VT1211 is not set
->> # CONFIG_SENSORS_VT8231 is not set
->> # CONFIG_SENSORS_W83781D is not set
->> # CONFIG_SENSORS_W83791D is not set
->> # CONFIG_SENSORS_W83792D is not set
->> # CONFIG_SENSORS_W83793 is not set
->> # CONFIG_SENSORS_W83L785TS is not set
->> # CONFIG_SENSORS_W83L786NG is not set
->> # CONFIG_SENSORS_W83627HF is not set
->> # CONFIG_SENSORS_W83627EHF is not set
->> # CONFIG_SENSORS_HDAPS is not set
->> # CONFIG_SENSORS_APPLESMC is not set
->> CONFIG_HWMON_DEBUG_CHIP=y
->> CONFIG_THERMAL=y
->> # CONFIG_WATCHDOG is not set
->>
->> #
->> # Sonics Silicon Backplane
->> #
->> CONFIG_SSB_POSSIBLE=y
->> # CONFIG_SSB is not set
->>
->> #
->> # Multifunction device drivers
->> #
->> # CONFIG_MFD_SM501 is not set
->>
->> #
->> # Multimedia devices
->> #
->> # CONFIG_VIDEO_DEV is not set
->> # CONFIG_DVB_CORE is not set
->> # CONFIG_DAB is not set
->>
->> #
->> # Graphics support
->> #
->> CONFIG_AGP=y
->> # CONFIG_AGP_ALI is not set
->> # CONFIG_AGP_ATI is not set
->> # CONFIG_AGP_AMD is not set
->> # CONFIG_AGP_AMD64 is not set
->> CONFIG_AGP_INTEL=y
->> # CONFIG_AGP_NVIDIA is not set
->> # CONFIG_AGP_SIS is not set
->> # CONFIG_AGP_SWORKS is not set
->> # CONFIG_AGP_VIA is not set
->> # CONFIG_AGP_EFFICEON is not set
->> CONFIG_DRM=y
->> # CONFIG_DRM_TDFX is not set
->> # CONFIG_DRM_R128 is not set
->> # CONFIG_DRM_RADEON is not set
->> # CONFIG_DRM_I810 is not set
->> # CONFIG_DRM_I830 is not set
->> CONFIG_DRM_I915=m
->> # CONFIG_DRM_MGA is not set
->> # CONFIG_DRM_SIS is not set
->> # CONFIG_DRM_VIA is not set
->> # CONFIG_DRM_SAVAGE is not set
->> # CONFIG_VGASTATE is not set
->> CONFIG_VIDEO_OUTPUT_CONTROL=y
->> CONFIG_FB=m
->> # CONFIG_FIRMWARE_EDID is not set
->> CONFIG_FB_DDC=m
->> CONFIG_FB_CFB_FILLRECT=m
->> CONFIG_FB_CFB_COPYAREA=m
->> CONFIG_FB_CFB_IMAGEBLIT=m
->> # CONFIG_FB_CFB_REV_PIXELS_IN_BYTE is not set
->> # CONFIG_FB_SYS_FILLRECT is not set
->> # CONFIG_FB_SYS_COPYAREA is not set
->> # CONFIG_FB_SYS_IMAGEBLIT is not set
->> # CONFIG_FB_SYS_FOPS is not set
->> CONFIG_FB_DEFERRED_IO=y
->> # CONFIG_FB_SVGALIB is not set
->> # CONFIG_FB_MACMODES is not set
->> # CONFIG_FB_BACKLIGHT is not set
->> CONFIG_FB_MODE_HELPERS=y
->> # CONFIG_FB_TILEBLITTING is not set
->>
->> #
->> # Frame buffer hardware drivers
->> #
->> # CONFIG_FB_CIRRUS is not set
->> # CONFIG_FB_PM2 is not set
->> # CONFIG_FB_CYBER2000 is not set
->> # CONFIG_FB_ARC is not set
->> # CONFIG_FB_VGA16 is not set
->> # CONFIG_FB_HECUBA is not set
->> # CONFIG_FB_HGA is not set
->> # CONFIG_FB_S1D13XXX is not set
->> # CONFIG_FB_NVIDIA is not set
->> # CONFIG_FB_RIVA is not set
->> # CONFIG_FB_I810 is not set
->> # CONFIG_FB_LE80578 is not set
->> CONFIG_FB_INTEL=m
->> # CONFIG_FB_INTEL_DEBUG is not set
->> CONFIG_FB_INTEL_I2C=y
->> # CONFIG_FB_MATROX is not set
->> # CONFIG_FB_RADEON is not set
->> # CONFIG_FB_ATY128 is not set
->> # CONFIG_FB_ATY is not set
->> # CONFIG_FB_S3 is not set
->> # CONFIG_FB_SAVAGE is not set
->> # CONFIG_FB_SIS is not set
->> # CONFIG_FB_NEOMAGIC is not set
->> # CONFIG_FB_KYRO is not set
->> # CONFIG_FB_3DFX is not set
->> # CONFIG_FB_VOODOO1 is not set
->> # CONFIG_FB_VT8623 is not set
->> # CONFIG_FB_CYBLA is not set
->> # CONFIG_FB_TRIDENT is not set
->> # CONFIG_FB_ARK is not set
->> # CONFIG_FB_PM3 is not set
->> # CONFIG_FB_GEODE is not set
->> # CONFIG_FB_VIRTUAL is not set
->> CONFIG_BACKLIGHT_LCD_SUPPORT=y
->> CONFIG_LCD_CLASS_DEVICE=y
->> # CONFIG_LCD_LTV350QV is not set
->> CONFIG_BACKLIGHT_CLASS_DEVICE=y
->> # CONFIG_BACKLIGHT_CORGI is not set
->> # CONFIG_BACKLIGHT_PROGEAR is not set
->>
->> #
->> # Display device support
->> #
->> CONFIG_DISPLAY_SUPPORT=y
->>
->> #
->> # Display hardware drivers
->> #
->>
->> #
->> # Console display driver support
->> #
->> CONFIG_VGA_CONSOLE=y
->> # CONFIG_VGACON_SOFT_SCROLLBACK is not set
->> # CONFIG_VIDEO_SELECT is not set
->> CONFIG_DUMMY_CONSOLE=y
->> # CONFIG_FRAMEBUFFER_CONSOLE is not set
->> # CONFIG_LOGO is not set
->>
->> #
->> # Sound
->> #
->> CONFIG_SOUND=y
->>
->> #
->> # Advanced Linux Sound Architecture
->> #
->> CONFIG_SND=y
->> CONFIG_SND_TIMER=y
->> CONFIG_SND_PCM=y
->> CONFIG_SND_RAWMIDI=m
->> CONFIG_SND_SEQUENCER=y
->> # CONFIG_SND_SEQ_DUMMY is not set
->> # CONFIG_SND_MIXER_OSS is not set
->> # CONFIG_SND_PCM_OSS is not set
->> # CONFIG_SND_SEQUENCER_OSS is not set
->> CONFIG_SND_RTCTIMER=y
->> CONFIG_SND_SEQ_RTCTIMER_DEFAULT=y
->> # CONFIG_SND_DYNAMIC_MINORS is not set
->> # CONFIG_SND_SUPPORT_OLD_API is not set
->> # CONFIG_SND_VERBOSE_PROCFS is not set
->> # CONFIG_SND_VERBOSE_PRINTK is not set
->> # CONFIG_SND_DEBUG is not set
->>
->> #
->> # Generic devices
->> #
->> CONFIG_SND_MPU401_UART=m
->> CONFIG_SND_AC97_CODEC=y
->> # CONFIG_SND_DUMMY is not set
->> CONFIG_SND_VIRMIDI=m
->> CONFIG_SND_MTPAV=m
->> CONFIG_SND_SERIAL_U16550=m
->> CONFIG_SND_MPU401=m
->>
->> #
->> # PCI devices
->> #
->> # CONFIG_SND_AD1889 is not set
->> # CONFIG_SND_ALS300 is not set
->> # CONFIG_SND_ALS4000 is not set
->> # CONFIG_SND_ALI5451 is not set
->> # CONFIG_SND_ATIIXP is not set
->> # CONFIG_SND_ATIIXP_MODEM is not set
->> # CONFIG_SND_AU8810 is not set
->> # CONFIG_SND_AU8820 is not set
->> # CONFIG_SND_AU8830 is not set
->> # CONFIG_SND_AZT3328 is not set
->> # CONFIG_SND_BT87X is not set
->> # CONFIG_SND_CA0106 is not set
->> # CONFIG_SND_CMIPCI is not set
->> # CONFIG_SND_OXYGEN is not set
->> # CONFIG_SND_CS4281 is not set
->> # CONFIG_SND_CS46XX is not set
->> # CONFIG_SND_CS5530 is not set
->> # CONFIG_SND_CS5535AUDIO is not set
->> # CONFIG_SND_DARLA20 is not set
->> # CONFIG_SND_GINA20 is not set
->> # CONFIG_SND_LAYLA20 is not set
->> # CONFIG_SND_DARLA24 is not set
->> # CONFIG_SND_GINA24 is not set
->> # CONFIG_SND_LAYLA24 is not set
->> # CONFIG_SND_MONA is not set
->> # CONFIG_SND_MIA is not set
->> # CONFIG_SND_ECHO3G is not set
->> # CONFIG_SND_INDIGO is not set
->> # CONFIG_SND_INDIGOIO is not set
->> # CONFIG_SND_INDIGODJ is not set
->> # CONFIG_SND_EMU10K1 is not set
->> # CONFIG_SND_EMU10K1X is not set
->> # CONFIG_SND_ENS1370 is not set
->> # CONFIG_SND_ENS1371 is not set
->> # CONFIG_SND_ES1938 is not set
->> # CONFIG_SND_ES1968 is not set
->> # CONFIG_SND_FM801 is not set
->> # CONFIG_SND_HDA_INTEL is not set
->> # CONFIG_SND_HDSP is not set
->> # CONFIG_SND_HDSPM is not set
->> # CONFIG_SND_HIFIER is not set
->> # CONFIG_SND_ICE1712 is not set
->> # CONFIG_SND_ICE1724 is not set
->> CONFIG_SND_INTEL8X0=y
->> # CONFIG_SND_INTEL8X0M is not set
->> # CONFIG_SND_KORG1212 is not set
->> # CONFIG_SND_MAESTRO3 is not set
->> # CONFIG_SND_MIXART is not set
->> # CONFIG_SND_NM256 is not set
->> # CONFIG_SND_PCXHR is not set
->> # CONFIG_SND_RIPTIDE is not set
->> # CONFIG_SND_RME32 is not set
->> # CONFIG_SND_RME96 is not set
->> # CONFIG_SND_RME9652 is not set
->> # CONFIG_SND_SIS7019 is not set
->> # CONFIG_SND_SONICVIBES is not set
->> # CONFIG_SND_TRIDENT is not set
->> # CONFIG_SND_VIA82XX is not set
->> # CONFIG_SND_VIA82XX_MODEM is not set
->> # CONFIG_SND_VIRTUOSO is not set
->> # CONFIG_SND_VX222 is not set
->> # CONFIG_SND_YMFPCI is not set
->> CONFIG_SND_AC97_POWER_SAVE=y
->> CONFIG_SND_AC97_POWER_SAVE_DEFAULT=1
->>
->> #
->> # SPI devices
->> #
->>
->> #
->> # USB devices
->> #
->> # CONFIG_SND_USB_AUDIO is not set
->> # CONFIG_SND_USB_USX2Y is not set
->> # CONFIG_SND_USB_CAIAQ is not set
->>
->> #
->> # System on Chip audio support
->> #
->> # CONFIG_SND_SOC is not set
->>
->> #
->> # SoC Audio support for SuperH
->> #
->>
->> #
->> # ALSA SoC audio for Freescale SOCs
->> #
->>
->> #
->> # Open Sound System
->> #
->> # CONFIG_SOUND_PRIME is not set
->> CONFIG_AC97_BUS=y
->> CONFIG_HID_SUPPORT=y
->> CONFIG_HID=y
->> # CONFIG_HID_DEBUG is not set
->> CONFIG_HIDRAW=y
->>
->> #
->> # USB Input Devices
->> #
->> CONFIG_USB_HID=y
->> # CONFIG_USB_HIDINPUT_POWERBOOK is not set
->> # CONFIG_HID_FF is not set
->> CONFIG_USB_HIDDEV=y
->> CONFIG_USB_SUPPORT=y
->> CONFIG_USB_ARCH_HAS_HCD=y
->> CONFIG_USB_ARCH_HAS_OHCI=y
->> CONFIG_USB_ARCH_HAS_EHCI=y
->> CONFIG_USB=y
->> # CONFIG_USB_DEBUG is not set
->> CONFIG_USB_ANNOUNCE_NEW_DEVICES=y
->>
->> #
->> # Miscellaneous USB options
->> #
->> CONFIG_USB_DEVICEFS=y
->> # CONFIG_USB_DEVICE_CLASS is not set
->> # CONFIG_USB_DYNAMIC_MINORS is not set
->> CONFIG_USB_SUSPEND=y
->> # CONFIG_USB_PERSIST is not set
->> # CONFIG_USB_OTG is not set
->>
->> #
->> # USB Host Controller Drivers
->> #
->> CONFIG_USB_EHCI_HCD=y
->> CONFIG_USB_EHCI_ROOT_HUB_TT=y
->> # CONFIG_USB_EHCI_TT_NEWSCHED is not set
->> # CONFIG_USB_ISP116X_HCD is not set
->> # CONFIG_USB_OHCI_HCD is not set
->> CONFIG_USB_UHCI_HCD=y
->> # CONFIG_USB_SL811_HCD is not set
->> # CONFIG_USB_R8A66597_HCD is not set
->>
->> #
->> # USB Device Class drivers
->> #
->> CONFIG_USB_ACM=m
->> CONFIG_USB_PRINTER=m
->>
->> #
->> # NOTE: USB_STORAGE enables SCSI, and 'SCSI disk support'
->> #
->>
->> #
->> # may also be needed; see USB_STORAGE Help for more information
->> #
->> CONFIG_USB_STORAGE=y
->> # CONFIG_USB_STORAGE_DEBUG is not set
->> # CONFIG_USB_STORAGE_DATAFAB is not set
->> # CONFIG_USB_STORAGE_FREECOM is not set
->> # CONFIG_USB_STORAGE_ISD200 is not set
->> # CONFIG_USB_STORAGE_DPCM is not set
->> # CONFIG_USB_STORAGE_USBAT is not set
->> # CONFIG_USB_STORAGE_SDDR09 is not set
->> # CONFIG_USB_STORAGE_SDDR55 is not set
->> # CONFIG_USB_STORAGE_JUMPSHOT is not set
->> # CONFIG_USB_STORAGE_ALAUDA is not set
->> # CONFIG_USB_STORAGE_KARMA is not set
->> # CONFIG_USB_LIBUSUAL is not set
->>
->> #
->> # USB Imaging devices
->> #
->> # CONFIG_USB_MDC800 is not set
->> # CONFIG_USB_MICROTEK is not set
->> # CONFIG_USB_MON is not set
->>
->> #
->> # USB port drivers
->> #
->> # CONFIG_USB_SERIAL is not set
->>
->> #
->> # USB Miscellaneous drivers
->> #
->> # CONFIG_USB_EMI62 is not set
->> # CONFIG_USB_EMI26 is not set
->> # CONFIG_USB_ADUTUX is not set
->> # CONFIG_USB_AUERSWALD is not set
->> # CONFIG_USB_RIO500 is not set
->> # CONFIG_USB_LEGOTOWER is not set
->> # CONFIG_USB_LCD is not set
->> # CONFIG_USB_BERRY_CHARGE is not set
->> # CONFIG_USB_LED is not set
->> # CONFIG_USB_CYPRESS_CY7C63 is not set
->> # CONFIG_USB_CYTHERM is not set
->> # CONFIG_USB_PHIDGET is not set
->> # CONFIG_USB_IDMOUSE is not set
->> # CONFIG_USB_FTDI_ELAN is not set
->> # CONFIG_USB_APPLEDISPLAY is not set
->> # CONFIG_USB_SISUSBVGA is not set
->> # CONFIG_USB_LD is not set
->> # CONFIG_USB_TRANCEVIBRATOR is not set
->> # CONFIG_USB_IOWARRIOR is not set
->> # CONFIG_USB_TEST is not set
->> # CONFIG_USB_GADGET is not set
->> CONFIG_MMC=y
->> CONFIG_MMC_DEBUG=y
->> # CONFIG_MMC_UNSAFE_RESUME is not set
->>
->> #
->> # MMC/SD Card Drivers
->> #
->> CONFIG_MMC_BLOCK=m
->> CONFIG_MMC_BLOCK_BOUNCE=y
->> CONFIG_SDIO_UART=m
->>
->> #
->> # MMC/SD Host Controller Drivers
->> #
->> CONFIG_MMC_SDHCI=m
->> CONFIG_MMC_RICOH_MMC=m
->> CONFIG_MMC_WBSD=m
->> CONFIG_MMC_TIFM_SD=m
->> CONFIG_MMC_SPI=m
->> CONFIG_MEMSTICK=m
->> CONFIG_MEMSTICK_DEBUG=y
->>
->> #
->> # MemoryStick drivers
->> #
->> # CONFIG_MEMSTICK_UNSAFE_RESUME is not set
->> # CONFIG_MSPRO_BLOCK is not set
->>
->> #
->> # MemoryStick Host Controller Drivers
->> #
->> CONFIG_MEMSTICK_TIFM_MS=m
->> CONFIG_MEMSTICK_JMICRON_38X=m
->> CONFIG_NEW_LEDS=y
->> CONFIG_LEDS_CLASS=y
->>
->> #
->> # LED drivers
->> #
->> # CONFIG_LEDS_CLEVO_MAIL is not set
->>
->> #
->> # LED Triggers
->> #
->> CONFIG_LEDS_TRIGGERS=y
->> CONFIG_LEDS_TRIGGER_TIMER=y
->> CONFIG_LEDS_TRIGGER_HEARTBEAT=y
->> # CONFIG_INFINIBAND is not set
->> # CONFIG_EDAC is not set
->> # CONFIG_RTC_CLASS is not set
->> CONFIG_DMADEVICES=y
->>
->> #
->> # DMA Devices
->> #
->> CONFIG_INTEL_IOATDMA=y
->> CONFIG_DMA_ENGINE=y
->>
->> #
->> # DMA Clients
->> #
->> CONFIG_NET_DMA=y
->> CONFIG_DCA=y
->>
->> #
->> # Userspace I/O
->> #
->> # CONFIG_UIO is not set
->>
->> #
->> # Firmware Drivers
->> #
->> CONFIG_EDD=y
->> # CONFIG_DELL_RBU is not set
->> # CONFIG_DCDBAS is not set
->> CONFIG_DMIID=y
->>
->> #
->> # File systems
->> #
->> CONFIG_EXT2_FS=y
->> # CONFIG_EXT2_FS_XATTR is not set
->> # CONFIG_EXT2_FS_XIP is not set
->> CONFIG_EXT3_FS=y
->> CONFIG_EXT3_FS_XATTR=y
->> # CONFIG_EXT3_FS_POSIX_ACL is not set
->> # CONFIG_EXT3_FS_SECURITY is not set
->> # CONFIG_EXT4DEV_FS is not set
->> CONFIG_JBD=y
->> CONFIG_FS_MBCACHE=y
->> # CONFIG_REISERFS_FS is not set
->> CONFIG_JFS_FS=m
->> CONFIG_JFS_POSIX_ACL=y
->> CONFIG_JFS_SECURITY=y
->> CONFIG_JFS_DEBUG=y
->> CONFIG_JFS_STATISTICS=y
->> CONFIG_FS_POSIX_ACL=y
->> CONFIG_XFS_FS=m
->> CONFIG_XFS_QUOTA=y
->> CONFIG_XFS_SECURITY=y
->> CONFIG_XFS_POSIX_ACL=y
->> CONFIG_XFS_RT=y
->> # CONFIG_GFS2_FS is not set
->> # CONFIG_OCFS2_FS is not set
->> CONFIG_DNOTIFY=y
->> CONFIG_INOTIFY=y
->> CONFIG_INOTIFY_USER=y
->> # CONFIG_QUOTA is not set
->> CONFIG_QUOTACTL=y
->> # CONFIG_AUTOFS_FS is not set
->> # CONFIG_AUTOFS4_FS is not set
->> CONFIG_FUSE_FS=y
->>
->> #
->> # CD-ROM/DVD Filesystems
->> #
->> CONFIG_ISO9660_FS=y
->> CONFIG_JOLIET=y
->> CONFIG_ZISOFS=y
->> CONFIG_UDF_FS=y
->> CONFIG_UDF_NLS=y
->>
->> #
->> # DOS/FAT/NT Filesystems
->> #
->> CONFIG_FAT_FS=m
->> CONFIG_MSDOS_FS=m
->> CONFIG_VFAT_FS=m
->> CONFIG_FAT_DEFAULT_CODEPAGE=866
->> CONFIG_FAT_DEFAULT_IOCHARSET="koi8-r"
->> CONFIG_NTFS_FS=m
->> # CONFIG_NTFS_DEBUG is not set
->> # CONFIG_NTFS_RW is not set
->>
->> #
->> # Pseudo filesystems
->> #
->> CONFIG_PROC_FS=y
->> CONFIG_PROC_KCORE=y
->> CONFIG_PROC_SYSCTL=y
->> CONFIG_SYSFS=y
->> CONFIG_TMPFS=y
->> # CONFIG_TMPFS_POSIX_ACL is not set
->> # CONFIG_HUGETLBFS is not set
->> # CONFIG_HUGETLB_PAGE is not set
->> # CONFIG_CONFIGFS_FS is not set
->>
->> #
->> # Miscellaneous filesystems
->> #
->> # CONFIG_ADFS_FS is not set
->> # CONFIG_AFFS_FS is not set
->> # CONFIG_HFS_FS is not set
->> # CONFIG_HFSPLUS_FS is not set
->> # CONFIG_BEFS_FS is not set
->> # CONFIG_BFS_FS is not set
->> # CONFIG_EFS_FS is not set
->> CONFIG_CRAMFS=y
->> # CONFIG_VXFS_FS is not set
->> CONFIG_MINIX_FS=y
->> # CONFIG_HPFS_FS is not set
->> # CONFIG_QNX4FS_FS is not set
->> CONFIG_ROMFS_FS=y
->> # CONFIG_SYSV_FS is not set
->> # CONFIG_UFS_FS is not set
->> # CONFIG_NETWORK_FILESYSTEMS is not set
->>
->> #
->> # Partition Types
->> #
->> CONFIG_PARTITION_ADVANCED=y
->> # CONFIG_ACORN_PARTITION is not set
->> # CONFIG_OSF_PARTITION is not set
->> # CONFIG_AMIGA_PARTITION is not set
->> # CONFIG_ATARI_PARTITION is not set
->> # CONFIG_MAC_PARTITION is not set
->> CONFIG_MSDOS_PARTITION=y
->> # CONFIG_BSD_DISKLABEL is not set
->> CONFIG_MINIX_SUBPARTITION=y
->> # CONFIG_SOLARIS_X86_PARTITION is not set
->> # CONFIG_UNIXWARE_DISKLABEL is not set
->> CONFIG_LDM_PARTITION=y
->> # CONFIG_LDM_DEBUG is not set
->> # CONFIG_SGI_PARTITION is not set
->> # CONFIG_ULTRIX_PARTITION is not set
->> # CONFIG_SUN_PARTITION is not set
->> # CONFIG_KARMA_PARTITION is not set
->> # CONFIG_EFI_PARTITION is not set
->> # CONFIG_SYSV68_PARTITION is not set
->> CONFIG_NLS=y
->> CONFIG_NLS_DEFAULT="koi8-r"
->> CONFIG_NLS_CODEPAGE_437=m
->> # CONFIG_NLS_CODEPAGE_737 is not set
->> # CONFIG_NLS_CODEPAGE_775 is not set
->> # CONFIG_NLS_CODEPAGE_850 is not set
->> # CONFIG_NLS_CODEPAGE_852 is not set
->> CONFIG_NLS_CODEPAGE_855=m
->> # CONFIG_NLS_CODEPAGE_857 is not set
->> # CONFIG_NLS_CODEPAGE_860 is not set
->> # CONFIG_NLS_CODEPAGE_861 is not set
->> # CONFIG_NLS_CODEPAGE_862 is not set
->> # CONFIG_NLS_CODEPAGE_863 is not set
->> # CONFIG_NLS_CODEPAGE_864 is not set
->> # CONFIG_NLS_CODEPAGE_865 is not set
->> CONFIG_NLS_CODEPAGE_866=y
->> # CONFIG_NLS_CODEPAGE_869 is not set
->> # CONFIG_NLS_CODEPAGE_936 is not set
->> # CONFIG_NLS_CODEPAGE_950 is not set
->> # CONFIG_NLS_CODEPAGE_932 is not set
->> # CONFIG_NLS_CODEPAGE_949 is not set
->> # CONFIG_NLS_CODEPAGE_874 is not set
->> # CONFIG_NLS_ISO8859_8 is not set
->> # CONFIG_NLS_CODEPAGE_1250 is not set
->> # CONFIG_NLS_CODEPAGE_1251 is not set
->> # CONFIG_NLS_ASCII is not set
->> CONFIG_NLS_ISO8859_1=m
->> # CONFIG_NLS_ISO8859_2 is not set
->> # CONFIG_NLS_ISO8859_3 is not set
->> # CONFIG_NLS_ISO8859_4 is not set
->> CONFIG_NLS_ISO8859_5=y
->> # CONFIG_NLS_ISO8859_6 is not set
->> # CONFIG_NLS_ISO8859_7 is not set
->> # CONFIG_NLS_ISO8859_9 is not set
->> # CONFIG_NLS_ISO8859_13 is not set
->> # CONFIG_NLS_ISO8859_14 is not set
->> # CONFIG_NLS_ISO8859_15 is not set
->> CONFIG_NLS_KOI8_R=y
->> # CONFIG_NLS_KOI8_U is not set
->> CONFIG_NLS_UTF8=y
->> # CONFIG_DLM is not set
->>
->> #
->> # Kernel hacking
->> #
->> CONFIG_TRACE_IRQFLAGS_SUPPORT=y
->> # CONFIG_PRINTK_TIME is not set
->> # CONFIG_ENABLE_WARN_DEPRECATED is not set
->> # CONFIG_ENABLE_MUST_CHECK is not set
->> # CONFIG_MAGIC_SYSRQ is not set
->> # CONFIG_UNUSED_SYMBOLS is not set
->> # CONFIG_DEBUG_FS is not set
->> # CONFIG_HEADERS_CHECK is not set
->> # CONFIG_DEBUG_KERNEL is not set
->> # CONFIG_SLUB_DEBUG_ON is not set
->> # CONFIG_SLUB_STATS is not set
->> CONFIG_DEBUG_BUGVERBOSE=y
->> # CONFIG_LATENCYTOP is not set
->> # CONFIG_PROVIDE_OHCI1394_DMA_INIT is not set
->> # CONFIG_SAMPLES is not set
->> CONFIG_EARLY_PRINTK=y
->> CONFIG_X86_FIND_SMP_CONFIG=y
->> CONFIG_X86_MPPARSE=y
->> CONFIG_DOUBLEFAULT=y
->> CONFIG_IO_DELAY_TYPE_0X80=0
->> CONFIG_IO_DELAY_TYPE_0XED=1
->> CONFIG_IO_DELAY_TYPE_UDELAY=2
->> CONFIG_IO_DELAY_TYPE_NONE=3
->> CONFIG_IO_DELAY_0X80=y
->> # CONFIG_IO_DELAY_0XED is not set
->> # CONFIG_IO_DELAY_UDELAY is not set
->> # CONFIG_IO_DELAY_NONE is not set
->> CONFIG_DEFAULT_IO_DELAY_TYPE=0
->>
->> #
->> # Security options
->> #
->> # CONFIG_KEYS is not set
->> # CONFIG_SECURITY is not set
->> # CONFIG_SECURITY_FILE_CAPABILITIES is not set
->> CONFIG_CRYPTO=y
->> CONFIG_CRYPTO_ALGAPI=y
->> CONFIG_CRYPTO_AEAD=m
->> CONFIG_CRYPTO_BLKCIPHER=y
->> CONFIG_CRYPTO_SEQIV=m
->> CONFIG_CRYPTO_HASH=y
->> CONFIG_CRYPTO_MANAGER=y
->> CONFIG_CRYPTO_HMAC=m
->> CONFIG_CRYPTO_XCBC=y
->> CONFIG_CRYPTO_NULL=m
->> CONFIG_CRYPTO_MD4=m
->> CONFIG_CRYPTO_MD5=y
->> CONFIG_CRYPTO_SHA1=m
->> CONFIG_CRYPTO_SHA256=m
->> CONFIG_CRYPTO_SHA512=m
->> CONFIG_CRYPTO_WP512=m
->> CONFIG_CRYPTO_TGR192=m
->> CONFIG_CRYPTO_GF128MUL=m
->> CONFIG_CRYPTO_ECB=m
->> CONFIG_CRYPTO_CBC=y
->> CONFIG_CRYPTO_PCBC=m
->> CONFIG_CRYPTO_LRW=m
->> CONFIG_CRYPTO_XTS=m
->> CONFIG_CRYPTO_CTR=m
->> CONFIG_CRYPTO_GCM=m
->> CONFIG_CRYPTO_CCM=m
->> CONFIG_CRYPTO_CRYPTD=m
->> CONFIG_CRYPTO_DES=y
->> CONFIG_CRYPTO_FCRYPT=m
->> CONFIG_CRYPTO_BLOWFISH=m
->> CONFIG_CRYPTO_TWOFISH=m
->> CONFIG_CRYPTO_TWOFISH_COMMON=m
->> # CONFIG_CRYPTO_TWOFISH_586 is not set
->> CONFIG_CRYPTO_SERPENT=m
->> CONFIG_CRYPTO_AES=m
->> CONFIG_CRYPTO_AES_586=m
->> CONFIG_CRYPTO_CAST5=m
->> CONFIG_CRYPTO_CAST6=m
->> CONFIG_CRYPTO_TEA=m
->> CONFIG_CRYPTO_ARC4=m
->> CONFIG_CRYPTO_KHAZAD=m
->> CONFIG_CRYPTO_ANUBIS=m
->> CONFIG_CRYPTO_SEED=m
->> CONFIG_CRYPTO_SALSA20=m
->> CONFIG_CRYPTO_SALSA20_586=m
->> CONFIG_CRYPTO_DEFLATE=m
->> CONFIG_CRYPTO_MICHAEL_MIC=m
->> CONFIG_CRYPTO_CRC32C=m
->> CONFIG_CRYPTO_CAMELLIA=m
->> CONFIG_CRYPTO_TEST=m
->> CONFIG_CRYPTO_AUTHENC=m
->> CONFIG_CRYPTO_LZO=m
->> # CONFIG_CRYPTO_HW is not set
->> CONFIG_HAVE_KVM=y
->> # CONFIG_VIRTUALIZATION is not set
->>
->> #
->> # Library routines
->> #
->> CONFIG_BITREVERSE=y
->> CONFIG_CRC_CCITT=y
->> CONFIG_CRC16=y
->> CONFIG_CRC_ITU_T=y
->> CONFIG_CRC32=y
->> CONFIG_CRC7=y
->> CONFIG_LIBCRC32C=m
->> CONFIG_ZLIB_INFLATE=y
->> CONFIG_ZLIB_DEFLATE=m
->> CONFIG_LZO_COMPRESS=m
->> CONFIG_LZO_DECOMPRESS=m
->> CONFIG_PLIST=y
->> CONFIG_HAS_IOMEM=y
->> CONFIG_HAS_IOPORT=y
->> CONFIG_HAS_DMA=y
->>
->>
->> Versions of my environment:
->> Gnu C                  4.3.0
->> Gnu make               3.81
->> binutils               2.18
->> util-linux             2.13.0.1
->> mount                  2.13.0.1
->> module-init-tools      3.2.2
->> e2fsprogs              1.40.8
->> reiserfsprogs          3.6.20
->> pcmciautils            014
->> PPP                    2.4.4
->> Linux C Library        2.7
->> Dynamic linker (ldd)   2.7
->> Linux C++ Library      6.0.10
->> Procps                 3.2.7
->> Net-tools              1.60
->> Kbd                    1.13
->> Sh-utils               6.11
->> udev                   119
->> wireless-tools         29
->> Modules Loaded         i915
->>
->>
->> cat /proc/cpuinfo:
->> processor    : 0
->> vendor_id    : GenuineIntel
->> cpu family    : 6
->> model        : 13
->> model name    : Intel(R) Pentium(R) M processor 1.60GHz
->> stepping    : 6
->> cpu MHz        : 1600.000
->> cache size    : 2048 KB
->> fdiv_bug    : no
->> hlt_bug        : no
->> f00f_bug    : no
->> coma_bug    : no
->> fpu        : yes
->> fpu_exception    : yes
->> cpuid level    : 2
->> wp        : yes
->> flags        : fpu vme de pse tsc msr mce cx8 apic sep mtrr pge mca cmov 
->> pat clflush dts acpi mmx fxsr sse sse2 ss tm pbe bts est tm2
->> bogomips    : 3201.64
->> clflush size    : 64
->>
->>
->> cat /proc/modules:
->> i915 30656 2 - Live 0xdf90b000 cat /proc/ioports
->> 0000-001f : dma1
->> 0020-0021 : pic1
->> 0040-0043 : timer0
->> 0050-0053 : timer1
->> 0060-006f : keyboard
->> 0070-0077 : rtc
->> 0080-008f : dma page reg
->> 00a0-00a1 : pic2
->> 00c0-00df : dma2
->> 00f0-00ff : fpu
->> 0170-0177 : 0000:00:1f.1
->>   0170-0177 : ata_piix
->> 01f0-01f7 : 0000:00:1f.1
->>   01f0-01f7 : ata_piix
->> 0200-020f : pnp 00:08
->> 0376-0376 : 0000:00:1f.1
->>   0376-0376 : ata_piix
->> 03c0-03df : vga+
->> 03f6-03f6 : 0000:00:1f.1
->>   03f6-03f6 : ata_piix
->> 0400-047f : 0000:00:1f.0
->>   0400-047f : pnp 00:07
->>     0400-0403 : ACPI PM1a_EVT_BLK
->>     0404-0405 : ACPI PM1a_CNT_BLK
->>     0408-040b : ACPI PM_TMR
->>     0410-0415 : ACPI CPU throttle
->>     0420-0420 : ACPI PM2_CNT_BLK
->>     0428-042f : ACPI GPE0_BLK
->> 04d0-04d1 : pnp 00:07
->> 0500-053f : 0000:00:1f.0
->>   0500-053f : pnp 00:07
->> 0860-086f : pnp 00:08
->> 0cf8-0cff : PCI conf1
->> 1000-10ff : PCI CardBus #06
->> 1100-113f : pnp 00:08
->> 1254-1254 : pnp 00:08
->> 12d4-12d4 : pnp 00:08
->> 1300-1375 : pnp 00:08
->> 1377-137f : pnp 00:08
->> c000-cfff : PCI Bus #01
->>   c000-c0ff : PCI CardBus #02
->>   c400-c4ff : PCI CardBus #02
->>   c800-c8ff : 0000:01:0c.0
->>     c800-c8ff : 8139too
->>   cc00-ccff : PCI CardBus #06
->> d480-d49f : 0000:00:1f.3
->>   d480-d49f : i801_smbus
->> d800-d8ff : 0000:00:1f.5
->>   d800-d8ff : Intel 82801DB-ICH4
->> dc00-dc3f : 0000:00:1f.5
->>   dc00-dc3f : Intel 82801DB-ICH4
->> e000-e0ff : 0000:00:1f.6
->> e400-e47f : 0000:00:1f.6
->> e480-e49f : 0000:00:1d.0
->>   e480-e49f : uhci_hcd
->> e800-e81f : 0000:00:1d.1
->>   e800-e81f : uhci_hcd
->> e880-e89f : 0000:00:1d.2
->>   e880-e89f : uhci_hcd
->> ec00-ec07 : 0000:00:02.0
->> ffa0-ffaf : 0000:00:1f.1
->>   ffa0-ffaf : ata_piix
->>
->> cat /proc/iomem
->> 00000000-0009fbff : System RAM
->> 0009fc00-0009ffff : reserved
->> 000a0000-000bffff : Video RAM area
->> 000c0000-000c7fff : Video ROM
->> 000cd000-000cdfff : Adapter ROM
->> 000f0000-000fffff : System ROM
->> 00100000-1efcffff : System RAM
->>   00100000-003ee8ce : Kernel code
->>   003ee8cf-004e6e83 : Kernel data
->>   00521000-0055be3f : Kernel bss
->> 1efd0000-1efdefff : ACPI Tables
->> 1efdf000-1effffff : ACPI Non-volatile Storage
->> 20000000-27ffffff : PCI Bus #01
->>   20000000-23ffffff : PCI CardBus #02
->>   24000000-27ffffff : PCI CardBus #06
->> 28000000-280003ff : 0000:00:1f.1
->> 2c000000-2fffffff : PCI CardBus #02
->> 30000000-33ffffff : PCI CardBus #06
->> d0000000-d7ffffff : 0000:00:02.1
->> d8000000-dfffffff : 0000:00:02.0
->> e0000000-e00fffff : PCI Bus #01
->>   e0000000-e0000fff : 0000:01:03.0
->>     e0000000-e0000fff : yenta_socket
->>   e0001000-e0001fff : 0000:01:03.1
->>     e0001000-e0001fff : yenta_socket
->>   e00f8000-e00fbfff : 0000:01:0a.0
->>   e00fe400-e00fe4ff : 0000:01:0c.0
->>     e00fe400-e00fe4ff : 8139too
->>   e00fe800-e00fefff : 0000:01:0a.0
->>     e00fe800-e00fefff : firewire_ohci
->>   e00ff000-e00fffff : 0000:01:03.2
->> e02ff400-e02ff4ff : 0000:00:1f.5
->>   e02ff400-e02ff4ff : Intel 82801DB-ICH4
->> e02ff800-e02ff9ff : 0000:00:1f.5
->>   e02ff800-e02ff9ff : Intel 82801DB-ICH4
->> e02ffc00-e02fffff : 0000:00:1d.7
->>   e02ffc00-e02fffff : ehci_hcd
->> e0300000-e037ffff : 0000:00:02.1
->> e0380000-e03fffff : 0000:00:02.0
->> fec00000-fec00fff : pnp 00:08
->> fec10000-fec1ffff : pnp 00:08
->> fee00000-fee00fff : pnp 00:08
->> ffe80000-ffefffff : pnp 00:08
->> fff00000-fff7ffff : pnp 00:08
->> fff80000-ffffffff : pnp 00:08
->>
->>   lspci -vvv
->> 00:00.0 Host bridge: Intel Corporation 82852/82855 GM/GME/PM/GMV 
->> Processor to I/O Controller (rev 02)
->>     Subsystem: Uniwill Computer Corp Unknown device 9023
->>     Control: I/O- Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- 
->> Stepping- SERR+ FastB2B- DisINTx-
->>     Status: Cap+ 66MHz- UDF- FastB2B+ ParErr- DEVSEL=fast >TAbort- 
->> <TAbort- <MAbort+ >SERR- <PERR- INTx-
->>     Latency: 0
->>     Region 0: Memory at <unassigned> (32-bit, prefetchable)
->>     Capabilities: [40] Vendor Specific Information <?>
->>
->> 00:00.1 System peripheral: Intel Corporation 82852/82855 GM/GME/PM/GMV 
->> Processor to I/O Controller (rev 02)
->>     Subsystem: Uniwill Computer Corp Unknown device 9023
->>     Control: I/O- Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- 
->> Stepping- SERR- FastB2B- DisINTx-
->>     Status: Cap- 66MHz- UDF- FastB2B+ ParErr- DEVSEL=fast >TAbort- 
->> <TAbort- <MAbort- >SERR- <PERR- INTx-
->>     Latency: 0
->>
->> 00:00.3 System peripheral: Intel Corporation 82852/82855 GM/GME/PM/GMV 
->> Processor to I/O Controller (rev 02)
->>     Subsystem: Uniwill Computer Corp Unknown device 9023
->>     Control: I/O- Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- 
->> Stepping- SERR- FastB2B- DisINTx-
->>     Status: Cap- 66MHz- UDF- FastB2B+ ParErr- DEVSEL=fast >TAbort- 
->> <TAbort- <MAbort- >SERR- <PERR- INTx-
->>     Latency: 0
->>
->> 00:02.0 VGA compatible controller: Intel Corporation 82852/855GM 
->> Integrated Graphics Device (rev 02) (prog-if 00 [VGA controller])
->>     Subsystem: Uniwill Computer Corp Unknown device 9500
->>     Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- 
->> Stepping- SERR- FastB2B- DisINTx-
->>     Status: Cap+ 66MHz- UDF- FastB2B+ ParErr- DEVSEL=fast >TAbort- 
->> <TAbort- <MAbort- >SERR- <PERR- INTx-
->>     Latency: 0
->>     Interrupt: pin A routed to IRQ 16
->>     Region 0: Memory at d8000000 (32-bit, prefetchable) [size=128M]
->>     Region 1: Memory at e0380000 (32-bit, non-prefetchable) [size=512K]
->>     Region 2: I/O ports at ec00 [size=8]
->>     Capabilities: [d0] Power Management version 1
->>         Flags: PMEClk- DSI+ D1+ D2- AuxCurrent=0mA 
->> PME(D0-,D1-,D2-,D3hot-,D3cold-)
->>         Status: D0 PME-Enable- DSel=0 DScale=0 PME-
->>
->> 00:02.1 Display controller: Intel Corporation 82852/855GM Integrated 
->> Graphics Device (rev 02)
->>     Subsystem: Uniwill Computer Corp Unknown device 9500
->>     Control: I/O- Mem- BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- 
->> Stepping- SERR- FastB2B- DisINTx-
->>     Status: Cap+ 66MHz- UDF- FastB2B+ ParErr- DEVSEL=fast >TAbort- 
->> <TAbort- <MAbort- >SERR- <PERR- INTx-
->>     Latency: 0
->>     Region 0: Memory at d0000000 (32-bit, prefetchable) [disabled] 
->> [size=128M]
->>     Region 1: Memory at e0300000 (32-bit, non-prefetchable) [disabled] 
->> [size=512K]
->>     Capabilities: [d0] Power Management version 1
->>         Flags: PMEClk- DSI+ D1+ D2- AuxCurrent=0mA 
->> PME(D0-,D1-,D2-,D3hot-,D3cold-)
->>         Status: D0 PME-Enable- DSel=0 DScale=0 PME-
->>
->> 00:1d.0 USB Controller: Intel Corporation 82801DB/DBL/DBM 
->> (ICH4/ICH4-L/ICH4-M) USB UHCI Controller #1 (rev 03) (prog-if 00 [UHCI])
->>     Subsystem: Uniwill Computer Corp Unknown device 9023
->>     Control: I/O+ Mem- BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- 
->> Stepping- SERR- FastB2B- DisINTx-
->>     Status: Cap- 66MHz- UDF- FastB2B+ ParErr- DEVSEL=medium >TAbort- 
->> <TAbort- <MAbort- >SERR- <PERR- INTx-
->>     Latency: 0
->>     Interrupt: pin A routed to IRQ 16
->>     Region 4: I/O ports at e480 [size=32]
->>
->> 00:1d.1 USB Controller: Intel Corporation 82801DB/DBL/DBM 
->> (ICH4/ICH4-L/ICH4-M) USB UHCI Controller #2 (rev 03) (prog-if 00 [UHCI])
->>     Subsystem: Uniwill Computer Corp Unknown device 9023
->>     Control: I/O+ Mem- BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- 
->> Stepping- SERR- FastB2B- DisINTx-
->>     Status: Cap- 66MHz- UDF- FastB2B+ ParErr- DEVSEL=medium >TAbort- 
->> <TAbort- <MAbort- >SERR- <PERR- INTx-
->>     Latency: 0
->>     Interrupt: pin B routed to IRQ 19
->>     Region 4: I/O ports at e800 [size=32]
->>
->> 00:1d.2 USB Controller: Intel Corporation 82801DB/DBL/DBM 
->> (ICH4/ICH4-L/ICH4-M) USB UHCI Controller #3 (rev 03) (prog-if 00 [UHCI])
->>     Subsystem: Uniwill Computer Corp Unknown device 9023
->>     Control: I/O+ Mem- BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- 
->> Stepping- SERR- FastB2B- DisINTx-
->>     Status: Cap- 66MHz- UDF- FastB2B+ ParErr- DEVSEL=medium >TAbort- 
->> <TAbort- <MAbort- >SERR- <PERR- INTx-
->>     Latency: 0
->>     Interrupt: pin C routed to IRQ 18
->>     Region 4: I/O ports at e880 [size=32]
->>
->> 00:1d.7 USB Controller: Intel Corporation 82801DB/DBM (ICH4/ICH4-M) USB2 
->> EHCI Controller (rev 03) (prog-if 20 [EHCI])
->>     Subsystem: Uniwill Computer Corp Unknown device 9023
->>     Control: I/O- Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- 
->> Stepping- SERR+ FastB2B- DisINTx-
->>     Status: Cap+ 66MHz- UDF- FastB2B+ ParErr- DEVSEL=medium >TAbort- 
->> <TAbort- <MAbort- >SERR- <PERR- INTx-
->>     Latency: 0
->>     Interrupt: pin D routed to IRQ 23
->>     Region 0: Memory at e02ffc00 (32-bit, non-prefetchable) [size=1K]
->>     Capabilities: [50] Power Management version 2
->>         Flags: PMEClk- DSI- D1- D2- AuxCurrent=375mA 
->> PME(D0+,D1-,D2-,D3hot+,D3cold+)
->>         Status: D0 PME-Enable- DSel=0 DScale=0 PME-
->>     Capabilities: [58] Debug port: BAR=1 offset=0080
->>
->> 00:1e.0 PCI bridge: Intel Corporation 82801 Mobile PCI Bridge (rev 83) 
->> (prog-if 00 [Normal decode])
->>     Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- 
->> Stepping- SERR+ FastB2B- DisINTx-
->>     Status: Cap- 66MHz- UDF- FastB2B+ ParErr- DEVSEL=fast >TAbort- 
->> <TAbort- <MAbort- >SERR- <PERR+ INTx-
->>     Latency: 0
->>     Bus: primary=00, secondary=01, subordinate=09, sec-latency=64
->>     I/O behind bridge: 0000c000-0000cfff
->>     Memory behind bridge: e0000000-e00fffff
->>     Prefetchable memory behind bridge: 20000000-27ffffff
->>     Secondary status: 66MHz- FastB2B+ ParErr- DEVSEL=medium >TAbort- 
->> <TAbort- <MAbort+ <SERR- <PERR-
->>     BridgeCtl: Parity- SERR+ NoISA+ VGA- MAbort- >Reset- FastB2B-
->>         PriDiscTmr- SecDiscTmr- DiscTmrStat- DiscTmrSERREn-
->>
->> 00:1f.0 ISA bridge: Intel Corporation 82801DBM (ICH4-M) LPC Interface 
->> Bridge (rev 03)
->>     Control: I/O+ Mem+ BusMaster+ SpecCycle+ MemWINV- VGASnoop- ParErr- 
->> Stepping- SERR+ FastB2B- DisINTx-
->>     Status: Cap- 66MHz- UDF- FastB2B+ ParErr- DEVSEL=medium >TAbort- 
->> <TAbort- <MAbort- >SERR- <PERR- INTx-
->>     Latency: 0
->>
->> 00:1f.1 IDE interface: Intel Corporation 82801DBM (ICH4-M) IDE 
->> Controller (rev 03) (prog-if 8a [Master SecP PriP])
->>     Subsystem: Uniwill Computer Corp Unknown device 9023
->>     Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- 
->> Stepping- SERR- FastB2B- DisINTx-
->>     Status: Cap- 66MHz- UDF- FastB2B+ ParErr- DEVSEL=medium >TAbort- 
->> <TAbort- <MAbort- >SERR- <PERR- INTx-
->>     Latency: 0
->>     Interrupt: pin A routed to IRQ 18
->>     Region 0: I/O ports at 01f0 [size=8]
->>     Region 1: I/O ports at 03f4 [size=1]
->>     Region 2: I/O ports at 0170 [size=8]
->>     Region 3: I/O ports at 0374 [size=1]
->>     Region 4: I/O ports at ffa0 [size=16]
->>     Region 5: Memory at 28000000 (32-bit, non-prefetchable) [size=1K]
->>
->> 00:1f.3 SMBus: Intel Corporation 82801DB/DBL/DBM (ICH4/ICH4-L/ICH4-M) 
->> SMBus Controller (rev 03)
->>     Subsystem: Uniwill Computer Corp Unknown device 9023
->>     Control: I/O+ Mem- BusMaster- SpecCycle- MemWINV- VGASnoop- ParErr- 
->> Stepping- SERR- FastB2B- DisINTx-
->>     Status: Cap- 66MHz- UDF- FastB2B+ ParErr- DEVSEL=medium >TAbort- 
->> <TAbort- <MAbort- >SERR- <PERR- INTx-
->>     Interrupt: pin B routed to IRQ 17
->>     Region 4: I/O ports at d480 [size=32]
->>
->> 00:1f.5 Multimedia audio controller: Intel Corporation 82801DB/DBL/DBM 
->> (ICH4/ICH4-L/ICH4-M) AC'97 Audio Controller (rev 03)
->>     Subsystem: Uniwill Computer Corp Unknown device 8402
->>     Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- 
->> Stepping- SERR- FastB2B- DisINTx-
->>     Status: Cap+ 66MHz- UDF- FastB2B+ ParErr- DEVSEL=medium >TAbort- 
->> <TAbort- <MAbort- >SERR- <PERR- INTx-
->>     Latency: 0
->>     Interrupt: pin B routed to IRQ 17
->>     Region 0: I/O ports at d800 [size=256]
->>     Region 1: I/O ports at dc00 [size=64]
->>     Region 2: Memory at e02ff800 (32-bit, non-prefetchable) [size=512]
->>     Region 3: Memory at e02ff400 (32-bit, non-prefetchable) [size=256]
->>     Capabilities: [50] Power Management version 2
->>         Flags: PMEClk- DSI- D1- D2- AuxCurrent=375mA 
->> PME(D0+,D1-,D2-,D3hot+,D3cold+)
->>         Status: D0 PME-Enable- DSel=0 DScale=0 PME-
->>
->> 00:1f.6 Modem: Intel Corporation 82801DB/DBL/DBM (ICH4/ICH4-L/ICH4-M) 
->> AC'97 Modem Controller (rev 03) (prog-if 00 [Generic])
->>     Subsystem: Uniwill Computer Corp Unknown device 4007
->>     Control: I/O+ Mem- BusMaster- SpecCycle- MemWINV- VGASnoop- ParErr- 
->> Stepping- SERR- FastB2B- DisINTx-
->>     Status: Cap+ 66MHz- UDF- FastB2B+ ParErr- DEVSEL=medium >TAbort- 
->> <TAbort- <MAbort- >SERR- <PERR- INTx-
->>     Interrupt: pin B routed to IRQ 17
->>     Region 0: I/O ports at e000 [size=256]
->>     Region 1: I/O ports at e400 [size=128]
->>     Capabilities: [50] Power Management version 2
->>         Flags: PMEClk- DSI- D1- D2- AuxCurrent=375mA 
->> PME(D0+,D1-,D2-,D3hot+,D3cold+)
->>         Status: D0 PME-Enable- DSel=0 DScale=0 PME-
->>
->> 01:03.0 CardBus bridge: O2 Micro, Inc. OZ711M1/MC1 4-in-1 MemoryCardBus 
->> Controller (rev 20)
->>     Subsystem: Uniwill Computer Corp Unknown device 3008
->>     Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- 
->> Stepping+ SERR- FastB2B- DisINTx-
->>     Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=slow >TAbort- 
->> <TAbort- <MAbort- >SERR- <PERR- INTx-
->>     Latency: 168, Cache Line Size: 64 bytes
->>     Interrupt: pin A routed to IRQ 17
->>     Region 0: Memory at e0000000 (32-bit, non-prefetchable) [size=4K]
->>     Bus: primary=01, secondary=02, subordinate=05, sec-latency=176
->>     Memory window 0: 20000000-23fff000 (prefetchable)
->>     Memory window 1: 2c000000-2ffff000
->>     I/O window 0: 0000c000-0000c0ff
->>     I/O window 1: 0000c400-0000c4ff
->>     BridgeCtl: Parity- SERR- ISA- VGA- MAbort- >Reset- 16bInt+ PostWrite+
->>     16-bit legacy interface ports at 0001
->>
->> 01:03.1 CardBus bridge: O2 Micro, Inc. OZ711M1/MC1 4-in-1 MemoryCardBus 
->> Controller (rev 20)
->>     Subsystem: Uniwill Computer Corp Unknown device 3008
->>     Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- 
->> Stepping+ SERR- FastB2B- DisINTx-
->>     Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=slow >TAbort- 
->> <TAbort- <MAbort- >SERR- <PERR- INTx-
->>     Latency: 168, Cache Line Size: 64 bytes
->>     Interrupt: pin A routed to IRQ 17
->>     Region 0: Memory at e0001000 (32-bit, non-prefetchable) [size=4K]
->>     Bus: primary=01, secondary=06, subordinate=09, sec-latency=176
->>     Memory window 0: 24000000-27fff000 (prefetchable)
->>     Memory window 1: 30000000-33fff000
->>     I/O window 0: 0000cc00-0000ccff
->>     I/O window 1: 00001000-000010ff
->>     BridgeCtl: Parity- SERR- ISA- VGA- MAbort- >Reset- 16bInt+ PostWrite+
->>     16-bit legacy interface ports at 0001
->>
->> 01:03.2 System peripheral: O2 Micro, Inc. OZ711Mx 4-in-1 MemoryCardBus 
->> Accelerator
->>     Subsystem: Uniwill Computer Corp Unknown device 3008
->>     Control: I/O+ Mem+ BusMaster- SpecCycle- MemWINV- VGASnoop- ParErr- 
->> Stepping- SERR+ FastB2B- DisINTx-
->>     Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=slow >TAbort- 
->> <TAbort- <MAbort- >SERR- <PERR- INTx-
->>     Interrupt: pin A routed to IRQ 3
->>     Region 0: Memory at e00ff000 (32-bit, non-prefetchable) [size=4K]
->>     Capabilities: [a0] Power Management version 2
->>         Flags: PMEClk- DSI- D1+ D2+ AuxCurrent=0mA 
->> PME(D0+,D1+,D2+,D3hot+,D3cold+)
->>         Status: D0 PME-Enable- DSel=0 DScale=0 PME-
->>
->> 01:0a.0 FireWire (IEEE 1394): Texas Instruments TSB43AB22/A 
->> IEEE-1394a-2000 Controller (PHY/Link) (prog-if 10 [OHCI])
->>     Subsystem: Uniwill Computer Corp Unknown device 7000
->>     Control: I/O- Mem+ BusMaster+ SpecCycle- MemWINV+ VGASnoop- ParErr- 
->> Stepping- SERR+ FastB2B- DisINTx-
->>     Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=medium >TAbort- 
->> <TAbort- <MAbort- >SERR- <PERR- INTx-
->>     Latency: 64 (500ns min, 1000ns max), Cache Line Size: 64 bytes
->>     Interrupt: pin A routed to IRQ 18
->>     Region 0: Memory at e00fe800 (32-bit, non-prefetchable) [size=2K]
->>     Region 1: Memory at e00f8000 (32-bit, non-prefetchable) [size=16K]
->>     Capabilities: [44] Power Management version 2
->>         Flags: PMEClk- DSI- D1+ D2+ AuxCurrent=0mA 
->> PME(D0+,D1+,D2+,D3hot+,D3cold-)
->>         Status: D0 PME-Enable- DSel=0 DScale=0 PME+
->>
->> 01:0c.0 Ethernet controller: Realtek Semiconductor Co., Ltd. 
->> RTL-8139/8139C/8139C+ (rev 10)
->>     Subsystem: Uniwill Computer Corp Unknown device 9700
->>     Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- 
->> Stepping- SERR+ FastB2B- DisINTx-
->>     Status: Cap+ 66MHz- UDF- FastB2B+ ParErr- DEVSEL=medium >TAbort- 
->> <TAbort- <MAbort- >SERR- <PERR- INTx-
->>     Latency: 64 (8000ns min, 16000ns max)
->>     Interrupt: pin A routed to IRQ 19
->>     Region 0: I/O ports at c800 [size=256]
->>     Region 1: Memory at e00fe400 (32-bit, non-prefetchable) [size=256]
->>     Capabilities: [50] Power Management version 2
->>         Flags: PMEClk- DSI- D1+ D2+ AuxCurrent=375mA 
->> PME(D0-,D1+,D2+,D3hot+,D3cold+)
->>         Status: D0 PME-Enable- DSel=0 DScale=0 PME-
->>
->> cat /proc/interrupts
->>            CPU0      
->>   0:     123016   IO-APIC-edge      timer
->>   1:      11639   IO-APIC-edge      i8042
->>   8:          0   IO-APIC-edge      rtc
->>   9:       9187   IO-APIC-fasteoi   acpi
->>  12:         28   IO-APIC-edge      i8042
->>  14:      16059   IO-APIC-edge      ata_piix
->>  15:      21582   IO-APIC-edge      ata_piix
->>  16:       6082   IO-APIC-fasteoi   uhci_hcd:usb2, i915@pci:0000:00:02.0
->>  17:         14   IO-APIC-fasteoi   yenta, yenta, Intel 82801DB-ICH4
->>  18:         38   IO-APIC-fasteoi   uhci_hcd:usb4, firewire_ohci
->>  19:       2854   IO-APIC-fasteoi   uhci_hcd:usb3, eth0
->>  23:          4   IO-APIC-fasteoi   ehci_hcd:usb1
->> NMI:          0   Non-maskable interrupts
->> LOC:      47658   Local timer interrupts
->> TRM:          0   Thermal event interrupts
->> SPU:          0   Spurious interrupts
->> ERR:          0
->> MIS:          0
->>
->> Hope this can help.
->>
->> Best,
->> Andrey
->>
->>     
->
->
->   
+To: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>
+Cc: linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
 
 
---------------090305080708080607010206
-Content-Type: text/x-vcard; charset=utf-8;
- name="ronne.vcf"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: attachment;
- filename="ronne.vcf"
+sata_mv, sata_promise and PMP fixes
 
-begin:vcard
-fn;quoted-printable:=D0=90=D0=BD=D0=B4=D1=80=D0=B5=D0=B9 =D0=93=D1=83=D1=81=D0=B5=D0=B2
-n;quoted-printable;quoted-printable:=D0=93=D1=83=D1=81=D0=B5=D0=B2;=D0=90=D0=BD=D0=B4=D1=80=D0=B5=D0=B9
-email;internet:ronne@list.ru
-version:2.1
-end:vcard
+Please pull from 'upstream-linus' branch of
+master.kernel.org:/pub/scm/linux/kernel/git/jgarzik/libata-dev.git upstream-linus
 
+to receive the following updates:
 
---------------090305080708080607010206--
+ drivers/ata/libata-acpi.c   |   75 ++++++++++------
+ drivers/ata/libata-core.c   |   40 +++++----
+ drivers/ata/libata-eh.c     |  207 +++++++++++++++++++++++-------------------
+ drivers/ata/libata-pmp.c    |   44 +++++-----
+ drivers/ata/libata-scsi.c   |    6 --
+ drivers/ata/pata_ali.c      |   10 +-
+ drivers/ata/pata_amd.c      |   14 ++--
+ drivers/ata/pata_at32.c     |    2 -
+ drivers/ata/pata_bf54x.c    |    5 +-
+ drivers/ata/pata_cypress.c  |    8 +-
+ drivers/ata/pata_legacy.c   |   50 +++++-----
+ drivers/ata/pata_ns87410.c  |    6 +-
+ drivers/ata/pata_ns87415.c  |    4 +-
+ drivers/ata/pata_qdi.c      |   16 ++--
+ drivers/ata/pata_sl82c105.c |    2 +-
+ drivers/ata/pata_via.c      |   14 ++--
+ drivers/ata/pata_winbond.c  |    6 +-
+ drivers/ata/sata_mv.c       |  163 +++++++++++++++++++---------------
+ drivers/ata/sata_promise.c  |  148 +++++++++++++++----------------
+ drivers/ata/sata_sil24.c    |   11 +++
+ include/linux/libata.h      |    6 +-
+ 21 files changed, 453 insertions(+), 384 deletions(-)
+
+Christophe Jaillet (1):
+      avr32/pata: avoid unnecessary memset (updated after comments)
+
+Harvey Harrison (1):
+      ata: remove FIT() macro
+
+Jeff Garzik (1):
+      drivers/ata: trim trailing whitespace
+
+Mark Lord (10):
+      sata_mv: always do softreset
+      sata_mv: fis irq register fixes
+      sata_mv: group genIIe flags
+      sata_mv: async notify for genIIe only
+      sata_mv: don't blindly enable IRQs
+      sata_mv: consolidate main_irq_mask updates
+      sata_mv: fix pmp drives not found
+      sata_mv: disregard masked irqs
+      sata_mv: cache main_irq_mask register in hpriv
+      sata_mv: ensure empty request queue for FBS-NCQ EH
+
+Matthew Garrett (1):
+      Fixups to ATA ACPI hotplug
+
+Mikael Pettersson (3):
+      sata_promise: fix irq clearing buglets
+      sata_promise: mmio access cleanups
+      sata_promise: other cleanups
+
+Sonic Zhang (1):
+      pata-bf54x: Set ATAPI HSM to control IDE device terminate sequence.
+
+Tejun Heo (10):
+      libata: fix sata_link_hardreset() @online out parameter handling
+      libata: reorganize ata_eh_reset() no reset method path
+      libata: move reset freeze/thaw handling into ata_eh_reset()
+      libata: kill hotplug related race condition
+      libata: ignore recovered PHY errors
+      libata: increase PMP register access timeout to 3s
+      libata: make sure PMP notification is turned off during recovery
+      libata: don't schedule LPM action seperately during probing
+      sata_sil24: don't use NCQ if marvell 4140 PMP is attached
+      libata: ignore SIMG4726 config pseudo device
+
+diff --git a/drivers/ata/libata-acpi.c b/drivers/ata/libata-acpi.c
+index 70b77e0..dbf6ca7 100644
+--- a/drivers/ata/libata-acpi.c
++++ b/drivers/ata/libata-acpi.c
+@@ -118,8 +118,8 @@ static void ata_acpi_associate_ide_port(struct ata_port *ap)
+ 		ap->pflags |= ATA_PFLAG_INIT_GTM_VALID;
+ }
+ 
+-static void ata_acpi_handle_hotplug(struct ata_port *ap, struct ata_device *dev,
+-				    u32 event)
++static void ata_acpi_handle_hotplug(struct ata_port *ap, struct ata_device
++				    *dev, u32 event)
+ {
+ 	char event_string[12];
+ 	char *envp[] = { event_string, NULL };
+@@ -127,6 +127,9 @@ static void ata_acpi_handle_hotplug(struct ata_port *ap, struct ata_device *dev,
+ 	struct kobject *kobj = NULL;
+ 	int wait = 0;
+ 	unsigned long flags;
++	acpi_handle handle, tmphandle;
++	unsigned long sta;
++	acpi_status status;
+ 
+ 	if (!ap)
+ 		ap = dev->link->ap;
+@@ -134,32 +137,57 @@ static void ata_acpi_handle_hotplug(struct ata_port *ap, struct ata_device *dev,
+ 
+ 	spin_lock_irqsave(ap->lock, flags);
+ 
++	if (dev)
++		handle = dev->acpi_handle;
++	else
++		handle = ap->acpi_handle;
++
++	status = acpi_get_handle(handle, "_EJ0", &tmphandle);
++	if (ACPI_FAILURE(status)) {
++		/* This device is not ejectable */
++		spin_unlock_irqrestore(ap->lock, flags);
++		return;
++	}
++
++	status = acpi_evaluate_integer(handle, "_STA", NULL, &sta);
++	if (ACPI_FAILURE(status)) {
++		printk ("Unable to determine bay status\n");
++		spin_unlock_irqrestore(ap->lock, flags);
++		return;
++	}
++
+ 	switch (event) {
+ 	case ACPI_NOTIFY_BUS_CHECK:
+ 	case ACPI_NOTIFY_DEVICE_CHECK:
+ 		ata_ehi_push_desc(ehi, "ACPI event");
+-		ata_ehi_hotplugged(ehi);
+-		ata_port_freeze(ap);
+-		break;
+-
+-	case ACPI_NOTIFY_EJECT_REQUEST:
+-		ata_ehi_push_desc(ehi, "ACPI event");
+-		if (dev)
+-			dev->flags |= ATA_DFLAG_DETACH;
+-		else {
+-			struct ata_link *tlink;
+-			struct ata_device *tdev;
+-
+-			ata_port_for_each_link(tlink, ap)
+-				ata_link_for_each_dev(tdev, tlink)
+-					tdev->flags |= ATA_DFLAG_DETACH;
++		if (!sta) {
++                /* Device has been unplugged */
++			if (dev)
++				dev->flags |= ATA_DFLAG_DETACH;
++			else {
++				struct ata_link *tlink;
++				struct ata_device *tdev;
++
++				ata_port_for_each_link(tlink, ap) {
++					ata_link_for_each_dev(tdev, tlink) {
++						tdev->flags |=
++							ATA_DFLAG_DETACH;
++					}
++				}
++			}
++			ata_port_schedule_eh(ap);
++			wait = 1;
++		} else {
++			ata_ehi_hotplugged(ehi);
++			ata_port_freeze(ap);
+ 		}
+-
+-		ata_port_schedule_eh(ap);
+-		wait = 1;
+-		break;
+ 	}
+ 
++	spin_unlock_irqrestore(ap->lock, flags);
++
++	if (wait)
++		ata_port_wait_eh(ap);
++
+ 	if (dev) {
+ 		if (dev->sdev)
+ 			kobj = &dev->sdev->sdev_gendev.kobj;
+@@ -170,11 +198,6 @@ static void ata_acpi_handle_hotplug(struct ata_port *ap, struct ata_device *dev,
+ 		sprintf(event_string, "BAY_EVENT=%d", event);
+ 		kobject_uevent_env(kobj, KOBJ_CHANGE, envp);
+ 	}
+-
+-	spin_unlock_irqrestore(ap->lock, flags);
+-
+-	if (wait)
+-		ata_port_wait_eh(ap);
+ }
+ 
+ static void ata_acpi_dev_notify(acpi_handle handle, u32 event, void *data)
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index 927b692..3c89f20 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -2126,6 +2126,13 @@ int ata_dev_configure(struct ata_device *dev)
+ 	dev->horkage |= ata_dev_blacklisted(dev);
+ 	ata_force_horkage(dev);
+ 
++	if (dev->horkage & ATA_HORKAGE_DISABLE) {
++		ata_dev_printk(dev, KERN_INFO,
++			       "unsupported device, disabling\n");
++		ata_dev_disable(dev);
++		return 0;
++	}
++
+ 	/* let ACPI work its magic */
+ 	rc = ata_acpi_on_devcfg(dev);
+ 	if (rc)
+@@ -3490,22 +3497,11 @@ int sata_link_resume(struct ata_link *link, const unsigned long *params,
+ 	if ((rc = sata_link_debounce(link, params, deadline)))
+ 		return rc;
+ 
+-	/* Clear SError.  PMP and some host PHYs require this to
+-	 * operate and clearing should be done before checking PHY
+-	 * online status to avoid race condition (hotplugging between
+-	 * link resume and status check).
+-	 */
++	/* clear SError, some PHYs require this even for SRST to work */
+ 	if (!(rc = sata_scr_read(link, SCR_ERROR, &serror)))
+ 		rc = sata_scr_write(link, SCR_ERROR, serror);
+-	if (rc == 0 || rc == -EINVAL) {
+-		unsigned long flags;
+ 
+-		spin_lock_irqsave(link->ap->lock, flags);
+-		link->eh_info.serror = 0;
+-		spin_unlock_irqrestore(link->ap->lock, flags);
+-		rc = 0;
+-	}
+-	return rc;
++	return rc != -EINVAL ? rc : 0;
+ }
+ 
+ /**
+@@ -3653,9 +3649,13 @@ int sata_link_hardreset(struct ata_link *link, const unsigned long *timing,
+ 	if (check_ready)
+ 		rc = ata_wait_ready(link, deadline, check_ready);
+  out:
+-	if (rc && rc != -EAGAIN)
++	if (rc && rc != -EAGAIN) {
++		/* online is set iff link is online && reset succeeded */
++		if (online)
++			*online = false;
+ 		ata_link_printk(link, KERN_ERR,
+ 				"COMRESET failed (errno=%d)\n", rc);
++	}
+ 	DPRINTK("EXIT, rc=%d\n", rc);
+ 	return rc;
+ }
+@@ -3700,8 +3700,14 @@ int sata_std_hardreset(struct ata_link *link, unsigned int *class,
+  */
+ void ata_std_postreset(struct ata_link *link, unsigned int *classes)
+ {
++	u32 serror;
++
+ 	DPRINTK("ENTER\n");
+ 
++	/* reset complete, clear SError */
++	if (!sata_scr_read(link, SCR_ERROR, &serror))
++		sata_scr_write(link, SCR_ERROR, serror);
++
+ 	/* print link status */
+ 	sata_print_link_status(link);
+ 
+@@ -3894,8 +3900,7 @@ static const struct ata_blacklist_entry ata_device_blacklist [] = {
+ 	{ "SAMSUNG CD-ROM SN-124", "N001",	ATA_HORKAGE_NODMA },
+ 	{ "Seagate STT20000A", NULL,		ATA_HORKAGE_NODMA },
+ 	/* Odd clown on sil3726/4726 PMPs */
+-	{ "Config  Disk",	NULL,		ATA_HORKAGE_NODMA |
+-						ATA_HORKAGE_SKIP_PM },
++	{ "Config  Disk",	NULL,		ATA_HORKAGE_DISABLE },
+ 
+ 	/* Weird ATAPI devices */
+ 	{ "TORiSAN DVD-ROM DRD-N216", NULL,	ATA_HORKAGE_MAX_SEC_128 },
+@@ -5616,7 +5621,7 @@ int ata_host_register(struct ata_host *host, struct scsi_host_template *sht)
+ 			spin_lock_irqsave(ap->lock, flags);
+ 
+ 			ehi->probe_mask |= ATA_ALL_DEVICES;
+-			ehi->action |= ATA_EH_RESET;
++			ehi->action |= ATA_EH_RESET | ATA_EH_LPM;
+ 			ehi->flags |= ATA_EHI_NO_AUTOPSY | ATA_EHI_QUIET;
+ 
+ 			ap->pflags &= ~ATA_PFLAG_INITIALIZING;
+@@ -5649,7 +5654,6 @@ int ata_host_register(struct ata_host *host, struct scsi_host_template *sht)
+ 		struct ata_port *ap = host->ports[i];
+ 
+ 		ata_scsi_scan_host(ap, 1);
+-		ata_lpm_schedule(ap, ap->pm_policy);
+ 	}
+ 
+ 	return 0;
+diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
+index 62e0331..7894d83 100644
+--- a/drivers/ata/libata-eh.c
++++ b/drivers/ata/libata-eh.c
+@@ -1308,12 +1308,7 @@ static void ata_eh_analyze_serror(struct ata_link *link)
+ 	unsigned int err_mask = 0, action = 0;
+ 	u32 hotplug_mask;
+ 
+-	if (serror & SERR_PERSISTENT) {
+-		err_mask |= AC_ERR_ATA_BUS;
+-		action |= ATA_EH_RESET;
+-	}
+-	if (serror &
+-	    (SERR_DATA_RECOVERED | SERR_COMM_RECOVERED | SERR_DATA)) {
++	if (serror & (SERR_PERSISTENT | SERR_DATA)) {
+ 		err_mask |= AC_ERR_ATA_BUS;
+ 		action |= ATA_EH_RESET;
+ 	}
+@@ -2047,19 +2042,11 @@ static int ata_do_reset(struct ata_link *link, ata_reset_fn_t reset,
+ 			unsigned int *classes, unsigned long deadline)
+ {
+ 	struct ata_device *dev;
+-	int rc;
+ 
+ 	ata_link_for_each_dev(dev, link)
+ 		classes[dev->devno] = ATA_DEV_UNKNOWN;
+ 
+-	rc = reset(link, classes, deadline);
+-
+-	/* convert all ATA_DEV_UNKNOWN to ATA_DEV_NONE */
+-	ata_link_for_each_dev(dev, link)
+-		if (classes[dev->devno] == ATA_DEV_UNKNOWN)
+-			classes[dev->devno] = ATA_DEV_NONE;
+-
+-	return rc;
++	return reset(link, classes, deadline);
+ }
+ 
+ static int ata_eh_followup_srst_needed(struct ata_link *link,
+@@ -2096,9 +2083,11 @@ int ata_eh_reset(struct ata_link *link, int classify,
+ 	ata_reset_fn_t reset;
+ 	unsigned long flags;
+ 	u32 sstatus;
+-	int rc;
++	int nr_known, rc;
+ 
+-	/* about to reset */
++	/*
++	 * Prepare to reset
++	 */
+ 	spin_lock_irqsave(ap->lock, flags);
+ 	ap->pflags |= ATA_PFLAG_RESETTING;
+ 	spin_unlock_irqrestore(ap->lock, flags);
+@@ -2124,16 +2113,8 @@ int ata_eh_reset(struct ata_link *link, int classify,
+ 			ap->ops->set_piomode(ap, dev);
+ 	}
+ 
+-	if (!softreset && !hardreset) {
+-		if (verbose)
+-			ata_link_printk(link, KERN_INFO, "no reset method "
+-					"available, skipping reset\n");
+-		if (!(lflags & ATA_LFLAG_ASSUME_CLASS))
+-			lflags |= ATA_LFLAG_ASSUME_ATA;
+-		goto done;
+-	}
+-
+ 	/* prefer hardreset */
++	reset = NULL;
+ 	ehc->i.action &= ~ATA_EH_RESET;
+ 	if (hardreset) {
+ 		reset = hardreset;
+@@ -2141,11 +2122,6 @@ int ata_eh_reset(struct ata_link *link, int classify,
+ 	} else if (softreset) {
+ 		reset = softreset;
+ 		ehc->i.action = ATA_EH_SOFTRESET;
+-	} else {
+-		ata_link_printk(link, KERN_ERR, "BUG: no reset method, "
+-				"please report to linux-ide@vger.kernel.org\n");
+-		dump_stack();
+-		return -EINVAL;
+ 	}
+ 
+ 	if (prereset) {
+@@ -2165,55 +2141,71 @@ int ata_eh_reset(struct ata_link *link, int classify,
+ 					"prereset failed (errno=%d)\n", rc);
+ 			goto out;
+ 		}
+-	}
+ 
+-	/* prereset() might have cleared ATA_EH_RESET */
+-	if (!(ehc->i.action & ATA_EH_RESET)) {
+-		/* prereset told us not to reset, bang classes and return */
+-		ata_link_for_each_dev(dev, link)
+-			classes[dev->devno] = ATA_DEV_NONE;
+-		rc = 0;
+-		goto out;
++		/* prereset() might have cleared ATA_EH_RESET.  If so,
++		 * bang classes and return.
++		 */
++		if (reset && !(ehc->i.action & ATA_EH_RESET)) {
++			ata_link_for_each_dev(dev, link)
++				classes[dev->devno] = ATA_DEV_NONE;
++			rc = 0;
++			goto out;
++		}
+ 	}
+ 
+  retry:
++	/*
++	 * Perform reset
++	 */
++	if (ata_is_host_link(link))
++		ata_eh_freeze_port(ap);
++
+ 	deadline = jiffies + ata_eh_reset_timeouts[try++];
+ 
+-	/* shut up during boot probing */
+-	if (verbose)
+-		ata_link_printk(link, KERN_INFO, "%s resetting link\n",
+-				reset == softreset ? "soft" : "hard");
++	if (reset) {
++		if (verbose)
++			ata_link_printk(link, KERN_INFO, "%s resetting link\n",
++					reset == softreset ? "soft" : "hard");
+ 
+-	/* mark that this EH session started with reset */
+-	if (reset == hardreset)
+-		ehc->i.flags |= ATA_EHI_DID_HARDRESET;
+-	else
+-		ehc->i.flags |= ATA_EHI_DID_SOFTRESET;
++		/* mark that this EH session started with reset */
++		if (reset == hardreset)
++			ehc->i.flags |= ATA_EHI_DID_HARDRESET;
++		else
++			ehc->i.flags |= ATA_EHI_DID_SOFTRESET;
+ 
+-	rc = ata_do_reset(link, reset, classes, deadline);
++		rc = ata_do_reset(link, reset, classes, deadline);
+ 
+-	if (reset == hardreset &&
+-	    ata_eh_followup_srst_needed(link, rc, classify, classes)) {
+-		/* okay, let's do follow-up softreset */
+-		reset = softreset;
++		if (reset == hardreset &&
++		    ata_eh_followup_srst_needed(link, rc, classify, classes)) {
++			/* okay, let's do follow-up softreset */
++			reset = softreset;
+ 
+-		if (!reset) {
+-			ata_link_printk(link, KERN_ERR,
+-					"follow-up softreset required "
+-					"but no softreset avaliable\n");
+-			rc = -EINVAL;
+-			goto fail;
++			if (!reset) {
++				ata_link_printk(link, KERN_ERR,
++						"follow-up softreset required "
++						"but no softreset avaliable\n");
++				rc = -EINVAL;
++				goto fail;
++			}
++
++			ata_eh_about_to_do(link, NULL, ATA_EH_RESET);
++			rc = ata_do_reset(link, reset, classes, deadline);
+ 		}
+ 
+-		ata_eh_about_to_do(link, NULL, ATA_EH_RESET);
+-		rc = ata_do_reset(link, reset, classes, deadline);
++		/* -EAGAIN can happen if we skipped followup SRST */
++		if (rc && rc != -EAGAIN)
++			goto fail;
++	} else {
++		if (verbose)
++			ata_link_printk(link, KERN_INFO, "no reset method "
++					"available, skipping reset\n");
++		if (!(lflags & ATA_LFLAG_ASSUME_CLASS))
++			lflags |= ATA_LFLAG_ASSUME_ATA;
+ 	}
+ 
+-	/* -EAGAIN can happen if we skipped followup SRST */
+-	if (rc && rc != -EAGAIN)
+-		goto fail;
+-
+- done:
++	/*
++	 * Post-reset processing
++	 */
+ 	ata_link_for_each_dev(dev, link) {
+ 		/* After the reset, the device state is PIO 0 and the
+ 		 * controller state is undefined.  Reset also wakes up
+@@ -2236,9 +2228,53 @@ int ata_eh_reset(struct ata_link *link, int classify,
+ 	if (sata_scr_read(link, SCR_STATUS, &sstatus) == 0)
+ 		link->sata_spd = (sstatus >> 4) & 0xf;
+ 
++	/* thaw the port */
++	if (ata_is_host_link(link))
++		ata_eh_thaw_port(ap);
++
++	/* postreset() should clear hardware SError.  Although SError
++	 * is cleared during link resume, clearing SError here is
++	 * necessary as some PHYs raise hotplug events after SRST.
++	 * This introduces race condition where hotplug occurs between
++	 * reset and here.  This race is mediated by cross checking
++	 * link onlineness and classification result later.
++	 */
+ 	if (postreset)
+ 		postreset(link, classes);
+ 
++	/* clear cached SError */
++	spin_lock_irqsave(link->ap->lock, flags);
++	link->eh_info.serror = 0;
++	spin_unlock_irqrestore(link->ap->lock, flags);
++
++	/* Make sure onlineness and classification result correspond.
++	 * Hotplug could have happened during reset and some
++	 * controllers fail to wait while a drive is spinning up after
++	 * being hotplugged causing misdetection.  By cross checking
++	 * link onlineness and classification result, those conditions
++	 * can be reliably detected and retried.
++	 */
++	nr_known = 0;
++	ata_link_for_each_dev(dev, link) {
++		/* convert all ATA_DEV_UNKNOWN to ATA_DEV_NONE */
++		if (classes[dev->devno] == ATA_DEV_UNKNOWN)
++			classes[dev->devno] = ATA_DEV_NONE;
++		else
++			nr_known++;
++	}
++
++	if (classify && !nr_known && ata_link_online(link)) {
++		if (try < max_tries) {
++			ata_link_printk(link, KERN_WARNING, "link online but "
++				       "device misclassified, retrying\n");
++			rc = -EAGAIN;
++			goto fail;
++		}
++		ata_link_printk(link, KERN_WARNING,
++			       "link online but device misclassified, "
++			       "device detection might fail\n");
++	}
++
+ 	/* reset successful, schedule revalidation */
+ 	ata_eh_done(link, NULL, ATA_EH_RESET);
+ 	ehc->i.action |= ATA_EH_REVALIDATE;
+@@ -2587,7 +2623,7 @@ int ata_eh_recover(struct ata_port *ap, ata_prereset_fn_t prereset,
+ 	struct ata_link *link;
+ 	struct ata_device *dev;
+ 	int nr_failed_devs, nr_disabled_devs;
+-	int reset, rc;
++	int rc;
+ 	unsigned long flags;
+ 
+ 	DPRINTK("ENTER\n");
+@@ -2630,7 +2666,6 @@ int ata_eh_recover(struct ata_port *ap, ata_prereset_fn_t prereset,
+ 	rc = 0;
+ 	nr_failed_devs = 0;
+ 	nr_disabled_devs = 0;
+-	reset = 0;
+ 
+ 	/* if UNLOADING, finish immediately */
+ 	if (ap->pflags & ATA_PFLAG_UNLOADING)
+@@ -2644,40 +2679,24 @@ int ata_eh_recover(struct ata_port *ap, ata_prereset_fn_t prereset,
+ 		if (ata_eh_skip_recovery(link))
+ 			ehc->i.action = 0;
+ 
+-		/* do we need to reset? */
+-		if (ehc->i.action & ATA_EH_RESET)
+-			reset = 1;
+-
+ 		ata_link_for_each_dev(dev, link)
+ 			ehc->classes[dev->devno] = ATA_DEV_UNKNOWN;
+ 	}
+ 
+ 	/* reset */
+-	if (reset) {
+-		/* if PMP is attached, this function only deals with
+-		 * downstream links, port should stay thawed.
+-		 */
+-		if (!sata_pmp_attached(ap))
+-			ata_eh_freeze_port(ap);
+-
+-		ata_port_for_each_link(link, ap) {
+-			struct ata_eh_context *ehc = &link->eh_context;
++	ata_port_for_each_link(link, ap) {
++		struct ata_eh_context *ehc = &link->eh_context;
+ 
+-			if (!(ehc->i.action & ATA_EH_RESET))
+-				continue;
++		if (!(ehc->i.action & ATA_EH_RESET))
++			continue;
+ 
+-			rc = ata_eh_reset(link, ata_link_nr_vacant(link),
+-					  prereset, softreset, hardreset,
+-					  postreset);
+-			if (rc) {
+-				ata_link_printk(link, KERN_ERR,
+-						"reset failed, giving up\n");
+-				goto out;
+-			}
++		rc = ata_eh_reset(link, ata_link_nr_vacant(link),
++				  prereset, softreset, hardreset, postreset);
++		if (rc) {
++			ata_link_printk(link, KERN_ERR,
++					"reset failed, giving up\n");
++			goto out;
+ 		}
+-
+-		if (!sata_pmp_attached(ap))
+-			ata_eh_thaw_port(ap);
+ 	}
+ 
+ 	/* the rest */
+diff --git a/drivers/ata/libata-pmp.c b/drivers/ata/libata-pmp.c
+index ff1822a..0f9386d 100644
+--- a/drivers/ata/libata-pmp.c
++++ b/drivers/ata/libata-pmp.c
+@@ -48,7 +48,7 @@ static unsigned int sata_pmp_read(struct ata_link *link, int reg, u32 *r_val)
+ 	tf.device = link->pmp;
+ 
+ 	err_mask = ata_exec_internal(pmp_dev, &tf, NULL, DMA_NONE, NULL, 0,
+-				     SATA_PMP_SCR_TIMEOUT);
++				     SATA_PMP_RW_TIMEOUT);
+ 	if (err_mask)
+ 		return err_mask;
+ 
+@@ -88,7 +88,7 @@ static unsigned int sata_pmp_write(struct ata_link *link, int reg, u32 val)
+ 	tf.lbah = (val >> 24) & 0xff;
+ 
+ 	return ata_exec_internal(pmp_dev, &tf, NULL, DMA_NONE, NULL, 0,
+-				 SATA_PMP_SCR_TIMEOUT);
++				 SATA_PMP_RW_TIMEOUT);
+ }
+ 
+ /**
+@@ -257,19 +257,6 @@ static int sata_pmp_configure(struct ata_device *dev, int print_info)
+ 		goto fail;
+ 	}
+ 
+-	/* turn off notification till fan-out ports are reset and configured */
+-	if (gscr[SATA_PMP_GSCR_FEAT_EN] & SATA_PMP_FEAT_NOTIFY) {
+-		gscr[SATA_PMP_GSCR_FEAT_EN] &= ~SATA_PMP_FEAT_NOTIFY;
+-
+-		err_mask = sata_pmp_write(dev->link, SATA_PMP_GSCR_FEAT_EN,
+-					  gscr[SATA_PMP_GSCR_FEAT_EN]);
+-		if (err_mask) {
+-			rc = -EIO;
+-			reason = "failed to write GSCR_FEAT_EN";
+-			goto fail;
+-		}
+-	}
+-
+ 	if (print_info) {
+ 		ata_dev_printk(dev, KERN_INFO, "Port Multiplier %s, "
+ 			       "0x%04x:0x%04x r%d, %d ports, feat 0x%x/0x%x\n",
+@@ -700,8 +687,6 @@ static int sata_pmp_eh_recover_pmp(struct ata_port *ap,
+ 	if (ehc->i.action & ATA_EH_RESET) {
+ 		struct ata_link *tlink;
+ 
+-		ata_eh_freeze_port(ap);
+-
+ 		/* reset */
+ 		rc = ata_eh_reset(link, 0, prereset, softreset, hardreset,
+ 				  postreset);
+@@ -711,8 +696,6 @@ static int sata_pmp_eh_recover_pmp(struct ata_port *ap,
+ 			goto fail;
+ 		}
+ 
+-		ata_eh_thaw_port(ap);
+-
+ 		/* PMP is reset, SErrors cannot be trusted, scan all */
+ 		ata_port_for_each_link(tlink, ap) {
+ 			struct ata_eh_context *ehc = &tlink->eh_context;
+@@ -864,6 +847,7 @@ static int sata_pmp_eh_recover(struct ata_port *ap)
+ 	struct ata_link *pmp_link = &ap->link;
+ 	struct ata_device *pmp_dev = pmp_link->device;
+ 	struct ata_eh_context *pmp_ehc = &pmp_link->eh_context;
++	u32 *gscr = pmp_dev->gscr;
+ 	struct ata_link *link;
+ 	struct ata_device *dev;
+ 	unsigned int err_mask;
+@@ -901,6 +885,22 @@ static int sata_pmp_eh_recover(struct ata_port *ap)
+ 	if (rc)
+ 		goto pmp_fail;
+ 
++	/* PHY event notification can disturb reset and other recovery
++	 * operations.  Turn it off.
++	 */
++	if (gscr[SATA_PMP_GSCR_FEAT_EN] & SATA_PMP_FEAT_NOTIFY) {
++		gscr[SATA_PMP_GSCR_FEAT_EN] &= ~SATA_PMP_FEAT_NOTIFY;
++
++		err_mask = sata_pmp_write(pmp_link, SATA_PMP_GSCR_FEAT_EN,
++					  gscr[SATA_PMP_GSCR_FEAT_EN]);
++		if (err_mask) {
++			ata_link_printk(pmp_link, KERN_WARNING,
++				"failed to disable NOTIFY (err_mask=0x%x)\n",
++				err_mask);
++			goto pmp_fail;
++		}
++	}
++
+ 	/* handle disabled links */
+ 	rc = sata_pmp_eh_handle_disabled_links(ap);
+ 	if (rc)
+@@ -923,10 +923,10 @@ static int sata_pmp_eh_recover(struct ata_port *ap)
+ 
+ 	/* enable notification */
+ 	if (pmp_dev->flags & ATA_DFLAG_AN) {
+-		pmp_dev->gscr[SATA_PMP_GSCR_FEAT_EN] |= SATA_PMP_FEAT_NOTIFY;
++		gscr[SATA_PMP_GSCR_FEAT_EN] |= SATA_PMP_FEAT_NOTIFY;
+ 
+-		err_mask = sata_pmp_write(pmp_dev->link, SATA_PMP_GSCR_FEAT_EN,
+-					  pmp_dev->gscr[SATA_PMP_GSCR_FEAT_EN]);
++		err_mask = sata_pmp_write(pmp_link, SATA_PMP_GSCR_FEAT_EN,
++					  gscr[SATA_PMP_GSCR_FEAT_EN]);
+ 		if (err_mask) {
+ 			ata_dev_printk(pmp_dev, KERN_ERR, "failed to write "
+ 				       "PMP_FEAT_EN (Emask=0x%x)\n", err_mask);
+diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+index 3ce4392..aeb6e01 100644
+--- a/drivers/ata/libata-scsi.c
++++ b/drivers/ata/libata-scsi.c
+@@ -1082,12 +1082,6 @@ static unsigned int ata_scsi_start_stop_xlat(struct ata_queued_cmd *qc)
+ 	if (((cdb[4] >> 4) & 0xf) != 0)
+ 		goto invalid_fld;       /* power conditions not supported */
+ 
+-	if (qc->dev->horkage & ATA_HORKAGE_SKIP_PM) {
+-		/* the device lacks PM support, finish without doing anything */
+-		scmd->result = SAM_STAT_GOOD;
+-		return 1;
+-	}
+-
+ 	if (cdb[4] & 0x1) {
+ 		tf->nsect = 1;	/* 1 sector, lba=0 */
+ 
+diff --git a/drivers/ata/pata_ali.c b/drivers/ata/pata_ali.c
+index fcabe46..0f3e659 100644
+--- a/drivers/ata/pata_ali.c
++++ b/drivers/ata/pata_ali.c
+@@ -177,11 +177,11 @@ static void ali_program_modes(struct ata_port *ap, struct ata_device *adev, stru
+ 	u8 udma;
+ 
+ 	if (t != NULL) {
+-		t->setup = FIT(t->setup, 1, 8) & 7;
+-		t->act8b = FIT(t->act8b, 1, 8) & 7;
+-		t->rec8b = FIT(t->rec8b, 1, 16) & 15;
+-		t->active = FIT(t->active, 1, 8) & 7;
+-		t->recover = FIT(t->recover, 1, 16) & 15;
++		t->setup = clamp_val(t->setup, 1, 8) & 7;
++		t->act8b = clamp_val(t->act8b, 1, 8) & 7;
++		t->rec8b = clamp_val(t->rec8b, 1, 16) & 15;
++		t->active = clamp_val(t->active, 1, 8) & 7;
++		t->recover = clamp_val(t->recover, 1, 16) & 15;
+ 
+ 		pci_write_config_byte(pdev, cas, t->setup);
+ 		pci_write_config_byte(pdev, cbt, (t->act8b << 4) | t->rec8b);
+diff --git a/drivers/ata/pata_amd.c b/drivers/ata/pata_amd.c
+index 26665c3..57dd00f 100644
+--- a/drivers/ata/pata_amd.c
++++ b/drivers/ata/pata_amd.c
+@@ -84,32 +84,32 @@ static void timing_setup(struct ata_port *ap, struct ata_device *adev, int offse
+ 
+ 	/* Configure the address set up timing */
+ 	pci_read_config_byte(pdev, offset + 0x0C, &t);
+-	t = (t & ~(3 << ((3 - dn) << 1))) | ((FIT(at.setup, 1, 4) - 1) << ((3 - dn) << 1));
++	t = (t & ~(3 << ((3 - dn) << 1))) | ((clamp_val(at.setup, 1, 4) - 1) << ((3 - dn) << 1));
+ 	pci_write_config_byte(pdev, offset + 0x0C , t);
+ 
+ 	/* Configure the 8bit I/O timing */
+ 	pci_write_config_byte(pdev, offset + 0x0E + (1 - (dn >> 1)),
+-		((FIT(at.act8b, 1, 16) - 1) << 4) | (FIT(at.rec8b, 1, 16) - 1));
++		((clamp_val(at.act8b, 1, 16) - 1) << 4) | (clamp_val(at.rec8b, 1, 16) - 1));
+ 
+ 	/* Drive timing */
+ 	pci_write_config_byte(pdev, offset + 0x08 + (3 - dn),
+-		((FIT(at.active, 1, 16) - 1) << 4) | (FIT(at.recover, 1, 16) - 1));
++		((clamp_val(at.active, 1, 16) - 1) << 4) | (clamp_val(at.recover, 1, 16) - 1));
+ 
+ 	switch (clock) {
+ 		case 1:
+-		t = at.udma ? (0xc0 | (FIT(at.udma, 2, 5) - 2)) : 0x03;
++		t = at.udma ? (0xc0 | (clamp_val(at.udma, 2, 5) - 2)) : 0x03;
+ 		break;
+ 
+ 		case 2:
+-		t = at.udma ? (0xc0 | amd_cyc2udma[FIT(at.udma, 2, 10)]) : 0x03;
++		t = at.udma ? (0xc0 | amd_cyc2udma[clamp_val(at.udma, 2, 10)]) : 0x03;
+ 		break;
+ 
+ 		case 3:
+-		t = at.udma ? (0xc0 | amd_cyc2udma[FIT(at.udma, 1, 10)]) : 0x03;
++		t = at.udma ? (0xc0 | amd_cyc2udma[clamp_val(at.udma, 1, 10)]) : 0x03;
+ 		break;
+ 
+ 		case 4:
+-		t = at.udma ? (0xc0 | amd_cyc2udma[FIT(at.udma, 1, 15)]) : 0x03;
++		t = at.udma ? (0xc0 | amd_cyc2udma[clamp_val(at.udma, 1, 15)]) : 0x03;
+ 		break;
+ 
+ 		default:
+diff --git a/drivers/ata/pata_at32.c b/drivers/ata/pata_at32.c
+index 5e10438..82fb6e2 100644
+--- a/drivers/ata/pata_at32.c
++++ b/drivers/ata/pata_at32.c
+@@ -291,8 +291,6 @@ static int __init pata_at32_probe(struct platform_device *pdev)
+ 	if (!info)
+ 		return -ENOMEM;
+ 
+-	memset(info, 0, sizeof(struct at32_ide_info));
+-
+ 	info->irq = irq;
+ 	info->cs  = board->cs;
+ 
+diff --git a/drivers/ata/pata_bf54x.c b/drivers/ata/pata_bf54x.c
+index 9ab8973..5551610 100644
+--- a/drivers/ata/pata_bf54x.c
++++ b/drivers/ata/pata_bf54x.c
+@@ -911,7 +911,10 @@ static void bfin_bmdma_start(struct ata_queued_cmd *qc)
+ 	/* Reset all transfer count */
+ 	ATAPI_SET_CONTROL(base, ATAPI_GET_CONTROL(base) | TFRCNT_RST);
+ 
+-		/* Set transfer length to buffer len */
++	/* Set ATAPI state machine contorl in terminate sequence */
++	ATAPI_SET_CONTROL(base, ATAPI_GET_CONTROL(base) | END_ON_TERM);
++
++	/* Set transfer length to buffer len */
+ 	for_each_sg(qc->sg, sg, qc->n_elem, si) {
+ 		ATAPI_SET_XFER_LEN(base, (sg_dma_len(sg) >> 1));
+ 	}
+diff --git a/drivers/ata/pata_cypress.c b/drivers/ata/pata_cypress.c
+index a9c3218..2ff6260 100644
+--- a/drivers/ata/pata_cypress.c
++++ b/drivers/ata/pata_cypress.c
+@@ -62,14 +62,14 @@ static void cy82c693_set_piomode(struct ata_port *ap, struct ata_device *adev)
+ 		return;
+ 	}
+ 
+-	time_16 = FIT(t.recover, 0, 15) | (FIT(t.active, 0, 15) << 4);
+-	time_8 = FIT(t.act8b, 0, 15) | (FIT(t.rec8b, 0, 15) << 4);
++	time_16 = clamp_val(t.recover, 0, 15) | (clamp_val(t.active, 0, 15) << 4);
++	time_8 = clamp_val(t.act8b, 0, 15) | (clamp_val(t.rec8b, 0, 15) << 4);
+ 
+ 	if (adev->devno == 0) {
+ 		pci_read_config_dword(pdev, CY82_IDE_ADDRSETUP, &addr);
+ 
+ 		addr &= ~0x0F;	/* Mask bits */
+-		addr |= FIT(t.setup, 0, 15);
++		addr |= clamp_val(t.setup, 0, 15);
+ 
+ 		pci_write_config_dword(pdev, CY82_IDE_ADDRSETUP, addr);
+ 		pci_write_config_byte(pdev, CY82_IDE_MASTER_IOR, time_16);
+@@ -79,7 +79,7 @@ static void cy82c693_set_piomode(struct ata_port *ap, struct ata_device *adev)
+ 		pci_read_config_dword(pdev, CY82_IDE_ADDRSETUP, &addr);
+ 
+ 		addr &= ~0xF0;	/* Mask bits */
+-		addr |= (FIT(t.setup, 0, 15) << 4);
++		addr |= (clamp_val(t.setup, 0, 15) << 4);
+ 
+ 		pci_write_config_dword(pdev, CY82_IDE_ADDRSETUP, addr);
+ 		pci_write_config_byte(pdev, CY82_IDE_SLAVE_IOR, time_16);
+diff --git a/drivers/ata/pata_legacy.c b/drivers/ata/pata_legacy.c
+index 7af4b29..fe7cc8e 100644
+--- a/drivers/ata/pata_legacy.c
++++ b/drivers/ata/pata_legacy.c
+@@ -343,8 +343,8 @@ static void ht6560a_set_piomode(struct ata_port *ap, struct ata_device *adev)
+ 	/* Get the timing data in cycles. For now play safe at 50Mhz */
+ 	ata_timing_compute(adev, adev->pio_mode, &t, 20000, 1000);
+ 
+-	active = FIT(t.active, 2, 15);
+-	recover = FIT(t.recover, 4, 15);
++	active = clamp_val(t.active, 2, 15);
++	recover = clamp_val(t.recover, 4, 15);
+ 
+ 	inb(0x3E6);
+ 	inb(0x3E6);
+@@ -377,8 +377,8 @@ static void ht6560b_set_piomode(struct ata_port *ap, struct ata_device *adev)
+ 	/* Get the timing data in cycles. For now play safe at 50Mhz */
+ 	ata_timing_compute(adev, adev->pio_mode, &t, 20000, 1000);
+ 
+-	active = FIT(t.active, 2, 15);
+-	recover = FIT(t.recover, 2, 16);
++	active = clamp_val(t.active, 2, 15);
++	recover = clamp_val(t.recover, 2, 16);
+ 	recover &= 0x15;
+ 
+ 	inb(0x3E6);
+@@ -462,9 +462,9 @@ static void opti82c611a_set_piomode(struct ata_port *ap,
+ 		ata_timing_merge(&t, &tp, &t, ATA_TIMING_SETUP);
+ 	}
+ 
+-	active = FIT(t.active, 2, 17) - 2;
+-	recover = FIT(t.recover, 1, 16) - 1;
+-	setup = FIT(t.setup, 1, 4) - 1;
++	active = clamp_val(t.active, 2, 17) - 2;
++	recover = clamp_val(t.recover, 1, 16) - 1;
++	setup = clamp_val(t.setup, 1, 4) - 1;
+ 
+ 	/* Select the right timing bank for write timing */
+ 	rc = ioread8(ap->ioaddr.lbal_addr);
+@@ -541,9 +541,9 @@ static void opti82c46x_set_piomode(struct ata_port *ap, struct ata_device *adev)
+ 		ata_timing_merge(&t, &tp, &t, ATA_TIMING_SETUP);
+ 	}
+ 
+-	active = FIT(t.active, 2, 17) - 2;
+-	recover = FIT(t.recover, 1, 16) - 1;
+-	setup = FIT(t.setup, 1, 4) - 1;
++	active = clamp_val(t.active, 2, 17) - 2;
++	recover = clamp_val(t.recover, 1, 16) - 1;
++	setup = clamp_val(t.setup, 1, 4) - 1;
+ 
+ 	/* Select the right timing bank for write timing */
+ 	rc = ioread8(ap->ioaddr.lbal_addr);
+@@ -624,11 +624,11 @@ static void qdi6500_set_piomode(struct ata_port *ap, struct ata_device *adev)
+ 	ata_timing_compute(adev, adev->pio_mode, &t, 30303, 1000);
+ 
+ 	if (ld_qdi->fast) {
+-		active = 8 - FIT(t.active, 1, 8);
+-		recovery = 18 - FIT(t.recover, 3, 18);
++		active = 8 - clamp_val(t.active, 1, 8);
++		recovery = 18 - clamp_val(t.recover, 3, 18);
+ 	} else {
+-		active = 9 - FIT(t.active, 2, 9);
+-		recovery = 15 - FIT(t.recover, 0, 15);
++		active = 9 - clamp_val(t.active, 2, 9);
++		recovery = 15 - clamp_val(t.recover, 0, 15);
+ 	}
+ 	timing = (recovery << 4) | active | 0x08;
+ 
+@@ -658,11 +658,11 @@ static void qdi6580dp_set_piomode(struct ata_port *ap, struct ata_device *adev)
+ 	ata_timing_compute(adev, adev->pio_mode, &t, 30303, 1000);
+ 
+ 	if (ld_qdi->fast) {
+-		active = 8 - FIT(t.active, 1, 8);
+-		recovery = 18 - FIT(t.recover, 3, 18);
++		active = 8 - clamp_val(t.active, 1, 8);
++		recovery = 18 - clamp_val(t.recover, 3, 18);
+ 	} else {
+-		active = 9 - FIT(t.active, 2, 9);
+-		recovery = 15 - FIT(t.recover, 0, 15);
++		active = 9 - clamp_val(t.active, 2, 9);
++		recovery = 15 - clamp_val(t.recover, 0, 15);
+ 	}
+ 	timing = (recovery << 4) | active | 0x08;
+ 
+@@ -695,11 +695,11 @@ static void qdi6580_set_piomode(struct ata_port *ap, struct ata_device *adev)
+ 	ata_timing_compute(adev, adev->pio_mode, &t, 30303, 1000);
+ 
+ 	if (ld_qdi->fast) {
+-		active = 8 - FIT(t.active, 1, 8);
+-		recovery = 18 - FIT(t.recover, 3, 18);
++		active = 8 - clamp_val(t.active, 1, 8);
++		recovery = 18 - clamp_val(t.recover, 3, 18);
+ 	} else {
+-		active = 9 - FIT(t.active, 2, 9);
+-		recovery = 15 - FIT(t.recover, 0, 15);
++		active = 9 - clamp_val(t.active, 2, 9);
++		recovery = 15 - clamp_val(t.recover, 0, 15);
+ 	}
+ 	timing = (recovery << 4) | active | 0x08;
+ 	ld_qdi->clock[adev->devno] = timing;
+@@ -830,8 +830,8 @@ static void winbond_set_piomode(struct ata_port *ap, struct ata_device *adev)
+ 	else
+ 		ata_timing_compute(adev, adev->pio_mode, &t, 30303, 1000);
+ 
+-	active = (FIT(t.active, 3, 17) - 1) & 0x0F;
+-	recovery = (FIT(t.recover, 1, 15) + 1) & 0x0F;
++	active = (clamp_val(t.active, 3, 17) - 1) & 0x0F;
++	recovery = (clamp_val(t.recover, 1, 15) + 1) & 0x0F;
+ 	timing = (active << 4) | recovery;
+ 	winbond_writecfg(ld_winbond->timing, timing, reg);
+ 
+@@ -842,7 +842,7 @@ static void winbond_set_piomode(struct ata_port *ap, struct ata_device *adev)
+ 		reg |= 0x08;	/* FIFO off */
+ 	if (!ata_pio_need_iordy(adev))
+ 		reg |= 0x02;	/* IORDY off */
+-	reg |= (FIT(t.setup, 0, 3) << 6);
++	reg |= (clamp_val(t.setup, 0, 3) << 6);
+ 	winbond_writecfg(ld_winbond->timing, timing + 1, reg);
+ }
+ 
+diff --git a/drivers/ata/pata_ns87410.c b/drivers/ata/pata_ns87410.c
+index 76d2455..be756b7 100644
+--- a/drivers/ata/pata_ns87410.c
++++ b/drivers/ata/pata_ns87410.c
+@@ -91,9 +91,9 @@ static void ns87410_set_piomode(struct ata_port *ap, struct ata_device *adev)
+ 		return;
+ 	}
+ 
+-	at.active = FIT(at.active, 2, 16) - 2;
+-	at.setup = FIT(at.setup, 1, 4) - 1;
+-	at.recover = FIT(at.recover, 1, 12) - 1;
++	at.active = clamp_val(at.active, 2, 16) - 2;
++	at.setup = clamp_val(at.setup, 1, 4) - 1;
++	at.recover = clamp_val(at.recover, 1, 12) - 1;
+ 
+ 	idetcr = (at.setup << 6) | (recoverbits[at.recover] << 3) | activebits[at.active];
+ 
+diff --git a/drivers/ata/pata_ns87415.c b/drivers/ata/pata_ns87415.c
+index ae92b00..e0aa7ea 100644
+--- a/drivers/ata/pata_ns87415.c
++++ b/drivers/ata/pata_ns87415.c
+@@ -66,8 +66,8 @@ static void ns87415_set_mode(struct ata_port *ap, struct ata_device *adev, u8 mo
+ 
+ 	ata_timing_compute(adev, adev->pio_mode, &t, T, 0);
+ 
+-	clocking = 17 - FIT(t.active, 2, 17);
+-	clocking |= (16 - FIT(t.recover, 1, 16)) << 4;
++	clocking = 17 - clamp_val(t.active, 2, 17);
++	clocking |= (16 - clamp_val(t.recover, 1, 16)) << 4;
+  	/* Use the same timing for read and write bytes */
+ 	clocking |= (clocking << 8);
+ 	pci_write_config_word(dev, timing, clocking);
+diff --git a/drivers/ata/pata_qdi.c b/drivers/ata/pata_qdi.c
+index bf45cf0..97e5b09 100644
+--- a/drivers/ata/pata_qdi.c
++++ b/drivers/ata/pata_qdi.c
+@@ -60,11 +60,11 @@ static void qdi6500_set_piomode(struct ata_port *ap, struct ata_device *adev)
+ 	ata_timing_compute(adev, adev->pio_mode, &t, 30303, 1000);
+ 
+ 	if (qdi->fast) {
+-		active = 8 - FIT(t.active, 1, 8);
+-		recovery = 18 - FIT(t.recover, 3, 18);
++		active = 8 - clamp_val(t.active, 1, 8);
++		recovery = 18 - clamp_val(t.recover, 3, 18);
+ 	} else {
+-		active = 9 - FIT(t.active, 2, 9);
+-		recovery = 15 - FIT(t.recover, 0, 15);
++		active = 9 - clamp_val(t.active, 2, 9);
++		recovery = 15 - clamp_val(t.recover, 0, 15);
+ 	}
+ 	timing = (recovery << 4) | active | 0x08;
+ 
+@@ -84,11 +84,11 @@ static void qdi6580_set_piomode(struct ata_port *ap, struct ata_device *adev)
+ 	ata_timing_compute(adev, adev->pio_mode, &t, 30303, 1000);
+ 
+ 	if (qdi->fast) {
+-		active = 8 - FIT(t.active, 1, 8);
+-		recovery = 18 - FIT(t.recover, 3, 18);
++		active = 8 - clamp_val(t.active, 1, 8);
++		recovery = 18 - clamp_val(t.recover, 3, 18);
+ 	} else {
+-		active = 9 - FIT(t.active, 2, 9);
+-		recovery = 15 - FIT(t.recover, 0, 15);
++		active = 9 - clamp_val(t.active, 2, 9);
++		recovery = 15 - clamp_val(t.recover, 0, 15);
+ 	}
+ 	timing = (recovery << 4) | active | 0x08;
+ 
+diff --git a/drivers/ata/pata_sl82c105.c b/drivers/ata/pata_sl82c105.c
+index 70d94fb..69877bd 100644
+--- a/drivers/ata/pata_sl82c105.c
++++ b/drivers/ata/pata_sl82c105.c
+@@ -216,7 +216,7 @@ static int sl82c105_qc_defer(struct ata_queued_cmd *qc)
+ 	struct ata_port *alt = host->ports[1 ^ qc->ap->port_no];
+ 	int rc;
+ 
+-	/* First apply the usual rules */	
++	/* First apply the usual rules */
+ 	rc = ata_std_qc_defer(qc);
+ 	if (rc != 0)
+ 		return rc;
+diff --git a/drivers/ata/pata_via.c b/drivers/ata/pata_via.c
+index 2fea6cb..708ed14 100644
+--- a/drivers/ata/pata_via.c
++++ b/drivers/ata/pata_via.c
+@@ -259,15 +259,15 @@ static void via_do_set_mode(struct ata_port *ap, struct ata_device *adev, int mo
+ 
+ 		pci_read_config_byte(pdev, 0x4C, &setup);
+ 		setup &= ~(3 << shift);
+-		setup |= FIT(t.setup, 1, 4) << shift;	/* 1,4 or 1,4 - 1  FIXME */
++		setup |= clamp_val(t.setup, 1, 4) << shift;	/* 1,4 or 1,4 - 1  FIXME */
+ 		pci_write_config_byte(pdev, 0x4C, setup);
+ 	}
+ 
+ 	/* Load the PIO mode bits */
+ 	pci_write_config_byte(pdev, 0x4F - ap->port_no,
+-		((FIT(t.act8b, 1, 16) - 1) << 4) | (FIT(t.rec8b, 1, 16) - 1));
++		((clamp_val(t.act8b, 1, 16) - 1) << 4) | (clamp_val(t.rec8b, 1, 16) - 1));
+ 	pci_write_config_byte(pdev, 0x48 + offset,
+-		((FIT(t.active, 1, 16) - 1) << 4) | (FIT(t.recover, 1, 16) - 1));
++		((clamp_val(t.active, 1, 16) - 1) << 4) | (clamp_val(t.recover, 1, 16) - 1));
+ 
+ 	/* Load the UDMA bits according to type */
+ 	switch(udma_type) {
+@@ -275,16 +275,16 @@ static void via_do_set_mode(struct ata_port *ap, struct ata_device *adev, int mo
+ 			/* BUG() ? */
+ 			/* fall through */
+ 		case 33:
+-			ut = t.udma ? (0xe0 | (FIT(t.udma, 2, 5) - 2)) : 0x03;
++			ut = t.udma ? (0xe0 | (clamp_val(t.udma, 2, 5) - 2)) : 0x03;
+ 			break;
+ 		case 66:
+-			ut = t.udma ? (0xe8 | (FIT(t.udma, 2, 9) - 2)) : 0x0f;
++			ut = t.udma ? (0xe8 | (clamp_val(t.udma, 2, 9) - 2)) : 0x0f;
+ 			break;
+ 		case 100:
+-			ut = t.udma ? (0xe0 | (FIT(t.udma, 2, 9) - 2)) : 0x07;
++			ut = t.udma ? (0xe0 | (clamp_val(t.udma, 2, 9) - 2)) : 0x07;
+ 			break;
+ 		case 133:
+-			ut = t.udma ? (0xe0 | (FIT(t.udma, 2, 9) - 2)) : 0x07;
++			ut = t.udma ? (0xe0 | (clamp_val(t.udma, 2, 9) - 2)) : 0x07;
+ 			break;
+ 	}
+ 
+diff --git a/drivers/ata/pata_winbond.c b/drivers/ata/pata_winbond.c
+index 6e52a35..474528f 100644
+--- a/drivers/ata/pata_winbond.c
++++ b/drivers/ata/pata_winbond.c
+@@ -75,8 +75,8 @@ static void winbond_set_piomode(struct ata_port *ap, struct ata_device *adev)
+ 	else
+ 		ata_timing_compute(adev, adev->pio_mode, &t, 30303, 1000);
+ 
+-	active = (FIT(t.active, 3, 17) - 1) & 0x0F;
+-	recovery = (FIT(t.recover, 1, 15) + 1) & 0x0F;
++	active = (clamp_val(t.active, 3, 17) - 1) & 0x0F;
++	recovery = (clamp_val(t.recover, 1, 15) + 1) & 0x0F;
+ 	timing = (active << 4) | recovery;
+ 	winbond_writecfg(winbond->config, timing, reg);
+ 
+@@ -87,7 +87,7 @@ static void winbond_set_piomode(struct ata_port *ap, struct ata_device *adev)
+ 		reg |= 0x08;	/* FIFO off */
+ 	if (!ata_pio_need_iordy(adev))
+ 		reg |= 0x02;	/* IORDY off */
+-	reg |= (FIT(t.setup, 0, 3) << 6);
++	reg |= (clamp_val(t.setup, 0, 3) << 6);
+ 	winbond_writecfg(winbond->config, timing + 1, reg);
+ }
+ 
+diff --git a/drivers/ata/sata_mv.c b/drivers/ata/sata_mv.c
+index bb73b22..fb81f0c 100644
+--- a/drivers/ata/sata_mv.c
++++ b/drivers/ata/sata_mv.c
+@@ -72,7 +72,7 @@
+ #include <linux/libata.h>
+ 
+ #define DRV_NAME	"sata_mv"
+-#define DRV_VERSION	"1.20"
++#define DRV_VERSION	"1.21"
+ 
+ enum {
+ 	/* BAR's are enumerated in terms of pci_resource_start() terms */
+@@ -128,8 +128,13 @@ enum {
+ 	MV_COMMON_FLAGS		= ATA_FLAG_SATA | ATA_FLAG_NO_LEGACY |
+ 				  ATA_FLAG_MMIO | ATA_FLAG_NO_ATAPI |
+ 				  ATA_FLAG_PIO_POLLING,
++
+ 	MV_6XXX_FLAGS		= MV_FLAG_IRQ_COALESCE,
+ 
++	MV_GENIIE_FLAGS		= MV_COMMON_FLAGS | MV_6XXX_FLAGS |
++				  ATA_FLAG_PMP | ATA_FLAG_ACPI_SATA |
++				  ATA_FLAG_NCQ | ATA_FLAG_AN,
++
+ 	CRQB_FLAG_READ		= (1 << 0),
+ 	CRQB_TAG_SHIFT		= 1,
+ 	CRQB_IOID_SHIFT		= 6,	/* CRQB Gen-II/IIE IO Id shift */
+@@ -197,13 +202,6 @@ enum {
+ 	HC_MAIN_RSVD		= (0x7f << 25),	/* bits 31-25 */
+ 	HC_MAIN_RSVD_5		= (0x1fff << 19), /* bits 31-19 */
+ 	HC_MAIN_RSVD_SOC	= (0x3fffffb << 6),     /* bits 31-9, 7-6 */
+-	HC_MAIN_MASKED_IRQS	= (TRAN_LO_DONE | TRAN_HI_DONE |
+-				   PORTS_0_3_COAL_DONE | PORTS_4_7_COAL_DONE |
+-				   PORTS_0_7_COAL_DONE | GPIO_INT | TWSI_INT |
+-				   HC_MAIN_RSVD),
+-	HC_MAIN_MASKED_IRQS_5	= (PORTS_0_3_COAL_DONE | PORTS_4_7_COAL_DONE |
+-				   HC_MAIN_RSVD_5),
+-	HC_MAIN_MASKED_IRQS_SOC = (PORTS_0_3_COAL_DONE | HC_MAIN_RSVD_SOC),
+ 
+ 	/* SATAHC registers */
+ 	HC_CFG_OFS		= 0,
+@@ -221,6 +219,7 @@ enum {
+ 	SATA_STATUS_OFS		= 0x300,  /* ctrl, err regs follow status */
+ 	SATA_ACTIVE_OFS		= 0x350,
+ 	SATA_FIS_IRQ_CAUSE_OFS	= 0x364,
++	SATA_FIS_IRQ_AN		= (1 << 9),	/* async notification */
+ 
+ 	LTMODE_OFS		= 0x30c,
+ 	LTMODE_BIT8		= (1 << 8),	/* unknown, but necessary */
+@@ -459,6 +458,7 @@ struct mv_port_signal {
+ 
+ struct mv_host_priv {
+ 	u32			hp_flags;
++	u32			main_irq_mask;
+ 	struct mv_port_signal	signal[8];
+ 	const struct mv_hw_ops	*ops;
+ 	int			n_ports;
+@@ -640,25 +640,19 @@ static const struct ata_port_info mv_port_info[] = {
+ 		.port_ops	= &mv6_ops,
+ 	},
+ 	{  /* chip_6042 */
+-		.flags		= MV_COMMON_FLAGS | MV_6XXX_FLAGS |
+-				  ATA_FLAG_PMP | ATA_FLAG_ACPI_SATA |
+-				  ATA_FLAG_NCQ,
++		.flags		= MV_GENIIE_FLAGS,
+ 		.pio_mask	= 0x1f,	/* pio0-4 */
+ 		.udma_mask	= ATA_UDMA6,
+ 		.port_ops	= &mv_iie_ops,
+ 	},
+ 	{  /* chip_7042 */
+-		.flags		= MV_COMMON_FLAGS | MV_6XXX_FLAGS |
+-				  ATA_FLAG_PMP | ATA_FLAG_ACPI_SATA |
+-				  ATA_FLAG_NCQ,
++		.flags		= MV_GENIIE_FLAGS,
+ 		.pio_mask	= 0x1f,	/* pio0-4 */
+ 		.udma_mask	= ATA_UDMA6,
+ 		.port_ops	= &mv_iie_ops,
+ 	},
+ 	{  /* chip_soc */
+-		.flags		= MV_COMMON_FLAGS | MV_6XXX_FLAGS |
+-				  ATA_FLAG_PMP | ATA_FLAG_ACPI_SATA |
+-				  ATA_FLAG_NCQ | MV_FLAG_SOC,
++		.flags		= MV_GENIIE_FLAGS | MV_FLAG_SOC,
+ 		.pio_mask	= 0x1f,	/* pio0-4 */
+ 		.udma_mask	= ATA_UDMA6,
+ 		.port_ops	= &mv_iie_ops,
+@@ -844,6 +838,33 @@ static void mv_set_edma_ptrs(void __iomem *port_mmio,
+ 		 port_mmio + EDMA_RSP_Q_OUT_PTR_OFS);
+ }
+ 
++static void mv_set_main_irq_mask(struct ata_host *host,
++				 u32 disable_bits, u32 enable_bits)
++{
++	struct mv_host_priv *hpriv = host->private_data;
++	u32 old_mask, new_mask;
++
++	old_mask = hpriv->main_irq_mask;
++	new_mask = (old_mask & ~disable_bits) | enable_bits;
++	if (new_mask != old_mask) {
++		hpriv->main_irq_mask = new_mask;
++		writelfl(new_mask, hpriv->main_irq_mask_addr);
++	}
++}
++
++static void mv_enable_port_irqs(struct ata_port *ap,
++				     unsigned int port_bits)
++{
++	unsigned int shift, hardport, port = ap->port_no;
++	u32 disable_bits, enable_bits;
++
++	MV_PORT_TO_SHIFT_AND_HARDPORT(port, shift, hardport);
++
++	disable_bits = (DONE_IRQ | ERR_IRQ) << shift;
++	enable_bits  = port_bits << shift;
++	mv_set_main_irq_mask(ap->host, disable_bits, enable_bits);
++}
++
+ /**
+  *      mv_start_dma - Enable eDMA engine
+  *      @base: port base address
+@@ -886,9 +907,11 @@ static void mv_start_dma(struct ata_port *ap, void __iomem *port_mmio,
+ 		mv_edma_cfg(ap, want_ncq);
+ 
+ 		/* clear FIS IRQ Cause */
+-		writelfl(0, port_mmio + SATA_FIS_IRQ_CAUSE_OFS);
++		if (IS_GEN_IIE(hpriv))
++			writelfl(0, port_mmio + SATA_FIS_IRQ_CAUSE_OFS);
+ 
+ 		mv_set_edma_ptrs(port_mmio, hpriv, pp);
++		mv_enable_port_irqs(ap, DONE_IRQ|ERR_IRQ);
+ 
+ 		writelfl(EDMA_EN, port_mmio + EDMA_CMD_OFS);
+ 		pp->pp_flags |= MV_PP_FLAG_EDMA_EN;
+@@ -1341,6 +1364,7 @@ out_port_free_dma_mem:
+ static void mv_port_stop(struct ata_port *ap)
+ {
+ 	mv_stop_edma(ap);
++	mv_enable_port_irqs(ap, 0);
+ 	mv_port_free_dma_mem(ap);
+ }
+ 
+@@ -1582,6 +1606,7 @@ static unsigned int mv_qc_issue(struct ata_queued_cmd *qc)
+ 		 * shadow block, etc registers.
+ 		 */
+ 		mv_stop_edma(ap);
++		mv_enable_port_irqs(ap, ERR_IRQ);
+ 		mv_pmp_select(ap, qc->dev->link->pmp);
+ 		return ata_sff_qc_issue(qc);
+ 	}
+@@ -1670,6 +1695,18 @@ static void mv_pmp_eh_prep(struct ata_port *ap, unsigned int pmp_map)
+ 	}
+ }
+ 
++static int mv_req_q_empty(struct ata_port *ap)
++{
++	void __iomem *port_mmio = mv_ap_base(ap);
++	u32 in_ptr, out_ptr;
++
++	in_ptr  = (readl(port_mmio + EDMA_REQ_Q_IN_PTR_OFS)
++			>> EDMA_REQ_Q_PTR_SHIFT) & MV_MAX_Q_DEPTH_MASK;
++	out_ptr = (readl(port_mmio + EDMA_REQ_Q_OUT_PTR_OFS)
++			>> EDMA_REQ_Q_PTR_SHIFT) & MV_MAX_Q_DEPTH_MASK;
++	return (in_ptr == out_ptr);	/* 1 == queue_is_empty */
++}
++
+ static int mv_handle_fbs_ncq_dev_err(struct ata_port *ap)
+ {
+ 	struct mv_port_priv *pp = ap->private_data;
+@@ -1703,7 +1740,7 @@ static int mv_handle_fbs_ncq_dev_err(struct ata_port *ap)
+ 			ap->qc_active, failed_links,
+ 			ap->nr_active_links);
+ 
+-	if (ap->nr_active_links <= failed_links) {
++	if (ap->nr_active_links <= failed_links && mv_req_q_empty(ap)) {
+ 		mv_process_crpb_entries(ap, pp);
+ 		mv_stop_edma(ap);
+ 		mv_eh_freeze(ap);
+@@ -1812,6 +1849,7 @@ static void mv_err_intr(struct ata_port *ap)
+ {
+ 	void __iomem *port_mmio = mv_ap_base(ap);
+ 	u32 edma_err_cause, eh_freeze_mask, serr = 0;
++	u32 fis_cause = 0;
+ 	struct mv_port_priv *pp = ap->private_data;
+ 	struct mv_host_priv *hpriv = ap->host->private_data;
+ 	unsigned int action = 0, err_mask = 0;
+@@ -1821,16 +1859,19 @@ static void mv_err_intr(struct ata_port *ap)
+ 
+ 	/*
+ 	 * Read and clear the SError and err_cause bits.
++	 * For GenIIe, if EDMA_ERR_TRANS_IRQ_7 is set, we also must read/clear
++	 * the FIS_IRQ_CAUSE register before clearing edma_err_cause.
+ 	 */
+ 	sata_scr_read(&ap->link, SCR_ERROR, &serr);
+ 	sata_scr_write_flush(&ap->link, SCR_ERROR, serr);
+ 
+ 	edma_err_cause = readl(port_mmio + EDMA_ERR_IRQ_CAUSE_OFS);
++	if (IS_GEN_IIE(hpriv) && (edma_err_cause & EDMA_ERR_TRANS_IRQ_7)) {
++		fis_cause = readl(port_mmio + SATA_FIS_IRQ_CAUSE_OFS);
++		writelfl(~fis_cause, port_mmio + SATA_FIS_IRQ_CAUSE_OFS);
++	}
+ 	writelfl(~edma_err_cause, port_mmio + EDMA_ERR_IRQ_CAUSE_OFS);
+ 
+-	ata_port_printk(ap, KERN_INFO, "%s: err_cause=%08x pp_flags=0x%x\n",
+-			__func__, edma_err_cause, pp->pp_flags);
+-
+ 	if (edma_err_cause & EDMA_ERR_DEV) {
+ 		/*
+ 		 * Device errors during FIS-based switching operation
+@@ -1844,6 +1885,18 @@ static void mv_err_intr(struct ata_port *ap)
+ 	ata_ehi_clear_desc(ehi);
+ 	ata_ehi_push_desc(ehi, "edma_err_cause=%08x pp_flags=%08x",
+ 			  edma_err_cause, pp->pp_flags);
++
++	if (IS_GEN_IIE(hpriv) && (edma_err_cause & EDMA_ERR_TRANS_IRQ_7)) {
++		ata_ehi_push_desc(ehi, "fis_cause=%08x", fis_cause);
++		if (fis_cause & SATA_FIS_IRQ_AN) {
++			u32 ec = edma_err_cause &
++			       ~(EDMA_ERR_TRANS_IRQ_7 | EDMA_ERR_IRQ_TRANSIENT);
++			sata_async_notification(ap);
++			if (!ec)
++				return; /* Just an AN; no need for the nukes */
++			ata_ehi_push_desc(ehi, "SDB notify");
++		}
++	}
+ 	/*
+ 	 * All generations share these EDMA error cause bits:
+ 	 */
+@@ -2162,20 +2215,20 @@ static irqreturn_t mv_interrupt(int irq, void *dev_instance)
+ 	struct ata_host *host = dev_instance;
+ 	struct mv_host_priv *hpriv = host->private_data;
+ 	unsigned int handled = 0;
+-	u32 main_irq_cause, main_irq_mask;
++	u32 main_irq_cause, pending_irqs;
+ 
+ 	spin_lock(&host->lock);
+ 	main_irq_cause = readl(hpriv->main_irq_cause_addr);
+-	main_irq_mask  = readl(hpriv->main_irq_mask_addr);
++	pending_irqs   = main_irq_cause & hpriv->main_irq_mask;
+ 	/*
+ 	 * Deal with cases where we either have nothing pending, or have read
+ 	 * a bogus register value which can indicate HW removal or PCI fault.
+ 	 */
+-	if ((main_irq_cause & main_irq_mask) && (main_irq_cause != 0xffffffffU)) {
+-		if (unlikely((main_irq_cause & PCI_ERR) && HAS_PCI(host)))
++	if (pending_irqs && main_irq_cause != 0xffffffffU) {
++		if (unlikely((pending_irqs & PCI_ERR) && HAS_PCI(host)))
+ 			handled = mv_pci_error(host, hpriv->base);
+ 		else
+-			handled = mv_host_intr(host, main_irq_cause);
++			handled = mv_host_intr(host, pending_irqs);
+ 	}
+ 	spin_unlock(&host->lock);
+ 	return IRQ_RETVAL(handled);
+@@ -2373,7 +2426,6 @@ static void mv_reset_pci_bus(struct ata_host *host, void __iomem *mmio)
+ 	ZERO(MV_PCI_DISC_TIMER);
+ 	ZERO(MV_PCI_MSI_TRIGGER);
+ 	writel(0x000100ff, mmio + MV_PCI_XBAR_TMOUT_OFS);
+-	ZERO(PCI_HC_MAIN_IRQ_MASK_OFS);
+ 	ZERO(MV_PCI_SERR_MASK);
+ 	ZERO(hpriv->irq_cause_ofs);
+ 	ZERO(hpriv->irq_mask_ofs);
+@@ -2728,6 +2780,7 @@ static int mv_hardreset(struct ata_link *link, unsigned int *class,
+ 
+ 		rc = sata_link_hardreset(link, timing, deadline + extra,
+ 					 &online, NULL);
++		rc = online ? -EAGAIN : rc;
+ 		if (rc)
+ 			return rc;
+ 		sata_scr_read(link, SCR_STATUS, &sstatus);
+@@ -2744,32 +2797,18 @@ static int mv_hardreset(struct ata_link *link, unsigned int *class,
+ 
+ static void mv_eh_freeze(struct ata_port *ap)
+ {
+-	struct mv_host_priv *hpriv = ap->host->private_data;
+-	unsigned int shift, hardport, port = ap->port_no;
+-	u32 main_irq_mask;
+-
+-	/* FIXME: handle coalescing completion events properly */
+-
+ 	mv_stop_edma(ap);
+-	MV_PORT_TO_SHIFT_AND_HARDPORT(port, shift, hardport);
+-
+-	/* disable assertion of portN err, done events */
+-	main_irq_mask = readl(hpriv->main_irq_mask_addr);
+-	main_irq_mask &= ~((DONE_IRQ | ERR_IRQ) << shift);
+-	writelfl(main_irq_mask, hpriv->main_irq_mask_addr);
++	mv_enable_port_irqs(ap, 0);
+ }
+ 
+ static void mv_eh_thaw(struct ata_port *ap)
+ {
+ 	struct mv_host_priv *hpriv = ap->host->private_data;
+-	unsigned int shift, hardport, port = ap->port_no;
++	unsigned int port = ap->port_no;
++	unsigned int hardport = mv_hardport_from_port(port);
+ 	void __iomem *hc_mmio = mv_hc_base_from_port(hpriv->base, port);
+ 	void __iomem *port_mmio = mv_ap_base(ap);
+-	u32 main_irq_mask, hc_irq_cause;
+-
+-	/* FIXME: handle coalescing completion events properly */
+-
+-	MV_PORT_TO_SHIFT_AND_HARDPORT(port, shift, hardport);
++	u32 hc_irq_cause;
+ 
+ 	/* clear EDMA errors on this port */
+ 	writel(0, port_mmio + EDMA_ERR_IRQ_CAUSE_OFS);
+@@ -2779,10 +2818,7 @@ static void mv_eh_thaw(struct ata_port *ap)
+ 	hc_irq_cause &= ~((DEV_IRQ | DMA_IRQ) << hardport);
+ 	writelfl(hc_irq_cause, hc_mmio + HC_IRQ_CAUSE_OFS);
+ 
+-	/* enable assertion of portN err, done events */
+-	main_irq_mask = readl(hpriv->main_irq_mask_addr);
+-	main_irq_mask |= ((DONE_IRQ | ERR_IRQ) << shift);
+-	writelfl(main_irq_mask, hpriv->main_irq_mask_addr);
++	mv_enable_port_irqs(ap, ERR_IRQ);
+ }
+ 
+ /**
+@@ -3035,7 +3071,7 @@ static int mv_init_host(struct ata_host *host, unsigned int board_idx)
+ 	}
+ 
+ 	/* global interrupt mask: 0 == mask everything */
+-	writel(0, hpriv->main_irq_mask_addr);
++	mv_set_main_irq_mask(host, ~0, 0);
+ 
+ 	n_hc = mv_get_hc_count(host->ports[0]->flags);
+ 
+@@ -3083,25 +3119,12 @@ static int mv_init_host(struct ata_host *host, unsigned int board_idx)
+ 
+ 		/* and unmask interrupt generation for host regs */
+ 		writelfl(hpriv->unmask_all_irqs, mmio + hpriv->irq_mask_ofs);
+-		if (IS_GEN_I(hpriv))
+-			writelfl(~HC_MAIN_MASKED_IRQS_5,
+-				 hpriv->main_irq_mask_addr);
+-		else
+-			writelfl(~HC_MAIN_MASKED_IRQS,
+-				 hpriv->main_irq_mask_addr);
+-
+-		VPRINTK("HC MAIN IRQ cause/mask=0x%08x/0x%08x "
+-			"PCI int cause/mask=0x%08x/0x%08x\n",
+-			readl(hpriv->main_irq_cause_addr),
+-			readl(hpriv->main_irq_mask_addr),
+-			readl(mmio + hpriv->irq_cause_ofs),
+-			readl(mmio + hpriv->irq_mask_ofs));
+-	} else {
+-		writelfl(~HC_MAIN_MASKED_IRQS_SOC,
+-			 hpriv->main_irq_mask_addr);
+-		VPRINTK("HC MAIN IRQ cause/mask=0x%08x/0x%08x\n",
+-			readl(hpriv->main_irq_cause_addr),
+-			readl(hpriv->main_irq_mask_addr));
++
++		/*
++		 * enable only global host interrupts for now.
++		 * The per-port interrupts get done later as ports are set up.
++		 */
++		mv_set_main_irq_mask(host, 0, PCI_ERR);
+ 	}
+ done:
+ 	return rc;
+diff --git a/drivers/ata/sata_promise.c b/drivers/ata/sata_promise.c
+index 5a10dc5..030665b 100644
+--- a/drivers/ata/sata_promise.c
++++ b/drivers/ata/sata_promise.c
+@@ -53,7 +53,15 @@ enum {
+ 	PDC_MMIO_BAR		= 3,
+ 	PDC_MAX_PRD		= LIBATA_MAX_PRD - 1, /* -1 for ASIC PRD bug workaround */
+ 
+-	/* register offsets */
++	/* host register offsets (from host->iomap[PDC_MMIO_BAR]) */
++	PDC_INT_SEQMASK		= 0x40,	/* Mask of asserted SEQ INTs */
++	PDC_FLASH_CTL		= 0x44, /* Flash control register */
++	PDC_SATA_PLUG_CSR	= 0x6C, /* SATA Plug control/status reg */
++	PDC2_SATA_PLUG_CSR	= 0x60, /* SATAII Plug control/status reg */
++	PDC_TBG_MODE		= 0x41C, /* TBG mode (not SATAII) */
++	PDC_SLEW_CTL		= 0x470, /* slew rate control reg (not SATAII) */
++
++	/* per-port ATA register offsets (from ap->ioaddr.cmd_addr) */
+ 	PDC_FEATURE		= 0x04, /* Feature/Error reg (per port) */
+ 	PDC_SECTOR_COUNT	= 0x08, /* Sector count reg (per port) */
+ 	PDC_SECTOR_NUMBER	= 0x0C, /* Sector number reg (per port) */
+@@ -63,14 +71,11 @@ enum {
+ 	PDC_COMMAND		= 0x1C, /* Command/status reg (per port) */
+ 	PDC_ALTSTATUS		= 0x38, /* Alternate-status/device-control reg (per port) */
+ 	PDC_PKT_SUBMIT		= 0x40, /* Command packet pointer addr */
+-	PDC_INT_SEQMASK		= 0x40,	/* Mask of asserted SEQ INTs */
+-	PDC_FLASH_CTL		= 0x44, /* Flash control register */
+ 	PDC_GLOBAL_CTL		= 0x48, /* Global control/status (per port) */
+ 	PDC_CTLSTAT		= 0x60,	/* IDE control and status (per port) */
+-	PDC_SATA_PLUG_CSR	= 0x6C, /* SATA Plug control/status reg */
+-	PDC2_SATA_PLUG_CSR	= 0x60, /* SATAII Plug control/status reg */
+-	PDC_TBG_MODE		= 0x41C, /* TBG mode (not SATAII) */
+-	PDC_SLEW_CTL		= 0x470, /* slew rate control reg (not SATAII) */
++
++	/* per-port SATA register offsets (from ap->ioaddr.scr_addr) */
++	PDC_PHYMODE4		= 0x14,
+ 
+ 	/* PDC_GLOBAL_CTL bit definitions */
+ 	PDC_PH_ERR		= (1 <<  8), /* PCI error while loading packet */
+@@ -134,7 +139,7 @@ struct pdc_port_priv {
+ 
+ static int pdc_sata_scr_read(struct ata_port *ap, unsigned int sc_reg, u32 *val);
+ static int pdc_sata_scr_write(struct ata_port *ap, unsigned int sc_reg, u32 val);
+-static int pdc_ata_init_one (struct pci_dev *pdev, const struct pci_device_id *ent);
++static int pdc_ata_init_one(struct pci_dev *pdev, const struct pci_device_id *ent);
+ static int pdc_common_port_start(struct ata_port *ap);
+ static int pdc_sata_port_start(struct ata_port *ap);
+ static void pdc_qc_prep(struct ata_queued_cmd *qc);
+@@ -332,12 +337,12 @@ static int pdc_sata_port_start(struct ata_port *ap)
+ 
+ 	/* fix up PHYMODE4 align timing */
+ 	if (ap->flags & PDC_FLAG_GEN_II) {
+-		void __iomem *mmio = ap->ioaddr.scr_addr;
++		void __iomem *sata_mmio = ap->ioaddr.scr_addr;
+ 		unsigned int tmp;
+ 
+-		tmp = readl(mmio + 0x014);
++		tmp = readl(sata_mmio + PDC_PHYMODE4);
+ 		tmp = (tmp & ~3) | 1;	/* set bits 1:0 = 0:1 */
+-		writel(tmp, mmio + 0x014);
++		writel(tmp, sata_mmio + PDC_PHYMODE4);
+ 	}
+ 
+ 	return 0;
+@@ -345,32 +350,32 @@ static int pdc_sata_port_start(struct ata_port *ap)
+ 
+ static void pdc_reset_port(struct ata_port *ap)
+ {
+-	void __iomem *mmio = ap->ioaddr.cmd_addr + PDC_CTLSTAT;
++	void __iomem *ata_ctlstat_mmio = ap->ioaddr.cmd_addr + PDC_CTLSTAT;
+ 	unsigned int i;
+ 	u32 tmp;
+ 
+ 	for (i = 11; i > 0; i--) {
+-		tmp = readl(mmio);
++		tmp = readl(ata_ctlstat_mmio);
+ 		if (tmp & PDC_RESET)
+ 			break;
+ 
+ 		udelay(100);
+ 
+ 		tmp |= PDC_RESET;
+-		writel(tmp, mmio);
++		writel(tmp, ata_ctlstat_mmio);
+ 	}
+ 
+ 	tmp &= ~PDC_RESET;
+-	writel(tmp, mmio);
+-	readl(mmio);	/* flush */
++	writel(tmp, ata_ctlstat_mmio);
++	readl(ata_ctlstat_mmio);	/* flush */
+ }
+ 
+ static int pdc_pata_cable_detect(struct ata_port *ap)
+ {
+ 	u8 tmp;
+-	void __iomem *mmio = ap->ioaddr.cmd_addr + PDC_CTLSTAT + 0x03;
++	void __iomem *ata_mmio = ap->ioaddr.cmd_addr;
+ 
+-	tmp = readb(mmio);
++	tmp = readb(ata_mmio + PDC_CTLSTAT + 3);
+ 	if (tmp & 0x01)
+ 		return ATA_CBL_PATA40;
+ 	return ATA_CBL_PATA80;
+@@ -557,31 +562,25 @@ static void pdc_qc_prep(struct ata_queued_cmd *qc)
+ 	switch (qc->tf.protocol) {
+ 	case ATA_PROT_DMA:
+ 		pdc_fill_sg(qc);
+-		/* fall through */
+-
++		/*FALLTHROUGH*/
+ 	case ATA_PROT_NODATA:
+ 		i = pdc_pkt_header(&qc->tf, qc->ap->prd_dma,
+ 				   qc->dev->devno, pp->pkt);
+-
+ 		if (qc->tf.flags & ATA_TFLAG_LBA48)
+ 			i = pdc_prep_lba48(&qc->tf, pp->pkt, i);
+ 		else
+ 			i = pdc_prep_lba28(&qc->tf, pp->pkt, i);
+-
+ 		pdc_pkt_footer(&qc->tf, pp->pkt, i);
+ 		break;
+-
+ 	case ATAPI_PROT_PIO:
+ 		pdc_fill_sg(qc);
+ 		break;
+-
+ 	case ATAPI_PROT_DMA:
+ 		pdc_fill_sg(qc);
+ 		/*FALLTHROUGH*/
+ 	case ATAPI_PROT_NODATA:
+ 		pdc_atapi_pkt(qc);
+ 		break;
+-
+ 	default:
+ 		break;
+ 	}
+@@ -611,7 +610,7 @@ static unsigned int pdc_sata_ata_port_to_ata_no(const struct ata_port *ap)
+ 	unsigned int nr_ports = pdc_sata_nr_ports(ap);
+ 	unsigned int i;
+ 
+-	for(i = 0; i < nr_ports && host->ports[i] != ap; ++i)
++	for (i = 0; i < nr_ports && host->ports[i] != ap; ++i)
+ 		;
+ 	BUG_ON(i >= nr_ports);
+ 	return pdc_port_no_to_ata_no(i, pdc_is_sataii_tx4(ap->flags));
+@@ -624,14 +623,14 @@ static unsigned int pdc_sata_hotplug_offset(const struct ata_port *ap)
+ 
+ static void pdc_freeze(struct ata_port *ap)
+ {
+-	void __iomem *mmio = ap->ioaddr.cmd_addr;
++	void __iomem *ata_mmio = ap->ioaddr.cmd_addr;
+ 	u32 tmp;
+ 
+-	tmp = readl(mmio + PDC_CTLSTAT);
++	tmp = readl(ata_mmio + PDC_CTLSTAT);
+ 	tmp |= PDC_IRQ_DISABLE;
+ 	tmp &= ~PDC_DMA_ENABLE;
+-	writel(tmp, mmio + PDC_CTLSTAT);
+-	readl(mmio + PDC_CTLSTAT); /* flush */
++	writel(tmp, ata_mmio + PDC_CTLSTAT);
++	readl(ata_mmio + PDC_CTLSTAT); /* flush */
+ }
+ 
+ static void pdc_sata_freeze(struct ata_port *ap)
+@@ -659,17 +658,17 @@ static void pdc_sata_freeze(struct ata_port *ap)
+ 
+ static void pdc_thaw(struct ata_port *ap)
+ {
+-	void __iomem *mmio = ap->ioaddr.cmd_addr;
++	void __iomem *ata_mmio = ap->ioaddr.cmd_addr;
+ 	u32 tmp;
+ 
+ 	/* clear IRQ */
+-	readl(mmio + PDC_INT_SEQMASK);
++	readl(ata_mmio + PDC_COMMAND);
+ 
+ 	/* turn IRQ back on */
+-	tmp = readl(mmio + PDC_CTLSTAT);
++	tmp = readl(ata_mmio + PDC_CTLSTAT);
+ 	tmp &= ~PDC_IRQ_DISABLE;
+-	writel(tmp, mmio + PDC_CTLSTAT);
+-	readl(mmio + PDC_CTLSTAT); /* flush */
++	writel(tmp, ata_mmio + PDC_CTLSTAT);
++	readl(ata_mmio + PDC_CTLSTAT); /* flush */
+ }
+ 
+ static void pdc_sata_thaw(struct ata_port *ap)
+@@ -743,11 +742,11 @@ static void pdc_error_intr(struct ata_port *ap, struct ata_queued_cmd *qc,
+ 	ata_port_abort(ap);
+ }
+ 
+-static inline unsigned int pdc_host_intr(struct ata_port *ap,
+-					 struct ata_queued_cmd *qc)
++static unsigned int pdc_host_intr(struct ata_port *ap,
++				  struct ata_queued_cmd *qc)
+ {
+ 	unsigned int handled = 0;
+-	void __iomem *port_mmio = ap->ioaddr.cmd_addr;
++	void __iomem *ata_mmio = ap->ioaddr.cmd_addr;
+ 	u32 port_status, err_mask;
+ 
+ 	err_mask = PDC_ERR_MASK;
+@@ -755,7 +754,7 @@ static inline unsigned int pdc_host_intr(struct ata_port *ap,
+ 		err_mask &= ~PDC1_ERR_MASK;
+ 	else
+ 		err_mask &= ~PDC2_ERR_MASK;
+-	port_status = readl(port_mmio + PDC_GLOBAL_CTL);
++	port_status = readl(ata_mmio + PDC_GLOBAL_CTL);
+ 	if (unlikely(port_status & err_mask)) {
+ 		pdc_error_intr(ap, qc, port_status, err_mask);
+ 		return 1;
+@@ -770,7 +769,6 @@ static inline unsigned int pdc_host_intr(struct ata_port *ap,
+ 		ata_qc_complete(qc);
+ 		handled = 1;
+ 		break;
+-
+ 	default:
+ 		ap->stats.idle_irq++;
+ 		break;
+@@ -781,10 +779,9 @@ static inline unsigned int pdc_host_intr(struct ata_port *ap,
+ 
+ static void pdc_irq_clear(struct ata_port *ap)
+ {
+-	struct ata_host *host = ap->host;
+-	void __iomem *mmio = host->iomap[PDC_MMIO_BAR];
++	void __iomem *ata_mmio = ap->ioaddr.cmd_addr;
+ 
+-	readl(mmio + PDC_INT_SEQMASK);
++	readl(ata_mmio + PDC_COMMAND);
+ }
+ 
+ static irqreturn_t pdc_interrupt(int irq, void *dev_instance)
+@@ -794,7 +791,7 @@ static irqreturn_t pdc_interrupt(int irq, void *dev_instance)
+ 	u32 mask = 0;
+ 	unsigned int i, tmp;
+ 	unsigned int handled = 0;
+-	void __iomem *mmio_base;
++	void __iomem *host_mmio;
+ 	unsigned int hotplug_offset, ata_no;
+ 	u32 hotplug_status;
+ 	int is_sataii_tx4;
+@@ -806,7 +803,7 @@ static irqreturn_t pdc_interrupt(int irq, void *dev_instance)
+ 		return IRQ_NONE;
+ 	}
+ 
+-	mmio_base = host->iomap[PDC_MMIO_BAR];
++	host_mmio = host->iomap[PDC_MMIO_BAR];
+ 
+ 	spin_lock(&host->lock);
+ 
+@@ -815,26 +812,26 @@ static irqreturn_t pdc_interrupt(int irq, void *dev_instance)
+ 		hotplug_offset = PDC2_SATA_PLUG_CSR;
+ 	else
+ 		hotplug_offset = PDC_SATA_PLUG_CSR;
+-	hotplug_status = readl(mmio_base + hotplug_offset);
++	hotplug_status = readl(host_mmio + hotplug_offset);
+ 	if (hotplug_status & 0xff)
+-		writel(hotplug_status | 0xff, mmio_base + hotplug_offset);
++		writel(hotplug_status | 0xff, host_mmio + hotplug_offset);
+ 	hotplug_status &= 0xff;	/* clear uninteresting bits */
+ 
+ 	/* reading should also clear interrupts */
+-	mask = readl(mmio_base + PDC_INT_SEQMASK);
++	mask = readl(host_mmio + PDC_INT_SEQMASK);
+ 
+ 	if (mask == 0xffffffff && hotplug_status == 0) {
+ 		VPRINTK("QUICK EXIT 2\n");
+ 		goto done_irq;
+ 	}
+ 
+-	mask &= 0xffff;		/* only 16 tags possible */
++	mask &= 0xffff;		/* only 16 SEQIDs possible */
+ 	if (mask == 0 && hotplug_status == 0) {
+ 		VPRINTK("QUICK EXIT 3\n");
+ 		goto done_irq;
+ 	}
+ 
+-	writel(mask, mmio_base + PDC_INT_SEQMASK);
++	writel(mask, host_mmio + PDC_INT_SEQMASK);
+ 
+ 	is_sataii_tx4 = pdc_is_sataii_tx4(host->ports[0]->flags);
+ 
+@@ -875,23 +872,24 @@ done_irq:
+ 	return IRQ_RETVAL(handled);
+ }
+ 
+-static inline void pdc_packet_start(struct ata_queued_cmd *qc)
++static void pdc_packet_start(struct ata_queued_cmd *qc)
+ {
+ 	struct ata_port *ap = qc->ap;
+ 	struct pdc_port_priv *pp = ap->private_data;
+-	void __iomem *mmio = ap->host->iomap[PDC_MMIO_BAR];
++	void __iomem *host_mmio = ap->host->iomap[PDC_MMIO_BAR];
++	void __iomem *ata_mmio = ap->ioaddr.cmd_addr;
+ 	unsigned int port_no = ap->port_no;
+ 	u8 seq = (u8) (port_no + 1);
+ 
+ 	VPRINTK("ENTER, ap %p\n", ap);
+ 
+-	writel(0x00000001, mmio + (seq * 4));
+-	readl(mmio + (seq * 4));	/* flush */
++	writel(0x00000001, host_mmio + (seq * 4));
++	readl(host_mmio + (seq * 4));	/* flush */
+ 
+ 	pp->pkt[2] = seq;
+ 	wmb();			/* flush PRD, pkt writes */
+-	writel(pp->pkt_dma, ap->ioaddr.cmd_addr + PDC_PKT_SUBMIT);
+-	readl(ap->ioaddr.cmd_addr + PDC_PKT_SUBMIT); /* flush */
++	writel(pp->pkt_dma, ata_mmio + PDC_PKT_SUBMIT);
++	readl(ata_mmio + PDC_PKT_SUBMIT); /* flush */
+ }
+ 
+ static unsigned int pdc_qc_issue(struct ata_queued_cmd *qc)
+@@ -909,11 +907,9 @@ static unsigned int pdc_qc_issue(struct ata_queued_cmd *qc)
+ 	case ATA_PROT_DMA:
+ 		pdc_packet_start(qc);
+ 		return 0;
+-
+ 	default:
+ 		break;
+ 	}
+-
+ 	return ata_sff_qc_issue(qc);
+ }
+ 
+@@ -987,7 +983,7 @@ static void pdc_ata_setup_port(struct ata_port *ap,
+ 
+ static void pdc_host_init(struct ata_host *host)
+ {
+-	void __iomem *mmio = host->iomap[PDC_MMIO_BAR];
++	void __iomem *host_mmio = host->iomap[PDC_MMIO_BAR];
+ 	int is_gen2 = host->ports[0]->flags & PDC_FLAG_GEN_II;
+ 	int hotplug_offset;
+ 	u32 tmp;
+@@ -1004,38 +1000,38 @@ static void pdc_host_init(struct ata_host *host)
+ 	 */
+ 
+ 	/* enable BMR_BURST, maybe change FIFO_SHD to 8 dwords */
+-	tmp = readl(mmio + PDC_FLASH_CTL);
++	tmp = readl(host_mmio + PDC_FLASH_CTL);
+ 	tmp |= 0x02000;	/* bit 13 (enable bmr burst) */
+ 	if (!is_gen2)
+ 		tmp |= 0x10000;	/* bit 16 (fifo threshold at 8 dw) */
+-	writel(tmp, mmio + PDC_FLASH_CTL);
++	writel(tmp, host_mmio + PDC_FLASH_CTL);
+ 
+ 	/* clear plug/unplug flags for all ports */
+-	tmp = readl(mmio + hotplug_offset);
+-	writel(tmp | 0xff, mmio + hotplug_offset);
++	tmp = readl(host_mmio + hotplug_offset);
++	writel(tmp | 0xff, host_mmio + hotplug_offset);
+ 
+ 	/* unmask plug/unplug ints */
+-	tmp = readl(mmio + hotplug_offset);
+-	writel(tmp & ~0xff0000, mmio + hotplug_offset);
++	tmp = readl(host_mmio + hotplug_offset);
++	writel(tmp & ~0xff0000, host_mmio + hotplug_offset);
+ 
+ 	/* don't initialise TBG or SLEW on 2nd generation chips */
+ 	if (is_gen2)
+ 		return;
+ 
+ 	/* reduce TBG clock to 133 Mhz. */
+-	tmp = readl(mmio + PDC_TBG_MODE);
++	tmp = readl(host_mmio + PDC_TBG_MODE);
+ 	tmp &= ~0x30000; /* clear bit 17, 16*/
+ 	tmp |= 0x10000;  /* set bit 17:16 = 0:1 */
+-	writel(tmp, mmio + PDC_TBG_MODE);
++	writel(tmp, host_mmio + PDC_TBG_MODE);
+ 
+-	readl(mmio + PDC_TBG_MODE);	/* flush */
++	readl(host_mmio + PDC_TBG_MODE);	/* flush */
+ 	msleep(10);
+ 
+ 	/* adjust slew rate control register. */
+-	tmp = readl(mmio + PDC_SLEW_CTL);
++	tmp = readl(host_mmio + PDC_SLEW_CTL);
+ 	tmp &= 0xFFFFF03F; /* clear bit 11 ~ 6 */
+ 	tmp  |= 0x00000900; /* set bit 11-9 = 100b , bit 8-6 = 100 */
+-	writel(tmp, mmio + PDC_SLEW_CTL);
++	writel(tmp, host_mmio + PDC_SLEW_CTL);
+ }
+ 
+ static int pdc_ata_init_one(struct pci_dev *pdev,
+@@ -1045,7 +1041,7 @@ static int pdc_ata_init_one(struct pci_dev *pdev,
+ 	const struct ata_port_info *pi = &pdc_port_info[ent->driver_data];
+ 	const struct ata_port_info *ppi[PDC_MAX_PORTS];
+ 	struct ata_host *host;
+-	void __iomem *base;
++	void __iomem *host_mmio;
+ 	int n_ports, i, rc;
+ 	int is_sataii_tx4;
+ 
+@@ -1062,7 +1058,7 @@ static int pdc_ata_init_one(struct pci_dev *pdev,
+ 		pcim_pin_device(pdev);
+ 	if (rc)
+ 		return rc;
+-	base = pcim_iomap_table(pdev)[PDC_MMIO_BAR];
++	host_mmio = pcim_iomap_table(pdev)[PDC_MMIO_BAR];
+ 
+ 	/* determine port configuration and setup host */
+ 	n_ports = 2;
+@@ -1072,7 +1068,7 @@ static int pdc_ata_init_one(struct pci_dev *pdev,
+ 		ppi[i] = pi;
+ 
+ 	if (pi->flags & PDC_FLAG_SATA_PATA) {
+-		u8 tmp = readb(base + PDC_FLASH_CTL+1);
++		u8 tmp = readb(host_mmio + PDC_FLASH_CTL + 1);
+ 		if (!(tmp & 0x80))
+ 			ppi[n_ports++] = pi + 1;
+ 	}
+@@ -1088,13 +1084,13 @@ static int pdc_ata_init_one(struct pci_dev *pdev,
+ 	for (i = 0; i < host->n_ports; i++) {
+ 		struct ata_port *ap = host->ports[i];
+ 		unsigned int ata_no = pdc_port_no_to_ata_no(i, is_sataii_tx4);
+-		unsigned int port_offset = 0x200 + ata_no * 0x80;
++		unsigned int ata_offset = 0x200 + ata_no * 0x80;
+ 		unsigned int scr_offset = 0x400 + ata_no * 0x100;
+ 
+-		pdc_ata_setup_port(ap, base + port_offset, base + scr_offset);
++		pdc_ata_setup_port(ap, host_mmio + ata_offset, host_mmio + scr_offset);
+ 
+ 		ata_port_pbar_desc(ap, PDC_MMIO_BAR, -1, "mmio");
+-		ata_port_pbar_desc(ap, PDC_MMIO_BAR, port_offset, "port");
++		ata_port_pbar_desc(ap, PDC_MMIO_BAR, ata_offset, "ata");
+ 	}
+ 
+ 	/* initialize adapter */
+diff --git a/drivers/ata/sata_sil24.c b/drivers/ata/sata_sil24.c
+index 27a1101..8ee6b5b 100644
+--- a/drivers/ata/sata_sil24.c
++++ b/drivers/ata/sata_sil24.c
+@@ -899,14 +899,25 @@ static bool sil24_qc_fill_rtf(struct ata_queued_cmd *qc)
+ 
+ static void sil24_pmp_attach(struct ata_port *ap)
+ {
++	u32 *gscr = ap->link.device->gscr;
++
+ 	sil24_config_pmp(ap, 1);
+ 	sil24_init_port(ap);
++
++	if (sata_pmp_gscr_vendor(gscr) == 0x11ab &&
++	    sata_pmp_gscr_devid(gscr) == 0x4140) {
++		ata_port_printk(ap, KERN_INFO,
++			"disabling NCQ support due to sil24-mv4140 quirk\n");
++		ap->flags &= ~ATA_FLAG_NCQ;
++	}
+ }
+ 
+ static void sil24_pmp_detach(struct ata_port *ap)
+ {
+ 	sil24_init_port(ap);
+ 	sil24_config_pmp(ap, 0);
++
++	ap->flags |= ATA_FLAG_NCQ;
+ }
+ 
+ static int sil24_pmp_hardreset(struct ata_link *link, unsigned int *class,
+diff --git a/include/linux/libata.h b/include/linux/libata.h
+index 0f17643..4a92fba 100644
+--- a/include/linux/libata.h
++++ b/include/linux/libata.h
+@@ -341,7 +341,7 @@ enum {
+ 	ATA_EH_PMP_TRIES	= 5,
+ 	ATA_EH_PMP_LINK_TRIES	= 3,
+ 
+-	SATA_PMP_SCR_TIMEOUT	= 250,
++	SATA_PMP_RW_TIMEOUT	= 3000,		/* PMP read/write timeout */
+ 
+ 	/* Horkage types. May be set by libata or controller on drives
+ 	   (some horkage may be drive/controller pair dependant */
+@@ -351,7 +351,7 @@ enum {
+ 	ATA_HORKAGE_NONCQ	= (1 << 2),	/* Don't use NCQ */
+ 	ATA_HORKAGE_MAX_SEC_128	= (1 << 3),	/* Limit max sects to 128 */
+ 	ATA_HORKAGE_BROKEN_HPA	= (1 << 4),	/* Broken HPA */
+-	ATA_HORKAGE_SKIP_PM	= (1 << 5),	/* Skip PM operations */
++	ATA_HORKAGE_DISABLE	= (1 << 5),	/* Disable it */
+ 	ATA_HORKAGE_HPA_SIZE	= (1 << 6),	/* native size off by one */
+ 	ATA_HORKAGE_IPM		= (1 << 7),	/* Link PM problems */
+ 	ATA_HORKAGE_IVB		= (1 << 8),	/* cbl det validity bit bugs */
+@@ -821,8 +821,6 @@ struct ata_timing {
+ 	unsigned short udma;		/* t2CYCTYP/2 */
+ };
+ 
+-#define FIT(v, vmin, vmax)	max_t(short, min_t(short, v, vmax), vmin)
+-
+ /*
+  * Core layer - drivers/ata/libata-core.c
+  */
