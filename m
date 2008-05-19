@@ -1,40 +1,28 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH 2.6.26-rc2 1/3] sata_promise: fix irq clearing buglets
-Date: Mon, 19 May 2008 17:43:36 -0400
-Message-ID: <4831F488.9070802@garzik.org>
-References: <200805171647.m4HGlZFW015961@harpo.it.uu.se>
+From: "Rune Torgersen" <runet@innovsys.com>
+Subject: RE: Oops with PREEMPT-RT on 2.6.25.4
+Date: Mon, 19 May 2008 16:46:51 -0500
+Message-ID: <DCEAAC0833DD314AB0B58112AD99B93B04690276@ismail.innsys.innovsys.com>
+References: <DCEAAC0833DD314AB0B58112AD99B93B0469010C@ismail.innsys.innovsys.com>	<4831D527.2020907@freescale.com> <DCEAAC0833DD314AB0B58112AD99B93B04690162@ismail.innsys.innovsys.com> <4831ECF0.5090101@freescale.com> <DCEAAC0833DD314AB0B58112AD99B93B04690239@ismail.innsys.innovsys.com> <4831F364.8020702@freescale.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:38619 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756963AbYESVni (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 19 May 2008 17:43:38 -0400
-In-Reply-To: <200805171647.m4HGlZFW015961@harpo.it.uu.se>
+Received: from smtp.innovsys.com ([66.115.232.196]:29238 "EHLO
+	mail.innovsys.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751873AbYESVqa convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 19 May 2008 17:46:30 -0400
+Content-class: urn:content-classes:message
+In-Reply-To: <4831F364.8020702@freescale.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mikael Pettersson <mikpe@it.uu.se>
-Cc: linux-ide@vger.kernel.org
+To: Scott Wood <scottwood@freescale.com>
+Cc: linuxppc-dev@ozlabs.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-Mikael Pettersson wrote:
-> This patch fixes two bugs in sata_promise's irq status clearing paths:
-> 1. When clearing the irq status for a specific port, the driver
->    read the global SEQMASK register. This is wrong because that
->    clears the irq status for _all_ ports.
-> 2. pdc_thaw() incorrectly added the PDC_INT_SEQMASK host register
->    offset to a per-port ata engine base address. This resulted in
->    it reading the unrelated PDC_PKT_SUBMIT register, which did not
->    have the desired irq status clearing effect.
-> 
-> In both cases the fix is to read from the port's Command/Status
-> register. This also matches what Promise's own driver does.
-> 
-> Signed-off-by: Mikael Pettersson <mikpe@it.uu.se>
-> ---
->  drivers/ata/sata_promise.c |    7 +++----
->  1 file changed, 3 insertions(+), 4 deletions(-)
+Scott Wood wrote:
+> Try calling irq_set_chip_and_handler() with handle_level_irq, rather
+> than irq_set_chip().  The -rt patch doesn't seem to have threadified
+>   the __do_IRQ() path.
 
-is sata_sx4 similarly affected?
-
-
+The demuxer is setting itself up with set_irq_chained handler(), any
+pointers on how to change to irq_set_chip_and_handler()?
