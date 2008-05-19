@@ -1,31 +1,34 @@
 From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [PATCH 3/5] libata: improve EH retry delay handling
-Date: Mon, 19 May 2008 19:33:11 +0100
-Message-ID: <20080519193311.01b5b928@core>
+Subject: Re: [PATCH 5/5] libata: improve EH internal command timeout
+ handling
+Date: Mon, 19 May 2008 19:35:06 +0100
+Message-ID: <20080519193506.6811bdb3@core>
 References: <12112174741373-git-send-email-htejun@gmail.com>
-	<1211217475951-git-send-email-htejun@gmail.com>
+	<12112174751449-git-send-email-htejun@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:56134 "EHLO
+Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:56139 "EHLO
 	lxorguk.ukuu.org.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751188AbYESSpM (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 19 May 2008 14:45:12 -0400
-In-Reply-To: <1211217475951-git-send-email-htejun@gmail.com>
+	with ESMTP id S1751011AbYESSq7 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 19 May 2008 14:46:59 -0400
+In-Reply-To: <12112174751449-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 Cc: jeff@garzik.org, linux-ide@vger.kernel.org, liml@rtr.ca, Tejun Heo <htejun@gmail.com>
 
-On Tue, 20 May 2008 02:17:52 +0900
-Tejun Heo <htejun@gmail.com> wrote:
+> IDENTIFYs use 5s - 10s - 30s timeout and all other commands use 5s -
+> 10s timeouts.
 
-> EH retries were delayed by 5 seconds to ensure that resets don't occur
-> back-to-back.  However, this 5 second delay is superflous or excessive
-> in many cases.  For example, after IDENTIFY times out, there's no
-> reason to wait five more seconds before retrying.
+Cache flushes need more but they now come via the libata-scsi code right ?
 
-You'll crash some ATAPI CD-ROM drives without that delay - at least for
-PATA. As in power cycle required to get it back.
+> 
+> This patch significantly cuts down the needed time to handle failure
+> cases while still allowing libata to work with nut job devices through
+> retries.
+> 
+> Signed-off-by: Tejun Heo <htejun@gmail.com>
 
-Perhaps we should check cable type here ?
+Acked-by: Alan Cox <alan@redhat.com>
+
