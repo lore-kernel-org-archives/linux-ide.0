@@ -1,72 +1,38 @@
-From: Willy Tarreau <w@1wt.eu>
-Subject: Re: SATA 2.4 ICH8
-Date: Mon, 19 May 2008 22:26:25 +0200
-Message-ID: <20080519202625.GC5108@1wt.eu>
-References: <480B925B.1080408@sbcglobal.net> <20080424221143.GB20775@1wt.eu> <48311942.8000407@sbcglobal.net>
+From: Scott Wood <scottwood@freescale.com>
+Subject: Re: Oops with PREEMPT-RT on 2.6.25.4
+Date: Mon, 19 May 2008 16:11:12 -0500
+Message-ID: <4831ECF0.5090101@freescale.com>
+References: <DCEAAC0833DD314AB0B58112AD99B93B0469010C@ismail.innsys.innovsys.com>	<4831D527.2020907@freescale.com> <DCEAAC0833DD314AB0B58112AD99B93B04690162@ismail.innsys.innovsys.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from 1wt.eu ([62.212.114.60]:4504 "EHLO 1wt.eu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1763449AbYESU1U (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 19 May 2008 16:27:20 -0400
-Content-Disposition: inline
-In-Reply-To: <48311942.8000407@sbcglobal.net>
+Received: from az33egw01.freescale.net ([192.88.158.102]:52427 "EHLO
+	az33egw01.freescale.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758559AbYESVKe (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 19 May 2008 17:10:34 -0400
+In-Reply-To: <DCEAAC0833DD314AB0B58112AD99B93B04690162@ismail.innsys.innovsys.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: steve@conceptoverdrive.com
-Cc: jgarzik@pobox.com, linux-ide@vger.kernel.org
+To: Rune Torgersen <runet@innovsys.com>
+Cc: linuxppc-dev@ozlabs.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-Hi Steve,
-
-On Sun, May 18, 2008 at 11:08:02PM -0700, Steve Rosenbluth wrote:
-> Hello Willie,
+Rune Torgersen wrote:
+> Scott Wood wrote:
+>> You're recursively entering lock_timer_base, which does a
+>> spin_lock_irqsave().  Either interrupts are enabled when they should
+>> not be, or an interrupt was supposed to be threaded that isn't.
 > 
-> Attached is the patch you asked for (ICH8 SATA controller definition).
+> Sort of figured. How do I figure out which one, and how to fix it?
 
-OK thanks, I'm queueing it for 2.4.37.
+Almost certainly the latter.  Is the disk interrupt shared with any 
+other interrupts, that are marked IRQF_NODELAY?  The -rt patch doesn't 
+seem to handle mixing the two well.
 
-> I have also supplied two other patches for 2.4.36.4
-> 
-> From the enclosed README :
-> 
-> "The following patches are for kernel 2.4.36.4 sources
-> obtained from kernel.org :
-> 
-> intel_sata_ich8.patch
-> This patches drivers/scsi/ata_piix.c
-> It allows the kernel to access a SATA drive on an Intel ICH8 controller
-> using the ich7 driver. This has been tested and it seems quite stable.
-> 
-> sigset_cast.patch
-> This patches include/linux/signal.h
-> There is an implicit cast from an integer to an
-> unsigned long (sigset_t) which causes compilers to generate warnings.
-> Different compilers could possibly produce different code.
-> This change has been tested over several years of use and is stable.
+Oh, and just to be sure: you do have CONFIG_PREEMPT_RT turned on, and 
+not just CONFIG_PREEMPT, right?  The non-preempt-rt versions in the -rt 
+patch don't look like they disable interrupts, though I may just be 
+getting lost in a sea of underscores and ifdefs.
 
-OK, it makes sense. Another solution could have been to use ~0 instead of
-(unsigned long)-1, but at least using -1 is easier to match with other
-places. It would be kind to send the same patch for 2.6-mainline too.
-
-> processor_colons_gcc-2.95.3.patch
-> This patches include/asm/processor.h
-> Sometime between 2.4.29 and 2.4.36.2 spaces were deleted between colons
-> which causes compiler gcc 2.95.3 to fail to parse the header
-> when compiling applications which include it.
-> Adding back the spaces solves the problem on gcc 2.95.3.
-
-Amusing. Interestingly, I mostly build my kernels with 2.95.3 too and never
-got this funny thing. But I think that 2.95.3 has existed in so many flavors
-that all we know is that it's based on some 2.95.[234] + more or less a ton
-of patches.
-
-> gcc 4.1.1 also compiles the kernel OK with this patch."
-
-I have no worries about this :-)
-
-OK, I'm queueing your patches.
-
-Thanks Steve!
-Willy
+-Scott
 
