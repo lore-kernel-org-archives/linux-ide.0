@@ -1,40 +1,58 @@
-From: Elias Oltmanns <eo@nebensachen.de>
-Subject: Re: [PATCH 2/5] libata: consistently use msecs for time durations
-Date: Tue, 20 May 2008 00:35:23 +0200
-Message-ID: <873aodx6qc.fsf@denkblock.local>
-References: <12112174741373-git-send-email-htejun@gmail.com>
-	<12112174751988-git-send-email-htejun@gmail.com>
+From: Adrian Bunk <bunk@kernel.org>
+Subject: Re: [RFC: 2.6 patch] MAINTAINERS: remove SIS 5513 IDE entry
+Date: Tue, 20 May 2008 01:35:56 +0300
+Message-ID: <20080519223556.GC17716@cs181133002.pp.htv.fi>
+References: <20080519220942.GX17716@cs181133002.pp.htv.fi>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nebensachen.de ([195.34.83.29]:41573 "EHLO mail.nebensachen.de"
+Received: from smtp5.pp.htv.fi ([213.243.153.39]:46144 "EHLO smtp5.pp.htv.fi"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755466AbYESWfU (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 19 May 2008 18:35:20 -0400
+	id S1755634AbYESWiD (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 19 May 2008 18:38:03 -0400
+Content-Disposition: inline
+In-Reply-To: <20080519220942.GX17716@cs181133002.pp.htv.fi>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: jeff@garzik.org, linux-ide@vger.kernel.org, liml@rtr.ca
+To: bzolnier@gmail.com
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Tejun Heo <htejun@gmail.com> wrote:
-> libata has been using mix of jiffies and msecs for time druations.
-> This is getting confusing.  As writing sub HZ values in jiffies is
-> PITA and msecs_to_jiffies() can't be used as initializer, unify unit
-> for all time durations to msecs.  So, durations are in msecs and
-> deadlines are in jiffies.  ata_deadline() is added to compute deadline
-> from a start time and duration in msecs.
->
-> While at it, drop now superflous _msec suffix from arguments and
-> rename @timeout to @deadline if it represents a fixed point in time
-> rather than duration.
->
-> Signed-off-by: Tejun Heo <htejun@gmail.com>
-[...]
-> +static inline unsigned long ata_deadline(unsigned long from_jiffies,
-> +					 unsigned long timeout_msecs)
-							      ^^^^^^
-Wouldn't that be against the newly adopted convention? Just a thought.
+On Tue, May 20, 2008 at 01:09:42AM +0300, Adrian Bunk wrote:
+> - maintainer has not been active for years
+> - URLs no longer exist
+> - covered by the IDE SUBSYSTEM entry
 
-Regards,
+- maintainer email bounces
 
-Elias
+> Signed-off-by: Adrian Bunk <bunk@kernel.org>
+> 
+> ---
+> 277a244cfa665db347cc0c2ec27b19d73fd0ee2a diff --git a/MAINTAINERS b/MAINTAINERS
+> index af69cab..0220ce9 100644
+> --- a/MAINTAINERS
+> +++ b/MAINTAINERS
+> @@ -3623,13 +3623,6 @@ M:	romieu@fr.zoreil.com
+>  L:	netdev@vger.kernel.org
+>  S:	Maintained
+>  
+> -SIS 5513 IDE CONTROLLER DRIVER
+> -P:	Lionel Bouton
+> -M:	Lionel.Bouton@inet6.fr
+> -W:	http://inet6.dyn.dhs.org/sponsoring/sis5513/index.html
+> -W:	http://gyver.homeip.net/sis5513/index.html
+> -S:	Maintained
+> -
+>  SIS 900/7016 FAST ETHERNET DRIVER
+>  P:	Daniele Venzano
+>  M:	venza@brownhat.org
+
+cu
+Adrian
+
+-- 
+
+       "Is there not promise of rain?" Ling Tan asked suddenly out
+        of the darkness. There had been need of rain for many days.
+       "Only a promise," Lao Er said.
+                                       Pearl S. Buck - Dragon Seed
+
