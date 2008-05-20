@@ -1,39 +1,51 @@
-From: Mark Lord <liml@rtr.ca>
-Subject: Re: [PATCHSET #upstream-fixes] git tree available
-Date: Mon, 19 May 2008 22:58:23 -0400
-Message-ID: <48323E4F.3050806@rtr.ca>
-References: <12111273141039-git-send-email-htejun@gmail.com> <48305961.2050509@gmail.com> <006501c8ba19$c1f53340$6917a8c0@parents>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: [PATCH 3/5] libata: improve EH retry delay handling
+Date: Tue, 20 May 2008 13:02:22 +0900
+Message-ID: <48324D4E.1040109@gmail.com>
+References: <12112174741373-git-send-email-htejun@gmail.com>	<1211217475951-git-send-email-htejun@gmail.com> <20080519193311.01b5b928@core>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([76.10.145.34]:1098 "EHLO mail.rtr.ca"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754451AbYETC62 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 19 May 2008 22:58:28 -0400
-In-Reply-To: <006501c8ba19$c1f53340$6917a8c0@parents>
+Received: from wf-out-1314.google.com ([209.85.200.172]:29506 "EHLO
+	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750700AbYETEC2 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 20 May 2008 00:02:28 -0400
+Received: by wf-out-1314.google.com with SMTP id 27so1604920wfd.4
+        for <linux-ide@vger.kernel.org>; Mon, 19 May 2008 21:02:27 -0700 (PDT)
+In-Reply-To: <20080519193311.01b5b928@core>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Brian & Chamaigne Scamman <scammanbc@earthlink.net>
-Cc: 'Tejun Heo' <htejun@gmail.com>, jeff@garzik.org, linux-ide@vger.kernel.org
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: jeff@garzik.org, linux-ide@vger.kernel.org, liml@rtr.ca
 
-Brian & Chamaigne Scamman wrote:
-> Tejun-
+Alan Cox wrote:
+> On Tue, 20 May 2008 02:17:52 +0900
+> Tejun Heo <htejun@gmail.com> wrote:
 > 
-> The hotplug fixes didn't solve the problem. After adding some "logic
-> monitoring" statements, I found that the successful discovery of the drives
-> depends on the response from sil24_exec_polled_cmd.
+>> EH retries were delayed by 5 seconds to ensure that resets don't occur
+>> back-to-back.  However, this 5 second delay is superflous or excessive
+>> in many cases.  For example, after IDENTIFY times out, there's no
+>> reason to wait five more seconds before retrying.
 > 
-> If the call from ata_wait_register is 327680, the drives are recognized; if
-> the response is 262144 the drives have timed out.
+> You'll crash some ATAPI CD-ROM drives without that delay - at least for
+> PATA. As in power cycle required to get it back.
 > 
-> I've also noticed that the drives respond to the EH entering with DevExch
-> vs. PHY RDY changed.
-> 
-> Bottom line, the drives seem to be recognized almost every time I attach
-> them to the PMP after the EH has completed processing the empty PMP.  If the
-> drives are attached to the PMP before the PMP is attached to the controller,
-> the drives are almost never recognized (EH times out).
-..
+> Perhaps we should check cable type here ?
 
-hp-polling is beginning to look better and better..  again.  :)
+No, no, the five secs is still there.
+
+e.g. Previously:
+
+	reset (fail) - 5s retry wait - reset
+	reset - IDENTIFY (30s timeout) - 5s retry wait - reset
+
+Now:
+
+	reset (fail) - 5s retry wait - reset
+	reset - IDENTIFY (30s timeout) - reset
+
+So, the inter-reset delay is never shorter than 5s.
+
+-- 
+tejun
