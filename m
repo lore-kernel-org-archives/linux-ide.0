@@ -1,46 +1,31 @@
-From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: Re: [PATCH 1/4] block: use ARCH_KMALLOC_MINALIGN as the default
- dma pad mask
-Date: Tue, 20 May 2008 18:58:17 +0900
-Message-ID: <20080520185827U.tomof@acm.org>
-References: <20080520023129.2f921f24.akpm@linux-foundation.org>
-	<20080520093819.GA9147@gondor.apana.org.au>
-	<20080520025231.b88bc71d.akpm@linux-foundation.org>
+From: Matthew Garrett <mjg59@srcf.ucam.org>
+Subject: Re: [PATCH] Fixups to ATA ACPI hotplug
+Date: Tue, 20 May 2008 11:20:38 +0100
+Message-ID: <20080520102038.GA2441@srcf.ucam.org>
+References: <20080505223357.GA2839@srcf.ucam.org> <20080506081347.GA8688@homac> <20080506082110.GA10355@srcf.ucam.org> <48201987.4020009@gmail.com> <20080506092653.GB4378@homac> <20080506093628.GA12469@srcf.ucam.org> <20080519162934.GA15623@srcf.ucam.org> <20080520074442.GA14417@homac>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <20080520025231.b88bc71d.akpm@linux-foundation.org>
-Sender: linux-scsi-owner@vger.kernel.org
-To: akpm@linux-foundation.org
-Cc: herbert@gondor.apana.org.au, fujita.tomonori@lab.ntt.co.jp, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, jens.axboe@oracle.com, tsbogend@alpha.franken.de, bzolnier@gmail.com, James.Bottomley@HansenPartnership.com, jeff@garzik.org, davem@davemloft.net, linux-mm@kvack.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-acpi-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20080520074442.GA14417@homac>
+Sender: linux-acpi-owner@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>, linux-ide@vger.kernel.org, Jeff Garzik <jeff@garzik.org>, linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
-On Tue, 20 May 2008 02:52:31 -0700
-Andrew Morton <akpm@linux-foundation.org> wrote:
+On Tue, May 20, 2008 at 09:44:42AM +0200, Holger Macht wrote:
 
-> On Tue, 20 May 2008 17:38:20 +0800 Herbert Xu <herbert@gondor.apana.org.au> wrote:
-> 
-> > On Tue, May 20, 2008 at 02:31:29AM -0700, Andrew Morton wrote:
-> > >
-> > > So here you're using it for "dma aligment" whereas crypto is using it
-> > > (or ARCH_SLAB_MINALIGN!) for "cpu 64-bit alignment".
-> > 
-> > No the 64-bit alignment is just an example.  The purpose of
-> > CRYPTO_MINALIGN is pretty much the same as ARCH_KMALLOC_MINALIGN,
-> > i.e., the minimum alignment guaranteed by kmalloc.  The only
-> > reason it exists is because ARCH_KMALLOC_MINALIGN isn't defined
-> > on all platforms.
-> 
-> I'm struggling to understand what you're saying here.
-> 
-> The comment you have there over the CRYPTO_MINALIGN definition is quite
-> specific.  Is it wrong?
-> 
-> Whether the mapping between CRYPTO_MINALIGN and ARCH_KMALLOC_MINALIGN
-> is abusive is (I find) hard to say, because first one would need to be
-> able to say what ARCH_KMALLOC_MINALIGN is for.  I expect it was for DMA
-> purposes.
+> * In case of an ACPI_NOTIFY_DEVICE/BUS_CHECK, evaluate _STA to check if
+>   the device has been plugged or unplugged. If plugged, hotplug it, if
+>   unplugged, just signal event to userspace
+>   (initial patch by Matthew Garrett <mjg59@srcf.ucam.org>)
 
-Yeah, ARCH_KMALLOC_MINALIGN is for DMA. Non coherent platforms define
-it.
+The only issue I can see is that this one doesn't check _EJ0. Unless 
+that's done, you'll (on some hardware) evaluate _STA on the bay itself 
+rather than the device within the bay, which leads to confusion as to 
+whether the device has been inserted. Other than that, looks good. 
+Jeff's sent my patch to Linus, so can you redo this on top and I'll sign 
+it off?
+
+Thanks,
+-- 
+Matthew Garrett | mjg59@srcf.ucam.org
