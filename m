@@ -1,55 +1,34 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH 22/40] ide-floppy: start DMA engine in idefloppy_transfer_pc1()
-Date: Tue, 20 May 2008 15:00:41 +0400
-Message-ID: <4832AF59.1020808@ru.mvista.com>
-References: <20080518185428.5636.77234.sendpatchset@localhost.localdomain> <20080518185745.5636.55162.sendpatchset@localhost.localdomain>
+From: Herbert Xu <herbert@gondor.apana.org.au>
+Subject: Re: [PATCH 1/4] block: use ARCH_KMALLOC_MINALIGN as the default dma pad mask
+Date: Tue, 20 May 2008 19:32:35 +0800
+Message-ID: <20080520113235.GA9801@gondor.apana.org.au>
+References: <1211259514-9131-1-git-send-email-fujita.tomonori@lab.ntt.co.jp> <1211259514-9131-2-git-send-email-fujita.tomonori@lab.ntt.co.jp> <20080520023129.2f921f24.akpm@linux-foundation.org> <20080520093819.GA9147@gondor.apana.org.au> <20080520025231.b88bc71d.akpm@linux-foundation.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from homer.mvista.com ([63.81.120.155]:56519 "EHLO
-	imap.sh.mvista.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1756822AbYETLBG (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 20 May 2008 07:01:06 -0400
-In-Reply-To: <20080518185745.5636.55162.sendpatchset@localhost.localdomain>
+Received: from rhun.apana.org.au ([64.62.148.172]:52507 "EHLO
+	arnor.apana.org.au" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751616AbYETLc4 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 20 May 2008 07:32:56 -0400
+Content-Disposition: inline
+In-Reply-To: <20080520025231.b88bc71d.akpm@linux-foundation.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: linux-ide@vger.kernel.org, Borislav Petkov <petkovbb@gmail.com>, linux-kernel@vger.kernel.org
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, jens.axboe@oracle.com, tsbogend@alpha.franken.de, bzolnier@gmail.com, James.Bottomley@HansenPartnership.com, jeff@garzik.org, davem@davemloft.net, linux-mm@kvack.org
 
-Hello.
+On Tue, May 20, 2008 at 02:52:31AM -0700, Andrew Morton wrote:
+> 
+> The comment you have there over the CRYPTO_MINALIGN definition is quite
+> specific.  Is it wrong?
 
-Bartlomiej Zolnierkiewicz wrote:
+No it's not wrong, but the comment isn't about CRYPTO_MINALIGN.
+The comment is talking about CRYPTO_MINALIGN_ATTR, which uses
+CRYPTO_MINALIGN.
 
-> Start DMA engine and set PC_FLAG_DMA_IN_PROGRESS flag in
-> idefloppy_transfer_pc1() instead of idefloppy_issue_pc()
-
-    Good. I have long ago noticed that DMA is started too early in ide-floppy 
-which is known to cobfuse some chips (like PDC20246) and was going to do a 
-patch at first but the lack of hardware (and time) stopped me...
-
-> so the Status Register and the Interrupt Reason Register
-> are checked first.
-
-> Cc: Borislav Petkov <petkovbb@gmail.com>
-> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-
-> Index: b/drivers/ide/ide-floppy.c
-> ===================================================================
-> --- a/drivers/ide/ide-floppy.c
-> +++ b/drivers/ide/ide-floppy.c
-[...]
-> @@ -568,6 +569,12 @@ static ide_startstop_t idefloppy_transfe
->  
->  	ide_set_handler(drive, &idefloppy_pc_intr, timeout, expiry);
->  
-> +	/* Begin DMA, if necessary */
-> +	if (pc->flags & PC_FLAG_DMA_OK) {
-> +		pc->flags |= PC_FLAG_DMA_IN_PROGRESS;
-> +		hwif->dma_ops->dma_start(drive);
-> +	}
-> +
-
-    May be too early still... ide-cd does this after writing the command packet.
-
-WBR, Sergei
+Cheers,
+-- 
+Visit Openswan at http://www.openswan.org/
+Email: Herbert Xu ~{PmV>HI~} <herbert@gondor.apana.org.au>
+Home Page: http://gondor.apana.org.au/~herbert/
+PGP Key: http://gondor.apana.org.au/~herbert/pubkey.txt
