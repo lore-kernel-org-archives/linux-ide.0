@@ -1,53 +1,242 @@
-From: "Brian & Chamaigne Scamman" <scammanbc@earthlink.net>
-Subject: RE: [PATCHSET #upstream-fixes] git tree available
-Date: Tue, 20 May 2008 08:08:35 -0400
-Message-ID: <006f01c8ba72$3ac5d1a0$6917a8c0@parents>
-References: <12111273141039-git-send-email-htejun@gmail.com> <48305961.2050509@gmail.com> <006501c8ba19$c1f53340$6917a8c0@parents> <48323E4F.3050806@rtr.ca> <4832535B.1080505@gmail.com>
+From: Holger Macht <hmacht@suse.de>
+Subject: Re: [PATCH] Fixups to ATA ACPI hotplug
+Date: Tue, 20 May 2008 15:18:32 +0200
+Message-ID: <20080520131831.GA568@homac>
+References: <20080505223357.GA2839@srcf.ucam.org> <20080506081347.GA8688@homac> <20080506082110.GA10355@srcf.ucam.org> <48201987.4020009@gmail.com> <20080506092653.GB4378@homac> <20080506093628.GA12469@srcf.ucam.org> <20080519162934.GA15623@srcf.ucam.org> <20080520074442.GA14417@homac> <20080520102038.GA2441@srcf.ucam.org>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from elasmtp-scoter.atl.sa.earthlink.net ([209.86.89.67]:49445 "EHLO
-	elasmtp-scoter.atl.sa.earthlink.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753851AbYETMIo (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 20 May 2008 08:08:44 -0400
-In-Reply-To: <4832535B.1080505@gmail.com>
+Received: from mx2.suse.de ([195.135.220.15]:50854 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751020AbYETNQD (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 20 May 2008 09:16:03 -0400
+Content-Disposition: inline
+In-Reply-To: <20080520102038.GA2441@srcf.ucam.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: 'Tejun Heo' <htejun@gmail.com>, 'Mark Lord' <liml@rtr.ca>
-Cc: jeff@garzik.org, linux-ide@vger.kernel.org
+To: Matthew Garrett <mjg59@srcf.ucam.org>
+Cc: Tejun Heo <htejun@gmail.com>, linux-ide@vger.kernel.org, Jeff Garzik <jeff@garzik.org>, linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Tejun Heo wrote:
->Can you please describe what you did exactly?  sil3726/4726 has some 
->problems when its first fan out port goes online and offline while it's 
->powered up.  You want to keep it occupied at all times.
->
-Here's the current setup:
-- PMP powered via computer's power supply; on with computer
-- SSD and bridges powered via computer's power supply; on with computer
-- FC9 with new 2.6.26-rc2-hotplug-patches installed and booted
-- Once computer is booted, login, open a terminal and dmesg -c
-For the case which fails:
-- plug SSD drive/bridge into PMP port 0
-- plug eSata cable into PMP
-- plug eSata cable into eSata port on controller
-- watch the softreset timeout
-For the case which works:
-- plug eSata cable into PMP
-- plug eSata cable into eSata port on controller
-- watch the PMP become recognized
-- plug SSD drive/bridge into PMP port 0
-- watch the SSD drive become recognized
+On Tue 20. May - 11:20:38, Matthew Garrett wrote:
+> On Tue, May 20, 2008 at 09:44:42AM +0200, Holger Macht wrote:
+> 
+> > * In case of an ACPI_NOTIFY_DEVICE/BUS_CHECK, evaluate _STA to check if
+> >   the device has been plugged or unplugged. If plugged, hotplug it, if
+> >   unplugged, just signal event to userspace
+> >   (initial patch by Matthew Garrett <mjg59@srcf.ucam.org>)
+> 
+> The only issue I can see is that this one doesn't check _EJ0. Unless 
+> that's done, you'll (on some hardware) evaluate _STA on the bay itself 
+> rather than the device within the bay, which leads to confusion as to 
+> whether the device has been inserted. Other than that, looks good. 
+> Jeff's sent my patch to Linus, so can you redo this on top and I'll sign 
+> it off?
 
-Steps above are repeatable. Previously I was applying power to the PMP while
-the drives were attached (PMP, bridges and drives all receiving power at the
-same time) and then plugging in the eSata cable, but this case always failed
-as well.
+Handle bay devices in dock stations
 
->Also, does putting sslep(5) right before followup-SRST help?
->
-I'll look at adding the sslep line and the new patch (independently).
+* Differentiate between bay devices in dock stations and others:
 
--Brian
+ - When an ACPI_NOTIFY_EJECT_REQUEST appears, just signal uevent to
+   userspace (that is when the optional eject button on a bay device is
+   pressed/pulled) giving the possibility to unmount file systems and to
+   clean up. Also, only send uevent in case we get an EJECT_REQUEST
+   without doing anything else. In other cases, you'll get an add/remove
+   event because libata attaches/detaches the device.
+
+ - In case of a dock event, which in turn signals an
+   ACPI_NOTIFY_EJECT_REQUEST, immediately detach the device, because it
+   may already have been gone
+
+* In case of an ACPI_NOTIFY_DEVICE/BUS_CHECK, evaluate _STA to check if
+  the device has been plugged or unplugged. If plugged, hotplug it, if
+  unplugged, just signal event to userspace
+  (initial patch by Matthew Garrett <mjg59@srcf.ucam.org>)
+
+Signed-off-by: Holger Macht <hmacht@suse.de>
+---
+
+--- linux-2.6.25/drivers/ata/libata-acpi.c.orig	2008-05-20 13:25:50.000000000 +0200
++++ linux-2.6.25/drivers/ata/libata-acpi.c	2008-05-20 15:12:03.000000000 +0200
+@@ -118,8 +118,25 @@ static void ata_acpi_associate_ide_port(
+ 		ap->pflags |= ATA_PFLAG_INIT_GTM_VALID;
+ }
+ 
++static void ata_acpi_detach_device(struct ata_port *ap, struct ata_device *dev)
++{
++	if (dev)
++		dev->flags |= ATA_DFLAG_DETACH;
++	else {
++		struct ata_link *tlink;
++		struct ata_device *tdev;
++
++		ata_port_for_each_link(tlink, ap)
++			ata_link_for_each_dev(tdev, tlink)
++			tdev->flags |= ATA_DFLAG_DETACH;
++	}
++
++	ata_port_freeze(ap);
++	ata_port_schedule_eh(ap);
++}
++
+ static void ata_acpi_handle_hotplug(struct ata_port *ap, struct ata_device
+-				    *dev, u32 event)
++				    *dev, u32 event, int is_dock_event)
+ {
+ 	char event_string[12];
+ 	char *envp[] = { event_string, NULL };
+@@ -135,83 +152,92 @@ static void ata_acpi_handle_hotplug(stru
+ 		ap = dev->link->ap;
+ 	ehi = &ap->link.eh_info;
+ 
+-	spin_lock_irqsave(ap->lock, flags);
+-
+-	if (dev)
++	if (dev) {
++		if (dev->sdev)
++			kobj = &dev->sdev->sdev_gendev.kobj;
+ 		handle = dev->acpi_handle;
+-	else
++	} else {
++		kobj = &ap->dev->kobj;
+ 		handle = ap->acpi_handle;
+-
+-	status = acpi_get_handle(handle, "_EJ0", &tmphandle);
+-	if (ACPI_FAILURE(status)) {
+-		/* This device is not ejectable */
+-		spin_unlock_irqrestore(ap->lock, flags);
+-		return;
+ 	}
+ 
+-	status = acpi_evaluate_integer(handle, "_STA", NULL, &sta);
+-	if (ACPI_FAILURE(status)) {
+-		printk ("Unable to determine bay status\n");
+-		spin_unlock_irqrestore(ap->lock, flags);
+-		return;
++	if (kobj && !is_dock_event) {
++		sprintf(event_string, "BAY_EVENT=%d", event);
++		kobject_uevent_env(kobj, KOBJ_CHANGE, envp);
+ 	}
+ 
++	spin_lock_irqsave(ap->lock, flags);
++
+ 	switch (event) {
+ 	case ACPI_NOTIFY_BUS_CHECK:
+ 	case ACPI_NOTIFY_DEVICE_CHECK:
+ 		ata_ehi_push_desc(ehi, "ACPI event");
+-		if (!sta) {
+-                /* Device has been unplugged */
+-			if (dev)
+-				dev->flags |= ATA_DFLAG_DETACH;
+-			else {
+-				struct ata_link *tlink;
+-				struct ata_device *tdev;
+-
+-				ata_port_for_each_link(tlink, ap) {
+-					ata_link_for_each_dev(tdev, tlink) {
+-						tdev->flags |=
+-							ATA_DFLAG_DETACH;
+-					}
+-				}
+-			}
+-			ata_port_schedule_eh(ap);
+-			wait = 1;
+-		} else {
++
++		status = acpi_get_handle(handle, "_EJ0", &tmphandle);
++		if (ACPI_FAILURE(status)) {
++			/* This device is not ejectable */
++			break;
++		}
++
++		status = acpi_evaluate_integer(handle, "_STA", NULL, &sta);
++		if (ACPI_FAILURE(status)) {
++			printk(KERN_ERR "Unable to determine bay status\n");
++			break;
++		}
++
++		if (sta) {
+ 			ata_ehi_hotplugged(ehi);
+ 			ata_port_freeze(ap);
++		} else {
++			/* The device has gone - unplug it */
++			ata_acpi_detach_device(ap, dev);
++			wait = 1;
+ 		}
++		break;
++	case ACPI_NOTIFY_EJECT_REQUEST:
++		ata_ehi_push_desc(ehi, "ACPI event");
++
++		if (!is_dock_event)
++			break;
++
++		/* undock event - immediate unplug */
++		ata_acpi_detach_device(ap, dev);
++		wait = 1;
++		break;
+ 	}
+ 
+ 	spin_unlock_irqrestore(ap->lock, flags);
+ 
+ 	if (wait)
+ 		ata_port_wait_eh(ap);
++}
+ 
+-	if (dev) {
+-		if (dev->sdev)
+-			kobj = &dev->sdev->sdev_gendev.kobj;
+-	} else
+-		kobj = &ap->dev->kobj;
++static void ata_acpi_dev_notify_dock(acpi_handle handle, u32 event, void *data)
++{
++	struct ata_device *dev = data;
+ 
+-	if (kobj) {
+-		sprintf(event_string, "BAY_EVENT=%d", event);
+-		kobject_uevent_env(kobj, KOBJ_CHANGE, envp);
+-	}
++	ata_acpi_handle_hotplug(NULL, dev, event, 1);
++}
++
++static void ata_acpi_ap_notify_dock(acpi_handle handle, u32 event, void *data)
++{
++	struct ata_port *ap = data;
++
++	ata_acpi_handle_hotplug(ap, NULL, event, 1);
+ }
+ 
+ static void ata_acpi_dev_notify(acpi_handle handle, u32 event, void *data)
+ {
+ 	struct ata_device *dev = data;
+ 
+-	ata_acpi_handle_hotplug(NULL, dev, event);
++	ata_acpi_handle_hotplug(NULL, dev, event, 0);
+ }
+ 
+ static void ata_acpi_ap_notify(acpi_handle handle, u32 event, void *data)
+ {
+ 	struct ata_port *ap = data;
+ 
+-	ata_acpi_handle_hotplug(ap, NULL, event);
++	ata_acpi_handle_hotplug(ap, NULL, event, 0);
+ }
+ 
+ /**
+@@ -252,7 +278,7 @@ void ata_acpi_associate(struct ata_host
+ 						    ata_acpi_ap_notify, ap);
+ 			/* we might be on a docking station */
+ 			register_hotplug_dock_device(ap->acpi_handle,
+-						     ata_acpi_ap_notify, ap);
++					     ata_acpi_ap_notify_dock, ap);
+ 		}
+ 
+ 		for (j = 0; j < ata_link_max_devices(&ap->link); j++) {
+@@ -264,7 +290,7 @@ void ata_acpi_associate(struct ata_host
+ 						ata_acpi_dev_notify, dev);
+ 				/* we might be on a docking station */
+ 				register_hotplug_dock_device(dev->acpi_handle,
+-						ata_acpi_dev_notify, dev);
++					     ata_acpi_dev_notify_dock, dev);
+ 			}
+ 		}
+ 	}
 
