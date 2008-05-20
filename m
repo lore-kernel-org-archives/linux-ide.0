@@ -1,30 +1,50 @@
-From: Matthew Garrett <mjg59@srcf.ucam.org>
-Subject: Re: [PATCH] Fixups to ATA ACPI hotplug
-Date: Tue, 20 May 2008 14:22:17 +0100
-Message-ID: <20080520132217.GA5633@srcf.ucam.org>
-References: <20080505223357.GA2839@srcf.ucam.org> <20080506081347.GA8688@homac> <20080506082110.GA10355@srcf.ucam.org> <48201987.4020009@gmail.com> <20080506092653.GB4378@homac> <20080506093628.GA12469@srcf.ucam.org> <20080519162934.GA15623@srcf.ucam.org> <20080520074442.GA14417@homac> <20080520102038.GA2441@srcf.ucam.org> <20080520131831.GA568@homac>
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Subject: Re: [PATCH 1/4] block: use ARCH_KMALLOC_MINALIGN as the default
+ dma pad mask
+Date: Tue, 20 May 2008 22:25:25 +0900
+Message-ID: <20080520222531H.tomof@acm.org>
+References: <1211259514-9131-2-git-send-email-fujita.tomonori@lab.ntt.co.jp>
+	<20080520023129.2f921f24.akpm@linux-foundation.org>
+	<20080520093819.GA9147@gondor.apana.org.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: Text/Plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from cavan.codon.org.uk ([93.93.128.6]:46648 "EHLO
-	vavatch.codon.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754735AbYETNWg (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 20 May 2008 09:22:36 -0400
-Content-Disposition: inline
-In-Reply-To: <20080520131831.GA568@homac>
+Received: from mo11.iij4u.or.jp ([210.138.174.79]:36623 "EHLO mo11.iij4u.or.jp"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758450AbYETN1k (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 20 May 2008 09:27:40 -0400
+In-Reply-To: <20080520093819.GA9147@gondor.apana.org.au>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>, linux-ide@vger.kernel.org, Jeff Garzik <jeff@garzik.org>, linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: herbert@gondor.apana.org.au
+Cc: akpm@linux-foundation.org, fujita.tomonori@lab.ntt.co.jp, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, jens.axboe@oracle.com, tsbogend@alpha.franken.de, bzolnier@gmail.com, James.Bottomley@HansenPartnership.com, jeff@garzik.org, davem@davemloft.net, linux-mm@kvack.org
 
-On Tue, May 20, 2008 at 03:18:32PM +0200, Holger Macht wrote:
+On Tue, 20 May 2008 17:38:20 +0800
+Herbert Xu <herbert@gondor.apana.org.au> wrote:
 
-> +	if (kobj && !is_dock_event) {
-> +		sprintf(event_string, "BAY_EVENT=%d", event);
-> +		kobject_uevent_env(kobj, KOBJ_CHANGE, envp);
+> On Tue, May 20, 2008 at 02:31:29AM -0700, Andrew Morton wrote:
+> >
+> > So here you're using it for "dma aligment" whereas crypto is using it
+> > (or ARCH_SLAB_MINALIGN!) for "cpu 64-bit alignment".
+> 
+> No the 64-bit alignment is just an example.  The purpose of
+> CRYPTO_MINALIGN is pretty much the same as ARCH_KMALLOC_MINALIGN,
+> i.e., the minimum alignment guaranteed by kmalloc.  The only
+> reason it exists is because ARCH_KMALLOC_MINALIGN isn't defined
+> on all platforms.
 
-I think we want to do the _EJ0 checking before this, otherwise we'll 
-generate two uevents for the same removal on some hardware. Otherwise, 
-looks good.
+struct ablkcipher_request {
+	struct crypto_async_request base;
 
--- 
-Matthew Garrett | mjg59@srcf.ucam.org
+	unsigned int nbytes;
+
+	void *info;
+
+	struct scatterlist *src;
+	struct scatterlist *dst;
+
+	void *__ctx[] CRYPTO_MINALIGN_ATTR;
+};
+
+Does someone do DMA from/to __ctx?
