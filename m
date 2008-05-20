@@ -1,53 +1,39 @@
-From: "peerchen" <peerchen@gmail.com>
-Subject: Re: Re: [PATCH] ahci: change the Device IDs of nvidia MCP7B AHCI controllerin ahci.c
-Date: Tue, 20 May 2008 10:50:56 +0800
-Message-ID: <200805201050523570380@gmail.com>
-References: <200805191444539981741@gmail.com>,
- <4831D0F8.4060706@garzik.org>
+From: Mark Lord <liml@rtr.ca>
+Subject: Re: [PATCHSET #upstream-fixes] git tree available
+Date: Mon, 19 May 2008 22:58:23 -0400
+Message-ID: <48323E4F.3050806@rtr.ca>
+References: <12111273141039-git-send-email-htejun@gmail.com> <48305961.2050509@gmail.com> <006501c8ba19$c1f53340$6917a8c0@parents>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="gb2312"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.179]:57375 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755622AbYETCvB (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 19 May 2008 22:51:01 -0400
-Received: by wa-out-1112.google.com with SMTP id j37so2130764waf.23
-        for <linux-ide@vger.kernel.org>; Mon, 19 May 2008 19:51:01 -0700 (PDT)
+Received: from rtr.ca ([76.10.145.34]:1098 "EHLO mail.rtr.ca"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754451AbYETC62 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 19 May 2008 22:58:28 -0400
+In-Reply-To: <006501c8ba19$c1f53340$6917a8c0@parents>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: linux-kernel <linux-kernel@vger.kernel.org>, linux-ide <linux-ide@vger.kernel.org>, akpm <akpm@linux-foundation.org>
+To: Brian & Chamaigne Scamman <scammanbc@earthlink.net>
+Cc: 'Tejun Heo' <htejun@gmail.com>, jeff@garzik.org, linux-ide@vger.kernel.org
 
-V2UgbWFrZSBhIG1pc3Rha2UsIHRoZSBJRHMgbmVlZCB0byBiZSBjaGFuZ2VkIGFyZSBub3QgY29y
-cmVjdCwgdGhvc2UgSURzIGJlbG9uZyB0byBvdGhlciBkZXZpY2VzLg0KDQotLS0tLS0tLS0tLS0t
-LS0tLS0JCQkJIA0KcGVlcmNoZW4NCjIwMDgtMDUtMjANCg0KLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLQ0Kt6K8/sjLo7pKZWZmIEdh
-cnppaw0Kt6LLzcjVxtqjujIwMDgtMDUtMjAgMDM6MTE6NTYNCsrVvP7Iy6O6cGVlcmNoZW4NCrOt
-y82jumxpbnV4LWtlcm5lbDsgbGludXgtaWRlOyBha3BtDQrW98zio7pSZTogW1BBVENIXSBhaGNp
-OiBjaGFuZ2UgdGhlIERldmljZSBJRHMgb2YgbnZpZGlhIE1DUDdCIEFIQ0kgY29udHJvbGxlcmlu
-IGFoY2kuYw0KDQpwZWVyY2hlbiB3cm90ZToNCj4gQ2hhbmdlIHRoZSBwYXJ0aWFsIERldmljZSBJ
-RHMgb2YgbnZpZGlhIE1DUDdCIEFIQ0kgY29udHJvbGxlciBpbiBhaGNpLmMNCj4gDQo+IFNpZ25l
-ZC1vZmYtYnk6IFBlZXIgQ2hlbiA8cGVlcmNoZW5AZ21haWwuY29tPg0KPiAtLS0NCj4gLS0tIGxp
-bnV4LTIuNi4yNi1yYzMvZHJpdmVycy9hdGEvYWhjaS5jLm9yaWcJMjAwOC0wNS0wNyAxMzoyNDox
-OS4wMDAwMDAwMDAgLTA0MDANCj4gKysrIGxpbnV4LTIuNi4yNi1yYzMvZHJpdmVycy9hdGEvYWhj
-aS5jCTIwMDgtMDUtMDcgMTM6MjU6MTcuMDAwMDAwMDAwIC0wNDAwDQo+IEBAIC01MDIsMTAgKzUw
-MiwxMCBAQCBzdGF0aWMgY29uc3Qgc3RydWN0IHBjaV9kZXZpY2VfaWQgYWhjaV9wDQo+ICAJeyBQ
-Q0lfVkRFVklDRShOVklESUEsIDB4MGJjZCksIGJvYXJkX2FoY2kgfSwJCS8qIE1DUDdCICovDQo+
-ICAJeyBQQ0lfVkRFVklDRShOVklESUEsIDB4MGJjZSksIGJvYXJkX2FoY2kgfSwJCS8qIE1DUDdC
-ICovDQo+ICAJeyBQQ0lfVkRFVklDRShOVklESUEsIDB4MGJjZiksIGJvYXJkX2FoY2kgfSwJCS8q
-IE1DUDdCICovDQo+IC0JeyBQQ0lfVkRFVklDRShOVklESUEsIDB4MGJkMCksIGJvYXJkX2FoY2kg
-fSwJCS8qIE1DUDdCICovDQo+IC0JeyBQQ0lfVkRFVklDRShOVklESUEsIDB4MGJkMSksIGJvYXJk
-X2FoY2kgfSwJCS8qIE1DUDdCICovDQo+IC0JeyBQQ0lfVkRFVklDRShOVklESUEsIDB4MGJkMiks
-IGJvYXJkX2FoY2kgfSwJCS8qIE1DUDdCICovDQo+IC0JeyBQQ0lfVkRFVklDRShOVklESUEsIDB4
-MGJkMyksIGJvYXJkX2FoY2kgfSwJCS8qIE1DUDdCICovDQo+ICsJeyBQQ0lfVkRFVklDRShOVklE
-SUEsIDB4MGJjNCksIGJvYXJkX2FoY2kgfSwJCS8qIE1DUDdCICovDQo+ICsJeyBQQ0lfVkRFVklD
-RShOVklESUEsIDB4MGJjNSksIGJvYXJkX2FoY2kgfSwJCS8qIE1DUDdCICovDQo+ICsJeyBQQ0lf
-VkRFVklDRShOVklESUEsIDB4MGJjNiksIGJvYXJkX2FoY2kgfSwJCS8qIE1DUDdCICovDQo+ICsJ
-eyBQQ0lfVkRFVklDRShOVklESUEsIDB4MGJjNyksIGJvYXJkX2FoY2kgfSwJCS8qIE1DUDdCICov
-DQoNCkEgbGl0dGxlIGJpdCBtb3JlIHBhdGNoIGRlc2NyaXB0aW9uLCBwbGVhc2U/DQoNCldoeSBp
-cyB0aGlzIGNoYW5nZSBuZWVkZWQ/ICBBIGNoYW5nZSB3aXRoIGEgZGVzY3JpcHRpb24gb2YNCihw
-YXJhcGhyYXNpbmcpICJkbyB0aGlzIGNoYW5nZSIgaXMgcmF0aGVyIHZhZ3VlIDspDQoNCglKZWZm
-DQoNCg0KDQo=
+Brian & Chamaigne Scamman wrote:
+> Tejun-
+> 
+> The hotplug fixes didn't solve the problem. After adding some "logic
+> monitoring" statements, I found that the successful discovery of the drives
+> depends on the response from sil24_exec_polled_cmd.
+> 
+> If the call from ata_wait_register is 327680, the drives are recognized; if
+> the response is 262144 the drives have timed out.
+> 
+> I've also noticed that the drives respond to the EH entering with DevExch
+> vs. PHY RDY changed.
+> 
+> Bottom line, the drives seem to be recognized almost every time I attach
+> them to the PMP after the EH has completed processing the empty PMP.  If the
+> drives are attached to the PMP before the PMP is attached to the controller,
+> the drives are almost never recognized (EH times out).
+..
 
+hp-polling is beginning to look better and better..  again.  :)
