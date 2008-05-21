@@ -1,42 +1,45 @@
-From: Robert Hancock <hancockr@shaw.ca>
-Subject: Re: [PATCH] ata: fix sleep-while-holding-spinlock in sata_nv
-Date: Wed, 21 May 2008 08:31:26 -0600
-Message-ID: <4834323E.1060608@shaw.ca>
-References: <fa.m+kShlzXY/wmFlvZXsE0W7wQIxU@ifi.uio.no>
- <48338624.3000304@shaw.ca> <20080520214311.2d2aa8d3@infradead.org>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: Re: [PATCH 04/22] ide: add ide_deprecated_find_port() helper
+Date: Wed, 21 May 2008 18:29:56 +0400
+Message-ID: <483431E4.7020307@ru.mvista.com>
+References: <20080116232556.9166.13457.sendpatchset@localhost.localdomain> <20080116232624.9166.73929.sendpatchset@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S935491AbYEUOdt@vger.kernel.org>
-In-reply-to: <20080520214311.2d2aa8d3@infradead.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Arjan van de Ven <arjan@infradead.org>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from h155.mvista.com ([63.81.120.155]:10396 "EHLO imap.sh.mvista.com"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1755429AbYEUOaT (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 21 May 2008 10:30:19 -0400
+In-Reply-To: <20080116232624.9166.73929.sendpatchset@localhost.localdomain>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-rjan van de Ven wrote:
->> I'm not certain this is safe to do it quite this way. It would be
->> better to keep that spinlock held so that no operations could be in
->> progress on either port while these operations are happening.
-> 
-> blk_bounce_limit can sleep. that's just a fact of life ;(
+Hello.
 
-Now it can, for no reason. Under the conditions it was used before, it 
-never could.
+Bartlomiej Zolnierkiewicz wrote:
 
-> 
->> It would be better to fix the regression from 
->> 419c434c35614609fd0c79d335c134bf4b88b30b in block/blk_settings.c that 
->> resulted in the blk_queue_bounce_limit allocation wrongly allocating 
->> emergency ISA pages in the first place as a 32-bit DMA mask does not 
->> need them.
-> 
-> the condition under which it sleeps might be slightly buggy on your
-> exact x86 machine... but that doesn't mean that that is guaranteed to
-> be so forever going forward.... it's still a sleeping function.
+> * Factor out code for finding ide_hwifs[] slot from ide_register_hw()
+>   to ide_deprecated_find_port().
 
-More than slightly buggy, I think.. It seems like it is going to be 
-bouncing block layer accesses to devices with 32-bit DMA masks through 
-the 16MB ZONE_DMA. If that's what's actually going on, I'm surprised 
-there haven't been more regression reports. The fact that the function 
-now sleeps when it didn't before is the least of the problems here..
+> * Convert bast-ide, ide-cs and delkin_cb host drivers to use ide_device_add()
+>   instead of ide_register_hw() (while at it drop doing "ide_unregister()" loop
+>   which tries to unregister _all_ IDE interfaces if useable ide_hwifs[] slot
+>   cannot be find).
+
+    Er... this patch didn't actually drop that loop (late remark :-).
+
+> This patch leaves us with only two ide_register_hw() users:
+> - drivers/macintosh/mediabay.c
+> - drivers/ide/ide.c
+
+    I wonder whether ide_register_hw() was much good at all since it didn't 
+actually permit to register chips using MMIO: you couldn't pass that info via 
+'hw' and it set 'hwif->noprobe' to 0, thus giving you no chance to skip 
+probing which wouldn't work anyway; for the same reason it was no good for DMA 
+capable chips since you had not time to install ide_dma_check() and other DMA 
+methods. Am I right here?
+
+MBR, Sergei
