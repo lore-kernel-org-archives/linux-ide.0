@@ -1,35 +1,42 @@
-From: Herbert Xu <herbert@gondor.apana.org.au>
-Subject: Re: [PATCH 1/4] block: use ARCH_KMALLOC_MINALIGN as the default dma pad mask
-Date: Wed, 21 May 2008 21:19:06 +0800
-Message-ID: <20080521131906.GB20212@gondor.apana.org.au>
-References: <20080521210956C.tomof@acm.org> <20080521122218.GA19849@gondor.apana.org.au> <20080521214624Y.fujita.tomonori@lab.ntt.co.jp> <20080521215515G.fujita.tomonori@lab.ntt.co.jp>
+From: Robert Hancock <hancockr@shaw.ca>
+Subject: Re: [PATCH] ata: fix sleep-while-holding-spinlock in sata_nv
+Date: Wed, 21 May 2008 08:31:26 -0600
+Message-ID: <4834323E.1060608@shaw.ca>
+References: <fa.m+kShlzXY/wmFlvZXsE0W7wQIxU@ifi.uio.no>
+ <48338624.3000304@shaw.ca> <20080520214311.2d2aa8d3@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rhun.apana.org.au ([64.62.148.172]:60930 "EHLO
-	arnor.apana.org.au" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1750763AbYEUNTK (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 21 May 2008 09:19:10 -0400
-Content-Disposition: inline
-In-Reply-To: <20080521215515G.fujita.tomonori@lab.ntt.co.jp>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S935491AbYEUOdt@vger.kernel.org>
+In-reply-to: <20080520214311.2d2aa8d3@infradead.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Arjan van de Ven <arjan@infradead.org>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Cc: akpm@linux-foundation.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, jens.axboe@oracle.com, tsbogend@alpha.franken.de, bzolnier@gmail.com, James.Bottomley@HansenPartnership.com, jeff@garzik.org, davem@davemloft.net, linux-mm@kvack.org
 
-On Wed, May 21, 2008 at 09:55:15PM +0900, FUJITA Tomonori wrote:
->
-> > crypto hardware, it may be fine to use ALIGN_PTR for the hardware.
+rjan van de Ven wrote:
+>> I'm not certain this is safe to do it quite this way. It would be
+>> better to keep that spinlock held so that no operations could be in
+>> progress on either port while these operations are happening.
 > 
-> I still wonder it's acceptable or not.
+> blk_bounce_limit can sleep. that's just a fact of life ;(
 
-Normally I would say yes.  But because the context poitner is
-used on the most performance-critical path of the crypto API,
-I'd rather not use it unless necessary.
+Now it can, for no reason. Under the conditions it was used before, it 
+never could.
 
-Cheers,
--- 
-Visit Openswan at http://www.openswan.org/
-Email: Herbert Xu ~{PmV>HI~} <herbert@gondor.apana.org.au>
-Home Page: http://gondor.apana.org.au/~herbert/
-PGP Key: http://gondor.apana.org.au/~herbert/pubkey.txt
+> 
+>> It would be better to fix the regression from 
+>> 419c434c35614609fd0c79d335c134bf4b88b30b in block/blk_settings.c that 
+>> resulted in the blk_queue_bounce_limit allocation wrongly allocating 
+>> emergency ISA pages in the first place as a 32-bit DMA mask does not 
+>> need them.
+> 
+> the condition under which it sleeps might be slightly buggy on your
+> exact x86 machine... but that doesn't mean that that is guaranteed to
+> be so forever going forward.... it's still a sleeping function.
+
+More than slightly buggy, I think.. It seems like it is going to be 
+bouncing block layer accesses to devices with 32-bit DMA masks through 
+the 16MB ZONE_DMA. If that's what's actually going on, I'm surprised 
+there haven't been more regression reports. The fact that the function 
+now sleeps when it didn't before is the least of the problems here..
