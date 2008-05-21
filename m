@@ -1,87 +1,45 @@
-From: Arjan van de Ven <arjan@infradead.org>
-Subject: Re: [PATCH] ata: fix sleep-while-holding-spinlock in sata_nv
-Date: Tue, 20 May 2008 21:43:11 -0700
-Message-ID: <20080520214311.2d2aa8d3@infradead.org>
-References: <fa.m+kShlzXY/wmFlvZXsE0W7wQIxU@ifi.uio.no>
-	<48338624.3000304@shaw.ca>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: [PATCHSET #upstream-fixes] git tree available
+Date: Wed, 21 May 2008 13:59:00 +0900
+Message-ID: <4833AC14.5090207@gmail.com>
+References: <12111273141039-git-send-email-htejun@gmail.com> <48305961.2050509@gmail.com> <006501c8ba19$c1f53340$6917a8c0@parents> <48323E4F.3050806@rtr.ca> <4832535B.1080505@gmail.com> <483256FF.1010200@gmail.com> <00a501c8bae2$7815f7e0$6917a8c0@parents>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:37206 "EHLO
-	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750821AbYEUEn2 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 21 May 2008 00:43:28 -0400
-In-Reply-To: <48338624.3000304@shaw.ca>
+Received: from wf-out-1314.google.com ([209.85.200.173]:60078 "EHLO
+	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750983AbYEUE7H (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 21 May 2008 00:59:07 -0400
+Received: by wf-out-1314.google.com with SMTP id 27so2051071wfd.4
+        for <linux-ide@vger.kernel.org>; Tue, 20 May 2008 21:59:06 -0700 (PDT)
+In-Reply-To: <00a501c8bae2$7815f7e0$6917a8c0@parents>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Robert Hancock <hancockr@shaw.ca>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Brian & Chamaigne Scamman <scammanbc@earthlink.net>
+Cc: 'Mark Lord' <liml@rtr.ca>, jeff@garzik.org, linux-ide@vger.kernel.org
 
-On Tue, 20 May 2008 20:17:08 -0600
-Robert Hancock <hancockr@shaw.ca> wrote:
-
-> Arjan van de Ven wrote:
-> > From: Arjan van de Ven <arjan@linux.intel.com>
-> > Subject: [PATCH] ata: fix sleep-while-holding-spinlock in sata_nv
-> > 
-> > blk_queue_bounce_limit() is a sleeping function, so reorganize
-> > the code a little to not call it while holding a spinlock.
-> > 
-> > Signed-off-by: Arjan van de Ven <arjan@linux.intel.com>
-> > ---
-> >  drivers/ata/sata_nv.c |    8 +++++---
-> >  1 files changed, 5 insertions(+), 3 deletions(-)
-> > 
-> > diff --git a/drivers/ata/sata_nv.c b/drivers/ata/sata_nv.c
-> > index 858f706..a7bc56d 100644
-> > --- a/drivers/ata/sata_nv.c
-> > +++ b/drivers/ata/sata_nv.c
-> > @@ -671,6 +671,11 @@ static int nv_adma_slave_config(struct
-> > scsi_device *sdev) port1 = ap->host->ports[1]->private_data;
-> >  	sdev0 = ap->host->ports[0]->link.device[0].sdev;
-> >  	sdev1 = ap->host->ports[1]->link.device[0].sdev;
-> > +
-> > +	blk_queue_segment_boundary(sdev->request_queue,
-> > segment_boundary);
-> > +	blk_queue_max_hw_segments(sdev->request_queue,
-> > sg_tablesize);
-> > +	spin_unlock_irqrestore(ap->lock, flags);
-> > +
-> >  	if ((port0->flags & NV_ADMA_ATAPI_SETUP_COMPLETE) ||
-> >  	    (port1->flags & NV_ADMA_ATAPI_SETUP_COMPLETE)) {
-> >  		/** We have to set the DMA mask to 32-bit if
-> > either port is in @@ -701,14 +706,11 @@ static int
-> > nv_adma_slave_config(struct scsi_device *sdev) pp->adma_dma_mask);
-> >  	}
-> >  
-> > -	blk_queue_segment_boundary(sdev->request_queue,
-> > segment_boundary);
-> > -	blk_queue_max_hw_segments(sdev->request_queue,
-> > sg_tablesize); ata_port_printk(ap, KERN_INFO,
-> >  		"DMA mask 0x%llX, segment boundary 0x%lX, hw segs
-> > %hu\n", (unsigned long long)*ap->host->dev->dma_mask,
-> >  		segment_boundary, sg_tablesize);
-> >  
-> > -	spin_unlock_irqrestore(ap->lock, flags);
-> >  
-> >  	return rc;
-> >  }
+Brian & Chamaigne Scamman wrote:
+> Tejun Heo wrote:
+>> Can you please test whether the attached patch fixes the detection problem?
 > 
-> I'm not certain this is safe to do it quite this way. It would be
-> better to keep that spinlock held so that no operations could be in
-> progress on either port while these operations are happening.
+> Tejun-
+> The patch worked great; see dmesg log below...
+> I didn't test the sslep(5) command since the patch worked; do you still need
+> me to test it?
 
-blk_bounce_limit can sleep. that's just a fact of life ;(
+Nope.
 
-> 
-> It would be better to fix the regression from 
-> 419c434c35614609fd0c79d335c134bf4b88b30b in block/blk_settings.c that 
-> resulted in the blk_queue_bounce_limit allocation wrongly allocating 
-> emergency ISA pages in the first place as a 32-bit DMA mask does not 
-> need them.
+> One remaining issue is the "failed to IDENTIFY (I/O error, err mask=0xll)"
+> message. If the PMP, bridges and drives are powered up before I insert the
+> eSATA cable in to the controller, I don't receive the message. The message
+> appears when only when I have the eSATA cable attached to the controller and
+> then simultaneously power on the PMP and drives. In the attached dmesg log,
+> the drive is eventually recognized; however there have been a couple of
+> times when the drives aren't recognized. An eSATA cable remove/re-insert
+> fixes the problem.
 
-the condition under which it sleeps might be slightly buggy on your
-exact x86 machine... but that doesn't mean that that is guaranteed to
-be so forever going forward.... it's still a sleeping function.
+Hmm... can you please post the failing log?
 
+-- 
+tejun
