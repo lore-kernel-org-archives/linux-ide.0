@@ -1,45 +1,46 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCHSET #upstream-fixes] git tree available
-Date: Wed, 21 May 2008 13:59:00 +0900
-Message-ID: <4833AC14.5090207@gmail.com>
-References: <12111273141039-git-send-email-htejun@gmail.com> <48305961.2050509@gmail.com> <006501c8ba19$c1f53340$6917a8c0@parents> <48323E4F.3050806@rtr.ca> <4832535B.1080505@gmail.com> <483256FF.1010200@gmail.com> <00a501c8bae2$7815f7e0$6917a8c0@parents>
+Subject: [PATCH #upstream-fixes] libata: SRST can't be trusted on PMP sil3726
+Date: Wed, 21 May 2008 14:11:24 +0900
+Message-ID: <4833AEFC.2000705@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wf-out-1314.google.com ([209.85.200.173]:60078 "EHLO
-	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750983AbYEUE7H (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 21 May 2008 00:59:07 -0400
-Received: by wf-out-1314.google.com with SMTP id 27so2051071wfd.4
-        for <linux-ide@vger.kernel.org>; Tue, 20 May 2008 21:59:06 -0700 (PDT)
-In-Reply-To: <00a501c8bae2$7815f7e0$6917a8c0@parents>
+Received: from wa-out-1112.google.com ([209.85.146.176]:49349 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751169AbYEUFLa (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 21 May 2008 01:11:30 -0400
+Received: by wa-out-1112.google.com with SMTP id j37so2762667waf.23
+        for <linux-ide@vger.kernel.org>; Tue, 20 May 2008 22:11:29 -0700 (PDT)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Brian & Chamaigne Scamman <scammanbc@earthlink.net>
-Cc: 'Mark Lord' <liml@rtr.ca>, jeff@garzik.org, linux-ide@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>, IDE/ATA development list <linux-ide@vger.kernel.org>
 
-Brian & Chamaigne Scamman wrote:
-> Tejun Heo wrote:
->> Can you please test whether the attached patch fixes the detection problem?
-> 
-> Tejun-
-> The patch worked great; see dmesg log below...
-> I didn't test the sslep(5) command since the patch worked; do you still need
-> me to test it?
+As in sil4726, SRST can't be trusted on sil3726 causing detection
+problems under certain configuraitons.  I thought it was from the
+Config Disk device but apparently not.
 
-Nope.
+Signed-off-by: Tejun Heo <htejun@gmail.com>
+---
+ drivers/ata/libata-pmp.c |    7 +++++--
+ 1 file changed, 5 insertions(+), 2 deletions(-)
 
-> One remaining issue is the "failed to IDENTIFY (I/O error, err mask=0xll)"
-> message. If the PMP, bridges and drives are powered up before I insert the
-> eSATA cable in to the controller, I don't receive the message. The message
-> appears when only when I have the eSATA cable attached to the controller and
-> then simultaneously power on the PMP and drives. In the attached dmesg log,
-> the drive is eventually recognized; however there have been a couple of
-> times when the drives aren't recognized. An eSATA cable remove/re-insert
-> fixes the problem.
-
-Hmm... can you please post the failing log?
-
--- 
-tejun
+diff --git a/drivers/ata/libata-pmp.c b/drivers/ata/libata-pmp.c
+index 3374ec5..b65db30 100644
+--- a/drivers/ata/libata-pmp.c
++++ b/drivers/ata/libata-pmp.c
+@@ -322,9 +322,12 @@ static void sata_pmp_quirks(struct ata_port *ap)
+ 	if (vendor == 0x1095 && devid == 0x3726) {
+ 		/* sil3726 quirks */
+ 		ata_port_for_each_link(link, ap) {
+-			/* class code report is unreliable */
++			/* Class code report is unreliable and SRST
++			 * times out under certain configurations.
++			 */
+ 			if (link->pmp < 5)
+-				link->flags |= ATA_LFLAG_ASSUME_ATA;
++				link->flags |= ATA_LFLAG_NO_SRST |
++					       ATA_LFLAG_ASSUME_ATA;
+ 
+ 			/* port 5 is for SEMB device and it doesn't like SRST */
+ 			if (link->pmp == 5)
