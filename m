@@ -1,54 +1,87 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCH] libata-sff: Fix oops reported in kerneloops.org for pnp
- devices with no ctl
-Date: Wed, 21 May 2008 13:23:26 +0900
-Message-ID: <4833A3BE.2070107@gmail.com>
-References: <20080520145031.13437.90254.stgit@core>
+From: Arjan van de Ven <arjan@infradead.org>
+Subject: Re: [PATCH] ata: fix sleep-while-holding-spinlock in sata_nv
+Date: Tue, 20 May 2008 21:43:11 -0700
+Message-ID: <20080520214311.2d2aa8d3@infradead.org>
+References: <fa.m+kShlzXY/wmFlvZXsE0W7wQIxU@ifi.uio.no>
+	<48338624.3000304@shaw.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rv-out-0506.google.com ([209.85.198.232]:21420 "EHLO
-	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750996AbYEUEXc (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 21 May 2008 00:23:32 -0400
-Received: by rv-out-0506.google.com with SMTP id l9so2384904rvb.1
-        for <linux-ide@vger.kernel.org>; Tue, 20 May 2008 21:23:32 -0700 (PDT)
-In-Reply-To: <20080520145031.13437.90254.stgit@core>
+Received: from pentafluge.infradead.org ([213.146.154.40]:37206 "EHLO
+	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750821AbYEUEn2 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 21 May 2008 00:43:28 -0400
+In-Reply-To: <48338624.3000304@shaw.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: jeff@garzik.org, linux-ide@vger.kernel.org, akpm@osdl.org
+To: Robert Hancock <hancockr@shaw.ca>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Alan Cox wrote:
-> This fixes most common oops #5 on Arjan's kerneloops.org site
-> 
-> Not all controllers have ctl/altstatus. In particular many ISAPnP controllers
-> omit them. While libata should handle this it generally only got the ctl port
-> (the write side) correct.
-> 
-> Functions
-> - ata_sff_maybe_altstatus - this uses the status if altstatus is not available.
->   In the longer term I believe each use of it is in fact removable but don't
->   want to perturb anything during the -rc releases
-> - ata_sff_pause - don't use altstatus I/O for fencing if we don't have one
-> - ata_sff_sync - add a fencing call so we can distinguish fencing from real
-> 		 altstatus usage. All non ctl/altstatus controllers are PIO
-> 		 so do not need a fence
-> 
-> Code wise we then use maybe_altstatus in the IRQ path (where we should only
-> check status and the current code is actually I think buggy), and for DMA
-> completion (no non ctl/altstatus controller does DMA but need to finish
-> verifying the calling cases).
-> 
-> This has been tested with ctl/altstatus faked to be unavailable on controllers
-> I have and works. You get some spew about failed identify but that is another
-> issue that can be fixed later and it does all work. Also the spew only occurs
-> on controllers that currently just go wrong.
-> 
-> Signed-off-by: Alan Cox <alan@redhat.com>
+On Tue, 20 May 2008 20:17:08 -0600
+Robert Hancock <hancockr@shaw.ca> wrote:
 
-Acked-by: Tejun Heo <htejun@gmail.com>
+> Arjan van de Ven wrote:
+> > From: Arjan van de Ven <arjan@linux.intel.com>
+> > Subject: [PATCH] ata: fix sleep-while-holding-spinlock in sata_nv
+> > 
+> > blk_queue_bounce_limit() is a sleeping function, so reorganize
+> > the code a little to not call it while holding a spinlock.
+> > 
+> > Signed-off-by: Arjan van de Ven <arjan@linux.intel.com>
+> > ---
+> >  drivers/ata/sata_nv.c |    8 +++++---
+> >  1 files changed, 5 insertions(+), 3 deletions(-)
+> > 
+> > diff --git a/drivers/ata/sata_nv.c b/drivers/ata/sata_nv.c
+> > index 858f706..a7bc56d 100644
+> > --- a/drivers/ata/sata_nv.c
+> > +++ b/drivers/ata/sata_nv.c
+> > @@ -671,6 +671,11 @@ static int nv_adma_slave_config(struct
+> > scsi_device *sdev) port1 = ap->host->ports[1]->private_data;
+> >  	sdev0 = ap->host->ports[0]->link.device[0].sdev;
+> >  	sdev1 = ap->host->ports[1]->link.device[0].sdev;
+> > +
+> > +	blk_queue_segment_boundary(sdev->request_queue,
+> > segment_boundary);
+> > +	blk_queue_max_hw_segments(sdev->request_queue,
+> > sg_tablesize);
+> > +	spin_unlock_irqrestore(ap->lock, flags);
+> > +
+> >  	if ((port0->flags & NV_ADMA_ATAPI_SETUP_COMPLETE) ||
+> >  	    (port1->flags & NV_ADMA_ATAPI_SETUP_COMPLETE)) {
+> >  		/** We have to set the DMA mask to 32-bit if
+> > either port is in @@ -701,14 +706,11 @@ static int
+> > nv_adma_slave_config(struct scsi_device *sdev) pp->adma_dma_mask);
+> >  	}
+> >  
+> > -	blk_queue_segment_boundary(sdev->request_queue,
+> > segment_boundary);
+> > -	blk_queue_max_hw_segments(sdev->request_queue,
+> > sg_tablesize); ata_port_printk(ap, KERN_INFO,
+> >  		"DMA mask 0x%llX, segment boundary 0x%lX, hw segs
+> > %hu\n", (unsigned long long)*ap->host->dev->dma_mask,
+> >  		segment_boundary, sg_tablesize);
+> >  
+> > -	spin_unlock_irqrestore(ap->lock, flags);
+> >  
+> >  	return rc;
+> >  }
+> 
+> I'm not certain this is safe to do it quite this way. It would be
+> better to keep that spinlock held so that no operations could be in
+> progress on either port while these operations are happening.
 
--- 
-tejun
+blk_bounce_limit can sleep. that's just a fact of life ;(
+
+> 
+> It would be better to fix the regression from 
+> 419c434c35614609fd0c79d335c134bf4b88b30b in block/blk_settings.c that 
+> resulted in the blk_queue_bounce_limit allocation wrongly allocating 
+> emergency ISA pages in the first place as a 32-bit DMA mask does not 
+> need them.
+
+the condition under which it sleeps might be slightly buggy on your
+exact x86 machine... but that doesn't mean that that is guaranteed to
+be so forever going forward.... it's still a sleeping function.
+
