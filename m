@@ -1,62 +1,35 @@
-From: Arjan van de Ven <arjan@infradead.org>
-Subject: [PATCH] ata: fix sleep-while-holding-spinlock in sata_nv
-Date: Tue, 20 May 2008 15:58:47 -0700
-Message-ID: <20080520155847.12a22dfb@infradead.org>
+From: Herbert Xu <herbert@gondor.apana.org.au>
+Subject: Re: [PATCH 1/4] block: use ARCH_KMALLOC_MINALIGN as the default dma pad mask
+Date: Wed, 21 May 2008 09:26:22 +0800
+Message-ID: <20080521012622.GA15850@gondor.apana.org.au>
+References: <20080520093819.GA9147@gondor.apana.org.au> <20080520222531H.tomof@acm.org> <20080520153424.GA11687@gondor.apana.org.au> <20080521010942W.tomof@acm.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:48740 "EHLO
-	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758427AbYETW65 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 20 May 2008 18:58:57 -0400
+Received: from rhun.apana.org.au ([64.62.148.172]:33672 "EHLO
+	arnor.apana.org.au" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1754953AbYEUB0f (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 20 May 2008 21:26:35 -0400
+Content-Disposition: inline
+In-Reply-To: <20080521010942W.tomof@acm.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Cc: akpm@linux-foundation.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, jens.axboe@oracle.com, tsbogend@alpha.franken.de, bzolnier@gmail.com, James.Bottomley@HansenPartnership.com, jeff@garzik.org, davem@davemloft.net, linux-mm@kvack.org
 
+On Wed, May 21, 2008 at 01:09:41AM +0900, FUJITA Tomonori wrote:
+>
+> Then, you don't need to use ARCH_KMALLOC_MINALIGN. 8 bytes align works
+> for you on all the architectures.
 
-From: Arjan van de Ven <arjan@linux.intel.com>
-Subject: [PATCH] ata: fix sleep-while-holding-spinlock in sata_nv
+DMA isn't the only thing that requires alignment.  The CPU needs
+it too.  Also using a constant like 8 is broken because if we used
+a value larger than the alignment guaranteed by kmalloc then the
+context may end up unaligned.
 
-blk_queue_bounce_limit() is a sleeping function, so reorganize
-the code a little to not call it while holding a spinlock.
-
-Signed-off-by: Arjan van de Ven <arjan@linux.intel.com>
----
- drivers/ata/sata_nv.c |    8 +++++---
- 1 files changed, 5 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/ata/sata_nv.c b/drivers/ata/sata_nv.c
-index 858f706..a7bc56d 100644
---- a/drivers/ata/sata_nv.c
-+++ b/drivers/ata/sata_nv.c
-@@ -671,6 +671,11 @@ static int nv_adma_slave_config(struct scsi_device *sdev)
- 	port1 = ap->host->ports[1]->private_data;
- 	sdev0 = ap->host->ports[0]->link.device[0].sdev;
- 	sdev1 = ap->host->ports[1]->link.device[0].sdev;
-+
-+	blk_queue_segment_boundary(sdev->request_queue, segment_boundary);
-+	blk_queue_max_hw_segments(sdev->request_queue, sg_tablesize);
-+	spin_unlock_irqrestore(ap->lock, flags);
-+
- 	if ((port0->flags & NV_ADMA_ATAPI_SETUP_COMPLETE) ||
- 	    (port1->flags & NV_ADMA_ATAPI_SETUP_COMPLETE)) {
- 		/** We have to set the DMA mask to 32-bit if either port is in
-@@ -701,14 +706,11 @@ static int nv_adma_slave_config(struct scsi_device *sdev)
- 					       pp->adma_dma_mask);
- 	}
- 
--	blk_queue_segment_boundary(sdev->request_queue, segment_boundary);
--	blk_queue_max_hw_segments(sdev->request_queue, sg_tablesize);
- 	ata_port_printk(ap, KERN_INFO,
- 		"DMA mask 0x%llX, segment boundary 0x%lX, hw segs %hu\n",
- 		(unsigned long long)*ap->host->dev->dma_mask,
- 		segment_boundary, sg_tablesize);
- 
--	spin_unlock_irqrestore(ap->lock, flags);
- 
- 	return rc;
- }
+Cheers,
 -- 
-1.5.4.5
-
+Visit Openswan at http://www.openswan.org/
+Email: Herbert Xu ~{PmV>HI~} <herbert@gondor.apana.org.au>
+Home Page: http://gondor.apana.org.au/~herbert/
+PGP Key: http://gondor.apana.org.au/~herbert/pubkey.txt
