@@ -1,80 +1,54 @@
-From: Mikael Pettersson <mikpe@it.uu.se>
-Subject: Re: [PATCH 2.6.26-rc2 1/3] sata_promise: fix irq clearing buglets
-Date: Thu, 22 May 2008 10:29:24 +0200
-Message-ID: <18485.12004.632683.959582@harpo.it.uu.se>
-References: <200805171647.m4HGlZFW015961@harpo.it.uu.se>
-	<4831F488.9070802@garzik.org>
-	<18482.36979.487666.133247@harpo.it.uu.se>
-	<48333F60.8050508@garzik.org>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH 0/4] revert the commit 22a9189f (cdrom: use kmalloced
+	buffers instead of buffers on stack)
+Date: Thu, 22 May 2008 09:43:12 +0100
+Message-ID: <1211445792.3956.14.camel@localhost.localdomain>
+References: <1211259514-9131-1-git-send-email-fujita.tomonori@lab.ntt.co.jp>
+	 <20080521221113.GA12695@alpha.franken.de> <20080522095506E.tomof@acm.org>
+	 <20080521.181847.157652663.davem@davemloft.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from aun.it.uu.se ([130.238.12.36]:36437 "EHLO aun.it.uu.se"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S935245AbYEVIb0 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 22 May 2008 04:31:26 -0400
-In-Reply-To: <48333F60.8050508@garzik.org>
+Received: from accolon.hansenpartnership.com ([76.243.235.52]:51102 "EHLO
+	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1758487AbYEVXoY (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 22 May 2008 19:44:24 -0400
+In-Reply-To: <20080521.181847.157652663.davem@davemloft.net>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: Mikael Pettersson <mikpe@it.uu.se>, linux-ide@vger.kernel.org
+To: David Miller <davem@davemloft.net>
+Cc: fujita.tomonori@lab.ntt.co.jp, tsbogend@alpha.franken.de, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, jens.axboe@oracle.com, bzolnier@gmail.com, jeff@garzik.org, akpm@linux-foundation.org
 
-Jeff Garzik writes:
- > Mikael Pettersson wrote:
- > > Jeff Garzik writes:
- > >  > Mikael Pettersson wrote:
- > >  > > This patch fixes two bugs in sata_promise's irq status clearing paths:
- > >  > > 1. When clearing the irq status for a specific port, the driver
- > >  > >    read the global SEQMASK register. This is wrong because that
- > >  > >    clears the irq status for _all_ ports.
- > >  > > 2. pdc_thaw() incorrectly added the PDC_INT_SEQMASK host register
- > >  > >    offset to a per-port ata engine base address. This resulted in
- > >  > >    it reading the unrelated PDC_PKT_SUBMIT register, which did not
- > >  > >    have the desired irq status clearing effect.
- > >  > > 
- > >  > > In both cases the fix is to read from the port's Command/Status
- > >  > > register. This also matches what Promise's own driver does.
- > >  > > 
- > >  > > Signed-off-by: Mikael Pettersson <mikpe@it.uu.se>
- > >  > > ---
- > >  > >  drivers/ata/sata_promise.c |    7 +++----
- > >  > >  1 file changed, 3 insertions(+), 4 deletions(-)
- > >  > 
- > >  > is sata_sx4 similarly affected?
- > > 
- > > For issue 2, pdc_thaw(), the answer is No since that's
- > > a sata_promise only thing I added as part of new-EH.
- > 
- > probably relevant to libata-dev.git#new-eh which contains the sata_sx4 
- > new-eh conversion.
+On Wed, 2008-05-21 at 18:18 -0700, David Miller wrote:
+> From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+> Date: Thu, 22 May 2008 10:13:31 +0900
+> 
+> > DMA on stack is forbidden because of non coherent architecutes and
+> > architectures can't uses stack addresses for DMA? What architectures
+> > can't uses stack addresses for DMA? Would it be better to just forbid
+> > using stack addresses for DMA on all the architectures at all times?
+> 
+> Rather, the real problem is that some architectures map the kernel
+> stack virtually, and as a result virt_to_page() and things like that
+> will not work.
+> 
+> It really is fully not working to put DMA buffers on the stack
+> in these cases.
 
-pdc_thaw() in the libata#new-eh version of sata_sx4.c wants to
-clear a single port's IRQ status, but reads the host's SEQMASK
-register which affects all ports.
+Actually, for SCSI only, that problem is fixed.  Our decision to
+re-route all I/O, including kernel internal I/O through the block
+mapping algorithms (really so we don't have to worry about GFP_DMA any
+more since we can now use the block bounce buffers) means that all SCSI
+submission routines will accept vmalloc'd and even stack buffers
+perfectly correctly.
 
-Fix by reading the port's Command/Status register instead.
+However (before anyone gets any ideas), the stack is incredibly
+dangerous to do DMA on because it's packed with current data.  If you
+don't get the alignment requirements right on a non-coherent platform,
+you'll end up corrupting data because of cache line interference issues.
+For this reason, DMA to stack is still technically illegal.
 
-Signed-off-by: Mikael Pettersson <mikpe@it.uu.se>
----
-Compile-tested only.
+James
 
---- linux-2.6.26-rc3.libata#new-eh/drivers/ata/sata_sx4.c.~1~	2008-05-21 10:38:01.000000000 +0200
-+++ linux-2.6.26-rc3.libata#new-eh/drivers/ata/sata_sx4.c	2008-05-22 09:54:07.000000000 +0200
-@@ -872,14 +872,12 @@ static void pdc_freeze(struct ata_port *
- static void pdc_thaw(struct ata_port *ap)
- {
- 	void __iomem *mmio = ap->ioaddr.cmd_addr;
--	void __iomem *mmio_base;
- 	u32 tmp;
- 
- 	/* FIXME: this should handle HDMA copy engine thawing */
- 
--	/* reading SEQ mask register clears IRQ */
--	mmio_base = ap->host->iomap[PDC_MMIO_BAR] + PDC_CHIP0_OFS;
--	readl(mmio_base + PDC_20621_SEQMASK);
-+	/* clear IRQ */
-+	ioread8(ap->ioaddr.status_addr);
- 
- 	/* turn IRQ back on */
- 	tmp = readl(mmio + PDC_CTLSTAT);
+
