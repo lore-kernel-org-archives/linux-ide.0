@@ -1,36 +1,58 @@
-From: Herbert Xu <herbert@gondor.apana.org.au>
-Subject: Re: [PATCH 1/4] block: use ARCH_KMALLOC_MINALIGN as the default dma pad mask
-Date: Thu, 22 May 2008 09:56:41 +0800
-Message-ID: <20080522015641.GA28199@gondor.apana.org.au>
-References: <20080521131811.GA20212@gondor.apana.org.au> <20080522100712S.tomof@acm.org> <20080521.181945.27326326.davem@davemloft.net> <20080522103221C.fujita.tomonori@lab.ntt.co.jp>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: Drives not detected: sil3124 PMP to sil4726 5 drive enclosure
+Date: Thu, 22 May 2008 11:25:52 +0900
+Message-ID: <4834D9B0.8030902@gmail.com>
+References: <48344E5D.1040301@utdallas.edu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20080522103221C.fujita.tomonori@lab.ntt.co.jp>
-Sender: linux-scsi-owner@vger.kernel.org
-To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Cc: davem@davemloft.net, akpm@linux-foundation.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, jens.axboe@oracle.com, tsbogend@alpha.franken.de, bzolnier@gmail.com, James.Bottomley@HansenPartnership.com, jeff@garzik.org, linux-mm@kvack.org
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from rv-out-0506.google.com ([209.85.198.231]:20983 "EHLO
+	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754852AbYEVCZ7 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 21 May 2008 22:25:59 -0400
+Received: by rv-out-0506.google.com with SMTP id l9so2982302rvb.1
+        for <linux-ide@vger.kernel.org>; Wed, 21 May 2008 19:25:58 -0700 (PDT)
+In-Reply-To: <48344E5D.1040301@utdallas.edu>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Ryan Burchfield <rxb023100@utdallas.edu>
+Cc: linux-ide@vger.kernel.org
 
-On Thu, May 22, 2008 at 10:32:21AM +0900, FUJITA Tomonori wrote:
->
-> What I asking is:
+Ryan Burchfield wrote:
+> Hi all,
+> I have done a bit of digging in the archives and find lots of related 
+> issues but no working solutions. I don't know if this should be 
+> considered a bug or not so help is appreciated.
+> I have a sil3124 chipset PCI card flashed with base(non-RAID) BIOS. 
+> Connected to this card I have a sil4726 chipset 5 drive enclosure with 
+> up to date firmware. The enclosure has been configured using a Windows 
+> machine with 2 750GB drives in RAID 1. So a host PC should see 1 logical 
+> 750GB drive + configuration drive if my understanding is correct. I have 
+> tried many of the latest kernels but the drives are not detected correctly.
 > 
-> On most architectures, the minimum alignment guaranteed by kmalloc is
-> too small (8 bytes). This ideal story doesn't happen to most of us.
+> At the moment I have just tried the latest fixes at upstream-fixes @ 
+> git://git.kernel.org/pub/scm/linux/kernel/git/jgarzik/libata-dev.git
+> 
+> Attached below is a dmesg log with the above specified kernel for the 
+> following action.
+> 1) Boot computer
+> 2) Begin recording dmesg log
+> 3) Turn on sil4726 based drive enclosure
+> 4) Wait for dmesg activity to settle
+> 5) Stop logging
+> 
+> At the end of the process I have no additional disks in /dev/sd*.
+> 
+> Does anyone have any suggestions or any troubleshooting steps that I 
+> should try? What can I do to provide more useful information?
 
-Right, so the real issue is that what we have here is a lower
-bound of the kmalloc alignment.  In reality, the kmalloc return
-values are cache-line aligned when debugging is off.  So if you
-can think of a way of getting a better bound at compile time,
-I'm all ears.
+Ah... please don't use hardware RAID mode w/ 4726.  Just use it as plain 
+Port Multiplier.  Its ATA device emulation is really bad and just can't 
+work with a generic driver.  We had to disable even the Config Disk 
+recently to work around some detection issues.
 
-Otherwise this discussion seems to be completely pointless.
+Thanks.
 
-Cheers,
 -- 
-Visit Openswan at http://www.openswan.org/
-Email: Herbert Xu ~{PmV>HI~} <herbert@gondor.apana.org.au>
-Home Page: http://gondor.apana.org.au/~herbert/
-PGP Key: http://gondor.apana.org.au/~herbert/pubkey.txt
+tejun
