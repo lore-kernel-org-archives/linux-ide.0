@@ -1,172 +1,49 @@
-From: Andrew Morton <akpm@linux-foundation.org>
-Subject: Re: [PATCH] Fixups to ATA ACPI hotplug
-Date: Wed, 21 May 2008 15:26:12 -0700
-Message-ID: <20080521152612.c7525502.akpm@linux-foundation.org>
-References: <20080506081347.GA8688@homac>
-	<20080506082110.GA10355@srcf.ucam.org>
-	<48201987.4020009@gmail.com>
-	<20080506092653.GB4378@homac>
-	<20080506093628.GA12469@srcf.ucam.org>
-	<20080519162934.GA15623@srcf.ucam.org>
-	<20080520074442.GA14417@homac>
-	<20080520102038.GA2441@srcf.ucam.org>
-	<20080520131831.GA568@homac>
-	<20080520132217.GA5633@srcf.ucam.org>
-	<20080520135828.GA3167@homac>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: [PATCHSET #upstream-fixes] git tree available
+Date: Thu, 22 May 2008 09:40:33 +0900
+Message-ID: <4834C101.70005@gmail.com>
+References: <12111273141039-git-send-email-htejun@gmail.com> <48305961.2050509@gmail.com> <006501c8ba19$c1f53340$6917a8c0@parents> <48323E4F.3050806@rtr.ca> <4832535B.1080505@gmail.com> <483256FF.1010200@gmail.com> <00a501c8bae2$7815f7e0$6917a8c0@parents> <4833AC14.5090207@gmail.com> <00b901c8bb7a$caaa1ed0$6917a8c0@parents>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-acpi-owner@vger.kernel.org>
-In-Reply-To: <20080520135828.GA3167@homac>
-Sender: linux-acpi-owner@vger.kernel.org
-To: Holger Macht <hmacht@suse.de>
-Cc: mjg59@srcf.ucam.org, htejun@gmail.com, linux-ide@vger.kernel.org, jeff@garzik.org, linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from rv-out-0506.google.com ([209.85.198.234]:10845 "EHLO
+	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932895AbYEVAkk (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 21 May 2008 20:40:40 -0400
+Received: by rv-out-0506.google.com with SMTP id l9so2935541rvb.1
+        for <linux-ide@vger.kernel.org>; Wed, 21 May 2008 17:40:39 -0700 (PDT)
+In-Reply-To: <00b901c8bb7a$caaa1ed0$6917a8c0@parents>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Brian & Chamaigne Scamman <scammanbc@earthlink.net>
+Cc: 'Mark Lord' <liml@rtr.ca>, jeff@garzik.org, linux-ide@vger.kernel.org
 
-On Tue, 20 May 2008 15:58:30 +0200
-Holger Macht <hmacht@suse.de> wrote:
-
-> On Tue 20. May - 14:22:17, Matthew Garrett wrote:
-> > On Tue, May 20, 2008 at 03:18:32PM +0200, Holger Macht wrote:
-> > 
-> > > +	if (kobj && !is_dock_event) {
-> > > +		sprintf(event_string, "BAY_EVENT=%d", event);
-> > > +		kobject_uevent_env(kobj, KOBJ_CHANGE, envp);
-> > 
-> > I think we want to do the _EJ0 checking before this, otherwise we'll 
-> > generate two uevents for the same removal on some hardware. Otherwise, 
-> > looks good.
+Brian & Chamaigne Scamman wrote:
+> Tejun Heo wrote:
+>> Brian & Chamaigne Scamman wrote:
+>>> One remaining issue is the "failed to IDENTIFY (I/O error, err
+> mask=0xll)"
+>>> message. If the PMP, bridges and drives are powered up before I 
+>>> insert the eSATA cable in to the controller, I don't receive the 
+>>> message. The message appears when only when I have the eSATA cable 
+>>> attached to the controller and then simultaneously power on the PMP 
+>>> and drives. In the attached dmesg log, the drive is eventually 
+>>> recognized; however there have been a couple of times when the drives 
+>>> aren't recognized. An eSATA cable remove/re-insert fixes the problem.
+>> Hmm... can you please post the failing log?
 > 
-> So once again:
+> Here's a dmesg log where one of the drives is never recognized, but the
+> others eventually are...
 > 
-> Handle bay devices in dock stations
+> -Brian
 > 
-> * Differentiate between bay devices in dock stations and others:
-> 
->  - When an ACPI_NOTIFY_EJECT_REQUEST appears, just signal uevent to
->    userspace (that is when the optional eject button on a bay device is
->    pressed/pulled) giving the possibility to unmount file systems and to
->    clean up. Also, only send uevent in case we get an EJECT_REQUEST
->    without doing anything else. In other cases, you'll get an add/remove
->    event because libata attaches/detaches the device.
-> 
->  - In case of a dock event, which in turn signals an
->    ACPI_NOTIFY_EJECT_REQUEST, immediately detach the device, because it
->    may already have been gone
-> 
-> * In case of an ACPI_NOTIFY_DEVICE/BUS_CHECK, evaluate _STA to check if
->   the device has been plugged or unplugged. If plugged, hotplug it, if
->   unplugged, just signal event to userspace
->   (initial patch by Matthew Garrett <mjg59@srcf.ucam.org>)
-> 
-> Signed-off-by: Holger Macht <hmacht@suse.de>
-> ---
-> 
-> --- linux-2.6.25/drivers/ata/libata-acpi.c.orig	2008-05-20 13:25:50.000000000 +0200
-> +++ linux-2.6.25/drivers/ata/libata-acpi.c	2008-05-20 15:56:38.000000000 +0200
-> @@ -118,8 +118,25 @@ static void ata_acpi_associate_ide_port(
->  		ap->pflags |= ATA_PFLAG_INIT_GTM_VALID;
->  }
->  
-> +static void ata_acpi_detach_device(struct ata_port *ap, struct ata_device *dev)
-> +{
-> +	if (dev)
-> +		dev->flags |= ATA_DFLAG_DETACH;
-> +	else {
-> +		struct ata_link *tlink;
-> +		struct ata_device *tdev;
-> +
-> +		ata_port_for_each_link(tlink, ap)
-> +			ata_link_for_each_dev(tdev, tlink)
-> +			tdev->flags |= ATA_DFLAG_DETACH;
 
-Looks odd.   I guess this:
+Can you please put ssleep(5) right after the first ata_do_reset() call 
+in drivers/ata/libata-eh.c::ata_eh_reset() and see whether the problem 
+goes away?
 
---- a/drivers/ata/libata-acpi.c~ata-acpi-hotplug-handle-bay-devices-in-dock-stations-cleanup
-+++ a/drivers/ata/libata-acpi.c
-@@ -128,7 +128,7 @@ static void ata_acpi_detach_device(struc
- 
- 		ata_port_for_each_link(tlink, ap)
- 			ata_link_for_each_dev(tdev, tlink)
--			tdev->flags |= ATA_DFLAG_DETACH;
-+				tdev->flags |= ATA_DFLAG_DETACH;
- 	}
- 
- 	ata_port_freeze(ap);
-_
+Thanks.
 
-was intended.
-
-> +	}
-> +
-> +	ata_port_freeze(ap);
-> +	ata_port_schedule_eh(ap);
-> +}
-> +
->  static void ata_acpi_handle_hotplug(struct ata_port *ap, struct ata_device
-> -				    *dev, u32 event)
-> +				    *dev, u32 event, int is_dock_event)
->  {
->  	char event_string[12];
->  	char *envp[] = { event_string, NULL };
-> @@ -135,83 +152,92 @@ static void ata_acpi_handle_hotplug(stru
->  		ap = dev->link->ap;
->  	ehi = &ap->link.eh_info;
->  
-> -	spin_lock_irqsave(ap->lock, flags);
-> -
-> -	if (dev)
-> +	if (dev) {
-> +		if (dev->sdev)
-> +			kobj = &dev->sdev->sdev_gendev.kobj;
->  		handle = dev->acpi_handle;
-> -	else
-> +	} else {
-> +		kobj = &ap->dev->kobj;
->  		handle = ap->acpi_handle;
-> +	}
->  
->  	status = acpi_get_handle(handle, "_EJ0", &tmphandle);
->  	if (ACPI_FAILURE(status)) {
-> -		/* This device is not ejectable */
-> -		spin_unlock_irqrestore(ap->lock, flags);
-> +		/* This device does not support hotplug */
->  		return;
->  	}
->  
-> -	status = acpi_evaluate_integer(handle, "_STA", NULL, &sta);
-> -	if (ACPI_FAILURE(status)) {
-> -		printk ("Unable to determine bay status\n");
-> -		spin_unlock_irqrestore(ap->lock, flags);
-> -		return;
-> +	if (kobj && !is_dock_event) {
-> +		sprintf(event_string, "BAY_EVENT=%d", event);
-> +		kobject_uevent_env(kobj, KOBJ_CHANGE, envp);
->  	}
->  
-> +	spin_lock_irqsave(ap->lock, flags);
-
-Wow, lots of stuff happening under spinlock here, but it all looks OK to me.
-
->  	switch (event) {
->  	case ACPI_NOTIFY_BUS_CHECK:
->  	case ACPI_NOTIFY_DEVICE_CHECK:
->  		ata_ehi_push_desc(ehi, "ACPI event");
-> -		if (!sta) {
-> -                /* Device has been unplugged */
-> -			if (dev)
-> -				dev->flags |= ATA_DFLAG_DETACH;
-> -			else {
-> -				struct ata_link *tlink;
-> -				struct ata_device *tdev;
-> -
-> -				ata_port_for_each_link(tlink, ap) {
-> -					ata_link_for_each_dev(tdev, tlink) {
-> -						tdev->flags |=
-> -							ATA_DFLAG_DETACH;
-> -					}
-> -				}
-
-The old code was less odd ;)
-
-
+-- 
+tejun
