@@ -1,180 +1,80 @@
-From: Borislav Petkov <petkovbb@googlemail.com>
-Subject: Re: [PATCH 00/40] ide: generic ATAPI support
-Date: Thu, 22 May 2008 09:43:54 +0200
-Message-ID: <20080522074354.GB2414@gollum.tnic>
-References: <20080518185428.5636.77234.sendpatchset@localhost.localdomain>
-Reply-To: petkovbb@gmail.com
+From: Mikael Pettersson <mikpe@it.uu.se>
+Subject: Re: [PATCH 2.6.26-rc2 1/3] sata_promise: fix irq clearing buglets
+Date: Thu, 22 May 2008 10:29:24 +0200
+Message-ID: <18485.12004.632683.959582@harpo.it.uu.se>
+References: <200805171647.m4HGlZFW015961@harpo.it.uu.se>
+	<4831F488.9070802@garzik.org>
+	<18482.36979.487666.133247@harpo.it.uu.se>
+	<48333F60.8050508@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.156]:6744 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758500AbYEVHn6 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 22 May 2008 03:43:58 -0400
-Received: by fg-out-1718.google.com with SMTP id 19so2565859fgg.17
-        for <linux-ide@vger.kernel.org>; Thu, 22 May 2008 00:43:56 -0700 (PDT)
-Content-Disposition: inline
-In-Reply-To: <20080518185428.5636.77234.sendpatchset@localhost.localdomain>
+Received: from aun.it.uu.se ([130.238.12.36]:36437 "EHLO aun.it.uu.se"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S935245AbYEVIb0 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 22 May 2008 04:31:26 -0400
+In-Reply-To: <48333F60.8050508@garzik.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: Mikael Pettersson <mikpe@it.uu.se>, linux-ide@vger.kernel.org
 
-On Sun, May 18, 2008 at 08:54:28PM +0200, Bartlomiej Zolnierkiewicz wro=
-te:
->=20
-> Hi,
->=20
-> This patch series unifies ATAPI support present in ide-{floppy,tape,s=
-csi}
-> device drivers and moves it out to the core IDE code (new ide-atapi.c=
- file).
->=20
-> In the process many bugs were shaken out and ~300 LOC were removed.
->=20
-> diffstat:
->=20
->  drivers/ide/Kconfig      |    6=20
->  drivers/ide/Makefile     |    1=20
->  drivers/ide/ide-atapi.c  |  296 ++++++++++++++++++++++
->  drivers/ide/ide-cd.c     |    5=20
->  drivers/ide/ide-floppy.c |  431 +++++++-------------------------
->  drivers/ide/ide-tape.c   |  630 ++++++++++++++----------------------=
------------
->  drivers/scsi/ide-scsi.c  |  455 +++++++++++----------------------
->  include/linux/ide.h      |   28 +-
->  8 files changed, 777 insertions(+), 1075 deletions(-)
->=20
-> Now, while this is a big step in the right direction there are still =
-some
-> things left on TODO for generic ATAPI support to be complete:
->=20
-> - convert ide-cd to use generic ATAPI code
->=20
-> - kill pc and rq stacks in ide-{floppy,tape}
->=20
-> - generic handling of REQUEST SENSE command
->=20
-> - generic handling of MODE SENSE command for ide-{floppy,tape}
->=20
-> - convert ide-{cd,floppy,tape} to use scatterlists for PIO transers
->   (ala ide-scsi)
->=20
-> I know that Borislav is working on the first two items but other ones
-> are free at the moment so if you feel brave you may give it a try :-)=
-=2E
->=20
-> PS I'll be travelling during this weekend and be rather busy with day=
- job
->    so replies from me may be delayed a bit.
+Jeff Garzik writes:
+ > Mikael Pettersson wrote:
+ > > Jeff Garzik writes:
+ > >  > Mikael Pettersson wrote:
+ > >  > > This patch fixes two bugs in sata_promise's irq status clearing paths:
+ > >  > > 1. When clearing the irq status for a specific port, the driver
+ > >  > >    read the global SEQMASK register. This is wrong because that
+ > >  > >    clears the irq status for _all_ ports.
+ > >  > > 2. pdc_thaw() incorrectly added the PDC_INT_SEQMASK host register
+ > >  > >    offset to a per-port ata engine base address. This resulted in
+ > >  > >    it reading the unrelated PDC_PKT_SUBMIT register, which did not
+ > >  > >    have the desired irq status clearing effect.
+ > >  > > 
+ > >  > > In both cases the fix is to read from the port's Command/Status
+ > >  > > register. This also matches what Promise's own driver does.
+ > >  > > 
+ > >  > > Signed-off-by: Mikael Pettersson <mikpe@it.uu.se>
+ > >  > > ---
+ > >  > >  drivers/ata/sata_promise.c |    7 +++----
+ > >  > >  1 file changed, 3 insertions(+), 4 deletions(-)
+ > >  > 
+ > >  > is sata_sx4 similarly affected?
+ > > 
+ > > For issue 2, pdc_thaw(), the answer is No since that's
+ > > a sata_promise only thing I added as part of new-EH.
+ > 
+ > probably relevant to libata-dev.git#new-eh which contains the sata_sx4 
+ > new-eh conversion.
 
-Hi Bart,
+pdc_thaw() in the libata#new-eh version of sata_sx4.c wants to
+clear a single port's IRQ status, but reads the host's SEQMASK
+register which affects all ports.
 
-yep, these all look real good, makes all drivers really lightweight. Lo=
-oks like
-ide-cd will follow not too far behind. By the way, here's another one y=
-ou count apply ontop:
+Fix by reading the port's Command/Status register instead.
 
-=46rom: Borislav Petkov <petkovbb@gmail.com>
-Date: Thu, 22 May 2008 09:36:53 +0200
-Subject: [PATCH] ide-tape: unify idetape_create_read/write_cmd
-
-A straightforward one. There should be no functional change resulting f=
-rom this
-change.
-
-Signed-off-by: Borislav Petkov <petkovbb@gmail.com>
+Signed-off-by: Mikael Pettersson <mikpe@it.uu.se>
 ---
- drivers/ide/ide-tape.c |   47 ++++++++++++++++++++--------------------=
--------
- 1 files changed, 20 insertions(+), 27 deletions(-)
+Compile-tested only.
 
-diff --git a/drivers/ide/ide-tape.c b/drivers/ide/ide-tape.c
-index 0afa109..da08a6a 100644
---- a/drivers/ide/ide-tape.c
-+++ b/drivers/ide/ide-tape.c
-@@ -952,40 +952,31 @@ static ide_startstop_t idetape_media_access_finis=
-hed(ide_drive_t *drive)
- 	return ide_stopped;
- }
-=20
--static void idetape_create_read_cmd(idetape_tape_t *tape,
--		struct ide_atapi_pc *pc,
--		unsigned int length, struct idetape_bh *bh)
-+static void ide_tape_create_rw_cmd(idetape_tape_t *tape,
-+		struct ide_atapi_pc *pc, unsigned int length,
-+		struct idetape_bh *bh, int opcode)
+--- linux-2.6.26-rc3.libata#new-eh/drivers/ata/sata_sx4.c.~1~	2008-05-21 10:38:01.000000000 +0200
++++ linux-2.6.26-rc3.libata#new-eh/drivers/ata/sata_sx4.c	2008-05-22 09:54:07.000000000 +0200
+@@ -872,14 +872,12 @@ static void pdc_freeze(struct ata_port *
+ static void pdc_thaw(struct ata_port *ap)
  {
- 	idetape_init_pc(pc);
--	pc->c[0] =3D READ_6;
- 	put_unaligned(cpu_to_be32(length), (unsigned int *) &pc->c[1]);
- 	pc->c[1] =3D 1;
- 	pc->bh =3D bh;
--	atomic_set(&bh->b_count, 0);
- 	pc->buf =3D NULL;
- 	pc->buf_size =3D length * tape->blk_size;
- 	pc->req_xfer =3D pc->buf_size;
- 	if (pc->req_xfer =3D=3D tape->buffer_size)
- 		pc->flags |=3D PC_FLAG_DMA_OK;
--}
-=20
--static void idetape_create_write_cmd(idetape_tape_t *tape,
--		struct ide_atapi_pc *pc,
--		unsigned int length, struct idetape_bh *bh)
--{
--	idetape_init_pc(pc);
--	pc->c[0] =3D WRITE_6;
--	put_unaligned(cpu_to_be32(length), (unsigned int *) &pc->c[1]);
--	pc->c[1] =3D 1;
--	pc->flags |=3D PC_FLAG_WRITING;
--	pc->bh =3D bh;
--	pc->b_data =3D bh->b_data;
--	pc->b_count =3D atomic_read(&bh->b_count);
--	pc->buf =3D NULL;
--	pc->buf_size =3D length * tape->blk_size;
--	pc->req_xfer =3D pc->buf_size;
--	if (pc->req_xfer =3D=3D tape->buffer_size)
--		pc->flags |=3D PC_FLAG_DMA_OK;
-+	if (opcode =3D=3D READ_6) {
-+		pc->c[0] =3D READ_6;
-+		atomic_set(&bh->b_count, 0);
-+	}
-+	else if (opcode =3D=3D WRITE_6) {
-+		pc->c[0] =3D WRITE_6;
-+		pc->flags |=3D PC_FLAG_WRITING;
-+		pc->b_data =3D bh->b_data;
-+		pc->b_count =3D atomic_read(&bh->b_count);
-+	} else
-+		printk(KERN_ERR "%s: Invalid opcode: 0x%x\n", __func__, opcode);
- }
-=20
- static ide_startstop_t idetape_do_request(ide_drive_t *drive,
-@@ -1062,14 +1053,16 @@ static ide_startstop_t idetape_do_request(ide_d=
-rive_t *drive,
- 	}
- 	if (rq->cmd[0] & REQ_IDETAPE_READ) {
- 		pc =3D idetape_next_pc_storage(drive);
--		idetape_create_read_cmd(tape, pc, rq->current_nr_sectors,
--					(struct idetape_bh *)rq->special);
-+		ide_tape_create_rw_cmd(tape, pc, rq->current_nr_sectors,
-+					(struct idetape_bh *)rq->special,
-+					READ_6);
- 		goto out;
- 	}
- 	if (rq->cmd[0] & REQ_IDETAPE_WRITE) {
- 		pc =3D idetape_next_pc_storage(drive);
--		idetape_create_write_cmd(tape, pc, rq->current_nr_sectors,
--					 (struct idetape_bh *)rq->special);
-+		ide_tape_create_rw_cmd(tape, pc, rq->current_nr_sectors,
-+					 (struct idetape_bh *)rq->special,
-+					 WRITE_6);
- 		goto out;
- 	}
- 	if (rq->cmd[0] & REQ_IDETAPE_PC1) {
---=20
-1.5.5.1
-
---=20
-Regards/Gru=DF,
-    Boris.
+ 	void __iomem *mmio = ap->ioaddr.cmd_addr;
+-	void __iomem *mmio_base;
+ 	u32 tmp;
+ 
+ 	/* FIXME: this should handle HDMA copy engine thawing */
+ 
+-	/* reading SEQ mask register clears IRQ */
+-	mmio_base = ap->host->iomap[PDC_MMIO_BAR] + PDC_CHIP0_OFS;
+-	readl(mmio_base + PDC_20621_SEQMASK);
++	/* clear IRQ */
++	ioread8(ap->ioaddr.status_addr);
+ 
+ 	/* turn IRQ back on */
+ 	tmp = readl(mmio + PDC_CTLSTAT);
