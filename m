@@ -1,54 +1,37 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH 0/4] revert the commit 22a9189f (cdrom: use kmalloced
-	buffers instead of buffers on stack)
-Date: Thu, 22 May 2008 09:43:12 +0100
-Message-ID: <1211445792.3956.14.camel@localhost.localdomain>
-References: <1211259514-9131-1-git-send-email-fujita.tomonori@lab.ntt.co.jp>
-	 <20080521221113.GA12695@alpha.franken.de> <20080522095506E.tomof@acm.org>
-	 <20080521.181847.157652663.davem@davemloft.net>
+From: "Brian & Chamaigne Scamman" <scammanbc@earthlink.net>
+Subject: RE: [PATCHSET #upstream-fixes] git tree available
+Date: Thu, 22 May 2008 20:49:04 -0400
+Message-ID: <00ee01c8bc6e$cc9ee910$6917a8c0@parents>
+References: <12111273141039-git-send-email-htejun@gmail.com> <48305961.2050509@gmail.com> <006501c8ba19$c1f53340$6917a8c0@parents> <48323E4F.3050806@rtr.ca> <4832535B.1080505@gmail.com> <483256FF.1010200@gmail.com> <00a501c8bae2$7815f7e0$6917a8c0@parents> <4833AC14.5090207@gmail.com> <00b901c8bb7a$caaa1ed0$6917a8c0@parents> <4834C101.70005@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain;
+	charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:51102 "EHLO
-	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1758487AbYEVXoY (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 22 May 2008 19:44:24 -0400
-In-Reply-To: <20080521.181847.157652663.davem@davemloft.net>
+Received: from elasmtp-scoter.atl.sa.earthlink.net ([209.86.89.67]:55722 "EHLO
+	elasmtp-scoter.atl.sa.earthlink.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755687AbYEWAtF (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 22 May 2008 20:49:05 -0400
+In-Reply-To: <4834C101.70005@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: David Miller <davem@davemloft.net>
-Cc: fujita.tomonori@lab.ntt.co.jp, tsbogend@alpha.franken.de, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, jens.axboe@oracle.com, bzolnier@gmail.com, jeff@garzik.org, akpm@linux-foundation.org
+To: 'Tejun Heo' <htejun@gmail.com>
+Cc: 'Mark Lord' <liml@rtr.ca>, jeff@garzik.org, linux-ide@vger.kernel.org
 
-On Wed, 2008-05-21 at 18:18 -0700, David Miller wrote:
-> From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-> Date: Thu, 22 May 2008 10:13:31 +0900
-> 
-> > DMA on stack is forbidden because of non coherent architecutes and
-> > architectures can't uses stack addresses for DMA? What architectures
-> > can't uses stack addresses for DMA? Would it be better to just forbid
-> > using stack addresses for DMA on all the architectures at all times?
-> 
-> Rather, the real problem is that some architectures map the kernel
-> stack virtually, and as a result virt_to_page() and things like that
-> will not work.
-> 
-> It really is fully not working to put DMA buffers on the stack
-> in these cases.
+Tejun Heo wrote:
+>Can you please put ssleep(5) right after the first ata_do_reset() call 
+>in drivers/ata/libata-eh.c::ata_eh_reset() and see whether the problem 
+>goes away?
 
-Actually, for SCSI only, that problem is fixed.  Our decision to
-re-route all I/O, including kernel internal I/O through the block
-mapping algorithms (really so we don't have to worry about GFP_DMA any
-more since we can now use the block bounce buffers) means that all SCSI
-submission routines will accept vmalloc'd and even stack buffers
-perfectly correctly.
+This actually caused more problems. The "failed to IDENTIFY (I/O error,
+err_mask=0x11)" was still printed, plus there was a 5 second delay for each
+port on the PMP during each of the 3 attempts to read the drive. In the end,
+neither of the two SSD drives I tried ended up working. Changing ssleep(5)
+to msleep(5) didn't remove the IDENTIFY errors, but still allowed the drives
+to work.
 
-However (before anyone gets any ideas), the stack is incredibly
-dangerous to do DMA on because it's packed with current data.  If you
-don't get the alignment requirements right on a non-coherent platform,
-you'll end up corrupting data because of cache line interference issues.
-For this reason, DMA to stack is still technically illegal.
+Is there anyway to control the length of the reset pulse? I've heard that
+some of the SSD's require the reset pulse to be held longer than normal.
 
-James
-
+-Brian
 
