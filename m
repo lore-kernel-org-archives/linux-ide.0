@@ -1,55 +1,50 @@
-From: bugme-daemon@bugzilla.kernel.org
-Subject: [Bug 10723] linux 2.6.24 fails to mount ext3 rootfs on FUJITSU MHK2060AT
-Date: Fri, 23 May 2008 09:51:12 -0700 (PDT)
-Message-ID: <20080523165112.89CA811D109@picon.linux-foundation.org>
-References: <bug-10723-11633@http.bugzilla.kernel.org/>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: Bug in libata
+Date: Sat, 24 May 2008 15:35:23 -0400
+Message-ID: <48386DFB.2090607@garzik.org>
+References: <20080524191326.GA2917@ikki.ethgen.de>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:36836 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750696AbYEWQvm (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 23 May 2008 12:51:42 -0400
-Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
-	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id m4NGpC5V016757
-	for <linux-ide@vger.kernel.org>; Fri, 23 May 2008 09:51:13 -0700
-In-Reply-To: <bug-10723-11633@http.bugzilla.kernel.org/>
+Received: from srv5.dvmed.net ([207.36.208.214]:39056 "EHLO mail.dvmed.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752008AbYEXTfZ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 24 May 2008 15:35:25 -0400
+In-Reply-To: <20080524191326.GA2917@ikki.ethgen.de>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Klaus Ethgen <Klaus@Ethgen.de>
+Cc: linux-kernel@vger.kernel.org, Linux IDE mailing list <linux-ide@vger.kernel.org>
 
-http://bugzilla.kernel.org/show_bug.cgi?id=10723
+Klaus Ethgen wrote:
+> -----BEGIN PGP SIGNED MESSAGE-----
+> Hash: SHA1
+> 
+> Dear Jeff, dear Kernel developers,
+> 
+> after several time I decided to update the kernel on my IBM ThinkPad
+> T43p to the newest one (2.6.25.4). After doing so my system was unable
+> to boot. I always got the following error:
+>    ata_piix 000:00:1f.2: failed to request/iomap BARs for port 0 (errno=-16)
+> 
+> After doing some regressions tests I got the wrong commit. Git commit
+> 8cdfb29c0cd8018f92214c11c631d8926f4cb032 which is from Jeff Garzik
+> introduce the bug that makes the system unbootable at all.
+> 
+> As I am not subscribed to the kernel-devel list please hold me in Cc
+> about this bug.
+> 
+> Regards
+>    Klaus Ethgen
+> 
+> Ps. Thanks to Linus for git-bisect. It costs me one day but without it I
+> think I had have much longer to find the problematic patch.
 
+This is a configuration problem.  You need to pick one driver or the 
+other, not both, as that commit's description indicates.
 
-
-
-
-------- Comment #9 from juergen.kosel@gmx.de  2008-05-23 09:51 -------
-Hello,
-
-git bisect delivered the following:
-
-912fb29a36a7269ac1c4a4df45bc0ac1d2637972 is first bad commit
-commit 912fb29a36a7269ac1c4a4df45bc0ac1d2637972
-Author: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Date:   Fri Oct 19 00:30:11 2007 +0200
-
-    opti621: always tune PIO
-
-    Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-
-:040000 040000 ac8b9614dad447f22ebc105dcec5e94d52434c41
-95facc970da3f5821b06b859340232abc2518813 M      drivers
-
-
-Which are changes of just 2 lines of code to allways enable autotune.
-Either my hardware doesn't like it by construction or by agged electronic
-components.
-
-
-Greetings
-   Juergen
+	Jeff
 
 
--- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug, or are watching the assignee.
+
