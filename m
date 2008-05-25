@@ -1,50 +1,41 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: Bug in libata
-Date: Sat, 24 May 2008 15:35:23 -0400
-Message-ID: <48386DFB.2090607@garzik.org>
-References: <20080524191326.GA2917@ikki.ethgen.de>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: [RFC: 2.6 patch] MAINTAINERS: remove SIS 5513 IDE entry
+Date: Sun, 25 May 2008 15:11:01 +0200
+Message-ID: <200805251511.01827.bzolnier@gmail.com>
+References: <20080519220942.GX17716@cs181133002.pp.htv.fi> <20080519223556.GC17716@cs181133002.pp.htv.fi>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain;
+  charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:39056 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752008AbYEXTfZ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 24 May 2008 15:35:25 -0400
-In-Reply-To: <20080524191326.GA2917@ikki.ethgen.de>
+Received: from fg-out-1718.google.com ([72.14.220.159]:4033 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1761482AbYEXV6F (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 24 May 2008 17:58:05 -0400
+Received: by fg-out-1718.google.com with SMTP id 19so798518fgg.17
+        for <linux-ide@vger.kernel.org>; Sat, 24 May 2008 14:58:03 -0700 (PDT)
+In-Reply-To: <20080519223556.GC17716@cs181133002.pp.htv.fi>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Klaus Ethgen <Klaus@Ethgen.de>
-Cc: linux-kernel@vger.kernel.org, Linux IDE mailing list <linux-ide@vger.kernel.org>
+To: Adrian Bunk <bunk@kernel.org>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Klaus Ethgen wrote:
-> -----BEGIN PGP SIGNED MESSAGE-----
-> Hash: SHA1
+On Tuesday 20 May 2008, Adrian Bunk wrote:
+> On Tue, May 20, 2008 at 01:09:42AM +0300, Adrian Bunk wrote:
+> > - maintainer has not been active for years
+> > - URLs no longer exist
+> > - covered by the IDE SUBSYSTEM entry
 > 
-> Dear Jeff, dear Kernel developers,
-> 
-> after several time I decided to update the kernel on my IBM ThinkPad
-> T43p to the newest one (2.6.25.4). After doing so my system was unable
-> to boot. I always got the following error:
->    ata_piix 000:00:1f.2: failed to request/iomap BARs for port 0 (errno=-16)
-> 
-> After doing some regressions tests I got the wrong commit. Git commit
-> 8cdfb29c0cd8018f92214c11c631d8926f4cb032 which is from Jeff Garzik
-> introduce the bug that makes the system unbootable at all.
-> 
-> As I am not subscribed to the kernel-devel list please hold me in Cc
-> about this bug.
-> 
-> Regards
->    Klaus Ethgen
-> 
-> Ps. Thanks to Linus for git-bisect. It costs me one day but without it I
-> think I had have much longer to find the problematic patch.
+> - maintainer email bounces
 
-This is a configuration problem.  You need to pick one driver or the 
-other, not both, as that commit's description indicates.
+Lionel did some great work on this driver in the past and it is
+a shame that he is no longer active.
 
-	Jeff
+If somebody would like to take over maintainership over this driver
+(or some other IDE host driver) please just send me a patch adding
+yourself to MAINTAINERS file.
 
+> > Signed-off-by: Adrian Bunk <bunk@kernel.org>
 
-
+applied
