@@ -1,65 +1,55 @@
-From: Klaus Ethgen <Klaus@Ethgen.de>
-Subject: Re: [KERNEL] Re: Bug in libata
-Date: Sun, 25 May 2008 12:22:22 +0200
-Message-ID: <20080525102222.GB27369@ikki.ethgen.de>
-References: <20080524191326.GA2917@ikki.ethgen.de> <48386DFB.2090607@garzik.org>
+From: Justin Piszcz <jpiszcz@lucidpixels.com>
+Subject: Marvell 88SX7042 [4 Port SATA PCI-Express x4] Support/Questions
+Date: Sun, 25 May 2008 08:03:22 -0400 (EDT)
+Message-ID: <alpine.DEB.1.10.0805250757550.18572@p34.internal.lan>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1; x-action=pgp-signed
+Content-Type: TEXT/PLAIN; format=flowed; charset=US-ASCII
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from toomai.ethgen.de ([85.10.201.50]:38452 "EHLO toomai.ethgen.de"
+Received: from lucidpixels.com ([75.144.35.66]:60508 "EHLO lucidpixels.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753535AbYEYKW3 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 25 May 2008 06:22:29 -0400
-Content-Disposition: inline
-In-Reply-To: <48386DFB.2090607@garzik.org>
+	id S1755229AbYEYMDX (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 25 May 2008 08:03:23 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Jeff Garzik <jeff@garzik.org>
-Cc: linux-kernel@vger.kernel.org, Linux IDE mailing list <linux-ide@vger.kernel.org>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
 
------BEGIN PGP SIGNED MESSAGE-----
-Hash: SHA1
+Jeff has been working on this chipset/patching/etc:
+http://forum.soft32.com/linux/PATCH-sata_mv-HighPoint-2310-support-88SX7042-ftopict338643.html
 
-Resent as the mail had delivery failure on on
-linux-kernel@vger.kernel.org.
+Manual/specs:
+http://www.startech.com/Share/ProductSpecs/PDF/PEXSATA24E.pdf
+http://www.rosewill.com/RosewillSoftware/UserManual%20for%20RC-218-WEB%20v1.0.pdf
 
-Hi Jeff,
+Looks like there are a couple cards sporting this new chip at the moment, 
+here is one:
+http://www.newegg.com/Product/Product.aspx?Item=N82E16816132018
 
-Am Sa den 24. Mai 2008 um 21:35 schrieb Jeff Garzik:
->> after several time I decided to update the kernel on my IBM ThinkPad
->> T43p to the newest one (2.6.25.4). After doing so my system was unable
->> to boot. I always got the following error:
->>    ata_piix 000:00:1f.2: failed to request/iomap BARs for port 0 (errno=-16)
->>
->> After doing some regressions tests I got the wrong commit. Git commit
->> 8cdfb29c0cd8018f92214c11c631d8926f4cb032 which is from Jeff Garzik
->> introduce the bug that makes the system unbootable at all.
-[...]
-> This is a configuration problem.  You need to pick one driver or the other, 
-> not both, as that commit's description indicates.
+http://en.wikipedia.org/wiki/List_of_Marvell_Technology_Group_chipsets#88SXxxxx_SATA_Controllers_Chipsets
+It also appears to be supported in the latest kernel.
 
-Ah, now I read that in the right way. I didn't read it the way that it
-is excepting each other. The reason I misread it was that I have a
-system with a SATA hard drive and a PATA CDROM. So I read that I need
-explicit both for both devices. Compiling the PATA stuff as module (or
-not compiling with it) gets the issue solved.
+If one bought enough of these, one could possibly achieve speeds in 
+excess(!) of 1 gigabyte/second with enough drives and SW RAID in Linux.
+Does anyone have such a card? I would be interested if it could sustain 
+the maximum rate from each disk without any contention.
 
-Shouldn't there a excluding rule in the configuration?
+(with an old 965 chipset for example and a lot of 2-port PCI-e cards)
+dd if=/dev/sda of=/dev/null bs=1M
+dd if=/dev/sdb of=/dev/null bs=1M
 
-Regards
-   Klaus Ethgen
-- -- 
-Klaus Ethgen                            http://www.ethgen.de/
-pub  2048R/D1A4EDE5 2000-02-26 Klaus Ethgen <Klaus@Ethgen.de>
-Fingerprint: D7 67 71 C4 99 A6 D4 FE  EA 40 30 57 3C 88 26 2B
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.6 (GNU/Linux)
+The total read speed increases linearly with each additional disk.  Up to 
+~700-800 megabytes per second with 12 disks (as reported by dstat) (or 
+vmstat 1)..  Same with write (but slower, obviously)...
 
-iQEVAwUBSDk93p+OKpjRpO3lAQIQ5wf/S8xnADlviXi2bXBcJha93pp9c/pEsg+H
-Cf6GrYG1A9oLq2ZDcYXkskiEqLMzcv89HOuUMaBKHx2rglBDjF8HvcWv/urJZwsW
-qao0oB9ez7Gr1EJUOqxdTCGagmjZqZNOBCeCBGJB0HjHT/I8hFfYOwXql+B6LEWh
-t9RHWDg4bnOWYq0Wedo/zpASkyShJwGsCEubffgWjxzhJcZ/ynAz5PQNaQKZx9JW
-SQ2UfJ2IZe1kPJrB3t9yldwhl6E9wqZrG85Y9PR7+i5d6LLZBxwlHjG8e5ZQjZPY
-t85+daxer0tIY/HNyQL/M206eevDQy1DATJNdea/RyU2zm0QZ4PGtA==
-=FA1Y
------END PGP SIGNATURE-----
+So my questions are:
+1. Does anyone have one of these cards? (not the highpoint with the same 
+chip) as that is a RAID card.
+2. How 'experimental' is it?
+
+Any other comments?
+
+There are motherboards with multiple PCI-e x8 slots (5) if you look around 
+hard enough, imagine 5 of these cards with 20 hard drives, you could have 
+one very fast raid array..!
+
+Justin.
