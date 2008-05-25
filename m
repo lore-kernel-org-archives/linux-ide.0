@@ -1,41 +1,47 @@
-From: Andre Tomt <andre@tomt.net>
-Subject: Re: Marvell 88SX7042 [4 Port SATA PCI-Express x4] Support/Questions
-Date: Sun, 25 May 2008 21:43:28 +0200
-Message-ID: <4839C160.6010409@tomt.net>
-References: <alpine.DEB.1.10.0805250757550.18572@p34.internal.lan> <4839A63E.4050409@rtr.ca>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+From: bugme-daemon@bugzilla.kernel.org
+Subject: [Bug 10749] IDE sis5513: the system doesn't shutdown
+Date: Sun, 25 May 2008 13:33:38 -0700 (PDT)
+Message-ID: <20080525203338.BB41710805D@picon.linux-foundation.org>
+References: <bug-10749-11633@http.bugzilla.kernel.org/>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail1.ugh.no ([80.239.42.168]:45486 "EHLO mail1.ugh.no"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752948AbYEYTnY (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 25 May 2008 15:43:24 -0400
-In-Reply-To: <4839A63E.4050409@rtr.ca>
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:40189 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753400AbYEYUeJ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 25 May 2008 16:34:09 -0400
+Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
+	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id m4PKXcNc013999
+	for <linux-ide@vger.kernel.org>; Sun, 25 May 2008 13:33:39 -0700
+In-Reply-To: <bug-10749-11633@http.bugzilla.kernel.org/>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Justin Piszcz <jpiszcz@lucidpixels.com>
-Cc: Mark Lord <liml@rtr.ca>, Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-Mark Lord wrote:
-> Justin Piszcz wrote:
->> If one bought enough of these, one could possibly achieve speeds in 
->> excess(!) of 1 gigabyte/second with enough drives and SW RAID in Linux.
->> Does anyone have such a card? I would be interested if it could 
->> sustain the maximum rate from each disk without any contention.
-> ..
-> 
-> Sure, if the bus and memory are fast enough.  You'll hit the Linux/libata
-> transactions/sec limit at some point, but I don't know what that is.
+http://bugzilla.kernel.org/show_bug.cgi?id=10749
 
-I'm seeing 800MB/s on ICH8/9R class chipsets on concurrent non-raid I/O, 
-however that's the limit of the PCIe bus used between the ICH (south, 
-IO) and the MCH (north, memory/cpu/video-pcie hub). ICH10 is supposed to 
-double that by moving up to PCI-e 2.0 on that link AFAIK.
 
-> Eg. Here's a 4X (I think) card in my PCIe video slot:
+bunk@kernel.org changed:
 
-Ah, of course making use of the video PCIe slot by putting as many ports 
-as you can on it will improve the situation somewhat as its generally 
-connected to the MCH directly. (mm, any plain/non-raid 88SX7xxx PCIe 
-cards with 8 ports available?)
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+                 CC|                            |acpi_power-off@kernel-
+                   |                            |bugs.osdl.org
+OtherBugsDependingO|7216                        |
+              nThis|                            |
+         AssignedTo|acpi_power-off@kernel-      |io_ide@kernel-bugs.osdl.org
+                   |bugs.osdl.org               |
+          Component|Power-Off                   |IDE
+            Product|ACPI                        |IO/Storage
+            Summary|the system doesn't shutdown |IDE sis5513: the system
+                   |                            |doesn't shutdown
+
+
+
+
+------- Comment #5 from bunk@kernel.org  2008-05-25 13:33 -------
+Bart, can you look at this 2.6.26-rc regression?
+
+
+-- 
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug, or are watching the assignee.
