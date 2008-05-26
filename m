@@ -1,46 +1,64 @@
-From: bugme-daemon@bugzilla.kernel.org
-Subject: [Bug 10749] IDE sis5513: the system doesn't shutdown
-Date: Sun, 25 May 2008 16:50:36 -0700 (PDT)
-Message-ID: <20080525235036.B6D69108038@picon.linux-foundation.org>
-References: <bug-10749-11633@http.bugzilla.kernel.org/>
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:59644 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751081AbYEYXvK (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 25 May 2008 19:51:10 -0400
-Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
-	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id m4PNoakt022761
-	for <linux-ide@vger.kernel.org>; Sun, 25 May 2008 16:50:38 -0700
-In-Reply-To: <bug-10749-11633@http.bugzilla.kernel.org/>
-Sender: linux-ide-owner@vger.kernel.org
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Subject: Re: [PATCH 0/4] revert the commit 22a9189f (cdrom: use kmalloced
+	buffers instead of buffers on stack)
+Date: Mon, 26 May 2008 18:17:34 +0900
+Message-ID: <20080526181723X.tomof@acm.org>
+References: <20080522095506E.tomof@acm.org>
+	<20080521.181847.157652663.davem@davemloft.net>
+	<1211445792.3956.14.camel@localhost.localdomain>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <1211445792.3956.14.camel@localhost.localdomain>
+Sender: linux-scsi-owner@vger.kernel.org
+To: James.Bottomley@HansenPartnership.com
+Cc: davem@davemloft.net, fujita.tomonori@lab.ntt.co.jp, tsbogend@alpha.franken.de, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, jens.axboe@oracle.com, bzolnier@gmail.com, jeff@garzik.org, akpm@linux-foundation.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
 
-http://bugzilla.kernel.org/show_bug.cgi?id=10749
+On Thu, 22 May 2008 09:43:12 +0100
+James Bottomley <James.Bottomley@HansenPartnership.com> wrote:
+
+> On Wed, 2008-05-21 at 18:18 -0700, David Miller wrote:
+> > From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+> > Date: Thu, 22 May 2008 10:13:31 +0900
+> > 
+> > > DMA on stack is forbidden because of non coherent architecutes and
+> > > architectures can't uses stack addresses for DMA? What architectures
+> > > can't uses stack addresses for DMA? Would it be better to just forbid
+> > > using stack addresses for DMA on all the architectures at all times?
+> > 
+> > Rather, the real problem is that some architectures map the kernel
+> > stack virtually, and as a result virt_to_page() and things like that
+> > will not work.
+> > 
+> > It really is fully not working to put DMA buffers on the stack
+> > in these cases.
+> 
+> Actually, for SCSI only, that problem is fixed.  Our decision to
+> re-route all I/O, including kernel internal I/O through the block
+> mapping algorithms (really so we don't have to worry about GFP_DMA any
+> more since we can now use the block bounce buffers) means that all SCSI
+> submission routines will accept vmalloc'd and even stack buffers
+> perfectly correctly.
+
+Yeah, post 2.6.24, blk_rq_map_kern was fixed to use the bounce
+buffers. But the block layer doesn't take care of stack buffers or non
+coherent architectures wrt the bounce buffers. If we fix that, all
+SCSI submission routines are fine. That's the issue that this patchset
+tries to fix.
 
 
-bzolnier@gmail.com changed:
-
-           What    |Removed                     |Added
-----------------------------------------------------------------------------
-         AssignedTo|io_ide@kernel-bugs.osdl.org |bzolnier@gmail.com
-             Status|NEW                         |ASSIGNED
-
-
-
-
-------- Comment #6 from bzolnier@gmail.com  2008-05-25 16:50 -------
-I already did, see:
-
-http://lkml.org/lkml/2008/5/25/149
-
-ACPI errors in the dmesg seem to confirm that this is not an sis5513 problem,
-
-I'm reverting it back to ACPI for now.
-
-
--- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug, or are watching the assignee.
-You are the assignee for the bug, or are watching the assignee.
+> However (before anyone gets any ideas), the stack is incredibly
+> dangerous to do DMA on because it's packed with current data.  If you
+> don't get the alignment requirements right on a non-coherent platform,
+> you'll end up corrupting data because of cache line interference issues.
+> For this reason, DMA to stack is still technically illegal.
+> 
+> James
+> 
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
