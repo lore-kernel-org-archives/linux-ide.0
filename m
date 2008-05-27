@@ -1,64 +1,81 @@
-From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: Re: [PATCH 0/4] revert the commit 22a9189f (cdrom: use kmalloced
-	buffers instead of buffers on stack)
-Date: Mon, 26 May 2008 18:17:34 +0900
-Message-ID: <20080526181723X.tomof@acm.org>
-References: <20080522095506E.tomof@acm.org>
-	<20080521.181847.157652663.davem@davemloft.net>
-	<1211445792.3956.14.camel@localhost.localdomain>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: [PATCH 04/40] ide-scsi: fix Interrupt Reason checking in idescsi_pc_intr()
+Date: Tue, 27 May 2008 20:30:48 +0200
+Message-ID: <200805272030.48438.bzolnier@gmail.com>
+References: <20080518185428.5636.77234.sendpatchset@localhost.localdomain> <20080518185503.5636.98141.sendpatchset@localhost.localdomain> <20080519051032.GB31130@gollum.tnic>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <1211445792.3956.14.camel@localhost.localdomain>
-Sender: linux-scsi-owner@vger.kernel.org
-To: James.Bottomley@HansenPartnership.com
-Cc: davem@davemloft.net, fujita.tomonori@lab.ntt.co.jp, tsbogend@alpha.franken.de, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, jens.axboe@oracle.com, bzolnier@gmail.com, jeff@garzik.org, akpm@linux-foundation.org
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1756402AbYEZTXZ@vger.kernel.org>
+In-Reply-To: <20080519051032.GB31130@gollum.tnic>
+Content-Disposition: inline
+Sender: linux-kernel-owner@vger.kernel.org
+To: petkovbb@gmail.com
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
-On Thu, 22 May 2008 09:43:12 +0100
-James Bottomley <James.Bottomley@HansenPartnership.com> wrote:
-
-> On Wed, 2008-05-21 at 18:18 -0700, David Miller wrote:
-> > From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-> > Date: Thu, 22 May 2008 10:13:31 +0900
+On Monday 19 May 2008, Borislav Petkov wrote:
+> On Sun, May 18, 2008 at 08:55:03PM +0200, Bartlomiej Zolnierkiewicz wrote:
+> > Set PC_FLAG_WRITING pc flag in idescsi_queue() (if needed)
+> > and then fix Interrupt Reason checking in idescsi_pc_intr().
 > > 
-> > > DMA on stack is forbidden because of non coherent architecutes and
-> > > architectures can't uses stack addresses for DMA? What architectures
-> > > can't uses stack addresses for DMA? Would it be better to just forbid
-> > > using stack addresses for DMA on all the architectures at all times?
+> > Cc: Borislav Petkov <petkovbb@gmail.com>
+> > Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+> > ---
+> >  drivers/scsi/ide-scsi.c |   17 +++++++++++------
+> >  1 file changed, 11 insertions(+), 6 deletions(-)
 > > 
-> > Rather, the real problem is that some architectures map the kernel
-> > stack virtually, and as a result virt_to_page() and things like that
-> > will not work.
-> > 
-> > It really is fully not working to put DMA buffers on the stack
-> > in these cases.
+> > Index: b/drivers/scsi/ide-scsi.c
+> > ===================================================================
+> > --- a/drivers/scsi/ide-scsi.c
+> > +++ b/drivers/scsi/ide-scsi.c
+> > @@ -427,7 +427,15 @@ static ide_startstop_t idescsi_pc_intr (
+> >  		printk(KERN_ERR "ide-scsi: CoD != 0 in idescsi_pc_intr\n");
+> >  		return ide_do_reset (drive);
+> >  	}
+> > -	if (ireason & IO) {
+> > +	if (((ireason & IO) == IO) == !!(pc->flags & PC_FLAG_WRITING)) {
+> > +		/* Hopefully, we will never get here */
+> > +		printk(KERN_ERR "%s: We wanted to %s, but the device wants us "
+> > +				"to %s!\n", drive->name,
+> > +				(ireason & IO) ? "Write" : "Read",
+> > +				(ireason & IO) ? "Read" : "Write");
+> > +		return ide_do_reset(drive);
+> > +	}
+> > +	if (!(pc->flags & PC_FLAG_WRITING)) {
+> >  		temp = pc->xferred + bcount;
+> >  		if (temp > pc->req_xfer) {
+> >  			if (temp > pc->buf_size) {
+> > @@ -436,7 +444,6 @@ static ide_startstop_t idescsi_pc_intr (
+> >  					"- discarding data\n");
+> >  				temp = pc->buf_size - pc->xferred;
+> >  				if (temp) {
+> > -					pc->flags &= ~PC_FLAG_WRITING;
+> >  					if (pc->sg)
+> >  						idescsi_input_buffers(drive, pc,
+> >  									temp);
+> > @@ -457,15 +464,11 @@ static ide_startstop_t idescsi_pc_intr (
+> >  			printk (KERN_NOTICE "ide-scsi: The scsi wants to send us more data than expected - allowing transfer\n");
+> >  #endif /* IDESCSI_DEBUG_LOG */
+> >  		}
+> > -	}
+> > -	if (ireason & IO) {
+> > -		pc->flags &= ~PC_FLAG_WRITING;
+> >  		if (pc->sg)
+> >  			idescsi_input_buffers(drive, pc, bcount);
+> >  		else
+> >  			hwif->input_data(drive, NULL, pc->cur_pos, bcount);
+> >  	} else {
+> > -		pc->flags |= PC_FLAG_WRITING;
 > 
-> Actually, for SCSI only, that problem is fixed.  Our decision to
-> re-route all I/O, including kernel internal I/O through the block
-> mapping algorithms (really so we don't have to worry about GFP_DMA any
-> more since we can now use the block bounce buffers) means that all SCSI
-> submission routines will accept vmalloc'd and even stack buffers
-> perfectly correctly.
+> Yeah, what was the driver doing turning on/off that flag in the irq handler? Are
+> those pc's getting reused in ide-scsi... I guess this is one of the bugs you
+> were talking about :).
 
-Yeah, post 2.6.24, blk_rq_map_kern was fixed to use the bounce
-buffers. But the block layer doesn't take care of stack buffers or non
-coherent architectures wrt the bounce buffers. If we fix that, all
-SCSI submission routines are fine. That's the issue that this patchset
-tries to fix.
+I guess that it was a left-over from the old days...
 
+[ nowadays idescsi_queue() dynamically allocates new pc-s ]
 
-> However (before anyone gets any ideas), the stack is incredibly
-> dangerous to do DMA on because it's packed with current data.  If you
-> don't get the alignment requirements right on a non-coherent platform,
-> you'll end up corrupting data because of cache line interference issues.
-> For this reason, DMA to stack is still technically illegal.
-> 
-> James
-> 
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Thanks,
+Bart
