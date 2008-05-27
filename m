@@ -1,36 +1,57 @@
-From: bugme-daemon@bugzilla.kernel.org
-Subject: [Bug 10803] Kernel freeze on accesing CD-ROM or HDD
-Date: Tue, 27 May 2008 04:16:30 -0700 (PDT)
-Message-ID: <20080527111630.B45D6108038@picon.linux-foundation.org>
-References: <bug-10803-11633@http.bugzilla.kernel.org/>
+From: Kristen Carlson Accardi <kristen.c.accardi@intel.com>
+Subject: Re: [PATCH] ata: ahci: power off unused ports
+Date: Tue, 27 May 2008 14:32:02 -0700
+Message-ID: <20080527143202.4bab5bf0@appleyard>
+References: <20080508161008.59361de5@appleyard>
+	<20080527030854.GC7515@mit.edu>
+Reply-To: kristen.c.accardi@intel.com
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:41890 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755666AbYE0LQc (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 27 May 2008 07:16:32 -0400
-Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
-	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id m4RBGUu8026227
-	for <linux-ide@vger.kernel.org>; Tue, 27 May 2008 04:16:32 -0700
-In-Reply-To: <bug-10803-11633@http.bugzilla.kernel.org/>
+Received: from mga02.intel.com ([134.134.136.20]:24131 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758467AbYE0VlD (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 27 May 2008 17:41:03 -0400
+In-Reply-To: <20080527030854.GC7515@mit.edu>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Theodore Tso <tytso@mit.edu>
+Cc: jeff@garzik.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-http://bugzilla.kernel.org/show_bug.cgi?id=10803
+On Mon, 26 May 2008 23:08:54 -0400
+Theodore Tso <tytso@mit.edu> wrote:
 
-
-
-
-
-------- Comment #2 from nitanovidiu@gmail.com  2008-05-27 04:16 -------
-(In reply to comment #1)
-> Looks like random corruption - are you using the proprietary Nvidia drivers ?
+> On Thu, May 08, 2008 at 04:10:08PM -0700, Kristen Carlson Accardi wrote:
+> > power off unused ports
+> > 
+> > If the port isn't either a drive bay or an external SATA port, do not 
+> > keep the phy powered on if the port is unoccupied. This saves .75 watts
+> > on most laptops.  A module parameter can be used to override this 
+> > behavior and allow the phy's to be powered up regardless of whether it
+> > has externally accessible SATA ports. 
+> > 
+> > Signed-off-by:  Kristen Carlson Accardi <kristen.c.accardi@intel.com>
+> 
+> Hi,
+> 
+> I'm wondering what's the status of this patch?  
+> 
+> if this has hit a subsystem tree yet?  0.75 watts power savings sounds
+> really cool, but it doesn't seem to be in Linus's mainline yet.  Has
+> it hit a subsystem tree yet, or is there some issue that still needs
+> to be resolved before it can go it?
+> 
+> Thanks, regards,
+> 
+> 							- Ted
 > 
 
-Yes, I do. That may be te problem?
+Hi Ted,
+As far as I know the patch has gone nowhere.  I believe that 
+Jeff wanted something more flexible than the module parameter that
+I provided to override the BIOS options.  I am not working on this,
+I figured he had a pretty firm idea what he wanted so he was better
+equipped to write the patch.
 
-
--- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug, or are watching the assignee.
+Kristen
