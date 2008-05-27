@@ -1,43 +1,45 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [RFC: 2.6 patch] remove BLK_DEV_HD_ONLY
-Date: Mon, 26 May 2008 20:50:21 +0100
-Message-ID: <20080526205021.12ef7948@core>
-References: <20080519215357.GH17716@cs181133002.pp.htv.fi>
-	<20080519225018.1df63bef@core>
-	<200805272114.12763.bzolnier@gmail.com>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: [PATCH] sis5513: add missing pci_enable_device() call
+Date: Tue, 27 May 2008 22:15:24 +0200
+Message-ID: <200805272215.24560.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:58165 "EHLO
-	lxorguk.ukuu.org.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1754561AbYEZUDu (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 26 May 2008 16:03:50 -0400
-In-Reply-To: <200805272114.12763.bzolnier@gmail.com>
+Received: from mu-out-0910.google.com ([209.85.134.191]:5569 "EHLO
+	mu-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755357AbYEZU2B (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 26 May 2008 16:28:01 -0400
+Received: by mu-out-0910.google.com with SMTP id w8so1677724mue.1
+        for <linux-ide@vger.kernel.org>; Mon, 26 May 2008 13:28:00 -0700 (PDT)
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: Adrian Bunk <bunk@kernel.org>, linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, Riccardo Gori <goric@trivenet.it>
 
-> I tend to disagree:
-> 
-> - there is nothing wrong with using an older kernel for rescue operations
->   on MFM/RLL drives
+Cc: Riccardo Gori <goric@trivenet.it>
+Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+---
+thanks to Riccardo for an unintentional ;) inspiration
 
-Older kernels don't boot on a lot of modern hardware.
+ drivers/ide/pci/sis5513.c |    5 +++++
+ 1 file changed, 5 insertions(+)
 
-> - it should be relatively easy to add MFM/RLL support to IDE subsystem
->   or libata layer (or even both)
-
-I'm working on a libata driver when I get bits of time but it is not
-trivial because stuff like device probe is totally different,
-multi-write/multi-read are different, some of the command set is
-different and even some of the task file registers are different.
-
-> If there is no consensus about hd.c removal I think that the appropriate
-> alternative would be to move it to drivers/block/ as it has nothing to do
-> with IDE subsystem code.
-
-Thats true enough.
-
-Alan
+Index: b/drivers/ide/pci/sis5513.c
+===================================================================
+--- a/drivers/ide/pci/sis5513.c
++++ b/drivers/ide/pci/sis5513.c
+@@ -569,6 +569,11 @@ static int __devinit sis5513_init_one(st
+ {
+ 	struct ide_port_info d = sis5513_chipset;
+ 	u8 udma_rates[] = { 0x00, 0x00, 0x07, 0x1f, 0x3f, 0x3f, 0x7f, 0x7f };
++	int rc;
++
++	rc = pci_enable_device(dev);
++	if (rc)
++		return rc;
+ 
+ 	if (sis_find_family(dev) == 0)
+ 		return -ENOTSUPP;
