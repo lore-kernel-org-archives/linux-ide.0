@@ -1,56 +1,59 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH] block: handle blk_pm_resume_request() requests in blk_execute_rq_nowait()
-Date: Tue, 27 May 2008 22:02:01 +0200
-Message-ID: <200805272202.01360.bzolnier@gmail.com>
+From: "Grant Grundler" <grundler@google.com>
+Subject: Re: Marvell 88SX7042 [4 Port SATA PCI-Express x4] Support/Questions
+Date: Mon, 26 May 2008 17:34:25 -0700
+Message-ID: <da824cf30805261734g6dbd43yfda62124973b98cf@mail.gmail.com>
+References: <alpine.DEB.1.10.0805250757550.18572@p34.internal.lan>
+	 <4839A63E.4050409@rtr.ca>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mu-out-0910.google.com ([209.85.134.189]:5459 "EHLO
-	mu-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755369AbYEZU17 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 26 May 2008 16:27:59 -0400
-Received: by mu-out-0910.google.com with SMTP id w8so1677751mue.1
-        for <linux-ide@vger.kernel.org>; Mon, 26 May 2008 13:27:58 -0700 (PDT)
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <4839A63E.4050409@rtr.ca>
 Content-Disposition: inline
-Sender: linux-ide-owner@vger.kernel.org
+Sender: linux-raid-owner@vger.kernel.org
+To: Mark Lord <liml@rtr.ca>
+Cc: Justin Piszcz <jpiszcz@lucidpixels.com>, Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Borislav Petkov <petkovbb@gmail.com>, Jens Axboe <jens.axboe@oracle.com>, "Rafael J. Wysocki" <rjw@sisk.pl>
 
-For blk_pm_resume_request() requests (which are used only by IDE subsystem
-currently) the queue is stopped so we need to call ->request_fn explicitly.
+On Sun, May 25, 2008 at 10:47 AM, Mark Lord <liml@rtr.ca> wrote:
+...
+> Sure, if the bus and memory are fast enough.  You'll hit the Linux/libata
+> transactions/sec limit at some point, but I don't know what that is.
+>
+> Eg. Here's a 4X (I think) card in my PCIe video slot:
+>
+> beefy:~# mdadm --create /dev/md0 --chunk=256 -l 0 --raid-devices=4
+> /dev/sd[bcde]
+> mdadm: array /dev/md0 started.
+>
+> beefy:~# hdparm -t --direct /dev/sd[bcde] /dev/md0
+>
+> /dev/sdb:
+> Timing O_DIRECT disk reads:  218 MB in  3.01 seconds =  72.46 MB/sec
+>
+> /dev/sdc:
+> Timing O_DIRECT disk reads:  256 MB in  3.01 seconds =  85.00 MB/sec
+>
+> /dev/sdd:
+> Timing O_DIRECT disk reads:  192 MB in  3.01 seconds =  63.79 MB/sec
+>
+> /dev/sde:
+> Timing O_DIRECT disk reads:  256 MB in  3.01 seconds =  85.07 MB/sec
+>
+> /dev/md0:
+> Timing O_DIRECT disk reads:  768 MB in  3.00 seconds = 255.69 MB/sec
 
-Thanks to:
-- Rafael for reporting/bisecting the bug
-- Borislav/Rafael for testing the fix
+The bottle neck here is with the four disks.
+Modern 1TB 7200 rpm disks have raw throughput rates up to around
+100MB/s. Anything in the last 4-5 years should do better than 60MB/s.
 
-This is a preparation for converting IDE to use blk_execute_rq().
+In theory, ~16 disks (4 disks per 7042 port using Port Mulitpliers),
+one should be able to hit 200+ MB/s per 7042 port and approach 900MB/s
+total. Getting more than 900Mb/s will depend on the chipset. IIRC, the
+MMRBC of 128 bytes will result in about 15% protocol overhead in the
+PCI-e link.
+Bigger PCI-e "burst" will result in dramatically less overhead (IIRC,
+256Byte == 9% overhead.)
 
-Cc: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Cc: Borislav Petkov <petkovbb@gmail.com>
-Cc: Jens Axboe <jens.axboe@oracle.com>
-Cc: "Rafael J. Wysocki" <rjw@sisk.pl>
-Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
----
-goes before "ide: convert ide_do_drive_cmd path to use blk_execute_rq" patch
-in IDE tree
-
- block/blk-exec.c |    3 +++
- 1 file changed, 3 insertions(+)
-
-Index: b/block/blk-exec.c
-===================================================================
---- a/block/blk-exec.c
-+++ b/block/blk-exec.c
-@@ -58,6 +58,9 @@ void blk_execute_rq_nowait(struct reques
- 	spin_lock_irq(q->queue_lock);
- 	__elv_add_request(q, rq, where, 1);
- 	__generic_unplug_device(q);
-+	/* the queue is stopped so it won't be plugged+unplugged */
-+	if (blk_pm_resume_request(rq))
-+		q->request_fn(q);
- 	spin_unlock_irq(q->queue_lock);
- }
- EXPORT_SYMBOL_GPL(blk_execute_rq_nowait);
+hth,
+grant
