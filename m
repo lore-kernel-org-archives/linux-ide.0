@@ -1,55 +1,54 @@
-From: Mark Lord <liml@rtr.ca>
-Subject: [PATCH 05/05] sata_mv: implement SoC guideline SATA_S11
-Date: Wed, 28 May 2008 13:41:52 -0400
-Message-ID: <483D9960.8070607@rtr.ca>
-References: <483C8328.1030807@rtr.ca> <483C838F.9060208@rtr.ca> <483C8420.5090706@rtr.ca> <483D81C8.90208@rtr.ca>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: [PATCH 01/21] ide: remove needless includes from ide-lib.c
+Date: Wed, 28 May 2008 23:39:54 +0200
+Message-ID: <20080528213954.16327.43382.sendpatchset@localhost.localdomain>
+References: <20080528213944.16327.92950.sendpatchset@localhost.localdomain>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([76.10.145.34]:2171 "EHLO mail.rtr.ca"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751794AbYE1Rly (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 28 May 2008 13:41:54 -0400
-In-Reply-To: <483D81C8.90208@rtr.ca>
+Received: from mu-out-0910.google.com ([209.85.134.186]:50110 "EHLO
+	mu-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753402AbYE1VmU (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 28 May 2008 17:42:20 -0400
+Received: by mu-out-0910.google.com with SMTP id w8so2393895mue.1
+        for <linux-ide@vger.kernel.org>; Wed, 28 May 2008 14:42:19 -0700 (PDT)
+In-Reply-To: <20080528213944.16327.92950.sendpatchset@localhost.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>, IDE/ATA development list <linux-ide@vger.kernel.org>
+To: linux-ide@vger.kernel.org
+Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-kernel@vger.kernel.org
 
-The 5182 System-On-Chip (SOC) variant wants certain lower
-bits to be cleared on any write to the PHY_MODE3 register.
-
-If/when support is added for other SOC variants, we'll need
-some way to uniquely identify the 5182, and not perform this
-workaround for the others.
-
-But for now, it is the only SOC variant we support here.
-
-Signed-off-by: Mark Lord <mlord@pobox.com>
+Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 ---
-Another extension to the patch series.
-This concludes the errata fixes I know of
-for the various PHY_MODE registers.
+ drivers/ide/ide-lib.c |   15 ---------------
+ 1 file changed, 15 deletions(-)
 
---- old/drivers/ata/sata_mv.c	2008-05-28 11:50:56.000000000 -0400
-+++ linux/drivers/ata/sata_mv.c	2008-05-28 12:20:05.000000000 -0400
-@@ -72,7 +72,7 @@
- #include <linux/libata.h>
+Index: b/drivers/ide/ide-lib.c
+===================================================================
+--- a/drivers/ide/ide-lib.c
++++ b/drivers/ide/ide-lib.c
+@@ -1,26 +1,11 @@
+-#include <linux/module.h>
+ #include <linux/types.h>
+ #include <linux/string.h>
+ #include <linux/kernel.h>
+-#include <linux/timer.h>
+-#include <linux/mm.h>
+ #include <linux/interrupt.h>
+-#include <linux/major.h>
+-#include <linux/errno.h>
+-#include <linux/genhd.h>
+-#include <linux/blkpg.h>
+-#include <linux/slab.h>
+-#include <linux/pci.h>
+-#include <linux/delay.h>
+ #include <linux/hdreg.h>
+ #include <linux/ide.h>
+ #include <linux/bitops.h>
  
- #define DRV_NAME	"sata_mv"
--#define DRV_VERSION	"1.23"
-+#define DRV_VERSION	"1.24"
- 
- enum {
- 	/* BAR's are enumerated in terms of pci_resource_start() terms */
-@@ -2558,6 +2558,10 @@
- 	m3 = readl(port_mmio + PHY_MODE3);
- 	m3 = (m3 & 0x1f) | (0x5555601 << 5);
- 
-+	/* Guideline 88F5182 (GL# SATA-S11) */
-+	if (IS_SOC(hpriv))
-+		m3 &= ~0x1c;
-+
- 	if (fix_phy_mode4) {
- 		u32 m4;
- 
+-#include <asm/byteorder.h>
+-#include <asm/irq.h>
+-#include <asm/uaccess.h>
+-#include <asm/io.h>
+-
+ static const char *udma_str[] =
+ 	 { "UDMA/16", "UDMA/25",  "UDMA/33",  "UDMA/44",
+ 	   "UDMA/66", "UDMA/100", "UDMA/133", "UDMA7" };
