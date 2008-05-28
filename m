@@ -1,15 +1,15 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH 09/21] ht6560b: convert to use ide_timing_find_mode()
-Date: Wed, 28 May 2008 23:41:04 +0200
-Message-ID: <20080528214104.16327.34235.sendpatchset@localhost.localdomain>
+Subject: [PATCH 11/21] alim15x3: convert to use ide_timing_find_mode()
+Date: Wed, 28 May 2008 23:42:23 +0200
+Message-ID: <20080528214223.16327.11847.sendpatchset@localhost.localdomain>
 References: <20080528213944.16327.92950.sendpatchset@localhost.localdomain>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from gv-out-0910.google.com ([216.239.58.189]:29491 "EHLO
-	gv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754795AbYE1Voe (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 28 May 2008 17:44:34 -0400
-Received: by gv-out-0910.google.com with SMTP id e6so1537473gvc.37
-        for <linux-ide@vger.kernel.org>; Wed, 28 May 2008 14:44:32 -0700 (PDT)
+Received: from mu-out-0910.google.com ([209.85.134.191]:51381 "EHLO
+	mu-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755858AbYE1Vos (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 28 May 2008 17:44:48 -0400
+Received: by mu-out-0910.google.com with SMTP id w8so2394678mue.1
+        for <linux-ide@vger.kernel.org>; Wed, 28 May 2008 14:44:46 -0700 (PDT)
 In-Reply-To: <20080528213944.16327.92950.sendpatchset@localhost.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
@@ -20,44 +20,47 @@ There should be no functional changes caused by this patch.
 
 Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 ---
- drivers/ide/Kconfig          |    1 +
- drivers/ide/legacy/ht6560b.c |    7 +++----
- 2 files changed, 4 insertions(+), 4 deletions(-)
+ drivers/ide/Kconfig        |    1 +
+ drivers/ide/pci/alim15x3.c |    6 ++----
+ 2 files changed, 3 insertions(+), 4 deletions(-)
 
 Index: b/drivers/ide/Kconfig
 ===================================================================
 --- a/drivers/ide/Kconfig
 +++ b/drivers/ide/Kconfig
-@@ -1008,6 +1008,7 @@ config BLK_DEV_DTC2278
+@@ -458,6 +458,7 @@ config BLK_DEV_AEC62XX
  
- config BLK_DEV_HT6560B
- 	tristate "Holtek HT6560B support"
+ config BLK_DEV_ALI15X3
+ 	tristate "ALI M15x3 chipset support"
 +	select IDE_TIMINGS
+ 	select BLK_DEV_IDEDMA_PCI
  	help
- 	  This driver is enabled at runtime using the "ht6560b.probe" kernel
- 	  boot parameter. It enables support for the secondary IDE interface
-Index: b/drivers/ide/legacy/ht6560b.c
+ 	  This driver ensures (U)DMA support for ALI 1533, 1543 and 1543C
+Index: b/drivers/ide/pci/alim15x3.c
 ===================================================================
---- a/drivers/ide/legacy/ht6560b.c
-+++ b/drivers/ide/legacy/ht6560b.c
-@@ -216,6 +216,7 @@ static u8 ht_pio2timings(ide_drive_t *dr
+--- a/drivers/ide/pci/alim15x3.c
++++ b/drivers/ide/pci/alim15x3.c
+@@ -69,7 +69,8 @@ static void ali_set_pio_mode(ide_drive_t
+ {
+ 	ide_hwif_t *hwif = HWIF(drive);
+ 	struct pci_dev *dev = to_pci_dev(hwif->dev);
+-	int s_time, a_time, c_time;
++	struct ide_timing *t = ide_timing_find_mode(XFER_PIO_0 + pio);
++	int s_time = t->setup, a_time = t->active, c_time = t->cycle;
+ 	u8 s_clc, a_clc, r_clc;
+ 	unsigned long flags;
+ 	int bus_speed = ide_pci_clk ? ide_pci_clk : 33;
+@@ -78,13 +79,10 @@ static void ali_set_pio_mode(ide_drive_t
+ 	u8 cd_dma_fifo = 0;
+ 	int unit = drive->select.b.unit & 1;
  
-         if (pio) {
- 		unsigned int cycle_time;
-+		struct ide_timing *t = ide_timing_find_mode(XFER_PIO_0 + pio);
+-	s_time = ide_pio_timings[pio].setup_time;
+-	a_time = ide_pio_timings[pio].active_time;
+ 	if ((s_clc = (s_time * bus_speed + 999) / 1000) >= 8)
+ 		s_clc = 0;
+ 	if ((a_clc = (a_time * bus_speed + 999) / 1000) >= 8)
+ 		a_clc = 0;
+-	c_time = ide_pio_timings[pio].cycle_time;
  
- 		cycle_time = ide_pio_cycle_time(drive, pio);
- 
-@@ -224,10 +225,8 @@ static u8 ht_pio2timings(ide_drive_t *dr
- 		 *  actual cycle time for recovery and activity
- 		 *  according system bus speed.
- 		 */
--		active_time = ide_pio_timings[pio].active_time;
--		recovery_time = cycle_time
--			- active_time
--			- ide_pio_timings[pio].setup_time;
-+		active_time = t->active;
-+		recovery_time = cycle_time - active_time - t->setup;
- 		/*
- 		 *  Cycle times should be Vesa bus cycles
- 		 */
+ 	if (!(r_clc = (c_time * bus_speed + 999) / 1000 - a_clc - s_clc)) {
+ 		r_clc = 1;
