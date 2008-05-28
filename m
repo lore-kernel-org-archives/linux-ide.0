@@ -1,52 +1,89 @@
-From: Kristen Carlson Accardi <kristen.c.accardi@intel.com>
-Subject: Re: [PATCH] ata: ahci: power off unused ports
-Date: Tue, 27 May 2008 16:32:51 -0700
-Message-ID: <20080527163251.04054a74@appleyard>
-References: <20080508161008.59361de5@appleyard>
-	<20080527030854.GC7515@mit.edu>
-	<20080527143202.4bab5bf0@appleyard>
-	<20080527225926.GE6843@mit.edu>
-Reply-To: kristen.c.accardi@intel.com
+From: Borislav Petkov <petkovbb@googlemail.com>
+Subject: Re: [PATCH 3/4] ide: use the dma safe check for REQ_TYPE_ATA_PC
+Date: Wed, 28 May 2008 08:43:00 +0200
+Message-ID: <20080528064259.GA30300@gollum.tnic>
+References: <1211259514-9131-1-git-send-email-fujita.tomonori@lab.ntt.co.jp> <1211259514-9131-2-git-send-email-fujita.tomonori@lab.ntt.co.jp> <1211259514-9131-3-git-send-email-fujita.tomonori@lab.ntt.co.jp> <1211259514-9131-4-git-send-email-fujita.tomonori@lab.ntt.co.jp>
+Reply-To: petkovbb@gmail.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:53353 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754160AbYE0Xlx (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 27 May 2008 19:41:53 -0400
-In-Reply-To: <20080527225926.GE6843@mit.edu>
+Received: from fg-out-1718.google.com ([72.14.220.152]:17981 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750807AbYE1GnI (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 28 May 2008 02:43:08 -0400
+Received: by fg-out-1718.google.com with SMTP id 19so1705968fgg.17
+        for <linux-ide@vger.kernel.org>; Tue, 27 May 2008 23:43:03 -0700 (PDT)
+Content-Disposition: inline
+In-Reply-To: <1211259514-9131-4-git-send-email-fujita.tomonori@lab.ntt.co.jp>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Theodore Tso <tytso@mit.edu>
-Cc: jeff@garzik.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, jens.axboe@oracle.com, tsbogend@alpha.franken.de, bzolnier@gmail.com, James.Bottomley@HansenPartnership.com, jeff@garzik.org, akpm@linux-foundation.org, davem@davemloft.net
 
-On Tue, 27 May 2008 18:59:26 -0400
-Theodore Tso <tytso@mit.edu> wrote:
+On Tue, May 20, 2008 at 01:58:33PM +0900, FUJITA Tomonori wrote:
+> This uses the dma safe check for REQ_TYPE_ATA_PC. The dma safe check
+> is used for only sg requests but it should be used for other non fs
+> commands.
+>=20
+> This uses blk_queue_update_dma_pad to make the intention clear though
+> ide don't use the blk APIs so it doesn't change anything.
+>=20
+> Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+> Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+> ---
+>  drivers/ide/ide-cd.c |   17 ++++++++++++-----
+>  1 files changed, 12 insertions(+), 5 deletions(-)
+>=20
+> diff --git a/drivers/ide/ide-cd.c b/drivers/ide/ide-cd.c
+> index 68e7f19..1d8d510 100644
+> --- a/drivers/ide/ide-cd.c
+> +++ b/drivers/ide/ide-cd.c
+> @@ -1178,10 +1178,15 @@ static ide_startstop_t cdrom_do_block_pc(ide_=
+drive_t *drive, struct request *rq)
+>  	info->dma =3D 0;
+> =20
+>  	/* sg request */
+> -	if (rq->bio) {
+> -		int mask =3D drive->queue->dma_alignment;
+> -		unsigned long addr =3D
+> -			(unsigned long)page_address(bio_page(rq->bio));
+> +	if (rq->bio || ((rq->cmd_type =3D=3D REQ_TYPE_ATA_PC) && rq->data_l=
+en)) {
+> +		struct request_queue *q =3D drive->queue;
+> +		unsigned int alignment;
+> +		unsigned long addr;
+> +
+> +		if (rq->bio)
+> +			addr =3D (unsigned long)bio_data(rq->bio);
+> +		else
+> +			addr =3D (unsigned long)rq->data;
+> =20
+>  		info->dma =3D drive->using_dma;
+> =20
+> @@ -1191,7 +1196,8 @@ static ide_startstop_t cdrom_do_block_pc(ide_dr=
+ive_t *drive, struct request *rq)
+>  		 * NOTE! The "len" and "addr" checks should possibly have
+>  		 * separate masks.
+>  		 */
+> -		if ((rq->data_len & 15) || (addr & mask))
+> +		alignment =3D queue_dma_alignment(q) | q->dma_pad_mask;
+> +		if (addr & alignment || rq->data_len & alignment)
+>  			info->dma =3D 0;
+>  	}
+> =20
+> @@ -1869,6 +1875,7 @@ static int ide_cdrom_setup(ide_drive_t *drive)
+> =20
+>  	blk_queue_prep_rq(drive->queue, ide_cdrom_prep_fn);
+>  	blk_queue_dma_alignment(drive->queue, 31);
+> +	blk_queue_update_dma_pad(drive->queue, 15);
+>  	drive->queue->unplug_delay =3D (1 * HZ) / 1000;
+>  	if (!drive->queue->unplug_delay)
+>  		drive->queue->unplug_delay =3D 1;
 
-> On Tue, May 27, 2008 at 02:32:02PM -0700, Kristen Carlson Accardi wrote:
-> > 
-> > As far as I know the patch has gone nowhere.  I believe that 
-> > Jeff wanted something more flexible than the module parameter that
-> > I provided to override the BIOS options.  I am not working on this,
-> > I figured he had a pretty firm idea what he wanted so he was better
-> > equipped to write the patch.
-> 
-> Thanks Kristen,
-> 
-> Can you say which laptops you had tested this on where it saved power?
-> (Did you test any Thinkpads, in particular?)  I'm wondering if it's
-> worth trying to forward port your patch as a private mod to my kernel;
-> 30 to 40 minutes of extra battery life is nothing to sneeze at!
-> 
-> 						- Ted
-> 
+Looks good to me.
 
-I tested this on an Intel mobile software development platform 
-with a newer mobile ICH - the power savings were measured at the actual 
-component (via probes on the ICH), so I did not measure the power 
-savings at the wall socket, although I would expect the power savings
-to be even greater on the other side of the power supply.  So in short,
-yes, I think it's worth it to give it a try - the patch is pretty
-unintrusive, so it should be that difficult a port to do.
-
+Acked-by: Borislav Petkov <petkovbb@gmail.com>
+--=20
+Regards/Gru=DF,
+    Boris.
