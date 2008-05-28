@@ -1,269 +1,46 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH 21/21] ide: move PIO blacklist to ide-pio-blacklist.c
-Date: Wed, 28 May 2008 23:43:36 +0200
-Message-ID: <20080528214336.16327.94684.sendpatchset@localhost.localdomain>
-References: <20080528213944.16327.92950.sendpatchset@localhost.localdomain>
+From: bugme-daemon@bugzilla.kernel.org
+Subject: [Bug 10723] linux 2.6.24 fails to mount ext3 rootfs on FUJITSU MHK2060AT
+Date: Wed, 28 May 2008 15:13:52 -0700 (PDT)
+Message-ID: <20080528221352.91BED108047@picon.linux-foundation.org>
+References: <bug-10723-11633@http.bugzilla.kernel.org/>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mu-out-0910.google.com ([209.85.134.185]:51939 "EHLO
-	mu-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756073AbYE1VqF (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 28 May 2008 17:46:05 -0400
-Received: by mu-out-0910.google.com with SMTP id w8so2395032mue.1
-        for <linux-ide@vger.kernel.org>; Wed, 28 May 2008 14:46:00 -0700 (PDT)
-In-Reply-To: <20080528213944.16327.92950.sendpatchset@localhost.localdomain>
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:44450 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753389AbYE1WOY (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 28 May 2008 18:14:24 -0400
+Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
+	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id m4SMDqS5029619
+	for <linux-ide@vger.kernel.org>; Wed, 28 May 2008 15:13:53 -0700
+In-Reply-To: <bug-10723-11633@http.bugzilla.kernel.org/>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
-Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-kernel@vger.kernel.org
 
-Move PIO blacklist to ide-pio-blacklist.c.
+http://bugzilla.kernel.org/show_bug.cgi?id=10723
 
-While at it:
 
-- fix comment
+bzolnier@gmail.com changed:
 
-- fix whitespace damage
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+         AssignedTo|io_ide@kernel-bugs.osdl.org |bzolnier@gmail.com
+             Status|NEW                         |ASSIGNED
 
-There should be no functional changes caused by this patch.
 
-Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
----
- drivers/ide/Makefile            |    3 -
- drivers/ide/ide-lib.c           |   96 ----------------------------------------
- drivers/ide/ide-pio-blacklist.c |   94 +++++++++++++++++++++++++++++++++++++++
- include/linux/ide.h             |    2 
- 4 files changed, 98 insertions(+), 97 deletions(-)
 
-Index: b/drivers/ide/Makefile
-===================================================================
---- a/drivers/ide/Makefile
-+++ b/drivers/ide/Makefile
-@@ -11,7 +11,8 @@
- 
- EXTRA_CFLAGS				+= -Idrivers/ide
- 
--ide-core-y += ide.o ide-io.o ide-iops.o ide-lib.o ide-probe.o ide-taskfile.o
-+ide-core-y += ide.o ide-io.o ide-iops.o ide-lib.o ide-probe.o ide-taskfile.o \
-+	      ide-pio-blacklist.o
- 
- # core IDE code
- ide-core-$(CONFIG_IDE_TIMINGS)		+= ide-timings.o
-Index: b/drivers/ide/ide-lib.c
-===================================================================
---- a/drivers/ide/ide-lib.c
-+++ b/drivers/ide/ide-lib.c
-@@ -75,102 +75,6 @@ static u8 ide_rate_filter(ide_drive_t *d
- 	return min(speed, mode);
- }
- 
--/*
-- * Shared data/functions for determining best PIO mode for an IDE drive.
-- * Most of this stuff originally lived in cmd640.c, and changes to the
-- * ide_pio_blacklist[] table should be made with EXTREME CAUTION to avoid
-- * breaking the fragile cmd640.c support.
-- */
--
--/*
-- * Black list. Some drives incorrectly report their maximal PIO mode,
-- * at least in respect to CMD640. Here we keep info on some known drives.
-- */
--static struct ide_pio_info {
--	const char	*name;
--	int		pio;
--} ide_pio_blacklist [] = {
--	{ "Conner Peripherals 540MB - CFS540A", 3 },
--
--	{ "WDC AC2700",  3 },
--	{ "WDC AC2540",  3 },
--	{ "WDC AC2420",  3 },
--	{ "WDC AC2340",  3 },
--	{ "WDC AC2250",  0 },
--	{ "WDC AC2200",  0 },
--	{ "WDC AC21200", 4 },
--	{ "WDC AC2120",  0 },
--	{ "WDC AC2850",  3 },
--	{ "WDC AC1270",  3 },
--	{ "WDC AC1170",  1 },
--	{ "WDC AC1210",  1 },
--	{ "WDC AC280",   0 },
--	{ "WDC AC31000", 3 },
--	{ "WDC AC31200", 3 },
--
--	{ "Maxtor 7131 AT", 1 },
--	{ "Maxtor 7171 AT", 1 },
--	{ "Maxtor 7213 AT", 1 },
--	{ "Maxtor 7245 AT", 1 },
--	{ "Maxtor 7345 AT", 1 },
--	{ "Maxtor 7546 AT", 3 },
--	{ "Maxtor 7540 AV", 3 },
--
--	{ "SAMSUNG SHD-3121A", 1 },
--	{ "SAMSUNG SHD-3122A", 1 },
--	{ "SAMSUNG SHD-3172A", 1 },
--
--	{ "ST5660A",  3 },
--	{ "ST3660A",  3 },
--	{ "ST3630A",  3 },
--	{ "ST3655A",  3 },
--	{ "ST3391A",  3 },
--	{ "ST3390A",  1 },
--	{ "ST3600A",  1 },
--	{ "ST3290A",  0 },
--	{ "ST3144A",  0 },
--	{ "ST3491A",  1 },	/* reports 3, should be 1 or 2 (depending on */	
--				/* drive) according to Seagates FIND-ATA program */
--
--	{ "QUANTUM ELS127A", 0 },
--	{ "QUANTUM ELS170A", 0 },
--	{ "QUANTUM LPS240A", 0 },
--	{ "QUANTUM LPS210A", 3 },
--	{ "QUANTUM LPS270A", 3 },
--	{ "QUANTUM LPS365A", 3 },
--	{ "QUANTUM LPS540A", 3 },
--	{ "QUANTUM LIGHTNING 540A", 3 },
--	{ "QUANTUM LIGHTNING 730A", 3 },
--
--        { "QUANTUM FIREBALL_540", 3 }, /* Older Quantum Fireballs don't work */
--        { "QUANTUM FIREBALL_640", 3 }, 
--        { "QUANTUM FIREBALL_1080", 3 },
--        { "QUANTUM FIREBALL_1280", 3 },
--	{ NULL,	0 }
--};
--
--/**
-- *	ide_scan_pio_blacklist 	-	check for a blacklisted drive
-- *	@model: Drive model string
-- *
-- *	This routine searches the ide_pio_blacklist for an entry
-- *	matching the start/whole of the supplied model name.
-- *
-- *	Returns -1 if no match found.
-- *	Otherwise returns the recommended PIO mode from ide_pio_blacklist[].
-- */
--
--static int ide_scan_pio_blacklist (char *model)
--{
--	struct ide_pio_info *p;
--
--	for (p = ide_pio_blacklist; p->name != NULL; p++) {
--		if (strncmp(p->name, model, strlen(p->name)) == 0)
--			return p->pio;
--	}
--	return -1;
--}
--
- /**
-  *	ide_get_best_pio_mode	-	get PIO mode from drive
-  *	@drive: drive to consider
-Index: b/drivers/ide/ide-pio-blacklist.c
-===================================================================
---- /dev/null
-+++ b/drivers/ide/ide-pio-blacklist.c
-@@ -0,0 +1,94 @@
-+/*
-+ * PIO blacklist.  Some drives incorrectly report their maximal PIO mode,
-+ * at least in respect to CMD640.  Here we keep info on some known drives.
-+ *
-+ * Changes to the ide_pio_blacklist[] should be made with EXTREME CAUTION
-+ * to avoid breaking the fragile cmd640.c support.
-+ */
-+
-+#include <linux/string.h>
-+
-+static struct ide_pio_info {
-+	const char	*name;
-+	int		pio;
-+} ide_pio_blacklist [] = {
-+	{ "Conner Peripherals 540MB - CFS540A", 3 },
-+
-+	{ "WDC AC2700",  3 },
-+	{ "WDC AC2540",  3 },
-+	{ "WDC AC2420",  3 },
-+	{ "WDC AC2340",  3 },
-+	{ "WDC AC2250",  0 },
-+	{ "WDC AC2200",  0 },
-+	{ "WDC AC21200", 4 },
-+	{ "WDC AC2120",  0 },
-+	{ "WDC AC2850",  3 },
-+	{ "WDC AC1270",  3 },
-+	{ "WDC AC1170",  1 },
-+	{ "WDC AC1210",  1 },
-+	{ "WDC AC280",   0 },
-+	{ "WDC AC31000", 3 },
-+	{ "WDC AC31200", 3 },
-+
-+	{ "Maxtor 7131 AT", 1 },
-+	{ "Maxtor 7171 AT", 1 },
-+	{ "Maxtor 7213 AT", 1 },
-+	{ "Maxtor 7245 AT", 1 },
-+	{ "Maxtor 7345 AT", 1 },
-+	{ "Maxtor 7546 AT", 3 },
-+	{ "Maxtor 7540 AV", 3 },
-+
-+	{ "SAMSUNG SHD-3121A", 1 },
-+	{ "SAMSUNG SHD-3122A", 1 },
-+	{ "SAMSUNG SHD-3172A", 1 },
-+
-+	{ "ST5660A",  3 },
-+	{ "ST3660A",  3 },
-+	{ "ST3630A",  3 },
-+	{ "ST3655A",  3 },
-+	{ "ST3391A",  3 },
-+	{ "ST3390A",  1 },
-+	{ "ST3600A",  1 },
-+	{ "ST3290A",  0 },
-+	{ "ST3144A",  0 },
-+	{ "ST3491A",  1 }, /* reports 3, should be 1 or 2 (depending on drive)
-+			      according to Seagate's FIND-ATA program */
-+
-+	{ "QUANTUM ELS127A", 0 },
-+	{ "QUANTUM ELS170A", 0 },
-+	{ "QUANTUM LPS240A", 0 },
-+	{ "QUANTUM LPS210A", 3 },
-+	{ "QUANTUM LPS270A", 3 },
-+	{ "QUANTUM LPS365A", 3 },
-+	{ "QUANTUM LPS540A", 3 },
-+	{ "QUANTUM LIGHTNING 540A", 3 },
-+	{ "QUANTUM LIGHTNING 730A", 3 },
-+
-+	{ "QUANTUM FIREBALL_540", 3 }, /* Older Quantum Fireballs don't work */
-+	{ "QUANTUM FIREBALL_640", 3 },
-+	{ "QUANTUM FIREBALL_1080", 3 },
-+	{ "QUANTUM FIREBALL_1280", 3 },
-+	{ NULL, 0 }
-+};
-+
-+/**
-+ *	ide_scan_pio_blacklist 	-	check for a blacklisted drive
-+ *	@model: Drive model string
-+ *
-+ *	This routine searches the ide_pio_blacklist for an entry
-+ *	matching the start/whole of the supplied model name.
-+ *
-+ *	Returns -1 if no match found.
-+ *	Otherwise returns the recommended PIO mode from ide_pio_blacklist[].
-+ */
-+
-+int ide_scan_pio_blacklist(char *model)
-+{
-+	struct ide_pio_info *p;
-+
-+	for (p = ide_pio_blacklist; p->name != NULL; p++) {
-+		if (strncmp(p->name, model, strlen(p->name)) == 0)
-+			return p->pio;
-+	}
-+	return -1;
-+}
-Index: b/include/linux/ide.h
-===================================================================
---- a/include/linux/ide.h
-+++ b/include/linux/ide.h
-@@ -1290,6 +1290,8 @@ void ide_timing_merge(struct ide_timing 
- 		      struct ide_timing *, unsigned int);
- int ide_timing_compute(ide_drive_t *, u8, struct ide_timing *, int, int);
- 
-+int ide_scan_pio_blacklist(char *);
-+
- u8 ide_get_best_pio_mode(ide_drive_t *, u8, u8);
- 
- int ide_set_pio_mode(ide_drive_t *, u8);
+
+------- Comment #10 from bzolnier@gmail.com  2008-05-28 15:13 -------
+Could you please send output of "lspci -s 14.0 -vvv -xxx" command for good and
+bad kernel?
+
+Also please verify that booting good kernel with "hda=autotune" reproduces a
+bug.
+
+Thanks.
+
+
+-- 
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug, or are watching the assignee.
+You are the assignee for the bug, or are watching the assignee.
