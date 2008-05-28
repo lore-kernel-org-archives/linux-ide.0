@@ -1,41 +1,58 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCH] libata: Handle bay devices in dock stations
-Date: Wed, 28 May 2008 23:39:09 +0900
-Message-ID: <483D6E8D.7030409@gmail.com>
-References: <20080528143857.GB5585@homac.suse.de>
+From: Mark Lord <liml@rtr.ca>
+Subject: [PATCH 04/04] sata_mv: workaround for 60x1 errata sata13
+Date: Wed, 28 May 2008 12:01:12 -0400
+Message-ID: <483D81C8.90208@rtr.ca>
+References: <483C8328.1030807@rtr.ca> <483C838F.9060208@rtr.ca> <483C8420.5090706@rtr.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-acpi-owner@vger.kernel.org>
-In-Reply-To: <20080528143857.GB5585@homac.suse.de>
-Sender: linux-acpi-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org, Tejun Heo <htejun@gmail.com>, linux-ide@vger.kernel.org, Jeff Garzik <jeff@garzik.org>, linux-acpi@vger.kernel.org, Matthew Garrett <mjg59@srcf.ucam.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from rtr.ca ([76.10.145.34]:1591 "EHLO mail.rtr.ca"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751584AbYE1QBQ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 28 May 2008 12:01:16 -0400
+In-Reply-To: <483C8420.5090706@rtr.ca>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>, IDE/ATA development list <linux-ide@vger.kernel.org>
 
-Holger Macht wrote:
-> * Differentiate between bay devices in dock stations and others:
-> 
->  - When an ACPI_NOTIFY_EJECT_REQUEST appears, just signal uevent to
->    userspace (that is when the optional eject button on a bay device is
->    pressed/pulled) giving the possibility to unmount file systems and to
->    clean up. Also, only send uevent in case we get an EJECT_REQUEST
->    without doing anything else. In other cases, you'll get an add/remove
->    event because libata attaches/detaches the device.
-> 
->  - In case of a dock event, which in turn signals an
->    ACPI_NOTIFY_EJECT_REQUEST, immediately detach the device, because it
->    may already have been gone
-> 
-> * In case of an ACPI_NOTIFY_DEVICE/BUS_CHECK, evaluate _STA to check if
->   the device has been plugged or unplugged. If plugged, hotplug it, if
->   unplugged, just signal event to userspace
->   (initial patch by Matthew Garrett <mjg59@srcf.ucam.org>)
-> 
-> * Call ACPI _EJ0 for detached devices
-> 
-> Signed-off-by: Holger Macht <hmacht@suse.de>
+The "B2" variant of the 6041/6081 (genII) chips requires
+that the PHY_MODE3 register be rewritten after any write
+to PHY_MODE4.
 
-Acked-by: Tejun Heo <htejun@gmail.com>
+This fixes a regression introduced by an earlier patch.
 
--- 
-tejun
+Signed-off-by: Mark Lord <mlord@pobox.com>
+
+--- old/drivers/ata/sata_mv.c	2008-05-28 11:47:44.000000000 -0400
++++ linux/drivers/ata/sata_mv.c	2008-05-28 11:50:56.000000000 -0400
+@@ -72,7 +72,7 @@
+ #include <linux/libata.h>
+ 
+ #define DRV_NAME	"sata_mv"
+-#define DRV_VERSION	"1.22"
++#define DRV_VERSION	"1.23"
+ 
+ enum {
+ 	/* BAR's are enumerated in terms of pci_resource_start() terms */
+@@ -2557,7 +2557,6 @@
+ 	 */
+ 	m3 = readl(port_mmio + PHY_MODE3);
+ 	m3 = (m3 & 0x1f) | (0x5555601 << 5);
+-	writel(m3, port_mmio + PHY_MODE3);
+ 
+ 	if (fix_phy_mode4) {
+ 		u32 m4;
+@@ -2573,6 +2572,12 @@
+ 
+ 		writel(m4, port_mmio + PHY_MODE4);
+ 	}
++	/*
++	 * Workaround for 60x1-B2 errata SATA#13:
++	 * Any write to PHY_MODE4 (above) may corrupt PHY_MODE3,
++	 * so we must always rewrite PHY_MODE3 after PHY_MODE4.
++	 */
++	writel(m3, port_mmio + PHY_MODE3);
+ 
+ 	/* Revert values of pre-emphasis and signal amps to the saved ones */
+ 	m2 = readl(port_mmio + PHY_MODE2);
