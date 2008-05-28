@@ -1,120 +1,250 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: ata_piix on MacBook4,1: fail to startup in a certain situation
-Date: Wed, 28 May 2008 23:23:48 +0900
-Message-ID: <483D6AF4.8000502@gmail.com>
-References: <20080528075106.F2C3D29C127@m02-blue.in.shared-server.net>	<20080528075747.A18A5114160@m03-blue.in.shared-server.net>	<483D1429.3080804@gmail.com> <20080528092117.4A5177080E8@m04-blue.in.shared-server.net>
+From: Holger Macht <hmacht@suse.de>
+Subject: [PATCH] libata: Handle bay devices in dock stations
+Date: Wed, 28 May 2008 16:38:57 +0200
+Message-ID: <20080528143857.GB5585@homac.suse.de>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------020600070609050901060602"
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rv-out-0506.google.com ([209.85.198.227]:14030 "EHLO
-	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750831AbYE1OXy (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 28 May 2008 10:23:54 -0400
-Received: by rv-out-0506.google.com with SMTP id l9so3548712rvb.1
-        for <linux-ide@vger.kernel.org>; Wed, 28 May 2008 07:23:54 -0700 (PDT)
-In-Reply-To: <20080528092117.4A5177080E8@m04-blue.in.shared-server.net>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-acpi-owner@vger.kernel.org>
+Content-Disposition: inline
+Sender: linux-acpi-owner@vger.kernel.org
+To: linux-kernel@vger.kernel.org
+Cc: Tejun Heo <htejun@gmail.com>, linux-ide@vger.kernel.org, Jeff Garzik <jeff@garzik.org>, linux-acpi@vger.kernel.org, Matthew Garrett <mjg59@srcf.ucam.org>, akpm@linux-foundation.org
 List-Id: linux-ide@vger.kernel.org
-To: MATSUBAYASHI 'Shaolin' Kohji <shaolin@rhythmaning.org>
-Cc: linux-ide@vger.kernel.org
 
-This is a multi-part message in MIME format.
---------------020600070609050901060602
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+* Differentiate between bay devices in dock stations and others:
 
-MATSUBAYASHI 'Shaolin' Kohji wrote:
-> At Wed, 28 May 2008 17:13:29 +0900,
-> Tejun Heo wrote:
->> Please post the result of "lspci -nnvvv".  Thanks.
-> 
-> Thanks, I have attached the lspci -nnvvv output far below:
-> 
-> 
->>> At Wed, 28 May 2008 16:51:05 +0900,
->>> MATSUBAYASHI 'Shaolin' Kohji wrote:
->>>> Hi, I've been running 2.6.25 kernel with the patch you posted
->>>> (cb6716c879ecf49e2af344926c6a476821812061) on newest MacBook4,1
->>>> and works very fine except a certain situation.
->>>>
->>>>
->>>> The case I could reproduced is as follows:
->>>>
->>>> (1) boot kernel 2.6.25 w/ your patch (or 2.6.25.4 which already
->>>>     includes your patch), WITH AC ADAPTER PLUGGED
->>>> (2) before executing "reboot", UNPLUG AC ADAPTER
->>>> (3) then execute "reboot"
->>>> (4) system reboots, but stops booting with the following messages:
->>>>     ata_piix 0000:00:1f.2: MAP [ P0 P2 P1 P3 ]
->>>> (5) then if I plug the AC adapter, system likely to continue booting
->>>>     with the following message:
->>>>     ata_piix 0000:00:1f.2: SCR access via SIDPR is available but doesn't work
->>>> (5a) sometimes system still keep stopping even though I plug the AC adapter
->>>>
->>>>
->>>> By inserting many printk() functions on ata_piix.c,
->>>> I confirmed the pause (between 4 and 5) occurs just before
->>>> the following line:
->>>>
->>>>     /* SCR access via SIDPR doesn't work on some configurations.
->>>>      * Give it a test drive by inhibiting power save modes which
->>>>      * we'll do anyway.
->>>>      */
->>>>     scontrol = piix_sidpr_read(dev0, SCR_CONTROL);
->>>>
->>>>
->>>> I also confirmed that the following:
->>>>
->>> (2a) before executing "poweroff", KEEP AC ADAPTER PLUGGED
->>> (3a) then execute "poweroff"
->>> (3b) system shuts down, then I UNPLUG AC ADAPTER
->>> (4a) press power button to boot, and sometimes stops booting like
->>>      the above (4) and sometimes booting fine without any problems
-> 
-> 
-> $ sudo /sbin/lspci -nnvvv
-> 00:1f.2 IDE interface [0101]: Intel Corporation 82801HBM/HEM (ICH8M/ICH8M-E) SATA IDE Controller [8086:2828] (rev 03) (prog-if 8f [Master SecP SecO PriP PriO])
-> 	Subsystem: Apple Computer Inc. Unknown device [106b:00a1]
-> 	Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B-
-> 	Status: Cap+ 66MHz+ UDF- FastB2B+ ParErr- DEVSEL=medium >TAbort- <TAbort- <MAbort- >SERR- <PERR-
-> 	Latency: 0
-> 	Interrupt: pin B routed to IRQ 18
-> 	Region 0: I/O ports at 60f8 [size=8]
-> 	Region 1: I/O ports at 611c [size=4]
-> 	Region 2: I/O ports at 60f0 [size=8]
-> 	Region 3: I/O ports at 6118 [size=4]
-> 	Region 4: I/O ports at 6020 [size=16]
-> 	Region 5: I/O ports at 4000 [size=16]
-> 	Capabilities: [70] Power Management version 3
-> 		Flags: PMEClk- DSI- D1- D2- AuxCurrent=0mA PME(D0-,D1-,D2-,D3hot+,D3cold-)
-> 		Status: D0 PME-Enable- DSel=0 DScale=0 PME-
+ - When an ACPI_NOTIFY_EJECT_REQUEST appears, just signal uevent to
+   userspace (that is when the optional eject button on a bay device is
+   pressed/pulled) giving the possibility to unmount file systems and to
+   clean up. Also, only send uevent in case we get an EJECT_REQUEST
+   without doing anything else. In other cases, you'll get an add/remove
+   event because libata attaches/detaches the device.
 
-Hmmm... What is apple doing with ich8m?  :-(
+ - In case of a dock event, which in turn signals an
+   ACPI_NOTIFY_EJECT_REQUEST, immediately detach the device, because it
+   may already have been gone
 
-Does the attached patch fix the problem?
+* In case of an ACPI_NOTIFY_DEVICE/BUS_CHECK, evaluate _STA to check if
+  the device has been plugged or unplugged. If plugged, hotplug it, if
+  unplugged, just signal event to userspace
+  (initial patch by Matthew Garrett <mjg59@srcf.ucam.org>)
 
--- 
-tejun
+* Call ACPI _EJ0 for detached devices
 
---------------020600070609050901060602
-Content-Type: text/x-patch;
- name="ata_piix-apple.patch"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="ata_piix-apple.patch"
+Signed-off-by: Holger Macht <hmacht@suse.de>
+---
 
-diff --git a/drivers/ata/ata_piix.c b/drivers/ata/ata_piix.c
-index a9027b8..4e90d94 100644
---- a/drivers/ata/ata_piix.c
-+++ b/drivers/ata/ata_piix.c
-@@ -251,6 +251,7 @@ static const struct pci_device_id piix_pci_tbl[] = {
- 	{ 0x8086, 0x2828, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich8_sata },
- 	/* Mobile SATA Controller IDE (ICH8M), Apple */
- 	{ 0x8086, 0x2828, 0x106b, 0x00a0, 0, 0, ich8m_apple_sata },
-+	{ 0x8086, 0x2828, 0x106b, 0x00a1, 0, 0, ich8m_apple_sata },
- 	/* SATA Controller IDE (ICH9) */
- 	{ 0x8086, 0x2920, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich8_sata },
- 	/* SATA Controller IDE (ICH9) */
+Changes regarding the previous patch:
 
---------------020600070609050901060602--
+ * Make sure kobj does not go away outside locking
+ * Coding style cleanups
+ * Call _EJ0 for detached devices
+
+diff --git a/drivers/ata/libata-acpi.c b/drivers/ata/libata-acpi.c
+index dbf6ca7..e0e49fd 100644
+--- a/drivers/ata/libata-acpi.c
++++ b/drivers/ata/libata-acpi.c
+@@ -118,8 +118,40 @@ static void ata_acpi_associate_ide_port(struct ata_port *ap)
+ 		ap->pflags |= ATA_PFLAG_INIT_GTM_VALID;
+ }
+ 
++static void ata_acpi_eject_device(acpi_handle handle)
++{
++	struct acpi_object_list arg_list;
++	union acpi_object arg;
++
++	arg_list.count = 1;
++	arg_list.pointer = &arg;
++	arg.type = ACPI_TYPE_INTEGER;
++	arg.integer.value = 1;
++
++	if (ACPI_FAILURE(acpi_evaluate_object(handle, "_EJ0",
++					      &arg_list, NULL)))
++		printk(KERN_ERR "Failed to evaluate _EJ0!\n");
++}
++
++static void ata_acpi_detach_device(struct ata_port *ap, struct ata_device *dev)
++{
++	if (dev)
++		dev->flags |= ATA_DFLAG_DETACH;
++	else {
++		struct ata_link *tlink;
++		struct ata_device *tdev;
++
++		ata_port_for_each_link(tlink, ap)
++			ata_link_for_each_dev(tdev, tlink)
++				tdev->flags |= ATA_DFLAG_DETACH;
++	}
++
++	ata_port_freeze(ap);
++	ata_port_schedule_eh(ap);
++}
++
+ static void ata_acpi_handle_hotplug(struct ata_port *ap, struct ata_device
+-				    *dev, u32 event)
++				    *dev, u32 event, int is_dock_event)
+ {
+ 	char event_string[12];
+ 	char *envp[] = { event_string, NULL };
+@@ -135,83 +167,98 @@ static void ata_acpi_handle_hotplug(struct ata_port *ap, struct ata_device
+ 		ap = dev->link->ap;
+ 	ehi = &ap->link.eh_info;
+ 
+-	spin_lock_irqsave(ap->lock, flags);
+-
+-	if (dev)
++	if (dev) {
++		if (dev->sdev)
++			kobj = &dev->sdev->sdev_gendev.kobj;
+ 		handle = dev->acpi_handle;
+-	else
++	} else {
++		kobj = &ap->dev->kobj;
+ 		handle = ap->acpi_handle;
++	}
+ 
+ 	status = acpi_get_handle(handle, "_EJ0", &tmphandle);
+-	if (ACPI_FAILURE(status)) {
+-		/* This device is not ejectable */
+-		spin_unlock_irqrestore(ap->lock, flags);
++	if (ACPI_FAILURE(status))
++		/* This device does not support hotplug */
+ 		return;
+-	}
+ 
+-	status = acpi_evaluate_integer(handle, "_STA", NULL, &sta);
+-	if (ACPI_FAILURE(status)) {
+-		printk ("Unable to determine bay status\n");
+-		spin_unlock_irqrestore(ap->lock, flags);
+-		return;
+-	}
++	spin_lock_irqsave(ap->lock, flags);
+ 
+ 	switch (event) {
+ 	case ACPI_NOTIFY_BUS_CHECK:
+ 	case ACPI_NOTIFY_DEVICE_CHECK:
+ 		ata_ehi_push_desc(ehi, "ACPI event");
+-		if (!sta) {
+-                /* Device has been unplugged */
+-			if (dev)
+-				dev->flags |= ATA_DFLAG_DETACH;
+-			else {
+-				struct ata_link *tlink;
+-				struct ata_device *tdev;
+-
+-				ata_port_for_each_link(tlink, ap) {
+-					ata_link_for_each_dev(tdev, tlink) {
+-						tdev->flags |=
+-							ATA_DFLAG_DETACH;
+-					}
+-				}
+-			}
+-			ata_port_schedule_eh(ap);
+-			wait = 1;
+-		} else {
++
++		status = acpi_evaluate_integer(handle, "_STA", NULL, &sta);
++		if (ACPI_FAILURE(status)) {
++			printk(KERN_ERR "Unable to determine bay status\n");
++			break;
++		}
++
++		if (sta) {
+ 			ata_ehi_hotplugged(ehi);
+ 			ata_port_freeze(ap);
++		} else {
++			/* The device has gone - unplug it */
++			ata_acpi_detach_device(ap, dev);
++			wait = 1;
+ 		}
+-	}
++		break;
++	case ACPI_NOTIFY_EJECT_REQUEST:
++		ata_ehi_push_desc(ehi, "ACPI event");
+ 
+-	spin_unlock_irqrestore(ap->lock, flags);
++		if (!is_dock_event)
++			break;
+ 
+-	if (wait)
+-		ata_port_wait_eh(ap);
++		/* undock event - immediate unplug */
++		ata_acpi_detach_device(ap, dev);
++		wait = 1;
++		break;
++	}
+ 
+-	if (dev) {
+-		if (dev->sdev)
+-			kobj = &dev->sdev->sdev_gendev.kobj;
+-	} else
+-		kobj = &ap->dev->kobj;
++	/* make sure kobj doesn't go away while ap->lock is released */
++	kobject_get(kobj);
++
++	spin_unlock_irqrestore(ap->lock, flags);
+ 
+-	if (kobj) {
++	if (kobj && !is_dock_event) {
+ 		sprintf(event_string, "BAY_EVENT=%d", event);
+ 		kobject_uevent_env(kobj, KOBJ_CHANGE, envp);
+ 	}
++
++	kobject_put(kobj);
++
++	if (wait) {
++		ata_port_wait_eh(ap);
++		ata_acpi_eject_device(handle);
++	}
++}
++
++static void ata_acpi_dev_notify_dock(acpi_handle handle, u32 event, void *data)
++{
++	struct ata_device *dev = data;
++
++	ata_acpi_handle_hotplug(NULL, dev, event, 1);
++}
++
++static void ata_acpi_ap_notify_dock(acpi_handle handle, u32 event, void *data)
++{
++	struct ata_port *ap = data;
++
++	ata_acpi_handle_hotplug(ap, NULL, event, 1);
+ }
+ 
+ static void ata_acpi_dev_notify(acpi_handle handle, u32 event, void *data)
+ {
+ 	struct ata_device *dev = data;
+ 
+-	ata_acpi_handle_hotplug(NULL, dev, event);
++	ata_acpi_handle_hotplug(NULL, dev, event, 0);
+ }
+ 
+ static void ata_acpi_ap_notify(acpi_handle handle, u32 event, void *data)
+ {
+ 	struct ata_port *ap = data;
+ 
+-	ata_acpi_handle_hotplug(ap, NULL, event);
++	ata_acpi_handle_hotplug(ap, NULL, event, 0);
+ }
+ 
+ /**
+@@ -252,7 +299,7 @@ void ata_acpi_associate(struct ata_host *host)
+ 						    ata_acpi_ap_notify, ap);
+ 			/* we might be on a docking station */
+ 			register_hotplug_dock_device(ap->acpi_handle,
+-						     ata_acpi_ap_notify, ap);
++					     ata_acpi_ap_notify_dock, ap);
+ 		}
+ 
+ 		for (j = 0; j < ata_link_max_devices(&ap->link); j++) {
+@@ -264,7 +311,7 @@ void ata_acpi_associate(struct ata_host *host)
+ 						ata_acpi_dev_notify, dev);
+ 				/* we might be on a docking station */
+ 				register_hotplug_dock_device(dev->acpi_handle,
+-						ata_acpi_dev_notify, dev);
++					     ata_acpi_dev_notify_dock, dev);
+ 			}
+ 		}
+ 	}
+
