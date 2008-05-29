@@ -1,43 +1,38 @@
-From: Pradeep Singh Rautela <rautelap@gmail.com>
-Subject: [PATCH v2.6.26-rc4] ata: Convert deprecated static spinlock_t lock
-	instance to static DEFINE_SPINLOCK(lock)
-Date: Thu, 29 May 2008 23:28:14 +0530
-Message-ID: <20080529175814.GB4926@kernelpanic>
+From: Linus Torvalds <torvalds@linux-foundation.org>
+Subject: Re: RESEND: [PATCH] libata-sff: Fix oops reported in kerneloops.org
+ for pnp devices with no ctl
+Date: Thu, 29 May 2008 11:04:08 -0700 (PDT)
+Message-ID: <alpine.LFD.1.10.0805291102370.2958@woody.linux-foundation.org>
+References: <20080529161453.24735.805.stgit@core> <alpine.LFD.1.10.0805290950230.2958@woody.linux-foundation.org> <483EEBE5.5030708@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wx-out-0506.google.com ([66.249.82.224]:12829 "EHLO
-	wx-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752049AbYE2R63 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 29 May 2008 13:58:29 -0400
-Received: by wx-out-0506.google.com with SMTP id h29so2734223wxd.4
-        for <linux-ide@vger.kernel.org>; Thu, 29 May 2008 10:58:24 -0700 (PDT)
-Content-Disposition: inline
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:44182 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752498AbYE2SEV (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 29 May 2008 14:04:21 -0400
+In-Reply-To: <483EEBE5.5030708@garzik.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
-Cc: kernel-janitors@vger.kernel.org, jgarzik@pobox.com
+To: Jeff Garzik <jeff@garzik.org>
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-Replace deprecated static spinlock_t instance to static DEFINE_SPINLOCK(lock).
 
-Signed-off-by: Pradeep Singh <rautelap@gmail.com>
----
- drivers/ata/libata-core.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index 3c89f20..cc816ca 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -5403,7 +5403,7 @@ static void ata_host_stop(struct device *gendev, void *res)
-  */
- static void ata_finalize_port_ops(struct ata_port_operations *ops)
- {
--	static spinlock_t lock = SPIN_LOCK_UNLOCKED;
-+	static DEFINE_SPINLOCK(lock);
- 	const struct ata_port_operations *cur;
- 	void **begin = (void **)ops;
- 	void **end = (void **)&ops->inherits;
--- 
-1.5.5.1
+On Thu, 29 May 2008, Jeff Garzik wrote:
+> > 
+> > It may be that you meant to make it an "else if" case, ie if there was no
+> > IO-read, then you do a ndelay(400) as a last desperate case, but that's not
+> > how your ata_sdd_sync() is actually written.
+> 
+> The double-ndelay is definitely wrong, but we do need one.  Technically it
+> should -only- be a 400ns delay, but we also have a register read in there to
+> make sure any posted writes are flushed.
 
+Well, but the "read + delay" is already in ata_sdd_pause(). 
+
+So it's "ata_sdd_sync()" that I think is bogus. Based on its name alone, 
+it shouldn't have a delay in it (except, as mentioned, possibly for the 
+fallback case where no port can be used for reading).
+
+		Linus
