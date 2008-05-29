@@ -1,29 +1,47 @@
-From: Holger Macht <hmacht@suse.de>
-Subject: Re: [PATCH] libata: Handle bay devices in dock stations
-Date: Thu, 29 May 2008 18:46:04 +0200
-Message-ID: <20080529164603.GB4520@homac>
-References: <20080528143857.GB5585@homac.suse.de> <20080529132253.GA22309@srcf.ucam.org> <483EB33D.6010101@gmail.com> <20080529140213.GA23373@srcf.ucam.org> <20080529141421.GC9268@homac.suse.de> <20080529143541.GA24013@srcf.ucam.org> <483EBFC5.7020406@gmail.com> <20080529144934.GA24382@srcf.ucam.org> <20080529163201.GA4520@homac>
+From: Linus Torvalds <torvalds@linux-foundation.org>
+Subject: Re: RESEND: [PATCH] libata-sff: Fix oops reported in kerneloops.org
+ for pnp devices with no ctl
+Date: Thu, 29 May 2008 10:04:10 -0700 (PDT)
+Message-ID: <alpine.LFD.1.10.0805290950230.2958@woody.linux-foundation.org>
+References: <20080529161453.24735.805.stgit@core>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mx1.suse.de ([195.135.220.2]:51268 "EHLO mx1.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751722AbYE2QnL (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 29 May 2008 12:43:11 -0400
-Content-Disposition: inline
-In-Reply-To: <20080529163201.GA4520@homac>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1756806AbYE2REd@vger.kernel.org>
+In-Reply-To: <20080529161453.24735.805.stgit@core>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, jeff@garzik.org
 List-Id: linux-ide@vger.kernel.org
-To: Matthew Garrett <mjg59@srcf.ucam.org>, Tejun Heo <htejun@gmail.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Jeff Garzik <jeff@garzik.org>, linux-acpi@vger.kernel.org
 
-On Thu 29. May - 18:32:02, Holger Macht wrote:
-> On Thu 29. May - 15:49:34, Matthew Garrett wrote:
-> > Got it. It works if I lose the ata_port_freeze() from 
-> > ata_acpi_detach_device. 
-> 
-> Tejun, any idea? This is in for quite some time now. Maybe there's some
-> involved...
 
-The last sentence misses the one important word 'race'.
 
- - Holger
+On Thu, 29 May 2008, Alan Cox wrote:
+>
+> (Jeff would you please take a look at this: Its #4 or #5 top OOPS on Arjan's
+>  oops tracker, and it generally causes the boot to fail. First sent 20th May)
+
+Quite frankly, if I was Jeff, I'd have refused to apply this patch as "too 
+damn ugly to live".
+
+Why the *hell* doesn't it just fix "ata_sff_altstatus()" instead? Why does 
+it introduce a ludicrously named stupid "maybe" version of it that doesn't 
+oops?
+
+In other words: in *any* case where the old "ata_sff_altstatus()" function 
+worked correctly, the new "ata_sff_maybe_altstatus()" function does THE 
+EXACT SAME THING. And in any case where the old "ata_sff_altstatus()" 
+function oopsed, the new "maybe" version at least is _better_.
+
+In other words: there is absolutely no excuse for keeping the old (and 
+known-to-be-broken) "ata_sff_altstatus()" function at all. It should be 
+removed, not left around with an alternate function that works.
+
+I also think your "ata_sff_sync()" thing is buggy. It has a "ndelay(400)" 
+that is almost certainly buggy (it's the one that is already in 
+ata_sff_pause()).
+
+It may be that you meant to make it an "else if" case, ie if there was no 
+IO-read, then you do a ndelay(400) as a last desperate case, but that's 
+not how your ata_sdd_sync() is actually written.
+
+		Linus
