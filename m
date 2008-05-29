@@ -1,38 +1,43 @@
-From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-Subject: Re: [PATCH] libata: Handle bay devices in dock stations
-Date: Thu, 29 May 2008 14:51:16 -0300
-Message-ID: <20080529175116.GE3375@khazad-dum.debian.net>
-References: <20080528143857.GB5585@homac.suse.de> <20080529132253.GA22309@srcf.ucam.org> <483EB33D.6010101@gmail.com> <20080529140213.GA23373@srcf.ucam.org> <20080529141421.GC9268@homac.suse.de> <20080529143541.GA24013@srcf.ucam.org> <483EBFC5.7020406@gmail.com> <20080529144934.GA24382@srcf.ucam.org> <20080529163201.GA4520@homac>
+From: Pradeep Singh Rautela <rautelap@gmail.com>
+Subject: [PATCH v2.6.26-rc4] ata: Convert deprecated static spinlock_t lock
+	instance to static DEFINE_SPINLOCK(lock)
+Date: Thu, 29 May 2008 23:28:14 +0530
+Message-ID: <20080529175814.GB4926@kernelpanic>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1757483AbYE2Rvb@vger.kernel.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from wx-out-0506.google.com ([66.249.82.224]:12829 "EHLO
+	wx-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752049AbYE2R63 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 29 May 2008 13:58:29 -0400
+Received: by wx-out-0506.google.com with SMTP id h29so2734223wxd.4
+        for <linux-ide@vger.kernel.org>; Thu, 29 May 2008 10:58:24 -0700 (PDT)
 Content-Disposition: inline
-In-Reply-To: <20080529163201.GA4520@homac>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Matthew Garrett <mjg59@srcf.ucam.org>, Tejun Heo <htejun@gmail.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Jeff Garzik <jeff@garzik.org>, linux-acpi@vger.kernel.org
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
+Cc: kernel-janitors@vger.kernel.org, jgarzik@pobox.com
 
-On Thu, 29 May 2008, Holger Macht wrote:
-> On Thu 29. May - 15:49:34, Matthew Garrett wrote:
-> > Got it. It works if I lose the ata_port_freeze() from=20
-> > ata_acpi_detach_device.=20
->=20
-> Tejun, any idea? This is in for quite some time now. Maybe there's so=
-me
-> involved...
+Replace deprecated static spinlock_t instance to static DEFINE_SPINLOCK(lock).
 
-<naiv=EB question> Do we handle the possible fact that _EJ0 might want =
-the
-port (and maybe the device) to be active when it is called AND that _EJ=
-0
-might attempt to shutdown the port or the device itself?  </naiv=EB
-question>
+Signed-off-by: Pradeep Singh <rautelap@gmail.com>
+---
+ drivers/ata/libata-core.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-Please ignore if it is something not even worth answering.
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index 3c89f20..cc816ca 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -5403,7 +5403,7 @@ static void ata_host_stop(struct device *gendev, void *res)
+  */
+ static void ata_finalize_port_ops(struct ata_port_operations *ops)
+ {
+-	static spinlock_t lock = SPIN_LOCK_UNLOCKED;
++	static DEFINE_SPINLOCK(lock);
+ 	const struct ata_port_operations *cur;
+ 	void **begin = (void **)ops;
+ 	void **end = (void **)&ops->inherits;
+-- 
+1.5.5.1
 
---=20
-  "One disk to rule them all, One disk to find them. One disk to bring
-  them all and in the darkness grind them. In the Land of Redmond
-  where the shadows lie." -- The Silicon Valley Tarot
-  Henrique Holschuh
