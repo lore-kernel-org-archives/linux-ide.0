@@ -1,63 +1,38 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: RESEND: [PATCH] libata-sff: Fix oops reported in kerneloops.org
- for pnp devices with no ctl
-Date: Thu, 29 May 2008 13:46:13 -0400
-Message-ID: <483EEBE5.5030708@garzik.org>
-References: <20080529161453.24735.805.stgit@core> <alpine.LFD.1.10.0805290950230.2958@woody.linux-foundation.org>
+From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+Subject: Re: [PATCH] libata: Handle bay devices in dock stations
+Date: Thu, 29 May 2008 14:51:16 -0300
+Message-ID: <20080529175116.GE3375@khazad-dum.debian.net>
+References: <20080528143857.GB5585@homac.suse.de> <20080529132253.GA22309@srcf.ucam.org> <483EB33D.6010101@gmail.com> <20080529140213.GA23373@srcf.ucam.org> <20080529141421.GC9268@homac.suse.de> <20080529143541.GA24013@srcf.ucam.org> <483EBFC5.7020406@gmail.com> <20080529144934.GA24382@srcf.ucam.org> <20080529163201.GA4520@homac>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:52743 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751968AbYE2RqW (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 29 May 2008 13:46:22 -0400
-In-Reply-To: <alpine.LFD.1.10.0805290950230.2958@woody.linux-foundation.org>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1757483AbYE2Rvb@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20080529163201.GA4520@homac>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Matthew Garrett <mjg59@srcf.ucam.org>, Tejun Heo <htejun@gmail.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Jeff Garzik <jeff@garzik.org>, linux-acpi@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-Linus Torvalds wrote:
-> 
-> On Thu, 29 May 2008, Alan Cox wrote:
->> (Jeff would you please take a look at this: Its #4 or #5 top OOPS on Arjan's
->>  oops tracker, and it generally causes the boot to fail. First sent 20th May)
-> 
-> Quite frankly, if I was Jeff, I'd have refused to apply this patch as "too 
-> damn ugly to live".
-> 
-> Why the *hell* doesn't it just fix "ata_sff_altstatus()" instead? Why does 
-> it introduce a ludicrously named stupid "maybe" version of it that doesn't 
-> oops?
-> 
-> In other words: in *any* case where the old "ata_sff_altstatus()" function 
-> worked correctly, the new "ata_sff_maybe_altstatus()" function does THE 
-> EXACT SAME THING. And in any case where the old "ata_sff_altstatus()" 
-> function oopsed, the new "maybe" version at least is _better_.
-> 
-> In other words: there is absolutely no excuse for keeping the old (and 
-> known-to-be-broken) "ata_sff_altstatus()" function at all. It should be 
-> removed, not left around with an alternate function that works.
+On Thu, 29 May 2008, Holger Macht wrote:
+> On Thu 29. May - 15:49:34, Matthew Garrett wrote:
+> > Got it. It works if I lose the ata_port_freeze() from=20
+> > ata_acpi_detach_device.=20
+>=20
+> Tejun, any idea? This is in for quite some time now. Maybe there's so=
+me
+> involved...
 
-That's my general feeling on the issue.  It was ugly and seemed to 
-needlessly avoid the existing one, which we would probably have to 
-bugfix later on...
+<naiv=EB question> Do we handle the possible fact that _EJ0 might want =
+the
+port (and maybe the device) to be active when it is called AND that _EJ=
+0
+might attempt to shutdown the port or the device itself?  </naiv=EB
+question>
 
+Please ignore if it is something not even worth answering.
 
-> I also think your "ata_sff_sync()" thing is buggy. It has a "ndelay(400)" 
-> that is almost certainly buggy (it's the one that is already in 
-> ata_sff_pause()).
-> 
-> It may be that you meant to make it an "else if" case, ie if there was no 
-> IO-read, then you do a ndelay(400) as a last desperate case, but that's 
-> not how your ata_sdd_sync() is actually written.
-
-The double-ndelay is definitely wrong, but we do need one.  Technically 
-it should -only- be a 400ns delay, but we also have a register read in 
-there to make sure any posted writes are flushed.
-
-	Jeff
-
-
-
+--=20
+  "One disk to rule them all, One disk to find them. One disk to bring
+  them all and in the darkness grind them. In the Land of Redmond
+  where the shadows lie." -- The Silicon Valley Tarot
+  Henrique Holschuh
