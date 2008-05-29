@@ -1,44 +1,95 @@
-From: bugme-daemon@bugzilla.kernel.org
-Subject: [Bug 10803] Kernel freeze on accesing CD-ROM or HDD
-Date: Thu, 29 May 2008 13:39:01 -0700 (PDT)
-Message-ID: <20080529203901.91E4B108060@picon.linux-foundation.org>
-References: <bug-10803-11633@http.bugzilla.kernel.org/>
+From: Linus Torvalds <torvalds@linux-foundation.org>
+Subject: Re: RESEND: [PATCH] libata-sff: Fix oops reported in kerneloops.org
+ for pnp devices with no ctl
+Date: Thu, 29 May 2008 14:13:26 -0700 (PDT)
+Message-ID: <alpine.LFD.1.10.0805291403030.3873@woody.linux-foundation.org>
+References: <20080529161453.24735.805.stgit@core> <alpine.LFD.1.10.0805290950230.2958@woody.linux-foundation.org> <483EEBE5.5030708@garzik.org> <20080529191920.12609c32@core>
+Mime-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:42739 "EHLO
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:59105 "EHLO
 	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751585AbYE2Uj2 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 29 May 2008 16:39:28 -0400
-Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
-	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id m4TKd1jI022392
-	for <linux-ide@vger.kernel.org>; Thu, 29 May 2008 13:39:02 -0700
-In-Reply-To: <bug-10803-11633@http.bugzilla.kernel.org/>
+	by vger.kernel.org with ESMTP id S1751341AbYE2VOH (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 29 May 2008 17:14:07 -0400
+In-Reply-To: <20080529191920.12609c32@core>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
-
-http://bugzilla.kernel.org/show_bug.cgi?id=10803
-
-
-bzolnier@gmail.com changed:
-
-           What    |Removed                     |Added
-----------------------------------------------------------------------------
-         AssignedTo|io_ide@kernel-bugs.osdl.org |bzolnier@gmail.com
-             Status|NEW                         |ASSIGNED
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: Jeff Garzik <jeff@garzik.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
 
 
+On Thu, 29 May 2008, Alan Cox wrote:
+>
+> And this is how a revised one would look.
 
-------- Comment #4 from bzolnier@gmail.com  2008-05-29 13:39 -------
-Please try to reproduce it without proprietary module - Alan and Roland
-correctly suggest that it may be the root cause of the problem.
+Ok, this looks nicer, but how about:
 
-PS your system uses pata_via driver (part of libata SCSI->ATA layer) for IDE
-support so I'm changing the component to libata
+> +static u8 ata_sff_irq_status(struct ata_port *ap)
+> +{
+> +	u8 status;
+> +
+> +	if (ap->ops->sff_check_altstatus || ap->ioaddr.altstatus_addr) {
+> +		status = ata_sff_altstatus(ap);
 
+This here is all about not oopsing in ata_sff_altstatus(), ie just knowing 
+about the bug.
 
--- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug, or are watching the assignee.
-You are the assignee for the bug, or are watching the assignee.
+Why not just fix ata_sff_altstatus(), instead of causing these kinds of 
+problems downstream?
+
+If you don't want to read the status register, fine. But at least do 
+something like
+
+ - make ata_sff_altstatus static, since it's useless and dangerous to call 
+   otherwise (ie make the exported interfaces be the nicer higher-level 
+   ones that are sane)
+
+ - and make it just return 0 if the altstatus register doesn't exist.
+
+At that point, both 'ata_sff_irq_status()' and 'ata_sff_sync()' can just 
+use ata_sff_altstatus() directly, *without* having to check that altstatus 
+setup by hand, or re-implement the function just because it was buggy and 
+broken to begin with.
+
+So now ata_sff_irq_status() just becomes
+
+	static u8 ata_sff_irq_status(struct ata_port *ap)
+	{
+		u8 status;
+
+		status = ata_sff_altstatus(ap);
+		if (status & ATA_BUSY)
+			return status;
+
+		/* Clear INTRQ latch */
+		status = ata_sff_check_status(ap);
+		return status;
+	}
+
+and if there was no altstatus register, everything is fine because 
+"ata_sff_altstatus()" was safe and returned 0 (and not ATA_BUSY).
+
+Or feel free and make it return ATA_INVALID, which has a value of 0x100, 
+or something - it still won't be busy, and it will clearly not be a byte 
+read, so people *can* check for "no altstatus existed" if they want to.
+
+Similarly, 'ata_sff_sync()' just becomes
+
+	void ata_sff_sync(struct ata_port *ap)
+	{
+		ata_sff_altstatus();
+	}
+
+and 'ata_sff_pause()' becomes
+
+	void ata_sff_pause(struct ata_port *ap)
+	{
+		ata_sff_altstatus();
+		ndelay(400);
+	}
+
+and again, if there is no altstatus register, that's a low-level driver 
+issue.
+
+		Linus
