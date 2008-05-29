@@ -1,95 +1,342 @@
-From: Linus Torvalds <torvalds@linux-foundation.org>
-Subject: Re: RESEND: [PATCH] libata-sff: Fix oops reported in kerneloops.org
- for pnp devices with no ctl
-Date: Thu, 29 May 2008 14:13:26 -0700 (PDT)
-Message-ID: <alpine.LFD.1.10.0805291403030.3873@woody.linux-foundation.org>
-References: <20080529161453.24735.805.stgit@core> <alpine.LFD.1.10.0805290950230.2958@woody.linux-foundation.org> <483EEBE5.5030708@garzik.org> <20080529191920.12609c32@core>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: [RFC PATCH] libata-sff: Fix oops reported in kerneloops.org for pnp
+ devices with no ctl
+Date: Thu, 29 May 2008 22:10:58 +0100
+Message-ID: <20080529221058.1169e140@core>
+References: <20080529161453.24735.805.stgit@core>
+	<alpine.LFD.1.10.0805290950230.2958@woody.linux-foundation.org>
+	<20080529190235.258d304e@core>
+	<483EF536.90801@garzik.org>
+	<20080529194238.36458a46@core>
+	<483F049E.2090809@garzik.org>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:59105 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751341AbYE2VOH (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 29 May 2008 17:14:07 -0400
-In-Reply-To: <20080529191920.12609c32@core>
+Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:55671 "EHLO
+	lxorguk.ukuu.org.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1752785AbYE2VZD (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 29 May 2008 17:25:03 -0400
+In-Reply-To: <483F049E.2090809@garzik.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: Jeff Garzik <jeff@garzik.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+
+> > Want me to roll a patch in that style ?
+> 
+> Works for me...
+
+Ok
+
+- Make ata_sff_altstatus private so nobody uses it by mistake
+- Drop the 400nS delay from it
+
+Add
+
+ata_sff_irq_status	-	encapsulates the IRQ check logic
+
+This function keeps the existing behaviour for altstatus using devices. I
+actually suspect the logic was wrong before the changes but -rc isn't the
+time to play with that
+
+ata_sff_sync		-	ensure writes hit the device
+
+Really we want an io* operation for 'is posted' eg ioisposted(ioaddr) so
+that we can fix the nasty delay this causes on most systems.
+
+- ata_sff_pause		-	400nS delay
+
+Ensure the command hit the device and delay 400nS
+
+- ata_sff_dma_pause
+
+Ensure the I/O hit the device and enforce an HDMA1:0 transition delay.
+Requires altstatus register exists, BUG if not so we don't risk
+corruption in MWDMA modes. (UDMA the checksum will save your backside in
+theory)
+
+The only other complication then is devices with their own handlers.
+rb532 can use dma_pause but scc needs to access its own altstatus
+register for internal errata workarounds so directly call the drivers own
+altstatus function.
 
 
+Signed-off-by: Alan Cox <alan@redhat.com>
 
-On Thu, 29 May 2008, Alan Cox wrote:
->
-> And this is how a revised one would look.
+ drivers/ata/libata-sff.c    |  115 +++++++++++++++++++++++++++++++++++++------
+ drivers/ata/pata_icside.c   |    2 -
+ drivers/ata/pata_rb532_cf.c |    4 +
+ drivers/ata/pata_scc.c      |    5 +-
+ include/linux/libata.h      |   16 +-----
+ 5 files changed, 109 insertions(+), 33 deletions(-)
 
-Ok, this looks nicer, but how about:
 
-> +static u8 ata_sff_irq_status(struct ata_port *ap)
-> +{
-> +	u8 status;
-> +
-> +	if (ap->ops->sff_check_altstatus || ap->ioaddr.altstatus_addr) {
-> +		status = ata_sff_altstatus(ap);
-
-This here is all about not oopsing in ata_sff_altstatus(), ie just knowing 
-about the bug.
-
-Why not just fix ata_sff_altstatus(), instead of causing these kinds of 
-problems downstream?
-
-If you don't want to read the status register, fine. But at least do 
-something like
-
- - make ata_sff_altstatus static, since it's useless and dangerous to call 
-   otherwise (ie make the exported interfaces be the nicer higher-level 
-   ones that are sane)
-
- - and make it just return 0 if the altstatus register doesn't exist.
-
-At that point, both 'ata_sff_irq_status()' and 'ata_sff_sync()' can just 
-use ata_sff_altstatus() directly, *without* having to check that altstatus 
-setup by hand, or re-implement the function just because it was buggy and 
-broken to begin with.
-
-So now ata_sff_irq_status() just becomes
-
-	static u8 ata_sff_irq_status(struct ata_port *ap)
-	{
-		u8 status;
-
-		status = ata_sff_altstatus(ap);
-		if (status & ATA_BUSY)
-			return status;
-
-		/* Clear INTRQ latch */
-		status = ata_sff_check_status(ap);
-		return status;
-	}
-
-and if there was no altstatus register, everything is fine because 
-"ata_sff_altstatus()" was safe and returned 0 (and not ATA_BUSY).
-
-Or feel free and make it return ATA_INVALID, which has a value of 0x100, 
-or something - it still won't be busy, and it will clearly not be a byte 
-read, so people *can* check for "no altstatus existed" if they want to.
-
-Similarly, 'ata_sff_sync()' just becomes
-
-	void ata_sff_sync(struct ata_port *ap)
-	{
-		ata_sff_altstatus();
-	}
-
-and 'ata_sff_pause()' becomes
-
-	void ata_sff_pause(struct ata_port *ap)
-	{
-		ata_sff_altstatus();
-		ndelay(400);
-	}
-
-and again, if there is no altstatus register, that's a low-level driver 
-issue.
-
-		Linus
+diff --git a/drivers/ata/libata-sff.c b/drivers/ata/libata-sff.c
+index 3c2d228..90d20c6 100644
+--- a/drivers/ata/libata-sff.c
++++ b/drivers/ata/libata-sff.c
+@@ -247,7 +247,7 @@ u8 ata_sff_check_status(struct ata_port *ap)
+  *	LOCKING:
+  *	Inherited from caller.
+  */
+-u8 ata_sff_altstatus(struct ata_port *ap)
++static u8 ata_sff_altstatus(struct ata_port *ap)
+ {
+ 	if (ap->ops->sff_check_altstatus)
+ 		return ap->ops->sff_check_altstatus(ap);
+@@ -256,6 +256,93 @@ u8 ata_sff_altstatus(struct ata_port *ap)
+ }
+ 
+ /**
++ *	ata_sff_irq_status - Check if the device is busy
++ *	@ap: port where the device is
++ *
++ *	Determine if the port is currently busy. Uses altstatus
++ *	if available in order to avoid clearing shared IRQ status
++ *	when finding an IRQ source. Non ctl capable devices don't
++ *	share interrupt lines fortunately for us.
++ *
++ *	LOCKING:
++ *	Inherited from caller.
++ */
++static u8 ata_sff_irq_status(struct ata_port *ap)
++{
++	u8 status;
++
++	if (ap->ops->sff_check_altstatus || ap->ioaddr.altstatus_addr) {
++		status = ata_sff_altstatus(ap);
++		/* Not us: We are busy */
++		if (status & ATA_BUSY)
++		    	return status;
++	}
++	/* Clear INTRQ latch */
++	status = ata_sff_check_status(ap);
++	return status;
++}
++
++/**
++ *	ata_sff_sync - Flush writes
++ *	@ap: Port to wait for.
++ *
++ *	CAUTION:
++ *	If we have an mmio device with no ctl and no altstatus
++ *	method this will fail. No such devices are known to exist.
++ *
++ *	LOCKING:
++ *	Inherited from caller.
++ */
++
++static void ata_sff_sync(struct ata_port *ap)
++{
++	if (ap->ops->sff_check_altstatus)
++		ap->ops->sff_check_altstatus(ap);
++	else if (ap->ioaddr.altstatus_addr)
++		ioread8(ap->ioaddr.altstatus_addr);
++}
++
++/**
++ *	ata_sff_pause		-	Flush writes and wait 400nS
++ *	@ap: Port to pause for.
++ *
++ *	CAUTION:
++ *	If we have an mmio device with no ctl and no altstatus
++ *	method this will fail. No such devices are known to exist.
++ *
++ *	LOCKING:
++ *	Inherited from caller.
++ */
++
++void ata_sff_pause(struct ata_port *ap)
++{
++	ata_sff_sync(ap);
++	ndelay(400);
++}
++
++/**
++ *	ata_sff_dma_pause	-	Pause before commencing DMA
++ *	@ap: Port to pause for.
++ *
++ *	Perform I/O fencing and ensure sufficient cycle delays occur
++ *	for the HDMA1:0 transition
++ */
++ 
++void ata_sff_dma_pause(struct ata_port *ap)
++{
++	if (ap->ops->sff_check_altstatus || ap->ioaddr.altstatus_addr) {
++		/* An altstatus read will cause the needed delay without
++		   messing up the IRQ status */
++		ata_sff_altstatus(ap);
++		return;
++	}
++	/* There are no DMA controllers without ctl. BUG here to ensure
++	   we never violate the HDMA1:0 transition timing and risk
++	   corruption. */
++	BUG();
++}
++
++/**
+  *	ata_sff_busy_sleep - sleep until BSY clears, or timeout
+  *	@ap: port containing status register to be polled
+  *	@tmout_pat: impatience timeout
+@@ -742,7 +829,7 @@ static void ata_pio_sectors(struct ata_queued_cmd *qc)
+ 	} else
+ 		ata_pio_sector(qc);
+ 
+-	ata_sff_altstatus(qc->ap); /* flush */
++	ata_sff_sync(qc->ap); /* flush */
+ }
+ 
+ /**
+@@ -763,8 +850,9 @@ static void atapi_send_cdb(struct ata_port *ap, struct ata_queued_cmd *qc)
+ 	WARN_ON(qc->dev->cdb_len < 12);
+ 
+ 	ap->ops->sff_data_xfer(qc->dev, qc->cdb, qc->dev->cdb_len, 1);
+-	ata_sff_altstatus(ap); /* flush */
+-
++	ata_sff_sync(ap);
++	/* FIXME: If the CDB is for DMA do we need to do the transition delay
++	   or is bmdma_start guaranteed to do it ? */
+ 	switch (qc->tf.protocol) {
+ 	case ATAPI_PROT_PIO:
+ 		ap->hsm_task_state = HSM_ST;
+@@ -905,7 +993,7 @@ static void atapi_pio_bytes(struct ata_queued_cmd *qc)
+ 
+ 	if (unlikely(__atapi_pio_bytes(qc, bytes)))
+ 		goto err_out;
+-	ata_sff_altstatus(ap); /* flush */
++	ata_sff_sync(ap); /* flush */
+ 
+ 	return;
+ 
+@@ -1489,14 +1577,10 @@ inline unsigned int ata_sff_host_intr(struct ata_port *ap,
+ 		goto idle_irq;
+ 	}
+ 
+-	/* check altstatus */
+-	status = ata_sff_altstatus(ap);
+-	if (status & ATA_BUSY)
+-		goto idle_irq;
+ 
+-	/* check main status, clearing INTRQ */
+-	status = ap->ops->sff_check_status(ap);
+-	if (unlikely(status & ATA_BUSY))
++	/* check main status, clearing INTRQ if needed */
++	status = ata_sff_irq_status(ap);
++	if (status & ATA_BUSY)
+ 		goto idle_irq;
+ 
+ 	/* ack bmdma irq events */
+@@ -2030,7 +2114,7 @@ void ata_sff_error_handler(struct ata_port *ap)
+ 		ap->ops->bmdma_stop(qc);
+ 	}
+ 
+-	ata_sff_altstatus(ap);
++	ata_sff_sync(ap);		/* FIXME: We don't need this */
+ 	ap->ops->sff_check_status(ap);
+ 	ap->ops->sff_irq_clear(ap);
+ 
+@@ -2203,7 +2287,7 @@ void ata_bmdma_stop(struct ata_queued_cmd *qc)
+ 		 mmio + ATA_DMA_CMD);
+ 
+ 	/* one-PIO-cycle guaranteed wait, per spec, for HDMA1:0 transition */
+-	ata_sff_altstatus(ap);        /* dummy read */
++	ata_sff_dma_pause(ap);
+ }
+ 
+ /**
+@@ -2722,7 +2806,8 @@ EXPORT_SYMBOL_GPL(ata_sff_qc_prep);
+ EXPORT_SYMBOL_GPL(ata_sff_dumb_qc_prep);
+ EXPORT_SYMBOL_GPL(ata_sff_dev_select);
+ EXPORT_SYMBOL_GPL(ata_sff_check_status);
+-EXPORT_SYMBOL_GPL(ata_sff_altstatus);
++EXPORT_SYMBOL_GPL(ata_sff_dma_pause);
++EXPORT_SYMBOL_GPL(ata_sff_pause);
+ EXPORT_SYMBOL_GPL(ata_sff_busy_sleep);
+ EXPORT_SYMBOL_GPL(ata_sff_wait_ready);
+ EXPORT_SYMBOL_GPL(ata_sff_tf_load);
+diff --git a/drivers/ata/pata_icside.c b/drivers/ata/pata_icside.c
+index 1713843..cf9e984 100644
+--- a/drivers/ata/pata_icside.c
++++ b/drivers/ata/pata_icside.c
+@@ -270,7 +270,7 @@ static void pata_icside_bmdma_stop(struct ata_queued_cmd *qc)
+ 	disable_dma(state->dma);
+ 
+ 	/* see ata_bmdma_stop */
+-	ata_sff_altstatus(ap);
++	ata_sff_dma_pause(ap);
+ }
+ 
+ static u8 pata_icside_bmdma_status(struct ata_port *ap)
+diff --git a/drivers/ata/pata_rb532_cf.c b/drivers/ata/pata_rb532_cf.c
+index a108d25..f8b3ffc 100644
+--- a/drivers/ata/pata_rb532_cf.c
++++ b/drivers/ata/pata_rb532_cf.c
+@@ -57,7 +57,9 @@ static inline void rb532_pata_finish_io(struct ata_port *ap)
+ 	struct ata_host *ah = ap->host;
+ 	struct rb532_cf_info *info = ah->private_data;
+ 
+-	ata_sff_altstatus(ap);
++	/* FIXME: Keep previous delay. If this is merely a fence then
++	   ata_sff_sync might be sufficient. */
++	ata_sff_dma_pause(ap);
+ 	ndelay(RB500_CF_IO_DELAY);
+ 
+ 	set_irq_type(info->irq, IRQ_TYPE_LEVEL_HIGH);
+diff --git a/drivers/ata/pata_scc.c b/drivers/ata/pata_scc.c
+index e965b25..bbf5aa3 100644
+--- a/drivers/ata/pata_scc.c
++++ b/drivers/ata/pata_scc.c
+@@ -726,7 +726,7 @@ static void scc_bmdma_stop (struct ata_queued_cmd *qc)
+ 		 in_be32(bmid_base + SCC_DMA_CMD) & ~ATA_DMA_START);
+ 
+ 	/* one-PIO-cycle guaranteed wait, per spec, for HDMA1:0 transition */
+-	ata_sff_altstatus(ap);	/* dummy read */
++	ata_sff_dma_pause(ap);	/* dummy read */
+ }
+ 
+ /**
+@@ -747,7 +747,8 @@ static u8 scc_bmdma_status (struct ata_port *ap)
+ 		return host_stat;
+ 
+ 	/* errata A252,A308 workaround: Step4 */
+-	if ((ata_sff_altstatus(ap) & ATA_ERR) && (int_status & INTSTS_INTRQ))
++	if ((scc_check_altstatus(ap) & ATA_ERR)
++					&& (int_status & INTSTS_INTRQ))
+ 		return (host_stat | ATA_DMA_INTR);
+ 
+ 	/* errata A308 workaround Step5 */
+diff --git a/include/linux/libata.h b/include/linux/libata.h
+index 4a92fba..57cfd92 100644
+--- a/include/linux/libata.h
++++ b/include/linux/libata.h
+@@ -1435,7 +1435,8 @@ extern void ata_sff_qc_prep(struct ata_queued_cmd *qc);
+ extern void ata_sff_dumb_qc_prep(struct ata_queued_cmd *qc);
+ extern void ata_sff_dev_select(struct ata_port *ap, unsigned int device);
+ extern u8 ata_sff_check_status(struct ata_port *ap);
+-extern u8 ata_sff_altstatus(struct ata_port *ap);
++extern void ata_sff_pause(struct ata_port *ap);
++extern void ata_sff_dma_pause(struct ata_port *ap);
+ extern int ata_sff_busy_sleep(struct ata_port *ap,
+ 			      unsigned long timeout_pat, unsigned long timeout);
+ extern int ata_sff_wait_ready(struct ata_link *link, unsigned long deadline);
+@@ -1496,19 +1497,6 @@ extern int ata_pci_sff_init_one(struct pci_dev *pdev,
+ #endif /* CONFIG_PCI */
+ 
+ /**
+- *	ata_sff_pause - Flush writes and pause 400 nanoseconds.
+- *	@ap: Port to wait for.
+- *
+- *	LOCKING:
+- *	Inherited from caller.
+- */
+-static inline void ata_sff_pause(struct ata_port *ap)
+-{
+-	ata_sff_altstatus(ap);
+-	ndelay(400);
+-}
+-
+-/**
+  *	ata_sff_busy_wait - Wait for a port status register
+  *	@ap: Port to wait for.
+  *	@bits: bits that must be clear
