@@ -1,116 +1,35 @@
-From: Harvey Harrison <harvey.harrison@gmail.com>
-Subject: [PATCH 05/37] ata: use get/put_endian helpers
-Date: Thu, 29 May 2008 13:18:02 -0700
-Message-ID: <1212092282.28403.107.camel@brick>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: RESEND: [PATCH] libata-sff: Fix oops reported in kerneloops.org
+ for pnp devices with no ctl
+Date: Thu, 29 May 2008 21:18:49 +0100
+Message-ID: <20080529211849.59aafbc0@core>
+References: <20080529161453.24735.805.stgit@core>
+	<alpine.LFD.1.10.0805290950230.2958@woody.linux-foundation.org>
+	<20080529190235.258d304e@core>
+	<483EF536.90801@garzik.org>
+	<20080529193813.4bc0a677@core>
+	<alpine.LFD.1.10.0805291245330.2958@woody.linux-foundation.org>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wf-out-1314.google.com ([209.85.200.175]:43046 "EHLO
-	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753611AbYE2USE (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 29 May 2008 16:18:04 -0400
-Received: by wf-out-1314.google.com with SMTP id 27so3083458wfd.4
-        for <linux-ide@vger.kernel.org>; Thu, 29 May 2008 13:18:03 -0700 (PDT)
+Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:49772 "EHLO
+	lxorguk.ukuu.org.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751341AbYE2UdO (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 29 May 2008 16:33:14 -0400
+In-Reply-To: <alpine.LFD.1.10.0805291245330.2958@woody.linux-foundation.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: linux-arch <linux-arch@vger.kernel.org>, Jeff Garzik <jeff@garzik.org>, linux-ide <linux-ide@vger.kernel.org>
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Jeff Garzik <jeff@garzik.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-Signed-off-by: Harvey Harrison <harvey.harrison@gmail.com>
----
- drivers/ata/pdc_adma.c   |   12 ++++++------
- drivers/ata/sata_qstor.c |   12 +++++-------
- 2 files changed, 11 insertions(+), 13 deletions(-)
+> The old function oopsed for the case that you worry about. That is WORSE 
+> than anything else you can come up with. There is absolutely zero upside 
+> to using that old and broken thing.
 
-diff --git a/drivers/ata/pdc_adma.c b/drivers/ata/pdc_adma.c
-index be53545..162eecb 100644
---- a/drivers/ata/pdc_adma.c
-+++ b/drivers/ata/pdc_adma.c
-@@ -284,11 +284,11 @@ static int adma_fill_sg(struct ata_queued_cmd *qc)
- 		u32 len;
- 
- 		addr = (u32)sg_dma_address(sg);
--		*(__le32 *)(buf + i) = cpu_to_le32(addr);
-+		put_le32(addr, (__le32 *)(buf + i));
- 		i += 4;
- 
- 		len = sg_dma_len(sg) >> 3;
--		*(__le32 *)(buf + i) = cpu_to_le32(len);
-+		put_le32(len, (__le32 *)(buf + i));
- 		i += 4;
- 
- 		last_buf = &buf[i];
-@@ -297,8 +297,8 @@ static int adma_fill_sg(struct ata_queued_cmd *qc)
- 		buf[i++] = 0;	/* pPKLW */
- 		buf[i++] = 0;	/* reserved */
- 
--		*(__le32 *)(buf + i) =
--			(pFLAGS & pEND) ? 0 : cpu_to_le32(pp->pkt_dma + i + 4);
-+		put_le32((pFLAGS & pEND) ? 0 : pp->pkt_dma + i + 4,
-+			 (__le32 *)(buf + i));
- 		i += 4;
- 
- 		VPRINTK("PRD[%u] = (0x%lX, 0x%X)\n", i/4,
-@@ -331,7 +331,7 @@ static void adma_qc_prep(struct ata_queued_cmd *qc)
- 	buf[i++] = cVLD | cDAT | cIEN;
- 	i++;		/* cLEN, gets filled in below */
- 
--	*(__le32 *)(buf+i) = cpu_to_le32(pkt_dma);	/* cNCPB */
-+	put_le32(pkt_dma, (__le32 *)(buf + i));	/* cNCPB */
- 	i += 4;		/* cNCPB */
- 	i += 4;		/* cPRD, gets filled in below */
- 
-@@ -369,7 +369,7 @@ static void adma_qc_prep(struct ata_queued_cmd *qc)
- 	buf[i++] = ADMA_REGS_COMMAND | rEND;
- 
- 	buf[3] = (i >> 3) - 2;				/* cLEN */
--	*(__le32 *)(buf+8) = cpu_to_le32(pkt_dma + i);	/* cPRD */
-+	put_le32(pkt_dma + i, (__le32 *)(buf + 8));	/* cPRD */
- 
- 	i = adma_fill_sg(qc);
- 	wmb();	/* flush PRDs and pkt to memory */
-diff --git a/drivers/ata/sata_qstor.c b/drivers/ata/sata_qstor.c
-index 1600107..7e3c4d5 100644
---- a/drivers/ata/sata_qstor.c
-+++ b/drivers/ata/sata_qstor.c
-@@ -277,11 +277,11 @@ static unsigned int qs_fill_sg(struct ata_queued_cmd *qc)
- 		u32 len;
- 
- 		addr = sg_dma_address(sg);
--		*(__le64 *)prd = cpu_to_le64(addr);
-+		put_le64(addr, (__le64 *)prd);
- 		prd += sizeof(u64);
- 
- 		len = sg_dma_len(sg);
--		*(__le32 *)prd = cpu_to_le32(len);
-+		put_le32(len, (__le32 *)prd);
- 		prd += sizeof(u64);
- 
- 		VPRINTK("PRD[%u] = (0x%llX, 0x%X)\n", si,
-@@ -296,7 +296,6 @@ static void qs_qc_prep(struct ata_queued_cmd *qc)
- 	struct qs_port_priv *pp = qc->ap->private_data;
- 	u8 dflags = QS_DF_PORD, *buf = pp->pkt;
- 	u8 hflags = QS_HF_DAT | QS_HF_IEN | QS_HF_VLD;
--	u64 addr;
- 	unsigned int nelem;
- 
- 	VPRINTK("ENTER\n");
-@@ -317,10 +316,9 @@ static void qs_qc_prep(struct ata_queued_cmd *qc)
- 	/* host control block (HCB) */
- 	buf[ 0] = QS_HCB_HDR;
- 	buf[ 1] = hflags;
--	*(__le32 *)(&buf[ 4]) = cpu_to_le32(qc->nbytes);
--	*(__le32 *)(&buf[ 8]) = cpu_to_le32(nelem);
--	addr = ((u64)pp->pkt_dma) + QS_CPB_BYTES;
--	*(__le64 *)(&buf[16]) = cpu_to_le64(addr);
-+	put_le32(qc->nbytes, (__le32 *)&buf[4]);
-+	put_le32(nelem, (__le32 *)&buf[8]);
-+	put_le64((u64)pp->pkt_dma + QS_CPB_BYTES, (__le64 *)&buf[16]);
- 
- 	/* device control block (DCB) */
- 	buf[24] = QS_DCB_HDR;
--- 
-1.5.6.rc0.277.g804cf
+The worst case is uncaught data corruption. An oops is harmless in
+comparison. Someone using altstatus to enforce DMA timing barriers and
+getting nothing else will find their disk contents 'degraded'.
 
-
+I'm just putting together a patch that removes ata_altstatus entirely
+from public use, and that actually looks far nicer.
