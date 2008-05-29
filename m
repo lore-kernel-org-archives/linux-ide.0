@@ -1,84 +1,78 @@
-From: Bill Davidsen <davidsen@tmr.com>
-Subject: Re: Linux 2.6.26-rc4
-Date: Wed, 28 May 2008 19:59:17 -0400
-Message-ID: <483DF1D5.9030706@tmr.com>
-References: <alpine.LFD.1.10.0805261127030.2958@woody.linux-foundation.org> <20080527120128.7074c1bc@werewolf.home>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: ata_piix on MacBook4,1: fail to startup in a certain situation
+Date: Thu, 29 May 2008 09:23:30 +0900
+Message-ID: <483DF782.1050208@gmail.com>
+References: <20080528075106.F2C3D29C127@m02-blue.in.shared-server.net>	<20080528075747.A18A5114160@m03-blue.in.shared-server.net>	<483D1429.3080804@gmail.com>	<20080528092117.4A5177080E8@m04-blue.in.shared-server.net>	<483D6AF4.8000502@gmail.com> <20080528225338.5FB121E0868@m06-blue.in.shared-server.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: multipart/mixed;
+ boundary="------------040808080603010509020905"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.tmr.com ([64.65.253.246]:49041 "EHLO gaimboi.tmr.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751165AbYE1XrK convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 28 May 2008 19:47:10 -0400
-In-Reply-To: <20080527120128.7074c1bc@werewolf.home>
+Received: from rv-out-0506.google.com ([209.85.198.238]:15737 "EHLO
+	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751750AbYE2AXg (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 28 May 2008 20:23:36 -0400
+Received: by rv-out-0506.google.com with SMTP id l9so3791086rvb.1
+        for <linux-ide@vger.kernel.org>; Wed, 28 May 2008 17:23:36 -0700 (PDT)
+In-Reply-To: <20080528225338.5FB121E0868@m06-blue.in.shared-server.net>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: =?ISO-8859-1?Q?=22J=2EA=2E_Magall=F3n=22?= <jamagallon@ono.com>
-Cc: Linux-Kernel <linux-kernel@vger.kernel.org>, Linus-IDE <linux-ide@vger.kernel.org>
+To: MATSUBAYASHI 'Shaolin' Kohji <shaolin@rhythmaning.org>
+Cc: linux-ide@vger.kernel.org
 
-J.A. Magall=F3n wrote:
-> On Mon, 26 May 2008 11:41:35 -0700 (PDT), Linus Torvalds <torvalds@li=
-nux-foundation.org> wrote:
->=20
->> You know the drill by now: another week, another -rc.
->>
->> There's a lot of small stuff in here, most people won't even notice.=
- The=20
->> most noticeable thing is for all you 32-bit x86 people who use PAE=20
->> (enabled by the HIGHMEM64G config option) due to having too much mem=
-ory in=20
->> your machine - mprotect() was broken due to some of the PAT fix/clea=
-nup=20
->> patches, causing the NX bit to be not set correctly.
->>
->> So if you had PAE enabled _and_ a recent enough CPU to have NX, but =
-not=20
->> recent enough to be 64-bit (or you were just perverse and wanted to =
-run a=20
->> 32-bit kernel despite having a chip that could do 64-bit and enough =
-memory=20
->> that you _really_ should have used a 64-bit kernel), you'd get vario=
-us=20
->> random program failures with SIGSEGV. It ranged from X not starting =
-up to=20
->> apparently OpenOffice not working if it did.
->>
->> But most of the changes, as usual, are in drivers, at 60%, with some=
- DRI=20
->> changes leading the way (fixing a number of other regressions, mainl=
-y by=20
->> reverting the under-cooked vblank update). Network, MMC, USB, watchd=
-og and=20
->> IDE drivers also got updates.
->>
->> We had CIFS and NFS updates, and some arch updates as usual. The dir=
-stat=20
->> gives the overview:
->>
->=20
-> I have this patchsets collected from LKML, that still apply ontop of =
--rc4.
-> Are they not so urgent or are they not needed any more ?
->=20
-> JBD[2] races
-> http://marc.info/?l=3Dlinux-ext4&m=3D121141319601650&w=3D2
-> http://marc.info/?l=3Dlinux-ext4&m=3D121141319701660&w=3D2
->=20
-Unless I misread the thread, akpm had a raft of issues with the first=20
-one, all of which were spelling except one initialization which he=20
-thought was not needed. All of those could be fixed in less effort that=
-=20
-it takes to mention them, perhaps, but even so I think the patch could=20
-be ready in a short time.
+This is a multi-part message in MIME format.
+--------------040808080603010509020905
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 
-The problem looks worth fixing to me, but probably not a must have at=20
-the rc4 level. Maybe in 2.6.27 we could get rid of the potential race?
+MATSUBAYASHI 'Shaolin' Kohji wrote:
+> Unfortunately no...
+> With this patch, booting will stop during the execution of
+> the following lines (in ata_piix.c: piix_init_sidpr()):
+> 
+>         if (pci_resource_start(pdev, PIIX_SIDPR_BAR) == 0 ||
+>             pci_resource_len(pdev, PIIX_SIDPR_BAR) != PIIX_SIDPR_LEN)
+>                 return;
+> 
+> which might suggest this is not ata_piix related problem I'm afraid...
+> 
+> Again, please note if I keep the AC adapter plugged to MacBook,
+> there is no such problem happening. It happens only when running with battery.
 
+Hmmm.. That really doesn't make much sense.  Can you please try the
+attached one just in case?
 
---=20
-Bill Davidsen <davidsen@tmr.com>
-   "We have more to fear from the bungling of the incompetent than from
-the machinations of the wicked."  - from Slashdot
+Thanks.
 
+-- 
+tejun
+
+--------------040808080603010509020905
+Content-Type: text/x-patch;
+ name="ata_piix-apple-1.patch"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="ata_piix-apple-1.patch"
+
+diff --git a/drivers/ata/ata_piix.c b/drivers/ata/ata_piix.c
+index a9027b8..6c2e907 100644
+--- a/drivers/ata/ata_piix.c
++++ b/drivers/ata/ata_piix.c
+@@ -251,6 +251,7 @@ static const struct pci_device_id piix_pci_tbl[] = {
+ 	{ 0x8086, 0x2828, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich8_sata },
+ 	/* Mobile SATA Controller IDE (ICH8M), Apple */
+ 	{ 0x8086, 0x2828, 0x106b, 0x00a0, 0, 0, ich8m_apple_sata },
++	{ 0x8086, 0x2828, 0x106b, 0x00a1, 0, 0, ich8m_apple_sata },
+ 	/* SATA Controller IDE (ICH9) */
+ 	{ 0x8086, 0x2920, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich8_sata },
+ 	/* SATA Controller IDE (ICH9) */
+@@ -526,7 +527,7 @@ static struct ata_port_info piix_port_info[] = {
+ 
+ 	[ich8m_apple_sata] =
+ 	{
+-		.flags		= PIIX_SATA_FLAGS | PIIX_FLAG_SIDPR,
++		.flags		= PIIX_SATA_FLAGS,
+ 		.pio_mask	= 0x1f,	/* pio0-4 */
+ 		.mwdma_mask	= 0x07, /* mwdma0-2 */
+ 		.udma_mask	= ATA_UDMA6,
+
+--------------040808080603010509020905--
