@@ -1,39 +1,65 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [RFC PATCH] libata-sff: Fix oops reported in kerneloops.org for
- pnp devices with no ctl
-Date: Thu, 29 May 2008 22:57:48 +0100
-Message-ID: <20080529225748.40f19026@core>
-References: <20080529161453.24735.805.stgit@core>
-	<alpine.LFD.1.10.0805290950230.2958@woody.linux-foundation.org>
-	<20080529190235.258d304e@core>
-	<483EF536.90801@garzik.org>
-	<20080529194238.36458a46@core>
-	<483F049E.2090809@garzik.org>
-	<20080529221058.1169e140@core>
-	<20080529223755.12610b87@core>
-	<483F26B0.8010006@garzik.org>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: [PATCH 14/40] ide-floppy: merge idefloppy_transfer_pc() and idefloppy_transfer_pc1()
+Date: Fri, 30 May 2008 01:01:13 +0200
+Message-ID: <200805300101.14495.bzolnier@gmail.com>
+References: <20080518185428.5636.77234.sendpatchset@localhost.localdomain> <200805272057.42444.bzolnier@gmail.com> <20080527053737.GA19760@gollum.tnic>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:42358 "EHLO
-	lxorguk.ukuu.org.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1759462AbYE2WLv (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 29 May 2008 18:11:51 -0400
-In-Reply-To: <483F26B0.8010006@garzik.org>
+Received: from mu-out-0910.google.com ([209.85.134.188]:16263 "EHLO
+	mu-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751183AbYE2XVN (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 29 May 2008 19:21:13 -0400
+Received: by mu-out-0910.google.com with SMTP id w8so2805824mue.1
+        for <linux-ide@vger.kernel.org>; Thu, 29 May 2008 16:21:11 -0700 (PDT)
+In-Reply-To: <20080527053737.GA19760@gollum.tnic>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: petkovbb@gmail.com
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-> Honestly I think your first RFC PATCH (dated Thu, 29 May 2008 22:10:58 
-> +0100) turned out better than this.
+On Tuesday 27 May 2008, Borislav Petkov wrote:
+> On Tue, May 27, 2008 at 08:57:42PM +0200, Bartlomiej Zolnierkiewicz wrote:
+> > On Wednesday 21 May 2008, Borislav Petkov wrote:
+> > > On Sun, May 18, 2008 at 08:56:33PM +0200, Bartlomiej Zolnierkiewicz wrote:
+> > > > * Check IDEFLOPPY_FLAG_ZIP_DRIVE flag in idefloppy_transfer_pc1()
+> > > >   and skip idefloppy_transfer_pc2()-phase if the flag is not set.
+> > > > 
+> > > > * Always use idefloppy_transfer_pc1() in idefloppy_issue_pc()
+> > > >   and remove no longer needed idefloppy_transfer_pc().
+> > > 
+> > > ... and also probably mv idefloppy_transfer_pc1() to something like
+> > > idefloppy_start_transfer_pc() and rename idefloppy_transfer_pc2() to something
+> > > more appropriate like e.g. idefloppy_do_transfer_pc() or similar and do away
+> > > with those misleading names and probably even the comments are superfluous then.
+> > 
+> > Probably the most intuitive would be to do:
+> > 
+> > 	idefloppy_transfer_pc1() -> idefloppy_transfer_pc()
+> > 
+> > and
+> > 
+> > 	idefloppy_transfer_pc2() -> idefloppy_do_transfer_pc()
+> > 
+> > but I don't feel too strong about it and welcome other ideas
+> > (preferably in form of patches :).
 > 
-> NO_ALTSTATUS is a bit ugly, don't you think?
-
-I do , but Linus seemed to like it ;)
+> ^Hint^! :) Sure, what about the following:
+> --
 > 
-> In any case, based on a quick review I would certainly ack the first RFC 
-> PATCH.
+> From: Borislav Petkov <petkovbb@gmail.com>
+> Date: Tue, 27 May 2008 07:31:37 +0200
+> Subject: [PATCH] ide-floppy: fix unfortunate function naming
+> 
+> mv idefloppy_transfer_pc1 idefloppy_start_pc_transfer
+> mv idefloppy_transfer_pc2 idefloppy_transfer_pc
+> 
+> which describes their functionality and disambiguates them. There should be no
+> functionality change introduced by this patch.
+> 
+> Signed-off-by: Borislav Petkov <petkovbb@gmail.com>
 
-Ok. I'll run a full test set on that one tomorrow
+applied, thanks
