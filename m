@@ -1,59 +1,111 @@
-From: Andrew Morton <akpm@linux-foundation.org>
-Subject: Re: [PATCH 05/37] ata: use get/put_endian helpers
-Date: Thu, 29 May 2008 22:04:50 -0700
-Message-ID: <20080529220450.2f701d93.akpm@linux-foundation.org>
-References: <1212092282.28403.107.camel@brick>
-	<483F65CA.4050507@rtr.ca>
-	<20080529195225.5665ae9c.akpm@linux-foundation.org>
-	<18495.32327.521211.508818@cargo.ozlabs.ibm.com>
+From: TAKADA Yoshihito <takada@mbf.nifty.com>
+Subject: Re: kernel 2.6.25 with ide driver cs5520 does not boot.
+Date: Fri, 30 May 2008 14:01:40 +0900 (JST)
+Message-ID: <20080530.140140.193692749.takada@mbf.nifty.com>
+References: <20080509.215601.208967867.takada@mbf.nifty.com>
+	<200805142244.48548.bzolnier@gmail.com>
+	<200805150028.04625.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:51815 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752186AbYE3FE7 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 30 May 2008 01:04:59 -0400
-In-Reply-To: <18495.32327.521211.508818@cargo.ozlabs.ibm.com>
+Received: from pxy2nd.nifty.com ([202.248.175.14]:8898 "HELO pxy2nd.nifty.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1752412AbYE3FKQ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 30 May 2008 01:10:16 -0400
+In-Reply-To: <200805150028.04625.bzolnier@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Paul Mackerras <paulus@samba.org>
-Cc: Mark Lord <liml@rtr.ca>, Harvey Harrison <harvey.harrison@gmail.com>, linux-arch <linux-arch@vger.kernel.org>, Jeff Garzik <jeff@garzik.org>, linux-ide <linux-ide@vger.kernel.org>
+To: bzolnier@gmail.com
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-On Fri, 30 May 2008 14:10:47 +1000 Paul Mackerras <paulus@samba.org> wrote:
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: kernel 2.6.25 with ide driver cs5520 does not boot.
+Date: Thu, 15 May 2008 00:28:04 +0200
 
-> > > What's the point here?
+Hi. sorry, I'm too late.
+I tested the patch to re-enable DMA. But, this patch has no effect. It cannot boot.
+printk() message disappeared.
+
+> On Wednesday 14 May 2008, Bartlomiej Zolnierkiewicz wrote:
+> > On Friday 09 May 2008, TAKADA Yoshihito wrote:
+> > > Hi.
+> > > 
+> > > From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+> > > Subject: Re: kernel 2.6.25 with ide driver cs5520 does not boot.
+> > > Date: Fri, 9 May 2008 11:27:53 +0200
+> > > 
+> > > > On Friday 09 May 2008, TAKADA Yoshihito wrote:
+> > > > > Thanks for quick reply.
+> > > > > 
+> > > > > I tried 2.6.26rc1. It hangs same as 2.6.25.
+> > > > > kernel 2.6.26rc1 with cs5520 cannot boot. cs5520 scans ide0 and ide1.
+> > > > > It seems 2nd port DMA base issue was solved.
+> > > > 
+> > > > [...]
+> > > > 
+> > > > Thanks.
+> > > > 
+> > > > The following patch for 2.6.26-rc1 disables VDMA, please give it a try
+> > > > (I haven't time to fully audit VDMA support yet but lets see if it is
+> > > > the main source of the problems).
+> > > 
+> > > I applied the patch. But kernel was hung.
+> > > And I attempt to kill IDE_HFLAG_CS5520. It cannot boot, oo.
+> > > 
+> > >   kill IDE_HFLAG_VDMA  : hang  
+> > >   kill IDE_HFLAG_CS5520: hang
+> > >   kill both flags      : boot
 > > 
-> > Readability and maintainability.  Once one becomes familar with a
-> > particular idion like this you can read it and say "ah, I know what
-> > that's doing" rather than having to peer at every character and work it
-> > out at each site where it happens.
+> > Thanks for investigating this - I forgot that currently VDMA and CS5520
+> > host flags use the same bit (so it also needs to be fixed).
 > > 
-> > As usual: a PITA now, but better long-term.
+> > I'm going to send the following patch to Linus (please verify it):
 > > 
-> > otoh,
-> > 
-> > - I think the args are backwards
+> > From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+> > Subject: [PATCH] cs5520: disable VDMA
 > 
-> I think you just admitted that the new version is less readable.  At
-> least with an '=' operator you know which side is the thing that's
-> being modified.  With a put_XXX function, I would have to go look up
-> the definition (particularly since outb et al. are also the wrong way
-> around, i.e. have the destination as the second argument).
-
-Well yes, but you don't have to worry about that when reviewing because
-you know the compiler will catch reversals.
-
-Still not terribly keen about it all, but geeze the code which it is
-trying to clarify is godawful:
-
-	*(__le32 *)(buf + i) = cpu_to_le32(addr);
-
-wtf?
-
-Then again the replacement
-
-	put_le32(addr, (__le32 *)(buf + i));
-
-is still wtf.
-
+> [...]
+> 
+> Please also try 2.6.26-rc2 without the above patch but with the following
+> patch applied instead - according to comments in OpenFirmware & pata_cs5520
+> code 0x60 register contains bus-master enable bit, it could be that it was
+> left disabled by BIOS and we need to explicitely enable it (if somebody has
+> CX5510 or CX5520 datasheet please verify this + send me a copy if possible).
+> 
+> ---
+>  drivers/ide/pci/cs5520.c |    8 ++++++++
+>  1 file changed, 8 insertions(+)
+> 
+> Index: b/drivers/ide/pci/cs5520.c
+> ===================================================================
+> --- a/drivers/ide/pci/cs5520.c
+> +++ b/drivers/ide/pci/cs5520.c
+> @@ -147,6 +147,7 @@ static int __devinit cs5520_init_one(str
+>  {
+>  	const struct ide_port_info *d = &cyrix_chipsets[id->driver_data];
+>  	u8 idx[4] = { 0xff, 0xff, 0xff, 0xff };
+> +	u8 pcicfg;
+>  
+>  	ide_setup_pci_noise(dev, d);
+>  
+> @@ -163,6 +164,13 @@ static int __devinit cs5520_init_one(str
+>  		return -ENODEV;
+>  	}
+>  
+> +	pci_read_config_byte(dev, 0x60, &pcicfg);
+> +
+> +	if ((pcicfg & 0x40) == 0) {
+> +		printk(KERN_WARNING "cs5520: DMA mode disabled. Enabling.\n");
+> +		pci_write_config_byte(dev, 0x60, pcicfg | 0x40);
+> +	}
+> +
+>  	/*
+>  	 *	Now the chipset is configured we can let the core
+>  	 *	do all the device setup for us
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Please read the FAQ at  http://www.tux.org/lkml/
