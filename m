@@ -1,32 +1,58 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH #upstream-fixes] libata: SRST can't be trusted on PMP
- sil3726
-Date: Fri, 30 May 2008 18:11:36 -0400
-Message-ID: <48407B98.6050604@garzik.org>
-References: <4833AEFC.2000705@gmail.com>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: [PATCH] Add port multiplier (PMP) support in sata_fsl driver
+Date: Fri, 30 May 2008 18:11:46 -0400
+Message-ID: <48407BA2.5050103@pobox.com>
+References: <Pine.LNX.4.64.0805200015010.5318@blarg.am.freescale.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:44944 "EHLO mail.dvmed.net"
+Received: from srv5.dvmed.net ([207.36.208.214]:44953 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751545AbYE3WLh (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 30 May 2008 18:11:37 -0400
-In-Reply-To: <4833AEFC.2000705@gmail.com>
+	id S1751160AbYE3WLw (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 30 May 2008 18:11:52 -0400
+In-Reply-To: <Pine.LNX.4.64.0805200015010.5318@blarg.am.freescale.net>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: IDE/ATA development list <linux-ide@vger.kernel.org>
+To: Kumar Gala <galak@kernel.crashing.org>
+Cc: linuxppc-dev@ozlabs.org, linux-ide@vger.kernel.org, ashish.kalra@freescale.com, htejun@gmail.com
 
-Tejun Heo wrote:
-> As in sil4726, SRST can't be trusted on sil3726 causing detection
-> problems under certain configuraitons.  I thought it was from the
-> Config Disk device but apparently not.
+Kumar Gala wrote:
+> From: Ashish Kalra <ashish.kalra@freescale.com>
 > 
-> Signed-off-by: Tejun Heo <htejun@gmail.com>
+> PMP support for sata_fsl driver.
+> 
+> Signed-off-by: Ashish Kalra <ashish.kalra@freescale.com>
 > ---
-> drivers/ata/libata-pmp.c |    7 +++++--
-> 1 file changed, 5 insertions(+), 2 deletions(-)
+> Jeff,
+> 
+> The following commit (4c9bf4e799ce06a7378f1196587084802a414c03):
+> libata: replace tf_read with qc_fill_rtf for non-SFF drivers
+> 
+> Broke the sata_fsl.c driver in 2.6.26.  I know the following patch fixes
+> the issue, it clearly also adds port multipler support.  I'm not sure if
+> you are willing to take that as part of 2.6.26 or not, but the current
+> 2.6.26 driver is broken.
+> 
+> On boot with debug enabled we get something like (w/o this patch):
+> 
+> spurious interrupt!!, CC = 0x1
+> interrupt status 0x1
+> xx_scr_read, reg_in = 1
+> spurious interrupt!!, CC = 0x1
+> interrupt status 0x1
+> xx_scr_read, reg_in = 1
+> spurious interrupt!!, CC = 0x1
+> interrupt status 0x1
+> xx_scr_read, reg_in = 1
+> 
+> .. continues for ever.
+> 
+> - k
+> 
+>  drivers/ata/sata_fsl.c |  224 +++++++++++++++++++++++++++++++++++-------------
+>  1 files changed, 163 insertions(+), 61 deletions(-)
+> 
 
 applied
 
