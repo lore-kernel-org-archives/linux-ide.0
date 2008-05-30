@@ -1,58 +1,42 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH] Add port multiplier (PMP) support in sata_fsl driver
-Date: Fri, 30 May 2008 18:11:46 -0400
-Message-ID: <48407BA2.5050103@pobox.com>
-References: <Pine.LNX.4.64.0805200015010.5318@blarg.am.freescale.net>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [PATCH] ahci: change the Device IDs of nvidia MCP7B AHCI controller
+ in ahci.c
+Date: Fri, 30 May 2008 18:11:54 -0400
+Message-ID: <48407BAA.6030106@garzik.org>
+References: <200805191444539981741@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=Big5
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:44953 "EHLO mail.dvmed.net"
+Received: from srv5.dvmed.net ([207.36.208.214]:44963 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751160AbYE3WLw (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 30 May 2008 18:11:52 -0400
-In-Reply-To: <Pine.LNX.4.64.0805200015010.5318@blarg.am.freescale.net>
+	id S1751565AbYE3WLz (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 30 May 2008 18:11:55 -0400
+In-Reply-To: <200805191444539981741@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Kumar Gala <galak@kernel.crashing.org>
-Cc: linuxppc-dev@ozlabs.org, linux-ide@vger.kernel.org, ashish.kalra@freescale.com, htejun@gmail.com
+To: peerchen <peerchen@gmail.com>
+Cc: linux-kernel <linux-kernel@vger.kernel.org>, linux-ide <linux-ide@vger.kernel.org>, akpm <akpm@linux-foundation.org>
 
-Kumar Gala wrote:
-> From: Ashish Kalra <ashish.kalra@freescale.com>
+peerchen wrote:
+> Change the partial Device IDs of nvidia MCP7B AHCI controller in ahci.c
 > 
-> PMP support for sata_fsl driver.
-> 
-> Signed-off-by: Ashish Kalra <ashish.kalra@freescale.com>
+> Signed-off-by: Peer Chen <peerchen@gmail.com>
 > ---
-> Jeff,
-> 
-> The following commit (4c9bf4e799ce06a7378f1196587084802a414c03):
-> libata: replace tf_read with qc_fill_rtf for non-SFF drivers
-> 
-> Broke the sata_fsl.c driver in 2.6.26.  I know the following patch fixes
-> the issue, it clearly also adds port multipler support.  I'm not sure if
-> you are willing to take that as part of 2.6.26 or not, but the current
-> 2.6.26 driver is broken.
-> 
-> On boot with debug enabled we get something like (w/o this patch):
-> 
-> spurious interrupt!!, CC = 0x1
-> interrupt status 0x1
-> xx_scr_read, reg_in = 1
-> spurious interrupt!!, CC = 0x1
-> interrupt status 0x1
-> xx_scr_read, reg_in = 1
-> spurious interrupt!!, CC = 0x1
-> interrupt status 0x1
-> xx_scr_read, reg_in = 1
-> 
-> .. continues for ever.
-> 
-> - k
-> 
->  drivers/ata/sata_fsl.c |  224 +++++++++++++++++++++++++++++++++++-------------
->  1 files changed, 163 insertions(+), 61 deletions(-)
-> 
+> --- linux-2.6.26-rc3/drivers/ata/ahci.c.orig	2008-05-07 13:24:19.000000000 -0400
+> +++ linux-2.6.26-rc3/drivers/ata/ahci.c	2008-05-07 13:25:17.000000000 -0400
+> @@ -502,10 +502,10 @@ static const struct pci_device_id ahci_p
+>  	{ PCI_VDEVICE(NVIDIA, 0x0bcd), board_ahci },		/* MCP7B */
+>  	{ PCI_VDEVICE(NVIDIA, 0x0bce), board_ahci },		/* MCP7B */
+>  	{ PCI_VDEVICE(NVIDIA, 0x0bcf), board_ahci },		/* MCP7B */
+> -	{ PCI_VDEVICE(NVIDIA, 0x0bd0), board_ahci },		/* MCP7B */
+> -	{ PCI_VDEVICE(NVIDIA, 0x0bd1), board_ahci },		/* MCP7B */
+> -	{ PCI_VDEVICE(NVIDIA, 0x0bd2), board_ahci },		/* MCP7B */
+> -	{ PCI_VDEVICE(NVIDIA, 0x0bd3), board_ahci },		/* MCP7B */
+> +	{ PCI_VDEVICE(NVIDIA, 0x0bc4), board_ahci },		/* MCP7B */
+> +	{ PCI_VDEVICE(NVIDIA, 0x0bc5), board_ahci },		/* MCP7B */
+> +	{ PCI_VDEVICE(NVIDIA, 0x0bc6), board_ahci },		/* MCP7B */
+> +	{ PCI_VDEVICE(NVIDIA, 0x0bc7), board_ahci },		/* MCP7B */
 
 applied
 
