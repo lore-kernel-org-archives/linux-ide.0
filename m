@@ -1,111 +1,117 @@
-From: TAKADA Yoshihito <takada@mbf.nifty.com>
-Subject: Re: kernel 2.6.25 with ide driver cs5520 does not boot.
-Date: Fri, 30 May 2008 14:01:40 +0900 (JST)
-Message-ID: <20080530.140140.193692749.takada@mbf.nifty.com>
-References: <20080509.215601.208967867.takada@mbf.nifty.com>
-	<200805142244.48548.bzolnier@gmail.com>
-	<200805150028.04625.bzolnier@gmail.com>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: 2.6.25: sata_sil freezes, hard resets port.
+Date: Fri, 30 May 2008 14:15:22 +0900
+Message-ID: <483F8D6A.3010109@gmail.com>
+References: <3ECBDC05781B3D48ABD520A01ABF2F9B12C589D4FA@SE-EX008.groupinfra.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from pxy2nd.nifty.com ([202.248.175.14]:8898 "HELO pxy2nd.nifty.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1752412AbYE3FKQ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 30 May 2008 01:10:16 -0400
-In-Reply-To: <200805150028.04625.bzolnier@gmail.com>
+Received: from rv-out-0506.google.com ([209.85.198.225]:50408 "EHLO
+	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753082AbYE3FP2 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 30 May 2008 01:15:28 -0400
+Received: by rv-out-0506.google.com with SMTP id l9so4443630rvb.1
+        for <linux-ide@vger.kernel.org>; Thu, 29 May 2008 22:15:28 -0700 (PDT)
+In-Reply-To: <3ECBDC05781B3D48ABD520A01ABF2F9B12C589D4FA@SE-EX008.groupinfra.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: bzolnier@gmail.com
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: "Henry, Andrew" <andrew.henry@logica.com>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, IDE/ATA development list <linux-ide@vger.kernel.org>
 
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: kernel 2.6.25 with ide driver cs5520 does not boot.
-Date: Thu, 15 May 2008 00:28:04 +0200
+Hello, cc'ing linux-ide@vger.kernel.org
 
-Hi. sorry, I'm too late.
-I tested the patch to re-enable DMA. But, this patch has no effect. It cannot boot.
-printk() message disappeared.
+Henry, Andrew wrote:
+> I'm not on the list.  Please cc me if you reply.
+> 
+> I run 2.6.18-53 kernel on CentOS5.1 x86_64.  I recently bought 2 x
+> WD 500GB triple interface drives and an ST Labs/Sunway eSATA CardBus
+> (sil_3512?) controller with 2 ports.
+> 
+> Note that I compiled 2.6.25 and still get errors.  All output below
+> is from 2.6.25.
+> 
+> I can hotplug the card and drives and run badblocks for 48hrs
+> without any verification errors, RAID1 them with mdadm, run dmcrypt
+> and create ext3 fs and mount it and it works perfectly.
+>
+> Then the drives spin down/go to sleep *or* I cold boot the
+> computer, and the problems begin...
+>
+> As long as the discs are always in use, they seem to work, and
+> maybe a workaround is a cronjob with sdparm -C start /dev/sdx, but
+> the lockups/hangs on the port during boot cannot be overcome so
+> easily.  At boot one of the 2 ports can hang and the activity LED
+> stays lit and then I cannot access that disc until I cold boot, and
+> disconnect all power from the drive and unplug the eSATA cable.  It
+> does not work even on cold boot and pressing power off/power on
+> button on drive: I need to actually disconnect the cables!
+>
+> Error 1.
+> 
+> (system is booted, I hotplug card here)
+> 
+> pccard: CardBus card inserted into slot 0
+> sata_sil 0000:07:00.0: version 2.3
+> PCI: Enabling device 0000:07:00.0 (0000 -> 0003)
+> ACPI: PCI Interrupt 0000:07:00.0[A] -> GSI 20 (level, low) -> IRQ 20
+> sata_sil 0000:07:00.0: cache line size not set.  Driver may not function
+> sata_sil 0000:07:00.0: Applying R_ERR on DMA activate FIS errata fix
+> 
+> Error 2.
+> 
+> ata1.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 frozen
+> ata1.00: cmd c8/00:08:00:00:00/00:00:00:00:00/e0 tag 0 cdb 0x0 data 4096 in
+>          res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
+> ata1: soft resetting port
+> ata1: SATA link up 1.5 Gbps (SStatus 113 SControl 310)
+> ata1.00: configured for UDMA/66
+> ata1: EH complete
+> 
+> Error 3.
+> 
+> (this can happen when disc has spun down and I try to access with 'fdisk -l')
+> 
+> ata2: port is slow to respond, please be patient (Status 0xd8)
+> ata2: device not ready (errno=-16), forcing hardreset
+> ata2: hard resetting port
+> ata2: port is slow to respond, please be patient (Status 0xff)
+> ata2: COMRESET failed (errno=-16)
+> ata2: hard resetting port
+> ata2: port is slow to respond, please be patient (Status 0xff)
+> ata2: COMRESET failed (errno=-16)
+> ata2: hard resetting port
+> ata2: port is slow to respond, please be patient (Status 0xff)
+> ata1.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 frozen
+> ata1.00: cmd 25/00:08:80:5f:38/00:00:3a:00:00/e0 tag 0 cdb 0x0 data 4096 in
+>          res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
+> ata1: soft resetting port
+> ata1: SATA link up 1.5 Gbps (SStatus 113 SControl 310)
+> ata1.00: configured for UDMA/33
+> ata1: EH complete
+> ata2: COMRESET failed (errno=-16)
+> ata2: hard resetting port
+> ata2: COMRESET failed (errno=-16)
+> ata2: reset failed, giving up
+> ata2.00: disabled
+> ata2: EH complete
+> sd 1:0:0:0: SCSI error: return code = 0x00040000
+> end_request: I/O error, dev sdb, sector 0
+> 
+> 
+> Error 4.
+> 
+> ( I get these after the hard resets)
+> 
+> May 29 07:50:25 k2 kernel: end_request: I/O error, dev sdb, sector 0
+> May 29 07:50:25 k2 kernel: sd 1:0:0:0: [sdb] Result: hostbyte=DID_BAD_TARGET driverbyte=DRIVER_OK,SUGGEST_OK
 
-> On Wednesday 14 May 2008, Bartlomiej Zolnierkiewicz wrote:
-> > On Friday 09 May 2008, TAKADA Yoshihito wrote:
-> > > Hi.
-> > > 
-> > > From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-> > > Subject: Re: kernel 2.6.25 with ide driver cs5520 does not boot.
-> > > Date: Fri, 9 May 2008 11:27:53 +0200
-> > > 
-> > > > On Friday 09 May 2008, TAKADA Yoshihito wrote:
-> > > > > Thanks for quick reply.
-> > > > > 
-> > > > > I tried 2.6.26rc1. It hangs same as 2.6.25.
-> > > > > kernel 2.6.26rc1 with cs5520 cannot boot. cs5520 scans ide0 and ide1.
-> > > > > It seems 2nd port DMA base issue was solved.
-> > > > 
-> > > > [...]
-> > > > 
-> > > > Thanks.
-> > > > 
-> > > > The following patch for 2.6.26-rc1 disables VDMA, please give it a try
-> > > > (I haven't time to fully audit VDMA support yet but lets see if it is
-> > > > the main source of the problems).
-> > > 
-> > > I applied the patch. But kernel was hung.
-> > > And I attempt to kill IDE_HFLAG_CS5520. It cannot boot, oo.
-> > > 
-> > >   kill IDE_HFLAG_VDMA  : hang  
-> > >   kill IDE_HFLAG_CS5520: hang
-> > >   kill both flags      : boot
-> > 
-> > Thanks for investigating this - I forgot that currently VDMA and CS5520
-> > host flags use the same bit (so it also needs to be fixed).
-> > 
-> > I'm going to send the following patch to Linus (please verify it):
-> > 
-> > From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-> > Subject: [PATCH] cs5520: disable VDMA
-> 
-> [...]
-> 
-> Please also try 2.6.26-rc2 without the above patch but with the following
-> patch applied instead - according to comments in OpenFirmware & pata_cs5520
-> code 0x60 register contains bus-master enable bit, it could be that it was
-> left disabled by BIOS and we need to explicitely enable it (if somebody has
-> CX5510 or CX5520 datasheet please verify this + send me a copy if possible).
-> 
-> ---
->  drivers/ide/pci/cs5520.c |    8 ++++++++
->  1 file changed, 8 insertions(+)
-> 
-> Index: b/drivers/ide/pci/cs5520.c
-> ===================================================================
-> --- a/drivers/ide/pci/cs5520.c
-> +++ b/drivers/ide/pci/cs5520.c
-> @@ -147,6 +147,7 @@ static int __devinit cs5520_init_one(str
->  {
->  	const struct ide_port_info *d = &cyrix_chipsets[id->driver_data];
->  	u8 idx[4] = { 0xff, 0xff, 0xff, 0xff };
-> +	u8 pcicfg;
->  
->  	ide_setup_pci_noise(dev, d);
->  
-> @@ -163,6 +164,13 @@ static int __devinit cs5520_init_one(str
->  		return -ENODEV;
->  	}
->  
-> +	pci_read_config_byte(dev, 0x60, &pcicfg);
-> +
-> +	if ((pcicfg & 0x40) == 0) {
-> +		printk(KERN_WARNING "cs5520: DMA mode disabled. Enabling.\n");
-> +		pci_write_config_byte(dev, 0x60, pcicfg | 0x40);
-> +	}
-> +
->  	/*
->  	 *	Now the chipset is configured we can let the core
->  	 *	do all the device setup for us
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> Please read the FAQ at  http://www.tux.org/lkml/
+ATA drives are supposed to wake up from standby on command issue and
+from sleep on reset.  Does the drive spin up while sata_sil is trying
+to reset the port?  Also, please post the result of 'hdparm -I
+/dev/sdX' where sdX is the offending drive.
+
+Thanks.
+
+-- 
+tejun
