@@ -1,39 +1,35 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH #upstream-fixes] ata_piix: fix macbook ich8m problems
-Date: Fri, 30 May 2008 18:11:15 -0400
-Message-ID: <48407B83.90303@garzik.org>
-References: <483EA9D6.6040402@gmail.com>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: [PATCH] libata: fix libata-scsi kernel-doc notation
+Date: Fri, 30 May 2008 18:11:29 -0400
+Message-ID: <48407B91.9060906@pobox.com>
+References: <20080430125700.6d1d24b1.randy.dunlap@oracle.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:44919 "EHLO mail.dvmed.net"
+Received: from srv5.dvmed.net ([207.36.208.214]:44936 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751346AbYE3WLT (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 30 May 2008 18:11:19 -0400
-In-Reply-To: <483EA9D6.6040402@gmail.com>
+	id S1751521AbYE3WLb (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 30 May 2008 18:11:31 -0400
+In-Reply-To: <20080430125700.6d1d24b1.randy.dunlap@oracle.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: IDE/ATA development list <linux-ide@vger.kernel.org>, MATSUBAYASHI 'Shaolin' Kohji <shaolin@rhythmaning.org>
+To: Randy Dunlap <randy.dunlap@oracle.com>
+Cc: ide <linux-ide@vger.kernel.org>
 
-Tejun Heo wrote:
-> ICH8M on macbooks are peculiar in that some of them lock up when the
-> second port is enabled, some return bogus values on SIDPR access while
-> yet others hang on SIDPR access.  Also, the ich8m_apple_sata entry was
-> wrongly added below generic ich8m entry making it virtually useless.
+Randy Dunlap wrote:
+> From: Randy Dunlap <randy.dunlap@oracle.com>
 > 
-> This patch works around macbook ich8m problems by
+> Fix libata-scsi kernel-doc notation:
 > 
-> * moving ich8m_apple_sata entry above generic ich8m entry
-> * dropping PIIX_FLAG_SIDPR from ich8m_apple_sata
-> * adding subsystem 106b:00a1 as ich8m_apple_sata
+> Warning(linux-2.6.25-git15//drivers/ata/libata-scsi.c:1659): No description found for parameter 'cmd'
+> Warning(linux-2.6.25-git15//drivers/ata/libata-scsi.c:1971): No description found for parameter 'buf'
 > 
-> Reported and tested by MATSUBAYASHI.
-> 
-> Signed-off-by: Tejun Heo <htejun@gmail.com>
+> Signed-off-by: Randy Dunlap <randy.dunlap@oracle.com>
+> ---
+>  drivers/ata/libata-scsi.c |    3 ++-
+>  1 file changed, 2 insertions(+), 1 deletion(-)
 
 applied
-
 
 
