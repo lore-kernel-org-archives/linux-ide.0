@@ -1,71 +1,51 @@
-From: "Tuc at T-B-O-H.NET" <ml@t-b-o-h.net>
-Subject: Re: Correct partition table geometry?(Story included)
-Date: Sat, 31 May 2008 17:28:46 -0400 (EDT)
-Message-ID: <200805312128.m4VLSkwi047400@himinbjorg.tucs-beachin-obx-house.com>
-References: <484146EF.7090302@rtr.ca>
+From: Pavel Machek <pavel@ucw.cz>
+Subject: Re: [PATCH] ata: ahci: power off unused ports
+Date: Sat, 31 May 2008 10:00:15 +0200
+Message-ID: <20080531080015.GG5405@ucw.cz>
+References: <20080508161008.59361de5@appleyard> <20080527030854.GC7515@mit.edu> <20080527143202.4bab5bf0@appleyard> <20080527225926.GE6843@mit.edu> <20080527163251.04054a74@appleyard>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from vjofn.tucs-beachin-obx-house.com ([204.107.90.128]:2466 "EHLO
-	vjofn.tucs-beachin-obx-house.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751812AbYEaVbh (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 31 May 2008 17:31:37 -0400
-In-Reply-To: <484146EF.7090302@rtr.ca>
+Received: from gprs189-60.eurotel.cz ([160.218.189.60]:4364 "EHLO spitz.ucw.cz"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751602AbYFAOQu (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 1 Jun 2008 10:16:50 -0400
+Content-Disposition: inline
+In-Reply-To: <20080527163251.04054a74@appleyard>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark Lord <liml@rtr.ca>
-Cc: "Tuc at T-B-O-H.NET" <ml@t-b-o-h.net>, linux-ide@vger.kernel.org
+To: Kristen Carlson Accardi <kristen.c.accardi@intel.com>
+Cc: Theodore Tso <tytso@mit.edu>, jeff@garzik.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-> 
-> Tuc at T-B-O-H.NET wrote:
-> >
-> > Disk /dev/hdb: 500.1 GB, 500107862016 bytes
-> > 255 heads, 63 sectors/track, 60801 cylinders
-> > Units = cylinders of 16065 * 512 = 8225280 bytes
+Hi!
+
+> > > As far as I know the patch has gone nowhere.  I believe that 
+> > > Jeff wanted something more flexible than the module parameter that
+> > > I provided to override the BIOS options.  I am not working on this,
+> > > I figured he had a pretty firm idea what he wanted so he was better
+> > > equipped to write the patch.
 > > 
-> >    Device Boot      Start         End      Blocks   Id  System
-> > /dev/hda1   *           1         127     1020096   83  Linux
-> > /dev/hda2             128         185      465885   82  Linux swap
-> > /dev/hda3             186         312     1020127+  83  Linux
-> > /dev/hda4             313        9729    75642052+   5  Extended
-> > /dev/hda5             313         439     1020096   83  Linux
-> > /dev/hda6             440        1714    10241406   83  Linux
-> ..
+> > Thanks Kristen,
+> > 
+> > Can you say which laptops you had tested this on where it saved power?
+> > (Did you test any Thinkpads, in particular?)  I'm wondering if it's
+> > worth trying to forward port your patch as a private mod to my kernel;
+> > 30 to 40 minutes of extra battery life is nothing to sneeze at!
+> > 
+> > 						- Ted
+> > 
 > 
-> You could fire up fdisk, delete hda6, hda5, hda4,
-> then recreate hda4 extending over the entire free space,
-> then recreate hda5, hda6 *exactly* as before (above),
-> and then hda7 with the remaining free space.
-> And only *then* commit the changes to disk.
-> 
-> No need to reformat hda5,hda6 this way, their contents will
-> survive the repartitioning if they are recreated exactly
-> as before.
-> 
-> Done.  Entire disk now accessible.
-> 
-> But personally, I wouldn't do this.  I'd just create a new
-> partition scheme that makes more sense, and then file-copy
-> everything over from the old 80GB drive to the new scheme,
-> re-run grub-install on the new drive, and be done with it.
-> 
-Hi,
+> I tested this on an Intel mobile software development platform 
+> with a newer mobile ICH - the power savings were measured at the actual 
+> component (via probes on the ICH), so I did not measure the power 
+> savings at the wall socket, although I would expect the power savings
+> to be even greater on the other side of the power supply.  So in short,
+> yes, I think it's worth it to give it a try - the patch is pretty
+> unintrusive, so it should be that difficult a port to do.
 
-	Thanks for the reply. Yea, I thought later I could
-look at it just fdisking in memory. Turns out it did open up
-once I deleted the extended. I'm a bit leary about placing 
-the 5+6 back where they were. Since the disk partition table
-was DD'd, not fdisk'd, I'd be concerned the boundary would
-be the EXACT same place. I actually ended up deleting the
-whole table up until hdb1, and recreating swap down. mkswap
-and "mk2fs -t ext3" and copied everything over. 
+Can you repost the patch? I believe we should push it and only add
+complex enable/disable functionality if someone needs it...
 
-	In effect I pretty much did that, leaving only the
-hdb1 intact (And the partition table). I'm going to run
-some more copies and then we'll swap it over to the primary
-and go from there.
-
-	Thanks!
-
-		Tuc
+-- 
+(english) http://www.livejournal.com/~pavelmachek
+(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
