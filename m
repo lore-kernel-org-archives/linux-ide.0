@@ -1,53 +1,45 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: 2.6.24.X: SATA/AHCI related boot delay. - not with 2.6.24.3
-Date: Sat, 31 May 2008 09:49:09 +0900
-Message-ID: <4840A085.2080101@gmail.com>
-References: <200803091922.33083.volker.armin.hemmann@tu-clausthal.de> <200805291654.03617.volker.armin.hemmann@tu-clausthal.de> <483F804F.1@gmail.com> <200805301243.39751.volker.armin.hemmann@tu-clausthal.de>
+From: "Tuc at T-B-O-H.NET" <ml@t-b-o-h.net>
+Subject: Wasn't thinking (Was: Correct partition table geometry?)
+Date: Fri, 30 May 2008 22:57:17 -0400 (EDT)
+Message-ID: <200805310257.m4V2vHWP034806@himinbjorg.tucs-beachin-obx-house.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rv-out-0506.google.com ([209.85.198.235]:31782 "EHLO
-	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752219AbYEaAtQ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 30 May 2008 20:49:16 -0400
-Received: by rv-out-0506.google.com with SMTP id l9so99466rvb.1
-        for <linux-ide@vger.kernel.org>; Fri, 30 May 2008 17:49:15 -0700 (PDT)
-In-Reply-To: <200805301243.39751.volker.armin.hemmann@tu-clausthal.de>
+Received: from vjofn.tucs-beachin-obx-house.com ([204.107.90.128]:4255 "EHLO
+	vjofn.tucs-beachin-obx-house.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751165AbYEaC5e (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 30 May 2008 22:57:34 -0400
+Received: from himinbjorg.tucs-beachin-obx-house.com (cpe-24-161-6-139.hvc.res.rr.com [24.161.6.139])
+	(authenticated bits=0)
+	by vjofn.tucs-beachin-obx-house.com (8.14.2/8.14.2) with ESMTP id m4V2vNTP092646
+	for <linux-ide@vger.kernel.org>; Fri, 30 May 2008 22:57:33 -0400 (EDT)
+Received: from himinbjorg.tucs-beachin-obx-house.com (localhost.tucs-beachin-obx-house.com [127.0.0.1])
+	by himinbjorg.tucs-beachin-obx-house.com (8.13.8/8.13.6) with ESMTP id m4V2vHGL034807
+	for <linux-ide@vger.kernel.org>; Fri, 30 May 2008 22:57:18 -0400 (EDT)
+	(envelope-from ml@t-b-o-h.net)
+Received: (from tbohml@localhost)
+	by himinbjorg.tucs-beachin-obx-house.com (8.13.8/8.13.6/Submit) id m4V2vHWP034806
+	for linux-ide@vger.kernel.org; Fri, 30 May 2008 22:57:17 -0400 (EDT)
+	(envelope-from tbohml)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "Hemmann, Volker Armin" <volker.armin.hemmann@tu-clausthal.de>
-Cc: Peer Chen <pchen@nvidia.com>, Jeff Garzik <jeff@garzik.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Kuan Luo <kluo@nvidia.com>
+To: linux-ide@vger.kernel.org
 
-Hemmann, Volker Armin wrote:
-> On Freitag, 30. Mai 2008, Tejun Heo wrote:
->> Hello,
->>
->> Hemmann, Volker Armin wrote:
->>> -AHCI+nomsi: boots fine. Works fine. But: I still can not enable ncq
->>> -AHCI+msi: the usual. No harddisks found, waiting for the timeouts, then
->>> kernel panic because of missing root.
->>>
->>> -NON-RAID/IDE+msi: works fine. No delays. No NCQ (not surprising since
->>> mobos handbook says that AHCI mode is required).
->>> -NON-RAID/IDE+nomsi: see above.
->> So, sans NCQ, the only remaining issue is MSI, right?  Peer Chen, please
->> lemme know which controllers are affected by this MSI problem and where
->> the problem lies.
-> 
-> this is correct.
-> 
->> The controller is not reporting NCQ capability in its cap register
->> (flags: line contains ncq if the controller is), so NCQ is not enabled.
-> 
-> ah, I thought all AHCI chipsets support NCQ (and the board's handbook lists it 
-> as feature) thanks for the explanation.
+Hi,
 
-It could be that the controller has ahci support but it just forgets to
-set the corresponding cap bit.  Peer Chen, Kuan Luo, can you guys please
-comment on the 64bit and ncq problems?
+	Ok, scratch 90% of that, I'm a bit tired . Realized I could make 
+the edits in memory and see if things "adjusted". They do. So its really
+not bad. I'll probably just delete the partitions in the extended and
+re-create them. I think at that point I can do what I want. 
 
-Thanks.
+	I guess I could still use :
 
--- 
-tejun
+	* Standard mk2fs line options
+	* Just as an FYI when we swap the 500 to primary, and put ANOTHER
+500 in as a backup.... How to install grub to be bootable on a disk
+(But I'm sure I could visit the grub site to find that out.... :) )
+
+	Sorry for the previous ramble. This time *I* wasn't thinking.
+
+			Tuc
