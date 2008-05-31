@@ -1,50 +1,71 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH] ide-generic: add missing hwif->chipset setup
-Date: Sat, 31 May 2008 15:43:30 +0200
-Message-ID: <200805311543.30501.bzolnier@gmail.com>
+From: Mark Lord <liml@rtr.ca>
+Subject: [PATCH 01/01] sata_mv: PHY_MODE4 cleanups
+Date: Sat, 31 May 2008 16:46:34 -0400
+Message-ID: <4841B92A.1050508@rtr.ca>
+References: <483C8328.1030807@rtr.ca> <483C838F.9060208@rtr.ca> <48407B79.4090303@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mu-out-0910.google.com ([209.85.134.189]:63261 "EHLO
-	mu-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752513AbYEaNtE (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 31 May 2008 09:49:04 -0400
-Received: by mu-out-0910.google.com with SMTP id w8so511644mue.1
-        for <linux-ide@vger.kernel.org>; Sat, 31 May 2008 06:49:01 -0700 (PDT)
-Content-Disposition: inline
+Received: from rtr.ca ([76.10.145.34]:2899 "EHLO mail.rtr.ca"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753534AbYEaUqg (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 31 May 2008 16:46:36 -0400
+In-Reply-To: <48407B79.4090303@pobox.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-kernel@vger.kernel.org
-Cc: linux-ide@vger.kernel.org, John Keller <jpk@sgi.com>, Dmitri Vorobiev <dmitri.vorobiev@gmail.com>, Mel Gorman <mel@csn.ul.ie>
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: IDE/ATA development list <linux-ide@vger.kernel.org>
 
-hwif->chipset need to be set properly or ide-generic driver will break once
-we make a final step in fixing host drivers' dependence on ide_hwifs[].
+The handling for PHY_MODE4 was originally just cloned from the
+Marvell proprietary driver (with their blessing).
+But we can do better than that.
 
-Problem was catched early thanks to IDE tree exposure in -mm / -next trees
-and reported by people listed people (thank you guys!).
+Tidy things up with some judicious mask definitions, to improve maintainability.
 
-Reported-by: "John Keller" <jpk@sgi.com>
-Reported-by: Dmitri Vorobiev <dmitri.vorobiev@gmail.com>
-Reported-by: Mel Gorman <mel@csn.ul.ie>
-Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Signed-off-by: Mark Lord <mlord@pobox.com>
 ---
-With this patch applied we can bring "ide: fix hwif-s initialization"
-and "ide: make ide_hwifs[] static" patches back into IDE tree! :)
 
- drivers/ide/ide-generic.c |    1 +
- 1 file changed, 1 insertion(+)
+As requested..
 
-Index: b/drivers/ide/ide-generic.c
-===================================================================
---- a/drivers/ide/ide-generic.c
-+++ b/drivers/ide/ide-generic.c
-@@ -125,6 +125,7 @@ static int __init ide_generic_init(void)
- 			memset(&hw, 0, sizeof(hw));
- 			ide_std_init_ports(&hw, io_addr, io_addr + 0x206);
- 			hw.irq = ide_default_irq(io_addr);
-+			hw.chipset = ide_generic;
- 			ide_init_port_hw(hwif, &hw);
+--- old/drivers/ata/sata_mv.c	2008-05-28 12:20:05.000000000 -0400
++++ linux/drivers/ata/sata_mv.c	2008-05-30 19:36:52.000000000 -0400
+@@ -224,6 +224,11 @@
  
- 			idx[i] = i;
+ 	PHY_MODE3		= 0x310,
+ 	PHY_MODE4		= 0x314,
++	PHY_MODE4_CFG_MASK	= 0x00000003,	/* phy internal config field */
++	PHY_MODE4_CFG_VALUE	= 0x00000001,	/* phy internal config field */
++	PHY_MODE4_RSVD_ZEROS	= 0x5de3fffa,	/* Gen2e always write zeros */
++	PHY_MODE4_RSVD_ONES	= 0x00000005,	/* Gen2e always write ones */
++
+ 	PHY_MODE2		= 0x330,
+ 	SATA_IFCTL_OFS		= 0x344,
+ 	SATA_TESTCTL_OFS	= 0x348,
+@@ -2563,17 +2568,16 @@
+ 		m3 &= ~0x1c;
+ 
+ 	if (fix_phy_mode4) {
+-		u32 m4;
+-
+-		m4 = readl(port_mmio + PHY_MODE4);
+-
+-		/* workaround for errata FEr SATA#10 (part 1) */
+-		m4 = (m4 & ~(1 << 1)) | (1 << 0);
+-
+-		/* enforce bit restrictions on GenIIe devices */
++		u32 m4 = readl(port_mmio + PHY_MODE4);
++		/*
++		 * Enforce reserved-bit restrictions on GenIIe devices only.
++		 * For earlier chipsets, force only the internal config field
++		 *  (workaround for errata FEr SATA#10 part 1).
++		 */
+ 		if (IS_GEN_IIE(hpriv))
+-			m4 = (m4 & ~0x5DE3FFFC) | (1 << 2);
+-
++			m4 = (m4 & ~PHY_MODE4_RSVD_ZEROS) | PHY_MODE4_RSVD_ONES;
++		else
++			m4 = (m4 & ~PHY_MODE4_CFG_MASK) | PHY_MODE4_CFG_VALUE;
+ 		writel(m4, port_mmio + PHY_MODE4);
+ 	}
+ 	/*
