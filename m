@@ -1,53 +1,50 @@
-From: Mark Lord <liml@rtr.ca>
-Subject: Re: Correct partition table geometry?(Story included)
-Date: Sat, 31 May 2008 08:39:11 -0400
-Message-ID: <484146EF.7090302@rtr.ca>
-References: <200805310238.m4V2chKZ034543@himinbjorg.tucs-beachin-obx-house.com>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: [PATCH] ide-generic: add missing hwif->chipset setup
+Date: Sat, 31 May 2008 15:43:30 +0200
+Message-ID: <200805311543.30501.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([76.10.145.34]:4160 "EHLO mail.rtr.ca"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750867AbYEaMjO (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 31 May 2008 08:39:14 -0400
-In-Reply-To: <200805310238.m4V2chKZ034543@himinbjorg.tucs-beachin-obx-house.com>
+Received: from mu-out-0910.google.com ([209.85.134.189]:63261 "EHLO
+	mu-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752513AbYEaNtE (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 31 May 2008 09:49:04 -0400
+Received: by mu-out-0910.google.com with SMTP id w8so511644mue.1
+        for <linux-ide@vger.kernel.org>; Sat, 31 May 2008 06:49:01 -0700 (PDT)
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "Tuc at T-B-O-H.NET" <ml@t-b-o-h.net>
-Cc: linux-ide@vger.kernel.org
+To: linux-kernel@vger.kernel.org
+Cc: linux-ide@vger.kernel.org, John Keller <jpk@sgi.com>, Dmitri Vorobiev <dmitri.vorobiev@gmail.com>, Mel Gorman <mel@csn.ul.ie>
 
-Tuc at T-B-O-H.NET wrote:
->
-> Disk /dev/hdb: 500.1 GB, 500107862016 bytes
-> 255 heads, 63 sectors/track, 60801 cylinders
-> Units = cylinders of 16065 * 512 = 8225280 bytes
-> 
->    Device Boot      Start         End      Blocks   Id  System
-> /dev/hda1   *           1         127     1020096   83  Linux
-> /dev/hda2             128         185      465885   82  Linux swap
-> /dev/hda3             186         312     1020127+  83  Linux
-> /dev/hda4             313        9729    75642052+   5  Extended
-> /dev/hda5             313         439     1020096   83  Linux
-> /dev/hda6             440        1714    10241406   83  Linux
-..
+hwif->chipset need to be set properly or ide-generic driver will break once
+we make a final step in fixing host drivers' dependence on ide_hwifs[].
 
-You could fire up fdisk, delete hda6, hda5, hda4,
-then recreate hda4 extending over the entire free space,
-then recreate hda5, hda6 *exactly* as before (above),
-and then hda7 with the remaining free space.
-And only *then* commit the changes to disk.
+Problem was catched early thanks to IDE tree exposure in -mm / -next trees
+and reported by people listed people (thank you guys!).
 
-No need to reformat hda5,hda6 this way, their contents will
-survive the repartitioning if they are recreated exactly
-as before.
+Reported-by: "John Keller" <jpk@sgi.com>
+Reported-by: Dmitri Vorobiev <dmitri.vorobiev@gmail.com>
+Reported-by: Mel Gorman <mel@csn.ul.ie>
+Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+---
+With this patch applied we can bring "ide: fix hwif-s initialization"
+and "ide: make ide_hwifs[] static" patches back into IDE tree! :)
 
-Done.  Entire disk now accessible.
+ drivers/ide/ide-generic.c |    1 +
+ 1 file changed, 1 insertion(+)
 
-But personally, I wouldn't do this.  I'd just create a new
-partition scheme that makes more sense, and then file-copy
-everything over from the old 80GB drive to the new scheme,
-re-run grub-install on the new drive, and be done with it.
-
-Cheers
-
+Index: b/drivers/ide/ide-generic.c
+===================================================================
+--- a/drivers/ide/ide-generic.c
++++ b/drivers/ide/ide-generic.c
+@@ -125,6 +125,7 @@ static int __init ide_generic_init(void)
+ 			memset(&hw, 0, sizeof(hw));
+ 			ide_std_init_ports(&hw, io_addr, io_addr + 0x206);
+ 			hw.irq = ide_default_irq(io_addr);
++			hw.chipset = ide_generic;
+ 			ide_init_port_hw(hwif, &hw);
+ 
+ 			idx[i] = i;
