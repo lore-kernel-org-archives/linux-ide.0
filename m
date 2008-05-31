@@ -1,71 +1,71 @@
-From: Mark Lord <liml@rtr.ca>
-Subject: [PATCH 01/01] sata_mv: PHY_MODE4 cleanups
-Date: Sat, 31 May 2008 16:46:34 -0400
-Message-ID: <4841B92A.1050508@rtr.ca>
-References: <483C8328.1030807@rtr.ca> <483C838F.9060208@rtr.ca> <48407B79.4090303@pobox.com>
+From: "Tuc at T-B-O-H.NET" <ml@t-b-o-h.net>
+Subject: Re: Correct partition table geometry?(Story included)
+Date: Sat, 31 May 2008 17:28:46 -0400 (EDT)
+Message-ID: <200805312128.m4VLSkwi047400@himinbjorg.tucs-beachin-obx-house.com>
+References: <484146EF.7090302@rtr.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([76.10.145.34]:2899 "EHLO mail.rtr.ca"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753534AbYEaUqg (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 31 May 2008 16:46:36 -0400
-In-Reply-To: <48407B79.4090303@pobox.com>
+Received: from vjofn.tucs-beachin-obx-house.com ([204.107.90.128]:2466 "EHLO
+	vjofn.tucs-beachin-obx-house.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751812AbYEaVbh (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 31 May 2008 17:31:37 -0400
+In-Reply-To: <484146EF.7090302@rtr.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: IDE/ATA development list <linux-ide@vger.kernel.org>
+To: Mark Lord <liml@rtr.ca>
+Cc: "Tuc at T-B-O-H.NET" <ml@t-b-o-h.net>, linux-ide@vger.kernel.org
 
-The handling for PHY_MODE4 was originally just cloned from the
-Marvell proprietary driver (with their blessing).
-But we can do better than that.
+> 
+> Tuc at T-B-O-H.NET wrote:
+> >
+> > Disk /dev/hdb: 500.1 GB, 500107862016 bytes
+> > 255 heads, 63 sectors/track, 60801 cylinders
+> > Units = cylinders of 16065 * 512 = 8225280 bytes
+> > 
+> >    Device Boot      Start         End      Blocks   Id  System
+> > /dev/hda1   *           1         127     1020096   83  Linux
+> > /dev/hda2             128         185      465885   82  Linux swap
+> > /dev/hda3             186         312     1020127+  83  Linux
+> > /dev/hda4             313        9729    75642052+   5  Extended
+> > /dev/hda5             313         439     1020096   83  Linux
+> > /dev/hda6             440        1714    10241406   83  Linux
+> ..
+> 
+> You could fire up fdisk, delete hda6, hda5, hda4,
+> then recreate hda4 extending over the entire free space,
+> then recreate hda5, hda6 *exactly* as before (above),
+> and then hda7 with the remaining free space.
+> And only *then* commit the changes to disk.
+> 
+> No need to reformat hda5,hda6 this way, their contents will
+> survive the repartitioning if they are recreated exactly
+> as before.
+> 
+> Done.  Entire disk now accessible.
+> 
+> But personally, I wouldn't do this.  I'd just create a new
+> partition scheme that makes more sense, and then file-copy
+> everything over from the old 80GB drive to the new scheme,
+> re-run grub-install on the new drive, and be done with it.
+> 
+Hi,
 
-Tidy things up with some judicious mask definitions, to improve maintainability.
+	Thanks for the reply. Yea, I thought later I could
+look at it just fdisking in memory. Turns out it did open up
+once I deleted the extended. I'm a bit leary about placing 
+the 5+6 back where they were. Since the disk partition table
+was DD'd, not fdisk'd, I'd be concerned the boundary would
+be the EXACT same place. I actually ended up deleting the
+whole table up until hdb1, and recreating swap down. mkswap
+and "mk2fs -t ext3" and copied everything over. 
 
-Signed-off-by: Mark Lord <mlord@pobox.com>
----
+	In effect I pretty much did that, leaving only the
+hdb1 intact (And the partition table). I'm going to run
+some more copies and then we'll swap it over to the primary
+and go from there.
 
-As requested..
+	Thanks!
 
---- old/drivers/ata/sata_mv.c	2008-05-28 12:20:05.000000000 -0400
-+++ linux/drivers/ata/sata_mv.c	2008-05-30 19:36:52.000000000 -0400
-@@ -224,6 +224,11 @@
- 
- 	PHY_MODE3		= 0x310,
- 	PHY_MODE4		= 0x314,
-+	PHY_MODE4_CFG_MASK	= 0x00000003,	/* phy internal config field */
-+	PHY_MODE4_CFG_VALUE	= 0x00000001,	/* phy internal config field */
-+	PHY_MODE4_RSVD_ZEROS	= 0x5de3fffa,	/* Gen2e always write zeros */
-+	PHY_MODE4_RSVD_ONES	= 0x00000005,	/* Gen2e always write ones */
-+
- 	PHY_MODE2		= 0x330,
- 	SATA_IFCTL_OFS		= 0x344,
- 	SATA_TESTCTL_OFS	= 0x348,
-@@ -2563,17 +2568,16 @@
- 		m3 &= ~0x1c;
- 
- 	if (fix_phy_mode4) {
--		u32 m4;
--
--		m4 = readl(port_mmio + PHY_MODE4);
--
--		/* workaround for errata FEr SATA#10 (part 1) */
--		m4 = (m4 & ~(1 << 1)) | (1 << 0);
--
--		/* enforce bit restrictions on GenIIe devices */
-+		u32 m4 = readl(port_mmio + PHY_MODE4);
-+		/*
-+		 * Enforce reserved-bit restrictions on GenIIe devices only.
-+		 * For earlier chipsets, force only the internal config field
-+		 *  (workaround for errata FEr SATA#10 part 1).
-+		 */
- 		if (IS_GEN_IIE(hpriv))
--			m4 = (m4 & ~0x5DE3FFFC) | (1 << 2);
--
-+			m4 = (m4 & ~PHY_MODE4_RSVD_ZEROS) | PHY_MODE4_RSVD_ONES;
-+		else
-+			m4 = (m4 & ~PHY_MODE4_CFG_MASK) | PHY_MODE4_CFG_VALUE;
- 		writel(m4, port_mmio + PHY_MODE4);
- 	}
- 	/*
+		Tuc
