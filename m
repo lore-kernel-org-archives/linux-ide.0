@@ -1,65 +1,57 @@
-From: Holger Macht <hmacht@suse.de>
-Subject: Re: [PATCH] libata: Handle bay devices in dock stations
-Date: Sun, 1 Jun 2008 18:06:31 +0200
-Message-ID: <20080601160631.GB4599@homac>
-References: <20080528143857.GB5585@homac.suse.de> <20080530130739.25bz9mdjwwo080cw@dbservice.com>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [PATCH] ata: ahci: power off unused ports
+Date: Sun, 01 Jun 2008 15:16:56 -0400
+Message-ID: <4842F5A8.9020708@garzik.org>
+References: <20080508161008.59361de5@appleyard> <20080527030854.GC7515@mit.edu> <20080527143202.4bab5bf0@appleyard> <20080527225926.GE6843@mit.edu> <20080527163251.04054a74@appleyard> <20080531080015.GG5405@ucw.cz>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ns.suse.de ([195.135.220.2]:33237 "EHLO mx1.suse.de"
+Received: from srv5.dvmed.net ([207.36.208.214]:38518 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752788AbYFAQDd (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 1 Jun 2008 12:03:33 -0400
-Content-Disposition: inline
-In-Reply-To: <20080530130739.25bz9mdjwwo080cw@dbservice.com>
+	id S1751294AbYFATRX (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 1 Jun 2008 15:17:23 -0400
+In-Reply-To: <20080531080015.GG5405@ucw.cz>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: tom@dbservice.com
-Cc: linux-kernel@vger.kernel.org, Tejun Heo <htejun@gmail.com>, linux-ide@vger.kernel.org, Jeff Garzik <jeff@garzik.org>, linux-acpi@vger.kernel.org, Matthew Garrett <mjg59@srcf.ucam.org>, akpm@linux-foundation.org
+To: Pavel Machek <pavel@ucw.cz>
+Cc: Kristen Carlson Accardi <kristen.c.accardi@intel.com>, Theodore Tso <tytso@mit.edu>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Fri 30. May - 13:07:39, tom@dbservice.com wrote:
-> Quoting Holger Macht <hmacht@suse.de>:
->
->> * Differentiate between bay devices in dock stations and others:
->>
->>  - When an ACPI_NOTIFY_EJECT_REQUEST appears, just signal uevent to
->>    userspace (that is when the optional eject button on a bay device is
->>    pressed/pulled) giving the possibility to unmount file systems and to
->>    clean up. Also, only send uevent in case we get an EJECT_REQUEST
->>    without doing anything else. In other cases, you'll get an add/remove
->>    event because libata attaches/detaches the device.
->>
->>  - In case of a dock event, which in turn signals an
->>    ACPI_NOTIFY_EJECT_REQUEST, immediately detach the device, because it
->>    may already have been gone
->>
->> * In case of an ACPI_NOTIFY_DEVICE/BUS_CHECK, evaluate _STA to check if
->>   the device has been plugged or unplugged. If plugged, hotplug it, if
->>   unplugged, just signal event to userspace
->>   (initial patch by Matthew Garrett <mjg59@srcf.ucam.org>)
->>
->> * Call ACPI _EJ0 for detached devices
->
-> Will this patch or the other bay/dock related patches you send in the past 
-> days allow me to undock my laptop and still be able to suspend/resume 
-> without locking the laptop up? And without having to run any userspace 
-> scripts?
->
-> My dock is not a simple port replicator, it has an USB hub and an ATA bay 
-> in it. My tests showed that I need to 'echo 1 > /sys/.../scsi/.../eject' or 
-> something like that before I can take the laptop out of the docking 
-> station. If I don't do that and try to access the cdrom in the bay (or even 
-> rescaning the scsi bus) after I have taken the laptop out of the dock it 
-> results in a hard lockup. That in itself would not be a problem, because 
-> it's just a simple command that I can do in an acpid script. But far worse 
-> is that even if I do that, the computer locks up when I resume from 
-> suspend. I run 2.6.24.7 which locks up every time I resume. In recent 
-> versions from git it has somehow improved, there are situations where it 
-> doesn't lock up, but there are still a few left where it does (I don't 
-> remember the exact actions/commands I have to take).
+Pavel Machek wrote:
+> Hi!
+> 
+>>>> As far as I know the patch has gone nowhere.  I believe that 
+>>>> Jeff wanted something more flexible than the module parameter that
+>>>> I provided to override the BIOS options.  I am not working on this,
+>>>> I figured he had a pretty firm idea what he wanted so he was better
+>>>> equipped to write the patch.
+>>> Thanks Kristen,
+>>>
+>>> Can you say which laptops you had tested this on where it saved power?
+>>> (Did you test any Thinkpads, in particular?)  I'm wondering if it's
+>>> worth trying to forward port your patch as a private mod to my kernel;
+>>> 30 to 40 minutes of extra battery life is nothing to sneeze at!
+>>>
+>>> 						- Ted
+>>>
+>> I tested this on an Intel mobile software development platform 
+>> with a newer mobile ICH - the power savings were measured at the actual 
+>> component (via probes on the ICH), so I did not measure the power 
+>> savings at the wall socket, although I would expect the power savings
+>> to be even greater on the other side of the power supply.  So in short,
+>> yes, I think it's worth it to give it a try - the patch is pretty
+>> unintrusive, so it should be that difficult a port to do.
+> 
+> Can you repost the patch? I believe we should push it and only add
+> complex enable/disable functionality if someone needs it...
 
-Which kernel versions did you already try? But yes, those patches will
-most likely help. But not sure about the resume issues...
+If you are talking about SATA -- incorrect.
 
-Regards,
-	Holger
+The patch deals with policy, and the user MUST have the ability to 
+control this stuff.  Otherwise you create a situation where the user 
+might be denied hotplug use in valid cases, or similar negative situations.
+
+	Jeff
+
+
+
