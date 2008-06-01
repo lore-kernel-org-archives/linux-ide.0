@@ -1,57 +1,52 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH] ata: ahci: power off unused ports
-Date: Sun, 01 Jun 2008 15:16:56 -0400
-Message-ID: <4842F5A8.9020708@garzik.org>
-References: <20080508161008.59361de5@appleyard> <20080527030854.GC7515@mit.edu> <20080527143202.4bab5bf0@appleyard> <20080527225926.GE6843@mit.edu> <20080527163251.04054a74@appleyard> <20080531080015.GG5405@ucw.cz>
+From: "Peter Teoh" <htmldeveloper@gmail.com>
+Subject: Why my USB disk drive is mounted "WriteProtect is on"?
+Date: Mon, 2 Jun 2008 05:34:30 +0800
+Message-ID: <804dabb00806011434n47101206t40f50e2398e7a0c8@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:38518 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751294AbYFATRX (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 1 Jun 2008 15:17:23 -0400
-In-Reply-To: <20080531080015.GG5405@ucw.cz>
+Received: from an-out-0708.google.com ([209.85.132.245]:34635 "EHLO
+	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752211AbYFAVee (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 1 Jun 2008 17:34:34 -0400
+Received: by an-out-0708.google.com with SMTP id d40so227197and.103
+        for <linux-ide@vger.kernel.org>; Sun, 01 Jun 2008 14:34:30 -0700 (PDT)
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Pavel Machek <pavel@ucw.cz>
-Cc: Kristen Carlson Accardi <kristen.c.accardi@intel.com>, Theodore Tso <tytso@mit.edu>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: linux-fsdevel@vger.kernel.org, Linux Driver Developers <devel@linuxdriverproject.org>, linux-ide@vger.kernel.org
 
-Pavel Machek wrote:
-> Hi!
-> 
->>>> As far as I know the patch has gone nowhere.  I believe that 
->>>> Jeff wanted something more flexible than the module parameter that
->>>> I provided to override the BIOS options.  I am not working on this,
->>>> I figured he had a pretty firm idea what he wanted so he was better
->>>> equipped to write the patch.
->>> Thanks Kristen,
->>>
->>> Can you say which laptops you had tested this on where it saved power?
->>> (Did you test any Thinkpads, in particular?)  I'm wondering if it's
->>> worth trying to forward port your patch as a private mod to my kernel;
->>> 30 to 40 minutes of extra battery life is nothing to sneeze at!
->>>
->>> 						- Ted
->>>
->> I tested this on an Intel mobile software development platform 
->> with a newer mobile ICH - the power savings were measured at the actual 
->> component (via probes on the ICH), so I did not measure the power 
->> savings at the wall socket, although I would expect the power savings
->> to be even greater on the other side of the power supply.  So in short,
->> yes, I think it's worth it to give it a try - the patch is pretty
->> unintrusive, so it should be that difficult a port to do.
-> 
-> Can you repost the patch? I believe we should push it and only add
-> complex enable/disable functionality if someone needs it...
+Got no reply from linux-usb.   So trying here.   In the past I was
+able to mount it as "WriteProtect is off"....but one day....suddenly
+it became "on" on two of my machine, but the others like 3 still
+"off".   So right now the status is as follows:
 
-If you are talking about SATA -- incorrect.
+usb-storage: waiting for device to settle before scanning
+usbcore: registered new interface driver usb-storage
+USB Mass Storage support registered.
+scsi 6:0:0:0: Direct-Access     WD       1600BEAExternal  1.02 PQ: 0 ANSI: 0
+sd 6:0:0:0: [sdc] 312581808 512-byte hardware sectors (160042 MB)
+sd 6:0:0:0: [sdc] Write Protect is on
+sd 6:0:0:0: [sdc] Mode Sense: 12 a1 9e af
+sd 6:0:0:0: [sdc] Assuming drive cache: write through
+sd 6:0:0:0: [sdc] 312581808 512-byte hardware sectors (160042 MB)
+sd 6:0:0:0: [sdc] Write Protect is on
+sd 6:0:0:0: [sdc] Mode Sense: 12 a1 9e af
+sd 6:0:0:0: [sdc] Assuming drive cache: write through
+ sdc: sdc1 sdc2 sdc3 < sdc5 > sdc4
+sd 6:0:0:0: [sdc] Attached SCSI disk
+sd 6:0:0:0: Attached scsi generic sg2 type 0
+usb-storage: device scan complete
 
-The patch deals with policy, and the user MUST have the ability to 
-control this stuff.  Otherwise you create a situation where the user 
-might be denied hotplug use in valid cases, or similar negative situations.
+But when u plug out and insert into another machine, it may be
+detected as "off", why?
 
-	Jeff
+With this writeprotect on, there is no way i can mount it for writing.
+  Appreciate your answer very much.
 
+THanks.
 
-
+-- 
+Regards,
+Peter Teoh
