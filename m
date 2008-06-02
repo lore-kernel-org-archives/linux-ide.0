@@ -1,60 +1,144 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH 1/1] ipr: Fix HDIO_GET_IDENTITY oops for SATA devices
-Date: Mon, 02 Jun 2008 14:39:12 -0500
-Message-ID: <1212435552.3369.62.camel@localhost.localdomain>
-References: <12124164141515-patch-mail.ibm.com>
-	 <48441AEE.6050605@garzik.org> <48441F82.6060706@linux.vnet.ibm.com>
-	 <1212425124.3369.20.camel@localhost.localdomain>
-	 <4844312C.7010403@garzik.org>
-	 <1212429428.3369.45.camel@localhost.localdomain>
-	 <484437C3.8020306@garzik.org> <48444126.8050107@linux.vnet.ibm.com>
-	 <484441E6.8020501@garzik.org>
+From: Matthew Garrett <mjg@redhat.com>
+Subject: Re: [PATCH] ata: ahci: power off unused ports
+Date: Mon, 2 Jun 2008 21:00:53 +0100
+Message-ID: <20080602200053.GA17698@srcf.ucam.org>
+References: <4843A4A7.3020809@garzik.org> <4843EF88.2040606@rtr.ca> <48441AA6.8080704@garzik.org> <20080602100019.3d2d2522@appleyard> <484431AB.7010005@garzik.org> <20080602104753.3f24087d@appleyard> <484438BF.7070303@garzik.org> <20080602111644.54738d57@appleyard> <48443C3C.3010401@redhat.com> <48443EB3.8020303@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <484441E6.8020501@garzik.org>
-Sender: linux-scsi-owner@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: brking@linux.vnet.ibm.com, Tejun Heo <htejun@gmail.com>, linux-scsi@vger.kernel.org, thlin@linux.vnet.ibm.com, linux-ide@vger.kernel.org, miltonm@bga.com
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from cavan.codon.org.uk ([93.93.128.6]:55543 "EHLO
+	vavatch.codon.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754024AbYFBUBp (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 2 Jun 2008 16:01:45 -0400
+Content-Disposition: inline
+In-Reply-To: <48443EB3.8020303@garzik.org>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: rwheeler@redhat.com, kristen.c.accardi@intel.com, Mark Lord <liml@rtr.ca>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Pavel Machek <pavel@ucw.cz>, Theodore Tso <tytso@mit.edu>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Mon, 2008-06-02 at 14:54 -0400, Jeff Garzik wrote:
-> Brian King wrote:
-> > One thing that having a per-port SCSI host buys us is that it isolates
-> > EH to the port rather than the entire SCSI host. The way that the new
-> > libata EH is designed, it can end up spending a fair amount of time
-> > in EH and may even sleep for seconds at a time, waiting for the device
-> > to come ready. Quiescing all devices on a SAS host due to a single
-> > SATA device gets *very* painful. The new libata EH does much more than
-> > just EH. It wakes up for every ATAPI check condition...
-> > 
-> > Before we can move to a single SCSI host model, we will
-> > have to make some changes regarding how EH is done in libata...
-> 
-> 
-> Good points.  There definitely needs to be a discussion about how to 
-> integrate libata EH with libsas model and ipr model (which are distinct, 
-> if similar).
+On Mon, Jun 02, 2008 at 02:40:51PM -0400, Jeff Garzik wrote:
 
-Actually, libsas completely hijacks the strategy handler (as I believe
-libata does), so it really no longer has a host dependency, except for
-the one thread per host thing.  Most of what it does (unless it thinks
-the actual host chip is wedged) is port (as in SAS port, not phy) based,
-so I think we have the capability for doing this already.
+> A better patch would enable the _possibility_ of power savings on 
+> non-AHCI chips, and not add a one-off AHCI-specific user interface that 
+> must be supported for years to come.
 
-> libata EH was coded to largely be "in the driver's seat", which isn't 
-> true in a world where it is a peer to SAS devices.  Also libata EH 
-> duplicates some of the link EH stuff that SAS deals with, and must 
-> subsume (since libsas knows about both SAS and SATA phys, and an ideal 
-> world doesn't have the two as separate as they are now).
+So how about somethig like the following, where the module parameter 
+just gets moved to libata rather than ahci? Entirely untested, I don't 
+have ahci on this machine.
 
-Yes ... there's even nastier scenarios.  If we're in a STP (SATA Tunnel
-Protocol) situation, the device at the end is SATA, but the pathway to
-get to it through the port is SAS via expanders.  In that situation the
-two have to co-operate on the recovery ... of course, this isn't
-incredibly dissimilar from port multipliers now.
+diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+index 97f83fb..5913ebb 100644
+--- a/drivers/ata/ahci.c
++++ b/drivers/ata/ahci.c
+@@ -56,6 +56,7 @@ MODULE_PARM_DESC(skip_host_reset, "skip global host reset (0=don't skip, 1=skip)
+ static int ahci_enable_alpm(struct ata_port *ap,
+ 		enum link_pm policy);
+ static void ahci_disable_alpm(struct ata_port *ap);
++static int ahci_is_hotplug_capable(struct ata_port *ap);
+ 
+ enum {
+ 	AHCI_PCI_BAR		= 5,
+@@ -166,6 +167,8 @@ enum {
+ 	PORT_CMD_ASP		= (1 << 27), /* Aggressive Slumber/Partial */
+ 	PORT_CMD_ALPE		= (1 << 26), /* Aggressive Link PM enable */
+ 	PORT_CMD_ATAPI		= (1 << 24), /* Device is ATAPI */
++	PORT_CMD_ESP		= (1 << 21), /* External SATA Port */
++	PORT_CMD_HPCP		= (1 << 18), /* port is hot plug capable */
+ 	PORT_CMD_PMP		= (1 << 17), /* PMP attached */
+ 	PORT_CMD_LIST_ON	= (1 << 15), /* cmd list DMA engine running */
+ 	PORT_CMD_FIS_ON		= (1 << 14), /* FIS DMA engine running */
+@@ -1900,6 +1903,15 @@ static int ahci_pci_device_resume(struct pci_dev *pdev)
+ }
+ #endif
+ 
++static int ahci_is_hotplug_capable(struct ata_port *ap)
++{
++	void __iomem *port_mmio = ahci_port_base(ap);
++	u8 cmd;
++
++	cmd = readl(port_mmio + PORT_CMD);
++	return ((cmd & PORT_CMD_HPCP) || (cmd & PORT_CMD_ESP));
++}
++
+ static int ahci_port_start(struct ata_port *ap)
+ {
+ 	struct device *dev = ap->host->dev;
+@@ -1951,6 +1963,9 @@ static int ahci_port_start(struct ata_port *ap)
+ 
+ 	ap->private_data = pp;
+ 
++	/* set some flags based on port capabilities */
++	if (!ahci_is_hotplug_capable(ap))
++		ap->flags |= ATA_FLAG_NO_HOTPLUG;
+ 	/* engage engines, captain */
+ 	return ahci_port_resume(ap);
+ }
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index 3c89f20..209efe5 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -157,11 +157,28 @@ int libata_allow_tpm = 0;
+ module_param_named(allow_tpm, libata_allow_tpm, int, 0444);
+ MODULE_PARM_DESC(allow_tpm, "Permit the use of TPM commands");
+ 
++static int sata_power_save = 1;
++module_param_named(sata_power_save, sata_power_save, int, 0644);
++MODULE_PARM_DESC(sata_power_save, "Power off unused ports (0=don't power off, 1=power off)");
++
+ MODULE_AUTHOR("Jeff Garzik");
+ MODULE_DESCRIPTION("Library module for ATA devices");
+ MODULE_LICENSE("GPL");
+ MODULE_VERSION(DRV_VERSION);
+ 
++static void ata_phy_offline(struct ata_link *link)
++{
++	u32 scontrol;
++	int rc;
++
++	/* set DET to 4 */
++	rc = sata_scr_read(link, SCR_CONTROL, &scontrol);
++	if (rc)
++		return;
++	scontrol &= ~0xf;
++	scontrol |= (1 << 2);
++	sata_scr_write(link, SCR_CONTROL, scontrol);
++}
+ 
+ /**
+  *	ata_force_cbl - force cable type according to libata.force
+@@ -2678,6 +2695,7 @@ void ata_port_disable(struct ata_port *ap)
+ 	ap->link.device[0].class = ATA_DEV_NONE;
+ 	ap->link.device[1].class = ATA_DEV_NONE;
+ 	ap->flags |= ATA_FLAG_DISABLED;
++	ata_phy_offline(&ap->link);
+ }
+ 
+ /**
+@@ -5614,6 +5632,8 @@ int ata_host_register(struct ata_host *host, struct scsi_host_template *sht)
+ 		if (ap->ops->error_handler) {
+ 			struct ata_eh_info *ehi = &ap->link.eh_info;
+ 			unsigned long flags;
++			int device_attached = 0;
++			struct ata_device *dev;
+ 
+ 			ata_port_probe(ap);
+ 
+@@ -5632,6 +5652,14 @@ int ata_host_register(struct ata_host *host, struct scsi_host_template *sht)
+ 
+ 			/* wait for EH to finish */
+ 			ata_port_wait_eh(ap);
++			ata_link_for_each_dev(dev, &ap->link)
++				if (ata_dev_enabled(dev))
++					device_attached++;
++			if (!device_attached && sata_power_save &&
++			    (ap->flags & ATA_FLAG_NO_HOTPLUG)) {
++				/* no device present, disable port */
++				ata_port_disable(ap);
++			}
+ 		} else {
+ 			DPRINTK("ata%u: bus probe begin\n", ap->print_id);
+ 			rc = ata_bus_probe(ap);
 
-James
-
-
+-- 
+Matthew Garrett | mjg59@srcf.ucam.org
