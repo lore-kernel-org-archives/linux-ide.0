@@ -1,45 +1,65 @@
-From: Brian King <brking@linux.vnet.ibm.com>
-Subject: Re: [PATCH 1/1] ipr: Fix HDIO_GET_IDENTITY oops for SATA devices
-Date: Mon, 02 Jun 2008 13:51:18 -0500
-Message-ID: <48444126.8050107@linux.vnet.ibm.com>
-References: <12124164141515-patch-mail.ibm.com>	 <48441AEE.6050605@garzik.org> <48441F82.6060706@linux.vnet.ibm.com>	 <1212425124.3369.20.camel@localhost.localdomain>	 <4844312C.7010403@garzik.org> <1212429428.3369.45.camel@localhost.localdomain> <484437C3.8020306@garzik.org>
-Reply-To: brking@linux.vnet.ibm.com
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [PATCH] ata: ahci: power off unused ports
+Date: Mon, 02 Jun 2008 14:52:16 -0400
+Message-ID: <48444160.50308@garzik.org>
+References: <20080508161008.59361de5@appleyard>	<20080527030854.GC7515@mit.edu>	<20080527143202.4bab5bf0@appleyard>	<20080527225926.GE6843@mit.edu>	<20080527163251.04054a74@appleyard>	<20080531080015.GG5405@ucw.cz>	<4842F5A8.9020708@garzik.org>	<20080602080440.25fc663c@core>	<4843A4A7.3020809@garzik.org>	<4843EF88.2040606@rtr.ca>	<48441AA6.8080704@garzik.org>	<20080602100019.3d2d2522@appleyard>	<484431AB.7010005@garzik.org>	<20080602104753.3f24087d@appleyard>	<484438BF.7070303@garzik.org> <20080602111644.54738d57@appleyard> <48443C3C.3010401@redhat.com> <48443EB3.8020303@garzik.org> <484440AA.6060202@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from e31.co.us.ibm.com ([32.97.110.149]:47192 "EHLO
-	e31.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752704AbYFBSvf (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 2 Jun 2008 14:51:35 -0400
-In-Reply-To: <484437C3.8020306@garzik.org>
+Received: from srv5.dvmed.net ([207.36.208.214]:40302 "EHLO mail.dvmed.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752286AbYFBSws (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 2 Jun 2008 14:52:48 -0400
+In-Reply-To: <484440AA.6060202@redhat.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi@vger.kernel.org, thlin@linux.vnet.ibm.com, linux-ide@vger.kernel.org, miltonm@bga.com, Tejun Heo <htejun@gmail.com>
+To: rwheeler@redhat.com
+Cc: kristen.c.accardi@intel.com, Mark Lord <liml@rtr.ca>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Pavel Machek <pavel@ucw.cz>, Theodore Tso <tytso@mit.edu>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Jeff Garzik wrote:
-> The other reason why we use one-short-per-port on master/slave is that, 
-> in many respects, each legacy IDE port really can behave like a 
-> completely separate controller, each port with its own interrupts and 
-> independent reset logic.
+Ric Wheeler wrote:
+> Jeff Garzik wrote:
+>> Ric Wheeler wrote:
+>>> Kristen Carlson Accardi wrote:
+>>>> Not all drivers will need a user interface to turn off hotplug
+>>>> I would think.  At any rate - I would think it'd be better to let
+>>>> driver writers decide how they want their drivers to behave wrt
+>>>> hotplug and power instead of forcing a generic policy on everyone.
+>>>>
+>>>> This patch would provide users of AHCI controllers a way to save
+>>>> power now, while you work on the grand scheme for polling/turning on 
+>>>> off
+>>>> hotplug via sysfs.  It's an interim solution that impacts nobody but
+>>>> ahci users and is can be easily integrated into whatever solution you
+>>>> eventually work out.
+>>
+>>> I like the patch -  it seems that it will help a lot of users out 
+>>> near term in a very positive way while we iterate on the broader 
+>>> solution,
+>>
+>> A better patch would enable the _possibility_ of power savings on 
+>> non-AHCI chips, and not add a one-off AHCI-specific user interface 
+>> that must be supported for years to come.
+>>
+>>     Jeff
+> I think that the patch does that first part pretty reasonably for all 
+> chips as Kristen explained before.
 > 
-> Thus ATA really has two models:  1-port-1-host and N-ports-1-host.
+> If the user interface is the only obstacle and the base code seems to be 
+> flexible enough for any device to take advantage of, it would still seem 
+> to be a positive step forward to put in that base functionality (even 
+> without the module param) to enable power saving.
+> 
+> It is always good to get the complete solution in (how hard can the user 
+> interface be to code once we agree on what it should be ;-)), but this 
+> seems to be a good first step.
 
-One thing that having a per-port SCSI host buys us is that it isolates
-EH to the port rather than the entire SCSI host. The way that the new
-libata EH is designed, it can end up spending a fair amount of time
-in EH and may even sleep for seconds at a time, waiting for the device
-to come ready. Quiescing all devices on a SAS host due to a single
-SATA device gets *very* painful. The new libata EH does much more than
-just EH. It wakes up for every ATAPI check condition...
+A prep step without the module param (ie. user interface) is fine. 
+That's how we deployed Async Notification.  Kristen's AN stuff went into 
+libata well before the SCSI API was settled upon.
 
-Before we can move to a single SCSI host model, we will
-have to make some changes regarding how EH is done in libata...
+	Jeff
 
--Brian
 
--- 
-Brian King
-Linux on Power Virtualization
-IBM Linux Technology Center
+
+
