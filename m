@@ -1,55 +1,49 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [PATCH] ata: ahci: power off unused ports
-Date: Mon, 2 Jun 2008 14:54:58 +0100
-Message-ID: <20080602145458.011b3655@core>
-References: <20080508161008.59361de5@appleyard>
-	<20080527030854.GC7515@mit.edu>
-	<20080527143202.4bab5bf0@appleyard>
-	<20080527225926.GE6843@mit.edu>
-	<20080527163251.04054a74@appleyard>
-	<20080531080015.GG5405@ucw.cz>
-	<4842F5A8.9020708@garzik.org>
-	<20080602080440.25fc663c@core>
-	<4843A4A7.3020809@garzik.org>
-	<20080602092225.26db9b5b@core>
-	<4843C1E0.3080900@garzik.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:33776 "EHLO
-	lxorguk.ukuu.org.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1754765AbYFBOKf (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 2 Jun 2008 10:10:35 -0400
-In-Reply-To: <4843C1E0.3080900@garzik.org>
-Sender: linux-ide-owner@vger.kernel.org
+From: Brian King <brking@linux.vnet.ibm.com>
+Subject: [PATCH 1/1] ipr: Fix HDIO_GET_IDENTITY oops for SATA devices
+Date: Mon, 02 Jun 2008 09:20:15 -0500
+Message-ID: <16639.3097061247$1212416524@news.gmane.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Sender: linux-scsi-owner@vger.kernel.org
+To: James.Bottomley@HansenPartnership.com
+Cc: linux-scsi@vger.kernel.org, thlin@linux.vnet.ibm.com, linux-ide@vger.kernel.org, brking@linux.vnet.ibm.com, miltonm@bga.com
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: Pavel Machek <pavel@ucw.cz>, Kristen Carlson Accardi <kristen.c.accardi@intel.com>, Theodore Tso <tytso@mit.edu>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-> > We don't need it per port Jeff, you are being quite silly here. Right now
-> > its permanently foo=0 for all ports and nobody has suffered anything too
-> > horrible so being able to turn it off for all ports is clearly quite
-> > sufficient for the neat future.
-> 
-> Er, huh?  foo=0 means hotplug continues to work on the unused ports. 
-> Nobody has suffered because we default to enabling all the goodies.
 
-Thats a simple question of what "=0" means - is it "disable=1" or
-"enable=1" or to quote Alice in Wonderland
+Currently, ipr does not support HDIO_GET_IDENTITY to SATA devices.
+An oops occurs if userspace attempts to send the command. Since hald
+issues the command, ensure we fail the ioctl in ipr. This is a
+temporary solution to the oops. Once the ipr libata EH conversion
+is upstream, ipr will fully support HDIO_GET_IDENTITY.
 
-	'When I use a word,' Humpty Dumpty said, in a rather scornful
-	tone,' it means just what I choose it to mean, neither more nor
-	less
+Tested-by: Milton Miller <miltonm@bga.com>
+Signed-off-by: Brian King <brking@linux.vnet.ibm.com>
+---
 
-It really doesn't matter if it is on by default or off by default,
-whether 0 means off or on, what matters is that the single switch is
-quite sufficient initially to improve matters for everyone wanting to use
-the feature without harming anyone else.
+ linux-2.6-bjking1/drivers/scsi/ipr.c |    6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
 
-Sure you might want to make it per port later but someone who wants to
-optimise that peculiar case, has a problem and can test it can deal with
-that.
-
-Alan
-
+diff -puN drivers/scsi/ipr.c~ipr_sata_no_identify drivers/scsi/ipr.c
+--- linux-2.6/drivers/scsi/ipr.c~ipr_sata_no_identify	2008-06-02 08:46:19.000000000 -0500
++++ linux-2.6-bjking1/drivers/scsi/ipr.c	2008-06-02 08:46:19.000000000 -0500
+@@ -71,6 +71,7 @@
+ #include <linux/module.h>
+ #include <linux/moduleparam.h>
+ #include <linux/libata.h>
++#include <linux/hdreg.h>
+ #include <asm/io.h>
+ #include <asm/irq.h>
+ #include <asm/processor.h>
+@@ -4913,8 +4914,11 @@ static int ipr_ioctl(struct scsi_device 
+ 	struct ipr_resource_entry *res;
+ 
+ 	res = (struct ipr_resource_entry *)sdev->hostdata;
+-	if (res && ipr_is_gata(res))
++	if (res && ipr_is_gata(res)) {
++		if (cmd == HDIO_GET_IDENTITY)
++			return -ENOTTY;
+ 		return ata_scsi_ioctl(sdev, cmd, arg);
++	}
+ 
+ 	return -EINVAL;
+ }
+_
