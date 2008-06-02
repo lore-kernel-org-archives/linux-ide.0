@@ -1,42 +1,188 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [PATCH 1/1] ipr: Fix HDIO_GET_IDENTITY oops for SATA devices
-Date: Mon, 2 Jun 2008 20:53:29 +0100
-Message-ID: <20080602205329.3b824d0b@core>
-References: <12124164141515-patch-mail.ibm.com>
-	<48441AEE.6050605@garzik.org>
-	<48441F82.6060706@linux.vnet.ibm.com>
-	<1212425124.3369.20.camel@localhost.localdomain>
-	<4844312C.7010403@garzik.org>
-	<1212429428.3369.45.camel@localhost.localdomain>
-	<484437C3.8020306@garzik.org>
-	<1212435308.3369.58.camel@localhost.localdomain>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <1212435308.3369.58.camel@localhost.localdomain>
-Sender: linux-scsi-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Jeff Garzik <jeff@garzik.org>, brking@linux.vnet.ibm.com, linux-scsi@vger.kernel.org, thlin@linux.vnet.ibm.com, linux-ide@vger.kernel.org, miltonm@bga.com, Tejun Heo <htejun@gmail.com>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: [PATCH 1/9] ide: fix host drivers missing hwif->chipset initialization
+Date: Mon, 02 Jun 2008 22:22:53 +0200
+Message-ID: <20080602202253.7265.23590.sendpatchset@localhost.localdomain>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mu-out-0910.google.com ([209.85.134.187]:17008 "EHLO
+	mu-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750913AbYFBUV0 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 2 Jun 2008 16:21:26 -0400
+Received: by mu-out-0910.google.com with SMTP id w8so1229319mue.1
+        for <linux-ide@vger.kernel.org>; Mon, 02 Jun 2008 13:21:24 -0700 (PDT)
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
+Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-kernel@vger.kernel.org
 
-> I think it's possible to do the shift while still making it look to
-> single port hosts that nothing has changed
+ide_find_port() now depends on ->chipset being set for occupied ide_hwifs[]
+slots so all host drivers have to initialize hwif->chipset properly.
 
-There are very few of those. Your generic PC controller is single host,
-dual channel two devices per channel.
+This patch fixes a regression on hosts with > 1 port or with a single port
+but no devices attached to it for an affected host drivers.
 
-> Well, we can be elastic on this.  The common case is a two port
-> master/slave, isn't it.  This particular one could just be treated as
-> two separate interfaces and hence two hosts (it's reasonably analagous
-> to the 53c896---which is a single chip that presents two SCSI channels
-> as two PCI functions).
+Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+---
+ drivers/ide/arm/bast-ide.c     |    1 +
+ drivers/ide/arm/ide_arm.c      |    1 +
+ drivers/ide/ide-pnp.c          |    1 +
+ drivers/ide/ide-probe.c        |    1 +
+ drivers/ide/legacy/buddha.c    |    2 ++
+ drivers/ide/legacy/falconide.c |    2 ++
+ drivers/ide/legacy/gayle.c     |    2 ++
+ drivers/ide/legacy/macide.c    |    2 ++
+ drivers/ide/legacy/q40ide.c    |    2 ++
+ drivers/ide/pci/cmd640.c       |    2 ++
+ drivers/ide/ppc/mpc8xx.c       |    4 ++++
+ 11 files changed, 20 insertions(+)
 
-Not as trivial as you might hope. In some cases the two are closely
-linked, they often share timing rules. In other cases they have shared or
-single assignable DMA fifos.
-
-In practical terms that means you must reconfigure *both* channels when
-you do an EH.
-
-Alan
+Index: b/drivers/ide/arm/bast-ide.c
+===================================================================
+--- a/drivers/ide/arm/bast-ide.c
++++ b/drivers/ide/arm/bast-ide.c
+@@ -42,6 +42,7 @@ static int __init bastide_register(unsig
+ 
+ 	hw.io_ports.ctl_addr = aux + (6 * 0x20);
+ 	hw.irq = irq;
++	hw.chipset = ide_generic;
+ 
+ 	hwif = ide_find_port();
+ 	if (hwif == NULL)
+Index: b/drivers/ide/arm/ide_arm.c
+===================================================================
+--- a/drivers/ide/arm/ide_arm.c
++++ b/drivers/ide/arm/ide_arm.c
+@@ -49,6 +49,7 @@ static int __init ide_arm_init(void)
+ 	memset(&hw, 0, sizeof(hw));
+ 	ide_std_init_ports(&hw, base, ctl);
+ 	hw.irq = IDE_ARM_IRQ;
++	hw.chipset = ide_generic;
+ 
+ 	hwif = ide_find_port();
+ 	if (hwif) {
+Index: b/drivers/ide/ide-pnp.c
+===================================================================
+--- a/drivers/ide/ide-pnp.c
++++ b/drivers/ide/ide-pnp.c
+@@ -55,6 +55,7 @@ static int idepnp_probe(struct pnp_dev *
+ 	memset(&hw, 0, sizeof(hw));
+ 	ide_std_init_ports(&hw, base, ctl);
+ 	hw.irq = pnp_irq(dev, 0);
++	hw.chipset = ide_generic;
+ 
+ 	hwif = ide_find_port();
+ 	if (hwif) {
+Index: b/drivers/ide/ide-probe.c
+===================================================================
+--- a/drivers/ide/ide-probe.c
++++ b/drivers/ide/ide-probe.c
+@@ -1670,6 +1670,7 @@ static void ide_legacy_init_one(u8 *idx,
+ 
+ 	ide_std_init_ports(hw, base, ctl);
+ 	hw->irq = irq;
++	hw->chipset = d->chipset;
+ 
+ 	hwif = ide_find_port_slot(d);
+ 	if (hwif) {
+Index: b/drivers/ide/legacy/buddha.c
+===================================================================
+--- a/drivers/ide/legacy/buddha.c
++++ b/drivers/ide/legacy/buddha.c
+@@ -138,6 +138,8 @@ static void __init buddha_setup_ports(hw
+ 
+ 	hw->irq = IRQ_AMIGA_PORTS;
+ 	hw->ack_intr = ack_intr;
++
++	hw->chipset = ide_generic;
+ }
+ 
+     /*
+Index: b/drivers/ide/legacy/falconide.c
+===================================================================
+--- a/drivers/ide/legacy/falconide.c
++++ b/drivers/ide/legacy/falconide.c
+@@ -81,6 +81,8 @@ static void __init falconide_setup_ports
+ 
+ 	hw->irq = IRQ_MFP_IDE;
+ 	hw->ack_intr = NULL;
++
++	hw->chipset = ide_generic;
+ }
+ 
+     /*
+Index: b/drivers/ide/legacy/gayle.c
+===================================================================
+--- a/drivers/ide/legacy/gayle.c
++++ b/drivers/ide/legacy/gayle.c
+@@ -113,6 +113,8 @@ static void __init gayle_setup_ports(hw_
+ 
+ 	hw->irq = IRQ_AMIGA_PORTS;
+ 	hw->ack_intr = ack_intr;
++
++	hw->chipset = ide_generic;
+ }
+ 
+     /*
+Index: b/drivers/ide/legacy/macide.c
+===================================================================
+--- a/drivers/ide/legacy/macide.c
++++ b/drivers/ide/legacy/macide.c
+@@ -78,6 +78,8 @@ static void __init macide_setup_ports(hw
+ 
+ 	hw->irq = irq;
+ 	hw->ack_intr = ack_intr;
++
++	hw->chipset = ide_generic;
+ }
+ 
+ static const char *mac_ide_name[] =
+Index: b/drivers/ide/legacy/q40ide.c
+===================================================================
+--- a/drivers/ide/legacy/q40ide.c
++++ b/drivers/ide/legacy/q40ide.c
+@@ -70,6 +70,8 @@ static void q40_ide_setup_ports(hw_regs_
+ 
+ 	hw->irq = irq;
+ 	hw->ack_intr = ack_intr;
++
++	hw->chipset = ide_generic;
+ }
+ 
+ static void q40ide_input_data(ide_drive_t *drive, struct request *rq,
+Index: b/drivers/ide/pci/cmd640.c
+===================================================================
+--- a/drivers/ide/pci/cmd640.c
++++ b/drivers/ide/pci/cmd640.c
+@@ -749,9 +749,11 @@ static int __init cmd640x_init(void)
+ 
+ 	ide_std_init_ports(&hw[0], 0x1f0, 0x3f6);
+ 	hw[0].irq = 14;
++	hw[0].chipset = ide_cmd640;
+ 
+ 	ide_std_init_ports(&hw[1], 0x170, 0x376);
+ 	hw[1].irq = 15;
++	hw[1].chipset = ide_cmd640;
+ 
+ 	printk(KERN_INFO "cmd640: buggy cmd640%c interface on %s, config=0x%02x"
+ 			 "\n", 'a' + cmd640_chip_version - 1, bus_type, cfr);
+Index: b/drivers/ide/ppc/mpc8xx.c
+===================================================================
+--- a/drivers/ide/ppc/mpc8xx.c
++++ b/drivers/ide/ppc/mpc8xx.c
+@@ -296,6 +296,8 @@ static int __init m8xx_ide_init_ports(hw
+ 	pcmp->pcmc_per = 0x100000 >> (16 * _slot_);
+ #endif	/* CONFIG_IDE_8xx_PCCARD */
+ 
++	hw->chipset = ide_generic;
++
+ 	return 0;
+ }
+ #endif /* CONFIG_IDE_8xx_PCCARD || CONFIG_IDE_8xx_DIRECT */
+@@ -370,6 +372,8 @@ static int __init m8xx_ide_init_ports(hw
+ 	((immap_t *) IMAP_ADDR)->im_siu_conf.sc_siel |=
+ 			(0x80000000 >> ioport_dsc[data_port].irq);
+ 
++	hw->chipset = ide_generic;
++
+ 	return 0;
+ }
+ #endif	/* CONFIG_IDE_8xx_DIRECT */
