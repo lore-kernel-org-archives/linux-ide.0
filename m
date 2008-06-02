@@ -1,74 +1,61 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH 8/9] ide_4drives: use struct ide_port_info
-Date: Mon, 02 Jun 2008 22:23:56 +0200
-Message-ID: <20080602202356.7265.68692.sendpatchset@localhost.localdomain>
-References: <20080602202253.7265.23590.sendpatchset@localhost.localdomain>
+From: Brian King <brking@linux.vnet.ibm.com>
+Subject: Re: [PATCH 1/1] ipr: Fix HDIO_GET_IDENTITY oops for SATA devices
+Date: Mon, 02 Jun 2008 15:27:10 -0500
+Message-ID: <4844579E.80005@linux.vnet.ibm.com>
+References: <12124164141515-patch-mail.ibm.com>  <48441AEE.6050605@garzik.org> <48441F82.6060706@linux.vnet.ibm.com> <1212425124.3369.20.camel@localhost.localdomain> <4844312C.7010403@garzik.org> <1212429428.3369.45.camel@localhost.localdomain> <484437C3.8020306@garzik.org> <48444126.8050107@linux.vnet.ibm.com> <484441E6.8020501@garzik.org> <1212435552.3369.62.camel@localhost.localdomain>
+Reply-To: brking@linux.vnet.ibm.com
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mu-out-0910.google.com ([209.85.134.187]:17008 "EHLO
-	mu-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755272AbYFBUW2 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 2 Jun 2008 16:22:28 -0400
-Received: by mu-out-0910.google.com with SMTP id w8so1229319mue.1
-        for <linux-ide@vger.kernel.org>; Mon, 02 Jun 2008 13:22:27 -0700 (PDT)
-In-Reply-To: <20080602202253.7265.23590.sendpatchset@localhost.localdomain>
+Received: from e5.ny.us.ibm.com ([32.97.182.145]:56946 "EHLO e5.ny.us.ibm.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752013AbYFBU1U (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 2 Jun 2008 16:27:20 -0400
+In-Reply-To: <1212435552.3369.62.camel@localhost.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
-Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-kernel@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Jeff Garzik <jeff@garzik.org>, Tejun Heo <htejun@gmail.com>, linux-scsi@vger.kernel.org, thlin@linux.vnet.ibm.com, linux-ide@vger.kernel.org, miltonm@bga.com
 
-Convert the driver to use struct ide_port_info - as a nice side-effect
-this fixes hwif->channel initialization.
+James Bottomley wrote:
+> On Mon, 2008-06-02 at 14:54 -0400, Jeff Garzik wrote:
+>> Brian King wrote:
+>>> One thing that having a per-port SCSI host buys us is that it isolates
+>>> EH to the port rather than the entire SCSI host. The way that the new
+>>> libata EH is designed, it can end up spending a fair amount of time
+>>> in EH and may even sleep for seconds at a time, waiting for the device
+>>> to come ready. Quiescing all devices on a SAS host due to a single
+>>> SATA device gets *very* painful. The new libata EH does much more than
+>>> just EH. It wakes up for every ATAPI check condition...
+>>>
+>>> Before we can move to a single SCSI host model, we will
+>>> have to make some changes regarding how EH is done in libata...
+>>
+>> Good points.  There definitely needs to be a discussion about how to 
+>> integrate libata EH with libsas model and ipr model (which are distinct, 
+>> if similar).
+> 
+> Actually, libsas completely hijacks the strategy handler (as I believe
+> libata does), so it really no longer has a host dependency, except for
+> the one thread per host thing.  Most of what it does (unless it thinks
+> the actual host chip is wedged) is port (as in SAS port, not phy) based,
+> so I think we have the capability for doing this already.
 
-Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
----
- drivers/ide/legacy/ide-4drives.c |   27 ++++++++++++++++++---------
- 1 file changed, 18 insertions(+), 9 deletions(-)
+libsas currently does hijack the strategy handler today, but if we want
+to move it to the new libata EH/attach model, that's not going to work.
+libata EH does much more than EH. Its really more of an exception handler
+than an error handler. Anything that happens out of the ordinary wakes
+the EH thread.
 
-Index: b/drivers/ide/legacy/ide-4drives.c
-===================================================================
---- a/drivers/ide/legacy/ide-4drives.c
-+++ b/drivers/ide/legacy/ide-4drives.c
-@@ -11,6 +11,23 @@ static int probe_4drives;
- module_param_named(probe, probe_4drives, bool, 0);
- MODULE_PARM_DESC(probe, "probe for generic IDE chipset with 4 drives/port");
- 
-+static void ide_4drives_port_init_devs(ide_hwif_t *hwif)
-+{
-+	if (hwif->channel) {
-+		hwif->drives[0].select.all ^= 0x20;
-+		hwif->drives[1].select.all ^= 0x20;
-+	}
-+}
-+
-+static const struct ide_port_ops ide_4drives_port_ops = {
-+	.port_init_devs		= ide_4drives_port_init_devs,
-+};
-+
-+static const struct ide_port_info ide_4drives_port_info = {
-+	.port_ops		= &ide_4drives_port_ops,
-+	.host_flags		= IDE_HFLAG_SERIALIZE | IDE_HFLAG_NO_DMA,
-+};
-+
- static int __init ide_4drives_init(void)
- {
- 	ide_hwif_t *hwif, *mate;
-@@ -49,18 +66,10 @@ static int __init ide_4drives_init(void)
- 	mate = ide_find_port();
- 	if (mate) {
- 		ide_init_port_hw(mate, &hw);
--		mate->drives[0].select.all ^= 0x20;
--		mate->drives[1].select.all ^= 0x20;
- 		idx[1] = mate->index;
--
--		if (hwif) {
--			hwif->mate = mate;
--			mate->mate = hwif;
--			hwif->serialized = mate->serialized = 1;
--		}
- 	}
- 
--	ide_device_add(idx, NULL);
-+	ide_device_add(idx, &ide_4drives_port_info);
- 
- 	return 0;
- }
+Ideally, I think we really want to have stacked EH as I believe we have
+discussed in the past. If we hit an error, we quiesce the device, do device
+level EH. If needed, quiesce the device group / port, perform EH. If 
+necessary, quiesce the entire HBA and perform EH on it.
+
+-Brian
+
+-- 
+Brian King
+Linux on Power Virtualization
+IBM Linux Technology Center
