@@ -1,35 +1,62 @@
 From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH 1/1] ipr: Fix HDIO_GET_IDENTITY oops for SATA devices
-Date: Mon, 02 Jun 2008 13:43:08 -0400
-Message-ID: <4844312C.7010403@garzik.org>
-References: <12124164141515-patch-mail.ibm.com>	 <48441AEE.6050605@garzik.org>  <48441F82.6060706@linux.vnet.ibm.com> <1212425124.3369.20.camel@localhost.localdomain>
+Subject: Re: [PATCH] ata: ahci: power off unused ports
+Date: Mon, 02 Jun 2008 13:44:11 -0400
+Message-ID: <4844316B.1080405@garzik.org>
+References: <20080508161008.59361de5@appleyard>	<20080527030854.GC7515@mit.edu>	<20080527143202.4bab5bf0@appleyard>	<20080527225926.GE6843@mit.edu>	<20080527163251.04054a74@appleyard>	<20080531080015.GG5405@ucw.cz>	<4842F5A8.9020708@garzik.org>	<20080602080440.25fc663c@core>	<4843A4A7.3020809@garzik.org>	<4843EF88.2040606@rtr.ca> <20080602095710.1b0de376@appleyard>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <1212425124.3369.20.camel@localhost.localdomain>
-Sender: linux-scsi-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: brking@linux.vnet.ibm.com, linux-scsi@vger.kernel.org, thlin@linux.vnet.ibm.com, linux-ide@vger.kernel.org, miltonm@bga.com, Tejun Heo <htejun@gmail.com>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from srv5.dvmed.net ([207.36.208.214]:43471 "EHLO mail.dvmed.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751165AbYFBRop (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 2 Jun 2008 13:44:45 -0400
+In-Reply-To: <20080602095710.1b0de376@appleyard>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: kristen.c.accardi@intel.com
+Cc: Mark Lord <liml@rtr.ca>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Pavel Machek <pavel@ucw.cz>, Theodore Tso <tytso@mit.edu>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-James Bottomley wrote:
-> The problems seem to come at us from the 1:1 relationship between a
-> 'port' and a host in libata.  Is there no way we can perhaps recast what
-> we think of as a phy as what libata thinks of as a link and thus keep us
-> at one host per actual physical device?
+Kristen Carlson Accardi wrote:
+> On Mon, 02 Jun 2008 09:03:04 -0400
+> Mark Lord <liml@rtr.ca> wrote:
+> 
+>> Jeff Garzik wrote:
+>>> Alan Cox wrote:
+>>>>> If you are talking about SATA -- incorrect.
+>>>>>
+>>>>> The patch deals with policy, and the user MUST have the ability to 
+>>>>> control this stuff.  Otherwise you create a situation where the user 
+>>>>> might be denied hotplug use in valid cases, or similar negative 
+>>>>> situations.
+>>>> The policy isn't however complicated. Tejun added the stuff for forcing
+>>>> cable type and mode on setup and has therefore written all the per device
+>>>> setup code we might need. Alternatively a single
+>>>>
+>>>>     foo=1/0
+>>>>
+>>>> option has been fine for acpi and will do fine for this. Total additional
+>>>> cost - 1 line.
+>>> The key requirement is per-port control.  Ideally via hdparm or another 
+>>> userspace tool, but kernel command line (module options) or sysfs would 
+>>> be just fine too.  And agreed, the minimal you need is simply 1/0 for 
+>>> the port's policy.
+>> ..
+>>
+>> Btw.. hdparm-8.7 (unreleased) can grok /sys now, so that interface is
+>> as good as any from a userspace viewpoint now.
+>>
+>> For the power-off of unused ports, the current patch still sounds
+>> extremely vendor-specific (Intel).
+> 
+> Wrong - this patch is implemented according to the AHCI spec and
+> has absolutely nothing vendor specific in it.
 
-
-It's difficult to do that universally, but OTOH it would be quite 
-reasonable to do that for modern SATA controllers, leaving the older 
-master/slave controllers as one-host-per-port.
-
-I've been wanting to do that for a while, even.
-
-The main thing holding me back is not any technical issue, but desire to 
-avoid breakage caused by abrupt topology change.
+ITHM AHCI-specific, and not usable by non-AHCI SATA controllers -- which 
+we would want in any solution.
 
 	Jeff
+
 
 
 
