@@ -1,41 +1,46 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [PATCH] ata: ahci: power off unused ports
-Date: Mon, 2 Jun 2008 08:04:40 +0100
-Message-ID: <20080602080440.25fc663c@core>
-References: <20080508161008.59361de5@appleyard>
-	<20080527030854.GC7515@mit.edu>
-	<20080527143202.4bab5bf0@appleyard>
-	<20080527225926.GE6843@mit.edu>
-	<20080527163251.04054a74@appleyard>
-	<20080531080015.GG5405@ucw.cz>
-	<4842F5A8.9020708@garzik.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:42656 "EHLO
-	lxorguk.ukuu.org.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1750936AbYFBHUC (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 2 Jun 2008 03:20:02 -0400
-In-Reply-To: <4842F5A8.9020708@garzik.org>
-Sender: linux-ide-owner@vger.kernel.org
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Subject: [PATCH v2 -mm 0/6] revert the commit 22a9189f (cdrom: use kmalloced buffers instead of buffers on stack)
+Date: Mon,  2 Jun 2008 15:57:26 +0900
+Message-ID: <1212389852-1277-1-git-send-email-fujita.tomonori@lab.ntt.co.jp>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Sender: linux-scsi-owner@vger.kernel.org
+To: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
+Cc: jens.axboe@oracle.com, tsbogend@alpha.franken.de, bzolnier@gmail.com, petkovbb@gmail.com, James.Bottomley@HansenPartnership.com, jeff@garzik.org, davem@davemloft.net, akpm@linux-foundation.org, fujita.tomonori@lab.ntt.co.jp
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: Pavel Machek <pavel@ucw.cz>, Kristen Carlson Accardi <kristen.c.accardi@intel.com>, Theodore Tso <tytso@mit.edu>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-> If you are talking about SATA -- incorrect.
-> 
-> The patch deals with policy, and the user MUST have the ability to 
-> control this stuff.  Otherwise you create a situation where the user 
-> might be denied hotplug use in valid cases, or similar negative situations.
+This is an updated version of the patchset to revert the commit
+22a9189fd073db3d03a4cf8b8c098aa207602de1 (cdrom: use kmalloced buffers
+instead of buffers on stack):
 
-The policy isn't however complicated. Tejun added the stuff for forcing
-cable type and mode on setup and has therefore written all the per device
-setup code we might need. Alternatively a single
+http://marc.info/?l=linux-scsi&m=121125981930673&w=2
 
-	foo=1/0
+The major change is that this version avoids DMA on the stack on all
+the platforms (for simplicity) while the previous version uses the
+dma_pad_mask on a non-coherent platform (in a bit hacky way).
 
-option has been fine for acpi and will do fine for this. Total additional
-cost - 1 line.
+With thic patchset, blk_rq_map_kern() always uses the bounce buffers
+if a caller passes a stack buffer.
 
-Alan
+ide-cd has a mechanism to handle DMA alignment and padding for
+SG_IO. This patchset extends the mechanism with regard to a stack
+buffer.
+
+This patchset is against -mm, replaces the following patches in -mm:
+
+cdrom-revert-commit-22a9189-cdrom-use-kmalloced-buffers-instead-of-buffers-on-stack.patch
+ide-use-the-dma-safe-check-for-req_type_ata_pc.patch 
+block-add-blk_queue_update_dma_pad.patch 
+block-use-arch_kmalloc_minalign-as-the-default-dma-pad-mask.patch
+
+The diffstat is:
+
+ block/blk-map.c           |    5 +
+ block/blk-settings.c      |   24 ++++-
+ drivers/ata/libata-scsi.c |    3 +-
+ drivers/cdrom/cdrom.c     |  274 +++++++++++++++------------------------------
+ drivers/ide/ide-cd.c      |   22 +++-
+ drivers/scsi/sr.c         |   20 +---
+ include/linux/blkdev.h    |    1 +
+ 7 files changed, 143 insertions(+), 206 deletions(-)
+
+
