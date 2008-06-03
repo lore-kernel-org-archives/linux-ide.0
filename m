@@ -1,41 +1,46 @@
 From: maximilian attems <max@stro.at>
-Subject: [PATCH] ata: blacklist FUJITSU MHW2160BH PL
-Date: Tue,  3 Jun 2008 18:53:25 +0200
-Message-ID: <1212512005-13284-1-git-send-email-max@stro.at>
+Subject: [PATCH] ata acer short cable quirks
+Date: Tue,  3 Jun 2008 18:59:02 +0200
+Message-ID: <1212512342-13374-1-git-send-email-max@stro.at>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from baikonur.stro.at ([213.239.196.228]:41042 "EHLO
+Received: from baikonur.stro.at ([213.239.196.228]:41054 "EHLO
 	baikonur.stro.at" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753100AbYFCROv (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 3 Jun 2008 13:14:51 -0400
+	with ESMTP id S1753233AbYFCROz (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 3 Jun 2008 13:14:55 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: jgarzik@pobox.com
-Cc: linux-ide@vger.kernel.org, Chuck Short <zulcss@ubuntu.com>, Tim Gardner <tim.gardner@canonical.com>, maximilian attems <max@stro.at>
+Cc: linux-ide@vger.kernel.org, Colin Ian King <colin.king@canonical.com>, maximilian attems <max@stro.at>
 
-From: Chuck Short <zulcss@ubuntu.com>
+From: Colin Ian King <colin.king@canonical.com>
 
-OriginalAuthor: Chuck Short <zulcss@ubuntu.com>
-Bug: #175834
+Add ICH6 on ACER Aspire 1694WLMi to list of laptops that use short cables
+rather than 80 wire
 
-Signed-off-by: Chuck Short <zulcss@ubuntu.com>
-Signed-off-by: Tim Gardner <tim.gardner@canonical.com>
+OriginalAuthor: Tiago Sousa 
+OriginalLocation: http://launchpadlibrarian.net/11627664/new.ich_laptop.short.cables.diff
+Bug: #187121
+
+
+Signed-off-by: Colin Ian King <colin.king@canonical.com>
 Signed-off-by: maximilian attems <max@stro.at>
 ---
- drivers/ata/libata-core.c |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
+ drivers/ata/ata_piix.c |    2 ++
+ 1 files changed, 2 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index 3c89f20..8f76885 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -3924,6 +3924,7 @@ static const struct ata_blacklist_entry ata_device_blacklist [] = {
- 	{ "HTS541060G9SA00",    "MB3OC60D",     ATA_HORKAGE_NONCQ, },
- 	{ "HTS541080G9SA00",    "MB4OC60D",     ATA_HORKAGE_NONCQ, },
- 	{ "HTS541010G9SA00",    "MBZOC60D",     ATA_HORKAGE_NONCQ, },
-+	{ "FUJITSU MHW2160BH PL", "0084001E",   ATA_HORKAGE_NONCQ, },
- 
- 	/* devices which puke on READ_NATIVE_MAX */
- 	{ "HDS724040KLSA80",	"KFAOA20N",	ATA_HORKAGE_BROKEN_HPA, },
+diff --git a/drivers/ata/ata_piix.c b/drivers/ata/ata_piix.c
+index a9027b8..e02b5e0 100644
+--- a/drivers/ata/ata_piix.c
++++ b/drivers/ata/ata_piix.c
+@@ -573,6 +573,8 @@ static const struct ich_laptop ich_laptop[] = {
+ 	{ 0x27DF, 0x1043, 0x1267 },	/* ICH7 on Asus W5F */
+ 	{ 0x27DF, 0x103C, 0x30A1 },	/* ICH7 on HP Compaq nc2400 */
+ 	{ 0x24CA, 0x1025, 0x0061 },	/* ICH4 on ACER Aspire 2023WLMi */
++	{ 0x24CA, 0x1025, 0x003d },	/* ICH4 on ACER TM290 */
++	{ 0x266F, 0x1025, 0x0066 },	/* ICH6 on ACER Aspire 1694WLMi */
+ 	{ 0x2653, 0x1043, 0x82D8 },	/* ICH6M on Asus Eee 701 */
+ 	/* end marker */
+ 	{ 0, }
 -- 
 1.5.5.1
 
