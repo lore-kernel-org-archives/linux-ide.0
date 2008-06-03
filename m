@@ -1,45 +1,73 @@
 From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [patch] libata:ahci: enclosure management support (resend)
-Date: Tue, 03 Jun 2008 14:03:35 -0400
-Message-ID: <48458777.70904@garzik.org>
-References: <20080603103355.34c49ef4@appleyard>
+Subject: Re: [PATCHSET #upstream] libata: improve timeout handling for EH
+ commands
+Date: Tue, 03 Jun 2008 14:06:01 -0400
+Message-ID: <48458809.1030207@garzik.org>
+References: <12112174741373-git-send-email-htejun@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:37470 "EHLO mail.dvmed.net"
+Received: from srv5.dvmed.net ([207.36.208.214]:47676 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752245AbYFCSDl (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 3 Jun 2008 14:03:41 -0400
-In-Reply-To: <20080603103355.34c49ef4@appleyard>
+	id S1753255AbYFCSGE (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 3 Jun 2008 14:06:04 -0400
+In-Reply-To: <12112174741373-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Kristen Carlson Accardi <kristen.c.accardi@intel.com>
-Cc: akpm@linux-foundation.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: linux-ide@vger.kernel.org, liml@rtr.ca
 
-Kristen Carlson Accardi wrote:
-> Here's a resend of the patch I sent 2 weeks ago, refreshed against
-> Andrews kernel.  This is one of many resends since the original 
-> patch was sent in January-ish. Could you please review this patch 
-> and let me know what you'd like me to change?  I'm happy to change it 
-> however you want as long as the feature still functions.
+Tejun Heo wrote:
+> Hello,
 > 
-> Thanks,
-> Kristen
+> [S]ATA has lots of legacy and not in a too healthy way.  The desparate
+> efforts to keep everything compatible made mundane things quite
+> challenging.  Probing definitely is one of them.  We now span from
+> ancient CF devices to port multipliers and quirky ones are easy to
+> find all along the spectrum.
 > 
-> Add Enclosure Management support to libata and ahci.
+> For example, according to the spec reset protocol and the actual
+> implementations, there's no defined way to wait for the initial D2H
+> Reg FIS after hardresetting a fan-out port.  The problem is that the
+> D2H Reg FIS can arrive during later steps of probing is in progress
+> and a rogue FIS at the right time can easily make the controller fail
+> or time out pending operations.
 > 
-> Signed-off-by:  Kristen Carlson Accardi <kristen.c.accardi@intel.com>
-> ---
->  drivers/ata/ahci.c        |  321 +++++++++++++++++++++++++++++++++++++++++++++-
->  drivers/ata/libata-scsi.c |   79 +++++++++++
->  include/linux/libata.h    |   21 +++
->  3 files changed, 419 insertions(+), 2 deletions(-)
+> Another problem of the long spectrum is that we can't choose the one
+> correct value as timeout for operations.  A timeout value which can
+> cover all the devices is too long and makes EH painfully slow when
+> something goes wrong.  Choosing shorter timeout means the ancient and
+> weirdos won't work.
+> 
+> So, we have to resort to smart self adjusting timeouts.  Early
+> quickies to detect transient failures quickly and later long ones to
+> cover odd devices.  Deadline driven ata_eh_reset() was a step in that
+> direction and this patchset, in addition to other timeout related
+> improvements, applies it to the rest of EH commands.
+> 
+> This patchset contains the following patches.
+> 
+>  01-libata-kill-unused-constants.patch
+>  02-libata-consistently-use-msecs-for-time-durations.patch
+>  03-libata-improve-EH-retry-delay-handling.patch
+>  04-libata-use-ULONG_MAX-to-terminate-reset-timeout-tab.patch
+>  05-libata-improve-EH-internal-command-timeout-handling.patch
+> 
+> #01, #02 and #04 are preparations.  #02 makes liata use msecs
+> consistently for time durations.  #03 makes inter-try or inter-reset
+> delays smarter and allows libata EH to delay less between tries
+> without sacrificing robustness.  #05 implements per command class
+> stepped timeouts for EH commands, so that the first IDENTIFY try fails
+> quickly but later on the device can take full 30secs to think about it
+> while restricting maximum timeout for SET_FEATURES to 10secs.
+> 
+> This patchset makes whole EH behave much more swiftly and timeout
+> cases bearable.  :-)
 
-I'm pretty happy with this, and I plan on queueing it for #upstream 
-(2.6.27, linux-next).
+ACK
 
-Ideally a better solution would be a bit more generic (i.e. not just 
-libata), but this is a nice and compact implementation, and generic 
-enough to support all of libata's purposes.
+for .27?  Seems useful to .26, but also we are late in .26-rc and this 
+is a lot of changes for -rc$LATE :)
+
 
