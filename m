@@ -1,59 +1,45 @@
-From: vb <vb@vsbe.com>
-Subject: Re: Mounting CF flash card in 2.6.25
-Date: Tue, 3 Jun 2008 10:49:27 -0700
-Message-ID: <f608b67d0806031049g24779a09o56bfac0bd6f6384c@mail.gmail.com>
-References: <f608b67d0806021906g3020db3bve6515cbc8c7d99b5@mail.gmail.com>
-	 <20080603171923.7aaf87b5@core>
-	 <f608b67d0806030948t2df91060w46a9342a813ea216@mail.gmail.com>
-	 <48458099.5020306@msgid.tls.msk.ru>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [patch] libata:ahci: enclosure management support (resend)
+Date: Tue, 03 Jun 2008 14:03:35 -0400
+Message-ID: <48458777.70904@garzik.org>
+References: <20080603103355.34c49ef4@appleyard>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=US-ASCII; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from yx-out-2324.google.com ([74.125.44.29]:15200 "EHLO
-	yx-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753325AbYFCRt3 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 3 Jun 2008 13:49:29 -0400
-Received: by yx-out-2324.google.com with SMTP id 31so180081yxl.1
-        for <linux-ide@vger.kernel.org>; Tue, 03 Jun 2008 10:49:28 -0700 (PDT)
-In-Reply-To: <48458099.5020306@msgid.tls.msk.ru>
-Content-Disposition: inline
+Received: from srv5.dvmed.net ([207.36.208.214]:37470 "EHLO mail.dvmed.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752245AbYFCSDl (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 3 Jun 2008 14:03:41 -0400
+In-Reply-To: <20080603103355.34c49ef4@appleyard>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Michael Tokarev <mjt@tls.msk.ru>
-Cc: linux-ide@vger.kernel.org
+To: Kristen Carlson Accardi <kristen.c.accardi@intel.com>
+Cc: akpm@linux-foundation.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-Michael, thank you for your reply and pardon my ignorance,
+Kristen Carlson Accardi wrote:
+> Here's a resend of the patch I sent 2 weeks ago, refreshed against
+> Andrews kernel.  This is one of many resends since the original 
+> patch was sent in January-ish. Could you please review this patch 
+> and let me know what you'd like me to change?  I'm happy to change it 
+> however you want as long as the feature still functions.
+> 
+> Thanks,
+> Kristen
+> 
+> Add Enclosure Management support to libata and ahci.
+> 
+> Signed-off-by:  Kristen Carlson Accardi <kristen.c.accardi@intel.com>
+> ---
+>  drivers/ata/ahci.c        |  321 +++++++++++++++++++++++++++++++++++++++++++++-
+>  drivers/ata/libata-scsi.c |   79 +++++++++++
+>  include/linux/libata.h    |   21 +++
+>  3 files changed, 419 insertions(+), 2 deletions(-)
 
-On Tue, Jun 3, 2008 at 10:34 AM, Michael Tokarev <mjt@tls.msk.ru> wrote:
-> Kernel does not maintain /dev, ever.  Times of devfs are long gone.
-> All nodes in your /dev are created in userspace.
->
+I'm pretty happy with this, and I plan on queueing it for #upstream 
+(2.6.27, linux-next).
 
-but I see that the kernel creates /dev/ram[0..15],
-/dev/mtdblock[0..3], at least I see these mentioned in
-block/genhd.c:major_names[] - are these not devices created by kernel?
+Ideally a better solution would be a bit more generic (i.e. not just 
+libata), but this is a nice and compact implementation, and generic 
+enough to support all of libata's purposes.
 
-Are you saying that I can't mount a CF card without initrd (or nfs
-mounted userland, etc.)?
-
->>>> What needs to be done to get the device created and mapped to  a
->>>> generic CF card?
->>>
->>> You need to ensure you have SCSI_DISK support included (as CF is a disk)
->>> and you need your initrd either to create device nodes, or to prepack
->>> them.
->>
->> I don't see SCSI_DISK as a config option, can you please elaborate on
->> this?
->
-> It's CONFIG_BLK_DEV_SD.
->
-
-thank you for the hint, let me try this...
-
-cheers,
-/vb
-
-> /mjt
->
