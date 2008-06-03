@@ -1,31 +1,45 @@
-From: vb <vb@vsbe.com>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
 Subject: Re: Mounting CF flash card in 2.6.25
-Date: Tue, 3 Jun 2008 08:41:21 -0700
-Message-ID: <f608b67d0806030841x77f9bea5lf817cd35ab6d3278@mail.gmail.com>
+Date: Tue, 3 Jun 2008 17:19:23 +0100
+Message-ID: <20080603171923.7aaf87b5@core>
 References: <f608b67d0806021906g3020db3bve6515cbc8c7d99b5@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rn-out-0910.google.com ([64.233.170.191]:24841 "EHLO
-	rn-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752566AbYFCPlX (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 3 Jun 2008 11:41:23 -0400
-Received: by rn-out-0910.google.com with SMTP id k40so377614rnd.17
-        for <linux-ide@vger.kernel.org>; Tue, 03 Jun 2008 08:41:22 -0700 (PDT)
+Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:52124 "EHLO
+	lxorguk.ukuu.org.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751925AbYFCQe1 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 3 Jun 2008 12:34:27 -0400
 In-Reply-To: <f608b67d0806021906g3020db3bve6515cbc8c7d99b5@mail.gmail.com>
-Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: vb <vb@vsbe.com>
+Cc: linux-ide@vger.kernel.org
 
->
-> I am trying to bring up a system initrd, as I have a CF card installed
+> scsi0 : pata_platform
+> ata1: PATA max PIO6 mmio cmd 0xfc000000 ctl 0xfc00020c irq 20
+> ata1.00: CFA: CF 512MB, 06/07/29, max PIO4
+> ata1.00: 1028160 sectors, multi 0: LBA
+> ata1.00: configured for PIO
+> ata1.00: configured for PIO
+> ata1: EH complete
+> scsi 0:0:0:0: Direct-Access     ATA      CF 512MB         06/0 PQ: 0 ANSI: 5
+> 
+> 
+> which tells me that the card is being recognized. However, there is no
+> appropriate device get created in the /dev directory. Examining
 
-sorry, this of course should read "I am trying to bring up a system
-*without* initrd".
+The /dev creation is up to your initrd.
 
-I start wondering if anyone ever had a generic CF card working in 2.6.25...
+> impression that the one in pata_of_platform is supposed to do for a
+> generic CF card.
 
-cheers,
-/vb
+In your case it seems to be correct.
+
+> What needs to be done to get the device created and mapped to  a
+> generic CF card?
+
+You need to ensure you have SCSI_DISK support included (as CF is a disk)
+and you need your initrd either to create device nodes, or to prepack
+them.
