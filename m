@@ -1,55 +1,53 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH] libata: Handle bay devices in dock stations
-Date: Tue, 03 Jun 2008 14:07:42 -0400
-Message-ID: <4845886E.2010505@garzik.org>
-References: <20080528143857.GB5585@homac.suse.de>
+From: vb <vb@vsbe.com>
+Subject: Re: Mounting CF flash card in 2.6.25
+Date: Tue, 3 Jun 2008 11:13:11 -0700
+Message-ID: <f608b67d0806031113m45e2aa6eo874590eece48400e@mail.gmail.com>
+References: <f608b67d0806021906g3020db3bve6515cbc8c7d99b5@mail.gmail.com>
+	 <20080603171923.7aaf87b5@core>
+	 <f608b67d0806030948t2df91060w46a9342a813ea216@mail.gmail.com>
+	 <48458099.5020306@msgid.tls.msk.ru>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:47689 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753336AbYFCSHp (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 3 Jun 2008 14:07:45 -0400
-In-Reply-To: <20080528143857.GB5585@homac.suse.de>
+Received: from yw-out-2324.google.com ([74.125.46.28]:38258 "EHLO
+	yw-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752967AbYFCSNN (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 3 Jun 2008 14:13:13 -0400
+Received: by yw-out-2324.google.com with SMTP id 9so864170ywe.1
+        for <linux-ide@vger.kernel.org>; Tue, 03 Jun 2008 11:13:12 -0700 (PDT)
+In-Reply-To: <48458099.5020306@msgid.tls.msk.ru>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-kernel@vger.kernel.org, Tejun Heo <htejun@gmail.com>, linux-ide@vger.kernel.org, linux-acpi@vger.kernel.org, Matthew Garrett <mjg59@srcf.ucam.org>, akpm@linux-foundation.org
+To: Michael Tokarev <mjt@tls.msk.ru>, Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: linux-ide@vger.kernel.org
 
-Holger Macht wrote:
-> * Differentiate between bay devices in dock stations and others:
-> 
->  - When an ACPI_NOTIFY_EJECT_REQUEST appears, just signal uevent to
->    userspace (that is when the optional eject button on a bay device is
->    pressed/pulled) giving the possibility to unmount file systems and to
->    clean up. Also, only send uevent in case we get an EJECT_REQUEST
->    without doing anything else. In other cases, you'll get an add/remove
->    event because libata attaches/detaches the device.
-> 
->  - In case of a dock event, which in turn signals an
->    ACPI_NOTIFY_EJECT_REQUEST, immediately detach the device, because it
->    may already have been gone
-> 
-> * In case of an ACPI_NOTIFY_DEVICE/BUS_CHECK, evaluate _STA to check if
->   the device has been plugged or unplugged. If plugged, hotplug it, if
->   unplugged, just signal event to userspace
->   (initial patch by Matthew Garrett <mjg59@srcf.ucam.org>)
-> 
-> * Call ACPI _EJ0 for detached devices
-> 
-> Signed-off-by: Holger Macht <hmacht@suse.de>
-> ---
-> 
-> Changes regarding the previous patch:
-> 
->  * Make sure kobj does not go away outside locking
->  * Coding style cleanups
->  * Call _EJ0 for detached devices
+On Tue, Jun 3, 2008 at 10:34 AM, Michael Tokarev <mjt@tls.msk.ru> wrote:
+> vb wrote:
+>> On Tue, Jun 3, 2008 at 9:19 AM, Alan Cox <alan@lxorguk.ukuu.org.uk> wrote:
+>>>
+>>> You need to ensure you have SCSI_DISK support included (as CF is a disk)
+>>> and you need your initrd either to create device nodes, or to prepack
+>>> them.
+>>
+>> I don't see SCSI_DISK as a config option, can you please elaborate on
+>> this?
+>
+> It's CONFIG_BLK_DEV_SD.
+>
 
-Matthew, any comments?
+Alan, Michael, this was it - now the /dev/sda and friends get created,
+the CF gets mounted and the system comes up all the way to the login
+prompt!
 
-It would be nice if you and Holger could work together to produce a 
-single patch[set]...  right now I have patches from both of you, and I 
-was sorta waiting on the thread to die down to see if competing patches 
-might merge into a single set
+Thank you so much for your help, (and for my faith in free software
+being restored :-))
 
+What do you think: shouldn't enabling of PATA_OF_PLATFORM enable
+BLK_DEV_SD automatically? This would have saved me (and maybe a few
+more newbies who try doing this) a few days of banging my head against
+the desk.
+
+regards,
+Vadim
