@@ -1,109 +1,41 @@
-From: Kristen Carlson Accardi <kristen.c.accardi@intel.com>
-Subject: Re: [PATCH] ata: ahci: power off unused ports
-Date: Tue, 3 Jun 2008 09:49:03 -0700
-Message-ID: <20080603094903.280775ae@appleyard>
-References: <20080508161008.59361de5@appleyard>
-	<20080527030854.GC7515@mit.edu>
-	<20080527143202.4bab5bf0@appleyard>
-	<20080527225926.GE6843@mit.edu>
-	<20080527163251.04054a74@appleyard>
-	<20080531080015.GG5405@ucw.cz>
-	<4842F5A8.9020708@garzik.org>
-	<20080602080440.25fc663c@core>
-	<4843A4A7.3020809@garzik.org>
-	<4843EF88.2040606@rtr.ca>
-	<48441AA6.8080704@garzik.org>
-	<20080602100019.3d2d2522@appleyard>
-	<484431AB.7010005@garzik.org>
-	<20080602104753.3f24087d@appleyard>
-	<484438BF.7070303@garzik.org>
-	<20080602111644.54738d57@appleyard>
-	<48443E3F.8050306@garzik.org>
-Reply-To: kristen.c.accardi@intel.com
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1755567AbYFCQ6z@vger.kernel.org>
-In-Reply-To: <48443E3F.8050306@garzik.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: Mark Lord <liml@rtr.ca>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Pavel Machek <pavel@ucw.cz>, Theodore Tso <tytso@mit.edu>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+From: maximilian attems <max@stro.at>
+Subject: [PATCH] ata: blacklist FUJITSU MHW2160BH PL
+Date: Tue,  3 Jun 2008 18:53:25 +0200
+Message-ID: <1212512005-13284-1-git-send-email-max@stro.at>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from baikonur.stro.at ([213.239.196.228]:41042 "EHLO
+	baikonur.stro.at" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753100AbYFCROv (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 3 Jun 2008 13:14:51 -0400
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: jgarzik@pobox.com
+Cc: linux-ide@vger.kernel.org, Chuck Short <zulcss@ubuntu.com>, Tim Gardner <tim.gardner@canonical.com>, maximilian attems <max@stro.at>
 
-On Mon, 02 Jun 2008 14:38:55 -0400
-Jeff Garzik <jeff@garzik.org> wrote:
+From: Chuck Short <zulcss@ubuntu.com>
 
-> Kristen Carlson Accardi wrote:
-> > On Mon, 02 Jun 2008 14:15:27 -0400
-> > Jeff Garzik <jeff@garzik.org> wrote:
-> > 
-> >> Kristen Carlson Accardi wrote:
-> >>> Here you can see that it would be very easy for another driver
-> >>> to just add code to set the NO_HOTPLUG flag and then this code
-> >>> will work for them as well, since we power off the phy using
-> >>> DET which is specified by SATA.
-> >>> here's that code:
-> >> Agreed.  The main discussion in this sub-thread is more about user 
-> >> interface.  The user interface in this case, a module option, is 
-> >> specific to AHCI.
-> >>
-> >> Surely you can see how it is a bit silly to force each driver writer to 
-> >> create the same user interface in each driver, to support a generic concept.
-> >>
-> >> 	Jeff
-> >>
-> >>
-> > Not all drivers will need a user interface to turn off hotplug
-> > I would think.  At any rate - I would think it'd be better to let
-> > driver writers decide how they want their drivers to behave wrt
-> > hotplug and power instead of forcing a generic policy on everyone.
-> > 
-> > This patch would provide users of AHCI controllers a way to save
-> > power now, while you work on the grand scheme for polling/turning on off
-> > hotplug via sysfs.  It's an interim solution that impacts nobody but
-> > ahci users and is can be easily integrated into whatever solution you
-> > eventually work out.
-> 
-> It's a one-off driver-specific interface that will have to be supported 
-> even after the same feature is available via libata core...  that's not 
-> the path to scalable, sustainable engineering.
+OriginalAuthor: Chuck Short <zulcss@ubuntu.com>
+Bug: #175834
 
-Jeff - I think you are misunderstanding what the module parameter 
-is doing.  It is not a substitute for the sysfs interface that you
-proposed.  You would not want to get rid of it ever.  What it does
-is set the default of the AHCI driver to favor the BIOS settings
-for which ports are hotpluggable.  the parameter is there to allow
-users to override the BIOS settings at module load time.  Once you
-get your sysfs interface in, you would then be able to override
-the default at run time.  
+Signed-off-by: Chuck Short <zulcss@ubuntu.com>
+Signed-off-by: Tim Gardner <tim.gardner@canonical.com>
+Signed-off-by: maximilian attems <max@stro.at>
+---
+ drivers/ata/libata-core.c |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
 
-> 
-> I know user interfaces are annoying because you have to think about 
-> chips other than your own, but that's life.  Other hardware vendors have 
-> to do it too.
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index 3c89f20..8f76885 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -3924,6 +3924,7 @@ static const struct ata_blacklist_entry ata_device_blacklist [] = {
+ 	{ "HTS541060G9SA00",    "MB3OC60D",     ATA_HORKAGE_NONCQ, },
+ 	{ "HTS541080G9SA00",    "MB4OC60D",     ATA_HORKAGE_NONCQ, },
+ 	{ "HTS541010G9SA00",    "MBZOC60D",     ATA_HORKAGE_NONCQ, },
++	{ "FUJITSU MHW2160BH PL", "0084001E",   ATA_HORKAGE_NONCQ, },
+ 
+ 	/* devices which puke on READ_NATIVE_MAX */
+ 	{ "HDS724040KLSA80",	"KFAOA20N",	ATA_HORKAGE_BROKEN_HPA, },
+-- 
+1.5.5.1
 
-User interfaces are annoying because it takes 2 maintainers to agree
-on them, that is all.  Surely you remember how long it took AN to
-get in?  It was about 9 months.  This patch can go in now while we
-spend 9 months deciding how to do the ultimate sysfs interface.
-
-> 
-> Letting each driver have a different user interface is /unfriendly/ to 
-> both developers users.  It's easiest for Intel kernel developers, but 
-> that is not our target audience :)
-> 
-> The biggest power savings for the largest amount of users can be had if 
-> you take a moment and figure out what's best for Linux, rather than what 
-> is best for Intel.
-> 
-> Because you can be damned sure SATA users with non-AHCI chips want this 
-> power savings too...  let's not put roadblocks to that in place in the 
-> beginning (by adding one-off interfaces).
-
-As I've been trying to explain to you.  a) this isn't a one off interface.
-b) this patch doesn't prevent you at all from adding a generic interface
-later.  Perhaps you have a non-technical reason for not wanting this
-patch, but I'd like to make sure there's nothing here that you are
-just not understanding or something that I can fix.  I obviously can't
-fix your idea that I only care about Intel chips, not matter how utterly
-wrong and not supported by the facts that is.
