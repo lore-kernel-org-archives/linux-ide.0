@@ -1,51 +1,109 @@
-From: vb <vb@vsbe.com>
-Subject: Re: Mounting CF flash card in 2.6.25
-Date: Tue, 3 Jun 2008 09:48:18 -0700
-Message-ID: <f608b67d0806030948t2df91060w46a9342a813ea216@mail.gmail.com>
-References: <f608b67d0806021906g3020db3bve6515cbc8c7d99b5@mail.gmail.com>
-	 <20080603171923.7aaf87b5@core>
+From: Kristen Carlson Accardi <kristen.c.accardi@intel.com>
+Subject: Re: [PATCH] ata: ahci: power off unused ports
+Date: Tue, 3 Jun 2008 09:49:03 -0700
+Message-ID: <20080603094903.280775ae@appleyard>
+References: <20080508161008.59361de5@appleyard>
+	<20080527030854.GC7515@mit.edu>
+	<20080527143202.4bab5bf0@appleyard>
+	<20080527225926.GE6843@mit.edu>
+	<20080527163251.04054a74@appleyard>
+	<20080531080015.GG5405@ucw.cz>
+	<4842F5A8.9020708@garzik.org>
+	<20080602080440.25fc663c@core>
+	<4843A4A7.3020809@garzik.org>
+	<4843EF88.2040606@rtr.ca>
+	<48441AA6.8080704@garzik.org>
+	<20080602100019.3d2d2522@appleyard>
+	<484431AB.7010005@garzik.org>
+	<20080602104753.3f24087d@appleyard>
+	<484438BF.7070303@garzik.org>
+	<20080602111644.54738d57@appleyard>
+	<48443E3F.8050306@garzik.org>
+Reply-To: kristen.c.accardi@intel.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wr-out-0506.google.com ([64.233.184.226]:18157 "EHLO
-	wr-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751936AbYFCQsT (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 3 Jun 2008 12:48:19 -0400
-Received: by wr-out-0506.google.com with SMTP id c48so3377644wra.1
-        for <linux-ide@vger.kernel.org>; Tue, 03 Jun 2008 09:48:19 -0700 (PDT)
-In-Reply-To: <20080603171923.7aaf87b5@core>
-Content-Disposition: inline
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1755567AbYFCQ6z@vger.kernel.org>
+In-Reply-To: <48443E3F.8050306@garzik.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: Mark Lord <liml@rtr.ca>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Pavel Machek <pavel@ucw.cz>, Theodore Tso <tytso@mit.edu>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: linux-ide@vger.kernel.org
 
-Alan,
+On Mon, 02 Jun 2008 14:38:55 -0400
+Jeff Garzik <jeff@garzik.org> wrote:
 
-thank you for your reply, I am not quite clear with a couple of things
-though, please see below:
+> Kristen Carlson Accardi wrote:
+> > On Mon, 02 Jun 2008 14:15:27 -0400
+> > Jeff Garzik <jeff@garzik.org> wrote:
+> > 
+> >> Kristen Carlson Accardi wrote:
+> >>> Here you can see that it would be very easy for another driver
+> >>> to just add code to set the NO_HOTPLUG flag and then this code
+> >>> will work for them as well, since we power off the phy using
+> >>> DET which is specified by SATA.
+> >>> here's that code:
+> >> Agreed.  The main discussion in this sub-thread is more about user 
+> >> interface.  The user interface in this case, a module option, is 
+> >> specific to AHCI.
+> >>
+> >> Surely you can see how it is a bit silly to force each driver writer to 
+> >> create the same user interface in each driver, to support a generic concept.
+> >>
+> >> 	Jeff
+> >>
+> >>
+> > Not all drivers will need a user interface to turn off hotplug
+> > I would think.  At any rate - I would think it'd be better to let
+> > driver writers decide how they want their drivers to behave wrt
+> > hotplug and power instead of forcing a generic policy on everyone.
+> > 
+> > This patch would provide users of AHCI controllers a way to save
+> > power now, while you work on the grand scheme for polling/turning on off
+> > hotplug via sysfs.  It's an interim solution that impacts nobody but
+> > ahci users and is can be easily integrated into whatever solution you
+> > eventually work out.
+> 
+> It's a one-off driver-specific interface that will have to be supported 
+> even after the same feature is available via libata core...  that's not 
+> the path to scalable, sustainable engineering.
 
-On Tue, Jun 3, 2008 at 9:19 AM, Alan Cox <alan@lxorguk.ukuu.org.uk> wrote:
->>
->> which tells me that the card is being recognized. However, there is no
->> appropriate device get created in the /dev directory. Examining
->
-> The /dev creation is up to your initrd.
->
+Jeff - I think you are misunderstanding what the module parameter 
+is doing.  It is not a substitute for the sysfs interface that you
+proposed.  You would not want to get rid of it ever.  What it does
+is set the default of the AHCI driver to favor the BIOS settings
+for which ports are hotpluggable.  the parameter is there to allow
+users to override the BIOS settings at module load time.  Once you
+get your sysfs interface in, you would then be able to override
+the default at run time.  
 
-but I don't have initrd, so I need the kernel to create /dev/<drive>.
-It does create other devices, right?
+> 
+> I know user interfaces are annoying because you have to think about 
+> chips other than your own, but that's life.  Other hardware vendors have 
+> to do it too.
 
->> What needs to be done to get the device created and mapped to  a
->> generic CF card?
->
-> You need to ensure you have SCSI_DISK support included (as CF is a disk)
-> and you need your initrd either to create device nodes, or to prepack
-> them.
->
+User interfaces are annoying because it takes 2 maintainers to agree
+on them, that is all.  Surely you remember how long it took AN to
+get in?  It was about 9 months.  This patch can go in now while we
+spend 9 months deciding how to do the ultimate sysfs interface.
 
-I don't see SCSI_DISK as a config option, can you please elaborate on this?
+> 
+> Letting each driver have a different user interface is /unfriendly/ to 
+> both developers users.  It's easiest for Intel kernel developers, but 
+> that is not our target audience :)
+> 
+> The biggest power savings for the largest amount of users can be had if 
+> you take a moment and figure out what's best for Linux, rather than what 
+> is best for Intel.
+> 
+> Because you can be damned sure SATA users with non-AHCI chips want this 
+> power savings too...  let's not put roadblocks to that in place in the 
+> beginning (by adding one-off interfaces).
 
-TIA,
-/vb
+As I've been trying to explain to you.  a) this isn't a one off interface.
+b) this patch doesn't prevent you at all from adding a generic interface
+later.  Perhaps you have a non-technical reason for not wanting this
+patch, but I'd like to make sure there's nothing here that you are
+just not understanding or something that I can fix.  I obviously can't
+fix your idea that I only care about Intel chips, not matter how utterly
+wrong and not supported by the facts that is.
