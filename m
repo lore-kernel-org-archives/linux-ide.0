@@ -1,70 +1,48 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [RFC PATCH] libata-sff: Fix oops reported in kerneloops.org for
- pnp devices with no ctl
-Date: Wed, 04 Jun 2008 06:45:49 -0400
-Message-ID: <4846725D.70507@garzik.org>
-References: <20080529161453.24735.805.stgit@core>	<alpine.LFD.1.10.0805290950230.2958@woody.linux-foundation.org>	<20080529190235.258d304e@core>	<483EF536.90801@garzik.org>	<20080529194238.36458a46@core>	<483F049E.2090809@garzik.org> <20080529221058.1169e140@core>
+From: Kristen Carlson Accardi <kristen.c.accardi@intel.com>
+Subject: Re: [RFC] expand link_power_management_policy definition
+Date: Wed, 4 Jun 2008 09:08:01 -0700
+Message-ID: <20080604090801.4c5a7658@appleyard>
+References: <20080603172307.1b963aac@appleyard>
+	<4845E761.2090604@garzik.org>
+Reply-To: kristen.c.accardi@intel.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:44249 "EHLO mail.dvmed.net"
+Received: from mga02.intel.com ([134.134.136.20]:45107 "EHLO mga02.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1760174AbYFDKpv (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 4 Jun 2008 06:45:51 -0400
-In-Reply-To: <20080529221058.1169e140@core>
+	id S1752987AbYFDQRu (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 4 Jun 2008 12:17:50 -0400
+In-Reply-To: <4845E761.2090604@garzik.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Alan Cox wrote:
->>> Want me to roll a patch in that style ?
->> Works for me...
-> 
-> Ok
-> 
-> - Make ata_sff_altstatus private so nobody uses it by mistake
-> - Drop the 400nS delay from it
-> 
-> Add
-> 
-> ata_sff_irq_status	-	encapsulates the IRQ check logic
-> 
-> This function keeps the existing behaviour for altstatus using devices. I
-> actually suspect the logic was wrong before the changes but -rc isn't the
-> time to play with that
-> 
-> ata_sff_sync		-	ensure writes hit the device
-> 
-> Really we want an io* operation for 'is posted' eg ioisposted(ioaddr) so
-> that we can fix the nasty delay this causes on most systems.
-> 
-> - ata_sff_pause		-	400nS delay
-> 
-> Ensure the command hit the device and delay 400nS
-> 
-> - ata_sff_dma_pause
-> 
-> Ensure the I/O hit the device and enforce an HDMA1:0 transition delay.
-> Requires altstatus register exists, BUG if not so we don't risk
-> corruption in MWDMA modes. (UDMA the checksum will save your backside in
-> theory)
-> 
-> The only other complication then is devices with their own handlers.
-> rb532 can use dma_pause but scc needs to access its own altstatus
-> register for internal errata workarounds so directly call the drivers own
-> altstatus function.
-> 
-> 
-> Signed-off-by: Alan Cox <alan@redhat.com>
-> 
->  drivers/ata/libata-sff.c    |  115 +++++++++++++++++++++++++++++++++++++------
->  drivers/ata/pata_icside.c   |    2 -
->  drivers/ata/pata_rb532_cf.c |    4 +
->  drivers/ata/pata_scc.c      |    5 +-
->  include/linux/libata.h      |   16 +-----
+On Tue, 03 Jun 2008 20:52:49 -0400
+Jeff Garzik <jeff@garzik.org> wrote:
 
-applied
+> Kristen Carlson Accardi wrote:
+> > I think I mentioned on the list a couple weeks ago that I favor just 
+> > expanding the definition of link power management to include
+> > the notion of simply powering the entire port off rather
+> > than adding new knobs to sysfs.  I wrote this completely untested and
+> > very incomplete patch to give you a better idea of what I am proposing.
+> > This patch adds a new valid value of "power_off" for the existing
+> > link_power_management_policy sysfs entry:
+> 
+> Looks fine to me...  that would work nicely.
+> 
+> I think your patch is missing code to handle the transition from 
+> power_off to <something else>, though, right?
+> 
+> I'm quite happy with this approach.
+> 
+> 	Jeff
+> 
+> 
+> 
 
+yeah - it's missing a lot.  I'll flesh it out some more and
+send a real one.
 
