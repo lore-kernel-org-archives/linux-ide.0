@@ -1,47 +1,75 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH 1/5] libata: kill unused constants
-Date: Wed, 04 Jun 2008 06:29:54 -0400
-Message-ID: <48466EA2.8050409@garzik.org>
-References: <12112174741373-git-send-email-htejun@gmail.com> <12112174751732-git-send-email-htejun@gmail.com>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: [PATCH 01/01] sata_mv: PHY_MODE4 cleanups
+Date: Wed, 04 Jun 2008 06:29:48 -0400
+Message-ID: <48466E9C.6040606@pobox.com>
+References: <483C8328.1030807@rtr.ca> <483C838F.9060208@rtr.ca> <48407B79.4090303@pobox.com> <4841B92A.1050508@rtr.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:46847 "EHLO mail.dvmed.net"
+Received: from srv5.dvmed.net ([207.36.208.214]:46843 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752334AbYFDK3z (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 4 Jun 2008 06:29:55 -0400
-In-Reply-To: <12112174751732-git-send-email-htejun@gmail.com>
+	id S1759657AbYFDK3u (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 4 Jun 2008 06:29:50 -0400
+In-Reply-To: <4841B92A.1050508@rtr.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: linux-ide@vger.kernel.org, liml@rtr.ca
+To: Mark Lord <liml@rtr.ca>
+Cc: IDE/ATA development list <linux-ide@vger.kernel.org>
 
-Tejun Heo wrote:
-> Kill a few unused constants.
+Mark Lord wrote:
+> The handling for PHY_MODE4 was originally just cloned from the
+> Marvell proprietary driver (with their blessing).
+> But we can do better than that.
 > 
-> Signed-off-by: Tejun Heo <htejun@gmail.com>
+> Tidy things up with some judicious mask definitions, to improve 
+> maintainability.
+> 
+> Signed-off-by: Mark Lord <mlord@pobox.com>
 > ---
->  include/linux/libata.h |    3 ---
->  1 files changed, 0 insertions(+), 3 deletions(-)
 > 
-> diff --git a/include/linux/libata.h b/include/linux/libata.h
-> index 95a2000..989088e 100644
-> --- a/include/linux/libata.h
-> +++ b/include/linux/libata.h
-> @@ -111,13 +111,10 @@ enum {
->  	/* various global constants */
->  	LIBATA_MAX_PRD		= ATA_MAX_PRD / 2,
->  	LIBATA_DUMB_MAX_PRD	= ATA_MAX_PRD / 4,	/* Worst case */
-> -	ATA_MAX_PORTS		= 8,
->  	ATA_DEF_QUEUE		= 1,
->  	/* tag ATA_MAX_QUEUE - 1 is reserved for internal commands */
->  	ATA_MAX_QUEUE		= 32,
->  	ATA_TAG_INTERNAL	= ATA_MAX_QUEUE - 1,
-> -	ATA_MAX_BUS		= 2,
-> -	ATA_DEF_BUSY_WAIT	= 10000,
->  	ATA_SHORT_PAUSE		= (HZ >> 6) + 1,
+> As requested..
+> 
+> --- old/drivers/ata/sata_mv.c    2008-05-28 12:20:05.000000000 -0400
+> +++ linux/drivers/ata/sata_mv.c    2008-05-30 19:36:52.000000000 -0400
+> @@ -224,6 +224,11 @@
+> 
+>     PHY_MODE3        = 0x310,
+>     PHY_MODE4        = 0x314,
+> +    PHY_MODE4_CFG_MASK    = 0x00000003,    /* phy internal config field */
+> +    PHY_MODE4_CFG_VALUE    = 0x00000001,    /* phy internal config 
+> field */
+> +    PHY_MODE4_RSVD_ZEROS    = 0x5de3fffa,    /* Gen2e always write 
+> zeros */
+> +    PHY_MODE4_RSVD_ONES    = 0x00000005,    /* Gen2e always write ones */
+> +
+>     PHY_MODE2        = 0x330,
+>     SATA_IFCTL_OFS        = 0x344,
+>     SATA_TESTCTL_OFS    = 0x348,
+> @@ -2563,17 +2568,16 @@
+>         m3 &= ~0x1c;
+> 
+>     if (fix_phy_mode4) {
+> -        u32 m4;
+> -
+> -        m4 = readl(port_mmio + PHY_MODE4);
+> -
+> -        /* workaround for errata FEr SATA#10 (part 1) */
+> -        m4 = (m4 & ~(1 << 1)) | (1 << 0);
+> -
+> -        /* enforce bit restrictions on GenIIe devices */
+> +        u32 m4 = readl(port_mmio + PHY_MODE4);
+> +        /*
+> +         * Enforce reserved-bit restrictions on GenIIe devices only.
+> +         * For earlier chipsets, force only the internal config field
+> +         *  (workaround for errata FEr SATA#10 part 1).
+> +         */
+>         if (IS_GEN_IIE(hpriv))
+> -            m4 = (m4 & ~0x5DE3FFFC) | (1 << 2);
+> -
+> +            m4 = (m4 & ~PHY_MODE4_RSVD_ZEROS) | PHY_MODE4_RSVD_ONES;
+> +        else
 
-applied
+applied, thanks
 
 
