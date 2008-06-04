@@ -1,166 +1,81 @@
-From: Shane Huang <shane.huang@amd.com>
-Subject: [PATCH] SB600 SATA controller PMP support
-Date: Wed, 4 Jun 2008 10:51:28 +0800
-Message-ID: <1212547888.5722.5.camel@chunhao-desktop>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: [PATCHSET #upstream] libata: improve timeout handling for EH
+ commands
+Date: Wed, 04 Jun 2008 14:02:15 +0900
+Message-ID: <484621D7.1040607@gmail.com>
+References: <12112174741373-git-send-email-htejun@gmail.com> <48458809.1030207@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outbound-wa4.frontbridge.com ([216.32.181.16]:57146 "EHLO
-	WA4EHSOBE002.bigfish.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752149AbYFDCwX (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 3 Jun 2008 22:52:23 -0400
+Received: from rv-out-0506.google.com ([209.85.198.227]:32446 "EHLO
+	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751189AbYFDFCV (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 4 Jun 2008 01:02:21 -0400
+Received: by rv-out-0506.google.com with SMTP id l9so1948567rvb.1
+        for <linux-ide@vger.kernel.org>; Tue, 03 Jun 2008 22:02:21 -0700 (PDT)
+In-Reply-To: <48458809.1030207@garzik.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: jgarzik@pobox.com
-Cc: linux-ide@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: linux-ide@vger.kernel.org, liml@rtr.ca
 
-There is one bug in SB600 SATA PMP which leads to softreset failure,
-this patch can fix the bug.
+Jeff Garzik wrote:
+> Tejun Heo wrote:
+>> Hello,
+>>
+>> [S]ATA has lots of legacy and not in a too healthy way.  The desparate
+>> efforts to keep everything compatible made mundane things quite
+>> challenging.  Probing definitely is one of them.  We now span from
+>> ancient CF devices to port multipliers and quirky ones are easy to
+>> find all along the spectrum.
+>>
+>> For example, according to the spec reset protocol and the actual
+>> implementations, there's no defined way to wait for the initial D2H
+>> Reg FIS after hardresetting a fan-out port.  The problem is that the
+>> D2H Reg FIS can arrive during later steps of probing is in progress
+>> and a rogue FIS at the right time can easily make the controller fail
+>> or time out pending operations.
+>>
+>> Another problem of the long spectrum is that we can't choose the one
+>> correct value as timeout for operations.  A timeout value which can
+>> cover all the devices is too long and makes EH painfully slow when
+>> something goes wrong.  Choosing shorter timeout means the ancient and
+>> weirdos won't work.
+>>
+>> So, we have to resort to smart self adjusting timeouts.  Early
+>> quickies to detect transient failures quickly and later long ones to
+>> cover odd devices.  Deadline driven ata_eh_reset() was a step in that
+>> direction and this patchset, in addition to other timeout related
+>> improvements, applies it to the rest of EH commands.
+>>
+>> This patchset contains the following patches.
+>>
+>>  01-libata-kill-unused-constants.patch
+>>  02-libata-consistently-use-msecs-for-time-durations.patch
+>>  03-libata-improve-EH-retry-delay-handling.patch
+>>  04-libata-use-ULONG_MAX-to-terminate-reset-timeout-tab.patch
+>>  05-libata-improve-EH-internal-command-timeout-handling.patch
+>>
+>> #01, #02 and #04 are preparations.  #02 makes liata use msecs
+>> consistently for time durations.  #03 makes inter-try or inter-reset
+>> delays smarter and allows libata EH to delay less between tries
+>> without sacrificing robustness.  #05 implements per command class
+>> stepped timeouts for EH commands, so that the first IDENTIFY try fails
+>> quickly but later on the device can take full 30secs to think about it
+>> while restricting maximum timeout for SET_FEATURES to 10secs.
+>>
+>> This patchset makes whole EH behave much more swiftly and timeout
+>> cases bearable.  :-)
+> 
+> ACK
+> 
+> for .27?  Seems useful to .26, but also we are late in .26-rc and this
+> is a lot of changes for -rc$LATE :)
 
-Signed-off-by: Shane Huang <shane.huang@amd.com>
+Yes, for .27.  It's too big a change for 26.
 
-diff -ruN a/drivers/ata/ahci.c b/drivers/ata/ahci.c
---- a/drivers/ata/ahci.c	2008-06-03 15:23:59.000000000 +0800
-+++ b/drivers/ata/ahci.c	2008-06-03 15:20:44.000000000 +0800
-@@ -253,6 +253,8 @@
- static void ahci_pmp_detach(struct ata_port *ap);
- static int ahci_softreset(struct ata_link *link, unsigned int *class,
- 			  unsigned long deadline);
-+static int ahci_sb600_softreset(struct ata_link *link, unsigned int *class,
-+			  unsigned long deadline);
- static int ahci_hardreset(struct ata_link *link, unsigned int *class,
- 			  unsigned long deadline);
- static int ahci_vt8251_hardreset(struct ata_link *link, unsigned int *class,
-@@ -329,6 +331,12 @@
- 	.hardreset		= ahci_p5wdh_hardreset,
- };
- 
-+static struct ata_port_operations ahci_sb600_ops = {
-+	.inherits		= &ahci_ops,
-+	.softreset		= ahci_sb600_softreset,
-+	.pmp_softreset		= ahci_sb600_softreset,
-+};
-+
- #define AHCI_HFLAGS(flags)	.private_data	= (void *)(flags)
- 
- static const struct ata_port_info ahci_port_info[] = {
-@@ -359,11 +367,11 @@
- 	{
- 		AHCI_HFLAGS	(AHCI_HFLAG_IGN_SERR_INTERNAL |
- 				 AHCI_HFLAG_32BIT_ONLY | AHCI_HFLAG_NO_MSI |
--				 AHCI_HFLAG_SECT255 | AHCI_HFLAG_NO_PMP),
-+				 AHCI_HFLAG_SECT255),
- 		.flags		= AHCI_FLAG_COMMON,
- 		.pio_mask	= 0x1f, /* pio0-4 */
- 		.udma_mask	= ATA_UDMA6,
--		.port_ops	= &ahci_ops,
-+		.port_ops	= &ahci_sb600_ops,
- 	},
- 	/* board_ahci_mv */
- 	{
-@@ -1270,11 +1278,24 @@
- 	return ata_check_ready(status);
- }
- 
--static int ahci_softreset(struct ata_link *link, unsigned int *class,
--			  unsigned long deadline)
-+static int ahci_sb600_check_ready(struct ata_link *link)
-+{
-+	void __iomem *port_mmio = ahci_port_base(link->ap);
-+
-+	u8 status = readl(port_mmio + PORT_TFDATA) & 0xFF;
-+	u32 irq_status = readl(port_mmio + PORT_IRQ_STAT);
-+
-+	if (irq_status & PORT_IRQ_BAD_PMP)
-+		return -EIO;
-+
-+	return ata_check_ready(status);
-+}
-+
-+static int ahci_do_softreset(struct ata_link *link, unsigned int *class,
-+			     int pmp, unsigned long deadline,
-+			     int (*check_ready)(struct ata_link *link))
- {
- 	struct ata_port *ap = link->ap;
--	int pmp = sata_srst_pmp(link);
- 	const char *reason = NULL;
- 	unsigned long now, msecs;
- 	struct ata_taskfile tf;
-@@ -1312,15 +1333,12 @@
- 	ahci_exec_polled_cmd(ap, pmp, &tf, 0, 0, 0);
- 
- 	/* wait for link to become ready */
--	rc = ata_wait_after_reset(link, deadline, ahci_check_ready);
-+	rc = ata_wait_after_reset(link, deadline, check_ready);
- 	/* link occupied, -ENODEV too is an error */
- 	if (rc) {
- 		reason = "device not ready";
- 		goto fail;
- 	}
--	*class = ahci_dev_classify(ap);
--
--	DPRINTK("EXIT, class=%u\n", *class);
- 	return 0;
- 
-  fail:
-@@ -1328,6 +1346,57 @@
- 	return rc;
- }
- 
-+static int ahci_softreset(struct ata_link *link, unsigned int *class,
-+			  unsigned long deadline)
-+{
-+	struct ata_port *ap = link->ap;
-+	int pmp = sata_srst_pmp(link);
-+	int rc;
-+
-+	DPRINTK("ENTER\n");
-+
-+	rc = ahci_do_softreset(link, class, pmp, deadline, ahci_check_ready);
-+	if (!rc) {
-+		*class = ahci_dev_classify(ap);
-+		DPRINTK("EXIT, class=%u\n", *class);
-+	}
-+	return rc;
-+}
-+
-+static int ahci_sb600_softreset(struct ata_link *link, unsigned int *class,
-+				unsigned long deadline)
-+{
-+	struct ata_port *ap = link->ap;
-+	void __iomem *port_mmio = ahci_port_base(ap);
-+	int pmp = sata_srst_pmp(link);
-+	int rc;
-+	u32 irq_sts;
-+
-+	DPRINTK("ENTER\n");
-+
-+	rc = ahci_do_softreset(link, class, pmp, deadline,
-+				ahci_sb600_check_ready);
-+
-+	/* Soft reset fails on some ATI chips with IPMS set when PMP
-+	   is enabled but SATA HDD/ODD is connected to SATA port,
-+	   do soft reset again to port 0. */
-+	if (rc == -EIO) {
-+		irq_sts = readl(port_mmio + PORT_IRQ_STAT);
-+		if (irq_sts & PORT_IRQ_BAD_PMP) {
-+			ata_link_printk(link, KERN_WARNING,
-+					"softreset failed, try again\n");
-+			rc = ahci_do_softreset(link, class, 0, deadline,
-+						ahci_check_ready);
-+		}
-+	}
-+
-+	if (!rc) {
-+		*class = ahci_dev_classify(ap);
-+		DPRINTK("EXIT, class=%u\n", *class);
-+	}
-+	return rc;
-+}
-+
- static int ahci_hardreset(struct ata_link *link, unsigned int *class,
- 			  unsigned long deadline)
- {
+Thanks.
 
-
+-- 
+tejun
