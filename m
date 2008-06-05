@@ -1,62 +1,79 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: patch "libata-sff: Fix oops for pnp devices with no ctl" causes
- regression
-Date: Thu, 5 Jun 2008 12:19:35 +0100
-Message-ID: <20080605121935.1a1ecb59@core>
-References: <20080605050923.GD11811@wotan.suse.de>
-	<20080605102424.0cf56c37@core>
-	<20080605102129.GB11366@wotan.suse.de>
-	<20080605103116.GC11366@wotan.suse.de>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH v2 -mm 4/6] ide: avoid DMA on the stack for
+	REQ_TYPE_ATA_PC
+Date: Thu, 05 Jun 2008 11:10:48 -0500
+Message-ID: <1212682248.13549.48.camel@localhost.localdomain>
+References: <1212389852-1277-1-git-send-email-fujita.tomonori@lab.ntt.co.jp>
+	 <1212389852-1277-2-git-send-email-fujita.tomonori@lab.ntt.co.jp>
+	 <1212389852-1277-3-git-send-email-fujita.tomonori@lab.ntt.co.jp>
+	 <1212389852-1277-4-git-send-email-fujita.tomonori@lab.ntt.co.jp>
+	 <1212389852-1277-5-git-send-email-fujita.tomonori@lab.ntt.co.jp>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:52921 "EHLO
-	lxorguk.ukuu.org.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1754429AbYFELfa (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 5 Jun 2008 07:35:30 -0400
-In-Reply-To: <20080605103116.GC11366@wotan.suse.de>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-arch-owner@vger.kernel.org>
+In-Reply-To: <1212389852-1277-5-git-send-email-fujita.tomonori@lab.ntt.co.jp>
+Sender: linux-arch-owner@vger.kernel.org
+To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, jens.axboe@oracle.com, tsbogend@alpha.franken.de, bzolnier@gmail.com, petkovbb@gmail.com, jeff@garzik.org, davem@davemloft.net, akpm@linux-foundation.org, linux-arch@vger.kernel.org, Roman Zippel <zippel@linux-m68k.org>
 List-Id: linux-ide@vger.kernel.org
-To: Nick Piggin <npiggin@suse.de>
-Cc: jgarzik@redhat.com, linux-ide@vger.kernel.org
 
-> > @@ -1583,6 +1583,12 @@ inline unsigned int ata_sff_host_intr(struct ata_port *ap
-> >         if (status & ATA_BUSY)
-> >                 goto idle_irq;
-> > 
-> > +       /* check main status, clearing INTRQ */
-> > +       status = ap->ops->sff_check_status(ap);
-> > +       if (unlikely(status & ATA_BUSY))
-> > +               goto idle_irq;
-> > +
-> > +
+On Mon, 2008-06-02 at 15:57 +0900, FUJITA Tomonori wrote:
+> Some REQ_TYPE_ATA_PC commands uses the stack buffers for DMA, which
+> leads to memory corruption on a non-coherent platform.
+> 
+> With regard to alignment and padding, ide-cd has the the dma safe
+> check for sg requests and REQ_TYPE_ATA_PC. This adds the stack buffer
+> check to that check.
+> 
+> Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+> Cc: Borislav Petkov <petkovbb@gmail.com>
+> Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+> ---
+>  drivers/ide/ide-cd.c |    5 +++++
+>  1 files changed, 5 insertions(+), 0 deletions(-)
+> 
+> diff --git a/drivers/ide/ide-cd.c b/drivers/ide/ide-cd.c
+> index e3f085c..e12d602 100644
+> --- a/drivers/ide/ide-cd.c
+> +++ b/drivers/ide/ide-cd.c
+> @@ -1195,6 +1195,7 @@ static ide_startstop_t cdrom_do_block_pc(ide_drive_t *drive, struct request *rq)
+>  		struct request_queue *q = drive->queue;
+>  		unsigned int alignment;
+>  		unsigned long addr;
+> +		unsigned long stack_mask = ~(THREAD_SIZE - 1);
+>  
+>  		if (rq->bio)
+>  			addr = (unsigned long)bio_data(rq->bio);
+> @@ -1212,6 +1213,10 @@ static ide_startstop_t cdrom_do_block_pc(ide_drive_t *drive, struct request *rq)
+>  		alignment = queue_dma_alignment(q) | q->dma_pad_mask;
+>  		if (addr & alignment || rq->data_len & alignment)
+>  			info->dma = 0;
+> +
+> +		if (!((addr & stack_mask) ^
+> +		      ((unsigned long)current->stack & stack_mask)))
 
-Aha all is revealed: and yes it would only show up on a few boxes
+That can basically become
 
-libata-sff: Don't assume that check_status is an SFF read
+if ((addr & stack_mask)  == ((unsigned long)current->stack & stack_mask))
 
-From: Alan Cox <alan@redhat.com>
+to be a bit clearer, can't it?
 
-For a few controllers the sff check status is actually a method not an I/O
-access and we must call the method when doing the IRQ check
----
+I'm also not keen on the use of current->stack.  It looks like this
+commit:
 
- drivers/ata/libata-sff.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+commit f7e4217b007d1f73e7e3cf10ba4fea4a608c603f
+Author: Roman Zippel <zippel@linux-m68k.org>
+Date:   Wed May 9 02:35:17 2007 -0700
 
-Signed-off-by: Alan Cox <alan@redhat.com>
+    rename thread_info to stack
 
-diff --git a/drivers/ata/libata-sff.c b/drivers/ata/libata-sff.c
-index 90d20c6..215d186 100644
---- a/drivers/ata/libata-sff.c
-+++ b/drivers/ata/libata-sff.c
-@@ -278,7 +278,7 @@ static u8 ata_sff_irq_status(struct ata_port *ap)
- 		    	return status;
- 	}
- 	/* Clear INTRQ latch */
--	status = ata_sff_check_status(ap);
-+	status = ap->ops->sff_check_status(ap);
- 	return status;
- }
- 
+Introduced a task_stack_page() accessor to get this instead, so perhaps
+we should use it (I've cc'd Roman and linux-arch for opinions).
+
+> +			info->dma = 0;
+>  	}
+>  
+>  	/* start sending the command to the drive */
+
+James
