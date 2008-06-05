@@ -1,41 +1,43 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: patch "libata-sff: Fix oops for pnp devices with no ctl" causes
- regression
-Date: Thu, 5 Jun 2008 10:24:24 +0100
-Message-ID: <20080605102424.0cf56c37@core>
-References: <20080605050923.GD11811@wotan.suse.de>
+From: Shane Huang <shane.huang@amd.com>
+Subject: [PATCH] Support SB700 SATA controller PMP
+Date: Thu, 5 Jun 2008 17:58:33 +0800
+Message-ID: <1212659914.6639.12.camel@zm-desktop>
+Reply-To: shane.huang@amd.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:53206 "EHLO
-	lxorguk.ukuu.org.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1753908AbYFEJkU (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 5 Jun 2008 05:40:20 -0400
-In-Reply-To: <20080605050923.GD11811@wotan.suse.de>
+Received: from outbound-va3.frontbridge.com ([216.32.180.16]:7864 "EHLO
+	VA3EHSOBE004.bigfish.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758476AbYFEJ67 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 5 Jun 2008 05:58:59 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Nick Piggin <npiggin@suse.de>
-Cc: jgarzik@redhat.com, linux-ide@vger.kernel.org
+To: jgarzik@pobox.com
+Cc: linux-ide@vger.kernel.org, htejun@gmail.com, shane.huang@amd.com
 
-> And when booting with the commit applied, I instead get a whole lot of
-> messages like this (this is the first one, copied by hand):
-> 
-> ata2.00: exception Emask 0x0 SAct 0x0 Serr 0x10000000 action 0x6 frozen
-> ata2: SError: { }
-> ata2.00: cmd c8/00:02:42:08:20/00:00:00:00:00/e0 tag 0 dma 1024 in
->          res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
-> ata2.00: status: { DRDY }
-> ata2: hard resetting link
-> ata2: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
-> ata2.00: configured for UDMA/133
-> ata2: EH complete
+This patch supports SB700 SATA PMP, this patch depends on
+the SB600 SATA PMP patch sent two days ago.
 
-Well I've been over the patch twice now and I cannot see a single point
-at which the sequence of code that *should* be executed is any different.
+Signed-off-by: Shane Huang <shane.huang@amd.com>
 
-Stick wmb();rmb(); (or similar barriers to compiler optimisation and I/O
-fencing) at the start and end of your ata_sff_altstatus() and see what
-happens, if it suddenly decides to behave or forcing it no inline makes
-it behave then that would be useful info.
+diff -ruN a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+--- a/drivers/ata/ahci.c	2008-06-03 15:36:56.000000000 +0800
++++ b/drivers/ata/ahci.c	2008-06-03 15:37:11.000000000 +0800
+@@ -385,12 +385,11 @@
+ 	},
+ 	/* board_ahci_sb700 */
+ 	{
+-		AHCI_HFLAGS	(AHCI_HFLAG_IGN_SERR_INTERNAL |
+-				 AHCI_HFLAG_NO_PMP),
++		AHCI_HFLAGS	(AHCI_HFLAG_IGN_SERR_INTERNAL),
+ 		.flags		= AHCI_FLAG_COMMON,
+ 		.pio_mask	= 0x1f, /* pio0-4 */
+ 		.udma_mask	= ATA_UDMA6,
+-		.port_ops	= &ahci_ops,
++		.port_ops	= &ahci_sb600_ops,
+ 	},
+ };
+ 
+
 
