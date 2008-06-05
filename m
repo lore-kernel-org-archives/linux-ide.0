@@ -1,90 +1,101 @@
-From: Borislav Petkov <petkovbb@googlemail.com>
-Subject: Re: [PATCH v2 -mm 4/6] ide: avoid DMA on the stack for
-	REQ_TYPE_ATA_PC
-Date: Thu, 5 Jun 2008 21:14:37 +0200
-Message-ID: <20080605191437.GA7479@gollum.tnic>
-References: <1212389852-1277-1-git-send-email-fujita.tomonori@lab.ntt.co.jp> <1212389852-1277-2-git-send-email-fujita.tomonori@lab.ntt.co.jp> <1212389852-1277-3-git-send-email-fujita.tomonori@lab.ntt.co.jp> <1212389852-1277-4-git-send-email-fujita.tomonori@lab.ntt.co.jp> <1212389852-1277-5-git-send-email-fujita.tomonori@lab.ntt.co.jp> <1212682248.13549.48.camel@localhost.localdomain>
-Reply-To: petkovbb@gmail.com
+From: Andrew Morton <akpm@linux-foundation.org>
+Subject: Re: [Bugme-new] [Bug 10860] New: total system freeze at boot with
+ 2.6.26-rc
+Date: Thu, 5 Jun 2008 12:49:45 -0700
+Message-ID: <20080605124945.3a9ff0c2.akpm@linux-foundation.org>
+References: <bug-10860-10286@http.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-arch-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1212682248.13549.48.camel@localhost.localdomain>
-Sender: linux-arch-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, jens.axboe@oracle.com, tsbogend@alpha.franken.de, bzolnier@gmail.com, jeff@garzik.org, davem@davemloft.net, akpm@linux-foundation.org, linux-arch@vger.kernel.org, Roman Zippel <zippel@linux-m68k.org>
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:37104 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751542AbYFETuH (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 5 Jun 2008 15:50:07 -0400
+In-Reply-To: <bug-10860-10286@http.bugzilla.kernel.org/>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
+Cc: bugme-daemon@bugzilla.kernel.org, "Rafael J. Wysocki" <rjw@sisk.pl>, casteyde.christian@free.fr
 
-On Thu, Jun 05, 2008 at 11:10:48AM -0500, James Bottomley wrote:
-> On Mon, 2008-06-02 at 15:57 +0900, FUJITA Tomonori wrote:
-> > Some REQ_TYPE_ATA_PC commands uses the stack buffers for DMA, which
-> > leads to memory corruption on a non-coherent platform.
-> >=20
-> > With regard to alignment and padding, ide-cd has the the dma safe
-> > check for sg requests and REQ_TYPE_ATA_PC. This adds the stack buff=
-er
-> > check to that check.
-> >=20
-> > Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-> > Cc: Borislav Petkov <petkovbb@gmail.com>
-> > Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-> > ---
-> >  drivers/ide/ide-cd.c |    5 +++++
-> >  1 files changed, 5 insertions(+), 0 deletions(-)
-> >=20
-> > diff --git a/drivers/ide/ide-cd.c b/drivers/ide/ide-cd.c
-> > index e3f085c..e12d602 100644
-> > --- a/drivers/ide/ide-cd.c
-> > +++ b/drivers/ide/ide-cd.c
-> > @@ -1195,6 +1195,7 @@ static ide_startstop_t cdrom_do_block_pc(ide_=
-drive_t *drive, struct request *rq)
-> >  		struct request_queue *q =3D drive->queue;
-> >  		unsigned int alignment;
-> >  		unsigned long addr;
-> > +		unsigned long stack_mask =3D ~(THREAD_SIZE - 1);
-> > =20
-> >  		if (rq->bio)
-> >  			addr =3D (unsigned long)bio_data(rq->bio);
-> > @@ -1212,6 +1213,10 @@ static ide_startstop_t cdrom_do_block_pc(ide=
-_drive_t *drive, struct request *rq)
-> >  		alignment =3D queue_dma_alignment(q) | q->dma_pad_mask;
-> >  		if (addr & alignment || rq->data_len & alignment)
-> >  			info->dma =3D 0;
-> > +
-> > +		if (!((addr & stack_mask) ^
-> > +		      ((unsigned long)current->stack & stack_mask)))
->=20
-> That can basically become
->=20
-> if ((addr & stack_mask)  =3D=3D ((unsigned long)current->stack & stac=
-k_mask))
->=20
-> to be a bit clearer, can't it?
 
-yep, yep. Clearer it is :).
->=20
-> I'm also not keen on the use of current->stack.  It looks like this
-> commit:
->=20
-> commit f7e4217b007d1f73e7e3cf10ba4fea4a608c603f
-> Author: Roman Zippel <zippel@linux-m68k.org>
-> Date:   Wed May 9 02:35:17 2007 -0700
->=20
->     rename thread_info to stack
->=20
-> Introduced a task_stack_page() accessor to get this instead, so perha=
-ps
-> we should use it (I've cc'd Roman and linux-arch for opinions).
->=20
-> > +			info->dma =3D 0;
-> >  	}
-> > =20
-> >  	/* start sending the command to the drive */
->=20
-> James
->=20
+(switched to email.  Please respond via emailed reply-to-all, not via the
+bugzilla web interface).
 
---=20
-Regards/Gru=DF,
-    Boris.
+On Thu,  5 Jun 2008 12:38:02 -0700 (PDT)
+bugme-daemon@bugzilla.kernel.org wrote:
+
+> http://bugzilla.kernel.org/show_bug.cgi?id=10860
+> 
+>            Summary: total system freeze at boot with 2.6.26-rc
+>            Product: Other
+>            Version: 2.5
+>      KernelVersion: 2.6.26-rc4
+>           Platform: All
+>         OS/Version: Linux
+>               Tree: Mainline
+>             Status: NEW
+>           Severity: blocking
+>           Priority: P1
+>          Component: Other
+>         AssignedTo: other_other@kernel-bugs.osdl.org
+>         ReportedBy: casteyde.christian@free.fr
+> 
+> 
+> Latest working kernel version:2.6.25.4
+> Earliest failing kernel version:2.6.24-rc4
+
+(should have been 2.6.26-rc4)
+
+> also fails with -rc5 I was wating for, previous rcs not tested
+> Distribution: Bluewhite64 (64 bits slackware)
+> Hardware Environment: Athlon64 X2 / Ali 1689 north 1563 south
+> + bt848 v4l + PATA and SATA disk (SATA on sata_uli)
+> Seems to be related to sata disk detection (see below).
+> 
+> Software Environment:
+> none
+> 
+> Problem Description:
+> the computer freeze totally at boot after SATA disk detection.
+> I append 2.6.25.4 dmesg, lspci and lsusb.
+> The CPU is not 100% (otherwise I could hear the fan going crazy), the keayboard
+> is dead (unable to scroll the console up or down). Nothings happen.
+> 
+> The console shows somethings similar to the 2.6.25.4 logs, but hangs after
+> those lines:
+> hda: cache flushes not supported
+>  hda: hda1 hda2
+> hdd: ATAPI 40X DVD-ROM DVD-R-RAM CD-R/RW drive, 2048kB Cache
+> Uniform CD-ROM driver Revision: 3.20
+> Driver 'sd' needs updating - please use bus_type methods
+> sata_uli 0000:00:0e.1: version 1.3
+> ACPI: PCI Interrupt 0000:00:0e.1[A] -> GSI 19 (level, low) -> IRQ 19
+> scsi0 : sata_uli
+> scsi1 : sata_uli
+> ata1: SATA max UDMA/133 cmd 0xf80 ctl 0xf00 bmdma 0xd880 irq 19
+> ata2: SATA max UDMA/133 cmd 0xe80 ctl 0xe00 bmdma 0xd888 irq 19
+> ata1: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+> 
+> <-- here, 2.6.24 hangs -->
+> 
+> normal way for 2.6.25 :
+> 
+> ata1.00: ATA-7: ST3200826AS, 3.06, max UDMA/133
+> ata1.00: 390721968 sectors, multi 16: LBA48 NCQ (depth 0/32)
+> ata1.00: configured for UDMA/133
+> ata2: SATA link down (SStatus 0 SControl 300)
+> scsi 0:0:0:0: Direct-Access     ATA      ST3200826AS      3.06 PQ: 0 ANSI: 5
+> sd 0:0:0:0: [sda] 390721968 512-byte hardware sectors (200050 MB)
+> sd 0:0:0:0: [sda] Write Protect is off
+> sd 0:0:0:0: [sda] Mode Sense: 00 3a 00 00
+> 
+> Steps to reproduce:
+> Boot my PC :-)
+> I guess any sata_uli device may hang the same way?
+
+yup, I'd say that the ata code (or something very nearby) killed your
+box.
+
+This is a post-2.6.25 regression.
+
