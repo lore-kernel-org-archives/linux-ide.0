@@ -1,44 +1,131 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: ide cdrom problems on new imac
-Date: Fri, 6 Jun 2008 21:49:47 +0100
-Message-ID: <20080606214947.06e19074@core>
-References: <484970DC.3060209@cse.yorku.ca>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: [PATCH 1/4] icside: don't use hwif->hwif_data
+Date: Fri, 6 Jun 2008 23:31:53 +0200
+Message-ID: <200806062331.53382.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:33940 "EHLO
-	lxorguk.ukuu.org.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1756602AbYFFVGB (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 6 Jun 2008 17:06:01 -0400
-In-Reply-To: <484970DC.3060209@cse.yorku.ca>
+Received: from mu-out-0910.google.com ([209.85.134.184]:8718 "EHLO
+	mu-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758633AbYFFVkl (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 6 Jun 2008 17:40:41 -0400
+Received: by mu-out-0910.google.com with SMTP id w8so726772mue.1
+        for <linux-ide@vger.kernel.org>; Fri, 06 Jun 2008 14:40:40 -0700 (PDT)
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jason Keltz <jas@cse.yorku.ca>
-Cc: jgarzik@pobox.com, linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, Russell King <rmk@arm.linux.org.uk>
 
-> It isn't clear to me whether the device is recognized by libata 
-> ata_piix, or just by a separate kernel IDE Intel PIIX driver?
+* Move ecard_set_drvdata() from icside_probe() to icside_register_v{5,6}(),
+  then use state->ioc_base instead of hwif->hwif_data in icside_maskproc()
+  and icside_dma_test_irq().
 
-One slot by each - CD by old IDE  disk by libata in the dump you gave
+While at it:
 
-> [<c025d0ae>] (ide_intr+0x0/0x11e)
-> Disabling IRQ #185
+* Add sel field to struct icside_state, then use state->{sel,ioc_base}
+  instead of ->{select,config}_data in icside_dma_setup().
 
-and old IDE broke
+There should be no functional changes caused by this patch.
 
-No kernel that old supports the needed workarounds for the ICH behaviour
-change. Intel changed the ICH behaviour on IRQ handling in the later
-chips in some configurations that are mostly used on the mac.
+Cc: Russell King <rmk@arm.linux.org.uk>
+Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+---
+ drivers/ide/arm/icside.c |   25 ++++++++++++-------------
+ 1 file changed, 12 insertions(+), 13 deletions(-)
 
-The SATA backport in Centos 4.x doesn't include the needed changes nor
-does the IDE layer. Ditto I believe 5.x.
-
-You need to use the current IRQ clearing logic for both drivers - the old
-logic only clears the ata status register on PIO events, the newer one
-clears both the ata and DMA status to work around the Intel funny.
-
-[By a strict reading of the spec the Intel behaviour does appear allowed,
- although I hope Intel didn't intend it ...]
-
-Alan
+Index: b/drivers/ide/arm/icside.c
+===================================================================
+--- a/drivers/ide/arm/icside.c
++++ b/drivers/ide/arm/icside.c
+@@ -68,6 +68,7 @@ struct icside_state {
+ 	unsigned int enabled;
+ 	void __iomem *irq_port;
+ 	void __iomem *ioc_base;
++	unsigned int sel;
+ 	unsigned int type;
+ 	ide_hwif_t *hwif[2];
+ };
+@@ -165,7 +166,8 @@ static const expansioncard_ops_t icside_
+ static void icside_maskproc(ide_drive_t *drive, int mask)
+ {
+ 	ide_hwif_t *hwif = HWIF(drive);
+-	struct icside_state *state = hwif->hwif_data;
++	struct expansion_card *ec = ECARD_DEV(hwif->dev);
++	struct icside_state *state = ecard_get_drvdata(ec);
+ 	unsigned long flags;
+ 
+ 	local_irq_save(flags);
+@@ -308,6 +310,7 @@ static int icside_dma_setup(ide_drive_t 
+ {
+ 	ide_hwif_t *hwif = HWIF(drive);
+ 	struct expansion_card *ec = ECARD_DEV(hwif->dev);
++	struct icside_state *state = ecard_get_drvdata(ec);
+ 	struct request *rq = hwif->hwgroup->rq;
+ 	unsigned int dma_mode;
+ 
+@@ -331,7 +334,7 @@ static int icside_dma_setup(ide_drive_t 
+ 	/*
+ 	 * Route the DMA signals to the correct interface.
+ 	 */
+-	writeb(hwif->select_data, hwif->config_data);
++	writeb(state->sel | hwif->channel, state->ioc_base);
+ 
+ 	/*
+ 	 * Select the correct timing for this drive.
+@@ -359,7 +362,8 @@ static void icside_dma_exec_cmd(ide_driv
+ static int icside_dma_test_irq(ide_drive_t *drive)
+ {
+ 	ide_hwif_t *hwif = HWIF(drive);
+-	struct icside_state *state = hwif->hwif_data;
++	struct expansion_card *ec = ECARD_DEV(hwif->dev);
++	struct icside_state *state = ecard_get_drvdata(ec);
+ 
+ 	return readb(state->irq_port +
+ 		     (hwif->channel ?
+@@ -472,6 +476,8 @@ icside_register_v5(struct icside_state *
+ 
+ 	state->hwif[0] = hwif;
+ 
++	ecard_set_drvdata(ec, state);
++
+ 	idx[0] = hwif->index;
+ 
+ 	ide_device_add(idx, NULL);
+@@ -525,6 +531,7 @@ icside_register_v6(struct icside_state *
+ 
+ 	state->irq_port   = easi_base;
+ 	state->ioc_base   = ioc_base;
++	state->sel	  = sel;
+ 
+ 	/*
+ 	 * Be on the safe side - disable interrupts
+@@ -545,13 +552,7 @@ icside_register_v6(struct icside_state *
+ 	state->hwif[0]    = hwif;
+ 	state->hwif[1]    = mate;
+ 
+-	hwif->hwif_data   = state;
+-	hwif->config_data = (unsigned long)ioc_base;
+-	hwif->select_data = sel;
+-
+-	mate->hwif_data   = state;
+-	mate->config_data = (unsigned long)ioc_base;
+-	mate->select_data = sel | 1;
++	ecard_set_drvdata(ec, state);
+ 
+ 	if (ec->dma != NO_DMA && !request_dma(ec->dma, hwif->name)) {
+ 		d.init_dma = icside_dma_init;
+@@ -627,10 +628,8 @@ icside_probe(struct expansion_card *ec, 
+ 		break;
+ 	}
+ 
+-	if (ret == 0) {
+-		ecard_set_drvdata(ec, state);
++	if (ret == 0)
+ 		goto out;
+-	}
+ 
+ 	kfree(state);
+  release:
