@@ -1,135 +1,44 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: 2.6.25 -> 2.6.26-rc1: pcmcia flash card changed name from hda to hdc
-Date: Fri, 6 Jun 2008 22:45:55 +0200
-Message-ID: <200806062245.55973.bzolnier@gmail.com>
-References: <20080515132313.GA1558@elf.ucw.cz> <200805162140.49501.bzolnier@gmail.com> <20080605102146.GA1552@elf.ucw.cz>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: ide cdrom problems on new imac
+Date: Fri, 6 Jun 2008 21:49:47 +0100
+Message-ID: <20080606214947.06e19074@core>
+References: <484970DC.3060209@cse.yorku.ca>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from gv-out-0910.google.com ([216.239.58.185]:31592 "EHLO
-	gv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755520AbYFFUpR (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 6 Jun 2008 16:45:17 -0400
-Received: by gv-out-0910.google.com with SMTP id e6so428993gvc.37
-        for <linux-ide@vger.kernel.org>; Fri, 06 Jun 2008 13:45:14 -0700 (PDT)
-In-Reply-To: <20080605102146.GA1552@elf.ucw.cz>
-Content-Disposition: inline
+Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:33940 "EHLO
+	lxorguk.ukuu.org.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1756602AbYFFVGB (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 6 Jun 2008 17:06:01 -0400
+In-Reply-To: <484970DC.3060209@cse.yorku.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Pavel Machek <pavel@suse.cz>
-Cc: kernel list <linux-kernel@vger.kernel.org>, "Rafael J. Wysocki" <rjw@sisk.pl>, linux-ide@vger.kernel.org
+To: Jason Keltz <jas@cse.yorku.ca>
+Cc: jgarzik@pobox.com, linux-ide@vger.kernel.org
 
+> It isn't clear to me whether the device is recognized by libata 
+> ata_piix, or just by a separate kernel IDE Intel PIIX driver?
 
-Hi,
+One slot by each - CD by old IDE  disk by libata in the dump you gave
 
-On Thursday 05 June 2008, Pavel Machek wrote:
-> Hi!
-> 
-> > > After update to 2.6.26-rc1, CF card (in pcmcia slot) moved from hda to
-> > > hdc on thinkpad x60 (and broke my scripts).
-> > > 
-> > > Is that intentional?
-> > 
-> > Please send dmesgs for 2.6.25 and 2.6.26-rc1 so we can tell more.
-> 
-> Sorry it took me so long...
-> 								Pavel
+> [<c025d0ae>] (ide_intr+0x0/0x11e)
+> Disabling IRQ #185
 
-No problem, lets see what is going on:
+and old IDE broke
 
-> 2.6.26-rc5: flash card is at /dev/hdc.
+No kernel that old supports the needed workarounds for the ICH behaviour
+change. Intel changed the ICH behaviour on IRQ handling in the later
+chips in some configurations that are mostly used on the mac.
 
-[...]
+The SATA backport in Centos 4.x doesn't include the needed changes nor
+does the IDE layer. Ditto I believe 5.x.
 
-> Uniform Multi-Platform E-IDE driver
-> ide: Assuming 33MHz system bus speed for PIO modes; override with idebus=xx
-> ICH7: IDE controller (0x8086:0x27df rev 0x02) at  PCI slot 0000:00:1f.1
-> ICH7: not 100% native mode: will probe irqs later
-> ICH7: IDE port disabled
->     ide0: BM-DMA at 0x1810-0x1817
+You need to use the current IRQ clearing logic for both drivers - the old
+logic only clears the ata status register on PIO events, the newer one
+clears both the ata and DMA status to work around the Intel funny.
 
-ide0 interface is claimed by piix host driver...
+[By a strict reading of the spec the Intel behaviour does appear allowed,
+ although I hope Intel didn't intend it ...]
 
-> Probing IDE interface ide0...
-> ide0 at 0x1f0-0x1f7,0x3f6 on irq 14
-
-...but there are no devices attached to it.
-
-[...]
-
-> pcmcia: registering new device pcmcia0.0
-> Probing IDE interface ide1...
-> hdc: SunDisk SDP3B-20, CFA DISK drive
-> hdd: SunDisk SDP3B-20, CFA DISK drive
-> ide-probe: ignoring undecoded slave
-> ide1 at 0x9100-0x9107,0x910e on irq 16
-
-PCMCIA IDE controller is inserted and ide-cs claims the next free
-interface (ide1) and then detects device on it.
-
-[...]
-
-Now in 2.6.25 it was is like this:
-
-> 2.6.25 : flash card is on /dev/hda
-
-[...]
-
-> Uniform Multi-Platform E-IDE driver
-> ide: Assuming 33MHz system bus speed for PIO modes; override with idebus=xx
-> ICH7: IDE controller (0x8086:0x27df rev 0x02) at  PCI slot 0000:00:1f.1
-> ICH7: not 100% native mode: will probe irqs later
-> ICH7: IDE port disabled
->     ide0: BM-DMA at 0x1810-0x1817, BIOS settings: hda:PIO, hdb:PIO
-> Probing IDE interface ide0...
-
-Same as in 2.6.26-rc1.
-
-[...]
-
-> pcmcia: registering new device pcmcia0.0
-> Probing IDE interface ide0...
-> hda: SunDisk SDP3B-20, CFA DISK drive
-> hdb: SunDisk SDP3B-20, CFA DISK drive
-> ide-probe: ignoring undecoded slave
-> ide0 at 0x9100-0x9107,0x910e on irq 16
-
-However ide0 (already claimed by piix host driver) is re-used by ide-cs
-host driver.
-
-[...]
-
-I now see the source cause of the hda -> hdc name change - we've fixed
-bast-ide (for arm/bast and arm/vr1000) palm_bk3710 (arm/davinci), ide-cs
-and delkin_cb to use ide_find_port() instead of ide_deprecated_find_port()
-in the commit 4f0eee4d877e3b617b6a22d209d52b3dfca2b2a7.
-
-This was needed because re-using interfaces already claimed by other host
-drivers was buggy (i.e. if ide-cs was used along with some other host driver
-that can be unloaded, unloading the other driver would result in attempt to
-un-register ide-cs interface => havoc), also the change was necessary for
-proper IDE warm-plug support (devices can be added/removed to ide0).
-
-We may try to bring the old behavior back with some (major) hackery but:
-
-- the old behavior was buggy (it could result in _real_ bugs under certain
-  circumstances)
-
-- the issue will come back again if allow module unloading for IDE PCI host
-  drivers or remove static ide_hwifs[] table
-
-- there shouldn't be many systems affected by it since you need to use both
-  bast-ide/palm_bk3710/ide-cs/delkin_cb and some other host driver (for host
-  which has _all_ IDE interfaces empty)
-
-- we've never claimed to have stable device naming (we try very hard to keep
-  it unchanged and avoid unnecessary changes but sometimes it isn't feasible)
-  and there are more reliable means for achieving it (udev / UUIDs)
-
-so I guess that is fair to say that ide-cs name change is an inconvenient
-side-effect of moving things forward? [ and I'm _really_ sorry about it! ]
-
-Thanks,
-Bart
+Alan
