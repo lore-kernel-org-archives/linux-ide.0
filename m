@@ -1,62 +1,34 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: ide cdrom problems on new imac
-Date: Sat, 7 Jun 2008 11:01:32 +0100
-Message-ID: <20080607110132.30ea73fc@core>
-References: <484970DC.3060209@cse.yorku.ca>
-	<20080606214947.06e19074@core>
-	<Pine.LNX.4.63.0806062141280.29139@indigo.cs.yorku.ca>
+From: Linus Torvalds <torvalds@linux-foundation.org>
+Subject: Re: [stable] [patch 10/50] libata: force hardreset if link is in
+ powersave mode
+Date: Sat, 7 Jun 2008 09:51:54 -0700 (PDT)
+Message-ID: <alpine.LFD.1.10.0806070951430.3473@woody.linux-foundation.org>
+References: <20080607010215.358296706@sous-sol.org> <20080607010555.470605116@sous-sol.org> <alpine.LFD.1.10.0806061826420.3473@woody.linux-foundation.org> <20080607015730.GA15123@kroah.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:55142 "EHLO
-	lxorguk.ukuu.org.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1755635AbYFGKRe (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 7 Jun 2008 06:17:34 -0400
-In-Reply-To: <Pine.LNX.4.63.0806062141280.29139@indigo.cs.yorku.ca>
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:39011 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1759565AbYFGQyz (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 7 Jun 2008 12:54:55 -0400
+In-Reply-To: <20080607015730.GA15123@kroah.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jason Keltz <jas@cse.yorku.ca>
-Cc: jgarzik@pobox.com, linux-ide@vger.kernel.org
+To: Greg KH <greg@kroah.com>
+Cc: Chris Wright <chrisw@sous-sol.org>, Tejun Heo <htejun@gmail.com>, Theodore Ts'o <tytso@mit.edu>, Zwane Mwaikambo <zwane@arm.linux.org.uk>, Jeff Garzik <jeff@garzik.org>, Greg Kroah-Hartman <gregkh@suse.de>, Justin Forbes <jmforbes@linuxtx.org>, linux-kernel@vger.kernel.org, Chris Wedgwood <reviews@ml.cw.f00f.org>, Domenico Andreoli <cavokz@gmail.com>, IDE/ATA development list <linux-ide@vger.kernel.org>, Randy Dunlap <rdunlap@xenotime.net>, Michael Krufky <mkrufky@linuxtv.org>, matthieu.castet@parrot.com, Chuck Ebbert <cebbert@redhat.com>, Dave Jones <davej@redhat.com>, akpm@linux-foundation.org, Chuck Wolber <chuckw@quantumlinux.com>, stable@kernel.org, alan@lxorguk.ukuu.org.uk
 
-> When you say "old IDE", can you expand on this one for me.  I'm trying to 
-> learn as I go along.  This is the old Linux IDE driver with support of an 
-> Intel PIIX module?  If I understand it correctly, why would RedHat then 
 
-drivers/ide is the old IDE driver which is pretty much for parallel ATA
-(big cables) not serial ATA.
 
-> update the PIIX module to support later versions of the Intel chipsets, if 
-> this can't work properly with the older version of the kernel?
-
-The bug only shows up on the Mac in specific cases so nobody discovered
-it before then.
-
-> Yes, as far as I can tell 5.x doesn't do it either.  I guess I have to 
-> wait for CentOS 6, or go with a distribution like Ubuntu that uses a more 
-> up to date kernel as a start.
-
-Any distro which tracks recent kernels should work fine so Ubuntu,
-Fedora etc. Centos/RHEL/etc backport minimal fixes to old kernels to keep
-maximum stability. The Intel chipset bug might get fixed in an update in
-future. but I couldn't say.
-
-> > You need to use the current IRQ clearing logic for both drivers - the old
-> > logic only clears the ata status register on PIO events, the newer one
-> > clears both the ata and DMA status to work around the Intel funny.
+On Fri, 6 Jun 2008, Greg KH wrote:
+> > 
+> > This isn't upstream. Maybe there's some reason it's not needed upstream, 
+> > but it would be nice to know.
 > 
-> And I guess it wouldn't be easy for me to make these changes, especially 
-> without much kernel hacking knowledge?
+> To quote Tejun when he sent this patch:
+> 	---
+> 	Patch for -stable only.  Devel branch now uses hardreset by
+> 	default so this type of promotion logic isn't necessary anymore.
 
-It's not that big from what I remember, I don't know if Jeff has the
-relevant patch to hand ?
+Ok, thanks,
 
-> > [By a strict reading of the spec the Intel behaviour does appear allowed,
-> > although I hope Intel didn't intend it ...]
-> 
-> Has anyone tried to contact Intel to see their response? 
-
-I've not pursued it - even if it wasn't intentional it won't get fixed so
-we need to support it and now do.
-
-Alan
+		Linus
