@@ -1,34 +1,43 @@
-From: bugme-daemon@bugzilla.kernel.org
-Subject: [Bug 10715] 2.6.25 -> 2.6.26-rc1: pcmcia flash card changed name from hda to hdc
-Date: Sat,  7 Jun 2008 14:24:37 -0700 (PDT)
-Message-ID: <20080607212437.DCF9D108067@picon.linux-foundation.org>
-References: <bug-10715-11633@http.bugzilla.kernel.org/>
+From: Pavel Machek <pavel@suse.cz>
+Subject: Re: 2.6.25 -> 2.6.26-rc1: pcmcia flash card changed name from hda
+	to hdc
+Date: Sat, 7 Jun 2008 23:31:56 +0200
+Message-ID: <20080607213156.GB1746@elf.ucw.cz>
+References: <20080515132313.GA1558@elf.ucw.cz> <200805162140.49501.bzolnier@gmail.com> <20080605102146.GA1552@elf.ucw.cz> <200806062245.55973.bzolnier@gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:37610 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751995AbYFGVZ3 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 7 Jun 2008 17:25:29 -0400
-Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
-	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id m57LOxdj004038
-	for <linux-ide@vger.kernel.org>; Sat, 7 Jun 2008 14:25:00 -0700
-In-Reply-To: <bug-10715-11633@http.bugzilla.kernel.org/>
+Received: from gprs189-60.eurotel.cz ([160.218.189.60]:58448 "EHLO
+	gprs189-60.eurotel.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754007AbYFGVbE (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 7 Jun 2008 17:31:04 -0400
+Content-Disposition: inline
+In-Reply-To: <200806062245.55973.bzolnier@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: kernel list <linux-kernel@vger.kernel.org>, "Rafael J. Wysocki" <rjw@sisk.pl>, linux-ide@vger.kernel.org
 
-http://bugzilla.kernel.org/show_bug.cgi?id=10715
+Hi!
 
+...
+> I now see the source cause of the hda -> hdc name change - we've fixed
+> bast-ide (for arm/bast and arm/vr1000) palm_bk3710 (arm/davinci), ide-cs
+> and delkin_cb to use ide_find_port() instead of ide_deprecated_find_port()
+> in the commit 4f0eee4d877e3b617b6a22d209d52b3dfca2b2a7.
+> 
+> This was needed because re-using interfaces already claimed by other host
+> drivers was buggy (i.e. if ide-cs was used along with some other host driver
+> that can be unloaded, unloading the other driver would result in attempt to
+> un-register ide-cs interface => havoc), also the change was necessary for
+> proper IDE warm-plug support (devices can be added/removed to ide0).
+> 
+> We may try to bring the old behavior back with some (major) hackery but:
 
-rjw@sisk.pl changed:
+No, I do not think we should do any hackery here. I should fix my
+scripts. Thanks!
 
-           What    |Removed                     |Added
-----------------------------------------------------------------------------
-             Status|REJECTED                    |CLOSED
-
-
-
-
+									Pavel
 -- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug, or are watching the assignee.
+(english) http://www.livejournal.com/~pavelmachek
+(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
