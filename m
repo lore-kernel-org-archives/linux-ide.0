@@ -1,43 +1,37 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH] palm_bk3710: add warm-plug support
-Date: Sun, 8 Jun 2008 20:09:41 +0200
-Message-ID: <200806082009.41844.bzolnier@gmail.com>
+From: "Maciej W. Rozycki" <macro@linux-mips.org>
+Subject: Re: [PATCH] swarm: use struct ide_port_info
+Date: Sun, 8 Jun 2008 19:36:01 +0100 (BST)
+Message-ID: <Pine.LNX.4.55.0806081934090.15673@cliff.in.clinika.pl>
+References: <200806082010.35429.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mu-out-0910.google.com ([209.85.134.190]:19404 "EHLO
-	mu-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753882AbYFHSJd (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 8 Jun 2008 14:09:33 -0400
-Received: by mu-out-0910.google.com with SMTP id w8so1273130mue.1
-        for <linux-ide@vger.kernel.org>; Sun, 08 Jun 2008 11:09:29 -0700 (PDT)
-Content-Disposition: inline
+Received: from kirk.serum.com.pl ([213.77.9.205]:61609 "EHLO serum.com.pl"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1754019AbYFHSgK (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 8 Jun 2008 14:36:10 -0400
+In-Reply-To: <200806082010.35429.bzolnier@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, Sergei Shtylyov <sshtylyov@ru.mvista.com>
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Don't fail the probe if there are no devices attached to the controller.
+On Sun, 8 Jun 2008, Bartlomiej Zolnierkiewicz wrote:
 
-Cc: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
----
- drivers/ide/arm/palm_bk3710.c |    3 ---
- 1 file changed, 3 deletions(-)
+> Convert the driver to use struct ide_port_info.
+> 
+> There should be no functional changes caused by this patch.
+> 
+> Cc: Maciej W. Rozycki <macro@linux-mips.org>
+> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+> ---
 
-Index: b/drivers/ide/arm/palm_bk3710.c
-===================================================================
---- a/drivers/ide/arm/palm_bk3710.c
-+++ b/drivers/ide/arm/palm_bk3710.c
-@@ -405,9 +405,6 @@ static int __devinit palm_bk3710_probe(s
- 
- 	ide_device_add(idx, &palm_bk3710_port_info);
- 
--	if (!hwif->present)
--		goto out;
--
- 	return 0;
- out:
- 	printk(KERN_WARNING "Palm Chip BK3710 IDE Register Fail\n");
+Acked-by: Maciej W. Rozycki <macro@linux-mips.org>
+
+ Verified to work correctly on my system, thanks.
+
+> +	.host_flags		= IDE_HFLAG_MMIO | IDE_HFLAG_NO_DMA,
+
+ You could have saved one <Tab> here. ;)
+
+  Maciej
