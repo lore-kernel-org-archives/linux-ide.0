@@ -1,41 +1,54 @@
-From: Roman Zippel <zippel@linux-m68k.org>
-Subject: Re: [PATCH v2 -mm 4/6] ide: avoid DMA on the stack for REQ_TYPE_ATA_PC
-Date: Mon, 9 Jun 2008 19:44:56 +0200 (CEST)
-Message-ID: <Pine.LNX.4.64.0806091937580.6791@localhost.localdomain>
-References: <1212389852-1277-1-git-send-email-fujita.tomonori@lab.ntt.co.jp>
-  <1212389852-1277-2-git-send-email-fujita.tomonori@lab.ntt.co.jp>
- <1212389852-1277-3-git-send-email-fujita.tomonori@lab.ntt.co.jp>
- <1212389852-1277-4-git-send-email-fujita.tomonori@lab.ntt.co.jp>
- <1212389852-1277-5-git-send-email-fujita.tomonori@lab.ntt.co.jp>
- <1212682248.13549.48.camel@localhost.localdomain>
+From: Adrian Bunk <bunk@kernel.org>
+Subject: [2.6 patch] fix BLK_DEV_HD_ONLY on ARM dependencies
+Date: Tue, 10 Jun 2008 01:21:55 +0300
+Message-ID: <20080609222155.GA1987@cs181133002.pp.htv.fi>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-arch-owner@vger.kernel.org>
-In-Reply-To: <1212682248.13549.48.camel@localhost.localdomain>
-Sender: linux-arch-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, jens.axboe@oracle.com, tsbogend@alpha.franken.de, bzolnier@gmail.com, petkovbb@gmail.com, jeff@garzik.org, davem@davemloft.net, akpm@linux-foundation.org, linux-arch@vger.kernel.org
+Content-Type: text/plain; charset=utf-8
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from smtp4.pp.htv.fi ([213.243.153.38]:53857 "EHLO smtp4.pp.htv.fi"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751756AbYFIWWt (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 9 Jun 2008 18:22:49 -0400
+Content-Disposition: inline
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: bzolnier@gmail.com
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, rmk@arm.linux.org.uk
 
-Hi,
+This patch limits BLK_DEV_HD_ONLY to the ARM platforms offering 
+IRQ_HARDDISK, fixing the following compile error on others:
 
-On Thu, 5 Jun 2008, James Bottomley wrote:
+<--  snip  -->
 
-> I'm also not keen on the use of current->stack.  It looks like this
-> commit:
-> 
-> commit f7e4217b007d1f73e7e3cf10ba4fea4a608c603f
-> Author: Roman Zippel <zippel@linux-m68k.org>
-> Date:   Wed May 9 02:35:17 2007 -0700
-> 
->     rename thread_info to stack
-> 
-> Introduced a task_stack_page() accessor to get this instead, so perhaps
-> we should use it (I've cc'd Roman and linux-arch for opinions).
+...
+  CC      drivers/ide/legacy/hd.o
+...
+/home/bunk/linux/kernel-2.6/git/linux-2.6/drivers/ide/legacy/hd.c: In function 'hd_times_out':
+/home/bunk/linux/kernel-2.6/git/linux-2.6/drivers/ide/legacy/hd.c:542: error: 'IRQ_HARDDISK' undeclared (first use in this function)
+/home/bunk/linux/kernel-2.6/git/linux-2.6/drivers/ide/legacy/hd.c:542: error: (Each undeclared identifier is reported only once
+/home/bunk/linux/kernel-2.6/git/linux-2.6/drivers/ide/legacy/hd.c:542: error: for each function it appears in.)
+/home/bunk/linux/kernel-2.6/git/linux-2.6/drivers/ide/legacy/hd.c: In function 'do_hd_request':
+/home/bunk/linux/kernel-2.6/git/linux-2.6/drivers/ide/legacy/hd.c:661: error: 'IRQ_HARDDISK' undeclared (first use in this function)
+/home/bunk/linux/kernel-2.6/git/linux-2.6/drivers/ide/legacy/hd.c: In function 'hd_init':
+/home/bunk/linux/kernel-2.6/git/linux-2.6/drivers/ide/legacy/hd.c:765: error: 'IRQ_HARDDISK' undeclared (first use in this function)
+make[3]: *** [drivers/ide/legacy/hd.o] Error 1
 
-This helper was mainly introduced to help with the transition from direct 
-thread_info access. I don't see this field go away or change somehow in 
-the near future, so direct access of stack is IMO ok, but we already have 
-the helper, so using it to improve readability is fine too.
+<--  snip  -->
 
-bye, Roman
+Reported-by: Adrian Bunk <bunk@kernel.org>
+Signed-off-by: Adrian Bunk <bunk@kernel.org>
+
+---
+f3602f8b3005bec996d53f36cdeb9c894e257003 diff --git a/drivers/ide/Kconfig b/drivers/ide/Kconfig
+index b4f3aef..1607536 100644
+--- a/drivers/ide/Kconfig
++++ b/drivers/ide/Kconfig
+@@ -1028,6 +1028,7 @@ endif
+ 
+ config BLK_DEV_HD_ONLY
+ 	bool "Old hard disk (MFM/RLL/IDE) driver"
++	depends on !ARM || ARCH_RPC || ARCH_SHARK || BROKEN
+ 	help
+ 	  There are two drivers for MFM/RLL/IDE hard disks. Most people use
+ 	  the newer enhanced driver, but this old one is still around for two
+
