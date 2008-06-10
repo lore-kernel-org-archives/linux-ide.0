@@ -1,45 +1,38 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: 2.6.25: sata_sil freezes, hard resets port.
-Date: Tue, 10 Jun 2008 12:18:58 +0900
-Message-ID: <484DF2A2.103@gmail.com>
-References: <4846F3EA.2050408@bredband.net>
+From: maximilian attems <max@stro.at>
+Subject: Re: [PATCH] ata: blacklist FUJITSU MHW2160BH PL
+Date: Tue, 10 Jun 2008 09:19:04 +0200
+Message-ID: <20080610071903.GA24102@stro.at>
+References: <1212512005-13284-1-git-send-email-max@stro.at> <484DEB57.8060508@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wf-out-1314.google.com ([209.85.200.168]:63372 "EHLO
-	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752585AbYFJDTF (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 9 Jun 2008 23:19:05 -0400
-Received: by wf-out-1314.google.com with SMTP id 27so2392836wfd.4
-        for <linux-ide@vger.kernel.org>; Mon, 09 Jun 2008 20:19:04 -0700 (PDT)
-In-Reply-To: <4846F3EA.2050408@bredband.net>
+Received: from baikonur.stro.at ([213.239.196.228]:52213 "EHLO
+	baikonur.stro.at" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751856AbYFJHTh (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 10 Jun 2008 03:19:37 -0400
+Content-Disposition: inline
+In-Reply-To: <484DEB57.8060508@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Andrew Henry <adhenry@bredband.net>
-Cc: linux-ide@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: jgarzik@pobox.com, linux-ide@vger.kernel.org, Chuck Short <zulcss@ubuntu.com>, Tim Gardner <tim.gardner@canonical.com>
 
-Andrew Henry wrote:
-> Any news with this?  I start to understand that this really is a missing
-> function in the sata_sil driver: driver does not work well with power
-> saving modes/standby on eSATA drives.
-> 
-> I have created a cron script to 'ping' the drives usng sdparm -C start
-> /dev/sdX every 3 minutes and the drives have been operating with RAID1
-> and dmcrypt for 4 days non-stop without error.
-> 
-> It does seem that this fault I am experiencing is only caused by
-> incomplete driver.  Can someone please acknowledge this?
+On Tue, 10 Jun 2008, Tejun Heo wrote:
 
-It looks like bad interaction with link power saving to me.  libata
-currently inhibits all link power saving and doesn't configure device
-side power saving either, so the link should never enter powersaving
-mode but some "green" drives are known to take extreme measures to cut
-down on power.  At any rate, the drive and link should wake up when the
-controller strobes the link w/ PHY reset no matter in which PS mode it's
-in.  I can't think of any good solution at the moment.  Can you please
-post the outputs of dmesg after the wake up failure (fdisk -l) and
-"hdparm --Istdout /dev/sdX"?
+> maximilian attems wrote:
+> > From: Chuck Short <zulcss@ubuntu.com>
+> > 
+> > OriginalAuthor: Chuck Short <zulcss@ubuntu.com>
+> > Bug: #175834
+> 
+> OSDL bz #175834 does not exist and even if it did having some
+> explanation on patch itself wouldn't hurt.
+> 
+> -- 
+> tejun
+
+right is a launchpad bug number
+https://bugs.launchpad.net/ubuntu/+source/linux/+bug/175834
 
 -- 
-tejun
+maks
