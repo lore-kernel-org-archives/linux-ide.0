@@ -1,77 +1,109 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH 2/5] rapide: fix rapide_probe() return value
-Date: Wed, 11 Jun 2008 21:19:46 +0200
-Message-ID: <200806112119.46243.bzolnier@gmail.com>
+Subject: [PATCH 1/5] ide-cs: fix probing and add warm-plug support
+Date: Wed, 11 Jun 2008 21:18:48 +0200
+Message-ID: <200806112118.48980.bzolnier@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
   charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.153]:61057 "EHLO
+Received: from fg-out-1718.google.com ([72.14.220.152]:60265 "EHLO
 	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751541AbYFKUZ6 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 11 Jun 2008 16:25:58 -0400
-Received: by fg-out-1718.google.com with SMTP id 19so2234746fgg.17
-        for <linux-ide@vger.kernel.org>; Wed, 11 Jun 2008 13:25:56 -0700 (PDT)
+	with ESMTP id S1751323AbYFKUZ4 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 11 Jun 2008 16:25:56 -0400
+Received: by fg-out-1718.google.com with SMTP id 19so2234733fgg.17
+        for <linux-ide@vger.kernel.org>; Wed, 11 Jun 2008 13:25:54 -0700 (PDT)
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, Russell King <rmk@arm.linux.org.uk>
+Cc: linux-kernel@vger.kernel.org
 
-Return -ENOENT on ide_find_port() failure.
+* Fix probing by using ide_port_scan() and moving "retry loop"
+  from ide_config() to idecs_register().
 
-While at it:
+* Don't fail probe if there are no devices attached to a port.
 
-- Cleanup rapide_probe() a bit.
+* Remove (now redundant) error message from ide_config().
 
-Cc: Russell King <rmk@arm.linux.org.uk>
 Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 ---
- drivers/ide/arm/rapide.c |   28 +++++++++++++++-------------
- 1 file changed, 15 insertions(+), 13 deletions(-)
+ drivers/ide/legacy/ide-cs.c |   37 +++++++++++++++----------------------
+ 1 file changed, 15 insertions(+), 22 deletions(-)
 
-Index: b/drivers/ide/arm/rapide.c
+Index: b/drivers/ide/legacy/ide-cs.c
 ===================================================================
---- a/drivers/ide/arm/rapide.c
-+++ b/drivers/ide/arm/rapide.c
-@@ -48,24 +48,26 @@ rapide_probe(struct expansion_card *ec, 
- 		goto release;
- 	}
+--- a/drivers/ide/legacy/ide-cs.c
++++ b/drivers/ide/legacy/ide-cs.c
+@@ -186,17 +186,25 @@ static ide_hwif_t *idecs_register(unsign
+     if (hwif == NULL)
+ 	goto out_release;
  
--	hwif = ide_find_port();
--	if (hwif) {
--		memset(&hw, 0, sizeof(hw));
--		rapide_setup_ports(&hw, base, base + 0x818, 1 << 6, ec->irq);
--		hw.chipset = ide_generic;
--		hw.dev = &ec->dev;
-+	memset(&hw, 0, sizeof(hw));
-+	rapide_setup_ports(&hw, base, base + 0x818, 1 << 6, ec->irq);
-+	hw.chipset = ide_generic;
-+	hw.dev = &ec->dev;
+-    i = hwif->index;
+-
+     ide_init_port_hw(hwif, &hw);
  
--		ide_init_port_hw(hwif, &hw);
-+	hwif = ide_find_port();
-+	if (hwif == NULL) {
-+		ret = -ENOENT;
-+		goto release;
-+	}
+-    idx[0] = i;
++    idx[0] = hwif->index;
  
--		default_hwif_mmiops(hwif);
-+	ide_init_port_hw(hwif, &hw);
-+	default_hwif_mmiops(hwif);
+     ide_device_add(idx, &idecs_port_info);
  
--		idx[0] = hwif->index;
-+	idx[0] = hwif->index;
+     if (hwif->present)
+ 	return hwif;
  
--		ide_device_add(idx, &rapide_port_info);
-+	ide_device_add(idx, &rapide_port_info);
++    /* retry registration in case device is still spinning up */
++    for (i = 0; i < 10; i++) {
++	msleep(100);
++	ide_port_scan(hwif);
++	if (hwif->present)
++	    return hwif;
++    }
++
++    return hwif;
++
+ out_release:
+     release_region(ctl, 1);
+     release_region(io, 8);
+@@ -225,7 +233,7 @@ static int ide_config(struct pcmcia_devi
+ 	cistpl_cftable_entry_t dflt;
+     } *stk = NULL;
+     cistpl_cftable_entry_t *cfg;
+-    int i, pass, last_ret = 0, last_fn = 0, is_kme = 0;
++    int pass, last_ret = 0, last_fn = 0, is_kme = 0;
+     unsigned long io_base, ctl_base;
+     ide_hwif_t *hwif;
  
--		ecard_set_drvdata(ec, hwif);
--		goto out;
+@@ -322,30 +330,15 @@ static int ide_config(struct pcmcia_devi
+     if (is_kme)
+ 	outb(0x81, ctl_base+1);
+ 
+-    /* retry registration in case device is still spinning up */
+-    for (i = 0; i < 10; i++) {
+-	hwif = idecs_register(io_base, ctl_base, link->irq.AssignedIRQ, link);
+-	if (hwif)
+-	    break;
+-	if (link->io.NumPorts1 == 0x20) {
++     hwif = idecs_register(io_base, ctl_base, link->irq.AssignedIRQ, link);
++     if (hwif == NULL && link->io.NumPorts1 == 0x20) {
+ 	    outb(0x02, ctl_base + 0x10);
+ 	    hwif = idecs_register(io_base + 0x10, ctl_base + 0x10,
+ 				  link->irq.AssignedIRQ, link);
+-	    if (hwif) {
+-		io_base += 0x10;
+-		ctl_base += 0x10;
+-		break;
+-	    }
 -	}
-+	ecard_set_drvdata(ec, hwif);
-+	goto out;
+-	msleep(100);
+     }
  
-  release:
- 	ecard_release_resources(ec);
+-    if (hwif == NULL) {
+-	printk(KERN_NOTICE "ide-cs: ide_register() at 0x%3lx & 0x%3lx"
+-	       ", irq %u failed\n", io_base, ctl_base,
+-	       link->irq.AssignedIRQ);
++    if (hwif == NULL)
+ 	goto failed;
+-    }
+ 
+     info->ndev = 1;
+     sprintf(info->node.dev_name, "hd%c", 'a' + hwif->index * 2);
