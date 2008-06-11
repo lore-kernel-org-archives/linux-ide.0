@@ -1,7 +1,7 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH 1/5] ide-cs: fix probing and add warm-plug support
-Date: Wed, 11 Jun 2008 21:18:48 +0200
-Message-ID: <200806112118.48980.bzolnier@gmail.com>
+Subject: [PATCH 2/6] opti621: remove DMA support
+Date: Wed, 11 Jun 2008 21:58:18 +0200
+Message-ID: <200806112158.18354.bzolnier@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
   charset="iso-8859-1"
@@ -9,101 +9,48 @@ Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
 Received: from fg-out-1718.google.com ([72.14.220.152]:60265 "EHLO
 	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751323AbYFKUZ4 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 11 Jun 2008 16:25:56 -0400
+	with ESMTP id S1752244AbYFKU0J (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 11 Jun 2008 16:26:09 -0400
 Received: by fg-out-1718.google.com with SMTP id 19so2234733fgg.17
-        for <linux-ide@vger.kernel.org>; Wed, 11 Jun 2008 13:25:54 -0700 (PDT)
+        for <linux-ide@vger.kernel.org>; Wed, 11 Jun 2008 13:26:08 -0700 (PDT)
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, Juergen Kosel <juergen.kosel@gmx.de>
 
-* Fix probing by using ide_port_scan() and moving "retry loop"
-  from ide_config() to idecs_register().
+These controllers don't support DMA.
 
-* Don't fail probe if there are no devices attached to a port.
+Based on a bugreport from Juergen Kosel & inspired by pata_opti.c code.
 
-* Remove (now redundant) error message from ide_config().
-
+Tested-by: Juergen Kosel <juergen.kosel@gmx.de>
 Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 ---
- drivers/ide/legacy/ide-cs.c |   37 +++++++++++++++----------------------
- 1 file changed, 15 insertions(+), 22 deletions(-)
+ drivers/ide/pci/opti621.c |    8 ++------
+ 1 file changed, 2 insertions(+), 6 deletions(-)
 
-Index: b/drivers/ide/legacy/ide-cs.c
+Index: b/drivers/ide/pci/opti621.c
 ===================================================================
---- a/drivers/ide/legacy/ide-cs.c
-+++ b/drivers/ide/legacy/ide-cs.c
-@@ -186,17 +186,25 @@ static ide_hwif_t *idecs_register(unsign
-     if (hwif == NULL)
- 	goto out_release;
+--- a/drivers/ide/pci/opti621.c
++++ b/drivers/ide/pci/opti621.c
+@@ -324,18 +324,14 @@ static const struct ide_port_info opti62
+ 		.name		= "OPTI621",
+ 		.enablebits	= { {0x45, 0x80, 0x00}, {0x40, 0x08, 0x00} },
+ 		.port_ops	= &opti621_port_ops,
+-		.host_flags	= IDE_HFLAG_TRUST_BIOS_FOR_DMA,
++		.host_flags	= IDE_HFLAG_NO_DMA,
+ 		.pio_mask	= ATA_PIO3,
+-		.swdma_mask	= ATA_SWDMA2,
+-		.mwdma_mask	= ATA_MWDMA2,
+ 	}, {	/* 1 */
+ 		.name		= "OPTI621X",
+ 		.enablebits	= { {0x45, 0x80, 0x00}, {0x40, 0x08, 0x00} },
+ 		.port_ops	= &opti621_port_ops,
+-		.host_flags	= IDE_HFLAG_TRUST_BIOS_FOR_DMA,
++		.host_flags	= IDE_HFLAG_NO_DMA,
+ 		.pio_mask	= ATA_PIO3,
+-		.swdma_mask	= ATA_SWDMA2,
+-		.mwdma_mask	= ATA_MWDMA2,
+ 	}
+ };
  
--    i = hwif->index;
--
-     ide_init_port_hw(hwif, &hw);
- 
--    idx[0] = i;
-+    idx[0] = hwif->index;
- 
-     ide_device_add(idx, &idecs_port_info);
- 
-     if (hwif->present)
- 	return hwif;
- 
-+    /* retry registration in case device is still spinning up */
-+    for (i = 0; i < 10; i++) {
-+	msleep(100);
-+	ide_port_scan(hwif);
-+	if (hwif->present)
-+	    return hwif;
-+    }
-+
-+    return hwif;
-+
- out_release:
-     release_region(ctl, 1);
-     release_region(io, 8);
-@@ -225,7 +233,7 @@ static int ide_config(struct pcmcia_devi
- 	cistpl_cftable_entry_t dflt;
-     } *stk = NULL;
-     cistpl_cftable_entry_t *cfg;
--    int i, pass, last_ret = 0, last_fn = 0, is_kme = 0;
-+    int pass, last_ret = 0, last_fn = 0, is_kme = 0;
-     unsigned long io_base, ctl_base;
-     ide_hwif_t *hwif;
- 
-@@ -322,30 +330,15 @@ static int ide_config(struct pcmcia_devi
-     if (is_kme)
- 	outb(0x81, ctl_base+1);
- 
--    /* retry registration in case device is still spinning up */
--    for (i = 0; i < 10; i++) {
--	hwif = idecs_register(io_base, ctl_base, link->irq.AssignedIRQ, link);
--	if (hwif)
--	    break;
--	if (link->io.NumPorts1 == 0x20) {
-+     hwif = idecs_register(io_base, ctl_base, link->irq.AssignedIRQ, link);
-+     if (hwif == NULL && link->io.NumPorts1 == 0x20) {
- 	    outb(0x02, ctl_base + 0x10);
- 	    hwif = idecs_register(io_base + 0x10, ctl_base + 0x10,
- 				  link->irq.AssignedIRQ, link);
--	    if (hwif) {
--		io_base += 0x10;
--		ctl_base += 0x10;
--		break;
--	    }
--	}
--	msleep(100);
-     }
- 
--    if (hwif == NULL) {
--	printk(KERN_NOTICE "ide-cs: ide_register() at 0x%3lx & 0x%3lx"
--	       ", irq %u failed\n", io_base, ctl_base,
--	       link->irq.AssignedIRQ);
-+    if (hwif == NULL)
- 	goto failed;
--    }
- 
-     info->ndev = 1;
-     sprintf(info->node.dev_name, "hd%c", 'a' + hwif->index * 2);
