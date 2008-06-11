@@ -1,64 +1,41 @@
-From: "Justin Mattock" <justinmattock@gmail.com>
-Subject: Re: macbook pro dvd playback after suspend Buffer I/O error
-Date: Wed, 11 Jun 2008 07:45:05 +0000
-Message-ID: <dd18b0c30806110045s6d19a034yd89b892441bd1621@mail.gmail.com>
-References: <dd18b0c30804032207u36bd1f43l358e9949f0c94f79@mail.gmail.com>
-	 <20080404012147.abf8a598.akpm@linux-foundation.org>
-	 <484F31B8.8030001@gmail.com>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: Prevent busy looping
+Date: Wed, 11 Jun 2008 17:03:32 +0900
+Message-ID: <484F86D4.8050907@gmail.com>
+References: <20080416151305.8788.63912.stgit@denkblock.local>	<20080416163152.GK12774@kernel.dk>	<87r6d5l9pb.fsf@denkblock.local>	<20080417071335.GR12774@kernel.dk>	<87ve2gc1bn.fsf@denkblock.local>	<484F7A8D.1040809@gmail.com> <20080611080502.4aa43980@core>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from an-out-0708.google.com ([209.85.132.246]:58726 "EHLO
-	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753433AbYFKHpI (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 11 Jun 2008 03:45:08 -0400
-Received: by an-out-0708.google.com with SMTP id d40so702956and.103
-        for <linux-ide@vger.kernel.org>; Wed, 11 Jun 2008 00:45:07 -0700 (PDT)
-In-Reply-To: <484F31B8.8030001@gmail.com>
-Content-Disposition: inline
+Received: from rv-out-0506.google.com ([209.85.198.227]:48279 "EHLO
+	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753748AbYFKIDk (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 11 Jun 2008 04:03:40 -0400
+Received: by rv-out-0506.google.com with SMTP id k40so1325180rvb.1
+        for <linux-ide@vger.kernel.org>; Wed, 11 Jun 2008 01:03:39 -0700 (PDT)
+In-Reply-To: <20080611080502.4aa43980@core>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Jens Axboe <jens.axboe@oracle.com>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Wed, Jun 11, 2008 at 2:00 AM, Tejun Heo <htejun@gmail.com> wrote:
-> Andrew Morton wrote:
->> On Fri, 4 Apr 2008 05:07:45 +0000 "Justin Mattock" <justinmattock@gmail.com> wrote:
->>
->>> When playing a DVD and then suspending the system while the DVD is
->>> still in play, upon wakeup I'm receiving a Buffer I/O error on device
->>> sr0, logical block 356490.
->>> the DVD will continue to play but then gmplayer complains: Warning!
->>> FPS changed 23.976 -> 29.970 (-5.994005) [4] then the video becomes
->>> very choppy. When looking at osx in the same test the DVD will be
->>> paused until the cd player aligns itself, then playback will start.
->>> With looking further at this I think this is an issue of a library or
->>> codec, So with this in mind is there a package that I might look at to
->>> see if this resolves the issue. Attached is dmesg of the Buffer I/O
->>> regards;
->>
->> An ata thing, I assume.  Let's cc linux-ide.
->>
->> Is this new behaviour in 2.6.25-rc8, or were earlier kernels OK?
->
-> This is due to UNIT ATTENTION condition triggered by reset during
-> resume.  The following patches should fix it.
->
-> http://marc.info/?l=linux-ide&m=121309016918976&w=2
-> http://marc.info/?l=linux-ide&m=121309016918979&w=2
->
-> Thanks.
->
-> --
-> tejun
->
+Alan Cox wrote:
+>> Elias's synthetic test case triggered infinite loop because it wasn't
+>> a proper ->qc_defer().  ->qc_defer() should never defer commands when
+>> the target is idle.
+> 
+> Target or host ? We *do* defer commands in the case of an idle channel
+> when dealing with certain simplex controllers that can only issue one
+> command per host not one per cable (and in fact in the general case we
+> can defer commands due to activity on the other drive on the cable).
 
-alright!! I'll give that a test and see; give me some time right now
-it's midnight, and a couple of beer's in; so doing anything that
-requires
-thinking isn't going to happen, but tomorrow it will.
-regards;
+The term was confusing.  I used target to mean both device
+(ATA_DEFER_LINK) and host (ATA_DEFER_PORT).  Hmmm... in simplex case,
+yeah, blocked counters need to be > 1.  We'll need to increase blocked
+counts after all.  I'll test blocked counts of 2 w/ PMP and make sure it
+doesn't incur unnecessary delays and post the patch.
+
+Thanks.
 
 -- 
-Justin P. Mattock
+tejun
