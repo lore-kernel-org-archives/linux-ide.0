@@ -1,50 +1,67 @@
-From: Mikael Pettersson <mikpe@it.uu.se>
-Subject: Re: Promise SATA300 TX4
-Date: Wed, 11 Jun 2008 10:03:17 +0200
-Message-ID: <18511.34501.593196.761308@harpo.it.uu.se>
-References: <1067206692.20080610231140@zonnet.nl>
+From: Dominik Brodowski <linux@dominikbrodowski.net>
+Subject: Re: [KERNEL 2.6.26-rc4]  bugreport : pata_pcmcia with Sandisk
+	Extreme III 8GB
+Date: Wed, 11 Jun 2008 09:20:29 +0200
+Message-ID: <20080611072029.GB28692@comet.dominikbrodowski.net>
+References: <20080528225049.9a134e0d.Kristoffer.Ericson@Gmail.com> <20080528222740.GB20893@isilmar.linta.de> <20080530135728.be02d3dc.Kristoffer.Ericson@Gmail.com> <20080607223716.7d142072.komurojun-mbn@nifty.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from aun.it.uu.se ([130.238.12.36]:35583 "EHLO aun.it.uu.se"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753939AbYFKIDr (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 11 Jun 2008 04:03:47 -0400
-In-Reply-To: <1067206692.20080610231140@zonnet.nl>
+Received: from isilmar.linta.de ([213.133.102.198]:36134 "EHLO linta.de"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1759083AbYFKPuk (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 11 Jun 2008 11:50:40 -0400
+Content-Disposition: inline
+In-Reply-To: <20080607223716.7d142072.komurojun-mbn@nifty.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: MisterE <MisterE2002@zonnet.nl>
-Cc: Mikael Pettersson <mikpe@it.uu.se>, Alexander Sabourenkov <screwdriver@lxnt.info>, Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org
+To: Komuro <komurojun-mbn@nifty.com>, Tejun Heo <htejun@gmail.com>, jgarzik@redhat.com, linux-ide@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, linux-pcmcia <linux-pcmcia@lists.infradead.org>, Kristoffer Ericson <kristoffer.ericson@gmail.com>
 
-On Tue, 10 Jun 2008 23:11:40 +0200, MisterE wrote:
->Hello,
->
->A long while ago we had contact about corruption with this
->controller. Then you people found the ASIC PRD bug.
->
->When the 2.6.24 kernel was released i made a custom version for my
->debian fileserver. It's now running for a while without real problems.
->
->But now and then i get a message in my log which concerns me. I can't
->reproduce them but mass actions (copy, move, delete, etc.) does not
->seem to cause it.
->
->Example:
->
->
->Mar 24 14:27:59 fileserver -- MARK --
->Mar 24 14:47:59 fileserver -- MARK --
->Mar 24 15:07:59 fileserver -- MARK --
->Mar 24 15:22:59 fileserver kernel:          res 50/00:00:3e:3f:db/00:00:2=
->a:00:00/e0 Emask 0x2 (HSM violation)
->Mar 24 15:22:59 fileserver kernel: ata1: soft resetting link
->Mar 24 15:22:59 fileserver kernel: ata1: SATA link up 3.0 Gbps (SStatus 1=
->23 SControl 300)
->Mar 24 15:22:59 fileserver kernel: ata1.00: configured for UDMA/133
->Mar 24 15:22:59 fileserver kernel: ata1: EH complete
+On Sat, Jun 07, 2008 at 10:37:16PM +0900, Komuro wrote:
+> On Fri, 30 May 2008 13:57:28 +0200
+> Kristoffer Ericson <kristoffer.ericson@gmail.com> wrote:
+> 
+> 
+> > > > pcmcia: registering new device pcmcia1.0
+> > > ...
+> > > > pcmcia: registering new device pcmcia1.1
+> > > > 1.1: GetNextTuple: No more items
+> > > > pata_pcmcia: probe of 1.1 failed with error -12
+> 
+> This problem is introduced at kernel 2.6.26-rc4.
+> 
+> The kernel 2.6.26-rc3 does not have this problem.
 
-Occasional hickups like these can be caused by inadequate
-power-supply units. Nothing driver-related comes to mind.
 
-/Mikael
+git-diff drivers/pcmcia is empty for 2.6.26-rc3 to 2.6.26-rc4. Therefore,
+it looks like something in the ata codepaths introduced this error? Tejun,
+Jeff, any ideas? (original bugreport below)
+
+Thanks,
+	Dominik
+
+> > > Hi,
+> > > 
+> > > > Ive added the id123 strings for a Sandisk Extreme III 8GB.
+> > > > I get this when using pcmcia->CF adapter.
+> > > 
+> > > > pcmcia: registering new device pcmcia1.0
+> > > ...
+> > > > pcmcia: registering new device pcmcia1.1
+> > > > 1.1: GetNextTuple: No more items
+> > > > pata_pcmcia: probe of 1.1 failed with error -12
+> > > 
+> > > Is that a multifunction device? It seems to me that something is broken in
+> > > the device CIS, for both drives seem to be exported already by device
+> > > pcmcia1.0.
+> > 
+> > Its a simply pcmcia->CF adapter and the CF card is a simple storage one. I got it to work through USB-adapter after replacing my
+> > broken one.
+> > However it still doesnt work through the pcmcia->CF adapter.
+> > 
+> > Im not ruling out that its broken though.
+> > 
+> > > 
+> > > Best,
+> > > 	Dominik
