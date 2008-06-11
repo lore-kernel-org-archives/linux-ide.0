@@ -1,69 +1,113 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH 5/5] sgiioc4: call ide_find_port_slot() later
-Date: Wed, 11 Jun 2008 21:22:45 +0200
-Message-ID: <200806112122.45788.bzolnier@gmail.com>
+Subject: Re: kernel 2.6.25 with ide driver cs5520 does not boot.
+Date: Wed, 11 Jun 2008 22:27:23 +0200
+Message-ID: <200806112227.23556.bzolnier@gmail.com>
+References: <20080509.215601.208967867.takada@mbf.nifty.com> <200805150028.04625.bzolnier@gmail.com> <20080530.140140.193692749.takada@mbf.nifty.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
   charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.152]:60653 "EHLO
+Received: from fg-out-1718.google.com ([72.14.220.152]:60265 "EHLO
 	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752376AbYFKU0I (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 11 Jun 2008 16:26:08 -0400
-Received: by fg-out-1718.google.com with SMTP id 19so2234785fgg.17
-        for <linux-ide@vger.kernel.org>; Wed, 11 Jun 2008 13:26:04 -0700 (PDT)
+	with ESMTP id S1755350AbYFKU0W (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 11 Jun 2008 16:26:22 -0400
+Received: by fg-out-1718.google.com with SMTP id 19so2234733fgg.17
+        for <linux-ide@vger.kernel.org>; Wed, 11 Jun 2008 13:26:21 -0700 (PDT)
+In-Reply-To: <20080530.140140.193692749.takada@mbf.nifty.com>
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, Jeremy Higdon <jeremy@sgi.com>
+To: TAKADA Yoshihito <takada@mbf.nifty.com>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-Move ide_find_port_slot() call closer to ide_device_add().
 
-This is basically a preparation for the future changes.
+On Friday 30 May 2008, TAKADA Yoshihito wrote:
+> From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+> Subject: Re: kernel 2.6.25 with ide driver cs5520 does not boot.
+> Date: Thu, 15 May 2008 00:28:04 +0200
+> 
+> Hi. sorry, I'm too late.
+> I tested the patch to re-enable DMA. But, this patch has no effect. It cannot boot.
+> printk() message disappeared.
 
-Cc: Jeremy Higdon <jeremy@sgi.com>
-Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
----
- drivers/ide/pci/sgiioc4.c |   13 +++++++++----
- 1 file changed, 9 insertions(+), 4 deletions(-)
+Now I'm late. ;-)
 
-Index: b/drivers/ide/pci/sgiioc4.c
-===================================================================
---- a/drivers/ide/pci/sgiioc4.c
-+++ b/drivers/ide/pci/sgiioc4.c
-@@ -588,10 +588,6 @@ sgiioc4_ide_setup_pci_device(struct pci_
- 	hw_regs_t hw;
- 	struct ide_port_info d = sgiioc4_port_info;
- 
--	hwif = ide_find_port_slot(&d);
--	if (hwif == NULL)
--		return -ENOMEM;
--
- 	/*  Get the CmdBlk and CtrlBlk Base Registers */
- 	bar0 = pci_resource_start(dev, 0);
- 	virt_base = ioremap(bar0, pci_resource_len(dev, 0));
-@@ -621,6 +617,11 @@ sgiioc4_ide_setup_pci_device(struct pci_
- 	hw.irq = dev->irq;
- 	hw.chipset = ide_pci;
- 	hw.dev = &dev->dev;
-+
-+	hwif = ide_find_port_slot(&d);
-+	if (hwif == NULL)
-+		goto err;
-+
- 	ide_init_port_hw(hwif, &hw);
- 
- 	/* The IOC4 uses MMIO rather than Port IO. */
-@@ -637,6 +638,10 @@ sgiioc4_ide_setup_pci_device(struct pci_
- 		return -EIO;
- 
- 	return 0;
-+err:
-+	release_mem_region(cmd_phys_base, IOC4_CMD_CTL_BLK_SIZE);
-+	iounmap(virt_base);
-+	return -ENOMEM;
- }
- 
- static unsigned int __devinit
+Thanks for info, I'll later prepare patch removing IDE_HFLAG_VDMA & co.
+
+> > On Wednesday 14 May 2008, Bartlomiej Zolnierkiewicz wrote:
+> > > On Friday 09 May 2008, TAKADA Yoshihito wrote:
+> > > > Hi.
+> > > > 
+> > > > From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+> > > > Subject: Re: kernel 2.6.25 with ide driver cs5520 does not boot.
+> > > > Date: Fri, 9 May 2008 11:27:53 +0200
+> > > > 
+> > > > > On Friday 09 May 2008, TAKADA Yoshihito wrote:
+> > > > > > Thanks for quick reply.
+> > > > > > 
+> > > > > > I tried 2.6.26rc1. It hangs same as 2.6.25.
+> > > > > > kernel 2.6.26rc1 with cs5520 cannot boot. cs5520 scans ide0 and ide1.
+> > > > > > It seems 2nd port DMA base issue was solved.
+> > > > > 
+> > > > > [...]
+> > > > > 
+> > > > > Thanks.
+> > > > > 
+> > > > > The following patch for 2.6.26-rc1 disables VDMA, please give it a try
+> > > > > (I haven't time to fully audit VDMA support yet but lets see if it is
+> > > > > the main source of the problems).
+> > > > 
+> > > > I applied the patch. But kernel was hung.
+> > > > And I attempt to kill IDE_HFLAG_CS5520. It cannot boot, oo.
+> > > > 
+> > > >   kill IDE_HFLAG_VDMA  : hang  
+> > > >   kill IDE_HFLAG_CS5520: hang
+> > > >   kill both flags      : boot
+> > > 
+> > > Thanks for investigating this - I forgot that currently VDMA and CS5520
+> > > host flags use the same bit (so it also needs to be fixed).
+> > > 
+> > > I'm going to send the following patch to Linus (please verify it):
+> > > 
+> > > From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+> > > Subject: [PATCH] cs5520: disable VDMA
+> > 
+> > [...]
+> > 
+> > Please also try 2.6.26-rc2 without the above patch but with the following
+> > patch applied instead - according to comments in OpenFirmware & pata_cs5520
+> > code 0x60 register contains bus-master enable bit, it could be that it was
+> > left disabled by BIOS and we need to explicitely enable it (if somebody has
+> > CX5510 or CX5520 datasheet please verify this + send me a copy if possible).
+> > 
+> > ---
+> >  drivers/ide/pci/cs5520.c |    8 ++++++++
+> >  1 file changed, 8 insertions(+)
+> > 
+> > Index: b/drivers/ide/pci/cs5520.c
+> > ===================================================================
+> > --- a/drivers/ide/pci/cs5520.c
+> > +++ b/drivers/ide/pci/cs5520.c
+> > @@ -147,6 +147,7 @@ static int __devinit cs5520_init_one(str
+> >  {
+> >  	const struct ide_port_info *d = &cyrix_chipsets[id->driver_data];
+> >  	u8 idx[4] = { 0xff, 0xff, 0xff, 0xff };
+> > +	u8 pcicfg;
+> >  
+> >  	ide_setup_pci_noise(dev, d);
+> >  
+> > @@ -163,6 +164,13 @@ static int __devinit cs5520_init_one(str
+> >  		return -ENODEV;
+> >  	}
+> >  
+> > +	pci_read_config_byte(dev, 0x60, &pcicfg);
+> > +
+> > +	if ((pcicfg & 0x40) == 0) {
+> > +		printk(KERN_WARNING "cs5520: DMA mode disabled. Enabling.\n");
+> > +		pci_write_config_byte(dev, 0x60, pcicfg | 0x40);
+> > +	}
+> > +
+> >  	/*
+> >  	 *	Now the chipset is configured we can let the core
+> >  	 *	do all the device setup for us
