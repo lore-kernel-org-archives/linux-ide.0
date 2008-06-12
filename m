@@ -1,50 +1,54 @@
 From: Borislav Petkov <petkovbb@googlemail.com>
-Subject: [PATCH 07/18] ide-cd: mv ide_do_rw_cdrom ide_cd_do_request
-Date: Thu, 12 Jun 2008 08:40:59 +0200
-Message-ID: <1213252870-20474-8-git-send-email-petkovbb@gmail.com>
+Subject: [PATCH 17/18] ide-floppy: cleanup idefloppy_create_rw_cmd
+Date: Thu, 12 Jun 2008 08:41:09 +0200
+Message-ID: <1213252870-20474-18-git-send-email-petkovbb@gmail.com>
 References: <1213252870-20474-1-git-send-email-petkovbb@gmail.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.152]:9230 "EHLO
+Received: from fg-out-1718.google.com ([72.14.220.158]:8289 "EHLO
 	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753589AbYFLGlH (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 12 Jun 2008 02:41:07 -0400
-Received: by fg-out-1718.google.com with SMTP id 19so2381819fgg.17
-        for <linux-ide@vger.kernel.org>; Wed, 11 Jun 2008 23:41:06 -0700 (PDT)
+	with ESMTP id S1753826AbYFLGlK (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 12 Jun 2008 02:41:10 -0400
+Received: by fg-out-1718.google.com with SMTP id 19so2381796fgg.17
+        for <linux-ide@vger.kernel.org>; Wed, 11 Jun 2008 23:41:09 -0700 (PDT)
 In-Reply-To: <1213252870-20474-1-git-send-email-petkovbb@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: bzolnier@gmail.com
 Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Borislav Petkov <petkovbb@gmail.com>
 
-There should be no functionality change resulting from this patch.
+There should be no functionality change introduced by this patch.
 
 Signed-off-by: Borislav Petkov <petkovbb@gmail.com>
 ---
- drivers/ide/ide-cd.c |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
+ drivers/ide/ide-floppy.c |    7 ++++---
+ 1 files changed, 4 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/ide/ide-cd.c b/drivers/ide/ide-cd.c
-index 40dab2b..e9d9363 100644
---- a/drivers/ide/ide-cd.c
-+++ b/drivers/ide/ide-cd.c
-@@ -1211,7 +1211,7 @@ static ide_startstop_t cdrom_do_block_pc(ide_drive_t *drive, struct request *rq)
- /*
-  * cdrom driver request routine.
-  */
--static ide_startstop_t ide_do_rw_cdrom(ide_drive_t *drive, struct request *rq,
-+static ide_startstop_t ide_cd_do_request(ide_drive_t *drive, struct request *rq,
- 					sector_t block)
- {
- 	ide_startstop_t action;
-@@ -1949,7 +1949,7 @@ static ide_driver_t ide_cdrom_driver = {
- 	.version		= IDECD_VERSION,
- 	.media			= ide_cdrom,
- 	.supports_dsc_overlap	= 1,
--	.do_request		= ide_do_rw_cdrom,
-+	.do_request		= ide_cd_do_request,
- 	.end_request		= ide_end_request,
- 	.error			= __ide_error,
- 	.abort			= __ide_abort,
+diff --git a/drivers/ide/ide-floppy.c b/drivers/ide/ide-floppy.c
+index 1ec4951..8bdef60 100644
+--- a/drivers/ide/ide-floppy.c
++++ b/drivers/ide/ide-floppy.c
+@@ -576,8 +576,7 @@ static void idefloppy_create_rw_cmd(idefloppy_floppy_t *floppy,
+ 	int blocks = rq->nr_sectors / floppy->bs_factor;
+ 	int rw_dir = rq_data_dir(rq);
+ 
+-	debug_log("create_rw10_cmd: block == %d, blocks == %d\n",
+-		  block, blocks);
++	debug_log("%s: block == %d, blocks == %d\n", __func__, block, blocks);
+ 
+ 	idefloppy_init_pc(pc, NULL);
+ 	rq->cmd[0] = rw_dir == READ ? GPCMD_READ_10 : GPCMD_WRITE_10;
+@@ -586,8 +585,10 @@ static void idefloppy_create_rw_cmd(idefloppy_floppy_t *floppy,
+ 
+ 	pc->rq = rq;
+ 	pc->b_count = rw_dir == READ ? 0 : rq->bio->bi_size;
+-	if (rq->cmd_flags & REQ_RW)
++
++	if (rw_dir)
+ 		pc->flags |= PC_FLAG_WRITING;
++
+ 	pc->buf = NULL;
+ 	pc->req_xfer = pc->buf_size = blocks * floppy->block_size;
+ 	pc->flags |= PC_FLAG_DMA_OK;
 -- 
 1.5.5.1
 
