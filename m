@@ -1,36 +1,38 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: Prevent busy looping
-Date: Thu, 12 Jun 2008 09:18:27 -0500
-Message-ID: <1213280307.3426.4.camel@localhost.localdomain>
-References: <20080416151305.8788.63912.stgit@denkblock.local>
-	 <20080416163152.GK12774@kernel.dk> <87r6d5l9pb.fsf@denkblock.local>
-	 <20080417071335.GR12774@kernel.dk> <87ve2gc1bn.fsf@denkblock.local>
-	 <484F7A8D.1040809@gmail.com> <20080611080502.4aa43980@core>
-	 <484F86D4.8050907@gmail.com> <485092C9.3050309@gmail.com>
-	 <87d4mmubvf.fsf@denkblock.local>  <48512801.7090502@gmail.com>
+From: Martin Michlmayr <tbm@cyrius.com>
+Subject: Re: sata_mv on Orion: mv_err_intr when shutting down
+Date: Thu, 12 Jun 2008 20:18:51 +0200
+Message-ID: <20080612181851.GA19874@deprecation.cyrius.com>
+References: <20080512132611.GA15410@deprecation.cyrius.com> <48286499.9020202@rtr.ca> <20080512154609.GI15866@deprecation.cyrius.com> <20080512191534.GA28429@deprecation.cyrius.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <48512801.7090502@gmail.com>
-Sender: linux-scsi-owner@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Elias Oltmanns <eo@nebensachen.de>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Jens Axboe <jens.axboe@oracle.com>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from sorrow.cyrius.com ([65.19.161.204]:4042 "EHLO sorrow.cyrius.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753376AbYFLSVI (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 12 Jun 2008 14:21:08 -0400
+Content-Disposition: inline
+In-Reply-To: <20080512191534.GA28429@deprecation.cyrius.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Mark Lord <liml@rtr.ca>
+Cc: linux-ide@vger.kernel.org, nico@cam.org, buytenh@wantstofly.org
 
-On Thu, 2008-06-12 at 22:43 +0900, Tejun Heo wrote:
-> It busy loops but it won't lock up as command completion is the loop
-> breaker and command completion comes via IRQ and the busy looping
-> doesn't happen solely in the IRQ context.  Still needs to be fixed tho.
->  Anyways, this is only limited to ->qc_defer for simplex and the reason
-> why there's busy loop is because we're trying to schedule two
-> independent hosts and SCSI midlayer (of course) doesn't have the notion
-> of cross host deferring.
+* Martin Michlmayr <tbm@cyrius.com> [2008-05-12 21:15]:
+> * Martin Michlmayr <tbm@cyrius.com> [2008-05-12 17:46]:
+> > > The code that triggers this was fixed up more after -rc1, so if you can
+> > > still get messages like that with, say -rc2 or later, then please post them.
+> > 
+> > Cool.  I'll let you know in case the message doesn't go away with rc2.
+> 
+> I still get the same message with rc2.
 
-It would if the host were at the right level.  We have the whole concept
-of starved list processing for blocked queues that was supposed to be
-designed for this (well, for a corresponding SCSI situation).
+Just saw it again with 2.6.26-rc6:
 
-James
+[42949509.440000] Power down.
+[42949509.440000] qnap_ts209_power_off: triggering power-off...
+[42949509.460000] ata1: exception Emask 0x10 SAct 0x0 SErr 0x190002 action 0xe frozen
+[42949509.460000] ata1: edma_err_cause=02000020 pp_f
 
-
+-- 
+Martin Michlmayr
+http://www.cyrius.com/
