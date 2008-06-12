@@ -1,297 +1,163 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH 5/7] ide-pmac: store pmif instead of hwif in ->driver_data
-Date: Fri, 13 Jun 2008 01:13:00 +0200
-Message-ID: <20080612231300.18335.237.sendpatchset@localhost.localdomain>
+Subject: [PATCH 7/7] ide-pmac: move ide_find_port() call to pmac_ide_setup_device()
+Date: Fri, 13 Jun 2008 01:13:18 +0200
+Message-ID: <20080612231318.18335.110.sendpatchset@localhost.localdomain>
 References: <20080612231224.18335.91182.sendpatchset@localhost.localdomain>
 Return-path: <linux-ide-owner@vger.kernel.org>
 Received: from fg-out-1718.google.com ([72.14.220.154]:23855 "EHLO
 	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756811AbYFLXLT (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 12 Jun 2008 19:11:19 -0400
+	with ESMTP id S1758023AbYFLXLh (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 12 Jun 2008 19:11:37 -0400
 Received: by fg-out-1718.google.com with SMTP id 19so2634645fgg.17
-        for <linux-ide@vger.kernel.org>; Thu, 12 Jun 2008 16:11:18 -0700 (PDT)
+        for <linux-ide@vger.kernel.org>; Thu, 12 Jun 2008 16:11:36 -0700 (PDT)
 In-Reply-To: <20080612231224.18335.91182.sendpatchset@localhost.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
 Cc: linuxppc-dev@ozlabs.org, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Benjamin Herrenschmidt <benh@kernel.crashing.org>, linux-kernel@vger.kernel.org
 
-* Pass pmif instead of hwif to pmac_ide_do_{suspend,resume}().
+Move ide_find_port() call to pmac_ide_setup_device().
 
-* Store pmif instead of hwif in ->driver_data.
+While at it:
 
-* Use dev_get_drvdata() instead of ->hwif_data to obtain pmif.
+- fix return value (s/-ENODEV/-ENOENT/)
 
-There should be no functional changes caused by this patch.
+- add DRV_NAME define and use it to set name field of pmac_port_info
+
+- use ide_find_port_slot() instead of ide_find_port()
+
+- remove superfluous error message (ide_find_port_slot() takes care of it)
+
+- drop IDE interface number from driver banner message (but include bus type)
 
 Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
 Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 ---
- drivers/ide/ppc/pmac.c |   93 ++++++++++++++++++++++++++++---------------------
- 1 file changed, 55 insertions(+), 38 deletions(-)
+ drivers/ide/ppc/pmac.c |   42 ++++++++++++++++--------------------------
+ 1 file changed, 16 insertions(+), 26 deletions(-)
 
 Index: b/drivers/ide/ppc/pmac.c
 ===================================================================
 --- a/drivers/ide/ppc/pmac.c
 +++ b/drivers/ide/ppc/pmac.c
-@@ -424,7 +424,9 @@ static void pmac_ide_kauai_selectproc(id
- static void
- pmac_ide_selectproc(ide_drive_t *drive)
- {
--	pmac_ide_hwif_t* pmif = (pmac_ide_hwif_t *)HWIF(drive)->hwif_data;
-+	ide_hwif_t *hwif = drive->hwif;
-+	pmac_ide_hwif_t *pmif =
-+		(pmac_ide_hwif_t *)dev_get_drvdata(hwif->gendev.parent);
+@@ -48,6 +48,8 @@
+ #include <asm/mediabay.h>
+ #endif
  
- 	if (pmif == NULL)
- 		return;
-@@ -444,7 +446,9 @@ pmac_ide_selectproc(ide_drive_t *drive)
- static void
- pmac_ide_kauai_selectproc(ide_drive_t *drive)
- {
--	pmac_ide_hwif_t* pmif = (pmac_ide_hwif_t *)HWIF(drive)->hwif_data;
-+	ide_hwif_t *hwif = drive->hwif;
-+	pmac_ide_hwif_t *pmif =
-+		(pmac_ide_hwif_t *)dev_get_drvdata(hwif->gendev.parent);
++#define DRV_NAME "ide-pmac"
++
+ #undef IDE_PMAC_DEBUG
  
- 	if (pmif == NULL)
- 		return;
-@@ -465,7 +469,9 @@ pmac_ide_kauai_selectproc(ide_drive_t *d
- static void
- pmac_ide_do_update_timings(ide_drive_t *drive)
- {
--	pmac_ide_hwif_t* pmif = (pmac_ide_hwif_t *)HWIF(drive)->hwif_data;
-+	ide_hwif_t *hwif = drive->hwif;
-+	pmac_ide_hwif_t *pmif =
-+		(pmac_ide_hwif_t *)dev_get_drvdata(hwif->gendev.parent);
+ #define DMA_WAIT_TIMEOUT	50
+@@ -982,6 +984,7 @@ static const struct ide_port_ops pmac_id
+ static const struct ide_dma_ops pmac_dma_ops;
  
- 	if (pmif == NULL)
- 		return;
-@@ -493,11 +499,13 @@ static void pmac_outbsync(ide_hwif_t *hw
- static void
- pmac_ide_set_pio_mode(ide_drive_t *drive, const u8 pio)
- {
-+	ide_hwif_t *hwif = drive->hwif;
-+	pmac_ide_hwif_t *pmif =
-+		(pmac_ide_hwif_t *)dev_get_drvdata(hwif->gendev.parent);
- 	struct ide_timing *tim = ide_timing_find_mode(XFER_PIO_0 + pio);
- 	u32 *timings, t;
- 	unsigned accessTicks, recTicks;
- 	unsigned accessTime, recTime;
--	pmac_ide_hwif_t* pmif = (pmac_ide_hwif_t *)HWIF(drive)->hwif_data;
- 	unsigned int cycle_time;
- 
- 	if (pmif == NULL)
-@@ -778,9 +786,11 @@ set_timings_mdma(ide_drive_t *drive, int
- 
- static void pmac_ide_set_dma_mode(ide_drive_t *drive, const u8 speed)
- {
-+	ide_hwif_t *hwif = drive->hwif;
-+	pmac_ide_hwif_t *pmif =
-+		(pmac_ide_hwif_t *)dev_get_drvdata(hwif->gendev.parent);
- 	int unit = (drive->select.b.unit & 0x01);
- 	int ret = 0;
--	pmac_ide_hwif_t* pmif = (pmac_ide_hwif_t *)HWIF(drive)->hwif_data;
- 	u32 *timings, *timings2, tl[2];
- 
- 	timings = &pmif->timings[unit];
-@@ -852,11 +862,8 @@ sanitize_timings(pmac_ide_hwif_t *pmif)
- /* Suspend call back, should be called after the child devices
-  * have actually been suspended
+ static const struct ide_port_info pmac_port_info = {
++	.name			= DRV_NAME,
+ 	.init_dma		= pmac_ide_init_dma,
+ 	.chipset		= ide_pmac,
+ #ifdef CONFIG_BLK_DEV_IDEDMA_PMAC
+@@ -1000,11 +1003,11 @@ static const struct ide_port_info pmac_p
+  * Setup, register & probe an IDE channel driven by this driver, this is
+  * called by one of the 2 probe functions (macio or PCI).
   */
--static int
--pmac_ide_do_suspend(ide_hwif_t *hwif)
-+static int pmac_ide_do_suspend(pmac_ide_hwif_t *pmif)
+-static int __devinit
+-pmac_ide_setup_device(pmac_ide_hwif_t *pmif, ide_hwif_t *hwif, hw_regs_t *hw)
++static int __devinit pmac_ide_setup_device(pmac_ide_hwif_t *pmif, hw_regs_t *hw)
  {
--	pmac_ide_hwif_t *pmif = (pmac_ide_hwif_t *)hwif->hwif_data;
--	
- 	/* We clear the timings */
- 	pmif->timings[0] = 0;
- 	pmif->timings[1] = 0;
-@@ -884,11 +891,8 @@ pmac_ide_do_suspend(ide_hwif_t *hwif)
- /* Resume call back, should be called before the child devices
-  * are resumed
-  */
--static int
--pmac_ide_do_resume(ide_hwif_t *hwif)
-+static int pmac_ide_do_resume(pmac_ide_hwif_t *pmif)
- {
--	pmac_ide_hwif_t *pmif = (pmac_ide_hwif_t *)hwif->hwif_data;
--	
- 	/* Hard reset & re-enable controller (do we really need to reset ? -BenH) */
- 	if (!pmif->mediabay) {
- 		ppc_md.feature_call(PMAC_FTR_IDE_RESET, pmif->node, pmif->aapl_bus_id, 1);
-@@ -916,7 +920,8 @@ pmac_ide_do_resume(ide_hwif_t *hwif)
- 
- static u8 pmac_ide_cable_detect(ide_hwif_t *hwif)
- {
--	pmac_ide_hwif_t *pmif = (pmac_ide_hwif_t *)ide_get_hwifdata(hwif);
-+	pmac_ide_hwif_t *pmif =
-+		(pmac_ide_hwif_t *)drv_get_drvdata(hwif->gendev.parent);
  	struct device_node *np = pmif->node;
- 	const char *cable = of_get_property(np, "cable-type", NULL);
+ 	const int *bidp;
++	ide_hwif_t *hwif;
+ 	u8 idx[4] = { 0xff, 0xff, 0xff, 0xff };
+ 	struct ide_port_info d = pmac_port_info;
  
-@@ -1054,7 +1059,6 @@ pmac_ide_setup_device(pmac_ide_hwif_t *p
+@@ -1073,16 +1076,21 @@ pmac_ide_setup_device(pmac_ide_hwif_t *p
+ 		msleep(jiffies_to_msecs(IDE_WAKEUP_DELAY));
+ 	}
+ 
++	printk(KERN_INFO DRV_NAME ": Found Apple %s controller (%s), "
++			 "bus ID %d%s, irq %d\n", model_name[pmif->kind],
++			 pmif->mdev ? "MacIO" : "PCI", pmif->aapl_bus_id,
++			 pmif->mediabay ? " (mediabay)" : "", hw.irq);
++
++	hwif = ide_find_port_slot(&d);
++	if (hwif == NULL)
++		return -ENOENT;
++
+ 	/* Setup MMIO ops */
  	default_hwif_mmiops(hwif);
         	hwif->OUTBSYNC = pmac_outbsync;
  
--	hwif->hwif_data = pmif;
  	ide_init_port_hw(hwif, hw);
  
- 	printk(KERN_INFO "ide%d: Found Apple %s controller, bus ID %d%s, irq %d\n",
-@@ -1162,7 +1166,7 @@ pmac_ide_macio_attach(struct macio_dev *
- 	} else
- 		pmif->dma_regs = NULL;
- #endif /* CONFIG_BLK_DEV_IDEDMA_PMAC */
--	dev_set_drvdata(&mdev->ofdev.dev, hwif);
-+	dev_set_drvdata(&mdev->ofdev.dev, pmif);
+-	printk(KERN_INFO "ide%d: Found Apple %s controller, bus ID %d%s, irq %d\n",
+-	       hwif->index, model_name[pmif->kind], pmif->aapl_bus_id,
+-	       pmif->mediabay ? " (mediabay)" : "", hwif->irq);
+-
+ 	idx[0] = hwif->index;
  
- 	memset(&hw, 0, sizeof(hw));
- 	pmac_ide_init_ports(&hw, pmif->regbase);
-@@ -1193,12 +1197,13 @@ out_free_pmif:
- static int
- pmac_ide_macio_suspend(struct macio_dev *mdev, pm_message_t mesg)
+ 	ide_device_add(idx, &d);
+@@ -1112,7 +1120,6 @@ pmac_ide_macio_attach(struct macio_dev *
  {
--	ide_hwif_t	*hwif = (ide_hwif_t *)dev_get_drvdata(&mdev->ofdev.dev);
--	int		rc = 0;
-+	pmac_ide_hwif_t *pmif =
-+		(pmac_ide_hwif_t *)dev_get_drvdata(&mdev->ofdev.dev);
-+	int rc = 0;
+ 	void __iomem *base;
+ 	unsigned long regbase;
+-	ide_hwif_t *hwif;
+ 	pmac_ide_hwif_t *pmif;
+ 	int irq, rc;
+ 	hw_regs_t hw;
+@@ -1121,14 +1128,6 @@ pmac_ide_macio_attach(struct macio_dev *
+ 	if (pmif == NULL)
+ 		return -ENOMEM;
  
- 	if (mesg.event != mdev->ofdev.dev.power.power_state.event
- 			&& (mesg.event & PM_EVENT_SLEEP)) {
--		rc = pmac_ide_do_suspend(hwif);
-+		rc = pmac_ide_do_suspend(pmif);
- 		if (rc == 0)
- 			mdev->ofdev.dev.power.power_state = mesg;
- 	}
-@@ -1209,11 +1214,12 @@ pmac_ide_macio_suspend(struct macio_dev 
- static int
- pmac_ide_macio_resume(struct macio_dev *mdev)
- {
--	ide_hwif_t	*hwif = (ide_hwif_t *)dev_get_drvdata(&mdev->ofdev.dev);
--	int		rc = 0;
--	
-+	pmac_ide_hwif_t *pmif =
-+		(pmac_ide_hwif_t *)dev_get_drvdata(&mdev->ofdev.dev);
-+	int rc = 0;
-+
- 	if (mdev->ofdev.dev.power.power_state.event != PM_EVENT_ON) {
--		rc = pmac_ide_do_resume(hwif);
-+		rc = pmac_ide_do_resume(pmif);
- 		if (rc == 0)
- 			mdev->ofdev.dev.power.power_state = PMSG_ON;
- 	}
-@@ -1282,7 +1288,7 @@ pmac_ide_pci_attach(struct pci_dev *pdev
- 	pmif->kauai_fcr = base;
- 	pmif->irq = pdev->irq;
+-	hwif = ide_find_port();
+-	if (hwif == NULL) {
+-		printk(KERN_ERR "ide-pmac: MacIO interface attach with no slot\n");
+-		printk(KERN_ERR "          %s\n", mdev->ofdev.node->full_name);
+-		rc = -ENODEV;
+-		goto out_free_pmif;
+-	}
+-
+ 	if (macio_resource_count(mdev) == 0) {
+ 		printk(KERN_WARNING "ide-pmac: no address for %s\n",
+ 				    mdev->ofdev.node->full_name);
+@@ -1183,7 +1182,7 @@ pmac_ide_macio_attach(struct macio_dev *
+ 	hw.dev = &mdev->bus->pdev->dev;
+ 	hw.parent = &mdev->ofdev.dev;
  
--	pci_set_drvdata(pdev, hwif);
-+	pci_set_drvdata(pdev, pmif);
+-	rc = pmac_ide_setup_device(pmif, hwif, &hw);
++	rc = pmac_ide_setup_device(pmif, &hw);
+ 	if (rc != 0) {
+ 		/* The inteface is released to the common IDE layer */
+ 		dev_set_drvdata(&mdev->ofdev.dev, NULL);
+@@ -1242,7 +1241,6 @@ pmac_ide_macio_resume(struct macio_dev *
+ static int __devinit
+ pmac_ide_pci_attach(struct pci_dev *pdev, const struct pci_device_id *id)
+ {
+-	ide_hwif_t *hwif;
+ 	struct device_node *np;
+ 	pmac_ide_hwif_t *pmif;
+ 	void __iomem *base;
+@@ -1260,14 +1258,6 @@ pmac_ide_pci_attach(struct pci_dev *pdev
+ 	if (pmif == NULL)
+ 		return -ENOMEM;
  
- 	memset(&hw, 0, sizeof(hw));
- 	pmac_ide_init_ports(&hw, pmif->regbase);
-@@ -1308,9 +1314,9 @@ out_free_pmif:
- static int
- pmac_ide_pci_suspend(struct pci_dev *pdev, pm_message_t mesg)
- {
--	ide_hwif_t	*hwif = (ide_hwif_t *)pci_get_drvdata(pdev);
--	int		rc = 0;
--	
-+	pmac_ide_hwif_t *pmif = (pmac_ide_hwif_t *)pci_get_drvdata(pdev);
-+	int rc = 0;
-+
- 	if (mesg.event != pdev->dev.power.power_state.event
- 			&& (mesg.event & PM_EVENT_SLEEP)) {
- 		rc = pmac_ide_do_suspend(hwif);
-@@ -1324,9 +1330,9 @@ pmac_ide_pci_suspend(struct pci_dev *pde
- static int
- pmac_ide_pci_resume(struct pci_dev *pdev)
- {
--	ide_hwif_t	*hwif = (ide_hwif_t *)pci_get_drvdata(pdev);
--	int		rc = 0;
--	
-+	pmac_ide_hwif_t *pmif = (pmac_ide_hwif_t *)pci_get_drvdata(pdev);
-+	int rc = 0;
-+
- 	if (pdev->dev.power.power_state.event != PM_EVENT_ON) {
- 		rc = pmac_ide_do_resume(hwif);
- 		if (rc == 0)
-@@ -1419,10 +1425,11 @@ out:
- static int
- pmac_ide_build_dmatable(ide_drive_t *drive, struct request *rq)
- {
-+	ide_hwif_t *hwif = drive->hwif;
-+	pmac_ide_hwif_t *pmif =
-+		(pmac_ide_hwif_t *)dev_get_drvdata(hwif->gendev.parent);
- 	struct dbdma_cmd *table;
- 	int i, count = 0;
--	ide_hwif_t *hwif = HWIF(drive);
--	pmac_ide_hwif_t* pmif = (pmac_ide_hwif_t *)hwif->hwif_data;
- 	volatile struct dbdma_regs __iomem *dma = pmif->dma_regs;
- 	struct scatterlist *sg;
- 	int wr = (rq_data_dir(rq) == WRITE);
-@@ -1518,7 +1525,8 @@ static int
- pmac_ide_dma_setup(ide_drive_t *drive)
- {
- 	ide_hwif_t *hwif = HWIF(drive);
--	pmac_ide_hwif_t* pmif = (pmac_ide_hwif_t *)hwif->hwif_data;
-+	pmac_ide_hwif_t *pmif =
-+		(pmac_ide_hwif_t *)dev_get_drvdata(hwif->gendev.parent);
- 	struct request *rq = HWGROUP(drive)->rq;
- 	u8 unit = (drive->select.b.unit & 0x01);
- 	u8 ata4;
-@@ -1558,7 +1566,9 @@ pmac_ide_dma_exec_cmd(ide_drive_t *drive
- static void
- pmac_ide_dma_start(ide_drive_t *drive)
- {
--	pmac_ide_hwif_t* pmif = (pmac_ide_hwif_t *)HWIF(drive)->hwif_data;
-+	ide_hwif_t *hwif = drive->hwif;
-+	pmac_ide_hwif_t *pmif =
-+		(pmac_ide_hwif_t *)dev_get_drvdata(hwif->gendev.parent);
- 	volatile struct dbdma_regs __iomem *dma;
+-	hwif = ide_find_port();
+-	if (hwif == NULL) {
+-		printk(KERN_ERR "ide-pmac: PCI interface attach with no slot\n");
+-		printk(KERN_ERR "          %s\n", np->full_name);
+-		rc = -ENODEV;
+-		goto out_free_pmif;
+-	}
+-
+ 	if (pci_enable_device(pdev)) {
+ 		printk(KERN_WARNING "ide-pmac: Can't enable PCI device for "
+ 				    "%s\n", np->full_name);
+@@ -1304,7 +1294,7 @@ pmac_ide_pci_attach(struct pci_dev *pdev
+ 	hw.irq = pdev->irq;
+ 	hw.dev = &pdev->dev;
  
- 	dma = pmif->dma_regs;
-@@ -1574,7 +1584,9 @@ pmac_ide_dma_start(ide_drive_t *drive)
- static int
- pmac_ide_dma_end (ide_drive_t *drive)
- {
--	pmac_ide_hwif_t* pmif = (pmac_ide_hwif_t *)HWIF(drive)->hwif_data;
-+	ide_hwif_t *hwif = drive->hwif;
-+	pmac_ide_hwif_t *pmif =
-+		(pmac_ide_hwif_t *)dev_get_drvdata(hwif->gendev.parent);
- 	volatile struct dbdma_regs __iomem *dma;
- 	u32 dstat;
- 	
-@@ -1602,7 +1614,9 @@ pmac_ide_dma_end (ide_drive_t *drive)
- static int
- pmac_ide_dma_test_irq (ide_drive_t *drive)
- {
--	pmac_ide_hwif_t* pmif = (pmac_ide_hwif_t *)HWIF(drive)->hwif_data;
-+	ide_hwif_t *hwif = drive->hwif;
-+	pmac_ide_hwif_t *pmif =
-+		(pmac_ide_hwif_t *)dev_get_drvdata(hwif->gendev.parent);
- 	volatile struct dbdma_regs __iomem *dma;
- 	unsigned long status, timeout;
- 
-@@ -1662,7 +1676,9 @@ static void pmac_ide_dma_host_set(ide_dr
- static void
- pmac_ide_dma_lost_irq (ide_drive_t *drive)
- {
--	pmac_ide_hwif_t* pmif = (pmac_ide_hwif_t *)HWIF(drive)->hwif_data;
-+	ide_hwif_t *hwif = drive->hwif;
-+	pmac_ide_hwif_t *pmif =
-+		(pmac_ide_hwif_t *)dev_get_drvdata(hwif->gendev.parent);
- 	volatile struct dbdma_regs __iomem *dma;
- 	unsigned long status;
- 
-@@ -1692,7 +1708,8 @@ static const struct ide_dma_ops pmac_dma
- static int __devinit pmac_ide_init_dma(ide_hwif_t *hwif,
- 				       const struct ide_port_info *d)
- {
--	pmac_ide_hwif_t *pmif = (pmac_ide_hwif_t *)hwif->hwif_data;
-+	pmac_ide_hwif_t *pmif =
-+		(pmac_ide_hwif_t *)dev_get_drvdata(hwif->gendev.parent);
- 	struct pci_dev *dev = to_pci_dev(hwif->dev);
- 
- 	/* We won't need pci_dev if we switch to generic consistent
+-	rc = pmac_ide_setup_device(pmif, hwif, &hw);
++	rc = pmac_ide_setup_device(pmif, &hw);
+ 	if (rc != 0) {
+ 		/* The inteface is released to the common IDE layer */
+ 		pci_set_drvdata(pdev, NULL);
