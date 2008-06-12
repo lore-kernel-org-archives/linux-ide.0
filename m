@@ -1,34 +1,78 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: CDC_PLAY_AUDIO check in cdrom_count_tracks() and other oddities
-Date: Thu, 12 Jun 2008 12:51:28 +0900
-Message-ID: <48509D40.2060901@gmail.com>
+Subject: Re: macbook pro dvd playback after suspend Buffer I/O error
+Date: Thu, 12 Jun 2008 13:15:52 +0900
+Message-ID: <4850A2F8.3050404@gmail.com>
+References: <dd18b0c30804032207u36bd1f43l358e9949f0c94f79@mail.gmail.com>	 <20080404012147.abf8a598.akpm@linux-foundation.org>	 <484F31B8.8030001@gmail.com>	 <dd18b0c30806110045s6d19a034yd89b892441bd1621@mail.gmail.com>	 <dd18b0c30806111131gc1b506cva12f577ebb4afdf9@mail.gmail.com>	 <485048EC.2080608@gmail.com>	 <dd18b0c30806111527x22fa895em230ceade4712f073@mail.gmail.com>	 <4850794F.3000200@gmail.com>	 <dd18b0c30806111910j4b127c32rbd546f885731e18c@mail.gmail.com> <dd18b0c30806111913gf505c05j479a6a682c2cdd28@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed;
+ boundary="------------020908080006080203010206"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rv-out-0506.google.com ([209.85.198.237]:23189 "EHLO
-	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751624AbYFLDvd (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 11 Jun 2008 23:51:33 -0400
-Received: by rv-out-0506.google.com with SMTP id k40so1807979rvb.1
-        for <linux-ide@vger.kernel.org>; Wed, 11 Jun 2008 20:51:33 -0700 (PDT)
+Received: from ti-out-0910.google.com ([209.85.142.188]:1337 "EHLO
+	ti-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753361AbYFLEP7 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 12 Jun 2008 00:15:59 -0400
+Received: by ti-out-0910.google.com with SMTP id b6so925940tic.23
+        for <linux-ide@vger.kernel.org>; Wed, 11 Jun 2008 21:15:57 -0700 (PDT)
+In-Reply-To: <dd18b0c30806111913gf505c05j479a6a682c2cdd28@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jens Axboe <jens.axboe@oracle.com>, IDE/ATA development list <linux-ide@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>
+To: Justin Mattock <justinmattock@gmail.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-Hello, Jens.
+This is a multi-part message in MIME format.
+--------------020908080006080203010206
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 
-I'm tracking down a bug where HAL doesn't mount media automatically.
-It turned out that CDROM_DISC_STATUS wasn't reporting correct disc
-type which was caused by CDC_PLAY_AUDIO check failure at the top of
-cdrom_count_tracks().
+Hello,
 
-I've went through MMC-3 but couldn't find anything which associates
-play audio capability with READ_TOC.  READ_TOC was mandatory command,
-so according to MMC-3, there's no reason to avoid issuing READ_TOC on
-!CDC_PLAY_AUDIO.  Is there something I don't know?
+Please do the followings.
+
+1. apply the attached patch
+2. turn on device drivers -> SCSI -> SCSI verbose logging
+3. rebuild the kernel and boot the new kernel.
+4. run "sysctl -w dev.scsi.logging_level=1"
+5. run the suspend/resume test w/ dd and report the result.
 
 Thanks.
 
 -- 
 tejun
+
+--------------020908080006080203010206
+Content-Type: text/plain;
+ name="debug"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="debug"
+
+---
+ drivers/ata/libata-eh.c |    6 ++++++
+ 1 file changed, 6 insertions(+)
+
+Index: work/drivers/ata/libata-eh.c
+===================================================================
+--- work.orig/drivers/ata/libata-eh.c
++++ work/drivers/ata/libata-eh.c
+@@ -2507,6 +2507,9 @@ static int atapi_eh_clear_ua(struct ata_
+ 			return -EIO;
+ 		}
+ 
++		ata_dev_printk(dev, KERN_WARNING, "XXX: TUR err_mask=0x%x sense_key=0x%x\n",
++			       err_mask, sense_key);
++
+ 		if (!err_mask || sense_key != UNIT_ATTENTION)
+ 			return 0;
+ 
+@@ -2516,6 +2519,9 @@ static int atapi_eh_clear_ua(struct ata_
+ 				"UNIT ATTENTION (err_mask=0x%x)\n", err_mask);
+ 			return -EIO;
+ 		}
++
++		ata_dev_printk(dev, KERN_WARNING, "XXX: REQUEST SENSE err_mask=0x%x ASC=0x%x ASCQ=0x%x\n",
++			       err_mask, sense_buffer[12], sense_buffer[13]);
+ 	}
+ 
+ 	ata_dev_printk(dev, KERN_WARNING,
+
+--------------020908080006080203010206--
