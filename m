@@ -1,40 +1,39 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: ahci.c
-Date: Wed, 11 Jun 2008 22:50:25 -0400
-Message-ID: <48508EF1.8000304@pobox.com>
-References: <BAY122-DS4E91A6CF6FAF2D10B80E9BEB20@phx.gbl>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: Prevent busy looping
+Date: Thu, 12 Jun 2008 12:06:49 +0900
+Message-ID: <485092C9.3050309@gmail.com>
+References: <20080416151305.8788.63912.stgit@denkblock.local>	<20080416163152.GK12774@kernel.dk>	<87r6d5l9pb.fsf@denkblock.local>	<20080417071335.GR12774@kernel.dk>	<87ve2gc1bn.fsf@denkblock.local>	<484F7A8D.1040809@gmail.com> <20080611080502.4aa43980@core> <484F86D4.8050907@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=GB2312
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:45463 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751936AbYFLCua (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 11 Jun 2008 22:50:30 -0400
-In-Reply-To: <BAY122-DS4E91A6CF6FAF2D10B80E9BEB20@phx.gbl>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <484F86D4.8050907@gmail.com>
+Sender: linux-scsi-owner@vger.kernel.org
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Jens Axboe <jens.axboe@oracle.com>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: dunneil <dunneil@live.cn>
-Cc: linux-ide@vger.kernel.org
 
-dunneil wrote:
-> hi,
->  
->   My hardware is AHCI SATA controller with FPGA-based PCIE board.My 
-> kernel is 2.6.20.7. after insmod ahci.ko, i run lspci -xxxxvvvv 
-> command.but,it seems that it doesn't set the BUS master enable bit of 
-> PCIE header command register.plz check my header content.
->  
->   But,i run Pcitree software at windows.The BUS master enable is 
-> observed to be set,and that i can read out a part of sata register value.
->  
->   how to debug this issue?
+Tejun Heo wrote:
+> Alan Cox wrote:
+>>> Elias's synthetic test case triggered infinite loop because it wasn't
+>>> a proper ->qc_defer().  ->qc_defer() should never defer commands when
+>>> the target is idle.
+>> Target or host ? We *do* defer commands in the case of an idle channel
+>> when dealing with certain simplex controllers that can only issue one
+>> command per host not one per cable (and in fact in the general case we
+>> can defer commands due to activity on the other drive on the cable).
+> 
+> The term was confusing.  I used target to mean both device
+> (ATA_DEFER_LINK) and host (ATA_DEFER_PORT).  Hmmm... in simplex case,
+> yeah, blocked counters need to be > 1.  We'll need to increase blocked
+> counts after all.  I'll test blocked counts of 2 w/ PMP and make sure it
+> doesn't incur unnecessary delays and post the patch.
 
-ahci.c calls pci_set_master() to enable the BusMaster bit.
+Setting blocked counts to 2 makes simplex scheduling starve one of the
+drives.  When a drive loses competition, it retries only after plug
+delay and of course it loses most of the time.  For now, it seems we'll
+have to live with busy loops (which doesn't lock up the machine) for
+simplex controllers.  Ewww... :-(
 
-	Jeff
-
-
-
-
-
+-- 
+tejun
