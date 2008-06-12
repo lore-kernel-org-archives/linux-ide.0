@@ -1,59 +1,38 @@
-From: Borislav Petkov <petkovbb@googlemail.com>
-Subject: [PATCH 09/18] ide-cd: fold cdrom_start_seek into ide_cd_do_request
-Date: Thu, 12 Jun 2008 08:41:01 +0200
-Message-ID: <1213252870-20474-10-git-send-email-petkovbb@gmail.com>
-References: <1213252870-20474-1-git-send-email-petkovbb@gmail.com>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: macbook pro dvd playback after suspend Buffer I/O error
+Date: Thu, 12 Jun 2008 15:59:32 +0900
+Message-ID: <4850C954.60805@gmail.com>
+References: <dd18b0c30804032207u36bd1f43l358e9949f0c94f79@mail.gmail.com>	 <485048EC.2080608@gmail.com>	 <dd18b0c30806111527x22fa895em230ceade4712f073@mail.gmail.com>	 <4850794F.3000200@gmail.com>	 <dd18b0c30806111910j4b127c32rbd546f885731e18c@mail.gmail.com>	 <dd18b0c30806111913gf505c05j479a6a682c2cdd28@mail.gmail.com>	 <4850A2F8.3050404@gmail.com>	 <dd18b0c30806112222k60e411dfs98e4cc7f64938b5b@mail.gmail.com>	 <dd18b0c30806112315x70dee219oa6738de3e22d4939@mail.gmail.com>	 <4850C1AC.4090809@gmail.com> <dd18b0c30806112336ma74115cta1923f7b08dcc2d@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.159]:21650 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759497AbYFLGrs (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 12 Jun 2008 02:47:48 -0400
-Received: by fg-out-1718.google.com with SMTP id 19so2383441fgg.17
-        for <linux-ide@vger.kernel.org>; Wed, 11 Jun 2008 23:47:48 -0700 (PDT)
-In-Reply-To: <1213252870-20474-1-git-send-email-petkovbb@gmail.com>
+Received: from wf-out-1314.google.com ([209.85.200.170]:20426 "EHLO
+	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752560AbYFLG7i (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 12 Jun 2008 02:59:38 -0400
+Received: by wf-out-1314.google.com with SMTP id 27so3478089wfd.4
+        for <linux-ide@vger.kernel.org>; Wed, 11 Jun 2008 23:59:37 -0700 (PDT)
+In-Reply-To: <dd18b0c30806112336ma74115cta1923f7b08dcc2d@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: bzolnier@gmail.com
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Borislav Petkov <petkovbb@gmail.com>
+To: Justin Mattock <justinmattock@gmail.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-Do what the compiler does anyway: inline a function that is used only once. This
-saves us the overhead of a function call and the function is small enough to be
-embedded in the callsite anyways.
+Justin Mattock wrote:
+> Yeah, take you're time. Maybe it's easier  to have mplayer or which
+> ever media player wait for the drive. i.g.
+> under OSX, the media player pauses until the drive does it's thing,
+> and then resumes.(but this would be for the suspend aspect)
+> As for the live distro part I'd have to think as well. Let me know
+> what you think.
 
-Signed-off-by: Borislav Petkov <petkovbb@gmail.com>
----
- drivers/ide/ide-cd.c |   11 ++---------
- 1 files changed, 2 insertions(+), 9 deletions(-)
+For apps which know they're accessing cd or dvd (probably using sg
+commands), asking for TUR test after resume could be acceptable but apps
+getting -EIO on read(2) because of intervening suspend/resume cycle is
+just not right.  The problem is that readiness waiting can take quite
+some time and under the current architecture, that can make resume take
+much longer or block IOs to other devices on the same port.  :-(
 
-diff --git a/drivers/ide/ide-cd.c b/drivers/ide/ide-cd.c
-index abf9af2..b8c98e1 100644
---- a/drivers/ide/ide-cd.c
-+++ b/drivers/ide/ide-cd.c
-@@ -778,14 +778,6 @@ static ide_startstop_t cdrom_start_seek_continuation(ide_drive_t *drive)
- 	return cdrom_transfer_packet_command(drive, rq, &cdrom_seek_intr);
- }
- 
--static void cdrom_start_seek(ide_drive_t *drive)
--{
--	struct cdrom_info *info = drive->driver_data;
--
--	info->dma = 0;
--	info->start_seek = jiffies;
--}
--
- /*
-  * Fix up a possibly partially-processed request so that we can start it over
-  * entirely, or even put it back on the request queue.
-@@ -1233,7 +1225,8 @@ static ide_startstop_t ide_cd_do_request(ide_drive_t *drive, struct request *rq,
- 		    drive->dsc_overlap) {
- 			xferlen = 0;
- 			fn = cdrom_start_seek_continuation;
--			cdrom_start_seek(drive);
-+			info->dma = 0;
-+			info->start_seek = jiffies;
- 		} else {
- 			xferlen = 32768;
- 			fn = cdrom_start_rw_cont;
 -- 
-1.5.5.1
-
+tejun
