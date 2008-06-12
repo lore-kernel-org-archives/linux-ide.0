@@ -1,105 +1,267 @@
 From: Borislav Petkov <petkovbb@googlemail.com>
-Subject: [PATCH 02/18] ide-cd: remove ide_cd_drain_data and ide_cd_pad_transfer
-Date: Thu, 12 Jun 2008 08:40:54 +0200
-Message-ID: <1213252870-20474-3-git-send-email-petkovbb@gmail.com>
+Subject: [PATCH 04/18] ide-cd: cdrom_decode_status: factor out fs request error handling code
+Date: Thu, 12 Jun 2008 08:40:56 +0200
+Message-ID: <1213252870-20474-5-git-send-email-petkovbb@gmail.com>
 References: <1213252870-20474-1-git-send-email-petkovbb@gmail.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.153]:9950 "EHLO
+Received: from fg-out-1718.google.com ([72.14.220.159]:9089 "EHLO
 	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753221AbYFLGlG (ORCPT
+	with ESMTP id S1753347AbYFLGlG (ORCPT
 	<rfc822;linux-ide@vger.kernel.org>); Thu, 12 Jun 2008 02:41:06 -0400
-Received: by fg-out-1718.google.com with SMTP id 19so2381789fgg.17
-        for <linux-ide@vger.kernel.org>; Wed, 11 Jun 2008 23:41:02 -0700 (PDT)
+Received: by fg-out-1718.google.com with SMTP id 19so2381797fgg.17
+        for <linux-ide@vger.kernel.org>; Wed, 11 Jun 2008 23:41:03 -0700 (PDT)
 In-Reply-To: <1213252870-20474-1-git-send-email-petkovbb@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: bzolnier@gmail.com
 Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Borislav Petkov <petkovbb@gmail.com>
 
-Use the generic ide_pad_transfer() helper instead
+... into cdrom_handle_failed_fs_req(). There's a slight change in internal
+functionality in the case when we have sense NOT_READY and the request is WRITE: the
+original function cdrom_decode_status returned 1 in this case, which means "request
+was ended." We accomplish the same by returning 0 instead, which falls through in the
+if..else block and the surrounding cdrom_decode_status() returns 1 at the end instead
+of jumping to the end_request label as is in all the other cases, so no change
+in obvious functionality.
 
 Signed-off-by: Borislav Petkov <petkovbb@gmail.com>
 ---
- drivers/ide/ide-cd.c |   33 ++++-----------------------------
- 1 files changed, 4 insertions(+), 29 deletions(-)
+ drivers/ide/ide-cd.c |  206 +++++++++++++++++++++++++++-----------------------
+ 1 files changed, 111 insertions(+), 95 deletions(-)
 
 diff --git a/drivers/ide/ide-cd.c b/drivers/ide/ide-cd.c
-index 92a8a36..2f0c9d4 100644
+index 16c4ce9..e63eea2 100644
 --- a/drivers/ide/ide-cd.c
 +++ b/drivers/ide/ide-cd.c
-@@ -599,28 +599,6 @@ static ide_startstop_t cdrom_transfer_packet_command(ide_drive_t *drive,
+@@ -314,12 +314,115 @@ static int cdrom_handle_failed_pc_req(ide_drive_t *drive, struct request *rq,
+ 	return 1;
  }
  
+-
  /*
-- * Block read functions.
-- */
--static void ide_cd_pad_transfer(ide_drive_t *drive, xfer_func_t *xf, int len)
--{
--	while (len > 0) {
--		int dum = 0;
--		xf(drive, NULL, &dum, sizeof(dum));
--		len -= sizeof(dum);
--	}
--}
--
--static void ide_cd_drain_data(ide_drive_t *drive, int nsects)
--{
--	while (nsects > 0) {
--		static char dum[SECTOR_SIZE];
--
--		drive->hwif->input_data(drive, NULL, dum, sizeof(dum));
--		nsects--;
--	}
--}
--
--/*
-  * Check the contents of the interrupt reason register from the cdrom
-  * and attempt to recover if there are problems.  Returns  0 if everything's
-  * ok; nonzero if the request has been terminated.
-@@ -635,15 +613,12 @@ static int ide_cd_check_ireason(ide_drive_t *drive, struct request *rq,
- 	if (ireason == (!rw << 1))
- 		return 0;
- 	else if (ireason == (rw << 1)) {
--		ide_hwif_t *hwif = drive->hwif;
--		xfer_func_t *xf;
+- * Returns:
+- * 0: if the request should be continued.
+- * 1: if the request was ended.
++ * Handle errors from READ and WRITE requests. Do a request sense analysis when
++ * we have sense data. We need this in order to perform end of media processing.
+  */
++static int cdrom_handle_failed_fs_req(ide_drive_t *drive, struct request *rq,
++				      int sense_key, int stat)
++{
++	int err = 0;
++
++	if (blk_noretry_request(rq))
++		err = 1;
++
++	switch (sense_key) {
++	case NOT_READY:
++		/* tray open */
++		if (rq_data_dir(rq) == READ) {
++			cdrom_saw_media_change(drive);
++
++			/* fail the request */
++			printk(KERN_ERR "%s: tray open\n", drive->name);
++			err = 1;
++		} else {
++			struct cdrom_info *info = drive->driver_data;
++
++			/*
++			 * Allow the drive 5 seconds to recover, some devices
++			 * will return this error while flushing data from
++			 * cache.
++			 */
++			if (!rq->errors)
++				info->write_timeout = jiffies +
++						      ATAPI_WAIT_WRITE_BUSY;
++			rq->errors = 1;
++
++			if (time_after(jiffies, info->write_timeout))
++				err = 1;
++			else {
++				unsigned long flags;
++
++				/*
++				 * take a breather relying on the unplug timer
++				 * to kick us again
++				 */
++				spin_lock_irqsave(&ide_lock, flags);
++				blk_plug_device(drive->queue);
++				spin_unlock_irqrestore(&ide_lock, flags);
++				err = 0;
++			}
++		}
++		break;
++
++	case UNIT_ATTENTION:
++		/* media change */
++		cdrom_saw_media_change(drive);
++
++		/*
++		 * Arrange to retry the request but be sure to give up if we've
++		 * retried too many times.
++		 */
++		if (++rq->errors > ERROR_MAX)
++			err = 1;
++		break;
++
++	case ILLEGAL_REQUEST:
++	case DATA_PROTECT:
++
++		/*
++		 * No point in retrying after an illegal request or data
++		 * protect error.
++		 */
++		ide_dump_status_no_sense(drive, "command error", stat);
++		err = 1;
++		break;
++
++	case MEDIUM_ERROR:
++
++		/*
++		 * No point in re-trying a zillion times on a bad sector. If we
++		 * got here the error is not correctable.
++		 */
++		ide_dump_status_no_sense(drive, "media error (bad sector)",
++					 stat);
++		err = 1;
++		break;
++
++	case BLANK_CHECK:
++
++		/* disk appears blank ?? */
++		ide_dump_status_no_sense(drive, "media error (blank)", stat);
++		err = 1;
++		break;
++
++	default:
++		break;
++	}
++
++	if ((err & ~ABRT_ERR) != 0) {
++		/* go to the default handler for other errors */
++		ide_error(drive, "cdrom_handle_failed_fs_req", stat);
++		err = 1;
++	} else if ((++rq->errors > ERROR_MAX))
++
++		/* we've racked up too many retries, abort */
++		err = 1;
++
++	return err;
++}
++
++/* Returns 0 if the request should be continued, 1 otherwise. */
+ static int cdrom_decode_status(ide_drive_t *drive, int good_stat, int *stat_ret)
+ {
+ 	struct request *rq = HWGROUP(drive)->rq;
+@@ -363,104 +466,17 @@ static int cdrom_decode_status(ide_drive_t *drive, int good_stat, int *stat_ret)
+ 			return 0;
  
- 		/* whoops... */
- 		printk(KERN_ERR "%s: %s: wrong transfer direction!\n",
- 				drive->name, __func__);
+ 	} else if (blk_fs_request(rq)) {
+-		int do_end_request = 0;
+-
+-		/* handle errors from READ and WRITE requests */
+-
+-		if (blk_noretry_request(rq))
+-			do_end_request = 1;
+-
+-		if (sense_key == NOT_READY) {
+-			/* tray open */
+-			if (rq_data_dir(rq) == READ) {
+-				cdrom_saw_media_change(drive);
  
--		xf = rw ? hwif->output_data : hwif->input_data;
--		ide_cd_pad_transfer(drive, xf, len);
-+		ide_pad_transfer(drive, rw, len);
- 	} else  if (rw == 0 && ireason == 1) {
+-				/* fail the request */
+-				printk(KERN_ERR "%s: tray open\n", drive->name);
+-				do_end_request = 1;
+-			} else {
+-				struct cdrom_info *info = drive->driver_data;
+-
+-				/*
+-				 * Allow the drive 5 seconds to recover, some
+-				 * devices will return this error while flushing
+-				 * data from cache.
+-				 */
+-				if (!rq->errors)
+-					info->write_timeout = jiffies +
+-							ATAPI_WAIT_WRITE_BUSY;
+-				rq->errors = 1;
+-				if (time_after(jiffies, info->write_timeout))
+-					do_end_request = 1;
+-				else {
+-					unsigned long flags;
+-
+-					/*
+-					 * take a breather relying on the unplug
+-					 * timer to kick us again
+-					 */
+-					spin_lock_irqsave(&ide_lock, flags);
+-					blk_plug_device(drive->queue);
+-					spin_unlock_irqrestore(&ide_lock,
+-								flags);
+-					return 1;
+-				}
+-			}
+-		} else if (sense_key == UNIT_ATTENTION) {
+-			/* media change */
+-			cdrom_saw_media_change(drive);
+-
+-			/*
+-			 * Arrange to retry the request but be sure to give up
+-			 * if we've retried too many times.
+-			 */
+-			if (++rq->errors > ERROR_MAX)
+-				do_end_request = 1;
+-		} else if (sense_key == ILLEGAL_REQUEST ||
+-			   sense_key == DATA_PROTECT) {
+-			/*
+-			 * No point in retrying after an illegal request or data
+-			 * protect error.
+-			 */
+-			ide_dump_status_no_sense(drive, "command error", stat);
+-			do_end_request = 1;
+-		} else if (sense_key == MEDIUM_ERROR) {
+-			/*
+-			 * No point in re-trying a zillion times on a bad
+-			 * sector. If we got here the error is not correctable.
+-			 */
+-			ide_dump_status_no_sense(drive,
+-						 "media error (bad sector)",
+-						 stat);
+-			do_end_request = 1;
+-		} else if (sense_key == BLANK_CHECK) {
+-			/* disk appears blank ?? */
+-			ide_dump_status_no_sense(drive, "media error (blank)",
+-						 stat);
+-			do_end_request = 1;
+-		} else if ((err & ~ABRT_ERR) != 0) {
+-			/* go to the default handler for other errors */
+-			ide_error(drive, "cdrom_decode_status", stat);
+-			return 1;
+-		} else if ((++rq->errors > ERROR_MAX)) {
+-			/* we've racked up too many retries, abort */
+-			do_end_request = 1;
+-		}
+-
+-		/*
+-		 * End a request through request sense analysis when we have
+-		 * sense data. We need this in order to perform end of media
+-		 * processing.
+-		 */
+-		if (do_end_request)
++		if (cdrom_handle_failed_fs_req(drive, rq, sense_key, stat))
+ 			goto end_request;
+ 
  		/*
- 		 * Some drives (ASUS) seem to tell us that status info is
-@@ -1006,7 +981,7 @@ static ide_startstop_t cdrom_newpc_intr(ide_drive_t *drive)
- 					   - bio_cur_sectors(rq->bio),
- 					   thislen >> 9);
- 			if (nskip > 0) {
--				ide_cd_drain_data(drive, nskip);
-+				ide_pad_transfer(drive, write, nskip);
- 				rq->current_nr_sectors -= nskip;
- 				thislen -= (nskip << 9);
- 			}
-@@ -1043,7 +1018,7 @@ static ide_startstop_t cdrom_newpc_intr(ide_drive_t *drive)
- 				 * If the buffers are full, pipe the rest into
- 				 * oblivion.
- 				 */
--				ide_cd_drain_data(drive, thislen >> 9);
-+				ide_pad_transfer(drive, 0, thislen >> 9);
- 			else {
- 				printk(KERN_ERR "%s: confused, missing data\n",
- 						drive->name);
-@@ -1091,7 +1066,7 @@ static ide_startstop_t cdrom_newpc_intr(ide_drive_t *drive)
- 
- 	/* pad, if necessary */
- 	if (!blk_fs_request(rq) && len > 0)
--		ide_cd_pad_transfer(drive, xferfunc, len);
-+		ide_pad_transfer(drive, write, len);
- 
- 	if (blk_pc_request(rq)) {
- 		timeout = rq->timeout;
+-		 * If we got a CHECK_CONDITION status, queue
+-		 * a request sense command.
++		 * If we got a CHECK_CONDITION status, queue a request sense
++		 * command.
+ 		 */
+ 		if (stat & ERR_STAT)
+ 			cdrom_queue_request_sense(drive, NULL, NULL);
++
+ 	} else {
+ 		blk_dump_rq_flags(rq, "ide-cd: bad rq");
+ 		cdrom_end_request(drive, 0);
 -- 
 1.5.5.1
 
