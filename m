@@ -1,62 +1,126 @@
-From: "Justin Mattock" <justinmattock@gmail.com>
-Subject: Re: macbook pro dvd playback after suspend Buffer I/O error
-Date: Thu, 12 Jun 2008 07:45:58 +0000
-Message-ID: <dd18b0c30806120045r3b0b8dd5h42783aa56eab657b@mail.gmail.com>
-References: <dd18b0c30804032207u36bd1f43l358e9949f0c94f79@mail.gmail.com>
-	 <4850794F.3000200@gmail.com>
-	 <dd18b0c30806111910j4b127c32rbd546f885731e18c@mail.gmail.com>
-	 <dd18b0c30806111913gf505c05j479a6a682c2cdd28@mail.gmail.com>
-	 <4850A2F8.3050404@gmail.com>
-	 <dd18b0c30806112222k60e411dfs98e4cc7f64938b5b@mail.gmail.com>
-	 <dd18b0c30806112315x70dee219oa6738de3e22d4939@mail.gmail.com>
-	 <4850C1AC.4090809@gmail.com>
-	 <dd18b0c30806112336ma74115cta1923f7b08dcc2d@mail.gmail.com>
-	 <4850C954.60805@gmail.com>
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Subject: Re:
+	+block-blk_rq_map_kern-uses-the-bounce-buffers-for-stack-buffers.patchadded
+	 to -mm tree
+Date: Thu, 12 Jun 2008 20:17:37 +0900
+Message-ID: <20080612201737J.fujita.tomonori@lab.ntt.co.jp>
+References: <200806032155.m53LtGxK021677@imap1.linux-foundation.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: Text/Plain;
+	charset=us-ascii
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from an-out-0708.google.com ([209.85.132.240]:24149 "EHLO
-	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753446AbYFLHqB (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 12 Jun 2008 03:46:01 -0400
-Received: by an-out-0708.google.com with SMTP id d40so834411and.103
-        for <linux-ide@vger.kernel.org>; Thu, 12 Jun 2008 00:45:58 -0700 (PDT)
-In-Reply-To: <4850C954.60805@gmail.com>
-Content-Disposition: inline
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <200806032155.m53LtGxK021677@imap1.linux-foundation.org>
+Sender: linux-scsi-owner@vger.kernel.org
+To: akpm@linux-foundation.org
+Cc: mm-commits@vger.kernel.org, fujita.tomonori@lab.ntt.co.jp, James.Bottomley@HansenPartnership.com, bzolnier@gmail.com, htejun@gmail.com, jens.axboe@oracle.com, tsbogend@alpha.franken.de, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-On Thu, Jun 12, 2008 at 6:59 AM, Tejun Heo <htejun@gmail.com> wrote:
-> Justin Mattock wrote:
->> Yeah, take you're time. Maybe it's easier  to have mplayer or which
->> ever media player wait for the drive. i.g.
->> under OSX, the media player pauses until the drive does it's thing,
->> and then resumes.(but this would be for the suspend aspect)
->> As for the live distro part I'd have to think as well. Let me know
->> what you think.
->
-> For apps which know they're accessing cd or dvd (probably using sg
-> commands), asking for TUR test after resume could be acceptable but apps
-> getting -EIO on read(2) because of intervening suspend/resume cycle is
-> just not right.  The problem is that readiness waiting can take quite
-> some time and under the current architecture, that can make resume take
-> much longer or block IOs to other devices on the same port.  :-(
->
-> --
-> tejun
->
+On Tue, 03 Jun 2008 14:55:15 -0700
+akpm@linux-foundation.org wrote:
 
->From what I could tell it's the whole start, think, move a little,
-then start spinning, then slow down, then finally locate it's place,
-that the drive
-is doing that's causing the timing to be out of sync, with what's left
-in the cache/or memory,  I'm wondering if its possible to have the
-disk not do the whole cycle that it does once suspend/resume is
-activated, just to see.
-regards;
+> 
+> The patch titled
+>      block: blk_rq_map_kern uses the bounce buffers for stack buffers
+> has been added to the -mm tree.  Its filename is
+>      block-blk_rq_map_kern-uses-the-bounce-buffers-for-stack-buffers.patch
+> 
+> Before you just go and hit "reply", please:
+>    a) Consider who else should be cc'ed
+>    b) Prefer to cc a suitable mailing list as well
+>    c) Ideally: find the original patch on the mailing list and do a
+>       reply-to-all to that, adding suitable additional cc's
+> 
+> *** Remember to use Documentation/SubmitChecklist when testing your code ***
+> 
+> See http://www.zip.com.au/~akpm/linux/patches/stuff/added-to-mm.txt to find
+> out what to do about this
+> 
+> The current -mm tree may be found at http://userweb.kernel.org/~akpm/mmotm/
+> 
+> ------------------------------------------------------
+> Subject: block: blk_rq_map_kern uses the bounce buffers for stack buffers
+> From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+> 
+> blk_rq_map_kern is used for kernel internal I/Os. Some callers use
+> this function with stack buffers but DMA to/from the stack buffers
+> leads to memory corruption on a non-coherent platform.
+> 
+> This patch make blk_rq_map_kern uses the bounce buffers if a caller
+> passes a stack buffer (on the all platforms for simplicity).
+> 
+> Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+> Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+> Cc: Thomas Bogendoerfer <tsbogend@alpha.franken.de>
+> Cc: Tejun Heo <htejun@gmail.com>
+> Cc: Jens Axboe <jens.axboe@oracle.com>
+> Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
+> Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
+> ---
+> 
+>  block/blk-map.c |    5 +++++
+>  1 file changed, 5 insertions(+)
+> 
+> diff -puN block/blk-map.c~block-blk_rq_map_kern-uses-the-bounce-buffers-for-stack-buffers block/blk-map.c
+> --- a/block/blk-map.c~block-blk_rq_map_kern-uses-the-bounce-buffers-for-stack-buffers
+> +++ a/block/blk-map.c
+> @@ -268,6 +268,7 @@ int blk_rq_map_kern(struct request_queue
+>  	int reading = rq_data_dir(rq) == READ;
+>  	int do_copy = 0;
+>  	struct bio *bio;
+> +	unsigned long stack_mask = ~(THREAD_SIZE - 1);
+>  
+>  	if (len > (q->max_hw_sectors << 9))
+>  		return -EINVAL;
+> @@ -278,6 +279,10 @@ int blk_rq_map_kern(struct request_queue
+>  	alignment = queue_dma_alignment(q) | q->dma_pad_mask;
+>  	do_copy = ((kaddr & alignment) || (len & alignment));
+>  
+> +	if (!((kaddr & stack_mask) ^
+> +	      ((unsigned long)current->stack & stack_mask)))
+> +		do_copy = 1;
+> +
+>  	if (do_copy)
+>  		bio = bio_copy_kern(q, kbuf, len, gfp_mask, reading);
+>  	else
 
+Here's an updated version.
+
+A helper function to test if an object is on the stack was added into
+-mm. We can use it to simplify this patch.
+
+http://marc.info/?l=linux-kernel&m=121315043731994&w=2
+
+=
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Subject: [PATCH] block: blk_rq_map_kern uses the bounce buffers for stack buffers
+
+blk_rq_map_kern is used for kernel internal I/Os. Some callers use
+this function with stack buffers but DMA to/from the stack buffers
+leads to memory corruption on a non-coherent platform.
+
+This patch make blk_rq_map_kern uses the bounce buffers if a caller
+passes a stack buffer (on the all platforms for simplicity).
+
+Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+---
+ block/blk-map.c |    3 ++-
+ 1 files changed, 2 insertions(+), 1 deletions(-)
+
+diff --git a/block/blk-map.c b/block/blk-map.c
+index 0b1af5a..3cec2b1 100644
+--- a/block/blk-map.c
++++ b/block/blk-map.c
+@@ -276,7 +276,8 @@ int blk_rq_map_kern(struct request_queue *q, struct request *rq, void *kbuf,
+ 
+ 	kaddr = (unsigned long)kbuf;
+ 	alignment = queue_dma_alignment(q) | q->dma_pad_mask;
+-	do_copy = ((kaddr & alignment) || (len & alignment));
++	do_copy = ((kaddr & alignment) || (len & alignment) ||
++		   object_is_on_stack(kbuf));
+ 
+ 	if (do_copy)
+ 		bio = bio_copy_kern(q, kbuf, len, gfp_mask, reading);
 -- 
-Justin P. Mattock
+1.5.5.GIT
+
