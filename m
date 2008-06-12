@@ -1,38 +1,40 @@
-From: Martin Michlmayr <tbm@cyrius.com>
-Subject: Re: sata_mv on Orion: mv_err_intr when shutting down
-Date: Thu, 12 Jun 2008 20:18:51 +0200
-Message-ID: <20080612181851.GA19874@deprecation.cyrius.com>
-References: <20080512132611.GA15410@deprecation.cyrius.com> <48286499.9020202@rtr.ca> <20080512154609.GI15866@deprecation.cyrius.com> <20080512191534.GA28429@deprecation.cyrius.com>
+From: Jens Axboe <jens.axboe@oracle.com>
+Subject: Re: CDC_PLAY_AUDIO check in cdrom_count_tracks() and other oddities
+Date: Thu, 12 Jun 2008 20:47:42 +0200
+Message-ID: <20080612184742.GQ20851@kernel.dk>
+References: <48509D40.2060901@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from sorrow.cyrius.com ([65.19.161.204]:4042 "EHLO sorrow.cyrius.com"
+Received: from brick.kernel.dk ([87.55.233.238]:10791 "EHLO kernel.dk"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753376AbYFLSVI (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 12 Jun 2008 14:21:08 -0400
+	id S1754157AbYFLSrp (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 12 Jun 2008 14:47:45 -0400
 Content-Disposition: inline
-In-Reply-To: <20080512191534.GA28429@deprecation.cyrius.com>
+In-Reply-To: <48509D40.2060901@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark Lord <liml@rtr.ca>
-Cc: linux-ide@vger.kernel.org, nico@cam.org, buytenh@wantstofly.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: IDE/ATA development list <linux-ide@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>
 
-* Martin Michlmayr <tbm@cyrius.com> [2008-05-12 21:15]:
-> * Martin Michlmayr <tbm@cyrius.com> [2008-05-12 17:46]:
-> > > The code that triggers this was fixed up more after -rc1, so if you can
-> > > still get messages like that with, say -rc2 or later, then please post them.
-> > 
-> > Cool.  I'll let you know in case the message doesn't go away with rc2.
+On Thu, Jun 12 2008, Tejun Heo wrote:
+> Hello, Jens.
 > 
-> I still get the same message with rc2.
+> I'm tracking down a bug where HAL doesn't mount media automatically.
+> It turned out that CDROM_DISC_STATUS wasn't reporting correct disc
+> type which was caused by CDC_PLAY_AUDIO check failure at the top of
+> cdrom_count_tracks().
+> 
+> I've went through MMC-3 but couldn't find anything which associates
+> play audio capability with READ_TOC.  READ_TOC was mandatory command,
+> so according to MMC-3, there's no reason to avoid issuing READ_TOC on
+> !CDC_PLAY_AUDIO.  Is there something I don't know?
 
-Just saw it again with 2.6.26-rc6:
+That check predates me :-)
 
-[42949509.440000] Power down.
-[42949509.440000] qnap_ts209_power_off: triggering power-off...
-[42949509.460000] ata1: exception Emask 0x10 SAct 0x0 SErr 0x190002 action 0xe frozen
-[42949509.460000] ata1: edma_err_cause=02000020 pp_f
+I can't imagine drives NOT having READ_TOC, so I don't think it's a
+problem to remove the depedency on CDC_PLAY_AUDIO.
 
 -- 
-Martin Michlmayr
-http://www.cyrius.com/
+Jens Axboe
+
