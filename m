@@ -1,34 +1,44 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: ahci.c
-Date: Fri, 13 Jun 2008 04:49:26 -0400
-Message-ID: <48523496.3090208@pobox.com>
-References: <BAY122-DS4E91A6CF6FAF2D10B80E9BEB20@phx.gbl> <48508EF1.8000304@pobox.com> <BAY122-DS5943144F5B68D62071DDEBEAC0@phx.gbl>
+From: Tejun Heo <htejun@gmail.com>
+Subject: [PATCH #upstream-fixes] ata_piix: add TECRA M4 to broken suspend
+ list
+Date: Fri, 13 Jun 2008 18:05:02 +0900
+Message-ID: <4852383E.3000901@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=GB2312
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:41846 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754668AbYFMItb (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 13 Jun 2008 04:49:31 -0400
-In-Reply-To: <BAY122-DS5943144F5B68D62071DDEBEAC0@phx.gbl>
+Received: from rv-out-0506.google.com ([209.85.198.228]:31551 "EHLO
+	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755355AbYFMJFJ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 13 Jun 2008 05:05:09 -0400
+Received: by rv-out-0506.google.com with SMTP id k40so2423886rvb.1
+        for <linux-ide@vger.kernel.org>; Fri, 13 Jun 2008 02:05:09 -0700 (PDT)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: dunneil <dunneil@live.cn>
-Cc: linux-ide@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>, IDE/ATA development list <linux-ide@vger.kernel.org>
 
-dunneil wrote:
-> if there are two ASATA controller inside motherboard, it will cause 
-> conflict
-> for BUS Master Enable bit? Do i need disable the motherboard integrated 
-> ASATA controoller for my separate ASATA controller FPGA board?
+TOSHIBA also used "TECRA M4" in additon to "Tecra M4", add it.
 
-You can have as many AHCI PCI devices as you wish.
+Signed-off-by: Tejun Heo <htejun@gmail.com>
+---
+ drivers/ata/ata_piix.c |    7 +++++++
+ 1 file changed, 7 insertions(+)
 
-Each PCI device has its own Bus Master Enable bit in the PCI Command
-register.
-
-	Jeff
-
-
-
+diff --git a/drivers/ata/ata_piix.c b/drivers/ata/ata_piix.c
+index 81b7ae3..a90ae03 100644
+--- a/drivers/ata/ata_piix.c
++++ b/drivers/ata/ata_piix.c
+@@ -1043,6 +1043,13 @@ static int piix_broken_suspend(void)
+ 			},
+ 		},
+ 		{
++			.ident = "TECRA M4",
++			.matches = {
++				DMI_MATCH(DMI_SYS_VENDOR, "TOSHIBA"),
++				DMI_MATCH(DMI_PRODUCT_NAME, "TECRA M4"),
++			},
++		},
++		{
+ 			.ident = "TECRA M5",
+ 			.matches = {
+ 				DMI_MATCH(DMI_SYS_VENDOR, "TOSHIBA"),
