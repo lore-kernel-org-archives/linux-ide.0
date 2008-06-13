@@ -1,66 +1,76 @@
-From: Mark Lord <liml@rtr.ca>
-Subject: Re: sata_mv on Orion: mv_err_intr when shutting down
-Date: Fri, 13 Jun 2008 08:42:44 -0400
-Message-ID: <48526B44.4060600@rtr.ca>
-References: <20080512132611.GA15410@deprecation.cyrius.com> <48286499.9020202@rtr.ca> <20080512154609.GI15866@deprecation.cyrius.com> <20080512191534.GA28429@deprecation.cyrius.com> <20080612181851.GA19874@deprecation.cyrius.com>
+From: "dunneil" <dunneil@live.cn>
+Subject: Re: ahci.c
+Date: Fri, 13 Jun 2008 21:20:23 +0800
+Message-ID: <BAY122-DS144B862CC5C2487230031BEAC0@phx.gbl>
+References: <BAY122-DS4E91A6CF6FAF2D10B80E9BEB20@phx.gbl> <48508EF1.8000304@pobox.com> <BAY122-DS5943144F5B68D62071DDEBEAC0@phx.gbl> <48523496.3090208@pobox.com> <BAY122-DS49D35770A7DFF4DB4885EBEAC0@phx.gbl> <4852411D.2050702@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain;
+	format=flowed;
+	charset="gb2312";
+	reply-type=original
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([76.10.145.34]:3022 "EHLO mail.rtr.ca"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754618AbYFMMmr (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 13 Jun 2008 08:42:47 -0400
-In-Reply-To: <20080612181851.GA19874@deprecation.cyrius.com>
+Received: from bay0-omc2-s19.bay0.hotmail.com ([65.54.246.155]:49740 "EHLO
+	bay0-omc2-s19.bay0.hotmail.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753376AbYFMNU0 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 13 Jun 2008 09:20:26 -0400
+In-Reply-To: <BAY122-DS4E91A6CF6FAF2D10B80E9BEB20@phx.gbl> <48508EF1.8000304@pobox.com> <BAY122-DS5943144F5B68D62071DDEBEAC0@phx.gbl> <48523496.3090208@pobox.com> <BAY122-DS49D35770A7DFF4DB4885EBEAC0@phx.gbl> <4852411D.2050702@pobox.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Martin Michlmayr <tbm@cyrius.com>
-Cc: linux-ide@vger.kernel.org, nico@cam.org, buytenh@wantstofly.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: linux-ide@vger.kernel.org
 
-Martin Michlmayr wrote:
-> * Martin Michlmayr <tbm@cyrius.com> [2008-05-12 21:15]:
->> * Martin Michlmayr <tbm@cyrius.com> [2008-05-12 17:46]:
->>>> The code that triggers this was fixed up more after -rc1, so if you can
->>>> still get messages like that with, say -rc2 or later, then please post them.
->>> Cool.  I'll let you know in case the message doesn't go away with rc2.
->> I still get the same message with rc2.
+it seems that the memory allocate is failed.
+
+	probe_ent = kmalloc(sizeof(*probe_ent), GFP_KERNEL);
+
+why?
+
+--------------------------------------------------
+From: "Jeff Garzik" <jgarzik@pobox.com>
+Sent: Friday, June 13, 2008 5:42 PM
+To: "dunneil" <dunneil@live.cn>
+Cc: <linux-ide@vger.kernel.org>
+Subject: Re: ahci.c
+
+> dunneil wrote:
+>> thx your response~
+>> 
+>> my test step is as following.
+>> 
+>> 
+>> My asata controller is based-PCIEx1 1-port SATA controller.The ASATA 
+>> FPGA board is plugged into PC motherboard. My os is AS5.1.the kernel is 
+>> 2.6.20.7.
+>> 
+>> 1>
+>> Before insmod ahci.ko manualy, the {IO,Mem,BusMaster}=3'b111.
+>> 
+>> After insmod ahci.ko manualy,the {IO,Mem,BusMaster}=3'b110.
+>> 
+>> The Bus Master Enable is not be set.
+>> 
+>> 2> I load my available ethernet NIC driver. My NIC and SATA Controller 
+>> hardware architecture is similar,especially pci part.
+>> 
+>> The BusMasterEnable can be set by the ethernet NIC driver.
+>> 
+>> how to debug?
 > 
-> Just saw it again with 2.6.26-rc6:
+> At this point you need to buy some books on PCI and such and master the
+> basics.
 > 
-> [42949509.440000] Power down.
-> [42949509.440000] qnap_ts209_power_off: triggering power-off...
-> [42949509.460000] ata1: exception Emask 0x10 SAct 0x0 SErr 0x190002 action 0xe frozen
-> [42949509.460000] ata1: edma_err_cause=02000020 pp_f
-..
-
-Mmm.. I don't know how this can happen, even if it does happen.
-Unless perhaps the plaform code doesn't do a (driver).remove() call,
-which is where we disable the interrupt you see above.
-
-This *is* a "platform" (non-PCI) device, right?
-
-That being the case, can you stick a printk() into mv_platform_remove()
-so we can see whether or not it gets called before "power down" ?
-
-Something like this:
-
---- old/drivers/ata/sata_mv.c	2008-05-30 19:36:52.000000000 -0400
-+++ linux/drivers/ata/sata_mv.c	2008-06-13 08:42:02.000000000 -0400
-@@ -3186,6 +3186,7 @@
- 	struct mv_host_priv *hpriv;
- 	struct resource *res;
- 	int n_ports, rc;
-+	printk(KERN_INFO "%s(%p)\n", __func__, pdev);
- 
- 	if (!printed_version++)
- 		dev_printk(KERN_INFO, &pdev->dev, "version " DRV_VERSION "\n");
-@@ -3258,7 +3259,9 @@
- 	struct device *dev = &pdev->dev;
- 	struct ata_host *host = dev_get_drvdata(dev);
- 
-+	printk(KERN_INFO "%s(%p) enter\n", __func__, pdev);
- 	ata_host_detach(host);
-+	printk(KERN_INFO "%s(%p) exit\n", __func__, pdev);
- 	return 0;
- }
- 
+> We are not here to teach you everything in the world about PCI or AHCI,
+> nor are we here to debug your FPGA hardware setup.
+> 
+> If you are going to be working at a low level, you are expected to know
+> this stuff already.
+> 
+> Jeff
+> 
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-ide" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
