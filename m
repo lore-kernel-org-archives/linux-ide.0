@@ -1,57 +1,86 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH] ide-cs: fix releasing I/O resources
-Date: Sun, 15 Jun 2008 20:23:58 +0200
-Message-ID: <200806152023.59096.bzolnier@gmail.com>
+From: Mikael Pettersson <mikpe@it.uu.se>
+Subject: Re: [BUG] IDE: 2.6.26-rc5-git5 ide_generic leaks resources breaking my NE2000 NIC
+Date: Sun, 15 Jun 2008 20:52:31 +0200
+Message-ID: <18517.25839.523939.668307@harpo.it.uu.se>
+References: <200806151155.m5FBtoou029056@harpo.it.uu.se>
+	<200806151612.21248.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from yw-out-2324.google.com ([74.125.46.30]:62275 "EHLO
-	yw-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758856AbYFOSXL (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 15 Jun 2008 14:23:11 -0400
-Received: by yw-out-2324.google.com with SMTP id 9so2934519ywe.1
-        for <linux-ide@vger.kernel.org>; Sun, 15 Jun 2008 11:23:01 -0700 (PDT)
-Content-Disposition: inline
+Received: from aun.it.uu.se ([130.238.12.36]:63167 "EHLO aun.it.uu.se"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750699AbYFOSwo (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 15 Jun 2008 14:52:44 -0400
+In-Reply-To: <200806151612.21248.bzolnier@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: Mikael Pettersson <mikpe@it.uu.se>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Alan Cox <alan@lxorguk.ukuu.org.uk>
 
-hwif content is already freed after ide_release() call so cache
-hwif->io_ports.{data,ctl}_addr in local variables in ide_detach().
+Bartlomiej Zolnierkiewicz writes:
+ > From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+ > Subject: [PATCH] ide-generic: don't probe all legacy ISA IDE ports by default
+ > 
+ > We can't probe all legacy ISA IDE ports by default as the resources may be
+ > occupied by other ISA devices.  Add "probe_mask" module parameter and probe
+ > only first two ISA IDE ports by default leaving the decision about probing
+ > the rest to the user (systems with ISA ide2-6 should be very, very rare).
+ > 
+ > This fixes a regression caused by:
+ > 
+ > commit 343a3451e20314d5959b59b992e33fbaadfe52bf
+ > Author: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+ > Date:   Tue Jun 10 20:56:36 2008 +0200
+ > 
+ >     ide-generic: add missing hwif->chipset setup
+ > ...
+ > 
+ > Reported-by: Mikael Pettersson <mikpe@it.uu.se>
+ > Bisected-by: Mikael Pettersson <mikpe@it.uu.se>
+ > Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>
+ > Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 
-This fixes 2.6.26 regression.
+This fixes the regression on my old box. Thanks.
 
-Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
----
-for 2.6.26
+Tested-by: Mikael Pettersson <mikpe@it.uu.se>
 
- drivers/ide/legacy/ide-cs.c |    8 ++++++--
- 1 file changed, 6 insertions(+), 2 deletions(-)
-
-Index: b/drivers/ide/legacy/ide-cs.c
-===================================================================
---- a/drivers/ide/legacy/ide-cs.c
-+++ b/drivers/ide/legacy/ide-cs.c
-@@ -135,13 +135,17 @@ static void ide_detach(struct pcmcia_dev
- {
-     ide_info_t *info = link->priv;
-     ide_hwif_t *hwif = info->hwif;
-+    unsigned long data_addr, ctl_addr;
- 
-     DEBUG(0, "ide_detach(0x%p)\n", link);
- 
-+    data_addr = hwif->io_ports.data_addr;
-+    ctl_addr  = hwif->io_ports.ctl_addr;
-+
-     ide_release(link);
- 
--    release_region(hwif->io_ports.ctl_addr, 1);
--    release_region(hwif->io_ports.data_addr, 8);
-+    release_region(ctl_addr, 1);
-+    release_region(data_addr, 8);
- 
-     kfree(info);
- } /* ide_detach */
+ > ---
+ >  drivers/ide/ide-generic.c |    9 ++++++++-
+ >  1 file changed, 8 insertions(+), 1 deletion(-)
+ > 
+ > Index: b/drivers/ide/ide-generic.c
+ > ===================================================================
+ > --- a/drivers/ide/ide-generic.c
+ > +++ b/drivers/ide/ide-generic.c
+ > @@ -22,6 +22,10 @@
+ >  
+ >  #define DRV_NAME	"ide_generic"
+ >  
+ > +static int probe_mask = 0x03;
+ > +module_param(probe_mask, int, 0);
+ > +MODULE_PARM_DESC(probe_mask, "probe mask for legacy ISA IDE ports");
+ > +
+ >  static ssize_t store_add(struct class *cls, const char *buf, size_t n)
+ >  {
+ >  	ide_hwif_t *hwif;
+ > @@ -89,6 +93,9 @@ static int __init ide_generic_init(void)
+ >  	u8 idx[MAX_HWIFS];
+ >  	int i;
+ >  
+ > +	printk(KERN_INFO DRV_NAME ": please use \"probe_mask=0x3f\" module "
+ > +			 "parameter for probing all legacy ISA IDE ports\n");
+ > +
+ >  	for (i = 0; i < MAX_HWIFS; i++) {
+ >  		ide_hwif_t *hwif;
+ >  		unsigned long io_addr = ide_default_io_base(i);
+ > @@ -96,7 +103,7 @@ static int __init ide_generic_init(void)
+ >  
+ >  		idx[i] = 0xff;
+ >  
+ > -		if (io_addr) {
+ > +		if ((probe_mask & (1 << i)) && io_addr) {
+ >  			if (!request_region(io_addr, 8, DRV_NAME)) {
+ >  				printk(KERN_ERR "%s: I/O resource 0x%lX-0x%lX "
+ >  						"not free.\n",
+ > 
