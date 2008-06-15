@@ -1,99 +1,43 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [m68k] drivers/ide/ide-taskfile.c:235: error: implicit declaration of function 'sg_page'
-Date: Sun, 15 Jun 2008 16:50:32 +0200
-Message-ID: <200806151650.33323.bzolnier@gmail.com>
-References: <Pine.LNX.4.64.0806151538160.5736@anakin>
+Subject: Re: [PATCH 13/18] ide-floppy: replace pc->c with rq->cmd
+Date: Sun, 15 Jun 2008 16:57:49 +0200
+Message-ID: <200806151657.49843.bzolnier@gmail.com>
+References: <1213252870-20474-1-git-send-email-petkovbb@gmail.com> <200806141940.22838.bzolnier@gmail.com> <20080615102124.GB7622@gollum.tnic>
 Mime-Version: 1.0
 Content-Type: text/plain;
   charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from yw-out-2324.google.com ([74.125.46.28]:21728 "EHLO
+Received: from yw-out-2324.google.com ([74.125.46.28]:32734 "EHLO
 	yw-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758025AbYFOOt2 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 15 Jun 2008 10:49:28 -0400
-Received: by yw-out-2324.google.com with SMTP id 9so2909279ywe.1
-        for <linux-ide@vger.kernel.org>; Sun, 15 Jun 2008 07:49:23 -0700 (PDT)
-In-Reply-To: <Pine.LNX.4.64.0806151538160.5736@anakin>
+	with ESMTP id S1758142AbYFOO5T (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 15 Jun 2008 10:57:19 -0400
+Received: by yw-out-2324.google.com with SMTP id 9so2910188ywe.1
+        for <linux-ide@vger.kernel.org>; Sun, 15 Jun 2008 07:57:14 -0700 (PDT)
+In-Reply-To: <20080615102124.GB7622@gollum.tnic>
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Geert Uytterhoeven <geert@linux-m68k.org>
-Cc: linux-ide@vger.kernel.org, linux-next@vger.kernel.org, Linux/m68k <linux-m68k@vger.kernel.org>
+To: petkovbb@gmail.com
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-
-Hi,
-
-On Sunday 15 June 2008, Geert Uytterhoeven wrote:
-> 	Hi Bart,
+On Sunday 15 June 2008, Borislav Petkov wrote:
+> On Sat, Jun 14, 2008 at 07:40:22PM +0200, Bartlomiej Zolnierkiewicz wrote:
+> > On Thursday 12 June 2008, Borislav Petkov wrote:
+> > > This is the first one in the series attempting to phase out ide_atapi_pc and use
+> > > block request structs. Also, the pc request type is now REQ_TYPE_BLOCK_PC. As a result,
+> > > idefloppy_blockpc_cmd becomes unused and can go.
+> > 
+> > Do not attack too many dragons at once or they will slay you... ;)
+> > 
+> > IOW this patch mixes too many changes (some _really_ non-trivial)
+> > in one go which results in rather bad outcome...
 > 
-> As of June 12, drivers/ide/ide-taskfile.c fails to compile on m68k in
-> linux-next:
-> 
-> | drivers/ide/ide-taskfile.c:235: error: implicit declaration of function 'sg_page'
-> | drivers/ide/ide-taskfile.c:251: error: implicit declaration of function 'sg_next'
-> | distcc[17810] ERROR: compile drivers/ide/ide-taskfile.c on localhost failed
-> | make[3]: *** [drivers/ide/ide-taskfile.o] Error 1
-> 
-> http://kisskb.ellerman.id.au/kisskb/buildresult/31729/
-> 
-> I suspect http://git.kernel.org/?p=linux/kernel/git/sfr/linux-next.git;a=commitdiff;h=52cc802c0f45d8c15b20025e0fecf84174797307 is too blame:
-> 
-> | ide: remove needless includes from ide-taskfile.c
-> 
-> | -#include <linux/scatterlist.h>
->   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
->  
-> As ide-taskfile.c uses scatterlists, it should include <linux/scatterlist.h>.
+> yeah, this was more of a RFC patch for me not intended in any way for submission
+> but instead to get your comments on it. Atapi-land is full of surprises and you
+> have to be _really_ careful when changing stuff around. I got bitten by that
+> couple times when preparing those patches. Anyways, don't take those seriously,
+> they were simply a warmup :).
 
-Yep, obvious bug (sorry for it), fixed in IDE tree now.
-
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH] ide: remove needless includes from ide-taskfile.c (take 2)
-
-v2:
-
-On Sunday 15 June 2008, Geert Uytterhoeven wrote:
-> As ide-taskfile.c uses scatterlists, it should include <linux/scatterlist.h>.
-
-(v1 broke IDE build on m68k, thanks to Geert for finding the bug)
-
-Cc: Geert Uytterhoeven <geert@linux-m68k.org>
-Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
----
- drivers/ide/ide-taskfile.c |   10 ----------
- 1 file changed, 10 deletions(-)
-
-Index: b/drivers/ide/ide-taskfile.c
-===================================================================
---- a/drivers/ide/ide-taskfile.c
-+++ b/drivers/ide/ide-taskfile.c
-@@ -8,28 +8,18 @@
-  *  The big the bad and the ugly.
-  */
- 
--#include <linux/module.h>
- #include <linux/types.h>
- #include <linux/string.h>
- #include <linux/kernel.h>
--#include <linux/timer.h>
--#include <linux/mm.h>
- #include <linux/sched.h>
- #include <linux/interrupt.h>
--#include <linux/major.h>
- #include <linux/errno.h>
--#include <linux/genhd.h>
--#include <linux/blkpg.h>
- #include <linux/slab.h>
--#include <linux/pci.h>
- #include <linux/delay.h>
- #include <linux/hdreg.h>
- #include <linux/ide.h>
--#include <linux/bitops.h>
- #include <linux/scatterlist.h>
- 
--#include <asm/byteorder.h>
--#include <asm/irq.h>
- #include <asm/uaccess.h>
- #include <asm/io.h>
- 
+I'm not worried at all - I'm sure that if you keep fighting these dragons
+one by one they won't stand a chance... :)
