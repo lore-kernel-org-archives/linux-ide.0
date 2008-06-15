@@ -1,65 +1,38 @@
-From: Borislav Petkov <petkovbb@googlemail.com>
-Subject: Re: [PATCH 02/18] ide-cd: remove ide_cd_drain_data and
-	ide_cd_pad_transfer
-Date: Sun, 15 Jun 2008 11:28:08 +0200
-Message-ID: <20080615092808.GA7622@gollum.tnic>
-References: <1213252870-20474-1-git-send-email-petkovbb@gmail.com> <1213252870-20474-3-git-send-email-petkovbb@gmail.com> <200806141929.05834.bzolnier@gmail.com>
-Reply-To: petkovbb@gmail.com
+From: Frans Pop <elendil@planet.nl>
+Subject: Re: sata_mv on Orion: mv_err_intr when shutting down
+Date: Sun, 15 Jun 2008 11:41:50 +0200
+Message-ID: <200806151141.52326.elendil@planet.nl>
+References: <20080512132611.GA15410@deprecation.cyrius.com> <4852A6D0.8030607@rtr.ca> <48547BD9.8050306@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain;
+  charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.174]:12556 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756690AbYFOJ2Q (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 15 Jun 2008 05:28:16 -0400
-Received: by ug-out-1314.google.com with SMTP id h2so258331ugf.16
-        for <linux-ide@vger.kernel.org>; Sun, 15 Jun 2008 02:28:14 -0700 (PDT)
+Received: from cpsmtpo-eml03.kpnxchange.com ([213.75.38.152]:7472 "EHLO
+	cpsmtpo-eml03.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1756727AbYFOJlz (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 15 Jun 2008 05:41:55 -0400
+In-Reply-To: <48547BD9.8050306@gmail.com>
 Content-Disposition: inline
-In-Reply-To: <200806141929.05834.bzolnier@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: Mark Lord <liml@rtr.ca>, linux-ide@vger.kernel.org, nico@cam.org, buytenh@wantstofly.org, Byron Bradley <byron.bbradley@gmail.com>
 
-On Sat, Jun 14, 2008 at 07:29:05PM +0200, Bartlomiej Zolnierkiewicz wro=
-te:
-> On Thursday 12 June 2008, Borislav Petkov wrote:
-> > Use the generic ide_pad_transfer() helper instead
-> >=20
-> > Signed-off-by: Borislav Petkov <petkovbb@gmail.com>
->=20
-> applied w/ ide_cd_drain_data() -> ide_pad_transfer() conversion fixup
->=20
-> [...]
->=20
-> > @@ -1006,7 +981,7 @@ static ide_startstop_t cdrom_newpc_intr(ide_dr=
-ive_t *drive)
-> >  					   - bio_cur_sectors(rq->bio),
-> >  					   thislen >> 9);
-> >  			if (nskip > 0) {
-> > -				ide_cd_drain_data(drive, nskip);
-> > +				ide_pad_transfer(drive, write, nskip);
-> >  				rq->current_nr_sectors -=3D nskip;
-> >  				thislen -=3D (nskip << 9);
-> >  			}
->=20
-> ide_cd_drain_data() took number for _sectors_ as an argument
-> while ide_pad_transfer() wants to be given number of _bytes_
+On Sunday 15 June 2008, Tejun Heo wrote:
+> The interesting thing here is that sata_mv can see the disk going off
+> the power, which is kind of cool.  The controller and CPU are watching
+> itself as it goes off the life support and is drifting awaaaaaayyyy.
+>
+> The PSU has switched off and power to the drive was cut.  I don't think
+> anything can go wrong at that point.
 
-/me crawls ashamed back into the black place behind the wall cardboard =
-=2E.. :)
->=20
-> > @@ -1043,7 +1018,7 @@ static ide_startstop_t cdrom_newpc_intr(ide_d=
-rive_t *drive)
-> >  				 * If the buffers are full, pipe the rest into
-> >  				 * oblivion.
-> >  				 */
-> > -				ide_cd_drain_data(drive, thislen >> 9);
-> > +				ide_pad_transfer(drive, 0, thislen >> 9);
->=20
-> ditto
+What I still find most interesting is that with 2.6.25 the extra 
+message(s) do not appear and the poweroff is "clean". And that it affects 
+2 different systems where one seems to live on just a bit longer than the 
+other. So it does look as if something _has_ changed.
 
---=20
-Regards/Gru=DF,
-    Boris.
+I'll probably do a bisect to see if I can discover what/where/why...
+
+Cheers,
+FJP
