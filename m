@@ -1,50 +1,63 @@
-From: Ben Dooks <ben-linux@fluff.org>
-Subject: [patch 1/2] LIBATA: Add HAVE_PATA_PLATFORM to select PATA_PLATFORM driver
-Date: Mon, 16 Jun 2008 12:16:26 +0100
-Message-ID: <20080616112452.786570267@fluff.org.uk>
-References: <20080616111625.145158959@fluff.org.uk>
+From: Adrian Bunk <bunk@kernel.org>
+Subject: Re: [git pull] Please pull powerpc.git merge branch
+Date: Mon, 16 Jun 2008 15:43:24 +0300
+Message-ID: <20080616124324.GC10854@cs181133002.pp.htv.fi>
+References: <18518.114.100584.607669@cargo.ozlabs.ibm.com> <18518.19857.917564.461743@cargo.ozlabs.ibm.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from aeryn.fluff.org.uk ([87.194.8.8]:63529 "EHLO
-	kira.home.fluff.org" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751107AbYFPLZH (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 16 Jun 2008 07:25:07 -0400
-Content-Disposition: inline; filename=simtec/libata-pata-kconfig.patch
+Received: from smtp4.pp.htv.fi ([213.243.153.38]:57599 "EHLO smtp4.pp.htv.fi"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752463AbYFPMon (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 16 Jun 2008 08:44:43 -0400
+Content-Disposition: inline
+In-Reply-To: <18518.19857.917564.461743@cargo.ozlabs.ibm.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
-Cc: jgarzik@pobox.com, bzolnier@gmail.com, Ben Dooks <ben-linux@fluff.org>
+To: Paul Mackerras <paulus@samba.org>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>, linuxppc-dev@ozlabs.org, akpm@linux-foundation.org, linux-kernel@vger.kernel.org, Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org, Benjamin Herrenschmidt <benh@kernel.crashing.org>
 
-Add HAVE_PATA_PLATFORM to select the pata platform driver
-to ensure that we do not end up with a long 'depends on' list
-when other users of this driver turn up.
+On Mon, Jun 16, 2008 at 09:25:05PM +1000, Paul Mackerras wrote:
+> Linus,
+> 
+> As Ben pointed out, I had forgotten to re-do a couple of defconfigs
+> where I had inadvertently turned off the SATA driver for the G5
+> powermacs.  So when you do the pull as I requested earlier from
+> 
+> git://git.kernel.org/pub/scm/linux/kernel/git/paulus/powerpc.git merge
+> 
+> you'll also get one more commit as listed below.
+> 
+> Thanks,
+> Paul.
+> 
+>  arch/powerpc/configs/g5_defconfig    |   62 ++++++++++++++++++++++++++++++--
+>  arch/powerpc/configs/ppc64_defconfig |   66 ++++++++++++++++++++++++++++++++--
+>  2 files changed, 122 insertions(+), 6 deletions(-)
+> 
+> Paul Mackerras (1):
+>       [POWERPC] Turn on ATA_SFF so we get SATA_SVW back in defconfigs
+>...
 
-Signed-off-by: Ben Dooks <ben-linux@fluff.org>
+What about my patch [1] to eliminate this new trap in kconfig since we 
+do not have to bother kconfig users with ATA_SFF at all?
 
-Index: linux-2.6.26-rc3-quilt1/drivers/ata/Kconfig
-===================================================================
---- linux-2.6.26-rc3-quilt1.orig/drivers/ata/Kconfig	2008-05-19 23:04:01.000000000 +0100
-+++ linux-2.6.26-rc3-quilt1/drivers/ata/Kconfig	2008-05-19 23:39:47.000000000 +0100
-@@ -651,9 +651,17 @@ config PATA_WINBOND_VLB
- 	  Support for the Winbond W83759A controller on Vesa Local Bus
- 	  systems.
- 
-+config HAVE_PATA_PLATFORM
-+	bool
-+	help
-+	  This is an internal configuration node for any machine that
-+	  uses pata-platform driver to enable the relevant driver in the
-+	  configuration structure without having to submit endless patches
-+	  to update the PATA_PLATFORM entry.
-+
- config PATA_PLATFORM
- 	tristate "Generic platform device PATA support"
--	depends on EMBEDDED || ARCH_RPC || PPC
-+	depends on EMBEDDED || ARCH_RPC || PPC || HAVE_PATA_PLATFORM
- 	help
- 	  This option enables support for generic directly connected ATA
- 	  devices commonly found on embedded systems.
+Besides some orthoginal discussion whether this stuff should actually be 
+called SFF I am not aware of any reactions to my patch from the ATA 
+people.
+
+I already sent this patch twice and I can update it to the latest tree 
+if it's considered OK, but I'd like to get some ACK/NAK first.
+
+cu
+Adrian
+
+[1] http://lkml.org/lkml/2008/4/21/501
 
 -- 
-Ben (ben@fluff.org, http://www.fluff.org/)
 
-  'a smiley only costs 4 bytes'
+       "Is there not promise of rain?" Ling Tan asked suddenly out
+        of the darkness. There had been need of rain for many days.
+       "Only a promise," Lao Er said.
+                                       Pearl S. Buck - Dragon Seed
+
