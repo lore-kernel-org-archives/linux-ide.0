@@ -1,42 +1,36 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [git patches] IDE fixes
-Date: Mon, 16 Jun 2008 11:10:42 +0200
-Message-ID: <200806161110.44224.bzolnier@gmail.com>
-References: <200806152149.11267.bzolnier@gmail.com> <alpine.LFD.1.10.0806151630380.2949@woody.linux-foundation.org> <alpine.LFD.1.10.0806151702400.2949@woody.linux-foundation.org>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [PATCH] libata: use ATAPI dma even for data transfers not
+ aligned to 16 bytes
+Date: Mon, 16 Jun 2008 10:31:46 +0100
+Message-ID: <20080616103146.0bbdc641@lxorguk.ukuu.org.uk>
+References: <485615B4.7070002@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from yw-out-2324.google.com ([74.125.46.30]:6066 "EHLO
-	yw-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758375AbYFPJKB (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 16 Jun 2008 05:10:01 -0400
-Received: by yw-out-2324.google.com with SMTP id 9so3045741ywe.1
-        for <linux-ide@vger.kernel.org>; Mon, 16 Jun 2008 02:09:31 -0700 (PDT)
-In-Reply-To: <alpine.LFD.1.10.0806151702400.2949@woody.linux-foundation.org>
-Content-Disposition: inline
+Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:55836 "EHLO
+	lxorguk.ukuu.org.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1758139AbYFPJzm (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 16 Jun 2008 05:55:42 -0400
+In-Reply-To: <485615B4.7070002@kernel.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Stephen Rothwell <sfr@canb.auug.org.au>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: Jeff Garzik <jeff@garzik.org>, IDE/ATA development list <linux-ide@vger.kernel.org>
 
-On Monday 16 June 2008, Linus Torvalds wrote:
-> 
-> On Sun, 15 Jun 2008, Linus Torvalds wrote:
-> > 
-> > It *looks* like it has all the new objects, but its 
-> > objects/info/alternates is corrupt:
-> > 
-> > 	[torvalds@hera ide-2.6.git]$ cat objects/info/alternates 
-> > 	/home/dump/git/linux-2.6.git/.git/objects
-> > 
-> > and there is no such thing as "/home/dump/git/linux-2.6.git/"
-> 
-> Ok, I did the pull by just copying the objects to a local repo, and 
-> setting the alternates file correctly. So it worked this time, but please 
-> double-check your alternates next time,
+On Mon, 16 Jun 2008 16:26:44 +0900
+Tejun Heo <tj@kernel.org> wrote:
 
-Thanks, and sorry for troubles.
+> Most ATAPI DMA failures are due to controller issues including choking
+> on data buffer w/o proper padding or draining areas and should be
+> worked around in LLDs.  The default 16 byte alignment check in
+> ata_check_atapi_dma() only partially hides problems (well, that was
+> the conclusion back then, at least).
 
-Bart
+You need to modify some of the drivers before you can remove this check
+now. At least AMD, and probably nvidia (but who knows) require 4
+byte alignment for internal buffering unless you reconfigure the FIFO
+(actually we should be using inl/outl as well in the AMD case it seems -
+docs are not 100% clear). I'm currently investigating this bit.
+
+Alan
