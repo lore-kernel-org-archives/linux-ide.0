@@ -1,69 +1,135 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH #upstream-fixes] ahci: sis can't do PMP
-Date: Mon, 16 Jun 2008 11:38:22 +0900
-Message-ID: <4855D21E.5020706@kernel.org>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: [KERNEL 2.6.26-rc4]  bugreport : pata_pcmcia with Sandisk Extreme
+ III 8GB
+Date: Mon, 16 Jun 2008 12:07:14 +0900
+Message-ID: <4855D8E2.10409@gmail.com>
+References: <20080528225049.9a134e0d.Kristoffer.Ericson@Gmail.com>	<20080528222740.GB20893@isilmar.linta.de>	<20080530135728.be02d3dc.Kristoffer.Ericson@Gmail.com>	<20080607223716.7d142072.komurojun-mbn@nifty.com>	<20080611072029.GB28692@comet.dominikbrodowski.net>	<20080614120055.ad8fbee0.komurojun-mbn@nifty.com>	<48537149.4040102@garzik.org> <20080614213612.96873c25.komurojun-mbn@nifty.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed;
+ boundary="------------020409020006020000010900"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:46104 "EHLO hera.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751423AbYFPCig (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 15 Jun 2008 22:38:36 -0400
+Received: from rv-out-0506.google.com ([209.85.198.228]:2361 "EHLO
+	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751056AbYFPDHX (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 15 Jun 2008 23:07:23 -0400
+Received: by rv-out-0506.google.com with SMTP id k40so3367711rvb.1
+        for <linux-ide@vger.kernel.org>; Sun, 15 Jun 2008 20:07:22 -0700 (PDT)
+In-Reply-To: <20080614213612.96873c25.komurojun-mbn@nifty.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, piterpunk@slackware.com
+To: Komuro <komurojun-mbn@nifty.com>
+Cc: Jeff Garzik <jeff@garzik.org>, Dominik Brodowski <linux@dominikbrodowski.net>, jgarzik@redhat.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linux-pcmcia <linux-pcmcia@lists.infradead.org>, Kristoffer Ericson <kristoffer.ericson@gmail.com>
 
-From: Piter PUNK <piterpunk@slackware.com>
+This is a multi-part message in MIME format.
+--------------020409020006020000010900
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 
-SiS AHCIs say they can do PMP but can't and fail detection if SRST w/
-pmp==15 is used.  Turn off PMP support.
+Hello,
 
-tj: added patch description, adapted patch to #upstream-fixes and
-    renamed board_ahci_sis to board_ahci_nopmp.
+Komuro wrote:
+> On Sat, 14 Jun 2008 03:20:41 -0400
+> Jeff Garzik <jeff@garzik.org> wrote:
+> 
+> 
+> After removing the 3-lines below in ata_eh_reset
+> the pata_pcmcia works properly.
+> 
+> 
+> -       spin_lock_irqsave(link->ap->lock, flags);
+> -       link->eh_info.serror = 0;
+> -       spin_unlock_irqrestore(link->ap->lock, flags);
+> 
+> Please fix this problem.
 
-Signed-off-by: Tejun Heo <tj@kernel.org>
----
- drivers/ata/ahci.c |   15 ++++++++++++---
- 1 file changed, 12 insertions(+), 3 deletions(-)
+Thanks for diagnosing the problem but it doesn't make any sense at all.
+ Those three lines just clear cached SError value.  pata_pcmcia being a
+PATA driver, SError is not implemented and always zero.
 
-diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
-index 544b7d6..c81f09c 100644
---- a/drivers/ata/ahci.c
-+++ b/drivers/ata/ahci.c
-@@ -89,6 +89,7 @@ enum {
- 	board_ahci_sb600	= 3,
- 	board_ahci_mv		= 4,
- 	board_ahci_sb700	= 5,
-+	board_ahci_nopmp	= 6,
+Also the init_one error is -ENOMEM.  For the above change to make any
+difference, EH should have been entered which is invoked deep into
+ata_host_register() and once control reaches that point it never returns
+error code.  I have difficult time imagining any way the above diff can
+have anything to do with the reported failure.
+
+Please apply the attached patch and report the log after probe failure.
+
+Thanks.
+
+-- 
+tejun
+
+--------------020409020006020000010900
+Content-Type: text/x-patch;
+ name="pata_pcmcia-debug.patch"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="pata_pcmcia-debug.patch"
+
+diff --git a/drivers/ata/pata_pcmcia.c b/drivers/ata/pata_pcmcia.c
+index 3d39f9d..d5bcdc2 100644
+--- a/drivers/ata/pata_pcmcia.c
++++ b/drivers/ata/pata_pcmcia.c
+@@ -177,8 +177,10 @@ static int pcmcia_init_one(struct pcmcia_device *pdev)
+ 	struct ata_port_operations *ops = &pcmcia_port_ops;
  
- 	/* global controller registers */
- 	HOST_CAP		= 0x00, /* host capabilities */
-@@ -384,6 +385,14 @@ static const struct ata_port_info ahci_port_info[] = {
- 		.udma_mask	= ATA_UDMA6,
- 		.port_ops	= &ahci_ops,
- 	},
-+	/* board_ahci_nopmp */
-+	{
-+		AHCI_HFLAGS	(AHCI_HFLAG_NO_PMP),
-+		.flags		= AHCI_FLAG_COMMON,
-+		.pio_mask	= 0x1f, /* pio0-4 */
-+		.udma_mask	= ATA_UDMA6,
-+		.port_ops	= &ahci_ops,
-+	},
- };
+ 	info = kzalloc(sizeof(*info), GFP_KERNEL);
+-	if (info == NULL)
++	if (info == NULL) {
++		printk("XXX info alloc failed\n");
+ 		return -ENOMEM;
++	}
  
- static const struct pci_device_id ahci_pci_tbl[] = {
-@@ -508,9 +517,9 @@ static const struct pci_device_id ahci_pci_tbl[] = {
- 	{ PCI_VDEVICE(NVIDIA, 0x0bc7), board_ahci },		/* MCP7B */
+ 	/* Glue stuff together. FIXME: We may be able to get rid of info with care */
+ 	info->pdev = pdev;
+@@ -196,8 +198,10 @@ static int pcmcia_init_one(struct pcmcia_device *pdev)
+ 	/* Allocate resoure probing structures */
  
- 	/* SiS */
--	{ PCI_VDEVICE(SI, 0x1184), board_ahci }, /* SiS 966 */
--	{ PCI_VDEVICE(SI, 0x1185), board_ahci }, /* SiS 966 */
--	{ PCI_VDEVICE(SI, 0x0186), board_ahci }, /* SiS 968 */
-+	{ PCI_VDEVICE(SI, 0x1184), board_ahci_nopmp },		/* SiS 966 */
-+	{ PCI_VDEVICE(SI, 0x1185), board_ahci_nopmp },		/* SiS 968 */
-+	{ PCI_VDEVICE(SI, 0x0186), board_ahci_nopmp },		/* SiS 968 */
+ 	stk = kzalloc(sizeof(*stk), GFP_KERNEL);
+-	if (!stk)
++	if (!stk) {
++		printk("XXX stk alloc failed\n");
+ 		goto out1;
++	}
  
- 	/* Marvell */
- 	{ PCI_VDEVICE(MARVELL, 0x6145), board_ahci_mv },	/* 6145 */
+ 	cfg = &stk->parse.cftable_entry;
+ 
+@@ -290,8 +294,11 @@ next_entry:
+ 	ret = -ENOMEM;
+ 	io_addr = devm_ioport_map(&pdev->dev, io_base, 8);
+ 	ctl_addr = devm_ioport_map(&pdev->dev, ctl_base, 1);
+-	if (!io_addr || !ctl_addr)
++	if (!io_addr || !ctl_addr) {
++		printk("XXX ioport_map failed io_addr=%p ctl_addr=%p\n",
++		       io_addr, ctl_addr);
+ 		goto failed;
++	}
+ 
+ 	/* Success. Disable the IRQ nIEN line, do quirks */
+ 	iowrite8(0x02, ctl_addr);
+@@ -311,8 +318,10 @@ next_entry:
+ 	 */
+ 	ret = -ENOMEM;
+ 	host = ata_host_alloc(&pdev->dev, n_ports);
+-	if (!host)
++	if (!host) {
++		printk("XXX host alloc failed\n");
+ 		goto failed;
++	}
+ 
+ 	for (p = 0; p < n_ports; p++) {
+ 		ap = host->ports[p];
+@@ -331,8 +340,10 @@ next_entry:
+ 	/* activate */
+ 	ret = ata_host_activate(host, pdev->irq.AssignedIRQ, ata_sff_interrupt,
+ 				IRQF_SHARED, &pcmcia_sht);
+-	if (ret)
++	if (ret) {
++		printk("XXX host activate failed ret=%d\n", ret);
+ 		goto failed;
++	}
+ 
+ 	info->ndev = 1;
+ 	kfree(stk);
+
+--------------020409020006020000010900--
