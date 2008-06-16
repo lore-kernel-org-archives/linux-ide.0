@@ -1,135 +1,56 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [KERNEL 2.6.26-rc4]  bugreport : pata_pcmcia with Sandisk Extreme
- III 8GB
-Date: Mon, 16 Jun 2008 12:07:14 +0900
-Message-ID: <4855D8E2.10409@gmail.com>
-References: <20080528225049.9a134e0d.Kristoffer.Ericson@Gmail.com>	<20080528222740.GB20893@isilmar.linta.de>	<20080530135728.be02d3dc.Kristoffer.Ericson@Gmail.com>	<20080607223716.7d142072.komurojun-mbn@nifty.com>	<20080611072029.GB28692@comet.dominikbrodowski.net>	<20080614120055.ad8fbee0.komurojun-mbn@nifty.com>	<48537149.4040102@garzik.org> <20080614213612.96873c25.komurojun-mbn@nifty.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: [PATCH] libata: use ATAPI dma even for data transfers not aligned
+ to 16 bytes
+Date: Mon, 16 Jun 2008 16:26:44 +0900
+Message-ID: <485615B4.7070002@kernel.org>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------020409020006020000010900"
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rv-out-0506.google.com ([209.85.198.228]:2361 "EHLO
-	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751056AbYFPDHX (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 15 Jun 2008 23:07:23 -0400
-Received: by rv-out-0506.google.com with SMTP id k40so3367711rvb.1
-        for <linux-ide@vger.kernel.org>; Sun, 15 Jun 2008 20:07:22 -0700 (PDT)
-In-Reply-To: <20080614213612.96873c25.komurojun-mbn@nifty.com>
-Sender: linux-ide-owner@vger.kernel.org
-List-Id: linux-ide@vger.kernel.org
-To: Komuro <komurojun-mbn@nifty.com>
-Cc: Jeff Garzik <jeff@garzik.org>, Dominik Brodowski <linux@dominikbrodowski.net>, jgarzik@redhat.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linux-pcmcia <linux-pcmcia@lists.infradead.org>, Kristoffer Ericson <kristoffer.ericson@gmail.com>
-
-This is a multi-part message in MIME format.
---------------020409020006020000010900
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from hera.kernel.org ([140.211.167.34]:50028 "EHLO hera.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752104AbYFPH1B (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 16 Jun 2008 03:27:01 -0400
+Sender: linux-ide-owner@vger.kernel.org
+List-Id: linux-ide@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>
 
-Hello,
+Most ATAPI DMA failures are due to controller issues including choking
+on data buffer w/o proper padding or draining areas and should be
+worked around in LLDs.  The default 16 byte alignment check in
+ata_check_atapi_dma() only partially hides problems (well, that was
+the conclusion back then, at least).
 
-Komuro wrote:
-> On Sat, 14 Jun 2008 03:20:41 -0400
-> Jeff Garzik <jeff@garzik.org> wrote:
-> 
-> 
-> After removing the 3-lines below in ata_eh_reset
-> the pata_pcmcia works properly.
-> 
-> 
-> -       spin_lock_irqsave(link->ap->lock, flags);
-> -       link->eh_info.serror = 0;
-> -       spin_unlock_irqrestore(link->ap->lock, flags);
-> 
-> Please fix this problem.
+Now that ATAPI DMA support seems fairly stable.  Let's take the plunge
+and verify the previous conclusion was correct.
 
-Thanks for diagnosing the problem but it doesn't make any sense at all.
- Those three lines just clear cached SError value.  pata_pcmcia being a
-PATA driver, SError is not implemented and always zero.
-
-Also the init_one error is -ENOMEM.  For the above change to make any
-difference, EH should have been entered which is invoked deep into
-ata_host_register() and once control reaches that point it never returns
-error code.  I have difficult time imagining any way the above diff can
-have anything to do with the reported failure.
-
-Please apply the attached patch and report the log after probe failure.
+Signed-off-by: Tejun Heo <tj@kernel.org>
+---
+Jeff, Alan, as discussed before, the default 16 byte alignment check
+doesn't make much sense if our previous conclusion was correct.  I
+guess it's about time we put the theory to the test.  It'll be
+probably best to put this in a separate branch and expose it through
+-next and -mm only.
 
 Thanks.
 
--- 
-tejun
+ drivers/ata/libata-core.c |    6 ------
+ 1 file changed, 6 deletions(-)
 
---------------020409020006020000010900
-Content-Type: text/x-patch;
- name="pata_pcmcia-debug.patch"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="pata_pcmcia-debug.patch"
-
-diff --git a/drivers/ata/pata_pcmcia.c b/drivers/ata/pata_pcmcia.c
-index 3d39f9d..d5bcdc2 100644
---- a/drivers/ata/pata_pcmcia.c
-+++ b/drivers/ata/pata_pcmcia.c
-@@ -177,8 +177,10 @@ static int pcmcia_init_one(struct pcmcia_device *pdev)
- 	struct ata_port_operations *ops = &pcmcia_port_ops;
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index 52285f6..0d3d16c 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -4325,12 +4325,6 @@ int ata_check_atapi_dma(struct ata_queued_cmd *qc)
+ {
+ 	struct ata_port *ap = qc->ap;
  
- 	info = kzalloc(sizeof(*info), GFP_KERNEL);
--	if (info == NULL)
-+	if (info == NULL) {
-+		printk("XXX info alloc failed\n");
- 		return -ENOMEM;
-+	}
+-	/* Don't allow DMA if it isn't multiple of 16 bytes.  Quite a
+-	 * few ATAPI devices choke on such DMA requests.
+-	 */
+-	if (unlikely(qc->nbytes & 15))
+-		return 1;
+-
+ 	if (ap->ops->check_atapi_dma)
+ 		return ap->ops->check_atapi_dma(qc);
  
- 	/* Glue stuff together. FIXME: We may be able to get rid of info with care */
- 	info->pdev = pdev;
-@@ -196,8 +198,10 @@ static int pcmcia_init_one(struct pcmcia_device *pdev)
- 	/* Allocate resoure probing structures */
- 
- 	stk = kzalloc(sizeof(*stk), GFP_KERNEL);
--	if (!stk)
-+	if (!stk) {
-+		printk("XXX stk alloc failed\n");
- 		goto out1;
-+	}
- 
- 	cfg = &stk->parse.cftable_entry;
- 
-@@ -290,8 +294,11 @@ next_entry:
- 	ret = -ENOMEM;
- 	io_addr = devm_ioport_map(&pdev->dev, io_base, 8);
- 	ctl_addr = devm_ioport_map(&pdev->dev, ctl_base, 1);
--	if (!io_addr || !ctl_addr)
-+	if (!io_addr || !ctl_addr) {
-+		printk("XXX ioport_map failed io_addr=%p ctl_addr=%p\n",
-+		       io_addr, ctl_addr);
- 		goto failed;
-+	}
- 
- 	/* Success. Disable the IRQ nIEN line, do quirks */
- 	iowrite8(0x02, ctl_addr);
-@@ -311,8 +318,10 @@ next_entry:
- 	 */
- 	ret = -ENOMEM;
- 	host = ata_host_alloc(&pdev->dev, n_ports);
--	if (!host)
-+	if (!host) {
-+		printk("XXX host alloc failed\n");
- 		goto failed;
-+	}
- 
- 	for (p = 0; p < n_ports; p++) {
- 		ap = host->ports[p];
-@@ -331,8 +340,10 @@ next_entry:
- 	/* activate */
- 	ret = ata_host_activate(host, pdev->irq.AssignedIRQ, ata_sff_interrupt,
- 				IRQF_SHARED, &pcmcia_sht);
--	if (ret)
-+	if (ret) {
-+		printk("XXX host activate failed ret=%d\n", ret);
- 		goto failed;
-+	}
- 
- 	info->ndev = 1;
- 	kfree(stk);
-
---------------020409020006020000010900--
