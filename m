@@ -1,36 +1,51 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [PATCH] libata: use ATAPI dma even for data transfers not
- aligned to 16 bytes
-Date: Mon, 16 Jun 2008 10:31:46 +0100
-Message-ID: <20080616103146.0bbdc641@lxorguk.ukuu.org.uk>
-References: <485615B4.7070002@kernel.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+From: Ben Dooks <ben-linux@fluff.org>
+Subject: [patch 0/2] pata-platform configuration changes / Remove bast-ide
+Date: Mon, 16 Jun 2008 12:16:25 +0100
+Message-ID: <20080616111625.145158959@fluff.org.uk>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:55836 "EHLO
-	lxorguk.ukuu.org.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1758139AbYFPJzm (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 16 Jun 2008 05:55:42 -0400
-In-Reply-To: <485615B4.7070002@kernel.org>
+Received: from aeryn.fluff.org.uk ([87.194.8.8]:63525 "EHLO
+	kira.home.fluff.org" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1750868AbYFPLZH (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 16 Jun 2008 07:25:07 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: Jeff Garzik <jeff@garzik.org>, IDE/ATA development list <linux-ide@vger.kernel.org>
+To: linux-ide@vger.kernel.org
+Cc: jgarzik@pobox.com, bzolnier@gmail.com
 
-On Mon, 16 Jun 2008 16:26:44 +0900
-Tejun Heo <tj@kernel.org> wrote:
+With libata's pata-platform support being merged, look at removing
+the old bast-ide driver as this can now be done by registering a
+pair of platform devices in the relevant machine support file.
 
-> Most ATAPI DMA failures are due to controller issues including choking
-> on data buffer w/o proper padding or draining areas and should be
-> worked around in LLDs.  The default 16 byte alignment check in
-> ata_check_atapi_dma() only partially hides problems (well, that was
-> the conclusion back then, at least).
+As an addition, introduct HAVE_PATA_PLATFORM to allow any platform
+or machine that uses this support to define their use of this
+without having to explicitly enable CONFIG_EMBEDDED or add numerous
+enabling statements into drivers/ata/Kconfig.
 
-You need to modify some of the drivers before you can remove this check
-now. At least AMD, and probably nvidia (but who knows) require 4
-byte alignment for internal buffering unless you reconfigure the FIFO
-(actually we should be using inl/outl as well in the AMD case it seems -
-docs are not 100% clear). I'm currently investigating this bit.
+For an example, this is the update that will happen to the relevant
+Kconfig for the "Simtec Anubis" machine:
 
-Alan
+--- linux-2.6.26-rc3-quilt1.orig/arch/arm/mach-s3c2440/Kconfig
++++ linux-2.6.26-rc3-quilt1/arch/arm/mach-s3c2440/Kconfig
+@@ -29,6 +29,7 @@ config MACH_ANUBIS
+        bool "Simtec Electronics ANUBIS"
+        select CPU_S3C2440
+        select PM_SIMTEC if PM
++       select HAVE_PATA_PLATFORM
+        help
+          Say Y here if you are using the Simtec Electronics ANUBIS
+          development system
+
+
+These two patches do not update the PATA_PLATFORM to remove the
+current 'depends on' lines as these require syncronisation with
+the relevant maintainers, so I propose these be submitted once
+the HAVE_PATA_PLATFORM is merged. This means the sequence is
+merge the HAVE_PATA_PLATFORM Kconfig changes, then send the
+updates to use it to each maintainer. Onces these are merged
+it is then possible to remove the other 'depends on' items from
+the Kconfig without damaging architecture or machine support.
+
+-- 
+Ben (ben@fluff.org, http://www.fluff.org/)
+
+  'a smiley only costs 4 bytes'
