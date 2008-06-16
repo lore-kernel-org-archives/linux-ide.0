@@ -1,131 +1,88 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [KERNEL 2.6.26-rc4]  bugreport : pata_pcmcia with Sandisk Extreme
- III 8GB
-Date: Mon, 16 Jun 2008 22:24:48 +0900
-Message-ID: <485669A0.6000404@gmail.com>
-References: <20080528225049.9a134e0d.Kristoffer.Ericson@Gmail.com>	<20080528222740.GB20893@isilmar.linta.de>	<20080530135728.be02d3dc.Kristoffer.Ericson@Gmail.com>	<20080607223716.7d142072.komurojun-mbn@nifty.com>	<20080611072029.GB28692@comet.dominikbrodowski.net>	<20080614120055.ad8fbee0.komurojun-mbn@nifty.com>	<48537149.4040102@garzik.org>	<20080614213612.96873c25.komurojun-mbn@nifty.com>	<4855D8E2.10409@gmail.com> <20080616221145.e3b069b9.komurojun-mbn@nifty.com>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: [PATCH] palm_bk3710: fix resource management
+Date: Mon, 16 Jun 2008 22:20:35 +0400
+Message-ID: <200806162220.35499.sshtylyov@ru.mvista.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------000102010201020501050003"
+Content-Type: text/plain;
+  charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rv-out-0506.google.com ([209.85.198.232]:41036 "EHLO
-	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753528AbYFPNY5 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 16 Jun 2008 09:24:57 -0400
-Received: by rv-out-0506.google.com with SMTP id k40so3578776rvb.1
-        for <linux-ide@vger.kernel.org>; Mon, 16 Jun 2008 06:24:55 -0700 (PDT)
-In-Reply-To: <20080616221145.e3b069b9.komurojun-mbn@nifty.com>
+Received: from rtsoft3.corbina.net ([85.21.88.6]:15666 "EHLO
+	buildserver.ru.mvista.com" rhost-flags-OK-FAIL-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1751366AbYFPSU3 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 16 Jun 2008 14:20:29 -0400
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Komuro <komurojun-mbn@nifty.com>
-Cc: Jeff Garzik <jeff@garzik.org>, Dominik Brodowski <linux@dominikbrodowski.net>, jgarzik@redhat.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linux-pcmcia <linux-pcmcia@lists.infradead.org>, Kristoffer Ericson <kristoffer.ericson@gmail.com>
+To: bzolnier@gmail.com
+Cc: linux-ide@vger.kernel.org
 
-This is a multi-part message in MIME format.
---------------000102010201020501050003
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+The driver expected a *virtual* address in the IDE platform device's memory
+resource and didn't request the memory region for the register block. Fix this
+taking into account the fact that DaVinci SoC devices are fixed-mapped to the
+virtual memory early and we can get their virtual addresses using IO_ADDRESS()
+macro, not having to call ioremap()...
 
-Komuro wrote:
-> Hi,
-> 
-> Here is the log  (your patch is applied).
-> Unfortunately, no message that you added appears.
-> 
-> It seems this device is detected as pcmcia0.0 first
-> but later it is detected as pcmcia0.1.
+While at it, also do some cosmetic changes...
 
-Hmmm... strange.  Can you please try the attached patch?
+---
+The patch is against the recent Linus' tree.
 
--- 
-tejun
+ drivers/ide/arm/palm_bk3710.c |   22 +++++++++++++---------
+ 1 files changed, 13 insertions(+), 9 deletions(-)
 
---------------000102010201020501050003
-Content-Type: text/x-patch;
- name="pata_pcmcia-debug-1.patch"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="pata_pcmcia-debug-1.patch"
-
-diff --git a/drivers/ata/pata_pcmcia.c b/drivers/ata/pata_pcmcia.c
-index 3d39f9d..0eb4f77 100644
---- a/drivers/ata/pata_pcmcia.c
-+++ b/drivers/ata/pata_pcmcia.c
-@@ -176,9 +176,14 @@ static int pcmcia_init_one(struct pcmcia_device *pdev)
+Index: linux-2.6/drivers/ide/arm/palm_bk3710.c
+===================================================================
+--- linux-2.6.orig/drivers/ide/arm/palm_bk3710.c
++++ linux-2.6/drivers/ide/arm/palm_bk3710.c
+@@ -353,8 +353,8 @@ static int __devinit palm_bk3710_probe(s
+ 	struct clk *clkp;
+ 	struct resource *mem, *irq;
+ 	ide_hwif_t *hwif;
+-	void __iomem *base;
+-	int pribase, i;
++	unsigned long base;
++	int i;
+ 	hw_regs_t hw;
+ 	u8 idx[4] = { 0xff, 0xff, 0xff, 0xff };
  
- 	struct ata_port_operations *ops = &pcmcia_port_ops;
- 
-+	dev_printk(KERN_INFO, &pdev->dev, "XXX ENTER\n");
-+	dump_stack();
+@@ -374,22 +374,27 @@ static int __devinit palm_bk3710_probe(s
+ 		printk(KERN_ERR "failed to get memory region resource\n");
+ 		return -ENODEV;
+ 	}
 +
- 	info = kzalloc(sizeof(*info), GFP_KERNEL);
--	if (info == NULL)
-+	if (info == NULL) {
-+		printk("XXX info alloc failed\n");
- 		return -ENOMEM;
+ 	irq = platform_get_resource(pdev, IORESOURCE_IRQ, 0);
+ 	if (irq == NULL) {
+ 		printk(KERN_ERR "failed to get IRQ resource\n");
+ 		return -ENODEV;
+ 	}
+ 
+-	base = (void *)mem->start;
++	if (request_mem_region(mem->start, mem->end - mem->start + 1,
++			       "palm_bk3710") == NULL) {
++		printk(KERN_ERR "failed to request memory region\n");
++		return -EBUSY;
 +	}
++
++	base = IO_ADDRESS(mem->start);
  
- 	/* Glue stuff together. FIXME: We may be able to get rid of info with care */
- 	info->pdev = pdev;
-@@ -196,8 +201,10 @@ static int pcmcia_init_one(struct pcmcia_device *pdev)
- 	/* Allocate resoure probing structures */
+ 	/* Configure the Palm Chip controller */
+-	palm_bk3710_chipinit(base);
++	palm_bk3710_chipinit((void __iomem *)base);
  
- 	stk = kzalloc(sizeof(*stk), GFP_KERNEL);
--	if (!stk)
-+	if (!stk) {
-+		printk("XXX stk alloc failed\n");
- 		goto out1;
-+	}
+-	pribase = mem->start + IDE_PALM_ATA_PRI_REG_OFFSET;
+ 	for (i = 0; i < IDE_NR_PORTS - 2; i++)
+-		hw.io_ports_array[i] = pribase + i;
+-	hw.io_ports.ctl_addr = mem->start +
+-			IDE_PALM_ATA_PRI_CTL_OFFSET;
++ 		hw.io_ports_array[i] = base + IDE_PALM_ATA_PRI_REG_OFFSET + i;
++	hw.io_ports.ctl_addr = base + IDE_PALM_ATA_PRI_CTL_OFFSET;
+ 	hw.irq = irq->start;
+ 	hw.chipset = ide_palm3710;
  
- 	cfg = &stk->parse.cftable_entry;
+@@ -434,4 +439,3 @@ static int __init palm_bk3710_init(void)
  
-@@ -290,8 +297,11 @@ next_entry:
- 	ret = -ENOMEM;
- 	io_addr = devm_ioport_map(&pdev->dev, io_base, 8);
- 	ctl_addr = devm_ioport_map(&pdev->dev, ctl_base, 1);
--	if (!io_addr || !ctl_addr)
-+	if (!io_addr || !ctl_addr) {
-+		printk("XXX ioport_map failed io_addr=%p ctl_addr=%p\n",
-+		       io_addr, ctl_addr);
- 		goto failed;
-+	}
- 
- 	/* Success. Disable the IRQ nIEN line, do quirks */
- 	iowrite8(0x02, ctl_addr);
-@@ -311,8 +321,10 @@ next_entry:
- 	 */
- 	ret = -ENOMEM;
- 	host = ata_host_alloc(&pdev->dev, n_ports);
--	if (!host)
-+	if (!host) {
-+		printk("XXX host alloc failed\n");
- 		goto failed;
-+	}
- 
- 	for (p = 0; p < n_ports; p++) {
- 		ap = host->ports[p];
-@@ -331,11 +343,14 @@ next_entry:
- 	/* activate */
- 	ret = ata_host_activate(host, pdev->irq.AssignedIRQ, ata_sff_interrupt,
- 				IRQF_SHARED, &pcmcia_sht);
--	if (ret)
-+	if (ret) {
-+		printk("XXX host activate failed ret=%d\n", ret);
- 		goto failed;
-+	}
- 
- 	info->ndev = 1;
- 	kfree(stk);
-+	dev_printk(KERN_INFO, &pdev->dev, "XXX LEAVE 0\n");
- 	return 0;
- 
- cs_failed:
-@@ -345,6 +360,7 @@ failed:
- 	info->ndev = 0;
- 	pcmcia_disable_device(pdev);
- out1:
-+	dev_printk(KERN_INFO, &pdev->dev, "XXX LEAVE %d\n", ret);
- 	kfree(info);
- 	return ret;
- }
+ module_init(palm_bk3710_init);
+ MODULE_LICENSE("GPL");
+-
 
---------------000102010201020501050003--
