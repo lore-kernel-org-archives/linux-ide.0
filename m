@@ -1,16 +1,16 @@
 From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
 Subject: [PATCH] palm_bk3710: fix resource management (take 2)
-Date: Mon, 16 Jun 2008 23:48:19 +0400
-Message-ID: <200806162348.19971.sshtylyov@ru.mvista.com>
+Date: Mon, 16 Jun 2008 23:51:07 +0400
+Message-ID: <200806162351.07566.sshtylyov@ru.mvista.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
   charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtsoft3.corbina.net ([85.21.88.6]:15855 "EHLO
+Received: from rtsoft3.corbina.net ([85.21.88.6]:15864 "EHLO
 	buildserver.ru.mvista.com" rhost-flags-OK-FAIL-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1750911AbYFPTsN (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 16 Jun 2008 15:48:13 -0400
+	by vger.kernel.org with ESMTP id S1751556AbYFPTvA (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 16 Jun 2008 15:51:00 -0400
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
@@ -29,7 +29,8 @@ Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
 
 ---
 Argh! I have finally run checkpatch.pl and it detected some whitespace damage.
-So, here's take 2 of that stupid patch...
+And of course, I then re-sent it without fixing that!
+So, here's take 2 of that stupid patch for real now. Sorry for the mess... :-<
 
  drivers/ide/arm/palm_bk3710.c |   22 +++++++++++++---------
  1 files changed, 13 insertions(+), 9 deletions(-)
@@ -78,7 +79,7 @@ Index: linux-2.6/drivers/ide/arm/palm_bk3710.c
 -		hw.io_ports_array[i] = pribase + i;
 -	hw.io_ports.ctl_addr = mem->start +
 -			IDE_PALM_ATA_PRI_CTL_OFFSET;
-+ 		hw.io_ports_array[i] = base + IDE_PALM_ATA_PRI_REG_OFFSET + i;
++		hw.io_ports_array[i] = base + IDE_PALM_ATA_PRI_REG_OFFSET + i;
 +	hw.io_ports.ctl_addr = base + IDE_PALM_ATA_PRI_CTL_OFFSET;
  	hw.irq = irq->start;
  	hw.chipset = ide_palm3710;
