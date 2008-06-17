@@ -1,55 +1,45 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [PATCH] cdrom: don't check CDC_PLAY_AUDIO in cdrom_count_tracks()
-Date: Tue, 17 Jun 2008 11:43:53 +0200
-Message-ID: <200806171143.53883.bzolnier@gmail.com>
-References: <48574994.9090503@kernel.org>
+Subject: Re: [PATCH 1/4] ide-pmac: media-bay support fixes
+Date: Tue, 17 Jun 2008 11:58:34 +0200
+Message-ID: <200806171158.35210.bzolnier@gmail.com>
+References: <200806162124.43005.bzolnier@gmail.com> <1213674572.8129.159.camel@pasglop> <200806171141.08865.bzolnier@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
-  charset="iso-8859-1"
+  charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wr-out-0506.google.com ([64.233.184.230]:51340 "EHLO
+Received: from wr-out-0506.google.com ([64.233.184.239]:50175 "EHLO
 	wr-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754127AbYFQJm1 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 17 Jun 2008 05:42:27 -0400
-Received: by wr-out-0506.google.com with SMTP id 69so3321752wri.5
-        for <linux-ide@vger.kernel.org>; Tue, 17 Jun 2008 02:42:22 -0700 (PDT)
-In-Reply-To: <48574994.9090503@kernel.org>
+	with ESMTP id S1751878AbYFQJ5E (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 17 Jun 2008 05:57:04 -0400
+Received: by wr-out-0506.google.com with SMTP id 69so3324426wri.5
+        for <linux-ide@vger.kernel.org>; Tue, 17 Jun 2008 02:57:01 -0700 (PDT)
+In-Reply-To: <200806171141.08865.bzolnier@gmail.com>
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: IDE/ATA development list <linux-ide@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>, Jens Axboe <jens.axboe@oracle.com>, Borislav Petkov <petkovbb@googlemail.com>
+To: benh@kernel.crashing.org
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Tuesday 17 June 2008, Tejun Heo wrote:
-> According to MMC-3 (or any later versions) READ TOCs are mandatory
-> commands and have nothing to do with CDC_PLAY_AUDIO.  I have no idea
-> why the check was put there in the first place but it now only breaks
-> automatic actions on certain drives.
+On Tuesday 17 June 2008, Bartlomiej Zolnierkiewicz wrote:
+> On Tuesday 17 June 2008, Benjamin Herrenschmidt wrote:
+> > On Tue, 2008-06-17 at 13:39 +1000, Benjamin Herrenschmidt wrote:
+> > > Your patches don't apply on today upstream, I'll try against
+> > > linux-next or is there a git I can clone to test things ?
+> > 
+> > Ok, I'm lost. I have 3 different series of patches from you partially
+> > overlapping with different amount of patches in them. I don't have
+> > time to sort that out right now. Can you send me a single serie that
+> > I can apply on top of either upstream or tonight linux-next which
+> > should have your stuff removed hopefully ?
 > 
-> Note that this test was only effective when ide-cdrom was being used
+> This patch series (from yesterday, the rest of can be ignored) should
+> apply fine to the next revision of linux-next (later than -next-20080616,
+> it is not out yet), if you prefer upstream patches I can look into it
 
-cc:ing Borislav
+-next-20080617 is out now so please try it
 
-> as sr didn't mask CDC_PLAY_AUDIO according to the capabilities.
+> tonight.
 > 
-> Signed-off-by: Tejun Heo <tj@kernel.org>
-> ---
->  drivers/cdrom/cdrom.c |    4 ----
->  1 file changed, 4 deletions(-)
-> 
-> diff --git a/drivers/cdrom/cdrom.c b/drivers/cdrom/cdrom.c
-> index 69f26eb..11574c5 100644
-> --- a/drivers/cdrom/cdrom.c
-> +++ b/drivers/cdrom/cdrom.c
-> @@ -1491,10 +1491,6 @@ static void cdrom_count_tracks(struct cdrom_device_info *cdi, tracktype* tracks)
->  	tracks->xa=0;
->  	tracks->error=0;
->  	cdinfo(CD_COUNT_TRACKS, "entering cdrom_count_tracks\n"); 
-> -        if (!CDROM_CAN(CDC_PLAY_AUDIO)) { 
-> -                tracks->error=CDS_NO_INFO;
-> -                return;
-> -        }        
->  	/* Grab the TOC header so we can see how many tracks there are */
->  	if ((ret = cdi->ops->audio_ioctl(cdi, CDROMREADTOCHDR, &header))) {
->  		if (ret == -ENOMEDIUM)
+> Thanks,
+> Bart
