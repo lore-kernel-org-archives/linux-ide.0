@@ -1,49 +1,34 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH #upstream-fixes] ahci: jmb361 has only one port
-Date: Tue, 17 Jun 2008 12:46:30 +0900
-Message-ID: <48573396.9050308@kernel.org>
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Subject: Re: [PATCH 1/4] ide-pmac: media-bay support fixes
+Date: Tue, 17 Jun 2008 13:49:32 +1000
+Message-ID: <1213674572.8129.159.camel@pasglop>
+References: <200806162124.43005.bzolnier@gmail.com>
+	 <1213673979.8129.156.camel@pasglop>
+Reply-To: benh@kernel.crashing.org
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:44748 "EHLO hera.kernel.org"
+Received: from gate.crashing.org ([63.228.1.57]:56611 "EHLO gate.crashing.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754148AbYFQDqp (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 16 Jun 2008 23:46:45 -0400
+	id S1751146AbYFQDtj (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 16 Jun 2008 23:49:39 -0400
+In-Reply-To: <1213673979.8129.156.camel@pasglop>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>, IDE/ATA development list <linux-ide@vger.kernel.org>
-Cc: gajo01@gmail.com
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-JMB361 has only one port but reports it has two causing longish probe
-failure on the second one.  Quirk it.
+On Tue, 2008-06-17 at 13:39 +1000, Benjamin Herrenschmidt wrote:
+> Your patches don't apply on today upstream, I'll try against
+> linux-next or is there a git I can clone to test things ?
 
-Reported by Gajo Petrovic in bz 10911.
+Ok, I'm lost. I have 3 different series of patches from you partially
+overlapping with different amount of patches in them. I don't have
+time to sort that out right now. Can you send me a single serie that
+I can apply on top of either upstream or tonight linux-next which
+should have your stuff removed hopefully ?
 
-Signed-off-by: Tejun Heo <tj@kernel.org>
-Cc: Gajo Petrovic <gajo01@gmail.com>
----
-Another hardware-specific workaround for #upstream-fixes.
+Ben.
 
- drivers/ata/ahci.c |    8 ++++++++
- 1 file changed, 8 insertions(+)
 
-diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
-index 966ab40..29f34d0 100644
---- a/drivers/ata/ahci.c
-+++ b/drivers/ata/ahci.c
-@@ -653,6 +653,14 @@ static void ahci_save_initial_config(struct pci_dev *pdev,
- 		cap &= ~HOST_CAP_PMP;
- 	}
- 
-+	if (pdev->vendor == PCI_VENDOR_ID_JMICRON && pdev->device == 0x2361 &&
-+	    port_map != 1) {
-+		dev_printk(KERN_INFO, &pdev->dev,
-+			   "JMB361 has only one port, port_map 0x%x -> 0x%x\n",
-+			   port_map, 1);
-+		port_map = 1;
-+	}
-+
- 	/*
- 	 * Temporary Marvell 6145 hack: PATA port presence
- 	 * is asserted through the standard AHCI port
