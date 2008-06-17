@@ -1,56 +1,59 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH] palm_bk3710: fix resource management (take 2)
-Date: Tue, 17 Jun 2008 02:35:38 +0400
-Message-ID: <4856EABA.4040105@ru.mvista.com>
-References: <200806162351.07566.sshtylyov@ru.mvista.com> <200806162210.39943.bzolnier@gmail.com>
+From: Stephen Rothwell <sfr@canb.auug.org.au>
+Subject: Re: [PATCH 3/4] ide-pmac: add ->init_dev method (take 2)
+Date: Tue, 17 Jun 2008 10:45:46 +1000
+Message-ID: <20080617104546.3b4535c9.sfr@canb.auug.org.au>
+References: <200806162124.48029.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; protocol="application/pgp-signature";
+ micalg="PGP-SHA1";
+ boundary="Signature=_Tue__17_Jun_2008_10_45_46_+1000_mEKqAjB4sr8s1P3S"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from h155.mvista.com ([63.81.120.155]:19034 "EHLO imap.sh.mvista.com"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1757010AbYFPWfo (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 16 Jun 2008 18:35:44 -0400
-In-Reply-To: <200806162210.39943.bzolnier@gmail.com>
+Received: from chilli.pcug.org.au ([203.10.76.44]:47233 "EHLO smtps.tip.net.au"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752011AbYFQAp6 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 16 Jun 2008 20:45:58 -0400
+In-Reply-To: <200806162124.48029.bzolnier@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: linux-ide@vger.kernel.org
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Benjamin Herrenschmidt <benh@kernel.crashing.org>
 
-Hello.
+--Signature=_Tue__17_Jun_2008_10_45_46_+1000_mEKqAjB4sr8s1P3S
+Content-Type: text/plain; charset=US-ASCII
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Bartlomiej Zolnierkiewicz wrote:
-> On Monday 16 June 2008, Sergei Shtylyov wrote:
->   
->> The driver expected a *virtual* address in the IDE platform device's memory
->> resource and didn't request the memory region for the register block. Fix this
->> taking into account the fact that DaVinci SoC devices are fixed-mapped to the
->> virtual memory early and we can get their virtual addresses using IO_ADDRESS()
->> macro, not having to call ioremap()...
->>
->> While at it, also do some cosmetic changes...
->>
->> Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
->>
->> ---
->> Argh! I have finally run checkpatch.pl and it detected some whitespace damage.
->> And of course, I then re-sent it without fixing that!
->> So, here's take 2 of that stupid patch for real now. Sorry for the mess... :-<
->>     
+Hi Bart,
+
+On Mon, 16 Jun 2008 21:24:47 +0200 Bartlomiej Zolnierkiewicz <bzolnier@gmai=
+l.com> wrote:
 >
-> I've already fixed it while applying "take 1" but I was too lazy to
-> mention it (not that single " " removal is worth mentioning)... :)
->   
+> +static void pmac_ide_init_dev(ide_drive_t *drive)
+> +{
+> +	ide_hwif_t *hwif =3D drive->hwif;
+> +	pmac_ide_hwif_t *pmif =3D
+> +		(pmac_ide_hwif_t *)dev_get_drvdata(hwif->gendev.parent);
+> +
+> +	if (pmif->mediabay) {
+> +#ifdef CONFIG_PMAC_MEDIABAY
+> +		if (check_media_bay(np->parent, MB_CD) =3D=3D -ENODEV)
+                                    ^^
+"np" doesn't exist here.
 
-   I do that kind of mistakes in reject resolution very rarely. This 
-just wasn't my day it seems... :-)
+--=20
+Cheers,
+Stephen Rothwell                    sfr@canb.auug.org.au
+http://www.canb.auug.org.au/~sfr/
 
-> [ However please integrate checkpatch.pl into your workflow... ]
->
->   
-   The forgotten signoff is surely my problem, so indeed I should... if 
-I don't forget. ;-)
+--Signature=_Tue__17_Jun_2008_10_45_46_+1000_mEKqAjB4sr8s1P3S
+Content-Type: application/pgp-signature
 
-WBR. Sergei
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.9 (GNU/Linux)
 
+iEYEARECAAYFAkhXCToACgkQTgG2atn1QN/l+wCfSiOoVrIZSyAWkFDJmFUOT2oV
+VgwAn0SPKJimmSieWWvfornqd2sVq5SK
+=77XE
+-----END PGP SIGNATURE-----
 
+--Signature=_Tue__17_Jun_2008_10_45_46_+1000_mEKqAjB4sr8s1P3S--
