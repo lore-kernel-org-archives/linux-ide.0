@@ -1,33 +1,117 @@
-From: Dominik Brodowski <linux@dominikbrodowski.net>
-Subject: Re: [KERNEL 2.6.26-rc4]  bugreport : pata_pcmcia with Sandisk Extreme III 8GB
-Date: Tue, 17 Jun 2008 16:15:50 +0200
-Message-ID: <20080617141549.GA490@isilmar.linta.de>
-References: <20080607223716.7d142072.komurojun-mbn@nifty.com> <20080611072029.GB28692@comet.dominikbrodowski.net> <20080614120055.ad8fbee0.komurojun-mbn@nifty.com> <48537149.4040102@garzik.org> <20080614213612.96873c25.komurojun-mbn@nifty.com> <4855D8E2.10409@gmail.com> <20080616221145.e3b069b9.komurojun-mbn@nifty.com> <485669A0.6000404@gmail.com> <20080617212345.c452d8c5.komurojun-mbn@nifty.com> <4857C590.6050002@gmail.com>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: [PATCH 3/4] ide-pmac: add ->init_dev method (take 2)
+Date: Tue, 17 Jun 2008 22:43:31 +0200
+Message-ID: <200806172243.32854.bzolnier@gmail.com>
+References: <200806162124.48029.bzolnier@gmail.com> <20080617104546.3b4535c9.sfr@canb.auug.org.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+  charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from isilmar.linta.de ([213.133.102.198]:36708 "EHLO linta.de"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1756098AbYFQOPw (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 17 Jun 2008 10:15:52 -0400
+Received: from an-out-0708.google.com ([209.85.132.249]:5053 "EHLO
+	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755071AbYFQUpA (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 17 Jun 2008 16:45:00 -0400
+Received: by an-out-0708.google.com with SMTP id d40so1353373and.103
+        for <linux-ide@vger.kernel.org>; Tue, 17 Jun 2008 13:44:59 -0700 (PDT)
+In-Reply-To: <20080617104546.3b4535c9.sfr@canb.auug.org.au>
 Content-Disposition: inline
-In-Reply-To: <4857C590.6050002@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Komuro <komurojun-mbn@nifty.com>, Jeff Garzik <jeff@garzik.org>, jgarzik@redhat.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linux-pcmcia <linux-pcmcia@lists.infradead.org>, Kristoffer Ericson <kristoffer.ericson@gmail.com>
+To: Stephen Rothwell <sfr@canb.auug.org.au>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Benjamin Herrenschmidt <benh@kernel.crashing.org>
 
-On Tue, Jun 17, 2008 at 11:09:20PM +0900, Tejun Heo wrote:
-> Okay.  The exit is from CS_CHECK macro on GetNextTuple, missed that
-> macro. It means it failed to request IO resource somewhere.  Can you
-> please try the attached patch?  It will show us where it failed.
+On Tuesday 17 June 2008, Stephen Rothwell wrote:
+> Hi Bart,
 > 
-> This part of code hasn't changed at all in pata_pcmcia && I don't really
-> understand the tuple business.  We need pcmcia people to pitch in.
+> On Mon, 16 Jun 2008 21:24:47 +0200 Bartlomiej Zolnierkiewicz <bzolnier@gmail.com> wrote:
+> >
+> > +static void pmac_ide_init_dev(ide_drive_t *drive)
+> > +{
+> > +	ide_hwif_t *hwif = drive->hwif;
+> > +	pmac_ide_hwif_t *pmif =
+> > +		(pmac_ide_hwif_t *)dev_get_drvdata(hwif->gendev.parent);
+> > +
+> > +	if (pmif->mediabay) {
+> > +#ifdef CONFIG_PMAC_MEDIABAY
+> > +		if (check_media_bay(np->parent, MB_CD) == -ENODEV)
+>                                     ^^
+> "np" doesn't exist here.
 
-The strange thing is that neither the PCMCIA side nor pata_pcmcia changed
-between the working 2.6.26-rc4 and the non-working 2.6.26-rc3... that's why
-I am at least as surprised as you are ;)
+uh, it should be pmif->node there... take 3...
 
-Thanks,
-	Dominik
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: [PATCH] ide-pmac: add ->init_dev method (take 3)
+
+v2/3:
+* Build fixes from Stephen Rothwell.
+
+There should be no functional changes caused by this patch.
+
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Cc: Stephen Rothwell <sfr@canb.auug.org.au>
+Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+---
+ drivers/ide/ppc/pmac.c |   27 ++++++++++++++++++---------
+ 1 file changed, 18 insertions(+), 9 deletions(-)
+
+Index: b/drivers/ide/ppc/pmac.c
+===================================================================
+--- a/drivers/ide/ppc/pmac.c
++++ b/drivers/ide/ppc/pmac.c
+@@ -941,7 +941,23 @@ static u8 pmac_ide_cable_detect(ide_hwif
+ 	return ATA_CBL_PATA40;
+ }
+ 
++static void pmac_ide_init_dev(ide_drive_t *drive)
++{
++	ide_hwif_t *hwif = drive->hwif;
++	pmac_ide_hwif_t *pmif =
++		(pmac_ide_hwif_t *)dev_get_drvdata(hwif->gendev.parent);
++
++	if (pmif->mediabay) {
++#ifdef CONFIG_PMAC_MEDIABAY
++		if (check_media_bay(pmif->node->parent, MB_CD) == -ENODEV)
++			return;
++#endif
++		drive->noprobe = 1;
++	}
++}
++
+ static const struct ide_port_ops pmac_ide_ata6_port_ops = {
++	.init_dev		= pmac_ide_init_dev,
+ 	.set_pio_mode		= pmac_ide_set_pio_mode,
+ 	.set_dma_mode		= pmac_ide_set_dma_mode,
+ 	.selectproc		= pmac_ide_kauai_selectproc,
+@@ -949,6 +965,7 @@ static const struct ide_port_ops pmac_id
+ };
+ 
+ static const struct ide_port_ops pmac_ide_ata4_port_ops = {
++	.init_dev		= pmac_ide_init_dev,
+ 	.set_pio_mode		= pmac_ide_set_pio_mode,
+ 	.set_dma_mode		= pmac_ide_set_dma_mode,
+ 	.selectproc		= pmac_ide_selectproc,
+@@ -956,6 +973,7 @@ static const struct ide_port_ops pmac_id
+ };
+ 
+ static const struct ide_port_ops pmac_ide_port_ops = {
++	.init_dev		= pmac_ide_init_dev,
+ 	.set_pio_mode		= pmac_ide_set_pio_mode,
+ 	.set_dma_mode		= pmac_ide_set_dma_mode,
+ 	.selectproc		= pmac_ide_selectproc,
+@@ -1065,15 +1083,6 @@ pmac_ide_setup_device(pmac_ide_hwif_t *p
+ 	       hwif->index, model_name[pmif->kind], pmif->aapl_bus_id,
+ 	       pmif->mediabay ? " (mediabay)" : "", hwif->irq);
+ 
+-	if (pmif->mediabay) {
+-#ifdef CONFIG_PMAC_MEDIABAY
+-		if (check_media_bay(np->parent, MB_CD) == -ENODEV)
+-			break;
+-#endif
+-		hwif->drives[0].noprobe = 1;
+-		hwif->drives[1].noprobe = 1;
+-	}
+-
+ 	idx[0] = hwif->index;
+ 
+ 	ide_device_add(idx, &d);
