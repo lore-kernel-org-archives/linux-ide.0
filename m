@@ -1,55 +1,43 @@
-From: Jens Axboe <jens.axboe@oracle.com>
-Subject: Re: [PATCH] cdrom: don't check CDC_PLAY_AUDIO in cdrom_count_tracks()
-Date: Tue, 17 Jun 2008 10:06:47 +0200
-Message-ID: <20080617080647.GD20851@kernel.dk>
-References: <48574994.9090503@kernel.org>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [PATCH #upstream-fixes 2/2] libata: implement
+ ATAPI_HORKAGE_NOPIO and apply it to GGW-H10N
+Date: Tue, 17 Jun 2008 09:43:54 +0100
+Message-ID: <20080617094354.338e186b@lxorguk.ukuu.org.uk>
+References: <4857313A.1000405@kernel.org>
+	<48573174.9050103@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from brick.kernel.dk ([87.55.233.238]:25085 "EHLO kernel.dk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752077AbYFQIGt (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 17 Jun 2008 04:06:49 -0400
-Content-Disposition: inline
-In-Reply-To: <48574994.9090503@kernel.org>
+Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:35280 "EHLO
+	lxorguk.ukuu.org.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751949AbYFQJBp (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 17 Jun 2008 05:01:45 -0400
+In-Reply-To: <48573174.9050103@kernel.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Tejun Heo <tj@kernel.org>
-Cc: IDE/ATA development list <linux-ide@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: Jeff Garzik <jeff@garzik.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, luke@lukeross.name
 
-On Tue, Jun 17 2008, Tejun Heo wrote:
-> According to MMC-3 (or any later versions) READ TOCs are mandatory
-> commands and have nothing to do with CDC_PLAY_AUDIO.  I have no idea
-> why the check was put there in the first place but it now only breaks
-> automatic actions on certain drives.
-> 
-> Note that this test was only effective when ide-cdrom was being used
-> as sr didn't mask CDC_PLAY_AUDIO according to the capabilities.
-> 
-> Signed-off-by: Tejun Heo <tj@kernel.org>
+On Tue, 17 Jun 2008 12:37:24 +0900
+Tejun Heo <tj@kernel.org> wrote:
 
-Acked-by: Jens Axboe <jens.axboe@oracle.com>
+> LG blueray drive GGW-H10N can't do ATAPI PIO.  Implement
+> ATAPI_HORKAGE_NOPIO and apply it to the drive.  If the horkage is
+> active, atapi_check_dma() always returns 0 and warns if the controller
+> needs ATAPI PIO for certain commands.
 
-> ---
->  drivers/cdrom/cdrom.c |    4 ----
->  1 file changed, 4 deletions(-)
-> 
-> diff --git a/drivers/cdrom/cdrom.c b/drivers/cdrom/cdrom.c
-> index 69f26eb..11574c5 100644
-> --- a/drivers/cdrom/cdrom.c
-> +++ b/drivers/cdrom/cdrom.c
-> @@ -1491,10 +1491,6 @@ static void cdrom_count_tracks(struct cdrom_device_info *cdi, tracktype* tracks)
->  	tracks->xa=0;
->  	tracks->error=0;
->  	cdinfo(CD_COUNT_TRACKS, "entering cdrom_count_tracks\n"); 
-> -        if (!CDROM_CAN(CDC_PLAY_AUDIO)) { 
-> -                tracks->error=CDS_NO_INFO;
-> -                return;
-> -        }        
->  	/* Grab the TOC header so we can see how many tracks there are */
->  	if ((ret = cdi->ops->audio_ioctl(cdi, CDROMREADTOCHDR, &header))) {
->  		if (ret == -ENOMEDIUM)
+This all seems wildly improbable as a drive with such a bug would not
+appear to be going to work in Windows. I'd like to know more and see more
+than one bug report for that drive before it goes in
 
--- 
-Jens Axboe
+You might even be looking at a single drive with a one off wiring flaw or
+chip fault at this point.
 
+So in the absence of multiple reports of this drive failing, and
+of no other drive being tested on the same controller after the bug was
+seen I think this is a *very bad idea* as a patch.
+
+If after 3 months we see a series of such reports then maybe.
+
+Alan
