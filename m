@@ -1,59 +1,110 @@
-From: Stephen Rothwell <sfr@canb.auug.org.au>
-Subject: Re: [PATCH 3/4] ide-pmac: add ->init_dev method (take 2)
-Date: Tue, 17 Jun 2008 10:45:46 +1000
-Message-ID: <20080617104546.3b4535c9.sfr@canb.auug.org.au>
-References: <200806162124.48029.bzolnier@gmail.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: [PATCH #upstream-fixes 1/2] libata: don't check whether to use DMA
+ or not for no data commands
+Date: Tue, 17 Jun 2008 12:36:26 +0900
+Message-ID: <4857313A.1000405@kernel.org>
 Mime-Version: 1.0
-Content-Type: multipart/signed; protocol="application/pgp-signature";
- micalg="PGP-SHA1";
- boundary="Signature=_Tue__17_Jun_2008_10_45_46_+1000_mEKqAjB4sr8s1P3S"
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from chilli.pcug.org.au ([203.10.76.44]:47233 "EHLO smtps.tip.net.au"
+Received: from hera.kernel.org ([140.211.167.34]:39307 "EHLO hera.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752011AbYFQAp6 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 16 Jun 2008 20:45:58 -0400
-In-Reply-To: <200806162124.48029.bzolnier@gmail.com>
+	id S1753523AbYFQDhb (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 16 Jun 2008 23:37:31 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Benjamin Herrenschmidt <benh@kernel.crashing.org>
+To: Jeff Garzik <jeff@garzik.org>, IDE/ATA development list <linux-ide@vger.kernel.org>
+Cc: luke@lukeross.name
 
---Signature=_Tue__17_Jun_2008_10_45_46_+1000_mEKqAjB4sr8s1P3S
-Content-Type: text/plain; charset=US-ASCII
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+There's no reason to check whether to use DMA or not for no data
+commands.  Don't do it.  While at it, make local variable using_pio in
+atapi_xlat() set iff ATAPI_PROT_PIO is going to be used and rename
+ata_check_atapi_dma() to atapi_check_dma() for consistency.
 
-Hi Bart,
+Signed-off-by: Tejun Heo <tj@kernel.org>
+---
+It's late in the -rc cycle but these two patches are to work around
+specific hardware and low risk.  Thanks.
 
-On Mon, 16 Jun 2008 21:24:47 +0200 Bartlomiej Zolnierkiewicz <bzolnier@gmai=
-l.com> wrote:
->
-> +static void pmac_ide_init_dev(ide_drive_t *drive)
-> +{
-> +	ide_hwif_t *hwif =3D drive->hwif;
-> +	pmac_ide_hwif_t *pmif =3D
-> +		(pmac_ide_hwif_t *)dev_get_drvdata(hwif->gendev.parent);
-> +
-> +	if (pmif->mediabay) {
-> +#ifdef CONFIG_PMAC_MEDIABAY
-> +		if (check_media_bay(np->parent, MB_CD) =3D=3D -ENODEV)
-                                    ^^
-"np" doesn't exist here.
+ drivers/ata/libata-core.c |    4 ++--
+ drivers/ata/libata-scsi.c |   16 +++++++---------
+ drivers/ata/libata.h      |    2 +-
+ 3 files changed, 10 insertions(+), 12 deletions(-)
 
---=20
-Cheers,
-Stephen Rothwell                    sfr@canb.auug.org.au
-http://www.canb.auug.org.au/~sfr/
-
---Signature=_Tue__17_Jun_2008_10_45_46_+1000_mEKqAjB4sr8s1P3S
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.9 (GNU/Linux)
-
-iEYEARECAAYFAkhXCToACgkQTgG2atn1QN/l+wCfSiOoVrIZSyAWkFDJmFUOT2oV
-VgwAn0SPKJimmSieWWvfornqd2sVq5SK
-=77XE
------END PGP SIGNATURE-----
-
---Signature=_Tue__17_Jun_2008_10_45_46_+1000_mEKqAjB4sr8s1P3S--
+Index: work/drivers/ata/libata-scsi.c
+===================================================================
+--- work.orig/drivers/ata/libata-scsi.c
++++ work/drivers/ata/libata-scsi.c
+@@ -2343,8 +2343,8 @@ static unsigned int atapi_xlat(struct at
+ {
+ 	struct scsi_cmnd *scmd = qc->scsicmd;
+ 	struct ata_device *dev = qc->dev;
+-	int using_pio = (dev->flags & ATA_DFLAG_PIO);
+ 	int nodata = (scmd->sc_data_direction == DMA_NONE);
++	int using_pio = !nodata && (dev->flags & ATA_DFLAG_PIO);
+ 	unsigned int nbytes;
+ 
+ 	memset(qc->cdb, 0, dev->cdb_len);
+@@ -2362,7 +2362,7 @@ static unsigned int atapi_xlat(struct at
+ 	ata_qc_set_pc_nbytes(qc);
+ 
+ 	/* check whether ATAPI DMA is safe */
+-	if (!using_pio && ata_check_atapi_dma(qc))
++	if (!nodata && !using_pio && atapi_check_dma(qc))
+ 		using_pio = 1;
+ 
+ 	/* Some controller variants snoop this value for Packet
+@@ -2402,13 +2402,11 @@ static unsigned int atapi_xlat(struct at
+ 	qc->tf.lbam = (nbytes & 0xFF);
+ 	qc->tf.lbah = (nbytes >> 8);
+ 
+-	if (using_pio || nodata) {
+-		/* no data, or PIO data xfer */
+-		if (nodata)
+-			qc->tf.protocol = ATAPI_PROT_NODATA;
+-		else
+-			qc->tf.protocol = ATAPI_PROT_PIO;
+-	} else {
++	if (nodata)
++		qc->tf.protocol = ATAPI_PROT_NODATA;
++	else if (using_pio)
++		qc->tf.protocol = ATAPI_PROT_PIO;
++	else {
+ 		/* DMA data xfer */
+ 		qc->tf.protocol = ATAPI_PROT_DMA;
+ 		qc->tf.feature |= ATAPI_PKT_DMA;
+Index: work/drivers/ata/libata-core.c
+===================================================================
+--- work.orig/drivers/ata/libata-core.c
++++ work/drivers/ata/libata-core.c
+@@ -4297,7 +4297,7 @@ void ata_sg_clean(struct ata_queued_cmd 
+ }
+ 
+ /**
+- *	ata_check_atapi_dma - Check whether ATAPI DMA can be supported
++ *	atapi_check_dma - Check whether ATAPI DMA can be supported
+  *	@qc: Metadata associated with taskfile to check
+  *
+  *	Allow low-level driver to filter ATA PACKET commands, returning
+@@ -4310,7 +4310,7 @@ void ata_sg_clean(struct ata_queued_cmd 
+  *	RETURNS: 0 when ATAPI DMA can be used
+  *               nonzero otherwise
+  */
+-int ata_check_atapi_dma(struct ata_queued_cmd *qc)
++int atapi_check_dma(struct ata_queued_cmd *qc)
+ {
+ 	struct ata_port *ap = qc->ap;
+ 
+Index: work/drivers/ata/libata.h
+===================================================================
+--- work.orig/drivers/ata/libata.h
++++ work/drivers/ata/libata.h
+@@ -106,7 +106,7 @@ extern void ata_sg_clean(struct ata_queu
+ extern void ata_qc_free(struct ata_queued_cmd *qc);
+ extern void ata_qc_issue(struct ata_queued_cmd *qc);
+ extern void __ata_qc_complete(struct ata_queued_cmd *qc);
+-extern int ata_check_atapi_dma(struct ata_queued_cmd *qc);
++extern int atapi_check_dma(struct ata_queued_cmd *qc);
+ extern void swap_buf_le16(u16 *buf, unsigned int buf_words);
+ extern void ata_dev_init(struct ata_device *dev);
+ extern void ata_link_init(struct ata_port *ap, struct ata_link *link, int pmp);
