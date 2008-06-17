@@ -1,202 +1,33 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [KERNEL 2.6.26-rc4]  bugreport : pata_pcmcia with Sandisk Extreme
- III 8GB
-Date: Tue, 17 Jun 2008 23:09:20 +0900
-Message-ID: <4857C590.6050002@gmail.com>
-References: <20080528225049.9a134e0d.Kristoffer.Ericson@Gmail.com>	<20080528222740.GB20893@isilmar.linta.de>	<20080530135728.be02d3dc.Kristoffer.Ericson@Gmail.com>	<20080607223716.7d142072.komurojun-mbn@nifty.com>	<20080611072029.GB28692@comet.dominikbrodowski.net>	<20080614120055.ad8fbee0.komurojun-mbn@nifty.com>	<48537149.4040102@garzik.org>	<20080614213612.96873c25.komurojun-mbn@nifty.com>	<4855D8E2.10409@gmail.com>	<20080616221145.e3b069b9.komurojun-mbn@nifty.com>	<485669A0.6000404@gmail.com> <20080617212345.c452d8c5.komurojun-mbn@nifty.com>
+From: Dominik Brodowski <linux@dominikbrodowski.net>
+Subject: Re: [KERNEL 2.6.26-rc4]  bugreport : pata_pcmcia with Sandisk Extreme III 8GB
+Date: Tue, 17 Jun 2008 16:15:50 +0200
+Message-ID: <20080617141549.GA490@isilmar.linta.de>
+References: <20080607223716.7d142072.komurojun-mbn@nifty.com> <20080611072029.GB28692@comet.dominikbrodowski.net> <20080614120055.ad8fbee0.komurojun-mbn@nifty.com> <48537149.4040102@garzik.org> <20080614213612.96873c25.komurojun-mbn@nifty.com> <4855D8E2.10409@gmail.com> <20080616221145.e3b069b9.komurojun-mbn@nifty.com> <485669A0.6000404@gmail.com> <20080617212345.c452d8c5.komurojun-mbn@nifty.com> <4857C590.6050002@gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------000609080104070708000500"
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ti-out-0910.google.com ([209.85.142.185]:37913 "EHLO
-	ti-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757768AbYFQOJc (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 17 Jun 2008 10:09:32 -0400
-Received: by ti-out-0910.google.com with SMTP id b6so1819311tic.23
-        for <linux-ide@vger.kernel.org>; Tue, 17 Jun 2008 07:09:27 -0700 (PDT)
-In-Reply-To: <20080617212345.c452d8c5.komurojun-mbn@nifty.com>
+Received: from isilmar.linta.de ([213.133.102.198]:36708 "EHLO linta.de"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1756098AbYFQOPw (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 17 Jun 2008 10:15:52 -0400
+Content-Disposition: inline
+In-Reply-To: <4857C590.6050002@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Komuro <komurojun-mbn@nifty.com>
-Cc: Jeff Garzik <jeff@garzik.org>, Dominik Brodowski <linux@dominikbrodowski.net>, jgarzik@redhat.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linux-pcmcia <linux-pcmcia@lists.infradead.org>, Kristoffer Ericson <kristoffer.ericson@gmail.com>
+To: Tejun Heo <htejun@gmail.com>
+Cc: Komuro <komurojun-mbn@nifty.com>, Jeff Garzik <jeff@garzik.org>, jgarzik@redhat.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linux-pcmcia <linux-pcmcia@lists.infradead.org>, Kristoffer Ericson <kristoffer.ericson@gmail.com>
 
-This is a multi-part message in MIME format.
---------------000609080104070708000500
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+On Tue, Jun 17, 2008 at 11:09:20PM +0900, Tejun Heo wrote:
+> Okay.  The exit is from CS_CHECK macro on GetNextTuple, missed that
+> macro. It means it failed to request IO resource somewhere.  Can you
+> please try the attached patch?  It will show us where it failed.
+> 
+> This part of code hasn't changed at all in pata_pcmcia && I don't really
+> understand the tuple business.  We need pcmcia people to pitch in.
 
-Okay.  The exit is from CS_CHECK macro on GetNextTuple, missed that
-macro. It means it failed to request IO resource somewhere.  Can you
-please try the attached patch?  It will show us where it failed.
+The strange thing is that neither the PCMCIA side nor pata_pcmcia changed
+between the working 2.6.26-rc4 and the non-working 2.6.26-rc3... that's why
+I am at least as surprised as you are ;)
 
-This part of code hasn't changed at all in pata_pcmcia && I don't really
-understand the tuple business.  We need pcmcia people to pitch in.
-
-Thanks.
-
--- 
-tejun
-
---------------000609080104070708000500
-Content-Type: text/x-patch;
- name="pata_pcmcia-debug-2.patch"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="pata_pcmcia-debug-2.patch"
-
-diff --git a/drivers/ata/pata_pcmcia.c b/drivers/ata/pata_pcmcia.c
-index 3d39f9d..fafe525 100644
---- a/drivers/ata/pata_pcmcia.c
-+++ b/drivers/ata/pata_pcmcia.c
-@@ -176,9 +176,13 @@ static int pcmcia_init_one(struct pcmcia_device *pdev)
- 
- 	struct ata_port_operations *ops = &pcmcia_port_ops;
- 
-+	dev_printk(KERN_INFO, &pdev->dev, "XXX ENTER\n");
-+
- 	info = kzalloc(sizeof(*info), GFP_KERNEL);
--	if (info == NULL)
-+	if (info == NULL) {
-+		printk("XXX info alloc failed\n");
- 		return -ENOMEM;
-+	}
- 
- 	/* Glue stuff together. FIXME: We may be able to get rid of info with care */
- 	info->pdev = pdev;
-@@ -196,8 +200,10 @@ static int pcmcia_init_one(struct pcmcia_device *pdev)
- 	/* Allocate resoure probing structures */
- 
- 	stk = kzalloc(sizeof(*stk), GFP_KERNEL);
--	if (!stk)
-+	if (!stk) {
-+		printk("XXX stk alloc failed\n");
- 		goto out1;
-+	}
- 
- 	cfg = &stk->parse.cftable_entry;
- 
-@@ -224,18 +230,27 @@ static int pcmcia_init_one(struct pcmcia_device *pdev)
- 
- 	/* Now munch the resources looking for a suitable set */
- 	while (1) {
--		if (pcmcia_get_tuple_data(pdev, &tuple) != 0)
-+		dev_printk(KERN_INFO, &pdev->dev, "XXX resource loop, pass=%d\n", pass);
-+		if (pcmcia_get_tuple_data(pdev, &tuple) != 0) {
-+			dev_printk(KERN_INFO, &pdev->dev, "XXX get_tuple_data failed\n");
- 			goto next_entry;
--		if (pcmcia_parse_tuple(pdev, &tuple, &stk->parse) != 0)
-+		}
-+		if (pcmcia_parse_tuple(pdev, &tuple, &stk->parse) != 0) {
-+			dev_printk(KERN_INFO, &pdev->dev, "XXX parse_tuple failed\n");
- 			goto next_entry;
-+		}
- 		/* Check for matching Vcc, unless we're desperate */
- 		if (!pass) {
- 			if (cfg->vcc.present & (1 << CISTPL_POWER_VNOM)) {
--				if (stk->conf.Vcc != cfg->vcc.param[CISTPL_POWER_VNOM] / 10000)
-+				if (stk->conf.Vcc != cfg->vcc.param[CISTPL_POWER_VNOM] / 10000) {
-+					dev_printk(KERN_INFO, &pdev->dev, "XXX vcc0 fail\n");
- 					goto next_entry;
-+				}
- 			} else if (stk->dflt.vcc.present & (1 << CISTPL_POWER_VNOM)) {
--				if (stk->conf.Vcc != stk->dflt.vcc.param[CISTPL_POWER_VNOM] / 10000)
-+				if (stk->conf.Vcc != stk->dflt.vcc.param[CISTPL_POWER_VNOM] / 10000) {
-+					dev_printk(KERN_INFO, &pdev->dev, "XXX vcc1 fail\n");
- 					goto next_entry;
-+				}
- 			}
- 		}
- 
-@@ -255,19 +270,27 @@ static int pcmcia_init_one(struct pcmcia_device *pdev)
- 				pdev->io.NumPorts1 = 8;
- 				pdev->io.BasePort2 = io->win[1].base;
- 				pdev->io.NumPorts2 = (is_kme) ? 2 : 1;
--				if (pcmcia_request_io(pdev, &pdev->io) != 0)
-+				if (pcmcia_request_io(pdev, &pdev->io) != 0) {
-+					dev_printk(KERN_INFO, &pdev->dev, "XXX IO request failed 1 %x:%d %x:%d\n",
-+						   pdev->io.BasePort1, pdev->io.NumPorts1, pdev->io.BasePort2, pdev->io.NumPorts2);
- 					goto next_entry;
-+				}
- 				io_base = pdev->io.BasePort1;
- 				ctl_base = pdev->io.BasePort2;
- 			} else if ((io->nwin == 1) && (io->win[0].len >= 16)) {
- 				pdev->io.NumPorts1 = io->win[0].len;
- 				pdev->io.NumPorts2 = 0;
--				if (pcmcia_request_io(pdev, &pdev->io) != 0)
-+				if (pcmcia_request_io(pdev, &pdev->io) != 0) {
-+					dev_printk(KERN_INFO, &pdev->dev, "XXX IO request failed 2 %x:%d %x:%d\n",
-+						   pdev->io.BasePort1, pdev->io.NumPorts1, pdev->io.BasePort2, pdev->io.NumPorts2);
- 					goto next_entry;
-+				}
- 				io_base = pdev->io.BasePort1;
- 				ctl_base = pdev->io.BasePort1 + 0x0e;
--			} else
-+			} else {
-+				dev_printk(KERN_INFO, &pdev->dev, "XXX hmmmm\n");
- 				goto next_entry;
-+			}
- 			/* If we've got this far, we're done */
- 			break;
- 		}
-@@ -275,8 +298,10 @@ next_entry:
- 		if (cfg->flags & CISTPL_CFTABLE_DEFAULT)
- 			memcpy(&stk->dflt, cfg, sizeof(stk->dflt));
- 		if (pass) {
-+			dev_printk(KERN_INFO, &pdev->dev, "XXX pass=%d, doing GetNextTuple\n", pass);
- 			CS_CHECK(GetNextTuple, pcmcia_get_next_tuple(pdev, &tuple));
- 		} else if (pcmcia_get_next_tuple(pdev, &tuple) != 0) {
-+			dev_printk(KERN_INFO, &pdev->dev, "XXX pass=%d, doing GetFirstTuple\n", pass);
- 			CS_CHECK(GetFirstTuple, pcmcia_get_first_tuple(pdev, &tuple));
- 			memset(&stk->dflt, 0, sizeof(stk->dflt));
- 			pass++;
-@@ -290,8 +315,11 @@ next_entry:
- 	ret = -ENOMEM;
- 	io_addr = devm_ioport_map(&pdev->dev, io_base, 8);
- 	ctl_addr = devm_ioport_map(&pdev->dev, ctl_base, 1);
--	if (!io_addr || !ctl_addr)
-+	if (!io_addr || !ctl_addr) {
-+		printk("XXX ioport_map failed io_addr=%p ctl_addr=%p\n",
-+		       io_addr, ctl_addr);
- 		goto failed;
-+	}
- 
- 	/* Success. Disable the IRQ nIEN line, do quirks */
- 	iowrite8(0x02, ctl_addr);
-@@ -311,8 +339,10 @@ next_entry:
- 	 */
- 	ret = -ENOMEM;
- 	host = ata_host_alloc(&pdev->dev, n_ports);
--	if (!host)
-+	if (!host) {
-+		printk("XXX host alloc failed\n");
- 		goto failed;
-+	}
- 
- 	for (p = 0; p < n_ports; p++) {
- 		ap = host->ports[p];
-@@ -331,11 +361,14 @@ next_entry:
- 	/* activate */
- 	ret = ata_host_activate(host, pdev->irq.AssignedIRQ, ata_sff_interrupt,
- 				IRQF_SHARED, &pcmcia_sht);
--	if (ret)
-+	if (ret) {
-+		printk("XXX host activate failed ret=%d\n", ret);
- 		goto failed;
-+	}
- 
- 	info->ndev = 1;
- 	kfree(stk);
-+	dev_printk(KERN_INFO, &pdev->dev, "XXX LEAVE 0\n");
- 	return 0;
- 
- cs_failed:
-@@ -345,6 +378,7 @@ failed:
- 	info->ndev = 0;
- 	pcmcia_disable_device(pdev);
- out1:
-+	dev_printk(KERN_INFO, &pdev->dev, "XXX LEAVE %d\n", ret);
- 	kfree(info);
- 	return ret;
- }
-
---------------000609080104070708000500--
+Thanks,
+	Dominik
