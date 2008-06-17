@@ -1,53 +1,41 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH #upstream-fixes 2/2] libata: implement ATAPI_HORKAGE_NOPIO
- and apply it to GGW-H10N
-Date: Tue, 17 Jun 2008 18:31:10 +0900
-Message-ID: <4857845E.2060504@kernel.org>
-References: <4857313A.1000405@kernel.org>	<48573174.9050103@kernel.org> <20080617094354.338e186b@lxorguk.ukuu.org.uk> <48578080.5030605@kernel.org>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: [PATCH 1/4] ide-pmac: media-bay support fixes
+Date: Tue, 17 Jun 2008 11:41:08 +0200
+Message-ID: <200806171141.08865.bzolnier@gmail.com>
+References: <200806162124.43005.bzolnier@gmail.com> <1213673979.8129.156.camel@pasglop> <1213674572.8129.159.camel@pasglop>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain;
+  charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:43729 "EHLO hera.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756055AbYFQJb3 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 17 Jun 2008 05:31:29 -0400
-In-Reply-To: <48578080.5030605@kernel.org>
+Received: from yw-out-2324.google.com ([74.125.46.29]:13343 "EHLO
+	yw-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751603AbYFQJjc (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 17 Jun 2008 05:39:32 -0400
+Received: by yw-out-2324.google.com with SMTP id 9so3349084ywe.1
+        for <linux-ide@vger.kernel.org>; Tue, 17 Jun 2008 02:39:32 -0700 (PDT)
+In-Reply-To: <1213674572.8129.159.camel@pasglop>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: Jeff Garzik <jeff@garzik.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, luke@lukeross.name
+To: benh@kernel.crashing.org
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Tejun Heo wrote:
-> Alan Cox wrote:
->> On Tue, 17 Jun 2008 12:37:24 +0900
->> Tejun Heo <tj@kernel.org> wrote:
->>
->>> LG blueray drive GGW-H10N can't do ATAPI PIO.  Implement
->>> ATAPI_HORKAGE_NOPIO and apply it to the drive.  If the horkage is
->>> active, atapi_check_dma() always returns 0 and warns if the controller
->>> needs ATAPI PIO for certain commands.
->> This all seems wildly improbable as a drive with such a bug would not
->> appear to be going to work in Windows. I'd like to know more and see more
->> than one bug report for that drive before it goes in
->>
->> You might even be looking at a single drive with a one off wiring flaw or
->> chip fault at this point.
+On Tuesday 17 June 2008, Benjamin Herrenschmidt wrote:
+> On Tue, 2008-06-17 at 13:39 +1000, Benjamin Herrenschmidt wrote:
+> > Your patches don't apply on today upstream, I'll try against
+> > linux-next or is there a git I can clone to test things ?
 > 
-> I thought it was improbable too but it's a brand new relatively cheap
-> blueray writer so it's quite possible that they screwed up the firmware
-> on this one as are often the cases for first gen devices.
-> 
-> Relatively cheap it may be, it's still around $300, so I don't think
-> I'll get one for testing.  The high price could probably explain low
-> error report rate.
+> Ok, I'm lost. I have 3 different series of patches from you partially
+> overlapping with different amount of patches in them. I don't have
+> time to sort that out right now. Can you send me a single serie that
+> I can apply on top of either upstream or tonight linux-next which
+> should have your stuff removed hopefully ?
 
-Ah.. one more thing to note.  The drive doesn't choke on all PIO
-commands, so it's quite possible that windows just luckily dodged bullet
-and we're taking the fall instead && the reporter says that the
-controller worked fine with a dvd writer.
+This patch series (from yesterday, the rest of can be ignored) should
+apply fine to the next revision of linux-next (later than -next-20080616,
+it is not out yet), if you prefer upstream patches I can look into it
+tonight.
 
-Is there anyone who is willing to shell out $300 in the name of penguin?
-
--- 
-tejun
+Thanks,
+Bart
