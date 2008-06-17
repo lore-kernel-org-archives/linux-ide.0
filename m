@@ -1,34 +1,45 @@
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Subject: Re: [PATCH 1/4] ide-pmac: media-bay support fixes
-Date: Tue, 17 Jun 2008 13:49:32 +1000
-Message-ID: <1213674572.8129.159.camel@pasglop>
-References: <200806162124.43005.bzolnier@gmail.com>
-	 <1213673979.8129.156.camel@pasglop>
-Reply-To: benh@kernel.crashing.org
+From: Tejun Heo <tj@kernel.org>
+Subject: [PATCH] cdrom: don't check CDC_PLAY_AUDIO in cdrom_count_tracks()
+Date: Tue, 17 Jun 2008 14:20:20 +0900
+Message-ID: <48574994.9090503@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from gate.crashing.org ([63.228.1.57]:56611 "EHLO gate.crashing.org"
+Received: from hera.kernel.org ([140.211.167.34]:40668 "EHLO hera.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751146AbYFQDtj (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 16 Jun 2008 23:49:39 -0400
-In-Reply-To: <1213673979.8129.156.camel@pasglop>
+	id S1751382AbYFQFVp (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 17 Jun 2008 01:21:45 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: IDE/ATA development list <linux-ide@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>, Jens Axboe <jens.axboe@oracle.com>
+Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 
-On Tue, 2008-06-17 at 13:39 +1000, Benjamin Herrenschmidt wrote:
-> Your patches don't apply on today upstream, I'll try against
-> linux-next or is there a git I can clone to test things ?
+According to MMC-3 (or any later versions) READ TOCs are mandatory
+commands and have nothing to do with CDC_PLAY_AUDIO.  I have no idea
+why the check was put there in the first place but it now only breaks
+automatic actions on certain drives.
 
-Ok, I'm lost. I have 3 different series of patches from you partially
-overlapping with different amount of patches in them. I don't have
-time to sort that out right now. Can you send me a single serie that
-I can apply on top of either upstream or tonight linux-next which
-should have your stuff removed hopefully ?
+Note that this test was only effective when ide-cdrom was being used
+as sr didn't mask CDC_PLAY_AUDIO according to the capabilities.
 
-Ben.
+Signed-off-by: Tejun Heo <tj@kernel.org>
+---
+ drivers/cdrom/cdrom.c |    4 ----
+ 1 file changed, 4 deletions(-)
 
-
+diff --git a/drivers/cdrom/cdrom.c b/drivers/cdrom/cdrom.c
+index 69f26eb..11574c5 100644
+--- a/drivers/cdrom/cdrom.c
++++ b/drivers/cdrom/cdrom.c
+@@ -1491,10 +1491,6 @@ static void cdrom_count_tracks(struct cdrom_device_info *cdi, tracktype* tracks)
+ 	tracks->xa=0;
+ 	tracks->error=0;
+ 	cdinfo(CD_COUNT_TRACKS, "entering cdrom_count_tracks\n"); 
+-        if (!CDROM_CAN(CDC_PLAY_AUDIO)) { 
+-                tracks->error=CDS_NO_INFO;
+-                return;
+-        }        
+ 	/* Grab the TOC header so we can see how many tracks there are */
+ 	if ((ret = cdi->ops->audio_ioctl(cdi, CDROMREADTOCHDR, &header))) {
+ 		if (ret == -ENOMEDIUM)
