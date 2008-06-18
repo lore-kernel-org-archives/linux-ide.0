@@ -1,158 +1,38 @@
-From: Komuro <komurojun-mbn@nifty.com>
-Subject: Re: [KERNEL 2.6.26-rc4]  bugreport : pata_pcmcia with Sandisk
- Extreme III 8GB
-Date: Wed, 18 Jun 2008 21:23:58 +0900
-Message-ID: <20080618212358.c9bbf3fd.komurojun-mbn@nifty.com>
-References: <20080528225049.9a134e0d.Kristoffer.Ericson@Gmail.com>
-	<20080528222740.GB20893@isilmar.linta.de>
-	<20080530135728.be02d3dc.Kristoffer.Ericson@Gmail.com>
-	<20080607223716.7d142072.komurojun-mbn@nifty.com>
-	<20080611072029.GB28692@comet.dominikbrodowski.net>
-	<20080614120055.ad8fbee0.komurojun-mbn@nifty.com>
-	<48537149.4040102@garzik.org>
-	<20080614213612.96873c25.komurojun-mbn@nifty.com>
-	<4855D8E2.10409@gmail.com>
-	<20080616221145.e3b069b9.komurojun-mbn@nifty.com>
-	<485669A0.6000404@gmail.com>
-	<20080617212345.c452d8c5.komurojun-mbn@nifty.com>
-	<4857C590.6050002@gmail.com>
+From: Mark Lord <liml@rtr.ca>
+Subject: [PATCH 01/02] sata_mv: enable async_notify for 60x1 Rev.C0 and higher
+Date: Wed, 18 Jun 2008 12:11:16 -0400
+Message-ID: <485933A4.3010409@rtr.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from userg501.nifty.com ([202.248.238.81]:21107 "EHLO
-	userg501.nifty.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753665AbYFRM2x (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 18 Jun 2008 08:28:53 -0400
-In-Reply-To: <4857C590.6050002@gmail.com>
+Received: from rtr.ca ([76.10.145.34]:1525 "EHLO mail.rtr.ca"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751313AbYFRQLS (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 18 Jun 2008 12:11:18 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Jeff Garzik <jeff@garzik.org>, Dominik Brodowski <linux@dominikbrodowski.net>, jgarzik@redhat.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linux-pcmcia <linux-pcmcia@lists.infradead.org>, Kristoffer Ericson <kristoffer.ericson@gmail.com>
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: IDE/ATA development list <linux-ide@vger.kernel.org>, Tejun Heo <htejun@gmail.com>
 
+The early chipsets cannot safely handle Async Notification (AN),
+but 6041/6081 chip revision "C0" (and newer) can handle it.
 
-Hi,
+So allow AN for "C0" and higher.
 
-Here is the log.
+This enables use of hotplug on PMP ports for the 6041/6081 PCI Rev.9 chips.
 
-My card is single function device.
+Signed-off-by: Mark Lord <mlord@pobox.com>
 
-it is correct that GetNextTuple fails for pcmcia0.1.
-since pcmcia0.1 does not exist.
-
-I think the reason of this problem is
-memory-leak or something.
-
-
-pcmcia: registering new device pcmcia0.0
-pata_pcmcia 0.0: XXX ENTER
-pata_pcmcia 0.0: XXX resource loop, pass=0
-pata_pcmcia 0.0: XXX resource loop, pass=0
-scsi2 : pata_pcmcia
-ata3: PATA max PIO0 cmd 0xd100 ctl 0xd10e irq 4
-ata3.00: CFA: , Ver.1.0, max PIO2
-ata3.00: 32000 sectors, multi 0: LBA 
-ata3.00: configured for PIO0
-ata3.00: configured for PIO0
-ata3: EH complete
-isa bounce pool size: 16 pages
-scsi 2:0:0:0: Direct-Access     ATA                       Ver. PQ: 0 ANSI: 5
-sd 2:0:0:0: [sdb] 32000 512-byte hardware sectors (16 MB)
-sd 2:0:0:0: [sdb] Write Protect is off
-sd 2:0:0:0: [sdb] Mode Sense: 00 3a 00 00
-sd 2:0:0:0: [sdb] Write cache: disabled, read cache: enabled, doesn't support DPO or FUA
-sd 2:0:0:0: [sdb] 32000 512-byte hardware sectors (16 MB)
-sd 2:0:0:0: [sdb] Write Protect is off
-sd 2:0:0:0: [sdb] Mode Sense: 00 3a 00 00
-sd 2:0:0:0: [sdb] Write cache: disabled, read cache: enabled, doesn't support DPO or FUA
- sdb: sdb1
-sd 2:0:0:0: [sdb] Attached SCSI removable disk
-sd 2:0:0:0: Attached scsi generic sg2 type 0
-pata_pcmcia 0.0: XXX LEAVE 0
-pcmcia: registering new device pcmcia0.1
-pata_pcmcia 0.1: XXX ENTER
-pata_pcmcia 0.1: XXX resource loop, pass=0
-pata_pcmcia 0.1: XXX resource loop, pass=0
-pata_pcmcia 0.1: XXX IO request failed 2 0:16 0:0
-pata_pcmcia 0.1: XXX resource loop, pass=0
-pata_pcmcia 0.1: XXX IO request failed 1 1f0:8 3f6:1
-pata_pcmcia 0.1: XXX resource loop, pass=0
-pata_pcmcia 0.1: XXX IO request failed 1 170:8 376:1
-pata_pcmcia 0.1: XXX pass=0, doing GetFirstTuple
-pata_pcmcia 0.1: XXX resource loop, pass=1
-pata_pcmcia 0.1: XXX pass=1, doing GetNextTuple
-pata_pcmcia 0.1: XXX resource loop, pass=1
-pata_pcmcia 0.1: XXX IO request failed 2 0:16 376:0
-pata_pcmcia 0.1: XXX pass=1, doing GetNextTuple
-pata_pcmcia 0.1: XXX resource loop, pass=1
-pata_pcmcia 0.1: XXX IO request failed 1 1f0:8 3f6:1
-pata_pcmcia 0.1: XXX pass=1, doing GetNextTuple
-pata_pcmcia 0.1: XXX resource loop, pass=1
-pata_pcmcia 0.1: XXX IO request failed 1 170:8 376:1
-pata_pcmcia 0.1: XXX pass=1, doing GetNextTuple
-0.1: GetNextTuple: No more items
-pata_pcmcia 0.1: XXX LEAVE -12
-pata_pcmcia: probe of 0.1 failed with error -12
-modprobe used greatest stack depth: 1676 bytes left
-pata_pcmcia 0.1: XXX ENTER
-pata_pcmcia 0.1: XXX resource loop, pass=0
-pata_pcmcia 0.1: XXX resource loop, pass=0
-pata_pcmcia 0.1: XXX IO request failed 2 0:16 376:0
-pata_pcmcia 0.1: XXX resource loop, pass=0
-pata_pcmcia 0.1: XXX IO request failed 1 1f0:8 3f6:1
-pata_pcmcia 0.1: XXX resource loop, pass=0
-pata_pcmcia 0.1: XXX IO request failed 1 170:8 376:1
-pata_pcmcia 0.1: XXX pass=0, doing GetFirstTuple
-pata_pcmcia 0.1: XXX resource loop, pass=1
-pata_pcmcia 0.1: XXX pass=1, doing GetNextTuple
-pata_pcmcia 0.1: XXX resource loop, pass=1
-pata_pcmcia 0.1: XXX IO request failed 2 0:16 376:0
-pata_pcmcia 0.1: XXX pass=1, doing GetNextTuple
-pata_pcmcia 0.1: XXX resource loop, pass=1
-pata_pcmcia 0.1: XXX IO request failed 1 1f0:8 3f6:1
-pata_pcmcia 0.1: XXX pass=1, doing GetNextTuple
-pata_pcmcia 0.1: XXX resource loop, pass=1
-pata_pcmcia 0.1: XXX IO request failed 1 170:8 376:1
-pata_pcmcia 0.1: XXX pass=1, doing GetNextTuple
-0.1: GetNextTuple: No more items
-pata_pcmcia 0.1: XXX LEAVE -12
-pata_pcmcia: probe of 0.1 failed with error -12
-pata_pcmcia 0.1: XXX ENTER
-pata_pcmcia 0.1: XXX resource loop, pass=0
-pata_pcmcia 0.1: XXX resource loop, pass=0
-pata_pcmcia 0.1: XXX IO request failed 2 0:16 376:0
-pata_pcmcia 0.1: XXX resource loop, pass=0
-pata_pcmcia 0.1: XXX IO request failed 1 1f0:8 3f6:1
-pata_pcmcia 0.1: XXX resource loop, pass=0
-pata_pcmcia 0.1: XXX IO request failed 1 170:8 376:1
-pata_pcmcia 0.1: XXX pass=0, doing GetFirstTuple
-pata_pcmcia 0.1: XXX resource loop, pass=1
-pata_pcmcia 0.1: XXX pass=1, doing GetNextTuple
-pata_pcmcia 0.1: XXX resource loop, pass=1
-pata_pcmcia 0.1: XXX IO request failed 2 0:16 376:0
-pata_pcmcia 0.1: XXX pass=1, doing GetNextTuple
-pata_pcmcia 0.1: XXX resource loop, pass=1
-pata_pcmcia 0.1: XXX IO request failed 1 1f0:8 3f6:1
-pata_pcmcia 0.1: XXX pass=1, doing GetNextTuple
-pata_pcmcia 0.1: XXX resource loop, pass=1
-pata_pcmcia 0.1: XXX IO request failed 1 170:8 376:1
-pata_pcmcia 0.1: XXX pass=1, doing GetNextTuple
-0.1: GetNextTuple: No more items
-pata_pcmcia 0.1: XXX LEAVE -12
-pata_pcmcia: probe of 0.1 failed with error -12
-
-Best Regards
-Komuro
-
-> Okay.  The exit is from CS_CHECK macro on GetNextTuple, missed that
-> macro. It means it failed to request IO resource somewhere.  Can you
-> please try the attached patch?  It will show us where it failed.
-> 
-> This part of code hasn't changed at all in pata_pcmcia && I don't really
-> understand the tuple business.  We need pcmcia people to pitch in.
-> 
-> Thanks.
-> 
-> -- 
-> tejun
-> 
+--- old/drivers/ata/sata_mv.c	2008-05-30 19:36:52.000000000 -0400
++++ linux/drivers/ata/sata_mv.c	2008-06-17 17:45:00.000000000 -0400
+@@ -1322,6 +1322,9 @@
+ 		goto out_port_free_dma_mem;
+ 	memset(pp->crpb, 0, MV_CRPB_Q_SZ);
+ 
++	/* 6041/6081 Rev. "C0" (and newer) are okay with async notify */
++	if (hpriv->hp_flags & MV_HP_ERRATA_60X1C0)
++		ap->flags |= ATA_FLAG_AN;
+ 	/*
+ 	 * For GEN_I, there's no NCQ, so we only allocate a single sg_tbl.
+ 	 * For later hardware, we need one unique sg_tbl per NCQ tag.
