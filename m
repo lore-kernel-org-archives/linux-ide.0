@@ -1,49 +1,51 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH #upstream-fixes] ata_piix: add TECRA M4 to broken suspend
- list
-Date: Wed, 18 Jun 2008 20:30:17 -0400
-Message-ID: <4859A899.6080807@garzik.org>
-References: <4852383E.3000901@gmail.com>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: [patch 1/2] LIBATA: Add HAVE_PATA_PLATFORM to select PATA_PLATFORM
+ driver
+Date: Wed, 18 Jun 2008 20:30:07 -0400
+Message-ID: <4859A88F.5030709@pobox.com>
+References: <20080616111625.145158959@fluff.org.uk> <20080616112452.786570267@fluff.org.uk>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:58774 "EHLO mail.dvmed.net"
+Received: from srv5.dvmed.net ([207.36.208.214]:58760 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757846AbYFSAaU (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 18 Jun 2008 20:30:20 -0400
-In-Reply-To: <4852383E.3000901@gmail.com>
+	id S1757627AbYFSAaK (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 18 Jun 2008 20:30:10 -0400
+In-Reply-To: <20080616112452.786570267@fluff.org.uk>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: IDE/ATA development list <linux-ide@vger.kernel.org>
+To: Ben Dooks <ben-linux@fluff.org>
+Cc: linux-ide@vger.kernel.org, bzolnier@gmail.com
 
-Tejun Heo wrote:
-> TOSHIBA also used "TECRA M4" in additon to "Tecra M4", add it.
+Ben Dooks wrote:
+> Add HAVE_PATA_PLATFORM to select the pata platform driver
+> to ensure that we do not end up with a long 'depends on' list
+> when other users of this driver turn up.
 > 
-> Signed-off-by: Tejun Heo <htejun@gmail.com>
-> ---
->  drivers/ata/ata_piix.c |    7 +++++++
->  1 file changed, 7 insertions(+)
+> Signed-off-by: Ben Dooks <ben-linux@fluff.org>
 > 
-> diff --git a/drivers/ata/ata_piix.c b/drivers/ata/ata_piix.c
-> index 81b7ae3..a90ae03 100644
-> --- a/drivers/ata/ata_piix.c
-> +++ b/drivers/ata/ata_piix.c
-> @@ -1043,6 +1043,13 @@ static int piix_broken_suspend(void)
->  			},
->  		},
->  		{
-> +			.ident = "TECRA M4",
-> +			.matches = {
-> +				DMI_MATCH(DMI_SYS_VENDOR, "TOSHIBA"),
-> +				DMI_MATCH(DMI_PRODUCT_NAME, "TECRA M4"),
-> +			},
-> +		},
-> +		{
->  			.ident = "TECRA M5",
->  			.matches = {
->  				DMI_MATCH(DMI_SYS_VENDOR, "TOSHIBA"),
+> Index: linux-2.6.26-rc3-quilt1/drivers/ata/Kconfig
+> ===================================================================
+> --- linux-2.6.26-rc3-quilt1.orig/drivers/ata/Kconfig	2008-05-19 23:04:01.000000000 +0100
+> +++ linux-2.6.26-rc3-quilt1/drivers/ata/Kconfig	2008-05-19 23:39:47.000000000 +0100
+> @@ -651,9 +651,17 @@ config PATA_WINBOND_VLB
+>  	  Support for the Winbond W83759A controller on Vesa Local Bus
+>  	  systems.
+>  
+> +config HAVE_PATA_PLATFORM
+> +	bool
+> +	help
+> +	  This is an internal configuration node for any machine that
+> +	  uses pata-platform driver to enable the relevant driver in the
+> +	  configuration structure without having to submit endless patches
+> +	  to update the PATA_PLATFORM entry.
+> +
+>  config PATA_PLATFORM
+>  	tristate "Generic platform device PATA support"
+> -	depends on EMBEDDED || ARCH_RPC || PPC
+> +	depends on EMBEDDED || ARCH_RPC || PPC || HAVE_PATA_PLATFORM
+>  	help
 
 applied
 
