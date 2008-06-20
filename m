@@ -1,63 +1,57 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [RFC] Separating out libata out of SCSI (finally)
-Date: Fri, 20 Jun 2008 18:41:02 -0400
-Message-ID: <485C31FE.8050408@garzik.org>
-References: <485B2CC6.6070201@kernel.org> <1213993737.3443.35.camel@localhost.localdomain>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: Re: [PATCH 12/18] ide: use ->tf_load in actual_try_to_identify()
+Date: Sat, 21 Jun 2008 03:14:30 +0400
+Message-ID: <485C39D6.6020801@ru.mvista.com>
+References: <20080620213323.13202.71450.sendpatchset@localhost.localdomain> <20080620213445.13202.61145.sendpatchset@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <1213993737.3443.35.camel@localhost.localdomain>
-Sender: linux-scsi-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>, Tejun Heo <tj@kernel.org>
-Cc: IDE/ATA development list <linux-ide@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, brking@linux.vnet.ibm.com, Mark Lord <liml@rtr.ca>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Jens Axboe <jens.axboe@oracle.com>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from h155.mvista.com ([63.81.120.155]:59092 "EHLO imap.sh.mvista.com"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1755727AbYFTXOh (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 20 Jun 2008 19:14:37 -0400
+In-Reply-To: <20080620213445.13202.61145.sendpatchset@localhost.localdomain>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-James Bottomley wrote:
-> On Fri, 2008-06-20 at 13:06 +0900, Tejun Heo wrote:
->> The biggest problem is how to keep userland happy.  hdX -> sdX
->> transition was painful enough and I have a strong feeling that
->> everyone will come after and hunt down us if we try something like sdX
->> -> bdX now.  :-)
+Hello.
 
-> In theory mounting by label or ID should have fixed a lot of this.
-> However, if we need to head off a revolt, the sdX allocation algorithm
-> can be placed into it's own module so both sd and a ULD ata driver could
-> use it ...
+Bartlomiej Zolnierkiewicz wrote:
+> Convert actual_try_to_identify() to use ->tf_load instead of ->OUTB.
+>
+> There should be no functional changes caused by this patch.
+>
+> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+>   
+[...]
+> Index: b/drivers/ide/ide-probe.c
+> ===================================================================
+> --- a/drivers/ide/ide-probe.c
+> +++ b/drivers/ide/ide-probe.c
+> @@ -290,9 +290,15 @@ static int actual_try_to_identify (ide_d
+>  	/* set features register for atapi
+>  	 * identify command to be sure of reply
+>  	 */
+> -	if ((cmd == WIN_PIDENTIFY))
+> -		/* disable dma & overlap */
+> -		hwif->OUTB(0, io_ports->feature_addr);
+> +	if (cmd == WIN_PIDENTIFY) {
+> +		ide_task_t task;
+> +
+> +		memset(&task, 0, sizeof(task));
+> +		/* disable DMA & overlap */
+> +		task.tf_flags = IDE_TFLAG_OUT_FEATURE;
+> +
+> +		drive->hwif->tf_load(drive, &task);
+> +	}
+>   
 
-> Actually, surely we can mostly dump the SAT layer?
+   Eww, this is bulky but should be a part of your plan to switch to 
+tf_load() method...
 
-
-I don't see that we can do that for a long time...  And it's not just 
-the sdX allocation algorithm in question -- SCSI block devices come with 
-their own partition limits and set of supported ioctls.
-
-Therefore, my recommended path has always been
-
-* create ata_disk block device driver (ULD, in your terminology)
-
-* make SAT an optional piece, which maintains compatibility with 
-existing SCSI blkdevs, ioctls, command sets
-
-
-I just don't see a valid path moving forward that breaks userland 
-/again/...  we (ATA hackers) would be drummed out of a job I think :)
-
-Another option that's been discussed is
-
-1) Make SCSI block devices themselves an allocate-able resource (I think 
-that's what you meant by "placed into it's own module so both sd and a 
-ULD ata driver could use it"?)
-
-2) Ensure that any ata_disk ULD would support the same partition limits 
-and ioctl set, enough to ensure binary compatibility.
-
-Because that's the real need -- maintaining binary compatibility with 
-SCSI block devices, so major/minor, ioctl supported set, partition 
-limits, and other relevant details need to remain unchanged.
-
-The underlying software we're of course free to change...
-
-	Jeff
+WBR, Sergei
 
 
