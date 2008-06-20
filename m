@@ -1,88 +1,193 @@
-From: bugme-daemon@bugzilla.kernel.org
-Subject: [Bug 10943] New: machine doesn't shutdown when ahci sata driver is compiled as module
-Date: Fri, 20 Jun 2008 13:47:59 -0700 (PDT)
-Message-ID: <bug-10943-11633@http.bugzilla.kernel.org/>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: [PATCH 01/18] ide: add ->read_sff_dma_status method
+Date: Fri, 20 Jun 2008 23:33:23 +0200
+Message-ID: <20080620213323.13202.71450.sendpatchset@localhost.localdomain>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:44483 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S933748AbYFTUst (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 20 Jun 2008 16:48:49 -0400
-Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
-	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id m5KKm1bu028742
-	for <linux-ide@vger.kernel.org>; Fri, 20 Jun 2008 13:48:02 -0700
+Received: from fk-out-0910.google.com ([209.85.128.189]:6668 "EHLO
+	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753613AbYFTVb2 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 20 Jun 2008 17:31:28 -0400
+Received: by fk-out-0910.google.com with SMTP id 18so1410728fkq.5
+        for <linux-ide@vger.kernel.org>; Fri, 20 Jun 2008 14:31:26 -0700 (PDT)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
+Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-kernel@vger.kernel.org
 
-http://bugzilla.kernel.org/show_bug.cgi?id=10943
+Add ->read_sff_dma_status method for reading DMA Status register
+and use it instead of ->INB.
 
-           Summary: machine doesn't shutdown when ahci sata driver is
-                    compiled as module
-           Product: Drivers
-           Version: 2.5
-     KernelVersion: 2.6.24
-          Platform: All
-        OS/Version: Linux
-              Tree: Mainline
-            Status: NEW
-          Severity: normal
-          Priority: P1
-         Component: Other
-        AssignedTo: drivers_other@kernel-bugs.osdl.org
-        ReportedBy: gfpadovan@gmail.com
-                CC: jgarzik@pobox.com, linux-ide@vger.kernel.org
+While at it:
 
+* Use inb() directly in ns87415.c::ns87415_dma_end().
 
-Latest working kernel version: I don't know
-Earliest failing kernel version: I don't know
-Distribution: Gentoo
-Hardware Environment:
-lspci output:
-00:00.0 Host bridge [0600]: Intel Corporation Mobile PM965/GM965/GL960 Memory
-Controller Hub [8086:2a00] (rev 03)
-00:02.0 VGA compatible controller [0300]: Intel Corporation Mobile GM965/GL960
-Integrated Graphics Controller [8086:2a02] (rev 03)
-00:02.1 Display controller [0380]: Intel Corporation Mobile GM965/GL960
-Integrated Graphics Controller [8086:2a03] (rev 03)
-00:1a.0 USB Controller [0c03]: Intel Corporation 82801H (ICH8 Family) USB UHCI
-Controller #4 [8086:2834] (rev 03)
-00:1a.1 USB Controller [0c03]: Intel Corporation 82801H (ICH8 Family) USB UHCI
-Controller #5 [8086:2835] (rev 03)
-00:1a.7 USB Controller [0c03]: Intel Corporation 82801H (ICH8 Family) USB2 EHCI
-Controller #2 [8086:283a] (rev 03)
-00:1b.0 Audio device [0403]: Intel Corporation 82801H (ICH8 Family) HD Audio
-Controller [8086:284b] (rev 03)
-00:1c.0 PCI bridge [0604]: Intel Corporation 82801H (ICH8 Family) PCI Express
-Port 1 [8086:283f] (rev 03)
-00:1c.5 PCI bridge [0604]: Intel Corporation 82801H (ICH8 Family) PCI Express
-Port 6 [8086:2849] (rev 03)
-00:1d.0 USB Controller [0c03]: Intel Corporation 82801H (ICH8 Family) USB UHCI
-Controller #1 [8086:2830] (rev 03)
-00:1d.1 USB Controller [0c03]: Intel Corporation 82801H (ICH8 Family) USB UHCI
-Controller #2 [8086:2831] (rev 03)
-00:1d.2 USB Controller [0c03]: Intel Corporation 82801H (ICH8 Family) USB UHCI
-Controller #3 [8086:2832] (rev 03)
-00:1d.7 USB Controller [0c03]: Intel Corporation 82801H (ICH8 Family) USB2 EHCI
-Controller #1 [8086:2836] (rev 03)
-00:1e.0 PCI bridge [0604]: Intel Corporation 82801 Mobile PCI Bridge
-[8086:2448] (rev f3)
-00:1f.0 ISA bridge [0601]: Intel Corporation 82801HEM (ICH8M) LPC Interface
-Controller [8086:2815] (rev 03)
-00:1f.1 IDE interface [0101]: Intel Corporation 82801HBM/HEM (ICH8M/ICH8M-E)
-IDE Controller [8086:2850] (rev 03)
-00:1f.2 SATA controller [0106]: Intel Corporation 82801HBM/HEM (ICH8M/ICH8M-E)
-SATA AHCI Controller [8086:2829] (rev 03)
-00:1f.3 SMBus [0c05]: Intel Corporation 82801H (ICH8 Family) SMBus Controller
-[8086:283e] (rev 03)
-04:00.0 Ethernet controller [0200]: Marvell Technology Group Ltd. 88E8055 PCI-E
-Gigabit Ethernet Controller [11ab:4363] (rev 13)
+There should be no functional changes caused by this patch.
 
-Problem Description: The machine doesn't shutdown when the driver ahci is
-compiled as module.
-Steps to reproduce: Compile ahci driver as module.
+Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+---
+ drivers/ide/ide-dma.c      |   12 ++++++------
+ drivers/ide/ide-iops.c     |   10 ++++++++++
+ drivers/ide/pci/ns87415.c  |   13 ++++++++++---
+ drivers/ide/pci/scc_pata.c |    7 +++++++
+ include/linux/ide.h        |    2 ++
+ 5 files changed, 35 insertions(+), 9 deletions(-)
 
-
--- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are on the CC list for the bug, or are watching someone who is.
+Index: b/drivers/ide/ide-dma.c
+===================================================================
+--- a/drivers/ide/ide-dma.c
++++ b/drivers/ide/ide-dma.c
+@@ -334,7 +334,7 @@ static int config_drive_for_dma (ide_dri
+ static int dma_timer_expiry (ide_drive_t *drive)
+ {
+ 	ide_hwif_t *hwif	= HWIF(drive);
+-	u8 dma_stat		= hwif->INB(hwif->dma_status);
++	u8 dma_stat		= hwif->read_sff_dma_status(hwif);
+ 
+ 	printk(KERN_WARNING "%s: dma_timer_expiry: dma status == 0x%02x\n",
+ 		drive->name, dma_stat);
+@@ -369,7 +369,7 @@ void ide_dma_host_set(ide_drive_t *drive
+ {
+ 	ide_hwif_t *hwif	= HWIF(drive);
+ 	u8 unit			= (drive->select.b.unit & 0x01);
+-	u8 dma_stat		= hwif->INB(hwif->dma_status);
++	u8 dma_stat		= hwif->read_sff_dma_status(hwif);
+ 
+ 	if (on)
+ 		dma_stat |= (1 << (5 + unit));
+@@ -472,8 +472,8 @@ int ide_dma_setup(ide_drive_t *drive)
+ 	/* specify r/w */
+ 	hwif->OUTB(reading, hwif->dma_command);
+ 
+-	/* read dma_status for INTR & ERROR flags */
+-	dma_stat = hwif->INB(hwif->dma_status);
++	/* read DMA status for INTR & ERROR flags */
++	dma_stat = hwif->read_sff_dma_status(hwif);
+ 
+ 	/* clear INTR & ERROR flags */
+ 	hwif->OUTB(dma_stat|6, hwif->dma_status);
+@@ -520,7 +520,7 @@ int __ide_dma_end (ide_drive_t *drive)
+ 	/* stop DMA */
+ 	hwif->OUTB(dma_cmd&~1, hwif->dma_command);
+ 	/* get DMA status */
+-	dma_stat = hwif->INB(hwif->dma_status);
++	dma_stat = hwif->read_sff_dma_status(hwif);
+ 	/* clear the INTR & ERROR bits */
+ 	hwif->OUTB(dma_stat|6, hwif->dma_status);
+ 	/* purge DMA mappings */
+@@ -537,7 +537,7 @@ EXPORT_SYMBOL(__ide_dma_end);
+ int ide_dma_test_irq(ide_drive_t *drive)
+ {
+ 	ide_hwif_t *hwif	= HWIF(drive);
+-	u8 dma_stat		= hwif->INB(hwif->dma_status);
++	u8 dma_stat		= hwif->read_sff_dma_status(hwif);
+ 
+ 	/* return 1 if INTR asserted */
+ 	if ((dma_stat & 4) == 4)
+Index: b/drivers/ide/ide-iops.c
+===================================================================
+--- a/drivers/ide/ide-iops.c
++++ b/drivers/ide/ide-iops.c
+@@ -103,6 +103,14 @@ void SELECT_MASK(ide_drive_t *drive, int
+ 		port_ops->maskproc(drive, mask);
+ }
+ 
++static u8 ide_read_sff_dma_status(ide_hwif_t *hwif)
++{
++	if (hwif->host_flags & IDE_HFLAG_MMIO)
++		return readb((void __iomem *)hwif->dma_status);
++	else
++		return inb(hwif->dma_status);
++}
++
+ static void ide_tf_load(ide_drive_t *drive, ide_task_t *task)
+ {
+ 	ide_hwif_t *hwif = drive->hwif;
+@@ -323,6 +331,8 @@ static void ata_output_data(ide_drive_t 
+ 
+ void default_hwif_transport(ide_hwif_t *hwif)
+ {
++	hwif->read_sff_dma_status = ide_read_sff_dma_status;
++
+ 	hwif->tf_load	  = ide_tf_load;
+ 	hwif->tf_read	  = ide_tf_read;
+ 
+Index: b/drivers/ide/pci/ns87415.c
+===================================================================
+--- a/drivers/ide/pci/ns87415.c
++++ b/drivers/ide/pci/ns87415.c
+@@ -63,6 +63,11 @@ static u8 superio_ide_inb (unsigned long
+ 	return inb(port);
+ }
+ 
++static u8 superio_read_sff_dma_status(ide_hwif_t *hwif)
++{
++	return superio_ide_inb(hwif->dma_status);
++}
++
+ static void superio_tf_read(ide_drive_t *drive, ide_task_t *task)
+ {
+ 	struct ide_io_ports *io_ports = &drive->hwif->io_ports;
+@@ -122,6 +127,8 @@ static void __devinit superio_ide_init_i
+ 	tmp = superio_ide_inb(superio_ide_dma_status[port]);
+ 	outb(tmp | 0x66, superio_ide_dma_status[port]);
+ 
++	hwif->read_sff_dma_status = superio_read_sff_dma_status;
++
+ 	hwif->tf_read = superio_tf_read;
+ 
+ 	/* We need to override inb to workaround a SuperIO errata */
+@@ -200,13 +207,13 @@ static int ns87415_dma_end(ide_drive_t *
+ 	u8 dma_stat = 0, dma_cmd = 0;
+ 
+ 	drive->waiting_for_dma = 0;
+-	dma_stat = hwif->INB(hwif->dma_status);
++	dma_stat = hwif->read_sff_dma_status(hwif);
+ 	/* get dma command mode */
+-	dma_cmd = hwif->INB(hwif->dma_command);
++	dma_cmd = inb(hwif->dma_command);
+ 	/* stop DMA */
+ 	outb(dma_cmd & ~1, hwif->dma_command);
+ 	/* from ERRATA: clear the INTR & ERROR bits */
+-	dma_cmd = hwif->INB(hwif->dma_command);
++	dma_cmd = inb(hwif->dma_command);
+ 	outb(dma_cmd | 6, hwif->dma_command);
+ 	/* and free any DMA resources */
+ 	ide_destroy_dmatable(drive);
+Index: b/drivers/ide/pci/scc_pata.c
+===================================================================
+--- a/drivers/ide/pci/scc_pata.c
++++ b/drivers/ide/pci/scc_pata.c
+@@ -126,6 +126,11 @@ static u8 scc_ide_inb(unsigned long port
+ 	return (u8)data;
+ }
+ 
++static u8 scc_read_sff_dma_status(ide_hwif_t *hwif)
++{
++	return (u8)in_be32((void *)hwif->dma_status);
++}
++
+ static void scc_ide_insw(unsigned long port, void *addr, u32 count)
+ {
+ 	u16 *ptr = (u16 *)addr;
+@@ -774,6 +779,8 @@ static void __devinit init_mmio_iops_scc
+ 
+ 	ide_set_hwifdata(hwif, ports);
+ 
++	hwif->read_sff_dma_status = scc_read_sff_dma_status;
++
+ 	hwif->tf_load = scc_tf_load;
+ 	hwif->tf_read = scc_tf_read;
+ 
+Index: b/include/linux/ide.h
+===================================================================
+--- a/include/linux/ide.h
++++ b/include/linux/ide.h
+@@ -468,6 +468,8 @@ typedef struct hwif_s {
+ 	const struct ide_port_ops	*port_ops;
+ 	const struct ide_dma_ops	*dma_ops;
+ 
++	u8 (*read_sff_dma_status)(struct hwif_s *);
++
+ 	void (*tf_load)(ide_drive_t *, struct ide_task_s *);
+ 	void (*tf_read)(ide_drive_t *, struct ide_task_s *);
+ 
