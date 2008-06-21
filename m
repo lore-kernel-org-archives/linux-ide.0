@@ -1,17 +1,17 @@
 From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH 04/18] ide: remove ide_setup_dma()
-Date: Sat, 21 Jun 2008 23:29:00 +0400
-Message-ID: <485D567C.9030707@ru.mvista.com>
-References: <20080620213323.13202.71450.sendpatchset@localhost.localdomain> <20080620213350.13202.73557.sendpatchset@localhost.localdomain> <485C2924.7040905@ru.mvista.com> <200806212106.03484.bzolnier@gmail.com>
+Subject: Re: [PATCH 3/4] ide: filter out invalid transfer mode values in set_xfer_rate()
+Date: Sat, 21 Jun 2008 23:38:03 +0400
+Message-ID: <485D589B.5030105@ru.mvista.com>
+References: <200806212120.41514.bzolnier@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from homer.mvista.com ([63.81.120.155]:65153 "EHLO
+Received: from homer.mvista.com ([63.81.120.155]:65188 "EHLO
 	imap.sh.mvista.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751623AbYFUT3L (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 21 Jun 2008 15:29:11 -0400
-In-Reply-To: <200806212106.03484.bzolnier@gmail.com>
+	with ESMTP id S1751703AbYFUTiJ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 21 Jun 2008 15:38:09 -0400
+In-Reply-To: <200806212120.41514.bzolnier@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
@@ -20,57 +20,21 @@ Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 Hello.
 
 Bartlomiej Zolnierkiewicz wrote:
-> On Saturday 21 June 2008, Sergei Shtylyov wrote:
->   
->> Hello.
->>
->> Bartlomiej Zolnierkiewicz wrote:
->>     
->>> Export sff_dma_ops and then remove ide_setup_dma().
->>>
->>> There should be no functional changes caused by this patch.
->>>
->>> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
->>>
->>>       
-
-Acked-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-
->>> Index: b/drivers/ide/arm/palm_bk3710.c
->>> ===================================================================
->>> --- a/drivers/ide/arm/palm_bk3710.c
->>> +++ b/drivers/ide/arm/palm_bk3710.c
->>> @@ -318,15 +318,14 @@ static u8 __devinit palm_bk3710_cable_de
->>>  static int __devinit palm_bk3710_init_dma(ide_hwif_t *hwif,
->>>  					  const struct ide_port_info *d)
->>>  {
->>> -	unsigned long base =
->>> -		hwif->io_ports.data_addr - IDE_PALM_ATA_PRI_REG_OFFSET;
->>> -
->>>  	printk(KERN_INFO "    %s: MMIO-DMA\n", hwif->name);
->>>  
->>>  	if (ide_allocate_dma_engine(hwif))
->>>  		return -1;
->>>  
->>> -	ide_setup_dma(hwif, base);
->>> +	hwif->dma_base = hwif->io_ports.data_addr - IDE_PALM_ATA_PRI_REG_OFFSET;
->>>   
->>>       
->>    That's er... too complex. Actually, 'base' has the value for 
->> 'dma_base' at that moment...
->>     
+> Filter out invalid transfer mode values (0x02-0x07) in write handler
+> for obsoleted /proc/ide/hd?/settings:current_speed setting.
 >
-> Well, the above place is the only user of 'base' so isn't the variable
-> kind of superfluous?
+> While at it:
+>
+> * Use XFER_UDMA_6 define.
+>
+> Suggested-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+> ---
+> Sergei, IIRC that it is what you were suggesting some time ago.
 >   
 
-   Oops, sorry. I somehow thought this change was in other context (was 
-looking at the older version of driver recently).
+   Maybe I did. :-) But I don't see what that gives to us now...
 
-> Thanks,
-> Bart
->   
-
-MBR, Sergei
+WBR, Sergei
 
 
