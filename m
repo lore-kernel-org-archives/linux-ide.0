@@ -1,286 +1,176 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH 4/4] ide: filter out "default" transfer mode values in set_xfer_rate()
-Date: Sat, 21 Jun 2008 21:21:22 +0200
-Message-ID: <200806212121.22191.bzolnier@gmail.com>
+Subject: [PATCH 2/4] ide: remove dead Virtual DMA support
+Date: Sat, 21 Jun 2008 21:18:33 +0200
+Message-ID: <200806212118.33712.bzolnier@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
   charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from an-out-0708.google.com ([209.85.132.244]:54980 "EHLO
-	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753832AbYFUTWe (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 21 Jun 2008 15:22:34 -0400
-Received: by an-out-0708.google.com with SMTP id d40so410882and.103
-        for <linux-ide@vger.kernel.org>; Sat, 21 Jun 2008 12:22:33 -0700 (PDT)
+Received: from rv-out-0506.google.com ([209.85.198.230]:8500 "EHLO
+	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751740AbYFUTW0 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 21 Jun 2008 15:22:26 -0400
+Received: by rv-out-0506.google.com with SMTP id k40so6228446rvb.1
+        for <linux-ide@vger.kernel.org>; Sat, 21 Jun 2008 12:22:25 -0700 (PDT)
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Cc: linux-kernel@vger.kernel.org, TAKADA Yoshihito <takada@mbf.nifty.com>
 
-* Filter out "default" transfer mode values (0x00 - default PIO mode,
-  0x01 - default PIO mode w/ IORDY disabled) in write handler for obsoleted
-  /proc/ide/hd?/settings:current_speed setting.
+Lets remove dead Virtual DMA support for now so it doesn't clutter
+core IDE code (it can be bring back when there is a need for it):
 
-  Allowing "default" transfer mode values is a dangerous thing to do as
-  we don't support programming controller to the "default" transfer mode
-  and devices often use different values for the default and maximum PIO
-  mode (i.e. PIO2 default and PIO4 maximum) so the controller will stay
-  programmed for higher PIO mode while device will use the lower PIO mode.
+* Remove IDE_HFLAG_VDMA host flag.
 
-  There is no functionality loss as by using special IOCTLs device can
-  still be programmed to "default" transfer modes (it is only useful for
-  debugging/testing purposes anyway).
+* Remove ide_drive_t.vdma flag.
 
-* Remove no longer needed IDE_HFLAG_ABUSE_SET_DMA_MODE host flag, it was
-  previously used by few host drivers to program the controller to PIO0
-  timings for "default" transfer mode == 0x01 (although some host drivers
-  would program invalid PIO timings instead).
+* cs5520.c: remove stale FIXMEs, cs5520_dma_host_set() and cs5520_dma_ops
+  (also there is no longer a need to set IDE_HFLAG_NO_ATAPI_DMA).
 
-* Cleanup ide_set_xfer_rate() and add BUG_ON().
+There should be no functional changes caused by this patch.
 
-Suggested-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Cc: TAKADA Yoshihito <takada@mbf.nifty.com>
 Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 ---
-Sergei, IIRC that it is what you were suggesting some time ago.
+this is against IDE tree + 4 ide-pmac patches + 20 IDE patches from yesterday
 
- drivers/ide/ide-lib.c          |   15 ++-------------
- drivers/ide/ide-proc.c         |    4 ++--
- drivers/ide/pci/aec62xx.c      |    5 -----
- drivers/ide/pci/amd74xx.c      |    1 -
- drivers/ide/pci/cs5520.c       |    3 +--
- drivers/ide/pci/cs5535.c       |    3 +--
- drivers/ide/pci/hpt34x.c       |    1 -
- drivers/ide/pci/hpt366.c       |    1 -
- drivers/ide/pci/pdc202xx_old.c |    1 -
- drivers/ide/pci/serverworks.c  |    4 +---
- drivers/ide/pci/tc86c001.c     |    3 +--
- drivers/ide/pci/via82cxxx.c    |    1 -
- include/linux/ide.h            |    1 -
- 13 files changed, 8 insertions(+), 35 deletions(-)
+ drivers/ide/ide-disk.c   |    2 +-
+ drivers/ide/ide-dma.c    |    5 ++---
+ drivers/ide/ide-iops.c   |    3 +--
+ drivers/ide/pci/cs5520.c |   30 ------------------------------
+ include/linux/ide.h      |    3 ---
+ 5 files changed, 4 insertions(+), 39 deletions(-)
 
-Index: b/drivers/ide/ide-lib.c
+Index: b/drivers/ide/ide-disk.c
 ===================================================================
---- a/drivers/ide/ide-lib.c
-+++ b/drivers/ide/ide-lib.c
-@@ -266,22 +266,11 @@ int ide_set_xfer_rate(ide_drive_t *drive
+--- a/drivers/ide/ide-disk.c
++++ b/drivers/ide/ide-disk.c
+@@ -158,7 +158,7 @@ static void ide_tf_set_cmd(ide_drive_t *
+ 	write = (task->tf_flags & IDE_TFLAG_WRITE) ? 1 : 0;
  
- 	rate = ide_rate_filter(drive, rate);
+ 	if (dma)
+-		index = drive->vdma ? 4 : 8;
++		index = 8;
+ 	else
+ 		index = drive->mult_count ? 0 : 4;
  
-+	BUG_ON(rate < XFER_PIO_0);
-+
- 	if (rate >= XFER_PIO_0 && rate <= XFER_PIO_5)
- 		return ide_set_pio_mode(drive, rate);
+Index: b/drivers/ide/ide-dma.c
+===================================================================
+--- a/drivers/ide/ide-dma.c
++++ b/drivers/ide/ide-dma.c
+@@ -756,9 +756,8 @@ static int ide_tune_dma(ide_drive_t *dri
+ static int ide_dma_check(ide_drive_t *drive)
+ {
+ 	ide_hwif_t *hwif = drive->hwif;
+-	int vdma = (hwif->host_flags & IDE_HFLAG_VDMA)? 1 : 0;
  
--	/*
--	 * TODO: transfer modes 0x00-0x07 passed from the user-space are
--	 * currently handled here which needs fixing (please note that such
--	 * case could happen iff the transfer mode has already been set on
--	 * the device by ide-proc.c::set_xfer_rate()).
--	 */
--	if (rate < XFER_PIO_0) {
--		if (hwif->host_flags & IDE_HFLAG_ABUSE_SET_DMA_MODE)
--			return ide_set_dma_mode(drive, rate);
--		else
--			return ide_config_drive_speed(drive, rate);
--	}
--
- 	return ide_set_dma_mode(drive, rate);
+-	if (!vdma && ide_tune_dma(drive))
++	if (ide_tune_dma(drive))
+ 		return 0;
+ 
+ 	/* TODO: always do PIO fallback */
+@@ -767,7 +766,7 @@ static int ide_dma_check(ide_drive_t *dr
+ 
+ 	ide_set_max_pio(drive);
+ 
+-	return vdma ? 0 : -1;
++	return -1;
  }
  
-Index: b/drivers/ide/ide-proc.c
+ int ide_id_dma_bug(ide_drive_t *drive)
+Index: b/drivers/ide/ide-iops.c
 ===================================================================
---- a/drivers/ide/ide-proc.c
-+++ b/drivers/ide/ide-proc.c
-@@ -345,7 +345,7 @@ static int set_xfer_rate (ide_drive_t *d
- 	ide_task_t task;
- 	int err;
+--- a/drivers/ide/ide-iops.c
++++ b/drivers/ide/ide-iops.c
+@@ -866,8 +866,7 @@ int ide_config_drive_speed(ide_drive_t *
  
--	if (arg < 0 || (arg > 1 && arg < XFER_PIO_0) || arg > XFER_UDMA_6)
-+	if (arg < XFER_PIO_0 || arg > XFER_UDMA_6)
- 		return -EINVAL;
- 
- 	memset(&task, 0, sizeof(task));
-@@ -357,7 +357,7 @@ static int set_xfer_rate (ide_drive_t *d
- 
- 	err = ide_no_data_taskfile(drive, &task);
- 
--	if (!err && arg) {
-+	if (!err) {
- 		ide_set_xfer_rate(drive, (u8) arg);
- 		ide_driveid_update(drive);
- 	}
-Index: b/drivers/ide/pci/aec62xx.c
-===================================================================
---- a/drivers/ide/pci/aec62xx.c
-+++ b/drivers/ide/pci/aec62xx.c
-@@ -195,7 +195,6 @@ static const struct ide_port_info aec62x
- 		.host_flags	= IDE_HFLAG_SERIALIZE |
- 				  IDE_HFLAG_NO_ATAPI_DMA |
- 				  IDE_HFLAG_NO_DSC |
--				  IDE_HFLAG_ABUSE_SET_DMA_MODE |
- 				  IDE_HFLAG_OFF_BOARD,
- 		.pio_mask	= ATA_PIO4,
- 		.mwdma_mask	= ATA_MWDMA2,
-@@ -205,7 +204,6 @@ static const struct ide_port_info aec62x
- 		.init_chipset	= init_chipset_aec62xx,
- 		.port_ops	= &atp86x_port_ops,
- 		.host_flags	= IDE_HFLAG_NO_ATAPI_DMA | IDE_HFLAG_NO_AUTODMA |
--				  IDE_HFLAG_ABUSE_SET_DMA_MODE |
- 				  IDE_HFLAG_OFF_BOARD,
- 		.pio_mask	= ATA_PIO4,
- 		.mwdma_mask	= ATA_MWDMA2,
-@@ -216,7 +214,6 @@ static const struct ide_port_info aec62x
- 		.enablebits	= {{0x4a,0x02,0x02}, {0x4a,0x04,0x04}},
- 		.port_ops	= &atp86x_port_ops,
- 		.host_flags	= IDE_HFLAG_NO_ATAPI_DMA |
--				  IDE_HFLAG_ABUSE_SET_DMA_MODE |
- 				  IDE_HFLAG_NON_BOOTABLE,
- 		.pio_mask	= ATA_PIO4,
- 		.mwdma_mask	= ATA_MWDMA2,
-@@ -226,7 +223,6 @@ static const struct ide_port_info aec62x
- 		.init_chipset	= init_chipset_aec62xx,
- 		.port_ops	= &atp86x_port_ops,
- 		.host_flags	= IDE_HFLAG_NO_ATAPI_DMA |
--				  IDE_HFLAG_ABUSE_SET_DMA_MODE |
- 				  IDE_HFLAG_OFF_BOARD,
- 		.pio_mask	= ATA_PIO4,
- 		.mwdma_mask	= ATA_MWDMA2,
-@@ -237,7 +233,6 @@ static const struct ide_port_info aec62x
- 		.enablebits	= {{0x4a,0x02,0x02}, {0x4a,0x04,0x04}},
- 		.port_ops	= &atp86x_port_ops,
- 		.host_flags	= IDE_HFLAG_NO_ATAPI_DMA |
--				  IDE_HFLAG_ABUSE_SET_DMA_MODE |
- 				  IDE_HFLAG_OFF_BOARD,
- 		.pio_mask	= ATA_PIO4,
- 		.mwdma_mask	= ATA_MWDMA2,
-Index: b/drivers/ide/pci/amd74xx.c
-===================================================================
---- a/drivers/ide/pci/amd74xx.c
-+++ b/drivers/ide/pci/amd74xx.c
-@@ -218,7 +218,6 @@ static const struct ide_port_ops amd_por
- 
- #define IDE_HFLAGS_AMD \
- 	(IDE_HFLAG_PIO_NO_BLACKLIST | \
--	 IDE_HFLAG_ABUSE_SET_DMA_MODE | \
- 	 IDE_HFLAG_POST_SET_MODE | \
- 	 IDE_HFLAG_IO_32BIT | \
- 	 IDE_HFLAG_UNMASK_IRQS)
+  skip:
+ #ifdef CONFIG_BLK_DEV_IDEDMA
+-	if ((speed >= XFER_SW_DMA_0 || (hwif->host_flags & IDE_HFLAG_VDMA)) &&
+-	    drive->using_dma)
++	if (speed >= XFER_SW_DMA_0 && drive->using_dma)
+ 		hwif->dma_ops->dma_host_set(drive, 1);
+ 	else if (hwif->dma_ops)	/* check if host supports DMA */
+ 		ide_dma_off_quietly(drive);
 Index: b/drivers/ide/pci/cs5520.c
 ===================================================================
 --- a/drivers/ide/pci/cs5520.c
 +++ b/drivers/ide/pci/cs5520.c
-@@ -97,8 +97,7 @@ static const struct ide_port_ops cs5520_
- 		.name		= name_str,			\
- 		.port_ops	= &cs5520_port_ops,		\
- 		.host_flags	= IDE_HFLAG_ISA_PORTS |		\
--				  IDE_HFLAG_CS5520 |		\
--				  IDE_HFLAG_ABUSE_SET_DMA_MODE, \
-+				  IDE_HFLAG_CS5520,		\
- 		.pio_mask	= ATA_PIO4,			\
- 	}
+@@ -62,8 +62,6 @@ static void cs5520_set_pio_mode(ide_driv
+ 	struct pci_dev *pdev = to_pci_dev(hwif->dev);
+ 	int controller = drive->dn > 1 ? 1 : 0;
  
-Index: b/drivers/ide/pci/cs5535.c
-===================================================================
---- a/drivers/ide/pci/cs5535.c
-+++ b/drivers/ide/pci/cs5535.c
-@@ -171,8 +171,7 @@ static const struct ide_port_ops cs5535_
- static const struct ide_port_info cs5535_chipset __devinitdata = {
- 	.name		= "CS5535",
- 	.port_ops	= &cs5535_port_ops,
--	.host_flags	= IDE_HFLAG_SINGLE | IDE_HFLAG_POST_SET_MODE |
--			  IDE_HFLAG_ABUSE_SET_DMA_MODE,
-+	.host_flags	= IDE_HFLAG_SINGLE | IDE_HFLAG_POST_SET_MODE,
- 	.pio_mask	= ATA_PIO4,
- 	.mwdma_mask	= ATA_MWDMA2,
- 	.udma_mask	= ATA_UDMA4,
-Index: b/drivers/ide/pci/hpt34x.c
-===================================================================
---- a/drivers/ide/pci/hpt34x.c
-+++ b/drivers/ide/pci/hpt34x.c
-@@ -123,7 +123,6 @@ static const struct ide_port_ops hpt34x_
- #define IDE_HFLAGS_HPT34X \
- 	(IDE_HFLAG_NO_ATAPI_DMA | \
- 	 IDE_HFLAG_NO_DSC | \
--	 IDE_HFLAG_ABUSE_SET_DMA_MODE | \
- 	 IDE_HFLAG_NO_AUTODMA)
+-	/* FIXME: if DMA = 1 do we need to set the DMA bit here ? */
+-
+ 	/* 8bit CAT/CRT - 8bit command timing for channel */
+ 	pci_write_config_byte(pdev, 0x62 + controller, 
+ 		(cs5520_pio_clocks[pio].recovery << 4) |
+@@ -89,45 +87,17 @@ static void cs5520_set_dma_mode(ide_driv
+ 	cs5520_set_pio_mode(drive, 0);
+ }
  
- static const struct ide_port_info hpt34x_chipsets[] __devinitdata = {
-Index: b/drivers/ide/pci/hpt366.c
-===================================================================
---- a/drivers/ide/pci/hpt366.c
-+++ b/drivers/ide/pci/hpt366.c
-@@ -1409,7 +1409,6 @@ static int __devinit hpt36x_init(struct 
- 
- #define IDE_HFLAGS_HPT3XX \
- 	(IDE_HFLAG_NO_ATAPI_DMA | \
--	 IDE_HFLAG_ABUSE_SET_DMA_MODE | \
- 	 IDE_HFLAG_OFF_BOARD)
- 
- static const struct ide_port_ops hpt3xx_port_ops = {
-Index: b/drivers/ide/pci/pdc202xx_old.c
-===================================================================
---- a/drivers/ide/pci/pdc202xx_old.c
-+++ b/drivers/ide/pci/pdc202xx_old.c
-@@ -312,7 +312,6 @@ static void __devinit pdc202ata4_fixup_i
- 
- #define IDE_HFLAGS_PDC202XX \
- 	(IDE_HFLAG_ERROR_STOPS_FIFO | \
--	 IDE_HFLAG_ABUSE_SET_DMA_MODE | \
- 	 IDE_HFLAG_OFF_BOARD)
- 
- static const struct ide_port_ops pdc20246_port_ops = {
-Index: b/drivers/ide/pci/serverworks.c
-===================================================================
---- a/drivers/ide/pci/serverworks.c
-+++ b/drivers/ide/pci/serverworks.c
-@@ -349,9 +349,7 @@ static const struct ide_port_ops svwks_p
- 	.cable_detect		= svwks_cable_detect,
+-/*
+- *	We wrap the DMA activate to set the vdma flag. This is needed
+- *	so that the IDE DMA layer issues PIO not DMA commands over the
+- *	DMA channel
+- *
+- *	ATAPI is harder so disable it for now using IDE_HFLAG_NO_ATAPI_DMA
+- */
+-
+-static void cs5520_dma_host_set(ide_drive_t *drive, int on)
+-{
+-	drive->vdma = on;
+-	ide_dma_host_set(drive, on);
+-}
+-
+ static const struct ide_port_ops cs5520_port_ops = {
+ 	.set_pio_mode		= cs5520_set_pio_mode,
+ 	.set_dma_mode		= cs5520_set_dma_mode,
  };
  
--#define IDE_HFLAGS_SVWKS \
--	(IDE_HFLAG_LEGACY_IRQS | \
--	 IDE_HFLAG_ABUSE_SET_DMA_MODE)
-+#define IDE_HFLAGS_SVWKS IDE_HFLAG_LEGACY_IRQS
- 
- static const struct ide_port_info serverworks_chipsets[] __devinitdata = {
- 	{	/* 0 */
-Index: b/drivers/ide/pci/tc86c001.c
-===================================================================
---- a/drivers/ide/pci/tc86c001.c
-+++ b/drivers/ide/pci/tc86c001.c
-@@ -206,8 +206,7 @@ static const struct ide_port_info tc86c0
- 	.init_hwif	= init_hwif_tc86c001,
- 	.port_ops	= &tc86c001_port_ops,
- 	.dma_ops	= &tc86c001_dma_ops,
--	.host_flags	= IDE_HFLAG_SINGLE | IDE_HFLAG_OFF_BOARD |
--			  IDE_HFLAG_ABUSE_SET_DMA_MODE,
-+	.host_flags	= IDE_HFLAG_SINGLE | IDE_HFLAG_OFF_BOARD,
- 	.pio_mask	= ATA_PIO4,
- 	.mwdma_mask	= ATA_MWDMA2,
- 	.udma_mask	= ATA_UDMA4,
-Index: b/drivers/ide/pci/via82cxxx.c
-===================================================================
---- a/drivers/ide/pci/via82cxxx.c
-+++ b/drivers/ide/pci/via82cxxx.c
-@@ -425,7 +425,6 @@ static const struct ide_port_info via82c
- 	.enablebits	= { { 0x40, 0x02, 0x02 }, { 0x40, 0x01, 0x01 } },
- 	.port_ops	= &via_port_ops,
- 	.host_flags	= IDE_HFLAG_PIO_NO_BLACKLIST |
--			  IDE_HFLAG_ABUSE_SET_DMA_MODE |
- 			  IDE_HFLAG_POST_SET_MODE |
- 			  IDE_HFLAG_IO_32BIT,
- 	.pio_mask	= ATA_PIO5,
+-static const struct ide_dma_ops cs5520_dma_ops = {
+-	.dma_host_set		= cs5520_dma_host_set,
+-	.dma_setup		= ide_dma_setup,
+-	.dma_exec_cmd		= ide_dma_exec_cmd,
+-	.dma_start		= ide_dma_start,
+-	.dma_end		= __ide_dma_end,
+-	.dma_test_irq		= ide_dma_test_irq,
+-	.dma_lost_irq		= ide_dma_lost_irq,
+-	.dma_timeout		= ide_dma_timeout,
+-};
+-
+-/* FIXME: VDMA is disabled because it caused system hangs */
+ #define DECLARE_CS_DEV(name_str)				\
+ 	{							\
+ 		.name		= name_str,			\
+ 		.port_ops	= &cs5520_port_ops,		\
+-		.dma_ops	= &cs5520_dma_ops,		\
+ 		.host_flags	= IDE_HFLAG_ISA_PORTS |		\
+ 				  IDE_HFLAG_CS5520 |		\
+-				  IDE_HFLAG_NO_ATAPI_DMA |	\
+ 				  IDE_HFLAG_ABUSE_SET_DMA_MODE, \
+ 		.pio_mask	= ATA_PIO4,			\
+ 	}
 Index: b/include/linux/ide.h
 ===================================================================
 --- a/include/linux/ide.h
 +++ b/include/linux/ide.h
-@@ -1071,7 +1071,6 @@ enum {
- 	IDE_HFLAG_IO_32BIT		= (1 << 24),
- 	/* unmask IRQs */
- 	IDE_HFLAG_UNMASK_IRQS		= (1 << 25),
--	IDE_HFLAG_ABUSE_SET_DMA_MODE	= (1 << 26),
- 	/* serialize ports if DMA is possible (for sl82c105) */
- 	IDE_HFLAG_SERIALIZE_DMA		= (1 << 27),
- 	/* force host out of "simplex" mode */
+@@ -334,7 +334,6 @@ typedef struct ide_drive_s {
+ 	unsigned nodma		: 1;	/* disallow DMA */
+ 	unsigned remap_0_to_1	: 1;	/* 0=noremap, 1=remap 0->1 (for EZDrive) */
+ 	unsigned blocked        : 1;	/* 1=powermanagment told us not to do anything, so sleep nicely */
+-	unsigned vdma		: 1;	/* 1=doing PIO over DMA 0=doing normal DMA */
+ 	unsigned scsi		: 1;	/* 0=default, 1=ide-scsi emulation */
+ 	unsigned sleeping	: 1;	/* 1=sleeping & sleep field valid */
+ 	unsigned post_reset	: 1;
+@@ -1083,8 +1082,6 @@ enum {
+ 	IDE_HFLAG_NO_IO_32BIT		= (1 << 30),
+ 	/* never unmask IRQs */
+ 	IDE_HFLAG_NO_UNMASK_IRQS	= (1 << 31),
+-	/* host uses VDMA (disabled for now) */
+-	IDE_HFLAG_VDMA			= 0,
+ };
+ 
+ #ifdef CONFIG_BLK_DEV_OFFBOARD
