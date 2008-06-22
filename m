@@ -1,160 +1,119 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [PATCH 2/2] ide: pass hw_regs_t-s to ide_device_add[_all]()
-Date: Sun, 22 Jun 2008 15:22:53 +0200
-Message-ID: <200806221522.53574.bzolnier@gmail.com>
-References: <200806202029.11304.bzolnier@gmail.com> <Pine.LNX.4.64.0806221055210.4607@anakin>
+From: Boaz Harrosh <bharrosh@panasas.com>
+Subject: Re: [PATCH] libata support for rotation speed
+Date: Sun, 22 Jun 2008 17:18:13 +0300
+Message-ID: <485E5F25.4000704@panasas.com>
+References: <20080619160216.GH4392@parisc-linux.org> <20080619175904.GK4392@parisc-linux.org> <1213899895.3501.45.camel@localhost.localdomain> <20080619183113.GM4392@parisc-linux.org> <485AAD0D.9000205@garzik.org> <20080619191337.GO4392@parisc-linux.org> <485E4894.7000508@panasas.com> <20080622133105.GY4392@parisc-linux.org>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from fk-out-0910.google.com ([209.85.128.188]:43044 "EHLO
-	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752718AbYFVN5v (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 22 Jun 2008 09:57:51 -0400
-Received: by fk-out-0910.google.com with SMTP id 18so1946883fkq.5
-        for <linux-ide@vger.kernel.org>; Sun, 22 Jun 2008 06:57:49 -0700 (PDT)
-In-Reply-To: <Pine.LNX.4.64.0806221055210.4607@anakin>
-Content-Disposition: inline
+Received: from gw-colo-pa.panasas.com ([66.238.117.130]:24792 "EHLO
+	cassoulet.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1752471AbYFVOSj (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 22 Jun 2008 10:18:39 -0400
+In-Reply-To: <20080622133105.GY4392@parisc-linux.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Geert Uytterhoeven <geert@linux-m68k.org>
-Cc: linux-ide@vger.kernel.org, Linux Kernel Development <linux-kernel@vger.kernel.org>, Linux/m68k <linux-m68k@vger.kernel.org>
+To: Matthew Wilcox <matthew@wil.cx>
+Cc: Jeff Garzik <jeff@garzik.org>, James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
 
-On Sunday 22 June 2008, Geert Uytterhoeven wrote:
-> On Fri, 20 Jun 2008, Bartlomiej Zolnierkiewicz wrote:
-> > * Add 'hw_regs_t **hws' argument to ide_device_add[_all]() and convert
-> >   host drivers + drivers/ide/setup-pci.c to use it instead of calling
-> >   ide_init_port_hw() directly (however if host has more than 1 port we
-> >   must still set hwif->chipset to hint consecutive ide_find_port() call
-> >   that the ide_hwifs[] slot is occupied).
-> > 
-> > * Unexport ide_init_port_hw().
-> > 
-> > There should be no functional changes caused by this patch.
+Matthew Wilcox wrote:
+> On Sun, Jun 22, 2008 at 03:41:56PM +0300, Boaz Harrosh wrote:
+>>> +		rbuf[4] = args->id[217] >> 8;
+>>> +		rbuf[5] = args->id[217];
+>> args->id of struct ata_scsi_args are defined as u16.
+>> Are they actually SWABed at this point? Are they LE? BE?
 > 
-> Brr... seems to complicate the bookkeeping a lot...
+> They're cpu-endian at this point, I believe.  See ata_dev_read_id() in
+> libata-core.c where it calls swap_buf_le16().
 > 
-> I looked at the m68k drivers only:
+>> if args->id are actually __be16 then above should be
+>>  +		put_unaligned(args->id[217], &rbuf[4]);
+>> else
+>>  +		put_unaligned_be16(args->id[217], &rbuf[4]);
 > 
-> > --- a/drivers/ide/legacy/buddha.c
-> > +++ b/drivers/ide/legacy/buddha.c
-> > @@ -148,7 +148,6 @@ static void __init buddha_setup_ports(hw
-> >  
-> >  static int __init buddha_init(void)
-> >  {
-> > -	hw_regs_t hw;
-> >  	ide_hwif_t *hwif;
-> >  	int i;
-> >  
-> > @@ -159,6 +158,7 @@ static int __init buddha_init(void)
-> >  
-> >  	while ((z = zorro_find_device(ZORRO_WILDCARD, z))) {
-> >  		unsigned long board;
-> > +		hw_regs_t hw[3], *hws[] = { NULL, NULL, NULL, NULL };
-> 			     ^
-> max(BUDDHA_NUM_HWIFS, CATWEASEL_NUM_HWIFS, XSURF_NUM_HWIFS)
+> But the buf isn't unaligned, nor the offset within it.  And I
+> get confused by all these macros anyway.  If we had something like
+> store_scsi_u16(unsigned char *, u16), I'd use that, but put_unaligned_be16
+> just doesn't make sense.
 > 
-> 				  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-> Another magic constant, hws[] always has 4 elements?
 
-idx[] / hws[] always has 4 elements if used with ide_device_add().
+If you look at the code _unaligned here means to fetch a byte pointer
+char by char and swab by shifts, as opposed to SWABX instruction by
+CPU. So what I proposed is code equivalent to what you did, and optimized
+for BE systems.
 
-[ Todays' patches will remove idx[] so the number of magic constants
-  will remain constant. :) ]
+If you actually calculated that they are aligned and want the extra CPU
+help you will need a typecast as
+ 
+	*((__be16 *)&rbuf[4]) =  cpu_to_be16(args->id[217]);
 
-> > --- a/drivers/ide/legacy/gayle.c
-> > +++ b/drivers/ide/legacy/gayle.c
-> > @@ -125,6 +125,7 @@ static void __init gayle_setup_ports(hw_
-> >  static int __init gayle_init(void)
-> >  {
-> >      int a4000, i;
-> > +    hw_regs_t hw[2], *hws[] = { NULL, NULL, NULL, NULL };
-> 		    ^
-> 		    GAYLE_NUM_HWIFS
+> I actually wrote my own accessors for scsi_ram.  If they were to be more
+> generic, they ought to be renamed, but this is what I found useful:
 > 
-> > Index: b/drivers/ide/legacy/q40ide.c
-> > ===================================================================
-> > --- a/drivers/ide/legacy/q40ide.c
-> > +++ b/drivers/ide/legacy/q40ide.c
-> > @@ -112,7 +112,7 @@ static int __init q40ide_init(void)
-> >  {
-> >      int i;
-> >      ide_hwif_t *hwif;
-> > -    const char *name;
-> > +    hw_regs_t hw[2], *hws[] = { NULL, NULL, NULL, NULL };
-> 		    ^
-> 		    Q40IDE_NUM_HWIFS
 
-I revised the patch, thanks!
+But all this work is done. No need to reinvent the wheel, which is my
+point. Just change below scsi_xxx to beXX_ and your set.
 
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH] ide: pass hw_regs_t-s to ide_device_add[_all]() (take 2)
+> /*
+>  * SCSI requires quantities to be written MSB.  They're frequently misaligned,
+>  * so don't mess about with cpu_to_beN, just access it byte-wise
+>  */
+> static void scsi_ram_put_u32(unsigned char *addr, unsigned int data)
+> {
+>         addr[0] = data >> 24;
+>         addr[1] = data >> 16;
+>         addr[2] = data >> 8;
+>         addr[3] = data;
+> }
+> 
+exactly same code as put_unaligned_be32 on LE, not optimized for BE.
+(actually suboptimal for some LE systems as well)
 
-* Add 'hw_regs_t **hws' argument to ide_device_add[_all]() and convert
-  host drivers + ide_legacy_init_one() + ide_setup_pci_device[s]() to use
-  it instead of calling ide_init_port_hw() directly.
+> static unsigned int scsi_ram_get_u16(unsigned char *addr)
+> {
+>         unsigned int data;
+>         data = addr[0] << 8;
+>         data |= addr[1];
+> 
+>         return data;
+> }
+> 
 
-  [ However if host has > 1 port we must still set hwif->chipset to hint
-    consecutive ide_find_port() call that the previous slot is occupied. ]
+dito get_unaligned_be16
 
-* Unexport ide_init_port_hw().
+> static unsigned int scsi_ram_get_u24(unsigned char *addr)
+> {
+>         unsigned int data;
+>         data = addr[0] << 16;
+>         data |= addr[1] << 8;
+>         data |= addr[2];
+> 
+>         return data;
+> }
+> 
+OK You got me here
+> static unsigned int scsi_ram_get_u32(unsigned char *addr)
+> {
+>         unsigned int data;
+>         data = addr[0] << 24;
+>         data |= addr[1] << 16;
+>         data |= addr[2] << 8;
+>         data |= addr[3];
+> 
+>         return data;
+> }
+> 
 
-v2:
-* Use defines instead of hard-coded values in buddha.c, gayle.c and q40ide.c.
-  (Suggested by Geert Uytterhoeven)
+dito get_unaligned_be32
 
-* Better patch description.
+> I'm sure a more fully-featured set would include put_u24 and put_u16 too.
+> For the curious, u24 is useful for implementing read6/write6.
+> 
 
-There should be no functional changes caused by this patch.
+Kernel's is much nicer then those "ntoul..." which make my headache. All we
+need to remember is that SCSI is __bexx, and they are pretty intuitive,
+I think.
 
-Cc: Geert Uytterhoeven <geert@linux-m68k.org>
-Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
----
-only an interdiff from v1->v2 below
+Boaz
 
-diff -u b/drivers/ide/legacy/buddha.c b/drivers/ide/legacy/buddha.c
---- b/drivers/ide/legacy/buddha.c
-+++ b/drivers/ide/legacy/buddha.c
-@@ -37,6 +37,8 @@
- #define CATWEASEL_NUM_HWIFS	3
- #define XSURF_NUM_HWIFS         2
- 
-+#define MAX_NUM_HWIFS		3
-+
-     /*
-      *  Bases of the IDE interfaces (relative to the board address)
-      */
-@@ -158,7 +160,7 @@
- 
- 	while ((z = zorro_find_device(ZORRO_WILDCARD, z))) {
- 		unsigned long board;
--		hw_regs_t hw[3], *hws[] = { NULL, NULL, NULL, NULL };
-+		hw_regs_t hw[MAX_NUM_HWIFS], *hws[] = { NULL, NULL, NULL, NULL };
- 		u8 idx[4] = { 0xff, 0xff, 0xff, 0xff };
- 
- 		if (z->id == ZORRO_PROD_INDIVIDUAL_COMPUTERS_BUDDHA) {
-diff -u b/drivers/ide/legacy/gayle.c b/drivers/ide/legacy/gayle.c
---- b/drivers/ide/legacy/gayle.c
-+++ b/drivers/ide/legacy/gayle.c
-@@ -125,7 +125,7 @@
- static int __init gayle_init(void)
- {
-     int a4000, i;
--    hw_regs_t hw[2], *hws[] = { NULL, NULL, NULL, NULL };
-+    hw_regs_t hw[GAYLE_NUM_HWIFS], *hws[] = { NULL, NULL, NULL, NULL };
-     u8 idx[4] = { 0xff, 0xff, 0xff, 0xff };
- 
-     if (!MACH_IS_AMIGA)
-diff -u b/drivers/ide/legacy/q40ide.c b/drivers/ide/legacy/q40ide.c
---- b/drivers/ide/legacy/q40ide.c
-+++ b/drivers/ide/legacy/q40ide.c
-@@ -112,7 +112,7 @@
- {
-     int i;
-     ide_hwif_t *hwif;
--    hw_regs_t hw[2], *hws[] = { NULL, NULL, NULL, NULL };
-+    hw_regs_t hw[Q40IDE_NUM_HWIFS], *hws[] = { NULL, NULL, NULL, NULL };
-     u8 idx[4] = { 0xff, 0xff, 0xff, 0xff };
- 
-     if (!MACH_IS_Q40)
