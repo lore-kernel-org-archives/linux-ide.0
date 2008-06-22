@@ -1,83 +1,68 @@
-From: Geert Uytterhoeven <geert@linux-m68k.org>
-Subject: Re: [PATCH 2/2] ide: pass hw_regs_t-s to ide_device_add[_all]()
-Date: Sun, 22 Jun 2008 10:58:46 +0200 (CEST)
-Message-ID: <Pine.LNX.4.64.0806221055210.4607@anakin>
-References: <200806202029.11304.bzolnier@gmail.com>
+From: Adrian Bunk <bunk@kernel.org>
+Subject: Re: [2.6 patch] fix BLK_DEV_HD_ONLY on ARM dependencies
+Date: Sun, 22 Jun 2008 13:17:52 +0300
+Message-ID: <20080622101752.GG27069@cs181133002.pp.htv.fi>
+References: <20080609222155.GA1987@cs181133002.pp.htv.fi> <200806101956.15711.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1752785AbYFVI7A@vger.kernel.org>
-In-Reply-To: <200806202029.11304.bzolnier@gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: linux-ide@vger.kernel.org, Linux Kernel Development <linux-kernel@vger.kernel.org>, Linux/m68k <linux-m68k@vger.kernel.org>
+Content-Type: text/plain; charset=utf-8
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from smtp4.pp.htv.fi ([213.243.153.38]:37542 "EHLO smtp4.pp.htv.fi"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751300AbYFVKTm (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 22 Jun 2008 06:19:42 -0400
+Content-Disposition: inline
+In-Reply-To: <200806101956.15711.bzolnier@gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, rmk@arm.linux.org.uk, Alan Cox <alan@lxorguk.ukuu.org.uk>
 
-On Fri, 20 Jun 2008, Bartlomiej Zolnierkiewicz wrote:
-> * Add 'hw_regs_t **hws' argument to ide_device_add[_all]() and convert
->   host drivers + drivers/ide/setup-pci.c to use it instead of calling
->   ide_init_port_hw() directly (however if host has more than 1 port we
->   must still set hwif->chipset to hint consecutive ide_find_port() call
->   that the ide_hwifs[] slot is occupied).
+On Tue, Jun 10, 2008 at 07:56:15PM +0200, Bartlomiej Zolnierkiewicz wrote:
+> On Tuesday 10 June 2008, Adrian Bunk wrote:
+> > This patch limits BLK_DEV_HD_ONLY to the ARM platforms offering 
+> > IRQ_HARDDISK, fixing the following compile error on others:
+> > 
+> > <--  snip  -->
+> > 
+> > ...
+> >   CC      drivers/ide/legacy/hd.o
+> > ...
+> > /home/bunk/linux/kernel-2.6/git/linux-2.6/drivers/ide/legacy/hd.c: In function 'hd_times_out':
+> > /home/bunk/linux/kernel-2.6/git/linux-2.6/drivers/ide/legacy/hd.c:542: error: 'IRQ_HARDDISK' undeclared (first use in this function)
+> > /home/bunk/linux/kernel-2.6/git/linux-2.6/drivers/ide/legacy/hd.c:542: error: (Each undeclared identifier is reported only once
+> > /home/bunk/linux/kernel-2.6/git/linux-2.6/drivers/ide/legacy/hd.c:542: error: for each function it appears in.)
+> > /home/bunk/linux/kernel-2.6/git/linux-2.6/drivers/ide/legacy/hd.c: In function 'do_hd_request':
+> > /home/bunk/linux/kernel-2.6/git/linux-2.6/drivers/ide/legacy/hd.c:661: error: 'IRQ_HARDDISK' undeclared (first use in this function)
+> > /home/bunk/linux/kernel-2.6/git/linux-2.6/drivers/ide/legacy/hd.c: In function 'hd_init':
+> > /home/bunk/linux/kernel-2.6/git/linux-2.6/drivers/ide/legacy/hd.c:765: error: 'IRQ_HARDDISK' undeclared (first use in this function)
+> > make[3]: *** [drivers/ide/legacy/hd.o] Error 1
+> > 
+> > <--  snip  -->
+> > 
+> > Reported-by: Adrian Bunk <bunk@kernel.org>
+> > Signed-off-by: Adrian Bunk <bunk@kernel.org>
 > 
-> * Unexport ide_init_port_hw().
+> applied, thanks
 > 
-> There should be no functional changes caused by this patch.
+> BTW Could you look into converting your "remove BLK_DEV_HD_ONLY" patch
+> into "move old hd driver to drivers/block/" one because the old hd driver
+> still has some uses (as noticed by Alan)?
 
-Brr... seems to complicate the bookkeeping a lot...
+drivers/ide/Makefile says:
+  # old hd driver must be last
 
-I looked at the m68k drivers only:
+Is this still true?
 
-> --- a/drivers/ide/legacy/buddha.c
-> +++ b/drivers/ide/legacy/buddha.c
-> @@ -148,7 +148,6 @@ static void __init buddha_setup_ports(hw
->  
->  static int __init buddha_init(void)
->  {
-> -	hw_regs_t hw;
->  	ide_hwif_t *hwif;
->  	int i;
->  
-> @@ -159,6 +158,7 @@ static int __init buddha_init(void)
->  
->  	while ((z = zorro_find_device(ZORRO_WILDCARD, z))) {
->  		unsigned long board;
-> +		hw_regs_t hw[3], *hws[] = { NULL, NULL, NULL, NULL };
-			     ^
-max(BUDDHA_NUM_HWIFS, CATWEASEL_NUM_HWIFS, XSURF_NUM_HWIFS)
+If yes then moving the driver to drivers/block/ requires switching to 
+late_initcall() since drivers/block/ is linked before drivers/ide/ .
 
-				  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Another magic constant, hws[] always has 4 elements?
+cu
+Adrian
 
-> --- a/drivers/ide/legacy/gayle.c
-> +++ b/drivers/ide/legacy/gayle.c
-> @@ -125,6 +125,7 @@ static void __init gayle_setup_ports(hw_
->  static int __init gayle_init(void)
->  {
->      int a4000, i;
-> +    hw_regs_t hw[2], *hws[] = { NULL, NULL, NULL, NULL };
-		    ^
-		    GAYLE_NUM_HWIFS
+-- 
 
-> Index: b/drivers/ide/legacy/q40ide.c
-> ===================================================================
-> --- a/drivers/ide/legacy/q40ide.c
-> +++ b/drivers/ide/legacy/q40ide.c
-> @@ -112,7 +112,7 @@ static int __init q40ide_init(void)
->  {
->      int i;
->      ide_hwif_t *hwif;
-> -    const char *name;
-> +    hw_regs_t hw[2], *hws[] = { NULL, NULL, NULL, NULL };
-		    ^
-		    Q40IDE_NUM_HWIFS
+       "Is there not promise of rain?" Ling Tan asked suddenly out
+        of the darkness. There had been need of rain for many days.
+       "Only a promise," Lao Er said.
+                                       Pearl S. Buck - Dragon Seed
 
-Gr{oetje,eeting}s,
-
-						Geert
-
---
-Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
-
-In personal conversations with technical people, I call myself a hacker. But
-when I'm talking to journalists I just say "programmer" or something like that.
-							    -- Linus Torvalds
