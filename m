@@ -1,45 +1,49 @@
-From: "Mark Miesfeld" <miesfeld@gmail.com>
-Subject: Adding port multiplier support to a LLDD
-Date: Sat, 21 Jun 2008 13:35:45 -0700
-Message-ID: <5d74c5720806211335i12cd4764j2109703ab224b1cb@mail.gmail.com>
+From: Komuro <komurojun-mbn@nifty.com>
+Subject: Re: [KERNEL 2.6.26-rc4]  bugreport : pata_pcmcia with Sandisk
+	Extreme III 8GB
+Date: Sun, 22 Jun 2008 10:07:51 +0900
+Message-ID: <20080622100751.dd019b01.komurojun-mbn@nifty.com>
+References: <20080528225049.9a134e0d.Kristoffer.Ericson@Gmail.com>
+	<20080528222740.GB20893@isilmar.linta.de>
+	<20080530135728.be02d3dc.Kristoffer.Ericson@Gmail.com>
+	<20080607223716.7d142072.komurojun-mbn@nifty.com>
+	<20080611072029.GB28692@comet.dominikbrodowski.net>
+	<20080614120055.ad8fbee0.komurojun-mbn@nifty.com>
+	<48537149.4040102@garzik.org>
+	<20080614213612.96873c25.komurojun-mbn@nifty.com>
+	<4855D8E2.10409@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rv-out-0506.google.com ([209.85.198.234]:52138 "EHLO
-	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752113AbYFUUfq (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 21 Jun 2008 16:35:46 -0400
-Received: by rv-out-0506.google.com with SMTP id k40so6254083rvb.1
-        for <linux-ide@vger.kernel.org>; Sat, 21 Jun 2008 13:35:45 -0700 (PDT)
-Content-Disposition: inline
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-pcmcia-bounces+glkpd-linux-pcmcia=m.gmane.org@lists.infradead.org>
+In-Reply-To: <4855D8E2.10409@gmail.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/listinfo/linux-pcmcia>,
+	<mailto:linux-pcmcia-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-pcmcia>
+List-Post: <mailto:linux-pcmcia@lists.infradead.org>
+List-Help: <mailto:linux-pcmcia-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-pcmcia>,
+	<mailto:linux-pcmcia-request@lists.infradead.org?subject=subscribe>
+Sender: linux-pcmcia-bounces@lists.infradead.org
+Errors-To: linux-pcmcia-bounces+glkpd-linux-pcmcia=m.gmane.org@lists.infradead.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: Jeff Garzik <jeff@garzik.org>, linux-pcmcia <linux-pcmcia@lists.infradead.org>, linux-kernel@vger.kernel.org, Dominik Brodowski <linux@dominikbrodowski.net>, linux-ide@vger.kernel.org, Kristoffer Ericson <kristoffer.ericson@gmail.com>, jgarzik@redhat.com
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
 
 Hi,
 
-I wonder if someone could give me a broad outline of what is needed to
-add port multiplier support to a low-level SATA device driver through
-libata in a 2.6.26 kernel.
+Strangely, after removing the spin_lock_irqsave
+and spin_unlock_irqrestore from the ata_eh_reset,
+the pata_pcmcia works properly.
 
-I'm working on a driver for a new SOC (460EX) that AMCC has.  The chip
-has support for SATA and support for port multipliers through
-command-based switching.
+It seedms link->ap->lock is not intialized
+by spin_lock_init().
 
-For our in-house validation boards I have the driver working on a
-2.6.19 kernel and implemented the port multiplier support within the
-driver itself since libata didn't yet have port multiplier support.
+-     spin_lock_irqsave(link->ap->lock, flags);
+      link->eh_info.serror = 0;
+-     spin_unlock_irqrestore(link->ap->lock, flags);
+ 
 
-Our customer evaluation boards (Canyonlands) are using a 2.6.26
-kernel.  Stefan Roese at DENX has ported the 2.6.19 driver to 2.6.26
-but without port multiplier support.  In 2.6.26 the libata port
-multiplier support looks pretty good, I was hoping I can add the
-support to the 2.6.26 driver fairly easily by going through libata.
 
-What basic steps should I take?
-
-Thanks.
-
---
-Mark Miesfeld
+Best Regards
+Komuro
