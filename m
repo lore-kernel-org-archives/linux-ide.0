@@ -1,66 +1,59 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: SB700 AHCI causes disk power cycle
-Date: Mon, 23 Jun 2008 09:28:06 +0900
-Message-ID: <485EEE16.1060701@kernel.org>
-References: <a58c5fe70806221052w7c93b342hdaf44fb27983534a@mail.gmail.com>
+Subject: Re: sata_svw data corruption, strange problems
+Date: Mon, 23 Jun 2008 09:37:53 +0900
+Message-ID: <485EF061.3010601@kernel.org>
+References: <20080617093602.GA28140@elf.ucw.cz>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:49234 "EHLO hera.kernel.org"
+Received: from hera.kernel.org ([140.211.167.34]:52292 "EHLO hera.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751805AbYFWA2O (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 22 Jun 2008 20:28:14 -0400
-In-Reply-To: <a58c5fe70806221052w7c93b342hdaf44fb27983534a@mail.gmail.com>
+	id S1751531AbYFWAiI (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 22 Jun 2008 20:38:08 -0400
+In-Reply-To: <20080617093602.GA28140@elf.ucw.cz>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: wessels <wessels147@gmail.com>
-Cc: linux-ide@vger.kernel.org
+To: Pavel Machek <pavel@suse.cz>
+Cc: kernel list <linux-kernel@vger.kernel.org>, benh@kernel.crashing.org, jgarzik@pobox.com, IDE/ATA development list <linux-ide@vger.kernel.org>
 
 Hello,
 
-wessels wrote:
-> Hi,
+Pavel Machek wrote:
+> I see strange problems on machine with sata_svw. The machine seems to
+> corrupt data every few days (ext3 error, dir index corrupted), and has
+> some other very strange problems (keyboard misbehaves, pulling out
+> SATA disk cures it, see
+> https://bugzilla.novell.com/show_bug.cgi?id=400772 ).
 > 
-> I also bought an ASUS M3A78 mATX board with a SB700 to see if it might
-> solve my problem with the SB600. But it doesn't.
-> The SB700 shows the same behaviour as the SB600, it periodically
-> throws an error and the power cycles the disk.
-> But it always happens on one channel not both. Perhaps a sudden burst
-> in disk IO causes this but I'm unable to
-> reproduce this with a synthetic load. Only when vmware is running this
-> happens. I don't see it when the machine is idling.
-> The load on the machine is very light both on cpu and disk. Also I
-> didn't see the error with a single seagate disk attached.
+> Then I got to the comment 
 > 
-> The error and configuration is the same as mentioned in my earlier
-> post regarding the "SB600 AHCI causes disk power cycle".
+>         writeb(dmactl | ATA_DMA_START, mmio + ATA_DMA_CMD);
+>         /* There is a race condition in certain SATA controllers
+> that can be seen when the r/w command is given to the controller
+> before the host DMA is started. On a Read command, the controller
+> would initiate the command to the drive even before it sees the DMA
+> start. When there are very fast drives connected to the controller,
+> or when the data request hits in the drive cache, there is the
+> possibility that the drive returns a part or all of the requested
+> data to the controller before the DMA start is issued.  In this
+> case, the controller would become confused as to what to do with the
+> data.  In the worst case when all the data is returned back to the
+> controller, the controller could hang. In other cases it could
+> return partial data returning in data corruption. This problem has
+> been seen in PPC systems and can also appear on an system with very
+> fast disks, where the SATA controller is sitting behind a number of
+> bridges, and hence there is significant latency between the r/w
+> command and the start command. */
+>         /* issue r/w command if the access is to ATA*/
+>         if (qc->tf.protocol == ATA_PROT_DMA)
 > 
-> What I didn't mentioned then was the filesystem layout
-> two disks in a mirror
-> /dev/sda & /dev/sdb
-> no LVM just a software raid via md
-> md0 /boot ext3
-> md1 / ext3
-> md2 swap
-> md3 /usr/local/virtmach XFS
-> 
-> Please let me know what else I need to log and/or test.
+> ...and that would certainly explain what we are seeing. Are
+> serverworks controllers broken by design?
 
->From your report on sb600.
-
-kernel: ata4: SError: { RecovComm Persist PHYRdyChg 10B8B }
-kernel: ata4.00: cmd ea/00:00:00:00:00/00:00:00:00:00/a0 tag 0
-kernel:          res 40/00:3c:0d:bd:c9/00:00:0b:00:00/40 Emask 0x10 (ATA bus error)
-
-This combined with the incremented start stop count looks very much
-like the harddisk went offline briefly and came back for whatever
-reason.  I doubt the ahci driver even with its all might can do that.
-
-Can you please try to hook up the faulting harddrive to a separate
-power supply?
-
-  http://modtown.co.uk/mt/article2.php?id=psumod
+The comment looks like a warning to me as the DMA engine is started
+before the command is issued to the drive as explained in the next
+comment.
 
 -- 
 tejun
