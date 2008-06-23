@@ -1,117 +1,37 @@
-From: Anton Vorontsov <avorontsov@ru.mvista.com>
-Subject: [PATCH -rt] ide: fix interrupts processing issue with preempt-able
-	hardirqs
-Date: Tue, 24 Jun 2008 03:40:37 +0400
-Message-ID: <20080623234037.GA6793@polina.dev.rtsoft.ru>
+From: Ingo Molnar <mingo@elte.hu>
+Subject: Re: [PATCH -rt] ide: fix interrupts processing issue with
+	preempt-able hardirqs
+Date: Tue, 24 Jun 2008 01:51:41 +0200
+Message-ID: <20080623235141.GB17297@elte.hu>
+References: <20080623234037.GA6793@polina.dev.rtsoft.ru>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf8
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtsoft3.corbina.net ([85.21.88.6]:32498 "EHLO
-	buildserver.ru.mvista.com" rhost-flags-OK-FAIL-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1751516AbYFWXkj (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 23 Jun 2008 19:40:39 -0400
+Received: from mx2.mail.elte.hu ([157.181.151.9]:58542 "EHLO mx2.mail.elte.hu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750895AbYFWXwB (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 23 Jun 2008 19:52:01 -0400
 Content-Disposition: inline
+In-Reply-To: <20080623234037.GA6793@polina.dev.rtsoft.ru>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
-Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Ingo Molnar <mingo@elte.hu>, Sergei Shtylyov <sshtylyov@ru.mvista.com>, linux-kernel@vger.kernel.org
+To: Anton Vorontsov <avorontsov@ru.mvista.com>
+Cc: linux-ide@vger.kernel.org, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Sergei Shtylyov <sshtylyov@ru.mvista.com>, linux-kernel@vger.kernel.org, Thomas Gleixner <tglx@linutronix.de>, Steven Rostedt <rostedt@goodmis.org>
 
-IDE interrupt handler relies on the fact that, if necessary, hardirqs
-will re-trigger on ISR exit. With fully preemtable IRQs this seems to be
-not true, since if hardirq thread is currently running, and the same IRQ
-raised again, then this IRQ will be simply lost.
 
-This patch fixes following issue:
+* Anton Vorontsov <avorontsov@ru.mvista.com> wrote:
 
-ALI15X3: IDE controller (0x10b9:0x5229 rev 0xc8) at  PCI slot 0001:03:1f.0
-ALI15X3: 100% native mode on irq 18
-    ide0: BM-DMA at 0x1120-0x1127, BIOS settings: hda:PIO, hdb:PIO
-    ide1: BM-DMA at 0x1128-0x112f, BIOS settings: hdc:PIO, hdd:PIO
-hda: Optiarc DVD RW AD-7190A, ATAPI CD/DVD-ROM drive
-hda: UDMA/66 mode selected
-ide0 at 0x1100-0x1107,0x110a on irq 18
-ide-cd: cmd 0x5a timed out
-hda: lost interrupt
-hda: ATAPI 12X DVD-ROM DVD-R-RAM CD-R/RW drive, 2048kB Cache
-Uniform CD-ROM driver Revision: 3.20
-ide-cd: cmd 0x3 timed out
-hda: lost interrupt
-ide-cd: cmd 0x3 timed out
-hda: lost interrupt
-...
+> IDE interrupt handler relies on the fact that, if necessary, hardirqs 
+> will re-trigger on ISR exit. With fully preemtable IRQs this seems to 
+> be not true, since if hardirq thread is currently running, and the 
+> same IRQ raised again, then this IRQ will be simply lost.
 
-Though, some IDE devices (e.g. SONY DVD RW AW-Q170A) seem to work fine
-without this patch, probably because they trigger IRQ after some delay.
+actually no, that should not happen - if -rt loses an IRQ then something 
+broke in the threaded IRQ code. It's supposed to be a drop-in, 
+compatible IRQ flow with no driver changes needed.
 
-This patch should be almost no-op for the !RT kernels, thus no #ifdefs.
+( also, please do not Cc: mainline maintainers to RFC -rt patches, let
+  the -rt maintainers sort out the need for any patch propagation - once 
+  the patches are sufficiently cooked. Thanks. )
 
-Signed-off-by: Anton Vorontsov <avorontsov@ru.mvista.com>
----
- drivers/ide/ide-io.c |   19 +++++++++++++++----
- 1 files changed, 15 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/ide/ide-io.c b/drivers/ide/ide-io.c
-index 6c1b288..a52733e 100644
---- a/drivers/ide/ide-io.c
-+++ b/drivers/ide/ide-io.c
-@@ -1460,6 +1460,7 @@ static void unexpected_intr (int irq, ide_hwgroup_t *hwgroup)
-  
- irqreturn_t ide_intr (int irq, void *dev_id)
- {
-+	int ret = IRQ_NONE;
- 	unsigned long flags;
- 	ide_hwgroup_t *hwgroup = (ide_hwgroup_t *)dev_id;
- 	ide_hwif_t *hwif;
-@@ -1467,12 +1468,13 @@ irqreturn_t ide_intr (int irq, void *dev_id)
- 	ide_handler_t *handler;
- 	ide_startstop_t startstop;
- 
-+again:
- 	spin_lock_irqsave(&ide_lock, flags);
- 	hwif = hwgroup->hwif;
- 
- 	if (!ide_ack_intr(hwif)) {
- 		spin_unlock_irqrestore(&ide_lock, flags);
--		return IRQ_NONE;
-+		return ret;
- 	}
- 
- 	if ((handler = hwgroup->handler) == NULL || hwgroup->polling) {
-@@ -1510,7 +1512,7 @@ irqreturn_t ide_intr (int irq, void *dev_id)
- #endif /* CONFIG_BLK_DEV_IDEPCI */
- 		}
- 		spin_unlock_irqrestore(&ide_lock, flags);
--		return IRQ_NONE;
-+		return ret;
- 	}
- 	drive = hwgroup->drive;
- 	if (!drive) {
-@@ -1532,7 +1534,7 @@ irqreturn_t ide_intr (int irq, void *dev_id)
- 		 * enough advance overhead that the latter isn't a problem.
- 		 */
- 		spin_unlock_irqrestore(&ide_lock, flags);
--		return IRQ_NONE;
-+		return ret;
- 	}
- 	if (!hwgroup->busy) {
- 		hwgroup->busy = 1;	/* paranoia */
-@@ -1578,7 +1580,16 @@ irqreturn_t ide_intr (int irq, void *dev_id)
- 		}
- 	}
- 	spin_unlock_irqrestore(&ide_lock, flags);
--	return IRQ_HANDLED;
-+	ret = IRQ_HANDLED;
-+
-+	/*
-+	 * Previous handler() may have set things up for another interrupt to
-+	 * occur soon... in case we've lost it (e.g. with preemtable hardirqs),
-+	 * try again and then return gracefully if no irqs were pending.
-+	 */
-+	if (startstop != ide_stopped)
-+		goto again;
-+	return ret;
- }
- 
- /**
--- 
-1.5.5.4
+	Ingo
