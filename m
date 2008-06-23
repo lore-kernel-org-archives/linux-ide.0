@@ -1,82 +1,87 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [RFC] Separating out libata out of SCSI (finally)
-Date: Mon, 23 Jun 2008 16:11:00 -0500
-Message-ID: <1214255460.3310.27.camel@localhost.localdomain>
-References: <485B2CC6.6070201@kernel.org>
-	 <1213993737.3443.35.camel@localhost.localdomain>
-	 <485C31FE.8050408@garzik.org>
-	 <87f94c370806231404t13586777x7f7bee24ebe25ffc@mail.gmail.com>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: [PATCH 1/4] ide-pmac: media-bay support fixes
+Date: Mon, 23 Jun 2008 23:45:06 +0200
+Message-ID: <200806232345.07621.bzolnier@gmail.com>
+References: <200806162124.43005.bzolnier@gmail.com> <1214203312.8011.246.camel@pasglop> <1214218047.8011.268.camel@pasglop>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain;
+  charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:47252 "EHLO
-	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753885AbYFWVLH (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 23 Jun 2008 17:11:07 -0400
-In-Reply-To: <87f94c370806231404t13586777x7f7bee24ebe25ffc@mail.gmail.com>
+Received: from rn-out-0910.google.com ([64.233.170.185]:36323 "EHLO
+	rn-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755703AbYFWVoX (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 23 Jun 2008 17:44:23 -0400
+Received: by rn-out-0910.google.com with SMTP id k40so457617rnd.17
+        for <linux-ide@vger.kernel.org>; Mon, 23 Jun 2008 14:44:22 -0700 (PDT)
+In-Reply-To: <1214218047.8011.268.camel@pasglop>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Greg Freemyer <greg.freemyer@gmail.com>
-Cc: Jeff Garzik <jeff@garzik.org>, Tejun Heo <tj@kernel.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, brking@linux.vnet.ibm.com, Mark Lord <liml@rtr.ca>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Jens Axboe <jens.axboe@oracle.com>
+To: benh@kernel.crashing.org
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Mon, 2008-06-23 at 17:04 -0400, Greg Freemyer wrote:
-> On Fri, Jun 20, 2008 at 6:41 PM, Jeff Garzik <jeff@garzik.org> wrote:
-> > James Bottomley wrote:
-> >>
-> >> On Fri, 2008-06-20 at 13:06 +0900, Tejun Heo wrote:
-> >>>
-> >>> The biggest problem is how to keep userland happy.  hdX -> sdX
-> >>> transition was painful enough and I have a strong feeling that
-> >>> everyone will come after and hunt down us if we try something like sdX
-> >>> -> bdX now.  :-)
-> >
-> >> In theory mounting by label or ID should have fixed a lot of this.
-> >> However, if we need to head off a revolt, the sdX allocation algorithm
-> >> can be placed into it's own module so both sd and a ULD ata driver could
-> >> use it ...
-> >
-> >> Actually, surely we can mostly dump the SAT layer?
-> >
-> >
-> > I don't see that we can do that for a long time...  And it's not just the
-> > sdX allocation algorithm in question -- SCSI block devices come with their
-> > own partition limits and set of supported ioctls.
-> >
-> > Therefore, my recommended path has always been
-> >
-> > * create ata_disk block device driver (ULD, in your terminology)
-> >
-> > * make SAT an optional piece, which maintains compatibility with existing
-> > SCSI blkdevs, ioctls, command sets
-> >
-> >
-> > I just don't see a valid path moving forward that breaks userland /again/...
-> >  we (ATA hackers) would be drummed out of a job I think :)
-> >
-> > Another option that's been discussed is
-> >
-> > 1) Make SCSI block devices themselves an allocate-able resource (I think
-> > that's what you meant by "placed into it's own module so both sd and a ULD
-> > ata driver could use it"?)
-> >
-> > 2) Ensure that any ata_disk ULD would support the same partition limits and
-> > ioctl set, enough to ensure binary compatibility.
-> >
-> > Because that's the real need -- maintaining binary compatibility with SCSI
-> > block devices, so major/minor, ioctl supported set, partition limits, and
-> > other relevant details need to remain unchanged.
-> >
+On Monday 23 June 2008, Benjamin Herrenschmidt wrote:
+> On Mon, 2008-06-23 at 16:41 +1000, Benjamin Herrenschmidt wrote:
+> > > Don't panic. It looks like it's something else in linux-next that's
+> > > changing some ifdef's in the media-bay code which is causing that.
+> > > 
+> > > I managed to pull linux next at the merge point with your tree and
+> > > things apply. I'll use that to test.
+> > 
+> > Ok, it doesn't work properly. It gets error trying to register
+> > the IDE device. Booting with a CD drive in and no disk in the drive
+> > gives the log below.
+> > 
+> > I've verified that it works without your patches. If I apply only patch
+> > 1, it doesn't build due to some wrong construct in the probe code. I've
+> > hand fixed it, but then I hit a BUG_ON in ide_probe_port() (line 773).
+> > 
+> > mediabay boot time messages (before IDE probing) are:
 > 
-> I've seen a lot of end user complaints about libata only supporting
-> 15(14?) partitions.  Will that limit be moved back to the traditional
-> drivers/ide limit as part of this?
+> BTW. I didn't debug more today as I ran out of time but I'll do more
+> tomorrow.
+> 
+> On a side note, we need to change the way the mediabay stuff works. I've
+> started writing a pata_macio (ie. libata variant of the driver) a while
 
-Number of partitions is directly related to number of minors, so it
-can't be changed without a change in the allocation of major/minor space
-in sd ... that could only be done compatibly by permuting the space.
-The only other way to do it is incompatibly by changing major (again).
+I (naively?) hope that you are using ide-pmac as a base (the driver looks
+like a normal host driver now) and going to make the final API switch after
+hardware specific changes are complete (so we will be able to use git-bisect
+instead of guesswork combined with voodoo dance when dealing with potential
+regressions :-).
 
-James
+> ago that I need to kick myself into finishing one of these days, and it
+> will want something different than having the mediabay code poke into
+> the IDE layer directly :-)
+> 
+> My current though is to add a media bay notification callback to the
+> macio_device structure (the pci variants of the device are never hooked
+> up on a media bay) and move the state query function to the macio core,
+> the media bay driver being then responsible for calling into the macio
+> core to update the state.
 
+You may want to look at ACPI hotplug dock handling for inspiration
+(if you haven't already).
 
+> I still have to sort out some interesting locking issues vs. state
+> changes around driver probe() but I think that's the way to go. Thus,
+> the drivers/ide driver can do it's old ide core hackery locally and the
+> libata variant do what is needed for libata locally too.
+
+There is no longer any hackery on IDE core code side in 2.6.26, there are
+just two nice methods: ide_port_unregister_devices() and ide_scan_port().
+
+Therefore I would prefer to also update ide-pmac for new methods and just
+add what is needed (if any) to IDE core code.
+
+[ Please keep me in loop on these mediabay changes. ]
+
+> It's been a bit low on my todo list as Apple stopped making machines
+> with hotswap mediabays something like 8 years ago :-) The two I have
+> still working are pretty scary old things and one of them is almost
+> falling apart..
+
+:)
+
+Bart
