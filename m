@@ -1,47 +1,41 @@
-From: "Milo Medin" <medin@m2znetworks.com>
-Subject: FW: ICH10R PMP support
-Date: Sun, 22 Jun 2008 20:04:23 -0700
-Message-ID: <023701c8d4dd$d737fa10$85a7ee30$@com>
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Subject: Re: [PATCH 1/4] ide-pmac: media-bay support fixes
+Date: Mon, 23 Jun 2008 15:35:43 +1000
+Message-ID: <1214199343.8011.230.camel@pasglop>
+References: <200806162124.43005.bzolnier@gmail.com>
+	 <1213673979.8129.156.camel@pasglop> <1213674572.8129.159.camel@pasglop>
+	 <200806171141.08865.bzolnier@gmail.com>
+Reply-To: benh@kernel.crashing.org
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="UTF-8"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from exsmtp012-1.exch012.intermedia.net ([64.78.20.147]:45004 "HELO
-	exsmtp012-1.exch012.intermedia.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1755195AbYFWDTi convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 22 Jun 2008 23:19:38 -0400
-Content-Language: en-us
+Received: from gate.crashing.org ([63.228.1.57]:37342 "EHLO gate.crashing.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751763AbYFWFft (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 23 Jun 2008 01:35:49 -0400
+In-Reply-To: <200806171141.08865.bzolnier@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: mlord@pobox.com
-Cc: linux-ide@vger.kernel.org
-
-Mark, Tejun suggested I query you about your thoughts re: the Marvell 88SX7042 or the 88SE6145 SATA controllers when connected with FIS based port multipliers? 
-
-Based on Intel's announcements last year for the ICH10R where they claimed they were going to implement FIS support for port multipliers, I had planned on rebuilding a Linux based NAS system using a P45 board and ICH10R, but it seems they didn't end up implementing FIS support in the ICH10 series after all (nice of them to neglect to mention that to the community after announcing that feature in the roadmap).  
-
-So now I'm looking for a different solution.  I currently use SI3132 based SATA controllers, but they seem to have some performance issues, and folks seem to be reporting good performance with at least the 88SX7042 part under windows, hence the question.
-
-Thanks in advance,
-Milo
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
 
------Original Message-----
-From: Tejun Heo [mailto:tj@kernel.org] 
-Sent: Sunday, June 22, 2008 4:51 PM
-To: Milo Medin
-Subject: Re: ICH10R PMP support
+> This patch series (from yesterday, the rest of can be ignored) should
+> apply fine to the next revision of linux-next (later than -next-20080616,
+> it is not out yet), if you prefer upstream patches I can look into it
+> tonight.
 
-Milo Medin wrote:
-> Tejun, what's your opinion of the Marvell 88SX7042 and 88SE6145
-> controllers for feeding PMP's?  Do they work OK with FIS based PMP's
-> in your experience?  Are they faster than the SI 3132's?
+Whatever last patches from you I have in my mailbox (ie. a serie of 4,
+one of them being superseeded by a "version 3" that you sent later on)
+doesn't apply on current linux next (ie 20080620).
 
-Dunno much about that chip.  You should ask Mark Lord <mlord@pobox.com>.
- Also please cc linux-ide@vger.kernel.org.
+I'll see if I can fix it up.
 
--- 
-tejun
+Can you ever give me something that both -applies- and I don't have to
+dig random amount of mailbox content to get to it ?
+
+Cheers,
+Ben.
+
 
