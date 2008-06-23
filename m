@@ -1,48 +1,111 @@
-From: Mark Lord <mlord@pobox.com>
-Subject: Re: FW: ICH10R PMP support
-Date: Mon, 23 Jun 2008 05:09:04 -0400
-Message-ID: <485F6830.1040000@pobox.com>
-References: <023701c8d4dd$d737fa10$85a7ee30$@com>
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Subject: Re: sata_svw data corruption, strange problems
+Date: Mon, 23 Jun 2008 19:04:19 +1000
+Message-ID: <1214211859.8011.250.camel@pasglop>
+References: <20080617093602.GA28140@elf.ucw.cz>
+	 <485EF061.3010601@kernel.org> <20080623082055.GB1850@elf.ucw.cz>
+	 <je63s0sfxv.fsf@sykes.suse.de> <20080623085338.GE1850@elf.ucw.cz>
+	 <485F6540.6000907@kernel.org>  <20080623090130.GF1850@elf.ucw.cz>
+Reply-To: benh@kernel.crashing.org
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from a-sasl-quonix.sasl.smtp.pobox.com ([208.72.237.25]:38082 "EHLO
-	sasl.smtp.pobox.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751612AbYFWJJV (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 23 Jun 2008 05:09:21 -0400
-In-Reply-To: <023701c8d4dd$d737fa10$85a7ee30$@com>
+Received: from gate.crashing.org ([63.228.1.57]:60841 "EHLO gate.crashing.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752518AbYFWJXi (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 23 Jun 2008 05:23:38 -0400
+In-Reply-To: <20080623090130.GF1850@elf.ucw.cz>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Milo Medin <medin@m2znetworks.com>
-Cc: linux-ide@vger.kernel.org
+To: Pavel Machek <pavel@suse.cz>
+Cc: Tejun Heo <tj@kernel.org>, Andreas Schwab <schwab@suse.de>, kernel list <linux-kernel@vger.kernel.org>, jgarzik@pobox.com, IDE/ATA development list <linux-ide@vger.kernel.org>, Trivial patch monkey <trivial@kernel.org>
 
-Milo Medin wrote:
-> Mark, Tejun suggested I query you about your thoughts re: the Marvell 88SX7042 or the 88SE6145 SATA controllers when connected with FIS based port multipliers? 
+On Mon, 2008-06-23 at 11:01 +0200, Pavel Machek wrote:
+> On Mon 2008-06-23 17:56:32, Tejun Heo wrote:
+> > Pavel Machek wrote:
+> > > On Mon 2008-06-23 10:39:40, Andreas Schwab wrote:
+> > >> Pavel Machek <pavel@suse.cz> writes:
+> > >>
+> > >>> +	   controller, the controller could hang. In other cases it
+> > >>> +	   could return partial data returning in data
+> > >>> +	   corruption. This problem has been seen in PPC systems and
+> > >> s/returning/resulting/ ?
+> > > 
+> > > Fix thinko in sata_svw comment.
+> > > 
+> > > Signed-off-by: Pavel Machek <pavel@suse.cz>
+> > 
+> > Please collapse into one patch.  Thanks.
+
+Am I the only one to find Pavel variant almost as obscure as
+the original one ? :-)
+
+It should explain precisely what the workaround is. Ie. to start the
+DMA there instead of where it normally is started which is the
+bmdma_setup() function.
+
+BTW. Tejun, I suppose that usually starting DMA after issuing the
+command is a standard practice of legacy/sff type controllers ? Or it's
+just because that's how linux did it until now ?
+
+Ben.
+
+> --- 
 > 
-> Based on Intel's announcements last year for the ICH10R where they claimed they were going to implement FIS support for port multipliers, I had planned on rebuilding a Linux based NAS system using a P45 board and ICH10R, but it seems they didn't end up implementing FIS support in the ICH10 series after all (nice of them to neglect to mention that to the community after announcing that feature in the roadmap).  
+> Clarify comment in sata_svw.c.
 > 
-> So now I'm looking for a different solution.  I currently use SI3132 based SATA controllers, but they seem to have some performance issues, and folks seem to be reporting good performance with at least the 88SX7042 part under windows, hence the question.
-..
+> Signed-off-by: Pavel Machek <pavel@suse.cz>
+> 
+> diff --git a/drivers/ata/sata_svw.c b/drivers/ata/sata_svw.c
+> index 16aa683..fb13b82 100644
+> --- a/drivers/ata/sata_svw.c
+> +++ b/drivers/ata/sata_svw.c
+> @@ -253,21 +253,29 @@ static void k2_bmdma_start_mmio(struct a
+>  	/* start host DMA transaction */
+>  	dmactl = readb(mmio + ATA_DMA_CMD);
+>  	writeb(dmactl | ATA_DMA_START, mmio + ATA_DMA_CMD);
+> -	/* There is a race condition in certain SATA controllers that can
+> -	   be seen when the r/w command is given to the controller before the
+> -	   host DMA is started. On a Read command, the controller would initiate
+> -	   the command to the drive even before it sees the DMA start. When there
+> -	   are very fast drives connected to the controller, or when the data request
+> -	   hits in the drive cache, there is the possibility that the drive returns a part
+> -	   or all of the requested data to the controller before the DMA start is issued.
+> -	   In this case, the controller would become confused as to what to do with the data.
+> -	   In the worst case when all the data is returned back to the controller, the
+> -	   controller could hang. In other cases it could return partial data returning
+> -	   in data corruption. This problem has been seen in PPC systems and can also appear
+> -	   on an system with very fast disks, where the SATA controller is sitting behind a
+> -	   number of bridges, and hence there is significant latency between the r/w command
+> -	   and the start command. */
+> -	/* issue r/w command if the access is to ATA*/
+> +	/* This works around possible data corruption.
+> +
+> +	   On certain SATA controllers that can be seen when the r/w
+> +	   command is given to the controller before the host DMA is
+> +	   started.
+> +
+> +	   On a Read command, the controller would initiate the
+> +	   command to the drive even before it sees the DMA
+> +	   start. When there are very fast drives connected to the
+> +	   controller, or when the data request hits in the drive
+> +	   cache, there is the possibility that the drive returns a
+> +	   part or all of the requested data to the controller before
+> +	   the DMA start is issued.  In this case, the controller
+> +	   would become confused as to what to do with the data.  In
+> +	   the worst case when all the data is returned back to the
+> +	   controller, the controller could hang. In other cases it
+> +	   could return partial data returning in data
+> +	   corruption. This problem has been seen in PPC systems and
+> +	   can also appear on an system with very fast disks, where
+> +	   the SATA controller is sitting behind a number of bridges,
+> +	   and hence there is significant latency between the r/w
+> +	   command and the start command. */
+> +	/* issue r/w command if the access is to ATA */
+>  	if (qc->tf.protocol == ATA_PROT_DMA)
+>  		ap->ops->sff_exec_command(ap, &qc->tf);
+>  }
+> 
+> 
 
-I don't know anything about the 88SE6145 (isn't that an AHCI clone?),
-but the 7042 chip under Linux is *now* a very safe (and good) bet.
-
-It has full kernel support for hot-plug, PMP with FIS-based switching,
-and employs a decent host command queue mechansim.  I believe all of the
-errata workarounds are now in place for this chip.
-
-Performance is about as good as it gets under Linux,
-though there's still another microsecond or so to be shaved
-away from the IRQ handling in the next cycle.
-
-Message-Switched-Interrupts (MSI) is there, but not fully supported yet.
-This also will likely get cleaned up in the next cycle.
-
-The 7042 is the best of the Marvell chips, for Linux.
-
-Cheers
--- 
-Mark Lord
-Real-Time Remedies Inc.
-mlord@pobox.com
