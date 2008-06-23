@@ -1,39 +1,139 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: sata_svw data corruption, strange problems
-Date: Mon, 23 Jun 2008 22:05:40 +0900
-Message-ID: <485F9FA4.3050608@kernel.org>
-References: <20080617093602.GA28140@elf.ucw.cz>	<485EF061.3010601@kernel.org>	<20080623082055.GB1850@elf.ucw.cz>	<je63s0sfxv.fsf@sykes.suse.de>	<20080623085338.GE1850@elf.ucw.cz>	<485F6540.6000907@kernel.org>	<20080623090130.GF1850@elf.ucw.cz>	<1214211859.8011.250.camel@pasglop>	<485F7184.1030907@kernel.org> <20080623104221.3b4fb350@lxorguk.ukuu.org.uk>
+From: "Edward Shao" <laface.tw@gmail.com>
+Subject: Re: libata pata_jmicron: kernel 2.6.26-rc6 wait for a long time to probe HDD
+Date: Mon, 23 Jun 2008 21:54:33 +0800
+Message-ID: <ff05f3d00806230654x231c3353ya316456422936b5a@mail.gmail.com>
+References: <ff05f3d00806192015t30617527uc3b87b81452b9ee9@mail.gmail.com>
+	 <485EF190.3020000@kernel.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1755714AbYFWNGn@vger.kernel.org>
-In-Reply-To: <20080623104221.3b4fb350@lxorguk.ukuu.org.uk>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: benh@kernel.crashing.org, Pavel Machek <pavel@suse.cz>, Andreas Schwab <schwab@suse.de>, kernel list <linux-kernel@vger.kernel.org>, jgarzik@pobox.com, IDE/ATA development list <linux-ide@vger.kernel.org>, Trivial patch monkey <trivial@kernel.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from yw-out-2324.google.com ([74.125.46.28]:64439 "EHLO
+	yw-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752140AbYFWNyp (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 23 Jun 2008 09:54:45 -0400
+Received: by yw-out-2324.google.com with SMTP id 9so891467ywe.1
+        for <linux-ide@vger.kernel.org>; Mon, 23 Jun 2008 06:54:37 -0700 (PDT)
+In-Reply-To: <485EF190.3020000@kernel.org>
+Content-Disposition: inline
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: linux-ide@vger.kernel.org
 
-Alan Cox wrote:
->>> BTW. Tejun, I suppose that usually starting DMA after issuing the
->>> command is a standard practice of legacy/sff type controllers ? Or it's
->>> just because that's how linux did it until now ?
->> It's how the standard says it should be programmed.  Please take a look
->> at section 3 of the following document.
+On Mon, Jun 23, 2008 at 8:42 AM, Tejun Heo <tj@kernel.org> wrote:
+> Hello,
+>
+> Edward Shao wrote:
+>> PATA chip : JMB368 IDE controller (1-port PATA Host Controller)
+>> HDD          : TOSHIBA MK1214GAH
 >>
->> http://www.centrillium-it.com/Projects/idems100.pdf
+>> Use pata_jmicron.ko in linux 2.6.25.4
 >>
->> It's a non-issue for PATA ones as the host is responsible for running
-> 
-> It's very much an issue for PATA. If you start the DMA before time things
-> go wrong. The DMA has to start after the command is issued (or for ATAPI
-> after the command and the cdb are issued). Various ATAPI devices get
-> quite cross if you mess this up.
-> 
-> In some cases the driver code also depends upon this as we software drive
-> the data clocks so have to reprogram them after command issue and before
-> data transfer begins.
+>> [   21.942308] ACPI: PCI Interrupt 0000:05:00.0[A] -> GSI 16 (level,
+>> low) -> IRQ 16
+>> [   21.942571] PCI: Setting latency timer of device 0000:05:00.0 to 64
+>> [   21.942696] scsi2 : pata_jmicron
+>> [   21.942976] scsi3 : pata_jmicron
+>> [   21.943192] ata1: PATA max UDMA/100 cmd 0xdc00 ctl 0xd880 bmdma 0xd400 irq 16
+>> [   21.943301] ata2: PATA max UDMA/100 cmd 0xd800 ctl 0xd480 bmdma 0xd408 irq 16
+>> [   26.959936] ata1: port is slow to respond, please be patient (Status 0xd0)
+>> [   31.804198] ata1: SRST failed (errno=-16)
+>>
+>> Fail to detect the HDD.
+>
+> 2.6.25.4 doesn't retry after that?
+>
 
-I was saying drive getting ready before command issue was non issue.
+Yes, it does not.
+
+>> Change kernel version to 2.6.26-rc6
+>>
+>> [   18.698228] PCI: Setting latency timer of device 0000:05:00.0 to 64
+>> [   18.699232] scsi2 : pata_jmicron
+>> [   18.700232] scsi3 : pata_jmicron
+>> [   18.701228] ata1: PATA max UDMA/100 cmd 0xdc00 ctl 0xd880 bmdma 0xd400 irq 16
+>> [   18.701228] ata2: PATA max UDMA/100 cmd 0xd800 ctl 0xd480 bmdma 0xd408 irq 16
+>> [   23.901273] ata1: link is slow to respond, please be patient (ready=0)
+>> [   28.745756] ata1: SRST failed (errno=-16)
+>> [   33.945755] ata1: link is slow to respond, please be patient (ready=0)
+>> [   38.790754] ata1: SRST failed (errno=-16)
+>> [   43.990754] ata1: link is slow to respond, please be patient (ready=0)
+>> [   69.801394] ata1.00: ATA-7: TOSHIBA MK1214GAH, BW004A, max UDMA/100
+>> [   69.801650] ata1.00: 234441648 sectors, multi 16: LBA48
+>> [   69.801955] ata1.00: limited to UDMA/33 due to 40-wire cable
+>> [   69.807903] ata1.00: configured for UDMA/33
+>> [   69.959727] scsi 2:0:0:0: Direct-Access     ATA      TOSHIBA
+>> MK1214GA BW00 PQ: 0 ANSI: 5
+>> [   69.962165] sd 2:0:0:0: [sdb] 234441648 512-byte hardware sectors (120034 MB)
+>> [   69.962524] sd 2:0:0:0: [sdb] Write Protect is off
+>> [   69.962585] sd 2:0:0:0: [sdb] Mode Sense: 00 3a 00 00
+>> [   69.963370] sd 2:0:0:0: [sdb] Write cache: enabled, read cache:
+>> enabled, doesn't support DPO or FUA
+>> [   69.964016] sd 2:0:0:0: [sdb] 234441648 512-byte hardware sectors (120034 MB)
+>> [   69.964160] sd 2:0:0:0: [sdb] Write Protect is off
+>> [   69.964160] sd 2:0:0:0: [sdb] Mode Sense: 00 3a 00 00
+>> [   69.965158] sd 2:0:0:0: [sdb] Write cache: enabled, read cache:
+>> enabled, doesn't support DPO or FUA
+>> [   69.965158]  sdb: sdb1 sdb3
+>> [   70.309158] sd 2:0:0:0: [sdb] Attached SCSI disk
+>> [   70.310158] sd 2:0:0:0: Attached scsi generic sg1 type 0
+>>
+>> Can detect HDD but takes a long time.
+>> Seems after SRST, the disk needs over 30 seconds to clear its BSY status.
+>
+> This is the first time I see this type of failure.  Two 10 secs aren't
+> enough?  Strange.
+>
+>> Try IDE driver jmicron.ko in 2.6.25.4
+>>
+>> [   44.870518] Uniform Multi-Platform E-IDE driver
+>> [   44.870732] ide: Assuming 33MHz system bus speed for PIO modes;
+>> override with idebus=xx
+>> [   60.096513] JMB: IDE controller (0x197b:0x2368 rev 0x00) at  PCI
+>> slot 0000:05:00.0
+>> [   60.096873] ACPI: PCI Interrupt 0000:05:00.0[A] -> GSI 16 (level,
+>> low) -> IRQ 16
+>> [   60.097202] JMB: 100% native mode on irq 16
+>> [   60.097429]     ide0: BM-DMA at 0xd400-0xd407, BIOS settings:
+>> hda:DMA, hdb:DMA
+>> [   60.097928]     ide1: BM-DMA at 0xd408-0xd40f, BIOS settings:
+>> hdc:PIO, hdd:PIO
+>> [   60.098342] Probing IDE interface ide0...
+>> [   60.362870] hda: TOSHIBA MK1214GAH, ATA DISK drive
+>> [   60.668892] hda: host max PIO5 wanted PIO255(auto-tune) selected PIO4
+>> [   60.669015] hda: host side 80-wire cable detection failed, limiting
+>> max speed to UDMA33
+>> [   60.669305] hda: UDMA/33 mode selected
+>> [   60.669618] Probing IDE interface ide1...
+>> [   61.188796] ide0 at 0xdc00-0xdc07,0xd882 on irq 16
+>> [   61.189461] hda: max request size: 512KiB
+>> [   61.736475] hda: 234441648 sectors (120034 MB), CHS=16383/255/63
+>> [   61.513823] hda: cache flushes supported
+>> [   61.514189]  hda: hda1 hda3
+>>
+>> It works fine due to IDE driver doesn't do SRST when probing HDD. (I guess. :p)
+>
+> Probably.
+>
+>> Not sure host or device issue.
+>> Is it possible to fix the problem?
+>
+> Any chance you can try the drive on a different controller?  Also, is it
+> a laptop?
+>
+
+Yes, it is a laptop but not on my hand now.
+The drive is a 1.8-inch embedded HDD.
+I'm not sure if I can try the drive on a different controller.
+Once I got the laptop back, I will try it.
+
+> --
+> tejun
+>
+
+
 
 -- 
-tejun
+Best Regards,
+Edward
