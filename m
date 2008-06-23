@@ -1,49 +1,117 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [PATCH] IDE: Fix HDIO_DRIVE_RESET handling
-Date: Tue, 24 Jun 2008 00:47:28 +0200
-Message-ID: <200806240047.29118.bzolnier@gmail.com>
-References: <87k5gmz596.fsf@denkblock.local> <87r6apuk16.fsf@denkblock.local> <87wskgtwwm.fsf@denkblock.local>
+From: Anton Vorontsov <avorontsov@ru.mvista.com>
+Subject: [PATCH -rt] ide: fix interrupts processing issue with preempt-able
+	hardirqs
+Date: Tue, 24 Jun 2008 03:40:37 +0400
+Message-ID: <20080623234037.GA6793@polina.dev.rtsoft.ru>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf8
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from fk-out-0910.google.com ([209.85.128.186]:15237 "EHLO
-	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750767AbYFWWqJ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 23 Jun 2008 18:46:09 -0400
-Received: by fk-out-0910.google.com with SMTP id 18so2504439fkq.5
-        for <linux-ide@vger.kernel.org>; Mon, 23 Jun 2008 15:46:08 -0700 (PDT)
-In-Reply-To: <87wskgtwwm.fsf@denkblock.local>
+Received: from rtsoft3.corbina.net ([85.21.88.6]:32498 "EHLO
+	buildserver.ru.mvista.com" rhost-flags-OK-FAIL-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1751516AbYFWXkj (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 23 Jun 2008 19:40:39 -0400
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Elias Oltmanns <eo@nebensachen.de>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Randy Dunlap <randy.dunlap@oracle.com>
+To: linux-ide@vger.kernel.org
+Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Ingo Molnar <mingo@elte.hu>, Sergei Shtylyov <sshtylyov@ru.mvista.com>, linux-kernel@vger.kernel.org
 
-On Monday 23 June 2008, Elias Oltmanns wrote:
-> Elias Oltmanns <eo@nebensachen.de> wrote:
-> [...]
-> > @@ -941,6 +949,7 @@ static ide_startstop_t atapi_reset_pollfunc (ide_drive_t *drive)
-> >  	/* done polling */
-> >  	hwgroup->polling = 0;
-> >  	hwgroup->resetting = 0;
-> 
-> Actually, ->resetting needs to be protected by the ide_lock here.
-> 
-> [...]
-> > @@ -1005,6 +1014,8 @@ static ide_startstop_t reset_pollfunc (ide_drive_t *drive)
-> >  	}
-> >  	hwgroup->polling = 0;	/* done polling */
-> >  	hwgroup->resetting = 0; /* done reset attempt */
-> 
-> Same as above.  Unless I have missed something, a simple
-> 
-> spin_lock(&ide_lock)
-> 
-> should suffice since there cannot possibly be another interrupt that
-> changes ->resetting behind our back.  I'll send an updated version of
-> patches 1 and 4 once I have your opinion on the current series.
+IDE interrupt handler relies on the fact that, if necessary, hardirqs
+will re-trigger on ISR exit. With fully preemtable IRQs this seems to be
+not true, since if hardirq thread is currently running, and the same IRQ
+raised again, then this IRQ will be simply lost.
 
-With patch #1 we may as well just remove ->resetting and allow the next
-reset request to be added to the queue.
+This patch fixes following issue:
+
+ALI15X3: IDE controller (0x10b9:0x5229 rev 0xc8) at  PCI slot 0001:03:1f.0
+ALI15X3: 100% native mode on irq 18
+    ide0: BM-DMA at 0x1120-0x1127, BIOS settings: hda:PIO, hdb:PIO
+    ide1: BM-DMA at 0x1128-0x112f, BIOS settings: hdc:PIO, hdd:PIO
+hda: Optiarc DVD RW AD-7190A, ATAPI CD/DVD-ROM drive
+hda: UDMA/66 mode selected
+ide0 at 0x1100-0x1107,0x110a on irq 18
+ide-cd: cmd 0x5a timed out
+hda: lost interrupt
+hda: ATAPI 12X DVD-ROM DVD-R-RAM CD-R/RW drive, 2048kB Cache
+Uniform CD-ROM driver Revision: 3.20
+ide-cd: cmd 0x3 timed out
+hda: lost interrupt
+ide-cd: cmd 0x3 timed out
+hda: lost interrupt
+...
+
+Though, some IDE devices (e.g. SONY DVD RW AW-Q170A) seem to work fine
+without this patch, probably because they trigger IRQ after some delay.
+
+This patch should be almost no-op for the !RT kernels, thus no #ifdefs.
+
+Signed-off-by: Anton Vorontsov <avorontsov@ru.mvista.com>
+---
+ drivers/ide/ide-io.c |   19 +++++++++++++++----
+ 1 files changed, 15 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/ide/ide-io.c b/drivers/ide/ide-io.c
+index 6c1b288..a52733e 100644
+--- a/drivers/ide/ide-io.c
++++ b/drivers/ide/ide-io.c
+@@ -1460,6 +1460,7 @@ static void unexpected_intr (int irq, ide_hwgroup_t *hwgroup)
+  
+ irqreturn_t ide_intr (int irq, void *dev_id)
+ {
++	int ret = IRQ_NONE;
+ 	unsigned long flags;
+ 	ide_hwgroup_t *hwgroup = (ide_hwgroup_t *)dev_id;
+ 	ide_hwif_t *hwif;
+@@ -1467,12 +1468,13 @@ irqreturn_t ide_intr (int irq, void *dev_id)
+ 	ide_handler_t *handler;
+ 	ide_startstop_t startstop;
+ 
++again:
+ 	spin_lock_irqsave(&ide_lock, flags);
+ 	hwif = hwgroup->hwif;
+ 
+ 	if (!ide_ack_intr(hwif)) {
+ 		spin_unlock_irqrestore(&ide_lock, flags);
+-		return IRQ_NONE;
++		return ret;
+ 	}
+ 
+ 	if ((handler = hwgroup->handler) == NULL || hwgroup->polling) {
+@@ -1510,7 +1512,7 @@ irqreturn_t ide_intr (int irq, void *dev_id)
+ #endif /* CONFIG_BLK_DEV_IDEPCI */
+ 		}
+ 		spin_unlock_irqrestore(&ide_lock, flags);
+-		return IRQ_NONE;
++		return ret;
+ 	}
+ 	drive = hwgroup->drive;
+ 	if (!drive) {
+@@ -1532,7 +1534,7 @@ irqreturn_t ide_intr (int irq, void *dev_id)
+ 		 * enough advance overhead that the latter isn't a problem.
+ 		 */
+ 		spin_unlock_irqrestore(&ide_lock, flags);
+-		return IRQ_NONE;
++		return ret;
+ 	}
+ 	if (!hwgroup->busy) {
+ 		hwgroup->busy = 1;	/* paranoia */
+@@ -1578,7 +1580,16 @@ irqreturn_t ide_intr (int irq, void *dev_id)
+ 		}
+ 	}
+ 	spin_unlock_irqrestore(&ide_lock, flags);
+-	return IRQ_HANDLED;
++	ret = IRQ_HANDLED;
++
++	/*
++	 * Previous handler() may have set things up for another interrupt to
++	 * occur soon... in case we've lost it (e.g. with preemtable hardirqs),
++	 * try again and then return gracefully if no irqs were pending.
++	 */
++	if (startstop != ide_stopped)
++		goto again;
++	return ret;
+ }
+ 
+ /**
+-- 
+1.5.5.4
