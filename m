@@ -1,101 +1,84 @@
-From: "Moore, Eric" <Eric.Moore@lsi.com>
-Subject: RE: ATA_16 support on mptsas
-Date: Mon, 23 Jun 2008 13:40:03 -0600
-Message-ID: <660360F4F2570145BD872F298951B17A26420CD9@cosmail03.lsi.com>
-References: <200806231800.08659.kb@sysmikro.com.pl>
+From: "Greg Freemyer" <greg.freemyer@gmail.com>
+Subject: Re: [RFC] Separating out libata out of SCSI (finally)
+Date: Mon, 23 Jun 2008 17:04:35 -0400
+Message-ID: <87f94c370806231404t13586777x7f7bee24ebe25ffc@mail.gmail.com>
+References: <485B2CC6.6070201@kernel.org>
+	 <1213993737.3443.35.camel@localhost.localdomain>
+	 <485C31FE.8050408@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-2
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail0.lsil.com ([147.145.40.20]:62181 "EHLO mail0.lsil.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1763030AbYFWTlr convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 23 Jun 2008 15:41:47 -0400
-In-Reply-To: <200806231800.08659.kb@sysmikro.com.pl>
-Content-Language: en-US
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <485C31FE.8050408@garzik.org>
+Content-Disposition: inline
+Sender: linux-scsi-owner@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: James Bottomley <James.Bottomley@hansenpartnership.com>, Tejun Heo <tj@kernel.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, brking@linux.vnet.ibm.com, Mark Lord <liml@rtr.ca>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Jens Axboe <jens.axboe@oracle.com>
 List-Id: linux-ide@vger.kernel.org
-To: =?iso-8859-2?Q?Krzysztof_B=B3aszkowski?= <kb@sysmikro.com.pl>, "jgarzik@pobox.com" <jgarzik@pobox.com>, "Stewart, Ken" <Ken.Stewart@lsi.com>
-Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, DL-MPT Fusion Linux <DL-MPTFusionLinux@lsi.com>
 
-On Monday, June 23, 2008 10:00 AM, Krzysztof B=B3aszkowski wrote:
+On Fri, Jun 20, 2008 at 6:41 PM, Jeff Garzik <jeff@garzik.org> wrote:
+> James Bottomley wrote:
+>>
+>> On Fri, 2008-06-20 at 13:06 +0900, Tejun Heo wrote:
+>>>
+>>> The biggest problem is how to keep userland happy.  hdX -> sdX
+>>> transition was painful enough and I have a strong feeling that
+>>> everyone will come after and hunt down us if we try something like sdX
+>>> -> bdX now.  :-)
 >
-> I found that any HDIO_DRIVE_CMD ioctl on sata drive connected
-> through mpsas
-> and backplane will fail. Basically the scsi_host_template structure i=
-s
-> missing ioctl callback. after adding it and temporary
-> tweaking domain_device
-> structure associated to scsi_device (rphy only) i reached a
-> point where
-> ata_scsi_ioctl returns EIO and this why i need some clue on a
-> way of adding
-> such support similar way to aic94 where it has been done.
+>> In theory mounting by label or ID should have fixed a lot of this.
+>> However, if we need to head off a revolt, the sdX allocation algorithm
+>> can be placed into it's own module so both sd and a ULD ata driver could
+>> use it ...
 >
-> I found also that mptsas leaves domain_device rather
-> uninitialized. the
-> example is rphy but there more fields i don't know if they
-> are revelant to
-> proper processing of HDIO_DRIVE_CMD.
-> i need additional references on libata design, call flow and
-> structures
-> relationship.
+>> Actually, surely we can mostly dump the SAT layer?
 >
-> probably it would be the best to design mptsas from scratch
-> using libsas but
-> this seems to me as huge work although if i was guided i
-> would probably
-> complete this.
 >
-
-We have no plans to implement HDIO ioctls in our driver.   The SATL imp=
-lementation is inside the mpt fusion firmware, and from the driver, we =
-don't care whether the underlying protocal is SAS, SATA, Fibre Channel,=
- or SPI.   For all protocals, we send scsi commands to the controller f=
-irmware using SCSI_IO opcode, with the following struct:
-
-typedef struct _MSG_SCSI_IO_REQUEST
-{
-    U8                      TargetID;           /* 00h */
-    U8                      Bus;                /* 01h */
-    U8                      ChainOffset;        /* 02h */
-    U8                      Function;           /* 03h */
-    U8                      CDBLength;          /* 04h */
-    U8                      SenseBufferLength;  /* 05h */
-    U8                      Reserved;           /* 06h */
-    U8                      MsgFlags;           /* 07h */
-    U32                     MsgContext;         /* 08h */
-    U8                      LUN[8];             /* 0Ch */
-    U32                     Control;            /* 14h */
-    U8                      CDB[16];            /* 18h */
-    U32                     DataLength;         /* 28h */
-    U32                     SenseBufferLowAddr; /* 2Ch */
-    SGE_IO_UNION            SGL;                /* 30h */
-} MSG_SCSI_IO_REQUEST, MPI_POINTER PTR_MSG_SCSI_IO_REQUEST,
-  SCSIIORequest_t, MPI_POINTER pSCSIIORequest_t;
-
+> I don't see that we can do that for a long time...  And it's not just the
+> sdX allocation algorithm in question -- SCSI block devices come with their
+> own partition limits and set of supported ioctls.
 >
-> I tried another approach where i used SG_IO ioctl and
-> prepared ATA_16 cdb
-> (just like libata does) but this failed on mptsas connected drives to=
-o
-> altough this way works on drives connected to ICH6.
+> Therefore, my recommended path has always been
+>
+> * create ata_disk block device driver (ULD, in your terminology)
+>
+> * make SAT an optional piece, which maintains compatibility with existing
+> SCSI blkdevs, ioctls, command sets
+>
+>
+> I just don't see a valid path moving forward that breaks userland /again/...
+>  we (ATA hackers) would be drummed out of a job I think :)
+>
+> Another option that's been discussed is
+>
+> 1) Make SCSI block devices themselves an allocate-able resource (I think
+> that's what you meant by "placed into it's own module so both sd and a ULD
+> ata driver could use it"?)
+>
+> 2) Ensure that any ata_disk ULD would support the same partition limits and
+> ioctl set, enough to ensure binary compatibility.
+>
+> Because that's the real need -- maintaining binary compatibility with SCSI
+> block devices, so major/minor, ioctl supported set, partition limits, and
+> other relevant details need to remain unchanged.
 >
 
-The SG tools will work with mpt fusion if your passing the ATA_12 (opco=
-de=3D0xA1) and ATA_16 (opcode=3D0x85).   This is implemented in fusion =
-firmware.  If your failing, then your probably having old firmware.  I =
-suggest that you upgrading by going to the download site  located here:=
- http://www.lsi.com/cm/DownloadSearch.do?locale=3DEN.    Ken Stewart is=
- from support, he should be able to assist you with upgrading the firmw=
-are if you encounter any problems.
+I've seen a lot of end user complaints about libata only supporting
+15(14?) partitions.  Will that limit be moved back to the traditional
+drivers/ide limit as part of this?
 
-Eric Moore
+FYI: I don't personally use that many partitions, but there is a vocal
+minority of users on the opensuse mailinglist that complain pretty
+loudly about current restriction.
 
+Greg
+-- 
+Greg Freemyer
+Litigation Triage Solutions Specialist
+http://www.linkedin.com/in/gregfreemyer
+First 99 Days Litigation White Paper -
+http://www.norcrossgroup.com/forms/whitepapers/99%20Days%20whitepaper.pdf
 
-
-
-
-
-
-
+The Norcross Group
+The Intersection of Evidence & Technology
+http://www.norcrossgroup.com
