@@ -1,114 +1,47 @@
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Subject: Re: [PATCH 1/4] ide-pmac: media-bay support fixes
-Date: Mon, 23 Jun 2008 16:41:52 +1000
-Message-ID: <1214203312.8011.246.camel@pasglop>
-References: <200806162124.43005.bzolnier@gmail.com>
-	 <1213673979.8129.156.camel@pasglop> <1213674572.8129.159.camel@pasglop>
-	 <200806171141.08865.bzolnier@gmail.com> <1214199343.8011.230.camel@pasglop>
-	 <1214200453.8011.232.camel@pasglop>
-Reply-To: benh@kernel.crashing.org
+From: Elias Oltmanns <eo@nebensachen.de>
+Subject: Re: [PATCH] IDE: Fix HDIO_DRIVE_RESET handling
+Date: Mon, 23 Jun 2008 09:47:53 +0200
+Message-ID: <87wskgtwwm.fsf@denkblock.local>
+References: <87k5gmz596.fsf@denkblock.local>
+	<200806192247.25063.bzolnier@gmail.com>
+	<87wskhuk98.fsf@denkblock.local> <87r6apuk16.fsf@denkblock.local>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from gate.crashing.org ([63.228.1.57]:38474 "EHLO gate.crashing.org"
+Received: from nebensachen.de ([195.34.83.29]:51937 "EHLO mail.nebensachen.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750939AbYFWGl6 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 23 Jun 2008 02:41:58 -0400
-In-Reply-To: <1214200453.8011.232.camel@pasglop>
+	id S1754240AbYFWHsK (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 23 Jun 2008 03:48:10 -0400
+In-Reply-To: <87r6apuk16.fsf@denkblock.local> (Elias Oltmanns's message of
+	"Mon, 23 Jun 2008 01:28:21 +0200")
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Randy Dunlap <randy.dunlap@oracle.com>
 
+Elias Oltmanns <eo@nebensachen.de> wrote:
+[...]
+> @@ -941,6 +949,7 @@ static ide_startstop_t atapi_reset_pollfunc (ide_drive_t *drive)
+>  	/* done polling */
+>  	hwgroup->polling = 0;
+>  	hwgroup->resetting = 0;
 
-> Don't panic. It looks like it's something else in linux-next that's
-> changing some ifdef's in the media-bay code which is causing that.
-> 
-> I managed to pull linux next at the merge point with your tree and
-> things apply. I'll use that to test.
+Actually, ->resetting needs to be protected by the ide_lock here.
 
-Ok, it doesn't work properly. It gets error trying to register
-the IDE device. Booting with a CD drive in and no disk in the drive
-gives the log below.
+[...]
+> @@ -1005,6 +1014,8 @@ static ide_startstop_t reset_pollfunc (ide_drive_t *drive)
+>  	}
+>  	hwgroup->polling = 0;	/* done polling */
+>  	hwgroup->resetting = 0; /* done reset attempt */
 
-I've verified that it works without your patches. If I apply only patch
-1, it doesn't build due to some wrong construct in the probe code. I've
-hand fixed it, but then I hit a BUG_ON in ide_probe_port() (line 773).
+Same as above.  Unless I have missed something, a simple
 
-mediabay boot time messages (before IDE probing) are:
+spin_lock(&ide_lock)
 
-mediabay0: Registered Heathrow media-bay
-mediabay0: powering down
-mediabay0: switching to 3
-mediabay0: powering up
-mediabay0: enabling (kind:3)
-mediabay0: waiting reset (kind:3)
-mediabay0: waiting IDE reset (kind:3)
-mediabay0: waiting IDE ready (kind:3)
-mediabay0: up before IDE init
-mediabay1: Registered Heathrow media-bay
-mediabay1: powering down
-mediabay1: switching to 0
-mediabay1: powering up
-mediabay1: enabling (kind:0)
-mediabay1: waiting reset (kind:0)
-mediabay1: bay is up (kind:0)
+should suffice since there cannot possibly be another interrupt that
+changes ->resetting behind our back.  I'll send an updated version of
+patches 1 and 4 once I have your opinion on the current series.
 
-Later, IDE registers:
+Regards,
 
-(ide0 is another controller, only ide1 and ide2 are media bay based, and
-ide2 has no device on it at all).
-
-ide-pmac: Found Apple Heathrow ATA controller (macio), bus ID 1 (mediabay), irq  35
-ide1 at 0xc7020000-0xc7020070,0xc7020160 on irq 35
-ide-pmac: Found Apple Heathrow ATA controller (macio), bus ID 4 (mediabay), irq  67
-ide2 at 0xc7022000-0xc7022070,0xc7022160 on irq 67
-mediabay0: waiting IDE ready (kind:3)
-mediabay 0, registering IDE...
-IDE register error
-mediabay0: powering down
-
- .../...
-
-mediabay0: end of power down
-mediabay0: switching to 3
-mediabay0: powering up
-mediabay0: enabling (kind:3)
-mediabay0: waiting reset (kind:3)
-mediabay0: waiting IDE reset (kind:3)
-
- .../...
-
-mediabay0: waiting IDE ready (kind:3)
-mediabay 0, registering IDE...
-IDE register error
-mediabay0: powering down
-mediabay0: end of power down
-mediabay0: switching to 3
-mediabay0: powering up
-mediabay0: enabling (kind:3)
-mediabay0: waiting reset (kind:3)
-mediabay0: waiting IDE reset (kind:3)
-mediabay0: waiting IDE ready (kind:3)
-mediabay 0, registering IDE...
-IDE register error
-mediabay0: powering down
-mediabay0: end of power down
-mediabay0: switching to 3
-mediabay0: powering up
-mediabay0: enabling (kind:3)
-mediabay0: waiting reset (kind:3)
-mediabay0: waiting IDE reset (kind:3)
-mediabay0: waiting IDE ready (kind:3)
-mediabay 0, registering IDE...
-IDE register error
-mediabay0: powering down
-media-bay 0, IDE device badly inserted or unrecognised
-mediabay0: end of power down
-
-Cheers,
-Ben.
-
-
-
+Elias
