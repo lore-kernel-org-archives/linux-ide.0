@@ -1,68 +1,62 @@
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Subject: Re: [PATCH 1/4] ide-pmac: media-bay support fixes
-Date: Mon, 23 Jun 2008 20:47:27 +1000
-Message-ID: <1214218047.8011.268.camel@pasglop>
-References: <200806162124.43005.bzolnier@gmail.com>
-	 <1213673979.8129.156.camel@pasglop> <1213674572.8129.159.camel@pasglop>
-	 <200806171141.08865.bzolnier@gmail.com> <1214199343.8011.230.camel@pasglop>
-	 <1214200453.8011.232.camel@pasglop>  <1214203312.8011.246.camel@pasglop>
-Reply-To: benh@kernel.crashing.org
+From: wessels <wessels147@gmail.com>
+Subject: Re: SB700 AHCI causes disk power cycle
+Date: Mon, 23 Jun 2008 13:52:37 +0200
+Message-ID: <a58c5fe70806230452p419de51et1060953af0a2aa6d@mail.gmail.com>
+References: <a58c5fe70806221052w7c93b342hdaf44fb27983534a@mail.gmail.com>
+	 <485EEE16.1060701@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from gate.crashing.org ([63.228.1.57]:59560 "EHLO gate.crashing.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753677AbYFWKrw (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 23 Jun 2008 06:47:52 -0400
-In-Reply-To: <1214203312.8011.246.camel@pasglop>
+Received: from yw-out-2324.google.com ([74.125.46.29]:55934 "EHLO
+	yw-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752993AbYFWLwo (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 23 Jun 2008 07:52:44 -0400
+Received: by yw-out-2324.google.com with SMTP id 9so876599ywe.1
+        for <linux-ide@vger.kernel.org>; Mon, 23 Jun 2008 04:52:39 -0700 (PDT)
+In-Reply-To: <485EEE16.1060701@kernel.org>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: linux-ide@vger.kernel.org
 
-On Mon, 2008-06-23 at 16:41 +1000, Benjamin Herrenschmidt wrote:
-> > Don't panic. It looks like it's something else in linux-next that's
-> > changing some ifdef's in the media-bay code which is causing that.
-> > 
-> > I managed to pull linux next at the merge point with your tree and
-> > things apply. I'll use that to test.
-> 
-> Ok, it doesn't work properly. It gets error trying to register
-> the IDE device. Booting with a CD drive in and no disk in the drive
-> gives the log below.
-> 
-> I've verified that it works without your patches. If I apply only patch
-> 1, it doesn't build due to some wrong construct in the probe code. I've
-> hand fixed it, but then I hit a BUG_ON in ide_probe_port() (line 773).
-> 
-> mediabay boot time messages (before IDE probing) are:
+> From your report on sb600.
+>
+> kernel: ata4: SError: { RecovComm Persist PHYRdyChg 10B8B }
+> kernel: ata4.00: cmd ea/00:00:00:00:00/00:00:00:00:00/a0 tag 0
+> kernel:          res 40/00:3c:0d:bd:c9/00:00:0b:00:00/40 Emask 0x10 (ATA bus error)
+>
+> This combined with the incremented start stop count looks very much
+> like the harddisk went offline briefly and came back for whatever
+> reason.  I doubt the ahci driver even with its all might can do that.
+>
+> Can you please try to hook up the faulting harddrive to a separate
+> power supply?
+>
+>  http://modtown.co.uk/mt/article2.php?id=psumod
+>
+> --
+> tejun
+>
 
-BTW. I didn't debug more today as I ran out of time but I'll do more
-tomorrow.
+Thank you for your interest,
 
-On a side note, we need to change the way the mediabay stuff works. I've
-started writing a pata_macio (ie. libata variant of the driver) a while
-ago that I need to kick myself into finishing one of these days, and it
-will want something different than having the mediabay code poke into
-the IDE layer directly :-)
+I'll test the system with a bigger power supply. But under full load
+(cpu, disk and network) these systems consume about 70 watts.
+They are powered by either an antec earthwatt 380W or a
+seasonic something energy efficient. The antec also powers an opensolaris
+server with 7 disks on a sb700 without a problem.
+There's one other thing, I did mentioned, the error occurs on both disks.
+Although one channel gets more errors than the other. This behaviour is
+the same on all three machines.
+I'll arrange a couple of seagates to test if it's limited to the
+western digital disks.
+Currently I'm running the vm's on a nfs share, keep my fingers crossed, no
+disk power cycles. But I'll have to test that a bit longer.
 
-My current though is to add a media bay notification callback to the
-macio_device structure (the pci variants of the device are never hooked
-up on a media bay) and move the state query function to the macio core,
-the media bay driver being then responsible for calling into the macio
-core to update the state.
+I'll be away till next tuesday so please be patient for my results.
 
-I still have to sort out some interesting locking issues vs. state
-changes around driver probe() but I think that's the way to go. Thus,
-the drivers/ide driver can do it's old ide core hackery locally and the
-libata variant do what is needed for libata locally too.
+Regards,
 
-It's been a bit low on my todo list as Apple stopped making machines
-with hotswap mediabays something like 8 years ago :-) The two I have
-still working are pretty scary old things and one of them is almost
-falling apart..
-
-Cheers,
-Ben.
-
+Wessels
