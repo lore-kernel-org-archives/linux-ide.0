@@ -1,42 +1,46 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: FW: ICH10R PMP support
-Date: Mon, 23 Jun 2008 18:56:38 +0900
-Message-ID: <485F7356.5050605@kernel.org>
-References: <023701c8d4dd$d737fa10$85a7ee30$@com> <485F6830.1040000@pobox.com>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: sata_svw data corruption, strange problems
+Date: Mon, 23 Jun 2008 10:42:21 +0100
+Message-ID: <20080623104221.3b4fb350@lxorguk.ukuu.org.uk>
+References: <20080617093602.GA28140@elf.ucw.cz>
+	<485EF061.3010601@kernel.org>
+	<20080623082055.GB1850@elf.ucw.cz>
+	<je63s0sfxv.fsf@sykes.suse.de>
+	<20080623085338.GE1850@elf.ucw.cz>
+	<485F6540.6000907@kernel.org>
+	<20080623090130.GF1850@elf.ucw.cz>
+	<1214211859.8011.250.camel@pasglop>
+	<485F7184.1030907@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:41088 "EHLO hera.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752904AbYFWJ5E (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 23 Jun 2008 05:57:04 -0400
-In-Reply-To: <485F6830.1040000@pobox.com>
+Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:50698 "EHLO
+	lxorguk.ukuu.org.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1753504AbYFWKAM (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 23 Jun 2008 06:00:12 -0400
+In-Reply-To: <485F7184.1030907@kernel.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark Lord <mlord@pobox.com>
-Cc: Milo Medin <medin@m2znetworks.com>, linux-ide@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: benh@kernel.crashing.org, Pavel Machek <pavel@suse.cz>, Andreas Schwab <schwab@suse.de>, kernel list <linux-kernel@vger.kernel.org>, jgarzik@pobox.com, IDE/ATA development list <linux-ide@vger.kernel.org>, Trivial patch monkey <trivial@kernel.org>
 
-Mark Lord wrote:
-> I don't know anything about the 88SE6145 (isn't that an AHCI clone?),
-> but the 7042 chip under Linux is *now* a very safe (and good) bet.
+> > BTW. Tejun, I suppose that usually starting DMA after issuing the
+> > command is a standard practice of legacy/sff type controllers ? Or it's
+> > just because that's how linux did it until now ?
 > 
-> It has full kernel support for hot-plug, PMP with FIS-based switching,
-> and employs a decent host command queue mechansim.  I believe all of the
-> errata workarounds are now in place for this chip.
+> It's how the standard says it should be programmed.  Please take a look
+> at section 3 of the following document.
 > 
-> Performance is about as good as it gets under Linux,
-> though there's still another microsecond or so to be shaved
-> away from the IRQ handling in the next cycle.
+> http://www.centrillium-it.com/Projects/idems100.pdf
 > 
-> Message-Switched-Interrupts (MSI) is there, but not fully supported yet.
-> This also will likely get cleaned up in the next cycle.
-> 
-> The 7042 is the best of the Marvell chips, for Linux.
+> It's a non-issue for PATA ones as the host is responsible for running
 
-How high does it go bandwidth-wise?
+It's very much an issue for PATA. If you start the DMA before time things
+go wrong. The DMA has to start after the command is issued (or for ATAPI
+after the command and the cdb are issued). Various ATAPI devices get
+quite cross if you mess this up.
 
-Thanks.
-
--- 
-tejun
+In some cases the driver code also depends upon this as we software drive
+the data clocks so have to reprogram them after command issue and before
+data transfer begins.
