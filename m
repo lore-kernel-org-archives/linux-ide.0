@@ -1,225 +1,86 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [PATCH 1/4] ide-pmac: media-bay support fixes
-Date: Mon, 23 Jun 2008 23:00:57 +0200
-Message-ID: <200806232300.57614.bzolnier@gmail.com>
-References: <200806162124.43005.bzolnier@gmail.com> <1214200453.8011.232.camel@pasglop> <1214203312.8011.246.camel@pasglop>
+From: Richard Scobie <richard@sauce.co.nz>
+Subject: RE: ATA_16 support on mptsas
+Date: Tue, 24 Jun 2008 10:09:11 +1200
+Message-ID: <48601F07.8020506@sauce.co.nz>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rn-out-0910.google.com ([64.233.170.185]:36323 "EHLO
-	rn-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755478AbYFWVoV (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 23 Jun 2008 17:44:21 -0400
-Received: by rn-out-0910.google.com with SMTP id k40so457617rnd.17
-        for <linux-ide@vger.kernel.org>; Mon, 23 Jun 2008 14:44:20 -0700 (PDT)
-In-Reply-To: <1214203312.8011.246.camel@pasglop>
-Content-Disposition: inline
+Received: from smtp.sauce.co.nz ([210.48.49.72]:37058 "EHLO smtp.sauce.co.nz"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753371AbYFWWEY (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 23 Jun 2008 18:04:24 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: benh@kernel.crashing.org
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-On Monday 23 June 2008, Benjamin Herrenschmidt wrote:
-> 
-> > Don't panic. It looks like it's something else in linux-next that's
-> > changing some ifdef's in the media-bay code which is causing that.
-> > 
-> > I managed to pull linux next at the merge point with your tree and
-> > things apply. I'll use that to test.
-> 
-> Ok, it doesn't work properly. It gets error trying to register
-> the IDE device. Booting with a CD drive in and no disk in the drive
-> gives the log below.
-> 
-> I've verified that it works without your patches. If I apply only patch
-> 1, it doesn't build due to some wrong construct in the probe code. I've
-> hand fixed it, but then I hit a BUG_ON in ide_probe_port() (line 773).
+Eric Moore wrote:
 
-Build error and/or your build fix would be useful here.
+ > The SG tools will work with mpt fusion if your passing the ATA_12
+ > (opcode=0xA1) and ATA_16 (opcode=0x85).   This is implemented in
+ > fusion firmware.  If your failing, then your probably having old
+ > firmware.  I suggest that you upgrading by going to the download
+ > site located here: http://www.lsi.com/cm/DownloadSearch.do?locale=EN.
+ > Ken Stewart is from support, he should be able to assist you with
+ > upgrading the firmware if you encounter any problems.
 
-> mediabay boot time messages (before IDE probing) are:
-> 
-> mediabay0: Registered Heathrow media-bay
-> mediabay0: powering down
-> mediabay0: switching to 3
-> mediabay0: powering up
-> mediabay0: enabling (kind:3)
-> mediabay0: waiting reset (kind:3)
-> mediabay0: waiting IDE reset (kind:3)
-> mediabay0: waiting IDE ready (kind:3)
-> mediabay0: up before IDE init
-> mediabay1: Registered Heathrow media-bay
-> mediabay1: powering down
-> mediabay1: switching to 0
-> mediabay1: powering up
-> mediabay1: enabling (kind:0)
-> mediabay1: waiting reset (kind:0)
-> mediabay1: bay is up (kind:0)
-> 
-> Later, IDE registers:
-> 
-> (ide0 is another controller, only ide1 and ide2 are media bay based, and
-> ide2 has no device on it at all).
-> 
-> ide-pmac: Found Apple Heathrow ATA controller (macio), bus ID 1 (mediabay), irq  35
-> ide1 at 0xc7020000-0xc7020070,0xc7020160 on irq 35
-> ide-pmac: Found Apple Heathrow ATA controller (macio), bus ID 4 (mediabay), irq  67
-> ide2 at 0xc7022000-0xc7022070,0xc7022160 on irq 67
-> mediabay0: waiting IDE ready (kind:3)
-> mediabay 0, registering IDE...
-> IDE register error
+Hi Eric,
 
-Ok, I see the problem - we now need to clear dive->noprobe after
-ide_device_add() call (pmac.c) or later ide_port_scan() call (mediabay.c)
-will fail...  also there was a pmif->mediabay check missing...
+I have already logged a bug with Fedora, but can you think of anything 
+that would have changed between 2.6.25.4 and 2.6.25.6 that would have 
+broken this?
 
-Please try the new version of patch #1 (the other patches are unchanged):
+I have just updated from 2.6.25.4-30.fc9.x86_64 to 
+2.6.25.6-55.fc9.x86_64 and smartmontools now causes LSISAS1068E 
+controller resets, where it was working perfectly before:
 
-[...]
+mptscsih: ioc0: attempting task abort! (sc=ffff81023d0c6b40)
+sd 4:0:0:0: [sdc] CDB: ATA command pass through(16): 85 08 0e 00 00 00 
+01 00 00
+00 00 00 00 00 ec 00
+mptbase: ioc0: LogInfo(0x31140000): Originator={PL}, Code={IO Executed},
+SubCode(0x0000)
+mptscsih: ioc0: task abort: SUCCESS (sc=ffff81023d0c6b40)
+mptscsih: ioc0: attempting task abort! (sc=ffff81023d0c6b40)
+sd 4:0:0:0: [sdc] CDB: Test Unit Ready: 00 00 00 00 00 00
+mptbase: ioc0: LogInfo(0x31130000): Originator={PL}, Code={IO Not Yet 
+Executed},
+SubCode(0x0000)
+mptscsih: ioc0: task abort: SUCCESS (sc=ffff81023d0c6b40)
+mptscsih: ioc0: attempting target reset! (sc=ffff81023d0c6b40)
+sd 4:0:0:0: [sdc] CDB: ATA command pass through(16): 85 08 0e 00 00 00 
+01 00 00
+00 00 00 00 00 ec 00
+mptscsih: ioc0: target reset: SUCCESS (sc=ffff81023d0c6b40)
+mptscsih: ioc0: attempting task abort! (sc=ffff81023d0c6b40)
+sd 4:0:0:0: [sdc] CDB: Test Unit Ready: 00 00 00 00 00 00
+mptbase: ioc0: LogInfo(0x31130000): Originator={PL}, Code={IO Not Yet 
+Executed},
+SubCode(0x0000)
+mptscsih: ioc0: task abort: SUCCESS (sc=ffff81023d0c6b40)
+mptscsih: ioc0: attempting bus reset! (sc=ffff81023d0c6b40)
+sd 4:0:0:0: [sdc] CDB: ATA command pass through(16): 85 08 0e 00 00 00 
+01 00 00
+00 00 00 00 00 ec 00
+mptscsih: ioc0: bus reset: SUCCESS (sc=ffff81023d0c6b40)
+mptscsih: ioc0: attempting task abort! (sc=ffff81023d0c6b40)
+sd 4:0:0:0: [sdc] CDB: Test Unit Ready: 00 00 00 00 00 00
+mptbase: ioc0: LogInfo(0x31130000): Originator={PL}, Code={IO Not Yet 
+Executed},
+SubCode(0x0000)
+mptscsih: ioc0: task abort: SUCCESS (sc=ffff81023d0c6b40)
+mptscsih: ioc0: attempting host reset! (sc=ffff81023d0c6b40)
+mptbase: ioc0: Initiating recovery
+mptscsih: ioc0: host reset: SUCCESS (sc=ffff81023d0c6b40)
+sd 4:0:0:0: Device offlined - not ready after error recovery
+program smartd is using a deprecated SCSI ioctl, please convert it to SG_IO
 
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH] ide-pmac: media-bay support fixes (take 2)
+smartd.conf entries are in the form:
 
-* If MB_CD device has already been detected and bay is in mb_up state just
-  change bay's state to mb_ide_resetting and let probing thread do the rest
-  instead of having open-coded waiting for IDE device to become ready in
-  media_bay_set_ide_infos() and doing the probe by ide_device_add().
+/dev/sdc -d sat,16 -a -I 194 -s L/../../1/01
 
-* Move media_bay_set_ide_infos() call after ide_device_add().
+and all drives behind the controller do the same.
 
-* Use check_media_bay() instead of check_media_bay_by_base(),
-  then remove the latter function.
+Regards,
 
-v2:
-* Check pmif->mediabay and clear drive->noprobe before calling
-  media_bay_set_ide_infos().
-
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
----
- drivers/ide/ppc/pmac.c         |   23 +++++++++++++----------
- drivers/macintosh/mediabay.c   |   33 +++++----------------------------
- include/asm-powerpc/mediabay.h |    1 -
- 3 files changed, 18 insertions(+), 39 deletions(-)
-
-Index: b/drivers/ide/ppc/pmac.c
-===================================================================
---- a/drivers/ide/ppc/pmac.c
-+++ b/drivers/ide/ppc/pmac.c
-@@ -1030,10 +1030,6 @@ pmac_ide_setup_device(pmac_ide_hwif_t *p
- 	/* XXX FIXME: Media bay stuff need re-organizing */
- 	if (np->parent && np->parent->name
- 	    && strcasecmp(np->parent->name, "media-bay") == 0) {
--#ifdef CONFIG_PMAC_MEDIABAY
--		media_bay_set_ide_infos(np->parent, pmif->regbase, pmif->irq,
--					hwif);
--#endif /* CONFIG_PMAC_MEDIABAY */
- 		pmif->mediabay = 1;
- 		if (!bidp)
- 			pmif->aapl_bus_id = 1;
-@@ -1067,19 +1063,26 @@ pmac_ide_setup_device(pmac_ide_hwif_t *p
- 
- 	if (pmif->mediabay) {
- #ifdef CONFIG_PMAC_MEDIABAY
--		if (check_media_bay_by_base(pmif->regbase, MB_CD)) {
--#else
--		if (1) {
-+		if (check_media_bay(np->parent, MB_CD) == -ENODEV)
-+			break;
- #endif
--			hwif->drives[0].noprobe = 1;
--			hwif->drives[1].noprobe = 1;
--		}
-+		hwif->drives[0].noprobe = 1;
-+		hwif->drives[1].noprobe = 1;
- 	}
- 
- 	idx[0] = hwif->index;
- 
- 	ide_device_add(idx, &d);
- 
-+	if (pmif->mediabay) {
-+		hwif->drives[0].noprobe = 0;
-+		hwif->drives[1].noprobe = 0;
-+#ifdef CONFIG_PMAC_MEDIABAY
-+		media_bay_set_ide_infos(np->parent, pmif->regbase, pmif->irq,
-+					hwif);
-+#endif
-+	}
-+
- 	return 0;
- }
- 
-Index: b/drivers/macintosh/mediabay.c
-===================================================================
---- a/drivers/macintosh/mediabay.c
-+++ b/drivers/macintosh/mediabay.c
-@@ -433,21 +433,6 @@ int check_media_bay(struct device_node *
- }
- EXPORT_SYMBOL(check_media_bay);
- 
--int check_media_bay_by_base(unsigned long base, int what)
--{
--	int	i;
--
--	for (i=0; i<media_bay_count; i++)
--		if (media_bays[i].mdev && base == (unsigned long) media_bays[i].cd_base) {
--			if ((what == media_bays[i].content_id) && media_bays[i].state == mb_up)
--				return 0;
--			media_bays[i].cd_index = -1;
--			return -EINVAL;
--		} 
--
--	return -ENODEV;
--}
--
- int media_bay_set_ide_infos(struct device_node* which_bay, unsigned long base,
- 			    int irq, ide_hwif_t *hwif)
- {
-@@ -457,8 +442,6 @@ int media_bay_set_ide_infos(struct devic
- 		struct media_bay_info* bay = &media_bays[i];
- 
- 		if (bay->mdev && which_bay == bay->mdev->ofdev.node) {
--			int timeout = 5000, index = hwif->index;
--			
- 			down(&bay->lock);
- 
- 			bay->cd_port	= hwif;
-@@ -469,18 +452,12 @@ int media_bay_set_ide_infos(struct devic
- 				up(&bay->lock);
- 				return 0;
- 			}
--			printk(KERN_DEBUG "Registered ide%d for media bay %d\n", index, i);
--			do {
--				if (MB_IDE_READY(i)) {
--					bay->cd_index	= index;
--					up(&bay->lock);
--					return 0;
--				}
--				mdelay(1);
--			} while(--timeout);
--			printk(KERN_DEBUG "Timeount waiting IDE in bay %d\n", i);
-+
-+			/* let probing thread do the rest */
-+			bay->state = mb_ide_resetting;
-+
- 			up(&bay->lock);
--			return -ENODEV;
-+			return 0;
- 		}
- 	}
- 
-Index: b/include/asm-powerpc/mediabay.h
-===================================================================
---- a/include/asm-powerpc/mediabay.h
-+++ b/include/asm-powerpc/mediabay.h
-@@ -23,7 +23,6 @@ extern int media_bay_count;
- #ifdef CONFIG_BLK_DEV_IDE_PMAC
- #include <linux/ide.h>
- 
--int check_media_bay_by_base(unsigned long base, int what);
- /* called by IDE PMAC host driver to register IDE controller for media bay */
- int media_bay_set_ide_infos(struct device_node *which_bay, unsigned long base,
- 			    int irq, ide_hwif_t *hwif);
+Richard
