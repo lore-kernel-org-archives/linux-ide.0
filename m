@@ -1,51 +1,34 @@
-From: Pavel Machek <pavel@suse.cz>
-Subject: Re: sata_svw data corruption, strange problems
-Date: Mon, 23 Jun 2008 11:26:38 +0200
-Message-ID: <20080623092638.GH1850@elf.ucw.cz>
-References: <20080617093602.GA28140@elf.ucw.cz> <485EF061.3010601@kernel.org> <20080623082055.GB1850@elf.ucw.cz> <je63s0sfxv.fsf@sykes.suse.de> <20080623085338.GE1850@elf.ucw.cz> <485F6540.6000907@kernel.org> <20080623090130.GF1850@elf.ucw.cz> <1214211859.8011.250.camel@pasglop>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [PATCH] IDE: Fix HDIO_DRIVE_RESET handling
+Date: Mon, 23 Jun 2008 10:16:00 +0100
+Message-ID: <20080623101600.391e5245@lxorguk.ukuu.org.uk>
+References: <87k5gmz596.fsf@denkblock.local>
+	<200806192247.25063.bzolnier@gmail.com>
+	<87wskhuk98.fsf@denkblock.local>
+	<87r6apuk16.fsf@denkblock.local>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from gprs189-60.eurotel.cz ([160.218.189.60]:43459 "EHLO
-	gprs189-60.eurotel.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753717AbYFWJZn (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 23 Jun 2008 05:25:43 -0400
-Content-Disposition: inline
-In-Reply-To: <1214211859.8011.250.camel@pasglop>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1756149AbYFWJez@vger.kernel.org>
+In-Reply-To: <87r6apuk16.fsf@denkblock.local>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Elias Oltmanns <eo@nebensachen.de>
+Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Randy Dunlap <randy.dunlap@oracle.com>
 List-Id: linux-ide@vger.kernel.org
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Cc: Tejun Heo <tj@kernel.org>, Andreas Schwab <schwab@suse.de>, kernel list <linux-kernel@vger.kernel.org>, jgarzik@pobox.com, IDE/ATA development list <linux-ide@vger.kernel.org>, Trivial patch monkey <trivial@kernel.org>
 
-On Mon 2008-06-23 19:04:19, Benjamin Herrenschmidt wrote:
-> On Mon, 2008-06-23 at 11:01 +0200, Pavel Machek wrote:
-> > On Mon 2008-06-23 17:56:32, Tejun Heo wrote:
-> > > Pavel Machek wrote:
-> > > > On Mon 2008-06-23 10:39:40, Andreas Schwab wrote:
-> > > >> Pavel Machek <pavel@suse.cz> writes:
-> > > >>
-> > > >>> +	   controller, the controller could hang. In other cases it
-> > > >>> +	   could return partial data returning in data
-> > > >>> +	   corruption. This problem has been seen in PPC systems and
-> > > >> s/returning/resulting/ ?
-> > > > 
-> > > > Fix thinko in sata_svw comment.
-> > > > 
-> > > > Signed-off-by: Pavel Machek <pavel@suse.cz>
-> > > 
-> > > Please collapse into one patch.  Thanks.
-> 
-> Am I the only one to find Pavel variant almost as obscure as
-> the original one ? :-)
+> in various ways.  Most importantly, it is treated as an out of band
+> request in an illegal way which may very likely lead to system lock ups.
+> Use the drive's request queue to avoid this problem (and fix a locking
+> issue for free along the way).
 
-At least it makes it clear that the bug should not bite in new
-releases.
+It was always designed to be, and used out of band. One of the important
+uses of the ioctl is to abort a running command when an interface has
+jammed up. If you end up queueing it behind that command you've lost most
+of the reason for the ioctl anyway (and you might as well just remove it
+really given SG_IO exists).
 
-I'm neither native english speaker nor author of this driver, so if
-you'd like to improve the comment, please do so. (I spent quite long
-time wondering if we do workaround that hw problem or not, that's why
-I'm trying to clarify the comment).
-								Pavel
--- 
-(english) http://www.livejournal.com/~pavelmachek
-(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
+Other than the command aborting bit, it looks a good idea - that code has
+always been racy and raced against timer handlers, irq handlers and if
+neither of them got it then a speed changedown raced the lot 8(
+
+Alan
