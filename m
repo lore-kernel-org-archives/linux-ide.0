@@ -1,86 +1,55 @@
-From: Richard Scobie <richard@sauce.co.nz>
-Subject: RE: ATA_16 support on mptsas
-Date: Tue, 24 Jun 2008 10:09:11 +1200
-Message-ID: <48601F07.8020506@sauce.co.nz>
+From: Felix Miata <mrmazda@ij.net>
+Subject: Re: [RFC] Separating out libata out of SCSI (finally)
+Date: Mon, 23 Jun 2008 17:56:45 -0400
+Message-ID: <48601C1D.1040508@ij.net>
+References: <485B2CC6.6070201@kernel.org>	 <1213993737.3443.35.camel@localhost.localdomain>	 <485C31FE.8050408@garzik.org>	 <87f94c370806231404t13586777x7f7bee24ebe25ffc@mail.gmail.com> <1214255460.3310.27.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp.sauce.co.nz ([210.48.49.72]:37058 "EHLO smtp.sauce.co.nz"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753371AbYFWWEY (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 23 Jun 2008 18:04:24 -0400
+Received: from fall-lakeland.atl.sa.earthlink.net ([207.69.195.103]:45357 "EHLO
+	fall-lakeland.atl.sa.earthlink.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753332AbYFWWIS (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 23 Jun 2008 18:08:18 -0400
+In-Reply-To: <1214255460.3310.27.camel@localhost.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>, linux-ide@vger.kernel.org
+Cc: Greg Freemyer <greg.freemyer@gmail.com>, Jeff Garzik <jeff@garzik.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Jens Axboe <jens.axboe@oracle.com>
 
-Eric Moore wrote:
+On 2008/06/23 16:11 (GMT-0500) James Bottomley apparently typed:
 
- > The SG tools will work with mpt fusion if your passing the ATA_12
- > (opcode=0xA1) and ATA_16 (opcode=0x85).   This is implemented in
- > fusion firmware.  If your failing, then your probably having old
- > firmware.  I suggest that you upgrading by going to the download
- > site located here: http://www.lsi.com/cm/DownloadSearch.do?locale=EN.
- > Ken Stewart is from support, he should be able to assist you with
- > upgrading the firmware if you encounter any problems.
+> On Mon, 2008-06-23 at 17:04 -0400, Greg Freemyer wrote:
 
-Hi Eric,
+>> I've seen a lot of end user complaints about libata only supporting
+>> 15(14?) partitions.  Will that limit be moved back to the traditional
+>> drivers/ide limit as part of this?
 
-I have already logged a bug with Fedora, but can you think of anything 
-that would have changed between 2.6.25.4 and 2.6.25.6 that would have 
-broken this?
+> Number of partitions is directly related to number of minors, so it
+> can't be changed without a change in the allocation of major/minor space
+> in sd ... that could only be done compatibly by permuting the space.
+> The only other way to do it is incompatibly by changing major (again).
 
-I have just updated from 2.6.25.4-30.fc9.x86_64 to 
-2.6.25.6-55.fc9.x86_64 and smartmontools now causes LSISAS1068E 
-controller resets, where it was working perfectly before:
+I don't know what permuting the space means, but I do know libata affects me
+in a very big way, being dependent on cross platform tools for partitioning,
+backup, & restoration; and multibooting virtually every system I touch. LVM
+is simply no option for these systems, and I have yet to determine whether
+and how kpartx and device mapper might be used to mitigate the problems
+caused by trying to work within libata's SCSI limit, a limit which is a major
+reason why I ceased trying to use SCSI over 5 years ago when disks got too
+big for few partitions. I've ceased trying to use Fedora & *buntu on more
+than a cursory basis, using mostly SUSE and Mandriva because they still
+provide the option to use legacy drivers in their default kernels.
 
-mptscsih: ioc0: attempting task abort! (sc=ffff81023d0c6b40)
-sd 4:0:0:0: [sdc] CDB: ATA command pass through(16): 85 08 0e 00 00 00 
-01 00 00
-00 00 00 00 00 ec 00
-mptbase: ioc0: LogInfo(0x31140000): Originator={PL}, Code={IO Executed},
-SubCode(0x0000)
-mptscsih: ioc0: task abort: SUCCESS (sc=ffff81023d0c6b40)
-mptscsih: ioc0: attempting task abort! (sc=ffff81023d0c6b40)
-sd 4:0:0:0: [sdc] CDB: Test Unit Ready: 00 00 00 00 00 00
-mptbase: ioc0: LogInfo(0x31130000): Originator={PL}, Code={IO Not Yet 
-Executed},
-SubCode(0x0000)
-mptscsih: ioc0: task abort: SUCCESS (sc=ffff81023d0c6b40)
-mptscsih: ioc0: attempting target reset! (sc=ffff81023d0c6b40)
-sd 4:0:0:0: [sdc] CDB: ATA command pass through(16): 85 08 0e 00 00 00 
-01 00 00
-00 00 00 00 00 ec 00
-mptscsih: ioc0: target reset: SUCCESS (sc=ffff81023d0c6b40)
-mptscsih: ioc0: attempting task abort! (sc=ffff81023d0c6b40)
-sd 4:0:0:0: [sdc] CDB: Test Unit Ready: 00 00 00 00 00 00
-mptbase: ioc0: LogInfo(0x31130000): Originator={PL}, Code={IO Not Yet 
-Executed},
-SubCode(0x0000)
-mptscsih: ioc0: task abort: SUCCESS (sc=ffff81023d0c6b40)
-mptscsih: ioc0: attempting bus reset! (sc=ffff81023d0c6b40)
-sd 4:0:0:0: [sdc] CDB: ATA command pass through(16): 85 08 0e 00 00 00 
-01 00 00
-00 00 00 00 00 ec 00
-mptscsih: ioc0: bus reset: SUCCESS (sc=ffff81023d0c6b40)
-mptscsih: ioc0: attempting task abort! (sc=ffff81023d0c6b40)
-sd 4:0:0:0: [sdc] CDB: Test Unit Ready: 00 00 00 00 00 00
-mptbase: ioc0: LogInfo(0x31130000): Originator={PL}, Code={IO Not Yet 
-Executed},
-SubCode(0x0000)
-mptscsih: ioc0: task abort: SUCCESS (sc=ffff81023d0c6b40)
-mptscsih: ioc0: attempting host reset! (sc=ffff81023d0c6b40)
-mptbase: ioc0: Initiating recovery
-mptscsih: ioc0: host reset: SUCCESS (sc=ffff81023d0c6b40)
-sd 4:0:0:0: Device offlined - not ready after error recovery
-program smartd is using a deprecated SCSI ioctl, please convert it to SG_IO
+Isn't libata at some point supposed to completely displace the legacy IDE
+driver set? If so, at some point couldn't the IDE major be recycled for
+libata use for devices >15, or even all of them, maybe in the interim via a
+compile time choice between either legacy or major 3 but never both
+simultaneously?
+-- 
+"Where were you when I laid the earth's
+foundation?"		       Matthew 7:12 NIV
 
-smartd.conf entries are in the form:
+ Team OS/2 ** Reg. Linux User #211409
 
-/dev/sdc -d sat,16 -a -I 194 -s L/../../1/01
-
-and all drives behind the controller do the same.
-
-Regards,
-
-Richard
+Felix Miata  ***  http://fm.no-ip.com/
