@@ -1,46 +1,41 @@
-From: Anton Vorontsov <avorontsov@ru.mvista.com>
-Subject: Re: [PATCH -rt] ide: fix interrupts processing issue with
-	preempt-able hardirqs
-Date: Tue, 24 Jun 2008 04:00:16 +0400
-Message-ID: <20080624000016.GA12547@polina.dev.rtsoft.ru>
-References: <20080623234037.GA6793@polina.dev.rtsoft.ru> <20080623235141.GB17297@elte.hu>
-Reply-To: avorontsov@ru.mvista.com
+From: Tejun Heo <tj@kernel.org>
+Subject: [PATCH] pci: VT3336 can't do MSI either
+Date: Tue, 24 Jun 2008 14:35:14 +0900
+Message-ID: <48608792.7090909@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf8
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtsoft3.corbina.net ([85.21.88.6]:32559 "EHLO
-	buildserver.ru.mvista.com" rhost-flags-OK-FAIL-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1752341AbYFXAAR (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 23 Jun 2008 20:00:17 -0400
-Content-Disposition: inline
-In-Reply-To: <20080623235141.GB17297@elte.hu>
+Received: from hera.kernel.org ([140.211.167.34]:53553 "EHLO hera.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751328AbYFXFgI (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 24 Jun 2008 01:36:08 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Ingo Molnar <mingo@elte.hu>
-Cc: linux-ide@vger.kernel.org, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Sergei Shtylyov <sshtylyov@ru.mvista.com>, linux-kernel@vger.kernel.org, Thomas Gleixner <tglx@linutronix.de>, Steven Rostedt <rostedt@goodmis.org>
+To: Jeff Garzik <jeff@garzik.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, Greg KH <greg@kroah.com>, Andrew Morton <akpm@linux-foundation.org>
+Cc: Linux Kernel <linux-kernel@vger.kernel.org>, linux-pci@atrey.karlin.mff.cuni.cz
 
-On Tue, Jun 24, 2008 at 01:51:41AM +0200, Ingo Molnar wrote:
-> 
-> * Anton Vorontsov <avorontsov@ru.mvista.com> wrote:
-> 
-> > IDE interrupt handler relies on the fact that, if necessary, hardirqs 
-> > will re-trigger on ISR exit. With fully preemtable IRQs this seems to 
-> > be not true, since if hardirq thread is currently running, and the 
-> > same IRQ raised again, then this IRQ will be simply lost.
-> 
-> actually no, that should not happen - if -rt loses an IRQ then something 
-> broke in the threaded IRQ code. It's supposed to be a drop-in, 
-> compatible IRQ flow with no driver changes needed.
+It seems VT3336 can't do msi either as with its bro 3351.  Disable it.
+Reported in the following SUSE bug.
 
-..just as I thought, the bug somewhere deeper... heh.
+  https://bugzilla.novell.com/show_bug.cgi?id=300001
 
-> ( also, please do not Cc: mainline maintainers to RFC -rt patches, let
->   the -rt maintainers sort out the need for any patch propagation - once 
->   the patches are sufficiently cooked. Thanks. )
+Signed-off-by: Tejun Heo <tj@kernel.org>
+---
+Anyone interested in queuing this for -rc8?  Thanks.
 
-Ok, thanks.
+ drivers/pci/quirks.c |    1 +
+ 1 file changed, 1 insertion(+)
 
--- 
-Anton Vorontsov
-email: cbouatmailru@gmail.com
-irc://irc.freenode.net/bd2
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index dabb563..9d95f0b 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -1685,6 +1685,7 @@ static void __init quirk_disable_all_msi(struct pci_dev *dev)
+ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_SERVERWORKS, PCI_DEVICE_ID_SERVERWORKS_GCNB_LE, quirk_disable_all_msi);
+ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_ATI, PCI_DEVICE_ID_ATI_RS400_200, quirk_disable_all_msi);
+ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_ATI, PCI_DEVICE_ID_ATI_RS480, quirk_disable_all_msi);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_VIA, PCI_DEVICE_ID_VIA_VT3336, quirk_disable_all_msi);
+ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_VIA, PCI_DEVICE_ID_VIA_VT3351, quirk_disable_all_msi);
+ 
+ /* Disable MSI on chipsets that are known to not support it */
