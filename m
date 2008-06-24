@@ -1,28 +1,37 @@
-From: "Richard Genoud" <richard.genoud@gmail.com>
-Subject: PLEXTOR DVDR PX-740A drive not ready for command
-Date: Tue, 24 Jun 2008 19:11:49 +0200
-Message-ID: <80b317760806241011u24642294tadbfb81977f2328@mail.gmail.com>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [RFC] Separating out libata out of SCSI (finally)
+Date: Tue, 24 Jun 2008 17:54:33 +0100
+Message-ID: <20080624175433.0461c85a@lxorguk.ukuu.org.uk>
+References: <485B2CC6.6070201@kernel.org>
+	<1213993737.3443.35.camel@localhost.localdomain>
+	<485C31FE.8050408@garzik.org>
+	<87f94c370806231404t13586777x7f7bee24ebe25ffc@mail.gmail.com>
+	<1214255460.3310.27.camel@localhost.localdomain>
+	<4860B099.2030305@panasas.com>
+	<1214318550.3299.7.camel@localhost.localdomain>
+	<48610BDC.6090101@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wf-out-1314.google.com ([209.85.200.169]:44707 "EHLO
-	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759275AbYFXRLu (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 24 Jun 2008 13:11:50 -0400
-Received: by wf-out-1314.google.com with SMTP id 27so2543932wfd.4
-        for <linux-ide@vger.kernel.org>; Tue, 24 Jun 2008 10:11:49 -0700 (PDT)
-Content-Disposition: inline
+Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:58566 "EHLO
+	lxorguk.ukuu.org.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1754357AbYFXROE (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 24 Jun 2008 13:14:04 -0400
+In-Reply-To: <48610BDC.6090101@kernel.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: linux-ide@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Boaz Harrosh <bharrosh@panasas.com>, Greg Freemyer <greg.freemyer@gmail.com>, Jeff Garzik <jeff@garzik.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, brking@linux.vnet.ibm.com, Mark Lord <liml@rtr.ca>, Jens Axboe <jens.axboe@oracle.com>
 
-hi Bartlomiej !
+> I'm currently working on a scheme where partitions above gd->minors get
+> allocated dynamic MAJ:MIN.  It looks like it can be done mostly in block
+> layer proper.  The only problem I can foresee is not being able to
+> specify MAJ:MIN as root device but that shouldn't be a major problem.
+> I'll report back when I make more progress.
 
-I've revert-the-revert on a 2.6.26-rc7 kernel and the "drive not ready
-for command" message comes again.
+Run it past Al Viro, he vetoed the previous proposal to have discontiguous
+minor number ranges a couple of years ago, which is why we are stuck with
+this limit.
 
-ref : http://bugzilla.kernel.org/show_bug.cgi?id=10239
-
-richard.
+Alan
