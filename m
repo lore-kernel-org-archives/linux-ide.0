@@ -1,43 +1,45 @@
-From: Tejun Heo <tj@kernel.org>
+From: Mark Lord <mlord@pobox.com>
 Subject: Re: FW: ICH10R PMP support
-Date: Tue, 24 Jun 2008 16:10:57 +0900
-Message-ID: <48609E01.1050802@kernel.org>
-References: <023701c8d4dd$d737fa10$85a7ee30$@com> <485F6830.1040000@pobox.com> <485F7356.5050605@kernel.org> <48609C8F.90805@pobox.com>
+Date: Tue, 24 Jun 2008 03:11:36 -0400
+Message-ID: <48609E28.8040300@pobox.com>
+References: <023701c8d4dd$d737fa10$85a7ee30$@com>
+ <485F6830.1040000@pobox.com> <028401c8d549$7dfab390$79f01ab0$@com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:55558 "EHLO hera.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750989AbYFXHLc (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 24 Jun 2008 03:11:32 -0400
-In-Reply-To: <48609C8F.90805@pobox.com>
+Received: from a-sasl-quonix.sasl.smtp.pobox.com ([208.72.237.25]:48158 "EHLO
+	sasl.smtp.pobox.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751405AbYFXHLx (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 24 Jun 2008 03:11:53 -0400
+In-Reply-To: <028401c8d549$7dfab390$79f01ab0$@com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark Lord <mlord@pobox.com>
-Cc: Milo Medin <medin@m2znetworks.com>, linux-ide@vger.kernel.org
+To: Milo Medin <medin@m2znetworks.com>
+Cc: linux-ide@vger.kernel.org
 
-Mark Lord wrote:
-> Tejun Heo wrote:
->> Mark Lord wrote:
-> ..
->>> The 7042 is the best of the Marvell chips, for Linux.
->>
->> How high does it go bandwidth-wise?
-> ..
+Milo Medin wrote:
+> Mark, thanks very much for the reply.  Sounds like the 88SX7042 is a good solution.  A couple more questions:
 > 
-> The limiting factor will be the bus width of the card
-> and the slot into which it is plugged, I suspect.
-> 
-> There are 4-lane PCIe cards out there, and one of those
-> in a 4-lane ("4X") or wider PCIe slot ought to have no
-> real limitations due to the 7042 side of things.
+> 1) There seems to be talk on the mailing list about a bug where on highpoint controllers using this chip the controller corrupts some data on non-raid disk members.  I assume this is caused by the specific firmware on highpoint controllers using this chip, and that if I use a non highpoint version of the 88SX7042 that I won't see this problem.
+..
 
-Cool.  I was asking because sil3124 and 32 seem to have inherent
-bandwidth limit regardless of the bus it lives on.  I'm planning on
-checking out 3132-2 chips to see whether they improved on that front.
+The firmware on the Highpoint RAID cards unconditionally overwrites
+sectors on any attached drives, before booting any O/S.
 
-Thanks.
+Never plug a drive that already has data on it into any Highpoint RAID card.
+But for new drives, just partition around the firmware areas and you'll be fine.
+There are notes (and a WARNING) in the driver source code regarding those.
+Avoid sectors 1..63 (cannot boot from this controller as a result),
+and avoid the final (full!) GB of each drive.
 
+> 2) You said this is the best marvell solution for Linux at this time.  Is there a better SATA controller that I should be thinking about other than the 88SX7042?  I know the ICH9R's had good performance, but no FIS switching for PMP's.
+..
+
+Dunno.  I think everyone in the biz is going to AHCI style controllers now.
+
+Cheers
 -- 
-tejun
+Mark Lord
+Real-Time Remedies Inc.
+mlord@pobox.com
