@@ -1,15 +1,15 @@
 From: Adrian Bunk <bunk@kernel.org>
-Subject: [0/5] move hd.c to drivers/block/
-Date: Wed, 25 Jun 2008 00:54:08 +0300
-Message-ID: <20080624215407.GB18252@cs181140183.pp.htv.fi>
+Subject: [1/5] remove BLK_DEV_HD_ONLY
+Date: Wed, 25 Jun 2008 00:54:15 +0300
+Message-ID: <20080624215414.GC18252@cs181140183.pp.htv.fi>
 References: <20080609222155.GA1987@cs181133002.pp.htv.fi> <200806101956.15711.bzolnier@gmail.com> <20080622101752.GG27069@cs181133002.pp.htv.fi> <200806221521.33506.bzolnier@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp5.pp.htv.fi ([213.243.153.39]:38995 "EHLO smtp5.pp.htv.fi"
+Received: from smtp6.pp.htv.fi ([213.243.153.40]:51389 "EHLO smtp6.pp.htv.fi"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756559AbYFXV4J (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 24 Jun 2008 17:56:09 -0400
+	id S1753646AbYFXV4Q (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 24 Jun 2008 17:56:16 -0400
 Content-Disposition: inline
 In-Reply-To: <200806221521.33506.bzolnier@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
@@ -17,66 +17,35 @@ List-Id: linux-ide@vger.kernel.org
 To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, rmk@arm.linux.org.uk, Alan Cox <alan@lxorguk.ukuu.org.uk>
 
-On Sun, Jun 22, 2008 at 03:21:33PM +0200, Bartlomiej Zolnierkiewicz wrote:
-> On Sunday 22 June 2008, Adrian Bunk wrote:
-> > On Tue, Jun 10, 2008 at 07:56:15PM +0200, Bartlomiej Zolnierkiewicz wrote:
-> > > On Tuesday 10 June 2008, Adrian Bunk wrote:
-> > > > This patch limits BLK_DEV_HD_ONLY to the ARM platforms offering 
-> > > > IRQ_HARDDISK, fixing the following compile error on others:
-> > > > 
-> > > > <--  snip  -->
-> > > > 
-> > > > ...
-> > > >   CC      drivers/ide/legacy/hd.o
-> > > > ...
-> > > > /home/bunk/linux/kernel-2.6/git/linux-2.6/drivers/ide/legacy/hd.c: In function 'hd_times_out':
-> > > > /home/bunk/linux/kernel-2.6/git/linux-2.6/drivers/ide/legacy/hd.c:542: error: 'IRQ_HARDDISK' undeclared (first use in this function)
-> > > > /home/bunk/linux/kernel-2.6/git/linux-2.6/drivers/ide/legacy/hd.c:542: error: (Each undeclared identifier is reported only once
-> > > > /home/bunk/linux/kernel-2.6/git/linux-2.6/drivers/ide/legacy/hd.c:542: error: for each function it appears in.)
-> > > > /home/bunk/linux/kernel-2.6/git/linux-2.6/drivers/ide/legacy/hd.c: In function 'do_hd_request':
-> > > > /home/bunk/linux/kernel-2.6/git/linux-2.6/drivers/ide/legacy/hd.c:661: error: 'IRQ_HARDDISK' undeclared (first use in this function)
-> > > > /home/bunk/linux/kernel-2.6/git/linux-2.6/drivers/ide/legacy/hd.c: In function 'hd_init':
-> > > > /home/bunk/linux/kernel-2.6/git/linux-2.6/drivers/ide/legacy/hd.c:765: error: 'IRQ_HARDDISK' undeclared (first use in this function)
-> > > > make[3]: *** [drivers/ide/legacy/hd.o] Error 1
-> > > > 
-> > > > <--  snip  -->
-> > > > 
-> > > > Reported-by: Adrian Bunk <bunk@kernel.org>
-> > > > Signed-off-by: Adrian Bunk <bunk@kernel.org>
-> > > 
-> > > applied, thanks
-> > > 
-> > > BTW Could you look into converting your "remove BLK_DEV_HD_ONLY" patch
-> > > into "move old hd driver to drivers/block/" one because the old hd driver
-> > > still has some uses (as noticed by Alan)?
-> > 
-> > drivers/ide/Makefile says:
-> >   # old hd driver must be last
-> > 
-> > Is this still true?
-> 
-> Yep.
-> 
-> > If yes then moving the driver to drivers/block/ requires switching to 
-> > late_initcall() since drivers/block/ is linked before drivers/ide/ .
-> 
-> Care to cook a patch?
+After commit 80aa31cb460d12c1e02327b43eceb3eebc6e7090
+(ide: remove CONFIG_BLK_DEV_HD_IDE config option (take 2))
+the indirection through BLK_DEV_HD_ONLY is no longer required.
 
-Comes as part of this patchset.
+Signed-off-by: Adrian Bunk <bunk@kernel.org>
 
-This was only compile tested, and I'd really appreciate if anyone 
-(Alan?) could test whether it still works.
+---
 
-> Thanks,
-> Bart
+ drivers/ide/Kconfig |    5 +----
+ 1 file changed, 1 insertion(+), 4 deletions(-)
 
-cu
-Adrian
-
--- 
-
-       "Is there not promise of rain?" Ling Tan asked suddenly out
-        of the darkness. There had been need of rain for many days.
-       "Only a promise," Lao Er said.
-                                       Pearl S. Buck - Dragon Seed
-
+5af5ece5e303cf8d6797510fa2e1ec0ffdf9c110 diff --git a/drivers/ide/Kconfig b/drivers/ide/Kconfig
+index 8e07de2..1933345 100644
+--- a/drivers/ide/Kconfig
++++ b/drivers/ide/Kconfig
+@@ -1019,7 +1019,7 @@ config BLK_DEV_IDEDMA
+ 
+ endif
+ 
+-config BLK_DEV_HD_ONLY
++config BLK_DEV_HD
+ 	bool "Old hard disk (MFM/RLL/IDE) driver"
+ 	depends on !ARM || ARCH_RPC || ARCH_SHARK || BROKEN
+ 	help
+@@ -1042,7 +1042,4 @@ config BLK_DEV_HD_ONLY
+ 	  Disk-HOWTO, available from
+ 	  <http://www.tldp.org/docs.html#howto>.
+ 
+-config BLK_DEV_HD
+-	def_bool BLK_DEV_HD_ONLY
+-
+ endif # IDE
