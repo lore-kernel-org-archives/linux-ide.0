@@ -1,43 +1,45 @@
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Subject: Re: [PATCH 1/4] ide-pmac: media-bay support fixes
-Date: Tue, 24 Jun 2008 20:34:53 +1000
-Message-ID: <1214303693.8011.345.camel@pasglop>
-References: <200806162124.43005.bzolnier@gmail.com>
-	 <1214200453.8011.232.camel@pasglop> <1214203312.8011.246.camel@pasglop>
-	 <200806232300.57614.bzolnier@gmail.com>
-Reply-To: benh@kernel.crashing.org
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: [PATCH] IDE: Fix HDIO_DRIVE_RESET handling
+Date: Tue, 24 Jun 2008 13:06:41 +0200
+Message-ID: <200806241306.42054.bzolnier@gmail.com>
+References: <87k5gmz596.fsf@denkblock.local> <200806240041.42796.bzolnier@gmail.com> <87skv3s3d9.fsf@denkblock.local>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from gate.crashing.org ([63.228.1.57]:33947 "EHLO gate.crashing.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751293AbYFXKe6 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 24 Jun 2008 06:34:58 -0400
-In-Reply-To: <200806232300.57614.bzolnier@gmail.com>
+Received: from yx-out-2324.google.com ([74.125.44.29]:16860 "EHLO
+	yx-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752578AbYFXLE7 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 24 Jun 2008 07:04:59 -0400
+Received: by yx-out-2324.google.com with SMTP id 31so497464yxl.1
+        for <linux-ide@vger.kernel.org>; Tue, 24 Jun 2008 04:04:58 -0700 (PDT)
+In-Reply-To: <87skv3s3d9.fsf@denkblock.local>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Elias Oltmanns <eo@nebensachen.de>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Randy Dunlap <randy.dunlap@oracle.com>
 
+On Tuesday 24 June 2008, Elias Oltmanns wrote:
+> Bartlomiej Zolnierkiewicz <bzolnier@gmail.com> wrote:
 
-> Build error and/or your build fix would be useful here.
+[...]
 
-Sorry. Fix was a quick hack. There is a check_media_bay() followed by a
-break; outside of a break-able construct in there (off memory, I'm not
-in front of the dev box right now).
-
-> Ok, I see the problem - we now need to clear dive->noprobe after
-> ide_device_add() call (pmac.c) or later ide_port_scan() call (mediabay.c)
-> will fail...  also there was a pmif->mediabay check missing...
+> > BTW Your fix adds framework which can be re-used for fixing locking of
+> >IDE
+> > settings (+ it finally makes sense to dust-off my IDE settings rework which
+> > was always low-prio and was never posted :) and maybe it could be also used
+> > for drive->special handling.
 > 
-> Please try the new version of patch #1 (the other patches are unchanged):
+> Alan's remark made me think again and I'm still not quite sure whether I
+> can (and indeed should) fix ide_abort() and allow for out of band
 
-Thanks. Will do ASAP tomorrow. I've been kept busy with other more
-urgent things today (gotta love having meetings starting at 6AM in the
-morning !)
+[...]
 
-Cheers,
-Ben.
+I don't see a reliable way to fix ide_abort() - once the request/command
+is started hardware can be already in a state that makes aborting hard if
+not impossible.
 
-
+Thanks,
+Bart
