@@ -1,40 +1,57 @@
-From: "Bartlomiej Zolnierkiewicz" <bzolnier@gmail.com>
-Subject: Re: [PATCH] IDE: Fix HDIO_DRIVE_RESET handling
-Date: Tue, 24 Jun 2008 16:33:38 +0200
-Message-ID: <58cb370e0806240733q5a6987f4q7f103e3864b09e62@mail.gmail.com>
-References: <87k5gmz596.fsf@denkblock.local>
-	 <200806240041.42796.bzolnier@gmail.com>
-	 <87skv3s3d9.fsf@denkblock.local>
-	 <200806241306.42054.bzolnier@gmail.com>
-	 <20080624133218.6bccab75@lxorguk.ukuu.org.uk>
-	 <58cb370e0806240621g61370f56j660e31790dad89c3@mail.gmail.com>
-	 <20080624143548.24dcf511@lxorguk.ukuu.org.uk>
-	 <58cb370e0806240719o4a70537p4a6fb64e9086e2d8@mail.gmail.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [RFC] Separating out libata out of SCSI (finally)
+Date: Tue, 24 Jun 2008 09:42:30 -0500
+Message-ID: <1214318550.3299.7.camel@localhost.localdomain>
+References: <485B2CC6.6070201@kernel.org>
+	 <1213993737.3443.35.camel@localhost.localdomain>
+	 <485C31FE.8050408@garzik.org>
+	 <87f94c370806231404t13586777x7f7bee24ebe25ffc@mail.gmail.com>
+	 <1214255460.3310.27.camel@localhost.localdomain>
+	 <4860B099.2030305@panasas.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.159]:39084 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754395AbYFXOdk (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 24 Jun 2008 10:33:40 -0400
-Received: by fg-out-1718.google.com with SMTP id 19so1185025fgg.17
-        for <linux-ide@vger.kernel.org>; Tue, 24 Jun 2008 07:33:39 -0700 (PDT)
-In-Reply-To: <58cb370e0806240719o4a70537p4a6fb64e9086e2d8@mail.gmail.com>
-Content-Disposition: inline
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <4860B099.2030305@panasas.com>
+Sender: linux-scsi-owner@vger.kernel.org
+To: Boaz Harrosh <bharrosh@panasas.com>
+Cc: Greg Freemyer <greg.freemyer@gmail.com>, Jeff Garzik <jeff@garzik.org>, Tejun Heo <tj@kernel.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, brking@linux.vnet.ibm.com, Mark Lord <liml@rtr.ca>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Jens Axboe <jens.axboe@oracle.com>
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: Elias Oltmanns <eo@nebensachen.de>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Randy Dunlap <randy.dunlap@oracle.com>
 
-On Tue, Jun 24, 2008 at 4:19 PM, Bartlomiej Zolnierkiewicz
-<bzolnier@gmail.com> wrote:
+On Tue, 2008-06-24 at 11:30 +0300, Boaz Harrosh wrote:
+> James Bottomley wrote:
+> > On Mon, 2008-06-23 at 17:04 -0400, Greg Freemyer wrote:
+> >> I've seen a lot of end user complaints about libata only supporting
+> >> 15(14?) partitions.  Will that limit be moved back to the traditional
+> >> drivers/ide limit as part of this?
+> > 
+> > Number of partitions is directly related to number of minors, so it
+> > can't be changed without a change in the allocation of major/minor space
+> > in sd ... that could only be done compatibly by permuting the space.
+> > The only other way to do it is incompatibly by changing major (again).
+> > 
+> Could we do both? I mean use the legacy, up to 15, with the old major,
+> then use the new major for bigger then 15. Since user mode that knows
+> about more then 15 partitions is new, it'll know it needs to jump a major.
 
-[...]
+Not simultaneously, which is the problem; you can't have two separate
+block devices for the same physical device unless you want aliasing
+issues in the page cache.
 
-> IOW while the two operations are very similar on the drive level they
-> certainly have different needs and requirements at the higher level
-> (abort operation being especially tricky).
+It might be possible to add an extra device to give access to the
+missing partitions, but that would require a bit of re-engineering in
+gendisk (which is the in-kernel code to manage the partitions).
 
-The confusion seems to be caused by unfortunate use of the word
-'hardware' in my initial mail ('system' should be more proper)...
+What might be far more feasible is to set up udev to use kpartx to
+provide the missing partitions if it detects a partition table that has
+them ... of course, that requires a udev setup and most of the
+complaints about the lost partitions seem to come from non-udev systems.
+
+But .... if everyone (particularly the people with these problems) had
+udev, we could simply migrate to a new major with more partitions, get
+udev to fix it all up for us and everyone would be happy because no-one
+would even notice that we'd moved majors ...
+
+James
+
+
