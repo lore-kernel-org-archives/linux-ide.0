@@ -1,54 +1,51 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [PATCH] IDE: Fix HDIO_DRIVE_RESET handling
-Date: Tue, 24 Jun 2008 10:10:40 +0100
-Message-ID: <20080624101040.0c9d7f9c@lxorguk.ukuu.org.uk>
-References: <87k5gmz596.fsf@denkblock.local>
-	<200806192247.25063.bzolnier@gmail.com>
-	<87wskhuk98.fsf@denkblock.local>
-	<87r6apuk16.fsf@denkblock.local>
-	<20080623101600.391e5245@lxorguk.ukuu.org.uk>
-	<873an3tixa.fsf@denkblock.local>
+From: Brad Campbell <brad@wasp.net.au>
+Subject: Re: FW: ICH10R PMP support
+Date: Tue, 24 Jun 2008 13:40:43 +0400
+Message-ID: <4860C11B.7060302@wasp.net.au>
+References: <023701c8d4dd$d737fa10$85a7ee30$@com> <485F6830.1040000@pobox.com> <485F7356.5050605@kernel.org> <48609C8F.90805@pobox.com> <48609E01.1050802@kernel.org> <48609F20.4060608@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:42726 "EHLO
-	lxorguk.ukuu.org.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1758881AbYFXJ21 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 24 Jun 2008 05:28:27 -0400
-In-Reply-To: <873an3tixa.fsf@denkblock.local>
+Received: from wasp.net.au ([203.190.192.17]:37696 "EHLO wasp.net.au"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750751AbYFXJkt (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 24 Jun 2008 05:40:49 -0400
+In-Reply-To: <48609F20.4060608@pobox.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Elias Oltmanns <eo@nebensachen.de>
-Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Randy Dunlap <randy.dunlap@oracle.com>
+To: Mark Lord <mlord@pobox.com>
+Cc: Tejun Heo <tj@kernel.org>, Milo Medin <medin@m2znetworks.com>, linux-ide@vger.kernel.org, Grant Grundler <grundler@google.com>
 
-> alternative to the out of band approach for the purposes you described.
-> Now, I even think that I could perhaps fix the request aborting properly
+Mark Lord wrote:
+> Tejun Heo wrote:
+>> Mark Lord wrote:
+>>> Tejun Heo wrote:
+>>>> Mark Lord wrote:
+>>> ..
+>>>>> The 7042 is the best of the Marvell chips, for Linux.
+>>>> How high does it go bandwidth-wise?
+>>> ..
+>>>
+>>> The limiting factor will be the bus width of the card
+>>> and the slot into which it is plugged, I suspect.
+> ..
+> 
+> Note that this has yet to be confirmed in practice,
+> though I don't know if anyone has really tried hard yet.
 
-I'm not sure the two are mutually conflicting. The queued reset you've
-done is very much cleaner so in theory you can abort the command in the
-ioctl and then queue the rest of the reset/recovery as you have done
+I recently read a very nice review of the 7042 on a Sonnet card in a Mac and they were pulling over 
+700MB/s using SIL port multipliers in a 4 lane slot. They managed over 1GB/s with 20 drives across 2 
+of the cards! I've heard some unkind things about the SIL cards bandwidth, but these Marvell jobbies 
+look very nice.
 
-> equivalent for HDIO_DRIVE_RESET in libata which makes me wonder whether
-> this ioctl has actually been used in real life for the purposes you
-> described.
+http://www.amug.org/amug-web/html/amug/reviews/articles/sonnet/mac-pro/
 
-Its on the todo list along with more speed control - it gets hard to do
-right and cleanly.
+I've half a mind to order a couple of these and some PM's to play with. Shame the only PM's I can 
+seem to find that do what I want are $85 each from addonics (I need 5 of them)
 
-> My idea to solve this would be roughly this: Change ide_set_handler to
-> leave the ->handler and ->expiry members alone if they have been set on
-> entry. If a request is being processed by the time a HDIO_DRIVE_RESET
-
-The basic problem is that we have to issue a speed change and the driver
-layer speed change code assumed this was issued polled with a wait (in
-fact for some controllers/disks it has to be polled). Not a good thing to
-discover you are doing in an IRQ handler ...
-
-> Comments?
-
-I think your basic approach is right. It might be that the abort path
-wants to abort and then queue the rest. I could of course be completely
-wrong too 8)
-
-Alan
+Brad
+-- 
+"Human beings, who are almost unique in having the ability
+to learn from the experience of others, are also remarkable
+for their apparent disinclination to do so." -- Douglas Adams
