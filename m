@@ -1,51 +1,60 @@
-From: Brad Campbell <brad@wasp.net.au>
-Subject: Re: FW: ICH10R PMP support
-Date: Tue, 24 Jun 2008 13:40:43 +0400
-Message-ID: <4860C11B.7060302@wasp.net.au>
-References: <023701c8d4dd$d737fa10$85a7ee30$@com> <485F6830.1040000@pobox.com> <485F7356.5050605@kernel.org> <48609C8F.90805@pobox.com> <48609E01.1050802@kernel.org> <48609F20.4060608@pobox.com>
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Subject: Re: [PATCH 1/4] ide-pmac: media-bay support fixes
+Date: Tue, 24 Jun 2008 20:33:37 +1000
+Message-ID: <1214303617.8011.342.camel@pasglop>
+References: <200806162124.43005.bzolnier@gmail.com>
+	 <1214203312.8011.246.camel@pasglop> <1214218047.8011.268.camel@pasglop>
+	 <200806232345.07621.bzolnier@gmail.com>
+Reply-To: benh@kernel.crashing.org
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wasp.net.au ([203.190.192.17]:37696 "EHLO wasp.net.au"
+Received: from gate.crashing.org ([63.228.1.57]:33929 "EHLO gate.crashing.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750751AbYFXJkt (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 24 Jun 2008 05:40:49 -0400
-In-Reply-To: <48609F20.4060608@pobox.com>
+	id S1752578AbYFXKdr (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 24 Jun 2008 06:33:47 -0400
+In-Reply-To: <200806232345.07621.bzolnier@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark Lord <mlord@pobox.com>
-Cc: Tejun Heo <tj@kernel.org>, Milo Medin <medin@m2znetworks.com>, linux-ide@vger.kernel.org, Grant Grundler <grundler@google.com>
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Mark Lord wrote:
-> Tejun Heo wrote:
->> Mark Lord wrote:
->>> Tejun Heo wrote:
->>>> Mark Lord wrote:
->>> ..
->>>>> The 7042 is the best of the Marvell chips, for Linux.
->>>> How high does it go bandwidth-wise?
->>> ..
->>>
->>> The limiting factor will be the bus width of the card
->>> and the slot into which it is plugged, I suspect.
-> ..
-> 
-> Note that this has yet to be confirmed in practice,
-> though I don't know if anyone has really tried hard yet.
 
-I recently read a very nice review of the 7042 on a Sonnet card in a Mac and they were pulling over 
-700MB/s using SIL port multipliers in a 4 lane slot. They managed over 1GB/s with 20 drives across 2 
-of the cards! I've heard some unkind things about the SIL cards bandwidth, but these Marvell jobbies 
-look very nice.
+> I (naively?) hope that you are using ide-pmac as a base (the driver looks
+> like a normal host driver now) and going to make the final API switch after
+> hardware specific changes are complete (so we will be able to use git-bisect
+> instead of guesswork combined with voodoo dance when dealing with potential
+> regressions :-).
 
-http://www.amug.org/amug-web/html/amug/reviews/articles/sonnet/mac-pro/
+I intend to yes :-) Along with my WIP pata_macio of course but I don't
+like leaving a driver broken and/or non bisectable, believe me.
 
-I've half a mind to order a couple of these and some PM's to play with. Shame the only PM's I can 
-seem to find that do what I want are $85 each from addonics (I need 5 of them)
+> You may want to look at ACPI hotplug dock handling for inspiration
+> (if you haven't already).
 
-Brad
--- 
-"Human beings, who are almost unique in having the ability
-to learn from the experience of others, are also remarkable
-for their apparent disinclination to do so." -- Douglas Adams
+Thanks, I will. I've been busy with all sorts of other things so no, I
+haven't looked yet, and it's a bit less urgent, but thanks for the
+pointer,
+
+> There is no longer any hackery on IDE core code side in 2.6.26, there are
+> just two nice methods: ide_port_unregister_devices() and ide_scan_port().
+
+Sure but the fact that mediabay calls them directly makes it painful to
+deal with 2 drivers, one using drivers/ide and one libata. So I want to
+turn that into a notification into the low level driver so it does what
+is appropriate.
+
+> Therefore I would prefer to also update ide-pmac for new methods and just
+> add what is needed (if any) to IDE core code.
+
+Sure. I don't think I will need to change any of the core.
+
+> [ Please keep me in loop on these mediabay changes. ]
+
+I'll let you know when I get something done.
+
+Cheers,
+Ben.
+
+
