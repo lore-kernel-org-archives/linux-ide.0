@@ -1,15 +1,15 @@
 From: Adrian Bunk <bunk@kernel.org>
-Subject: [4/5] update the BLK_DEV_HD help text
-Date: Wed, 25 Jun 2008 00:55:34 +0300
-Message-ID: <20080624215533.GF18252@cs181140183.pp.htv.fi>
+Subject: [5/5] hd.c: remove the #include <linux/mc146818rtc.h>
+Date: Wed, 25 Jun 2008 01:05:14 +0300
+Message-ID: <20080624220514.GG18252@cs181140183.pp.htv.fi>
 References: <20080609222155.GA1987@cs181133002.pp.htv.fi> <200806101956.15711.bzolnier@gmail.com> <20080622101752.GG27069@cs181133002.pp.htv.fi> <200806221521.33506.bzolnier@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp5.pp.htv.fi ([213.243.153.39]:39046 "EHLO smtp5.pp.htv.fi"
+Received: from smtp5.pp.htv.fi ([213.243.153.39]:39377 "EHLO smtp5.pp.htv.fi"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757925AbYFXV5f (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 24 Jun 2008 17:57:35 -0400
+	id S1751637AbYFXWHP (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 24 Jun 2008 18:07:15 -0400
 Content-Disposition: inline
 In-Reply-To: <200806221521.33506.bzolnier@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
@@ -17,55 +17,21 @@ List-Id: linux-ide@vger.kernel.org
 To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, rmk@arm.linux.org.uk, Alan Cox <alan@lxorguk.ukuu.org.uk>
 
-Many people will see this option the first time now that it is in 
-drivers/block/
-
-Make it clear that virtually noone needs it.
+The code that needed this #include was removed one year ago.
 
 Signed-off-by: Adrian Bunk <bunk@kernel.org>
 
 ---
-
- drivers/block/Kconfig |   26 +++++++-------------------
- 1 file changed, 7 insertions(+), 19 deletions(-)
-
-6071700205968d31a74a695a678188f2cbcf0eb8 diff --git a/drivers/block/Kconfig b/drivers/block/Kconfig
-index c9ab7ef..46eb920 100644
---- a/drivers/block/Kconfig
-+++ b/drivers/block/Kconfig
-@@ -434,27 +434,15 @@ config VIRTIO_BLK
-           lguest or QEMU based VMMs (like KVM or Xen).  Say Y or M.
- 
- config BLK_DEV_HD
--	bool "Old hard disk (MFM/RLL/IDE) driver"
-+	bool "Very old hard disk (MFM/RLL/IDE) driver"
- 	depends on HAVE_IDE
- 	depends on !ARM || ARCH_RPC || ARCH_SHARK || BROKEN
- 	help
--	  There are two drivers for MFM/RLL/IDE hard disks. Most people use
--	  the newer enhanced driver, but this old one is still around for two
--	  reasons. Some older systems have strange timing problems and seem to
--	  work only with the old driver (which itself does not work with some
--	  newer systems). The other reason is that the old driver is smaller,
--	  since it lacks the enhanced functionality of the new one. This makes
--	  it a good choice for systems with very tight memory restrictions, or
--	  for systems with only older MFM/RLL/ESDI drives. Choosing the old
--	  driver can save 13 KB or so of kernel memory.
--
--	  If you want to use this driver together with the new one you have
--	  to use "hda=noprobe hdb=noprobe" kernel parameters to prevent the new
--	  driver from probing the primary interface.
--
--	  If you are unsure, then just choose the Enhanced IDE/MFM/RLL driver
--	  instead of this one. For more detailed information, read the
--	  Disk-HOWTO, available from
--	  <http://www.tldp.org/docs.html#howto>.
-+	  This is a very old hard disk driver that lacks the enhanced
-+	  functionality of the newer ones.
-+
-+	  It is required for systems with ancient MFM/RLL/ESDI drives.
-+
-+	  If unsure, say N.
- 
- endif # BLK_DEV
+3aec5560128599a446f531ef18b32a21004884dc diff --git a/drivers/block/hd.c b/drivers/block/hd.c
+index 00b6956..682243b 100644
+--- a/drivers/block/hd.c
++++ b/drivers/block/hd.c
+@@ -37,7 +37,6 @@
+ #include <linux/slab.h>
+ #include <linux/string.h>
+ #include <linux/ioport.h>
+-#include <linux/mc146818rtc.h> /* CMOS defines */
+ #include <linux/init.h>
+ #include <linux/blkpg.h>
+ #include <linux/hdreg.h>
 
