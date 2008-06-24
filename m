@@ -1,37 +1,44 @@
 From: Mark Lord <mlord@pobox.com>
 Subject: Re: FW: ICH10R PMP support
-Date: Tue, 24 Jun 2008 03:04:47 -0400
-Message-ID: <48609C8F.90805@pobox.com>
-References: <023701c8d4dd$d737fa10$85a7ee30$@com>
- <485F6830.1040000@pobox.com> <485F7356.5050605@kernel.org>
+Date: Tue, 24 Jun 2008 03:08:35 -0400
+Message-ID: <48609D73.5020000@pobox.com>
+References: <OF1CA00FC2.4783C0D2-ON85257471.0053BCDF-85257471.0053FA0F@applera.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from a-sasl-fastnet.sasl.smtp.pobox.com ([207.106.133.19]:61447 "EHLO
+Received: from a-sasl-quonix.sasl.smtp.pobox.com ([208.72.237.25]:47833 "EHLO
 	sasl.smtp.pobox.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750770AbYFXHE7 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 24 Jun 2008 03:04:59 -0400
-In-Reply-To: <485F7356.5050605@kernel.org>
+	with ESMTP id S1750770AbYFXHJA (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 24 Jun 2008 03:09:00 -0400
+In-Reply-To: <OF1CA00FC2.4783C0D2-ON85257471.0053BCDF-85257471.0053FA0F@applera.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: Milo Medin <medin@m2znetworks.com>, linux-ide@vger.kernel.org
+To: Mike P Moore <Mike.Moore@appliedbiosystems.com>
+Cc: linux-ide@vger.kernel.org
 
-Tejun Heo wrote:
-> Mark Lord wrote:
-..
->> The 7042 is the best of the Marvell chips, for Linux.
+Mike P Moore wrote:
+> Hi Mark,
 > 
-> How high does it go bandwidth-wise?
+>   Sorry to hijack this thread a little, but I was wondering how is the 
+> support for the 88SX6081?
+> Does it have hot-plug, PMP w/FIS switching, etc. yet?
 ..
 
-The limiting factor will be the bus width of the card
-and the slot into which it is plugged, I suspect.
+The 6081 are PCI(-X) only chips, and so cannot be used with PCIe.
+These older chips had many issues with various things, and most of
+the errata workarounds required are now in Linux.
+A few more are coming for 2.6.27, though.
 
-There are 4-lane PCIe cards out there, and one of those
-in a 4-lane ("4X") or wider PCIe slot ought to have no
-real limitations due to the 7042 side of things.
+The "C0" revision (PCI "Rev.9") is the best of the lot;
+I wouldn't really use the older ones if I could avoid them,
+as they do not support PMP hotplug.
+
+No FIS-based switching on any 6081, but they all do support PMPs.
+
+There is a newer 6042 chip for PCI(-X) slots,
+which is more or less identical to the 7042 internally
+and featurewise on Linux.
 
 Cheers
 -- 
