@@ -1,36 +1,78 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [PATCH] IDE: Fix HDIO_DRIVE_RESET handling
-Date: Tue, 24 Jun 2008 14:35:48 +0100
-Message-ID: <20080624143548.24dcf511@lxorguk.ukuu.org.uk>
-References: <87k5gmz596.fsf@denkblock.local>
-	<200806240041.42796.bzolnier@gmail.com>
-	<87skv3s3d9.fsf@denkblock.local>
-	<200806241306.42054.bzolnier@gmail.com>
-	<20080624133218.6bccab75@lxorguk.ukuu.org.uk>
-	<58cb370e0806240621g61370f56j660e31790dad89c3@mail.gmail.com>
+From: Boaz Harrosh <bharrosh@panasas.com>
+Subject: Re: [RFC] Separating out libata out of SCSI (finally)
+Date: Tue, 24 Jun 2008 11:30:17 +0300
+Message-ID: <4860B099.2030305@panasas.com>
+References: <485B2CC6.6070201@kernel.org>	 <1213993737.3443.35.camel@localhost.localdomain>	 <485C31FE.8050408@garzik.org>	 <87f94c370806231404t13586777x7f7bee24ebe25ffc@mail.gmail.com> <1214255460.3310.27.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:37914 "EHLO
-	lxorguk.ukuu.org.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1753153AbYFXNzA (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 24 Jun 2008 09:55:00 -0400
-In-Reply-To: <58cb370e0806240621g61370f56j660e31790dad89c3@mail.gmail.com>
+Received: from gw-colo-pa.panasas.com ([66.238.117.130]:32004 "EHLO
+	natasha.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751402AbYFXODt (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 24 Jun 2008 10:03:49 -0400
+In-Reply-To: <1214255460.3310.27.camel@localhost.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: Elias Oltmanns <eo@nebensachen.de>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Randy Dunlap <randy.dunlap@oracle.com>
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Greg Freemyer <greg.freemyer@gmail.com>, Jeff Garzik <jeff@garzik.org>, Tejun Heo <tj@kernel.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, brking@linux.vnet.ibm.com, Mark Lord <liml@rtr.ca>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Jens Axboe <jens.axboe@oracle.com>
 
-> > I don't see why you think it's "hard". We have timeout handlers for many
-> > commands and those reset/abort just fine.
+James Bottomley wrote:
+> On Mon, 2008-06-23 at 17:04 -0400, Greg Freemyer wrote:
+>> On Fri, Jun 20, 2008 at 6:41 PM, Jeff Garzik <jeff@garzik.org> wrote:
+>>> James Bottomley wrote:
+>>>> On Fri, 2008-06-20 at 13:06 +0900, Tejun Heo wrote:
+>>>>> The biggest problem is how to keep userland happy.  hdX -> sdX
+>>>>> transition was painful enough and I have a strong feeling that
+>>>>> everyone will come after and hunt down us if we try something like sdX
+>>>>> -> bdX now.  :-)
+>>>> In theory mounting by label or ID should have fixed a lot of this.
+>>>> However, if we need to head off a revolt, the sdX allocation algorithm
+>>>> can be placed into it's own module so both sd and a ULD ata driver could
+>>>> use it ...
+>>>> Actually, surely we can mostly dump the SAT layer?
+>>>
+>>> I don't see that we can do that for a long time...  And it's not just the
+>>> sdX allocation algorithm in question -- SCSI block devices come with their
+>>> own partition limits and set of supported ioctls.
+>>>
+>>> Therefore, my recommended path has always been
+>>>
+>>> * create ata_disk block device driver (ULD, in your terminology)
+>>>
+>>> * make SAT an optional piece, which maintains compatibility with existing
+>>> SCSI blkdevs, ioctls, command sets
+>>>
+>>>
+>>> I just don't see a valid path moving forward that breaks userland /again/...
+>>>  we (ATA hackers) would be drummed out of a job I think :)
+>>>
+>>> Another option that's been discussed is
+>>>
+>>> 1) Make SCSI block devices themselves an allocate-able resource (I think
+>>> that's what you meant by "placed into it's own module so both sd and a ULD
+>>> ata driver could use it"?)
+>>>
+>>> 2) Ensure that any ata_disk ULD would support the same partition limits and
+>>> ioctl set, enough to ensure binary compatibility.
+>>>
+>>> Because that's the real need -- maintaining binary compatibility with SCSI
+>>> block devices, so major/minor, ioctl supported set, partition limits, and
+>>> other relevant details need to remain unchanged.
+>>>
+>> I've seen a lot of end user complaints about libata only supporting
+>> 15(14?) partitions.  Will that limit be moved back to the traditional
+>> drivers/ide limit as part of this?
 > 
-> They are different beasts from user-space initiated abort operation
+> Number of partitions is directly related to number of minors, so it
+> can't be changed without a change in the allocation of major/minor space
+> in sd ... that could only be done compatibly by permuting the space.
+> The only other way to do it is incompatibly by changing major (again).
+> 
+> James
+> 
+Could we do both? I mean use the legacy, up to 15, with the old major,
+then use the new major for bigger then 15. Since user mode that knows
+about more then 15 partitions is new, it'll know it needs to jump a major.
 
-No they are not. They are the *same* thing in every respect.
-
-You have the drive in an unknown state, you want it back. If your drive
-lost a command due to noise or a firmware flaw you have no idea about the
-state it is actually in (supposed to be is irrelevant)
-
-Alan
+Boaz
