@@ -1,45 +1,38 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: Do SATA Tapes work on *any* SATA controller?
-Date: Wed, 25 Jun 2008 20:59:59 +0900
-Message-ID: <4862333F.6020201@kernel.org>
-References: <m1KB9va-003v2oa@lls.lls.com>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: [regression] Re: 2.6.26-rc6: pcmcia stopped working
+Date: Wed, 25 Jun 2008 21:03:29 +0900
+Message-ID: <48623411.1030104@gmail.com>
+References: <20080622224022.GA2066@elf.ucw.cz> <20080623081309.GA10820@isilmar.linta.de> <20080623081811.GA1850@elf.ucw.cz> <20080623083046.GA12849@isilmar.linta.de> <20080625102347.GA2011@elf.ucw.cz> <20080625110105.GA1551@elf.ucw.cz>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:46957 "EHLO hera.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752394AbYFYMAZ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 25 Jun 2008 08:00:25 -0400
-In-Reply-To: <m1KB9va-003v2oa@lls.lls.com>
+Received: from ti-out-0910.google.com ([209.85.142.187]:64276 "EHLO
+	ti-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755112AbYFYMDp (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 25 Jun 2008 08:03:45 -0400
+Received: by ti-out-0910.google.com with SMTP id b6so1633154tic.23
+        for <linux-ide@vger.kernel.org>; Wed, 25 Jun 2008 05:03:41 -0700 (PDT)
+In-Reply-To: <20080625110105.GA1551@elf.ucw.cz>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Russell Brown <russell@lls.lls.com>
-Cc: linux-ide@vger.kernel.org
+To: Pavel Machek <pavel@suse.cz>
+Cc: kernel list <linux-kernel@vger.kernel.org>, "Rafael J. Wysocki" <rjw@sisk.pl>, linux-pcmcia@lists.infradead.org, bzolnier@gmail.com, linux-ide@vger.kernel.org
 
-Russell Brown wrote:
-> Executive Summary: Do SATA Tape drives work at all?
-> 
-> 
-> Ages past (March 28th) I posted to this list about my problems with Sony
-> AIT tape drives on a nVidia MCP55 SATA controller (using sata_nv).
-> 
-> I never did get them working so I've just bought a Silicon Image PCI SiI
-> 3512 SATA controller (using the sata_sil driver) to see if it might
-> work.
-> 
-> Sadly it doesn't and I still can't write tapes on a SATA drive with
-> Linux 2.6.25.1.
-> 
-> So before I put my SATA Tape drives in the bin, bite the bullet and
-> purchase SCSI versions and SCSI controllers I thought I'd ask if the
-> list knew of *any* SATA controller that works with tape drives in Linux?
-> 
-> Anyone? At all?
+Hello, Pavel.
 
-Albert Lee worked on tape drive support a while ago and ISTR he got a
-few devices working.  I'm interested.  Are you willing to ship the drive
-to me?  I can pay via paypal unless it's too expensive.
+Pavel Machek wrote:
+> pccardd       D f6dd1e1c     0  1121      2
+>        f6dd1e30 00000086 00000002 f6dd1e1c f6dd1e10 00000000 c2015e80 c2015e80 
+>        c09113e0 00000286 00000286 f72d13b8 f72d1618 c2015e80 f6dd0000 f6afedc0 
+>        ffff03a9 f6bcb458 00000000 c02bd187 00000000 f6dd1e4c 00000003 00000000 
+> Call Trace:
+>  [<c02bd187>] sysfs_addrm_finish+0x1a7/0x1e0
+>  [<c072edec>] schedule_timeout+0x7c/0xd0
+>  [<c02bd1e7>] remove_dir+0x27/0x40
+
+Strange.  sysfs_addrm_finish() releases resources and is unlikely to
+block.  Can you please translate the PC to source line?
 
 Thanks.
 
