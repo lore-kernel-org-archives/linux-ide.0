@@ -1,40 +1,76 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [regression] Re: 2.6.26-rc6: pcmcia stopped working
-Date: Wed, 25 Jun 2008 21:03:29 +0900
-Message-ID: <48623411.1030104@gmail.com>
-References: <20080622224022.GA2066@elf.ucw.cz> <20080623081309.GA10820@isilmar.linta.de> <20080623081811.GA1850@elf.ucw.cz> <20080623083046.GA12849@isilmar.linta.de> <20080625102347.GA2011@elf.ucw.cz> <20080625110105.GA1551@elf.ucw.cz>
+From: Anton Vorontsov <avorontsov@ru.mvista.com>
+Subject: Re: [PATCH -rt] ide: fix interrupts processing issue with
+	preempt-able hardirqs
+Date: Wed, 25 Jun 2008 16:34:31 +0400
+Message-ID: <20080625123431.GA25452@polina.dev.rtsoft.ru>
+References: <20080623234037.GA6793@polina.dev.rtsoft.ru> <20080623235141.GB17297@elte.hu> <20080624000016.GA12547@polina.dev.rtsoft.ru>
+Reply-To: avorontsov@ru.mvista.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf8
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ti-out-0910.google.com ([209.85.142.187]:64276 "EHLO
-	ti-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755112AbYFYMDp (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 25 Jun 2008 08:03:45 -0400
-Received: by ti-out-0910.google.com with SMTP id b6so1633154tic.23
-        for <linux-ide@vger.kernel.org>; Wed, 25 Jun 2008 05:03:41 -0700 (PDT)
-In-Reply-To: <20080625110105.GA1551@elf.ucw.cz>
+Received: from rtsoft3.corbina.net ([85.21.88.6]:2262 "EHLO
+	buildserver.ru.mvista.com" rhost-flags-OK-FAIL-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1754113AbYFYMeg (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 25 Jun 2008 08:34:36 -0400
+Content-Disposition: inline
+In-Reply-To: <20080624000016.GA12547@polina.dev.rtsoft.ru>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Pavel Machek <pavel@suse.cz>
-Cc: kernel list <linux-kernel@vger.kernel.org>, "Rafael J. Wysocki" <rjw@sisk.pl>, linux-pcmcia@lists.infradead.org, bzolnier@gmail.com, linux-ide@vger.kernel.org
+To: Ingo Molnar <mingo@elte.hu>
+Cc: linux-ide@vger.kernel.org, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Sergei Shtylyov <sshtylyov@ru.mvista.com>, linux-kernel@vger.kernel.org, Thomas Gleixner <tglx@linutronix.de>, Steven Rostedt <rostedt@goodmis.org>, Daniel Walker <dwalker@mvista.com>
 
-Hello, Pavel.
+On Tue, Jun 24, 2008 at 04:00:16AM +0400, Anton Vorontsov wrote:
+> On Tue, Jun 24, 2008 at 01:51:41AM +0200, Ingo Molnar wrote:
+> > 
+> > * Anton Vorontsov <avorontsov@ru.mvista.com> wrote:
+> > 
+> > > IDE interrupt handler relies on the fact that, if necessary, hardirqs 
+> > > will re-trigger on ISR exit. With fully preemtable IRQs this seems to 
+> > > be not true, since if hardirq thread is currently running, and the 
+> > > same IRQ raised again, then this IRQ will be simply lost.
+> > 
+> > actually no, that should not happen - if -rt loses an IRQ then something 
+> > broke in the threaded IRQ code. It's supposed to be a drop-in, 
+> > compatible IRQ flow with no driver changes needed.
+> 
+> ..just as I thought, the bug somewhere deeper... heh.
 
-Pavel Machek wrote:
-> pccardd       D f6dd1e1c     0  1121      2
->        f6dd1e30 00000086 00000002 f6dd1e1c f6dd1e10 00000000 c2015e80 c2015e80 
->        c09113e0 00000286 00000286 f72d13b8 f72d1618 c2015e80 f6dd0000 f6afedc0 
->        ffff03a9 f6bcb458 00000000 c02bd187 00000000 f6dd1e4c 00000003 00000000 
-> Call Trace:
->  [<c02bd187>] sysfs_addrm_finish+0x1a7/0x1e0
->  [<c072edec>] schedule_timeout+0x7c/0xd0
->  [<c02bd1e7>] remove_dir+0x27/0x40
+Ok, a bit more investigation showed that this is indeed not RT specific
+per see, but issue emerges only on RT-style IRQ handlers + alim15x3 IDE
+controller (for example, PDC20269 works ok).
 
-Strange.  sysfs_addrm_finish() releases resources and is unlikely to
-block.  Can you please translate the PC to source line?
+The difference is that that with RT: low-level (non-threaded) IRQ
+handler masks IDE IRQ, then wakes up appropriate IRQ thread, which calls
+IDE handler, and then, after IDE handler exits, thread routine unmasks
+IDE IRQ.
 
-Thanks.
+Without RT: low-level non-threaded IRQ handler does not mask specific
+IRQ, but disables local interrupts, and calls IDE handler directly.
+
+The bug, as I see it, in the alim15x3 (ULi M5228) hardware: for some
+reason it does not hold IRQ line, but rises it for some short period
+of time (while the drive itself rises and holds it correctly -- I'm
+seeing it via oscilloscope).
+
+So this scheme does not work:
+mask_irq()
+...do something that will trigger IDE interrupt...
+unmask_irq()
+
+Because at the unmask_irq() time IDE IRQ is gone already, and interrupt
+controller could not notice it (interrupts are level sensitive).
+
+I did following test: disable RT + insert mask/unmask sequence in the
+IDE IRQ handler, and I got the same behaviour as with RT enabled.
+
+Also, further testing showed that this issue isn't drive-specific, i.e.
+with a delay inserted before the unmask_irq(), the bug shows with any
+drive I have.
+
+So, in summary: I think that the patch is still correct as a hw bug
+workaround (I'll need to correct its comments and description though).
 
 -- 
-tejun
+Anton Vorontsov
+email: cbouatmailru@gmail.com
+irc://irc.freenode.net/bd2
