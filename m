@@ -1,34 +1,65 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+From: Anton Vorontsov <avorontsov@ru.mvista.com>
 Subject: Re: [PATCH -rt] ide: fix interrupts processing issue with
- preempt-able hardirqs
-Date: Wed, 25 Jun 2008 15:32:12 +0100
-Message-ID: <20080625153212.611c3766@lxorguk.ukuu.org.uk>
-References: <20080623234037.GA6793@polina.dev.rtsoft.ru>
-	<20080623235141.GB17297@elte.hu>
-	<20080624000016.GA12547@polina.dev.rtsoft.ru>
-	<20080625123431.GA25452@polina.dev.rtsoft.ru>
-	<486244FF.8060805@ru.mvista.com>
-	<20080625142249.GA21630@polina.dev.rtsoft.ru>
+	preempt-able hardirqs
+Date: Wed, 25 Jun 2008 18:59:37 +0400
+Message-ID: <20080625145937.GA2382@polina.dev.rtsoft.ru>
+References: <20080623234037.GA6793@polina.dev.rtsoft.ru> <20080623235141.GB17297@elte.hu> <20080624000016.GA12547@polina.dev.rtsoft.ru> <20080625123431.GA25452@polina.dev.rtsoft.ru> <486244FF.8060805@ru.mvista.com> <20080625142249.GA21630@polina.dev.rtsoft.ru>
+Reply-To: avorontsov@ru.mvista.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf8
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:37231 "EHLO
-	lxorguk.ukuu.org.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1750758AbYFYOwU (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 25 Jun 2008 10:52:20 -0400
+Received: from rtsoft3.corbina.net ([85.21.88.6]:2595 "EHLO
+	buildserver.ru.mvista.com" rhost-flags-OK-FAIL-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1751921AbYFYO7j (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 25 Jun 2008 10:59:39 -0400
+Content-Disposition: inline
 In-Reply-To: <20080625142249.GA21630@polina.dev.rtsoft.ru>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: avorontsov@ru.mvista.com
-Cc: Sergei Shtylyov <sshtylyov@ru.mvista.com>, Ingo Molnar <mingo@elte.hu>, linux-ide@vger.kernel.org, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-kernel@vger.kernel.org, Thomas Gleixner <tglx@linutronix.de>, Steven Rostedt <rostedt@goodmis.org>, Daniel Walker <dwalker@mvista.com>
+To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Cc: Ingo Molnar <mingo@elte.hu>, linux-ide@vger.kernel.org, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-kernel@vger.kernel.org, Thomas Gleixner <tglx@linutronix.de>, Steven Rostedt <rostedt@goodmis.org>, Daniel Walker <dwalker@mvista.com>
 
-> Note: I don't have any specifications on that ULi bridge, neither I have
-> any schematics for that board (so far, let's hope). So I can't say
-> exactly how things are inter-connected or what these PCI quirks are
-> actually doing (despite few comments in them).
+On Wed, Jun 25, 2008 at 06:22:49PM +0400, Anton Vorontsov wrote:
+> On Wed, Jun 25, 2008 at 05:15:43PM +0400, Sergei Shtylyov wrote:
+> > Hello.
+> >
+> > Anton Vorontsov wrote:
+> >
+> >>>>> IDE interrupt handler relies on the fact that, if necessary, 
+> >>>>> hardirqs will re-trigger on ISR exit. With fully preemtable IRQs 
+> >>>>> this seems to be not true, since if hardirq thread is currently 
+> >>>>> running, and the same IRQ raised again, then this IRQ will be 
+> >>>>> simply lost.
+> >
+> >>>> actually no, that should not happen - if -rt loses an IRQ then 
+> >>>> something broke in the threaded IRQ code. It's supposed to be a 
+> >>>> drop-in, compatible IRQ flow with no driver changes needed.
+> >
+> >>> ..just as I thought, the bug somewhere deeper... heh.
+> >
+> >> Ok, a bit more investigation showed that this is indeed not RT specific
+> >> per see, but issue emerges only on RT-style IRQ handlers + alim15x3 IDE
+> >> controller (for example, PDC20269 works ok).
+> >
+> >    Does it happen only with ATAPI devices also or with ATA disks too?
+> 
+> So far I own two ATAPI devices, IDE disks are quire rare nowadays,
+> should find one. ;-)
+[...]
+> >> Also, further testing showed that this issue isn't drive-specific, i.e.
+> >> with a delay inserted before the unmask_irq(), the bug shows with any
+> >> drive I have.
+> >
+> >    So, "shit happens" even with the ATA drives?
+> 
+> Will try as soon as I'll get one.
 
-So you don't for example know if the bridge is correctly configured for
-that device to be edge or level triggered ?
+Thanks for the drive, and the result is:
 
-Alan
+hda: irq timeout: status=0x58 { DriveReady SeekComplete DataRequest }
+ide: failed opcode was: unknown
+
+-- 
+Anton Vorontsov
+email: cbouatmailru@gmail.com
+irc://irc.freenode.net/bd2
