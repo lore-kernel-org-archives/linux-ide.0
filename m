@@ -1,166 +1,69 @@
-From: Pavel Machek <pavel@suse.cz>
-Subject: Re: [regression] Re: 2.6.26-rc6: pcmcia stopped working
-Date: Wed, 25 Jun 2008 13:01:06 +0200
-Message-ID: <20080625110105.GA1551@elf.ucw.cz>
-References: <20080622224022.GA2066@elf.ucw.cz> <20080623081309.GA10820@isilmar.linta.de> <20080623081811.GA1850@elf.ucw.cz> <20080623083046.GA12849@isilmar.linta.de> <20080625102347.GA2011@elf.ucw.cz>
+From: Elias Oltmanns <eo@nebensachen.de>
+Subject: Re: [PATCH] IDE: Fix HDIO_DRIVE_RESET handling
+Date: Wed, 25 Jun 2008 13:23:53 +0200
+Message-ID: <87k5gdn4fq.fsf@denkblock.local>
+References: <87k5gmz596.fsf@denkblock.local>
+	<200806240041.42796.bzolnier@gmail.com>
+	<87skv3s3d9.fsf@denkblock.local>
+	<200806241306.42054.bzolnier@gmail.com>
+	<20080624133218.6bccab75@lxorguk.ukuu.org.uk>
+	<58cb370e0806240621g61370f56j660e31790dad89c3@mail.gmail.com>
+	<20080624143548.24dcf511@lxorguk.ukuu.org.uk>
+	<58cb370e0806240719o4a70537p4a6fb64e9086e2d8@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from gprs189-60.eurotel.cz ([160.218.189.60]:56325 "EHLO
-	gprs189-60.eurotel.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753821AbYFYLBk (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 25 Jun 2008 07:01:40 -0400
-Content-Disposition: inline
-In-Reply-To: <20080625102347.GA2011@elf.ucw.cz>
+Received: from nebensachen.de ([195.34.83.29]:45075 "EHLO mail.nebensachen.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751623AbYFYLYU (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 25 Jun 2008 07:24:20 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: kernel list <linux-kernel@vger.kernel.org>, "Rafael J. Wysocki" <rjw@sisk.pl>, linux-pcmcia@lists.infradead.org, bzolnier@gmail.com, linux-ide@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Randy Dunlap <randy.dunlap@oracle.com>
 
-On Wed 2008-06-25 12:23:47, Pavel Machek wrote:
-> On Mon 2008-06-23 10:30:46, Dominik Brodowski wrote:
-> > On Mon, Jun 23, 2008 at 10:18:11AM +0200, Pavel Machek wrote:
-> > > Hi!
-> > > 
-> > > > > After s2ram and resume, CF card in PCMCIA-to-CF slot is no longer
-> > > > > detected.
-> > > > 
-> > > > might this be related to:
-> > > > http://bugzilla.kernel.org/show_bug.cgi?id=10957 ? There didn't change
-> > > > anything with regard to pcmcia between -rc3 and -rc6...
-> > > 
-> > > I'm pretty sure it worked in 2.6.25; I don't know if it worked in
-> > > -rc3, or not.
-> > > 
-> > > I don't even see note about card insertion in dmesg, so I figured out
-> > > it is probably pcmcia-core problem (or something deeper).
-> > 
-> > Well, even since 2.6.25 not much changed in PCMCIA-land, so...
-> 
-> Actually, it is worse. On thinkpad, PCMCIA card is only detected
-> once. If I remove it and reinsert it, it will not be detected, and
-> machine will not reboot.
-> 
-> Thinkpad X60.
+"Bartlomiej Zolnierkiewicz" <bzolnier@gmail.com> wrote:
+> On Tue, Jun 24, 2008 at 3:35 PM, Alan Cox <alan@lxorguk.ukuu.org.uk> wrote:
+>>> > I don't see why you think it's "hard". We have timeout handlers for many
+>
+>>> > commands and those reset/abort just fine.
+>>>
+>>> They are different beasts from user-space initiated abort operation
+>>
+>> No they are not. They are the *same* thing in every respect.
+>>
+>> You have the drive in an unknown state, you want it back. If your drive
+>> lost a command due to noise or a firmware flaw you have no idea about the
+>> state it is actually in (supposed to be is irrelevant)
+>
+> I generally agree with you w.r.t. to drive side of the operations but
+> the drive is only part of the equation (the host and the request states
+> are the others) so 'supposed to be is' is quite relevant.
+>
+> Also abort request can happen i.e. while the command is being prepared
+> & issued (it is done without ide_lock being taken and the timeout is not
+> even armed yet) so there are additional issues to take care of.
 
-Hmm, but with -rc8, I actually got some useful info:
+Yes there are. Still, I think it should be feasible which is why I
+personally would prefer to drop the second patch in the series for the
+time being. But then I can keep it around for reference locally and the
+original infrastructure can be found in the history after all.
 
-kjournald starting.  Commit interval 5 seconds
-EXT3-fs: mounted filesystem with ordered data mode.
-VFS: Mounted root (ext3 filesystem) readonly.
-debug: unmapping init memory c099f000..c09ef000
-Write protecting the kernel text: 5320k
-Write protecting the kernel read-only data: 1916k
-Failed to execute /tmp/swsusp-init.  Attempting defaults...
-EXT3 FS on sda4, internal journal
-Adding 987988k swap on /dev/sda1.  Priority:-1 extents:1 across:987988k
-kjournald starting.  Commit interval 5 seconds
-EXT3 FS on sda2, internal journal
-EXT3-fs: mounted filesystem with ordered data mode.
-pcmcia: Detected deprecated PCMCIA ioctl usage from process: hwclock.
-pcmcia: This interface will soon be removed from the kernel; please expect breakage unless you upgrade to new tools.
-pcmcia: see http://www.kernel.org/pub/linux/utils/kernel/pcmcia/pcmcia.html for details.
-eth0: Link is Up 1000 Mbps Full Duplex, Flow Control: RX/TX
-coda_read_super: Bad mount data
-coda_read_super: device index: 0
-coda_read_super: rootfid is (01234567.ffffffff.08051a38.00000000)
-coda: Unexpected interruption.
-Failure of coda_cnode_make for root: error -4
-pccard: PCMCIA card inserted into slot 0
-cs: memory probe 0x0c0000-0x0fffff: excluding 0xc0000-0xd3fff 0xdc000-0xfffff
-cs: memory probe 0x60000000-0x60ffffff: excluding 0x60000000-0x60ffffff
-cs: memory probe 0xe0000000-0xe3ffffff: excluding 0xe0000000-0xe3ffffff
-cs: memory probe 0xe4300000-0xe7ffffff: excluding 0xe4300000-0xe46cffff 0xe4e70000-0xe523ffff 0xe5db0000-0xe617ffff 0xe6cf0000-0xe70bffff
-pcmcia: registering new device pcmcia0.0
-Probing IDE interface ide1...
-hdc: SunDisk SDP3B-20, CFA DISK drive
-hdd: SunDisk SDP3B-20, CFA DISK drive
-ide-probe: ignoring undecoded slave
-ide1 at 0x9100-0x9107,0x910e on irq 16
-hdc: max request size: 128KiB
-hdc: 40960 sectors (20 MB) w/1KiB Cache, CHS=640/2/32
- hdc:hdc: set_geometry_intr: status=0x51 { DriveReady SeekComplete Error }
-hdc: set_geometry_intr: error=0x04 { DriveStatusError }
-ide: failed opcode was: unknown
- hdc1 hdc3
-ide-cs: hdc: Vpp = 0.0
-Clocksource tsc unstable (delta = -68835537 ns)
-pccard: card ejected from slot 0
-INFO: task pccardd:1121 blocked for more than 120 seconds.
-"echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
-pccardd       D f6dd1e1c     0  1121      2
-       f6dd1e30 00000086 00000002 f6dd1e1c f6dd1e10 00000000 c2015e80 c2015e80 
-       c09113e0 00000286 00000286 f72d13b8 f72d1618 c2015e80 f6dd0000 f6afedc0 
-       ffff03a9 f6bcb458 00000000 c02bd187 00000000 f6dd1e4c 00000003 00000000 
-Call Trace:
- [<c02bd187>] sysfs_addrm_finish+0x1a7/0x1e0
- [<c072edec>] schedule_timeout+0x7c/0xd0
- [<c02bd1e7>] remove_dir+0x27/0x40
- [<c0730b9a>] _spin_lock_irq+0x2a/0x40
- [<c072e240>] wait_for_common+0xc0/0x130
- [<c021f5c0>] default_wake_function+0x0/0x10
- [<c04d489f>] ide_unregister+0xcf/0x150
- [<c04e5671>] ide_release+0x21/0x40
- [<c04e56b9>] ide_detach+0x29/0x80
- [<c0520146>] pcmcia_device_remove+0x36/0xe0
- [<c0423116>] __device_release_driver+0x56/0x90
- [<c0423210>] device_release_driver+0x20/0x40
- [<c04225bb>] bus_remove_device+0x6b/0x90
- [<c04210cf>] device_del+0xcf/0x140
- [<c0421148>] device_unregister+0x8/0x10
- [<c051fb7c>] pcmcia_card_remove+0x6c/0x80
- [<c0520a34>] ds_event+0x64/0xb0
- [<c051c12f>] pccardd+0x16f/0x2a0
- [<c051b7fb>] send_event+0x4b/0x80
- [<c051ba6b>] socket_shutdown+0xb/0xd0
- [<c051bb4c>] socket_remove+0x1c/0x30
- [<c051c1fe>] pccardd+0x23e/0x2a0
- [<c021f5c0>] default_wake_function+0x0/0x10
- [<c051bfc0>] pccardd+0x0/0x2a0
- [<c023c3f2>] kthread+0x42/0x70
- [<c023c3b0>] kthread+0x0/0x70
- [<c02047ab>] kernel_thread_helper+0x7/0x1c
- [<c04216f2>] device_create_vargs+0x42/0xd0
- =======================
-no locks held by pccardd/1121.
-INFO: task pccardd:1121 blocked for more than 120 seconds.
-"echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
-pccardd       D f6dd1e1c     0  1121      2
-       f6dd1e30 00000086 00000002 f6dd1e1c f6dd1e10 00000000 c2015e80 c2015e80 
-       c09113e0 00000286 00000286 f72d13b8 f72d1618 c2015e80 f6dd0000 f6afedc0 
-       ffff03a9 f6bcb458 00000000 c02bd187 00000000 f6dd1e4c 00000003 00000000 
-Call Trace:
- [<c02bd187>] sysfs_addrm_finish+0x1a7/0x1e0
- [<c072edec>] schedule_timeout+0x7c/0xd0
- [<c02bd1e7>] remove_dir+0x27/0x40
- [<c0730b9a>] _spin_lock_irq+0x2a/0x40
- [<c072e240>] wait_for_common+0xc0/0x130
- [<c021f5c0>] default_wake_function+0x0/0x10
- [<c04d489f>] ide_unregister+0xcf/0x150
- [<c04e5671>] ide_release+0x21/0x40
- [<c04e56b9>] ide_detach+0x29/0x80
- [<c0520146>] pcmcia_device_remove+0x36/0xe0
- [<c0423116>] __device_release_driver+0x56/0x90
- [<c0423210>] device_release_driver+0x20/0x40
- [<c04225bb>] bus_remove_device+0x6b/0x90
- [<c04210cf>] device_del+0xcf/0x140
- [<c0421148>] device_unregister+0x8/0x10
- [<c051fb7c>] pcmcia_card_remove+0x6c/0x80
- [<c0520a34>] ds_event+0x64/0xb0
- [<c051c12f>] pccardd+0x16f/0x2a0
- [<c051b7fb>] send_event+0x4b/0x80
- [<c051ba6b>] socket_shutdown+0xb/0xd0
- [<c051bb4c>] socket_remove+0x1c/0x30
- [<c051c1fe>] pccardd+0x23e/0x2a0
- [<c021f5c0>] default_wake_function+0x0/0x10
- [<c051bfc0>] pccardd+0x0/0x2a0
- [<c023c3f2>] kthread+0x42/0x70
- [<c023c3b0>] kthread+0x0/0x70
- [<c02047ab>] kernel_thread_helper+0x7/0x1c
- [<c04216f2>] device_create_vargs+0x42/0xd0
- =======================
-no locks held by pccardd/1121.
+Even though the patch series currently doesn't fully restore the
+intended functionality, I'd like to merge it now. Command aborting
+didn't work reliably (if at all) before and now, at least, a simple
+ioctl won't harm a healthy system anymore. Since I think that we can add
+command aborting back later, I'd like to keep the HDIO_DRIVE_RESET ioctl
+even if it should currently be superfluous given SG_IO.
 
+So, here comes the second run of the patch series based on
+next-20080624. All suggested changes have been incorporated except for
+one additional check for ->rq_disk which I consider unnecessary (and you
+haven't insisted on it). In particular, this means that in the second
+patch the ->resetting member has been removed from the ide_hwgroup_t
+structure for completeness' sake (even though I'm not all in favour of
+applying that second patch just yet).
 
--- 
-(english) http://www.livejournal.com/~pavelmachek
-(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
+Regards,
+
+Elias
