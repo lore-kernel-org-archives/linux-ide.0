@@ -1,37 +1,33 @@
-From: Jesse Barnes <jbarnes@virtuousgeek.org>
-Subject: Re: [PATCH] pci: VT3336 can't do MSI either
-Date: Wed, 25 Jun 2008 14:12:53 -0700
-Message-ID: <200806251412.53453.jbarnes@virtuousgeek.org>
-References: <48608792.7090909@kernel.org> <20080623225302.ab7b35de.akpm@linux-foundation.org>
-Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1754082AbYFYVNT@vger.kernel.org>
-In-Reply-To: <20080623225302.ab7b35de.akpm@linux-foundation.org>
-Content-Disposition: inline
-Sender: linux-kernel-owner@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: Tejun Heo <tj@kernel.org>, Jeff Garzik <jeff@garzik.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, Greg KH <greg@kroah.com>, Linux Kernel <linux-kernel@vger.kernel.org>, linux-pci@atrey.karlin.mff.cuni.cz
+From: bugme-daemon@bugzilla.kernel.org
+Subject: [Bug 10943] machine doesn't shutdown when ahci sata driver is compiled as module
+Date: Wed, 25 Jun 2008 14:36:08 -0700 (PDT)
+Message-ID: <20080625213608.41490108038@picon.linux-foundation.org>
+References: <bug-10943-11633@http.bugzilla.kernel.org/>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:53491 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752748AbYFYVgj (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 25 Jun 2008 17:36:39 -0400
+Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
+	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id m5PLa8LJ032467
+	for <linux-ide@vger.kernel.org>; Wed, 25 Jun 2008 14:36:09 -0700
+In-Reply-To: <bug-10943-11633@http.bugzilla.kernel.org/>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-On Monday, June 23, 2008 10:53 pm Andrew Morton wrote:
-> On Tue, 24 Jun 2008 14:35:14 +0900 Tejun Heo <tj@kernel.org> wrote:
-> > It seems VT3336 can't do msi either as with its bro 3351.  Disable it.
-> > Reported in the following SUSE bug.
-> >
-> >   https://bugzilla.novell.com/show_bug.cgi?id=300001
-> >
-> > Signed-off-by: Tejun Heo <tj@kernel.org>
->
-> (argh.  Is that permanent(ish)?)
->
-> > ---
-> > Anyone interested in queuing this for -rc8?  Thanks.
->
-> Strictly a Jesse thing I guess, but I can do it ujnless there be
-> objections.
+http://bugzilla.kernel.org/show_bug.cgi?id=10943
 
-Yeah, no objections here.  Thanks.
 
-Jesse
+
+
+
+------- Comment #5 from tj@kernel.org  2008-06-25 14:36 -------
+So, it hangs while stopping services?  Does it say anything about stopping
+disks and powering off?
+
+
+-- 
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are on the CC list for the bug, or are watching someone who is.
