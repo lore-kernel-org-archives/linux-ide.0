@@ -1,159 +1,28 @@
-From: Jan Evert van Grootheest <j.e.van.grootheest@caiway.nl>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
 Subject: Re: [PATCH ht6560b] Force prefetch for some devices
-Date: Fri, 27 Jun 2008 21:51:59 +0200
-Message-ID: <486544DF.60002@caiway.nl>
-References: <47B97EFA.2040805@caiway.nl> <20080218143636.3394eece@core>
+Date: Fri, 27 Jun 2008 21:04:14 +0100
+Message-ID: <20080627210414.6a903f1e@lxorguk.ukuu.org.uk>
+References: <47B97EFA.2040805@caiway.nl>
+	<20080218143636.3394eece@core>
+	<486544DF.60002@caiway.nl>
 Mime-Version: 1.0
-Content-Type: multipart/signed; protocol="application/x-pkcs7-signature"; micalg=sha1; boundary="------------ms030302070300000205080007"
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from cardassian3.kabelfoon.nl ([62.45.45.105]:63267 "EHLO
-	cardassian.kabelfoon.nl" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1753652AbYF0TwD (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 27 Jun 2008 15:52:03 -0400
-In-Reply-To: <20080218143636.3394eece@core>
+Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:49916 "EHLO
+	lxorguk.ukuu.org.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1756109AbYF0UVr (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 27 Jun 2008 16:21:47 -0400
+In-Reply-To: <486544DF.60002@caiway.nl>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+To: Jan Evert van Grootheest <j.e.van.grootheest@caiway.nl>
 Cc: linux-ide@vger.kernel.org, bzolnier@gmail.com
 
-This is a cryptographically signed message in MIME format.
+> Is there some generic way to figure out wheter a device supports it?
+> What devices normally support prefetching? Disks only?
 
---------------ms030302070300000205080007
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+It depends on the controller not the device - generally older controller
+support it only for disk devices.
 
-Alan, Bart,
-
-It's been a while...
-
-Alan Cox wrote:
-> On Mon, 18 Feb 2008 13:50:02 +0100
-> Jan Evert van Grootheest <j.e.van.grootheest@caiway.nl> wrote:
->
->   
->> Prefetch needs to be set for some ide devices to work when connected to
->> a ht6560b interface. This was not always done properly, causing a system
->> with a HD and CD on the primary interface to not work properly. Or, in
->> effect, hang hard.
->>
->> This patch forces prefetch on devices before checking whether it
->> is necessary to change the settings in the interface
->>     
->
-> Interesting, that is backwards to the docs and not something I've seen.
-> If you are correct then pata_legacy also wants tweaking .
->   
-I'm testing this... but lack some knowledge.
-Is there some generic way to figure out wheter a device supports it?
-What devices normally support prefetching? Disks only?
-I already found out that CDs do not. But tapes? Floppies? What else can 
-be there that might support prefetching?
-
-Thanks,
-Jan Evert
-
-
---------------ms030302070300000205080007
-Content-Type: application/x-pkcs7-signature; name="smime.p7s"
-Content-Transfer-Encoding: base64
-Content-Disposition: attachment; filename="smime.p7s"
-Content-Description: S/MIME Cryptographic Signature
-
-MIAGCSqGSIb3DQEHAqCAMIACAQExCzAJBgUrDgMCGgUAMIAGCSqGSIb3DQEHAQAAoIIO7jCC
-B3MwggVboAMCAQICAQMwDQYJKoZIhvcNAQEFBQAwgaUxCzAJBgNVBAYTAk5MMRMwEQYDVQQI
-EwpHZWxkZXJsYW5kMRMwEQYDVQQHEwpIYXJkZXJ3aWprMRwwGgYDVQQKExNKLkUuIHZhbiBH
-cm9vdGhlZXN0MSEwHwYDVQQDExhKYW4gRXZlcnQgdmFuIEdyb290aGVlc3QxKzApBgkqhkiG
-9w0BCQEWHGouZS52YW4uZ3Jvb3RoZWVzdEBjYWl3YXkubmwwHhcNMDgwNDA4MDc1MTMxWhcN
-MDkwNDA4MDc1MTMxWjCBpTELMAkGA1UEBhMCTkwxEzARBgNVBAgTCkdlbGRlcmxhbmQxEzAR
-BgNVBAcTCkhhcmRlcndpamsxHDAaBgNVBAoTE0ouRS4gdmFuIEdyb290aGVlc3QxITAfBgNV
-BAMTGEphbiBFdmVydCB2YW4gR3Jvb3RoZWVzdDErMCkGCSqGSIb3DQEJARYcai5lLnZhbi5n
-cm9vdGhlZXN0QGNhaXdheS5ubDCCAiIwDQYJKoZIhvcNAQEBBQADggIPADCCAgoCggIBAMg4
-3wenc42l/YlQzGBogfqvlBH0A/3MvVw/9Fa2hPDTs/sJ+iNiiKHKBn7GhjMf3VO4bjFInbPc
-ZG0/b/A9bbvhRaNIAZmy2yz8IbFxU16g19cByyFKSEGbknS2r6fXMcCi02l65ZBmHV1XBB7M
-62GRo0TKWIqOY00AR3ujF9pAzARLSBW92Ykf6jIzgtliGLt6YO+EZVHNUHcV+CA2kR/HXfju
-M7+XOW+1IKSJyQ2aIlKBCtryxki/LqABTTL06jzJl+QW1oa7AIHhwI13qqyJfynTYrgAIwYS
-92H6Cv+J2Buxykk9vBb/L73q+VdGmLw2z/6gDsjQOmk+WpICDZLNs+aI5W4UCNoE1rYCFPki
-SI00TN/lAQXsp1mtNXs10RIW2OF2l0/ebM7Q6l4vj7l4LKjR/Qe3Yu3PzqBdDvaYeGMMpK2Q
-kSvKfvA+gQCRVw3W+9V3GgSiQkFcUmM1gNCjwHIoEwfRaU9iionE5VHSsjm8DoTtjdeq1mBE
-iFfsBQOkewAS2W3JFjGqOAYSh1UPgF57xdPzgjIzlnhji/NM3yy/9LCSZhVyf9eqZ7HvfI6s
-nYcaZJosM+x96iauOwJF1GM/DABsIAxZPvkXMMHjrQGW/iA4Ik4IgSa3ueP+mzgfwsdQjRqX
-oABun/mK/G3gJwJE2YsyYyawphg31kINAgMBAAGjggGqMIIBpjAJBgNVHRMEAjAAMBEGCWCG
-SAGG+EIBAQQEAwIEsDArBglghkgBhvhCAQ0EHhYcVGlueUNBIEdlbmVyYXRlZCBDZXJ0aWZp
-Y2F0ZTAdBgNVHQ4EFgQUZ/nkxP99q4jayO32sIUgzK3Ns7owgdoGA1UdIwSB0jCBz4AUloS2
-O/+9zbmqj22/Ad/RDl49RnmhgaukgagwgaUxCzAJBgNVBAYTAk5MMRMwEQYDVQQIEwpHZWxk
-ZXJsYW5kMRMwEQYDVQQHEwpIYXJkZXJ3aWprMRwwGgYDVQQKExNKLkUuIHZhbiBHcm9vdGhl
-ZXN0MSEwHwYDVQQDExhKYW4gRXZlcnQgdmFuIEdyb290aGVlc3QxKzApBgkqhkiG9w0BCQEW
-HGouZS52YW4uZ3Jvb3RoZWVzdEBjYWl3YXkubmyCCQCET9jqLUI66zAnBgNVHRIEIDAegRxq
-LmUudmFuLmdyb290aGVlc3RAY2Fpd2F5Lm5sMCcGA1UdEQQgMB6BHGouZS52YW4uZ3Jvb3Ro
-ZWVzdEBjYWl3YXkubmwwCwYDVR0PBAQDAgWgMA0GCSqGSIb3DQEBBQUAA4ICAQA2mHVdS8TG
-hiV43nucHfmtqg57uO3xQr4epgXidUMQHIzkuDAeXSz1pjQ/QtEuOXxJzdhEk3Y099m5syma
-7A3pvMowWBckOTjtfAA8gviY47fjFwTGSm37nUkUG5ndXrmhdSriLwypa6yF2vFgJZ5EXfox
-w2Fm6U0IWYWdKH6HAiyQYLiQ64FaeUYu5vRpzbMAUQ9he2gelIGs5hpNMwT9GV78i6P1IE5D
-wNdDiwurz53F4vgpH5/TGuyHfoe2H3hVeZLGpcjGv6oQbdtdldHltwzyc4rDSGTQOmLef48j
-CR91ijKyULmvFm9VjB64ddmtWqJQg7nmwb39LnrgVkrkbduwoA2+1e7BAS82O44bFaVlT2Pq
-EU9lLbKpGEcSTjcEZAzGZHGpG4MHQJZxxnh3YCUd2v7H0GFTiq21elgwlEKCuTHkTFKH6z8Y
-bTA1wI7o3PKHSkRI7vXJ/rOths4U7TNxuIK0rP5aP1KoRkHsVm57W0Up0UojaNQxOBSU62cb
-CeU4bThZekJ/HfBj6Vo0cWFFA0PGIkAbQKTKnlYzJC9mgWl5M+Fw0MiX9ybs94qj8lfIkIPI
-bqhSwzZQcxKcm9ZGVoGbrTSEIhrlXxhQSC8OSmW229J2fNFuxrHZdZbTtERmqCGriDFKrObe
-/TMrfVLQ3J19V28VMPyWoSPsFTCCB3MwggVboAMCAQICAQMwDQYJKoZIhvcNAQEFBQAwgaUx
-CzAJBgNVBAYTAk5MMRMwEQYDVQQIEwpHZWxkZXJsYW5kMRMwEQYDVQQHEwpIYXJkZXJ3aWpr
-MRwwGgYDVQQKExNKLkUuIHZhbiBHcm9vdGhlZXN0MSEwHwYDVQQDExhKYW4gRXZlcnQgdmFu
-IEdyb290aGVlc3QxKzApBgkqhkiG9w0BCQEWHGouZS52YW4uZ3Jvb3RoZWVzdEBjYWl3YXku
-bmwwHhcNMDgwNDA4MDc1MTMxWhcNMDkwNDA4MDc1MTMxWjCBpTELMAkGA1UEBhMCTkwxEzAR
-BgNVBAgTCkdlbGRlcmxhbmQxEzARBgNVBAcTCkhhcmRlcndpamsxHDAaBgNVBAoTE0ouRS4g
-dmFuIEdyb290aGVlc3QxITAfBgNVBAMTGEphbiBFdmVydCB2YW4gR3Jvb3RoZWVzdDErMCkG
-CSqGSIb3DQEJARYcai5lLnZhbi5ncm9vdGhlZXN0QGNhaXdheS5ubDCCAiIwDQYJKoZIhvcN
-AQEBBQADggIPADCCAgoCggIBAMg43wenc42l/YlQzGBogfqvlBH0A/3MvVw/9Fa2hPDTs/sJ
-+iNiiKHKBn7GhjMf3VO4bjFInbPcZG0/b/A9bbvhRaNIAZmy2yz8IbFxU16g19cByyFKSEGb
-knS2r6fXMcCi02l65ZBmHV1XBB7M62GRo0TKWIqOY00AR3ujF9pAzARLSBW92Ykf6jIzgtli
-GLt6YO+EZVHNUHcV+CA2kR/HXfjuM7+XOW+1IKSJyQ2aIlKBCtryxki/LqABTTL06jzJl+QW
-1oa7AIHhwI13qqyJfynTYrgAIwYS92H6Cv+J2Buxykk9vBb/L73q+VdGmLw2z/6gDsjQOmk+
-WpICDZLNs+aI5W4UCNoE1rYCFPkiSI00TN/lAQXsp1mtNXs10RIW2OF2l0/ebM7Q6l4vj7l4
-LKjR/Qe3Yu3PzqBdDvaYeGMMpK2QkSvKfvA+gQCRVw3W+9V3GgSiQkFcUmM1gNCjwHIoEwfR
-aU9iionE5VHSsjm8DoTtjdeq1mBEiFfsBQOkewAS2W3JFjGqOAYSh1UPgF57xdPzgjIzlnhj
-i/NM3yy/9LCSZhVyf9eqZ7HvfI6snYcaZJosM+x96iauOwJF1GM/DABsIAxZPvkXMMHjrQGW
-/iA4Ik4IgSa3ueP+mzgfwsdQjRqXoABun/mK/G3gJwJE2YsyYyawphg31kINAgMBAAGjggGq
-MIIBpjAJBgNVHRMEAjAAMBEGCWCGSAGG+EIBAQQEAwIEsDArBglghkgBhvhCAQ0EHhYcVGlu
-eUNBIEdlbmVyYXRlZCBDZXJ0aWZpY2F0ZTAdBgNVHQ4EFgQUZ/nkxP99q4jayO32sIUgzK3N
-s7owgdoGA1UdIwSB0jCBz4AUloS2O/+9zbmqj22/Ad/RDl49RnmhgaukgagwgaUxCzAJBgNV
-BAYTAk5MMRMwEQYDVQQIEwpHZWxkZXJsYW5kMRMwEQYDVQQHEwpIYXJkZXJ3aWprMRwwGgYD
-VQQKExNKLkUuIHZhbiBHcm9vdGhlZXN0MSEwHwYDVQQDExhKYW4gRXZlcnQgdmFuIEdyb290
-aGVlc3QxKzApBgkqhkiG9w0BCQEWHGouZS52YW4uZ3Jvb3RoZWVzdEBjYWl3YXkubmyCCQCE
-T9jqLUI66zAnBgNVHRIEIDAegRxqLmUudmFuLmdyb290aGVlc3RAY2Fpd2F5Lm5sMCcGA1Ud
-EQQgMB6BHGouZS52YW4uZ3Jvb3RoZWVzdEBjYWl3YXkubmwwCwYDVR0PBAQDAgWgMA0GCSqG
-SIb3DQEBBQUAA4ICAQA2mHVdS8TGhiV43nucHfmtqg57uO3xQr4epgXidUMQHIzkuDAeXSz1
-pjQ/QtEuOXxJzdhEk3Y099m5syma7A3pvMowWBckOTjtfAA8gviY47fjFwTGSm37nUkUG5nd
-XrmhdSriLwypa6yF2vFgJZ5EXfoxw2Fm6U0IWYWdKH6HAiyQYLiQ64FaeUYu5vRpzbMAUQ9h
-e2gelIGs5hpNMwT9GV78i6P1IE5DwNdDiwurz53F4vgpH5/TGuyHfoe2H3hVeZLGpcjGv6oQ
-bdtdldHltwzyc4rDSGTQOmLef48jCR91ijKyULmvFm9VjB64ddmtWqJQg7nmwb39LnrgVkrk
-bduwoA2+1e7BAS82O44bFaVlT2PqEU9lLbKpGEcSTjcEZAzGZHGpG4MHQJZxxnh3YCUd2v7H
-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
-AA==
---------------ms030302070300000205080007--
+Alan
