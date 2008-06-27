@@ -1,50 +1,71 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
 Subject: Re: libata and DMA quirks
-Date: Fri, 27 Jun 2008 13:10:42 +0400
-Message-ID: <4864AE92.2090805@ru.mvista.com>
-References: <1214548895.8011.526.camel@pasglop>	 <4864A6C9.2050709@ru.mvista.com> <1214556703.8011.531.camel@pasglop>
+Date: Fri, 27 Jun 2008 09:54:54 +0100
+Message-ID: <20080627095454.665b7229@lxorguk.ukuu.org.uk>
+References: <1214548895.8011.526.camel@pasglop>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8;
-	format=flowed
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from h155.mvista.com ([63.81.120.155]:21528 "EHLO imap.sh.mvista.com"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1750942AbYF0JKt (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 27 Jun 2008 05:10:49 -0400
-In-Reply-To: <1214556703.8011.531.camel@pasglop>
+Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:40869 "EHLO
+	lxorguk.ukuu.org.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751283AbYF0JMr convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 27 Jun 2008 05:12:47 -0400
+In-Reply-To: <1214548895.8011.526.camel@pasglop>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: benh@kernel.crashing.org
 Cc: linux-ide@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>, Tejun Heo <htejun@gmail.com>
 
-Hello.
+> a) =EF=BB=BFFor any ATAPI DMA, If the transfer size is not a multiple=
+ of 16
+> bytes, switch to PIO for this command.
 
-Benjamin Herrenschmidt wrote:
->>> The main one is that one their latest cell, they do the following
->>> "workarounds" which I never implemented in drivers/ide/ppc/pmac.c b=
-ut
->>> I'd like to implement in the libata driver, unless you believe that=
- is
->>> unnecessary:
->>>
->>> a) =EF=BB=BFFor any ATAPI DMA, If the transfer size is not a multip=
-le of 16
->>> bytes, switch to PIO for this command.
->>>  =20
->>>      =20
->>    No need to do this in old driver anyway since the *IDE* core only=
-=20
->> uses DMA for block commands like READ and WRITE.
->> Not sure about libata.
->>    =20
->
-> It doesn't use DMA to transfer the bulk of ATAPI ? I know it uses PIO
-> for the CDB but the rest of the transfer isn't done with DMA ?
->  =20
-   Like I said, DMA is used only for the *block* transfer commands for=20
-which the transfer size would always be a multiple of 16 bytes.
+Old IDE does this internally. Tejun has done a lot of this stuff for th=
+e
+ATAPI layer in libata. See the check_atapi_dma method (example at
+it821x_check_atapi_dma with a size rule)
 
-MBR, Sergei
+> b) Double buffer all ATAPI DMA reads. They allocate a 128K DMA buffer
+> and limit all requests to 128K. Then, they route all incoming DMAs to
+> that buffer and copy back to the original buffer on completion.
 
+That seems pretty icky. For overrun space on the standard SFF controlle=
+rs
+we just tack padding on the end of the DMA sg list.
+
+> The comments in the code seem to indicate this has to do with "alignm=
+ent
+> restrictions", unfortunately, I have no more infos so I don't know wh=
+at
+> the actual underlying HW issues are.
+
+Quite a bit of hardware has rules about the internal FIFO being fed in
+internal burst sized chunks, especially older devices. For ATA that isn=
+'t
+usually a problem, for ATAPI it is.
+
+> I could use some tips as to how to implement these in the libata driv=
+er.
+> For a) I'm not sure about either overriding qc_prep or qc_issue and w=
+hat
+> would be the consequence of changing tf.protocol there ? Among others=
+,
+
+You can't just change the protocol, you must change the command issued.
+
+> For b) I should be able to completely hide that within my qc_prep and
+> completion, by silently using a different DMA target. I suppose I can
+> use tf.command =3D=3D ATA_CMD_ID_ATAPI to differenciate with ATA comm=
+ands.
+
+if (ata_is_atapi(prot))
+
+> How do I set the max request size with the block layer tho from a lib=
+ata
+> sub-driver ?
+
+Set max_sectors for the disk in your dev_config method
+
+See it821x_dev_config for a simple example
 
