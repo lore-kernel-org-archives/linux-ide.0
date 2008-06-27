@@ -1,51 +1,44 @@
 From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCHv2] ata: endianness annotations in pata drivers
-Date: Fri, 27 Jun 2008 02:56:29 -0400
-Message-ID: <48648F1D.9040509@garzik.org>
-References: <1213829582.2125.24.camel@brick>	 <20080618233332.GN28946@ZenIV.linux.org.uk> <1213834603.2125.34.camel@brick>
+Subject: Re: [PATCH] libata support for rotation speed
+Date: Fri, 27 Jun 2008 02:56:41 -0400
+Message-ID: <48648F29.8040806@garzik.org>
+References: <20080619160216.GH4392@parisc-linux.org> <20080619175904.GK4392@parisc-linux.org> <1213899895.3501.45.camel@localhost.localdomain> <20080619183113.GM4392@parisc-linux.org> <485AAD0D.9000205@garzik.org> <20080619191337.GO4392@parisc-linux.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:54728 "EHLO mail.dvmed.net"
+Received: from srv5.dvmed.net ([207.36.208.214]:54738 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1760269AbYF0G4d (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 27 Jun 2008 02:56:33 -0400
-In-Reply-To: <1213834603.2125.34.camel@brick>
+	id S1759931AbYF0G4r (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 27 Jun 2008 02:56:47 -0400
+In-Reply-To: <20080619191337.GO4392@parisc-linux.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Harvey Harrison <harvey.harrison@gmail.com>
-Cc: Al Viro <viro@ZenIV.linux.org.uk>, linux-ide <linux-ide@vger.kernel.org>
+To: Matthew Wilcox <matthew@wil.cx>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
 
-Harvey Harrison wrote:
-> drivers/ata/pata_qdi.c:142:9: warning: incorrect type in assignment (different base types)
-> drivers/ata/pata_qdi.c:142:9:    expected unsigned int [unsigned] [usertype] pad
-> drivers/ata/pata_qdi.c:142:9:    got restricted __le32 [usertype] <noident>
-> drivers/ata/pata_qdi.c:146:15: warning: cast to restricted __le32
+Matthew Wilcox wrote:
+> On Thu, Jun 19, 2008 at 03:01:33PM -0400, Jeff Garzik wrote:
+>> Matthew Wilcox wrote:
+>>> On Thu, Jun 19, 2008 at 01:24:55PM -0500, James Bottomley wrote:
+>>>> This looks like it can be called for ATA_DEV_ATAPI as well, in which
+>>>> case it's an illegal page to ask for.
+>>> I was under the impression that this entire file is only used for
+>>> non-atapi devices.
+>> Correct.  That code path is not travelled by ATAPI.
 > 
-> drivers/ata/pata_winbond.c:110:9: warning: incorrect type in assignment (different base types)
-> drivers/ata/pata_winbond.c:110:9:    expected unsigned int [unsigned] [usertype] pad
-> drivers/ata/pata_winbond.c:110:9:    got restricted __le32 [usertype] <noident>
-> drivers/ata/pata_winbond.c:114:15: warning: cast to restricted __le32
+> Thanks, Jeff.  Here's version three, including the form factor from word
+> 168:
 > 
-> drivers/ata/pata_legacy.c:310:9: warning: incorrect type in assignment (different base types)
-> drivers/ata/pata_legacy.c:310:9:    expected unsigned int [unsigned] [usertype] pad
-> drivers/ata/pata_legacy.c:310:9:    got restricted __le32 [usertype] <noident>
-> drivers/ata/pata_legacy.c:314:15: warning: cast to restricted __le32
-> drivers/ata/pata_legacy.c:752:11: warning: cast to restricted __le32
-> drivers/ata/pata_legacy.c:756:9: warning: incorrect type in assignment (different base types)
-> drivers/ata/pata_legacy.c:756:9:    expected unsigned int [unsigned] [addressable] [assigned] [usertype] pad
-> drivers/ata/pata_legacy.c:756:9:    got restricted __le32 [usertype] <noident>
 > 
-> Signed-off-by: Harvey Harrison <harvey.harrison@gmail.com>
-> ---
-> Al, have incorporated your comments.
+> Add support for VPD page b1 to libata
 > 
->  drivers/ata/pata_legacy.c  |   10 ++++------
->  drivers/ata/pata_qdi.c     |    2 +-
->  drivers/ata/pata_winbond.c |    2 +-
->  3 files changed, 6 insertions(+), 8 deletions(-)
+> SCSI VPD page b1 reports the nominal rotation speed and physical size
+> of the device.  Devices that conform to ATA-8 can return this information
+> in words 217 and 168 of the identify data.
+> 
+> Signed-off-by: Matthew Wilcox <willy@linux.intel.com>
 
-applied
+applied (2.6.27)
 
 
