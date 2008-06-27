@@ -1,78 +1,36 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: sata_svw data corruption, strange problems
-Date: Fri, 27 Jun 2008 02:41:01 -0400
-Message-ID: <48648B7D.5050908@pobox.com>
-References: <20080617093602.GA28140@elf.ucw.cz> <485EF061.3010601@kernel.org> <20080623082055.GB1850@elf.ucw.cz> <je63s0sfxv.fsf@sykes.suse.de> <20080623085338.GE1850@elf.ucw.cz> <485F6540.6000907@kernel.org> <20080623090130.GF1850@elf.ucw.cz>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [PATCH #upstream 1/2] libata-eh: update atapi_eh_request_sense()
+ to take @dev instead of @qc
+Date: Fri, 27 Jun 2008 02:41:14 -0400
+Message-ID: <48648B8A.9000500@garzik.org>
+References: <484E4925.30202@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:47270 "EHLO mail.dvmed.net"
+Received: from srv5.dvmed.net ([207.36.208.214]:47278 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753946AbYF0GlX (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	id S1753581AbYF0GlX (ORCPT <rfc822;linux-ide@vger.kernel.org>);
 	Fri, 27 Jun 2008 02:41:23 -0400
-In-Reply-To: <20080623090130.GF1850@elf.ucw.cz>
+In-Reply-To: <484E4925.30202@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Pavel Machek <pavel@suse.cz>
-Cc: Tejun Heo <tj@kernel.org>, Andreas Schwab <schwab@suse.de>, kernel list <linux-kernel@vger.kernel.org>, benh@kernel.crashing.org, IDE/ATA development list <linux-ide@vger.kernel.org>, Trivial patch monkey <trivial@kernel.org>
+To: Tejun Heo <htejun@gmail.com>
+Cc: IDE/ATA development list <linux-ide@vger.kernel.org>
 
-Pavel Machek wrote:
-> Clarify comment in sata_svw.c.
+Tejun Heo wrote:
+> Update atapi_eh_request_sense() to take @dev, @sense_buf and
+> @dfl_sense_key instead of taking @qc and extracting information from
+> it.  This change is to make the function more generic and allow it to
+> be called from other places.
 > 
-> Signed-off-by: Pavel Machek <pavel@suse.cz>
+> While at it, make cdb initialization use initializer.
 > 
-> diff --git a/drivers/ata/sata_svw.c b/drivers/ata/sata_svw.c
-> index 16aa683..fb13b82 100644
-> --- a/drivers/ata/sata_svw.c
-> +++ b/drivers/ata/sata_svw.c
-> @@ -253,21 +253,29 @@ static void k2_bmdma_start_mmio(struct a
->  	/* start host DMA transaction */
->  	dmactl = readb(mmio + ATA_DMA_CMD);
->  	writeb(dmactl | ATA_DMA_START, mmio + ATA_DMA_CMD);
-> -	/* There is a race condition in certain SATA controllers that can
-> -	   be seen when the r/w command is given to the controller before the
-> -	   host DMA is started. On a Read command, the controller would initiate
-> -	   the command to the drive even before it sees the DMA start. When there
-> -	   are very fast drives connected to the controller, or when the data request
-> -	   hits in the drive cache, there is the possibility that the drive returns a part
-> -	   or all of the requested data to the controller before the DMA start is issued.
-> -	   In this case, the controller would become confused as to what to do with the data.
-> -	   In the worst case when all the data is returned back to the controller, the
-> -	   controller could hang. In other cases it could return partial data returning
-> -	   in data corruption. This problem has been seen in PPC systems and can also appear
-> -	   on an system with very fast disks, where the SATA controller is sitting behind a
-> -	   number of bridges, and hence there is significant latency between the r/w command
-> -	   and the start command. */
-> -	/* issue r/w command if the access is to ATA*/
-> +	/* This works around possible data corruption.
-> +
-> +	   On certain SATA controllers that can be seen when the r/w
-> +	   command is given to the controller before the host DMA is
-> +	   started.
-> +
-> +	   On a Read command, the controller would initiate the
-> +	   command to the drive even before it sees the DMA
-> +	   start. When there are very fast drives connected to the
-> +	   controller, or when the data request hits in the drive
-> +	   cache, there is the possibility that the drive returns a
-> +	   part or all of the requested data to the controller before
-> +	   the DMA start is issued.  In this case, the controller
-> +	   would become confused as to what to do with the data.  In
-> +	   the worst case when all the data is returned back to the
-> +	   controller, the controller could hang. In other cases it
-> +	   could return partial data returning in data
-> +	   corruption. This problem has been seen in PPC systems and
-> +	   can also appear on an system with very fast disks, where
-> +	   the SATA controller is sitting behind a number of bridges,
-> +	   and hence there is significant latency between the r/w
-> +	   command and the start command. */
-> +	/* issue r/w command if the access is to ATA */
->  	if (qc->tf.protocol == ATA_PROT_DMA)
->  		ap->ops->sff_exec_command(ap, &qc->tf);
->  }
-> 
-> 
+> Signed-off-by: Tejun Heo <htejun@gmail.com>
+> ---
+>  drivers/ata/libata-eh.c |   19 +++++++++----------
+>  1 file changed, 9 insertions(+), 10 deletions(-)
 
 applied
+
 
