@@ -1,67 +1,59 @@
 From: Jan Evert van Grootheest <j.e.van.grootheest@caiway.nl>
-Subject: Update my email address
-Date: Fri, 27 Jun 2008 21:23:30 +0200
-Message-ID: <48653E32.3090100@caiway.nl>
+Subject: Re: [PATCH ht6560b] Force prefetch for some devices
+Date: Fri, 27 Jun 2008 21:51:59 +0200
+Message-ID: <486544DF.60002@caiway.nl>
+References: <47B97EFA.2040805@caiway.nl> <20080218143636.3394eece@core>
 Mime-Version: 1.0
-Content-Type: multipart/signed; protocol="application/x-pkcs7-signature"; micalg=sha1; boundary="------------ms020704060303090602070108"
+Content-Type: multipart/signed; protocol="application/x-pkcs7-signature"; micalg=sha1; boundary="------------ms030302070300000205080007"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from pelian3.kabelfoon.nl ([62.45.45.106]:51630 "EHLO
-	pelian.kabelfoon.nl" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1754104AbYF0TmG (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 27 Jun 2008 15:42:06 -0400
+Received: from cardassian3.kabelfoon.nl ([62.45.45.105]:63267 "EHLO
+	cardassian.kabelfoon.nl" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1753652AbYF0TwD (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 27 Jun 2008 15:52:03 -0400
+In-Reply-To: <20080218143636.3394eece@core>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-ide@vger.kernel.org
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: linux-ide@vger.kernel.org, bzolnier@gmail.com
 
 This is a cryptographically signed message in MIME format.
 
---------------ms020704060303090602070108
-Content-Type: multipart/mixed;
- boundary="------------080203040802000706070504"
-
-This is a multi-part message in MIME format.
---------------080203040802000706070504
+--------------ms030302070300000205080007
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 
-Hi,
+Alan, Bart,
 
-Here's a patch to update my email address.
+It's been a while...
+
+Alan Cox wrote:
+> On Mon, 18 Feb 2008 13:50:02 +0100
+> Jan Evert van Grootheest <j.e.van.grootheest@caiway.nl> wrote:
+>
+>   
+>> Prefetch needs to be set for some ide devices to work when connected to
+>> a ht6560b interface. This was not always done properly, causing a system
+>> with a HD and CD on the primary interface to not work properly. Or, in
+>> effect, hang hard.
+>>
+>> This patch forces prefetch on devices before checking whether it
+>> is necessary to change the settings in the interface
+>>     
+>
+> Interesting, that is backwards to the docs and not something I've seen.
+> If you are correct then pata_legacy also wants tweaking .
+>   
+I'm testing this... but lack some knowledge.
+Is there some generic way to figure out wheter a device supports it?
+What devices normally support prefetching? Disks only?
+I already found out that CDs do not. But tapes? Floppies? What else can 
+be there that might support prefetching?
 
 Thanks,
 Jan Evert
 
 
---------------080203040802000706070504
-Content-Type: text/x-diff;
- name="ht6560b-email.diff"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="ht6560b-email.diff"
-
-commit 4fd7e51f38551911d060e8a5ba005ff3b4bb76fe
-Author: Jan Evert van Grootheest <janevert@lappie.(none)>
-Date:   Fri Jun 27 21:15:17 2008 +0200
-
-    Update email address.
-
-diff --git a/drivers/ide/legacy/ht6560b.c b/drivers/ide/legacy/ht6560b.c
-index 4fe516d..46d6166 100644
---- a/drivers/ide/legacy/ht6560b.c
-+++ b/drivers/ide/legacy/ht6560b.c
-@@ -30,7 +30,7 @@
-  *  Use hdparm utility to enable PIO mode support.
-  *
-  *  Author:    Mikko Ala-Fossi            <maf@iki.fi>
-- *             Jan Evert van Grootheest   <janevert@caiway.nl>
-+ *             Jan Evert van Grootheest   <j.e.van.grootheest@caiway.nl>
-  *
-  *  Try:  http://www.maf.iki.fi/~maf/ht6560b/
-  */
-
---------------080203040802000706070504--
-
---------------ms020704060303090602070108
+--------------ms030302070300000205080007
 Content-Type: application/x-pkcs7-signature; name="smime.p7s"
 Content-Transfer-Encoding: base64
 Content-Disposition: attachment; filename="smime.p7s"
@@ -143,8 +135,8 @@ MIGlMQswCQYDVQQGEwJOTDETMBEGA1UECBMKR2VsZGVybGFuZDETMBEGA1UEBxMKSGFyZGVy
 d2lqazEcMBoGA1UEChMTSi5FLiB2YW4gR3Jvb3RoZWVzdDEhMB8GA1UEAxMYSmFuIEV2ZXJ0
 IHZhbiBHcm9vdGhlZXN0MSswKQYJKoZIhvcNAQkBFhxqLmUudmFuLmdyb290aGVlc3RAY2Fp
 d2F5Lm5sAgEDMAkGBSsOAwIaBQCgggI+MBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJ
-KoZIhvcNAQkFMQ8XDTA4MDYyNzE5MjMzMFowIwYJKoZIhvcNAQkEMRYEFNTDRuPMJrPbZIC8
-5OI9XAJKDGtCMF8GCSqGSIb3DQEJDzFSMFAwCwYJYIZIAWUDBAECMAoGCCqGSIb3DQMHMA4G
+KoZIhvcNAQkFMQ8XDTA4MDYyNzE5NTE1OVowIwYJKoZIhvcNAQkEMRYEFMEi37jE4SAEmWVK
+rJtj7iMcta+UMF8GCSqGSIb3DQEJDzFSMFAwCwYJYIZIAWUDBAECMAoGCCqGSIb3DQMHMA4G
 CCqGSIb3DQMCAgIAgDANBggqhkiG9w0DAgIBQDAHBgUrDgMCBzANBggqhkiG9w0DAgIBKDCB
 vAYJKwYBBAGCNxAEMYGuMIGrMIGlMQswCQYDVQQGEwJOTDETMBEGA1UECBMKR2VsZGVybGFu
 ZDETMBEGA1UEBxMKSGFyZGVyd2lqazEcMBoGA1UEChMTSi5FLiB2YW4gR3Jvb3RoZWVzdDEh
@@ -153,15 +145,15 @@ dmFuLmdyb290aGVlc3RAY2Fpd2F5Lm5sAgEDMIG+BgsqhkiG9w0BCRACCzGBrqCBqzCBpTEL
 MAkGA1UEBhMCTkwxEzARBgNVBAgTCkdlbGRlcmxhbmQxEzARBgNVBAcTCkhhcmRlcndpamsx
 HDAaBgNVBAoTE0ouRS4gdmFuIEdyb290aGVlc3QxITAfBgNVBAMTGEphbiBFdmVydCB2YW4g
 R3Jvb3RoZWVzdDErMCkGCSqGSIb3DQEJARYcai5lLnZhbi5ncm9vdGhlZXN0QGNhaXdheS5u
-bAIBAzANBgkqhkiG9w0BAQEFAASCAgAw4jMp7sklh2+TkthB4gqEHR4R1hGgp3jSP+fYhW4I
-kUq78CT/MrG/3hm1ZF/vax3NpBqi3lK8gCQRhXwroXtMt9tpn3roz4P70tcu5BnZQFoF4wQY
-gUgFvrCrjFAAiarT/mBRKtOSJsqt2++HtiQACM7HCmOirwSi4xb24Rfgd3lsbehVczF0dz4I
-fNrZ9cmgI1faAtwnNiCqw4h6NI4ABJDXkbVuavHgjC7zzUIQt8nxmTMyKfJkMtZsawyVf1fi
-0me1/OK3guLPqo/q5bC1veZjJ1SnF/g6gMIW5B+0ZyQ6J/VMANl68YQPiwQ8QAbLyD/++Lq3
-gJEw1s++GuB/317PtUJjGEZbhGGPz82zKckJgl49V2oXbC15T5bWbxylJPpzU9km3IBzt9DT
-7zmSN1+ykbPnNyFST+mwbjqNuWoDTbeW2oJFvRWeQOTe6p+NaxxRm+QmJmnnabp8SUAlahRh
-D65zfJrJalWP645ojzPwepyowCoOaHlKVniDquVlGBvp1S4MkNrbGITuAKcy4AKwKd6KGPqB
-a8qD7dYTntTcyF6zLxQaJqNsrHzQsCM626pqpiwwwusv21j0RiygbM6lH7zbAFZa/K3hPJac
-uCEYeRxAU3X9P4NsuuZ+3pB9+i5+reuM2Q0bwGozTl3J09TUqzPgUBBG+vJX0gIxVAAAAAAA
+bAIBAzANBgkqhkiG9w0BAQEFAASCAgDG7o03oOeMWpgeGszVbTU+LsUu0lery2jHGqO01220
++aQdSiIDeBqJG2P7YK2ihr3EFohLIBJpQK6uIsM8KkskZDi4vJxFDbOl82lWXdzjvg63LlYl
+Te6grKCjN3Bi+z6+EaLkhUkYS3XgdwUiwJjDijaYLQ1ox6NjhqXA0m6FQebmVS7FDQHE8FDc
+6MvBZh+nG0v31XgAeLlBRZZ5p0dEu1QwrhneXWzCSoWTjstJ7hKCvGzqsAqEMzeNA6fvp+WO
+8h/KBCVDOirEtonRaQBVbOsuuyNP6sT4JgzNy0aI52MZV4h1JST5L/PvyKlmKYiuB/naGuhZ
+E9utE4NLX8vUJEkQRJCuNYj55jLRYK04MCfqxpPlubG7nnQiVy5ibuDWv0qGPwAAkuZ4hNDV
+JUpS38AB9gya8ndci06ZRom+YJ+i0k3PqOuawAPXS2yI6JRow1l+e4asRPOSYxSWmtUS/mkG
+CqzrHP9Ai2nhRL3Kp/QNAgfcZV/+nwIWPvDdOZovcwDPRZf3NhP+enRaIz6NI4Y4tgocSDEB
+4PTv7s42+JHctxpnYuDHUS9CAOUgBqkcPtoFDXsOu0wH/S7W/2YRjznC4SlrqIqx/ZRN9098
+HSuuWnv0Cy+0ancllgXiCGbVJysUUS+WkAwQLeuTTFbmPjACaGy3iRYIgSeFTAeINAAAAAAA
 AA==
---------------ms020704060303090602070108--
+--------------ms030302070300000205080007--
