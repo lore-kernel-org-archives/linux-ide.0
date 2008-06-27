@@ -1,95 +1,67 @@
 From: Jan Evert van Grootheest <j.e.van.grootheest@caiway.nl>
-Subject: Re: [PATCH] ht6560b: remove old history
-Date: Fri, 27 Jun 2008 21:34:42 +0200
-Message-ID: <486540D2.6050804@caiway.nl>
-References: <48654085.9070605@caiway.nl>
+Subject: Update my email address
+Date: Fri, 27 Jun 2008 21:23:30 +0200
+Message-ID: <48653E32.3090100@caiway.nl>
 Mime-Version: 1.0
-Content-Type: multipart/signed; protocol="application/x-pkcs7-signature"; micalg=sha1; boundary="------------ms080906080405050204010506"
+Content-Type: multipart/signed; protocol="application/x-pkcs7-signature"; micalg=sha1; boundary="------------ms020704060303090602070108"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from pelian3.kabelfoon.nl ([62.45.45.106]:65515 "EHLO
+Received: from pelian3.kabelfoon.nl ([62.45.45.106]:51630 "EHLO
 	pelian.kabelfoon.nl" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1758489AbYF0Teo (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 27 Jun 2008 15:34:44 -0400
-In-Reply-To: <48654085.9070605@caiway.nl>
+	with ESMTP id S1754104AbYF0TmG (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 27 Jun 2008 15:42:06 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-ide@vger.kernel.org
 
 This is a cryptographically signed message in MIME format.
 
---------------ms080906080405050204010506
+--------------ms020704060303090602070108
 Content-Type: multipart/mixed;
- boundary="------------010008070006010701040006"
+ boundary="------------080203040802000706070504"
 
 This is a multi-part message in MIME format.
---------------010008070006010701040006
+--------------080203040802000706070504
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 
-Ugh. patch. missing.
+Hi,
 
-Jan Evert van Grootheest wrote:
-> Hi Bart,
->
-> Here's a patch to remove the ancient history from the ht6560b driver.
-> I'm not entirely sure, but I'm listed as Author: in the patch. Do I 
-> also need to add a signed-off line?
->
-> Good luck,
-> Jan Evert
->
+Here's a patch to update my email address.
+
+Thanks,
+Jan Evert
 
 
---------------010008070006010701040006
+--------------080203040802000706070504
 Content-Type: text/x-diff;
- name="ht6560-history.diff"
+ name="ht6560b-email.diff"
 Content-Transfer-Encoding: 7bit
 Content-Disposition: inline;
- filename="ht6560-history.diff"
+ filename="ht6560b-email.diff"
 
-commit 2ee832ffc4acd24e740fa609586cc326ef0e9aed
+commit 4fd7e51f38551911d060e8a5ba005ff3b4bb76fe
 Author: Jan Evert van Grootheest <janevert@lappie.(none)>
-Date:   Fri Jun 27 21:30:14 2008 +0200
+Date:   Fri Jun 27 21:15:17 2008 +0200
 
-    Remove the ancient version history. Git does a better job.
+    Update email address.
 
 diff --git a/drivers/ide/legacy/ht6560b.c b/drivers/ide/legacy/ht6560b.c
-index 46d6166..8b48e63 100644
+index 4fe516d..46d6166 100644
 --- a/drivers/ide/legacy/ht6560b.c
 +++ b/drivers/ide/legacy/ht6560b.c
-@@ -3,28 +3,6 @@
-  */
- 
- /*
-- *
-- *  Version 0.01        Initial version hacked out of ide.c
-- *
-- *  Version 0.02        Added support for PIO modes, auto-tune
-- *
-- *  Version 0.03        Some cleanups
-- *
-- *  Version 0.05        PIO mode cycle timings auto-tune using bus-speed
-- *
-- *  Version 0.06        Prefetch mode now defaults no OFF. To set
-- *                      prefetch mode OFF/ON use "hdparm -p8/-p9".
-- *                      Unmask irq is disabled when prefetch mode
-- *                      is enabled.
-- *
-- *  Version 0.07        Trying to fix CD-ROM detection problem.
-- *                      "Prefetch" mode bit OFF for ide disks and
-- *                      ON for anything else.
-- *
-- *  Version 0.08        Need to force prefetch for CDs and other non-disk
-- *                      devices. (not sure which devices exactly need
-- *                      prefetch)
-- *
-  *  HT-6560B EIDE-controller support
-  *  To activate controller support use kernel parameter "ide0=ht6560b".
+@@ -30,7 +30,7 @@
   *  Use hdparm utility to enable PIO mode support.
+  *
+  *  Author:    Mikko Ala-Fossi            <maf@iki.fi>
+- *             Jan Evert van Grootheest   <janevert@caiway.nl>
++ *             Jan Evert van Grootheest   <j.e.van.grootheest@caiway.nl>
+  *
+  *  Try:  http://www.maf.iki.fi/~maf/ht6560b/
+  */
 
---------------010008070006010701040006--
+--------------080203040802000706070504--
 
---------------ms080906080405050204010506
+--------------ms020704060303090602070108
 Content-Type: application/x-pkcs7-signature; name="smime.p7s"
 Content-Transfer-Encoding: base64
 Content-Disposition: attachment; filename="smime.p7s"
@@ -171,8 +143,8 @@ MIGlMQswCQYDVQQGEwJOTDETMBEGA1UECBMKR2VsZGVybGFuZDETMBEGA1UEBxMKSGFyZGVy
 d2lqazEcMBoGA1UEChMTSi5FLiB2YW4gR3Jvb3RoZWVzdDEhMB8GA1UEAxMYSmFuIEV2ZXJ0
 IHZhbiBHcm9vdGhlZXN0MSswKQYJKoZIhvcNAQkBFhxqLmUudmFuLmdyb290aGVlc3RAY2Fp
 d2F5Lm5sAgEDMAkGBSsOAwIaBQCgggI+MBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJ
-KoZIhvcNAQkFMQ8XDTA4MDYyNzE5MzQ0MlowIwYJKoZIhvcNAQkEMRYEFMi4bTYpNhTXLwcZ
-Uz1ciV0dj3fjMF8GCSqGSIb3DQEJDzFSMFAwCwYJYIZIAWUDBAECMAoGCCqGSIb3DQMHMA4G
+KoZIhvcNAQkFMQ8XDTA4MDYyNzE5MjMzMFowIwYJKoZIhvcNAQkEMRYEFNTDRuPMJrPbZIC8
+5OI9XAJKDGtCMF8GCSqGSIb3DQEJDzFSMFAwCwYJYIZIAWUDBAECMAoGCCqGSIb3DQMHMA4G
 CCqGSIb3DQMCAgIAgDANBggqhkiG9w0DAgIBQDAHBgUrDgMCBzANBggqhkiG9w0DAgIBKDCB
 vAYJKwYBBAGCNxAEMYGuMIGrMIGlMQswCQYDVQQGEwJOTDETMBEGA1UECBMKR2VsZGVybGFu
 ZDETMBEGA1UEBxMKSGFyZGVyd2lqazEcMBoGA1UEChMTSi5FLiB2YW4gR3Jvb3RoZWVzdDEh
@@ -181,15 +153,15 @@ dmFuLmdyb290aGVlc3RAY2Fpd2F5Lm5sAgEDMIG+BgsqhkiG9w0BCRACCzGBrqCBqzCBpTEL
 MAkGA1UEBhMCTkwxEzARBgNVBAgTCkdlbGRlcmxhbmQxEzARBgNVBAcTCkhhcmRlcndpamsx
 HDAaBgNVBAoTE0ouRS4gdmFuIEdyb290aGVlc3QxITAfBgNVBAMTGEphbiBFdmVydCB2YW4g
 R3Jvb3RoZWVzdDErMCkGCSqGSIb3DQEJARYcai5lLnZhbi5ncm9vdGhlZXN0QGNhaXdheS5u
-bAIBAzANBgkqhkiG9w0BAQEFAASCAgBILsH4Xpu0mPbKAPjDilPzeUi9142qStuDAc6xW4zS
-zQ+X6ZiOtA8BO4P1oBbQqAkCfPL7J26Qx4ENqOibWrcrmldV5+aU+IszmCCNWSg5aM1cEw4l
-896ykKIFNqHOS4PAuJOAVBp778+MH+Eng5cC0zwWfARtnw3fCpS0pj+2BF+5m3RoLtcvSTAI
-LKBbOypvTKmebA7F9E4KiWzsCX3d/BPg9K2pkoLHlbjoa8cyFjO6y4pUhs5YgmRtxE0JAUF0
-CG7UhG39XgyaZRnIhxlOtMYvHW9dCxD+JdHMqitmxXOwwSf5+LuOFVdRPNZtNJRNYzJWeJK5
-0iLWFRtdL2hCr1+oErCw3FwWg8VKA5SWDHtWM6KFcQuNPtVY2PskVNaVEYzkFBQU5YD884la
-xDhKavRpkqnKelNIYrdezPTMf8BRj7GNpXZbd3KW3G3M/R309gKel4w0d8ZSPV/pBJyHndl2
-9eEUIQ6iO7JHtdwAqk860DjxP+YkL8NXx/gphuo2tmruY4OKtjC8eZDRJuSkwYSy2bAh8I8y
-X3e07tIFWF4n2lX213ODAHjd9f0KvcwrXrDjMv4Fk7osb0ryz+VuHlycZARvCjFJactzGD4b
-f7NyxnydMF6ibC5SA6U4I5uZqq5mY5h40nUQQApHW/7/z8wsz8EjM4JdzaAGdNi/fQAAAAAA
+bAIBAzANBgkqhkiG9w0BAQEFAASCAgAw4jMp7sklh2+TkthB4gqEHR4R1hGgp3jSP+fYhW4I
+kUq78CT/MrG/3hm1ZF/vax3NpBqi3lK8gCQRhXwroXtMt9tpn3roz4P70tcu5BnZQFoF4wQY
+gUgFvrCrjFAAiarT/mBRKtOSJsqt2++HtiQACM7HCmOirwSi4xb24Rfgd3lsbehVczF0dz4I
+fNrZ9cmgI1faAtwnNiCqw4h6NI4ABJDXkbVuavHgjC7zzUIQt8nxmTMyKfJkMtZsawyVf1fi
+0me1/OK3guLPqo/q5bC1veZjJ1SnF/g6gMIW5B+0ZyQ6J/VMANl68YQPiwQ8QAbLyD/++Lq3
+gJEw1s++GuB/317PtUJjGEZbhGGPz82zKckJgl49V2oXbC15T5bWbxylJPpzU9km3IBzt9DT
+7zmSN1+ykbPnNyFST+mwbjqNuWoDTbeW2oJFvRWeQOTe6p+NaxxRm+QmJmnnabp8SUAlahRh
+D65zfJrJalWP645ojzPwepyowCoOaHlKVniDquVlGBvp1S4MkNrbGITuAKcy4AKwKd6KGPqB
+a8qD7dYTntTcyF6zLxQaJqNsrHzQsCM626pqpiwwwusv21j0RiygbM6lH7zbAFZa/K3hPJac
+uCEYeRxAU3X9P4NsuuZ+3pB9+i5+reuM2Q0bwGozTl3J09TUqzPgUBBG+vJX0gIxVAAAAAAA
 AA==
---------------ms080906080405050204010506--
+--------------ms020704060303090602070108--
