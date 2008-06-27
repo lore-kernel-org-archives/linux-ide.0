@@ -1,36 +1,33 @@
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Subject: Re: libata and DMA quirks
-Date: Fri, 27 Jun 2008 19:31:23 +1000
-Message-ID: <1214559083.8011.544.camel@pasglop>
-References: <1214548895.8011.526.camel@pasglop>
-	 <4864A6C9.2050709@ru.mvista.com> <1214556703.8011.531.camel@pasglop>
-	 <4864AE92.2090805@ru.mvista.com>
-Reply-To: benh@kernel.crashing.org
-Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+From: bugme-daemon@bugzilla.kernel.org
+Subject: [Bug 10943] machine doesn't shutdown when ahci sata driver is compiled as module
+Date: Fri, 27 Jun 2008 07:20:17 -0700 (PDT)
+Message-ID: <20080627142017.85E52108045@picon.linux-foundation.org>
+References: <bug-10943-11633@http.bugzilla.kernel.org/>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from gate.crashing.org ([63.228.1.57]:40298 "EHLO gate.crashing.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751181AbYF0Jbx (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 27 Jun 2008 05:31:53 -0400
-In-Reply-To: <4864AE92.2090805@ru.mvista.com>
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:35997 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754957AbYF0OUv (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 27 Jun 2008 10:20:51 -0400
+Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
+	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id m5REKHvB029559
+	for <linux-ide@vger.kernel.org>; Fri, 27 Jun 2008 07:20:18 -0700
+In-Reply-To: <bug-10943-11633@http.bugzilla.kernel.org/>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Cc: linux-ide@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>, Tejun Heo <htejun@gmail.com>
+To: linux-ide@vger.kernel.org
 
-On Fri, 2008-06-27 at 13:10 +0400, Sergei Shtylyov wrote:
-> > It doesn't use DMA to transfer the bulk of ATAPI ? I know it uses PIO
-> > for the CDB but the rest of the transfer isn't done with DMA ?
-> >   
->    Like I said, DMA is used only for the *block* transfer commands for 
-> which the transfer size would always be a multiple of 16 bytes.
-
-Ok, I see. That might explain why I never saw a problem not doing
-anything special with drivers/ide.
-
-Cheers,
-Ben.
+http://bugzilla.kernel.org/show_bug.cgi?id=10943
 
 
+
+
+
+------- Comment #7 from tj@kernel.org  2008-06-27 07:20 -------
+That message isn't from the kernel.  It's from shutdown script.  Are you sure
+it's a kernel problem?  Does "halt -f" work?
+
+
+-- 
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are on the CC list for the bug, or are watching someone who is.
