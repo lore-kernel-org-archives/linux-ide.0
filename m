@@ -1,45 +1,49 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH v2 -rt] ide: workaround buggy hardware issues with	preemptable
- hardirqs
-Date: Sat, 28 Jun 2008 15:52:02 +0400
-Message-ID: <486625E2.2020808@ru.mvista.com>
-References: <20080623234037.GA6793@polina.dev.rtsoft.ru> <20080623235141.GB17297@elte.hu> <20080624000016.GA12547@polina.dev.rtsoft.ru> <20080625123431.GA25452@polina.dev.rtsoft.ru> <20080628005436.GA1956@polina.dev.rtsoft.ru> <486612CC.3060505@ru.mvista.com> <20080628113126.GA438@polina.dev.rtsoft.ru>
+From: "Petr Jelen" <petr.jelen@gmail.com>
+Subject: Highpoint RocketRaid 1720 support in sata_mv
+Date: Sat, 28 Jun 2008 23:00:37 +0200
+Message-ID: <ae2e8fb00806281400l54d9378ey22b7a952a6315088@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from gateway-1237.mvista.com ([63.81.120.155]:39033 "EHLO
-	imap.sh.mvista.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1750736AbYF1LwL (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 28 Jun 2008 07:52:11 -0400
-In-Reply-To: <20080628113126.GA438@polina.dev.rtsoft.ru>
+Received: from rv-out-0506.google.com ([209.85.198.230]:22080 "EHLO
+	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751787AbYF1VAi (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 28 Jun 2008 17:00:38 -0400
+Received: by rv-out-0506.google.com with SMTP id k40so1091996rvb.1
+        for <linux-ide@vger.kernel.org>; Sat, 28 Jun 2008 14:00:37 -0700 (PDT)
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: avorontsov@ru.mvista.com
-Cc: Ingo Molnar <mingo@elte.hu>, linux-ide@vger.kernel.org, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-kernel@vger.kernel.org, Thomas Gleixner <tglx@linutronix.de>, Steven Rostedt <rostedt@goodmis.org>, Daniel Walker <dwalker@mvista.com>
+To: mlord@pobox.com
+Cc: linux-ide@vger.kernel.org
 
-Hello.
+Hello,
 
-Anton Vorontsov wrote:
->>> But some hardware (namely ULi M5228 in the ULi M1575 "Super South Brige")
->>> behaves in a strange way: it asserts interrupts as edge sensitive. And
->>> because preemptable IRQ handler disables PIC's interrupt, PIC will likely
->>> miss it.
->>>   
->>>       
->>   Unmasking an IRQ should re-enable an edge detector in a PIC (or that  
->> detector should even be independent from mask).
->>     
-> Should? Hm.. well, I can easily check it. Will just program the MPIC IRQ
-> to edge sensitive, and see if it fixes the problem (not sure if I already
-> tried this, I think I did try).
->   
+I have a simple patch for sata_mv.c, which adds support for Highpoint
+RocketRaid 1720 adapter (2 SATA2 ports on PCI bus).
+The adapter has Marvel 88SX6042-BCZ1 on board.
 
-   That will not help if edge detector is not active for masked out IRQs 
-(that's how i8259 behaves, IIRC) *and* you're getting the short IRQ 
-"pulses" but should help if IRQ is generated normally -- though in this 
-case the level trigger mode (with the same polarity) should work as well...
+The patch is against 2.6.25.9 and I have tested it. I could normally
+work with my disks (in JBOD mode).
+Could you please accept the patch?
 
-MBR, Sergei
+diff -urN linux-2.6.25.9/drivers/ata/sata_mv.c
+linux-2.6.25.9-new/drivers/ata/sata_mv.c
+--- linux-2.6.25.9/drivers/ata/sata_mv.c        2008-06-24
+23:09:06.000000000 +0200
++++ linux-2.6.25.9-new/drivers/ata/sata_mv.c    2008-06-28
+22:36:22.000000000 +0200
+@@ -695,7 +695,8 @@
+        { PCI_VDEVICE(MARVELL, 0x5041), chip_504x },
+        { PCI_VDEVICE(MARVELL, 0x5080), chip_5080 },
+        { PCI_VDEVICE(MARVELL, 0x5081), chip_508x },
+-       /* RocketRAID 1740/174x have different identifiers */
++       /* RocketRAID 1720/174x have different identifiers */
++       { PCI_VDEVICE(TTI, 0x1720), chip_6042 },
+        { PCI_VDEVICE(TTI, 0x1740), chip_508x },
+        { PCI_VDEVICE(TTI, 0x1742), chip_508x },
 
 
+Best Regards,
+Petr Jelen
