@@ -1,14 +1,14 @@
 From: Borislav Petkov <petkovbb@googlemail.com>
-Subject: [PATCH 06/16] ide-floppy: pass packet command in rq->cmd
-Date: Sun, 29 Jun 2008 12:59:09 +0200
-Message-ID: <1214737159-1078-7-git-send-email-petkovbb@gmail.com>
+Subject: [PATCH 09/16] ide-scsi: pass packet command in rq->cmd
+Date: Sun, 29 Jun 2008 12:59:12 +0200
+Message-ID: <1214737159-1078-10-git-send-email-petkovbb@gmail.com>
 References: <1214737159-1078-1-git-send-email-petkovbb@gmail.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.155]:56959 "EHLO
+Received: from fg-out-1718.google.com ([72.14.220.159]:56179 "EHLO
 	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755143AbYF2K7P (ORCPT
+	with ESMTP id S1755309AbYF2K7P (ORCPT
 	<rfc822;linux-ide@vger.kernel.org>); Sun, 29 Jun 2008 06:59:15 -0400
-Received: by fg-out-1718.google.com with SMTP id 19so564623fgg.17
+Received: by fg-out-1718.google.com with SMTP id 19so564619fgg.17
         for <linux-ide@vger.kernel.org>; Sun, 29 Jun 2008 03:59:14 -0700 (PDT)
 In-Reply-To: <1214737159-1078-1-git-send-email-petkovbb@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
@@ -24,38 +24,29 @@ There should be no functionality change resulting from this patch.
 
 Signed-off-by: Borislav Petkov <petkovbb@gmail.com>
 ---
- drivers/ide/ide-floppy.c |    4 ++++
- 1 files changed, 4 insertions(+), 0 deletions(-)
+ drivers/scsi/ide-scsi.c |    2 ++
+ 1 files changed, 2 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/ide/ide-floppy.c b/drivers/ide/ide-floppy.c
-index b5b3191..37146d3 100644
---- a/drivers/ide/ide-floppy.c
-+++ b/drivers/ide/ide-floppy.c
-@@ -291,6 +291,7 @@ static void idefloppy_queue_pc_head(ide_drive_t *drive, struct ide_atapi_pc *pc,
- 	rq->cmd_type = REQ_TYPE_SPECIAL;
- 	rq->cmd_flags |= REQ_PREEMPT;
- 	rq->rq_disk = floppy->disk;
+diff --git a/drivers/scsi/ide-scsi.c b/drivers/scsi/ide-scsi.c
+index a6c2c5f..c637520 100644
+--- a/drivers/scsi/ide-scsi.c
++++ b/drivers/scsi/ide-scsi.c
+@@ -236,6 +236,7 @@ static int idescsi_check_condition(ide_drive_t *drive,
+ 		ide_scsi_hex_dump(pc->c, 6);
+ 	}
+ 	rq->rq_disk = scsi->disk;
 +	memcpy(rq->cmd, pc->c, 12);
  	ide_do_drive_cmd(drive, rq);
+ 	return 0;
  }
- 
-@@ -573,6 +574,8 @@ static void idefloppy_create_rw_cmd(idefloppy_floppy_t *floppy,
- 	put_unaligned(cpu_to_be16(blocks), (unsigned short *)&pc->c[7]);
- 	put_unaligned(cpu_to_be32(block), (unsigned int *) &pc->c[2]);
- 
-+	memcpy(rq->cmd, pc->c, 12);
-+
- 	pc->rq = rq;
- 	pc->b_count = cmd == READ ? 0 : rq->bio->bi_size;
- 	if (rq->cmd_flags & REQ_RW)
-@@ -670,6 +673,7 @@ static int idefloppy_queue_pc_tail(ide_drive_t *drive, struct ide_atapi_pc *pc)
- 	rq = blk_get_request(drive->queue, READ, __GFP_WAIT);
- 	rq->buffer = (char *) pc;
+@@ -646,6 +647,7 @@ static int idescsi_queue (struct scsi_cmnd *cmd,
+ 	rq->special = (char *) pc;
  	rq->cmd_type = REQ_TYPE_SPECIAL;
+ 	spin_unlock_irq(host->host_lock);
 +	memcpy(rq->cmd, pc->c, 12);
- 	error = blk_execute_rq(drive->queue, floppy->disk, rq, 0);
- 	blk_put_request(rq);
- 
+ 	blk_execute_rq_nowait(drive->queue, scsi->disk, rq, 0, NULL);
+ 	spin_lock_irq(host->host_lock);
+ 	return 0;
 -- 
 1.5.5.4
 
