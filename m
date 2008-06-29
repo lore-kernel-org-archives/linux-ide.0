@@ -1,71 +1,61 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH 5/7] ide: add ide_ports[]
-Date: Sat, 28 Jun 2008 23:44:31 +0200
-Message-ID: <20080628214431.21345.80510.sendpatchset@localhost.localdomain>
-References: <20080628214355.21345.94835.sendpatchset@localhost.localdomain>
+From: Mark Lord <liml@rtr.ca>
+Subject: Re: Highpoint RocketRaid 1720 support in sata_mv
+Date: Sun, 29 Jun 2008 04:45:06 -0400
+Message-ID: <48674B92.3030801@rtr.ca>
+References: <ae2e8fb00806281400l54d9378ey22b7a952a6315088@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mu-out-0910.google.com ([209.85.134.189]:38459 "EHLO
-	mu-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754771AbYF1VmX (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 28 Jun 2008 17:42:23 -0400
-Received: by mu-out-0910.google.com with SMTP id w8so348183mue.1
-        for <linux-ide@vger.kernel.org>; Sat, 28 Jun 2008 14:42:23 -0700 (PDT)
-In-Reply-To: <20080628214355.21345.94835.sendpatchset@localhost.localdomain>
+Received: from rtr.ca ([76.10.145.34]:1741 "EHLO mail.rtr.ca"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752037AbYF2IpN (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 29 Jun 2008 04:45:13 -0400
+In-Reply-To: <ae2e8fb00806281400l54d9378ey22b7a952a6315088@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
-Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-kernel@vger.kernel.org
+To: Petr Jelen <petr.jelen@gmail.com>, Jeff Garzik <jgarzik@pobox.com>
+Cc: mlord@pobox.com, linux-ide@vger.kernel.org, Tejun Heo <htejun@gmail.com>
 
-* Add ide_ports[] table keeping pointers to all initialized ports.
+>Petr Jelen wrote:
+> I have a simple patch for sata_mv.c, which adds support for Highpoint
+> RocketRaid 1720 adapter (2 SATA2 ports on PCI bus).
+> The adapter has Marvel 88SX6042-BCZ1 on board.
+> 
+> The patch is against 2.6.25.9 and I have tested it. I could normally
+> work with my disks (in JBOD mode).
+..
 
-* Set ide_ports[] entry for a given port in init_irq() and clear it
-  ide_remove_port_from_hwgroup().
+Looks simple enough.
 
-* Convert init_irq() to use ide_ports[] instead of ide_hwifs[] for
-  grouping ports into hwgroup.
-
-Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Signed-off-by: Mark Lord <mlord@pobox.com>
 ---
- drivers/ide/ide-probe.c |   11 +++++++++--
- 1 file changed, 9 insertions(+), 2 deletions(-)
 
-Index: b/drivers/ide/ide-probe.c
-===================================================================
---- a/drivers/ide/ide-probe.c
-+++ b/drivers/ide/ide-probe.c
-@@ -994,10 +994,14 @@ static void ide_port_setup_devices(ide_h
- 	mutex_unlock(&ide_cfg_mtx);
- }
- 
-+static ide_hwif_t *ide_ports[MAX_HWIFS];
-+
- void ide_remove_port_from_hwgroup(ide_hwif_t *hwif)
- {
- 	ide_hwgroup_t *hwgroup = hwif->hwgroup;
- 
-+	ide_ports[hwif->index] = NULL;
-+
- 	spin_lock_irq(&ide_lock);
- 	/*
- 	 * Remove us from the hwgroup, and free
-@@ -1056,8 +1060,9 @@ static int init_irq (ide_hwif_t *hwif)
- 	 * Group up with any other hwifs that share our irq(s).
- 	 */
- 	for (index = 0; index < MAX_HWIFS; index++) {
--		ide_hwif_t *h = &ide_hwifs[index];
--		if (h->hwgroup) {  /* scan only initialized hwif's */
-+		ide_hwif_t *h = ide_ports[index];
-+
-+		if (h && h->hwgroup) {  /* scan only initialized ports */
- 			if (hwif->irq == h->irq) {
- 				hwif->sharing_irq = h->sharing_irq = 1;
- 				if (hwif->chipset != ide_pci ||
-@@ -1111,6 +1116,8 @@ static int init_irq (ide_hwif_t *hwif)
- 		hwgroup->timer.data = (unsigned long) hwgroup;
- 	}
- 
-+	ide_ports[hwif->index] = hwif;
-+
- 	/*
- 	 * Allocate the irq, if not already obtained for another hwif
- 	 */
+Jeff, can you push this one-liner (or equivalent) out for 2.6.26?
+I don't have a dev tree with me on the road here,
+so the line offsets probably differ.
+
+
+diff -urN linux-2.6.25.9/drivers/ata/sata_mv.c
+linux-2.6.25.9-new/drivers/ata/sata_mv.c
+--- linux-2.6.25.9/drivers/ata/sata_mv.c        2008-06-24
+23:09:06.000000000 +0200
++++ linux-2.6.25.9-new/drivers/ata/sata_mv.c    2008-06-28
+22:36:22.000000000 +0200
+@@ -695,7 +695,8 @@
+        { PCI_VDEVICE(MARVELL, 0x5041), chip_504x },
+        { PCI_VDEVICE(MARVELL, 0x5080), chip_5080 },
+        { PCI_VDEVICE(MARVELL, 0x5081), chip_508x },
+-       /* RocketRAID 1740/174x have different identifiers */
++       /* RocketRAID 1720/174x have different identifiers */
++       { PCI_VDEVICE(TTI, 0x1720), chip_6042 },
+        { PCI_VDEVICE(TTI, 0x1740), chip_508x },
+        { PCI_VDEVICE(TTI, 0x1742), chip_508x },
+
+
+Best Regards,
+Petr Jelen
+--
+To unsubscribe from this list: send the line "unsubscribe linux-ide" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
