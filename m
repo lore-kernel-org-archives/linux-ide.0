@@ -1,50 +1,106 @@
-From: Anton Vorontsov <avorontsov@ru.mvista.com>
-Subject: Re: [PATCH v2 -rt] ide: workaround buggy hardware issues with
-	preemptable hardirqs
-Date: Sun, 29 Jun 2008 18:23:00 +0400
-Message-ID: <20080629142300.GA4599@polina.dev.rtsoft.ru>
-References: <20080623234037.GA6793@polina.dev.rtsoft.ru> <20080623235141.GB17297@elte.hu> <20080624000016.GA12547@polina.dev.rtsoft.ru> <20080625123431.GA25452@polina.dev.rtsoft.ru> <20080628005436.GA1956@polina.dev.rtsoft.ru> <20080628101431.0b64d6c2@lxorguk.ukuu.org.uk> <486615E2.3080802@ru.mvista.com> <20080629134943.19b94bd2@lxorguk.ukuu.org.uk> <48678B72.4000706@ru.mvista.com>
-Reply-To: avorontsov@ru.mvista.com
+From: mikp <mikpolniak@roadrunner.com>
+Subject: nvidia GF8200 (MCP78) chipset: plugging PMP gives
+ "failed to IDENTIFY..."
+Date: Sun, 29 Jun 2008 11:35:47 -0400
+Message-ID: <20080629113547.ad0082bf.mikpolniak@roadrunner.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf8
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtsoft3.corbina.net ([85.21.88.6]:12125 "EHLO
-	buildserver.ru.mvista.com" rhost-flags-OK-FAIL-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1758308AbYF2OXE (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 29 Jun 2008 10:23:04 -0400
-Content-Disposition: inline
-In-Reply-To: <48678B72.4000706@ru.mvista.com>
+Received: from mta9.adelphia.net ([68.168.78.199]:55876 "EHLO
+	mta9.adelphia.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752195AbYF2Pft (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 29 Jun 2008 11:35:49 -0400
+Received: from slack7.homefree.net ([76.180.122.198]) by mta9.adelphia.net
+          (InterMail vM.6.01.05.02 201-2131-123-102-20050715) with ESMTP
+          id <20080629154036.ODMR4520.mta9.adelphia.net@slack7.homefree.net>
+          for <linux-ide@vger.kernel.org>; Sun, 29 Jun 2008 11:40:36 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, Ingo Molnar <mingo@elte.hu>, linux-ide@vger.kernel.org, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-kernel@vger.kernel.org, Thomas Gleixner <tglx@linutronix.de>, Steven Rostedt <rostedt@goodmis.org>, Daniel Walker <dwalker@mvista.com>
+To: linux-ide@vger.kernel.org
 
-On Sun, Jun 29, 2008 at 05:17:38PM +0400, Sergei Shtylyov wrote:
-> Alan Cox wrote:
->
->>>   His boot log shows the native mode.
->
->> Then the bridge is misprogrammed
->
->>>   What's IDEIRT, some ISA bridge register? And why should one set  
->>> [A]PIC to level mode for legacy mode IDE? :-O
->
->> You need an NDA and then they'll send you the data sheet for the bridges
->> and other logic. It's all programmable.
->
->    That could be a very long story... :-|
->
->> "He has an OpenPIC, it's PowerPC SoC, so no ELCR either"
->
->> Really - he's using a designed for PC ISA bridge etc.. he might have all
->> sorts of stuff on it.
->
->   Ah, indeed. I meant to say that 8259 and ELCR are bypassed for PCI IRQs 
-> (or at least Anton says so :-).
+Using Biostar TF8200 m/b with GeForce 8200 (MCP78) chipset.Everything 
+seems to be working with kernel 2.6.25, but plugging in SIL 3726 port 
+multiplier gives "failed to identify.."
 
-Yes, we don't use 8259 for the IDE interrupt.
+dmesg...
 
--- 
-Anton Vorontsov
-email: cbouatmailru@gmail.com
-irc://irc.freenode.net/bd2
+ahci 0000:00:09.0: version 3.0
+ACPI: PCI Interrupt Link [LSA0] enabled at IRQ 23
+ACPI: PCI Interrupt 0000:00:09.0[A] -> Link [LSA0] -> GSI 23 (level, low) -> IRQ 23
+ahci 0000:00:09.0: AHCI 0001.0200 32 slots 6 ports 3 Gbps 0x3f impl IDE mode
+ahci 0000:00:09.0: flags: 64bit ncq sntf led clo pmp pio
+PCI: Setting latency timer of device 0000:00:09.0 to 64
+scsi0 : ahci
+scsi1 : ahci
+scsi2 : ahci
+scsi3 : ahci
+scsi4 : ahci
+scsi5 : ahci
+ata1: SATA max UDMA/133 abar m8192@0xfbe76000 port 0xfbe76100 irq 23
+ata2: SATA max UDMA/133 abar m8192@0xfbe76000 port 0xfbe76180 irq 23
+ata3: SATA max UDMA/133 abar m8192@0xfbe76000 port 0xfbe76200 irq 23
+ata4: SATA max UDMA/133 abar m8192@0xfbe76000 port 0xfbe76280 irq 23
+ata5: SATA max UDMA/133 abar m8192@0xfbe76000 port 0xfbe76300 irq 23
+ata6: SATA max UDMA/133 abar m8192@0xfbe76000 port 0xfbe76380 irq 23
+ata1: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+ata1.00: ATA-8: WDC WD6400AAKS-00A7B0, 01.03B01, max UDMA/133
+ata1.00: 1250263728 sectors, multi 16: LBA48 NCQ (depth 31/32)
+ata1.00: configured for UDMA/133
+ata2: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+ata2.00: failed to IDENTIFY (I/O error, err_mask=0x100)
+ata2: failed to recover some devices, retrying in 5 secs
+
+then replugging the PMP gives......
+
+ata2: hard resetting link
+ata2: SATA link down (SStatus 100 SControl 300)
+ata2: EH complete
+ata2: exception Emask 0x10 SAct 0x0 SErr 0x4040000 action 0xa frozen
+ata2: irq_stat 0x00000040, connection status changed
+ata2: SError: { CommWake DevExch }
+ata2: hard resetting link
+ata2: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+ata2.00: failed to IDENTIFY (I/O error, err_mask=0x100)
+ata2: failed to recover some devices, retrying in 5 secs
+ata2: hard resetting link
+ata2: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+ata2.00: failed to IDENTIFY (I/O error, err_mask=0x100)
+ata2: failed to recover some devices, retrying in 5 secs
+ata2: hard resetting link
+ata2: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+ata2.00: failed to IDENTIFY (I/O error, err_mask=0x100)
+ata2: failed to recover some devices, retrying in 5 secs
+ata2: hard resetting link
+ata2: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+ata2: exception Emask 0x10 SAct 0x0 SErr 0x0 action 0x1 t4
+ata2: irq_stat 0x08000000, interface fatal error
+ata2: EH complete
+
+
+
+and lspci -nn
+
+00:00.0 RAM memory [0500]: nVidia Corporation Unknown device [10de:0754] (rev a2)
+00:01.0 ISA bridge [0601]: nVidia Corporation Unknown device [10de:075c] (rev a2)
+00:01.1 SMBus [0c05]: nVidia Corporation Unknown device [10de:0752] (rev a1)
+00:01.2 RAM memory [0500]: nVidia Corporation Unknown device [10de:0751] (rev a1)
+00:01.3 Co-processor [0b40]: nVidia Corporation Unknown device [10de:0753] (rev a2)
+00:01.4 RAM memory [0500]: nVidia Corporation Unknown device [10de:0568] (rev a1)
+00:02.0 USB Controller [0c03]: nVidia Corporation Unknown device [10de:077b] (rev a1)
+00:02.1 USB Controller [0c03]: nVidia Corporation Unknown device [10de:077c] (rev a1)
+00:04.0 USB Controller [0c03]: nVidia Corporation Unknown device [10de:077d] (rev a1)
+00:04.1 USB Controller [0c03]: nVidia Corporation Unknown device [10de:077e] (rev a1)
+00:06.0 IDE interface [0101]: nVidia Corporation Unknown device [10de:0759] (reva1)
+00:07.0 Audio device [0403]: nVidia Corporation Unknown device [10de:0774] (rev a1)
+00:08.0 PCI bridge [0604]: nVidia Corporation Unknown device [10de:075a] (rev a1)
+00:09.0 IDE interface [0101]: nVidia Corporation Unknown device [10de:0ad0] (reva2)
+00:0b.0 PCI bridge [0604]: nVidia Corporation Unknown device [10de:0569] (rev a1)
+00:10.0 PCI bridge [0604]: nVidia Corporation Unknown device [10de:0778] (rev a1)
+00:12.0 PCI bridge [0604]: nVidia Corporation Unknown device [10de:075b] (rev a1)
+00:13.0 PCI bridge [0604]: nVidia Corporation Unknown device [10de:077a] (rev a1)
+00:14.0 PCI bridge [0604]: nVidia Corporation Unknown device [10de:077a] (rev a1
+
+
+
+
