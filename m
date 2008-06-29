@@ -1,61 +1,76 @@
-From: Mark Lord <liml@rtr.ca>
-Subject: Re: Highpoint RocketRaid 1720 support in sata_mv
-Date: Sun, 29 Jun 2008 04:45:06 -0400
-Message-ID: <48674B92.3030801@rtr.ca>
-References: <ae2e8fb00806281400l54d9378ey22b7a952a6315088@mail.gmail.com>
+From: Geert Uytterhoeven <geert@linux-m68k.org>
+Subject: Re: ide_release_lock: bug
+Date: Sun, 29 Jun 2008 12:10:02 +0200 (CEST)
+Message-ID: <Pine.LNX.4.64.0806291201530.29339@anakin>
+References: <20080623160539.GA8565@marenka.net>
+ <alpine.DEB.1.00.0806240219260.30759@zirkon.biophys.uni-duesseldorf.de>
+ <alpine.DEB.1.00.0806271036050.14458@zirkon.biophys.uni-duesseldorf.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([76.10.145.34]:1741 "EHLO mail.rtr.ca"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752037AbYF2IpN (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 29 Jun 2008 04:45:13 -0400
-In-Reply-To: <ae2e8fb00806281400l54d9378ey22b7a952a6315088@mail.gmail.com>
+Received: from yorgi.telenet-ops.be ([195.130.133.69]:43340 "EHLO
+	yorgi.telenet-ops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754348AbYF2KLV (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 29 Jun 2008 06:11:21 -0400
+Received: from wilson.telenet-ops.be (wilson.telenet-ops.be [195.130.132.42])
+	by yorgi.telenet-ops.be (Postfix) with ESMTP id C60096818D3
+	for <linux-ide@vger.kernel.org>; Sun, 29 Jun 2008 12:10:34 +0200 (CEST)
+In-Reply-To: <alpine.DEB.1.00.0806271036050.14458@zirkon.biophys.uni-duesseldorf.de>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Petr Jelen <petr.jelen@gmail.com>, Jeff Garzik <jgarzik@pobox.com>
-Cc: mlord@pobox.com, linux-ide@vger.kernel.org, Tejun Heo <htejun@gmail.com>
+To: Michael Schmitz <schmitz@opal.biophys.uni-duesseldorf.de>
+Cc: Stephen R Marenka <stephen@marenka.net>, linux-m68k@vger.kernel.org, linux-ide@vger.kernel.org
 
->Petr Jelen wrote:
-> I have a simple patch for sata_mv.c, which adds support for Highpoint
-> RocketRaid 1720 adapter (2 SATA2 ports on PCI bus).
-> The adapter has Marvel 88SX6042-BCZ1 on board.
+
+[ Background for linux-ide: ide_release_lock() spits out lots of
+
+    ide_release_lock: bug
+
+  warnings on Atari Falcon ]
+
+On Fri, 27 Jun 2008, Michael Schmitz wrote:
+> The following patch does, indeed, fix the ide_release_lock imbalance. No more
+> warnings.
 > 
-> The patch is against 2.6.25.9 and I have tested it. I could normally
-> work with my disks (in JBOD mode).
-..
+> --- drivers/ide/ide-io.c.orig	2008-06-27 20:11:42.000000000 +1200
+> +++ drivers/ide/ide-io.c	2008-06-27 20:32:50.000000000 +1200
+> @@ -1075,14 +1075,13 @@
+>  	ide_startstop_t	startstop;
+>  	int             loops = 0;
+> 
+> -	/* for atari only: POSSIBLY BROKEN HERE(?) */
+> -	ide_get_lock(ide_intr, hwgroup);
+> -
+>  	/* caller must own ide_lock */
+>  	BUG_ON(!irqs_disabled());
+> 
+>  	while (!hwgroup->busy) {
+>  		hwgroup->busy = 1;
+> +		/* for atari only */
+> +		ide_get_lock(ide_intr, hwgroup);
+>  		drive = choose_drive(hwgroup);
+>  		if (drive == NULL) {
+>  			int sleeping = 0;
+> 
+> Signed-off-by: <schmitz@biophys.uni-duesseldorf.de>
 
-Looks simple enough.
+> > We release the lock just before hwgroup->busy is cleared, so it should be
+> > logical to get hold of the lock just after hwgroup->busy was set, no?
 
-Signed-off-by: Mark Lord <mlord@pobox.com>
----
+If hwgroup->busy serves a similar purpose to falconide_intr_lock, what about
+moving the setting/clearing of hwgroup->busy into ide_{get,release}_lock()
+(and possibly renaming ide_{get,release}_lock() to e.g.
+ide_hwgroup_{set,clear}_busy())?
 
-Jeff, can you push this one-liner (or equivalent) out for 2.6.26?
-I don't have a dev tree with me on the road here,
-so the line offsets probably differ.
+What about the other places where hwgroup->busy is set/cleared?
 
+Gr{oetje,eeting}s,
 
-diff -urN linux-2.6.25.9/drivers/ata/sata_mv.c
-linux-2.6.25.9-new/drivers/ata/sata_mv.c
---- linux-2.6.25.9/drivers/ata/sata_mv.c        2008-06-24
-23:09:06.000000000 +0200
-+++ linux-2.6.25.9-new/drivers/ata/sata_mv.c    2008-06-28
-22:36:22.000000000 +0200
-@@ -695,7 +695,8 @@
-        { PCI_VDEVICE(MARVELL, 0x5041), chip_504x },
-        { PCI_VDEVICE(MARVELL, 0x5080), chip_5080 },
-        { PCI_VDEVICE(MARVELL, 0x5081), chip_508x },
--       /* RocketRAID 1740/174x have different identifiers */
-+       /* RocketRAID 1720/174x have different identifiers */
-+       { PCI_VDEVICE(TTI, 0x1720), chip_6042 },
-        { PCI_VDEVICE(TTI, 0x1740), chip_508x },
-        { PCI_VDEVICE(TTI, 0x1742), chip_508x },
+						Geert
 
-
-Best Regards,
-Petr Jelen
 --
-To unsubscribe from this list: send the line "unsubscribe linux-ide" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
+
+In personal conversations with technical people, I call myself a hacker. But
+when I'm talking to journalists I just say "programmer" or something like that.
+							    -- Linus Torvalds
