@@ -1,14 +1,14 @@
 From: Borislav Petkov <petkovbb@googlemail.com>
-Subject: [PATCH 09/16] ide-scsi: pass packet command in rq->cmd
-Date: Sun, 29 Jun 2008 12:59:12 +0200
-Message-ID: <1214737159-1078-10-git-send-email-petkovbb@gmail.com>
+Subject: [PATCH 07/16] ide-tape: make room for packet command ids in rq->cmd
+Date: Sun, 29 Jun 2008 12:59:10 +0200
+Message-ID: <1214737159-1078-8-git-send-email-petkovbb@gmail.com>
 References: <1214737159-1078-1-git-send-email-petkovbb@gmail.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.159]:56179 "EHLO
+Received: from fg-out-1718.google.com ([72.14.220.157]:55581 "EHLO
 	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755309AbYF2K7P (ORCPT
+	with ESMTP id S1755383AbYF2K7P (ORCPT
 	<rfc822;linux-ide@vger.kernel.org>); Sun, 29 Jun 2008 06:59:15 -0400
-Received: by fg-out-1718.google.com with SMTP id 19so564619fgg.17
+Received: by fg-out-1718.google.com with SMTP id 19so564617fgg.17
         for <linux-ide@vger.kernel.org>; Sun, 29 Jun 2008 03:59:14 -0700 (PDT)
 In-Reply-To: <1214737159-1078-1-git-send-email-petkovbb@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
@@ -16,37 +16,99 @@ List-Id: linux-ide@vger.kernel.org
 To: bzolnier@gmail.com
 Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Borislav Petkov <petkovbb@gmail.com>
 
-Make a redundant copy of the packet command bits into rq->cmd.
-Later, after all drivers have been converted, it'll be
-switched to use that in the common code instead of pc->c.
+ide-tape uses rq->cmd for special commands from the chrdev interface so move
+those to byte 13 (BLK_MAX_CDB = 16) since a packet cmd is max 12 bytes.
 
 There should be no functionality change resulting from this patch.
 
 Signed-off-by: Borislav Petkov <petkovbb@gmail.com>
 ---
- drivers/scsi/ide-scsi.c |    2 ++
- 1 files changed, 2 insertions(+), 0 deletions(-)
+ drivers/ide/ide-tape.c |   22 +++++++++++-----------
+ 1 files changed, 11 insertions(+), 11 deletions(-)
 
-diff --git a/drivers/scsi/ide-scsi.c b/drivers/scsi/ide-scsi.c
-index a6c2c5f..c637520 100644
---- a/drivers/scsi/ide-scsi.c
-+++ b/drivers/scsi/ide-scsi.c
-@@ -236,6 +236,7 @@ static int idescsi_check_condition(ide_drive_t *drive,
- 		ide_scsi_hex_dump(pc->c, 6);
- 	}
- 	rq->rq_disk = scsi->disk;
-+	memcpy(rq->cmd, pc->c, 12);
- 	ide_do_drive_cmd(drive, rq);
- 	return 0;
- }
-@@ -646,6 +647,7 @@ static int idescsi_queue (struct scsi_cmnd *cmd,
- 	rq->special = (char *) pc;
+diff --git a/drivers/ide/ide-tape.c b/drivers/ide/ide-tape.c
+index b9179ee..efe9c51 100644
+--- a/drivers/ide/ide-tape.c
++++ b/drivers/ide/ide-tape.c
+@@ -704,7 +704,7 @@ static void idetape_init_rq(struct request *rq, u8 cmd)
+ {
+ 	blk_rq_init(NULL, rq);
  	rq->cmd_type = REQ_TYPE_SPECIAL;
- 	spin_unlock_irq(host->host_lock);
-+	memcpy(rq->cmd, pc->c, 12);
- 	blk_execute_rq_nowait(drive->queue, scsi->disk, rq, 0, NULL);
- 	spin_lock_irq(host->host_lock);
- 	return 0;
+-	rq->cmd[0] = cmd;
++	rq->cmd[13] = cmd;
+ }
+ 
+ /*
+@@ -1018,7 +1018,7 @@ static ide_startstop_t idetape_do_request(ide_drive_t *drive,
+ 	 */
+ 	stat = ide_read_status(drive);
+ 
+-	if (!drive->dsc_overlap && !(rq->cmd[0] & REQ_IDETAPE_PC2))
++	if (!drive->dsc_overlap && !(rq->cmd[13] & REQ_IDETAPE_PC2))
+ 		set_bit(IDETAPE_FLAG_IGNORE_DSC, &tape->flags);
+ 
+ 	if (drive->post_reset == 1) {
+@@ -1035,7 +1035,7 @@ static ide_startstop_t idetape_do_request(ide_drive_t *drive,
+ 		} else if (time_after(jiffies, tape->dsc_timeout)) {
+ 			printk(KERN_ERR "ide-tape: %s: DSC timeout\n",
+ 				tape->name);
+-			if (rq->cmd[0] & REQ_IDETAPE_PC2) {
++			if (rq->cmd[13] & REQ_IDETAPE_PC2) {
+ 				idetape_media_access_finished(drive);
+ 				return ide_stopped;
+ 			} else {
+@@ -1048,27 +1048,27 @@ static ide_startstop_t idetape_do_request(ide_drive_t *drive,
+ 		idetape_postpone_request(drive);
+ 		return ide_stopped;
+ 	}
+-	if (rq->cmd[0] & REQ_IDETAPE_READ) {
++	if (rq->cmd[13] & REQ_IDETAPE_READ) {
+ 		pc = idetape_next_pc_storage(drive);
+ 		ide_tape_create_rw_cmd(tape, pc, rq->current_nr_sectors,
+ 					(struct idetape_bh *)rq->special,
+ 					READ_6);
+ 		goto out;
+ 	}
+-	if (rq->cmd[0] & REQ_IDETAPE_WRITE) {
++	if (rq->cmd[13] & REQ_IDETAPE_WRITE) {
+ 		pc = idetape_next_pc_storage(drive);
+ 		ide_tape_create_rw_cmd(tape, pc, rq->current_nr_sectors,
+ 					 (struct idetape_bh *)rq->special,
+ 					 WRITE_6);
+ 		goto out;
+ 	}
+-	if (rq->cmd[0] & REQ_IDETAPE_PC1) {
++	if (rq->cmd[13] & REQ_IDETAPE_PC1) {
+ 		pc = (struct ide_atapi_pc *) rq->buffer;
+-		rq->cmd[0] &= ~(REQ_IDETAPE_PC1);
+-		rq->cmd[0] |= REQ_IDETAPE_PC2;
++		rq->cmd[13] &= ~(REQ_IDETAPE_PC1);
++		rq->cmd[13] |= REQ_IDETAPE_PC2;
+ 		goto out;
+ 	}
+-	if (rq->cmd[0] & REQ_IDETAPE_PC2) {
++	if (rq->cmd[13] & REQ_IDETAPE_PC2) {
+ 		idetape_media_access_finished(drive);
+ 		return ide_stopped;
+ 	}
+@@ -1280,7 +1280,7 @@ static int idetape_queue_pc_tail(ide_drive_t *drive, struct ide_atapi_pc *pc)
+ 
+ 	rq = blk_get_request(drive->queue, READ, __GFP_WAIT);
+ 	rq->cmd_type = REQ_TYPE_SPECIAL;
+-	rq->cmd[0] = REQ_IDETAPE_PC1;
++	rq->cmd[13] = REQ_IDETAPE_PC1;
+ 	rq->buffer = (char *)pc;
+ 	error = blk_execute_rq(drive->queue, tape->disk, rq, 0);
+ 	blk_put_request(rq);
+@@ -1464,7 +1464,7 @@ static int idetape_queue_rw_tail(ide_drive_t *drive, int cmd, int blocks,
+ 
+ 	rq = blk_get_request(drive->queue, READ, __GFP_WAIT);
+ 	rq->cmd_type = REQ_TYPE_SPECIAL;
+-	rq->cmd[0] = cmd;
++	rq->cmd[13] = cmd;
+ 	rq->rq_disk = tape->disk;
+ 	rq->special = (void *)bh;
+ 	rq->sector = tape->first_frame;
 -- 
 1.5.5.4
 
