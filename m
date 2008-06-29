@@ -1,14 +1,14 @@
 From: Borislav Petkov <petkovbb@googlemail.com>
-Subject: [PATCH 04/16] ide-scsi: use drive->pc_callback instead of pc->callback
-Date: Sun, 29 Jun 2008 12:59:07 +0200
-Message-ID: <1214737159-1078-5-git-send-email-petkovbb@gmail.com>
+Subject: [PATCH 01/16] ide: push pc callback pointer into the ide_drive_t structure
+Date: Sun, 29 Jun 2008 12:59:04 +0200
+Message-ID: <1214737159-1078-2-git-send-email-petkovbb@gmail.com>
 References: <1214737159-1078-1-git-send-email-petkovbb@gmail.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.156]:56597 "EHLO
+Received: from fg-out-1718.google.com ([72.14.220.154]:56112 "EHLO
 	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754841AbYF2K7M (ORCPT
+	with ESMTP id S1754957AbYF2K7M (ORCPT
 	<rfc822;linux-ide@vger.kernel.org>); Sun, 29 Jun 2008 06:59:12 -0400
-Received: by fg-out-1718.google.com with SMTP id 19so564627fgg.17
+Received: by fg-out-1718.google.com with SMTP id 19so564622fgg.17
         for <linux-ide@vger.kernel.org>; Sun, 29 Jun 2008 03:59:10 -0700 (PDT)
 In-Reply-To: <1214737159-1078-1-git-send-email-petkovbb@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
@@ -16,72 +16,43 @@ List-Id: linux-ide@vger.kernel.org
 To: bzolnier@gmail.com
 Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Borislav Petkov <petkovbb@gmail.com>
 
-There should be no functionality change resulting from this patch.
+Refrain from carrying the callback ptr with every packet command since the
+callback function is only one anyways. ide_drive_t is probably not the most
+suitable place for it right now but is the more sane solution. Besides, these
+structs are going to be reorganized anyways during the generic ide rewrite.
 
 Signed-off-by: Borislav Petkov <petkovbb@gmail.com>
 ---
- drivers/ide/ide-atapi.c |   10 ++--------
- drivers/scsi/ide-scsi.c |    5 +++--
- 2 files changed, 5 insertions(+), 10 deletions(-)
+ include/linux/ide.h |    9 +++++++--
+ 1 files changed, 7 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/ide/ide-atapi.c b/drivers/ide/ide-atapi.c
-index c3c161a..0e8b6f5 100644
---- a/drivers/ide/ide-atapi.c
-+++ b/drivers/ide/ide-atapi.c
-@@ -30,10 +30,7 @@ ide_startstop_t ide_pc_intr(ide_drive_t *drive, struct ide_atapi_pc *pc,
- 	debug_log("Enter %s - interrupt handler\n", __func__);
+diff --git a/include/linux/ide.h b/include/linux/ide.h
+index 5ddae9b..be1e5c9 100644
+--- a/include/linux/ide.h
++++ b/include/linux/ide.h
+@@ -286,7 +286,7 @@ struct ide_acpi_drive_link;
+ struct ide_acpi_hwif_link;
+ #endif
  
- 	if (pc->flags & PC_FLAG_TIMEDOUT) {
--		if (drive->media == ide_floppy || drive->media == ide_tape)
--			drive->pc_callback(drive);
--		else
--			pc->callback(drive);
-+		drive->pc_callback(drive);
- 		return ide_stopped;
- 	}
+-typedef struct ide_drive_s {
++struct ide_drive_s {
+ 	char		name[4];	/* drive name, such as "hda" */
+         char            driver_req[10];	/* requests specific driver */
  
-@@ -99,10 +96,7 @@ cmd_finished:
- 			return ide_stopped;
- 		}
- 		/* Command finished - Call the callback function */
--		if (drive->media == ide_floppy || drive->media == ide_tape)
--			drive->pc_callback(drive);
--		else
--			pc->callback(drive);
-+		drive->pc_callback(drive);
- 		return ide_stopped;
- 	}
- 
-diff --git a/drivers/scsi/ide-scsi.c b/drivers/scsi/ide-scsi.c
-index 683bce3..a6c2c5f 100644
---- a/drivers/scsi/ide-scsi.c
-+++ b/drivers/scsi/ide-scsi.c
-@@ -228,7 +228,6 @@ static int idescsi_check_condition(ide_drive_t *drive,
- 	rq->cmd_type = REQ_TYPE_SENSE;
- 	rq->cmd_flags |= REQ_PREEMPT;
- 	pc->timeout = jiffies + WAIT_READY;
--	pc->callback = ide_scsi_callback;
- 	/* NOTE! Save the failed packet command in "rq->buffer" */
- 	rq->buffer = (void *) failed_cmd->special;
- 	pc->scsi_cmd = ((struct ide_atapi_pc *) failed_cmd->special)->scsi_cmd;
-@@ -478,6 +477,9 @@ static void idescsi_setup (ide_drive_t *drive, idescsi_scsi_t *scsi)
- #if IDESCSI_DEBUG_LOG
- 	set_bit(IDESCSI_LOG_CMD, &scsi->log);
- #endif /* IDESCSI_DEBUG_LOG */
+@@ -379,7 +379,12 @@ typedef struct ide_drive_s {
+ 	struct list_head list;
+ 	struct device	gendev;
+ 	struct completion gendev_rel_comp;	/* to deal with device release() */
+-} ide_drive_t;
 +
-+	drive->pc_callback = ide_scsi_callback;
++	/* callback for packet commands */
++	void (*pc_callback)(struct ide_drive_s *);
++};
 +
- 	idescsi_add_settings(drive);
- }
++typedef struct ide_drive_s ide_drive_t;
  
-@@ -630,7 +632,6 @@ static int idescsi_queue (struct scsi_cmnd *cmd,
- 	pc->scsi_cmd = cmd;
- 	pc->done = done;
- 	pc->timeout = jiffies + cmd->timeout_per_command;
--	pc->callback = ide_scsi_callback;
+ #define to_ide_device(dev)container_of(dev, ide_drive_t, gendev)
  
- 	if (test_bit(IDESCSI_LOG_CMD, &scsi->log)) {
- 		printk ("ide-scsi: %s: que %lu, cmd = ", drive->name, cmd->serial_number);
 -- 
 1.5.5.4
 
