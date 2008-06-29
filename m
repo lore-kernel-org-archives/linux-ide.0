@@ -1,108 +1,124 @@
 From: Borislav Petkov <petkovbb@googlemail.com>
-Subject: [PATCH 11/16] ide: add per-device flags
-Date: Sun, 29 Jun 2008 12:59:14 +0200
-Message-ID: <1214737159-1078-12-git-send-email-petkovbb@gmail.com>
+Subject: [PATCH 10/16] ide: use rq->cmd instead of pc->c in atapi common code
+Date: Sun, 29 Jun 2008 12:59:13 +0200
+Message-ID: <1214737159-1078-11-git-send-email-petkovbb@gmail.com>
 References: <1214737159-1078-1-git-send-email-petkovbb@gmail.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.155]:56961 "EHLO
+Received: from fg-out-1718.google.com ([72.14.220.158]:55234 "EHLO
 	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755384AbYF2K7P (ORCPT
+	with ESMTP id S1755518AbYF2K7P (ORCPT
 	<rfc822;linux-ide@vger.kernel.org>); Sun, 29 Jun 2008 06:59:15 -0400
-Received: by fg-out-1718.google.com with SMTP id 19so564626fgg.17
-        for <linux-ide@vger.kernel.org>; Sun, 29 Jun 2008 03:59:14 -0700 (PDT)
+Received: by fg-out-1718.google.com with SMTP id 19so564618fgg.17
+        for <linux-ide@vger.kernel.org>; Sun, 29 Jun 2008 03:59:15 -0700 (PDT)
 In-Reply-To: <1214737159-1078-1-git-send-email-petkovbb@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: bzolnier@gmail.com
 Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Borislav Petkov <petkovbb@gmail.com>
 
-Push device flags up into ide_drive_t.
-
 There should be no functionality change resulting from this patch.
 
 Signed-off-by: Borislav Petkov <petkovbb@gmail.com>
 ---
- include/linux/ide.h |   60 +++++++++++++++++++++++++++++++++++++++++++++++++++
- 1 files changed, 60 insertions(+), 0 deletions(-)
+ drivers/ide/ide-atapi.c |   18 +++++++++++++-----
+ 1 files changed, 13 insertions(+), 5 deletions(-)
 
-diff --git a/include/linux/ide.h b/include/linux/ide.h
-index 57e99e9..0e52c3c 100644
---- a/include/linux/ide.h
-+++ b/include/linux/ide.h
-@@ -286,6 +286,64 @@ struct ide_acpi_drive_link;
- struct ide_acpi_hwif_link;
- #endif
+diff --git a/drivers/ide/ide-atapi.c b/drivers/ide/ide-atapi.c
+index 0e8b6f5..fa49344 100644
+--- a/drivers/ide/ide-atapi.c
++++ b/drivers/ide/ide-atapi.c
+@@ -22,6 +22,7 @@ ide_startstop_t ide_pc_intr(ide_drive_t *drive, struct ide_atapi_pc *pc,
+ 	void (*io_buffers)(ide_drive_t *, struct ide_atapi_pc *, unsigned, int))
+ {
+ 	ide_hwif_t *hwif = drive->hwif;
++	struct request *rq = HWGROUP(drive)->rq;
+ 	xfer_func_t *xferfunc;
+ 	unsigned int temp;
+ 	u16 bcount;
+@@ -63,8 +64,9 @@ ide_startstop_t ide_pc_intr(ide_drive_t *drive, struct ide_atapi_pc *pc,
+ 		local_irq_enable_in_hardirq();
  
-+/* device flags */
-+enum {
-+	IDE_FLAG_DRQ_INTERRUPT		= (1 << 0),
-+	IDE_FLAG_MEDIA_CHANGED		= (1 << 1),
+ 		if (drive->media == ide_tape && !scsi &&
+-		    (stat & ERR_STAT) && pc->c[0] == REQUEST_SENSE)
++		    (stat & ERR_STAT) && rq->cmd[0] == REQUEST_SENSE)
+ 			stat &= ~ERR_STAT;
 +
-+	/* ide-cd */
-+	/* Drive cannot lock the door. */
-+	IDE_FLAG_NO_DOORLOCK		= (1 << 2),
-+	/* Drive cannot eject the disc. */
-+	IDE_FLAG_NO_EJECT		= (1 << 3),
-+	/* Drive is a pre ATAPI 1.2 drive. */
-+	IDE_FLAG_PRE_ATAPI12		= (1 << 4),
-+	/* TOC addresses are in BCD. */
-+	IDE_FLAG_TOCADDR_AS_BCD		= (1 << 5),
-+	/* TOC track numbers are in BCD. */
-+	IDE_FLAG_TOCTRACKS_AS_BCD	= (1 << 6),
-+	/*
-+	 * Drive does not provide data in multiples of SECTOR_SIZE
-+	 * when more than one interrupt is needed.
-+	 */
-+	IDE_FLAG_LIMIT_NFRAMES		= (1 << 7),
-+	/* Seeking in progress. */
-+	IDE_FLAG_SEEKING		= (1 << 8),
-+	/* Saved TOC information is current. */
-+	IDE_FLAG_TOC_VALID		= (1 << 9),
-+	/* We think that the drive door is locked. */
-+	IDE_FLAG_DOOR_LOCKED		= (1 << 10),
-+	/* SET_CD_SPEED command is unsupported. */
-+	IDE_FLAG_NO_SPEED_SELECT	= (1 << 11),
-+	IDE_FLAG_VERTOS_300_SSD		= (1 << 12),
-+	IDE_FLAG_VERTOS_600_ESD		= (1 << 13),
-+	IDE_FLAG_SANYO_3CD		= (1 << 14),
-+	IDE_FLAG_FULL_CAPS_PAGE		= (1 << 15),
-+	IDE_FLAG_PLAY_AUDIO_OK		= (1 << 16),
-+	IDE_FLAG_LE_SPEED_FIELDS	= (1 << 17),
-+
-+	/* ide-floppy */
-+	/* Format in progress */
-+	IDE_FLAG_FORMAT_IN_PROGRESS	= (1 << 18),
-+	/* Avoid commands not supported in Clik drive */
-+	IDE_FLAG_CLIK_DRIVE		= (1 << 19),
-+	/* Requires BH algorithm for packets */
-+	IDE_FLAG_ZIP_DRIVE		= (1 << 20),
-+
-+	/* ide-tape */
-+	IDE_FLAG_IGNORE_DSC		= (1 << 21),
-+	/* 0 When the tape position is unknown */
-+	IDE_FLAG_ADDRESS_VALID		= (1 <<	22),
-+	/* Device already opened */
-+	IDE_FLAG_BUSY			= (1 << 23),
-+	/* Attempt to auto-detect the current user block size */
-+	IDE_FLAG_DETECT_BS		= (1 << 24),
-+	/* Currently on a filemark */
-+	IDE_FLAG_FILEMARK		= (1 << 25),
-+	/* 0 = no tape is loaded, so we don't rewind after ejecting */
-+	IDE_FLAG_MEDIUM_PRESENT		= (1 << 26)
-+};
-+
- struct ide_drive_s {
- 	char		name[4];	/* drive name, such as "hda" */
-         char            driver_req[10];	/* requests specific driver */
-@@ -382,6 +440,8 @@ struct ide_drive_s {
+ 		if ((stat & ERR_STAT) || (pc->flags & PC_FLAG_DMA_ERROR)) {
+ 			/* Error detected */
+ 			debug_log("%s: I/O error\n", drive->name);
+@@ -75,16 +77,17 @@ ide_startstop_t ide_pc_intr(ide_drive_t *drive, struct ide_atapi_pc *pc,
+ 					goto cmd_finished;
+ 			}
  
- 	/* callback for packet commands */
- 	void (*pc_callback)(struct ide_drive_s *);
-+
-+	unsigned long dev_flags;
- };
+-			if (pc->c[0] == REQUEST_SENSE) {
++			if (rq->cmd[0] == REQUEST_SENSE) {
+ 				printk(KERN_ERR "%s: I/O error in request sense"
+ 						" command\n", drive->name);
+ 				return ide_do_reset(drive);
+ 			}
  
- typedef struct ide_drive_s ide_drive_t;
+-			debug_log("[cmd %x]: check condition\n", pc->c[0]);
++			debug_log("[cmd %x]: check condition\n", rq->cmd[0]);
+ 
+ 			/* Retry operation */
+ 			retry_pc(drive);
++
+ 			/* queued, but not started */
+ 			return ide_stopped;
+ 		}
+@@ -95,8 +98,10 @@ cmd_finished:
+ 			dsc_handle(drive);
+ 			return ide_stopped;
+ 		}
++
+ 		/* Command finished - Call the callback function */
+ 		drive->pc_callback(drive);
++
+ 		return ide_stopped;
+ 	}
+ 
+@@ -117,6 +122,7 @@ cmd_finished:
+ 		printk(KERN_ERR "%s: CoD != 0 in %s\n", drive->name, __func__);
+ 		return ide_do_reset(drive);
+ 	}
++
+ 	if (((ireason & IO) == IO) == !!(pc->flags & PC_FLAG_WRITING)) {
+ 		/* Hopefully, we will never get here */
+ 		printk(KERN_ERR "%s: We wanted to %s, but the device wants us "
+@@ -125,6 +131,7 @@ cmd_finished:
+ 				(ireason & IO) ? "Read" : "Write");
+ 		return ide_do_reset(drive);
+ 	}
++
+ 	if (!(pc->flags & PC_FLAG_WRITING)) {
+ 		/* Reading - Check that we have enough space */
+ 		temp = pc->xferred + bcount;
+@@ -175,7 +182,7 @@ cmd_finished:
+ 	pc->cur_pos += bcount;
+ 
+ 	debug_log("[cmd %x] transferred %d bytes on that intr.\n",
+-		  pc->c[0], bcount);
++		  rq->cmd[0], bcount);
+ 
+ 	/* And set the interrupt handler again */
+ 	ide_set_handler(drive, handler, timeout, expiry);
+@@ -210,6 +217,7 @@ ide_startstop_t ide_transfer_pc(ide_drive_t *drive, struct ide_atapi_pc *pc,
+ 				ide_expiry_t *expiry)
+ {
+ 	ide_hwif_t *hwif = drive->hwif;
++	struct request *rq = HWGROUP(drive)->rq;
+ 	ide_startstop_t startstop;
+ 	u8 ireason;
+ 
+@@ -240,7 +248,7 @@ ide_startstop_t ide_transfer_pc(ide_drive_t *drive, struct ide_atapi_pc *pc,
+ 
+ 	/* Send the actual packet */
+ 	if ((pc->flags & PC_FLAG_ZIP_DRIVE) == 0)
+-		hwif->output_data(drive, NULL, pc->c, 12);
++		hwif->output_data(drive, NULL, rq->cmd, 12);
+ 
+ 	return ide_started;
+ }
 -- 
 1.5.5.4
 
