@@ -1,14 +1,14 @@
 From: Borislav Petkov <petkovbb@googlemail.com>
-Subject: [PATCH 05/16] ide: remove pc->callback member from ide_atapi_pc
-Date: Sun, 29 Jun 2008 12:59:08 +0200
-Message-ID: <1214737159-1078-6-git-send-email-petkovbb@gmail.com>
+Subject: [PATCH 08/16] ide-tape: pass packet command in rq->cmd
+Date: Sun, 29 Jun 2008 12:59:11 +0200
+Message-ID: <1214737159-1078-9-git-send-email-petkovbb@gmail.com>
 References: <1214737159-1078-1-git-send-email-petkovbb@gmail.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.158]:55331 "EHLO
+Received: from fg-out-1718.google.com ([72.14.220.158]:55329 "EHLO
 	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756161AbYF2K7Q (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 29 Jun 2008 06:59:16 -0400
-Received: by fg-out-1718.google.com with SMTP id 19so564676fgg.17
+	with ESMTP id S1755891AbYF2K7R (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 29 Jun 2008 06:59:17 -0400
+Received: by fg-out-1718.google.com with SMTP id 19so564674fgg.17
         for <linux-ide@vger.kernel.org>; Sun, 29 Jun 2008 03:59:15 -0700 (PDT)
 In-Reply-To: <1214737159-1078-1-git-send-email-petkovbb@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
@@ -16,26 +16,80 @@ List-Id: linux-ide@vger.kernel.org
 To: bzolnier@gmail.com
 Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Borislav Petkov <petkovbb@gmail.com>
 
+Make a redundant copy of the packet command bits into rq->cmd. Later, after
+all drivers have been converted, it'll be switched to use that in the
+common code instead of pc->c. While at it, simplify ide_tape_create_rw_cmd.
+
 There should be no functionality change resulting from this patch.
 
 Signed-off-by: Borislav Petkov <petkovbb@gmail.com>
 ---
- include/linux/ide.h |    2 --
- 1 files changed, 0 insertions(+), 2 deletions(-)
+ drivers/ide/ide-tape.c |   19 +++++++++++--------
+ 1 files changed, 11 insertions(+), 8 deletions(-)
 
-diff --git a/include/linux/ide.h b/include/linux/ide.h
-index be1e5c9..57e99e9 100644
---- a/include/linux/ide.h
-+++ b/include/linux/ide.h
-@@ -632,8 +632,6 @@ struct ide_atapi_pc {
- 	 */
- 	u8 pc_buf[256];
+diff --git a/drivers/ide/ide-tape.c b/drivers/ide/ide-tape.c
+index efe9c51..e60faf3 100644
+--- a/drivers/ide/ide-tape.c
++++ b/drivers/ide/ide-tape.c
+@@ -731,6 +731,7 @@ static void idetape_queue_pc_head(ide_drive_t *drive, struct ide_atapi_pc *pc,
+ 	rq->cmd_flags |= REQ_PREEMPT;
+ 	rq->buffer = (char *) pc;
+ 	rq->rq_disk = tape->disk;
++	memcpy(rq->cmd, pc->c, 12);
+ 	ide_do_drive_cmd(drive, rq);
+ }
  
--	void (*callback)(ide_drive_t *);
--
- 	/* idetape only */
- 	struct idetape_bh *bh;
- 	char *b_data;
+@@ -952,9 +953,12 @@ static ide_startstop_t idetape_media_access_finished(ide_drive_t *drive)
+ }
+ 
+ static void ide_tape_create_rw_cmd(idetape_tape_t *tape,
+-		struct ide_atapi_pc *pc, unsigned int length,
+-		struct idetape_bh *bh, u8 opcode)
++				   struct ide_atapi_pc *pc, struct request *rq,
++				   u8 opcode)
+ {
++	struct idetape_bh *bh = (struct idetape_bh *)rq->special;
++	unsigned int length = rq->current_nr_sectors;
++
+ 	idetape_init_pc(pc);
+ 	put_unaligned(cpu_to_be32(length), (unsigned int *) &pc->c[1]);
+ 	pc->c[1] = 1;
+@@ -974,6 +978,8 @@ static void ide_tape_create_rw_cmd(idetape_tape_t *tape,
+ 		pc->b_data = bh->b_data;
+ 		pc->b_count = atomic_read(&bh->b_count);
+ 	}
++
++	memcpy(rq->cmd, pc->c, 12);
+ }
+ 
+ static ide_startstop_t idetape_do_request(ide_drive_t *drive,
+@@ -1050,16 +1056,12 @@ static ide_startstop_t idetape_do_request(ide_drive_t *drive,
+ 	}
+ 	if (rq->cmd[13] & REQ_IDETAPE_READ) {
+ 		pc = idetape_next_pc_storage(drive);
+-		ide_tape_create_rw_cmd(tape, pc, rq->current_nr_sectors,
+-					(struct idetape_bh *)rq->special,
+-					READ_6);
++		ide_tape_create_rw_cmd(tape, pc, rq, READ_6);
+ 		goto out;
+ 	}
+ 	if (rq->cmd[13] & REQ_IDETAPE_WRITE) {
+ 		pc = idetape_next_pc_storage(drive);
+-		ide_tape_create_rw_cmd(tape, pc, rq->current_nr_sectors,
+-					 (struct idetape_bh *)rq->special,
+-					 WRITE_6);
++		ide_tape_create_rw_cmd(tape, pc, rq, WRITE_6);
+ 		goto out;
+ 	}
+ 	if (rq->cmd[13] & REQ_IDETAPE_PC1) {
+@@ -1282,6 +1284,7 @@ static int idetape_queue_pc_tail(ide_drive_t *drive, struct ide_atapi_pc *pc)
+ 	rq->cmd_type = REQ_TYPE_SPECIAL;
+ 	rq->cmd[13] = REQ_IDETAPE_PC1;
+ 	rq->buffer = (char *)pc;
++	memcpy(rq->cmd, pc->c, 12);
+ 	error = blk_execute_rq(drive->queue, tape->disk, rq, 0);
+ 	blk_put_request(rq);
+ 	return error;
 -- 
 1.5.5.4
 
