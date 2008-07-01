@@ -1,84 +1,135 @@
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-Subject: Re: 2.6.25 to 2.6.26-rc8 regression  (related to ahci and acpi _GTF)
-Date: Tue, 1 Jul 2008 16:14:20 +0200
-Message-ID: <200807011614.21491.rjw@sisk.pl>
-References: <4869FB3C.4060509@crans.org>
+From: "Maximo Pech" <makzpj@gmail.com>
+Subject: sata-via second IDE hard drive not detected until reboot
+Date: Wed, 2 Jul 2008 00:02:25 +0200
+Message-ID: <e70424ee0807011502t13c226e9i4b0483657da75bca@mail.gmail.com>
+References: <e70424ee0807011500j155a45adl1639eea9d884de4d@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-15
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-acpi-owner@vger.kernel.org>
-In-Reply-To: <4869FB3C.4060509@crans.org>
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from rv-out-0506.google.com ([209.85.198.233]:50266 "EHLO
+	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751988AbYGAWCZ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 1 Jul 2008 18:02:25 -0400
+Received: by rv-out-0506.google.com with SMTP id k40so99880rvb.1
+        for <linux-ide@vger.kernel.org>; Tue, 01 Jul 2008 15:02:25 -0700 (PDT)
+In-Reply-To: <e70424ee0807011500j155a45adl1639eea9d884de4d@mail.gmail.com>
 Content-Disposition: inline
-Sender: linux-acpi-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org
-Cc: Mathieu =?iso-8859-15?q?B=E9rard?= <Mathieu.Berard@crans.org>, linux-ide@vger.kernel.org, ACPI Devel Maling List <linux-acpi@vger.kernel.org>, Tejun Heo <htejun@gmail.com>, Andrew Morton <akpm@linux-foundation.org>, Andi Kleen <andi@firstfloor.org>, Jeff Garzik <jeff@garzik.org>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-[Adding CCs.]
+Hi, I've been using the sata-via module with linux 2.6.24.2 it works
+ok, but there's something strange.
 
-On Tuesday, 1 of July 2008, Mathieu B=E9rard wrote:
-> Hi,
-> I have a laptop with an ICH6M SATA Controller and a Hitachi hard driv=
-e.
-> While it worked well using the ahci module and Linux 2.6.25,=20
-> it get randomly 'stuck' for several seconds to several minutes with 2=
-=2E6.26-rc8.
-> Successive errors progressively reduce the ATA link speed.
->=20
-> Passing the libata.noacpi parameter is an effective workaround.
->=20
-> Please note that it's not the first time i have this kind of issue, s=
-ee:
-> http://marc.info/?l=3Dlinux-ide&m=3D117305595312399&w=3D2
-> This was found to be a bad interaction between my _GTF taskfile, whic=
-h enable the
-> "Enable Device-Initiated Interface Power State Transitions" feature, =
-and NCQ.
-> The driver was later NCQ blacklisted to correct the problem.
->=20
->=20
-> Device detection:
->=20
-> [    0.567684] ahci 0000:00:1f.2: version 3.0
-> [    1.568027] ahci 0000:00:1f.2: AHCI 0001.0000 32 slots 4 ports 1.5=
- Gbps 0x5 impl IDE mode
-> [    1.568091] ahci 0000:00:1f.2: flags: 64bit ncq pm led slum part=20
-> [    1.568695] ata1: SATA max UDMA/133 abar m1024@0xb8000c00 port 0xb=
-8000d00 irq 19
-> [    1.873016] ata1: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
-> [    1.874045] ata1.00: ACPI cmd ef/10:03:00:00:00:a0 succeeded
-> [    1.875000] ata1.00: ATA-7: HTS541010G9SA00, MBZOC60D, max UDMA/10=
-0
-> [    1.875000] ata1.00: 195371568 sectors, multi 0: LBA48 NCQ (not us=
-ed)
-> [    1.875000] ata1.00: ACPI cmd ef/10:03:00:00:00:a0 succeeded
-> [    1.875000] ata1.00: configured for UDMA/100
->=20
-> Typical error:
->=20
-> [  499.178040] ata1.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action =
-0x6 frozen
-> [  499.178105] ata1.00: cmd ca/00:3e:76:45:81/00:00:00:00:00/e1 tag 0=
- dma 31744 out
-> [  499.178106]          res 40/00:00:00:00:00/00:00:00:00:00/00 Emask=
- 0x4 (timeout)
-> [  499.178168] ata1.00: status: { DRDY }
-> [  499.178220] ata1: hard resetting link
-> [  499.942034] ata1: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
-> [  499.943540] ata1.00: ACPI cmd ef/10:03:00:00:00:a0 succeeded
-> [  499.946056] ata1.00: ACPI cmd ef/10:03:00:00:00:a0 succeeded
-> [  499.947174] ata1.00: configured for UDMA/100
-> [  499.947174] ata1: EH complete
->=20
-> Full dmesg is attached.
->=20
+I'm using this sata controller (as showed by lspci):
 
+04:01.0 RAID bus controller: VIA Technologies, Inc. VT6421 IDE RAID
+Controller (rev 50)
 
+I'm not using it's sata ports, just the ide one. There are 2 hard
+drives attached to it. However one of them it's detected only after a
+reboot. Turning off and on the computer doesn't work, it has to be a
+reboot.
 
---=20
-"Premature optimization is the root of all evil." - Donald Knuth
---
-To unsubscribe from this list: send the line "unsubscribe linux-acpi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+This is what dmesg says on first boot (excuse me if it's too long):
+
+sata_via 0000:04:01.0: version 2.3
+ACPI: PCI Interrupt 0000:04:01.0[A] -> GSI 22 (level, low) -> IRQ 21
+sata_via 0000:04:01.0: routed to hard irq line 5
+scsi0 : sata_via
+scsi1 : sata_via
+scsi2 : sata_via
+ata1: SATA max UDMA/133 port i16@0xec00 bmdma 0xe000 irq 21
+ata2: SATA max UDMA/133 port i16@0xe480 bmdma 0xe008 irq 21
+ata3: PATA max UDMA/133 port i16@0xe400 bmdma 0xe010 irq 21
+ata1: SATA link down (SStatus 0 SControl 310)
+ata2: SATA link down (SStatus 0 SControl 310)
+ata3.00: ATA-5: IC35L060AVVA07-0, VA3OA52A, max UDMA/100
+ata3.00: 120103200 sectors, multi 0: LBA
+ata3.00: limited to UDMA/33 due to 40-wire cable
+ata3.00: configured for UDMA/33
+scsi 2:0:0:0: Direct-Access     ATA      IC35L060AVVA07-0 VA3O PQ: 0 ANSI: 5
+sd 2:0:0:0: [sda] 120103200 512-byte hardware sectors (61493 MB)
+sd 2:0:0:0: [sda] Write Protect is off
+sd 2:0:0:0: [sda] Mode Sense: 00 3a 00 00
+sd 2:0:0:0: [sda] Write cache: enabled, read cache: enabled, doesn't
+support DPO or FUA
+sd 2:0:0:0: [sda] 120103200 512-byte hardware sectors (61493 MB)
+sd 2:0:0:0: [sda] Write Protect is off
+sd 2:0:0:0: [sda] Mode Sense: 00 3a 00 00
+sd 2:0:0:0: [sda] Write cache: enabled, read cache: enabled, doesn't
+support DPO or FUA
+ sda: sda1
+sd 11:0:0:0: [sda] Attached SCSI disk
+sd 11:0:0:0: Attached scsi generic sg0 type 0
+ata12.00: disabled
+sd 11:0:0:0: [sda] Synchronizing SCSI cache
+sd 11:0:0:0: [sda] Result: hostbyte=0x04 driverbyte=0x00
+sd 11:0:0:0: [sda] Stopping disk
+sd 11:0:0:0: [sda] START_STOP FAILED
+sd 11:0:0:0: [sda] Result: hostbyte=0x04 driverbyte=0x00
+
+After reboot dmesg says this:
+
+sata_via 0000:04:01.0: version 2.3
+ACPI: PCI Interrupt 0000:04:01.0[A] -> GSI 22 (level, low) -> IRQ 21
+sata_via 0000:04:01.0: routed to hard irq line 5
+scsi0 : sata_via
+scsi1 : sata_via
+scsi2 : sata_via
+ata1: SATA max UDMA/133 port i16@0xec00 bmdma 0xe000 irq 21
+ata2: SATA max UDMA/133 port i16@0xe480 bmdma 0xe008 irq 21
+ata3: PATA max UDMA/133 port i16@0xe400 bmdma 0xe010 irq 21
+ata1: SATA link down (SStatus 0 SControl 310)
+ata2: SATA link down (SStatus 0 SControl 310)
+ata3.00: ATA-5: IC35L060AVVA07-0, VA3OA52A, max UDMA/100
+ata3.00: 120103200 sectors, multi 0: LBA
+ata3.01: ATA-6: ST320410A, 3.32, max UDMA/100
+ata3.01: 39102336 sectors, multi 0: LBA
+ata3.00: limited to UDMA/33 due to 40-wire cable
+ata3.01: limited to UDMA/33 due to 40-wire cable
+ata3.00: configured for UDMA/33
+ata3.01: configured for UDMA/33
+scsi 2:0:0:0: Direct-Access     ATA      IC35L060AVVA07-0 VA3O PQ: 0 ANSI: 5
+sd 2:0:0:0: [sda] 120103200 512-byte hardware sectors (61493 MB)
+sd 2:0:0:0: [sda] Write Protect is off
+sd 2:0:0:0: [sda] Mode Sense: 00 3a 00 00
+sd 2:0:0:0: [sda] Write cache: enabled, read cache: enabled, doesn't
+support DPO or FUA
+sd 2:0:0:0: [sda] 120103200 512-byte hardware sectors (61493 MB)
+sd 2:0:0:0: [sda] Write Protect is off
+sd 2:0:0:0: [sda] Mode Sense: 00 3a 00 00
+sd 2:0:0:0: [sda] Write cache: enabled, read cache: enabled, doesn't
+support DPO or FUA
+ sda: sda1
+sd 2:0:0:0: [sda] Attached SCSI disk
+sd 2:0:0:0: Attached scsi generic sg0 type 0
+scsi 2:0:1:0: Direct-Access     ATA      ST320410A        3.32 PQ: 0 ANSI: 5
+sd 2:0:1:0: [sdb] 39102336 512-byte hardware sectors (20020 MB)
+sd 2:0:1:0: [sdb] Write Protect is off
+sd 2:0:1:0: [sdb] Mode Sense: 00 3a 00 00
+sd 2:0:1:0: [sdb] Write cache: enabled, read cache: enabled, doesn't
+support DPO or FUA
+sd 2:0:1:0: [sdb] 39102336 512-byte hardware sectors (20020 MB)
+sd 2:0:1:0: [sdb] Write Protect is off
+sd 2:0:1:0: [sdb] Mode Sense: 00 3a 00 00
+sd 2:0:1:0: [sdb] Write cache: enabled, read cache: enabled, doesn't
+support DPO or FUA
+ sdb: sdb1 sdb2 sdb3 sdb4
+sd 2:0:1:0: [sdb] Attached SCSI disk
+sd 2:0:1:0: Attached scsi generic sg1 type 0
+ata3.00: disabled
+ata3.01: disabled
+sd 2:0:0:0: [sda] Synchronizing SCSI cache
+sd 2:0:0:0: [sda] Result: hostbyte=0x04 driverbyte=0x00
+sd 2:0:0:0: [sda] Stopping disk
+sd 2:0:0:0: [sda] START_STOP FAILED
+sd 2:0:0:0: [sda] Result: hostbyte=0x04 driverbyte=0x00
+sd 2:0:1:0: [sdb] Synchronizing SCSI cache
+sd 2:0:1:0: [sdb] Result: hostbyte=0x04 driverbyte=0x00
+sd 2:0:1:0: [sdb] Stopping disk
+sd 2:0:1:0: [sdb] START_STOP FAILED
+sd 2:0:1:0: [sdb] Result: hostbyte=0x04 driverbyte=0x00
+
+What do you think about this?
