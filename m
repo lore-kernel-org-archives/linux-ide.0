@@ -1,135 +1,99 @@
-From: "Maximo Pech" <makzpj@gmail.com>
-Subject: sata-via second IDE hard drive not detected until reboot
-Date: Wed, 2 Jul 2008 00:02:25 +0200
-Message-ID: <e70424ee0807011502t13c226e9i4b0483657da75bca@mail.gmail.com>
-References: <e70424ee0807011500j155a45adl1639eea9d884de4d@mail.gmail.com>
+From: George Socker <gsocker@redpin.com>
+Subject: SATA tape - partial success w/Sony i390ST
+Date: Tue, 1 Jul 2008 21:32:59 -0400
+Message-ID: <20080701213259.6fbed097@redpin.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rv-out-0506.google.com ([209.85.198.233]:50266 "EHLO
-	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751988AbYGAWCZ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 1 Jul 2008 18:02:25 -0400
-Received: by rv-out-0506.google.com with SMTP id k40so99880rvb.1
-        for <linux-ide@vger.kernel.org>; Tue, 01 Jul 2008 15:02:25 -0700 (PDT)
-In-Reply-To: <e70424ee0807011500j155a45adl1639eea9d884de4d@mail.gmail.com>
-Content-Disposition: inline
+Received: from radar.redpin.com ([208.110.80.114]:38654 "EHLO
+	hawkeye.redpin.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1756730AbYGBBxW (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 1 Jul 2008 21:53:22 -0400
+Received: from localhost ([127.0.0.1])
+	by hawkeye.redpin.com with esmtpa (Exim 4.67)
+	(envelope-from <gsocker@redpin.com>)
+	id 1KDqnX-0004C9-8V
+	for linux-ide@vger.kernel.org; Tue, 01 Jul 2008 20:06:15 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
 
-Hi, I've been using the sata-via module with linux 2.6.24.2 it works
-ok, but there's something strange.
+Hi,
+ 
+I have the same sata tape drive as Russell Brown (Sony i390ST) - same
+chipset as well - nVidia  MCP55.
 
-I'm using this sata controller (as showed by lspci):
+Results seem to vary depending on the software used.
 
-04:01.0 RAID bus controller: VIA Technologies, Inc. VT6421 IDE RAID
-Controller (rev 50)
+BRU dies as soon as it starts to write to the tape with below message:
+ ------------[ cut here ]------------
+ WARNING: at drivers/ata/libata-sff.c:1309 ata_sff_hsm_move+0x98/0x630()
+ Modules linked in: radeon drm snd_seq_midi snd_emu10k1_synth
+snd_emux_synth snd_seq_virmidi snd_seq_midi_em ul snd_pcm_oss
+snd_mixer_oss snd_seq_oss snd_seq_midi_event snd_seq k8temp hwmon
+ohci1394 hci_usb snd_emu10k1 snd_rawmidi snd_ac97_c odec ac97_bus
+snd_seq_device snd_util_mem snd_hwdep snd_hda_intel snd_pcm snd_timer
+snd_page_alloc wacom ieee1394 snd bluetooth i2c_ nforce2 i2c_core
+joydev
+ Pid: 0, comm: swapper Not tainted 2.6.26-rc8 #4 
+Call Trace:
+<IRQ>  [<ffffffff80232824>] warn_on_slowpath+0x64/0xa0
+[<ffffffff802473c9>] autoremove_wake_function+0x9/0x30
+[<ffffffff80228b7a>] __wake_up_common+0x5a/0x90 
+[<ffffffff8023c944>] lock_timer_base+0x34/0x70 
+[<ffffffff8023cab0>] __mod_timer+0xb0/0xd0 
+[<ffffffff80371cfa>] cfq_completed_request+0x1da/0x2c0
+[<ffffffff80447d48>] ata_sff_hsm_move+0x98/0x630 
+[<ffffffff80368631>] __blk_run_queue+0x11/0xd0 
+[<ffffffff8024a8b5>] ktime_get_ts+0x25/0x60 
+[<ffffffff80448375>] ata_sff_host_intr+0x95/0x130 
+[<ffffffff8044df97>] nv_swncq_interrupt+0x57/0x6b0 
+[<ffffffff8024a618>] hrtimer_start+0xe8/0x180 
+[<ffffffff8025c564>] handle_IRQ_event+0x34/0x70 
+[<ffffffff8025dff5>] handle_fasteoi_irq+0x85/0x100 
+[<ffffffff8020e36b>] do_IRQ+0x7b/0x100 
+[<ffffffff8020a5a0>] default_idle+0x0/0x40 
+[<ffffffff8020b9d1>] ret_from_intr+0x0/0xa <EOI>  
+[<ffffffff8021d4c0>] lapic_next_event+0x0/0x10 
+[<ffffffff8020a5c7>] default_idle+0x27/0x40 
+[<ffffffff8020a0c9>] cpu_idle+0x59/0xb0 
+---[ end trace 1f03762346e0ff62 ]--- 
+ata4.00: exception Emask 0x0 SAct
+0x0 SErr 0x0 action 0x6 ata4.00: BMDMA stat 0x4
+ ata4.00: cmd a0/01:00:00:00:fc/00:00:00:00:00/a0 tag 0 dma 1048576 out
+          cdb 0a 01 00 00 01 00 00 00  00 00 00 00 00 00 00 00
+          res 10/00:03:00:00:00/00:00:00:00:00/a0 Emask 0x2 (HSM
+violation)
+ ata4: hard resetting link ata4: SATA link up 1.5 Gbps
+(SStatus 113 SControl 300) ata4.00: configured for UDMA/100
+ ata4: EH complete
+ st0: Error: 8000002, cmd: a 1 0 0 1 0
+ st0: Sense Key : Aborted Command [current] [descriptor]
+ Descriptor sense data with sense descriptors (in hex):
+        72 0b 00 00 00 00 00 0e 09 0c 00 00 00 03 00 00 
+         00 00 00 00 a0 10 
+st0: Add. Sense: No additional sense information
+st0: Error on write:
+ st0: Async write waits 0, finished 0.
+ st0: Error: 8000002, cmd: 10 0 0 0 1 0
+ st0: Sense Key : Unit Attention [current] 
+ Info fld=0x1
+ st0: Add. Sense: Power on, reset, or bus device reset occurred
+ st0: Error on write filemark.
 
-I'm not using it's sata ports, just the ide one. There are 2 hard
-drives attached to it. However one of them it's detected only after a
-reboot. Turning off and on the computer doesn't work, it has to be a
-reboot.
 
-This is what dmesg says on first boot (excuse me if it's too long):
+However, using xfsdump, I can get ~300MB written to tape before 
+the above error occurs.
+xfsdump appears to use a different block size; with BRU there are many
+st0: Incorrect block size
+ messages in the log, but xfsdump  only generates the following:
+st0: Setting block size to 1048576 bytes. 
+Block size may be part of the problem.
+Sony does have a "Product Specification Manual" available on their
+website which lists all valid ATA/ATAPI commands for the drive.
 
-sata_via 0000:04:01.0: version 2.3
-ACPI: PCI Interrupt 0000:04:01.0[A] -> GSI 22 (level, low) -> IRQ 21
-sata_via 0000:04:01.0: routed to hard irq line 5
-scsi0 : sata_via
-scsi1 : sata_via
-scsi2 : sata_via
-ata1: SATA max UDMA/133 port i16@0xec00 bmdma 0xe000 irq 21
-ata2: SATA max UDMA/133 port i16@0xe480 bmdma 0xe008 irq 21
-ata3: PATA max UDMA/133 port i16@0xe400 bmdma 0xe010 irq 21
-ata1: SATA link down (SStatus 0 SControl 310)
-ata2: SATA link down (SStatus 0 SControl 310)
-ata3.00: ATA-5: IC35L060AVVA07-0, VA3OA52A, max UDMA/100
-ata3.00: 120103200 sectors, multi 0: LBA
-ata3.00: limited to UDMA/33 due to 40-wire cable
-ata3.00: configured for UDMA/33
-scsi 2:0:0:0: Direct-Access     ATA      IC35L060AVVA07-0 VA3O PQ: 0 ANSI: 5
-sd 2:0:0:0: [sda] 120103200 512-byte hardware sectors (61493 MB)
-sd 2:0:0:0: [sda] Write Protect is off
-sd 2:0:0:0: [sda] Mode Sense: 00 3a 00 00
-sd 2:0:0:0: [sda] Write cache: enabled, read cache: enabled, doesn't
-support DPO or FUA
-sd 2:0:0:0: [sda] 120103200 512-byte hardware sectors (61493 MB)
-sd 2:0:0:0: [sda] Write Protect is off
-sd 2:0:0:0: [sda] Mode Sense: 00 3a 00 00
-sd 2:0:0:0: [sda] Write cache: enabled, read cache: enabled, doesn't
-support DPO or FUA
- sda: sda1
-sd 11:0:0:0: [sda] Attached SCSI disk
-sd 11:0:0:0: Attached scsi generic sg0 type 0
-ata12.00: disabled
-sd 11:0:0:0: [sda] Synchronizing SCSI cache
-sd 11:0:0:0: [sda] Result: hostbyte=0x04 driverbyte=0x00
-sd 11:0:0:0: [sda] Stopping disk
-sd 11:0:0:0: [sda] START_STOP FAILED
-sd 11:0:0:0: [sda] Result: hostbyte=0x04 driverbyte=0x00
+Hope this provides some hints. Am willing to apply patches or do other
+testing.
 
-After reboot dmesg says this:
-
-sata_via 0000:04:01.0: version 2.3
-ACPI: PCI Interrupt 0000:04:01.0[A] -> GSI 22 (level, low) -> IRQ 21
-sata_via 0000:04:01.0: routed to hard irq line 5
-scsi0 : sata_via
-scsi1 : sata_via
-scsi2 : sata_via
-ata1: SATA max UDMA/133 port i16@0xec00 bmdma 0xe000 irq 21
-ata2: SATA max UDMA/133 port i16@0xe480 bmdma 0xe008 irq 21
-ata3: PATA max UDMA/133 port i16@0xe400 bmdma 0xe010 irq 21
-ata1: SATA link down (SStatus 0 SControl 310)
-ata2: SATA link down (SStatus 0 SControl 310)
-ata3.00: ATA-5: IC35L060AVVA07-0, VA3OA52A, max UDMA/100
-ata3.00: 120103200 sectors, multi 0: LBA
-ata3.01: ATA-6: ST320410A, 3.32, max UDMA/100
-ata3.01: 39102336 sectors, multi 0: LBA
-ata3.00: limited to UDMA/33 due to 40-wire cable
-ata3.01: limited to UDMA/33 due to 40-wire cable
-ata3.00: configured for UDMA/33
-ata3.01: configured for UDMA/33
-scsi 2:0:0:0: Direct-Access     ATA      IC35L060AVVA07-0 VA3O PQ: 0 ANSI: 5
-sd 2:0:0:0: [sda] 120103200 512-byte hardware sectors (61493 MB)
-sd 2:0:0:0: [sda] Write Protect is off
-sd 2:0:0:0: [sda] Mode Sense: 00 3a 00 00
-sd 2:0:0:0: [sda] Write cache: enabled, read cache: enabled, doesn't
-support DPO or FUA
-sd 2:0:0:0: [sda] 120103200 512-byte hardware sectors (61493 MB)
-sd 2:0:0:0: [sda] Write Protect is off
-sd 2:0:0:0: [sda] Mode Sense: 00 3a 00 00
-sd 2:0:0:0: [sda] Write cache: enabled, read cache: enabled, doesn't
-support DPO or FUA
- sda: sda1
-sd 2:0:0:0: [sda] Attached SCSI disk
-sd 2:0:0:0: Attached scsi generic sg0 type 0
-scsi 2:0:1:0: Direct-Access     ATA      ST320410A        3.32 PQ: 0 ANSI: 5
-sd 2:0:1:0: [sdb] 39102336 512-byte hardware sectors (20020 MB)
-sd 2:0:1:0: [sdb] Write Protect is off
-sd 2:0:1:0: [sdb] Mode Sense: 00 3a 00 00
-sd 2:0:1:0: [sdb] Write cache: enabled, read cache: enabled, doesn't
-support DPO or FUA
-sd 2:0:1:0: [sdb] 39102336 512-byte hardware sectors (20020 MB)
-sd 2:0:1:0: [sdb] Write Protect is off
-sd 2:0:1:0: [sdb] Mode Sense: 00 3a 00 00
-sd 2:0:1:0: [sdb] Write cache: enabled, read cache: enabled, doesn't
-support DPO or FUA
- sdb: sdb1 sdb2 sdb3 sdb4
-sd 2:0:1:0: [sdb] Attached SCSI disk
-sd 2:0:1:0: Attached scsi generic sg1 type 0
-ata3.00: disabled
-ata3.01: disabled
-sd 2:0:0:0: [sda] Synchronizing SCSI cache
-sd 2:0:0:0: [sda] Result: hostbyte=0x04 driverbyte=0x00
-sd 2:0:0:0: [sda] Stopping disk
-sd 2:0:0:0: [sda] START_STOP FAILED
-sd 2:0:0:0: [sda] Result: hostbyte=0x04 driverbyte=0x00
-sd 2:0:1:0: [sdb] Synchronizing SCSI cache
-sd 2:0:1:0: [sdb] Result: hostbyte=0x04 driverbyte=0x00
-sd 2:0:1:0: [sdb] Stopping disk
-sd 2:0:1:0: [sdb] START_STOP FAILED
-sd 2:0:1:0: [sdb] Result: hostbyte=0x04 driverbyte=0x00
-
-What do you think about this?
+George
