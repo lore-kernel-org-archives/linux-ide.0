@@ -1,179 +1,117 @@
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Subject: Re: [PATCH 1/4] ide-pmac: media-bay support fixes
-Date: Thu, 03 Jul 2008 17:33:55 +1000
-Message-ID: <1215070435.21182.107.camel@pasglop>
-References: <200806162124.43005.bzolnier@gmail.com>
-	 <200806261051.34733.bzolnier@gmail.com> <1214470868.8011.455.camel@pasglop>
-	 <200806261140.39531.bzolnier@gmail.com> <1215063236.21182.85.camel@pasglop>
-	 <1215067667.21182.98.camel@pasglop>
-Reply-To: benh@kernel.crashing.org
-Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+From: Tejun Heo <tj@kernel.org>
+Subject: [PATCHSET 2.6.26-rc8] block: implement extended devt
+Date: Thu,  3 Jul 2008 17:33:00 +0900
+Message-ID: <1215073986-4709-1-git-send-email-tj@kernel.org>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from gate.crashing.org ([63.228.1.57]:55176 "EHLO gate.crashing.org"
+Received: from hera.kernel.org ([140.211.167.34]:33992 "EHLO hera.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S937013AbYGCHeD (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 3 Jul 2008 03:34:03 -0400
-In-Reply-To: <1215067667.21182.98.camel@pasglop>
+	id S1754895AbYGCNGG (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 3 Jul 2008 09:06:06 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: jeff@garzik.org, linux-ide@vger.kernel.org, James.Bottomley@HansenPartnership.com, bharrosh@panasas.com, greg.freemyer@gmail.com, linux-scsi@vger.kernel.org, brking@linux.vnet.ibm.com
 
-On Thu, 2008-07-03 at 16:47 +1000, Benjamin Herrenschmidt wrote:
-> > Took me a while, kid was sick.
-> > 
-> > They apply on 20080625 (with various offset/fuzz but they do apply) and
-> > the tree builds. The media bay however fails the same way as before with
-> > IDE register errors.
-> > 
-> > I'll see if I can find where they come from.
-> 
-> Found multiple issues related to the ide-pmac <-> mediabay & ide core
-> interaction changes. I've done some fixes but it's not quite there yet.
-> It looks like it's getting IRQ issues with the mediabay CD, for some
-> reasons looks like something unmasks the interrupt before there's a
-> handler or around those lines... I get an irq "nobody cared" error, it
-> gets disabled, and then hdc gets lost interrupts.
-> 
-> I'll dig a bit more and if I can't find what's up tonight, will send
-> you my current patches in case you have some other idea.
+Hello, all.
 
-Ok, so the interrupt stuff is weird, I need to dig more. I get basically
-what looks like an interrupt storm in the enable_irq() after the probing
-of the drives. I know the media-bay IDE has some weird behaviours at
-probe time but that's not quite something I saw before. I'll have to
-debug more.
+This patchset implements extended devt for block devices.  This is
+mainly to work around sd limitations (16 minors per device) but can
+easily be used to allow more partitions or more devices.
 
-In the meantime, here's the hacks I applied to your patch series to get
-things mostly going (appart from that bug, which we -do- need to fix,
-but give me a bit more time to track it down). You'll probably want to
-integrate the fixes with your patches and remove the debug stuff :-)
+With it turned on, a libata disk w/ 60 partitions looks like the
+following.
 
-You'll notice that I created a new state for when the media-bay is up
-but IDE hasn't registered in yet. This might disappear in the future
-when I do the libata bits but for now it fixes a few issues where
-noprobe was never set properly, or if set, it would try to probe the
-drives twice and blow up...
+  # cat /proc/partitions 
+  major   minor   #blocks  name
 
-(The problem was either noprobe would stay set to 1 with your old code,
-despite the clearing in the mediabay case because pmac_ide_init_dev
-would set it back to 1. If you fix that you get into a case where
-the bay is "up" before IDE is ready, and when IDE gets ready, both
-the idea layer and the bay code race to trigger a probe).
+     3        0   78184008 hda
+     3        1   26218048 hda1
+     3        2    1052257 hda2
+     8        0  156290904 sda
+     8        1       8001 sda1
+     8        2       8032 sda2
+     8        3       8032 sda3
+     8        4          1 sda4
+   ...
+     8       15       8001 sda15
+   259        0       8001 sda16
+   259        1       8001 sda17
+   259        2       8001 sda18
+   ...
+   259       43       8001 sda59
+   259       44       8001 sda60
 
+As you can see, partitions over the genhd->minors limit gets assigned
+under major 259 which breaks the predetermined contiguous minors
+assumption.  I've tested a number of things on it and everything seems
+to work just fine including mounting as root.
 
-Ben.
+A debug option CONFIG_DEBUG_BLOCK_EXT_DEVT is also implemented, when
+enabled, the /proc/partitions looks like the following.
 
-Index: linux-work/drivers/ide/ide-probe.c
-===================================================================
---- linux-work.orig/drivers/ide/ide-probe.c	2008-07-03 15:50:24.000000000 +1000
-+++ linux-work/drivers/ide/ide-probe.c	2008-07-03 17:14:42.000000000 +1000
-@@ -770,11 +770,15 @@ static int ide_probe_port(ide_hwif_t *hw
- 	unsigned int irqd;
- 	int unit, rc = -ENODEV;
- 
--	BUG_ON(hwif->present);
--
-+	printk("ide_probe_port(%s) noprobe=%d,%d\n",
-+	       hwif->name, hwif->drives[0].noprobe, hwif->drives[1].noprobe);
- 	if (hwif->drives[0].noprobe && hwif->drives[1].noprobe)
- 		return -EACCES;
- 
-+	WARN_ON(hwif->present);
-+	if (hwif->present)
-+		return 0;
-+
- 	/*
- 	 * We must always disable IRQ, as probe_for_drive will assert IRQ, but
- 	 * we'll install our IRQ driver much later...
-@@ -798,6 +802,7 @@ static int ide_probe_port(ide_hwif_t *hw
- 		(void) probe_for_drive(drive);
- 		if (drive->present)
- 			rc = 0;
-+		ide_busy_sleep(hwif);
- 	}
- 
- 	local_irq_restore(flags);
-Index: linux-work/drivers/ide/ppc/pmac.c
-===================================================================
---- linux-work.orig/drivers/ide/ppc/pmac.c	2008-07-03 15:54:43.000000000 +1000
-+++ linux-work/drivers/ide/ppc/pmac.c	2008-07-03 15:57:12.000000000 +1000
-@@ -951,8 +951,10 @@ static void pmac_ide_init_dev(ide_drive_
- 
- 	if (pmif->mediabay) {
- #ifdef CONFIG_PMAC_MEDIABAY
--		if (check_media_bay(pmif->node->parent, MB_CD) == -ENODEV)
-+		if (check_media_bay(pmif->node->parent, MB_CD) == 0) {
-+			drive->noprobe = 0;
- 			return;
-+		}
- #endif
- 		drive->noprobe = 1;
- 	}
-@@ -1096,8 +1098,6 @@ static int __devinit pmac_ide_setup_devi
- 	ide_device_add(idx, &d);
- 
- 	if (pmif->mediabay) {
--		hwif->drives[0].noprobe = 0;
--		hwif->drives[1].noprobe = 0;
- #ifdef CONFIG_PMAC_MEDIABAY
- 		media_bay_set_ide_infos(np->parent, pmif->regbase, pmif->irq,
- 					hwif);
-Index: linux-work/drivers/macintosh/mediabay.c
-===================================================================
---- linux-work.orig/drivers/macintosh/mediabay.c	2008-07-03 16:20:13.000000000 +1000
-+++ linux-work/drivers/macintosh/mediabay.c	2008-07-03 16:41:07.000000000 +1000
-@@ -156,7 +156,8 @@ enum {
- 	mb_ide_resetting,	/* IDE reset bit unser, waiting MB_IDE_WAIT */
- 	mb_ide_waiting,		/* Waiting for BUSY bit to go away until MB_IDE_TIMEOUT */
- 	mb_up,			/* Media bay full */
--	mb_powering_down	/* Powering down (avoid too fast down/up) */
-+	mb_powering_down,	/* Powering down (avoid too fast down/up) */
-+	mb_wait_ide_init,	/* Wait for IDE layer to go up */
- };
- 
- #define MB_POWER_SOUND		0x08
-@@ -448,7 +449,7 @@ int media_bay_set_ide_infos(struct devic
-  			bay->cd_base	= (void __iomem *) base;
- 			bay->cd_irq	= irq;
- 
--			if ((MB_CD != bay->content_id) || bay->state != mb_up) {
-+			if ((MB_CD != bay->content_id) || bay->state != mb_wait_ide_init) {
- 				up(&bay->lock);
- 				return 0;
- 			}
-@@ -522,8 +523,8 @@ static void media_bay_step(int i)
- 	    	break;
- 	case mb_ide_waiting:
- 		if (bay->cd_base == NULL) {
--			bay->timer = 0;
--			bay->state = mb_up;
-+			bay->timer = -1;
-+			bay->state = mb_wait_ide_init;
- 			MBDBG("mediabay%d: up before IDE init\n", i);
- 			break;
- 		} else if (MB_IDE_READY(i)) {
-@@ -557,6 +558,9 @@ static void media_bay_step(int i)
- 			bay->timer = 0;
- 	    	}
- 		break;
-+	case mb_wait_ide_init:
-+		bay->timer = -1;
-+		break;
- #endif /* CONFIG_BLK_DEV_IDE_PMAC */
- 	case mb_powering_down:
- 	    	bay->state = mb_empty;
-@@ -656,7 +660,8 @@ static int __devinit media_bay_attach(st
- 		msleep(MB_POLL_DELAY);
- 		media_bay_step(i);
- 	} while((bay->state != mb_empty) &&
--		(bay->state != mb_up));
-+		(bay->state != mb_up) &&
-+		(bay->state != mb_wait_ide_init));
- 
- 	/* Mark us ready by filling our mdev data */
- 	macio_set_drvdata(mdev, bay);
+  # cat /proc/partitions
+  major   minor   #blocks  name
 
+     3        0   78184008 hda
+   259        0   26218048 hda1
+   259   524288    1052257 hda2
+     8        0  156290904 sda
+   259   262144       8001 sda1
+   259   786432       8032 sda2
+   259   131072       8032 sda3
+   259   655360          1 sda4
+   259   393216       8001 sda5
+   259   917504       8001 sda6
+   259    65536       8001 sda7
+   ...
+   259   114688       8001 sda55
+   259   638976       8001 sda56
+   259   376832       8001 sda57
+   259   901120       8001 sda58
+   259   245760       8001 sda59
+   259   770048       8001 sda60
 
+The option forces all partitions to be allocated from the extended
+region and spreads the minors as apart as possible to achieve two
+goals.
+
+* Detect kernel or userland code which assumes pre-determined
+  consecutive block devts.
+
+* Prevent such code from accessing the wrong partition and corrupting
+  it by making devts far apart from each other.
+
+I thought about making the spread allocation default for the extended
+area while keeping the conventional minors as they are but that seemed
+like an overkill.  Especially because the only interface which reveals
+how many consecutive minors are allocated is sysfs attribute "range"
+which doesn't change after this patchset.  A new attribute "ext_range"
+which indicates the total limit of minors includnig the extended ones
+is added instead.
+
+I chose major 259 at my own whim.  Is it okay to use this value?  As
+extended devts don't care what MAJ:MIN is used, we can also create a
+pool of MAJ:MINs which any driver can allocate MAJ:MIN from.
+Switching to such mechanism shouldn't be too difficult (some kobj_map
+adjustments will be necessary tho) so no need to worry about it now.
+
+This patchset is also available in the following git tree.
+
+  http://git.kernel.org/?p=linux/kernel/git/tj/misc.git;a=shortlog;h=block-extended-devt
+  git://git.kernel.org/pub/scm/linux/kernel/git/tj/misc.git block-extended-devt
+
+Thanks.
+
+ block/genhd.c          |  268 ++++++++++++++++++++++++++++++++++++++++---------
+ block/ioctl.c          |    6 -
+ drivers/ide/ide-disk.c |   17 ++-
+ drivers/scsi/sd.c      |   15 ++
+ fs/block_dev.c         |    2 
+ fs/partitions/check.c  |   44 ++++++--
+ include/linux/fs.h     |    1 
+ include/linux/genhd.h  |   36 ++++++
+ include/linux/major.h  |    2 
+ lib/Kconfig.debug      |   16 ++
+ 10 files changed, 340 insertions(+), 67 deletions(-)
+
+ --
+ tejun
