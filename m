@@ -1,76 +1,120 @@
 From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH #upstream-fixes] ahci: always clear all bits in irq_stat
-Date: Fri, 04 Jul 2008 09:11:01 -0400
-Message-ID: <486E2165.9080205@garzik.org>
-References: <486519FE.4070106@kernel.org>
+Subject: Re: [PATCH #upstream-fixes] libata-sff: improve HSM violation reporting
+Date: Fri, 04 Jul 2008 09:11:12 -0400
+Message-ID: <486E2170.1030009@garzik.org>
+References: <486517CF.8080204@kernel.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:46219 "EHLO mail.dvmed.net"
+Received: from srv5.dvmed.net ([207.36.208.214]:46232 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752879AbYGDNLF (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 4 Jul 2008 09:11:05 -0400
-In-Reply-To: <486519FE.4070106@kernel.org>
+	id S1753581AbYGDNLP (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 4 Jul 2008 09:11:15 -0400
+In-Reply-To: <486517CF.8080204@kernel.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Tejun Heo <tj@kernel.org>
-Cc: IDE/ATA development list <linux-ide@vger.kernel.org>, pth@novell.com
+Cc: IDE/ATA development list <linux-ide@vger.kernel.org>
 
 Tejun Heo wrote:
-> Some AHCI controllers (ICH7 was reported) set pending bit in
-> HOST_IRQ_STAT for non-existent ports and when it's not cleared falls
-> into IRQ storm.  Always clear full irq_stat instead of only the bits
-> that are handled.  As nothing changes for recognized ports, the risk
-> of breaking things is pretty low.
-> 
-> Reported and verified by Philipp Thomas in the following suse
-> bugzilla.
-> 
-> https://bugzilla.novell.com/attachment.cgi?id=215692
+> Improve SFF HSM violation reporting such that each HSM violation can
+> be distinguished using ehi_desc.
 > 
 > Signed-off-by: Tejun Heo <tj@kernel.org>
-> Cc: Philipp Thomas <pth@novell.com>
 > ---
-> This should fix some of ahci IRQ storms we have.  I'm not sure it
-> fixes the JMB probing one tho.  I think this one is worth committing
-> to #upstream-fixes and should be safe.
+> If it's too late in -rc cycle, feel free to push it to #upstream.
+> It's not critical.  Thanks.
 > 
-> Thanks.
+>  drivers/ata/libata-sff.c |   30 +++++++++++++++++++++---------
+>  1 file changed, 21 insertions(+), 9 deletions(-)
 > 
->  drivers/ata/ahci.c |    9 +++------
->  1 file changed, 3 insertions(+), 6 deletions(-)
-> 
-> diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
-> index 966ab40..8378334 100644
-> --- a/drivers/ata/ahci.c
-> +++ b/drivers/ata/ahci.c
-> @@ -1760,7 +1760,7 @@ static irqreturn_t ahci_interrupt(int irq, void *dev_instance)
->  	struct ahci_host_priv *hpriv;
->  	unsigned int i, handled = 0;
->  	void __iomem *mmio;
-> -	u32 irq_stat, irq_ack = 0;
-> +	u32 irq_stat;
+> diff --git a/drivers/ata/libata-sff.c b/drivers/ata/libata-sff.c
+> index 215d186..c0908c2 100644
+> --- a/drivers/ata/libata-sff.c
+> +++ b/drivers/ata/libata-sff.c
+> @@ -1094,6 +1094,7 @@ static void ata_hsm_qc_complete(struct ata_queued_cmd *qc, int in_wq)
+>  int ata_sff_hsm_move(struct ata_port *ap, struct ata_queued_cmd *qc,
+>  		     u8 status, int in_wq)
+>  {
+> +	struct ata_eh_info *ehi = &ap->link.eh_info;
+>  	unsigned long flags = 0;
+>  	int poll_next;
 >  
->  	VPRINTK("ENTER\n");
+> @@ -1125,9 +1126,12 @@ fsm_start:
+>  			if (likely(status & (ATA_ERR | ATA_DF)))
+>  				/* device stops HSM for abort/error */
+>  				qc->err_mask |= AC_ERR_DEV;
+> -			else
+> +			else {
+>  				/* HSM violation. Let EH handle this */
+> +				ata_ehi_push_desc(ehi,
+> +					"ST_FIRST: !(DRQ|ERR|DF)");
+>  				qc->err_mask |= AC_ERR_HSM;
+> +			}
 >  
-> @@ -1792,14 +1792,11 @@ static irqreturn_t ahci_interrupt(int irq, void *dev_instance)
->  					"interrupt on disabled port %u\n", i);
->  		}
+>  			ap->hsm_task_state = HSM_ST_ERR;
+>  			goto fsm_start;
+> @@ -1146,9 +1150,9 @@ fsm_start:
+>  			 * the CDB.
+>  			 */
+>  			if (!(qc->dev->horkage & ATA_HORKAGE_STUCK_ERR)) {
+> -				ata_port_printk(ap, KERN_WARNING,
+> -						"DRQ=1 with device error, "
+> -						"dev_stat 0x%X\n", status);
+> +				ata_ehi_push_desc(ehi, "ST_FIRST: "
+> +					"DRQ=1 with device error, "
+> +					"dev_stat 0x%X", status);
+>  				qc->err_mask |= AC_ERR_HSM;
+>  				ap->hsm_task_state = HSM_ST_ERR;
+>  				goto fsm_start;
+> @@ -1205,9 +1209,9 @@ fsm_start:
+>  			 * let the EH abort the command or reset the device.
+>  			 */
+>  			if (unlikely(status & (ATA_ERR | ATA_DF))) {
+> -				ata_port_printk(ap, KERN_WARNING, "DRQ=1 with "
+> -						"device error, dev_stat 0x%X\n",
+> -						status);
+> +				ata_ehi_push_desc(ehi, "ST-ATAPI: "
+> +					"DRQ=1 with device error, "
+> +					"dev_stat 0x%X", status);
+>  				qc->err_mask |= AC_ERR_HSM;
+>  				ap->hsm_task_state = HSM_ST_ERR;
+>  				goto fsm_start;
+> @@ -1226,13 +1230,17 @@ fsm_start:
+>  				if (likely(status & (ATA_ERR | ATA_DF)))
+>  					/* device stops HSM for abort/error */
+>  					qc->err_mask |= AC_ERR_DEV;
+> -				else
+> +				else {
+>  					/* HSM violation. Let EH handle this.
+>  					 * Phantom devices also trigger this
+>  					 * condition.  Mark hint.
+>  					 */
+> +					ata_ehi_push_desc(ehi, "ST-ATA: "
+> +						"DRQ=1 with device error, "
+> +						"dev_stat 0x%X", status);
+>  					qc->err_mask |= AC_ERR_HSM |
+>  							AC_ERR_NODEV_HINT;
+> +				}
 >  
-> -		irq_ack |= (1 << i);
-> -	}
-> -
-> -	if (irq_ack) {
-> -		writel(irq_ack, mmio + HOST_IRQ_STAT);
->  		handled = 1;
->  	}
+>  				ap->hsm_task_state = HSM_ST_ERR;
+>  				goto fsm_start;
+> @@ -1257,8 +1265,12 @@ fsm_start:
+>  					status = ata_wait_idle(ap);
+>  				}
 >  
-> +	writel(irq_stat, mmio + HOST_IRQ_STAT);
-> +
->  	spin_unlock(&host->lock);
+> -				if (status & (ATA_BUSY | ATA_DRQ))
+> +				if (status & (ATA_BUSY | ATA_DRQ)) {
+> +					ata_ehi_push_desc(ehi, "ST-ATA: "
+> +						"BUSY|DRQ persists on ERR|DF, "
+> +						"dev_stat 0x%X", status);
+>  					qc->err_mask |= AC_ERR_HSM;
+> +				}
 >  
+>  				/* ata_pio_sectors() might change the
+>  				 * state to HSM_ST_LAST. so, the state
 
-applied
+applied, nice!!
 
 
