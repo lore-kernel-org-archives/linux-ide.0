@@ -1,36 +1,78 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: pata_it821x completely broken
-Date: Fri, 4 Jul 2008 22:46:36 +0100
-Message-ID: <20080704224636.352e4a7b@lxorguk.ukuu.org.uk>
-References: <200807042153.56644.linux@rainbow-software.org>
-	<20080704212204.7c94ca7c@lxorguk.ukuu.org.uk>
-	<200807042339.02444.linux@rainbow-software.org>
+From: Harvey Harrison <harvey.harrison@gmail.com>
+Subject: [PATCH] ide: ide-cd_ioctl.c fix sparse integer as NULL pointer
+	warnings
+Date: Fri, 04 Jul 2008 16:46:53 -0700
+Message-ID: <1215215213.27271.2.camel@brick>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:49723 "EHLO
-	lxorguk.ukuu.org.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752885AbYGDWE2 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 4 Jul 2008 18:04:28 -0400
-In-Reply-To: <200807042339.02444.linux@rainbow-software.org>
+Received: from rv-out-0506.google.com ([209.85.198.237]:8336 "EHLO
+	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751708AbYGDXq4 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 4 Jul 2008 19:46:56 -0400
+Received: by rv-out-0506.google.com with SMTP id k40so1756666rvb.1
+        for <linux-ide@vger.kernel.org>; Fri, 04 Jul 2008 16:46:55 -0700 (PDT)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Ondrej Zary <linux@rainbow-software.org>
-Cc: alan@redhat.com, LKML <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: linux-ide <linux-ide@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>
 
-> It complains pretty loudly - something like 3 screens (with framebuffer at 
-> 1024x768) of errors like this:
+The function ide_cd_queue_pc should be checked as the bufflen arg is
+dereferenced and lots of callers are passing in NULL.
 
-Interesting. I need to have a poke at that - it used to work fine but
-I've not tested the 821x recently and the HPA code has changed. It
-shouldn't be issuing HPA commands in the first place. Added to the TODO
-list. The HPA is supposed to be cleared by the driver setup code but if
-the newer firmware is faking it then I wonder what it does if we allow
-the command through.
+drivers/ide/ide-cd_ioctl.c:124:46: warning: Using plain integer as NULL pointer
+drivers/ide/ide-cd_ioctl.c:149:47: warning: Using plain integer as NULL pointer
+drivers/ide/ide-cd_ioctl.c:231:46: warning: Using plain integer as NULL pointer
+drivers/ide/ide-cd_ioctl.c:374:46: warning: Using plain integer as NULL pointer
 
-> It's BIOS v1.7.1.94, firmware 02093030. Haven't tried waiting for the rebuild 
-> to complete. It will probably take ages for 400GB drives. I'll try with some 
-> much smaller drives (something <1GB).
+Signed-off-by: Harvey Harrison <harvey.harrison@gmail.com>
+---
+ drivers/ide/ide-cd_ioctl.c |    8 ++++----
+ 1 files changed, 4 insertions(+), 4 deletions(-)
 
-Thanks
+diff --git a/drivers/ide/ide-cd_ioctl.c b/drivers/ide/ide-cd_ioctl.c
+index fbacb7c..3a2ffd0 100644
+--- a/drivers/ide/ide-cd_ioctl.c
++++ b/drivers/ide/ide-cd_ioctl.c
+@@ -121,7 +121,7 @@ int cdrom_eject(ide_drive_t *drive, int ejectflag,
+ 	cmd[0] = GPCMD_START_STOP_UNIT;
+ 	cmd[4] = loej | (ejectflag != 0);
+ 
+-	return ide_cd_queue_pc(drive, cmd, 0, NULL, 0, sense, 0, 0);
++	return ide_cd_queue_pc(drive, cmd, 0, NULL, NULL, sense, 0, 0);
+ }
+ 
+ /* Lock the door if LOCKFLAG is nonzero; unlock it otherwise. */
+@@ -146,7 +146,7 @@ int ide_cd_lockdoor(ide_drive_t *drive, int lockflag,
+ 		cmd[0] = GPCMD_PREVENT_ALLOW_MEDIUM_REMOVAL;
+ 		cmd[4] = lockflag ? 1 : 0;
+ 
+-		stat = ide_cd_queue_pc(drive, cmd, 0, NULL, 0,
++		stat = ide_cd_queue_pc(drive, cmd, 0, NULL, NULL,
+ 				       sense, 0, 0);
+ 	}
+ 
+@@ -228,7 +228,7 @@ int ide_cdrom_select_speed(struct cdrom_device_info *cdi, int speed)
+ 		cmd[5] = speed & 0xff;
+ 	}
+ 
+-	stat = ide_cd_queue_pc(drive, cmd, 0, NULL, 0, &sense, 0, 0);
++	stat = ide_cd_queue_pc(drive, cmd, 0, NULL, NULL, &sense, 0, 0);
+ 
+ 	if (!ide_cdrom_get_capabilities(drive, buf)) {
+ 		ide_cdrom_update_speed(drive, buf);
+@@ -371,7 +371,7 @@ static int ide_cd_fake_play_trkind(ide_drive_t *drive, void *arg)
+ 	lba_to_msf(lba_start,   &cmd[3], &cmd[4], &cmd[5]);
+ 	lba_to_msf(lba_end - 1, &cmd[6], &cmd[7], &cmd[8]);
+ 
+-	return ide_cd_queue_pc(drive, cmd, 0, NULL, 0, &sense, 0, 0);
++	return ide_cd_queue_pc(drive, cmd, 0, NULL, NULL, &sense, 0, 0);
+ }
+ 
+ static int ide_cd_read_tochdr(ide_drive_t *drive, void *arg)
+-- 
+1.5.6.1.322.ge904b
+
+
+
