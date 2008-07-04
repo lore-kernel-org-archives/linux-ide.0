@@ -1,54 +1,46 @@
 From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [patch 1/2] allow user to power off unused ports via sysfs
-Date: Fri, 04 Jul 2008 08:58:12 -0400
-Message-ID: <486E1E64.6090506@garzik.org>
-References: <20080702225743.518230210@intel.com> <20080702161401.0fac6613@appleyard>
+Subject: Re: [patch 2/2] set default of ahci driver to power off unused ports
+Date: Fri, 04 Jul 2008 09:02:47 -0400
+Message-ID: <486E1F77.6010909@garzik.org>
+References: <20080702225743.518230210@intel.com> <20080702161407.13be7fc9@appleyard>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:57424 "EHLO mail.dvmed.net"
+Received: from srv5.dvmed.net ([207.36.208.214]:56034 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752428AbYGDM6P (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 4 Jul 2008 08:58:15 -0400
-In-Reply-To: <20080702161401.0fac6613@appleyard>
+	id S1757934AbYGDNCu (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 4 Jul 2008 09:02:50 -0400
+In-Reply-To: <20080702161407.13be7fc9@appleyard>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: kristen.c.accardi@intel.com
-Cc: linux-ide@vger.kernel.org, linux-scsi <linux-scsi@vger.kernel.org>
+Cc: linux-ide@vger.kernel.org
 
 kristen.c.accardi@intel.com wrote:
-> This patch expands the definition of link power management to 
-> include the notion of simply powering the entire port off.  
-> We add a new valid value for link_power_management_policy:
-> 
-> power_off:  phy is not on at all.
-> min_power:  driver uses minimum possible power. hotplug
->             may or may not be available.
-> medium_power: best power/performance tradeoff.  hotplug
->             may or may not be available
-> max_performance: max performance without regard to power
->             hot plug is available.
-> 
-> Additionally - this patch modifies the libata-core to
-> power off the port automatically at init time if the
-> driver marks the port as not hotpluggable.
-> 
-> The user may not power off a port if it is occupied.
-> If the port is powered off, and a new drive is plugged
-> in, the drive will not be detected until the port is
-> powered back up by setting the link_power_management_policy
-> to "max_performance".
-> 
-> Signed-off-by:  Kristen Carlson Accardi <kristen.c.accardi@intel.com>
-> ---
->  drivers/ata/libata-core.c |   58 +++++++++++++++++++++++++++++++++++++++++++++-
->  drivers/ata/libata-scsi.c |    1 
->  include/linux/libata.h    |    2 +
->  3 files changed, 60 insertions(+), 1 deletion(-)
+> If the port isn't either a drive bay or an external SATA port, 
+> mark the port not-hotpluggable.
 
-Looks good to me, ACK.
+That's just flat out incorrect, though.
 
-I'm apply soonish, unless there are other complaints.
+We've been hotplugging SATA cables since SATA began, when the _most 
+common_ hotplug case was where a port was neither a drive bay nor eSATA. 
+  Part of the beauty of SATA is being able to just 'yank the cable'.
+
+PORT_CMD_ESP and PORT_CMD_HPCP are positive indicators of hotplug 
+capability, but are not exclusively such.
+
+So, this patch would create regressions for people in servers or 
+desktops or development systems that wish to retain their _existing_ 
+ability to hotplug.
+
+One guaranteed way to avoid regressions is to default ahci_power_save to 
+zero, but that's then not helpful to Linux users in general, few of 
+which will know of this module option and turn it on.
+
+This is actually wandering into system-wide power policy :/
+
+	Jeff
+
 
 
