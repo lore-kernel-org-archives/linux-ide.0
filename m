@@ -1,51 +1,39 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH 2/2] ide: ide_unregister() locking bugfix
-Date: Sat, 5 Jul 2008 14:51:18 +0200
-Message-ID: <200807051451.18784.bzolnier@gmail.com>
+From: Alan Cox <alan@redhat.com>
+Subject: Re: pata_it821x completely broken
+Date: Sat, 5 Jul 2008 11:49:51 -0400
+Message-ID: <20080705154951.GC20937@devserv.devel.redhat.com>
+References: <200807042153.56644.linux@rainbow-software.org> <200807042339.02444.linux@rainbow-software.org> <20080704224636.352e4a7b@lxorguk.ukuu.org.uk> <200807051242.00545.linux@rainbow-software.org>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from gv-out-0910.google.com ([216.239.58.189]:10930 "EHLO
-	gv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752803AbYGEMvJ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 5 Jul 2008 08:51:09 -0400
-Received: by gv-out-0910.google.com with SMTP id e6so282661gvc.37
-        for <linux-ide@vger.kernel.org>; Sat, 05 Jul 2008 05:51:08 -0700 (PDT)
+Received: from mx1.redhat.com ([66.187.233.31]:59161 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751532AbYGEPwI (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 5 Jul 2008 11:52:08 -0400
 Content-Disposition: inline
+In-Reply-To: <200807051242.00545.linux@rainbow-software.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
+To: Ondrej Zary <linux@rainbow-software.org>
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, alan@redhat.com, LKML <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org
 
-Holding ide_lock for ide_release_dma_engine() call is unnecessary
-and triggers WARN_ON(irqs_disabled()) in dma_free_coherent().
+On Sat, Jul 05, 2008 at 12:41:58PM +0200, Ondrej Zary wrote:
+> Samsungs). Seems like any drive that can't do UDMA fails (looks like MWDMA is 
+> broken). The controller BIOS creates the array fine but it doesn't work in 
 
-Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
----
- drivers/ide/ide.c |    4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+I've no idea if the BIOS firmware mode can do MWDMA to the drives. The actual
+interface between the card and the kernel has no mode stuff at all.
 
-Index: b/drivers/ide/ide.c
-===================================================================
---- a/drivers/ide/ide.c
-+++ b/drivers/ide/ide.c
-@@ -352,15 +352,15 @@ void ide_unregister(ide_hwif_t *hwif)
- 	blk_unregister_region(MKDEV(hwif->major, 0), MAX_DRIVES<<PARTN_BITS);
- 	kfree(hwif->sg_table);
- 	unregister_blkdev(hwif->major, hwif->name);
--	spin_lock_irq(&ide_lock);
- 
- 	if (hwif->dma_base)
- 		ide_release_dma_engine(hwif);
- 
-+	spin_lock_irq(&ide_lock);
- 	/* restore hwif data to pristine status */
- 	ide_init_port_data(hwif, hwif->index);
--
- 	spin_unlock_irq(&ide_lock);
-+
- 	mutex_unlock(&ide_cfg_mtx);
- }
- 
+> When I force the pass-through mode, it oopses (haven't captured it yet as it's > too long). Forcing pass-through mode works fine with UDMA-capable drives:
+
+Interesting and definitely sounds like a bug.
+
+> 
+> Then I created RAID 1 from the Seagate and Quantum drives. No matter if the 
+> rebuild process is running or not, the result is the same - the drives that 
+> form RAID aren't accessible, the other drives work:
+
+I would imagine the controller fakes a hotplug event when the rebuild finishes
+but that is guessing. The firmware mode is pretty minimally documented.
+
+
