@@ -1,39 +1,147 @@
-From: Alan Cox <alan@redhat.com>
-Subject: Re: pata_it821x completely broken
-Date: Sat, 5 Jul 2008 11:49:51 -0400
-Message-ID: <20080705154951.GC20937@devserv.devel.redhat.com>
-References: <200807042153.56644.linux@rainbow-software.org> <200807042339.02444.linux@rainbow-software.org> <20080704224636.352e4a7b@lxorguk.ukuu.org.uk> <200807051242.00545.linux@rainbow-software.org>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: [PATCH 1/4] ide-pmac: media-bay support fixes
+Date: Sat, 5 Jul 2008 17:56:26 +0200
+Message-ID: <200807051756.26506.bzolnier@gmail.com>
+References: <200806162124.43005.bzolnier@gmail.com> <1215067667.21182.98.camel@pasglop> <1215070435.21182.107.camel@pasglop>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+  charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:59161 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751532AbYGEPwI (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 5 Jul 2008 11:52:08 -0400
+Received: from gv-out-0910.google.com ([216.239.58.184]:16747 "EHLO
+	gv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750959AbYGEP4V (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 5 Jul 2008 11:56:21 -0400
+Received: by gv-out-0910.google.com with SMTP id e6so291992gvc.37
+        for <linux-ide@vger.kernel.org>; Sat, 05 Jul 2008 08:56:20 -0700 (PDT)
+In-Reply-To: <1215070435.21182.107.camel@pasglop>
 Content-Disposition: inline
-In-Reply-To: <200807051242.00545.linux@rainbow-software.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Ondrej Zary <linux@rainbow-software.org>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, alan@redhat.com, LKML <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org
+To: benh@kernel.crashing.org
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Sat, Jul 05, 2008 at 12:41:58PM +0200, Ondrej Zary wrote:
-> Samsungs). Seems like any drive that can't do UDMA fails (looks like MWDMA is 
-> broken). The controller BIOS creates the array fine but it doesn't work in 
 
-I've no idea if the BIOS firmware mode can do MWDMA to the drives. The actual
-interface between the card and the kernel has no mode stuff at all.
+Hi,
 
-> When I force the pass-through mode, it oopses (haven't captured it yet as it's > too long). Forcing pass-through mode works fine with UDMA-capable drives:
-
-Interesting and definitely sounds like a bug.
-
+On Thursday 03 July 2008, Benjamin Herrenschmidt wrote:
+> On Thu, 2008-07-03 at 16:47 +1000, Benjamin Herrenschmidt wrote:
+> > > Took me a while, kid was sick.
+> > > 
+> > > They apply on 20080625 (with various offset/fuzz but they do apply) and
+> > > the tree builds. The media bay however fails the same way as before with
+> > > IDE register errors.
+> > > 
+> > > I'll see if I can find where they come from.
+> > 
+> > Found multiple issues related to the ide-pmac <-> mediabay & ide core
+> > interaction changes. I've done some fixes but it's not quite there yet.
+> > It looks like it's getting IRQ issues with the mediabay CD, for some
+> > reasons looks like something unmasks the interrupt before there's a
+> > handler or around those lines... I get an irq "nobody cared" error, it
+> > gets disabled, and then hdc gets lost interrupts.
+> > 
+> > I'll dig a bit more and if I can't find what's up tonight, will send
+> > you my current patches in case you have some other idea.
 > 
-> Then I created RAID 1 from the Seagate and Quantum drives. No matter if the 
-> rebuild process is running or not, the result is the same - the drives that 
-> form RAID aren't accessible, the other drives work:
+> Ok, so the interrupt stuff is weird, I need to dig more. I get basically
+> what looks like an interrupt storm in the enable_irq() after the probing
+> of the drives. I know the media-bay IDE has some weird behaviours at
+> probe time but that's not quite something I saw before. I'll have to
+> debug more.
 
-I would imagine the controller fakes a hotplug event when the rebuild finishes
-but that is guessing. The firmware mode is pretty minimally documented.
+This may be generic ide problem uncovered by media-bay changes.
 
+In init_irq() we unmask IRQs just before registering IRQ handler but we
+we don't clear pending IRQs before the unmask (simply reading the Status
+register should be enough).
 
+[ Previously ide_port_wait_ready() would do it during ide_device_add()
+  call and before the IRQ handler is registered but now it will be skipped
+  because of ->noprobe being set. ]
+
+> In the meantime, here's the hacks I applied to your patch series to get
+> things mostly going (appart from that bug, which we -do- need to fix,
+> but give me a bit more time to track it down). You'll probably want to
+> integrate the fixes with your patches and remove the debug stuff :-)
+
+Thanks!!
+
+> You'll notice that I created a new state for when the media-bay is up
+> but IDE hasn't registered in yet. This might disappear in the future
+> when I do the libata bits but for now it fixes a few issues where
+> noprobe was never set properly, or if set, it would try to probe the
+> drives twice and blow up...
+> 
+> (The problem was either noprobe would stay set to 1 with your old code,
+> despite the clearing in the mediabay case because pmac_ide_init_dev
+> would set it back to 1. If you fix that you get into a case where
+> the bay is "up" before IDE is ready, and when IDE gets ready, both
+> the idea layer and the bay code race to trigger a probe).
+
+Arrghhh, this was actually caused by a brain glitch on my side...
+
+While preparing this patch I was under the impression that ->init_dev can
+be called only by ide through ide_device_add(), which is of course untrue
+since it can be called by mediabay through ide_port_scan()...
+
+However when I think deeper about it I recall that I first implemented
+it as ->init_hwif (for which the assumption was true) and later converted
+the patch to ->init_dev because I noticed the assumption and realized
+that it needs to be ->init_dev to make it work for warm-plug...
+
+Scary... :)
+
+> Ben.
+> 
+> Index: linux-work/drivers/ide/ide-probe.c
+> ===================================================================
+> --- linux-work.orig/drivers/ide/ide-probe.c	2008-07-03 15:50:24.000000000 +1000
+> +++ linux-work/drivers/ide/ide-probe.c	2008-07-03 17:14:42.000000000 +1000
+> @@ -770,11 +770,15 @@ static int ide_probe_port(ide_hwif_t *hw
+>  	unsigned int irqd;
+>  	int unit, rc = -ENODEV;
+>  
+> -	BUG_ON(hwif->present);
+> -
+> +	printk("ide_probe_port(%s) noprobe=%d,%d\n",
+> +	       hwif->name, hwif->drives[0].noprobe, hwif->drives[1].noprobe);
+>  	if (hwif->drives[0].noprobe && hwif->drives[1].noprobe)
+>  		return -EACCES;
+>  
+> +	WARN_ON(hwif->present);
+> +	if (hwif->present)
+> +		return 0;
+> +
+
+This is a kind of tangential issue to pmac stuff.
+
+Could you resend it as a separate patch with your S-o-b: line?
+
+>  	/*
+>  	 * We must always disable IRQ, as probe_for_drive will assert IRQ, but
+>  	 * we'll install our IRQ driver much later...
+> @@ -798,6 +802,7 @@ static int ide_probe_port(ide_hwif_t *hw
+>  		(void) probe_for_drive(drive);
+>  		if (drive->present)
+>  			rc = 0;
+> +		ide_busy_sleep(hwif);
+
+I don't quite get this chunk.
+
+Is it a workaround for interrupt storm problem?
+
+[...]
+
+I integrated the rest in a verbatim form with pmac patches
+(two of them got 'take 4' as a result, the other two remain unchanged):
+
+pmac-media-bay-support-fixes-take-4.patch
+pmac-store-pmif-instead-of-hwif-in-driver_data-take-2.patch
+pmac-add-init_dev-method-take-4.patch
+pmac-move-ide_find_port-call-to-pmac_ide_setup_device-take-2.patch
+
+[ in the usual place ]
+
+Thanks,
+Bart
