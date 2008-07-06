@@ -1,149 +1,53 @@
-From: Justin Piszcz <jpiszcz@lucidpixels.com>
-Subject: Re: Lots of con-current I/O = resets SATA link? (2.6.25.10)
-Date: Sun, 6 Jul 2008 08:42:59 -0400 (EDT)
-Message-ID: <alpine.DEB.1.10.0807060841530.9996@p34.internal.lan>
-References: <fa.u8J+BqAcxU1mg8ob9pMBJaAHBPo@ifi.uio.no> <486FBFAB.5050303@shaw.ca> <alpine.DEB.1.10.0807051527210.8002@p34.internal.lan> <48700228.7060904@shaw.ca> <alpine.DEB.1.10.0807051923380.23222@p34.internal.lan> <alpine.DEB.1.10.0807060447180.5005@p34.internal.lan>
- <alpine.DEB.1.10.0807060741010.4930@p34.internal.lan>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: [PATCH] AHCI: Remove an unnecessary flush from ahci_qc_issue
+Date: Sun, 06 Jul 2008 09:44:54 -0400
+Message-ID: <4870CC56.7060002@pobox.com>
+References: <1215350600-5179-1-git-send-email-matthew@wil.cx>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <alpine.DEB.1.10.0807060741010.4930@p34.internal.lan>
-Sender: linux-raid-owner@vger.kernel.org
-To: Robert Hancock <hancockr@shaw.ca>
-Cc: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, linux-ide@vger.kernel.org, xfs@oss.sgi.com, Alan Piszcz <ap@solarrain.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from srv5.dvmed.net ([207.36.208.214]:36270 "EHLO mail.dvmed.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757494AbYGFNpL (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 6 Jul 2008 09:45:11 -0400
+In-Reply-To: <1215350600-5179-1-git-send-email-matthew@wil.cx>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Matthew Wilcox <matthew@wil.cx>
+Cc: linux-ide@vger.kernel.org, Matthew Wilcox <willy@linux.intel.com>, LKML <linux-kernel@vger.kernel.org>
 
-On Sun, 6 Jul 2008, Justin Piszcz wrote:
-> On Sun, 6 Jul 2008, Justin Piszcz wrote:
->> On Sat, 5 Jul 2008, Justin Piszcz wrote:
->>> On Sat, 5 Jul 2008, Robert Hancock wrote:
->> After the rebuild is completed I will perform more testing.
+Matthew Wilcox wrote:
+> In an I/O heavy workload (IOZone), ahci_qc_issue is the second-highest
+> consumer of CPU cycles.  Removing the flush gets us approximately 10%
+> bandwidth improvement.  I believe this to be because the CPU can start
+> queueing the next request instead of waiting for the readl() to flush the
+> writes to the device.  The flush isn't necessary because we're using a
+> 'queue' metaphor; we don't guarantee the command has got to the device,
+> nor do we need to guarantee the command has got to the controller.
+> 
+> Signed-off-by: Matthew Wilcox <willy@linux.intel.com>
+> ---
+>  drivers/ata/ahci.c |    1 -
+>  1 files changed, 0 insertions(+), 1 deletions(-)
+> 
+> diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+> index 6a7a70a..58915bd 100644
+> --- a/drivers/ata/ahci.c
+> +++ b/drivers/ata/ahci.c
+> @@ -1846,7 +1846,6 @@ static unsigned int ahci_qc_issue(struct ata_queued_cmd *qc)
+>  	if (qc->tf.protocol == ATA_PROT_NCQ)
+>  		writel(1 << qc->tag, port_mmio + PORT_SCR_ACT);
+>  	writel(1 << qc->tag, port_mmio + PORT_CMD_ISSUE);
+> -	readl(port_mmio + PORT_CMD_ISSUE);	/* flush */
+>  
 
-The following setup is in-place:
+(LKML CC added for wider review)
 
-       Kernel: 2.6.25.10
-Boot options: none
-          NCQ: disabled on all disks
-   irqbalance: disabled/not running
+As I noted in IRC, I've queued this and am planning to apply this, as 
+I've been thinking along the same lines for quite a while now...  not 
+just in this driver but other drivers too.
 
-Removal of all old test data:
-
-$ for i in [0-9]*; do rm -rf $i & done
-..
-[468] 5158
-[469] 5159
-[470] 5160
-[471] 5161
-[472] 5162
-$
-
--- no problems yet --
-
-run untar test+copy test:
-
-$ mkdir `seq 0 20`
-$ ./runtest.sh
-
-for i in `seq 0 20`
-do
-   cd $i
-   tar xf ../linux-2.6.25.10.tar &
-   cd ..
-done
-
-for b in `seq 21 40`
-do
-   cp linux-2.6.25.10.tar $b & 
-done
-
--- waiting for problems --
-
-If no problems at the end of this test, will start up IRQ balance (how I
-normally ran my system) and re-test to see it is relegated to the irqbalance
-daemon running.
-
------------------------------
-
-Success ..
-
-$ du -sh `seq 0 40`
-311M    0
-311M    1
-311M    2
-311M    3
-311M    4
-311M    5
-311M    6
-311M    7
-311M    8
-311M    9
-311M    10
-311M    11
-311M    12
-311M    13
-311M    14
-311M    15
-311M    16
-311M    17
-311M    18
-311M    19
-311M    20
-272M    21
-272M    22
-272M    23
-272M    24
-272M    25
-272M    26
-272M    27
-272M    28
-272M    29
-272M    30
-272M    31
-272M    32
-272M    33
-272M    34
-272M    35
-272M    36
-272M    37
-272M    38
-272M    39
-272M    40
-
------------------------------
-
-.. no problems ..
-.. proceeded with test mentioned above ..
-
-Second round:
-
-The following setup is in-place:
-
-       Kernel: 2.6.25.10
-Boot options: none
-          NCQ: disabled on all disks
-   irqbalance: enabled
-
---
-
-Remove old cruft:
-
-$ for i in `seq 0 40`
-> do
-> rm -rf $i  &
-> done
-
-Create new directories, re-run test:
-
-$ mkdir `seq 0 20`
-
-$ ./runtest.sh
-
-.. no problems either ..
-
---
-
-I do not have a method to reproduce the problem at will unfortunately.
-
-Justin.
-
+A couple places in libata arguably need additional flushing, but some 
+places could actually stand to use /less/
 
