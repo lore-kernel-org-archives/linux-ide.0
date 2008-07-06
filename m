@@ -1,219 +1,83 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH 09/50] hpt366: convert to use ->host_priv
-Date: Sun, 06 Jul 2008 19:20:19 +0200
-Message-ID: <48710238.1ade660a.3458.627b@mx.google.com>
+Subject: [PATCH 03/50] ide: respect dev->irq in do_ide_setup_pci_device() also if tried_config
+Date: Sun, 06 Jul 2008 19:20:13 +0200
+Message-ID: <4871022f.1ade660a.3458.626a@mx.google.com>
 References: <20080706172010.559358957@bzolnier@gmail.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
 Received: from mu-out-0910.google.com ([209.85.134.186]:6801 "EHLO
 	mu-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756588AbYGFRet (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 6 Jul 2008 13:34:49 -0400
+	with ESMTP id S1755105AbYGFRem (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 6 Jul 2008 13:34:42 -0400
 Received: by mu-out-0910.google.com with SMTP id w8so554720mue.1
-        for <linux-ide@vger.kernel.org>; Sun, 06 Jul 2008 10:34:49 -0700 (PDT)
-Content-Disposition: inline; filename=hpt366-convert-to-use-host_priv.patch
+        for <linux-ide@vger.kernel.org>; Sun, 06 Jul 2008 10:34:40 -0700 (PDT)
+Content-Disposition: inline; filename=ide-respect-dev-irq-in-do_ide_setup_pci_device-also-if-tried_config.patch
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Cc: linux-kernel@vger.kernel.org
 
-While at it:
+* If device is in the PCI native mode respect dev->irq regardless of
+  'tried_config' in do_ide_setup_pci_device().
 
-* Allocate both struct hpt_info instances at once.
+* Drop no longer needed 'config' argument from ide_setup_pci_controller().
 
-Cc: Sergei Shtylyov <sshtylyov@ru.mvista.com>
 Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 ---
-Sergei: we may also consider using only one struct hpt_info instance
-for both PCI devices on HPT366 with split PCI config space and HPT374
-but I'm leaving this to your judgement.
+ drivers/ide/setup-pci.c |   12 +++---------
+ 1 file changed, 3 insertions(+), 9 deletions(-)
 
- drivers/ide/pci/hpt366.c |   72 ++++++++++++++++++++++++++---------------------
- 1 file changed, 41 insertions(+), 31 deletions(-)
-
-Index: b/drivers/ide/pci/hpt366.c
+Index: b/drivers/ide/setup-pci.c
 ===================================================================
---- a/drivers/ide/pci/hpt366.c
-+++ b/drivers/ide/pci/hpt366.c
-@@ -620,7 +620,8 @@ static u8 hpt3xx_udma_filter(ide_drive_t
+--- a/drivers/ide/setup-pci.c
++++ b/drivers/ide/setup-pci.c
+@@ -392,14 +392,14 @@ int ide_hwif_setup_dma(ide_hwif_t *hwif,
+  *	@dev: PCI device
+  *	@d: IDE port info
+  *	@noisy: verbose flag
+- *	@config: returned as 1 if we configured the hardware
+  *
+  *	Set up the PCI and controller side of the IDE interface. This brings
+  *	up the PCI side of the device, checks that the device is enabled
+  *	and enables it if need be
+  */
+ 
+-static int ide_setup_pci_controller(struct pci_dev *dev, const struct ide_port_info *d, int noisy, int *config)
++static int ide_setup_pci_controller(struct pci_dev *dev,
++				    const struct ide_port_info *d, int noisy)
  {
- 	ide_hwif_t *hwif	= HWIF(drive);
- 	struct pci_dev *dev	= to_pci_dev(hwif->dev);
--	struct hpt_info *info	= pci_get_drvdata(dev);
-+	struct ide_host *host	= pci_get_drvdata(dev);
-+	struct hpt_info *info	= host->host_priv + (hwif->dev == host->dev[1]);
- 	u8 mask 		= hwif->ultra_mask;
- 
- 	switch (info->chip_type) {
-@@ -660,7 +661,8 @@ static u8 hpt3xx_mdma_filter(ide_drive_t
- {
- 	ide_hwif_t *hwif	= HWIF(drive);
- 	struct pci_dev *dev	= to_pci_dev(hwif->dev);
--	struct hpt_info *info	= pci_get_drvdata(dev);
-+	struct ide_host *host	= pci_get_drvdata(dev);
-+	struct hpt_info *info	= host->host_priv + (hwif->dev == host->dev[1]);
- 
- 	switch (info->chip_type) {
- 	case HPT372 :
-@@ -694,8 +696,10 @@ static u32 get_speed_setting(u8 speed, s
- 
- static void hpt3xx_set_mode(ide_drive_t *drive, const u8 speed)
- {
--	struct pci_dev  *dev	= to_pci_dev(drive->hwif->dev);
--	struct hpt_info	*info	= pci_get_drvdata(dev);
-+	ide_hwif_t *hwif	= drive->hwif;
-+	struct pci_dev *dev	= to_pci_dev(hwif->dev);
-+	struct ide_host *host	= pci_get_drvdata(dev);
-+	struct hpt_info *info	= host->host_priv + (hwif->dev == host->dev[1]);
- 	struct hpt_timings *t	= info->timings;
- 	u8  itr_addr		= 0x40 + (drive->dn * 4);
- 	u32 old_itr		= 0;
-@@ -738,7 +742,8 @@ static void hpt3xx_maskproc(ide_drive_t 
- {
- 	ide_hwif_t *hwif	= HWIF(drive);
- 	struct pci_dev	*dev	= to_pci_dev(hwif->dev);
--	struct hpt_info *info	= pci_get_drvdata(dev);
-+	struct ide_host *host	= pci_get_drvdata(dev);
-+	struct hpt_info *info	= host->host_priv + (hwif->dev == host->dev[1]);
- 
- 	if (drive->quirk_list) {
- 		if (info->chip_type >= HPT370) {
-@@ -965,22 +970,13 @@ static int __devinit hpt37x_calibrate_dp
- 
- static unsigned int __devinit init_chipset_hpt366(struct pci_dev *dev, const char *name)
- {
--	struct hpt_info *info	= kmalloc(sizeof(struct hpt_info), GFP_KERNEL);
- 	unsigned long io_base	= pci_resource_start(dev, 4);
-+	struct ide_host *host	= pci_get_drvdata(dev);
-+	struct hpt_info *info	= host->host_priv + (&dev->dev == host->dev[1]);
- 	u8 pci_clk,  dpll_clk	= 0;	/* PCI and DPLL clock in MHz */
- 	u8 chip_type;
- 	enum ata_clock	clock;
- 
--	if (info == NULL) {
--		printk(KERN_ERR "%s: out of memory!\n", name);
--		return -ENOMEM;
--	}
--
--	/*
--	 * Copy everything from a static "template" structure
--	 * to just allocated per-chip hpt_info structure.
--	 */
--	memcpy(info, pci_get_drvdata(dev), sizeof(struct hpt_info));
- 	chip_type = info->chip_type;
- 
- 	pci_write_config_byte(dev, PCI_CACHE_LINE_SIZE, (L1_CACHE_BYTES / 4));
-@@ -1142,7 +1138,6 @@ static unsigned int __devinit init_chips
- 
- 		if (info->timings->clock_table[clock] == NULL) {
- 			printk(KERN_ERR "%s: unknown bus timing!\n", name);
--			kfree(info);
- 			return -EIO;
- 		}
- 
-@@ -1169,7 +1164,6 @@ static unsigned int __devinit init_chips
- 		}
- 		if (adjust == 8) {
- 			printk(KERN_ERR "%s: DPLL did not stabilize!\n", name);
--			kfree(info);
- 			return -EIO;
- 		}
- 
-@@ -1186,9 +1180,6 @@ static unsigned int __devinit init_chips
- 	info->pci_clk	= pci_clk;
- 	info->clock	= clock;
- 
--	/* Point to this chip's own instance of the hpt_info structure. */
--	pci_set_drvdata(dev, info);
--
- 	if (chip_type >= HPT370) {
- 		u8  mcr1, mcr4;
- 
-@@ -1218,7 +1209,8 @@ static unsigned int __devinit init_chips
- static u8 __devinit hpt3xx_cable_detect(ide_hwif_t *hwif)
- {
- 	struct pci_dev	*dev	= to_pci_dev(hwif->dev);
--	struct hpt_info *info	= pci_get_drvdata(dev);
-+	struct ide_host *host	= pci_get_drvdata(dev);
-+	struct hpt_info *info	= host->host_priv + (hwif->dev == host->dev[1]);
- 	u8 chip_type		= info->chip_type;
- 	u8 scr1 = 0, ata66	= hwif->channel ? 0x01 : 0x02;
- 
-@@ -1262,7 +1254,8 @@ static u8 __devinit hpt3xx_cable_detect(
- static void __devinit init_hwif_hpt366(ide_hwif_t *hwif)
- {
- 	struct pci_dev *dev	= to_pci_dev(hwif->dev);
--	struct hpt_info *info	= pci_get_drvdata(dev);
-+	struct ide_host *host	= pci_get_drvdata(dev);
-+	struct hpt_info *info	= host->host_priv + (hwif->dev == host->dev[1]);
- 	int serialize		= HPT_SERIALIZE_IO;
- 	u8  chip_type		= info->chip_type;
- 	u8  new_mcr, old_mcr	= 0;
-@@ -1542,10 +1535,12 @@ static const struct ide_port_info hpt366
- static int __devinit hpt366_init_one(struct pci_dev *dev, const struct pci_device_id *id)
- {
- 	const struct hpt_info *info = NULL;
-+	struct hpt_info *dyn_info;
- 	struct pci_dev *dev2 = NULL;
- 	struct ide_port_info d;
- 	u8 idx = id->driver_data;
- 	u8 rev = dev->revision;
-+	int ret;
- 
- 	if ((idx == 0 || idx == 4) && (PCI_FUNC(dev->devfn) & 1))
- 		return -ENODEV;
-@@ -1591,15 +1586,24 @@ static int __devinit hpt366_init_one(str
- 	if (info == &hpt370 || info == &hpt370a)
- 		d.dma_ops = &hpt370_dma_ops;
- 
--	pci_set_drvdata(dev, (void *)info);
--
- 	if (info == &hpt36x || info == &hpt374)
- 		dev2 = pci_get_slot(dev->bus, dev->devfn + 1);
- 
--	if (dev2) {
--		int ret;
-+	dyn_info = kzalloc(sizeof(*dyn_info) * (dev2 ? 2 : 1), GFP_KERNEL);
-+	if (dyn_info == NULL) {
-+		printk(KERN_ERR "%s: out of memory!\n", d.name);
-+		pci_dev_put(dev2);
-+		return -ENOMEM;
-+	}
-+
-+	/*
-+	 * Copy everything from a static "template" structure
-+	 * to just allocated per-chip hpt_info structure.
-+	 */
-+	memcpy(dyn_info, info, sizeof(*dyn_info));
- 
--		pci_set_drvdata(dev2, (void *)info);
-+	if (dev2) {
-+		memcpy(dyn_info + 1, info, sizeof(*dyn_info));
- 
- 		if (info == &hpt374)
- 			hpt374_init(dev, dev2);
-@@ -1608,13 +1612,19 @@ static int __devinit hpt366_init_one(str
- 				d.host_flags &= ~IDE_HFLAG_NON_BOOTABLE;
- 		}
- 
--		ret = ide_pci_init_two(dev, dev2, &d, NULL);
--		if (ret < 0)
-+		ret = ide_pci_init_two(dev, dev2, &d, dyn_info);
-+		if (ret < 0) {
- 			pci_dev_put(dev2);
-+			kfree(dyn_info);
-+		}
- 		return ret;
+ 	int ret;
+ 	u16 pcicmd;
+@@ -420,7 +420,6 @@ static int ide_setup_pci_controller(stru
+ 		ret = ide_pci_configure(dev, d);
+ 		if (ret < 0)
+ 			goto out;
+-		*config = 1;
+ 		printk(KERN_INFO "%s: device enabled (Linux)\n", d->name);
  	}
  
--	return ide_pci_init_one(dev, &d, NULL);
-+	ret = ide_pci_init_one(dev, &d, dyn_info);
-+	if (ret < 0)
-+		kfree(dyn_info);
-+
-+	return ret;
- }
+@@ -486,10 +485,9 @@ static int do_ide_setup_pci_device(struc
+ 				   const struct ide_port_info *d,
+ 				   u8 noisy)
+ {
+-	int tried_config = 0;
+ 	int pciirq, ret;
  
- static const struct pci_device_id hpt366_pci_tbl[] __devinitconst = {
+-	ret = ide_setup_pci_controller(dev, d, noisy, &tried_config);
++	ret = ide_setup_pci_controller(dev, d, noisy);
+ 	if (ret < 0)
+ 		goto out;
+ 
+@@ -514,10 +512,6 @@ static int do_ide_setup_pci_device(struc
+ 			printk(KERN_INFO "%s: not 100%% native mode: "
+ 				"will probe irqs later\n", d->name);
+ 		pciirq = ret;
+-	} else if (tried_config) {
+-		if (noisy)
+-			printk(KERN_INFO "%s: will probe irqs later\n", d->name);
+-		pciirq = 0;
+ 	} else if (!pciirq) {
+ 		if (noisy)
+ 			printk(KERN_WARNING "%s: bad irq (%d): will probe later\n",
 
 -- 
 
