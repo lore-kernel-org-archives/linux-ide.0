@@ -1,109 +1,96 @@
 From: Borislav Petkov <petkovbb@googlemail.com>
-Subject: Re: [PATCH] ide: ide-cd.c fix sparse endianness warnings
-Date: Sun, 6 Jul 2008 09:25:40 +0200
-Message-ID: <20080706072540.GA31524@gollum.tnic>
-References: <1215128085.16647.40.camel@brick>
+Subject: Re: [PATCH] ide: ide-cd_ioctl.c fix sparse integer as NULL pointer
+	warnings
+Date: Sun, 6 Jul 2008 09:26:19 +0200
+Message-ID: <20080706072619.GB31524@gollum.tnic>
+References: <1215215213.27271.2.camel@brick>
 Reply-To: petkovbb@gmail.com
 Mime-Version: 1.0
 Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ik-out-1112.google.com ([66.249.90.179]:14477 "EHLO
+Received: from ik-out-1112.google.com ([66.249.90.183]:14679 "EHLO
 	ik-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751544AbYGFHZv (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 6 Jul 2008 03:25:51 -0400
-Received: by ik-out-1112.google.com with SMTP id c28so816538ika.5
-        for <linux-ide@vger.kernel.org>; Sun, 06 Jul 2008 00:25:49 -0700 (PDT)
+	with ESMTP id S1751798AbYGFH0Y (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 6 Jul 2008 03:26:24 -0400
+Received: by ik-out-1112.google.com with SMTP id c28so816583ika.5
+        for <linux-ide@vger.kernel.org>; Sun, 06 Jul 2008 00:26:23 -0700 (PDT)
 Content-Disposition: inline
-In-Reply-To: <1215128085.16647.40.camel@brick>
+In-Reply-To: <1215215213.27271.2.camel@brick>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: bzolnier@gmail.com, Harvey Harrison <harvey.harrison@gmail.com>
+To: Harvey Harrison <harvey.harrison@gmail.com>, bzolnier@gmail.com
 Cc: linux-ide <linux-ide@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>
 
-On Thu, Jul 03, 2008 at 04:34:45PM -0700, Harvey Harrison wrote:
-> drivers/ide/ide-cd.c:1276:46: warning: Using plain integer as NULL po=
-inter
-> drivers/ide/ide-cd.c:1298:19: warning: cast to restricted __be32
-> drivers/ide/ide-cd.c:1300:4: warning: cast to restricted __be32
-> drivers/ide/ide-cd.c:1522:14: warning: cast to restricted __le16
-> drivers/ide/ide-cd.c:1523:14: warning: cast to restricted __le16
-> drivers/ide/ide-cd.c:1525:14: warning: cast to restricted __be16
-> drivers/ide/ide-cd.c:1526:14: warning: cast to restricted __be16
-> drivers/ide/ide-cd.c:1667:37: warning: cast to restricted __be16
+On Fri, Jul 04, 2008 at 04:46:53PM -0700, Harvey Harrison wrote:
+> The function ide_cd_queue_pc should be checked as the bufflen arg is
+> dereferenced and lots of callers are passing in NULL.
+>=20
+> drivers/ide/ide-cd_ioctl.c:124:46: warning: Using plain integer as NU=
+LL pointer
+> drivers/ide/ide-cd_ioctl.c:149:47: warning: Using plain integer as NU=
+LL pointer
+> drivers/ide/ide-cd_ioctl.c:231:46: warning: Using plain integer as NU=
+LL pointer
+> drivers/ide/ide-cd_ioctl.c:374:46: warning: Using plain integer as NU=
+LL pointer
 >=20
 > Signed-off-by: Harvey Harrison <harvey.harrison@gmail.com>
 
-Acked-off-by: Borislav Petkov <petkovbb@gmail.com>
+Acked-by: Borislav Petkov <petkovbb@gmail.com>
 
 > ---
->  drivers/ide/ide-cd.c |   19 ++++++++-----------
->  1 files changed, 8 insertions(+), 11 deletions(-)
+>  drivers/ide/ide-cd_ioctl.c |    8 ++++----
+>  1 files changed, 4 insertions(+), 4 deletions(-)
 >=20
-> diff --git a/drivers/ide/ide-cd.c b/drivers/ide/ide-cd.c
-> index 9b4acbe..47c58a8 100644
-> --- a/drivers/ide/ide-cd.c
-> +++ b/drivers/ide/ide-cd.c
-> @@ -1273,7 +1273,7 @@ int cdrom_check_status(ide_drive_t *drive, stru=
-ct request_sense *sense)
->  	 */
->  	cmd[7] =3D cdi->sanyo_slot % 3;
+> diff --git a/drivers/ide/ide-cd_ioctl.c b/drivers/ide/ide-cd_ioctl.c
+> index fbacb7c..3a2ffd0 100644
+> --- a/drivers/ide/ide-cd_ioctl.c
+> +++ b/drivers/ide/ide-cd_ioctl.c
+> @@ -121,7 +121,7 @@ int cdrom_eject(ide_drive_t *drive, int ejectflag=
+,
+>  	cmd[0] =3D GPCMD_START_STOP_UNIT;
+>  	cmd[4] =3D loej | (ejectflag !=3D 0);
 > =20
-> -	return ide_cd_queue_pc(drive, cmd, 0, NULL, 0, sense, 0, REQ_QUIET)=
-;
-> +	return ide_cd_queue_pc(drive, cmd, 0, NULL, NULL, sense, 0, REQ_QUI=
-ET);
+> -	return ide_cd_queue_pc(drive, cmd, 0, NULL, 0, sense, 0, 0);
+> +	return ide_cd_queue_pc(drive, cmd, 0, NULL, NULL, sense, 0, 0);
 >  }
 > =20
->  static int cdrom_read_capacity(ide_drive_t *drive, unsigned long *ca=
-pacity,
-> @@ -1281,8 +1281,8 @@ static int cdrom_read_capacity(ide_drive_t *dri=
-ve, unsigned long *capacity,
->  			       struct request_sense *sense)
->  {
->  	struct {
-> -		__u32 lba;
-> -		__u32 blocklen;
-> +		__be32 lba;
-> +		__be32 blocklen;
->  	} capbuf;
+>  /* Lock the door if LOCKFLAG is nonzero; unlock it otherwise. */
+> @@ -146,7 +146,7 @@ int ide_cd_lockdoor(ide_drive_t *drive, int lockf=
+lag,
+>  		cmd[0] =3D GPCMD_PREVENT_ALLOW_MEDIUM_REMOVAL;
+>  		cmd[4] =3D lockflag ? 1 : 0;
 > =20
->  	int stat;
-> @@ -1515,15 +1515,12 @@ void ide_cdrom_update_speed(ide_drive_t *driv=
-e, u8 *buf)
->  	struct cdrom_info *cd =3D drive->driver_data;
->  	u16 curspeed, maxspeed;
-> =20
-> -	curspeed =3D *(u16 *)&buf[8 + 14];
-> -	maxspeed =3D *(u16 *)&buf[8 +  8];
-> -
->  	if (drive->dev_flags & IDE_DFLAG_LE_SPEED_FIELDS) {
-> -		curspeed =3D le16_to_cpu(curspeed);
-> -		maxspeed =3D le16_to_cpu(maxspeed);
-> +		curspeed =3D le16_to_cpup((__le16 *)&buf[8 + 14]);
-> +		maxspeed =3D le16_to_cpup((__le16 *)&buf[8 + 8]);
->  	} else {
-> -		curspeed =3D be16_to_cpu(curspeed);
-> -		maxspeed =3D be16_to_cpu(maxspeed);
-> +		curspeed =3D be16_to_cpup((__be16 *)&buf[8 + 14]);
-> +		maxspeed =3D be16_to_cpup((__be16 *)&buf[8 + 8]);
+> -		stat =3D ide_cd_queue_pc(drive, cmd, 0, NULL, 0,
+> +		stat =3D ide_cd_queue_pc(drive, cmd, 0, NULL, NULL,
+>  				       sense, 0, 0);
 >  	}
 > =20
->  	cd->current_speed =3D (curspeed + (176/2)) / 176;
-> @@ -1664,7 +1661,7 @@ static int ide_cdrom_probe_capabilities(ide_dri=
-ve_t *drive)
->  	else
->  		printk(KERN_CONT " drive");
+> @@ -228,7 +228,7 @@ int ide_cdrom_select_speed(struct cdrom_device_in=
+fo *cdi, int speed)
+>  		cmd[5] =3D speed & 0xff;
+>  	}
 > =20
-> -	printk(KERN_CONT ", %dkB Cache\n", be16_to_cpu(*(u16 *)&buf[8 + 12]=
-));
-> +	printk(KERN_CONT ", %dkB Cache\n", be16_to_cpup((__be16 *)&buf[8 + =
-12]));
+> -	stat =3D ide_cd_queue_pc(drive, cmd, 0, NULL, 0, &sense, 0, 0);
+> +	stat =3D ide_cd_queue_pc(drive, cmd, 0, NULL, NULL, &sense, 0, 0);
 > =20
->  	return nslots;
+>  	if (!ide_cdrom_get_capabilities(drive, buf)) {
+>  		ide_cdrom_update_speed(drive, buf);
+> @@ -371,7 +371,7 @@ static int ide_cd_fake_play_trkind(ide_drive_t *d=
+rive, void *arg)
+>  	lba_to_msf(lba_start,   &cmd[3], &cmd[4], &cmd[5]);
+>  	lba_to_msf(lba_end - 1, &cmd[6], &cmd[7], &cmd[8]);
+> =20
+> -	return ide_cd_queue_pc(drive, cmd, 0, NULL, 0, &sense, 0, 0);
+> +	return ide_cd_queue_pc(drive, cmd, 0, NULL, NULL, &sense, 0, 0);
 >  }
+> =20
+>  static int ide_cd_read_tochdr(ide_drive_t *drive, void *arg)
 > --=20
-> 1.5.6.1.281.g1087e
+> 1.5.6.1.322.ge904b
+>=20
+>=20
 >=20
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-ide" =
