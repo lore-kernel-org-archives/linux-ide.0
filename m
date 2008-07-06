@@ -1,104 +1,74 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH 11/50] sc1200: convert to use ->host_priv
-Date: Sun, 06 Jul 2008 19:20:21 +0200
-Message-ID: <4871023a.1ade660a.3458.627f@mx.google.com>
+Subject: [PATCH 04/50] ide: move ide_setup_pci_controller() call to ide_setup_pci_device()
+Date: Sun, 06 Jul 2008 19:20:14 +0200
+Message-ID: <48710231.1ade660a.3458.626e@mx.google.com>
 References: <20080706172010.559358957@bzolnier@gmail.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mu-out-0910.google.com ([209.85.134.186]:6801 "EHLO
-	mu-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757588AbYGFRew (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 6 Jul 2008 13:34:52 -0400
-Received: by mu-out-0910.google.com with SMTP id w8so554720mue.1
-        for <linux-ide@vger.kernel.org>; Sun, 06 Jul 2008 10:34:51 -0700 (PDT)
-Content-Disposition: inline; filename=sc1200-convert-to-use-host_priv.patch
+Received: from gv-out-0910.google.com ([216.239.58.187]:49197 "EHLO
+	gv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755699AbYGFReq (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 6 Jul 2008 13:34:46 -0400
+Received: by gv-out-0910.google.com with SMTP id e6so309131gvc.37
+        for <linux-ide@vger.kernel.org>; Sun, 06 Jul 2008 10:34:42 -0700 (PDT)
+Content-Disposition: inline; filename=ide-move-ide_setup_pci_controller-call-to-ide_setup_pci_device-s.patch
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
 Cc: linux-kernel@vger.kernel.org
 
+There should be no functional changes caused by this patch.
+
 Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 ---
- drivers/ide/pci/sc1200.c |   39 +++++++++++++++++++--------------------
- 1 file changed, 19 insertions(+), 20 deletions(-)
+ drivers/ide/setup-pci.c |   14 +++++++++-----
+ 1 file changed, 9 insertions(+), 5 deletions(-)
 
-Index: b/drivers/ide/pci/sc1200.c
+Index: b/drivers/ide/setup-pci.c
 ===================================================================
---- a/drivers/ide/pci/sc1200.c
-+++ b/drivers/ide/pci/sc1200.c
-@@ -234,21 +234,11 @@ static int sc1200_suspend (struct pci_de
- 	 * we only save state when going from full power to less
- 	 */
- 	if (state.event == PM_EVENT_ON) {
--		struct sc1200_saved_state *ss;
-+		struct ide_host *host = pci_get_drvdata(dev);
-+		struct sc1200_saved_state *ss = host->host_priv;
- 		unsigned int r;
- 
- 		/*
--		 * allocate a permanent save area, if not already allocated
--		 */
--		ss = (struct sc1200_saved_state *)pci_get_drvdata(dev);
--		if (ss == NULL) {
--			ss = kmalloc(sizeof(*ss), GFP_KERNEL);
--			if (ss == NULL)
--				return -ENOMEM;
--			pci_set_drvdata(dev, ss);
--		}
--
--		/*
- 		 * save timing registers
- 		 * (this may be unnecessary if BIOS also does it)
- 		 */
-@@ -263,7 +253,8 @@ static int sc1200_suspend (struct pci_de
- 
- static int sc1200_resume (struct pci_dev *dev)
+--- a/drivers/ide/setup-pci.c
++++ b/drivers/ide/setup-pci.c
+@@ -487,10 +487,6 @@ static int do_ide_setup_pci_device(struc
  {
--	struct sc1200_saved_state *ss;
-+	struct ide_host *host = pci_get_drvdata(dev);
-+	struct sc1200_saved_state *ss = host->host_priv;
- 	unsigned int r;
- 	int i;
+ 	int pciirq, ret;
  
-@@ -271,16 +262,12 @@ static int sc1200_resume (struct pci_dev
- 	if (i)
- 		return i;
- 
--	ss = (struct sc1200_saved_state *)pci_get_drvdata(dev);
+-	ret = ide_setup_pci_controller(dev, d, noisy);
+-	if (ret < 0)
+-		goto out;
 -
  	/*
- 	 * restore timing registers
- 	 * (this may be unnecessary if BIOS also does it)
+ 	 * Can we trust the reported IRQ?
  	 */
--	if (ss) {
--		for (r = 0; r < 8; r++)
--			pci_write_config_dword(dev, 0x40 + r * 4, ss->regs[r]);
--	}
-+	for (r = 0; r < 8; r++)
-+		pci_write_config_dword(dev, 0x40 + r * 4, ss->regs[r]);
+@@ -533,6 +529,10 @@ int ide_setup_pci_device(struct pci_dev 
+ 	hw_regs_t hw[4], *hws[] = { NULL, NULL, NULL, NULL };
+ 	int ret;
  
- 	return 0;
- }
-@@ -317,7 +304,19 @@ static const struct ide_port_info sc1200
- 
- static int __devinit sc1200_init_one(struct pci_dev *dev, const struct pci_device_id *id)
- {
--	return ide_pci_init_one(dev, &sc1200_chipset, NULL);
-+	struct sc1200_saved_state *ss = NULL;
-+	int rc;
++	ret = ide_setup_pci_controller(dev, d, 1);
++	if (ret < 0)
++		goto out;
 +
-+#ifdef CONFIG_PM
-+	ss = kmalloc(sizeof(*ss), GFP_KERNEL);
-+	if (ss == NULL)
-+		return -ENOMEM;
-+#endif
-+	rc = ide_pci_init_one(dev, &sc1200_chipset, ss);
-+	if (rc)
-+		kfree(ss);
-+
-+	return rc;
- }
+ 	ret = do_ide_setup_pci_device(dev, d, 1);
  
- static const struct pci_device_id sc1200_pci_tbl[] = {
+ 	if (ret >= 0) {
+@@ -541,7 +541,7 @@ int ide_setup_pci_device(struct pci_dev 
+ 
+ 		ret = ide_host_add(d, hws, NULL);
+ 	}
+-
++out:
+ 	return ret;
+ }
+ EXPORT_SYMBOL_GPL(ide_setup_pci_device);
+@@ -554,6 +554,10 @@ int ide_setup_pci_devices(struct pci_dev
+ 	hw_regs_t hw[4], *hws[] = { NULL, NULL, NULL, NULL };
+ 
+ 	for (i = 0; i < 2; i++) {
++		ret = ide_setup_pci_controller(pdev[i], d, !i);
++		if (ret < 0)
++			goto out;
++
+ 		ret = do_ide_setup_pci_device(pdev[i], d, !i);
+ 
+ 		/*
 
 -- 
 
