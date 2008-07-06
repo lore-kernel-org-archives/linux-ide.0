@@ -1,83 +1,104 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH 03/50] ide: respect dev->irq in do_ide_setup_pci_device() also if tried_config
-Date: Sun, 06 Jul 2008 19:20:13 +0200
-Message-ID: <4871022f.1ade660a.3458.626a@mx.google.com>
+Subject: [PATCH 11/50] sc1200: convert to use ->host_priv
+Date: Sun, 06 Jul 2008 19:20:21 +0200
+Message-ID: <4871023a.1ade660a.3458.627f@mx.google.com>
 References: <20080706172010.559358957@bzolnier@gmail.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
 Received: from mu-out-0910.google.com ([209.85.134.186]:6801 "EHLO
 	mu-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755105AbYGFRem (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 6 Jul 2008 13:34:42 -0400
+	with ESMTP id S1757588AbYGFRew (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 6 Jul 2008 13:34:52 -0400
 Received: by mu-out-0910.google.com with SMTP id w8so554720mue.1
-        for <linux-ide@vger.kernel.org>; Sun, 06 Jul 2008 10:34:40 -0700 (PDT)
-Content-Disposition: inline; filename=ide-respect-dev-irq-in-do_ide_setup_pci_device-also-if-tried_config.patch
+        for <linux-ide@vger.kernel.org>; Sun, 06 Jul 2008 10:34:51 -0700 (PDT)
+Content-Disposition: inline; filename=sc1200-convert-to-use-host_priv.patch
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
 Cc: linux-kernel@vger.kernel.org
 
-* If device is in the PCI native mode respect dev->irq regardless of
-  'tried_config' in do_ide_setup_pci_device().
-
-* Drop no longer needed 'config' argument from ide_setup_pci_controller().
-
 Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 ---
- drivers/ide/setup-pci.c |   12 +++---------
- 1 file changed, 3 insertions(+), 9 deletions(-)
+ drivers/ide/pci/sc1200.c |   39 +++++++++++++++++++--------------------
+ 1 file changed, 19 insertions(+), 20 deletions(-)
 
-Index: b/drivers/ide/setup-pci.c
+Index: b/drivers/ide/pci/sc1200.c
 ===================================================================
---- a/drivers/ide/setup-pci.c
-+++ b/drivers/ide/setup-pci.c
-@@ -392,14 +392,14 @@ int ide_hwif_setup_dma(ide_hwif_t *hwif,
-  *	@dev: PCI device
-  *	@d: IDE port info
-  *	@noisy: verbose flag
-- *	@config: returned as 1 if we configured the hardware
-  *
-  *	Set up the PCI and controller side of the IDE interface. This brings
-  *	up the PCI side of the device, checks that the device is enabled
-  *	and enables it if need be
-  */
+--- a/drivers/ide/pci/sc1200.c
++++ b/drivers/ide/pci/sc1200.c
+@@ -234,21 +234,11 @@ static int sc1200_suspend (struct pci_de
+ 	 * we only save state when going from full power to less
+ 	 */
+ 	if (state.event == PM_EVENT_ON) {
+-		struct sc1200_saved_state *ss;
++		struct ide_host *host = pci_get_drvdata(dev);
++		struct sc1200_saved_state *ss = host->host_priv;
+ 		unsigned int r;
  
--static int ide_setup_pci_controller(struct pci_dev *dev, const struct ide_port_info *d, int noisy, int *config)
-+static int ide_setup_pci_controller(struct pci_dev *dev,
-+				    const struct ide_port_info *d, int noisy)
+ 		/*
+-		 * allocate a permanent save area, if not already allocated
+-		 */
+-		ss = (struct sc1200_saved_state *)pci_get_drvdata(dev);
+-		if (ss == NULL) {
+-			ss = kmalloc(sizeof(*ss), GFP_KERNEL);
+-			if (ss == NULL)
+-				return -ENOMEM;
+-			pci_set_drvdata(dev, ss);
+-		}
+-
+-		/*
+ 		 * save timing registers
+ 		 * (this may be unnecessary if BIOS also does it)
+ 		 */
+@@ -263,7 +253,8 @@ static int sc1200_suspend (struct pci_de
+ 
+ static int sc1200_resume (struct pci_dev *dev)
  {
- 	int ret;
- 	u16 pcicmd;
-@@ -420,7 +420,6 @@ static int ide_setup_pci_controller(stru
- 		ret = ide_pci_configure(dev, d);
- 		if (ret < 0)
- 			goto out;
--		*config = 1;
- 		printk(KERN_INFO "%s: device enabled (Linux)\n", d->name);
- 	}
+-	struct sc1200_saved_state *ss;
++	struct ide_host *host = pci_get_drvdata(dev);
++	struct sc1200_saved_state *ss = host->host_priv;
+ 	unsigned int r;
+ 	int i;
  
-@@ -486,10 +485,9 @@ static int do_ide_setup_pci_device(struc
- 				   const struct ide_port_info *d,
- 				   u8 noisy)
+@@ -271,16 +262,12 @@ static int sc1200_resume (struct pci_dev
+ 	if (i)
+ 		return i;
+ 
+-	ss = (struct sc1200_saved_state *)pci_get_drvdata(dev);
+-
+ 	/*
+ 	 * restore timing registers
+ 	 * (this may be unnecessary if BIOS also does it)
+ 	 */
+-	if (ss) {
+-		for (r = 0; r < 8; r++)
+-			pci_write_config_dword(dev, 0x40 + r * 4, ss->regs[r]);
+-	}
++	for (r = 0; r < 8; r++)
++		pci_write_config_dword(dev, 0x40 + r * 4, ss->regs[r]);
+ 
+ 	return 0;
+ }
+@@ -317,7 +304,19 @@ static const struct ide_port_info sc1200
+ 
+ static int __devinit sc1200_init_one(struct pci_dev *dev, const struct pci_device_id *id)
  {
--	int tried_config = 0;
- 	int pciirq, ret;
+-	return ide_pci_init_one(dev, &sc1200_chipset, NULL);
++	struct sc1200_saved_state *ss = NULL;
++	int rc;
++
++#ifdef CONFIG_PM
++	ss = kmalloc(sizeof(*ss), GFP_KERNEL);
++	if (ss == NULL)
++		return -ENOMEM;
++#endif
++	rc = ide_pci_init_one(dev, &sc1200_chipset, ss);
++	if (rc)
++		kfree(ss);
++
++	return rc;
+ }
  
--	ret = ide_setup_pci_controller(dev, d, noisy, &tried_config);
-+	ret = ide_setup_pci_controller(dev, d, noisy);
- 	if (ret < 0)
- 		goto out;
- 
-@@ -514,10 +512,6 @@ static int do_ide_setup_pci_device(struc
- 			printk(KERN_INFO "%s: not 100%% native mode: "
- 				"will probe irqs later\n", d->name);
- 		pciirq = ret;
--	} else if (tried_config) {
--		if (noisy)
--			printk(KERN_INFO "%s: will probe irqs later\n", d->name);
--		pciirq = 0;
- 	} else if (!pciirq) {
- 		if (noisy)
- 			printk(KERN_WARNING "%s: bad irq (%d): will probe later\n",
+ static const struct pci_device_id sc1200_pci_tbl[] = {
 
 -- 
 
