@@ -1,110 +1,82 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH 13/50] via82cxxx: convert to use ->host_priv
-Date: Sun, 06 Jul 2008 19:20:23 +0200
-Message-ID: <4871023c.1ade660a.3458.6284@mx.google.com>
+Subject: [PATCH 15/50] amd74xx: cleanup ->init_chipset method
+Date: Sun, 06 Jul 2008 19:20:25 +0200
+Message-ID: <4871023f.1ade660a.3458.628b@mx.google.com>
 References: <20080706172010.559358957@bzolnier@gmail.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from gv-out-0910.google.com ([216.239.58.187]:49197 "EHLO
-	gv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758004AbYGFRey (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 6 Jul 2008 13:34:54 -0400
-Received: by gv-out-0910.google.com with SMTP id e6so309131gvc.37
-        for <linux-ide@vger.kernel.org>; Sun, 06 Jul 2008 10:34:54 -0700 (PDT)
-Content-Disposition: inline; filename=via82cxxx-convert-to-use-host_priv.patch
+Received: from ug-out-1314.google.com ([66.249.92.174]:7197 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756623AbYGFRe5 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 6 Jul 2008 13:34:57 -0400
+Received: by ug-out-1314.google.com with SMTP id h2so985609ugf.16
+        for <linux-ide@vger.kernel.org>; Sun, 06 Jul 2008 10:34:56 -0700 (PDT)
+Content-Disposition: inline; filename=amd74xx-cleanup-init_chipset-method.patch
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
 Cc: linux-kernel@vger.kernel.org
 
+Move amd_clock setup from init_chipset_amd74xx() to amd74xx_probe().
+
 Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 ---
- drivers/ide/pci/via82cxxx.c |   33 +++++++++++++++++++++------------
- 1 file changed, 21 insertions(+), 12 deletions(-)
+ drivers/ide/pci/amd74xx.c |   36 ++++++++++++++++++------------------
+ 1 file changed, 18 insertions(+), 18 deletions(-)
 
-Index: b/drivers/ide/pci/via82cxxx.c
+Index: b/drivers/ide/pci/amd74xx.c
 ===================================================================
---- a/drivers/ide/pci/via82cxxx.c
-+++ b/drivers/ide/pci/via82cxxx.c
-@@ -113,7 +113,8 @@ struct via82cxxx_dev
- static void via_set_speed(ide_hwif_t *hwif, u8 dn, struct ide_timing *timing)
- {
- 	struct pci_dev *dev = to_pci_dev(hwif->dev);
--	struct via82cxxx_dev *vdev = pci_get_drvdata(dev);
-+	struct ide_host *host = pci_get_drvdata(dev);
-+	struct via82cxxx_dev *vdev = host->host_priv;
- 	u8 t;
+--- a/drivers/ide/pci/amd74xx.c
++++ b/drivers/ide/pci/amd74xx.c
+@@ -173,24 +173,6 @@ static unsigned int __devinit init_chips
+ 		t |= 0xf0;
+ 	pci_write_config_byte(dev, AMD_IDE_CONFIG + offset, t);
  
- 	if (~vdev->via_config->flags & VIA_BAD_AST) {
-@@ -153,7 +154,8 @@ static void via_set_drive(ide_drive_t *d
- 	ide_hwif_t *hwif = drive->hwif;
- 	ide_drive_t *peer = hwif->drives + (~drive->dn & 1);
- 	struct pci_dev *dev = to_pci_dev(hwif->dev);
--	struct via82cxxx_dev *vdev = pci_get_drvdata(dev);
-+	struct ide_host *host = pci_get_drvdata(dev);
-+	struct via82cxxx_dev *vdev = host->host_priv;
- 	struct ide_timing t, p;
- 	unsigned int T, UT;
- 
-@@ -266,19 +268,13 @@ static void __devinit via_cable_detect(s
- 
- static unsigned int __devinit init_chipset_via82cxxx(struct pci_dev *dev, const char *name)
- {
-+	struct ide_host *host = pci_get_drvdata(dev);
-+	struct via82cxxx_dev *vdev = host->host_priv;
- 	struct pci_dev *isa = NULL;
--	struct via82cxxx_dev *vdev;
- 	struct via_isa_bridge *via_config;
- 	u8 t, v;
- 	u32 u;
- 
--	vdev = kzalloc(sizeof(*vdev), GFP_KERNEL);
--	if (!vdev) {
--		printk(KERN_ERR "VP_IDE: out of memory :(\n");
--		return -ENOMEM;
--	}
--	pci_set_drvdata(dev, vdev);
+-/*
+- * Determine the system bus clock.
+- */
 -
- 	/*
- 	 * Find the ISA bridge to see how good the IDE is.
- 	 */
-@@ -402,7 +398,8 @@ static int via_cable_override(struct pci
- static u8 __devinit via82cxxx_cable_detect(ide_hwif_t *hwif)
- {
- 	struct pci_dev *pdev = to_pci_dev(hwif->dev);
--	struct via82cxxx_dev *vdev = pci_get_drvdata(pdev);
-+	struct ide_host *host = pci_get_drvdata(pdev);
-+	struct via82cxxx_dev *vdev = host->host_priv;
- 
- 	if (via_cable_override(pdev))
- 		return ATA_CBL_PATA40_SHORT;
-@@ -436,6 +433,8 @@ static int __devinit via_init_one(struct
- {
- 	struct pci_dev *isa = NULL;
- 	struct via_isa_bridge *via_config;
-+	struct via82cxxx_dev *vdev;
-+	int rc;
- 	u8 idx = id->driver_data;
- 	struct ide_port_info d;
- 
-@@ -466,7 +465,17 @@ static int __devinit via_init_one(struct
- 
- 	d.udma_mask = via_config->udma_mask;
- 
--	return ide_pci_init_one(dev, &d, NULL);
-+	vdev = kzalloc(sizeof(*vdev), GFP_KERNEL);
-+	if (!vdev) {
-+		printk(KERN_ERR "VP_IDE: out of memory :(\n");
-+		return -ENOMEM;
-+	}
-+
-+	rc = ide_pci_init_one(dev, &d, vdev);
-+	if (rc)
-+		kfree(vdev);
-+
-+	return rc;
+-	amd_clock = (ide_pci_clk ? ide_pci_clk : 33) * 1000;
+-
+-	switch (amd_clock) {
+-		case 33000: amd_clock = 33333; break;
+-		case 37000: amd_clock = 37500; break;
+-		case 41000: amd_clock = 41666; break;
+-	}
+-
+-	if (amd_clock < 20000 || amd_clock > 50000) {
+-		printk(KERN_WARNING "%s: User given PCI clock speed impossible (%d), using 33 MHz instead.\n",
+-				    name, amd_clock);
+-		amd_clock = 33333;
+-	}
+-
+ 	return dev->irq;
  }
  
- static const struct pci_device_id via_pci_tbl[] = {
+@@ -302,6 +284,24 @@ static int __devinit amd74xx_probe(struc
+ 			 d.name, pci_name(dev), dev->revision,
+ 			 amd_dma[fls(d.udma_mask) - 1]);
+ 
++	/*
++	* Determine the system bus clock.
++	*/
++	amd_clock = (ide_pci_clk ? ide_pci_clk : 33) * 1000;
++
++	switch (amd_clock) {
++	case 33000: amd_clock = 33333; break;
++	case 37000: amd_clock = 37500; break;
++	case 41000: amd_clock = 41666; break;
++	}
++
++	if (amd_clock < 20000 || amd_clock > 50000) {
++		printk(KERN_WARNING "%s: User given PCI clock speed impossible"
++				    " (%d), using 33 MHz instead.\n",
++				    d.name, amd_clock);
++		amd_clock = 33333;
++	}
++
+ 	return ide_pci_init_one(dev, &d, NULL);
+ }
+ 
 
 -- 
 
