@@ -1,37 +1,40 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [PATCH #upstream-fixes] libata-acpi: filter out DIPM enable
-Date: Sun, 6 Jul 2008 16:25:52 +0100
-Message-ID: <20080706162552.47f39a6e@lxorguk.ukuu.org.uk>
-References: <4870D367.40106@kernel.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+From: bugme-daemon@bugzilla.kernel.org
+Subject: [Bug 11006] 2.6.26-rc6: pcmcia stopped working
+Date: Sun,  6 Jul 2008 08:54:56 -0700 (PDT)
+Message-ID: <20080706155456.C3DCA10805E@picon.linux-foundation.org>
+References: <bug-11006-11633@http.bugzilla.kernel.org/>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:44965 "EHLO
-	lxorguk.ukuu.org.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1753440AbYGFPn5 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 6 Jul 2008 11:43:57 -0400
-In-Reply-To: <4870D367.40106@kernel.org>
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:34062 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1756607AbYGFPz2 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 6 Jul 2008 11:55:28 -0400
+Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
+	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id m66FsuIc007660
+	for <linux-ide@vger.kernel.org>; Sun, 6 Jul 2008 08:54:57 -0700
+In-Reply-To: <bug-11006-11633@http.bugzilla.kernel.org/>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: Jeff Garzik <jeff@garzik.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, Mathieu =?UTF-8?B?QsOpcmFyZA==?= <Mathieu.Berard@crans.org>
+To: linux-ide@vger.kernel.org
 
-On Sun, 06 Jul 2008 23:15:03 +0900
-Tejun Heo <tj@kernel.org> wrote:
+http://bugzilla.kernel.org/show_bug.cgi?id=11006
 
-> Some BIOSen enable DIPM via _GTF which causes command timeouts under
-> certain configuration.  This didn't occur on 2.6.25 because 2.6.25
-> defaulted to SRST, so _GTF wasn't executed during boot probe, so ahci
-> host reset disabled DIPM and as _GTF wasn't executed after SRST, DIPM
-> wasn't enabled.  On 2.6.26, hardreset is used during probe and after
-> probe _GTF is executed enabling DIPM and thus the failures.
-> 
-> This patch could theoretically disable DIPM on machines which used to
-> have it enabled on 2.6.25 but AFAIK ahci is currently the only driver
-> which uses SATA ACPI hierarchy (_SDD) and as the host reset would have
-> always disabled DIPM, this shouldn't happen.
-> 
-> Signed-off-by: Tejun Heo <tj@kernel.org>
 
-Acked-by: Alan Cox <alan@redhat.com>
+bunk@kernel.org changed:
+
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+                 CC|                            |bunk@kernel.org
+             Status|NEW                         |CLOSED
+         Resolution|                            |CODE_FIX
+
+
+
+
+------- Comment #2 from bunk@kernel.org  2008-07-06 08:54 -------
+fixed by commit 7cd95f56cb61f5348d062527c9d3653196f6e629
+
+
+-- 
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug, or are watching the assignee.
