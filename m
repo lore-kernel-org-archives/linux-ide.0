@@ -1,71 +1,78 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH #upstream-fixes] libata-acpi: filter out DIPM enable
-Date: Sun, 06 Jul 2008 23:15:03 +0900
-Message-ID: <4870D367.40106@kernel.org>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: [KERNEL 2.6.26-rc4]  bugreport : pata_pcmcia with Sandisk Extreme
+ III 8GB
+Date: Sun, 06 Jul 2008 23:19:24 +0900
+Message-ID: <4870D46C.7000604@gmail.com>
+References: <20080528225049.9a134e0d.Kristoffer.Ericson@Gmail.com>	<20080528222740.GB20893@isilmar.linta.de>	<20080530135728.be02d3dc.Kristoffer.Ericson@Gmail.com>	<20080607223716.7d142072.komurojun-mbn@nifty.com>	<20080611072029.GB28692@comet.dominikbrodowski.net>	<20080614120055.ad8fbee0.komurojun-mbn@nifty.com>	<48537149.4040102@garzik.org>	<20080614213612.96873c25.komurojun-mbn@nifty.com>	<4855D8E2.10409@gmail.com>	<20080616221145.e3b069b9.komurojun-mbn@nifty.com>	<485669A0.6000404@gmail.com>	<20080617212345.c452d8c5.komurojun-mbn@nifty.com> <20080706103752.13935ffd.komurojun-mbn@nifty.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:38125 "EHLO hera.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756619AbYGFOPs (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 6 Jul 2008 10:15:48 -0400
+Received: from ti-out-0910.google.com ([209.85.142.190]:61541 "EHLO
+	ti-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756309AbYGFOTy (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 6 Jul 2008 10:19:54 -0400
+Received: by ti-out-0910.google.com with SMTP id b6so301559tic.23
+        for <linux-ide@vger.kernel.org>; Sun, 06 Jul 2008 07:19:52 -0700 (PDT)
+In-Reply-To: <20080706103752.13935ffd.komurojun-mbn@nifty.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, =?UTF-8?B?TWF0aGlldSBCw6lyYXJk?= <Mathieu.Berard@crans.org>
+To: Komuro <komurojun-mbn@nifty.com>
+Cc: Jeff Garzik <jeff@garzik.org>, linux-pcmcia <linux-pcmcia@lists.infradead.org>, linux-kernel@vger.kernel.org, Dominik Brodowski <linux@dominikbrodowski.net>, linux-ide@vger.kernel.org, Kristoffer Ericson <kristoffer.ericson@gmail.com>, jgarzik@redhat.com, rjw@sisk.pl
 
-Some BIOSen enable DIPM via _GTF which causes command timeouts under
-certain configuration.  This didn't occur on 2.6.25 because 2.6.25
-defaulted to SRST, so _GTF wasn't executed during boot probe, so ahci
-host reset disabled DIPM and as _GTF wasn't executed after SRST, DIPM
-wasn't enabled.  On 2.6.26, hardreset is used during probe and after
-probe _GTF is executed enabling DIPM and thus the failures.
+Hello, Komuro.
 
-This patch could theoretically disable DIPM on machines which used to
-have it enabled on 2.6.25 but AFAIK ahci is currently the only driver
-which uses SATA ACPI hierarchy (_SDD) and as the host reset would have
-always disabled DIPM, this shouldn't happen.
+Komuro wrote:
+> Hi, Tejun
+> 
+> The patch below fixes the pata_pcmcia problem.
+> 
+> I think the ap->lock points to bogus address.
+> 
+> Any comment?
+> 
+> --- linux-2.6.26-rc8/drivers/ata/libata-core.c.orig	2008-07-06 10:05:46.000000000 +0900
+> +++ linux-2.6.26-rc8/drivers/ata/libata-core.c	2008-07-06 10:09:16.000000000 +0900
+> @@ -5304,6 +5304,8 @@ struct ata_host *ata_host_alloc(struct d
+>  			goto err_out;
+>  
+>  		ap->port_no = i;
+> +		ap->lock = &ap->__lock;
+> +		spin_lock_init(ap->lock);
+>  		host->ports[i] = ap;
+>  	}
+>  
+> --- linux-2.6.26-rc8/include/linux/libata.h.orig	2008-07-06 10:03:54.000000000 +0900
+> +++ linux-2.6.26-rc8/include/linux/libata.h	2008-07-06 10:04:35.000000000 +0900
+> @@ -639,6 +639,7 @@ struct ata_port {
+>  	struct Scsi_Host	*scsi_host; /* our co-allocated scsi host */
+>  	struct ata_port_operations *ops;
+>  	spinlock_t		*lock;
+> +	spinlock_t		__lock;
+>  	unsigned long		flags;	/* ATA_FLAG_xxx */
+>  	unsigned int		pflags; /* ATA_PFLAG_xxx */
+>  	unsigned int		print_id; /* user visible unique port ID */
 
-Signed-off-by: Tejun Heo <tj@kernel.org>
----
- drivers/ata/libata-acpi.c |   14 ++++++++++++--
- 1 file changed, 12 insertions(+), 2 deletions(-)
+Hmmm... Strange.  From ata_port_alloc(),
 
-diff --git a/drivers/ata/libata-acpi.c b/drivers/ata/libata-acpi.c
-index 3ff8b14..abea74b 100644
---- a/drivers/ata/libata-acpi.c
-+++ b/drivers/ata/libata-acpi.c
-@@ -29,14 +29,16 @@
- enum {
- 	ATA_ACPI_FILTER_SETXFER	= 1 << 0,
- 	ATA_ACPI_FILTER_LOCK	= 1 << 1,
-+	ATA_ACPI_FILTER_DIPM	= 1 << 2,
- 
- 	ATA_ACPI_FILTER_DEFAULT	= ATA_ACPI_FILTER_SETXFER |
--				  ATA_ACPI_FILTER_LOCK,
-+				  ATA_ACPI_FILTER_LOCK |
-+				  ATA_ACPI_FILTER_DIPM,
- };
- 
- static unsigned int ata_acpi_gtf_filter = ATA_ACPI_FILTER_DEFAULT;
- module_param_named(acpi_gtf_filter, ata_acpi_gtf_filter, int, 0644);
--MODULE_PARM_DESC(acpi_gtf_filter, "filter mask for ACPI _GTF commands, set to filter out (0x1=set xfermode, 0x2=lock/freeze lock)");
-+MODULE_PARM_DESC(acpi_gtf_filter, "filter mask for ACPI _GTF commands, set to filter out (0x1=set xfermode, 0x2=lock/freeze lock, 0x4=DIPM)");
- 
- #define NO_PORT_MULT		0xffff
- #define SATA_ADR(root, pmp)	(((root) << 16) | (pmp))
-@@ -690,6 +692,14 @@ static int ata_acpi_filter_tf(const struct ata_taskfile *tf,
- 			return 1;
- 	}
- 
-+	if (ata_acpi_gtf_filter & ATA_ACPI_FILTER_DIPM) {
-+		/* inhibit enabling DIPM */
-+		if (tf->command == ATA_CMD_SET_FEATURES &&
-+		    tf->feature == SETFEATURES_SATA_ENABLE &&
-+		    tf->nsect == SATA_DIPM)
-+			return 1;
-+	}
-+
- 	return 0;
- }
- 
+struct ata_port *ata_port_alloc(struct ata_host *host)
+{
+	struct ata_port *ap;
+
+	DPRINTK("ENTER\n");
+
+	ap = kzalloc(sizeof(*ap), GFP_KERNEL);
+	if (!ap)
+		return NULL;
+
+	ap->pflags |= ATA_PFLAG_INITIALIZING;
+	ap->lock = &host->lock;
+	^^^^^^^^^^^^^^^^^^^^^^^
+
+How come ap->lock can get set to bogus address?  Can you please printk
+&host->lock and ap->lock after ata_host_alloc() without the patch?
+
+Thanks.
+
+-- 
+tejun
