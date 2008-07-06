@@ -1,35 +1,75 @@
-From: Justin Piszcz <jpiszcz@lucidpixels.com>
-Subject: Re: Lots of con-current I/O = resets SATA link? (2.6.25.10)
-Date: Sun, 6 Jul 2008 15:51:01 -0400 (EDT)
-Message-ID: <alpine.DEB.1.10.0807061550310.16931@p34.internal.lan>
-References: <fa.u8J+BqAcxU1mg8ob9pMBJaAHBPo@ifi.uio.no> <486FBFAB.5050303@shaw.ca> <alpine.DEB.1.10.0807051527210.8002@p34.internal.lan> <48700228.7060904@shaw.ca> <alpine.DEB.1.10.0807051923380.23222@p34.internal.lan> <alpine.DEB.1.10.0807060447180.5005@p34.internal.lan>
- <alpine.DEB.1.10.0807060741010.4930@p34.internal.lan> <alpine.DEB.1.10.0807060841530.9996@p34.internal.lan>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: pata_it821x completely broken
+Date: Sun, 6 Jul 2008 20:37:16 +0100
+Message-ID: <20080706203716.2c5bdcc5@lxorguk.ukuu.org.uk>
+References: <200807042153.56644.linux@rainbow-software.org>
+	<200807042339.02444.linux@rainbow-software.org>
+	<20080704224636.352e4a7b@lxorguk.ukuu.org.uk>
+	<200807051242.00545.linux@rainbow-software.org>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from lucidpixels.com ([75.144.35.66]:41584 "EHLO lucidpixels.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751319AbYGFTvD (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 6 Jul 2008 15:51:03 -0400
-In-Reply-To: <alpine.DEB.1.10.0807060841530.9996@p34.internal.lan>
+Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:49800 "EHLO
+	lxorguk.ukuu.org.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1753633AbYGFTzK (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 6 Jul 2008 15:55:10 -0400
+In-Reply-To: <200807051242.00545.linux@rainbow-software.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Robert Hancock <hancockr@shaw.ca>
-Cc: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, linux-ide@vger.kernel.org, xfs@oss.sgi.com, Alan Piszcz <ap@solarrain.com>
+To: Ondrej Zary <linux@rainbow-software.org>
+Cc: alan@redhat.com, LKML <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org
+
+> When I force the pass-through mode, it oopses (haven't captured it yet as it's 
+> too long). Forcing pass-through mode works fine with UDMA-capable drives:
+
+Couldn't reproduce that yet but the HPA case should be fixed by the
+following patch:
+
+pata_it821x: With newer firmware we see HPA flags
+
+From: Alan Cox <alan@redhat.com>
+
+We don't want HPA flags set at this point as we don't allow the issuing of
+HPA operations via the 'smart' firmware interface. It could be 1.7 firmware
+supports this but for the moment the blunt hammer is appealing (one reason
+being right now we don't actually know how to peek at the firmware rev!)
+---
+
+ drivers/ata/pata_it821x.c |    8 ++++++--
+ 1 files changed, 6 insertions(+), 2 deletions(-)
 
 
-
-On Sun, 6 Jul 2008, Justin Piszcz wrote:
-
-> On Sun, 6 Jul 2008, Justin Piszcz wrote:
->> On Sun, 6 Jul 2008, Justin Piszcz wrote:
->>> On Sat, 5 Jul 2008, Justin Piszcz wrote:
->>>> On Sat, 5 Jul 2008, Robert Hancock wrote:
->>> After the rebuild is completed I will perform more testing.
-
-As more or less of a last-ditch effort, I replaced all 12 SATA cables.
-
-Will see if/when the problem happens again.
-
-Justin.
-
+diff --git a/drivers/ata/pata_it821x.c b/drivers/ata/pata_it821x.c
+index e108169..977e5f8 100644
+--- a/drivers/ata/pata_it821x.c
++++ b/drivers/ata/pata_it821x.c
+@@ -80,7 +80,7 @@
+ 
+ 
+ #define DRV_NAME "pata_it821x"
+-#define DRV_VERSION "0.3.8"
++#define DRV_VERSION "0.3.9"
+ 
+ struct it821x_dev
+ {
+@@ -519,6 +519,8 @@ static void it821x_dev_config(struct ata_device *adev)
+ 	/* This is a controller firmware triggered funny, don't
+ 	   report the drive faulty! */
+ 	adev->horkage &= ~ATA_HORKAGE_DIAGNOSTIC;
++	/* No HPA in 'smart' mode */
++	adev->horkage |= ATA_HORKAGE_BROKEN_HPA;
+ }
+ 
+ /**
+@@ -546,7 +548,9 @@ static int it821x_ident_hack(struct ata_port *ap)
+ 			adev->id[76] = 0;		/* No NCQ/AN etc */
+ 		}
+ 	}
+-	return ata_cable_unknown(ap);
++	/* This is actually meaningless, but reporting 80 wire avoids
++	   warnings about cable types */
++	return ata_cable_80wire(ap);
+ }
+ 
+ 
