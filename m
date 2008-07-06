@@ -1,133 +1,242 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH 08/50] aec62xx: convert to use ->host_priv
-Date: Sun, 06 Jul 2008 19:20:18 +0200
-Message-ID: <48710236.1ade660a.3458.6279@mx.google.com>
+Subject: [PATCH 12/50] siimage: convert to use ->host_priv
+Date: Sun, 06 Jul 2008 19:20:22 +0200
+Message-ID: <4871023b.1ade660a.3458.6281@mx.google.com>
 References: <20080706172010.559358957@bzolnier@gmail.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.174]:7197 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755699AbYGFRes (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 6 Jul 2008 13:34:48 -0400
-Received: by ug-out-1314.google.com with SMTP id h2so985609ugf.16
-        for <linux-ide@vger.kernel.org>; Sun, 06 Jul 2008 10:34:47 -0700 (PDT)
-Content-Disposition: inline; filename=aec62xx-convert-to-use-host_priv.patch
+Received: from gv-out-0910.google.com ([216.239.58.184]:50363 "EHLO
+	gv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757975AbYGFRex (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 6 Jul 2008 13:34:53 -0400
+Received: by gv-out-0910.google.com with SMTP id e6so309123gvc.37
+        for <linux-ide@vger.kernel.org>; Sun, 06 Jul 2008 10:34:52 -0700 (PDT)
+Content-Disposition: inline; filename=siimage-convert-to-use-host_priv.patch
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
 Cc: linux-kernel@vger.kernel.org
 
+While at it:
+
+* Reserve PCI BAR 5 in siimage_init_one() and remove no longer needed
+  setup_mmio_siimage().
+
 Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 ---
- drivers/ide/pci/aec62xx.c |   32 ++++++++++++++++----------------
- 1 file changed, 16 insertions(+), 16 deletions(-)
+ drivers/ide/pci/siimage.c |  114 +++++++++++++++++++++++-----------------------
+ 1 file changed, 58 insertions(+), 56 deletions(-)
 
-Index: b/drivers/ide/pci/aec62xx.c
+Index: b/drivers/ide/pci/siimage.c
 ===================================================================
---- a/drivers/ide/pci/aec62xx.c
-+++ b/drivers/ide/pci/aec62xx.c
-@@ -59,10 +59,6 @@ static const struct chipset_bus_clock_li
- 	{	0,		0x00,	0x00	}
- };
+--- a/drivers/ide/pci/siimage.c
++++ b/drivers/ide/pci/siimage.c
+@@ -127,9 +127,10 @@ static inline unsigned long siimage_seld
  
--#define BUSCLOCK(D)	\
--	((struct chipset_bus_clock_list_entry *) pci_get_drvdata((D)))
--
--
- /*
-  * TO DO: active tuning and correction of cards without a bios.
-  */
-@@ -88,6 +84,8 @@ static void aec6210_set_mode(ide_drive_t
+ static u8 sil_ioread8(struct pci_dev *dev, unsigned long addr)
  {
- 	ide_hwif_t *hwif	= HWIF(drive);
++	struct ide_host *host = pci_get_drvdata(dev);
+ 	u8 tmp = 0;
+ 
+-	if (pci_get_drvdata(dev))
++	if (host->host_priv)
+ 		tmp = readb((void __iomem *)addr);
+ 	else
+ 		pci_read_config_byte(dev, addr, &tmp);
+@@ -139,9 +140,10 @@ static u8 sil_ioread8(struct pci_dev *de
+ 
+ static u16 sil_ioread16(struct pci_dev *dev, unsigned long addr)
+ {
++	struct ide_host *host = pci_get_drvdata(dev);
+ 	u16 tmp = 0;
+ 
+-	if (pci_get_drvdata(dev))
++	if (host->host_priv)
+ 		tmp = readw((void __iomem *)addr);
+ 	else
+ 		pci_read_config_word(dev, addr, &tmp);
+@@ -151,7 +153,9 @@ static u16 sil_ioread16(struct pci_dev *
+ 
+ static void sil_iowrite8(struct pci_dev *dev, u8 val, unsigned long addr)
+ {
+-	if (pci_get_drvdata(dev))
++	struct ide_host *host = pci_get_drvdata(dev);
++
++	if (host->host_priv)
+ 		writeb(val, (void __iomem *)addr);
+ 	else
+ 		pci_write_config_byte(dev, addr, val);
+@@ -159,7 +163,9 @@ static void sil_iowrite8(struct pci_dev 
+ 
+ static void sil_iowrite16(struct pci_dev *dev, u16 val, unsigned long addr)
+ {
+-	if (pci_get_drvdata(dev))
++	struct ide_host *host = pci_get_drvdata(dev);
++
++	if (host->host_priv)
+ 		writew(val, (void __iomem *)addr);
+ 	else
+ 		pci_write_config_word(dev, addr, val);
+@@ -167,7 +173,9 @@ static void sil_iowrite16(struct pci_dev
+ 
+ static void sil_iowrite32(struct pci_dev *dev, u32 val, unsigned long addr)
+ {
+-	if (pci_get_drvdata(dev))
++	struct ide_host *host = pci_get_drvdata(dev);
++
++	if (host->host_priv)
+ 		writel(val, (void __iomem *)addr);
+ 	else
+ 		pci_write_config_dword(dev, addr, val);
+@@ -445,44 +453,6 @@ static void sil_sata_pre_reset(ide_drive
+ }
+ 
+ /**
+- *	setup_mmio_siimage	-	switch controller into MMIO mode
+- *	@dev: PCI device we are configuring
+- *	@name: device name
+- *
+- *	Attempt to put the device into MMIO mode. There are some slight
+- *	complications here with certain systems where the MMIO BAR isn't
+- *	mapped, so we have to be sure that we can fall back to I/O.
+- */
+-
+-static unsigned int setup_mmio_siimage(struct pci_dev *dev, const char *name)
+-{
+-	resource_size_t bar5	= pci_resource_start(dev, 5);
+-	unsigned long barsize	= pci_resource_len(dev, 5);
+-	void __iomem *ioaddr;
+-
+-	/*
+-	 *	Drop back to PIO if we can't map the MMIO. Some	systems
+-	 *	seem to get terminally confused in the PCI spaces.
+-	 */
+-	if (!request_mem_region(bar5, barsize, name)) {
+-		printk(KERN_WARNING "siimage: IDE controller MMIO ports not "
+-				    "available.\n");
+-		return 0;
+-	}
+-
+-	ioaddr = ioremap(bar5, barsize);
+-	if (ioaddr == NULL) {
+-		release_mem_region(bar5, barsize);
+-		return 0;
+-	}
+-
+-	pci_set_master(dev);
+-	pci_set_drvdata(dev, (void *) ioaddr);
+-
+-	return 1;
+-}
+-
+-/**
+  *	init_chipset_siimage	-	set up an SI device
+  *	@dev: PCI device
+  *	@name: device name
+@@ -494,17 +464,15 @@ static unsigned int setup_mmio_siimage(s
+ static unsigned int __devinit init_chipset_siimage(struct pci_dev *dev,
+ 						   const char *name)
+ {
++	struct ide_host *host = pci_get_drvdata(dev);
++	void __iomem *ioaddr = host->host_priv;
+ 	unsigned long base, scsc_addr;
+-	void __iomem *ioaddr = NULL;
+-	u8 rev = dev->revision, tmp, BA5_EN;
++	u8 rev = dev->revision, tmp;
+ 
+ 	pci_write_config_byte(dev, PCI_CACHE_LINE_SIZE, rev ? 1 : 255);
+ 
+-	pci_read_config_byte(dev, 0x8A, &BA5_EN);
+-
+-	if ((BA5_EN & 0x01) || pci_resource_start(dev, 5))
+-		if (setup_mmio_siimage(dev, name))
+-			ioaddr = pci_get_drvdata(dev);
++	if (ioaddr)
++		pci_set_master(dev);
+ 
+ 	base = (unsigned long)ioaddr;
+ 
+@@ -592,7 +560,8 @@ static unsigned int __devinit init_chips
+ static void __devinit init_mmio_iops_siimage(ide_hwif_t *hwif)
+ {
  	struct pci_dev *dev	= to_pci_dev(hwif->dev);
+-	void *addr		= pci_get_drvdata(dev);
 +	struct ide_host *host	= pci_get_drvdata(dev);
-+	struct chipset_bus_clock_list_entry *bus_clock = host->host_priv;
- 	u16 d_conf		= 0;
- 	u8 ultra = 0, ultra_conf = 0;
- 	u8 tmp0 = 0, tmp1 = 0, tmp2 = 0;
-@@ -96,7 +94,7 @@ static void aec6210_set_mode(ide_drive_t
- 	local_irq_save(flags);
- 	/* 0x40|(2*drive->dn): Active, 0x41|(2*drive->dn): Recovery */
- 	pci_read_config_word(dev, 0x40|(2*drive->dn), &d_conf);
--	tmp0 = pci_bus_clock_list(speed, BUSCLOCK(dev));
-+	tmp0 = pci_bus_clock_list(speed, bus_clock);
- 	d_conf = ((tmp0 & 0xf0) << 4) | (tmp0 & 0xf);
- 	pci_write_config_word(dev, 0x40|(2*drive->dn), d_conf);
- 
-@@ -104,7 +102,7 @@ static void aec6210_set_mode(ide_drive_t
- 	tmp2 = 0x00;
- 	pci_read_config_byte(dev, 0x54, &ultra);
- 	tmp1 = ((0x00 << (2*drive->dn)) | (ultra & ~(3 << (2*drive->dn))));
--	ultra_conf = pci_bus_clock_list_ultra(speed, BUSCLOCK(dev));
-+	ultra_conf = pci_bus_clock_list_ultra(speed, bus_clock);
- 	tmp2 = ((ultra_conf << (2*drive->dn)) | (tmp1 & ~(3 << (2*drive->dn))));
- 	pci_write_config_byte(dev, 0x54, tmp2);
- 	local_irq_restore(flags);
-@@ -114,6 +112,8 @@ static void aec6260_set_mode(ide_drive_t
++	void *addr		= host->host_priv;
+ 	u8 ch			= hwif->channel;
+ 	struct ide_io_ports *io_ports = &hwif->io_ports;
+ 	unsigned long base;
+@@ -691,16 +660,15 @@ static void __devinit sil_quirkproc(ide_
+ static void __devinit init_iops_siimage(ide_hwif_t *hwif)
  {
- 	ide_hwif_t *hwif	= HWIF(drive);
- 	struct pci_dev *dev	= to_pci_dev(hwif->dev);
-+	struct ide_host *host	= pci_get_drvdata(dev);
-+	struct chipset_bus_clock_list_entry *bus_clock = host->host_priv;
- 	u8 unit		= (drive->select.b.unit & 0x01);
- 	u8 tmp1 = 0, tmp2 = 0;
- 	u8 ultra = 0, drive_conf = 0, ultra_conf = 0;
-@@ -122,12 +122,12 @@ static void aec6260_set_mode(ide_drive_t
- 	local_irq_save(flags);
- 	/* high 4-bits: Active, low 4-bits: Recovery */
- 	pci_read_config_byte(dev, 0x40|drive->dn, &drive_conf);
--	drive_conf = pci_bus_clock_list(speed, BUSCLOCK(dev));
-+	drive_conf = pci_bus_clock_list(speed, bus_clock);
- 	pci_write_config_byte(dev, 0x40|drive->dn, drive_conf);
+ 	struct pci_dev *dev = to_pci_dev(hwif->dev);
++	struct ide_host *host = pci_get_drvdata(dev);
  
- 	pci_read_config_byte(dev, (0x44|hwif->channel), &ultra);
- 	tmp1 = ((0x00 << (4*unit)) | (ultra & ~(7 << (4*unit))));
--	ultra_conf = pci_bus_clock_list_ultra(speed, BUSCLOCK(dev));
-+	ultra_conf = pci_bus_clock_list_ultra(speed, bus_clock);
- 	tmp2 = ((ultra_conf << (4*unit)) | (tmp1 & ~(7 << (4*unit))));
- 	pci_write_config_byte(dev, (0x44|hwif->channel), tmp2);
- 	local_irq_restore(flags);
-@@ -140,13 +140,6 @@ static void aec_set_pio_mode(ide_drive_t
+ 	hwif->hwif_data = NULL;
  
- static unsigned int __devinit init_chipset_aec62xx(struct pci_dev *dev, const char *name)
- {
--	int bus_speed = ide_pci_clk ? ide_pci_clk : 33;
+ 	/* Pessimal until we finish probing */
+ 	hwif->rqsize = 15;
+ 
+-	if (pci_get_drvdata(dev) == NULL)
+-		return;
 -
--	if (bus_speed <= 33)
--		pci_set_drvdata(dev, (void *) aec6xxx_33_base);
--	else
--		pci_set_drvdata(dev, (void *) aec6xxx_34_base);
--
- 	/* These are necessary to get AEC6280 Macintosh cards to work */
- 	if ((dev->device == PCI_DEVICE_ID_ARTOP_ATP865) ||
- 	    (dev->device == PCI_DEVICE_ID_ARTOP_ATP865R)) {
-@@ -254,10 +247,17 @@ static const struct ide_port_info aec62x
+-	init_mmio_iops_siimage(hwif);
++	if (host->host_priv)
++		init_mmio_iops_siimage(hwif);
+ }
  
- static int __devinit aec62xx_init_one(struct pci_dev *dev, const struct pci_device_id *id)
+ /**
+@@ -778,8 +746,13 @@ static const struct ide_port_info siimag
+ static int __devinit siimage_init_one(struct pci_dev *dev,
+ 				      const struct pci_device_id *id)
  {
-+	const struct chipset_bus_clock_list_entry *bus_clock;
++	void __iomem *ioaddr = NULL;
++	resource_size_t bar5 = pci_resource_start(dev, 5);
++	unsigned long barsize = pci_resource_len(dev, 5);
++	int rc;
  	struct ide_port_info d;
  	u8 idx = id->driver_data;
-+	int bus_speed = ide_pci_clk ? ide_pci_clk : 33;
- 	int err;
++	u8 BA5_EN;
  
-+	if (bus_speed <= 33)
-+		bus_clock = aec6xxx_33_base;
-+	else
-+		bus_clock = aec6xxx_34_base;
-+
- 	err = pci_enable_device(dev);
- 	if (err)
- 		return err;
-@@ -273,7 +273,7 @@ static int __devinit aec62xx_init_one(st
- 		}
+ 	d = siimage_chipsets[idx];
+ 
+@@ -795,7 +768,36 @@ static int __devinit siimage_init_one(st
+ 		d.host_flags |= IDE_HFLAG_NO_ATAPI_DMA;
  	}
  
--	err = ide_pci_init_one(dev, &d, NULL);
-+	err = ide_pci_init_one(dev, &d, (void *)bus_clock);
- 	if (err)
- 		pci_disable_device(dev);
+-	return ide_pci_init_one(dev, &d, NULL);
++	rc = pci_enable_device(dev);
++	if (rc)
++		return rc;
++
++	pci_read_config_byte(dev, 0x8A, &BA5_EN);
++	if ((BA5_EN & 0x01) || bar5) {
++		/*
++		* Drop back to PIO if we can't map the MMIO. Some systems
++		* seem to get terminally confused in the PCI spaces.
++		*/
++		if (!request_mem_region(bar5, barsize, d.name)) {
++			printk(KERN_WARNING "siimage: IDE controller MMIO "
++					    "ports not available.\n");
++		} else {
++			ioaddr = ioremap(bar5, barsize);
++			if (ioaddr == NULL)
++				release_mem_region(bar5, barsize);
++		}
++	}
++
++	rc = ide_pci_init_one(dev, &d, ioaddr);
++	if (rc) {
++		if (ioaddr) {
++			iounmap(ioaddr);
++			release_mem_region(bar5, barsize);
++		}
++		pci_disable_device(dev);
++	}
++
++	return rc;
+ }
  
+ static const struct pci_device_id siimage_pci_tbl[] = {
 
 -- 
 
