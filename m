@@ -1,62 +1,36 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [PATCH 2/8] ide: add ide_set_irq() inline helper
-Date: Mon, 7 Jul 2008 20:05:41 +0200
-Message-ID: <200807072005.42187.bzolnier@gmail.com>
-References: <200711290104.21376.bzolnier@gmail.com> <48723A9B.6030309@ru.mvista.com> <48724BB0.3080008@ru.mvista.com>
+From: Michal Soltys <soltys@ziu.info>
+Subject: Re: Lots of con-current I/O = resets SATA link? (2.6.25.10)
+Date: Mon, 07 Jul 2008 20:14:52 +0200
+Message-ID: <48725D1C.2080500@ziu.info>
+References: <fa.u8J+BqAcxU1mg8ob9pMBJaAHBPo@ifi.uio.no> <486FBFAB.5050303@shaw.ca> <alpine.DEB.1.10.0807051527210.8002@p34.internal.lan> <48700228.7060904@shaw.ca> <alpine.DEB.1.10.0807051923380.23222@p34.internal.lan> <Pine.GSO.4.64.0807071138190.20863@shaka.acc.umu.se> <alpine.DEB.1.10.0807070554270.32508@p34.internal.lan>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from yw-out-2324.google.com ([74.125.46.29]:14731 "EHLO
-	yw-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754724AbYGGSLK (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 7 Jul 2008 14:11:10 -0400
-Received: by yw-out-2324.google.com with SMTP id 9so1034424ywe.1
-        for <linux-ide@vger.kernel.org>; Mon, 07 Jul 2008 11:11:01 -0700 (PDT)
-In-Reply-To: <48724BB0.3080008@ru.mvista.com>
-Content-Disposition: inline
+Received: from drutsystem.com ([80.72.38.138]:4747 "EHLO drutsystem.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754372AbYGGSOx (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 7 Jul 2008 14:14:53 -0400
+In-Reply-To: <alpine.DEB.1.10.0807070554270.32508@p34.internal.lan>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Cc: linux-ide@vger.kernel.org, Mikhail Cherkashin <mcherkashin@ru.mvista.com>
+To: Justin Piszcz <jpiszcz@lucidpixels.com>
+Cc: Mattias Wadenstein <maswan@acc.umu.se>, Robert Hancock <hancockr@shaw.ca>, linux-raid@vger.kernel.org, linux-ide@vger.kernel.org, Alan Piszcz <ap@solarrain.com>
 
-On Monday 07 July 2008, Sergei Shtylyov wrote:
-> Hello, I wrote:
+Justin Piszcz wrote:
 > 
-> >> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 > 
-> >    We're getting "ide0: unexpected interrupt, status=0x58, count=1" with 
-> > palm_bk3710 driver when running hdparm with option -X. That interrupt 
-> > has beenidentidied to occur while ide_driveid_update() waits for non-BSY 
-> > status polling the alt. status reg.  After looking at the code there, I 
-> > couldn't help wondering why I never saw that before with any other 
-> > controller since the code looked like it was bound to produce the 
-> > unexpected interrupts -- unless I'm missing something?..
+> I have two hosts, pretty much idential, I use the Antec TruePower Trio 
+> 650 in each of them.
 > 
->      Ah, I know why: unexpected_intr() just is never called for PCI chips. 
-> Here's an related excerpt from ide_intr():
+> http://www.antec.com/us/productDetails.php?ProdID=23650
 > 
-> #ifdef CONFIG_BLK_DEV_IDEPCI
->                  if (hwif->chipset != ide_pci)
-> #endif  /* CONFIG_BLK_DEV_IDEPCI */
->                  {
->                          /*
->                           * Probably not a shared PCI interrupt,
->                           * so we can safely try to do something about it:
->                           */
->                          unexpected_intr(irq, hwgroup);
-> #ifdef CONFIG_BLK_DEV_IDEPCI
->                  } else {
->                          /*
->                           * Whack the status register, just in case
->                           * we have a leftover pending IRQ.
->                           */
->                          (void) hwif->INB(hwif->io_ports.status_addr);
-> #endif /* CONFIG_BLK_DEV_IDEPCI */
+> Justin.
+> 
 
-Yes, we may consider removing #ifdef-s and always calling unexpected_intr()
-(ide_driveid_update() needs fixing first though).
+On a related note, the best place to check out for psu reviews - 
+especially with unusual requirements in mind - is probably jonnyguru's 
+site. The mentioned psu model was reviewed some time ago (it's decent psu):
 
-Thanks,
-Bart
+http://www.jonnyguru.com/modules.php?name=NDReviews&op=Story&reid=1
+
