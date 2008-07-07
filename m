@@ -1,7 +1,7 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH 10/10] ide: remove <asm/ide.h> for some archs
-Date: Mon, 7 Jul 2008 23:58:25 +0200
-Message-ID: <200807072358.25962.bzolnier@gmail.com>
+Subject: [PATCH 2/10] ide-generic: fix ide_default_io_base() for m32r
+Date: Mon, 7 Jul 2008 23:52:59 +0200
+Message-ID: <200807072352.59495.bzolnier@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
   charset="iso-8859-1"
@@ -9,263 +9,46 @@ Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
 Received: from yw-out-2324.google.com ([74.125.46.31]:9169 "EHLO
 	yw-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758744AbYGGWA6 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 7 Jul 2008 18:00:58 -0400
+	with ESMTP id S1758205AbYGGWAv (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 7 Jul 2008 18:00:51 -0400
 Received: by yw-out-2324.google.com with SMTP id 9so1051968ywe.1
-        for <linux-ide@vger.kernel.org>; Mon, 07 Jul 2008 15:00:57 -0700 (PDT)
+        for <linux-ide@vger.kernel.org>; Mon, 07 Jul 2008 15:00:46 -0700 (PDT)
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, Hirokazu Takata <takata@linux-m32r.org>
 
-* Remove <linux/irq.h> include from <asm-ia64.h> (<linux/ide.h> includes
-  <linux/interrupt.h> which is enough).
+Fix ide_default_io_base() to match ide_default_irq().
 
-* Remove <asm/ide.h> for alpha/blackfin/h8300/ia64/m32r/sh/x86/xtensa
-  (this leaves us with arm/frv/m68k/mips/mn10300/parisc/powerpc/sparc[64]).
-
-There should be no functional changes caused by this patch.
-
+Cc: Hirokazu Takata <takata@linux-m32r.org>
 Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 ---
- include/asm-alpha/ide.h    |   20 --------------------
- include/asm-blackfin/ide.h |   25 -------------------------
- include/asm-h8300/ide.h    |   24 ------------------------
- include/asm-ia64/ide.h     |   22 ----------------------
- include/asm-m32r/ide.h     |   20 --------------------
- include/asm-sh/ide.h       |   21 ---------------------
- include/asm-x86/ide.h      |   18 ------------------
- include/asm-xtensa/ide.h   |   21 ---------------------
- include/linux/ide.h        |    6 ++++++
- 9 files changed, 6 insertions(+), 171 deletions(-)
+ include/asm-m32r/ide.h |    8 ++++++++
+ 1 file changed, 8 insertions(+)
 
-Index: b/include/asm-alpha/ide.h
-===================================================================
---- a/include/asm-alpha/ide.h
-+++ /dev/null
-@@ -1,20 +0,0 @@
--/*
-- *  linux/include/asm-alpha/ide.h
-- *
-- *  Copyright (C) 1994-1996  Linus Torvalds & authors
-- */
--
--/*
-- *  This file contains the alpha architecture specific IDE code.
-- */
--
--#ifndef __ASMalpha_IDE_H
--#define __ASMalpha_IDE_H
--
--#ifdef __KERNEL__
--
--#include <asm-generic/ide_iops.h>
--
--#endif /* __KERNEL__ */
--
--#endif /* __ASMalpha_IDE_H */
-Index: b/include/asm-blackfin/ide.h
-===================================================================
---- a/include/asm-blackfin/ide.h
-+++ /dev/null
-@@ -1,25 +0,0 @@
--/****************************************************************************/
--
--/*
-- *  linux/include/asm-blackfin/ide.h
-- *
-- *  Copyright (C) 1994-1996  Linus Torvalds & authors
-- *  Copyright (C) 2001       Lineo Inc., davidm@snapgear.com
-- *  Copyright (C) 2002       Greg Ungerer (gerg@snapgear.com)
-- *  Copyright (C) 2002       Yoshinori Sato (ysato@users.sourceforge.jp)
-- *  Copyright (C) 2005       Hennerich Michael (hennerich@blackfin.uclinux.org)
-- */
--
--/****************************************************************************/
--#ifndef _BLACKFIN_IDE_H
--#define _BLACKFIN_IDE_H
--/****************************************************************************/
--#ifdef __KERNEL__
--/****************************************************************************/
--
--#include <asm-generic/ide_iops.h>
--
--/****************************************************************************/
--#endif				/* __KERNEL__ */
--#endif				/* _BLACKFIN_IDE_H */
--/****************************************************************************/
-Index: b/include/asm-h8300/ide.h
-===================================================================
---- a/include/asm-h8300/ide.h
-+++ /dev/null
-@@ -1,24 +0,0 @@
--/****************************************************************************/
--
--/*
-- *  linux/include/asm-h8300/ide.h
-- *
-- *  Copyright (C) 1994-1996  Linus Torvalds & authors
-- *  Copyright (C) 2001       Lineo Inc., davidm@snapgear.com
-- *  Copyright (C) 2002       Greg Ungerer (gerg@snapgear.com)
-- *  Copyright (C) 2002       Yoshinori Sato (ysato@users.sourceforge.jp)
-- */
--
--/****************************************************************************/
--#ifndef _H8300_IDE_H
--#define _H8300_IDE_H
--/****************************************************************************/
--#ifdef __KERNEL__
--/****************************************************************************/
--
--#include <asm-generic/ide_iops.h>
--
--/****************************************************************************/
--#endif /* __KERNEL__ */
--#endif /* _H8300_IDE_H */
--/****************************************************************************/
-Index: b/include/asm-ia64/ide.h
-===================================================================
---- a/include/asm-ia64/ide.h
-+++ /dev/null
-@@ -1,22 +0,0 @@
--/*
-- *  linux/include/asm-ia64/ide.h
-- *
-- *  Copyright (C) 1994-1996  Linus Torvalds & authors
-- */
--
--/*
-- *  This file contains the ia64 architecture specific IDE code.
-- */
--
--#ifndef __ASM_IA64_IDE_H
--#define __ASM_IA64_IDE_H
--
--#ifdef __KERNEL__
--
--#include <linux/irq.h>
--
--#include <asm-generic/ide_iops.h>
--
--#endif /* __KERNEL__ */
--
--#endif /* __ASM_IA64_IDE_H */
 Index: b/include/asm-m32r/ide.h
 ===================================================================
 --- a/include/asm-m32r/ide.h
-+++ /dev/null
-@@ -1,20 +0,0 @@
--#ifndef _ASM_M32R_IDE_H
--#define _ASM_M32R_IDE_H
--
--/*
-- *  linux/include/asm-m32r/ide.h
-- *
-- *  Copyright (C) 1994-1996  Linus Torvalds & authors
-- */
--
--/*
-- *  This file contains the i386 architecture specific IDE code.
-- */
--
--#ifdef __KERNEL__
--
--#include <asm-generic/ide_iops.h>
--
--#endif /* __KERNEL__ */
--
--#endif /* _ASM_M32R_IDE_H */
-Index: b/include/asm-sh/ide.h
-===================================================================
---- a/include/asm-sh/ide.h
-+++ /dev/null
-@@ -1,21 +0,0 @@
--/*
-- *  linux/include/asm-sh/ide.h
-- *
-- *  Copyright (C) 1994-1996  Linus Torvalds & authors
-- */
--
--/*
-- *  This file contains the i386 architecture specific IDE code.
-- *  In future, SuperH code.
-- */
--
--#ifndef __ASM_SH_IDE_H
--#define __ASM_SH_IDE_H
--
--#ifdef __KERNEL__
--
--#include <asm-generic/ide_iops.h>
--
--#endif /* __KERNEL__ */
--
--#endif /* __ASM_SH_IDE_H */
-Index: b/include/asm-x86/ide.h
-===================================================================
---- a/include/asm-x86/ide.h
-+++ /dev/null
-@@ -1,18 +0,0 @@
--/*
-- *  Copyright (C) 1994-1996  Linus Torvalds & authors
-- */
--
--/*
-- *  This file contains the i386 architecture specific IDE code.
-- */
--
--#ifndef __ASMi386_IDE_H
--#define __ASMi386_IDE_H
--
--#ifdef __KERNEL__
--
--#include <asm-generic/ide_iops.h>
--
--#endif /* __KERNEL__ */
--
--#endif /* __ASMi386_IDE_H */
-Index: b/include/asm-xtensa/ide.h
-===================================================================
---- a/include/asm-xtensa/ide.h
-+++ /dev/null
-@@ -1,21 +0,0 @@
--/*
-- * include/asm-xtensa/ide.h
-- *
-- * This file is subject to the terms and conditions of the GNU General Public
-- * License.  See the file "COPYING" in the main directory of this archive
-- * for more details.
-- *
-- * Copyright (C) 1994 - 1996  Linus Torvalds & authors
-- * Copyright (C) 2001 - 2005 Tensilica Inc.
-- */
--
--#ifndef _XTENSA_IDE_H
--#define _XTENSA_IDE_H
--
--#ifdef __KERNEL__
--
--#include <asm-generic/ide_iops.h>
--
--#endif	/* __KERNEL__ */
--
--#endif	/* _XTENSA_IDE_H */
-Index: b/include/linux/ide.h
-===================================================================
---- a/include/linux/ide.h
-+++ b/include/linux/ide.h
-@@ -211,7 +211,13 @@ static inline int __ide_default_irq(unsi
- 	return 0;
- }
- 
-+#if defined(CONFIG_ARM) || defined(CONFIG_FRV) || defined(CONFIG_M68K) || \
-+    defined(CONFIG_MIPS) || defined(CONFIG_MN10300) || defined(CONFIG_PARISC) \
-+    || defined(CONFIG_PPC) || defined(CONFIG_SPARC) || defined(CONFIG_SPARC64)
- #include <asm/ide.h>
++++ b/include/asm-m32r/ide.h
+@@ -52,12 +52,20 @@ static __inline__ int ide_default_irq(un
+ static __inline__ unsigned long ide_default_io_base(int index)
+ {
+ 	switch (index) {
++#if defined(CONFIG_PLAT_M32700UT) || defined(CONFIG_PLAT_MAPPI2) \
++	|| defined(CONFIG_PLAT_OPSPUT)
++		case 0:	return 0x1f0;
++#elif defined(CONFIG_PLAT_MAPPI3)
++		case 0:	return 0x1f0;
++		case 1:	return 0x170;
 +#else
-+#include <asm-generic/ide_iops.h>
+ 		case 0:	return 0x1f0;
+ 		case 1:	return 0x170;
+ 		case 2: return 0x1e8;
+ 		case 3: return 0x168;
+ 		case 4: return 0x1e0;
+ 		case 5: return 0x160;
 +#endif
- 
- #ifndef MAX_HWIFS
- #if defined(CONFIG_BLACKFIN) || defined(CONFIG_H8300) || defined(CONFIG_XTENSA)
+ 		default:
+ 			return 0;
+ 	}
