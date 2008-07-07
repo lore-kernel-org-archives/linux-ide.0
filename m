@@ -1,184 +1,149 @@
-From: Gerhard Wiesinger <lists@wiesinger.com>
-Subject: Re: Lots of con-current I/O = resets SATA link? (2.6.25.10)
-Date: Mon, 7 Jul 2008 17:08:19 +0200 (CEST)
-Message-ID: <alpine.LFD.1.10.0807071705490.2997@bbs.intern>
-References: <alpine.DEB.1.10.0807051252200.12562@p34.internal.lan> <alpine.LFD.1.10.0807071649340.1160@bbs.intern>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: Re: [PATCH 2/8] ide: add ide_set_irq() inline helper
+Date: Mon, 07 Jul 2008 19:47:39 +0400
+Message-ID: <48723A9B.6030309@ru.mvista.com>
+References: <200711290104.21376.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: MULTIPART/MIXED; BOUNDARY="-1463811584-533268350-1215443300=:3171"
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <alpine.LFD.1.10.0807071649340.1160@bbs.intern>
-Sender: linux-raid-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, linux-ide@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from h155.mvista.com ([63.81.120.155]:54770 "EHLO imap.sh.mvista.com"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1752677AbYGGPri (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 7 Jul 2008 11:47:38 -0400
+In-Reply-To: <200711290104.21376.bzolnier@gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: linux-ide@vger.kernel.org, Mikhail Cherkashin <mcherkashin@ru.mvista.com>
 
-  This message is in MIME format.  The first part should be readable text,
-  while the remaining parts are likely unreadable without MIME-aware tools.
+Hello.
 
----1463811584-533268350-1215443300=:3171
-Content-Type: TEXT/PLAIN; format=flowed; charset=US-ASCII
+Bartlomiej Zolnierkiewicz wrote:
 
-Hello!
+> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 
-Missing logs attached ...
+    We're getting "ide0: unexpected interrupt, status=0x58, count=1" with 
+palm_bk3710 driver when running hdparm with option -X. That interrupt has 
+beenidentidied to occur while ide_driveid_update() waits for non-BSY status 
+polling the alt. status reg.  After looking at the code there, I couldn't help 
+wondering why I never saw that before with any other controller since the code 
+looked like it was bound to produce the unexpected interrupts -- unless I'm 
+missing something?..
 
-Ciao,
-Gerhard
+> Index: b/drivers/ide/ide-iops.c
+> ===================================================================
+> --- a/drivers/ide/ide-iops.c
+> +++ b/drivers/ide/ide-iops.c
+> @@ -688,8 +688,7 @@ int ide_driveid_update(ide_drive_t *driv
+>  	 */
+>  
+>  	SELECT_MASK(drive, 1);
+> -	if (IDE_CONTROL_REG)
+> -		hwif->OUTB(drive->ctl,IDE_CONTROL_REG);
+> +	ide_set_irq(drive, 1);
 
---
-http://www.wiesinger.com/
+    If we're going to execute the command using polling, isn't it logical to 
+*disable* drive's interrupt instead of enabling it which this code is 
+currently doing?  This looks like it might work only for the drivers having 
+the maskproc() method (of which hpt366.c is the only one that I've ever dealt 
+with).
 
+>  	msleep(50);
 
-On Mon, 7 Jul 2008, Gerhard Wiesinger wrote:
+    Not sure why this substantial delay is needed at all...
 
-> Hello!
->
-> I'm having a similar problem with a brand new Hardware under Fedora 9 x64
-> 8GB RAM
-> Motherboard: ASUS M3N-H/HDMI
-> Chipset: NForce 8300/Nvidia 750a
-> CPU: AMD AM2 5600+, 2.9GHz, Brisbane Dual Core
-> Kernel: 2.6.25.9-76.fc9.x86_64
-> Smartmontools: smartmontools-5.38-2.fc9.x86_64
-> BIOS AHCI mode
-> Power cables for ata3 and ata4 are on the same cable from an Enermax power 
-> supply.
->
-> ata1.00: ATA-7: SAMSUNG HD103UJ, 1AA01109, max UDMA7
-> ata2.00: ATA-7: SAMSUNG HD103UJ, 1AA01109, max UDMA7
-> ata3.00: ATA-7: SAMSUNG HD103UJ, 1AA01109, max UDMA7
-> ata4.00: ATA-7: SAMSUNG HD103UJ, 1AA01109, max UDMA7
-> ata5.00: ATA-7: SAMSUNG HD103UJ, 1AA01109, max UDMA7
-> ata6.00: ATA-7: SAMSUNG HD103UJ, 1AA01109, max UDMA7
-> scsi 0:0:0:0: Direct-Access     ATA      SAMSUNG HD103UJ  1AA0 PQ: 0 ANSI: 5
-> scsi 1:0:0:0: Direct-Access     ATA      SAMSUNG HD103UJ  1AA0 PQ: 0 ANSI: 5
-> scsi 2:0:0:0: Direct-Access     ATA      SAMSUNG HD103UJ  1AA0 PQ: 0 ANSI: 5
-> scsi 3:0:0:0: Direct-Access     ATA      SAMSUNG HD103UJ  1AA0 PQ: 0 ANSI: 5
-> scsi 4:0:0:0: Direct-Access     ATA      SAMSUNG HD103UJ  1AA0 PQ: 0 ANSI: 5
-> scsi 5:0:0:0: Direct-Access     ATA      SAMSUNG HD103UJ  1AA0 PQ: 0 ANSI: 5
->
-> Problem occours only on ata3, I've changed the disk Port 3 the third time 
-> (new disks) and changed the SATA cable, too. Problem still exists.
->
-> Sometimes a RAID rebuild doesn't work at all.
->
-> To get the drive to live I've to power down the system.
->
-> Logs are attached.
->
-> Can it be a bug on concurrent access of smartctl/smartd?
->
-> Any ideas?
->
-> Ciao,
-> Gerhard
->
-> --
-> http://www.wiesinger.com/
->
->
----1463811584-533268350-1215443300=:3171
-Content-Type: TEXT/plain; name=kernel.txt
-Content-Transfer-Encoding: BASE64
-Content-ID: <alpine.LFD.1.10.0807071708190.3171@bbs.intern>
-Content-Description: 
-Content-Disposition: attachment; filename=kernel.txt
+>  	hwif->OUTB(WIN_IDENTIFY, IDE_COMMAND_REG);
+>  	timeout = jiffies + WAIT_WORSTCASE;
 
-SnVsICA3IDE1OjU2OjIyIGJpZzgga2VybmVsOiBtZDogZGF0YS1jaGVjayBv
-ZiBSQUlEIGFycmF5IG1kMA0KSnVsICA3IDE1OjU2OjIyIGJpZzgga2VybmVs
-OiBtZDogbWluaW11bSBfZ3VhcmFudGVlZF8gIHNwZWVkOiAxMDAwIEtCL3Nl
-Yy9kaXNrLg0KSnVsICA3IDE1OjU2OjIyIGJpZzgga2VybmVsOiBtZDogdXNp
-bmcgbWF4aW11bSBhdmFpbGFibGUgaWRsZSBJTyBiYW5kd2lkdGggKGJ1dCBu
-b3QgbW9yZSB0aGFuIDgwMDAwIEtCL3NlYykgZm9yIGRhdGEtY2hlY2suDQpK
-dWwgIDcgMTU6NTY6MjIgYmlnOCBrZXJuZWw6IG1kOiB1c2luZyAxMjhrIHdp
-bmRvdywgb3ZlciBhIHRvdGFsIG9mIDk3Njc1OTgwOCBibG9ja3MuDQpKdWwg
-IDcgMTU6NTY6MjYgYmlnOCBrZXJuZWw6IG1kOiBkYXRhLWNoZWNrIG9mIFJB
-SUQgYXJyYXkgbWQxDQpKdWwgIDcgMTU6NTY6MjYgYmlnOCBrZXJuZWw6IG1k
-OiBtaW5pbXVtIF9ndWFyYW50ZWVkXyAgc3BlZWQ6IDEwMDAgS0Ivc2VjL2Rp
-c2suDQpKdWwgIDcgMTU6NTY6MjYgYmlnOCBrZXJuZWw6IG1kOiB1c2luZyBt
-YXhpbXVtIGF2YWlsYWJsZSBpZGxlIElPIGJhbmR3aWR0aCAoYnV0IG5vdCBt
-b3JlIHRoYW4gODAwMDAgS0Ivc2VjKSBmb3IgZGF0YS1jaGVjay4NCkp1bCAg
-NyAxNTo1NjoyNiBiaWc4IGtlcm5lbDogbWQ6IHVzaW5nIDEyOGsgd2luZG93
-LCBvdmVyIGEgdG90YWwgb2YgOTc2NzU5ODA4IGJsb2Nrcy4NCkp1bCAgNyAx
-NjowMDo1MyBiaWc4IGtlcm5lbDogYXRhMy4wMDogZXhjZXB0aW9uIEVtYXNr
-IDB4MCBTQWN0IDB4MCBTRXJyIDB4MCBhY3Rpb24gMHgyIGZyb3plbg0KSnVs
-ICA3IDE2OjAwOjUzIGJpZzgga2VybmVsOiBhdGEzLjAwOiBjbWQgZWEvMDA6
-MDA6MDA6MDA6MDAvMDA6MDA6MDA6MDA6MDAvYTAgdGFnIDANCkp1bCAgNyAx
-NjowMDo1MyBiaWc4IGtlcm5lbDogICAgICAgICAgcmVzIDQwLzAwOjAwOjAw
-OjAwOjAwLzAwOjAwOjAwOjAwOjAwL2EwIEVtYXNrIDB4NCAodGltZW91dCkN
-Ckp1bCAgNyAxNjowMDo1MyBiaWc4IGtlcm5lbDogYXRhMy4wMDogc3RhdHVz
-OiB7IERSRFkgfQ0KSnVsICA3IDE2OjAwOjUzIGJpZzgga2VybmVsOiBhdGEz
-OiBoYXJkIHJlc2V0dGluZyBsaW5rDQpKdWwgIDcgMTY6MDE6MDAgYmlnOCBr
-ZXJuZWw6IGF0YTM6IHBvcnQgaXMgc2xvdyB0byByZXNwb25kLCBwbGVhc2Ug
-YmUgcGF0aWVudCAoU3RhdHVzIDB4ODApDQpKdWwgIDcgMTY6MDE6MDMgYmln
-OCBrZXJuZWw6IGF0YTM6IHNvZnRyZXNldCBmYWlsZWQgKGRldmljZSBub3Qg
-cmVhZHkpDQpKdWwgIDcgMTY6MDE6MDMgYmlnOCBrZXJuZWw6IGF0YTM6IGhh
-cmQgcmVzZXR0aW5nIGxpbmsNCkp1bCAgNyAxNjowMToxMCBiaWc4IGtlcm5l
-bDogYXRhMzogcG9ydCBpcyBzbG93IHRvIHJlc3BvbmQsIHBsZWFzZSBiZSBw
-YXRpZW50IChTdGF0dXMgMHg4MCkNCkp1bCAgNyAxNjowMToxMyBiaWc4IGtl
-cm5lbDogYXRhMzogc29mdHJlc2V0IGZhaWxlZCAoZGV2aWNlIG5vdCByZWFk
-eSkNCkp1bCAgNyAxNjowMToxMyBiaWc4IGtlcm5lbDogYXRhMzogaGFyZCBy
-ZXNldHRpbmcgbGluaw0KSnVsICA3IDE2OjAxOjIwIGJpZzgga2VybmVsOiBh
-dGEzOiBwb3J0IGlzIHNsb3cgdG8gcmVzcG9uZCwgcGxlYXNlIGJlIHBhdGll
-bnQgKFN0YXR1cyAweDgwKQ0KSnVsICA3IDE2OjAxOjQ4IGJpZzgga2VybmVs
-OiBhdGEzOiBzb2Z0cmVzZXQgZmFpbGVkIChkZXZpY2Ugbm90IHJlYWR5KQ0K
-SnVsICA3IDE2OjAxOjQ4IGJpZzgga2VybmVsOiBhdGEzOiBsaW1pdGluZyBT
-QVRBIGxpbmsgc3BlZWQgdG8gMS41IEdicHMNCkp1bCAgNyAxNjowMTo0OCBi
-aWc4IGtlcm5lbDogYXRhMzogaGFyZCByZXNldHRpbmcgbGluaw0KSnVsICA3
-IDE2OjAxOjUzIGJpZzgga2VybmVsOiBhdGEzOiBzb2Z0cmVzZXQgZmFpbGVk
-IChkZXZpY2Ugbm90IHJlYWR5KQ0KSnVsICA3IDE2OjAxOjUzIGJpZzgga2Vy
-bmVsOiBhdGEzOiByZXNldCBmYWlsZWQsIGdpdmluZyB1cA0KSnVsICA3IDE2
-OjAxOjUzIGJpZzgga2VybmVsOiBhdGEzLjAwOiBkaXNhYmxlZA0KSnVsICA3
-IDE2OjAxOjUzIGJpZzgga2VybmVsOiBhdGEzOiBFSCBjb21wbGV0ZQ0KSnVs
-ICA3IDE2OjAxOjUzIGJpZzgga2VybmVsOiBzZCAyOjA6MDowOiBbc2RjXSBS
-ZXN1bHQ6IGhvc3RieXRlPURJRF9CQURfVEFSR0VUIGRyaXZlcmJ5dGU9RFJJ
-VkVSX09LLFNVR0dFU1RfT0sNCkp1bCAgNyAxNjowMTo1MyBiaWc4IGtlcm5l
-bDogZW5kX3JlcXVlc3Q6IEkvTyBlcnJvciwgZGV2IHNkYywgc2VjdG9yIDI5
-MTIzNjQ3DQpKdWwgIDcgMTY6MDE6NTMgYmlnOCBrZXJuZWw6IHNkIDI6MDow
-OjA6IFtzZGNdIFJlc3VsdDogaG9zdGJ5dGU9RElEX0JBRF9UQVJHRVQgZHJp
-dmVyYnl0ZT1EUklWRVJfT0ssU1VHR0VTVF9PSw0KSnVsICA3IDE2OjAxOjUz
-IGJpZzgga2VybmVsOiBlbmRfcmVxdWVzdDogSS9PIGVycm9yLCBkZXYgc2Rj
-LCBzZWN0b3IgMjkxMjQ5MjcNCkp1bCAgNyAxNjowMTo1MyBiaWc4IGtlcm5l
-bDogc2QgMjowOjA6MDogW3NkY10gUmVzdWx0OiBob3N0Ynl0ZT1ESURfQkFE
-X1RBUkdFVCBkcml2ZXJieXRlPURSSVZFUl9PSyxTVUdHRVNUX09LDQpKdWwg
-IDcgMTY6MDE6NTMgYmlnOCBrZXJuZWw6IGVuZF9yZXF1ZXN0OiBJL08gZXJy
-b3IsIGRldiBzZGMsIHNlY3RvciAyOTEyMzkwMw0KSnVsICA3IDE2OjAxOjUz
-IGJpZzgga2VybmVsOiBzZCAyOjA6MDowOiBbc2RjXSBSZXN1bHQ6IGhvc3Ri
-eXRlPURJRF9CQURfVEFSR0VUIGRyaXZlcmJ5dGU9RFJJVkVSX09LLFNVR0dF
-U1RfT0sNCkp1bCAgNyAxNjowMTo1MyBiaWc4IGtlcm5lbDogZW5kX3JlcXVl
-c3Q6IEkvTyBlcnJvciwgZGV2IHNkYywgc2VjdG9yIDExODI4OTQyMDcNCkp1
-bCAgNyAxNjowMTo1MyBiaWc4IGtlcm5lbDogc2QgMjowOjA6MDogW3NkY10g
-UmVzdWx0OiBob3N0Ynl0ZT1ESURfQkFEX1RBUkdFVCBkcml2ZXJieXRlPURS
-SVZFUl9PSyxTVUdHRVNUX09LDQpKdWwgIDcgMTY6MDE6NTMgYmlnOCBrZXJu
-ZWw6IGVuZF9yZXF1ZXN0OiBJL08gZXJyb3IsIGRldiBzZGMsIHNlY3RvciAx
-MTM5NjcxNjM5DQpKdWwgIDcgMTY6MDE6NTMgYmlnOCBrZXJuZWw6IHNkIDI6
-MDowOjA6IFtzZGNdIFJlc3VsdDogaG9zdGJ5dGU9RElEX0JBRF9UQVJHRVQg
-ZHJpdmVyYnl0ZT1EUklWRVJfT0ssU1VHR0VTVF9PSw0KSnVsICA3IDE2OjAx
-OjUzIGJpZzgga2VybmVsOiBlbmRfcmVxdWVzdDogSS9PIGVycm9yLCBkZXYg
-c2RjLCBzZWN0b3IgMTU1NzIyMjY4Nw0KSnVsICA3IDE2OjAxOjUzIGJpZzgg
-a2VybmVsOiBzZCAyOjA6MDowOiBbc2RjXSBSZXN1bHQ6IGhvc3RieXRlPURJ
-RF9CQURfVEFSR0VUIGRyaXZlcmJ5dGU9RFJJVkVSX09LLFNVR0dFU1RfT0sN
-Ckp1bCAgNyAxNjowMTo1MyBiaWc4IGtlcm5lbDogZW5kX3JlcXVlc3Q6IEkv
-TyBlcnJvciwgZGV2IHNkYywgc2VjdG9yIDI5MTIzNjQ3DQpKdWwgIDcgMTY6
-MDE6NTMgYmlnOCBrZXJuZWw6IHJhaWQ1OiBEaXNrIGZhaWx1cmUgb24gc2Rj
-MSwgZGlzYWJsaW5nIGRldmljZS4gT3BlcmF0aW9uIGNvbnRpbnVpbmcgb24g
-MiBkZXZpY2VzDQpKdWwgIDcgMTY6MDE6NTMgYmlnOCBrZXJuZWw6IHNkIDI6
-MDowOjA6IFtzZGNdIFJlc3VsdDogaG9zdGJ5dGU9RElEX0JBRF9UQVJHRVQg
-ZHJpdmVyYnl0ZT1EUklWRVJfT0ssU1VHR0VTVF9PSw0KSnVsICA3IDE2OjAx
-OjUzIGJpZzgga2VybmVsOiBlbmRfcmVxdWVzdDogSS9PIGVycm9yLCBkZXYg
-c2RjLCBzZWN0b3IgMjkxMjQ2NzENCkp1bCAgNyAxNjowMTo1MyBiaWc4IGtl
-cm5lbDogbWQ6IG1kMDogZGF0YS1jaGVjayBkb25lLg0KSnVsICA3IDE2OjAx
-OjUzIGJpZzgga2VybmVsOiBSQUlENSBjb25mIHByaW50b3V0Og0KSnVsICA3
-IDE2OjAxOjUzIGJpZzgga2VybmVsOiAgLS0tIHJkOjMgd2Q6Mg0KSnVsICA3
-IDE2OjAxOjUzIGJpZzgga2VybmVsOiAgZGlzayAwLCBvOjEsIGRldjpzZGEx
-DQpKdWwgIDcgMTY6MDE6NTMgYmlnOCBrZXJuZWw6ICBkaXNrIDEsIG86MSwg
-ZGV2OnNkYjENCkp1bCAgNyAxNjowMTo1MyBiaWc4IGtlcm5lbDogIGRpc2sg
-MiwgbzowLCBkZXY6c2RjMQ0KSnVsICA3IDE2OjAxOjUzIGJpZzgga2VybmVs
-OiBSQUlENSBjb25mIHByaW50b3V0Og0KSnVsICA3IDE2OjAxOjUzIGJpZzgg
-a2VybmVsOiAgLS0tIHJkOjMgd2Q6Mg0KSnVsICA3IDE2OjAxOjUzIGJpZzgg
-a2VybmVsOiAgZGlzayAwLCBvOjEsIGRldjpzZGExDQpKdWwgIDcgMTY6MDE6
-NTMgYmlnOCBrZXJuZWw6ICBkaXNrIDEsIG86MSwgZGV2OnNkYjENCkp1bCAg
-NyAxNjowMjo0NSBiaWc4IGtlcm5lbDogcHJvZ3JhbSBzbWFydGN0bCBpcyB1
-c2luZyBhIGRlcHJlY2F0ZWQgU0NTSSBpb2N0bCwgcGxlYXNlIGNvbnZlcnQg
-aXQgdG8gU0dfSU8NCg==
+    Here's the code that follows:
 
----1463811584-533268350-1215443300=:3171--
+>         do {
+
+    The unexpected interrupt happens in this loop -- no wonder, we have no 
+hwgroup->handler installed.
+
+>                 if (time_after(jiffies, timeout)) {
+>                         SELECT_MASK(drive, 0);
+>                         return 0;       /* drive timed-out */
+>                 }
+>                                                                                 
+>                 msleep(50);     /* give drive a breather */
+
+    Isn't that too much for "a breather"? :-)
+
+>                 stat = ide_read_altstatus(drive);
+>         } while (stat & BUSY_STAT);
+>                                                                                 
+>         msleep(50);     /* wait for IRQ and DRQ_STAT */
+
+    Again, isn't that too much?
+
+>         stat = ide_read_status(drive);
+
+    This should clear the interrupt pending state on drive...
+
+>         if (!OK_STAT(stat, DRQ_STAT, BAD_R_STAT)) {
+>                 SELECT_MASK(drive, 0);
+>                 printk("%s: CHECK for good STATUS\n", drive->name);
+>                 return 0;
+>         }
+>         local_irq_save(flags);
+>         SELECT_MASK(drive, 0);
+>         id = kmalloc(SECTOR_WORDS*4, GFP_ATOMIC);
+>         if (!id) {
+>                 local_irq_restore(flags);
+>                 return 0;
+>         }
+>         hwif->input_data(drive, NULL, id, SECTOR_SIZE);
+>         (void)ide_read_status(drive);   /* clear drive IRQ */
+
+    Too late, it's been surely cleared already.
+
+>         local_irq_enable();
+>         local_irq_restore(flags);
+
+    What's interesting, ide_config_drive_speed() code looks sane in this respect:
+
+> @@ -769,13 +768,12 @@ int ide_config_drive_speed(ide_drive_t *
+>  	SELECT_DRIVE(drive);
+>  	SELECT_MASK(drive, 0);
+>  	udelay(1);
+> -	if (IDE_CONTROL_REG)
+> -		hwif->OUTB(drive->ctl | 2, IDE_CONTROL_REG);
+> +	ide_set_irq(drive, 0);
+
+    This correctly sets nIEN... The code als calls disable_irq_nosync() which 
+might be an overkill
+
+>  	hwif->OUTB(speed, IDE_NSECTOR_REG);
+>  	hwif->OUTB(SETFEATURES_XFER, IDE_FEATURE_REG);
+>  	hwif->OUTBSYNC(drive, WIN_SETFEATURES, IDE_COMMAND_REG);
+> -	if ((IDE_CONTROL_REG) && (drive->quirk_list == 2))
+> -		hwif->OUTB(drive->ctl, IDE_CONTROL_REG);
+> +	if (drive->quirk_list == 2)
+> +		ide_set_irq(drive, 1);
+
+    I'm just not sure why set nIEN on the quirky drives at all...
+
+>  	error = __ide_wait_stat(drive, drive->ready_stat,
+>  				BUSY_STAT|DRQ_STAT|ERR_STAT,
+
+    Here's the code of ide_set_irq() for the reference:
+
+> Index: b/include/linux/ide.h
+> ===================================================================
+> --- a/include/linux/ide.h
+> +++ b/include/linux/ide.h
+> @@ -1302,4 +1302,9 @@ static inline ide_drive_t *ide_get_paire
+>  	return &hwif->drives[(drive->dn ^ 1) & 1];
+>  }
+>  
+> +static inline void ide_set_irq(ide_drive_t *drive, int on)
+> +{
+> +	drive->hwif->OUTB(drive->ctl | (on ? 0 : 2), IDE_CONTROL_REG);
+> +}
+> +
+>  #endif /* _IDE_H */
+
+MBR, Sergei
