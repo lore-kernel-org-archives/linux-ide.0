@@ -1,119 +1,60 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH] ide: add __ide_default_irq() inline helper
-Date: Mon, 7 Jul 2008 22:09:44 +0200
-Message-ID: <200807072209.44933.bzolnier@gmail.com>
+Subject: [PATCH 3/10] ide-generic: minor fix for mips
+Date: Mon, 7 Jul 2008 23:53:02 +0200
+Message-ID: <200807072353.02859.bzolnier@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
   charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from yw-out-2324.google.com ([74.125.46.31]:51832 "EHLO
+Received: from yw-out-2324.google.com ([74.125.46.29]:6551 "EHLO
 	yw-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755513AbYGGUNQ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 7 Jul 2008 16:13:16 -0400
-Received: by yw-out-2324.google.com with SMTP id 9so1043424ywe.1
-        for <linux-ide@vger.kernel.org>; Mon, 07 Jul 2008 13:12:55 -0700 (PDT)
+	with ESMTP id S1758229AbYGGWAv (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 7 Jul 2008 18:00:51 -0400
+Received: by yw-out-2324.google.com with SMTP id 9so1051972ywe.1
+        for <linux-ide@vger.kernel.org>; Mon, 07 Jul 2008 15:00:48 -0700 (PDT)
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, Ralf Baechle <ralf@linux-mips.org>
 
-Add __ide_default_irq() inline helper and use it instead of
-ide_default_irq() in ide-probe.c and ns87415.c (all host drivers
-except IDE PCI ones always setup hwif->irq so it is enough to
-check only for I/O bases 0x1f0 and 0x170).
+Move ide_probe_legacy() call to ide_generic_init() so it fails
+early if necessary and returns the proper error value (nowadays
+ide_default_io_base() is used only by ide-generic).
 
-This fixes post-2.6.25 regression since ide_default_irq()
-define could shadow ide_default_irq() inline.
-
+Cc: Ralf Baechle <ralf@linux-mips.org>
 Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 ---
-for 2.6.26
+ drivers/ide/ide-generic.c           |    4 ++++
+ include/asm-mips/mach-generic/ide.h |    2 --
+ 2 files changed, 4 insertions(+), 2 deletions(-)
 
- drivers/ide/ide-probe.c   |    8 ++------
- drivers/ide/pci/ns87415.c |    6 +-----
- include/linux/ide.h       |   15 +++++++++++++++
- 3 files changed, 18 insertions(+), 11 deletions(-)
-
-Index: b/drivers/ide/ide-probe.c
+Index: b/drivers/ide/ide-generic.c
 ===================================================================
---- a/drivers/ide/ide-probe.c
-+++ b/drivers/ide/ide-probe.c
-@@ -1280,16 +1280,12 @@ static void drive_release_dev (struct de
- 	complete(&drive->gendev_rel_comp);
- }
+--- a/drivers/ide/ide-generic.c
++++ b/drivers/ide/ide-generic.c
+@@ -87,6 +87,10 @@ static int __init ide_generic_init(void)
+ 	unsigned long io_addr;
+ 	int i, rc;
  
--#ifndef ide_default_irq
--#define ide_default_irq(irq) 0
--#endif
--
- static int hwif_init(ide_hwif_t *hwif)
- {
- 	int old_irq;
- 
- 	if (!hwif->irq) {
--		hwif->irq = ide_default_irq(hwif->io_ports.data_addr);
-+		hwif->irq = __ide_default_irq(hwif->io_ports.data_addr);
- 		if (!hwif->irq) {
- 			printk("%s: DISABLED, NO IRQ\n", hwif->name);
- 			return 0;
-@@ -1319,7 +1315,7 @@ static int hwif_init(ide_hwif_t *hwif)
- 	 *	It failed to initialise. Find the default IRQ for 
- 	 *	this port and try that.
- 	 */
--	hwif->irq = ide_default_irq(hwif->io_ports.data_addr);
-+	hwif->irq = __ide_default_irq(hwif->io_ports.data_addr);
- 	if (!hwif->irq) {
- 		printk("%s: Disabled unable to get IRQ %d.\n",
- 			hwif->name, old_irq);
-Index: b/drivers/ide/pci/ns87415.c
-===================================================================
---- a/drivers/ide/pci/ns87415.c
-+++ b/drivers/ide/pci/ns87415.c
-@@ -220,10 +220,6 @@ static int ns87415_dma_setup(ide_drive_t
- 	return 1;
- }
- 
--#ifndef ide_default_irq
--#define ide_default_irq(irq) 0
--#endif
--
- static void __devinit init_hwif_ns87415 (ide_hwif_t *hwif)
- {
- 	struct pci_dev *dev = to_pci_dev(hwif->dev);
-@@ -283,7 +279,7 @@ static void __devinit init_hwif_ns87415 
- 	}
- 
- 	if (!using_inta)
--		hwif->irq = ide_default_irq(hwif->io_ports.data_addr);
-+		hwif->irq = __ide_default_irq(hwif->io_ports.data_addr);
- 	else if (!hwif->irq && hwif->mate && hwif->mate->irq)
- 		hwif->irq = hwif->mate->irq;	/* share IRQ with mate */
- 
-Index: b/include/linux/ide.h
-===================================================================
---- a/include/linux/ide.h
-+++ b/include/linux/ide.h
-@@ -196,6 +196,21 @@ static inline void ide_std_init_ports(hw
- 	hw->io_ports.ctl_addr = ctl_addr;
- }
- 
-+/* for IDE PCI controllers in legacy mode, temporary */
-+static inline int __ide_default_irq(unsigned long base)
-+{
-+	switch (base) {
-+#ifdef CONFIG_IA64
-+	case 0x1f0: return isa_irq_to_vector(14);
-+	case 0x170: return isa_irq_to_vector(15);
-+#else
-+	case 0x1f0: return 14;
-+	case 0x170: return 15;
++#ifdef CONFIG_MIPS
++	if (!ide_probe_legacy())
++		return -ENODEV;
 +#endif
-+	}
-+	return 0;
-+}
-+
- #include <asm/ide.h>
+ 	printk(KERN_INFO DRV_NAME ": please use \"probe_mask=0x3f\" module "
+ 			 "parameter for probing all legacy ISA IDE ports\n");
  
- #if !defined(MAX_HWIFS) || defined(CONFIG_EMBEDDED)
+Index: b/include/asm-mips/mach-generic/ide.h
+===================================================================
+--- a/include/asm-mips/mach-generic/ide.h
++++ b/include/asm-mips/mach-generic/ide.h
+@@ -72,8 +72,6 @@ static __inline__ int ide_default_irq(un
+ 
+ static __inline__ unsigned long ide_default_io_base(int index)
+ {
+-	if (!ide_probe_legacy())
+-		return 0;
+ 	/*
+ 	 *      If PCI is present then it is not safe to poke around
+ 	 *      the other legacy IDE ports. Only 0x1f0 and 0x170 are
