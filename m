@@ -1,149 +1,92 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH 2/8] ide: add ide_set_irq() inline helper
-Date: Mon, 07 Jul 2008 19:47:39 +0400
-Message-ID: <48723A9B.6030309@ru.mvista.com>
-References: <200711290104.21376.bzolnier@gmail.com>
+From: Justin Piszcz <jpiszcz@lucidpixels.com>
+Subject: Re: Lots of con-current I/O = resets SATA link? (2.6.25.10)
+Date: Mon, 7 Jul 2008 12:04:06 -0400 (EDT)
+Message-ID: <alpine.DEB.1.10.0807071149530.32508@p34.internal.lan>
+References: <alpine.DEB.1.10.0807051252200.12562@p34.internal.lan> <alpine.LFD.1.10.0807071649340.1160@bbs.intern> <alpine.LFD.1.10.0807071705490.2997@bbs.intern>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from h155.mvista.com ([63.81.120.155]:54770 "EHLO imap.sh.mvista.com"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752677AbYGGPri (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 7 Jul 2008 11:47:38 -0400
-In-Reply-To: <200711290104.21376.bzolnier@gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: TEXT/PLAIN; format=flowed; charset=US-ASCII
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1755336AbYGGQEW@vger.kernel.org>
+In-Reply-To: <alpine.LFD.1.10.0807071705490.2997@bbs.intern>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Gerhard Wiesinger <lists@wiesinger.com>
+Cc: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: linux-ide@vger.kernel.org, Mikhail Cherkashin <mcherkashin@ru.mvista.com>
 
-Hello.
 
-Bartlomiej Zolnierkiewicz wrote:
 
-> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+On Mon, 7 Jul 2008, Gerhard Wiesinger wrote:
 
-    We're getting "ide0: unexpected interrupt, status=0x58, count=1" with 
-palm_bk3710 driver when running hdparm with option -X. That interrupt has 
-beenidentidied to occur while ide_driveid_update() waits for non-BSY status 
-polling the alt. status reg.  After looking at the code there, I couldn't help 
-wondering why I never saw that before with any other controller since the code 
-looked like it was bound to produce the unexpected interrupts -- unless I'm 
-missing something?..
+> Hello!
+>
+> Missing logs attached ...
+>
+> Ciao,
+> Gerhard
 
-> Index: b/drivers/ide/ide-iops.c
-> ===================================================================
-> --- a/drivers/ide/ide-iops.c
-> +++ b/drivers/ide/ide-iops.c
-> @@ -688,8 +688,7 @@ int ide_driveid_update(ide_drive_t *driv
->  	 */
->  
->  	SELECT_MASK(drive, 1);
-> -	if (IDE_CONTROL_REG)
-> -		hwif->OUTB(drive->ctl,IDE_CONTROL_REG);
-> +	ide_set_irq(drive, 1);
 
-    If we're going to execute the command using polling, isn't it logical to 
-*disable* drive's interrupt instead of enabling it which this code is 
-currently doing?  This looks like it might work only for the drivers having 
-the maskproc() method (of which hpt366.c is the only one that I've ever dealt 
-with).
+Hello!
 
->  	msleep(50);
+I'm having a similar problem with a brand new Hardware under Fedora 9 x64
+8GB RAM
+Motherboard: ASUS M3N-H/HDMI
+Chipset: NForce 8300/Nvidia 750a
+CPU: AMD AM2 5600+, 2.9GHz, Brisbane Dual Core
+Kernel: 2.6.25.9-76.fc9.x86_64
+Smartmontools: smartmontools-5.38-2.fc9.x86_64
+BIOS AHCI mode
+Power cables for ata3 and ata4 are on the same cable from an Enermax power
+supply.
 
-    Not sure why this substantial delay is needed at all...
+ata1.00: ATA-7: SAMSUNG HD103UJ, 1AA01109, max UDMA7
+ata2.00: ATA-7: SAMSUNG HD103UJ, 1AA01109, max UDMA7
+ata3.00: ATA-7: SAMSUNG HD103UJ, 1AA01109, max UDMA7
+ata4.00: ATA-7: SAMSUNG HD103UJ, 1AA01109, max UDMA7
+ata5.00: ATA-7: SAMSUNG HD103UJ, 1AA01109, max UDMA7
+ata6.00: ATA-7: SAMSUNG HD103UJ, 1AA01109, max UDMA7
+scsi 0:0:0:0: Direct-Access     ATA      SAMSUNG HD103UJ  1AA0 PQ: 0 ANSI: 5
+scsi 1:0:0:0: Direct-Access     ATA      SAMSUNG HD103UJ  1AA0 PQ: 0 ANSI: 5
+scsi 2:0:0:0: Direct-Access     ATA      SAMSUNG HD103UJ  1AA0 PQ: 0 ANSI: 5
+scsi 3:0:0:0: Direct-Access     ATA      SAMSUNG HD103UJ  1AA0 PQ: 0 ANSI: 5
+scsi 4:0:0:0: Direct-Access     ATA      SAMSUNG HD103UJ  1AA0 PQ: 0 ANSI: 5
+scsi 5:0:0:0: Direct-Access     ATA      SAMSUNG HD103UJ  1AA0 PQ: 0 ANSI: 5
 
->  	hwif->OUTB(WIN_IDENTIFY, IDE_COMMAND_REG);
->  	timeout = jiffies + WAIT_WORSTCASE;
+Problem occours only on ata3, I've changed the disk Port 3 the third time (new
+disks) and changed the SATA cable, too. Problem still exists.
 
-    Here's the code that follows:
+Sometimes a RAID rebuild doesn't work at all.
 
->         do {
+To get the drive to live I've to power down the system.
 
-    The unexpected interrupt happens in this loop -- no wonder, we have no 
-hwgroup->handler installed.
+Logs are attached.
 
->                 if (time_after(jiffies, timeout)) {
->                         SELECT_MASK(drive, 0);
->                         return 0;       /* drive timed-out */
->                 }
->                                                                                 
->                 msleep(50);     /* give drive a breather */
+Can it be a bug on concurrent access of smartctl/smartd?
 
-    Isn't that too much for "a breather"? :-)
+Any ideas?
 
->                 stat = ide_read_altstatus(drive);
->         } while (stat & BUSY_STAT);
->                                                                                 
->         msleep(50);     /* wait for IRQ and DRQ_STAT */
+Ciao,
+Gerhard
 
-    Again, isn't that too much?
+--
 
->         stat = ide_read_status(drive);
+Hi Gerhard,
 
-    This should clear the interrupt pending state on drive...
+It /could/ be the port itself if you have changed the cable and disk..
 
->         if (!OK_STAT(stat, DRQ_STAT, BAD_R_STAT)) {
->                 SELECT_MASK(drive, 0);
->                 printk("%s: CHECK for good STATUS\n", drive->name);
->                 return 0;
->         }
->         local_irq_save(flags);
->         SELECT_MASK(drive, 0);
->         id = kmalloc(SECTOR_WORDS*4, GFP_ATOMIC);
->         if (!id) {
->                 local_irq_restore(flags);
->                 return 0;
->         }
->         hwif->input_data(drive, NULL, id, SECTOR_SIZE);
->         (void)ide_read_status(drive);   /* clear drive IRQ */
+Have you tried loading the disk with dd and seeing if you can reproduce 
+the problem? You are getting the same error I get generally, I can 
+recommend turning OFF NCQ first and see if the problem goes away.
 
-    Too late, it's been surely cleared already.
+# Define DISKS.
+cd /sys/block
+DISKS=$(/bin/ls -1d sd[a-z])
 
->         local_irq_enable();
->         local_irq_restore(flags);
+# Disable NCQ on all disks.
+echo "Disabling NCQ on all disks..."
+for i in $DISKS
+do
+   echo "Disabling NCQ on $i"
+   echo 1 > /sys/block/"$i"/device/queue_depth
+done
 
-    What's interesting, ide_config_drive_speed() code looks sane in this respect:
 
-> @@ -769,13 +768,12 @@ int ide_config_drive_speed(ide_drive_t *
->  	SELECT_DRIVE(drive);
->  	SELECT_MASK(drive, 0);
->  	udelay(1);
-> -	if (IDE_CONTROL_REG)
-> -		hwif->OUTB(drive->ctl | 2, IDE_CONTROL_REG);
-> +	ide_set_irq(drive, 0);
-
-    This correctly sets nIEN... The code als calls disable_irq_nosync() which 
-might be an overkill
-
->  	hwif->OUTB(speed, IDE_NSECTOR_REG);
->  	hwif->OUTB(SETFEATURES_XFER, IDE_FEATURE_REG);
->  	hwif->OUTBSYNC(drive, WIN_SETFEATURES, IDE_COMMAND_REG);
-> -	if ((IDE_CONTROL_REG) && (drive->quirk_list == 2))
-> -		hwif->OUTB(drive->ctl, IDE_CONTROL_REG);
-> +	if (drive->quirk_list == 2)
-> +		ide_set_irq(drive, 1);
-
-    I'm just not sure why set nIEN on the quirky drives at all...
-
->  	error = __ide_wait_stat(drive, drive->ready_stat,
->  				BUSY_STAT|DRQ_STAT|ERR_STAT,
-
-    Here's the code of ide_set_irq() for the reference:
-
-> Index: b/include/linux/ide.h
-> ===================================================================
-> --- a/include/linux/ide.h
-> +++ b/include/linux/ide.h
-> @@ -1302,4 +1302,9 @@ static inline ide_drive_t *ide_get_paire
->  	return &hwif->drives[(drive->dn ^ 1) & 1];
->  }
->  
-> +static inline void ide_set_irq(ide_drive_t *drive, int on)
-> +{
-> +	drive->hwif->OUTB(drive->ctl | (on ? 0 : 2), IDE_CONTROL_REG);
-> +}
-> +
->  #endif /* _IDE_H */
-
-MBR, Sergei
+Justin.
