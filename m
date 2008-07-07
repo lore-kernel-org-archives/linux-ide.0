@@ -1,36 +1,119 @@
-From: Michal Soltys <soltys@ziu.info>
-Subject: Re: Lots of con-current I/O = resets SATA link? (2.6.25.10)
-Date: Mon, 07 Jul 2008 20:14:52 +0200
-Message-ID: <48725D1C.2080500@ziu.info>
-References: <fa.u8J+BqAcxU1mg8ob9pMBJaAHBPo@ifi.uio.no> <486FBFAB.5050303@shaw.ca> <alpine.DEB.1.10.0807051527210.8002@p34.internal.lan> <48700228.7060904@shaw.ca> <alpine.DEB.1.10.0807051923380.23222@p34.internal.lan> <Pine.GSO.4.64.0807071138190.20863@shaka.acc.umu.se> <alpine.DEB.1.10.0807070554270.32508@p34.internal.lan>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: [PATCH] ide: add __ide_default_irq() inline helper
+Date: Mon, 7 Jul 2008 22:09:44 +0200
+Message-ID: <200807072209.44933.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from drutsystem.com ([80.72.38.138]:4747 "EHLO drutsystem.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754372AbYGGSOx (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 7 Jul 2008 14:14:53 -0400
-In-Reply-To: <alpine.DEB.1.10.0807070554270.32508@p34.internal.lan>
+Received: from yw-out-2324.google.com ([74.125.46.31]:51832 "EHLO
+	yw-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755513AbYGGUNQ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 7 Jul 2008 16:13:16 -0400
+Received: by yw-out-2324.google.com with SMTP id 9so1043424ywe.1
+        for <linux-ide@vger.kernel.org>; Mon, 07 Jul 2008 13:12:55 -0700 (PDT)
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Justin Piszcz <jpiszcz@lucidpixels.com>
-Cc: Mattias Wadenstein <maswan@acc.umu.se>, Robert Hancock <hancockr@shaw.ca>, linux-raid@vger.kernel.org, linux-ide@vger.kernel.org, Alan Piszcz <ap@solarrain.com>
+To: linux-ide@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
 
-Justin Piszcz wrote:
-> 
-> 
-> I have two hosts, pretty much idential, I use the Antec TruePower Trio 
-> 650 in each of them.
-> 
-> http://www.antec.com/us/productDetails.php?ProdID=23650
-> 
-> Justin.
-> 
+Add __ide_default_irq() inline helper and use it instead of
+ide_default_irq() in ide-probe.c and ns87415.c (all host drivers
+except IDE PCI ones always setup hwif->irq so it is enough to
+check only for I/O bases 0x1f0 and 0x170).
 
-On a related note, the best place to check out for psu reviews - 
-especially with unusual requirements in mind - is probably jonnyguru's 
-site. The mentioned psu model was reviewed some time ago (it's decent psu):
+This fixes post-2.6.25 regression since ide_default_irq()
+define could shadow ide_default_irq() inline.
 
-http://www.jonnyguru.com/modules.php?name=NDReviews&op=Story&reid=1
+Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+---
+for 2.6.26
 
+ drivers/ide/ide-probe.c   |    8 ++------
+ drivers/ide/pci/ns87415.c |    6 +-----
+ include/linux/ide.h       |   15 +++++++++++++++
+ 3 files changed, 18 insertions(+), 11 deletions(-)
+
+Index: b/drivers/ide/ide-probe.c
+===================================================================
+--- a/drivers/ide/ide-probe.c
++++ b/drivers/ide/ide-probe.c
+@@ -1280,16 +1280,12 @@ static void drive_release_dev (struct de
+ 	complete(&drive->gendev_rel_comp);
+ }
+ 
+-#ifndef ide_default_irq
+-#define ide_default_irq(irq) 0
+-#endif
+-
+ static int hwif_init(ide_hwif_t *hwif)
+ {
+ 	int old_irq;
+ 
+ 	if (!hwif->irq) {
+-		hwif->irq = ide_default_irq(hwif->io_ports.data_addr);
++		hwif->irq = __ide_default_irq(hwif->io_ports.data_addr);
+ 		if (!hwif->irq) {
+ 			printk("%s: DISABLED, NO IRQ\n", hwif->name);
+ 			return 0;
+@@ -1319,7 +1315,7 @@ static int hwif_init(ide_hwif_t *hwif)
+ 	 *	It failed to initialise. Find the default IRQ for 
+ 	 *	this port and try that.
+ 	 */
+-	hwif->irq = ide_default_irq(hwif->io_ports.data_addr);
++	hwif->irq = __ide_default_irq(hwif->io_ports.data_addr);
+ 	if (!hwif->irq) {
+ 		printk("%s: Disabled unable to get IRQ %d.\n",
+ 			hwif->name, old_irq);
+Index: b/drivers/ide/pci/ns87415.c
+===================================================================
+--- a/drivers/ide/pci/ns87415.c
++++ b/drivers/ide/pci/ns87415.c
+@@ -220,10 +220,6 @@ static int ns87415_dma_setup(ide_drive_t
+ 	return 1;
+ }
+ 
+-#ifndef ide_default_irq
+-#define ide_default_irq(irq) 0
+-#endif
+-
+ static void __devinit init_hwif_ns87415 (ide_hwif_t *hwif)
+ {
+ 	struct pci_dev *dev = to_pci_dev(hwif->dev);
+@@ -283,7 +279,7 @@ static void __devinit init_hwif_ns87415 
+ 	}
+ 
+ 	if (!using_inta)
+-		hwif->irq = ide_default_irq(hwif->io_ports.data_addr);
++		hwif->irq = __ide_default_irq(hwif->io_ports.data_addr);
+ 	else if (!hwif->irq && hwif->mate && hwif->mate->irq)
+ 		hwif->irq = hwif->mate->irq;	/* share IRQ with mate */
+ 
+Index: b/include/linux/ide.h
+===================================================================
+--- a/include/linux/ide.h
++++ b/include/linux/ide.h
+@@ -196,6 +196,21 @@ static inline void ide_std_init_ports(hw
+ 	hw->io_ports.ctl_addr = ctl_addr;
+ }
+ 
++/* for IDE PCI controllers in legacy mode, temporary */
++static inline int __ide_default_irq(unsigned long base)
++{
++	switch (base) {
++#ifdef CONFIG_IA64
++	case 0x1f0: return isa_irq_to_vector(14);
++	case 0x170: return isa_irq_to_vector(15);
++#else
++	case 0x1f0: return 14;
++	case 0x170: return 15;
++#endif
++	}
++	return 0;
++}
++
+ #include <asm/ide.h>
+ 
+ #if !defined(MAX_HWIFS) || defined(CONFIG_EMBEDDED)
