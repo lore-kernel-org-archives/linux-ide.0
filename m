@@ -1,243 +1,166 @@
-From: Ondrej Zary <linux@rainbow-software.org>
-Subject: Re: pata_it821x completely broken
-Date: Mon, 7 Jul 2008 20:07:38 +0200
-Message-ID: <200807072007.40818.linux@rainbow-software.org>
-References: <200807042153.56644.linux@rainbow-software.org> <200807062350.35650.linux@rainbow-software.org> <20080706230118.GA25905@devserv.devel.redhat.com>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: [PATCH 2/8] ide: add ide_set_irq() inline helper
+Date: Mon, 7 Jul 2008 20:00:26 +0200
+Message-ID: <200807072000.26380.bzolnier@gmail.com>
+References: <200711290104.21376.bzolnier@gmail.com> <48723A9B.6030309@ru.mvista.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
   charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.atlantis.sk ([80.94.52.35]:33591 "EHLO mail.atlantis.sk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755186AbYGGSHt (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 7 Jul 2008 14:07:49 -0400
-In-Reply-To: <20080706230118.GA25905@devserv.devel.redhat.com>
+Received: from yw-out-2324.google.com ([74.125.46.28]:21027 "EHLO
+	yw-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754872AbYGGSLK (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 7 Jul 2008 14:11:10 -0400
+Received: by yw-out-2324.google.com with SMTP id 9so1034422ywe.1
+        for <linux-ide@vger.kernel.org>; Mon, 07 Jul 2008 11:11:00 -0700 (PDT)
+In-Reply-To: <48723A9B.6030309@ru.mvista.com>
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@redhat.com>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, LKML <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org
-
-On Monday 07 July 2008 01:01:18 Alan Cox wrote:
-> On Sun, Jul 06, 2008 at 11:50:33PM +0200, Ondrej Zary wrote:
-> > Thanks, it does not complain about HPA anymore. However, there are some
-> > error messages left. I thought that they were connected with the HPA, but
-> > obviously they aren't:
->
-> FLUSH_CACHE .. I would hope the firmware supports that if advertised. If so
-> then adding it to the switch in it821x_smart_qc_issue might do the trick
-> (ATA_CMD_FLUSH and ATA_CMD_FLUSH_EXT). I'd be interested to know if your
-> firmware seems to support that or whether the entire thing goes castors up
-> if it gets through.
-
-It breaks - I get more errors and it takes ages to reboot. Looks like the 
-firmware does not like that command. I don't believe that it's so stupid - is 
-it even possible to safely turn off the machine when neither FLUSH nor STOP 
-command can be issued?
-
-sd 2:0:0:0: [sdb] Synchronizing SCSI cache
-ata3.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 frozen
-ata3.00: cmd ea/00:00:00:00:00/00:00:00:00:00/a0 tag 0
-         res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
-ata3.00: status: { DRDY }
-ata3: port is slow to respond, please be patient (Status 0xd0)
-ata3: device not ready (errno=-16), forcing hardreset
-ata3: soft resetting link
-ata3.00: configured for DMA
-ata3: EH complete
-ata3.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 frozen
-ata3.00: cmd ea/00:00:00:00:00/00:00:00:00:00/a0 tag 0
-         res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
-ata3.00: status: { DRDY }
-ata3: port is slow to respond, please be patient (Status 0xd0)
-ata3: device not ready (errno=-16), forcing hardreset
-ata3: soft resetting link
-ata3.00: configured for DMA
-ata3: EH complete
-ata3.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 frozen
-ata3.00: cmd ea/00:00:00:00:00/00:00:00:00:00/a0 tag 0
-         res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
-ata3.00: status: { DRDY }
-ata3: port is slow to respond, please be patient (Status 0xd0)
-ata3: device not ready (errno=-16), forcing hardreset
-ata3: soft resetting link
-ata3.00: configured for DMA
-ata3: EH complete
-ata3.00: limiting speed to UDMA/133:PIO6
-ata3.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 frozen
-ata3.00: cmd ea/00:00:00:00:00/00:00:00:00:00/a0 tag 0
-         res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
-ata3.00: status: { DRDY }
-ata3: port is slow to respond, please be patient (Status 0xd0)
-ata3: device not ready (errno=-16), forcing hardreset
-ata3: soft resetting link
-ata3.00: configured for DMA
-ata3: EH complete
-ata3.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 frozen
-ata3.00: cmd ea/00:00:00:00:00/00:00:00:00:00/a0 tag 0
-         res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
-ata3.00: status: { DRDY }
-ata3: port is slow to respond, please be patient (Status 0xd0)
-ata3: device not ready (errno=-16), forcing hardreset
-ata3: soft resetting link
-ata3.00: configured for DMA
-ata3: EH complete
-ata3.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 frozen
-ata3.00: cmd ea/00:00:00:00:00/00:00:00:00:00/a0 tag 0
-         res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
-ata3.00: status: { DRDY }
-ata3: port is slow to respond, please be patient (Status 0xd0)
-ata3: device not ready (errno=-16), forcing hardreset
-ata3: soft resetting link
-ata3.00: configured for DMA
-ata3: EH complete
-sd 2:0:0:0: [sdb] 781422768 512-byte hardware sectors (400088 MB)
-sd 2:0:0:0: [sdb] Write Protect is off
-sd 2:0:0:0: [sdb] Write cache: enabled, read cache: enabled, doesn't support 
-DPO or FUA
-sd 2:0:0:0: [sdb] 781422768 512-byte hardware sectors (400088 MB)
-sd 2:0:0:0: [sdb] Write Protect is off
-sd 2:0:0:0: [sdb] Write cache: enabled, read cache: enabled, doesn't support 
-DPO or FUA
-ata3.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 frozen
-ata3.00: cmd ea/00:00:00:00:00/00:00:00:00:00/a0 tag 0
-         res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
-ata3.00: status: { DRDY }
-ata3: port is slow to respond, please be patient (Status 0xd0)
-ata3: device not ready (errno=-16), forcing hardreset
-ata3: soft resetting link
-ata3.00: configured for DMA
-ata3: EH complete
-ata3.00: limiting speed to UDMA/33:PIO6
-ata3.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 frozen
-ata3.00: cmd ea/00:00:00:00:00/00:00:00:00:00/a0 tag 0
-         res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
-ata3.00: status: { DRDY }
-ata3: port is slow to respond, please be patient (Status 0xd0)
-ata3: device not ready (errno=-16), forcing hardreset
-ata3: soft resetting link
-ata3.00: configured for DMA
-ata3: EH complete
-ata3.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 frozen
-ata3.00: cmd ea/00:00:00:00:00/00:00:00:00:00/a0 tag 0
-         res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
-ata3.00: status: { DRDY }
-ata3: port is slow to respond, please be patient (Status 0xd0)
-ata3: device not ready (errno=-16), forcing hardreset
-ata3: soft resetting link
-ata3.00: configured for DMA
-ata3: EH complete
-ata3.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 frozen
-ata3.00: cmd ea/00:00:00:00:00/00:00:00:00:00/a0 tag 0
-         res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
-ata3.00: status: { DRDY }
-ata3: port is slow to respond, please be patient (Status 0xd0)
-ata3: device not ready (errno=-16), forcing hardreset
-ata3: soft resetting link
-ata3.00: configured for DMA
-ata3: EH complete
-ata3.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 frozen
-ata3.00: cmd ea/00:00:00:00:00/00:00:00:00:00/a0 tag 0
-         res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
-ata3.00: status: { DRDY }
-ata3: port is slow to respond, please be patient (Status 0xd0)
-ata3: device not ready (errno=-16), forcing hardreset
-ata3: soft resetting link
-ata3.00: configured for DMA
-ata3: EH complete
-ata3.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 frozen
-ata3.00: cmd ea/00:00:00:00:00/00:00:00:00:00/a0 tag 0
-         res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
-ata3.00: status: { DRDY }
-ata3: port is slow to respond, please be patient (Status 0xd0)
-ata3: device not ready (errno=-16), forcing hardreset
-ata3: soft resetting link
-ata3.00: configured for DMA
-ata3: EH complete
-sd 2:0:0:0: [sdb] 781422768 512-byte hardware sectors (400088 MB)
-sd 2:0:0:0: [sdb] Write Protect is off
-sd 2:0:0:0: [sdb] Write cache: enabled, read cache: enabled, doesn't support 
-DPO or FUA
-sd 2:0:0:0: [sdb] 781422768 512-byte hardware sectors (400088 MB)
-sd 2:0:0:0: [sdb] Write Protect is off
-sd 2:0:0:0: [sdb] Write cache: enabled, read cache: enabled, doesn't support 
-DPO or FUA
-ata3.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 frozen
-ata3.00: cmd ea/00:00:00:00:00/00:00:00:00:00/a0 tag 0
-         res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
-ata3.00: status: { DRDY }
-ata3: port is slow to respond, please be patient (Status 0xd0)
-ata3: device not ready (errno=-16), forcing hardreset
-ata3: soft resetting link
-ata3.00: configured for DMA
-ata3: EH complete
-ata3.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 frozen
-ata3.00: cmd ea/00:00:00:00:00/00:00:00:00:00/a0 tag 0
-         res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
-ata3.00: status: { DRDY }
-ata3: port is slow to respond, please be patient (Status 0xd0)
-ata3: device not ready (errno=-16), forcing hardreset
-ata3: soft resetting link
-ata3.00: configured for DMA
-ata3: EH complete
-ata3.00: limiting speed to PIO6
-ata3.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 frozen
-ata3.00: cmd ea/00:00:00:00:00/00:00:00:00:00/a0 tag 0
-         res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
-ata3.00: status: { DRDY }
-ata3: port is slow to respond, please be patient (Status 0xd0)
-ata3: device not ready (errno=-16), forcing hardreset
-ata3: soft resetting link
-ata3.00: configured for DMA
-ata3: EH complete
-ata3.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 frozen
-ata3.00: cmd ea/00:00:00:00:00/00:00:00:00:00/a0 tag 0
-         res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
-ata3.00: status: { DRDY }
-ata3: port is slow to respond, please be patient (Status 0xd0)
-ata3: device not ready (errno=-16), forcing hardreset
-ata3: soft resetting link
-ata3.00: configured for DMA
-ata3: EH complete
-ata3.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 frozen
-ata3.00: cmd ea/00:00:00:00:00/00:00:00:00:00/a0 tag 0
-         res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
-ata3.00: status: { DRDY }
-ata3: port is slow to respond, please be patient (Status 0xd0)
-ata3: device not ready (errno=-16), forcing hardreset
-ata3: soft resetting link
-ata3.00: configured for DMA
-ata3: EH complete
-ata3.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 frozen
-ata3.00: cmd ea/00:00:00:00:00/00:00:00:00:00/a0 tag 0
-         res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
-ata3.00: status: { DRDY }
-ata3: port is slow to respond, please be patient (Status 0xd0)
-ata3: device not ready (errno=-16), forcing hardreset
-ata3: soft resetting link
-ata3.00: configured for DMA
-ata3: EH complete
-sd 2:0:0:0: [sdb] 781422768 512-byte hardware sectors (400088 MB)
-sd 2:0:0:0: [sdb] Write Protect is off
-sd 2:0:0:0: [sdb] Write cache: enabled, read cache: enabled, doesn't support 
-DPO or FUA
-sd 2:0:0:0: [sdb] 781422768 512-byte hardware sectors (400088 MB)
-sd 2:0:0:0: [sdb] Write Protect is off
-sd 2:0:0:0: [sdb] Write cache: enabled, read cache: enabled, doesn't support 
-DPO or FUA
-sd 2:0:0:0: [sdb] Result: hostbyte=0x00 driverbyte=0x08
-sd 2:0:0:0: [sdb] Sense Key : 0xb [current] [descriptor]
-sd 2:0:0:0: [sdb] ASC=0x0 ASCQ=0x0
-Restarting system.
-machine restart
+To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Cc: linux-ide@vger.kernel.org, Mikhail Cherkashin <mcherkashin@ru.mvista.com>
 
 
+Hi,
 
->
-> Alan
+On Monday 07 July 2008, Sergei Shtylyov wrote:
+> Hello.
+> 
+> Bartlomiej Zolnierkiewicz wrote:
+> 
+> > Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 
+Hmm, this patch already went in on Jan 26
+(commit 81ca691981da718727281238b435dcf1528d2fda).
 
+>     We're getting "ide0: unexpected interrupt, status=0x58, count=1" with 
+> palm_bk3710 driver when running hdparm with option -X. That interrupt has 
+> beenidentidied to occur while ide_driveid_update() waits for non-BSY status 
+> polling the alt. status reg.  After looking at the code there, I couldn't help 
+> wondering why I never saw that before with any other controller since the code 
+> looked like it was bound to produce the unexpected interrupts -- unless I'm 
+> missing something?..
 
--- 
-Ondrej Zary
+You are right, I've also noticed this old bug while working on the patch
+but I didn't have time to deal with it yet (it was kind of low-prio since
+it doesn't affect IDE PCI controllers and has been there for a long time).
+
+[ BTW I would _strongly_ prefer to discuss the old bugs under new threads
+  instead of replying to unrelated patches which just happen to be touching
+  the buggy code (like my patch which didn't cause any funtionality changes
+  and was just a preparation for adding struct ide_tp_ops). ]
+
+> > Index: b/drivers/ide/ide-iops.c
+> > ===================================================================
+> > --- a/drivers/ide/ide-iops.c
+> > +++ b/drivers/ide/ide-iops.c
+> > @@ -688,8 +688,7 @@ int ide_driveid_update(ide_drive_t *driv
+> >  	 */
+> >  
+> >  	SELECT_MASK(drive, 1);
+> > -	if (IDE_CONTROL_REG)
+> > -		hwif->OUTB(drive->ctl,IDE_CONTROL_REG);
+> > +	ide_set_irq(drive, 1);
+> 
+>     If we're going to execute the command using polling, isn't it logical to 
+> *disable* drive's interrupt instead of enabling it which this code is 
+> currently doing?  This looks like it might work only for the drivers having 
+> the maskproc() method (of which hpt366.c is the only one that I've ever dealt 
+> with).
+
+Yes, this needs fixing.
+
+> >  	msleep(50);
+> 
+>     Not sure why this substantial delay is needed at all...
+
+Probably not neeed - this code was historically based on ide-probe.c
+so I guess it came from there.
+
+> >  	hwif->OUTB(WIN_IDENTIFY, IDE_COMMAND_REG);
+> >  	timeout = jiffies + WAIT_WORSTCASE;
+> 
+>     Here's the code that follows:
+> 
+> >         do {
+> 
+>     The unexpected interrupt happens in this loop -- no wonder, we have no 
+> hwgroup->handler installed.
+> 
+> >                 if (time_after(jiffies, timeout)) {
+> >                         SELECT_MASK(drive, 0);
+> >                         return 0;       /* drive timed-out */
+> >                 }
+> >                                                                                 
+> >                 msleep(50);     /* give drive a breather */
+> 
+>     Isn't that too much for "a breather"? :-)
+
+ditto
+
+> >                 stat = ide_read_altstatus(drive);
+> >         } while (stat & BUSY_STAT);
+> >                                                                                 
+> >         msleep(50);     /* wait for IRQ and DRQ_STAT */
+> 
+>     Again, isn't that too much?
+
+ditto
+
+> >         stat = ide_read_status(drive);
+> 
+>     This should clear the interrupt pending state on drive...
+> 
+> >         if (!OK_STAT(stat, DRQ_STAT, BAD_R_STAT)) {
+> >                 SELECT_MASK(drive, 0);
+> >                 printk("%s: CHECK for good STATUS\n", drive->name);
+> >                 return 0;
+> >         }
+> >         local_irq_save(flags);
+> >         SELECT_MASK(drive, 0);
+> >         id = kmalloc(SECTOR_WORDS*4, GFP_ATOMIC);
+> >         if (!id) {
+> >                 local_irq_restore(flags);
+> >                 return 0;
+> >         }
+> >         hwif->input_data(drive, NULL, id, SECTOR_SIZE);
+> >         (void)ide_read_status(drive);   /* clear drive IRQ */
+> 
+>     Too late, it's been surely cleared already.
+
+Agreed.
+
+> >         local_irq_enable();
+> >         local_irq_restore(flags);
+> 
+>     What's interesting, ide_config_drive_speed() code looks sane in this respect:
+> 
+> > @@ -769,13 +768,12 @@ int ide_config_drive_speed(ide_drive_t *
+> >  	SELECT_DRIVE(drive);
+> >  	SELECT_MASK(drive, 0);
+> >  	udelay(1);
+> > -	if (IDE_CONTROL_REG)
+> > -		hwif->OUTB(drive->ctl | 2, IDE_CONTROL_REG);
+> > +	ide_set_irq(drive, 0);
+> 
+>     This correctly sets nIEN... The code als calls disable_irq_nosync() which 
+> might be an overkill
+> 
+> >  	hwif->OUTB(speed, IDE_NSECTOR_REG);
+> >  	hwif->OUTB(SETFEATURES_XFER, IDE_FEATURE_REG);
+> >  	hwif->OUTBSYNC(drive, WIN_SETFEATURES, IDE_COMMAND_REG);
+> > -	if ((IDE_CONTROL_REG) && (drive->quirk_list == 2))
+> > -		hwif->OUTB(drive->ctl, IDE_CONTROL_REG);
+> > +	if (drive->quirk_list == 2)
+> > +		ide_set_irq(drive, 1);
+> 
+>     I'm just not sure why set nIEN on the quirky drives at all...
+
+Agreed (however deserves a separate patch just in case we're wrong).
+
+Since you have both the affected hardware and needed expertise
+I assume that you'll take care fixing ide_driveid_update()?
+
+Thanks,
+Bart
