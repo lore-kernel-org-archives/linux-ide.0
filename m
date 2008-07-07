@@ -1,198 +1,313 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH 5/10] ide: remove <asm-cris/ide.h>
-Date: Mon, 7 Jul 2008 23:53:09 +0200
-Message-ID: <200807072353.09634.bzolnier@gmail.com>
+Subject: [PATCH 9/10] ide-generic: remove ide_default_{io_base,irq}() inlines
+Date: Mon, 7 Jul 2008 23:57:24 +0200
+Message-ID: <200807072357.24902.bzolnier@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
   charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from yw-out-2324.google.com ([74.125.46.31]:9493 "EHLO
-	yw-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758630AbYGGWBE (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 7 Jul 2008 18:01:04 -0400
-Received: by yw-out-2324.google.com with SMTP id 9so1051981ywe.1
-        for <linux-ide@vger.kernel.org>; Mon, 07 Jul 2008 15:00:51 -0700 (PDT)
+Received: from mu-out-0910.google.com ([209.85.134.186]:41763 "EHLO
+	mu-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758255AbYGGWA4 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 7 Jul 2008 18:00:56 -0400
+Received: by mu-out-0910.google.com with SMTP id w8so712931mue.1
+        for <linux-ide@vger.kernel.org>; Mon, 07 Jul 2008 15:00:55 -0700 (PDT)
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, Jesper Nilsson <Jesper.Nilsson@axis.com>, Mikael Starvik <mikael.starvik@axis.com>
+Cc: linux-kernel@vger.kernel.org
 
-Remove <asm-cris/arch-v{10,32}/ide.h> and <asm-cris/ide.h>.
+Replace ide_default_{io_base,irq}() inlines by legacy_{bases,irqs}[].
 
-This has been a broken code for some time now and needs rewrite
-to match IDE core code / host driver model anyway.
+There should be no functional changes caused by this patch.
 
-Cc: Jesper Nilsson <Jesper.Nilsson@axis.com>
-Cc: Mikael Starvik <mikael.starvik@axis.com>
 Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 ---
- include/asm-cris/arch-v10/ide.h |   91 ----------------------------------------
- include/asm-cris/arch-v32/ide.h |   56 ------------------------
- include/asm-cris/ide.h          |    1 
- 3 files changed, 148 deletions(-)
+ drivers/ide/ide-generic.c           |   30 +++++++++++++++++++--
+ include/asm-alpha/ide.h             |   24 -----------------
+ include/asm-ia64/ide.h              |   29 --------------------
+ include/asm-m32r/ide.h              |   50 ------------------------------------
+ include/asm-mips/mach-generic/ide.h |   28 --------------------
+ include/asm-x86/ide.h               |   28 --------------------
+ 6 files changed, 27 insertions(+), 162 deletions(-)
 
-Index: b/include/asm-cris/arch-v10/ide.h
+Index: b/drivers/ide/ide-generic.c
 ===================================================================
---- a/include/asm-cris/arch-v10/ide.h
-+++ /dev/null
-@@ -1,91 +0,0 @@
--/*
-- *  linux/include/asm-cris/ide.h
-- *
-- *  Copyright (C) 2000, 2001, 2002  Axis Communications AB
-- *
-- *  Authors:    Bjorn Wesen
-- *
-- */
--
--/*
-- *  This file contains the ETRAX 100LX specific IDE code.
-- */
--
--#ifndef __ASMCRIS_IDE_H
--#define __ASMCRIS_IDE_H
--
--#ifdef __KERNEL__
--
--#include <asm/arch/svinto.h>
--#include <asm/io.h>
--#include <asm-generic/ide_iops.h>
--
--
--/* ETRAX 100 can support 4 IDE busses on the same pins (serialized) */
--
--#define MAX_HWIFS	4
--
+--- a/drivers/ide/ide-generic.c
++++ b/drivers/ide/ide-generic.c
+@@ -20,6 +20,11 @@
+ #include <linux/module.h>
+ #include <linux/ide.h>
+ 
++/* FIXME: convert m32r to use ide_platform host driver */
++#ifdef CONFIG_M32R
++#include <asm/m32r.h>
++#endif
++
+ #define DRV_NAME	"ide_generic"
+ 
+ static int probe_mask = 0x03;
+@@ -80,6 +85,21 @@ static int __init ide_generic_sysfs_init
+ 	return 0;
+ }
+ 
++#if defined(CONFIG_PLAT_M32700UT) || defined(CONFIG_PLAT_MAPPI2) \
++	|| defined(CONFIG_PLAT_OPSPUT)
++static const u16 legacy_bases[] = { 0x1f0 };
++static const int legacy_irqs[]  = { PLD_IRQ_CFIREQ };
++#elif defined(CONFIG_PLAT_MAPPI3)
++static const u16 legacy_bases[] = { 0x1f0, 0x170 };
++static const int legacy_irqs[]  = { PLD_IRQ_CFIREQ, PLD_IRQ_IDEIREQ };
++#elif defined(CONFIG_ALPHA)
++static const u16 legacy_bases[] = { 0x1f0, 0x170, 0x1e8, 0x168 };
++static const int legacy_irqs[]  = { 14, 15, 11, 10 };
++#else
++static const u16 legacy_bases[] = { 0x1f0, 0x170, 0x1e8, 0x168, 0x1e0, 0x160 };
++static const int legacy_irqs[]  = { 14, 15, 11, 10, 8, 12 };
++#endif
++
+ static int __init ide_generic_init(void)
+ {
+ 	hw_regs_t hw[MAX_HWIFS], *hws[MAX_HWIFS];
+@@ -94,8 +114,8 @@ static int __init ide_generic_init(void)
+ 	printk(KERN_INFO DRV_NAME ": please use \"probe_mask=0x3f\" module "
+ 			 "parameter for probing all legacy ISA IDE ports\n");
+ 
+-	for (i = 0; i < MAX_HWIFS; i++) {
+-		io_addr = ide_default_io_base(i);
++	for (i = 0; i < ARRAY_SIZE(legacy_bases); i++) {
++		io_addr = legacy_bases[i];
+ 
+ 		hws[i] = NULL;
+ 
+@@ -117,7 +137,11 @@ static int __init ide_generic_init(void)
+ 
+ 			memset(&hw[i], 0, sizeof(hw[i]));
+ 			ide_std_init_ports(&hw[i], io_addr, io_addr + 0x206);
+-			hw[i].irq = ide_default_irq(io_addr);
++#ifdef CONFIG_IA64
++			hw[i].irq = isa_irq_to_vector(legacy_irqs[i]);
++#else
++			hw[i].irq = legacy_irqs[i];
++#endif
+ 			hw[i].chipset = ide_generic;
+ 
+ 			hws[i] = &hw[i];
+Index: b/include/asm-alpha/ide.h
+===================================================================
+--- a/include/asm-alpha/ide.h
++++ b/include/asm-alpha/ide.h
+@@ -13,30 +13,6 @@
+ 
+ #ifdef __KERNEL__
+ 
 -static inline int ide_default_irq(unsigned long base)
 -{
--	/* all IDE busses share the same IRQ, number 4.
--	 * this has the side-effect that ide-probe.c will cluster our 4 interfaces
--	 * together in a hwgroup, and will serialize accesses. this is good, because
--	 * we can't access more than one interface at the same time on ETRAX100.
--	 */
--	return 4;
+-	switch (base) {
+-		case 0x1f0: return 14;
+-		case 0x170: return 15;
+-		case 0x1e8: return 11;
+-		case 0x168: return 10;
+-		default:
+-			return 0;
+-	}
 -}
 -
 -static inline unsigned long ide_default_io_base(int index)
 -{
--	/* we have no real I/O base address per interface, since all go through the
--	 * same register. but in a bitfield in that register, we have the i/f number.
--	 * so we can use the io_base to remember that bitfield.
--	 */
--	static const unsigned long io_bases[MAX_HWIFS] = {
--		IO_FIELD(R_ATA_CTRL_DATA, sel, 0),
--		IO_FIELD(R_ATA_CTRL_DATA, sel, 1),
--		IO_FIELD(R_ATA_CTRL_DATA, sel, 2),
--		IO_FIELD(R_ATA_CTRL_DATA, sel, 3)
--	};
--	return io_bases[index];
--}
--
--/* this is called once for each interface, to setup the port addresses. data_port is the result
-- * of the ide_default_io_base call above. ctrl_port will be 0, but that is don't care for us.
-- */
--
--static inline void ide_init_hwif_ports(hw_regs_t *hw, unsigned long data_port, unsigned long ctrl_port, int *irq)
--{
--	int i;
--
--	/* fill in ports for ATA addresses 0 to 7 */
--	for (i = 0; i <= 7; i++) {
--		hw->io_ports_array[i] = data_port |
--			IO_FIELD(R_ATA_CTRL_DATA, addr, i) |
--			IO_STATE(R_ATA_CTRL_DATA, cs0, active);
--	}
--
--	/* the IDE control register is at ATA address 6, with CS1 active instead of CS0 */
--	hw->io_ports.ctl_addr = data_port |
--			IO_FIELD(R_ATA_CTRL_DATA, addr, 6) |
--			IO_STATE(R_ATA_CTRL_DATA, cs1, active);
--
--	/* whats this for ? */
--	hw->io_ports.irq_addr = 0;
--}
--
--static inline void ide_init_default_hwifs(void)
--{
--	hw_regs_t hw;
--	int index;
--
--	for(index = 0; index < MAX_HWIFS; index++) {
--		ide_init_hwif_ports(&hw, ide_default_io_base(index), 0, NULL);
--		hw.irq = ide_default_irq(ide_default_io_base(index));
--		ide_register_hw(&hw, NULL);
+-	switch (index) {
+-		case 0:	return 0x1f0;
+-		case 1:	return 0x170;
+-		case 2: return 0x1e8;
+-		case 3: return 0x168;
+-		default:
+-			return 0;
 -	}
 -}
 -
--#endif /* __KERNEL__ */
--
--#endif /* __ASMCRIS_IDE_H */
-Index: b/include/asm-cris/arch-v32/ide.h
+ #include <asm-generic/ide_iops.h>
+ 
+ #endif /* __KERNEL__ */
+Index: b/include/asm-ia64/ide.h
 ===================================================================
---- a/include/asm-cris/arch-v32/ide.h
-+++ /dev/null
-@@ -1,56 +0,0 @@
--/*
-- *  linux/include/asm-cris/ide.h
-- *
-- *  Copyright (C) 2000-2004  Axis Communications AB
-- *
-- *  Authors:    Bjorn Wesen, Mikael Starvik
-- *
-- */
+--- a/include/asm-ia64/ide.h
++++ b/include/asm-ia64/ide.h
+@@ -13,37 +13,8 @@
+ 
+ #ifdef __KERNEL__
+ 
 -
--/*
-- *  This file contains the ETRAX FS specific IDE code.
-- */
--
--#ifndef __ASMCRIS_IDE_H
--#define __ASMCRIS_IDE_H
--
--#ifdef __KERNEL__
--
--#include <asm/arch/hwregs/intr_vect.h>
--#include <asm/arch/hwregs/ata_defs.h>
--#include <asm/io.h>
--#include <asm-generic/ide_iops.h>
--
--
--/* ETRAX FS can support 4 IDE busses on the same pins (serialized) */
--
--#define MAX_HWIFS	4
--
+ #include <linux/irq.h>
+ 
 -static inline int ide_default_irq(unsigned long base)
 -{
--	/* all IDE busses share the same IRQ,
--	 * this has the side-effect that ide-probe.c will cluster our 4 interfaces
--	 * together in a hwgroup, and will serialize accesses. this is good, because
--	 * we can't access more than one interface at the same time on ETRAX100.
--	 */
--	return ATA_INTR_VECT;
+-	switch (base) {
+-	      case 0x1f0: return isa_irq_to_vector(14);
+-	      case 0x170: return isa_irq_to_vector(15);
+-	      case 0x1e8: return isa_irq_to_vector(11);
+-	      case 0x168: return isa_irq_to_vector(10);
+-	      case 0x1e0: return isa_irq_to_vector(8);
+-	      case 0x160: return isa_irq_to_vector(12);
+-	      default:
+-		return 0;
+-	}
 -}
 -
 -static inline unsigned long ide_default_io_base(int index)
 -{
--	reg_ata_rw_ctrl2 ctrl2 = {.sel = index};
--	/* we have no real I/O base address per interface, since all go through the
--	 * same register. but in a bitfield in that register, we have the i/f number.
--	 * so we can use the io_base to remember that bitfield.
--	 */
--        ctrl2.sel = index;
--
--	return REG_TYPE_CONV(unsigned long, reg_ata_rw_ctrl2, ctrl2);
+-	switch (index) {
+-	      case 0: return 0x1f0;
+-	      case 1: return 0x170;
+-	      case 2: return 0x1e8;
+-	      case 3: return 0x168;
+-	      case 4: return 0x1e0;
+-	      case 5: return 0x160;
+-	      default:
+-		return 0;
+-	}
 -}
 -
--#define IDE_ARCH_ACK_INTR
--#define ide_ack_intr(hwif)	((hwif)->ack_intr(hwif))
--
--#endif /* __KERNEL__ */
--
--#endif /* __ASMCRIS_IDE_H */
-Index: b/include/asm-cris/ide.h
+ #include <asm-generic/ide_iops.h>
+ 
+ #endif /* __KERNEL__ */
+Index: b/include/asm-m32r/ide.h
 ===================================================================
---- a/include/asm-cris/ide.h
-+++ /dev/null
-@@ -1 +0,0 @@
--#include <asm/arch/ide.h>
+--- a/include/asm-m32r/ide.h
++++ b/include/asm-m32r/ide.h
+@@ -13,56 +13,6 @@
+ 
+ #ifdef __KERNEL__
+ 
+-#include <asm/m32r.h>
+-
+-static __inline__ int ide_default_irq(unsigned long base)
+-{
+-	switch (base) {
+-#if defined(CONFIG_PLAT_M32700UT) || defined(CONFIG_PLAT_MAPPI2) \
+-	|| defined(CONFIG_PLAT_OPSPUT)
+-		case 0x1f0: return PLD_IRQ_CFIREQ;
+-		default:
+-			return 0;
+-#elif defined(CONFIG_PLAT_MAPPI3)
+-		case 0x1f0: return PLD_IRQ_CFIREQ;
+-		case 0x170: return PLD_IRQ_IDEIREQ;
+-		default:
+-			return 0;
+-#else
+-		case 0x1f0: return 14;
+-		case 0x170: return 15;
+-		case 0x1e8: return 11;
+-		case 0x168: return 10;
+-		case 0x1e0: return 8;
+-		case 0x160: return 12;
+-		default:
+-			return 0;
+-#endif
+-	}
+-}
+-
+-static __inline__ unsigned long ide_default_io_base(int index)
+-{
+-	switch (index) {
+-#if defined(CONFIG_PLAT_M32700UT) || defined(CONFIG_PLAT_MAPPI2) \
+-	|| defined(CONFIG_PLAT_OPSPUT)
+-		case 0:	return 0x1f0;
+-#elif defined(CONFIG_PLAT_MAPPI3)
+-		case 0:	return 0x1f0;
+-		case 1:	return 0x170;
+-#else
+-		case 0:	return 0x1f0;
+-		case 1:	return 0x170;
+-		case 2: return 0x1e8;
+-		case 3: return 0x168;
+-		case 4: return 0x1e0;
+-		case 5: return 0x160;
+-#endif
+-		default:
+-			return 0;
+-	}
+-}
+-
+ #include <asm-generic/ide_iops.h>
+ 
+ #endif /* __KERNEL__ */
+Index: b/include/asm-mips/mach-generic/ide.h
+===================================================================
+--- a/include/asm-mips/mach-generic/ide.h
++++ b/include/asm-mips/mach-generic/ide.h
+@@ -48,34 +48,6 @@ found:
+ #endif
+ }
+ 
+-static __inline__ int ide_default_irq(unsigned long base)
+-{
+-	switch (base) {
+-		case 0x1f0: return 14;
+-		case 0x170: return 15;
+-		case 0x1e8: return 11;
+-		case 0x168: return 10;
+-		case 0x1e0: return 8;
+-		case 0x160: return 12;
+-		default:
+-			return 0;
+-	}
+-}
+-
+-static __inline__ unsigned long ide_default_io_base(int index)
+-{
+-	switch (index) {
+-	case 0: return 0x1f0;
+-	case 1: return 0x170;
+-	case 2: return 0x1e8;
+-	case 3: return 0x168;
+-	case 4: return 0x1e0;
+-	case 5: return 0x160;
+-	default:
+-		return 0;
+-	}
+-}
+-
+ /* MIPS port and memory-mapped I/O string operations.  */
+ static inline void __ide_flush_prologue(void)
+ {
+Index: b/include/asm-x86/ide.h
+===================================================================
+--- a/include/asm-x86/ide.h
++++ b/include/asm-x86/ide.h
+@@ -11,34 +11,6 @@
+ 
+ #ifdef __KERNEL__
+ 
+-static __inline__ int ide_default_irq(unsigned long base)
+-{
+-	switch (base) {
+-		case 0x1f0: return 14;
+-		case 0x170: return 15;
+-		case 0x1e8: return 11;
+-		case 0x168: return 10;
+-		case 0x1e0: return 8;
+-		case 0x160: return 12;
+-		default:
+-			return 0;
+-	}
+-}
+-
+-static __inline__ unsigned long ide_default_io_base(int index)
+-{
+-	switch (index) {
+-		case 0:	return 0x1f0;
+-		case 1:	return 0x170;
+-		case 2: return 0x1e8;
+-		case 3: return 0x168;
+-		case 4: return 0x1e0;
+-		case 5: return 0x160;
+-		default:
+-			return 0;
+-	}
+-}
+-
+ #include <asm-generic/ide_iops.h>
+ 
+ #endif /* __KERNEL__ */
