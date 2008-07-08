@@ -1,32 +1,18 @@
-From: Gerhard Wiesinger <lists@wiesinger.com>
+From: Justin Piszcz <jpiszcz@lucidpixels.com>
 Subject: Re: Lots of con-current I/O = resets SATA link? (2.6.25.10)
-Date: Tue, 8 Jul 2008 08:59:54 +0200 (CEST)
-Message-ID: <alpine.LFD.1.10.0807080857460.10532@bbs.intern>
+Date: Tue, 8 Jul 2008 04:34:33 -0400 (EDT)
+Message-ID: <alpine.DEB.1.10.0807080433550.17980@p34.internal.lan>
 References: <alpine.DEB.1.10.0807051252200.12562@p34.internal.lan> <alpine.LFD.1.10.0807071649340.1160@bbs.intern> <alpine.LFD.1.10.0807071705490.2997@bbs.intern> <alpine.DEB.1.10.0807071149530.32508@p34.internal.lan>
  <alpine.LFD.1.10.0807080811560.5439@bbs.intern>
 Mime-Version: 1.0
 Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from chello212186124096.11.vie.surfer.at ([212.186.124.96]:45164
-	"EHLO wiesinger.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751475AbYGHHAe (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 8 Jul 2008 03:00:34 -0400
+Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <alpine.LFD.1.10.0807080811560.5439@bbs.intern>
-Sender: linux-ide-owner@vger.kernel.org
-List-Id: linux-ide@vger.kernel.org
-To: Justin Piszcz <jpiszcz@lucidpixels.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: Gerhard Wiesinger <lists@wiesinger.com>
 Cc: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, linux-ide@vger.kernel.org
+List-Id: linux-ide@vger.kernel.org
 
-Hello!
-
-BTW:
-The error in syslog also accoured when Reallocated_Sector_Ct didn't go up.
-
-Ciao,
-Gerhard
-
---
-http://www.wiesinger.com/
 
 
 On Tue, 8 Jul 2008, Gerhard Wiesinger wrote:
@@ -86,3 +72,16 @@ On Tue, 8 Jul 2008, Gerhard Wiesinger wrote:
 > When you search in google you find a lot of threads with the timeout problem. 
 > Might this be a software issue?
 >
+> Any ideas?
+
+Please run:
+
+smartctl -t short /dev/sdc
+sleep 300
+smartctl -t long /dev/sdc
+
+Wait 2-3 hours or more and:
+
+smartctl -a /dev/sdc
+
+Justin.
