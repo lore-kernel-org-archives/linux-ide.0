@@ -1,81 +1,67 @@
-From: Mikael Pettersson <mikpe@it.uu.se>
-Subject: Re: Promise SATA 300 TX2plus: disk stops responding
-Date: Wed, 9 Jul 2008 14:39:24 +0200
-Message-ID: <18548.45436.262423.693474@harpo.it.uu.se>
-References: <200807021136.m62BaPvx026056@harpo.it.uu.se>
-	<501db8660807041150r5f800839m4815275d6542760@mail.gmail.com>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: Re: [PATCH] palm_bk3710: fix IDECLK period calculation
+Date: Wed, 09 Jul 2008 18:46:58 +0400
+Message-ID: <4874CF62.6080103@ru.mvista.com>
+References: <200807081829.06199.sshtylyov@ru.mvista.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from aun.it.uu.se ([130.238.12.36]:51151 "EHLO aun.it.uu.se"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752751AbYGIMjb (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 9 Jul 2008 08:39:31 -0400
-In-Reply-To: <501db8660807041150r5f800839m4815275d6542760@mail.gmail.com>
+Received: from h155.mvista.com ([63.81.120.155]:28658 "EHLO imap.sh.mvista.com"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1750955AbYGIOqz (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 9 Jul 2008 10:46:55 -0400
+In-Reply-To: <200807081829.06199.sshtylyov@ru.mvista.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Aneurin Price <aneurin.price@gmail.com>
-Cc: Mikael Pettersson <mikpe@it.uu.se>, linux-ide@vger.kernel.org
+To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Cc: bzolnier@gmail.com, linux-ide@vger.kernel.org, mcherkashin@ru.mvista.com
 
-On Fri, 4 Jul 2008 19:50:17 +0100, Aneurin Price wrote:
->>>[1382260.429883] ata1.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action
->>>0x2 frozen
->>>[1382260.429931] ata1.00: cmd 25/00:50:27:6e:cd/00:00:15:00:00/e0 tag
->>>0 dma 40960 in
->>>[1382260.429933]          res 40/00:00:00:00:00/00:00:00:00:00/00
->>>Emask 0x4 (timeout)
->>>[1382260.429956] ata1.00: status: { DRDY }
->>>[1382265.796276] ata1: port is slow to respond, please be patient (Status
->>>0xff)
->>>[1382270.473163] ata1: device not ready (errno=-16), forcing hardreset
->>>[1382270.473179] ata1: hard resetting link
->>>[1382276.679024] ata1: port is slow to respond, please be patient (Status
->>>0xff)
->>>[1382280.476592] ata1: COMRESET failed (errno=-16)
->>>[1382280.476626] ata1: hard resetting link
->>>[1382286.692400] ata1: port is slow to respond, please be patient (Status
->>>0xff)
->>>[1382290.529795] ata1: COMRESET failed (errno=-16)
->>>[1382290.529829] ata1: hard resetting link
->>>[1382296.745702] ata1: port is slow to respond, please be patient (Status
->>>0xff)
->>>[1382325.566448] ata1: COMRESET failed (errno=-16)
->>>[1382325.566484] ata1: limiting SATA link speed to 1.5 Gbps
->>>[1382325.566487] ata1: hard resetting link
->>>[1382330.573112] ata1: COMRESET failed (errno=-16)
->>>[1382330.573146] ata1: reset failed, giving up
->>>[1382330.573162] ata1.00: disabled
->>>[1382330.573188] ata1: exception Emask 0x10 SAct 0x0 SErr 0x190002
->>>action 0xa frozen t4
->>>[1382330.573212] ata1: hotplug_status 0x10
->>>[1382330.573226] ata1: SError: { RecovComm PHYRdyChg 10B8B Dispar }
->> ...
->>>[1382571.052939] ata1: EH pending after 5 tries, giving up
->>
->> These are signs of the disk going offline, or the communication between
->> the controller and the disk being corrupted. That's a hardware issue,
->> not unlike what we see with bad PSUs.
->>
->> The 2.6.24 kernel lacks two post-2.6.24 sata_promise bug fixes.
->> The first fixes a problem where error recovery may trigger unexpected
->> hotplug events (we see those in your log), the second fixes a potential
->> problem in interrupt status clearing operations.
->>
->
->Does this mean that it could potentially be possible to recover from this error,
->even without nailing the cause?
+Hello, I wrote:
 
-In your log the stray hotplug events occur only after several failed
-COMRESET attempts. I don't know if fixing the stray hotplug events has
-any effect on the COMRESETs. Try the patch, it won't do any harm.
+> The driver uses completely bogus rounding formula for calculating period from
+> the IDECLK frequency which gives one-off period values (e.g. 11 ns with 100 MHz
+> IDECLK) which in turn can lead to overclocked IDE transfer timings.  Actually,
+> rounding is just wrong in this case, so use a mere division for a safe result.
 
-> Are random hardware problems of this sort quite
->common, and papered over by good drivers as a matter of course?
+> While at it, also:
 
-I wouldn't say "common". It seems to vary a lot from machine to
-machine. As for papering over, that's what the error recovery
-handling in libata and the driver are supposed to handle, although
-it's clearly not always effective.
+> - give 'ide_palm_clk' variable a more suitable name;
 
-/Mikael
+> - get rid of the useless 'ideclkp' variable;
+
+> - drop the LISP stype 'p' postfix from the 'clkp' variable's name. :-)
+
+> Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+
+> Index: linux-2.6/drivers/ide/arm/palm_bk3710.c
+> ===================================================================
+> --- linux-2.6.orig/drivers/ide/arm/palm_bk3710.c
+> +++ linux-2.6/drivers/ide/arm/palm_bk3710.c
+[...]
+> @@ -350,22 +348,22 @@ static const struct ide_port_info __devi
+>  
+>  static int __devinit palm_bk3710_probe(struct platform_device *pdev)
+>  {
+> -	struct clk *clkp;
+> +	struct clk *clk;
+>  	struct resource *mem, *irq;
+>  	ide_hwif_t *hwif;
+> -	unsigned long base;
+> +	unsigned long base, rate;
+>  	int i;
+>  	hw_regs_t hw;
+>  	u8 idx[4] = { 0xff, 0xff, 0xff, 0xff };
+>  
+> -	clkp = clk_get(NULL, "IDECLK");
+> -	if (IS_ERR(clkp))
+> +	clk = clk_get(NULL, "IDECLK");
+> +	if (IS_ERR(clk))
+>  		return -ENODEV;
+
+    Oh, crap! My original patch had NULL changed to &pdev->dev here but I 
+mis-fixed the reject when importing it to the recent tree... Well, too late 
+now, so till next time. :-)
+
+MBR, Sergei
+
