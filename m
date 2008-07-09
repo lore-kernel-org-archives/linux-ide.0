@@ -1,67 +1,44 @@
 From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH] palm_bk3710: fix IDECLK period calculation
-Date: Wed, 09 Jul 2008 18:46:58 +0400
-Message-ID: <4874CF62.6080103@ru.mvista.com>
-References: <200807081829.06199.sshtylyov@ru.mvista.com>
+Subject: [PATCH] palm_bk3710: fix tRP for UDMA mode 4
+Date: Wed, 9 Jul 2008 19:40:15 +0400
+Message-ID: <200807091940.15722.sshtylyov@ru.mvista.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from h155.mvista.com ([63.81.120.155]:28658 "EHLO imap.sh.mvista.com"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1750955AbYGIOqz (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 9 Jul 2008 10:46:55 -0400
-In-Reply-To: <200807081829.06199.sshtylyov@ru.mvista.com>
+Received: from rtsoft3.corbina.net ([85.21.88.6]:2917 "EHLO
+	buildserver.ru.mvista.com" rhost-flags-OK-FAIL-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1754692AbYGIPkL (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 9 Jul 2008 11:40:11 -0400
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Cc: bzolnier@gmail.com, linux-ide@vger.kernel.org, mcherkashin@ru.mvista.com
+To: bzolnier@gmail.com
+Cc: linux-ide@vger.kernel.org, mcherkashin@ru.mvista.com
 
-Hello, I wrote:
+From: Mikhail Cherkashin <mcherkhashin@ru.mvista.com>
 
-> The driver uses completely bogus rounding formula for calculating period from
-> the IDECLK frequency which gives one-off period values (e.g. 11 ns with 100 MHz
-> IDECLK) which in turn can lead to overclocked IDE transfer timings.  Actually,
-> rounding is just wrong in this case, so use a mere division for a safe result.
+Fix tRP timing for UDMA mode 4 according to the ATA specification.
 
-> While at it, also:
+Signed-off-by: Mikhail Cherkashin <mcherkhashin@ru.mvista.com>
+Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
 
-> - give 'ide_palm_clk' variable a more suitable name;
+---
+ drivers/ide/arm/palm_bk3710.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-> - get rid of the useless 'ideclkp' variable;
-
-> - drop the LISP stype 'p' postfix from the 'clkp' variable's name. :-)
-
-> Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-
-> Index: linux-2.6/drivers/ide/arm/palm_bk3710.c
-> ===================================================================
-> --- linux-2.6.orig/drivers/ide/arm/palm_bk3710.c
-> +++ linux-2.6/drivers/ide/arm/palm_bk3710.c
-[...]
-> @@ -350,22 +348,22 @@ static const struct ide_port_info __devi
->  
->  static int __devinit palm_bk3710_probe(struct platform_device *pdev)
->  {
-> -	struct clk *clkp;
-> +	struct clk *clk;
->  	struct resource *mem, *irq;
->  	ide_hwif_t *hwif;
-> -	unsigned long base;
-> +	unsigned long base, rate;
->  	int i;
->  	hw_regs_t hw;
->  	u8 idx[4] = { 0xff, 0xff, 0xff, 0xff };
->  
-> -	clkp = clk_get(NULL, "IDECLK");
-> -	if (IS_ERR(clkp))
-> +	clk = clk_get(NULL, "IDECLK");
-> +	if (IS_ERR(clk))
->  		return -ENODEV;
-
-    Oh, crap! My original patch had NULL changed to &pdev->dev here but I 
-mis-fixed the reject when importing it to the recent tree... Well, too late 
-now, so till next time. :-)
-
-MBR, Sergei
+diff --git a/drivers/ide/arm/palm_bk3710.c b/drivers/ide/arm/palm_bk3710.c
+index 2f2b4f4..74a05dc 100644
+--- a/drivers/ide/arm/palm_bk3710.c
++++ b/drivers/ide/arm/palm_bk3710.c
+@@ -83,7 +83,7 @@ static const struct palm_bk3710_udmatiming palm_bk3710_udmatimings[6] = {
+ 	{125, 160},		/* UDMA Mode 1 */
+ 	{100, 120},		/* UDMA Mode 2 */
+ 	{100, 90},		/* UDMA Mode 3 */
+-	{85,  60},		/* UDMA Mode 4 */
++	{100, 60},		/* UDMA Mode 4 */
+ };
+ 
+ static void palm_bk3710_setudmamode(void __iomem *base, unsigned int dev,
 
