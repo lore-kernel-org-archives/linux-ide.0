@@ -1,28 +1,101 @@
-From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-Subject: Re: Lots of con-current I/O = resets SATA link? (2.6.25.10)
-Date: Wed, 9 Jul 2008 22:27:36 -0300
-Message-ID: <20080710012736.GD15729@khazad-dum.debian.net>
-References: <alpine.DEB.1.10.0807051252200.12562@p34.internal.lan> <alpine.LFD.1.10.0807071649340.1160@bbs.intern> <alpine.LFD.1.10.0807071705490.2997@bbs.intern> <alpine.DEB.1.10.0807071149530.32508@p34.internal.lan> <alpine.LFD.1.10.0807080811560.5439@bbs.intern> <alpine.DEB.1.10.0807080433550.17980@p34.internal.lan> <alpine.LFD.1.10.0807081232350.32659@bbs.intern> <alpine.DEB.1.10.0807080915040.23688@p34.internal.lan> <alpine.LFD.1.10.0807090726200.686@bbs.intern>
+From: Andrew Morton <akpm@linux-foundation.org>
+Subject: Re: 2.6.26-rc: host can not shutdown: ata problem
+Date: Wed, 9 Jul 2008 18:28:52 -0700
+Message-ID: <20080709182852.c22ca65a.akpm@linux-foundation.org>
+References: <a4423d670807031443v73def4d2g97c9d6acc4b4e941@mail.gmail.com>
+	<200807052213.02098.rjw@sisk.pl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <alpine.LFD.1.10.0807090726200.686@bbs.intern>
-Sender: linux-raid-owner@vger.kernel.org
-To: Gerhard Wiesinger <lists@wiesinger.com>
-Cc: Justin Piszcz <jpiszcz@lucidpixels.com>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, linux-ide@vger.kernel.org
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:42065 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753395AbYGJBgF (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 9 Jul 2008 21:36:05 -0400
+In-Reply-To: <200807052213.02098.rjw@sisk.pl>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: "Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: Alexander Beregalov <a.beregalov@gmail.com>, jgarzik@pobox.com, linux-ide@vger.kernel.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Tejun Heo <htejun@gmail.com>, linux-acpi@vger.kernel.org
 
-On Wed, 09 Jul 2008, Gerhard Wiesinger wrote:
-> Load on power supply measured on 220V side with a true RMS Wattmeter:
+On Sat, 5 Jul 2008 22:13:01 +0200 "Rafael J. Wysocki" <rjw@sisk.pl> wrote:
 
-That won't help for the failure mode you're looking for.
+> [Adding CCs.]
 
-Hook an osciloscope to the power lines on the HD's power feed, and try to
-get it to trigger on any "big" variations.
+Possibly not the correct ones.
 
--- 
-  "One disk to rule them all, One disk to find them. One disk to bring
-  them all and in the darkness grind them. In the Land of Redmond
-  where the shadows lie." -- The Silicon Valley Tarot
-  Henrique Holschuh
+> On Thursday, 3 of July 2008, Alexander Beregalov wrote:
+> > Hi
+> > 
+> > A host does not go down.
+> > I also tried it with `irqpoll` with the same result.
+> > 
+> > 
+> > Remaining filesystems read-only ...
+> >  / ...
+> > irq 18: nobody cared (try booting with the "irqpoll" option)
+> > Pid: 0, comm: swapper Not tainted 2.6.26-rc8 #2
+> >  [<c0141678>] __report_bad_irq+0x2e/0x6f
+> >  [<c014187f>] note_interrupt+0x1c6/0x21f
+> >  [<c0140fee>] ? handle_IRQ_event+0x3e/0x46
+> >  [<c0141e11>] handle_fasteoi_irq+0x86/0xab
+> >  [<c0141d8b>] ? handle_fasteoi_irq+0x0/0xab
+> >  [<c0104c54>] do_IRQ+0xb6/0xe2
+> >  [<c0101daf>] ? default_idle+0x0/0x55
+> >  [<c0101daf>] ? default_idle+0x0/0x55
+> >  [<c010372e>] common_interrupt+0x2e/0x34
+> >  [<c0101daf>] ? default_idle+0x0/0x55
+> >  [<c0101daf>] ? default_idle+0x0/0x55
+> >  [<c0101de4>] ? default_idle+0x35/0x55
+> >  [<c0101d7a>] cpu_idle+0x62/0x97
+> >  [<c0353270>] rest_init+0x5c/0x5e
+> >  =======================
+> > handlers:
+> > [<c02df1df>] (ata_sff_interrupt+0x0/0xab)
+> > Disabling IRQ #18
+> > atkbd serio0: shutdown
+> > i8042 i8042: shutdown
+> > sd 3:0:1:0: shutdown
+> > sd 3:0:1:0: [sdd] Synchronizing SCSI cache
+> > ata4.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x6 frozen
+> > ata4.00: cmd ea/00:00:00:00:00/00:00:00:00:00/a0 tag 0
+> >          res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
+> > ata4.00: status: { DRDY }
+> > ata4: soft resetting link
+> > ata4.00: configured for UDMA/100
+> > ata4: EH complete
+> > ata4.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x6 frozen
+> > ata4.00: cmd ea/00:00:00:00:00/00:00:00:00:00/a0 tag 0
+> >          res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
+> > ata4.00: status: { DRDY }
+> > ata4: soft resetting link
+> > ata4.00: configured for UDMA/100
+> > ata4: EH complete
+> > ata4.00: limiting speed to UDMA/66:PIO4
+> > 
+> > and so on ..
+
+Normally I'd assume that this is an acpi-caused problem with IRQ
+assignments.  But given that it happens only at machine shutdown time, it
+is more likely to be an ordering-of-operations bug in the ata code?
+
+> > 
+> > Controller is
+> > Promise Technology, Inc. PDC20270 (FastTrak100 LP/TX2/TX4) (rev 02)
+> > 
+> > pata_pdc2027x 0000:01:0a.0: PLL input clock 16692 kHz
+> > scsi2 : pata_pdc2027x
+> > scsi3 : pata_pdc2027x
+> > ata3: PATA max UDMA/100 mmio m65536@0xed040000 cmd 0xed0417c0 irq 18
+> > ata4: PATA max UDMA/100 mmio m65536@0xed040000 cmd 0xed0415c0 irq 18
+> > ata3.00: ATA-7: ST3250823A, 3.03, max UDMA/100
+> > ata3.00: 488397168 sectors, multi 16: LBA48
+> > ata3.00: configured for UDMA/100
+> > ata4.01: HPA detected: current 488395055, native 488397168
+> > ata4.01: ATA-7: ST3250824A, 3.AAD, max UDMA/100
+> > ata4.01: 488395055 sectors, multi 16: LBA48
+> > ata4.01: configured for UDMA/100
+
+Alexander, is this a regression?  Was 2.6.25 OK?
+
+Thanks.
