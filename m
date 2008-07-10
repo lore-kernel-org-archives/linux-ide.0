@@ -1,76 +1,73 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: Dubious IRQ masking in ide_config_drive_speed()
-Date: Fri, 11 Jul 2008 21:39:30 +0200
-Message-ID: <200807112139.31353.bzolnier@gmail.com>
-References: <200711290104.21376.bzolnier@gmail.com> <48723A9B.6030309@ru.mvista.com> <4875FC63.7040309@ru.mvista.com>
+From: Ondrej Zary <linux@rainbow-software.org>
+Subject: Re: pata_it821x completely broken
+Date: Thu, 10 Jul 2008 22:35:20 +0200
+Message-ID: <200807102235.22651.linux@rainbow-software.org>
+References: <200807042153.56644.linux@rainbow-software.org> <200807062350.35650.linux@rainbow-software.org> <20080706230118.GA25905@devserv.devel.redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
   charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from yx-out-2324.google.com ([74.125.44.28]:5047 "EHLO
-	yx-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753492AbYGJTnh (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 10 Jul 2008 15:43:37 -0400
-Received: by yx-out-2324.google.com with SMTP id 8so1183957yxm.1
-        for <linux-ide@vger.kernel.org>; Thu, 10 Jul 2008 12:43:36 -0700 (PDT)
-In-Reply-To: <4875FC63.7040309@ru.mvista.com>
+Received: from mail.atlantis.sk ([80.94.52.35]:38219 "EHLO mail.atlantis.sk"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753615AbYGJUf3 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 10 Jul 2008 16:35:29 -0400
+In-Reply-To: <20080706230118.GA25905@devserv.devel.redhat.com>
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Cc: linux-ide@vger.kernel.org, Mikhail Cherkashin <mcherkashin@ru.mvista.com>
+To: Alan Cox <alan@redhat.com>
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, LKML <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org
 
-On Thursday 10 July 2008, Sergei Shtylyov wrote:
-> Hello, I wrote:
-> 
-> >> Index: b/drivers/ide/ide-iops.c
-> >> ===================================================================
-> >> --- a/drivers/ide/ide-iops.c
-> >> +++ b/drivers/ide/ide-iops.c
-> [...]
-> 
-> >    What's interesting, ide_config_drive_speed() code looks sane in this 
-> > respect:
-> 
->     ... except one thing:
-> 
-> >> @@ -769,13 +768,12 @@ int ide_config_drive_speed(ide_drive_t *
-> >>      SELECT_DRIVE(drive);
-> >>      SELECT_MASK(drive, 0);
-> 
->     We've called disable_irq_nosync() before that, so it's not clear why we're 
-> calling the driver's maskproc() method with 0 -- which unmasks interrupt in 
-> the IDE chip.
+Hello,
+commenting out the error check after ata_dev_init_params() call in 
+ata_dev_read_id() function (libata-core.c), I got at least the device name. 
+The capacity is 0 so it doesn't work, obviously:
 
-It seems to be an obvious bug (0 instead of 1) but it is hidden on almost
-all host drivers since they don't implement ->maskproc method (only icside,
-hpt366 and sgiioc4 do).
+pata_it821x: controller in smart mode.
+ACPI: PCI Interrupt Link [LNKC] enabled at IRQ 11
+ACPI: PCI Interrupt 0000:00:12.0[A] -> Link [LNKC] -> GSI 11 (level, low) -> 
+IRQ 11
+PCI: Setting latency timer of device 0000:00:12.0 to 64
+scsi2 : pata_it821x
+scsi3 : pata_it821x
+ata3: PATA max MWDMA2 cmd 0x6800 ctl 0x6c00 bmdma 0x7800 irq 11
+ata4: PATA max MWDMA2 cmd 0x7000 ctl 0x7400 bmdma 0x7808 irq 11
+ata3.00: ATA-7: SAMSUNG HD400LD, WQ100-15, max UDMA/100
+ata3.00: 781422768 sectors, multi 0: LBA48
+ata3.01: ATA-0: Integrated Technology Express Inc, , max MWDMA2
+ata3.01: 0 sectors, multi 0, CHS 0/0/0
+IT821x RAID1 volume.
+ata3.00: configured for DMA
+ata3.01: configured for PIO
+scsi 2:0:0:0: Direct-Access     ATA      SAMSUNG HD400LD  WQ10 PQ: 0 ANSI: 5
+sd 2:0:0:0: [sdb] 781422768 512-byte hardware sectors (400088 MB)
+sd 2:0:0:0: [sdb] Write Protect is off
+sd 2:0:0:0: [sdb] Mode Sense: 00 3a 00 00
+sd 2:0:0:0: [sdb] Write cache: enabled, read cache: enabled, doesn't support 
+DPO or FUA
+sd 2:0:0:0: [sdb] 781422768 512-byte hardware sectors (400088 MB)
+sd 2:0:0:0: [sdb] Write Protect is off
+sd 2:0:0:0: [sdb] Mode Sense: 00 3a 00 00
+sd 2:0:0:0: [sdb] Write cache: enabled, read cache: enabled, doesn't support 
+DPO or FUA
+ sdb: sdb1 sdb2 sdb3 sdb4
+sd 2:0:0:0: [sdb] Attached SCSI disk
+sd 2:0:0:0: Attached scsi generic sg2 type 0
+scsi 2:0:1:0: Direct-Access     ATA      Integrated Techn n/a  PQ: 0 ANSI: 5
+sd 2:0:1:0: [sdc] Too big for this kernel. Use a kernel compiled with support 
+for large block devices.
+sd 2:0:1:0: [sdc] 0 512-byte hardware sectors (0 MB)
+sd 2:0:1:0: [sdc] Write Protect is off
+sd 2:0:1:0: [sdc] Mode Sense: 00 3a 00 00
+sd 2:0:1:0: [sdc] Write cache: disabled, read cache: enabled, doesn't support 
+DPO or FUA
+sd 2:0:1:0: [sdc] Attached SCSI disk
+sd 2:0:1:0: Attached scsi generic sg3 type 0
 
-[ disable_irq_nosync() is used due to other reasons than ->maskproc.
 
-  The former is a band-aid for racing against IRQ handler, the latter
-  is needed by icside to setup routing of IRQs and by hpt366 to handle
-  ->quirk_list devices. ]
+(0 is too big for the kernel, interesting :)
 
-> >>      udelay(1);
-> >> -    if (IDE_CONTROL_REG)
-> >> -        hwif->OUTB(drive->ctl | 2, IDE_CONTROL_REG);
-> >> +    ide_set_irq(drive, 0);
-> >>      hwif->OUTB(speed, IDE_NSECTOR_REG);
-> >>      hwif->OUTB(SETFEATURES_XFER, IDE_FEATURE_REG);
-> >>      hwif->OUTBSYNC(drive, WIN_SETFEATURES, IDE_COMMAND_REG);
-> >> -    if ((IDE_CONTROL_REG) && (drive->quirk_list == 2))
-> >> -        hwif->OUTB(drive->ctl, IDE_CONTROL_REG);
-> >> +    if (drive->quirk_list == 2)
-> >> +        ide_set_irq(drive, 1);
-> >>      error = __ide_wait_stat(drive, drive->ready_stat,
-> >>                  BUSY_STAT|DRQ_STAT|ERR_STAT,
-> 
->     Another SELECT_MASK(drive, 0) call follows which just doesn't make any 
-> sense since the interrupt has been already unmasked by the first call.
 
-This one makes sense here if we assume that the previous one was buggy.
-
-Thanks,
-Bart
+-- 
+Ondrej Zary
