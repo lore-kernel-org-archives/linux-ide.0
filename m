@@ -1,84 +1,41 @@
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: Re: [PATCH] PCI: Add support for multiple MSI
-Date: Fri, 11 Jul 2008 03:45:20 -0600
-Message-ID: <20080711094520.GQ14894@parisc-linux.org>
-References: <20080711005719.GO14894@parisc-linux.org> <1215738002-4961-2-git-send-email-matthew@wil.cx> <487719AC.9070609@jp.fujitsu.com>
+From: ebiederm@xmission.com (Eric W. Biederman)
+Subject: Re: Multiple MSI, take 3
+Date: Fri, 11 Jul 2008 03:06:33 -0700
+Message-ID: <m1iqvc91li.fsf@frodo.ebiederm.org>
+References: <20080711005719.GO14894@parisc-linux.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from palinux.external.hp.com ([192.25.206.14]:55222 "EHLO
-	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750992AbYGKJpi (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 11 Jul 2008 05:45:38 -0400
-Content-Disposition: inline
-In-Reply-To: <487719AC.9070609@jp.fujitsu.com>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-pci-owner@vger.kernel.org>
+In-Reply-To: <20080711005719.GO14894@parisc-linux.org> (Matthew Wilcox's
+	message of "Thu, 10 Jul 2008 18:57:19 -0600")
+Sender: linux-pci-owner@vger.kernel.org
+To: Matthew Wilcox <matthew@wil.cx>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org, grundler@parisc-linux.org, mingo@elte.hu, tglx@linutronix.de, jgarzik@pobox.com, linux-ide@vger.kernel.org, suresh.b.siddha@intel.com, benh@kernel.crashing.org, jbarnes@virtuousgeek.org, rdunlap@xenotime.net, mtk.manpages@gmail.com
 List-Id: linux-ide@vger.kernel.org
-To: Hidetoshi Seto <seto.hidetoshi@jp.fujitsu.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org, grundler@parisc-linux.org, mingo@elte.hu, tglx@linutronix.de, jgarzik@pobox.com, linux-ide@vger.kernel.org, suresh.b.siddha@intel.com, benh@kernel.crashing.org, jbarnes@virtuousgeek.org, rdunlap@xenotime.net, mtk.manpages@gmail.com, Matthew Wilcox <willy@linux.intel.com>
 
-On Fri, Jul 11, 2008 at 05:28:28PM +0900, Hidetoshi Seto wrote:
-> Hi,
-> 
-> First of all, it seems that mask/unmask of MSI has problems.
->  - Per-vector masking is optional for MSI, so I think that allocating
->    multiple messages for a function without masking capability would be
->    not good idea, since all vector in the block will be masked/unmasked
->    at once without any agreement.
->  - Even if the function supports per-vector masking, current
->    mask/unmask_msi_irq() functions assume that MSI uses only one vector,
->    therefore they only set/unset the first bit of the maskbits which
->    for the first vector of the block.  The bits for other vectors are
->    initialized as 'masked' but no one unmask them.
+Matthew Wilcox <matthew@wil.cx> writes:
 
-Thank you for pointing out the problems with masking.  The device I am
-testing with does not support per-vector masking, so I have not paid
-attention to this.
+> I'd like to thank Michael Ellerman for his feedback.  This is a much
+> better patchset than it used to be.
 
-To your first point, if the function does not support per-vector
-masking, I think it's OK to mask/unmask all vectors at once.  But we
-must be careful to manage this correctly in software; if we disable IRQ
-496, disable IRQ 497, then enable IRQ 497, we must not enable IRQ 496 at
-that time.  I think we can solve this problem, but I must think about it
-some more.
+There is a reason we don't have an API to support this.  Linux can not
+reasonably support this, especially not on current X86.  The designers
+of the of the AHCI were idiots and should have used MSI-X.
 
-The second point is a simple bug that should be easy to fix.  Thank you
-for pointing it out.
+Attempting to support multiple irqs in an MSI capability breaks
+every interesting use of an irq.
 
-> Matthew Wilcox wrote:
-> > + * Allocate IRQs for a device with the MSI capability.
-> > + * This function returns a negative errno if an error occurs.  If it
-> > + * is unable to allocate the number of interrupts requested, it returns
-> > + * the number of interrupts it might be able to allocate.  If it successfully
-> > + * allocates at least the number of interrupts requested, it returns 0 and
-> > + * updates the @dev's irq member to the lowest new interrupt number; the
-> > + * other interrupt numbers allocated to this device are consecutive.
-> > + */
-> > +int pci_enable_msi_block(struct pci_dev *dev, unsigned int nvec)
-> >  {
-> >  	int status;
-> >  
-> > -	status = pci_msi_check_device(dev, 1, PCI_CAP_ID_MSI);
-> > +	/* MSI only supports up to 32 interrupts */
-> > +	if (nvec > 32)
-> > +		return 32;
-> 
-> I think we should return -EINVAL here.
-> No one guarantee that 32 interrupts is able to be allocate at this time.
-> 
-> And also I think -EINVAL should be returned if nvec is greater than
-> the number of encoded in the function's "Multiple Message Capable", but
-> I could not find any mention about handling of such over-capability request
-> in PCI Bus Spec. 3.0.
+mask/unmask is will likely break because the mask bit is optional
+and when it is not present we disable the msi capability.
 
-It would be outside the scope of the PCI Bus Specification.  I think
-you're right that we should check the MMC bits; but I think we should
-tell the driver to request a lower number, not return -EINVAL.
+We can not set the affinity individually so we can not allow
+different queues to be processed on different cores.
 
-Thanks for your comments.
+So in general it seems something that we have to jump through a million
+hurdles and the result is someones twisted parody of a multiple working
+irqs, that even Intel's IOMMU can't cure.
 
--- 
-Intel are signing my paycheques ... these opinions are still mine
-"Bill, look, we understand that you're interested in selling us this
-operating system, but compare it to ours.  We can't possibly take such
-a retrograde step."
+So unless the performance of the AHCI is better by a huge amount I don't
+see the point, and even then I am extremely sceptical.
+
+Eric
