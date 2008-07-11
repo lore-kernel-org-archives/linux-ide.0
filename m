@@ -1,79 +1,54 @@
-From: Hidetoshi Seto <seto.hidetoshi@jp.fujitsu.com>
-Subject: Re: [PATCH] PCI: Add support for multiple MSI
-Date: Fri, 11 Jul 2008 17:28:28 +0900
-Message-ID: <487719AC.9070609@jp.fujitsu.com>
-References: <20080711005719.GO14894@parisc-linux.org> <1215738002-4961-2-git-send-email-matthew@wil.cx>
+From: Matthew Wilcox <matthew@wil.cx>
+Subject: Re: [PATCH] x86-64: Support for multiple MSIs
+Date: Fri, 11 Jul 2008 02:50:36 -0600
+Message-ID: <20080711085035.GP14894@parisc-linux.org>
+References: <20080711005719.GO14894@parisc-linux.org> <1215738002-4961-5-git-send-email-matthew@wil.cx> <4876E68F.3050200@jp.fujitsu.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-2022-JP
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-pci-owner@vger.kernel.org>
-In-Reply-To: <1215738002-4961-2-git-send-email-matthew@wil.cx>
+Content-Disposition: inline
+In-Reply-To: <4876E68F.3050200@jp.fujitsu.com>
 Sender: linux-pci-owner@vger.kernel.org
-To: Matthew Wilcox <matthew@wil.cx>
+To: Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>
 Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org, grundler@parisc-linux.org, mingo@elte.hu, tglx@linutronix.de, jgarzik@pobox.com, linux-ide@vger.kernel.org, suresh.b.siddha@intel.com, benh@kernel.crashing.org, jbarnes@virtuousgeek.org, rdunlap@xenotime.net, mtk.manpages@gmail.com, Matthew Wilcox <willy@linux.intel.com>
 List-Id: linux-ide@vger.kernel.org
 
-Hi,
+On Fri, Jul 11, 2008 at 01:50:23PM +0900, Kenji Kaneshige wrote:
+> I'm very sorry for very delayed comment, but I have a concern
+> about irq affinity code. Since I didn't have enough time to
+> look at your patch, I might be misunderstanding something...
+> 
+> In my understanding, when irq affinity is changed on one of
+> the IRQs corresponding to MSI, it will not completed until
+> interrupts occur on all the IRQs. Attempts to change irq
+> affinity before previous affinity change is finished will be
+> ignored. Here, suppose that device uses three MSI irqs. In
+> this case, your patch manages four irqs, but only three
+> interrupts are used. If irq affinity changed on this MSI
+> interrupts, will it be completed?
 
-First of all, it seems that mask/unmask of MSI has problems.
- - Per-vector masking is optional for MSI, so I think that allocating
-   multiple messages for a function without masking capability would be
-   not good idea, since all vector in the block will be masked/unmasked
-   at once without any agreement.
- - Even if the function supports per-vector masking, current
-   mask/unmask_msi_irq() functions assume that MSI uses only one vector,
-   therefore they only set/unset the first bit of the maskbits which
-   for the first vector of the block.  The bits for other vectors are
-   initialized as 'masked' but no one unmask them.
+I have tested the affinity code with an ICH9 AHCI:
 
-Matthew Wilcox wrote:
-> + * Allocate IRQs for a device with the MSI capability.
-> + * This function returns a negative errno if an error occurs.  If it
-> + * is unable to allocate the number of interrupts requested, it returns
-> + * the number of interrupts it might be able to allocate.  If it successfully
-> + * allocates at least the number of interrupts requested, it returns 0 and
-> + * updates the @dev's irq member to the lowest new interrupt number; the
-> + * other interrupt numbers allocated to this device are consecutive.
-> + */
-> +int pci_enable_msi_block(struct pci_dev *dev, unsigned int nvec)
->  {
->  	int status;
->  
-> -	status = pci_msi_check_device(dev, 1, PCI_CAP_ID_MSI);
-> +	/* MSI only supports up to 32 interrupts */
-> +	if (nvec > 32)
-> +		return 32;
+495:     117233     117966     118033     117797   PCI-MSI-edge      ahci
+496:      29860      29106      30191      28705   PCI-MSI-edge      ahci
+497:          0          0          0          0   PCI-MSI-edge      ahci
+498:          0          0          0          0   PCI-MSI-edge      ahci
+499:          0          0          0          0   PCI-MSI-edge      ahci
+500:          0          0          0          0   PCI-MSI-edge      ahci
 
-I think we should return -EINVAL here.
-No one guarantee that 32 interrupts is able to be allocate at this time.
+This chip requires 16 MSIs to be registered, and it has 6 ports.
+Only ports 0 and 1 have a device attached.  If I change the mask of
+an active irq (eg 495 or 496), it takes effect on both of them.  If I
+change the mask of an inactive irq (497-500), nothing happens.  But I
+can subsequently change the mask on 495 or 496 successfully.
 
-And also I think -EINVAL should be returned if nvec is greater than
-the number of encoded in the function's "Multiple Message Capable", but
-I could not find any mention about handling of such over-capability request
-in PCI Bus Spec. 3.0.
+I can't tell you why this works this way; I haven't looked in enough
+detail at the irq affinity code, but this is my observation.
 
-> +
-> +	status = pci_msi_check_device(dev, nvec, PCI_CAP_ID_MSI);
->  	if (status)
->  		return status;
->  
->  	WARN_ON(!!dev->msi_enabled);
->  
-> -	/* Check whether driver already requested for MSI-X irqs */
-> +	/* Check whether driver already requested MSI-X irqs */
->  	if (dev->msix_enabled) {
->  		printk(KERN_INFO "PCI: %s: Can't enable MSI.  "
->  			"Device already has MSI-X enabled\n",
->  			pci_name(dev));
->  		return -EINVAL;
->  	}
-> -	status = msi_capability_init(dev);
-> +
-> +	status = msi_capability_init(dev, nvec);
->  	return status;
->  }
-> -EXPORT_SYMBOL(pci_enable_msi);
-> +EXPORT_SYMBOL(pci_enable_msi_block);
+Thanks for your comment.
 
-Thanks,
-H.Seto
+-- 
+Intel are signing my paycheques ... these opinions are still mine
+"Bill, look, we understand that you're interested in selling us this
+operating system, but compare it to ours.  We can't possibly take such
+a retrograde step."
