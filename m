@@ -1,55 +1,77 @@
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: Re: Multiple MSI, take 3
-Date: Fri, 11 Jul 2008 06:17:44 -0600
-Message-ID: <20080711121744.GT14894@parisc-linux.org>
-References: <20080711005719.GO14894@parisc-linux.org> <m1iqvc91li.fsf@frodo.ebiederm.org> <20080711102326.GR14894@parisc-linux.org> <m1iqvc7iys.fsf@frodo.ebiederm.org>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: Re: [PATCH 2/8] ide: add ide_set_irq() inline helper
+Date: Fri, 11 Jul 2008 16:57:22 +0400
+Message-ID: <487758B2.8060909@ru.mvista.com>
+References: <200711290104.21376.bzolnier@gmail.com> <200807072000.26380.bzolnier@gmail.com> <48732EF5.6080302@ru.mvista.com> <200807112320.04264.bzolnier@gmail.com> <487727C6.7040008@ru.mvista.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from palinux.external.hp.com ([192.25.206.14]:47376 "EHLO
-	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754006AbYGKMRp (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 11 Jul 2008 08:17:45 -0400
-Content-Disposition: inline
-In-Reply-To: <m1iqvc7iys.fsf@frodo.ebiederm.org>
+Received: from gateway-1237.mvista.com ([63.81.120.155]:7255 "EHLO
+	imap.sh.mvista.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1750924AbYGKM5S (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 11 Jul 2008 08:57:18 -0400
+In-Reply-To: <487727C6.7040008@ru.mvista.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "Eric W. Biederman" <ebiederm@xmission.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org, grundler@parisc-linux.org, mingo@elte.hu, tglx@linutronix.de, jgarzik@pobox.com, linux-ide@vger.kernel.org, suresh.b.siddha@intel.com, benh@kernel.crashing.org, jbarnes@virtuousgeek.org, rdunlap@xenotime.net, mtk.manpages@gmail.com
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: linux-ide@vger.kernel.org, Mikhail Cherkashin <mcherkashin@ru.mvista.com>
 
-On Fri, Jul 11, 2008 at 04:34:19AM -0700, Eric W. Biederman wrote:
-> There is one idea that seems to model this cleanly
-> without breaking all kinds of expectations.
-> 
-> That is an irq with a very small data payload.
-> 
-> In that case we wire all of the vectors up to a single
-> irq handler that computes the payload as:
-> payload = vector - base-vector.
-> 
-> And then we figure out how to pass that to the handler in irqaction.
-> 
-> To most of the system it is a single irq so it avoids breaking
-> expectations about what an irq is.
-> 
-> To everything else it is a little odd, and has it's own unique
-> set of rules (which is good as well).
+Hello, I wrote:
 
-OK, I'm willing to play this scenario through and see where it takes us.
+>>>>>> Index: b/drivers/ide/ide-iops.c
+>>>>>> ===================================================================
+>>>>>> --- a/drivers/ide/ide-iops.c
+>>>>>> +++ b/drivers/ide/ide-iops.c
+>>>>>> @@ -688,8 +688,7 @@ int ide_driveid_update(ide_drive_t *driv
+>>>>>>      */
+>>>>>>
+>>>>>>     SELECT_MASK(drive, 1);
+>>>>>> -    if (IDE_CONTROL_REG)
+>>>>>> -        hwif->OUTB(drive->ctl,IDE_CONTROL_REG);
+>>>>>> +    ide_set_irq(drive, 1);
 
- - The affinity now matches reality.  Good.
- - For devices without individual masking, the masking API matches
-   reality.  Good.
- - For devices with individual masking, we'll want a new API.  Adequate.
- - We'll still need to allocate an aligned block of vectors on x86-64.
-   No change.
+>>>>>    If we're going to execute the command using polling, isn't it 
+>>>>> logical to *disable* drive's interrupt instead of enabling it which 
+>>>>> this code is currently doing?  This looks like it might work only 
+>>>>> for the drivers having the maskproc() method (of which hpt366.c is 
+>>>>> the only one that I've ever dealt with).
 
-I think rather than passing the 'vector - base_vector' integer, the
-request_irq_block() should pass in an array of pointers as large as nvec
-and irqaction passes the appropriate pointer to the handler.
+>>>> Yes, this needs fixing.
 
--- 
-Intel are signing my paycheques ... these opinions are still mine
-"Bill, look, we understand that you're interested in selling us this
-operating system, but compare it to ours.  We can't possibly take such
-a retrograde step."
+>>>     But should we honor drive->quirk_list here? What its different 
+>>> values mean? I'm seeing either 1 or 2 is used to decide whether to 
+>>> set nIEN or not...
+
+>> I did some research on ->quirk_list in the past but I couldn't exactly
+>> figure it out.  I also wasn't able to trace this code to its author
+>> (not that I tried very hard)...
+
+>> Anyway my current findings/theories are the following:
+
+>> - we should make sure that all SELECT_MASK() users also call ide_set_irq()
+>>   (then sgiioc4's ->maskproc can be removed since it is a copy of ->set_irq)
+
+>   I've kind of made sure about that already, 
+
+    After another look, I've indeed correctly described this as "kind of" --
+since ide_set_irq() is called only before issuing a command, while
+SELECT_MASK() is called both before (but it seems to be always skipped due to 
+IDE_TFLAG_NO_SELECT_MASK being set for the commands executed in a normal way, 
+i.e. using interrupts) and after that (the latter is done if we are using the 
+polling mode). So, those maskproc() methods in hpt366 and sgiioc4 in fact 
+inadvertently clear nIEN after the polled command execution -- not that it's 
+wrong but why the hell? And those maskproc() methods duplicate nIEN setup 
+before the command execution -- except in ide_config_drive_speed() where 
+there's an obvious error...
+
+> hence I've already created a patch doing that...
+
+    As I have no idea why sgiioc4 needs to manipulate nIEN, I guess I'll just 
+CC the SGI people on that patch...
+
+>> Thanks,
+>> Bart
+
+MBR, Sergei
+
