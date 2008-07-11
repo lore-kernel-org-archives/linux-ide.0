@@ -1,168 +1,171 @@
 From: Matthew Wilcox <matthew@wil.cx>
-Subject: [PATCH 1/6] Allow a small amount of data to be stored with the interrupt number
-Date: Fri, 11 Jul 2008 17:16:53 -0400
-Message-ID: <1215811018-15270-1-git-send-email-matthew@wil.cx>
+Subject: [PATCH 5/6] AHCI: Request multiple MSIs
+Date: Fri, 11 Jul 2008 17:16:57 -0400
+Message-ID: <1215811018-15270-5-git-send-email-matthew@wil.cx>
 References: <20080711211559.GV14894@parisc-linux.org>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.tor.primus.ca ([216.254.136.21]:49502 "EHLO
-	mail-09.primus.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752753AbYGKVSa (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 11 Jul 2008 17:18:30 -0400
+Received: from mail.tor.primus.ca ([216.254.136.21]:38207 "EHLO
+	mail-01.primus.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756272AbYGKVSh (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 11 Jul 2008 17:18:37 -0400
 In-Reply-To: <20080711211559.GV14894@parisc-linux.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
 Cc: grundler@parisc-linux.org, mingo@elte.hu, tglx@linutronix.de, jgarzik@pobox.com, linux-ide@vger.kernel.org, suresh.b.siddha@intel.com, benh@kernel.crashing.org, jbarnes@virtuousgeek.org, rdunlap@xenotime.net, mtk.manpages@gmail.com, ebiederm@xmission.com, Matthew Wilcox <matthew@wil.cx>, Matthew Wilcox <willy@linux.intel.com>
 
-The PCI MSI capability allows up to 5 bits of information to be sent
-from the device to the interrupt controller.  Rather than allocate
-multiple Linux interrupts to handle this, we can store the information in
-the top 5 bits of the interrupt number.  Architectures which have not
-been converted to handle multiple MSI will not store data there and so
-do not need to be taught about this.
+AHCI controllers can support up to 16 interrupts, one per port.  This
+saves us a readl() in the interrupt path to determine which port has
+generated the interrupt.
 
 Signed-off-by: Matthew Wilcox <willy@linux.intel.com>
 ---
- include/linux/irq.h |   22 +++++++++++++++++++++-
- kernel/irq/chip.c   |    5 +++--
- kernel/irq/handle.c |   17 +++++++++--------
- 3 files changed, 33 insertions(+), 11 deletions(-)
+ drivers/ata/ahci.c |  104 +++++++++++++++++++++++++++++++++++++++++++++++++--
+ 1 files changed, 99 insertions(+), 5 deletions(-)
 
-diff --git a/include/linux/irq.h b/include/linux/irq.h
-index 552e0ec..9bc7d61 100644
---- a/include/linux/irq.h
-+++ b/include/linux/irq.h
-@@ -282,6 +282,26 @@ extern unsigned int __do_IRQ(unsigned int irq);
- #endif
+diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+index 5e6468a..a3f6331 100644
+--- a/drivers/ata/ahci.c
++++ b/drivers/ata/ahci.c
+@@ -102,6 +102,7 @@ enum {
+ 	/* HOST_CTL bits */
+ 	HOST_RESET		= (1 << 0),  /* reset controller; self-clear */
+ 	HOST_IRQ_EN		= (1 << 1),  /* global IRQ enable */
++	HOST_MSI_RSM		= (1 << 2),  /* Revert to Single Message */
+ 	HOST_AHCI_EN		= (1 << 31), /* AHCI enabled */
  
- /*
-+ * We allow interrupts to have a few subchannels.  It's up to the
-+ * architecture to arrange how many there are per interrupt and what they
-+ * are used for.  To support subchannels, architectures should define
-+ * IRQ_SUBCHANNEL_BITS in asm/irq.h.  In order to support multiple PCI MSI,
-+ * an architecture should set it to at least 5 in order to support 32
-+ * subchannels (one for each vector).  This leaves 27 bits for NR_IRQS.  If
-+ * the architecture wants to store something other than MSI data here, it
-+ * may wish to make it larger, but should take care not to run into NR_IRQS.
-+ */
+ 	/* HOST_CAP bits */
+@@ -1771,6 +1772,19 @@ static void ahci_port_intr(struct ata_port *ap)
+ 	}
+ }
+ 
++static irqreturn_t ahci_msi_interrupt(int irq, void *dev_instance)
++{
++	struct ata_host *host = dev_instance;
++	int port = get_irq_subchannel(irq);
++	struct ata_port *ap = host->ports[port];
 +
-+#ifndef IRQ_SUBCHANNEL_BITS
-+#define get_irq_value(irq)	(irq)
-+#define get_irq_subchannel(irq)	0
-+#else
-+#define IRQ_SUBCHANNEL_SHIFT	(32 - IRQ_SUBCHANNEL_BITS)
-+#define get_irq_value(irq)	(irq & ((1 << IRQ_SUBCHANNEL_SHIFT) - 1))
-+#define get_irq_subchannel(irq)	(irq >> IRQ_SUBCHANNEL_SHIFT)
-+#endif
++	spin_lock(&ap->host->lock);
++	ahci_port_intr(ap);
++	spin_unlock(&ap->host->lock);
++
++	return IRQ_HANDLED;
++}
++
+ static irqreturn_t ahci_interrupt(int irq, void *dev_instance)
+ {
+ 	struct ata_host *host = dev_instance;
+@@ -2220,6 +2234,80 @@ static void ahci_p5wdh_workaround(struct ata_host *host)
+ 	}
+ }
+ 
++static int ahci_request_irq(struct pci_dev *pdev, struct ata_host *host,
++							int n_irqs)
++{
++	int rc;
++
++	if (n_irqs) {
++		rc = pci_enable_msi_block(pdev, n_irqs);
++		if (rc)
++			return rc;
++	}
++
++	if (n_irqs > 1) {
++		void __iomem *mmio = host->iomap[AHCI_PCI_BAR];
++		u32 host_ctl = readl(mmio + HOST_CTL);
++		if (host_ctl & HOST_MSI_RSM)
++			goto try_different;
++		rc = devm_request_irq(host->dev, pdev->irq, ahci_msi_interrupt,
++				IRQF_DISABLED,
++				dev_driver_string(host->dev), host);
++	} else {
++		rc = devm_request_irq(host->dev, pdev->irq, ahci_interrupt,
++				IRQF_SHARED,
++				dev_driver_string(host->dev), host);
++	}
++
++	if (!rc)
++		return 0;
++
++ try_different:
++	pci_disable_msi(pdev);
++	pci_intx(pdev, 1);
++	return (n_irqs == 1) ? rc : 1;
++}
 +
 +/*
-  * Architectures call this to let the generic IRQ layer
-  * handle an interrupt. If the descriptor is attached to an
-  * irqchip-style controller then we call the ->handle_irq() handler,
-@@ -289,7 +309,7 @@ extern unsigned int __do_IRQ(unsigned int irq);
-  */
- static inline void generic_handle_irq(unsigned int irq)
++ * We only need one interrupt per port (plus one for CCC which isn't
++ * supported yet), but some AHCI controllers refuse to use multiple MSIs
++ * unless they get the maximum number of interrupts.  We don't support the
++ * mode where fewer interrupts are assigned than we have ports.
++ */
++static int ahci_setup_irqs(struct pci_dev *pdev, struct ata_host *host)
++{
++	struct ahci_host_priv *hpriv = host->private_data;
++	int n_irqs, pos, rc;
++	u16 control;
++
++	if (hpriv->flags & AHCI_HFLAG_NO_MSI)
++		goto no_msi;
++
++	rc = ahci_request_irq(pdev, host, host->n_ports);
++	if (rc == 0)
++		return 0;
++	if (rc < 0)
++		goto no_msi;
++
++	/* Find out how many it might want */
++	pos = pci_find_capability(pdev, PCI_CAP_ID_MSI);
++	pci_read_config_word(pdev, pos + PCI_MSI_FLAGS, &control);
++	n_irqs = 1 << ((control & PCI_MSI_FLAGS_QMASK) >> 1);
++
++	rc = ahci_request_irq(pdev, host, n_irqs);
++	if (rc == 0)
++		return 0;
++	if (rc < 0)
++		goto no_msi;
++
++	rc = ahci_request_irq(pdev, host, 1);
++	if (rc == 0)
++		return 0;
++
++ no_msi:
++	return ahci_request_irq(pdev, host, 0);
++}
++
+ static int ahci_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
  {
--	struct irq_desc *desc = irq_desc + irq;
-+	struct irq_desc *desc = irq_desc + get_irq_value(irq);
+ 	static int printed_version;
+@@ -2278,9 +2366,6 @@ static int ahci_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 	    (pdev->revision == 0xa1 || pdev->revision == 0xa2))
+ 		hpriv->flags |= AHCI_HFLAG_NO_MSI;
  
- #ifdef CONFIG_GENERIC_HARDIRQS_NO__DO_IRQ
- 	desc->handle_irq(irq, desc);
-diff --git a/kernel/irq/chip.c b/kernel/irq/chip.c
-index 964964b..fd4f7f0 100644
---- a/kernel/irq/chip.c
-+++ b/kernel/irq/chip.c
-@@ -453,8 +453,9 @@ out:
-  *	loop is left.
-  */
- void
--handle_edge_irq(unsigned int irq, struct irq_desc *desc)
-+handle_edge_irq(unsigned int irq_plus_data, struct irq_desc *desc)
- {
-+	const unsigned int irq = get_irq_value(irq_plus_data);
- 	const unsigned int cpu = smp_processor_id();
+-	if ((hpriv->flags & AHCI_HFLAG_NO_MSI) || pci_enable_msi(pdev))
+-		pci_intx(pdev, 1);
+-
+ 	/* save initial config */
+ 	ahci_save_initial_config(pdev, hpriv);
  
- 	spin_lock(&desc->lock);
-@@ -504,7 +505,7 @@ handle_edge_irq(unsigned int irq, struct irq_desc *desc)
+@@ -2335,8 +2420,17 @@ static int ahci_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 	ahci_print_info(host);
  
- 		desc->status &= ~IRQ_PENDING;
- 		spin_unlock(&desc->lock);
--		action_ret = handle_IRQ_event(irq, action);
-+		action_ret = handle_IRQ_event(irq_plus_data, action);
- 		if (!noirqdebug)
- 			note_interrupt(irq, desc, action_ret);
- 		spin_lock(&desc->lock);
-diff --git a/kernel/irq/handle.c b/kernel/irq/handle.c
-index 5fa6198..4e463e6 100644
---- a/kernel/irq/handle.c
-+++ b/kernel/irq/handle.c
-@@ -126,7 +126,7 @@ irqreturn_t no_action(int cpl, void *dev_id)
-  *
-  * Handles the action chain of an irq event
-  */
--irqreturn_t handle_IRQ_event(unsigned int irq, struct irqaction *action)
-+irqreturn_t handle_IRQ_event(unsigned int irq_plus_data, struct irqaction *action)
- {
- 	irqreturn_t ret, retval = IRQ_NONE;
- 	unsigned int status = 0;
-@@ -137,7 +137,7 @@ irqreturn_t handle_IRQ_event(unsigned int irq, struct irqaction *action)
- 		local_irq_enable_in_hardirq();
+ 	pci_set_master(pdev);
+-	return ata_host_activate(host, pdev->irq, ahci_interrupt, IRQF_SHARED,
+-				 &ahci_sht);
++
++	rc = ata_host_start(host);
++	if (rc)
++		return rc;
++
++	rc = ahci_setup_irqs(pdev, host);
++	if (rc)
++		return rc;
++
++	rc = ata_host_register(host, &ahci_sht);
++	return rc;
+ }
  
- 	do {
--		ret = action->handler(irq, action->dev_id);
-+		ret = action->handler(irq_plus_data, action->dev_id);
- 		if (ret == IRQ_HANDLED)
- 			status |= action->flags;
- 		retval |= ret;
-@@ -145,7 +145,7 @@ irqreturn_t handle_IRQ_event(unsigned int irq, struct irqaction *action)
- 	} while (action);
- 
- 	if (status & IRQF_SAMPLE_RANDOM)
--		add_interrupt_randomness(irq);
-+		add_interrupt_randomness(get_irq_value(irq_plus_data));
- 	local_irq_disable();
- 
- 	return retval;
-@@ -163,15 +163,16 @@ irqreturn_t handle_IRQ_event(unsigned int irq, struct irqaction *action)
-  * This is the original x86 implementation which is used for every
-  * interrupt type.
-  */
--unsigned int __do_IRQ(unsigned int irq)
-+unsigned int __do_IRQ(unsigned int irq_plus_data)
- {
-+	const unsigned int irq = get_irq_value(irq_plus_data);
- 	struct irq_desc *desc = irq_desc + irq;
- 	struct irqaction *action;
- 	unsigned int status;
- 
- 	kstat_this_cpu.irqs[irq]++;
- 	if (CHECK_IRQ_PER_CPU(desc->status)) {
--		irqreturn_t action_ret;
-+		irqreturn_t ret;
- 
- 		/*
- 		 * No locking required for CPU-local interrupts:
-@@ -179,9 +180,9 @@ unsigned int __do_IRQ(unsigned int irq)
- 		if (desc->chip->ack)
- 			desc->chip->ack(irq);
- 		if (likely(!(desc->status & IRQ_DISABLED))) {
--			action_ret = handle_IRQ_event(irq, desc->action);
-+			ret = handle_IRQ_event(irq_plus_data, desc->action);
- 			if (!noirqdebug)
--				note_interrupt(irq, desc, action_ret);
-+				note_interrupt(irq, desc, ret);
- 		}
- 		desc->chip->end(irq);
- 		return 1;
-@@ -233,7 +234,7 @@ unsigned int __do_IRQ(unsigned int irq)
- 
- 		spin_unlock(&desc->lock);
- 
--		action_ret = handle_IRQ_event(irq, action);
-+		action_ret = handle_IRQ_event(irq_plus_data, action);
- 		if (!noirqdebug)
- 			note_interrupt(irq, desc, action_ret);
- 
+ static int __init ahci_init(void)
 -- 
 1.5.5.4
 
