@@ -1,253 +1,400 @@
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: [PATCH] PCI: Add support for multiple MSI
-Date: Thu, 10 Jul 2008 20:59:59 -0400
-Message-ID: <1215738002-4961-2-git-send-email-matthew@wil.cx>
-References: <20080711005719.GO14894@parisc-linux.org>
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1758388AbYGKBDr@vger.kernel.org>
-In-Reply-To: <20080711005719.GO14894@parisc-linux.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc: grundler@parisc-linux.org, mingo@elte.hu, tglx@linutronix.de, jgarzik@pobox.com, linux-ide@vger.kernel.org, suresh.b.siddha@intel.com, benh@kernel.crashing.org, jbarnes@virtuousgeek.org, rdunlap@xenotime.net, mtk.manpages@gmail.com, Matthew Wilcox <matthew@wil.cx>, Matthew Wilcox <willy@linux.intel.com>
+From: Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>
+Subject: Re: [PATCH] x86-64: Support for multiple MSIs
+Date: Fri, 11 Jul 2008 13:50:23 +0900
+Message-ID: <4876E68F.3050200@jp.fujitsu.com>
+References: <20080711005719.GO14894@parisc-linux.org> <1215738002-4961-5-git-send-email-matthew@wil.cx>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-2022-JP
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-pci-owner@vger.kernel.org>
+In-Reply-To: <1215738002-4961-5-git-send-email-matthew@wil.cx>
+Sender: linux-pci-owner@vger.kernel.org
+To: Matthew Wilcox <matthew@wil.cx>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org, grundler@parisc-linux.org, mingo@elte.hu, tglx@linutronix.de, jgarzik@pobox.com, linux-ide@vger.kernel.org, suresh.b.siddha@intel.com, benh@kernel.crashing.org, jbarnes@virtuousgeek.org, rdunlap@xenotime.net, mtk.manpages@gmail.com, Matthew Wilcox <willy@linux.intel.com>
 List-Id: linux-ide@vger.kernel.org
 
-Add the new API pci_enable_msi_block() to allow drivers to
-request multiple MSI and reimplement pci_enable_msi in terms of
-pci_enable_msi_block.  Ensure that the architecture back ends don't
-have to know about multiple MSI.
+Hi,
 
-Signed-off-by: Matthew Wilcox <willy@linux.intel.com>
----
- arch/powerpc/kernel/msi.c |    4 ++
- drivers/pci/msi.c         |   79 +++++++++++++++++++++++++++++++-------------
- drivers/pci/msi.h         |    4 --
- include/linux/msi.h       |    1 +
- include/linux/pci.h       |    6 ++-
- 5 files changed, 64 insertions(+), 30 deletions(-)
+I'm very sorry for very delayed comment, but I have a concern
+about irq affinity code. Since I didn't have enough time to
+look at your patch, I might be misunderstanding something...
 
-diff --git a/arch/powerpc/kernel/msi.c b/arch/powerpc/kernel/msi.c
-index c62d101..5bc8dda 100644
---- a/arch/powerpc/kernel/msi.c
-+++ b/arch/powerpc/kernel/msi.c
-@@ -19,6 +19,10 @@ int arch_msi_check_device(struct pci_dev* dev, int nvec, int type)
- 		return -ENOSYS;
- 	}
- 
-+	/* PowerPC doesn't support multiple MSI yet */
-+	if (type == PCI_CAP_ID_MSI && nvec > 1)
-+		return 1;
-+
- 	if (ppc_md.msi_check_device) {
- 		pr_debug("msi: Using platform check routine.\n");
- 		return ppc_md.msi_check_device(dev, nvec, type);
-diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-index 104f297..bc2e888 100644
---- a/drivers/pci/msi.c
-+++ b/drivers/pci/msi.c
-@@ -45,6 +45,13 @@ arch_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
- 	struct msi_desc *entry;
- 	int ret;
- 
-+	/*
-+	 * If an architecture wants to support multiple MSI, it needs to
-+	 * override arch_setup_msi_irqs()
-+	 */
-+	if (type == PCI_CAP_ID_MSI && nvec > 1)
-+		return 1;
-+
- 	list_for_each_entry(entry, &dev->msi_list, list) {
- 		ret = arch_setup_msi_irq(dev, entry);
- 		if (ret)
-@@ -65,8 +72,12 @@ arch_teardown_msi_irqs(struct pci_dev *dev)
- 	struct msi_desc *entry;
- 
- 	list_for_each_entry(entry, &dev->msi_list, list) {
--		if (entry->irq != 0)
--			arch_teardown_msi_irq(entry->irq);
-+		int i, nvec;
-+		if (entry->irq == 0)
-+			continue;
-+		nvec = 1 << entry->msi_attrib.multiple;
-+		for (i = 0; i < nvec; i++)
-+			arch_teardown_msi_irq(entry->irq + i);
- 	}
- }
- 
-@@ -186,6 +197,12 @@ void write_msi_msg(unsigned int irq, struct msi_msg *msg)
- 	} else {
- 		struct pci_dev *dev = entry->dev;
- 		int pos = entry->msi_attrib.pos;
-+		u16 msgctl;
-+
-+		pci_read_config_word(dev, msi_control_reg(pos), &msgctl);
-+		msgctl &= ~PCI_MSI_FLAGS_QSIZE;
-+		msgctl |= entry->msi_attrib.multiple << 4;
-+		pci_write_config_word(dev, msi_control_reg(pos), msgctl);
- 
- 		pci_write_config_dword(dev, msi_lower_address_reg(pos),
- 					msg->address_lo);
-@@ -301,13 +318,15 @@ EXPORT_SYMBOL_GPL(pci_restore_msi_state);
- /**
-  * msi_capability_init - configure device's MSI capability structure
-  * @dev: pointer to the pci_dev data structure of MSI device function
-+ * @nvec: number of interrupts to allocate
-  *
-- * Setup the MSI capability structure of device function with a single
-- * MSI irq, regardless of device function is capable of handling
-- * multiple messages. A return of zero indicates the successful setup
-- * of an entry zero with the new MSI irq or non-zero for otherwise.
-- **/
--static int msi_capability_init(struct pci_dev *dev)
-+ * Setup the MSI capability structure of the device with the requested
-+ * number of interrupts.  A return value of zero indicates the successful
-+ * setup of an entry with the new MSI irq.  A negative return value indicates
-+ * an error, and a positive return value indicates the number of interrupts
-+ * which could have been allocated.
-+ */
-+static int msi_capability_init(struct pci_dev *dev, int nvec)
- {
- 	struct msi_desc *entry;
- 	int pos, ret;
-@@ -351,7 +370,7 @@ static int msi_capability_init(struct pci_dev *dev)
- 	list_add_tail(&entry->list, &dev->msi_list);
- 
- 	/* Configure MSI capability structure */
--	ret = arch_setup_msi_irqs(dev, 1, PCI_CAP_ID_MSI);
-+	ret = arch_setup_msi_irqs(dev, nvec, PCI_CAP_ID_MSI);
- 	if (ret) {
- 		msi_free_irqs(dev);
- 		return ret;
-@@ -503,36 +522,44 @@ static int pci_msi_check_device(struct pci_dev* dev, int nvec, int type)
- }
- 
- /**
-- * pci_enable_msi - configure device's MSI capability structure
-- * @dev: pointer to the pci_dev data structure of MSI device function
-+ * pci_enable_msi_block - configure device's MSI capability structure
-+ * @dev: device to configure
-+ * @nvec: number of interrupts to configure
-  *
-- * Setup the MSI capability structure of device function with
-- * a single MSI irq upon its software driver call to request for
-- * MSI mode enabled on its hardware device function. A return of zero
-- * indicates the successful setup of an entry zero with the new MSI
-- * irq or non-zero for otherwise.
-- **/
--int pci_enable_msi(struct pci_dev* dev)
-+ * Allocate IRQs for a device with the MSI capability.
-+ * This function returns a negative errno if an error occurs.  If it
-+ * is unable to allocate the number of interrupts requested, it returns
-+ * the number of interrupts it might be able to allocate.  If it successfully
-+ * allocates at least the number of interrupts requested, it returns 0 and
-+ * updates the @dev's irq member to the lowest new interrupt number; the
-+ * other interrupt numbers allocated to this device are consecutive.
-+ */
-+int pci_enable_msi_block(struct pci_dev *dev, unsigned int nvec)
- {
- 	int status;
- 
--	status = pci_msi_check_device(dev, 1, PCI_CAP_ID_MSI);
-+	/* MSI only supports up to 32 interrupts */
-+	if (nvec > 32)
-+		return 32;
-+
-+	status = pci_msi_check_device(dev, nvec, PCI_CAP_ID_MSI);
- 	if (status)
- 		return status;
- 
- 	WARN_ON(!!dev->msi_enabled);
- 
--	/* Check whether driver already requested for MSI-X irqs */
-+	/* Check whether driver already requested MSI-X irqs */
- 	if (dev->msix_enabled) {
- 		printk(KERN_INFO "PCI: %s: Can't enable MSI.  "
- 			"Device already has MSI-X enabled\n",
- 			pci_name(dev));
- 		return -EINVAL;
- 	}
--	status = msi_capability_init(dev);
-+
-+	status = msi_capability_init(dev, nvec);
- 	return status;
- }
--EXPORT_SYMBOL(pci_enable_msi);
-+EXPORT_SYMBOL(pci_enable_msi_block);
- 
- void pci_msi_shutdown(struct pci_dev* dev)
- {
-@@ -581,8 +608,12 @@ static int msi_free_irqs(struct pci_dev* dev)
- 	struct msi_desc *entry, *tmp;
- 
- 	list_for_each_entry(entry, &dev->msi_list, list) {
--		if (entry->irq)
--			BUG_ON(irq_has_action(entry->irq));
-+		int i, nvec;
-+		if (!entry->irq)
-+			continue;
-+		nvec = 1 << entry->msi_attrib.multiple;
-+		for (i = 0; i < nvec; i++)
-+			BUG_ON(irq_has_action(entry->irq + i));
- 	}
- 
- 	arch_teardown_msi_irqs(dev);
-diff --git a/drivers/pci/msi.h b/drivers/pci/msi.h
-index 3898f52..b72e0bd 100644
---- a/drivers/pci/msi.h
-+++ b/drivers/pci/msi.h
-@@ -22,12 +22,8 @@
- #define msi_disable(control)		control &= ~PCI_MSI_FLAGS_ENABLE
- #define multi_msi_capable(control) \
- 	(1 << ((control & PCI_MSI_FLAGS_QMASK) >> 1))
--#define multi_msi_enable(control, num) \
--	control |= (((num >> 1) << 4) & PCI_MSI_FLAGS_QSIZE);
- #define is_64bit_address(control)	(!!(control & PCI_MSI_FLAGS_64BIT))
- #define is_mask_bit_support(control)	(!!(control & PCI_MSI_FLAGS_MASKBIT))
--#define msi_enable(control, num) multi_msi_enable(control, num); \
--	control |= PCI_MSI_FLAGS_ENABLE
- 
- #define msix_table_offset_reg(base)	(base + 0x04)
- #define msix_pba_offset_reg(base)	(base + 0x08)
-diff --git a/include/linux/msi.h b/include/linux/msi.h
-index 13a8a1b..70fcebc 100644
---- a/include/linux/msi.h
-+++ b/include/linux/msi.h
-@@ -18,6 +18,7 @@ extern void write_msi_msg(unsigned int irq, struct msi_msg *msg);
- struct msi_desc {
- 	struct {
- 		__u8	is_msix	: 1;
-+		__u8	multiple: 3;	/* log2 number of messages */
- 		__u8	maskbit	: 1; 	/* mask-pending bit supported ?   */
- 		__u8	masked	: 1;
- 		__u8	is_64	: 1;	/* Address size: 0=32bit 1=64bit  */
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index d18b1dd..16df5f9 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -699,7 +699,7 @@ struct msix_entry {
- 
- 
- #ifndef CONFIG_PCI_MSI
--static inline int pci_enable_msi(struct pci_dev *dev)
-+static inline int pci_enable_msi_block(struct pci_dev *dev, unsigned int nvec)
- {
- 	return -1;
- }
-@@ -726,7 +726,7 @@ static inline void msi_remove_pci_irq_vectors(struct pci_dev *dev)
- static inline void pci_restore_msi_state(struct pci_dev *dev)
- { }
- #else
--extern int pci_enable_msi(struct pci_dev *dev);
-+extern int pci_enable_msi_block(struct pci_dev *dev, unsigned int nvec);
- extern void pci_msi_shutdown(struct pci_dev *dev);
- extern void pci_disable_msi(struct pci_dev *dev);
- extern int pci_enable_msix(struct pci_dev *dev,
-@@ -737,6 +737,8 @@ extern void msi_remove_pci_irq_vectors(struct pci_dev *dev);
- extern void pci_restore_msi_state(struct pci_dev *dev);
- #endif
- 
-+#define pci_enable_msi(pdev)	pci_enable_msi_block(pdev, 1)
-+
- #ifdef CONFIG_HT_IRQ
- /* The functions a driver should call */
- int  ht_create_irq(struct pci_dev *dev, int idx);
--- 
-1.5.5.4
+In my understanding, when irq affinity is changed on one of
+the IRQs corresponding to MSI, it will not completed until
+interrupts occur on all the IRQs. Attempts to change irq
+affinity before previous affinity change is finished will be
+ignored. Here, suppose that device uses three MSI irqs. In
+this case, your patch manages four irqs, but only three
+interrupts are used. If irq affinity changed on this MSI
+interrupts, will it be completed?
+
+Thanks,
+Kenji Kaneshige
+
+
+Matthew Wilcox wrote:
+> Implement the arch_setup_msi_irqs() interface.  Extend create_irq()
+> into create_irq_block() and reimplement create_irq as a wrapper around
+> it.  Create assign_irq_vector_block() based closely on
+> assign_irq_vector().  Teach set_msi_irq_affinity() how to handle
+> multiple MSIs.
+> 
+> Signed-off-by: Matthew Wilcox <willy@linux.intel.com>
+> ---
+>  arch/x86/kernel/io_apic_64.c |  237 ++++++++++++++++++++++++++++++++++++------
+>  1 files changed, 205 insertions(+), 32 deletions(-)
+> 
+> diff --git a/arch/x86/kernel/io_apic_64.c b/arch/x86/kernel/io_apic_64.c
+> index ef1a8df..6a00dca 100644
+> --- a/arch/x86/kernel/io_apic_64.c
+> +++ b/arch/x86/kernel/io_apic_64.c
+> @@ -61,7 +61,7 @@ struct irq_cfg {
+>  };
+>  
+>  /* irq_cfg is indexed by the sum of all RTEs in all I/O APICs. */
+> -struct irq_cfg irq_cfg[NR_IRQS] __read_mostly = {
+> +static struct irq_cfg irq_cfg[NR_IRQS] __read_mostly = {
+>  	[0]  = { .domain = CPU_MASK_ALL, .vector = IRQ0_VECTOR,  },
+>  	[1]  = { .domain = CPU_MASK_ALL, .vector = IRQ1_VECTOR,  },
+>  	[2]  = { .domain = CPU_MASK_ALL, .vector = IRQ2_VECTOR,  },
+> @@ -683,6 +683,8 @@ static int pin_2_irq(int idx, int apic, int pin)
+>  	return irq;
+>  }
+>  
+> +static int current_vector = FIRST_DEVICE_VECTOR;
+> +
+>  static int __assign_irq_vector(int irq, cpumask_t mask)
+>  {
+>  	/*
+> @@ -696,7 +698,7 @@ static int __assign_irq_vector(int irq, cpumask_t mask)
+>  	 * Also, we've got to be careful not to trash gate
+>  	 * 0x80, because int 0x80 is hm, kind of importantish. ;)
+>  	 */
+> -	static int current_vector = FIRST_DEVICE_VECTOR, current_offset = 0;
+> +	static int current_offset = 0;
+>  	unsigned int old_vector;
+>  	int cpu;
+>  	struct irq_cfg *cfg;
+> @@ -769,6 +771,97 @@ static int assign_irq_vector(int irq, cpumask_t mask)
+>  	return err;
+>  }
+>  
+> +static int __assign_irq_vector_block(int irq, int count, cpumask_t mask)
+> +{
+> +	unsigned int old_vector;
+> +	int i, cpu;
+> +	struct irq_cfg *cfg;
+> +
+> +	/*
+> +	 * We've got to be careful not to trash gate 0x80,
+> +	 * because int 0x80 is hm, kind of importantish. ;)
+> +	 */
+> +	BUG_ON((unsigned)irq + count > NR_IRQS);
+> +
+> +	/* Only try and allocate irqs on cpus that are present */
+> +	cpus_and(mask, mask, cpu_online_map);
+> +
+> +	for (i = 0; i < count; i++) {
+> +		cfg = &irq_cfg[irq + i];
+> +		if ((cfg->move_in_progress) || cfg->move_cleanup_count)
+> +			return -EBUSY;
+> +	}
+> +
+> +	cfg = &irq_cfg[irq];
+> +	old_vector = cfg->vector;
+> +	if (old_vector) {
+> +		cpumask_t tmp;
+> +		cpus_and(tmp, cfg->domain, mask);
+> +		if (!cpus_empty(tmp))
+> +			return 0;
+> +	}
+> +
+> +	for_each_cpu_mask(cpu, mask) {
+> +		cpumask_t domain, new_mask;
+> +		int new_cpu;
+> +		int vector;
+> +
+> +		domain = vector_allocation_domain(cpu);
+> +		cpus_and(new_mask, domain, cpu_online_map);
+> +
+> +		vector = current_vector & ~(count - 1);
+> + next:
+> +		vector += count;
+> +		if (vector + count >= FIRST_SYSTEM_VECTOR) {
+> +			vector = FIRST_DEVICE_VECTOR & ~(count - 1);
+> +			if (vector < FIRST_DEVICE_VECTOR)
+> +				vector += count;
+> +		}
+> +		if (unlikely(vector == (current_vector & ~(count - 1))))
+> +			continue;
+> +		if ((IA32_SYSCALL_VECTOR >= vector) &&
+> +		    (IA32_SYSCALL_VECTOR < vector + count))
+> +			goto next;
+> +		for_each_cpu_mask(new_cpu, new_mask) {
+> +			for (i = 0; i < count; i++) {
+> +				if (per_cpu(vector_irq, new_cpu)[vector + i]
+> +									!= -1)
+> +					goto next;
+> +			}
+> +		}
+> +		/* Found one! */
+> +		current_vector = vector + count - 1;
+> +		for (i = 0; i < count; i++) {
+> +			cfg = &irq_cfg[irq + i];
+> +			if (old_vector) {
+> +				cfg->move_in_progress = 1;
+> +				cfg->old_domain = cfg->domain;
+> +			}
+> +			for_each_cpu_mask(new_cpu, new_mask) {
+> +				per_cpu(vector_irq, new_cpu)[vector + i] =
+> +					irq + i;
+> +			}
+> +			cfg->vector = vector;
+> +			cfg->domain = domain;
+> +		}
+> +		return 0;
+> +	}
+> +	return -ENOSPC;
+> +}
+> +
+> +/* Assumes that count is a power of two and aligns to that power of two */
+> +static int assign_irq_vector_block(int irq, int count, cpumask_t mask)
+> +{
+> +	int result;
+> +	unsigned long flags;
+> +
+> +	spin_lock_irqsave(&vector_lock, flags);
+> +	result = __assign_irq_vector_block(irq, count, mask);
+> +	spin_unlock_irqrestore(&vector_lock, flags);
+> +
+> +	return result;
+> +}
+> +
+>  static void __clear_irq_vector(int irq)
+>  {
+>  	struct irq_cfg *cfg;
+> @@ -788,6 +881,14 @@ static void __clear_irq_vector(int irq)
+>  	cpus_clear(cfg->domain);
+>  }
+>  
+> +static void __clear_irq_vector_block(int irq, int count)
+> +{
+> +	while (count > 0) {
+> +		count--;
+> +		__clear_irq_vector(irq + count);
+> +	}
+> +}
+> +
+>  void __setup_vector_irq(int cpu)
+>  {
+>  	/* Initialize vector_irq on a new cpu */
+> @@ -1895,30 +1996,56 @@ device_initcall(ioapic_init_sysfs);
+>  /*
+>   * Dynamic irq allocate and deallocation
+>   */
+> -int create_irq(void)
+> +
+> +/*
+> + * On success, returns the interrupt number of the lowest numbered irq
+> + * in the block.  If it can't find a block of the right size, it returns
+> + * -1 - (length of the longest run).
+> + */
+> +static int create_irq_block(int count)
+>  {
+> -	/* Allocate an unused irq */
+> -	int irq;
+> -	int new;
+> +	/* Allocate 'count' consecutive unused irqs */
+> +	int i, new, longest;
+>  	unsigned long flags;
+>  
+> -	irq = -ENOSPC;
+> +	longest = 0;
+>  	spin_lock_irqsave(&vector_lock, flags);
+>  	for (new = (NR_IRQS - 1); new >= 0; new--) {
+>  		if (platform_legacy_irq(new))
+> -			continue;
+> +			goto clear;
+>  		if (irq_cfg[new].vector != 0)
+> +			goto clear;
+> +		longest++;
+> +		if (longest < count)
+>  			continue;
+> -		if (__assign_irq_vector(new, TARGET_CPUS) == 0)
+> -			irq = new;
+> +
+> +		while (__assign_irq_vector_block(new, longest, TARGET_CPUS))
+> +			longest /= 2;
+> +		if (longest < count)
+> +			__clear_irq_vector_block(new, longest);
+>  		break;
+> + clear:
+> +		__clear_irq_vector_block(new + 1, longest);
+> +		longest = 0;
+>  	}
+>  	spin_unlock_irqrestore(&vector_lock, flags);
+>  
+> -	if (irq >= 0) {
+> -		dynamic_irq_init(irq);
+> +	if (longest < count)
+> +		return -1 - longest;
+> +
+> +	for (i = 0; i < count; i++) {
+> +		dynamic_irq_init(new + i);
+>  	}
+> -	return irq;
+> +
+> +	return new;
+> +}
+> +
+> +int create_irq(void)
+> +{
+> +	int ret = create_irq_block(1);
+> +	if (ret < 0)
+> +		return -ENOSPC;
+> +	return ret;
+>  }
+>  
+>  void destroy_irq(unsigned int irq)
+> @@ -1936,7 +2063,8 @@ void destroy_irq(unsigned int irq)
+>   * MSI message composition
+>   */
+>  #ifdef CONFIG_PCI_MSI
+> -static int msi_compose_msg(struct pci_dev *pdev, unsigned int irq, struct msi_msg *msg)
+> +static int msi_compose_msg(struct pci_dev *pdev, unsigned int irq,
+> +				unsigned int count, struct msi_msg *msg)
+>  {
+>  	struct irq_cfg *cfg = irq_cfg + irq;
+>  	int err;
+> @@ -1944,7 +2072,10 @@ static int msi_compose_msg(struct pci_dev *pdev, unsigned int irq, struct msi_ms
+>  	cpumask_t tmp;
+>  
+>  	tmp = TARGET_CPUS;
+> -	err = assign_irq_vector(irq, tmp);
+> +	if (count == 1)
+> +		err = assign_irq_vector(irq, tmp);
+> +	else
+> +		err = assign_irq_vector_block(irq, count, tmp);
+>  	if (!err) {
+>  		cpus_and(tmp, cfg->domain, tmp);
+>  		dest = cpu_mask_to_apicid(tmp);
+> @@ -1975,6 +2106,8 @@ static int msi_compose_msg(struct pci_dev *pdev, unsigned int irq, struct msi_ms
+>  static void set_msi_irq_affinity(unsigned int irq, cpumask_t mask)
+>  {
+>  	struct irq_cfg *cfg = irq_cfg + irq;
+> +	struct msi_desc *desc = get_irq_msi(irq);
+> +	int i, count = 1 << desc->msi_attrib.multiple;
+>  	struct msi_msg msg;
+>  	unsigned int dest;
+>  	cpumask_t tmp;
+> @@ -1983,8 +2116,15 @@ static void set_msi_irq_affinity(unsigned int irq, cpumask_t mask)
+>  	if (cpus_empty(tmp))
+>  		return;
+>  
+> -	if (assign_irq_vector(irq, mask))
+> -		return;
+> +	if (count > 1) {
+> +		/* Multiple MSIs all go to the same destination */
+> +		irq = desc->irq;
+> +		if (assign_irq_vector_block(irq, count, mask))
+> +			return;
+> +	} else {
+> +		if (assign_irq_vector(irq, mask))
+> +			return;
+> +	}
+>  
+>  	cpus_and(tmp, cfg->domain, mask);
+>  	dest = cpu_mask_to_apicid(tmp);
+> @@ -1997,7 +2137,9 @@ static void set_msi_irq_affinity(unsigned int irq, cpumask_t mask)
+>  	msg.address_lo |= MSI_ADDR_DEST_ID(dest);
+>  
+>  	write_msi_msg(irq, &msg);
+> -	irq_desc[irq].affinity = mask;
+> +
+> +	for (i = 0; i < count; i++)
+> +		irq_desc[irq + i].affinity = mask;
+>  }
+>  #endif /* CONFIG_SMP */
+>  
+> @@ -2016,28 +2158,59 @@ static struct irq_chip msi_chip = {
+>  	.retrigger	= ioapic_retrigger_irq,
+>  };
+>  
+> -int arch_setup_msi_irq(struct pci_dev *dev, struct msi_desc *desc)
+> +static int x86_setup_msi_irq(struct pci_dev *pdev, struct msi_desc *desc, int count)
+>  {
+>  	struct msi_msg msg;
+> -	int irq, ret;
+> -	irq = create_irq();
+> -	if (irq < 0)
+> -		return irq;
+> -
+> -	ret = msi_compose_msg(dev, irq, &msg);
+> -	if (ret < 0) {
+> -		destroy_irq(irq);
+> -		return ret;
+> +	int i, ret, base_irq, alloc;
+> +
+> +	/* MSI can only allocate a power-of-two */
+> +	alloc = roundup_pow_of_two(count);
+> +
+> +	base_irq = create_irq_block(alloc);
+> +	if (base_irq < 0) {
+> +		if (alloc == 1)
+> +			return -ENOSPC;
+> +		return rounddown_pow_of_two(-base_irq - 1);
+>  	}
+>  
+> -	set_irq_msi(irq, desc);
+> -	write_msi_msg(irq, &msg);
+> +	ret = msi_compose_msg(pdev, base_irq, alloc, &msg);
+> +	if (ret)
+> +		return ret;
+> +
+> +	desc->msi_attrib.multiple = order_base_2(alloc);
+>  
+> -	set_irq_chip_and_handler_name(irq, &msi_chip, handle_edge_irq, "edge");
+> +	/* Do loop in reverse so set_irq_msi ends up setting
+> +	 * desc->irq to base_irq
+> +	 */
+> +	for (i = count - 1; i >= 0; i--) {
+> +		set_irq_msi(base_irq + i, desc);
+> +		set_irq_chip_and_handler_name(base_irq + i, &msi_chip,
+> +						handle_edge_irq, "edge");
+> +	}
+> +	write_msi_msg(base_irq, &msg);
+>  
+>  	return 0;
+>  }
+>  
+> +int arch_setup_msi_irqs(struct pci_dev *pdev, int nvec, int type)
+> +{
+> +	struct msi_desc *desc;
+> +	int ret;
+> +
+> +	if (type == PCI_CAP_ID_MSI) {
+> +		desc = list_first_entry(&pdev->msi_list, struct msi_desc, list);
+> +		ret = x86_setup_msi_irq(pdev, desc, nvec);
+> +	} else {
+> +		list_for_each_entry(desc, &pdev->msi_list, list) {
+> +			ret = x86_setup_msi_irq(pdev, desc, 1);
+> +			if (ret)
+> +				break;
+> +		}
+> +	}
+> +
+> +	return ret;
+> +}
+> +
+>  void arch_teardown_msi_irq(unsigned int irq)
+>  {
+>  	destroy_irq(irq);
+> @@ -2090,7 +2263,7 @@ int arch_setup_dmar_msi(unsigned int irq)
+>  	int ret;
+>  	struct msi_msg msg;
+>  
+> -	ret = msi_compose_msg(NULL, irq, &msg);
+> +	ret = msi_compose_msg(NULL, irq, 1, &msg);
+>  	if (ret < 0)
+>  		return ret;
+>  	dmar_msi_write(irq, &msg);
