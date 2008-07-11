@@ -1,31 +1,37 @@
 From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: non functional pata dvd drive under 2.6.25.6
-Date: Fri, 11 Jul 2008 19:27:36 +0100
-Message-ID: <20080711192736.41a5c877@lxorguk.ukuu.org.uk>
-References: <vi85j5-uig.ln1@scorpion77.cjb.net>
-	<20080708214145.0480ac28.akpm@linux-foundation.org>
-	<20080711164805.3bd4c960@lxorguk.ukuu.org.uk>
-	<20080711113745.21823a9f.akpm@linux-foundation.org>
+Subject: Re: pata_it821x completely broken
+Date: Fri, 11 Jul 2008 21:14:09 +0100
+Message-ID: <20080711211409.2eef4ddb@lxorguk.ukuu.org.uk>
+References: <200807042153.56644.linux@rainbow-software.org>
+	<20080706230118.GA25905@devserv.devel.redhat.com>
+	<200807102235.22651.linux@rainbow-software.org>
+	<200807112043.36772.linux@rainbow-software.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:33560 "EHLO
+Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:35556 "EHLO
 	lxorguk.ukuu.org.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1754778AbYGKSpI (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 11 Jul 2008 14:45:08 -0400
-In-Reply-To: <20080711113745.21823a9f.akpm@linux-foundation.org>
+	with ESMTP id S1753344AbYGKUbw (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 11 Jul 2008 16:31:52 -0400
+In-Reply-To: <200807112043.36772.linux@rainbow-software.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: Jeroen Beerstra <jb@scorpion77.cjb.net>, linux-ide@vger.kernel.org
+To: Ondrej Zary <linux@rainbow-software.org>
+Cc: Alan Cox <alan@redhat.com>, LKML <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org
 
-> If the IDE guys knew this information then would it be too much to ask
-> that you go tell the x86 developers about it rather than having me play
-> postman all the time?
+> > commenting out the error check after ata_dev_init_params() call in
+> > ata_dev_read_id() function (libata-core.c), I got at least the device name.
+> > The capacity is 0 so it doesn't work, obviously:
 
-Its in the bugzilla bug referenced (and I couldn't play postman as I'd
-not reviewed the bug until then)
+If you don't read the ID then it wouldn't.
 
-Alan
+> I captured the IDENTIFY data from the virtual device. I'm not ATA guru but
+> looking at the data, there are zeros at many places where something should be.
+> That number starting at 0x78 looks like size of the array in sectors
+> (0x4C726C or 0x4C6C72 - the array is built from 2.5GB and 6.4GB drives).
+
+The Ident data for the virtual device is fairly sparse but the specs
+don't require a lot of the field are filled in and only the LBA really
+matters.
 
