@@ -1,105 +1,164 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: [git patches] libata fixes for .26
-Date: Fri, 11 Jul 2008 10:10:42 -0400
-Message-ID: <20080711141042.GA17624@havoc.gtf.org>
+From: Matthew Wilcox <matthew@wil.cx>
+Subject: Re: Multiple MSI, take 3
+Date: Fri, 11 Jul 2008 09:10:58 -0600
+Message-ID: <20080711151058.GU14894@parisc-linux.org>
+References: <20080711005719.GO14894@parisc-linux.org> <m1iqvc91li.fsf@frodo.ebiederm.org> <20080711102326.GR14894@parisc-linux.org> <m1iqvc7iys.fsf@frodo.ebiederm.org> <20080711121744.GT14894@parisc-linux.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from havoc.gtf.org ([69.61.125.42]:34595 "EHLO havoc.gtf.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752498AbYGKOKn (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 11 Jul 2008 10:10:43 -0400
+Received: from palinux.external.hp.com ([192.25.206.14]:44571 "EHLO
+	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752572AbYGKPLP (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 11 Jul 2008 11:11:15 -0400
 Content-Disposition: inline
+In-Reply-To: <20080711121744.GT14894@parisc-linux.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>
-Cc: linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
+To: "Eric W. Biederman" <ebiederm@xmission.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org, grundler@parisc-linux.org, mingo@elte.hu, tglx@linutronix.de, jgarzik@pobox.com, linux-ide@vger.kernel.org, suresh.b.siddha@intel.com, benh@kernel.crashing.org, jbarnes@virtuousgeek.org, rdunlap@xenotime.net, mtk.manpages@gmail.com
 
+On Fri, Jul 11, 2008 at 06:17:44AM -0600, Matthew Wilcox wrote:
+> On Fri, Jul 11, 2008 at 04:34:19AM -0700, Eric W. Biederman wrote:
+> > There is one idea that seems to model this cleanly
+> > without breaking all kinds of expectations.
+> > 
+> > That is an irq with a very small data payload.
+> > 
+> > In that case we wire all of the vectors up to a single
+> > irq handler that computes the payload as:
+> > payload = vector - base-vector.
+> > 
+> > And then we figure out how to pass that to the handler in irqaction.
+> > 
+> > To most of the system it is a single irq so it avoids breaking
+> > expectations about what an irq is.
+> > 
+> > To everything else it is a little odd, and has it's own unique
+> > set of rules (which is good as well).
 
-Please pull from 'upstream-linus' branch of
-master.kernel.org:/pub/scm/linux/kernel/git/jgarzik/libata-dev.git upstream-linus
+Having implemented this, I wish to retract my earlier statement:
 
-to receive the following updates:
+> I think rather than passing the 'vector - base_vector' integer, the
+> request_irq_block() should pass in an array of pointers as large as nvec
+> and irqaction passes the appropriate pointer to the handler.
 
- drivers/ata/libata-acpi.c |   19 ++++++++++++++++---
- drivers/ata/pata_sis.c    |    1 +
- 2 files changed, 17 insertions(+), 3 deletions(-)
+That idea requires a lot of mucking with generic_IRQ_handle, which I'm
+not willing to do.  Anyone have any problems with the below patch?
 
-Kai Krakow (1):
-      Added Targa Visionary 1000 IDE adapter to pata_sis.c
+I've not implemented the corresponding bit in io_apic_64.c yet, so
+completely untested.
 
-Tejun Heo (1):
-      libata-acpi: filter out DIPM enable
-
-Zhang Rui (1):
-      libata-acpi: don't call sleeping function from invalid context
-
-diff --git a/drivers/ata/libata-acpi.c b/drivers/ata/libata-acpi.c
-index 3ff8b14..9330b79 100644
---- a/drivers/ata/libata-acpi.c
-+++ b/drivers/ata/libata-acpi.c
-@@ -29,14 +29,16 @@
- enum {
- 	ATA_ACPI_FILTER_SETXFER	= 1 << 0,
- 	ATA_ACPI_FILTER_LOCK	= 1 << 1,
-+	ATA_ACPI_FILTER_DIPM	= 1 << 2,
+diff --git a/arch/x86/kernel/irq_64.c b/arch/x86/kernel/irq_64.c
+index 3aac154..a5d79e9 100644
+--- a/arch/x86/kernel/irq_64.c
++++ b/arch/x86/kernel/irq_64.c
+@@ -173,7 +173,7 @@ asmlinkage unsigned int do_IRQ(struct pt_regs *regs)
+ 	stack_overflow_check(regs);
+ #endif
  
- 	ATA_ACPI_FILTER_DEFAULT	= ATA_ACPI_FILTER_SETXFER |
--				  ATA_ACPI_FILTER_LOCK,
-+				  ATA_ACPI_FILTER_LOCK |
-+				  ATA_ACPI_FILTER_DIPM,
- };
+-	if (likely(irq < NR_IRQS))
++	if (likely((irq & ARCH_IRQ_DATA_MASK) < NR_IRQS))
+ 		generic_handle_irq(irq);
+ 	else {
+ 		if (!disable_apic)
+diff --git a/include/linux/irq.h b/include/linux/irq.h
+index 552e0ec..19c679c 100644
+--- a/include/linux/irq.h
++++ b/include/linux/irq.h
+@@ -282,6 +282,19 @@ extern unsigned int __do_IRQ(unsigned int irq);
+ #endif
  
- static unsigned int ata_acpi_gtf_filter = ATA_ACPI_FILTER_DEFAULT;
- module_param_named(acpi_gtf_filter, ata_acpi_gtf_filter, int, 0644);
--MODULE_PARM_DESC(acpi_gtf_filter, "filter mask for ACPI _GTF commands, set to filter out (0x1=set xfermode, 0x2=lock/freeze lock)");
-+MODULE_PARM_DESC(acpi_gtf_filter, "filter mask for ACPI _GTF commands, set to filter out (0x1=set xfermode, 0x2=lock/freeze lock, 0x4=DIPM)");
- 
- #define NO_PORT_MULT		0xffff
- #define SATA_ADR(root, pmp)	(((root) << 16) | (pmp))
-@@ -195,6 +197,10 @@ static void ata_acpi_handle_hotplug(struct ata_port *ap, struct ata_device *dev,
- 		/* This device does not support hotplug */
- 		return;
- 
-+	if (event == ACPI_NOTIFY_BUS_CHECK ||
-+	    event == ACPI_NOTIFY_DEVICE_CHECK)
-+		status = acpi_evaluate_integer(handle, "_STA", NULL, &sta);
+ /*
++ * For multiple MSI, we allow a small amount of data to be passed to
++ * the interrupt handler to determine which vector was called.  MSI
++ * only allows 32 interrupts, so we default to requiring 5 bits of
++ * information to be passed.  If your arch has NR_IRQS set higher than
++ * 2^27, you have some extremely large arrays and probably want to consider
++ * defining ARCH_IRQ_DATA_SHIFT and ARCH_IRQ_DATA_MASK.
++ */
++#ifndef ARCH_IRQ_DATA_SHIFT
++#define ARCH_IRQ_DATA_SHIFT 27
++#define ARCH_IRQ_DATA_MASK ((1 << ARCH_IRQ_DATA_SHIFT) - 1)
++#endif
 +
- 	spin_lock_irqsave(ap->lock, flags);
++/*
+  * Architectures call this to let the generic IRQ layer
+  * handle an interrupt. If the descriptor is attached to an
+  * irqchip-style controller then we call the ->handle_irq() handler,
+@@ -289,7 +302,7 @@ extern unsigned int __do_IRQ(unsigned int irq);
+  */
+ static inline void generic_handle_irq(unsigned int irq)
+ {
+-	struct irq_desc *desc = irq_desc + irq;
++	struct irq_desc *desc = irq_desc + (irq & ARCH_IRQ_DATA_MASK);
  
- 	switch (event) {
-@@ -202,7 +208,6 @@ static void ata_acpi_handle_hotplug(struct ata_port *ap, struct ata_device *dev,
- 	case ACPI_NOTIFY_DEVICE_CHECK:
- 		ata_ehi_push_desc(ehi, "ACPI event");
+ #ifdef CONFIG_GENERIC_HARDIRQS_NO__DO_IRQ
+ 	desc->handle_irq(irq, desc);
+diff --git a/kernel/irq/handle.c b/kernel/irq/handle.c
+index 5fa6198..86ff1ab 100644
+--- a/kernel/irq/handle.c
++++ b/kernel/irq/handle.c
+@@ -126,7 +126,7 @@ irqreturn_t no_action(int cpl, void *dev_id)
+  *
+  * Handles the action chain of an irq event
+  */
+-irqreturn_t handle_IRQ_event(unsigned int irq, struct irqaction *action)
++irqreturn_t handle_IRQ_event(unsigned int irq_plus_data, struct irqaction *action)
+ {
+ 	irqreturn_t ret, retval = IRQ_NONE;
+ 	unsigned int status = 0;
+@@ -137,7 +137,7 @@ irqreturn_t handle_IRQ_event(unsigned int irq, struct irqaction *action)
+ 		local_irq_enable_in_hardirq();
  
--		status = acpi_evaluate_integer(handle, "_STA", NULL, &sta);
- 		if (ACPI_FAILURE(status)) {
- 			ata_port_printk(ap, KERN_ERR,
- 				"acpi: failed to determine bay status (0x%x)\n",
-@@ -690,6 +695,14 @@ static int ata_acpi_filter_tf(const struct ata_taskfile *tf,
- 			return 1;
- 	}
+ 	do {
+-		ret = action->handler(irq, action->dev_id);
++		ret = action->handler(irq_plus_data, action->dev_id);
+ 		if (ret == IRQ_HANDLED)
+ 			status |= action->flags;
+ 		retval |= ret;
+@@ -163,15 +163,16 @@ irqreturn_t handle_IRQ_event(unsigned int irq, struct irqaction *action)
+  * This is the original x86 implementation which is used for every
+  * interrupt type.
+  */
+-unsigned int __do_IRQ(unsigned int irq)
++unsigned int __do_IRQ(unsigned int irq_plus_data)
+ {
++	unsigned int irq = irq_plus_data & ARCH_IRQ_DATA_MASK;
+ 	struct irq_desc *desc = irq_desc + irq;
+ 	struct irqaction *action;
+ 	unsigned int status;
  
-+	if (ata_acpi_gtf_filter & ATA_ACPI_FILTER_DIPM) {
-+		/* inhibit enabling DIPM */
-+		if (tf->command == ATA_CMD_SET_FEATURES &&
-+		    tf->feature == SETFEATURES_SATA_ENABLE &&
-+		    tf->nsect == SATA_DIPM)
-+			return 1;
-+	}
-+
- 	return 0;
- }
+ 	kstat_this_cpu.irqs[irq]++;
+ 	if (CHECK_IRQ_PER_CPU(desc->status)) {
+-		irqreturn_t action_ret;
++		irqreturn_t ret;
  
-diff --git a/drivers/ata/pata_sis.c b/drivers/ata/pata_sis.c
-index e82c66e..26345d7 100644
---- a/drivers/ata/pata_sis.c
-+++ b/drivers/ata/pata_sis.c
-@@ -56,6 +56,7 @@ static const struct sis_laptop sis_laptop[] = {
- 	{ 0x5513, 0x1043, 0x1107 },	/* ASUS A6K */
- 	{ 0x5513, 0x1734, 0x105F },	/* FSC Amilo A1630 */
- 	{ 0x5513, 0x1071, 0x8640 },     /* EasyNote K5305 */
-+	{ 0x5513, 0x1039, 0x5513 },	/* Targa Visionary 1000 */
- 	/* end marker */
- 	{ 0, }
- };
+ 		/*
+ 		 * No locking required for CPU-local interrupts:
+@@ -179,9 +180,9 @@ unsigned int __do_IRQ(unsigned int irq)
+ 		if (desc->chip->ack)
+ 			desc->chip->ack(irq);
+ 		if (likely(!(desc->status & IRQ_DISABLED))) {
+-			action_ret = handle_IRQ_event(irq, desc->action);
++			ret = handle_IRQ_event(irq_plus_data, desc->action);
+ 			if (!noirqdebug)
+-				note_interrupt(irq, desc, action_ret);
++				note_interrupt(irq, desc, ret);
+ 		}
+ 		desc->chip->end(irq);
+ 		return 1;
+@@ -233,7 +234,7 @@ unsigned int __do_IRQ(unsigned int irq)
+ 
+ 		spin_unlock(&desc->lock);
+ 
+-		action_ret = handle_IRQ_event(irq, action);
++		action_ret = handle_IRQ_event(irq_plus_data, action);
+ 		if (!noirqdebug)
+ 			note_interrupt(irq, desc, action_ret);
+ 
+
+-- 
+Intel are signing my paycheques ... these opinions are still mine
+"Bill, look, we understand that you're interested in selling us this
+operating system, but compare it to ours.  We can't possibly take such
+a retrograde step."
