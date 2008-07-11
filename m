@@ -1,141 +1,123 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH 2/8] ide: add ide_set_irq() inline helper
-Date: Fri, 11 Jul 2008 13:28:38 +0400
-Message-ID: <487727C6.7040008@ru.mvista.com>
-References: <200711290104.21376.bzolnier@gmail.com> <200807072000.26380.bzolnier@gmail.com> <48732EF5.6080302@ru.mvista.com> <200807112320.04264.bzolnier@gmail.com>
+From: "Sagar Borikar" <sagar.borikar@gmail.com>
+Subject: Infrequent soft reset of ata for silicon image 3512 cards
+Date: Fri, 11 Jul 2008 14:59:12 +0530
+Message-ID: <3fb94e50807110229l18def5fbjadf7af9d6f9943d9@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from gateway-1237.mvista.com ([63.81.120.155]:3268 "EHLO
-	imap.sh.mvista.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751511AbYGKJ2q (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 11 Jul 2008 05:28:46 -0400
-In-Reply-To: <200807112320.04264.bzolnier@gmail.com>
+Received: from py-out-1112.google.com ([64.233.166.180]:56331 "EHLO
+	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751944AbYGKJ3O (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 11 Jul 2008 05:29:14 -0400
+Received: by py-out-1112.google.com with SMTP id p76so2121389pyb.10
+        for <linux-ide@vger.kernel.org>; Fri, 11 Jul 2008 02:29:13 -0700 (PDT)
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: linux-ide@vger.kernel.org, Mikhail Cherkashin <mcherkashin@ru.mvista.com>
+To: linux-ide@vger.kernel.org
 
-Hello.
+Hello,
 
-Bartlomiej Zolnierkiewicz wrote:
+I hope this is the right list for following questions if not please
+direct me to the correct one.
 
->>>>> Index: b/drivers/ide/ide-iops.c
->>>>> ===================================================================
->>>>> --- a/drivers/ide/ide-iops.c
->>>>> +++ b/drivers/ide/ide-iops.c
->>>>> @@ -688,8 +688,7 @@ int ide_driveid_update(ide_drive_t *driv
->>>>> 	 */
->>>>>
->>>>> 	SELECT_MASK(drive, 1);
->>>>> -	if (IDE_CONTROL_REG)
->>>>> -		hwif->OUTB(drive->ctl,IDE_CONTROL_REG);
->>>>> +	ide_set_irq(drive, 1);
->>>>>           
->>>>    If we're going to execute the command using polling, isn't it logical to 
->>>> *disable* drive's interrupt instead of enabling it which this code is 
->>>> currently doing?  This looks like it might work only for the drivers having 
->>>> the maskproc() method (of which hpt366.c is the only one that I've ever dealt 
->>>> with).
->>>>         
->>> Yes, this needs fixing.
->>>       
->>     But should we honor drive->quirk_list here? What its different values 
->> mean? I'm seeing either 1 or 2 is used to decide whether to set nIEN or not...
->>     
->
-> I did some research on ->quirk_list in the past but I couldn't exactly
-> figure it out.  I also wasn't able to trace this code to its author
-> (not that I tried very hard)...
->
-> Anyway my current findings/theories are the following:
->
-> - the diff between hpt366 and pdc202xx_{new,old} quirky devices:
->
-> --- hpt366.c    2008-04-12 22:03:54.000000000 +0200
-> +++ pdc202xx_new.c      2008-04-12 22:04:03.000000000 +0200
-> @@ -1,7 +1,11 @@
-> -static const char *quirk_drives[] = {
-> +static const char *pdc_quirk_drives[] = {
->         "QUANTUM FIREBALLlct08 08",
->         "QUANTUM FIREBALLP KA6.4",
-> +       "QUANTUM FIREBALLP KA9.1",
->         "QUANTUM FIREBALLP LM20.4",
-> +       "QUANTUM FIREBALLP KX13.6",
-> +       "QUANTUM FIREBALLP KX20.5",
-> +       "QUANTUM FIREBALLP KX27.3",
->         "QUANTUM FIREBALLP LM20.5",
->         NULL
->  };
->
->   indicates that pdc202xx_{new,old} lists lack few devices that were added
->   only to hpt366 and need fixing
->   
+Currently  I am working with NAS box which has following configuration:
 
-   You surely meant to say the hpt366's list lacks few devices. ;-)
+MIPS arch
+2.6.18 kernel - comparatively older but box is in production
+128 MB RAM
+sil 3512 SATA controller
+xfs file system
 
-> - the problem most likely is not limited to hpt366/pdc202xx_{new,old}
->   so we should move its handling to core IDE code
->   
+When performing the iozone stress test of the box over CIFS, NFS
+simultaneously, I find that the ata port gets soft reset once in 5-8
+hours and because of which the the continuous write activity gets
+stalled on the drives. All the smbd processes which are writing data
+to the disk goes into uninterruptilbe sleep state continuosuly and the
+test doesn't complete.
 
-   Agreed.
+Following is the log that I get :
 
-> - we should make sure that all SELECT_MASK() users also call ide_set_irq()
->   (then sgiioc4's ->maskproc can be removed since it is a copy of ->set_irq)
->   
-
-   I've kind of made sure about that already, hence I've already created 
-a patch doing that...
-
-> - we may want to make SELECT_MASK() call enable/disable_irq() for
->   ->quirk_list device if there is no >maskproc method
->   
-
-   Agreed.
-
-> - we need to be a bit careful with hpt366's ->maskproc because it checks
->   for ->quirk_list internally
-
-   ... and falls back to manipuating nIEN if not -- which is not its 
-business.
-
->  (so either we need to mask/unmask for all devices on hpt366
->   
-
-   I looked at that masking code and didn't like it at all -- since the 
-interrupts are disabled for *both* channels as there's only *one* bit 
-controlling that. :-/
-So, masking interrupt for all drives is not really desirable...
-
->   or limit masking/unmasking to ->quirk_list on icside)
->   
-
-   But you just said that in the icside driver this code controls some 
-kind of IRQ routinng...
-
-> - we should merge SELECT_MASK() with ide_set_irq() and consider skipping
->   ide_set_irq() for ->quirk_list devices
->   
-
-   ... you mean where it's not already done?
-
-> There is an added bonus in fixing the above issues as it would result in
-> (finally) having sane API for IRQ (un)masking, namely:
->
-> * ->set_irq in struct ide_tp_ops for device's side
->
-> * ->maskproc in struct ide_port_ops for controller's side
->
-> As usual, I'll be glad to help with any patches.
->   
-
-   Unfortunately, I'm very time-limited currently.
-
-> Thanks,
-> Bart
->   
-
-MBR, Sergei
+ata1: soft resetting port
+ata1: SATA link up 1.5 Gbps (SStatus 113 SControl 310)
+ata1.00: configured for UDMA/100
+ata1: EH complete
+SCSI device sda: 488397168 512-byte hdwr sectors (250059 MB)
+sda: Write Protect is off
+SCSI device sda: drive cache: write back
 
 
+After this, I start getting errors from file system :
+
+can't seek in filesystem at bb 10686861057857128
+can't read btree block 1630685585/1000141
+can't seek in filesystem at bb 8951363201349912
+can't read btree block 1365869628/911139
+can't seek in filesystem at bb 5768064121399776
+can't read btree block 880136736/1043772
+
+Which looks like filesystem is trying to read the block  which is not
+present in the partition.
+and because of which device driver cribs that it is trying to access
+the data beyond end of the device.
+
+So I guess there is filesystem corruption too which can be solved
+independently but ata1 getting soft reset under load is something
+strange. Has anyone observed this before with silicon image 3512
+cards?
+
+If I look for health of the drives, everything looks good:
+
+
+[root@NAS001ee5ab9c85 ~]# smartctl -d ata -A /dev/sata1
+smartctl version 5.33 [mips-unknown-linux-gnu] Copyright (C) 2002-4 Bruce Allen
+Home page is http://smartmontools.sourceforge.net/
+=== START OF READ SMART DATA SECTION ===
+SMART Attributes Data Structure revision number: 16
+Vendor Specific SMART Attributes with Thresholds:
+ID# ATTRIBUTE_NAME          FLAG     VALUE WORST THRESH TYPE
+UPDATED  WHEN_FAILED RAW_VALUE
+  1 Raw_Read_Error_Rate     0x000f   200   200   051    Pre-fail
+Always       -       0
+  3 Spin_Up_Time            0x0003   190   187   021    Pre-fail
+Always       -       5500
+  4 Start_Stop_Count        0x0032   100   100   000    Old_age
+Always       -       603
+  5 Reallocated_Sector_Ct   0x0033   200   200   140    Pre-fail
+Always       -       0
+  7 Seek_Error_Rate         0x000f   200   200   051    Pre-fail
+Always       -       0
+  9 Power_On_Hours          0x0032   096   096   000    Old_age
+Always       -       3188
+ 10 Spin_Retry_Count        0x0013   100   100   051    Pre-fail
+Always       -       0
+ 11 Calibration_Retry_Count 0x0013   100   100   051    Pre-fail
+Always       -       0
+ 12 Power_Cycle_Count       0x0032   100   100   000    Old_age
+Always       -       601
+194 Temperature_Celsius     0x0022   120   096   000    Old_age
+Always       -       30
+196 Reallocated_Event_Count 0x0032   200   200   000    Old_age
+Always       -       0
+197 Current_Pending_Sector  0x0012   200   200   000    Old_age
+Always       -       0
+198 Offline_Uncorrectable   0x0010   200   200   000    Old_age
+Offline      -       0
+199 UDMA_CRC_Error_Count    0x003e   200   200   000    Old_age
+Always       -       0
+200 Multi_Zone_Error_Rate   0x0009   200   200   051    Pre-fail
+Offline      -       0
+
+Checked whether it has any badblocks but it returns success for affected drive
+
+buffer read and cache read command using hdparm also succeeds.
+[root@NAS001ee5ab9c85 ~]# hdparm -tT /dev/sata1
+/dev/sata1:
+ Timing cached reads:   308 MB in  2.03 seconds = 152.05 MB/sec
+ Timing buffered disk reads:  132 MB in  3.04 seconds =  43.45 MB/sec
+
+any pointers?
+
+Thanks in advance
+Sagar
