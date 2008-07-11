@@ -1,41 +1,62 @@
-From: ebiederm@xmission.com (Eric W. Biederman)
+From: Matthew Wilcox <matthew@wil.cx>
 Subject: Re: Multiple MSI, take 3
-Date: Fri, 11 Jul 2008 03:06:33 -0700
-Message-ID: <m1iqvc91li.fsf@frodo.ebiederm.org>
-References: <20080711005719.GO14894@parisc-linux.org>
+Date: Fri, 11 Jul 2008 04:23:26 -0600
+Message-ID: <20080711102326.GR14894@parisc-linux.org>
+References: <20080711005719.GO14894@parisc-linux.org> <m1iqvc91li.fsf@frodo.ebiederm.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-pci-owner@vger.kernel.org>
-In-Reply-To: <20080711005719.GO14894@parisc-linux.org> (Matthew Wilcox's
-	message of "Thu, 10 Jul 2008 18:57:19 -0600")
-Sender: linux-pci-owner@vger.kernel.org
-To: Matthew Wilcox <matthew@wil.cx>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org, grundler@parisc-linux.org, mingo@elte.hu, tglx@linutronix.de, jgarzik@pobox.com, linux-ide@vger.kernel.org, suresh.b.siddha@intel.com, benh@kernel.crashing.org, jbarnes@virtuousgeek.org, rdunlap@xenotime.net, mtk.manpages@gmail.com
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from palinux.external.hp.com ([192.25.206.14]:40107 "EHLO
+	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755636AbYGKKXn (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 11 Jul 2008 06:23:43 -0400
+Content-Disposition: inline
+In-Reply-To: <m1iqvc91li.fsf@frodo.ebiederm.org>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: "Eric W. Biederman" <ebiederm@xmission.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org, grundler@parisc-linux.org, mingo@elte.hu, tglx@linutronix.de, jgarzik@pobox.com, linux-ide@vger.kernel.org, suresh.b.siddha@intel.com, benh@kernel.crashing.org, jbarnes@virtuousgeek.org, rdunlap@xenotime.net, mtk.manpages@gmail.com
 
-Matthew Wilcox <matthew@wil.cx> writes:
+On Fri, Jul 11, 2008 at 03:06:33AM -0700, Eric W. Biederman wrote:
+> Matthew Wilcox <matthew@wil.cx> writes:
+> 
+> > I'd like to thank Michael Ellerman for his feedback.  This is a much
+> > better patchset than it used to be.
+> 
+> There is a reason we don't have an API to support this.  Linux can not
+> reasonably support this, especially not on current X86.  The designers
+> of the of the AHCI were idiots and should have used MSI-X.
 
-> I'd like to thank Michael Ellerman for his feedback.  This is a much
-> better patchset than it used to be.
+Thank you for your constructive feedback, Eric.  Unfortunately, we have
+to deal with the world as it is, not how we would like it to be.  Since
+I have it running, I'd like to know what is unreasonable about the
+implementation.
 
-There is a reason we don't have an API to support this.  Linux can not
-reasonably support this, especially not on current X86.  The designers
-of the of the AHCI were idiots and should have used MSI-X.
+> mask/unmask is will likely break because the mask bit is optional
+> and when it is not present we disable the msi capability.
 
-Attempting to support multiple irqs in an MSI capability breaks
-every interesting use of an irq.
+I believe this is fixable.  I will attempt to do so.
 
-mask/unmask is will likely break because the mask bit is optional
-and when it is not present we disable the msi capability.
+> We can not set the affinity individually so we can not allow
+> different queues to be processed on different cores.
 
-We can not set the affinity individually so we can not allow
-different queues to be processed on different cores.
+This is true, and yet, it is still useful.  Just not as useful as one
+would want.
 
-So in general it seems something that we have to jump through a million
-hurdles and the result is someones twisted parody of a multiple working
-irqs, that even Intel's IOMMU can't cure.
+> So in general it seems something that we have to jump through a million
+> hurdles and the result is someones twisted parody of a multiple working
+> irqs, that even Intel's IOMMU can't cure.
 
-So unless the performance of the AHCI is better by a huge amount I don't
-see the point, and even then I am extremely sceptical.
+More constructive feedback ...
 
-Eric
+> So unless the performance of the AHCI is better by a huge amount I don't
+> see the point, and even then I am extremely sceptical.
+
+I don't have performance numbers yet, but surely you can see that
+avoiding a register read in the interrupt path is a large win?
+
+-- 
+Intel are signing my paycheques ... these opinions are still mine
+"Bill, look, we understand that you're interested in selling us this
+operating system, but compare it to ours.  We can't possibly take such
+a retrograde step."
