@@ -1,30 +1,38 @@
-From: the4hoffmans@earthlink.net
-Subject: Issue with AHCI driver
-Date: Thu, 10 Jul 2008 10:17:05 -0500 (GMT-05:00)
-Message-ID: <29493114.1215703025597.JavaMail.root@elwamui-lapwing.atl.sa.earthlink.net>
-Reply-To: the4hoffmans@earthlink.net
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: [PATCH] ide: disable drive interrupts in ide_driveid_update()
+Date: Fri, 11 Jul 2008 21:11:32 +0200
+Message-ID: <200807112111.33084.bzolnier@gmail.com>
+References: <200807092048.48078.sshtylyov@ru.mvista.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from elasmtp-kukur.atl.sa.earthlink.net ([209.86.89.65]:53752 "EHLO
-	elasmtp-kukur.atl.sa.earthlink.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751171AbYGJPRL (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 10 Jul 2008 11:17:11 -0400
+Received: from yx-out-2324.google.com ([74.125.44.30]:60120 "EHLO
+	yx-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753431AbYGJTXj (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 10 Jul 2008 15:23:39 -0400
+Received: by yx-out-2324.google.com with SMTP id 8so1178258yxm.1
+        for <linux-ide@vger.kernel.org>; Thu, 10 Jul 2008 12:23:38 -0700 (PDT)
+In-Reply-To: <200807092048.48078.sshtylyov@ru.mvista.com>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: jgarzik@pobox.com
-Cc: linux-ide@vger.kernel.org, blward@micron.com
+To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Cc: linux-ide@vger.kernel.org, mcherkashin@ru.mvista.com
 
-Sorry about the multiple e-mails Jeff, but our IT group has seen fit to deny me the ability to send e-mail to vger.kernel.org so I'm trying again from my own personal account.
--------------------------------------------------------------------
+On Wednesday 09 July 2008, Sergei Shtylyov wrote:
+> From: Mikhail Cherkashin <mcherkashin@ru.mvista.com>
+> 
+> Since ide_driveid_update() uses polling to execute the IDENTIFY DEVICE command
+> but clears nIEN bit in the control register and doesn't mask the IDE interrupt,
+> the latter does happen and lead to the corresponding message to appear:
+> 
+> ide0: unexpected interrupt, status=0x58, count=1
+> 
+> when e.g. running hdparm with option -X with a non-PCI IDE driver...
+> 
+> Signed-off-by: Mikhail Cherkashin <mcherkashin@ru.mvista.com>
+> Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
 
-
-My name is Bob Hoffman.  I am a software engineer for Micron Technology in Minneapolis.  I have been working on AHCI drivers.  We recently installed kernel build 2.6.19.0 (unpatched) of Linux on an Intel motherboard system which includes the ICH9 SATA controller.  We have been running some benchmarks and found that the SATA harddrives looked slow.  When I attached a SATA analyzer it shows that we are only getting one command "in flight" or "outstanding" at a time, and it is always slot (or tag) zero.  The AHCI driver doesn't seem to be taking advantage of the 32 deep queue.
-
-I checked the queue depth using the info at http://linux-ata.org/faq.html#io32 and it shows "NCQ (depth 31/32)".  I'm wondering if there is something else I need to know.
-
-I've copied our "Linux guru", Bob Ward, who knows more about the kernel stuff than I do.
-
-Thank you for any help you can provide.
-Bob (Hoffman) ; )
+applied
