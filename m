@@ -1,37 +1,47 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: pata_it821x completely broken
-Date: Fri, 11 Jul 2008 21:14:09 +0100
-Message-ID: <20080711211409.2eef4ddb@lxorguk.ukuu.org.uk>
-References: <200807042153.56644.linux@rainbow-software.org>
-	<20080706230118.GA25905@devserv.devel.redhat.com>
-	<200807102235.22651.linux@rainbow-software.org>
-	<200807112043.36772.linux@rainbow-software.org>
+From: Matthew Wilcox <matthew@wil.cx>
+Subject: Multiple MSI, take 4
+Date: Fri, 11 Jul 2008 15:16:00 -0600
+Message-ID: <20080711211559.GV14894@parisc-linux.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:35556 "EHLO
-	lxorguk.ukuu.org.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1753344AbYGKUbw (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 11 Jul 2008 16:31:52 -0400
-In-Reply-To: <200807112043.36772.linux@rainbow-software.org>
+Received: from palinux.external.hp.com ([192.25.206.14]:43711 "EHLO
+	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752260AbYGKVQB (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 11 Jul 2008 17:16:01 -0400
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Ondrej Zary <linux@rainbow-software.org>
-Cc: Alan Cox <alan@redhat.com>, LKML <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org
+To: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: grundler@parisc-linux.org, mingo@elte.hu, tglx@linutronix.de, jgarzik@pobox.com, linux-ide@vger.kernel.org, suresh.b.siddha@intel.com, benh@kernel.crashing.org, jbarnes@virtuousgeek.org, rdunlap@xenotime.net, mtk.manpages@gmail.com
 
-> > commenting out the error check after ata_dev_init_params() call in
-> > ata_dev_read_id() function (libata-core.c), I got at least the device name.
-> > The capacity is 0 so it doesn't work, obviously:
 
-If you don't read the ID then it wouldn't.
+Here we go with take 4.  Changes:
 
-> I captured the IDENTIFY data from the virtual device. I'm not ATA guru but
-> looking at the data, there are zeros at many places where something should be.
-> That number starting at 0x78 looks like size of the array in sectors
-> (0x4C726C or 0x4C6C72 - the array is built from 2.5GB and 6.4GB drives).
+ - Check the requested number of interrupts against the maximum number
+   the device claims to support.  Thanks to Hidetoshi Seto for pointing
+   out this oversight.
+ - Implemented Eric's suggestion of using a single IRQ and storing the
+   data with it.
+ - As a result, don't try to support the mode in the AHCI driver where
+   the excess ports all share the last interrupt.  It could be done, but
+   it would be rather messy and I don't have hardware that supports that
+   mode anyway.
 
-The Ident data for the virtual device is fairly sparse but the specs
-don't require a lot of the field are filled in and only the LBA really
-matters.
+I'm fairly comfortable with the subchannel notion we're introducing
+here.  It's more flexible than MSI and doesn't impose a penalty on
+architectures which don't implement it.  It makes some things more
+complex, but it makes other things simpler, so I think it's a wash from
+a cleanliness standpoint.
 
+Git tree still at 
+git://git.kernel.org/pub/scm/linux/kernel/git/willy/misc.git multiple-msi
+(and this push specifically at multiple-msi-20080711)
+
+Patches to follow.
+
+-- 
+Intel are signing my paycheques ... these opinions are still mine
+"Bill, look, we understand that you're interested in selling us this
+operating system, but compare it to ours.  We can't possibly take such
+a retrograde step."
