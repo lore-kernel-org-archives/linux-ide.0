@@ -1,50 +1,37 @@
-From: ebiederm@xmission.com (Eric W. Biederman)
-Subject: Re: Multiple MSI, take 3
-Date: Fri, 11 Jul 2008 21:41:07 -0700
-Message-ID: <m13amf3eak.fsf@frodo.ebiederm.org>
-References: <20080711005719.GO14894@parisc-linux.org>
-	<m1iqvc91li.fsf@frodo.ebiederm.org>
-	<20080711215943.GW1678@linux-os.sc.intel.com>
-	<m1d4lkauxc.fsf@frodo.ebiederm.org>
-	<1215834720.7549.154.camel@pasglop>
+From: Ingo Molnar <mingo@elte.hu>
+Subject: Re: [PATCH 6/6] x86-64: Support for multiple MSIs
+Date: Sat, 12 Jul 2008 07:54:44 +0200
+Message-ID: <20080712055444.GA13420@elte.hu>
+References: <20080711211559.GV14894@parisc-linux.org> <1215811018-15270-6-git-send-email-matthew@wil.cx>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-pci-owner@vger.kernel.org>
-In-Reply-To: <1215834720.7549.154.camel@pasglop> (Benjamin Herrenschmidt's
-	message of "Sat, 12 Jul 2008 13:52:00 +1000")
+Content-Disposition: inline
+In-Reply-To: <1215811018-15270-6-git-send-email-matthew@wil.cx>
 Sender: linux-pci-owner@vger.kernel.org
-To: benh@kernel.crashing.org
-Cc: Suresh Siddha <suresh.b.siddha@intel.com>, Matthew Wilcox <matthew@wil.cx>, "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "grundler@parisc-linux.org" <grundler@parisc-linux.org>, "mingo@elte.hu" <mingo@elte.hu>, "tglx@linutronix.de" <tglx@linutronix.de>, "jgarzik@pobox.com" <jgarzik@pobox.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "jbarnes@virtuousgeek.org" <jbarnes@virtuousgeek.org>, "rdunlap@xenotime.net" <rdunlap@xenotime.net>, "mtk.manpages@gmail.com" <mtk.manpages@gmail.com>
+To: Matthew Wilcox <matthew@wil.cx>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org, grundler@parisc-linux.org, tglx@linutronix.de, jgarzik@pobox.com, linux-ide@vger.kernel.org, suresh.b.siddha@intel.com, benh@kernel.crashing.org, jbarnes@virtuousgeek.org, rdunlap@xenotime.net, mtk.manpages@gmail.com, ebiederm@xmission.com, Matthew Wilcox <willy@linux.intel.com>, Yinghai Lu <yhlu.kernel@gmail.com>
 List-Id: linux-ide@vger.kernel.org
 
-Benjamin Herrenschmidt <benh@kernel.crashing.org> writes:
 
-> On Fri, 2008-07-11 at 15:59 -0700, Eric W. Biederman wrote:
->> 
->> Working mask/unmask.  With MSI-X as specced if I mask an irq and then unmask
->> it, an msi message will fire if something happened while the irq was masked
->> and not taken care of before the irq was unmasked.  That is the correct
->> behavior for an irq and a mmu won't let me get that.
->
-> And ? It's just a message, we can ignore it if masked, ie, do
-> software-masking. Not a big deal... no ?
+* Matthew Wilcox <matthew@wil.cx> wrote:
 
-It is edge triggered so it won't refire when unmasked (especially if we don't know).
-So it is easy to wind up in a state where the device is waiting for the software
-and the software is waiting for the device because an irq gets dropped.
+> Add support for allocating an aligned block of interrupt vectors. 
+> Allow interrupts to have up to 32 subchannels. Implement the 
+> arch_setup_msi_irqs() and arch_teardown_msi_irqs() interfaces.
+> 
+> Signed-off-by: Matthew Wilcox <willy@linux.intel.com>
+> ---
+>  arch/x86/kernel/io_apic_64.c |  221 +++++++++++++++++++++++++++++++++++------
+>  arch/x86/kernel/irq_64.c     |    2 +-
+>  include/asm-x86/irq_64.h     |    2 +
+>  3 files changed, 191 insertions(+), 34 deletions(-)
 
-There are enough places that have problems that we have a fairly standard work around
-to the problem (listed above) by just taking the first irq (after we have disabled the
-irq) and setting it pending in software and then actually masking it in hardware.
+hm, please implement this symmetrically on 64-bit and 32-bit as well. 
+That will need more IRQ infrastructure changes but that should be OK as 
+it will reduce the gap between the 32-bit and 64-bit side instead of 
+widening it. A good starting point would be to unify/generalize the IRQ 
+vector allocators. (and that would get most of what you need for 
+multi-vector MSI)
 
-That works, but it is still isn't quite correct.  Because we can run the
-interrupt handler once to often.  For interrupts that are never shared and
-always in order with the DMA, generally don't require reading a status
-register on the card, and are otherwise highly optimized that might actually
-be a problem.
-
-Which is why I said that it doesn't look like even using an iommu can
-fix all of the issues with treating msi multi message mode messages
-as individual irqs.  We can get very close but not quite there.
-
-Eric
+	Ingo
