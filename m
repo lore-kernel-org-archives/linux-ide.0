@@ -1,69 +1,41 @@
-From: Komuro <komurojun-mbn@nifty.com>
-Subject: Re: [KERNEL 2.6.26-rc4]  bugreport : pata_pcmcia with Sandisk
-	Extreme III 8GB
-Date: Sat, 12 Jul 2008 11:39:16 +0900
-Message-ID: <20080712113916.fb69df6b.komurojun-mbn@nifty.com>
-References: <20080528225049.9a134e0d.Kristoffer.Ericson@Gmail.com>
-	<20080528222740.GB20893@isilmar.linta.de>
-	<20080530135728.be02d3dc.Kristoffer.Ericson@Gmail.com>
-	<20080607223716.7d142072.komurojun-mbn@nifty.com>
-	<20080611072029.GB28692@comet.dominikbrodowski.net>
-	<20080614120055.ad8fbee0.komurojun-mbn@nifty.com>
-	<48537149.4040102@garzik.org>
-	<20080614213612.96873c25.komurojun-mbn@nifty.com>
-	<4855D8E2.10409@gmail.com>
-	<20080616221145.e3b069b9.komurojun-mbn@nifty.com>
-	<485669A0.6000404@gmail.com>
-	<20080617212345.c452d8c5.komurojun-mbn@nifty.com>
-	<20080706103752.13935ffd.komurojun-mbn@nifty.com>
-	<4870D46C.7000604@gmail.com>
-	<20080707214253.2406f81a.komurojun-mbn@nifty.com>
-	<48743A1A.2010304@gmail.com>
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Subject: Re: [PATCH] PCI: Add support for multiple MSI
+Date: Sat, 12 Jul 2008 13:45:42 +1000
+Message-ID: <1215834342.7549.151.camel@pasglop>
+References: <20080711005719.GO14894@parisc-linux.org>
+	 <1215738002-4961-2-git-send-email-matthew@wil.cx>
+	 <487719AC.9070609@jp.fujitsu.com>
+Reply-To: benh@kernel.crashing.org
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-pcmcia-bounces+glkpd-linux-pcmcia=m.gmane.org@lists.infradead.org>
-In-Reply-To: <48743A1A.2010304@gmail.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/listinfo/linux-pcmcia>,
-	<mailto:linux-pcmcia-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-pcmcia>
-List-Post: <mailto:linux-pcmcia@lists.infradead.org>
-List-Help: <mailto:linux-pcmcia-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-pcmcia>,
-	<mailto:linux-pcmcia-request@lists.infradead.org?subject=subscribe>
-Sender: linux-pcmcia-bounces@lists.infradead.org
-Errors-To: linux-pcmcia-bounces+glkpd-linux-pcmcia=m.gmane.org@lists.infradead.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Jeff Garzik <jeff@garzik.org>, linux-pcmcia <linux-pcmcia@lists.infradead.org>, linux-kernel@vger.kernel.org, Brodowski <linux@dominikbrodowski.net>, rjw@sisk.pl, linux-ide@vger.kernel.org, Dominik, Kristoffer Ericson <kristoffer.ericson@gmail.com>, jgarzik@redhat.com
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from gate.crashing.org ([63.228.1.57]:46620 "EHLO gate.crashing.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753210AbYGLDrY (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 11 Jul 2008 23:47:24 -0400
+In-Reply-To: <487719AC.9070609@jp.fujitsu.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Hidetoshi Seto <seto.hidetoshi@jp.fujitsu.com>
+Cc: Matthew Wilcox <matthew@wil.cx>, linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org, grundler@parisc-linux.org, mingo@elte.hu, tglx@linutronix.de, jgarzik@pobox.com, linux-ide@vger.kernel.org, suresh.b.siddha@intel.com, jbarnes@virtuousgeek.org, rdunlap@xenotime.net, mtk.manpages@gmail.com, Matthew Wilcox <willy@linux.intel.com>
 
+On Fri, 2008-07-11 at 17:28 +0900, Hidetoshi Seto wrote:
+> Hi,
+> 
+> First of all, it seems that mask/unmask of MSI has problems.
+>  - Per-vector masking is optional for MSI, so I think that allocating
+>    multiple messages for a function without masking capability would be
+>    not good idea, since all vector in the block will be masked/unmasked
+>    at once without any agreement.
+>  - Even if the function supports per-vector masking, current
+>    mask/unmask_msi_irq() functions assume that MSI uses only one vector,
+>    therefore they only set/unset the first bit of the maskbits which
+>    for the first vector of the block.  The bits for other vectors are
+>    initialized as 'masked' but no one unmask them.
 
-Hello,
+I tend to think we should just do soft-masking anyway for MSI... better
+than whacking config space.
 
-> Ah... super strange.  Can you please try to swap memory sticks around
-> and see whether anything changes to rule out bad memory?  
+Ben
 
-I tried the pata_pcmcia on 3(three) PC.but the result is same.
-So I think the memory is good.
-
-> Another
-> possibility is DMA corrupting the memory and printk makes the timing
-> different and dodges the bullet.  Does putting msleep(100) in the
-> pata_pcmcia init_one make any difference?
-
-I tried the msleep , but it still does not work.
-
-By the way,
-If I delete the pata_pcmcia.ko from /lib/modules/...
-and insert the ata pcmcia card,
-only /sys/bus/pcmcia/devices/0.0 exist.
-
-But if I install the pata_pcmcia.ko,
-/sys/bus/pcmcia/devices/0.0 and
-/sys/bus/pcmcia/devices/0.1 exist.
-
-Maybe the sysfs or something like that 
-is the problem.
-
-Best Regards
-Komuro
