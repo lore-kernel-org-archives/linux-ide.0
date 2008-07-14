@@ -1,243 +1,132 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 13/13] block: allow disk to have extended device number
-Date: Mon, 14 Jul 2008 16:48:13 +0900
-Message-ID: <1216021693-483-14-git-send-email-tj__8958.04074029929$1216021896$gmane$org@kernel.org>
+Subject: [PATCH 06/13] block: move policy from disk to part0
+Date: Mon, 14 Jul 2008 16:48:06 +0900
+Message-ID: <1216021693-483-7-git-send-email-tj@kernel.org>
 References: <1216021693-483-1-git-send-email-tj@kernel.org>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:38030 "EHLO hera.kernel.org"
+Received: from hera.kernel.org ([140.211.167.34]:36875 "EHLO hera.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757086AbYGNHuE (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 14 Jul 2008 03:50:04 -0400
+	id S1756004AbYGNHtd (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 14 Jul 2008 03:49:33 -0400
 In-Reply-To: <1216021693-483-1-git-send-email-tj@kernel.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: jens.axboe@oracle.com, James.Bottomley@HansenPartnership.com, bharrosh@panasas.com, greg.freemyer@gmail.com, linux-scsi@vger.kernel.org, brking@linux.vnet.ibm.com, liml@rtr.ca, viro@f
 Cc: Tejun Heo <tj@kernel.org>
 
-Now that disk and partition handlings are mostly unified, it's easy to
-allow disk to have extended device number.  This patch makes
-add_disk() use extended device number if disk->minors is zero.  Both
-sd and ide-disk are updated to use this.
-
-* sd_format_disk_name() is implemented which can generically determine
-  the drive name.  This removes disk number restriction stemming from
-  limited device names.
-
-* If sd index goes over SD_MAX_DISKS (which can be increased now BTW),
-  sd simply doesn't initialize minors letting block layer choose
-  extended device number.
-
-* If CONFIG_DEBUG_EXT_DEVT is set, both sd and ide-disk always set
-  minors to 0 and use extended device numbers.
+Move disk->policy to part0->policy.  Implement and use get_disk_ro().
 
 Signed-off-by: Tejun Heo <tj@kernel.org>
 ---
- block/genhd.c          |   29 ++++++++++++++++++-
- drivers/ide/ide-disk.c |    2 +-
- drivers/scsi/sd.c      |   74 +++++++++++++++++++++++++++++++++++-------------
- fs/partitions/check.c  |    1 +
- include/linux/genhd.h  |    3 +-
- 5 files changed, 86 insertions(+), 23 deletions(-)
+ block/genhd.c         |   14 ++++----------
+ drivers/ide/ide-cd.c  |    2 +-
+ drivers/md/dm-ioctl.c |    2 +-
+ fs/partitions/check.c |    2 +-
+ include/linux/genhd.h |    6 +++++-
+ 5 files changed, 12 insertions(+), 14 deletions(-)
 
 diff --git a/block/genhd.c b/block/genhd.c
-index b38c235..a4f3117 100644
+index c5b45e9..ff33b8c 100644
 --- a/block/genhd.c
 +++ b/block/genhd.c
-@@ -477,13 +477,40 @@ static int exact_lock(dev_t devt, void *data)
-  *
-  * This function registers the partitioning information in @disk
-  * with the kernel.
-+ *
-+ * FIXME: error handling
-  */
- void add_disk(struct gendisk *disk)
+@@ -1090,10 +1090,7 @@ EXPORT_SYMBOL(put_disk);
+ 
+ void set_device_ro(struct block_device *bdev, int flag)
  {
- 	struct backing_dev_info *bdi;
-+	dev_t devt;
-+	int rc;
-+
-+	/* minors == 0 indicates to use ext devt from part0 and should
-+	 * be accompanied with EXT_DEVT flag.  Make sure all
-+	 * parameters make sense.
-+	 */
-+	WARN_ON(disk->minors && !(disk->major || disk->first_minor));
-+	WARN_ON(!disk->minors && !(disk->flags & GENHD_FL_EXT_DEVT));
- 
- 	disk->flags |= GENHD_FL_UP;
--	disk_to_dev(disk)->devt = MKDEV(disk->major, disk->first_minor);
-+
-+	if (disk->minors)
-+		devt = MKDEV(disk->major, disk->first_minor);
-+	else {
-+		rc = blk_alloc_devt(&disk->part0, &devt);
-+		if (rc)
-+			return;
-+
-+		/* ->major and ->first_minor aren't supposed to be
-+		 * referenced from here on, but set them just in case.
-+		 */
-+		disk->major = MAJOR(devt);
-+		disk->first_minor = MINOR(devt);
-+	}
-+
-+	disk_to_dev(disk)->devt = devt;
-+
- 	blk_register_region(disk_devt(disk), disk->minors, NULL,
- 			    exact_match, exact_lock, disk);
- 	register_disk(disk);
-diff --git a/drivers/ide/ide-disk.c b/drivers/ide/ide-disk.c
-index 6d7cf15..6fe4d7b 100644
---- a/drivers/ide/ide-disk.c
-+++ b/drivers/ide/ide-disk.c
-@@ -44,7 +44,7 @@
- #if !defined(CONFIG_DEBUG_BLOCK_EXT_DEVT)
- #define IDE_DISK_MINORS		(1 << PARTN_BITS)
- #else
--#define IDE_DISK_MINORS		1
-+#define IDE_DISK_MINORS		0
- #endif
- 
- struct ide_disk_obj {
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index 1f41e3d..a10706b 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -89,7 +89,7 @@ MODULE_ALIAS_SCSI_DEVICE(TYPE_RBC);
- #if !defined(CONFIG_DEBUG_BLOCK_EXT_DEVT)
- #define SD_MINORS	16
- #else
--#define SD_MINORS	1
-+#define SD_MINORS	0
- #endif
- 
- static int  sd_revalidate_disk(struct gendisk *);
-@@ -1610,6 +1610,52 @@ static int sd_revalidate_disk(struct gendisk *disk)
+-	if (bdev->bd_contains != bdev)
+-		bdev->bd_part->policy = flag;
+-	else
+-		bdev->bd_disk->policy = flag;
++	bdev->bd_part->policy = flag;
  }
  
- /**
-+ *	sd_format_disk_name - format disk name
-+ *	@prefix: name prefix - ie. "sd" for SCSI disks
-+ *	@index: index of the disk to format name for
-+ *	@buf: output buffer
-+ *	@buflen: length of the output buffer
-+ *
-+ *	SCSI disk names starts at sda.  The 26th device is sdz and the
-+ *	27th is sdaa.  The last one for two lettered suffix is sdzz
-+ *	which is followed by sdaaa.
-+ *
-+ *	This is basically 26 base counting with one extra 'nil' entry
-+ *	at the beggining from the second digit on and can be
-+ *	determined using similar method as 26 base conversion with the
-+ *	index shifted -1 after each digit is computed.
-+ *
-+ *	CONTEXT:
-+ *	Don't care.
-+ *
-+ *	RETURNS:
-+ *	0 on success, -errno on failure.
-+ */
-+static int sd_format_disk_name(char *prefix, int index, char *buf, int buflen)
-+{
-+	const int base = 'z' - 'a' + 1;
-+	char *begin = buf + strlen(prefix);
-+	char *end = buf + buflen;
-+	char *p;
-+	int unit;
-+
-+	p = end - 1;
-+	*p = '\0';
-+	unit = base;
-+	do {
-+		if (p == begin)
-+			return -EINVAL;
-+		*--p = 'a' + (index % unit);
-+		index = (index / unit) - 1;
-+	} while (index >= 0);
-+
-+	memmove(begin, p, end - p);
-+	memcpy(buf, prefix, strlen(prefix));
-+
-+	return 0;
-+}
-+
-+/**
-  *	sd_probe - called during driver initialization and whenever a
-  *	new scsi device is attached to the system. It is called once
-  *	for each scsi device (not just disks) present.
-@@ -1661,8 +1707,8 @@ static int sd_probe(struct device *dev)
- 	if (error)
- 		goto out_put;
+ EXPORT_SYMBOL(set_device_ro);
+@@ -1103,8 +1100,8 @@ void set_disk_ro(struct gendisk *disk, int flag)
+ 	struct disk_part_iter piter;
+ 	struct hd_struct *part;
  
--	error = -EBUSY;
--	if (index >= SD_MAX_DISKS)
-+	error = sd_format_disk_name("sd", index, gd->disk_name, DISK_NAME_LEN);
-+	if (error)
- 		goto out_free_index;
+-	disk->policy = flag;
+-	disk_part_iter_start(&piter, disk, DISK_PITER_INCL_EMPTY);
++	disk_part_iter_start(&piter, disk,
++			     DISK_PITER_INCL_EMPTY | DISK_PITER_INCL_PART0);
+ 	while ((part = disk_part_iter_next(&piter)))
+ 		part->policy = flag;
+ 	disk_part_iter_stop(&piter);
+@@ -1116,10 +1113,7 @@ int bdev_read_only(struct block_device *bdev)
+ {
+ 	if (!bdev)
+ 		return 0;
+-	else if (bdev->bd_contains != bdev)
+-		return bdev->bd_part->policy;
+-	else
+-		return bdev->bd_disk->policy;
++	return bdev->bd_part->policy;
+ }
  
- 	sdkp->device = sdp;
-@@ -1689,24 +1735,12 @@ static int sd_probe(struct device *dev)
+ EXPORT_SYMBOL(bdev_read_only);
+diff --git a/drivers/ide/ide-cd.c b/drivers/ide/ide-cd.c
+index 68e7f19..86752cb 100644
+--- a/drivers/ide/ide-cd.c
++++ b/drivers/ide/ide-cd.c
+@@ -1126,7 +1126,7 @@ static ide_startstop_t cdrom_start_rw(ide_drive_t *drive, struct request *rq)
  
- 	get_device(&sdp->sdev_gendev);
+ 	if (write) {
+ 		/* disk has become write protected */
+-		if (cd->disk->policy) {
++		if (get_disk_ro(cd->disk)) {
+ 			cdrom_end_request(drive, 0);
+ 			return ide_stopped;
+ 		}
+diff --git a/drivers/md/dm-ioctl.c b/drivers/md/dm-ioctl.c
+index c3de311..5b91915 100644
+--- a/drivers/md/dm-ioctl.c
++++ b/drivers/md/dm-ioctl.c
+@@ -548,7 +548,7 @@ static int __dev_status(struct mapped_device *md, struct dm_ioctl *param)
+ 	 */
+ 	param->open_count = dm_open_count(md);
  
--	gd->major = sd_major((index & 0xf0) >> 4);
--	gd->first_minor = ((index & 0xf) << 4) | (index & 0xfff00);
--	gd->minors = SD_MINORS;
--	gd->fops = &sd_fops;
--
--	if (index < 26) {
--		sprintf(gd->disk_name, "sd%c", 'a' + index % 26);
--	} else if (index < (26 + 1) * 26) {
--		sprintf(gd->disk_name, "sd%c%c",
--			'a' + index / 26 - 1,'a' + index % 26);
--	} else {
--		const unsigned int m1 = (index / 26 - 1) / 26 - 1;
--		const unsigned int m2 = (index / 26 - 1) % 26;
--		const unsigned int m3 =  index % 26;
--		sprintf(gd->disk_name, "sd%c%c%c",
--			'a' + m1, 'a' + m2, 'a' + m3);
-+	if (index < SD_MAX_DISKS) {
-+		gd->major = sd_major((index & 0xf0) >> 4);
-+		gd->first_minor = ((index & 0xf) << 4) | (index & 0xfff00);
-+		gd->minors = SD_MINORS;
- 	}
--
-+	gd->fops = &sd_fops;
- 	gd->private_data = &sdkp->driver;
- 	gd->queue = sdkp->device->request_queue;
+-	if (disk->policy)
++	if (get_disk_ro(disk))
+ 		param->flags |= DM_READONLY_FLAG;
  
+ 	param->event_nr = dm_get_event_nr(md);
 diff --git a/fs/partitions/check.c b/fs/partitions/check.c
-index 825da63..15a3a1e 100644
+index bc4453a..bb969a0 100644
 --- a/fs/partitions/check.c
 +++ b/fs/partitions/check.c
-@@ -592,6 +592,7 @@ void del_gendisk(struct gendisk *disk)
- 		delete_partition(disk, part->partno);
- 	}
- 	invalidate_partition(disk, 0);
-+	blk_free_devt(disk_to_dev(disk)->devt);
- 	set_capacity(disk, 0);
- 	disk->flags &= ~GENHD_FL_UP;
- 	unlink_gendisk(disk);
+@@ -384,7 +384,7 @@ int add_partition(struct gendisk *disk, int partno,
+ 	p->start_sect = start;
+ 	p->nr_sects = len;
+ 	p->partno = partno;
+-	p->policy = disk->policy;
++	p->policy = get_disk_ro(disk);
+ 
+ 	dname = dev_name(ddev);
+ 	if (isdigit(dname[strlen(dname) - 1]))
 diff --git a/include/linux/genhd.h b/include/linux/genhd.h
-index a48f350..5b97ef8 100644
+index 8933ba8..0edef09 100644
 --- a/include/linux/genhd.h
 +++ b/include/linux/genhd.h
-@@ -59,6 +59,7 @@ enum {
- };
+@@ -146,7 +146,6 @@ struct gendisk {
+ 	struct kobject *slave_dir;
  
- #define DISK_MAX_PARTS			256
-+#define DISK_NAME_LEN			32
+ 	struct timer_rand_state *random;
+-	int policy;
  
- #include <linux/major.h>
- #include <linux/device.h>
-@@ -131,7 +132,7 @@ struct gendisk {
- 	int minors;                     /* maximum number of minors, =1 for
-                                          * disks that can't be partitioned. */
+ 	atomic_t sync_io;		/* RAID */
+ 	unsigned long stamp;
+@@ -389,6 +388,11 @@ extern struct block_device *bdget_disk(struct gendisk *disk, int partno);
+ extern void set_device_ro(struct block_device *bdev, int flag);
+ extern void set_disk_ro(struct gendisk *disk, int flag);
  
--	char disk_name[32];		/* name of major driver */
-+	char disk_name[DISK_NAME_LEN];	/* name of major driver */
- 
- 	/* Array of pointers to partitions indexed by partno.
- 	 * Protected with matching bdev lock but stat and other
++static inline int get_disk_ro(struct gendisk *disk)
++{
++	return disk->part0.policy;
++}
++
+ /* drivers/char/random.c */
+ extern void add_disk_randomness(struct gendisk *disk);
+ extern void rand_initialize_disk(struct gendisk *disk);
 -- 
 1.5.4.5
 
