@@ -1,72 +1,49 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: Regression: kernel 2.6.24{,.1} ahci problem, does not boot
-Date: Mon, 14 Jul 2008 21:02:07 +0900
-Message-ID: <487B403F.5040704@gmail.com>
-References: <Pine.LNX.4.63.0806141945270.2761@bob.slackware.com>
+From: "Igor Podlesny" <for.poige+linux@gmail.com>
+Subject: 2.6.26, sata_nv.c, NCQ's support disappeared (broken?)
+Date: Tue, 15 Jul 2008 01:31:12 +0800
+Message-ID: <43d009740807141031g612c56b7h52f6c3c6cbfab6b9@mail.gmail.com>
+Reply-To: for.poige+linux@gmail.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ti-out-0910.google.com ([209.85.142.188]:14696 "EHLO
-	ti-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752722AbYGNMCj (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 14 Jul 2008 08:02:39 -0400
-Received: by ti-out-0910.google.com with SMTP id b6so2277613tic.23
-        for <linux-ide@vger.kernel.org>; Mon, 14 Jul 2008 05:02:37 -0700 (PDT)
-In-Reply-To: <Pine.LNX.4.63.0806141945270.2761@bob.slackware.com>
+Received: from wx-out-0506.google.com ([66.249.82.233]:23516 "EHLO
+	wx-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753206AbYGNRbO (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 14 Jul 2008 13:31:14 -0400
+Received: by wx-out-0506.google.com with SMTP id h29so2402273wxd.4
+        for <linux-ide@vger.kernel.org>; Mon, 14 Jul 2008 10:31:13 -0700 (PDT)
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Piter PUNK <piterpunk@slackware.com>
-Cc: linux-kernel@vger.kernel.org, Jeff Garzik <jeff@garzik.org>, IDE/ATA development list <linux-ide@vger.kernel.org>
+To: linux-ide@vger.kernel.org
 
-Piter PUNK wrote:
-> I have a notebook with SiS968. It works with 2.6.23.x
-> kernels but not with 2.6.24+ kernels. Probably my
-> problem is the same of this old thread:
-> 
-> http://lkml.org/lkml/2008/2/14/263
-> 
-> The error is exactly the same.
-> 
-> Looking the changes from 2.6.23 to 2.6.24 in
-> 
-> http://kernelnewbies.org/Linux_2_6_24#head-f29764e7ef293be84e2f8aa1b08b8816b15ebfca
-> 
-> I try to revert two commits to see which one brokes
-> my SATA device support. The guilt is this one:
-> 
-> http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commit;h=7d50b60b5e38f910ad69f0187af00f5d6a8970d4
-> 
-> It implements PMP support. In attached patch, I
-> disable PMP support in ahci.c to SiS SATA controllers.
-> 
-> I hope i am sending the patch to correct place and
-> it works fine to others (well, it's working to me).
+	Hi! Here goes the dmesg output:
 
-This change made into the kernel in commit 9a3b103c...  Today, I
-tested a SIS968 board whose lspci -nn output looks like the following.
-
-  00:00.0 Host bridge [Class 0600]: Silicon Integrated Systems [SiS] 671MX [1039:0671]
-  00:01.0 PCI bridge [Class 0604]: Silicon Integrated Systems [SiS] PCI-to-PCI bridge [1039:0004]
-  00:02.0 ISA bridge [Class 0601]: Silicon Integrated Systems [SiS] SiS968 [MuTIOL Media IO] [1039:0968] (rev 01)
-  00:02.5 IDE interface [Class 0101]: Silicon Integrated Systems [SiS] 5513 [IDE] [1039:5513] (rev 01)
-  00:03.0 USB Controller [Class 0c03]: Silicon Integrated Systems [SiS] USB 1.0 Controller [1039:7001] (rev 0f)
-  00:03.1 USB Controller [Class 0c03]: Silicon Integrated Systems [SiS] USB 1.0 Controller [1039:7001] (rev 0f)
-  00:03.3 USB Controller [Class 0c03]: Silicon Integrated Systems [SiS] USB 2.0 Controller [1039:7002]
-  00:04.0 Ethernet controller [Class 0200]: Silicon Integrated Systems [SiS] 191 Gigabit Ethernet Adapter [1039:0191] (rev 02)
-  00:05.0 SATA controller [Class 0106]: Silicon Integrated Systems [SiS] AHCI IDE Controller (0106) [1039:1185] (rev 03)
-  00:06.0 PCI bridge [Class 0604]: Silicon Integrated Systems [SiS] PCI-to-PCI bridge [1039:000a]
-  00:07.0 PCI bridge [Class 0604]: Silicon Integrated Systems [SiS] PCI-to-PCI bridge [1039:000a]
-  00:0d.0 VGA compatible controller [Class 0300]: ATI Technologies Inc Radeon RV100 QZ [Radeon 7000/VE] [1002:515a]
-  00:0f.0 Audio device [Class 0403]: Silicon Integrated Systems [SiS] Azalia Audio Controller [1039:7502]
-  00:10.0 RAID bus controller [Class 0104]: HighPoint Technologies, Inc. HPT372A/372N [1103:0005] (rev 02)
-  02:00.0 Ethernet controller [Class 0200]: Intel Corporation 82572EI Gigabit Ethernet Controller (Copper) [8086:10b9] (rev 06)
-
-And the AHCI controller 1039:1185 @ 00:05.0 works just fine with
-regular devices and PMPs.  Can you please post lspci -nn output on
-your machine?  It seems the blacklisting was too wide.
-
-Thanks.
+---X8------X8------X8------X8------X8------X8------X8------X8------X8------X8------X8------X8------X8---
+[    0.658727] scsi0 : sata_nv
+[    0.658727] scsi1 : sata_nv
+[    0.658727] ata1: SATA max UDMA/133 cmd 0x9f0 ctl 0xbf0 bmdma 0xd400 irq 23
+[    0.658727] ata2: SATA max UDMA/133 cmd 0x970 ctl 0xb70 bmdma 0xd408 irq 23
+[    0.973823] ata1: SATA link down (SStatus 0 SControl 300)
+[    1.293342] ata2: SATA link down (SStatus 0 SControl 300)
+[    1.294547] ACPI: PCI Interrupt Link [APSJ] enabled at IRQ 22
+[    1.294547] ACPI: PCI Interrupt 0000:00:08.0[A] -> Link [APSJ] ->
+GSI 22 (level, low) -> IRQ 22
+[    1.294547] PCI: Setting latency timer of device 0000:00:08.0 to 64
+[    1.294547] scsi2 : sata_nv
+[    1.294547] scsi3 : sata_nv
+[    1.294547] ata3: SATA max UDMA/133 cmd 0x9e0 ctl 0xbe0 bmdma 0xc000 irq 22
+[    1.294547] ata4: SATA max UDMA/133 cmd 0x960 ctl 0xb60 bmdma 0xc008 irq 22
+[    1.768314] ata3: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+[    1.816280] ata3.00: ATA-7: ST3500630AS, 3.AAK, max UDMA/133
+[    1.816280] ata3.00: 976773168 sectors, multi 1: LBA48 NCQ (depth 0/32)
+[    1.882549] ata3.00: configured for UDMA/133
+[    2.367912] ata4: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+[    2.374813] ata4.00: ATA-8: Hitachi HDP725050GLA360, GM4OA50E, max UDMA/133
+[    2.374855] ata4.00: 976773168 sectors, multi 1: LBA48 NCQ (depth 0/32)
+[    2.388144] ata4.00: configured for UDMA/133
+---X8------X8------X8------X8------X8------X8------X8------X8------X8------X8------X8------X8------X8-----
 
 -- 
-tejun
+End of message. Next message?
