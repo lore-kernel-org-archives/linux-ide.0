@@ -1,148 +1,112 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 09/13] block: kill GENHD_FL_FAIL and use part0->make_it_fail
-Date: Mon, 14 Jul 2008 16:48:09 +0900
-Message-ID: <1216021693-483-10-git-send-email-tj@kernel.org>
+Subject: [PATCH 07/13] block: move holder_dir from disk to part0
+Date: Mon, 14 Jul 2008 16:48:07 +0900
+Message-ID: <1216021693-483-8-git-send-email-tj__32272.4018748433$1216021860$gmane$org@kernel.org>
 References: <1216021693-483-1-git-send-email-tj@kernel.org>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:36865 "EHLO hera.kernel.org"
+Received: from hera.kernel.org ([140.211.167.34]:36859 "EHLO hera.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755707AbYGNHtb (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 14 Jul 2008 03:49:31 -0400
+	id S1755085AbYGNHt3 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 14 Jul 2008 03:49:29 -0400
 In-Reply-To: <1216021693-483-1-git-send-email-tj@kernel.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: jens.axboe@oracle.com, James.Bottomley@HansenPartnership.com, bharrosh@panasas.com, greg.freemyer@gmail.com, linux-scsi@vger.kernel.org, brking@linux.vnet.ibm.com, liml@rtr.ca, viro@f
 Cc: Tejun Heo <tj@kernel.org>
 
-GENHD_FL_FAIL for disk is what make_it_fail is for parts.  Kill it and
-use part0->make_it_fail.  Sysfs node handling is unified too.
+Move disk->holder_dir to part0->holder_dir.  Kill now mostly
+superflous bdev_get_holder().
 
 Signed-off-by: Tejun Heo <tj@kernel.org>
 ---
- block/blk-core.c      |    5 +++--
- block/genhd.c         |   30 +-----------------------------
- fs/partitions/check.c |   10 +++++-----
- include/linux/genhd.h |    9 +++++++--
- 4 files changed, 16 insertions(+), 38 deletions(-)
+ fs/block_dev.c        |   10 +---------
+ fs/partitions/check.c |   20 +++++++-------------
+ include/linux/genhd.h |    1 -
+ 3 files changed, 8 insertions(+), 23 deletions(-)
 
-diff --git a/block/blk-core.c b/block/blk-core.c
-index 511b8c7..332d695 100644
---- a/block/blk-core.c
-+++ b/block/blk-core.c
-@@ -1262,8 +1262,9 @@ __setup("fail_make_request=", setup_fail_make_request);
- 
- static int should_fail_request(struct bio *bio)
- {
--	if ((bio->bi_bdev->bd_disk->flags & GENHD_FL_FAIL) ||
--	    bio->bi_bdev->bd_part->make_it_fail)
-+	struct hd_struct *part = bio->bi_bdev->bd_part;
-+
-+	if (part_to_disk(part)->part0.make_it_fail || part->make_it_fail)
- 		return should_fail(&fail_make_request, bio->bi_size);
- 
- 	return 0;
-diff --git a/block/genhd.c b/block/genhd.c
-index ff33b8c..21b8535 100644
---- a/block/genhd.c
-+++ b/block/genhd.c
-@@ -762,34 +762,6 @@ static ssize_t disk_stat_show(struct device *dev,
- 		jiffies_to_msecs(disk_stat_read(disk, time_in_queue)));
+diff --git a/fs/block_dev.c b/fs/block_dev.c
+index 4fd822d..a563e71 100644
+--- a/fs/block_dev.c
++++ b/fs/block_dev.c
+@@ -548,14 +548,6 @@ static struct kobject *bdev_get_kobj(struct block_device *bdev)
+ 		return kobject_get(&disk_to_dev(bdev->bd_disk)->kobj);
  }
  
--#ifdef CONFIG_FAIL_MAKE_REQUEST
--static ssize_t disk_fail_show(struct device *dev,
--			      struct device_attribute *attr, char *buf)
+-static struct kobject *bdev_get_holder(struct block_device *bdev)
 -{
--	struct gendisk *disk = dev_to_disk(dev);
--
--	return sprintf(buf, "%d\n", disk->flags & GENHD_FL_FAIL ? 1 : 0);
+-	if (bdev->bd_contains != bdev)
+-		return kobject_get(bdev->bd_part->holder_dir);
+-	else
+-		return kobject_get(bdev->bd_disk->holder_dir);
 -}
 -
--static ssize_t disk_fail_store(struct device *dev,
--			       struct device_attribute *attr,
--			       const char *buf, size_t count)
--{
--	struct gendisk *disk = dev_to_disk(dev);
--	int i;
--
--	if (count > 0 && sscanf(buf, "%d", &i) > 0) {
--		if (i == 0)
--			disk->flags &= ~GENHD_FL_FAIL;
--		else
--			disk->flags |= GENHD_FL_FAIL;
--	}
--
--	return count;
--}
--
--#endif
--
- static DEVICE_ATTR(range, S_IRUGO, disk_range_show, NULL);
- static DEVICE_ATTR(ext_range, S_IRUGO, disk_ext_range_show, NULL);
- static DEVICE_ATTR(removable, S_IRUGO, disk_removable_show, NULL);
-@@ -798,7 +770,7 @@ static DEVICE_ATTR(capability, S_IRUGO, disk_capability_show, NULL);
- static DEVICE_ATTR(stat, S_IRUGO, disk_stat_show, NULL);
- #ifdef CONFIG_FAIL_MAKE_REQUEST
- static struct device_attribute dev_attr_fail =
--	__ATTR(make-it-fail, S_IRUGO|S_IWUSR, disk_fail_show, disk_fail_store);
-+	__ATTR(make-it-fail, S_IRUGO|S_IWUSR, part_fail_show, part_fail_store);
- #endif
+ static int add_symlink(struct kobject *from, struct kobject *to)
+ {
+ 	if (!from || !to)
+@@ -608,7 +600,7 @@ static int bd_holder_grab_dirs(struct block_device *bdev,
+ 	if (!bo->sdev)
+ 		goto fail_put_hdev;
  
- static struct attribute *disk_attrs[] = {
+-	bo->hdir = bdev_get_holder(bdev);
++	bo->hdir = kobject_get(bdev->bd_part->holder_dir);
+ 	if (!bo->hdir)
+ 		goto fail_put_sdev;
+ 
 diff --git a/fs/partitions/check.c b/fs/partitions/check.c
-index 931d366..ddd0258 100644
+index bb969a0..e247b81 100644
 --- a/fs/partitions/check.c
 +++ b/fs/partitions/check.c
-@@ -237,17 +237,17 @@ static ssize_t part_stat_show(struct device *dev,
+@@ -304,23 +304,17 @@ struct device_type part_type = {
+ 	.release	= part_release,
+ };
+ 
+-static inline void partition_sysfs_add_subdir(struct hd_struct *p)
++static inline void partition_sysfs_add_subdir(struct hd_struct *part)
+ {
+-	struct kobject *k;
+-
+-	k = kobject_get(&part_to_dev(p)->kobj);
+-	p->holder_dir = kobject_create_and_add("holders", k);
+-	kobject_put(k);
++	part->holder_dir = kobject_create_and_add("holders",
++						  &part_to_dev(part)->kobj);
  }
  
- #ifdef CONFIG_FAIL_MAKE_REQUEST
--static ssize_t part_fail_show(struct device *dev,
--			      struct device_attribute *attr, char *buf)
-+ssize_t part_fail_show(struct device *dev,
-+		       struct device_attribute *attr, char *buf)
+ static inline void disk_sysfs_add_subdirs(struct gendisk *disk)
  {
- 	struct hd_struct *p = dev_to_part(dev);
- 
- 	return sprintf(buf, "%d\n", p->make_it_fail);
+-	struct kobject *k;
+-
+-	k = kobject_get(&disk_to_dev(disk)->kobj);
+-	disk->holder_dir = kobject_create_and_add("holders", k);
+-	disk->slave_dir = kobject_create_and_add("slaves", k);
+-	kobject_put(k);
++	partition_sysfs_add_subdir(&disk->part0);
++	disk->slave_dir = kobject_create_and_add("slaves",
++						 &disk_to_dev(disk)->kobj);
  }
  
--static ssize_t part_fail_store(struct device *dev,
--			       struct device_attribute *attr,
--			       const char *buf, size_t count)
-+ssize_t part_fail_store(struct device *dev,
-+			struct device_attribute *attr,
-+			const char *buf, size_t count)
- {
- 	struct hd_struct *p = dev_to_part(dev);
- 	int i;
+ static void delete_partition_rcu_cb(struct rcu_head *head)
+@@ -588,7 +582,7 @@ void del_gendisk(struct gendisk *disk)
+ 	disk_stat_set_all(disk, 0);
+ 	disk->stamp = 0;
+ 
+-	kobject_put(disk->holder_dir);
++	kobject_put(disk->part0.holder_dir);
+ 	kobject_put(disk->slave_dir);
+ 	disk->driverfs_dev = NULL;
+ #ifndef CONFIG_SYSFS_DEPRECATED
 diff --git a/include/linux/genhd.h b/include/linux/genhd.h
-index 8c94f17..61448a9 100644
+index 0edef09..bf3d7e3 100644
 --- a/include/linux/genhd.h
 +++ b/include/linux/genhd.h
-@@ -112,8 +112,6 @@ struct hd_struct {
- #define GENHD_FL_CD				8
- #define GENHD_FL_UP				16
- #define GENHD_FL_SUPPRESS_PARTITION_INFO	32
--#define GENHD_FL_FAIL				64
--
+@@ -142,7 +142,6 @@ struct gendisk {
  
- struct gendisk {
- 	/* major, first_minor, minors and ext_minors are input
-@@ -582,6 +580,13 @@ extern void blk_unregister_region(dev_t devt, unsigned long range);
+ 	int flags;
+ 	struct device *driverfs_dev;  // FIXME: remove
+-	struct kobject *holder_dir;
+ 	struct kobject *slave_dir;
  
- extern ssize_t part_size_show(struct device *dev,
- 			      struct device_attribute *attr, char *buf);
-+#ifdef CONFIG_FAIL_MAKE_REQUEST
-+extern ssize_t part_fail_show(struct device *dev,
-+			      struct device_attribute *attr, char *buf);
-+extern ssize_t part_fail_store(struct device *dev,
-+			       struct device_attribute *attr,
-+			       const char *buf, size_t count);
-+#endif /* CONFIG_FAIL_MAKE_REQUEST */
- 
- #else /* CONFIG_BLOCK */
- 
+ 	struct timer_rand_state *random;
 -- 
 1.5.4.5
 
