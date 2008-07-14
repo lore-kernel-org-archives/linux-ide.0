@@ -1,37 +1,41 @@
-From: ebiederm@xmission.com (Eric W. Biederman)
+From: David Miller <davem@davemloft.net>
 Subject: Re: Multiple MSI, take 3
-Date: Sun, 13 Jul 2008 19:03:52 -0700
-Message-ID: <m1ej5x1at3.fsf@frodo.ebiederm.org>
-References: <1215989044.7549.219.camel@pasglop>
-	<m1tzet2wie.fsf@frodo.ebiederm.org>
-	<1215994659.7549.227.camel@pasglop>
+Date: Sun, 13 Jul 2008 20:19:06 -0700 (PDT)
+Message-ID: <20080713.201906.60811176.davem@davemloft.net>
+References: <1215994659.7549.227.camel@pasglop>
 	<20080713.174457.82768245.davem@davemloft.net>
+	<m1ej5x1at3.fsf@frodo.ebiederm.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: Text/Plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-pci-owner@vger.kernel.org>
-In-Reply-To: <20080713.174457.82768245.davem@davemloft.net> (David Miller's
-	message of "Sun, 13 Jul 2008 17:44:57 -0700 (PDT)")
+In-Reply-To: <m1ej5x1at3.fsf@frodo.ebiederm.org>
 Sender: linux-pci-owner@vger.kernel.org
-To: David Miller <davem@davemloft.net>
+To: ebiederm@xmission.com
 Cc: benh@kernel.crashing.org, suresh.b.siddha@intel.com, matthew@wil.cx, linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org, grundler@parisc-linux.org, mingo@elte.hu, tglx@linutronix.de, jgarzik@pobox.com, linux-ide@vger.kernel.org, jbarnes@virtuousgeek.org, rdunlap@xenotime.net, mtk.manpages@gmail.com
 List-Id: linux-ide@vger.kernel.org
 
-David Miller <davem@davemloft.net> writes:
+From: ebiederm@xmission.com (Eric W. Biederman)
+Date: Sun, 13 Jul 2008 19:03:52 -0700
 
-> The x86 system designers decided to implement multi-MSI in an
-> inconvenient way, it is not a "crap hardware design", merely
-> some (unfortunately common) implementations of it happen to be.
+> At the very least you are left with the problem of allocating multiple
+> contiguous destinations.  Which has the potential to create
+> fragmentation on all supported platforms.
 
-To be clear I was referring to the PCI spec that describes multi-MSI
-as a crap hardware design.
+I don't think this is a very real concern.  With 256 MSI slots
+available per domain, at least on sparc64, no real case can cause
+problems.
 
-At the very least you are left with the problem of allocating multiple
-contiguous destinations.  Which has the potential to create
-fragmentation on all supported platforms.
+And even so, drivers can and should fall back when allocations fail
+anyways.
 
-Optional mask bits are also nasty.
+That's what drivers, at least the ones I have written, do even for
+MSI-X.  For example, the NIU driver scales back the number of
+MSI-X vectors it askes for if the original request cannot be
+satisfied.
 
-My honest opinion is that the should have deprecated multi-msi after the
-introduction of the msi-x specification.
+> My honest opinion is that the should have deprecated multi-msi after
+> the introduction of the msi-x specification.
 
-Eric
+I don't think this would have materially influenced what happened with
+AHCI at all.
