@@ -1,40 +1,69 @@
-From: David Miller <davem@davemloft.net>
-Subject: Re: Multiple MSI, take 3
-Date: Sun, 13 Jul 2008 17:44:57 -0700 (PDT)
-Message-ID: <20080713.174457.82768245.davem@davemloft.net>
-References: <1215989044.7549.219.camel@pasglop>
-	<m1tzet2wie.fsf@frodo.ebiederm.org>
-	<1215994659.7549.227.camel@pasglop>
+From: Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>
+Subject: Re: [PATCH] x86-64: Support for multiple MSIs
+Date: Mon, 14 Jul 2008 10:08:46 +0900
+Message-ID: <487AA71E.7000900@jp.fujitsu.com>
+References: <20080711005719.GO14894@parisc-linux.org> <1215738002-4961-5-git-send-email-matthew@wil.cx> <4876E68F.3050200@jp.fujitsu.com> <20080711085035.GP14894@parisc-linux.org>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-pci-owner@vger.kernel.org>
-In-Reply-To: <1215994659.7549.227.camel@pasglop>
-Sender: linux-pci-owner@vger.kernel.org
-To: benh@kernel.crashing.org
-Cc: ebiederm@xmission.com, suresh.b.siddha@intel.com, matthew@wil.cx, linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org, grundler@parisc-linux.org, mingo@elte.hu, tglx@linutronix.de, jgarzik@pobox.com, linux-ide@vger.kernel.org, jbarnes@virtuousgeek.org, rdunlap@xenotime.net, mtk.manpages@gmail.com
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from fgwmail5.fujitsu.co.jp ([192.51.44.35]:53455 "EHLO
+	fgwmail5.fujitsu.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754281AbYGNBMA (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 13 Jul 2008 21:12:00 -0400
+In-Reply-To: <20080711085035.GP14894@parisc-linux.org>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Matthew Wilcox <matthew@wil.cx>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org, grundler@parisc-linux.org, mingo@elte.hu, tglx@linutronix.de, jgarzik@pobox.com, linux-ide@vger.kernel.org, suresh.b.siddha@intel.com, benh@kernel.crashing.org, jbarnes@virtuousgeek.org, rdunlap@xenotime.net, mtk.manpages@gmail.com, Matthew Wilcox <willy@linux.intel.com>
 
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Date: Mon, 14 Jul 2008 10:17:39 +1000
-
-> On Sun, 2008-07-13 at 16:29 -0700, Eric W. Biederman wrote:
-> > Ben.  Multi-MSI is a crap hardware design.  Why do you think we have
-> > MSI-X?  
+Matthew Wilcox wrote:
+> On Fri, Jul 11, 2008 at 01:50:23PM +0900, Kenji Kaneshige wrote:
+>> I'm very sorry for very delayed comment, but I have a concern
+>> about irq affinity code. Since I didn't have enough time to
+>> look at your patch, I might be misunderstanding something...
+>>
+>> In my understanding, when irq affinity is changed on one of
+>> the IRQs corresponding to MSI, it will not completed until
+>> interrupts occur on all the IRQs. Attempts to change irq
+>> affinity before previous affinity change is finished will be
+>> ignored. Here, suppose that device uses three MSI irqs. In
+>> this case, your patch manages four irqs, but only three
+>> interrupts are used. If irq affinity changed on this MSI
+>> interrupts, will it be completed?
 > 
-> I know and I agree. Which is why I'd rather keep the SW crap totally
-> local to the MSI support code and not add new concepts to the generic
-> IRQ API such as sub-channels, for which it's really not ready for imho.
+> I have tested the affinity code with an ICH9 AHCI:
 > 
-> They -are- separate IRQs, just badly implemented. Besides, a large part
-> of the problem is purely due to the typical x86 implementation of them,
-> since for example, on most PowerPC's (and possibly other archs), they
-> tend to land in the PIC as normal sources, and as such benefit from all
-> the "features" of such interrupts like HW masking, affinity control,
-> etc... at the PIC level.
+> 495:     117233     117966     118033     117797   PCI-MSI-edge      ahci
+> 496:      29860      29106      30191      28705   PCI-MSI-edge      ahci
+> 497:          0          0          0          0   PCI-MSI-edge      ahci
+> 498:          0          0          0          0   PCI-MSI-edge      ahci
+> 499:          0          0          0          0   PCI-MSI-edge      ahci
+> 500:          0          0          0          0   PCI-MSI-edge      ahci
+> 
+> This chip requires 16 MSIs to be registered, and it has 6 ports.
+> Only ports 0 and 1 have a device attached.  If I change the mask of
+> an active irq (eg 495 or 496), it takes effect on both of them.  If I
+> change the mask of an inactive irq (497-500), nothing happens.  But I
+> can subsequently change the mask on 495 or 496 successfully.
+> 
+> I can't tell you why this works this way; I haven't looked in enough
+> detail at the irq affinity code, but this is my observation.
+> 
 
-This is how it works on sparc64 too.
+What I was worrying about was around irq_cfg->move_in_progress.
+Since your environment has less than 8 cpus according to your
+/proc/interrupts, I think your environment seems to use "apic_flat"
+mode for interrupt handling. In this case, irq_cfg->move_in_progress
+is not used for irq migration. I think this is why your environment
+didn't encounter the problem I worried about. We should note that
+vector allocation logic varies depending on the environment.
 
-The x86 system designers decided to implement multi-MSI in an
-inconvenient way, it is not a "crap hardware design", merely
-some (unfortunately common) implementations of it happen to be.
+BTW, I looked at your take 4 patch. The problem I worried about
+seems not to exist in this version (as a good side effect).
+
+Thanks,
+Kenji Kaneshige
+
+
+
