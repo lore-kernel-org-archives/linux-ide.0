@@ -1,64 +1,218 @@
-From: Piter PUNK <piterpunk@slackware.com>
-Subject: Re: Regression: kernel 2.6.24{,.1} ahci problem, does not boot
-Date: Mon, 14 Jul 2008 20:47:38 -0700 (PDT)
-Message-ID: <Pine.LNX.4.63.0807142036180.2473@bob.slackware.com>
-References: <Pine.LNX.4.63.0806141945270.2761@bob.slackware.com>
- <487B403F.5040704@gmail.com>
+From: Borislav Petkov <petkovbb@googlemail.com>
+Subject: [PATCH] ide-floppy fix
+Date: Tue, 15 Jul 2008 07:33:56 +0200
+Message-ID: <20080715053356.GA18628@gollum.tnic>
+Reply-To: petkovbb@gmail.com
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from slackware.com ([64.57.102.34]:58611 "EHLO bob.slackware.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754098AbYGODr6 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 14 Jul 2008 23:47:58 -0400
-In-Reply-To: <487B403F.5040704@gmail.com>
+Received: from fg-out-1718.google.com ([72.14.220.157]:14377 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753149AbYGOFdk (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 15 Jul 2008 01:33:40 -0400
+Received: by fg-out-1718.google.com with SMTP id 19so2223668fgg.17
+        for <linux-ide@vger.kernel.org>; Mon, 14 Jul 2008 22:33:38 -0700 (PDT)
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: linux-kernel@vger.kernel.org, Jeff Garzik <jeff@garzik.org>, IDE/ATA development list <linux-ide@vger.kernel.org>
+To: bzolnier@gmail.com
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, stable@kernel.org
 
-> This change made into the kernel in commit 9a3b103c...  Today, I
-> tested a SIS968 board whose lspci -nn output looks like the following.
->
->  00:00.0 Host bridge [Class 0600]: Silicon Integrated Systems [SiS] 671MX [1039:0671]
->  00:01.0 PCI bridge [Class 0604]: Silicon Integrated Systems [SiS] PCI-to-PCI bridge [1039:0004]
->  00:02.0 ISA bridge [Class 0601]: Silicon Integrated Systems [SiS] SiS968 [MuTIOL Media IO] [1039:0968] (rev 01)
->  00:02.5 IDE interface [Class 0101]: Silicon Integrated Systems [SiS] 5513 [IDE] [1039:5513] (rev 01)
->  00:03.0 USB Controller [Class 0c03]: Silicon Integrated Systems [SiS] USB 1.0 Controller [1039:7001] (rev 0f)
->  00:03.1 USB Controller [Class 0c03]: Silicon Integrated Systems [SiS] USB 1.0 Controller [1039:7001] (rev 0f)
->  00:03.3 USB Controller [Class 0c03]: Silicon Integrated Systems [SiS] USB 2.0 Controller [1039:7002]
->  00:04.0 Ethernet controller [Class 0200]: Silicon Integrated Systems [SiS] 191 Gigabit Ethernet Adapter [1039:0191] (rev 02)
->  00:05.0 SATA controller [Class 0106]: Silicon Integrated Systems [SiS] AHCI IDE Controller (0106) [1039:1185] (rev 03)
->  00:06.0 PCI bridge [Class 0604]: Silicon Integrated Systems [SiS] PCI-to-PCI bridge [1039:000a]
->  00:07.0 PCI bridge [Class 0604]: Silicon Integrated Systems [SiS] PCI-to-PCI bridge [1039:000a]
->  00:0d.0 VGA compatible controller [Class 0300]: ATI Technologies Inc Radeon RV100 QZ [Radeon 7000/VE] [1002:515a]
->  00:0f.0 Audio device [Class 0403]: Silicon Integrated Systems [SiS] Azalia Audio Controller [1039:7502]
->  00:10.0 RAID bus controller [Class 0104]: HighPoint Technologies, Inc. HPT372A/372N [1103:0005] (rev 02)
->  02:00.0 Ethernet controller [Class 0200]: Intel Corporation 82572EI Gigabit Ethernet Controller (Copper) [8086:10b9] (rev 06)
->
-> And the AHCI controller 1039:1185 @ 00:05.0 works just fine with
-> regular devices and PMPs.  Can you please post lspci -nn output on
-> your machine?  It seems the blacklisting was too wide.
+Hi Bart,
 
-OK.
+i broke ide-floppy for Iomega ZIP drives with the last round of generic=
+ patches
+and now it works only sometimes during write requests. The reason for i=
+t is that
+the command issue path is not being delayed with a 50msec timeout, for =
+details
+see the comment in idefloppy_start_pc(). Anyway, attached is a fix that=
+ should
+go into the -stable kernel too since the driver is now broken in 2.6.26=
+=2E
 
-That is the lspci-nn output:
+On a different note, the current pata tree on top of v2.6.25-2125-g5051=
+5af blows
+up here with the following error:
 
-00:00.0 Host bridge [0600]: Silicon Integrated Systems [SiS] 671MX [1039:0671]
-00:01.0 PCI bridge [0604]: Silicon Integrated Systems [SiS] SiS AGP Port (virtual PCI-to-PCI bridge) [1039:0003]
-00:02.0 ISA bridge [0601]: Silicon Integrated Systems [SiS] SiS968 [MuTIOL Media IO] [1039:0968] (rev 01)
-00:02.5 IDE interface [0101]: Silicon Integrated Systems [SiS] 5513 [IDE] [1039:5513] (rev 01)
-00:03.0 USB Controller [0c03]: Silicon Integrated Systems [SiS] USB 1.1 Controller [1039:7001] (rev 0f)
-00:03.1 USB Controller [0c03]: Silicon Integrated Systems [SiS] USB 1.1 Controller [1039:7001] (rev 0f)
-00:03.3 USB Controller [0c03]: Silicon Integrated Systems [SiS] USB 2.0 Controller [1039:7002]
-00:04.0 Ethernet controller [0200]: Silicon Integrated Systems [SiS] 191 Gigabit Ethernet Adapter [1039:0191] (rev 02)
-00:05.0 SATA controller [0106]: Silicon Integrated Systems [SiS] AHCI IDE Controller (0106) [1039:1185] (rev 03)
-00:0f.0 Audio device [0403]: Silicon Integrated Systems [SiS] Azalia Audio Controller [1039:7502]
-01:00.0 VGA compatible controller [0300]: Silicon Integrated Systems [SiS] 771/671 PCIE VGA Display Adapter [1039:6351] (rev 10)
 
-The main differences that i can see are the internal SiS video chip and
-the "SiS AGP Port".
+[    4.296729] Uniform Multi-Platform E-IDE driver
+[    4.297905] ICH4: IDE controller (0x8086:0x24cb rev 0x02) at  PCI sl=
+ot 0000:00:1f.1
+[    4.297986] ACPI: PCI Interrupt 0000:00:1f.1[A] -> GSI 18 (level, lo=
+w) -> IRQ 18
+[    4.298153] ICH4: not 100% native mode: will probe irqs later
+[    4.298213]     ide0: BM-DMA at 0xfc00-0xfc07
+[    4.298282]     ide1: BM-DMA at 0xfc08-0xfc0f
+[    4.561768] hda: QUANTUM FIREBALLlct10 20, ATA DISK drive
+[    4.816724] hdb: SAMSUNG SP2014N, ATA DISK drive
+[    4.867959] hda: drive side 80-wire cable detection failed, limiting=
+ max speed to UDMA33
+[    4.868027] hda: UDMA/33 mode selected
+[    4.868441] hdb: UDMA/100 mode selected
+[    5.540683] hdc: IOMEGA ZIP 100 ATAPI, ATAPI FLOPPY drive
+[    5.795564] hdd: IC35L120AVV207-0, ATA DISK drive
+[    5.847295] hdd: host side 80-wire cable detection failed, limiting =
+max speed to UDMA33
+[    5.847362] hdd: UDMA/33 mode selected
+[    5.847715] ide0 at 0x1f0-0x1f7,0x3f6 on irq 14
+[    5.855487] ide1 at 0x170-0x177,0x376 on irq 15
+[    5.875927] ide_generic: please use "probe_mask=3D0x3f" module param=
+eter for probing all legacy ISA IDE ports
+[    5.876012] ide_generic: I/O resource 0x1F0-0x1F7 not free.
+[    5.876074] ide_generic: I/O resource 0x170-0x177 not free.
+[   11.342504] hde: no response (status =3D 0xa1), resetting drive
+[   17.206535] hdf: no response (status =3D 0xa1), resetting drive
+[   17.614474] ------------[ cut here ]------------
+[   17.614528] WARNING: at lib/kref.c:43 kref_get+0x1a/0x20()
+[   17.614586] Modules linked in:
+[   17.614681] Pid: 1, comm: swapper Not tainted 2.6.26 #33
+[   17.614738]  [<c01220e9>] warn_on_slowpath+0x41/0x7b
+[   17.614839]  [<c02efa9a>] ? _spin_unlock_irq+0x2d/0x42
+[   17.614980]  [<c011d1e7>] ? finish_task_switch+0x47/0x94
+[   17.615118]  [<c011d1cb>] ? finish_task_switch+0x2b/0x94
+[   17.615257]  [<c02effa8>] ? __reacquire_kernel_lock+0x33/0x37
+[   17.615396]  [<c013d1d9>] ? trace_hardirqs_on+0xb/0xd
+[   17.615552]  [<c013d1ad>] ? trace_hardirqs_on_caller+0xe1/0x102
+[   17.615693]  [<c013d1d9>] ? trace_hardirqs_on+0xb/0xd
+[   17.615830]  [<c013d1d9>] ? trace_hardirqs_on+0xb/0xd
+[   17.615968]  [<c013d1ad>] ? trace_hardirqs_on_caller+0xe1/0x102
+[   17.616107]  [<c01d86ae>] kref_get+0x1a/0x20
+[   17.616204]  [<c01d7c39>] kobject_get+0x12/0x17
+[   17.616301]  [<c01d7ce0>] kobject_add_internal+0x44/0x14f
+[   17.616399]  [<c01d7e69>] kobject_add_varg+0x4a/0x4c
+[   17.617153]  [<c01d7ed0>] kobject_add+0x43/0x49
+[   17.617252]  [<c022a5dd>] device_add+0x91/0x48e
+[   17.617353]  [<c022a2aa>] ? device_initialize+0xd7/0xf8
+[   17.617510]  [<c022a9ec>] device_register+0x12/0x15
+[   17.617606]  [<c02376b1>] ide_host_register+0x284/0x537
+[   17.617706]  [<c0237af8>] ? ide_host_alloc_all+0x123/0x178
+[   17.617845]  [<c04227ba>] ide_generic_init+0x142/0x1e7
+[   17.617946]  [<c013d1d9>] ? trace_hardirqs_on+0xb/0xd
+[   17.618084]  [<c013d1ad>] ? trace_hardirqs_on_caller+0xe1/0x102
+[   17.618226]  [<c013d1d9>] ? trace_hardirqs_on+0xb/0xd
+[   17.618363]  [<c02efa9a>] ? _spin_unlock_irq+0x2d/0x42
+[   17.618516]  [<c011d1e7>] ? finish_task_switch+0x47/0x94
+[   17.618655]  [<c02effa8>] ? __reacquire_kernel_lock+0x33/0x37
+[   17.618796]  [<c013d1ad>] ? trace_hardirqs_on_caller+0xe1/0x102
+[   17.618938]  [<c013d1d9>] ? trace_hardirqs_on+0xb/0xd
+[   17.619077]  [<c013d1ad>] ? trace_hardirqs_on_caller+0xe1/0x102
+[   17.619218]  [<c013d1d9>] ? trace_hardirqs_on+0xb/0xd
+[   17.619357]  [<c02eeb4d>] ? mutex_unlock+0x8/0xa
+[   17.619512]  [<c01a0334>] ? sysfs_addrm_finish+0x17/0x1cd
+[   17.619649]  [<c02efb2e>] ? _spin_unlock+0x27/0x3c
+[   17.619788]  [<c017bad9>] ? ifind+0x7e/0x88
+[   17.619926]  [<c019fdd8>] ? sysfs_ilookup_test+0x0/0x11
+[   17.620068]  [<c019ffa7>] ? sysfs_find_dirent+0x16/0x27
+[   17.620206]  [<c01a00a0>] ? sysfs_add_one+0x14/0x85
+[   17.620344]  [<c019fc8e>] ? sysfs_add_file_mode+0x4e/0x6d
+[   17.620502]  [<c019fcbb>] ? sysfs_add_file+0xe/0x13
+[   17.620637]  [<c040d2eb>] kernel_init+0x127/0x257
+[   17.620739]  [<c0422678>] ? ide_generic_init+0x0/0x1e7
+[   17.620879]  [<c013d1ad>] ? trace_hardirqs_on_caller+0xe1/0x102
+[   17.621019]  [<c01dbe18>] ? trace_hardirqs_on_thunk+0xc/0x10
+[   17.621159]  [<c0102eb6>] ? restore_nocheck_notrace+0x0/0xe
+[   17.621298]  [<c040d1c4>] ? kernel_init+0x0/0x257
+[   17.621438]  [<c040d1c4>] ? kernel_init+0x0/0x257
+[   17.621591]  [<c0103a8f>] kernel_thread_helper+0x7/0x10
+[   17.621691]  =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D
+[   17.621759] ---[ end trace 01bb572fb1fb92e8 ]---
+[   17.621835] BUG: unable to handle kernel paging request at 6f690074
+[   17.621968] IP: [<6f690074>]
+[   17.622060] *pde =3D 00000000=20
+[   17.622153] Oops: 0000 [#1] PREEMPT SMP=20
+[   17.622370] Modules linked in:
+[   17.622458]=20
+[   17.622506] Pid: 1, comm: swapper Tainted: G        W (2.6.26 #33)
+[   17.622617] EIP: 0060:[<6f690074>] EFLAGS: 00010206 CPU: 0
+[   17.622670] EIP is at 0x6f690074
+[   17.622720] EAX: dfa1b5c8 EBX: c03e630c ECX: 6f690074 EDX: c01ec367
+[   17.622774] ESI: dfa1b5c8 EDI: c069bd4c EBP: df82fc24 ESP: df82fc14
+[   17.622884]  DS: 007b ES: 007b FS: 00d8 GS: 0000 SS: 0068
+[   17.622937] Process swapper (pid: 1, ti=3Ddf82e000 task=3Ddf830000 t=
+ask.ti=3Ddf82e000)
+[   17.622992] Stack: c01ec382 c03e630c dfa1b614 00000000 df82fc34 c02e=
+11c6 c03e630c dfa1b614=20
+[   17.623379]        df82fc44 c02e1255 dfa1b5e8 dfa1b5e8 df82fc74 c022=
+a8cf dfa1b6e4 dfa1b6c0=20
+[   17.623379]        c03e630c dfa1b5e8 00000000 00000000 c022a2aa dfa1=
+b5e8 dfa1b5e8 00000006=20
+[   17.623379] Call Trace:
+[   17.623379]  [<c01ec382>] ? pci_device_suspend+0x1b/0x4d
+[   17.623379]  [<c02e11c6>] ? klist_node_init+0x36/0x3a
+[   17.623379]  [<c02e1255>] ? klist_add_tail+0x12/0x38
+[   17.623379]  [<c022a8cf>] ? device_add+0x383/0x48e
+[   17.623379]  [<c022a2aa>] ? device_initialize+0xd7/0xf8
+[   17.623379]  [<c022a9ec>] ? device_register+0x12/0x15
+[   17.623379]  [<c02376b1>] ? ide_host_register+0x284/0x537
+[   17.623379]  [<c0237af8>] ? ide_host_alloc_all+0x123/0x178
+[   17.623379]  [<c04227ba>] ? ide_generic_init+0x142/0x1e7
+[   17.623379]  [<c013d1d9>] ? trace_hardirqs_on+0xb/0xd
+[   17.623379]  [<c013d1ad>] ? trace_hardirqs_on_caller+0xe1/0x102
+[   17.623379]  [<c013d1d9>] ? trace_hardirqs_on+0xb/0xd
+[   17.623379]  [<c02efa9a>] ? _spin_unlock_irq+0x2d/0x42
+[   17.623379]  [<c011d1e7>] ? finish_task_switch+0x47/0x94
+[   17.623379]  [<c02effa8>] ? __reacquire_kernel_lock+0x33/0x37
+[   17.623379]  [<c013d1ad>] ? trace_hardirqs_on_caller+0xe1/0x102
+[   17.623379]  [<c013d1d9>] ? trace_hardirqs_on+0xb/0xd
+[   17.623379]  [<c013d1ad>] ? trace_hardirqs_on_caller+0xe1/0x102
+[   17.623379]  [<c013d1d9>] ? trace_hardirqs_on+0xb/0xd
+[   17.623379]  [<c02eeb4d>] ? mutex_unlock+0x8/0xa
+[   17.623379]  [<c01a0334>] ? sysfs_addrm_finish+0x17/0x1cd
+[   17.623379]  [<c02efb2e>] ? _spin_unlock+0x27/0x3c
+[   17.623379]  [<c017bad9>] ? ifind+0x7e/0x88
+[   17.623379]  [<c019fdd8>] ? sysfs_ilookup_test+0x0/0x11
+[   17.623379]  [<c019ffa7>] ? sysfs_find_dirent+0x16/0x27
+[   17.623379]  [<c01a00a0>] ? sysfs_add_one+0x14/0x85
+[   17.623379]  [<c019fc8e>] ? sysfs_add_file_mode+0x4e/0x6d
+[   17.623379]  [<c019fcbb>] ? sysfs_add_file+0xe/0x13
+[   17.623379]  [<c040d2eb>] ? kernel_init+0x127/0x257
+[   17.623379]  [<c0422678>] ? ide_generic_init+0x0/0x1e7
+[   17.623379]  [<c013d1ad>] ? trace_hardirqs_on_caller+0xe1/0x102
+[   17.623379]  [<c01dbe18>] ? trace_hardirqs_on_thunk+0xc/0x10
+[   17.623379]  [<c0102eb6>] ? restore_nocheck_notrace+0x0/0xe
+[   17.623379]  [<c040d1c4>] ? kernel_init+0x0/0x257
+[   17.623379]  [<c040d1c4>] ? kernel_init+0x0/0x257
+[   17.623379]  [<c0103a8f>] ? kernel_thread_helper+0x7/0x10
+[   17.623379]  =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D
+[   17.623379] Code:  Bad EIP value.
+[   17.623379] EIP: [<6f690074>] 0x6f690074 SS:ESP 0068:df82fc14
+[   17.630502] ---[ end trace 01bb572fb1fb92e8 ]---
+[   17.630557] Kernel panic - not syncing: Attempted to kill init!
 
-Hope it can help
+I tracked the error down to the call to ide_register_port(hwif) in
+ide-probe.c:ide_host_register() which does device_register(&hwif->gende=
+v) and
+the hwif->gendev->kobj seems unitialized thus the WARN_ON on its refcou=
+nt in
+kref_get(). Will look into it more when i get some free time.
 
-Piter Punk
+--
+=46rom: Borislav Petkov <petkovbb@gmail.com>
+
+Check the correct flags-location for set features.
+
+Signed-off-by: Borislav Petkov <petkovbb@gmail.com>
+
+---
+
+diff --git a/drivers/ide/ide-atapi.c b/drivers/ide/ide-atapi.c
+index 97cabfd..ddabad9 100644
+--- a/drivers/ide/ide-atapi.c
++++ b/drivers/ide/ide-atapi.c
+@@ -257,7 +257,7 @@ ide_startstop_t ide_transfer_pc(ide_drive_t *drive,=
+ struct ide_atapi_pc *pc,
+ 	}
+=20
+ 	/* Send the actual packet */
+-	if ((pc->flags & IDE_DFLAG_ZIP_DRIVE) =3D=3D 0)
++	if ((drive->dev_flags & IDE_DFLAG_ZIP_DRIVE) =3D=3D 0)
+ 		hwif->tp_ops->output_data(drive, NULL, rq->cmd, 12);
+=20
+ 	return ide_started;
+--=20
+Regards/Gru=DF,
+    Boris.
