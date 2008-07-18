@@ -1,79 +1,38 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: [PATCH] palm_bk3710: add UltraDMA/100 support
-Date: Thu, 17 Jul 2008 17:04:59 +0400
-Message-ID: <200807171705.00026.sshtylyov@ru.mvista.com>
+From: =?ISO-8859-15?Q?David_M=FCller?= <dave.mueller@gmx.ch>
+Subject: [PATCH] libata: fix out-of-bounds access in pata_oldpiix.c
+Date: Fri, 18 Jul 2008 09:06:12 +0200
+Message-ID: <488040E4.1090500@gmx.ch>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset=ISO-8859-15; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtsoft3.corbina.net ([85.21.88.6]:9295 "EHLO
-	buildserver.ru.mvista.com" rhost-flags-OK-FAIL-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1751461AbYGQNEy (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 17 Jul 2008 09:04:54 -0400
-Content-Disposition: inline
+Received: from mail.gmx.net ([213.165.64.20]:42626 "HELO mail.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1752697AbYGRHGK (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 18 Jul 2008 03:06:10 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: bzolnier@gmail.com
+To: jgarzik@pobox.com
 Cc: linux-ide@vger.kernel.org
 
-This controller supports UltraDMA up to mode 5 but it should be clocked with
-at least twice the data strobe frequency, so enable mode 5 for 100+ MHz IDECLK.
+The "pata_oldpiix" driver in linux-2.6.26 is calling its "set_dmamode" 
+routine also locally, but under different preconditions as the 
+corresponding call in libata-core.c. This may cause an "out-of-array 
+bounds" access in "oldpiix_set_dmamode".
 
-While at it, start passing the correct device to clk_get() -- it worked anyway
-but WTF? :-/
 
-Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Signed-off-by: Dave Mueller <dave.mueller@gmx.ch>
 
----
-The patch is atop of the recent pata-2.6 series.
+diff -dpurN a/drivers/ata/pata_oldpiix.c b/drivers/ata/pata_oldpiix.c
+--- a/drivers/ata/pata_oldpiix.c   2008-07-18 08:13:38.000000000 +0200
++++ b/drivers/ata/pata_oldpiix.c   2008-07-18 08:18:45.000000000 +0200
+@@ -198,7 +198,7 @@ static unsigned int oldpiix_qc_issue(str
 
- drivers/ide/arm/palm_bk3710.c |    9 ++++++---
- 1 files changed, 6 insertions(+), 3 deletions(-)
-
-Index: linux-2.6/drivers/ide/arm/palm_bk3710.c
-===================================================================
---- linux-2.6.orig/drivers/ide/arm/palm_bk3710.c
-+++ linux-2.6/drivers/ide/arm/palm_bk3710.c
-@@ -82,6 +82,7 @@ static const struct palm_bk3710_udmatimi
- 	{100, 120},		/* UDMA Mode 2 */
- 	{100, 90},		/* UDMA Mode 3 */
- 	{100, 60},		/* UDMA Mode 4 */
-+	{85,  40},		/* UDMA Mode 5 */
- };
- 
- static void palm_bk3710_setudmamode(void __iomem *base, unsigned int dev,
-@@ -334,12 +335,11 @@ static const struct ide_port_ops palm_bk
- 	.cable_detect		= palm_bk3710_cable_detect,
- };
- 
--static const struct ide_port_info __devinitdata palm_bk3710_port_info = {
-+static struct ide_port_info __devinitdata palm_bk3710_port_info = {
- 	.init_dma		= palm_bk3710_init_dma,
- 	.port_ops		= &palm_bk3710_ports_ops,
- 	.host_flags		= IDE_HFLAG_MMIO,
- 	.pio_mask		= ATA_PIO4,
--	.udma_mask		= ATA_UDMA4,	/* (input clk 99MHz) */
- 	.mwdma_mask		= ATA_MWDMA2,
- };
- 
-@@ -352,7 +352,7 @@ static int __devinit palm_bk3710_probe(s
- 	int i, rc;
- 	hw_regs_t hw, *hws[] = { &hw, NULL, NULL, NULL };
- 
--	clk = clk_get(NULL, "IDECLK");
-+	clk = clk_get(&pdev->dev, "IDECLK");
- 	if (IS_ERR(clk))
- 		return -ENODEV;
- 
-@@ -392,6 +392,9 @@ static int __devinit palm_bk3710_probe(s
- 	hw.irq = irq->start;
- 	hw.chipset = ide_palm3710;
- 
-+	palm_bk3710_port_info.udma_mask = rate < 100000000 ? ATA_UDMA4 :
-+							     ATA_UDMA5;
-+
- 	rc = ide_host_add(&palm_bk3710_port_info, hws, NULL);
- 	if (rc)
- 		goto out;
+         if (adev != ap->private_data) {
+                 oldpiix_set_piomode(ap, adev);
+-               if (adev->dma_mode)
++               if (adev->dma_mode != 0xff)
+                         oldpiix_set_dmamode(ap, adev);
+         }
+         return ata_sff_qc_issue(qc);
 
