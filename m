@@ -1,68 +1,124 @@
-From: Pierre Ossman <drzeus@drzeus.cx>
-Subject: Re: linux-next: Tree for July 16 (crash on quad core AMD)
-Date: Sat, 19 Jul 2008 14:07:17 +0200
-Message-ID: <20080719140717.7b296eae@mjolnir.drzeus.cx>
-References: <20080716235011.ac9643aa.sfr@canb.auug.org.au>
-	<200807170053.36661.rjw@sisk.pl>
-	<1216249292.3358.66.camel@localhost.localdomain>
-	<200807170109.30655.rjw@sisk.pl>
-	<48808EE0.2060603@gmail.com>
-	<20080719004736.626ef169@mjolnir.drzeus.cx>
-	<48813C5F.70007@gmail.com>
-	<20080719033050.552f9b49@mjolnir.drzeus.cx>
-	<48814D81.8060001@gmail.com>
+From: Geert Uytterhoeven <geert@linux-m68k.org>
+Subject: Re: [PATCH] gayle: reserve memory resources at once
+Date: Sat, 19 Jul 2008 14:38:01 +0200 (CEST)
+Message-ID: <Pine.LNX.4.64.0807191436330.2017@anakin>
+References: <200806221916.59751.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; protocol="application/pgp-signature"; micalg=PGP-SHA1; boundary="=_freyr.drzeus.cx-30400-1216469241-0001-2"
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from server.drzeus.cx ([85.8.24.28]:59062 "EHLO smtp.drzeus.cx"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752826AbYGSMHX (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 19 Jul 2008 08:07:23 -0400
-In-Reply-To: <48814D81.8060001@gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1755515AbYGSMiU@vger.kernel.org>
+In-Reply-To: <200806221916.59751.bzolnier@gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: linux-ide@vger.kernel.org, Linux Kernel Development <linux-kernel@vger.kernel.org>, Linux/m68k <linux-m68k@vger.kernel.org>
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: "Rafael J. Wysocki" <rjw@sisk.pl>, James Bottomley <James.Bottomley@hansenpartnership.com>, Stephen Rothwell <sfr@canb.auug.org.au>, linux-next@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>, Kernel Testers List <kernel-testers@vger.kernel.org>, scsi <linux-scsi@vger.kernel.org>, Jens Axboe <jens.axboe@oracle.com>, linux-ide <linux-ide@vger.kernel.org>, Jeff Garzik <jeff@garzik.org>, Takashi Iwai <tiwai@suse.de>, tino.keitel@gmx.de
 
-This is a MIME-formatted message.  If you see this text it means that your
-E-mail software does not support MIME-formatted messages.
+On Sun, 22 Jun 2008, Bartlomiej Zolnierkiewicz wrote:
+> * Reserve memory resources for all IDE ports at once by moving
+>   request_mem_region() out of 'for ()' loop and always defining
+>   GAYLE_IDEREG_SIZE to 0x2000.
+> 
+> * Keep memory resources even if no free IDE slots can be found
+>   (this driver is unloadable currently).
 
---=_freyr.drzeus.cx-30400-1216469241-0001-2
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+I don't like this part. You're changing the driver to no longer
+correctly handle initialization failures.
 
-On Sat, 19 Jul 2008 11:12:17 +0900
-Tejun Heo <htejun@gmail.com> wrote:
+> Cc: Geert Uytterhoeven <geert@linux-m68k.org>
+> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+> ---
+>  drivers/ide/legacy/gayle.c |   25 +++++++++++--------------
+>  1 file changed, 11 insertions(+), 14 deletions(-)
+> 
+> Index: b/drivers/ide/legacy/gayle.c
+> ===================================================================
+> --- a/drivers/ide/legacy/gayle.c
+> +++ b/drivers/ide/legacy/gayle.c
+> @@ -31,6 +31,8 @@
+>  #define GAYLE_BASE_4000	0xdd2020	/* A4000/A4000T */
+>  #define GAYLE_BASE_1200	0xda0000	/* A1200/A600 and E-Matrix 530 */
+>  
+> +#define GAYLE_IDEREG_SIZE	0x2000
+> +
+>      /*
+>       *  Offsets from one of the above bases
+>       */
+> @@ -56,13 +58,11 @@
+>  #define GAYLE_NUM_HWIFS		1
+>  #define GAYLE_NUM_PROBE_HWIFS	GAYLE_NUM_HWIFS
+>  #define GAYLE_HAS_CONTROL_REG	1
+> -#define GAYLE_IDEREG_SIZE	0x2000
+>  #else /* CONFIG_BLK_DEV_IDEDOUBLER */
+>  #define GAYLE_NUM_HWIFS		2
+>  #define GAYLE_NUM_PROBE_HWIFS	(ide_doubler ? GAYLE_NUM_HWIFS : \
+>  					       GAYLE_NUM_HWIFS-1)
+>  #define GAYLE_HAS_CONTROL_REG	(!ide_doubler)
+> -#define GAYLE_IDEREG_SIZE	(ide_doubler ? 0x1000 : 0x2000)
+>  
+>  static int ide_doubler;
+>  module_param_named(doubler, ide_doubler, bool, 0);
+> @@ -124,6 +124,9 @@ static void __init gayle_setup_ports(hw_
+>  
+>  static int __init gayle_init(void)
+>  {
+> +    unsigned long phys_base, res_start, res_n;
+> +    unsigned long base, ctrlport, irqport;
+> +    ide_ack_intr_t *ack_intr;
+>      int a4000, i;
+>      hw_regs_t hw[GAYLE_NUM_HWIFS], *hws[] = { NULL, NULL, NULL, NULL };
+>      u8 idx[4] = { 0xff, 0xff, 0xff, 0xff };
+> @@ -149,12 +152,6 @@ found:
+>  #endif
+>  			 "");
+>  
+> -    for (i = 0; i < GAYLE_NUM_PROBE_HWIFS; i++) {
+> -	unsigned long base, ctrlport, irqport;
+> -	ide_ack_intr_t *ack_intr;
+> -	ide_hwif_t *hwif;
+> -	unsigned long phys_base, res_start, res_n;
+> -
+>  	if (a4000) {
+>  	    phys_base = GAYLE_BASE_4000;
+>  	    irqport = (unsigned long)ZTWO_VADDR(GAYLE_IRQ_4000);
+> @@ -168,15 +165,16 @@ found:
+>   * FIXME: we now have selectable modes between mmio v/s iomio
+>   */
+>  
+> -	phys_base += i*GAYLE_NEXT_PORT;
+> -
+>  	res_start = ((unsigned long)phys_base) & ~(GAYLE_NEXT_PORT-1);
+>  	res_n = GAYLE_IDEREG_SIZE;
+>  
+>  	if (!request_mem_region(res_start, res_n, "IDE"))
+> -	    continue;
+> +		return -EBUSY;
+>  
+> -	base = (unsigned long)ZTWO_VADDR(phys_base);
+> +    for (i = 0; i < GAYLE_NUM_PROBE_HWIFS; i++) {
+> +	ide_hwif_t *hwif;
+> +
+> +	base = (unsigned long)ZTWO_VADDR(phys_base + i * GAYLE_NEXT_PORT);
+>  	ctrlport = GAYLE_HAS_CONTROL_REG ? (base + GAYLE_CONTROL) : 0;
+>  
+>  	gayle_setup_ports(&hw[i], base, ctrlport, irqport, ack_intr);
+> @@ -187,8 +185,7 @@ found:
+>  
+>  	    hws[i] = &hw[i];
+>  	    idx[i] = hwif->index;
+> -	} else
+> -	    release_mem_region(res_start, res_n);
+> +	}
+>      }
+>  
+>      ide_device_add(idx, NULL, hws);
+> 
 
->=20
-> Oh... I see.  How about adding sg_miter_consume(@miter, @bytes)?  If the
-> function is never called, the whole chunk is assumed to be consumed.  If
-> the function is called only @bytes are consumed.
->=20
+Gr{oetje,eeting}s,
 
-Sounds reasonable. Care to make an independent patch so that I can
-continue my PIO hacking adventures? :)
+						Geert
 
-Rgds
---=20
-     -- Pierre Ossman
+--
+Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
 
-  WARNING: This correspondence is being monitored by the
-  Swedish government. Make sure your server uses encryption
-  for SMTP traffic and consider using PGP for end-to-end
-  encryption.
-
---=_freyr.drzeus.cx-30400-1216469241-0001-2
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.9 (GNU/Linux)
-
-iEYEARECAAYFAkiB2PgACgkQ7b8eESbyJLjB2QCg1KCslUIDEmrKFM9JVmIIIShK
-jfIAoPg5hu1NeLw/v+DiodxZY/bqK3pd
-=N4n4
------END PGP SIGNATURE-----
-
---=_freyr.drzeus.cx-30400-1216469241-0001-2--
+In personal conversations with technical people, I call myself a hacker. But
+when I'm talking to journalists I just say "programmer" or something like that.
+							    -- Linus Torvalds
