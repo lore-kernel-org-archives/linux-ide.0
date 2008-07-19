@@ -1,124 +1,303 @@
-From: Geert Uytterhoeven <geert@linux-m68k.org>
-Subject: Re: [PATCH] gayle: reserve memory resources at once
-Date: Sat, 19 Jul 2008 14:38:01 +0200 (CEST)
-Message-ID: <Pine.LNX.4.64.0807191436330.2017@anakin>
-References: <200806221916.59751.bzolnier@gmail.com>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: linux-next: Tree for July 16 (crash on quad core AMD)
+Date: Sat, 19 Jul 2008 23:03:35 +0900
+Message-ID: <4881F437.7000503@gmail.com>
+References: <20080716235011.ac9643aa.sfr@canb.auug.org.au>	<200807170053.36661.rjw@sisk.pl>	<1216249292.3358.66.camel@localhost.localdomain>	<200807170109.30655.rjw@sisk.pl>	<48808EE0.2060603@gmail.com>	<20080719004736.626ef169@mjolnir.drzeus.cx>	<48813C5F.70007@gmail.com>	<20080719033050.552f9b49@mjolnir.drzeus.cx>	<48814D81.8060001@gmail.com> <20080719140717.7b296eae@mjolnir.drzeus.cx>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1755515AbYGSMiU@vger.kernel.org>
-In-Reply-To: <200806221916.59751.bzolnier@gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: linux-ide@vger.kernel.org, Linux Kernel Development <linux-kernel@vger.kernel.org>, Linux/m68k <linux-m68k@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-next-owner@vger.kernel.org>
+In-Reply-To: <20080719140717.7b296eae@mjolnir.drzeus.cx>
+Sender: linux-next-owner@vger.kernel.org
+To: Pierre Ossman <drzeus@drzeus.cx>
+Cc: "Rafael J. Wysocki" <rjw@sisk.pl>, James Bottomley <James.Bottomley@hansenpartnership.com>, Stephen Rothwell <sfr@canb.auug.org.au>, linux-next@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>, Kernel Testers List <kernel-testers@vger.kernel.org>, scsi <linux-scsi@vger.kernel.org>, Jens Axboe <jens.axboe@oracle.com>, linux-ide <linux-ide@vger.kernel.org>, Jeff Garzik <jeff@garzik.org>, Takashi Iwai <tiwai@suse.de>, tino.keitel@gmx.de
 List-Id: linux-ide@vger.kernel.org
 
-On Sun, 22 Jun 2008, Bartlomiej Zolnierkiewicz wrote:
-> * Reserve memory resources for all IDE ports at once by moving
->   request_mem_region() out of 'for ()' loop and always defining
->   GAYLE_IDEREG_SIZE to 0x2000.
+Pierre Ossman wrote:
+> On Sat, 19 Jul 2008 11:12:17 +0900
+> Tejun Heo <htejun@gmail.com> wrote:
 > 
-> * Keep memory resources even if no free IDE slots can be found
->   (this driver is unloadable currently).
-
-I don't like this part. You're changing the driver to no longer
-correctly handle initialization failures.
-
-> Cc: Geert Uytterhoeven <geert@linux-m68k.org>
-> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-> ---
->  drivers/ide/legacy/gayle.c |   25 +++++++++++--------------
->  1 file changed, 11 insertions(+), 14 deletions(-)
+>> Oh... I see.  How about adding sg_miter_consume(@miter, @bytes)?  If the
+>> function is never called, the whole chunk is assumed to be consumed.  If
+>> the function is called only @bytes are consumed.
+>>
 > 
-> Index: b/drivers/ide/legacy/gayle.c
-> ===================================================================
-> --- a/drivers/ide/legacy/gayle.c
-> +++ b/drivers/ide/legacy/gayle.c
-> @@ -31,6 +31,8 @@
->  #define GAYLE_BASE_4000	0xdd2020	/* A4000/A4000T */
->  #define GAYLE_BASE_1200	0xda0000	/* A1200/A600 and E-Matrix 530 */
->  
-> +#define GAYLE_IDEREG_SIZE	0x2000
-> +
->      /*
->       *  Offsets from one of the above bases
->       */
-> @@ -56,13 +58,11 @@
->  #define GAYLE_NUM_HWIFS		1
->  #define GAYLE_NUM_PROBE_HWIFS	GAYLE_NUM_HWIFS
->  #define GAYLE_HAS_CONTROL_REG	1
-> -#define GAYLE_IDEREG_SIZE	0x2000
->  #else /* CONFIG_BLK_DEV_IDEDOUBLER */
->  #define GAYLE_NUM_HWIFS		2
->  #define GAYLE_NUM_PROBE_HWIFS	(ide_doubler ? GAYLE_NUM_HWIFS : \
->  					       GAYLE_NUM_HWIFS-1)
->  #define GAYLE_HAS_CONTROL_REG	(!ide_doubler)
-> -#define GAYLE_IDEREG_SIZE	(ide_doubler ? 0x1000 : 0x2000)
->  
->  static int ide_doubler;
->  module_param_named(doubler, ide_doubler, bool, 0);
-> @@ -124,6 +124,9 @@ static void __init gayle_setup_ports(hw_
->  
->  static int __init gayle_init(void)
->  {
-> +    unsigned long phys_base, res_start, res_n;
-> +    unsigned long base, ctrlport, irqport;
-> +    ide_ack_intr_t *ack_intr;
->      int a4000, i;
->      hw_regs_t hw[GAYLE_NUM_HWIFS], *hws[] = { NULL, NULL, NULL, NULL };
->      u8 idx[4] = { 0xff, 0xff, 0xff, 0xff };
-> @@ -149,12 +152,6 @@ found:
->  #endif
->  			 "");
->  
-> -    for (i = 0; i < GAYLE_NUM_PROBE_HWIFS; i++) {
-> -	unsigned long base, ctrlport, irqport;
-> -	ide_ack_intr_t *ack_intr;
-> -	ide_hwif_t *hwif;
-> -	unsigned long phys_base, res_start, res_n;
-> -
->  	if (a4000) {
->  	    phys_base = GAYLE_BASE_4000;
->  	    irqport = (unsigned long)ZTWO_VADDR(GAYLE_IRQ_4000);
-> @@ -168,15 +165,16 @@ found:
->   * FIXME: we now have selectable modes between mmio v/s iomio
->   */
->  
-> -	phys_base += i*GAYLE_NEXT_PORT;
-> -
->  	res_start = ((unsigned long)phys_base) & ~(GAYLE_NEXT_PORT-1);
->  	res_n = GAYLE_IDEREG_SIZE;
->  
->  	if (!request_mem_region(res_start, res_n, "IDE"))
-> -	    continue;
-> +		return -EBUSY;
->  
-> -	base = (unsigned long)ZTWO_VADDR(phys_base);
-> +    for (i = 0; i < GAYLE_NUM_PROBE_HWIFS; i++) {
-> +	ide_hwif_t *hwif;
-> +
-> +	base = (unsigned long)ZTWO_VADDR(phys_base + i * GAYLE_NEXT_PORT);
->  	ctrlport = GAYLE_HAS_CONTROL_REG ? (base + GAYLE_CONTROL) : 0;
->  
->  	gayle_setup_ports(&hw[i], base, ctrlport, irqport, ack_intr);
-> @@ -187,8 +185,7 @@ found:
->  
->  	    hws[i] = &hw[i];
->  	    idx[i] = hwif->index;
-> -	} else
-> -	    release_mem_region(res_start, res_n);
-> +	}
->      }
->  
->      ide_device_add(idx, NULL, hws);
-> 
+> Sounds reasonable. Care to make an independent patch so that I can
+> continue my PIO hacking adventures? :)
 
-Gr{oetje,eeting}s,
+Sure thing.  Here you go.  :-)
 
-						Geert
+Subject: [PATCH 2.6.26] sg: reimplement sg mapping iterator
 
---
-Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
+This is alternative implementation of sg content iterator introduced
+by commit 83e7d317... from Pierre Ossman in next-20080716.  As there's
+already an sg iterator which iterates over sg entries themselves, name
+this sg_mapping_iterator.
 
-In personal conversations with technical people, I call myself a hacker. But
-when I'm talking to journalists I just say "programmer" or something like that.
-							    -- Linus Torvalds
+Slightly edited description from the original implementation follows.
+
+Iteration over a sg list is not that trivial when you take into
+account that memory pages might have to be mapped before being used.
+Unfortunately, that means that some parts of the kernel restrict
+themselves to directly accesible memory just to not have to deal with
+the mess.
+
+This patch adds a simple iterator system that allows any code to
+easily traverse an sg list and not have to deal with all the details.
+The user can decide to consume part of the iteration.  Also, iteration
+can be stopped and resumed later if releasing the kmap between
+iteration steps is necessary.  These features are useful to implement
+piecemeal sg copying for interrupt drive PIO for example.
+
+Signed-off-by: Tejun Heo <tj@kernel.org>
+Cc: Pierre Ossman <drzeus@drzeus.cx>
+---
+ include/linux/scatterlist.h |   38 +++++++++
+ lib/scatterlist.c           |  176 ++++++++++++++++++++++++++++++++------------
+ 2 files changed, 168 insertions(+), 46 deletions(-)
+
+diff --git a/include/linux/scatterlist.h b/include/linux/scatterlist.h
+index 71fc813..e599698 100644
+--- a/include/linux/scatterlist.h
++++ b/include/linux/scatterlist.h
+@@ -224,4 +224,42 @@ size_t sg_copy_to_buffer(struct scatterlist *sgl, unsigned int nents,
+  */
+ #define SG_MAX_SINGLE_ALLOC		(PAGE_SIZE / sizeof(struct scatterlist))
+ 
++
++/*
++ * Mapping sg iterator
++ *
++ * Iterates over sg entries mapping page-by-page.  On each successful
++ * iteration, @miter->page points to the mapped page and
++ * @miter->length bytes of data can be accessed at @miter->addr.  As
++ * long as an interation is enclosed between start and stop, the user
++ * is free to choose control structure and when to stop.
++ *
++ * @miter->consumed is set to @miter->length on each iteration.  It
++ * can be adjusted if the user can't consume all the bytes in one go.
++ * Also, a stopped iteration can be resumed by calling next on it.
++ * This is useful when iteration needs to release all resources and
++ * continue later (e.g. at the next interrupt).
++ */
++
++#define SG_MITER_ATOMIC		(1 << 0)	 /* use kmap_atomic */
++
++struct sg_mapping_iter {
++	/* the following three fields can be accessed directly */
++	struct page		*page;		/* currently mapped page */
++	void			*addr;		/* pointer to the mapped area */
++	size_t			length;		/* length of the mapped area */
++	size_t			consumed;	/* number of consumed bytes */
++
++	/* these are internal states, keep away */
++	struct scatterlist	*__sg;		/* current entry */
++	unsigned int		__nents;	/* nr of remaining entries */
++	unsigned int		__offset;	/* offset within sg */
++	unsigned int		__flags;
++};
++
++void sg_miter_start(struct sg_mapping_iter *miter, struct scatterlist *sgl,
++		    unsigned int nents, unsigned int flags);
++bool sg_miter_next(struct sg_mapping_iter *miter);
++void sg_miter_stop(struct sg_mapping_iter *miter);
++
+ #endif /* _LINUX_SCATTERLIST_H */
+diff --git a/lib/scatterlist.c b/lib/scatterlist.c
+index b80c211..876ba6d 100644
+--- a/lib/scatterlist.c
++++ b/lib/scatterlist.c
+@@ -295,6 +295,117 @@ int sg_alloc_table(struct sg_table *table, unsigned int nents, gfp_t gfp_mask)
+ EXPORT_SYMBOL(sg_alloc_table);
+ 
+ /**
++ * sg_miter_start - start mapping iteration over a sg list
++ * @miter: sg mapping iter to be started
++ * @sgl: sg list to iterate over
++ * @nents: number of sg entries
++ *
++ * Description:
++ *   Starts mapping iterator @miter.
++ *
++ * Context:
++ *   Don't care.
++ */
++void sg_miter_start(struct sg_mapping_iter *miter, struct scatterlist *sgl,
++		    unsigned int nents, unsigned int flags)
++{
++	memset(miter, 0, sizeof(struct sg_mapping_iter));
++
++	miter->__sg = sgl;
++	miter->__nents = nents;
++	miter->__offset = 0;
++	miter->__flags = flags;
++}
++EXPORT_SYMBOL(sg_miter_start);
++
++/**
++ * sg_miter_next - proceed mapping iterator to the next mapping
++ * @miter: sg mapping iter to proceed
++ *
++ * Description:
++ *   Proceeds @miter@ to the next mapping.  @miter@ should have been
++ *   started using sg_miter_start().  On successful return,
++ *   @miter@->page, @miter@->addr and @miter@->length point to the
++ *   current mapping.
++ *
++ * Context:
++ *   IRQ disabled if SG_MITER_ATOMIC.  IRQ must stay disabled till
++ *   @miter@ is stopped.  May sleep if !SG_MITER_ATOMIC.
++ *
++ * Returns:
++ *   true if @miter contains the next mapping.  false if end of sg
++ *   list is reached.
++ */
++bool sg_miter_next(struct sg_mapping_iter *miter)
++{
++	unsigned int off, len;
++
++	/* check for end and drop resources from the last iteration */
++	if (!miter->__nents)
++		return false;
++
++	sg_miter_stop(miter);
++
++	/* get to the next sg if necessary.  __offset is adjusted by stop */
++	if (miter->__offset == miter->__sg->length && --miter->__nents) {
++		miter->__sg = sg_next(miter->__sg);
++		miter->__offset = 0;
++	}
++
++	/* map the next page */
++	off = miter->__sg->offset + miter->__offset;
++	len = miter->__sg->length - miter->__offset;
++
++	miter->page = nth_page(sg_page(miter->__sg), off >> PAGE_SHIFT);
++	off &= ~PAGE_MASK;
++	miter->length = min_t(unsigned int, len, PAGE_SIZE - off);
++	miter->consumed = miter->length;
++
++	if (miter->__flags & SG_MITER_ATOMIC)
++		miter->addr = kmap_atomic(miter->page, KM_BIO_SRC_IRQ) + off;
++	else
++		miter->addr = kmap(miter->page) + off;
++
++	return true;
++}
++EXPORT_SYMBOL(sg_miter_next);
++
++/**
++ * sg_miter_stop - stop mapping iteration
++ * @miter: sg mapping iter to be stopped
++ *
++ * Description:
++ *   Stops mapping iterator @miter.  @miter should have been started
++ *   started using sg_miter_start().  A stopped iteration can be
++ *   resumed by calling sg_miter_next() on it.  This is useful when
++ *   resources (kmap) need to be released during iteration.
++ *
++ * Context:
++ *   IRQ disabled if the SG_MITER_ATOMIC is set.  Don't care otherwise.
++ */
++void sg_miter_stop(struct sg_mapping_iter *miter)
++{
++	WARN_ON(miter->consumed > miter->length);
++
++	/* drop resources from the last iteration */
++	if (miter->addr) {
++		miter->__offset += miter->consumed;
++
++		if (miter->__flags & SG_MITER_ATOMIC) {
++			WARN_ON(!irqs_disabled());
++			kunmap_atomic(miter->addr, KM_BIO_SRC_IRQ);
++		} else
++			kunmap(miter->addr);
++
++		miter->page = NULL;
++		miter->addr = NULL;
++		miter->length = 0;
++		miter->consumed = 0;
++	}
++}
++EXPORT_SYMBOL(sg_miter_stop);
++
++/**
+  * sg_copy_buffer - Copy data between a linear buffer and an SG list
+  * @sgl:		 The SG list
+  * @nents:		 Number of SG entries
+@@ -309,56 +420,29 @@ EXPORT_SYMBOL(sg_alloc_table);
+ static size_t sg_copy_buffer(struct scatterlist *sgl, unsigned int nents,
+ 			     void *buf, size_t buflen, int to_buffer)
+ {
+-	struct scatterlist *sg;
+-	size_t buf_off = 0;
+-	int i;
+-
+-	WARN_ON(!irqs_disabled());
+-
+-	for_each_sg(sgl, sg, nents, i) {
+-		struct page *page;
+-		int n = 0;
+-		unsigned int sg_off = sg->offset;
+-		unsigned int sg_copy = sg->length;
+-
+-		if (sg_copy > buflen)
+-			sg_copy = buflen;
+-		buflen -= sg_copy;
+-
+-		while (sg_copy > 0) {
+-			unsigned int page_copy;
+-			void *p;
+-
+-			page_copy = PAGE_SIZE - sg_off;
+-			if (page_copy > sg_copy)
+-				page_copy = sg_copy;
+-
+-			page = nth_page(sg_page(sg), n);
+-			p = kmap_atomic(page, KM_BIO_SRC_IRQ);
+-
+-			if (to_buffer)
+-				memcpy(buf + buf_off, p + sg_off, page_copy);
+-			else {
+-				memcpy(p + sg_off, buf + buf_off, page_copy);
+-				flush_kernel_dcache_page(page);
+-			}
+-
+-			kunmap_atomic(p, KM_BIO_SRC_IRQ);
+-
+-			buf_off += page_copy;
+-			sg_off += page_copy;
+-			if (sg_off == PAGE_SIZE) {
+-				sg_off = 0;
+-				n++;
+-			}
+-			sg_copy -= page_copy;
++	unsigned int offset = 0;
++	struct sg_mapping_iter miter;
++
++	sg_miter_start(&miter, sgl, nents, SG_MITER_ATOMIC);
++
++	while (sg_miter_next(&miter) && offset < buflen) {
++		unsigned int len;
++
++		len = min(miter.length, buflen - offset);
++
++		if (to_buffer)
++			memcpy(buf + offset, miter.addr, len);
++		else {
++			memcpy(miter.addr, buf + offset, len);
++			flush_kernel_dcache_page(miter.page);
+ 		}
+ 
+-		if (!buflen)
+-			break;
++		offset += len;
+ 	}
+ 
+-	return buf_off;
++	sg_miter_stop(&miter);
++
++	return offset;
+ }
+ 
+ /**
