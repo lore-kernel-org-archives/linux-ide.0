@@ -1,303 +1,132 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: linux-next: Tree for July 16 (crash on quad core AMD)
-Date: Sat, 19 Jul 2008 23:03:35 +0900
-Message-ID: <4881F437.7000503@gmail.com>
-References: <20080716235011.ac9643aa.sfr@canb.auug.org.au>	<200807170053.36661.rjw@sisk.pl>	<1216249292.3358.66.camel@localhost.localdomain>	<200807170109.30655.rjw@sisk.pl>	<48808EE0.2060603@gmail.com>	<20080719004736.626ef169@mjolnir.drzeus.cx>	<48813C5F.70007@gmail.com>	<20080719033050.552f9b49@mjolnir.drzeus.cx>	<48814D81.8060001@gmail.com> <20080719140717.7b296eae@mjolnir.drzeus.cx>
+From: Alexander Beregalov <a.beregalov@gmail.com>
+Subject: sata_sx4: DIMM ECC initialization takes 5 min
+Date: Sun, 20 Jul 2008 05:25:55 +0400
+Message-ID: <48829423.5040704@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-next-owner@vger.kernel.org>
-In-Reply-To: <20080719140717.7b296eae@mjolnir.drzeus.cx>
-Sender: linux-next-owner@vger.kernel.org
-To: Pierre Ossman <drzeus@drzeus.cx>
-Cc: "Rafael J. Wysocki" <rjw@sisk.pl>, James Bottomley <James.Bottomley@hansenpartnership.com>, Stephen Rothwell <sfr@canb.auug.org.au>, linux-next@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>, Kernel Testers List <kernel-testers@vger.kernel.org>, scsi <linux-scsi@vger.kernel.org>, Jens Axboe <jens.axboe@oracle.com>, linux-ide <linux-ide@vger.kernel.org>, Jeff Garzik <jeff@garzik.org>, Takashi Iwai <tiwai@suse.de>, tino.keitel@gmx.de
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from fg-out-1718.google.com ([72.14.220.156]:8344 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754870AbYGTB0A (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 19 Jul 2008 21:26:00 -0400
+Received: by fg-out-1718.google.com with SMTP id 19so392550fgg.17
+        for <linux-ide@vger.kernel.org>; Sat, 19 Jul 2008 18:25:59 -0700 (PDT)
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: jgarzik@pobox.com, linux-ide@vger.kernel.org
 
-Pierre Ossman wrote:
-> On Sat, 19 Jul 2008 11:12:17 +0900
-> Tejun Heo <htejun@gmail.com> wrote:
-> 
->> Oh... I see.  How about adding sg_miter_consume(@miter, @bytes)?  If the
->> function is never called, the whole chunk is assumed to be consumed.  If
->> the function is called only @bytes are consumed.
->>
-> 
-> Sounds reasonable. Care to make an independent patch so that I can
-> continue my PIO hacking adventures? :)
+Hi Jeff
 
-Sure thing.  Here you go.  :-)
+Is it possible to initialize it faster?
 
-Subject: [PATCH 2.6.26] sg: reimplement sg mapping iterator
+[10853.618984] sata_sx4 0000:05:01.0: version 0.12
+[10853.618984] ACPI: PCI Interrupt 0000:05:01.0[A] -> GSI 19 (level,
+low) -> IRQ 19
+[10853.618984] pdc20621_dimm_init: Time Period Register (0x40): 0xffffffff
+[10857.105665] pdc20621_dimm_init: Time Counter Register (0x44): 0xf58f6257
+[10857.105669] pdc20621_dimm_init: Num counters 0xa709da8 (175152552)
+[10857.105671] pdc20621_dimm_init: 10 * Internal clk = 0x247 (583)
+[10857.105673] pdc20621_dimm_init: 10 * Internal clk * 33 = 0x4b27 (19239)
+[10857.105675] pdc20621_dimm_init: PLL F Param: 0x46 (70)
+[10857.105677] pdc20621_dimm_init: pci_status: 0x8a461824
+[10857.105800] pdc20621_dimm_init: Local DIMM Speed = 100
+[10857.106191] pdc20621_dimm_init: Local DIMM Size = 512MB
+[10857.106191] Local DIMM ECC Enabled
+[10857.207422] 0, 0,
+[10857.207435] 55, aa, Promise Not Yet Defined 1.1098
+[10857.207455] 55, aa, Promise Not Yet Defined 1.1098
+[10857.207576] pdc20621_dimm_init: Start ECC initialization
+[10922.102473] BUG: soft lockup - CPU#0 stuck for 61s! [modprobe:2156]
+[10922.102473] Modules linked in: sata_sx4(+) ossusb hdaudio envy24ht
+osscore fglrx(P) usb_storage intel_agp agpgart [last unloaded: sata_sx4]
+[10922.102473]
+[10922.102473] Pid: 2156, comm: modprobe Tainted: P          (2.6.26 #3)
+[10922.102473] EIP: 0060:[<f9c2d2a6>] EFLAGS: 00000246 CPU: 0
+[10922.102473] EIP is at pdc20621_put_to_dimm+0xab/0x14a [sata_sx4]
+[10922.102473] EAX: 00000004 EBX: f9d40000 ECX: f9d40484 EDX: 00000000
+[10922.102473] ESI: e30dcdac EDI: f9c41a2c EBP: 00000afb ESP: e30dcc64
+[10922.102473]  DS: 007b ES: 007b FS: 00d8 GS: 0033 SS: 0068
+[10922.102473] CR0: 8005003b CR2: 0805bc3c CR3: 1e93a000 CR4: 000006d0
+[10922.102473] DR0: 00000000 DR1: 00000000 DR2: 00000000 DR3: 00000000
+[10922.102473] DR6: ffff0ff0 DR7: 00000400
+[10922.102473]  [<f9c2e191>] ? pdc20621_dimm_init+0x4b0/0x50d [sata_sx4]
+[10922.102473]  [<c0112da4>] ? change_page_attr_set_clr+0x17c/0x186
+[10922.102473]  [<c023a3ac>] ? vscnprintf+0xc/0x17
+[10922.102473]  [<c023a3ac>] ? vscnprintf+0xc/0x17
+[10922.102473]  [<c02a5612>] ? ata_port_desc+0x59/0x65
+[10922.102473]  [<f9c2e39a>] ? pdc_sata_init_one+0x1ac/0x234 [sata_sx4]
+[10922.102473]  [<c0241465>] ? pci_device_probe+0x36/0x55
+[10922.102473]  [<c028136a>] ? driver_probe_device+0x9d/0x12f
+[10922.102473]  [<c0281433>] ? __driver_attach+0x37/0x55
+[10922.102473]  [<c0280deb>] ? bus_for_each_dev+0x35/0x5c
+[10922.102473]  [<c028121d>] ? driver_attach+0x11/0x13
+[10922.102473]  [<c02813fc>] ? __driver_attach+0x0/0x55
+[10922.102473]  [<c028086e>] ? bus_add_driver+0x91/0x1a7
+[10922.102473]  [<c0281599>] ? driver_register+0x7d/0xd6
+[10922.102473]  [<c024161d>] ? __pci_register_driver+0x32/0x5d
+[10922.102473]  [<c0137c78>] ? sys_init_module+0x175e/0x18f1
+[10922.102473]  [<c012a5d6>] ? autoremove_wake_function+0x0/0x2d
+[10922.102473]  [<c029c3e2>] ? ata_port_start+0x0/0x29
+[10922.102473]  [<c0102aa5>] ? sysenter_past_esp+0x6a/0x91
+[10922.102473]  [<c0330000>] ? quirk_disable_msi+0x2e/0x33
+[10922.102473]  =======================
+<...>
+[11235.333118] pdc20621_dimm_init: Finish ECC initialization
 
-This is alternative implementation of sg content iterator introduced
-by commit 83e7d317... from Pierre Ossman in next-20080716.  As there's
-already an sg iterator which iterates over sg entries themselves, name
-this sg_mapping_iterator.
 
-Slightly edited description from the original implementation follows.
+        pdc20621_i2c_read(host, PDC_DIMM0_SPD_DEV_ADDRESS,
+                          PDC_DIMM_SPD_TYPE, &spd0);
+        if (spd0 == 0x02) {
+                VPRINTK("Start ECC initialization\n");
+                addr = 0;
+                length = size * 1024 * 1024;
+                while (addr < length) {
+                        pdc20621_put_to_dimm(host, (void *) &tmp, addr,
+                                             sizeof(u32));
+                        addr += sizeof(u32);
+                }
+                VPRINTK("Finish ECC initialization\n");
+        }
 
-Iteration over a sg list is not that trivial when you take into
-account that memory pages might have to be mapped before being used.
-Unfortunately, that means that some parts of the kernel restrict
-themselves to directly accesible memory just to not have to deal with
-the mess.
 
-This patch adds a simple iterator system that allows any code to
-easily traverse an sg list and not have to deal with all the details.
-The user can decide to consume part of the iteration.  Also, iteration
-can be stopped and resumed later if releasing the kmap between
-iteration steps is necessary.  These features are useful to implement
-piecemeal sg copying for interrupt drive PIO for example.
+If I understand correctly FreeBSD does not initialize ECC at all,
+but I do not know how this card works there.
 
-Signed-off-by: Tejun Heo <tj@kernel.org>
-Cc: Pierre Ossman <drzeus@drzeus.cx>
----
- include/linux/scatterlist.h |   38 +++++++++
- lib/scatterlist.c           |  176 ++++++++++++++++++++++++++++++++------------
- 2 files changed, 168 insertions(+), 46 deletions(-)
+        if (ctlr->chip->cfg2 == PRSX4X) {
+            struct ata_promise_sx4 *hpkt;
+            u_int32_t dimm = ATA_INL(ctlr->r_res2, 0x000c0080);
 
-diff --git a/include/linux/scatterlist.h b/include/linux/scatterlist.h
-index 71fc813..e599698 100644
---- a/include/linux/scatterlist.h
-+++ b/include/linux/scatterlist.h
-@@ -224,4 +224,42 @@ size_t sg_copy_to_buffer(struct scatterlist *sgl, unsigned int nents,
-  */
- #define SG_MAX_SINGLE_ALLOC		(PAGE_SIZE / sizeof(struct scatterlist))
- 
-+
-+/*
-+ * Mapping sg iterator
-+ *
-+ * Iterates over sg entries mapping page-by-page.  On each successful
-+ * iteration, @miter->page points to the mapped page and
-+ * @miter->length bytes of data can be accessed at @miter->addr.  As
-+ * long as an interation is enclosed between start and stop, the user
-+ * is free to choose control structure and when to stop.
-+ *
-+ * @miter->consumed is set to @miter->length on each iteration.  It
-+ * can be adjusted if the user can't consume all the bytes in one go.
-+ * Also, a stopped iteration can be resumed by calling next on it.
-+ * This is useful when iteration needs to release all resources and
-+ * continue later (e.g. at the next interrupt).
-+ */
-+
-+#define SG_MITER_ATOMIC		(1 << 0)	 /* use kmap_atomic */
-+
-+struct sg_mapping_iter {
-+	/* the following three fields can be accessed directly */
-+	struct page		*page;		/* currently mapped page */
-+	void			*addr;		/* pointer to the mapped area */
-+	size_t			length;		/* length of the mapped area */
-+	size_t			consumed;	/* number of consumed bytes */
-+
-+	/* these are internal states, keep away */
-+	struct scatterlist	*__sg;		/* current entry */
-+	unsigned int		__nents;	/* nr of remaining entries */
-+	unsigned int		__offset;	/* offset within sg */
-+	unsigned int		__flags;
-+};
-+
-+void sg_miter_start(struct sg_mapping_iter *miter, struct scatterlist *sgl,
-+		    unsigned int nents, unsigned int flags);
-+bool sg_miter_next(struct sg_mapping_iter *miter);
-+void sg_miter_stop(struct sg_mapping_iter *miter);
-+
- #endif /* _LINUX_SCATTERLIST_H */
-diff --git a/lib/scatterlist.c b/lib/scatterlist.c
-index b80c211..876ba6d 100644
---- a/lib/scatterlist.c
-+++ b/lib/scatterlist.c
-@@ -295,6 +295,117 @@ int sg_alloc_table(struct sg_table *table, unsigned int nents, gfp_t gfp_mask)
- EXPORT_SYMBOL(sg_alloc_table);
- 
- /**
-+ * sg_miter_start - start mapping iteration over a sg list
-+ * @miter: sg mapping iter to be started
-+ * @sgl: sg list to iterate over
-+ * @nents: number of sg entries
-+ *
-+ * Description:
-+ *   Starts mapping iterator @miter.
-+ *
-+ * Context:
-+ *   Don't care.
-+ */
-+void sg_miter_start(struct sg_mapping_iter *miter, struct scatterlist *sgl,
-+		    unsigned int nents, unsigned int flags)
-+{
-+	memset(miter, 0, sizeof(struct sg_mapping_iter));
-+
-+	miter->__sg = sgl;
-+	miter->__nents = nents;
-+	miter->__offset = 0;
-+	miter->__flags = flags;
-+}
-+EXPORT_SYMBOL(sg_miter_start);
-+
-+/**
-+ * sg_miter_next - proceed mapping iterator to the next mapping
-+ * @miter: sg mapping iter to proceed
-+ *
-+ * Description:
-+ *   Proceeds @miter@ to the next mapping.  @miter@ should have been
-+ *   started using sg_miter_start().  On successful return,
-+ *   @miter@->page, @miter@->addr and @miter@->length point to the
-+ *   current mapping.
-+ *
-+ * Context:
-+ *   IRQ disabled if SG_MITER_ATOMIC.  IRQ must stay disabled till
-+ *   @miter@ is stopped.  May sleep if !SG_MITER_ATOMIC.
-+ *
-+ * Returns:
-+ *   true if @miter contains the next mapping.  false if end of sg
-+ *   list is reached.
-+ */
-+bool sg_miter_next(struct sg_mapping_iter *miter)
-+{
-+	unsigned int off, len;
-+
-+	/* check for end and drop resources from the last iteration */
-+	if (!miter->__nents)
-+		return false;
-+
-+	sg_miter_stop(miter);
-+
-+	/* get to the next sg if necessary.  __offset is adjusted by stop */
-+	if (miter->__offset == miter->__sg->length && --miter->__nents) {
-+		miter->__sg = sg_next(miter->__sg);
-+		miter->__offset = 0;
-+	}
-+
-+	/* map the next page */
-+	off = miter->__sg->offset + miter->__offset;
-+	len = miter->__sg->length - miter->__offset;
-+
-+	miter->page = nth_page(sg_page(miter->__sg), off >> PAGE_SHIFT);
-+	off &= ~PAGE_MASK;
-+	miter->length = min_t(unsigned int, len, PAGE_SIZE - off);
-+	miter->consumed = miter->length;
-+
-+	if (miter->__flags & SG_MITER_ATOMIC)
-+		miter->addr = kmap_atomic(miter->page, KM_BIO_SRC_IRQ) + off;
-+	else
-+		miter->addr = kmap(miter->page) + off;
-+
-+	return true;
-+}
-+EXPORT_SYMBOL(sg_miter_next);
-+
-+/**
-+ * sg_miter_stop - stop mapping iteration
-+ * @miter: sg mapping iter to be stopped
-+ *
-+ * Description:
-+ *   Stops mapping iterator @miter.  @miter should have been started
-+ *   started using sg_miter_start().  A stopped iteration can be
-+ *   resumed by calling sg_miter_next() on it.  This is useful when
-+ *   resources (kmap) need to be released during iteration.
-+ *
-+ * Context:
-+ *   IRQ disabled if the SG_MITER_ATOMIC is set.  Don't care otherwise.
-+ */
-+void sg_miter_stop(struct sg_mapping_iter *miter)
-+{
-+	WARN_ON(miter->consumed > miter->length);
-+
-+	/* drop resources from the last iteration */
-+	if (miter->addr) {
-+		miter->__offset += miter->consumed;
-+
-+		if (miter->__flags & SG_MITER_ATOMIC) {
-+			WARN_ON(!irqs_disabled());
-+			kunmap_atomic(miter->addr, KM_BIO_SRC_IRQ);
-+		} else
-+			kunmap(miter->addr);
-+
-+		miter->page = NULL;
-+		miter->addr = NULL;
-+		miter->length = 0;
-+		miter->consumed = 0;
-+	}
-+}
-+EXPORT_SYMBOL(sg_miter_stop);
-+
-+/**
-  * sg_copy_buffer - Copy data between a linear buffer and an SG list
-  * @sgl:		 The SG list
-  * @nents:		 Number of SG entries
-@@ -309,56 +420,29 @@ EXPORT_SYMBOL(sg_alloc_table);
- static size_t sg_copy_buffer(struct scatterlist *sgl, unsigned int nents,
- 			     void *buf, size_t buflen, int to_buffer)
- {
--	struct scatterlist *sg;
--	size_t buf_off = 0;
--	int i;
--
--	WARN_ON(!irqs_disabled());
--
--	for_each_sg(sgl, sg, nents, i) {
--		struct page *page;
--		int n = 0;
--		unsigned int sg_off = sg->offset;
--		unsigned int sg_copy = sg->length;
--
--		if (sg_copy > buflen)
--			sg_copy = buflen;
--		buflen -= sg_copy;
--
--		while (sg_copy > 0) {
--			unsigned int page_copy;
--			void *p;
--
--			page_copy = PAGE_SIZE - sg_off;
--			if (page_copy > sg_copy)
--				page_copy = sg_copy;
--
--			page = nth_page(sg_page(sg), n);
--			p = kmap_atomic(page, KM_BIO_SRC_IRQ);
--
--			if (to_buffer)
--				memcpy(buf + buf_off, p + sg_off, page_copy);
--			else {
--				memcpy(p + sg_off, buf + buf_off, page_copy);
--				flush_kernel_dcache_page(page);
--			}
--
--			kunmap_atomic(p, KM_BIO_SRC_IRQ);
--
--			buf_off += page_copy;
--			sg_off += page_copy;
--			if (sg_off == PAGE_SIZE) {
--				sg_off = 0;
--				n++;
--			}
--			sg_copy -= page_copy;
-+	unsigned int offset = 0;
-+	struct sg_mapping_iter miter;
-+
-+	sg_miter_start(&miter, sgl, nents, SG_MITER_ATOMIC);
-+
-+	while (sg_miter_next(&miter) && offset < buflen) {
-+		unsigned int len;
-+
-+		len = min(miter.length, buflen - offset);
-+
-+		if (to_buffer)
-+			memcpy(buf + offset, miter.addr, len);
-+		else {
-+			memcpy(miter.addr, buf + offset, len);
-+			flush_kernel_dcache_page(miter.page);
- 		}
- 
--		if (!buflen)
--			break;
-+		offset += len;
- 	}
- 
--	return buf_off;
-+	sg_miter_stop(&miter);
-+
-+	return offset;
- }
- 
- /**
+            if (bus_teardown_intr(dev, ctlr->r_irq, ctlr->handle) ||
+                bus_setup_intr(dev, ctlr->r_irq, ATA_INTR_FLAGS, NULL,
+                               ata_promise_sx4_intr, ctlr, &ctlr->handle)) {
+                device_printf(dev, "unable to setup interrupt\n");
+                goto failnfree;
+            }
+
+            /* print info about cache memory */
+            device_printf(dev, "DIMM size %dMB @ 0x%08x%s\n",
+                          (((dimm >> 16) & 0xff)-((dimm >> 24) &
+0xff)+1) << 4,
+                          ((dimm >> 24) & 0xff),
+                          ATA_INL(ctlr->r_res2, 0x000c0088) & (1<<16) ?
+                          " ECC enabled" : "" );
+
+            /* adjust cache memory parameters */
+            ATA_OUTL(ctlr->r_res2, 0x000c000c,
+                     (ATA_INL(ctlr->r_res2, 0x000c000c) & 0xffff0000));
+
+            /* setup host packet controls */
+            hpkt = malloc(sizeof(struct ata_promise_sx4),
+                          M_TEMP, M_NOWAIT | M_ZERO);
+            mtx_init(&hpkt->mtx, "ATA promise HPKT lock", NULL, MTX_DEF);
+            TAILQ_INIT(&hpkt->queue);
+            hpkt->busy = 0;
+            device_set_ivars(dev, hpkt);
+            ctlr->allocate = ata_promise_mio_allocate;
+            ctlr->reset = ata_promise_mio_reset;
+            ctlr->dmainit = ata_promise_mio_dmainit;
+            ctlr->setmode = ata_promise_setmode;
+            ctlr->channels = 4;
+            return 0;
+        }
