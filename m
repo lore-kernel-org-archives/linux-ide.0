@@ -1,132 +1,176 @@
-From: Alexander Beregalov <a.beregalov@gmail.com>
-Subject: sata_sx4: DIMM ECC initialization takes 5 min
-Date: Sun, 20 Jul 2008 05:25:55 +0400
-Message-ID: <48829423.5040704@gmail.com>
+From: Borislav Petkov <petkovbb@googlemail.com>
+Subject: Re: [PATCH] ide-floppy fix
+Date: Sun, 20 Jul 2008 14:06:29 +0200
+Message-ID: <20080720120629.GA16529@gollum.tnic>
+References: <20080715053356.GA18628@gollum.tnic> <200807152258.49462.bzolnier@gmail.com> <20080716052047.GA12383@gollum.tnic> <200807161956.46981.bzolnier@gmail.com>
+Reply-To: petkovbb@gmail.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.156]:8344 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754870AbYGTB0A (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 19 Jul 2008 21:26:00 -0400
-Received: by fg-out-1718.google.com with SMTP id 19so392550fgg.17
-        for <linux-ide@vger.kernel.org>; Sat, 19 Jul 2008 18:25:59 -0700 (PDT)
+Received: from nf-out-0910.google.com ([64.233.182.189]:17005 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753695AbYGTMGT (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 20 Jul 2008 08:06:19 -0400
+Received: by nf-out-0910.google.com with SMTP id d3so322180nfc.21
+        for <linux-ide@vger.kernel.org>; Sun, 20 Jul 2008 05:06:17 -0700 (PDT)
+Content-Disposition: inline
+In-Reply-To: <200807161956.46981.bzolnier@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: jgarzik@pobox.com, linux-ide@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, stable@kernel.org
 
-Hi Jeff
+Hi Bart,
 
-Is it possible to initialize it faster?
+On Wed, Jul 16, 2008 at 07:56:46PM +0200, Bartlomiej Zolnierkiewicz wro=
+te:
+> On Wednesday 16 July 2008, Borislav Petkov wrote:
+> > On Tue, Jul 15, 2008 at 10:58:48PM +0200, Bartlomiej Zolnierkiewicz=
+ wrote:
+> > > On Tuesday 15 July 2008, Borislav Petkov wrote:
+> > > > On Wed, Jul 16, 2008 at 05:59:16PM +0200, Bartlomiej Zolnierkie=
+wicz wrote:
+> > > > >=20
+> > > > > Hi,
+> > > > >=20
+> > > > > On Tuesday 15 July 2008, Borislav Petkov wrote:
+> > > > >=20
+> > > > > [...]
+> > > > >=20
+> > > > > > On a different note, the current pata tree on top of v2.6.2=
+5-2125-g50515af blows
+> > > > > > up here with the following error:
+> > > > > >=20
+> > > > > > [    4.296729] Uniform Multi-Platform E-IDE driver
+> > > > > > [    4.297905] ICH4: IDE controller (0x8086:0x24cb rev 0x02=
+) at  PCI slot 0000:00:1f.1
+> > > > > > [    4.297986] ACPI: PCI Interrupt 0000:00:1f.1[A] -> GSI 1=
+8 (level, low) -> IRQ 18
+> > > > > > [    4.298153] ICH4: not 100% native mode: will probe irqs =
+later
+> > > > > > [    4.298213]     ide0: BM-DMA at 0xfc00-0xfc07
+> > > > > > [    4.298282]     ide1: BM-DMA at 0xfc08-0xfc0f
+> > > > > > [    4.561768] hda: QUANTUM FIREBALLlct10 20, ATA DISK driv=
+e
+> > > > > > [    4.816724] hdb: SAMSUNG SP2014N, ATA DISK drive
+> > > > > > [    4.867959] hda: drive side 80-wire cable detection fail=
+ed, limiting max speed to UDMA33
+> > > > > > [    4.868027] hda: UDMA/33 mode selected
+> > > > > > [    4.868441] hdb: UDMA/100 mode selected
+> > > > > > [    5.540683] hdc: IOMEGA ZIP 100 ATAPI, ATAPI FLOPPY driv=
+e
+> > > > > > [    5.795564] hdd: IC35L120AVV207-0, ATA DISK drive
+> > > > > > [    5.847295] hdd: host side 80-wire cable detection faile=
+d, limiting max speed to UDMA33
+> > > > > > [    5.847362] hdd: UDMA/33 mode selected
+> > > > > > [    5.847715] ide0 at 0x1f0-0x1f7,0x3f6 on irq 14
+> > > > > > [    5.855487] ide1 at 0x170-0x177,0x376 on irq 15
+> > > > > > [    5.875927] ide_generic: please use "probe_mask=3D0x3f" =
+module parameter for probing all legacy ISA IDE ports
+> > > > > > [    5.876012] ide_generic: I/O resource 0x1F0-0x1F7 not fr=
+ee.
+> > > > > > [    5.876074] ide_generic: I/O resource 0x170-0x177 not fr=
+ee.
+> > > > > > [   11.342504] hde: no response (status =3D 0xa1), resettin=
+g drive
+> > > > > > [   17.206535] hdf: no response (status =3D 0xa1), resettin=
+g drive
+> > > > >=20
+> > > > > hde? hdf?
+> > > > >=20
+> > > > > [...]
+> > > >=20
+> > > > yep, looks strange to me too. Isn't that the MAX_HWIFS upper bo=
+und of a loop.. ?
+> > >=20
+> > > Close, it is related to MAX_HWIFS being upper bound on hws[]
+> > > in ide_generic.c but now we loop for ARRAY_SIZE(legacy_bases).
+> > >=20
+> > > IOW there is a memset(hws, 0, MAX_HWIFS) missing at the top of
+> > > ide_generic_init() (please re-test after adding it).
+> > >=20
+> > > This may also explain the later problems with ide_host_register()=
+=2E
+>=20
+> I fixed this in pata tree now with:
+>=20
+> "ide-generic: remove ide_default_{io_base,irq}() inlines (take 2)" pa=
+tch
 
-[10853.618984] sata_sx4 0000:05:01.0: version 0.12
-[10853.618984] ACPI: PCI Interrupt 0000:05:01.0[A] -> GSI 19 (level,
-low) -> IRQ 19
-[10853.618984] pdc20621_dimm_init: Time Period Register (0x40): 0xffffffff
-[10857.105665] pdc20621_dimm_init: Time Counter Register (0x44): 0xf58f6257
-[10857.105669] pdc20621_dimm_init: Num counters 0xa709da8 (175152552)
-[10857.105671] pdc20621_dimm_init: 10 * Internal clk = 0x247 (583)
-[10857.105673] pdc20621_dimm_init: 10 * Internal clk * 33 = 0x4b27 (19239)
-[10857.105675] pdc20621_dimm_init: PLL F Param: 0x46 (70)
-[10857.105677] pdc20621_dimm_init: pci_status: 0x8a461824
-[10857.105800] pdc20621_dimm_init: Local DIMM Speed = 100
-[10857.106191] pdc20621_dimm_init: Local DIMM Size = 512MB
-[10857.106191] Local DIMM ECC Enabled
-[10857.207422] 0, 0,
-[10857.207435] 55, aa, Promise Not Yet Defined 1.1098
-[10857.207455] 55, aa, Promise Not Yet Defined 1.1098
-[10857.207576] pdc20621_dimm_init: Start ECC initialization
-[10922.102473] BUG: soft lockup - CPU#0 stuck for 61s! [modprobe:2156]
-[10922.102473] Modules linked in: sata_sx4(+) ossusb hdaudio envy24ht
-osscore fglrx(P) usb_storage intel_agp agpgart [last unloaded: sata_sx4]
-[10922.102473]
-[10922.102473] Pid: 2156, comm: modprobe Tainted: P          (2.6.26 #3)
-[10922.102473] EIP: 0060:[<f9c2d2a6>] EFLAGS: 00000246 CPU: 0
-[10922.102473] EIP is at pdc20621_put_to_dimm+0xab/0x14a [sata_sx4]
-[10922.102473] EAX: 00000004 EBX: f9d40000 ECX: f9d40484 EDX: 00000000
-[10922.102473] ESI: e30dcdac EDI: f9c41a2c EBP: 00000afb ESP: e30dcc64
-[10922.102473]  DS: 007b ES: 007b FS: 00d8 GS: 0033 SS: 0068
-[10922.102473] CR0: 8005003b CR2: 0805bc3c CR3: 1e93a000 CR4: 000006d0
-[10922.102473] DR0: 00000000 DR1: 00000000 DR2: 00000000 DR3: 00000000
-[10922.102473] DR6: ffff0ff0 DR7: 00000400
-[10922.102473]  [<f9c2e191>] ? pdc20621_dimm_init+0x4b0/0x50d [sata_sx4]
-[10922.102473]  [<c0112da4>] ? change_page_attr_set_clr+0x17c/0x186
-[10922.102473]  [<c023a3ac>] ? vscnprintf+0xc/0x17
-[10922.102473]  [<c023a3ac>] ? vscnprintf+0xc/0x17
-[10922.102473]  [<c02a5612>] ? ata_port_desc+0x59/0x65
-[10922.102473]  [<f9c2e39a>] ? pdc_sata_init_one+0x1ac/0x234 [sata_sx4]
-[10922.102473]  [<c0241465>] ? pci_device_probe+0x36/0x55
-[10922.102473]  [<c028136a>] ? driver_probe_device+0x9d/0x12f
-[10922.102473]  [<c0281433>] ? __driver_attach+0x37/0x55
-[10922.102473]  [<c0280deb>] ? bus_for_each_dev+0x35/0x5c
-[10922.102473]  [<c028121d>] ? driver_attach+0x11/0x13
-[10922.102473]  [<c02813fc>] ? __driver_attach+0x0/0x55
-[10922.102473]  [<c028086e>] ? bus_add_driver+0x91/0x1a7
-[10922.102473]  [<c0281599>] ? driver_register+0x7d/0xd6
-[10922.102473]  [<c024161d>] ? __pci_register_driver+0x32/0x5d
-[10922.102473]  [<c0137c78>] ? sys_init_module+0x175e/0x18f1
-[10922.102473]  [<c012a5d6>] ? autoremove_wake_function+0x0/0x2d
-[10922.102473]  [<c029c3e2>] ? ata_port_start+0x0/0x29
-[10922.102473]  [<c0102aa5>] ? sysenter_past_esp+0x6a/0x91
-[10922.102473]  [<c0330000>] ? quirk_disable_msi+0x2e/0x33
-[10922.102473]  =======================
-<...>
-[11235.333118] pdc20621_dimm_init: Finish ECC initialization
+here's the root cause for the problem: I had both Intel ICH chipset
+(BLK_DEV_PIIX) und generic ide (BLK_DEV_GENERIC) selected in Kconfig an=
+d since
+ICH4 uses the generic driver detection routine, the second(!) generic d=
+etection after the
+ICH4 one failed and died. This is why request_region()-resources are sh=
+own as
+not being free above:
 
+> > > > > > [    5.875927] ide_generic: please use "probe_mask=3D0x3f" =
+module parameter for probing all legacy ISA IDE ports
+> > > > > > [    5.876012] ide_generic: I/O resource 0x1F0-0x1F7 not fr=
+ee.
+> > > > > > [    5.876074] ide_generic: I/O resource 0x170-0x177 not fr=
+ee.
 
-        pdc20621_i2c_read(host, PDC_DIMM0_SPD_DEV_ADDRESS,
-                          PDC_DIMM_SPD_TYPE, &spd0);
-        if (spd0 == 0x02) {
-                VPRINTK("Start ECC initialization\n");
-                addr = 0;
-                length = size * 1024 * 1024;
-                while (addr < length) {
-                        pdc20621_put_to_dimm(host, (void *) &tmp, addr,
-                                             sizeof(u32));
-                        addr += sizeof(u32);
-                }
-                VPRINTK("Finish ECC initialization\n");
-        }
+One of the possible fixes is adding
 
+depends on !BLK_DEV_GENERIC
 
-If I understand correctly FreeBSD does not initialize ECC at all,
-but I do not know how this card works there.
+after each IDE chipset driver using the generic detection in drivers/id=
+e/Kconfig
+but it's a not-that-elegant one. Another thing would be using a dummy o=
+ne like
+BLK_DEV_IDEDMA_PCI, but I'm not that sure. Will look into it. I'm prett=
+y sure
+you have a better idea...
 
-        if (ctlr->chip->cfg2 == PRSX4X) {
-            struct ata_promise_sx4 *hpkt;
-            u_int32_t dimm = ATA_INL(ctlr->r_res2, 0x000c0080);
+>=20
+> > > > > > From: Borislav Petkov <petkovbb@gmail.com>
+> > > > > >=20
+> > > > > > Check the correct flags-location for set features.
+> > > > > >=20
+> > > > > > Signed-off-by: Borislav Petkov <petkovbb@gmail.com>
+> > > > >=20
+> > > > > Thanks, I folded the fix into original patch (->dev_flags is =
+not yet
+> > > > > upstream so -stable fix shouldn't be necessary).
+> > > > >=20
+> > > > > While on it: I later noticed that there will be also need for=
+ common
+> > > > > ATA/ATAPI ->dev_flags in the future so I wonder whether curre=
+nt
+> > > > > ->dev_flags should be renamed to ->atapi_flags (& s/*DFLAG*/*=
+AFLAG*/).
+> > > > >=20
+> > > > > If there is agreement on this I'll fix it in pata tree.
+> > > >=20
+> > > > ... or if there's room, use a single ->dev_flags for all possib=
+le flag settings?
+> > >=20
+> > > Unfortunately there isn't enough room left (27 bits are occupied =
+ATM)
+> > > and having u64 ->dev_flags sucks...
+> >=20
+> > I'm pretty sure some of the 27 will be removed later but yeah, u64 =
+flags is
+> > kinda bad since it has to be always atomically updated and this has=
+ to be
+> > explicitly staged on 32bit cpus due to the wordsize. I guess two fl=
+ags members
+>=20
+> ->dev_flags -> ->atapi_flags & co. are also in pata tree now
+>=20
+> > are the easiest thing to do for now, you might add some comments to=
+ both so we
+> > know which is which.
+>=20
+> Sure, I will remember about this when it comes time for ->dev_flags.
+>=20
+> Thanks,
+> Bart
 
-            if (bus_teardown_intr(dev, ctlr->r_irq, ctlr->handle) ||
-                bus_setup_intr(dev, ctlr->r_irq, ATA_INTR_FLAGS, NULL,
-                               ata_promise_sx4_intr, ctlr, &ctlr->handle)) {
-                device_printf(dev, "unable to setup interrupt\n");
-                goto failnfree;
-            }
-
-            /* print info about cache memory */
-            device_printf(dev, "DIMM size %dMB @ 0x%08x%s\n",
-                          (((dimm >> 16) & 0xff)-((dimm >> 24) &
-0xff)+1) << 4,
-                          ((dimm >> 24) & 0xff),
-                          ATA_INL(ctlr->r_res2, 0x000c0088) & (1<<16) ?
-                          " ECC enabled" : "" );
-
-            /* adjust cache memory parameters */
-            ATA_OUTL(ctlr->r_res2, 0x000c000c,
-                     (ATA_INL(ctlr->r_res2, 0x000c000c) & 0xffff0000));
-
-            /* setup host packet controls */
-            hpkt = malloc(sizeof(struct ata_promise_sx4),
-                          M_TEMP, M_NOWAIT | M_ZERO);
-            mtx_init(&hpkt->mtx, "ATA promise HPKT lock", NULL, MTX_DEF);
-            TAILQ_INIT(&hpkt->queue);
-            hpkt->busy = 0;
-            device_set_ivars(dev, hpkt);
-            ctlr->allocate = ata_promise_mio_allocate;
-            ctlr->reset = ata_promise_mio_reset;
-            ctlr->dmainit = ata_promise_mio_dmainit;
-            ctlr->setmode = ata_promise_setmode;
-            ctlr->channels = 4;
-            return 0;
-        }
+--=20
+Regards/Gru=DF,
+    Boris.
