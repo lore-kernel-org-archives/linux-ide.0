@@ -1,45 +1,46 @@
-From: Robert Hancock <hancockr@shaw.ca>
-Subject: Re: [PATCH 2/7] ata: blacklist FUJITSU MHW2160BH PL
-Date: Mon, 21 Jul 2008 13:21:51 -0600
-Message-ID: <4884E1CF.2060405@shaw.ca>
-References: <fa.ALyrA5g+KD/4GlXdcY53hIWqKUs@ifi.uio.no> <fa.DCjHMBBwNh4jCV7S5sRgLaXPnZo@ifi.uio.no>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [PATCH] ide: use proper printk() KERN_* levels in ide-probe.c
+Date: Mon, 21 Jul 2008 21:45:35 +0100
+Message-ID: <20080721214535.6de8c6a0@lxorguk.ukuu.org.uk>
+References: <200807212108.15505.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from idcmail-mo2no.shaw.ca ([64.59.134.9]:56584 "EHLO
-	pd5mo1no-dmz.prod.shaw.ca" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1754670AbYGUTVv (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 21 Jul 2008 15:21:51 -0400
-In-Reply-To: <fa.DCjHMBBwNh4jCV7S5sRgLaXPnZo@ifi.uio.no>
+Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:60628 "EHLO
+	lxorguk.ukuu.org.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1750881AbYGUVCt (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 21 Jul 2008 17:02:49 -0400
+In-Reply-To: <200807212108.15505.bzolnier@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Chuck Short <zulcss@ubuntu.com>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Chuck Short wrote:
-> Reference: https://launchpad.net/bugs/175834
+On Mon, 21 Jul 2008 21:08:15 +0200
+Bartlomiej Zolnierkiewicz <bzolnier@gmail.com> wrote:
+
+> While at it:
 > 
-> CC: linux-ide@vger.kernel.org
-> Signed-off-by: Chuck Short <zulcss@ubuntu.com>
-> Signed-off-by: Tim Gardner <tim.gardner@canonical.com>
-> Signed-off-by: Ben Collins <ben.collins@canonical.com>
+> - fixup printk() messages in save_match() and hwif_init().
+> 
+> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 > ---
->  drivers/ata/libata-core.c |    1 +
->  1 files changed, 1 insertions(+), 0 deletions(-)
+>  drivers/ide/ide-probe.c |   54 ++++++++++++++++++++++++++----------------------
+>  1 file changed, 30 insertions(+), 24 deletions(-)
 > 
-> diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-> index 9bef1a8..2664082 100644
-> --- a/drivers/ata/libata-core.c
-> +++ b/drivers/ata/libata-core.c
-> @@ -3935,6 +3935,7 @@ static const struct ata_blacklist_entry ata_device_blacklist [] = {
->  	{ "HTS541060G9SA00",    "MB3OC60D",     ATA_HORKAGE_NONCQ, },
->  	{ "HTS541080G9SA00",    "MB4OC60D",     ATA_HORKAGE_NONCQ, },
->  	{ "HTS541010G9SA00",    "MBZOC60D",     ATA_HORKAGE_NONCQ, },
-> +	{ "FUJITSU MHW2160BH PL", "0084001E",   ATA_HORKAGE_NONCQ, },
->  
->  	/* devices which puke on READ_NATIVE_MAX */
->  	{ "HDS724040KLSA80",	"KFAOA20N",	ATA_HORKAGE_BROKEN_HPA, },
+> Index: b/drivers/ide/ide-probe.c
+> ===================================================================
+> --- a/drivers/ide/ide-probe.c
+> +++ b/drivers/ide/ide-probe.c
+> @@ -141,7 +141,8 @@ static inline void do_identify (ide_driv
+>  	 */
+>  	if ((id->model[0] == 'P' && id->model[1] == 'M') ||
+>  	    (id->model[0] == 'S' && id->model[1] == 'K')) {
+> -		printk("%s: EATA SCSI HBA %.10s\n", drive->name, id->model);
+> +		printk(KERN_ERR "%s: EATA SCSI HBA %.10s\n",
+> +			drive->name, id->model);
 
-NACK, this report is based on spurious NCQ completions in ahci which 
-were found to be bogus and the detection was removed in later kernels.
+That isn't an error. It occurs normally using legacy IDE with an EATA HBA
+present in ATA emulating mode.
+
