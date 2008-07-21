@@ -1,46 +1,40 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [PATCH] ide: use proper printk() KERN_* levels in ide-probe.c
-Date: Mon, 21 Jul 2008 21:45:35 +0100
-Message-ID: <20080721214535.6de8c6a0@lxorguk.ukuu.org.uk>
-References: <200807212108.15505.bzolnier@gmail.com>
+From: Gene Heskett <gene.heskett@verizon.net>
+Subject: floppy vs late kernels
+Date: Mon, 21 Jul 2008 19:44:37 -0400
+Message-ID: <200807211944.38029.gene.heskett@verizon.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:60628 "EHLO
-	lxorguk.ukuu.org.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1750881AbYGUVCt (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 21 Jul 2008 17:02:49 -0400
-In-Reply-To: <200807212108.15505.bzolnier@gmail.com>
+Received: from vms173005pub.verizon.net ([206.46.173.5]:53836 "EHLO
+	vms173005pub.verizon.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750970AbYGUXo5 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 21 Jul 2008 19:44:57 -0400
+Received: from coyote.coyote.den ([151.205.34.141]) by vms173005.mailsrvcs.net
+ (Sun Java System Messaging Server 6.2-6.01 (built Apr  3 2006))
+ with ESMTPA id <0K4D00N81RAE1TP4@vms173005.mailsrvcs.net> for
+ linux-ide@vger.kernel.org; Mon, 21 Jul 2008 18:44:38 -0500 (CDT)
+Content-disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-On Mon, 21 Jul 2008 21:08:15 +0200
-Bartlomiej Zolnierkiewicz <bzolnier@gmail.com> wrote:
+Greetings all;
 
-> While at it:
-> 
-> - fixup printk() messages in save_match() and hwif_init().
-> 
-> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-> ---
->  drivers/ide/ide-probe.c |   54 ++++++++++++++++++++++++++----------------------
->  1 file changed, 30 insertions(+), 24 deletions(-)
-> 
-> Index: b/drivers/ide/ide-probe.c
-> ===================================================================
-> --- a/drivers/ide/ide-probe.c
-> +++ b/drivers/ide/ide-probe.c
-> @@ -141,7 +141,8 @@ static inline void do_identify (ide_driv
->  	 */
->  	if ((id->model[0] == 'P' && id->model[1] == 'M') ||
->  	    (id->model[0] == 'S' && id->model[1] == 'K')) {
-> -		printk("%s: EATA SCSI HBA %.10s\n", drive->name, id->model);
-> +		printk(KERN_ERR "%s: EATA SCSI HBA %.10s\n",
-> +			drive->name, id->model);
+I was just contacted off-list by someone who saw my message about the failed 
+floppy on 2.6.26-rc2, who had a copy of DSL with a 2.4 kernel in it.
 
-That isn't an error. It occurs normally using legacy IDE with an EATA HBA
-present in ATA emulating mode.
+His floppy drive worked flawlessly when booted to DSL.  But like mine, dd bails 
+out with an error, no such device, when booted to a recent 2.6 kernel. 
 
+So possibly this needs looked at a little closer?
+
+Thanks all.
+
+-- 
+Cheers, Gene
+"There are four boxes to be used in defense of liberty:
+ soap, ballot, jury, and ammo. Please use in that order."
+-Ed Howdershelt (Author)
+"Yes, and I feel bad about rendering their useless carci into dogfood..."
+-- Badger comics
