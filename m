@@ -1,146 +1,66 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH 05/10] ide: cleanup ide_fix_driveid()
-Date: Tue, 22 Jul 2008 23:12:34 +0200
-Message-ID: <20080722211234.20478.22003.sendpatchset@localhost.localdomain>
+Subject: [PATCH 04/10] ide: cleanup ide_disk_init_mult_count()
+Date: Tue, 22 Jul 2008 23:12:28 +0200
+Message-ID: <20080722211228.20478.63822.sendpatchset@localhost.localdomain>
 References: <20080722211159.20478.74184.sendpatchset@localhost.localdomain>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.189]:64452 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756508AbYGVVOp (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 22 Jul 2008 17:14:45 -0400
-Received: by nf-out-0910.google.com with SMTP id d3so761467nfc.21
-        for <linux-ide@vger.kernel.org>; Tue, 22 Jul 2008 14:14:44 -0700 (PDT)
+Received: from fg-out-1718.google.com ([72.14.220.152]:50843 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756457AbYGVVOi (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 22 Jul 2008 17:14:38 -0400
+Received: by fg-out-1718.google.com with SMTP id 19so963175fgg.17
+        for <linux-ide@vger.kernel.org>; Tue, 22 Jul 2008 14:14:37 -0700 (PDT)
 In-Reply-To: <20080722211159.20478.74184.sendpatchset@localhost.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
 Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-kernel@vger.kernel.org
 
-Do all __le16_to_cpu() swapping in one loop.
+* Remove superfluous checks for drive->mult_req.
+
+* No need to zero drive's fields.
+
+* Move the common code out of #ifdef scope.
+
+There should be no functional changes caused by this patch.
 
 Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 ---
- drivers/ide/ide-iops.c |  105 ++++++++-----------------------------------------
- 1 file changed, 19 insertions(+), 86 deletions(-)
+ drivers/ide/ide-probe.c |   21 ++++++++++-----------
+ 1 file changed, 10 insertions(+), 11 deletions(-)
 
-Index: b/drivers/ide/ide-iops.c
+Index: b/drivers/ide/ide-probe.c
 ===================================================================
---- a/drivers/ide/ide-iops.c
-+++ b/drivers/ide/ide-iops.c
-@@ -400,97 +400,30 @@ const struct ide_tp_ops default_tp_ops =
- 	.output_data		= ide_output_data,
- };
- 
--void ide_fix_driveid (struct hd_driveid *id)
-+void ide_fix_driveid(struct hd_driveid *driveid)
+--- a/drivers/ide/ide-probe.c
++++ b/drivers/ide/ide-probe.c
+@@ -89,20 +89,19 @@ static void ide_disk_init_mult_count(ide
  {
- #ifndef __LITTLE_ENDIAN
- # ifdef __BIG_ENDIAN
-+	u16 *id = (u16 *)driveid;
- 	int i;
--	u16 *stringcast;
+ 	struct hd_driveid *id = drive->id;
  
--	id->config         = __le16_to_cpu(id->config);
--	id->cyls           = __le16_to_cpu(id->cyls);
--	id->reserved2      = __le16_to_cpu(id->reserved2);
--	id->heads          = __le16_to_cpu(id->heads);
--	id->track_bytes    = __le16_to_cpu(id->track_bytes);
--	id->sector_bytes   = __le16_to_cpu(id->sector_bytes);
--	id->sectors        = __le16_to_cpu(id->sectors);
--	id->vendor0        = __le16_to_cpu(id->vendor0);
--	id->vendor1        = __le16_to_cpu(id->vendor1);
--	id->vendor2        = __le16_to_cpu(id->vendor2);
--	stringcast = (u16 *)&id->serial_no[0];
--	for (i = 0; i < (20/2); i++)
--		stringcast[i] = __le16_to_cpu(stringcast[i]);
--	id->buf_type       = __le16_to_cpu(id->buf_type);
--	id->buf_size       = __le16_to_cpu(id->buf_size);
--	id->ecc_bytes      = __le16_to_cpu(id->ecc_bytes);
--	stringcast = (u16 *)&id->fw_rev[0];
--	for (i = 0; i < (8/2); i++)
--		stringcast[i] = __le16_to_cpu(stringcast[i]);
--	stringcast = (u16 *)&id->model[0];
--	for (i = 0; i < (40/2); i++)
--		stringcast[i] = __le16_to_cpu(stringcast[i]);
--	id->dword_io       = __le16_to_cpu(id->dword_io);
--	id->reserved50     = __le16_to_cpu(id->reserved50);
--	id->field_valid    = __le16_to_cpu(id->field_valid);
--	id->cur_cyls       = __le16_to_cpu(id->cur_cyls);
--	id->cur_heads      = __le16_to_cpu(id->cur_heads);
--	id->cur_sectors    = __le16_to_cpu(id->cur_sectors);
--	id->cur_capacity0  = __le16_to_cpu(id->cur_capacity0);
--	id->cur_capacity1  = __le16_to_cpu(id->cur_capacity1);
--	id->lba_capacity   = __le32_to_cpu(id->lba_capacity);
--	id->dma_1word      = __le16_to_cpu(id->dma_1word);
--	id->dma_mword      = __le16_to_cpu(id->dma_mword);
--	id->eide_pio_modes = __le16_to_cpu(id->eide_pio_modes);
--	id->eide_dma_min   = __le16_to_cpu(id->eide_dma_min);
--	id->eide_dma_time  = __le16_to_cpu(id->eide_dma_time);
--	id->eide_pio       = __le16_to_cpu(id->eide_pio);
--	id->eide_pio_iordy = __le16_to_cpu(id->eide_pio_iordy);
--	for (i = 0; i < 2; ++i)
--		id->words69_70[i] = __le16_to_cpu(id->words69_70[i]);
--	for (i = 0; i < 4; ++i)
--		id->words71_74[i] = __le16_to_cpu(id->words71_74[i]);
--	id->queue_depth    = __le16_to_cpu(id->queue_depth);
--	for (i = 0; i < 4; ++i)
--		id->words76_79[i] = __le16_to_cpu(id->words76_79[i]);
--	id->major_rev_num  = __le16_to_cpu(id->major_rev_num);
--	id->minor_rev_num  = __le16_to_cpu(id->minor_rev_num);
--	id->command_set_1  = __le16_to_cpu(id->command_set_1);
--	id->command_set_2  = __le16_to_cpu(id->command_set_2);
--	id->cfsse          = __le16_to_cpu(id->cfsse);
--	id->cfs_enable_1   = __le16_to_cpu(id->cfs_enable_1);
--	id->cfs_enable_2   = __le16_to_cpu(id->cfs_enable_2);
--	id->csf_default    = __le16_to_cpu(id->csf_default);
--	id->dma_ultra      = __le16_to_cpu(id->dma_ultra);
--	id->trseuc         = __le16_to_cpu(id->trseuc);
--	id->trsEuc         = __le16_to_cpu(id->trsEuc);
--	id->CurAPMvalues   = __le16_to_cpu(id->CurAPMvalues);
--	id->mprc           = __le16_to_cpu(id->mprc);
--	id->hw_config      = __le16_to_cpu(id->hw_config);
--	id->acoustic       = __le16_to_cpu(id->acoustic);
--	id->msrqs          = __le16_to_cpu(id->msrqs);
--	id->sxfert         = __le16_to_cpu(id->sxfert);
--	id->sal            = __le16_to_cpu(id->sal);
--	id->spg            = __le32_to_cpu(id->spg);
--	id->lba_capacity_2 = __le64_to_cpu(id->lba_capacity_2);
--	for (i = 0; i < 22; i++)
--		id->words104_125[i]   = __le16_to_cpu(id->words104_125[i]);
--	id->last_lun       = __le16_to_cpu(id->last_lun);
--	id->word127        = __le16_to_cpu(id->word127);
--	id->dlf            = __le16_to_cpu(id->dlf);
--	id->csfo           = __le16_to_cpu(id->csfo);
--	for (i = 0; i < 26; i++)
--		id->words130_155[i] = __le16_to_cpu(id->words130_155[i]);
--	id->word156        = __le16_to_cpu(id->word156);
--	for (i = 0; i < 3; i++)
--		id->words157_159[i] = __le16_to_cpu(id->words157_159[i]);
--	id->cfa_power      = __le16_to_cpu(id->cfa_power);
--	for (i = 0; i < 15; i++)
--		id->words161_175[i] = __le16_to_cpu(id->words161_175[i]);
--	for (i = 0; i < 30; i++)
--		id->words176_205[i] = __le16_to_cpu(id->words176_205[i]);
--	for (i = 0; i < 49; i++)
--		id->words206_254[i] = __le16_to_cpu(id->words206_254[i]);
--	id->integrity_word  = __le16_to_cpu(id->integrity_word);
-+	for (i = 0; i < 256; i++) {
-+		/*  these words are accessed as two 8-bit values */
-+		if (i == 47 || i == 49 || i == 51 || i == 52 || i == 59)
-+			continue;
-+		if (i == 60 || i == 61)	/* ->lba_capacity is 32-bit */
-+			continue;
-+		if (i == 98 || i == 99)	/* ->spg is 32-bit */
-+			continue;
-+		if (i > 99 && i < 104)	/* ->lba_capacity_2 is 64-bit */
-+			continue;
-+
-+		id[i] = __le16_to_cpu(id[i]);
-+	}
-+
-+	driveid->lba_capacity	= __le32_to_cpu(driveid->lba_capacity);
-+	driveid->spg		= __le32_to_cpu(driveid->spg);
-+	driveid->lba_capacity_2	= __le64_to_cpu(driveid->lba_capacity_2);
- # else
- #  error "Please fix <asm/byteorder.h>"
- # endif
+-	drive->mult_count = 0;
+ 	if (id->max_multsect) {
+ #ifdef CONFIG_IDEDISK_MULTI_MODE
+-		id->multsect = ((id->max_multsect/2) > 1) ? id->max_multsect : 0;
+-		id->multsect_valid = id->multsect ? 1 : 0;
+-		drive->mult_req = id->multsect_valid ? id->max_multsect : 0;
+-		drive->special.b.set_multmode = drive->mult_req ? 1 : 0;
+-#else	/* original, pre IDE-NFG, per request of AC */
+-		drive->mult_req = 0;
+-		if (drive->mult_req > id->max_multsect)
+-			drive->mult_req = id->max_multsect;
+-		if (drive->mult_req || ((id->multsect_valid & 1) && id->multsect))
+-			drive->special.b.set_multmode = 1;
++		if ((id->max_multsect / 2) > 1) {
++			id->multsect = id->max_multsect;
++			id->multsect_valid = 1;
++		} else {
++			id->multsect = 0;
++			id->multsect_valid = 0;
++		}
++		drive->mult_req = id->multsect;
+ #endif
++		if ((id->multsect_valid & 1) && id->multsect)
++			drive->special.b.set_multmode = 1;
+ 	}
+ }
+ 
