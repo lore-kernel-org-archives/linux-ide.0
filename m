@@ -1,95 +1,306 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [PATCH] ide: use proper printk() KERN_* levels in ide-probe.c
-Date: Tue, 22 Jul 2008 22:44:38 +0200
-Message-ID: <200807222244.38752.bzolnier@gmail.com>
-References: <200807212108.15505.bzolnier@gmail.com> <20080721214535.6de8c6a0@lxorguk.ukuu.org.uk>
+Subject: [PATCH] ata: add missing ATA_ID_* defines (take 2)
+Date: Tue, 22 Jul 2008 22:49:31 +0200
+Message-ID: <200807222249.32242.bzolnier@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
   charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.188]:62038 "EHLO
+Received: from nf-out-0910.google.com ([64.233.182.184]:62109 "EHLO
 	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754483AbYGVUuY (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 22 Jul 2008 16:50:24 -0400
-Received: by nf-out-0910.google.com with SMTP id d3so756571nfc.21
-        for <linux-ide@vger.kernel.org>; Tue, 22 Jul 2008 13:50:23 -0700 (PDT)
-In-Reply-To: <20080721214535.6de8c6a0@lxorguk.ukuu.org.uk>
+	with ESMTP id S1752999AbYGVUwB (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 22 Jul 2008 16:52:01 -0400
+Received: by nf-out-0910.google.com with SMTP id d3so756882nfc.21
+        for <linux-ide@vger.kernel.org>; Tue, 22 Jul 2008 13:51:57 -0700 (PDT)
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: linux-ide@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>
 
-On Monday 21 July 2008, Alan Cox wrote:
-> On Mon, 21 Jul 2008 21:08:15 +0200
-> Bartlomiej Zolnierkiewicz <bzolnier@gmail.com> wrote:
-> 
-> > While at it:
-> > 
-> > - fixup printk() messages in save_match() and hwif_init().
-> > 
-> > Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-> > ---
-> >  drivers/ide/ide-probe.c |   54 ++++++++++++++++++++++++++----------------------
-> >  1 file changed, 30 insertions(+), 24 deletions(-)
-> > 
-> > Index: b/drivers/ide/ide-probe.c
-> > ===================================================================
-> > --- a/drivers/ide/ide-probe.c
-> > +++ b/drivers/ide/ide-probe.c
-> > @@ -141,7 +141,8 @@ static inline void do_identify (ide_driv
-> >  	 */
-> >  	if ((id->model[0] == 'P' && id->model[1] == 'M') ||
-> >  	    (id->model[0] == 'S' && id->model[1] == 'K')) {
-> > -		printk("%s: EATA SCSI HBA %.10s\n", drive->name, id->model);
-> > +		printk(KERN_ERR "%s: EATA SCSI HBA %.10s\n",
-> > +			drive->name, id->model);
-> 
-> That isn't an error. It occurs normally using legacy IDE with an EATA HBA
-> present in ATA emulating mode.
+Add missing ATA_ID_* defines and update {ata,atapi}_*()
+inlines accordingly.  The currently unused defines are
+needed for the forthcoming drivers/ide/ changes.
 
-Thanks for noticing, fix below.
+v2:
+Add ATA_ID_SPG.
 
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH] ide: fix for EATA SCSI HBA in ATA emulating mode
-
-IDE probing code used to skip devices attached to EATA SCSI HBA
-in ATA emulating mode but because of warm-plug support port I/O
-resources are no longer freed if no devices are detected on a port
-and the decision about the driver to use is left up to the user.
-
-Remove no longer valid EATA SCSI HBA quirk from do_identify().
-
-Noticed-by: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: Jeff Garzik <jgarzik@pobox.com>
 Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 ---
-goes before "ide: use proper printk() KERN_* levels in ide-probe.c"
-patch in pata tree
+v2 was needed because one define got lost :/
 
- drivers/ide/ide-probe.c |   12 ------------
- 1 file changed, 12 deletions(-)
+ include/linux/ata.h |  122 ++++++++++++++++++++++++++++++++--------------------
+ 1 file changed, 76 insertions(+), 46 deletions(-)
 
-Index: b/drivers/ide/ide-probe.c
+Index: b/include/linux/ata.h
 ===================================================================
---- a/drivers/ide/ide-probe.c
-+++ b/drivers/ide/ide-probe.c
-@@ -134,18 +134,6 @@ static inline void do_identify (ide_driv
- #endif
- 	ide_fix_driveid(id);
+--- a/include/linux/ata.h
++++ b/include/linux/ata.h
+@@ -46,18 +46,48 @@ enum {
+ 	ATA_MAX_SECTORS_TAPE	= 65535,
  
--#if defined (CONFIG_SCSI_EATA_PIO) || defined (CONFIG_SCSI_EATA)
--	/*
--	 * EATA SCSI controllers do a hardware ATA emulation:
--	 * Ignore them if there is a driver for them available.
--	 */
--	if ((id->model[0] == 'P' && id->model[1] == 'M') ||
--	    (id->model[0] == 'S' && id->model[1] == 'K')) {
--		printk("%s: EATA SCSI HBA %.10s\n", drive->name, id->model);
--		goto err_misc;
--	}
--#endif /* CONFIG_SCSI_EATA || CONFIG_SCSI_EATA_PIO */
--
- 	/*
- 	 *  WIN_IDENTIFY returns little-endian info,
- 	 *  WIN_PIDENTIFY *usually* returns little-endian info.
+ 	ATA_ID_WORDS		= 256,
++	ATA_ID_CONFIG		= 0,
++	ATA_ID_CYLS		= 1,
++	ATA_ID_HEADS		= 3,
++	ATA_ID_SECTORS		= 6,
+ 	ATA_ID_SERNO		= 10,
++	ATA_ID_BUF_SIZE		= 21,
+ 	ATA_ID_FW_REV		= 23,
+ 	ATA_ID_PROD		= 27,
++	ATA_ID_MAX_MULTSECT	= 47,
++	ATA_ID_DWORD_IO		= 48,
++	ATA_ID_CAPABILITY	= 49,
+ 	ATA_ID_OLD_PIO_MODES	= 51,
++	ATA_ID_OLD_DMA_MODES	= 52,
+ 	ATA_ID_FIELD_VALID	= 53,
++	ATA_ID_CUR_CYLS		= 54,
++	ATA_ID_CUR_HEADS	= 55,
++	ATA_ID_CUR_SECTORS	= 56,
++	ATA_ID_MULTSECT		= 59,
++	ATA_ID_LBA_CAPACITY	= 60,
++	ATA_ID_SWDMA_MODES	= 62,
+ 	ATA_ID_MWDMA_MODES	= 63,
+ 	ATA_ID_PIO_MODES	= 64,
+ 	ATA_ID_EIDE_DMA_MIN	= 65,
++	ATA_ID_EIDE_DMA_TIME	= 66,
+ 	ATA_ID_EIDE_PIO		= 67,
+ 	ATA_ID_EIDE_PIO_IORDY	= 68,
+-	ATA_ID_UDMA_MODES	= 88,
++	ATA_ID_QUEUE_DEPTH	= 75,
+ 	ATA_ID_MAJOR_VER	= 80,
++	ATA_ID_COMMAND_SET_1	= 82,
++	ATA_ID_COMMAND_SET_2	= 83,
++	ATA_ID_CFSSE		= 84,
++	ATA_ID_CFS_ENABLE_1	= 85,
++	ATA_ID_CFS_ENABLE_2	= 86,
++	ATA_ID_CSF_DEFAULT	= 87,
++	ATA_ID_UDMA_MODES	= 88,
++	ATA_ID_HW_CONFIG	= 93,
++	ATA_ID_SPG		= 98,
++	ATA_ID_LBA_CAPACITY_2	= 100,
++	ATA_ID_LAST_LUN		= 126,
++	ATA_ID_DLF		= 128,
++	ATA_ID_CSFO		= 129,
++	ATA_ID_CFA_POWER	= 160,
+ 	ATA_ID_PIO4		= (1 << 1),
+ 
+ 	ATA_ID_SERNO_LEN	= 20,
+@@ -438,17 +468,17 @@ static inline int ata_is_data(u8 prot)
+ /*
+  * id tests
+  */
+-#define ata_id_is_ata(id)	(((id)[0] & (1 << 15)) == 0)
+-#define ata_id_has_lba(id)	((id)[49] & (1 << 9))
+-#define ata_id_has_dma(id)	((id)[49] & (1 << 8))
++#define ata_id_is_ata(id)	(((id)[ATA_ID_CONFIG] & (1 << 15)) == 0)
++#define ata_id_has_lba(id)	((id)[ATA_ID_CAPABILITY] & (1 << 9))
++#define ata_id_has_dma(id)	((id)[ATA_ID_CAPABILITY] & (1 << 8))
+ #define ata_id_has_ncq(id)	((id)[76] & (1 << 8))
+-#define ata_id_queue_depth(id)	(((id)[75] & 0x1f) + 1)
+-#define ata_id_removeable(id)	((id)[0] & (1 << 7))
++#define ata_id_queue_depth(id)	(((id)[ATA_ID_QUEUE_DEPTH] & 0x1f) + 1)
++#define ata_id_removeable(id)	((id)[ATA_ID_CONFIG] & (1 << 7))
+ #define ata_id_has_atapi_AN(id)	\
+ 	( (((id)[76] != 0x0000) && ((id)[76] != 0xffff)) && \
+ 	  ((id)[78] & (1 << 5)) )
+-#define ata_id_iordy_disable(id) ((id)[49] & (1 << 10))
+-#define ata_id_has_iordy(id) ((id)[49] & (1 << 11))
++#define ata_id_iordy_disable(id) ((id)[ATA_ID_CAPABILITY] & (1 << 10))
++#define ata_id_has_iordy(id) ((id)[ATA_ID_CAPABILITY] & (1 << 11))
+ #define ata_id_u32(id,n)	\
+ 	(((u32) (id)[(n) + 1] << 16) | ((u32) (id)[(n)]))
+ #define ata_id_u64(id,n)	\
+@@ -457,7 +487,7 @@ static inline int ata_is_data(u8 prot)
+ 	  ((u64) (id)[(n) + 1] << 16) |	\
+ 	  ((u64) (id)[(n) + 0]) )
+ 
+-#define ata_id_cdb_intr(id)	(((id)[0] & 0x60) == 0x20)
++#define ata_id_cdb_intr(id)	(((id)[ATA_ID_CONFIG] & 0x60) == 0x20)
+ 
+ static inline bool ata_id_has_hipm(const u16 *id)
+ {
+@@ -482,75 +512,75 @@ static inline bool ata_id_has_dipm(const
+ 
+ static inline int ata_id_has_fua(const u16 *id)
+ {
+-	if ((id[84] & 0xC000) != 0x4000)
++	if ((id[ATA_ID_CFSSE] & 0xC000) != 0x4000)
+ 		return 0;
+-	return id[84] & (1 << 6);
++	return id[ATA_ID_CFSSE] & (1 << 6);
+ }
+ 
+ static inline int ata_id_has_flush(const u16 *id)
+ {
+-	if ((id[83] & 0xC000) != 0x4000)
++	if ((id[ATA_ID_COMMAND_SET_2] & 0xC000) != 0x4000)
+ 		return 0;
+-	return id[83] & (1 << 12);
++	return id[ATA_ID_COMMAND_SET_2] & (1 << 12);
+ }
+ 
+ static inline int ata_id_has_flush_ext(const u16 *id)
+ {
+-	if ((id[83] & 0xC000) != 0x4000)
++	if ((id[ATA_ID_COMMAND_SET_2] & 0xC000) != 0x4000)
+ 		return 0;
+-	return id[83] & (1 << 13);
++	return id[ATA_ID_COMMAND_SET_2] & (1 << 13);
+ }
+ 
+ static inline int ata_id_has_lba48(const u16 *id)
+ {
+-	if ((id[83] & 0xC000) != 0x4000)
++	if ((id[ATA_ID_COMMAND_SET_2] & 0xC000) != 0x4000)
+ 		return 0;
+-	if (!ata_id_u64(id, 100))
++	if (!ata_id_u64(id, ATA_ID_LBA_CAPACITY_2))
+ 		return 0;
+-	return id[83] & (1 << 10);
++	return id[ATA_ID_COMMAND_SET_2] & (1 << 10);
+ }
+ 
+ static inline int ata_id_hpa_enabled(const u16 *id)
+ {
+ 	/* Yes children, word 83 valid bits cover word 82 data */
+-	if ((id[83] & 0xC000) != 0x4000)
++	if ((id[ATA_ID_COMMAND_SET_2] & 0xC000) != 0x4000)
+ 		return 0;
+ 	/* And 87 covers 85-87 */
+-	if ((id[87] & 0xC000) != 0x4000)
++	if ((id[ATA_ID_CSF_DEFAULT] & 0xC000) != 0x4000)
+ 		return 0;
+ 	/* Check command sets enabled as well as supported */
+-	if ((id[85] & ( 1 << 10)) == 0)
++	if ((id[ATA_ID_CFS_ENABLE_1] & (1 << 10)) == 0)
+ 		return 0;
+-	return id[82] & (1 << 10);
++	return id[ATA_ID_COMMAND_SET_1] & (1 << 10);
+ }
+ 
+ static inline int ata_id_has_wcache(const u16 *id)
+ {
+ 	/* Yes children, word 83 valid bits cover word 82 data */
+-	if ((id[83] & 0xC000) != 0x4000)
++	if ((id[ATA_ID_COMMAND_SET_2] & 0xC000) != 0x4000)
+ 		return 0;
+-	return id[82] & (1 << 5);
++	return id[ATA_ID_COMMAND_SET_1] & (1 << 5);
+ }
+ 
+ static inline int ata_id_has_pm(const u16 *id)
+ {
+-	if ((id[83] & 0xC000) != 0x4000)
++	if ((id[ATA_ID_COMMAND_SET_2] & 0xC000) != 0x4000)
+ 		return 0;
+-	return id[82] & (1 << 3);
++	return id[ATA_ID_COMMAND_SET_1] & (1 << 3);
+ }
+ 
+ static inline int ata_id_rahead_enabled(const u16 *id)
+ {
+-	if ((id[87] & 0xC000) != 0x4000)
++	if ((id[ATA_ID_CSF_DEFAULT] & 0xC000) != 0x4000)
+ 		return 0;
+-	return id[85] & (1 << 6);
++	return id[ATA_ID_CFS_ENABLE_1] & (1 << 6);
+ }
+ 
+ static inline int ata_id_wcache_enabled(const u16 *id)
+ {
+-	if ((id[87] & 0xC000) != 0x4000)
++	if ((id[ATA_ID_CSF_DEFAULT] & 0xC000) != 0x4000)
+ 		return 0;
+-	return id[85] & (1 << 5);
++	return id[ATA_ID_CFS_ENABLE_1] & (1 << 5);
+ }
+ 
+ /**
+@@ -581,7 +611,7 @@ static inline unsigned int ata_id_major_
+ 
+ static inline int ata_id_is_sata(const u16 *id)
+ {
+-	return ata_id_major_version(id) >= 5 && id[93] == 0;
++	return ata_id_major_version(id) >= 5 && id[ATA_ID_HW_CONFIG] == 0;
+ }
+ 
+ static inline int ata_id_has_tpm(const u16 *id)
+@@ -599,7 +629,7 @@ static inline int ata_id_has_dword_io(co
+ 	/* ATA 8 reuses this flag for "trusted" computing */
+ 	if (ata_id_major_version(id) > 7)
+ 		return 0;
+-	if (id[48] & (1 << 0))
++	if (id[ATA_ID_DWORD_IO] & (1 << 0))
+ 		return 1;
+ 	return 0;
+ }
+@@ -608,22 +638,22 @@ static inline int ata_id_current_chs_val
+ {
+ 	/* For ATA-1 devices, if the INITIALIZE DEVICE PARAMETERS command
+ 	   has not been issued to the device then the values of
+-	   id[54] to id[56] are vendor specific. */
+-	return (id[53] & 0x01) && /* Current translation valid */
+-		id[54] &&  /* cylinders in current translation */
+-		id[55] &&  /* heads in current translation */
+-		id[55] <= 16 &&
+-		id[56];    /* sectors in current translation */
++	   id[ATA_ID_CUR_CYLS] to id[ATA_ID_CUR_SECTORS] are vendor specific. */
++	return (id[ATA_ID_FIELD_VALID] & 1) && /* Current translation valid */
++		id[ATA_ID_CUR_CYLS] &&  /* cylinders in current translation */
++		id[ATA_ID_CUR_HEADS] &&  /* heads in current translation */
++		id[ATA_ID_CUR_HEADS] <= 16 &&
++		id[ATA_ID_CUR_SECTORS];    /* sectors in current translation */
+ }
+ 
+ static inline int ata_id_is_cfa(const u16 *id)
+ {
+-	u16 v = id[0];
+-	if (v == 0x848A)	/* Standard CF */
++	if (id[ATA_ID_CONFIG] == 0x848A)	/* Standard CF */
+ 		return 1;
+ 	/* Could be CF hiding as standard ATA */
+-	if (ata_id_major_version(id) >= 3 &&  id[82] != 0xFFFF &&
+-			(id[82] & ( 1 << 2)))
++	if (ata_id_major_version(id) >= 3 &&
++	    id[ATA_ID_COMMAND_SET_1] != 0xFFFF &&
++	   (id[ATA_ID_COMMAND_SET_1] & (1 << 2)))
+ 		return 1;
+ 	return 0;
+ }
+@@ -632,21 +662,21 @@ static inline int ata_drive_40wire(const
+ {
+ 	if (ata_id_is_sata(dev_id))
+ 		return 0;	/* SATA */
+-	if ((dev_id[93] & 0xE000) == 0x6000)
++	if ((dev_id[ATA_ID_HW_CONFIG] & 0xE000) == 0x6000)
+ 		return 0;	/* 80 wire */
+ 	return 1;
+ }
+ 
+ static inline int ata_drive_40wire_relaxed(const u16 *dev_id)
+ {
+-	if ((dev_id[93] & 0x2000) == 0x2000)
++	if ((dev_id[ATA_ID_HW_CONFIG] & 0x2000) == 0x2000)
+ 		return 0;	/* 80 wire */
+ 	return 1;
+ }
+ 
+ static inline int atapi_cdb_len(const u16 *dev_id)
+ {
+-	u16 tmp = dev_id[0] & 0x3;
++	u16 tmp = dev_id[ATA_ID_CONFIG] & 0x3;
+ 	switch (tmp) {
+ 	case 0:		return 12;
+ 	case 1:		return 16;
+@@ -656,7 +686,7 @@ static inline int atapi_cdb_len(const u1
+ 
+ static inline int atapi_command_packet_set(const u16 *dev_id)
+ {
+-	return (dev_id[0] >> 8) & 0x1f;
++	return (dev_id[ATA_ID_CONFIG] >> 8) & 0x1f;
+ }
+ 
+ static inline int atapi_id_dmadir(const u16 *dev_id)
