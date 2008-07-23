@@ -1,43 +1,56 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [PATCH] ide-floppy fix
-Date: Wed, 23 Jul 2008 20:51:11 +0200
-Message-ID: <200807232051.12226.bzolnier@gmail.com>
-References: <20080715053356.GA18628@gollum.tnic> <200807222149.19939.bzolnier@gmail.com> <20080723063224.GB17724@gollum.tnic>
+From: Ben Dooks <ben-linux@fluff.org>
+Subject: Re: [patch 1/1] LIBATA: Allow devices without IRQ specified to fall back
+Date: Wed, 23 Jul 2008 20:04:33 +0100
+Message-ID: <20080723190433.GB26938@trinity.fluff.org>
+References: <20080723144226.807475493@fluff.org> <20080723144227.253944199@fluff.org> <20080723163216.7477be06@lxorguk.ukuu.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.184]:7588 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754558AbYGWSzL (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 23 Jul 2008 14:55:11 -0400
-Received: by nf-out-0910.google.com with SMTP id d3so940068nfc.21
-        for <linux-ide@vger.kernel.org>; Wed, 23 Jul 2008 11:55:10 -0700 (PDT)
-In-Reply-To: <20080723063224.GB17724@gollum.tnic>
+Received: from trinity.fluff.org ([89.145.97.151]:53853 "EHLO
+	trinity.fluff.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753623AbYGWTEf (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 23 Jul 2008 15:04:35 -0400
 Content-Disposition: inline
+In-Reply-To: <20080723163216.7477be06@lxorguk.ukuu.org.uk>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: petkovbb@gmail.com
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, stable@kernel.org
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: Ben Dooks <ben-linux@fluff.org>, linux-ide@vger.kernel.org
 
-On Wednesday 23 July 2008, Borislav Petkov wrote:
-
-[...]
-
-> > Now it should be finally fixed.
+On Wed, Jul 23, 2008 at 04:32:16PM +0100, Alan Cox wrote:
+> > is not correclty supported by libata as the pdev->irq field
+> > has no valid interrupt set. This is due to the legacy IRQ
+> > check in ata_pci_sff_activate_host() only checking to see 
+> > if the device class is legacy, not that the IRQ has been
+> > setup.
 > 
-> True story. Works here too.
+> It does that check as that is the correct check to do. If the device is
+> in native mode with no assigned IRQ we must poll, we cannot assume that
+> legacy interrupts are in use.
+> 
+> > Change ata_pci_sff_activate_host() to try the legacy IRQ
+> > numbers (which works correctly) when the dev->irq has not
+> > been set. The current check for !legacy_mode && dev->irq
+> > does not deal with devices that are not in legacy mode
+> > but do not have mapped interrupts.
+> 
+> If they have no mapped interrupt and are not in legacy mode then they
+> have no interrupt we can use and we should poll. Your assumption that if
+> no IRQ is assigned we should use the legacy interrupts is incorrect for
+> PC class systems.
+> 
+> Can you not correct this with a PCI quirk handler for your board instead ?
 
-Thanks for verifying it.
+Ok, however the drivers/ide/pci/alim15x3.c still works fine
+on this board, so there's something that something in the libata
+driver path not working properly. Possibly drivers/ata/pata_ali.c
+that is missing something
 
-> Hm, let's see whether there's time during the weekend. I already have something
-> stolen from pata_legacy but I'll do some more testing first. By the way, what
-> are the chances of exporting those pieces of code from drivers/ata/pata_legacy.c
-> and adding the function def into some header instead of duplicating the code into
-> ide_generic.c?
+I will check this over tommorow and come up with a new solution.
 
-Good idea (<linux/ata.h> sounds like a perfect spot).
+-- 
+Ben
 
-Thanks,
-Bart
+Q:      What's a light-year?
+A:      One-third less calories than a regular year.
+
