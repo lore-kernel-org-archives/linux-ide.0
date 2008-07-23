@@ -1,39 +1,51 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH] ata: add missing ATA_ID_* defines (take 2)
-Date: Wed, 23 Jul 2008 16:48:56 -0400
-Message-ID: <48879938.8010803@pobox.com>
-References: <200807222249.32242.bzolnier@gmail.com>
+From: Jeroen Beerstra <jeroen@scorpion77.cjb.net>
+Subject: Re: non functional pata dvd drive under 2.6.25.6
+Date: Wed, 23 Jul 2008 22:19:47 +0200
+Message-ID: <200807232219.47760.jeroen@scorpion77.cjb.net>
+References: <vi85j5-uig.ln1@scorpion77.cjb.net> <4880237A.7070002@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain;
+  charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:52634 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753913AbYGWUs7 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 23 Jul 2008 16:48:59 -0400
-In-Reply-To: <200807222249.32242.bzolnier@gmail.com>
+Received: from dhcp-077-248-068-247.chello.nl ([77.248.68.247]:58881 "EHLO
+	scorpion77.cjb.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751534AbYGWVAH (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 23 Jul 2008 17:00:07 -0400
+In-Reply-To: <4880237A.7070002@kernel.org>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: linux-kernel@vger.kernel.org, IDE/ATA development list <linux-ide@vger.kernel.org>
 
-Bartlomiej Zolnierkiewicz wrote:
-> Add missing ATA_ID_* defines and update {ata,atapi}_*()
-> inlines accordingly.  The currently unused defines are
-> needed for the forthcoming drivers/ide/ changes.
-> 
-> v2:
-> Add ATA_ID_SPG.
-> 
-> Cc: Jeff Garzik <jgarzik@pobox.com>
-> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-> ---
-> v2 was needed because one define got lost :/
-> 
->  include/linux/ata.h |  122 ++++++++++++++++++++++++++++++++--------------------
->  1 file changed, 76 insertions(+), 46 deletions(-)
+Hello Tejun,
 
-ACK, and I'll send this one upstream myself.  It shouldn't conflict with 
-the patches just ACK'd.
+Op Friday 18 July 2008 07:00:42 schreef u:
+> Hello, Jeroen.
+>
+> [cc'ing linux-ide]
+>
+> Hmmm... the problem could be caused by hald polling for media presence.
+>  Does "hal-disable-polling /dev/srX" make any difference?
+> hal-disable-polling setting is persistent so if your drive goes bonkers
+> quickly after boot, you can disable polling, reboot and see whether
+> anything is different.  Also, please post the result of "lspci -nn" and
+> "hdparm -I /dev/srX" && please try 2.6.26.
+>
+> Thanks.
+
+I'm pretty sure about that since the hald process I'm refering to points to 
+the 'faulty' drive. However simply booting with noapic seems to fix all of my 
+problems.
+
+See:
+
+Bug 451081 @ bugzilla.redhat.com
+Bug 11044 @ bugzilla.kernel.org
+
+regards,
+
+Jeroen Beerstra
 
 
