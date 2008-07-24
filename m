@@ -1,56 +1,32 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [PATCH {1,3}/7] ata: add missing ATA_CMD_* defines
-Date: Thu, 24 Jul 2008 21:07:36 +0200
-Message-ID: <200807242107.36740.bzolnier@gmail.com>
-References: <200807232042.45733.bzolnier@gmail.com> <200807232040.18264.bzolnier@gmail.com> <20080723235237.GA11354@puku.stupidest.org>
+From: Harvey Harrison <harvey.harrison@gmail.com>
+Subject: Re: [PATCH] ide: ide-cd.c blocklen is a big-endian value
+Date: Thu, 24 Jul 2008 12:16:57 -0700
+Message-ID: <1216927017.30386.76.camel@brick>
+References: <1216852296.30386.21.camel@brick>
+	 <200807242048.20087.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mu-out-0910.google.com ([209.85.134.184]:52465 "EHLO
-	mu-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753024AbYGXTOe (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 24 Jul 2008 15:14:34 -0400
-Received: by mu-out-0910.google.com with SMTP id w8so2194484mue.1
-        for <linux-ide@vger.kernel.org>; Thu, 24 Jul 2008 12:14:32 -0700 (PDT)
-In-Reply-To: <20080723235237.GA11354@puku.stupidest.org>
-Content-Disposition: inline
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-next-owner@vger.kernel.org>
+In-Reply-To: <200807242048.20087.bzolnier@gmail.com>
+Sender: linux-next-owner@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: linux-next <linux-next@vger.kernel.org>, linux-ide <linux-ide@vger.kernel.org>, Jens Axboe <jens.axboe@oracle.com>, Andrew Morton <akpm@linux-foundation.org>, Michael Buesch <mb@bu3sch.de>, Jan Kara <jack@suse.cz>, Arnd Bergmann <arnd@arndb.de>, Borislav Petkov <petkovbb@googlemail.com>
 List-Id: linux-ide@vger.kernel.org
-To: Chris Wedgwood <cw@f00f.org>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Jeff Garzik <jeff@garzik.org>
 
-On Thursday 24 July 2008, Chris Wedgwood wrote:
-> On Wed, Jul 23, 2008 at 08:40:18PM +0200, Bartlomiej Zolnierkiewicz wrote:
+On Thu, 2008-07-24 at 20:48 +0200, Bartlomiej Zolnierkiewicz wrote:
+> On Thursday 24 July 2008, Harvey Harrison wrote:
+> > Noticed by sparse between next-20080722 and next-20080723
+> > 
+> > Signed-off-by: Harvey Harrison <harvey.harrison@gmail.com>
 > 
-> > Add missing ATA_CMD_* defines to <linux/ata.h>.  Also add
-> > ATA_EXABYTE_ENABLE_NEST, SETFEATURES_AAM_* and ATA_SMART_*
-> > defines while at it.
-> >
-> > Partially based on earlier work by Chris Wedgwood.
+> Thanks for noticing/fixing this.
 > 
-> [...]
+> I integrated it into the guilty patch
+> ("ide-cd: fix oops when using growisofs").
 > 
-> 
-> On Wed, Jul 23, 2008 at 08:42:45PM +0200, Bartlomiej Zolnierkiewicz wrote:
-> > * Use ATA_CMD_* defines instead of WIN_* ones.
-> >
-> > While at it:
-> >
-> > * EXABYTE_ENABLE_NEXT -> ATA_EXABYTE_ENABLE_NEST
-> >
-> > * SETFEATURES_{EN,DIS}_WCACHE -> SETFEATURES_WC_{ON,OFF}
-> >
-> > * SETFEATURES_{EN,DIS}_AAM -> SETFEATURES_AAM_{ON,OFF}
-> >
-> > * SMART_* -> ATA_SMART_*
-> >
-> > * Remove stale comment from ide-proc.c.
-> >
-> > Partially based on earlier work by Chris Wedgwood.
-> 
-> ACK/signoff from me (in so far as it's relevant, my original patches
-> are so old I'm sure Bart probably had to so it almost all again).
 
-Thanks, added your ACK to #1/#3 and Jeff's to #1/#2.
+This is precisely why I'm running sparse on each linux-next, so
+no worries.
+
+Harvey
