@@ -1,61 +1,50 @@
-From: "Jeroen Beerstra" <jb@scorpion77.cjb.net>
-Subject: Re: non functional pata dvd drive under 2.6.25.6
-Date: Thu, 24 Jul 2008 08:38:26 +0200 (CEST)
-Message-ID: <28993.213.197.214.77.1216881506.squirrel@scorpion77.cjb.net>
-References: <vi85j5-uig.ln1@scorpion77.cjb.net> <4880237A.7070002@kernel.org>
-    <200807232219.47760.jeroen@scorpion77.cjb.net>
-    <20080723220107.3d26e30a@lxorguk.ukuu.org.uk>
+From: Ben Dooks <ben-linux@fluff.org>
+Subject: Re: [patch 1/1] LIBATA: Allow devices without IRQ specified to fall back
+Date: Thu, 24 Jul 2008 12:26:37 +0100
+Message-ID: <20080724112637.GG26938@trinity.fluff.org>
+References: <20080723144226.807475493@fluff.org> <20080723144227.253944199@fluff.org> <20080723163216.7477be06@lxorguk.ukuu.org.uk> <20080723190433.GB26938@trinity.fluff.org> <20080723201349.33226d58@lxorguk.ukuu.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain;charset=utf-8
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from dhcp-077-248-068-247.chello.nl ([77.248.68.247]:60895 "EHLO
-	scorpion77.cjb.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750696AbYGXHAX (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 24 Jul 2008 03:00:23 -0400
-In-Reply-To: <20080723220107.3d26e30a@lxorguk.ukuu.org.uk>
+Received: from trinity.fluff.org ([89.145.97.151]:53236 "EHLO
+	trinity.fluff.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753153AbYGXL0k (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 24 Jul 2008 07:26:40 -0400
+Content-Disposition: inline
+In-Reply-To: <20080723201349.33226d58@lxorguk.ukuu.org.uk>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: Jeroen Beerstra <jeroen@scorpion77.cjb.net>, Tejun Heo <tj@kernel.org>, linux-kernel@vger.kernel.org, IDE/ATA development list <linux-ide@vger.kernel.org>
+Cc: Ben Dooks <ben-linux@fluff.org>, linux-ide@vger.kernel.org, vince@simtec.co.uk
 
+On Wed, Jul 23, 2008 at 08:13:49PM +0100, Alan Cox wrote:
+> > Ok, however the drivers/ide/pci/alim15x3.c still works fine
+> > on this board, so there's something that something in the libata
+> > driver path not working properly. Possibly drivers/ata/pata_ali.c
+> > that is missing something
+> 
+> The old driver makes some rather iffy assumptions when dev->irq == 0 in
+> part because the old IDE code predates PCI quirks.
 
-> On Wed, 23 Jul 2008 22:19:47 +0200
-> Jeroen Beerstra <jeroen@scorpion77.cjb.net> wrote:
->
->> Hello Tejun,
->>
->> Op Friday 18 July 2008 07:00:42 schreef u:
->> > Hello, Jeroen.
->> >
->> > [cc'ing linux-ide]
->> >
->> > Hmmm... the problem could be caused by hald polling for media
->> presence.
->> >  Does "hal-disable-polling /dev/srX" make any difference?
->> > hal-disable-polling setting is persistent so if your drive goes
->> bonkers
->> > quickly after boot, you can disable polling, reboot and see whether
->> > anything is different.  Also, please post the result of "lspci -nn"
->> and
->> > "hdparm -I /dev/srX" && please try 2.6.26.
->> >
->> > Thanks.
->>
->> I'm pretty sure about that since the hald process I'm refering to points
->> to
->> the 'faulty' drive. However simply booting with noapic seems to fix all
->> of my
->> problems.
->
-> There are lots of similar reports. I don't know what broke the APIC code
-> but it doesn't appear any of these are libata bugs.
->
-> Alan
->
+>From reading the ALI M1543 datasheets that the interrupt pin in either
+mode (compatibility or native) is routed directly into the inbuilt ISA-PIC,
+and thus the IRQ field in the PCI child device is not available. This
+means we need to be able to override the IRQ numbers for these devices.
 
-As soon as I have my system back and running again I will test the patch
-that was attached to the rh bugzilla report, perhaps that will make things
-a bit clearer.
+I had a look, and there doesn't seem to be any way of specifying an
+IRQ for a host port when registering with libata-sff.c, which is a
+problem since we need to be able to either pass-in or have a callback
+to allow our "quirk" to specify a new IRQ for the device.
 
-Jeroen
+Does anyone know if the ALi M5229 actually exists outside of one of
+the M1543 bridges?
+
+Note, this hardly seems to be a board-quirk, it is more of a device
+quirk...
+
+-- 
+Ben
+
+Q:      What's a light-year?
+A:      One-third less calories than a regular year.
+
