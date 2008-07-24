@@ -1,26 +1,29 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 4/4] remove <linux/hdreg.h>
-Date: Thu, 24 Jul 2008 15:49:15 -0400
-Message-ID: <20080724194915.GA23998@infradead.org>
-References: <200807242137.58606.bzolnier@gmail.com>
+From: Greg KH <gregkh@suse.de>
+Subject: Re: [PATCH 3/4] isd200: use ATA_* defines instead of *_STAT and
+	*_ERR ones
+Date: Thu, 24 Jul 2008 12:57:22 -0700
+Message-ID: <20080724195722.GA9859@suse.de>
+References: <200807242123.42923.bzolnier@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:41603 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750744AbYGXTtQ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 24 Jul 2008 15:49:16 -0400
+Received: from ns2.suse.de ([195.135.220.15]:41233 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750744AbYGXUDl (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 24 Jul 2008 16:03:41 -0400
 Content-Disposition: inline
-In-Reply-To: <200807242137.58606.bzolnier@gmail.com>
+In-Reply-To: <200807242123.42923.bzolnier@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Thu, Jul 24, 2008 at 09:37:58PM +0200, Bartlomiej Zolnierkiewicz wrote:
-> It has no in-kernel users now and can be removed.
+On Thu, Jul 24, 2008 at 09:23:42PM +0200, Bartlomiej Zolnierkiewicz wrote:
+> Cc: Greg Kroah-Hartman <gregkh@suse.de>
+> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 
-But beeing an exported header it has userspace users.  Plese keep it
-and just leave the ioctl defintions as need by userspace in it instead
-of renaming that part to hdio_ioctls.h.
+Acked-by: Greg Kroah-Hartman <gregkh@suse.de>
 
+thanks,
+
+greg k-h
