@@ -1,49 +1,51 @@
 From: Ben Dooks <ben-linux@fluff.org>
-Subject: Re: [patch 1/1] LIBATA: Allow devices without IRQ specified to fall back
-Date: Thu, 24 Jul 2008 16:24:17 +0100
-Message-ID: <20080724152417.GP26938@trinity.fluff.org>
-References: <20080723144227.253944199@fluff.org> <20080723163216.7477be06@lxorguk.ukuu.org.uk> <20080723190433.GB26938@trinity.fluff.org> <20080723201349.33226d58@lxorguk.ukuu.org.uk> <20080724112637.GG26938@trinity.fluff.org> <20080724121450.7c30bc61@lxorguk.ukuu.org.uk> <20080724115000.GJ26938@trinity.fluff.org> <20080724125823.727e96db@lxorguk.ukuu.org.uk> <20080724135203.GM26938@trinity.fluff.org> <20080724153338.646a8182@lxorguk.ukuu.org.uk>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Subject: LIBATA: pata_ali.c misplaced pci_dev_put()
+Date: Thu, 24 Jul 2008 16:38:06 +0100
+Message-ID: <20080724153806.633927699@fluff.org.uk>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from trinity.fluff.org ([89.145.97.151]:51268 "EHLO
-	trinity.fluff.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751431AbYGXPYT (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 24 Jul 2008 11:24:19 -0400
-Content-Disposition: inline
-In-Reply-To: <20080724153338.646a8182@lxorguk.ukuu.org.uk>
+Received: from aeryn.fluff.org.uk ([87.194.8.8]:49446 "EHLO
+	kira.home.fluff.org" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1750744AbYGXPiI (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 24 Jul 2008 11:38:08 -0400
+Content-Disposition: inline; filename=simtec/simtec-libata-stop-pci-get-leak.patch
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: Ben Dooks <ben-linux@fluff.org>, linux-ide@vger.kernel.org, vince@simtec.co.uk
+To: linux-ide@vger.kernel.org
+Cc: Ben Dooks <ben-linux@fluff.org>
 
-On Thu, Jul 24, 2008 at 03:33:38PM +0100, Alan Cox wrote:
-> > Ok, so this controller is not performing to the IRQ portion of the PCI
-> > IDE specification, but is this any reason to force it back into legacy
-> > mode?
-> 
-> Well the obvious reason to do that is that is what the BIOS guide says
-> and what the standards expect. Given that legacy mode has no performance
-> impact at all as it just changes the IRQ interpretation and the port
-> mapping rules it seems silly not to do that
+The ali_init_one() function does a search for an isa_bridge,
+but then fails to release it if the revision information was
+not correctly found.
 
-I've changed drivers/ata/pata_ali.c to change the mode back to compatibility
-mode, but libata-sff.c is still trying to use the pci configuration BARs
-to map the control registers. If the copy of the "PCI IDE Controller
-Specification, Revision 1.0" [1] is to be belived, the values in the PCI BARs
-should be ignored.
+the problem comes from:
+	isa_bridge = pci_get_device(...);
+	if (isa_bridge && ...) {
+		pci_dev_put(isa_bridge);
+	}
 
-[1] http://suif.stanford.edu/~csapuntz/specs/pciide.ps
-> Alan
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-ide" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+where the pci_dev_put() is never called if isa_bridge
+was valid but the extra checks on the chip-revision
+fail to match.
+
+Signed-off-by: Ben Dooks <ben-linux@fluff.org>
+
+Index: linux-2.6.26-quilt4/drivers/ata/pata_ali.c
+===================================================================
+--- linux-2.6.26-quilt4.orig/drivers/ata/pata_ali.c	2008-07-24 16:26:43.000000000 +0100
++++ linux-2.6.26-quilt4/drivers/ata/pata_ali.c	2008-07-24 16:27:24.000000000 +0100
+@@ -550,8 +550,9 @@ static int ali_init_one(struct pci_dev *
+ 		pci_read_config_byte(isa_bridge, 0x5E, &tmp);
+ 		if ((tmp & 0x1E) == 0x12)
+ 	        	ppi[0] = &info_20_udma;
+-		pci_dev_put(isa_bridge);
+ 	}
++	pci_dev_put(isa_bridge);
++
+ 	return ata_pci_sff_init_one(pdev, ppi, &ali_sht, NULL);
+ }
+ 
 
 -- 
--- 
-Ben
+Ben (ben@fluff.org, http://www.fluff.org/)
 
-Q:      What's a light-year?
-A:      One-third less calories than a regular year.
-
+  'a smiley only costs 4 bytes'
