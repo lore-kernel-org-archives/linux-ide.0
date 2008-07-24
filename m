@@ -1,39 +1,66 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [patch 1/1] LIBATA: Allow devices without IRQ specified to fall
- back
-Date: Thu, 24 Jul 2008 18:23:46 +0100
-Message-ID: <20080724182346.06d06bfd@lxorguk.ukuu.org.uk>
-References: <20080723144227.253944199@fluff.org>
-	<200807241812.32988.bzolnier@gmail.com>
-	<20080724170650.07b542d5@lxorguk.ukuu.org.uk>
-	<200807241905.22959.bzolnier@gmail.com>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: [PATCH] ide: ide-cd.c blocklen is a big-endian value
+Date: Thu, 24 Jul 2008 20:48:19 +0200
+Message-ID: <200807242048.20087.bzolnier@gmail.com>
+References: <1216852296.30386.21.camel@brick>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain;
+  charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:55998 "EHLO
-	lxorguk.ukuu.org.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751407AbYGXRlN (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 24 Jul 2008 13:41:13 -0400
-In-Reply-To: <200807241905.22959.bzolnier@gmail.com>
+Received: from ug-out-1314.google.com ([66.249.92.169]:10957 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751610AbYGXTOa (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 24 Jul 2008 15:14:30 -0400
+Received: by ug-out-1314.google.com with SMTP id h2so627387ugf.16
+        for <linux-ide@vger.kernel.org>; Thu, 24 Jul 2008 12:14:29 -0700 (PDT)
+In-Reply-To: <1216852296.30386.21.camel@brick>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: Ben Dooks <ben-linux@fluff.org>, linux-ide@vger.kernel.org, vince@simtec.co.uk
+To: Harvey Harrison <harvey.harrison@gmail.com>
+Cc: linux-next <linux-next@vger.kernel.org>, linux-ide <linux-ide@vger.kernel.org>, Jens Axboe <jens.axboe@oracle.com>, Andrew Morton <akpm@linux-foundation.org>, Michael Buesch <mb@bu3sch.de>, Jan Kara <jack@suse.cz>, Arnd Bergmann <arnd@arndb.de>, Borislav Petkov <petkovbb@googlemail.com>
 
-> config PATA_ALI
->         tristate "ALi PATA support (Experimental)"
->         depends on PCI && EXPERIMENTAL
-> ...
+On Thursday 24 July 2008, Harvey Harrison wrote:
+> Noticed by sparse between next-20080722 and next-20080723
+> 
+> Signed-off-by: Harvey Harrison <harvey.harrison@gmail.com>
 
-I should update that now the ATAPI stuff is done.
+Thanks for noticing/fixing this.
 
-> The second is of course optional for properly configured chips but it is
-> not much of work and better be safe than sorry (also which 'BIOS writers
+I integrated it into the guilty patch
+("ide-cd: fix oops when using growisofs").
 
-That might make sense for the specific chipset.
-
-> guide' exactly are you referring to?).
-
-The ALi one for the chipset. You might need to be nice to ULi to get a
-copy however as I don't think its on the web site 8(
+> ---
+>  drivers/ide/ide-cd.c |   10 +++++-----
+>  1 files changed, 5 insertions(+), 5 deletions(-)
+> 
+> diff --git a/drivers/ide/ide-cd.c b/drivers/ide/ide-cd.c
+> index 3a6fef5..a384500 100644
+> --- a/drivers/ide/ide-cd.c
+> +++ b/drivers/ide/ide-cd.c
+> @@ -1318,17 +1318,17 @@ static int cdrom_read_capacity(ide_drive_t *drive, unsigned long *capacity,
+>  	 * Sanity check the given block size
+>  	 */
+>  	switch (capbuf.blocklen) {
+> -	case 512:
+> -	case 1024:
+> -	case 2048:
+> -	case 4096:
+> +	case __constant_cpu_to_be32(512):
+> +	case __constant_cpu_to_be32(1024):
+> +	case __constant_cpu_to_be32(2048):
+> +	case __constant_cpu_to_be32(4096):
+>  		break;
+>  	default:
+>  		printk(KERN_ERR "%s: weird block size %u\n",
+>  			drive->name, capbuf.blocklen);
+>  		printk(KERN_ERR "%s: default to 2kb block size\n",
+>  			drive->name);
+> -		capbuf.blocklen = 2048;
+> +		capbuf.blocklen = __constant_cpu_to_be32(2048);
+>  		break;
+>  	}
+>  
+> -- 
+> 1.5.6.4.570.g052e
