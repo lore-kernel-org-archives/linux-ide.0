@@ -1,32 +1,64 @@
-From: Harvey Harrison <harvey.harrison@gmail.com>
-Subject: Re: [PATCH] ide: ide-cd.c blocklen is a big-endian value
-Date: Thu, 24 Jul 2008 12:16:57 -0700
-Message-ID: <1216927017.30386.76.camel@brick>
-References: <1216852296.30386.21.camel@brick>
-	 <200807242048.20087.bzolnier@gmail.com>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: [PATCH 1/4] ata: add missing ATA_* defines
+Date: Thu, 24 Jul 2008 21:22:39 +0200
+Message-ID: <200807242122.39783.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-next-owner@vger.kernel.org>
-In-Reply-To: <200807242048.20087.bzolnier@gmail.com>
-Sender: linux-next-owner@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: linux-next <linux-next@vger.kernel.org>, linux-ide <linux-ide@vger.kernel.org>, Jens Axboe <jens.axboe@oracle.com>, Andrew Morton <akpm@linux-foundation.org>, Michael Buesch <mb@bu3sch.de>, Jan Kara <jack@suse.cz>, Arnd Bergmann <arnd@arndb.de>, Borislav Petkov <petkovbb@googlemail.com>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mu-out-0910.google.com ([209.85.134.187]:53596 "EHLO
+	mu-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751610AbYGXT1J (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 24 Jul 2008 15:27:09 -0400
+Received: by mu-out-0910.google.com with SMTP id w8so2199467mue.1
+        for <linux-ide@vger.kernel.org>; Thu, 24 Jul 2008 12:27:08 -0700 (PDT)
+Content-Disposition: inline
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, Jeff Garzik <jeff@garzik.org>
 
-On Thu, 2008-07-24 at 20:48 +0200, Bartlomiej Zolnierkiewicz wrote:
-> On Thursday 24 July 2008, Harvey Harrison wrote:
-> > Noticed by sparse between next-20080722 and next-20080723
-> > 
-> > Signed-off-by: Harvey Harrison <harvey.harrison@gmail.com>
-> 
-> Thanks for noticing/fixing this.
-> 
-> I integrated it into the guilty patch
-> ("ide-cd: fix oops when using growisofs").
-> 
+Add missing ATA_* defines to <linux/ata.h>.  Also add
+ATAPI_{LFS,EOM,ILI,IO,CODE} defines while at it.
 
-This is precisely why I'm running sparse on each linux-next, so
-no worries.
+Cc: Jeff Garzik <jeff@garzik.org>
+Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+---
+* against previous ATA_ID_* and ATA_CMD_* patchsets
+* patch #1 shouldn't conflict with previous <linux/ata.h> ones
 
-Harvey
+ include/linux/ata.h |   13 +++++++++++++
+ 1 file changed, 13 insertions(+)
+
+Index: b/include/linux/ata.h
+===================================================================
+--- a/include/linux/ata.h
++++ b/include/linux/ata.h
+@@ -153,13 +153,26 @@ enum {
+ 	ATA_BUSY		= (1 << 7),	/* BSY status bit */
+ 	ATA_DRDY		= (1 << 6),	/* device ready */
+ 	ATA_DF			= (1 << 5),	/* device fault */
++	ATA_DSC			= (1 << 4),	/* drive seek complete */
+ 	ATA_DRQ			= (1 << 3),	/* data request i/o */
++	ATA_CORR		= (1 << 2),	/* corrected data error */
++	ATA_IDX			= (1 << 1),	/* index */
+ 	ATA_ERR			= (1 << 0),	/* have an error */
+ 	ATA_SRST		= (1 << 2),	/* software reset */
+ 	ATA_ICRC		= (1 << 7),	/* interface CRC error */
++	ATA_BBK			= ATA_ICRC,	/* pre-EIDE: block marked bad */
+ 	ATA_UNC			= (1 << 6),	/* uncorrectable media error */
++	ATA_MC			= (1 << 5),	/* media changed */
+ 	ATA_IDNF		= (1 << 4),	/* ID not found */
++	ATA_MCR			= (1 << 3),	/* media change requested */
+ 	ATA_ABORTED		= (1 << 2),	/* command aborted */
++	ATA_TRK0NF		= (1 << 1),	/* track 0 not found */
++	ATA_AMNF		= (1 << 0),	/* address mark not found */
++	ATAPI_LFS		= 0xF0,		/* last failed sense */
++	ATAPI_EOM		= ATA_TRK0NF,	/* end of media */
++	ATAPI_ILI		= ATA_AMNF,	/* illegal length indication */
++	ATAPI_IO		= (1 << 1),
++	ATAPI_COD		= (1 << 0),
+ 
+ 	/* ATA command block registers */
+ 	ATA_REG_DATA		= 0x00,
