@@ -1,110 +1,125 @@
-From: TAKADA Yoshihito <takada@mbf.nifty.com>
-Subject: IDE driver assined IRQ for disabled IDE channel
-Date: Fri, 25 Jul 2008 14:31:28 +0900 (JST)
-Message-ID: <20080725.143128.193681587.takada@mbf.nifty.com>
+From: David Miller <davem@davemloft.net>
+Subject: recent IDE regression
+Date: Thu, 24 Jul 2008 23:38:31 -0700 (PDT)
+Message-ID: <20080724.233831.193691312.davem@davemloft.net>
 Mime-Version: 1.0
 Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from pxy2nd.nifty.com ([202.248.175.14]:39493 "HELO pxy2nd.nifty.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1750934AbYGYFjT (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 25 Jul 2008 01:39:19 -0400
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1754697AbYGYGin@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: bzolnier@gmail.com
+Cc: harvey.harrison@gmail.com, linux-ide@kernel.org, linux-kernel@vger.kernel.org, torvalds@linux-foundation.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
 
-Hi.
-In kernel 2.6.26, I disable the secoundary IDE via BIOS. But kernel assigned IRQ to secondary IDE.
-I saw /proc/interrupts:
-  - /proc/interrupts of 2.6.25
-           CPU0       
-  0:     232213    XT-PIC-XT        timer
-  1:        388    XT-PIC-XT        i8042
-  2:          0    XT-PIC-XT        cascade
-  3:          1    XT-PIC-XT      
-  4:        305    XT-PIC-XT      
-  5:          1    XT-PIC-XT      
-  7:          1    XT-PIC-XT      
-  8:          0    XT-PIC-XT        rtc0
-  9:          1    XT-PIC-XT      
- 10:          1    XT-PIC-XT      
- 11:          1    XT-PIC-XT      
- 12:        110    XT-PIC-XT        i8042
- 14:       5640    XT-PIC-XT        ide0
- 15:         35    XT-PIC-XT        yenta, ohci_hcd:usb1
-NMI:          0   Non-maskable interrupts
-TRM:          0   Thermal event interrupts
-SPU:          0   Spurious interrupts
-ERR:          0
 
-IRQ15 doesn't assigned for ide1.
+After today's IDE merge my sparc64 workstation stopped booting.
 
-  - /proc/interrupts of 2.6.26
-           CPU0       
-  0:     213884    XT-PIC-XT        timer
-  1:        197    XT-PIC-XT        i8042
-  2:          0    XT-PIC-XT        cascade
-  3:          1    XT-PIC-XT      
-  4:        309    XT-PIC-XT      
-  5:          1    XT-PIC-XT      
-  7:          2    XT-PIC-XT      
-  8:          0    XT-PIC-XT        rtc0
-  9:          1    XT-PIC-XT      
- 10:          1    XT-PIC-XT      
- 11:          1    XT-PIC-XT      
- 12:        110    XT-PIC-XT        i8042
- 14:       5621    XT-PIC-XT        ide0
- 15:          0    XT-PIC-XT        ide1
-NMI:          0   Non-maskable interrupts
-TRM:          0   Thermal event interrupts
-SPU:          0   Spurious interrupts
-ERR:          1
+It's due to this change:
 
-However, kernel 2.6.26 assinged IRQ15 for ide1. And yenta and ohci
-(USB host controller) couldn't assign an IRQ.
+commit 7fa897b91a3ea0f16c2873b869d7a0eef05acff4
+Author: Harvey Harrison <harvey.harrison@gmail.com>
+Date:   Thu Jul 24 22:53:34 2008 +0200
 
-dmesg are:
-Yenta: CardBus bridge found at 0000:00:01.0 [0000:0000]
-Yenta: no PCI IRQ, CardBus support disabled for this socket.
-Yenta: check your BIOS CardBus, BIOS IRQ or ACPI settings.
+    ide: trivial sparse annotations
+    
+    Signed-off-by: Harvey Harrison <harvey.harrison@gmail.com>
+    Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 
-ohci_hcd: 2006 August 04 USB 1.1 'Open' Host Controller (OHCI) Driver
-ohci_hcd 0000:00:13.0: OHCI Host Controller
-ohci_hcd 0000:00:13.0: new USB bus registered, assigned bus number 1
-ohci_hcd 0000:00:13.0: request interrupt 15 failed
-ohci_hcd 0000:00:13.0: USB bus 1 deregistered
-ohci_hcd 0000:00:13.0: init 0000:00:13.0 fail, -16
-ohci_hcd: probe of 0000:00:13.0 failed with error -16
+Heh, "trivial", indeed.
 
-Signed-off-by: TAKADA Yoshihito <takada@mbf.nifty.com>
+Specifically, this part of the change:
 
-diff -Narup a/drivers/ide/ide-probe.c b/drivers/ide/ide-probe.c
---- a/drivers/ide/ide-probe.c	2008-07-25 13:21:37.000000000 +0900
-+++ b/drivers/ide/ide-probe.c	2008-07-25 13:42:38.000000000 +0900
-@@ -1546,6 +1546,8 @@ int ide_device_add_all(u8 *idx, const st
- 			continue;
+diff --git a/drivers/ide/ide-iops.c b/drivers/ide/ide-iops.c
+index 07da5fb..8aae917 100644
+--- a/drivers/ide/ide-iops.c
++++ b/drivers/ide/ide-iops.c
+@@ -510,10 +510,8 @@ void ide_fixstring (u8 *s, const int bytecount, const int byteswap)
  
- 		hwif = &ide_hwifs[idx[i]];
-+		if (!hwif->present)
-+			continue;
- 
- 		if (hwif_init(hwif) == 0) {
- 			printk(KERN_INFO "%s: failed to initialize IDE "
-@@ -1582,12 +1584,11 @@ int ide_device_add_all(u8 *idx, const st
- 			continue;
- 
- 		hwif = &ide_hwifs[idx[i]];
--
--		ide_sysfs_register_port(hwif);
--		ide_proc_register_port(hwif);
--
--		if (hwif->present)
-+		if (hwif->present) {
-+			ide_sysfs_register_port(hwif);
-+			ide_proc_register_port(hwif);
- 			ide_proc_port_register_devices(hwif);
-+		}
+ 	if (byteswap) {
+ 		/* convert from big-endian to host byte order */
+-		for (p = end ; p != s;) {
+-			unsigned short *pp = (unsigned short *) (p -= 2);
+-			*pp = ntohs(*pp);
+-		}
++		for (p = end ; p != s;)
++			be16_to_cpus((u16 *)(p -= 2));
  	}
+ 	/* strip leading blanks */
+ 	while (s != end && *s == ' ')
+
+On big-endian, be16_to_cpus() (via __be16_to_cpus()) is:
+
+	do { } while (0)
+
+which therefore does not evaluate the argument, and thus this loop
+will make no forward progress.
+
+Probably the fix is in be16_to_cpus(), making it do something like
+"(void) (x);" in the do/while body.
+
+Something like this:
+
+endian: Always evaluate arguments.
+
+Changeset 7fa897b91a3ea0f16c2873b869d7a0eef05acff4
+("ide: trivial sparse annotations") created an IDE bootup
+regression on big-endian systems.  In drivers/ide/ide-iops.c,
+function ide_fixstring() we now have the loop:
+
+		for (p = end ; p != s;)
+			be16_to_cpus((u16 *)(p -= 2));
+
+which will never terminate on big-endian because in such
+a configuration be16_to_cpus() evaluates to "do { } while (0)"
+
+Therefore, always evaluate the arguments to nop endian transformation
+operations.
+
+Signed-off-by: David S. Miller <davem@davemloft.net>
+
+diff --git a/include/linux/byteorder/big_endian.h b/include/linux/byteorder/big_endian.h
+index 961ed4b..44f95b9 100644
+--- a/include/linux/byteorder/big_endian.h
++++ b/include/linux/byteorder/big_endian.h
+@@ -94,12 +94,12 @@ static inline __u16 __be16_to_cpup(const __be16 *p)
+ #define __le32_to_cpus(x) __swab32s((x))
+ #define __cpu_to_le16s(x) __swab16s((x))
+ #define __le16_to_cpus(x) __swab16s((x))
+-#define __cpu_to_be64s(x) do {} while (0)
+-#define __be64_to_cpus(x) do {} while (0)
+-#define __cpu_to_be32s(x) do {} while (0)
+-#define __be32_to_cpus(x) do {} while (0)
+-#define __cpu_to_be16s(x) do {} while (0)
+-#define __be16_to_cpus(x) do {} while (0)
++#define __cpu_to_be64s(x) do { (void)(x); } while (0)
++#define __be64_to_cpus(x) do { (void)(x); } while (0)
++#define __cpu_to_be32s(x) do { (void)(x); } while (0)
++#define __be32_to_cpus(x) do { (void)(x); } while (0)
++#define __cpu_to_be16s(x) do { (void)(x); } while (0)
++#define __be16_to_cpus(x) do { (void)(x); } while (0)
  
- 	return rc;
+ #ifdef __KERNEL__
+ #include <linux/byteorder/generic.h>
+diff --git a/include/linux/byteorder/little_endian.h b/include/linux/byteorder/little_endian.h
+index 05dc7c3..4cc170a 100644
+--- a/include/linux/byteorder/little_endian.h
++++ b/include/linux/byteorder/little_endian.h
+@@ -88,12 +88,12 @@ static inline __u16 __be16_to_cpup(const __be16 *p)
+ {
+ 	return __swab16p((__u16 *)p);
+ }
+-#define __cpu_to_le64s(x) do {} while (0)
+-#define __le64_to_cpus(x) do {} while (0)
+-#define __cpu_to_le32s(x) do {} while (0)
+-#define __le32_to_cpus(x) do {} while (0)
+-#define __cpu_to_le16s(x) do {} while (0)
+-#define __le16_to_cpus(x) do {} while (0)
++#define __cpu_to_le64s(x) do { (void)(x); } while (0)
++#define __le64_to_cpus(x) do { (void)(x); } while (0)
++#define __cpu_to_le32s(x) do { (void)(x); } while (0)
++#define __le32_to_cpus(x) do { (void)(x); } while (0)
++#define __cpu_to_le16s(x) do { (void)(x); } while (0)
++#define __le16_to_cpus(x) do { (void)(x); } while (0)
+ #define __cpu_to_be64s(x) __swab64s((x))
+ #define __be64_to_cpus(x) __swab64s((x))
+ #define __cpu_to_be32s(x) __swab32s((x))
