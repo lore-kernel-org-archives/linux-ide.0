@@ -1,70 +1,36 @@
-From: Linus Torvalds <torvalds@linux-foundation.org>
-Subject: Re: recent IDE regression
-Date: Fri, 25 Jul 2008 09:37:25 -0700 (PDT)
-Message-ID: <alpine.LFD.1.10.0807250930190.5249@nehalem.linux-foundation.org>
-References: <20080724.233831.193691312.davem@davemloft.net> <20080725083448.GE8301@fluff.org.uk>
+From: "Rakib Mullick" <rakib.mullick@gmail.com>
+Subject: [PATCH] Proper initialization of rc in drivers/ide/ide-probe.c
+Date: Fri, 25 Jul 2008 23:54:17 +0600
+Message-ID: <b9df5fa10807251054i5bd1d309g93a23ba405fc15b9@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1754089AbYGYQlo@vger.kernel.org>
-In-Reply-To: <20080725083448.GE8301@fluff.org.uk>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Ben Dooks <ben-linux@fluff.org>
-Cc: David Miller <davem@davemloft.net>, bzolnier@gmail.com, harvey.harrison@gmail.com, linux-ide@kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from nf-out-0910.google.com ([64.233.182.188]:63277 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751423AbYGYRyT (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 25 Jul 2008 13:54:19 -0400
+Received: by nf-out-0910.google.com with SMTP id d3so1296927nfc.21
+        for <linux-ide@vger.kernel.org>; Fri, 25 Jul 2008 10:54:18 -0700 (PDT)
+Content-Disposition: inline
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: bzolnier@gmail.com
+Cc: linux-ide@vger.kernel.org
 
+Hello to all , In existing code, rc might remain uninitialized. This
+patch initializes rc properly.
 
+Signed-off-by: Md.Rakib Hassan Mullick ( rakib.mullick@gmail.com)
 
-On Fri, 25 Jul 2008, Ben Dooks wrote:
-> 
-> personally, i would much prefer to see the loop being less evil
-> like:
-> 
-> 	for (p = s; p < end; p += 2)
-> 		be16_to_cpus((u16 *)p);
+--- drivers/ide/ide-probe.c.orig	2008-07-25 23:33:22.000000000 +0600
++++ drivers/ide/ide-probe.c	2008-07-25 23:35:00.000000000 +0600
+@@ -1437,7 +1437,7 @@ static struct device_attribute *ide_port
 
-Well, in this case, the code actually depends on 'p' being back at the 
-start of the buffer by the end of it all, so it would need some more 
-changes than that. 
-
-But yes, I applied David's patch, but I _also_ suspect that we would be 
-better off without code that does horrid things like casts and assignments 
-inside the function arguments.
-
-So it would be nice to re-code that loop to be more readable. But due to 
-the reliance of 'p' being 's' after the loop, the minimal patch would be 
-something like the appended.
-
-Bartlomiej - take this or not, I'm not going to commit it - I haven't 
-tested it, nor do I even have any machines that would trigger it. So this 
-is more a "maybe something like this" than anything else.
-
-		Linus
-
----
- drivers/ide/ide-iops.c |    8 +++++---
- 1 files changed, 5 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/ide/ide-iops.c b/drivers/ide/ide-iops.c
-index 8aae917..ae03151 100644
---- a/drivers/ide/ide-iops.c
-+++ b/drivers/ide/ide-iops.c
-@@ -506,14 +506,16 @@ void ide_fix_driveid (struct hd_driveid *id)
- 
- void ide_fixstring (u8 *s, const int bytecount, const int byteswap)
+ static int ide_sysfs_register_port(ide_hwif_t *hwif)
  {
--	u8 *p = s, *end = &s[bytecount & ~1]; /* bytecount must be even */
-+	u8 *p, *end = &s[bytecount & ~1]; /* bytecount must be even */
- 
- 	if (byteswap) {
- 		/* convert from big-endian to host byte order */
--		for (p = end ; p != s;)
--			be16_to_cpus((u16 *)(p -= 2));
-+		for (p = s ; p != end ; p += 2)
-+			be16_to_cpus((u16 *) p);
- 	}
-+
- 	/* strip leading blanks */
-+	p = s;
- 	while (s != end && *s == ' ')
- 		++s;
- 	/* compress internal blanks and strip trailing blanks */
+-	int i, rc;
++	int i, rc = 0;
+
+ 	for (i = 0; ide_port_attrs[i]; i++) {
+ 		rc = device_create_file(hwif->portdev, ide_port_attrs[i]);
