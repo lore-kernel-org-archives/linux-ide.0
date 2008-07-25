@@ -1,51 +1,96 @@
-From: "Stoyan Gaydarov" <stoyboyker@gmail.com>
-Subject: Re: ata error
-Date: Fri, 25 Jul 2008 14:26:52 -0500
-Message-ID: <6d291e080807251226l3af4fd78m85de6e2122dac682@mail.gmail.com>
-References: <6d291e080807251143k6cfc6db1w4e024ac245187d48@mail.gmail.com>
-	 <6d291e080807251147n14b0f0d1g4c8ad1d4759c702b@mail.gmail.com>
-	 <20080725195618.5f09c3bf@lxorguk.ukuu.org.uk>
+From: Ben Dooks <ben-linux@fluff.org>
+Subject: Re: recent IDE regression
+Date: Fri, 25 Jul 2008 23:17:03 +0100
+Message-ID: <20080725221703.GS26938@trinity.fluff.org>
+References: <20080724.233831.193691312.davem@davemloft.net> <20080725083448.GE8301@fluff.org.uk> <alpine.LFD.1.10.0807250930190.5249@nehalem.linux-foundation.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.187]:9633 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754235AbYGYT0z (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 25 Jul 2008 15:26:55 -0400
-Received: by nf-out-0910.google.com with SMTP id d3so1310547nfc.21
-        for <linux-ide@vger.kernel.org>; Fri, 25 Jul 2008 12:26:52 -0700 (PDT)
-In-Reply-To: <20080725195618.5f09c3bf@lxorguk.ukuu.org.uk>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1756515AbYGYWRV@vger.kernel.org>
 Content-Disposition: inline
-Sender: linux-ide-owner@vger.kernel.org
+In-Reply-To: <alpine.LFD.1.10.0807250930190.5249@nehalem.linux-foundation.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Ben Dooks <ben-linux@fluff.org>, David Miller <davem@davemloft.net>, bzolnier@gmail.com, harvey.harrison@gmail.com, linux-ide@kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: linux-ide@vger.kernel.org
 
-On Fri, Jul 25, 2008 at 1:56 PM, Alan Cox <alan@lxorguk.ukuu.org.uk> wrote:
->> > [ 1078.735322] ata3.00: configured for UDMA/133
->> > [ 1078.735336] ata3: EH complete
->> > [ 1078.766066] sd 2:0:0:0: [sda] 976773168 512-byte hardware sectors (500108 MB)
->
-> We timed out, reset the drive and it came back.
->> > [ 1078.766442] sd 2:0:0:0: [sda] Write Protect is off
->> > [ 1078.766448] sd 2:0:0:0: [sda] Mode Sense: 00 3a 00 00
->> > [ 1078.766957] sd 2:0:0:0: [sda] Write cache: enabled, read cache:
->> > enabled, doesn't support DPO or FUA
->> > [ 1107.310768] [drm] Loading R300 Microcode
->
-> I notice there is a drm Loading R300 Microcode logged just before each
-> drive failure. That seems very suspicious to me. Does it ever occur if
-> you are not in X ?
+On Fri, Jul 25, 2008 at 09:37:25AM -0700, Linus Torvalds wrote:
+> 
+> 
+> On Fri, 25 Jul 2008, Ben Dooks wrote:
+> > 
+> > personally, i would much prefer to see the loop being less evil
+> > like:
+> > 
+> > 	for (p = s; p < end; p += 2)
+> > 		be16_to_cpus((u16 *)p);
+> 
+> Well, in this case, the code actually depends on 'p' being back at the 
+> start of the buffer by the end of it all, so it would need some more 
+> changes than that. 
 
-I don't know but I can try it, later today.
-What is happening is that the movie I am watching with vlc (stored on
-the drive) stops playing and then the dmesg error comes up, and then
-it ether freezes X which it did a couple of times but I didnt get the
-dmesg because it was frozen and i wasnt expecting it, or I just need
-to restart the movie and it plays again(the error stuff mentioned in
-the dmesg above). Is there any other info I can provide you with?
+I'm not adverse to the loop running backwards, it is just that we end
+up evaluating macro with side-effects to the pointer itself, which is
+"just asking for trouble". 
 
--Stoyan G
+		for (p = end ; p != s; p -= 2)
+			be16_to_cpus((u16 *)p);
 
->
+This removes the side-effect of be16_to_cpus(), which means that the
+change to p is moved back into the for statement; After all, the for
+construct has three code blocks for a reason!
+
+I just wonder what would happen if be16_to_cpus(x) evaluated 'x' more
+than once... it would be difficult to find problems introduced if this
+happened as it would fail to hang, just not do the 'right' thing... 
+
+> But yes, I applied David's patch, but I _also_ suspect that we would be 
+> better off without code that does horrid things like casts and assignments 
+> inside the function arguments.
+> 
+> So it would be nice to re-code that loop to be more readable. But due to 
+> the reliance of 'p' being 's' after the loop, the minimal patch would be 
+> something like the appended.
+
+As noted above, I don't have any problems with the looping going backwards,
+just the problems with potential side-effects.
+ 
+> Bartlomiej - take this or not, I'm not going to commit it - I haven't 
+> tested it, nor do I even have any machines that would trigger it. So this 
+> is more a "maybe something like this" than anything else.
+> 
+> 		Linus
+> 
+> ---
+>  drivers/ide/ide-iops.c |    8 +++++---
+>  1 files changed, 5 insertions(+), 3 deletions(-)
+> 
+> diff --git a/drivers/ide/ide-iops.c b/drivers/ide/ide-iops.c
+> index 8aae917..ae03151 100644
+> --- a/drivers/ide/ide-iops.c
+> +++ b/drivers/ide/ide-iops.c
+> @@ -506,14 +506,16 @@ void ide_fix_driveid (struct hd_driveid *id)
+>  
+>  void ide_fixstring (u8 *s, const int bytecount, const int byteswap)
+>  {
+> -	u8 *p = s, *end = &s[bytecount & ~1]; /* bytecount must be even */
+> +	u8 *p, *end = &s[bytecount & ~1]; /* bytecount must be even */
+>  
+>  	if (byteswap) {
+>  		/* convert from big-endian to host byte order */
+> -		for (p = end ; p != s;)
+> -			be16_to_cpus((u16 *)(p -= 2));
+> +		for (p = s ; p != end ; p += 2)
+> +			be16_to_cpus((u16 *) p);
+>  	}
+> +
+>  	/* strip leading blanks */
+> +	p = s;
+>  	while (s != end && *s == ' ')
+>  		++s;
+>  	/* compress internal blanks and strip trailing blanks */
+
+-- 
+Ben
+
+Q:      What's a light-year?
+A:      One-third less calories than a regular year.
