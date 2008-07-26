@@ -1,135 +1,76 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: IDE driver assined IRQ for disabled IDE channel
-Date: Sat, 26 Jul 2008 13:58:59 +0200
-Message-ID: <200807261358.59667.bzolnier@gmail.com>
-References: <20080725.143128.193681587.takada@mbf.nifty.com>
+Subject: Re: recent IDE regression
+Date: Sat, 26 Jul 2008 14:13:38 +0200
+Message-ID: <200807261413.38337.bzolnier@gmail.com>
+References: <20080724.233831.193691312.davem@davemloft.net> <20080725083448.GE8301@fluff.org.uk> <alpine.LFD.1.10.0807250930190.5249@nehalem.linux-foundation.org>
 Mime-Version: 1.0
 Content-Type: text/plain;
   charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from fk-out-0910.google.com ([209.85.128.184]:30924 "EHLO
-	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750726AbYGZMSY (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 26 Jul 2008 08:18:24 -0400
-Received: by fk-out-0910.google.com with SMTP id 18so2709275fkq.5
-        for <linux-ide@vger.kernel.org>; Sat, 26 Jul 2008 05:18:22 -0700 (PDT)
-In-Reply-To: <20080725.143128.193681587.takada@mbf.nifty.com>
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1752777AbYGZMSh@vger.kernel.org>
+In-Reply-To: <alpine.LFD.1.10.0807250930190.5249@nehalem.linux-foundation.org>
 Content-Disposition: inline
-Sender: linux-ide-owner@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Ben Dooks <ben-linux@fluff.org>, David Miller <davem@davemloft.net>, harvey.harrison@gmail.com, linux-ide@kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: TAKADA Yoshihito <takada@mbf.nifty.com>
-Cc: linux-ide@vger.kernel.org
 
+On Friday 25 July 2008, Linus Torvalds wrote:
+> 
+> On Fri, 25 Jul 2008, Ben Dooks wrote:
+> > 
+> > personally, i would much prefer to see the loop being less evil
+> > like:
+> > 
+> > 	for (p = s; p < end; p += 2)
+> > 		be16_to_cpus((u16 *)p);
+> 
+> Well, in this case, the code actually depends on 'p' being back at the 
+> start of the buffer by the end of it all, so it would need some more 
+> changes than that. 
+> 
+> But yes, I applied David's patch, but I _also_ suspect that we would be 
+> better off without code that does horrid things like casts and assignments 
+> inside the function arguments.
+> 
+> So it would be nice to re-code that loop to be more readable. But due to 
+> the reliance of 'p' being 's' after the loop, the minimal patch would be 
+> something like the appended.
+> 
+> Bartlomiej - take this or not, I'm not going to commit it - I haven't 
+> tested it, nor do I even have any machines that would trigger it. So this 
+> is more a "maybe something like this" than anything else.
+> 
+> 		Linus
 
-Hi,
+Looks fine and I added it to pata tree but a test+ACK from
+one of big-endianners would be great.
 
-On Friday 25 July 2008, TAKADA Yoshihito wrote:
-> Hi.
-> In kernel 2.6.26, I disable the secoundary IDE via BIOS. But kernel assigned IRQ to secondary IDE.
-> I saw /proc/interrupts:
->   - /proc/interrupts of 2.6.25
->            CPU0       
->   0:     232213    XT-PIC-XT        timer
->   1:        388    XT-PIC-XT        i8042
->   2:          0    XT-PIC-XT        cascade
->   3:          1    XT-PIC-XT      
->   4:        305    XT-PIC-XT      
->   5:          1    XT-PIC-XT      
->   7:          1    XT-PIC-XT      
->   8:          0    XT-PIC-XT        rtc0
->   9:          1    XT-PIC-XT      
->  10:          1    XT-PIC-XT      
->  11:          1    XT-PIC-XT      
->  12:        110    XT-PIC-XT        i8042
->  14:       5640    XT-PIC-XT        ide0
->  15:         35    XT-PIC-XT        yenta, ohci_hcd:usb1
-> NMI:          0   Non-maskable interrupts
-> TRM:          0   Thermal event interrupts
-> SPU:          0   Spurious interrupts
-> ERR:          0
+> ---
+>  drivers/ide/ide-iops.c |    8 +++++---
+>  1 files changed, 5 insertions(+), 3 deletions(-)
 > 
-> IRQ15 doesn't assigned for ide1.
-> 
->   - /proc/interrupts of 2.6.26
->            CPU0       
->   0:     213884    XT-PIC-XT        timer
->   1:        197    XT-PIC-XT        i8042
->   2:          0    XT-PIC-XT        cascade
->   3:          1    XT-PIC-XT      
->   4:        309    XT-PIC-XT      
->   5:          1    XT-PIC-XT      
->   7:          2    XT-PIC-XT      
->   8:          0    XT-PIC-XT        rtc0
->   9:          1    XT-PIC-XT      
->  10:          1    XT-PIC-XT      
->  11:          1    XT-PIC-XT      
->  12:        110    XT-PIC-XT        i8042
->  14:       5621    XT-PIC-XT        ide0
->  15:          0    XT-PIC-XT        ide1
-> NMI:          0   Non-maskable interrupts
-> TRM:          0   Thermal event interrupts
-> SPU:          0   Spurious interrupts
-> ERR:          1
-> 
-> However, kernel 2.6.26 assinged IRQ15 for ide1. And yenta and ohci
-> (USB host controller) couldn't assign an IRQ.
-> 
-> dmesg are:
-> Yenta: CardBus bridge found at 0000:00:01.0 [0000:0000]
-> Yenta: no PCI IRQ, CardBus support disabled for this socket.
-> Yenta: check your BIOS CardBus, BIOS IRQ or ACPI settings.
-> 
-> ohci_hcd: 2006 August 04 USB 1.1 'Open' Host Controller (OHCI) Driver
-> ohci_hcd 0000:00:13.0: OHCI Host Controller
-> ohci_hcd 0000:00:13.0: new USB bus registered, assigned bus number 1
-> ohci_hcd 0000:00:13.0: request interrupt 15 failed
-> ohci_hcd 0000:00:13.0: USB bus 1 deregistered
-> ohci_hcd 0000:00:13.0: init 0000:00:13.0 fail, -16
-> ohci_hcd: probe of 0000:00:13.0 failed with error -16
-
-Could you please post the full dmesg?
-
-The second IDE port should be skipped by the corresponding host driver
-if disabled in BIOS (it could be that this particular host driver neeeds
-fixing).
-
-> Signed-off-by: TAKADA Yoshihito <takada@mbf.nifty.com>
-> 
-> diff -Narup a/drivers/ide/ide-probe.c b/drivers/ide/ide-probe.c
-> --- a/drivers/ide/ide-probe.c	2008-07-25 13:21:37.000000000 +0900
-> +++ b/drivers/ide/ide-probe.c	2008-07-25 13:42:38.000000000 +0900
-> @@ -1546,6 +1546,8 @@ int ide_device_add_all(u8 *idx, const st
->  			continue;
+> diff --git a/drivers/ide/ide-iops.c b/drivers/ide/ide-iops.c
+> index 8aae917..ae03151 100644
+> --- a/drivers/ide/ide-iops.c
+> +++ b/drivers/ide/ide-iops.c
+> @@ -506,14 +506,16 @@ void ide_fix_driveid (struct hd_driveid *id)
 >  
->  		hwif = &ide_hwifs[idx[i]];
-> +		if (!hwif->present)
-> +			continue;
-
-Unfortunately we can't fix it this way as this will cause regression
-for other people (we now want ports with no devices attached to be also
-registered to allow warm-plugging of IDE devices).
-
-BTW sorry for breaking things for you with every major kernel release ;)
-(any chance that you give linux-next kernels a test drive from time to
-time so we catch such problems early?)
-
->  		if (hwif_init(hwif) == 0) {
->  			printk(KERN_INFO "%s: failed to initialize IDE "
-> @@ -1582,12 +1584,11 @@ int ide_device_add_all(u8 *idx, const st
->  			continue;
+>  void ide_fixstring (u8 *s, const int bytecount, const int byteswap)
+>  {
+> -	u8 *p = s, *end = &s[bytecount & ~1]; /* bytecount must be even */
+> +	u8 *p, *end = &s[bytecount & ~1]; /* bytecount must be even */
 >  
->  		hwif = &ide_hwifs[idx[i]];
-> -
-> -		ide_sysfs_register_port(hwif);
-> -		ide_proc_register_port(hwif);
-> -
-> -		if (hwif->present)
-> +		if (hwif->present) {
-> +			ide_sysfs_register_port(hwif);
-> +			ide_proc_register_port(hwif);
->  			ide_proc_port_register_devices(hwif);
-> +		}
+>  	if (byteswap) {
+>  		/* convert from big-endian to host byte order */
+> -		for (p = end ; p != s;)
+> -			be16_to_cpus((u16 *)(p -= 2));
+> +		for (p = s ; p != end ; p += 2)
+> +			be16_to_cpus((u16 *) p);
 >  	}
->  
->  	return rc;
+> +
+>  	/* strip leading blanks */
+> +	p = s;
+>  	while (s != end && *s == ' ')
+>  		++s;
+>  	/* compress internal blanks and strip trailing blanks */
