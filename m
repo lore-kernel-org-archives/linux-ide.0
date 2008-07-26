@@ -1,104 +1,44 @@
-From: Elias Oltmanns <eo@nebensachen.de>
-Subject: [PATCH 5/5] Add documentation for hard disk shock protection
-	interface
-Date: Sat, 26 Jul 2008 08:29:11 +0200
-Message-ID: <20080726062142.29070.60679.stgit@denkblock.local>
-References: <87prp1kvyy.fsf@denkblock.local>
+From: sivaji <rameshmrm@gmail.com>
+Subject: Ultra DMA problem
+Date: Sat, 26 Jul 2008 01:38:14 -0700 (PDT)
+Message-ID: <18664594.post@talk.nabble.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nebensachen.de ([195.34.83.29]:53022 "EHLO mail.nebensachen.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751567AbYGZG3V (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 26 Jul 2008 02:29:21 -0400
-In-Reply-To: <87prp1kvyy.fsf@denkblock.local>
+Received: from kuber.nabble.com ([216.139.236.158]:42606 "EHLO
+	kuber.nabble.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750894AbYGZIiQ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 26 Jul 2008 04:38:16 -0400
+Received: from isper.nabble.com ([192.168.236.156])
+	by kuber.nabble.com with esmtp (Exim 4.63)
+	(envelope-from <lists@nabble.com>)
+	id 1KMfI6-0005EY-KS
+	for linux-ide@vger.kernel.org; Sat, 26 Jul 2008 01:38:14 -0700
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>, Jeff Garzik <jeff@garzik.org>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, James Bottomley <James.Bottomley@hansenpartnership.com>
-Cc: Pavel Machek <pavel@ucw.cz>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-Put some information (and pointers to more) into the kernel's doc tree,
-describing briefly how to set up disk shock protection under GNU/Linux.
 
-Signed-off-by: Elias Oltmanns <eo@nebensachen.de>
----
+Hi,
+We are using MCF5253 procesoor. In this processor we have dedicated ATA DMA
+controller.  Right now we are testing the ATA interface using the  PIO and
+UDMA modes. PIO modes works perfectly. When moving to the  UDMA mode,  First
+we configured the ATA DMA controller registers,  then we are setting the
+command in the command register. 
 
- Documentation/laptops/disk-shock-protection.txt |   66 +++++++++++++++++++++++
- 1 files changed, 66 insertions(+), 0 deletions(-)
- create mode 100644 Documentation/laptops/disk-shock-protection.txt
+Before configuring the ATA DMA Misccr Reigster the value of Device status
+and Alternate status registers is 0x50. After configuring the Misccr
+Registers the values of status and Alternate status register is 0x0. I don't
+know why the STATUS register and ALTSTATUS register values are changing when
+configuring the ATADMA Controller Register.  Due to this i am facing HSM
+violation. Here i have attached the log. Give some idea to fix this issue.
 
-diff --git a/Documentation/laptops/disk-shock-protection.txt b/Documentation/laptops/disk-shock-protection.txt
-new file mode 100644
-index 0000000..ac26040
---- /dev/null
-+++ b/Documentation/laptops/disk-shock-protection.txt
-@@ -0,0 +1,66 @@
-+Hard disk shock protection
-+==========================
-+
-+Author: Elias Oltmanns <eo@nebensachen.de>
-+Last modified: 2008-07-24
-+
-+
-+Intro
-+-----
-+
-+ATA/ATAPI-7 specifies the IDLE IMMEDIATE command with UNLOAD FEATURE.
-+Issuing this command should cause the drive to switch to idle mode and
-+unload disk heads. This feature is being used in modern laptops in
-+conjunction with accelerometers and appropriate software to implement
-+a shock protection facility. The idea is to stop all I/O operations on
-+the internal hard drive and park its heads on the ramp when critical
-+situations are anticipated. The desire to have such a feature
-+available on GNU/Linux systems has been the original motivation to
-+implement a generic disk head parking interface in the Linux kernel.
-+
-+
-+The interface
-+-------------
-+
-+The interface works as follows: Writing an integer value to
-+/sys/block/*/device/unload_heads will take the heads of the respective
-+drive off the platter and block all I/O operations for the specified
-+number of seconds. When the timeout expires and no further disk head
-+park request has been issued in the meantime, normal operation will be
-+resumed.
-+
-+FIXME:
-+Once we've addressed the problem with pre-ATA-7 drives supporting the
-+UNLOAD FEATURE but not announcing it properly, we'll document it
-+accordingly.
-+
-+
-+References
-+----------
-+
-+There are several laptops from different brands featuring shock
-+protection capabilities. As manufacturers have refused to support open
-+source development of the required software components so far, Linux
-+support for shock protection varies considerably between different
-+hardware implementations. Ideally, this section should contain a list
-+of pointers at different projects aiming at an implementation of shock
-+protection on different systeems. Unfortunately, I only know of a
-+single project which, although still considered experimental, is fit
-+for use. Please feel free to add projects that have been the victims
-+of my ignorance.
-+
-+- http://www.thinkwiki.org/wiki/HDAPS
-+  See this page for information about Linux support of the hard disk
-+  active protection syystem as implemented in IBM/Lenovo Thinkpads.
-+  (FIXME: The information there will have to be updated once this
-+  patch has been approved or the user interface has been agreed upon
-+  at least.)
-+
-+
-+CREDITS
-+-------
-+
-+This implementation of disk head parking has been based on a patch
-+originally published by Jon Escombe <lists@dresco.co.uk>. Assisted by
-+various kernel developers, the author of this document has rewritten
-+the original patch in order to make it fit for upstream submission.
+Linux Version : 2.6.23-uc1
 
+Thanks and Regards
+Sivaji
+-- 
+View this message in context: http://www.nabble.com/Ultra-DMA-problem-tp18664594p18664594.html
+Sent from the linux-ide mailing list archive at Nabble.com.
 
