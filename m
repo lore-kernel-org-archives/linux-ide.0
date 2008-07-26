@@ -1,136 +1,69 @@
-From: sivaji <rameshmrm@gmail.com>
-Subject: Re: Ultra DMA problem
-Date: Sat, 26 Jul 2008 01:44:41 -0700 (PDT)
-Message-ID: <18664647.post@talk.nabble.com>
-References: <18664594.post@talk.nabble.com>
+From: Borislav Petkov <petkovbb@googlemail.com>
+Subject: Re: [PATCH] Proper initialization of rc in drivers/ide/ide-probe.c
+Date: Sat, 26 Jul 2008 10:45:31 +0200
+Message-ID: <20080726084531.GB18223@gollum.tnic>
+References: <b9df5fa10807251054i5bd1d309g93a23ba405fc15b9@mail.gmail.com>
+Reply-To: petkovbb@gmail.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from kuber.nabble.com ([216.139.236.158]:39693 "EHLO
-	kuber.nabble.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751038AbYGZIom (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 26 Jul 2008 04:44:42 -0400
-Received: from isper.nabble.com ([192.168.236.156])
-	by kuber.nabble.com with esmtp (Exim 4.63)
-	(envelope-from <lists@nabble.com>)
-	id 1KMfOL-0005PU-Un
-	for linux-ide@vger.kernel.org; Sat, 26 Jul 2008 01:44:41 -0700
-In-Reply-To: <18664594.post@talk.nabble.com>
+Received: from fg-out-1718.google.com ([72.14.220.159]:18177 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751236AbYGZIpR (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 26 Jul 2008 04:45:17 -0400
+Received: by fg-out-1718.google.com with SMTP id 19so1800299fgg.17
+        for <linux-ide@vger.kernel.org>; Sat, 26 Jul 2008 01:45:16 -0700 (PDT)
+Content-Disposition: inline
+In-Reply-To: <b9df5fa10807251054i5bd1d309g93a23ba405fc15b9@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Rakib Mullick <rakib.mullick@gmail.com>
+Cc: bzolnier@gmail.com, linux-ide@vger.kernel.org
 
-
+On Fri, Jul 25, 2008 at 11:54:17PM +0600, Rakib Mullick wrote:
+> Hello to all , In existing code, rc might remain uninitialized.
 Hi,
-We are using MCF5253 procesoor. In this processor we have dedicated ATA DMA
-controller.  Right now we are testing the ATA interface using the  PIO and
-UDMA modes. PIO modes works perfectly. When moving to the  UDMA mode,  First
-we configured the ATA DMA controller registers,  then we are setting the
-command in the command register.
 
-Before configuring the ATA DMA Misccr Reigster the value of Device status
-and Alternate status registers is 0x50. After configuring the Misccr
-Registers the values of status and Alternate status register is 0x0. I don't
-know why the STATUS register and ALTSTATUS register values are changing when
-configuring the ATADMA Controller Register.  Due to this i am facing HSM
-violation. Here i have attached the log. 
+are you sure? device_create_file() does return a proper value at all ti=
+mes:
+either a 0 or the result from calling sysfs_create_file(), and, if you =
+follow
+the last's call chain into the sysfs-internals you can easily see that =
+those
+functions also return proper value at all times. What is more, it is gu=
+aranteed
+that the loop will execute since ide_port_attrs is statically initializ=
+ed
+and has 2 elements... so no need for initializing the rc-variable - it =
+gets
+overwritten in any case.
 
-scsi0 : pata_fsl
-ata1: PATA max UDMA/44 cmd 0x800008a0 ctl 0x800008d8 bmdma 0x00000000 irq
-147
-feat 0x0 nsect 0x0 lba 0x0 0x0 0x0
-hob&LBA48: feat 0x0 nsect 0x0, lba 0x0 0x0 0x0
-feat 0x0 nsect 0x0 lba 0x0 0x0 0x0
-ata1.00: ATA-7: ST380215A, 3.AAD, max UDMA/100
-ata1.00: 156301488 sectors, multi 0: LBA48
-xfer_mode:c
-xfer_mode:43
-feat 0x3 nsect 0x43 lba 0x0 0x0 0x0
-feat 0x0 nsect 0x0 lba 0x0 0x0 0x0
-hob&LBA48: feat 0x0 nsect 0x0, lba 0x0 0x0 0x0
-feat 0x0 nsect 0x0 lba 0x0 0x0 0x0
-ata1.00: configured for UDMA/44
-scsi 0:0:0:0: Direct-Access     ATA      ST380215A        3.AA PQ: 0 ANSI: 5
-sd 0:0:0:0: [sda] 156301488 512-byte hardware sectors (80026 MB)
-sd 0:0:0:0: [sda] Write Protect is off
-sd 0:0:0:0: [sda] Write cache: enabled, read cache: enabled, doesn't support
-DPO or FUA
-sd 0:0:0:0: [sda] 156301488 512-byte hardware sectors (80026 MB)
-sd 0:0:0:0: [sda] Write Protect is off
-sd 0:0:0:0: [sda] Write cache: enabled, read cache: enabled, doesn't support
-DPO or FUA
- sda:feat 0x0 nsect 0x8 lba 0x0 0x0 0x0
-sg->address:80020000
-Before Setting ATADMA Device Alternate Status Register:50
-Source address :18
-DMA count register:1000
-After setting ATADMA Device Alternate Status Register:50
-pata_fsl_bmdma_start starts     qc->flags:11
-pata_fsl_bmdma_start Read mode  Dma Control Register:100
-pata_fsl_bmdma_start Read mode Dma Control Register:107
-Alternate status Register:0
-pata_fsl_bmdma_start ends
-ata_host_intr: Alternate status register:0
-ata1.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2
-ata1.00: BMDMA stat 0x0
-ata1.00: cmd c8/00:08:00:00:00/00:00:00:00:00/e0 tag 0 cdb 0x0 data 4096 in
-         res 00/00:00:00:00:00/00:00:00:00:00/00 Emask 0x2 (HSM violation)
-ata1: soft resetting port
-feat 0x0 nsect 0x0 lba 0x0 0x0 0x0
-ata1.00: revalidation failed (errno=-2)
-ata1: failed to recover some devices, retrying in 5 secs
-ata1: soft resetting port
-feat 0x0 nsect 0x0 lba 0x0 0x0 0x0
-ata1.00: revalidation failed (errno=-2)
-ata1: failed to recover some devices, retrying in 5 secs
-ata1: soft resetting port
-feat 0x0 nsect 0x0 lba 0x0 0x0 0x0
-ata1.00: revalidation failed (errno=-2)
-ata1.00: disabled
-ata1: EH pending after completion, repeating EH (cnt=4)
-ata1: soft resetting port
-ata1: EH complete
-sd 0:0:0:0: [sda] Result: hostbyte=0x04 driverbyte=0x00
-end_request: I/O error, dev sda, sector 0
-Buffer I/O error on device sda, logical block 0
-sd 0:0:0:0: [sda] Result: hostbyte=0x04 driverbyte=0x00
-end_request: I/O error, dev sda, sector 0
-Buffer I/O error on device sda, logical block 0
- unable to read partition table
-sd 0:0:0:0: [sda] Attached SCSI disk
+However, i'm sure you can find some other places in the kernel where th=
+e return
+value is not set appropriately, leading to really nasty bugs :(.
 
+> This patch initializes rc properly.
+>=20
+> Signed-off-by: Md.Rakib Hassan Mullick ( rakib.mullick@gmail.com)
+>=20
+> --- drivers/ide/ide-probe.c.orig	2008-07-25 23:33:22.000000000 +0600
+> +++ drivers/ide/ide-probe.c	2008-07-25 23:35:00.000000000 +0600
+> @@ -1437,7 +1437,7 @@ static struct device_attribute *ide_port
+>=20
+>  static int ide_sysfs_register_port(ide_hwif_t *hwif)
+>  {
+> -	int i, rc;
+> +	int i, rc =3D 0;
+>=20
+>  	for (i =3D 0; ide_port_attrs[i]; i++) {
+>  		rc =3D device_create_file(hwif->portdev, ide_port_attrs[i]);
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-ide" =
+in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-Linux Version : 2.6.23-uc1
-
-Thanks and Regards
-Sivaji
-
-
-sivaji wrote:
-> 
-> Hi,
-> We are using MCF5253 procesoor. In this processor we have dedicated ATA
-> DMA controller.  Right now we are testing the ATA interface using the  PIO
-> and UDMA modes. PIO modes works perfectly. When moving to the  UDMA mode, 
-> First we configured the ATA DMA controller registers,  then we are setting
-> the command in the command register. 
-> 
-> Before configuring the ATA DMA Misccr Reigster the value of Device status
-> and Alternate status registers is 0x50. After configuring the Misccr
-> Registers the values of status and Alternate status register is 0x0. I
-> don't know why the STATUS register and ALTSTATUS register values are
-> changing when configuring the ATADMA Controller Register.  Due to this i
-> am facing HSM violation. Here i have attached the log. Give some idea to
-> fix this issue.
-> 
-> Linux Version : 2.6.23-uc1
-> 
-> Thanks and Regards
-> Sivaji
-> 
-
--- 
-View this message in context: http://www.nabble.com/Ultra-DMA-problem-tp18664594p18664647.html
-Sent from the linux-ide mailing list archive at Nabble.com.
-
+--=20
+Regards/Gru=DF,
+    Boris.
