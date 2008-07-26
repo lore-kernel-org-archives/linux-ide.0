@@ -1,85 +1,60 @@
 From: Elias Oltmanns <eo@nebensachen.de>
-Subject: [RFC] Disk shock protection in GNU/Linux
-Date: Sat, 26 Jul 2008 08:20:21 +0200
-Message-ID: <87prp1kvyy.fsf@denkblock.local>
+Subject: [PATCH 1/5] Make sure that ata_force_tbl is freed in case of an error
+Date: Sat, 26 Jul 2008 08:23:23 +0200
+Message-ID: <20080726062141.29070.75212.stgit@denkblock.local>
+References: <87prp1kvyy.fsf@denkblock.local>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nebensachen.de ([195.34.83.29]:52123 "EHLO mail.nebensachen.de"
+Received: from nebensachen.de ([195.34.83.29]:37617 "EHLO mail.nebensachen.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750823AbYGZGUo (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 26 Jul 2008 02:20:44 -0400
+	id S1751478AbYGZGXh (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 26 Jul 2008 02:23:37 -0400
+In-Reply-To: <87prp1kvyy.fsf@denkblock.local>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Alan Cox <alan@lxorguk.ukuu.org.uk>, Jeff Garzik <jeff@garzik.org>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, James Bottomley <James.Bottomley@hansenpartnership.com>
 Cc: Pavel Machek <pavel@ucw.cz>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Hi all,
+This is just a trivial fix of a potential memory leak when ata_init()
+encounters an error.
 
-yet again, I'm trying to get this feature into the Linux kernel. This
-time, I have tried to arrange the code in such a way that hardly
-anything not strictly belonging to the libata or ide subsystem is
-touched at all. Since former attempts to design this in a more generic
-way involving the block and scsi layer have proven very difficult and
-since this is all about an ATA specific feature anyway, I think the best
-solution (for now at least) is to stick to those two subsystems as far
-as possible.
+Signed-off-by: Elias Oltmanns <eo@nebensachen.de>
+---
 
-Nevertheless, I'd welcome James' opinion on the third patch in the
-series with regard to the use of vendor specific cdbs. If it is
-acceptable in principle, the question remains whether we sould reserve
-part of the range 0xf800 - 0xffff of vendor specific service actions for
-the exclusive use by LLDDs (in much the way I did it here), or whether
-all these codes should be unique in the kernel and defined in scsi.h.
+ drivers/ata/libata-core.c |   14 +++++++++-----
+ 1 files changed, 9 insertions(+), 5 deletions(-)
 
-Also, we have to agree upon a suitable way to deal with devices that
-actually do support the UNLOAD FEATURE but don't report that capability
-in their ID as specified in ATA-7. Perhaps we even want to fall back to
-STANDBY IMMEDIATE on devices that definitely don't support IDLE
-IMMEDIATE with UNLOAD FEATURE; this has been the case for the original
-hdaps / disk-protect patch but I'm not quite sure whether anybody
-actually relies on this feature and whether it would be advisable in the
-first place. Regarding devices that support head unloading but don't
-report it properly, there seem to be the following options:
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index 9bef1a8..0a2f921 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -6088,16 +6088,20 @@ static int __init ata_init(void)
+ 
+ 	ata_wq = create_workqueue("ata");
+ 	if (!ata_wq)
+-		return -ENOMEM;
++		goto free_force_tbl;
+ 
+ 	ata_aux_wq = create_singlethread_workqueue("ata_aux");
+-	if (!ata_aux_wq) {
+-		destroy_workqueue(ata_wq);
+-		return -ENOMEM;
+-	}
++	if (!ata_aux_wq)
++		goto free_wq;
+ 
+ 	printk(KERN_DEBUG "libata version " DRV_VERSION " loaded.\n");
+ 	return 0;
++
++free_wq:
++	destroy_workqueue(ata_wq);
++free_force_tbl:
++	kfree(ata_force_tbl);
++	return -ENOMEM;
+ }
+ 
+ static void __exit ata_exit(void)
 
-a) Provide an attribute in sysfs for the user to indicate that the
-   device really does support the UNLOAD FEATURE.
-b) Issue the command (for the first time) anyway and check whether the
-   device responds as specified in ATA-7. Make a note of the result and
-   act accordingly from there on.
 
-The second option looks appealing because no user intervention is
-required and it is known to work at least for some devices. On the other
-hand, it may be dangerous on old hardware and I don't even know whether
-all pre-ATA-7 devices supporting the UNLOAD FEATURE really do return the
-correct data in the command registers.
-
-Here is a short description of the patches in this series applying
-cleanly on top of next-20080725:
-
-1. This is a trivial patch making things slightly easier for #3. More
-   importantly though, it also fixes a potential memory leak and should
-   probably be applied regardless of the rest of the series (Jeff?).
-2. This is a small patch to ata.h in order to provide a simple check for
-   support of the UNLOAD FEATURE as indicated in a device's ID.
-3. Here disk head unloading is implemented in the libata subsystem. See
-   the changelog entry for current shortcomings of this patch.
-4. The same for ide.
-5. A little bit of documentation.
-
-There are some questions I need your advice on that have been inserted
-as FIXME comments into the code. However, here is a more general
-question that interests me even though it could turn out to be a good
-idea (or at least acceptable) to merge these patches before that
-question has been fully resolved. Alan once mentioned that it might be
-desirable to abort commands currently in progress and issue IDLE
-IMMEDIATE straight away. My question is whether this is at all possible
-for non SATA command protocols. In volume 2 of the ATA-7 specification I
-haven't found a well defined way to abort or shor circuit, say, a DMA or
-PIO command in progress. It even says that after the host has aborted
-data transfer when DMA was in progress, it is supposed to initiate a
-SRST. Obviously, I'd like to avoid that at all costs.
-
-Thank you in advance for your cooperation,
-
-Elias
