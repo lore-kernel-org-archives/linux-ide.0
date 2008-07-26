@@ -1,96 +1,85 @@
-From: Ben Dooks <ben-linux@fluff.org>
-Subject: Re: recent IDE regression
-Date: Fri, 25 Jul 2008 23:17:03 +0100
-Message-ID: <20080725221703.GS26938@trinity.fluff.org>
-References: <20080724.233831.193691312.davem@davemloft.net> <20080725083448.GE8301@fluff.org.uk> <alpine.LFD.1.10.0807250930190.5249@nehalem.linux-foundation.org>
+From: Elias Oltmanns <eo@nebensachen.de>
+Subject: [RFC] Disk shock protection in GNU/Linux
+Date: Sat, 26 Jul 2008 08:20:21 +0200
+Message-ID: <87prp1kvyy.fsf@denkblock.local>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1756515AbYGYWRV@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <alpine.LFD.1.10.0807250930190.5249@nehalem.linux-foundation.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Ben Dooks <ben-linux@fluff.org>, David Miller <davem@davemloft.net>, bzolnier@gmail.com, harvey.harrison@gmail.com, linux-ide@kernel.org, linux-kernel@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from nebensachen.de ([195.34.83.29]:52123 "EHLO mail.nebensachen.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750823AbYGZGUo (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 26 Jul 2008 02:20:44 -0400
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>, Jeff Garzik <jeff@garzik.org>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, James Bottomley <James.Bottomley@hansenpartnership.com>
+Cc: Pavel Machek <pavel@ucw.cz>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Fri, Jul 25, 2008 at 09:37:25AM -0700, Linus Torvalds wrote:
-> 
-> 
-> On Fri, 25 Jul 2008, Ben Dooks wrote:
-> > 
-> > personally, i would much prefer to see the loop being less evil
-> > like:
-> > 
-> > 	for (p = s; p < end; p += 2)
-> > 		be16_to_cpus((u16 *)p);
-> 
-> Well, in this case, the code actually depends on 'p' being back at the 
-> start of the buffer by the end of it all, so it would need some more 
-> changes than that. 
+Hi all,
 
-I'm not adverse to the loop running backwards, it is just that we end
-up evaluating macro with side-effects to the pointer itself, which is
-"just asking for trouble". 
+yet again, I'm trying to get this feature into the Linux kernel. This
+time, I have tried to arrange the code in such a way that hardly
+anything not strictly belonging to the libata or ide subsystem is
+touched at all. Since former attempts to design this in a more generic
+way involving the block and scsi layer have proven very difficult and
+since this is all about an ATA specific feature anyway, I think the best
+solution (for now at least) is to stick to those two subsystems as far
+as possible.
 
-		for (p = end ; p != s; p -= 2)
-			be16_to_cpus((u16 *)p);
+Nevertheless, I'd welcome James' opinion on the third patch in the
+series with regard to the use of vendor specific cdbs. If it is
+acceptable in principle, the question remains whether we sould reserve
+part of the range 0xf800 - 0xffff of vendor specific service actions for
+the exclusive use by LLDDs (in much the way I did it here), or whether
+all these codes should be unique in the kernel and defined in scsi.h.
 
-This removes the side-effect of be16_to_cpus(), which means that the
-change to p is moved back into the for statement; After all, the for
-construct has three code blocks for a reason!
+Also, we have to agree upon a suitable way to deal with devices that
+actually do support the UNLOAD FEATURE but don't report that capability
+in their ID as specified in ATA-7. Perhaps we even want to fall back to
+STANDBY IMMEDIATE on devices that definitely don't support IDLE
+IMMEDIATE with UNLOAD FEATURE; this has been the case for the original
+hdaps / disk-protect patch but I'm not quite sure whether anybody
+actually relies on this feature and whether it would be advisable in the
+first place. Regarding devices that support head unloading but don't
+report it properly, there seem to be the following options:
 
-I just wonder what would happen if be16_to_cpus(x) evaluated 'x' more
-than once... it would be difficult to find problems introduced if this
-happened as it would fail to hang, just not do the 'right' thing... 
+a) Provide an attribute in sysfs for the user to indicate that the
+   device really does support the UNLOAD FEATURE.
+b) Issue the command (for the first time) anyway and check whether the
+   device responds as specified in ATA-7. Make a note of the result and
+   act accordingly from there on.
 
-> But yes, I applied David's patch, but I _also_ suspect that we would be 
-> better off without code that does horrid things like casts and assignments 
-> inside the function arguments.
-> 
-> So it would be nice to re-code that loop to be more readable. But due to 
-> the reliance of 'p' being 's' after the loop, the minimal patch would be 
-> something like the appended.
+The second option looks appealing because no user intervention is
+required and it is known to work at least for some devices. On the other
+hand, it may be dangerous on old hardware and I don't even know whether
+all pre-ATA-7 devices supporting the UNLOAD FEATURE really do return the
+correct data in the command registers.
 
-As noted above, I don't have any problems with the looping going backwards,
-just the problems with potential side-effects.
- 
-> Bartlomiej - take this or not, I'm not going to commit it - I haven't 
-> tested it, nor do I even have any machines that would trigger it. So this 
-> is more a "maybe something like this" than anything else.
-> 
-> 		Linus
-> 
-> ---
->  drivers/ide/ide-iops.c |    8 +++++---
->  1 files changed, 5 insertions(+), 3 deletions(-)
-> 
-> diff --git a/drivers/ide/ide-iops.c b/drivers/ide/ide-iops.c
-> index 8aae917..ae03151 100644
-> --- a/drivers/ide/ide-iops.c
-> +++ b/drivers/ide/ide-iops.c
-> @@ -506,14 +506,16 @@ void ide_fix_driveid (struct hd_driveid *id)
->  
->  void ide_fixstring (u8 *s, const int bytecount, const int byteswap)
->  {
-> -	u8 *p = s, *end = &s[bytecount & ~1]; /* bytecount must be even */
-> +	u8 *p, *end = &s[bytecount & ~1]; /* bytecount must be even */
->  
->  	if (byteswap) {
->  		/* convert from big-endian to host byte order */
-> -		for (p = end ; p != s;)
-> -			be16_to_cpus((u16 *)(p -= 2));
-> +		for (p = s ; p != end ; p += 2)
-> +			be16_to_cpus((u16 *) p);
->  	}
-> +
->  	/* strip leading blanks */
-> +	p = s;
->  	while (s != end && *s == ' ')
->  		++s;
->  	/* compress internal blanks and strip trailing blanks */
+Here is a short description of the patches in this series applying
+cleanly on top of next-20080725:
 
--- 
-Ben
+1. This is a trivial patch making things slightly easier for #3. More
+   importantly though, it also fixes a potential memory leak and should
+   probably be applied regardless of the rest of the series (Jeff?).
+2. This is a small patch to ata.h in order to provide a simple check for
+   support of the UNLOAD FEATURE as indicated in a device's ID.
+3. Here disk head unloading is implemented in the libata subsystem. See
+   the changelog entry for current shortcomings of this patch.
+4. The same for ide.
+5. A little bit of documentation.
 
-Q:      What's a light-year?
-A:      One-third less calories than a regular year.
+There are some questions I need your advice on that have been inserted
+as FIXME comments into the code. However, here is a more general
+question that interests me even though it could turn out to be a good
+idea (or at least acceptable) to merge these patches before that
+question has been fully resolved. Alan once mentioned that it might be
+desirable to abort commands currently in progress and issue IDLE
+IMMEDIATE straight away. My question is whether this is at all possible
+for non SATA command protocols. In volume 2 of the ATA-7 specification I
+haven't found a well defined way to abort or shor circuit, say, a DMA or
+PIO command in progress. It even says that after the host has aborted
+data transfer when DMA was in progress, it is supposed to initiate a
+SRST. Obviously, I'd like to avoid that at all costs.
+
+Thank you in advance for your cooperation,
+
+Elias
