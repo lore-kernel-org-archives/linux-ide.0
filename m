@@ -1,31 +1,32 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [PATCH 2/5] Introduce ata_id_has_unload()
-Date: Sat, 26 Jul 2008 17:01:36 +0100
-Message-ID: <20080726170136.144f51b0@lxorguk.ukuu.org.uk>
-References: <87prp1kvyy.fsf@denkblock.local>
-	<20080726062142.29070.87751.stgit@denkblock.local>
+From: David Miller <davem@davemloft.net>
+Subject: Re: recent IDE regression
+Date: Sat, 26 Jul 2008 17:31:43 -0700 (PDT)
+Message-ID: <20080726.173143.137065135.davem@davemloft.net>
+References: <20080724.233831.193691312.davem@davemloft.net>
+	<200807261404.49947.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:44550 "EHLO
-	lxorguk.ukuu.org.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1754588AbYGZQTg (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 26 Jul 2008 12:19:36 -0400
-In-Reply-To: <20080726062142.29070.87751.stgit@denkblock.local>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1758033AbYG0Abx@vger.kernel.org>
+In-Reply-To: <200807261404.49947.bzolnier@gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: bzolnier@gmail.com
+Cc: harvey.harrison@gmail.com, linux-ide@kernel.org, linux-kernel@vger.kernel.org, torvalds@linux-foundation.org
 List-Id: linux-ide@vger.kernel.org
-To: Elias Oltmanns <eo@nebensachen.de>
-Cc: Jeff Garzik <jeff@garzik.org>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, Pavel Machek <pavel@ucw.cz>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Sat, 26 Jul 2008 08:24:35 +0200
-Elias Oltmanns <eo@nebensachen.de> wrote:
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Date: Sat, 26 Jul 2008 14:04:49 +0200
 
-> Add a function to check an ATA device's id for head unload support as
-> specified in ATA-7.
+> PS We need more big-endian users testing linux-next (this particular patch
+> despite being trivial has been put there just-in-case for a week)
 
-If a feature is new in ATA 7 you should also check the ATA version is >=7
-in the tests. Just in case some prehistoric device has it down for a
-different purpose.
+Normally I do test linux-next from time to time.
 
-Alan
+But in the past week or so my efforts have been purely focused on
+merging the tree(s) that I maintain.
+
+It's going to be like this for bascially every other person doing
+development.
+
+Therefore I would suggest not adding changes during the merge window
+that you or someone else has not actually tested.
