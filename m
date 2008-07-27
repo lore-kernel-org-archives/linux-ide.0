@@ -1,42 +1,111 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH 0/3] ide: /proc/ide/hd*/settings rework
-Date: Sun, 27 Jul 2008 20:56:02 +0200
-Message-ID: <20080727185602.4660.66530.sendpatchset@localhost.localdomain>
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1758937AbYG0S6Y@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Subject: [PATCH 2/3] ide: preparations for /proc/ide/hd*/settings rework
+Date: Sun, 27 Jul 2008 20:56:17 +0200
+Message-ID: <20080727185617.4660.7668.sendpatchset@localhost.localdomain>
+References: <20080727185602.4660.66530.sendpatchset@localhost.localdomain>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from fk-out-0910.google.com ([209.85.128.187]:6914 "EHLO
+	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758853AbYG0S6U (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 27 Jul 2008 14:58:20 -0400
+Received: by fk-out-0910.google.com with SMTP id 18so3091115fkq.5
+        for <linux-ide@vger.kernel.org>; Sun, 27 Jul 2008 11:58:19 -0700 (PDT)
+In-Reply-To: <20080727185602.4660.66530.sendpatchset@localhost.localdomain>
+Sender: linux-ide-owner@vger.kernel.org
+List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
 Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-kernel@vger.kernel.org, Elias Oltmanns <eo@nebensachen.de>
-List-Id: linux-ide@vger.kernel.org
 
+After rework settings will be no longer created dynamically
+for each device so we need to make some fixups first.
 
-Hi,
+* Use set_[ksettings,unmaskirq]() as a set function for
+  ["keepsettings","unmaskirq"] setting.
 
-I finally dusted off /proc/ide/hd*/settings rework (this has been laying
-on my hdd and waiting for the better days for at least 1.5 year, draft
-version even longer like ~3 years... sigh).
+* Allow writes to ["io_32bit","unmaskirq"] settings also when
+  drive->no_[io_32bit,unmask] is set (this is checked later inside
+  set_[io_32bit,unmaskirq]() anywyay and keeps consistency with
+  the corresponding HDIO_SET_[32BIT,UNMASKINTR] ioctls).
 
-The main motivation for doing it is that with infrastructure for private
-IDE subsystem requests from Elias Oltmanns (which was merged recently)
-and this patchset it should be possible (by using private requests for
-device settings) to make IDE locking code a lot saner and get rid of
-of ide_spin_wait_hwgroup()-ugliness completely.
+* Use max possible multi sectors value (16) as an allowed max for
+  "multcount" setting.  set_multcount() set function checks against
+  device's max possbile value anyway and it makes the proc setting
+  consistent with the corresponding HDIO_SET_MULTCOUNT ioctl.
 
-Elias if you would like to take care of it please go ahead [ from a quick
-look it seems this would mostly require adding new request type, pointing
-rq->special to setting's ->get or ->set method and putting setting's type
-(read/write -> 1 bit) + argument (int) somewhere inside request but you
-probably know better ].
+Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+---
+ drivers/ide/ide-disk.c |    3 +--
+ drivers/ide/ide-proc.c |    6 +++---
+ drivers/ide/ide.c      |    4 ++--
+ include/linux/ide.h    |    2 ++
+ 4 files changed, 8 insertions(+), 7 deletions(-)
 
-Patches #1-2 are a preparatory cleanups, the main rework is in patch #3.
-
-diffstat:
- drivers/ide/ide-cd.c     |   20 +--
- drivers/ide/ide-disk.c   |   94 ++++++++-------
- drivers/ide/ide-floppy.c |   39 ++++--
- drivers/ide/ide-probe.c  |    2
- drivers/ide/ide-proc.c   |  285 ++++++++++++++---------------------------------
- drivers/ide/ide-tape.c   |   77 ++++++++----
- drivers/ide/ide.c        |   25 ++--
- drivers/scsi/ide-scsi.c  |   54 ++++++--
- include/linux/ide.h      |  112 ++++++++++++------
- 9 files changed, 356 insertions(+), 352 deletions(-)
+Index: b/drivers/ide/ide-disk.c
+===================================================================
+--- a/drivers/ide/ide-disk.c
++++ b/drivers/ide/ide-disk.c
+@@ -767,8 +767,7 @@ static void idedisk_add_settings(ide_dri
+ 			&drive->bios_sect, NULL);
+ 	ide_add_setting(drive, "address", SETTING_RW, TYPE_BYTE, 0, 2, 1, 1,
+ 			&drive->addressing, set_lba_addressing);
+-	ide_add_setting(drive, "multcount", SETTING_RW, TYPE_BYTE, 0,
+-			drive->id[ATA_ID_MAX_MULTSECT] & 0xff, 1, 1,
++	ide_add_setting(drive, "multcount", SETTING_RW, TYPE_BYTE, 0, 16, 1, 1,
+ 			&drive->mult_count, set_multcount);
+ 	ide_add_setting(drive, "nowerr", SETTING_RW, TYPE_BYTE, 0, 1, 1, 1,
+ 			&drive->nowerr, set_nowerr);
+Index: b/drivers/ide/ide-proc.c
+===================================================================
+--- a/drivers/ide/ide-proc.c
++++ b/drivers/ide/ide-proc.c
+@@ -368,11 +368,11 @@ void ide_add_generic_settings (ide_drive
+ /*
+  *			  drive		setting name		read/write access				data type	min	max				mul_factor	div_factor	data pointer			set function
+  */
+-	__ide_add_setting(drive,	"io_32bit",		drive->no_io_32bit ? SETTING_READ : SETTING_RW,	TYPE_BYTE,	0,	1 + (SUPPORT_VLB_SYNC << 1),	1,		1,		&drive->io_32bit,		set_io_32bit,	0);
+-	__ide_add_setting(drive,	"keepsettings",		SETTING_RW,					TYPE_BYTE,	0,	1,				1,		1,		&drive->keep_settings,		NULL,		0);
++	__ide_add_setting(drive,	"io_32bit",		SETTING_RW,					TYPE_BYTE,	0,	1 + (SUPPORT_VLB_SYNC << 1),	1,		1,		&drive->io_32bit,		set_io_32bit,	0);
++	__ide_add_setting(drive,	"keepsettings",		SETTING_RW,					TYPE_BYTE,	0,	1,				1,		1,		&drive->keep_settings,		set_ksettings,	0);
+ 	__ide_add_setting(drive,	"nice1",		SETTING_RW,					TYPE_BYTE,	0,	1,				1,		1,		&drive->nice1,			NULL,		0);
+ 	__ide_add_setting(drive,	"pio_mode",		SETTING_WRITE,					TYPE_BYTE,	0,	255,				1,		1,		NULL,				set_pio_mode,	0);
+-	__ide_add_setting(drive,	"unmaskirq",		drive->no_unmask ? SETTING_READ : SETTING_RW,	TYPE_BYTE,	0,	1,				1,		1,		&drive->unmask,			NULL,		0);
++	__ide_add_setting(drive,	"unmaskirq",		SETTING_RW,					TYPE_BYTE,	0,	1,				1,		1,		&drive->unmask,			set_unmaskirq,	0);
+ 	__ide_add_setting(drive,	"using_dma",		SETTING_RW,					TYPE_BYTE,	0,	1,				1,		1,		&drive->using_dma,		set_using_dma,	0);
+ 	__ide_add_setting(drive,	"init_speed",		SETTING_RW,					TYPE_BYTE,	0,	70,				1,		1,		&drive->init_speed,		NULL,		0);
+ 	__ide_add_setting(drive,	"current_speed",	SETTING_RW,					TYPE_BYTE,	0,	70,				1,		1,		&drive->current_speed,		set_xfer_rate,	0);
+Index: b/drivers/ide/ide.c
+===================================================================
+--- a/drivers/ide/ide.c
++++ b/drivers/ide/ide.c
+@@ -305,7 +305,7 @@ int set_io_32bit(ide_drive_t *drive, int
+ 	return 0;
+ }
+ 
+-static int set_ksettings(ide_drive_t *drive, int arg)
++int set_ksettings(ide_drive_t *drive, int arg)
+ {
+ 	if (arg < 0 || arg > 1)
+ 		return -EINVAL;
+@@ -394,7 +394,7 @@ int set_pio_mode(ide_drive_t *drive, int
+ 	return 0;
+ }
+ 
+-static int set_unmaskirq(ide_drive_t *drive, int arg)
++int set_unmaskirq(ide_drive_t *drive, int arg)
+ {
+ 	if (drive->no_unmask)
+ 		return -EPERM;
+Index: b/include/linux/ide.h
+===================================================================
+--- a/include/linux/ide.h
++++ b/include/linux/ide.h
+@@ -697,7 +697,9 @@ typedef struct ide_driver_s ide_driver_t
+ extern struct mutex ide_setting_mtx;
+ 
+ int set_io_32bit(ide_drive_t *, int);
++int set_ksettings(ide_drive_t *, int);
+ int set_pio_mode(ide_drive_t *, int);
++int set_unmaskirq(ide_drive_t *, int);
+ int set_using_dma(ide_drive_t *, int);
+ 
+ /* ATAPI packet command flags */
