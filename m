@@ -1,45 +1,155 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH 3/3] remove <linux/ata.h> include from <linux/hdreg.h>
-Date: Sun, 27 Jul 2008 17:32:13 +0200
-Message-ID: <200807271732.13758.bzolnier@gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+Subject: [PATCH 1/3] ide: call ide_proc_register_driver() later
+Date: Sun, 27 Jul 2008 20:56:10 +0200
+Message-ID: <20080727185610.4660.825.sendpatchset@localhost.localdomain>
+References: <20080727185602.4660.66530.sendpatchset@localhost.localdomain>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.157]:10604 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751224AbYG0PfG (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 27 Jul 2008 11:35:06 -0400
-Received: by fg-out-1718.google.com with SMTP id 19so1928048fgg.17
-        for <linux-ide@vger.kernel.org>; Sun, 27 Jul 2008 08:35:05 -0700 (PDT)
-Content-Disposition: inline
+Received: from mu-out-0910.google.com ([209.85.134.189]:45617 "EHLO
+	mu-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757994AbYG0S6M (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 27 Jul 2008 14:58:12 -0400
+Received: by mu-out-0910.google.com with SMTP id w8so4564101mue.1
+        for <linux-ide@vger.kernel.org>; Sun, 27 Jul 2008 11:58:11 -0700 (PDT)
+In-Reply-To: <20080727185602.4660.66530.sendpatchset@localhost.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, Christoph Hellwig <hch@infradead.org>
+Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-kernel@vger.kernel.org, Elias Oltmanns <eo@nebensachen.de>
 
-All <linux/hdreg.h> users that need <linux/ata.h> have been fixed
-to include it directly.
+Call ide_proc_register_driver() in ide*_setup() (just before
+ide*_add_settings() call) instead of in ->probe method.
 
-Cc: Christoph Hellwig <hch@infradead.org>
+Despite being basically a preparation for /proc/ide/hd*/settings
+rework this is a nice cleanup in itself.
+
 Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 ---
- include/linux/hdreg.h |    4 ----
- 1 file changed, 4 deletions(-)
+against pata tree
 
-Index: b/include/linux/hdreg.h
+ drivers/ide/ide-cd.c     |    5 ++---
+ drivers/ide/ide-disk.c   |    4 ++--
+ drivers/ide/ide-floppy.c |    4 ++--
+ drivers/ide/ide-tape.c   |    3 +--
+ drivers/scsi/ide-scsi.c  |    2 +-
+ 5 files changed, 8 insertions(+), 10 deletions(-)
+
+Index: b/drivers/ide/ide-cd.c
 ===================================================================
---- a/include/linux/hdreg.h
-+++ b/include/linux/hdreg.h
-@@ -1,10 +1,6 @@
- #ifndef _LINUX_HDREG_H
- #define _LINUX_HDREG_H
+--- a/drivers/ide/ide-cd.c
++++ b/drivers/ide/ide-cd.c
+@@ -1916,6 +1916,8 @@ static int ide_cdrom_setup(ide_drive_t *
+ 		cd->devinfo.handle = NULL;
+ 		return 1;
+ 	}
++
++	ide_proc_register_driver(drive, cd->driver);
+ 	ide_cdrom_add_settings(drive);
+ 	return 0;
+ }
+@@ -2126,8 +2128,6 @@ static int ide_cd_probe(ide_drive_t *dri
  
--#ifdef __KERNEL__
--#include <linux/ata.h>
--#endif /* __KERNEL__ */
+ 	ide_init_disk(g, drive);
+ 
+-	ide_proc_register_driver(drive, &ide_cdrom_driver);
 -
- #include <linux/types.h>
+ 	kref_init(&info->kref);
  
- /*
+ 	info->drive = drive;
+@@ -2142,7 +2142,6 @@ static int ide_cd_probe(ide_drive_t *dri
+ 	g->driverfs_dev = &drive->gendev;
+ 	g->flags = GENHD_FL_CD | GENHD_FL_REMOVABLE;
+ 	if (ide_cdrom_setup(drive)) {
+-		ide_proc_unregister_driver(drive, &ide_cdrom_driver);
+ 		ide_cd_release(&info->kref);
+ 		goto failed;
+ 	}
+Index: b/drivers/ide/ide-disk.c
+===================================================================
+--- a/drivers/ide/ide-disk.c
++++ b/drivers/ide/ide-disk.c
+@@ -789,11 +789,13 @@ static inline void idedisk_add_settings(
+ 
+ static void idedisk_setup(ide_drive_t *drive)
+ {
++	struct ide_disk_obj *idkp = drive->driver_data;
+ 	ide_hwif_t *hwif = drive->hwif;
+ 	u16 *id = drive->id;
+ 	char *m = (char *)&id[ATA_ID_PROD];
+ 	unsigned long long capacity;
+ 
++	ide_proc_register_driver(drive, idkp->driver);
+ 	idedisk_add_settings(drive);
+ 
+ 	if (drive->id_read == 0)
+@@ -1159,8 +1161,6 @@ static int ide_disk_probe(ide_drive_t *d
+ 
+ 	ide_init_disk(g, drive);
+ 
+-	ide_proc_register_driver(drive, &idedisk_driver);
+-
+ 	kref_init(&idkp->kref);
+ 
+ 	idkp->drive = drive;
+Index: b/drivers/ide/ide-floppy.c
+===================================================================
+--- a/drivers/ide/ide-floppy.c
++++ b/drivers/ide/ide-floppy.c
+@@ -1060,6 +1060,8 @@ static void idefloppy_setup(ide_drive_t 
+ 	}
+ 
+ 	(void) ide_floppy_get_capacity(drive);
++
++	ide_proc_register_driver(drive, floppy->driver);
+ 	idefloppy_add_settings(drive);
+ }
+ 
+@@ -1412,8 +1414,6 @@ static int ide_floppy_probe(ide_drive_t 
+ 
+ 	ide_init_disk(g, drive);
+ 
+-	ide_proc_register_driver(drive, &idefloppy_driver);
+-
+ 	kref_init(&floppy->kref);
+ 
+ 	floppy->drive = drive;
+Index: b/drivers/ide/ide-tape.c
+===================================================================
+--- a/drivers/ide/ide-tape.c
++++ b/drivers/ide/ide-tape.c
+@@ -2512,6 +2512,7 @@ static void idetape_setup(ide_drive_t *d
+ 		tape->best_dsc_rw_freq * 1000 / HZ,
+ 		drive->using_dma ? ", DMA":"");
+ 
++	ide_proc_register_driver(drive, tape->driver);
+ 	idetape_add_settings(drive);
+ }
+ 
+@@ -2667,8 +2668,6 @@ static int ide_tape_probe(ide_drive_t *d
+ 
+ 	ide_init_disk(g, drive);
+ 
+-	ide_proc_register_driver(drive, &idetape_driver);
+-
+ 	kref_init(&tape->kref);
+ 
+ 	tape->drive = drive;
+Index: b/drivers/scsi/ide-scsi.c
+===================================================================
+--- a/drivers/scsi/ide-scsi.c
++++ b/drivers/scsi/ide-scsi.c
+@@ -459,6 +459,7 @@ static void idescsi_setup (ide_drive_t *
+ 
+ 	drive->pc_callback = ide_scsi_callback;
+ 
++	ide_proc_register_driver(drive, scsi->driver);
+ 	idescsi_add_settings(drive);
+ }
+ 
+@@ -850,7 +851,6 @@ static int ide_scsi_probe(ide_drive_t *d
+ 	idescsi->host = host;
+ 	idescsi->disk = g;
+ 	g->private_data = &idescsi->driver;
+-	ide_proc_register_driver(drive, &idescsi_driver);
+ 	err = 0;
+ 	idescsi_setup(drive, idescsi);
+ 	g->fops = &idescsi_ops;
