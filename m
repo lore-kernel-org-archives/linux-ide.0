@@ -1,48 +1,97 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH 3/5] ide: remove read-only ->atapi_overlap field from ide_drive_t
-Date: Mon, 28 Jul 2008 22:41:16 +0200
-Message-ID: <20080728204116.4283.46297.sendpatchset@localhost.localdomain>
+Subject: [PATCH 2/5] cmd640: add __set_prefetch_mode()
+Date: Mon, 28 Jul 2008 22:41:08 +0200
+Message-ID: <20080728204108.4283.44774.sendpatchset@localhost.localdomain>
 References: <20080728204102.4283.74632.sendpatchset@localhost.localdomain>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from fk-out-0910.google.com ([209.85.128.184]:16727 "EHLO
+Received: from fk-out-0910.google.com ([209.85.128.185]:15694 "EHLO
 	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759613AbYG1UnQ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 28 Jul 2008 16:43:16 -0400
-Received: by fk-out-0910.google.com with SMTP id 18so3550805fkq.5
-        for <linux-ide@vger.kernel.org>; Mon, 28 Jul 2008 13:43:15 -0700 (PDT)
+	with ESMTP id S1757622AbYG1UnI (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 28 Jul 2008 16:43:08 -0400
+Received: by fk-out-0910.google.com with SMTP id 18so3550806fkq.5
+        for <linux-ide@vger.kernel.org>; Mon, 28 Jul 2008 13:43:08 -0700 (PDT)
 In-Reply-To: <20080728204102.4283.74632.sendpatchset@localhost.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
 Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-kernel@vger.kernel.org
 
+Factor out the common code from check_prefetch()
+and set_prefetch_mode() to __set_prefetch_mode().
+
 Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 ---
- drivers/ide/ide.c   |    1 -
- include/linux/ide.h |    1 -
- 2 files changed, 2 deletions(-)
+ drivers/ide/pci/cmd640.c |   42 ++++++++++++++++++++----------------------
+ 1 file changed, 20 insertions(+), 22 deletions(-)
 
-Index: b/drivers/ide/ide.c
+Index: b/drivers/ide/pci/cmd640.c
 ===================================================================
---- a/drivers/ide/ide.c
-+++ b/drivers/ide/ide.c
-@@ -585,7 +585,6 @@ int generic_ide_ioctl(ide_drive_t *drive
- 			return ide_get_identity_ioctl(drive, cmd, arg);
- 		case HDIO_GET_NICE:
- 			return put_user(drive->dsc_overlap	<<	IDE_NICE_DSC_OVERLAP	|
--					drive->atapi_overlap	<<	IDE_NICE_ATAPI_OVERLAP	|
- 					drive->nice1 << IDE_NICE_1,
- 					(long __user *) arg);
- #ifdef CONFIG_IDE_TASK_IOCTL
-Index: b/include/linux/ide.h
-===================================================================
---- a/include/linux/ide.h
-+++ b/include/linux/ide.h
-@@ -424,7 +424,6 @@ struct ide_drive_s {
- 	unsigned forced_geom	: 1;	/* 1 if hdx=c,h,s was given at boot */
- 	unsigned no_unmask	: 1;	/* disallow setting unmask bit */
- 	unsigned no_io_32bit	: 1;	/* disallow enabling 32bit I/O */
--	unsigned atapi_overlap	: 1;	/* ATAPI overlap (not supported) */
- 	unsigned doorlocking	: 1;	/* for removable only: door lock/unlock works */
- 	unsigned nodma		: 1;	/* disallow DMA */
- 	unsigned blocked        : 1;	/* 1=powermanagment told us not to do anything, so sleep nicely */
+--- a/drivers/ide/pci/cmd640.c
++++ b/drivers/ide/pci/cmd640.c
+@@ -374,6 +374,21 @@ static void cmd640_dump_regs(void)
+ }
+ #endif
+ 
++static void __set_prefetch_mode(ide_drive_t *drive, int mode)
++{
++	if (mode) {	/* want prefetch on? */
++#if CMD640_PREFETCH_MASKS
++		drive->no_unmask = 1;
++		drive->unmask = 0;
++#endif
++		drive->no_io_32bit = 0;
++	} else {
++		drive->no_unmask = 0;
++		drive->no_io_32bit = 1;
++		drive->io_32bit = 0;
++	}
++}
++
+ #ifndef CONFIG_BLK_DEV_CMD640_ENHANCED
+ /*
+  * Check whether prefetch is on for a drive,
+@@ -383,19 +398,10 @@ static void __init check_prefetch(ide_dr
+ {
+ 	u8 b = get_cmd640_reg(prefetch_regs[index]);
+ 
+-	if (b & prefetch_masks[index]) {	/* is prefetch off? */
+-		drive->no_unmask = 0;
+-		drive->no_io_32bit = 1;
+-		drive->io_32bit = 0;
+-	} else {
+-#if CMD640_PREFETCH_MASKS
+-		drive->no_unmask = 1;
+-		drive->unmask = 0;
+-#endif
+-		drive->no_io_32bit = 0;
+-	}
++	__set_prefetch_mode(drive, (b & prefetch_masks[index]) ? 0 : 1);
+ }
+ #else
++
+ /*
+  * Sets prefetch mode for a drive.
+  */
+@@ -407,19 +413,11 @@ static void set_prefetch_mode(ide_drive_
+ 
+ 	spin_lock_irqsave(&cmd640_lock, flags);
+ 	b = __get_cmd640_reg(reg);
+-	if (mode) {	/* want prefetch on? */
+-#if CMD640_PREFETCH_MASKS
+-		drive->no_unmask = 1;
+-		drive->unmask = 0;
+-#endif
+-		drive->no_io_32bit = 0;
++	__set_prefetch_mode(drive, mode);
++	if (mode)
+ 		b &= ~prefetch_masks[index];	/* enable prefetch */
+-	} else {
+-		drive->no_unmask = 0;
+-		drive->no_io_32bit = 1;
+-		drive->io_32bit = 0;
++	else
+ 		b |= prefetch_masks[index];	/* disable prefetch */
+-	}
+ 	__put_cmd640_reg(reg, b);
+ 	spin_unlock_irqrestore(&cmd640_lock, flags);
+ }
