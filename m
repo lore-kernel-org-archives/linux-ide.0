@@ -1,38 +1,60 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: + pata_viac-add-flag-for-vx800-and-add-a-function-for-fixing-internal-bugs-for-via-chipsets.patch
- added to -mm tree
-Date: Mon, 28 Jul 2008 22:14:40 +0900
-Message-ID: <488DC640.3070406@kernel.org>
-References: <200807220814.m6M8EYoC017989@imap1.linux-foundation.org>	<488DC365.1020806@kernel.org> <20080728134847.612106ec@lxorguk.ukuu.org.uk>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: IDE S.M.A.R.T. ioctl errors
+Date: Mon, 28 Jul 2008 16:44:38 +0200
+Message-ID: <200807281644.38419.bzolnier@gmail.com>
+References: <20080728060133.GA14007@gollum.tnic>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:49827 "EHLO hera.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751070AbYG1NP7 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 28 Jul 2008 09:15:59 -0400
-In-Reply-To: <20080728134847.612106ec@lxorguk.ukuu.org.uk>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1755209AbYG1PCE@vger.kernel.org>
+In-Reply-To: <20080728060133.GA14007@gollum.tnic>
+Content-Disposition: inline
+Sender: linux-kernel-owner@vger.kernel.org
+To: petkovbb@gmail.com
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: akpm@linux-foundation.org, mm-commits@vger.kernel.org, JosephChan@via.com.tw, jeff@garzik.org, IDE/ATA development list <linux-ide@vger.kernel.org>
 
-Alan Cox wrote:
->> And, likewise, I think
->>
->> 	if (tf->ctl != tf->last_ctl)
->> 		tf->flags |= ATA_TFLAG_DEVICE;
->> 	ata_sff_tf_load(ap, tf);
->>
->> would be better.
+
+Hi,
+
+On Monday 28 July 2008, Borislav Petkov wrote:
+
+[...]
+
+> [   32.918048] ide_cmd_ioctl: args[0]: 0xb0, args[1]: 0x1, args[2]: 0xd5 args[3]: 0x1
+> [   32.918164] hdd: status error: status=0x58 { DriveReady SeekComplete DataRequest }
+> [   32.918392] ide: failed opcode was: 0xb0
+> [   32.918491] hdd: drive not ready for command
+> [   32.918618] hdd: status error: status=0x58 { DriveReady SeekComplete DataRequest }
+> [   32.918844] ide: failed opcode was: 0xea
+> [   32.918949] hdd: drive not ready for command
+> ...
 > 
-> Are we actually guranteed that tf->device is valid in every case where
-> ATA_TFLAG_DEVICE is not set ? I don't think we actually are, in which
-> case we should cache the last tf->device in the ap->private_data
-> structures
+> and this is "caused" by
+> ide-use-correct-data-phase-for-smart-read-data-log-in-ide_cmd_ioctl.patch. This
+> happens, IMHO, because when you do ATA_CMD_SMART from userspace ioctl, one of
+> the cases is that the tf->feature flags have values which are inconsistent with
+> the ATA/ATAPI v.7 spec (6.54.5 SMART READ DATA):
+> 
+> "If the device does not support this command, if SMART is disabled, or if the
+> values in the Features, LBA Mid, or LBA High registers are invalid, the device
+> shall return command aborted."
+> 
+> For example this one:
+> 
+> [   30.499581] ide_cmd_ioctl: args[0]: 0xb0, args[1]: 0x1, args[2]: 0xd1 args[3]: 0x1
+> [   30.516111] hda: task_no_data_intr: status=0x58 { DriveReady SeekComplete DataRequest }
+> [   30.516387] ide: failed opcode was: 0xb0
+> 
+> However, the case with the SMART_READ_LOG looks correct above: args[2] = 0xd5
+> which is the tf->feature flag, cmd = 0xb0 (ATA_CMD_SMART). This one fails too, though.
 
-Yeap, tf->device is setup during ata_tf_init().
+Thanks for spotting it.
 
--- 
-tejun
+It seems that ide_cmd_ioctl() ->data_phase change is not as obvious as
+I previously thought.  Since the patch is quite low-prio (it prepares
+the code for future changes) I just dropped it until we learn more about
+the underlying issues.
+
+Bart
