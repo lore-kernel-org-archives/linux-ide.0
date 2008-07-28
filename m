@@ -1,124 +1,48 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH 1/5] ide: remove SECTOR_WORDS define
-Date: Mon, 28 Jul 2008 22:41:02 +0200
-Message-ID: <20080728204102.4283.74632.sendpatchset@localhost.localdomain>
+Subject: [PATCH 3/5] ide: remove read-only ->atapi_overlap field from ide_drive_t
+Date: Mon, 28 Jul 2008 22:41:16 +0200
+Message-ID: <20080728204116.4283.46297.sendpatchset@localhost.localdomain>
+References: <20080728204102.4283.74632.sendpatchset@localhost.localdomain>
 Return-path: <linux-ide-owner@vger.kernel.org>
 Received: from fk-out-0910.google.com ([209.85.128.184]:16727 "EHLO
 	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752053AbYG1UnD (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 28 Jul 2008 16:43:03 -0400
+	with ESMTP id S1759613AbYG1UnQ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 28 Jul 2008 16:43:16 -0400
 Received: by fk-out-0910.google.com with SMTP id 18so3550805fkq.5
-        for <linux-ide@vger.kernel.org>; Mon, 28 Jul 2008 13:43:00 -0700 (PDT)
+        for <linux-ide@vger.kernel.org>; Mon, 28 Jul 2008 13:43:15 -0700 (PDT)
+In-Reply-To: <20080728204102.4283.74632.sendpatchset@localhost.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
 Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-kernel@vger.kernel.org
 
-Just use SECTOR_SIZE instead.
-
 Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 ---
-another batch of small cleanups...
+ drivers/ide/ide.c   |    1 -
+ include/linux/ide.h |    1 -
+ 2 files changed, 2 deletions(-)
 
- drivers/ide/ide-disk.c     |    5 +++--
- drivers/ide/ide-iops.c     |    2 +-
- drivers/ide/ide-probe.c    |    2 +-
- drivers/ide/ide-proc.c     |    5 +++--
- drivers/ide/ide-taskfile.c |    2 +-
- include/linux/ide.h        |    2 +-
- 6 files changed, 10 insertions(+), 8 deletions(-)
-
-Index: b/drivers/ide/ide-disk.c
+Index: b/drivers/ide/ide.c
 ===================================================================
---- a/drivers/ide/ide-disk.c
-+++ b/drivers/ide/ide-disk.c
-@@ -546,13 +546,14 @@ static int proc_idedisk_read_smart(char 
- 
- 	if (get_smart_data(drive, page, sub_cmd) == 0) {
- 		unsigned short *val = (unsigned short *) page;
--		char *out = ((char *)val) + (SECTOR_WORDS * 4);
-+		char *out = (char *)val + SECTOR_SIZE;
-+
- 		page = out;
- 		do {
- 			out += sprintf(out, "%04x%c", le16_to_cpu(*val),
- 				       (++i & 7) ? ' ' : '\n');
- 			val += 1;
--		} while (i < (SECTOR_WORDS * 2));
-+		} while (i < SECTOR_SIZE / 2);
- 		len = out - page;
- 	}
- 
-Index: b/drivers/ide/ide-iops.c
-===================================================================
---- a/drivers/ide/ide-iops.c
-+++ b/drivers/ide/ide-iops.c
-@@ -693,7 +693,7 @@ int ide_driveid_update(ide_drive_t *driv
- 	}
- 	local_irq_save(flags);
- 	SELECT_MASK(drive, 0);
--	id = kmalloc(SECTOR_WORDS*4, GFP_ATOMIC);
-+	id = kmalloc(SECTOR_SIZE, GFP_ATOMIC);
- 	if (!id) {
- 		local_irq_restore(flags);
- 		return 0;
-Index: b/drivers/ide/ide-probe.c
-===================================================================
---- a/drivers/ide/ide-probe.c
-+++ b/drivers/ide/ide-probe.c
-@@ -561,7 +561,7 @@ static inline u8 probe_for_drive (ide_dr
- 	 *	Also note that 0 everywhere means "can't do X"
- 	 */
-  
--	drive->id = kzalloc(SECTOR_WORDS *4, GFP_KERNEL);
-+	drive->id = kzalloc(SECTOR_SIZE, GFP_KERNEL);
- 	drive->id_read = 0;
- 	if(drive->id == NULL)
- 	{
-Index: b/drivers/ide/ide-proc.c
-===================================================================
---- a/drivers/ide/ide-proc.c
-+++ b/drivers/ide/ide-proc.c
-@@ -100,13 +100,14 @@ static int proc_ide_read_identify
- 
- 		err = taskfile_lib_get_identify(drive, page);
- 		if (!err) {
--			char *out = ((char *)page) + (SECTOR_WORDS * 4);
-+			char *out = (char *)page + SECTOR_SIZE;
-+
- 			page = out;
- 			do {
- 				out += sprintf(out, "%04x%c",
- 					le16_to_cpup(val), (++i & 7) ? ' ' : '\n');
- 				val += 1;
--			} while (i < (SECTOR_WORDS * 2));
-+			} while (i < SECTOR_SIZE / 2);
- 			len = out - page;
- 		}
- 	}
-Index: b/drivers/ide/ide-taskfile.c
-===================================================================
---- a/drivers/ide/ide-taskfile.c
-+++ b/drivers/ide/ide-taskfile.c
-@@ -768,7 +768,7 @@ int ide_cmd_ioctl (ide_drive_t *drive, u
- 
- 	if (args[3]) {
- 		tfargs.tf_flags |= IDE_TFLAG_IO_16BIT;
--		bufsize = SECTOR_WORDS * 4 * args[3];
-+		bufsize = SECTOR_SIZE * args[3];
- 		buf = kzalloc(bufsize, GFP_KERNEL);
- 		if (buf == NULL)
- 			return -ENOMEM;
+--- a/drivers/ide/ide.c
++++ b/drivers/ide/ide.c
+@@ -585,7 +585,6 @@ int generic_ide_ioctl(ide_drive_t *drive
+ 			return ide_get_identity_ioctl(drive, cmd, arg);
+ 		case HDIO_GET_NICE:
+ 			return put_user(drive->dsc_overlap	<<	IDE_NICE_DSC_OVERLAP	|
+-					drive->atapi_overlap	<<	IDE_NICE_ATAPI_OVERLAP	|
+ 					drive->nice1 << IDE_NICE_1,
+ 					(long __user *) arg);
+ #ifdef CONFIG_IDE_TASK_IOCTL
 Index: b/include/linux/ide.h
 ===================================================================
 --- a/include/linux/ide.h
 +++ b/include/linux/ide.h
-@@ -126,7 +126,7 @@ struct ide_io_ports {
- #define PARTN_BITS	6	/* number of minor dev bits for partitions */
- #define MAX_DRIVES	2	/* per interface; 2 assumed by lots of code */
- #define SECTOR_SIZE	512
--#define SECTOR_WORDS	(SECTOR_SIZE / 4)	/* number of 32bit words per sector */
-+
- #define IDE_LARGE_SEEK(b1,b2,t)	(((b1) > (b2) + (t)) || ((b2) > (b1) + (t)))
- 
- /*
+@@ -424,7 +424,6 @@ struct ide_drive_s {
+ 	unsigned forced_geom	: 1;	/* 1 if hdx=c,h,s was given at boot */
+ 	unsigned no_unmask	: 1;	/* disallow setting unmask bit */
+ 	unsigned no_io_32bit	: 1;	/* disallow enabling 32bit I/O */
+-	unsigned atapi_overlap	: 1;	/* ATAPI overlap (not supported) */
+ 	unsigned doorlocking	: 1;	/* for removable only: door lock/unlock works */
+ 	unsigned nodma		: 1;	/* disallow DMA */
+ 	unsigned blocked        : 1;	/* 1=powermanagment told us not to do anything, so sleep nicely */
