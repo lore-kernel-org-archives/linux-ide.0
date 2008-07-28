@@ -1,62 +1,108 @@
-From: Tejun Heo <teheo@suse.de>
-Subject: Re: Seagate HDD Frequent Head Unload - hdparm/dmidecode/smartctl
- output
-Date: Mon, 28 Jul 2008 18:18:09 +0900
-Message-ID: <488D8ED1.2040400@suse.de>
-References: <488B27CE.5060106@i-nz.net> <488D751C.5080302@suse.de> <488D8B97.1040805@i-nz.net>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: + pata_viac-add-flag-for-vx800-and-add-a-function-for-fixing-internal-bugs-for-via-chipsets.patch
+ added to -mm tree
+Date: Mon, 28 Jul 2008 22:02:29 +0900
+Message-ID: <488DC365.1020806@kernel.org>
+References: <200807220814.m6M8EYoC017989@imap1.linux-foundation.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ns.suse.de ([195.135.220.2]:34470 "EHLO mx1.suse.de"
+Received: from hera.kernel.org ([140.211.167.34]:50462 "EHLO hera.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751012AbYG1JSf (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 28 Jul 2008 05:18:35 -0400
-In-Reply-To: <488D8B97.1040805@i-nz.net>
+	id S1750851AbYG1NDz (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 28 Jul 2008 09:03:55 -0400
+In-Reply-To: <200807220814.m6M8EYoC017989@imap1.linux-foundation.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "Ivan N. Zlatev" <contact@i-nz.net>
-Cc: linux-ide@vger.kernel.org
+To: akpm@linux-foundation.org
+Cc: mm-commits@vger.kernel.org, JosephChan@via.com.tw, alan@lxorguk.ukuu.org.uk, jeff@garzik.org, IDE/ATA development list <linux-ide@vger.kernel.org>
 
-Ivan N. Zlatev wrote:
-> I tested and it seems that the right value for my configuration is 254
-> instead of 255. With 255 I still get spin downs.
+Hello, again.
 
-Ah... okay, so it should be 254.
+akpm@linux-foundation.org wrote:
+> @@ -98,7 +98,8 @@ static const struct via_isa_bridge {
+>  	u8 rev_max;
+>  	u16 flags;
+>  } via_isa_bridges[] = {
+> -	{ "vx800",	PCI_DEVICE_ID_VIA_VX800,    0x00, 0x2f, VIA_UDMA_133 | VIA_BAD_AST },
+> +	{ "vx800",	PCI_DEVICE_ID_VIA_VX800,    0x00, 0x2f, VIA_UDMA_133 |
+> +	VIA_BAD_AST | VIA_SATA_PATA },
+>  	{ "vt8237s",	PCI_DEVICE_ID_VIA_8237S,    0x00, 0x2f, VIA_UDMA_133 | VIA_BAD_AST },
+>  	{ "vt8251",	PCI_DEVICE_ID_VIA_8251,     0x00, 0x2f, VIA_UDMA_133 | VIA_BAD_AST },
+>  	{ "cx700",	PCI_DEVICE_ID_VIA_CX700,    0x00, 0x2f, VIA_UDMA_133 | VIA_BAD_AST | VIA_SATA_PATA },
+> @@ -322,6 +323,65 @@ static void via_set_dmamode(struct ata_p
+>  	via_do_set_mode(ap, adev, adev->dma_mode, tclock[mode], set_ast, udma[mode]);
+>  }
 
-> BTW I noticed that on http://en.opensuse.org/Disk_Power_Management the
-> script sets a combination of APM and spin-down time, e.g:
-> 
->    [1] hdparm -q -B 200 -q -S 252 /dev/sda
-> 
-> With that I also don't get spin downs. So compared to:
-> 
->    [2] hdparm  -B 254 /dev/sda
-> 
-> will [1] or [2] be better for the HDD in terms of power consumption and
-> overheating? Would *not* disabling the APM for the HDD (is what 254/255
-> do?), but setting the spin down timeout to something more sensible be
-> better for the HDD? I have no idea if spinning down the head is the only
-> thing HDDs do for power saving. I suppose you would know best?
+Please put this into a separate patch.
 
-I have no idea at all.  The semantics for APM settings isn't strictly
-defined so only the vendor knows what each range of values actually
-does.  And devices don't even follow the loose definitions too well -
-255 should stop unloading but it doesn't on some devices.
+> +/**
+> + *	via_ata_sff_tf_load - send taskfile registers to host controller
+> + *	@ap: Port to which output is sent
+> + *	@tf: ATA taskfile register set
+> + *
+> + *	Outputs ATA taskfile to standard ATA host controller.
+> + *
+> + *	Note: This is to fix the internal bug of via chipsets, which
+> + *  will reset the device register after changing the IEN bit on
+> + *  ctl register
+> + */
+> +static void via_ata_tf_load(struct ata_port *ap, const struct ata_taskfile *tf)
+> +{
+> +	struct ata_ioports *ioaddr = &ap->ioaddr;
+> +	unsigned int is_addr = tf->flags & ATA_TFLAG_ISADDR;
+> +
+> +	if (tf->ctl != ap->last_ctl) {
+> +		iowrite8(tf->ctl, ioaddr->ctl_addr);
+> +		iowrite8(tf->device, ioaddr->device_addr);
+> +		ap->last_ctl = tf->ctl;
+> +		ata_wait_idle(ap);
+> +	}
+> +
+> +	if (is_addr && (tf->flags & ATA_TFLAG_LBA48)) {
+> +		iowrite8(tf->hob_feature, ioaddr->feature_addr);
+> +		iowrite8(tf->hob_nsect, ioaddr->nsect_addr);
+> +		iowrite8(tf->hob_lbal, ioaddr->lbal_addr);
+> +		iowrite8(tf->hob_lbam, ioaddr->lbam_addr);
+> +		iowrite8(tf->hob_lbah, ioaddr->lbah_addr);
+> +		VPRINTK("hob: feat 0x%X nsect 0x%X, lba 0x%X 0x%X 0x%X\n",
+> +			tf->hob_feature,
+> +			tf->hob_nsect,
+> +			tf->hob_lbal,
+> +			tf->hob_lbam,
+> +			tf->hob_lbah);
+> +	}
+> +
+> +	if (is_addr) {
+> +		iowrite8(tf->feature, ioaddr->feature_addr);
+> +		iowrite8(tf->nsect, ioaddr->nsect_addr);
+> +		iowrite8(tf->lbal, ioaddr->lbal_addr);
+> +		iowrite8(tf->lbam, ioaddr->lbam_addr);
+> +		iowrite8(tf->lbah, ioaddr->lbah_addr);
+> +		VPRINTK("feat 0x%X nsect 0x%X lba 0x%X 0x%X 0x%X\n",
+> +			tf->feature,
+> +			tf->nsect,
+> +			tf->lbal,
+> +			tf->lbam,
+> +			tf->lbah);
+> +	}
+> +
+> +	if (tf->flags & ATA_TFLAG_DEVICE) {
+> +		iowrite8(tf->device, ioaddr->device_addr);
+> +		VPRINTK("device 0x%X\n", tf->device);
+> +	}
+> +
+> +	ata_wait_idle(ap);
+> +}
 
-I'll set the value to 254 for your system for now.  If you find that 252
- or any other value is better, please lemme know.
+And, likewise, I think
 
-> Also on another note I accidentally saw two more potential entries for
-> your storage-fixup on the linux-ide list (I do not know if you monitor it):
+	if (tf->ctl != tf->last_ctl)
+		tf->flags |= ATA_TFLAG_DEVICE;
+	ata_sff_tf_load(ap, tf);
 
-I monitor the list but have accumulated quite some backlog during past
-two weeks.  I'm going through them now.
-
->    * http://www.spinics.net/lists/linux-ide/msg24667.html
->    * http://www.spinics.net/lists/linux-ide/msg24460.html
-
-Thanks a lot for the pointers & testing.
+would be better.
 
 -- 
 tejun
