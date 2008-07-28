@@ -1,72 +1,195 @@
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Subject: Re: ide pmac breakage
-Date: Mon, 28 Jul 2008 12:02:25 +1000
-Message-ID: <1217210545.11188.146.camel@pasglop>
-References: <1217208596.11188.144.camel@pasglop>
-Reply-To: benh@kernel.crashing.org
+From: Borislav Petkov <petkovbb@googlemail.com>
+Subject: IDE S.M.A.R.T. ioctl errors
+Date: Mon, 28 Jul 2008 08:01:33 +0200
+Message-ID: <20080728060133.GA14007@gollum.tnic>
+Reply-To: petkovbb@gmail.com
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from gate.crashing.org ([63.228.1.57]:34314 "EHLO gate.crashing.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753206AbYG1CCe (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 27 Jul 2008 22:02:34 -0400
-In-Reply-To: <1217208596.11188.144.camel@pasglop>
+Received: from fg-out-1718.google.com ([72.14.220.155]:56388 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751237AbYG1GBZ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 28 Jul 2008 02:01:25 -0400
+Received: by fg-out-1718.google.com with SMTP id 19so2002557fgg.17
+        for <linux-ide@vger.kernel.org>; Sun, 27 Jul 2008 23:01:23 -0700 (PDT)
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: list linux-ide <linux-ide@vger.kernel.org>, linuxppc-dev list <linuxppc-dev@ozlabs.org>
+To: bzolnier@gmail.com
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-On Mon, 2008-07-28 at 11:29 +1000, Benjamin Herrenschmidt wrote:
-> The current ide-pmac upstream is broken. It calls
-> media_bay_set_ide_infos() with an uninitialized "hwif" argument.
-> 
-> It's not a trivial mistake, there's a chicken-and-egg problem in the
-> init code in there.
-> 
-> I've locally fixed it with this patch that i'll merge via the powerpc
-> tree unless you have an objection.
-> 
-> However, the machine crashes when removing the media-bay CD-ROM drive.
-> 
-> Crash appears to be a NULL deref, possibly in elv_may_queue() though
-> I don't have a clean backtrace yet, working on it...
+Hi Bart,
 
-Here's a backtrace:
+i'm getting the following when the S.M.A.R.T. daemon starts during boot=
+ (verbose
+printk added by me):
 
-Vector: 300 (Data Access) at [c58b7b80]
-    pc: c014f264: elv_may_queue+0x10/0x44
-    lr: c0152750: get_request+0x2c/0x2c0
-    sp: c58b7c30
-   msr: 1032
-   dar: c
- dsisr: 40000000
-  current = 0xc58aaae0
-    pid   = 854, comm = media-bay
-enter ? for help
-mon> t
-[c58b7c40] c0152750 get_request+0x2c/0x2c0
-[c58b7c70] c0152a08 get_request_wait+0x24/0xec
-[c58b7cc0] c0225674 ide_cd_queue_pc+0x58/0x1a0
-[c58b7d40] c022672c ide_cdrom_packet+0x9c/0xdc
-[c58b7d70] c0261810 cdrom_get_disc_info+0x60/0xd0
-[c58b7dc0] c026208c cdrom_mrw_exit+0x1c/0x11c
-[c58b7e30] c0260f7c unregister_cdrom+0x84/0xe8
-[c58b7e50] c022395c ide_cd_release+0x80/0x84
-[c58b7e70] c0163650 kref_put+0x54/0x6c
-[c58b7e80] c0223884 ide_cd_put+0x40/0x5c
-[c58b7ea0] c0211100 generic_ide_remove+0x28/0x3c
-[c58b7eb0] c01e9d34 __device_release_driver+0x78/0xb4
-[c58b7ec0] c01e9e44 device_release_driver+0x28/0x44
-[c58b7ee0] c01e8f7c bus_remove_device+0xac/0xd8
-[c58b7f00] c01e7424 device_del+0x104/0x198
-[c58b7f20] c01e74d0 device_unregister+0x18/0x30
-[c58b7f40] c02121c4 __ide_port_unregister_devices+0x6c/0x88
-[c58b7f60] c0212398 ide_port_unregister_devices+0x38/0x80
-[c58b7f80] c0208ca4 media_bay_step+0x1cc/0x5c0
-[c58b7fb0] c0209124 media_bay_task+0x8c/0xcc
-[c58b7fd0] c00485c0 kthread+0x48/0x84
-[c58b7ff0] c0011b20 kernel_thread+0x44/0x60
+=2E..
+[   29.974243] ide_cmd_ioctl: args[0]: 0xec, args[1]: 0x0, args[2]: 0x0=
+ args[3]: 0x1
+[   30.052422] ide_cmd_ioctl: args[0]: 0xb0, args[1]: 0x1, args[2]: 0xd=
+8 args[3]: 0x0
+[   30.361782] ide_cmd_ioctl: args[0]: 0xb0, args[1]: 0x0, args[2]: 0xd=
+0 args[3]: 0x1
+[   30.499581] ide_cmd_ioctl: args[0]: 0xb0, args[1]: 0x1, args[2]: 0xd=
+1 args[3]: 0x1
+[   30.516111] hda: task_no_data_intr: status=3D0x58 { DriveReady SeekC=
+omplete DataRequest }
+[   30.516387] ide: failed opcode was: 0xb0
+[   30.516510] hda: status error: status=3D0x58 { DriveReady SeekComple=
+te DataRequest }
+[   30.517423] ide: failed opcode was: unknown
+[   30.517730] hda: drive not ready for command
+[   30.517793] ide_cmd_ioctl: args[0]: 0xb0, args[1]: 0x6, args[2]: 0xd=
+5 args[3]: 0x1
+[   30.551903] ide_cmd_ioctl: args[0]: 0xb0, args[1]: 0x1, args[2]: 0xd=
+5 args[3]: 0x1
+[   30.585392] ide_cmd_ioctl: args[0]: 0xec, args[1]: 0x0, args[2]: 0x0=
+ args[3]: 0x1
+[   30.605220] ide_cmd_ioctl: args[0]: 0xb0, args[1]: 0x1, args[2]: 0xd=
+8 args[3]: 0x0
+[   30.850747] ide_cmd_ioctl: args[0]: 0xb0, args[1]: 0x0, args[2]: 0xd=
+0 args[3]: 0x1
+[   31.000050] ide_cmd_ioctl: args[0]: 0xb0, args[1]: 0x1, args[2]: 0xd=
+1 args[3]: 0x1
+[   31.087848] hdb: task_no_data_intr: status=3D0x58 { DriveReady SeekC=
+omplete DataRequest }
+[   31.088124] ide: failed opcode was: 0xb0
+[   31.088409] ide_cmd_ioctl: args[0]: 0xb0, args[1]: 0x6, args[2]: 0xd=
+5 args[3]: 0x1
+[   31.101375] hdb: status error: status=3D0x58 { DriveReady SeekComple=
+te DataRequest }
+[   31.101681] ide: failed opcode was: 0xb0
+[   31.101775] hdb: drive not ready for command
+[   31.101964] ide_cmd_ioctl: args[0]: 0xb0, args[1]: 0x1, args[2]: 0xd=
+5 args[3]: 0x1
+[   31.128299] hdb: status error: status=3D0x58 { DriveReady SeekComple=
+te DataRequest }
+[   31.128571] ide: failed opcode was: 0xb0
+[   31.128669] hdb: drive not ready for command
+[   31.144786] hdb: status error: status=3D0x58 { DriveReady SeekComple=
+te DataRequest }
+[   31.145060] ide: failed opcode was: 0xea
+[   31.145166] hdb: drive not ready for command
+[   31.599369] hdc: No disk in drive
+[   32.105234] ide_cmd_ioctl: args[0]: 0xa1, args[1]: 0x0, args[2]: 0x0=
+ args[3]: 0x1
+[   32.162295] ide_cmd_ioctl: args[0]: 0xec, args[1]: 0x0, args[2]: 0x0=
+ args[3]: 0x1
+[   32.168927] ide_cmd_ioctl: args[0]: 0xb0, args[1]: 0x1, args[2]: 0xd=
+8 args[3]: 0x0
+[   32.339912] ide_cmd_ioctl: args[0]: 0xb0, args[1]: 0x0, args[2]: 0xd=
+0 args[3]: 0x1
+[   32.439278] ide_cmd_ioctl: args[0]: 0xb0, args[1]: 0x1, args[2]: 0xd=
+1 args[3]: 0x1
+[   32.491542] hdd: task_no_data_intr: status=3D0x58 { DriveReady SeekC=
+omplete DataRequest }
+[   32.491820] ide: failed opcode was: 0xb0
+[   32.492105] ide_cmd_ioctl: args[0]: 0xb0, args[1]: 0x6, args[2]: 0xd=
+5 args[3]: 0x1
+[   32.492247] hdd: status error: status=3D0x58 { DriveReady SeekComple=
+te DataRequest }
+[   32.492531] ide: failed opcode was: 0xb0
+[   32.492629] hdd: drive not ready for command
+[   32.493059] ide_cmd_ioctl: args[0]: 0xb0, args[1]: 0x1, args[2]: 0xd=
+5 args[3]: 0x1
+[   32.493175] hdd: status error: status=3D0x58 { DriveReady SeekComple=
+te DataRequest }
+[   32.493454] ide: failed opcode was: 0xb0
+[   32.493551] hdd: drive not ready for command
+[   32.494440] hdd: status error: status=3D0x58 { DriveReady SeekComple=
+te DataRequest }
+[   32.494733] ide: failed opcode was: 0xea
+[   32.494850] hdd: drive not ready for command
+[   32.614821] ide_cmd_ioctl: args[0]: 0xb0, args[1]: 0x0, args[2]: 0xd=
+0 args[3]: 0x1
+[   32.752564] ide_cmd_ioctl: args[0]: 0xb0, args[1]: 0x6, args[2]: 0xd=
+5 args[3]: 0x1
+[   32.815267] ide_cmd_ioctl: args[0]: 0xb0, args[1]: 0x1, args[2]: 0xd=
+5 args[3]: 0x1
+[   32.875133] hdb: status error: status=3D0x58 { DriveReady SeekComple=
+te DataRequest }
+[   32.875443] ide: failed opcode was: 0xb0
+[   32.875559] hdb: drive not ready for command
+[   32.875991] ide_cmd_ioctl: args[0]: 0xb0, args[1]: 0x0, args[2]: 0xd=
+0 args[3]: 0x1
+[   32.889735] hdb: status error: status=3D0x58 { DriveReady SeekComple=
+te DataRequest }
+[   32.890006] ide: failed opcode was: 0xb0
+[   32.890100] hdb: drive not ready for command
+[   32.890453] ide_cmd_ioctl: args[0]: 0xb0, args[1]: 0x6, args[2]: 0xd=
+5 args[3]: 0x1
+[   32.891249] hdb: status error: status=3D0x58 { DriveReady SeekComple=
+te DataRequest }
+[   32.891260] ide: failed opcode was: 0xb0
+[   32.891278] hdb: drive not ready for command
+[   32.891625] ide_cmd_ioctl: args[0]: 0xb0, args[1]: 0x1, args[2]: 0xd=
+5 args[3]: 0x1
+[   32.904268] hdb: status error: status=3D0x58 { DriveReady SeekComple=
+te DataRequest }
+[   32.904579] ide: failed opcode was: 0xb0
+[   32.904704] hdb: drive not ready for command
+[   32.916044] hdb: status error: status=3D0x58 { DriveReady SeekComple=
+te DataRequest }
+[   32.916317] ide: failed opcode was: 0xea
+[   32.916417] hdb: drive not ready for command
+[   32.916519] hdd: status error: status=3D0x58 { DriveReady SeekComple=
+te DataRequest }
+[   32.916762] ide: failed opcode was: 0xb0
+[   32.916875] hdd: drive not ready for command
+[   32.916959] ide_cmd_ioctl: args[0]: 0xb0, args[1]: 0x0, args[2]: 0xd=
+0 args[3]: 0x1
+[   32.917071] hdd: status error: status=3D0x58 { DriveReady SeekComple=
+te DataRequest }
+[   32.917313] ide: failed opcode was: 0xb0
+[   32.917419] hdd: drive not ready for command
+[   32.917507] ide_cmd_ioctl: args[0]: 0xb0, args[1]: 0x6, args[2]: 0xd=
+5 args[3]: 0x1
+[   32.917618] hdd: status error: status=3D0x58 { DriveReady SeekComple=
+te DataRequest }
+[   32.917864] ide: failed opcode was: 0xb0
+[   32.917971] hdd: drive not ready for command
+[   32.918048] ide_cmd_ioctl: args[0]: 0xb0, args[1]: 0x1, args[2]: 0xd=
+5 args[3]: 0x1
+[   32.918164] hdd: status error: status=3D0x58 { DriveReady SeekComple=
+te DataRequest }
+[   32.918392] ide: failed opcode was: 0xb0
+[   32.918491] hdd: drive not ready for command
+[   32.918618] hdd: status error: status=3D0x58 { DriveReady SeekComple=
+te DataRequest }
+[   32.918844] ide: failed opcode was: 0xea
+[   32.918949] hdd: drive not ready for command
+=2E..
 
+and this is "caused" by
+ide-use-correct-data-phase-for-smart-read-data-log-in-ide_cmd_ioctl.pat=
+ch. This
+happens, IMHO, because when you do ATA_CMD_SMART from userspace ioctl, =
+one of
+the cases is that the tf->feature flags have values which are inconsist=
+ent with
+the ATA/ATAPI v.7 spec (6.54.5 SMART READ DATA):
 
+"If the device does not support this command, if SMART is disabled, or =
+if the
+values in the Features, LBA Mid, or LBA High registers are invalid, the=
+ device
+shall return command aborted."
+
+=46or example this one:
+
+[   30.499581] ide_cmd_ioctl: args[0]: 0xb0, args[1]: 0x1, args[2]: 0xd=
+1 args[3]: 0x1
+[   30.516111] hda: task_no_data_intr: status=3D0x58 { DriveReady SeekC=
+omplete DataRequest }
+[   30.516387] ide: failed opcode was: 0xb0
+
+However, the case with the SMART_READ_LOG looks correct above: args[2] =
+=3D 0xd5
+which is the tf->feature flag, cmd =3D 0xb0 (ATA_CMD_SMART). This one f=
+ails too, though.
+
+--=20
+Regards/Gru=DF,
+    Boris.
