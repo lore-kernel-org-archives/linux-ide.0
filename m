@@ -1,195 +1,109 @@
-From: Borislav Petkov <petkovbb@googlemail.com>
-Subject: IDE S.M.A.R.T. ioctl errors
-Date: Mon, 28 Jul 2008 08:01:33 +0200
-Message-ID: <20080728060133.GA14007@gollum.tnic>
-Reply-To: petkovbb@gmail.com
+From: Tejun Heo <teheo@suse.de>
+Subject: Re: Seagate HDD Frequent Head Unload - hdparm/dmidecode/smartctl
+ output
+Date: Mon, 28 Jul 2008 16:28:28 +0900
+Message-ID: <488D751C.5080302@suse.de>
+References: <488B27CE.5060106@i-nz.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: multipart/mixed;
+ boundary="------------030909080709090302050400"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.155]:56388 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751237AbYG1GBZ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 28 Jul 2008 02:01:25 -0400
-Received: by fg-out-1718.google.com with SMTP id 19so2002557fgg.17
-        for <linux-ide@vger.kernel.org>; Sun, 27 Jul 2008 23:01:23 -0700 (PDT)
-Content-Disposition: inline
+Received: from ns2.suse.de ([195.135.220.15]:44184 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752349AbYG1H2z (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 28 Jul 2008 03:28:55 -0400
+In-Reply-To: <488B27CE.5060106@i-nz.net>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: bzolnier@gmail.com
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: "Ivan N. Zlatev" <contact@i-nz.net>
+Cc: linux-ide@vger.kernel.org
 
-Hi Bart,
+This is a multi-part message in MIME format.
+--------------030909080709090302050400
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 
-i'm getting the following when the S.M.A.R.T. daemon starts during boot=
- (verbose
-printk added by me):
+Ivan N. Zlatev wrote:
+> I am having frequent head unloads on a Dell Vostro 1400 laptop with a
+> Seagate HDD. As explained on the Wiki[1] I am attaching for you the
+> output of:
+> 
+>    * hdparm -I
+>    * dmidecode
+>    * smartctl --all (in addition)
+> 
+> I hope this information is useful for you.
+> 
+> I am currently using a workaround to prevent the unloads as described
+> here - http://en.opensuse.org/Disk_Power_Management .
+> 
+> [1]
+> http://ata.wiki.kernel.org/index.php/Known_issues#Drives_which_perform_frequent_head_unloads_under_Linux
 
-=2E..
-[   29.974243] ide_cmd_ioctl: args[0]: 0xec, args[1]: 0x0, args[2]: 0x0=
- args[3]: 0x1
-[   30.052422] ide_cmd_ioctl: args[0]: 0xb0, args[1]: 0x1, args[2]: 0xd=
-8 args[3]: 0x0
-[   30.361782] ide_cmd_ioctl: args[0]: 0xb0, args[1]: 0x0, args[2]: 0xd=
-0 args[3]: 0x1
-[   30.499581] ide_cmd_ioctl: args[0]: 0xb0, args[1]: 0x1, args[2]: 0xd=
-1 args[3]: 0x1
-[   30.516111] hda: task_no_data_intr: status=3D0x58 { DriveReady SeekC=
-omplete DataRequest }
-[   30.516387] ide: failed opcode was: 0xb0
-[   30.516510] hda: status error: status=3D0x58 { DriveReady SeekComple=
-te DataRequest }
-[   30.517423] ide: failed opcode was: unknown
-[   30.517730] hda: drive not ready for command
-[   30.517793] ide_cmd_ioctl: args[0]: 0xb0, args[1]: 0x6, args[2]: 0xd=
-5 args[3]: 0x1
-[   30.551903] ide_cmd_ioctl: args[0]: 0xb0, args[1]: 0x1, args[2]: 0xd=
-5 args[3]: 0x1
-[   30.585392] ide_cmd_ioctl: args[0]: 0xec, args[1]: 0x0, args[2]: 0x0=
- args[3]: 0x1
-[   30.605220] ide_cmd_ioctl: args[0]: 0xb0, args[1]: 0x1, args[2]: 0xd=
-8 args[3]: 0x0
-[   30.850747] ide_cmd_ioctl: args[0]: 0xb0, args[1]: 0x0, args[2]: 0xd=
-0 args[3]: 0x1
-[   31.000050] ide_cmd_ioctl: args[0]: 0xb0, args[1]: 0x1, args[2]: 0xd=
-1 args[3]: 0x1
-[   31.087848] hdb: task_no_data_intr: status=3D0x58 { DriveReady SeekC=
-omplete DataRequest }
-[   31.088124] ide: failed opcode was: 0xb0
-[   31.088409] ide_cmd_ioctl: args[0]: 0xb0, args[1]: 0x6, args[2]: 0xd=
-5 args[3]: 0x1
-[   31.101375] hdb: status error: status=3D0x58 { DriveReady SeekComple=
-te DataRequest }
-[   31.101681] ide: failed opcode was: 0xb0
-[   31.101775] hdb: drive not ready for command
-[   31.101964] ide_cmd_ioctl: args[0]: 0xb0, args[1]: 0x1, args[2]: 0xd=
-5 args[3]: 0x1
-[   31.128299] hdb: status error: status=3D0x58 { DriveReady SeekComple=
-te DataRequest }
-[   31.128571] ide: failed opcode was: 0xb0
-[   31.128669] hdb: drive not ready for command
-[   31.144786] hdb: status error: status=3D0x58 { DriveReady SeekComple=
-te DataRequest }
-[   31.145060] ide: failed opcode was: 0xea
-[   31.145166] hdb: drive not ready for command
-[   31.599369] hdc: No disk in drive
-[   32.105234] ide_cmd_ioctl: args[0]: 0xa1, args[1]: 0x0, args[2]: 0x0=
- args[3]: 0x1
-[   32.162295] ide_cmd_ioctl: args[0]: 0xec, args[1]: 0x0, args[2]: 0x0=
- args[3]: 0x1
-[   32.168927] ide_cmd_ioctl: args[0]: 0xb0, args[1]: 0x1, args[2]: 0xd=
-8 args[3]: 0x0
-[   32.339912] ide_cmd_ioctl: args[0]: 0xb0, args[1]: 0x0, args[2]: 0xd=
-0 args[3]: 0x1
-[   32.439278] ide_cmd_ioctl: args[0]: 0xb0, args[1]: 0x1, args[2]: 0xd=
-1 args[3]: 0x1
-[   32.491542] hdd: task_no_data_intr: status=3D0x58 { DriveReady SeekC=
-omplete DataRequest }
-[   32.491820] ide: failed opcode was: 0xb0
-[   32.492105] ide_cmd_ioctl: args[0]: 0xb0, args[1]: 0x6, args[2]: 0xd=
-5 args[3]: 0x1
-[   32.492247] hdd: status error: status=3D0x58 { DriveReady SeekComple=
-te DataRequest }
-[   32.492531] ide: failed opcode was: 0xb0
-[   32.492629] hdd: drive not ready for command
-[   32.493059] ide_cmd_ioctl: args[0]: 0xb0, args[1]: 0x1, args[2]: 0xd=
-5 args[3]: 0x1
-[   32.493175] hdd: status error: status=3D0x58 { DriveReady SeekComple=
-te DataRequest }
-[   32.493454] ide: failed opcode was: 0xb0
-[   32.493551] hdd: drive not ready for command
-[   32.494440] hdd: status error: status=3D0x58 { DriveReady SeekComple=
-te DataRequest }
-[   32.494733] ide: failed opcode was: 0xea
-[   32.494850] hdd: drive not ready for command
-[   32.614821] ide_cmd_ioctl: args[0]: 0xb0, args[1]: 0x0, args[2]: 0xd=
-0 args[3]: 0x1
-[   32.752564] ide_cmd_ioctl: args[0]: 0xb0, args[1]: 0x6, args[2]: 0xd=
-5 args[3]: 0x1
-[   32.815267] ide_cmd_ioctl: args[0]: 0xb0, args[1]: 0x1, args[2]: 0xd=
-5 args[3]: 0x1
-[   32.875133] hdb: status error: status=3D0x58 { DriveReady SeekComple=
-te DataRequest }
-[   32.875443] ide: failed opcode was: 0xb0
-[   32.875559] hdb: drive not ready for command
-[   32.875991] ide_cmd_ioctl: args[0]: 0xb0, args[1]: 0x0, args[2]: 0xd=
-0 args[3]: 0x1
-[   32.889735] hdb: status error: status=3D0x58 { DriveReady SeekComple=
-te DataRequest }
-[   32.890006] ide: failed opcode was: 0xb0
-[   32.890100] hdb: drive not ready for command
-[   32.890453] ide_cmd_ioctl: args[0]: 0xb0, args[1]: 0x6, args[2]: 0xd=
-5 args[3]: 0x1
-[   32.891249] hdb: status error: status=3D0x58 { DriveReady SeekComple=
-te DataRequest }
-[   32.891260] ide: failed opcode was: 0xb0
-[   32.891278] hdb: drive not ready for command
-[   32.891625] ide_cmd_ioctl: args[0]: 0xb0, args[1]: 0x1, args[2]: 0xd=
-5 args[3]: 0x1
-[   32.904268] hdb: status error: status=3D0x58 { DriveReady SeekComple=
-te DataRequest }
-[   32.904579] ide: failed opcode was: 0xb0
-[   32.904704] hdb: drive not ready for command
-[   32.916044] hdb: status error: status=3D0x58 { DriveReady SeekComple=
-te DataRequest }
-[   32.916317] ide: failed opcode was: 0xea
-[   32.916417] hdb: drive not ready for command
-[   32.916519] hdd: status error: status=3D0x58 { DriveReady SeekComple=
-te DataRequest }
-[   32.916762] ide: failed opcode was: 0xb0
-[   32.916875] hdd: drive not ready for command
-[   32.916959] ide_cmd_ioctl: args[0]: 0xb0, args[1]: 0x0, args[2]: 0xd=
-0 args[3]: 0x1
-[   32.917071] hdd: status error: status=3D0x58 { DriveReady SeekComple=
-te DataRequest }
-[   32.917313] ide: failed opcode was: 0xb0
-[   32.917419] hdd: drive not ready for command
-[   32.917507] ide_cmd_ioctl: args[0]: 0xb0, args[1]: 0x6, args[2]: 0xd=
-5 args[3]: 0x1
-[   32.917618] hdd: status error: status=3D0x58 { DriveReady SeekComple=
-te DataRequest }
-[   32.917864] ide: failed opcode was: 0xb0
-[   32.917971] hdd: drive not ready for command
-[   32.918048] ide_cmd_ioctl: args[0]: 0xb0, args[1]: 0x1, args[2]: 0xd=
-5 args[3]: 0x1
-[   32.918164] hdd: status error: status=3D0x58 { DriveReady SeekComple=
-te DataRequest }
-[   32.918392] ide: failed opcode was: 0xb0
-[   32.918491] hdd: drive not ready for command
-[   32.918618] hdd: status error: status=3D0x58 { DriveReady SeekComple=
-te DataRequest }
-[   32.918844] ide: failed opcode was: 0xea
-[   32.918949] hdd: drive not ready for command
-=2E..
+Can you please test the attached storage-fixup.conf?  If you're on suse,
+just do "zypper install storage-fixup" and replace
+/etc/storage-fixup.conf with the attached file, remove the manual
+workaround and see whether the problem is gone.
 
-and this is "caused" by
-ide-use-correct-data-phase-for-smart-read-data-log-in-ide_cmd_ioctl.pat=
-ch. This
-happens, IMHO, because when you do ATA_CMD_SMART from userspace ioctl, =
-one of
-the cases is that the tf->feature flags have values which are inconsist=
-ent with
-the ATA/ATAPI v.7 spec (6.54.5 SMART READ DATA):
+Thanks.
 
-"If the device does not support this command, if SMART is disabled, or =
-if the
-values in the Features, LBA Mid, or LBA High registers are invalid, the=
- device
-shall return command aborted."
+-- 
+tejun
 
-=46or example this one:
+--------------030909080709090302050400
+Content-Type: text/plain;
+ name="storage-fixup.conf"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="storage-fixup.conf"
 
-[   30.499581] ide_cmd_ioctl: args[0]: 0xb0, args[1]: 0x1, args[2]: 0xd=
-1 args[3]: 0x1
-[   30.516111] hda: task_no_data_intr: status=3D0x58 { DriveReady SeekC=
-omplete DataRequest }
-[   30.516387] ide: failed opcode was: 0xb0
+#
+# /etc/storage-fixup.conf - Configuration file for storage-fixup
+#
+# Blank lines and lines starting with # are ignored.  Please read
+# comment at the top of storage-fixup for more information.
+#
+# Drive model patterns are generalized to cover drives from the same
+# family.  Drive manufacturers usually have datasheets or web pages
+# listing all models of the same family.
+#
+# The DMI part is difficult to generalize as there's no such
+# information.  We'll have to generalize as we collect entries.
+#
+# If you have a harddrive which does crazy unloading but not listed
+# here, please write to linux-ide@vger.kernel.org with the outputs of
+# "dmidecode" and "hdparm -I DRIVE" attached.  On a laptop the DRIVE
+# is usually /dev/sda.
+#
 
-However, the case with the SMART_READ_LOG looks correct above: args[2] =
-=3D 0xd5
-which is the tf->feature flag, cmd =3D 0xb0 (ATA_CMD_SMART). This one f=
-ails too, though.
+# Reported drive model: Hitachi HTS722020K9SA00
+rule tp-t60
+dmi system-manufacturer		LENOVO
+dmi system-product-name		1952W5R
+dmi system-version		ThinkPad T60
+ata model			Hitachi HTS7220*K9*A*
+act hdparm -B 255 $DEV
 
---=20
-Regards/Gru=DF,
-    Boris.
+# Reported drive model: SAMSUNG HM250JI
+rule hp-dv6500
+dmi system-manufacturer		Hewlett-Packard
+dmi system-product-name		HP Pavilion dv6500 Notebook PC
+dmi system-version		Rev 1
+ata model			SAMSUNG HM*I
+act hdparm -B 255 $DEV
+
+# Reported drive model: ST9100824AS
+rule dell-e1505
+dmi system-manufacturer		Dell Inc.
+dmi system-product-name		MM061
+ata model			ST9*AS
+act hdparm -B 255 $DEV
+
+# Reported drive model: ST9120822AS
+rule dell-Vostro-1400
+dmi system-manufacturer		Dell Inc.
+dmi system-product-name		Vostro 1400
+ata model			ST9*AS
+act hdparm -B 255 $DEV
+
+--------------030909080709090302050400--
