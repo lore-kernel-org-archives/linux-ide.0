@@ -1,65 +1,95 @@
-From: Larry Finger <Larry.Finger@lwfinger.net>
-Subject: Re: [RFC] [PATCH 2/7] pcmcia: use pcmcia_loop_config in pata and
-	ide	drivers
-Date: Tue, 29 Jul 2008 15:19:01 -0500
-Message-ID: <488F7B35.5040205@lwfinger.net>
+From: Randy Dunlap <rdunlap@xenotime.net>
+Subject: Re: [RFC] [PATCH 1/7] pcmcia: add pcmcia_loop_config() helper
+Date: Tue, 29 Jul 2008 14:16:42 -0700
+Message-ID: <20080729141642.47c8d6ca.rdunlap@xenotime.net>
 References: <20080729071539.GB27385@comet.dominikbrodowski.net>
-	<20080729071733.GD27385@comet.dominikbrodowski.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-pcmcia-bounces+glkpd-linux-pcmcia=m.gmane.org@lists.infradead.org>
-In-Reply-To: <20080729071733.GD27385@comet.dominikbrodowski.net>
-List-Unsubscribe: <http://lists.infradead.org/mailman/listinfo/linux-pcmcia>,
-	<mailto:linux-pcmcia-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-pcmcia>
-List-Post: <mailto:linux-pcmcia@lists.infradead.org>
-List-Help: <mailto:linux-pcmcia-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-pcmcia>,
-	<mailto:linux-pcmcia-request@lists.infradead.org?subject=subscribe>
-Sender: linux-pcmcia-bounces@lists.infradead.org
-Errors-To: linux-pcmcia-bounces+glkpd-linux-pcmcia=m.gmane.org@lists.infradead.org
+Return-path: <linux-serial-owner@vger.kernel.org>
+In-Reply-To: <20080729071539.GB27385@comet.dominikbrodowski.net>
+Sender: linux-serial-owner@vger.kernel.org
 To: Dominik Brodowski <linux@dominikbrodowski.net>
-Cc: linux-ide@vger.kernel.org, Tejun Heo <htejun@gmail.com>, linux-pcmcia@lists.infradead.org, Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: linux-pcmcia@lists.infradead.org, Tejun Heo <htejun@gmail.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-ide@vger.kernel.org, Marcel Holtmann <marcel@holtmann.org>, linux-bluetooth@vger.kernel.org, "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, linux-scsi@vger.kernel.org, Karsten Keil <kkeil@suse.de>, isdn4linux@listserv.isdn4linux.de, Jeff Garzik <jgarzik@pobox.com>, netdev@vger.kernel.org, Harald Welte <laforge@gnumonks.org>, linux-parport@lists.infradead.org, Russell King <rmk+kernel@arm.linux.org.uk>, Ed Okerson <eokerson@quicknet.net>, linux-serial@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
-Dominik Brodowski wrote:
-> Use the config loop helper in pata_pcmcia and ide_cs
+On Tue, 29 Jul 2008 09:15:39 +0200 Dominik Brodowski wrote:
+
+> By calling pcmcia_loop_config(), a pcmcia driver can iterate over all
+> available configuration options. During a driver's probe() phase, one
+> doesn't need to use pcmcia_get_{first,next}_tuple, pcmcia_get_tuple_data
+> and pcmcia_parse_tuple directly in most if not all cases.
 > 
-> CC: Tejun Heo <htejun@gmail.com>
-> CC: Alan Cox <alan@lxorguk.ukuu.org.uk>
-> CC: linux-ide@vger.kernel.org
 > Signed-off-by: Dominik Brodowski <linux@dominikbrodowski.net>
 > ---
->  drivers/ata/pata_pcmcia.c   |  171 ++++++++++++++++++++-----------------------
->  drivers/ide/legacy/ide-cs.c |  156 +++++++++++++++++++--------------------
->  2 files changed, 155 insertions(+), 172 deletions(-)
+>  Documentation/pcmcia/driver-changes.txt |    6 +++
+>  drivers/pcmcia/pcmcia_resource.c        |   57 +++++++++++++++++++++++++++++++
+>  include/pcmcia/cistpl.h                 |    6 +++
+>  3 files changed, 69 insertions(+), 0 deletions(-)
+> 
+> By calling pcmcia_loop_config(), a pcmcia driver can iterate over all
+> available configuration options. During a driver's probe() phase, one
+> doesn't need to use pcmcia_get_{first,next}_tuple, pcmcia_get_tuple_data
+> and pcmcia_parse_tuple directly in most if not all cases.
+> 
+> Signed-off-by: Dominik Brodowski <linux@dominikbrodowski.net>
+> ---
+>  Documentation/pcmcia/driver-changes.txt |    6 +++
+>  drivers/pcmcia/pcmcia_resource.c        |   63 +++++++++++++++++++++++++++++++
+>  include/pcmcia/cistpl.h                 |    6 +++
+>  3 files changed, 75 insertions(+), 0 deletions(-)
+> 
+> diff --git a/drivers/pcmcia/pcmcia_resource.c b/drivers/pcmcia/pcmcia_resource.c
+> index 4884a18..0fa48aa 100644
+> --- a/drivers/pcmcia/pcmcia_resource.c
+> +++ b/drivers/pcmcia/pcmcia_resource.c
+> @@ -909,3 +909,66 @@ void pcmcia_disable_device(struct pcmcia_device *p_dev) {
+>  		pcmcia_release_window(p_dev->win);
+>  }
+>  EXPORT_SYMBOL(pcmcia_disable_device);
+> +
+> +
 
-ACKed by Larry Finger <Larry.Finger@lwfinger.net> for ide-cs
+Hi,
 
-There was one patch rejection when installing onto 2.6.27-rc1:
+One more comment here (sorry I missed it earlier):
 
->  static int ide_config(struct pcmcia_device *link)
->  {
->      ide_info_t *info = link->priv;
-> -    tuple_t tuple;
-> -    struct {
-> -	u_short		buf[128];
-> -	cisparse_t	parse;
-> -	config_info_t	conf;
-> -	cistpl_cftable_entry_t dflt;
-> -    } *stk = NULL;
-> -    cistpl_cftable_entry_t *cfg;
-> -    int pass, last_ret = 0, last_fn = 0, is_kme = 0;
-> +    struct pcmcia_config_check *stk = NULL;
-> +    int last_ret = 0, last_fn = 0, is_kme = 0;
->      unsigned long io_base, ctl_base;
->      ide_hwif_t *hwif;
-
-The last line should be
-
- >      struct ide_host *host;
+The kernel-doc comment needs to immediately precede the function, so that
+struct pcmcia_cfg_mem needs to be moved to before the kernel-doc block...
 
 
+> +/**
+> + * pcmcia_loop_config() - loop over configuration options
+> + * @p_dev:	the struct pcmcia_device which we need to loop for.
+> + * @conf_check:	function to call for each configuration option.
+> + *		It gets passed the struct pcmcia_device, the CIS data
+> + *		describing the configuration option, and private data
+> + *		being passed to pcmcia_loop_config()
+> + * @priv_data:	private data to be passed to the conf_check function.
+> + *
+> + * pcmcia_loop_config() loops over all configuration options, and calls
+> + * the driver-specific conf_check() for each one, checking whether
+> + * it is a valid one.
+> + */
+> +
+> +struct pcmcia_cfg_mem {
+> +	tuple_t tuple;
+> +	cisparse_t parse;
+> +	u8 buf[256];
+> +};
+> +
+> +int pcmcia_loop_config(struct pcmcia_device *p_dev,
+> +		       int	(*conf_check)	(struct pcmcia_device *p_dev,
+> +						 cistpl_cftable_entry_t *cfg,
+> +						 void *priv_data),
+> +		       void *priv_data)
+> +{
+...
+> +}
+> +EXPORT_SYMBOL(pcmcia_loop_config);
 
-Larry
+
+---
+~Randy
+Linux Plumbers Conference, 17-19 September 2008, Portland, Oregon USA
+http://linuxplumbersconf.org/
