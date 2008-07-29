@@ -1,41 +1,43 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
 Subject: Re: ide pmac breakage
-Date: Tue, 29 Jul 2008 13:41:14 +0200
-Message-ID: <200807291341.14724.bzolnier@gmail.com>
+Date: Tue, 29 Jul 2008 22:02:51 +1000
+Message-ID: <1217332971.11188.249.camel@pasglop>
 References: <1217208596.11188.144.camel@pasglop>
-	<20080729141750V.fujita.tomonori@lab.ntt.co.jp>
-	<1217308857.11188.237.camel@pasglop>
+	 <20080729141750V.fujita.tomonori@lab.ntt.co.jp>
+	 <1217308857.11188.237.camel@pasglop>
+	 <200807291341.14724.bzolnier@gmail.com>
+Reply-To: benh@kernel.crashing.org
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linuxppc-dev-bounces+glppd-linuxppc64-dev=m.gmane.org@ozlabs.org>
-In-Reply-To: <1217308857.11188.237.camel@pasglop>
-Content-Disposition: inline
-List-Unsubscribe: <https://ozlabs.org/mailman/options/linuxppc-dev>,
-	<mailto:linuxppc-dev-request@ozlabs.org?subject=unsubscribe>
-List-Archive: <http://ozlabs.org/pipermail/linuxppc-dev>
-List-Post: <mailto:linuxppc-dev@ozlabs.org>
-List-Help: <mailto:linuxppc-dev-request@ozlabs.org?subject=help>
-List-Subscribe: <https://ozlabs.org/mailman/listinfo/linuxppc-dev>,
-	<mailto:linuxppc-dev-request@ozlabs.org?subject=subscribe>
-Sender: linuxppc-dev-bounces+glppd-linuxppc64-dev=m.gmane.org@ozlabs.org
-Errors-To: linuxppc-dev-bounces+glppd-linuxppc64-dev=m.gmane.org@ozlabs.org
-To: benh@kernel.crashing.org
-Cc: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, linux-ide@vger.kernel.org, petkovbb@gmail.com, linuxppc-dev@ozlabs.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from gate.crashing.org ([63.228.1.57]:36850 "EHLO gate.crashing.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758353AbYG2MDF (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 29 Jul 2008 08:03:05 -0400
+In-Reply-To: <200807291341.14724.bzolnier@gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, linux-ide@vger.kernel.org, linuxppc-dev@ozlabs.org, petkovbb@gmail.com
 
-On Tuesday 29 July 2008, Benjamin Herrenschmidt wrote:
-> On Tue, 2008-07-29 at 14:17 +0900, FUJITA Tomonori wrote:
-> > If q->elevator is NULL, the media-bay code might mess up the ref
-> > counting of the request queue...
+On Tue, 2008-07-29 at 13:41 +0200, Bartlomiej Zolnierkiewicz wrote:
+> > Well, all I do is call into Bart's new helpers to scan for or
+> unregister
+> > devices ...
 > 
-> Well, all I do is call into Bart's new helpers to scan for or unregister
-> devices ...
+> The switch to these helpers happened _before_ 2.6.26 and it shouldn't
+> bring
+> such behavior change (ditto for new IDE host addition/removal
+> helpers)...
+> 
+> Please try to git-bisect it when you have some time.
 
-The switch to these helpers happened _before_ 2.6.26 and it shouldn't bring
-such behavior change (ditto for new IDE host addition/removal helpers)...
+Ok, I will. I worked fine when I last tried your patches. I'll see if I
+can track it down too. Been a bit too busy lately as you can imagine.
 
-Please try to git-bisect it when you have some time.
+Do you have something that exercise the same code path you can use ?
 
-Thanks,
-Bart
+Ben.
+
+
