@@ -1,47 +1,142 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH #upstream-fixes] ata_piix: subsys 106b:00a3 is apple ich8m
- too
-Date: Tue, 29 Jul 2008 15:06:26 +0900
-Message-ID: <488EB362.1090307@gmail.com>
-References: <da38d7b90807240227q165cb5elad937973a58bf88f@mail.gmail.com>	 <488D757B.6000002@gmail.com>	 <da38d7b90807280101y44ef5624of99f7038967405a6@mail.gmail.com>	 <da38d7b90807281154p6cd45e0pf0acd83cd583d06a@mail.gmail.com>	 <488E7D0F.4040204@gmail.com> <da38d7b90807282255l5aabd1c7lb763307a5bac9c64@mail.gmail.com>
+From: Dominik Brodowski <linux@dominikbrodowski.net>
+Subject: [RFC] [PATCH 1/7] pcmcia: add pcmcia_loop_config() helper
+Date: Tue, 29 Jul 2008 09:15:39 +0200
+Message-ID: <20080729071539.GB27385@comet.dominikbrodowski.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ti-out-0910.google.com ([209.85.142.189]:24291 "EHLO
-	ti-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751063AbYG2GGy (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 29 Jul 2008 02:06:54 -0400
-Received: by ti-out-0910.google.com with SMTP id b6so2507338tic.23
-        for <linux-ide@vger.kernel.org>; Mon, 28 Jul 2008 23:06:52 -0700 (PDT)
-In-Reply-To: <da38d7b90807282255l5aabd1c7lb763307a5bac9c64@mail.gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-serial-owner@vger.kernel.org>
+Content-Disposition: inline
+Sender: linux-serial-owner@vger.kernel.org
+To: linux-pcmcia@lists.infradead.org
+Cc: Tejun Heo <htejun@gmail.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-ide@vger.kernel.org, Marcel Holtmann <marcel@holtmann.org>, linux-bluetooth@vger.kernel.org, "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, linux-scsi@vger.kernel.org, Karsten Keil <kkeil@suse.de>, isdn4linux@listserv.isdn4linux.de, Jeff Garzik <jgarzik@pobox.com>, netdev@vger.kernel.org, Harald Welte <laforge@gnumonks.org>, linux-parport@lists.infradead.org, Russell King <rmk+kernel@arm.linux.org.uk>, Ed Okerson <eokerson@quicknet.net>, linux-serial@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Felipe Sere <dodofxp@gmail.com>, Jeff Garzik <jeff@garzik.org>
-Cc: linux-ide@vger.kernel.org
 
-Subsys 106b:00a3 also is the weird apple ich8m which chokes when the
-latter two ports are accessed, add it.  Reported by Felipe Sere.
+By calling pcmcia_loop_config(), a pcmcia driver can iterate over all
+available configuration options. During a driver's probe() phase, one
+doesn't need to use pcmcia_get_{first,next}_tuple, pcmcia_get_tuple_data
+and pcmcia_parse_tuple directly in most if not all cases.
 
-Signed-off-by: Tejun Heo <tj@kernel.org>
-Cc: Felipe Sere <dodofxp@gmail.com>
+Signed-off-by: Dominik Brodowski <linux@dominikbrodowski.net>
 ---
-This leaves a whole - 00a2.  Is there anyone who can verify whether
-00a2 exists or not?  I feel a bit uncomfortable about adding it
-blindly.
+ Documentation/pcmcia/driver-changes.txt |    6 +++
+ drivers/pcmcia/pcmcia_resource.c        |   57 +++++++++++++++++++++++++++++++
+ include/pcmcia/cistpl.h                 |    6 +++
+ 3 files changed, 69 insertions(+), 0 deletions(-)
 
- drivers/ata/ata_piix.c |    1 +
- 1 file changed, 1 insertion(+)
+By calling pcmcia_loop_config(), a pcmcia driver can iterate over all
+available configuration options. During a driver's probe() phase, one
+doesn't need to use pcmcia_get_{first,next}_tuple, pcmcia_get_tuple_data
+and pcmcia_parse_tuple directly in most if not all cases.
 
-diff --git a/drivers/ata/ata_piix.c b/drivers/ata/ata_piix.c
-index a90ae03..c294121 100644
---- a/drivers/ata/ata_piix.c
-+++ b/drivers/ata/ata_piix.c
-@@ -250,6 +250,7 @@ static const struct pci_device_id piix_pci_tbl[] = {
- 	/* Mobile SATA Controller IDE (ICH8M), Apple */
- 	{ 0x8086, 0x2828, 0x106b, 0x00a0, 0, 0, ich8m_apple_sata },
- 	{ 0x8086, 0x2828, 0x106b, 0x00a1, 0, 0, ich8m_apple_sata },
-+	{ 0x8086, 0x2828, 0x106b, 0x00a3, 0, 0, ich8m_apple_sata },
- 	/* Mobile SATA Controller IDE (ICH8M) */
- 	{ 0x8086, 0x2828, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich8_sata },
- 	/* SATA Controller IDE (ICH9) */
+Signed-off-by: Dominik Brodowski <linux@dominikbrodowski.net>
+---
+ Documentation/pcmcia/driver-changes.txt |    6 +++
+ drivers/pcmcia/pcmcia_resource.c        |   63 +++++++++++++++++++++++++++++++
+ include/pcmcia/cistpl.h                 |    6 +++
+ 3 files changed, 75 insertions(+), 0 deletions(-)
+
+diff --git a/Documentation/pcmcia/driver-changes.txt b/Documentation/pcmcia/driver-changes.txt
+index 96f155e..44085c1 100644
+--- a/Documentation/pcmcia/driver-changes.txt
++++ b/Documentation/pcmcia/driver-changes.txt
+@@ -1,5 +1,11 @@
+ This file details changes in 2.6 which affect PCMCIA card driver authors:
+ 
++* New configuration loop helper (as of 2.6.28)
++   By calling pcmcia_loop_config(), a driver can iterate over all available
++   configuration options. During a driver's probe() phase, one doesn't need
++   to use pcmcia_get_{first,next}_tuple, pcmcia_get_tuple_data and
++   pcmcia_parse_tuple directly in most if not all cases.  
++
+ * New release helper (as of 2.6.17)
+    Instead of calling pcmcia_release_{configuration,io,irq,win}, all that's
+    necessary now is calling pcmcia_disable_device. As there is no valid
+diff --git a/drivers/pcmcia/pcmcia_resource.c b/drivers/pcmcia/pcmcia_resource.c
+index 4884a18..0fa48aa 100644
+--- a/drivers/pcmcia/pcmcia_resource.c
++++ b/drivers/pcmcia/pcmcia_resource.c
+@@ -909,3 +909,66 @@ void pcmcia_disable_device(struct pcmcia_device *p_dev) {
+ 		pcmcia_release_window(p_dev->win);
+ }
+ EXPORT_SYMBOL(pcmcia_disable_device);
++
++
++/**
++ * pcmcia_loop_config() - loop over configuration options
++ * @p_dev:	the struct pcmcia_device which we need to loop for.
++ * @conf_check:	function to call for each configuration option.
++ *		It gets passed the struct pcmcia_device, the CIS data
++ *		describing the configuration option, and private data
++ *		being passed to pcmcia_loop_config()
++ * @priv_data:	private data to be passed to the conf_check function.
++ *
++ * pcmcia_loop_config() loops over all configuration options, and calls
++ * the driver-specific conf_check() for each one, checking whether
++ * it is a valid one.
++ */
++
++struct pcmcia_cfg_mem {
++	tuple_t tuple;
++	cisparse_t parse;
++	u8 buf[256];
++};
++
++int pcmcia_loop_config(struct pcmcia_device *p_dev,
++		       int	(*conf_check)	(struct pcmcia_device *p_dev,
++						 cistpl_cftable_entry_t *cfg,
++						 void *priv_data),
++		       void *priv_data)
++{
++	struct pcmcia_cfg_mem *cfg_mem;
++	tuple_t *tuple;
++	int ret = -ENODEV;
++
++	cfg_mem = kzalloc(sizeof(struct pcmcia_cfg_mem), GFP_KERNEL);
++	if (cfg_mem == NULL)
++		return -ENOMEM;
++
++	tuple = &cfg_mem->tuple;
++	tuple->TupleData = cfg_mem->buf;
++	tuple->TupleDataMax = 255;
++	tuple->TupleOffset = 0;
++	tuple->DesiredTuple = CISTPL_CFTABLE_ENTRY;
++	tuple->Attributes = 0;
++
++	ret = pcmcia_get_first_tuple(p_dev, tuple);
++	while (!ret) {
++		if (pcmcia_get_tuple_data(p_dev, tuple))
++			goto next_entry;
++
++		if (pcmcia_parse_tuple(p_dev, tuple, &cfg_mem->parse))
++			goto next_entry;
++
++		ret = conf_check(p_dev, &cfg_mem->parse.cftable_entry,
++				 priv_data);
++		if (!ret)
++			break;
++
++	next_entry:
++		ret = pcmcia_get_next_tuple(p_dev, tuple);
++	}
++
++	return ret;
++}
++EXPORT_SYMBOL(pcmcia_loop_config);
+diff --git a/include/pcmcia/cistpl.h b/include/pcmcia/cistpl.h
+index 552a332..9830b34 100644
+--- a/include/pcmcia/cistpl.h
++++ b/include/pcmcia/cistpl.h
+@@ -607,4 +607,10 @@ int pccard_validate_cis(struct pcmcia_socket *s, unsigned int function, unsigned
+ #define pcmcia_validate_cis(p_dev, info) \
+ 		pccard_validate_cis(p_dev->socket, p_dev->func, info)
+ 
++int pcmcia_loop_config(struct pcmcia_device *p_dev,
++		       int	(*conf_check)	(struct pcmcia_device *p_dev,
++						 cistpl_cftable_entry_t *cf,
++						 void *priv_data),
++		       void *priv_data);
++
+ #endif /* LINUX_CISTPL_H */
+-- 
+1.5.4.3
+
