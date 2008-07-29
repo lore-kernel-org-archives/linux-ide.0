@@ -1,142 +1,425 @@
 From: Dominik Brodowski <linux@dominikbrodowski.net>
-Subject: [RFC] [PATCH 1/7] pcmcia: add pcmcia_loop_config() helper
-Date: Tue, 29 Jul 2008 09:15:39 +0200
-Message-ID: <20080729071539.GB27385@comet.dominikbrodowski.net>
+Subject: [RFC] [PATCH 2/7] pcmcia: use pcmcia_loop_config in pata and ide
+	drivers
+Date: Tue, 29 Jul 2008 09:17:33 +0200
+Message-ID: <20080729071733.GD27385@comet.dominikbrodowski.net>
+References: <20080729071539.GB27385@comet.dominikbrodowski.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-serial-owner@vger.kernel.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from isilmar.linta.de ([213.133.102.198]:43248 "EHLO linta.de"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1752503AbYG2HWK (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 29 Jul 2008 03:22:10 -0400
 Content-Disposition: inline
-Sender: linux-serial-owner@vger.kernel.org
-To: linux-pcmcia@lists.infradead.org
-Cc: Tejun Heo <htejun@gmail.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-ide@vger.kernel.org, Marcel Holtmann <marcel@holtmann.org>, linux-bluetooth@vger.kernel.org, "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, linux-scsi@vger.kernel.org, Karsten Keil <kkeil@suse.de>, isdn4linux@listserv.isdn4linux.de, Jeff Garzik <jgarzik@pobox.com>, netdev@vger.kernel.org, Harald Welte <laforge@gnumonks.org>, linux-parport@lists.infradead.org, Russell King <rmk+kernel@arm.linux.org.uk>, Ed Okerson <eokerson@quicknet.net>, linux-serial@vger.kernel.org
+In-Reply-To: <20080729071539.GB27385@comet.dominikbrodowski.net>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: linux-pcmcia@lists.infradead.org
+Cc: Tejun Heo <htejun@gmail.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-ide@vger.kernel.org
 
-By calling pcmcia_loop_config(), a pcmcia driver can iterate over all
-available configuration options. During a driver's probe() phase, one
-doesn't need to use pcmcia_get_{first,next}_tuple, pcmcia_get_tuple_data
-and pcmcia_parse_tuple directly in most if not all cases.
+Use the config loop helper in pata_pcmcia and ide_cs
 
+CC: Tejun Heo <htejun@gmail.com>
+CC: Alan Cox <alan@lxorguk.ukuu.org.uk>
+CC: linux-ide@vger.kernel.org
 Signed-off-by: Dominik Brodowski <linux@dominikbrodowski.net>
 ---
- Documentation/pcmcia/driver-changes.txt |    6 +++
- drivers/pcmcia/pcmcia_resource.c        |   57 +++++++++++++++++++++++++++++++
- include/pcmcia/cistpl.h                 |    6 +++
- 3 files changed, 69 insertions(+), 0 deletions(-)
+ drivers/ata/pata_pcmcia.c   |  171 ++++++++++++++++++++-----------------------
+ drivers/ide/legacy/ide-cs.c |  156 +++++++++++++++++++--------------------
+ 2 files changed, 155 insertions(+), 172 deletions(-)
 
-By calling pcmcia_loop_config(), a pcmcia driver can iterate over all
-available configuration options. During a driver's probe() phase, one
-doesn't need to use pcmcia_get_{first,next}_tuple, pcmcia_get_tuple_data
-and pcmcia_parse_tuple directly in most if not all cases.
-
-Signed-off-by: Dominik Brodowski <linux@dominikbrodowski.net>
----
- Documentation/pcmcia/driver-changes.txt |    6 +++
- drivers/pcmcia/pcmcia_resource.c        |   63 +++++++++++++++++++++++++++++++
- include/pcmcia/cistpl.h                 |    6 +++
- 3 files changed, 75 insertions(+), 0 deletions(-)
-
-diff --git a/Documentation/pcmcia/driver-changes.txt b/Documentation/pcmcia/driver-changes.txt
-index 96f155e..44085c1 100644
---- a/Documentation/pcmcia/driver-changes.txt
-+++ b/Documentation/pcmcia/driver-changes.txt
-@@ -1,5 +1,11 @@
- This file details changes in 2.6 which affect PCMCIA card driver authors:
+diff --git a/drivers/ata/pata_pcmcia.c b/drivers/ata/pata_pcmcia.c
+index 41b4361..8cccd1b 100644
+--- a/drivers/ata/pata_pcmcia.c
++++ b/drivers/ata/pata_pcmcia.c
+@@ -148,6 +148,69 @@ static struct ata_port_operations pcmcia_8bit_port_ops = {
+ #define CS_CHECK(fn, ret) \
+ do { last_fn = (fn); if ((last_ret = (ret)) != 0) goto cs_failed; } while (0)
  
-+* New configuration loop helper (as of 2.6.28)
-+   By calling pcmcia_loop_config(), a driver can iterate over all available
-+   configuration options. During a driver's probe() phase, one doesn't need
-+   to use pcmcia_get_{first,next}_tuple, pcmcia_get_tuple_data and
-+   pcmcia_parse_tuple directly in most if not all cases.  
 +
- * New release helper (as of 2.6.17)
-    Instead of calling pcmcia_release_{configuration,io,irq,win}, all that's
-    necessary now is calling pcmcia_disable_device. As there is no valid
-diff --git a/drivers/pcmcia/pcmcia_resource.c b/drivers/pcmcia/pcmcia_resource.c
-index 4884a18..0fa48aa 100644
---- a/drivers/pcmcia/pcmcia_resource.c
-+++ b/drivers/pcmcia/pcmcia_resource.c
-@@ -909,3 +909,66 @@ void pcmcia_disable_device(struct pcmcia_device *p_dev) {
- 		pcmcia_release_window(p_dev->win);
- }
- EXPORT_SYMBOL(pcmcia_disable_device);
-+
-+
-+/**
-+ * pcmcia_loop_config() - loop over configuration options
-+ * @p_dev:	the struct pcmcia_device which we need to loop for.
-+ * @conf_check:	function to call for each configuration option.
-+ *		It gets passed the struct pcmcia_device, the CIS data
-+ *		describing the configuration option, and private data
-+ *		being passed to pcmcia_loop_config()
-+ * @priv_data:	private data to be passed to the conf_check function.
-+ *
-+ * pcmcia_loop_config() loops over all configuration options, and calls
-+ * the driver-specific conf_check() for each one, checking whether
-+ * it is a valid one.
-+ */
-+
-+struct pcmcia_cfg_mem {
-+	tuple_t tuple;
-+	cisparse_t parse;
-+	u8 buf[256];
++struct pcmcia_config_check {
++	config_info_t conf;
++	cistpl_cftable_entry_t dflt;
++	unsigned long ctl_base;
++	int skip_vcc;
++	int is_kme;
 +};
 +
-+int pcmcia_loop_config(struct pcmcia_device *p_dev,
-+		       int	(*conf_check)	(struct pcmcia_device *p_dev,
-+						 cistpl_cftable_entry_t *cfg,
-+						 void *priv_data),
-+		       void *priv_data)
++static int pcmcia_check_one_config(struct pcmcia_device *pdev,
++				   cistpl_cftable_entry_t *cfg,
++				   void *priv_data)
 +{
-+	struct pcmcia_cfg_mem *cfg_mem;
-+	tuple_t *tuple;
-+	int ret = -ENODEV;
++	struct pcmcia_config_check *stk = priv_data;
 +
-+	cfg_mem = kzalloc(sizeof(struct pcmcia_cfg_mem), GFP_KERNEL);
-+	if (cfg_mem == NULL)
-+		return -ENOMEM;
-+
-+	tuple = &cfg_mem->tuple;
-+	tuple->TupleData = cfg_mem->buf;
-+	tuple->TupleDataMax = 255;
-+	tuple->TupleOffset = 0;
-+	tuple->DesiredTuple = CISTPL_CFTABLE_ENTRY;
-+	tuple->Attributes = 0;
-+
-+	ret = pcmcia_get_first_tuple(p_dev, tuple);
-+	while (!ret) {
-+		if (pcmcia_get_tuple_data(p_dev, tuple))
-+			goto next_entry;
-+
-+		if (pcmcia_parse_tuple(p_dev, tuple, &cfg_mem->parse))
-+			goto next_entry;
-+
-+		ret = conf_check(p_dev, &cfg_mem->parse.cftable_entry,
-+				 priv_data);
-+		if (!ret)
-+			break;
-+
-+	next_entry:
-+		ret = pcmcia_get_next_tuple(p_dev, tuple);
++	/* Check for matching Vcc, unless we're desperate */
++	if (!stk->skip_vcc) {
++		if (cfg->vcc.present & (1 << CISTPL_POWER_VNOM)) {
++			if (stk->conf.Vcc != cfg->vcc.param[CISTPL_POWER_VNOM] / 10000)
++				goto next_entry;
++		} else if (stk->dflt.vcc.present & (1 << CISTPL_POWER_VNOM)) {
++			if (stk->conf.Vcc != stk->dflt.vcc.param[CISTPL_POWER_VNOM] / 10000)
++				goto next_entry;
++		}
 +	}
 +
-+	return ret;
-+}
-+EXPORT_SYMBOL(pcmcia_loop_config);
-diff --git a/include/pcmcia/cistpl.h b/include/pcmcia/cistpl.h
-index 552a332..9830b34 100644
---- a/include/pcmcia/cistpl.h
-+++ b/include/pcmcia/cistpl.h
-@@ -607,4 +607,10 @@ int pccard_validate_cis(struct pcmcia_socket *s, unsigned int function, unsigned
- #define pcmcia_validate_cis(p_dev, info) \
- 		pccard_validate_cis(p_dev->socket, p_dev->func, info)
- 
-+int pcmcia_loop_config(struct pcmcia_device *p_dev,
-+		       int	(*conf_check)	(struct pcmcia_device *p_dev,
-+						 cistpl_cftable_entry_t *cf,
-+						 void *priv_data),
-+		       void *priv_data);
++	if (cfg->vpp1.present & (1 << CISTPL_POWER_VNOM))
++		pdev->conf.Vpp = cfg->vpp1.param[CISTPL_POWER_VNOM] / 10000;
++	else if (stk->dflt.vpp1.present & (1 << CISTPL_POWER_VNOM))
++		pdev->conf.Vpp = stk->dflt.vpp1.param[CISTPL_POWER_VNOM] / 10000;
 +
- #endif /* LINUX_CISTPL_H */
++	if ((cfg->io.nwin > 0) || (stk->dflt.io.nwin > 0)) {
++		cistpl_io_t *io = (cfg->io.nwin) ? &cfg->io : &stk->dflt.io;
++		pdev->conf.ConfigIndex = cfg->index;
++		pdev->io.BasePort1 = io->win[0].base;
++		pdev->io.IOAddrLines = io->flags & CISTPL_IO_LINES_MASK;
++		if (!(io->flags & CISTPL_IO_16BIT))
++			pdev->io.Attributes1 = IO_DATA_PATH_WIDTH_8;
++		if (io->nwin == 2) {
++			pdev->io.NumPorts1 = 8;
++			pdev->io.BasePort2 = io->win[1].base;
++			pdev->io.NumPorts2 = (stk->is_kme) ? 2 : 1;
++			if (pcmcia_request_io(pdev, &pdev->io) != 0)
++				goto next_entry;
++			stk->ctl_base = pdev->io.BasePort2;
++		} else if ((io->nwin == 1) && (io->win[0].len >= 16)) {
++			pdev->io.NumPorts1 = io->win[0].len;
++			pdev->io.NumPorts2 = 0;
++			if (pcmcia_request_io(pdev, &pdev->io) != 0)
++				goto next_entry;
++			stk->ctl_base = pdev->io.BasePort1 + 0x0e;
++		} else
++			goto next_entry;
++		/* If we've got this far, we're done */
++		return 0;
++	}
++next_entry:
++	if (cfg->flags & CISTPL_CFTABLE_DEFAULT)
++		memcpy(&stk->dflt, cfg, sizeof(stk->dflt));
++
++	return -ENODEV;
++}
++
+ /**
+  *	pcmcia_init_one		-	attach a PCMCIA interface
+  *	@pdev: pcmcia device
+@@ -161,19 +224,11 @@ static int pcmcia_init_one(struct pcmcia_device *pdev)
+ 	struct ata_host *host;
+ 	struct ata_port *ap;
+ 	struct ata_pcmcia_info *info;
+-	tuple_t tuple;
+-	struct {
+-		unsigned short buf[128];
+-		cisparse_t parse;
+-		config_info_t conf;
+-		cistpl_cftable_entry_t dflt;
+-	} *stk = NULL;
+-	cistpl_cftable_entry_t *cfg;
+-	int pass, last_ret = 0, last_fn = 0, is_kme = 0, ret = -ENOMEM, p;
++	struct pcmcia_config_check *stk = NULL;
++	int last_ret = 0, last_fn = 0, is_kme = 0, ret = -ENOMEM, p;
+ 	unsigned long io_base, ctl_base;
+ 	void __iomem *io_addr, *ctl_addr;
+ 	int n_ports = 1;
+-
+ 	struct ata_port_operations *ops = &pcmcia_port_ops;
+ 
+ 	info = kzalloc(sizeof(*info), GFP_KERNEL);
+@@ -193,96 +248,30 @@ static int pcmcia_init_one(struct pcmcia_device *pdev)
+ 	pdev->conf.Attributes = CONF_ENABLE_IRQ;
+ 	pdev->conf.IntType = INT_MEMORY_AND_IO;
+ 
+-	/* Allocate resoure probing structures */
+-
+-	stk = kzalloc(sizeof(*stk), GFP_KERNEL);
+-	if (!stk)
+-		goto out1;
+-
+-	cfg = &stk->parse.cftable_entry;
+-
+-	/* Tuples we are walking */
+-	tuple.TupleData = (cisdata_t *)&stk->buf;
+-	tuple.TupleOffset = 0;
+-	tuple.TupleDataMax = 255;
+-	tuple.Attributes = 0;
+-
+ 	/* See if we have a manufacturer identifier. Use it to set is_kme for
+ 	   vendor quirks */
+ 	is_kme = ((pdev->manf_id == MANFID_KME) &&
+ 		  ((pdev->card_id == PRODID_KME_KXLC005_A) ||
+ 		   (pdev->card_id == PRODID_KME_KXLC005_B)));
+ 
+-	/* Not sure if this is right... look up the current Vcc */
+-	CS_CHECK(GetConfigurationInfo, pcmcia_get_configuration_info(pdev, &stk->conf));
+-/*	link->conf.Vcc = stk->conf.Vcc; */
+-
+-	pass = io_base = ctl_base = 0;
+-	tuple.DesiredTuple = CISTPL_CFTABLE_ENTRY;
+-	tuple.Attributes = 0;
+-	CS_CHECK(GetFirstTuple, pcmcia_get_first_tuple(pdev, &tuple));
++	/* Allocate resoure probing structures */
+ 
+-	/* Now munch the resources looking for a suitable set */
+-	while (1) {
+-		if (pcmcia_get_tuple_data(pdev, &tuple) != 0)
+-			goto next_entry;
+-		if (pcmcia_parse_tuple(pdev, &tuple, &stk->parse) != 0)
+-			goto next_entry;
+-		/* Check for matching Vcc, unless we're desperate */
+-		if (!pass) {
+-			if (cfg->vcc.present & (1 << CISTPL_POWER_VNOM)) {
+-				if (stk->conf.Vcc != cfg->vcc.param[CISTPL_POWER_VNOM] / 10000)
+-					goto next_entry;
+-			} else if (stk->dflt.vcc.present & (1 << CISTPL_POWER_VNOM)) {
+-				if (stk->conf.Vcc != stk->dflt.vcc.param[CISTPL_POWER_VNOM] / 10000)
+-					goto next_entry;
+-			}
+-		}
++	stk = kzalloc(sizeof(*stk), GFP_KERNEL);
++	if (!stk)
++		goto out1;
++	stk->is_kme = is_kme;
+ 
+-		if (cfg->vpp1.present & (1 << CISTPL_POWER_VNOM))
+-			pdev->conf.Vpp = cfg->vpp1.param[CISTPL_POWER_VNOM] / 10000;
+-		else if (stk->dflt.vpp1.present & (1 << CISTPL_POWER_VNOM))
+-			pdev->conf.Vpp = stk->dflt.vpp1.param[CISTPL_POWER_VNOM] / 10000;
+-
+-		if ((cfg->io.nwin > 0) || (stk->dflt.io.nwin > 0)) {
+-			cistpl_io_t *io = (cfg->io.nwin) ? &cfg->io : &stk->dflt.io;
+-			pdev->conf.ConfigIndex = cfg->index;
+-			pdev->io.BasePort1 = io->win[0].base;
+-			pdev->io.IOAddrLines = io->flags & CISTPL_IO_LINES_MASK;
+-			if (!(io->flags & CISTPL_IO_16BIT))
+-				pdev->io.Attributes1 = IO_DATA_PATH_WIDTH_8;
+-			if (io->nwin == 2) {
+-				pdev->io.NumPorts1 = 8;
+-				pdev->io.BasePort2 = io->win[1].base;
+-				pdev->io.NumPorts2 = (is_kme) ? 2 : 1;
+-				if (pcmcia_request_io(pdev, &pdev->io) != 0)
+-					goto next_entry;
+-				io_base = pdev->io.BasePort1;
+-				ctl_base = pdev->io.BasePort2;
+-			} else if ((io->nwin == 1) && (io->win[0].len >= 16)) {
+-				pdev->io.NumPorts1 = io->win[0].len;
+-				pdev->io.NumPorts2 = 0;
+-				if (pcmcia_request_io(pdev, &pdev->io) != 0)
+-					goto next_entry;
+-				io_base = pdev->io.BasePort1;
+-				ctl_base = pdev->io.BasePort1 + 0x0e;
+-			} else
+-				goto next_entry;
+-			/* If we've got this far, we're done */
+-			break;
+-		}
+-next_entry:
+-		if (cfg->flags & CISTPL_CFTABLE_DEFAULT)
+-			memcpy(&stk->dflt, cfg, sizeof(stk->dflt));
+-		if (pass) {
+-			CS_CHECK(GetNextTuple, pcmcia_get_next_tuple(pdev, &tuple));
+-		} else if (pcmcia_get_next_tuple(pdev, &tuple) != 0) {
+-			CS_CHECK(GetFirstTuple, pcmcia_get_first_tuple(pdev, &tuple));
+-			memset(&stk->dflt, 0, sizeof(stk->dflt));
+-			pass++;
+-		}
++	/* Not sure if this is right... look up the current Vcc */
++	CS_CHECK(GetConfigurationInfo, pcmcia_get_configuration_info(pdev, &stk->conf));
++	stk->skip_vcc = io_base = ctl_base = 0;
++	if (pcmcia_loop_config(pdev, pcmcia_check_one_config, stk)) {
++		memset(&stk->dflt, 0, sizeof(stk->dflt));
++		stk->skip_vcc = 1;
++		if (pcmcia_loop_config(pdev, pcmcia_check_one_config, stk))
++			goto failed; /* No suitable config found */
+ 	}
+-
++	io_base = pdev->io.BasePort1;
++	ctl_base = stk->ctl_base;
+ 	CS_CHECK(RequestIRQ, pcmcia_request_irq(pdev, &pdev->irq));
+ 	CS_CHECK(RequestConfiguration, pcmcia_request_configuration(pdev, &pdev->conf));
+ 
+diff --git a/drivers/ide/legacy/ide-cs.c b/drivers/ide/legacy/ide-cs.c
+index 27b1e0b..50624b6 100644
+--- a/drivers/ide/legacy/ide-cs.c
++++ b/drivers/ide/legacy/ide-cs.c
+@@ -226,103 +226,97 @@ out_release:
+ #define CS_CHECK(fn, ret) \
+ do { last_fn = (fn); if ((last_ret = (ret)) != 0) goto cs_failed; } while (0)
+ 
++struct pcmcia_config_check {
++	config_info_t conf;
++	cistpl_cftable_entry_t dflt;
++	unsigned long ctl_base;
++	int skip_vcc;
++	int is_kme;
++};
++
++static int pcmcia_check_one_config(struct pcmcia_device *pdev,
++				   cistpl_cftable_entry_t *cfg,
++				   void *priv_data)
++{
++	struct pcmcia_config_check *stk = priv_data;
++
++	/* Check for matching Vcc, unless we're desperate */
++	if (!stk->skip_vcc) {
++		if (cfg->vcc.present & (1 << CISTPL_POWER_VNOM)) {
++			if (stk->conf.Vcc != cfg->vcc.param[CISTPL_POWER_VNOM] / 10000)
++				goto next_entry;
++		} else if (stk->dflt.vcc.present & (1 << CISTPL_POWER_VNOM)) {
++			if (stk->conf.Vcc != stk->dflt.vcc.param[CISTPL_POWER_VNOM] / 10000)
++				goto next_entry;
++		}
++	}
++
++	if (cfg->vpp1.present & (1 << CISTPL_POWER_VNOM))
++		pdev->conf.Vpp = cfg->vpp1.param[CISTPL_POWER_VNOM] / 10000;
++	else if (stk->dflt.vpp1.present & (1 << CISTPL_POWER_VNOM))
++		pdev->conf.Vpp = stk->dflt.vpp1.param[CISTPL_POWER_VNOM] / 10000;
++
++	if ((cfg->io.nwin > 0) || (stk->dflt.io.nwin > 0)) {
++		cistpl_io_t *io = (cfg->io.nwin) ? &cfg->io : &stk->dflt.io;
++		pdev->conf.ConfigIndex = cfg->index;
++		pdev->io.BasePort1 = io->win[0].base;
++		pdev->io.IOAddrLines = io->flags & CISTPL_IO_LINES_MASK;
++		if (!(io->flags & CISTPL_IO_16BIT))
++			pdev->io.Attributes1 = IO_DATA_PATH_WIDTH_8;
++		if (io->nwin == 2) {
++			pdev->io.NumPorts1 = 8;
++			pdev->io.BasePort2 = io->win[1].base;
++			pdev->io.NumPorts2 = (stk->is_kme) ? 2 : 1;
++			if (pcmcia_request_io(pdev, &pdev->io) != 0)
++				goto next_entry;
++			stk->ctl_base = pdev->io.BasePort2;
++		} else if ((io->nwin == 1) && (io->win[0].len >= 16)) {
++			pdev->io.NumPorts1 = io->win[0].len;
++			pdev->io.NumPorts2 = 0;
++			if (pcmcia_request_io(pdev, &pdev->io) != 0)
++				goto next_entry;
++			stk->ctl_base = pdev->io.BasePort1 + 0x0e;
++		} else
++			goto next_entry;
++		/* If we've got this far, we're done */
++		return 0;
++	}
++next_entry:
++	if (cfg->flags & CISTPL_CFTABLE_DEFAULT)
++		memcpy(&stk->dflt, cfg, sizeof(stk->dflt));
++
++	return -ENODEV;
++}
++
+ static int ide_config(struct pcmcia_device *link)
+ {
+     ide_info_t *info = link->priv;
+-    tuple_t tuple;
+-    struct {
+-	u_short		buf[128];
+-	cisparse_t	parse;
+-	config_info_t	conf;
+-	cistpl_cftable_entry_t dflt;
+-    } *stk = NULL;
+-    cistpl_cftable_entry_t *cfg;
+-    int pass, last_ret = 0, last_fn = 0, is_kme = 0;
++    struct pcmcia_config_check *stk = NULL;
++    int last_ret = 0, last_fn = 0, is_kme = 0;
+     unsigned long io_base, ctl_base;
+     ide_hwif_t *hwif;
+ 
+     DEBUG(0, "ide_config(0x%p)\n", link);
+ 
+-    stk = kzalloc(sizeof(*stk), GFP_KERNEL);
+-    if (!stk) goto err_mem;
+-    cfg = &stk->parse.cftable_entry;
+-
+-    tuple.TupleData = (cisdata_t *)&stk->buf;
+-    tuple.TupleOffset = 0;
+-    tuple.TupleDataMax = 255;
+-    tuple.Attributes = 0;
+-
+     is_kme = ((link->manf_id == MANFID_KME) &&
+ 	      ((link->card_id == PRODID_KME_KXLC005_A) ||
+ 	       (link->card_id == PRODID_KME_KXLC005_B)));
+ 
++    stk = kzalloc(sizeof(*stk), GFP_KERNEL);
++    if (!stk) goto err_mem;
++    stk->is_kme = is_kme;
++
+     /* Not sure if this is right... look up the current Vcc */
+     CS_CHECK(GetConfigurationInfo, pcmcia_get_configuration_info(link, &stk->conf));
+-
+-    pass = io_base = ctl_base = 0;
+-    tuple.DesiredTuple = CISTPL_CFTABLE_ENTRY;
+-    tuple.Attributes = 0;
+-    CS_CHECK(GetFirstTuple, pcmcia_get_first_tuple(link, &tuple));
+-    while (1) {
+-    	if (pcmcia_get_tuple_data(link, &tuple) != 0) goto next_entry;
+-	if (pcmcia_parse_tuple(link, &tuple, &stk->parse) != 0) goto next_entry;
+-
+-	/* Check for matching Vcc, unless we're desperate */
+-	if (!pass) {
+-	    if (cfg->vcc.present & (1 << CISTPL_POWER_VNOM)) {
+-		if (stk->conf.Vcc != cfg->vcc.param[CISTPL_POWER_VNOM] / 10000)
+-		    goto next_entry;
+-	    } else if (stk->dflt.vcc.present & (1 << CISTPL_POWER_VNOM)) {
+-		if (stk->conf.Vcc != stk->dflt.vcc.param[CISTPL_POWER_VNOM] / 10000)
+-		    goto next_entry;
+-	    }
+-	}
+-
+-	if (cfg->vpp1.present & (1 << CISTPL_POWER_VNOM))
+-	    link->conf.Vpp =
+-		cfg->vpp1.param[CISTPL_POWER_VNOM] / 10000;
+-	else if (stk->dflt.vpp1.present & (1 << CISTPL_POWER_VNOM))
+-	    link->conf.Vpp =
+-		stk->dflt.vpp1.param[CISTPL_POWER_VNOM] / 10000;
+-
+-	if ((cfg->io.nwin > 0) || (stk->dflt.io.nwin > 0)) {
+-	    cistpl_io_t *io = (cfg->io.nwin) ? &cfg->io : &stk->dflt.io;
+-	    link->conf.ConfigIndex = cfg->index;
+-	    link->io.BasePort1 = io->win[0].base;
+-	    link->io.IOAddrLines = io->flags & CISTPL_IO_LINES_MASK;
+-	    if (!(io->flags & CISTPL_IO_16BIT))
+-		link->io.Attributes1 = IO_DATA_PATH_WIDTH_8;
+-	    if (io->nwin == 2) {
+-		link->io.NumPorts1 = 8;
+-		link->io.BasePort2 = io->win[1].base;
+-		link->io.NumPorts2 = (is_kme) ? 2 : 1;
+-		if (pcmcia_request_io(link, &link->io) != 0)
+-			goto next_entry;
+-		io_base = link->io.BasePort1;
+-		ctl_base = link->io.BasePort2;
+-	    } else if ((io->nwin == 1) && (io->win[0].len >= 16)) {
+-		link->io.NumPorts1 = io->win[0].len;
+-		link->io.NumPorts2 = 0;
+-		if (pcmcia_request_io(link, &link->io) != 0)
+-			goto next_entry;
+-		io_base = link->io.BasePort1;
+-		ctl_base = link->io.BasePort1 + 0x0e;
+-	    } else goto next_entry;
+-	    /* If we've got this far, we're done */
+-	    break;
+-	}
+-
+-    next_entry:
+-	if (cfg->flags & CISTPL_CFTABLE_DEFAULT)
+-	    memcpy(&stk->dflt, cfg, sizeof(stk->dflt));
+-	if (pass) {
+-	    CS_CHECK(GetNextTuple, pcmcia_get_next_tuple(link, &tuple));
+-	} else if (pcmcia_get_next_tuple(link, &tuple) != 0) {
+-	    CS_CHECK(GetFirstTuple, pcmcia_get_first_tuple(link, &tuple));
++    stk->skip_vcc = io_base = ctl_base = 0;
++    if (pcmcia_loop_config(link, pcmcia_check_one_config, stk)) {
+ 	    memset(&stk->dflt, 0, sizeof(stk->dflt));
+-	    pass++;
+-	}
++	    stk->skip_vcc = 1;
++	    if (pcmcia_loop_config(link, pcmcia_check_one_config, stk))
++		    goto failed; /* No suitable config found */
+     }
++    io_base = link->io.BasePort1;
++    ctl_base = stk->ctl_base;
+ 
+     CS_CHECK(RequestIRQ, pcmcia_request_irq(link, &link->irq));
+     CS_CHECK(RequestConfiguration, pcmcia_request_configuration(link, &link->conf));
 -- 
 1.5.4.3
 
