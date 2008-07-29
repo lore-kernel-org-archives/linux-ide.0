@@ -1,45 +1,47 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: ide pmac breakage
-Date: Tue, 29 Jul 2008 14:04:46 +0200
-Message-ID: <200807291404.46906.bzolnier@gmail.com>
-References: <1217208596.11188.144.camel@pasglop> <200807291341.14724.bzolnier@gmail.com> <1217332971.11188.249.camel@pasglop>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: PIIX4: DMA timeout issue
+Date: Tue, 29 Jul 2008 09:34:36 -0400
+Message-ID: <488F1C6C.9000002@garzik.org>
+References: <488ED837.2060509@alcatel-lucent.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from fk-out-0910.google.com ([209.85.128.184]:9618 "EHLO
-	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754270AbYG2MGs (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 29 Jul 2008 08:06:48 -0400
-Received: by fk-out-0910.google.com with SMTP id 18so3846640fkq.5
-        for <linux-ide@vger.kernel.org>; Tue, 29 Jul 2008 05:06:47 -0700 (PDT)
-In-Reply-To: <1217332971.11188.249.camel@pasglop>
-Content-Disposition: inline
+Received: from srv5.dvmed.net ([207.36.208.214]:60169 "EHLO mail.dvmed.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753525AbYG2Nel (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 29 Jul 2008 09:34:41 -0400
+In-Reply-To: <488ED837.2060509@alcatel-lucent.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: benh@kernel.crashing.org
-Cc: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, linux-ide@vger.kernel.org, linuxppc-dev@ozlabs.org, petkovbb@gmail.com
+To: gshan <gshan@alcatel-lucent.com>
+Cc: linux-kernel@vger.kernel.org, Linux IDE mailing list <linux-ide@vger.kernel.org>
 
-On Tuesday 29 July 2008, Benjamin Herrenschmidt wrote:
-> On Tue, 2008-07-29 at 13:41 +0200, Bartlomiej Zolnierkiewicz wrote:
-> > > Well, all I do is call into Bart's new helpers to scan for or
-> > unregister
-> > > devices ...
-> > 
-> > The switch to these helpers happened _before_ 2.6.26 and it shouldn't
-> > bring
-> > such behavior change (ditto for new IDE host addition/removal
-> > helpers)...
-> > 
-> > Please try to git-bisect it when you have some time.
+gshan wrote:
+> Hello, I sent mails on this issue before, but nobody made response.
+> There are 2 types of board for me. The hardware configuration for
+> those 2 boards are almost same except that one of them has 100GB
+> harddisk, and another type of board has 60GB harddisk. All harddisk
+> was access through PIIX4. I found this issue on board with 60GB
+> disk, but can't reproduce it on that with 100GB disk.
 > 
-> Ok, I will. I worked fine when I last tried your patches. I'll see if I
-> can track it down too. Been a bit too busy lately as you can imagine.
+> When I uncompressed a large file (600MB) to a logic partition with 8GB
+> size, following errors was report on middle way (5 minutes about from 
+> start).
+> Anybody has ideas?
 > 
-> Do you have something that exercise the same code path you can use ?
+> hdc: dma_timer_expiry: dma status == 0x21
+> hdc: DMA timeout error
+> hdc: dma timeout error: status=0x58 { DriveReady SeekComplete DataRequest }
+> ide: failed opcode was: unknown
+> hdc: DMA disabled
+> ide1: reset: success
 
-I'll see if I can reproduce it with IDE warm-plug support later...
+Can you try disabling the IDE driver (CONFIG_IDE) and enabling the newer 
+libata driver?  (CONFIG_ATA)
 
-Thanks,
-Bart
+	Jeff
+
+
+
+
