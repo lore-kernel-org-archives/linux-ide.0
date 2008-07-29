@@ -1,51 +1,65 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [2.6 patch] remove unneeded #include <linux/ide.h>'s
-Date: Tue, 29 Jul 2008 21:43:22 +0200
-Message-ID: <200807292143.23094.bzolnier@gmail.com>
-References: <20080727130448.GK9301@cs181140183.pp.htv.fi> <200807271632.16417.bzolnier@gmail.com> <20080729164831.GC23951@cs181140183.pp.htv.fi>
+From: Larry Finger <Larry.Finger@lwfinger.net>
+Subject: Re: [RFC] [PATCH 2/7] pcmcia: use pcmcia_loop_config in pata and
+	ide	drivers
+Date: Tue, 29 Jul 2008 15:19:01 -0500
+Message-ID: <488F7B35.5040205@lwfinger.net>
+References: <20080729071539.GB27385@comet.dominikbrodowski.net>
+	<20080729071733.GD27385@comet.dominikbrodowski.net>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from fk-out-0910.google.com ([209.85.128.188]:8530 "EHLO
-	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753118AbYG2Tvc (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 29 Jul 2008 15:51:32 -0400
-Received: by fk-out-0910.google.com with SMTP id 18so26829fkq.5
-        for <linux-ide@vger.kernel.org>; Tue, 29 Jul 2008 12:51:30 -0700 (PDT)
-In-Reply-To: <20080729164831.GC23951@cs181140183.pp.htv.fi>
-Content-Disposition: inline
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-pcmcia-bounces+glkpd-linux-pcmcia=m.gmane.org@lists.infradead.org>
+In-Reply-To: <20080729071733.GD27385@comet.dominikbrodowski.net>
+List-Unsubscribe: <http://lists.infradead.org/mailman/listinfo/linux-pcmcia>,
+	<mailto:linux-pcmcia-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-pcmcia>
+List-Post: <mailto:linux-pcmcia@lists.infradead.org>
+List-Help: <mailto:linux-pcmcia-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-pcmcia>,
+	<mailto:linux-pcmcia-request@lists.infradead.org?subject=subscribe>
+Sender: linux-pcmcia-bounces@lists.infradead.org
+Errors-To: linux-pcmcia-bounces+glkpd-linux-pcmcia=m.gmane.org@lists.infradead.org
+To: Dominik Brodowski <linux@dominikbrodowski.net>
+Cc: linux-ide@vger.kernel.org, Tejun Heo <htejun@gmail.com>, linux-pcmcia@lists.infradead.org, Alan Cox <alan@lxorguk.ukuu.org.uk>
 List-Id: linux-ide@vger.kernel.org
-To: Adrian Bunk <bunk@kernel.org>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Tuesday 29 July 2008, Adrian Bunk wrote:
-> On Sun, Jul 27, 2008 at 04:32:16PM +0200, Bartlomiej Zolnierkiewicz wrote:
-> > On Sunday 27 July 2008, Adrian Bunk wrote:
-> > > The sh systemh_defconfig currently fails to build with the following 
-> > > error:
-> > > 
-> > > <--  snip  -->
-> > > 
-> > > ...
-> > >   CC      arch/sh/boards/renesas/systemh/irq.o
-> > > In file included from /home/bunk/linux/kernel-2.6/git/linux-2.6/arch/sh/boards/renesas/systemh/irq.c:16:
-> > > /home/bunk/linux/kernel-2.6/git/linux-2.6/include/linux/ide.h:645: error: 'CONFIG_IDE_MAX_HWIFS' undeclared here (not in a function)
-> > > make[2]: *** [arch/sh/boards/renesas/systemh/irq.o] Error 1
-> > 
-> > Please also fix the source root of the problem:
-> > 
-> > arch/sh/boards/renesas/systemh/irq.c should have no bussiness in
-> > including include/linux/ide.h (which is for drivers/ide/ _only_)
-> >...
+Dominik Brodowski wrote:
+> Use the config loop helper in pata_pcmcia and ide_cs
 > 
-> ide-scsi.c and the mediabay stuff might qualify as exceptions?
+> CC: Tejun Heo <htejun@gmail.com>
+> CC: Alan Cox <alan@lxorguk.ukuu.org.uk>
+> CC: linux-ide@vger.kernel.org
+> Signed-off-by: Dominik Brodowski <linux@dominikbrodowski.net>
+> ---
+>  drivers/ata/pata_pcmcia.c   |  171 ++++++++++++++++++++-----------------------
+>  drivers/ide/legacy/ide-cs.c |  156 +++++++++++++++++++--------------------
+>  2 files changed, 155 insertions(+), 172 deletions(-)
 
-Yes, they are exceptions confirming the rule. :)
+ACKed by Larry Finger <Larry.Finger@lwfinger.net> for ide-cs
 
-> For the rest a patch is below (on top of your #include <linux/hdreg.h> 
-> removal patch).
+There was one patch rejection when installing onto 2.6.27-rc1:
 
-applied
+>  static int ide_config(struct pcmcia_device *link)
+>  {
+>      ide_info_t *info = link->priv;
+> -    tuple_t tuple;
+> -    struct {
+> -	u_short		buf[128];
+> -	cisparse_t	parse;
+> -	config_info_t	conf;
+> -	cistpl_cftable_entry_t dflt;
+> -    } *stk = NULL;
+> -    cistpl_cftable_entry_t *cfg;
+> -    int pass, last_ret = 0, last_fn = 0, is_kme = 0;
+> +    struct pcmcia_config_check *stk = NULL;
+> +    int last_ret = 0, last_fn = 0, is_kme = 0;
+>      unsigned long io_base, ctl_base;
+>      ide_hwif_t *hwif;
+
+The last line should be
+
+ >      struct ide_host *host;
+
+
+
+Larry
