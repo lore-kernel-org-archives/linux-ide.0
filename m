@@ -1,20 +1,23 @@
 From: Petr Tesarik <ptesarik@suse.cz>
 Subject: [PATCH] ide-cd: fix endianity for the error message in
 	cdrom_read_capacity
-Date: Wed, 30 Jul 2008 09:42:21 +0200
-Message-ID: <1217403741.11834.9.camel@elijah.suse.cz>
+Date: Wed, 30 Jul 2008 10:10:06 +0200
+Message-ID: <1217405406.11834.11.camel@elijah.suse.cz>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from styx.suse.cz ([82.119.242.94]:59041 "EHLO mail.suse.cz"
+Received: from styx.suse.cz ([82.119.242.94]:59844 "EHLO mail.suse.cz"
 	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751233AbYG3HmZ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 30 Jul 2008 03:42:25 -0400
+	id S1751502AbYG3IKH (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 30 Jul 2008 04:10:07 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux@vger.kernel.org
+To: linux-kernel@vger.kernel.org
 Cc: linux-ide@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Jens Axboe <jens.axboe@oracle.com>, Jan Kara <jack@suse.cz>
+
+Resent because of a typo in the LKML address. :(
+
 
 Aesthetic regards aside, commit e8e7b9eb11c34ee18bde8b7011af41938d1ad667
 still leaves a bug in the error message, because it uses the unconverted
