@@ -1,77 +1,67 @@
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Subject: Re: ide pmac breakage
-Date: Wed, 30 Jul 2008 16:57:32 +1000
-Message-ID: <1217401052.11188.318.camel@pasglop>
-References: <1217208596.11188.144.camel@pasglop>
-	 <200807291404.46906.bzolnier@gmail.com>
-	 <200807291645.03382.bzolnier@gmail.com>
-	 <200807292126.12238.bzolnier@gmail.com>
-Reply-To: benh@kernel.crashing.org
+From: "Justin Mattock" <justinmattock@gmail.com>
+Subject: Re: 2.6.26 DVD playing regression with libata
+Date: Tue, 29 Jul 2008 23:59:34 -0700
+Message-ID: <dd18b0c30807292359s4b41c3b1m82ddf7707f41e402@mail.gmail.com>
+References: <200807292323.28033.tvrtko@ursulin.net>
+	 <20080730002011.21947c32@lxorguk.ukuu.org.uk>
+	 <200807300757.29520.tvrtko@ursulin.net>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from gate.crashing.org ([63.228.1.57]:51899 "EHLO gate.crashing.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751580AbYG3G5q (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 30 Jul 2008 02:57:46 -0400
-In-Reply-To: <200807292126.12238.bzolnier@gmail.com>
+Received: from an-out-0708.google.com ([209.85.132.247]:8030 "EHLO
+	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751233AbYG3G7g (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 30 Jul 2008 02:59:36 -0400
+Received: by an-out-0708.google.com with SMTP id d40so46010and.103
+        for <linux-ide@vger.kernel.org>; Tue, 29 Jul 2008 23:59:35 -0700 (PDT)
+In-Reply-To: <200807300757.29520.tvrtko@ursulin.net>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, linux-ide@vger.kernel.org, linuxppc-dev@ozlabs.org, petkovbb@gmail.com
+To: "Tvrtko A. Ursulin" <tvrtko@ursulin.net>
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-On Tue, 2008-07-29 at 21:26 +0200, Bartlomiej Zolnierkiewicz wrote:
+On Tue, Jul 29, 2008 at 11:57 PM, Tvrtko A. Ursulin <tvrtko@ursulin.net> wrote:
+> On Wednesday 30 July 2008 00:20:11 Alan Cox wrote:
+>> > Jul 29 21:10:03 media kernel: [353032.319013] sr 2:0:0:0: [sr0] unaligned
+>> > transfer Jul 29 21:10:03 media kernel: [353032.319013] sr 2:0:0:0: [sr0]
+>> > unaligned transfer
+>>
+>> This is coming from the scsi/block layer and definitely isn't good.
+>> Doesn't directly look like a libata bug but seems to be higher up the
+>> stack. What software is triggering this ?
+>
+> I tried to reproduce it now but could not.
+>
+> After a fresh boot into 2.6.26, I first tried mounting the DVD which was fine. Then I ran lsdvd which also worked and finally mplayer without any problems. In
+> contrast to that yesterday I ran my playdvd.pl (http://www.ursulin.net/2008/06/effectively-using-mplayer-within-mythtv/) script from within MythTV and it
+> exited immediately. It looked like either it triggered that failure without any delay or subsystem was already in that failure mode by simple DVD insertion.
+> When ran directly lsdvd would exit being unable to open /dev/dvd (/dev/scdo). Unfortunately I didn't debug it further at the time.
+>
+> The only difference is that yesterday box had an uptime of couple of days while this morning it was completely fresh. Unless mounting the disc before
+> everything else somehow stabilised something. Hm let me do another reboot... no, still can't reproduce it.
+>
+> One interesting thing, sometimes it detects drive capabilities like this:
+> [    3.498951] sr0: scsi3-mmc drive: 62x/62x writer dvd-ram cd/rw xa/form2 cdda tray
+>
+> And sometimes like this:
+> [    3.514104] sr0: scsi3-mmc drive: 48x/48x writer dvd-ram cd/rw xa/form2 cdda tray
+>
+> Later I think is correct according to drive datasheet.
+>
+> I will keep 2.6.26 running and see if the problem comes back in following days.
+>
+> Tvrtko
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Please read the FAQ at  http://www.tux.org/lkml/
+>
 
-> I WON!!!
+I usually see these errors with mplayer i.g. insert a dvd
+then press play instead of waiting for the dvd to settle down.
 
-Only half...
-
-It goes further and then blows up again. First problem is, this
-unregister interface doesn't quite convey the fact that the HW is gone
-and the IDE code seems to take it's sweet time figuring it out after
-trying some requests. Maybe something smarter can be done here ? ie,
-ide_set_interface_dead() :-)
-
-mediabay0: switching to 7
-mediabay0: powering down
-media bay 0 is empty
-hdc: status error: status=0x00 { }
-ide: failed opcode was: unknown
-hdc: status error: status=0x00 { }
-ide: failed opcode was: unknown
-
-Then after this couple of failed attempts at sending commands, it
-crashes with the backtrace below. Another NULL dereference apparently,
-though the DAR value (the faulting address) has been slightly different
-between consecutive tests so it may be a use-after-free too.
-
-Note that there shouldn't be anything fundamentally different from
-ide-pmac here vs. something like pcmcia IDE cards... do you have one of
-these to test with ?
-
-Vector: 300 (Data Access) at [c59dfdc0]
-    pc: c0211f78: ide_device_put+0x18/0x58
-    lr: c0223c34: ide_cd_put+0x40/0x5c
-    sp: c59dfe70
-   msr: 9032
-   dar: 10
- dsisr: 40000000
-  current = 0xc58a9880
-    pid   = 843, comm = media-bay
-enter ? for help
-[c59dfe80] c0223c34 ide_cd_put+0x40/0x5c
-[c59dfea0] c02114d4 generic_ide_remove+0x28/0x3c
-[c59dfeb0] c01ea108 __device_release_driver+0x78/0xb4
-[c59dfec0] c01ea218 device_release_driver+0x28/0x44
-[c59dfee0] c01e9350 bus_remove_device+0xac/0xd8
-[c59dff00] c01e77f8 device_del+0x104/0x198
-[c59dff20] c01e78a4 device_unregister+0x18/0x30
-[c59dff40] c0212598 __ide_port_unregister_devices+0x6c/0x88
-[c59dff60] c021276c ide_port_unregister_devices+0x38/0x80
-[c59dff80] c0209078 media_bay_step+0x1cc/0x5c0
-[c59dffb0] c02094f8 media_bay_task+0x8c/0xcc
-[c59dffd0] c0048640 kthread+0x48/0x84
-[c59dfff0] c0011b38 kernel_thread+0x44/0x60
-
-
+-- 
+Justin P. Mattock
