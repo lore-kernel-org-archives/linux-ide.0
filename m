@@ -1,44 +1,48 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: PIIX4: DMA timeout issue
-Date: Wed, 30 Jul 2008 11:49:34 +0100
-Message-ID: <20080730114934.5a593cf4@lxorguk.ukuu.org.uk>
-References: <488ED837.2060509@alcatel-lucent.com>
-	<488F1C6C.9000002@garzik.org>
-	<48902EB5.8070102@alcatel-lucent.com>
+From: Matt Domsch <Matt_Domsch@dell.com>
+Subject: Re: tools support for non-512 byte sector sizes
+Date: Wed, 30 Jul 2008 08:51:47 -0500
+Message-ID: <20080730135147.GA4513@auslistsprd01.us.dell.com>
+References: <488F524F.6020905@redhat.com> <20080729182611.GB24924@parisc-linux.org> <1217356645.6103.48.camel@localhost.localdomain> <yq13alsr0g0.fsf@sermon.lab.mkp.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:56479 "EHLO
-	lxorguk.ukuu.org.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751812AbYG3LHZ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 30 Jul 2008 07:07:25 -0400
-In-Reply-To: <48902EB5.8070102@alcatel-lucent.com>
+Received: from ausxipps301.us.dell.com ([143.166.148.223]:53479 "EHLO
+	ausxipps301.us.dell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752314AbYG3Nvt (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 30 Jul 2008 09:51:49 -0400
+Content-Disposition: inline
+In-Reply-To: <yq13alsr0g0.fsf@sermon.lab.mkp.net>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: gshan <gshan@alcatel-lucent.com>
-Cc: Jeff Garzik <jeff@garzik.org>, linux-kernel@vger.kernel.org, Linux IDE mailing list <linux-ide@vger.kernel.org>
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Matthew Wilcox <matthew@wil.cx>, Ric Wheeler <rwheeler@redhat.com>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, Jim Meyering <jim@meyering.net>, linux-kernel@vger.kernel.org, Jeff Garzik <jeff@garzik.org>
 
-> Jeff, I tried moving to ATA driver for PIIX4 today and found ATA need to 
-> request
-> 2 IRQ lines, each one of them belongs to primary and secondary channel. 
-> However,
-> when I make PIIX4 worked under IDE driver, it also need to request one 
-> IRQ for "ide1".
-> So it's necessary to disable secondary channel manually?
-
-If the controller is in legacy mode then libata will claim the interrupt
-lines for all channels which are enabled even if there are no devices on
-them. This is neccessary for device hot or warm plug support as new disks
-could appear on empty channels.
+On Tue, Jul 29, 2008 at 02:48:31PM -0400, Martin K. Petersen wrote:
+> >>>>> "James" == James Bottomley <James.Bottomley@HansenPartnership.com> writes:
 > 
-> Another question is my PIIX4 chip has device ID + vendor ID of 
-> 0x71108086. But it finally
-> was mapped to following ID of piix_pci_tbl[] array. Device of 0x7110 and 
-> 0x7010 should
-> be quit different, right?
+> James> The problem, which ata_ram also suffers, is that the tools we
+> James> most need to test are the ones for manipulating non volatile
+> James> characteristics (like partition tables).  We'd really like the
+> James> disk contents to survive reboot for this ...
+> 
+> Yeah, I should add that I wanted persistence too.  I went through a
+> whole stack (well, 5-6 or so) fibre channel drives from various
+> vendors and attempted to low-level format them to 4KB sectors.  Most
+> of them laughed in my face.  One of them tried to comply and
+> irreparably confused its firmware in the process.
+> 
+> Just yesterday I received a couple of prototype drives in the mail.
+> I'll ask the vendor whether they support 4KB and if so I'll give them
+> a whirl.
 
-Yes - I find tht one very odd - you might need to debug a bit to see what
-is occuring if you think this is the case.
+I have access to disks with native 4KB sectors now too.  Would
+interested parties be willing to share test plans, so we could be sure
+we have coverage wrt correctness: kernel internals, userspace tools like parted,
+fdisk, kpartx, apps using O_DIRECT)?  Benchmarking winds up being an
+NDA activity this early in the game so I don't want the focus of any
+joint work to be benchmarks yet.
 
-Alan
+-- 
+Matt Domsch
+Linux Technology Strategist, Dell Office of the CTO
+linux.dell.com & www.dell.com/linux
