@@ -1,58 +1,126 @@
 From: akpm@linux-foundation.org
-Subject: [patch 2/2] libata-core: make sure that ata_force_tbl is freed in case of an error
-Date: Wed, 30 Jul 2008 12:32:39 -0700
-Message-ID: <200807301932.m6UJWdaM012125@imap1.linux-foundation.org>
+Subject: [patch 1/1] pata_via.c: add flag for VX800 and add a function for fixing internal bugs for VIA chipsets
+Date: Wed, 30 Jul 2008 12:32:48 -0700
+Message-ID: <200807301932.m6UJWmel012137@imap1.linux-foundation.org>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:48835 "EHLO
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:48987 "EHLO
 	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754481AbYG3TeA (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 30 Jul 2008 15:34:00 -0400
+	by vger.kernel.org with ESMTP id S1754481AbYG3TeP (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 30 Jul 2008 15:34:15 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: jeff@garzik.org
-Cc: linux-ide@vger.kernel.org, akpm@linux-foundation.org, eo@nebensachen.de, alan@lxorguk.ukuu.org.uk, tj@kernel.org
+Cc: linux-ide@vger.kernel.org, akpm@linux-foundation.org, JosephChan@via.com.tw, alan@lxorguk.ukuu.org.uk, josephchan@via.com.tw, tj@kernel.org
 
-From: Elias Oltmanns <eo@nebensachen.de>
+From: <JosephChan@via.com.tw>
 
-Fix a potential memory leak when ata_init() encounters an error.
+Add flag VIA_SATA_PATA for vx800, VX800 uses the same
+chipset(0x0581/0x5324) as CX700, which has 1 PATA channel(Master/Slave)
+and 1 SATA channel(Master/Slave) Add function <via_ata_tf_load>.  This is
+to fix the internal bug of VIA chipsets, which will reset the device
+register after changing the IEN bit in CTL register
 
-Signed-off-by: Elias Oltmanns <eo@nebensachen.de>
-Cc: Jeff Garzik <jeff@garzik.org>
+Signed-off-by: Joseph Chan <josephchan@via.com.tw>
 Cc: Tejun Heo <tj@kernel.org>
+Cc: Jeff Garzik <jeff@garzik.org>
 Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>
 Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
 ---
 
- drivers/ata/libata-core.c |   14 +++++++++-----
- 1 file changed, 9 insertions(+), 5 deletions(-)
+ drivers/ata/pata_via.c |   64 ++++++++++++++++++++++++++++++++++++++-
+ 1 file changed, 63 insertions(+), 1 deletion(-)
 
-diff -puN drivers/ata/libata-core.c~libata-core-make-sure-that-ata_force_tbl-is-freed-in-case-of-an-error drivers/ata/libata-core.c
---- a/drivers/ata/libata-core.c~libata-core-make-sure-that-ata_force_tbl-is-freed-in-case-of-an-error
-+++ a/drivers/ata/libata-core.c
-@@ -6088,16 +6088,20 @@ static int __init ata_init(void)
- 
- 	ata_wq = create_workqueue("ata");
- 	if (!ata_wq)
--		return -ENOMEM;
-+		goto free_force_tbl;
- 
- 	ata_aux_wq = create_singlethread_workqueue("ata_aux");
--	if (!ata_aux_wq) {
--		destroy_workqueue(ata_wq);
--		return -ENOMEM;
--	}
-+	if (!ata_aux_wq)
-+		goto free_wq;
- 
- 	printk(KERN_DEBUG "libata version " DRV_VERSION " loaded.\n");
- 	return 0;
-+
-+free_wq:
-+	destroy_workqueue(ata_wq);
-+free_force_tbl:
-+	kfree(ata_force_tbl);
-+	return -ENOMEM;
+diff -puN drivers/ata/pata_via.c~pata_viac-add-flag-for-vx800-and-add-a-function-for-fixing-internal-bugs-for-via-chipsets drivers/ata/pata_via.c
+--- a/drivers/ata/pata_via.c~pata_viac-add-flag-for-vx800-and-add-a-function-for-fixing-internal-bugs-for-via-chipsets
++++ a/drivers/ata/pata_via.c
+@@ -98,7 +98,8 @@ static const struct via_isa_bridge {
+ 	u8 rev_max;
+ 	u16 flags;
+ } via_isa_bridges[] = {
+-	{ "vx800",	PCI_DEVICE_ID_VIA_VX800,    0x00, 0x2f, VIA_UDMA_133 | VIA_BAD_AST },
++	{ "vx800",	PCI_DEVICE_ID_VIA_VX800,    0x00, 0x2f, VIA_UDMA_133 |
++	VIA_BAD_AST | VIA_SATA_PATA },
+ 	{ "vt8237s",	PCI_DEVICE_ID_VIA_8237S,    0x00, 0x2f, VIA_UDMA_133 | VIA_BAD_AST },
+ 	{ "vt8251",	PCI_DEVICE_ID_VIA_8251,     0x00, 0x2f, VIA_UDMA_133 | VIA_BAD_AST },
+ 	{ "cx700",	PCI_DEVICE_ID_VIA_CX700,    0x00, 0x2f, VIA_UDMA_133 | VIA_BAD_AST | VIA_SATA_PATA },
+@@ -322,6 +323,65 @@ static void via_set_dmamode(struct ata_p
+ 	via_do_set_mode(ap, adev, adev->dma_mode, tclock[mode], set_ast, udma[mode]);
  }
  
- static void __exit ata_exit(void)
++/**
++ *	via_ata_sff_tf_load - send taskfile registers to host controller
++ *	@ap: Port to which output is sent
++ *	@tf: ATA taskfile register set
++ *
++ *	Outputs ATA taskfile to standard ATA host controller.
++ *
++ *	Note: This is to fix the internal bug of via chipsets, which
++ *  will reset the device register after changing the IEN bit on
++ *  ctl register
++ */
++static void via_ata_tf_load(struct ata_port *ap, const struct ata_taskfile *tf)
++{
++	struct ata_ioports *ioaddr = &ap->ioaddr;
++	unsigned int is_addr = tf->flags & ATA_TFLAG_ISADDR;
++
++	if (tf->ctl != ap->last_ctl) {
++		iowrite8(tf->ctl, ioaddr->ctl_addr);
++		iowrite8(tf->device, ioaddr->device_addr);
++		ap->last_ctl = tf->ctl;
++		ata_wait_idle(ap);
++	}
++
++	if (is_addr && (tf->flags & ATA_TFLAG_LBA48)) {
++		iowrite8(tf->hob_feature, ioaddr->feature_addr);
++		iowrite8(tf->hob_nsect, ioaddr->nsect_addr);
++		iowrite8(tf->hob_lbal, ioaddr->lbal_addr);
++		iowrite8(tf->hob_lbam, ioaddr->lbam_addr);
++		iowrite8(tf->hob_lbah, ioaddr->lbah_addr);
++		VPRINTK("hob: feat 0x%X nsect 0x%X, lba 0x%X 0x%X 0x%X\n",
++			tf->hob_feature,
++			tf->hob_nsect,
++			tf->hob_lbal,
++			tf->hob_lbam,
++			tf->hob_lbah);
++	}
++
++	if (is_addr) {
++		iowrite8(tf->feature, ioaddr->feature_addr);
++		iowrite8(tf->nsect, ioaddr->nsect_addr);
++		iowrite8(tf->lbal, ioaddr->lbal_addr);
++		iowrite8(tf->lbam, ioaddr->lbam_addr);
++		iowrite8(tf->lbah, ioaddr->lbah_addr);
++		VPRINTK("feat 0x%X nsect 0x%X lba 0x%X 0x%X 0x%X\n",
++			tf->feature,
++			tf->nsect,
++			tf->lbal,
++			tf->lbam,
++			tf->lbah);
++	}
++
++	if (tf->flags & ATA_TFLAG_DEVICE) {
++		iowrite8(tf->device, ioaddr->device_addr);
++		VPRINTK("device 0x%X\n", tf->device);
++	}
++
++	ata_wait_idle(ap);
++}
++
+ static struct scsi_host_template via_sht = {
+ 	ATA_BMDMA_SHT(DRV_NAME),
+ };
+@@ -332,11 +392,13 @@ static struct ata_port_operations via_po
+ 	.set_piomode	= via_set_piomode,
+ 	.set_dmamode	= via_set_dmamode,
+ 	.prereset	= via_pre_reset,
++	.sff_tf_load = via_ata_tf_load,
+ };
+ 
+ static struct ata_port_operations via_port_ops_noirq = {
+ 	.inherits	= &via_port_ops,
+ 	.sff_data_xfer	= ata_sff_data_xfer_noirq,
++	.sff_tf_load = via_ata_tf_load,
+ };
+ 
+ /**
 _
