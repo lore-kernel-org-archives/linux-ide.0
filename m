@@ -1,44 +1,45 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [patch 1/2] libata-scsi: don't start hotplug work queue if hotplug
- is disabled
-Date: Thu, 31 Jul 2008 07:42:14 +0900
-Message-ID: <4890EE46.10809@kernel.org>
-References: <200807301932.m6UJWcBV012122@imap1.linux-foundation.org>
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Subject: Re: ide pmac breakage
+Date: Thu, 31 Jul 2008 08:49:12 +1000
+Message-ID: <1217458152.11188.355.camel@pasglop>
+References: <1217208596.11188.144.camel@pasglop>
+	 <200807292126.12238.bzolnier@gmail.com>
+	 <1217401052.11188.318.camel@pasglop>
+	 <200807302111.54514.bzolnier@gmail.com>
+Reply-To: benh@kernel.crashing.org
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:41052 "EHLO hera.kernel.org"
+Received: from gate.crashing.org ([63.228.1.57]:48568 "EHLO gate.crashing.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751787AbYG3WnQ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 30 Jul 2008 18:43:16 -0400
-In-Reply-To: <200807301932.m6UJWcBV012122@imap1.linux-foundation.org>
+	id S1753353AbYG3Wta (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 30 Jul 2008 18:49:30 -0400
+In-Reply-To: <200807302111.54514.bzolnier@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: akpm@linux-foundation.org
-Cc: jeff@garzik.org, linux-ide@vger.kernel.org, chunbo.luo@windriver.com
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, linux-ide@vger.kernel.org, linuxppc-dev@ozlabs.org, petkovbb@gmail.com
 
-akpm@linux-foundation.org wrote:
-> From: Chunbo Luo <chunbo.luo@windriver.com>
+On Wed, 2008-07-30 at 21:11 +0200, Bartlomiej Zolnierkiewicz wrote:
 > 
-> Previously, queue_delayed_work() was started unconditionally, but if
-> ATA_PFLAG_SCSI_HOTPLUG is not set and we do this, the work queue may cause
-> multiple messages like this:
+> > Note that there shouldn't be anything fundamentally different from
+> > ide-pmac here vs. something like pcmcia IDE cards... do you have one
+> of
+> > these to test with ?
 > 
-> ata3.00: WARNING: ATAPI is not supported with this driver, device ignored.
-> 
-> So now,it is only started when the hotplug flag is actually set.
-> 
-> Signed-off-by: Chunbo Luo <chunbo.luo@windriver.com>
-> Cc: Jeff Garzik <jeff@garzik.org>
-> Cc: Tejun Heo <tj@kernel.org>
-> Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
+> Nope and I really don't intend to have one.  I count on other people
+> to take some care of support for host drivers that they
+> maintain/use. ;)
 
-Oops, I forgot to send the alternative patch (verified by Chunbo).  I'm
-sending it to Jeff now and cc'ing you.  Please drop this one when the
-patch hits -mm.
+Hrm... that's not a very sane approach. You have some infrastructure for
+adding / removing devices, in fact changes things in that area even, and
+not a single piece of HW to exercise those code path ? I don't ask you
+to get a powermac with a media-bay, but ide_cs seems to be a pretty
+important one that's part of what the ide maintainer should take care
+of... And I suspect it's going to exercise the same code path as
+mediabay.
 
-Thanks.
+Ben.
 
--- 
-tejun
+
