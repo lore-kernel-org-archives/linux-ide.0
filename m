@@ -1,67 +1,41 @@
-From: Greg KH <greg@kroah.com>
-Subject: Re: [PATCH] ide-cd: fix endianity for the error message in
-	cdrom_read_capacity
-Date: Wed, 30 Jul 2008 13:58:36 -0700
-Message-ID: <20080730205836.GA31232@kroah.com>
-References: <1217405406.11834.11.camel@elijah.suse.cz> <20080730011832.0ee55d47.akpm@linux-foundation.org> <9ea470500807300152p5d5414aaq2d0d0053c12ef3f5@mail.gmail.com> <20080730163327.GA23086@suse.de> <20080730191257.GA1205@gollum.tnic>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: [PATCH] ide-cd: fix endianity for the error message in cdrom_read_capacity
+Date: Wed, 30 Jul 2008 23:23:24 +0200
+Message-ID: <200807302323.24807.bzolnier@gmail.com>
+References: <1217405406.11834.11.camel@elijah.suse.cz> <200807302125.54124.bzolnier@gmail.com> <20080730130255.9538678a.akpm@linux-foundation.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from casper.infradead.org ([85.118.1.10]:46707 "EHLO
-	casper.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759897AbYG3VTA (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 30 Jul 2008 17:19:00 -0400
+Received: from fk-out-0910.google.com ([209.85.128.187]:26222 "EHLO
+	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751787AbYG3WXE (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 30 Jul 2008 18:23:04 -0400
+Received: by fk-out-0910.google.com with SMTP id 18so179779fkq.5
+        for <linux-ide@vger.kernel.org>; Wed, 30 Jul 2008 15:23:02 -0700 (PDT)
+In-Reply-To: <20080730130255.9538678a.akpm@linux-foundation.org>
 Content-Disposition: inline
-In-Reply-To: <20080730191257.GA1205@gollum.tnic>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: petkovbb@gmail.com, Greg KH <gregkh@suse.de>, stable@kernel.org, Andrew Morton <akpm@linux-foundation.org>, Petr Tesarik <ptesarik@suse.cz>, linux-kernel@vger.kernel.org, linux-ide@vg
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: petkovbb@gmail.com, gregkh@suse.de, ptesarik@suse.cz, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, jens.axboe@oracle.com, jack@suse.cz
 
-On Wed, Jul 30, 2008 at 09:12:57PM +0200, Borislav Petkov wrote:
-> On Wed, Jul 30, 2008 at 09:33:28AM -0700, Greg KH wrote:
-> > On Wed, Jul 30, 2008 at 10:52:50AM +0200, Boris Petkov wrote:
-> > > On Wed, Jul 30, 2008 at 10:18 AM, Andrew Morton
-> > > <akpm@linux-foundation.org> wrote:
-> > > > On Wed, 30 Jul 2008 10:10:06 +0200 Petr Tesarik <ptesarik@suse.cz> wrote:
-> > > >
-> > > >> Resent because of a typo in the LKML address. :(
-> > > >
-> > > > Thanks.
-> > > >
-> > > >>
-> > > >> Aesthetic regards aside, commit e8e7b9eb11c34ee18bde8b7011af41938d1ad667
-> > > >> still leaves a bug in the error message, because it uses the unconverted
-> > > >> big-endian value for printk.
-> > > >>
-> > > >> Fix this by using a local variable in machine byte order. The result is
-> > > >> correct, more readable, and also produces slightly shorter code on i386.
-> > > >>
-> > > >> Cc: Jens Axboe <jens.axboe@oracle.com>
-> > > >> Cc: Jan Kara <jack@suse.cz>
-> > > >> Signed-off-by: Petr Tesarik <ptesarik@suse.cz>
-> > > 
-> > > I definitely like this one better, thanks.
-> > > 
-> > > Acked-by: Borislav Petkov <petkovbb@gmail.com>
-> > > 
-> > > 
-> > > >
+On Wednesday 30 July 2008, Andrew Morton wrote:
+> On Wed, 30 Jul 2008 21:25:53 +0200
+> Bartlomiej Zolnierkiewicz <bzolnier@gmail.com> wrote:
+> 
 > > > > Bart owns this patch now.  It got lost for a month and it has already
 > > > > been fixed twice and it is also on the route to 2.6.25.x and 2.6.26.x,
 > > > > so it'll get complicated.  Not a happy little patch.
 > > > 
 > > > Greg, can you please apply this one on top of -stable.
 > > 
-> > What one?  Do you have a git commit id?
+> > The usual policy is to not apply to -stable patches which are not in
+> > Linus' tree so please notify stable@kernelorg team after patch hits
+> > mainline.
 > 
-> Oh, sorry about that. Ok, you should have in both 2.6.25 and .26 the patch with
-> upstream commit id e8e7b9eb11c34ee18bde8b7011af41938d1ad667. I rediffed the new
-> one on top, here's the 2.6.26 version, the 2.6.25 one follows.
+> Please put a Cc: <stable@kernel.org> into the changelog.  Then the
+> stable people will notice it when Linus commits it.
 
-I need the patch id when this goes to Linus, in his tree.  If you add
-"cc: stable <stable@kernel.org>" to the signed-off-by area, when it gets
-into Linus's tree, we will be automatically notified of it.
-
-thanks,
-
-greg k-h
+Done.
