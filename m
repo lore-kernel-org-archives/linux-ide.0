@@ -1,51 +1,77 @@
-From: "Tvrtko A. Ursulin" <tvrtko@ursulin.net>
-Subject: Re: 2.6.26 DVD playing regression with libata
-Date: Wed, 30 Jul 2008 07:57:29 +0100
-Message-ID: <200807300757.29520.tvrtko@ursulin.net>
-References: <200807292323.28033.tvrtko@ursulin.net> <20080730002011.21947c32@lxorguk.ukuu.org.uk>
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Subject: Re: ide pmac breakage
+Date: Wed, 30 Jul 2008 16:57:32 +1000
+Message-ID: <1217401052.11188.318.camel@pasglop>
+References: <1217208596.11188.144.camel@pasglop>
+	 <200807291404.46906.bzolnier@gmail.com>
+	 <200807291645.03382.bzolnier@gmail.com>
+	 <200807292126.12238.bzolnier@gmail.com>
+Reply-To: benh@kernel.crashing.org
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mk-outboundfilter-5.mail.uk.tiscali.com ([212.74.114.1]:40204
-	"EHLO mk-outboundfilter-5.mail.uk.tiscali.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751208AbYG3G5d (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 30 Jul 2008 02:57:33 -0400
-In-Reply-To: <20080730002011.21947c32@lxorguk.ukuu.org.uk>
-Content-Disposition: inline
+Received: from gate.crashing.org ([63.228.1.57]:51899 "EHLO gate.crashing.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751580AbYG3G5q (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 30 Jul 2008 02:57:46 -0400
+In-Reply-To: <200807292126.12238.bzolnier@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, linux-ide@vger.kernel.org, linuxppc-dev@ozlabs.org, petkovbb@gmail.com
 
-On Wednesday 30 July 2008 00:20:11 Alan Cox wrote:
-> > Jul 29 21:10:03 media kernel: [353032.319013] sr 2:0:0:0: [sr0] unaligned
-> > transfer Jul 29 21:10:03 media kernel: [353032.319013] sr 2:0:0:0: [sr0]
-> > unaligned transfer
->
-> This is coming from the scsi/block layer and definitely isn't good.
-> Doesn't directly look like a libata bug but seems to be higher up the
-> stack. What software is triggering this ?
+On Tue, 2008-07-29 at 21:26 +0200, Bartlomiej Zolnierkiewicz wrote:
 
-I tried to reproduce it now but could not.
+> I WON!!!
 
-After a fresh boot into 2.6.26, I first tried mounting the DVD which was fine. Then I ran lsdvd which also worked and finally mplayer without any problems. In 
-contrast to that yesterday I ran my playdvd.pl (http://www.ursulin.net/2008/06/effectively-using-mplayer-within-mythtv/) script from within MythTV and it 
-exited immediately. It looked like either it triggered that failure without any delay or subsystem was already in that failure mode by simple DVD insertion. 
-When ran directly lsdvd would exit being unable to open /dev/dvd (/dev/scdo). Unfortunately I didn't debug it further at the time.
+Only half...
 
-The only difference is that yesterday box had an uptime of couple of days while this morning it was completely fresh. Unless mounting the disc before 
-everything else somehow stabilised something. Hm let me do another reboot... no, still can't reproduce it.
+It goes further and then blows up again. First problem is, this
+unregister interface doesn't quite convey the fact that the HW is gone
+and the IDE code seems to take it's sweet time figuring it out after
+trying some requests. Maybe something smarter can be done here ? ie,
+ide_set_interface_dead() :-)
 
-One interesting thing, sometimes it detects drive capabilities like this:
-[    3.498951] sr0: scsi3-mmc drive: 62x/62x writer dvd-ram cd/rw xa/form2 cdda tray
+mediabay0: switching to 7
+mediabay0: powering down
+media bay 0 is empty
+hdc: status error: status=0x00 { }
+ide: failed opcode was: unknown
+hdc: status error: status=0x00 { }
+ide: failed opcode was: unknown
 
-And sometimes like this:
-[    3.514104] sr0: scsi3-mmc drive: 48x/48x writer dvd-ram cd/rw xa/form2 cdda tray
+Then after this couple of failed attempts at sending commands, it
+crashes with the backtrace below. Another NULL dereference apparently,
+though the DAR value (the faulting address) has been slightly different
+between consecutive tests so it may be a use-after-free too.
 
-Later I think is correct according to drive datasheet.
+Note that there shouldn't be anything fundamentally different from
+ide-pmac here vs. something like pcmcia IDE cards... do you have one of
+these to test with ?
 
-I will keep 2.6.26 running and see if the problem comes back in following days.
+Vector: 300 (Data Access) at [c59dfdc0]
+    pc: c0211f78: ide_device_put+0x18/0x58
+    lr: c0223c34: ide_cd_put+0x40/0x5c
+    sp: c59dfe70
+   msr: 9032
+   dar: 10
+ dsisr: 40000000
+  current = 0xc58a9880
+    pid   = 843, comm = media-bay
+enter ? for help
+[c59dfe80] c0223c34 ide_cd_put+0x40/0x5c
+[c59dfea0] c02114d4 generic_ide_remove+0x28/0x3c
+[c59dfeb0] c01ea108 __device_release_driver+0x78/0xb4
+[c59dfec0] c01ea218 device_release_driver+0x28/0x44
+[c59dfee0] c01e9350 bus_remove_device+0xac/0xd8
+[c59dff00] c01e77f8 device_del+0x104/0x198
+[c59dff20] c01e78a4 device_unregister+0x18/0x30
+[c59dff40] c0212598 __ide_port_unregister_devices+0x6c/0x88
+[c59dff60] c021276c ide_port_unregister_devices+0x38/0x80
+[c59dff80] c0209078 media_bay_step+0x1cc/0x5c0
+[c59dffb0] c02094f8 media_bay_task+0x8c/0xcc
+[c59dffd0] c0048640 kthread+0x48/0x84
+[c59dfff0] c0011b38 kernel_thread+0x44/0x60
 
-Tvrtko
+
