@@ -1,58 +1,56 @@
-From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: Re: ide pmac breakage
-Date: Wed, 30 Jul 2008 10:23:08 +0900
-Message-ID: <20080730102308B.fujita.tomonori@lab.ntt.co.jp>
-References: <200807291404.46906.bzolnier@gmail.com>
-	<200807291645.03382.bzolnier@gmail.com>
-	<200807292126.12238.bzolnier@gmail.com>
+From: Vladislav Bolkhovitin <vst@vlnb.net>
+Subject: Re: tools support for non-512 byte sector sizes
+Date: Wed, 30 Jul 2008 09:51:03 +0400
+Message-ID: <48900147.7030106@vlnb.net>
+References: <488F524F.6020905@redhat.com>	 <20080729182611.GB24924@parisc-linux.org> <1217356645.6103.48.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Content-Type: text/plain; charset=KOI8-R; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from tama500.ecl.ntt.co.jp ([129.60.39.148]:56867 "EHLO
-	tama500.ecl.ntt.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751608AbYG3Bvw (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 29 Jul 2008 21:51:52 -0400
-In-Reply-To: <200807292126.12238.bzolnier@gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <1217356645.6103.48.camel@localhost.localdomain>
+Sender: linux-scsi-owner@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Matthew Wilcox <matthew@wil.cx>, Ric Wheeler <rwheeler@redhat.com>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, Jim Meyering <jim@meyering.net>, linux-kernel@vger.kernel.org, Martin Petersen <mkp@mkp.net>, Jeff Garzik <jeff@garzik.org>, Matt Domsch <Matt_Domsch@Dell.com>
 List-Id: linux-ide@vger.kernel.org
-To: bzolnier@gmail.com
-Cc: benh@kernel.crashing.org, fujita.tomonori@lab.ntt.co.jp, linux-ide@vger.kernel.org, linuxppc-dev@ozlabs.org, petkovbb@gmail.com
 
-On Tue, 29 Jul 2008 21:26:11 +0200
-Bartlomiej Zolnierkiewicz <bzolnier@gmail.com> wrote:
-
-> On Tuesday 29 July 2008, Bartlomiej Zolnierkiewicz wrote:
-> > On Tuesday 29 July 2008, Bartlomiej Zolnierkiewicz wrote:
-> > > On Tuesday 29 July 2008, Benjamin Herrenschmidt wrote:
-> > > > On Tue, 2008-07-29 at 13:41 +0200, Bartlomiej Zolnierkiewicz wrote:
-> > > > > > Well, all I do is call into Bart's new helpers to scan for or
-> > > > > unregister
-> > > > > > devices ...
-> > > > > 
-> > > > > The switch to these helpers happened _before_ 2.6.26 and it shouldn't
-> > > > > bring
-> > > > > such behavior change (ditto for new IDE host addition/removal
-> > > > > helpers)...
-> > > > > 
-> > > > > Please try to git-bisect it when you have some time.
-> > > > 
-> > > > Ok, I will. I worked fine when I last tried your patches. I'll see if I
-> > > > can track it down too. Been a bit too busy lately as you can imagine.
-> > > > 
-> > > > Do you have something that exercise the same code path you can use ?
-> > > 
-> > > I'll see if I can reproduce it with IDE warm-plug support later...
-> > 
-> > OK, I reproduced it here with IDE warm-plug support
-> > (echo -n "1" > /sys/class/ide_port/ide*/delete_devices)
-> > for devices driven by ide-cd.
-> > 
-> > It is also reproducible under qemu so I'm scripting it
-> > into git-bisect run now...
+James Bottomley wrote:
+> On Tue, 2008-07-29 at 12:26 -0600, Matthew Wilcox wrote:
+>> On Tue, Jul 29, 2008 at 01:24:31PM -0400, Ric Wheeler wrote:
+>>> Jim pinged me about the use case for having our tool chain (parted 
+>>> specifically) support devices with non-512 bytes sectors.
+>> Matt Domsch spoke with me about this at OLS.  I took that opportunity,
+>> and I'll take this one, to pimp my ata-ram driver which allows you to
+>> alter the sector sizse to whatever you want:
+>>
+>> http://git.kernel.org/?p=linux/kernel/git/willy/misc.git;a=shortlog;h=ata-ram
+>>
+>> I'll admit to having not tested it with anything other than 512, but it
+>> ought to support 4096 byte sectors just fine.  I haven't looked at what
+>> would be required to support 520-byte sectors.
 > 
-> I WON!!!
+> scsi_debug does exactly the same thing, so it reports anything you tell
+> it (Martin Petersen actually added this so he could test with 4k
+> sectors).
+> 
+> The problem, which ata_ram also suffers, is that the tools we most need
+> to test are the ones for manipulating non volatile characteristics (like
+> partition tables).  We'd really like the disk contents to survive reboot
+> for this ...
 
-Great, seems that I don't need to learn how ide does ref counting. :)
+SCST (http://scst.sf.net) fully supports non-512 bytes sectors up to 
+4096. Available target drivers for transports: software iSCSI, FC, 
+InfiniBand SRP, parallel SCSI, SAS (not much tested, because of lack of 
+hardware). With VDISK dev handler you can use files as a backstorage.
 
-Thanks a lot!
+I personally for a long time have been working with 4K sectors, because 
+it's better for performance, but so far found the only tool, which 
+doesn't support them: disktest.
+
+> James
+> 
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
