@@ -1,32 +1,67 @@
-From: bugme-daemon@bugzilla.kernel.org
-Subject: [Bug 10943] machine doesn't shutdown when ahci sata driver is compiled as module
-Date: Wed, 30 Jul 2008 13:37:09 -0700 (PDT)
-Message-ID: <20080730203709.4C192108035@picon.linux-foundation.org>
-References: <bug-10943-11633@http.bugzilla.kernel.org/>
+From: Greg KH <greg@kroah.com>
+Subject: Re: [PATCH] ide-cd: fix endianity for the error message in
+	cdrom_read_capacity
+Date: Wed, 30 Jul 2008 13:58:36 -0700
+Message-ID: <20080730205836.GA31232@kroah.com>
+References: <1217405406.11834.11.camel@elijah.suse.cz> <20080730011832.0ee55d47.akpm@linux-foundation.org> <9ea470500807300152p5d5414aaq2d0d0053c12ef3f5@mail.gmail.com> <20080730163327.GA23086@suse.de> <20080730191257.GA1205@gollum.tnic>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:60855 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750764AbYG3UhL (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 30 Jul 2008 16:37:11 -0400
-Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
-	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id m6UKb93Q030391
-	for <linux-ide@vger.kernel.org>; Wed, 30 Jul 2008 13:37:10 -0700
-In-Reply-To: <bug-10943-11633@http.bugzilla.kernel.org/>
+Received: from casper.infradead.org ([85.118.1.10]:46707 "EHLO
+	casper.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759897AbYG3VTA (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 30 Jul 2008 17:19:00 -0400
+Content-Disposition: inline
+In-Reply-To: <20080730191257.GA1205@gollum.tnic>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: petkovbb@gmail.com, Greg KH <gregkh@suse.de>, stable@kernel.org, Andrew Morton <akpm@linux-foundation.org>, Petr Tesarik <ptesarik@suse.cz>, linux-kernel@vger.kernel.org, linux-ide@vg
 
-http://bugzilla.kernel.org/show_bug.cgi?id=10943
+On Wed, Jul 30, 2008 at 09:12:57PM +0200, Borislav Petkov wrote:
+> On Wed, Jul 30, 2008 at 09:33:28AM -0700, Greg KH wrote:
+> > On Wed, Jul 30, 2008 at 10:52:50AM +0200, Boris Petkov wrote:
+> > > On Wed, Jul 30, 2008 at 10:18 AM, Andrew Morton
+> > > <akpm@linux-foundation.org> wrote:
+> > > > On Wed, 30 Jul 2008 10:10:06 +0200 Petr Tesarik <ptesarik@suse.cz> wrote:
+> > > >
+> > > >> Resent because of a typo in the LKML address. :(
+> > > >
+> > > > Thanks.
+> > > >
+> > > >>
+> > > >> Aesthetic regards aside, commit e8e7b9eb11c34ee18bde8b7011af41938d1ad667
+> > > >> still leaves a bug in the error message, because it uses the unconverted
+> > > >> big-endian value for printk.
+> > > >>
+> > > >> Fix this by using a local variable in machine byte order. The result is
+> > > >> correct, more readable, and also produces slightly shorter code on i386.
+> > > >>
+> > > >> Cc: Jens Axboe <jens.axboe@oracle.com>
+> > > >> Cc: Jan Kara <jack@suse.cz>
+> > > >> Signed-off-by: Petr Tesarik <ptesarik@suse.cz>
+> > > 
+> > > I definitely like this one better, thanks.
+> > > 
+> > > Acked-by: Borislav Petkov <petkovbb@gmail.com>
+> > > 
+> > > 
+> > > >
+> > > > Bart owns this patch now.  It got lost for a month and it has already
+> > > > been fixed twice and it is also on the route to 2.6.25.x and 2.6.26.x,
+> > > > so it'll get complicated.  Not a happy little patch.
+> > > 
+> > > Greg, can you please apply this one on top of -stable.
+> > 
+> > What one?  Do you have a git commit id?
+> 
+> Oh, sorry about that. Ok, you should have in both 2.6.25 and .26 the patch with
+> upstream commit id e8e7b9eb11c34ee18bde8b7011af41938d1ad667. I rediffed the new
+> one on top, here's the 2.6.26 version, the 2.6.25 one follows.
 
+I need the patch id when this goes to Linus, in his tree.  If you add
+"cc: stable <stable@kernel.org>" to the signed-off-by area, when it gets
+into Linus's tree, we will be automatically notified of it.
 
+thanks,
 
-
-
-------- Comment #11 from gfpadovan@gmail.com  2008-07-30 13:37 -------
-I forgot: Machine tested with 2.6.27-rc1 and the problem go on.
-
-
--- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are on the CC list for the bug, or are watching someone who is.
+greg k-h
