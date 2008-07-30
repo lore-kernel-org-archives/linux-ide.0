@@ -1,56 +1,51 @@
-From: Vladislav Bolkhovitin <vst@vlnb.net>
-Subject: Re: tools support for non-512 byte sector sizes
-Date: Wed, 30 Jul 2008 09:51:03 +0400
-Message-ID: <48900147.7030106@vlnb.net>
-References: <488F524F.6020905@redhat.com>	 <20080729182611.GB24924@parisc-linux.org> <1217356645.6103.48.camel@localhost.localdomain>
+From: "Tvrtko A. Ursulin" <tvrtko@ursulin.net>
+Subject: Re: 2.6.26 DVD playing regression with libata
+Date: Wed, 30 Jul 2008 07:57:29 +0100
+Message-ID: <200807300757.29520.tvrtko@ursulin.net>
+References: <200807292323.28033.tvrtko@ursulin.net> <20080730002011.21947c32@lxorguk.ukuu.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=KOI8-R; format=flowed
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <1217356645.6103.48.camel@localhost.localdomain>
-Sender: linux-scsi-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Matthew Wilcox <matthew@wil.cx>, Ric Wheeler <rwheeler@redhat.com>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, Jim Meyering <jim@meyering.net>, linux-kernel@vger.kernel.org, Martin Petersen <mkp@mkp.net>, Jeff Garzik <jeff@garzik.org>, Matt Domsch <Matt_Domsch@Dell.com>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mk-outboundfilter-5.mail.uk.tiscali.com ([212.74.114.1]:40204
+	"EHLO mk-outboundfilter-5.mail.uk.tiscali.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751208AbYG3G5d (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 30 Jul 2008 02:57:33 -0400
+In-Reply-To: <20080730002011.21947c32@lxorguk.ukuu.org.uk>
+Content-Disposition: inline
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-James Bottomley wrote:
-> On Tue, 2008-07-29 at 12:26 -0600, Matthew Wilcox wrote:
->> On Tue, Jul 29, 2008 at 01:24:31PM -0400, Ric Wheeler wrote:
->>> Jim pinged me about the use case for having our tool chain (parted 
->>> specifically) support devices with non-512 bytes sectors.
->> Matt Domsch spoke with me about this at OLS.  I took that opportunity,
->> and I'll take this one, to pimp my ata-ram driver which allows you to
->> alter the sector sizse to whatever you want:
->>
->> http://git.kernel.org/?p=linux/kernel/git/willy/misc.git;a=shortlog;h=ata-ram
->>
->> I'll admit to having not tested it with anything other than 512, but it
->> ought to support 4096 byte sectors just fine.  I haven't looked at what
->> would be required to support 520-byte sectors.
-> 
-> scsi_debug does exactly the same thing, so it reports anything you tell
-> it (Martin Petersen actually added this so he could test with 4k
-> sectors).
-> 
-> The problem, which ata_ram also suffers, is that the tools we most need
-> to test are the ones for manipulating non volatile characteristics (like
-> partition tables).  We'd really like the disk contents to survive reboot
-> for this ...
+On Wednesday 30 July 2008 00:20:11 Alan Cox wrote:
+> > Jul 29 21:10:03 media kernel: [353032.319013] sr 2:0:0:0: [sr0] unaligned
+> > transfer Jul 29 21:10:03 media kernel: [353032.319013] sr 2:0:0:0: [sr0]
+> > unaligned transfer
+>
+> This is coming from the scsi/block layer and definitely isn't good.
+> Doesn't directly look like a libata bug but seems to be higher up the
+> stack. What software is triggering this ?
 
-SCST (http://scst.sf.net) fully supports non-512 bytes sectors up to 
-4096. Available target drivers for transports: software iSCSI, FC, 
-InfiniBand SRP, parallel SCSI, SAS (not much tested, because of lack of 
-hardware). With VDISK dev handler you can use files as a backstorage.
+I tried to reproduce it now but could not.
 
-I personally for a long time have been working with 4K sectors, because 
-it's better for performance, but so far found the only tool, which 
-doesn't support them: disktest.
+After a fresh boot into 2.6.26, I first tried mounting the DVD which was fine. Then I ran lsdvd which also worked and finally mplayer without any problems. In 
+contrast to that yesterday I ran my playdvd.pl (http://www.ursulin.net/2008/06/effectively-using-mplayer-within-mythtv/) script from within MythTV and it 
+exited immediately. It looked like either it triggered that failure without any delay or subsystem was already in that failure mode by simple DVD insertion. 
+When ran directly lsdvd would exit being unable to open /dev/dvd (/dev/scdo). Unfortunately I didn't debug it further at the time.
 
-> James
-> 
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+The only difference is that yesterday box had an uptime of couple of days while this morning it was completely fresh. Unless mounting the disc before 
+everything else somehow stabilised something. Hm let me do another reboot... no, still can't reproduce it.
+
+One interesting thing, sometimes it detects drive capabilities like this:
+[    3.498951] sr0: scsi3-mmc drive: 62x/62x writer dvd-ram cd/rw xa/form2 cdda tray
+
+And sometimes like this:
+[    3.514104] sr0: scsi3-mmc drive: 48x/48x writer dvd-ram cd/rw xa/form2 cdda tray
+
+Later I think is correct according to drive datasheet.
+
+I will keep 2.6.26 running and see if the problem comes back in following days.
+
+Tvrtko
