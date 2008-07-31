@@ -1,74 +1,140 @@
-From: Borislav Petkov <petkovbb@googlemail.com>
-Subject: Re: [PATCH] ide-cd: fix endianity for the error message in
-	cdrom_read_capacity
-Date: Thu, 31 Jul 2008 05:32:07 +0200
-Message-ID: <20080731033207.GA11238@gollum.tnic>
-References: <1217405406.11834.11.camel@elijah.suse.cz> <20080730011832.0ee55d47.akpm@linux-foundation.org> <9ea470500807300152p5d5414aaq2d0d0053c12ef3f5@mail.gmail.com> <20080730163327.GA23086@suse.de> <20080730191257.GA1205@gollum.tnic> <20080730205836.GA31232@kroah.com>
-Reply-To: petkovbb@gmail.com
+From: "KueiHuan Chen" <kueihuan.chen@gmail.com>
+Subject: SATA port multiplier(Marvell 6121 with ahci) and Marvell 4140, simg 3726
+Date: Thu, 31 Jul 2008 11:37:42 +0800
+Message-ID: <788014650807302037vd942056r103205ac6f3b9c7a@mail.gmail.com>
+Reply-To: khchen@synology.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.153]:40864 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754837AbYGaDcB (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 30 Jul 2008 23:32:01 -0400
-Received: by fg-out-1718.google.com with SMTP id 19so182187fgg.17
-        for <linux-ide@vger.kernel.org>; Wed, 30 Jul 2008 20:31:59 -0700 (PDT)
+Received: from rv-out-0506.google.com ([209.85.198.229]:46167 "EHLO
+	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755438AbYGaDhn (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 30 Jul 2008 23:37:43 -0400
+Received: by rv-out-0506.google.com with SMTP id k40so361531rvb.1
+        for <linux-ide@vger.kernel.org>; Wed, 30 Jul 2008 20:37:42 -0700 (PDT)
 Content-Disposition: inline
-In-Reply-To: <20080730205836.GA31232@kroah.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Greg KH <greg@kroah.com>
-Cc: Greg KH <gregkh@suse.de>, stable@kernel.org, Andrew Morton <akpm@linux-foundation.org>, Petr Tesarik <ptesarik@suse.cz>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Jens Axboe <jens.axboe@oracle.com>, Jan Kara <jack@suse.cz>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+To: htejun@gmail.com
+Cc: linux-ide@vger.kernel.org
 
-On Wed, Jul 30, 2008 at 01:58:36PM -0700, Greg KH wrote:
-> On Wed, Jul 30, 2008 at 09:12:57PM +0200, Borislav Petkov wrote:
-> > On Wed, Jul 30, 2008 at 09:33:28AM -0700, Greg KH wrote:
-> > > On Wed, Jul 30, 2008 at 10:52:50AM +0200, Boris Petkov wrote:
-> > > > On Wed, Jul 30, 2008 at 10:18 AM, Andrew Morton
-> > > > <akpm@linux-foundation.org> wrote:
-> > > > > On Wed, 30 Jul 2008 10:10:06 +0200 Petr Tesarik <ptesarik@suse.cz> wrote:
-> > > > >
-> > > > >> Resent because of a typo in the LKML address. :(
-> > > > >
-> > > > > Thanks.
-> > > > >
-> > > > >>
-> > > > >> Aesthetic regards aside, commit e8e7b9eb11c34ee18bde8b7011af41938d1ad667
-> > > > >> still leaves a bug in the error message, because it uses the unconverted
-> > > > >> big-endian value for printk.
-> > > > >>
-> > > > >> Fix this by using a local variable in machine byte order. The result is
-> > > > >> correct, more readable, and also produces slightly shorter code on i386.
-> > > > >>
-> > > > >> Cc: Jens Axboe <jens.axboe@oracle.com>
-> > > > >> Cc: Jan Kara <jack@suse.cz>
-> > > > >> Signed-off-by: Petr Tesarik <ptesarik@suse.cz>
-> > > > 
-> > > > I definitely like this one better, thanks.
-> > > > 
-> > > > Acked-by: Borislav Petkov <petkovbb@gmail.com>
-> > > > 
-> > > > 
-> > > > >
-> > > > > Bart owns this patch now.  It got lost for a month and it has already
-> > > > > been fixed twice and it is also on the route to 2.6.25.x and 2.6.26.x,
-> > > > > so it'll get complicated.  Not a happy little patch.
-> > > > 
-> > > > Greg, can you please apply this one on top of -stable.
-> > > 
-> > > What one?  Do you have a git commit id?
-> > 
-> > Oh, sorry about that. Ok, you should have in both 2.6.25 and .26 the patch with
-> > upstream commit id e8e7b9eb11c34ee18bde8b7011af41938d1ad667. I rediffed the new
-> > one on top, here's the 2.6.26 version, the 2.6.25 one follows.
-> 
-> I need the patch id when this goes to Linus, in his tree.  If you add
-> "cc: stable <stable@kernel.org>" to the signed-off-by area, when it gets
-> into Linus's tree, we will be automatically notified of it.
+Hello,
 
-Bart already did that. It's now in his pata-2.6 tree.
+  This is the resent mail, because original one was deny by vger.kernel.org.
 
--- 
-Regards/Gruss,
-    Boris.
+  We got some problem while evaluation port multipiler with libata, we
+had tested with two sata chip, one is sil-3132, the another is Marvell
+6121. And we also have two port multiplie: Marvell 4140 and Sil-3726.
+Our kernel version is kernel-2.6.24 with Marvell 5281 platform.
+
+  Testing result:
+
+  Sil 3132 with 3726 and 4140: everything looks like fine.
+
+  Marvell 6121 with 3726 and 4140(using ahci.c): both port multipiler
+would got problem. It can't be detected whether hotplug or at boot
+time. But the disk detection is fine without port multiplier.
+  Because we can't upgrade kernel to latest version so quickly, is
+there any hint or solution for us ?
+
+Thanks a lot.
+
+Here is the boot message:
+The boot message of 6121 and 4140:
+-----------------------------------------------
+Driver 'sd' needs updating - please use bus_type methods
+ahci 0000:00:01.0: controller can't do NCQ, turning off CAP_NCQ
+ahci 0000:00:01.0: MV_AHCI HACK: port_map 7 -> 3
+ahci 0000:00:01.0: nr_ports (3) and implemented port map (0x3) don't
+match, using nr_ports
+ahci 0000:00:01.0: forcing PORTS_IMPL to 0x7
+ahci 0000:00:01.0: AHCI 0001.0000 32 slots 3 ports 3 Gbps 0x7 impl IDE mode
+ahci 0000:00:01.0: flags: 64bit stag led pmp slum part
+scsi0 : ahci
+scsi1 : ahci
+scsi2 : ahci
+ata1: SATA max UDMA/133 abar m1024@0xe0000000 port 0xe0000100 irq 11
+ata2: SATA max UDMA/133 abar m1024@0xe0000000 port 0xe0000180 irq 11
+ata3: SATA max UDMA/133 abar m1024@0xe0000000 port 0xe0000200 irq 11
+ata1: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+ata1.00: ATA-7: Hitachi HDT725050VLA360, V56OA7EA, max UDMA/133
+ata1.00: 976773168 sectors, multi 0: LBA48 NCQ (depth 0/32)
+ata1.00: configured for UDMA/133
+ata2: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+ata2.15: qc timeout (cmd 0xe4)
+ata2.15: failed to read PMP GSCR[0] (Emask=0x4)
+ata2: failed to recover some devices, retrying in 2 secs
+ata2: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+ata2.15: qc timeout (cmd 0xe4)
+ata2.15: failed to read PMP GSCR[0] (Emask=0x4)
+ata2: failed to recover some devices, retrying in 2 secs
+ata2: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+ata2.15: qc timeout (cmd 0xe4)
+ata2.15: failed to read PMP GSCR[0] (Emask=0x4)
+ata2: failed to recover some devices, retrying in 2 secs
+ata2: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+ata3: SATA link down (SStatus 0 SControl 0)
+scsi 0:0:0:0: Direct-Access     ATA      Hitachi HDT72505 V56O PQ: 0 ANSI: 5
+sd 0:0:0:0: [sda] 976773168 512-byte hardware sectors (500108 MB)
+sd 0:0:0:0: [sda] Write Protect is off
+sd 0:0:0:0: [sda] Write cache: enabled, read cache: enabled, doesn't
+support DPO or FUA
+sd 0:0:0:0: [sda] 976773168 512-byte hardware sectors (500108 MB)
+sd 0:0:0:0: [sda] Write Protect is off
+sd 0:0:0:0: [sda] Write cache: enabled, read cache: enabled, doesn't
+support DPO or FUA
+ sda: sda1 sda2 sda3
+sd 0:0:0:0: [sda] Attached SCSI disk
+physmap platform flash device: 00400000 at ffc00000
+The boot message of 6121 and 3726:
+-----------------------------------------------
+Driver 'sd' needs updating - please use bus_type methods
+ahci 0000:00:01.0: controller can't do NCQ, turning off CAP_NCQ
+ahci 0000:00:01.0: MV_AHCI HACK: port_map 7 -> 3
+ahci 0000:00:01.0: nr_ports (3) and implemented port map (0x3) don't
+match, using nr_ports
+ahci 0000:00:01.0: forcing PORTS_IMPL to 0x7
+ahci 0000:00:01.0: AHCI 0001.0000 32 slots 3 ports 3 Gbps 0x7 impl IDE mode
+ahci 0000:00:01.0: flags: 64bit stag led pmp slum part
+scsi0 : ahci
+scsi1 : ahci
+scsi2 : ahci
+ata1: SATA max UDMA/133 abar m1024@0xe0000000 port 0xe0000100 irq 11
+ata2: SATA max UDMA/133 abar m1024@0xe0000000 port 0xe0000180 irq 11
+ata3: SATA max UDMA/133 abar m1024@0xe0000000 port 0xe0000200 irq 11
+Delay 10 seconds to wait for disk 1 ready.
+ata1: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+ata1.00: ATA-7: Hitachi HDT725050VLA360, V56OA7EA, max UDMA/133
+ata1.00: 976773168 sectors, multi 0: LBA48 NCQ (depth 0/32)
+ata1.00: configured for UDMA/133
+Delay 10 seconds to wait for disk 2 ready.
+ata2: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+ata2.15: qc time(cmd 0xe4)
+ata2.15: failed to read PMP GSCR[0] (Emask=0x4)
+ata2: failed to recover some devices, retrying in 2 secs
+ata2: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+ata2.15: qc timeout (cmd 0xe4)
+ata2.15: failed to read PMP GSCR[0] (Emask=0x4)
+ata2: failed to recover some devices, retrying in 2 secs
+ata2: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+ata2.15: qc timeout (cmd 0xe4)
+ata2.15: failed to read PMP GSCR[0] (Emask=0x4)
+ata2: failed to recover some devices, retrying in 2 secs
+ata2: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+ata3: SATA link down (SStatus 0 SControl 0)
+scsi 0:0:0:0: Direct-Access     ATA      Hitachi HDT72505 V56O PQ: 0 ANSI: 5
+sd 0:0:0:0: [sda] 976773168 512-byte hardware sectors (500108 MB)
+sd 0:0:0:0: [sda] Write Protect is off
+sd 0:0:0:0: [sda] Write cache: enabled, read cache: enabled, doesn't
+support DPO or FUA
+sd 0:0:0:0: [sda] 976773168 512-byte hardware sectors (500108 MB)
+sd 0:0:0:0: [sda] Write Protect is off
+sd 0:0:0:0: [sda] Write cache: enabled, read cache: enabled, doesn't
+support DPO or FUA
+ sda: sda1 sda2 sda3
+sd 0:0:0:0: [sda] Attached SCSI disk
+physmap platform flash device: 00400000 at ffc00000
+---
+Thanks,
+KueiHuan-Chen
