@@ -1,41 +1,45 @@
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Subject: Re: ide pmac breakage
-Date: Thu, 31 Jul 2008 19:48:08 +1000
-Message-ID: <1217497688.11188.446.camel@pasglop>
-References: <1217208596.11188.144.camel@pasglop>
-	 <200807302111.54514.bzolnier@gmail.com>
-	 <1217458152.11188.355.camel@pasglop>
-	 <200807310248.29214.bzolnier@gmail.com>
-	 <20080731094901.062a2602@lxorguk.ukuu.org.uk>
-	 <1217495493.11188.441.camel@pasglop>
-	 <20080731101322.18735e64@lxorguk.ukuu.org.uk>
-Reply-To: benh@kernel.crashing.org
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: SATA port multiplier(Marvell 6121 with ahci) and Marvell 4140,
+ simg 3726
+Date: Thu, 31 Jul 2008 19:00:50 +0900
+Message-ID: <48918D52.3010404@gmail.com>
+References: <788014650807302022j30cea641wcfe4105ac8702b8c@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from gate.crashing.org ([63.228.1.57]:38434 "EHLO gate.crashing.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752274AbYGaJs2 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 31 Jul 2008 05:48:28 -0400
-In-Reply-To: <20080731101322.18735e64@lxorguk.ukuu.org.uk>
+Received: from rv-out-0506.google.com ([209.85.198.229]:9875 "EHLO
+	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752979AbYGaKBa (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 31 Jul 2008 06:01:30 -0400
+Received: by rv-out-0506.google.com with SMTP id k40so475891rvb.1
+        for <linux-ide@vger.kernel.org>; Thu, 31 Jul 2008 03:01:30 -0700 (PDT)
+In-Reply-To: <788014650807302022j30cea641wcfe4105ac8702b8c@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, linux-ide@vger.kernel.org, linuxppc-dev@ozlabs.org, petkovbb@gmail.com
+To: khchen@synology.com
+Cc: linux-ide@vger.kernel.org
 
-On Thu, 2008-07-31 at 10:13 +0100, Alan Cox wrote:
-> > I could make the media-bay look like a controller hotplug if it was
-> > going to make things easier...
+KueiHuan Chen wrote:
+> Hello,
 > 
-> I'm not sure it will. It may do nowdays, but the older IDE code
-> historically was fairly broken for both cases except in 2.4. Also faking
-> it as controller hotplug is the wrong path for libata which does real
-> drive hot plug.
+>   We got some problem while evaluation port multipiler with libata, we
+> had tested with two sata chip, one is sil-3132, the another is Marvell
+> 6121. And we also have two port multiplie: Marvell 4140 and Sil-3726.
+> Our kernel version is kernel-2.6.24 with Marvell 5281 platform.
+> 
+>   Testing result:
+> 
+>   Sil 3132 with 3726 and 4140: everything looks like fine.
+> 
+>   Marvell 6121 with 3726 and 4140(using ahci.c): both port multipiler
+> would got problem. It can't be detected whether hotplug or at boot time.
+> But the disk detection is fine without port multiplier.
+> 
+>   Because we can't upgrade kernel to latest version so quickly, is there
+> any hint or solution for us ?
 
-Yeah, that was my line of thinking initially, also the fact that it has
-the nice side effect of keeping the minor number stable.
+mv PMP support was added very recently.  2.6.26 has it.
 
-Ben.
-
-
+-- 
+tejun
