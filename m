@@ -1,168 +1,94 @@
-From: "eric" <eric@pozicom.net>
-Subject: RE: multiple sata_mv boards with same DevID ?
-Date: Thu, 31 Jul 2008 16:47:53 -0400
-Message-ID: <20080731213509.5C8573CF98@mail.pozicom.net>
-References: <4891D653.3020803@pobox.com>
-Reply-To: <eric@pozicom.net>
+From: Anton Vorontsov <avorontsov@ru.mvista.com>
+Subject: Re: libata badness
+Date: Fri, 1 Aug 2008 01:04:10 +0400
+Message-ID: <20080731210410.GA623@polina.dev.rtsoft.ru>
+References: <95646AC3-5385-4F59-8EBA-20F811168A87@kernel.crashing.org>
+Reply-To: avorontsov@ru.mvista.com
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mx01.pozicom.net ([70.88.103.169]:59422 "EHLO mail.pozicom.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752945AbYGaUol (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 31 Jul 2008 16:44:41 -0400
-In-Reply-To: <4891D653.3020803@pobox.com>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=utf8
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1757581AbYGaVE1@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <95646AC3-5385-4F59-8EBA-20F811168A87@kernel.crashing.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Kumar Gala <galak@kernel.crashing.org>
+Cc: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, Linux Kernel list <linux-kernel@vger.kernel.org>, linuxppc-dev list <linuxppc-dev@ozlabs.org>
 List-Id: linux-ide@vger.kernel.org
-To: 'Mark Lord' <mlord@pobox.com>
-Cc: linux-ide@vger.kernel.org
 
-Hello Mark,
+On Thu, Jul 31, 2008 at 01:53:45PM -0500, Kumar Gala wrote:
+> I'm getting the following badness with top of tree on a embedded PowerPC 
+> w/a ULI 1575 bridge (M5229 IDE):
+>
+> 02:1f.0 IDE interface: Acer Laboratories Inc. [ALi] M5229 IDE (rev c8)
 
-I did respond.  Maybe my note back to you got caught by your spam filter?  
+Just to be sure that I didn't break the ULi for your board, could
+you try locally revert this patch:
 
-At any rate, the details you're looking for are below.
+commit 52ddd1cdc923802b224b15ba75000c6c5668227f
+Author: Anton Vorontsov <avorontsov@ru.mvista.com>
+Date:   Thu Jun 12 03:04:17 2008 +0400
 
-BTW:  I just got an education on Software RAID vs. Hardware RAID.  I had no
-idea manufacturers were doing this.  Reminds me of the Win-Modem days.  I'm
-returning the card but still have it.  If there are any details you would
-like to know before I return the card, let me know and I'll be more than
-happy to get them for you.  I plan to ship the card back this Saturday.  
+    powerpc/85xx/86xx: some refactoring for fsl_uli1575 code
 
-Hope this helps!
+And see if this helps?
 
-Best,
-~Eric
+> If you need more info let me know.
+>
+> - k
+>
+> ahci 0000:02:1f.1: AHCI 0001.0000 32 slots 4 ports 3 Gbps 0xf impl SATA 
+> mode
+> ahci 0000:02:1f.1: flags: ncq sntf ilck pm led clo pmp pio slum part
+> ------------[ cut here ]------------
+> Badness at c021e700 [verbose debug info unavailable]
+> NIP: c021e700 LR: c021e6e8 CTR: c022ce90
+> REGS: ef82bca0 TRAP: 0700   Not tainted  (2.6.27-rc1-00495-g33bd9fe- 
+> dirty)
+> MSR: 00029032 <EE,ME,IR,DR>  CR: 22044022  XER: 20000000
+> TASK = ef830000[1] 'swapper' THREAD: ef82a000 CPU: 1
+> GPR00: 00000001 ef82bd50 ef830000 00000000 00009032 00000000 ef0b64fc  
+> 00000000
+> GPR08: ef937c10 c022f93f efbfc8e0 ef900b60 22044028 fffdd3ff 0ffe8700  
+> c044c17c
+> GPR16: c04d52ec ef82f458 ef82f4f4 ef82f4f4 c044c234 c044c5d8 c044c5d8  
+> c044c220
+> GPR24: c044c218 c04d52f0 00000080 c022f940 00000000 c044c244 efbec490  
+> 00000000
+> NIP [c021e700] ata_host_activate+0x40/0x10c
+> LR [c021e6e8] ata_host_activate+0x28/0x10c
+> Call Trace:
+> [ef82bd50] [c021e6e8] ata_host_activate+0x28/0x10c (unreliable)
+> [ef82bd80] [c022f48c] ahci_init_one+0x8b4/0xd68
+> [ef82be30] [c01b69c0] pci_device_probe+0x84/0xa8
+> [ef82be50] [c01e5438] driver_probe_device+0xb4/0x1e8
+> [ef82be70] [c01e55f0] __driver_attach+0x84/0x88
+> [ef82be90] [c01e4ba0] bus_for_each_dev+0x5c/0xa4
+> [ef82bec0] [c01e5254] driver_attach+0x24/0x34
+> [ef82bed0] [c01e44b8] bus_add_driver+0x1d8/0x24c
+> [ef82bef0] [c01e5810] driver_register+0x70/0x160
+> [ef82bf10] [c01b6c54] __pci_register_driver+0x64/0xc4
+> [ef82bf30] [c04aaa60] ahci_init+0x28/0x38
+> [ef82bf40] [c048717c] do_one_initcall+0x38/0x1ac
+> [ef82bfb0] [c04874e0] kernel_init+0x1f0/0x1fc
+> [ef82bff0] [c0013b04] kernel_thread+0x44/0x60
+> Instruction dump:
+> 7cbb2b78 90010034 7cda3378 7cf93b78 7c7e1b78 4bff9dbd 7c7f1b79 408200c8
+> 2f9c0000 409e002c 313bffff 7c09d910 <0f000000> 80010034 7fc3f378  
+> 7f24cb78
+> scsi0 : ahci
+> scsi1 : ahci
+> scsi2 : ahci
+> scsi3 : ahci
+> ata1: SATA max UDMA/133 abar m1024@0x80006000 port 0x80006100
+> ata2: SATA max UDMA/133 abar m1024@0x80006000 port 0x80006180
+> ata3: SATA max UDMA/133 abar m1024@0x80006000 port 0x80006200
+> ata4: SATA max UDMA/133 abar m1024@0x80006000 port 0x80006280
+> ata1: SATA link down (SStatus 0 SControl 300)
+> ata2: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+> ata2.00: qc timeout (cmd 0xec)
+> ata2.00: failed to IDENTIFY (I/O error, err_mask=0x4)
+> ata2: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
 
-
-lspci -xxx
-04:00.0 SCSI storage controller: HighPoint Technologies, Inc. RocketRAID
-1740 (rev 02)
-00: 03 11 40 17 17 01 b0 02 02 00 00 01 20 40 00 00
-10: 04 00 90 df 00 00 00 00 01 dc 00 00 00 00 00 00
-20: 00 00 00 00 00 00 00 00 00 00 00 00 ab 11 ab 11
-30: 00 00 00 00 40 00 00 00 00 00 00 00 0b 01 00 00
-40: 01 50 02 00 00 00 00 00 00 00 00 00 00 00 00 00
-50: 05 60 80 00 00 00 00 00 00 00 00 00 00 00 00 00
-60: 07 00 30 00 f8 ff 83 01 00 00 00 00 00 00 00 00
-70: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-80: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-90: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-a0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-b0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-c0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-d0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-e0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-f0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-
-lspci -vvxxx
-04:00.0 SCSI storage controller: HighPoint Technologies, Inc. RocketRAID
-1740 (rev 02)
-        Subsystem: Marvell Technology Group Ltd. Unknown device 11ab
-        Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV+ VGASnoop- ParErr-
-Stepping- SERR+ FastB2B- DisINTx-
-        Status: Cap+ 66MHz+ UDF- FastB2B+ ParErr- DEVSEL=medium >TAbort-
-<TAbort- <MAbort- >SERR- <PERR- INTx-
-        Latency: 64, Cache Line Size: 128 bytes
-        Interrupt: pin A routed to IRQ 16
-        Region 0: Memory at df900000 (64-bit, non-prefetchable) [size=1M]
-        Region 2: I/O ports at dc00 [size=256]
-        Capabilities: [40] Power Management version 2
-                Flags: PMEClk- DSI- D1- D2- AuxCurrent=0mA
-PME(D0-,D1-,D2-,D3hot-,D3cold-)
-                Status: D0 PME-Enable- DSel=0 DScale=0 PME-
-        Capabilities: [50] Message Signalled Interrupts: Mask- 64bit+
-Queue=0/0 Enable-
-                Address: 0000000000000000  Data: 0000
-        Capabilities: [60] PCI-X non-bridge device
-                Command: DPERE- ERO- RBC=512 OST=4
-                Status: Dev=ff:1f.0 64bit+ 133MHz+ SCD- USC- DC=simple
-DMMRBC=512 DMOST=4 DMCRS=8 RSCEM- 266MHz- 533MHz-
-        Kernel driver in use: sata_mv
-00: 03 11 40 17 17 01 b0 02 02 00 00 01 20 40 00 00
-10: 04 00 90 df 00 00 00 00 01 dc 00 00 00 00 00 00
-20: 00 00 00 00 00 00 00 00 00 00 00 00 ab 11 ab 11
-30: 00 00 00 00 40 00 00 00 00 00 00 00 0b 01 00 00
-40: 01 50 02 00 00 00 00 00 00 00 00 00 00 00 00 00
-50: 05 60 80 00 00 00 00 00 00 00 00 00 00 00 00 00
-60: 07 00 30 00 f8 ff 83 01 00 00 00 00 00 00 00 00
-70: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-80: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-90: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-a0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-b0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-c0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-d0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-e0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-f0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-
-
-~Eric
- 
-
-
-Eric Mayo
-Pozicom Technologies, Inc.
-Cell :  248-703-5241
-Fax  :  509-757-5241
-Email:  eric@pozicom.net 
-Web:  www.pozicom.net
-
-
------Original Message-----
-From: Mark Lord [mailto:mlord@pobox.com] 
-Sent: Thursday, July 31, 2008 11:12 AM
-To: eric@pozicom.net
-Cc: linux-ide@vger.kernel.org
-Subject: Re: multiple sata_mv boards with same DevID ?
-
-Hello?
-
-Still waiting to hear back from you on this (see below).
-
-Thanks
---
-Mark Lord
-Real-Time Remedies Inc.
-mlord@pobox.com
-
-Mark Lord wrote:
-> eric wrote:
->> To whom it may concern:
->>
->> We have the HighPoint 1740 SATAII RAID card.  I had to modify the 
->> sata_mv.c
->> (attached) to get it to work with my card.  The interesting bits are 
->> as
->> follows:
->>
->> /* RocketRAID 1740/174x have different identifiers */
->>
->> /* { PCI_VDEVICE(TTI, 0x1740), chip_508x }, */
->>
->> /* Pozicom: GenII 1740 cards use 88sx6042 chip */
->>
->> { PCI_VDEVICE(TTI, 0x1740), chip_6042 },
->>
->> { PCI_VDEVICE(TTI, 0x1742), chip_508x },
->>
->>  
->> It appears the same card has different chip set depending upon when 
->> you purchased your card.  Looking through the code, the GenI vs. GenII
-vs.
->> GenIIe is done after the call to mv_pci_init_one thus passing a table 
->> of values that are incorrect.  It would appear to make sense to solve 
->> this by creating two or more tables and make mv_pci_tbl a 
->> pci_device_id global
->> * and
->> reference it accordingly after the Rev. level was determined.
-> ..
-> 
-> Hi,
-> 
-> We (I) really need to see the output of "lspci -xxx" from that system.
-> 
-> Thanks.
-
+-- 
+Anton Vorontsov
+email: cbouatmailru@gmail.com
+irc://irc.freenode.net/bd2
