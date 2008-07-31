@@ -1,99 +1,956 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 3/5] libata: misc updates to prepare for slave link
-Date: Thu, 31 Jul 2008 17:02:42 +0900
-Message-ID: <1217491364-19725-4-git-send-email-tj@kernel.org>
+Subject: [PATCH 1/5] libata: make SCR access ops per-link
+Date: Thu, 31 Jul 2008 17:02:40 +0900
+Message-ID: <1217491364-19725-2-git-send-email-tj@kernel.org>
 References: <1217491364-19725-1-git-send-email-tj@kernel.org>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:39900 "EHLO hera.kernel.org"
+Received: from hera.kernel.org ([140.211.167.34]:39910 "EHLO hera.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750804AbYGaIES (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 31 Jul 2008 04:04:18 -0400
+	id S1750925AbYGaIE1 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 31 Jul 2008 04:04:27 -0400
 In-Reply-To: <1217491364-19725-1-git-send-email-tj@kernel.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: jeff@garzik.org, linux-ide@vger.kernel.org, alan@lxorguk.ukuu.org.uk, JosephChan@via.com.tw
 Cc: Tejun Heo <tj@kernel.org>
 
-* Add ATA_EH_ALL_ACTIONS.
+Logically, SCR access ops should take @link; however, there was no
+compelling reason to convert all SCR access ops when adding @link
+abstraction as there's one-to-one mapping between a port and a non-PMP
+link.  However, that assumption won't hold anymore with the scheduled
+addition of slave link.
 
-* Make sata_link_{on|off}_line() return bool instead of int.
+Make SCR access ops per-link.
 
 Signed-off-by: Tejun Heo <tj@kernel.org>
 ---
- drivers/ata/libata-core.c |   16 ++++++++--------
- include/linux/libata.h    |    6 ++++--
- 2 files changed, 12 insertions(+), 10 deletions(-)
+ drivers/ata/ahci.c            |   24 ++++++++++++------------
+ drivers/ata/ata_piix.c        |   15 +++++++++++----
+ drivers/ata/libata-core.c     |   13 ++++---------
+ drivers/ata/sata_fsl.c        |   26 +++++++++++++-------------
+ drivers/ata/sata_inic162x.c   |    8 ++++----
+ drivers/ata/sata_mv.c         |   28 ++++++++++++++--------------
+ drivers/ata/sata_nv.c         |   16 ++++++++--------
+ drivers/ata/sata_promise.c    |   16 +++++++++-------
+ drivers/ata/sata_qstor.c      |   12 ++++++------
+ drivers/ata/sata_sil.c        |   16 ++++++++--------
+ drivers/ata/sata_sil24.c      |   12 ++++++------
+ drivers/ata/sata_sis.c        |   28 ++++++++++++++++------------
+ drivers/ata/sata_svw.c        |   10 ++++++----
+ drivers/ata/sata_uli.c        |   24 ++++++++++++------------
+ drivers/ata/sata_via.c        |   24 ++++++++++++------------
+ drivers/ata/sata_vsc.c        |   10 ++++++----
+ drivers/scsi/libsas/sas_ata.c |    8 ++++----
+ include/linux/libata.h        |    4 ++--
+ 18 files changed, 153 insertions(+), 141 deletions(-)
 
+diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+index dc7596f..2b715ed 100644
+--- a/drivers/ata/ahci.c
++++ b/drivers/ata/ahci.c
+@@ -267,8 +267,8 @@ struct ahci_port_priv {
+ 					 	 * per PM slot */
+ };
+ 
+-static int ahci_scr_read(struct ata_port *ap, unsigned int sc_reg, u32 *val);
+-static int ahci_scr_write(struct ata_port *ap, unsigned int sc_reg, u32 val);
++static int ahci_scr_read(struct ata_link *link, unsigned int sc_reg, u32 *val);
++static int ahci_scr_write(struct ata_link *link, unsigned int sc_reg, u32 val);
+ static int ahci_init_one(struct pci_dev *pdev, const struct pci_device_id *ent);
+ static unsigned int ahci_qc_issue(struct ata_queued_cmd *qc);
+ static bool ahci_qc_fill_rtf(struct ata_queued_cmd *qc);
+@@ -805,10 +805,10 @@ static unsigned ahci_scr_offset(struct ata_port *ap, unsigned int sc_reg)
+ 	return 0;
+ }
+ 
+-static int ahci_scr_read(struct ata_port *ap, unsigned int sc_reg, u32 *val)
++static int ahci_scr_read(struct ata_link *link, unsigned int sc_reg, u32 *val)
+ {
+-	void __iomem *port_mmio = ahci_port_base(ap);
+-	int offset = ahci_scr_offset(ap, sc_reg);
++	void __iomem *port_mmio = ahci_port_base(link->ap);
++	int offset = ahci_scr_offset(link->ap, sc_reg);
+ 
+ 	if (offset) {
+ 		*val = readl(port_mmio + offset);
+@@ -817,10 +817,10 @@ static int ahci_scr_read(struct ata_port *ap, unsigned int sc_reg, u32 *val)
+ 	return -EINVAL;
+ }
+ 
+-static int ahci_scr_write(struct ata_port *ap, unsigned int sc_reg, u32 val)
++static int ahci_scr_write(struct ata_link *link, unsigned int sc_reg, u32 val)
+ {
+-	void __iomem *port_mmio = ahci_port_base(ap);
+-	int offset = ahci_scr_offset(ap, sc_reg);
++	void __iomem *port_mmio = ahci_port_base(link->ap);
++	int offset = ahci_scr_offset(link->ap, sc_reg);
+ 
+ 	if (offset) {
+ 		writel(val, port_mmio + offset);
+@@ -958,7 +958,7 @@ static void ahci_disable_alpm(struct ata_port *ap)
+ 	writel(PORT_IRQ_PHYRDY, port_mmio + PORT_IRQ_STAT);
+ 
+ 	/* go ahead and clean out PhyRdy Change from Serror too */
+-	ahci_scr_write(ap, SCR_ERROR, ((1 << 16) | (1 << 18)));
++	ahci_scr_write(&ap->link, SCR_ERROR, ((1 << 16) | (1 << 18)));
+ 
+ 	/*
+  	 * Clear flag to indicate that we should ignore all PhyRdy
+@@ -1922,8 +1922,8 @@ static void ahci_error_intr(struct ata_port *ap, u32 irq_stat)
+ 	ata_ehi_push_desc(host_ehi, "irq_stat 0x%08x", irq_stat);
+ 
+ 	/* AHCI needs SError cleared; otherwise, it might lock up */
+-	ahci_scr_read(ap, SCR_ERROR, &serror);
+-	ahci_scr_write(ap, SCR_ERROR, serror);
++	ahci_scr_read(&ap->link, SCR_ERROR, &serror);
++	ahci_scr_write(&ap->link, SCR_ERROR, serror);
+ 	host_ehi->serror |= serror;
+ 
+ 	/* some controllers set IRQ_IF_ERR on device errors, ignore it */
+@@ -2012,7 +2012,7 @@ static void ahci_port_intr(struct ata_port *ap)
+ 	if ((hpriv->flags & AHCI_HFLAG_NO_HOTPLUG) &&
+ 		(status & PORT_IRQ_PHYRDY)) {
+ 		status &= ~PORT_IRQ_PHYRDY;
+-		ahci_scr_write(ap, SCR_ERROR, ((1 << 16) | (1 << 18)));
++		ahci_scr_write(&ap->link, SCR_ERROR, ((1 << 16) | (1 << 18)));
+ 	}
+ 
+ 	if (unlikely(status & PORT_IRQ_ERROR)) {
+diff --git a/drivers/ata/ata_piix.c b/drivers/ata/ata_piix.c
+index a90ae03..375cdc7 100644
+--- a/drivers/ata/ata_piix.c
++++ b/drivers/ata/ata_piix.c
+@@ -165,8 +165,10 @@ static void piix_set_dmamode(struct ata_port *ap, struct ata_device *adev);
+ static void ich_set_dmamode(struct ata_port *ap, struct ata_device *adev);
+ static int ich_pata_cable_detect(struct ata_port *ap);
+ static u8 piix_vmw_bmdma_status(struct ata_port *ap);
+-static int piix_sidpr_scr_read(struct ata_port *ap, unsigned int reg, u32 *val);
+-static int piix_sidpr_scr_write(struct ata_port *ap, unsigned int reg, u32 val);
++static int piix_sidpr_scr_read(struct ata_link *link,
++			       unsigned int reg, u32 *val);
++static int piix_sidpr_scr_write(struct ata_link *link,
++				unsigned int reg, u32 val);
+ #ifdef CONFIG_PM
+ static int piix_pci_device_suspend(struct pci_dev *pdev, pm_message_t mesg);
+ static int piix_pci_device_resume(struct pci_dev *pdev);
+@@ -962,8 +964,10 @@ static u32 piix_merge_scr(u32 val0, u32 val1, const int * const *merge_tbl)
+ 	return val;
+ }
+ 
+-static int piix_sidpr_scr_read(struct ata_port *ap, unsigned int reg, u32 *val)
++static int piix_sidpr_scr_read(struct ata_link *link,
++			       unsigned int reg, u32 *val)
+ {
++	struct ata_port *ap = link->ap;
+ 	const int * const sstatus_merge_tbl[] = {
+ 		/* DET */ (const int []){ 1, 3, 0, 4, 3, -1 },
+ 		/* SPD */ (const int []){ 2, 1, 0, -1 },
+@@ -1004,8 +1008,11 @@ static int piix_sidpr_scr_read(struct ata_port *ap, unsigned int reg, u32 *val)
+ 	return 0;
+ }
+ 
+-static int piix_sidpr_scr_write(struct ata_port *ap, unsigned int reg, u32 val)
++static int piix_sidpr_scr_write(struct ata_link *link,
++				unsigned int reg, u32 val)
+ {
++	struct ata_port *ap = link->ap;
++
+ 	if (reg >= ARRAY_SIZE(piix_sidx_map))
+ 		return -EINVAL;
+ 
 diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index f7049cd..0c303e6 100644
+index 9481937..03151a1 100644
 --- a/drivers/ata/libata-core.c
 +++ b/drivers/ata/libata-core.c
-@@ -4935,16 +4935,16 @@ int sata_scr_write_flush(struct ata_link *link, int reg, u32 val)
-  *	None.
-  *
-  *	RETURNS:
-- *	1 if the port online status is available and online.
-+ *	True if the port online status is available and online.
-  */
--int ata_link_online(struct ata_link *link)
-+bool ata_link_online(struct ata_link *link)
+@@ -4827,10 +4827,8 @@ int sata_scr_valid(struct ata_link *link)
+ int sata_scr_read(struct ata_link *link, int reg, u32 *val)
  {
- 	u32 sstatus;
+ 	if (ata_is_host_link(link)) {
+-		struct ata_port *ap = link->ap;
+-
+ 		if (sata_scr_valid(link))
+-			return ap->ops->scr_read(ap, reg, val);
++			return link->ap->ops->scr_read(link, reg, val);
+ 		return -EOPNOTSUPP;
+ 	}
  
- 	if (sata_scr_read(link, SCR_STATUS, &sstatus) == 0 &&
- 	    (sstatus & 0xf) == 0x3)
--		return 1;
--	return 0;
-+		return true;
-+	return false;
+@@ -4856,10 +4854,8 @@ int sata_scr_read(struct ata_link *link, int reg, u32 *val)
+ int sata_scr_write(struct ata_link *link, int reg, u32 val)
+ {
+ 	if (ata_is_host_link(link)) {
+-		struct ata_port *ap = link->ap;
+-
+ 		if (sata_scr_valid(link))
+-			return ap->ops->scr_write(ap, reg, val);
++			return link->ap->ops->scr_write(link, reg, val);
+ 		return -EOPNOTSUPP;
+ 	}
+ 
+@@ -4884,13 +4880,12 @@ int sata_scr_write(struct ata_link *link, int reg, u32 val)
+ int sata_scr_write_flush(struct ata_link *link, int reg, u32 val)
+ {
+ 	if (ata_is_host_link(link)) {
+-		struct ata_port *ap = link->ap;
+ 		int rc;
+ 
+ 		if (sata_scr_valid(link)) {
+-			rc = ap->ops->scr_write(ap, reg, val);
++			rc = link->ap->ops->scr_write(link, reg, val);
+ 			if (rc == 0)
+-				rc = ap->ops->scr_read(ap, reg, &val);
++				rc = link->ap->ops->scr_read(link, reg, &val);
+ 			return rc;
+ 		}
+ 		return -EOPNOTSUPP;
+diff --git a/drivers/ata/sata_fsl.c b/drivers/ata/sata_fsl.c
+index 3924e72..1a56db9 100644
+--- a/drivers/ata/sata_fsl.c
++++ b/drivers/ata/sata_fsl.c
+@@ -469,10 +469,10 @@ static bool sata_fsl_qc_fill_rtf(struct ata_queued_cmd *qc)
+ 	return true;
  }
  
- /**
-@@ -4959,16 +4959,16 @@ int ata_link_online(struct ata_link *link)
-  *	None.
-  *
-  *	RETURNS:
-- *	1 if the port offline status is available and offline.
-+ *	True if the port offline status is available and offline.
-  */
--int ata_link_offline(struct ata_link *link)
-+bool ata_link_offline(struct ata_link *link)
+-static int sata_fsl_scr_write(struct ata_port *ap, unsigned int sc_reg_in,
+-			       u32 val)
++static int sata_fsl_scr_write(struct ata_link *link,
++			      unsigned int sc_reg_in, u32 val)
  {
- 	u32 sstatus;
+-	struct sata_fsl_host_priv *host_priv = ap->host->private_data;
++	struct sata_fsl_host_priv *host_priv = link->ap->host->private_data;
+ 	void __iomem *ssr_base = host_priv->ssr_base;
+ 	unsigned int sc_reg;
  
- 	if (sata_scr_read(link, SCR_STATUS, &sstatus) == 0 &&
- 	    (sstatus & 0xf) != 0x3)
--		return 1;
--	return 0;
-+		return true;
-+	return false;
+@@ -493,10 +493,10 @@ static int sata_fsl_scr_write(struct ata_port *ap, unsigned int sc_reg_in,
+ 	return 0;
  }
  
- #ifdef CONFIG_PM
+-static int sata_fsl_scr_read(struct ata_port *ap, unsigned int sc_reg_in,
+-			u32 *val)
++static int sata_fsl_scr_read(struct ata_link *link,
++			     unsigned int sc_reg_in, u32 *val)
+ {
+-	struct sata_fsl_host_priv *host_priv = ap->host->private_data;
++	struct sata_fsl_host_priv *host_priv = link->ap->host->private_data;
+ 	void __iomem *ssr_base = host_priv->ssr_base;
+ 	unsigned int sc_reg;
+ 
+@@ -645,12 +645,12 @@ static int sata_fsl_port_start(struct ata_port *ap)
+ 	 * Workaround for 8315DS board 3gbps link-up issue,
+ 	 * currently limit SATA port to GEN1 speed
+ 	 */
+-	sata_fsl_scr_read(ap, SCR_CONTROL, &temp);
++	sata_fsl_scr_read(&ap->link, SCR_CONTROL, &temp);
+ 	temp &= ~(0xF << 4);
+ 	temp |= (0x1 << 4);
+-	sata_fsl_scr_write(ap, SCR_CONTROL, temp);
++	sata_fsl_scr_write(&ap->link, SCR_CONTROL, temp);
+ 
+-	sata_fsl_scr_read(ap, SCR_CONTROL, &temp);
++	sata_fsl_scr_read(&ap->link, SCR_CONTROL, &temp);
+ 	dev_printk(KERN_WARNING, dev, "scr_control, speed limited to %x\n",
+ 			temp);
+ #endif
+@@ -868,7 +868,7 @@ issue_srst:
+ 			ioread32(CQ + hcr_base),
+ 			ioread32(CA + hcr_base), ioread32(CC + hcr_base));
+ 
+-		sata_fsl_scr_read(ap, SCR_ERROR, &Serror);
++		sata_fsl_scr_read(&ap->link, SCR_ERROR, &Serror);
+ 
+ 		DPRINTK("HStatus = 0x%x\n", ioread32(hcr_base + HSTATUS));
+ 		DPRINTK("HControl = 0x%x\n", ioread32(hcr_base + HCONTROL));
+@@ -972,9 +972,9 @@ static void sata_fsl_error_intr(struct ata_port *ap)
+ 	 * Handle & Clear SError
+ 	 */
+ 
+-	sata_fsl_scr_read(ap, SCR_ERROR, &SError);
++	sata_fsl_scr_read(&ap->link, SCR_ERROR, &SError);
+ 	if (unlikely(SError & 0xFFFF0000)) {
+-		sata_fsl_scr_write(ap, SCR_ERROR, SError);
++		sata_fsl_scr_write(&ap->link, SCR_ERROR, SError);
+ 	}
+ 
+ 	DPRINTK("error_intr,hStat=0x%x,CE=0x%x,DE =0x%x,SErr=0x%x\n",
+@@ -1091,7 +1091,7 @@ static void sata_fsl_host_intr(struct ata_port *ap)
+ 
+ 	hstatus = ioread32(hcr_base + HSTATUS);
+ 
+-	sata_fsl_scr_read(ap, SCR_ERROR, &SError);
++	sata_fsl_scr_read(&ap->link, SCR_ERROR, &SError);
+ 
+ 	if (unlikely(SError & 0xFFFF0000)) {
+ 		DPRINTK("serror @host_intr : 0x%x\n", SError);
+diff --git a/drivers/ata/sata_inic162x.c b/drivers/ata/sata_inic162x.c
+index 3ead02f..f77b13c 100644
+--- a/drivers/ata/sata_inic162x.c
++++ b/drivers/ata/sata_inic162x.c
+@@ -268,9 +268,9 @@ static void inic_reset_port(void __iomem *port_base)
+ 	writeb(0xff, port_base + PORT_IRQ_STAT);
+ }
+ 
+-static int inic_scr_read(struct ata_port *ap, unsigned sc_reg, u32 *val)
++static int inic_scr_read(struct ata_link *link, unsigned sc_reg, u32 *val)
+ {
+-	void __iomem *scr_addr = inic_port_base(ap) + PORT_SCR;
++	void __iomem *scr_addr = inic_port_base(link->ap) + PORT_SCR;
+ 	void __iomem *addr;
+ 
+ 	if (unlikely(sc_reg >= ARRAY_SIZE(scr_map)))
+@@ -285,9 +285,9 @@ static int inic_scr_read(struct ata_port *ap, unsigned sc_reg, u32 *val)
+ 	return 0;
+ }
+ 
+-static int inic_scr_write(struct ata_port *ap, unsigned sc_reg, u32 val)
++static int inic_scr_write(struct ata_link *link, unsigned sc_reg, u32 val)
+ {
+-	void __iomem *scr_addr = inic_port_base(ap) + PORT_SCR;
++	void __iomem *scr_addr = inic_port_base(link->ap) + PORT_SCR;
+ 
+ 	if (unlikely(sc_reg >= ARRAY_SIZE(scr_map)))
+ 		return -EINVAL;
+diff --git a/drivers/ata/sata_mv.c b/drivers/ata/sata_mv.c
+index ad169ff..e282f3f 100644
+--- a/drivers/ata/sata_mv.c
++++ b/drivers/ata/sata_mv.c
+@@ -493,10 +493,10 @@ struct mv_hw_ops {
+ 	void (*reset_bus)(struct ata_host *host, void __iomem *mmio);
+ };
+ 
+-static int mv_scr_read(struct ata_port *ap, unsigned int sc_reg_in, u32 *val);
+-static int mv_scr_write(struct ata_port *ap, unsigned int sc_reg_in, u32 val);
+-static int mv5_scr_read(struct ata_port *ap, unsigned int sc_reg_in, u32 *val);
+-static int mv5_scr_write(struct ata_port *ap, unsigned int sc_reg_in, u32 val);
++static int mv_scr_read(struct ata_link *link, unsigned int sc_reg_in, u32 *val);
++static int mv_scr_write(struct ata_link *link, unsigned int sc_reg_in, u32 val);
++static int mv5_scr_read(struct ata_link *link, unsigned int sc_reg_in, u32 *val);
++static int mv5_scr_write(struct ata_link *link, unsigned int sc_reg_in, u32 val);
+ static int mv_port_start(struct ata_port *ap);
+ static void mv_port_stop(struct ata_port *ap);
+ static int mv_qc_defer(struct ata_queued_cmd *qc);
+@@ -1069,23 +1069,23 @@ static unsigned int mv_scr_offset(unsigned int sc_reg_in)
+ 	return ofs;
+ }
+ 
+-static int mv_scr_read(struct ata_port *ap, unsigned int sc_reg_in, u32 *val)
++static int mv_scr_read(struct ata_link *link, unsigned int sc_reg_in, u32 *val)
+ {
+ 	unsigned int ofs = mv_scr_offset(sc_reg_in);
+ 
+ 	if (ofs != 0xffffffffU) {
+-		*val = readl(mv_ap_base(ap) + ofs);
++		*val = readl(mv_ap_base(link->ap) + ofs);
+ 		return 0;
+ 	} else
+ 		return -EINVAL;
+ }
+ 
+-static int mv_scr_write(struct ata_port *ap, unsigned int sc_reg_in, u32 val)
++static int mv_scr_write(struct ata_link *link, unsigned int sc_reg_in, u32 val)
+ {
+ 	unsigned int ofs = mv_scr_offset(sc_reg_in);
+ 
+ 	if (ofs != 0xffffffffU) {
+-		writelfl(val, mv_ap_base(ap) + ofs);
++		writelfl(val, mv_ap_base(link->ap) + ofs);
+ 		return 0;
+ 	} else
+ 		return -EINVAL;
+@@ -2264,11 +2264,11 @@ static unsigned int mv5_scr_offset(unsigned int sc_reg_in)
+ 	return ofs;
+ }
+ 
+-static int mv5_scr_read(struct ata_port *ap, unsigned int sc_reg_in, u32 *val)
++static int mv5_scr_read(struct ata_link *link, unsigned int sc_reg_in, u32 *val)
+ {
+-	struct mv_host_priv *hpriv = ap->host->private_data;
++	struct mv_host_priv *hpriv = link->ap->host->private_data;
+ 	void __iomem *mmio = hpriv->base;
+-	void __iomem *addr = mv5_phy_base(mmio, ap->port_no);
++	void __iomem *addr = mv5_phy_base(mmio, link->ap->port_no);
+ 	unsigned int ofs = mv5_scr_offset(sc_reg_in);
+ 
+ 	if (ofs != 0xffffffffU) {
+@@ -2278,11 +2278,11 @@ static int mv5_scr_read(struct ata_port *ap, unsigned int sc_reg_in, u32 *val)
+ 		return -EINVAL;
+ }
+ 
+-static int mv5_scr_write(struct ata_port *ap, unsigned int sc_reg_in, u32 val)
++static int mv5_scr_write(struct ata_link *link, unsigned int sc_reg_in, u32 val)
+ {
+-	struct mv_host_priv *hpriv = ap->host->private_data;
++	struct mv_host_priv *hpriv = link->ap->host->private_data;
+ 	void __iomem *mmio = hpriv->base;
+-	void __iomem *addr = mv5_phy_base(mmio, ap->port_no);
++	void __iomem *addr = mv5_phy_base(mmio, link->ap->port_no);
+ 	unsigned int ofs = mv5_scr_offset(sc_reg_in);
+ 
+ 	if (ofs != 0xffffffffU) {
+diff --git a/drivers/ata/sata_nv.c b/drivers/ata/sata_nv.c
+index 858f706..5cd18a5 100644
+--- a/drivers/ata/sata_nv.c
++++ b/drivers/ata/sata_nv.c
+@@ -302,8 +302,8 @@ static void nv_ck804_host_stop(struct ata_host *host);
+ static irqreturn_t nv_generic_interrupt(int irq, void *dev_instance);
+ static irqreturn_t nv_nf2_interrupt(int irq, void *dev_instance);
+ static irqreturn_t nv_ck804_interrupt(int irq, void *dev_instance);
+-static int nv_scr_read(struct ata_port *ap, unsigned int sc_reg, u32 *val);
+-static int nv_scr_write(struct ata_port *ap, unsigned int sc_reg, u32 val);
++static int nv_scr_read(struct ata_link *link, unsigned int sc_reg, u32 *val);
++static int nv_scr_write(struct ata_link *link, unsigned int sc_reg, u32 val);
+ 
+ static void nv_nf2_freeze(struct ata_port *ap);
+ static void nv_nf2_thaw(struct ata_port *ap);
+@@ -1494,21 +1494,21 @@ static irqreturn_t nv_ck804_interrupt(int irq, void *dev_instance)
+ 	return ret;
+ }
+ 
+-static int nv_scr_read(struct ata_port *ap, unsigned int sc_reg, u32 *val)
++static int nv_scr_read(struct ata_link *link, unsigned int sc_reg, u32 *val)
+ {
+ 	if (sc_reg > SCR_CONTROL)
+ 		return -EINVAL;
+ 
+-	*val = ioread32(ap->ioaddr.scr_addr + (sc_reg * 4));
++	*val = ioread32(link->ap->ioaddr.scr_addr + (sc_reg * 4));
+ 	return 0;
+ }
+ 
+-static int nv_scr_write(struct ata_port *ap, unsigned int sc_reg, u32 val)
++static int nv_scr_write(struct ata_link *link, unsigned int sc_reg, u32 val)
+ {
+ 	if (sc_reg > SCR_CONTROL)
+ 		return -EINVAL;
+ 
+-	iowrite32(val, ap->ioaddr.scr_addr + (sc_reg * 4));
++	iowrite32(val, link->ap->ioaddr.scr_addr + (sc_reg * 4));
+ 	return 0;
+ }
+ 
+@@ -2201,9 +2201,9 @@ static void nv_swncq_host_interrupt(struct ata_port *ap, u16 fis)
+ 	if (!pp->qc_active)
+ 		return;
+ 
+-	if (ap->ops->scr_read(ap, SCR_ERROR, &serror))
++	if (ap->ops->scr_read(&ap->link, SCR_ERROR, &serror))
+ 		return;
+-	ap->ops->scr_write(ap, SCR_ERROR, serror);
++	ap->ops->scr_write(&ap->link, SCR_ERROR, serror);
+ 
+ 	if (ata_stat & ATA_ERR) {
+ 		ata_ehi_clear_desc(ehi);
+diff --git a/drivers/ata/sata_promise.c b/drivers/ata/sata_promise.c
+index 030665b..750d8cd 100644
+--- a/drivers/ata/sata_promise.c
++++ b/drivers/ata/sata_promise.c
+@@ -137,8 +137,8 @@ struct pdc_port_priv {
+ 	dma_addr_t		pkt_dma;
+ };
+ 
+-static int pdc_sata_scr_read(struct ata_port *ap, unsigned int sc_reg, u32 *val);
+-static int pdc_sata_scr_write(struct ata_port *ap, unsigned int sc_reg, u32 val);
++static int pdc_sata_scr_read(struct ata_link *link, unsigned int sc_reg, u32 *val);
++static int pdc_sata_scr_write(struct ata_link *link, unsigned int sc_reg, u32 val);
+ static int pdc_ata_init_one(struct pci_dev *pdev, const struct pci_device_id *ent);
+ static int pdc_common_port_start(struct ata_port *ap);
+ static int pdc_sata_port_start(struct ata_port *ap);
+@@ -386,19 +386,21 @@ static int pdc_sata_cable_detect(struct ata_port *ap)
+ 	return ATA_CBL_SATA;
+ }
+ 
+-static int pdc_sata_scr_read(struct ata_port *ap, unsigned int sc_reg, u32 *val)
++static int pdc_sata_scr_read(struct ata_link *link,
++			     unsigned int sc_reg, u32 *val)
+ {
+ 	if (sc_reg > SCR_CONTROL)
+ 		return -EINVAL;
+-	*val = readl(ap->ioaddr.scr_addr + (sc_reg * 4));
++	*val = readl(link->ap->ioaddr.scr_addr + (sc_reg * 4));
+ 	return 0;
+ }
+ 
+-static int pdc_sata_scr_write(struct ata_port *ap, unsigned int sc_reg, u32 val)
++static int pdc_sata_scr_write(struct ata_link *link,
++			      unsigned int sc_reg, u32 val)
+ {
+ 	if (sc_reg > SCR_CONTROL)
+ 		return -EINVAL;
+-	writel(val, ap->ioaddr.scr_addr + (sc_reg * 4));
++	writel(val, link->ap->ioaddr.scr_addr + (sc_reg * 4));
+ 	return 0;
+ }
+ 
+@@ -731,7 +733,7 @@ static void pdc_error_intr(struct ata_port *ap, struct ata_queued_cmd *qc,
+ 	if (sata_scr_valid(&ap->link)) {
+ 		u32 serror;
+ 
+-		pdc_sata_scr_read(ap, SCR_ERROR, &serror);
++		pdc_sata_scr_read(&ap->link, SCR_ERROR, &serror);
+ 		ehi->serror |= serror;
+ 	}
+ 
+diff --git a/drivers/ata/sata_qstor.c b/drivers/ata/sata_qstor.c
+index 1600107..a000c86 100644
+--- a/drivers/ata/sata_qstor.c
++++ b/drivers/ata/sata_qstor.c
+@@ -111,8 +111,8 @@ struct qs_port_priv {
+ 	qs_state_t		state;
+ };
+ 
+-static int qs_scr_read(struct ata_port *ap, unsigned int sc_reg, u32 *val);
+-static int qs_scr_write(struct ata_port *ap, unsigned int sc_reg, u32 val);
++static int qs_scr_read(struct ata_link *link, unsigned int sc_reg, u32 *val);
++static int qs_scr_write(struct ata_link *link, unsigned int sc_reg, u32 val);
+ static int qs_ata_init_one(struct pci_dev *pdev, const struct pci_device_id *ent);
+ static int qs_port_start(struct ata_port *ap);
+ static void qs_host_stop(struct ata_host *host);
+@@ -242,11 +242,11 @@ static int qs_prereset(struct ata_link *link, unsigned long deadline)
+ 	return ata_sff_prereset(link, deadline);
+ }
+ 
+-static int qs_scr_read(struct ata_port *ap, unsigned int sc_reg, u32 *val)
++static int qs_scr_read(struct ata_link *link, unsigned int sc_reg, u32 *val)
+ {
+ 	if (sc_reg > SCR_CONTROL)
+ 		return -EINVAL;
+-	*val = readl(ap->ioaddr.scr_addr + (sc_reg * 8));
++	*val = readl(link->ap->ioaddr.scr_addr + (sc_reg * 8));
+ 	return 0;
+ }
+ 
+@@ -256,11 +256,11 @@ static void qs_error_handler(struct ata_port *ap)
+ 	ata_std_error_handler(ap);
+ }
+ 
+-static int qs_scr_write(struct ata_port *ap, unsigned int sc_reg, u32 val)
++static int qs_scr_write(struct ata_link *link, unsigned int sc_reg, u32 val)
+ {
+ 	if (sc_reg > SCR_CONTROL)
+ 		return -EINVAL;
+-	writel(val, ap->ioaddr.scr_addr + (sc_reg * 8));
++	writel(val, link->ap->ioaddr.scr_addr + (sc_reg * 8));
+ 	return 0;
+ }
+ 
+diff --git a/drivers/ata/sata_sil.c b/drivers/ata/sata_sil.c
+index 88bf421..031d7b7 100644
+--- a/drivers/ata/sata_sil.c
++++ b/drivers/ata/sata_sil.c
+@@ -115,8 +115,8 @@ static int sil_init_one(struct pci_dev *pdev, const struct pci_device_id *ent);
+ static int sil_pci_device_resume(struct pci_dev *pdev);
+ #endif
+ static void sil_dev_config(struct ata_device *dev);
+-static int sil_scr_read(struct ata_port *ap, unsigned int sc_reg, u32 *val);
+-static int sil_scr_write(struct ata_port *ap, unsigned int sc_reg, u32 val);
++static int sil_scr_read(struct ata_link *link, unsigned int sc_reg, u32 *val);
++static int sil_scr_write(struct ata_link *link, unsigned int sc_reg, u32 val);
+ static int sil_set_mode(struct ata_link *link, struct ata_device **r_failed);
+ static void sil_freeze(struct ata_port *ap);
+ static void sil_thaw(struct ata_port *ap);
+@@ -317,9 +317,9 @@ static inline void __iomem *sil_scr_addr(struct ata_port *ap,
+ 	return NULL;
+ }
+ 
+-static int sil_scr_read(struct ata_port *ap, unsigned int sc_reg, u32 *val)
++static int sil_scr_read(struct ata_link *link, unsigned int sc_reg, u32 *val)
+ {
+-	void __iomem *mmio = sil_scr_addr(ap, sc_reg);
++	void __iomem *mmio = sil_scr_addr(link->ap, sc_reg);
+ 
+ 	if (mmio) {
+ 		*val = readl(mmio);
+@@ -328,9 +328,9 @@ static int sil_scr_read(struct ata_port *ap, unsigned int sc_reg, u32 *val)
+ 	return -EINVAL;
+ }
+ 
+-static int sil_scr_write(struct ata_port *ap, unsigned int sc_reg, u32 val)
++static int sil_scr_write(struct ata_link *link, unsigned int sc_reg, u32 val)
+ {
+-	void __iomem *mmio = sil_scr_addr(ap, sc_reg);
++	void __iomem *mmio = sil_scr_addr(link->ap, sc_reg);
+ 
+ 	if (mmio) {
+ 		writel(val, mmio);
+@@ -352,8 +352,8 @@ static void sil_host_intr(struct ata_port *ap, u32 bmdma2)
+ 		 * controllers continue to assert IRQ as long as
+ 		 * SError bits are pending.  Clear SError immediately.
+ 		 */
+-		sil_scr_read(ap, SCR_ERROR, &serror);
+-		sil_scr_write(ap, SCR_ERROR, serror);
++		sil_scr_read(&ap->link, SCR_ERROR, &serror);
++		sil_scr_write(&ap->link, SCR_ERROR, serror);
+ 
+ 		/* Sometimes spurious interrupts occur, double check
+ 		 * it's PHYRDY CHG.
+diff --git a/drivers/ata/sata_sil24.c b/drivers/ata/sata_sil24.c
+index 84ffcc2..4621807 100644
+--- a/drivers/ata/sata_sil24.c
++++ b/drivers/ata/sata_sil24.c
+@@ -340,8 +340,8 @@ struct sil24_port_priv {
+ };
+ 
+ static void sil24_dev_config(struct ata_device *dev);
+-static int sil24_scr_read(struct ata_port *ap, unsigned sc_reg, u32 *val);
+-static int sil24_scr_write(struct ata_port *ap, unsigned sc_reg, u32 val);
++static int sil24_scr_read(struct ata_link *link, unsigned sc_reg, u32 *val);
++static int sil24_scr_write(struct ata_link *link, unsigned sc_reg, u32 val);
+ static int sil24_qc_defer(struct ata_queued_cmd *qc);
+ static void sil24_qc_prep(struct ata_queued_cmd *qc);
+ static unsigned int sil24_qc_issue(struct ata_queued_cmd *qc);
+@@ -504,9 +504,9 @@ static int sil24_scr_map[] = {
+ 	[SCR_ACTIVE]	= 3,
+ };
+ 
+-static int sil24_scr_read(struct ata_port *ap, unsigned sc_reg, u32 *val)
++static int sil24_scr_read(struct ata_link *link, unsigned sc_reg, u32 *val)
+ {
+-	void __iomem *scr_addr = sil24_port_base(ap) + PORT_SCONTROL;
++	void __iomem *scr_addr = sil24_port_base(link->ap) + PORT_SCONTROL;
+ 
+ 	if (sc_reg < ARRAY_SIZE(sil24_scr_map)) {
+ 		void __iomem *addr;
+@@ -517,9 +517,9 @@ static int sil24_scr_read(struct ata_port *ap, unsigned sc_reg, u32 *val)
+ 	return -EINVAL;
+ }
+ 
+-static int sil24_scr_write(struct ata_port *ap, unsigned sc_reg, u32 val)
++static int sil24_scr_write(struct ata_link *link, unsigned sc_reg, u32 val)
+ {
+-	void __iomem *scr_addr = sil24_port_base(ap) + PORT_SCONTROL;
++	void __iomem *scr_addr = sil24_port_base(link->ap) + PORT_SCONTROL;
+ 
+ 	if (sc_reg < ARRAY_SIZE(sil24_scr_map)) {
+ 		void __iomem *addr;
+diff --git a/drivers/ata/sata_sis.c b/drivers/ata/sata_sis.c
+index 1010b30..9c43b4e 100644
+--- a/drivers/ata/sata_sis.c
++++ b/drivers/ata/sata_sis.c
+@@ -64,8 +64,8 @@ enum {
+ };
+ 
+ static int sis_init_one(struct pci_dev *pdev, const struct pci_device_id *ent);
+-static int sis_scr_read(struct ata_port *ap, unsigned int sc_reg, u32 *val);
+-static int sis_scr_write(struct ata_port *ap, unsigned int sc_reg, u32 val);
++static int sis_scr_read(struct ata_link *link, unsigned int sc_reg, u32 *val);
++static int sis_scr_write(struct ata_link *link, unsigned int sc_reg, u32 val);
+ 
+ static const struct pci_device_id sis_pci_tbl[] = {
+ 	{ PCI_VDEVICE(SI, 0x0180), sis_180 },	/* SiS 964/180 */
+@@ -134,10 +134,11 @@ static unsigned int get_scr_cfg_addr(struct ata_port *ap, unsigned int sc_reg)
+ 	return addr;
+ }
+ 
+-static u32 sis_scr_cfg_read(struct ata_port *ap, unsigned int sc_reg, u32 *val)
++static u32 sis_scr_cfg_read(struct ata_link *link,
++			    unsigned int sc_reg, u32 *val)
+ {
+-	struct pci_dev *pdev = to_pci_dev(ap->host->dev);
+-	unsigned int cfg_addr = get_scr_cfg_addr(ap, sc_reg);
++	struct pci_dev *pdev = to_pci_dev(link->ap->host->dev);
++	unsigned int cfg_addr = get_scr_cfg_addr(link->ap, sc_reg);
+ 	u32 val2 = 0;
+ 	u8 pmr;
+ 
+@@ -158,10 +159,11 @@ static u32 sis_scr_cfg_read(struct ata_port *ap, unsigned int sc_reg, u32 *val)
+ 	return 0;
+ }
+ 
+-static int sis_scr_cfg_write(struct ata_port *ap, unsigned int sc_reg, u32 val)
++static int sis_scr_cfg_write(struct ata_link *link,
++			     unsigned int sc_reg, u32 val)
+ {
+-	struct pci_dev *pdev = to_pci_dev(ap->host->dev);
+-	unsigned int cfg_addr = get_scr_cfg_addr(ap, sc_reg);
++	struct pci_dev *pdev = to_pci_dev(link->ap->host->dev);
++	unsigned int cfg_addr = get_scr_cfg_addr(link->ap, sc_reg);
+ 	u8 pmr;
+ 
+ 	if (sc_reg == SCR_ERROR) /* doesn't exist in PCI cfg space */
+@@ -178,8 +180,9 @@ static int sis_scr_cfg_write(struct ata_port *ap, unsigned int sc_reg, u32 val)
+ 	return 0;
+ }
+ 
+-static int sis_scr_read(struct ata_port *ap, unsigned int sc_reg, u32 *val)
++static int sis_scr_read(struct ata_link *link, unsigned int sc_reg, u32 *val)
+ {
++	struct ata_port *ap = link->ap;
+ 	struct pci_dev *pdev = to_pci_dev(ap->host->dev);
+ 	u8 pmr;
+ 
+@@ -187,7 +190,7 @@ static int sis_scr_read(struct ata_port *ap, unsigned int sc_reg, u32 *val)
+ 		return -EINVAL;
+ 
+ 	if (ap->flags & SIS_FLAG_CFGSCR)
+-		return sis_scr_cfg_read(ap, sc_reg, val);
++		return sis_scr_cfg_read(link, sc_reg, val);
+ 
+ 	pci_read_config_byte(pdev, SIS_PMR, &pmr);
+ 
+@@ -202,8 +205,9 @@ static int sis_scr_read(struct ata_port *ap, unsigned int sc_reg, u32 *val)
+ 	return 0;
+ }
+ 
+-static int sis_scr_write(struct ata_port *ap, unsigned int sc_reg, u32 val)
++static int sis_scr_write(struct ata_link *link, unsigned int sc_reg, u32 val)
+ {
++	struct ata_port *ap = link->ap;
+ 	struct pci_dev *pdev = to_pci_dev(ap->host->dev);
+ 	u8 pmr;
+ 
+@@ -213,7 +217,7 @@ static int sis_scr_write(struct ata_port *ap, unsigned int sc_reg, u32 val)
+ 	pci_read_config_byte(pdev, SIS_PMR, &pmr);
+ 
+ 	if (ap->flags & SIS_FLAG_CFGSCR)
+-		return sis_scr_cfg_write(ap, sc_reg, val);
++		return sis_scr_cfg_write(link, sc_reg, val);
+ 	else {
+ 		iowrite32(val, ap->ioaddr.scr_addr + (sc_reg * 4));
+ 		if ((pdev->device == 0x0182) || (pdev->device == 0x0183) ||
+diff --git a/drivers/ata/sata_svw.c b/drivers/ata/sata_svw.c
+index fb13b82..609d147 100644
+--- a/drivers/ata/sata_svw.c
++++ b/drivers/ata/sata_svw.c
+@@ -123,20 +123,22 @@ static int k2_sata_check_atapi_dma(struct ata_queued_cmd *qc)
+ 	}
+ }
+ 
+-static int k2_sata_scr_read(struct ata_port *ap, unsigned int sc_reg, u32 *val)
++static int k2_sata_scr_read(struct ata_link *link,
++			    unsigned int sc_reg, u32 *val)
+ {
+ 	if (sc_reg > SCR_CONTROL)
+ 		return -EINVAL;
+-	*val = readl(ap->ioaddr.scr_addr + (sc_reg * 4));
++	*val = readl(link->ap->ioaddr.scr_addr + (sc_reg * 4));
+ 	return 0;
+ }
+ 
+ 
+-static int k2_sata_scr_write(struct ata_port *ap, unsigned int sc_reg, u32 val)
++static int k2_sata_scr_write(struct ata_link *link,
++			     unsigned int sc_reg, u32 val)
+ {
+ 	if (sc_reg > SCR_CONTROL)
+ 		return -EINVAL;
+-	writel(val, ap->ioaddr.scr_addr + (sc_reg * 4));
++	writel(val, link->ap->ioaddr.scr_addr + (sc_reg * 4));
+ 	return 0;
+ }
+ 
+diff --git a/drivers/ata/sata_uli.c b/drivers/ata/sata_uli.c
+index db529b8..019575b 100644
+--- a/drivers/ata/sata_uli.c
++++ b/drivers/ata/sata_uli.c
+@@ -57,8 +57,8 @@ struct uli_priv {
+ };
+ 
+ static int uli_init_one(struct pci_dev *pdev, const struct pci_device_id *ent);
+-static int uli_scr_read(struct ata_port *ap, unsigned int sc_reg, u32 *val);
+-static int uli_scr_write(struct ata_port *ap, unsigned int sc_reg, u32 val);
++static int uli_scr_read(struct ata_link *link, unsigned int sc_reg, u32 *val);
++static int uli_scr_write(struct ata_link *link, unsigned int sc_reg, u32 val);
+ 
+ static const struct pci_device_id uli_pci_tbl[] = {
+ 	{ PCI_VDEVICE(AL, 0x5289), uli_5289 },
+@@ -107,39 +107,39 @@ static unsigned int get_scr_cfg_addr(struct ata_port *ap, unsigned int sc_reg)
+ 	return hpriv->scr_cfg_addr[ap->port_no] + (4 * sc_reg);
+ }
+ 
+-static u32 uli_scr_cfg_read(struct ata_port *ap, unsigned int sc_reg)
++static u32 uli_scr_cfg_read(struct ata_link *link, unsigned int sc_reg)
+ {
+-	struct pci_dev *pdev = to_pci_dev(ap->host->dev);
+-	unsigned int cfg_addr = get_scr_cfg_addr(ap, sc_reg);
++	struct pci_dev *pdev = to_pci_dev(link->ap->host->dev);
++	unsigned int cfg_addr = get_scr_cfg_addr(link->ap, sc_reg);
+ 	u32 val;
+ 
+ 	pci_read_config_dword(pdev, cfg_addr, &val);
+ 	return val;
+ }
+ 
+-static void uli_scr_cfg_write(struct ata_port *ap, unsigned int scr, u32 val)
++static void uli_scr_cfg_write(struct ata_link *link, unsigned int scr, u32 val)
+ {
+-	struct pci_dev *pdev = to_pci_dev(ap->host->dev);
+-	unsigned int cfg_addr = get_scr_cfg_addr(ap, scr);
++	struct pci_dev *pdev = to_pci_dev(link->ap->host->dev);
++	unsigned int cfg_addr = get_scr_cfg_addr(link->ap, scr);
+ 
+ 	pci_write_config_dword(pdev, cfg_addr, val);
+ }
+ 
+-static int uli_scr_read(struct ata_port *ap, unsigned int sc_reg, u32 *val)
++static int uli_scr_read(struct ata_link *link, unsigned int sc_reg, u32 *val)
+ {
+ 	if (sc_reg > SCR_CONTROL)
+ 		return -EINVAL;
+ 
+-	*val = uli_scr_cfg_read(ap, sc_reg);
++	*val = uli_scr_cfg_read(link, sc_reg);
+ 	return 0;
+ }
+ 
+-static int uli_scr_write(struct ata_port *ap, unsigned int sc_reg, u32 val)
++static int uli_scr_write(struct ata_link *link, unsigned int sc_reg, u32 val)
+ {
+ 	if (sc_reg > SCR_CONTROL) //SCR_CONTROL=2, SCR_ERROR=1, SCR_STATUS=0
+ 		return -EINVAL;
+ 
+-	uli_scr_cfg_write(ap, sc_reg, val);
++	uli_scr_cfg_write(link, sc_reg, val);
+ 	return 0;
+ }
+ 
+diff --git a/drivers/ata/sata_via.c b/drivers/ata/sata_via.c
+index 96deeb3..1cfa745 100644
+--- a/drivers/ata/sata_via.c
++++ b/drivers/ata/sata_via.c
+@@ -68,8 +68,8 @@ enum {
+ };
+ 
+ static int svia_init_one(struct pci_dev *pdev, const struct pci_device_id *ent);
+-static int svia_scr_read(struct ata_port *ap, unsigned int sc_reg, u32 *val);
+-static int svia_scr_write(struct ata_port *ap, unsigned int sc_reg, u32 val);
++static int svia_scr_read(struct ata_link *link, unsigned int sc_reg, u32 *val);
++static int svia_scr_write(struct ata_link *link, unsigned int sc_reg, u32 val);
+ static void svia_noop_freeze(struct ata_port *ap);
+ static int vt6420_prereset(struct ata_link *link, unsigned long deadline);
+ static int vt6421_pata_cable_detect(struct ata_port *ap);
+@@ -152,19 +152,19 @@ MODULE_LICENSE("GPL");
+ MODULE_DEVICE_TABLE(pci, svia_pci_tbl);
+ MODULE_VERSION(DRV_VERSION);
+ 
+-static int svia_scr_read(struct ata_port *ap, unsigned int sc_reg, u32 *val)
++static int svia_scr_read(struct ata_link *link, unsigned int sc_reg, u32 *val)
+ {
+ 	if (sc_reg > SCR_CONTROL)
+ 		return -EINVAL;
+-	*val = ioread32(ap->ioaddr.scr_addr + (4 * sc_reg));
++	*val = ioread32(link->ap->ioaddr.scr_addr + (4 * sc_reg));
+ 	return 0;
+ }
+ 
+-static int svia_scr_write(struct ata_port *ap, unsigned int sc_reg, u32 val)
++static int svia_scr_write(struct ata_link *link, unsigned int sc_reg, u32 val)
+ {
+ 	if (sc_reg > SCR_CONTROL)
+ 		return -EINVAL;
+-	iowrite32(val, ap->ioaddr.scr_addr + (4 * sc_reg));
++	iowrite32(val, link->ap->ioaddr.scr_addr + (4 * sc_reg));
+ 	return 0;
+ }
+ 
+@@ -210,20 +210,20 @@ static int vt6420_prereset(struct ata_link *link, unsigned long deadline)
+ 		goto skip_scr;
+ 
+ 	/* Resume phy.  This is the old SATA resume sequence */
+-	svia_scr_write(ap, SCR_CONTROL, 0x300);
+-	svia_scr_read(ap, SCR_CONTROL, &scontrol); /* flush */
++	svia_scr_write(link, SCR_CONTROL, 0x300);
++	svia_scr_read(link, SCR_CONTROL, &scontrol); /* flush */
+ 
+ 	/* wait for phy to become ready, if necessary */
+ 	do {
+ 		msleep(200);
+-		svia_scr_read(ap, SCR_STATUS, &sstatus);
++		svia_scr_read(link, SCR_STATUS, &sstatus);
+ 		if ((sstatus & 0xf) != 1)
+ 			break;
+ 	} while (time_before(jiffies, timeout));
+ 
+ 	/* open code sata_print_link_status() */
+-	svia_scr_read(ap, SCR_STATUS, &sstatus);
+-	svia_scr_read(ap, SCR_CONTROL, &scontrol);
++	svia_scr_read(link, SCR_STATUS, &sstatus);
++	svia_scr_read(link, SCR_CONTROL, &scontrol);
+ 
+ 	online = (sstatus & 0xf) == 0x3;
+ 
+@@ -232,7 +232,7 @@ static int vt6420_prereset(struct ata_link *link, unsigned long deadline)
+ 			online ? "up" : "down", sstatus, scontrol);
+ 
+ 	/* SStatus is read one more time */
+-	svia_scr_read(ap, SCR_STATUS, &sstatus);
++	svia_scr_read(link, SCR_STATUS, &sstatus);
+ 
+ 	if (!online) {
+ 		/* tell EH to bail */
+diff --git a/drivers/ata/sata_vsc.c b/drivers/ata/sata_vsc.c
+index f3d635c..c57cdff 100644
+--- a/drivers/ata/sata_vsc.c
++++ b/drivers/ata/sata_vsc.c
+@@ -98,20 +98,22 @@ enum {
+ 			      VSC_SATA_INT_PHY_CHANGE),
+ };
+ 
+-static int vsc_sata_scr_read(struct ata_port *ap, unsigned int sc_reg, u32 *val)
++static int vsc_sata_scr_read(struct ata_link *link,
++			     unsigned int sc_reg, u32 *val)
+ {
+ 	if (sc_reg > SCR_CONTROL)
+ 		return -EINVAL;
+-	*val = readl(ap->ioaddr.scr_addr + (sc_reg * 4));
++	*val = readl(link->ap->ioaddr.scr_addr + (sc_reg * 4));
+ 	return 0;
+ }
+ 
+ 
+-static int vsc_sata_scr_write(struct ata_port *ap, unsigned int sc_reg, u32 val)
++static int vsc_sata_scr_write(struct ata_link *link,
++			      unsigned int sc_reg, u32 val)
+ {
+ 	if (sc_reg > SCR_CONTROL)
+ 		return -EINVAL;
+-	writel(val, ap->ioaddr.scr_addr + (sc_reg * 4));
++	writel(val, link->ap->ioaddr.scr_addr + (sc_reg * 4));
+ 	return 0;
+ }
+ 
+diff --git a/drivers/scsi/libsas/sas_ata.c b/drivers/scsi/libsas/sas_ata.c
+index 744f06d..e1d170c 100644
+--- a/drivers/scsi/libsas/sas_ata.c
++++ b/drivers/scsi/libsas/sas_ata.c
+@@ -294,10 +294,10 @@ static void sas_ata_post_internal(struct ata_queued_cmd *qc)
+ 	}
+ }
+ 
+-static int sas_ata_scr_write(struct ata_port *ap, unsigned int sc_reg_in,
++static int sas_ata_scr_write(struct ata_link *link, unsigned int sc_reg_in,
+ 			      u32 val)
+ {
+-	struct domain_device *dev = ap->private_data;
++	struct domain_device *dev = link->ap->private_data;
+ 
+ 	SAS_DPRINTK("STUB %s\n", __FUNCTION__);
+ 	switch (sc_reg_in) {
+@@ -319,10 +319,10 @@ static int sas_ata_scr_write(struct ata_port *ap, unsigned int sc_reg_in,
+ 	return 0;
+ }
+ 
+-static int sas_ata_scr_read(struct ata_port *ap, unsigned int sc_reg_in,
++static int sas_ata_scr_read(struct ata_link *link, unsigned int sc_reg_in,
+ 			    u32 *val)
+ {
+-	struct domain_device *dev = ap->private_data;
++	struct domain_device *dev = link->ap->private_data;
+ 
+ 	SAS_DPRINTK("STUB %s\n", __FUNCTION__);
+ 	switch (sc_reg_in) {
 diff --git a/include/linux/libata.h b/include/linux/libata.h
-index 42c4b6f..67640ce 100644
+index 3437c11..1418a21 100644
 --- a/include/linux/libata.h
 +++ b/include/linux/libata.h
-@@ -320,6 +320,8 @@ enum {
- 	ATA_EH_LPM		= (1 << 4),  /* link power management action */
- 
- 	ATA_EH_PERDEV_MASK	= ATA_EH_REVALIDATE,
-+	ATA_EH_ALL_ACTIONS	= ATA_EH_REVALIDATE | ATA_EH_RESET |
-+				  ATA_EH_ENABLE_LINK | ATA_EH_LPM,
- 
- 	/* ata_eh_info->flags */
- 	ATA_EHI_HOTPLUGGED	= (1 << 0),  /* could have been hotplugged */
-@@ -918,8 +920,8 @@ extern int sata_scr_valid(struct ata_link *link);
- extern int sata_scr_read(struct ata_link *link, int reg, u32 *val);
- extern int sata_scr_write(struct ata_link *link, int reg, u32 val);
- extern int sata_scr_write_flush(struct ata_link *link, int reg, u32 val);
--extern int ata_link_online(struct ata_link *link);
--extern int ata_link_offline(struct ata_link *link);
-+extern bool ata_link_online(struct ata_link *link);
-+extern bool ata_link_offline(struct ata_link *link);
- #ifdef CONFIG_PM
- extern int ata_host_suspend(struct ata_host *host, pm_message_t mesg);
- extern void ata_host_resume(struct ata_host *host);
+@@ -770,8 +770,8 @@ struct ata_port_operations {
+ 	/*
+ 	 * Optional features
+ 	 */
+-	int  (*scr_read)(struct ata_port *ap, unsigned int sc_reg, u32 *val);
+-	int  (*scr_write)(struct ata_port *ap, unsigned int sc_reg, u32 val);
++	int  (*scr_read)(struct ata_link *link, unsigned int sc_reg, u32 *val);
++	int  (*scr_write)(struct ata_link *link, unsigned int sc_reg, u32 val);
+ 	void (*pmp_attach)(struct ata_port *ap);
+ 	void (*pmp_detach)(struct ata_port *ap);
+ 	int  (*enable_pm)(struct ata_port *ap, enum link_pm policy);
 -- 
 1.5.4.5
 
