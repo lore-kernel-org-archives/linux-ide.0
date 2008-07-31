@@ -1,125 +1,125 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: ide pmac breakage
-Date: Thu, 31 Jul 2008 12:51:01 +0200
-Message-ID: <200807311251.02251.bzolnier@gmail.com>
-References: <1217208596.11188.144.camel@pasglop> <200807302111.54514.bzolnier@gmail.com> <1217478322.11188.410.camel@pasglop>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: Entry for Samsung Q45 /etc/storage-fixup.conf
+Date: Thu, 31 Jul 2008 20:09:54 +0900
+Message-ID: <48919D82.3060306@kernel.org>
+References: <4876107E.308@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: multipart/mixed;
+ boundary="------------090306060209070001040502"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from fk-out-0910.google.com ([209.85.128.190]:58810 "EHLO
-	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753281AbYGaKyj convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 31 Jul 2008 06:54:39 -0400
-Received: by fk-out-0910.google.com with SMTP id 18so395300fkq.5
-        for <linux-ide@vger.kernel.org>; Thu, 31 Jul 2008 03:54:37 -0700 (PDT)
-In-Reply-To: <1217478322.11188.410.camel@pasglop>
-Content-Disposition: inline
+Received: from hera.kernel.org ([140.211.167.34]:55983 "EHLO hera.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751319AbYGaLKW (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 31 Jul 2008 07:10:22 -0400
+In-Reply-To: <4876107E.308@suse.de>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: benh@kernel.crashing.org
-Cc: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, linux-ide@vger.kernel.org, linuxppc-dev@ozlabs.org, petkovbb@gmail.com
+To: Frank Seidel <fseidel@suse.de>
+Cc: linux-ide@vger.kernel.org
 
-On Thursday 31 July 2008, Benjamin Herrenschmidt wrote:
->=20
-> > Is it actually caused by additional reference counting on drive->ge=
-ndev?
-> > IOW if you reverse the patch below instead of applying the previous=
- fix
-> > do things work OK again?
-> >=20
-> > > Note that there shouldn't be anything fundamentally different fro=
-m
-> > > ide-pmac here vs. something like pcmcia IDE cards... do you have =
-one of
-> > > these to test with ?
-> >=20
-> > Nope and I really don't intend to have one.  I count on other peopl=
-e
-> > to take some care of support for host drivers that they maintain/us=
-e. ;)
->=20
-> Reverting the patch below does the job. Thanks.
+This is a multi-part message in MIME format.
+--------------090306060209070001040502
+Content-Type: text/plain; charset=ISO-8859-15
+Content-Transfer-Encoding: 7bit
 
-Thanks, this narrows down the problem pretty nicely.
+Frank Seidel wrote:
+> Hi,
+> 
+> my new Samsung Q45 containing a Toshiba drive
+> also has the problem of a high amount of load_unload
+> cycles. So i added it with this rules to /etc/storage-fixup.conf:
+> ---
+> # Reported drive model: Toshiba MK2546GSX
+> rule samsung-q45
+> dmi system-manufacturer         SAMSUNG ELECTRONICS CO., LTD.
+> dmi system-product-name         SQ45S70S
+> ata model                       TOSHIBA MK2546GSX
+> act hdparm -B 254 $DEV
+> ---
+> 
+> Perhaps you'd want to include this? Attached you find the
+> output of dmidecode and hdparm -I as quested.
 
-[ Unfortunately we cannot revert the whole patch as it would break
-  unloading of IDE host drivers modules so I still need you help on
-  fixing this one. ]
+Added.  Can you please verify the attached storage-fixup.conf works for you?
 
-Lets get back to the oops:
+-- 
+tejun
 
-Vector: 300 (Data Access) at [c59dfdc0]
-=C2=A0 =C2=A0 pc: c0211f78: ide_device_put+0x18/0x58
-=C2=A0 =C2=A0 lr: c0223c34: ide_cd_put+0x40/0x5c
-=C2=A0 =C2=A0 sp: c59dfe70
-=C2=A0 =C2=A0msr: 9032
-=C2=A0 =C2=A0dar: 10
-=C2=A0dsisr: 40000000
-=C2=A0 current =3D 0xc58a9880
-=C2=A0 =C2=A0 pid =C2=A0 =3D 843, comm =3D media-bay
-enter ? for help
-[c59dfe80] c0223c34 ide_cd_put+0x40/0x5c
-[c59dfea0] c02114d4 generic_ide_remove+0x28/0x3c
-[c59dfeb0] c01ea108 __device_release_driver+0x78/0xb4
-[c59dfec0] c01ea218 device_release_driver+0x28/0x44
-[c59dfee0] c01e9350 bus_remove_device+0xac/0xd8
-[c59dff00] c01e77f8 device_del+0x104/0x198
-[c59dff20] c01e78a4 device_unregister+0x18/0x30
-[c59dff40] c0212598 __ide_port_unregister_devices+0x6c/0x88
-[c59dff60] c021276c ide_port_unregister_devices+0x38/0x80
-[c59dff80] c0209078 media_bay_step+0x1cc/0x5c0
-[c59dffb0] c02094f8 media_bay_task+0x8c/0xcc
-[c59dffd0] c0048640 kthread+0x48/0x84
-[c59dfff0] c0011b38 kernel_thread+0x44/0x60
+--------------090306060209070001040502
+Content-Type: text/plain;
+ name="storage-fixup.conf"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="storage-fixup.conf"
 
-On a fresh look at ide_device_put(), ide_host_alloc() and pmac.c
-it may be that the above oops is actually media-bay specific.
+#
+# /etc/storage-fixup.conf - Configuration file for storage-fixup
+#
+# Blank lines and lines starting with # are ignored.  Please read
+# comment at the top of storage-fixup for more information.
+#
+# Drive model patterns are generalized to cover drives from the same
+# family.  Drive manufacturers usually have datasheets or web pages
+# listing all models of the same family.
+#
+# The DMI part is difficult to generalize as there's no such
+# information.  We'll have to generalize as we collect entries.
+#
+# If you have a harddrive which does crazy unloading but not listed
+# here, please write to linux-ide@vger.kernel.org with the outputs of
+# "dmidecode" and "hdparm -I DRIVE" attached.  On a laptop the DRIVE
+# is usually /dev/sda.
+#
 
-ide_device_put():
-=2E..
-        struct device *host_dev =3D drive->hwif->host->dev[0];
-        struct module *module =3D host_dev ? host_dev->driver->owner : =
-NULL;
-=2E..
+# Reported drive model: Hitachi HTS722020K9SA00
+rule tp-t60
+dmi system-manufacturer		LENOVO
+dmi system-product-name		1952W5R
+dmi system-version		ThinkPad T60
+ata model			Hitachi HTS7220*K9*A*
+act hdparm -B 255 $DEV
 
-ide_host_alloc():
-=2E..
-       if (hws[0])
-                host->dev[0] =3D hws[0]->dev;
-=2E..
+# Reported drive model: SAMSUNG HM250JI
+rule hp-dv6500
+dmi system-manufacturer		Hewlett-Packard
+dmi system-product-name		HP Pavilion dv6500 Notebook PC
+dmi system-version		Rev 1
+ata model			SAMSUNG HM*I
+act hdparm -B 255 $DEV
 
-pmac.c:
-=2E..
-pmac_ide_macio_attach(struct macio_dev *mdev, const struct of_device_id=
- *match)
-=2E..
-	dev_set_drvdata(&mdev->ofdev.dev, pmif);
+# Reported drive model: ST9100824AS
+rule dell-e1505
+dmi system-manufacturer		Dell Inc.
+dmi system-product-name		MM061
+ata model			ST9*AS
+act hdparm -B 255 $DEV
 
-	memset(&hw, 0, sizeof(hw));
-	pmac_ide_init_ports(&hw, pmif->regbase);
-	hw.irq =3D irq;
-	hw.dev =3D &mdev->bus->pdev->dev;
-	hw.parent =3D &mdev->ofdev.dev;
-=2E..
+# Reported drive model: ST9120822AS
+rule dell-Vostro-1400
+dmi system-manufacturer		Dell Inc.
+dmi system-product-name		Vostro 1400
+ata model			ST9*AS
+act hdparm -B 254 $DEV
 
-pmac macio is unique in using different devices for hwif->dev / host->d=
-ev
-(hw.dev) and hwif->gendev.parent / dev_set_drvdata() (hw.parent)
+# Reported drive model: Toshiba MK2546GSX
+rule samsung-q45
+dmi system-manufacturer		SAMSUNG ELECTRONICS CO., LTD.
+dmi system-product-name		SQ45S70S
+ata model			TOSHIBA MK*46GSX
+act hdparm -B 254 $DEV
 
-[ I has been actually wondering why is it so for some time...? ]
+# Reported drive model: FUJITSU MHV2080BHPL
+rule macmini1_1
+dmi system-manufacturer		Apple Computer, Inc.
+dmi system-product-name		Macmini1,1
+ata model			FUJITSU MHV2*
+act hdparm -B 255 $DEV
 
-Thus we may be hitting oops in ide_device_put() on host_dev->driver
-because hw.dev is used as host->dev for pmac macio in ide_device_put()
-while we really want to use hw.parent.
+# Reported drive model: WDC WD1200BEVE-00WZT0
+rule acer-aspire-1690
+dmi system-manufacturer		Acer, inc.
+dmi system-product-name		Aspire 1690
+ata model			WDC WD*BEVE*
+act hdparm -B 255 $DEV
 
-=46ix should be as simple as:
-
--                host->dev[0] =3D hws[0]->dev;
-+                host->dev[0] =3D hws[0]->parent ? hws[0]->parent : hws=
-[0]->dev;
-
-Could you please try it together with my previous patch for
-ide_device_{get,put}()?
-
-Bart
+--------------090306060209070001040502--
