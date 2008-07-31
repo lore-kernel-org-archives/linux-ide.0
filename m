@@ -1,287 +1,125 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 5/5] ata_piix: drop merged SCR access and use slave_link instead
-Date: Thu, 31 Jul 2008 17:02:44 +0900
-Message-ID: <1217491364-19725-6-git-send-email-tj@kernel.org>
+Subject: [PATCH 2/5] libata: reimplement link iterator
+Date: Thu, 31 Jul 2008 17:02:41 +0900
+Message-ID: <1217491364-19725-3-git-send-email-tj@kernel.org>
 References: <1217491364-19725-1-git-send-email-tj@kernel.org>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:39942 "EHLO hera.kernel.org"
+Received: from hera.kernel.org ([140.211.167.34]:42765 "EHLO hera.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751017AbYGaIEu (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 31 Jul 2008 04:04:50 -0400
+	id S1751110AbYGaIFj (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 31 Jul 2008 04:05:39 -0400
 In-Reply-To: <1217491364-19725-1-git-send-email-tj@kernel.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: jeff@garzik.org, linux-ide@vger.kernel.org, alan@lxorguk.ukuu.org.uk, JosephChan@via.com.tw
 Cc: Tejun Heo <tj@kernel.org>
 
-Now that libata has slave_link, there's no need to keep ugly merged
-SCR access.  Drop it and use slave_link instead.  This results in
-simpler code and much better separate link handling for master and
-slave.
+Implement __ata_port_next_link() and reimplement
+__ata_port_for_each_link() and ata_port_for_each_link() using it.
+This removes relatively large inlined code and makes iteration easier
+to extend.
 
 Signed-off-by: Tejun Heo <tj@kernel.org>
 ---
- drivers/ata/ata_piix.c |  167 ++++++++++++------------------------------------
- 1 files changed, 40 insertions(+), 127 deletions(-)
+ drivers/ata/libata-core.c |   30 ++++++++++++++++++++++++++++++
+ include/linux/libata.h    |   33 ++++++++-------------------------
+ 2 files changed, 38 insertions(+), 25 deletions(-)
 
-diff --git a/drivers/ata/ata_piix.c b/drivers/ata/ata_piix.c
-index 375cdc7..4de4074 100644
---- a/drivers/ata/ata_piix.c
-+++ b/drivers/ata/ata_piix.c
-@@ -878,23 +878,9 @@ static void ich_set_dmamode(struct ata_port *ap, struct ata_device *adev)
-  * Serial ATA Index/Data Pair Superset Registers access
-  *
-  * Beginning from ICH8, there's a sane way to access SCRs using index
-- * and data register pair located at BAR5.  This creates an
-- * interesting problem of mapping two SCRs to one port.
-- *
-- * Although they have separate SCRs, the master and slave aren't
-- * independent enough to be treated as separate links - e.g. softreset
-- * resets both.  Also, there's no protocol defined for hard resetting
-- * singled device sharing the virtual port (no defined way to acquire
-- * device signature).  This is worked around by merging the SCR values
-- * into one sensible value and requesting follow-up SRST after
-- * hardreset.
-- *
-- * SCR merging is perfomed in nibbles which is the unit contents in
-- * SCRs are organized.  If two values are equal, the value is used.
-- * When they differ, merge table which lists precedence of possible
-- * values is consulted and the first match or the last entry when
-- * nothing matches is used.  When there's no merge table for the
-- * specific nibble, value from the first port is used.
-+ * and data register pair located at BAR5 which means that we have
-+ * separate SCRs for master and slave.  This is handled using libata
-+ * slave_link facility.
-  */
- static const int piix_sidx_map[] = {
- 	[SCR_STATUS]	= 0,
-@@ -902,125 +888,38 @@ static const int piix_sidx_map[] = {
- 	[SCR_CONTROL]	= 1,
- };
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index 03151a1..f7049cd 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -162,6 +162,35 @@ MODULE_LICENSE("GPL");
+ MODULE_VERSION(DRV_VERSION);
  
--static void piix_sidpr_sel(struct ata_device *dev, unsigned int reg)
-+static void piix_sidpr_sel(struct ata_link *link, unsigned int reg)
- {
--	struct ata_port *ap = dev->link->ap;
-+	struct ata_port *ap = link->ap;
- 	struct piix_host_priv *hpriv = ap->host->private_data;
  
--	iowrite32(((ap->port_no * 2 + dev->devno) << 8) | piix_sidx_map[reg],
-+	iowrite32(((ap->port_no * 2 + link->pmp) << 8) | piix_sidx_map[reg],
- 		  hpriv->sidpr + PIIX_SIDPR_IDX);
- }
- 
--static int piix_sidpr_read(struct ata_device *dev, unsigned int reg)
--{
--	struct piix_host_priv *hpriv = dev->link->ap->host->private_data;
--
--	piix_sidpr_sel(dev, reg);
--	return ioread32(hpriv->sidpr + PIIX_SIDPR_DATA);
--}
--
--static void piix_sidpr_write(struct ata_device *dev, unsigned int reg, u32 val)
--{
--	struct piix_host_priv *hpriv = dev->link->ap->host->private_data;
--
--	piix_sidpr_sel(dev, reg);
--	iowrite32(val, hpriv->sidpr + PIIX_SIDPR_DATA);
--}
--
--static u32 piix_merge_scr(u32 val0, u32 val1, const int * const *merge_tbl)
--{
--	u32 val = 0;
--	int i, mi;
--
--	for (i = 0, mi = 0; i < 32 / 4; i++) {
--		u8 c0 = (val0 >> (i * 4)) & 0xf;
--		u8 c1 = (val1 >> (i * 4)) & 0xf;
--		u8 merged = c0;
--		const int *cur;
--
--		/* if no merge preference, assume the first value */
--		cur = merge_tbl[mi];
--		if (!cur)
--			goto done;
--		mi++;
--
--		/* if two values equal, use it */
--		if (c0 == c1)
--			goto done;
--
--		/* choose the first match or the last from the merge table */
--		while (*cur != -1) {
--			if (c0 == *cur || c1 == *cur)
--				break;
--			cur++;
--		}
--		if (*cur == -1)
--			cur--;
--		merged = *cur;
--	done:
--		val |= merged << (i * 4);
--	}
--
--	return val;
--}
--
- static int piix_sidpr_scr_read(struct ata_link *link,
- 			       unsigned int reg, u32 *val)
- {
--	struct ata_port *ap = link->ap;
--	const int * const sstatus_merge_tbl[] = {
--		/* DET */ (const int []){ 1, 3, 0, 4, 3, -1 },
--		/* SPD */ (const int []){ 2, 1, 0, -1 },
--		/* IPM */ (const int []){ 6, 2, 1, 0, -1 },
--		NULL,
--	};
--	const int * const scontrol_merge_tbl[] = {
--		/* DET */ (const int []){ 1, 0, 4, 0, -1 },
--		/* SPD */ (const int []){ 0, 2, 1, 0, -1 },
--		/* IPM */ (const int []){ 0, 1, 2, 3, 0, -1 },
--		NULL,
--	};
--	u32 v0, v1;
-+	struct piix_host_priv *hpriv = link->ap->host->private_data;
- 
- 	if (reg >= ARRAY_SIZE(piix_sidx_map))
- 		return -EINVAL;
- 
--	if (!(ap->flags & ATA_FLAG_SLAVE_POSS)) {
--		*val = piix_sidpr_read(&ap->link.device[0], reg);
--		return 0;
--	}
--
--	v0 = piix_sidpr_read(&ap->link.device[0], reg);
--	v1 = piix_sidpr_read(&ap->link.device[1], reg);
--
--	switch (reg) {
--	case SCR_STATUS:
--		*val = piix_merge_scr(v0, v1, sstatus_merge_tbl);
--		break;
--	case SCR_ERROR:
--		*val = v0 | v1;
--		break;
--	case SCR_CONTROL:
--		*val = piix_merge_scr(v0, v1, scontrol_merge_tbl);
--		break;
--	}
--
-+	piix_sidpr_sel(link, reg);
-+	*val = ioread32(hpriv->sidpr + PIIX_SIDPR_DATA);
- 	return 0;
- }
- 
- static int piix_sidpr_scr_write(struct ata_link *link,
- 				unsigned int reg, u32 val)
- {
--	struct ata_port *ap = link->ap;
-+	struct piix_host_priv *hpriv = link->ap->host->private_data;
- 
- 	if (reg >= ARRAY_SIZE(piix_sidx_map))
- 		return -EINVAL;
- 
--	piix_sidpr_write(&ap->link.device[0], reg, val);
--
--	if (ap->flags & ATA_FLAG_SLAVE_POSS)
--		piix_sidpr_write(&ap->link.device[1], reg, val);
--
-+	piix_sidpr_sel(link, reg);
-+	iowrite32(val, hpriv->sidpr + PIIX_SIDPR_DATA);
- 	return 0;
- }
- 
-@@ -1361,28 +1260,28 @@ static const int *__devinit piix_init_sata_map(struct pci_dev *pdev,
- 	return map;
- }
- 
--static void __devinit piix_init_sidpr(struct ata_host *host)
-+static int __devinit piix_init_sidpr(struct ata_host *host)
- {
- 	struct pci_dev *pdev = to_pci_dev(host->dev);
- 	struct piix_host_priv *hpriv = host->private_data;
--	struct ata_device *dev0 = &host->ports[0]->link.device[0];
-+	struct ata_link *link0 = &host->ports[0]->link;
- 	u32 scontrol;
--	int i;
-+	int i, rc;
- 
- 	/* check for availability */
- 	for (i = 0; i < 4; i++)
- 		if (hpriv->map[i] == IDE)
--			return;
-+			return 0;
- 
- 	if (!(host->ports[0]->flags & PIIX_FLAG_SIDPR))
--		return;
-+		return 0;
- 
- 	if (pci_resource_start(pdev, PIIX_SIDPR_BAR) == 0 ||
- 	    pci_resource_len(pdev, PIIX_SIDPR_BAR) != PIIX_SIDPR_LEN)
--		return;
-+		return 0;
- 
- 	if (pcim_iomap_regions(pdev, 1 << PIIX_SIDPR_BAR, DRV_NAME))
--		return;
-+		return 0;
- 
- 	hpriv->sidpr = pcim_iomap_table(pdev)[PIIX_SIDPR_BAR];
- 
-@@ -1390,7 +1289,7 @@ static void __devinit piix_init_sidpr(struct ata_host *host)
- 	 * Give it a test drive by inhibiting power save modes which
- 	 * we'll do anyway.
- 	 */
--	scontrol = piix_sidpr_read(dev0, SCR_CONTROL);
-+	piix_sidpr_scr_read(link0, SCR_CONTROL, &scontrol);
- 
- 	/* if IPM is already 3, SCR access is probably working.  Don't
- 	 * un-inhibit power save modes as BIOS might have inhibited
-@@ -1398,18 +1297,30 @@ static void __devinit piix_init_sidpr(struct ata_host *host)
- 	 */
- 	if ((scontrol & 0xf00) != 0x300) {
- 		scontrol |= 0x300;
--		piix_sidpr_write(dev0, SCR_CONTROL, scontrol);
--		scontrol = piix_sidpr_read(dev0, SCR_CONTROL);
-+		piix_sidpr_scr_write(link0, SCR_CONTROL, scontrol);
-+		piix_sidpr_scr_read(link0, SCR_CONTROL, &scontrol);
- 
- 		if ((scontrol & 0xf00) != 0x300) {
- 			dev_printk(KERN_INFO, host->dev, "SCR access via "
- 				   "SIDPR is available but doesn't work\n");
--			return;
-+			return 0;
- 		}
- 	}
- 
--	host->ports[0]->ops = &piix_sidpr_sata_ops;
--	host->ports[1]->ops = &piix_sidpr_sata_ops;
-+	/* okay, SCRs available, set ops and ask libata for slave_link */
-+	for (i = 0; i < 2; i++) {
-+		struct ata_port *ap = host->ports[i];
-+
-+		ap->ops = &piix_sidpr_sata_ops;
-+
-+		if (ap->flags & ATA_FLAG_SLAVE_POSS) {
-+			rc = ata_slave_link_init(ap);
-+			if (rc)
-+				return rc;
-+		}
++/*
++ * Iterator helpers.  Don't use directly.
++ *
++ * LOCKING:
++ * Host lock or EH context.
++ */
++struct ata_link *__ata_port_next_link(struct ata_port *ap,
++				      struct ata_link *link, bool dev_only)
++{
++	/* NULL link indicates start of iteration */
++	if (!link) {
++		if (dev_only && sata_pmp_attached(ap))
++			return ap->pmp_link;
++		return &ap->link;
 +	}
 +
-+	return 0;
++	/* we just iterated over the host link, what's next? */
++	if (ata_is_host_link(link)) {
++		if (!sata_pmp_attached(ap))
++			return NULL;
++		return ap->pmp_link;
++	}
++
++	/* iterate to the next PMP link */
++	if (++link < ap->pmp_link + ap->nr_pmp_links)
++		return link;
++	return NULL;
++}
++
+ /**
+  *	ata_force_cbl - force cable type according to libata.force
+  *	@ap: ATA port of interest
+@@ -6207,6 +6236,7 @@ EXPORT_SYMBOL_GPL(ata_base_port_ops);
+ EXPORT_SYMBOL_GPL(sata_port_ops);
+ EXPORT_SYMBOL_GPL(ata_dummy_port_ops);
+ EXPORT_SYMBOL_GPL(ata_dummy_port_info);
++EXPORT_SYMBOL_GPL(__ata_port_next_link);
+ EXPORT_SYMBOL_GPL(ata_std_bios_param);
+ EXPORT_SYMBOL_GPL(ata_host_init);
+ EXPORT_SYMBOL_GPL(ata_host_alloc);
+diff --git a/include/linux/libata.h b/include/linux/libata.h
+index 1418a21..42c4b6f 100644
+--- a/include/linux/libata.h
++++ b/include/linux/libata.h
+@@ -1261,34 +1261,17 @@ static inline int ata_link_active(struct ata_link *link)
+ 	return ata_tag_valid(link->active_tag) || link->sactive;
  }
  
- static void piix_iocfg_bit18_quirk(struct pci_dev *pdev)
-@@ -1519,7 +1430,9 @@ static int __devinit piix_init_one(struct pci_dev *pdev,
- 	/* initialize controller */
- 	if (port_flags & ATA_FLAG_SATA) {
- 		piix_init_pcs(host, piix_map_db_table[ent->driver_data]);
--		piix_init_sidpr(host);
-+		rc = piix_init_sidpr(host);
-+		if (rc)
-+			return rc;
- 	}
+-static inline struct ata_link *ata_port_first_link(struct ata_port *ap)
+-{
+-	if (sata_pmp_attached(ap))
+-		return ap->pmp_link;
+-	return &ap->link;
+-}
+-
+-static inline struct ata_link *ata_port_next_link(struct ata_link *link)
+-{
+-	struct ata_port *ap = link->ap;
+-
+-	if (ata_is_host_link(link)) {
+-		if (!sata_pmp_attached(ap))
+-			return NULL;
+-		return ap->pmp_link;
+-	}
+-
+-	if (++link < ap->nr_pmp_links + ap->pmp_link)
+-		return link;
+-	return NULL;
+-}
++extern struct ata_link *__ata_port_next_link(struct ata_port *ap,
++					     struct ata_link *link,
++					     bool dev_only);
  
- 	/* apply IOCFG bit18 quirk */
+-#define __ata_port_for_each_link(lk, ap) \
+-	for ((lk) = &(ap)->link; (lk); (lk) = ata_port_next_link(lk))
++#define __ata_port_for_each_link(link, ap) \
++	for ((link) = __ata_port_next_link((ap), NULL, false); (link); \
++	     (link) = __ata_port_next_link((ap), (link), false))
+ 
+ #define ata_port_for_each_link(link, ap) \
+-	for ((link) = ata_port_first_link(ap); (link); \
+-	     (link) = ata_port_next_link(link))
++	for ((link) = __ata_port_next_link((ap), NULL, true); (link); \
++	     (link) = __ata_port_next_link((ap), (link), true))
+ 
+ #define ata_link_for_each_dev(dev, link) \
+ 	for ((dev) = (link)->device; \
 -- 
 1.5.4.5
 
