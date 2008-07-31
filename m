@@ -1,51 +1,39 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: SATA port multiplier(Marvell 6121 with ahci) and Marvell 4140,
- simg 3726
-Date: Thu, 31 Jul 2008 19:03:05 +0900
-Message-ID: <48918DD9.9050603@kernel.org>
-References: <788014650807302022j30cea641wcfe4105ac8702b8c@mail.gmail.com> <48918D52.3010404@gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+From: bugme-daemon@bugzilla.kernel.org
+Subject: [Bug 10943] machine doesn't shutdown when ahci sata driver is compiled as module
+Date: Thu, 31 Jul 2008 03:14:30 -0700 (PDT)
+Message-ID: <20080731101430.BFCE3108045@picon.linux-foundation.org>
+References: <bug-10943-11633@http.bugzilla.kernel.org/>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:57522 "EHLO hera.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753023AbYGaKDc (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 31 Jul 2008 06:03:32 -0400
-In-Reply-To: <48918D52.3010404@gmail.com>
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:48840 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752252AbYGaKPD (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 31 Jul 2008 06:15:03 -0400
+Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
+	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id m6VAEUSD004360
+	for <linux-ide@vger.kernel.org>; Thu, 31 Jul 2008 03:14:31 -0700
+In-Reply-To: <bug-10943-11633@http.bugzilla.kernel.org/>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: khchen@synology.com
-Cc: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-Tejun Heo wrote:
-> KueiHuan Chen wrote:
->> Hello,
->>
->>   We got some problem while evaluation port multipiler with libata, we
->> had tested with two sata chip, one is sil-3132, the another is Marvell
->> 6121. And we also have two port multiplie: Marvell 4140 and Sil-3726.
->> Our kernel version is kernel-2.6.24 with Marvell 5281 platform.
->>
->>   Testing result:
->>
->>   Sil 3132 with 3726 and 4140: everything looks like fine.
->>
->>   Marvell 6121 with 3726 and 4140(using ahci.c): both port multipiler
->> would got problem. It can't be detected whether hotplug or at boot time.
->> But the disk detection is fine without port multiplier.
->>
->>   Because we can't upgrade kernel to latest version so quickly, is there
->> any hint or solution for us ?
-> 
-> mv PMP support was added very recently.  2.6.26 has it.
+http://bugzilla.kernel.org/show_bug.cgi?id=10943
 
-Heh.. didn't read the last line.  If you can't upgrade the kernel,
-you'll need to backport.  We had to fix core PMP support quite a bit to
-get mv working, so you'll need to backport whole libata, which usually
-isn't too difficult.  Someone knowledgeable would be able to pull it in
-a few days but if you don't know what you're doing it can be pretty
-hairy.  :-)
+
+
+
+
+------- Comment #14 from tj@kernel.org  2008-07-31 03:14 -------
+Gustavo, can you please add the following loop at the top of device_shutdown()
+and report what the kernel says?
+
+  printk("XXX head prev=%p next=%p\n", devices_kset->list.prev,
+devices_kset->list.next);
+  list_for_each_entry(dev, &devices_kset->list, kobj.entry)
+      printk("XXX prev=%p next=%p\n", dev->kobj.entry.prev,
+dev->kobj.entry.next);
+
 
 -- 
-tejun
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are on the CC list for the bug, or are watching someone who is.
