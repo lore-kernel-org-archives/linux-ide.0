@@ -1,41 +1,45 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: storage-fixup.conf
-Date: Thu, 31 Jul 2008 20:10:18 +0900
-Message-ID: <48919D9A.2030803@kernel.org>
-References: <4886F429.8070701@gmail.com>
+Subject: Re: an affected device for the head unload wikipage
+Date: Thu, 31 Jul 2008 20:38:12 +0900
+Message-ID: <4891A424.6030604@kernel.org>
+References: <488C4B11.8030603@gmx.net>
 Mime-Version: 1.0
 Content-Type: multipart/mixed;
- boundary="------------090300090902060700030500"
+ boundary="------------080903000609070001000800"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:55997 "EHLO hera.kernel.org"
+Received: from hera.kernel.org ([140.211.167.34]:39434 "EHLO hera.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751471AbYGaLKn (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 31 Jul 2008 07:10:43 -0400
-In-Reply-To: <4886F429.8070701@gmail.com>
+	id S1751106AbYGaLik (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 31 Jul 2008 07:38:40 -0400
+In-Reply-To: <488C4B11.8030603@gmx.net>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Andrea Turrini <andrea.turrini@gmail.com>
+To: Tobias Stegmann <tobias_stegmann@gmx.net>
 Cc: linux-ide@vger.kernel.org
 
 This is a multi-part message in MIME format.
---------------090300090902060700030500
+--------------080903000609070001000800
 Content-Type: text/plain; charset=ISO-8859-15
 Content-Transfer-Encoding: 7bit
 
-Andrea Turrini wrote:
-> Hi all,
-> I've an Acer Aspire 1691wlmi with an Western Digital disk which does
-> crazy unloads with openSUSE 11.0.
-> The same happens to a mac mini which runs an openSUSE 10.3.
+Tobias Stegmann wrote:
+> Hey guys,
 > 
-> I've attached dmidecode and hdparm outputs for both systems.
+> here are the dmidecode and hdparm -i outputs of my HP Pavilion dv9533
+> Notebook PC.
+> 
+> This notebook got 2 hdds (same model) built in, so I added both hdparm
+> outputs.
 
-Added.  Can you please verify the attached storage-fixup.conf works for you?
+Added.  Can you please test the attached storage-fixup.conf fixes the
+problem?
+
+Thanks.
 
 -- 
 tejun
 
---------------090300090902060700030500
+--------------080903000609070001000800
 Content-Type: text/plain;
  name="storage-fixup.conf"
 Content-Transfer-Encoding: 7bit
@@ -77,6 +81,14 @@ dmi system-version		Rev 1
 ata model			SAMSUNG HM*I
 act hdparm -B 255 $DEV
 
+# Reported drive model: TOSHIBA MK1637GSX
+rule hp-dv9500
+dmi system-manufacturer		Hewlett-Packard
+dmi system-product-name		HP Pavilion dv9500 Notebook PC
+dmi system-version		Rev 1
+ata model			TOSHIBA MK*37GSX
+act hdparm -B 255 $DEV
+
 # Reported drive model: ST9100824AS
 rule dell-e1505
 dmi system-manufacturer		Dell Inc.
@@ -112,4 +124,4 @@ dmi system-product-name		Aspire 1690
 ata model			WDC WD*BEVE*
 act hdparm -B 255 $DEV
 
---------------090300090902060700030500--
+--------------080903000609070001000800--
