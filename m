@@ -1,140 +1,80 @@
-From: "KueiHuan Chen" <kueihuan.chen@gmail.com>
-Subject: SATA port multiplier(Marvell 6121 with ahci) and Marvell 4140, simg 3726
-Date: Thu, 31 Jul 2008 11:37:42 +0800
-Message-ID: <788014650807302037vd942056r103205ac6f3b9c7a@mail.gmail.com>
-Reply-To: khchen@synology.com
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Subject: Re: ide pmac breakage
+Date: Thu, 31 Jul 2008 14:25:22 +1000
+Message-ID: <1217478322.11188.410.camel@pasglop>
+References: <1217208596.11188.144.camel@pasglop>
+	 <200807292126.12238.bzolnier@gmail.com>
+	 <1217401052.11188.318.camel@pasglop>
+	 <200807302111.54514.bzolnier@gmail.com>
+Reply-To: benh@kernel.crashing.org
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rv-out-0506.google.com ([209.85.198.229]:46167 "EHLO
-	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755438AbYGaDhn (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 30 Jul 2008 23:37:43 -0400
-Received: by rv-out-0506.google.com with SMTP id k40so361531rvb.1
-        for <linux-ide@vger.kernel.org>; Wed, 30 Jul 2008 20:37:42 -0700 (PDT)
-Content-Disposition: inline
+Received: from gate.crashing.org ([63.228.1.57]:50896 "EHLO gate.crashing.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750935AbYGaEZg (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 31 Jul 2008 00:25:36 -0400
+In-Reply-To: <200807302111.54514.bzolnier@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: htejun@gmail.com
-Cc: linux-ide@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, linux-ide@vger.kernel.org, linuxppc-dev@ozlabs.org, petkovbb@gmail.com
 
-Hello,
 
-  This is the resent mail, because original one was deny by vger.kernel.org.
+> Is it actually caused by additional reference counting on drive->gendev?
+> IOW if you reverse the patch below instead of applying the previous fix
+> do things work OK again?
+> 
+> > Note that there shouldn't be anything fundamentally different from
+> > ide-pmac here vs. something like pcmcia IDE cards... do you have one of
+> > these to test with ?
+> 
+> Nope and I really don't intend to have one.  I count on other people
+> to take some care of support for host drivers that they maintain/use. ;)
 
-  We got some problem while evaluation port multipiler with libata, we
-had tested with two sata chip, one is sil-3132, the another is Marvell
-6121. And we also have two port multiplie: Marvell 4140 and Sil-3726.
-Our kernel version is kernel-2.6.24 with Marvell 5281 platform.
+Reverting the patch below does the job. Thanks.
 
-  Testing result:
+Ben.
 
-  Sil 3132 with 3726 and 4140: everything looks like fine.
+> Thanks,
+> Bart
+> 
+> diff --git a/drivers/ide/ide-cd.c b/drivers/ide/ide-cd.c
+> index 4e73aee..8f253e5 100644
+> --- a/drivers/ide/ide-cd.c
+> +++ b/drivers/ide/ide-cd.c
+> @@ -57,23 +57,29 @@ static DEFINE_MUTEX(idecd_ref_mutex);
+>  #define ide_cd_g(disk) \
+>  	container_of((disk)->private_data, struct cdrom_info, driver)
+>  
+> +static void ide_cd_release(struct kref *);
+> +
+>  static struct cdrom_info *ide_cd_get(struct gendisk *disk)
+>  {
+>  	struct cdrom_info *cd = NULL;
+>  
+>  	mutex_lock(&idecd_ref_mutex);
+>  	cd = ide_cd_g(disk);
+> -	if (cd)
+> +	if (cd) {
+>  		kref_get(&cd->kref);
+> +		if (ide_device_get(cd->drive)) {
+> +			kref_put(&cd->kref, ide_cd_release);
+> +			cd = NULL;
+> +		}
+> +	}
+>  	mutex_unlock(&idecd_ref_mutex);
+>  	return cd;
+>  }
+>  
+> -static void ide_cd_release(struct kref *);
+> -
+>  static void ide_cd_put(struct cdrom_info *cd)
+>  {
+>  	mutex_lock(&idecd_ref_mutex);
+> +	ide_device_put(cd->drive);
+>  	kref_put(&cd->kref, ide_cd_release);
+>  	mutex_unlock(&idecd_ref_mutex);
+>  }
 
-  Marvell 6121 with 3726 and 4140(using ahci.c): both port multipiler
-would got problem. It can't be detected whether hotplug or at boot
-time. But the disk detection is fine without port multiplier.
-  Because we can't upgrade kernel to latest version so quickly, is
-there any hint or solution for us ?
-
-Thanks a lot.
-
-Here is the boot message:
-The boot message of 6121 and 4140:
------------------------------------------------
-Driver 'sd' needs updating - please use bus_type methods
-ahci 0000:00:01.0: controller can't do NCQ, turning off CAP_NCQ
-ahci 0000:00:01.0: MV_AHCI HACK: port_map 7 -> 3
-ahci 0000:00:01.0: nr_ports (3) and implemented port map (0x3) don't
-match, using nr_ports
-ahci 0000:00:01.0: forcing PORTS_IMPL to 0x7
-ahci 0000:00:01.0: AHCI 0001.0000 32 slots 3 ports 3 Gbps 0x7 impl IDE mode
-ahci 0000:00:01.0: flags: 64bit stag led pmp slum part
-scsi0 : ahci
-scsi1 : ahci
-scsi2 : ahci
-ata1: SATA max UDMA/133 abar m1024@0xe0000000 port 0xe0000100 irq 11
-ata2: SATA max UDMA/133 abar m1024@0xe0000000 port 0xe0000180 irq 11
-ata3: SATA max UDMA/133 abar m1024@0xe0000000 port 0xe0000200 irq 11
-ata1: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-ata1.00: ATA-7: Hitachi HDT725050VLA360, V56OA7EA, max UDMA/133
-ata1.00: 976773168 sectors, multi 0: LBA48 NCQ (depth 0/32)
-ata1.00: configured for UDMA/133
-ata2: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-ata2.15: qc timeout (cmd 0xe4)
-ata2.15: failed to read PMP GSCR[0] (Emask=0x4)
-ata2: failed to recover some devices, retrying in 2 secs
-ata2: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-ata2.15: qc timeout (cmd 0xe4)
-ata2.15: failed to read PMP GSCR[0] (Emask=0x4)
-ata2: failed to recover some devices, retrying in 2 secs
-ata2: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-ata2.15: qc timeout (cmd 0xe4)
-ata2.15: failed to read PMP GSCR[0] (Emask=0x4)
-ata2: failed to recover some devices, retrying in 2 secs
-ata2: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-ata3: SATA link down (SStatus 0 SControl 0)
-scsi 0:0:0:0: Direct-Access     ATA      Hitachi HDT72505 V56O PQ: 0 ANSI: 5
-sd 0:0:0:0: [sda] 976773168 512-byte hardware sectors (500108 MB)
-sd 0:0:0:0: [sda] Write Protect is off
-sd 0:0:0:0: [sda] Write cache: enabled, read cache: enabled, doesn't
-support DPO or FUA
-sd 0:0:0:0: [sda] 976773168 512-byte hardware sectors (500108 MB)
-sd 0:0:0:0: [sda] Write Protect is off
-sd 0:0:0:0: [sda] Write cache: enabled, read cache: enabled, doesn't
-support DPO or FUA
- sda: sda1 sda2 sda3
-sd 0:0:0:0: [sda] Attached SCSI disk
-physmap platform flash device: 00400000 at ffc00000
-The boot message of 6121 and 3726:
------------------------------------------------
-Driver 'sd' needs updating - please use bus_type methods
-ahci 0000:00:01.0: controller can't do NCQ, turning off CAP_NCQ
-ahci 0000:00:01.0: MV_AHCI HACK: port_map 7 -> 3
-ahci 0000:00:01.0: nr_ports (3) and implemented port map (0x3) don't
-match, using nr_ports
-ahci 0000:00:01.0: forcing PORTS_IMPL to 0x7
-ahci 0000:00:01.0: AHCI 0001.0000 32 slots 3 ports 3 Gbps 0x7 impl IDE mode
-ahci 0000:00:01.0: flags: 64bit stag led pmp slum part
-scsi0 : ahci
-scsi1 : ahci
-scsi2 : ahci
-ata1: SATA max UDMA/133 abar m1024@0xe0000000 port 0xe0000100 irq 11
-ata2: SATA max UDMA/133 abar m1024@0xe0000000 port 0xe0000180 irq 11
-ata3: SATA max UDMA/133 abar m1024@0xe0000000 port 0xe0000200 irq 11
-Delay 10 seconds to wait for disk 1 ready.
-ata1: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-ata1.00: ATA-7: Hitachi HDT725050VLA360, V56OA7EA, max UDMA/133
-ata1.00: 976773168 sectors, multi 0: LBA48 NCQ (depth 0/32)
-ata1.00: configured for UDMA/133
-Delay 10 seconds to wait for disk 2 ready.
-ata2: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-ata2.15: qc time(cmd 0xe4)
-ata2.15: failed to read PMP GSCR[0] (Emask=0x4)
-ata2: failed to recover some devices, retrying in 2 secs
-ata2: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-ata2.15: qc timeout (cmd 0xe4)
-ata2.15: failed to read PMP GSCR[0] (Emask=0x4)
-ata2: failed to recover some devices, retrying in 2 secs
-ata2: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-ata2.15: qc timeout (cmd 0xe4)
-ata2.15: failed to read PMP GSCR[0] (Emask=0x4)
-ata2: failed to recover some devices, retrying in 2 secs
-ata2: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-ata3: SATA link down (SStatus 0 SControl 0)
-scsi 0:0:0:0: Direct-Access     ATA      Hitachi HDT72505 V56O PQ: 0 ANSI: 5
-sd 0:0:0:0: [sda] 976773168 512-byte hardware sectors (500108 MB)
-sd 0:0:0:0: [sda] Write Protect is off
-sd 0:0:0:0: [sda] Write cache: enabled, read cache: enabled, doesn't
-support DPO or FUA
-sd 0:0:0:0: [sda] 976773168 512-byte hardware sectors (500108 MB)
-sd 0:0:0:0: [sda] Write Protect is off
-sd 0:0:0:0: [sda] Write cache: enabled, read cache: enabled, doesn't
-support DPO or FUA
- sda: sda1 sda2 sda3
-sd 0:0:0:0: [sda] Attached SCSI disk
-physmap platform flash device: 00400000 at ffc00000
----
-Thanks,
-KueiHuan-Chen
