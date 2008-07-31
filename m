@@ -1,125 +1,127 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 2/5] libata: reimplement link iterator
-Date: Thu, 31 Jul 2008 17:02:41 +0900
-Message-ID: <1217491364-19725-3-git-send-email-tj@kernel.org>
-References: <1217491364-19725-1-git-send-email-tj@kernel.org>
+Subject: [PATCH #upstream-fixes] pata_via: clean up recent tf_load changes
+Date: Thu, 31 Jul 2008 18:02:35 +0900
+Message-ID: <48917FAB.3000703@kernel.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:42765 "EHLO hera.kernel.org"
+Received: from hera.kernel.org ([140.211.167.34]:59856 "EHLO hera.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751110AbYGaIFj (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 31 Jul 2008 04:05:39 -0400
-In-Reply-To: <1217491364-19725-1-git-send-email-tj@kernel.org>
+	id S1750967AbYGaJEJ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 31 Jul 2008 05:04:09 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: jeff@garzik.org, linux-ide@vger.kernel.org, alan@lxorguk.ukuu.org.uk, JosephChan@via.com.tw
-Cc: Tejun Heo <tj@kernel.org>
+To: Jeff Garzik <jeff@garzik.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, JosephChan@via.com.tw
 
-Implement __ata_port_next_link() and reimplement
-__ata_port_for_each_link() and ata_port_for_each_link() using it.
-This removes relatively large inlined code and makes iteration easier
-to extend.
+Commit bfce5e0179ad059035df28558724ff60af708e09 implemented custom
+tf_load for pata_via.  This patch cleans it up a bit.
+
+* Instead of duplicating whole body, copy tf and set ATA_TFLAG_DEVICE
+  when necessary.
+
+* Rename via_ata_tf_load() to via_tf_load().
+
+* No need to set .tf_load in via_port_ops_noirq as it inherits from
+  via_port_ops.
+
+* Clean up indentation.
 
 Signed-off-by: Tejun Heo <tj@kernel.org>
+Cc: Joseph Chan <JosephChan@via.com.tw>
 ---
- drivers/ata/libata-core.c |   30 ++++++++++++++++++++++++++++++
- include/linux/libata.h    |   33 ++++++++-------------------------
- 2 files changed, 38 insertions(+), 25 deletions(-)
+ drivers/ata/pata_via.c |   59 +++++++++----------------------------------------
+ 1 file changed, 11 insertions(+), 48 deletions(-)
 
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index 03151a1..f7049cd 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -162,6 +162,35 @@ MODULE_LICENSE("GPL");
- MODULE_VERSION(DRV_VERSION);
- 
- 
-+/*
-+ * Iterator helpers.  Don't use directly.
-+ *
-+ * LOCKING:
-+ * Host lock or EH context.
-+ */
-+struct ata_link *__ata_port_next_link(struct ata_port *ap,
-+				      struct ata_link *link, bool dev_only)
-+{
-+	/* NULL link indicates start of iteration */
-+	if (!link) {
-+		if (dev_only && sata_pmp_attached(ap))
-+			return ap->pmp_link;
-+		return &ap->link;
-+	}
-+
-+	/* we just iterated over the host link, what's next? */
-+	if (ata_is_host_link(link)) {
-+		if (!sata_pmp_attached(ap))
-+			return NULL;
-+		return ap->pmp_link;
-+	}
-+
-+	/* iterate to the next PMP link */
-+	if (++link < ap->pmp_link + ap->nr_pmp_links)
-+		return link;
-+	return NULL;
-+}
-+
- /**
-  *	ata_force_cbl - force cable type according to libata.force
-  *	@ap: ATA port of interest
-@@ -6207,6 +6236,7 @@ EXPORT_SYMBOL_GPL(ata_base_port_ops);
- EXPORT_SYMBOL_GPL(sata_port_ops);
- EXPORT_SYMBOL_GPL(ata_dummy_port_ops);
- EXPORT_SYMBOL_GPL(ata_dummy_port_info);
-+EXPORT_SYMBOL_GPL(__ata_port_next_link);
- EXPORT_SYMBOL_GPL(ata_std_bios_param);
- EXPORT_SYMBOL_GPL(ata_host_init);
- EXPORT_SYMBOL_GPL(ata_host_alloc);
-diff --git a/include/linux/libata.h b/include/linux/libata.h
-index 1418a21..42c4b6f 100644
---- a/include/linux/libata.h
-+++ b/include/linux/libata.h
-@@ -1261,34 +1261,17 @@ static inline int ata_link_active(struct ata_link *link)
- 	return ata_tag_valid(link->active_tag) || link->sactive;
+diff --git a/drivers/ata/pata_via.c b/drivers/ata/pata_via.c
+index 57d951b..8fdb2ce 100644
+--- a/drivers/ata/pata_via.c
++++ b/drivers/ata/pata_via.c
+@@ -324,62 +324,26 @@ static void via_set_dmamode(struct ata_port *ap, struct ata_device *adev)
  }
  
--static inline struct ata_link *ata_port_first_link(struct ata_port *ap)
--{
--	if (sata_pmp_attached(ap))
--		return ap->pmp_link;
--	return &ap->link;
--}
+ /**
+- *	via_ata_sff_tf_load - send taskfile registers to host controller
++ *	via_tf_load - send taskfile registers to host controller
+  *	@ap: Port to which output is sent
+  *	@tf: ATA taskfile register set
+  *
+  *	Outputs ATA taskfile to standard ATA host controller.
+  *
+  *	Note: This is to fix the internal bug of via chipsets, which
+- *  will reset the device register after changing the IEN bit on
+- *  ctl register
++ *	will reset the device register after changing the IEN bit on
++ *	ctl register
+  */
+-static void via_ata_tf_load(struct ata_port *ap, const struct ata_taskfile *tf)
++static void via_tf_load(struct ata_port *ap, const struct ata_taskfile *tf)
+ {
+-	struct ata_ioports *ioaddr = &ap->ioaddr;
+-	unsigned int is_addr = tf->flags & ATA_TFLAG_ISADDR;
 -
--static inline struct ata_link *ata_port_next_link(struct ata_link *link)
--{
--	struct ata_port *ap = link->ap;
--
--	if (ata_is_host_link(link)) {
--		if (!sata_pmp_attached(ap))
--			return NULL;
--		return ap->pmp_link;
+-	if (tf->ctl != ap->last_ctl) {
+-		iowrite8(tf->ctl, ioaddr->ctl_addr);
+-		iowrite8(tf->device, ioaddr->device_addr);
+-		ap->last_ctl = tf->ctl;
+-		ata_wait_idle(ap);
 -	}
 -
--	if (++link < ap->nr_pmp_links + ap->pmp_link)
--		return link;
--	return NULL;
--}
-+extern struct ata_link *__ata_port_next_link(struct ata_port *ap,
-+					     struct ata_link *link,
-+					     bool dev_only);
+-	if (is_addr && (tf->flags & ATA_TFLAG_LBA48)) {
+-		iowrite8(tf->hob_feature, ioaddr->feature_addr);
+-		iowrite8(tf->hob_nsect, ioaddr->nsect_addr);
+-		iowrite8(tf->hob_lbal, ioaddr->lbal_addr);
+-		iowrite8(tf->hob_lbam, ioaddr->lbam_addr);
+-		iowrite8(tf->hob_lbah, ioaddr->lbah_addr);
+-		VPRINTK("hob: feat 0x%X nsect 0x%X, lba 0x%X 0x%X 0x%X\n",
+-			tf->hob_feature,
+-			tf->hob_nsect,
+-			tf->hob_lbal,
+-			tf->hob_lbam,
+-			tf->hob_lbah);
+-	}
++	struct ata_taskfile tmp_tf;
  
--#define __ata_port_for_each_link(lk, ap) \
--	for ((lk) = &(ap)->link; (lk); (lk) = ata_port_next_link(lk))
-+#define __ata_port_for_each_link(link, ap) \
-+	for ((link) = __ata_port_next_link((ap), NULL, false); (link); \
-+	     (link) = __ata_port_next_link((ap), (link), false))
+-	if (is_addr) {
+-		iowrite8(tf->feature, ioaddr->feature_addr);
+-		iowrite8(tf->nsect, ioaddr->nsect_addr);
+-		iowrite8(tf->lbal, ioaddr->lbal_addr);
+-		iowrite8(tf->lbam, ioaddr->lbam_addr);
+-		iowrite8(tf->lbah, ioaddr->lbah_addr);
+-		VPRINTK("feat 0x%X nsect 0x%X lba 0x%X 0x%X 0x%X\n",
+-			tf->feature,
+-			tf->nsect,
+-			tf->lbal,
+-			tf->lbam,
+-			tf->lbah);
++	if (ap->ctl != ap->last_ctl && !(tf->flags & ATA_TFLAG_DEVICE)) {
++		tmp_tf = *tf;
++		tmp_tf.flags |= ATA_TFLAG_DEVICE;
++		tf = &tmp_tf;
+ 	}
+-
+-	if (tf->flags & ATA_TFLAG_DEVICE) {
+-		iowrite8(tf->device, ioaddr->device_addr);
+-		VPRINTK("device 0x%X\n", tf->device);
+-	}
+-
+-	ata_wait_idle(ap);
++	ata_sff_tf_load(ap, tf);
+ }
  
- #define ata_port_for_each_link(link, ap) \
--	for ((link) = ata_port_first_link(ap); (link); \
--	     (link) = ata_port_next_link(link))
-+	for ((link) = __ata_port_next_link((ap), NULL, true); (link); \
-+	     (link) = __ata_port_next_link((ap), (link), true))
+ static struct scsi_host_template via_sht = {
+@@ -392,13 +356,12 @@ static struct ata_port_operations via_port_ops = {
+ 	.set_piomode	= via_set_piomode,
+ 	.set_dmamode	= via_set_dmamode,
+ 	.prereset	= via_pre_reset,
+-	.sff_tf_load = via_ata_tf_load,
++	.sff_tf_load	= via_tf_load,
+ };
  
- #define ata_link_for_each_dev(dev, link) \
- 	for ((dev) = (link)->device; \
--- 
-1.5.4.5
-
+ static struct ata_port_operations via_port_ops_noirq = {
+ 	.inherits	= &via_port_ops,
+ 	.sff_data_xfer	= ata_sff_data_xfer_noirq,
+-	.sff_tf_load = via_ata_tf_load,
+ };
+ 
+ /**
