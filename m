@@ -1,33 +1,41 @@
-From: Ben Dooks <ben-linux@fluff.org>
-Subject: Re: libata badness
-Date: Fri, 1 Aug 2008 11:43:47 +0100
-Message-ID: <20080801104347.GM26938@trinity.fluff.org>
-References: <95646AC3-5385-4F59-8EBA-20F811168A87@kernel.crashing.org> <20080731210410.GA623@polina.dev.rtsoft.ru> <DAE7C7B4-CE5B-45EB-B3B4-E5491A843CD9@kernel.crashing.org>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: ide pmac breakage
+Date: Fri, 1 Aug 2008 12:54:02 +0200
+Message-ID: <200808011254.02989.bzolnier@gmail.com>
+References: <1217208596.11188.144.camel@pasglop> <1217478322.11188.410.camel@pasglop> <200807311251.02251.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+  charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from trinity.fluff.org ([89.145.97.151]:34954 "EHLO
-	trinity.fluff.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751371AbYHAKn7 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 1 Aug 2008 06:43:59 -0400
+Received: from fk-out-0910.google.com ([209.85.128.185]:48761 "EHLO
+	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752756AbYHAK4c (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 1 Aug 2008 06:56:32 -0400
+Received: by fk-out-0910.google.com with SMTP id 18so819985fkq.5
+        for <linux-ide@vger.kernel.org>; Fri, 01 Aug 2008 03:56:30 -0700 (PDT)
+In-Reply-To: <200807311251.02251.bzolnier@gmail.com>
 Content-Disposition: inline
-In-Reply-To: <DAE7C7B4-CE5B-45EB-B3B4-E5491A843CD9@kernel.crashing.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Kumar Gala <galak@kernel.crashing.org>
-Cc: avorontsov@ru.mvista.com, Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, Linux Kernel list <linux-kernel@vger.kernel.org>, linuxppc-dev list <linuxppc-dev@ozlabs.org>
+To: benh@kernel.crashing.org
+Cc: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, linux-ide@vger.kernel.org, linuxppc-dev@ozlabs.org, petkovbb@gmail.com
 
-On Thu, Jul 31, 2008 at 04:58:05PM -0500, Kumar Gala wrote:
-> I figured out the issue.  Its related to the interrupt routing being  
-> conveyed to the code from the device tree.  We have a missing 'space'  
-> causing issues.
 
-out of interest, is the M5229 attached to a single IRQ in this device
-or has the bridge been configured to route the IRQs from the IDE to
-the same pin on the PIC?
+On Thursday 31 July 2008, Bartlomiej Zolnierkiewicz wrote:
 
--- 
-Ben
+[...]
 
-Q:      What's a light-year?
-A:      One-third less calories than a regular year.
+Sorry if my mails were a bit harsh but nobody likes to be pushed around.
+
+[ It is not like I don't want to add proper hot-plugging support or do test
+  on more hardware but my time schedule is already tight enough and there are
+  still more fundamental things to address (which take priority). ]
+
+> -                host->dev[0] = hws[0]->dev;
+> +                host->dev[0] = hws[0]->parent ? hws[0]->parent : hws[0]->dev;
+> 
+> Could you please try it together with my previous patch for
+> ide_device_{get,put}()?
+
+Please test it when you have some time.
