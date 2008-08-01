@@ -1,33 +1,34 @@
 From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [PATCH] libata: fix out-of-bounds access in pata_oldpiix.c
-Date: Fri, 1 Aug 2008 23:29:14 +0100
-Message-ID: <20080801232914.3077c21b@lxorguk.ukuu.org.uk>
-References: <488040E4.1090500@gmx.ch>
-	<20080718095541.6bf01fff@the-village.bc.nu>
-	<200807181615.26272.bzolnier@gmail.com>
-	<4892927A.1000808@kernel.org>
+Subject: Re: [PATCH 3/5] libata: Implement disk shock protection support
+Date: Fri, 1 Aug 2008 23:34:59 +0100
+Message-ID: <20080801233459.11e9b254@lxorguk.ukuu.org.uk>
+References: <87prp1kvyy.fsf@denkblock.local>
+	<20080726062142.29070.10413.stgit@denkblock.local>
+	<4892B8FE.1070400@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:60237 "EHLO
+Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:58489 "EHLO
 	lxorguk.ukuu.org.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1762200AbYHAWqb (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 1 Aug 2008 18:46:31 -0400
-In-Reply-To: <4892927A.1000808@kernel.org>
+	with ESMTP id S1751319AbYHAWwv (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 1 Aug 2008 18:52:51 -0400
+In-Reply-To: <4892B8FE.1070400@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, David =?UTF-8?B?TcO8?= =?UTF-8?B?bGxlcg==?= <dave.mueller@gmx.ch>, jgarzik@pobox.com, linux-ide@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: Elias Oltmanns <eo@nebensachen.de>, Jeff Garzik <jeff@garzik.org>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, Pavel Machek <pavel@ucw.cz>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
+> However, SATA or not, there simply isn't a way to abort commands in ATA.
+>  Issuing random command while other commands are in progress simply is
+> state machine violation and there will be many interesting results
+> including complete system lockup (ATA controller dying while holding the
+> PCI bus).  The only reliable way to abort in-flight commands are by
+> issuing hardreset.  However, ATA reset protocol is not designed for
+> quick recovery.  The machine is gonna hit the ground hard way before the
+> reset protocol is complete.
 
-> see it as libata-core won't call them if unsupported but qc_issue will
-> see it.  Can you please unnak?
+Actually you cau can issue idle immediate on older ATA devices. I am not
+clear if that was stuck back into the current accelerometer friendly
+drives or not. Would need to check with IBLenovo
 
-No. Please see the patch I posted. It got a bit stuck as I got no reply
-at all to the original query so it was filed on the low priority pile.
-Simply quick fixing one case isn't the way to sort a bug like that. 
-
-No un-nak as I've now been through and fixed the lot including a couple
-of really nasty assumptions that >= UDMA_0 means UDMA mode (which isnt
-true as 0xFF is no DMA)
