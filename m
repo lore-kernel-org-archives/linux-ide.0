@@ -1,47 +1,51 @@
-From: bugme-daemon@bugzilla.kernel.org
-Subject: [Bug 10943] machine doesn't shutdown when ahci sata driver is compiled as module
-Date: Fri,  1 Aug 2008 13:00:02 -0700 (PDT)
-Message-ID: <20080801200002.9F0D8108038@picon.linux-foundation.org>
-References: <bug-10943-11633@http.bugzilla.kernel.org/>
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Subject: Re: ide pmac breakage
+Date: Sat, 02 Aug 2008 08:26:18 +1000
+Message-ID: <1217629578.11188.516.camel@pasglop>
+References: <1217208596.11188.144.camel@pasglop>
+	 <1217478322.11188.410.camel@pasglop>
+	 <200807311251.02251.bzolnier@gmail.com>
+	 <200808011254.02989.bzolnier@gmail.com>
+Reply-To: benh@kernel.crashing.org
+Mime-Version: 1.0
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:53720 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754070AbYHAUAa (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 1 Aug 2008 16:00:30 -0400
-Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
-	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id m71K02aL030420
-	for <linux-ide@vger.kernel.org>; Fri, 1 Aug 2008 13:00:03 -0700
-In-Reply-To: <bug-10943-11633@http.bugzilla.kernel.org/>
+Received: from gate.crashing.org ([63.228.1.57]:54875 "EHLO gate.crashing.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754922AbYHAW0e (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 1 Aug 2008 18:26:34 -0400
+In-Reply-To: <200808011254.02989.bzolnier@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, linux-ide@vger.kernel.org, linuxppc-dev@ozlabs.org, petkovbb@gmail.com
 
-http://bugzilla.kernel.org/show_bug.cgi?id=10943
+On Fri, 2008-08-01 at 12:54 +0200, Bartlomiej Zolnierkiewicz wrote:
+> On Thursday 31 July 2008, Bartlomiej Zolnierkiewicz wrote:
+> 
+> [...]
+> 
+> Sorry if my mails were a bit harsh but nobody likes to be pushed around.
+> 
+> [ It is not like I don't want to add proper hot-plugging support or do test
+>   on more hardware but my time schedule is already tight enough and there are
+>   still more fundamental things to address (which take priority). ]
+> 
+> > -                host->dev[0] = hws[0]->dev;
+> > +                host->dev[0] = hws[0]->parent ? hws[0]->parent : hws[0]->dev;
+> > 
+> > Could you please try it together with my previous patch for
+> > ide_device_{get,put}()?
+> 
+> Please test it when you have some time.
+
+The problem in that case is access to the HW :-) I have plenty ide-pmac
+based machines but only one or two old laptop (ie. Paul has one too)
+with a media-bay and those are in the office. So I'll test on Monday
+when I get there, unless I get a chance to pop by on Sunday but that's
+unlikely.
+
+Ben.
 
 
-
-
-
-------- Comment #15 from gfpadovan@gmail.com  2008-08-01 13:00 -------
-The dev->kobj.entry.prev and dev->kobj.entry.next point to same place. But I
-noted that it isn't the one. This happens with other devices too.
-
-So I tried whit this:
-
-list_for_each_entry(dev, &devices_kset->list, kobj.entry) {
-                dev_emerg(dev, " dev=%p prev=%p next=%p\n", dev->kobj.entry,
-                dev->kobj.entry.prev, dev->kobj.entry.next)
-
-And the unique dev that dev->kobj.entry, dev->kobj.entry.prev and
-dev->kobj.entry.next point to same place. So we take an infinite loop.
-
-Where is the function that include the device on the list? Is 
-device_initialize()?
-
-If my English is bad, ask me to rewrite this.
-
-
--- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are on the CC list for the bug, or are watching someone who is.
