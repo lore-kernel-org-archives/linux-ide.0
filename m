@@ -1,272 +1,184 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: Machine affected Dell Inspiron 1525
-Date: Fri, 01 Aug 2008 17:34:29 +0900
-Message-ID: <4892CA95.1090006@kernel.org>
-References: <a71d92700807210917r629d05dfu29f03f720aa38ea2@mail.gmail.com>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: [PATCH] libata: Fix a large collection of DMA mode mismatches
+Date: Fri, 1 Aug 2008 09:18:34 +0100
+Message-ID: <20080801091834.5ca39334@lxorguk.ukuu.org.uk>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------050600050300050404000202"
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:56050 "EHLO hera.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750834AbYHAIez (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 1 Aug 2008 04:34:55 -0400
-In-Reply-To: <a71d92700807210917r629d05dfu29f03f720aa38ea2@mail.gmail.com>
+Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:51561 "EHLO
+	lxorguk.ukuu.org.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751735AbYHAIft convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 1 Aug 2008 04:35:49 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Pedro Gomez Salazar <pitgomez@gmail.com>
-Cc: linux-ide@vger.kernel.org
+To: David =?UTF-8?B?TcO8bGxlcg==?= <dave.mueller@gmx.ch>, jgarzik@pobox.com, linux-ide@vger.kernel.org
 
-This is a multi-part message in MIME format.
---------------050600050300050404000202
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+=46rom: Alan Cox <alan@redhat.com>
 
-Pedro Gomez Salazar wrote:
-> Hi!
-> 
-> Machine affected:
-> Dell Inspiron 1525
-> HD: WD1600BEVT
-> System: Kubuntu 8:04
-> 
-> 
-> Fix?
-> hdparm -B 254
-> in rc.local
-> 
-> bug?
-> hddtemp /dev/sda
-> 45-46 Celsius
-> 
-> In Windows Vista
-> Count increse 4 o 5 cycles in hour..
-> HDD temp: 39-40 Celsius
+Dave M=C3=BCller sent a diff for the pata_oldpiix that highlighted a pr=
+oblem
+where a lot of the ATA drivers assume dma_mode =3D=3D 0 means "no DMA" =
+while
+the core code uses 0xFF.
 
-Please test the attached script and configuration file remove the
-problem.  Thanks.
+This turns out to have other consequences such as code doing >=3D XFER_=
+UDMA_0
+also catching 0xFF as UDMAlots. Fortunately it doesn't generally affect
+set_dma_mode, although some drivers call back into their own set mode c=
+ode
+from other points.
 
--- 
-tejun
+Having been through the drivers I've added helpers for using_udma/using=
+_mwdma
+dma_enabled so that people don't open code ranges that may change (eg i=
+f UDMA8
+appears somewhere)
 
---------------050600050300050404000202
-Content-Type: text/plain;
- name="storage-fixup"
-Content-Transfer-Encoding: base64
-Content-Disposition: inline;
- filename="storage-fixup"
+Thanks to David for the initial bits
 
-IyEgL2Jpbi9iYXNoCiMKIyBzdG9yYWdlLWZpeHVwCQkJLSBUZWp1biBIZW8gPHRlaGVvQHN1
-c2UuZGU+CiMKIyBTY3JpcHQgdG8gaXNzdWUgZml4IHVwIGNvbW1hbmRzIGZvciB3ZWlyZCBk
-aXNrcy4gIFRoaXMgaXMgcHJpbWFyaWx5CiMgdG8gYWRqdXN0IEFUQSBBUE0gc2V0dGluZy4g
-IFNvbWUgbGFwdG9wIEJJT1NlbiBzZXQgdGhpcyB2YWx1ZSB0b28KIyBhZ2dyZXNzaXZlbHkg
-Y2F1c2luZyBmcmVxdWVudCBoZWFkIHVubG9hZHMgd2hpY2ggY2FuIGtpbGwgdGhlIGRyaXZl
-CiMgcXVpY2tseS4gIFRoaXMgc2NyaXB0IHNob3VsZCBiZSBjYWxsZWQgZHVyaW5nIGJvb3Qg
-YW5kIHJlc3VtZS4gIEl0CiMgZXhhbWluZXMgcnVsZXMgZnJvbSAvZXRjL3N0cm9hZ2UtZml4
-dXAuY29uZiBhbmQgZXhlY3V0ZXMgbWF0Y2hpbmcKIyBjb21tYW5kcy4KIwojIEluIHN0cm9h
-Z2UtZml4dXAuY29uZiwgZW1wdHkgbGluZXMgYW5kIGxpbmVzIHN0YXJ0aW5nIHcvICMgYXJl
-CiMgaWdub3JlZC4gIEVhY2ggbGluZSBzdGFydHMgd2l0aCBydWxlLCBkbWksIGF0YSBvciBh
-Y3QuCiMKIyBydWxlIFJVTEVOQU1FCiMJU3RhcnRzIGEgcnVsZS4gICRSVUxFTkFNRSBjYW4n
-dCBjb250YWluIHdoaXRlc3BhY2VzLgojCiMgZG1pIEtFWSBQQVRURVJOCiMJQ2hlY2tzIHdo
-ZXRoZXIgRE1JIHZhbHVlIGZvciBLRVkgbWF0Y2hlcyBQQVRURVJOLiAgSWYgbm90LCB0aGUK
-IwlydWxlIGlzIHNraXBwZWQuCiMKIyBhdGEgS0VZIFBBVFRFUk4KIwlDaGVja3Mgd2hldGhl
-ciBBVEEgdmFsdWUgZm9yIEtFWSBtYXRjaGVzIFBBVFRFUk4uICBJZiBub3QsIHRoZQojCXJ1
-bGUgaXMgc2tpcHBlZC4gIEtFWSBjYW4gYmUgb25lIG9mIG1vZGVsLCByZXYgYW5kIHNlcmlh
-bC4KIwojIGFjdCBBQ1RJT04KIwlFeGVjdXRlcyBBQ1RJT04gb24gbWF0Y2hlZCBkZXZpY2Vz
-LiAgQUNUSU9OIGNhbiBjb250YWluICRERVYKIwl3aGljaCB3aWxsIGJlIHN1YnN0aXR1dGVk
-IHdpdGggZGV2aWNlIGZpbGUgb2YgbWF0Y2hpbmcgZGV2aWNlLgojCiMgc2FjdCBBQ1RJT04K
-IwlTaWxlbnQgdmVyc2lvbiBvZiAiYWN0Ii4gIFVzZWZ1bCB3aGVuIHRoZSBhY3Rpb24gdG8g
-dGFrZSBpcwojCXByaW50aW5nIG91dCBhIHdhcm5pbmcgbWVzc2FnZS4KIwojIFBBVFRFUk4g
-aXMgYmFzaCBleHRnbG9iIHBhdHRlcm4uCiMKIyBGb3IgZXhhbXBsZSwgdGhlIGZvbGxvd2lu
-ZyAodXNlbGVzcykgcnVsZSBkaXNhYmxlcyBBUE0gb24gdGhlIGZpcnN0CiMgaGFyZGRyaXZl
-IG9mIG15IG1hY2hpbmUuCiMKIyBydWxlIHA1dzY0CiMgZG1pIGJhc2Vib2FyZC1wcm9kdWN0
-LW5hbWUJUDVXNjQgV1MgUHJvCiMgZG1pIGJhc2Vib2FyZC1tYW51ZmFjdHVyZXIJQVNVU1Rl
-SyBDb21wdXRlciBJTkMuCiMgYXRhIG1vZGVsICAgICAgICAgICAgICAgICAgICAgV0RDIFdE
-NTAwMFlTLTAxTQojIGF0YSBzZXJpYWwgICAgICAgICAgICAgICAgICAgICpXTUFOVTEyMTcy
-NjIKIyBhY3QgaGRwYXJtIC1CIDI1NSAkREVWCiMKIyBSZWxlYXNlIHVuZGVyIEJTRCBsaWNl
-bnNlLiAgU2VlIExJQ0VOU0UuCiMKCmRlY2xhcmUgdXNhZ2U9IgpVc2FnZTogc3RvcmFnZS1m
-aXh1cCBbLWhdIFstVl0gWy12XSBbLWJdIFstYyBjb25maWdfZmlsZV0gWy1tIG1heF9kZXZz
-XQoKICAgICAgIC1oICAgICAgUHJpbnQgdGhpcyBoZWxwIG1lc3NhZ2UgYW5kIGV4aXQKICAg
-ICAgIC1WICAgICAgUHJpbnQgdmVyc2lvbiBhbmQgZXhpdAogICAgICAgLXYgICAgICBWZXJi
-b3NlCiAgICAgICAtZCAgICAgIERyeSBydW4sIGRvbid0IGFjdHVhbGx5IGV4ZWN1dGUgYWN0
-aW9uCiAgICAgICAtYyAgICAgIFVzZSBjb25maWdfZmlsZSBpbnN0ZWFkIG9mIC9ldGMvc3Rv
-cmFnZS1maXh1cC5jb25mCiAgICAgICAtbSAgICAgIE1heGltdW0gbnVtYmVyIG9mIGFsbG93
-ZWQgZGV2aWNlcyAoZGVmYXVsdD02NCwgMCBmb3IgdW5saW1pdGVkKQoiCgpkZWNsYXJlIGRt
-aWRlY29kZT0ke0RNSURFQ09ERTotZG1pZGVjb2RlfQpkZWNsYXJlIGhkcGFybT0ke0hEUEFS
-TTotaGRwYXJtfQpkZWNsYXJlIHNnX2lucT0ke0hEUEFSTTotc2dfaW5xfQpkZWNsYXJlIHNl
-ZD0ke1NFRDotc2VkfQoKZGVjbGFyZSB2ZXJzaW9uPTAuMgpkZWNsYXJlIGNvbmZfZmlsZT0v
-ZXRjL3N0b3JhZ2UtZml4dXAuY29uZgpkZWNsYXJlIG1heF9kZXZzPTY0CgpkZWNsYXJlIG5l
-d2xpbmU9JCdcbicKZGVjbGFyZSBkcnlfcnVuPTAgdmVyYm9zZT0wIGxpbmVubz0wIHNraXA9
-MCBydWxlX25hbWU9IiIgcmVwbHkKZGVjbGFyZSAtYSBzdG9yYWdlX2RldnMKZGVjbGFyZSAt
-YSBtYXRjaF9jYWNoZQpkZWNsYXJlIC1hIG1hdGNoZXMKCmxvZygpIHsKICAgIGVjaG8gInN0
-b3JhZ2UtZml4dXA6ICRAIgp9Cgp3YXJuKCkgewogICBsb2cgIiRAIiAxPiYyCn0KCmRlYnVn
-KCkgewogICAgaWYgWyAkdmVyYm9zZSAtbmUgMCBdOyB0aGVuCgl3YXJuICIkQCIKICAgIGZp
-Cn0KCnRyaW0oKSB7CiAgICBsb2NhbCBzdHI9IiQxIgoKICAgIHN0cj0iJHtzdHIjIyooW1s6
-Ymxhbms6XV0pfSIKICAgIHN0cj0iJHtzdHIlJSooW1s6Ymxhbms6XV0pfSIKICAgIGVjaG8g
-LW4gIiRzdHIiCn0KCiMKIyBzZWFyY2hfbWF0Y2hfY2FjaGUgLSBzZWFyY2ggbWF0Y2ggY2Fj
-aGUKIyBAdHlwZTogdHlwZSBvZiBtYXRjaAojIEBrZXk6IGtleSBvZiBwcm9wZXJ0eSB0byBz
-ZWFyY2gKIyBAaWR4OiBpbmRleCBvZiBkZXZpY2UgdG8gc2VhcmNoIGZvcgojCiMgU2VhcmNo
-ZXMgbWF0Y2ggY2FjaGUgYW5kIHJldHVybnMgMCBpZiBmb3VuZCwgMSBpZiBAdHlwZTpAa2V5
-CiMgcHJvcGVydGllcyBhcmUgY2FjaGVkIGJ1dCBtYXRjaGluZyBlbnRyeSBpcyBub3QgZm91
-bmQsIDIgaWYKIyBAdHlwZTpAa2V5IHByb3BlcnRpZXMgYXJlIG5vdCBjYWNoZWQgeWV0LiAg
-T24gc3VjY2VzcywgdGhlIG1hdGNoZWQKIyBwcm9wZXJ0eSBpcyByZXR1cm5lZCBpbiAkcmVw
-bHkuCiMKc2VhcmNoX21hdGNoX2NhY2hlKCkgewogICAgbG9jYWwgdHlwZT0iJDEiIGtleT0k
-KHRyaW0gIiQyIikgaWR4PSIkMyIKICAgIGxvY2FsIGkga2V5X2ZvdW5kPTAgY2FjaGUgbGVu
-IG1hdGNoCgogICAgcmVwbHk9CgogICAgZm9yICgoaT0wO2k8JHsjbWF0Y2hfY2FjaGVbQF19
-O2krKykpOyBkbwoJY2FjaGU9JHttYXRjaF9jYWNoZVtpXX0KCWxlbj0keyNjYWNoZX0KCglt
-YXRjaD0iJHtjYWNoZSMkdHlwZToka2V5Oj8oLSkrKFswLTldKSB9IgoJaWYgWyAkeyNtYXRj
-aH0gLW5lICRsZW4gXTsgdGhlbgoJICAgIGtleV9mb3VuZD0xCglmaQoKCW1hdGNoPSIke2Nh
-Y2hlIyR0eXBlOiRrZXk6JGlkeCB9IgoJaWYgWyAkeyNtYXRjaH0gLW5lICRsZW4gXTsgdGhl
-bgoJICAgIHJlcGx5PSIkbWF0Y2giCgkgICAgcmV0dXJuIDAKCWZpCiAgICBkb25lCgogICAg
-aWYgWyAka2V5X2ZvdW5kIC1lcSAxIF07IHRoZW4KCXJldHVybiAxCiAgICBlbHNlCglyZXR1
-cm4gMgogICAgZmkKfQoKIwojIGFkZF90b19tYXRjaF9jYWNoZSAtIGFkZCBlbnRyeSB0byBt
-YXRjaCBjYWNoZQojIEB0eXBlOiB0eXBlIG9mIG1hdGNoCiMgQGtleToga2V5IG9mIHRoZSBl
-bnRyeSB0byBiZSBhZGRlZAojIEBpZHg6IGluZGV4IG9mIGRldmljZSB0byBhZGQgZW50cnkg
-Zm9yCiMgQHByb3BlcnR5OiBwcm9wZXJ0eSBvZiB0aGUgZW50cnkgdG8gYmUgYWRkZWQKIwoj
-IEFkZCAkcHJvcGVydHkgZm9yICR0eXBlOiRrZXk6JGlkeC4KIwphZGRfdG9fbWF0Y2hfY2Fj
-aGUoKSB7CiAgICBsb2NhbCB0eXBlPSIkMSIga2V5PSQodHJpbSAiJDIiKSBpZHg9IiQzIiBw
-cm9wZXJ0eT0kKHRyaW0gIiQ0IikKCiAgICBtYXRjaF9jYWNoZSs9KCIkdHlwZToka2V5OiRp
-ZHggJHByb3BlcnR5IikKICAgIGRlYnVnICJDICR0eXBlOiRrZXk6JGlkeCAkcHJvcGVydHki
-CiAgICByZXBseT0iJHByb3BlcnR5IgogICAgcmV0dXJuIDAKfQoKIwojIGRvX2RtaSAtIHBl
-cmZvcm0gRE1JIG1hdGNoCiMgQGtleTogRE1JIGtleSB0byBiZSBwYXNzZWQgYXMgLS1zdHJp
-bmcgYXJndW1lbnQgdG8gZG1pZGVjb2RlCiMgQHBhdHRlcm46IGdsb2IgcGF0dGVybiB0byBt
-YXRjaAojCiMgUmV0dXJucyAwIG9uIG1hdGNoLCAxIG9uIG1pc21hdGNoLCAyIG9uIGludmFs
-aWQgbWF0Y2ggKHRyaWdnZXJzCiMgd2FybmluZykuCiMKZG9fZG1pKCkgewogICAgbG9jYWwg
-a2V5PSIkMSIgcGF0dGVybj0iJDIiCiAgICBsb2NhbCByZXQgdmFsCgogICAgaWYgWyAteiAi
-JGtleSIgLW8gLXogIiRwYXR0ZXJuIiBdOyB0aGVuCglyZXR1cm4gMQogICAgZmkKCiAgICBz
-ZWFyY2hfbWF0Y2hfY2FjaGUgZG1pICIka2V5IiAwCiAgICByZXQ9JD8KICAgIGlmIFsgJHJl
-dCAtZXEgMiBdOyB0aGVuCgl2YWw9JCgkZG1pZGVjb2RlIC0tc3RyaW5nICIka2V5IikKCWlm
-IFsgIiQ/IiAtbmUgMCBdOyB0aGVuCgkgICAgYWRkX3RvX21hdGNoX2NhY2hlIGRtaSAiJGtl
-eSIgLTEKCSAgICByZXR1cm4gMgoJZmkKCWFkZF90b19tYXRjaF9jYWNoZSBkbWkgIiRrZXki
-IDAgIiR2YWwiCiAgICBlbGlmIFsgJHJldCAtZXEgMSBdOyB0aGVuCglyZXR1cm4gMgogICAg
-ZmkKCiAgICBpZiBbIC16ICIke3JlcGx5IyMkcGF0dGVybn0iIF07IHRoZW4KCWRlYnVnICJZ
-ICRsaW5lbm8gJHJ1bGVfbmFtZSBkbWkgJGtleT0kcGF0dGVybiIKCXJldHVybiAwCiAgICBm
-aQoKICAgIGRlYnVnICJOICRsaW5lbm8gJHJ1bGVfbmFtZSBkbWkgJGtleT0kcGF0dGVybiIK
-ICAgIHJldHVybiAxCn0KCiMKIyBkb19zdG9yYWdlIC0gcGVyZm9ybSBzdG9yYWdlIG1hdGNo
-CiMgQHR5cGU6IGF0YSBvciBzY3NpCiMgQGtleTogYXRhIGtleSAtIG1vZGVsLCByZXYgb3Ig
-c2VyaWFsIGZvciBib3RoIGF0YSBhbmQgc2NzaSBvciB2ZW5kb3IgZm9yIHNjc2kKIyBAcGF0
-dGVybjogZ2xvYiBwYXR0ZXJuIHRvIG1hdGNoCiMKIyBSZXR1cm5zIDAgb24gbWF0Y2gsIDEg
-b24gbWlzbWF0Y2gsIDIgb24gaW52YWxpZCBtYXRjaCAodHJpZ2dlcnMKIyB3YXJuaW5nKS4K
-Iwpkb19zdG9yYWdlKCkgewogICAgbG9jYWwgdHlwZT0iJDEiIGtleT0iJDIiIHBhdHRlcm49
-IiQzIiBpZHgKICAgIGxvY2FsIC1hIG9sZF9tYXRjaGVzPSgiJHttYXRjaGVzW0BdfSIpCgog
-ICAgaWYgWyAteiAiJGtleSIgLW8gLXogIiRwYXR0ZXJuIiBdOyB0aGVuCglyZXR1cm4gMQog
-ICAgZmkKCiAgICBtYXRjaGVzPSgpCiAgICBmb3IgaWR4IGluICR7b2xkX21hdGNoZXNbQF19
-OyBkbwoJaWYgc2VhcmNoX21hdGNoX2NhY2hlICR0eXBlICIka2V5IiAkaWR4OyB0aGVuCgkg
-ICAgaWYgWyAkPyAtZXEgMCAtYSAteiAiJHtyZXBseSMjJHBhdHRlcm59IiBdOyB0aGVuCgkJ
-bWF0Y2hlcys9KCRpZHgpCgkgICAgZmkKCWZpCiAgICBkb25lCgogICAgaWYgWyAkeyNtYXRj
-aGVzW0BdfSAtZXEgMCBdOyB0aGVuCglkZWJ1ZyAiTiAkbGluZW5vICRydWxlX25hbWUgJHR5
-cGU6JGtleT0kcGF0dGVybiIKCXJldHVybiAxCiAgICBmaQoKICAgIGRlYnVnICJZICRsaW5l
-bm8gJHJ1bGVfbmFtZSAkdHlwZSBucl9kZXZzPSR7I21hdGNoZXNbQF19ICR0eXBlOiRrZXki
-CiAgICByZXR1cm4gMAp9CgojCiMgZG9fYWN0IC0gZXhlY3V0ZSBhY3Rpb24KIyBAYWN0OiBh
-Y3Rpb24gdG8gZXhlY3V0ZQojCiMgRXhlY3V0ZSBAYWN0IGZvciBlYWNoIGRldmljZSBpbiAk
-bWF0Y2hlcy4gICIkREVWIiBpbiBAYWN0IGlzCiMgc3Vic3RpdHV0ZWQgd2l0aCB0aGUgL2Rl
-diBub2RlIG9mIGVhY2ggbWF0Y2guICBJZiAkZHJ5X3J1biBpcyBzZXQsCiMgdGhlIGFjdGlv
-biBpcyBsb2dnZWQgYnV0IG5vdCBhY3R1YWxseSBleGVjdXRlZC4KIwojIFJldHVybnMgMC4K
-Iwpkb19hY3QoKSB7CiAgICBsb2NhbCBhY3Q9IiQxIiB2ZXJib3NlPSIkMiIKICAgIGxvY2Fs
-IGlkIGRldgoKICAgIGZvciBpZHggaW4gJHttYXRjaGVzW0BdfTsgZG8KCURFVj0ke3N0b3Jh
-Z2VfZGV2c1tpZHhdfQoJaWYgWyAkZHJ5X3J1biAtZXEgMCBdOyB0aGVuCgkgICAgaWYgWyAk
-dmVyYm9zZSAtbmUgMCBdOyB0aGVuCgkJZXZhbCBsb2cgIiRydWxlX25hbWU6IGV4ZWN1dGlu
-ZyBcIiRhY3RcIiIKCSAgICBmaQoJICAgIGV2YWwgIiRhY3QiCgllbHNlCgkgICAgZXZhbCBs
-b2cgIiRydWxlX25hbWU6IGRyeS1ydW4gXCIkYWN0XCIiCglmaQogICAgZG9uZQoKICAgIHJl
-dHVybiAwCn0KCiMKIyBFeGVjdXRpb24gc3RhcnRzIGhlcmUKIwpzaG9wdCAtcyBleHRnbG9i
-Cgp3aGlsZSBnZXRvcHRzICJkdlZjOm06aCIgb3B0aW9uOyBkbwogICAgY2FzZSAkb3B0aW9u
-IGluCglkKQoJICAgIGRyeV9ydW49MTs7Cgl2KQoJICAgIHZlcmJvc2U9MTs7CglWKQoJICAg
-IGVjaG8gIiR2ZXJzaW9uIgoJICAgIGV4aXQgMDs7CgljKQoJICAgIGNvbmZfZmlsZT0kT1BU
-QVJHOzsKCW0pCgkgICAgbWF4X2RldnM9JCgoT1BUQVJHKzApKTs7CgkqKQoJICAgIGVjaG8g
-IiR1c2FnZSIgMj4mMQoJICAgIGV4aXQgMTs7CiAgICBlc2FjCmRvbmUKCiMgd2hhdCBzdG9y
-YWdlIGRldmljZXMgZG8gd2UgaGF2ZT8Kc3RvcmFnZV9kZXZzPSgkKGxzIC9kZXYvW3NoXWQr
-KFthLXpdKSAvZGV2L3NyKyhbMC05XSkgMj4gL2Rldi9udWxsKSkKZGVidWcgIkkgJHsjc3Rv
-cmFnZV9kZXZzW0BdfSBzdG9yYWdlIGRldmljZXMiCgppZiBbICRtYXhfZGV2cyAtbmUgMCAt
-YSAkeyNzdG9yYWdlX2RldnNbQF19IC1ndCAkbWF4X2RldnMgXTsgdGhlbgogICAgd2FybiAi
-bnJfc3RvcmFnZV9kZXZzPSR7I3N0b3JhZ2VfZGV2c1tAXX0gPiBsaW1pdD0kbWF4X2RldnMs
-IHNraXBwaW5nIgogICAgZXhpdCAxCmZpCgojIHBvcHVsYXRlIHN0b3JhZ2UgaW5mbwpmb3Ig
-KChpPTA7aTwkeyNzdG9yYWdlX2RldnN9O2krKykpOyBkbwogICAgb3V0cHV0PSQoJGhkcGFy
-bSAtaSAke3N0b3JhZ2VfZGV2c1tpXX0gMj4gL2Rldi9udWxsKQogICAgaWYgWyAkPyAtZXEg
-MCBdOyB0aGVuCglNT0RFTD0KCVJFVj0KCVNFUklBTD0KCWV2YWwgJChlY2hvICIkb3V0cHV0
-IiB8ICRzZWQgLW5yICdzL15ccypNb2RlbD1ccyooLipcU3xccyopXHMqLFxzKkZ3UmV2PVxz
-KiguKlxTfFxzKilccyosXHMqU2VyaWFsTm89XHMqKC4qXFN8XHMqKVxzKiQvTU9ERUw9XCJc
-MVwiXG5SRVY9XCJcMlwiXG5TRVJJQUw9XCJcM1wiL3AnKQoJYWRkX3RvX21hdGNoX2NhY2hl
-IGF0YSBtb2RlbCAkaSAiJE1PREVMIgoJYWRkX3RvX21hdGNoX2NhY2hlIGF0YSByZXYgJGkg
-IiRSRVYiCglhZGRfdG9fbWF0Y2hfY2FjaGUgYXRhIHNlcmlhbCAkaSAiJFNFUklBTCIKICAg
-IGZpCgogICAgb3V0cHV0PSQoJHNnX2lucSAke3N0b3JhZ2VfZGV2c1tpXX0gMj4gL2Rldi9u
-dWxsKQogICAgaWYgWyAkPyAtZXEgMCBdOyB0aGVuCglWRU5ET1I9CglNT0RFTD0KCVJFVj0K
-CVNFUklBTD0KCWV2YWwgJChlY2hvICIkb3V0cHV0IiB8ICRzZWQgLW5yICdzL15ccypWZW5k
-b3IgaWRlbnRpZmljYXRpb246XHMqKC4qXFN8XHMqKVxzKiQvVkVORE9SPVwiXDFcIi9wJykK
-CWV2YWwgJChlY2hvICIkb3V0cHV0IiB8ICRzZWQgLW5yICdzL15ccypQcm9kdWN0IGlkZW50
-aWZpY2F0aW9uOlxzKiguKlxTfFxzKilccyokL01PREVMPVwiXDFcIi9wJykKCWV2YWwgJChl
-Y2hvICIkb3V0cHV0IiB8ICRzZWQgLW5yICdzL15ccypQcm9kdWN0IHJldmlzaW9uIGxldmVs
-OlxzKiguKlxTfFxzKilccyokL1JFVj1cIlwxXCIvcCcpCglldmFsICQoZWNobyAiJG91dHB1
-dCIgfCAkc2VkIC1uciAncy9eXHMqVW5pdCBzZXJpYWwgbnVtYmVyOlxzKiguKlxTfFxzKilc
-cyokL1NFUklBTD1cIlwxXCIvcCcpCglhZGRfdG9fbWF0Y2hfY2FjaGUgc2NzaSB2ZW5kb3Ig
-JGkgIiRWRU5ET1IiCglhZGRfdG9fbWF0Y2hfY2FjaGUgc2NzaSBtb2RlbCAkaSAiJE1PREVM
-IgoJYWRkX3RvX21hdGNoX2NhY2hlIHNjc2kgcmV2ICRpICIkUkVWIgoJYWRkX3RvX21hdGNo
-X2NhY2hlIHNjc2kgc2VyaWFsICRpICIkU0VSSUFMIgogICAgZmkKZG9uZQoKd2hpbGUgcmVh
-ZCBmMCBmMSBmMjsgZG8KICAgIHRydWUgJCgobGluZW5vKyspKQogICAgaWYgWyAteiAke2Yw
-IyMjKn0gXTsgdGhlbgoJY29udGludWUKICAgIGZpCgogICAgaWYgWyAiJGYwIiA9IHJ1bGUg
-XTsgdGhlbgoJcnVsZV9uYW1lPSRmMQoJc2tpcD0wCgltYXRjaGVzPSgkKHNlcSAwICQoKCR7
-I3N0b3JhZ2VfZGV2c1tAXX0tMSkpKSkKCWNvbnRpbnVlCiAgICBmaQoKICAgIGlmIFsgJHNr
-aXAgLW5lIDAgXTsgdGhlbgoJY29udGludWUKICAgIGZpCgogICAgY2FzZSAiJGYwIiBpbgog
-ICAgZG1pKQoJICAgIGRvX2RtaSAiJGYxIiAiJGYyIgoJICAgIDs7CiAgICBhdGEpCgkgICAg
-ZG9fc3RvcmFnZSBhdGEgIiRmMSIgIiRmMiIKCSAgICA7OwogICAgc2NzaSkKCSAgICBkb19z
-dG9yYWdlIHNjc2kgIiRmMSIgIiRmMiIKCSAgICA7OwogICAgYWN0KQoJICAgIGRvX2FjdCAi
-JGYxICRmMiIgMQoJICAgIDs7CiAgICBzYWN0KQoJICAgIGRvX2FjdCAiJGYxICRmMiIgMAoJ
-ICAgIDs7CiAgICAqKQoJICAgIGZhbHNlCgkgICAgOzsKICAgIGVzYWMKCiAgICByZXQ9JD8K
-ICAgIGlmIFsgJHJldCAtbmUgMCBdOyB0aGVuCglpZiBbICRyZXQgLWVxIDIgXTsgdGhlbgoJ
-ICAgIHdhcm4gIm1hbGZvcm1lZCBsaW5lICRsaW5lbm8gXCIkZjAgJGYxICRmMlwiLCJcCgkg
-ICAgICAgICAic2tpcHBpbmcgcnVsZSAkcnVsZV9uYW1lIiAyPiYxCglmaQoJc2tpcD0xCiAg
-ICBmaQpkb25lIDwgJGNvbmZfZmlsZQo=
---------------050600050300050404000202
-Content-Type: text/plain;
- name="storage-fixup.conf"
-Content-Transfer-Encoding: base64
-Content-Disposition: inline;
- filename="storage-fixup.conf"
+Signed-off-by: Alan Cox <alan@redhat.com>
+---
 
-IwojIC9ldGMvc3RvcmFnZS1maXh1cC5jb25mIC0gQ29uZmlndXJhdGlvbiBmaWxlIGZvciBz
-dG9yYWdlLWZpeHVwCiMKIyBCbGFuayBsaW5lcyBhbmQgbGluZXMgc3RhcnRpbmcgd2l0aCAj
-IGFyZSBpZ25vcmVkLiAgUGxlYXNlIHJlYWQKIyBjb21tZW50IGF0IHRoZSB0b3Agb2Ygc3Rv
-cmFnZS1maXh1cCBmb3IgbW9yZSBpbmZvcm1hdGlvbi4KIwojIERyaXZlIG1vZGVsIHBhdHRl
-cm5zIGFyZSBnZW5lcmFsaXplZCB0byBjb3ZlciBkcml2ZXMgZnJvbSB0aGUgc2FtZQojIGZh
-bWlseS4gIERyaXZlIG1hbnVmYWN0dXJlcnMgdXN1YWxseSBoYXZlIGRhdGFzaGVldHMgb3Ig
-d2ViIHBhZ2VzCiMgbGlzdGluZyBhbGwgbW9kZWxzIG9mIHRoZSBzYW1lIGZhbWlseS4KIwoj
-IFRoZSBETUkgcGFydCBpcyBkaWZmaWN1bHQgdG8gZ2VuZXJhbGl6ZSBhcyB0aGVyZSdzIG5v
-IHN1Y2gKIyBpbmZvcm1hdGlvbi4gIFdlJ2xsIGhhdmUgdG8gZ2VuZXJhbGl6ZSBhcyB3ZSBj
-b2xsZWN0IGVudHJpZXMuCiMKIyBJZiB5b3UgaGF2ZSBhIGhhcmRkcml2ZSB3aGljaCBkb2Vz
-IGNyYXp5IHVubG9hZGluZyBidXQgbm90IGxpc3RlZAojIGhlcmUsIHBsZWFzZSB3cml0ZSB0
-byBsaW51eC1pZGVAdmdlci5rZXJuZWwub3JnIHdpdGggdGhlIG91dHB1dHMgb2YKIyAiZG1p
-ZGVjb2RlIiBhbmQgImhkcGFybSAtSSBEUklWRSIgYXR0YWNoZWQuICBPbiBhIGxhcHRvcCB0
-aGUgRFJJVkUKIyBpcyB1c3VhbGx5IC9kZXYvc2RhLgojCgojIFJlcG9ydGVkIGRyaXZlIG1v
-ZGVsOiBIaXRhY2hpIEhUUzcyMjAyMEs5U0EwMApydWxlIHRwLXQ2MApkbWkgc3lzdGVtLW1h
-bnVmYWN0dXJlcgkJTEVOT1ZPCmRtaSBzeXN0ZW0tcHJvZHVjdC1uYW1lCQkxOTUyVzVSCmRt
-aSBzeXN0ZW0tdmVyc2lvbgkJVGhpbmtQYWQgVDYwCmF0YSBtb2RlbAkJCUhpdGFjaGkgSFRT
-NzIyMCpLOSpBKgphY3QgaGRwYXJtIC1CIDI1NSAkREVWCgojIFJlcG9ydGVkIGRyaXZlIG1v
-ZGVsOiBTQU1TVU5HIEhNMjUwSkkKcnVsZSBocC1kdjY1MDAKZG1pIHN5c3RlbS1tYW51ZmFj
-dHVyZXIJCUhld2xldHQtUGFja2FyZApkbWkgc3lzdGVtLXByb2R1Y3QtbmFtZQkJSFAgUGF2
-aWxpb24gZHY2NTAwIE5vdGVib29rIFBDCmRtaSBzeXN0ZW0tdmVyc2lvbgkJUmV2IDEKYXRh
-IG1vZGVsCQkJU0FNU1VORyBITSpJCmFjdCBoZHBhcm0gLUIgMjU1ICRERVYKCiMgUmVwb3J0
-ZWQgZHJpdmUgbW9kZWw6IFRPU0hJQkEgTUsxNjM3R1NYCnJ1bGUgaHAtZHY5NTAwCmRtaSBz
-eXN0ZW0tbWFudWZhY3R1cmVyCQlIZXdsZXR0LVBhY2thcmQKZG1pIHN5c3RlbS1wcm9kdWN0
-LW5hbWUJCUhQIFBhdmlsaW9uIGR2OTUwMCBOb3RlYm9vayBQQwpkbWkgc3lzdGVtLXZlcnNp
-b24JCVJldiAxCmF0YSBtb2RlbAkJCVRPU0hJQkEgTUsqMzdHU1gKYWN0IGhkcGFybSAtQiAy
-NTQgJERFVgoKIyBSZXBvcnRlZCBkcml2ZSBtb2RlbDogU1Q5MTAwODI0QVMKcnVsZSBkZWxs
-LWUxNTA1CmRtaSBzeXN0ZW0tbWFudWZhY3R1cmVyCQlEZWxsIEluYy4KZG1pIHN5c3RlbS1w
-cm9kdWN0LW5hbWUJCU1NMDYxCmF0YSBtb2RlbAkJCVNUOSpBUwphY3QgaGRwYXJtIC1CIDI1
-NSAkREVWCgojIFJlcG9ydGVkIGRyaXZlIG1vZGVsOiBTVDkxMjA4MjJBUwpydWxlIGRlbGwt
-Vm9zdHJvLTE0MDAKZG1pIHN5c3RlbS1tYW51ZmFjdHVyZXIJCURlbGwgSW5jLgpkbWkgc3lz
-dGVtLXByb2R1Y3QtbmFtZQkJVm9zdHJvIDE0MDAKYXRhIG1vZGVsCQkJU1Q5KkFTCmFjdCBo
-ZHBhcm0gLUIgMjU0ICRERVYKCiMgUmVwb3J0ZWQgZHJpdmUgbW9kZWw6IFdEQyBXRDE2MDBC
-RVZULTc1WkNUMApydWxlIGRlbGwtaW5zcGlyb24tMTUyNQpkbWkgc3lzdGVtLW1hbnVmYWN0
-dXJlcgkJRGVsbCBJbmMuCmRtaSBzeXN0ZW0tcHJvZHVjdC1uYW1lCQlJbnNwaXJvbiAxNTI1
-CmF0YSBtb2RlbAkJCVdEQyBXRCpCRVZUKgphY3QgaGRwYXJtIC1CIDI1NSAkREVWCgojIFJl
-cG9ydGVkIGRyaXZlIG1vZGVsOiBUb3NoaWJhIE1LMjU0NkdTWApydWxlIHNhbXN1bmctcTQ1
-CmRtaSBzeXN0ZW0tbWFudWZhY3R1cmVyCQlTQU1TVU5HIEVMRUNUUk9OSUNTIENPLiwgTFRE
-LgpkbWkgc3lzdGVtLXByb2R1Y3QtbmFtZQkJU1E0NVM3MFMKYXRhIG1vZGVsCQkJVE9TSElC
-QSBNSyo0NkdTWAphY3QgaGRwYXJtIC1CIDI1NCAkREVWCgojIFJlcG9ydGVkIGRyaXZlIG1v
-ZGVsOiBGVUpJVFNVIE1IVjIwODBCSFBMCnJ1bGUgbWFjbWluaTFfMQpkbWkgc3lzdGVtLW1h
-bnVmYWN0dXJlcgkJQXBwbGUgQ29tcHV0ZXIsIEluYy4KZG1pIHN5c3RlbS1wcm9kdWN0LW5h
-bWUJCU1hY21pbmkxLDEKYXRhIG1vZGVsCQkJRlVKSVRTVSBNSFYyKgphY3QgaGRwYXJtIC1C
-IDI1NSAkREVWCgojIFJlcG9ydGVkIGRyaXZlIG1vZGVsOiBXREMgV0QxMjAwQkVWRS0wMFda
-VDAKcnVsZSBhY2VyLWFzcGlyZS0xNjkwCmRtaSBzeXN0ZW0tbWFudWZhY3R1cmVyCQlBY2Vy
-LCBpbmMuCmRtaSBzeXN0ZW0tcHJvZHVjdC1uYW1lCQlBc3BpcmUgMTY5MAphdGEgbW9kZWwJ
-CQlXREMgV0QqQkVWRSoKYWN0IGhkcGFybSAtQiAyNTUgJERFVgo=
---------------050600050300050404000202--
+ drivers/ata/libata-core.c |    4 ++--
+ drivers/ata/pata_acpi.c   |    2 +-
+ drivers/ata/pata_atiixp.c |    2 +-
+ drivers/ata/pata_cs5530.c |    6 +++---
+ drivers/ata/pata_sc1200.c |    6 +++---
+ include/linux/libata.h    |   22 ++++++++++++++++++++++
+ 6 files changed, 32 insertions(+), 10 deletions(-)
+
+
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index b4297ea..d7b6633 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -3267,7 +3267,7 @@ int ata_do_set_mode(struct ata_link *link, struct=
+ ata_device **r_failed_dev)
+ 		dev->dma_mode =3D ata_xfer_mask2mode(dma_mask);
+=20
+ 		found =3D 1;
+-		if (dev->dma_mode !=3D 0xff)
++		if (ata_dma_enabled(dev))
+ 			used_dma =3D 1;
+ 	}
+ 	if (!found)
+@@ -3292,7 +3292,7 @@ int ata_do_set_mode(struct ata_link *link, struct=
+ ata_device **r_failed_dev)
+=20
+ 	/* step 3: set host DMA timings */
+ 	ata_link_for_each_dev(dev, link) {
+-		if (!ata_dev_enabled(dev) || dev->dma_mode =3D=3D 0xff)
++		if (!ata_dev_enabled(dev) || !ata_dma_enabled(dev))
+ 			continue;
+=20
+ 		dev->xfer_mode =3D dev->dma_mode;
+diff --git a/drivers/ata/pata_acpi.c b/drivers/ata/pata_acpi.c
+index c5f91e6..783e3c2 100644
+--- a/drivers/ata/pata_acpi.c
++++ b/drivers/ata/pata_acpi.c
+@@ -181,7 +181,7 @@ static unsigned int pacpi_qc_issue(struct ata_queue=
+d_cmd *qc)
+=20
+ 	if (adev !=3D acpi->last) {
+ 		pacpi_set_piomode(ap, adev);
+-		if (adev->dma_mode)
++		if (ata_dma_enabled(adev))
+ 			pacpi_set_dmamode(ap, adev);
+ 		acpi->last =3D adev;
+ 	}
+diff --git a/drivers/ata/pata_atiixp.c b/drivers/ata/pata_atiixp.c
+index d7de7ba..e8a0d99 100644
+--- a/drivers/ata/pata_atiixp.c
++++ b/drivers/ata/pata_atiixp.c
+@@ -183,7 +183,7 @@ static void atiixp_bmdma_start(struct ata_queued_cm=
+d *qc)
+ 	u16 tmp16;
+=20
+ 	pci_read_config_word(pdev, ATIIXP_IDE_UDMA_CONTROL, &tmp16);
+-	if (adev->dma_mode >=3D XFER_UDMA_0)
++	if (ata_using_udma(adev))
+ 		tmp16 |=3D (1 << dn);
+ 	else
+ 		tmp16 &=3D ~(1 << dn);
+diff --git a/drivers/ata/pata_cs5530.c b/drivers/ata/pata_cs5530.c
+index 744beeb..0c4b271 100644
+--- a/drivers/ata/pata_cs5530.c
++++ b/drivers/ata/pata_cs5530.c
+@@ -149,10 +149,10 @@ static unsigned int cs5530_qc_issue(struct ata_qu=
+eued_cmd *qc)
+ 	struct ata_device *prev =3D ap->private_data;
+=20
+ 	/* See if the DMA settings could be wrong */
+-	if (adev->dma_mode !=3D 0 && adev !=3D prev && prev !=3D NULL) {
++	if (ata_dma_enabled(adev) && adev !=3D prev && prev !=3D NULL) {
+ 		/* Maybe, but do the channels match MWDMA/UDMA ? */
+-		if ((adev->dma_mode >=3D XFER_UDMA_0 && prev->dma_mode < XFER_UDMA_0=
+) ||
+-		    (adev->dma_mode < XFER_UDMA_0 && prev->dma_mode >=3D XFER_UDMA_0=
+))
++		if ((ata_using_udma(adev) && !ata_using_udma(prev)) ||
++		    (ata_using_udma(prev) && !ata_using_udma(adev)))
+ 		    	/* Switch the mode bits */
+ 		    	cs5530_set_dmamode(ap, adev);
+ 	}
+diff --git a/drivers/ata/pata_sc1200.c b/drivers/ata/pata_sc1200.c
+index cbab397..0278fd2 100644
+--- a/drivers/ata/pata_sc1200.c
++++ b/drivers/ata/pata_sc1200.c
+@@ -167,10 +167,10 @@ static unsigned int sc1200_qc_issue(struct ata_qu=
+eued_cmd *qc)
+ 	struct ata_device *prev =3D ap->private_data;
+=20
+ 	/* See if the DMA settings could be wrong */
+-	if (adev->dma_mode !=3D 0 && adev !=3D prev && prev !=3D NULL) {
++	if (ata_dma_enabled(adev) && adev !=3D prev && prev !=3D NULL) {
+ 		/* Maybe, but do the channels match MWDMA/UDMA ? */
+-		if ((adev->dma_mode >=3D XFER_UDMA_0 && prev->dma_mode < XFER_UDMA_0=
+) ||
+-		    (adev->dma_mode < XFER_UDMA_0 && prev->dma_mode >=3D XFER_UDMA_0=
+))
++		if ((ata_using_udma(adev) && !ata_using_udma(prev)) ||
++		    (ata_using_udma(prev) && !ata_using_udma(adev)))
+ 		    	/* Switch the mode bits */
+ 		    	sc1200_set_dmamode(ap, adev);
+ 	}
+diff --git a/include/linux/libata.h b/include/linux/libata.h
+index 6820d6b..9bfe49e 100644
+--- a/include/linux/libata.h
++++ b/include/linux/libata.h
+@@ -1427,6 +1427,28 @@ static inline unsigned long ata_deadline(unsigne=
+d long from_jiffies,
+ 	return from_jiffies + msecs_to_jiffies(timeout_msecs);
+ }
+=20
++/* Don't open code these in drivers as there are traps. Firstly the ra=
+nge may
++   change in future hardware and specs, secondly 0xFF means 'no DMA' b=
+ut is
++   > UDMA_0. Dyma ddreigiau */
++
++static inline int ata_using_mwdma(struct ata_device *adev)
++{
++	if (adev->dma_mode >=3D XFER_MW_DMA_0 && adev->dma_mode <=3D XFER_MW_=
+DMA_4)
++		return 1;
++	return 0;
++}
++
++static inline int ata_using_udma(struct ata_device *adev)
++{
++	if (adev->dma_mode >=3D XFER_UDMA_0 && adev->dma_mode <=3D XFER_UDMA_=
+7)
++		return 1;
++	return 0;
++}
++
++static inline int ata_dma_enabled(struct ata_device *adev)
++{
++	return (adev->dma_mode =3D=3D 0xFF ? 0 : 1);
++}
+=20
+ /*********************************************************************=
+*****
+  * PMP - drivers/ata/libata-pmp.c
