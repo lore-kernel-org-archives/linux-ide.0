@@ -1,59 +1,44 @@
-From: Alan Cox <alan@redhat.com>
-Subject: Re: [RFC/Review] libata driver for Apple "macio" pata
-Date: Fri, 1 Aug 2008 12:58:04 -0400
-Message-ID: <20080801165804.GA21906@devserv.devel.redhat.com>
-References: <1217581709.11188.489.camel@pasglop> <4892DE7C.2040708@gmail.com> <1217588203.11188.507.camel@pasglop>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:37292 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751793AbYHARMe (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 1 Aug 2008 13:12:34 -0400
-Content-Disposition: inline
-In-Reply-To: <1217588203.11188.507.camel@pasglop>
-Sender: linux-ide-owner@vger.kernel.org
+From: Kumar Gala <galak@kernel.crashing.org>
+Subject: [PATCH 09/10] pata_sil680: convert CONFIG_PPC_MERGE to CONFIG_PPC
+Date: Fri,  1 Aug 2008 11:44:19 -0500
+Message-ID: <1217609060-6381-10-git-send-email-galak@kernel.crashing.org>
+References: <1217609060-6381-1-git-send-email-galak@kernel.crashing.org>
+ <1217609060-6381-2-git-send-email-galak@kernel.crashing.org>
+ <1217609060-6381-3-git-send-email-galak@kernel.crashing.org>
+ <1217609060-6381-4-git-send-email-galak@kernel.crashing.org>
+ <1217609060-6381-5-git-send-email-galak@kernel.crashing.org>
+ <1217609060-6381-6-git-send-email-galak@kernel.crashing.org>
+ <1217609060-6381-7-git-send-email-galak@kernel.crashing.org>
+ <1217609060-6381-8-git-send-email-galak@kernel.crashing.org>
+ <1217609060-6381-9-git-send-email-galak@kernel.crashing.org>
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1757056AbYHARo6@vger.kernel.org>
+In-Reply-To: <1217609060-6381-9-git-send-email-galak@kernel.crashing.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: linuxppc-dev@ozlabs.org
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, jgarzik@pobox.com
 List-Id: linux-ide@vger.kernel.org
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Cc: Tejun Heo <htejun@gmail.com>, list linux-ide <linux-ide@vger.kernel.org>, Jeff Garzik <jgarzik@pobox.com>, Alan Cox <alan@redhat.com>
 
-> I know and I believe it should still be ok ... As I said, the chipset
-> should use the PIO field in the register for PIO transfers. And if the
-> above unknown bit is set, I suspect it's just going to increase the
-> setup time a bit or something like that, which won't hurt other than
-> perfs.
+Now that arch/ppc is dead CONFIG_PPC_MERGE is always defined for all
+powerpc platforms and we want to get rid of CONFIG_PPC_MERGE use
+CONFIG_PPC instead.
 
-What I do with some other drivers is set the PIO mode in the pio mode function
-but defer DMA timing setup to bmdma_start/stop methods. Some chips need this
-in the PC world and that works nicely.
+Signed-off-by: Kumar Gala <galak@kernel.crashing.org>
+---
+ drivers/ata/pata_sil680.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-> > > +static unsigned long pata_macio_mode_filter(struct ata_device *adev,
-> > > +					    unsigned long xfer_mask)
-> > > +{
-> > > +	struct pata_macio_priv *priv = adev->link->ap->private_data;
-> > > +
-> > > +	if (priv->dma_regs == NULL)
-> > > +		xfer_mask &= ~(ATA_MASK_MWDMA | ATA_MASK_UDMA);
-> > > +	return xfer_mask;
-> > > +}
-> > 
-> > Wouldn't it be better to clear these during initialization?
-> 
-> I could. Doesn't matter much where it's done, does it ? Doing there
-> allows to deal with a failure in my port_start() callback, if the
-> allocation of the DMA table fails, I clear dma_regs.
-
-For x86 we clear it later in some cases too - because the allocation is
-done after we pass the sht and ata parameters to the setup functions.
-
-> The reason is that I can only have 64K-4K per transfer (I don't think I
-> can do 64K per DBDMA entry). So the above routine can potentially
-> breakup, in the worst case scenario, the table into twice as many
-> entries if they are all 64K precisely.
-
-See ata_sff_dumb_qc_prep - we have PC chips with the same bug!
-
---
-   "Engineers are 'small children' when it comes to product warning labels"
-					-- John Duino
-
+diff --git a/drivers/ata/pata_sil680.c b/drivers/ata/pata_sil680.c
+index 720b864..9655511 100644
+--- a/drivers/ata/pata_sil680.c
++++ b/drivers/ata/pata_sil680.c
+@@ -230,7 +230,7 @@ static u8 sil680_init_chip(struct pci_dev *pdev, int *try_mmio)
+ 		tmpbyte & 1, tmpbyte & 0x30);
+ 
+ 	*try_mmio = 0;
+-#ifdef CONFIG_PPC_MERGE
++#ifdef CONFIG_PPC
+ 	if (machine_is(cell))
+ 		*try_mmio = (tmpbyte & 1) || pci_resource_start(pdev, 5);
+ #endif
+-- 
+1.5.5.1
