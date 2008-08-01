@@ -1,34 +1,59 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: SATA port multiplier(Marvell 6121 with ahci) and Marvell 4140,
- simg 3726
-Date: Sat, 02 Aug 2008 01:16:32 +0900
-Message-ID: <489336E0.7020409@kernel.org>
-References: <788014650807302022j30cea641wcfe4105ac8702b8c@mail.gmail.com> <48918D52.3010404@gmail.com> <48918DD9.9050603@kernel.org> <788014650807310612x70347f8dt56ed650dc6b8c5ca@mail.gmail.com> <48926F7E.1020807@kernel.org> <48930B2E.9060604@pobox.com>
+From: Alan Cox <alan@redhat.com>
+Subject: Re: [RFC/Review] libata driver for Apple "macio" pata
+Date: Fri, 1 Aug 2008 12:58:04 -0400
+Message-ID: <20080801165804.GA21906@devserv.devel.redhat.com>
+References: <1217581709.11188.489.camel@pasglop> <4892DE7C.2040708@gmail.com> <1217588203.11188.507.camel@pasglop>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:49928 "EHLO hera.kernel.org"
+Received: from mx1.redhat.com ([66.187.233.31]:37292 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751567AbYHAQRj (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 1 Aug 2008 12:17:39 -0400
-In-Reply-To: <48930B2E.9060604@pobox.com>
+	id S1751793AbYHARMe (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 1 Aug 2008 13:12:34 -0400
+Content-Disposition: inline
+In-Reply-To: <1217588203.11188.507.camel@pasglop>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark Lord <mlord@pobox.com>
-Cc: khchen@synology.com, linux-ide@vger.kernel.org
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Cc: Tejun Heo <htejun@gmail.com>, list linux-ide <linux-ide@vger.kernel.org>, Jeff Garzik <jgarzik@pobox.com>, Alan Cox <alan@redhat.com>
 
-Mark Lord wrote:
-> I have exactly zero documentation on those chips,
-> but they are supposedly AHCI compliant.
+> I know and I believe it should still be ok ... As I said, the chipset
+> should use the PIO field in the register for PIO transfers. And if the
+> above unknown bit is set, I suspect it's just going to increase the
+> setup time a bit or something like that, which won't hurt other than
+> perfs.
+
+What I do with some other drivers is set the PIO mode in the pio mode function
+but defer DMA timing setup to bmdma_start/stop methods. Some chips need this
+in the PC world and that works nicely.
+
+> > > +static unsigned long pata_macio_mode_filter(struct ata_device *adev,
+> > > +					    unsigned long xfer_mask)
+> > > +{
+> > > +	struct pata_macio_priv *priv = adev->link->ap->private_data;
+> > > +
+> > > +	if (priv->dma_regs == NULL)
+> > > +		xfer_mask &= ~(ATA_MASK_MWDMA | ATA_MASK_UDMA);
+> > > +	return xfer_mask;
+> > > +}
+> > 
+> > Wouldn't it be better to clear these during initialization?
 > 
-> Looking in drivers/ata/ahci.c, one can see that the chips are indeed
-> supported,
-> and there the AHCI_HFLAG_NO_PMP is *not* set, so one might expect them
-> to work
-> with a port-multiplier already.  ?
+> I could. Doesn't matter much where it's done, does it ? Doing there
+> allows to deal with a failure in my port_start() callback, if the
+> allocation of the DMA table fails, I clear dma_regs.
 
-I bet it's more like nobody tried yet.  :-P
+For x86 we clear it later in some cases too - because the allocation is
+done after we pass the sht and ata parameters to the setup functions.
 
--- 
-tejun
+> The reason is that I can only have 64K-4K per transfer (I don't think I
+> can do 64K per DBDMA entry). So the above routine can potentially
+> breakup, in the worst case scenario, the table into twice as many
+> entries if they are all 64K precisely.
+
+See ata_sff_dumb_qc_prep - we have PC chips with the same bug!
+
+--
+   "Engineers are 'small children' when it comes to product warning labels"
+					-- John Duino
+
