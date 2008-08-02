@@ -1,50 +1,108 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [PATCH] ide-generic: skip automatic probing of legacy iobases (was: Re: [PATCH] ide-floppy fix)
-Date: Sat, 2 Aug 2008 20:46:16 +0200
-Message-ID: <200808022046.16990.bzolnier@gmail.com>
-References: <20080715053356.GA18628@gollum.tnic> <200808021902.12191.bzolnier@gmail.com> <20080802183253.GA2239@gollum.tnic>
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+Subject: Re: [PATCH 2/2] ide: add proper PCI PM support
+Date: Sat, 2 Aug 2008 22:49:38 +0200
+Message-ID: <200808022249.38969.rjw@sisk.pl>
+References: <200808021917.04847.bzolnier@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
   charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from fk-out-0910.google.com ([209.85.128.184]:18218 "EHLO
-	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752410AbYHBSsq (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 2 Aug 2008 14:48:46 -0400
-Received: by fk-out-0910.google.com with SMTP id 18so1285944fkq.5
-        for <linux-ide@vger.kernel.org>; Sat, 02 Aug 2008 11:48:45 -0700 (PDT)
-In-Reply-To: <20080802183253.GA2239@gollum.tnic>
+Received: from ogre.sisk.pl ([217.79.144.158]:38523 "EHLO ogre.sisk.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750866AbYHBUrY (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 2 Aug 2008 16:47:24 -0400
+In-Reply-To: <200808021917.04847.bzolnier@gmail.com>
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: petkovbb@gmail.com
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Jesse Barnes <jbarnes@virtuousgeek.org>
 
-On Saturday 02 August 2008, Borislav Petkov wrote:
-> On Sat, Aug 02, 2008 at 07:02:12PM +0200, Bartlomiej Zolnierkiewicz wrote:
-
-[...]
-
-> > > As a result, i have now a new bool-Kconfig option BLK_DEV_GENERIC_ONLY which
-> > > gets reverse-selected only when no pci ide controller which is using the generic
-> > > ide_host_register() from within ide_pci_init_one() is selected in Kconfig. This
-> > > is tested both with and without a pci ide driver selected in addition to
-> > > ide-generic.
-> > 
-> > How's about just leaving the final decision up to the user with changing
-> > probe_mask in ide_generic from 0x3 to 0x0 and automatically probing for
-> > ports 0-1 iff there is no IDE PCI controller present (otherwise check
-> > probe_mask).
+On Saturday, 2 of August 2008, Bartlomiej Zolnierkiewicz wrote:
+> * Keep pointer to ->init_chipset method also in
+>   struct ide_host and set it in ide_host_alloc_all().
 > 
-> Wait, let me get this straight: you want to set probe_mask to 0x0 as a default,
-> which skips probing of the primary and secondary ports, and to do the checking
+> * Add ide_pci_suspend() and ide_pci_resume() helpers
+>   (default ->suspend and ->resume implementations).
+> 
+> * ->init_chipset can no longer be marked __devinit.
+> 
+> * Add proper PCI PM support to IDE PCI host drivers
+>   (rz1000.c and tc86c001.c are skipped for now since
+>   they need to be converted from using ->init_hwif
+>   to use ->init_chipset instead).
 
-Yes.
+Well, first, the work on improving the PCI PM support by IDE drivers is much
+appreciated.
 
-> whether the IDE PCI controller uses legacy iobases only when the user has
-> enforced it by setting probe_mask to 0x3? At least this is how i understand
-> it...
+Still, since you're adding new routines etc., it may be a good time to
+implement them using the new PM framework, as defined in
+include/linux/pm.h (please also have a look at drivers/pci/pci-driver.c for the
+PCI bus type's PM callbacks implementation details).  Unfortunately, it's not
+been well documented yet, so if you have any questions, please ask.
 
-Nope, always do the checking and if there is no IDE PCI controller do the
-probing (& if there is IDE PCI controller present check probe_mask bits).
+In fact, we need some example implementations of the new PM callbacks and
+since you know the drivers in question very well, we could use your
+implementations as examples, if you don't mind.  [Certainly, they would be
+better than PM callbacks written by me for any driver. ;-) ]
+
+> Cc: "Rafael J. Wysocki" <rjw@sisk.pl>
+> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+> ---
+
+[--snip--]  
+
+>  static int __init via_ide_init(void)
+> Index: b/drivers/ide/setup-pci.c
+> ===================================================================
+> --- a/drivers/ide/setup-pci.c
+> +++ b/drivers/ide/setup-pci.c
+> @@ -659,3 +659,36 @@ void ide_pci_remove(struct pci_dev *dev)
+>  	pci_disable_device(dev);
+>  }
+>  EXPORT_SYMBOL_GPL(ide_pci_remove);
+> +
+> +#ifdef CONFIG_PM
+> +int ide_pci_suspend(struct pci_dev *dev, pm_message_t state)
+> +{
+> +	pci_save_state(dev);
+> +	pci_disable_device(dev);
+> +	pci_set_power_state(dev, pci_choose_state(dev, state));
+
+pci_choose_state() is now considered as obsolete.  You can use
+pci_target_state() or even pci_prepare_to_sleep() here.
+
+> +
+> +	return 0;
+> +}
+> +EXPORT_SYMBOL_GPL(ide_pci_suspend);
+> +
+> +int ide_pci_resume(struct pci_dev *dev)
+> +{
+> +	struct ide_host *host = pci_get_drvdata(dev);
+> +	int rc;
+> +
+> +	pci_set_power_state(dev, PCI_D0);
+> +
+
+If you decide to use pci_prepare_to_sleep() above, please use
+pci_back_from_sleep() here.
+
+> +	rc = pci_enable_device(dev);
+> +	if (rc)
+> +		return rc;
+> +
+> +	pci_restore_state(dev);
+> +	pci_set_master(dev);
+> +
+> +	if (host->init_chipset)
+> +		host->init_chipset(dev);
+> +
+> +	return 0;
+> +}
+> +EXPORT_SYMBOL_GPL(ide_pci_resume);
+> +#endif
+
+Thanks,
+Rafael
