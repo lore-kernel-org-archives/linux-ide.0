@@ -1,61 +1,143 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [PATCH] libata: Fix a large collection of DMA mode mismatches
-Date: Fri, 1 Aug 2008 23:42:49 +0100
-Message-ID: <20080801234249.7d6b36fe@lxorguk.ukuu.org.uk>
-References: <20080801091834.5ca39334@lxorguk.ukuu.org.uk>
-	<4892FA08.7070403@gmx.ch>
+From: Borislav Petkov <petkovbb@googlemail.com>
+Subject: updated remove-unnecessary-linux-hdreg-h-includes.patch
+Date: Sat, 2 Aug 2008 11:21:43 +0200
+Message-ID: <20080802092143.GA10061@gollum.tnic>
+Reply-To: petkovbb@gmail.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:54933 "EHLO
-	lxorguk.ukuu.org.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751037AbYHAXAF convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 1 Aug 2008 19:00:05 -0400
-In-Reply-To: <4892FA08.7070403@gmx.ch>
+Received: from fg-out-1718.google.com ([72.14.220.154]:7559 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751054AbYHBJVv (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 2 Aug 2008 05:21:51 -0400
+Received: by fg-out-1718.google.com with SMTP id 19so688006fgg.17
+        for <linux-ide@vger.kernel.org>; Sat, 02 Aug 2008 02:21:48 -0700 (PDT)
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: David =?UTF-8?B?TcO8bGxlcg==?= <dave.mueller@gmx.ch>
-Cc: jgarzik@pobox.com, linux-ide@vger.kernel.org
+To: bzolnier@gmail.com
+Cc: linux-ide@vger.kernel.org
 
-On Fri, 01 Aug 2008 13:56:56 +0200
-David M=C3=BCller <dave.mueller@gmx.ch> wrote:
+Hi Bart,
 
-> Alan Cox wrote:
-> >  drivers/ata/libata-core.c |    4 ++--
-> >  drivers/ata/pata_acpi.c   |    2 +-
-> >  drivers/ata/pata_atiixp.c |    2 +-
-> >  drivers/ata/pata_cs5530.c |    6 +++---
-> >  drivers/ata/pata_sc1200.c |    6 +++---
-> >  include/linux/libata.h    |   22 ++++++++++++++++++++++
-> >  6 files changed, 32 insertions(+), 10 deletions(-)
->=20
-> A patch for the "pata_oldpiix" driver seems to be missing.
->=20
-> Signed-off-by: Dave Mueller <dave.mueller@gmx.ch>
+some renaming took place in the linux-sh tree so
+remove-unnecessary-linux-hdreg-h-includes.patch wasn't applying cleanly and
+especially due to the move:
 
-Oops I meant to send that one on as well
+arch/sh/boards/{renesas/ =>}mach-systemh/irq.c. Here's an updated version:
 
-Acked-by: Alan Cox <alan@redhat.com>
+---
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: [PATCH] remove unnecessary <linux/hdreg.h> includes
 
-> diff -dpurN a/drivers/ata/pata_oldpiix.c b/drivers/ata/pata_oldpiix.c
-> --- a/drivers/ata/pata_oldpiix.c    2008-07-14 18:19:53.000000000 +02=
-00
-> +++ b/drivers/ata/pata_oldpiix.c    2008-08-01 13:17:34.000000000 +02=
-00
-> @@ -198,7 +198,7 @@ static unsigned int oldpiix_qc_issue(str
->=20
->   	if (adev !=3D ap->private_data) {
->   		oldpiix_set_piomode(ap, adev);
-> -		if (adev->dma_mode)
-> +		if (ata_dma_enabled(adev))
->   			oldpiix_set_dmamode(ap, adev);
->   	}
->   	return ata_sff_qc_issue(qc);
->=20
+Following files don't need <linux/hdreg.h> at all:
 
+- arch/mips/jazz/setup.c
+- arch/sh/boards/renesas/systemh/irq.c
+- drivers/macintosh/mediabay.c
+- drivers/scsi/hptiop.c
+- drivers/usb/storage/freecom.c
+- include/asm-powerpc/ide.h
+- init/main.c
 
---=20
---
-	"Alan, I'm getting a bit worried about you."
-				-- Linus Torvalds
+Cc: Christoph Hellwig <hch@infradead.org>
+Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+---
+ arch/mips/jazz/setup.c               |    1 -
+ arch/sh/boards/renesas/systemh/irq.c |    1 -
+ drivers/macintosh/mediabay.c         |    1 -
+ drivers/scsi/hptiop.c                |    1 -
+ drivers/usb/storage/freecom.c        |    2 --
+ include/asm-powerpc/ide.h            |    1 -
+ init/main.c                          |    1 -
+ 7 files changed, 8 deletions(-)
+
+Index: b/arch/mips/jazz/setup.c
+===================================================================
+--- a/arch/mips/jazz/setup.c
++++ b/arch/mips/jazz/setup.c
+@@ -10,7 +10,6 @@
+  * Copyright (C) 2007 by Thomas Bogendoerfer
+  */
+ #include <linux/eisa.h>
+-#include <linux/hdreg.h>
+ #include <linux/init.h>
+ #include <linux/ioport.h>
+ #include <linux/sched.h>
+Index: b/arch/sh/boards/renesas/systemh/irq.c
+===================================================================
+--- a/arch/sh/boards/mach-systemh/irq.c
++++ b/arch/sh/boards/mach-systemh/irq.c
+@@ -12,7 +12,6 @@
+ #include <linux/init.h>
+ #include <linux/irq.h>
+ 
+-#include <linux/hdreg.h>
+ #include <linux/ide.h>
+ #include <asm/io.h>
+ #include <asm/systemh7751.h>
+Index: b/drivers/macintosh/mediabay.c
+===================================================================
+--- a/drivers/macintosh/mediabay.c
++++ b/drivers/macintosh/mediabay.c
+@@ -16,7 +16,6 @@
+ #include <linux/delay.h>
+ #include <linux/sched.h>
+ #include <linux/timer.h>
+-#include <linux/hdreg.h>
+ #include <linux/stddef.h>
+ #include <linux/init.h>
+ #include <linux/ide.h>
+Index: b/drivers/scsi/hptiop.c
+===================================================================
+--- a/drivers/scsi/hptiop.c
++++ b/drivers/scsi/hptiop.c
+@@ -25,7 +25,6 @@
+ #include <linux/delay.h>
+ #include <linux/timer.h>
+ #include <linux/spinlock.h>
+-#include <linux/hdreg.h>
+ #include <asm/uaccess.h>
+ #include <asm/io.h>
+ #include <asm/div64.h>
+Index: b/drivers/usb/storage/freecom.c
+===================================================================
+--- a/drivers/usb/storage/freecom.c
++++ b/drivers/usb/storage/freecom.c
+@@ -26,8 +26,6 @@
+  * (http://www.freecom.de/)
+  */
+ 
+-#include <linux/hdreg.h>
+-
+ #include <scsi/scsi.h>
+ #include <scsi/scsi_cmnd.h>
+ 
+Index: b/include/asm-powerpc/ide.h
+===================================================================
+--- a/include/asm-powerpc/ide.h
++++ b/include/asm-powerpc/ide.h
+@@ -20,7 +20,6 @@
+ #define __ide_mm_outsl(p, a, c)	writesl((void __iomem *)(p), (a), (c))
+ 
+ #ifndef  __powerpc64__
+-#include <linux/hdreg.h>
+ #include <linux/ioport.h>
+ 
+ /* FIXME: use ide_platform host driver */
+Index: b/init/main.c
+===================================================================
+--- a/init/main.c
++++ b/init/main.c
+@@ -22,7 +22,6 @@
+ #include <linux/init.h>
+ #include <linux/smp_lock.h>
+ #include <linux/initrd.h>
+-#include <linux/hdreg.h>
+ #include <linux/bootmem.h>
+ #include <linux/tty.h>
+ #include <linux/gfp.h>
+
+-- 
+Regards/Gruss,
+    Boris.
