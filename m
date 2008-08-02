@@ -1,88 +1,61 @@
-From: "KueiHuan Chen" <kueihuan.chen@gmail.com>
-Subject: Re: SATA port multiplier(Marvell 6121 with ahci) and Marvell 4140, simg 3726
-Date: Sun, 3 Aug 2008 01:53:58 +0800
-Message-ID: <788014650808021053y5b5a8e01y62099464cc96d8a4@mail.gmail.com>
-References: <788014650807302022j30cea641wcfe4105ac8702b8c@mail.gmail.com>
-	 <48918D52.3010404@gmail.com> <48918DD9.9050603@kernel.org>
-	 <788014650807310612x70347f8dt56ed650dc6b8c5ca@mail.gmail.com>
-	 <48926F7E.1020807@kernel.org> <48930B2E.9060604@pobox.com>
-	 <489336E0.7020409@kernel.org>
-Reply-To: khchen@synology.com
+From: Borislav Petkov <petkovbb@googlemail.com>
+Subject: Re: [PATCH] ide-generic: skip automatic probing of legacy iobases
+	(was: Re: [PATCH] ide-floppy fix)
+Date: Sat, 2 Aug 2008 20:32:53 +0200
+Message-ID: <20080802183253.GA2239@gollum.tnic>
+References: <20080715053356.GA18628@gollum.tnic> <200807232051.12226.bzolnier@gmail.com> <20080801054831.GA14636@gollum.tnic> <200808021902.12191.bzolnier@gmail.com>
+Reply-To: petkovbb@gmail.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rv-out-0506.google.com ([209.85.198.229]:45024 "EHLO
-	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751293AbYHBRx7 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 2 Aug 2008 13:53:59 -0400
-Received: by rv-out-0506.google.com with SMTP id k40so1523684rvb.1
-        for <linux-ide@vger.kernel.org>; Sat, 02 Aug 2008 10:53:58 -0700 (PDT)
-In-Reply-To: <489336E0.7020409@kernel.org>
+Received: from fg-out-1718.google.com ([72.14.220.153]:23918 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753215AbYHBSc7 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 2 Aug 2008 14:32:59 -0400
+Received: by fg-out-1718.google.com with SMTP id 19so742943fgg.17
+        for <linux-ide@vger.kernel.org>; Sat, 02 Aug 2008 11:32:56 -0700 (PDT)
 Content-Disposition: inline
+In-Reply-To: <200808021902.12191.bzolnier@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>, jgarzik@pobox.com
-Cc: Mark Lord <mlord@pobox.com>, linux-ide@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-2008/8/2 Tejun Heo <tj@kernel.org>:
-> Mark Lord wrote:
->> I have exactly zero documentation on those chips,
->> but they are supposedly AHCI compliant.
->>
->> Looking in drivers/ata/ahci.c, one can see that the chips are indeed
->> supported,
->> and there the AHCI_HFLAG_NO_PMP is *not* set, so one might expect them
->> to work
->> with a port-multiplier already.  ?
->
-> I bet it's more like nobody tried yet.  :-P
+On Sat, Aug 02, 2008 at 07:02:12PM +0200, Bartlomiej Zolnierkiewicz wrote:
 
+[.. ]
 
- Thanks for your explaining, i had tried it already.
+> Why not try <linux/ata.h> + inline trick instead?
+> 
+> [ <linux/ata.h> is shared by both stacks so by moving the function there
+>   + making it inline it can also be shared without the need for dependency
+>   on libata. ]
 
- Port multiplier of Silicon image 3726 is not supported from 2.6.24 to
-2.6.26 with 6121 and 6145 which using ahci.c  : (
+I hadn't thought of that, will try it out later.
 
- Here is the test envirement:
+> > As a result, i have now a new bool-Kconfig option BLK_DEV_GENERIC_ONLY which
+> > gets reverse-selected only when no pci ide controller which is using the generic
+> > ide_host_register() from within ide_pci_init_one() is selected in Kconfig. This
+> > is tested both with and without a pci ide driver selected in addition to
+> > ide-generic.
+> 
+> How's about just leaving the final decision up to the user with changing
+> probe_mask in ide_generic from 0x3 to 0x0 and automatically probing for
+> ports 0-1 iff there is no IDE PCI controller present (otherwise check
+> probe_mask).
 
-  Port Multipiler : Silicon image 3726. (Marvell 4140 is not fully
-tested, so i don't listed, but it is the same in arm arch.)
+Wait, let me get this straight: you want to set probe_mask to 0x0 as a default,
+which skips probing of the primary and secondary ports, and to do the checking
+whether the IDE PCI controller uses legacy iobases only when the user has
+enforced it by setting probe_mask to 0x3? At least this is how i understand
+it...
 
- arch/kernel   2.6.24        2.6.25       2.6.26
+> This is should remove the need for Kconfig magic and is a sane default
+> since a lot of people get caught using ide_generic by mistake and not by
+> intent (IOW they forgot to enable the right IDE PCI host driver).
 
-  arm            Not Work   Not tested   Not tested
+[.. ]
 
-  powerpc     Not Work   Not tested   Not tested
-
-  x86_64       Not Work   Not Work     Not Work
-
-
- Should we need disable 6121/6145 pmp support in ahci.c until it is
-fully supported?
-
-Thanks a lot.
---------------------
-
-  Temporal disable pmp support in 6121/6145 until it is fully supported.
-
-Signed-off-by: KueiHuan Chen <khchen@synology.com>
----
-diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
-index ef3e552..ef65ac0 100644
---- a/drivers/ata/ahci.c
-+++ b/drivers/ata/ahci.c
-@@ -420,7 +420,7 @@ static const struct ata_port_info ahci_port_info[] = {
-        /* board_ahci_mv */
-        {
-                AHCI_HFLAGS     (AHCI_HFLAG_NO_NCQ | AHCI_HFLAG_NO_MSI |
--                                AHCI_HFLAG_MV_PATA),
-+                                AHCI_HFLAG_MV_PATA | AHCI_HFLAG_NO_PMP),
-                .flags          = ATA_FLAG_SATA | ATA_FLAG_NO_LEGACY |
-                                  ATA_FLAG_MMIO | ATA_FLAG_PIO_DMA,
-                .pio_mask       = 0x1f, /* pio0-4 */
-
-
----
-Thanks,
-KueiHuan-Chen
+-- 
+Regards/Gruss,
+    Boris.
