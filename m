@@ -1,34 +1,42 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: Kernel Summit request for Discussion of future of ATA (libata)
- and IDE
-Date: Mon, 04 Aug 2008 07:36:17 +0900
-Message-ID: <489632E1.6090900@kernel.org>
-References: <1217779055.4179.10.camel@localhost.localdomain>	<20080803173941.314edf33@lxorguk.ukuu.org.uk>	<1217783433.4179.18.camel@localhost.localdomain>	<20080803194501.24fa3e51@lxorguk.ukuu.org.uk>	<48960B28.2040709@ij.net>	<48962C6E.5080802@kernel.org> <20080803230502.2cfd013e@lxorguk.ukuu.org.uk>
+Subject: Re: Re : Re : Re : Re : dvd-9 trouble with TSSTcorp SH-S203D
+Date: Mon, 04 Aug 2008 07:41:50 +0900
+Message-ID: <4896342E.1000007@kernel.org>
+References: <92141.98412.qm@web26206.mail.ukl.yahoo.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:52169 "EHLO hera.kernel.org"
+Received: from hera.kernel.org ([140.211.167.34]:33640 "EHLO hera.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757430AbYHCWhA (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 3 Aug 2008 18:37:00 -0400
-In-Reply-To: <20080803230502.2cfd013e@lxorguk.ukuu.org.uk>
+	id S1757363AbYHCWm2 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 3 Aug 2008 18:42:28 -0400
+In-Reply-To: <92141.98412.qm@web26206.mail.ukl.yahoo.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: Felix Miata <mrmazda@ij.net>, linux-ide@vger.kernel.org
+To: =?ISO-8859-1?Q?S=E9bastien?= <willy_the_cat@yahoo.com>
+Cc: jgarzik@pobox.com, linux-ide@vger.kernel.org
 
-Alan Cox wrote:
->> http://www.ussg.iu.edu/hypermail/linux/kernel/0807.1/2568.html
->>
->> Dunno it will get in tho.
-> 
-> Take it up with Al. He vetoed the needed fixes for this before libata
-> even acquired PATA support. Since then nothing has happened.
-> 
-> This is simply not a technical problem.
+S=E9bastien wrote:
+> You are right, it's a css dvd. I use dvdbackup and work fine without =
+any I/O errors.
+> Ok, "we are learning every old" (French proverb).
+>=20
+> I finaly found a dvd9 which pass throught udf filesystem correctly, b=
+ut it seems that there's no general way to see if there is or there is =
+not a CSS part in the media.
+>=20
+> I apologies. Sorry for disturbing. Many thanks for all.
+> S=E9bastien
+>=20
+> nota : you can keep your connect if you want heo !
 
-Al Viro is cc'd in all the postings.  Don't really know what else to do.
+No need to keep it around.  Please kill it.
 
--- 
+Ah.. so it was the copy protection thing.  The firmware failed the
+command and reported it via sense data.  Hmmm... how come SCSI didn't
+report the sense data?  Anyways, you probably want to look for libdvdcs=
+s.
+
+--=20
 tejun
