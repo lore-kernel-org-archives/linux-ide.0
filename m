@@ -1,34 +1,36 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: smartctl -a output on crazy-unloading drives
-Date: Sun, 03 Aug 2008 20:05:46 +0900
-Message-ID: <4895910A.5080305@kernel.org>
-References: <4892D1F9.5060106@kernel.org> <4892D34F.7040501@gmx.net> <489526B5.9020001@kernel.org> <48958F70.8090907@gmx.net>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [PATCH 1/2] pata_legacy: export functionality to ide
+Date: Sun, 3 Aug 2008 12:59:07 +0100
+Message-ID: <20080803125907.67676948@lxorguk.ukuu.org.uk>
+References: <20080715053356.GA18628@gollum.tnic>
+	<200808021902.12191.bzolnier@gmail.com>
+	<20080802183253.GA2239@gollum.tnic>
+	<200808022046.16990.bzolnier@gmail.com>
+	<20080803073756.GA8762@gollum.tnic>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:42040 "EHLO hera.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752001AbYHCLGV (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 3 Aug 2008 07:06:21 -0400
-In-Reply-To: <48958F70.8090907@gmx.net>
+Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:47351 "EHLO
+	lxorguk.ukuu.org.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1753572AbYHCMQe (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 3 Aug 2008 08:16:34 -0400
+In-Reply-To: <20080803073756.GA8762@gollum.tnic>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tobias Stegmann <tobias_stegmann@gmx.net>
-Cc: IDE/ATA development list <linux-ide@vger.kernel.org>
+To: petkovbb@gmail.com
+Cc: petkovbb@googlemail.com, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, alan@redhat.com, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-(restoring linux-ide cc)
+On Sun, 3 Aug 2008 09:37:56 +0200
+Borislav Petkov <petkovbb@googlemail.com> wrote:
 
-Tobias Stegmann wrote:
-> Yes, I'm using the APM setting between 6 and 12 months now. If I'm using
-> standard APM settings, the Load_Cycle_Counts increases very fast and
-> there is this clicking noise I can hear.
-> I'm not quite sure, but I think its rated for over 1.500.000 LCCs.
+> Ok, here's a definitely better solution:
 
-Can you please turn off APM setting and see how much Load_Cycle_Counts
-increases in an hour under light usage?
+Please don't stuff large important pieces of code in header files where
+they will be overlooked
 
-Thanks.
+NAK this.
 
--- 
-tejun
+I'm happy to have a shared library directory for ATA stuff, containing
+useful C code, but hiding stuff in headers like that is just plain wrong.
+
