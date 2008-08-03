@@ -1,124 +1,136 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [PATCH 2/2] ide-generic: handle probing of legacy io-ports
-Date: Sun, 3 Aug 2008 16:11:10 +0200
-Message-ID: <200808031611.11033.bzolnier@gmail.com>
-References: <20080715053356.GA18628@gollum.tnic> <200808022046.16990.bzolnier@gmail.com> <20080803073842.GB8762@gollum.tnic>
+From: "Gavin Shan" <gshan@alcatel-lucent.com>
+Subject: Re: PIIX4: DMA timeout issue
+Date: Sun, 3 Aug 2008 22:10:55 +0800
+Message-ID: <007901c8f572$c0f3d020$0100a8c0@microsof291b50>
+References: <488ED837.2060509@alcatel-lucent.com>	<488F1C6C.9000002@garzik.org>	<48902EB5.8070102@alcatel-lucent.com> <20080730114934.5a593cf4@lxorguk.ukuu.org.uk> <48913FFD.5070901@alcatel-lucent.com> <4892BEBA.2000602@kernel.org> <4892CF2B.9030309@alcatel-lucent.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from fk-out-0910.google.com ([209.85.128.190]:15941 "EHLO
-	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755550AbYHCONj (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 3 Aug 2008 10:13:39 -0400
-Received: by fk-out-0910.google.com with SMTP id 18so1484941fkq.5
-        for <linux-ide@vger.kernel.org>; Sun, 03 Aug 2008 07:13:37 -0700 (PDT)
-In-Reply-To: <20080803073842.GB8762@gollum.tnic>
-Content-Disposition: inline
-Sender: linux-ide-owner@vger.kernel.org
+	charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1757989AbYHCOPD@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: gshan <gshan@alcatel-lucent.com>, Tejun Heo <tj@kernel.org>
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, Jeff Garzik <jeff@garzik.org>, linux-kernel@vger.kernel.org, Linux IDE mailing list <linux-ide@vger.kernel.org>
 List-Id: linux-ide@vger.kernel.org
-To: petkovbb@gmail.com
-Cc: alan@redhat.com, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-
-On Sunday 03 August 2008, Borislav Petkov wrote:
-> From: Borislav Petkov <petkovbb@gmail.com>
-> Date: Sun, 3 Aug 2008 09:28:53 +0200
-> Subject: [PATCH 2/2] ide-generic: handle probing of legacy io-ports
-> 
-> Avoid probing the io-ports in case an IDE PCI controller is present and it uses
-> the legacy iobases. If we still want to enforce the probing, we do
-> 
-> ide_generic.probe_mask=0x3f
-> 
-> on the kernel command line.
-> 
-> Signed-off-by: Borislav Petkov <petkovbb@gmail.com>
-
-Thanks for reworking the patch, looks much better now.
-
-There are still some issues to address though.
-
-> ---
->  drivers/ide/ide-generic.c |   23 ++++++++++++++++++-----
->  1 files changed, 18 insertions(+), 5 deletions(-)
-> 
-> diff --git a/drivers/ide/ide-generic.c b/drivers/ide/ide-generic.c
-> index 8fe8b5b..7d79616 100644
-> --- a/drivers/ide/ide-generic.c
-> +++ b/drivers/ide/ide-generic.c
-> @@ -27,7 +27,7 @@
->  
->  #define DRV_NAME	"ide_generic"
->  
-> -static int probe_mask = 0x03;
-> +static int probe_mask = 0x00;
-
-No need to initialize it now.
-
->  module_param(probe_mask, int, 0);
->  MODULE_PARM_DESC(probe_mask, "probe mask for legacy ISA IDE ports");
->  
-> @@ -105,18 +105,31 @@ static int __init ide_generic_init(void)
->  	hw_regs_t hw[MAX_HWIFS], *hws[MAX_HWIFS];
->  	struct ide_host *host;
->  	unsigned long io_addr;
-> -	int i, rc;
-> +	int i, rc, dummy, primary = 0, secondary = 0;
->  
->  #ifdef CONFIG_MIPS
->  	if (!ide_probe_legacy())
->  		return -ENODEV;
->  #endif
-> -	printk(KERN_INFO DRV_NAME ": please use \"probe_mask=0x3f\" module "
-> -			 "parameter for probing all legacy ISA IDE ports\n");
-> +	ata_legacy_check_iobases(&primary, &secondary, &dummy);
-> +
-> +	if (primary) {
-
-Shouldn't this also check for secondary?
-
-> +		if (probe_mask) {
-> +			printk(KERN_WARNING "%s: enforcing probing of io ports "
-> +			       "upon user request.\n", DRV_NAME);
-> +			primary = 0;
-> +			secondary = 0;
-> +		} else
-> +			printk(KERN_INFO DRV_NAME ": please use "
-> +			       \"probe_mask=0x3f\" module parameter for probing"
-> +			       "all legacy ISA IDE ports\n");
-
-Help message is no longer printed for !primary
-(we always want to have it unless probe_mask is set).
-
-> +
-> +	} else
-> +		probe_mask = 0x3;
-
-I think this was meant to be 'probe_mask |= 3;'?
-
->  	memset(hws, 0, sizeof(hw_regs_t *) * MAX_HWIFS);
->  
-> -	for (i = 0; i < ARRAY_SIZE(legacy_bases); i++) {
-> +	for (i = primary + secondary; i < ARRAY_SIZE(legacy_bases); i++) {
-
-No need for primary/secondary checking here now as everything
-is controlled by probe_mask.
-
-Thus we can check for probe_mask first in the previous chunk
-and it can be rewritten/simplified to something like:
-
-	ata_legacy_check_iobases(&primary, &secondary, &dummy);
-
-	if (probe_mask == 0) {
-		printk(KERN_INFO DRV_NAME ": please use "
-		       \"probe_mask=0x3f\" module parameter for probing"
-		       "all legacy ISA IDE ports\n");
-
-		if (primary == 0)
-			probe_mask |= 1;
-
-		if (secondary == 0)
-			probe_mask |= 2;
-	}
+PiBVbmZvcnR1bmF0ZWx5LCB0aGUgdGltZW91dCBpc3N1ZSBzdGlsbCBoYXBwZW5lZCBvbiBBVEEg
+ZHJpdmVyIGFzIElERS4NCj4gDQo+IENvbW1hbmQgKG0gZm9yIGhlbHApOiBwDQo+IA0KPiBEaXNr
+IC9kZXYvc2RhOiA2MC4wIEdCLCA2MDAxMTY0Mjg4MCBieXRlcw0KPiAyNTUgaGVhZHMsIDYzIHNl
+Y3RvcnMvdHJhY2ssIDcyOTYgY3lsaW5kZXJzDQo+IFVuaXRzID0gY3lsaW5kZXJzIG9mIDE2MDY1
+ICogNTEyID0gODIyNTI4MCBieXRlcw0KPiBEaXNrIGlkZW50aWZpZXI6IDB4NDg5MmMwMDQNCj4g
+DQo+ICAgRGV2aWNlIEJvb3QgICAgICBTdGFydCAgICAgICAgIEVuZCAgICAgIEJsb2NrcyAgIElk
+ICBTeXN0ZW0NCj4gL2Rldi9zZGExICAgICAgICAgICAgICAgMSAgICAgICAgICAxNyAgICAgIDEz
+NjUyMSAgIDgzICBMaW51eA0KPiAvZGV2L3NkYTQgICAgICAgICAgICAgIDE4ICAgICAgICA3Mjk2
+ICAgIDU4NDY4NTY3KyAgIDUgIEV4dGVuZGVkDQo+IC9kZXYvc2RhNSAgICAgICAgICAgICAgMTgg
+ICAgICAgIDcyOTYgICAgNTg0Njg1MzYgICA4MyAgTGludXgNCj4gDQo+IENvbW1hbmQgKG0gZm9y
+IGhlbHApOiB3DQo+IFRoZSBwYXJ0aXRpb24gdGFibGUgaGFzIGJlZW4gYWx0ZXJlZCENCj4gDQo+
+IENhbGxpbmcgaW9jdGwoKSB0byByZS1yZWFkIHBhcnRpdGlvbiB0YWJsZS4NCj4gU0NTSSBkZXZp
+Y2Ugc2RhOiAxMTcyMTAyNDAgNTEyLWJ5dGUgaGR3ciBzZWN0b3JzICg2MDAxMiBNQikNCj4gc2Rh
+OiBXcml0ZSBQcm90ZWN0IGlzIG9mZg0KPiBTQ1NJIGRldmljZSBzZGE6IHdyaXRlIGNhY2hlOiBl
+bmFibGVkLCByZWFkIGNhY2hlOiBlbmFibGVkLCBkb2Vzbid0IA0KPiBzdXBwb3J0IERQTyBvciBG
+VUENCj4gc2RhOiBzZGExIHNkYTQgPCBzZGE1ID4NCj4gU3luY2luZyBkaXNrcy4NCj4gLyAkIG1r
+ZnMuZXh0MyAtTiA2NTUzNjAgL2Rldi9zZGE1DQo+IG1rZTJmcyAxLjQwICgyOS1KdW4tMjAwNykN
+Cj4gRmlsZXN5c3RlbSBsYWJlbD0NCj4gT1MgdHlwZTogTGludXgNCj4gQmxvY2sgc2l6ZT00MDk2
+IChsb2c9MikNCj4gRnJhZ21lbnQgc2l6ZT00MDk2IChsb2c9MikNCj4gNjU3OTg0IGlub2Rlcywg
+MTQ2MTcxMzQgYmxvY2tzDQo+IDczMDg1NiBibG9ja3MgKDUuMDAlKSByZXNlcnZlZCBmb3IgdGhl
+IHN1cGVyIHVzZXINCj4gRmlyc3QgZGF0YSBibG9jaz0wDQo+IE1heGltdW0gZmlsZXN5c3RlbSBi
+bG9ja3M9MA0KPiA0NDcgYmxvY2sgZ3JvdXBzDQo+IDMyNzY4IGJsb2NrcyBwZXIgZ3JvdXAsIDMy
+NzY4IGZyYWdtZW50cyBwZXIgZ3JvdXANCj4gMTQ3MiBpbm9kZXMgcGVyIGdyb3VwDQo+IFN1cGVy
+YmxvY2sgYmFja3VwcyBzdG9yZWQgb24gYmxvY2tzOg0KPiAgICAgICAgMzI3NjgsIDk4MzA0LCAx
+NjM4NDAsIDIyOTM3NiwgMjk0OTEyLCA4MTkyMDAsIDg4NDczNiwgMTYwNTYzMiwgDQo+IDI2NTQy
+MDgsDQo+ICAgICAgICA0MDk2MDAwLCA3OTYyNjI0LCAxMTIzOTQyNA0KPiANCj4gV3JpdGluZyBp
+bm9kZSB0YWJsZXM6IGRvbmUgICAgICAgICAgICAgICAgICAgICAgICAgICANCj4gQ3JlYXRpbmcg
+am91cm5hbCAoMzI3NjggYmxvY2tzKTogZG9uZQ0KPiBXcml0aW5nIHN1cGVyYmxvY2tzIGFuZCBm
+aWxlc3lzdGVtIGFjY291bnRpbmcgaW5mb3JtYXRpb246IGRvbmUNCj4gDQo+IFRoaXMgZmlsZXN5
+c3RlbSB3aWxsIGJlIGF1dG9tYXRpY2FsbHkgY2hlY2tlZCBldmVyeSAyNSBtb3VudHMgb3INCj4g
+MTgwIGRheXMsIHdoaWNoZXZlciBjb21lcyBmaXJzdC4gIFVzZSB0dW5lMmZzIC1jIG9yIC1pIHRv
+IG92ZXJyaWRlLg0KPiAvICQgbWtkaXIgL2FhYQ0KPiAvICQgaWZjb25maWcgcmVwMCAxOTIuMTY4
+LjI1My4yNw0KPiBtdjY0M3h4X2V0aF9pZl9zdGFydDogcmVnaXN0ZXIgUEhZIGludGVycnVwdCBy
+ZXAwIHBvcnQ9MSBzdz0xIHN3cG9ydD0yDQo+IC8gJCBtb3VudCAtbyBub2xvY2sgMTkyLjE2OC4y
+NTMuMjY6L2hvbWUxIC9hYWENCj4gLyAkIGNkIC9kaXNrX3Jvb3QvDQo+IC9kaXNrX3Jvb3QgJCBs
+cw0KPiAvZGlza19yb290ICQgY2QgLw0KPiAvICQgbW91bnQgL2Rldi9zZGE1IC9kaXNrX3Jvb3Qv
+DQo+IGtqb3VybmFsZCBzdGFydGluZy4gIENvbW1pdCBpbnRlcnZhbCA1IHNlY29uZHMNCj4gRVhU
+MyBGUyBvbiBzZGE1LCBpbnRlcm5hbCBqb3VybmFsDQo+IEVYVDMtZnM6IG1vdW50ZWQgZmlsZXN5
+c3RlbSB3aXRoIG9yZGVyZWQgZGF0YSBtb2RlLg0KPiAvICQgY2QgL2Rpc2tfcm9vdC8NCj4gL2Rp
+c2tfcm9vdCAkIHRhciAtenhmIC9hYWEvdGFyZ2V0Xzd4eF9jZ2U1LjIwMDgtMDctMTAudGd6DQo+
+IA0KPiBhdGEyLjAwOiBleGNlcHRpb24gRW1hc2sgMHgwIFNBY3QgMHgwIFNFcnIgMHgwIGFjdGlv
+biAweDIgZnJvemVuDQo+IGF0YTIuMDA6IGNtZCAzNS8wMDowMDoxODplZjoyOC8wMDowNDowMTow
+MDowMC9lMCB0YWcgMCBjZGIgMHgwIGRhdGEgDQo+IDUyNDI4OCBvdXQNCj4gICAgICAgICByZXMg
+NDAvMDA6MDA6MDA6MDA6MDAvMDA6MDA6MDA6MDA6MDAvMDAgRW1hc2sgMHg0ICh0aW1lb3V0KQ0K
+PiBhdGEyOiBzb2Z0IHJlc2V0dGluZyBwb3J0DQo+IGF0YTIuMDA6IGNvbmZpZ3VyZWQgZm9yIFVE
+TUEvMzMNCj4gYXRhMjogRUggY29tcGxldGUNCj4gYXRhMi4wMDogZXhjZXB0aW9uIEVtYXNrIDB4
+MCBTQWN0IDB4MCBTRXJyIDB4MCBhY3Rpb24gMHgyIGZyb3plbg0KPiBhdGEyLjAwOiBjbWQgMzUv
+MDA6MDA6MTg6ZWY6MjgvMDA6MDQ6MDE6MDA6MDAvZTAgdGFnIDAgY2RiIDB4MCBkYXRhIA0KPiA1
+MjQyODggb3V0DQo+ICAgICAgICAgcmVzIDQwLzAwOjAwOjAwOjAwOjAwLzAwOjAwOjAwOjAwOjAw
+LzAwIEVtYXNrIDB4NCAodGltZW91dCkNCj4gYXRhMjogc29mdCByZXNldHRpbmcgcG9ydA0KPiBh
+dGEyLjAwOiBjb25maWd1cmVkIGZvciBVRE1BLzMzDQo+IGF0YTI6IEVIIGNvbXBsZXRlDQo+IGF0
+YTIuMDA6IGV4Y2VwdGlvbiBFbWFzayAweDAgU0FjdCAweDAgU0VyciAweDAgYWN0aW9uIDB4MiBm
+cm96ZW4NCj4gYXRhMi4wMDogY21kIDM1LzAwOjAwOjE4OmVmOjI4LzAwOjA0OjAxOjAwOjAwL2Uw
+IHRhZyAwIGNkYiAweDAgZGF0YSANCj4gNTI0Mjg4IG91dA0KPiAgICAgICAgIHJlcyA0MC8wMDow
+MDowMDowMDowMC8wMDowMDowMDowMDowMC8wMCBFbWFzayAweDQgKHRpbWVvdXQpDQo+IGF0YTI6
+IHNvZnQgcmVzZXR0aW5nIHBvcnQNCj4gYXRhMi4wMDogY29uZmlndXJlZCBmb3IgVURNQS8zMw0K
+PiBhdGEyOiBFSCBjb21wbGV0ZQ0KPiBhdGEyLjAwOiBsaW1pdGluZyBzcGVlZCB0byBVRE1BLzI1
+OlBJTzQNCj4gYXRhMi4wMDogZXhjZXB0aW9uIEVtYXNrIDB4MCBTQWN0IDB4MCBTRXJyIDB4MCBh
+Y3Rpb24gMHgyIGZyb3plbg0KPiBhdGEyLjAwOiBjbWQgMzUvMDA6MDA6MTg6ZWY6MjgvMDA6MDQ6
+MDE6MDA6MDAvZTAgdGFnIDAgY2RiIDB4MCBkYXRhIA0KPiA1MjQyODggb3V0DQo+ICAgICAgICAg
+cmVzIDQwLzAwOjAwOjAwOjAwOjAwLzAwOjAwOjAwOjAwOjAwLzAwIEVtYXNrIDB4NCAodGltZW91
+dCkNCj4gYXRhMjogc29mdCByZXNldHRpbmcgcG9ydA0KPiBhdGEyLjAwOiBjb25maWd1cmVkIGZv
+ciBVRE1BLzI1DQo+IGF0YTI6IEVIIGNvbXBsZXRlDQo+IGF0YTIuMDA6IGV4Y2VwdGlvbiBFbWFz
+ayAweDAgU0FjdCAweDAgU0VyciAweDAgYWN0aW9uIDB4MiBmcm96ZW4NCj4gYXRhMi4wMDogY21k
+IDM1LzAwOjAwOjE4OmVmOjI4LzAwOjA0OjAxOjAwOjAwL2UwIHRhZyAwIGNkYiAweDAgZGF0YSAN
+Cj4gNTI0Mjg4IG91dA0KPiAgICAgICAgIHJlcyA0MC8wMDowMDowMDowMDowMC8wMDowMDowMDow
+MDowMC8wMCBFbWFzayAweDQgKHRpbWVvdXQpDQo+IGF0YTI6IHNvZnQgcmVzZXR0aW5nIHBvcnQN
+Cj4gYXRhMi4wMDogY29uZmlndXJlZCBmb3IgVURNQS8yNQ0KPiBhdGEyOiBFSCBjb21wbGV0ZQ0K
+PiBhdGEyLjAwOiBleGNlcHRpb24gRW1hc2sgMHgwIFNBY3QgMHgwIFNFcnIgMHgwIGFjdGlvbiAw
+eDIgZnJvemVuDQo+IGF0YTIuMDA6IGNtZCAzNS8wMDowMDoxODplZjoyOC8wMDowNDowMTowMDow
+MC9lMCB0YWcgMCBjZGIgMHgwIGRhdGEgDQo+IDUyNDI4OCBvdXQNCj4gICAgICAgICByZXMgNDAv
+MDA6MDA6MDA6MDA6MDAvMDA6MDA6MDA6MDA6MDAvMDAgRW1hc2sgMHg0ICh0aW1lb3V0KQ0KPiBh
+dGEyOiBzb2Z0IHJlc2V0dGluZyBwb3J0DQo+IGF0YTIuMDA6IGNvbmZpZ3VyZWQgZm9yIFVETUEv
+MjUNCj4gc2QgMTowOjA6MDogU0NTSSBlcnJvcjogcmV0dXJuIGNvZGUgPSAweDA4MDAwMDAyDQo+
+IHNkYTogQ3VycmVudCBbZGVzY3JpcHRvcl06IHNlbnNlIGtleT0weGINCj4gICAgQVNDPTB4MCBB
+U0NRPTB4MA0KPiBEZXNjcmlwdG9yIHNlbnNlIGRhdGEgd2l0aCBzZW5zZSBkZXNjcmlwdG9ycyAo
+aW4gaGV4KToNCj4gICAgICAgIDcyIDBiIDAwIDAwIDAwIDAwIDAwIDBjIDAwIDBhIDgwIDAwIDAw
+IDAwIDAwIDAwDQo+ICAgICAgICAwMCAwMCAwMCAwMA0KPiBlbmRfcmVxdWVzdDogSS9PIGVycm9y
+LCBkZXYgc2RhLCBzZWN0b3IgMTk0NTk4NjQNCj4gQnVmZmVyIEkvTyBlcnJvciBvbiBkZXZpY2Ug
+c2RhNSwgbG9naWNhbCBibG9jayAyMzk4MzM3DQo+IGxvc3QgcGFnZSB3cml0ZSBkdWUgdG8gSS9P
+IGVycm9yIG9uIHNkYTUNCj4gQnVmZmVyIEkvTyBlcnJvciBvbiBkZXZpY2Ugc2RhNSwgbG9naWNh
+bCBibG9jayAyMzk4MzM4DQo+IGxvc3QgcGFnZSB3cml0ZSBkdWUgdG8gSS9PIGVycm9yIG9uIHNk
+YTUNCj4gQnVmZmVyIEkvTyBlcnJvciBvbiBkZXZpY2Ugc2RhNSwgbG9naWNhbCBibG9jayAyMzk4
+MzM5DQo+IGxvc3QgcGFnZSB3cml0ZSBkdWUgdG8gSS9PIGVycm9yIG9uIHNkYTUNCj4gQnVmZmVy
+IEkvTyBlcnJvciBvbiBkZXZpY2Ugc2RhNSwgbG9naWNhbCBibG9jayAyMzk4MzQwDQo+IGxvc3Qg
+cGFnZSB3cml0ZSBkdWUgdG8gSS9PIGVycm9yIG9uIHNkYTUNCj4gQnVmZmVyIEkvTyBlcnJvciBv
+biBkZXZpY2Ugc2RhNSwgbG9naWNhbCBibG9jayAyMzk4MzQxDQo+IGxvc3QgcGFnZSB3cml0ZSBk
+dWUgdG8gSS9PIGVycm9yIG9uIHNkYTUNCj4gQnVmZmVyIEkvTyBlcnJvciBvbiBkZXZpY2Ugc2Rh
+NSwgbG9naWNhbCBibG9jayAyMzk4MzQyDQo+IGxvc3QgcGFnZSB3cml0ZSBkdWUgdG8gSS9PIGVy
+cm9yIG9uIHNkYTUNCj4gQnVmZmVyIEkvTyBlcnJvciBvbiBkZXZpY2Ugc2RhNSwgbG9naWNhbCBi
+bG9jayAyMzk4MzQzDQo+IGxvc3QgcGFnZSB3cml0ZSBkdWUgdG8gSS9PIGVycm9yIG9uIHNkYTUN
+Cj4gQnVmZmVyIEkvTyBlcnJvciBvbiBkZXZpY2Ugc2RhNSwgbG9naWNhbCBibG9jayAyMzk4MzQ0
+DQo+IGxvc3QgcGFnZSB3cml0ZSBkdWUgdG8gSS9PIGVycm9yIG9uIHNkYTUNCj4gQnVmZmVyIEkv
+TyBlcnJvciBvbiBkZXZpY2Ugc2RhNSwgbG9naWNhbCBibG9jayAyMzk4MzQ1DQo+IGxvc3QgcGFn
+ZSB3cml0ZSBkdWUgdG8gSS9PIGVycm9yIG9uIHNkYTUNCj4gQnVmZmVyIEkvTyBlcnJvciBvbiBk
+ZXZpY2Ugc2RhNSwgbG9naWNhbCBibG9jayAyMzk4MzQ2DQo+IGxvc3QgcGFnZSB3cml0ZSBkdWUg
+dG8gSS9PIGVycm9yIG9uIHNkYTUNCj4gYXRhMjogRUggY29tcGxldGUNCj4gYXRhMi4wMDogZXhj
+ZXB0aW9uIEVtYXNrIDB4MCBTQWN0IDB4MCBTRXJyIDB4MCBhY3Rpb24gMHgyIGZyb3plbg0KPiBh
+dGEyLjAwOiBjbWQgY2EvMDA6Zjg6MTg6ZjM6MjgvMDA6MDA6MDA6MDA6MDAvZTEgdGFnIDAgY2Ri
+IDB4MCBkYXRhIA0KPiAxMjY5NzYgb3V0DQo+ICAgICAgICAgcmVzIDQwLzAwOjAwOjAwOjAwOjAw
+LzAwOjAwOjAwOjAwOjAwLzAwIEVtYXNrIDB4NCAodGltZW91dCkNCj4gYXRhMjogc29mdCByZXNl
+dHRpbmcgcG9ydA0KPiBhdGEyLjAwOiBjb25maWd1cmVkIGZvciBVRE1BLzI1DQo+IGF0YTI6IEVI
+IGNvbXBsZXRlDQo+IGF0YTIuMDA6IGV4Y2VwdGlvbiBFbWFzayAweDAgU0FjdCAweDAgU0VyciAw
+eDAgYWN0aW9uIDB4MiBmcm96ZW4NCj4gYXRhMi4wMDogY21kIGNhLzAwOmY4OjE4OmYzOjI4LzAw
+OjAwOjAwOjAwOjAwL2UxIHRhZyAwIGNkYiAweDAgZGF0YSANCj4gMTI2OTc2IG91dA0KPiAgICAg
+ICAgIHJlcyA0MC8wMDowMDowMDowMDowMC8wMDowMDowMDowMDowMC8wMCBFbWFzayAweDQgKHRp
+bWVvdXQpDQo+IGF0YTI6IHNvZnQgcmVzZXR0aW5nIHBvcnQNCj4gYXRhMi4wMDogY29uZmlndXJl
+ZCBmb3IgVURNQS8yNQ0KPiBhdGEyOiBFSCBjb21wbGV0ZQ0KDQpBbGFuIGFuZCBKZWZmLCBJIGRp
+ZG4ndCByZWNlaXZlIHlvdXIgcmVwbHkgdGlsbCBub3cuIEknbSBub3Qgc3VyZSB5b3UgYXJlIA0K
+c3RpbGwgaW50cmVzdGVkIG9uIHRoaXMgaXNzdWUuIElmIHlvdSB3b3VsZCBsaWtlIHRvIGdldCBt
+b3JlIGluZm9ybWF0aW9uLA0KcGxzIGxldCBtZSBrbm93LiANCg0KSSB0ZXN0ZWQgaXQgZm9yIGFs
+bW9zdCBvbmUgZGF5IGFuZCBmb3VuZCBzYW1lIGlzc3VlIG9uIDEwMEdCIGFuZCA2MEdCDQpkaXNr
+LiBTbyBJIGhhdmUgdG8gdGhpbmsgYWJvdXQgaW50ZXJydXB0IGxvc3QgaW5zaWRlIGk4MjU5LiBU
+aGVuIEkgY2hhbmdlZA0KY29kZSBvZiBpODI1OSBmb3Igc2V2ZXJhbCB0aW1lIGFuZCB0ZXN0ZWQg
+aXQgYW5kIHVuZm9ydHVuYXRlbHkgc2FtZSBpc3N1ZQ0Kd2FzIHRoZXJlLiBJIGRvbid0IGhhdmUg
+Z29vZCBpZGVhcyBub3cuIElmIHlvdSB3b3VsZCBsaWtlLCBJIGNhbiBzaG93IHlvdQ0KdGhlIGNv
+ZGUgYWJvdXQgaTgyNTkgaW50ZXJydXB0IGhhbmRsaW5nLiANCg0KVGhlIHN1c3BlY3RpbmcgcG9p
+bnQgb2YgbWluZSBvbiBpODI1OSBpczogd2hlbiBtdWx0aXBsZSBpbnRlcnJ1cHRzIGFyZSBhc3Nl
+cnRlZA0Kb24gc2xhdmUgY29udHJvbGxlci4gTm9uLXNwZWNpZmljIEVPSSB3aWxsIGNsZWFyIGFs
+bCBwZW5kaW5nIGludGVycnVwdHMgb3IganVzdA0KY2xlYXIgdGhhdCBvbmUgaW4gSVNSPw0KDQpH
+YXZpbg0K
