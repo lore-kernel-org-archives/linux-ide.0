@@ -1,41 +1,134 @@
 From: "Ivan N. Zlatev" <contact@i-nz.net>
-Subject: Re: Seagate HDD Frequent Head Unload - hdparm/dmidecode/smartctl output
-Date: Sun, 3 Aug 2008 18:29:34 +0300
-Message-ID: <3db1ec7f0808030829h58ca1adck33485af364d82ced@mail.gmail.com>
-References: <488B27CE.5060106@i-nz.net> <488D751C.5080302@suse.de>
-	 <488D8B97.1040805@i-nz.net> <488D8ED1.2040400@suse.de>
-	 <3db1ec7f0808020601h20b2282ch51e6d93a484ac61c@mail.gmail.com>
-	 <48956B0C.3030406@suse.de>
+Subject: Re: smartctl -a output on crazy-unloading drives
+Date: Sun, 3 Aug 2008 18:33:26 +0300
+Message-ID: <3db1ec7f0808030833oa729172u5555235a64b2e4f@mail.gmail.com>
+References: <4892D1F9.5060106@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed;
+	boundary="----=_Part_22570_31897914.1217777606917"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from an-out-0708.google.com ([209.85.132.251]:47551 "EHLO
+Received: from an-out-0708.google.com ([209.85.132.247]:46866 "EHLO
 	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755585AbYHCP3g (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 3 Aug 2008 11:29:36 -0400
-Received: by an-out-0708.google.com with SMTP id d40so263636and.103
-        for <linux-ide@vger.kernel.org>; Sun, 03 Aug 2008 08:29:34 -0700 (PDT)
-In-Reply-To: <48956B0C.3030406@suse.de>
-Content-Disposition: inline
+	with ESMTP id S1756262AbYHCPd1 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 3 Aug 2008 11:33:27 -0400
+Received: by an-out-0708.google.com with SMTP id d40so263765and.103
+        for <linux-ide@vger.kernel.org>; Sun, 03 Aug 2008 08:33:27 -0700 (PDT)
+In-Reply-To: <4892D1F9.5060106@kernel.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <teheo@suse.de>
-Cc: linux-ide@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: IDE/ATA development list <linux-ide@vger.kernel.org>
 
-On Sun, Aug 3, 2008 at 11:23 AM, Tejun Heo <teheo@suse.de> wrote:
-> Ivan N. Zlatev wrote:
->> Hi again,
->>
->> It appears that the storage-fixup rule [1] doesn't work. Verbose
->> output below[2]. Also I saw that you use hdparm -i and sg_inq so
->> output from those for the HDD too. I badly failed to understand this
->> brainf*** called bash :-), so may be you can advice what's going
->> wrong? Thanks in advance.
+------=_Part_22570_31897914.1217777606917
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
+
+On Fri, Aug 1, 2008 at 12:06 PM, Tejun Heo <tj@kernel.org> wrote:
+> Hello,
 >
-> Can you please the attached updated script?  The previous version failed
-> match if dmi string contains leading or trailing blanks.
+> As the $SUBJ says, please post the result of "smartctl -a" on the
+> affected drives for documentation and verification.
 >
 
-That works, thanks. It might be a good idea to get storage-fixup
-pushed as a compulsory update for openSUSE 11? Thanks again.
+Attached. It should be noted that this machine has been running with
+enforced disabled powersaving (by me) pretty much from day 1.
+
+Kind Regards,
+Ivan Zlatev
+
+------=_Part_22570_31897914.1217777606917
+Content-Type: application/octet-stream;
+ name=dell-vostro-1400-smartctl.output
+Content-Transfer-Encoding: base64
+X-Attachment-Id: f_fjft9ttn0
+Content-Disposition: attachment; filename=dell-vostro-1400-smartctl.output
+
+c21hcnRjdGwgNS4zOSAyMDA4LTA1LTA4IDIxOjU2IFtpNjg2LXBjLWxpbnV4LWdudV0gKGxvY2Fs
+IGJ1aWxkKQpDb3B5cmlnaHQgKEMpIDIwMDItOCBieSBCcnVjZSBBbGxlbiwgaHR0cDovL3NtYXJ0
+bW9udG9vbHMuc291cmNlZm9yZ2UubmV0Cgo9PT0gU1RBUlQgT0YgSU5GT1JNQVRJT04gU0VDVElP
+TiA9PT0KTW9kZWwgRmFtaWx5OiAgICAgU2VhZ2F0ZSBNb21lbnR1cyA1NDAwLjMKRGV2aWNlIE1v
+ZGVsOiAgICAgU1Q5MTIwODIyQVMKU2VyaWFsIE51bWJlcjogICAgNUxaNlBGOEUKRmlybXdhcmUg
+VmVyc2lvbjogMy5DREQKVXNlciBDYXBhY2l0eTogICAgMTIwLDAzNCwxMjMsNzc2IGJ5dGVzCkRl
+dmljZSBpczogICAgICAgIEluIHNtYXJ0Y3RsIGRhdGFiYXNlIFtmb3IgZGV0YWlscyB1c2U6IC1Q
+IHNob3ddCkFUQSBWZXJzaW9uIGlzOiAgIDcKQVRBIFN0YW5kYXJkIGlzOiAgRXhhY3QgQVRBIHNw
+ZWNpZmljYXRpb24gZHJhZnQgdmVyc2lvbiBub3QgaW5kaWNhdGVkCkxvY2FsIFRpbWUgaXM6ICAg
+IFN1biBBdWcgIDMgMTg6MzA6MzAgMjAwOCBFRVNUClNNQVJUIHN1cHBvcnQgaXM6IEF2YWlsYWJs
+ZSAtIGRldmljZSBoYXMgU01BUlQgY2FwYWJpbGl0eS4KU01BUlQgc3VwcG9ydCBpczogRW5hYmxl
+ZAoKPT09IFNUQVJUIE9GIFJFQUQgU01BUlQgREFUQSBTRUNUSU9OID09PQpTTUFSVCBvdmVyYWxs
+LWhlYWx0aCBzZWxmLWFzc2Vzc21lbnQgdGVzdCByZXN1bHQ6IFBBU1NFRAoKR2VuZXJhbCBTTUFS
+VCBWYWx1ZXM6Ck9mZmxpbmUgZGF0YSBjb2xsZWN0aW9uIHN0YXR1czogICgweDgyKQlPZmZsaW5l
+IGRhdGEgY29sbGVjdGlvbiBhY3Rpdml0eQoJCQkJCXdhcyBjb21wbGV0ZWQgd2l0aG91dCBlcnJv
+ci4KCQkJCQlBdXRvIE9mZmxpbmUgRGF0YSBDb2xsZWN0aW9uOiBFbmFibGVkLgpTZWxmLXRlc3Qg
+ZXhlY3V0aW9uIHN0YXR1czogICAgICAoICAgMCkJVGhlIHByZXZpb3VzIHNlbGYtdGVzdCByb3V0
+aW5lIGNvbXBsZXRlZAoJCQkJCXdpdGhvdXQgZXJyb3Igb3Igbm8gc2VsZi10ZXN0IGhhcyBldmVy
+IAoJCQkJCWJlZW4gcnVuLgpUb3RhbCB0aW1lIHRvIGNvbXBsZXRlIE9mZmxpbmUgCmRhdGEgY29s
+bGVjdGlvbjogCQkgKCA0MjYpIHNlY29uZHMuCk9mZmxpbmUgZGF0YSBjb2xsZWN0aW9uCmNhcGFi
+aWxpdGllczogCQkJICgweDViKSBTTUFSVCBleGVjdXRlIE9mZmxpbmUgaW1tZWRpYXRlLgoJCQkJ
+CUF1dG8gT2ZmbGluZSBkYXRhIGNvbGxlY3Rpb24gb24vb2ZmIHN1cHBvcnQuCgkJCQkJU3VzcGVu
+ZCBPZmZsaW5lIGNvbGxlY3Rpb24gdXBvbiBuZXcKCQkJCQljb21tYW5kLgoJCQkJCU9mZmxpbmUg
+c3VyZmFjZSBzY2FuIHN1cHBvcnRlZC4KCQkJCQlTZWxmLXRlc3Qgc3VwcG9ydGVkLgoJCQkJCU5v
+IENvbnZleWFuY2UgU2VsZi10ZXN0IHN1cHBvcnRlZC4KCQkJCQlTZWxlY3RpdmUgU2VsZi10ZXN0
+IHN1cHBvcnRlZC4KU01BUlQgY2FwYWJpbGl0aWVzOiAgICAgICAgICAgICgweDAwMDMpCVNhdmVz
+IFNNQVJUIGRhdGEgYmVmb3JlIGVudGVyaW5nCgkJCQkJcG93ZXItc2F2aW5nIG1vZGUuCgkJCQkJ
+U3VwcG9ydHMgU01BUlQgYXV0byBzYXZlIHRpbWVyLgpFcnJvciBsb2dnaW5nIGNhcGFiaWxpdHk6
+ICAgICAgICAoMHgwMSkJRXJyb3IgbG9nZ2luZyBzdXBwb3J0ZWQuCgkJCQkJTm8gR2VuZXJhbCBQ
+dXJwb3NlIExvZ2dpbmcgc3VwcG9ydC4KU2hvcnQgc2VsZi10ZXN0IHJvdXRpbmUgCnJlY29tbWVu
+ZGVkIHBvbGxpbmcgdGltZTogCSAoICAgMikgbWludXRlcy4KRXh0ZW5kZWQgc2VsZi10ZXN0IHJv
+dXRpbmUKcmVjb21tZW5kZWQgcG9sbGluZyB0aW1lOiAJICggMTExKSBtaW51dGVzLgpTQ1QgY2Fw
+YWJpbGl0aWVzOiAJICAgICAgICgweDAwMDEpCVNDVCBTdGF0dXMgc3VwcG9ydGVkLgoKU01BUlQg
+QXR0cmlidXRlcyBEYXRhIFN0cnVjdHVyZSByZXZpc2lvbiBudW1iZXI6IDEwClZlbmRvciBTcGVj
+aWZpYyBTTUFSVCBBdHRyaWJ1dGVzIHdpdGggVGhyZXNob2xkczoKSUQjIEFUVFJJQlVURV9OQU1F
+ICAgICAgICAgIEZMQUcgICAgIFZBTFVFIFdPUlNUIFRIUkVTSCBUWVBFICAgICAgVVBEQVRFRCAg
+V0hFTl9GQUlMRUQgUkFXX1ZBTFVFCiAgMSBSYXdfUmVhZF9FcnJvcl9SYXRlICAgICAweDAwMGYg
+ICAxMDYgICAxMDAgICAwMDYgICAgUHJlLWZhaWwgIEFsd2F5cyAgICAgICAtICAgICAgIDExODI5
+MTc0CiAgMyBTcGluX1VwX1RpbWUgICAgICAgICAgICAweDAwMDMgICAwOTkgICAwOTkgICAwODUg
+ICAgUHJlLWZhaWwgIEFsd2F5cyAgICAgICAtICAgICAgIDAKICA0IFN0YXJ0X1N0b3BfQ291bnQg
+ICAgICAgIDB4MDAzMiAgIDEwMCAgIDEwMCAgIDAyMCAgICBPbGRfYWdlICAgQWx3YXlzICAgICAg
+IC0gICAgICAgMzc1CiAgNSBSZWFsbG9jYXRlZF9TZWN0b3JfQ3QgICAweDAwMzMgICAxMDAgICAx
+MDAgICAwMzYgICAgUHJlLWZhaWwgIEFsd2F5cyAgICAgICAtICAgICAgIDAKICA3IFNlZWtfRXJy
+b3JfUmF0ZSAgICAgICAgIDB4MDAwZiAgIDA3NyAgIDA2MCAgIDAzMCAgICBQcmUtZmFpbCAgQWx3
+YXlzICAgICAgIC0gICAgICAgNTQwMjE5MTMKICA5IFBvd2VyX09uX0hvdXJzICAgICAgICAgIDB4
+MDAzMiAgIDA5OCAgIDA5OCAgIDAwMCAgICBPbGRfYWdlICAgQWx3YXlzICAgICAgIC0gICAgICAg
+MTc2OQogMTAgU3Bpbl9SZXRyeV9Db3VudCAgICAgICAgMHgwMDEzICAgMTAwICAgMTAwICAgMDM0
+ICAgIFByZS1mYWlsICBBbHdheXMgICAgICAgLSAgICAgICAwCiAxMiBQb3dlcl9DeWNsZV9Db3Vu
+dCAgICAgICAweDAwMzIgICAxMDAgICAxMDAgICAwMjAgICAgT2xkX2FnZSAgIEFsd2F5cyAgICAg
+ICAtICAgICAgIDM4OAoxODcgUmVwb3J0ZWRfVW5jb3JyZWN0ICAgICAgMHgwMDMyICAgMTAwICAg
+MTAwICAgMDAwICAgIE9sZF9hZ2UgICBBbHdheXMgICAgICAgLSAgICAgICAwCjE4OSBIaWdoX0Zs
+eV9Xcml0ZXMgICAgICAgICAweDAwM2EgICAwOTYgICAwOTYgICAwMDAgICAgT2xkX2FnZSAgIEFs
+d2F5cyAgICAgICAtICAgICAgIDQKMTkwIEFpcmZsb3dfVGVtcGVyYXR1cmVfQ2VsIDB4MDAyMiAg
+IDA2NiAgIDA0NiAgIDA0NSAgICBPbGRfYWdlICAgQWx3YXlzICAgICAgIC0gICAgICAgMzQgKExp
+ZmV0aW1lIE1pbi9NYXggMjgvMzQpCjE5MiBQb3dlci1PZmZfUmV0cmFjdF9Db3VudCAweDAwMzIg
+ICAxMDAgICAxMDAgICAwMDAgICAgT2xkX2FnZSAgIEFsd2F5cyAgICAgICAtICAgICAgIDI3OQox
+OTMgTG9hZF9DeWNsZV9Db3VudCAgICAgICAgMHgwMDMyICAgMDk3ICAgMDk3ICAgMDAwICAgIE9s
+ZF9hZ2UgICBBbHdheXMgICAgICAgLSAgICAgICA3MzE2CjE5NCBUZW1wZXJhdHVyZV9DZWxzaXVz
+ICAgICAweDAwMjIgICAwMzQgICAwNTQgICAwMDAgICAgT2xkX2FnZSAgIEFsd2F5cyAgICAgICAt
+ICAgICAgIDM0ICgwIDE0IDAgMCkKMTk1IEhhcmR3YXJlX0VDQ19SZWNvdmVyZWQgIDB4MDAxYSAg
+IDA4MCAgIDA2MCAgIDAwMCAgICBPbGRfYWdlICAgQWx3YXlzICAgICAgIC0gICAgICAgMTIyMDE0
+MTE2CjE5NyBDdXJyZW50X1BlbmRpbmdfU2VjdG9yICAweDAwMTIgICAxMDAgICAxMDAgICAwMDAg
+ICAgT2xkX2FnZSAgIEFsd2F5cyAgICAgICAtICAgICAgIDAKMTk4IE9mZmxpbmVfVW5jb3JyZWN0
+YWJsZSAgIDB4MDAxMCAgIDEwMCAgIDEwMCAgIDAwMCAgICBPbGRfYWdlICAgT2ZmbGluZSAgICAg
+IC0gICAgICAgMAoxOTkgVURNQV9DUkNfRXJyb3JfQ291bnQgICAgMHgwMDNlICAgMjAwICAgMjAw
+ICAgMDAwICAgIE9sZF9hZ2UgICBBbHdheXMgICAgICAgLSAgICAgICAwCjIwMCBNdWx0aV9ab25l
+X0Vycm9yX1JhdGUgICAweDAwMDAgICAxMDAgICAyNTMgICAwMDAgICAgT2xkX2FnZSAgIE9mZmxp
+bmUgICAgICAtICAgICAgIDAKMjAyIFRBX0luY3JlYXNlX0NvdW50ICAgICAgIDB4MDAzMiAgIDEw
+MCAgIDI1MyAgIDAwMCAgICBPbGRfYWdlICAgQWx3YXlzICAgICAgIC0gICAgICAgMAoKU01BUlQg
+RXJyb3IgTG9nIFZlcnNpb246IDEKTm8gRXJyb3JzIExvZ2dlZAoKU01BUlQgU2VsZi10ZXN0IGxv
+ZyBzdHJ1Y3R1cmUgcmV2aXNpb24gbnVtYmVyIDEKTnVtICBUZXN0X0Rlc2NyaXB0aW9uICAgIFN0
+YXR1cyAgICAgICAgICAgICAgICAgIFJlbWFpbmluZyAgTGlmZVRpbWUoaG91cnMpICBMQkFfb2Zf
+Zmlyc3RfZXJyb3IKIyAxICBTaG9ydCBvZmZsaW5lICAgICAgIENvbXBsZXRlZCB3aXRob3V0IGVy
+cm9yICAgICAgIDAwJSAgICAgIDE0NzggICAgICAgICAtCiMgMiAgU2hvcnQgb2ZmbGluZSAgICAg
+ICBDb21wbGV0ZWQgd2l0aG91dCBlcnJvciAgICAgICAwMCUgICAgICAgICAxICAgICAgICAgLQoj
+IDMgIFNob3J0IG9mZmxpbmUgICAgICAgQ29tcGxldGVkIHdpdGhvdXQgZXJyb3IgICAgICAgMDAl
+ICAgICAgICAgMCAgICAgICAgIC0KIyA0ICBTaG9ydCBvZmZsaW5lICAgICAgIENvbXBsZXRlZCB3
+aXRob3V0IGVycm9yICAgICAgIDAwJSAgICAgICAgIDAgICAgICAgICAtCgpTTUFSVCBTZWxlY3Rp
+dmUgc2VsZi10ZXN0IGxvZyBkYXRhIHN0cnVjdHVyZSByZXZpc2lvbiBudW1iZXIgMQogU1BBTiAg
+TUlOX0xCQSAgTUFYX0xCQSAgQ1VSUkVOVF9URVNUX1NUQVRVUwogICAgMSAgICAgICAgMCAgICAg
+ICAgMCAgTm90X3Rlc3RpbmcKICAgIDIgICAgICAgIDAgICAgICAgIDAgIE5vdF90ZXN0aW5nCiAg
+ICAzICAgICAgICAwICAgICAgICAwICBOb3RfdGVzdGluZwogICAgNCAgICAgICAgMCAgICAgICAg
+MCAgTm90X3Rlc3RpbmcKICAgIDUgICAgICAgIDAgICAgICAgIDAgIE5vdF90ZXN0aW5nClNlbGVj
+dGl2ZSBzZWxmLXRlc3QgZmxhZ3MgKDB4MCk6CiAgQWZ0ZXIgc2Nhbm5pbmcgc2VsZWN0ZWQgc3Bh
+bnMsIGRvIE5PVCByZWFkLXNjYW4gcmVtYWluZGVyIG9mIGRpc2suCklmIFNlbGVjdGl2ZSBzZWxm
+LXRlc3QgaXMgcGVuZGluZyBvbiBwb3dlci11cCwgcmVzdW1lIGFmdGVyIDAgbWludXRlIGRlbGF5
+LgoK
+------=_Part_22570_31897914.1217777606917--
