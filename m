@@ -1,45 +1,41 @@
-From: Hong Tran Duc <hongtd2k@gmail.com>
-Subject: Re: Oops when read/write or mount/unmount continuously ~ 600.000
- times
-Date: Sun, 03 Aug 2008 22:18:57 +0700
-Message-ID: <4895CC61.6040301@gmail.com>
-References: <4895A96E.2040303@gmail.com> <20080803133817.GG26461@parisc-linux.org>
+From: "Ivan N. Zlatev" <contact@i-nz.net>
+Subject: Re: Seagate HDD Frequent Head Unload - hdparm/dmidecode/smartctl output
+Date: Sun, 3 Aug 2008 18:29:34 +0300
+Message-ID: <3db1ec7f0808030829h58ca1adck33485af364d82ced@mail.gmail.com>
+References: <488B27CE.5060106@i-nz.net> <488D751C.5080302@suse.de>
+	 <488D8B97.1040805@i-nz.net> <488D8ED1.2040400@suse.de>
+	 <3db1ec7f0808020601h20b2282ch51e6d93a484ac61c@mail.gmail.com>
+	 <48956B0C.3030406@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-fsdevel-owner@vger.kernel.org>
-In-Reply-To: <20080803133817.GG26461@parisc-linux.org>
-Sender: linux-fsdevel-owner@vger.kernel.org
-To: Matthew Wilcox <matthew@wil.cx>
-Cc: linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-ide@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from an-out-0708.google.com ([209.85.132.251]:47551 "EHLO
+	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755585AbYHCP3g (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 3 Aug 2008 11:29:36 -0400
+Received: by an-out-0708.google.com with SMTP id d40so263636and.103
+        for <linux-ide@vger.kernel.org>; Sun, 03 Aug 2008 08:29:34 -0700 (PDT)
+In-Reply-To: <48956B0C.3030406@suse.de>
+Content-Disposition: inline
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Tejun Heo <teheo@suse.de>
+Cc: linux-ide@vger.kernel.org
 
-Matthew Wilcox wrote:
-> On Sun, Aug 03, 2008 at 07:49:50PM +0700, Hong Tran Duc wrote:
->   
->> The reasons is almost linked list on those function was broken. Ex: 
->> linkedlist->next linkedlist->prev = NULL or set to invalid address.
->> In the situation SIGILL, the instruction pointer (NIP) is same as the 
->> return address register (LR).
->>     
+On Sun, Aug 3, 2008 at 11:23 AM, Tejun Heo <teheo@suse.de> wrote:
+> Ivan N. Zlatev wrote:
+>> Hi again,
+>>
+>> It appears that the storage-fixup rule [1] doesn't work. Verbose
+>> output below[2]. Also I saw that you use hdparm -i and sg_inq so
+>> output from those for the HDD too. I badly failed to understand this
+>> brainf*** called bash :-), so may be you can advice what's going
+>> wrong? Thanks in advance.
 >
-> In later kernels, we have a list debugging option which lets you find
-> list corruptions earlier.
->   
-I'm not have much experience with linux kernel architecture, so I don't 
-know where I can focus on.
+> Can you please the attached updated script?  The previous version failed
+> match if dmi string contains leading or trailing blanks.
+>
 
-Currently, I'm suspecting these module are affected with this Oops: 
-Block I/O management and filesystem, some Wait Queue  ? Is that correct ?
-Or would you give me some suggestion what is the most suspicious ? or 
-some debugging option you told above ?
-
-Thanks for your help,
-
-
--- 
-nm.
-
-GPG Key ID: 0xDD253B25
-Fingerprint: 2B17 D64A 9561 A443 2ABC 1302 4641 D0B7 DD25 3B25
-
+That works, thanks. It might be a good idea to get storage-fixup
+pushed as a compulsory update for openSUSE 11? Thanks again.
