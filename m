@@ -1,36 +1,216 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH] libata: fix out-of-bounds access in pata_oldpiix.c
-Date: Sun, 03 Aug 2008 14:22:52 +0900
-Message-ID: <489540AC.9060409@kernel.org>
-References: <488040E4.1090500@gmx.ch>	<20080718095541.6bf01fff@the-village.bc.nu>	<200807181615.26272.bzolnier@gmail.com>	<4892927A.1000808@kernel.org> <20080801232914.3077c21b@lxorguk.ukuu.org.uk>
+From: Borislav Petkov <petkovbb@googlemail.com>
+Subject: [PATCH 1/2] pata_legacy: export functionality to ide
+Date: Sun, 3 Aug 2008 09:37:56 +0200
+Message-ID: <20080803073756.GA8762@gollum.tnic>
+References: <20080715053356.GA18628@gollum.tnic> <200808021902.12191.bzolnier@gmail.com> <20080802183253.GA2239@gollum.tnic> <200808022046.16990.bzolnier@gmail.com>
+Reply-To: petkovbb@gmail.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:49029 "EHLO hera.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751977AbYHCFXe (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 3 Aug 2008 01:23:34 -0400
-In-Reply-To: <20080801232914.3077c21b@lxorguk.ukuu.org.uk>
+Received: from fg-out-1718.google.com ([72.14.220.156]:36961 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752389AbYHCHiB (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 3 Aug 2008 03:38:01 -0400
+Received: by fg-out-1718.google.com with SMTP id 19so799712fgg.17
+        for <linux-ide@vger.kernel.org>; Sun, 03 Aug 2008 00:38:00 -0700 (PDT)
+Content-Disposition: inline
+In-Reply-To: <200808022046.16990.bzolnier@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, =?ISO-8859-1?Q?David_?= =?ISO-8859-1?Q?M=FCller?= <dave.mueller@gmx.ch>, jgarzik@pobox.com, linux-ide@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: alan@redhat.com, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-Alan Cox wrote:
->> see it as libata-core won't call them if unsupported but qc_issue will
->> see it.  Can you please unnak?
-> 
-> No. Please see the patch I posted. It got a bit stuck as I got no reply
-> at all to the original query so it was filed on the low priority pile.
-> Simply quick fixing one case isn't the way to sort a bug like that. 
-> 
-> No un-nak as I've now been through and fixed the lot including a couple
-> of really nasty assumptions that >= UDMA_0 means UDMA mode (which isnt
-> true as 0xFF is no DMA)
+Ok, here's a definitely better solution:
 
-Ah... okay.  That looks like a much better way to handle this.  Let's
-continue there.  Thanks.
+---
+From: Borislav Petkov <petkovbb@gmail.com>
+Date: Sun, 3 Aug 2008 08:31:20 +0200
+Subject: [PATCH 1/2] pata_legacy: export functionality to ide
+
+export the legacy iobases checking code to other
+users (ide) by pushing it up into the header.
+
+CC: Alan Cox <alan@redhat.com>
+Signed-off-by: Borislav Petkov <petkovbb@gmail.com>
+---
+ drivers/ata/pata_legacy.c |   63 +-----------------------------------------
+ include/linux/ata.h       |   67 +++++++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 68 insertions(+), 62 deletions(-)
+
+diff --git a/drivers/ata/pata_legacy.c b/drivers/ata/pata_legacy.c
+index bc037ff..14d187e 100644
+--- a/drivers/ata/pata_legacy.c
++++ b/drivers/ata/pata_legacy.c
+@@ -50,7 +50,6 @@
+ 
+ #include <linux/kernel.h>
+ #include <linux/module.h>
+-#include <linux/pci.h>
+ #include <linux/init.h>
+ #include <linux/blkdev.h>
+ #include <linux/delay.h>
+@@ -1040,47 +1039,6 @@ fail:
+ 	return ret;
+ }
+ 
+-/**
+- *	legacy_check_special_cases	-	ATA special cases
+- *	@p: PCI device to check
+- *	@master: set this if we find an ATA master
+- *	@master: set this if we find an ATA secondary
+- *
+- *	A small number of vendors implemented early PCI ATA interfaces
+- *	on bridge logic without the ATA interface being PCI visible.
+- *	Where we have a matching PCI driver we must skip the relevant
+- *	device here. If we don't know about it then the legacy driver
+- *	is the right driver anyway.
+- */
+-
+-static void __init legacy_check_special_cases(struct pci_dev *p, int *primary,
+-								int *secondary)
+-{
+-	/* Cyrix CS5510 pre SFF MWDMA ATA on the bridge */
+-	if (p->vendor == 0x1078 && p->device == 0x0000) {
+-		*primary = *secondary = 1;
+-		return;
+-	}
+-	/* Cyrix CS5520 pre SFF MWDMA ATA on the bridge */
+-	if (p->vendor == 0x1078 && p->device == 0x0002) {
+-		*primary = *secondary = 1;
+-		return;
+-	}
+-	/* Intel MPIIX - PIO ATA on non PCI side of bridge */
+-	if (p->vendor == 0x8086 && p->device == 0x1234) {
+-		u16 r;
+-		pci_read_config_word(p, 0x6C, &r);
+-		if (r & 0x8000) {
+-			/* ATA port enabled */
+-			if (r & 0x4000)
+-				*secondary = 1;
+-			else
+-				*primary = 1;
+-		}
+-		return;
+-	}
+-}
+-
+ static __init void probe_opti_vlb(void)
+ {
+ 	/* If an OPTI 82C46X is present find out where the channels are */
+@@ -1210,26 +1168,7 @@ static __init int legacy_init(void)
+ 	struct legacy_probe *pl = &probe_list[0];
+ 	int slot = 0;
+ 
+-	struct pci_dev *p = NULL;
+-
+-	for_each_pci_dev(p) {
+-		int r;
+-		/* Check for any overlap of the system ATA mappings. Native
+-		   mode controllers stuck on these addresses or some devices
+-		   in 'raid' mode won't be found by the storage class test */
+-		for (r = 0; r < 6; r++) {
+-			if (pci_resource_start(p, r) == 0x1f0)
+-				primary = 1;
+-			if (pci_resource_start(p, r) == 0x170)
+-				secondary = 1;
+-		}
+-		/* Check for special cases */
+-		legacy_check_special_cases(p, &primary, &secondary);
+-
+-		/* If PCI bus is present then don't probe for tertiary
+-		   legacy ports */
+-		pci_present = 1;
+-	}
++	ata_legacy_check_iobases(&primary, &secondary, &pci_present);
+ 
+ 	if (winbond == 1)
+ 		winbond = 0x130;	/* Default port, alt is 1B0 */
+diff --git a/include/linux/ata.h b/include/linux/ata.h
+index 11de32c..0470562 100644
+--- a/include/linux/ata.h
++++ b/include/linux/ata.h
+@@ -30,6 +30,7 @@
+ #define __LINUX_ATA_H__
+ 
+ #include <linux/types.h>
++#include <linux/pci.h>
+ 
+ /* defines only for the constants which don't work well as enums */
+ #define ATA_DMA_BOUNDARY	0xffffUL
+@@ -776,4 +777,70 @@ static inline int lba_48_ok(u64 block, u32 n_block)
+ #define sata_pmp_gscr_rev(gscr)		(((gscr)[SATA_PMP_GSCR_REV] >> 8) & 0xff)
+ #define sata_pmp_gscr_ports(gscr)	((gscr)[SATA_PMP_GSCR_PORT_INFO] & 0xf)
+ 
++/**
++ *	legacy_check_special_cases	-	ATA special cases
++ *	@p: PCI device to check
++ *	@master: set this if we find an ATA master
++ *	@master: set this if we find an ATA secondary
++ *
++ *	A small number of vendors implemented early PCI ATA interfaces
++ *	on bridge logic without the ATA interface being PCI visible.
++ *	Where we have a matching PCI driver we must skip the relevant
++ *	device here. If we don't know about it then the legacy driver
++ *	is the right driver anyway.
++ */
++static inline void __init ata_legacy_check_special_cases(struct pci_dev *p,
++							 int *primary,
++							 int *secondary)
++{
++	/* Cyrix CS5510 pre SFF MWDMA ATA on the bridge */
++	if (p->vendor == 0x1078 && p->device == 0x0000) {
++		*primary = *secondary = 1;
++		return;
++	}
++	/* Cyrix CS5520 pre SFF MWDMA ATA on the bridge */
++	if (p->vendor == 0x1078 && p->device == 0x0002) {
++		*primary = *secondary = 1;
++		return;
++	}
++	/* Intel MPIIX - PIO ATA on non PCI side of bridge */
++	if (p->vendor == 0x8086 && p->device == 0x1234) {
++		u16 r;
++		pci_read_config_word(p, 0x6C, &r);
++		if (r & 0x8000) {
++			/* ATA port enabled */
++			if (r & 0x4000)
++				*secondary = 1;
++			else
++				*primary = 1;
++		}
++		return;
++	}
++}
++
++static inline void __init ata_legacy_check_iobases(int *primary, int *secondary,
++						   int *pci_present)
++{
++	struct pci_dev *p = NULL;
++
++	for_each_pci_dev(p) {
++		int r;
++		/* Check for any overlap of the system ATA mappings. Native
++		   mode controllers stuck on these addresses or some devices
++		   in 'raid' mode won't be found by the storage class test */
++		for (r = 0; r < 6; r++) {
++			if (pci_resource_start(p, r) == 0x1f0)
++				*primary = 1;
++			if (pci_resource_start(p, r) == 0x170)
++				*secondary = 1;
++		}
++		/* Check for special cases */
++		ata_legacy_check_special_cases(p, primary, secondary);
++
++		/* If PCI bus is present then don't probe for tertiary
++		   legacy ports */
++		*pci_present = 1;
++	}
++}
++
+ #endif /* __LINUX_ATA_H__ */
+-- 
+1.5.5.4
 
 -- 
-tejun
+Regards/Gruss,
+    Boris.
