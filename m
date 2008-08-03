@@ -1,60 +1,40 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH] libata: Fix a large collection of DMA mode mismatches
-Date: Sun, 03 Aug 2008 13:45:51 +0900
-Message-ID: <489537FF.7050106@kernel.org>
-References: <20080801091834.5ca39334@lxorguk.ukuu.org.uk>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+From: bugme-daemon@bugzilla.kernel.org
+Subject: [Bug 10943] machine doesn't shutdown when ahci sata driver is compiled as module
+Date: Sat,  2 Aug 2008 22:00:02 -0700 (PDT)
+Message-ID: <20080803050002.D9F9A11D10B@picon.linux-foundation.org>
+References: <bug-10943-11633@http.bugzilla.kernel.org/>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:36182 "EHLO hera.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751183AbYHCEqf (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 3 Aug 2008 00:46:35 -0400
-In-Reply-To: <20080801091834.5ca39334@lxorguk.ukuu.org.uk>
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:50309 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751939AbYHCFAe (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 3 Aug 2008 01:00:34 -0400
+Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
+	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id m735021o001360
+	for <linux-ide@vger.kernel.org>; Sat, 2 Aug 2008 22:00:03 -0700
+In-Reply-To: <bug-10943-11633@http.bugzilla.kernel.org/>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: =?UTF-8?B?RGF2aWQgTcO8bGxlcg==?= <dave.mueller@gmx.ch>, jgarzik@pobox.com, linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-Hello, Alan.
+http://bugzilla.kernel.org/show_bug.cgi?id=10943
 
-Yeap, this approach looks much better.  Just few nits.
 
-Alan Cox wrote:
-> @@ -1427,6 +1427,28 @@ static inline unsigned long ata_deadline(unsigned long from_jiffies,
->  	return from_jiffies + msecs_to_jiffies(timeout_msecs);
->  }
->  
-> +/* Don't open code these in drivers as there are traps. Firstly the range may
-> +   change in future hardware and specs, secondly 0xFF means 'no DMA' but is
-> +   > UDMA_0. Dyma ddreigiau */
 
-I suppose "Dyma ddreigiau" is just contamination?  Also, can you please
-use similar patch formatting as other comments for consistency?
 
-> +static inline int ata_using_mwdma(struct ata_device *adev)
-> +{
-> +	if (adev->dma_mode >= XFER_MW_DMA_0 && adev->dma_mode <= XFER_MW_DMA_4)
-> +		return 1;
-> +	return 0;
-> +}
-> +
-> +static inline int ata_using_udma(struct ata_device *adev)
-> +{
-> +	if (adev->dma_mode >= XFER_UDMA_0 && adev->dma_mode <= XFER_UDMA_7)
-> +		return 1;
-> +	return 0;
-> +}
-> +
-> +static inline int ata_dma_enabled(struct ata_device *adev)
-> +{
-> +	return (adev->dma_mode == 0xFF ? 0 : 1);
-> +}
 
-Wouldn't it be better to use ata_using_dma() instead like the other two?
+------- Comment #16 from tj@kernel.org  2008-08-02 22:00 -------
+Eh... devices_kset list is corrupt?  Strange.  It's added through
+drivers/base/core.c::device_add() -> lib/kobject.c:kobject_add() ->
+kobject_add_vargs() -> kobject_add_internal() -> kobj_kset_join() ->
+include/linux/list.h::list_add_tail().
 
-Thanks.
+So, it seems loading ahci as module breaks the list.  Strange.  The list is
+manipulated only through device_add() and device_del().  Can you please put
+some tracing code there and see what's going on?  (ie. printk to print out
+what's happening followed by infinite loop check)
+
 
 -- 
-tejun
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are on the CC list for the bug, or are watching someone who is.
