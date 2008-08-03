@@ -1,257 +1,243 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH] ide: fix regression caused by ide_device_{get,put}() addition (take 2)
-Date: Sun, 3 Aug 2008 16:48:57 +0200
-Message-ID: <200808031648.57513.bzolnier@gmail.com>
+From: =?iso-8859-1?Q?S=E9bastien?= <willy_the_cat@yahoo.com>
+Subject: Re : Re : dvd-9 trouble with TSSTcorp SH-S203D
+Date: Sun, 3 Aug 2008 14:53:36 +0000 (GMT)
+Message-ID: <547246.1958.qm@web26202.mail.ukl.yahoo.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from fk-out-0910.google.com ([209.85.128.185]:20187 "EHLO
-	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757490AbYHCOwE (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 3 Aug 2008 10:52:04 -0400
-Received: by fk-out-0910.google.com with SMTP id 18so1491852fkq.5
-        for <linux-ide@vger.kernel.org>; Sun, 03 Aug 2008 07:52:03 -0700 (PDT)
-Content-Disposition: inline
+Received: from web26202.mail.ukl.yahoo.com ([217.12.10.239]:28898 "HELO
+	web26202.mail.ukl.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1758074AbYHCOxi convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 3 Aug 2008 10:53:38 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, Benjamin Herrenschmidt <benh@kernel.crashing.org>, Mariusz Kozlowski <m.kozlowski@tuxland.pl>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Borislav Petkov <petkovbb@gmail.com>
+To: Tejun Heo <tj@kernel.org>
+Cc: jgarzik@pobox.com, linux-ide@vger.kernel.org
 
 
-Ben, please use this version instead
-(together with ide_host_alloc_all() fix)
-for media-bay testing.
+Hi,
 
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH] ide: fix regression caused by ide_device_{get,put}() addition (take 2)
 
-On Monday 28 July 2008, Benjamin Herrenschmidt wrote:
+> S=E9bastien wrote:
+> > Here's attached file of config 2.6.27-rc1 and System-map 2.6.27-rc1
+> > and lspci -nn and dmesg before mount and after mount (-t udf /dev/s=
+r0
+> > fool)
+> >=20
+> > I re-compile a fresh kernel : HW Bug re-appear. It had been
+> > diseappered with 2.6.26 and re-appeared with that new fresh kern
+> > 2.6.27-rc1 : perhaps a mistaken comipile option. However with that
+> > 2.6.26, HW Bug only disappeared when "Native IDE" was set in Bios
+> > SATA OnChip option.
+>=20
+> That message is harmless and it showing up or not probably means your
+> controller is behaving slightly differently and is most likely random=
+=2E
+> As long as the detection works out, it's okay.  Maybe we need to make
+> the message friendlier.
 
-[...]
+Agreed.
+Oops, the right bios option is "Legacy IDE" and NOT "Native IDE" as I w=
+rote, among "Legacy IDE" and "Native IDE" and "RAID" and "AHCI".
+I'm nearly sure that it is an kernel option i.e. take only sata modules=
+ and get rid of all pata modules. I should make modules only for my box=
+ indead.
 
-> Vector: 300 (Data Access) at [c58b7b80]
->     pc: c014f264: elv_may_queue+0x10/0x44
->     lr: c0152750: get_request+0x2c/0x2c0
->     sp: c58b7c30
->    msr: 1032
->    dar: c
->  dsisr: 40000000
->   current = 0xc58aaae0
->     pid   = 854, comm = media-bay
-> enter ? for help
-> mon> t
-> [c58b7c40] c0152750 get_request+0x2c/0x2c0
-> [c58b7c70] c0152a08 get_request_wait+0x24/0xec
-> [c58b7cc0] c0225674 ide_cd_queue_pc+0x58/0x1a0
-> [c58b7d40] c022672c ide_cdrom_packet+0x9c/0xdc
-> [c58b7d70] c0261810 cdrom_get_disc_info+0x60/0xd0
-> [c58b7dc0] c026208c cdrom_mrw_exit+0x1c/0x11c
-> [c58b7e30] c0260f7c unregister_cdrom+0x84/0xe8
-> [c58b7e50] c022395c ide_cd_release+0x80/0x84
-> [c58b7e70] c0163650 kref_put+0x54/0x6c
-> [c58b7e80] c0223884 ide_cd_put+0x40/0x5c
-> [c58b7ea0] c0211100 generic_ide_remove+0x28/0x3c
-> [c58b7eb0] c01e9d34 __device_release_driver+0x78/0xb4
-> [c58b7ec0] c01e9e44 device_release_driver+0x28/0x44
-> [c58b7ee0] c01e8f7c bus_remove_device+0xac/0xd8
-> [c58b7f00] c01e7424 device_del+0x104/0x198
-> [c58b7f20] c01e74d0 device_unregister+0x18/0x30
-> [c58b7f40] c02121c4 __ide_port_unregister_devices+0x6c/0x88
-> [c58b7f60] c0212398 ide_port_unregister_devices+0x38/0x80
-> [c58b7f80] c0208ca4 media_bay_step+0x1cc/0x5c0
-> [c58b7fb0] c0209124 media_bay_task+0x8c/0xcc
-> [c58b7fd0] c00485c0 kthread+0x48/0x84
-> [c58b7ff0] c0011b20 kernel_thread+0x44/0x60
+> > Changed nearly nothing when compiling that new kern, i.e. :
+> >=20
+> > make mrproper make menuconfig
+> >=20
+> > --> Change Generic x86_64 to Opteron/Athlon64/Hammer/K8
+> >=20
+> > --> Exit
+> >=20
+> > then, make-kpg with initrd enabled.
+> >=20
+> > I was pretty sure that the trouble would still appear with
+> > 2.6.27-rc1, but didn't exept HW Bug again. error message is part of
+> > diff before-mount after-mount, i.e. : end_request: I/O error, dev
+> > sr0, sector 11697200
+>=20
+> Hmm.. Strange, no ATA error message nor past the end of the device
+> message.  I wonder where that error comes from.  Is the DVD accessibl=
+e
+> at all after mounting?  We had several UDF related reports and IIRC
+> those haven't been resolved.  Maybe you're seeing the same problem.
 
-The guilty commit turned out to be 08da591e14cf87247ec09b17c350235157a92fc3
-("ide: add ide_device_{get,put}() helpers").  ide_device_put() is called
-before kref_put() in ide_cd_put() so IDE device is already gone by the time
-ide_cd_release() is reached.
+yes, no errors before real access.
 
-Fix it by calling ide_device_get() before kref_get() and ide_device_put()
-after kref_put() in all affected device drivers.
+=46irst.
+I read that it was because Linux were to fast to do the job, from A. Co=
+x, if I remember correctly and concern many CD-DVD Cumbo and other devi=
+ce of that kind.
+It is probably not the case here because It was an old message.
+Look, it is appear when DVD-9 are inserted and not other ones (DVD-5, C=
+D* good).
+I suspect a different way to attack the TSST Corp in case of DVD-9 and =
+perhaps at "low speed", like suggested.
+The first message I read about that particular material was again from =
+A. Cox and he resumed that we must know the way to talk with the device=
+=2E He even conclude by a list of things to do with etc. like it was re=
+ally often to be in front of that we were in presence of such kind of p=
+rocess with many others material.
+Really don't know any of the command send.
 
-v2:
-Brown paper bag time.  In v1 cd->drive was referenced after dropping last
-reference on cd object (which could result in OOPS in ide_device_put() as
-reported/debugged by Mariusz Kozlowski).  Fix it by caching cd->drive in
-the local variable (fix other device drivers too).
+Second.
+I read that we must update the firmware from L. Torvalds and probably m=
+any others. This was done before I wrote my first message, the up to da=
+te firmware is from may (SB001).
+I even read that there were a kernel patch for that particular problem =
+but didn't find it.
+Compile libata in kernel to have a better access to the dma and pio con=
+trol : nothing.
+Modify kernel source to blacklisted the device : nothing.
 
-Reported-by: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Reported-by: Mariusz Kozlowski <m.kozlowski@tuxland.pl>
-Cc: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Cc: Borislav Petkov <petkovbb@gmail.com>
-Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
----
-replacement patch
+Third.
+Yes, you right, it seems that some others have the same trouble with th=
+at sort of device.
+I didn't irc but I saw some similar message and no real kernel post abo=
+ut the progress on that trouble execpt that there were a patch.
 
- drivers/ide/ide-cd.c     |   12 +++++++-----
- drivers/ide/ide-disk.c   |   11 ++++++-----
- drivers/ide/ide-floppy.c |   11 ++++++-----
- drivers/ide/ide-tape.c   |   11 ++++++-----
- drivers/scsi/ide-scsi.c  |   11 ++++++-----
- 5 files changed, 31 insertions(+), 25 deletions(-)
+=46ourth.
+DVD-5 and CD*, as I said, works fine : mounting and access.
+DVD-9 is mount with an end_request I/O error. (2.6.27-rc1-git4 change n=
+othing :))
+I can access through the directory of the disk.
 
-Index: b/drivers/ide/ide-cd.c
-===================================================================
---- a/drivers/ide/ide-cd.c
-+++ b/drivers/ide/ide-cd.c
-@@ -66,11 +66,11 @@ static struct cdrom_info *ide_cd_get(str
- 	mutex_lock(&idecd_ref_mutex);
- 	cd = ide_cd_g(disk);
- 	if (cd) {
--		kref_get(&cd->kref);
--		if (ide_device_get(cd->drive)) {
--			kref_put(&cd->kref, ide_cd_release);
-+		if (ide_device_get(cd->drive))
- 			cd = NULL;
--		}
-+		else
-+			kref_get(&cd->kref);
-+
- 	}
- 	mutex_unlock(&idecd_ref_mutex);
- 	return cd;
-@@ -78,9 +78,11 @@ static struct cdrom_info *ide_cd_get(str
- 
- static void ide_cd_put(struct cdrom_info *cd)
- {
-+	ide_drive_t *drive = cd->drive;
-+
- 	mutex_lock(&idecd_ref_mutex);
--	ide_device_put(cd->drive);
- 	kref_put(&cd->kref, ide_cd_release);
-+	ide_device_put(drive);
- 	mutex_unlock(&idecd_ref_mutex);
- }
- 
-Index: b/drivers/ide/ide-disk.c
-===================================================================
---- a/drivers/ide/ide-disk.c
-+++ b/drivers/ide/ide-disk.c
-@@ -63,11 +63,10 @@ static struct ide_disk_obj *ide_disk_get
- 	mutex_lock(&idedisk_ref_mutex);
- 	idkp = ide_disk_g(disk);
- 	if (idkp) {
--		kref_get(&idkp->kref);
--		if (ide_device_get(idkp->drive)) {
--			kref_put(&idkp->kref, ide_disk_release);
-+		if (ide_device_get(idkp->drive))
- 			idkp = NULL;
--		}
-+		else
-+			kref_get(&idkp->kref);
- 	}
- 	mutex_unlock(&idedisk_ref_mutex);
- 	return idkp;
-@@ -75,9 +74,11 @@ static struct ide_disk_obj *ide_disk_get
- 
- static void ide_disk_put(struct ide_disk_obj *idkp)
- {
-+	ide_drive_t *drive = idkp->drive;
-+
- 	mutex_lock(&idedisk_ref_mutex);
--	ide_device_put(idkp->drive);
- 	kref_put(&idkp->kref, ide_disk_release);
-+	ide_device_put(drive);
- 	mutex_unlock(&idedisk_ref_mutex);
- }
- 
-Index: b/drivers/ide/ide-floppy.c
-===================================================================
---- a/drivers/ide/ide-floppy.c
-+++ b/drivers/ide/ide-floppy.c
-@@ -168,11 +168,10 @@ static struct ide_floppy_obj *ide_floppy
- 	mutex_lock(&idefloppy_ref_mutex);
- 	floppy = ide_floppy_g(disk);
- 	if (floppy) {
--		kref_get(&floppy->kref);
--		if (ide_device_get(floppy->drive)) {
--			kref_put(&floppy->kref, idefloppy_cleanup_obj);
-+		if (ide_device_get(floppy->drive))
- 			floppy = NULL;
--		}
-+		else
-+			kref_get(&floppy->kref);
- 	}
- 	mutex_unlock(&idefloppy_ref_mutex);
- 	return floppy;
-@@ -180,9 +179,11 @@ static struct ide_floppy_obj *ide_floppy
- 
- static void ide_floppy_put(struct ide_floppy_obj *floppy)
- {
-+	ide_drive_t *drive = floppy->drive;
-+
- 	mutex_lock(&idefloppy_ref_mutex);
--	ide_device_put(floppy->drive);
- 	kref_put(&floppy->kref, idefloppy_cleanup_obj);
-+	ide_device_put(drive);
- 	mutex_unlock(&idefloppy_ref_mutex);
- }
- 
-Index: b/drivers/ide/ide-tape.c
-===================================================================
---- a/drivers/ide/ide-tape.c
-+++ b/drivers/ide/ide-tape.c
-@@ -331,11 +331,10 @@ static struct ide_tape_obj *ide_tape_get
- 	mutex_lock(&idetape_ref_mutex);
- 	tape = ide_tape_g(disk);
- 	if (tape) {
--		kref_get(&tape->kref);
--		if (ide_device_get(tape->drive)) {
--			kref_put(&tape->kref, ide_tape_release);
-+		if (ide_device_get(tape->drive))
- 			tape = NULL;
--		}
-+		else
-+			kref_get(&tape->kref);
- 	}
- 	mutex_unlock(&idetape_ref_mutex);
- 	return tape;
-@@ -343,9 +342,11 @@ static struct ide_tape_obj *ide_tape_get
- 
- static void ide_tape_put(struct ide_tape_obj *tape)
- {
-+	ide_drive_t *drive = tape->drive;
-+
- 	mutex_lock(&idetape_ref_mutex);
--	ide_device_put(tape->drive);
- 	kref_put(&tape->kref, ide_tape_release);
-+	ide_device_put(drive);
- 	mutex_unlock(&idetape_ref_mutex);
- }
- 
-Index: b/drivers/scsi/ide-scsi.c
-===================================================================
---- a/drivers/scsi/ide-scsi.c
-+++ b/drivers/scsi/ide-scsi.c
-@@ -101,11 +101,10 @@ static struct ide_scsi_obj *ide_scsi_get
- 	mutex_lock(&idescsi_ref_mutex);
- 	scsi = ide_scsi_g(disk);
- 	if (scsi) {
--		scsi_host_get(scsi->host);
--		if (ide_device_get(scsi->drive)) {
--			scsi_host_put(scsi->host);
-+		if (ide_device_get(scsi->drive))
- 			scsi = NULL;
--		}
-+		else
-+			scsi_host_get(scsi->host);
- 	}
- 	mutex_unlock(&idescsi_ref_mutex);
- 	return scsi;
-@@ -113,9 +112,11 @@ static struct ide_scsi_obj *ide_scsi_get
- 
- static void ide_scsi_put(struct ide_scsi_obj *scsi)
- {
-+	ide_drive_t *drive = scsi->drive;
-+
- 	mutex_lock(&idescsi_ref_mutex);
--	ide_device_put(scsi->drive);
- 	scsi_host_put(scsi->host);
-+	ide_device_put(drive);
- 	mutex_unlock(&idescsi_ref_mutex);
- }
- 
+Here's a file * of VIDEO_TS contents of it :
+
+$ file *
+VIDEO_TS.BUP: Video manager, v11
+VIDEO_TS.IFO: Video manager, v11
+VIDEO_TS.VOB: ERROR: cannot read `VIDEO_TS.VOB' (Input/output error)
+VTS_01_0.BUP: Video title set, v11
+VTS_01_0.IFO: Video title set, v11
+VTS_01_0.VOB: ERROR: cannot read `VTS_01_0.VOB' (Input/output error)
+VTS_01_1.VOB: ERROR: cannot read `VTS_01_1.VOB' (Input/output error)
+VTS_01_2.VOB: MPEG sequence, v2, program multiplex
+VTS_01_3.VOB: MPEG sequence, v2, program multiplex
+VTS_01_4.VOB: MPEG sequence, v2, program multiplex
+VTS_01_5.VOB: ERROR: cannot read `VTS_01_5.VOB' (Input/output error)
+VTS_01_6.VOB: MPEG sequence, v2, program multiplex
+VTS_02_0.BUP: Video title set, v11
+VTS_02_0.IFO: Video title set, v11
+VTS_02_0.VOB: empty
+VTS_02_1.VOB: ERROR: cannot read `VTS_02_1.VOB' (Input/output error)
+
+And Here's the dmesg of the input/output errors :
+=46rom mount :
+[ 2002.943737] end_request: I/O error, dev sr0, sector 11697200
+[ 2003.112690] UDF-fs: Partition marked readonly; forcing readonly moun=
+t
+[ 2003.138034] UDF-fs INFO UDF: Mounting volume 'BROKEN_ARROW', timesta=
+mp 1999/12/29 19:42 (1078)
+
+=46rom file * :
+[ 2034.392665] end_request: I/O error, dev sr0, sector 1220
+[ 2034.392705] Buffer I/O error on device sr0, logical block 305
+[ 2034.392740] Buffer I/O error on device sr0, logical block 306
+[ 2034.392771] Buffer I/O error on device sr0, logical block 307
+[ 2034.392801] Buffer I/O error on device sr0, logical block 308
+[ 2034.392832] Buffer I/O error on device sr0, logical block 309
+[ 2034.392862] Buffer I/O error on device sr0, logical block 310
+[ 2034.392892] Buffer I/O error on device sr0, logical block 311
+[ 2034.392923] Buffer I/O error on device sr0, logical block 312
+[ 2034.392953] Buffer I/O error on device sr0, logical block 313
+[ 2034.392983] Buffer I/O error on device sr0, logical block 314
+[ 2034.416025] end_request: I/O error, dev sr0, sector 1220
+[ 2034.833477] end_request: I/O error, dev sr0, sector 2456
+[ 2034.855230] end_request: I/O error, dev sr0, sector 2456
+[ 2034.954243] end_request: I/O error, dev sr0, sector 224624
+[ 2034.976313] end_request: I/O error, dev sr0, sector 224624
+[ 2036.034252] end_request: I/O error, dev sr0, sector 7356612
+[ 2036.058234] end_request: I/O error, dev sr0, sector 7356612
+[ 2037.287468] end_request: I/O error, dev sr0, sector 11464736
+[ 2037.311031] end_request: I/O error, dev sr0, sector 11464736
+
+As you can see, we have partial access of file in the device.
+Really seems it's nearly nothing to have a good right access, but didn'=
+t be able to guess what since 6 month !
+ok, see ya.
+
+
+> > You can have an ssh -l root on that Debian unstable GNU/linux box i=
+f
+> > it can help you.
+>=20
+> Yeah, I'm attaching my public key.  Please send me the login informat=
+ion.
+
+Hmm, don't know how to deal with that, I will learn.
+I think you'll receive, in the worse case, login connexion in cupple fe=
+w days.
+
+> Thanks.
+
+You're welcome.
+
+Best regards.
+S=E9bastien
+
+
+----- Message d'origine ----
+De : Tejun Heo <tj@kernel.org>
+=C0 : S=E9bastien <willy_the_cat@yahoo.com>
+Cc : jgarzik@pobox.com; linux-ide@vger.kernel.org
+Envoy=E9 le : Dimanche, 3 Ao=FBt 2008, 5h27mn 41s
+Objet : Re: Re : dvd-9 trouble with TSSTcorp SH-S203D
+
+S=E9bastien wrote:
+> Here's attached file of config 2.6.27-rc1 and System-map 2.6.27-rc1
+> and lspci -nn and dmesg before mount and after mount (-t udf /dev/sr0
+> fool)
+>=20
+> I re-compile a fresh kernel : HW Bug re-appear. It had been
+> diseappered with 2.6.26 and re-appeared with that new fresh kern
+> 2.6.27-rc1 : perhaps a mistaken comipile option. However with that
+> 2.6.26, HW Bug only disappeared when "Native IDE" was set in Bios
+> SATA OnChip option.
+
+That message is harmless and it showing up or not probably means your
+controller is behaving slightly differently and is most likely random.
+As long as the detection works out, it's okay.  Maybe we need to make
+the message friendlier.
+
+> Changed nearly nothing when compiling that new kern, i.e. :
+>=20
+> make mrproper make menuconfig
+>=20
+> --> Change Generic x86_64 to Opteron/Athlon64/Hammer/K8
+>=20
+> --> Exit
+>=20
+> then, make-kpg with initrd enabled.
+>=20
+> I was pretty sure that the trouble would still appear with
+> 2.6.27-rc1, but didn't exept HW Bug again. error message is part of
+> diff before-mount after-mount, i.e. : end_request: I/O error, dev
+> sr0, sector 11697200
+
+Hmm.. Strange, no ATA error message nor past the end of the device
+message.  I wonder where that error comes from.  Is the DVD accessible
+at all after mounting?  We had several UDF related reports and IIRC
+those haven't been resolved.  Maybe you're seeing the same problem.
+
+> You can have an ssh -l root on that Debian unstable GNU/linux box if
+> it can help you.
+
+Yeah, I'm attaching my public key.  Please send me the login informatio=
+n.
+
+Thanks.
+
+--=20
+tejun
+
+
+
+      _________________________________________________________________=
+____________=20
+Envoyez avec Yahoo! Mail. Une boite mail plus intelligente http://mail.=
+yahoo.fr
