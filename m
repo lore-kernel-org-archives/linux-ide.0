@@ -1,50 +1,27 @@
 From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [PATCH 1/2] pata_legacy: export functionality to ide
-Date: Sun, 3 Aug 2008 16:22:14 +0100
-Message-ID: <20080803162214.394b13a1@lxorguk.ukuu.org.uk>
-References: <20080715053356.GA18628@gollum.tnic>
-	<200808021902.12191.bzolnier@gmail.com>
-	<20080802183253.GA2239@gollum.tnic>
-	<200808022046.16990.bzolnier@gmail.com>
-	<20080803073756.GA8762@gollum.tnic>
-	<20080803125907.67676948@lxorguk.ukuu.org.uk>
-	<20080803143837.GA26672@gollum.tnic>
+Subject: Re: Re : Re : dvd-9 trouble with TSSTcorp SH-S203D
+Date: Sun, 3 Aug 2008 16:26:47 +0100
+Message-ID: <20080803162647.26c188b2@lxorguk.ukuu.org.uk>
+References: <547246.1958.qm@web26202.mail.ukl.yahoo.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:49935 "EHLO
+Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:55182 "EHLO
 	lxorguk.ukuu.org.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1756052AbYHCPjw (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 3 Aug 2008 11:39:52 -0400
-In-Reply-To: <20080803143837.GA26672@gollum.tnic>
+	with ESMTP id S1756052AbYHCPo0 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 3 Aug 2008 11:44:26 -0400
+In-Reply-To: <547246.1958.qm@web26202.mail.ukl.yahoo.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: petkovbb@gmail.com
-Cc: petkovbb@googlemail.com, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, alan@redhat.com, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: =?UTF-8?B?U8OpYmFzdGllbg==?= <willy_the_cat@yahoo.com>
+Cc: Tejun Heo <tj@kernel.org>, jgarzik@pobox.com, linux-ide@vger.kernel.org
 
-> conventions, it is still the best one considering the other possibilities:
-> 
-> a) code duplication: dumb idea, bloated kernel for no reason
 
-I think you might want to start somewhere else if that worries you. Its
-also a mostly bogus reasoning as almost nobody builds with both, in fact
-you have to be pretty careful if you do that or it all falls over in a
-heap.
+> [ 2002.943737] end_request: I/O error, dev sr0, sector 11697200
+> [ 2003.112690] UDF-fs: Partition marked readonly; forcing readonly mount
+> [ 2003.138034] UDF-fs INFO UDF: Mounting volume 'BROKEN_ARROW', timestamp 1999/12/29 19:42 (1078)
 
-For previous cases (eg ide timing) it has actually made more sense to
-split the code. The moment you get future different behaviour between
-libata and old IDE on any of these devices the sharing will just break
-again (eg if one or the other drops chipset support for one of those
-devices or adds one for another device)
-
-> b) evil Kconfig SELECT pulling in core libata just so that ide might be calling
-> a function or two.
-
-That would be stunningly dumb. I happen to think we have developers whose
-minds extent to adding libata-common.c and pulling in a single file if we
-do that. Yes people have the past done stupid stuff like pulling all of
-CONFIG_IDE in for a single USB device but that was because nobody noticed
-and fixed it promptly not because it was a good idea.
-
-Alan
+Partial access to a movie file. I assume you've checked the disc in
+question is not copy protected. We don't support decrypting copy
+protected disks for all the obvious reasons.
