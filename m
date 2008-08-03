@@ -1,86 +1,47 @@
-From: =?iso-8859-1?Q?S=E9bastien?= <willy_the_cat@yahoo.com>
-Subject: Re : Re : Re : Re : Re : dvd-9 trouble with TSSTcorp SH-S203D
-Date: Sun, 3 Aug 2008 23:08:36 +0000 (GMT)
-Message-ID: <781438.27763.qm@web26204.mail.ukl.yahoo.com>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: Kernel Summit request for Discussion of future of ATA (libata)
+ and	IDE
+Date: Sun, 03 Aug 2008 19:10:25 -0400
+Message-ID: <48963AE1.8080308@garzik.org>
+References: <1217779055.4179.10.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from web26204.mail.ukl.yahoo.com ([217.12.10.241]:23093 "HELO
-	web26204.mail.ukl.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1754486AbYHCXIi convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 3 Aug 2008 19:08:38 -0400
+Received: from srv5.dvmed.net ([207.36.208.214]:53201 "EHLO mail.dvmed.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758725AbYHCXKa (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 3 Aug 2008 19:10:30 -0400
+In-Reply-To: <1217779055.4179.10.camel@localhost.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: jgarzik@pobox.com, linux-ide@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: ksummit-2008-discuss@lists.linux-foundation.org, linux-kernel <linux-kernel@vger.kernel.org>, linux-ide <linux-ide@vger.kernel.org>
 
+James Bottomley wrote:
+> Right at the moment, we have two separate subsystems for running IDE
+> type devices:  driver/ide and drivers/ata.  The claim I've seen is that
+> drivers/ata can do everything drivers/ide can do plus it does sata.  I
+> also note that no major distribution seems to enable anything in
+> drivers/ide anymore, so given this is it time to deprecate drivers/ide?
+> 
+> A counter argument to the above is that not all drivers (particularly
+> the older ones where hw is scarce) are converted to drivers/ata, so
+> drivers/ide seems to be needed for some legacy systems (in which case it
+> can be deprecated but not removed).  I've also noted that some embedded
+> distributions seem to be using drivers/ide, but I'm not really sure
+> whether this is inertia or some overriding need.
+> 
+> The proposal is to discuss the future of these two subsystems and arrive
+> at a consensus what's happening to each going forwards.
 
-> > nota : you can keep your connect if you want heo !
+I'm not in any rush to change the status quo as I see it: don't remove 
+drivers/ide but encourage new drivers to be under libata.
 
-> No need to keep it around.  Please kill it.
+I am a bit disappointed at all the drivers/ide churn.  I had hoped it 
+would sit around and be a stable alternative, a fallback to libata.
 
-ok, done.
-
-> how come SCSI didn't report the sense data?  Anyways, you probably wa=
-nt to look for libdvdcss.
-
-SCSI ? Hmm, it's probably like Mister A. Cox said : the handshake proce=
-ss.
-But, we are not supposed to only read movies ... and the kernel is not =
-here to see what it deal with, as I understand.
-
-There is even a version 2 of libdvdcss now.
-Yes, will have a look at when I will have got the time.
-
-Again, I apology and sorry for the disturbs.
-Thanks for answering.
-
-See ya.
-Best regards.
-S=E9bastien
-
-
-
------ Message d'origine ----
-De : Tejun Heo <tj@kernel.org>
-=C0 : S=E9bastien <willy_the_cat@yahoo.com>
-Cc : jgarzik@pobox.com; linux-ide@vger.kernel.org
-Envoy=E9 le : Lundi, 4 Ao=FBt 2008, 0h41mn 50s
-Objet : Re: Re : Re : Re : Re : dvd-9 trouble with TSSTcorp SH-S203D
-
-S=E9bastien wrote:
-> You are right, it's a css dvd. I use dvdbackup and work fine without =
-any I/O errors.
-> Ok, "we are learning every old" (French proverb).
->=20
-> I finaly found a dvd9 which pass throught udf filesystem correctly, b=
-ut it seems that there's no general way to see if there is or there is =
-not a CSS part in the media.
->=20
-> I apologies. Sorry for disturbing. Many thanks for all.
-> S=E9bastien
->=20
-> nota : you can keep your connect if you want heo !
-
-No need to keep it around.  Please kill it.
-
-Ah.. so it was the copy protection thing.  The firmware failed the
-command and reported it via sense data.  Hmmm... how come SCSI didn't
-report the sense data?  Anyways, you probably want to look for libdvdcs=
-s.
-
---=20
-tejun
---
-To unsubscribe from this list: send the line "unsubscribe linux-ide" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+	Jeff
 
 
 
-      _________________________________________________________________=
-____________=20
-Envoyez avec Yahoo! Mail. Une boite mail plus intelligente http://mail.=
-yahoo.fr
