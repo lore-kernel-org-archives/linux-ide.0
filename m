@@ -1,47 +1,47 @@
-From: Jeff Garzik <jeff@garzik.org>
+From: Felix Miata <mrmazda@ij.net>
 Subject: Re: Kernel Summit request for Discussion of future of ATA (libata)
- and	IDE
-Date: Sun, 03 Aug 2008 19:10:25 -0400
-Message-ID: <48963AE1.8080308@garzik.org>
-References: <1217779055.4179.10.camel@localhost.localdomain>
+ and IDE
+Date: Sun, 03 Aug 2008 19:23:10 -0400
+Message-ID: <48963DDE.8080201@ij.net>
+References: <1217779055.4179.10.camel@localhost.localdomain>	<20080803173941.314edf33@lxorguk.ukuu.org.uk>	<1217783433.4179.18.camel@localhost.localdomain>	<20080803194501.24fa3e51@lxorguk.ukuu.org.uk>	<48960B28.2040709@ij.net>	<48962C6E.5080802@kernel.org> <20080803230502.2cfd013e@lxorguk.ukuu.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:53201 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758725AbYHCXKa (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 3 Aug 2008 19:10:30 -0400
-In-Reply-To: <1217779055.4179.10.camel@localhost.localdomain>
+Received: from pop-canoe.atl.sa.earthlink.net ([207.69.195.66]:53382 "EHLO
+	pop-canoe.atl.sa.earthlink.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1758330AbYHCXWo (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 3 Aug 2008 19:22:44 -0400
+Received: from user-142grnk.cable.mindspring.com ([72.40.110.244] helo=[192.168.0.51])
+	by pop-canoe.atl.sa.earthlink.net with esmtp (Exim 3.36 #1)
+	id 1KPmuO-0000O2-00
+	for linux-ide@vger.kernel.org; Sun, 03 Aug 2008 19:22:40 -0400
+In-Reply-To: <20080803230502.2cfd013e@lxorguk.ukuu.org.uk>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: ksummit-2008-discuss@lists.linux-foundation.org, linux-kernel <linux-kernel@vger.kernel.org>, linux-ide <linux-ide@vger.kernel.org>
+To: linux-ide@vger.kernel.org
 
-James Bottomley wrote:
-> Right at the moment, we have two separate subsystems for running IDE
-> type devices:  driver/ide and drivers/ata.  The claim I've seen is that
-> drivers/ata can do everything drivers/ide can do plus it does sata.  I
-> also note that no major distribution seems to enable anything in
-> drivers/ide anymore, so given this is it time to deprecate drivers/ide?
-> 
-> A counter argument to the above is that not all drivers (particularly
-> the older ones where hw is scarce) are converted to drivers/ata, so
-> drivers/ide seems to be needed for some legacy systems (in which case it
-> can be deprecated but not removed).  I've also noted that some embedded
-> distributions seem to be using drivers/ide, but I'm not really sure
-> whether this is inertia or some overriding need.
-> 
-> The proposal is to discuss the future of these two subsystems and arrive
-> at a consensus what's happening to each going forwards.
+On 2008/08/03 23:05 (GMT+0100) Alan Cox apparently typed:
 
-I'm not in any rush to change the status quo as I see it: don't remove 
-drivers/ide but encourage new drivers to be under libata.
+> On 2008/08/04 07:08 (GMT+0900) Tejun Heo apparently typed:
 
-I am a bit disappointed at all the drivers/ide churn.  I had hoped it 
-would sit around and be a stable alternative, a fallback to libata.
+>> http://www.ussg.iu.edu/hypermail/linux/kernel/0807.1/2568.html
 
-	Jeff
+>> Dunno it will get in tho.
 
+> Take it up with Al. He vetoed the needed fixes for this before libata
+> even acquired PATA support. Since then nothing has happened.
 
+I have no idea who Al is, or how one would "take it up with" him.
 
+> This is simply not a technical problem.
+
+I only signed up on this list 10 months ago, and never did find the veto history or any discussion leading thereto. I have seen discussion/attempts to solve the >15 limitation of libata via dm/kpartx, but not any yet
+user-ready solution.
+-- 
+"Love is not easily angered. Love does not demand
+its own way."			1 Corinthians 13:5 NIV
+
+ Team OS/2 ** Reg. Linux User #211409
+
+Felix Miata  ***  http://fm.no-ip.com/
