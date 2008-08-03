@@ -1,33 +1,32 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [PATCH 1/2] pata_legacy: export functionality to ide
-Date: Sun, 3 Aug 2008 14:39:39 +0100
-Message-ID: <20080803143939.37a74bf5@lxorguk.ukuu.org.uk>
-References: <20080715053356.GA18628@gollum.tnic>
-	<20080803073756.GA8762@gollum.tnic>
-	<20080803125907.67676948@lxorguk.ukuu.org.uk>
-	<200808031537.41224.bzolnier@gmail.com>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: [PATCH 3/5] libata: Implement disk shock protection support
+Date: Sun, 03 Aug 2008 22:58:23 +0900
+Message-ID: <4895B97F.4020708@gmail.com>
+References: <87prp1kvyy.fsf@denkblock.local>	<20080726062142.29070.10413.stgit@denkblock.local>	<4892B8FE.1070400@gmail.com>	<20080801233459.11e9b254@lxorguk.ukuu.org.uk>	<489523DC.2090903@gmail.com> <20080803140536.062c2ef1@lxorguk.ukuu.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:59444 "EHLO
-	lxorguk.ukuu.org.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1755124AbYHCN5n (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 3 Aug 2008 09:57:43 -0400
-In-Reply-To: <200808031537.41224.bzolnier@gmail.com>
+Received: from rv-out-0506.google.com ([209.85.198.230]:44347 "EHLO
+	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755237AbYHCN67 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 3 Aug 2008 09:58:59 -0400
+Received: by rv-out-0506.google.com with SMTP id k40so1744207rvb.1
+        for <linux-ide@vger.kernel.org>; Sun, 03 Aug 2008 06:58:59 -0700 (PDT)
+In-Reply-To: <20080803140536.062c2ef1@lxorguk.ukuu.org.uk>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: petkovbb@gmail.com, petkovbb@googlemail.com, alan@redhat.com, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: Elias Oltmanns <eo@nebensachen.de>, Jeff Garzik <jeff@garzik.org>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, Pavel Machek <pavel@ucw.cz>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-> The code in question is 65 LOC total (43 LOC without counting comments)
-> so having a shared library just for it sounds like an overkill and we may
+Alan Cox wrote:
+>> on both sides of the cable and I think things like that would be more
+>> difficult to work accidentally.
+> 
+> We'd have to query the drive vendors to see what they expected.
 
-People expect code in C files, so in headers it gets missed as well as
-dumped in a directory with no correlation between file name and subsystem.
+We'll have to query the controller vendors too and I think it's highly
+likely to cause problems on many controllers.
 
-> just copy that one function from pata_legacy to ide_generic instead.
-
-If you are going to  #include two copies you might as well just copy it.
-
-Alan
+-- 
+tejun
