@@ -1,40 +1,51 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH 1/2] pata_legacy: export functionality to ide
-Date: Sun, 03 Aug 2008 19:43:43 -0400
-Message-ID: <489642AF.3020708@pobox.com>
-References: <20080715053356.GA18628@gollum.tnic>	<20080803073756.GA8762@gollum.tnic>	<20080803125907.67676948@lxorguk.ukuu.org.uk>	<200808031537.41224.bzolnier@gmail.com> <20080803143939.37a74bf5@lxorguk.ukuu.org.uk>
+From: Juergen Kreileder <jk@blackdown.de>
+Subject: Re: SW-IOMMU / ata_piix errors with 2.6.27-rc1
+Date: Mon, 04 Aug 2008 02:40:46 +0200
+Message-ID: <4896500E.2040304@blackdown.de>
+References: <fa.64b92XSd5HpCdpOYcDENnJSZJyw@ifi.uio.no> <4896157A.2020907@shaw.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:42300 "EHLO mail.dvmed.net"
+Received: from smtp.blackdown.de ([78.47.134.53]:44789 "EHLO smtp.blackdown.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758898AbYHCXnz (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 3 Aug 2008 19:43:55 -0400
-In-Reply-To: <20080803143939.37a74bf5@lxorguk.ukuu.org.uk>
+	id S1751547AbYHDAku (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 3 Aug 2008 20:40:50 -0400
+In-Reply-To: <4896157A.2020907@shaw.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, petkovbb@gmail.com, petkovbb@googlemail.com, alan@redhat.com, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: Robert Hancock <hancockr@shaw.ca>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-Alan Cox wrote:
->> The code in question is 65 LOC total (43 LOC without counting comments)
->> so having a shared library just for it sounds like an overkill and we may
+Robert Hancock wrote:
+> Juergen Kreileder wrote:
+>> Hi,
+>>
+>> I get lots of errors like this with 2.6.27-rc1 on my
+>> Macbook Pro (3rd generation), 2.6.26 seems to work fine:
+>>
+>> [  907.524509] DMA: Out of SW-IOMMU space for 45056 bytes at device 0000:00:1f.2
+>> [  907.524783] ata3.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x0
+>> [  907.524796] ata3.00: cmd 35/00:50:08:91:5c/00:01:0f:00:00/e0 tag 0 dma 172032 out
+>> [  907.524798]          res 50/00:00:ff:90:5c/00:00:0f:00:00/ef Emask 0x40 (internal error)
+>> [  907.524805] ata3.00: status: { DRDY }
+>> [  907.646590] ata3.00: configured for UDMA/133
+>> [  907.646624] ata3: EH complete
+
+>>
+>>
+>> Any suggestions?
 > 
-> People expect code in C files, so in headers it gets missed as well as
-> dumped in a directory with no correlation between file name and subsystem.
-> 
->> just copy that one function from pata_legacy to ide_generic instead.
-> 
-> If you are going to  #include two copies you might as well just copy it.
+> You can try increasing the swiotlb size by booting with swiotlb=65536 
+> (for 128MB) or swiotlb=131072 (for 256MB), and see if that makes the 
+> problem go away.. It's unclear why you'd be running out of SWIOTLB space 
+> now, though, if 2.6.26 worked fine..
 
-That's pretty much my feeling...  just copy the code.
-
-If the shared code grows larger, create a kernel module with the stuff 
-shared by both libata and drivers/ide.
-
-liblibata?  libata-core-core?  :)
-
-	Jeff
+Still happening, although 256M make it a bit harder to trigger.
 
 
+	Juergen
+
+-- 
+Juergen Kreileder, Blackdown Java-Linux Team
+http://blog.blackdown.de/
