@@ -1,39 +1,30 @@
-From: Saeed Bishara <saeed@marvell.com>
-Subject: [PATCH] sata_mv: add the Gen IIE flag to the SoC devices.
-Date: Mon,  4 Aug 2008 00:52:55 -1100
-Message-ID: <12178507751128-git-send-email-saeed@marvell.com>
+From: Kumar Gala <galak@kernel.crashing.org>
+Subject: Re: Kernel Summit request for Discussion of future of ATA (libata) and IDE
+Date: Mon, 4 Aug 2008 08:16:47 -0500
+Message-ID: <F29B8321-272A-45B4-9D72-DC6A9EB407F1@kernel.crashing.org>
+References: <1217779055.4179.10.camel@localhost.localdomain> <20080803173941.314edf33@lxorguk.ukuu.org.uk>
+Mime-Version: 1.0 (Apple Message framework v926)
+Content-Type: text/plain; charset=US-ASCII; format=flowed; delsp=yes
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from dakia3.marvell.com ([65.219.4.28]:33388 "EHLO
-	dakia3.marvell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750751AbYHDMDE (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 4 Aug 2008 08:03:04 -0400
+Received: from gate.crashing.org ([63.228.1.57]:43046 "EHLO gate.crashing.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753302AbYHDNRD (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 4 Aug 2008 09:17:03 -0400
+In-Reply-To: <20080803173941.314edf33@lxorguk.ukuu.org.uk>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: liml@rtr.ca, linux-ide@vger.kernel.org, jeff@garzik.org
-Cc: buytenh@marvell.com, Saeed Bishara <saeed@marvell.com>
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, ksummit-2008-discuss@lists.linux-foundation.org, linux-kernel <linux-kernel@vger.kernel.org>, linux-ide <linux-ide@vger.kernel.org>
 
-The SoC sata port is based on the 7042/6042 devices (Gen IIE). This patch
-will fix various issues when working with PMP and/or NCQ.
 
-Signed-off-by: Saeed Bishara <saeed@marvell.com>
----
- drivers/ata/sata_mv.c |    3 ++-
- 1 files changed, 2 insertions(+), 1 deletions(-)
+On Aug 3, 2008, at 11:39 AM, Alan Cox wrote:
 
-diff --git a/drivers/ata/sata_mv.c b/drivers/ata/sata_mv.c
-index ad169ff..f483067 100644
---- a/drivers/ata/sata_mv.c
-+++ b/drivers/ata/sata_mv.c
-@@ -3036,7 +3036,8 @@ static int mv_chip_id(struct ata_host *host, unsigned int board_idx)
- 		break;
- 	case chip_soc:
- 		hpriv->ops = &mv_soc_ops;
--		hp_flags |= MV_HP_FLAG_SOC | MV_HP_ERRATA_60X1C0;
-+		hp_flags |= MV_HP_FLAG_SOC | MV_HP_GEN_IIE |
-+			MV_HP_ERRATA_60X1C0;
- 		break;
- 
- 	default:
--- 
-1.5.2.5
+> - For certain embedded PPC boards there are some things to sort out  
+> with
+> IRQ routing on non standards sane configurations using pata_ali in
+> particular.
 
+Alan, do you have any specifics here?
+
+- k
