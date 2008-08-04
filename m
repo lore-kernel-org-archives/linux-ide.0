@@ -1,37 +1,48 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: Issue with AHCI driver
-Date: Mon, 04 Aug 2008 15:33:38 -0400
-Message-ID: <48975992.4030003@pobox.com>
-References: <30565143.1217877521998.JavaMail.root@elwamui-milano.atl.sa.earthlink.net>
+From: Robert Hancock <hancockr@shaw.ca>
+Subject: Re: Kernel Summit request for Discussion of future of ATA (libata)
+ and IDE
+Date: Mon, 04 Aug 2008 14:07:04 -0600
+Message-ID: <48976168.3020804@shaw.ca>
+References: <fa.OGeO7gZvBG4obEzRbVltjSebgTQ@ifi.uio.no> <fa.KtvYE2B2yrJqUleolhtMPN9ljAQ@ifi.uio.no> <fa.AqEKTvguYFAzDFHy/We/8MpOqmo@ifi.uio.no>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:41280 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753707AbYHDTdn (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 4 Aug 2008 15:33:43 -0400
-In-Reply-To: <30565143.1217877521998.JavaMail.root@elwamui-milano.atl.sa.earthlink.net>
+Received: from idcmail-mo2no.shaw.ca ([64.59.134.9]:38302 "EHLO
+	pd5mo1no-dmz.prod.shaw.ca" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1759589AbYHDUHG (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 4 Aug 2008 16:07:06 -0400
+In-Reply-To: <fa.AqEKTvguYFAzDFHy/We/8MpOqmo@ifi.uio.no>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: the4hoffmans@earthlink.net
-Cc: Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org, blward@micron.com
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, ksummit-2008-discuss@lists.linux-foundation.org, linux-kernel <linux-kernel@vger.kernel.org>, linux-ide <linux-ide@vger.kernel.org>
 
-the4hoffmans@earthlink.net wrote:
-> We do have the AHCI class code - PCI offset 09h = 010601h.  We are detected as an AHCI controller under Vista.  I even tried adding our vendor/device id to ahci.c but that didn't make any difference.  Is there something else I'm missing?
+Alan Cox wrote:
+>> * There are still corner case in libata core - PIO is dead slow
+>> compared to drivers/ide/,
 > 
-> A little background...
-> 
-> We have a PCIe plug-in card that identifies itself as an AHCI controller as mentioned above.  We used a PCIe analyzer card to look at traffic as we booted Linux (build 2.6.19).  We saw various PCI reads & writes as the system initialized PCI resources but we never saw what would amount to an 'Identify Device' command which I'm assuming the libata driver should do.  Any ideas?
+> There are two there - libata keeps IRQs blocked for longer in PIO mode as
+> well which is a factor for realtime that needs looking at, as well as
+> using 16bit not 32bit I/O for most devices (which is trivial to fix). The
+> IRQ masking stuff is more complex and old IDE handles it far better for
+> PIO on non shared IRQ interfaces. That is actually probably the most
+> complicated thing to address of the stuff you'd want to do if you were
+> going to kill off old IDE.
 
-Turn on debugging (top of include/linux/libata.h), and show us that output.
+I was looking into the 32-bit PIO issue a bit yesterday. It looks like 
+some of the VLB libata drivers are doing this internally already, so it 
+shouldn't be hard to do this in the core. Only question is how we know 
+generically if the controller can do it or not? It looks like in old 
+IDE, a few controllers explicitly disable it, but it appears that it 
+doesn't default to on for any controller, so it's possible there are 
+others on which it doesn't work. Presumably anything on an actual 16-bit 
+bus (ISA, LPC, etc.) wouldn't like it, to start with.
 
-As Tejun noted, every vendor that claims full AHCI compatibility works 
-with the Linux AHCI driver just fine.  A couple vendors that are not 
-fully compatible (Marvell, ACard) need some tweaks due to non-standard 
-register and operational differences.
-
-	Jeff
-
-
-
+There's also the matter of the identify bit to indicate whether the 
+drive supports 32-bit transfers, which was reallocated to trusted 
+computing in ATA-8 so any drive matching that standard will indicate not 
+supported. I couldn't track down where that bit was actually defined in 
+the first place, all the way back to ATA-1 it seems to be indicated as 
+reserved. Actually, I'm not sure why the drive cares in the first place, 
+it would seem like a pure host controller issue..
