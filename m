@@ -1,106 +1,52 @@
-From: "Grant Grundler" <grundler@google.com>
-Subject: Re: SATA port multiplier(Marvell 6121 with ahci) and Marvell 4140, simg 3726
-Date: Mon, 4 Aug 2008 13:59:48 -0700
-Message-ID: <da824cf30808041359t2047a1abj50ddc4c984509c3@mail.gmail.com>
-References: <788014650807302022j30cea641wcfe4105ac8702b8c@mail.gmail.com>
-	 <48918D52.3010404@gmail.com> <48918DD9.9050603@kernel.org>
-	 <788014650807310612x70347f8dt56ed650dc6b8c5ca@mail.gmail.com>
-	 <48926F7E.1020807@kernel.org> <48930B2E.9060604@pobox.com>
-	 <489336E0.7020409@kernel.org>
-	 <788014650808021053y5b5a8e01y62099464cc96d8a4@mail.gmail.com>
+From: Robert Hancock <hancockr@shaw.ca>
+Subject: Re: Kernel Summit request for Discussion of future of ATA (libata)
+ and IDE
+Date: Mon, 04 Aug 2008 15:17:52 -0600
+Message-ID: <48977200.3050307@shaw.ca>
+References: <fa.OGeO7gZvBG4obEzRbVltjSebgTQ@ifi.uio.no> <fa.KtvYE2B2yrJqUleolhtMPN9ljAQ@ifi.uio.no> <fa.AqEKTvguYFAzDFHy/We/8MpOqmo@ifi.uio.no> <48976168.3020804@shaw.ca> <20080804205508.20a3f917@lxorguk.ukuu.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp-out.google.com ([216.239.33.17]:10926 "EHLO
-	smtp-out.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756866AbYHDVAn (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 4 Aug 2008 17:00:43 -0400
-Received: from wpaz13.hot.corp.google.com (wpaz13.hot.corp.google.com [172.24.198.77])
-	by smtp-out.google.com with ESMTP id m74L0Eeh009591
-	for <linux-ide@vger.kernel.org>; Mon, 4 Aug 2008 22:00:16 +0100
-Received: from rv-out-0708.google.com (rvbf25.prod.google.com [10.140.82.25])
-	by wpaz13.hot.corp.google.com with ESMTP id m74KxGIh021236
-	for <linux-ide@vger.kernel.org>; Mon, 4 Aug 2008 14:00:06 -0700
-Received: by rv-out-0708.google.com with SMTP id f25so2602416rvb.18
-        for <linux-ide@vger.kernel.org>; Mon, 04 Aug 2008 13:59:48 -0700 (PDT)
-In-Reply-To: <788014650808021053y5b5a8e01y62099464cc96d8a4@mail.gmail.com>
-Content-Disposition: inline
+Received: from idcmail-mo2no.shaw.ca ([64.59.134.9]:8734 "EHLO
+	pd5mo1no-dmz.prod.shaw.ca" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1754972AbYHDVRz (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 4 Aug 2008 17:17:55 -0400
+In-Reply-To: <20080804205508.20a3f917@lxorguk.ukuu.org.uk>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: khchen@synology.com
-Cc: Tejun Heo <tj@kernel.org>, jgarzik@pobox.com, Mark Lord <mlord@pobox.com>, linux-ide@vger.kernel.org
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, ksummit-2008-discuss@lists.linux-foundation.org, linux-kernel <linux-kernel@vger.kernel.org>, linux-ide <linux-ide@vger.kernel.org>, Jeff Garzik <jeff@garzik.org>
 
-On Sat, Aug 2, 2008 at 10:53 AM, KueiHuan Chen <kueihuan.chen@gmail.com> wrote:
-> 2008/8/2 Tejun Heo <tj@kernel.org>:
->> Mark Lord wrote:
->>> I have exactly zero documentation on those chips,
->>> but they are supposedly AHCI compliant.
->>>
->>> Looking in drivers/ata/ahci.c, one can see that the chips are indeed
->>> supported,
->>> and there the AHCI_HFLAG_NO_PMP is *not* set, so one might expect them
->>> to work
->>> with a port-multiplier already.  ?
->>
->> I bet it's more like nobody tried yet.  :-P
+Alan Cox wrote:
+>> I was looking into the 32-bit PIO issue a bit yesterday. It looks like 
+>> some of the VLB libata drivers are doing this internally already, so it 
+>> shouldn't be hard to do this in the core. Only question is how we know 
+>> generically if the controller can do it or not? It looks like in old
+> 
+> You don't. Basically it is controller dependant. Pretty much all the
+> newer controllers support the 32bit PIO data cycles. Most PCI controllers
+> it makes no speed difference but host bus controllers (especially
+> PIIX/ICH) really benefit.
+> 
+>> supported. I couldn't track down where that bit was actually defined in 
+>> the first place, all the way back to ATA-1 it seems to be indicated as 
+>> reserved. Actually, I'm not sure why the drive cares in the first place, 
+>> it would seem like a pure host controller issue..
+> 
+> It goes back before IDE into the depths of the original compaq spec. When
+> you have a device wired basically directly to the ISA bus (original IDE)
+> it mattered. I don't believe it is relevant to any of the PCI controllers.
 
-I don't think we have. Patch I just posted won't
-address this issue either.
+I guess that bit doesn't really make any difference with remotely modern 
+drives, then.. Could we make that ata_id_has_dword_io check always 
+return true if ata_id_is_ata returns true and only check word 48 if not?
 
-grant
+I saw Willy Tarreau's patch from February for this, I agree that we 
+should likely use a separate data_xfer method for 32-bit transfer (or if 
+enough controllers should support 32-bit, then just make it be the 
+default and make a separate 16-bit only function for those that don't), 
+rather than punting the decision to the user with hdparm.
 
->
->
->  Thanks for your explaining, i had tried it already.
->
->  Port multiplier of Silicon image 3726 is not supported from 2.6.24 to
-> 2.6.26 with 6121 and 6145 which using ahci.c  : (
->
->  Here is the test envirement:
->
->  Port Multipiler : Silicon image 3726. (Marvell 4140 is not fully
-> tested, so i don't listed, but it is the same in arm arch.)
->
->  arch/kernel   2.6.24        2.6.25       2.6.26
->
->  arm            Not Work   Not tested   Not tested
->
->  powerpc     Not Work   Not tested   Not tested
->
->  x86_64       Not Work   Not Work     Not Work
->
->
->  Should we need disable 6121/6145 pmp support in ahci.c until it is
-> fully supported?
->
-> Thanks a lot.
-> --------------------
->
->  Temporal disable pmp support in 6121/6145 until it is fully supported.
->
-> Signed-off-by: KueiHuan Chen <khchen@synology.com>
-> ---
-> diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
-> index ef3e552..ef65ac0 100644
-> --- a/drivers/ata/ahci.c
-> +++ b/drivers/ata/ahci.c
-> @@ -420,7 +420,7 @@ static const struct ata_port_info ahci_port_info[] = {
->        /* board_ahci_mv */
->        {
->                AHCI_HFLAGS     (AHCI_HFLAG_NO_NCQ | AHCI_HFLAG_NO_MSI |
-> -                                AHCI_HFLAG_MV_PATA),
-> +                                AHCI_HFLAG_MV_PATA | AHCI_HFLAG_NO_PMP),
->                .flags          = ATA_FLAG_SATA | ATA_FLAG_NO_LEGACY |
->                                  ATA_FLAG_MMIO | ATA_FLAG_PIO_DMA,
->                .pio_mask       = 0x1f, /* pio0-4 */
->
->
-> ---
-> Thanks,
-> KueiHuan-Chen
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-ide" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+You mentioned in the thread for Willy's patch that "some
+controllers have quirky rules for 32bit xfers" - any details anywhere?
