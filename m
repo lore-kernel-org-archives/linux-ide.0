@@ -1,63 +1,34 @@
-From: Juergen Kreileder <jk@blackdown.de>
-Subject: Running out of SWIOTLB space (was: SW-IOMMU / ata_piix errors with
- 2.6.27-rc1)
-Date: Tue, 05 Aug 2008 00:09:31 +0200
-Message-ID: <48977E1B.2090905@blackdown.de>
-References: <fa.64b92XSd5HpCdpOYcDENnJSZJyw@ifi.uio.no> <4896157A.2020907@shaw.ca> <4896500E.2040304@blackdown.de> <48966728.5080901@kernel.org> <48966DAE.2020203@shaw.ca>
+From: Mark Lord <liml@rtr.ca>
+Subject: Re: Kernel Summit request for Discussion of future of ATA (libata)
+ and IDE
+Date: Mon, 04 Aug 2008 18:12:51 -0400
+Message-ID: <48977EE3.8050806@rtr.ca>
+References: <fa.OGeO7gZvBG4obEzRbVltjSebgTQ@ifi.uio.no>	<fa.KtvYE2B2yrJqUleolhtMPN9ljAQ@ifi.uio.no>	<fa.AqEKTvguYFAzDFHy/We/8MpOqmo@ifi.uio.no>	<48976168.3020804@shaw.ca> <20080804205508.20a3f917@lxorguk.ukuu.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp.blackdown.de ([78.47.134.53]:41164 "EHLO smtp.blackdown.de"
+Received: from rtr.ca ([76.10.145.34]:1447 "EHLO mail.rtr.ca"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751535AbYHDWJr (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 4 Aug 2008 18:09:47 -0400
-In-Reply-To: <48966DAE.2020203@shaw.ca>
+	id S1751163AbYHDWMx (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 4 Aug 2008 18:12:53 -0400
+In-Reply-To: <20080804205508.20a3f917@lxorguk.ukuu.org.uk>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Robert Hancock <hancockr@shaw.ca>, ath9k-devel@lists.ath9k.org
-Cc: Tejun Heo <tj@kernel.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: Robert Hancock <hancockr@shaw.ca>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, ksummit-2008-discuss@lists.linux-foundation.org, linux-kernel <linux-kernel@vger.kernel.org>, linux-ide <linux-ide@vger.kernel.org>
 
-Robert Hancock wrote:
-> Tejun Heo wrote:
->> Juergen Kreileder wrote:
->>> Robert Hancock wrote:
->>>> Juergen Kreileder wrote:
->>>>> Hi,
->>>>>
->>>>> I get lots of errors like this with 2.6.27-rc1 on my
->>>>> Macbook Pro (3rd generation), 2.6.26 seems to work fine:
->>>>>
->>>>> [  907.524509] DMA: Out of SW-IOMMU space for 45056 bytes at device 0000:00:1f.2
->>>>> [  907.524783] ata3.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x0
->>>>> [  907.524796] ata3.00: cmd 35/00:50:08:91:5c/00:01:0f:00:00/e0 tag 0 dma 172032 out
->>>>> [  907.524798]          res 50/00:00:ff:90:5c/00:00:0f:00:00/ef Emask 0x40 (internal error)
->>>>> [  907.524805] ata3.00: status: { DRDY }
->>>>> [  907.646590] ata3.00: configured for UDMA/133
->>>>> [  907.646624] ata3: EH complete
->>>>> Any suggestions?
->>>> You can try increasing the swiotlb size by booting with swiotlb=65536 
->>>> (for 128MB) or swiotlb=131072 (for 256MB), and see if that makes the 
->>>> problem go away.. It's unclear why you'd be running out of SWIOTLB space 
->>>> now, though, if 2.6.26 worked fine..
->>> Still happening, although 256M make it a bit harder to trigger.
->> Hmm... sounds like mapping is leaking.  Eh... iommu leak debug seems to
->> support only AMD GART IOMMU.  How long does it take to reproduce the
->> bug?  Once it happens, it never recovers, right?  Does the problem
->> happen with minimal configuration w/ only libata enabled (no network, no
->> sound, no usb...)?
-> 
-> Yes, that would be a good test.. Easiest way might be booting with 
-> init=/bin/sh and running some processes that do lots of disk access..
+Alan Cox wrote:
+> You don't. Basically it is controller dependant. Pretty much all the
+> newer controllers support the 32bit PIO data cycles. Most PCI controllers
+> it makes no speed difference but host bus controllers (especially
+> PIIX/ICH) really benefit.
+..
 
-After a bit more testing I'm pretty sure the problem is caused by an
-external driver, namely the new ath9k driver.
+By "most PCI controllers", did you really mean "most add-on PCI (card) controllers"?
 
-Sorry for the noise on the wrong lists.
+Nearly all onboard "PCI" controllers (integrated into the host chipset) benefit hugely,
+but I suppose that is what was meant by "host bus controllers".
 
+Cheers
 
-	Juergen
-
--- 
-Juergen Kreileder, Blackdown Java-Linux Team
-http://blog.blackdown.de/
