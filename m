@@ -1,43 +1,71 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
 Subject: Re: Kernel Summit request for Discussion of future of ATA (libata)
  and IDE
-Date: Mon, 4 Aug 2008 23:00:11 +0100
-Message-ID: <20080804230011.1640f011@lxorguk.ukuu.org.uk>
-References: <fa.OGeO7gZvBG4obEzRbVltjSebgTQ@ifi.uio.no>
-	<fa.KtvYE2B2yrJqUleolhtMPN9ljAQ@ifi.uio.no>
-	<fa.AqEKTvguYFAzDFHy/We/8MpOqmo@ifi.uio.no>
-	<48976168.3020804@shaw.ca>
-	<20080804205508.20a3f917@lxorguk.ukuu.org.uk>
-	<48977EE3.8050806@rtr.ca>
+Date: Tue, 05 Aug 2008 02:45:59 +0400
+Message-ID: <489786A7.8060400@ru.mvista.com>
+References: <fa.OGeO7gZvBG4obEzRbVltjSebgTQ@ifi.uio.no>	<fa.KtvYE2B2yrJqUleolhtMPN9ljAQ@ifi.uio.no>	<fa.AqEKTvguYFAzDFHy/We/8MpOqmo@ifi.uio.no>	<48976168.3020804@shaw.ca>	<20080804205508.20a3f917@lxorguk.ukuu.org.uk>	<48977AE1.1070402@ru.mvista.com> <20080804224309.77ffd28e@lxorguk.ukuu.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:33698 "EHLO
-	lxorguk.ukuu.org.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751147AbYHDWR3 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 4 Aug 2008 18:17:29 -0400
-In-Reply-To: <48977EE3.8050806@rtr.ca>
+Received: from h155.mvista.com ([63.81.120.155]:3722 "EHLO imap.sh.mvista.com"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1757051AbYHDWqG (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 4 Aug 2008 18:46:06 -0400
+In-Reply-To: <20080804224309.77ffd28e@lxorguk.ukuu.org.uk>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark Lord <liml@rtr.ca>
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
 Cc: Robert Hancock <hancockr@shaw.ca>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, ksummit-2008-discuss@lists.linux-foundation.org, linux-kernel <linux-kernel@vger.kernel.org>, linux-ide <linux-ide@vger.kernel.org>
 
-On Mon, 04 Aug 2008 18:12:51 -0400
-Mark Lord <liml@rtr.ca> wrote:
+Hello.
 
-> Alan Cox wrote:
-> > You don't. Basically it is controller dependant. Pretty much all the
-> > newer controllers support the 32bit PIO data cycles. Most PCI controllers
-> > it makes no speed difference but host bus controllers (especially
-> > PIIX/ICH) really benefit.
-> ..
-> 
-> By "most PCI controllers", did you really mean "most add-on PCI (card) controllers"?
+Alan Cox wrote:
+>>> newer controllers support the 32bit PIO data cycles. Most PCI controllers
+>>> it makes no speed difference but host bus controllers (especially
+>>> PIIX/ICH) really benefit.
+>>>       
 
-Yes
+   PIIX was a pure PCI controller, IIRC. ICH is also not a "host bus" 
+controller, it hangs off the I/O hub bus...
 
-> Nearly all onboard "PCI" controllers (integrated into the host chipset) benefit hugely,
-> but I suppose that is what was meant by "host bus controllers".
+>>>   
+>>>       
+>>     In what way if there's no speed gain?
+>>     
+>
+> As in the numbers are the same before and after. The FIFO on the
+> controller is happily hiding the extra latencies I assume.
+>   
 
-Yes
+   Depends on the PIO mode -- in the lower ones, the prefetch reads 
+might really be slower than successive reads on the host bus...
+
+>>>> supported. I couldn't track down where that bit was actually defined in 
+>>>> the first place, all the way back to ATA-1 it seems to be indicated as 
+>>>> reserved. Actually, I'm not sure why the drive cares in the first place, 
+>>>> it would seem like a pure host controller issue..
+>>>>     
+>>>>         
+>>> It goes back before IDE into the depths of the original compaq spec. When
+>>> you have a device wired basically directly to the ISA bus (original IDE)
+>>>   
+>>>       
+>>    ISA has only 8/16-bit data bus, so it could not have mattered 
+>> there... 
+>>     
+>
+> Depends what a 32bit I/O looks like on the 16bit bus - timing wise.
+>   
+
+   Two 16-bit reads at addresses 0x1x0 and 0x1x2 with the programmed 
+recovery time, IIRC... It's just occured to me that in case of the 
+16-bit bus it should be how the drive treated the accesses at address 
+0x1x2 with IOCS16 asserted that could have mattered. If it honored them, 
+32-bit I/O could have worked even on a dumb ISA "controller", if not -- 
+no way (unless you really had *something* between the ISA and the IDE 
+cable).
+
+MBR, Sergei
+
+
