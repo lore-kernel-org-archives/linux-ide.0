@@ -1,50 +1,55 @@
-From: Robert Hancock <hancockr@shaw.ca>
-Subject: Re: SW-IOMMU / ata_piix errors with 2.6.27-rc1
-Date: Sun, 03 Aug 2008 20:47:10 -0600
-Message-ID: <48966DAE.2020203@shaw.ca>
-References: <fa.64b92XSd5HpCdpOYcDENnJSZJyw@ifi.uio.no> <4896157A.2020907@shaw.ca> <4896500E.2040304@blackdown.de> <48966728.5080901@kernel.org>
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Subject: Re: Kernel Summit request for Discussion of future of ATA (libata)
+	and IDE
+Date: Mon, 04 Aug 2008 15:35:04 +1000
+Message-ID: <1217828104.24157.53.camel@pasglop>
+References: <1217779055.4179.10.camel@localhost.localdomain>
+	 <20080803173941.314edf33@lxorguk.ukuu.org.uk>
+Reply-To: benh@kernel.crashing.org
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from idcmail-mo1so.shaw.ca ([24.71.223.10]:55826 "EHLO
-	pd2mo1so-dmz.prod.shaw.ca" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1753946AbYHDCrM (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 3 Aug 2008 22:47:12 -0400
-In-Reply-To: <48966728.5080901@kernel.org>
+Received: from gate.crashing.org ([63.228.1.57]:53685 "EHLO gate.crashing.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751850AbYHDFfW (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 4 Aug 2008 01:35:22 -0400
+In-Reply-To: <20080803173941.314edf33@lxorguk.ukuu.org.uk>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: Juergen Kreileder <jk@blackdown.de>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, ksummit-2008-discuss@lists.linux-foundation.org, linux-kernel <linux-kernel@vger.kernel.org>, linux-ide <linux-ide@vger.kernel.org>
 
-Tejun Heo wrote:
-> Juergen Kreileder wrote:
->> Robert Hancock wrote:
->>> Juergen Kreileder wrote:
->>>> Hi,
->>>>
->>>> I get lots of errors like this with 2.6.27-rc1 on my
->>>> Macbook Pro (3rd generation), 2.6.26 seems to work fine:
->>>>
->>>> [  907.524509] DMA: Out of SW-IOMMU space for 45056 bytes at device 0000:00:1f.2
->>>> [  907.524783] ata3.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x0
->>>> [  907.524796] ata3.00: cmd 35/00:50:08:91:5c/00:01:0f:00:00/e0 tag 0 dma 172032 out
->>>> [  907.524798]          res 50/00:00:ff:90:5c/00:00:0f:00:00/ef Emask 0x40 (internal error)
->>>> [  907.524805] ata3.00: status: { DRDY }
->>>> [  907.646590] ata3.00: configured for UDMA/133
->>>> [  907.646624] ata3: EH complete
->>>> Any suggestions?
->>> You can try increasing the swiotlb size by booting with swiotlb=65536 
->>> (for 128MB) or swiotlb=131072 (for 256MB), and see if that makes the 
->>> problem go away.. It's unclear why you'd be running out of SWIOTLB space 
->>> now, though, if 2.6.26 worked fine..
->> Still happening, although 256M make it a bit harder to trigger.
+On Sun, 2008-08-03 at 17:39 +0100, Alan Cox wrote:
+> On Sun, 03 Aug 2008 10:57:35 -0500
+> James Bottomley <James.Bottomley@HansenPartnership.com> wrote:
+
+> - For PC class hardware libata covers everything in old IDE and a lot
+> more.
+> - For the older Mac hardware libata does not have pre PCI Macintosh
+> support although it is in progress
+> - For certain embedded PPC boards there are some things to sort out with
+> IRQ routing on non standards sane configurations using pata_ali in
+> particular.
 > 
-> Hmm... sounds like mapping is leaking.  Eh... iommu leak debug seems to
-> support only AMD GART IOMMU.  How long does it take to reproduce the
-> bug?  Once it happens, it never recovers, right?  Does the problem
-> happen with minimal configuration w/ only libata enabled (no network, no
-> sound, no usb...)?
+> There is a trend in new hardware to interfaces that simply won't fit old
+> IDE so that process of libata only drivers is likely to continue.
 
-Yes, that would be a good test.. Easiest way might be booting with 
-init=/bin/sh and running some processes that do lots of disk access..
+Actually, libata is missing anything using the Apple proprietary (I call
+it "macio") IDE controller. That includes pretty much all Macs with IDE
+not only pre-PCI. IE, it's used for the CD-ROM on the G5's for example
+(the disks use sata_svw).
+
+I'm working on it though :-)
+
+> Won't be at KS and I suspect that is true of most of the folks hacking on
+> both sets so the right place for discussion would be the net. Right now
+> the PPC bits need fixing, and the lack of libata Macio support for the
+> moment makes the debate premature.
+
+Hopefully that will be fixed by .28
+
+Cheers,
+Ben.
+
+
