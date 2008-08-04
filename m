@@ -1,50 +1,97 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCH 3/5] libata: Implement disk shock protection support
-Date: Mon, 04 Aug 2008 23:12:04 +0900
-Message-ID: <48970E34.9000706@gmail.com>
-References: <87prp1kvyy.fsf@denkblock.local>	<20080726062142.29070.10413.stgit@denkblock.local>	<4892B8FE.1070400@gmail.com> <87proooqry.fsf@denkblock.local>
+From: Elias Oltmanns <eo@nebensachen.de>
+Subject: Re: [PATCH 4/5] ide: Implement disk shock protection support
+Date: Mon, 04 Aug 2008 16:15:35 +0200
+Message-ID: <87hca0oohk.fsf@denkblock.local>
+References: <87prp1kvyy.fsf@denkblock.local>
+	<20080726062142.29070.7339.stgit@denkblock.local>
+	<20080804063901.GA23933@atrey.karlin.mff.cuni.cz>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wf-out-1314.google.com ([209.85.200.174]:46512 "EHLO
-	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755460AbYHDOMn (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 4 Aug 2008 10:12:43 -0400
-Received: by wf-out-1314.google.com with SMTP id 27so3262202wfd.4
-        for <linux-ide@vger.kernel.org>; Mon, 04 Aug 2008 07:12:42 -0700 (PDT)
-In-Reply-To: <87proooqry.fsf@denkblock.local>
+Received: from nebensachen.de ([195.34.83.29]:53767 "EHLO mail.nebensachen.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756536AbYHDOTY (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 4 Aug 2008 10:19:24 -0400
+In-Reply-To: <20080804063901.GA23933@atrey.karlin.mff.cuni.cz> (Pavel Machek's
+	message of "Mon, 4 Aug 2008 08:39:01 +0200")
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Elias Oltmanns <eo@nebensachen.de>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, Jeff Garzik <jeff@garzik.org>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, Pavel Machek <pavel@ucw.cz>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Pavel Machek <pavel@suse.cz>
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, Jeff Garzik <jeff@garzik.org>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, "Rafael J. Wysocki" <rjw@sisk.pl>
 
-Elias Oltmanns wrote:
->> For libata, the easiest way to achieve the above would be adding a
->> per-dev EH action, say, ATA_EH_UNLOAD and schedule EH w/ the action OR'd
->> to eh_info->action.  The EH_UNLOAD handler can then issue the command
->> wait for the specified number of seconds and continue.  This will be
->> pretty simple to implement as command exclusion and stuff are all
->> automatically handled by EH framework.
-> 
-> I'm rather afraid this approach is impractical or unfavourable at the
-> very least. Depending on the configured thresholds, a head unload
-> request might well be issued unintentionally, e.g. by accidentally
-> knocking against the table. It is quite alright for the HD to stop I/O
-> for a moment but if the secondary device on the interface happens to be
-> a CD writer, it will be very annoying to have CD writing operations fail
-> due to minor percussions.
+Pavel Machek <pavel@suse.cz> wrote:
+> Hi!
+>
+>>  #include <linux/ide.h>
+>>  #include <linux/completion.h>
+>>  #include <linux/device.h>
+>> +#if defined(CONFIG_PM_SLEEP) || defined(CONFIG_HIBERNATION)
+>> +# include <linux/suspend.h>
+>> +#endif
+>
+> This ifdef should be unneccessary.
 
-Why would it fail?
+Right.
 
-> Also, if there are two devices on the same
-> port that support the UNLOAD FEATURE and you issue a head unload request
-> to both of them in close succession, the IDLE IMMEDIATE to the second
-> device will be blocked until the timeout for the first has expired.
+>
+>
+>> +#if defined(CONFIG_PM_SLEEP) || defined(CONFIG_HIBERNATION)
+>> +static int ide_park_count = 1;
+>> +DECLARE_WAIT_QUEUE_HEAD(ide_park_wq);
+>> +
+>> +static inline int suspend_parking(void)
+>> +{
+>> +	spin_lock_irq(&ide_lock);
+>> +	if (ide_park_count == 1)
+>> +		ide_park_count = 0;
+>> +	spin_unlock_irq(&ide_lock);
+>> +	return !ide_park_count;
+>> +}
+>> +
+>> +static int ide_pm_notifier(struct notifier_block *nb, unsigned long val,
+>> +			   void *null)
+>> +{
+>> +	switch (val) {
+>> +	case PM_SUSPEND_PREPARE:
+>> +		wait_event(ide_park_wq, suspend_parking());
+>> +		break;
+>> +	case PM_POST_SUSPEND:
+>> +		ide_park_count = 1;
+>> +		break;
+>> +	default:
+>> +		return NOTIFY_DONE;
+>> +	}
+>> +	return NOTIFY_OK;
+>> +}
+>> +
+>> +static struct notifier_block ide_pm_notifier_block = {
+>> +	.notifier_call = ide_pm_notifier,
+>> +};
+>> +
+>> +static inline int ide_register_pm_notifier(void)
+>> +{
+>> +	return register_pm_notifier(&ide_pm_notifier_block);
+>> +}
+>> +
+>> +static inline int ide_unregister_pm_notifier(void)
+>> +{
+>> +	return unregister_pm_notifier(&ide_pm_notifier_block);
+>> +}
+>
+> Any reason this does not use normal driver model suspend/resume
+> callbacks?
 
-Unload can be implemented as port-wide operation so that it issues IDLE
-IMMEDIATE to all drives on the port but given that this is mostly for
-laptop, this discussion is a bit peripheral.
+Yes, two in fact. Firstly, it would appear that after freeze_processes()
+has completed, timers don't fire anymore. That's why we have to call the
+unpark hook manually. The ATA suspend callback would be the place to do
+that but the scsi ULD's suspend callback issues a cache sync and a disk
+start_stop command before and waits indefinitely for completion.
 
--- 
-tejun
+Secondly and more importantly, using pm_notifiers is the right thing to
+do as long as user processes control when to park and unpark the disks.
+This way we can hold back from suspending until user space gives the all
+clear.
+
+Regards,
+
+Elias
