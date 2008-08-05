@@ -1,39 +1,46 @@
-From: Ben Dooks <ben-linux@fluff.org>
-Subject: PATA: RPC now selects HAVE_PATA_PLATFORM for pata platform driver
-Date: Tue, 05 Aug 2008 10:36:15 +0100
-Message-ID: <20080805093615.362685204@fluff.org.uk>
+From: Theodore Tso <tytso@mit.edu>
+Subject: Re: [PATCH 3/5] libata: Implement disk shock protection support
+Date: Tue, 5 Aug 2008 09:14:17 -0400
+Message-ID: <20080805131417.GC8569@mit.edu>
+References: <fa.nx0yFPJm+aNXPHgykUrOzZXvvIs@ifi.uio.no> <fa.NfEr7Ik6e8oextyWICW/jR5emeE@ifi.uio.no> <fa.zGvATZImeUo0tHJe4hzlk5+mTiM@ifi.uio.no> <fa.SRVleMItV5QEF7/tgCjSHz0ScJA@ifi.uio.no> <fa.YKbhgq8XUxH/Qg1ArE+73YsDlpE@ifi.uio.no> <4897D16F.3000504@shaw.ca>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from aeryn.fluff.org.uk ([87.194.8.8]:51234 "EHLO
-	kira.home.fluff.org" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1753338AbYHEJgV (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 5 Aug 2008 05:36:21 -0400
-Content-Disposition: inline; filename=simtec/libata-rpc-use-have-kconfig2.patch
+Received: from www.church-of-our-saviour.org ([69.25.196.31]:58885 "EHLO
+	thunker.thunk.org" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1757215AbYHENn2 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 5 Aug 2008 09:43:28 -0400
+Content-Disposition: inline
+In-Reply-To: <4897D16F.3000504@shaw.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
-Cc: Russell King <rmk@arm.linux.org.uk>, Ben Dooks <ben-linux@fluff.org>
+To: Robert Hancock <hancockr@shaw.ca>
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, Gabor Gombas <gombasg@sztaki.hu>, Tejun Heo <htejun@gmail.com>, Elias Oltmanns <eo@nebensachen.de>, Jeff Garzik <jeff@garzik.org>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, Pavel Machek <pavel@ucw.cz>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-The RPC machine type now selects HAVE_PATA_PLATFORM so we can remove
-the special case in the PATA_PLATFORM configuration code.
+On Mon, Aug 04, 2008 at 10:05:03PM -0600, Robert Hancock wrote:
+> Yes, from what I've seen on these laptops, it doesn't take much to  
+> trigger the shock protection in Windows - lifting the front of the  
+> laptop off the table an inch and dropping it will do it, 
 
-Acked-by: Russell King <rmk@arm.linux.org.uk>
-Signed-off-by: Ben Dooks <ben-linux@fluff.org>
+A few years ago, I had a Thinkpad T21 laptop, accidentally slip
+through my butterfingers and dropped about an inch before it landed on
+the table.  Unfortunately, (a) the Thinkpad T21 laptop was rather
+heavy (compared to modern laptops), (b) it didn't have the rubber
+"bubble" on the bottom of the laptop to cushion the landing as the T22
+and T23's had (and I'm sure I know why it was added), and (c) the hard
+drive was active at the time.  It was enough to cause a head crash and
+Linux immediately started reporting an exponentially increasing number
+of write errors; the hard drive was totally unusable within an hour or
+so.
 
-Index: linux-2.6.26-rc5-quilt1/drivers/ata/Kconfig
-===================================================================
---- linux-2.6.26-rc5-quilt1.orig/drivers/ata/Kconfig	2008-06-10 12:38:03.000000000 +0100
-+++ linux-2.6.26-rc5-quilt1/drivers/ata/Kconfig	2008-06-10 12:38:03.000000000 +0100
-@@ -661,7 +661,7 @@ config HAVE_PATA_PLATFORM
- 
- config PATA_PLATFORM
- 	tristate "Generic platform device PATA support"
--	depends on EMBEDDED || ARCH_RPC || PPC || HAVE_PATA_PLATFORM
-+	depends on EMBEDDED || PPC || HAVE_PATA_PLATFORM
- 	help
- 	  This option enables support for generic directly connected ATA
- 	  devices commonly found on embedded systems.
+So there's a reason why the anti-shock protection is set at a rather
+sensitive level...    
 
--- 
-Ben (ben@fluff.org, http://www.fluff.org/)
+The real right answer though is to buy one of the laptop drives (such
+as the Seagate Momentus 7200.2 or 7200.3) which has the anti-shock
+detection built directly into the hard drive.  That way you don't have
+to have a daemon that sits in the OS waking up the CPU some 20 to 30
+times a second and burning up your battery even when the laptop is
+idle.
 
-  'a smiley only costs 4 bytes'
+							- Ted
