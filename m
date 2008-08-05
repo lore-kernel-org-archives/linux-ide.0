@@ -1,194 +1,59 @@
-From: "Greg Freemyer" <greg.freemyer@gmail.com>
-Subject: Re: [PATCH] ata: Define new commands from ATA8
-Date: Tue, 5 Aug 2008 16:10:36 -0400
-Message-ID: <87f94c370808051310g4186034dnbd711ed3b4db752e@mail.gmail.com>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [PATCH] ata: Add support for Long Logical Sectors and Long
+ Physical Sectors
+Date: Tue, 5 Aug 2008 21:46:51 +0100
+Message-ID: <20080805214651.621263f5@lxorguk.ukuu.org.uk>
 References: <1217957207-23116-1-git-send-email-matthew@wil.cx>
-	 <1217957207-23116-2-git-send-email-matthew@wil.cx>
+	<1217957207-23116-3-git-send-email-matthew@wil.cx>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from an-out-0708.google.com ([209.85.132.241]:50089 "EHLO
-	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1764570AbYHEURs (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 5 Aug 2008 16:17:48 -0400
-Received: by an-out-0708.google.com with SMTP id d40so445761and.103
-        for <linux-ide@vger.kernel.org>; Tue, 05 Aug 2008 13:17:47 -0700 (PDT)
-In-Reply-To: <1217957207-23116-2-git-send-email-matthew@wil.cx>
-Content-Disposition: inline
+Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:58612 "EHLO
+	lxorguk.ukuu.org.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1758946AbYHEVEo (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 5 Aug 2008 17:04:44 -0400
+In-Reply-To: <1217957207-23116-3-git-send-email-matthew@wil.cx>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Matthew Wilcox <matthew@wil.cx>
 Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, jgarzik@pobox.com, Matt_Domsch@dell.com, Matthew Wilcox <willy@linux.intel.com>
 
-Updated comment below.
+> + * Some commands are specified to transfer (a multiple of) 512 bytes of data
+> + * while others transfer a multiple of the number of bytes in a sector.  This
+> + * function knows which commands transfer how much data.
 
-On Tue, Aug 5, 2008 at 1:26 PM, Matthew Wilcox <matthew@wil.cx> wrote:
-> From: Matthew Wilcox <willy@linux.intel.com>
->
-> Later patches require knowledge of some commands which aren't currently
-> defined.  While I'm at it, add all the commands that are in ATA8 and
-> reorder the existing commands to be in the same order as ATA8.
->
-> Signed-off-by: Matthew Wilcox <willy@linux.intel.com>
-> ---
->  include/linux/ata.h |   97 ++++++++++++++++++++++++++++++++++----------------
->  1 files changed, 66 insertions(+), 31 deletions(-)
->
-> diff --git a/include/linux/ata.h b/include/linux/ata.h
-> index 1c622e2..3815431 100644
-> --- a/include/linux/ata.h
-> +++ b/include/linux/ata.h
-> @@ -149,58 +149,93 @@ enum {
->        ATA_REG_IRQ             = ATA_REG_NSECT,
->
->        /* ATA device commands */
-> -       ATA_CMD_DEV_RESET       = 0x08, /* ATAPI device reset */
-> +       ATA_CMD_CFA_ERASE_SECTORS = 0xC0,
-> +       ATA_CMD_CFA_REQUEST_EXT_ERROR = 0x03,
-> +       ATA_CMD_CFA_TRANSLATE_SECTOR = 0x87,
-> +       ATA_CMD_CFA_WRITE_MULTI_WITHOUT_ERASE = 0xCD,
-> +       ATA_CMD_CFA_WRITE_SECTORS_WITHOUT_ERASE = 0x38,
-> +       ATA_CMD_CHK_MEDIA_CARD_TYPE = 0xD1,
->        ATA_CMD_CHK_POWER       = 0xE5, /* check power mode */
-> -       ATA_CMD_STANDBY         = 0xE2, /* place in standby power mode */
-> -       ATA_CMD_IDLE            = 0xE3, /* place in idle power mode */
-> +       ATA_CMD_CONFIG_STREAM   = 0x51,
-> +       ATA_CMD_CONF_OVERLAY    = 0xB1,
-> +       ATA_CMD_DEV_RESET       = 0x08, /* ATAPI device reset */
-> +       ATA_CMD_DLOAD_MCODE     = 0x92,
->        ATA_CMD_EDD             = 0x90, /* execute device diagnostic */
->        ATA_CMD_FLUSH           = 0xE7,
->        ATA_CMD_FLUSH_EXT       = 0xEA,
->        ATA_CMD_ID_ATA          = 0xEC,
->        ATA_CMD_ID_ATAPI        = 0xA1,
-> -       ATA_CMD_READ            = 0xC8,
-> -       ATA_CMD_READ_EXT        = 0x25,
-> -       ATA_CMD_WRITE           = 0xCA,
-> -       ATA_CMD_WRITE_EXT       = 0x35,
-> -       ATA_CMD_WRITE_FUA_EXT   = 0x3D,
-> +       ATA_CMD_IDLE            = 0xE3, /* place in idle power mode */
-> +       ATA_CMD_IDLEIMMEDIATE   = 0xE1,
-> +       ATA_CMD_NVCACHE         = 0xB6,
-> +       ATA_CMD_NOP             = 0x00,
-> +       ATA_CMD_PACKET          = 0xA0,
-> +       ATA_CMD_PMP_READ        = 0xE4, /* aka READ BUFFER */
-> +       ATA_CMD_READ            = 0xC8, /* aka READ DMA */
-> +       ATA_CMD_READ_EXT        = 0x25, /* aka READ DMA EXT */
-> +       ATA_CMD_READ_QUEUED     = 0xC7,
-> +       ATA_CMD_READ_QUEUED_EXT = 0x26,
->        ATA_CMD_FPDMA_READ      = 0x60,
-> -       ATA_CMD_FPDMA_WRITE     = 0x61,
-> -       ATA_CMD_PIO_READ        = 0x20,
-> -       ATA_CMD_PIO_READ_EXT    = 0x24,
-> -       ATA_CMD_PIO_WRITE       = 0x30,
-> -       ATA_CMD_PIO_WRITE_EXT   = 0x34,
-> +       ATA_CMD_READ_LOG_EXT    = 0x2F,
-> +       ATA_CMD_READ_LOG_DMA_EXT= 0x47,
->        ATA_CMD_READ_MULTI      = 0xC4,
->        ATA_CMD_READ_MULTI_EXT  = 0x29,
-> -       ATA_CMD_WRITE_MULTI     = 0xC5,
-> -       ATA_CMD_WRITE_MULTI_EXT = 0x39,
-> -       ATA_CMD_WRITE_MULTI_FUA_EXT = 0xCE,
-> -       ATA_CMD_SET_FEATURES    = 0xEF,
-> -       ATA_CMD_SET_MULTI       = 0xC6,
-> -       ATA_CMD_PACKET          = 0xA0,
-> -       ATA_CMD_VERIFY          = 0x40,
-> -       ATA_CMD_VERIFY_EXT      = 0x42,
-> -       ATA_CMD_STANDBYNOW1     = 0xE0,
-> -       ATA_CMD_IDLEIMMEDIATE   = 0xE1,
-> -       ATA_CMD_SLEEP           = 0xE6,
-> -       ATA_CMD_INIT_DEV_PARAMS = 0x91,
->        ATA_CMD_READ_NATIVE_MAX = 0xF8,
->        ATA_CMD_READ_NATIVE_MAX_EXT = 0x27,
-> +       ATA_CMD_PIO_READ        = 0x20, /* aka READ SECTOR(S) */
-> +       ATA_CMD_PIO_READ_EXT    = 0x24, /* aka READ SECTOR(S) EXT */
-> +       ATA_CMD_READ_STREAM_DMA_EXT = 0x2A,
-> +       ATA_CMD_READ_STREAM_EXT = 0x2B,
-> +       ATA_CMD_VERIFY          = 0x40, /* aka READ VERIFY SECTOR(S) */
-> +       ATA_CMD_VERIFY_EXT      = 0x42, /* aka READ VERIFY SECTOR(S) EXT */
-> +       ATA_CMD_SEC_DISABLE_PASSWORD = 0xF6,
-> +       ATA_CMD_SEC_ERASE_PREPARE = 0xF3,
-> +       ATA_CMD_SEC_ERASE_UNIT  = 0xF4,
-> +       ATA_CMD_SEC_FREEZE_LOCK = 0xF5,
-> +       ATA_CMD_SEC_SET_PASSWORD = 0xF1,
-> +       ATA_CMD_SEC_UNLOCK      = 0xF2,
-> +       ATA_CMD_SERVICE         = 0xA2,
-> +       ATA_CMD_SET_FEATURES    = 0xEF,
->        ATA_CMD_SET_MAX         = 0xF9,
->        ATA_CMD_SET_MAX_EXT     = 0x37,
-> -       ATA_CMD_READ_LOG_EXT    = 0x2f,
-> -       ATA_CMD_PMP_READ        = 0xE4,
-> -       ATA_CMD_PMP_WRITE       = 0xE8,
-> -       ATA_CMD_CONF_OVERLAY    = 0xB1,
-> -       ATA_CMD_SEC_FREEZE_LOCK = 0xF5,
-> +       ATA_CMD_SET_MULTI       = 0xC6,
-> +       ATA_CMD_SLEEP           = 0xE6,
-> +       ATA_CMD_SMART           = 0xB0,
-> +       ATA_CMD_STANDBY         = 0xE2, /* place in standby power mode */
-> +       ATA_CMD_STANDBYNOW1     = 0xE0,
-> +       ATA_CMD_TRUSTED_NON_DATA = 0x5B,
-> +       ATA_CMD_TRUSTED_RECEIVE = 0x5C,
-> +       ATA_CMD_TRUSTED_RECEIVE_DMA = 0x5D,
-> +       ATA_CMD_TRUSTED_SEND    = 0x5E,
-> +       ATA_CMD_TRUSTED_SEND_DMA = 0x5F,
-> +       ATA_CMD_PMP_WRITE       = 0xE8, /* aka WRITE BUFFER */
-> +       ATA_CMD_WRITE           = 0xCA, /* aka WRITE DMA */
-> +       ATA_CMD_WRITE_EXT       = 0x35, /* aka WRITE DMA EXT */
-> +       ATA_CMD_WRITE_FUA_EXT   = 0x3D, /* aka WRITE DMA FUA EXT */
-> +       ATA_CMD_WRITE_DMA_QUEUED = 0xCC,
-> +       ATA_CMD_WRITE_DMA_QUEUED_EXT = 0x36,
-> +       ATA_CMD_WRITE_DMA_QUEUED_FUA_EXT = 0x3E,
-> +       ATA_CMD_FPDMA_WRITE     = 0x61, /* aka WRITE FPDMA QUEUED */
-> +       ATA_CMD_WRITE_LOG_EXT   = 0x3F,
-> +       ATA_CMD_WRITE_LOG_DMA_EXT = 0x57,
-> +       ATA_CMD_WRITE_MULTI     = 0xC5,
-> +       ATA_CMD_WRITE_MULTI_EXT = 0x39,
-> +       ATA_CMD_WRITE_MULTI_FUA_EXT = 0xCE,
-> +       ATA_CMD_PIO_WRITE       = 0x30, /* aka WRITE SECTOR(S) */
-> +       ATA_CMD_PIO_WRITE_EXT   = 0x34, /* aka WRITE SECTOR(S) EXT */
-> +       ATA_CMD_WRITE_STREAM_DMA_EXT = 0x3A,
-> +       ATA_CMD_WRITE_STREAM_EXT = 0x3B,
-> +       ATA_CMD_WRITE_UNCORRECTABLE_EXT = 0x45,
->
->        /* READ_LOG_EXT pages */
->        ATA_LOG_SATA_NCQ        = 0x10,
->
-> -       /* READ/WRITE LONG (obsolete) */
-> +       /* Obsolete */
+	static u32 ata_sector_or_block[]={...};
 
-Since these diagnostic commands could be confused with the new "long
-sector" commands, should the comment say:
+	if (test_bit(tf->cmd, &ata_sector_or_block))
 
-/* Obsolete LBA28 diagnostic commands, in LBA48 replaced by
-ATA_WRITE_UNC_EXT, etc. */
+looks so much more elegant than a giant switch statement and I suspect
+produces far better code
 
->        ATA_CMD_READ_LONG       = 0x22,
->        ATA_CMD_READ_LONG_ONCE  = 0x23,
->        ATA_CMD_WRITE_LONG      = 0x32,
->        ATA_CMD_WRITE_LONG_ONCE = 0x33,
-> +       ATA_CMD_INIT_DEV_PARAMS = 0x91,
->
->        /* SETFEATURES stuff */
->        SETFEATURES_XFER        = 0x03,
-> --
-> 1.5.6.3
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-ide" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+> + * ATA supports sector sizes up to 2^33 - 1.  The reported sector size may
+> + * not be a power of two.  The extra bytes are used for user-visible data
+> + * integrity calculations.  Note this is not the same as the ECC which is
+> + * accessed through the SCT Command Transport or READ / WRITE LONG.
+> + */
+> +static u64 ata_id_sect_size(const u16 *id)
 
+word 106 is not defined in early ATA standards so it would be wise to
+check that ATA8 is reported by the drive - and trust the relevant bits
+for ATA7/8 as appropriate.
 
+The drivers also need to know when a command is being issued which is a
+funny shape as some hardware cannot do it because the internal state
+machine knows the sector size and other stuff seems to need the internal
+FIFO turning off or other things whacked repeatedly on the head to make
+it work.
 
--- 
-Greg Freemyer
-Litigation Triage Solutions Specialist
-http://www.linkedin.com/in/gregfreemyer
-First 99 Days Litigation White Paper -
-http://www.norcrossgroup.com/forms/whitepapers/99%20Days%20whitepaper.pdf
+You also don't need to bother listing all the commands that don't have
+data transfer phases as a sector size is meaningless there so we
+shouldn't even bother doing a lookup for them. Indeed the more I look at
+this the more it seems that keeping long complex ever out of date arrays
+is the wrong way to do it.
 
-The Norcross Group
-The Intersection of Evidence & Technology
-http://www.norcrossgroup.com
+We will also need a driver flag to indicate support in that HBA but that
+is pretty trivial to add
+
+Alan
