@@ -1,46 +1,79 @@
-From: Theodore Tso <tytso@mit.edu>
-Subject: Re: [PATCH 3/5] libata: Implement disk shock protection support
-Date: Tue, 5 Aug 2008 09:14:17 -0400
-Message-ID: <20080805131417.GC8569@mit.edu>
-References: <fa.nx0yFPJm+aNXPHgykUrOzZXvvIs@ifi.uio.no> <fa.NfEr7Ik6e8oextyWICW/jR5emeE@ifi.uio.no> <fa.zGvATZImeUo0tHJe4hzlk5+mTiM@ifi.uio.no> <fa.SRVleMItV5QEF7/tgCjSHz0ScJA@ifi.uio.no> <fa.YKbhgq8XUxH/Qg1ArE+73YsDlpE@ifi.uio.no> <4897D16F.3000504@shaw.ca>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: Re: [PATCH 1/2] pata_legacy: export functionality to ide
+Date: Tue, 05 Aug 2008 18:26:20 +0400
+Message-ID: <4898630C.7090403@ru.mvista.com>
+References: <20080715053356.GA18628@gollum.tnic> <200808021902.12191.bzolnier@gmail.com> <20080802183253.GA2239@gollum.tnic> <200808022046.16990.bzolnier@gmail.com> <20080803073756.GA8762@gollum.tnic> <20080803125907.67676948@lxorguk.ukuu.org.uk> <20080803143837.GA26672@gollum.tnic> <20080803162214.394b13a1@lxorguk.ukuu.org.uk> <20080803165135.GA31977@gollum.tnic>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from www.church-of-our-saviour.org ([69.25.196.31]:58885 "EHLO
-	thunker.thunk.org" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1757215AbYHENn2 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 5 Aug 2008 09:43:28 -0400
-Content-Disposition: inline
-In-Reply-To: <4897D16F.3000504@shaw.ca>
+Received: from h155.mvista.com ([63.81.120.155]:19471 "EHLO imap.sh.mvista.com"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1754811AbYHEO0Y (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 5 Aug 2008 10:26:24 -0400
+In-Reply-To: <20080803165135.GA31977@gollum.tnic>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Robert Hancock <hancockr@shaw.ca>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, Gabor Gombas <gombasg@sztaki.hu>, Tejun Heo <htejun@gmail.com>, Elias Oltmanns <eo@nebensachen.de>, Jeff Garzik <jeff@garzik.org>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, Pavel Machek <pavel@ucw.cz>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: petkovbb@gmail.com
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, bzolnier@gmail.com, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-On Mon, Aug 04, 2008 at 10:05:03PM -0600, Robert Hancock wrote:
-> Yes, from what I've seen on these laptops, it doesn't take much to  
-> trigger the shock protection in Windows - lifting the front of the  
-> laptop off the table an inch and dropping it will do it, 
+Hello.
 
-A few years ago, I had a Thinkpad T21 laptop, accidentally slip
-through my butterfingers and dropped about an inch before it landed on
-the table.  Unfortunately, (a) the Thinkpad T21 laptop was rather
-heavy (compared to modern laptops), (b) it didn't have the rubber
-"bubble" on the bottom of the laptop to cushion the landing as the T22
-and T23's had (and I'm sure I know why it was added), and (c) the hard
-drive was active at the time.  It was enough to cause a head crash and
-Linux immediately started reporting an exponentially increasing number
-of write errors; the hard drive was totally unusable within an hour or
-so.
+Borislav Petkov wrote:
 
-So there's a reason why the anti-shock protection is set at a rather
-sensitive level...    
+> Avoid probing the io-ports in case an IDE PCI controller is present and it uses
+> the legacy iobases. If we still want to enforce the probing, we do
 
-The real right answer though is to buy one of the laptop drives (such
-as the Seagate Momentus 7200.2 or 7200.3) which has the anti-shock
-detection built directly into the hard drive.  That way you don't have
-to have a daemon that sits in the OS waking up the CPU some 20 to 30
-times a second and burning up your battery even when the laptop is
-idle.
+> ide_generic.probe_mask=0x3f
 
-							- Ted
+> on the kernel command line. The iobase checking code is adapted from
+> drivers/ata/pata_legacy.c
+
+> Signed-off-by: Borislav Petkov <petkovbb@gmail.com>
+
+> diff --git a/drivers/ide/ide-generic.c b/drivers/ide/ide-generic.c
+> index 8fe8b5b..e9b7b69 100644
+> --- a/drivers/ide/ide-generic.c
+> +++ b/drivers/ide/ide-generic.c
+[...]
+> @@ -100,19 +100,71 @@ static const u16 legacy_bases[] = { 0x1f0, 0x170, 0x1e8, 0x168, 0x1e0, 0x160 };
+>  static const int legacy_irqs[]  = { 14, 15, 11, 10, 8, 12 };
+>  #endif
+>  
+> +
+
+    Extra newline...
+
+> +static void ide_generic_check_pci_legacy_iobases(int *primary, int *secondary)
+> +{
+> +	struct pci_dev *p = NULL;
+> +	u16 val;
+> +
+> +	for_each_pci_dev(p) {
+> +		int r;
+> +
+> +		for (r = 0; r < 6; r++) {
+> +			if (pci_resource_start(p, r) == 0x1f0)
+> +				*primary = 1;
+> +			if (pci_resource_start(p, r) == 0x170)
+> +				*secondary = 1;
+> +		}
+> +
+> +		/* Cyrix CS5510 pre SFF MWDMA ATA on the bridge */
+> +		if (p->vendor == 0x1078 && p->device == 0x0000)
+> +			*primary = *secondary = 1;
+> +
+> +		/* Cyrix CS5520 pre SFF MWDMA ATA on the bridge */
+> +		if (p->vendor == 0x1078 && p->device == 0x0002)
+> +			*primary = *secondary = 1;
+
+    I think the above two if statements should be collapsed into a single one.
+
+> +
+> +		/* Intel MPIIX - PIO ATA on non PCI side of bridge */
+> +		if (p->vendor == 0x8086 && p->device == 0x1234) {
+
+    Also, perhaps it makes sense to #include <linux/pci_ids.h> and use the 
+macros defined there...
+
+MBR, Sergei
