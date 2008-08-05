@@ -1,146 +1,88 @@
-From: Borislav Petkov <petkovbb@googlemail.com>
-Subject: [PATCH] ide-floppy: use scatterlists for pio transfers
-Date: Tue, 5 Aug 2008 07:11:13 +0200
-Message-ID: <20080805051113.GA15834@gollum.tnic>
-Reply-To: petkovbb@gmail.com
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: [PATCH 3/5] libata: Implement disk shock protection support
+Date: Tue, 05 Aug 2008 16:49:47 +0900
+Message-ID: <4898061B.6010406@gmail.com>
+References: <fa.nx0yFPJm+aNXPHgykUrOzZXvvIs@ifi.uio.no> <fa.NfEr7Ik6e8oextyWICW/jR5emeE@ifi.uio.no> <fa.zGvATZImeUo0tHJe4hzlk5+mTiM@ifi.uio.no> <4897D433.5040409@shaw.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.157]:17497 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753884AbYHEFLG (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 5 Aug 2008 01:11:06 -0400
-Received: by fg-out-1718.google.com with SMTP id 19so1189202fgg.17
-        for <linux-ide@vger.kernel.org>; Mon, 04 Aug 2008 22:11:04 -0700 (PDT)
-Content-Disposition: inline
+Received: from ti-out-0910.google.com ([209.85.142.190]:64016 "EHLO
+	ti-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752225AbYHEHuY (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 5 Aug 2008 03:50:24 -0400
+Received: by ti-out-0910.google.com with SMTP id b6so669053tic.23
+        for <linux-ide@vger.kernel.org>; Tue, 05 Aug 2008 00:50:22 -0700 (PDT)
+In-Reply-To: <4897D433.5040409@shaw.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: bzolnier@gmail.com
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Robert Hancock <hancockr@shaw.ca>
+Cc: Elias Oltmanns <eo@nebensachen.de>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Jeff Garzik <jeff@garzik.org>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, Pavel Machek <pavel@ucw.cz>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Hi Bart,
+Robert Hancock wrote:
+>> However, SATA or not, there simply isn't a way to abort commands in ATA.
+>>  Issuing random command while other commands are in progress simply is
+>> state machine violation and there will be many interesting results
+>> including complete system lockup (ATA controller dying while holding the
+>> PCI bus).  The only reliable way to abort in-flight commands are by
+>> issuing hardreset.  However, ATA reset protocol is not designed for
+>> quick recovery.  The machine is gonna hit the ground hard way before the
+>> reset protocol is complete.
+> 
+> How long does hardreset have to take? I only see a 1ms delay in the
+> COMRESET process (sata_link_hardreset). I'd think it would be feasible
+> to do something like:
+> 
+> -stop the queue to prevent new commands from being issued
+> -wait a certain amount of time (20ms or so?) for existing command(s) to
+> complete, if they do then issue the idle command
+> -if time runs out, trigger a hardreset and then issue the idle command
+> 
+> The drive is going to take a little while to actually unload the heads
+> anyway, so a few milliseconds delay doesn't seem like a big deal..
 
-here's my first stab at using scatterlists in ide-floppy. I've adapted your
-ide-scsi version to fit in here. The change here is that i use pc->b_count as
-a sort-of completion counter to know when i'm at the end of the sg element and
-be able to switch to the next/finish transfer. I've tested the patch with the
-Iomega ZIP drive i have here - it works. We should do some more testing first
-though, before sending it upstream.
+Two major areas of delays are...
 
----
-From: Borislav Petkov <petkovbb@gmail.com>
-Date: Tue, 5 Aug 2008 06:57:44 +0200
-Subject: [PATCH] ide-floppy: use scatterlists for pio transfers
+- Post-hardreset PHY readiness delay.  It depends on both the controller
+and drive.  Some combination might take pretty short while there are
+combinations which are known to take in the order of few seconds.  It's
+determined by sata_deb_timing_* arrays in libata-core.c.  In most cases,
+sata_deb_timing_normal works fine.  Currently, sil24 needs the long
+variant.  Using the normal one, the shortest possible timing would be a
+bit above 100ms as libata determines PHY is online only after the link
+state hasn't oscillate for that long.
 
-Use hwif->sg_table for pio transfers instead of fumbling
-with block layer internals in the driver. Also, make debug
-statements more informative in .._do_request() while at it.
+- Device readiness (the initial TF w/ signature).  It depends on how the
+drive implementation.  If the drive is spinning, it's usually pretty
+quick but there's no guarantee.  Also, there's another problem that some
+controllers just can't wait for device readiness after hardreset and
+thus needs to perform softreset after hard one, which adds to the delay.
 
-Signed-off-by: Borislav Petkov <petkovbb@gmail.com>
----
- drivers/ide/ide-floppy.c |   58 +++++++++++++++++++++++++++------------------
- 1 files changed, 35 insertions(+), 23 deletions(-)
+Missing either of the above two can jam the reset sequence forcing a
+retry.  It might work with some combinations of devices but given that
+we wouldn't get too much test coverage I don't really think the overhead
+and risk are justifiable.
 
-diff --git a/drivers/ide/ide-floppy.c b/drivers/ide/ide-floppy.c
-index de8d42b..5820d3a 100644
---- a/drivers/ide/ide-floppy.c
-+++ b/drivers/ide/ide-floppy.c
-@@ -224,29 +224,37 @@ static void ide_floppy_io_buffers(ide_drive_t *drive, struct ide_atapi_pc *pc,
- 				  unsigned int bcount, int direction)
- {
- 	ide_hwif_t *hwif = drive->hwif;
--	struct request *rq = pc->rq;
--	struct req_iterator iter;
--	struct bio_vec *bvec;
--	unsigned long flags;
-+	const struct ide_tp_ops *tp_ops = hwif->tp_ops;
-+	xfer_func_t *xf = direction ? tp_ops->output_data : tp_ops->input_data;
-+	struct scatterlist *sg = hwif->sg_table;
-+	char *buf;
- 	int count, done = 0;
--	char *data;
- 
--	rq_for_each_segment(bvec, rq, iter) {
--		if (!bcount)
--			break;
-+	while (bcount) {
- 
--		count = min(bvec->bv_len, bcount);
--
--		data = bvec_kmap_irq(bvec, &flags);
--		if (direction)
--			hwif->tp_ops->output_data(drive, NULL, data, count);
--		else
--			hwif->tp_ops->input_data(drive, NULL, data, count);
--		bvec_kunmap_irq(data, &flags);
-+		count = min(sg->length - pc->b_count, bcount);
-+		if (PageHighMem(sg_page(sg))) {
-+			unsigned long flags;
- 
-+			local_irq_save(flags);
-+			buf = kmap_atomic(sg_page(sg), KM_IRQ0) + sg->offset;
-+			xf(drive, NULL, buf + pc->b_count, count);
-+			kunmap_atomic(buf - sg->offset, KM_IRQ0);
-+			local_irq_restore(flags);
-+		} else {
-+			buf = sg_virt(sg);
-+			xf(drive, NULL, buf + pc->b_count, count);
-+		}
- 		bcount -= count;
- 		pc->b_count += count;
- 		done += count;
-+
-+		if (pc->b_count == sg->length) {
-+			if (!--hwif->sg_nents)
-+				break;
-+			sg = sg_next(sg);
-+			pc->b_count = 0;
-+		}
- 	}
- 
- 	idefloppy_end_request(drive, 1, done >> 9);
-@@ -569,7 +577,7 @@ static void idefloppy_create_rw_cmd(idefloppy_floppy_t *floppy,
- 	memcpy(rq->cmd, pc->c, 12);
- 
- 	pc->rq = rq;
--	pc->b_count = cmd == READ ? 0 : rq->bio->bi_size;
-+	pc->b_count = 0;
- 	if (rq->cmd_flags & REQ_RW)
- 		pc->flags |= PC_FLAG_WRITING;
- 	pc->buf = NULL;
-@@ -603,12 +611,13 @@ static ide_startstop_t idefloppy_do_request(ide_drive_t *drive,
- 	struct ide_atapi_pc *pc;
- 	unsigned long block = (unsigned long)block_s;
- 
--	debug_log("dev: %s, cmd_type: %x, errors: %d\n",
--			rq->rq_disk ? rq->rq_disk->disk_name : "?",
--			rq->cmd_type, rq->errors);
--	debug_log("sector: %ld, nr_sectors: %ld, "
--			"current_nr_sectors: %d\n", (long)rq->sector,
--			rq->nr_sectors, rq->current_nr_sectors);
-+	debug_log("%s: dev: %s, cmd: 0x%x, cmd_type: %x, errors: %d\n",
-+		  __func__, rq->rq_disk ? rq->rq_disk->disk_name : "?",
-+		  rq->cmd[0], rq->cmd_type, rq->errors);
-+
-+	debug_log("%s: sector: %ld, nr_sectors: %ld, current_nr_sectors: %d\n",
-+		  __func__, (long)rq->sector, rq->nr_sectors,
-+		  rq->current_nr_sectors);
- 
- 	if (rq->errors >= ERROR_MAX) {
- 		if (floppy->failed_pc)
-@@ -643,6 +652,9 @@ static ide_startstop_t idefloppy_do_request(ide_drive_t *drive,
- 
- 	pc->rq = rq;
- 
-+	ide_init_sg_cmd(drive, rq);
-+	ide_map_sg(drive, rq);
-+
- 	return idefloppy_issue_pc(drive, pc);
- }
- 
--- 
-1.5.5.4
+>> The only way to solve this nicely is either to build the accelerometer
+>> into the drive and let the drive itself protect itself or implement a
+>> sideband signal to tell it to duck for cover.  For SATA, this sideband
+>> signal can be another OOB sequence.  If it's ever implemented this way,
+>> it will be in SControl, I guess.
+>>
+>> Well, short of that, all we can do is to wait for the currently
+>> in-flight commands to drain and hope that it happens before the machine
+>> hits the ground.  Also, that the harddrive is not going through one of
+>> the longish EH recovery sequences when it starts to fall.  :-(
+> 
+> Well, Lenovo (and others?) have implemented this in Windows somehow.. It
+> would be interesting to know what solution they used there (either
+> hardreset, issue the command even when busy, or just wait for the
+> commands to hopefully finish in time).
+
+I think just waiting till the currently pending commands are complete
+and then issuing IDLE_IMMEDIATE would cover most of the cases.  Longer
+term, I really think there needs to be an out-of-band signal if this is
+gonna get done right.
 
 -- 
-Regards/Gruss,
-    Boris.
+tejun
