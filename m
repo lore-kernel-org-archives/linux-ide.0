@@ -1,656 +1,85 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH 4/4] ide: move ioctls handling to ide-ioctls.c
-Date: Tue, 05 Aug 2008 18:40:41 +0200
-Message-ID: <20080805164041.17094.59318.sendpatchset@localhost.localdomain>
-References: <20080805164022.17094.27615.sendpatchset@localhost.localdomain>
+From: Matthew Wilcox <matthew@wil.cx>
+Subject: Re: tools support for non-512 byte sector sizes
+Date: Tue, 5 Aug 2008 10:54:27 -0600
+Message-ID: <20080805165426.GA2055@parisc-linux.org>
+References: <488F524F.6020905@redhat.com> <20080729182611.GB24924@parisc-linux.org> <1217356645.6103.48.camel@localhost.localdomain> <yq13alsr0g0.fsf@sermon.lab.mkp.net> <20080730135147.GA4513@auslistsprd01.us.dell.com> <20080801161149.GA26461@parisc-linux.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.155]:50079 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1762648AbYHEQm7 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 5 Aug 2008 12:42:59 -0400
-Received: by fg-out-1718.google.com with SMTP id 19so1328086fgg.17
-        for <linux-ide@vger.kernel.org>; Tue, 05 Aug 2008 09:42:58 -0700 (PDT)
-In-Reply-To: <20080805164022.17094.27615.sendpatchset@localhost.localdomain>
+Received: from palinux.external.hp.com ([192.25.206.14]:37063 "EHLO
+	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758259AbYHEQy2 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 5 Aug 2008 12:54:28 -0400
+Content-Disposition: inline
+In-Reply-To: <20080801161149.GA26461@parisc-linux.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
-Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-kernel@vger.kernel.org
+To: Matt Domsch <Matt_Domsch@dell.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, Ric Wheeler <rwheeler@redhat.com>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, Jim Meyering <jim@meyering.net>, linux-kernel@vger.kernel.org, Jeff Garzik <jeff@garzik.org>
 
-* Move ioctls handling to ide-ioctls.c
-  (except HDIO_DRIVE_TASKFILE for now).
+On Fri, Aug 01, 2008 at 10:11:49AM -0600, Matthew Wilcox wrote:
+> Are they SCSI?  I just got round to trying 4k sector sizes in ata_ram
+> (after adding file backed capability) and found that libata currently
+> silently ignores the identify bits that report sector size.  I'll work
+> on fixing that this afternoon if nobody beats me to it.
 
-* Make ide_{cmd,task}() static.
+OK, I have patches.  I'll send them to linux-ide.  If anyone wants to
+try them, I pushed out two trees; one for libata:
 
-Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
----
- drivers/ide/Makefile       |    4 
- drivers/ide/ide-ioctls.c   |  289 +++++++++++++++++++++++++++++++++++++++++++++
- drivers/ide/ide-taskfile.c |  109 ----------------
- drivers/ide/ide.c          |  174 ---------------------------
- include/linux/ide.h        |    2 
- 5 files changed, 291 insertions(+), 287 deletions(-)
+http://git.kernel.org/?p=linux/kernel/git/willy/misc.git;a=shortlog;h=ata-large-sectors
 
-Index: b/drivers/ide/Makefile
-===================================================================
---- a/drivers/ide/Makefile
-+++ b/drivers/ide/Makefile
-@@ -4,8 +4,8 @@
- 
- EXTRA_CFLAGS				+= -Idrivers/ide
- 
--ide-core-y += ide.o ide-io.o ide-iops.o ide-lib.o ide-probe.o ide-taskfile.o \
--	      ide-pio-blacklist.o
-+ide-core-y += ide.o ide-ioctls.o ide-io.o ide-iops.o ide-lib.o ide-probe.o \
-+	      ide-taskfile.o ide-pio-blacklist.o
- 
- # core IDE code
- ide-core-$(CONFIG_IDE_TIMINGS)		+= ide-timings.o
-Index: b/drivers/ide/ide-ioctls.c
-===================================================================
---- /dev/null
-+++ b/drivers/ide/ide-ioctls.c
-@@ -0,0 +1,289 @@
-+/*
-+ * IDE ioctls handling.
-+ */
-+
-+#include <linux/hdreg.h>
-+#include <linux/ide.h>
-+
-+static const struct ide_ioctl_devset ide_ioctl_settings[] = {
-+{ HDIO_GET_32BIT,	 HDIO_SET_32BIT,	get_io_32bit,  set_io_32bit  },
-+{ HDIO_GET_KEEPSETTINGS, HDIO_SET_KEEPSETTINGS,	get_ksettings, set_ksettings },
-+{ HDIO_GET_UNMASKINTR,	 HDIO_SET_UNMASKINTR,	get_unmaskirq, set_unmaskirq },
-+{ HDIO_GET_DMA,		 HDIO_SET_DMA,		get_using_dma, set_using_dma },
-+{ -1,			 HDIO_SET_PIO_MODE,	NULL,	       set_pio_mode  },
-+{ 0 }
-+};
-+
-+int ide_setting_ioctl(ide_drive_t *drive, struct block_device *bdev,
-+		      unsigned int cmd, unsigned long arg,
-+		      const struct ide_ioctl_devset *s)
-+{
-+	unsigned long flags;
-+	int err = -EOPNOTSUPP;
-+
-+	for (; s->get_ioctl; s++) {
-+		if (s->get && s->get_ioctl == cmd)
-+			goto read_val;
-+		else if (s->set && s->set_ioctl == cmd)
-+			goto set_val;
-+	}
-+
-+	return err;
-+
-+read_val:
-+	mutex_lock(&ide_setting_mtx);
-+	spin_lock_irqsave(&ide_lock, flags);
-+	err = s->get(drive);
-+	spin_unlock_irqrestore(&ide_lock, flags);
-+	mutex_unlock(&ide_setting_mtx);
-+	return err >= 0 ? put_user(err, (long __user *)arg) : err;
-+
-+set_val:
-+	if (bdev != bdev->bd_contains)
-+		err = -EINVAL;
-+	else {
-+		if (!capable(CAP_SYS_ADMIN))
-+			err = -EACCES;
-+		else {
-+			mutex_lock(&ide_setting_mtx);
-+			err = s->set(drive, arg);
-+			mutex_unlock(&ide_setting_mtx);
-+		}
-+	}
-+	return err;
-+}
-+EXPORT_SYMBOL_GPL(ide_setting_ioctl);
-+
-+static int ide_get_identity_ioctl(ide_drive_t *drive, unsigned int cmd,
-+				  unsigned long arg)
-+{
-+	u16 *id = NULL;
-+	int size = (cmd == HDIO_GET_IDENTITY) ? (ATA_ID_WORDS * 2) : 142;
-+	int rc = 0;
-+
-+	if (drive->id_read == 0) {
-+		rc = -ENOMSG;
-+		goto out;
-+	}
-+
-+	id = kmalloc(size, GFP_KERNEL);
-+	if (id == NULL) {
-+		rc = -ENOMEM;
-+		goto out;
-+	}
-+
-+	memcpy(id, drive->id, size);
-+	ata_id_to_hd_driveid(id);
-+
-+	if (copy_to_user((void __user *)arg, id, size))
-+		rc = -EFAULT;
-+
-+	kfree(id);
-+out:
-+	return rc;
-+}
-+
-+static int ide_get_nice_ioctl(ide_drive_t *drive, unsigned long arg)
-+{
-+	return put_user((drive->dsc_overlap << IDE_NICE_DSC_OVERLAP) |
-+			(drive->nice1 << IDE_NICE_1), (long __user *)arg);
-+}
-+
-+static int ide_set_nice_ioctl(ide_drive_t *drive, unsigned long arg)
-+{
-+	if (arg != (arg & ((1 << IDE_NICE_DSC_OVERLAP) | (1 << IDE_NICE_1))))
-+		return -EPERM;
-+
-+	if (((arg >> IDE_NICE_DSC_OVERLAP) & 1) &&
-+	    (drive->media == ide_disk || drive->media == ide_floppy ||
-+	     drive->scsi))
-+		return -EPERM;
-+
-+	drive->dsc_overlap = (arg >> IDE_NICE_DSC_OVERLAP) & 1;
-+	drive->nice1 = (arg >> IDE_NICE_1) & 1;
-+
-+	return 0;
-+}
-+
-+static int ide_cmd_ioctl(ide_drive_t *drive, unsigned cmd, unsigned long arg)
-+{
-+	u8 *buf = NULL;
-+	int bufsize = 0, err = 0;
-+	u8 args[4], xfer_rate = 0;
-+	ide_task_t tfargs;
-+	struct ide_taskfile *tf = &tfargs.tf;
-+	u16 *id = drive->id;
-+
-+	if (NULL == (void *) arg) {
-+		struct request *rq;
-+
-+		rq = blk_get_request(drive->queue, READ, __GFP_WAIT);
-+		rq->cmd_type = REQ_TYPE_ATA_TASKFILE;
-+		err = blk_execute_rq(drive->queue, NULL, rq, 0);
-+		blk_put_request(rq);
-+
-+		return err;
-+	}
-+
-+	if (copy_from_user(args, (void __user *)arg, 4))
-+		return -EFAULT;
-+
-+	memset(&tfargs, 0, sizeof(ide_task_t));
-+	tf->feature = args[2];
-+	if (args[0] == ATA_CMD_SMART) {
-+		tf->nsect = args[3];
-+		tf->lbal  = args[1];
-+		tf->lbam  = 0x4f;
-+		tf->lbah  = 0xc2;
-+		tfargs.tf_flags = IDE_TFLAG_OUT_TF | IDE_TFLAG_IN_NSECT;
-+	} else {
-+		tf->nsect = args[1];
-+		tfargs.tf_flags = IDE_TFLAG_OUT_FEATURE |
-+				  IDE_TFLAG_OUT_NSECT | IDE_TFLAG_IN_NSECT;
-+	}
-+	tf->command = args[0];
-+	tfargs.data_phase = args[3] ? TASKFILE_IN : TASKFILE_NO_DATA;
-+
-+	if (args[3]) {
-+		tfargs.tf_flags |= IDE_TFLAG_IO_16BIT;
-+		bufsize = SECTOR_SIZE * args[3];
-+		buf = kzalloc(bufsize, GFP_KERNEL);
-+		if (buf == NULL)
-+			return -ENOMEM;
-+	}
-+
-+	if (tf->command == ATA_CMD_SET_FEATURES &&
-+	    tf->feature == SETFEATURES_XFER &&
-+	    tf->nsect >= XFER_SW_DMA_0 &&
-+	    (id[ATA_ID_UDMA_MODES] ||
-+	     id[ATA_ID_MWDMA_MODES] ||
-+	     id[ATA_ID_SWDMA_MODES])) {
-+		xfer_rate = args[1];
-+		if (tf->nsect > XFER_UDMA_2 && !eighty_ninty_three(drive)) {
-+			printk(KERN_WARNING "%s: UDMA speeds >UDMA33 cannot "
-+					    "be set\n", drive->name);
-+			goto abort;
-+		}
-+	}
-+
-+	err = ide_raw_taskfile(drive, &tfargs, buf, args[3]);
-+
-+	args[0] = tf->status;
-+	args[1] = tf->error;
-+	args[2] = tf->nsect;
-+
-+	if (!err && xfer_rate) {
-+		/* active-retuning-calls future */
-+		ide_set_xfer_rate(drive, xfer_rate);
-+		ide_driveid_update(drive);
-+	}
-+abort:
-+	if (copy_to_user((void __user *)arg, &args, 4))
-+		err = -EFAULT;
-+	if (buf) {
-+		if (copy_to_user((void __user *)(arg + 4), buf, bufsize))
-+			err = -EFAULT;
-+		kfree(buf);
-+	}
-+	return err;
-+}
-+
-+static int ide_task_ioctl(ide_drive_t *drive, unsigned cmd, unsigned long arg)
-+{
-+	void __user *p = (void __user *)arg;
-+	int err = 0;
-+	u8 args[7];
-+	ide_task_t task;
-+
-+	if (copy_from_user(args, p, 7))
-+		return -EFAULT;
-+
-+	memset(&task, 0, sizeof(task));
-+	memcpy(&task.tf_array[7], &args[1], 6);
-+	task.tf.command = args[0];
-+	task.tf_flags = IDE_TFLAG_TF | IDE_TFLAG_DEVICE;
-+
-+	err = ide_no_data_taskfile(drive, &task);
-+
-+	args[0] = task.tf.command;
-+	memcpy(&args[1], &task.tf_array[7], 6);
-+
-+	if (copy_to_user(p, args, 7))
-+		err = -EFAULT;
-+
-+	return err;
-+}
-+
-+static int generic_drive_reset(ide_drive_t *drive)
-+{
-+	struct request *rq;
-+	int ret = 0;
-+
-+	rq = blk_get_request(drive->queue, READ, __GFP_WAIT);
-+	rq->cmd_type = REQ_TYPE_SPECIAL;
-+	rq->cmd_len = 1;
-+	rq->cmd[0] = REQ_DRIVE_RESET;
-+	rq->cmd_flags |= REQ_SOFTBARRIER;
-+	if (blk_execute_rq(drive->queue, NULL, rq, 1))
-+		ret = rq->errors;
-+	blk_put_request(rq);
-+	return ret;
-+}
-+
-+int generic_ide_ioctl(ide_drive_t *drive, struct file *file,
-+		      struct block_device *bdev,
-+		      unsigned int cmd, unsigned long arg)
-+{
-+	int err;
-+
-+	err = ide_setting_ioctl(drive, bdev, cmd, arg, ide_ioctl_settings);
-+	if (err != -EOPNOTSUPP)
-+		return err;
-+
-+	switch (cmd) {
-+	case HDIO_OBSOLETE_IDENTITY:
-+	case HDIO_GET_IDENTITY:
-+		if (bdev != bdev->bd_contains)
-+			return -EINVAL;
-+		return ide_get_identity_ioctl(drive, cmd, arg);
-+	case HDIO_GET_NICE:
-+		return ide_get_nice_ioctl(drive, arg);
-+	case HDIO_SET_NICE:
-+		if (!capable(CAP_SYS_ADMIN))
-+			return -EACCES;
-+		return ide_set_nice_ioctl(drive, arg);
-+#ifdef CONFIG_IDE_TASK_IOCTL
-+	case HDIO_DRIVE_TASKFILE:
-+		if (!capable(CAP_SYS_ADMIN) || !capable(CAP_SYS_RAWIO))
-+			return -EACCES;
-+		if (drive->media == ide_disk)
-+			return ide_taskfile_ioctl(drive, cmd, arg);
-+		return -ENOMSG;
-+#endif
-+	case HDIO_DRIVE_CMD:
-+		if (!capable(CAP_SYS_RAWIO))
-+			return -EACCES;
-+		return ide_cmd_ioctl(drive, cmd, arg);
-+	case HDIO_DRIVE_TASK:
-+		if (!capable(CAP_SYS_RAWIO))
-+			return -EACCES;
-+		return ide_task_ioctl(drive, cmd, arg);
-+	case HDIO_DRIVE_RESET:
-+		if (!capable(CAP_SYS_ADMIN))
-+			return -EACCES;
-+		return generic_drive_reset(drive);
-+	case HDIO_GET_BUSSTATE:
-+		if (!capable(CAP_SYS_ADMIN))
-+			return -EACCES;
-+		if (put_user(BUSSTATE_ON, (long __user *)arg))
-+			return -EFAULT;
-+		return 0;
-+	case HDIO_SET_BUSSTATE:
-+		if (!capable(CAP_SYS_ADMIN))
-+			return -EACCES;
-+		return -EOPNOTSUPP;
-+	default:
-+		return -EINVAL;
-+	}
-+}
-+EXPORT_SYMBOL(generic_ide_ioctl);
-Index: b/drivers/ide/ide-taskfile.c
-===================================================================
---- a/drivers/ide/ide-taskfile.c
-+++ b/drivers/ide/ide-taskfile.c
-@@ -726,112 +726,3 @@ abort:
- 	return err;
- }
- #endif
--
--int ide_cmd_ioctl (ide_drive_t *drive, unsigned int cmd, unsigned long arg)
--{
--	u8 *buf = NULL;
--	int bufsize = 0, err = 0;
--	u8 args[4], xfer_rate = 0;
--	ide_task_t tfargs;
--	struct ide_taskfile *tf = &tfargs.tf;
--	u16 *id = drive->id;
--
--	if (NULL == (void *) arg) {
--		struct request *rq;
--
--		rq = blk_get_request(drive->queue, READ, __GFP_WAIT);
--		rq->cmd_type = REQ_TYPE_ATA_TASKFILE;
--		err = blk_execute_rq(drive->queue, NULL, rq, 0);
--		blk_put_request(rq);
--
--		return err;
--	}
--
--	if (copy_from_user(args, (void __user *)arg, 4))
--		return -EFAULT;
--
--	memset(&tfargs, 0, sizeof(ide_task_t));
--	tf->feature = args[2];
--	if (args[0] == ATA_CMD_SMART) {
--		tf->nsect = args[3];
--		tf->lbal  = args[1];
--		tf->lbam  = 0x4f;
--		tf->lbah  = 0xc2;
--		tfargs.tf_flags = IDE_TFLAG_OUT_TF | IDE_TFLAG_IN_NSECT;
--	} else {
--		tf->nsect = args[1];
--		tfargs.tf_flags = IDE_TFLAG_OUT_FEATURE |
--				  IDE_TFLAG_OUT_NSECT | IDE_TFLAG_IN_NSECT;
--	}
--	tf->command = args[0];
--	tfargs.data_phase = args[3] ? TASKFILE_IN : TASKFILE_NO_DATA;
--
--	if (args[3]) {
--		tfargs.tf_flags |= IDE_TFLAG_IO_16BIT;
--		bufsize = SECTOR_SIZE * args[3];
--		buf = kzalloc(bufsize, GFP_KERNEL);
--		if (buf == NULL)
--			return -ENOMEM;
--	}
--
--	if (tf->command == ATA_CMD_SET_FEATURES &&
--	    tf->feature == SETFEATURES_XFER &&
--	    tf->nsect >= XFER_SW_DMA_0 &&
--	    (id[ATA_ID_UDMA_MODES] ||
--	     id[ATA_ID_MWDMA_MODES] ||
--	     id[ATA_ID_SWDMA_MODES])) {
--		xfer_rate = args[1];
--		if (tf->nsect > XFER_UDMA_2 && !eighty_ninty_three(drive)) {
--			printk(KERN_WARNING "%s: UDMA speeds >UDMA33 cannot "
--					    "be set\n", drive->name);
--			goto abort;
--		}
--	}
--
--	err = ide_raw_taskfile(drive, &tfargs, buf, args[3]);
--
--	args[0] = tf->status;
--	args[1] = tf->error;
--	args[2] = tf->nsect;
--
--	if (!err && xfer_rate) {
--		/* active-retuning-calls future */
--		ide_set_xfer_rate(drive, xfer_rate);
--		ide_driveid_update(drive);
--	}
--abort:
--	if (copy_to_user((void __user *)arg, &args, 4))
--		err = -EFAULT;
--	if (buf) {
--		if (copy_to_user((void __user *)(arg + 4), buf, bufsize))
--			err = -EFAULT;
--		kfree(buf);
--	}
--	return err;
--}
--
--int ide_task_ioctl (ide_drive_t *drive, unsigned int cmd, unsigned long arg)
--{
--	void __user *p = (void __user *)arg;
--	int err = 0;
--	u8 args[7];
--	ide_task_t task;
--
--	if (copy_from_user(args, p, 7))
--		return -EFAULT;
--
--	memset(&task, 0, sizeof(task));
--	memcpy(&task.tf_array[7], &args[1], 6);
--	task.tf.command = args[0];
--	task.tf_flags = IDE_TFLAG_TF | IDE_TFLAG_DEVICE;
--
--	err = ide_no_data_taskfile(drive, &task);
--
--	args[0] = task.tf.command;
--	memcpy(&args[1], &task.tf_array[7], 6);
--
--	if (copy_to_user(p, args, 7))
--		err = -EFAULT;
--
--	return err;
--}
-Index: b/drivers/ide/ide.c
-===================================================================
---- a/drivers/ide/ide.c
-+++ b/drivers/ide/ide.c
-@@ -489,180 +489,6 @@ static int generic_ide_resume(struct dev
- 	return err;
- }
- 
--static int generic_drive_reset(ide_drive_t *drive)
--{
--	struct request *rq;
--	int ret = 0;
--
--	rq = blk_get_request(drive->queue, READ, __GFP_WAIT);
--	rq->cmd_type = REQ_TYPE_SPECIAL;
--	rq->cmd_len = 1;
--	rq->cmd[0] = REQ_DRIVE_RESET;
--	rq->cmd_flags |= REQ_SOFTBARRIER;
--	if (blk_execute_rq(drive->queue, NULL, rq, 1))
--		ret = rq->errors;
--	blk_put_request(rq);
--	return ret;
--}
--
--static int ide_get_identity_ioctl(ide_drive_t *drive, unsigned int cmd,
--				  unsigned long arg)
--{
--	u16 *id = NULL;
--	int size = (cmd == HDIO_GET_IDENTITY) ? (ATA_ID_WORDS * 2) : 142;
--	int rc = 0;
--
--	if (drive->id_read == 0) {
--		rc = -ENOMSG;
--		goto out;
--	}
--
--	id = kmalloc(size, GFP_KERNEL);
--	if (id == NULL) {
--		rc = -ENOMEM;
--		goto out;
--	}
--
--	memcpy(id, drive->id, size);
--	ata_id_to_hd_driveid(id);
--
--	if (copy_to_user((void __user *)arg, id, size))
--		rc = -EFAULT;
--
--	kfree(id);
--out:
--	return rc;
--}
--
--static int ide_get_nice_ioctl(ide_drive_t *drive, unsigned long arg)
--{
--	return put_user((drive->dsc_overlap << IDE_NICE_DSC_OVERLAP) |
--			(drive->nice1 << IDE_NICE_1), (long __user *)arg);
--}
--
--static int ide_set_nice_ioctl(ide_drive_t *drive, unsigned long arg)
--{
--	if (arg != (arg & ((1 << IDE_NICE_DSC_OVERLAP) | (1 << IDE_NICE_1))))
--		return -EPERM;
--
--	if (((arg >> IDE_NICE_DSC_OVERLAP) & 1) &&
--	    (drive->media == ide_disk || drive->media == ide_floppy ||
--	     drive->scsi))
--		return -EPERM;
--
--	drive->dsc_overlap = (arg >> IDE_NICE_DSC_OVERLAP) & 1;
--	drive->nice1 = (arg >> IDE_NICE_1) & 1;
--
--	return 0;
--}
--
--static const struct ide_ioctl_devset ide_ioctl_settings[] = {
--{ HDIO_GET_32BIT,	 HDIO_SET_32BIT,	get_io_32bit,  set_io_32bit  },
--{ HDIO_GET_KEEPSETTINGS, HDIO_SET_KEEPSETTINGS,	get_ksettings, set_ksettings },
--{ HDIO_GET_UNMASKINTR,	 HDIO_SET_UNMASKINTR,	get_unmaskirq, set_unmaskirq },
--{ HDIO_GET_DMA,		 HDIO_SET_DMA,		get_using_dma, set_using_dma },
--{ -1,			 HDIO_SET_PIO_MODE,	NULL,	       set_pio_mode  },
--{ 0 }
--};
--
--int generic_ide_ioctl(ide_drive_t *drive, struct file *file,
--		      struct block_device *bdev,
--		      unsigned int cmd, unsigned long arg)
--{
--	int err;
--
--	err = ide_setting_ioctl(drive, bdev, cmd, arg, ide_ioctl_settings);
--	if (err != -EOPNOTSUPP)
--		return err;
--
--	switch (cmd) {
--	case HDIO_OBSOLETE_IDENTITY:
--	case HDIO_GET_IDENTITY:
--		if (bdev != bdev->bd_contains)
--			return -EINVAL;
--		return ide_get_identity_ioctl(drive, cmd, arg);
--	case HDIO_GET_NICE:
--		return ide_get_nice_ioctl(drive, arg);
--	case HDIO_SET_NICE:
--		if (!capable(CAP_SYS_ADMIN))
--			return -EACCES;
--		return ide_set_nice_ioctl(drive, arg);
--#ifdef CONFIG_IDE_TASK_IOCTL
--	case HDIO_DRIVE_TASKFILE:
--		if (!capable(CAP_SYS_ADMIN) || !capable(CAP_SYS_RAWIO))
--			return -EACCES;
--		if (drive->media == ide_disk)
--			return ide_taskfile_ioctl(drive, cmd, arg);
--		return -ENOMSG;
--#endif
--	case HDIO_DRIVE_CMD:
--		if (!capable(CAP_SYS_RAWIO))
--			return -EACCES;
--		return ide_cmd_ioctl(drive, cmd, arg);
--	case HDIO_DRIVE_TASK:
--		if (!capable(CAP_SYS_RAWIO))
--			return -EACCES;
--		return ide_task_ioctl(drive, cmd, arg);
--	case HDIO_DRIVE_RESET:
--		if (!capable(CAP_SYS_ADMIN))
--			return -EACCES;
--		return generic_drive_reset(drive);
--	case HDIO_GET_BUSSTATE:
--		if (!capable(CAP_SYS_ADMIN))
--			return -EACCES;
--		if (put_user(BUSSTATE_ON, (long __user *)arg))
--			return -EFAULT;
--		return 0;
--	case HDIO_SET_BUSSTATE:
--		if (!capable(CAP_SYS_ADMIN))
--			return -EACCES;
--		return -EOPNOTSUPP;
--	default:
--		return -EINVAL;
--	}
--}
--EXPORT_SYMBOL(generic_ide_ioctl);
--
--int ide_setting_ioctl(ide_drive_t *drive, struct block_device *bdev,
--		      unsigned int cmd, unsigned long arg,
--		      const struct ide_ioctl_devset *s)
--{
--	unsigned long flags;
--	int err = -EOPNOTSUPP;
--
--	for (; s->get_ioctl; s++) {
--		if (s->get && s->get_ioctl == cmd)
--			goto read_val;
--		else if (s->set && s->set_ioctl == cmd)
--			goto set_val;
--	}
--
--	return err;
--
--read_val:
--	mutex_lock(&ide_setting_mtx);
--	spin_lock_irqsave(&ide_lock, flags);
--	err = s->get(drive);
--	spin_unlock_irqrestore(&ide_lock, flags);
--	mutex_unlock(&ide_setting_mtx);
--	return err >= 0 ? put_user(err, (long __user *)arg) : err;
--
--set_val:
--	if (bdev != bdev->bd_contains)
--		err = -EINVAL;
--	else {
--		if (!capable(CAP_SYS_ADMIN))
--			err = -EACCES;
--		else {
--			mutex_lock(&ide_setting_mtx);
--			err = s->set(drive, arg);
--			mutex_unlock(&ide_setting_mtx);
--		}
--	}
--	return err;
--}
--EXPORT_SYMBOL_GPL(ide_setting_ioctl);
--
- /**
-  * ide_device_get	-	get an additional reference to a ide_drive_t
-  * @drive:	device to get a reference to
-Index: b/include/linux/ide.h
-===================================================================
---- a/include/linux/ide.h
-+++ b/include/linux/ide.h
-@@ -1126,8 +1126,6 @@ int ide_raw_taskfile(ide_drive_t *, ide_
- int ide_no_data_taskfile(ide_drive_t *, ide_task_t *);
- 
- int ide_taskfile_ioctl(ide_drive_t *, unsigned int, unsigned long);
--int ide_cmd_ioctl(ide_drive_t *, unsigned int, unsigned long);
--int ide_task_ioctl(ide_drive_t *, unsigned int, unsigned long);
- 
- extern int ide_driveid_update(ide_drive_t *);
- extern int ide_config_drive_speed(ide_drive_t *, u8);
+and one for ata_ram supporting:
+ - large sectors
+ - file backing
+http://git.kernel.org/?p=linux/kernel/git/willy/misc.git;a=shortlog;h=ata-ram
+
+I hope that will help some more people do testing.
+
+Here's the dmesg from running:
+
+$ sudo modprobe ata_ram sector_size=4096 capacity=262144 nr_ports=2
+
+(note that you'll need at least 2.5GB of ram in your machine to try this,
+or Linux gets really unhappy.  You can, of course, reduce the capacity.
+Would there be interest in a lazily allocated option for ata_ram?)
+
+[ 1134.017240] scsi7 : ata_ram
+[ 1134.017420] scsi8 : ata_ram
+[ 1134.017489] ata8: SATA max UDMA/133 ata_ram_0
+[ 1134.017495] ata9: SATA max UDMA/133 ata_ram_1
+[ 1134.017557] ata8.00: ATA-8: Linux RAM Drive, 0.01, max UDMA7
+[ 1134.017563] ata8.00: 262144 sectors, multi 0: LBA 
+[ 1134.017602] ata8.00: configured for UDMA/133
+[ 1134.017631] ata9.00: ATA-8: Linux RAM Drive, 0.01, max UDMA7
+[ 1134.017636] ata9.00: 262144 sectors, multi 0: LBA 
+[ 1134.017668] ata9.00: configured for UDMA/133
+[ 1134.035741] scsi 7:0:0:0: Direct-Access     ATA      Linux RAM Drive  0.01 PQ: 0 ANSI: 5
+[ 1134.035904] sd 7:0:0:0: [sdb] 262144 4096-byte hardware sectors (1074 MB)
+[ 1134.035926] sd 7:0:0:0: [sdb] Write Protect is off
+[ 1134.035932] sd 7:0:0:0: [sdb] Mode Sense: 00 3a 00 00
+[ 1134.035961] sd 7:0:0:0: [sdb] Write cache: disabled, read cache: enabled, doesn't support DPO or FUA
+[ 1134.036039] sd 7:0:0:0: [sdb] 262144 4096-byte hardware sectors (1074 MB)
+[ 1134.036061] sd 7:0:0:0: [sdb] Write Protect is off
+[ 1134.036066] sd 7:0:0:0: [sdb] Mode Sense: 00 3a 00 00
+[ 1134.036095] sd 7:0:0:0: [sdb] Write cache: disabled, read cache: enabled, doesn't support DPO or FUA
+[ 1134.036119]  sdb: unknown partition table
+[ 1134.036276] sd 7:0:0:0: [sdb] Attached SCSI disk
+[ 1134.036463] sd 7:0:0:0: Attached scsi generic sg2 type 0
+[ 1134.036607] scsi 8:0:0:0: Direct-Access     ATA      Linux RAM Drive  0.01 PQ: 0 ANSI: 5
+[ 1134.036749] sd 8:0:0:0: [sdc] 262144 4096-byte hardware sectors (1074 MB)
+[ 1134.036768] sd 8:0:0:0: [sdc] Write Protect is off
+[ 1134.036774] sd 8:0:0:0: [sdc] Mode Sense: 00 3a 00 00
+[ 1134.036803] sd 8:0:0:0: [sdc] Write cache: disabled, read cache: enabled, doesn't support DPO or FUA
+[ 1134.036869] sd 8:0:0:0: [sdc] 262144 4096-byte hardware sectors (1074 MB)
+[ 1134.036888] sd 8:0:0:0: [sdc] Write Protect is off
+[ 1134.036895] sd 8:0:0:0: [sdc] Mode Sense: 00 3a 00 00
+[ 1134.036924] sd 8:0:0:0: [sdc] Write cache: disabled, read cache: enabled, doesn't support DPO or FUA
+[ 1134.036944]  sdc: unknown partition table
+[ 1134.037082] sd 8:0:0:0: [sdc] Attached SCSI disk
+[ 1134.037182] sd 8:0:0:0: Attached scsi generic sg3 type 0
+
+-- 
+Intel are signing my paycheques ... these opinions are still mine
+"Bill, look, we understand that you're interested in selling us this
+operating system, but compare it to ours.  We can't possibly take such
+a retrograde step."
