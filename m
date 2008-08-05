@@ -1,159 +1,54 @@
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: [PATCH] ata: Define new commands from ATA8
-Date: Tue,  5 Aug 2008 13:26:46 -0400
-Message-ID: <1217957207-23116-2-git-send-email-matthew@wil.cx>
-References: <1217957207-23116-1-git-send-email-matthew@wil.cx>
+From: Pavel Machek <pavel@suse.cz>
+Subject: Re: [PATCH 3/5] libata: Implement disk shock protection support
+Date: Tue, 5 Aug 2008 21:59:12 +0200
+Message-ID: <20080805195912.GE7939@elf.ucw.cz>
+References: <fa.nx0yFPJm+aNXPHgykUrOzZXvvIs@ifi.uio.no> <fa.NfEr7Ik6e8oextyWICW/jR5emeE@ifi.uio.no> <fa.zGvATZImeUo0tHJe4hzlk5+mTiM@ifi.uio.no> <fa.SRVleMItV5QEF7/tgCjSHz0ScJA@ifi.uio.no> <fa.YKbhgq8XUxH/Qg1ArE+73YsDlpE@ifi.uio.no> <4897D16F.3000504@shaw.ca> <20080805131417.GC8569@mit.edu>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ottawa-hs-64-26-148-84.d-ip.magma.ca ([64.26.148.84]:33989 "EHLO
-	gonzo.int.wil.cx" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1755093AbYHERw2 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 5 Aug 2008 13:52:28 -0400
-In-Reply-To: <1217957207-23116-1-git-send-email-matthew@wil.cx>
+Received: from gprs189-60.eurotel.cz ([160.218.189.60]:57914 "EHLO
+	gprs189-60.eurotel.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758402AbYHET5v (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 5 Aug 2008 15:57:51 -0400
+Content-Disposition: inline
+In-Reply-To: <20080805131417.GC8569@mit.edu>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
-Cc: jgarzik@pobox.com, Matt_Domsch@dell.com, Matthew Wilcox <willy@linux.intel.com>
+To: Theodore Tso <tytso@mit.edu>, Robert Hancock <hancockr@shaw.ca>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Gabor Gombas <gombasg@sztaki.hu>, Tejun Heo <htejun@gmail.com>Elias Oltmanns <e>
 
-From: Matthew Wilcox <willy@linux.intel.com>
+Hi!
 
-Later patches require knowledge of some commands which aren't currently
-defined.  While I'm at it, add all the commands that are in ATA8 and
-reorder the existing commands to be in the same order as ATA8.
+> > Yes, from what I've seen on these laptops, it doesn't take much to  
+> > trigger the shock protection in Windows - lifting the front of the  
+> > laptop off the table an inch and dropping it will do it, 
+> 
+> A few years ago, I had a Thinkpad T21 laptop, accidentally slip
+> through my butterfingers and dropped about an inch before it landed on
+> the table.  Unfortunately, (a) the Thinkpad T21 laptop was rather
+> heavy (compared to modern laptops), (b) it didn't have the rubber
+> "bubble" on the bottom of the laptop to cushion the landing as the T22
+> and T23's had (and I'm sure I know why it was added), and (c) the hard
+> drive was active at the time.  It was enough to cause a head crash and
+> Linux immediately started reporting an exponentially increasing number
+> of write errors; the hard drive was totally unusable within an hour or
+> so.
+> 
+> So there's a reason why the anti-shock protection is set at a rather
+> sensitive level...    
+> 
+> The real right answer though is to buy one of the laptop drives (such
+> as the Seagate Momentus 7200.2 or 7200.3) which has the anti-shock
+> detection built directly into the hard drive.  That way you don't have
+> to have a daemon that sits in the OS waking up the CPU some 20 to 30
+> times a second and burning up your battery even when the laptop is
+> idle.
 
-Signed-off-by: Matthew Wilcox <willy@linux.intel.com>
----
- include/linux/ata.h |   97 ++++++++++++++++++++++++++++++++++----------------
- 1 files changed, 66 insertions(+), 31 deletions(-)
+Hmm, when the laptop is idle, "right thing" is to spin the disk down,
+and at that point you no longer need to poll the accelerometer...
 
-diff --git a/include/linux/ata.h b/include/linux/ata.h
-index 1c622e2..3815431 100644
---- a/include/linux/ata.h
-+++ b/include/linux/ata.h
-@@ -149,58 +149,93 @@ enum {
- 	ATA_REG_IRQ		= ATA_REG_NSECT,
- 
- 	/* ATA device commands */
--	ATA_CMD_DEV_RESET	= 0x08, /* ATAPI device reset */
-+	ATA_CMD_CFA_ERASE_SECTORS = 0xC0,
-+	ATA_CMD_CFA_REQUEST_EXT_ERROR = 0x03,
-+	ATA_CMD_CFA_TRANSLATE_SECTOR = 0x87,
-+	ATA_CMD_CFA_WRITE_MULTI_WITHOUT_ERASE = 0xCD,
-+	ATA_CMD_CFA_WRITE_SECTORS_WITHOUT_ERASE = 0x38,
-+	ATA_CMD_CHK_MEDIA_CARD_TYPE = 0xD1,
- 	ATA_CMD_CHK_POWER	= 0xE5, /* check power mode */
--	ATA_CMD_STANDBY		= 0xE2, /* place in standby power mode */
--	ATA_CMD_IDLE		= 0xE3, /* place in idle power mode */
-+	ATA_CMD_CONFIG_STREAM	= 0x51,
-+	ATA_CMD_CONF_OVERLAY	= 0xB1,
-+	ATA_CMD_DEV_RESET	= 0x08, /* ATAPI device reset */
-+	ATA_CMD_DLOAD_MCODE	= 0x92,
- 	ATA_CMD_EDD		= 0x90,	/* execute device diagnostic */
- 	ATA_CMD_FLUSH		= 0xE7,
- 	ATA_CMD_FLUSH_EXT	= 0xEA,
- 	ATA_CMD_ID_ATA		= 0xEC,
- 	ATA_CMD_ID_ATAPI	= 0xA1,
--	ATA_CMD_READ		= 0xC8,
--	ATA_CMD_READ_EXT	= 0x25,
--	ATA_CMD_WRITE		= 0xCA,
--	ATA_CMD_WRITE_EXT	= 0x35,
--	ATA_CMD_WRITE_FUA_EXT	= 0x3D,
-+	ATA_CMD_IDLE		= 0xE3, /* place in idle power mode */
-+	ATA_CMD_IDLEIMMEDIATE	= 0xE1,
-+	ATA_CMD_NVCACHE		= 0xB6,
-+	ATA_CMD_NOP		= 0x00,
-+	ATA_CMD_PACKET		= 0xA0,
-+	ATA_CMD_PMP_READ	= 0xE4, /* aka READ BUFFER */
-+	ATA_CMD_READ		= 0xC8, /* aka READ DMA */
-+	ATA_CMD_READ_EXT	= 0x25, /* aka READ DMA EXT */
-+	ATA_CMD_READ_QUEUED	= 0xC7,
-+	ATA_CMD_READ_QUEUED_EXT	= 0x26,
- 	ATA_CMD_FPDMA_READ	= 0x60,
--	ATA_CMD_FPDMA_WRITE	= 0x61,
--	ATA_CMD_PIO_READ	= 0x20,
--	ATA_CMD_PIO_READ_EXT	= 0x24,
--	ATA_CMD_PIO_WRITE	= 0x30,
--	ATA_CMD_PIO_WRITE_EXT	= 0x34,
-+	ATA_CMD_READ_LOG_EXT	= 0x2F,
-+	ATA_CMD_READ_LOG_DMA_EXT= 0x47,
- 	ATA_CMD_READ_MULTI	= 0xC4,
- 	ATA_CMD_READ_MULTI_EXT	= 0x29,
--	ATA_CMD_WRITE_MULTI	= 0xC5,
--	ATA_CMD_WRITE_MULTI_EXT	= 0x39,
--	ATA_CMD_WRITE_MULTI_FUA_EXT = 0xCE,
--	ATA_CMD_SET_FEATURES	= 0xEF,
--	ATA_CMD_SET_MULTI	= 0xC6,
--	ATA_CMD_PACKET		= 0xA0,
--	ATA_CMD_VERIFY		= 0x40,
--	ATA_CMD_VERIFY_EXT	= 0x42,
--	ATA_CMD_STANDBYNOW1	= 0xE0,
--	ATA_CMD_IDLEIMMEDIATE	= 0xE1,
--	ATA_CMD_SLEEP		= 0xE6,
--	ATA_CMD_INIT_DEV_PARAMS	= 0x91,
- 	ATA_CMD_READ_NATIVE_MAX	= 0xF8,
- 	ATA_CMD_READ_NATIVE_MAX_EXT = 0x27,
-+	ATA_CMD_PIO_READ	= 0x20, /* aka READ SECTOR(S) */
-+	ATA_CMD_PIO_READ_EXT	= 0x24, /* aka READ SECTOR(S) EXT */
-+	ATA_CMD_READ_STREAM_DMA_EXT = 0x2A,
-+	ATA_CMD_READ_STREAM_EXT	= 0x2B,
-+	ATA_CMD_VERIFY		= 0x40, /* aka READ VERIFY SECTOR(S) */
-+	ATA_CMD_VERIFY_EXT	= 0x42, /* aka READ VERIFY SECTOR(S) EXT */
-+	ATA_CMD_SEC_DISABLE_PASSWORD = 0xF6,
-+	ATA_CMD_SEC_ERASE_PREPARE = 0xF3,
-+	ATA_CMD_SEC_ERASE_UNIT	= 0xF4,
-+	ATA_CMD_SEC_FREEZE_LOCK	= 0xF5,
-+	ATA_CMD_SEC_SET_PASSWORD = 0xF1,
-+	ATA_CMD_SEC_UNLOCK	= 0xF2,
-+	ATA_CMD_SERVICE		= 0xA2,
-+	ATA_CMD_SET_FEATURES	= 0xEF,
- 	ATA_CMD_SET_MAX		= 0xF9,
- 	ATA_CMD_SET_MAX_EXT	= 0x37,
--	ATA_CMD_READ_LOG_EXT	= 0x2f,
--	ATA_CMD_PMP_READ	= 0xE4,
--	ATA_CMD_PMP_WRITE	= 0xE8,
--	ATA_CMD_CONF_OVERLAY	= 0xB1,
--	ATA_CMD_SEC_FREEZE_LOCK	= 0xF5,
-+	ATA_CMD_SET_MULTI	= 0xC6,
-+	ATA_CMD_SLEEP		= 0xE6,
-+	ATA_CMD_SMART		= 0xB0,
-+	ATA_CMD_STANDBY		= 0xE2, /* place in standby power mode */
-+	ATA_CMD_STANDBYNOW1	= 0xE0,
-+	ATA_CMD_TRUSTED_NON_DATA = 0x5B,
-+	ATA_CMD_TRUSTED_RECEIVE	= 0x5C,
-+	ATA_CMD_TRUSTED_RECEIVE_DMA = 0x5D,
-+	ATA_CMD_TRUSTED_SEND	= 0x5E,
-+	ATA_CMD_TRUSTED_SEND_DMA = 0x5F,
-+	ATA_CMD_PMP_WRITE	= 0xE8, /* aka WRITE BUFFER */
-+	ATA_CMD_WRITE		= 0xCA, /* aka WRITE DMA */
-+	ATA_CMD_WRITE_EXT	= 0x35, /* aka WRITE DMA EXT */
-+	ATA_CMD_WRITE_FUA_EXT	= 0x3D, /* aka WRITE DMA FUA EXT */
-+	ATA_CMD_WRITE_DMA_QUEUED = 0xCC,
-+	ATA_CMD_WRITE_DMA_QUEUED_EXT = 0x36,
-+	ATA_CMD_WRITE_DMA_QUEUED_FUA_EXT = 0x3E,
-+	ATA_CMD_FPDMA_WRITE	= 0x61, /* aka WRITE FPDMA QUEUED */
-+	ATA_CMD_WRITE_LOG_EXT	= 0x3F,
-+	ATA_CMD_WRITE_LOG_DMA_EXT = 0x57,
-+	ATA_CMD_WRITE_MULTI	= 0xC5,
-+	ATA_CMD_WRITE_MULTI_EXT	= 0x39,
-+	ATA_CMD_WRITE_MULTI_FUA_EXT = 0xCE,
-+	ATA_CMD_PIO_WRITE	= 0x30, /* aka WRITE SECTOR(S) */
-+	ATA_CMD_PIO_WRITE_EXT	= 0x34, /* aka WRITE SECTOR(S) EXT */
-+	ATA_CMD_WRITE_STREAM_DMA_EXT = 0x3A,
-+	ATA_CMD_WRITE_STREAM_EXT = 0x3B,
-+	ATA_CMD_WRITE_UNCORRECTABLE_EXT = 0x45,
- 
- 	/* READ_LOG_EXT pages */
- 	ATA_LOG_SATA_NCQ	= 0x10,
- 
--	/* READ/WRITE LONG (obsolete) */
-+	/* Obsolete */
- 	ATA_CMD_READ_LONG	= 0x22,
- 	ATA_CMD_READ_LONG_ONCE	= 0x23,
- 	ATA_CMD_WRITE_LONG	= 0x32,
- 	ATA_CMD_WRITE_LONG_ONCE	= 0x33,
-+	ATA_CMD_INIT_DEV_PARAMS	= 0x91,
- 
- 	/* SETFEATURES stuff */
- 	SETFEATURES_XFER	= 0x03,
+Yes, doing it in drive is probably right place... but I'm told the
+algorithms are quite complex.
+								Pavel
 -- 
-1.5.6.3
-
+(english) http://www.livejournal.com/~pavelmachek
+(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
