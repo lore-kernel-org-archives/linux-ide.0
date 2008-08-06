@@ -1,71 +1,49 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH 1/2] pata_legacy: export functionality to ide
-Date: Wed, 06 Aug 2008 15:34:48 +0400
-Message-ID: <48998C58.20703@ru.mvista.com>
-References: <20080802183253.GA2239@gollum.tnic> <200808022046.16990.bzolnier@gmail.com> <20080803073756.GA8762@gollum.tnic> <20080803125907.67676948@lxorguk.ukuu.org.uk> <20080803143837.GA26672@gollum.tnic> <20080803162214.394b13a1@lxorguk.ukuu.org.uk> <20080803165135.GA31977@gollum.tnic> <4898630C.7090403@ru.mvista.com> <9ea470500808050732s7be29360ge358790e955be06a@mail.gmail.com> <58cb370e0808050741v7ff3f20awb3d91a84486f8547@mail.gmail.com> <20080806061023.GA23773@gollum.tnic>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: [Ksummit-2008-discuss] Kernel Summit request for Discussion of
+ future of ATA (libata) and IDE
+Date: Wed, 06 Aug 2008 22:04:27 +0900
+Message-ID: <4899A15B.8000800@gmail.com>
+References: <fa.OGeO7gZvBG4obEzRbVltjSebgTQ@ifi.uio.no>	<fa.KtvYE2B2yrJqUleolhtMPN9ljAQ@ifi.uio.no>	<fa.AqEKTvguYFAzDFHy/We/8MpOqmo@ifi.uio.no>	<48976168.3020804@shaw.ca>	<20080804205508.20a3f917@lxorguk.ukuu.org.uk>	<48977200.3050307@shaw.ca>	<20080804220619.76b94ceb@lxorguk.ukuu.org.uk>	<4898EE70.1030604@shaw.ca> <4898F3EA.7000507@gmail.com> <48998A8B.9040109@ru.mvista.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from h155.mvista.com ([63.81.120.155]:40212 "EHLO imap.sh.mvista.com"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1755244AbYHFLez (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 6 Aug 2008 07:34:55 -0400
-In-Reply-To: <20080806061023.GA23773@gollum.tnic>
+Received: from ti-out-0910.google.com ([209.85.142.187]:14309 "EHLO
+	ti-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753416AbYHFNFE (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 6 Aug 2008 09:05:04 -0400
+Received: by ti-out-0910.google.com with SMTP id b6so972424tic.23
+        for <linux-ide@vger.kernel.org>; Wed, 06 Aug 2008 06:05:02 -0700 (PDT)
+In-Reply-To: <48998A8B.9040109@ru.mvista.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: petkovbb@gmail.com, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Sergei Shtylyov <sshtylyov@ru.mvista.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-kernel@vger.kernel.orglinux
+To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Cc: Robert Hancock <hancockr@shaw.ca>, Jeff Garzik <jeff@garzik.org>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, ksummit-2008-discuss@lists.linux-foundation.org, linux-kernel <linux-kernel@vger.kernel.org>, James Bottomley <James.Bottomley@hansenpartnership.com>, linux-ide <linux-ide@vger.kernel.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>
 
-Hello.
+Sergei Shtylyov wrote:
+> Hello.
+> 
+> Tejun Heo wrote:
+>>> +unsigned int ata_sff_data_xfer(struct ata_device *dev, unsigned char *buf,
+>>> +			       unsigned int buflen, int rw)
+>>> +{
+>>> +	struct ata_port *ap = dev->link->ap;
+>>> +	void __iomem *data_addr = ap->ioaddr.data_addr;
+>>> +	unsigned int words = buflen >> 2;
+>>>     
+>> dwords maybe?
+>>   
+> 
+>    Isn't word 32-bit in the 32-bit systems? We're not on 80[12]86 
+> (despite Intel/MS preference of calling 32-bit memory cells DWORDS)...
 
-Borislav Petkov wrote:
-> From: Borislav Petkov <petkovbb@gmail.com>
-> Date: Sun, 3 Aug 2008 18:46:35 +0200
-> Subject: [PATCH] ide-generic: handle probing of legacy io-ports v4
->
-> Avoid probing the io-ports in case an IDE PCI controller is present and it uses
-> the legacy iobases. If we still want to enforce the probing, we do
->
-> ide_generic.probe_mask=0x3f
->
-> on the kernel command line. The iobase checking code is adapted from
-> drivers/ata/pata_legacy.c after converting hex pci ids into their corresponding
-> macros in <linux/pci_ids.h>.
->
-> CC: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-> Signed-off-by: Borislav Petkov <petkovbb@gmail.com>
->   
+Well, as most of machines are 64-bit these days, discussing whether a
+word means 16 or 32 bits is kind of moot.  I usually just think byte,
+word, dword, qword and and libata and pci assume that too -
+ata_id_has_dword_io() and PCI configuration accessors.  It's ultimately
+a peripheral issue either way tho.
 
-Acked-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Thanks.
 
-> diff --git a/drivers/ide/ide-generic.c b/drivers/ide/ide-generic.c
-> index 8fe8b5b..efce159 100644
-> --- a/drivers/ide/ide-generic.c
-> +++ b/drivers/ide/ide-generic.c
->   
-[...]
-> @@ -100,19 +101,69 @@ static const u16 legacy_bases[] = { 0x1f0, 0x170, 0x1e8, 0x168, 0x1e0, 0x160 };
->  static const int legacy_irqs[]  = { 14, 15, 11, 10, 8, 12 };
->  #endif
->  
-> +static void ide_generic_check_pci_legacy_iobases(int *primary, int *secondary)
-> +{
-> +	struct pci_dev *p = NULL;
-> +	u16 val;
-> +
-> +	for_each_pci_dev(p) {
-> +		int r;
-> +
-> +		for (r = 0; r < 6; r++) {
-> +			if (pci_resource_start(p, r) == 0x1f0)
-> +				*primary = 1;
-> +			if (pci_resource_start(p, r) == 0x170)
-> +				*secondary = 1;
-> +		}
->   
-
-   Would have been probably enough to test only BAR0/2, don't you think?
-
-MBR, Sergei
-
-
+-- 
+tejun
