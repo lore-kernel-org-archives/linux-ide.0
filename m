@@ -1,75 +1,111 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH 1/2] pata_legacy: export functionality to ide
-Date: Wed, 06 Aug 2008 19:57:40 +0400
-Message-ID: <4899C9F4.9040002@ru.mvista.com>
-References: <20080802183253.GA2239@gollum.tnic>	 <20080803125907.67676948@lxorguk.ukuu.org.uk>	 <20080803143837.GA26672@gollum.tnic>	 <20080803162214.394b13a1@lxorguk.ukuu.org.uk>	 <20080803165135.GA31977@gollum.tnic> <4898630C.7090403@ru.mvista.com>	 <9ea470500808050732s7be29360ge358790e955be06a@mail.gmail.com>	 <58cb370e0808050741v7ff3f20awb3d91a84486f8547@mail.gmail.com>	 <20080806061023.GA23773@gollum.tnic> <48998C58.20703@ru.mvista.com> <9ea470500808060703p4a94c868i25106e081aad75c4@mail.gmail.com>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: [PATCH 1/2] ide-floppy: remove needless parens
+Date: Wed, 6 Aug 2008 18:37:21 +0200
+Message-ID: <200808061837.21240.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1764714AbYHFP6R@vger.kernel.org>
-In-Reply-To: <9ea470500808060703p4a94c868i25106e081aad75c4@mail.gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: petkovbb@gmail.com
-Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from fg-out-1718.google.com ([72.14.220.156]:12384 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759434AbYHFQn2 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 6 Aug 2008 12:43:28 -0400
+Received: by fg-out-1718.google.com with SMTP id 19so1542fgg.17
+        for <linux-ide@vger.kernel.org>; Wed, 06 Aug 2008 09:43:26 -0700 (PDT)
+Content-Disposition: inline
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, Borislav Petkov <petkovbb@gmail.com>
 
-Boris Petkov wrote:
+Cc: Borislav Petkov <petkovbb@gmail.com>
+Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+---
+ drivers/ide/ide-floppy.c |   27 ++++++++++++++++-----------
+ 1 file changed, 16 insertions(+), 11 deletions(-)
 
->>>From: Borislav Petkov <petkovbb@gmail.com>
->>>Date: Sun, 3 Aug 2008 18:46:35 +0200
->>>Subject: [PATCH] ide-generic: handle probing of legacy io-ports v4
-
->>>Avoid probing the io-ports in case an IDE PCI controller is present and it uses
->>>the legacy iobases. If we still want to enforce the probing, we do
-
->>>ide_generic.probe_mask=0x3f
-
->>>on the kernel command line. The iobase checking code is adapted from
->>>drivers/ata/pata_legacy.c after converting hex pci ids into their
->>>corresponding
->>>macros in <linux/pci_ids.h>.
-
->>>CC: Sergei Shtylyov <sshtylyov@ru.mvista.com>
->>>Signed-off-by: Borislav Petkov <petkovbb@gmail.com>
-
->>Acked-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-
->>>diff --git a/drivers/ide/ide-generic.c b/drivers/ide/ide-generic.c
->>>index 8fe8b5b..efce159 100644
->>>--- a/drivers/ide/ide-generic.c
->>>+++ b/drivers/ide/ide-generic.c
-
->>[...]
-
->>>@@ -100,19 +101,69 @@ static const u16 legacy_bases[] = { 0x1f0, 0x170,
->>>0x1e8, 0x168, 0x1e0, 0x160 };
->>> static const int legacy_irqs[]  = { 14, 15, 11, 10, 8, 12 };
->>> #endif
->>> +static void ide_generic_check_pci_legacy_iobases(int *primary, int
->>>*secondary)
->>>+{
->>>+       struct pci_dev *p = NULL;
->>>+       u16 val;
->>>+
->>>+       for_each_pci_dev(p) {
->>>+               int r;
->>>+
->>>+               for (r = 0; r < 6; r++) {
->>>+                       if (pci_resource_start(p, r) == 0x1f0)
->>>+                               *primary = 1;
->>>+                       if (pci_resource_start(p, r) == 0x170)
->>>+                               *secondary = 1;
->>>+               }
-
->> Would have been probably enough to test only BAR0/2, don't you think?
-
-> I assume you're referring to the legacy ioports fixup in
-> drivers/pci/probe.c:pci_setup_device().
-
-    And to the fact that the value 0x1f0 should only be ever seen in BAR0 and 
-0x170 in BAR2 even if they would have been read off the chips (some chips have 
-these values reading back even in legacy mode, and even could malfunction if 
-other values are written there), not fixed up there, and certainly not in BAR1 
-or BAR3, so it's quite pointless to look in these BARs too.
-
-WBR, Sergei
+Index: b/drivers/ide/ide-floppy.c
+===================================================================
+--- a/drivers/ide/ide-floppy.c
++++ b/drivers/ide/ide-floppy.c
+@@ -738,7 +738,7 @@ static int idefloppy_get_sfrp_bit(ide_dr
+ 		return 1;
+ 
+ 	floppy->srfp = pc.buf[8 + 2] & 0x40;
+-	return (0);
++	return 0;
+ }
+ 
+ /*
+@@ -866,16 +866,17 @@ static int ide_floppy_get_format_capacit
+ 	int __user *argp;
+ 
+ 	if (get_user(u_array_size, arg))
+-		return (-EFAULT);
++		return -EFAULT;
+ 
+ 	if (u_array_size <= 0)
+-		return (-EINVAL);
++		return -EINVAL;
+ 
+ 	idefloppy_create_read_capacity_cmd(&pc);
+ 	if (idefloppy_queue_pc_tail(drive, &pc)) {
+ 		printk(KERN_ERR "ide-floppy: Can't get floppy parameters\n");
+-		return (-EIO);
++		return -EIO;
+ 	}
++
+ 	header_len = pc.buf[3];
+ 	desc_cnt = header_len / 8; /* capacity descriptor of 8 bytes */
+ 
+@@ -897,19 +898,22 @@ static int ide_floppy_get_format_capacit
+ 		length = be16_to_cpup((__be16 *)&pc.buf[desc_start + 6]);
+ 
+ 		if (put_user(blocks, argp))
+-			return(-EFAULT);
++			return -EFAULT;
++
+ 		++argp;
+ 
+ 		if (put_user(length, argp))
+-			return (-EFAULT);
++			return -EFAULT;
++
+ 		++argp;
+ 
+ 		++u_index;
+ 	}
+ 
+ 	if (put_user(u_index, arg))
+-		return (-EFAULT);
+-	return (0);
++		return -EFAULT;
++
++	return 0;
+ }
+ 
+ /*
+@@ -931,7 +935,7 @@ static int idefloppy_get_format_progress
+ 	if (floppy->srfp) {
+ 		idefloppy_create_request_sense_cmd(&pc);
+ 		if (idefloppy_queue_pc_tail(drive, &pc))
+-			return (-EIO);
++			return -EIO;
+ 
+ 		if (floppy->sense_key == 2 &&
+ 		    floppy->asc == 4 &&
+@@ -950,10 +954,11 @@ static int idefloppy_get_format_progress
+ 
+ 		progress_indication = ((stat & ATA_DSC) == 0) ? 0 : 0x10000;
+ 	}
++
+ 	if (put_user(progress_indication, arg))
+-		return (-EFAULT);
++		return -EFAULT;
+ 
+-	return (0);
++	return 0;
+ }
+ 
+ static sector_t idefloppy_capacity(ide_drive_t *drive)
