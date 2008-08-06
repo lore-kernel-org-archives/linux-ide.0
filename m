@@ -1,63 +1,75 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: Kernel Summit request for Discussion of future of ATA (libata)
- and IDE
-Date: Wed, 06 Aug 2008 09:44:26 +0900
-Message-ID: <4898F3EA.7000507@gmail.com>
-References: <fa.OGeO7gZvBG4obEzRbVltjSebgTQ@ifi.uio.no> <fa.KtvYE2B2yrJqUleolhtMPN9ljAQ@ifi.uio.no> <fa.AqEKTvguYFAzDFHy/We/8MpOqmo@ifi.uio.no> <48976168.3020804@shaw.ca> <20080804205508.20a3f917@lxorguk.ukuu.org.uk> <48977200.3050307@shaw.ca> <20080804220619.76b94ceb@lxorguk.ukuu.org.uk> <4898EE70.1030604@shaw.ca>
+From: Matthew Wilcox <matthew@wil.cx>
+Subject: Re: [PATCH] ata: Add support for Long Logical Sectors and Long Physical Sectors
+Date: Tue, 5 Aug 2008 20:22:55 -0600
+Message-ID: <20080806022255.GC2055@parisc-linux.org>
+References: <1217957207-23116-1-git-send-email-matthew@wil.cx> <1217957207-23116-3-git-send-email-matthew@wil.cx> <20080805214651.621263f5@lxorguk.ukuu.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ti-out-0910.google.com ([209.85.142.189]:50749 "EHLO
-	ti-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753084AbYHFApE (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 5 Aug 2008 20:45:04 -0400
-Received: by ti-out-0910.google.com with SMTP id b6so812044tic.23
-        for <linux-ide@vger.kernel.org>; Tue, 05 Aug 2008 17:45:01 -0700 (PDT)
-In-Reply-To: <4898EE70.1030604@shaw.ca>
+Received: from palinux.external.hp.com ([192.25.206.14]:47069 "EHLO
+	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753950AbYHFCXM (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 5 Aug 2008 22:23:12 -0400
+Content-Disposition: inline
+In-Reply-To: <20080805214651.621263f5@lxorguk.ukuu.org.uk>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Robert Hancock <hancockr@shaw.ca>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, ksummit-2008-discuss@lists.linux-foundation.org, linux-kernel <linux-kernel@vger.kernel.org>, linux-ide <linux-ide@vger.kernel.org>, Jeff Garzik <jeff@garzik.org>
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, jgarzik@pobox.com, Matt_Domsch@dell.com, Matthew Wilcox <willy@linux.intel.com>
 
-Robert Hancock wrote:
-> Here's my first cut at it. Compile tested only. This sets most controllers
-> to use 32-bit PIO except for those which could potentially be on a real ISA
-> or other 16-bit bus. It's a bit non-obvious what to do with some of the
-> drivers, so input is welcome.
+On Tue, Aug 05, 2008 at 09:46:51PM +0100, Alan Cox wrote:
+> > + * Some commands are specified to transfer (a multiple of) 512 bytes of data
+> > + * while others transfer a multiple of the number of bytes in a sector.  This
+> > + * function knows which commands transfer how much data.
 > 
-> This implementation doesn't check the ata_id_has_dword_io at all, since it
-> would only make a difference on controllers where we don't really want to
-> use it anyway.
+> 	static u32 ata_sector_or_block[]={...};
 > 
-> It seems like regardless of whether we do 32-bit by default or not the 32-bit
-> data_xfer function should be added to libata core as we have several drivers
-> which duplicate the same code currently..
+> 	if (test_bit(tf->cmd, &ata_sector_or_block))
+> 
+> looks so much more elegant than a giant switch statement and I suspect
+> produces far better code
 
-Great, just some minor nitpicks as I don't have much idea about 16 bit ones.
+Probably ... I did consider it, but I think I was too influenced by the
+existing READ/WRITE LONG code.
 
-> +unsigned int ata_sff_data_xfer(struct ata_device *dev, unsigned char *buf,
-> +			       unsigned int buflen, int rw)
-> +{
-> +	struct ata_port *ap = dev->link->ap;
-> +	void __iomem *data_addr = ap->ioaddr.data_addr;
-> +	unsigned int words = buflen >> 2;
+> > + * ATA supports sector sizes up to 2^33 - 1.  The reported sector size may
+> > + * not be a power of two.  The extra bytes are used for user-visible data
+> > + * integrity calculations.  Note this is not the same as the ECC which is
+> > + * accessed through the SCT Command Transport or READ / WRITE LONG.
+> > + */
+> > +static u64 ata_id_sect_size(const u16 *id)
+> 
+> word 106 is not defined in early ATA standards so it would be wise to
+> check that ATA8 is reported by the drive - and trust the relevant bits
+> for ATA7/8 as appropriate.
 
-dwords maybe?
+I'm not sure that's necessary.  The spec says to check whether words are
+valid by doing the & 0xc000 == 0x4000 test.
 
-> +	unsigned int slop = buflen & 3;
-> +
-> +	/* Transfer multiple of 4 bytes */
-> +	if (rw == READ)
-> +		ioread32_rep(data_addr, buf, words);
-> +	else
-> +		iowrite32_rep(data_addr, buf, words);
-> +
-> +	/* Transfer trailing 1 byte, if any. */
+> The drivers also need to know when a command is being issued which is a
+> funny shape as some hardware cannot do it because the internal state
+> machine knows the sector size and other stuff seems to need the internal
+> FIFO turning off or other things whacked repeatedly on the head to make
+> it work.
 
-1byte?
+Yes, I would expect some driver work to be required.  It only gets worse
+once we implement the DIX-equivalent.  How do you suggest would be a
+good migration path?  We could have the driver set a flag, or call into
+the driver from the midlayer to check whether it can cope with a
+particular sector size.
 
-Thanks.
+> You also don't need to bother listing all the commands that don't have
+> data transfer phases as a sector size is meaningless there so we
+> shouldn't even bother doing a lookup for them. Indeed the more I look at
+> this the more it seems that keeping long complex ever out of date arrays
+> is the wrong way to do it.
+
+I didn't want to change behaviour.  We currently set sect_size to 512
+for all commands (except READ LONG), and I didn't want to change that
+for non-data commands.  I agree with you that it's not relevant.
 
 -- 
-tejun
+Intel are signing my paycheques ... these opinions are still mine
+"Bill, look, we understand that you're interested in selling us this
+operating system, but compare it to ours.  We can't possibly take such
+a retrograde step."
