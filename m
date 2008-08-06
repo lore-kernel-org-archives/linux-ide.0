@@ -1,65 +1,58 @@
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: Re: [PATCH] ata: Add support for Long Logical Sectors and Long Physical Sectors
-Date: Wed, 6 Aug 2008 09:13:30 -0600
-Message-ID: <20080806151330.GM2055@parisc-linux.org>
-References: <1217957207-23116-1-git-send-email-matthew@wil.cx> <1217957207-23116-3-git-send-email-matthew@wil.cx> <20080805214651.621263f5@lxorguk.ukuu.org.uk> <20080806022255.GC2055@parisc-linux.org> <20080806100647.21529284@lxorguk.ukuu.org.uk> <20080806131109.GH2055@parisc-linux.org> <20080806151302.1d282747@lxorguk.ukuu.org.uk>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [PATCH] ata: Add support for Long Logical Sectors and Long
+ Physical Sectors
+Date: Wed, 6 Aug 2008 16:06:18 +0100
+Message-ID: <20080806160618.40058068@lxorguk.ukuu.org.uk>
+References: <1217957207-23116-1-git-send-email-matthew@wil.cx>
+	<1217957207-23116-3-git-send-email-matthew@wil.cx>
+	<20080805214651.621263f5@lxorguk.ukuu.org.uk>
+	<20080806022255.GC2055@parisc-linux.org>
+	<20080806100647.21529284@lxorguk.ukuu.org.uk>
+	<20080806131109.GH2055@parisc-linux.org>
+	<20080806151302.1d282747@lxorguk.ukuu.org.uk>
+	<20080806151330.GM2055@parisc-linux.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from palinux.external.hp.com ([192.25.206.14]:56304 "EHLO
-	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752754AbYHFPOG (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 6 Aug 2008 11:14:06 -0400
-Content-Disposition: inline
-In-Reply-To: <20080806151302.1d282747@lxorguk.ukuu.org.uk>
+Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:59265 "EHLO
+	lxorguk.ukuu.org.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1755240AbYHFPYI (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 6 Aug 2008 11:24:08 -0400
+In-Reply-To: <20080806151330.GM2055@parisc-linux.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+To: Matthew Wilcox <matthew@wil.cx>
 Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, jgarzik@pobox.com, Matt_Domsch@dell.com, Matthew Wilcox <willy@linux.intel.com>
 
-On Wed, Aug 06, 2008 at 03:13:02PM +0100, Alan Cox wrote:
-> > Obviously it is going to change per command -- because different
-> > commands have different sizes.  I was thinking that we could call the
-> > driver to see if it can handle a particular sector size right after we
-> > get the IDENTIFY data.  
+> > 	-	FIFO managed for the odd command thats a funny size
 > 
-> The drivers need to know if you are going to be using odd sizes regularly
-> so they can pick between
+> ... but it's not the odd command, it's going to be the vast majority of
+> them.
 
-It's up to the drive to report the number of sectors it uses.  After
-that all regular read/write commands will be doing that size.  Unless
-we're in some very bizarre situation, that will be the majority of
-accesses to the device.
+Put a 512 byte and a 2K sector sized disk on the same channel and its
+probably nearer 50/50.
 
-> 	-	I do this fine who cares (most chips)
-
-Fine, returns 1.
-
-> 	-	Er uh wtf its not 512 byts (some chip state machines)
-
-Fine, returns 0.
-
-> 	-	FIFO off (performance hit) for this disk
-
-Might want to print a message explaining why performance is going to
-suck and return 1.
-
-> 	-	FIFO managed for the odd command thats a funny size
-
-... but it's not the odd command, it's going to be the vast majority of
-them.
-
-> 	-	Various other levels of software managed controller
-> 		thumping
 > 
-> It's not a passive thing and we'd want to do it post identify on the
-> drive pair as it'll often need per channel decisions (eg on FIFO)
+> > 	-	Various other levels of software managed controller
+> > 		thumping
+> > 
+> > It's not a passive thing and we'd want to do it post identify on the
+> > drive pair as it'll often need per channel decisions (eg on FIFO)
+> 
+> Why can't you just disable the (controller) FIFO whenever any drive
+> reports != 512 byte sectors?
 
-Why can't you just disable the (controller) FIFO whenever any drive
-reports != 512 byte sectors?
+Because I'd like to do better than that - and FIFO is only one of the
+cases. I think your proposal basically works - providing you identify
+both drives before worrying about sector sizes. Most of our other logic
+is done that way - the drives are all identified then the controller makes
+decisions.
 
--- 
-Intel are signing my paycheques ... these opinions are still mine
-"Bill, look, we understand that you're interested in selling us this
-operating system, but compare it to ours.  We can't possibly take such
-a retrograde step."
+The setup time method then either vetos the disk or accepts it
+The existing mode_filter can be used to implement stuff like "PIO only no
+DMA" cases
+And if we can do it but have problems the qc_issue or device select
+methods can be hooked to do the work.
+
+Alan
