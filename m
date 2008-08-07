@@ -1,95 +1,199 @@
-From: Russell King <rmk+lkml@arm.linux.org.uk>
-Subject: [WHINGE+PATCH] Stupid structure naming and stupid linker error messages
-Date: Thu, 7 Aug 2008 17:45:39 +0100
-Message-ID: <20080807164539.GA26947@flint.arm.linux.org.uk>
+From: Adrian Bunk <bunk@kernel.org>
+Subject: [2.6 patch] drivers/ide/pci/: use __devexit_p()
+Date: Thu, 7 Aug 2008 20:09:32 +0300
+Message-ID: <20080807170932.GC9692@cs181140183.pp.htv.fi>
+References: <20080807164539.GA26947@flint.arm.linux.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from caramon.arm.linux.org.uk ([78.32.30.218]:53703 "EHLO
-	caramon.arm.linux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752706AbYHGQpu (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 7 Aug 2008 12:45:50 -0400
+Received: from smtp5.pp.htv.fi ([213.243.153.39]:56655 "EHLO smtp5.pp.htv.fi"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752682AbYHGRLF (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 7 Aug 2008 13:11:05 -0400
 Content-Disposition: inline
+In-Reply-To: <20080807164539.GA26947@flint.arm.linux.org.uk>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Linux Kernel List <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org
+To: Russell King <rmk+lkml@arm.linux.org.uk>, bzolnier@gmail.com
+Cc: Linux Kernel List <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org
 
-When building one ARM configuration, I'm getting this very very useful
-error message:
+On Thu, Aug 07, 2008 at 05:45:39PM +0100, Russell King wrote:
+>...
+> --- a/drivers/ide/pci/hpt366.c
+> +++ b/drivers/ide/pci/hpt366.c
+> @@ -1594,7 +1594,7 @@ static int __devinit hpt366_init_one(struct pci_dev *dev, const struct pci_devic
+>  	return ret;
+>  }
+>  
+> -static void __devexit hpt366_remove(struct pci_dev *dev)
+> +static void hpt366_remove(struct pci_dev *dev)
+>...
 
-  LD      .tmp_vmlinux1
-`.devexit.text' referenced in section `.data' of drivers/built-in.o: defined in discarded section `.devexit.text' of drivers/built-in.o
-`.devexit.text' referenced in section `.data' of drivers/built-in.o: defined in discarded section `.devexit.text' of drivers/built-in.o
-make[1]: *** [.tmp_vmlinux1] Error 1
+Thanks for your report.
 
-Wow.  How much more useful information can it give me?  Anyway, let's
-try and work out what's going on.
+The code is buggy, but:
+- that's not the correct fix and
+- there are far more such bugs under drivers/ide/pci/
 
-$ arm-linux-objdump --section=.data -r ../build/ixp4xx/drivers/built-in.o |grep '\.devexit\.text'
-00002d10 R_ARM_ABS32       .devexit.text
-00003038 R_ARM_ABS32       .devexit.text
+Patch below.
 
-Okay, now we know where in the .data section these references are.  Let's
-try to find what's responsible.
+> Russell King
 
-$ arm-linux-nm -n ../build/ixp4xx/drivers/built-in.o | grep ' d '|less
-00002c8c d driver
-00002cfc d driver
-00002d6c d hpt37x_timings
-...
-00003014 d xfer_speeds
-00003024 d driver
-00003094 d pdc_quirk_drives
+cu
+Adrian
 
-How.  Very.  Informative.  They're both in a structure called 'driver'.
 
-$ grep 'struct.* driver *=' drivers -r | wc -l
-62
+<--  snip  -->
 
-Yes.  Well, 62 structures called 'driver'.  How about someone deciding
-to prefix such a generic name with something specific to the actual
-driver in question?
 
-However, you can take a guess that it might be in IDE.  Thankfully,
-there aren't that many IDE drivers selected, so it's a choice of
-three.  If there were more, finding this would be a BIG problem.
+This patch adds missing __devexit_p's.
 
-Can we please change this silly policy of using stupidly generic names
-like 'driver'?
+Reported-by: Russell King <rmk+lkml@arm.linux.org.uk>
+Signed-off-by: Adrian Bunk <bunk@kernel.org>
 
-In any case, this fixes the breakage.  Referencing discarded exit
-sections from .data sections is Bad News.  And no, the kernels static
-checker doesn't find this because 'driver' structures are exempted.
+---
 
+ drivers/ide/pci/aec62xx.c      |    2 +-
+ drivers/ide/pci/cy82c693.c     |    2 +-
+ drivers/ide/pci/hpt366.c       |    2 +-
+ drivers/ide/pci/it821x.c       |    2 +-
+ drivers/ide/pci/pdc202xx_new.c |    2 +-
+ drivers/ide/pci/scc_pata.c     |    2 +-
+ drivers/ide/pci/siimage.c      |    2 +-
+ drivers/ide/pci/sis5513.c      |    2 +-
+ drivers/ide/pci/tc86c001.c     |    2 +-
+ drivers/ide/pci/via82cxxx.c    |    2 +-
+ 10 files changed, 10 insertions(+), 10 deletions(-)
+
+2c3b97b99c1b2985e74bf60d46b105b8eacc4fba 
+diff --git a/drivers/ide/pci/aec62xx.c b/drivers/ide/pci/aec62xx.c
+index 40644b6..3187215 100644
+--- a/drivers/ide/pci/aec62xx.c
++++ b/drivers/ide/pci/aec62xx.c
+@@ -307,7 +307,7 @@ static struct pci_driver driver = {
+ 	.name		= "AEC62xx_IDE",
+ 	.id_table	= aec62xx_pci_tbl,
+ 	.probe		= aec62xx_init_one,
+-	.remove		= aec62xx_remove,
++	.remove		= __devexit_p(aec62xx_remove),
+ };
+ 
+ static int __init aec62xx_ide_init(void)
+diff --git a/drivers/ide/pci/cy82c693.c b/drivers/ide/pci/cy82c693.c
+index bfae2f8..e6d8ee8 100644
+--- a/drivers/ide/pci/cy82c693.c
++++ b/drivers/ide/pci/cy82c693.c
+@@ -447,7 +447,7 @@ static struct pci_driver driver = {
+ 	.name		= "Cypress_IDE",
+ 	.id_table	= cy82c693_pci_tbl,
+ 	.probe		= cy82c693_init_one,
+-	.remove		= cy82c693_remove,
++	.remove		= __devexit_p(cy82c693_remove),
+ };
+ 
+ static int __init cy82c693_ide_init(void)
 diff --git a/drivers/ide/pci/hpt366.c b/drivers/ide/pci/hpt366.c
-index 748793a..259ddf2 100644
+index 748793a..eb107ee 100644
 --- a/drivers/ide/pci/hpt366.c
 +++ b/drivers/ide/pci/hpt366.c
-@@ -1594,7 +1594,7 @@ static int __devinit hpt366_init_one(struct pci_dev *dev, const struct pci_devic
- 	return ret;
- }
+@@ -1620,7 +1620,7 @@ static struct pci_driver driver = {
+ 	.name		= "HPT366_IDE",
+ 	.id_table	= hpt366_pci_tbl,
+ 	.probe		= hpt366_init_one,
+-	.remove		= hpt366_remove,
++	.remove		= __devexit_p(hpt366_remove),
+ };
  
--static void __devexit hpt366_remove(struct pci_dev *dev)
-+static void hpt366_remove(struct pci_dev *dev)
- {
- 	struct ide_host *host = pci_get_drvdata(dev);
- 	struct ide_info *info = host->host_priv;
+ static int __init hpt366_ide_init(void)
+diff --git a/drivers/ide/pci/it821x.c b/drivers/ide/pci/it821x.c
+index b6dc723..4a1508a 100644
+--- a/drivers/ide/pci/it821x.c
++++ b/drivers/ide/pci/it821x.c
+@@ -686,7 +686,7 @@ static struct pci_driver driver = {
+ 	.name		= "ITE821x IDE",
+ 	.id_table	= it821x_pci_tbl,
+ 	.probe		= it821x_init_one,
+-	.remove		= it821x_remove,
++	.remove		= __devexit_p(it821x_remove),
+ };
+ 
+ static int __init it821x_ide_init(void)
 diff --git a/drivers/ide/pci/pdc202xx_new.c b/drivers/ide/pci/pdc202xx_new.c
-index 0f609b7..05ddfde 100644
+index 0f609b7..d477da6 100644
 --- a/drivers/ide/pci/pdc202xx_new.c
 +++ b/drivers/ide/pci/pdc202xx_new.c
-@@ -541,7 +541,7 @@ static int __devinit pdc202new_init_one(struct pci_dev *dev, const struct pci_de
- 	return ide_pci_init_one(dev, d, NULL);
- }
+@@ -566,7 +566,7 @@ static struct pci_driver driver = {
+ 	.name		= "Promise_IDE",
+ 	.id_table	= pdc202new_pci_tbl,
+ 	.probe		= pdc202new_init_one,
+-	.remove		= pdc202new_remove,
++	.remove		= __devexit_p(pdc202new_remove),
+ };
  
--static void __devexit pdc202new_remove(struct pci_dev *dev)
-+static void pdc202new_remove(struct pci_dev *dev)
- {
- 	struct ide_host *host = pci_get_drvdata(dev);
- 	struct pci_dev *dev2 = host->dev[1] ? to_pci_dev(host->dev[1]) : NULL;
+ static int __init pdc202new_ide_init(void)
+diff --git a/drivers/ide/pci/scc_pata.c b/drivers/ide/pci/scc_pata.c
+index 6cde48b..44cccd1 100644
+--- a/drivers/ide/pci/scc_pata.c
++++ b/drivers/ide/pci/scc_pata.c
+@@ -954,7 +954,7 @@ static struct pci_driver driver = {
+ 	.name = "SCC IDE",
+ 	.id_table = scc_pci_tbl,
+ 	.probe = scc_init_one,
+-	.remove = scc_remove,
++	.remove = __devexit_p(scc_remove),
+ };
+ 
+ static int scc_ide_init(void)
+diff --git a/drivers/ide/pci/siimage.c b/drivers/ide/pci/siimage.c
+index 445ce6f..db2b88a 100644
+--- a/drivers/ide/pci/siimage.c
++++ b/drivers/ide/pci/siimage.c
+@@ -832,7 +832,7 @@ static struct pci_driver driver = {
+ 	.name		= "SiI_IDE",
+ 	.id_table	= siimage_pci_tbl,
+ 	.probe		= siimage_init_one,
+-	.remove		= siimage_remove,
++	.remove		= __devexit_p(siimage_remove),
+ };
+ 
+ static int __init siimage_ide_init(void)
+diff --git a/drivers/ide/pci/sis5513.c b/drivers/ide/pci/sis5513.c
+index e5a4b42..5efe21d 100644
+--- a/drivers/ide/pci/sis5513.c
++++ b/drivers/ide/pci/sis5513.c
+@@ -610,7 +610,7 @@ static struct pci_driver driver = {
+ 	.name		= "SIS_IDE",
+ 	.id_table	= sis5513_pci_tbl,
+ 	.probe		= sis5513_init_one,
+-	.remove		= sis5513_remove,
++	.remove		= __devexit_p(sis5513_remove),
+ };
+ 
+ static int __init sis5513_ide_init(void)
+diff --git a/drivers/ide/pci/tc86c001.c b/drivers/ide/pci/tc86c001.c
+index 7fc88c3..927277c 100644
+--- a/drivers/ide/pci/tc86c001.c
++++ b/drivers/ide/pci/tc86c001.c
+@@ -249,7 +249,7 @@ static struct pci_driver driver = {
+ 	.name		= "TC86C001",
+ 	.id_table	= tc86c001_pci_tbl,
+ 	.probe		= tc86c001_init_one,
+-	.remove		= tc86c001_remove,
++	.remove		= __devexit_p(tc86c001_remove),
+ };
+ 
+ static int __init tc86c001_ide_init(void)
+diff --git a/drivers/ide/pci/via82cxxx.c b/drivers/ide/pci/via82cxxx.c
+index a6b2cc8..94fb9ab 100644
+--- a/drivers/ide/pci/via82cxxx.c
++++ b/drivers/ide/pci/via82cxxx.c
+@@ -491,7 +491,7 @@ static struct pci_driver driver = {
+ 	.name 		= "VIA_IDE",
+ 	.id_table 	= via_pci_tbl,
+ 	.probe 		= via_init_one,
+-	.remove		= via_remove,
++	.remove		= __devexit_p(via_remove),
+ };
+ 
+ static int __init via_ide_init(void)
 
-
--- 
-Russell King
- Linux kernel    2.6 ARM Linux   - http://www.arm.linux.org.uk/
- maintainer of:
