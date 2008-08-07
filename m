@@ -1,184 +1,95 @@
-From: Borislav Petkov <petkovbb@googlemail.com>
-Subject: [PATCH] ide-generic: handle probing of legacy io-ports v5 (was:
-	Re: [PATCH 1/2] pata_legacy: export functionality to ide)
-Date: Thu, 7 Aug 2008 06:36:22 +0200
-Message-ID: <20080807043621.GA3771@gollum.tnic>
-References: <20080803165135.GA31977@gollum.tnic> <4898630C.7090403@ru.mvista.com> <9ea470500808050732s7be29360ge358790e955be06a@mail.gmail.com> <58cb370e0808050741v7ff3f20awb3d91a84486f8547@mail.gmail.com> <20080806061023.GA23773@gollum.tnic> <48998C58.20703@ru.mvista.com> <9ea470500808060703p4a94c868i25106e081aad75c4@mail.gmail.com> <4899C9F4.9040002@ru.mvista.com> <20080806194754.GC31312@gollum.tnic> <489A03C3.5070607@ru.mvista.com>
-Reply-To: petkovbb@gmail.com
+From: Russell King <rmk+lkml@arm.linux.org.uk>
+Subject: [WHINGE+PATCH] Stupid structure naming and stupid linker error messages
+Date: Thu, 7 Aug 2008 17:45:39 +0100
+Message-ID: <20080807164539.GA26947@flint.arm.linux.org.uk>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.158]:49580 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751346AbYHGEgN (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 7 Aug 2008 00:36:13 -0400
-Received: by fg-out-1718.google.com with SMTP id 19so143892fgg.17
-        for <linux-ide@vger.kernel.org>; Wed, 06 Aug 2008 21:36:11 -0700 (PDT)
+Received: from caramon.arm.linux.org.uk ([78.32.30.218]:53703 "EHLO
+	caramon.arm.linux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752706AbYHGQpu (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 7 Aug 2008 12:45:50 -0400
 Content-Disposition: inline
-In-Reply-To: <489A03C3.5070607@ru.mvista.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: Linux Kernel List <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org
 
-On Thu, Aug 07, 2008 at 12:04:19AM +0400, Sergei Shtylyov wrote:
+When building one ARM configuration, I'm getting this very very useful
+error message:
 
-[.. ]
+  LD      .tmp_vmlinux1
+`.devexit.text' referenced in section `.data' of drivers/built-in.o: defined in discarded section `.devexit.text' of drivers/built-in.o
+`.devexit.text' referenced in section `.data' of drivers/built-in.o: defined in discarded section `.devexit.text' of drivers/built-in.o
+make[1]: *** [.tmp_vmlinux1] Error 1
 
->>>>> Would have been probably enough to test only BAR0/2, don't you think?
->
->>>> I assume you're referring to the legacy ioports fixup in
->>>> drivers/pci/probe.c:pci_setup_device().
->
->>>   And to the fact that the value 0x1f0 should only be ever seen in 
->>> BAR0 and 0x170 in BAR2 even if they would have been read off the 
->>> chips (some chips have these values reading back even in legacy mode, 
->>> and even could malfunction if other values are written there), not 
->>> fixed up there, and certainly not in BAR1 or BAR3, so it's quite 
->>> pointless to look in these BARs too.
->
->> So the comment in there saying that in some cases BAR0-3 could contain junk is a
->> bogus?
->
->    Don't know. The PCI IDE spec. said that those should be 0 in 
-> compatibility mode but I know that some controllers require the standard 
-> values of 0x1[f7]0 to be in BAR0/2 in compatibility mode. If my memory 
-> serves, NatSemi PC8741x were ones of those...
->
->> In other words, can we assume that one will always read 0x1f0 from BAR0
->> and 0x170 from BAR2 in compatibility mode.
->
->    Certainly not. We can only rely on the workaround putting 0x1[f7]0 in 
-> the resources 0/2.
->
->> If so, the check is even simpler:
->
->> 	if (pci_resource_start(p, 0) == 0x1f0)
->> 		*primary = 1;
->> 	if (pci_resource_start(p, 2) == 0x170)
->> 		*secondary = 1;
->
->    Yes, I think that should be enough...
+Wow.  How much more useful information can it give me?  Anyway, let's
+try and work out what's going on.
 
-Here's v5:
+$ arm-linux-objdump --section=.data -r ../build/ixp4xx/drivers/built-in.o |grep '\.devexit\.text'
+00002d10 R_ARM_ABS32       .devexit.text
+00003038 R_ARM_ABS32       .devexit.text
 
----
-From: Borislav Petkov <petkovbb@gmail.com>
-Date: Sun, 3 Aug 2008 18:46:35 +0200
-Subject: [PATCH] ide-generic: handle probing of legacy io-ports v5
+Okay, now we know where in the .data section these references are.  Let's
+try to find what's responsible.
 
-Avoid probing the io-ports in case an IDE PCI controller is present and it
-uses the legacy iobases. If we still want to enforce the probing, we do
+$ arm-linux-nm -n ../build/ixp4xx/drivers/built-in.o | grep ' d '|less
+00002c8c d driver
+00002cfc d driver
+00002d6c d hpt37x_timings
+...
+00003014 d xfer_speeds
+00003024 d driver
+00003094 d pdc_quirk_drives
 
-ide_generic.probe_mask=0x3f
+How.  Very.  Informative.  They're both in a structure called 'driver'.
 
-on the kernel command line. The iobase checking code is
-adapted from drivers/ata/pata_legacy.c after converting hex
-pci ids into their corresponding macros in <linux/pci_ids.h>.
+$ grep 'struct.* driver *=' drivers -r | wc -l
+62
 
-Also, check only BAR0/2 resources since those are guaranteed
-by the workaround in drivers/pci/probe.c:pci_setup_device().
+Yes.  Well, 62 structures called 'driver'.  How about someone deciding
+to prefix such a generic name with something specific to the actual
+driver in question?
 
-CC: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Signed-off-by: Borislav Petkov <petkovbb@gmail.com>
----
- drivers/ide/ide-generic.c |   56 +++++++++++++++++++++++++++++++++++++++++---
- 1 files changed, 52 insertions(+), 4 deletions(-)
+However, you can take a guess that it might be in IDE.  Thankfully,
+there aren't that many IDE drivers selected, so it's a choice of
+three.  If there were more, finding this would be a BIG problem.
 
-diff --git a/drivers/ide/ide-generic.c b/drivers/ide/ide-generic.c
-index 8fe8b5b..608f353 100644
---- a/drivers/ide/ide-generic.c
-+++ b/drivers/ide/ide-generic.c
-@@ -19,6 +19,7 @@
- #include <linux/init.h>
- #include <linux/module.h>
- #include <linux/ide.h>
-+#include <linux/pci_ids.h>
+Can we please change this silly policy of using stupidly generic names
+like 'driver'?
+
+In any case, this fixes the breakage.  Referencing discarded exit
+sections from .data sections is Bad News.  And no, the kernels static
+checker doesn't find this because 'driver' structures are exempted.
+
+diff --git a/drivers/ide/pci/hpt366.c b/drivers/ide/pci/hpt366.c
+index 748793a..259ddf2 100644
+--- a/drivers/ide/pci/hpt366.c
++++ b/drivers/ide/pci/hpt366.c
+@@ -1594,7 +1594,7 @@ static int __devinit hpt366_init_one(struct pci_dev *dev, const struct pci_devic
+ 	return ret;
+ }
  
- /* FIXME: convert m32r to use ide_platform host driver */
- #ifdef CONFIG_M32R
-@@ -27,7 +28,7 @@
- 
- #define DRV_NAME	"ide_generic"
- 
--static int probe_mask = 0x03;
-+static int probe_mask;
- module_param(probe_mask, int, 0);
- MODULE_PARM_DESC(probe_mask, "probe mask for legacy ISA IDE ports");
- 
-@@ -100,19 +101,66 @@ static const u16 legacy_bases[] = { 0x1f0, 0x170, 0x1e8, 0x168, 0x1e0, 0x160 };
- static const int legacy_irqs[]  = { 14, 15, 11, 10, 8, 12 };
- #endif
- 
-+static void ide_generic_check_pci_legacy_iobases(int *primary, int *secondary)
-+{
-+	struct pci_dev *p = NULL;
-+	u16 val;
-+
-+	for_each_pci_dev(p) {
-+
-+		if (pci_resource_start(p, 0) == 0x1f0)
-+			*primary = 1;
-+		if (pci_resource_start(p, 2) == 0x170)
-+			*secondary = 1;
-+
-+		/* Cyrix CS55{1,2}0 pre SFF MWDMA ATA on the bridge */
-+		if (p->vendor == PCI_VENDOR_ID_CYRIX &&
-+		    (p->device == PCI_DEVICE_ID_CYRIX_5510 ||
-+		     p->device == PCI_DEVICE_ID_CYRIX_5520))
-+			*primary = *secondary = 1;
-+
-+		/* Intel MPIIX - PIO ATA on non PCI side of bridge */
-+		if (p->vendor == PCI_VENDOR_ID_INTEL &&
-+		    p->device == PCI_DEVICE_ID_INTEL_82371MX) {
-+
-+			pci_read_config_word(p, 0x6C, &val);
-+			if (val & 0x8000) {
-+				/* ATA port enabled */
-+				if (val & 0x4000)
-+					*secondary = 1;
-+				else
-+					*primary = 1;
-+			}
-+		}
-+	}
-+}
-+
- static int __init ide_generic_init(void)
+-static void __devexit hpt366_remove(struct pci_dev *dev)
++static void hpt366_remove(struct pci_dev *dev)
  {
- 	hw_regs_t hw[MAX_HWIFS], *hws[MAX_HWIFS];
- 	struct ide_host *host;
- 	unsigned long io_addr;
--	int i, rc;
-+	int i, rc, primary = 0, secondary = 0;
+ 	struct ide_host *host = pci_get_drvdata(dev);
+ 	struct ide_info *info = host->host_priv;
+diff --git a/drivers/ide/pci/pdc202xx_new.c b/drivers/ide/pci/pdc202xx_new.c
+index 0f609b7..05ddfde 100644
+--- a/drivers/ide/pci/pdc202xx_new.c
++++ b/drivers/ide/pci/pdc202xx_new.c
+@@ -541,7 +541,7 @@ static int __devinit pdc202new_init_one(struct pci_dev *dev, const struct pci_de
+ 	return ide_pci_init_one(dev, d, NULL);
+ }
  
- #ifdef CONFIG_MIPS
- 	if (!ide_probe_legacy())
- 		return -ENODEV;
- #endif
--	printk(KERN_INFO DRV_NAME ": please use \"probe_mask=0x3f\" module "
--			 "parameter for probing all legacy ISA IDE ports\n");
-+	ide_generic_check_pci_legacy_iobases(&primary, &secondary);
-+
-+	if (!probe_mask) {
-+		printk(KERN_INFO DRV_NAME ": please use \"probe_mask=0x3f\" "
-+		     "module parameter for probing all legacy ISA IDE ports\n");
-+
-+		if (primary == 0)
-+			probe_mask |= 0x1;
-+
-+		if (secondary == 0)
-+			probe_mask |= 0x2;
-+	} else {
-+		printk(KERN_WARNING "%s: enforcing probing of io ports upon "
-+			"user request.\n", DRV_NAME);
-+	}
- 
- 	memset(hws, 0, sizeof(hw_regs_t *) * MAX_HWIFS);
- 
--- 
-1.5.5.4
+-static void __devexit pdc202new_remove(struct pci_dev *dev)
++static void pdc202new_remove(struct pci_dev *dev)
+ {
+ 	struct ide_host *host = pci_get_drvdata(dev);
+ 	struct pci_dev *dev2 = host->dev[1] ? to_pci_dev(host->dev[1]) : NULL;
+
 
 -- 
-Regards/Gruss,
-    Boris.
+Russell King
+ Linux kernel    2.6 ARM Linux   - http://www.arm.linux.org.uk/
+ maintainer of:
