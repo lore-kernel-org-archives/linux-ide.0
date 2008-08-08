@@ -1,85 +1,36 @@
-From: Adrian Bunk <bunk@kernel.org>
-Subject: [8/17] ide-cd: use bcd2bin/bin2bcd
-Date: Fri, 8 Aug 2008 19:34:46 +0300
-Message-ID: <20080808163446.GO14495@cs181140183.pp.htv.fi>
+From: "Boris Petkov" <petkovbb@googlemail.com>
+Subject: Re: [8/17] ide-cd: use bcd2bin/bin2bcd
+Date: Fri, 8 Aug 2008 18:56:22 +0200
+Message-ID: <9ea470500808080956m23f59966nb9b1955e174d157d@mail.gmail.com>
+References: <20080808163446.GO14495@cs181140183.pp.htv.fi>
+Reply-To: petkovbb@gmail.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp4.pp.htv.fi ([213.243.153.38]:49907 "EHLO smtp4.pp.htv.fi"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754595AbYHHQgV (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 8 Aug 2008 12:36:21 -0400
+Received: from wf-out-1314.google.com ([209.85.200.175]:61632 "EHLO
+	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751274AbYHHQ4X (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 8 Aug 2008 12:56:23 -0400
+Received: by wf-out-1314.google.com with SMTP id 27so1797405wfd.4
+        for <linux-ide@vger.kernel.org>; Fri, 08 Aug 2008 09:56:22 -0700 (PDT)
+In-Reply-To: <20080808163446.GO14495@cs181140183.pp.htv.fi>
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: bzolnier@gmail.com, petkovbb@gmail.com
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, David Brownell <david-b@pacbell.net>
+To: Adrian Bunk <bunk@kernel.org>
+Cc: bzolnier@gmail.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, David Brownell <david-b@pacbell.net>
 
-This patch changes ide-cd to use the new bcd2bin/bin2bcd functions 
-instead of the obsolete BCD2BIN/BIN2BCD macros.
+On Fri, Aug 8, 2008 at 6:34 PM, Adrian Bunk <bunk@kernel.org> wrote:
+> This patch changes ide-cd to use the new bcd2bin/bin2bcd functions
+> instead of the obsolete BCD2BIN/BIN2BCD macros.
+>
+> Signed-off-by: Adrian Bunk <bunk@kernel.org>
 
-Signed-off-by: Adrian Bunk <bunk@kernel.org>
+Acked-by: Borislav Petkov <petkovbb@gmail.com>
 
----
+[.. ]
 
- drivers/ide/ide-cd.c |   20 ++++++++++----------
- 1 file changed, 10 insertions(+), 10 deletions(-)
-
-71c0e7b9b6349129f4f810314598b6e76f1448d7 
-diff --git a/drivers/ide/ide-cd.c b/drivers/ide/ide-cd.c
-index e617cf0..a8e3ad2 100644
---- a/drivers/ide/ide-cd.c
-+++ b/drivers/ide/ide-cd.c
-@@ -1270,9 +1270,9 @@ static ide_startstop_t ide_cd_do_request(ide_drive_t *drive, struct request *rq,
-  */
- static void msf_from_bcd(struct atapi_msf *msf)
- {
--	msf->minute = BCD2BIN(msf->minute);
--	msf->second = BCD2BIN(msf->second);
--	msf->frame  = BCD2BIN(msf->frame);
-+	msf->minute = bcd2bin(msf->minute);
-+	msf->second = bcd2bin(msf->second);
-+	msf->frame  = bcd2bin(msf->frame);
- }
- 
- int cdrom_check_status(ide_drive_t *drive, struct request_sense *sense)
-@@ -1411,8 +1411,8 @@ int ide_cd_read_toc(ide_drive_t *drive, struct request_sense *sense)
- 		return stat;
- 
- 	if (drive->atapi_flags & IDE_AFLAG_TOCTRACKS_AS_BCD) {
--		toc->hdr.first_track = BCD2BIN(toc->hdr.first_track);
--		toc->hdr.last_track  = BCD2BIN(toc->hdr.last_track);
-+		toc->hdr.first_track = bcd2bin(toc->hdr.first_track);
-+		toc->hdr.last_track  = bcd2bin(toc->hdr.last_track);
- 	}
- 
- 	ntracks = toc->hdr.last_track - toc->hdr.first_track + 1;
-@@ -1452,8 +1452,8 @@ int ide_cd_read_toc(ide_drive_t *drive, struct request_sense *sense)
- 			return stat;
- 
- 		if (drive->atapi_flags & IDE_AFLAG_TOCTRACKS_AS_BCD) {
--			toc->hdr.first_track = (u8)BIN2BCD(CDROM_LEADOUT);
--			toc->hdr.last_track = (u8)BIN2BCD(CDROM_LEADOUT);
-+			toc->hdr.first_track = (u8)bin2bcd(CDROM_LEADOUT);
-+			toc->hdr.last_track = (u8)bin2bcd(CDROM_LEADOUT);
- 		} else {
- 			toc->hdr.first_track = CDROM_LEADOUT;
- 			toc->hdr.last_track = CDROM_LEADOUT;
-@@ -1466,14 +1466,14 @@ int ide_cd_read_toc(ide_drive_t *drive, struct request_sense *sense)
- 	toc->hdr.toc_length = be16_to_cpu(toc->hdr.toc_length);
- 
- 	if (drive->atapi_flags & IDE_AFLAG_TOCTRACKS_AS_BCD) {
--		toc->hdr.first_track = BCD2BIN(toc->hdr.first_track);
--		toc->hdr.last_track  = BCD2BIN(toc->hdr.last_track);
-+		toc->hdr.first_track = bcd2bin(toc->hdr.first_track);
-+		toc->hdr.last_track  = bcd2bin(toc->hdr.last_track);
- 	}
- 
- 	for (i = 0; i <= ntracks; i++) {
- 		if (drive->atapi_flags & IDE_AFLAG_TOCADDR_AS_BCD) {
- 			if (drive->atapi_flags & IDE_AFLAG_TOCTRACKS_AS_BCD)
--				toc->ent[i].track = BCD2BIN(toc->ent[i].track);
-+				toc->ent[i].track = bcd2bin(toc->ent[i].track);
- 			msf_from_bcd(&toc->ent[i].addr.msf);
- 		}
- 		toc->ent[i].addr.lba = msf_to_lba(toc->ent[i].addr.msf.minute,
+-- 
+Regards/Gruss,
+Boris.
