@@ -1,49 +1,45 @@
 From: Artem Bokhan <aptem@ngs.ru>
 Subject: bad sectors, suspicious behaviour
-Date: Fri, 08 Aug 2008 09:57:25 +0700
-Message-ID: <489BB615.4070809@ngs.ru>
+Date: Fri, 08 Aug 2008 17:02:54 +0700
+Message-ID: <489C19CE.6030708@ngs.ru>
 Mime-Version: 1.0
 Content-Type: multipart/mixed;
- boundary="------------010609060505070700000002"
+ boundary="------------040708060602080708070507"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtpout1.ngs.ru ([195.93.186.195]:46663 "EHLO smtpout1.ngs.ru"
+Received: from smtpout1.ngs.ru ([195.93.186.195]:33735 "EHLO smtpout1.ngs.ru"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753926AbYHHJ5Z (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 8 Aug 2008 05:57:25 -0400
+	id S1753606AbYHHKC5 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 8 Aug 2008 06:02:57 -0400
 Received: from [192.168.2.119] (unknown [192.168.2.119])
 	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
 	(No client certificate requested)
 	(Authenticated sender: aptem@ngs.ru)
-	by smtp.ngs.ru (smtp) with ESMTP id 0D8B956D843CC
-	for <linux-ide@vger.kernel.org>; Fri,  8 Aug 2008 16:57:22 +0700 (NOVST)
+	by smtp.ngs.ru (smtp) with ESMTP id A2C2756DAC210
+	for <linux-ide@vger.kernel.org>; Fri,  8 Aug 2008 17:02:54 +0700 (NOVST)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
 
 This is a multi-part message in MIME format.
---------------010609060505070700000002
+--------------040708060602080708070507
 Content-Type: text/plain; charset=KOI8-R; format=flowed
 Content-Transfer-Encoding: 7bit
 
+(sorry for dup, incorrect system clock was set)
+
 Hello!
 
-I'm not sure  I chose correct maillist, so point me somewhere in case of 
-mistake :)
+I'm not sure  I chose correct maillist, so point me somewhere in case of mistake :)
 
-I'm trying to emulate OS behaviour when something goes wrong with sata 
-hard drive, for example, unrecoverable "bad blocks".
-By some reason I do not want to use any sw/hw raid.
-
-I took new hard drive, because it should contain (and it contains) 
-unreadable (not reallocated yet) sectros, and did
+I'm trying to emulate OS behaviour when something goes wrong with sata hard drive, for example, unrecoverable "bad blocks". By some reason I do not want to use any sw/hw raid.
+I took new hard drive, because it should contain (and it contains) unreadable (not reallocated yet) sectros, and did
 
 
-'dd if=/dev/sda of=/dev/null bs=1M'. 
+'dd if=/dev/sda of=/dev/null bs=1M'.
 
-first run dd log (errors1.txt) looks OK, drive recovers, as I suppose, 
-approximately at time
+first run dd log (errors1.txt) looks OK, drive recovers, as I suppose, approximately at time
 
-cat 
+cat
 /sys/devices/pci0000:00/0000:00:01.0/0000:01:00.0/0000:02:02.0/host4/target4:0:0/4:0:0:0/timeout
 30
 
@@ -51,15 +47,15 @@ but when running dd second time, log looks strange (errors2.txt)
 
 
 running
-echo 1 > 
-/sys/devices/pci0000:00/0000:00:01.0/0000:01:00.0/0000:02:02.0/host4/target4:0:0/4:0:0:0/delete
+echo 1 > /sys/devices/pci0000:00/0000:00:01.0/0000:01:00.0/0000:02:02.0/host4/target4:0:0/4:0:0:0/delete
 echo "scsi add-single-device 4 0 0 0" > /proc/scsi/scsi
 
 and then running dd solve situation until next dd
 
 It is vanilla 2.6.26.2 kernel and sata_mv (MV88SX6081 8-port SATA II PCI-X)
 
---------------010609060505070700000002
+
+--------------040708060602080708070507
 Content-Type: text/plain;
  name="errors1.txt"
 Content-Transfer-Encoding: 7bit
@@ -270,7 +266,8 @@ Aug  8 05:35:09 ubuntu kernel: [75609.208690] sd 4:0:0:0: [sda] Write cache: ena
 
 
 
---------------010609060505070700000002
+
+--------------040708060602080708070507
 Content-Type: text/plain;
  name="errors2.txt"
 Content-Transfer-Encoding: 7bit
@@ -512,7 +509,8 @@ Aug  8 05:37:20 ubuntu kernel: [75757.414241] sd 4:0:0:0: [sda] Write Protect is
 Aug  8 05:37:20 ubuntu kernel: [75757.414241] sd 4:0:0:0: [sda] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
 
 
---------------010609060505070700000002
+
+--------------040708060602080708070507
 Content-Type: text/plain;
  name="errors3.txt"
 Content-Transfer-Encoding: 7bit
@@ -558,4 +556,5 @@ Aug  8 05:54:29 ubuntu kernel: [76898.778051]
 Aug  8 05:54:29 ubuntu kernel: [76898.778051] ---[ end trace 98cca564749c28e3 ]---
 
 
---------------010609060505070700000002--
+
+--------------040708060602080708070507--
