@@ -1,57 +1,40 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: Issue with AHCI driver
-Date: Fri, 08 Aug 2008 17:43:19 -0400
-Message-ID: <489CBDF7.8070707@pobox.com>
-References: <1592636.1218228104177.JavaMail.root@elwamui-wigeon.atl.sa.earthlink.net>
+From: Seth Heasley <seth.heasley@intel.com>
+Subject: [PATCH 2.6.26.2] ata_piix: IDE mode SATA patch for Intel Ibex Peak DeviceIDs
+Date: Fri, 8 Aug 2008 15:47:50 -0700
+Message-ID: <200808081547.50790.seth.heasley@intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain;
+  charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:37521 "EHLO mail.dvmed.net"
+Received: from mga02.intel.com ([134.134.136.20]:47590 "EHLO mga02.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755040AbYHHVnY (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 8 Aug 2008 17:43:24 -0400
-In-Reply-To: <1592636.1218228104177.JavaMail.root@elwamui-wigeon.atl.sa.earthlink.net>
+	id S1756185AbYHHWmo (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 8 Aug 2008 18:42:44 -0400
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: the4hoffmans@earthlink.net
-Cc: Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org, blward@micron.com
+To: jgarzik@pobox.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, htejun@gmail.com
+Cc: seth.heasley@intel.com
 
-the4hoffmans@earthlink.net wrote:
-> Update:
-> 
-> We got Fedora 2.6.25-14 build running.  It recognizes our card.  It identifies our device but at some point after that we die.  Using an analyzer we found that the problem is due to a buffer alignment issue.
-> 
-> Our card is a prototype and currently under development.  It currently only supports memory buffers that are quadword aligned.  We are dying because we get a buffer for a subsequent identify command that is on a dword boundary.  That is the problem we need to solve next.
-> 
-> We know we need to change our hardware and we will do that.  However, is there a way during driver init to specify quadword buffer alignment so we can continue our testing with Linux?
+This patch adds the Intel Ibex Peak (PCH) IDE mode SATA Controller DeviceIDs.
 
-Not easily, no :/  The entirety of SATA, both devices, the protocol, and 
-controllers, are all very 32-bit-centric.  Given that each SATA FIS is 
-one or more dwords, this fundamental feature propagates through 
-everything touched by SATA:  Linux kernel drivers, controller 
-interfaces, etc.
+Signed-off by: Seth Heasley <seth.heasley@intel.com>
 
-I would be surprised if standard filesystem I/O (via bio's) was 
-unaligned... but all the ATA commands we use for control, various 
-internal [and often controller-specific] data structures that are 
-DMA-mapped and directly accessed are usually found on 32-bit boundaries, 
-but nothing more than that.
+--- linux-2.6.26.2/drivers/ata/ata_piix.c.orig  2008-08-08 11:34:56.000000000 -0700
++++ linux-2.6.26.2/drivers/ata/ata_piix.c       2008-08-08 14:30:02.000000000 -0700
+@@ -274,6 +274,14 @@
+        { 0x8086, 0x3a20, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich8_sata },
+        /* SATA Controller IDE (ICH10) */
+        { 0x8086, 0x3a26, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich8_2port_sata },
++       /* SATA Controller IDE (PCH) */
++       { 0x8086, 0x3b20, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich8_sata },
++       /* SATA Controller IDE (PCH) */
++       { 0x8086, 0x3b26, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich8_2port_sata },
++       /* SATA Controller IDE (PCH) */
++       { 0x8086, 0x3b2d, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich8_2port_sata },
++       /* SATA Controller IDE (PCH) */
++       { 0x8086, 0x3b2e, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich8_sata },
 
-Avoiding commands outside the READ DMA / WRITE DMA realm may help you 
-limp along... if you want to hack things up to speed up local 
-development, I would turn on libata DEBUG and VERBOSE_DEBUG, follow the 
-trace until you find the failing (non-aligned) command, and try to omit 
-that from the probing process.  The main non-data operation during 
-probing we really care about is IDENTIFY [PACKET] DEVICE, and that 
-/should/ be aligned at a minimum on a quadword boundary, if I'm not 
-mistaken.
-
-Also, avoid ATAPI devices and testing ATAPI, as you will _definitely_ 
-not be getting quadword alignment there.
-
-	Jeff
-
-
-
-
+        { }     /* terminate list */
+ };
