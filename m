@@ -1,98 +1,112 @@
-From: bugme-daemon@bugzilla.kernel.org
-Subject: [Bug 10943] machine doesn't shutdown when ahci sata driver is compiled as module
-Date: Fri,  8 Aug 2008 10:30:45 -0700 (PDT)
-Message-ID: <20080808173045.BD67711D109@picon.linux-foundation.org>
-References: <bug-10943-11633@http.bugzilla.kernel.org/>
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:42495 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751008AbYHHRbQ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 8 Aug 2008 13:31:16 -0400
-Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
-	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id m78HUj7J008115
-	for <linux-ide@vger.kernel.org>; Fri, 8 Aug 2008 10:30:46 -0700
-In-Reply-To: <bug-10943-11633@http.bugzilla.kernel.org/>
-Sender: linux-ide-owner@vger.kernel.org
+From: Kumar Gala <galak@kernel.crashing.org>
+Subject: issues with sata hotplug?
+Date: Fri, 8 Aug 2008 12:49:01 -0500
+Message-ID: <5D4D272F-5546-4C02-852A-80849A42EC1F@kernel.crashing.org>
+Mime-Version: 1.0 (Apple Message framework v926)
+Content-Type: text/plain; charset=US-ASCII; format=flowed; delsp=yes
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1757928AbYHHRtU@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-ide <linux-ide@vger.kernel.org>
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
 
-http://bugzilla.kernel.org/show_bug.cgi?id=10943
+I've got a system with a nvidia chipset running fedora 9 (2.6.25.11)
 
+00:05.0 IDE interface: nVidia Corporation MCP55 SATA Controller (rev  
+a3) (prog-if 85 [Master SecO PriO])
+	Subsystem: Sun Microsystems Computer Corp. Unknown device 534d
+	Flags: bus master, 66MHz, fast devsel, latency 0, IRQ 21
+	I/O ports at 34c0 [size=8]
+	I/O ports at 34b4 [size=4]
+	I/O ports at 34b8 [size=8]
+	I/O ports at 34b0 [size=4]
+	I/O ports at 3490 [size=16]
+	Memory at d0006000 (32-bit, non-prefetchable) [size=4K]
+	Capabilities: [44] Power Management version 2
+	Capabilities: [b0] Message Signalled Interrupts: Mask- 64bit+  
+Queue=0/2 Enable-
+	Capabilities: [cc] HyperTransport: MSI Mapping Enable+ Fixed+
+	Kernel driver in use: sata_nv
+	Kernel modules: ata_generic, sata_nv, pata_acpi
 
+00:05.1 IDE interface: nVidia Corporation MCP55 SATA Controller (rev  
+a3) (prog-if 85 [Master SecO PriO])
+	Subsystem: Sun Microsystems Computer Corp. Unknown device 534d
+	Flags: bus master, 66MHz, fast devsel, latency 0, IRQ 20
+	I/O ports at 34d8 [size=8]
+	I/O ports at 34cc [size=4]
+	I/O ports at 34d0 [size=8]
+	I/O ports at 34c8 [size=4]
+	I/O ports at 34a0 [size=16]
+	Memory at d0007000 (32-bit, non-prefetchable) [size=4K]
+	Capabilities: [44] Power Management version 2
+	Capabilities: [b0] Message Signalled Interrupts: Mask- 64bit+  
+Queue=0/2 Enable-
+	Capabilities: [cc] HyperTransport: MSI Mapping Enable+ Fixed+
+	Kernel driver in use: sata_nv
+	Kernel modules: ata_generic, sata_nv, pata_acpi
 
+I've connected a SATA to eSATA adapter on an internal port and  
+connected the eSATA port to a Thermaltake docking station:
 
+http://www.thermaltakeusa.com/Product.aspx?C=1346&ID=1731
 
-------- Comment #17 from gfpadovan@gmail.com  2008-08-08 10:30 -------
-Look! There is an error on device_add for sd 0:0:0:0:
-This was on the first dmesg I put here. I don't know what this error means.
+When I "eject" the drive I see no dmesg output related to hotplug.  I  
+also don't see anything when I plug a drive in.
 
-[    8.954419] sd 0:0:0:0:  dev=f70d4284 prev=f70ada90 next=f70ada90
-[    8.954434] ------------[ cut here ]------------
-[    8.954437] WARNING: at fs/sysfs/dir.c:463 sysfs_add_one+0x27/0x2f()
-[    8.954440] sysfs: duplicate filename '0:0:0:0' can not be created
-[    8.954443] Modules linked in: tg3 libphy e1000 xfs jfs raid10 raid456
-async_memcpy async_xor xor async_tx raid1 rai
-d0 dm_snapshot dm_mirror dm_log dm_mod scsi_wait_scan pdc_adma ata_piix ahci
-sata_qstor sata_vsc sata_uli sata_sis sata
-_sx4 sata_nv sata_via sata_svw sata_sil24 sata_sil sata_promise pata_sl82c105
-pata_cs5535 pata_cs5520 pata_via pata_mar
-vell pata_sis pata_netcell pata_sc1200 pata_triflex pata_ali pcmcia_core
-pata_efar pata_rz1000 pata_sil680 pata_pdc2027
-x pata_mpiix sbp2 ohci1394 ieee1394 sl811_hcd
-[    8.954500] Pid: 6280, comm: scsi_scan_0 Not tainted 2.6.27-rc1 #48
-[    8.954505]  [<c011db96>] warn_slowpath+0x61/0x84
-[    8.954512]  [<c02e4456>] scsi_device_dev_release_usercontext+0x129/0x13f
-[    8.954519]  [<c012adde>] execute_in_process_context+0x16/0x38
-[    8.954524]  [<c02bd462>] device_release+0x31/0x4d
-[    8.954530]  [<c0260461>] kobject_release+0x3c/0x4e
-[    8.954536]  [<c0260425>] kobject_release+0x0/0x4e
-[    8.954540]  [<c025fb02>] idr_get_empty_slot+0x129/0x206
-[    8.954545]  [<c025fcc0>] ida_get_new_above+0xe1/0x162
-[    8.954550]  [<c01a43ab>] sysfs_ilookup_test+0x0/0xd
-[    8.954555]  [<c017a1f5>] ifind+0x22/0x74
-[    8.954559]  [<c017a241>] ifind+0x6e/0x74
-[    8.954563]  [<c01a45bb>] sysfs_find_dirent+0x13/0x23
-[    8.954567]  [<c01a464e>] sysfs_add_one+0x27/0x2f
-[    8.954572]  [<c01a4aa4>] create_dir+0x3c/0x6c
-[    8.954576]  [<c01a4afd>] sysfs_create_dir+0x29/0x3b
-[    8.954580]  [<c0260482>] kobject_get+0xf/0x13
-[    8.954584]  [<c026058d>] kobject_add_internal+0xb1/0x14a
-[    8.954589]  [<c026090f>] kobject_add+0x4a/0x4e
-[    8.954594]  [<c02bdb23>] device_add+0xa3/0x525
-[    8.954598]  [<c02c13b6>] attribute_container_device_trigger+0x81/0x89
-[    8.954604]  [<c02e320c>] scsi_scan_host_selected+0xaa/0xdf
-[    8.954608]  [<c0260482>] kobject_get+0xf/0x13
-[    8.954613]  [<c02e40fd>] scsi_sysfs_add_sdev+0x96/0x1a9
-[    8.954617]  [<c02e3303>] do_scan_async+0x6c/0x127
-[    8.954622]  [<c02e3297>] do_scan_async+0x0/0x127
-[    8.954626]  [<c012d0cc>] kthread+0x38/0x60
-[    8.954631]  [<c012d094>] kthread+0x0/0x60
-[    8.954635]  [<c01037df>] kernel_thread_helper+0x7/0x10
-[    8.954640]  =======================
-[    8.954643] ---[ end trace fb7e35af3b626296 ]---
-[    8.954647] kobject_add_internal failed for 0:0:0:0 with -EEXIST, don't try
-to register things with the same name in the same directory.
-[    8.954652] Pid: 6280, comm: scsi_scan_0 Tainted: G        W 2.6.27-rc1 #48
-[    8.954655]  [<c02605f0>] kobject_add_internal+0x114/0x14a
-[    8.954660]  [<c026090f>] kobject_add+0x4a/0x4e
-[    8.954664]  [<c02bdb23>] device_add+0xa3/0x525
-[    8.954668]  [<c02c13b6>] attribute_container_device_trigger+0x81/0x89
-[    8.954673]  [<c02e320c>] scsi_scan_host_selected+0xaa/0xdf
-[    8.954677]  [<c0260482>] kobject_get+0xf/0x13
-[    8.954682]  [<c02e40fd>] scsi_sysfs_add_sdev+0x96/0x1a9
-[    8.954686]  [<c02e3303>] do_scan_async+0x6c/0x127
-[    8.954690]  [<c02e3297>] do_scan_async+0x0/0x127
-[    8.954694]  [<c012d0cc>] kthread+0x38/0x60
-[    8.954698]  [<c012d094>] kthread+0x0/0x60
-[    8.954702]  [<c01037df>] kernel_thread_helper+0x7/0x10
-[    8.954707]  =======================
-[    8.954709] error 1
-[    9.097510] kjournald starting.  Commit interval 5 seconds
-[    9.097529] EXT3-fs: mounted filesystem with ordered data mode.
-[   11.947144] sd 0:0:0:0: Attached scsi generic sg0 type 0
+scsi0 : sata_nv
+scsi1 : sata_nv
+ata1: SATA max UDMA/133 cmd 0x34c0 ctl 0x34b4 bmdma 0x3490 irq 21
+ata2: SATA max UDMA/133 cmd 0x34b8 ctl 0x34b0 bmdma 0x3498 irq 21
+ata1: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+ata1.00: ATA-7: HITACHI HDS7225SCSUN250G 0721BA6TRD, V5DOA7BA, max  
+UDMA/133
+ata1.00: 488390625 sectors, multi 16: LBA48 NCQ (depth 0/32)
+ata1.00: configured for UDMA/133
+ata2: SATA link down (SStatus 0 SControl 300)
+scsi 0:0:0:0: Direct-Access     ATA      HITACHI HDS7225S V5DO PQ: 0  
+ANSI: 5
+sd 0:0:0:0: [sda] 488390625 512-byte hardware sectors (250056 MB)
+sd 0:0:0:0: [sda] Write Protect is off
+sd 0:0:0:0: [sda] Mode Sense: 00 3a 00 00
+sd 0:0:0:0: [sda] Write cache: enabled, read cache: enabled, doesn't  
+support DPO or FUA
+sd 0:0:0:0: [sda] 488390625 512-byte hardware sectors (250056 MB)
+sd 0:0:0:0: [sda] Write Protect is off
+sd 0:0:0:0: [sda] Mode Sense: 00 3a 00 00
+sd 0:0:0:0: [sda] Write cache: enabled, read cache: enabled, doesn't  
+support DPO or FUA
+  sda: sda1 sda2 sda3
+sd 0:0:0:0: [sda] Attached SCSI disk
+ACPI: PCI Interrupt 0000:00:05.1[B] -> Link [LSI1] -> GSI 20 (level,  
+low) -> IRQ 20
+PCI: Setting latency timer of device 0000:00:05.1 to 64
+scsi2 : sata_nv
+scsi3 : sata_nv
+ata3: SATA max UDMA/133 cmd 0x34d8 ctl 0x34cc bmdma 0x34a0 irq 20
+ata4: SATA max UDMA/133 cmd 0x34d0 ctl 0x34c8 bmdma 0x34a8 irq 20
+ata3: SATA link down (SStatus 0 SControl 300)
+ata4: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+ata4.00: ATA-7: ST3808110AS, 3.AAE, max UDMA/133
+ata4.00: 156301488 sectors, multi 16: LBA48 NCQ (depth 0/32)
+ata4.00: configured for UDMA/133
+scsi 3:0:0:0: Direct-Access     ATA      ST3808110AS      3.AA PQ: 0  
+ANSI: 5
+sd 3:0:0:0: [sdb] 156301488 512-byte hardware sectors (80026 MB)
+sd 3:0:0:0: [sdb] Write Protect is off
+sd 3:0:0:0: [sdb] Mode Sense: 00 3a 00 00
+sd 3:0:0:0: [sdb] Write cache: enabled, read cache: enabled, doesn't  
+support DPO or FUA
+sd 3:0:0:0: [sdb] 156301488 512-byte hardware sectors (80026 MB)
+sd 3:0:0:0: [sdb] Write Protect is off
+sd 3:0:0:0: [sdb] Mode Sense: 00 3a 00 00
+sd 3:0:0:0: [sdb] Write cache: enabled, read cache: enabled, doesn't  
+support DPO or FUA
+  sdb: sdb1 sdb2 sdb3 sdb4
+sd 3:0:0:0: [sdb] Attached SCSI disk
+kjournald starting.  Commit interval 5 seconds
 
+Is there something I'm doing wrong w/regards to SATA hotplug support?
 
--- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are on the CC list for the bug, or are watching someone who is.
+- k
