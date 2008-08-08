@@ -1,46 +1,54 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH] ide-generic: handle probing of legacy io-ports v5
-Date: Fri, 08 Aug 2008 14:04:06 +0400
-Message-ID: <489C1A16.2050307@ru.mvista.com>
-References: <20080803165135.GA31977@gollum.tnic> <4898630C.7090403@ru.mvista.com> <9ea470500808050732s7be29360ge358790e955be06a@mail.gmail.com> <58cb370e0808050741v7ff3f20awb3d91a84486f8547@mail.gmail.com> <20080806061023.GA23773@gollum.tnic> <48998C58.20703@ru.mvista.com> <9ea470500808060703p4a94c868i25106e081aad75c4@mail.gmail.com> <4899C9F4.9040002@ru.mvista.com> <20080806194754.GC31312@gollum.tnic> <489A03C3.5070607@ru.mvista.com> <20080807043621.GA3771@gollum.tnic>
+From: Alan Jenkins <alan-jenkins@tuffmail.co.uk>
+Subject: Re: [Linux 2.6.27-rc2] suspend to disk, libata problem
+Date: Fri, 08 Aug 2008 12:19:26 +0100
+Message-ID: <489C2BBE.8040600@tuffmail.co.uk>
+References: <8db1092f0808071530o2f41b1b9p227dbb920e0a3961@mail.gmail.com>	 <alpine.LFD.1.10.0808071541150.3462@nehalem.linux-foundation.org>	 <200808080052.03443.rjw@sisk.pl> <8db1092f0808080057n588fff24r940b20358f5869f3@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from gateway-1237.mvista.com ([63.81.120.155]:22280 "EHLO
-	imap.sh.mvista.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751659AbYHHKEO (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 8 Aug 2008 06:04:14 -0400
-In-Reply-To: <20080807043621.GA3771@gollum.tnic>
+Received: from ik-out-1112.google.com ([66.249.90.181]:17530 "EHLO
+	ik-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753091AbYHHLUC (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 8 Aug 2008 07:20:02 -0400
+Received: by ik-out-1112.google.com with SMTP id c28so877533ika.5
+        for <linux-ide@vger.kernel.org>; Fri, 08 Aug 2008 04:20:01 -0700 (PDT)
+In-Reply-To: <8db1092f0808080057n588fff24r940b20358f5869f3@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: petkovbb@gmail.com, Sergei Shtylyov <sshtylyov@ru.mvista.com>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-kernel@vger.kernel.orglinux
+To: Maciej Rutecki <maciej.rutecki@gmail.com>
+Cc: "Rafael J. Wysocki" <rjw@sisk.pl>, Linus Torvalds <torvalds@linux-foundation.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, bzolnier@gmail.com, linux-ide@vger.kernel.org, jgarzik@pobox.com, Jesse Barnes <jbarnes@virtuousgeek.org>, Matthew Wilcox <matthew@wil.cx>
 
-Hello.
+Maciej Rutecki wrote:
+> Thanks
+> s2disk works, but I notice other problem during resume and normal
+> booting. Kernel very often stoped booting while detect PATA drive (DVD
+> drive):
+> http://unixy.pl/maciek/download/kernel/2.6.27-rc2/msi_path/img_0008.jpg
+> 
+> On 2.6.25.* stable it never happen.
+> On 2.6.26-rc* and 2.6.26.* stable -  sometimes
+> On 2.6.27-rc* - very often
+> 
+> So I try disable CONFIG_IDE and test s2disk again. Problem seems has
+> gone But a I have many warnings during resume (USB related?):
+> http://unixy.pl/maciek/download/kernel/2.6.27-rc2/without_config_ide/dmesg_resume_ahci.txt
 
-Borislav Petkov wrote:
+That looks like <http://bugzilla.kernel.org/show_bug.cgi?id=11263>.
 
-> From: Borislav Petkov <petkovbb@gmail.com>
-> Date: Sun, 3 Aug 2008 18:46:35 +0200
-> Subject: [PATCH] ide-generic: handle probing of legacy io-ports v5
->
-> Avoid probing the io-ports in case an IDE PCI controller is present and it
-> uses the legacy iobases. If we still want to enforce the probing, we do
->
-> ide_generic.probe_mask=0x3f
->
-> on the kernel command line. The iobase checking code is
-> adapted from drivers/ata/pata_legacy.c after converting hex
-> pci ids into their corresponding macros in <linux/pci_ids.h>.
->
-> Also, check only BAR0/2 resources since those are guaranteed
-> by the workaround in drivers/pci/probe.c:pci_setup_device().
->
-> CC: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-> Signed-off-by: Borislav Petkov <petkovbb@gmail.com>
+Comment  #9 From Alan Stern 2008-08-07 07:30:17  [reply] -------  
+This is a known problem caused by changes to the driver core.  I haven't had
+time yet to update the USB suspend/resume infrastructure to match.
 
-Acked-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-
-MBR, Sergei
-
+> Config kernel without CONFIG_IDE:
+> http://unixy.pl/maciek/download/kernel/2.6.27-rc2/without_config_ide/config-2.6.27-rc2
+> 
+> 
+> @Linus
+> If anybody tells me how do it, why not. I'm not kernel programmer (or
+> programmer in  generality). I'm only Linux user - newbie - who found
+> problem in kernel and think that better report it before stable 2.6.27
+> will be released than after.
+> 
+> Regards
 
