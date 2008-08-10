@@ -1,53 +1,37 @@
-From: Bruno =?UTF-8?B?UHLDqW1vbnQ=?= <bonbons@linux-vserver.org>
-Subject: Re: [2.6.27-rc2-git4] Kernel panic on VIA Ester+VIA CX700
-Date: Sun, 10 Aug 2008 00:13:25 +0200
-Message-ID: <20080810001325.383a9ade@neptune.home>
-References: <20080809225153.2fdb23a8@neptune.home>
-	<200808100000.25402.rjw@sisk.pl>
-	<20080809220154.GO28946@ZenIV.linux.org.uk>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <20080809220154.GO28946@ZenIV.linux.org.uk>
-Sender: linux-scsi-owner@vger.kernel.org
-To: Al Viro <viro@ZenIV.linux.org.uk>
-Cc: "Rafael J. Wysocki" <rjw@sisk.pl>, Linux Kernel <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: [PATCH 00/22] ide: more work on generic ATAPI support
+Date: Sun, 10 Aug 2008 17:35:27 +0200
+Message-ID: <20080810153527.16255.2504.sendpatchset@localhost.localdomain>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mu-out-0910.google.com ([209.85.134.188]:2494 "EHLO
+	mu-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752469AbYHJPhk (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 10 Aug 2008 11:37:40 -0400
+Received: by mu-out-0910.google.com with SMTP id w8so3058471mue.1
+        for <linux-ide@vger.kernel.org>; Sun, 10 Aug 2008 08:37:38 -0700 (PDT)
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
+Cc: Borislav Petkov <petkovbb@gmail.com>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-kernel@vger.kernel.org
 
-On Sat, 09 August 2008 Al Viro <viro@ZenIV.linux.org.uk> wrote:
-> On Sun, Aug 10, 2008 at 12:00:24AM +0200, Rafael J. Wysocki wrote:
-> > On Saturday, 9 of August 2008, Bruno Pr?mont wrote:
-> > > Hi,
-> > 
-> > Hi,
-> > 
-> > > Trying out 2.6.27-rc2-git4 on a VIA Ester + CX700 based system I
-> > > experience the following panic using a config obtained with make
-> > > oldconfig from working 2.6.26 config.
-> > > 
-> > > Looking at the traces and when it happens it looks like it could
-> > > be libATA or SCSI related...
-> > > 
-> > > 
-> > > Note: the kernel is patched with viafb patches sent yesterday
-> > > ([y]) and squashfs (<m>)
-> > 
-> > Could you retest without these two, please?
-> 
-> There'a another fun candidate: lazy allocation of fpu state.  Do you
-> have padlock-aes/padlock-sha/via-rng in use?
-> 
-They are compiled into the kernel and initialize with 2.6.26.2, though
-I have no idea if the kernel uses them more than that...
 
-The crash happens long enough before userspace gets started, as such
-except kernel-side users there should be no users of them.
+Just some more work on generic ATAPI layer...
 
-I will check tomorrow without these to determine which one might be the
-offending one:
-- no crypto,padlock/viarng
-- no viafb
-- no squashfs (though it should be pretty inoffensive)
+- code unifications here and there
 
-Bruno
+- move IDEFLOPPY_IOCTL_FORMAT_* support to a separate file
+
+- ide_pc_intr() no longer requires zillion of arguments
+
+Applies on top of current pata tree, tested with ide-scsi.
+
+diffstat:
+ drivers/ide/Makefile           |    3 
+ drivers/ide/ide-atapi.c        |  323 +++++++++++++++--
+ drivers/ide/ide-floppy.c       |  739 ++++++-----------------------------------
+ drivers/ide/ide-floppy.h       |   72 +++
+ drivers/ide/ide-floppy_ioctl.c |  245 +++++++++++++
+ drivers/ide/ide-tape.c         |  396 ++++++---------------
+ drivers/scsi/ide-scsi.c        |  178 ++-------
+ include/linux/ide.h            |  266 +++++++++-----
+ 8 files changed, 1035 insertions(+), 1187 deletions(-)
