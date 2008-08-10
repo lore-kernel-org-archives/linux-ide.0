@@ -1,127 +1,297 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH 05/22] ide-tape: add ide_tape_set_media_lock() helper
-Date: Sun, 10 Aug 2008 17:36:02 +0200
-Message-ID: <20080810153602.16255.44911.sendpatchset@localhost.localdomain>
+Subject: [PATCH 03/22] ide: add ide_io_buffers() helper
+Date: Sun, 10 Aug 2008 17:35:48 +0200
+Message-ID: <20080810153548.16255.52630.sendpatchset@localhost.localdomain>
 References: <20080810153527.16255.2504.sendpatchset@localhost.localdomain>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mu-out-0910.google.com ([209.85.134.187]:3925 "EHLO
-	mu-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755859AbYHJPiO (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 10 Aug 2008 11:38:14 -0400
-Received: by mu-out-0910.google.com with SMTP id w8so3058470mue.1
-        for <linux-ide@vger.kernel.org>; Sun, 10 Aug 2008 08:38:13 -0700 (PDT)
+Received: from fk-out-0910.google.com ([209.85.128.184]:13064 "EHLO
+	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755796AbYHJPiA (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 10 Aug 2008 11:38:00 -0400
+Received: by fk-out-0910.google.com with SMTP id 18so1414994fkq.5
+        for <linux-ide@vger.kernel.org>; Sun, 10 Aug 2008 08:37:59 -0700 (PDT)
 In-Reply-To: <20080810153527.16255.2504.sendpatchset@localhost.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
 Cc: Borislav Petkov <petkovbb@gmail.com>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-kernel@vger.kernel.org
 
-Add ide_tape_set_media_lock() helper and convert idetape_mtioctop(),
-idetape_chrdev_open() and idetape_chrdev_release() to use it.
+* Make ->io_buffers method return number of bytes transferred.
 
-There should be no functional changes caused by this patch (it is
-OK to modify ->door_locked if idetape_create_prevent_cmd() fails).
+* Use ide_end_request() instead of idefloppy_end_request()
+  in ide_floppy_io_buffers() and then move the call out to
+  ide_pc_intr().
+
+* Add ide_io_buffers() helper and convert ide-{floppy,scsi}.c
+  to use it instead of ide*_io_buffers().
+
+There should be no functional changes caused by this patch.
 
 Cc: Borislav Petkov <petkovbb@gmail.com>
 Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 ---
- drivers/ide/ide-tape.c |   39 +++++++++++++++++++--------------------
- 1 file changed, 19 insertions(+), 20 deletions(-)
+ drivers/ide/ide-atapi.c  |   63 ++++++++++++++++++++++++++++++++++++++++++++---
+ drivers/ide/ide-floppy.c |   47 -----------------------------------
+ drivers/ide/ide-tape.c   |    4 ++
+ drivers/scsi/ide-scsi.c  |   46 ----------------------------------
+ include/linux/ide.h      |    4 ++
+ 5 files changed, 67 insertions(+), 97 deletions(-)
 
+Index: b/drivers/ide/ide-atapi.c
+===================================================================
+--- a/drivers/ide/ide-atapi.c
++++ b/drivers/ide/ide-atapi.c
+@@ -61,12 +61,62 @@ int ide_check_atapi_device(ide_drive_t *
+ }
+ EXPORT_SYMBOL_GPL(ide_check_atapi_device);
+ 
++/* PIO data transfer routine using the scatter gather table. */
++int ide_io_buffers(ide_drive_t *drive, struct ide_atapi_pc *pc,
++		    unsigned int bcount, int write)
++{
++	ide_hwif_t *hwif = drive->hwif;
++	const struct ide_tp_ops *tp_ops = hwif->tp_ops;
++	xfer_func_t *xf = write ? tp_ops->output_data : tp_ops->input_data;
++	struct scatterlist *sg = pc->sg;
++	char *buf;
++	int count, done = 0;
++
++	while (bcount) {
++		count = min(sg->length - pc->b_count, bcount);
++
++		if (PageHighMem(sg_page(sg))) {
++			unsigned long flags;
++
++			local_irq_save(flags);
++			buf = kmap_atomic(sg_page(sg), KM_IRQ0) + sg->offset;
++			xf(drive, NULL, buf + pc->b_count, count);
++			kunmap_atomic(buf - sg->offset, KM_IRQ0);
++			local_irq_restore(flags);
++		} else {
++			buf = sg_virt(sg);
++			xf(drive, NULL, buf + pc->b_count, count);
++		}
++
++		bcount -= count;
++		pc->b_count += count;
++		done += count;
++
++		if (pc->b_count == sg->length) {
++			if (!--pc->sg_cnt)
++				break;
++			pc->sg = sg = sg_next(sg);
++			pc->b_count = 0;
++		}
++	}
++
++	if (bcount) {
++		printk(KERN_ERR "%s: %d leftover bytes, %s\n", drive->name,
++			bcount, write ? "padding with zeros"
++				      : "discarding data");
++		ide_pad_transfer(drive, write, bcount);
++	}
++
++	return done;
++}
++EXPORT_SYMBOL_GPL(ide_io_buffers);
++
+ /* TODO: unify the code thus making some arguments go away */
+ ide_startstop_t ide_pc_intr(ide_drive_t *drive, struct ide_atapi_pc *pc,
+ 	ide_handler_t *handler, unsigned int timeout, ide_expiry_t *expiry,
+ 	void (*update_buffers)(ide_drive_t *, struct ide_atapi_pc *),
+ 	void (*retry_pc)(ide_drive_t *), void (*dsc_handle)(ide_drive_t *),
+-	void (*io_buffers)(ide_drive_t *, struct ide_atapi_pc *, unsigned, int))
++	int (*io_buffers)(ide_drive_t *, struct ide_atapi_pc *, unsigned, int))
+ {
+ 	ide_hwif_t *hwif = drive->hwif;
+ 	struct request *rq = hwif->hwgroup->rq;
+@@ -219,9 +269,14 @@ cmd_finished:
+ 
+ 	if ((drive->media == ide_floppy && !scsi && !pc->buf) ||
+ 	    (drive->media == ide_tape && !scsi && pc->bh) ||
+-	    (scsi && pc->sg))
+-		io_buffers(drive, pc, bcount, !!(pc->flags & PC_FLAG_WRITING));
+-	else
++	    (scsi && pc->sg)) {
++		int done = io_buffers(drive, pc, bcount,
++				  !!(pc->flags & PC_FLAG_WRITING));
++
++		/* FIXME: don't do partial completions */
++		if (drive->media == ide_floppy && !scsi)
++			ide_end_request(drive, 1, done >> 9);
++	} else
+ 		xferfunc(drive, NULL, pc->cur_pos, bcount);
+ 
+ 	/* Update the current position */
+Index: b/drivers/ide/ide-floppy.c
+===================================================================
+--- a/drivers/ide/ide-floppy.c
++++ b/drivers/ide/ide-floppy.c
+@@ -207,51 +207,6 @@ static int idefloppy_end_request(ide_dri
+ 	return 0;
+ }
+ 
+-static void ide_floppy_io_buffers(ide_drive_t *drive, struct ide_atapi_pc *pc,
+-				  unsigned int bcount, int direction)
+-{
+-	ide_hwif_t *hwif = drive->hwif;
+-	const struct ide_tp_ops *tp_ops = hwif->tp_ops;
+-	xfer_func_t *xf = direction ? tp_ops->output_data : tp_ops->input_data;
+-	struct scatterlist *sg = pc->sg;
+-	char *buf;
+-	int count, done = 0;
+-
+-	while (bcount) {
+-		count = min(sg->length - pc->b_count, bcount);
+-		if (PageHighMem(sg_page(sg))) {
+-			unsigned long flags;
+-
+-			local_irq_save(flags);
+-			buf = kmap_atomic(sg_page(sg), KM_IRQ0) + sg->offset;
+-			xf(drive, NULL, buf + pc->b_count, count);
+-			kunmap_atomic(buf - sg->offset, KM_IRQ0);
+-			local_irq_restore(flags);
+-		} else {
+-			buf = sg_virt(sg);
+-			xf(drive, NULL, buf + pc->b_count, count);
+-		}
+-		bcount -= count;
+-		pc->b_count += count;
+-		done += count;
+-
+-		if (pc->b_count == sg->length) {
+-			if (!--pc->sg_cnt)
+-				break;
+-			pc->sg = sg = sg_next(sg);
+-			pc->b_count = 0;
+-		}
+-	}
+-
+-	idefloppy_end_request(drive, 1, done >> 9);
+-
+-	if (bcount) {
+-		printk(KERN_ERR "%s: leftover data in %s, bcount == %d\n",
+-				drive->name, __func__, bcount);
+-		ide_pad_transfer(drive, direction, bcount);
+-	}
+-}
+-
+ static void idefloppy_update_buffers(ide_drive_t *drive,
+ 				struct ide_atapi_pc *pc)
+ {
+@@ -355,7 +310,7 @@ static ide_startstop_t idefloppy_pc_intr
+ 
+ 	return ide_pc_intr(drive, floppy->pc, idefloppy_pc_intr,
+ 			   IDEFLOPPY_WAIT_CMD, NULL, idefloppy_update_buffers,
+-			   idefloppy_retry_pc, NULL, ide_floppy_io_buffers);
++			   idefloppy_retry_pc, NULL, ide_io_buffers);
+ }
+ 
+ /*
 Index: b/drivers/ide/ide-tape.c
 ===================================================================
 --- a/drivers/ide/ide-tape.c
 +++ b/drivers/ide/ide-tape.c
-@@ -1298,6 +1298,16 @@ static int idetape_create_prevent_cmd(id
- 	return 1;
+@@ -693,13 +693,15 @@ static void ide_tape_handle_dsc(ide_driv
+ 	idetape_postpone_request(drive);
  }
  
-+static int ide_tape_set_media_lock(ide_drive_t *drive, int on)
-+{
-+	struct ide_atapi_pc pc;
-+
-+	if (!idetape_create_prevent_cmd(drive, &pc, on))
-+		return 0;
-+
-+	return idetape_queue_pc_tail(drive, &pc);
-+}
-+
- static void __ide_tape_discard_merge_buffer(ide_drive_t *drive)
+-static void ide_tape_io_buffers(ide_drive_t *drive, struct ide_atapi_pc *pc,
++static int ide_tape_io_buffers(ide_drive_t *drive, struct ide_atapi_pc *pc,
+ 				unsigned int bcount, int write)
  {
- 	idetape_tape_t *tape = drive->driver_data;
-@@ -1926,9 +1936,8 @@ static int idetape_mtioctop(ide_drive_t 
- 		 * attempting to eject.
- 		 */
- 		if (tape->door_locked) {
--			if (idetape_create_prevent_cmd(drive, &pc, 0))
--				if (!idetape_queue_pc_tail(drive, &pc))
--					tape->door_locked = DOOR_UNLOCKED;
-+			if (!ide_tape_set_media_lock(drive, 0))
-+				tape->door_locked = DOOR_UNLOCKED;
- 		}
- 		ide_tape_discard_merge_buffer(drive, 0);
- 		idetape_create_load_unload_cmd(drive, &pc,
-@@ -1972,17 +1981,13 @@ static int idetape_mtioctop(ide_drive_t 
- 	case MTFSR:
- 	case MTBSR:
- 	case MTLOCK:
--		if (!idetape_create_prevent_cmd(drive, &pc, 1))
--			return 0;
--		retval = idetape_queue_pc_tail(drive, &pc);
-+		retval = ide_tape_set_media_lock(drive, 1);
- 		if (retval)
- 			return retval;
- 		tape->door_locked = DOOR_EXPLICITLY_LOCKED;
- 		return 0;
- 	case MTUNLOCK:
--		if (!idetape_create_prevent_cmd(drive, &pc, 0))
--			return 0;
--		retval = idetape_queue_pc_tail(drive, &pc);
-+		retval = ide_tape_set_media_lock(drive, 0);
- 		if (retval)
- 			return retval;
- 		tape->door_locked = DOOR_UNLOCKED;
-@@ -2084,7 +2089,6 @@ static int idetape_chrdev_open(struct in
- 	unsigned int minor = iminor(inode), i = minor & ~0xc0;
- 	ide_drive_t *drive;
- 	idetape_tape_t *tape;
--	struct ide_atapi_pc pc;
- 	int retval;
+ 	if (write)
+ 		idetape_output_buffers(drive, pc, bcount);
+ 	else
+ 		idetape_input_buffers(drive, pc, bcount);
++
++	return bcount;
+ }
  
- 	if (i >= MAX_HWIFS * MAX_DRIVES)
-@@ -2147,11 +2151,9 @@ static int idetape_chrdev_open(struct in
+ /*
+Index: b/drivers/scsi/ide-scsi.c
+===================================================================
+--- a/drivers/scsi/ide-scsi.c
++++ b/drivers/scsi/ide-scsi.c
+@@ -130,50 +130,6 @@ static inline idescsi_scsi_t *drive_to_i
+ 	return scsihost_to_idescsi(ide_drive->driver_data);
+ }
  
- 	/* Lock the tape drive door so user can't eject. */
- 	if (tape->chrdev_dir == IDETAPE_DIR_NONE) {
--		if (idetape_create_prevent_cmd(drive, &pc, 1)) {
--			if (!idetape_queue_pc_tail(drive, &pc)) {
--				if (tape->door_locked != DOOR_EXPLICITLY_LOCKED)
--					tape->door_locked = DOOR_LOCKED;
--			}
-+		if (!ide_tape_set_media_lock(drive, 1)) {
-+			if (tape->door_locked != DOOR_EXPLICITLY_LOCKED)
-+				tape->door_locked = DOOR_LOCKED;
- 		}
- 	}
- 	unlock_kernel();
-@@ -2184,7 +2186,6 @@ static int idetape_chrdev_release(struct
+-/*
+- *	PIO data transfer routine using the scatter gather table.
+- */
+-static void ide_scsi_io_buffers(ide_drive_t *drive, struct ide_atapi_pc *pc,
+-				unsigned int bcount, int write)
+-{
+-	ide_hwif_t *hwif = drive->hwif;
+-	const struct ide_tp_ops *tp_ops = hwif->tp_ops;
+-	xfer_func_t *xf = write ? tp_ops->output_data : tp_ops->input_data;
+-	struct scatterlist *sg = pc->sg;
+-	char *buf;
+-	int count;
+-
+-	while (bcount) {
+-		count = min(sg->length - pc->b_count, bcount);
+-		if (PageHighMem(sg_page(sg))) {
+-			unsigned long flags;
+-
+-			local_irq_save(flags);
+-			buf = kmap_atomic(sg_page(sg), KM_IRQ0) + sg->offset;
+-			xf(drive, NULL, buf + pc->b_count, count);
+-			kunmap_atomic(buf - sg->offset, KM_IRQ0);
+-			local_irq_restore(flags);
+-		} else {
+-			buf = sg_virt(sg);
+-			xf(drive, NULL, buf + pc->b_count, count);
+-		}
+-		bcount -= count; pc->b_count += count;
+-		if (pc->b_count == sg->length) {
+-			if (!--pc->sg_cnt)
+-				break;
+-			pc->sg = sg = sg_next(sg);
+-			pc->b_count = 0;
+-		}
+-	}
+-
+-	if (bcount) {
+-		printk(KERN_ERR "%s: scatter gather table too small, %s\n",
+-				drive->name, write ? "padding with zeros"
+-						   : "discarding data");
+-		ide_pad_transfer(drive, write, bcount);
+-	}
+-}
+-
+ static void ide_scsi_hex_dump(u8 *data, int len)
  {
- 	struct ide_tape_obj *tape = ide_tape_f(filp);
- 	ide_drive_t *drive = tape->drive;
--	struct ide_atapi_pc pc;
- 	unsigned int minor = iminor(inode);
+ 	print_hex_dump(KERN_CONT, "", DUMP_PREFIX_NONE, 16, 1, data, len, 0);
+@@ -343,7 +299,7 @@ static ide_startstop_t idescsi_pc_intr (
  
- 	lock_kernel();
-@@ -2203,10 +2204,8 @@ static int idetape_chrdev_release(struct
- 		(void) idetape_rewind_tape(drive);
- 	if (tape->chrdev_dir == IDETAPE_DIR_NONE) {
- 		if (tape->door_locked == DOOR_LOCKED) {
--			if (idetape_create_prevent_cmd(drive, &pc, 0)) {
--				if (!idetape_queue_pc_tail(drive, &pc))
--					tape->door_locked = DOOR_UNLOCKED;
--			}
-+			if (!ide_tape_set_media_lock(drive, 0))
-+				tape->door_locked = DOOR_UNLOCKED;
- 		}
- 	}
- 	clear_bit(IDE_AFLAG_BUSY, &drive->atapi_flags);
+ 	return ide_pc_intr(drive, pc, idescsi_pc_intr, get_timeout(pc),
+ 			   idescsi_expiry, NULL, NULL, NULL,
+-			   ide_scsi_io_buffers);
++			   ide_io_buffers);
+ }
+ 
+ static ide_startstop_t idescsi_transfer_pc(ide_drive_t *drive)
+Index: b/include/linux/ide.h
+===================================================================
+--- a/include/linux/ide.h
++++ b/include/linux/ide.h
+@@ -1097,6 +1097,8 @@ void ide_tf_read(ide_drive_t *, ide_task
+ void ide_input_data(ide_drive_t *, struct request *, void *, unsigned int);
+ void ide_output_data(ide_drive_t *, struct request *, void *, unsigned int);
+ 
++int ide_io_buffers(ide_drive_t *, struct ide_atapi_pc *, unsigned int, int);
++
+ extern void SELECT_DRIVE(ide_drive_t *);
+ void SELECT_MASK(ide_drive_t *, int);
+ 
+@@ -1113,7 +1115,7 @@ ide_startstop_t ide_pc_intr(ide_drive_t 
+ 	ide_handler_t *handler, unsigned int timeout, ide_expiry_t *expiry,
+ 	void (*update_buffers)(ide_drive_t *, struct ide_atapi_pc *),
+ 	void (*retry_pc)(ide_drive_t *), void (*dsc_handle)(ide_drive_t *),
+-	void (*io_buffers)(ide_drive_t *, struct ide_atapi_pc *, unsigned int,
++	int (*io_buffers)(ide_drive_t *, struct ide_atapi_pc *, unsigned int,
+ 			   int));
+ ide_startstop_t ide_transfer_pc(ide_drive_t *, struct ide_atapi_pc *,
+ 				ide_handler_t *, unsigned int, ide_expiry_t *);
