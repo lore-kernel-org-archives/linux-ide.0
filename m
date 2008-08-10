@@ -1,245 +1,123 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH 18/22] ide: add request_sense_{pc,rq} to ide_drive_t
-Date: Sun, 10 Aug 2008 17:37:36 +0200
-Message-ID: <20080810153736.16255.43132.sendpatchset@localhost.localdomain>
+Subject: [PATCH 13/22] ide: add ide_do_test_unit_ready() helper
+Date: Sun, 10 Aug 2008 17:37:00 +0200
+Message-ID: <20080810153700.16255.79527.sendpatchset@localhost.localdomain>
 References: <20080810153527.16255.2504.sendpatchset@localhost.localdomain>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mu-out-0910.google.com ([209.85.134.187]:3925 "EHLO
-	mu-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756328AbYHJPjt (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 10 Aug 2008 11:39:49 -0400
-Received: by mu-out-0910.google.com with SMTP id w8so3058470mue.1
-        for <linux-ide@vger.kernel.org>; Sun, 10 Aug 2008 08:39:47 -0700 (PDT)
+Received: from fk-out-0910.google.com ([209.85.128.184]:13064 "EHLO
+	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755895AbYHJPjM (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 10 Aug 2008 11:39:12 -0400
+Received: by fk-out-0910.google.com with SMTP id 18so1414994fkq.5
+        for <linux-ide@vger.kernel.org>; Sun, 10 Aug 2008 08:39:12 -0700 (PDT)
 In-Reply-To: <20080810153527.16255.2504.sendpatchset@localhost.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
 Cc: Borislav Petkov <petkovbb@gmail.com>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-kernel@vger.kernel.org
 
-Add 'struct ide_atapi_pc request_sense_pc' and 'request request_sense_rq' to
-ide_drive_t and use them instead of fields in struct ide_{floppy,tape}_obj.
+* Add ide_do_test_unit_ready() helper and convert ide-{floppy,tape}.c
+  to use it.
+
+* Remove no longer used idetape_create_test_unit_ready_cmd().
 
 There should be no functional changes caused by this patch.
 
 Cc: Borislav Petkov <petkovbb@gmail.com>
 Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 ---
- drivers/ide/ide-floppy.c |    4 -
- drivers/ide/ide-floppy.h |    3 -
- drivers/ide/ide-tape.c   |    7 --
- include/linux/ide.h      |  134 +++++++++++++++++++++++------------------------
- 4 files changed, 72 insertions(+), 76 deletions(-)
+ drivers/ide/ide-atapi.c  |   11 +++++++++++
+ drivers/ide/ide-floppy.c |    6 +-----
+ drivers/ide/ide-tape.c   |   10 +---------
+ include/linux/ide.h      |    1 +
+ 4 files changed, 14 insertions(+), 14 deletions(-)
 
+Index: b/drivers/ide/ide-atapi.c
+===================================================================
+--- a/drivers/ide/ide-atapi.c
++++ b/drivers/ide/ide-atapi.c
+@@ -162,6 +162,17 @@ int ide_queue_pc_tail(ide_drive_t *drive
+ }
+ EXPORT_SYMBOL_GPL(ide_queue_pc_tail);
+ 
++int ide_do_test_unit_ready(ide_drive_t *drive, struct gendisk *disk)
++{
++	struct ide_atapi_pc pc;
++
++	ide_init_pc(&pc);
++	pc.c[0] = TEST_UNIT_READY;
++
++	return ide_queue_pc_tail(drive, disk, &pc);
++}
++EXPORT_SYMBOL_GPL(ide_do_test_unit_ready);
++
+ int ide_do_start_stop(ide_drive_t *drive, struct gendisk *disk, int start)
+ {
+ 	struct ide_atapi_pc pc;
 Index: b/drivers/ide/ide-floppy.c
 ===================================================================
 --- a/drivers/ide/ide-floppy.c
 +++ b/drivers/ide/ide-floppy.c
-@@ -207,8 +207,8 @@ void ide_floppy_create_request_sense_cmd
- static void idefloppy_retry_pc(ide_drive_t *drive)
- {
- 	struct ide_floppy_obj *floppy = drive->driver_data;
--	struct request *rq = &floppy->request_sense_rq;
--	struct ide_atapi_pc *pc = &floppy->request_sense_pc;
-+	struct request *rq = &drive->request_sense_rq;
-+	struct ide_atapi_pc *pc = &drive->request_sense_pc;
+@@ -772,7 +772,6 @@ static int idefloppy_open(struct inode *
+ 	struct gendisk *disk = inode->i_bdev->bd_disk;
+ 	struct ide_floppy_obj *floppy;
+ 	ide_drive_t *drive;
+-	struct ide_atapi_pc pc;
+ 	int ret = 0;
  
- 	(void)ide_read_error(drive);
- 	ide_floppy_create_request_sense_cmd(pc);
-Index: b/drivers/ide/ide-floppy.h
-===================================================================
---- a/drivers/ide/ide-floppy.h
-+++ b/drivers/ide/ide-floppy.h
-@@ -18,9 +18,6 @@ typedef struct ide_floppy_obj {
- 	/* used for blk_{fs,pc}_request() requests */
- 	struct ide_atapi_pc queued_pc;
+ 	debug_log("Reached %s\n", __func__);
+@@ -789,10 +788,7 @@ static int idefloppy_open(struct inode *
+ 		drive->atapi_flags &= ~IDE_AFLAG_FORMAT_IN_PROGRESS;
+ 		/* Just in case */
  
--	struct ide_atapi_pc request_sense_pc;
--	struct request request_sense_rq;
+-		ide_init_pc(&pc);
+-		pc.c[0] = GPCMD_TEST_UNIT_READY;
 -
- 	/* Last error information */
- 	u8 sense_key, asc, ascq;
- 	/* delay this long before sending packet command */
+-		if (ide_queue_pc_tail(drive, disk, &pc))
++		if (ide_do_test_unit_ready(drive, disk))
+ 			ide_do_start_stop(drive, disk, 1);
+ 
+ 		if (ide_floppy_get_capacity(drive)
 Index: b/drivers/ide/ide-tape.c
 ===================================================================
 --- a/drivers/ide/ide-tape.c
 +++ b/drivers/ide/ide-tape.c
-@@ -182,9 +182,6 @@ typedef struct ide_tape_obj {
- 	/* used by REQ_IDETAPE_{READ,WRITE} requests */
- 	struct ide_atapi_pc queued_pc;
+@@ -1118,25 +1118,17 @@ static void idetape_create_write_filemar
+ 	pc->flags |= PC_FLAG_WAIT_FOR_DSC;
+ }
  
--	struct ide_atapi_pc request_sense_pc;
--	struct request request_sense_rq;
+-static void idetape_create_test_unit_ready_cmd(struct ide_atapi_pc *pc)
+-{
+-	ide_init_pc(pc);
+-	pc->c[0] = TEST_UNIT_READY;
+-}
 -
- 	/*
- 	 * DSC polling variables.
- 	 *
-@@ -600,8 +597,8 @@ static void idetape_create_request_sense
- static void idetape_retry_pc(ide_drive_t *drive)
+ static int idetape_wait_ready(ide_drive_t *drive, unsigned long timeout)
  {
- 	struct ide_tape_obj *tape = drive->driver_data;
--	struct request *rq = &tape->request_sense_rq;
--	struct ide_atapi_pc *pc = &tape->request_sense_pc;
-+	struct request *rq = &drive->request_sense_rq;
-+	struct ide_atapi_pc *pc = &drive->request_sense_pc;
+ 	idetape_tape_t *tape = drive->driver_data;
+ 	struct gendisk *disk = tape->disk;
+-	struct ide_atapi_pc pc;
+ 	int load_attempted = 0;
  
- 	(void)ide_read_error(drive);
- 	idetape_create_request_sense_cmd(pc);
+ 	/* Wait for the tape to become ready */
+ 	set_bit(IDE_AFLAG_MEDIUM_PRESENT, &drive->atapi_flags);
+ 	timeout += jiffies;
+ 	while (time_before(jiffies, timeout)) {
+-		idetape_create_test_unit_ready_cmd(&pc);
+-		if (!ide_queue_pc_tail(drive, disk, &pc))
++		if (ide_do_test_unit_ready(drive, disk) == 0)
+ 			return 0;
+ 		if ((tape->sense_key == 2 && tape->asc == 4 && tape->ascq == 2)
+ 		    || (tape->asc == 0x3A)) {
 Index: b/include/linux/ide.h
 ===================================================================
 --- a/include/linux/ide.h
 +++ b/include/linux/ide.h
-@@ -321,7 +321,71 @@ typedef enum {
- 	ide_started,	/* a drive operation was started, handler was set */
- } ide_startstop_t;
+@@ -1140,6 +1140,7 @@ void ide_queue_pc_head(ide_drive_t *, st
+ 		       struct request *);
+ int ide_queue_pc_tail(ide_drive_t *, struct gendisk *, struct ide_atapi_pc *);
  
--struct ide_atapi_pc;
-+/* ATAPI packet command flags */
-+enum {
-+	/* set when an error is considered normal - no retry (ide-tape) */
-+	PC_FLAG_ABORT			= (1 << 0),
-+	PC_FLAG_SUPPRESS_ERROR		= (1 << 1),
-+	PC_FLAG_WAIT_FOR_DSC		= (1 << 2),
-+	PC_FLAG_DMA_OK			= (1 << 3),
-+	PC_FLAG_DMA_IN_PROGRESS		= (1 << 4),
-+	PC_FLAG_DMA_ERROR		= (1 << 5),
-+	PC_FLAG_WRITING			= (1 << 6),
-+	/* command timed out */
-+	PC_FLAG_TIMEDOUT		= (1 << 7),
-+};
-+
-+/*
-+ * With each packet command, we allocate a buffer of IDE_PC_BUFFER_SIZE bytes.
-+ * This is used for several packet commands (not for READ/WRITE commands).
-+ */
-+#define IDE_PC_BUFFER_SIZE	256
-+
-+struct ide_atapi_pc {
-+	/* actual packet bytes */
-+	u8 c[12];
-+	/* incremented on each retry */
-+	int retries;
-+	int error;
-+
-+	/* bytes to transfer */
-+	int req_xfer;
-+	/* bytes actually transferred */
-+	int xferred;
-+
-+	/* data buffer */
-+	u8 *buf;
-+	/* current buffer position */
-+	u8 *cur_pos;
-+	int buf_size;
-+	/* missing/available data on the current buffer */
-+	int b_count;
-+
-+	/* the corresponding request */
-+	struct request *rq;
-+
-+	unsigned long flags;
-+
-+	/*
-+	 * those are more or less driver-specific and some of them are subject
-+	 * to change/removal later.
-+	 */
-+	u8 pc_buf[IDE_PC_BUFFER_SIZE];
-+
-+	/* idetape only */
-+	struct idetape_bh *bh;
-+	char *b_data;
-+
-+	/* idescsi only for now */
-+	struct scatterlist *sg;
-+	unsigned int sg_cnt;
-+
-+	struct scsi_cmnd *scsi_cmd;
-+	void (*done) (struct scsi_cmnd *);
-+
-+	unsigned long timeout;
-+};
-+
- struct ide_devset;
- struct ide_driver_s;
++int ide_do_test_unit_ready(ide_drive_t *, struct gendisk *);
+ int ide_do_start_stop(ide_drive_t *, struct gendisk *, int);
+ int ide_set_media_lock(ide_drive_t *, struct gendisk *, int);
  
-@@ -489,6 +553,9 @@ struct ide_drive_s {
- 	void (*pc_callback)(struct ide_drive_s *, int);
- 
- 	unsigned long atapi_flags;
-+
-+	struct ide_atapi_pc request_sense_pc;
-+	struct request request_sense_rq;
- };
- 
- typedef struct ide_drive_s ide_drive_t;
-@@ -732,71 +799,6 @@ int set_##name(ide_drive_t *drive, int a
- 	return 0; \
- }
- 
--/* ATAPI packet command flags */
--enum {
--	/* set when an error is considered normal - no retry (ide-tape) */
--	PC_FLAG_ABORT			= (1 << 0),
--	PC_FLAG_SUPPRESS_ERROR		= (1 << 1),
--	PC_FLAG_WAIT_FOR_DSC		= (1 << 2),
--	PC_FLAG_DMA_OK			= (1 << 3),
--	PC_FLAG_DMA_IN_PROGRESS		= (1 << 4),
--	PC_FLAG_DMA_ERROR		= (1 << 5),
--	PC_FLAG_WRITING			= (1 << 6),
--	/* command timed out */
--	PC_FLAG_TIMEDOUT		= (1 << 7),
--};
--
--/*
-- * With each packet command, we allocate a buffer of IDE_PC_BUFFER_SIZE bytes.
-- * This is used for several packet commands (not for READ/WRITE commands).
-- */
--#define IDE_PC_BUFFER_SIZE	256
--
--struct ide_atapi_pc {
--	/* actual packet bytes */
--	u8 c[12];
--	/* incremented on each retry */
--	int retries;
--	int error;
--
--	/* bytes to transfer */
--	int req_xfer;
--	/* bytes actually transferred */
--	int xferred;
--
--	/* data buffer */
--	u8 *buf;
--	/* current buffer position */
--	u8 *cur_pos;
--	int buf_size;
--	/* missing/available data on the current buffer */
--	int b_count;
--
--	/* the corresponding request */
--	struct request *rq;
--
--	unsigned long flags;
--
--	/*
--	 * those are more or less driver-specific and some of them are subject
--	 * to change/removal later.
--	 */
--	u8 pc_buf[IDE_PC_BUFFER_SIZE];
--
--	/* idetape only */
--	struct idetape_bh *bh;
--	char *b_data;
--
--	/* idescsi only for now */
--	struct scatterlist *sg;
--	unsigned int sg_cnt;
--
--	struct scsi_cmnd *scsi_cmd;
--	void (*done) (struct scsi_cmnd *);
--
--	unsigned long timeout;
--};
--
- #ifdef CONFIG_IDE_PROC_FS
- /*
-  * configurable drive settings
