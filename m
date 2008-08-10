@@ -1,44 +1,32 @@
-From: Pavel Machek <pavel@suse.cz>
-Subject: Re: tools support for non-512 byte sector sizes
-Date: Sat, 9 Aug 2008 15:21:44 +0200
-Message-ID: <20080809132144.GB13169@ucw.cz>
-References: <488F524F.6020905@redhat.com> <20080729182611.GB24924@parisc-linux.org> <1217356645.6103.48.camel@localhost.localdomain> <yq13alsr0g0.fsf@sermon.lab.mkp.net> <20080730135147.GA4513@auslistsprd01.us.dell.com> <87zlnzb8ce.fsf@rho.meyering.net> <20080730172922.GA20191@auslistsprd01.us.dell.com>
+From: "H. Peter Anvin" <hpa@zytor.com>
+Subject: Re: [2.6.27-rc2-git4] Kernel panic on VIA Ester+VIA CX700
+Date: Sun, 10 Aug 2008 16:39:23 -0700
+Message-ID: <489F7C2B.30807@zytor.com>
+References: <20080809220154.GO28946@ZenIV.linux.org.uk>	<E1KS2KD-0000he-00@gondolin.me.apana.org.au> <20080810133056.2fd69a20@neptune.home>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20080730172922.GA20191@auslistsprd01.us.dell.com>
-Sender: linux-scsi-owner@vger.kernel.org
-To: Matt Domsch <Matt_Domsch@dell.com>
-Cc: Jim Meyering <jim@meyering.net>, "Martin K. Petersen" <martin.petersen@oracle.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, Matthew Wilcox <matthew@wil.cx>, Ric Wheeler <rwheeler@redhat.com>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Jeff Garzik <jeff@garzik.org>
+Content-Type: text/plain; charset=ISO-8859-1;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from terminus.zytor.com ([198.137.202.10]:48121 "EHLO
+	terminus.zytor.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752534AbYHJXqg (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 10 Aug 2008 19:46:36 -0400
+In-Reply-To: <20080810133056.2fd69a20@neptune.home>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: =?ISO-8859-1?Q?Bruno_Pr=E9mont?= <bonbons@linux-vserver.org>
+Cc: Herbert Xu <herbert@gondor.apana.org.au>, Al Viro <viro@ZenIV.linux.org.uk>, "Rafael J. Wysocki" <rjw@sisk.pl>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, Suresh Siddha <suresh.b.siddha@intel.com>, Ingo Molnar <mingo@elte.hu>, Wolfgang Walter <wolfgang.walter@stwm.de>
 
-Hi!
+Bruno Pr=E9mont wrote:
+>=20
+> Recompiling without viafb+squashfs patches makes the panic go away.
+>=20
+> So something from viafb or squashfs triggers the panic or prepare
+> for something else to trigger it...
+>=20
 
-> >   - some disk makers have sort of agreed not to do that, and
-> >       expect forever to hide the larger underlying sector size
-> >       behind a virtual 512 (of course, this imposes alignment
-> >       restrictions, but that's a smaller problem)
-> 
-> yes, this is happening also.
-> 
-> There will be 3 types of disks eventually:
-> 1) those that report a 512-byte sector size, and are really a 512-byte
->    size.  This is nearly all disks today.
-> 
-> 2) those that report a 512-byte sector size, but are really a
->    4096-byte size, and the drive does the conversions and
->    read/modify/write.  T10 and T13 are looking to add commands to
->    expose this different underlying physical sector size so the OS
->    could be aware of it.  This is primarily being driven to mitigate
->    any problems that may happen with "legacy" OSs that are not aware
->    of the difference.
+Out of those, viafb by far seems most likely.  Could you try compiling=20
+with only one or the other?
 
-How is this going to work with journaling? This has nasty property
-that if you are writing to sector n during powerfail, disk may also
-kill sectors n-3, n-2 and n-1..... and that's bad right?
-
-							Pavel
--- 
-(english) http://www.livejournal.com/~pavelmachek
-(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
+	-hpa
