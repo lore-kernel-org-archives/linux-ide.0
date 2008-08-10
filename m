@@ -1,269 +1,210 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH 11/22] ide: add ide_set_media_lock() helper
-Date: Sun, 10 Aug 2008 17:36:45 +0200
-Message-ID: <20080810153645.16255.80542.sendpatchset@localhost.localdomain>
+Subject: [PATCH 15/22] ide: drop dsc_handle argument from ide_pc_intr()
+Date: Sun, 10 Aug 2008 17:37:14 +0200
+Message-ID: <20080810153714.16255.66112.sendpatchset@localhost.localdomain>
 References: <20080810153527.16255.2504.sendpatchset@localhost.localdomain>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from fk-out-0910.google.com ([209.85.128.191]:10683 "EHLO
-	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756114AbYHJPi6 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 10 Aug 2008 11:38:58 -0400
-Received: by fk-out-0910.google.com with SMTP id 18so1415026fkq.5
-        for <linux-ide@vger.kernel.org>; Sun, 10 Aug 2008 08:38:57 -0700 (PDT)
+Received: from mu-out-0910.google.com ([209.85.134.187]:3925 "EHLO
+	mu-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756014AbYHJPj0 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 10 Aug 2008 11:39:26 -0400
+Received: by mu-out-0910.google.com with SMTP id w8so3058470mue.1
+        for <linux-ide@vger.kernel.org>; Sun, 10 Aug 2008 08:39:26 -0700 (PDT)
 In-Reply-To: <20080810153527.16255.2504.sendpatchset@localhost.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
 Cc: Borislav Petkov <petkovbb@gmail.com>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-kernel@vger.kernel.org
 
-* Set IDE_AFLAG_NO_DOORLOCK in idetape_get_mode_sense_result(), check it
-  in ide_tape_set_media_lock() and cleanup idetape_create_prevent_cmd().
+* Add 'int dsc' argument to ->pc_callback method.
 
-* Set IDE_AFLAG_NO_DOORLOCK in ide_floppy_create_read_capacity_cmd() and
-  check it instead of IDE_AFLAG_CLIK_DRIVE in ide_floppy_set_media_lock().
+* Call ide_tape_handle_dsc() internally in ide_tape_callback()
+  if dsc argument is set and update ide_pc_intr() accordingly.
 
-* Add ide_set_media_lock() helper and convert ide-{floppy,tape}.c to use it.
-
-* Remove no longer used ide*_create_prevent_cmd()/ide*_set_media_lock().
-
-* Update comment in <linux/ide.h> accordingly.
+There should be no functional changes caused by this patch.
 
 Cc: Borislav Petkov <petkovbb@gmail.com>
 Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 ---
- drivers/ide/ide-atapi.c  |   15 +++++++++++++++
- drivers/ide/ide-floppy.c |   32 +++++++-------------------------
- drivers/ide/ide-tape.c   |   41 ++++++++++-------------------------------
- include/linux/ide.h      |    6 ++++--
- 4 files changed, 36 insertions(+), 58 deletions(-)
+ drivers/ide/ide-atapi.c  |   16 +++++++---------
+ drivers/ide/ide-floppy.c |    6 +++---
+ drivers/ide/ide-tape.c   |   13 +++++++++----
+ drivers/scsi/ide-scsi.c  |    5 ++---
+ include/linux/ide.h      |    4 ++--
+ 5 files changed, 23 insertions(+), 21 deletions(-)
 
 Index: b/drivers/ide/ide-atapi.c
 ===================================================================
 --- a/drivers/ide/ide-atapi.c
 +++ b/drivers/ide/ide-atapi.c
-@@ -162,6 +162,21 @@ int ide_queue_pc_tail(ide_drive_t *drive
- }
- EXPORT_SYMBOL_GPL(ide_queue_pc_tail);
- 
-+int ide_set_media_lock(ide_drive_t *drive, struct gendisk *disk, int on)
-+{
-+	struct ide_atapi_pc pc;
-+
-+	if (drive->atapi_flags & IDE_AFLAG_NO_DOORLOCK)
-+		return 0;
-+
-+	ide_init_pc(&pc);
-+	pc.c[0] = ALLOW_MEDIUM_REMOVAL;
-+	pc.c[4] = on;
-+
-+	return ide_queue_pc_tail(drive, disk, &pc);
-+}
-+EXPORT_SYMBOL_GPL(ide_set_media_lock);
-+
- /* TODO: unify the code thus making some arguments go away */
+@@ -207,7 +207,7 @@ EXPORT_SYMBOL_GPL(ide_set_media_lock);
  ide_startstop_t ide_pc_intr(ide_drive_t *drive, struct ide_atapi_pc *pc,
  	ide_handler_t *handler, unsigned int timeout, ide_expiry_t *expiry,
+ 	void (*update_buffers)(ide_drive_t *, struct ide_atapi_pc *),
+-	void (*retry_pc)(ide_drive_t *), void (*dsc_handle)(ide_drive_t *),
++	void (*retry_pc)(ide_drive_t *),
+ 	int (*io_buffers)(ide_drive_t *, struct ide_atapi_pc *, unsigned, int))
+ {
+ 	ide_hwif_t *hwif = drive->hwif;
+@@ -216,12 +216,12 @@ ide_startstop_t ide_pc_intr(ide_drive_t 
+ 	xfer_func_t *xferfunc;
+ 	unsigned int temp;
+ 	u16 bcount;
+-	u8 stat, ireason, scsi = drive->scsi;
++	u8 stat, ireason, scsi = drive->scsi, dsc = 0;
+ 
+ 	debug_log("Enter %s - interrupt handler\n", __func__);
+ 
+ 	if (pc->flags & PC_FLAG_TIMEDOUT) {
+-		drive->pc_callback(drive);
++		drive->pc_callback(drive, 0);
+ 		return ide_stopped;
+ 	}
+ 
+@@ -283,14 +283,12 @@ ide_startstop_t ide_pc_intr(ide_drive_t 
+ 		}
+ cmd_finished:
+ 		pc->error = 0;
+-		if ((pc->flags & PC_FLAG_WAIT_FOR_DSC) &&
+-		    (stat & ATA_DSC) == 0) {
+-			dsc_handle(drive);
+-			return ide_stopped;
+-		}
++
++		if ((pc->flags & PC_FLAG_WAIT_FOR_DSC) && (stat & ATA_DSC) == 0)
++			dsc = 1;
+ 
+ 		/* Command finished - Call the callback function */
+-		drive->pc_callback(drive);
++		drive->pc_callback(drive, dsc);
+ 
+ 		return ide_stopped;
+ 	}
 Index: b/drivers/ide/ide-floppy.c
 ===================================================================
 --- a/drivers/ide/ide-floppy.c
 +++ b/drivers/ide/ide-floppy.c
-@@ -324,15 +324,6 @@ static ide_startstop_t idefloppy_issue_p
- 			    IDEFLOPPY_WAIT_CMD, NULL);
+@@ -155,7 +155,7 @@ static void idefloppy_update_buffers(ide
+ 		idefloppy_end_request(drive, 1, 0);
  }
  
--static void idefloppy_create_prevent_cmd(struct ide_atapi_pc *pc, int prevent)
--{
--	debug_log("creating prevent removal command, prevent = %d\n", prevent);
--
--	ide_init_pc(pc);
--	pc->c[0] = GPCMD_PREVENT_ALLOW_MEDIUM_REMOVAL;
--	pc->c[4] = prevent;
--}
--
- void ide_floppy_create_read_capacity_cmd(struct ide_atapi_pc *pc)
- {
- 	ide_init_pc(pc);
-@@ -711,6 +702,8 @@ static void idefloppy_setup(ide_drive_t 
- 	if (strncmp((char *)&id[ATA_ID_PROD], "IOMEGA Clik!", 11) == 0) {
- 		blk_queue_max_sectors(drive->queue, 64);
- 		drive->atapi_flags |= IDE_AFLAG_CLIK_DRIVE;
-+		/* IOMEGA Clik! drives do not support lock/unlock commands */
-+		drive->atapi_flags |= IDE_AFLAG_NO_DOORLOCK;
- 	}
- 
- 	(void) ide_floppy_get_capacity(drive);
-@@ -781,18 +774,6 @@ static ide_driver_t idefloppy_driver = {
- #endif
- };
- 
--static void ide_floppy_set_media_lock(ide_drive_t *drive, int on)
--{
--	struct ide_floppy_obj *floppy = drive->driver_data;
--	struct ide_atapi_pc pc;
--
--	/* IOMEGA Clik! drives do not support lock/unlock commands */
--	if ((drive->atapi_flags & IDE_AFLAG_CLIK_DRIVE) == 0) {
--		idefloppy_create_prevent_cmd(&pc, on);
--		(void)ide_queue_pc_tail(drive, floppy->disk, &pc);
--	}
--}
--
- static int idefloppy_open(struct inode *inode, struct file *filp)
- {
- 	struct gendisk *disk = inode->i_bdev->bd_disk;
-@@ -841,7 +822,7 @@ static int idefloppy_open(struct inode *
- 		}
- 
- 		drive->atapi_flags |= IDE_AFLAG_MEDIA_CHANGED;
--		ide_floppy_set_media_lock(drive, 1);
-+		ide_set_media_lock(drive, disk, 1);
- 		check_disk_change(inode->i_bdev);
- 	} else if (drive->atapi_flags & IDE_AFLAG_FORMAT_IN_PROGRESS) {
- 		ret = -EBUSY;
-@@ -864,7 +845,7 @@ static int idefloppy_release(struct inod
- 	debug_log("Reached %s\n", __func__);
- 
- 	if (floppy->openers == 1) {
--		ide_floppy_set_media_lock(drive, 0);
-+		ide_set_media_lock(drive, disk, 0);
- 		drive->atapi_flags &= ~IDE_AFLAG_FORMAT_IN_PROGRESS;
- 	}
- 
-@@ -890,16 +871,17 @@ static int ide_floppy_lockdoor(ide_drive
- 			       unsigned long arg, unsigned int cmd)
+-static void ide_floppy_callback(ide_drive_t *drive)
++static void ide_floppy_callback(ide_drive_t *drive, int dsc)
  {
  	idefloppy_floppy_t *floppy = drive->driver_data;
-+	struct gendisk *disk = floppy->disk;
- 	int prevent = (arg && cmd != CDROMEJECT) ? 1 : 0;
+ 	struct ide_atapi_pc *pc = floppy->pc;
+@@ -222,7 +222,7 @@ static ide_startstop_t idefloppy_pc_intr
  
- 	if (floppy->openers > 1)
- 		return -EBUSY;
+ 	return ide_pc_intr(drive, floppy->pc, idefloppy_pc_intr,
+ 			   WAIT_FLOPPY_CMD, NULL, idefloppy_update_buffers,
+-			   idefloppy_retry_pc, NULL, ide_io_buffers);
++			   idefloppy_retry_pc, ide_io_buffers);
+ }
  
--	ide_floppy_set_media_lock(drive, prevent);
-+	ide_set_media_lock(drive, disk, prevent);
+ /*
+@@ -307,7 +307,7 @@ static ide_startstop_t idefloppy_issue_p
+ 		pc->error = IDEFLOPPY_ERROR_GENERAL;
  
- 	if (cmd == CDROMEJECT) {
- 		idefloppy_create_start_stop_cmd(pc, 2);
--		(void)ide_queue_pc_tail(drive, floppy->disk, pc);
-+		(void)ide_queue_pc_tail(drive, disk, pc);
+ 		floppy->failed_pc = NULL;
+-		drive->pc_callback(drive);
++		drive->pc_callback(drive, 0);
+ 		return ide_stopped;
  	}
  
- 	return 0;
 Index: b/drivers/ide/ide-tape.c
 ===================================================================
 --- a/drivers/ide/ide-tape.c
 +++ b/drivers/ide/ide-tape.c
-@@ -1213,32 +1213,6 @@ static void idetape_create_locate_cmd(id
- 	pc->flags |= PC_FLAG_WAIT_FOR_DSC;
+@@ -522,7 +522,9 @@ static int idetape_end_request(ide_drive
+ 	return 0;
  }
  
--static int idetape_create_prevent_cmd(ide_drive_t *drive,
--		struct ide_atapi_pc *pc, int prevent)
--{
--	idetape_tape_t *tape = drive->driver_data;
--
--	/* device supports locking according to capabilities page */
--	if (!(tape->caps[6] & 0x01))
--		return 0;
--
--	ide_init_pc(pc);
--	pc->c[0] = ALLOW_MEDIUM_REMOVAL;
--	pc->c[4] = prevent;
--	return 1;
--}
--
--static int ide_tape_set_media_lock(ide_drive_t *drive, int on)
--{
--	struct ide_tape_obj *tape = drive->driver_data;
--	struct ide_atapi_pc pc;
--
--	if (!idetape_create_prevent_cmd(drive, &pc, on))
--		return 0;
--
--	return ide_queue_pc_tail(drive, tape->disk, &pc);
--}
--
- static void __ide_tape_discard_merge_buffer(ide_drive_t *drive)
+-static void ide_tape_callback(ide_drive_t *drive)
++static void ide_tape_handle_dsc(ide_drive_t *);
++
++static void ide_tape_callback(ide_drive_t *drive, int dsc)
  {
  	idetape_tape_t *tape = drive->driver_data;
-@@ -1871,7 +1845,7 @@ static int idetape_mtioctop(ide_drive_t 
- 		 * attempting to eject.
- 		 */
- 		if (tape->door_locked) {
--			if (!ide_tape_set_media_lock(drive, 0))
-+			if (!ide_set_media_lock(drive, disk, 0))
- 				tape->door_locked = DOOR_UNLOCKED;
- 		}
- 		ide_tape_discard_merge_buffer(drive, 0);
-@@ -1916,13 +1890,13 @@ static int idetape_mtioctop(ide_drive_t 
- 	case MTFSR:
- 	case MTBSR:
- 	case MTLOCK:
--		retval = ide_tape_set_media_lock(drive, 1);
-+		retval = ide_set_media_lock(drive, disk, 1);
- 		if (retval)
- 			return retval;
- 		tape->door_locked = DOOR_EXPLICITLY_LOCKED;
- 		return 0;
- 	case MTUNLOCK:
--		retval = ide_tape_set_media_lock(drive, 0);
-+		retval = ide_set_media_lock(drive, disk, 0);
- 		if (retval)
- 			return retval;
- 		tape->door_locked = DOOR_UNLOCKED;
-@@ -2086,7 +2060,7 @@ static int idetape_chrdev_open(struct in
+ 	struct ide_atapi_pc *pc = tape->pc;
+@@ -530,6 +532,9 @@ static void ide_tape_callback(ide_drive_
  
- 	/* Lock the tape drive door so user can't eject. */
- 	if (tape->chrdev_dir == IDETAPE_DIR_NONE) {
--		if (!ide_tape_set_media_lock(drive, 1)) {
-+		if (!ide_set_media_lock(drive, tape->disk, 1)) {
- 			if (tape->door_locked != DOOR_EXPLICITLY_LOCKED)
- 				tape->door_locked = DOOR_LOCKED;
- 		}
-@@ -2139,7 +2113,7 @@ static int idetape_chrdev_release(struct
- 		(void) idetape_rewind_tape(drive);
- 	if (tape->chrdev_dir == IDETAPE_DIR_NONE) {
- 		if (tape->door_locked == DOOR_LOCKED) {
--			if (!ide_tape_set_media_lock(drive, 0))
-+			if (!ide_set_media_lock(drive, tape->disk, 0))
- 				tape->door_locked = DOOR_UNLOCKED;
- 		}
- 	}
-@@ -2217,6 +2191,11 @@ static void idetape_get_mode_sense_resul
- 	}
+ 	debug_log(DBG_PROCS, "Enter %s\n", __func__);
  
- 	memcpy(&tape->caps, caps, 20);
++	if (dsc)
++		ide_tape_handle_dsc(drive);
 +
-+	/* device lacks locking support according to capabilities page */
-+	if ((caps[6] & 1) == 0)
-+		drive->atapi_flags |= IDE_AFLAG_NO_DOORLOCK;
-+
- 	if (caps[7] & 0x02)
- 		tape->blk_size = 512;
- 	else if (caps[7] & 0x04)
+ 	if (tape->failed_pc == pc)
+ 		tape->failed_pc = NULL;
+ 
+@@ -658,7 +663,7 @@ static ide_startstop_t idetape_pc_intr(i
+ 
+ 	return ide_pc_intr(drive, tape->pc, idetape_pc_intr, WAIT_TAPE_CMD,
+ 			   NULL, idetape_update_buffers, idetape_retry_pc,
+-			   ide_tape_handle_dsc, ide_tape_io_buffers);
++			   ide_tape_io_buffers);
+ }
+ 
+ /*
+@@ -743,7 +748,7 @@ static ide_startstop_t idetape_issue_pc(
+ 			pc->error = IDETAPE_ERROR_GENERAL;
+ 		}
+ 		tape->failed_pc = NULL;
+-		drive->pc_callback(drive);
++		drive->pc_callback(drive, 0);
+ 		return ide_stopped;
+ 	}
+ 	debug_log(DBG_SENSE, "Retry #%d, cmd = %02X\n", pc->retries, pc->c[0]);
+@@ -805,7 +810,7 @@ static ide_startstop_t idetape_media_acc
+ 		pc->error = IDETAPE_ERROR_GENERAL;
+ 		tape->failed_pc = NULL;
+ 	}
+-	drive->pc_callback(drive);
++	drive->pc_callback(drive, 0);
+ 	return ide_stopped;
+ }
+ 
+Index: b/drivers/scsi/ide-scsi.c
+===================================================================
+--- a/drivers/scsi/ide-scsi.c
++++ b/drivers/scsi/ide-scsi.c
+@@ -137,7 +137,7 @@ static void ide_scsi_hex_dump(u8 *data, 
+ 
+ static int idescsi_end_request(ide_drive_t *, int, int);
+ 
+-static void ide_scsi_callback(ide_drive_t *drive)
++static void ide_scsi_callback(ide_drive_t *drive, int dsc)
+ {
+ 	idescsi_scsi_t *scsi = drive_to_idescsi(drive);
+ 	struct ide_atapi_pc *pc = scsi->pc;
+@@ -298,8 +298,7 @@ static ide_startstop_t idescsi_pc_intr (
+ 	struct ide_atapi_pc *pc = scsi->pc;
+ 
+ 	return ide_pc_intr(drive, pc, idescsi_pc_intr, get_timeout(pc),
+-			   idescsi_expiry, NULL, NULL, NULL,
+-			   ide_io_buffers);
++			   idescsi_expiry, NULL, NULL, ide_io_buffers);
+ }
+ 
+ static ide_startstop_t idescsi_transfer_pc(ide_drive_t *drive)
 Index: b/include/linux/ide.h
 ===================================================================
 --- a/include/linux/ide.h
 +++ b/include/linux/ide.h
-@@ -317,10 +317,10 @@ struct ide_acpi_hwif_link;
- enum {
- 	IDE_AFLAG_DRQ_INTERRUPT		= (1 << 0),
- 	IDE_AFLAG_MEDIA_CHANGED		= (1 << 1),
--
--	/* ide-cd */
- 	/* Drive cannot lock the door. */
- 	IDE_AFLAG_NO_DOORLOCK		= (1 << 2),
-+
-+	/* ide-cd */
- 	/* Drive cannot eject the disc. */
- 	IDE_AFLAG_NO_EJECT		= (1 << 3),
- 	/* Drive is a pre ATAPI 1.2 drive. */
-@@ -1140,6 +1140,8 @@ void ide_queue_pc_head(ide_drive_t *, st
- 		       struct request *);
- int ide_queue_pc_tail(ide_drive_t *, struct gendisk *, struct ide_atapi_pc *);
+@@ -482,7 +482,7 @@ struct ide_drive_s {
+ 	struct completion gendev_rel_comp;	/* to deal with device release() */
  
-+int ide_set_media_lock(ide_drive_t *, struct gendisk *, int);
-+
+ 	/* callback for packet commands */
+-	void (*pc_callback)(struct ide_drive_s *);
++	void (*pc_callback)(struct ide_drive_s *, int);
+ 
+ 	unsigned long atapi_flags;
+ };
+@@ -1163,7 +1163,7 @@ int ide_set_media_lock(ide_drive_t *, st
  ide_startstop_t ide_pc_intr(ide_drive_t *drive, struct ide_atapi_pc *pc,
  	ide_handler_t *handler, unsigned int timeout, ide_expiry_t *expiry,
  	void (*update_buffers)(ide_drive_t *, struct ide_atapi_pc *),
+-	void (*retry_pc)(ide_drive_t *), void (*dsc_handle)(ide_drive_t *),
++	void (*retry_pc)(ide_drive_t *),
+ 	int (*io_buffers)(ide_drive_t *, struct ide_atapi_pc *, unsigned int,
+ 			   int));
+ ide_startstop_t ide_transfer_pc(ide_drive_t *, struct ide_atapi_pc *,
