@@ -1,73 +1,159 @@
-From: Suresh Siddha <suresh.b.siddha@intel.com>
-Subject: Re: [2.6.27-rc2-git4] Kernel panic on VIA Ester+VIA CX700
-Date: Mon, 11 Aug 2008 11:17:52 -0700
-Message-ID: <20080811181752.GK13158@linux-os.sc.intel.com>
-References: <20080809220154.GO28946@ZenIV.linux.org.uk> <E1KS2KD-0000he-00@gondolin.me.apana.org.au> <20080810133056.2fd69a20@neptune.home> <489F7C2B.30807@zytor.com>
+From: "Maciej Rutecki" <maciej.rutecki@gmail.com>
+Subject: [2.6.26.*] boot problem (ahci/irq related?)
+Date: Mon, 11 Aug 2008 22:12:19 +0200
+Message-ID: <8db1092f0808111312x3baf819bxbb05030c05693065@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:16275 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752729AbYHKSSN (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 11 Aug 2008 14:18:13 -0400
+Received: from wf-out-1314.google.com ([209.85.200.175]:49342 "EHLO
+	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754444AbYHKUMV (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 11 Aug 2008 16:12:21 -0400
+Received: by wf-out-1314.google.com with SMTP id 27so4229098wfd.4
+        for <linux-ide@vger.kernel.org>; Mon, 11 Aug 2008 13:12:20 -0700 (PDT)
 Content-Disposition: inline
-In-Reply-To: <489F7C2B.30807@zytor.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "H. Peter Anvin" <hpa@zytor.com>
-Cc: Bruno =?iso-8859-1?Q?Pr=E9mont?= <bonbons@linux-vserver.org>, Herbert Xu <herbert@gondor.apana.org.au>, Al Viro <viro@ZenIV.linux.org.uk>, "Rafael J. Wysocki" <rjw@sisk.pl>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "Siddha, Suresh B" <suresh.b.siddha@intel.com>, Ingo Molnar <mingo@elte.hu>, Wolfgang Walter <wolfgang.walter@stwm.de>
+To: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>, tj@kernel.org, andi@firstfloor.org, mingo@elte.hu, Rafael J.
 
-On Sun, Aug 10, 2008 at 04:39:23PM -0700, H. Peter Anvin wrote:
-> Bruno Pr=E9mont wrote:
-> >
-> > Recompiling without viafb+squashfs patches makes the panic go away.
-> >
-> > So something from viafb or squashfs triggers the panic or prepare
-> > for something else to trigger it...
-> >
->=20
-> Out of those, viafb by far seems most likely.  Could you try compilin=
-g
-> with only one or the other?
+A have problem with booting 2.6.26* and 2.6.27-rc* kernels. Very often
+booting stops on this message:
 
-[    5.010629] general protection fault: 0000 [#1]=20
-[    5.021782] Modules linked in:
-[    5.030227]=20
-[    5.030227] Pid: 3, comm: ksoftirqd/0 Not tainted (2.6.27-rc2-git4_n=
-ocrypto #1)
-[    5.030227] EIP: 0060:[<c01042f5>] EFLAGS: 00010046 CPU: 0
-[    5.030227] EIP is at math_state_restore+0x25/0x60
-[    5.030227] EAX: f781db3d EBX: f781d898 ECX: 00000000 EDX: 00000000
-[    5.030227] ESI: f781d000 EDI: f782c20c EBP: f781d840 ESP: f781d838
-[    5.030227]  DS: 007b ES: 007b FS: 0000 GS: 0000 SS: 0068
-[    5.030227] Process ksoftirqd/0 (pid: 3, ti=3Df781d000 task=3Df782c6=
-a0 task.ti=3Df782a000)
-[    5.030227] Stack: f782c000 f782c6a0 f781d890 c01038dd f782c000 0000=
-0000 f782c000 f782c6a0=20
-[    5.030227]        f782c20c f781d890 f7807e00 0000007b 0000007b 0000=
-0000 ffffffff c0101e8f=20
-[    5.030227]        00000060 00010002 f782c8ac f782c000 c04d8180 c011=
-fa50 f782afc0 c03cfa61=20
-[    5.030227] Call Trace:
-[    5.030227]  [<c01038dd>] ? device_not_available+0x2d/0x32
-[    5.030227]  [<c0101e8f>] ? __switch_to+0x2f/0x130
+[...]
+Uniform Multi-Platform E-IDE driver
+ide: Assuming 33MHz system bus speed for PIO modes; override with idebus=xx
+ICH7: IDE controller (0x8086:0x27df rev 0x01) at  PCI slot 0000:00:1f.1
+ACPI: PCI Interrupt 0000:00:1f.1[A] -> GSI 16 (level, low) -> IRQ 16
+ICH7: not 100% native mode: will probe irqs later
+ICH7: IDE port disabled
+    ide0: BM-DMA at 0x60a0-0x60a7
 
-It got a GP fault, because in __switch_to() we were doing unlazy_fpu() =
-and
-fxsave generated a DNA fault(which shouldn't happen unless we are hitti=
-ng the
-via padlock instruction issue or something else) and the math_state_res=
-tore()
-found the task's math state pointer to be 0xf781db3d (EAX in the oops) =
-and while
-doing fxrstor we got GP fault, as the fxrstor pointer(EAX) is not 16byt=
-e
-aligned.
+afer should be:
+hda: MATSHITADVD-RAM UJ-840S, ATAPI CD/DVD-ROM drive
+hda: host max PIO4 wanted PIO255(auto-tune) selected PIO4
+hda: MWDMA2 mode selected
+ide0 at 0x1f0-0x1f7,0x3f6 on irq 14
+[...]
 
-It is interesting to see the EAX value similar to stack pointer. Task's
-=46P area gets dynamically allocated and as such EAX def looks wrong he=
-re.
-I also see the config is using 4K stacks. Some config(viafb/squashfs?) =
-causing
-some thing wrong with the kernel stack?
+Initially I was think, that is hardware problem. But XP and 2.6.25.8
+work with _no_ problem (booting from xp, linux, knoppix, linux
+firmware development kit - about 50 reboots).
+
+So I try without CONFIG_IDE option and try libata.noacpi=1 option and
+without it. It doesn't help. Next messages  (from dmesg) below are
+with libata.noacpi=1 option enabled and CONFIG_IDE=n (libata only use
+- 2.6.26.2 kernel). Firstly i try 2.6.26.2 and very often boot stops
+on this message:
+
+http://unixy.pl/maciek/download/kernel/dupa/img_0001.jpg
+
+I observe few times this event:
+1. boot to 2.6.26.2 fails
+2. power on by power button and boot XP (works OK, clean logs)
+3. back to 2.6.26.2 (fail)
+4. power on by power button and boot XP (works OK)
+5. back to 2.6.26.2 (fail or sometimes boot normally)
+
+(The same sequence when XP change to 2.6.25.8)
+
+
+
+Also (1-2 times) I observed this:
+ahci 0000:00:1f.2: version 3.0
+ACPI: PCI Interrupt 0000:00:1f.2[B] -> GSI 17 (level, low) -> IRQ 17
+ahci 0000:00:1f.2: AHCI 0001.0100 32 slots 4 ports 1.5 Gbps 0x1 impl SATA mode
+ahci 0000:00:1f.2: flags: 64bit ncq ilck stag pm led clo pmp pio slum part
+PCI: Setting latency timer of device 0000:00:1f.2 to 64
+scsi0 : ahci
+scsi1 : ahci
+scsi2 : ahci
+scsi3 : ahci
+ata1: SATA max UDMA/133 irq_stat 0x00000040, connection status changed irq 220
+ata2: DUMMY
+ata3: DUMMY
+ata4: DUMMY
+ata1: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+ata1.00: ACPI cmd f5/00:00:00:00:00:a0 filtered out
+ata1.00: ACPI cmd b1/c1:00:00:00:00:a0 filtered out
+ata1.00: ACPI cmd c6/00:10:00:00:00:a0 succeeded
+ata1.00: ACPI cmd ef/10:03:00:00:00:a0 filtered out
+ata1.00: ATA-7: ST9120822AS, 3.ALC, max UDMA/133
+ata1.00: 234441648 sectors, multi 16: LBA48 NCQ (depth 31/32)
+ata1.00: ACPI cmd f5/00:00:00:00:00:a0 filtered out
+ata1.00: ACPI cmd b1/c1:00:00:00:00:a0 filtered out
+ata1.00: ACPI cmd c6/00:10:00:00:00:a0 succeeded
+ata1.00: ACPI cmd ef/10:03:00:00:00:a0 filtered out
+ata1.00: configured for UDMA/133
+ata1.00: configured for UDMA/133
+ata1: EH complete
+scsi 0:0:0:0: Direct-Access     ATA      ST9120822AS      3.AL PQ: 0 ANSI: 5
+sd 0:0:0:0: [sda] 234441648 512-byte hardware sectors (120034 MB)
+sd 0:0:0:0: [sda] Write Protect is off
+sd 0:0:0:0: [sda] Mode Sense: 00 3a 00 00
+sd 0:0:0:0: [sda] Write cache: enabled, read cache: enabled, doesn't
+support DPO or FUA
+sd 0:0:0:0: [sda] 234441648 512-byte hardware sectors (120034 MB)
+sd 0:0:0:0: [sda] Write Protect is off
+sd 0:0:0:0: [sda] Mode Sense: 00 3a 00 00
+sd 0:0:0:0: [sda] Write cache: enabled, read cache: enabled, doesn't
+support DPO or FUA
+ sda: sda1 sda2 sda3 sda4 < sda5 sda6 sda7 >
+sd 0:0:0:0: [sda] Attached SCSI disk
+ata_piix 0000:00:1f.1: version 2.12
+ACPI: PCI Interrupt 0000:00:1f.1[A] -> GSI 16 (level, low) -> IRQ 16
+PCI: Setting latency timer of device 0000:00:1f.1 to 64
+scsi4 : ata_piix
+scsi5 : ata_piix
+ata5: PATA max UDMA/100 cmd 0x1f0 ctl 0x3f6 bmdma 0x60a0 irq 14
+ata6: PATA max UDMA/100 cmd 0x170 ctl 0x376 bmdma 0x60a8 irq 15
+ata5.00: ATAPI: MATSHITADVD-RAM UJ-840S, 1.11, max MWDMA2
+ata5.00: configured for MWDMA2
+ata6: port disabled. ignoring.
+ata5.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x6 frozen
+ata5.00: cmd a0/01:00:00:60:00/00:00:00:00:00/a0 tag 0 dma 96 in
+        cdb 12 00 00 00 60 00 00 00  00 00 00 00 00 00 00 00
+        res 40/00:02:00:24:00/00:00:00:00:00/a0 Emask 0x4 (timeout)
+ata5.00: status: { DRDY }
+ata5: soft resetting link
+ata5.00: configured for MWDMA2
+ata5: EH complete
+ata5.00: limiting speed to MWDMA1:PIO4
+ata5.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x6 frozen
+ata5.00: cmd a0/01:00:00:60:00/00:00:00:00:00/a0 tag 0 dma 96 in
+        cdb 12 00 00 00 60 00 00 00  00 00 00 00 00 00 00 00
+        res 40/00:02:00:24:00/00:00:00:00:00/a0 Emask 0x4 (timeout)
+ata5.00: status: { DRDY }
+ata5: soft resetting link
+ata5.00: configured for MWDMA1
+ata5: EH complete
+ata5.00: limiting speed to PIO4
+ata5.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x6 frozen
+ata5.00: cmd a0/01:00:00:60:00/00:00:00:00:00/a0 tag 0 dma 96 in
+        cdb 12 00 00 00 60 00 00 00  00 00 00 00 00 00 00 00
+        res 40/00:02:00:24:00/00:00:00:00:00/a0 Emask 0x4 (timeout)
+ata5.00: status: { DRDY }
+ata5: soft resetting link
+ata5.00: configured for PIO4
+ata5: EH complete
+scsi 4:0:0:0: CD-ROM            MATSHITA DVD-RAM UJ-840S  1.11 PQ: 0 ANSI: 5
+
+and then booting normally.
+
+
+2.6.26.2:
+lspci -vvv: http://unixy.pl/maciek/download/kernel/dupa/lspci.txt
+interrupts: http://unixy.pl/maciek/download/kernel/dupa/przerwania.txt
+config: http://unixy.pl/maciek/download/kernel/dupa/config-2.6.26.2
+dmesg (normal booting):
+http://unixy.pl/maciek/download/kernel/dupa/dmesg-2.6.26.2.txt
+
+2.6.25.8:
+config: http://unixy.pl/maciek/download/kernel/dupa/config-2.6.25.8
+dmesg: http://unixy.pl/maciek/download/kernel/dupa/dmesg-2.6.25.8.txt
+
+I also try update BIOS - it doesn't help.
+
+-- 
+Maciej Rutecki
+http://www.maciek.unixy.pl
