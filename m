@@ -1,46 +1,69 @@
-From: Steven Gill <smgill75@verizon.net>
-Subject: sata_mv
-Date: Mon, 11 Aug 2008 18:47:12 -0400
-Message-ID: <48A0C170.2000803@verizon.net>
+From: Robert Hancock <hancockr@shaw.ca>
+Subject: Re: [2.6.26.*] boot problem (ahci/irq related?)
+Date: Mon, 11 Aug 2008 17:48:50 -0600
+Message-ID: <48A0CFE2.6090705@shaw.ca>
+References: <8db1092f0808111312x3baf819bxbb05030c05693065@mail.gmail.com> <20080811202731.GB2916@elte.hu> <20080811210140.GW9038@one.firstfloor.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from vms042pub.verizon.net ([206.46.252.42]:55891 "EHLO
-	vms042pub.verizon.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754034AbYHKWrQ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 11 Aug 2008 18:47:16 -0400
-Received: from vm.thebtbgroup.com ([72.78.111.7])
- by vms042.mailsrvcs.net (Sun Java System Messaging Server 6.2-6.01 (built Apr
- 3 2006)) with ESMTPA id <0K5G00LB6KMBS68E@vms042.mailsrvcs.net> for
- linux-ide@vger.kernel.org; Mon, 11 Aug 2008 17:47:00 -0500 (CDT)
-Received: from [192.168.1.151] (unknown [192.168.1.151])
-	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
-	(No client certificate requested)	by vm.thebtbgroup.com (Postfix)
- with ESMTP id 9C9A476AD1	for <linux-ide@vger.kernel.org>; Mon,
- 11 Aug 2008 18:46:59 -0400 (EDT)
+Received: from idcmail-mo1so.shaw.ca ([24.71.223.10]:30599 "EHLO
+	pd2mo1so-dmz.prod.shaw.ca" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1754057AbYHKXs4 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 11 Aug 2008 19:48:56 -0400
+In-Reply-To: <20080811210140.GW9038@one.firstfloor.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Andi Kleen <andi@firstfloor.org>
+Cc: Ingo Molnar <mingo@elte.hu>, Maciej Rutecki <maciej.rutecki@gmail.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>, tj@kernel.org, "Rafael J. Wysocki" <rjw@sisk.pl>, Yinghai Lu <yhlu.kernel@gmail.com>, Thomas Gleixner <tglx@linutronix.de>, "H. Peter Anvin" <hpa@zytor.com>, Jesse Barnes <jbarnes@virtuousgeek.org>
 
-Hi List,
+Andi Kleen wrote:
+> On Mon, Aug 11, 2008 at 10:27:31PM +0200, Ingo Molnar wrote:
+>> * Maciej Rutecki <maciej.rutecki@gmail.com> wrote:
+>>
+>>> A have problem with booting 2.6.26* and 2.6.27-rc* kernels. Very often
+>>> booting stops on this message:
+>>>
+>>> [...]
+>>> Uniform Multi-Platform E-IDE driver
+>>> ide: Assuming 33MHz system bus speed for PIO modes; override with idebus=xx
+>>> ICH7: IDE controller (0x8086:0x27df rev 0x01) at  PCI slot 0000:00:1f.1
+>>> ACPI: PCI Interrupt 0000:00:1f.1[A] -> GSI 16 (level, low) -> IRQ 16
+>>> ICH7: not 100% native mode: will probe irqs later
+>>> ICH7: IDE port disabled
+>>>     ide0: BM-DMA at 0x60a0-0x60a7
+>>>
+>>> afer should be:
+>>> hda: MATSHITADVD-RAM UJ-840S, ATAPI CD/DVD-ROM drive
+>>> hda: host max PIO4 wanted PIO255(auto-tune) selected PIO4
+>>> hda: MWDMA2 mode selected
+>>> ide0 at 0x1f0-0x1f7,0x3f6 on irq 14
+>>> [...]
+>>>
+>>> Initially I was think, that is hardware problem. But XP and 2.6.25.8 
+>>> work with _no_ problem (booting from xp, linux, knoppix, linux 
+>>> firmware development kit - about 50 reboots).
+>>> http://unixy.pl/maciek/download/kernel/dupa/dmesg-2.6.26.2.txt
+>>> dmesg: http://unixy.pl/maciek/download/kernel/dupa/dmesg-2.6.25.8.txt
+>> i had a look at diff -up dmesg-2.6.25.8.txt dmesg-2.6.26.2.txt, and 
+>> these changes stood out:
+> 
+> Yes post 2.6.25 changed to trust the ACPI motherboard resources
+> to signify working mmcfg, previously it would use the e820 table
+> which excluded near all motherboards which were not white listed
+> by PCI-ID because BIOS programmers were generally not aware
+> they had to reserve mcfg in e820. 
+> 
+> You can verify this by booting with pci=nommconf. If it works
+> then it's likely that.
+> 
+> The new heuristic is apparently the same as what Vista does.
+> 
+> Robert Hancock (cc'ed, fullquote) is mr. mmconfig quirk.
+> 
+> -Andi
 
-I am having some issues getting my Marvell 6145 working on my Asus P5E 
-ws pro motherboard working.  I am using a 3rd party patch to get the 
-pata port working, but have not had success with my e-sata ports (on the 
-board the 6145 drives 2 sata and 2 e-sata ports.  There are another 6 
-sata ports driven by the onboard intel ich9).  When checking dmesg 
-output, I see this:
-
-ACPI: PCI Interrupt 0000:02:00.0[A] -> GSI 16 (level, low) -> IRQ 16
-PCI: Setting latency timer of device 0000:02:00.0 to 64
-Marvell (S)ATA Controller is found, using IRQ 16.
-Interrupt Error: 0x40000000 orgIntStatus: 0x40000001 completeSlot=0x1.
-
-I am willing to help debug any issues, test patches, etc, but most 
-importantly wanted to report the issue.  I know this is labelled as 
-"highly experimental", but again, wanted to offer assistance in testing.
-
-Regards,
-
-Steve
+Wouldn't hurt to try it, but I'm kind of doubtful it's that - MMCONFIG 
+failures don't normally get that far into bootup, and I believe we're 
+not using it for non-extended config space anyways - I doubt IDE is 
+doing extended config space access..
