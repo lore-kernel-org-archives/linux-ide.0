@@ -1,71 +1,88 @@
-From: Bokhan Artem <APTEM@ngs.ru>
-Subject: Re: bad sectors, suspicious behaviour
-Date: Mon, 11 Aug 2008 18:12:25 +0700
-Message-ID: <48A01E99.1080905@ngs.ru>
-References: <489C19CE.6030708@ngs.ru> <489C4B6E.9070306@rtr.ca> <489C4F29.6020007@rtr.ca> <489C54D1.5080901@rtr.ca>
+From: Anton Vorontsov <avorontsov@ru.mvista.com>
+Subject: [PATCH] pata_of_platform: fix no irq handling
+Date: Mon, 11 Aug 2008 19:19:13 +0400
+Message-ID: <20080811151913.GA14690@oksana.dev.rtsoft.ru>
+References: <48A05152.7020508@harris.com>
+Reply-To: avorontsov@ru.mvista.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtpout1.ngs.ru ([195.93.186.195]:36518 "EHLO smtpout1.ngs.ru"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751513AbYHKLMb (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 11 Aug 2008 07:12:31 -0400
-Received: from [192.168.3.217] (unknown [192.168.3.217])
-	(Authenticated sender: aptem@ngs.ru)
-	by smtp.ngs.ru (smtp) with ESMTP id 610424254F1FF
-	for <linux-ide@vger.kernel.org>; Mon, 11 Aug 2008 18:12:28 +0700 (NOVST)
-In-Reply-To: <489C54D1.5080901@rtr.ca>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <linuxppc-dev-bounces+glppd-linuxppc64-dev=m.gmane.org@ozlabs.org>
+Content-Disposition: inline
+In-Reply-To: <48A05152.7020508@harris.com>
+List-Unsubscribe: <https://ozlabs.org/mailman/options/linuxppc-dev>,
+	<mailto:linuxppc-dev-request@ozlabs.org?subject=unsubscribe>
+List-Archive: <http://ozlabs.org/pipermail/linuxppc-dev>
+List-Post: <mailto:linuxppc-dev@ozlabs.org>
+List-Help: <mailto:linuxppc-dev-request@ozlabs.org?subject=help>
+List-Subscribe: <https://ozlabs.org/mailman/listinfo/linuxppc-dev>,
+	<mailto:linuxppc-dev-request@ozlabs.org?subject=subscribe>
+Sender: linuxppc-dev-bounces+glppd-linuxppc64-dev=m.gmane.org@ozlabs.org
+Errors-To: linuxppc-dev-bounces+glppd-linuxppc64-dev=m.gmane.org@ozlabs.org
+To: Jeff Garzik <jgarzik@pobox.com>, "Steven A. Falco" <sfalco@harris.com>
+Cc: linuxppc-dev@ozlabs.org, linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
 
-So, is there any chance to test patch from someone on this issue?
+When no irq specified, pata_of_platform fills irq_res with -1,
+which is wrong to do for two reasons:
 
-ps. I'm very far from kernel development.
+1. By definition, 'no irq' should be IRQ 0, not some negative integer;
+2. pata_platform checks for irq_res.start > 0, but since irq_res.start
+   is unsigned type, the check will be true for `-1'.
 
-Mark Lord =D0=BF=D0=B8=D1=88=D0=B5=D1=82:
-> Mark Lord wrote:
-> ..
->>>> [75703.296100] WARNING: at drivers/ata/libata-core.c:4732=20
->>>> ata_qc_issue+0x1ca/0x230 [libata]()
->> ..
->> That line is this one (linux-2.6.26.2):
->>
->>        WARN_ON(ap->ops->error_handler &&=20
->> ata_tag_valid(link->active_tag));
->>
->> So this should trigger only when link->active_tag is valid, which=20
->> doesn't normally happen.
->> But the convoluted traceback shows that this code path came from the=
- EH,
->> so something in libata EH is likely neglecting to clear link->active=
-_tag
->> before issuing a new command.
->> Tejun?
-> ..
->
-> Mmm.. since it happens only once in a while, and not on every EH acti=
-on,
-> one might assume that it's a race of some kind.
->
-> One possibility, might be due to .qc_defer.
->
-> The stock ata_qc_defer relies heavily on ata_tag_valid(),
-> which matches what the above WARN_ON uses.
->
-> But sata_mv doesn't use ata_tag_valid, because it wants to know
-> about the entire port and not just a single individual link on the po=
-rt.
-> So instead, it uses ap->nr_active_links for the test.
->
-> My guess is that these two items are not kept in sync during EH.
->
-> Tejun?
-> --=20
-> To unsubscribe from this list: send the line "unsubscribe linux-ide" =
-in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Reported-by: Steven A. Falco <sfalco@harris.com>
+Signed-off-by: Anton Vorontsov <avorontsov@ru.mvista.com>
+---
 
+On Mon, Aug 11, 2008 at 10:48:50AM -0400, Steven A. Falco wrote:
+> I think there is a bug in the communications between pata_of_platform
+> and pata_platform.  I will refer to the master branch of the DENX git
+> tree, which is roughly v2.6.26.1 at this time.  I am using a Sequoia
+> board with a PPC440EPx.
+> 
+> In pata_of_platform, we have:
+> 
+>     ret = of_irq_to_resource(dn, 0, &irq_res);
+>     if (ret == NO_IRQ)
+>         irq_res.start = irq_res.end = -1;
+> 
+> so if there is no interrupt defined, then start and end are -1. 
+> However, __pata_platform_probe has:
+> 
+>     if (irq_res && irq_res->start > 0) {
+>         irq = irq_res->start;
+>         irq_flags = irq_res->flags;
+>     }
+> 
+> You might think that the (irq_res->start > 0) test will fail, as it
+> should in this no-irq case.  But, start is a u64, so the -1 actually
+> looks like a large positive number in the comparison.  So,
+> __pata_platform_probe attempts to use an interrupt when there isn't one.
+> 
+> I think the fix would be to change __pata_platform_probe to:
+> 
+>     if (irq_res && irq_res->start != -1) {
+> 
+> but that might have other unintended consequences, so I'll defer to
+> whomever knows more about the intent of this code.
+
+Something like this patch should work. Thanks for noticing!
+
+ drivers/ata/pata_of_platform.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/ata/pata_of_platform.c b/drivers/ata/pata_of_platform.c
+index 408da30..1f18ad9 100644
+--- a/drivers/ata/pata_of_platform.c
++++ b/drivers/ata/pata_of_platform.c
+@@ -52,7 +52,7 @@ static int __devinit pata_of_platform_probe(struct of_device *ofdev,
+ 
+ 	ret = of_irq_to_resource(dn, 0, &irq_res);
+ 	if (ret == NO_IRQ)
+-		irq_res.start = irq_res.end = -1;
++		irq_res.start = irq_res.end = 0;
+ 	else
+ 		irq_res.flags = 0;
+ 
+-- 
+1.5.6.3
