@@ -1,41 +1,66 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH] sgiioc4: fixup message on resource allocation failure
-Date: Tue, 12 Aug 2008 11:27:23 +0200
-Message-ID: <200808121127.23512.bzolnier@gmail.com>
+From: Arjan van de Ven <arjan@infradead.org>
+Subject: Re: [patch 1/2] fastboot: Add a module parameter to skip probing of
+ specific ports
+Date: Tue, 12 Aug 2008 04:36:03 -0700
+Message-ID: <20080812043603.3d8471d4@infradead.org>
+References: <20080811153542.61095e5c@infradead.org>
+	<20080811153641.706726ec@infradead.org>
+	<20080812083903.6d402c2e@lxorguk.ukuu.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1753599AbYHLJcH@vger.kernel.org>
-Content-Disposition: inline
-Sender: linux-kernel-owner@vger.kernel.org
-To: linux-ide@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, Jeremy Higdon <jeremy@sgi.com>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from casper.infradead.org ([85.118.1.10]:37062 "EHLO
+	casper.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751439AbYHLLfz (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 12 Aug 2008 07:35:55 -0400
+In-Reply-To: <20080812083903.6d402c2e@lxorguk.ukuu.org.uk>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-There can be more than one sgiioc4 card in the system so print
-also PCI device name on resource allocation failure (so we know
-which one is the problematic one).
+On Tue, 12 Aug 2008 08:39:03 +0100
+Alan Cox <alan@lxorguk.ukuu.org.uk> wrote:
 
-Reported-by: Jeremy Higdon <jeremy@sgi.com>
-Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
----
- drivers/ide/pci/sgiioc4.c |    4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+> On Mon, 11 Aug 2008 15:36:41 -0700
+> Arjan van de Ven <arjan@infradead.org> wrote:
+> 
+> > 
+> > From: Kristen Accardi <kristen.c.accardi@intel.com>
+> > Subject: [PATCH] libata: Add a module parameter to skip probing of
+> > specific ports
+> > 
+> > Port probing by libata can easily take 10% or more of the kernel
+> > boot time (2%+ of total). For cases where one knows there is nothing
+> > connected to certain ports (for example on netbooks) this is a waste
+> > of boot time.
+> > 
+> > This patch adds a module parameter that allows the admin to specify
+> > to skip ports (specified by a bitmask) and recoup this boot time.
+> > This capability is potentially also useful to get systems to boot
+> > for cases where port-probing on a certain ports causes crashes.
+> > 
+> > A follow-on patch will add the capability to use DMI identification
+> > to automate this for certain known systems.
+> 
+> What happens if I plug in an additional libata using device ?
 
-Index: b/drivers/ide/pci/sgiioc4.c
-===================================================================
---- a/drivers/ide/pci/sgiioc4.c
-+++ b/drivers/ide/pci/sgiioc4.c
-@@ -621,9 +621,9 @@ sgiioc4_ide_setup_pci_device(struct pci_
- 	if (!request_mem_region(cmd_phys_base, IOC4_CMD_CTL_BLK_SIZE,
- 	    DRV_NAME)) {
- 		printk(KERN_ERR
--			"%s : %s -- ERROR, Addresses "
-+			"%s %s: -- ERROR, Addresses "
- 			"0x%p to 0x%p ALREADY in use\n",
--		       __func__, DRV_NAME, (void *) cmd_phys_base,
-+		       DRV_NAME, pci_name(dev), (void *)cmd_phys_base,
- 		       (void *) cmd_phys_base + IOC4_CMD_CTL_BLK_SIZE);
- 		return -ENOMEM;
- 	}
+on an eeepc ? ;)
+
+at least for the command line option the owner (or whoever sets up
+grub) knows the order and could adjust. For the DMI patch you do have a
+point.
+
+> What
+> defines the probe order here particularly as people are pushing for
+> parallel probing of multiple devices.
+
+the patches I'm pushing for this don't change probe order; that has
+been tried before and wasn't a great success.
+
+
+-- 
+If you want to reach me at my work email, use arjan@linux.intel.com
+For development, discussion and tips for power savings, 
+visit http://www.lesswatts.org
