@@ -1,52 +1,43 @@
-From: "Maciej Rutecki" <maciej.rutecki@gmail.com>
-Subject: Re: [2.6.26.*] boot problem (ahci/irq related?)
-Date: Tue, 12 Aug 2008 10:07:54 +0200
-Message-ID: <8db1092f0808120107k1f8a65f4sf406fa3a89125870@mail.gmail.com>
-References: <8db1092f0808111312x3baf819bxbb05030c05693065@mail.gmail.com>
-	 <20080811202731.GB2916@elte.hu>
-	 <86802c440808112352j2175d2edlf421c44499f8c1c0@mail.gmail.com>
-	 <20080812081632.303de380@lxorguk.ukuu.org.uk>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [patch 2/2] fastboot: use a DMI match table to set defaults for
+ port-disable
+Date: Tue, 12 Aug 2008 09:10:09 +0100
+Message-ID: <20080812091009.05a32b39@lxorguk.ukuu.org.uk>
+References: <20080811153542.61095e5c@infradead.org>
+	<20080811153730.74599410@infradead.org>
+	<1218503351.25524.28.camel@californication>
+	<20080811220440.5cc1bc2d@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wf-out-1314.google.com ([209.85.200.169]:30633 "EHLO
-	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751826AbYHLIH4 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 12 Aug 2008 04:07:56 -0400
-Received: by wf-out-1314.google.com with SMTP id 27so4621763wfd.4
-        for <linux-ide@vger.kernel.org>; Tue, 12 Aug 2008 01:07:56 -0700 (PDT)
-In-Reply-To: <20080812081632.303de380@lxorguk.ukuu.org.uk>
-Content-Disposition: inline
+Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:38537 "EHLO
+	lxorguk.ukuu.org.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751773AbYHLI1S (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 12 Aug 2008 04:27:18 -0400
+In-Reply-To: <20080811220440.5cc1bc2d@infradead.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: Yinghai Lu <yhlu.kernel@gmail.com>, Ingo Molnar <mingo@elte.hu>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>, tj@kernel.org, andi@firstfloor.org, "Rafael J. Wysocki" <rjw@sisk.pl>, Thomas Gleixner <tglx@linutronix.de>, "H. Peter Anvin" <hpa@zytor.com>, Jesse Barnes <jbarnes@virtuousgeek.org>
+To: Arjan van de Ven <arjan@infradead.org>
+Cc: Marcel Holtmann <marcel@holtmann.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-2008/8/12 Alan Cox <alan@lxorguk.ukuu.org.uk>:
->> > +sr 4:0:0:0: Attached scsi CD-ROM sr0
->>
->> looks like you are using ata driver for pata device instead of ide driver.
->>
->> so could be caused by bug in ata_piix...
->
-> See the original bug report - he tried both and got the same kind of
-> behaviour.
->
->
+> if you solder the board... well you can add a tiny kernel patch or
+> change the dmi ;)
 
-Yes I have similar behaviour, very often kernel stops on this message:
-http://unixy.pl/maciek/download/kernel/dupa/2.6.26.2_config_ide/img_0001.jpg
+Lots of people have them modified and you can even buy them pre-modded as
+an end user. It needs to be simpler than hacking your kernel. In fact
+this argues that the port disables should be handled by user space not by
+the kernel ?
 
-I added CONFIG_IDE, difference between pervious config and current:
-http://unixy.pl/maciek/download/kernel/dupa/2.6.26.2_config_ide/config.diff
+We have various other libata arguments so what would happen if instead we
+pushing setting it up to userspace but fixing the libata. options line
+for settings to take PCI bus info so you always hit the right port.
 
-Full .config:
-http://unixy.pl/maciek/download/kernel/dupa/2.6.26.2_config_ide/config-2.6.26.2
+Yes you'd still need to fix some drivers to cope with that behaviour too
+but it would kick policy (which this is) back into the hands of the
+distro and end user.
 
-Dmesg (1 time works ok):
-http://unixy.pl/maciek/download/kernel/dupa/2.6.26.2_config_ide/dmesg.txt
+Spinning a new kernel to get your off the shelf modded Eee PC wrking
+isn't very user friendly.
 
--- 
-Maciej Rutecki
-http://www.maciek.unixy.pl
+Alan
