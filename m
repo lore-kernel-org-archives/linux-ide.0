@@ -1,41 +1,53 @@
-From: "Boris Petkov" <petkovbb@googlemail.com>
-Subject: Re: [PATCH 11/22] ide: add ide_set_media_lock() helper
-Date: Tue, 12 Aug 2008 15:37:37 +0200
-Message-ID: <9ea470500808120637w354b3ae0w3ceca791344bd7cc@mail.gmail.com>
-References: <20080810153527.16255.2504.sendpatchset@localhost.localdomain>
-	 <20080810153645.16255.80542.sendpatchset@localhost.localdomain>
-	 <20080811060232.GA15436@gollum.tnic>
-	 <200808121105.49645.bzolnier@gmail.com>
-Reply-To: petkovbb@gmail.com
+From: Arjan van de Ven <arjan@infradead.org>
+Subject: Re: [patch 1/2] fastboot: Add a module parameter to skip probing of
+ specific ports
+Date: Tue, 12 Aug 2008 07:02:22 -0700
+Message-ID: <20080812070222.3dc9efcb@infradead.org>
+References: <20080811153542.61095e5c@infradead.org>
+	<20080811153641.706726ec@infradead.org>
+	<20080812083903.6d402c2e@lxorguk.ukuu.org.uk>
+	<20080812043603.3d8471d4@infradead.org>
+	<20080812130027.2c4643a9@lxorguk.ukuu.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wf-out-1314.google.com ([209.85.200.170]:15035 "EHLO
-	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752009AbYHLNhi (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 12 Aug 2008 09:37:38 -0400
-Received: by wf-out-1314.google.com with SMTP id 27so4827741wfd.4
-        for <linux-ide@vger.kernel.org>; Tue, 12 Aug 2008 06:37:37 -0700 (PDT)
-In-Reply-To: <200808121105.49645.bzolnier@gmail.com>
-Content-Disposition: inline
+Received: from casper.infradead.org ([85.118.1.10]:38232 "EHLO
+	casper.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752289AbYHLOCN (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 12 Aug 2008 10:02:13 -0400
+In-Reply-To: <20080812130027.2c4643a9@lxorguk.ukuu.org.uk>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
->> Are we switching to SCSI opcodes? What about the generic packet commands in
->> <include/linux/cdrom.h>?
->
-> I prefer to use them when possible but there is no strict policy.
->
-> [ SCSI defines are shorter, one of the drivers was using them already
->  and it also makes easier for comparing code with SCSI. ]
+On Tue, 12 Aug 2008 13:00:27 +0100
+Alan Cox <alan@lxorguk.ukuu.org.uk> wrote:
 
-I still think we should stick to one format or the other. All
-the drivers' functions, for example, comply with a naming scheme
-(ide_cd/ide_floppy/...) so opcodes shouldn't be an exception, imho...
+> > > What
+> > > defines the probe order here particularly as people are pushing
+> > > for parallel probing of multiple devices.
+> > 
+> > the patches I'm pushing for this don't change probe order; that has
+> > been tried before and wasn't a great success.
+> 
+> That was a question sorry. You are sledgehammering controllers by
+> discovery sequence - you've no idea if they will always be found in
+> that order. As such your boot option is incredibly fragile.
+
+ok to answer your question;
+today the probe order is consistent, at least on netbooks.
+The admin or his installation program knows it when he has this (and if
+linux were to grow full parallel probing it'll be optional, and if the
+admin wants a fast boot he'll disable the parallel, reordering probe)
+and can add the option for this case. It's the "push policy out of the
+kernel" thing.. while the kernel probably can't know this (and you're
+right, the DMI patch is thus the wrong thing to do).. the admin can.
+
+
 
 -- 
-Regards/Gruss,
-Boris
+If you want to reach me at my work email, use arjan@linux.intel.com
+For development, discussion and tips for power savings, 
+visit http://www.lesswatts.org
