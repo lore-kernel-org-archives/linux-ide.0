@@ -1,69 +1,37 @@
-From: Robert Hancock <hancockr@shaw.ca>
-Subject: Re: [2.6.26.*] boot problem (ahci/irq related?)
-Date: Mon, 11 Aug 2008 17:48:50 -0600
-Message-ID: <48A0CFE2.6090705@shaw.ca>
-References: <8db1092f0808111312x3baf819bxbb05030c05693065@mail.gmail.com> <20080811202731.GB2916@elte.hu> <20080811210140.GW9038@one.firstfloor.org>
+From: Seth Heasley <seth.heasley@intel.com>
+Subject: [PATCH 2.6.26.2][RESEND] ahci: RAID mode SATA patch for Intel Ibex Peak DeviceIDs
+Date: Mon, 11 Aug 2008 17:03:09 -0700
+Message-ID: <200808111703.09743.seth.heasley@intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain;
+  charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from idcmail-mo1so.shaw.ca ([24.71.223.10]:30599 "EHLO
-	pd2mo1so-dmz.prod.shaw.ca" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1754057AbYHKXs4 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 11 Aug 2008 19:48:56 -0400
-In-Reply-To: <20080811210140.GW9038@one.firstfloor.org>
+Received: from mga09.intel.com ([134.134.136.24]:53025 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758172AbYHKX6A (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 11 Aug 2008 19:58:00 -0400
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Andi Kleen <andi@firstfloor.org>
-Cc: Ingo Molnar <mingo@elte.hu>, Maciej Rutecki <maciej.rutecki@gmail.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>, tj@kernel.org, "Rafael J. Wysocki" <rjw@sisk.pl>, Yinghai Lu <yhlu.kernel@gmail.com>, Thomas Gleixner <tglx@linutronix.de>, "H. Peter Anvin" <hpa@zytor.com>, Jesse Barnes <jbarnes@virtuousgeek.org>
+To: jgarzik@pobox.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: seth.heasley@intel.com
 
-Andi Kleen wrote:
-> On Mon, Aug 11, 2008 at 10:27:31PM +0200, Ingo Molnar wrote:
->> * Maciej Rutecki <maciej.rutecki@gmail.com> wrote:
->>
->>> A have problem with booting 2.6.26* and 2.6.27-rc* kernels. Very often
->>> booting stops on this message:
->>>
->>> [...]
->>> Uniform Multi-Platform E-IDE driver
->>> ide: Assuming 33MHz system bus speed for PIO modes; override with idebus=xx
->>> ICH7: IDE controller (0x8086:0x27df rev 0x01) at  PCI slot 0000:00:1f.1
->>> ACPI: PCI Interrupt 0000:00:1f.1[A] -> GSI 16 (level, low) -> IRQ 16
->>> ICH7: not 100% native mode: will probe irqs later
->>> ICH7: IDE port disabled
->>>     ide0: BM-DMA at 0x60a0-0x60a7
->>>
->>> afer should be:
->>> hda: MATSHITADVD-RAM UJ-840S, ATAPI CD/DVD-ROM drive
->>> hda: host max PIO4 wanted PIO255(auto-tune) selected PIO4
->>> hda: MWDMA2 mode selected
->>> ide0 at 0x1f0-0x1f7,0x3f6 on irq 14
->>> [...]
->>>
->>> Initially I was think, that is hardware problem. But XP and 2.6.25.8 
->>> work with _no_ problem (booting from xp, linux, knoppix, linux 
->>> firmware development kit - about 50 reboots).
->>> http://unixy.pl/maciek/download/kernel/dupa/dmesg-2.6.26.2.txt
->>> dmesg: http://unixy.pl/maciek/download/kernel/dupa/dmesg-2.6.25.8.txt
->> i had a look at diff -up dmesg-2.6.25.8.txt dmesg-2.6.26.2.txt, and 
->> these changes stood out:
-> 
-> Yes post 2.6.25 changed to trust the ACPI motherboard resources
-> to signify working mmcfg, previously it would use the e820 table
-> which excluded near all motherboards which were not white listed
-> by PCI-ID because BIOS programmers were generally not aware
-> they had to reserve mcfg in e820. 
-> 
-> You can verify this by booting with pci=nommconf. If it works
-> then it's likely that.
-> 
-> The new heuristic is apparently the same as what Vista does.
-> 
-> Robert Hancock (cc'ed, fullquote) is mr. mmconfig quirk.
-> 
-> -Andi
+Resend with proper whitespace.
 
-Wouldn't hurt to try it, but I'm kind of doubtful it's that - MMCONFIG 
-failures don't normally get that far into bootup, and I believe we're 
-not using it for non-extended config space anyways - I doubt IDE is 
-doing extended config space access..
+This patch adds the Intel Ibex Peak (PCH) SATA RAID Controller DeviceIDs.
+
+Signed-off-by: Seth Heasley <seth.heasley@intel.com>
+
+--- linux-2.6.26.2/drivers/ata/ahci.c.orig	2008-08-08 11:34:48.000000000 -0700
++++ linux-2.6.26.2/drivers/ata/ahci.c	2008-08-08 11:36:06.000000000 -0700
+@@ -445,6 +445,8 @@
+ 	{ PCI_VDEVICE(INTEL, 0x502b), board_ahci }, /* Tolapai */
+ 	{ PCI_VDEVICE(INTEL, 0x3a05), board_ahci }, /* ICH10 */
+ 	{ PCI_VDEVICE(INTEL, 0x3a25), board_ahci }, /* ICH10 */
++	{ PCI_VDEVICE(INTEL, 0x3b24), board_ahci }, /* PCH RAID */
++	{ PCI_VDEVICE(INTEL, 0x3b2b), board_ahci }, /* PCH RAID */
+ 
+ 	/* JMicron 360/1/3/5/6, match class to avoid IDE function */
+ 	{ PCI_VENDOR_ID_JMICRON, PCI_ANY_ID, PCI_ANY_ID, PCI_ANY_ID,
+
