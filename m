@@ -1,41 +1,83 @@
-From: bugme-daemon@bugzilla.kernel.org
-Subject: [Bug 10943] machine doesn't shutdown when ahci sata driver is compiled as module
-Date: Wed, 13 Aug 2008 02:06:06 -0700 (PDT)
-Message-ID: <20080813090606.D410411D109@picon.linux-foundation.org>
-References: <bug-10943-11633@http.bugzilla.kernel.org/>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: libata problems
+Date: Wed, 13 Aug 2008 18:33:39 +0900
+Message-ID: <48A2AA73.6010901@kernel.org>
+References: <4880BDCD.4030104@gavsworld.net> <4892CDED.6080302@kernel.org> <4898BD4F.90709@gavsworld.net> <4898F11D.1080902@kernel.org> <4899EE03.3060204@gavsworld.net>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:50689 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753952AbYHMJGi (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 13 Aug 2008 05:06:38 -0400
-Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
-	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id m7D966Gp002066
-	for <linux-ide@vger.kernel.org>; Wed, 13 Aug 2008 02:06:07 -0700
-In-Reply-To: <bug-10943-11633@http.bugzilla.kernel.org/>
+Received: from hera.kernel.org ([140.211.167.34]:58001 "EHLO hera.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751386AbYHMJeS (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 13 Aug 2008 05:34:18 -0400
+In-Reply-To: <4899EE03.3060204@gavsworld.net>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Gavin Cameron <gavin@gavsworld.net>
+Cc: IDE/ATA development list <linux-ide@vger.kernel.org>
 
-http://bugzilla.kernel.org/show_bug.cgi?id=10943
+(please don't drop linux-ide, use reply-to-all)
 
+Gavin Cameron wrote:
+> Tejun Heo wrote:
+>> Hmmm... looks like configuration went well but media presence polling is
+>> causing the problem.  "hal-disable-polling /dev/sr0" will disable the
+>> polling.  Can you please do that and see whether the drive is usable?
+> 
+> [root@picard ~]# hal-disable-polling --device /dev/sr0
+> Polling for drive /dev/sr0 have been disabled. The fdi file written was
+> 
+> /etc/hal/fdi/information/media-check-disable-storage_model_DVD_A__DH20A3P.fdi
 
-tj@kernel.org changed:
+Okay.
 
-           What    |Removed                     |Added
-----------------------------------------------------------------------------
-         AssignedTo|jgarzik@pobox.com           |tj@kernel.org
-             Status|NEW                         |ASSIGNED
+> Inserted CD into drive: drive light came on for about 20 seconds, but
+> nothing happened.
+> 
+> Checked /var/log/messages and nothing there.
+> 
+> Left it sitting there for 5 minutes or so and checked /var/log/messages
+> again and still nothing there.
 
+As media presence polling is disabled, the system won't notice whether
+the media has changed or not.
 
+> Mounted the CD as root:
+> [root@picard ~]# mkdir /mnt/cdrom
+> [root@picard ~]# mount -t iso9660 /dev/sr0 /mnt/cdrom/
+> mount: block device /dev/sr0 is write-protected, mounting read-only
+> 
+> The command took about 1 minute to complete. I was then able to browse
+> the CD, however each change of directory took approximately 10 seconds
+> to read.
 
+Hmmm...
 
-------- Comment #18 from tj@kernel.org  2008-08-13 02:06 -------
-Can you please full kernel log?  Somehow it tried to add the same device twice
-(or different devices with the same name) and apparently error handling in
-duplicate case is incorrect.  Thanks.
+> I then ejected the CD:
+> [root@picard ~]# eject /dev/sr0
+> 
+> again, this took about 20 seconds to eject the CD.
+> 
+> After the eject, still nothing in /var/log/messages.
+> 
+> Tried inserting and ejecting another couple of times.
+> 
+> I verified that the CD was readable in my external CD drive and then put
+> the CD back into the main drive and started writing up the results so far.
+> 
+> As I've been typing, the drive has been spinning up and down several
+> times and this time when I checked /var/log/messages I found what is
+> attached.
+> 
+> Is there anything else I can provide in order for you to find the problem?
 
+Can you please try kernel parameter "libata.force=2.00:udma33" and then
+"libata.force=2.00:pio4"?  Depending on which distro you're on and
+whether libata is built into the kernel or not, you'll need to use
+different method to actually get the parameter passed to libata.
+
+Thanks.
 
 -- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are on the CC list for the bug, or are watching someone who is.
+tejun
