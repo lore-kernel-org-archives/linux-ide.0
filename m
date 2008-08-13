@@ -1,86 +1,40 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [PATCH] ide: remove CONFIG_BLK_DEV_IDE config option
-Date: Thu, 14 Aug 2008 00:09:26 +0200
-Message-ID: <200808140009.26857.bzolnier@gmail.com>
-References: <200808132323.02369.bzolnier@gmail.com> <20080813213149.GC7071@cs181140183.pp.htv.fi> <200808140005.03603.bzolnier@gmail.com>
+From: Adrian Bunk <bunk@kernel.org>
+Subject: [2.6 patch] xtensa: remove dead CONFIG_BLK_DEV_IDE code
+Date: Thu, 14 Aug 2008 01:19:07 +0300
+Message-ID: <20080813221907.GE7071@cs181140183.pp.htv.fi>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mu-out-0910.google.com ([209.85.134.188]:48652 "EHLO
-	mu-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752315AbYHMWMF (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 13 Aug 2008 18:12:05 -0400
-Received: by mu-out-0910.google.com with SMTP id w8so248645mue.1
-        for <linux-ide@vger.kernel.org>; Wed, 13 Aug 2008 15:12:02 -0700 (PDT)
-In-Reply-To: <200808140005.03603.bzolnier@gmail.com>
+Received: from smtp5.pp.htv.fi ([213.243.153.39]:39587 "EHLO smtp5.pp.htv.fi"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752237AbYHMWU7 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 13 Aug 2008 18:20:59 -0400
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Adrian Bunk <bunk@kernel.org>
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, chris@zankel.net
 Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Thursday 14 August 2008, Bartlomiej Zolnierkiewicz wrote:
-> On Wednesday 13 August 2008, Adrian Bunk wrote:
-> > On Wed, Aug 13, 2008 at 11:23:02PM +0200, Bartlomiej Zolnierkiewicz wrote:
-> > > Because hd.c was moved to drivers/block/ this config option
-> > > is superfluous now and may be removed.
-> > > 
-> > > Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-> > > ---
-> > >  drivers/ide/Kconfig |   38 ++------------------------------------
-> > >  1 file changed, 2 insertions(+), 36 deletions(-)
-> > >...
-> > 
-> > /me wonders why your patch doesn't touch drivers/ide/Makefile
-> 
-> This is a very good question...
-> 
-> v2 interdiff:
+I don't know why this was there, but it was dead code.
 
-Now for real...  [ I need some sleep badly... ]
+Signed-off-by: Adrian Bunk <bunk@kernel.org>
 
-...
-v2:
-Fix drivers/ide/Makefile (noticed by Adrian Bunk).
+---
+f2db4adb7a7f8fc0ea216fbc2d38a0c3802894ab 
+diff --git a/arch/xtensa/kernel/setup.c b/arch/xtensa/kernel/setup.c
+index a00359e..9606d2b 100644
+--- a/arch/xtensa/kernel/setup.c
++++ b/arch/xtensa/kernel/setup.c
+@@ -53,11 +53,6 @@ extern struct fd_ops no_fd_ops;
+ struct fd_ops *fd_ops;
+ #endif
+ 
+-#if defined(CONFIG_BLK_DEV_IDE) || defined(CONFIG_BLK_DEV_IDE_MODULE)
+-extern struct ide_ops no_ide_ops;
+-struct ide_ops *ide_ops;
+-#endif
+-
+ extern struct rtc_ops no_rtc_ops;
+ struct rtc_ops *rtc_ops;
+ 
 
-Cc: Adrian Bunk <bunk@kernel.org>
-...
-
-only in patch2:
-unchanged:
---- a/drivers/ide/Makefile
-+++ b/drivers/ide/Makefile
-@@ -15,14 +15,14 @@ ide-core-$(CONFIG_BLK_DEV_IDEDMA)	+= ide
- ide-core-$(CONFIG_IDE_PROC_FS)		+= ide-proc.o
- ide-core-$(CONFIG_BLK_DEV_IDEACPI)	+= ide-acpi.o
- 
--obj-$(CONFIG_BLK_DEV_IDE)		+= ide-core.o
-+obj-$(CONFIG_IDE)			+= ide-core.o
- 
- ifeq ($(CONFIG_IDE_ARM), y)
- 	ide-arm-core-y += arm/ide_arm.o
- 	obj-y += ide-arm-core.o
- endif
- 
--obj-$(CONFIG_BLK_DEV_IDE)		+= legacy/ pci/
-+obj-$(CONFIG_IDE)			+= legacy/ pci/
- 
- obj-$(CONFIG_IDEPCI_PCIBUS_ORDER)	+= ide-scan-pci.o
- 
-@@ -31,7 +31,7 @@ ifeq ($(CONFIG_BLK_DEV_CMD640), y)
- 	obj-y += cmd640-core.o
- endif
- 
--obj-$(CONFIG_BLK_DEV_IDE)		+= ppc/
-+obj-$(CONFIG_IDE)			+= ppc/
- obj-$(CONFIG_IDE_H8300)			+= h8300/
- obj-$(CONFIG_IDE_GENERIC)		+= ide-generic.o
- obj-$(CONFIG_BLK_DEV_IDEPNP)		+= ide-pnp.o
-@@ -54,4 +54,4 @@ ifeq ($(CONFIG_BLK_DEV_PLATFORM), y)
- 	obj-y += ide-platform-core.o
- endif
- 
--obj-$(CONFIG_BLK_DEV_IDE)		+= arm/ mips/
-+obj-$(CONFIG_IDE)			+= arm/ mips/
