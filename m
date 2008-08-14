@@ -1,54 +1,30 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: Promise 300-TX 4-channel SATA disk going dead under load
- 2.6.24-7
-Date: Thu, 14 Aug 2008 11:50:05 +0100
-Message-ID: <20080814115005.1495a0b1@lxorguk.ukuu.org.uk>
-References: <48A35FE6.1080903@tlinx.org>
+From: Mark Lord <liml@rtr.ca>
+Subject: Re: [PATCH #upstream-fixes] sata_mv: don't issue two DMA commands
+ concurrently
+Date: Thu, 14 Aug 2008 08:40:32 -0400
+Message-ID: <48A427C0.1070500@rtr.ca>
+References: <489C19CE.6030708@ngs.ru> <489C4B6E.9070306@rtr.ca> <489C4F29.6020007@rtr.ca> <489C54D1.5080901@rtr.ca> <48A29E14.3090908@gmail.com> <48A2BBDC.2090201@ngs.ru> <48A2BC5D.5060801@gmail.com> <48A2C35C.7020400@ngs.ru> <48A2C460.6040504@gmail.com> <48A2C770.2040200@ngs.ru> <48A2CB1B.4000200@gmail.com> <48A2CE09.9090806@ngs.ru> <48A30920.5030803@rtr.ca> <48A33CDC.3000809@ngs.ru> <48A36FE5.5000706@rtr.ca> <48A3E1FF.4030502@ngs.ru>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:55534 "EHLO
-	lxorguk.ukuu.org.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752951AbYHNLJt (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 14 Aug 2008 07:09:49 -0400
-In-Reply-To: <48A35FE6.1080903@tlinx.org>
+Received: from rtr.ca ([76.10.145.34]:52597 "EHLO mail.rtr.ca"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752785AbYHNMke (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 14 Aug 2008 08:40:34 -0400
+In-Reply-To: <48A3E1FF.4030502@ngs.ru>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Linda Walsh <lkml@tlinx.org>
-Cc: linux-ide@vger.kernel.org
+To: Artem Bokhan <aptem@ngs.ru>
+Cc: Tejun Heo <htejun@gmail.com>, linux-ide@vger.kernel.org
 
-> The disk is a Western Digital-1TB (new disk).
-> The controller is a Promise SATA 300TX4 (4-port Serial 3G with
-> NCQ/TCQ Support).
+Artem Bokhan wrote:
+..
+> IMHO, looks like cavity somewhere... Any ideas?
+..
 
-Your drive appears to fall off the bus.
+Have you tried to disable fs read-ahead?
 
-> 13 10:12:20 kern: res ff/ff:ff:ff:ff:ff/ff:ff:ff:ff:ff/ff Emask 0x12 
-> (ATA bus error)
+Something like "hdparm -a0 /dev/sd*" ?
 
-Splat
-
-> 13 10:12:20 kern: ata4.00: exception Emask 0x10 SAct 0x0 SErr 0x19 0002 
-> action 0xa frozen
-> 13 10:12:20 kern: ata4.00: hotplug_status 0x4
-> 13 10:12:20 kern: ata4: SError: { RecovComm PHYRdyChg 10B8B Dispar }
-
-SATA link dies
-
-> 13 10:13:25 kern: ata4: limiting SATA link speed to 1.5 Gbps
-
-We try 1.5GBit
-
-> 13 10:14:30 kern: ata4: SError: { RecovComm PHYRdyChg 10B8B Dispar DevExch }
-> 13 10:14:37 kern: ata4: port is slow to respond, please be patient 
-> (Status 0xff)
-
-First guess would be a dud drive but it could be power or cabling or
-firmware or ...
-
-In all the sane cases I would have expected it to recover, particularly
-if it was cabling.
-
-
-Alan
+-ml
