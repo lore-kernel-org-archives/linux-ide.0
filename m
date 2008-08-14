@@ -1,48 +1,68 @@
-From: Artem Bokhan <aptem@ngs.ru>
-Subject: Re: [PATCH #upstream-fixes] sata_mv: don't issue two DMA commands
- concurrently
-Date: Thu, 14 Aug 2008 14:42:55 +0700
-Message-ID: <48A3E1FF.4030502@ngs.ru>
-References: <489C19CE.6030708@ngs.ru> <489C4B6E.9070306@rtr.ca> <489C4F29.6020007@rtr.ca> <489C54D1.5080901@rtr.ca> <48A29E14.3090908@gmail.com> <48A2BBDC.2090201@ngs.ru> <48A2BC5D.5060801@gmail.com> <48A2C35C.7020400@ngs.ru> <48A2C460.6040504@gmail.com> <48A2C770.2040200@ngs.ru> <48A2CB1B.4000200@gmail.com> <48A2CE09.9090806@ngs.ru> <48A30920.5030803@rtr.ca> <48A33CDC.3000809@ngs.ru> <48A36FE5.5000706@rtr.ca>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+From: bugme-daemon@bugzilla.kernel.org
+Subject: [Bug 11328] New: kernel 2.6.26 reports massive filesystem errors on RAID5 device;  on 2.6.24 it is working but not well
+Date: Thu, 14 Aug 2008 01:02:50 -0700 (PDT)
+Message-ID: <bug-11328-11633@http.bugzilla.kernel.org/>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtpout1.ngs.ru ([195.93.186.195]:55798 "EHLO smtpout1.ngs.ru"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752461AbYHNHmu (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 14 Aug 2008 03:42:50 -0400
-In-Reply-To: <48A36FE5.5000706@rtr.ca>
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:52000 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752042AbYHNIDU (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 14 Aug 2008 04:03:20 -0400
+Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
+	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id m7E82oPv017459
+	for <linux-ide@vger.kernel.org>; Thu, 14 Aug 2008 01:02:51 -0700
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark Lord <liml@rtr.ca>, Tejun Heo <htejun@gmail.com>, linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-Mark Lord =D0=BF=D0=B8=D1=88=D0=B5=D1=82:
->
-> I only see two failures (eg. one retry) in the log you showed.
-Yes, I mean 2 tries, so 1 unnecessary rerty.
+http://bugzilla.kernel.org/show_bug.cgi?id=11328
 
-> But it probably was not a retry, but rather a second I/O after
-> the first one.  The filesystem layer often does that.
->
-If kernel tries to read the same sector more then one time, I call that=
-=20
-retry :)
-
-I found that it depend on vm someway... First 'dd if=3D/dev/sdb=20
-of=3D/dev/null skip=3D300000 count=3D1' causes 2 failures (1 retry), bu=
-t next=20
-'dd's only 1failure. After I drop vm cache 'sysctl vm.drop_caches=3D1',=
- I=20
-get two failures again.
-
-running 'dd if=3D/dev/sdb of=3D/dev/null skip=3D300000 count=3D1 iflag=3D=
-direct'=20
-always causes only 1 failure
-
-IMHO, looks like cavity somewhere... Any ideas?
+           Summary: kernel 2.6.26 reports massive filesystem errors on RAID5
+                    device;  on 2.6.24 it is working but not well
+           Product: IO/Storage
+           Version: 2.5
+     KernelVersion: 2.6.24 / 2.6.26
+          Platform: All
+        OS/Version: Linux
+              Tree: Mainline
+            Status: NEW
+          Severity: normal
+          Priority: P1
+         Component: IDE
+        AssignedTo: io_ide@kernel-bugs.osdl.org
+        ReportedBy: fpbeekhof@gmail.com
 
 
-> Cheers
+I'm running Ubuntu Hardy on a AMD64 machine with a RAID5 array in it, ext3
+formatted. It has been working fine for years, with the exception of
+Gutsy's kernel that couldn't handle that many IDE devices (bug 157909,
+fixed in hardy).
 
+To make backups, I bought an external drive and an eSata controller. The
+controller is not supported in Hardy's kernel (2.6.24), but it is in
+Intrepid, so I installed linux-image-2.6.26-5-generic from intrepid.
+
+Running this kernel causes several changes:
+1) My new controller is recognized
+2) All disks are now known as /dev/sd* and not /dev/hd*
+3) Copying from /dev/md0 results in many filesystem errors
+4) e2fsck reports massive errors on the filesystem on /dev/md0
+
+If I reboot into 2.6.24, all problems are gone and everything is back to
+normal. This implies that there is a major problem somewhere! I happen
+to mount the device read-only, but mounting it rw will no doubt result
+in severe damage to the fs. I accidentally tested this by running e2fsck
+under 2.6.26, which did introduce real errors that I then had to fix
+under 2.6.24. Now, under 2.6.24, all is fine and 2.6.26 still reports
+many errors.
+
+Since then, Tejun Heo pointed out that under 2.6.24 were not that good either,
+all disks on my HPT controller were working in PIO4 (but at least, without
+error), and advised opening a bug report.
+
+See attachments for details.
+
+
+-- 
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug, or are watching the assignee.
