@@ -1,39 +1,65 @@
-From: Mark Lord <liml@rtr.ca>
-Subject: Re: [PATCH #upstream-fixes] sata_mv: don't issue two DMA commands
- concurrently
-Date: Fri, 15 Aug 2008 08:27:27 -0400
-Message-ID: <48A5762F.7000502@rtr.ca>
-References: <489C19CE.6030708@ngs.ru> <489C4B6E.9070306@rtr.ca> <489C4F29.6020007@rtr.ca> <489C54D1.5080901@rtr.ca> <48A29E14.3090908@gmail.com> <48A2BBDC.2090201@ngs.ru> <48A2BC5D.5060801@gmail.com> <48A2C35C.7020400@ngs.ru> <48A2C460.6040504@gmail.com> <48A2C770.2040200@ngs.ru> <48A2CB1B.4000200@gmail.com> <48A2CE09.9090806@ngs.ru> <48A30920.5030803@rtr.ca> <48A33CDC.3000809@ngs.ru> <48A36FE5.5000706@rtr.ca> <48A3E1FF.4030502@ngs.ru> <48A427C0.1070500@rtr.ca> <48A43054.80605@ngs.ru> <48A48C2E.7020902@rtr.ca> <48A5159E.2010508@ngs.ru>
+From: "Greg Freemyer" <greg.freemyer@gmail.com>
+Subject: Re: [opensuse] Seeking advice: 4TB external drive
+Date: Fri, 15 Aug 2008 08:46:01 -0400
+Message-ID: <87f94c370808150546rfd6468er8503176bef0cf9b7@mail.gmail.com>
+References: <48A39DF3.2030105@rhyme.com.au>
+	 <87f94c370808140605w6d7af3c4nc75de67377cfc3ae@mail.gmail.com>
+	 <48A44995.2010908@rhyme.com.au>
+	 <48A45957.6060300@japantest.homelinux.com>
+	 <48A4F3CB.5060204@rhyme.com.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([76.10.145.34]:53401 "EHLO mail.rtr.ca"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752749AbYHOM10 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 15 Aug 2008 08:27:26 -0400
-In-Reply-To: <48A5159E.2010508@ngs.ru>
+Received: from yx-out-2324.google.com ([74.125.44.29]:57471 "EHLO
+	yx-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752877AbYHOMqC (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 15 Aug 2008 08:46:02 -0400
+Received: by yx-out-2324.google.com with SMTP id 8so707199yxm.1
+        for <linux-ide@vger.kernel.org>; Fri, 15 Aug 2008 05:46:01 -0700 (PDT)
+In-Reply-To: <48A4F3CB.5060204@rhyme.com.au>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Artem Bokhan <aptem@ngs.ru>
-Cc: linux-ide@vger.kernel.org
+To: IDE/ATA development list <linux-ide@vger.kernel.org>
+Cc: opensuse@opensuse.org
 
-Artem Bokhan wrote:
-> It uses ncq. Thanks, Mark.
-..
+On Thu, Aug 14, 2008 at 11:11 PM, Philip Warner <pjw@rhyme.com.au> wrote:
+> Sandy Drobic wrote:
+>> If you really intend to use an external drive larger than 1 TB you
+>> should definitely plan to use at least gigabit ethernet or eSATA.
+>> Anything else doesn't make much sense with storage of that size.
+> Yeah; that was the original plan until I failed to find an eSATA card
+> that would cope with a 4TB external disk. The last one I bought was
+> supposed to be 48bit LBA throughout, but the disk still shows up as the
+> wrong size in the cards internal bios (1.8TB). Using USB frightens me
+> considerably since I have (historically) had a great deal of trouble
+> getting large external USB drived to function reliably under linux. And,
+> as you say, they are slooow.
+>
+> If I go eSATA, it omes back to the hardware question: anyone know of a
+> hardware/software combo that thy know can cope with a single 4TB eSATA
+> drive?
+>
+> Also, maybe this is no longer a SuSE uestion.
 
-Okay, so the ATA specs explicitly require a reset there.
-Not much to do about that.
+Agreed, not a suse question.  If you are now thinking eSata, you
+should ask on the linux kernel sata list.
 
-If you were super-keen, though, you could crawl through libata
-and try reducing various delays and polling intervals that are
-associated with a hard reset for that specific (ahci?) driver
-and the core libata routines.
+<linux-ide@vger.kernel.org>
 
-Might shave that 0.75sec down to perhaps 100ms or so.
-But again, the optimal numbers in your specific case
-will not work for the general case.  It might be possible
-to parameterize it all, though, permitting different
-values for differing hardware.
+You don't have to subscribe, just post your question.  Typically
+people do a reply all on the kernel lists and they allow anyone to
+post.  (They have really good spam filters on them.)
 
-Cheers
+Greg
+-- 
+Greg Freemyer
+Litigation Triage Solutions Specialist
+http://www.linkedin.com/in/gregfreemyer
+First 99 Days Litigation White Paper -
+http://www.norcrossgroup.com/forms/whitepapers/99%20Days%20whitepaper.pdf
+
+The Norcross Group
+The Intersection of Evidence & Technology
+http://www.norcrossgroup.com
