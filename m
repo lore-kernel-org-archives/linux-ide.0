@@ -1,67 +1,39 @@
-From: Mikael Pettersson <mikpe@it.uu.se>
-Subject: Re: Driver for Promise PDC42819 SATA/SAS controller
-Date: Fri, 15 Aug 2008 13:10:34 +0200
-Message-ID: <18597.25642.934859.944853@harpo.it.uu.se>
-References: <65a6ef750808141846h1104bc1cj9a9c0bb721b62f58@mail.gmail.com>
+From: Mark Lord <liml@rtr.ca>
+Subject: Re: [PATCH #upstream-fixes] sata_mv: don't issue two DMA commands
+ concurrently
+Date: Fri, 15 Aug 2008 08:27:27 -0400
+Message-ID: <48A5762F.7000502@rtr.ca>
+References: <489C19CE.6030708@ngs.ru> <489C4B6E.9070306@rtr.ca> <489C4F29.6020007@rtr.ca> <489C54D1.5080901@rtr.ca> <48A29E14.3090908@gmail.com> <48A2BBDC.2090201@ngs.ru> <48A2BC5D.5060801@gmail.com> <48A2C35C.7020400@ngs.ru> <48A2C460.6040504@gmail.com> <48A2C770.2040200@ngs.ru> <48A2CB1B.4000200@gmail.com> <48A2CE09.9090806@ngs.ru> <48A30920.5030803@rtr.ca> <48A33CDC.3000809@ngs.ru> <48A36FE5.5000706@rtr.ca> <48A3E1FF.4030502@ngs.ru> <48A427C0.1070500@rtr.ca> <48A43054.80605@ngs.ru> <48A48C2E.7020902@rtr.ca> <48A5159E.2010508@ngs.ru>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from aun.it.uu.se ([130.238.12.36]:47796 "EHLO aun.it.uu.se"
+Received: from rtr.ca ([76.10.145.34]:53401 "EHLO mail.rtr.ca"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752595AbYHOLKp (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 15 Aug 2008 07:10:45 -0400
-In-Reply-To: <65a6ef750808141846h1104bc1cj9a9c0bb721b62f58@mail.gmail.com>
+	id S1752749AbYHOM10 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 15 Aug 2008 08:27:26 -0400
+In-Reply-To: <48A5159E.2010508@ngs.ru>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark Nelson <mdnelson8@gmail.com>
+To: Artem Bokhan <aptem@ngs.ru>
 Cc: linux-ide@vger.kernel.org
 
-Mark Nelson writes:
- > Hi All,
- > 
- > I recently bought an MSI K9A2 Platinum motherboard and it has a Promise
- > PDC42819 SATA/SAS controller onboard. I haven't been able to get the
- > controller to work with any of the libata sata drivers in mainline
- > (although I did only try sata_promise, sata_sx4 or ahci; last two I was
- > doubtful about but I figured it was worth a try).
- > 
- > Has anyone played with this controller under Linux before and can it be
- > made to work with any of the open source drivers - I would realy like
- > to use the eSATA and internal SATA ports attached to this controller
- > (and I don't want to trust my data to the promise binary blob)? Maybe
- > it's as simple as adding the right PCI ID to sata_promise, but I wasn't
- > sure what kind of board it should be: 2037x, 2057x, 20319, 40518, 20619,
- > or maybe some new one...
- > 
- > I'm not sure how important this is but I gathered the following info
- > about the controller:
- > 
- > References to the controller in the motherboard manual and the
- > motherboard manufacturer's website: Promise T3 [1]
- > 
- > Written on the actual chip on the motherboard: Promise PDC42819 [2]
- > 
- > This chip is also used on Promise's own FastTrak TX2650 & TX4650
- > adapters [3] which have "partial open source" drivers [4], [5]. This
- > driver looks like an open source wrapper around a binary blob (some
- > fasttrak library for software fake raid, I think).
- > 
- > Having a quick look through the source of Promise's driver, it looks
- > like the driver has been hacked up out of a driver that was originally
- > used for fakeraid on ATI and intel southbridges as well as Promise's
- > SX4 adapter (and some Promise adapter called the OCTOPUSII).
- > 
- > Promise has an open source commitment written on its werbsite [6] but
- > it just relates to their SuperTrak products (not their FastTrak ones)
- > and the stex driver.
- > 
- > The following is the hunk of lspci output that refers to the controller:
- > 
- > 02:00.0 RAID bus controller [0104]: Promise Technology, Inc. Unknown
- > device [105a:3f20]
+Artem Bokhan wrote:
+> It uses ncq. Thanks, Mark.
+..
 
-This is pure speculation, but _if_ it is similar to the chips
-driven by sata_promise then it should be close to the 40518 family
-(all the other ones are older). So adding that PCI id as a
-board_40518 in pdc_ata_pci_tbl[] just might do the trick.
+Okay, so the ATA specs explicitly require a reset there.
+Not much to do about that.
+
+If you were super-keen, though, you could crawl through libata
+and try reducing various delays and polling intervals that are
+associated with a hard reset for that specific (ahci?) driver
+and the core libata routines.
+
+Might shave that 0.75sec down to perhaps 100ms or so.
+But again, the optimal numbers in your specific case
+will not work for the general case.  It might be possible
+to parameterize it all, though, permitting different
+values for differing hardware.
+
+Cheers
