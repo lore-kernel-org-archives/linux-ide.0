@@ -1,15 +1,15 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH 7/9] ide: remove superfluous ->media field from ide_driver_t
-Date: Sun, 17 Aug 2008 19:15:36 +0200
-Message-ID: <20080817171536.27943.15794.sendpatchset@localhost.localdomain>
+Subject: [PATCH 8/9] ide: remove superfluous ->dma field from ide_hwif_t
+Date: Sun, 17 Aug 2008 19:15:48 +0200
+Message-ID: <20080817171548.27943.58522.sendpatchset@localhost.localdomain>
 References: <20080817171454.27943.37234.sendpatchset@localhost.localdomain>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.159]:31381 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753543AbYHQRSD (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 17 Aug 2008 13:18:03 -0400
-Received: by fg-out-1718.google.com with SMTP id 19so1455276fgg.17
-        for <linux-ide@vger.kernel.org>; Sun, 17 Aug 2008 10:18:01 -0700 (PDT)
+Received: from mu-out-0910.google.com ([209.85.134.186]:30252 "EHLO
+	mu-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754897AbYHQRSJ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 17 Aug 2008 13:18:09 -0400
+Received: by mu-out-0910.google.com with SMTP id w8so2799973mue.1
+        for <linux-ide@vger.kernel.org>; Sun, 17 Aug 2008 10:18:08 -0700 (PDT)
 In-Reply-To: <20080817171454.27943.37234.sendpatchset@localhost.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
@@ -18,83 +18,61 @@ Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-kernel@vger.kernel.org
 
 Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 ---
- drivers/ide/ide-cd.c     |    1 -
- drivers/ide/ide-disk.c   |    1 -
- drivers/ide/ide-floppy.c |    1 -
- drivers/ide/ide-tape.c   |    1 -
- drivers/scsi/ide-scsi.c  |    1 -
- include/linux/ide.h      |    1 -
- 6 files changed, 6 deletions(-)
+ drivers/ide/ide-dma.c      |    2 --
+ drivers/ide/pci/scc_pata.c |    2 --
+ include/linux/ide.h        |    2 --
+ 3 files changed, 6 deletions(-)
 
-Index: b/drivers/ide/ide-cd.c
+Index: b/drivers/ide/ide-dma.c
 ===================================================================
---- a/drivers/ide/ide-cd.c
-+++ b/drivers/ide/ide-cd.c
-@@ -1967,7 +1967,6 @@ static ide_driver_t ide_cdrom_driver = {
- 	.probe			= ide_cd_probe,
- 	.remove			= ide_cd_remove,
- 	.version		= IDECD_VERSION,
--	.media			= ide_cdrom,
- 	.do_request		= ide_cd_do_request,
- 	.end_request		= ide_end_request,
- 	.error			= __ide_error,
-Index: b/drivers/ide/ide-disk.c
+--- a/drivers/ide/ide-dma.c
++++ b/drivers/ide/ide-dma.c
+@@ -525,7 +525,6 @@ void ide_dma_start(ide_drive_t *drive)
+ 		outb(dma_cmd | 1, hwif->dma_base + ATA_DMA_CMD);
+ 	}
+ 
+-	hwif->dma = 1;
+ 	wmb();
+ }
+ 
+@@ -564,7 +563,6 @@ int __ide_dma_end (ide_drive_t *drive)
+ 	/* purge DMA mappings */
+ 	ide_destroy_dmatable(drive);
+ 	/* verify good DMA status */
+-	hwif->dma = 0;
+ 	wmb();
+ 	return (dma_stat & 7) != 4 ? (0x10 | dma_stat) : 0;
+ }
+Index: b/drivers/ide/pci/scc_pata.c
 ===================================================================
---- a/drivers/ide/ide-disk.c
-+++ b/drivers/ide/ide-disk.c
-@@ -932,7 +932,6 @@ static ide_driver_t idedisk_driver = {
- 	.resume			= ide_disk_resume,
- 	.shutdown		= ide_device_shutdown,
- 	.version		= IDEDISK_VERSION,
--	.media			= ide_disk,
- 	.do_request		= ide_do_rw_disk,
- 	.end_request		= ide_end_request,
- 	.error			= __ide_error,
-Index: b/drivers/ide/ide-floppy.c
-===================================================================
---- a/drivers/ide/ide-floppy.c
-+++ b/drivers/ide/ide-floppy.c
-@@ -664,7 +664,6 @@ static ide_driver_t idefloppy_driver = {
- 	.probe			= ide_floppy_probe,
- 	.remove			= ide_floppy_remove,
- 	.version		= IDEFLOPPY_VERSION,
--	.media			= ide_floppy,
- 	.do_request		= idefloppy_do_request,
- 	.end_request		= idefloppy_end_request,
- 	.error			= __ide_error,
-Index: b/drivers/ide/ide-tape.c
-===================================================================
---- a/drivers/ide/ide-tape.c
-+++ b/drivers/ide/ide-tape.c
-@@ -2324,7 +2324,6 @@ static ide_driver_t idetape_driver = {
- 	.probe			= ide_tape_probe,
- 	.remove			= ide_tape_remove,
- 	.version		= IDETAPE_VERSION,
--	.media			= ide_tape,
- 	.do_request		= idetape_do_request,
- 	.end_request		= idetape_end_request,
- 	.error			= __ide_error,
-Index: b/drivers/scsi/ide-scsi.c
-===================================================================
---- a/drivers/scsi/ide-scsi.c
-+++ b/drivers/scsi/ide-scsi.c
-@@ -437,7 +437,6 @@ static ide_driver_t idescsi_driver = {
- 	.probe			= ide_scsi_probe,
- 	.remove			= ide_scsi_remove,
- 	.version		= IDESCSI_VERSION,
--	.media			= ide_scsi,
- 	.do_request		= idescsi_do_request,
- 	.end_request		= idescsi_end_request,
- 	.error                  = idescsi_atapi_error,
+--- a/drivers/ide/pci/scc_pata.c
++++ b/drivers/ide/pci/scc_pata.c
+@@ -353,7 +353,6 @@ static void scc_dma_start(ide_drive_t *d
+ 
+ 	/* start DMA */
+ 	scc_ide_outb(dma_cmd | 1, hwif->dma_base);
+-	hwif->dma = 1;
+ 	wmb();
+ }
+ 
+@@ -374,7 +373,6 @@ static int __scc_dma_end(ide_drive_t *dr
+ 	/* purge DMA mappings */
+ 	ide_destroy_dmatable(drive);
+ 	/* verify good DMA status */
+-	hwif->dma = 0;
+ 	wmb();
+ 	return (dma_stat & 7) != 4 ? (0x10 | dma_stat) : 0;
+ }
 Index: b/include/linux/ide.h
 ===================================================================
 --- a/include/linux/ide.h
 +++ b/include/linux/ide.h
-@@ -998,7 +998,6 @@ enum {
-  */
- struct ide_driver_s {
- 	const char			*version;
--	u8				media;
- 	ide_startstop_t	(*do_request)(ide_drive_t *, struct request *, sector_t);
- 	int		(*end_request)(ide_drive_t *, int, int);
- 	ide_startstop_t	(*error)(ide_drive_t *, struct request *rq, u8, u8);
+@@ -745,8 +745,6 @@ typedef struct hwif_s {
+ 
+ 	void		*hwif_data;	/* extra hwif data */
+ 
+-	unsigned dma;
+-
+ #ifdef CONFIG_BLK_DEV_IDEACPI
+ 	struct ide_acpi_hwif_link *acpidata;
+ #endif
