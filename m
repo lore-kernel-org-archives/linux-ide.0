@@ -1,48 +1,140 @@
-From: Borislav Petkov <petkovbb@googlemail.com>
-Subject: Re: [PATCH 3/5] ide: add a driver-wide debugging macro
-Date: Sun, 17 Aug 2008 20:24:33 +0200
-Message-ID: <20080817182433.GA6849@gollum.tnic>
-References: <1218993826-4571-1-git-send-email-petkovbb@gmail.com> <1218993826-4571-4-git-send-email-petkovbb@gmail.com> <1218996786.24527.115.camel@localhost>
-Reply-To: petkovbb@gmail.com
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: [PATCH 1/9] ide: fix HDIO_DRIVE_TASK[FILE] ioctls for CHS commands on LBA devices
+Date: Sun, 17 Aug 2008 21:53:36 +0200
+Message-ID: <20080817195336.13393.86030.sendpatchset@localhost.localdomain>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.159]:52448 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752119AbYHQSYg (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 17 Aug 2008 14:24:36 -0400
-Received: by fg-out-1718.google.com with SMTP id 19so1466332fgg.17
-        for <linux-ide@vger.kernel.org>; Sun, 17 Aug 2008 11:24:33 -0700 (PDT)
-Content-Disposition: inline
-In-Reply-To: <1218996786.24527.115.camel@localhost>
+Received: from mu-out-0910.google.com ([209.85.134.190]:50284 "EHLO
+	mu-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750806AbYHQTz6 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 17 Aug 2008 15:55:58 -0400
+Received: by mu-out-0910.google.com with SMTP id w8so2865213mue.1
+        for <linux-ide@vger.kernel.org>; Sun, 17 Aug 2008 12:55:56 -0700 (PDT)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Joe Perches <joe@perches.com>
-Cc: bzolnier@gmail.com, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
+Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-kernel@vger.kernel.org
 
-On Sun, Aug 17, 2008 at 11:13:06AM -0700, Joe Perches wrote:
-> On Sun, 2008-08-17 at 19:23 +0200, Borislav Petkov wrote:
-> > diff --git a/include/linux/ide.h b/include/linux/ide.h
-> > index c161840..b6d714d 100644
-> > --- a/include/linux/ide.h
-> > +++ b/include/linux/ide.h
-> > []
-> > +/* DRV_NAME has to be defined in the driver before using the macro below */
-> > +#define __ide_debug_log(lvl, fmt, args...)			\
-> > +{								\
-> > +	if (unlikely(drive->debug_mask & lvl))			\
-> > +		printk(KERN_INFO DRV_NAME ": " fmt, ## args);	\
-> > +}
-> 
-> Shouldn't a debug printk use KERN_DEBUG?
+Add IDE_DFLAG_LBA device flag and use it instead of ->select.b.lba.
 
-Yes, it should. However, i'm going to have to change the default console
-loglevel to see those, aka boot with loglevel=7 and there's the possibility of
-other debug messages getting in the way too. Instead, the debugging messages
-here are enabled only when you do a debug build of the driver _and_ when enable
-them through the debug_mask so you get to see debug messages only you're
-interested in without changing anything else in the kernel boot.
+Since ->tf_load uses ->select.all for ATA Device/Head register this
+fixes HDIO_DRIVE_TASK[FILE] ioctls for CHS commands on LBA devices.
 
--- 
-Regards/Gruss,
-    Boris.
+Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+---
+moar patches (on top of pata tree + previous 9)
+
+ drivers/ide/ide-disk.c |   33 ++++++++++++++++++++-------------
+ drivers/ide/ide-io.c   |    4 ++--
+ include/linux/ide.h    |    1 +
+ 3 files changed, 23 insertions(+), 15 deletions(-)
+
+Index: b/drivers/ide/ide-disk.c
+===================================================================
+--- a/drivers/ide/ide-disk.c
++++ b/drivers/ide/ide-disk.c
+@@ -156,7 +156,7 @@ static ide_startstop_t __ide_do_rw_disk(
+ 	memset(&task, 0, sizeof(task));
+ 	task.tf_flags = IDE_TFLAG_TF | IDE_TFLAG_DEVICE;
+ 
+-	if (drive->select.b.lba) {
++	if (drive->dev_flags & IDE_DFLAG_LBA) {
+ 		if (lba48) {
+ 			pr_debug("%s: LBA=0x%012llx\n", drive->name,
+ 					(unsigned long long)block);
+@@ -181,6 +181,8 @@ static ide_startstop_t __ide_do_rw_disk(
+ 			tf->lbah   = block >>= 8;
+ 			tf->device = (block >> 8) & 0xf;
+ 		}
++
++		tf->device |= ATA_LBA;
+ 	} else {
+ 		unsigned int sect, head, cyl, track;
+ 
+@@ -378,28 +380,32 @@ static void idedisk_check_hpa(ide_drive_
+ static void init_idedisk_capacity(ide_drive_t *drive)
+ {
+ 	u16 *id = drive->id;
+-	/*
+-	 * If this drive supports the Host Protected Area feature set,
+-	 * then we may need to change our opinion about the drive's capacity.
+-	 */
+-	int hpa = ata_id_hpa_enabled(id);
++	int lba;
+ 
+ 	if (ata_id_lba48_enabled(id)) {
+ 		/* drive speaks 48-bit LBA */
+-		drive->select.b.lba = 1;
++		lba = 1;
+ 		drive->capacity64 = ata_id_u64(id, ATA_ID_LBA_CAPACITY_2);
+-		if (hpa)
+-			idedisk_check_hpa(drive);
+ 	} else if (ata_id_has_lba(id) && ata_id_is_lba_capacity_ok(id)) {
+ 		/* drive speaks 28-bit LBA */
+-		drive->select.b.lba = 1;
++		lba = 1;
+ 		drive->capacity64 = ata_id_u32(id, ATA_ID_LBA_CAPACITY);
+-		if (hpa)
+-			idedisk_check_hpa(drive);
+ 	} else {
+ 		/* drive speaks boring old 28-bit CHS */
++		lba = 0;
+ 		drive->capacity64 = drive->cyl * drive->head * drive->sect;
+ 	}
++
++	if (lba) {
++		drive->dev_flags |= IDE_DFLAG_LBA;
++
++		/*
++		* If this device supports the Host Protected Area feature set,
++		* then we may need to change our opinion about its capacity.
++		*/
++		if (ata_id_hpa_enabled(id))
++			idedisk_check_hpa(drive);
++	}
+ }
+ 
+ static sector_t idedisk_capacity(ide_drive_t *drive)
+@@ -1105,7 +1111,8 @@ static int ide_disk_probe(ide_drive_t *d
+ 	drive->driver_data = idkp;
+ 
+ 	idedisk_setup(drive);
+-	if ((!drive->head || drive->head > 16) && !drive->select.b.lba) {
++	if ((drive->dev_flags & IDE_DFLAG_LBA) == 0 &&
++	    (drive->head == 0 || drive->head > 16)) {
+ 		printk(KERN_ERR "%s: INVALID GEOMETRY: %d PHYSICAL HEADS?\n",
+ 			drive->name, drive->head);
+ 		drive->dev_flags &= ~IDE_DFLAG_ATTACH;
+Index: b/drivers/ide/ide-io.c
+===================================================================
+--- a/drivers/ide/ide-io.c
++++ b/drivers/ide/ide-io.c
+@@ -383,7 +383,7 @@ static ide_startstop_t ide_ata_error(ide
+ 	} else if (stat & ATA_ERR) {
+ 		/* err has different meaning on cdrom and tape */
+ 		if (err == ATA_ABORTED) {
+-			if (drive->select.b.lba &&
++			if ((drive->dev_flags & IDE_DFLAG_LBA) &&
+ 			    /* some newer drives don't support ATA_CMD_INIT_DEV_PARAMS */
+ 			    hwif->tp_ops->read_status(hwif) == ATA_CMD_INIT_DEV_PARAMS)
+ 				return ide_stopped;
+@@ -513,7 +513,7 @@ static void ide_tf_set_specify_cmd(ide_d
+ 	tf->lbal    = drive->sect;
+ 	tf->lbam    = drive->cyl;
+ 	tf->lbah    = drive->cyl >> 8;
+-	tf->device  = ((drive->head - 1) | drive->select.all) & ~ATA_LBA;
++	tf->device  = (drive->head - 1) | drive->select.all;
+ 	tf->command = ATA_CMD_INIT_DEV_PARAMS;
+ }
+ 
+Index: b/include/linux/ide.h
+===================================================================
+--- a/include/linux/ide.h
++++ b/include/linux/ide.h
+@@ -500,6 +500,7 @@ enum {
+ 	IDE_DFLAG_NOWERR		= (1 << 24),
+ 	/* retrying in PIO */
+ 	IDE_DFLAG_DMA_PIO_RETRY		= (1 << 25),
++	IDE_DFLAG_LBA			= (1 << 26),
+ };
+ 
+ struct ide_drive_s {
