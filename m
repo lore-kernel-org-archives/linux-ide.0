@@ -1,107 +1,54 @@
 From: Pavel Machek <pavel@suse.cz>
 Subject: Re: Laptop shock detection and harddisk protection
-Date: Sun, 17 Aug 2008 21:45:21 +0200
-Message-ID: <20080817194520.GB4043@ucw.cz>
-References: <48C7FCEE.8060404@kernel.org> <41840b750809110908o54a61f55w7b1b9793abf55634@mail.gmail.com> <48C948A6.3080404@kernel.org> <41840b750809111325t30f8ffe2sa4572d401d43dc5a@mail.gmail.com> <48C9AB5A.705@kernel.org> <20080912165947.GB5094@kroah.com>
+Date: Sun, 17 Aug 2008 21:48:38 +0200
+Message-ID: <20080817194838.GC4043@ucw.cz>
+References: <48C7FCEE.8060404@kernel.org> <41840b750809110908o54a61f55w7b1b9793abf55634@mail.gmail.com> <48C948A6.3080404@kernel.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from gprs189-60.eurotel.cz ([160.218.189.60]:3597 "EHLO spitz.ucw.cz"
+Received: from gprs189-60.eurotel.cz ([160.218.189.60]:3602 "EHLO spitz.ucw.cz"
 	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752922AbYIQO0F (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 17 Sep 2008 10:26:05 -0400
+	id S1752891AbYIQOZ6 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 17 Sep 2008 10:25:58 -0400
 Content-Disposition: inline
-In-Reply-To: <20080912165947.GB5094@kroah.com>
+In-Reply-To: <48C948A6.3080404@kernel.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Greg KH <greg@kroah.com>
-Cc: Tejun Heo <tj@kernel.org>, Shem Multinymous <multinymous@gmail.com>, Elias Oltmanns <eo@nebensachen.de>, Thomas Renninger <trenn@suse.de>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, IDE/ATA development list <linux-ide@vger.kernel.org>
+To: Tejun Heo <tj@kernel.org>
+Cc: Shem Multinymous <multinymous@gmail.com>, Elias Oltmanns <eo@nebensachen.de>, Thomas Renninger <trenn@suse.de>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, IDE/ATA development list <linux-ide@vger.kernel.org>
 
-On Fri 2008-09-12 09:59:47, Greg KH wrote:
-> On Fri, Sep 12, 2008 at 01:35:54AM +0200, Tejun Heo wrote:
-> > Shem Multinymous wrote:
-> > >> That reduction comes because input device supports poll and
-> > >> sysfs_notify_event() does about the same thing.  The uesrland daemon
-> > >> can just poll on a node and read data nodes when poll event on the
-> > >> node triggeres.
-> > > 
-> > > Agreed.
-> > > There's another issue with the current sysfs interface, though: hdapsd
-> > > needs to read (x,y,timestamp) tuples, whereas sysfs provides just x
-> > > and y in separate attributes which cannot be read atomically together.
-> > > We can add a sysfs file with "x y timestamp" readouts, though this is
-> > > unusual for sysfs (and certainly incompatible with hwmon).
+Hi!
+
+> >> 2. If we're gonna unify interface, how much can we unify the backend?
+> >>   Some devices are based on polling, others interrupt.  For polling,
+> >>   is it better to delegate the whole polling to userland or is it
+> >>   better to do some of it in kernel (tp_smapi seems to be doing
+> >>   this)?
 > > 
-> > Yes, right.  Forgot about the atomicity part altogether.  Thanks for
-> > bringing it up.
-> > 
-> > >> Unloading heads will be simple.  Just echoing timeout in ms to sysfs
-> > >> nodes, so I don't think it's a good idea to push out actual unloading
-> > >> to another process especially as fork doesn't inherit mlockall.
-> > > 
-> > > I had in mind another daemon listening for "unload now" events, so no
-> > > forking needed.
-> > > This second daemon might make sense if we push the logic of deciding
-> > > *which* disks to unload into userspace, since this logic is the same
-> > > for the ThinkPad style and the HP style.
-> > 
-> > Hmmm... I can't (yet) see the benefit of having two separate userland
-> > daemons.
-> > 
-> > >> On a related note, is there any plan to merge tp_smapi to mainline?
-> > >> It seems you put a lot of work into it and I don't really see why it
-> > >> should stay out of tree.
-> > > 
-> > > The only issue I'm aware of is finding a reasonably-named maintainer.
-> > > On the technical side, the reviews on my lkml submission of
-> > > thinkpad_ec+hdaps seemed good and all technical comments are since
-> > > addressed. The code has been stable, well-tested and packaged by major
-> > > distros for years.
-> > 
-> > Cool, can you please post the patch to the lkml and cc Greg
-> > Kroah-Hartman <gregkh@suse.de>, Andrew Morton
-> > <akpm@linux-foundation.org> and me?
+> > The ThinkPad accelerometer needs to be polled at very regular
+> > intervals (max jitter on the order of 10ms), which sounds like a job
+> > for the kernel.
 > 
-> Sorry, but no, I can't accept this code as it is coming from a "known
-> anonymous" person containing information that it is not known where it
-> came from.
+> Yes, I agree.
+> 
+> > This is because in ThinkPads we actually have a 4-level pile:
+> > [hdapsd userspace] -> [hdaps kernel] -> [embedded controller] ->
+> > [accelerometer A2D]
+> > What the kernel polls is actually is the H8S embedded controller (EC)
+> > chip, which in turn does its own polling of the accelerometer A2D.
+> > Now, the EC has a tiny buffer and strange buffering semantics, and it
+> > has its own internal clock, so the software->EC polling should be very
+> > regular to minmize EC buffer overflows/underruns.
+> 
+> So, I think the whole polling should be implemented inside the kernel
+> and the kernel should notify userland when new data is available,
+> which is about what the current joystick implementation does and can
+> be achieved using sysfs_notify_event().
 
-So... what are you worried about?
+I like joystick/input interface slightly better. In some cases,
+machines with accelerometers (openmoko) use them for input primarily.
 
-> In short, "Signed-off-by:" from people who are known to be anonymous is
-> not allowed.
-
-That's okay. Signed-off-by: by original author is not required for
-mainline merge. All that is required is submitter legally getting it
-under GPL, and signing that off.
-
-Now.. what are you worried about?
-
-a) Copyrights?
-
-b) Patents?
-
-c) Trademarks?
-
-d) Trade secrets?
-
-e) Contracts between Shem and ...?
-
-f) Some other contracts?
-
-g) any other applicable laws? which?
-
-h) anything else?
-
-i) anything you can't talk about because NDAs or similar?
-
-Based on the answer, we can try to figure way forward. 
-
-('power_now' is really useful for me; useful enough that I think about
-reverse-engineering it from tp_smapi and reimplementation. Maybe even
-doing it chinese-wall way if I can find second interested person. But
-I need to know what the concerns are. ...plus, I guess Ciaran can help
-with legal questions....)
+HP interface will be more specialized (but less useful); still  userland daemon can handle the differences...
 
 							Pavel
 -- 
