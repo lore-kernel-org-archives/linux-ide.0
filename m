@@ -1,233 +1,94 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH 7/9] ide: convert 'pio_mode' device setting to use DS_SYNC flag
-Date: Sun, 17 Aug 2008 21:54:18 +0200
-Message-ID: <20080817195418.13393.61579.sendpatchset@localhost.localdomain>
+Subject: [PATCH 8/9] ide: factor out reset error reporting from reset_pollfunc()
+Date: Sun, 17 Aug 2008 21:54:25 +0200
+Message-ID: <20080817195425.13393.62956.sendpatchset@localhost.localdomain>
 References: <20080817195336.13393.86030.sendpatchset@localhost.localdomain>
 Return-path: <linux-ide-owner@vger.kernel.org>
 Received: from fg-out-1718.google.com ([72.14.220.154]:16970 "EHLO
 	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756389AbYHQT4i (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 17 Aug 2008 15:56:38 -0400
+	with ESMTP id S1756580AbYHQT4p (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 17 Aug 2008 15:56:45 -0400
 Received: by fg-out-1718.google.com with SMTP id 19so1481750fgg.17
-        for <linux-ide@vger.kernel.org>; Sun, 17 Aug 2008 12:56:37 -0700 (PDT)
+        for <linux-ide@vger.kernel.org>; Sun, 17 Aug 2008 12:56:44 -0700 (PDT)
 In-Reply-To: <20080817195336.13393.86030.sendpatchset@localhost.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
 Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-kernel@vger.kernel.org
 
-* Convert 'pio_mode' device setting to use DS_SYNC flag.
+Factor out reset error reporting from reset_pollfunc()
+to ide_reset_report_error() helper.
 
-* Remove unused special_t.b.{set_tune,serviced} and ide_drive_t.tune_req.
+While at it:
+- fix KERN_* printk() levels
+- remove 'switch ()'
 
 Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 ---
- drivers/ide/ide-io.c |   68 +++------------------------------------------------
- drivers/ide/ide.c    |   58 +++++++++++++++++++++++++++++++++----------
- include/linux/ide.h  |    7 -----
- 3 files changed, 51 insertions(+), 82 deletions(-)
+ drivers/ide/ide-iops.c |   40 +++++++++++++++++++++-------------------
+ 1 file changed, 21 insertions(+), 19 deletions(-)
 
-Index: b/drivers/ide/ide-io.c
+Index: b/drivers/ide/ide-iops.c
 ===================================================================
---- a/drivers/ide/ide-io.c
-+++ b/drivers/ide/ide-io.c
-@@ -543,30 +543,6 @@ static ide_startstop_t ide_disk_special(
- 	return ide_started;
+--- a/drivers/ide/ide-iops.c
++++ b/drivers/ide/ide-iops.c
+@@ -940,6 +940,25 @@ static ide_startstop_t atapi_reset_pollf
+ 	return ide_stopped;
  }
  
--/*
-- * handle HDIO_SET_PIO_MODE ioctl abusers here, eventually it will go away
-- */
--static int set_pio_mode_abuse(ide_hwif_t *hwif, u8 req_pio)
--{
--	switch (req_pio) {
--	case 202:
--	case 201:
--	case 200:
--	case 102:
--	case 101:
--	case 100:
--		return (hwif->host_flags & IDE_HFLAG_ABUSE_DMA_MODES) ? 1 : 0;
--	case 9:
--	case 8:
--		return (hwif->host_flags & IDE_HFLAG_ABUSE_PREFETCH) ? 1 : 0;
--	case 7:
--	case 6:
--		return (hwif->host_flags & IDE_HFLAG_ABUSE_FAST_DEVSEL) ? 1 : 0;
--	default:
--		return 0;
--	}
--}
--
- /**
-  *	do_special		-	issue some special commands
-  *	@drive: drive the command is for
-@@ -584,46 +560,12 @@ static ide_startstop_t do_special (ide_d
- #ifdef DEBUG
- 	printk("%s: do_special: 0x%02x\n", drive->name, s->all);
- #endif
--	if (s->b.set_tune) {
--		ide_hwif_t *hwif = drive->hwif;
--		const struct ide_port_ops *port_ops = hwif->port_ops;
--		u8 req_pio = drive->tune_req;
--
--		s->b.set_tune = 0;
--
--		if (set_pio_mode_abuse(drive->hwif, req_pio)) {
--			/*
--			 * take ide_lock for IDE_DFLAG_[NO_]UNMASK/[NO_]IO_32BIT
--			 */
--			if (req_pio == 8 || req_pio == 9) {
--				unsigned long flags;
-+	if (drive->media == ide_disk)
-+		return ide_disk_special(drive);
- 
--				spin_lock_irqsave(&ide_lock, flags);
--				port_ops->set_pio_mode(drive, req_pio);
--				spin_unlock_irqrestore(&ide_lock, flags);
--			} else
--				port_ops->set_pio_mode(drive, req_pio);
--		} else {
--			int keep_dma =
--				!!(drive->dev_flags & IDE_DFLAG_USING_DMA);
--
--			ide_set_pio(drive, req_pio);
--
--			if (hwif->host_flags & IDE_HFLAG_SET_PIO_MODE_KEEP_DMA) {
--				if (keep_dma)
--					ide_dma_on(drive);
--			}
--		}
--
--		return ide_stopped;
--	} else {
--		if (drive->media == ide_disk)
--			return ide_disk_special(drive);
--
--		s->all = 0;
--		drive->mult_req = 0;
--		return ide_stopped;
--	}
-+	s->all = 0;
-+	drive->mult_req = 0;
-+	return ide_stopped;
- }
- 
- void ide_map_sg(ide_drive_t *drive, struct request *rq)
-Index: b/drivers/ide/ide.c
-===================================================================
---- a/drivers/ide/ide.c
-+++ b/drivers/ide/ide.c
-@@ -314,9 +314,32 @@ out:
- #endif
- }
- 
-+/*
-+ * handle HDIO_SET_PIO_MODE ioctl abusers here, eventually it will go away
-+ */
-+static int set_pio_mode_abuse(ide_hwif_t *hwif, u8 req_pio)
++static void ide_reset_report_error(ide_hwif_t *hwif, u8 err)
 +{
-+	switch (req_pio) {
-+	case 202:
-+	case 201:
-+	case 200:
-+	case 102:
-+	case 101:
-+	case 100:
-+		return (hwif->host_flags & IDE_HFLAG_ABUSE_DMA_MODES) ? 1 : 0;
-+	case 9:
-+	case 8:
-+		return (hwif->host_flags & IDE_HFLAG_ABUSE_PREFETCH) ? 1 : 0;
-+	case 7:
-+	case 6:
-+		return (hwif->host_flags & IDE_HFLAG_ABUSE_FAST_DEVSEL) ? 1 : 0;
-+	default:
-+		return 0;
-+	}
++	static const char *err_master_vals[] =
++		{ NULL, "passed", "formatter device error",
++		  "sector buffer error", "ECC circuitry error",
++		  "controlling MPU error" };
++
++	u8 err_master = err & 0x7f;
++
++	printk(KERN_ERR "%s: reset: master: ", hwif->name);
++	if (err_master && err_master < 6)
++		printk(KERN_CONT "%s", err_master_vals[err_master]);
++	else
++		printk(KERN_CONT "error (0x%02x?)", err);
++	if (err & 0x80)
++		printk(KERN_CONT "; slave: failed");
++	printk(KERN_CONT "\n");
 +}
 +
- static int set_pio_mode(ide_drive_t *drive, int arg)
- {
--	struct request *rq;
- 	ide_hwif_t *hwif = drive->hwif;
- 	const struct ide_port_ops *port_ops = hwif->port_ops;
+ /*
+  * reset_pollfunc() gets invoked to poll the interface for completion every 50ms
+  * during an ide reset operation. If the drives have not yet responded,
+@@ -975,31 +994,14 @@ static ide_startstop_t reset_pollfunc (i
+ 		drive->failures++;
+ 		err = -EIO;
+ 	} else  {
+-		printk("%s: reset: ", hwif->name);
+ 		tmp = ide_read_error(drive);
  
-@@ -327,17 +350,26 @@ static int set_pio_mode(ide_drive_t *dri
- 	    (hwif->host_flags & IDE_HFLAG_NO_SET_MODE))
- 		return -ENOSYS;
- 
--	if (drive->special.b.set_tune)
--		return -EBUSY;
--
--	rq = blk_get_request(drive->queue, READ, __GFP_WAIT);
--	rq->cmd_type = REQ_TYPE_ATA_TASKFILE;
--
--	drive->tune_req = (u8) arg;
--	drive->special.b.set_tune = 1;
--
--	blk_execute_rq(drive->queue, NULL, rq, 0);
--	blk_put_request(rq);
-+	if (set_pio_mode_abuse(drive->hwif, arg)) {
-+		if (arg == 8 || arg == 9) {
-+			unsigned long flags;
-+
-+			/* take lock for IDE_DFLAG_[NO_]UNMASK/[NO_]IO_32BIT */
-+			spin_lock_irqsave(&ide_lock, flags);
-+			port_ops->set_pio_mode(drive, arg);
-+			spin_unlock_irqrestore(&ide_lock, flags);
-+		} else
-+			port_ops->set_pio_mode(drive, arg);
-+	} else {
-+		int keep_dma = !!(drive->dev_flags & IDE_DFLAG_USING_DMA);
-+
-+		ide_set_pio(drive, arg);
-+
-+		if (hwif->host_flags & IDE_HFLAG_SET_PIO_MODE_KEEP_DMA) {
-+			if (keep_dma)
-+				ide_dma_on(drive);
-+		}
-+	}
- 
- 	return 0;
- }
-@@ -367,7 +399,7 @@ ide_gen_devset_rw(io_32bit, io_32bit);
- ide_gen_devset_rw(keepsettings, ksettings);
- ide_gen_devset_rw(unmaskirq, unmaskirq);
- ide_gen_devset_rw(using_dma, using_dma);
--__IDE_DEVSET(pio_mode, 0, NULL, set_pio_mode);
-+__IDE_DEVSET(pio_mode, DS_SYNC, NULL, set_pio_mode);
- 
- static int generic_ide_suspend(struct device *dev, pm_message_t mesg)
- {
-Index: b/include/linux/ide.h
-===================================================================
---- a/include/linux/ide.h
-+++ b/include/linux/ide.h
-@@ -262,8 +262,6 @@ static inline int __ide_default_irq(unsi
-  * set_geometry	: respecify drive geometry
-  * recalibrate	: seek to cyl 0
-  * set_multmode	: set multmode count
-- * set_tune	: tune interface for drive
-- * serviced	: service command
-  * reserved	: unused
-  */
- typedef union {
-@@ -272,9 +270,7 @@ typedef union {
- 		unsigned set_geometry	: 1;
- 		unsigned recalibrate	: 1;
- 		unsigned set_multmode	: 1;
--		unsigned set_tune	: 1;
--		unsigned serviced	: 1;
--		unsigned reserved	: 3;
-+		unsigned reserved	: 5;
- 	} b;
- } special_t;
- 
-@@ -512,7 +508,6 @@ struct ide_drive_s {
- 	u8	ready_stat;	/* min status value for drive ready */
- 	u8	mult_count;	/* current multiple sector setting */
- 	u8	mult_req;	/* requested multiple sector setting */
--	u8	tune_req;	/* requested drive tuning setting */
- 	u8	io_32bit;	/* 0=16-bit, 1=32-bit, 2/3=32bit+sync */
- 	u8	bad_wstat;	/* used for ignoring ATA_DF */
- 	u8	head;		/* "real" number of heads */
+ 		if (tmp == 1) {
+-			printk("success\n");
++			printk(KERN_INFO "%s: reset: success\n", hwif->name);
+ 			drive->failures = 0;
+ 		} else {
++			ide_reset_report_error(hwif, tmp);
+ 			drive->failures++;
+-			printk("master: ");
+-			switch (tmp & 0x7f) {
+-				case 1: printk("passed");
+-					break;
+-				case 2: printk("formatter device error");
+-					break;
+-				case 3: printk("sector buffer error");
+-					break;
+-				case 4: printk("ECC circuitry error");
+-					break;
+-				case 5: printk("controlling MPU error");
+-					break;
+-				default:printk("error (0x%02x?)", tmp);
+-			}
+-			if (tmp & 0x80)
+-				printk("; slave: failed");
+-			printk("\n");
+ 			err = -EIO;
+ 		}
+ 	}
