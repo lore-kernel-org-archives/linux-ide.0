@@ -1,30 +1,29 @@
-From: Borislav Petkov <petkovbb@googlemail.com>
-Subject: Re: [PATCH 03/18] ide-cd: cdrom_decode_status: factor out block pc
-	error handling code
-Date: Sat, 16 Aug 2008 22:26:00 +0200
-Message-ID: <20080816202600.GA13726@gollum.tnic>
-References: <1213252870-20474-1-git-send-email-petkovbb@gmail.com> <1213252870-20474-4-git-send-email-petkovbb@gmail.com> <200806141929.21329.bzolnier@gmail.com> <20080815073413.GA9906@gollum.tnic>
-Reply-To: petkovbb@gmail.com
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: [2.6 patch] xtensa: remove dead CONFIG_BLK_DEV_IDE code
+Date: Sun, 17 Aug 2008 18:55:53 +0200
+Message-ID: <200808171855.53521.bzolnier@gmail.com>
+References: <20080813221907.GE7071@cs181140183.pp.htv.fi>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+  charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.155]:36304 "EHLO
+Received: from fg-out-1718.google.com ([72.14.220.152]:27137 "EHLO
 	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752547AbYHPUZ4 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 16 Aug 2008 16:25:56 -0400
-Received: by fg-out-1718.google.com with SMTP id 19so1252930fgg.17
-        for <linux-ide@vger.kernel.org>; Sat, 16 Aug 2008 13:25:54 -0700 (PDT)
+	with ESMTP id S1752560AbYHQRM3 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 17 Aug 2008 13:12:29 -0400
+Received: by fg-out-1718.google.com with SMTP id 19so1454527fgg.17
+        for <linux-ide@vger.kernel.org>; Sun, 17 Aug 2008 10:12:27 -0700 (PDT)
+In-Reply-To: <20080813221907.GE7071@cs181140183.pp.htv.fi>
 Content-Disposition: inline
-In-Reply-To: <20080815073413.GA9906@gollum.tnic>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: Adrian Bunk <bunk@kernel.org>
+Cc: chris@zankel.net, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-[.. ]
+On Thursday 14 August 2008, Adrian Bunk wrote:
+> I don't know why this was there, but it was dead code.
+> 
+> Signed-off-by: Adrian Bunk <bunk@kernel.org>
 
-> here's a first attempt at that. These are only RFC of nature, please take a look
-> when there's time. They've been lightly tested but I'll do more later since this
-> path is not hit that often and a special test case will be required.
-
-Yep, this one has problems as I just noticed. Reworking... 
+applied
