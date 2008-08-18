@@ -1,51 +1,73 @@
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: Re: [PATCH] ata: Add support for Long Logical Sectors and Long Physical Sectors
-Date: Mon, 18 Aug 2008 12:42:46 -0600
-Message-ID: <20080818184246.GH677@parisc-linux.org>
-References: <1217957207-23116-1-git-send-email-matthew@wil.cx> <1217957207-23116-3-git-send-email-matthew@wil.cx> <48A8B211.8030103@pobox.com> <20080818181523.GG677@parisc-linux.org> <20080818190629.22fd618c@lxorguk.ukuu.org.uk>
+From: Dominik Brodowski <linux@dominikbrodowski.net>
+Subject: [PATCH 38/39] pcmcia: uniform device IDs of pata_pcmcia and ide-cs
+Date: Mon, 18 Aug 2008 20:53:29 +0200
+Message-ID: <1219085610-12289-38-git-send-email-linux@dominikbrodowski.net>
+References: <20080818185025.GA11647@comet.dominikbrodowski.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from palinux.external.hp.com ([192.25.206.14]:49990 "EHLO
-	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754914AbYHRSmr (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 18 Aug 2008 14:42:47 -0400
-Content-Disposition: inline
-In-Reply-To: <20080818190629.22fd618c@lxorguk.ukuu.org.uk>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-pcmcia-bounces+glkpd-linux-pcmcia=m.gmane.org@lists.infradead.org>
+In-Reply-To: <20080818185025.GA11647@comet.dominikbrodowski.net>
+List-Unsubscribe: <http://lists.infradead.org/mailman/listinfo/linux-pcmcia>,
+	<mailto:linux-pcmcia-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-pcmcia>
+List-Post: <mailto:linux-pcmcia@lists.infradead.org>
+List-Help: <mailto:linux-pcmcia-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-pcmcia>,
+	<mailto:linux-pcmcia-request@lists.infradead.org?subject=subscribe>
+Sender: linux-pcmcia-bounces@lists.infradead.org
+Errors-To: linux-pcmcia-bounces+glkpd-linux-pcmcia=m.gmane.org@lists.infradead.org
+To: linux-pcmcia@lists.infradead.org
+Cc: linux-ide@vger.kernel.org, Dominik Brodowski <linux@dominikbrodowski.net>
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: Jeff Garzik <jgarzik@pobox.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Matt_Domsch@dell.com, Matthew Wilcox <willy@linux.intel.com>
 
-On Mon, Aug 18, 2008 at 07:06:29PM +0100, Alan Cox wrote:
-> > +	static const char command_sect_size[256] = {
-> > +		[ ATA_CMD_CFA_TRANSLATE_SECTOR ] = DEVICE,
-> 
-> Should be a bit array so we can do a single fast test_bit()
-> 
-> > +	if (size == UNKNOWN && printk_ratelimit())
-> > +		printk("Unknown ata cmd %d, assuming 512 byte sector size\n",
-> > +				command);
-> 
-> or two bits ;)
+Over time, a few differences have accumulated between pata_pcmcia
+and ide-cs. Fix those.
 
-;-)  How about two 256-bit arrays?
+CC: linux-ide@vger.kernel.org
+Signed-off-by: Dominik Brodowski <linux@dominikbrodowski.net>
+---
+ drivers/ata/pata_pcmcia.c   |    3 ++-
+ drivers/ide/legacy/ide-cs.c |    2 ++
+ 2 files changed, 4 insertions(+), 1 deletions(-)
 
-The first is set for "Use device sector size", the second is set for
-"Yes, we know about this command, don't warn".  The most common commands
-(reads and writes) will hit the first test and never try the second test.
-
-> Rest looks ok. I'll probably send a follow up patch to make most pata
-> drivers return "no" to anything but 512 until we can test them with real
-> devices.
-
-Why do we need to do that?  Leaving sector_size_supported() unset means
-exactly "no to anything but 512".  I'll be quite surprised if we see
-PATA drives supporting 4096 or 520 byte sectors anyway.  It seems like
-a premium feature.
-
+diff --git a/drivers/ata/pata_pcmcia.c b/drivers/ata/pata_pcmcia.c
+index 6e4d31d..02b596b 100644
+--- a/drivers/ata/pata_pcmcia.c
++++ b/drivers/ata/pata_pcmcia.c
+@@ -365,6 +365,7 @@ static struct pcmcia_device_id pcmcia_devices[] = {
+ 	PCMCIA_DEVICE_MANF_CARD(0x0032, 0x0704),
+ 	PCMCIA_DEVICE_MANF_CARD(0x0032, 0x2904),
+ 	PCMCIA_DEVICE_MANF_CARD(0x0045, 0x0401),	/* SanDisk CFA */
++	PCMCIA_DEVICE_MANF_CARD(0x004f, 0x0000),	/* Kingston */
+ 	PCMCIA_DEVICE_MANF_CARD(0x0097, 0x1620), 	/* TI emulated */
+ 	PCMCIA_DEVICE_MANF_CARD(0x0098, 0x0000),	/* Toshiba */
+ 	PCMCIA_DEVICE_MANF_CARD(0x00a4, 0x002d),
+@@ -385,9 +386,9 @@ static struct pcmcia_device_id pcmcia_devices[] = {
+ 	PCMCIA_DEVICE_PROD_ID12("EXP   ", "CD-ROM", 0x0a5c52fd, 0x66536591),
+ 	PCMCIA_DEVICE_PROD_ID12("EXP   ", "PnPIDE", 0x0a5c52fd, 0x0c694728),
+ 	PCMCIA_DEVICE_PROD_ID12("FREECOM", "PCCARD-IDE", 0x5714cbf7, 0x48e0ab8e),
+-	PCMCIA_DEVICE_PROD_ID12("Hyperstone", "Model1", 0x3d5b9ef5, 0xca6ab420),
+ 	PCMCIA_DEVICE_PROD_ID12("HITACHI", "FLASH", 0xf4f43949, 0x9eb86aae),
+ 	PCMCIA_DEVICE_PROD_ID12("HITACHI", "microdrive", 0xf4f43949, 0xa6d76178),
++	PCMCIA_DEVICE_PROD_ID12("Hyperstone", "Model1", 0x3d5b9ef5, 0xca6ab420),
+ 	PCMCIA_DEVICE_PROD_ID12("IBM", "microdrive", 0xb569a6e5, 0xa6d76178),
+ 	PCMCIA_DEVICE_PROD_ID12("IBM", "IBM17JSSFP20", 0xb569a6e5, 0xf2508753),
+ 	PCMCIA_DEVICE_PROD_ID12("KINGSTON", "CF8GB", 0x2e6d1829, 0xacbe682e),
+diff --git a/drivers/ide/legacy/ide-cs.c b/drivers/ide/legacy/ide-cs.c
+index 10e6820..83591ab 100644
+--- a/drivers/ide/legacy/ide-cs.c
++++ b/drivers/ide/legacy/ide-cs.c
+@@ -391,8 +391,10 @@ static struct pcmcia_device_id ide_ids[] = {
+ 	PCMCIA_DEVICE_MANF_CARD(0x000a, 0x0000),	/* I-O Data CFA */
+ 	PCMCIA_DEVICE_MANF_CARD(0x001c, 0x0001),	/* Mitsubishi CFA */
+ 	PCMCIA_DEVICE_MANF_CARD(0x0032, 0x0704),
++	PCMCIA_DEVICE_MANF_CARD(0x0032, 0x2904),
+ 	PCMCIA_DEVICE_MANF_CARD(0x0045, 0x0401),	/* SanDisk CFA */
+ 	PCMCIA_DEVICE_MANF_CARD(0x004f, 0x0000),	/* Kingston */
++	PCMCIA_DEVICE_MANF_CARD(0x0097, 0x1620), 	/* TI emulated */
+ 	PCMCIA_DEVICE_MANF_CARD(0x0098, 0x0000),	/* Toshiba */
+ 	PCMCIA_DEVICE_MANF_CARD(0x00a4, 0x002d),
+ 	PCMCIA_DEVICE_MANF_CARD(0x00ce, 0x0000),	/* Samsung */
 -- 
-Intel are signing my paycheques ... these opinions are still mine
-"Bill, look, we understand that you're interested in selling us this
-operating system, but compare it to ours.  We can't possibly take such
-a retrograde step."
+1.5.4.3
