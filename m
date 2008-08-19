@@ -1,52 +1,70 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH 2/5] ide: ->ide_dma_clear_irq() -> ->clear_irq()
-Date: Wed, 20 Aug 2008 02:22:03 +0400
-Message-ID: <48AB478B.5040209@ru.mvista.com>
-References: <200808192031.40288.bzolnier@gmail.com>
+From: Andrew Morton <akpm@linux-foundation.org>
+Subject: Re: [PATCH 2/2] ide: add proper PCI PM support
+Date: Tue, 19 Aug 2008 15:34:37 -0700
+Message-ID: <20080819153437.68272594.akpm@linux-foundation.org>
+References: <200808021917.04847.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from homer.mvista.com ([63.81.120.155]:17050 "EHLO
-	imap.sh.mvista.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751746AbYHSWWJ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 19 Aug 2008 18:22:09 -0400
-In-Reply-To: <200808192031.40288.bzolnier@gmail.com>
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:38631 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752721AbYHSWem (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 19 Aug 2008 18:34:42 -0400
+In-Reply-To: <200808021917.04847.bzolnier@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, rjw@sisk.pl
 
-Hello.
+On Sat, 2 Aug 2008 19:17:04 +0200
+Bartlomiej Zolnierkiewicz <bzolnier@gmail.com> wrote:
 
-Bartlomiej Zolnierkiewicz wrote:
+> -static unsigned int __devinit init_chipset_aec62xx(struct pci_dev *dev)
+> +static unsigned int init_chipset_aec62xx(struct pci_dev *dev)
+>  {
+>  	/* These are necessary to get AEC6280 Macintosh cards to work */
+>  	if ((dev->device == PCI_DEVICE_ID_ARTOP_ATP865) ||
+> @@ -307,6 +307,10 @@ static struct pci_driver driver = {
+>  	.id_table	= aec62xx_pci_tbl,
+>  	.probe		= aec62xx_init_one,
+>  	.remove		= aec62xx_remove,
+> +#ifdef CONFIG_PM
+> +	.suspend	= ide_pci_suspend,
+> +	.resume		= ide_pci_resume,
+> +#endif
+>  };
+>  
+>  static int __init aec62xx_ide_init(void)
+> Index: b/drivers/ide/pci/alim15x3.c
+> ===================================================================
+> --- a/drivers/ide/pci/alim15x3.c
+> +++ b/drivers/ide/pci/alim15x3.c
+> @@ -213,7 +213,7 @@ static int ali15x3_dma_setup(ide_drive_t
+>   *	appropriate also sets up the 1533 southbridge.
+>   */
+>  
+> -static unsigned int __devinit init_chipset_ali15x3(struct pci_dev *dev)
+> +static unsigned int init_chipset_ali15x3(struct pci_dev *dev)
+>  {
+>  	unsigned long flags;
+>  	u8 tmpbyte;
+> @@ -581,6 +581,10 @@ static struct pci_driver driver = {
+>  	.id_table	= alim15x3_pci_tbl,
+>  	.probe		= alim15x3_init_one,
+>  	.remove		= ide_pci_remove,
+> +#ifdef CONFIG_PM
+> +	.suspend	= ide_pci_suspend,
+> +	.resume		= ide_pci_resume,
+> +#endif
 
-> * Rename ->ide_dma_clear_irq method to ->clear_irq
->   and move it from ide_hwif_t to struct ide_port_ops.
->
-> * Move ->waiting_for_dma check inside ->clear_irq method.
->
-> * Move ->dma_base check inside ->clear_irq method.
->
-> piix.c:
-> * Add ich_port_ops and remove init_hwif_ich() wrapper.
->
-> There should be no functional changes caused by this patch.
->   
+Please do
 
-   Good. I think it's worth implementing this method in at least 
-cmd64x.c which actually reads the IDE interrupt latch bits (independent 
-from the DMA interrupt status) in the dma_test_irq() methods but never 
-clears them, so the latches may reflect a non-current state of the IDE 
-interrupt...
-   It may also be worth considering turning this method into 
-test-and-clear, so that we can get the actual IDE interrupt state on the 
-chips that implement this...
+#ifndef CONFIG_PM
+#define ide_pci_suspend NULL
+#define ide_pci_resume NULL
+#endif
 
-> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+in a header file and then remove all these ifdefs.
 
-Acked-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-
-MBR, Sergei
-
-
+It's a pretty common convention and will clean things up rather a lot.
