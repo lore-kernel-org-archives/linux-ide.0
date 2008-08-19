@@ -1,15 +1,15 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH 6/6] ide-disk: move /proc handling to ide-disk_proc.c
-Date: Tue, 19 Aug 2008 20:40:13 +0200
-Message-ID: <20080819184013.16469.94516.sendpatchset@localhost.localdomain>
+Subject: [PATCH 5/6] ide-disk: move all ioctl handling to ide-disk_ioctl.c
+Date: Tue, 19 Aug 2008 20:40:03 +0200
+Message-ID: <20080819184003.16469.39090.sendpatchset@localhost.localdomain>
 References: <20080819183934.16469.69799.sendpatchset@localhost.localdomain>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from gv-out-0910.google.com ([216.239.58.190]:23913 "EHLO
-	gv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756096AbYHSSmc (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 19 Aug 2008 14:42:32 -0400
-Received: by gv-out-0910.google.com with SMTP id e6so46460gvc.37
-        for <linux-ide@vger.kernel.org>; Tue, 19 Aug 2008 11:42:31 -0700 (PDT)
+Received: from mu-out-0910.google.com ([209.85.134.189]:52529 "EHLO
+	mu-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754873AbYHSSmZ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 19 Aug 2008 14:42:25 -0400
+Received: by mu-out-0910.google.com with SMTP id w8so98223mue.1
+        for <linux-ide@vger.kernel.org>; Tue, 19 Aug 2008 11:42:24 -0700 (PDT)
 In-Reply-To: <20080819183934.16469.69799.sendpatchset@localhost.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
@@ -17,384 +17,229 @@ To: linux-ide@vger.kernel.org
 Cc: Borislav Petkov <petkovbb@gmail.com>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-kernel@vger.kernel.org
 
 While at it:
-- idedisk_capacity() -> ide_disk_capacity()
-- idedisk_proc[] -> ide_disk_proc[]
-- idedisk_settings[] -> ide_disk_settings[]
+- idedisk_ioctl() -> ide_disk_ioctl()
 
 Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 ---
- drivers/ide/Makefile        |    2 
- drivers/ide/ide-disk.c      |  142 ++------------------------------------------
- drivers/ide/ide-disk.h      |    5 +
- drivers/ide/ide-disk_proc.c |  131 ++++++++++++++++++++++++++++++++++++++++
- 4 files changed, 144 insertions(+), 136 deletions(-)
+ drivers/ide/Makefile         |    3 +-
+ drivers/ide/ide-disk.c       |   48 +++++++------------------------------------
+ drivers/ide/ide-disk.h       |   25 ++++++++++++++++++++++
+ drivers/ide/ide-disk_ioctl.c |   29 +++++++++++++++++++++++++
+ drivers/ide/ide.c            |   11 +++------
+ include/linux/ide.h          |    7 ++++--
+ 6 files changed, 73 insertions(+), 50 deletions(-)
 
 Index: b/drivers/ide/Makefile
 ===================================================================
 --- a/drivers/ide/Makefile
 +++ b/drivers/ide/Makefile
-@@ -36,7 +36,7 @@ obj-$(CONFIG_IDE_H8300)			+= h8300/
+@@ -36,10 +36,11 @@ obj-$(CONFIG_IDE_H8300)			+= h8300/
  obj-$(CONFIG_IDE_GENERIC)		+= ide-generic.o
  obj-$(CONFIG_BLK_DEV_IDEPNP)		+= ide-pnp.o
  
--ide-disk_mod-y += ide-disk.o ide-disk_ioctl.o
-+ide-disk_mod-y += ide-disk.o ide-disk_ioctl.o ide-disk_proc.o
++ide-disk_mod-y += ide-disk.o ide-disk_ioctl.o
  ide-cd_mod-y += ide-cd.o ide-cd_ioctl.o ide-cd_verbose.o
  ide-floppy_mod-y += ide-floppy.o ide-floppy_ioctl.o ide-floppy_proc.o
  
+-obj-$(CONFIG_BLK_DEV_IDEDISK)		+= ide-disk.o
++obj-$(CONFIG_BLK_DEV_IDEDISK)		+= ide-disk_mod.o
+ obj-$(CONFIG_BLK_DEV_IDECD)		+= ide-cd_mod.o
+ obj-$(CONFIG_BLK_DEV_IDEFLOPPY)		+= ide-floppy_mod.o
+ obj-$(CONFIG_BLK_DEV_IDETAPE)		+= ide-tape.o
 Index: b/drivers/ide/ide-disk.c
 ===================================================================
 --- a/drivers/ide/ide-disk.c
 +++ b/drivers/ide/ide-disk.c
-@@ -399,115 +399,11 @@ static void init_idedisk_capacity(ide_dr
- 	}
+@@ -39,21 +39,12 @@
+ #include <asm/io.h>
+ #include <asm/div64.h>
+ 
+-struct ide_disk_obj {
+-	ide_drive_t	*drive;
+-	ide_driver_t	*driver;
+-	struct gendisk	*disk;
+-	struct kref	kref;
+-	unsigned int	openers;	/* protected by BKL for now */
+-};
++#include "ide-disk.h"
+ 
+ static DEFINE_MUTEX(idedisk_ref_mutex);
+ 
+ #define to_ide_disk(obj) container_of(obj, struct ide_disk_obj, kref)
+ 
+-#define ide_disk_g(disk) \
+-	container_of((disk)->private_data, struct ide_disk_obj, driver)
+-
+ static void ide_disk_release(struct kref *);
+ 
+ static struct ide_disk_obj *ide_disk_get(struct gendisk *disk)
+@@ -716,12 +707,12 @@ static int set_addressing(ide_drive_t *d
+ 	return 0;
  }
  
--static sector_t idedisk_capacity(ide_drive_t *drive)
-+sector_t ide_disk_capacity(ide_drive_t *drive)
- {
- 	return drive->capacity64;
- }
+-ide_devset_rw(acoustic, acoustic);
+-ide_devset_rw(address, addressing);
+-ide_devset_rw(multcount, multcount);
+-ide_devset_rw(wcache, wcache);
++ide_ext_devset_rw(acoustic, acoustic);
++ide_ext_devset_rw(address, addressing);
++ide_ext_devset_rw(multcount, multcount);
++ide_ext_devset_rw(wcache, wcache);
  
--#ifdef CONFIG_IDE_PROC_FS
--static int smart_enable(ide_drive_t *drive)
--{
--	ide_task_t args;
--	struct ide_taskfile *tf = &args.tf;
--
--	memset(&args, 0, sizeof(ide_task_t));
--	tf->feature = ATA_SMART_ENABLE;
--	tf->lbam    = ATA_SMART_LBAM_PASS;
--	tf->lbah    = ATA_SMART_LBAH_PASS;
--	tf->command = ATA_CMD_SMART;
--	args.tf_flags = IDE_TFLAG_TF | IDE_TFLAG_DEVICE;
--	return ide_no_data_taskfile(drive, &args);
--}
--
--static int get_smart_data(ide_drive_t *drive, u8 *buf, u8 sub_cmd)
--{
--	ide_task_t args;
--	struct ide_taskfile *tf = &args.tf;
--
--	memset(&args, 0, sizeof(ide_task_t));
--	tf->feature = sub_cmd;
--	tf->nsect   = 0x01;
--	tf->lbam    = ATA_SMART_LBAM_PASS;
--	tf->lbah    = ATA_SMART_LBAH_PASS;
--	tf->command = ATA_CMD_SMART;
--	args.tf_flags	= IDE_TFLAG_TF | IDE_TFLAG_DEVICE;
--	args.data_phase	= TASKFILE_IN;
--	(void) smart_enable(drive);
--	return ide_raw_taskfile(drive, &args, buf, 1);
--}
--
--static int proc_idedisk_read_cache
--	(char *page, char **start, off_t off, int count, int *eof, void *data)
--{
--	ide_drive_t	*drive = (ide_drive_t *) data;
--	char		*out = page;
--	int		len;
--
--	if (drive->dev_flags & IDE_DFLAG_ID_READ)
--		len = sprintf(out, "%i\n", drive->id[ATA_ID_BUF_SIZE] / 2);
--	else
--		len = sprintf(out, "(none)\n");
--
--	PROC_IDE_READ_RETURN(page, start, off, count, eof, len);
--}
--
--static int proc_idedisk_read_capacity
--	(char *page, char **start, off_t off, int count, int *eof, void *data)
--{
--	ide_drive_t*drive = (ide_drive_t *)data;
--	int len;
--
--	len = sprintf(page, "%llu\n", (long long)idedisk_capacity(drive));
--
--	PROC_IDE_READ_RETURN(page, start, off, count, eof, len);
--}
--
--static int proc_idedisk_read_smart(char *page, char **start, off_t off,
--				   int count, int *eof, void *data, u8 sub_cmd)
--{
--	ide_drive_t	*drive = (ide_drive_t *)data;
--	int		len = 0, i = 0;
--
--	if (get_smart_data(drive, page, sub_cmd) == 0) {
--		unsigned short *val = (unsigned short *) page;
--		char *out = (char *)val + SECTOR_SIZE;
--
--		page = out;
--		do {
--			out += sprintf(out, "%04x%c", le16_to_cpu(*val),
--				       (++i & 7) ? ' ' : '\n');
--			val += 1;
--		} while (i < SECTOR_SIZE / 2);
--		len = out - page;
--	}
--
--	PROC_IDE_READ_RETURN(page, start, off, count, eof, len);
--}
--
--static int proc_idedisk_read_sv
--	(char *page, char **start, off_t off, int count, int *eof, void *data)
--{
--	return proc_idedisk_read_smart(page, start, off, count, eof, data,
--				       ATA_SMART_READ_VALUES);
--}
--
--static int proc_idedisk_read_st
--	(char *page, char **start, off_t off, int count, int *eof, void *data)
--{
--	return proc_idedisk_read_smart(page, start, off, count, eof, data,
--				       ATA_SMART_READ_THRESHOLDS);
--}
--
--static ide_proc_entry_t idedisk_proc[] = {
--	{ "cache",	  S_IFREG|S_IRUGO, proc_idedisk_read_cache,    NULL },
--	{ "capacity",	  S_IFREG|S_IRUGO, proc_idedisk_read_capacity, NULL },
--	{ "geometry",	  S_IFREG|S_IRUGO, proc_ide_read_geometry,     NULL },
--	{ "smart_values", S_IFREG|S_IRUSR, proc_idedisk_read_sv,       NULL },
--	{ "smart_thresholds", S_IFREG|S_IRUSR, proc_idedisk_read_st,   NULL },
--	{ NULL, 0, NULL, NULL }
--};
--#endif	/* CONFIG_IDE_PROC_FS */
--
- static void idedisk_prepare_flush(struct request_queue *q, struct request *rq)
- {
- 	ide_drive_t *drive = q->queuedata;
-@@ -606,7 +502,7 @@ static void update_ordered(ide_drive_t *
- 		 * time we have trimmed the drive capacity if LBA48 is
- 		 * not available so we don't need to recheck that.
- 		 */
--		capacity = idedisk_capacity(drive);
-+		capacity = ide_disk_capacity(drive);
- 		barrier = ata_id_flush_enabled(id) &&
- 			(drive->dev_flags & IDE_DFLAG_NOFLUSH) == 0 &&
- 			((drive->dev_flags & IDE_DFLAG_LBA48) == 0 ||
-@@ -714,30 +610,6 @@ ide_ext_devset_rw(wcache, wcache);
+-ide_devset_rw_sync(nowerr, nowerr);
++ide_ext_devset_rw_sync(nowerr, nowerr);
  
- ide_ext_devset_rw_sync(nowerr, nowerr);
- 
--#ifdef CONFIG_IDE_PROC_FS
--ide_devset_rw_field(bios_cyl, bios_cyl);
--ide_devset_rw_field(bios_head, bios_head);
--ide_devset_rw_field(bios_sect, bios_sect);
--ide_devset_rw_field(failures, failures);
--ide_devset_rw_field(lun, lun);
--ide_devset_rw_field(max_failures, max_failures);
--
--static const struct ide_proc_devset idedisk_settings[] = {
--	IDE_PROC_DEVSET(acoustic,	0,   254),
--	IDE_PROC_DEVSET(address,	0,     2),
--	IDE_PROC_DEVSET(bios_cyl,	0, 65535),
--	IDE_PROC_DEVSET(bios_head,	0,   255),
--	IDE_PROC_DEVSET(bios_sect,	0,    63),
--	IDE_PROC_DEVSET(failures,	0, 65535),
--	IDE_PROC_DEVSET(lun,		0,     7),
--	IDE_PROC_DEVSET(max_failures,	0, 65535),
--	IDE_PROC_DEVSET(multcount,	0,    16),
--	IDE_PROC_DEVSET(nowerr,		0,     1),
--	IDE_PROC_DEVSET(wcache,		0,     1),
--	{ 0 },
--};
--#endif
--
- static void idedisk_setup(ide_drive_t *drive)
- {
- 	struct ide_disk_obj *idkp = drive->driver_data;
-@@ -800,7 +672,7 @@ static void idedisk_setup(ide_drive_t *d
- 	 * if possible, give fdisk access to more of the drive,
- 	 * by correcting bios_cyls:
- 	 */
--	capacity = idedisk_capacity(drive);
-+	capacity = ide_disk_capacity(drive);
- 
- 	if ((drive->dev_flags & IDE_DFLAG_FORCED_GEOM) == 0) {
- 		if (ata_id_lba48_enabled(drive->id)) {
-@@ -933,8 +805,8 @@ static ide_driver_t idedisk_driver = {
- 	.end_request		= ide_end_request,
- 	.error			= __ide_error,
  #ifdef CONFIG_IDE_PROC_FS
--	.proc			= idedisk_proc,
--	.settings		= idedisk_settings,
-+	.proc			= ide_disk_proc,
-+	.settings		= ide_disk_settings,
- #endif
- };
+ ide_devset_rw_field(bios_cyl, bios_cyl);
+@@ -1019,30 +1010,6 @@ static int idedisk_getgeo(struct block_d
+ 	return 0;
+ }
  
-@@ -1028,7 +900,7 @@ static int idedisk_media_changed(struct 
- static int idedisk_revalidate_disk(struct gendisk *disk)
+-static const struct ide_ioctl_devset ide_disk_ioctl_settings[] = {
+-{ HDIO_GET_ADDRESS,	HDIO_SET_ADDRESS,   &ide_devset_address   },
+-{ HDIO_GET_MULTCOUNT,	HDIO_SET_MULTCOUNT, &ide_devset_multcount },
+-{ HDIO_GET_NOWERR,	HDIO_SET_NOWERR,    &ide_devset_nowerr	  },
+-{ HDIO_GET_WCACHE,	HDIO_SET_WCACHE,    &ide_devset_wcache	  },
+-{ HDIO_GET_ACOUSTIC,	HDIO_SET_ACOUSTIC,  &ide_devset_acoustic  },
+-{ 0 }
+-};
+-
+-static int idedisk_ioctl(struct inode *inode, struct file *file,
+-			unsigned int cmd, unsigned long arg)
+-{
+-	struct block_device *bdev = inode->i_bdev;
+-	struct ide_disk_obj *idkp = ide_disk_g(bdev->bd_disk);
+-	ide_drive_t *drive = idkp->drive;
+-	int err;
+-
+-	err = ide_setting_ioctl(drive, bdev, cmd, arg, ide_disk_ioctl_settings);
+-	if (err != -EOPNOTSUPP)
+-		return err;
+-
+-	return generic_ide_ioctl(drive, file, bdev, cmd, arg);
+-}
+-
+ static int idedisk_media_changed(struct gendisk *disk)
  {
  	struct ide_disk_obj *idkp = ide_disk_g(disk);
--	set_capacity(disk, idedisk_capacity(idkp->drive));
-+	set_capacity(disk, ide_disk_capacity(idkp->drive));
- 	return 0;
+@@ -1069,7 +1036,7 @@ static struct block_device_operations id
+ 	.owner			= THIS_MODULE,
+ 	.open			= idedisk_open,
+ 	.release		= idedisk_release,
+-	.ioctl			= idedisk_ioctl,
++	.ioctl			= ide_disk_ioctl,
+ 	.getgeo			= idedisk_getgeo,
+ 	.media_changed		= idedisk_media_changed,
+ 	.revalidate_disk	= idedisk_revalidate_disk
+@@ -1145,6 +1112,7 @@ static int __init idedisk_init(void)
  }
  
-@@ -1090,7 +962,7 @@ static int ide_disk_probe(ide_drive_t *d
- 	g->driverfs_dev = &drive->gendev;
- 	if (drive->dev_flags & IDE_DFLAG_REMOVABLE)
- 		g->flags = GENHD_FL_REMOVABLE;
--	set_capacity(g, idedisk_capacity(drive));
-+	set_capacity(g, ide_disk_capacity(drive));
- 	g->fops = &idedisk_ops;
- 	add_disk(g);
- 	return 0;
+ MODULE_ALIAS("ide:*m-disk*");
++MODULE_ALIAS("ide-disk");
+ module_init(idedisk_init);
+ module_exit(idedisk_exit);
+ MODULE_LICENSE("GPL");
 Index: b/drivers/ide/ide-disk.h
 ===================================================================
---- a/drivers/ide/ide-disk.h
+--- /dev/null
 +++ b/drivers/ide/ide-disk.h
-@@ -13,6 +13,7 @@ struct ide_disk_obj {
- 	container_of((disk)->private_data, struct ide_disk_obj, driver)
- 
- /* ide-disk.c */
-+sector_t ide_disk_capacity(ide_drive_t *);
- ide_decl_devset(address);
- ide_decl_devset(multcount);
- ide_decl_devset(nowerr);
-@@ -22,4 +23,8 @@ ide_decl_devset(acoustic);
- /* ide-disk_ioctl.c */
- int ide_disk_ioctl(struct inode *, struct file *, unsigned int, unsigned long);
- 
-+/* ide-disk_proc.c */
-+extern ide_proc_entry_t ide_disk_proc[];
-+extern const struct ide_proc_devset ide_disk_settings[];
+@@ -0,0 +1,25 @@
++#ifndef __IDE_DISK_H
++#define __IDE_DISK_H
 +
- #endif /* __IDE_DISK_H */
-Index: b/drivers/ide/ide-disk_proc.c
++struct ide_disk_obj {
++	ide_drive_t	*drive;
++	ide_driver_t	*driver;
++	struct gendisk	*disk;
++	struct kref	kref;
++	unsigned int	openers;	/* protected by BKL for now */
++};
++
++#define ide_disk_g(disk) \
++	container_of((disk)->private_data, struct ide_disk_obj, driver)
++
++/* ide-disk.c */
++ide_decl_devset(address);
++ide_decl_devset(multcount);
++ide_decl_devset(nowerr);
++ide_decl_devset(wcache);
++ide_decl_devset(acoustic);
++
++/* ide-disk_ioctl.c */
++int ide_disk_ioctl(struct inode *, struct file *, unsigned int, unsigned long);
++
++#endif /* __IDE_DISK_H */
+Index: b/drivers/ide/ide-disk_ioctl.c
 ===================================================================
 --- /dev/null
-+++ b/drivers/ide/ide-disk_proc.c
-@@ -0,0 +1,131 @@
++++ b/drivers/ide/ide-disk_ioctl.c
+@@ -0,0 +1,29 @@
 +#include <linux/kernel.h>
 +#include <linux/ide.h>
 +#include <linux/hdreg.h>
 +
 +#include "ide-disk.h"
 +
-+#ifdef CONFIG_PROC_FS
-+static int smart_enable(ide_drive_t *drive)
-+{
-+	ide_task_t args;
-+	struct ide_taskfile *tf = &args.tf;
-+
-+	memset(&args, 0, sizeof(ide_task_t));
-+	tf->feature = ATA_SMART_ENABLE;
-+	tf->lbam    = ATA_SMART_LBAM_PASS;
-+	tf->lbah    = ATA_SMART_LBAH_PASS;
-+	tf->command = ATA_CMD_SMART;
-+	args.tf_flags = IDE_TFLAG_TF | IDE_TFLAG_DEVICE;
-+	return ide_no_data_taskfile(drive, &args);
-+}
-+
-+static int get_smart_data(ide_drive_t *drive, u8 *buf, u8 sub_cmd)
-+{
-+	ide_task_t args;
-+	struct ide_taskfile *tf = &args.tf;
-+
-+	memset(&args, 0, sizeof(ide_task_t));
-+	tf->feature = sub_cmd;
-+	tf->nsect   = 0x01;
-+	tf->lbam    = ATA_SMART_LBAM_PASS;
-+	tf->lbah    = ATA_SMART_LBAH_PASS;
-+	tf->command = ATA_CMD_SMART;
-+	args.tf_flags	= IDE_TFLAG_TF | IDE_TFLAG_DEVICE;
-+	args.data_phase	= TASKFILE_IN;
-+	(void) smart_enable(drive);
-+	return ide_raw_taskfile(drive, &args, buf, 1);
-+}
-+
-+static int proc_idedisk_read_cache
-+	(char *page, char **start, off_t off, int count, int *eof, void *data)
-+{
-+	ide_drive_t	*drive = (ide_drive_t *) data;
-+	char		*out = page;
-+	int		len;
-+
-+	if (drive->dev_flags & IDE_DFLAG_ID_READ)
-+		len = sprintf(out, "%i\n", drive->id[ATA_ID_BUF_SIZE] / 2);
-+	else
-+		len = sprintf(out, "(none)\n");
-+
-+	PROC_IDE_READ_RETURN(page, start, off, count, eof, len);
-+}
-+
-+static int proc_idedisk_read_capacity
-+	(char *page, char **start, off_t off, int count, int *eof, void *data)
-+{
-+	ide_drive_t*drive = (ide_drive_t *)data;
-+	int len;
-+
-+	len = sprintf(page, "%llu\n", (long long)ide_disk_capacity(drive));
-+
-+	PROC_IDE_READ_RETURN(page, start, off, count, eof, len);
-+}
-+
-+static int proc_idedisk_read_smart(char *page, char **start, off_t off,
-+				   int count, int *eof, void *data, u8 sub_cmd)
-+{
-+	ide_drive_t	*drive = (ide_drive_t *)data;
-+	int		len = 0, i = 0;
-+
-+	if (get_smart_data(drive, page, sub_cmd) == 0) {
-+		unsigned short *val = (unsigned short *) page;
-+		char *out = (char *)val + SECTOR_SIZE;
-+
-+		page = out;
-+		do {
-+			out += sprintf(out, "%04x%c", le16_to_cpu(*val),
-+				       (++i & 7) ? ' ' : '\n');
-+			val += 1;
-+		} while (i < SECTOR_SIZE / 2);
-+		len = out - page;
-+	}
-+
-+	PROC_IDE_READ_RETURN(page, start, off, count, eof, len);
-+}
-+
-+static int proc_idedisk_read_sv
-+	(char *page, char **start, off_t off, int count, int *eof, void *data)
-+{
-+	return proc_idedisk_read_smart(page, start, off, count, eof, data,
-+				       ATA_SMART_READ_VALUES);
-+}
-+
-+static int proc_idedisk_read_st
-+	(char *page, char **start, off_t off, int count, int *eof, void *data)
-+{
-+	return proc_idedisk_read_smart(page, start, off, count, eof, data,
-+				       ATA_SMART_READ_THRESHOLDS);
-+}
-+
-+ide_proc_entry_t ide_disk_proc[] = {
-+	{ "cache",	  S_IFREG|S_IRUGO, proc_idedisk_read_cache,    NULL },
-+	{ "capacity",	  S_IFREG|S_IRUGO, proc_idedisk_read_capacity, NULL },
-+	{ "geometry",	  S_IFREG|S_IRUGO, proc_ide_read_geometry,     NULL },
-+	{ "smart_values", S_IFREG|S_IRUSR, proc_idedisk_read_sv,       NULL },
-+	{ "smart_thresholds", S_IFREG|S_IRUSR, proc_idedisk_read_st,   NULL },
-+	{ NULL, 0, NULL, NULL }
++static const struct ide_ioctl_devset ide_disk_ioctl_settings[] = {
++{ HDIO_GET_ADDRESS,	HDIO_SET_ADDRESS,   &ide_devset_address   },
++{ HDIO_GET_MULTCOUNT,	HDIO_SET_MULTCOUNT, &ide_devset_multcount },
++{ HDIO_GET_NOWERR,	HDIO_SET_NOWERR,    &ide_devset_nowerr	  },
++{ HDIO_GET_WCACHE,	HDIO_SET_WCACHE,    &ide_devset_wcache	  },
++{ HDIO_GET_ACOUSTIC,	HDIO_SET_ACOUSTIC,  &ide_devset_acoustic  },
++{ 0 }
 +};
 +
-+ide_devset_rw_field(bios_cyl, bios_cyl);
-+ide_devset_rw_field(bios_head, bios_head);
-+ide_devset_rw_field(bios_sect, bios_sect);
-+ide_devset_rw_field(failures, failures);
-+ide_devset_rw_field(lun, lun);
-+ide_devset_rw_field(max_failures, max_failures);
++int ide_disk_ioctl(struct inode *inode, struct file *file,
++		   unsigned int cmd, unsigned long arg)
++{
++	struct block_device *bdev = inode->i_bdev;
++	struct ide_disk_obj *idkp = ide_disk_g(bdev->bd_disk);
++	ide_drive_t *drive = idkp->drive;
++	int err;
 +
-+const struct ide_proc_devset ide_disk_settings[] = {
-+	IDE_PROC_DEVSET(acoustic,	0,   254),
-+	IDE_PROC_DEVSET(address,	0,     2),
-+	IDE_PROC_DEVSET(bios_cyl,	0, 65535),
-+	IDE_PROC_DEVSET(bios_head,	0,   255),
-+	IDE_PROC_DEVSET(bios_sect,	0,    63),
-+	IDE_PROC_DEVSET(failures,	0, 65535),
-+	IDE_PROC_DEVSET(lun,		0,     7),
-+	IDE_PROC_DEVSET(max_failures,	0, 65535),
-+	IDE_PROC_DEVSET(multcount,	0,    16),
-+	IDE_PROC_DEVSET(nowerr,		0,     1),
-+	IDE_PROC_DEVSET(wcache,		0,     1),
-+	{ 0 },
-+};
-+#endif /* CONFIG_PROC_FS */
++	err = ide_setting_ioctl(drive, bdev, cmd, arg, ide_disk_ioctl_settings);
++	if (err != -EOPNOTSUPP)
++		return err;
++
++	return generic_ide_ioctl(drive, file, bdev, cmd, arg);
++}
+Index: b/drivers/ide/ide.c
+===================================================================
+--- a/drivers/ide/ide.c
++++ b/drivers/ide/ide.c
+@@ -392,13 +392,10 @@ static int set_unmaskirq(ide_drive_t *dr
+ 	return 0;
+ }
+ 
+-#define ide_gen_devset_rw(_name, _func) \
+-__IDE_DEVSET(_name, DS_SYNC, get_##_func, set_##_func)
+-
+-ide_gen_devset_rw(io_32bit, io_32bit);
+-ide_gen_devset_rw(keepsettings, ksettings);
+-ide_gen_devset_rw(unmaskirq, unmaskirq);
+-ide_gen_devset_rw(using_dma, using_dma);
++ide_ext_devset_rw_sync(io_32bit, io_32bit);
++ide_ext_devset_rw_sync(keepsettings, ksettings);
++ide_ext_devset_rw_sync(unmaskirq, unmaskirq);
++ide_ext_devset_rw_sync(using_dma, using_dma);
+ __IDE_DEVSET(pio_mode, DS_SYNC, NULL, set_pio_mode);
+ 
+ static int generic_ide_suspend(struct device *dev, pm_message_t mesg)
+Index: b/include/linux/ide.h
+===================================================================
+--- a/include/linux/ide.h
++++ b/include/linux/ide.h
+@@ -942,8 +942,11 @@ IDE_DEVSET(_name, 0, get_##_func, set_##
+ #define ide_devset_w(_name, _func) \
+ IDE_DEVSET(_name, 0, NULL, set_##_func)
+ 
+-#define ide_devset_rw_sync(_name, _func) \
+-IDE_DEVSET(_name, DS_SYNC, get_##_func, set_##_func)
++#define ide_ext_devset_rw(_name, _func) \
++__IDE_DEVSET(_name, 0, get_##_func, set_##_func)
++
++#define ide_ext_devset_rw_sync(_name, _func) \
++__IDE_DEVSET(_name, DS_SYNC, get_##_func, set_##_func)
+ 
+ #define ide_decl_devset(_name) \
+ extern const struct ide_devset ide_devset_##_name
