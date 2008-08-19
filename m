@@ -1,81 +1,53 @@
-From: "Gwendal Grignou" <gwendal@google.com>
-Subject: Re: [PATCH #upstream-fixes] libata: Add transport class for libata
-Date: Tue, 19 Aug 2008 11:14:17 -0700
-Message-ID: <e7510f760808191114w614403eej2fd3ae4fb0176050@mail.gmail.com>
-References: <e7510f760808182131q1bd3aa4bp694ebff75b612995@mail.gmail.com>
-	 <48AAAFAC.9050502@s5r6.in-berlin.de>
-	 <20080819122738.GC21854@parisc-linux.org>
-	 <48AAC7B0.9060107@s5r6.in-berlin.de>
+From: Matthieu Helder <matthieu.helder@gmail.com>
+Subject: re: Initio 1623 driver question
+Date: Tue, 19 Aug 2008 20:22:12 +0200
+Message-ID: <48AB0F54.5080900@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp-out.google.com ([216.239.33.17]:15132 "EHLO
-	smtp-out.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752771AbYHSSOe (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 19 Aug 2008 14:14:34 -0400
-Received: from zps19.corp.google.com (zps19.corp.google.com [172.25.146.19])
-	by smtp-out.google.com with ESMTP id m7JIEW35021672
-	for <linux-ide@vger.kernel.org>; Tue, 19 Aug 2008 19:14:32 +0100
-Received: from yx-out-1718.google.com (yxi3.prod.google.com [10.190.3.3])
-	by zps19.corp.google.com with ESMTP id m7JIEUr1003352
-	for <linux-ide@vger.kernel.org>; Tue, 19 Aug 2008 11:14:31 -0700
-Received: by yx-out-1718.google.com with SMTP id 3so18653yxi.48
-        for <linux-ide@vger.kernel.org>; Tue, 19 Aug 2008 11:14:30 -0700 (PDT)
-In-Reply-To: <48AAC7B0.9060107@s5r6.in-berlin.de>
-Content-Disposition: inline
+Received: from ik-out-1112.google.com ([66.249.90.178]:60507 "EHLO
+	ik-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750788AbYHSSYd (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 19 Aug 2008 14:24:33 -0400
+Received: by ik-out-1112.google.com with SMTP id c28so65253ika.5
+        for <linux-ide@vger.kernel.org>; Tue, 19 Aug 2008 11:24:31 -0700 (PDT)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Cc: Matthew Wilcox <matthew@wil.cx>, IDE/ATA development list <linux-ide@vger.kernel.org>, linux-scsi@vger.kernel.org
+To: teheo@novell.com
+Cc: linux-ide@vger.kernel.org
 
-Hi Stefan,
+I've compiled and installed the 2.6.26.2 kernel.
 
-My mistake. I started from scsi_transport_sas.c code already present
-in the kernel; I forgot to remove the copyright notice. I changed the
-copyright notice.
+Best regards,
+Matthieu
 
-About Documentation/ABI, I did not found any information about
-existing transport classes [sas,fc,spi,iscsi,...]. I added on for
-libata transport class. I send a new patch shortly.
 
-Thanks,
+Matthieu Helder wrote:
+ > Dear Tejun,
+ >
+ >
+ > I've experiencing a problem for which I searched many forums, but to no
+ > avail yet, so I decided to ask you.
+ > I'm trying to install two Western Digital sata disks (750 GB each) with
+ > a PCI sata-controller that uses the Initio 1623 chipset. Operating
+ > system is SuSe 11.
+ > The PC is an Compaq deskpro something with a Celeron and 512 MB of ram.
+ > It boots from a 10 GB ata disk.
+ >
+ > The problem is that the controller card seems to be recognized
+ > correctly, the kernel module gets loaded and all, but the two disks are
+ > not detected: sata link down.
+ > I'm using your sata_inic162x driver module, the version that contains
+ > lba48 support.
+ > Do you have any idea what can be the case? At least I have the
+ > impression that the BIOS doesn't support lba48, could that be it? Below
+ > you'll find the output of some (hopefully relevant) commands.
 
-Gwendal.
+Can you please cc linux-ide@vger.kernel.org 
+<mailto:linux-ide@vger.kernel.org>?  And can you try to roll
+your own kernel 2.6.26.2 <http://2.6.26.2> for the system so that we can 
+try patches?
+Maybe the reset timing is too aggressive.
 
-On Tue, Aug 19, 2008 at 6:16 AM, Stefan Richter
-<stefanr@s5r6.in-berlin.de> wrote:
-> Matthew Wilcox wrote:
->> I think a more important question is ... this is coming from a Google
->> address, but has a Copyright Dell on it.  Where's the sign-off chain for
->> this?  Who's the author really?
->
-> Indeed, this needs to be clarified.
->
->>> Gwendal Grignou wrote:
->>>> +#define SETUP_TEMPLATE(attrb, field, perm, test)                   \
->>>> +   i->private_##attrb[count] = dev_attr_##field;                   \
->>>> +   i->private_##attrb[count].attr.mode = perm;                     \
->>>> +   i->attrb[count] = &i->private_##attrb[count];                   \
->>>> +   if (test)                                                       \
->>>> +           count++
-> ...
->>>> +#define SETUP_PORT_ATTRIBUTE(field)                                        \
->>>> +   SETUP_TEMPLATE(port_attrs, field, S_IRUGO, 1)
-> ...
->>>> +   count = 0;
->>>> +   SETUP_PORT_ATTRIBUTE(nr_pmp_links);
->>>> +   SETUP_PORT_ATTRIBUTE(idle_irq);
->>>> +   BUG_ON(count > ATA_PORT_ATTRS);
->>>> +   i->port_attrs[count] = NULL;
->
-> I understand that such preprocessor games are hard to avoid in code like
-> sysfs attribute setup.  I have nothing better to suggest, but they are
-> ugly nevertheless, and may amount to bloat.
->
-> Anyway; the BUG_ON there should probably be a BUILD_BUG_ON.
-> --
-> Stefan Richter
-> -=====-==--- =--- =--==
-> http://arcgraph.de/sr/
->
+Thanks.
