@@ -1,113 +1,178 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH 3/5] ide-generic: no need to probe all ports at once
-Date: Tue, 19 Aug 2008 20:32:33 +0200
-Message-ID: <200808192032.33287.bzolnier@gmail.com>
+Subject: [PATCH 2/5] ide: ->ide_dma_clear_irq() -> ->clear_irq()
+Date: Tue, 19 Aug 2008 20:31:40 +0200
+Message-ID: <200808192031.40288.bzolnier@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
   charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from gv-out-0910.google.com ([216.239.58.187]:24747 "EHLO
+Received: from gv-out-0910.google.com ([216.239.58.186]:24430 "EHLO
 	gv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753821AbYHSShS (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 19 Aug 2008 14:37:18 -0400
-Received: by gv-out-0910.google.com with SMTP id e6so45202gvc.37
-        for <linux-ide@vger.kernel.org>; Tue, 19 Aug 2008 11:37:16 -0700 (PDT)
+	with ESMTP id S1754601AbYHSShX (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 19 Aug 2008 14:37:23 -0400
+Received: by gv-out-0910.google.com with SMTP id e6so45201gvc.37
+        for <linux-ide@vger.kernel.org>; Tue, 19 Aug 2008 11:37:23 -0700 (PDT)
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
 Cc: linux-kernel@vger.kernel.org
 
+* Rename ->ide_dma_clear_irq method to ->clear_irq
+  and move it from ide_hwif_t to struct ide_port_ops.
+
+* Move ->waiting_for_dma check inside ->clear_irq method.
+
+* Move ->dma_base check inside ->clear_irq method.
+
+piix.c:
+* Add ich_port_ops and remove init_hwif_ich() wrapper.
+
+There should be no functional changes caused by this patch.
+
 Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 ---
- drivers/ide/ide-generic.c |   47 +++++++++++-----------------------------------
- 1 file changed, 12 insertions(+), 35 deletions(-)
+ drivers/ide/ide-io.c   |   15 ++++-----------
+ drivers/ide/pci/piix.c |   39 +++++++++++++++++++++++----------------
+ include/linux/ide.h    |    4 ++--
+ 3 files changed, 29 insertions(+), 29 deletions(-)
 
-Index: b/drivers/ide/ide-generic.c
+Index: b/drivers/ide/ide-io.c
 ===================================================================
---- a/drivers/ide/ide-generic.c
-+++ b/drivers/ide/ide-generic.c
-@@ -137,10 +137,9 @@ static void ide_generic_check_pci_legacy
+--- a/drivers/ide/ide-io.c
++++ b/drivers/ide/ide-io.c
+@@ -1418,23 +1418,16 @@ irqreturn_t ide_intr (int irq, void *dev
+ 	del_timer(&hwgroup->timer);
+ 	spin_unlock(&ide_lock);
  
- static int __init ide_generic_init(void)
- {
--	hw_regs_t hw[MAX_HWIFS], *hws[MAX_HWIFS];
--	struct ide_host *host;
-+	hw_regs_t hw, *hws[] = { &hw, NULL, NULL, NULL };
- 	unsigned long io_addr;
--	int i, rc, primary = 0, secondary = 0;
-+	int i, rc = 0, primary = 0, secondary = 0;
+-	/* Some controllers might set DMA INTR no matter DMA or PIO;
+-	 * bmdma status might need to be cleared even for
+-	 * PIO interrupts to prevent spurious/lost irq.
+-	 */
+-	if (hwif->ide_dma_clear_irq && !(drive->waiting_for_dma))
+-		/* ide_dma_end() needs bmdma status for error checking.
+-		 * So, skip clearing bmdma status here and leave it
+-		 * to ide_dma_end() if this is dma interrupt.
+-		 */
+-		hwif->ide_dma_clear_irq(drive);
++	if (hwif->port_ops && hwif->port_ops->clear_irq)
++		hwif->port_ops->clear_irq(drive);
  
- #ifdef CONFIG_MIPS
- 	if (!ide_probe_legacy())
-@@ -161,13 +160,9 @@ static int __init ide_generic_init(void)
- 		printk(KERN_INFO DRV_NAME ": enforcing probing of I/O ports "
- 			"upon user request\n");
+ 	if (drive->dev_flags & IDE_DFLAG_UNMASK)
+ 		local_irq_enable_in_hardirq();
++
+ 	/* service this interrupt, may set handler for next interrupt */
+ 	startstop = handler(drive);
+-	spin_lock_irq(&ide_lock);
  
--	memset(hws, 0, sizeof(hw_regs_t *) * MAX_HWIFS);
--
- 	for (i = 0; i < ARRAY_SIZE(legacy_bases); i++) {
- 		io_addr = legacy_bases[i];
- 
--		hws[i] = NULL;
--
- 		if ((probe_mask & (1 << i)) && io_addr) {
- 			if (!request_region(io_addr, 8, DRV_NAME)) {
- 				printk(KERN_ERR "%s: I/O resource 0x%lX-0x%lX "
-@@ -184,45 +179,27 @@ static int __init ide_generic_init(void)
- 				continue;
- 			}
- 
--			memset(&hw[i], 0, sizeof(hw[i]));
--			ide_std_init_ports(&hw[i], io_addr, io_addr + 0x206);
-+			memset(&hw, 0, sizeof(hw));
-+			ide_std_init_ports(&hw, io_addr, io_addr + 0x206);
- #ifdef CONFIG_IA64
--			hw[i].irq = isa_irq_to_vector(legacy_irqs[i]);
-+			hw.irq = isa_irq_to_vector(legacy_irqs[i]);
- #else
--			hw[i].irq = legacy_irqs[i];
-+			hw.irq = legacy_irqs[i];
- #endif
--			hw[i].chipset = ide_generic;
-+			hw.chipset = ide_generic;
- 
--			hws[i] = &hw[i];
-+			rc = ide_host_add(NULL, hws, NULL);
-+			if (rc) {
-+				release_region(io_addr + 0x206, 1);
-+				release_region(io_addr, 8);
-+			}
- 		}
- 	}
- 
--	host = ide_host_alloc_all(NULL, hws);
--	if (host == NULL) {
--		rc = -ENOMEM;
--		goto err;
--	}
--
--	rc = ide_host_register(host, NULL, hws);
--	if (rc)
--		goto err_free;
--
- 	if (ide_generic_sysfs_init())
- 		printk(KERN_ERR DRV_NAME ": failed to create ide_generic "
- 					 "class\n");
- 
--	return 0;
--err_free:
--	ide_host_free(host);
--err:
--	for (i = 0; i < MAX_HWIFS; i++) {
--		if (hws[i] == NULL)
--			continue;
--
--		io_addr = hws[i]->io_ports.data_addr;
--		release_region(io_addr + 0x206, 1);
--		release_region(io_addr, 8);
--	}
- 	return rc;
++	spin_lock_irq(&ide_lock);
+ 	/*
+ 	 * Note that handler() may have set things up for another
+ 	 * interrupt to occur soon, but it cannot happen until
+Index: b/drivers/ide/pci/piix.c
+===================================================================
+--- a/drivers/ide/pci/piix.c
++++ b/drivers/ide/pci/piix.c
+@@ -215,17 +215,26 @@ static unsigned int init_chipset_ich(str
  }
  
+ /**
+- *	piix_dma_clear_irq	-	clear BMDMA status
+- *	@drive: IDE drive to clear
++ *	ich_clear_irq	-	clear BMDMA status
++ *	@drive: IDE drive
+  *
+- *	Called from ide_intr() for PIO interrupts
+- *	to clear BMDMA status as needed by ICHx
++ *	ICHx contollers set DMA INTR no matter DMA or PIO.
++ *	BMDMA status might need to be cleared even for
++ *	PIO interrupts to prevent spurious/lost IRQ.
+  */
+-static void piix_dma_clear_irq(ide_drive_t *drive)
++static void ich_clear_irq(ide_drive_t *drive)
+ {
+ 	ide_hwif_t *hwif = HWIF(drive);
+ 	u8 dma_stat;
+ 
++	/*
++	 * ide_dma_end() needs BMDMA status for error checking.
++	 * So, skip clearing BMDMA status here and leave it
++	 * to ide_dma_end() if this is DMA interrupt.
++	 */
++	if (drive->waiting_for_dma || hwif->dma_base == 0)
++		return;
++
+ 	/* clear the INTR & ERROR bits */
+ 	dma_stat = inb(hwif->dma_base + ATA_DMA_STATUS);
+ 	/* Should we force the bit as well ? */
+@@ -293,21 +302,19 @@ static void __devinit init_hwif_piix(ide
+ 		hwif->ultra_mask = hwif->mwdma_mask = hwif->swdma_mask = 0;
+ }
+ 
+-static void __devinit init_hwif_ich(ide_hwif_t *hwif)
+-{
+-	init_hwif_piix(hwif);
+-
+-	/* ICHx need to clear the BMDMA status for all interrupts */
+-	if (hwif->dma_base)
+-		hwif->ide_dma_clear_irq = &piix_dma_clear_irq;
+-}
+-
+ static const struct ide_port_ops piix_port_ops = {
+ 	.set_pio_mode		= piix_set_pio_mode,
+ 	.set_dma_mode		= piix_set_dma_mode,
+ 	.cable_detect		= piix_cable_detect,
+ };
+ 
++static const struct ide_port_ops ich_port_ops = {
++	.set_pio_mode		= piix_set_pio_mode,
++	.set_dma_mode		= piix_set_dma_mode,
++	.clear_irq		= ich_clear_irq,
++	.cable_detect		= piix_cable_detect,
++};
++
+ #ifndef CONFIG_IA64
+  #define IDE_HFLAGS_PIIX IDE_HFLAG_LEGACY_IRQS
+ #else
+@@ -331,9 +338,9 @@ static const struct ide_port_ops piix_po
+ 	{ \
+ 		.name		= DRV_NAME, \
+ 		.init_chipset	= init_chipset_ich, \
+-		.init_hwif	= init_hwif_ich, \
++		.init_hwif	= init_hwif_piix, \
+ 		.enablebits	= {{0x41,0x80,0x80}, {0x43,0x80,0x80}}, \
+-		.port_ops	= &piix_port_ops, \
++		.port_ops	= &ich_port_ops, \
+ 		.host_flags	= IDE_HFLAGS_PIIX, \
+ 		.pio_mask	= ATA_PIO4, \
+ 		.swdma_mask	= ATA_SWDMA2_ONLY, \
+Index: b/include/linux/ide.h
+===================================================================
+--- a/include/linux/ide.h
++++ b/include/linux/ide.h
+@@ -702,6 +702,7 @@ extern const struct ide_tp_ops default_t
+  * @resetproc:		routine to reset controller after a disk reset
+  * @maskproc:		special host masking for drive selection
+  * @quirkproc:		check host's drive quirk list
++ * @clear_irq:		clear IRQ
+  *
+  * @mdma_filter:	filter MDMA modes
+  * @udma_filter:	filter UDMA modes
+@@ -718,6 +719,7 @@ struct ide_port_ops {
+ 	void	(*resetproc)(ide_drive_t *);
+ 	void	(*maskproc)(ide_drive_t *, int);
+ 	void	(*quirkproc)(ide_drive_t *);
++	void	(*clear_irq)(ide_drive_t *);
+ 
+ 	u8	(*mdma_filter)(ide_drive_t *);
+ 	u8	(*udma_filter)(ide_drive_t *);
+@@ -780,8 +782,6 @@ typedef struct hwif_s {
+ 	const struct ide_port_ops	*port_ops;
+ 	const struct ide_dma_ops	*dma_ops;
+ 
+-	void (*ide_dma_clear_irq)(ide_drive_t *drive);
+-
+ 	/* dma physical region descriptor table (cpu view) */
+ 	unsigned int	*dmatable_cpu;
+ 	/* dma physical region descriptor table (dma view) */
