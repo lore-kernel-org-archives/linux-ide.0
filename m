@@ -1,62 +1,84 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH] ide/Kconfig: mark ide-scsi as deprecated
-Date: Tue, 19 Aug 2008 21:11:44 +0200
-Message-ID: <200808192111.45351.bzolnier@gmail.com>
+From: Mark Lord <liml@rtr.ca>
+Subject: Re: Flush drive cache before issuing ATA_16 from userspace?
+Date: Tue, 19 Aug 2008 18:05:29 -0400
+Message-ID: <48AB43A9.3000003@rtr.ca>
+References: <48AACDA1.7070206@rtr.ca>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mu-out-0910.google.com ([209.85.134.186]:51400 "EHLO
-	mu-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753561AbYHSTOn (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 19 Aug 2008 15:14:43 -0400
-Received: by mu-out-0910.google.com with SMTP id w8so107324mue.1
-        for <linux-ide@vger.kernel.org>; Tue, 19 Aug 2008 12:14:41 -0700 (PDT)
-Content-Disposition: inline
+Received: from rtr.ca ([76.10.145.34]:41250 "EHLO mail.rtr.ca"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750824AbYHSWFc (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 19 Aug 2008 18:05:32 -0400
+In-Reply-To: <48AACDA1.7070206@rtr.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>, Tejun Heo <htejun@gmail.com>, Alan Cox <alan@redhat.com>
+Cc: IDE/ATA development list <linux-ide@vger.kernel.org>
 
-Mark ide-scsi as deprecated and remove stale/bogus documentation.
+Mark Lord wrote:
+> I have a rather busy MythTV system here, with four tuners
+> and a hirez HDTV for the display.
+> 
+> It uses a pair of 750GB Hitachi SATA drives (RAID0) for storage.
+> 
+> I wanted to see how warm the drives get, so I set up a monitoring
+> program that invokes hddtemp every 20-30 seconds or so, updating
+> a front panel display with the current drive temperature of /dev/sdb.
+> 
+> So far, so good.
+> 
+> But.. when the machine is busy recording a hi-def (17mbit/sec) stream
+> whilst also playing back a hi-def stream, libata locks up and resets
+> /dev/sdb periodically, say once every minute or so (quite irregular).
+> This causes lots of recording bits to be dropped, ruining later playback.
+> 
+> The dual-core system was using 2.6.24.3 (32-bit) at the time,
+> and libata.ahci w/NCQ on both drives.
+> I retested with "hdparm -Q1 /dev/sd?" and it didn't help -- same problem.
+> 
+> Looking at the system logs, and running a full S.M.A.R.T. test shows
+> both drives to be clean (no media faults found), other than libata
+> reporting timeouts as here:
+> 
+> ..
+> ata2.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 frozen
+> ata2.00: cmd ec/00:00:00:00:00/00:00:00:00:00/00 tag 0 pio 512 in
+>         res 40/00:00:00:4f:c2/00:01:00:00:00/00 Emask 0x4 (timeout)
+> ata2.00: status: { DRDY }
+> ata2: soft resetting link
+> ata2: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+> ata2.00: configured for UDMA/133
+> ata2: EH complete
+> sd 1:0:0:0: [sdb] 1465149168 512-byte hardware sectors (750156 MB)
+> sd 1:0:0:0: [sdb] Write Protect is off
+> sd 1:0:0:0: [sdb] Mode Sense: 00 3a 00 00
+> sd 1:0:0:0: [sdb] Write cache: enabled, read cache: enabled, doesn't 
+> support DPO or FUA
+> ..
+> 
+> That's an IDENTIFY (0xEC) command timing out.
+> The hddtemp program does it's work by issuing IDENTIFY and SMART
+> commands to the target drive, /dev/sdb in this case.
+> 
+>     ioctl(3, 0x30d, 0xbfd2c418)
+>     ioctl(3, 0x31f, 0xbfd2c60c)
+>     ioctl(3, 0x31f, 0xbfd2c614)
+>     ioctl(3, 0x31f, 0xbfd2c408)
+> 
+> So that 0xEC most likely came from the hddtemp program,
+> since libata doesn't normally issue them after probing.
+> 
+> So why is it timing out?  Well, these drives have 32MB onboard caches,
+> and I'm guessing that something (firmware, whatever) tries to empty that
+> cache before processing the issued IDENTIFY command.  And we time out
+> before the drive has a chance to actually process the IDENTIFY.
+..
 
-Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
----
- drivers/ide/Kconfig |   16 +---------------
- 1 file changed, 1 insertion(+), 15 deletions(-)
+Another possibility could be some kind of bug in libata or ahci.c.
+It seems unlikely -- .qc_defer ought to prevent issues -- but I haven't
+really poked around in there.  And this is a "production" machine :)
+so we don't like to use it (much) for debugging kernels if we can help it.
 
-Index: b/drivers/ide/Kconfig
-===================================================================
---- a/drivers/ide/Kconfig
-+++ b/drivers/ide/Kconfig
-@@ -187,7 +187,7 @@ config BLK_DEV_IDEFLOPPY
- 	  module will be called ide-floppy.
- 
- config BLK_DEV_IDESCSI
--	tristate "SCSI emulation support"
-+	tristate "SCSI emulation support (DEPRECATED)"
- 	depends on SCSI
- 	select IDE_ATAPI
- 	---help---
-@@ -200,20 +200,6 @@ config BLK_DEV_IDESCSI
- 	  and will allow you to use a SCSI device driver instead of a native
- 	  ATAPI driver.
- 
--	  This is useful if you have an ATAPI device for which no native
--	  driver has been written (for example, an ATAPI PD-CD drive);
--	  you can then use this emulation together with an appropriate SCSI
--	  device driver. In order to do this, say Y here and to "SCSI support"
--	  and "SCSI generic support", below. You must then provide the kernel
--	  command line "hdx=ide-scsi" (try "man bootparam" or see the
--	  documentation of your boot loader (lilo or loadlin) about how to
--	  pass options to the kernel at boot time) for devices if you want the
--	  native EIDE sub-drivers to skip over the native support, so that
--	  this SCSI emulation can be used instead.
--
--	  Note that this option does NOT allow you to attach SCSI devices to a
--	  box that doesn't have a SCSI host adapter installed.
--
- 	  If both this SCSI emulation and native ATAPI support are compiled
- 	  into the kernel, the native support will be used.
- 
+Cheers
