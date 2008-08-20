@@ -1,54 +1,48 @@
-From: Larry Finger <Larry.Finger@lwfinger.net>
-Subject: Re: 2.6.27-rc3: IP: [<ffffffffa0038b77>] init_irq+0x18d/0x31c [ide_core]
-Date: Wed, 20 Aug 2008 14:34:47 -0500
-Message-ID: <48AC71D7.8050604@lwfinger.net>
-References: <20080820173122.GA7335@deprecation.cyrius.com>
+From: "Matthieu Helder" <matthieu.helder@gmail.com>
+Subject: Re: Initio 1623 driver question
+Date: Wed, 20 Aug 2008 22:32:17 +0200
+Message-ID: <8ce0925c0808201332u604ce2a6sf2274d4517edf95b@mail.gmail.com>
+References: <48AB0F54.5080900@gmail.com> <48AB9B98.6000105@novell.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mtiwmhc11.worldnet.att.net ([204.127.131.115]:34280 "EHLO
-	mtiwmhc11.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753270AbYHTTeq (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 20 Aug 2008 15:34:46 -0400
-In-Reply-To: <20080820173122.GA7335@deprecation.cyrius.com>
+Received: from wf-out-1314.google.com ([209.85.200.172]:53676 "EHLO
+	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753844AbYHTUcR (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 20 Aug 2008 16:32:17 -0400
+Received: by wf-out-1314.google.com with SMTP id 27so758470wfd.4
+        for <linux-ide@vger.kernel.org>; Wed, 20 Aug 2008 13:32:17 -0700 (PDT)
+In-Reply-To: <48AB9B98.6000105@novell.com>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Martin Michlmayr <tbm@cyrius.com>
-Cc: Dominik Brodowski <linux@dominikbrodowski.net>, linux-ide@vger.kernel.org, linux-pcmcia@lists.infradead.org
+To: Tejun Heo <teheo@novell.com>
+Cc: linux-ide@vger.kernel.org
 
-Martin Michlmayr wrote:
-> I get the following with 2.6.27-rc3 when inserting a CF card into my
-> PCMCIA slot:
-> 
-> [  144.983810] pccard: PCMCIA card inserted into slot 0
-> [  144.983942] cs: memory probe 0x0c0000-0x0fffff: excluding 0xc0000-0xd3fff 0xe0000-0xfffff
-> [  144.989008] cs: memory probe 0x60000000-0x60ffffff: excluding 0x60000000-0x60ffffff
-> [  144.989008] cs: memory probe 0xa0000000-0xa0ffffff: clean.
-> [  145.008898] cs: memory probe 0xe0100000-0xe03fffff: excluding 0xe0100000-0xe012ffff
-> [  145.021508] pcmcia: registering new device pcmcia0.0
-> [  145.284012] Probing IDE interface ide1...
-> [  145.576063] hdc: TOSHIBA THNCF512MMA, CFA DISK drive
-> [  146.248065] BUG: unable to handle kernel NULL pointer dereference at 00000000000000f8
-> [  146.248065] IP: [<ffffffffa0038b77>] init_irq+0x18d/0x31c [ide_core]
+The calls to ata_link_print() didn't contain the warning level. I've
+added KERN_WARNING.
 
-Please do the following, which will require the package containing 
-objdump. First of all, do the command
+Could you please provide me with a way to build just the needed
+modules? From a.o. the Linux Kernel Module Programming Guide I don't
+succeed in building just the two kernel modules. The system builds all
+configured modules, which takes rather a long time.
 
-objdump -d -l drivers/ide/ide-core.o > ide_core.dump
+As soon as I have the requested log, I'll mail it to you. I assume I
+have to look in /var/log/messages for it?
 
-Next, open ide_core.dump with less or your favorite editor and search 
-for the start of init_irq. Note that address. Add your offset of 0x18D 
-to that value and find the instruction at that address. Move up in the 
-file until you find a line that looks like
+Kind regards,
+Matthieu
 
-/home/finger/linux-2.6/drivers/ide/ide-probe.c:1054
-
-That will be the source line that oopsed. Post that information.
-
-Thanks,
-
-Larry
-
-
-Once this is open, search
+On Wed, Aug 20, 2008 at 6:20 AM, Tejun Heo <teheo@novell.com> wrote:
+>
+> Matthieu Helder wrote:
+> > I've compiled and installed the 2.6.26.2 kernel.
+>
+> Can you please apply the attached patch and report the resulting
+> detection log?
+>
+> Thanks.
+>
+> --
+> tejun
