@@ -1,59 +1,80 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: Promise 300-TX 4-channel SATA disk going dead under load 2.6.24-7
-Date: Wed, 20 Aug 2008 16:39:04 +0900
-Message-ID: <48ABCA18.6060800@kernel.org>
-References: <48A35FE6.1080903@tlinx.org> <20080814115005.1495a0b1@lxorguk.ukuu.org.uk>
+Subject: Re: SATA Cold Boot Problems with 2.6.27-rc[23] on nVidia 680i
+Date: Wed, 20 Aug 2008 16:42:54 +0900
+Message-ID: <48ABCAFE.3030508@kernel.org>
+References: <6b2d1a5d2475e6be79d9ad459579f040.squirrel@www.mannymax.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed;
+ boundary="------------060306060304010006000004"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:60992 "EHLO hera.kernel.org"
+Received: from hera.kernel.org ([140.211.167.34]:58318 "EHLO hera.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751688AbYHTHkJ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 20 Aug 2008 03:40:09 -0400
-In-Reply-To: <20080814115005.1495a0b1@lxorguk.ukuu.org.uk>
+	id S1754559AbYHTHnu (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 20 Aug 2008 03:43:50 -0400
+In-Reply-To: <6b2d1a5d2475e6be79d9ad459579f040.squirrel@www.mannymax.net>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Linda Walsh <lkml@tlinx.org>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-ide@vger.kernel.org
+To: Manny Maxwell <mannymax@mannymax.net>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Alan Cox wrote:
->> 13 10:12:20 kern: res ff/ff:ff:ff:ff:ff/ff:ff:ff:ff:ff/ff Emask 0x12 
->> (ATA bus error)
-> 
-> Splat
-> 
->> 13 10:12:20 kern: ata4.00: exception Emask 0x10 SAct 0x0 SErr 0x19 0002 
->> action 0xa frozen
->> 13 10:12:20 kern: ata4.00: hotplug_status 0x4
->> 13 10:12:20 kern: ata4: SError: { RecovComm PHYRdyChg 10B8B Dispar }
-> 
-> SATA link dies
-> 
->> 13 10:13:25 kern: ata4: limiting SATA link speed to 1.5 Gbps
-> 
-> We try 1.5GBit
-> 
->> 13 10:14:30 kern: ata4: SError: { RecovComm PHYRdyChg 10B8B Dispar DevExch }
->> 13 10:14:37 kern: ata4: port is slow to respond, please be patient 
->> (Status 0xff)
-> 
-> First guess would be a dud drive but it could be power or cabling or
-> firmware or ...
-> 
-> In all the sane cases I would have expected it to recover, particularly
-> if it was cabling.
+This is a multi-part message in MIME format.
+--------------060306060304010006000004
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 
-Hmm... this could be either the drive or the controller.  After that
-happens, can you please plug the power line off the drive, wait a few
-tens of secs and plug in again and see whether the drive comes back?
-Even if the drive was serving root fs, you should still be able to see
-whether libata can converse with the device.  Just don't unplug and
-replug while libata is still trying to recover the device.  Unwritten
-data in the disk buffer will be lost when you unplug the power and
-libata would think it was just transmission glitch and the fs will just
-continue as if nothing happened which could result in massive filesystem
-corruption.
+Does the attached patch fix your problem?
 
 -- 
 tejun
+
+--------------060306060304010006000004
+Content-Type: text/x-patch;
+ name="nv-nohrst.patch"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="nv-nohrst.patch"
+
+--- a/drivers/ata/sata_nv.c
++++ b/drivers/ata/sata_nv.c
+@@ -309,8 +309,6 @@ static void nv_nf2_freeze(struct ata_port *ap);
+ static void nv_nf2_thaw(struct ata_port *ap);
+ static void nv_ck804_freeze(struct ata_port *ap);
+ static void nv_ck804_thaw(struct ata_port *ap);
+-static int nv_hardreset(struct ata_link *link, unsigned int *class,
+-			unsigned long deadline);
+ static int nv_adma_slave_config(struct scsi_device *sdev);
+ static int nv_adma_check_atapi_dma(struct ata_queued_cmd *qc);
+ static void nv_adma_qc_prep(struct ata_queued_cmd *qc);
+@@ -407,7 +405,7 @@ static struct scsi_host_template nv_swncq_sht = {
+ 
+ static struct ata_port_operations nv_generic_ops = {
+ 	.inherits		= &ata_bmdma_port_ops,
+-	.hardreset		= nv_hardreset,
++	.hardreset		= ATA_OP_NULL,
+ 	.scr_read		= nv_scr_read,
+ 	.scr_write		= nv_scr_write,
+ };
+@@ -1588,21 +1586,6 @@ static void nv_mcp55_thaw(struct ata_port *ap)
+ 	ata_sff_thaw(ap);
+ }
+ 
+-static int nv_hardreset(struct ata_link *link, unsigned int *class,
+-			unsigned long deadline)
+-{
+-	int rc;
+-
+-	/* SATA hardreset fails to retrieve proper device signature on
+-	 * some controllers.  Request follow up SRST.  For more info,
+-	 * see http://bugzilla.kernel.org/show_bug.cgi?id=3352
+-	 */
+-	rc = sata_sff_hardreset(link, class, deadline);
+-	if (rc)
+-		return rc;
+-	return -EAGAIN;
+-}
+-
+ static void nv_adma_error_handler(struct ata_port *ap)
+ {
+ 	struct nv_adma_port_priv *pp = ap->private_data;
+
+--------------060306060304010006000004--
