@@ -1,78 +1,95 @@
-From: Tejun Heo <teheo@novell.com>
-Subject: Re: Initio 1623 driver question
-Date: Wed, 20 Aug 2008 13:20:40 +0900
-Message-ID: <48AB9B98.6000105@novell.com>
-References: <48AB0F54.5080900@gmail.com>
+From: Steven Gill <smgill75@verizon.net>
+Subject: Re: sata_mv (NOT!)
+Date: Wed, 20 Aug 2008 01:20:23 -0400
+Message-ID: <48ABA997.1050109@verizon.net>
+References: <48A0C170.2000803@verizon.net> <48A307D3.2000905@rtr.ca>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------020000070100090407080509"
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ns2.suse.de ([195.135.220.15]:34157 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752011AbYHTEVR (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 20 Aug 2008 00:21:17 -0400
-In-Reply-To: <48AB0F54.5080900@gmail.com>
+Received: from vms046pub.verizon.net ([206.46.252.46]:40594 "EHLO
+	vms046pub.verizon.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751435AbYHTFUd (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 20 Aug 2008 01:20:33 -0400
+Received: from vm.thebtbgroup.com ([72.78.111.7])
+ by vms046.mailsrvcs.net (Sun Java System Messaging Server 6.2-6.01 (built Apr
+ 3 2006)) with ESMTPA id <0K5V00EE2W60AND8@vms046.mailsrvcs.net> for
+ linux-ide@vger.kernel.org; Wed, 20 Aug 2008 00:20:24 -0500 (CDT)
+In-reply-to: <48A307D3.2000905@rtr.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Matthieu Helder <matthieu.helder@gmail.com>
+To: Mark Lord <liml@rtr.ca>
 Cc: linux-ide@vger.kernel.org
 
-This is a multi-part message in MIME format.
---------------020000070100090407080509
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Sorry for the mistake there.  I realized I was using a non-mainline 
+driver to get PATA to work, but decided to move to a SATA DVD burner.  
+When inserting a disk into the drive (when hooked to the Marvell 6145), 
+I get the following:
 
-Matthieu Helder wrote:
-> I've compiled and installed the 2.6.26.2 kernel.
+ata10.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x6 frozen
+ata10.00: cmd a0/00:00:00:08:00/00:00:00:00:00/a0 tag 0 pio 16392 in
+         cdb 4a 01 00 00 10 00 00 00  08 00 00 00 00 00 00 00
+         res 40/00:03:00:00:00/00:00:00:00:00/a0 Emask 0x4 (timeout)
+ata10.00: status: { DRDY }
+ata10: hard resetting link
+ata10: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+ata10.00: configured for UDMA/100
+ata10: EH complete
+ata10.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x6 frozen
+ata10.00: cmd a0/00:00:00:02:00/00:00:00:00:00/a0 tag 0 pio 16388 in
+         cdb 51 00 00 00 00 00 00 00  02 00 00 00 00 00 00 00
+         res 40/00:03:00:00:00/00:00:00:00:00/a0 Emask 0x4 (timeout)
+ata10.00: status: { DRDY }
+ata10: hard resetting link
+ata10: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
 
-Can you please apply the attached patch and report the resulting
-detection log?
+I am currently running 2.26.2
 
-Thanks.
+I was able to sucessfully burn a CD when connecting this drive to the 
+ICH9 controller sata port, but could not burn a dual layer dvd (There 
+was a similar reset message)
 
--- 
-tejun
+Aug 19 22:05:18 [kernel] warning: `growisofs' uses deprecated v2 
+capabilities in a way that may be insecure.
+Aug 19 22:06:21 [kernel] ata5.00: exception Emask 0x0 SAct 0x0 SErr 0x0 
+action 0x6 frozen
+Aug 19 22:06:21 [kernel] ata5.00: cmd 
+a0/01:00:00:00:80/00:00:00:00:00/a0 tag 0 dma 32768 out
+Aug 19 22:06:21 [kernel]          cdb 2a 00 00 00 00 00 00 00  10 00 00 
+00 00 00 00 00
+Aug 19 22:06:21 [kernel]          res 
+40/00:03:00:0c:00/00:00:00:00:00/a0 Emask 0x4 (timeout)
+Aug 19 22:06:21 [kernel] ata5.00: status: { DRDY }
+Aug 19 22:06:21 [kernel] ata5: hard resetting link
+Aug 19 22:06:21 [kernel] ata5: SATA link up 1.5 Gbps (SStatus 113 
+SControl 300)
 
---------------020000070100090407080509
-Content-Type: text/x-patch;
- name="inic-reset-debug.patch"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="inic-reset-debug.patch"
+Steve
 
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index 9bef1a8..6670d4a 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -3451,6 +3451,7 @@ int sata_link_debounce(struct ata_link *link, const unsigned long *params,
- 
- 		/* DET stable? */
- 		if (cur == last) {
-+			ata_link_printk(link, "XXX debounce: DET stable %x\n", cur);
- 			if (cur == 1 && time_before(jiffies, deadline))
- 				continue;
- 			if (time_after(jiffies,
-@@ -3459,6 +3460,7 @@ int sata_link_debounce(struct ata_link *link, const unsigned long *params,
- 			continue;
- 		}
- 
-+		ata_link_printk(link, "XXX debounce: DET unstable %x\n", cur);
- 		/* unstable, start over */
- 		last = cur;
- 		last_jiffies = jiffies;
-diff --git a/drivers/ata/sata_inic162x.c b/drivers/ata/sata_inic162x.c
-index 3ead02f..a215c2a 100644
---- a/drivers/ata/sata_inic162x.c
-+++ b/drivers/ata/sata_inic162x.c
-@@ -615,7 +615,8 @@ static int inic_hardreset(struct ata_link *link, unsigned int *class,
- 	struct ata_port *ap = link->ap;
- 	void __iomem *port_base = inic_port_base(ap);
- 	void __iomem *idma_ctl = port_base + PORT_IDMA_CTL;
--	const unsigned long *timing = sata_ehc_deb_timing(&link->eh_context);
-+	//const unsigned long *timing = sata_ehc_deb_timing(&link->eh_context);
-+	const unsigned long *timing = sata_deb_timing_long;
- 	int rc;
- 
- 	/* hammer it into sane state */
+Mark Lord wrote:
+> Steven Gill wrote:
+>> Hi List,
+>>
+>> I am having some issues getting my Marvell 6145 working on my Asus 
+>> P5E ws pro motherboard working.  I am using a 3rd party patch to get 
+>> the pata port working, but have not had success with my e-sata ports 
+>> (on the board the 6145 drives 2 sata and 2 e-sata ports.  There are 
+>> another 6 sata ports driven by the onboard intel ich9).  When 
+>> checking dmesg output, I see this:
+>>
+>> ACPI: PCI Interrupt 0000:02:00.0[A] -> GSI 16 (level, low) -> IRQ 16
+>> PCI: Setting latency timer of device 0000:02:00.0 to 64
+>> Marvell (S)ATA Controller is found, using IRQ 16.
+>> Interrupt Error: 0x40000000 orgIntStatus: 0x40000001 completeSlot=0x1.
+>>
+>> I am willing to help debug any issues, test patches, etc, but most 
+>> importantly wanted to report the issue.  I know this is labelled as 
+>> "highly experimental", but again, wanted to offer assistance in testing.
+> ..
+>
+> Wrong driver.  sata_mv does *NOT* drive the 6145 chip.
+> Rather, that particular chip emulates AHCI, and uses the ahci driver.
+>
+> -ml
+>
 
---------------020000070100090407080509--
