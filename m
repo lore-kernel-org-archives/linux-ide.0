@@ -1,48 +1,79 @@
-From: "Matthieu Helder" <matthieu.helder@gmail.com>
-Subject: Re: Initio 1623 driver question
-Date: Wed, 20 Aug 2008 22:32:17 +0200
-Message-ID: <8ce0925c0808201332u604ce2a6sf2274d4517edf95b@mail.gmail.com>
-References: <48AB0F54.5080900@gmail.com> <48AB9B98.6000105@novell.com>
+From: Bjorn Helgaas <bjorn.helgaas@hp.com>
+Subject: Re: [patch 2/2] fastboot: use a DMI match table to set defaults for port-disable
+Date: Wed, 20 Aug 2008 16:46:06 -0600
+Message-ID: <200808201646.07159.bjorn.helgaas@hp.com>
+References: <20080811153542.61095e5c@infradead.org> <20080811153730.74599410@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wf-out-1314.google.com ([209.85.200.172]:53676 "EHLO
-	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753844AbYHTUcR (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 20 Aug 2008 16:32:17 -0400
-Received: by wf-out-1314.google.com with SMTP id 27so758470wfd.4
-        for <linux-ide@vger.kernel.org>; Wed, 20 Aug 2008 13:32:17 -0700 (PDT)
-In-Reply-To: <48AB9B98.6000105@novell.com>
+Received: from g4t0017.houston.hp.com ([15.201.24.20]:44272 "EHLO
+	g4t0017.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753827AbYHTWqK (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 20 Aug 2008 18:46:10 -0400
+In-Reply-To: <20080811153730.74599410@infradead.org>
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <teheo@novell.com>
-Cc: linux-ide@vger.kernel.org
+To: Arjan van de Ven <arjan@infradead.org>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-The calls to ata_link_print() didn't contain the warning level. I've
-added KERN_WARNING.
+On Monday 11 August 2008 04:37:30 pm Arjan van de Ven wrote:
+> 
+> From: Arjan van de Ven <arjan@linux.intel.com>
+> Subject: [PATCH] libata: use a DMI match table to set defaults for port-disable
+> 
+> As suggested by Jeff:
+> This patch adds a DMI table that is used for setting defaults for
+> the new dont-probe-port parameter boot time optimization feature.
 
-Could you please provide me with a way to build just the needed
-modules? From a.o. the Linux Kernel Module Programming Guide I don't
-succeed in building just the two kernel modules. The system builds all
-configured modules, which takes rather a long time.
+Isn't this the sort of thing we theoretically could learn from ACPI?
+I know we haven't really taken advantage of what ACPI tells us about
+the presence of legacy devices like COM ports and IDE ports, but
+maybe we should.
 
-As soon as I have the requested log, I'll mail it to you. I assume I
-have to look in /var/log/messages for it?
+> +static int __init dmi_disable_ports(const struct dmi_system_id *d)
+> +{
+> +	int value = (unsigned long)d->driver_data;
+> +
+> +	printk(KERN_INFO "libata: DMI match used to disable probing\n");
+> +	libata_disable_ports |= value;
+> +	return 0;
+> +}
+> +
+> +#define DMI_PORT_ATA1 (void *)0x1
+> +#define DMI_PORT_ATA2 (void *)0x2
+> +#define DMI_PORT_ATA3 (void *)0x4
+> +#define DMI_PORT_ATA4 (void *)0x8
+> +
+> +static struct dmi_system_id libata_dmi_table[] __initdata = {
+> +	/*
+> +	 * The Asus EeePC901 has its devices attached to ATA2 only
+> +	 */
+> +	{
+> +	.callback = dmi_disable_ports,
+> +	.driver_data = DMI_PORT_ATA1,
+> +	.ident = "Asus EeePC 901",
+> +	.matches = {
+> +		     DMI_MATCH(DMI_SYS_VENDOR, "ASUSTeK Computer INC."),
+> +		     DMI_MATCH(DMI_PRODUCT_NAME, "901"),
+> +		},
+> +	},
+> +	{}
+> +};
+> +
+> +
+>  /**
+>   *	ata_force_cbl - force cable type according to libata.force
+>   *	@ap: ATA port of interest
+> @@ -6126,6 +6158,7 @@ static void __init ata_parse_force_param(void)
+>  static int __init ata_init(void)
+>  {
+>  	ata_parse_force_param();
+> +	dmi_check_system(libata_dmi_table);
+>  
+>  	ata_wq = create_workqueue("ata");
+>  	if (!ata_wq)
 
-Kind regards,
-Matthieu
 
-On Wed, Aug 20, 2008 at 6:20 AM, Tejun Heo <teheo@novell.com> wrote:
->
-> Matthieu Helder wrote:
-> > I've compiled and installed the 2.6.26.2 kernel.
->
-> Can you please apply the attached patch and report the resulting
-> detection log?
->
-> Thanks.
->
-> --
-> tejun
