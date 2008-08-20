@@ -1,45 +1,43 @@
 From: akpm@linux-foundation.org
-Subject: [patch 2/3] ata_piix: IDE mode SATA patch for Intel Ibex Peak DeviceIDs
-Date: Wed, 20 Aug 2008 16:48:34 -0700
-Message-ID: <200808202348.m7KNmZel005817@imap1.linux-foundation.org>
+Subject: [patch 1/1] drivers/ata/pata_it821x.c: fix warning
+Date: Wed, 20 Aug 2008 16:48:52 -0700
+Message-ID: <200808202348.m7KNmqxR005825@imap1.linux-foundation.org>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:53837 "EHLO
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:38829 "EHLO
 	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754272AbYHTXtj (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 20 Aug 2008 19:49:39 -0400
+	by vger.kernel.org with ESMTP id S1755951AbYHTXtq (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 20 Aug 2008 19:49:46 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: jeff@garzik.org
-Cc: linux-ide@vger.kernel.org, akpm@linux-foundation.org, seth.heasley@intel.com
+Cc: linux-ide@vger.kernel.org, akpm@linux-foundation.org, alan@lxorguk.ukuu.org.uk
 
-From: Seth Heasley <seth.heasley@intel.com>
+From: Andrew Morton <akpm@linux-foundation.org>
 
-Add the Intel Ibex Peak (PCH) IDE mode SATA Controller DeviceIDs.
+drivers/ata/pata_it821x.c: In function 'it821x_port_start':
+drivers/ata/pata_it821x.c:609: warning: 'mtype' may be used uninitialized in this function
 
-Signed-off-by: Seth Heasley <seth.heasley@intel.com>
-Cc: Jeff Garzik <jeff@garzik.org>
+Pretty horrid fix, but so's a warning..
+
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>
 Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
 ---
 
- drivers/ata/ata_piix.c |    8 ++++++++
- 1 file changed, 8 insertions(+)
+ drivers/ata/pata_it821x.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff -puN drivers/ata/ata_piix.c~ata_piix-ide-mode-sata-patch-for-intel-ibex-peak-deviceids drivers/ata/ata_piix.c
---- a/drivers/ata/ata_piix.c~ata_piix-ide-mode-sata-patch-for-intel-ibex-peak-deviceids
-+++ a/drivers/ata/ata_piix.c
-@@ -275,6 +275,14 @@ static const struct pci_device_id piix_p
- 	{ 0x8086, 0x3a20, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich8_sata },
- 	/* SATA Controller IDE (ICH10) */
- 	{ 0x8086, 0x3a26, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich8_2port_sata },
-+	/* SATA Controller IDE (PCH) */
-+	{ 0x8086, 0x3b20, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich8_sata },
-+	/* SATA Controller IDE (PCH) */
-+	{ 0x8086, 0x3b26, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich8_2port_sata },
-+	/* SATA Controller IDE (PCH) */
-+	{ 0x8086, 0x3b2d, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich8_2port_sata },
-+	/* SATA Controller IDE (PCH) */
-+	{ 0x8086, 0x3b2e, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich8_sata },
+diff -puN drivers/ata/pata_it821x.c~drivers-ata-pata_it821xc-fix-warning drivers/ata/pata_it821x.c
+--- a/drivers/ata/pata_it821x.c~drivers-ata-pata_it821xc-fix-warning
++++ a/drivers/ata/pata_it821x.c
+@@ -619,9 +619,9 @@ static void it821x_display_disk(int n, u
  
- 	{ }	/* terminate list */
- };
+ 	ata_id_c_string((u16 *)buf, id, 0, 41); 
+ 
++	mtype = "UDMA";
+ 	if (buf[51]) {
+ 		mode = ffs(buf[51]);
+-		mtype = "UDMA";
+ 	} else if (buf[49]) {
+ 		mode = ffs(buf[49]);
+ 		mtype = "MWDMA";
 _
