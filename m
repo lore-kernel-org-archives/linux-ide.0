@@ -1,29 +1,69 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH 8/9] ide: remove superfluous ->dma field from ide_hwif_t
-Date: Wed, 20 Aug 2008 14:15:18 +0400
-Message-ID: <48ABEEB6.3030901@ru.mvista.com>
-References: <20080817171454.27943.37234.sendpatchset@localhost.localdomain> <20080817171548.27943.58522.sendpatchset@localhost.localdomain>
+From: Robin Holt <holt@sgi.com>
+Subject: Re: kernel unaligned accesses on IA64 in IDE
+Date: Wed, 20 Aug 2008 09:35:31 -0500
+Message-ID: <20080820143531.GA6488@sgi.com>
+References: <20080819225606.GB22088@us.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from h155.mvista.com ([63.81.120.155]:29416 "EHLO imap.sh.mvista.com"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751315AbYHTKPZ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 20 Aug 2008 06:15:25 -0400
-In-Reply-To: <20080817171548.27943.58522.sendpatchset@localhost.localdomain>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ia64-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20080819225606.GB22088@us.ibm.com>
+Sender: linux-ia64-owner@vger.kernel.org
+To: Nishanth Aravamudan <nacc@us.ibm.com>
+Cc: tony.luck@intel.com, bzolnier@gmail.com, linux-ia64@vger.kernel.org, linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Bartlomiej Zolnierkiewicz wrote:
+On Tue, Aug 19, 2008 at 03:56:06PM -0700, Nishanth Aravamudan wrote:
+> Hi Tony, Bart,
+> 
+> As mentioned in the cpu_clock() thread, I am seeing (consistently) 5
+> unaligned accesses in the bootlogs on a 2-node IA64 box:
+> 
+> [   32.593534] kernel unaligned access to 0xe000000644220466, ip=0xa000000100516fa1
+> [   32.601171] kernel unaligned access to 0xe00000064422046e, ip=0xa000000100516fa1
+> [   35.333273] kernel unaligned access to 0xe00000064451693e, ip=0xa000000100516fa1
+> [   35.340912] kernel unaligned access to 0xe000000644516942, ip=0xa000000100516fa1
+> [   35.348557] kernel unaligned access to 0xe000000644516946, ip=0xa000000100516fa1
+> 
+> Looking in the corresponding System.map, I see:
+> 
+> a000000100516940 T ide_input_data
+> a000000100516ec0 T ide_output_data
+> a000000100517340 T ide_execute_command
+> a000000100517420 t atapi_reset_pollfunc
 
-> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
->   
+I compiled your .config with commit ??? and got ide_output_data at
+a000000100516ae0 so the offending instruction is at a000000100516bc1
 
-Acked-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+a000000100516bc0:       08 a8 00 4c 18 10       [MMI]       ld8 r21=[r38]
+a000000100516bc6:       d0 22 90 20 28 c0                   ld4 r45=[r36],4
+a000000100516bcc:       05 28 01 84                         mov r46=r37
 
-MBR, Sergei
+Those look reasonable.
+
+That seems to be coming from include/asm/io.h:280
+
+static inline void
+__outsl (unsigned long port, const void *src, unsigned long count)
+{
+	const unsigned int *sp = src;
+
+	while (count--)
+		platform_outl(*sp++, port);
+}
+
+which is really outsl and that is only used on line 339:
+			outsl(data_addr, buf, len / 4);
+
+With as little as I know about what I am doing, I would probably add a
+printk immediately after the outsl line and dump out data_addr, buf, and
+len to see what those values are.  I expect either data_addr is not
+aligned on an 8 byte boundary or buf is not aligned on a 4 byte
+boundary.
+
+Keep in mind that I may have completely messed up my analysis and I am
+pursuing the wrong line entirely.
 
 
+Good Luck,
+Robin
