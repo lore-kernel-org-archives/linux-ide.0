@@ -1,39 +1,46 @@
-From: akpm@linux-foundation.org
-Subject: [patch 3/3] ahci: RAID mode SATA patch for Intel Ibex Peak DeviceIDs
-Date: Wed, 20 Aug 2008 16:48:35 -0700
-Message-ID: <200808202348.m7KNmZMP005820@imap1.linux-foundation.org>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [patch 1/3] libata-scsi: don't start hotplug work queue if hotplug
+ is disabled
+Date: Thu, 21 Aug 2008 11:38:37 +0900
+Message-ID: <48ACD52D.8090703@kernel.org>
+References: <200808202348.m7KNmXHq005814@imap1.linux-foundation.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:36238 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756032AbYHTXuk (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 20 Aug 2008 19:50:40 -0400
+Received: from hera.kernel.org ([140.211.167.34]:38007 "EHLO hera.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753757AbYHUCju (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 20 Aug 2008 22:39:50 -0400
+In-Reply-To: <200808202348.m7KNmXHq005814@imap1.linux-foundation.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: jeff@garzik.org
-Cc: linux-ide@vger.kernel.org, akpm@linux-foundation.org, seth.heasley@intel.com
+To: akpm@linux-foundation.org
+Cc: jeff@garzik.org, linux-ide@vger.kernel.org, chunbo.luo@windriver.com
 
-From: Seth Heasley <seth.heasley@intel.com>
+akpm@linux-foundation.org wrote:
+> From: Chunbo Luo <chunbo.luo@windriver.com>
+> 
+> Previously, queue_delayed_work() was started unconditionally, but if
+> ATA_PFLAG_SCSI_HOTPLUG is not set and we do this, the work queue may cause
+> multiple messages like this:
+> 
+> ata3.00: WARNING: ATAPI is not supported with this driver, device ignored.
+> 
+> So now,it is only started when the hotplug flag is actually set.
+> 
+> Signed-off-by: Chunbo Luo <chunbo.luo@windriver.com>
+> Cc: Jeff Garzik <jeff@garzik.org>
+> Cc: Tejun Heo <tj@kernel.org>
+> Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
 
-Add the Intel Ibex Peak (PCH) SATA RAID Controllers DeviceIDs.
+Andrew, this problem is solved by another patch and already went upstream.
 
-Signed-off-by: Seth Heasley <seth.heasley@intel.com>
-Cc: Jeff Garzik <jeff@garzik.org>
-Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
----
+  http://article.gmane.org/gmane.linux.ide/33261
 
- drivers/ata/ahci.c |    2 ++
- 1 file changed, 2 insertions(+)
+Can you please drop this one?
 
-diff -puN drivers/ata/ahci.c~ahci-raid-mode-sata-patch-for-intel-ibex-peak-deviceids drivers/ata/ahci.c
---- a/drivers/ata/ahci.c~ahci-raid-mode-sata-patch-for-intel-ibex-peak-deviceids
-+++ a/drivers/ata/ahci.c
-@@ -486,6 +486,8 @@ static const struct pci_device_id ahci_p
- 	{ PCI_VDEVICE(INTEL, 0x502b), board_ahci }, /* Tolapai */
- 	{ PCI_VDEVICE(INTEL, 0x3a05), board_ahci }, /* ICH10 */
- 	{ PCI_VDEVICE(INTEL, 0x3a25), board_ahci }, /* ICH10 */
-+	{ PCI_VDEVICE(INTEL, 0x3b24), board_ahci }, /* PCH RAID */
-+	{ PCI_VDEVICE(INTEL, 0x3b2b), board_ahci }, /* PCH RAID */
- 
- 	/* JMicron 360/1/3/5/6, match class to avoid IDE function */
- 	{ PCI_VENDOR_ID_JMICRON, PCI_ANY_ID, PCI_ANY_ID, PCI_ANY_ID,
-_
+Thanks.
+
+-- 
+tejun
