@@ -1,38 +1,48 @@
-From: Mark Lord <liml@rtr.ca>
-Subject: Re: sata_mv (NOT!)
-Date: Thu, 21 Aug 2008 18:05:01 -0400
-Message-ID: <48ADE68D.20705@rtr.ca>
-References: <48A0C170.2000803@verizon.net> <48A307D3.2000905@rtr.ca> <48ABA997.1050109@verizon.net>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+From: Kevin Hilman <khilman@deeprootsystems.com>
+Subject: [PATCH 1/2] IDE: compile fix for sff_dma_ops
+Date: Thu, 21 Aug 2008 14:23:43 -0700
+Message-ID: <1219353824-31246-1-git-send-email-khilman@deeprootsystems.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([76.10.145.34]:44497 "EHLO mail.rtr.ca"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756733AbYHUWFD (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 21 Aug 2008 18:05:03 -0400
-In-Reply-To: <48ABA997.1050109@verizon.net>
+Received: from deeprooted.net ([216.254.16.51]:33421 "EHLO grasse"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1754855AbYHUWq6 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 21 Aug 2008 18:46:58 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Steven Gill <smgill75@verizon.net>
-Cc: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
+Cc: Kevin Hilman <khilman@deeprootsystems.com>
 
-Steven Gill wrote:
-..
-> I am currently running 2.26.2
-> 
-> I was able to sucessfully burn a CD when connecting this drive to the 
-> ICH9 controller sata port, but could not burn a dual layer dvd (There 
-> was a similar reset message)
-..
+The sff_dma_ops struct should be wrapped by BLK_DEV_IDEDMA_SFF instead
+of BLK_DEV_IDEDMA_PCI.
 
-Yeah, it looks to me as if libata still has DVD burner issues.
-I used my SATA DVDRW drive to burn a Suse DVD the other day,
-and the same drive refused to read the burnt disc without first rebooting.
+Signed-off-by: Kevin Hilman <khilman@deeprootsystems.com>
+---
+ include/linux/ide.h |    5 ++++-
+ 1 files changed, 4 insertions(+), 1 deletions(-)
 
-linux-2.6.25.6
-
-Disc was fine, though.  Single-layer.
-
-Cheers
+diff --git a/include/linux/ide.h b/include/linux/ide.h
+index 87c12ed..fac67e6 100644
+--- a/include/linux/ide.h
++++ b/include/linux/ide.h
+@@ -1111,7 +1111,6 @@ void ide_setup_pci_noise(struct pci_dev *, const struct ide_port_info *);
+ #ifdef CONFIG_BLK_DEV_IDEDMA_PCI
+ int ide_pci_set_master(struct pci_dev *, const char *);
+ unsigned long ide_pci_dma_base(ide_hwif_t *, const struct ide_port_info *);
+-extern const struct ide_dma_ops sff_dma_ops;
+ int ide_pci_check_simplex(ide_hwif_t *, const struct ide_port_info *);
+ int ide_hwif_setup_dma(ide_hwif_t *, const struct ide_port_info *);
+ #else
+@@ -1122,6 +1121,10 @@ static inline int ide_hwif_setup_dma(ide_hwif_t *hwif,
+ }
+ #endif
+ 
++#ifdef CONFIG_BLK_DEV_IDEDMA_SFF
++extern const struct ide_dma_ops sff_dma_ops;
++#endif
++
+ typedef struct ide_pci_enablebit_s {
+ 	u8	reg;	/* byte pci reg holding the enable-bit */
+ 	u8	mask;	/* mask to isolate the enable-bit */
+-- 
+1.5.6.4
 
