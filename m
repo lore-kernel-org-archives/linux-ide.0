@@ -1,39 +1,75 @@
-From: Larry Finger <Larry.Finger@lwfinger.net>
-Subject: Re: 2.6.27-rc3: IP: [<ffffffffa0038b77>]
-	init_irq+0x18d/0x31c	[ide_core]
-Date: Thu, 21 Aug 2008 12:57:16 -0500
-Message-ID: <48ADAC7C.7040003@lwfinger.net>
-References: <20080820173122.GA7335@deprecation.cyrius.com>
-	<48AC71D7.8050604@lwfinger.net>
-	<20080821161610.GA2640@deprecation.cyrius.com>
-	<48ADA743.1070000@lwfinger.net>
-	<20080821175215.GI2640@deprecation.cyrius.com>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: Re: [PATCH 04/18] ide: remove ide_setup_dma()
+Date: Thu, 21 Aug 2008 21:56:21 +0400
+Message-ID: <48ADAC45.7080505@ru.mvista.com>
+References: <20080620213323.13202.71450.sendpatchset@localhost.localdomain> <20080620213350.13202.73557.sendpatchset@localhost.localdomain> <48ADA2DB.3060306@ru.mvista.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-pcmcia-bounces+glkpd-linux-pcmcia=m.gmane.org@lists.infradead.org>
-In-Reply-To: <20080821175215.GI2640@deprecation.cyrius.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/listinfo/linux-pcmcia>,
-	<mailto:linux-pcmcia-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-pcmcia>
-List-Post: <mailto:linux-pcmcia@lists.infradead.org>
-List-Help: <mailto:linux-pcmcia-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-pcmcia>,
-	<mailto:linux-pcmcia-request@lists.infradead.org?subject=subscribe>
-Sender: linux-pcmcia-bounces@lists.infradead.org
-Errors-To: linux-pcmcia-bounces+glkpd-linux-pcmcia=m.gmane.org@lists.infradead.org
-To: Martin Michlmayr <tbm@cyrius.com>
-Cc: linux-ide@vger.kernel.org, linux-pcmcia@lists.infradead.org, Dominik Brodowski <linux@dominikbrodowski.net>
+Content-Type: text/plain; charset=windows-1252;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from h155.mvista.com ([63.81.120.155]:62346 "EHLO imap.sh.mvista.com"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751034AbYHUR4I (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 21 Aug 2008 13:56:08 -0400
+In-Reply-To: <48ADA2DB.3060306@ru.mvista.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: khilman@deeprootsystems.com
+Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Martin Michlmayr wrote:
-> * Larry Finger <Larry.Finger@lwfinger.net> [2008-08-21 12:34]:
->> Did this work with precious versions? If so, it should be posted as
->> a  regression.
-> 
-> 2.6.25 and 2.6.26 work just fine.
+Hi, I wrote:
 
-Do you have a git tree, or have you downloaded snapshots? If the 
-former, a bisection would be useful.
+>> Export sff_dma_ops and then remove ide_setup_dma().
 
-Larry
+>> There should be no functional changes caused by this patch.
+
+>> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+
+>> Index: b/drivers/ide/arm/palm_bk3710.c
+>> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+>> --- a/drivers/ide/arm/palm_bk3710.c
+>> +++ b/drivers/ide/arm/palm_bk3710.c
+>> @@ -318,15 +318,14 @@ static u8 __devinit palm_bk3710_cable_de
+>>  static int __devinit palm_bk3710_init_dma(ide_hwif_t *hwif,
+>>                        const struct ide_port_info *d)
+>>  {
+>> -    unsigned long base =3D
+>> -        hwif->io_ports.data_addr - IDE_PALM_ATA_PRI_REG_OFFSET;
+>> -
+>>      printk(KERN_INFO "    %s: MMIO-DMA\n", hwif->name);
+>> =20
+>>      if (ide_allocate_dma_engine(hwif))
+>>          return -1;
+>> =20
+>> -    ide_setup_dma(hwif, base);
+>> +    hwif->dma_base =3D hwif->io_ports.data_addr -=20
+>> IDE_PALM_ATA_PRI_REG_OFFSET;
+>> +
+>> +    hwif->dma_ops =3D &sff_dma_ops;
+>> =20
+>>      return 0;
+>>  }
+
+>    Unfortunately, this patch broke this driver:
+
+> drivers/ide/arm/palm_bk3710.c:327: error: =91sff_dma_ops=92 undeclare=
+d=20
+> (first use in this function). The declatation of sff_dma_ops should'v=
+e=20
+> been surrounded by:
+
+> #ifdef CONFIG_BLK_DEV_IDEDMA_SFF
+
+> not by:
+
+> #ifdef CONFIG_BLK_DEV_IDEDMA_PCI
+
+> the same as its definition is in ide-dma.c...
+
+    OK, Kevin Hilman said he's going to post a patch for this issue...
+
+MBR, Sergei
+
