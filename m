@@ -1,63 +1,48 @@
-From: Borislav Petkov <petkovbb@googlemail.com>
-Subject: Re: kernel unaligned accesses on IA64 in IDE
-Date: Fri, 22 Aug 2008 23:49:14 +0200
-Message-ID: <20080822214914.GA8609@gollum.tnic>
-References: <20080819225606.GB22088@us.ibm.com> <20080822164538.GB9047@us.ibm.com> <9ea470500808221029l6bd79c62w4c06d948f962d95c@mail.gmail.com> <200808222036.00536.bzolnier@gmail.com> <57C9024A16AD2D4C97DC78E552063EA309EDE187@orsmsx505.amr.corp.intel.com> <200808222036.m7MKa6bT008897@agluck-lia64.sc.intel.com> <20080822205431.GA5968@gollum.tnic> <20080822213812.GC11781@us.ibm.com>
-Reply-To: petkovbb@gmail.com
+From: Mikael Pettersson <mikpe@it.uu.se>
+Subject: Re: Driver for Promise PDC42819 SATA/SAS controller
+Date: Sat, 23 Aug 2008 00:01:34 +0200
+Message-ID: <18607.14142.979717.852078@harpo.it.uu.se>
+References: <65a6ef750808141846h1104bc1cj9a9c0bb721b62f58@mail.gmail.com>
+	<18597.25642.934859.944853@harpo.it.uu.se>
+	<65a6ef750808210557o1cf07c5fj9d273413003037f8@mail.gmail.com>
+	<18605.27969.933718.902876@harpo.it.uu.se>
+	<65a6ef750808211710k4f1e18b5y74b8d51e30c5900@mail.gmail.com>
+	<18606.60604.356878.363677@harpo.it.uu.se>
+	<48AF282B.4090904@garzik.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from fk-out-0910.google.com ([209.85.128.189]:59371 "EHLO
-	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758732AbYHVVtP (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 22 Aug 2008 17:49:15 -0400
-Received: by fk-out-0910.google.com with SMTP id 18so370672fkq.5
-        for <linux-ide@vger.kernel.org>; Fri, 22 Aug 2008 14:49:13 -0700 (PDT)
-Content-Disposition: inline
-In-Reply-To: <20080822213812.GC11781@us.ibm.com>
+Received: from aun.it.uu.se ([130.238.12.36]:33931 "EHLO aun.it.uu.se"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754137AbYHVWCR (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 22 Aug 2008 18:02:17 -0400
+In-Reply-To: <48AF282B.4090904@garzik.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Nishanth Aravamudan <nacc@us.ibm.com>
-Cc: "Luck, Tony" <tony.luck@intel.com>, Robin Holt <holt@sgi.com>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, "linux-ia64@vger.kernel.org" <linux-ia64@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+To: Jeff Garzik <jeff@garzik.org>
+Cc: Mikael Pettersson <mikpe@it.uu.se>, Mark Nelson <mdnelson8@gmail.com>, linux-ide@vger.kernel.org
 
-On Fri, Aug 22, 2008 at 02:38:12PM -0700, Nishanth Aravamudan wrote:
-> On 22.08.2008 [22:54:31 +0200], Borislav Petkov wrote:
-> > On Fri, Aug 22, 2008 at 01:36:06PM -0700, Luck, Tony wrote:
-> > > > How about long instead of int.  int leaves us with the possibility that
-> > > > something else will expect 8 byte alignment.
-> > > 
-> > > How about this?
-> > > 
-> > > Align __cmd to ward off kernel unaligned access consoles messages on
-> > > ia64 (and perhaps make an almost imperceptible performance improvement
-> > > on other architectures that can handle unaligned access, but do so
-> > > more slowly than aligned accesses).
-> > 
-> > By the way, i've been wondering, this unaligned access breaking should have
-> > happened earlier, how did we miss that? Nish, Robin, can you see that in some
-> > older logs?
-> 
-> I replied about this in a separate sub-thread, but you may not have been
-> on the direct Cc (though linux-ide should have been).
-> 
-> This all began because I noticed one of my automated test machines had
-> not successfully booted a kernel in some time. I investigated via
-> bisection and found that CONFIG_PRINTK_TIME=y was broken on my IA64 box.
-> With Tony and Peter Z's help, that bug was resolved, but then with the
-> console working, I noticed these unaligned accesses. Sorry if it seemed
-> like, from my posting, they were a regression, I did not mean to give
-> that impression.
-> 
-> They may have been there for some time, but I don't have any logs from
-> kernels before 2.6.27-rc3, because of the CONFIG_PRINTK_TIME=y breakage
-> (which was being set by default for this box). I could go back and try
-> older kernels, if you'd like, but it would take some time.
+Jeff Garzik writes:
+ > Mikael Pettersson wrote:
+ > > Mark Nelson writes:
+ > >  > > But without docs or a reference driver I cannot really say what it
+ > >  > > would take to support it, sorry.
+ > >  > 
+ > >  > Yeah, I figured as much after reading that hardware docs
+ > >  > are only available under NDA... I do have Promise's "partial
+ > >  > open source driver" all working with the controller; but I
+ > >  > don't think that's what you meant by reference driver, is it?
+ > > 
+ > > No. Promise's partial-source drivers sometimes contain some useful
+ > > information, like register definitions, but the only useful info
+ > > in the TX4650 driver is the PCI ID list for the T3 chip family.
+ > 
+ > FWIW there's always the chance it belongs to drivers/scsi/stex.c...
 
-Thanks for clarifying but it's not needed anymore since we know about the
-problem now. I was simply wondering why similar reports didn't appear earlier
-since the code that causes it is not that new - I guess there aren't that many
-ia64 machines using ide-cd from a recent kernel out there :)
+True, but unfortunately I doubt it as the PCI IDs in the tx4650
+(partial) sources bear no resemblance to the ones in stex.c.
 
--- 
-Regards/Gruss,
-    Boris.
+The tx4650 driver lists 35xx for octopusII, 630x for napa_fpga, 377x/3Fxx
+for T3 (the chip in question), and 662x for SX4, whereas stex.c lists
+x350/4302 for shasta, 7250 for vsc (vitesse?), and 8650 for yosemite.
