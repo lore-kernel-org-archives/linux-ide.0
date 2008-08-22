@@ -1,51 +1,62 @@
-From: "Mr.William  Juwais" <williamjuwais90@jmail.co.za>
-Subject: FROM  MR.WILLIAM  JUWAIS
-Date: Fri, 22 Aug 2008 13:02:26 +0200
-Message-ID: <20080822130226.204071cn3ytbaiw4@webmail-html.freesurf.fr>
+From: "xerces8" <xerces8@butn.net>
+Subject: Intel AHCI ICH9R not detecting devices
+Date: Fri, 22 Aug 2008 17:29:36 +0200
+Message-ID: <WorldClient-F200808221729.AA29360172@butn.net>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset=ISO-8859-1;
-	DelSp="Yes";
-	format="flowed"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from orne.fr.clara.net ([212.43.206.200]:49951 "EHLO
-	smtp-defer.fr.clara.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751731AbYHVLOI (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 22 Aug 2008 07:14:08 -0400
-Received: from smtp-out.freesurf.fr (messidor.freesurf.fr [212.43.206.29])
-	by smtp-defer.fr.clara.net (Postfix) with ESMTP id 4BB712D0C43
-	for <linux-ide@vger.kernel.org>; Fri, 22 Aug 2008 13:12:20 +0200 (CEST)
-Content-Disposition: inline
+Received: from ikar.perftech.si ([195.246.0.20]:65219 "EHLO ikar.perftech.si"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752148AbYHVP3s (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 22 Aug 2008 11:29:48 -0400
+Received: from dedal.perftech.si (unknown [10.12.0.44])
+	by ikar.perftech.si (Spam Firewall) with ESMTP id 1719C31B54F
+	for <linux-ide@vger.kernel.org>; Fri, 22 Aug 2008 17:29:43 +0200 (CEST)
+Received: from dedal.perftech.si ([10.12.0.44]) by ikar.perftech.si with ESMTP id BEOyBH3M0Ljkfnpe for <linux-ide@vger.kernel.org>; Fri, 22 Aug 2008 17:29:43 +0200 (CEST)
+Received: from WorldClient by butn.net (MDaemon PRO v9.6.4)
+	with ESMTP id 40-md50000233777.msg
+	for <linux-ide@vger.kernel.org>; Fri, 22 Aug 2008 17:29:41 +0200
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>, stein@hermes.si
 
+(this time with proper subject)
 
+Hi!
 
-Respected Sir,
+I noticed that recent kernels do not detect my SATA devices (two
+SATA hard drives and one DVD unit).
 
-With all due respect,My name is William Juwais, an accountant with a  
-Government owned Gold Refinery Company here in South Africa. I wish  
-you to help me lay claims to balance funds derived from a contract  
-executed to our company by one of our contractors. The total contract  
-sum was US$158,109,000 and US$140,000,000 has already been paid.  
-Leaving a balance of US$18,109,000.
+HW: Asus P5K-E WiFi mainboard, BIOS version 1013 (latest as of now)
+BIOS setup: SATA adapter mode : AHCI
+CPU: Intel Core2 Q6600 (not overclocked)
+RAM: 4x2GB DDR2-800
 
-It is my intention to form a company with you when the funds are  
-paid.My area of interest is Real Estate or any other investment of  
-your great idea, I also desire absolute confidentiality and  
-professionalism in this transaction. For more information, write to me  
-via (williamjuwais90@jmail.co.za) with the following:
+Kernel: 2.6.26.3 (vanilla unpatched)
+arch: i386
 
-(1) FULL NAMES:
-(2) DIRECT TELEPHONE NO:
-(3) HOME OR OFFICE ADDRESS
-(4) AGE AND OCCUPATION:
+kernel config : http://pastebin.com/f7640ead2
+dmesg output : http://pastebin.com/f3b3fac14
+lspci: http://pastebin.com/f2a3edebf
+lspci -v -n : http://pastebin.com/f724cf3
+/proc/cpuinfo: http://pastebin.com/f11930c44
 
-I wait to hear from you soonest.
+uname -a :
+Linux RIPLinuX 2.6.26.3 #1 Fri Aug 22 16:24:23 CEST 2008 i686 GNU/Linux
 
-Best Regard,
+/proc/version:
+Linux version 2.6.26.3 (stein@udba) (gcc version 4.2.3 (Ubuntu 4.2.3-2u=
+buntu7)) #1 Fri Aug 22
+16:24:23 CEST 2008
 
-Mr.William Juwais.
+=46unny thing, in 64 bit mode it all works fine (tested and first
+discovered with RIPLinux 6.3; the above config should match the 32 bit
+config from riplinux)
+
+Please advise.
+
+Regards,
+David Bala=C5=BEic
 
 
