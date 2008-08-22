@@ -1,43 +1,39 @@
 From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: sata_mv (NOT!)
-Date: Fri, 22 Aug 2008 01:17:02 -0400
-Message-ID: <48AE4BCE.8090401@garzik.org>
-References: <48A0C170.2000803@verizon.net> <48A307D3.2000905@rtr.ca> <48ABA997.1050109@verizon.net> <48ADE68D.20705@rtr.ca>
+Subject: Re: [PATCH #upstream-fixes] libata: implement no[hs]rst force params
+Date: Fri, 22 Aug 2008 02:11:13 -0400
+Message-ID: <48AE5881.9020806@garzik.org>
+References: <48A2C32D.1090000@kernel.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:37616 "EHLO mail.dvmed.net"
+Received: from srv5.dvmed.net ([207.36.208.214]:50842 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752148AbYHVFRJ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 22 Aug 2008 01:17:09 -0400
-In-Reply-To: <48ADE68D.20705@rtr.ca>
+	id S1752787AbYHVGLS (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 22 Aug 2008 02:11:18 -0400
+In-Reply-To: <48A2C32D.1090000@kernel.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark Lord <liml@rtr.ca>
-Cc: Steven Gill <smgill75@verizon.net>, linux-ide@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: IDE/ATA development list <linux-ide@vger.kernel.org>, linux@sun7.cn
 
-Mark Lord wrote:
-> Steven Gill wrote:
-> ..
->> I am currently running 2.26.2
->>
->> I was able to sucessfully burn a CD when connecting this drive to the 
->> ICH9 controller sata port, but could not burn a dual layer dvd (There 
->> was a similar reset message)
-> ..
+Tejun Heo wrote:
+> Implement force params nohrst, nosrst and norst.  This is to work
+> around reset related problems and ease debugging.
 > 
-> Yeah, it looks to me as if libata still has DVD burner issues.
-> I used my SATA DVDRW drive to burn a Suse DVD the other day,
-> and the same drive refused to read the burnt disc without first rebooting.
+> Signed-off-by: Tejun Heo <tj@kernel.org>
+> ---
+> Dino Wu, specifying libata.force=nohrst will work around the problem
+> till the problem is properly fixed.
 > 
-> linux-2.6.25.6
+> Thanks.
 > 
-> Disc was fine, though.  Single-layer.
+>  Documentation/kernel-parameters.txt |    3 ++
+>  drivers/ata/libata-core.c           |   46 +++++++++++++++++++++++-------------
+>  drivers/ata/libata-eh.c             |    4 +++
+>  include/linux/libata.h              |    1 
+>  4 files changed, 38 insertions(+), 16 deletions(-)
 
-Do you get error messages as well?  Of what kind?
-
-	Jeff
-
+applied
 
 
