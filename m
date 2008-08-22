@@ -1,54 +1,43 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH 1/6] ide: set IDE_AFLAG_DRQ_INTERRUPT in do_identify()
-Date: Fri, 22 Aug 2008 14:41:44 +0400
-Message-ID: <48AE97E8.6050707@ru.mvista.com>
-References: <20080819183934.16469.69799.sendpatchset@localhost.localdomain> <48AE92F8.8020704@ru.mvista.com>
+From: "Maciej Rutecki" <maciej.rutecki@gmail.com>
+Subject: Re: [2.6.26.*] boot problem (ahci/irq related?)
+Date: Fri, 22 Aug 2008 12:50:06 +0200
+Message-ID: <8db1092f0808220350wc56af7di5c5e1c2eb2421249@mail.gmail.com>
+References: <8db1092f0808111312x3baf819bxbb05030c05693065@mail.gmail.com>
+	 <200808211445.46467.rjw@sisk.pl>
+	 <8db1092f0808220158k742c6429y5f8ee48d5eb61a30@mail.gmail.com>
+	 <200808221210.59560.rjw@sisk.pl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from h155.mvista.com ([63.81.120.155]:16271 "EHLO imap.sh.mvista.com"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752651AbYHVKlu (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 22 Aug 2008 06:41:50 -0400
-In-Reply-To: <48AE92F8.8020704@ru.mvista.com>
+Received: from wf-out-1314.google.com ([209.85.200.170]:3951 "EHLO
+	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752740AbYHVKuH (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 22 Aug 2008 06:50:07 -0400
+Received: by wf-out-1314.google.com with SMTP id 27so563814wfd.4
+        for <linux-ide@vger.kernel.org>; Fri, 22 Aug 2008 03:50:07 -0700 (PDT)
+In-Reply-To: <200808221210.59560.rjw@sisk.pl>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: linux-ide@vger.kernel.org, Borislav Petkov <petkovbb@gmail.com>, linux-kernel@vger.kernel.org
+To: "Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, Yinghai Lu <yhlu.kernel@gmail.com>, Ingo Molnar <mingo@elte.hu>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>, tj@kernel.org, andi@firstfloor.org, Thomas Gleixner <tglx@linutronix.de>, "H. Peter Anvin" <hpa@zytor.com>, Jesse Barnes <jbarnes@virtuousgeek.org>
 
-Hello, I wrote:
+2008/8/22 Rafael J. Wysocki <rjw@sisk.pl>:
 
->> Set IDE_AFLAG_DRQ_INTERRUPT in do_identify() instead of ATAPI
->> device drivers *_setup() methods.
->>
->> While at it:
->> - use ata_id_cdb_intr()
->>
->> There should be no functional changes caused by this patch.
->>
->> Cc: Borislav Petkov <petkovbb@gmail.com>
->> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
->>   
-> [...]
->> Index: b/drivers/ide/ide-cd.c
->> ===================================================================
->> --- a/drivers/ide/ide-cd.c
->> +++ b/drivers/ide/ide-cd.c
->> @@ -1887,9 +1887,6 @@ static int ide_cdrom_setup(ide_drive_t *
->>      drive->atapi_flags = IDE_AFLAG_MEDIA_CHANGED | IDE_AFLAG_NO_EJECT |
->>                 ide_cd_flags(id);
->>  
->> -    if ((id[ATA_ID_CONFIG] & 0x0060) == 0x20)
->> -        drive->atapi_flags |= IDE_AFLAG_DRQ_INTERRUPT;
->> -
->>   
+>> http://unixy.pl/maciek/download/kernel/2.6.27-rc3/dmesg-2.6.27-rc3.txt
 >
->   Wait, this needs to be fixed first -- 0x20 does *not* mean CDB INTRQ!
+> This doesn't look like the same configuration as in the picture you
+> sent previously.  In particular, the ICH7 lines are missing.
+>
+> Thanks,
+> Rafael
+>
 
-   Ignore me -- it's not my day. :-]
-
-WBR, Sergei
-
+I'm sorry, I boot wrong kernel. This is correct:
+http://unixy.pl/maciek/download/kernel/dupa/dmesg-2.6.26-rc2-initcall_debug.txt
 
 
+-- 
+Maciej Rutecki
+http://www.maciek.unixy.pl
