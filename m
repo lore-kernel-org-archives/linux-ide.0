@@ -1,27 +1,26 @@
 From: "xerces8" <xerces8@butn.net>
-Subject: Intel AHCI ICH9R not detecting devices
-Date: Fri, 22 Aug 2008 17:29:36 +0200
-Message-ID: <WorldClient-F200808221729.AA29360172@butn.net>
+Subject: (unknown)
+Date: Fri, 22 Aug 2008 17:21:14 +0200
+Message-ID: <WorldClient-F200808221721.AA21140170@butn.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ikar.perftech.si ([195.246.0.20]:65219 "EHLO ikar.perftech.si"
+Received: from ikar.perftech.si ([195.246.0.20]:65230 "EHLO ikar.perftech.si"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752148AbYHVP3s (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 22 Aug 2008 11:29:48 -0400
+	id S1751101AbYHVPci (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 22 Aug 2008 11:32:38 -0400
 Received: from dedal.perftech.si (unknown [10.12.0.44])
-	by ikar.perftech.si (Spam Firewall) with ESMTP id 1719C31B54F
-	for <linux-ide@vger.kernel.org>; Fri, 22 Aug 2008 17:29:43 +0200 (CEST)
-Received: from dedal.perftech.si ([10.12.0.44]) by ikar.perftech.si with ESMTP id BEOyBH3M0Ljkfnpe for <linux-ide@vger.kernel.org>; Fri, 22 Aug 2008 17:29:43 +0200 (CEST)
+	by ikar.perftech.si (Spam Firewall) with ESMTP id B051131A7A1
+	for <linux-ide@vger.kernel.org>; Fri, 22 Aug 2008 17:21:18 +0200 (CEST)
+Received: from dedal.perftech.si ([10.12.0.44]) by ikar.perftech.si with ESMTP id V38KV5cjDqTv6yzb for <linux-ide@vger.kernel.org>; Fri, 22 Aug 2008 17:21:18 +0200 (CEST)
 Received: from WorldClient by butn.net (MDaemon PRO v9.6.4)
-	with ESMTP id 40-md50000233777.msg
-	for <linux-ide@vger.kernel.org>; Fri, 22 Aug 2008 17:29:41 +0200
+	with ESMTP id 37-md50000233854.msg
+	for <linux-ide@vger.kernel.org>; Fri, 22 Aug 2008 17:21:17 +0200
+Subject: 
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>, stein@hermes.si
-
-(this time with proper subject)
+To: linux-ide@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>
 
 Hi!
 
