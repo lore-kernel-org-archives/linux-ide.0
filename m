@@ -1,167 +1,106 @@
-From: "Mark Nelson" <mdnelson8@gmail.com>
-Subject: Re: Driver for Promise PDC42819 SATA/SAS controller
-Date: Fri, 22 Aug 2008 10:10:09 +1000
-Message-ID: <65a6ef750808211710k4f1e18b5y74b8d51e30c5900@mail.gmail.com>
-References: <65a6ef750808141846h1104bc1cj9a9c0bb721b62f58@mail.gmail.com>
-	 <18597.25642.934859.944853@harpo.it.uu.se>
-	 <65a6ef750808210557o1cf07c5fj9d273413003037f8@mail.gmail.com>
-	 <18605.27969.933718.902876@harpo.it.uu.se>
+From: Nishanth Aravamudan <nacc@us.ibm.com>
+Subject: Re: kernel unaligned accesses on IA64 in IDE
+Date: Thu, 21 Aug 2008 17:39:06 -0700
+Message-ID: <20080822003906.GN11729@us.ibm.com>
+References: <20080819225606.GB22088@us.ibm.com> <20080820143531.GA6488@sgi.com> <20080821213146.GK11729@us.ibm.com> <20080821215426.GD8051@sgi.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.182]:11114 "EHLO
-	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752329AbYHVAKL (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 21 Aug 2008 20:10:11 -0400
-Received: by py-out-1112.google.com with SMTP id p76so163001pyb.10
-        for <linux-ide@vger.kernel.org>; Thu, 21 Aug 2008 17:10:10 -0700 (PDT)
-In-Reply-To: <18605.27969.933718.902876@harpo.it.uu.se>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ia64-owner@vger.kernel.org>
 Content-Disposition: inline
-Sender: linux-ide-owner@vger.kernel.org
+In-Reply-To: <20080821215426.GD8051@sgi.com>
+Sender: linux-ia64-owner@vger.kernel.org
+To: Robin Holt <holt@sgi.com>
+Cc: tony.luck@intel.com, bzolnier@gmail.com, linux-ia64@vger.kernel.org, linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mikael Pettersson <mikpe@it.uu.se>
-Cc: linux-ide@vger.kernel.org
 
-On Thu, Aug 21, 2008 at 11:27 PM, Mikael Pettersson <mikpe@it.uu.se> wrote:
-> Mark Nelson writes:
->  > On Fri, Aug 15, 2008 at 9:10 PM, Mikael Pettersson <mikpe@it.uu.se> wrote:
->  > > Mark Nelson writes:
->  > >  > Hi All,
->  > >  >
->  > >  > I recently bought an MSI K9A2 Platinum motherboard and it has a Promise
->  > >  > PDC42819 SATA/SAS controller onboard. I haven't been able to get the
->  > >  > controller to work with any of the libata sata drivers in mainline
->  > >  > (although I did only try sata_promise, sata_sx4 or ahci; last two I was
->  > >  > doubtful about but I figured it was worth a try).
->  > >  >
->  > >  > Has anyone played with this controller under Linux before and can it be
->  > >  > made to work with any of the open source drivers - I would realy like
->  > >  > to use the eSATA and internal SATA ports attached to this controller
->  > >  > (and I don't want to trust my data to the promise binary blob)? Maybe
->  > >  > it's as simple as adding the right PCI ID to sata_promise, but I wasn't
->  > >  > sure what kind of board it should be: 2037x, 2057x, 20319, 40518, 20619,
->  > >  > or maybe some new one...
->  > >  >
->  > >  > I'm not sure how important this is but I gathered the following info
->  > >  > about the controller:
->  > >  >
->  > >  > References to the controller in the motherboard manual and the
->  > >  > motherboard manufacturer's website: Promise T3 [1]
->  > >  >
->  > >  > Written on the actual chip on the motherboard: Promise PDC42819 [2]
->  > >  >
->  > >  > This chip is also used on Promise's own FastTrak TX2650 & TX4650
->  > >  > adapters [3] which have "partial open source" drivers [4], [5]. This
->  > >  > driver looks like an open source wrapper around a binary blob (some
->  > >  > fasttrak library for software fake raid, I think).
->  > >  >
->  > >  > Having a quick look through the source of Promise's driver, it looks
->  > >  > like the driver has been hacked up out of a driver that was originally
->  > >  > used for fakeraid on ATI and intel southbridges as well as Promise's
->  > >  > SX4 adapter (and some Promise adapter called the OCTOPUSII).
->  > >  >
->  > >  > Promise has an open source commitment written on its werbsite [6] but
->  > >  > it just relates to their SuperTrak products (not their FastTrak ones)
->  > >  > and the stex driver.
->  > >  >
->  > >  > The following is the hunk of lspci output that refers to the controller:
->  > >  >
->  > >  > 02:00.0 RAID bus controller [0104]: Promise Technology, Inc. Unknown
->  > >  > device [105a:3f20]
->  > >
->  > > This is pure speculation, but _if_ it is similar to the chips
->  > > driven by sata_promise then it should be close to the 40518 family
->  > > (all the other ones are older). So adding that PCI id as a
->  > > board_40518 in pdc_ata_pci_tbl[] just might do the trick.
->  > >
->  > Hi Mikael,
->  >
->  > First of all thanks for the reply. It's taken me a while because I
->  > had to get my hands on a spare SATA disk to test with (ended up
->  > with a 60GB eSATA disk).
->  >
->  > So, after adding the following PCI ID line:
->  >
->  >        { PCI_VDEVICE(PROMISE, 0x3f20), board_40518 },
->  >
->  > I can load the module and I get the following in dmesg:
->  >
->  > sata_promise 0000:02:00.0: version 2.12
->  > ACPI: PCI Interrupt 0000:02:00.0[A] -> GSI 17 (level, low) -> IRQ 17
->  > PCI: Setting latency timer of device 0000:02:00.0 to 64
->  > scsi7 : sata_promise
->  > scsi8 : sata_promise
->  > scsi9 : sata_promise
->  > scsi10 : sata_promise
->  > ata7: SATA max UDMA/133 mmio m4096@0xfbeff000 ata 0xfbeff380 irq 17
->  > ata8: SATA max UDMA/133 mmio m4096@0xfbeff000 ata 0xfbeff280 irq 17
->  > ata9: SATA max UDMA/133 mmio m4096@0xfbeff000 ata 0xfbeff200 irq 17
->  > ata10: SATA max UDMA/133 mmio m4096@0xfbeff000 ata 0xfbeff300 irq 17
->  > ata7: SATA link down (SStatus 0 SControl 0)
->  > ata8: SATA link down (SStatus 0 SControl 0)
->  > ata9: SATA link down (SStatus 0 SControl 0)
->  > ata10: SATA link down (SStatus 0 SControl 0)
->  >
->  > So it looks like it's at least found the SATA ports. But something's
->  > not quite right because as soon as I load the module, the hard disk
->  > activity LEDs are constantly on (my motherboard has two LEDs for
->  > any drive activity on the Promise controller).
->  >
->  > If I plug the eSATA disk I'm using to test into one of the eSATA
->  > ports of the Promise controller after I've already booted and loaded
->  > the module, I see the following in dmesg:
->  >
->  > ata10: exception Emask 0x10 SAct 0x0 SErr 0x0 action 0xe frozen
->  > ata10: hotplug_status 0x40
->  > ata10: hard resetting link
->  > ata10: SATA link down (SStatus 0 SControl 0)
->  > ata10: EH complete
->  > ata10: exception Emask 0x10 SAct 0x0 SErr 0x0 action 0xe frozen
->  > ata10: hotplug_status 0x40
->  > ata10: hard resetting link
->  > ata10: SATA link down (SStatus 0 SControl 0)
->  > ata10: EH complete
->  >
->  > But I'm not sure if sata_promise supports hotplug of drives so maybe
->  > that's to be expected.
->  >
->  > If I boot with the eSATA drive connected (the drive is found in the
->  > Promise FastTrak BIOS), when I load the sata_promise module no hard
->  > disks are found and I get exactly the same output to dmesg as the
->  > first example I showed above.
->  >
->  > Is there some way I can turn on more debugging output in the
->  > sata_promise driver or libata?
->  >
->  > And (possibly too early to tell, but) does this look promising (no pun
->  > intended)?
->
-> Not so promising. It didn't "find" the SATA ports, those addresses
-> are a function of the PCI BARs and the board type we assign to the
-> PCI ID, and we just guessed the board type.
+On 21.08.2008 [16:54:26 -0500], Robin Holt wrote:
+> > [   32.597792] outsl(496, e000000644678466, 3)
+>                             ^^^^^^^^^^^^^^^^
+> 
+> This is expected to be an unsigned int * and typecast to that in outsl.
+> Looks like the buffer being passed in is not properly aligned.  Time to
+> go look at the caller.  Make sure buf is defined as an array of at least
+> int size.  That should make this aligned on a 4 byte boundary instead of
+> the 2 byte boundary it is on now.
+> 
+> You can cheat at finding the callers by putting
+> 	WARN_ON(buf & 0x3);
+> 	printk...
 
-Ahhh, that's not so promising at all then...
+So I tried this and it gets quite hairy quickly (I think) because what's
+unaligned is an IDE command buffer? There is a lot of pointer passing
+and I get lost since I don't know the IDE/elevator code very well.
 
->
-> sata_promise does support hotplugging (since 2.6.22 or so), but the
-> messages you got do not indicate successful hotplugging. In particular,
-> you should see "link up" not "link down".
->
-> It does look like 0x3f20 is fairly different from previous chips.
+Here's the stack trace I'm looking at:
 
-Yes, I was a bit worried when I noticed that the majority of
-Promise controllers actually had a Marvell logo on them
-and this one didn't...
+[    5.018347]  [<a000000100015420>] show_stack+0x80/0xa0
+[    5.018348]                                 sp=e00000130307f930 bsp=e0000013030793b8
+[    5.031782]  [<a000000100015470>] dump_stack+0x30/0x60
+[    5.031783]                                 sp=e00000130307fb00 bsp=e0000013030793a0
+[    5.045223]  [<a000000100094ff0>] warn_on_slowpath+0x90/0xe0
+[    5.045225]                                 sp=e00000130307fb00 bsp=e000001303079378
+[    5.059201]  [<a000000100517480>] ide_output_data+0x3c0/0x540
+[    5.059204]                                 sp=e00000130307fbf0 bsp=e000001303079310
+[    5.073248]  [<a0000001005309e0>] cdrom_transfer_packet_command+0x2c0/0x340
+[    5.073249]                                 sp=e00000130307fbf0 bsp=e0000013030792d0
+[    5.088519]  [<a000000100530ac0>] cdrom_do_newpc_cont+0x60/0x80
+[    5.088522]                                 sp=e00000130307fc00 bsp=e0000013030792b0
+[    5.102739]  [<a00000010052f1a0>] ide_cd_do_request+0x980/0x1420
+[    5.102742]                                 sp=e00000130307fc00 bsp=e000001303079238
+[    5.117064]  [<a00000010050fe00>] ide_do_request+0xca0/0x1d00
+[    5.117066]                                 sp=e00000130307fc00 bsp=e0000013030791a0
+[    5.131105]  [<a000000100511580>] do_ide_request+0x40/0x60
+[    5.131107]                                 sp=e00000130307fc30 bsp=e000001303079180
+[    5.144897]  [<a000000100384780>] elv_insert+0x280/0x5c0
+[    5.144900]                                 sp=e00000130307fc30 bsp=e000001303079148
+[    5.158507]  [<a000000100384c40>] __elv_add_request+0x180/0x240
+[    5.158509]                                 sp=e00000130307fc30 bsp=e000001303079110
+[    5.172733]  [<a000000100391730>] blk_execute_rq_nowait+0xd0/0x1e0
+[    5.172734]                                 sp=e00000130307fc30 bsp=e0000013030790d0
+[    5.187220]  [<a000000100391910>] blk_execute_rq+0xd0/0x240
+[    5.187221]                                 sp=e00000130307fc30 bsp=e000001303079090
+[    5.201091]  [<a000000100531f70>] ide_cd_queue_pc+0x130/0x2e0
+[    5.201093]                                 sp=e00000130307fcc0 bsp=e000001303078fd0
+[    5.215137]  [<a0000001005342f0>] ide_cdrom_packet+0x130/0x180
+[    5.215139]                                 sp=e00000130307fd00 bsp=e000001303078f78
+[    5.229281]  [<a000000100593080>] cdrom_mode_sense+0xc0/0xe0
+[    5.229283]                                 sp=e00000130307fd10 bsp=e000001303078f40
+[    5.243239]  [<a00000010052d9c0>] ide_cdrom_get_capabilities+0x80/0xc0
+[    5.243240]                                 sp=e00000130307fd10 bsp=e000001303078f10
+[    5.258084]  [<a000000100533890>] ide_cd_probe+0x810/0xf40
+[    5.258086]                                 sp=e00000130307fd50 bsp=e000001303078e90
+[    5.273709]  [<a00000010050a510>] generic_ide_probe+0x70/0xa0
+[    5.273711]                                 sp=e00000130307fdc0 bsp=e000001303078e70
+[    5.287774]  [<a0000001004bdaf0>] driver_probe_device+0x190/0x3a0
+[    5.287775]                                 sp=e00000130307fdc0 bsp=e000001303078e28
+[    5.302163]  [<a0000001004bdd80>] __driver_attach+0x80/0xe0
+[    5.302164]                                 sp=e00000130307fdc0 bsp=e000001303078de8
+[    5.316032]  [<a0000001004bc5a0>] bus_for_each_dev+0xc0/0x140
+[    5.316034]                                 sp=e00000130307fdc0 bsp=e000001303078db0
+[    5.330072]  [<a0000001004bd700>] driver_attach+0x40/0x60
+[    5.330074]                                 sp=e00000130307fde0 bsp=e000001303078d90
+[    5.343761]  [<a0000001004bd290>] bus_add_driver+0x370/0x4a0
+[    5.343763]                                 sp=e00000130307fde0 bsp=e000001303078d48
+[    5.357720]  [<a0000001004be3d0>] driver_register+0xd0/0x340
+[    5.357721]                                 sp=e00000130307fde0 bsp=e000001303078d00
+[    5.371693]  [<a0000001009a3ea0>] ide_cdrom_init+0x20/0x40
+[    5.371695]                                 sp=e00000130307fde0 bsp=e000001303078ce8
+[    5.385475]  [<a00000010000a5a0>] do_one_initcall+0x60/0x380
+[    5.385477]                                 sp=e00000130307fde0 bsp=e000001303078ca8
+[    5.399445]  [<a0000001009645b0>] kernel_init+0x370/0x420
+[    5.399447]                                 sp=e00000130307fe20 bsp=e000001303078c68
+[    5.413148]  [<a000000100013590>] kernel_thread_helper+0xd0/0x100
+[    5.413149]                                 sp=e00000130307fe30 bsp=e000001303078c40
+[    5.427547]  [<a00000010000a4c0>] start_kernel_thread+0x20/0x40
+[    5.427548]                                 sp=e00000130307fe30 bsp=e000001303078c40
 
-> But without docs or a reference driver I cannot really say what it
-> would take to support it, sorry.
+We are trying to send a sense command to the device and the buffer we
+use (which is rq->cmd) is what is unaligned, I believe. I'm not sure how
+useful I can be going forward...
 
-Yeah, I figured as much after reading that hardware docs
-are only available under NDA... I do have Promise's "partial
-open source driver" all working with the controller; but I
-don't think that's what you meant by reference driver, is it?
+Thanks,
+Nish
 
-Thanks!
-
-Mark
+-- 
+Nishanth Aravamudan <nacc@us.ibm.com>
+IBM Linux Technology Center
