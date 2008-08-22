@@ -1,30 +1,41 @@
 From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH] sata_mv: add the Gen IIE flag to the SoC devices.
-Date: Fri, 22 Aug 2008 02:20:18 -0400
-Message-ID: <48AE5AA2.6050601@garzik.org>
-References: <12178507751128-git-send-email-saeed@marvell.com>
+Subject: Re: [PATCH #upstream-fixes] pata_via: clean up recent tf_load changes
+Date: Fri, 22 Aug 2008 02:20:27 -0400
+Message-ID: <48AE5AAB.5080507@garzik.org>
+References: <48917FAB.3000703@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:37288 "EHLO mail.dvmed.net"
+Received: from srv5.dvmed.net ([207.36.208.214]:37292 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753261AbYHVGUX (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 22 Aug 2008 02:20:23 -0400
-In-Reply-To: <12178507751128-git-send-email-saeed@marvell.com>
+	id S1753261AbYHVGUc (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 22 Aug 2008 02:20:32 -0400
+In-Reply-To: <48917FAB.3000703@kernel.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Saeed Bishara <saeed@marvell.com>
-Cc: liml@rtr.ca, linux-ide@vger.kernel.org, buytenh@marvell.com
+To: Tejun Heo <tj@kernel.org>
+Cc: IDE/ATA development list <linux-ide@vger.kernel.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, JosephChan@via.com.tw
 
-Saeed Bishara wrote:
-> The SoC sata port is based on the 7042/6042 devices (Gen IIE). This patch
-> will fix various issues when working with PMP and/or NCQ.
+Tejun Heo wrote:
+> Commit bfce5e0179ad059035df28558724ff60af708e09 implemented custom
+> tf_load for pata_via.  This patch cleans it up a bit.
 > 
-> Signed-off-by: Saeed Bishara <saeed@marvell.com>
+> * Instead of duplicating whole body, copy tf and set ATA_TFLAG_DEVICE
+>   when necessary.
+> 
+> * Rename via_ata_tf_load() to via_tf_load().
+> 
+> * No need to set .tf_load in via_port_ops_noirq as it inherits from
+>   via_port_ops.
+> 
+> * Clean up indentation.
+> 
+> Signed-off-by: Tejun Heo <tj@kernel.org>
+> Cc: Joseph Chan <JosephChan@via.com.tw>
 > ---
->  drivers/ata/sata_mv.c |    3 ++-
->  1 files changed, 2 insertions(+), 1 deletions(-)
+>  drivers/ata/pata_via.c |   59 +++++++++----------------------------------------
+>  1 file changed, 11 insertions(+), 48 deletions(-)
 
 applied
 
