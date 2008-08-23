@@ -1,17 +1,17 @@
 From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH 07/22] ide: add ide_queue_pc_head() helper
-Date: Sun, 24 Aug 2008 01:57:17 +0400
-Message-ID: <48B087BD.5010006@ru.mvista.com>
-References: <20080810153527.16255.2504.sendpatchset@localhost.localdomain> <20080810153616.16255.49418.sendpatchset@localhost.localdomain>
+Subject: Re: [PATCH 08/22] ide: add ide_queue_pc_tail() helper
+Date: Sun, 24 Aug 2008 01:58:28 +0400
+Message-ID: <48B08804.7070705@ru.mvista.com>
+References: <20080810153527.16255.2504.sendpatchset@localhost.localdomain> <20080810153623.16255.96138.sendpatchset@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from h155.mvista.com ([63.81.120.155]:35143 "EHLO imap.sh.mvista.com"
+Received: from h155.mvista.com ([63.81.120.155]:35153 "EHLO imap.sh.mvista.com"
 	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752799AbYHWV5Y (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 23 Aug 2008 17:57:24 -0400
-In-Reply-To: <20080810153616.16255.49418.sendpatchset@localhost.localdomain>
+	id S1753124AbYHWV6f (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 23 Aug 2008 17:58:35 -0400
+In-Reply-To: <20080810153623.16255.96138.sendpatchset@localhost.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
@@ -19,18 +19,15 @@ Cc: linux-ide@vger.kernel.org, Borislav Petkov <petkovbb@gmail.com>, linux-kerne
 
 Bartlomiej Zolnierkiewicz wrote:
 
-> * Move REQ_IDETAPE_* enums to <linux/ide.h>.
+> * Add ide_queue_pc_tail() and convert ide-{floppy,tape}.c to use it
+>   instead of ide*_queue_pc_tail().
 >
-> * Add ide_queue_pc_head() and convert ide-{floppy,tape}.c to use it
->   instead of ide*_queue_pc_head().
->
-> * Remove no longer used ide*_queue_pc_head().
+> * Remove no longer used ide*_queue_pc_tail().
 >
 > There should be no functional changes caused by this patch.
 >
 > Cc: Borislav Petkov <petkovbb@gmail.com>
 > Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
->   
 
 Acked-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
 
