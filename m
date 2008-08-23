@@ -1,45 +1,71 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: RE: kernel unaligned accesses on IA64 in IDE
-Date: Fri, 22 Aug 2008 18:33:51 -0500
-Message-ID: <1219448031.3316.0.camel@localhost.localdomain>
-References: <20080819225606.GB22088@us.ibm.com>
-	 <20080822164538.GB9047@us.ibm.com>
-	 <9ea470500808221029l6bd79c62w4c06d948f962d95c@mail.gmail.com>
-	 <200808222036.00536.bzolnier@gmail.com>
-	 <57C9024A16AD2D4C97DC78E552063EA309EDE187@orsmsx505.amr.corp.intel.com>
-	 <200808222036.m7MKa6bT008897@agluck-lia64.sc.intel.com>
-	 <20080822211447.GA7097@gollum.tnic> <20080822230253.GA27056@us.ibm.com>
-	 <57C9024A16AD2D4C97DC78E552063EA309EDE4A3@orsmsx505.amr.corp.intel.com>
+From: "Mark Nelson" <mdnelson8@gmail.com>
+Subject: Re: Driver for Promise PDC42819 SATA/SAS controller
+Date: Sat, 23 Aug 2008 19:23:59 +1000
+Message-ID: <65a6ef750808230223t6da2560fx1799dbf271e95959@mail.gmail.com>
+References: <65a6ef750808141846h1104bc1cj9a9c0bb721b62f58@mail.gmail.com>
+	 <18597.25642.934859.944853@harpo.it.uu.se>
+	 <65a6ef750808210557o1cf07c5fj9d273413003037f8@mail.gmail.com>
+	 <18605.27969.933718.902876@harpo.it.uu.se>
+	 <65a6ef750808211710k4f1e18b5y74b8d51e30c5900@mail.gmail.com>
+	 <18606.60604.356878.363677@harpo.it.uu.se>
+	 <48AF282B.4090904@garzik.org>
+	 <18607.14142.979717.852078@harpo.it.uu.se>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ia64-owner@vger.kernel.org>
-In-Reply-To: <57C9024A16AD2D4C97DC78E552063EA309EDE4A3@orsmsx505.amr.corp.intel.com>
-Sender: linux-ia64-owner@vger.kernel.org
-To: "Luck, Tony" <tony.luck@intel.com>
-Cc: Nishanth Aravamudan <nacc@us.ibm.com>, Borislav Petkov <petkovbb@googlemail.com>, Robin Holt <holt@sgi.com>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, "linux-ia64@vger.kernel.org" <linux-ia64@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, "axboe@kernel.dk" <axboe@kernel.dk>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from py-out-1112.google.com ([64.233.166.178]:2680 "EHLO
+	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752378AbYHWJYB (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 23 Aug 2008 05:24:01 -0400
+Received: by py-out-1112.google.com with SMTP id p76so571091pyb.10
+        for <linux-ide@vger.kernel.org>; Sat, 23 Aug 2008 02:24:00 -0700 (PDT)
+In-Reply-To: <18607.14142.979717.852078@harpo.it.uu.se>
+Content-Disposition: inline
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Mikael Pettersson <mikpe@it.uu.se>
+Cc: Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org
 
-On Fri, 2008-08-22 at 16:30 -0700, Luck, Tony wrote:
-> > > > Signed-off-by: Tony Luck <tony.luck@intel.com>
-> > >
-> > > Tested-by: Borislav Petkov <petkovbb@gmail.com>
-> >
-> > Tested-by: Nishanth Aravamudan <nacc@us.ibm.com>
-> 
-> Thanks guys for testing my crappy patch ... if you could test
-> James Bottomley's much better one, that would be wonderful.
-> My kernel boots ok with James' patch applied ... but I
-> don't get the unaligned kernel references (no ide-cd drive
-> on my box ... so I'm probably not executing any of these
-> code paths).
-> 
-> James: there's no Signed-off-by on your patch.
+On Sat, Aug 23, 2008 at 8:01 AM, Mikael Pettersson <mikpe@it.uu.se> wrote:
+> Jeff Garzik writes:
+>  > Mikael Pettersson wrote:
+>  > > Mark Nelson writes:
+>  > >  > > But without docs or a reference driver I cannot really say what it
+>  > >  > > would take to support it, sorry.
+>  > >  >
+>  > >  > Yeah, I figured as much after reading that hardware docs
+>  > >  > are only available under NDA... I do have Promise's "partial
+>  > >  > open source driver" all working with the controller; but I
+>  > >  > don't think that's what you meant by reference driver, is it?
+>  > >
+>  > > No. Promise's partial-source drivers sometimes contain some useful
+>  > > information, like register definitions, but the only useful info
+>  > > in the TX4650 driver is the PCI ID list for the T3 chip family.
+>  >
+>  > FWIW there's always the chance it belongs to drivers/scsi/stex.c...
+>
+> True, but unfortunately I doubt it as the PCI IDs in the tx4650
+> (partial) sources bear no resemblance to the ones in stex.c.
 
-I'm too used to adding one when I pull it in to my git tree, sorry.
+Would the other PCI IDs that are found in the tx4650 driver give any
+clue as to which other chips the T3 controller is similar to (or does
+that just show that Promise likes to reuse the open source wrapper
+around their binary blob)?
 
-Signed-off-by: James Bottomley <James.Bottomley@HansenPartnership.com>
+>
+> The tx4650 driver lists 35xx for octopusII, 630x for napa_fpga, 377x/3Fxx
+> for T3 (the chip in question), and 662x for SX4, whereas stex.c lists
+> x350/4302 for shasta, 7250 for vsc (vitesse?), and 8650 for yosemite.
+>
 
-James
+I was hopeful when I first found the STEX4650 as it at least had a similar
+model number, but upon further inspection the stex cards all seem to
+have Intel XScale I/O processors onboard...
 
+Forgive my ignorance, but does the fact that the T3 controller can also
+use SAS disks mean we should be looking for a SCSI driver?
 
+Thanks!
+
+Mark
