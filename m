@@ -1,58 +1,43 @@
-From: Sergey Spiridonov <sena@hurd.homeunix.org>
-Subject: Re: GA-MA790FX-DS5 SATA ahci NCQ erros on Jmicron 20360/20363  (JMB363)
-     kernel 2.6.25-2 Debian/Lenny
-Date: Mon, 25 Aug 2008 01:31:27 +0200
-Message-ID: <g8sqp1$jn4$1@ger.gmane.org>
-References: <g8p6po$nm$1@ger.gmane.org> <48B0916C.4080805@garzik.org> <g8q9mg$v2p$1@ger.gmane.org> <48B0E608.4050205@garzik.org>
+From: Bob Stewart <bob@evoria.net>
+Subject: Re: Old Thread: sata_inic162x driver for 2.6.19 timeouts etc
+Date: Sun, 24 Aug 2008 16:50:02 -0700 (PDT)
+Message-ID: <747739.95266.qm@web901.biz.mail.mud.yahoo.com>
+References: <4604D564.9010806@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from main.gmane.org ([80.91.229.2]:60878 "EHLO ciao.gmane.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752412AbYHXX1i (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 24 Aug 2008 19:27:38 -0400
-Received: from list by ciao.gmane.org with local (Exim 4.43)
-	id 1KXOzg-0007Zb-Ps
-	for linux-ide@vger.kernel.org; Sun, 24 Aug 2008 23:27:36 +0000
-Received: from 87.234.202.175 ([87.234.202.175])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-ide@vger.kernel.org>; Sun, 24 Aug 2008 23:27:36 +0000
-Received: from sena by 87.234.202.175 with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-ide@vger.kernel.org>; Sun, 24 Aug 2008 23:27:36 +0000
-In-Reply-To: <48B0E608.4050205@garzik.org>
+Received: from web901.biz.mail.mud.yahoo.com ([216.252.100.41]:48281 "HELO
+	web901.biz.mail.mud.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1752948AbYHXX4o (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 24 Aug 2008 19:56:44 -0400
+In-Reply-To: <4604D564.9010806@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: linux-ide@vger.kernel.org
 
-Hi
+Tejun, 
+This is an update to an old thread.
 
-Jeff Garzik wrote:
+--- Tejun Heo <htejun@gmail.com> wrote:
+> Bob Stewart wrote:
+> > I wonder if this card of mine is what's bad.  <snipp.
+> 
+> My bet is on broken driver.  sunix driver doesn't seem like it was 
+> written carefully.  Anyways, thanks for testing.  It seems we'll either 
+> have to implement adma mode.  I'll mark the driver broken for 2.6.21. 
+> Thanks.
 
-> Try new motherboard of same brand and model :/
+I just got your note that there is a new SATA_INIC162X driver, so I
+loaded up kernel 2.6.27-rc2 and gave it a try.  Timeouts again, so I
+ordered a new card on ebay.  I'm sad to say that the errors, months
+ago, were from a card that I had gotten bad from new.  Wasted a lot of my
+time and this list's time.  Sorry about that.  :(
 
-Well, it is probably right time to try to get replacement motherboard
-from store.
+OTOH, with the new card, both your new driver and the old one seem
+to be OK after several hours of copying ISO files and running "md5sum"
+on the copied filed.  Good job!  Thanks for all the hard work!  If there are
+any other tests needed on this driver let me know before I bow out again.
 
-> In general, tons of ATA bus errors and SError complaints indicate some
-> sort of problem at the physical layer/level.  Its always possible that
-> software is to blame, but bug report patterns so far tend to point to
-> hardware.
-
-I think I got indirect confirmation of possible motherboard defect.
-There are 2 sata ports managed by JMB363: GSATAII-1 and  GSATAII-2. I
-found out that kernel errors appear only if I use GSATAII-1. If I
-connect my drive to the GSATAII-2, there are no errors anymore.
-
-Also, Seagate testing utility Seatools for DOS 2.07PG (bootable iso) is
-hanging at startup even without connected sata drive, which also
-indicates some motherboard problem (or again, utility problem). Seagate
-support does not tell anything except something like "it should work"...
-
-Thanks everybody for support.
--- 
-Best regards, Sergey Spiridonov
-
+Bob
