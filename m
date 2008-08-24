@@ -1,85 +1,51 @@
-From: =?ISO-8859-1?Q?T=F6r=F6k_Edwin?= <edwintorok@gmail.com>
-Subject: Problems with ALPM on devices part of raid array
-Date: Sun, 24 Aug 2008 18:20:00 +0300
-Message-ID: <48B17C20.7020203@gmail.com>
+From: "xerces8" <xerces8@butn.net>
+Subject: Re: GA-MA790FX-DS5 SATA ahci NCQ erros on Jmicron 20360/20363
+	(JMB363) kernel 2.6.25-2 Debian/Lenny
+Date: Sun, 24 Aug 2008 18:44:24 +0200
+Message-ID: <WorldClient-F200808241844.AA44240046@butn.net>
+References: <g8p6po$nm$1@ger.gmane.org> <48B0916C.4080805@garzik.org> <g8q9mg$v2p$1@ger.gmane.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.187]:6689 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751010AbYHXPUF (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 24 Aug 2008 11:20:05 -0400
-Received: by nf-out-0910.google.com with SMTP id d3so559030nfc.21
-        for <linux-ide@vger.kernel.org>; Sun, 24 Aug 2008 08:20:03 -0700 (PDT)
+Received: from ikar.perftech.si ([195.246.0.20]:6733 "EHLO ikar.perftech.si"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751752AbYHXQod (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 24 Aug 2008 12:44:33 -0400
+In-Reply-To: <g8q9mg$v2p$1@ger.gmane.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Kristen Carlson Accardi <kristen.c.accardi@intel.com>
-Cc: linux-ide@vger.kernel.org, jgarzik@pobox.com
+To: Sergey Spiridonov <sena@hurd.homeunix.org>, linux-ide@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
 
-Hi,
+Sergey Spiridonov wrote:
 
-I have an AHCI capable chipset now (ICH10), so I tried ALPM[*], by 
-echo-ing min_power to:
-./class/scsi_host/host0/link_power_management_policy
-./class/scsi_host/host5/link_power_management_policy
+> Jeff Garzik wrote:
+> 
+> > So...  suspect bad cables, bad port connectors, cable interference,
+> > motherboard-caused interference or grounding problems, power supply
+> > problems.
+> 
+> I did exchange power supply and I did exchange hard drives. The same
+> hard drive with the same cable works with SB600 and produces errors with
+> JMB363. So looks like it is not cable or hard drive problem. May be the
+> problem is JMB363 port connector on the motherboard. How can I check it?
 
-The 6 SATA2 drives have 3 partitions each, partition 1 is RAID1, 
-partition 3 is RAID10.
+Hi!
 
-This soon caused me troubles, as the kernel gave I/O error messages, and 
-unmounted my filesystems running
-on /dev/md4 (raid10 array). Unfortunately I don't have those messages 
-saved to my logs, because my /var filesystem got automatically unmounted.
-I had no choice but to reboot, and then md kicked 4 drives out of the 
-md4 array (6 total drives), and then refused
-to assemble (too few drives). The RAID1 array (md3) got reassembled, and 
-resynced successfully.
-I had to force the assembly of /dev/md4 [and encountered a mdadm bug 
-while doing so: http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=496334]
+I have a JMB363 myself and it has its share of problems.
+I would say it is buggy hardware. (why would they otherwise
+release a new windows driver every week ? if not to workaround
+bugs in HW ;-)
 
-I think ALPM should refuse to set link pm if the device is part of a 
-raid array, or the md driver should be aware
-of ALPM, and wait a little longer for the device to come back online.
-Mentioning this problem somewhere in the sources/docs would be nice.
+My WD MyBook Studio Edition 500 GB external eSATA drive does not
+work on the JMB363 correctly no matter what I try. Both
+under linux and windows. I think the best was 30 minutes of
+(apparent) error free operation under windows.
 
-System info:
-Linux debian 2.6.26-1-amd64 #1 SMP Wed Aug 20 12:09:32 UTC 2008 x86_64 
-GNU/Linux
-0:00.0 Host bridge: Intel Corporation Eaglelake DRAM Controller (rev 02)
-00:01.0 PCI bridge: Intel Corporation Eaglelake PCI Express Root Port 
-(rev 02)
-00:1a.0 USB Controller: Intel Corporation ICH10 USB UHCI Controller #4
-00:1a.1 USB Controller: Intel Corporation ICH10 USB UHCI Controller #5
-00:1a.2 USB Controller: Intel Corporation ICH10 USB UHCI Controller #6
-00:1a.7 USB Controller: Intel Corporation ICH10 USB2 EHCI Controller #2
-00:1b.0 Audio device: Intel Corporation ICH10 HD Audio Controller
-00:1c.0 PCI bridge: Intel Corporation ICH10 PCI Express Port 1
-00:1c.2 PCI bridge: Intel Corporation ICH10 PCI Express Port 3
-00:1c.3 PCI bridge: Intel Corporation ICH10 PCI Express Port 4
-00:1c.4 PCI bridge: Intel Corporation ICH10 PCI Express Port 5
-00:1c.5 PCI bridge: Intel Corporation ICH10 PCI Express Port 6
-00:1d.0 USB Controller: Intel Corporation ICH10 USB UHCI Controller #1
-00:1d.1 USB Controller: Intel Corporation ICH10 USB UHCI Controller #2
-00:1d.2 USB Controller: Intel Corporation ICH10 USB UHCI Controller #3
-00:1d.7 USB Controller: Intel Corporation ICH10 USB2 EHCI Controller #1
-00:1e.0 PCI bridge: Intel Corporation 82801 PCI Bridge (rev 90)
-00:1f.0 ISA bridge: Intel Corporation ICH10 LPC Interface Controller
-00:1f.2 SATA controller: Intel Corporation ICH10 6 port SATA AHCI Controller
-00:1f.3 SMBus: Intel Corporation ICH10 SMBus Controller
-01:00.0 VGA compatible controller: nVidia Corporation NV44 [GeForce 6200 
-TurboCache(TM)] (rev a1)
-03:00.0 RAID bus controller: Silicon Image, Inc. SiI 3132 Serial ATA 
-Raid II Controller (rev 01)
-04:00.0 IDE interface: JMicron Technologies, Inc. JMB368 IDE controller
-06:00.0 Ethernet controller: Realtek Semiconductor Co., Ltd. 
-RTL8111/8168B PCI Express Gigabit Ethernet controller (rev 02)
-07:07.0 FireWire (IEEE 1394): Texas Instruments TSB43AB23 
-IEEE-1394a-2000 Controller (PHY/Link)
+If interested, I can supply logs, data etc.
+(I have a bunch of drives to try).
 
-[*]: this is a desktop, not a laptop system, but I have 6 disks, so I 
-thought to try some power-management tweaks.
-I should have known better not to do that on a raid device!
+Regards,
+David
 
-Best regards,
---Edwin
+
