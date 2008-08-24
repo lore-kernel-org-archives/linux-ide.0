@@ -1,51 +1,52 @@
-From: "xerces8" <xerces8@butn.net>
-Subject: Re: GA-MA790FX-DS5 SATA ahci NCQ erros on Jmicron 20360/20363
-	(JMB363) kernel 2.6.25-2 Debian/Lenny
-Date: Sun, 24 Aug 2008 18:44:24 +0200
-Message-ID: <WorldClient-F200808241844.AA44240046@butn.net>
-References: <g8p6po$nm$1@ger.gmane.org> <48B0916C.4080805@garzik.org> <g8q9mg$v2p$1@ger.gmane.org>
+From: "Jeffrey W. Baker" <jwbaker@gmail.com>
+Subject: SATA ALPM min_power causes > 10s delay on resume
+Date: Sun, 24 Aug 2008 10:27:50 -0700
+Message-ID: <1219598870.11057.2.camel@stinkpad>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ikar.perftech.si ([195.246.0.20]:6733 "EHLO ikar.perftech.si"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751752AbYHXQod (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 24 Aug 2008 12:44:33 -0400
-In-Reply-To: <g8q9mg$v2p$1@ger.gmane.org>
+Received: from wa-out-1112.google.com ([209.85.146.180]:28485 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752013AbYHXR2B (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 24 Aug 2008 13:28:01 -0400
+Received: by wa-out-1112.google.com with SMTP id j37so601773waf.23
+        for <linux-ide@vger.kernel.org>; Sun, 24 Aug 2008 10:28:01 -0700 (PDT)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Sergey Spiridonov <sena@hurd.homeunix.org>, linux-ide@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-Sergey Spiridonov wrote:
+I started using the min_power ALPM setting on my ThinkPad to save power
+(which works great, thanks!) but it causes a small problem.  When the
+machine resumes from suspend-to-ram it hangs for about 10s and then
+prints this on the console:
 
-> Jeff Garzik wrote:
-> 
-> > So...  suspect bad cables, bad port connectors, cable interference,
-> > motherboard-caused interference or grounding problems, power supply
-> > problems.
-> 
-> I did exchange power supply and I did exchange hard drives. The same
-> hard drive with the same cable works with SB600 and produces errors with
-> JMB363. So looks like it is not cable or hard drive problem. May be the
-> problem is JMB363 port connector on the motherboard. How can I check it?
+ata1: COMRESET failed (errno=-16)
 
-Hi!
+It then proceeds normally.  The full messages are:
 
-I have a JMB363 myself and it has its share of problems.
-I would say it is buggy hardware. (why would they otherwise
-release a new windows driver every week ? if not to workaround
-bugs in HW ;-)
+ata1: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+ata1.00: configured for UDMA/100
+ata1: failed to recover some devices, retrying in 5 secs
+ata1: soft resetting link
+ata1: SATA link down (SStatus 611 SControl 300)
+ata1: failed to recover some devices, retrying in 5 secs
+ata1: hard resetting link
+ata1: port is slow to respond, please be patient (Status 0x80)
+ata1: COMRESET failed (errno=-16)
+ata1: hard resetting link
+ata1: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
 
-My WD MyBook Studio Edition 500 GB external eSATA drive does not
-work on the JMB363 correctly no matter what I try. Both
-under linux and windows. I think the best was 30 minutes of
-(apparent) error free operation under windows.
+After which point the machine works normally.  The SATA controller is an
+Intel Corporation 82801HBM/HEM (ICH8M/ICH8M-E) SATA AHCI Controller (rev
+03) and the SATA target is a SAMSUNG MCBQE32G Rev: PS10.  The kernel is
+2.6.24.  I haven't tried anything newer.
 
-If interested, I can supply logs, data etc.
-(I have a bunch of drives to try).
+If the ALPM setting is left at its default of max_performance then
+resume from suspend is instant.  Is there any way to work around this?
+ALPM is worth a solid 30 minutes of extra battery life, so obviously I'd
+like to use it.  If nothing else, it might be helpful to have a module
+parameter to shorten the timeout on known-working hardware.
 
-Regards,
-David
-
+-jwb
 
