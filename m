@@ -1,68 +1,44 @@
-From: Lennert Buytenhek <buytenh@wantstofly.org>
-Subject: [PATCH,RFC] sata_mv: don't avoid clearing interrupt status on SoC host adapters
-Date: Sun, 24 Aug 2008 05:04:29 +0200
-Message-ID: <20080824030429.GA10230@xi.wantstofly.org>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: GA-MA790FX-DS5 SATA ahci NCQ erros on Jmicron 20360/20363  (JMB363)
+   kernel 2.6.25-2 Debian/Lenny
+Date: Sun, 24 Aug 2008 00:39:36 -0400
+Message-ID: <48B0E608.4050205@garzik.org>
+References: <g8p6po$nm$1@ger.gmane.org> <48B0916C.4080805@garzik.org> <g8q9mg$v2p$1@ger.gmane.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from xi.wantstofly.org ([83.160.184.112]:47676 "EHLO
-	xi.wantstofly.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751707AbYHXDEc (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 23 Aug 2008 23:04:32 -0400
-Content-Disposition: inline
+Received: from srv5.dvmed.net ([207.36.208.214]:52093 "EHLO mail.dvmed.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751045AbYHXEjj (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 24 Aug 2008 00:39:39 -0400
+In-Reply-To: <g8q9mg$v2p$1@ger.gmane.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Saeed Bishara <saeed@marvell.com>, linux-ide@vger.kernel.org
-Cc: Mark Lord <liml@rtr.ca>, Jeff Garzik <jeff@garzik.org>
+To: Sergey Spiridonov <sena@hurd.homeunix.org>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-For some reason, sata_mv doesn't clear interrupt status during init
-when it's running on an SoC host adapter.  If the bootloader has
-touched the SATA controller before starting Linux, Linux can end up
-enabling the SATA interrupt with events pending, which will cause the
-interrupt to be marked as spurious and then be disabled, which then
-breaks all further accesses to the controller.
+Sergey Spiridonov wrote:
+> Hi
+> 
+> Jeff Garzik wrote:
+> 
+>> So...  suspect bad cables, bad port connectors, cable interference,
+>> motherboard-caused interference or grounding problems, power supply
+>> problems.
+> 
+> I did exchange power supply and I did exchange hard drives. The same
+> hard drive with the same cable works with SB600 and produces errors with
+> JMB363. So looks like it is not cable or hard drive problem. May be the
+> problem is JMB363 port connector on the motherboard. How can I check it?
 
-This patch makes the SoC path clear interrupt status on init like in
-the non-SoC case.
+Try new motherboard of same brand and model :/
 
-Signed-off-by: Lennert Buytenhek <buytenh@marvell.com>
----
- drivers/ata/sata_mv.c |   21 ++++++++++-----------
- 1 files changed, 10 insertions(+), 11 deletions(-)
+In general, tons of ATA bus errors and SError complaints indicate some 
+sort of problem at the physical layer/level.  Its always possible that 
+software is to blame, but bug report patterns so far tend to point to 
+hardware.
 
-diff --git a/drivers/ata/sata_mv.c b/drivers/ata/sata_mv.c
-index ad169ff..e829a3a 100644
---- a/drivers/ata/sata_mv.c
-+++ b/drivers/ata/sata_mv.c
-@@ -3131,19 +3131,18 @@ static int mv_init_host(struct ata_host *host, unsigned int board_idx)
- 		writelfl(0, hc_mmio + HC_IRQ_CAUSE_OFS);
- 	}
- 
--	if (!IS_SOC(hpriv)) {
--		/* Clear any currently outstanding host interrupt conditions */
--		writelfl(0, mmio + hpriv->irq_cause_ofs);
-+	/* Clear any currently outstanding host interrupt conditions */
-+	writelfl(0, mmio + hpriv->irq_cause_ofs);
- 
--		/* and unmask interrupt generation for host regs */
--		writelfl(hpriv->unmask_all_irqs, mmio + hpriv->irq_mask_ofs);
-+	/* and unmask interrupt generation for host regs */
-+	writelfl(hpriv->unmask_all_irqs, mmio + hpriv->irq_mask_ofs);
-+
-+	/*
-+	 * enable only global host interrupts for now.
-+	 * The per-port interrupts get done later as ports are set up.
-+	 */
-+	mv_set_main_irq_mask(host, 0, PCI_ERR);
- 
--		/*
--		 * enable only global host interrupts for now.
--		 * The per-port interrupts get done later as ports are set up.
--		 */
--		mv_set_main_irq_mask(host, 0, PCI_ERR);
--	}
- done:
- 	return rc;
- }
--- 
-1.5.6.4
+	Jeff
+
+
