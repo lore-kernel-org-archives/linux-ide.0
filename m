@@ -1,34 +1,51 @@
-From: bugme-daemon@bugzilla.kernel.org
-Subject: [Bug 11420] attempting to read scuffed CDs causes libata to switch the drive to PIO0 mode and there's no way switch back
-Date: Sun, 24 Aug 2008 20:08:58 -0700 (PDT)
-Message-ID: <20080825030858.3654C108008@picon.linux-foundation.org>
-References: <bug-11420-11633@http.bugzilla.kernel.org/>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: Old Thread: sata_inic162x driver for 2.6.19 timeouts etc
+Date: Mon, 25 Aug 2008 10:39:17 +0200
+Message-ID: <48B26FB5.4070109@gmail.com>
+References: <747739.95266.qm@web901.biz.mail.mud.yahoo.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:45344 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753183AbYHYDJ2 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 24 Aug 2008 23:09:28 -0400
-Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
-	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id m7P38wGF030951
-	for <linux-ide@vger.kernel.org>; Sun, 24 Aug 2008 20:08:59 -0700
-In-Reply-To: <bug-11420-11633@http.bugzilla.kernel.org/>
+Received: from ti-out-0910.google.com ([209.85.142.189]:36128 "EHLO
+	ti-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752281AbYHYIka (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 25 Aug 2008 04:40:30 -0400
+Received: by ti-out-0910.google.com with SMTP id b6so908512tic.23
+        for <linux-ide@vger.kernel.org>; Mon, 25 Aug 2008 01:40:29 -0700 (PDT)
+In-Reply-To: <747739.95266.qm@web901.biz.mail.mud.yahoo.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Bob Stewart <bob@evoria.net>
+Cc: linux-ide@vger.kernel.org
 
-http://bugzilla.kernel.org/show_bug.cgi?id=11420
+Bob Stewart wrote:
+> Tejun, 
+> This is an update to an old thread.
+> 
+> --- Tejun Heo <htejun@gmail.com> wrote:
+>> Bob Stewart wrote:
+>>> I wonder if this card of mine is what's bad.  <snipp.
+>> My bet is on broken driver.  sunix driver doesn't seem like it was 
+>> written carefully.  Anyways, thanks for testing.  It seems we'll either 
+>> have to implement adma mode.  I'll mark the driver broken for 2.6.21. 
+>> Thanks.
+> 
+> I just got your note that there is a new SATA_INIC162X driver, so I
+> loaded up kernel 2.6.27-rc2 and gave it a try.  Timeouts again, so I
+> ordered a new card on ebay.  I'm sad to say that the errors, months
+> ago, were from a card that I had gotten bad from new.  Wasted a lot of my
+> time and this list's time.  Sorry about that.  :(
+> 
+> OTOH, with the new card, both your new driver and the old one seem
+> to be OK after several hours of copying ISO files and running "md5sum"
+> on the copied filed.  Good job!  Thanks for all the hard work!  If there are
+> any other tests needed on this driver let me know before I bow out again.
 
+Ah.. great, so at least something works.  :-)
 
-
-
-
-------- Comment #1 from nmiell@comcast.net  2008-08-24 20:08 -------
-Created an attachment (id=17422)
- --> (http://bugzilla.kernel.org/attachment.cgi?id=17422&action=view)
-relevant portion of system logs
-
+Any chance you can put the old one under windows and see whether it
+works there?
 
 -- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug, or are watching the assignee.
+tejun
