@@ -1,51 +1,26 @@
-From: Nishanth Aravamudan <nacc@us.ibm.com>
-Subject: Re: kernel unaligned accesses on IA64 in IDE
-Date: Mon, 25 Aug 2008 09:31:12 -0700
-Message-ID: <20080825163111.GA9279@us.ibm.com>
-References: <20080819225606.GB22088@us.ibm.com> <20080822164538.GB9047@us.ibm.com> <9ea470500808221029l6bd79c62w4c06d948f962d95c@mail.gmail.com> <200808222036.00536.bzolnier@gmail.com> <57C9024A16AD2D4C97DC78E552063EA309EDE187@orsmsx505.amr.corp.intel.com> <200808222036.m7MKa6bT008897@agluck-lia64.sc.intel.com> <1219439722.3339.89.camel@localhost.localdomain>
+From: Jens Axboe <jens.axboe@oracle.com>
+Subject: Re: [PATCHSET 2/3 blk-for-2.6.28] block: implement extended devt, take #3
+Date: Mon, 25 Aug 2008 20:33:50 +0200
+Message-ID: <20080825183350.GM20055@kernel.dk>
+References: <1219661245-16055-1-git-send-email-tj@kernel.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ia64-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <1219439722.3339.89.camel@localhost.localdomain>
-Sender: linux-ia64-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: "Luck, Tony" <tony.luck@intel.com>, Robin Holt <holt@sgi.com>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, "petkovbb@gmail.com" <petkovbb@gmail.com>, "linux-ia64@vger.kernel.org" <linux-ia64@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+In-Reply-To: <1219661245-16055-1-git-send-email-tj@kernel.org>
+Sender: linux-scsi-owner@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: James.Bottomley@HansenPartnership.com, bzolnier@gmail.com, bharrosh@panasas.com, greg.freemyer@gmail.com, linux-scsi@vger.kernel.org, brking@linux.vnet.ibm.com, liml@rtr.ca, viro@ftp.linux.org.uk, linux-ide@vger.kernel.org, neilb@suse.de, linux-kernel@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
-On 22.08.2008 [16:15:22 -0500], James Bottomley wrote:
-> On Fri, 2008-08-22 at 13:36 -0700, Luck, Tony wrote:
-> > > How about long instead of int.  int leaves us with the possibility that
-> > > something else will expect 8 byte alignment.
-> > 
-> > How about this?
-> > 
-> > Align __cmd to ward off kernel unaligned access consoles messages on
-> > ia64 (and perhaps make an almost imperceptible performance improvement
-> > on other architectures that can handle unaligned access, but do so
-> > more slowly than aligned accesses).
-> > 
-> > Signed-off-by: Tony Luck <tony.luck@intel.com>
+On Mon, Aug 25 2008, Tejun Heo wrote:
+> Hello, all.
 > 
-> Yuk, really ... you're blowing out the size of a critical structure by
-> padding which is unnecessary in 99% of cases.  Commands are supposed to
-> be byte streams. Adding extra alignment to generic code because some
-> driver has strange rules isn't very well layered.
-> 
-> Also, these are string out instructions ... They don't have any
-> alignment requirements (or they're not supposed to; they're like
-> memcpy); they're modelled on the x86 instructions
-> 
-> What about this as the obvious solution?  It makes the ia64 version of
-> this command behave exactly as the x86 version does.
-> 
-> James
+> This is the third take of block-extended-devt patchset and contains
+> the following 10 patches.
 
-Tested-by: Nishanth Aravamudan <nacc@us.ibm.com>
-
-Thanks,
-Nish
+Applied 1-9, thanks Tejun!
 
 -- 
-Nishanth Aravamudan <nacc@us.ibm.com>
-IBM Linux Technology Center
+Jens Axboe
+
