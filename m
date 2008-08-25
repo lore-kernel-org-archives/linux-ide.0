@@ -1,47 +1,27 @@
-From: bugme-daemon@bugzilla.kernel.org
-Subject: [Bug 11426] reproducable panic when reading cdrom (atapi dma)
-Date: Mon, 25 Aug 2008 12:48:35 -0700 (PDT)
-Message-ID: <20080825194835.5A748108008@picon.linux-foundation.org>
-References: <bug-11426-11633@http.bugzilla.kernel.org/>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: [PATCH 2/2] IDE: palm_bk3710: fix compile warning for unused variable
+Date: Mon, 25 Aug 2008 20:37:55 +0200
+Message-ID: <200808252037.55360.bzolnier@gmail.com>
+References: <1219353824-31246-1-git-send-email-khilman@deeprootsystems.com> <1219353824-31246-2-git-send-email-khilman@deeprootsystems.com>
+Mime-Version: 1.0
+Content-Type: text/plain;
+  charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:35073 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755223AbYHYTsh (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 25 Aug 2008 15:48:37 -0400
-Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
-	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id m7PJmZmE011639
-	for <linux-ide@vger.kernel.org>; Mon, 25 Aug 2008 12:48:36 -0700
-In-Reply-To: <bug-11426-11633@http.bugzilla.kernel.org/>
+Received: from mu-out-0910.google.com ([209.85.134.186]:23392 "EHLO
+	mu-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754067AbYHYUcE (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 25 Aug 2008 16:32:04 -0400
+Received: by mu-out-0910.google.com with SMTP id g7so320611muf.1
+        for <linux-ide@vger.kernel.org>; Mon, 25 Aug 2008 13:32:03 -0700 (PDT)
+In-Reply-To: <1219353824-31246-2-git-send-email-khilman@deeprootsystems.com>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Kevin Hilman <khilman@deeprootsystems.com>
+Cc: linux-ide@vger.kernel.org
 
-http://bugzilla.kernel.org/show_bug.cgi?id=11426
+On Thursday 21 August 2008, Kevin Hilman wrote:
+> Signed-off-by: Kevin Hilman <khilman@deeprootsystems.com>
 
-
-akpm@osdl.org changed:
-
-           What    |Removed                     |Added
-----------------------------------------------------------------------------
-                 CC|                            |venkatesh.pallipadi@intel.co
-                   |                            |m
-         AssignedTo|io_ide@kernel-bugs.osdl.org |acpi_power-processor@kernel-
-                   |                            |bugs.osdl.org
-          Component|IDE                         |Power-Processor
-            Product|IO/Storage                  |ACPI
-         Regression|0                           |1
-
-
-
-
-------- Comment #3 from akpm@osdl.org  2008-08-25 12:48 -------
-A divide-by-zero in acpi_idle_enter_simple()
-
-Marked as regression, reassigned to acpi people.
-
-
--- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug, or are watching the assignee.
-You are the assignee for the bug, or are watching the assignee.
+applied, thanks!
