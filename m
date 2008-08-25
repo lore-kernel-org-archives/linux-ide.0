@@ -1,34 +1,51 @@
-From: "xerces8" <xerces8@butn.net>
-Subject: Re: GA-MA790FX-DS5 SATA ahci NCQ erros on Jmicron 20360/20363
-	(JMB363) kernel 2.6.25-2 Debian/Lenny
-Date: Mon, 25 Aug 2008 16:52:03 +0200
-Message-ID: <WorldClient-F200808251652.AA52030010@butn.net>
-References: <g8p6po$nm$1@ger.gmane.org> <48B0916C.4080805@garzik.org> <g8q9mg$v2p$1@ger.gmane.org> <48B0E608.4050205@garzik.org> <g8sqp1$jn4$1@ger.gmane.org>
+From: Nishanth Aravamudan <nacc@us.ibm.com>
+Subject: Re: kernel unaligned accesses on IA64 in IDE
+Date: Mon, 25 Aug 2008 09:31:12 -0700
+Message-ID: <20080825163111.GA9279@us.ibm.com>
+References: <20080819225606.GB22088@us.ibm.com> <20080822164538.GB9047@us.ibm.com> <9ea470500808221029l6bd79c62w4c06d948f962d95c@mail.gmail.com> <200808222036.00536.bzolnier@gmail.com> <57C9024A16AD2D4C97DC78E552063EA309EDE187@orsmsx505.amr.corp.intel.com> <200808222036.m7MKa6bT008897@agluck-lia64.sc.intel.com> <1219439722.3339.89.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ikar.perftech.si ([195.246.0.20]:17901 "EHLO ikar.perftech.si"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753579AbYHYOwK (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 25 Aug 2008 10:52:10 -0400
-In-Reply-To: <g8sqp1$jn4$1@ger.gmane.org>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ia64-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1219439722.3339.89.camel@localhost.localdomain>
+Sender: linux-ia64-owner@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: "Luck, Tony" <tony.luck@intel.com>, Robin Holt <holt@sgi.com>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, "petkovbb@gmail.com" <petkovbb@gmail.com>, "linux-ia64@vger.kernel.org" <linux-ia64@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
 List-Id: linux-ide@vger.kernel.org
-To: Sergey Spiridonov <sena@hurd.homeunix.org>, linux-ide@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
 
-Sergey Spiridonov wrote:
+On 22.08.2008 [16:15:22 -0500], James Bottomley wrote:
+> On Fri, 2008-08-22 at 13:36 -0700, Luck, Tony wrote:
+> > > How about long instead of int.  int leaves us with the possibility that
+> > > something else will expect 8 byte alignment.
+> > 
+> > How about this?
+> > 
+> > Align __cmd to ward off kernel unaligned access consoles messages on
+> > ia64 (and perhaps make an almost imperceptible performance improvement
+> > on other architectures that can handle unaligned access, but do so
+> > more slowly than aligned accesses).
+> > 
+> > Signed-off-by: Tony Luck <tony.luck@intel.com>
+> 
+> Yuk, really ... you're blowing out the size of a critical structure by
+> padding which is unnecessary in 99% of cases.  Commands are supposed to
+> be byte streams. Adding extra alignment to generic code because some
+> driver has strange rules isn't very well layered.
+> 
+> Also, these are string out instructions ... They don't have any
+> alignment requirements (or they're not supposed to; they're like
+> memcpy); they're modelled on the x86 instructions
+> 
+> What about this as the obvious solution?  It makes the ia64 version of
+> this command behave exactly as the x86 version does.
+> 
+> James
 
-> Seagate
-> support does not tell anything except something like "it should work"...
+Tested-by: Nishanth Aravamudan <nacc@us.ibm.com>
 
-I just got this* link from WD support, accompanied with the text:
-"This sounds like an incompatibility perhaps with the ESATA controller.
-Please see the link below for tested ESATA controllers."
+Thanks,
+Nish
 
-* - http://www.wdc.com/en/products/resources/esataupgrade.asp
-
-Regards,
-David
-
-
+-- 
+Nishanth Aravamudan <nacc@us.ibm.com>
+IBM Linux Technology Center
