@@ -1,43 +1,44 @@
-From: Bob Stewart <bob@evoria.net>
-Subject: Re: Old Thread: sata_inic162x driver for 2.6.19 timeouts etc
-Date: Sun, 24 Aug 2008 16:50:02 -0700 (PDT)
-Message-ID: <747739.95266.qm@web901.biz.mail.mud.yahoo.com>
-References: <4604D564.9010806@gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+From: bugme-daemon@bugzilla.kernel.org
+Subject: [Bug 11420] New: attempting to read scuffed CDs causes libata to switch the drive to PIO0 mode and there's no way switch back
+Date: Sun, 24 Aug 2008 20:03:38 -0700 (PDT)
+Message-ID: <bug-11420-11633@http.bugzilla.kernel.org/>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from web901.biz.mail.mud.yahoo.com ([216.252.100.41]:48281 "HELO
-	web901.biz.mail.mud.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1752948AbYHXX4o (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 24 Aug 2008 19:56:44 -0400
-In-Reply-To: <4604D564.9010806@gmail.com>
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:34734 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753130AbYHYDEL (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 24 Aug 2008 23:04:11 -0400
+Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
+	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id m7P33c9c030532
+	for <linux-ide@vger.kernel.org>; Sun, 24 Aug 2008 20:03:39 -0700
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-Tejun, 
-This is an update to an old thread.
+http://bugzilla.kernel.org/show_bug.cgi?id=11420
 
---- Tejun Heo <htejun@gmail.com> wrote:
-> Bob Stewart wrote:
-> > I wonder if this card of mine is what's bad.  <snipp.
-> 
-> My bet is on broken driver.  sunix driver doesn't seem like it was 
-> written carefully.  Anyways, thanks for testing.  It seems we'll either 
-> have to implement adma mode.  I'll mark the driver broken for 2.6.21. 
-> Thanks.
+           Summary: attempting to read scuffed CDs causes libata to switch
+                    the drive to PIO0 mode and there's no way switch back
+           Product: IO/Storage
+           Version: 2.5
+     KernelVersion: kernel-2.6.25.14-108.fc9.x86_64
+          Platform: All
+        OS/Version: Linux
+              Tree: Fedora
+            Status: NEW
+          Severity: normal
+          Priority: P1
+         Component: IDE
+        AssignedTo: io_ide@kernel-bugs.osdl.org
+        ReportedBy: nmiell@comcast.net
 
-I just got your note that there is a new SATA_INIC162X driver, so I
-loaded up kernel 2.6.27-rc2 and gave it a try.  Timeouts again, so I
-ordered a new card on ebay.  I'm sad to say that the errors, months
-ago, were from a card that I had gotten bad from new.  Wasted a lot of my
-time and this list's time.  Sorry about that.  :(
 
-OTOH, with the new card, both your new driver and the old one seem
-to be OK after several hours of copying ISO files and running "md5sum"
-on the copied filed.  Good job!  Thanks for all the hard work!  If there are
-any other tests needed on this driver let me know before I bow out again.
+Attempting to rip a scuffed CD results in lots of errors in the log as libata
+steps down from UDMA66 to PIO0 (for no reason, afaik, these are media errors,
+not link errors). Once the libata has erroneously decided on a tediously slow
+communication method, there's no way to tell it to go back to UDMA66.
 
-Bob
+
+-- 
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug, or are watching the assignee.
