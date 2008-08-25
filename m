@@ -1,58 +1,51 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [PATCH 2/9] ide-disk: set_addressing() fixes
-Date: Mon, 25 Aug 2008 22:23:54 +0200
-Message-ID: <200808252223.54795.bzolnier@gmail.com>
-References: <20080817171454.27943.37234.sendpatchset@localhost.localdomain> <20080817171501.27943.57473.sendpatchset@localhost.localdomain> <48B0850D.4000105@ru.mvista.com>
+Subject: Re: IDE OOPS w/udevtrigger
+Date: Mon, 25 Aug 2008 22:50:47 +0200
+Message-ID: <200808252250.47719.bzolnier@gmail.com>
+References: <20080825185224.GA5187@nineveh.local>
 Mime-Version: 1.0
 Content-Type: text/plain;
   charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mu-out-0910.google.com ([209.85.134.186]:23392 "EHLO
-	mu-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754067AbYHYUcL (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 25 Aug 2008 16:32:11 -0400
-Received: by mu-out-0910.google.com with SMTP id g7so320611muf.1
-        for <linux-ide@vger.kernel.org>; Mon, 25 Aug 2008 13:32:11 -0700 (PDT)
-In-Reply-To: <48B0850D.4000105@ru.mvista.com>
+Received: from gv-out-0910.google.com ([216.239.58.186]:59683 "EHLO
+	gv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753002AbYHYUxb (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 25 Aug 2008 16:53:31 -0400
+Received: by gv-out-0910.google.com with SMTP id e6so367987gvc.37
+        for <linux-ide@vger.kernel.org>; Mon, 25 Aug 2008 13:53:29 -0700 (PDT)
+In-Reply-To: <20080825185224.GA5187@nineveh.local>
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Joseph Fannin <jfannin@gmail.com>
+Cc: linux-ide@vger.kernel.org
 
-On Saturday 23 August 2008, Sergei Shtylyov wrote:
-> Hello.
-> 
-> Bartlomiej Zolnierkiewicz wrote:
-> 
-> > * Return -EIO if arg > 0 and LBA48 is unsupported.
-> >
-> > * No need to reset ->addressing.
-> >
-> > * Make ->addressing a single bit flag.
-> >
-> > Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-> >   
-> [...]
-> > Index: b/include/linux/ide.h
-> > ===================================================================
-> > --- a/include/linux/ide.h
-> > +++ b/include/linux/ide.h
-> > @@ -507,7 +507,7 @@ struct ide_drive_s {
-> >  	unsigned sleeping	: 1;	/* 1=sleeping & sleep field valid */
-> >  	unsigned post_reset	: 1;
-> >  	unsigned udma33_warned	: 1;
-> > -	unsigned addressing	: 2;	/* 0=28-bit, 1=48-bit, 2=48-bit doing 28-bit */
-> > +	unsigned addressing	: 1;	/* 0=28-bit, 1=48-bit */
-> >  	unsigned wcache		: 1;	/* status of write cache */
-> >  	unsigned nowerr		: 1;	/* used for ignoring ATA_DF */
-> >   
-> 
->    Don't you want to get rid of things like:
-> 
->         u8 lba48 = (drive->addressing == 1) ? 1 : 0;
 
-This was dealt with in "[PATCH 5/9] ide: add device flags" - since patch
-#5/9 was going to touch the code anyway and there were no benefits besides
-aesthetics in doing it in #2/9 I optimized the development process a bit...
+Hi,
+
+On Monday 25 August 2008, Joseph Fannin wrote:
+
+[...]
+
+> So:  the ide hardware is known to be bad, and ide-generic is
+> necessarily a bit blind, as I understand it... but the OOPS is new,
+> and it seems like ide-generic isn't cleaning up after itself they way
+> it did before.  Or maybe sysfs isn't.
+
+Recent ide-generic fix from Borislav (to not probe automatically IDE PCI
+hardware) should alleviate the first problem (it is in pata tree and in
+linux-next):
+
+http://kernel.org/pub/linux/kernel/people/bart/pata-2.6/patches/ide-generic-handle-probing-of-legacy-io-ports-v5.patch
+ 
+The sysfs OOPS (which should also be alleviated by the above fix)
+is a bit more worrisome as it may hide some new bug.
+
+> I'm willing to try to bisect this, but maybe it's not necessary?
+
+If it is not too much work, please do (from the description of the
+issue it seems it can be scripted into 'git bisect run' nicely).
+
+Thanks,
+Bart
