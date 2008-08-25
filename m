@@ -1,34 +1,34 @@
-From: Bob Stewart <bob@evoria.net>
-Subject: Re: Old Thread: sata_inic162x driver for 2.6.19 timeouts etc
-Date: Mon, 25 Aug 2008 07:39:28 -0700 (PDT)
-Message-ID: <580273.65340.qm@web906.biz.mail.mud.yahoo.com>
-References: <48B26FB5.4070109@gmail.com>
+From: "xerces8" <xerces8@butn.net>
+Subject: Re: GA-MA790FX-DS5 SATA ahci NCQ erros on Jmicron 20360/20363
+	(JMB363) kernel 2.6.25-2 Debian/Lenny
+Date: Mon, 25 Aug 2008 16:52:03 +0200
+Message-ID: <WorldClient-F200808251652.AA52030010@butn.net>
+References: <g8p6po$nm$1@ger.gmane.org> <48B0916C.4080805@garzik.org> <g8q9mg$v2p$1@ger.gmane.org> <48B0E608.4050205@garzik.org> <g8sqp1$jn4$1@ger.gmane.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset="us-ascii"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from web906.biz.mail.mud.yahoo.com ([216.252.100.52]:40611 "HELO
-	web906.biz.mail.mud.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1753408AbYHYOj3 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 25 Aug 2008 10:39:29 -0400
-In-Reply-To: <48B26FB5.4070109@gmail.com>
+Received: from ikar.perftech.si ([195.246.0.20]:17901 "EHLO ikar.perftech.si"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753579AbYHYOwK (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 25 Aug 2008 10:52:10 -0400
+In-Reply-To: <g8sqp1$jn4$1@ger.gmane.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: linux-ide@vger.kernel.org
+To: Sergey Spiridonov <sena@hurd.homeunix.org>, linux-ide@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
 
---- Tejun Heo <htejun@gmail.com> wrote:
-> Bob Stewart wrote:
-<snip>
-> > OTOH, with the new card, both your new driver and the old one seem
-> > to be OK after several hours of copying ISO files and running "md5sum"
-> > on the copied filed.  Good job!  Thanks for all the hard work!  If there
-> are
-> > any other tests needed on this driver let me know before I bow out again.
-> 
-> Ah.. great, so at least something works.  :-)
-> 
-> Any chance you can put the old one under windows and see whether it
-> works there?
+Sergey Spiridonov wrote:
 
-Sorry.  It's already gone to "card heaven".  
+> Seagate
+> support does not tell anything except something like "it should work"...
+
+I just got this* link from WD support, accompanied with the text:
+"This sounds like an incompatibility perhaps with the ESATA controller.
+Please see the link below for tested ESATA controllers."
+
+* - http://www.wdc.com/en/products/resources/esataupgrade.asp
+
+Regards,
+David
+
+
