@@ -1,144 +1,70 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 07/13] block: move holder_dir from disk to part0
-Date: Mon, 25 Aug 2008 19:56:11 +0900
-Message-ID: <1219661777-17648-8-git-send-email-tj@kernel.org>
-References: <1219661777-17648-1-git-send-email-tj@kernel.org>
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:33364 "EHLO hera.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758067AbYHYLDS (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 25 Aug 2008 07:03:18 -0400
-In-Reply-To: <1219661777-17648-1-git-send-email-tj@kernel.org>
-Sender: linux-ide-owner@vger.kernel.org
+From: Martin Michlmayr <tbm@cyrius.com>
+Subject: Re: 2.6.27-rc3: IP: [<ffffffffa0038b77>] init_irq+0x18d/0x31c
+	[ide_core]
+Date: Mon, 25 Aug 2008 14:02:41 +0300
+Message-ID: <20080825110241.GI2606@deprecation.cyrius.com>
+References: <20080820173122.GA7335@deprecation.cyrius.com>
+	<48AC71D7.8050604@lwfinger.net>
+	<20080821161610.GA2640@deprecation.cyrius.com>
+	<48ADA743.1070000@lwfinger.net>
+	<20080821175215.GI2640@deprecation.cyrius.com>
+	<48ADAC7C.7040003@lwfinger.net>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-pcmcia-bounces+glkpd-linux-pcmcia=m.gmane.org@lists.infradead.org>
+Content-Disposition: inline
+In-Reply-To: <48ADAC7C.7040003@lwfinger.net>
+List-Unsubscribe: <http://lists.infradead.org/mailman/listinfo/linux-pcmcia>,
+	<mailto:linux-pcmcia-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-pcmcia>
+List-Post: <mailto:linux-pcmcia@lists.infradead.org>
+List-Help: <mailto:linux-pcmcia-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-pcmcia>,
+	<mailto:linux-pcmcia-request@lists.infradead.org?subject=subscribe>
+Sender: linux-pcmcia-bounces@lists.infradead.org
+Errors-To: linux-pcmcia-bounces+glkpd-linux-pcmcia=m.gmane.org@lists.infradead.org
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: linux-ide@vger.kernel.org, linux-pcmcia@lists.infradead.org, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Dominik Brodowski <linux@dominikbrodowski.net>
 List-Id: linux-ide@vger.kernel.org
-To: Jens Axboe <jens.axboe@oracle.com>
-Cc: James.Bottomley@HansenPartnership.com, bzolnier@gmail.com, bharrosh@panasas.com, greg.freemyer@gmail.com, linux-scsi@vger.kernel.org, brking@linux.vnet.ibm.com, liml@rtr.ca, viro@ftp.linux.org.uk, linux-ide@vger.kernel.org, neilb@suse.de, linux-kernel@vger.kernel.org, Tejun Heo <tj@kernel.org>
 
-Move disk->holder_dir to part0->holder_dir.  Kill now mostly
-superflous bdev_get_holder().
+* Larry Finger <Larry.Finger@lwfinger.net> [2008-08-21 12:57]:
+> Do you have a git tree, or have you downloaded snapshots? If the
+> former, a bisection would be useful.
 
-While at it, kill superflous kobject_get/put() around holder_dir,
-slave_dir and cmd_filter creation and collapse
-disk_sysfs_add_subdirs() into register_disk().  These serve no purpose
-but obfuscating the code.
+I've bisected it down to this change: ide: set hwif->dev in ide_init_port_hw() (take 2)
+http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commitdiff;h=c56c5648a3bd15ff14c50f284b261140cd5b5472
 
-Signed-off-by: Tejun Heo <tj@kernel.org>
----
- block/cmd-filter.c    |   12 +++---------
- fs/block_dev.c        |   10 +---------
- fs/partitions/check.c |   15 +++------------
- include/linux/genhd.h |    1 -
- 4 files changed, 7 insertions(+), 31 deletions(-)
+I cannot revert this from current git because there were too many
+changes but when I go to 5b664cb235e97afbf34db9c4d77f08ebd725335e (a
+random point that shows the oops) and apply the following (which is
+basically a partial revert of the c56c5648a3bd15ff14c50f284b261140cd5b5472)
+then it works:
 
-diff --git a/block/cmd-filter.c b/block/cmd-filter.c
-index eec4404..1ab98b2 100644
---- a/block/cmd-filter.c
-+++ b/block/cmd-filter.c
-@@ -309,14 +309,10 @@ int blk_register_filter(struct gendisk *disk)
- {
- 	int ret;
- 	struct blk_scsi_cmd_filter *filter = &disk->cmd_filter;
--	struct kobject *parent = kobject_get(disk->holder_dir->parent);
--
--	if (!parent)
--		return -ENODEV;
--
--	ret = kobject_init_and_add(&filter->kobj, &rcf_ktype, parent,
--				 "%s", "cmd_filter");
- 
-+	ret = kobject_init_and_add(&filter->kobj, &rcf_ktype,
-+				   &disk_to_dev(disk)->kobj,
-+				   "%s", "cmd_filter");
- 	if (ret < 0)
- 		return ret;
- 
-@@ -329,6 +325,4 @@ void blk_unregister_filter(struct gendisk *disk)
- 	struct blk_scsi_cmd_filter *filter = &disk->cmd_filter;
- 
- 	kobject_put(&filter->kobj);
--	kobject_put(disk->holder_dir->parent);
+--- a/drivers/ide/ide.c
++++ b/drivers/ide/ide.c
+@@ -284,7 +284,6 @@ void ide_init_port_hw(ide_hwif_t *hwif, hw_regs_t *hw)
+ 	memcpy(&hwif->io_ports, &hw->io_ports, sizeof(hwif->io_ports));
+ 	hwif->irq = hw->irq;
+ 	hwif->chipset = hw->chipset;
+-	hwif->dev = hw->dev;
+ 	hwif->gendev.parent = hw->parent ? hw->parent : hw->dev;
+ 	hwif->ack_intr = hw->ack_intr;
  }
--
-diff --git a/fs/block_dev.c b/fs/block_dev.c
-index c982a91..57d5726 100644
---- a/fs/block_dev.c
-+++ b/fs/block_dev.c
-@@ -548,14 +548,6 @@ static struct kobject *bdev_get_kobj(struct block_device *bdev)
- 		return kobject_get(&disk_to_dev(bdev->bd_disk)->kobj);
+diff --git a/drivers/ide/setup-pci.c b/drivers/ide/setup-pci.c
+index 65fc08b..187b7b1 100644
+--- a/drivers/ide/setup-pci.c
++++ b/drivers/ide/setup-pci.c
+@@ -339,6 +339,8 @@ static ide_hwif_t *ide_hwif_configure(struct pci_dev *dev,
+ 
+ 	ide_init_port_hw(hwif, &hw);
+ 
++	hwif->dev = &dev->dev;
++
+ 	return hwif;
  }
  
--static struct kobject *bdev_get_holder(struct block_device *bdev)
--{
--	if (bdev->bd_contains != bdev)
--		return kobject_get(bdev->bd_part->holder_dir);
--	else
--		return kobject_get(bdev->bd_disk->holder_dir);
--}
--
- static int add_symlink(struct kobject *from, struct kobject *to)
- {
- 	if (!from || !to)
-@@ -608,7 +600,7 @@ static int bd_holder_grab_dirs(struct block_device *bdev,
- 	if (!bo->sdev)
- 		goto fail_put_hdev;
- 
--	bo->hdir = bdev_get_holder(bdev);
-+	bo->hdir = kobject_get(bdev->bd_part->holder_dir);
- 	if (!bo->hdir)
- 		goto fail_put_sdev;
- 
-diff --git a/fs/partitions/check.c b/fs/partitions/check.c
-index cb9ec77..7e4a7d4 100644
---- a/fs/partitions/check.c
-+++ b/fs/partitions/check.c
-@@ -305,16 +305,6 @@ struct device_type part_type = {
- 	.release	= part_release,
- };
- 
--static inline void disk_sysfs_add_subdirs(struct gendisk *disk)
--{
--	struct kobject *k;
--
--	k = kobject_get(&disk_to_dev(disk)->kobj);
--	disk->holder_dir = kobject_create_and_add("holders", k);
--	disk->slave_dir = kobject_create_and_add("slaves", k);
--	kobject_put(k);
--}
--
- static void delete_partition_rcu_cb(struct rcu_head *head)
- {
- 	struct hd_struct *part = container_of(head, struct hd_struct, rcu_head);
-@@ -464,7 +454,8 @@ void register_disk(struct gendisk *disk)
- 		return;
- 	}
- #endif
--	disk_sysfs_add_subdirs(disk);
-+	disk->part0.holder_dir = kobject_create_and_add("holders", &ddev->kobj);
-+	disk->slave_dir = kobject_create_and_add("slaves", &ddev->kobj);
- 
- 	/* No minors to use for partitions */
- 	if (!disk_partitionable(disk))
-@@ -592,7 +583,7 @@ void del_gendisk(struct gendisk *disk)
- 	disk_stat_set_all(disk, 0);
- 	disk->stamp = 0;
- 
--	kobject_put(disk->holder_dir);
-+	kobject_put(disk->part0.holder_dir);
- 	kobject_put(disk->slave_dir);
- 	disk->driverfs_dev = NULL;
- #ifndef CONFIG_SYSFS_DEPRECATED
-diff --git a/include/linux/genhd.h b/include/linux/genhd.h
-index 461ba6d..a8573ba 100644
---- a/include/linux/genhd.h
-+++ b/include/linux/genhd.h
-@@ -151,7 +151,6 @@ struct gendisk {
- 
- 	int flags;
- 	struct device *driverfs_dev;  // FIXME: remove
--	struct kobject *holder_dir;
- 	struct kobject *slave_dir;
- 
- 	struct timer_rand_state *random;
+
 -- 
-1.5.4.5
-
+Martin Michlmayr
+http://www.cyrius.com/
