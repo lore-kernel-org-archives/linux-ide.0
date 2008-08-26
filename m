@@ -1,77 +1,34 @@
 From: Mark Lord <liml@rtr.ca>
-Subject: Re: [PATCH,RFC] sata_mv: don't avoid clearing interrupt status on
- SoC host adapters
-Date: Tue, 26 Aug 2008 09:50:23 -0400
-Message-ID: <48B40A1F.6090703@rtr.ca>
-References: <20080824030429.GA10230@xi.wantstofly.org>
+Subject: Re: [PATCH #upstream-fixes] sata_mv: don't issue two DMA commands
+ concurrently
+Date: Tue, 26 Aug 2008 09:54:24 -0400
+Message-ID: <48B40B10.6060301@rtr.ca>
+References: <489C19CE.6030708@ngs.ru> <489C4B6E.9070306@rtr.ca> <489C4F29.6020007@rtr.ca> <489C54D1.5080901@rtr.ca> <48A29E14.3090908@gmail.com> <48A2BBDC.2090201@ngs.ru> <48A2BC5D.5060801@gmail.com> <48A2C35C.7020400@ngs.ru> <48A2C460.6040504@gmail.com> <48AE588C.6080605@garzik.org> <20080822170119.GA18700@deprecation.cyrius.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([76.10.145.34]:33684 "EHLO mail.rtr.ca"
+Received: from rtr.ca ([76.10.145.34]:38805 "EHLO mail.rtr.ca"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753838AbYHZNuY (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 26 Aug 2008 09:50:24 -0400
-In-Reply-To: <20080824030429.GA10230@xi.wantstofly.org>
+	id S1754603AbYHZNyZ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 26 Aug 2008 09:54:25 -0400
+In-Reply-To: <20080822170119.GA18700@deprecation.cyrius.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Lennert Buytenhek <buytenh@wantstofly.org>
-Cc: Saeed Bishara <saeed@marvell.com>, linux-ide@vger.kernel.org, Jeff Garzik <jeff@garzik.org>
+To: Martin Michlmayr <tbm@cyrius.com>
+Cc: Tejun Heo <htejun@gmail.com>, Artem Bokhan <aptem@ngs.ru>, linux-ide@vger.kernel.org
 
-Lennert Buytenhek wrote:
-> For some reason, sata_mv doesn't clear interrupt status during init
-> when it's running on an SoC host adapter.  If the bootloader has
-> touched the SATA controller before starting Linux, Linux can end up
-> enabling the SATA interrupt with events pending, which will cause the
-> interrupt to be marked as spurious and then be disabled, which then
-> breaks all further accesses to the controller.
+Martin Michlmayr wrote:
+> * Jeff Garzik <jeff@garzik.org> [2008-08-22 02:11]:
+>> Tejun Heo wrote:
+>>> sata_mv allowed issuing two DMA commands concurrently which the
+>>> hardware allows.  Unfortunately, libata core layer isn't ready for
+>>> this yet and spews ugly warning message and malfunctions on this.
+>>> Don't allow concurrent DMA commands for now.
+>>>
+>>> Signed-off-by: Tejun Heo <tj@kernel.org>
+>> applied
 > 
-> This patch makes the SoC path clear interrupt status on init like in
-> the non-SoC case.
-> 
-> Signed-off-by: Lennert Buytenhek <buytenh@marvell.com>
-> ---
->  drivers/ata/sata_mv.c |   21 ++++++++++-----------
->  1 files changed, 10 insertions(+), 11 deletions(-)
-> 
-> diff --git a/drivers/ata/sata_mv.c b/drivers/ata/sata_mv.c
-> index ad169ff..e829a3a 100644
-> --- a/drivers/ata/sata_mv.c
-> +++ b/drivers/ata/sata_mv.c
-> @@ -3131,19 +3131,18 @@ static int mv_init_host(struct ata_host *host, unsigned int board_idx)
->  		writelfl(0, hc_mmio + HC_IRQ_CAUSE_OFS);
->  	}
->  
-> -	if (!IS_SOC(hpriv)) {
-> -		/* Clear any currently outstanding host interrupt conditions */
-> -		writelfl(0, mmio + hpriv->irq_cause_ofs);
-> +	/* Clear any currently outstanding host interrupt conditions */
-> +	writelfl(0, mmio + hpriv->irq_cause_ofs);
->  
-> -		/* and unmask interrupt generation for host regs */
-> -		writelfl(hpriv->unmask_all_irqs, mmio + hpriv->irq_mask_ofs);
-> +	/* and unmask interrupt generation for host regs */
-> +	writelfl(hpriv->unmask_all_irqs, mmio + hpriv->irq_mask_ofs);
-> +
-> +	/*
-> +	 * enable only global host interrupts for now.
-> +	 * The per-port interrupts get done later as ports are set up.
-> +	 */
-> +	mv_set_main_irq_mask(host, 0, PCI_ERR);
->  
-> -		/*
-> -		 * enable only global host interrupts for now.
-> -		 * The per-port interrupts get done later as ports are set up.
-> -		 */
-> -		mv_set_main_irq_mask(host, 0, PCI_ERR);
-> -	}
->  done:
->  	return rc;
->  }
+> Is this -stable material?
 
-
-Looks fine to me -- Saeed Bishara did the SOC stuff, and Marvell refuses to show
-me any documentation for it.  So if it works for you, then let's put it in there.
-Or maybe get Saeed's sign-off first.
-
-Cheers
+Absolutely yes.
