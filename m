@@ -1,25 +1,27 @@
 From: Frans Pop <elendil@planet.nl>
 Subject: [regression] sata_mv: harddisk activity led no longer responsive on QNAP TS-109
-Date: Tue, 26 Aug 2008 10:45:31 +0200
-Message-ID: <200808261045.33241.elendil@planet.nl>
+Date: Tue, 26 Aug 2008 11:24:38 +0200
+Message-ID: <200808261124.39282.elendil@planet.nl>
 Mime-Version: 1.0
 Content-Type: Multipart/Mixed;
-  boundary="Boundary-00=_tK8sIsIbsN60AjX"
+  boundary="Boundary-00=_Xv8sIQZMg6niQrb"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from cpsmtpo-eml04.kpnxchange.com ([213.75.38.153]:11588 "EHLO
-	cpsmtpo-eml04.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753690AbYHZJAt (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 26 Aug 2008 05:00:49 -0400
+Received: from cpsmtpo-eml06.kpnxchange.com ([213.75.38.155]:9798 "EHLO
+	cpsmtpo-eml06.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752200AbYHZJYl (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 26 Aug 2008 05:24:41 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-arm-kernel@vger.kernel.org
+To: linux-arm@vger.kernel.org
 Cc: linux-ide@vger.kernel.org, Saeed Bishara <saeed@marvell.com>, Mark Lord <liml@rtr.ca>, Nicolas Pitre <nico@cam.org>, Lennert Buytenhek <buytenh@wantstofly.org>
 
---Boundary-00=_tK8sIsIbsN60AjX
+--Boundary-00=_Xv8sIQZMg6niQrb
 Content-Type: text/plain;
   charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Content-Disposition: inline
+
+(Resend with correct address for linux-arm list; with apologies.)
 
 Starting with kernel 2.6.26 I've noticed that the harddisk (HDD) led on my 
 QNAP TS-109 (which has a Marvel SATA controller as platform device) no 
@@ -49,7 +51,7 @@ Cheers,
 FJP
 
 
---Boundary-00=_tK8sIsIbsN60AjX
+--Boundary-00=_Xv8sIQZMg6niQrb
 Content-Type: text/x-diff;
   charset="iso 8859-15";
   name="qnap_mv0.regs.diff"
@@ -284,4 +286,4 @@ Content-Disposition: attachment;
 +120:  AltStat: 50505050
 +
 
---Boundary-00=_tK8sIsIbsN60AjX--
+--Boundary-00=_Xv8sIQZMg6niQrb--
