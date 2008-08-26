@@ -1,106 +1,102 @@
-From: "Gwendal Grignou" <gwendal@google.com>
-Subject: Re: [PATCH #upstream-fixes] sata_mv: don't issue two DMA commands concurrently
-Date: Mon, 25 Aug 2008 18:24:57 -0700
-Message-ID: <e7510f760808251824m2da1331eq514e864209654028@mail.gmail.com>
-References: <489C19CE.6030708@ngs.ru> <489C4B6E.9070306@rtr.ca>
-	 <489C4F29.6020007@rtr.ca> <489C54D1.5080901@rtr.ca>
-	 <48A29E14.3090908@gmail.com> <48A2BBDC.2090201@ngs.ru>
-	 <48A2BC5D.5060801@gmail.com> <48A2C35C.7020400@ngs.ru>
-	 <48A2C460.6040504@gmail.com>
+From: "Jeffrey W. Baker" <jwbaker@gmail.com>
+Subject: Re: SATA ALPM min_power causes > 10s delay on resume
+Date: Mon, 25 Aug 2008 20:14:35 -0700
+Message-ID: <1219720475.18172.3.camel@stinkpad>
+References: <1219598870.11057.2.camel@stinkpad>
+	 <da824cf30808251714na27f523r7a6155d5086b62b9@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp-out.google.com ([216.239.33.17]:24033 "EHLO
-	smtp-out.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753215AbYHZBZP (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 25 Aug 2008 21:25:15 -0400
-Received: from spaceape7.eur.corp.google.com (spaceape7.eur.corp.google.com [172.28.16.141])
-	by smtp-out.google.com with ESMTP id m7Q1Ox5p026664
-	for <linux-ide@vger.kernel.org>; Tue, 26 Aug 2008 02:24:59 +0100
-Received: from yw-out-1718.google.com (ywk9.prod.google.com [10.192.11.9])
-	by spaceape7.eur.corp.google.com with ESMTP id m7Q1OvbG003787
-	for <linux-ide@vger.kernel.org>; Mon, 25 Aug 2008 18:24:58 -0700
-Received: by yw-out-1718.google.com with SMTP id 9so143062ywk.64
-        for <linux-ide@vger.kernel.org>; Mon, 25 Aug 2008 18:24:57 -0700 (PDT)
-In-Reply-To: <48A2C460.6040504@gmail.com>
-Content-Disposition: inline
+Received: from wa-out-1112.google.com ([209.85.146.180]:2069 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753640AbYHZDOh (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 25 Aug 2008 23:14:37 -0400
+Received: by wa-out-1112.google.com with SMTP id j37so811199waf.23
+        for <linux-ide@vger.kernel.org>; Mon, 25 Aug 2008 20:14:37 -0700 (PDT)
+In-Reply-To: <da824cf30808251714na27f523r7a6155d5086b62b9@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Artem Bokhan <aptem@ngs.ru>, Jeff Garzik <jeff@garzik.org>, Mark Lord <liml@rtr.ca>, linux-ide@vger.kernel.org
+To: Grant Grundler <grundler@google.com>
+Cc: linux-ide@vger.kernel.org
 
-What happen if there is a SATA port multiplier behing the marvell
-controller and NCQ is disabled?
+On Mon, 2008-08-25 at 17:14 -0700, Grant Grundler wrote:
+> On Sun, Aug 24, 2008 at 10:27 AM, Jeffrey W. Baker <jwbaker@gmail.com> wrote:
+> > I started using the min_power ALPM setting on my ThinkPad to save power
+> > (which works great, thanks!) but it causes a small problem.  When the
+> > machine resumes from suspend-to-ram it hangs for about 10s and then
+> > prints this on the console:
+> >
+> > ata1: COMRESET failed (errno=-16)
+> >
+> > It then proceeds normally.  The full messages are:
+> >
+> > ata1: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+> > ata1.00: configured for UDMA/100
+> > ata1: failed to recover some devices, retrying in 5 secs
+> > ata1: soft resetting link
+> > ata1: SATA link down (SStatus 611 SControl 300)
+> > ata1: failed to recover some devices, retrying in 5 secs
+> > ata1: hard resetting link
+> > ata1: port is slow to respond, please be patient (Status 0x80)
+> > ata1: COMRESET failed (errno=-16)
+> > ata1: hard resetting link
+> > ata1: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+> 
+> Can you enable CONFIG_PRINTK_TIME in your kernel?
 
-I have the impression that with this patch we are able to only send
-one DMA command at a time to all the drives behind the PM, which has
-an impact on performance.
+Output follows ...
 
-Gwendal.
+> It sounds like the ahci driver is having problems spinning up
+> the disk after putting it into a "low power state" (which I
+> have no clue might be). Getting more accurate time
+> stamps might be a useful additional clue.
 
-On Wed, Aug 13, 2008 at 4:24 AM, Tejun Heo <htejun@gmail.com> wrote:
-> sata_mv allowed issuing two DMA commands concurrently which the
-> hardware allows.  Unfortunately, libata core layer isn't ready for
-> this yet and spews ugly warning message and malfunctions on this.
-> Don't allow concurrent DMA commands for now.
->
-> Signed-off-by: Tejun Heo <tj@kernel.org>
-> ---
-> No problem, Artem.
->
-> Mark, does this look good to you?
->
->  drivers/ata/sata_mv.c |   34 ++++++++++------------------------
->  1 file changed, 10 insertions(+), 24 deletions(-)
->
-> diff --git a/drivers/ata/sata_mv.c b/drivers/ata/sata_mv.c
-> index ad169ff..80c655f 100644
-> --- a/drivers/ata/sata_mv.c
-> +++ b/drivers/ata/sata_mv.c
-> @@ -1134,30 +1134,16 @@ static int mv_qc_defer(struct ata_queued_cmd *qc)
->        if (ap->nr_active_links == 0)
->                return 0;
->
-> -       if (pp->pp_flags & MV_PP_FLAG_EDMA_EN) {
-> -               /*
-> -                * The port is operating in host queuing mode (EDMA).
-> -                * It can accomodate a new qc if the qc protocol
-> -                * is compatible with the current host queue mode.
-> -                */
-> -               if (pp->pp_flags & MV_PP_FLAG_NCQ_EN) {
-> -                       /*
-> -                        * The host queue (EDMA) is in NCQ mode.
-> -                        * If the new qc is also an NCQ command,
-> -                        * then allow the new qc.
-> -                        */
-> -                       if (qc->tf.protocol == ATA_PROT_NCQ)
-> -                               return 0;
-> -               } else {
-> -                       /*
-> -                        * The host queue (EDMA) is in non-NCQ, DMA mode.
-> -                        * If the new qc is also a non-NCQ, DMA command,
-> -                        * then allow the new qc.
-> -                        */
-> -                       if (qc->tf.protocol == ATA_PROT_DMA)
-> -                               return 0;
-> -               }
-> -       }
-> +       /*
-> +        * The port is operating in host queuing mode (EDMA) with NCQ
-> +        * enabled, allow multiple NCQ commands.  EDMA also allows
-> +        * queueing multiple DMA commands but libata core currently
-> +        * doesn't allow it.
-> +        */
-> +       if ((pp->pp_flags & MV_PP_FLAG_EDMA_EN) &&
-> +           (pp->pp_flags & MV_PP_FLAG_NCQ_EN) && ata_is_ncq(qc->tf.protocol))
-> +               return 0;
-> +
->        return ATA_DEFER_PORT;
->  }
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-ide" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+The disk is an SSD so there's no need for delay to allow it to spin up.
+Here are the messages from a normal resume, pipe grep ata:
+
+[    0.699797] ata5: port disabled. ignoring.
+[    2.028774] ata3: SATA link down (SStatus 0 SControl 300)
+[    2.028792] ata2: SATA link down (SStatus 0 SControl 0)
+[    2.192670] ata1: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+[    2.193535] ata1.00: ACPI cmd ef/02:00:00:00:00:a0 succeeded
+[    2.193537] ata1.00: ACPI cmd f5/00:00:00:00:00:a0 filtered out
+[    2.194998] ata1.00: ACPI cmd ef/10:03:00:00:00:a0 succeeded
+[    2.195381] ata1.00: configured for UDMA/100
+[    2.209049] ata1.00: configured for UDMA/100
+[    2.209051] ata1: EH complete
+
+And here are the messages on a slow resume:
+
+[    0.700191] ata5: port disabled. ignoring.
+[    2.029795] ata2: SATA link down (SStatus 0 SControl 0)
+[    2.029814] ata3: SATA link down (SStatus 0 SControl 300)
+[    2.193770] ata1: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+[    2.194631] ata1.00: ACPI cmd ef/02:00:00:00:00:a0 succeeded
+[    2.194634] ata1.00: ACPI cmd f5/00:00:00:00:00:a0 filtered out
+[    2.196161] ata1.00: ACPI cmd ef/10:03:00:00:00:a0 succeeded
+[    2.196545] ata1.00: configured for UDMA/100
+[    2.197289] ata1: failed to recover some devices, retrying in 5 secs
+[    3.644507] ata1: soft resetting link
+[    3.644518] ata1: SATA link down (SStatus 611 SControl 300)
+[    3.644530] ata1: failed to recover some devices, retrying in 5 secs
+[    4.430864] ata1: hard resetting link
+[    5.298009] ata1: port is slow to respond, please be patient (Status 0x80)
+[    6.010843] ata1: COMRESET failed (errno=-16)
+[    6.010847] ata1: hard resetting link
+[    6.085653] ata1: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+[    6.086267] ata1.00: ACPI cmd ef/02:00:00:00:00:a0 succeeded
+[    6.086269] ata1.00: ACPI cmd f5/00:00:00:00:00:a0 filtered out
+[    6.086380] ata1.00: ACPI cmd ef/10:03:00:00:00:a0 succeeded
+[    6.087124] ata1.00: ACPI cmd ef/02:00:00:00:00:a0 succeeded
+[    6.087128] ata1.00: ACPI cmd f5/00:00:00:00:00:a0 filtered out
+[    6.087350] ata1.00: ACPI cmd ef/10:03:00:00:00:a0 succeeded
+[    6.087550] ata1.00: configured for UDMA/100
+[    6.088119] ata1.00: configured for UDMA/100
+[    6.088122] ata1: EH complete
+
+I don't know how accurate these times are supposed to be.  On my
+wallclock it takes substantially more than 6 seconds.
+
+-jwb
+
