@@ -1,75 +1,72 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
+From: Mark Lord <liml@rtr.ca>
 Subject: Re: libata bridge limits
-Date: Tue, 26 Aug 2008 15:55:04 -0500
-Message-ID: <1219784104.6197.29.camel@localhost.localdomain>
-References: <20080826072841.GS20055@kernel.dk>
-	 <20080826104237.4b1cd7f6@lxorguk.ukuu.org.uk>
-	 <20080826101713.GW20055@kernel.dk> <48B3DE5B.1020607@kernel.org>
-	 <e7510f760808261025j189f6436ra2ec044256549cde@mail.gmail.com>
-	 <1219772711.6197.11.camel@localhost.localdomain>
-	 <e7510f760808261225x6164e1cciaf67ca08b26ef2bf@mail.gmail.com>
+Date: Tue, 26 Aug 2008 18:37:56 -0400
+Message-ID: <48B485C4.2030502@rtr.ca>
+References: <20080826072841.GS20055@kernel.dk> <20080826104237.4b1cd7f6@lxorguk.ukuu.org.uk> <20080826101713.GW20055@kernel.dk> <48B3F7C3.6010600@wasp.net.au> <20080826124816.GA20055@kernel.dk> <48B3FD40.3000109@kernel.org> <20080826130657.GB20055@kernel.dk> <20080826135822.GE20055@kernel.dk> <48B45B33.1050703@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:35970 "EHLO
-	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752018AbYHZUzI (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 26 Aug 2008 16:55:08 -0400
-In-Reply-To: <e7510f760808261225x6164e1cciaf67ca08b26ef2bf@mail.gmail.com>
+Received: from rtr.ca ([76.10.145.34]:55643 "EHLO mail.rtr.ca"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751090AbYHZWiB (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 26 Aug 2008 18:38:01 -0400
+In-Reply-To: <48B45B33.1050703@garzik.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Gwendal Grignou <gwendal@google.com>
-Cc: Tejun Heo <tj@kernel.org>, Jens Axboe <jens.axboe@oracle.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>, jeff@garzik.org, linux-ide@vger.kernel.org, Mark Lord <mlord@pobox.com>, Kay Sievers <kay.sievers@vrfy.org>
+To: Jeff Garzik <jeff@garzik.org>
+Cc: Jens Axboe <jens.axboe@oracle.com>, Tejun Heo <tj@kernel.org>, Brad Campbell <brad@wasp.net.au>, Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-ide@vger.kernel.org
 
-On Tue, 2008-08-26 at 12:25 -0700, Gwendal Grignou wrote:
-> On Tue, Aug 26, 2008 at 10:45 AM, James Bottomley
-> <James.Bottomley@hansenpartnership.com> wrote:
-> > On Tue, 2008-08-26 at 10:25 -0700, Gwendal Grignou wrote:
-> >> The current patch  to implement libata-sysfs floating in the mailing
-> >> list is read-only.
-> >> For write we must currently go through SCSI midlayer ioctls and use
-> >> sat. To send commands directly within libata[-sysfs] - for instance
-> >> writing SControl register of a SATA PM - I need to either implement a
-> >> queue mechanism over ata_exec_internal() or schedule eh and piggy back
-> >> on it.
-> >
-> > That's not how the other transport classes work, why does the libata one
-> > need to go through the mid-layer (well, except for the necessary command
-> > issue stuff, of course).  The design of the transport classes was
-> > specifically to take all transport knowledge out of the mid layer and
-> > connect the requisite controls in sysfs directly to the transport
-> > actions.
-> I agree. I don't want to use the mid-layer either. I just mentioned
-> that if I want to send a raw taskfile to a ATA device today, the only
-> way I found is using ata_task_ioctl() which relies on the mid-layer to
-> schedule the request; the direct way - through ata_exec_internal() -
-> assumes only one outstanding command at a time.  I need to implement
-> something else for the accessing ATA devices in libata-sysfs similar
-> to smp_execute_task() in libsas.
+Jeff Garzik wrote:
+> Jens Axboe wrote:
+>> OK, something like this. Jeff, if you think this is fine, let me know
+>> and I'll submit a proper patch with description and so on.
+>>
+>> diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+>> index 79e3a8e..879ceac 100644
+>> --- a/drivers/ata/libata-core.c
+>> +++ b/drivers/ata/libata-core.c
+>> @@ -2100,6 +2100,10 @@ retry:
+>>  static inline u8 ata_dev_knobble(struct ata_device *dev)
+>>  {
+>>      struct ata_port *ap = dev->link->ap;
+>> +
+>> +    if (ata_dev_blacklisted(dev) & ATA_HORKAGE_BRIDGE_OK)
+>> +        return 0;
+>> +
+>>      return ((ap->cbl == ATA_CBL_SATA) && (!ata_id_is_sata(dev->id)));
+>>  }
+>>  
+>> @@ -3998,6 +4002,9 @@ static const struct ata_blacklist_entry 
+>> ata_device_blacklist [] = {
+>>      { "TSSTcorp CDDVDW SH-S202N", "SB00",      ATA_HORKAGE_IVB, },
+>>      { "TSSTcorp CDDVDW SH-S202N", "SB01",      ATA_HORKAGE_IVB, },
+>>  
+>> +    /* Devices that do not need bridging limits applied */
+>> +    { "Mtron",        NULL,        0, },
 
-Actually, no ... if you're sending a SATA task, then you're right, you
-need to use the mid-layer inputs.  scsi_execute() is the way transport
-classes use this (see scsi_transport_spi ... it does exactly this for
-domain validation).  ata_task_ioctl() does it exactly this way.
+Err.. shouldn't there be an ATA_HORKAGE_BRIDGE_OK on that line?
+Or did Jens already repost a corrected patch..
 
-You don't want something like smp_execute_task because that's an
-internal libsas API for doing out of band management tasks ... ATA has
-no concept of anything like this.  Even our publicly exposed frame
-in/frame out interfaces for performing SMP tasks go via a special API
-stream in the transport class framework so they can be issued on all SAS
-hosts.  Mechanistically, they're different from normal SCSI commands
-because they don't count against the queuing quota or have ordinary
-tags.  If your commands come out again as standard ATA commands, I 
-suspect they have to go through the standard ATA quota machinery.
-
-SAS is very different from SATA in that we have tons of addressable
-ports sitting off the devices, each addressable by predefined protocols,
-so what smp_execute_task is doing is addressing the SMP port ... this is
-completely out of band as far as the normal SSP/STP protocols see
-things.  With port multipliers, you're more or less stuck with an
-in-band type of packet.
-
-James
-
-
+>> +
+>>      /* End Marker */
+>>      { }
+>>  };
+>> diff --git a/include/linux/libata.h b/include/linux/libata.h
+>> index 225bfc5..9f194c0 100644
+>> --- a/include/linux/libata.h
+>> +++ b/include/linux/libata.h
+>> @@ -364,6 +364,7 @@ enum {
+>>      ATA_HORKAGE_IPM        = (1 << 7),    /* Link PM problems */
+>>      ATA_HORKAGE_IVB        = (1 << 8),    /* cbl det validity bit 
+>> bugs */
+>>      ATA_HORKAGE_STUCK_ERR    = (1 << 9),    /* stuck ERR on next 
+>> PACKET */
+>> +    ATA_HORKAGE_BRIDGE_OK    = (1 << 10),    /* no bridge limits */
+>>  
+>>       /* DMA mask for user DMA control: User visible values; DO NOT
+>>          renumber */
+> 
+> 
+> This one seems fine to me...
+..
