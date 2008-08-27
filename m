@@ -1,92 +1,35 @@
-From: Bryan Wu <cooloney@kernel.org>
-Subject: [PATCH 1/1] libata: Blackfin Pata Driver: Add proper PM operation into ATAPI driver.
-Date: Wed, 27 Aug 2008 11:51:18 +0800
-Message-ID: <1219809078-15767-1-git-send-email-cooloney@kernel.org>
+From: "Andrew Grover" <andy.grover@gmail.com>
+Subject: delay & msgs on S3 wakeup, Dell XPS m1330 laptop
+Date: Tue, 26 Aug 2008 21:56:56 -0700
+Message-ID: <c0a09e5c0808262156u1ed7777ay5f1e6c196a8be6b7@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nwd2mail11.analog.com ([137.71.25.57]:62262 "EHLO
-	nwd2mail11.analog.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753120AbYH0DvK (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 26 Aug 2008 23:51:10 -0400
+Received: from wf-out-1314.google.com ([209.85.200.175]:21763 "EHLO
+	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751456AbYH0E45 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 27 Aug 2008 00:56:57 -0400
+Received: by wf-out-1314.google.com with SMTP id 27so2610180wfd.4
+        for <linux-ide@vger.kernel.org>; Tue, 26 Aug 2008 21:56:56 -0700 (PDT)
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: jgarzik@pobox.com
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Sonic Zhang <sonic.zhang@analog.com>, Bryan Wu <cooloney@kernel.org>
+To: linux-ide@vger.kernel.org
 
-From: Sonic Zhang <sonic.zhang@analog.com>
+Laptop comes out of suspend and then spends a long time (10 sec)
+waiting, and then finishes coming up. Everything seems to be working
+fine, but the delay is worrisome.
 
-Signed-off-by: Sonic Zhang <sonic.zhang@analog.com>
-Signed-off-by: Bryan Wu <cooloney@kernel.org>
----
- drivers/ata/pata_bf54x.c |   29 ++++++++++++++++++++++++-----
- 1 files changed, 24 insertions(+), 5 deletions(-)
+Any tips? Running latest bios (a12) on Ubuntu 2.6.24-19 kernel.
 
-diff --git a/drivers/ata/pata_bf54x.c b/drivers/ata/pata_bf54x.c
-index d393290..60f4872 100644
---- a/drivers/ata/pata_bf54x.c
-+++ b/drivers/ata/pata_bf54x.c
-@@ -1632,6 +1632,8 @@ static int __devinit bfin_atapi_probe(struct platform_device *pdev)
- 		return -ENODEV;
- 	}
- 
-+	dev_set_drvdata(&pdev->dev, host);
-+
- 	return 0;
- }
- 
-@@ -1648,6 +1650,7 @@ static int __devexit bfin_atapi_remove(struct platform_device *pdev)
- 	struct ata_host *host = dev_get_drvdata(dev);
- 
- 	ata_host_detach(host);
-+	dev_set_drvdata(&pdev->dev, NULL);
- 
- 	peripheral_free_list(atapi_io_port);
- 
-@@ -1657,11 +1660,27 @@ static int __devexit bfin_atapi_remove(struct platform_device *pdev)
- #ifdef CONFIG_PM
- int bfin_atapi_suspend(struct platform_device *pdev, pm_message_t state)
- {
--	return 0;
-+	struct ata_host *host = dev_get_drvdata(&pdev->dev);
-+	if (host)
-+		return ata_host_suspend(host, state);
-+	else
-+		return 0;
- }
- 
- int bfin_atapi_resume(struct platform_device *pdev)
- {
-+	struct ata_host *host = dev_get_drvdata(&pdev->dev);
-+	int ret;
-+
-+	if (host) {
-+		ret = bfin_reset_controller(host);
-+		if (ret) {
-+			printk(KERN_ERR DRV_NAME ": Error during HW init\n");
-+			return ret;
-+		}
-+		ata_host_resume(host);
-+	}
-+
- 	return 0;
- }
- #endif
-@@ -1669,13 +1688,13 @@ int bfin_atapi_resume(struct platform_device *pdev)
- static struct platform_driver bfin_atapi_driver = {
- 	.probe			= bfin_atapi_probe,
- 	.remove			= __devexit_p(bfin_atapi_remove),
-+#ifdef CONFIG_PM
-+	.suspend		= bfin_atapi_suspend,
-+	.resume			= bfin_atapi_resume,
-+#endif
- 	.driver = {
- 		.name		= DRV_NAME,
- 		.owner		= THIS_MODULE,
--#ifdef CONFIG_PM
--		.suspend	= bfin_atapi_suspend,
--		.resume		= bfin_atapi_resume,
--#endif
- 	},
- };
- 
--- 
-1.5.6
+[    2.946116] sd 2:0:0:0: [sda] Starting disk
+[    6.128124] ata3: port is slow to respond, please be patient (Status 0x80)
+[   10.941192] ata3: softreset failed (device not ready)
+[   11.240148] ata3: port is slow to respond, please be patient (Status 0x80)
+[   11.482698] ata3: COMRESET failed (errno=-16)
+[   11.508223] ata3: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+[   11.583731] ata3.00: configured for UDMA/133
+[   11.585389] sd 2:0:0:0: [sda] 488397168 512-byte hardware sectors (250059 MB)
+
+Thanks -- Andy
