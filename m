@@ -1,149 +1,41 @@
-From: "Grant Grundler" <grundler@google.com>
+From: Frans Pop <elendil@planet.nl>
 Subject: Re: [regression] sata_mv: harddisk activity led no longer responsive on QNAP TS-109
-Date: Thu, 28 Aug 2008 10:26:32 -0700
-Message-ID: <da824cf30808281026x1dde9a5bl1dd779b99b2c2789@mail.gmail.com>
-References: <200808261045.33241.elendil@planet.nl>
-	 <200808281125.14012.elendil@planet.nl>
-	 <c70ff3ad0808280353n18967a9frf414091ae768030c@mail.gmail.com>
-	 <200808281911.28484.elendil@planet.nl>
+Date: Thu, 28 Aug 2008 20:03:34 +0200
+Message-ID: <200808282003.35663.elendil@planet.nl>
+References: <200808261045.33241.elendil@planet.nl> <200808281911.28484.elendil@planet.nl> <da824cf30808281026x1dde9a5bl1dd779b99b2c2789@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
-	boundary="----=_Part_4350_32378458.1219944392695"
+Content-Type: text/plain;
+  charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp-out.google.com ([216.239.33.17]:63378 "EHLO
-	smtp-out.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752549AbYH1R0r (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 28 Aug 2008 13:26:47 -0400
-Received: from zps35.corp.google.com (zps35.corp.google.com [172.25.146.35])
-	by smtp-out.google.com with ESMTP id m7SHQZG1015119
-	for <linux-ide@vger.kernel.org>; Thu, 28 Aug 2008 18:26:35 +0100
-Received: from ug-out-1314.google.com (ugfe2.prod.google.com [10.66.182.2])
-	by zps35.corp.google.com with ESMTP id m7SHQXSl031724
-	for <linux-ide@vger.kernel.org>; Thu, 28 Aug 2008 10:26:34 -0700
-Received: by ug-out-1314.google.com with SMTP id e2so1666183ugf.38
-        for <linux-ide@vger.kernel.org>; Thu, 28 Aug 2008 10:26:32 -0700 (PDT)
-In-Reply-To: <200808281911.28484.elendil@planet.nl>
+Received: from hpsmtp-eml15.kpnxchange.com ([213.75.38.115]:26918 "EHLO
+	hpsmtp-eml15.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752690AbYH1SDk (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 28 Aug 2008 14:03:40 -0400
+In-Reply-To: <da824cf30808281026x1dde9a5bl1dd779b99b2c2789@mail.gmail.com>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Frans Pop <elendil@planet.nl>
+To: Grant Grundler <grundler@google.com>
 Cc: saeed bishara <saeed.bishara@gmail.com>, linux-arm@vger.kernel.org, linux-ide@vger.kernel.org, Mark Lord <liml@rtr.ca>, Nicolas Pitre <nico@cam.org>, Lennert Buytenhek <buytenh@wantstofly.org>, Harald Welte <laforge@gnumonks.org>
 
-------=_Part_4350_32378458.1219944392695
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
-
-On Thu, Aug 28, 2008 at 10:11 AM, Frans Pop <elendil@planet.nl> wrote:
-> On Thursday 28 August 2008, saeed bishara wrote:
->> can you try setting bit 0 of the 0xf108002c then run some io?
+On Thursday 28 August 2008, Grant Grundler wrote:
+> On Thu, Aug 28, 2008 at 10:11 AM, Frans Pop <elendil@planet.nl> wrote:
+> > On Thursday 28 August 2008, saeed bishara wrote:
+> >> can you try setting bit 0 of the 0xf108002c then run some io?
+> >
+> > Tried that using Grant's suggestion (thanks!), but setting the bit
+> > does not seem to take:
+> >
+> > $ sudo mmio_rd f108002c 1
+> > 0x0000000000000000
+> > $ sudo mmio_wr f108002c 1
+> > 0000000000000000 -> 0000000000000001
+> > $ sudo mmio_rd f108002c 1
+> > 0x0000000000000000
+> >
+> > Am I doing something wrong here?
 >
-> Tried that using Grant's suggestion (thanks!), but setting the bit does
-> not seem to take:
->
-> $ sudo mmio_rd f108002c 1
-> 0x0000000000000000
-> $ sudo mmio_wr f108002c 1
-> 0000000000000000 -> 0000000000000001
-> $ sudo mmio_rd f108002c 1
-> 0x0000000000000000
->
-> Am I doing something wrong here?
+> Dunno. Is this a 64-bit kjernel?
 
-Dunno. Is this a 64-bit kjernel?
-
-I still have a patch outstanding against mmio_test fix to issues with
-64-bit addressing from 32-bit user space. I've attached those (and
-cc'd Harald Welte) in case that's the problem.
-
-thanks,
-grant
-
-------=_Part_4350_32378458.1219944392695
-Content-Type: application/octet-stream; name=diff-mmio_test-02
-Content-Transfer-Encoding: base64
-X-Attachment-Id: f_fkfn9zg70
-Content-Disposition: attachment; filename=diff-mmio_test-02
-
-SW5kZXg6IG1taW9fdGVzdC54bWwKPT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
-PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PQotLS0gbW1pb190ZXN0LnhtbAkocmV2aXNp
-b24gMjA5OSkKKysrIG1taW9fdGVzdC54bWwJKHdvcmtpbmcgY29weSkKQEAgLTIwMyw2ICsyMDMs
-MjAgQEAKIAk8cmVnaXN0ZXIgbmFtZT0iSVNSQzIgKFl1a29uMiBvbmx5KSIgcmVzb3VyY2U9IjAi
-IG9mZnNldD0iMHgxYyIvPgogPC9kZXZpY2U+CiAKKzxkZXZpY2UgbmFtZT0ic2F0YV9tdiI+CisJ
-PCEtLSBNYXJ2ZWxsIFNBVEEgSUkgKCJUaG9yIikgLS0+CisJPHBjaV9pZCB2ZW5kb3JfaWQ9IjB4
-MTFBQiIgZGV2aWNlX2lkPSIweDYwNDIiLz4KKwk8cGNpX2lkIHZlbmRvcl9pZD0iMHgxMUFCIiBk
-ZXZpY2VfaWQ9IjB4NzA0MiIvPgorCisJPCEtLSBvbGRlciBNYXJ2ZWxsIGNvbnRyb2xsZXJzIC0t
-PgorCTwhLS0gcGNpX2lkIHZlbmRvcl9pZD0iMHgxMUFCIiBkZXZpY2VfaWQ9IjB4NjA0MSIvIC0t
-PgorCTwhLS0gcGNpX2lkIHZlbmRvcl9pZD0iMHgxMUFCIiBkZXZpY2VfaWQ9IjB4NjA4MSIvIC0t
-PgorCisJPHJlZ2lzdGVyIG5hbWU9Im1haW5fY2F1c2UiIHJlc291cmNlPSIwIiBvZmZzZXQ9IjB4
-MWQ2MCIvPgorCTxyZWdpc3RlciBuYW1lPSJtYWluX21hc2siIHJlc291cmNlPSIwIiBvZmZzZXQ9
-IjB4MWQ2NCIvPgorCTxyZWdpc3RlciBuYW1lPSJTQVRBSEMwQ2F1c2UiIHJlc291cmNlPSIwIiBv
-ZmZzZXQ9IjB4MjAwMTQiIC8+Cis8L2RldmljZT4KKwogPGRldmljZSBuYW1lPSJzeW0yIj4KIAk8
-IS0tIFN5bWJpb3MgU0NTSSAtLT4KIAk8cGNpX2lkIHZlbmRvcl9pZD0iMHgxMDAwIiBkZXZpY2Vf
-aWQ9IjB4MDAwMSIvPgpJbmRleDogbW1pb190ZXN0LmMKPT09PT09PT09PT09PT09PT09PT09PT09
-PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PQotLS0gbW1pb190ZXN0
-LmMJKHJldmlzaW9uIDIwOTkpCisrKyBtbWlvX3Rlc3QuYwkod29ya2luZyBjb3B5KQpAQCAtMTI3
-LDIzICsxMjcsMjkgQEAKIAkJY3ljbGVzX3QgYXZnOwogCQl1bnNpZ25lZCBsb25nIGxvbmcgcmVn
-cyA9IAogCQkJcC0+YmFzZV9hZGRyW3JlZy0+cmVzb3VyY2VdICYgUENJX0FERFJfTUVNX01BU0s7
-CisJCXVuc2lnbmVkIGludCByZWdvZmYgPSByZWctPm9mZnNldDsKIAotCQkvL3ByaW50ZigiVXNp
-bmcgcmVncyA9IDB4JWxseCAoJWQpXG4iLCByZWdzLCByZWctPm1tYXBfc2l6ZSk7Ci0JCXggPSBt
-bWFwKE5VTEwsIHJlZy0+bW1hcF9zaXplLCBQUk9UX1JFQUQsIE1BUF9TSEFSRUQsIAotCQkJIGRl
-dl9tZW1fZmQsIHJlZ3MpOworCQkvKiBXZSBkbyBub3QgbWFwIHRoZSBlbnRpcmUgcmVnaXN0ZXIg
-c3BhY2UgZm9yIGEgZGV2aWNlLgorCQkgKiBEbyBzb21lIGJhc2ljIG1hdGggdG8gcmVkdWNlIHRo
-YXQgdG8gb25lIDRrIHBhZ2UuIAorCQkgKi8KKwkJLyogcHJpbnRmKCJVc2luZyByZWdzID0gMHgl
-bGx4ICsgJXgiLCByZWdzLCByZWctPm9mZnNldCk7ICovCisJCXJlZ3MgKz0gcmVnb2ZmICYgfjB4
-ZmZmOworCQlyZWdvZmYgJj0gMHhmZmY7CisJCS8qIHByaW50ZigiIC0tPiAweCVsbHggKyAleFxu
-IiwgcmVncywgcmVnb2ZmKTsgKi8KKwkJeCA9IG1tYXAoTlVMTCwgMHgxMDAwLCBQUk9UX1JFQUQs
-IE1BUF9TSEFSRUQsIGRldl9tZW1fZmQsIHJlZ3MpOwogCQlpZiAoeCA9PSBNQVBfRkFJTEVEKSB7
-CiAJCQlwZXJyb3IoIm1tYXAiKTsKIAkJCXJldHVybiAtMTsKIAkJfQogCi0JCWF2ZyA9IHRlc3Rf
-YmFja2VuZCh4LCByZWctPm9mZnNldCk7CisJCWF2ZyA9IHRlc3RfYmFja2VuZCh4LCByZWdvZmYp
-OwogCQlpZiAob3V0cHV0X3htbCkgewogCQkJcHJpbnRmKCI8dGVzdHJlc3VsdCBkZXZfbmFtZT1c
-IiVzXCIgIgogCQkJCSJwY2lfdmVuZG9yX2lkPVwiMHgleFwiICIKIAkJCQkicGNpX2RldmljZV9p
-ZD1cIjB4JXhcIiAiCiAJCQkJInBjaV9hZGRyPVwiJWQ6JTAyZDolMDJkLiVkXCIgIgogCQkJCSJj
-cHU9XCIlZFwiIHJlc291cmNlPVwiJWRcIiAiCi0JCQkJInJlZ19vZmZzZXQ9XCIlZFwiIGN5Y2xl
-cz1cIiVkXCIiLCAKKwkJCQkicmVnX29mZnNldD1cIiVkXCIgY3ljbGVzPVwiJWxsZFwiIiwgCiAJ
-CQkJbi0+bmFtZSwgcC0+dmVuZG9yX2lkLCBwLT5kZXZpY2VfaWQsIAogCQkJCXAtPmRvbWFpbiwg
-cC0+YnVzLCBwLT5kZXYsIHAtPmZ1bmMsIAogCQkJCWNwdSwgcmVnLT5yZXNvdXJjZSwgcmVnLT5v
-ZmZzZXQsIGF2Zyk7CkluZGV4OiBtbWlvX3JkLmMKPT09PT09PT09PT09PT09PT09PT09PT09PT09
-PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PQotLS0gbW1pb19yZC5jCShy
-ZXZpc2lvbiAyMDk5KQorKysgbW1pb19yZC5jCSh3b3JraW5nIGNvcHkpCkBAIC0xMyw4ICsxMywx
-MCBAQAogaW50IG1haW4oaW50IGFyZ2MsIGNoYXIgKiphcmd2KQogewogCWludCBmZCA9IG9wZW4o
-Ii9kZXYvbWVtIiwgT19SRE9OTFkgfCBPX1NZTkMpOwotCXVuc2lnbmVkIGxvbmcgcGh5c19hZGRy
-LCBsZW47CS8qIGFyZzEsIGFyZzIgKi8KLQl1bnNpZ25lZCBsb25nIGksIHBhZ2VfYWRkciwgcGFn
-ZV9zaXplID0gZ2V0cGFnZXNpemUoKTsKKwl1bnNpZ25lZCBsb25nIGxvbmcgcGh5c19hZGRyOwkv
-KiBhcmcxICovCisJdW5zaWduZWQgbG9uZyBsb25nIHBhZ2VfYWRkcjsKKwl1bnNpZ25lZCBsb25n
-IGxlbjsJCS8qIGFyZzIgKi8KKwl1bnNpZ25lZCBsb25nIGksIHBhZ2Vfc2l6ZSA9IGdldHBhZ2Vz
-aXplKCk7CiAJdm9sYXRpbGUgdW5zaWduZWQgbG9uZyAqbWVtOwogCiAJaWYgKGZkIDwgMCkKQEAg
-LTIzLDcgKzI1LDcgQEAKIAlpZiAoYXJnYyA8IDMpCiAJCWV4aXQoLTIpOwogCi0JcGh5c19hZGRy
-ID0gc3RydG91bChhcmd2WzFdLCBOVUxMLCAxNik7CisJcGh5c19hZGRyID0gc3RydG91bGwoYXJn
-dlsxXSwgTlVMTCwgMCk7CiAJcGh5c19hZGRyICY9IH4oc2l6ZW9mKG1lbVswXSkgLSAxKTsKIAog
-CWxlbiA9IHN0cnRvdWwoYXJndlsyXSwgTlVMTCwgMTYpOwpAQCAtNDMsNyArNDUsNyBAQAogCiAJ
-Zm9yICg7IGxlbiAmJiAoaSA8IChwYWdlX3NpemUgLyBzaXplb2YobWVtWzBdKSkpOyBpKyssIGxl
-bi0tKSB7CiAvKiAgcHJpbnRmKCIlMDE2bHg6ICIsIHBhZ2VfYWRkciArIGkqc2l6ZW9mKG1lbVsw
-XSkpOyAqLwotCQlwcmludGYoIjB4JTAxNmx4XG4iLCBtZW1baV0pOworCQlwcmludGYoIiUwMTZs
-eFxuIiwgbWVtW2ldKTsKIAl9CiAKIAlyZXR1cm4gMDsKSW5kZXg6IG1taW9fd3IuYwo9PT09PT09
-PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
-PT09Ci0tLSBtbWlvX3dyLmMJKHJldmlzaW9uIDIwOTkpCisrKyBtbWlvX3dyLmMJKHdvcmtpbmcg
-Y29weSkKQEAgLTI2LDcgKzI2LDggQEAKIGludCBtYWluKGludCBhcmdjLCBjaGFyICoqYXJndikK
-IHsKIAlpbnQgZmQgPSBvcGVuKCIvZGV2L21lbSIsIE9fUkRXUiB8IE9fU1lOQyk7Ci0JdW5zaWdu
-ZWQgbG9uZyBpLCBhZGRyLCB2YWwsIG9mZnNldCwgb2xkLCBwYWdlX3NpemUgPSBnZXRwYWdlc2l6
-ZSgpOworCXVuc2lnbmVkIGxvbmcgbG9uZyBpLCBhZGRyLCB2YWwsIG9mZnNldCwgb2xkOworCXVu
-c2lnbmVkIGxvbmcgcGFnZV9zaXplID0gZ2V0cGFnZXNpemUoKTsKIAl2b2xhdGlsZSB1bnNpZ25l
-ZCBsb25nICptZW07CiAKIAlpZiAoZmQgPCAwKQpAQCAtMzUsOCArMzYsOCBAQAogCWlmIChhcmdj
-IDwgMykKIAkJZXhpdCgtMik7CiAKLQlhZGRyID0gc3RydG9sKGFyZ3ZbMV0sIE5VTEwsIDE2KTsK
-LQl2YWwgPSBzdHJ0b2woYXJndlsyXSwgTlVMTCwgMTYpOworCWFkZHIgPSBzdHJ0b3VsbChhcmd2
-WzFdLCBOVUxMLCAxNik7CisJdmFsID0gc3RydG91bGwoYXJndlsyXSwgTlVMTCwgMTYpOwogCiAJ
-b2Zmc2V0ID0gYWRkciAmIH4ocGFnZV9zaXplIC0gMSk7CiAJaSA9IChhZGRyIC0gb2Zmc2V0KSAv
-IHNpemVvZihtZW1bMF0pOwpAQCAtNDgsNyArNDksNyBAQAogCX0KIAogCW9sZCA9IG1lbVtpXTsK
-LQlwcmludGYoIiUwMTZseCAtPiAlMDE2bHhcbiIsIG9sZCwgdmFsKTsKKwkvKiBwcmludGYoIiUw
-MTZsbHggLT4gJTAxNmxseFxuIiwgb2xkLCB2YWwpOyAqLwogCW1lbVtpXSA9IHZhbDsKIAogCXJl
-dHVybiAwOwpJbmRleDogTWFrZWZpbGUKPT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
-PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PQotLS0gTWFrZWZpbGUJKHJldmlzaW9u
-IDIwOTkpCisrKyBNYWtlZmlsZQkod29ya2luZyBjb3B5KQpAQCAtMiwxOCArMiwxMyBAQAogQ0ZM
-QUdTICs9IC1JL3Vzci9pbmNsdWRlL2xpYnhtbDIKICMgb24gU1BBUkM2NCwgcGxlc2UgYWRkIHRo
-ZSBiZWxvdyBsaW5lCiAjQ0ZMQUdTICs9IC1XYSwtQXY5YQorTERGTEFHUyArPSAtc3RhdGljCiAK
-LUxJQlM6PS1scGNpIC1seG1sMgorTElCUzo9LWxwY2kgLWx4bWwyIC1seiAtbG0gLWxwdGhyZWFk
-CiAjTElCUys9LWxydAogCiBhbGw6IG1taW9fcmQgbW1pb193ciBtbWlvX3Rlc3QKIAotbW1pb19y
-ZDogbW1pb19yZC5vCi0JJChDQykgLW8gJEAgICReCi0KLW1taW9fd3I6IG1taW9fd3IubwotCSQo
-Q0MpIC1vICRAICAkXgotCiBtbWlvX3Rlc3Q6IG1taW9fdGVzdC5vIGdldF9jbG9jay5vIHhtbGlu
-Lm8KIAkkKENDKSAkKExERkxBR1MpIC1vICRAICReICQoTElCUykKIAo=
-------=_Part_4350_32378458.1219944392695--
+No, it's a 32-bit armel kernel.
