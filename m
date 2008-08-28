@@ -1,62 +1,176 @@
-From: Frans Pop <elendil@planet.nl>
-Subject: Re: [regression] sata_mv: harddisk activity led no longer responsive on QNAP TS-109
-Date: Thu, 28 Aug 2008 13:17:03 +0200
-Message-ID: <200808281317.04908.elendil@planet.nl>
-References: <200808261045.33241.elendil@planet.nl> <200808281125.14012.elendil@planet.nl> <c70ff3ad0808280353n18967a9frf414091ae768030c@mail.gmail.com>
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+Subject: Regression: SATA disk double spin-off during hibernation on hp nx6325
+Date: Fri, 29 Aug 2008 00:02:54 +0200
+Message-ID: <200808290002.55026.rjw@sisk.pl>
 Mime-Version: 1.0
 Content-Type: text/plain;
-  charset="utf-8"
-Content-Transfer-Encoding: 8BIT
+  charset="iso-8859-2"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from cpsmtpo-eml01.kpnxchange.com ([213.75.38.150]:15311 "EHLO
-	cpsmtpo-eml01.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752028AbYH1LRH convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 28 Aug 2008 07:17:07 -0400
-In-Reply-To: <c70ff3ad0808280353n18967a9frf414091ae768030c@mail.gmail.com>
+Received: from ogre.sisk.pl ([217.79.144.158]:49238 "EHLO ogre.sisk.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754271AbYH1V7I (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 28 Aug 2008 17:59:08 -0400
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: saeed bishara <saeed.bishara@gmail.com>
-Cc: linux-arm@vger.kernel.org, linux-ide@vger.kernel.org, Mark Lord <liml@rtr.ca>, Nicolas Pitre <nico@cam.org>, Lennert Buytenhek <buytenh@wantstofly.org>
+To: ACPI Devel Maling List <linux-acpi@vger.kernel.org>
+Cc: linux-ide@vger.kernel.org, Thomas Renninger <trenn@suse.de>, Tejun Heo <htejun@gmail.com>, Robert Hancock <hancockr@shaw.ca>, LKML <linux-kernel@vger.kernel.org>
 
-On Thursday 28 August 2008, saeed bishara wrote:
-> can you try setting bit 0 of the 0xf108002c then run some io?
+Hi,
 
-How can I set that bit?
+It appears that the "double spin-off" problem described in
 
-> which disk you have there?
+http://bugzilla.kernel.org/show_bug.cgi?id=8855
 
-ata1.00: ATA-7: HDT722516DLA380, V43OA91A, max UDMA/133
-ata1.00: 321672960 sectors, multi 0: LBA48 NCQ (depth 31/32)
-ata1.00: configured for UDMA/133
-ata2: SATA link down (SStatus 0 SControl 300)
-scsi 0:0:0:0: Direct-Access     ATA      HDT722516DLA380  V43O PQ: 0 ANSI: 5
-sd 0:0:0:0: [sda] 321672960 512-byte hardware sectors (164697 MB)
-sd 0:0:0:0: [sda] Write Protect is off
-sd 0:0:0:0: [sda] Mode Sense: 00 3a 00 00
-sd 0:0:0:0: [sda] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
-sd 0:0:0:0: [sda] 321672960 512-byte hardware sectors (164697 MB)
-sd 0:0:0:0: [sda] Write Protect is off
-sd 0:0:0:0: [sda] Mode Sense: 00 3a 00 00
-sd 0:0:0:0: [sda] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
- sda: sda1 sda2 sda3 sda4 < sda5 sda6 >
-sd 0:0:0:0: [sda] Attached SCSI disk
-sd 0:0:0:0: Attached scsi generic sg0 type 0
+has recently started to appear during hibernation as well as during shutdown.
+It didn't appear during hibernation on my hp nx6325 with 2.6.26, so this is a
+recent regression.
 
->From smartctl:
-Model Family:     Hitachi Deskstar T7K250 series
-Device Model:     HDT722516DLA380
-Firmware Version: V43OA91A
-User Capacity:    164,696,555,520 bytes
-ATA Version is:   7
-ATA Standard is:  ATA/ATAPI-7 T13 1532D revision 1
+I have prepared the appended patch that fixes the problem for me, based on the
+ earlier Tejun's patch at
 
-> is there any chance that you can replace it with different model that
-> support NCQ? 
+http://bugzilla.kernel.org/attachment.cgi?id=15441&action=view
 
-No, sorry. This is the only model SATA disk I have available. However, I use the
-exact same model in a x86_64 desktop without any problems.
+but I'm not really sure if this is an acceptable solution.  Please advise.
 
-Possibly another owner of a TS-109 or maybe TS-209 can confirm the issue with a
-different model disk.
+Thanks,
+Rafael
+
+
+not-yet-signed-off-by: Rafael J. Wysocki <rjw@sisk.pl>
+---
+ drivers/ata/libata-scsi.c |   16 +++++++++++++---
+ drivers/ata/sata_sil.c    |   30 +++++++++++++++++++++++++++++-
+ include/linux/libata.h    |    1 +
+ kernel/power/disk.c       |    2 ++
+ 4 files changed, 45 insertions(+), 4 deletions(-)
+
+Index: linux-2.6/drivers/ata/libata-scsi.c
+===================================================================
+--- linux-2.6.orig/drivers/ata/libata-scsi.c
++++ linux-2.6/drivers/ata/libata-scsi.c
+@@ -1181,6 +1181,14 @@ static unsigned int ata_scsi_start_stop_
+ 
+ 		tf->command = ATA_CMD_VERIFY;	/* READ VERIFY */
+ 	} else {
++		/* Some odd clown BIOSen issue spindown on shutdown
++		 * causing some drives to spin up and down again.
++		 */
++		if ((qc->ap->flags & ATA_FLAG_NO_SHUTDOWN_SPINDOWN) &&
++		    (system_state == SYSTEM_POWER_OFF ||
++		     system_state == SYSTEM_SUSPEND_DISK))
++			goto skip;
++
+ 		/* XXX: This is for backward compatibility, will be
+ 		 * removed.  Read Documentation/feature-removal-schedule.txt
+ 		 * for more info.
+@@ -1204,8 +1212,7 @@ static unsigned int ata_scsi_start_stop_
+ 				scmd->scsi_done = qc->scsidone;
+ 				qc->scsidone = ata_delayed_done;
+ 			}
+-			scmd->result = SAM_STAT_GOOD;
+-			return 1;
++			goto skip;
+ 		}
+ 
+ 		/* Issue ATA STANDBY IMMEDIATE command */
+@@ -1221,10 +1228,13 @@ static unsigned int ata_scsi_start_stop_
+ 
+ 	return 0;
+ 
+-invalid_fld:
++ invalid_fld:
+ 	ata_scsi_set_sense(scmd, ILLEGAL_REQUEST, 0x24, 0x0);
+ 	/* "Invalid field in cbd" */
+ 	return 1;
++ skip:
++	scmd->result = SAM_STAT_GOOD;
++	return 1;
+ }
+ 
+ 
+Index: linux-2.6/drivers/ata/sata_sil.c
+===================================================================
+--- linux-2.6.orig/drivers/ata/sata_sil.c
++++ linux-2.6/drivers/ata/sata_sil.c
+@@ -603,11 +603,33 @@ static void sil_init_controller(struct a
+ 	}
+ }
+ 
++static int sil_broken_shutdown(struct pci_dev *pdev)
++{
++	static const struct dmi_system_id sysid_nx6325[] = {
++		{
++			.ident = "HP Compaq nx6325",
++			.matches = {
++				DMI_MATCH(DMI_SYS_VENDOR, "Hewlett-Packard"),
++				DMI_MATCH(DMI_PRODUCT_NAME, "HP Compaq nx6325"),
++			},
++		},
++
++		{ }	/* terminate list */
++	};
++
++	/* apply the quirk only to the on-board controller */
++	if (dmi_check_system(sysid_nx6325) && PCI_SLOT(pdev->devfn) == 18)
++		return 1;
++
++	return 0;
++}
++
+ static int sil_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
+ {
+ 	static int printed_version;
+ 	int board_id = ent->driver_data;
+-	const struct ata_port_info *ppi[] = { &sil_port_info[board_id], NULL };
++	struct ata_port_info pi = sil_port_info[board_id];
++	const struct ata_port_info *ppi[] = { &pi, NULL };
+ 	struct ata_host *host;
+ 	void __iomem *mmio_base;
+ 	int n_ports, rc;
+@@ -621,6 +643,12 @@ static int sil_init_one(struct pci_dev *
+ 	if (board_id == sil_3114)
+ 		n_ports = 4;
+ 
++	if (sil_broken_shutdown(pdev)) {
++		pi.flags |= ATA_FLAG_NO_SHUTDOWN_SPINDOWN;
++		dev_printk(KERN_INFO, &pdev->dev,
++			   "quirky BIOS, skipping spindown on shutdown\n");
++	}
++
+ 	host = ata_host_alloc_pinfo(&pdev->dev, ppi, n_ports);
+ 	if (!host)
+ 		return -ENOMEM;
+Index: linux-2.6/include/linux/libata.h
+===================================================================
+--- linux-2.6.orig/include/linux/libata.h
++++ linux-2.6/include/linux/libata.h
+@@ -187,6 +187,7 @@ enum {
+ 					     * doesn't handle PIO interrupts */
+ 	ATA_FLAG_NCQ		= (1 << 10), /* host supports NCQ */
+ 	ATA_FLAG_DEBUGMSG	= (1 << 13),
++	ATA_FLAG_NO_SHUTDOWN_SPINDOWN = (1 << 14), /* don't spindown on shutdown */
+ 	ATA_FLAG_IGN_SIMPLEX	= (1 << 15), /* ignore SIMPLEX */
+ 	ATA_FLAG_NO_IORDY	= (1 << 16), /* controller lacks iordy */
+ 	ATA_FLAG_ACPI_SATA	= (1 << 17), /* need native SATA ACPI layout */
+Index: linux-2.6/kernel/power/disk.c
+===================================================================
+--- linux-2.6.orig/kernel/power/disk.c
++++ linux-2.6/kernel/power/disk.c
+@@ -416,6 +416,7 @@ int hibernation_platform_enter(void)
+ 	if (error)
+ 		goto Close;
+ 
++	system_state = SYSTEM_SUSPEND_DISK;
+ 	suspend_console();
+ 	ftrace_save = __ftrace_enabled_save();
+ 	error = device_suspend(PMSG_HIBERNATE);
+@@ -451,6 +452,7 @@ int hibernation_platform_enter(void)
+  Finish:
+ 	hibernation_ops->finish();
+  Resume_devices:
++	system_state = SYSTEM_RUNNING;
+ 	device_resume(PMSG_RESTORE);
+ 	__ftrace_enabled_restore(ftrace_save);
+ 	resume_console();
