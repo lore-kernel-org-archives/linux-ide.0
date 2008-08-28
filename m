@@ -1,97 +1,157 @@
-From: Linda Walsh <lkml@tlinx.org>
-Subject: Re: Promise 300-TX 4-channel SATA disk going dead under load 2.6.24-7
-Date: Wed, 27 Aug 2008 18:46:27 -0700
-Message-ID: <48B60373.2050501@tlinx.org>
-References: <48A35FE6.1080903@tlinx.org> <20080814115005.1495a0b1@lxorguk.ukuu.org.uk> <48ABCA18.6060800@kernel.org>
+From: Andrew Morton <akpm@linux-foundation.org>
+Subject: Re: [PATCH 1/1] libata: Blackfin Pata Driver: Add proper PM
+ operation into ATAPI driver.
+Date: Wed, 27 Aug 2008 20:51:18 -0700
+Message-ID: <20080827205118.f13d537f.akpm@linux-foundation.org>
+References: <1219809078-15767-1-git-send-email-cooloney@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ishtar.tlinx.org ([64.81.245.74]:43964 "EHLO ishtar.tlinx.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753020AbYH1Bqu (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 27 Aug 2008 21:46:50 -0400
-In-Reply-To: <48ABCA18.6060800@kernel.org>
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:57898 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753884AbYH1DwC (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 27 Aug 2008 23:52:02 -0400
+In-Reply-To: <1219809078-15767-1-git-send-email-cooloney@kernel.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
-Cc: Tejun Heo <tj@kernel.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>
+To: Bryan Wu <cooloney@kernel.org>
+Cc: jgarzik@pobox.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Sonic Zhang <sonic.zhang@analog.com>
 
-Tejun Heo wrote:
-> Alan Cox wrote:
->>> 13 10:12:20 kern: res ff/ff:ff:ff:ff:ff/ff:ff:ff:ff:ff/ff Emask 0x12 
->>> (ATA bus error)
->>> rn: ata4: SError: { RecovComm PHYRdyChg 10B8B Dispar DevExch }
->>> 13 10:14:37 kern: ata4: port is slow to respond, please be patient 
->>> (Status 0xff)
->> First guess would be a dud drive but it could be power or cabling or
->> firmware or ...
-> Hmm... this could be either the drive or the controller. 
-----
+On Wed, 27 Aug 2008 11:51:18 +0800 Bryan Wu <cooloney@kernel.org> wrote:
 
-    Just to confirm -- this particular problem was due to a faulty
-brand-new SATA Western_Digital drive that died.  It hung the system
-several times under load, but shortly after the above errors,
-the system would not boot with that drive attached.
+> From: Sonic Zhang <sonic.zhang@analog.com>
+> 
+> Signed-off-by: Sonic Zhang <sonic.zhang@analog.com>
+> Signed-off-by: Bryan Wu <cooloney@kernel.org>
+> ---
+>  drivers/ata/pata_bf54x.c |   29 ++++++++++++++++++++++++-----
+>  1 files changed, 24 insertions(+), 5 deletions(-)
+> 
+> diff --git a/drivers/ata/pata_bf54x.c b/drivers/ata/pata_bf54x.c
+> index d393290..60f4872 100644
+> --- a/drivers/ata/pata_bf54x.c
+> +++ b/drivers/ata/pata_bf54x.c
+> @@ -1632,6 +1632,8 @@ static int __devinit bfin_atapi_probe(struct platform_device *pdev)
+>  		return -ENODEV;
+>  	}
+>  
+> +	dev_set_drvdata(&pdev->dev, host);
+> +
+>  	return 0;
+>  }
+>  
+> @@ -1648,6 +1650,7 @@ static int __devexit bfin_atapi_remove(struct platform_device *pdev)
+>  	struct ata_host *host = dev_get_drvdata(dev);
+>  
+>  	ata_host_detach(host);
+> +	dev_set_drvdata(&pdev->dev, NULL);
+>  
+>  	peripheral_free_list(atapi_io_port);
+>  
+> @@ -1657,11 +1660,27 @@ static int __devexit bfin_atapi_remove(struct platform_device *pdev)
+>  #ifdef CONFIG_PM
+>  int bfin_atapi_suspend(struct platform_device *pdev, pm_message_t state)
+>  {
+> -	return 0;
+> +	struct ata_host *host = dev_get_drvdata(&pdev->dev);
+> +	if (host)
+> +		return ata_host_suspend(host, state);
+> +	else
+> +		return 0;
+>  }
+>  
+>  int bfin_atapi_resume(struct platform_device *pdev)
+>  {
+> +	struct ata_host *host = dev_get_drvdata(&pdev->dev);
+> +	int ret;
+> +
+> +	if (host) {
+> +		ret = bfin_reset_controller(host);
+> +		if (ret) {
+> +			printk(KERN_ERR DRV_NAME ": Error during HW init\n");
+> +			return ret;
+> +		}
+> +		ata_host_resume(host);
+> +	}
+> +
+>  	return 0;
+>  }
+>  #endif
+> @@ -1669,13 +1688,13 @@ int bfin_atapi_resume(struct platform_device *pdev)
+>  static struct platform_driver bfin_atapi_driver = {
+>  	.probe			= bfin_atapi_probe,
+>  	.remove			= __devexit_p(bfin_atapi_remove),
+> +#ifdef CONFIG_PM
+> +	.suspend		= bfin_atapi_suspend,
+> +	.resume			= bfin_atapi_resume,
+> +#endif
+>  	.driver = {
+>  		.name		= DRV_NAME,
+>  		.owner		= THIS_MODULE,
+> -#ifdef CONFIG_PM
+> -		.suspend	= bfin_atapi_suspend,
+> -		.resume		= bfin_atapi_resume,
+> -#endif
+>  	},
+>  };
 
-    Secondary error:     My ACPI impementation is, /apparently/, flakey.
-I used to not be able to use acpi back in the 2.2 timeframe.  But
-sometime in the 2.4 timeframe, ACPI started working with this system
-(a 440BX based motherboard).  I thought ACPI support had improved.
-Symptom of ACPI based boot vs. non: random hang (a few hours up to maybe
-48 hours max).  But after I thought ACPI was 'fixed', booting with ACPI
-(or not) resulted in stable system.
+I think we can make these fixes while we're there?
 
-    But -- two different error types.  Starting with the 2.6.25 series,
-I started observing hangs again (same in the 2.6.26 series).  My last
-stable was 2.6.24.1.  BUT -- I also occasionally noticed some rare
-sporadic disk error messages (while looking for the cause of the hang) --
-they weren't there in the "pre-hang" 2.6.24.1 kernel...(I couldn't
-even get a 2.6.24.7 kernel to stay up for more than 2 days).
+From: Andrew Morton <akpm@linux-foundation.org>
 
-    My upgrade strategy for disks has been to move to SATA disks as
-I needed to replace older PATA's.  Had alot of problems last Feb when
-I tried to use SATA; after a few weeks of making no progress discovering
-the source of he hangs, I went back to a PATA drive and took out the SATA
-controller -- and system went back to stable.  Ok...I'm tired of
-debugging this...lets stay with PATA for now.
+- remove the ifdefs using the usual pattern
 
-    Six months later...need another disk.  Back to trying SATA...
-more hangs (and a bad disk drive).  It seems that in addition to
-ACPI no longer working above my 2.6.24.1 kernel, adding in the SATA
-board also would cause an ACPI based boot to eventually hang (max 
-runtime ~30 hours).  Using the kernel load option "acpi=noirq", seems to be
-the key to stability now.
+- make things static
 
-    So I don't know exactly what changed -- but ACPI, which was working
-(pre-SATA) seemed to stop being reliable after 2.6.24.1. 
+Cc: Bryan Wu <cooloney@kernel.org>
+Cc: Jeff Garzik <jeff@garzik.org>
+Cc: Sonic Zhang <sonic.zhang@analog.com>
+Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
+---
 
-    Anyway I cut it,  acpi=noirq   now seems to be a requirement for
-system stability.  My ACPI version string shows it as "1.0"...so I'm
-guessing there might have been some kinks in the implementation.
+ drivers/ata/pata_bf54x.c |    9 +++++----
+ 1 file changed, 5 insertions(+), 4 deletions(-)
 
-    So had 4 different problems all converge at roughly the same time:
-1)  new SATA Western_Digital-1TB disk failure,
-2)  ACPI-induced instability in 2.6.25 and above
-3)  ACPI induced instability with addition of new SATA controller
-    (including a rebuilt-for-sata-support 2.6.24.1).
-4)  Auxiliary cooling fan failed and system would get 'warm' (don't know
-    exact temps, but some disks were nearing 50C (normal is mid 30's,
-    except for the 15K system SCSI.  It has its own attached fan, so
-    it's usually a few degrees cooler when the case-fans are operating
-    correctly.
-    However, the disk temps are not indicative of the CPU temps -- they
-    are only an indirect sign that case-airflow is sub-optimal.  The
-    CPU's (2 1GHz P-III's) in this baby don't give reliable thermal
-    warnings (have only ever seen 1).  Usually the system will
-    just 'hang' (not the most helpful indicator in any event).
-
-Thanks much for feedback that led me to figuring out (*crossing
-fingers*) the problems and fixes...
-
-Linda Walsh
-
-
-
-
+diff -puN drivers/ata/pata_bf54x.c~libata-blackfin-pata-driver-add-proper-pm-operation-into-atapi-driver-fix drivers/ata/pata_bf54x.c
+--- a/drivers/ata/pata_bf54x.c~libata-blackfin-pata-driver-add-proper-pm-operation-into-atapi-driver-fix
++++ a/drivers/ata/pata_bf54x.c
+@@ -1658,7 +1658,7 @@ static int __devexit bfin_atapi_remove(s
+ }
+ 
+ #ifdef CONFIG_PM
+-int bfin_atapi_suspend(struct platform_device *pdev, pm_message_t state)
++static int bfin_atapi_suspend(struct platform_device *pdev, pm_message_t state)
+ {
+ 	struct ata_host *host = dev_get_drvdata(&pdev->dev);
+ 	if (host)
+@@ -1667,7 +1667,7 @@ int bfin_atapi_suspend(struct platform_d
+ 		return 0;
+ }
+ 
+-int bfin_atapi_resume(struct platform_device *pdev)
++static int bfin_atapi_resume(struct platform_device *pdev)
+ {
+ 	struct ata_host *host = dev_get_drvdata(&pdev->dev);
+ 	int ret;
+@@ -1683,15 +1683,16 @@ int bfin_atapi_resume(struct platform_de
+ 
+ 	return 0;
+ }
++#else
++#define bfin_atapi_suspend NULL
++#define bfin_atapi_resume NULL
+ #endif
+ 
+ static struct platform_driver bfin_atapi_driver = {
+ 	.probe			= bfin_atapi_probe,
+ 	.remove			= __devexit_p(bfin_atapi_remove),
+-#ifdef CONFIG_PM
+ 	.suspend		= bfin_atapi_suspend,
+ 	.resume			= bfin_atapi_resume,
+-#endif
+ 	.driver = {
+ 		.name		= DRV_NAME,
+ 		.owner		= THIS_MODULE,
+_
 
