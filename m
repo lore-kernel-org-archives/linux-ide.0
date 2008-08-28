@@ -1,79 +1,97 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH 2.6.26.7-rc4] ata_piix: IDE Mode SATA patch for Intel
- Ibex Peak DeviceIDs
-Date: Wed, 27 Aug 2008 19:57:11 -0400
-Message-ID: <48B5E9D7.6060306@pobox.com>
-References: <200808271640.06762.seth.heasley@intel.com> <CF9C39F99A89134C9CF9C4CCB68B8DDF177A1450@orsmsx501.amr.corp.intel.com>
+From: Linda Walsh <lkml@tlinx.org>
+Subject: Re: Promise 300-TX 4-channel SATA disk going dead under load 2.6.24-7
+Date: Wed, 27 Aug 2008 18:46:27 -0700
+Message-ID: <48B60373.2050501@tlinx.org>
+References: <48A35FE6.1080903@tlinx.org> <20080814115005.1495a0b1@lxorguk.ukuu.org.uk> <48ABCA18.6060800@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:60177 "EHLO mail.dvmed.net"
+Received: from ishtar.tlinx.org ([64.81.245.74]:43964 "EHLO ishtar.tlinx.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753963AbYH0X5Q (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 27 Aug 2008 19:57:16 -0400
-In-Reply-To: <CF9C39F99A89134C9CF9C4CCB68B8DDF177A1450@orsmsx501.amr.corp.intel.com>
+	id S1753020AbYH1Bqu (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 27 Aug 2008 21:46:50 -0400
+In-Reply-To: <48ABCA18.6060800@kernel.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "Heasley, Seth" <seth.heasley@intel.com>
-Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "htejun@gmail.com" <htejun@gmail.com>
+To: linux-ide@vger.kernel.org
+Cc: Tejun Heo <tj@kernel.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>
 
-Heasley, Seth wrote:
->> -----Original Message-----
->> From: Heasley, Seth
->> Sent: Wednesday, August 27, 2008 4:40 PM
->> To: jgarzik@pobox.com; linux-ide@vger.kernel.org; linux-
->> kernel@vger.kernel.org; htejun@gmail.com
->> Cc: Heasley, Seth
->> Subject: [PATCH 2.6.26.7-rc4] ata_piix: IDE Mode SATA patch for Intel Ibex
->> Peak DeviceIDs
->>
->> This patch updates the Intel Ibex Peak (PCH) IDE mode SATA Controller
->> DeviceIDs.
->>
->> Signed-off-by: Seth Heasley <seth.heasley@intel.com>
->>
->> --- linux-2.6/drivers/ata/ata_piix.c.orig       2008-08-27
->> 11:32:28.000000000 -0700
->> +++ linux-2.6/drivers/ata/ata_piix.c    2008-08-27 11:47:59.000000000 -0700
->> @@ -278,12 +278,15 @@
->>        /* SATA Controller IDE (PCH) */
->>        { 0x8086, 0x3b20, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich8_sata },
->>        /* SATA Controller IDE (PCH) */
->> +       { 0x8086, 0x3b21, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich8_2port_sata },
->> +       /* SATA Controller IDE (PCH) */
->>        { 0x8086, 0x3b26, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich8_2port_sata },
->>        /* SATA Controller IDE (PCH) */
->> +       { 0x8086, 0x3b28, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich8_sata },
->> +       /* SATA Controller IDE (PCH) */
->>        { 0x8086, 0x3b2d, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich8_2port_sata },
->>        /* SATA Controller IDE (PCH) */
->>        { 0x8086, 0x3b2e, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich8_sata },
->> -
->>        { }     /* terminate list */
->> };
-> 
-> Typo in the subject line.  Should read 2.6.27-rc4.  This was built against http://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux-2.6
+Tejun Heo wrote:
+> Alan Cox wrote:
+>>> 13 10:12:20 kern: res ff/ff:ff:ff:ff:ff/ff:ff:ff:ff:ff/ff Emask 0x12 
+>>> (ATA bus error)
+>>> rn: ata4: SError: { RecovComm PHYRdyChg 10B8B Dispar DevExch }
+>>> 13 10:14:37 kern: ata4: port is slow to respond, please be patient 
+>>> (Status 0xff)
+>> First guess would be a dud drive but it could be power or cabling or
+>> firmware or ...
+> Hmm... this could be either the drive or the controller. 
+----
 
-A process note...
+    Just to confirm -- this particular problem was due to a faulty
+brand-new SATA Western_Digital drive that died.  It hung the system
+several times under load, but shortly after the above errors,
+the system would not boot with that drive attached.
 
-If you are building against torvalds/linux-2.6.git -- a good thing -- 
-then it is helpful to include the top-most commit id in your message [if 
-you feel it is relevant information].
+    Secondary error:     My ACPI impementation is, /apparently/, flakey.
+I used to not be able to use acpi back in the 2.2 timeframe.  But
+sometime in the 2.4 timeframe, ACPI started working with this system
+(a 440BX based motherboard).  I thought ACPI support had improved.
+Symptom of ACPI based boot vs. non: random hang (a few hours up to maybe
+48 hours max).  But after I thought ACPI was 'fixed', booting with ACPI
+(or not) resulted in stable system.
 
-For patches, meta-information like commit ids or special instructions to 
-the maintainer can be included following a "---" separator (on a line by 
-itself).
+    But -- two different error types.  Starting with the 2.6.25 series,
+I started observing hangs again (same in the 2.6.26 series).  My last
+stable was 2.6.24.1.  BUT -- I also occasionally noticed some rare
+sporadic disk error messages (while looking for the cause of the hang) --
+they weren't there in the "pre-hang" 2.6.24.1 kernel...(I couldn't
+even get a 2.6.24.7 kernel to stay up for more than 2 days).
 
-As an example, see this patch from Tejun, which includes a diffstat(1) 
-output and note about MAXTOR in the meta-information area of the patch:
+    My upgrade strategy for disks has been to move to SATA disks as
+I needed to replace older PATA's.  Had alot of problems last Feb when
+I tried to use SATA; after a few weeks of making no progress discovering
+the source of he hangs, I went back to a PATA drive and took out the SATA
+controller -- and system went back to stable.  Ok...I'm tired of
+debugging this...lets stay with PATA for now.
 
-	http://marc.info/?l=linux-ide&m=118835646130927&w=2
+    Six months later...need another disk.  Back to trying SATA...
+more hangs (and a bad disk drive).  It seems that in addition to
+ACPI no longer working above my 2.6.24.1 kernel, adding in the SATA
+board also would cause an ACPI based boot to eventually hang (max 
+runtime ~30 hours).  Using the kernel load option "acpi=noirq", seems to be
+the key to stability now.
 
-Our tools are specially programmed to exclude the meta-information from 
-the text copied into the permanent kernel linux-2.6.git changelog.
+    So I don't know exactly what changed -- but ACPI, which was working
+(pre-SATA) seemed to stop being reliable after 2.6.24.1. 
 
-	Jeff
+    Anyway I cut it,  acpi=noirq   now seems to be a requirement for
+system stability.  My ACPI version string shows it as "1.0"...so I'm
+guessing there might have been some kinks in the implementation.
+
+    So had 4 different problems all converge at roughly the same time:
+1)  new SATA Western_Digital-1TB disk failure,
+2)  ACPI-induced instability in 2.6.25 and above
+3)  ACPI induced instability with addition of new SATA controller
+    (including a rebuilt-for-sata-support 2.6.24.1).
+4)  Auxiliary cooling fan failed and system would get 'warm' (don't know
+    exact temps, but some disks were nearing 50C (normal is mid 30's,
+    except for the 15K system SCSI.  It has its own attached fan, so
+    it's usually a few degrees cooler when the case-fans are operating
+    correctly.
+    However, the disk temps are not indicative of the CPU temps -- they
+    are only an indirect sign that case-airflow is sub-optimal.  The
+    CPU's (2 1GHz P-III's) in this baby don't give reliable thermal
+    warnings (have only ever seen 1).  Usually the system will
+    just 'hang' (not the most helpful indicator in any event).
+
+Thanks much for feedback that led me to figuring out (*crossing
+fingers*) the problems and fixes...
+
+Linda Walsh
+
+
 
 
 
