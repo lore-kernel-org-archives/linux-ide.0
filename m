@@ -1,45 +1,34 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH #upstream-fixes] libata-sff: kill spurious WARN_ON() in ata_hsm_move()
-Date: Fri, 29 Aug 2008 16:27:43 +0200
-Message-ID: <48B8075F.9040805@kernel.org>
+From: Frans Pop <elendil@planet.nl>
+Subject: Re: Regression: SATA disk double spin-off during hibernation on hp nx6325
+Date: Fri, 29 Aug 2008 13:30:40 +0200
+Message-ID: <200808291330.42265.elendil@planet.nl>
+References: <200808290002.55026.rjw@sisk.pl> <200808291245.27436.elendil@planet.nl> <200808291257.33690.rjw@sisk.pl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:53337 "EHLO hera.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756783AbYH2O3c (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 29 Aug 2008 10:29:32 -0400
+Received: from hpsmtp-eml14.kpnxchange.com ([213.75.38.114]:5111 "EHLO
+	hpsmtp-eml14.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753078AbYH2Lao (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 29 Aug 2008 07:30:44 -0400
+In-Reply-To: <200808291257.33690.rjw@sisk.pl>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>, IDE/ATA development list <linux-ide@vger.kernel.org>
+To: "Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: linux-acpi@vger.kernel.org, linux-ide@vger.kernel.org, trenn@suse.de, htejun@gmail.com, hancockr@shaw.ca, linux-kernel@vger.kernel.org
 
-On HSM_ST_ERR, ata_hsm_move() triggers WARN_ON() if AC_ERR_DEV or
-AC_ERR_HSM is not set.  PHY events may trigger HSM_ST_ERR with other
-error codes and, with or without it, there just isn't much reason to
-do WARN_ON() on it.  Even if error code is not set there, core EH
-logic won't have any problem dealing with the error condition.
+On Friday 29 August 2008, Rafael J. Wysocki wrote:
+> Suspend to RAM is fine, hibernation (aka suspend to disk) is not (on my
+> box). Does it mean that hibernation is fine on your box with
+> 2.6.27-rc5, although shutdown is not?  That would require special
+> DMI-dependent handling, so please double check.
 
-OSDL bz#11065 reports this problem.
+Ah, right. The double spin down happens during hibernation too.
 
-Signed-off-by: Tejun Heo <tj@kernel.org>
----
- drivers/ata/libata-sff.c |    5 -----
- 1 file changed, 5 deletions(-)
+> Anyway, please attach the output of dmidecode to
+> http://bugzilla.kernel.org/show_bug.cgi?id=8855
+> so I can include your box into the final version of the patch.
 
-diff --git a/drivers/ata/libata-sff.c b/drivers/ata/libata-sff.c
-index 304fdc6..2a4c516 100644
---- a/drivers/ata/libata-sff.c
-+++ b/drivers/ata/libata-sff.c
-@@ -1315,11 +1315,6 @@ fsm_start:
- 		break;
- 
- 	case HSM_ST_ERR:
--		/* make sure qc->err_mask is available to
--		 * know what's wrong and recover
--		 */
--		WARN_ON(!(qc->err_mask & (AC_ERR_DEV | AC_ERR_HSM)));
--
- 		ap->hsm_task_state = HSM_ST_IDLE;
- 
- 		/* complete taskfile transaction */
+Done.
