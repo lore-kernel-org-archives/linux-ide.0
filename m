@@ -1,57 +1,42 @@
-From: Harald Welte <laforge@gnumonks.org>
-Subject: Re: [regression] sata_mv: harddisk activity led no longer
-	responsive on QNAP TS-109
-Date: Fri, 29 Aug 2008 09:47:20 +0800
-Message-ID: <20080829014719.GR5990@prithivi.gnumonks.org>
-References: <200808261045.33241.elendil@planet.nl> <200808281125.14012.elendil@planet.nl> <c70ff3ad0808280353n18967a9frf414091ae768030c@mail.gmail.com> <200808281911.28484.elendil@planet.nl> <da824cf30808281026x1dde9a5bl1dd779b99b2c2789@mail.gmail.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: [PATCH #upstream-fixes] ahci: disable PMP for marvell ahcis
+Date: Fri, 29 Aug 2008 16:03:59 +0200
+Message-ID: <48B801CF.6010703@kernel.org>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="tVmo9FyGdCe4F4YN"
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ganesha.gnumonks.org ([213.95.27.120]:45326 "EHLO
-	ganesha.gnumonks.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750900AbYH2BuP (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 28 Aug 2008 21:50:15 -0400
-Content-Disposition: inline
-In-Reply-To: <da824cf30808281026x1dde9a5bl1dd779b99b2c2789@mail.gmail.com>
+Received: from hera.kernel.org ([140.211.167.34]:45131 "EHLO hera.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752481AbYH2OGH (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 29 Aug 2008 10:06:07 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Grant Grundler <grundler@google.com>
-Cc: Frans Pop <elendil@planet.nl>, saeed bishara <saeed.bishara@gmail.com>, linux-arm@vger.kernel.org, linux-ide@vger.kernel.org, Mark Lord <liml@rtr.ca>, Nicolas Pitre <nico@cam.org>, Lennert Buytenhek <buytenh@wantstofly.org>
+To: Jeff Garzik l <jeff@garzik.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, kueihuan.chen@gmail.com, Mark Lord <liml@rtr.ca>
 
+Marvell ahcis don't play nicely with PMPs.  Disable it.
 
---tVmo9FyGdCe4F4YN
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Reported by KueiHuan Chen in the following thread.
 
-On Thu, Aug 28, 2008 at 10:26:32AM -0700, Grant Grundler wrote:
-> I still have a patch outstanding against mmio_test fix to issues with
-> 64-bit addressing from 32-bit user space. I've attached those (and
-> cc'd Harald Welte) in case that's the problem.
+  http://thread.gmane.org/gmane.linux.ide/33296
 
-Thanks, I'll merge your patches to mmio_test right now.
+Signed-off-by: Tejun Heo <tj@kernel.org>
+Cc: KueiHuan Chen <kueihuan.chen@gmail.com>
+Cc: Mark Lord <mlord@pobox.com>
+---
+ drivers/ata/ahci.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
---=20
-- Harald Welte <laforge@gnumonks.org>           http://laforge.gnumonks.org/
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D
-"Privacy in residential applications is a desirable marketing option."
-                                                  (ETSI EN 300 175-7 Ch. A6)
-
---tVmo9FyGdCe4F4YN
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.9 (GNU/Linux)
-
-iD8DBQFIt1UnXaXGVTD0i/8RAj9hAKCK0UQWRnD5xWWypPyXq6WWV6bgzACgtSbI
-TnUtL4KvqBtw+cNl1xJJLC0=
-=mhWE
------END PGP SIGNATURE-----
-
---tVmo9FyGdCe4F4YN--
+diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+index dc7596f..2806366 100644
+--- a/drivers/ata/ahci.c
++++ b/drivers/ata/ahci.c
+@@ -420,7 +420,7 @@ static const struct ata_port_info ahci_port_info[] = {
+ 	/* board_ahci_mv */
+ 	{
+ 		AHCI_HFLAGS	(AHCI_HFLAG_NO_NCQ | AHCI_HFLAG_NO_MSI |
+-				 AHCI_HFLAG_MV_PATA),
++				 AHCI_HFLAG_MV_PATA | AHCI_HFLAG_NO_PMP),
+ 		.flags		= ATA_FLAG_SATA | ATA_FLAG_NO_LEGACY |
+ 				  ATA_FLAG_MMIO | ATA_FLAG_PIO_DMA,
+ 		.pio_mask	= 0x1f, /* pio0-4 */
