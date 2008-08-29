@@ -1,29 +1,56 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [PATCH] pata_sil680: remove duplicate pcim_enable_device
-Date: Fri, 29 Aug 2008 16:50:24 +0100
-Message-ID: <20080829165024.6d2ff573@lxorguk.ukuu.org.uk>
-References: <20080829153628.GA20130@dhcp-210.hsv.redhat.com>
+From: Elias Oltmanns <eo@nebensachen.de>
+Subject: [RFC] Disk shock protection in GNU/Linux (take 2)
+Date: Fri, 29 Aug 2008 23:01:36 +0200
+Message-ID: <87ej47r0wf.fsf@denkblock.local>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:38219 "EHLO
-	lxorguk.ukuu.org.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751732AbYH2QKP (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 29 Aug 2008 12:10:15 -0400
-In-Reply-To: <20080829153628.GA20130@dhcp-210.hsv.redhat.com>
+Received: from nebensachen.de ([195.34.83.29]:38373 "EHLO mail.nebensachen.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750842AbYH2VCv (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 29 Aug 2008 17:02:51 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: David Milburn <dmilburn@redhat.com>
-Cc: jeff@garzik.org, linux-ide@vger.kernel.org
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>, Andrew Morton <akpm@linux-foundation.org>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Jeff Garzik <jeff@garzik.org>, Randy Dunlap <randy.dun>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vgrer.kernel.org
 
-On Fri, 29 Aug 2008 10:36:28 -0500
-David Milburn <dmilburn@redhat.com> wrote:
+Hi all,
 
-> Remove duplicate call to pcim_enable_device in sil680_init_one.
-> 
-> Signed-off-by: David Milburn <dmilburn@redhat.com>
+this is the second version of the patch series I posted a month ago.
+There are the following changes:
 
-Acked-by: Alan Cox <alan@redhat.com>
+- ata_id_has_unload() checks for the major version of the ATA spec the
+  drive claims to comply with.
+- A disk head unload request issued to a device will effectively cause
+  the same to be executed for all devices on the same port and stop all
+  I/O to that port. Tejun told me that modern CD/DVD writers should have
+  no difficulties to recover from buffer under-runs caused by such a
+  behaviour (I haven't had a chance to put it to the test).
+- As for the part dealing with libata, I have been following Tejun's
+  advice to rely on EH for the purposes of serialisation and in order to
+  prevent spurious resets. Hopefully, this has turned out
+  satisfactorily. As a nice side effect I don't have to touch any scsi
+  stuff at all due to this approach.
+- Various minor changes intended to optimise the code or simply to make
+  more compliant with kernel coding conventions.
 
-Doh.. ;)
+Unless there are any immediate objections from anyone, could the
+subsystem maintainers please voice their opinion whether these patches
+are likely to make it into 2.6.28? For obvious reasons, I'd like to make
+sure that the changes to libata and ide are introduced at the same time
+even though they don't depend on each other technically. Does that make
+the patch set a candidate for the mm tree, or should the patches go
+through the libata and ide tree respectively?
+
+Here are the short descriptions of the four patches (based on
+next-20080829):
+
+1. This is a small patch to ata.h in order to provide a simple check for
+   support of the unload feature as indicated in a device's ID.
+2. Here disk head unloading is implemented in the libata subsystem.
+3. The same for ide.
+4. A little bit of documentation.
+
+Regards,
+
+Elias
