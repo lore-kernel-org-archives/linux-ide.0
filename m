@@ -1,62 +1,41 @@
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-Subject: Re: Regression: SATA disk double spin-off during hibernation on hp nx6325
-Date: Fri, 29 Aug 2008 12:41:03 +0200
-Message-ID: <200808291241.04183.rjw@sisk.pl>
-References: <200808290002.55026.rjw@sisk.pl> <48B7C979.1000606@gmail.com>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: Regression: SATA disk double spin-off during hibernation on hp
+ nx6325
+Date: Fri, 29 Aug 2008 12:42:14 +0200
+Message-ID: <48B7D286.7050104@gmail.com>
+References: <200808290002.55026.rjw@sisk.pl> <48B7C979.1000606@gmail.com> <200808291241.04183.rjw@sisk.pl>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-2"
+Content-Type: text/plain; charset=ISO-8859-2
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ogre.sisk.pl ([217.79.144.158]:51552 "EHLO ogre.sisk.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750929AbYH2KhO (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 29 Aug 2008 06:37:14 -0400
-In-Reply-To: <48B7C979.1000606@gmail.com>
-Content-Disposition: inline
+Received: from ag-out-0708.google.com ([72.14.246.241]:26867 "EHLO
+	ag-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751139AbYH2KnY (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 29 Aug 2008 06:43:24 -0400
+Received: by ag-out-0708.google.com with SMTP id 31so2028566agc.10
+        for <linux-ide@vger.kernel.org>; Fri, 29 Aug 2008 03:43:24 -0700 (PDT)
+In-Reply-To: <200808291241.04183.rjw@sisk.pl>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
+To: "Rafael J. Wysocki" <rjw@sisk.pl>
 Cc: ACPI Devel Maling List <linux-acpi@vger.kernel.org>, linux-ide@vger.kernel.org, Thomas Renninger <trenn@suse.de>, Robert Hancock <hancockr@shaw.ca>, LKML <linux-kernel@vger.kernel.org>
 
-On Friday, 29 of August 2008, Tejun Heo wrote:
-> Hello,
+Rafael J. Wysocki wrote:
+> Actaully, they do belong to it.  This is the part "fixing" the hibernation code
+> path, in which the disk is also powered off unnecessarily.
 > 
-> Rafael J. Wysocki wrote:
-> > It appears that the "double spin-off" problem described in
-> > 
-> > http://bugzilla.kernel.org/show_bug.cgi?id=8855
-> > 
-> > has recently started to appear during hibernation as well as during shutdown.
-> > It didn't appear during hibernation on my hp nx6325 with 2.6.26, so this is a
-> > recent regression.
-> > 
-> > I have prepared the appended patch that fixes the problem for me, based on the
-> >  earlier Tejun's patch at
-> > 
-> > http://bugzilla.kernel.org/attachment.cgi?id=15441&action=view
-> > 
-> > but I'm not really sure if this is an acceptable solution.  Please advise.
-> > 
-> > Thanks,
-> > Rafael
-> > 
-> > 
-> > not-yet-signed-off-by: Rafael J. Wysocki <rjw@sisk.pl>
+> Well, probably I should use SYSTEM_HIBERNATE_ENTER or something similar
+> instead of SYSTEM_SUSPEND_DISK.
 > 
-> The libata part looks fine to me but what are those SYSTEM_SUSPEND_DISK
-> stuff?  They don't look like belonging to this patch.
+> In short, the idea is to change system_state to something specific to the last
+> phase of hibernation (after saving the image) and check that in
+> ata_scsi_start_stop_xlat().  In fact that's completely analogous to what's done
+> for SYSTEM_POWER_OFF in there.
 
-Actaully, they do belong to it.  This is the part "fixing" the hibernation code
-path, in which the disk is also powered off unnecessarily.
+Ah.. right, missed the added check for SUSPEND_DISK in libata-scsi.c.
+Maybe it's a good idea to note it in the commit message later?
 
-Well, probably I should use SYSTEM_HIBERNATE_ENTER or something similar
-instead of SYSTEM_SUSPEND_DISK.
+Thanks.
 
-In short, the idea is to change system_state to something specific to the last
-phase of hibernation (after saving the image) and check that in
-ata_scsi_start_stop_xlat().  In fact that's completely analogous to what's done
-for SYSTEM_POWER_OFF in there.
-
-Thanks,
-Rafael
+-- 
+tejun
