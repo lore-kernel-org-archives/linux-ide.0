@@ -1,81 +1,104 @@
 From: Elias Oltmanns <eo@nebensachen.de>
-Subject: [PATCH] ide: Build fix for CONFIG_IDE_PROC_FS=n
-Date: Fri, 29 Aug 2008 23:37:20 +0200
-Message-ID: <20080829213217.4826.91622.stgit@denkblock.local>
+Subject: [PATCH] ide: Two fixes regarding memory allocation
+Date: Fri, 29 Aug 2008 23:45:32 +0200
+Message-ID: <20080829213217.4826.43132.stgit@denkblock.local>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nebensachen.de ([195.34.83.29]:49689 "EHLO mail.nebensachen.de"
+Received: from nebensachen.de ([195.34.83.29]:49281 "EHLO mail.nebensachen.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752138AbYH2Vha (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 29 Aug 2008 17:37:30 -0400
+	id S1752933AbYH2Vq3 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 29 Aug 2008 17:46:29 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Recent changes have broken compilation when CONFIG_IDE_PROC_FS is not set.
+In function ide_devset_execute() we should use __GFP_WAIT rather than
+GFP_KERNEL. Also, the allocation cannot possibly fail at that point.
+More importantly, there is a potential memory leak in the device probing
+code. The infrastructure seems rather complex and I hope I haven't messed
+anything up by trying to fix this.
 
 Signed-off-by: Elias Oltmanns <eo@nebensachen.de>
 ---
 Applies to next-20080829.
 
- drivers/ide/Makefile     |    9 +++++++--
- drivers/ide/ide-disk.h   |    2 ++
- drivers/ide/ide-floppy.h |    2 ++
- 3 files changed, 11 insertions(+), 2 deletions(-)
+ drivers/ide/ide-io.c    |    5 +----
+ drivers/ide/ide-probe.c |   22 +++++++++++++++++-----
+ 2 files changed, 18 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/ide/Makefile b/drivers/ide/Makefile
-index 95a6135..e6e7811 100644
---- a/drivers/ide/Makefile
-+++ b/drivers/ide/Makefile
-@@ -36,9 +36,14 @@ obj-$(CONFIG_IDE_H8300)			+= h8300/
- obj-$(CONFIG_IDE_GENERIC)		+= ide-generic.o
- obj-$(CONFIG_BLK_DEV_IDEPNP)		+= ide-pnp.o
+diff --git a/drivers/ide/ide-io.c b/drivers/ide/ide-io.c
+index d0579f1..e205f46 100644
+--- a/drivers/ide/ide-io.c
++++ b/drivers/ide/ide-io.c
+@@ -655,10 +655,7 @@ int ide_devset_execute(ide_drive_t *drive, const struct ide_devset *setting,
+ 	if (!(setting->flags & DS_SYNC))
+ 		return setting->set(drive, arg);
  
--ide-disk_mod-y += ide-disk.o ide-disk_ioctl.o ide-disk_proc.o
-+ide-disk_mod-y += ide-disk.o ide-disk_ioctl.o
- ide-cd_mod-y += ide-cd.o ide-cd_ioctl.o ide-cd_verbose.o
--ide-floppy_mod-y += ide-floppy.o ide-floppy_ioctl.o ide-floppy_proc.o
-+ide-floppy_mod-y += ide-floppy.o ide-floppy_ioctl.o
+-	rq = blk_get_request(q, READ, GFP_KERNEL);
+-	if (!rq)
+-		return -ENOMEM;
+-
++	rq = blk_get_request(q, READ, __GFP_WAIT);
+ 	rq->cmd_type = REQ_TYPE_SPECIAL;
+ 	rq->cmd_len = 5;
+ 	rq->cmd[0] = REQ_DEVSET_EXEC;
+diff --git a/drivers/ide/ide-probe.c b/drivers/ide/ide-probe.c
+index b5e54d2..1c4cd5e 100644
+--- a/drivers/ide/ide-probe.c
++++ b/drivers/ide/ide-probe.c
+@@ -958,9 +958,9 @@ static void ide_add_drive_to_hwgroup(ide_drive_t *drive)
+  * - allocate the block device queue
+  * - link drive into the hwgroup
+  */
+-static void ide_port_setup_devices(ide_hwif_t *hwif)
++static int ide_port_setup_devices(ide_hwif_t *hwif)
+ {
+-	int i;
++	int i, j = 0;
+ 
+ 	mutex_lock(&ide_cfg_mtx);
+ 	for (i = 0; i < MAX_DRIVES; i++) {
+@@ -972,12 +972,21 @@ static void ide_port_setup_devices(ide_hwif_t *hwif)
+ 		if (ide_init_queue(drive)) {
+ 			printk(KERN_ERR "ide: failed to init %s\n",
+ 					drive->name);
++			spin_lock_irq(&ide_lock);
++			kfree(drive->id);
++			drive->id = NULL;
++			drive->dev_flags &= ~IDE_DFLAG_PRESENT;
++			spin_unlock_irq(&ide_lock);
+ 			continue;
+ 		}
+ 
++		j++;
 +
-+ifeq ($(CONFIG_IDE_PROC_FS), y)
-+	ide-disk_mod-y += ide-disk_proc.o
-+	ide-floppy_mod-y += ide-floppy_proc.o
-+endif
+ 		ide_add_drive_to_hwgroup(drive);
+ 	}
+ 	mutex_unlock(&ide_cfg_mtx);
++
++	return j;
+ }
  
- obj-$(CONFIG_BLK_DEV_IDEDISK)		+= ide-disk_mod.o
- obj-$(CONFIG_BLK_DEV_IDECD)		+= ide-cd_mod.o
-diff --git a/drivers/ide/ide-disk.h b/drivers/ide/ide-disk.h
-index f937772..5254cae 100644
---- a/drivers/ide/ide-disk.h
-+++ b/drivers/ide/ide-disk.h
-@@ -23,8 +23,10 @@ ide_decl_devset(acoustic);
- /* ide-disk_ioctl.c */
- int ide_disk_ioctl(struct inode *, struct file *, unsigned int, unsigned long);
+ static ide_hwif_t *ide_ports[MAX_HWIFS];
+@@ -1663,10 +1672,13 @@ int ide_host_register(struct ide_host *host, const struct ide_port_info *d,
+ 			continue;
+ 		}
  
-+#ifdef CONFIG_IDE_PROC_FS
- /* ide-disk_proc.c */
- extern ide_proc_entry_t ide_disk_proc[];
- extern const struct ide_proc_devset ide_disk_settings[];
-+#endif /* CONFIG_IDE_PROC_FS */
+-		j++;
+-
+ 		if (hwif->present)
+-			ide_port_setup_devices(hwif);
++			if (ide_port_setup_devices(hwif) == 0) {
++				hwif->present = 0;
++				continue;
++			}
++
++		j++;
  
- #endif /* __IDE_DISK_H */
-diff --git a/drivers/ide/ide-floppy.h b/drivers/ide/ide-floppy.h
-index 2ad373e..86ee37e 100644
---- a/drivers/ide/ide-floppy.h
-+++ b/drivers/ide/ide-floppy.h
-@@ -53,8 +53,10 @@ sector_t ide_floppy_capacity(ide_drive_t *);
- /* ide-floppy_ioctl.c */
- int ide_floppy_ioctl(struct inode *, struct file *, unsigned, unsigned long);
+ 		ide_acpi_init(hwif);
  
-+#ifdef CONFIG_IDE_PROC_FS
- /* ide-floppy_proc.c */
- extern ide_proc_entry_t ide_floppy_proc[];
- extern const struct ide_proc_devset ide_floppy_settings[];
-+#endif /* CONFIG_IDE_PROC_FS */
- 
- #endif /*__IDE_FLOPPY_H */
 
 
