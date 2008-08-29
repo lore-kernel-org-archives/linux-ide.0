@@ -1,28 +1,62 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: Promise 300-TX 4-channel SATA disk going dead under load 2.6.24-7
-Date: Fri, 29 Aug 2008 12:20:14 +0200
-Message-ID: <48B7CD5E.1050701@kernel.org>
-References: <48A35FE6.1080903@tlinx.org> <48B60373.2050501@tlinx.org> <48B64DB3.6060906@kernel.org> <200808281436.30089.trenn@suse.de>
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+Subject: Re: Regression: SATA disk double spin-off during hibernation on hp nx6325
+Date: Fri, 29 Aug 2008 12:41:03 +0200
+Message-ID: <200808291241.04183.rjw@sisk.pl>
+References: <200808290002.55026.rjw@sisk.pl> <48B7C979.1000606@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain;
+  charset="iso-8859-2"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-acpi-owner@vger.kernel.org>
-In-Reply-To: <200808281436.30089.trenn@suse.de>
-Sender: linux-acpi-owner@vger.kernel.org
-To: Thomas Renninger <trenn@suse.de>
-Cc: Linda Walsh <lkml@tlinx.org>, linux-ide@vger.kernel.org, Alan Cox <alan@lxorguk.ukuu.org.uk>, linux acpi <linux-acpi@vger.kernel.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from ogre.sisk.pl ([217.79.144.158]:51552 "EHLO ogre.sisk.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750929AbYH2KhO (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 29 Aug 2008 06:37:14 -0400
+In-Reply-To: <48B7C979.1000606@gmail.com>
+Content-Disposition: inline
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: ACPI Devel Maling List <linux-acpi@vger.kernel.org>, linux-ide@vger.kernel.org, Thomas Renninger <trenn@suse.de>, Robert Hancock <hancockr@shaw.ca>, LKML <linux-kernel@vger.kernel.org>
 
-Thomas Renninger wrote:
-> Also the system is really old. Why don't you stick to pci=noacpi or
-> even acpi=off?
-> What advantage do you want to get with ACPI (SATA works?)?
+On Friday, 29 of August 2008, Tejun Heo wrote:
+> Hello,
+> 
+> Rafael J. Wysocki wrote:
+> > It appears that the "double spin-off" problem described in
+> > 
+> > http://bugzilla.kernel.org/show_bug.cgi?id=8855
+> > 
+> > has recently started to appear during hibernation as well as during shutdown.
+> > It didn't appear during hibernation on my hp nx6325 with 2.6.26, so this is a
+> > recent regression.
+> > 
+> > I have prepared the appended patch that fixes the problem for me, based on the
+> >  earlier Tejun's patch at
+> > 
+> > http://bugzilla.kernel.org/attachment.cgi?id=15441&action=view
+> > 
+> > but I'm not really sure if this is an acceptable solution.  Please advise.
+> > 
+> > Thanks,
+> > Rafael
+> > 
+> > 
+> > not-yet-signed-off-by: Rafael J. Wysocki <rjw@sisk.pl>
+> 
+> The libata part looks fine to me but what are those SYSTEM_SUSPEND_DISK
+> stuff?  They don't look like belonging to this patch.
 
-I think this is the second time I see ACPI IRQ routing doesn't work on
-old ACPI.  Is it possible to detect this and turn off automatically?  Or
-does that risk breaking even more machines?
+Actaully, they do belong to it.  This is the part "fixing" the hibernation code
+path, in which the disk is also powered off unnecessarily.
 
-Thanks.
+Well, probably I should use SYSTEM_HIBERNATE_ENTER or something similar
+instead of SYSTEM_SUSPEND_DISK.
 
--- 
-tejun
+In short, the idea is to change system_state to something specific to the last
+phase of hibernation (after saving the image) and check that in
+ata_scsi_start_stop_xlat().  In fact that's completely analogous to what's done
+for SYSTEM_POWER_OFF in there.
+
+Thanks,
+Rafael
