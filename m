@@ -1,58 +1,58 @@
 From: Elias Oltmanns <eo@nebensachen.de>
-Subject: [RFC] Disk shock protection in GNU/Linux (take 2)
-Date: Fri, 29 Aug 2008 23:11:27 +0200
-Message-ID: <87wshzplvk.fsf@denkblock.local>
+Subject: [PATCH 1/4] Introduce ata_id_has_unload()
+Date: Fri, 29 Aug 2008 23:16:47 +0200
+Message-ID: <20080829211345.4355.63012.stgit@denkblock.local>
+References: <87wshzplvk.fsf@denkblock.local>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nebensachen.de ([195.34.83.29]:58172 "EHLO mail.nebensachen.de"
+Received: from nebensachen.de ([195.34.83.29]:51620 "EHLO mail.nebensachen.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755100AbYH2VMc (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 29 Aug 2008 17:12:32 -0400
+	id S1756123AbYH2VRZ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 29 Aug 2008 17:17:25 -0400
+In-Reply-To: <87wshzplvk.fsf@denkblock.local>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Alan Cox <alan@lxorguk.ukuu.org.uk>, Andrew Morton <akpm@linux-foundation.org>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Jeff Garzik <jeff@garzik.org>, Randy Dunlap <randy.dun>
 Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-[ Resending with correct address for lkml, sorry. ]
+Add a function to check an ATA device's id for head unload support as
+specified in ATA-7.
 
-Hi all,
+Signed-off-by: Elias Oltmanns <eo@nebensachen.de>
+---
 
-this is the second version of the patch series I posted a month ago.
-There are the following changes:
+ include/linux/ata.h |   17 +++++++++++++++++
+ 1 files changed, 17 insertions(+), 0 deletions(-)
 
-- ata_id_has_unload() checks for the major version of the ATA spec the
-  drive claims to comply with.
-- A disk head unload request issued to a device will effectively cause
-  the same to be executed for all devices on the same port and stop all
-  I/O to that port. Tejun told me that modern CD/DVD writers should have
-  no difficulties to recover from buffer under-runs caused by such a
-  behaviour (I haven't had a chance to put it to the test).
-- As for the part dealing with libata, I have been following Tejun's
-  advice to rely on EH for the purposes of serialisation and in order to
-  prevent spurious resets. Hopefully, this has turned out
-  satisfactorily. As a nice side effect I don't have to touch any scsi
-  stuff at all due to this approach.
-- Various minor changes intended to optimise the code or simply to make
-  more compliant with kernel coding conventions.
+diff --git a/include/linux/ata.h b/include/linux/ata.h
+index 80364b6..d9a94bd 100644
+--- a/include/linux/ata.h
++++ b/include/linux/ata.h
+@@ -707,6 +707,23 @@ static inline int ata_id_has_dword_io(const u16 *id)
+ 	return 0;
+ }
+ 
++static inline int ata_id_has_unload(const u16 *id)
++{
++	/*
++	 * ATA-7 specifies two places to indicate unload feature
++	 * support. Since I don't really understand the difference,
++	 * I'll just check both and only return zero if none of them
++	 * indicates otherwise.
++	 */
++	if (ata_id_major_version(id) >= 7
++	    && (((id[ATA_ID_CFSSE] & 0xC000) == 0x4000
++		 && id[ATA_ID_CFSSE] & (1 << 13))
++		|| ((id[ATA_ID_CSF_DEFAULT] & 0xC000) == 0x4000
++		    && (id[ATA_ID_CSF_DEFAULT] & (1 << 13)))))
++		return 1;
++	return 0;
++}
++
+ static inline int ata_id_current_chs_valid(const u16 *id)
+ {
+ 	/* For ATA-1 devices, if the INITIALIZE DEVICE PARAMETERS command
 
-Unless there are any immediate objections from anyone, could the
-subsystem maintainers please voice their opinion whether these patches
-are likely to make it into 2.6.28? For obvious reasons, I'd like to make
-sure that the changes to libata and ide are introduced at the same time
-even though they don't depend on each other technically. Does that make
-the patch set a candidate for the mm tree, or should the patches go
-through the libata and ide tree respectively?
 
-Here are the short descriptions of the four patches (based on
-next-20080829):
-
-1. This is a small patch to ata.h in order to provide a simple check for
-   support of the unload feature as indicated in a device's ID.
-2. Here disk head unloading is implemented in the libata subsystem.
-3. The same for ide.
-4. A little bit of documentation.
-
-Regards,
-
-Elias
