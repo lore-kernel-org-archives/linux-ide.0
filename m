@@ -1,18 +1,20 @@
 From: Elias Oltmanns <eo@nebensachen.de>
 Subject: [RFC] Disk shock protection in GNU/Linux (take 2)
-Date: Fri, 29 Aug 2008 23:01:36 +0200
-Message-ID: <87ej47r0wf.fsf@denkblock.local>
+Date: Fri, 29 Aug 2008 23:11:27 +0200
+Message-ID: <87wshzplvk.fsf@denkblock.local>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nebensachen.de ([195.34.83.29]:38373 "EHLO mail.nebensachen.de"
+Received: from nebensachen.de ([195.34.83.29]:58172 "EHLO mail.nebensachen.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750842AbYH2VCv (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 29 Aug 2008 17:02:51 -0400
+	id S1755100AbYH2VMc (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 29 Aug 2008 17:12:32 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Alan Cox <alan@lxorguk.ukuu.org.uk>, Andrew Morton <akpm@linux-foundation.org>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Jeff Garzik <jeff@garzik.org>, Randy Dunlap <randy.dun>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vgrer.kernel.org
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+
+[ Resending with correct address for lkml, sorry. ]
 
 Hi all,
 
