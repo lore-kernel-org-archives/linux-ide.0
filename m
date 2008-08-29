@@ -1,38 +1,89 @@
-From: Martin Michlmayr <tbm@cyrius.com>
-Subject: Re: [PATCH #upstream-fixes] sata_mv: don't issue two DMA commands
-	concurrently
-Date: Fri, 29 Aug 2008 10:12:01 +0300
-Message-ID: <20080829071201.GB5284@deprecation.cyrius.com>
-References: <489C4F29.6020007@rtr.ca> <489C54D1.5080901@rtr.ca> <48A29E14.3090908@gmail.com> <48A2BBDC.2090201@ngs.ru> <48A2BC5D.5060801@gmail.com> <48A2C35C.7020400@ngs.ru> <48A2C460.6040504@gmail.com> <48AE588C.6080605@garzik.org> <20080822170119.GA18700@deprecation.cyrius.com> <48B40B10.6060301@rtr.ca>
+From: Tejun Heo <tj@kernel.org>
+Subject: [PATCH #upstream-fixes] sata_nv: disable hardreset for generic
+Date: Fri, 29 Aug 2008 16:13:12 +0200
+Message-ID: <48B803F8.8000306@kernel.org>
+References: <4895407B.5030602@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from sorrow.cyrius.com ([65.19.161.204]:3904 "EHLO sorrow.cyrius.com"
+Received: from hera.kernel.org ([140.211.167.34]:58494 "EHLO hera.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751295AbYH2HMW (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 29 Aug 2008 03:12:22 -0400
-Content-Disposition: inline
-In-Reply-To: <48B40B10.6060301@rtr.ca>
+	id S1756310AbYH2OQc (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 29 Aug 2008 10:16:32 -0400
+In-Reply-To: <4895407B.5030602@kernel.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark Lord <liml@rtr.ca>
-Cc: Tejun Heo <htejun@gmail.com>, Artem Bokhan <aptem@ngs.ru>, linux-ide@vger.kernel.org, stable@kernel.org
+To: linux@sun7.cn, IDE/ATA development list <linux-ide@vger.kernel.org>, Jeff Garzik <jeff@garzik.org>, Peer Chen <pchen@nvidia.com>, Kuan Luo <kluo@nvidia.com>
 
-* Mark Lord <liml@rtr.ca> [2008-08-26 09:54]:
->>>> sata_mv allowed issuing two DMA commands concurrently which the
->>>> hardware allows.  Unfortunately, libata core layer isn't ready for
->>>> this yet and spews ugly warning message and malfunctions on this.
->>>> Don't allow concurrent DMA commands for now.
->>>>
->>>> Signed-off-by: Tejun Heo <tj@kernel.org>
->>> applied
->>
->> Is this -stable material?
->
-> Absolutely yes.
+>From 2.6.26, libata is defaulting to hardreset for various reasons one
+of them being unifying probing, hotplug and EH reset paths uniform.
+Previously, broken hardreset could go unnoticed as it wasn't used
+during probing but when something goes wrong or after hotplug the
+problem will surface and bite hard.
 
-Adding stable@kernel.org.  This is commit 4bdee6c5103696a2729d3db2f235d202191788e4
+OSDL bug 11195 reports that sata_nv generic flavor falls into this
+category.  Hardreset itself succeeds but PHY stays offline after
+hardreset.  I tried longer debounce timing but the result was the
+same.
 
--- 
-Martin Michlmayr
-http://www.cyrius.com/
+  http://bugzilla.kernel.org/show_bug.cgi?id=11195
+
+So, it seems we'll have to drop hardreset from the generic flavor.
+
+Signed-off-by: Tejun Heo <tj@kernel.org>
+Cc: Peer Chen <pchen@nvidia.com>
+---
+There have been more than three reports of this problem and there just
+isn't good reason to defer this workaround anymore.  Once this gets
+into #upstream-fixes, I think this should go to -stable too.
+
+Thanks.
+
+ drivers/ata/sata_nv.c |   19 +------------------
+ 1 file changed, 1 insertion(+), 18 deletions(-)
+
+diff --git a/drivers/ata/sata_nv.c b/drivers/ata/sata_nv.c
+index 858f706..1e1f3f3 100644
+--- a/drivers/ata/sata_nv.c
++++ b/drivers/ata/sata_nv.c
+@@ -309,8 +309,6 @@ static void nv_nf2_freeze(struct ata_port *ap);
+ static void nv_nf2_thaw(struct ata_port *ap);
+ static void nv_ck804_freeze(struct ata_port *ap);
+ static void nv_ck804_thaw(struct ata_port *ap);
+-static int nv_hardreset(struct ata_link *link, unsigned int *class,
+-			unsigned long deadline);
+ static int nv_adma_slave_config(struct scsi_device *sdev);
+ static int nv_adma_check_atapi_dma(struct ata_queued_cmd *qc);
+ static void nv_adma_qc_prep(struct ata_queued_cmd *qc);
+@@ -407,7 +405,7 @@ static struct scsi_host_template nv_swncq_sht = {
+ 
+ static struct ata_port_operations nv_generic_ops = {
+ 	.inherits		= &ata_bmdma_port_ops,
+-	.hardreset		= nv_hardreset,
++	.hardreset		= ATA_OP_NULL,
+ 	.scr_read		= nv_scr_read,
+ 	.scr_write		= nv_scr_write,
+ };
+@@ -1588,21 +1586,6 @@ static void nv_mcp55_thaw(struct ata_port *ap)
+ 	ata_sff_thaw(ap);
+ }
+ 
+-static int nv_hardreset(struct ata_link *link, unsigned int *class,
+-			unsigned long deadline)
+-{
+-	int rc;
+-
+-	/* SATA hardreset fails to retrieve proper device signature on
+-	 * some controllers.  Request follow up SRST.  For more info,
+-	 * see http://bugzilla.kernel.org/show_bug.cgi?id=3352
+-	 */
+-	rc = sata_sff_hardreset(link, class, deadline);
+-	if (rc)
+-		return rc;
+-	return -EAGAIN;
+-}
+-
+ static void nv_adma_error_handler(struct ata_port *ap)
+ {
+ 	struct nv_adma_port_priv *pp = ap->private_data;
