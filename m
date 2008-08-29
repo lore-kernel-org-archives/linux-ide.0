@@ -1,16 +1,16 @@
 From: Elias Oltmanns <eo@nebensachen.de>
-Subject: [PATCH 2/4] libata: Implement disk shock protection support
-Date: Fri, 29 Aug 2008 23:20:41 +0200
-Message-ID: <20080829211345.4355.89284.stgit@denkblock.local>
+Subject: [PATCH 3/4] ide: Implement disk shock protection support
+Date: Fri, 29 Aug 2008 23:26:42 +0200
+Message-ID: <20080829211345.4355.93873.stgit@denkblock.local>
 References: <87wshzplvk.fsf@denkblock.local>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nebensachen.de ([195.34.83.29]:37832 "EHLO mail.nebensachen.de"
+Received: from nebensachen.de ([195.34.83.29]:55067 "EHLO mail.nebensachen.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755708AbYH2VVd (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 29 Aug 2008 17:21:33 -0400
+	id S1754486AbYH2V1b (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 29 Aug 2008 17:27:31 -0400
 In-Reply-To: <87wshzplvk.fsf@denkblock.local>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
@@ -24,188 +24,133 @@ expires or user space asks to resume normal operation. This is supposed
 to prevent the heads of a hard drive from accidentally crashing onto the
 platter when a heavy shock is anticipated (like a falling laptop
 expected to hit the floor). In fact, the whole port stops processing
-commands until the timeout has expired in order to avoid any resets due
-to failed commands on another device.
+commands until the timeout has expired in order to avoid resets due to
+failed commands on another device.
 
 Signed-off-by: Elias Oltmanns <eo@nebensachen.de>
 ---
 
- drivers/ata/ahci.c        |    2 
- drivers/ata/ata_piix.c    |    7 ++
- drivers/ata/libata-core.c |    8 ++
- drivers/ata/libata-eh.c   |   51 +++++++++++
- drivers/ata/libata-scsi.c |  205 +++++++++++++++++++++++++++++++++++++++++++++
- drivers/ata/libata.h      |    9 ++
- include/linux/libata.h    |    5 +
- 7 files changed, 287 insertions(+), 0 deletions(-)
+ drivers/ide/ide-io.c       |   30 +++++
+ drivers/ide/ide-probe.c    |    3 
+ drivers/ide/ide-taskfile.c |   10 +-
+ drivers/ide/ide.c          |  287 ++++++++++++++++++++++++++++++++++++++++++++
+ include/linux/ide.h        |   17 ++-
+ 5 files changed, 341 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
-index c729e69..78281af 100644
---- a/drivers/ata/ahci.c
-+++ b/drivers/ata/ahci.c
-@@ -316,6 +316,8 @@ static struct device_attribute *ahci_shost_attrs[] = {
+diff --git a/drivers/ide/ide-io.c b/drivers/ide/ide-io.c
+index d0579f1..657c0d8 100644
+--- a/drivers/ide/ide-io.c
++++ b/drivers/ide/ide-io.c
+@@ -675,7 +675,33 @@ EXPORT_SYMBOL_GPL(ide_devset_execute);
  
- static struct device_attribute *ahci_sdev_attrs[] = {
- 	&dev_attr_sw_activity,
-+	&dev_attr_unload_feature,
-+	&dev_attr_unload_heads,
- 	NULL
- };
- 
-diff --git a/drivers/ata/ata_piix.c b/drivers/ata/ata_piix.c
-index b1d08a8..9b42f8d 100644
---- a/drivers/ata/ata_piix.c
-+++ b/drivers/ata/ata_piix.c
-@@ -298,8 +298,15 @@ static struct pci_driver piix_pci_driver = {
- #endif
- };
- 
-+static struct device_attribute *piix_sdev_attrs[] = {
-+	&dev_attr_unload_feature,
-+	&dev_attr_unload_heads,
-+	NULL
-+};
-+
- static struct scsi_host_template piix_sht = {
- 	ATA_BMDMA_SHT(DRV_NAME),
-+	.sdev_attrs		= piix_sdev_attrs,
- };
- 
- static struct ata_port_operations piix_pata_ops = {
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index 79e3a8e..f1e036f 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -5267,6 +5267,8 @@ struct ata_port *ata_port_alloc(struct ata_host *host)
- 	init_timer_deferrable(&ap->fastdrain_timer);
- 	ap->fastdrain_timer.function = ata_eh_fastdrain_timerfn;
- 	ap->fastdrain_timer.data = (unsigned long)ap;
-+	ap->park_timer.function = ata_scsi_park_timeout;
-+	init_timer(&ap->park_timer);
- 
- 	ap->cbl = ATA_CBL_NONE;
- 
-@@ -6138,6 +6140,11 @@ static int __init ata_init(void)
- 	if (!ata_aux_wq)
- 		goto free_wq;
- 
-+	if (ata_scsi_register_pm_notifier()) {
-+		destroy_workqueue(ata_aux_wq);
-+		goto free_wq;
-+	}
-+
- 	printk(KERN_DEBUG "libata version " DRV_VERSION " loaded.\n");
- 	return 0;
- 
-@@ -6153,6 +6160,7 @@ static void __exit ata_exit(void)
- 	kfree(ata_force_tbl);
- 	destroy_workqueue(ata_wq);
- 	destroy_workqueue(ata_aux_wq);
-+	ata_scsi_unregister_pm_notifier();
- }
- 
- subsys_initcall(ata_init);
-diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
-index c1db2f2..af75d59 100644
---- a/drivers/ata/libata-eh.c
-+++ b/drivers/ata/libata-eh.c
-@@ -2446,6 +2446,51 @@ int ata_eh_reset(struct ata_link *link, int classify,
- 	goto retry;
- }
- 
-+static void ata_eh_park_devs(struct ata_port *ap, int park)
-+{
-+	struct ata_link *link;
-+	struct ata_device *dev;
-+	struct ata_taskfile tf;
-+	struct request_queue *q;
-+	unsigned int err_mask;
-+
-+	ata_port_for_each_link(link, ap) {
-+		ata_link_for_each_dev(dev, link) {
-+			if (!dev->sdev)
-+				continue;
-+			ata_tf_init(dev, &tf);
-+			q = dev->sdev->request_queue;
-+			spin_lock_irq(q->queue_lock);
-+			if (park) {
-+				blk_stop_queue(q);
-+				tf.command = ATA_CMD_IDLEIMMEDIATE;
-+				tf.feature = 0x44;
-+				tf.lbal = 0x4c;
-+				tf.lbam = 0x4e;
-+				tf.lbah = 0x55;
-+			} else {
-+				blk_start_queue(q);
-+				tf.command = ATA_CMD_CHK_POWER;
-+			}
-+			spin_unlock(q->queue_lock);
-+			spin_lock(ap->lock);
-+			if (dev->flags & ATA_DFLAG_NO_UNLOAD) {
-+				spin_unlock_irq(ap->lock);
-+				continue;
-+			}
-+			spin_unlock_irq(ap->lock);
-+
-+			tf.flags |= ATA_TFLAG_DEVICE | ATA_TFLAG_ISADDR;
-+			tf.protocol |= ATA_PROT_NODATA;
-+			err_mask = ata_exec_internal(dev, &tf, NULL, DMA_NONE,
-+						     NULL, 0, 0);
-+			if ((err_mask || tf.lbal != 0xc4) && park)
-+				ata_dev_printk(dev, KERN_ERR,
-+					       "head unload failed\n");
-+		}
-+	}
-+}
-+
- static int ata_eh_revalidate_and_attach(struct ata_link *link,
- 					struct ata_device **r_failed_dev)
+ static ide_startstop_t ide_special_rq(ide_drive_t *drive, struct request *rq)
  {
-@@ -2829,6 +2874,12 @@ int ata_eh_recover(struct ata_port *ap, ata_prereset_fn_t prereset,
++	ide_hwif_t *hwif = drive->hwif;
++	ide_task_t task;
++	struct ide_taskfile *tf = &task.tf;
++
++	memset(&task, 0, sizeof(task));
+ 	switch (rq->cmd[0]) {
++	case REQ_PARK_HEADS: {
++		struct completion *waiting = rq->end_io_data;
++
++		drive->sleep = drive->hwif->park_timer.expires;
++		drive->dev_flags |= IDE_DFLAG_SLEEPING;
++		complete(waiting);
++		if (drive->dev_flags & IDE_DFLAG_NO_UNLOAD) {
++			ide_end_request(drive, 1, 0);
++			return ide_stopped;
++		}
++		tf->command = ATA_CMD_IDLEIMMEDIATE;
++		tf->feature = 0x44;
++		tf->lbal = 0x4c;
++		tf->lbam = 0x4e;
++		tf->lbah = 0x55;
++		task.tf_flags |= IDE_TFLAG_CUSTOM_HANDLER;
++		break;
++	}
++	case REQ_UNPARK_HEADS:
++		tf->command = ATA_CMD_CHK_POWER;
++		break;
+ 	case REQ_DEVSET_EXEC:
+ 	{
+ 		int err, (*setfunc)(ide_drive_t *, int) = rq->special;
+@@ -695,6 +721,10 @@ static ide_startstop_t ide_special_rq(ide_drive_t *drive, struct request *rq)
+ 		ide_end_request(drive, 0, 0);
+ 		return ide_stopped;
+ 	}
++	task.tf_flags |= IDE_TFLAG_TF | IDE_TFLAG_DEVICE;
++	task.rq = rq;
++	hwif->data_phase = task.data_phase = TASKFILE_NO_DATA;
++	return do_rw_taskfile(drive, &task);
+ }
+ 
+ static void ide_check_pm_state(ide_drive_t *drive, struct request *rq)
+diff --git a/drivers/ide/ide-probe.c b/drivers/ide/ide-probe.c
+index b5e54d2..789390b 100644
+--- a/drivers/ide/ide-probe.c
++++ b/drivers/ide/ide-probe.c
+@@ -842,6 +842,9 @@ static void ide_port_tune_devices(ide_hwif_t *hwif)
+ 
+ 			if (hwif->dma_ops)
+ 				ide_set_dma(drive);
++
++			if (!ata_id_has_unload(drive->id))
++				drive->dev_flags |= IDE_DFLAG_NO_UNLOAD;
  		}
  	}
  
-+	if (ap->link.eh_context.i.action & ATA_EH_PARK) {
-+		ata_eh_park_devs(ap, 1);
-+		wait_event(ata_scsi_park_wq, !timer_pending(&ap->park_timer));
-+		ata_eh_park_devs(ap, 0);
-+	}
-+
- 	/* the rest */
- 	ata_port_for_each_link(link, ap) {
- 		struct ata_eh_context *ehc = &link->eh_context;
-diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-index 4d066ad..ffcc016 100644
---- a/drivers/ata/libata-scsi.c
-+++ b/drivers/ata/libata-scsi.c
-@@ -46,6 +46,7 @@
- #include <linux/libata.h>
+diff --git a/drivers/ide/ide-taskfile.c b/drivers/ide/ide-taskfile.c
+index a4c2d91..7f89127 100644
+--- a/drivers/ide/ide-taskfile.c
++++ b/drivers/ide/ide-taskfile.c
+@@ -152,7 +152,15 @@ static ide_startstop_t task_no_data_intr(ide_drive_t *drive)
+ 
+ 	if (!custom)
+ 		ide_end_drive_cmd(drive, stat, ide_read_error(drive));
+-	else if (tf->command == ATA_CMD_SET_MULTI)
++	else if (tf->command == ATA_CMD_IDLEIMMEDIATE) {
++		drive->hwif->tp_ops->tf_read(drive, task);
++		if (tf->lbal != 0xc4) {
++			printk(KERN_ERR "%s: head unloading failed!\n",
++			       drive->name);
++			ide_tf_dump(drive->name, tf);
++		}
++		ide_end_drive_cmd(drive, stat, ide_read_error(drive));
++	} else if (tf->command == ATA_CMD_SET_MULTI)
+ 		drive->mult_count = drive->mult_req;
+ 
+ 	return ide_stopped;
+diff --git a/drivers/ide/ide.c b/drivers/ide/ide.c
+index a498245..75914aa 100644
+--- a/drivers/ide/ide.c
++++ b/drivers/ide/ide.c
+@@ -59,6 +59,7 @@
  #include <linux/hdreg.h>
- #include <linux/uaccess.h>
+ #include <linux/completion.h>
+ #include <linux/device.h>
 +#include <linux/suspend.h>
  
- #include "libata.h"
  
-@@ -113,6 +114,77 @@ static struct scsi_transport_template ata_scsi_transport_template = {
- 	.user_scan		= ata_scsi_user_scan,
- };
+ /* default maximum number of failures */
+@@ -77,6 +78,165 @@ DEFINE_MUTEX(ide_cfg_mtx);
+ __cacheline_aligned_in_smp DEFINE_SPINLOCK(ide_lock);
+ EXPORT_SYMBOL(ide_lock);
  
-+DECLARE_WAIT_QUEUE_HEAD(ata_scsi_park_wq);
-+
 +#if defined(CONFIG_PM_SLEEP) || defined(CONFIG_HIBERNATION)
-+static atomic_t ata_scsi_park_count = ATOMIC_INIT(0);
++static atomic_t ide_park_count = ATOMIC_INIT(0);
++DECLARE_WAIT_QUEUE_HEAD(ide_park_wq);
 +
-+static int ata_scsi_pm_notifier(struct notifier_block *nb, unsigned long val,
-+				void *null)
++static int ide_pm_notifier(struct notifier_block *nb, unsigned long val,
++			   void *null)
 +{
 +	switch (val) {
 +	case PM_SUSPEND_PREPARE:
-+		atomic_dec(&ata_scsi_park_count);
-+		wait_event(ata_scsi_park_wq,
-+			   atomic_read(&ata_scsi_park_count) == -1);
++		atomic_dec(&ide_park_count);
++		wait_event(ide_park_wq, atomic_read(&ide_park_count) == -1);
 +		break;
 +	case PM_POST_SUSPEND:
-+		atomic_inc(&ata_scsi_park_count);
++		atomic_inc(&ide_park_count);
 +		break;
 +	default:
 +		return NOTIFY_DONE;
@@ -214,259 +159,363 @@ index 4d066ad..ffcc016 100644
 +	return NOTIFY_OK;
 +}
 +
-+static struct notifier_block ata_scsi_pm_notifier_block = {
-+	.notifier_call = ata_scsi_pm_notifier,
++static struct notifier_block ide_pm_notifier_block = {
++	.notifier_call = ide_pm_notifier,
 +};
 +
-+int ata_scsi_register_pm_notifier(void)
++static inline int ide_register_pm_notifier(void)
 +{
-+	return register_pm_notifier(&ata_scsi_pm_notifier_block);
++	return register_pm_notifier(&ide_pm_notifier_block);
 +}
 +
-+int ata_scsi_unregister_pm_notifier(void)
++static inline int ide_unregister_pm_notifier(void)
 +{
-+	return unregister_pm_notifier(&ata_scsi_pm_notifier_block);
++	return unregister_pm_notifier(&ide_pm_notifier_block);
 +}
 +
-+static inline void ata_scsi_signal_unpark(void)
++static inline void signal_unpark(void)
 +{
-+	atomic_dec(&ata_scsi_park_count);
-+	wake_up_all(&ata_scsi_park_wq);
++	atomic_dec(&ide_park_count);
++	wake_up_all(&ide_park_wq);
 +}
 +
-+static inline int ata_scsi_mod_park_timer(struct timer_list *timer,
-+					  unsigned long timeout)
++static inline int ide_mod_park_timer(struct timer_list *timer,
++				     unsigned long timeout)
 +{
-+	if (unlikely(atomic_inc_and_test(&ata_scsi_park_count))) {
-+		ata_scsi_signal_unpark();
++	if (unlikely(atomic_inc_and_test(&ide_park_count))) {
++		signal_unpark();
 +		return -EBUSY;
 +	}
 +	if (mod_timer(timer, timeout)) {
-+		atomic_dec(&ata_scsi_park_count);
++		signal_unpark();
 +		return 1;
 +	}
 +
 +	return 0;
 +}
 +#else /* defined(CONFIG_PM_SLEEP) || defined(CONFIG_HIBERNATION) */
-+static inline void ata_scsi_signal_unpark(void)
-+{
-+	wake_up_all(&ata_scsi_park_wq);
-+}
++static inline int ide_register_pm_notifier(void) { return 0; }
 +
-+static inline int ata_scsi_mod_park_timer(struct timer_list *timer,
-+					  unsigned long timeout)
++static inline int ide_unregister_pm_notifier(void) { return 0; }
++
++static inline void signal_unpark(void) { }
++
++static inline int ide_mod_park_timer(struct timer_list *timer,
++				     unsigned long timeout)
 +{
 +	return mod_timer(timer, timeout);
 +}
 +#endif /* defined(CONFIG_PM_SLEEP) || defined(CONFIG_HIBERNATION) */
 +
- 
- static const struct {
- 	enum link_pm	value;
-@@ -183,6 +255,136 @@ DEVICE_ATTR(link_power_management_policy, S_IRUGO | S_IWUSR,
- 		ata_scsi_lpm_show, ata_scsi_lpm_put);
- EXPORT_SYMBOL_GPL(dev_attr_link_power_management_policy);
- 
-+static ssize_t ata_scsi_park_show(struct device *device,
-+				  struct device_attribute *attr, char *buf)
++static int issue_park_cmd(ide_drive_t *drive, struct completion *wait,
++			  u8 op_code)
 +{
-+	struct scsi_device *sdev = to_scsi_device(device);
-+	struct ata_port *ap;
++	ide_drive_t *odrive = drive;
++	ide_hwif_t *hwif = drive->hwif;
++	ide_hwgroup_t *hwgroup = hwif->hwgroup;
++	struct request_queue *q;
++	struct request *rq;
++	gfp_t gfp_mask = (op_code == REQ_PARK_HEADS) ? __GFP_WAIT : GFP_NOWAIT;
++	int count = 0;
++
++	do {
++		q = drive->queue;
++		if (drive->dev_flags & IDE_DFLAG_SLEEPING
++		    && op_code == REQ_PARK_HEADS) {
++			drive->sleep = hwif->park_timer.expires;
++			goto next_step;
++		}
++
++		if (unlikely(drive->dev_flags & IDE_DFLAG_NO_UNLOAD
++			     && op_code == REQ_UNPARK_HEADS))
++			goto resume;
++
++		spin_unlock_irq(&ide_lock);
++		rq = blk_get_request(q, READ, gfp_mask);
++		spin_lock_irq(&ide_lock);
++		if (unlikely(!rq))
++			goto resume;
++
++		rq->cmd[0] = op_code;
++		rq->cmd_len = 1;
++		rq->cmd_type = REQ_TYPE_SPECIAL;
++		rq->cmd_flags |= REQ_SOFTBARRIER;
++		__elv_add_request(q, rq, ELEVATOR_INSERT_FRONT, 0);
++		if (op_code == REQ_PARK_HEADS) {
++			rq->end_io_data = wait;
++			blk_stop_queue(q);
++			q->request_fn(q);
++			count++;
++		} else {
++resume:
++			drive->dev_flags &= ~IDE_DFLAG_SLEEPING;
++			if (hwgroup->sleeping) {
++				del_timer(&hwgroup->timer);
++				hwgroup->sleeping = 0;
++				hwgroup->busy = 0;
++			}
++			blk_start_queue(q);
++		}
++
++next_step:
++		do {
++			drive = drive->next;
++		} while (drive->hwif != hwif);
++	} while (drive != odrive);
++
++	return count;
++}
++
++static void unpark_work(struct work_struct *work)
++{
++	ide_hwif_t *hwif = container_of(work, ide_hwif_t, unpark_work);
++	ide_drive_t *drive;
++
++	mutex_lock(&ide_setting_mtx);
++	spin_lock_irq(&ide_lock);
++	if (unlikely(!hwif->present || timer_pending(&hwif->park_timer)))
++		goto done;
++
++	drive = hwif->hwgroup->drive;
++	while (drive->hwif != hwif)
++		drive = drive->next;
++
++	issue_park_cmd(drive, NULL, REQ_UNPARK_HEADS);
++done:
++	signal_unpark();
++	spin_unlock_irq(&ide_lock);
++	mutex_unlock(&ide_setting_mtx);
++	put_device(&hwif->gendev);
++}
++
++static void park_timeout(unsigned long data)
++{
++	ide_hwif_t *hwif = (ide_hwif_t *)data;
++
++	/* FIXME: Which work queue would be the right one? */
++	kblockd_schedule_work(NULL, &hwif->unpark_work);
++}
++
+ static void ide_port_init_devices_data(ide_hwif_t *);
+ 
+ /*
+@@ -100,6 +260,11 @@ void ide_init_port_data(ide_hwif_t *hwif, unsigned int index)
+ 
+ 	hwif->tp_ops = &default_tp_ops;
+ 
++	INIT_WORK(&hwif->unpark_work, unpark_work);
++	hwif->park_timer.function = park_timeout;
++	hwif->park_timer.data = (unsigned long)hwif;
++	init_timer(&hwif->park_timer);
++
+ 	ide_port_init_devices_data(hwif);
+ }
+ 
+@@ -581,6 +746,118 @@ static ssize_t serial_show(struct device *dev, struct device_attribute *attr,
+ 	return sprintf(buf, "%s\n", (char *)&drive->id[ATA_ID_SERNO]);
+ }
+ 
++static ssize_t park_show(struct device *dev, struct device_attribute *attr,
++			 char *buf)
++{
++	ide_drive_t *drive = to_ide_device(dev);
++	ide_hwif_t *hwif = drive->hwif;
 +	unsigned int seconds;
 +
-+	ap = ata_shost_to_port(sdev->host);
++	spin_lock_irq(&ide_lock);
++	if (!(drive->dev_flags & IDE_DFLAG_PRESENT)) {
++		spin_unlock_irq(&ide_lock);
++		return -ENODEV;
++	}
 +
-+	spin_lock_irq(ap->lock);
-+	if (timer_pending(&ap->park_timer))
++	if (timer_pending(&hwif->park_timer))
 +		/*
 +		 * Adding 1 in order to guarantee nonzero value until timer
 +		 * has actually expired.
 +		 */
-+		seconds = jiffies_to_msecs(ap->park_timer.expires - jiffies)
++		seconds = jiffies_to_msecs(hwif->park_timer.expires - jiffies)
 +			  / 1000 + 1;
 +	else
 +		seconds = 0;
-+	spin_unlock_irq(ap->lock);
++	spin_unlock_irq(&ide_lock);
 +
 +	return snprintf(buf, 20, "%u\n", seconds);
 +}
 +
-+static ssize_t ata_scsi_park_store(struct device *device,
-+				   struct device_attribute *attr,
-+				   const char *buf, size_t len)
++static ssize_t park_store(struct device *dev, struct device_attribute *attr,
++			  const char *buf, size_t len)
 +{
 +#define MAX_PARK_TIMEOUT 30
-+	struct scsi_device *sdev = to_scsi_device(device);
-+	struct ata_port *ap;
-+	struct ata_device *dev;
-+	unsigned long seconds;
-+	int rc;
++	ide_drive_t *drive = to_ide_device(dev);
++	ide_hwif_t *hwif = drive->hwif;
++	DECLARE_COMPLETION_ONSTACK(wait);
++	unsigned long timeout;
++	int rc, count = 0;
 +
-+	rc = strict_strtoul(buf, 10, &seconds);
-+	if (rc || seconds > MAX_PARK_TIMEOUT)
++	rc = strict_strtoul(buf, 10, &timeout);
++	if (rc || timeout > MAX_PARK_TIMEOUT)
 +		return -EINVAL;
 +
-+	ap = ata_shost_to_port(sdev->host);
-+	dev = ata_scsi_find_dev(ap, sdev);
-+	if (unlikely(!dev))
-+		return -ENODEV;
-+
-+	spin_lock_irq(ap->lock);
-+	if (dev->flags & ATA_DFLAG_NO_UNLOAD) {
++	mutex_lock(&ide_setting_mtx);
++	spin_lock_irq(&ide_lock);
++	if (unlikely(!(drive->dev_flags & IDE_DFLAG_PRESENT))) {
++		rc = -ENODEV;
++		goto unlock;
++	}
++	if (drive->dev_flags & IDE_DFLAG_NO_UNLOAD) {
 +		rc = -EOPNOTSUPP;
 +		goto unlock;
 +	}
 +
-+	if (seconds) {
-+		rc = ata_scsi_mod_park_timer(&ap->park_timer,
-+					     msecs_to_jiffies(seconds * 1000)
-+					     + jiffies);
-+		if (!rc) {
-+			ap->link.eh_info.action |= ATA_EH_PARK;
-+			ata_port_schedule_eh(ap);
-+		} else if (rc == 1)
++	if (timeout) {
++		timeout = msecs_to_jiffies(timeout * 1000) + jiffies;
++		rc = ide_mod_park_timer(&hwif->park_timer, timeout);
++		if (unlikely(rc < 0))
++			goto unlock;
++		else if (rc)
 +			rc = 0;
++		else
++			get_device(&hwif->gendev);
++		count = issue_park_cmd(drive, &wait, REQ_PARK_HEADS);
 +	} else {
-+		if (del_timer(&ap->park_timer))
-+			ata_scsi_signal_unpark();
++		if (del_timer(&hwif->park_timer)) {
++			issue_park_cmd(drive, NULL, REQ_UNPARK_HEADS);
++			signal_unpark();
++			put_device(&hwif->gendev);
++		}
 +	}
++
 +unlock:
-+	spin_unlock_irq(ap->lock);
++	spin_unlock_irq(&ide_lock);
++
++	for (; count; count--)
++		wait_for_completion(&wait);
++	mutex_unlock(&ide_setting_mtx);
 +
 +	return rc ? rc : len;
 +}
-+DEVICE_ATTR(unload_heads, S_IRUGO | S_IWUSR,
-+	    ata_scsi_park_show, ata_scsi_park_store);
-+EXPORT_SYMBOL_GPL(dev_attr_unload_heads);
 +
-+static ssize_t ata_scsi_unload_feature_show(struct device *device,
-+					    struct device_attribute *attr,
-+					    char *buf)
++ide_devset_rw_flag(no_unload, IDE_DFLAG_NO_UNLOAD);
++
++static ssize_t unload_feature_show(struct device *dev,
++				   struct device_attribute *attr, char *buf)
 +{
-+	struct scsi_device *sdev = to_scsi_device(device);
-+	struct ata_port *ap = ata_shost_to_port(sdev->host);
-+	struct ata_device *dev = ata_scsi_find_dev(ap, sdev);
-+	int val;
++	ide_drive_t *drive = to_ide_device(dev);
++	unsigned int val;
 +
-+	if (!dev)
-+		return -ENODEV;
-+	if (dev->class != ATA_DEV_ATA && dev->class != ATA_DEV_ATAPI)
-+		return -EOPNOTSUPP;
-+	spin_lock_irq(ap->lock);
-+	val = !(dev->flags & ATA_DFLAG_NO_UNLOAD);
-+	spin_unlock_irq(ap->lock);
++	spin_lock_irq(&ide_lock);
++	val = !get_no_unload(drive);
++	spin_unlock_irq(&ide_lock);
 +
 +	return snprintf(buf, 4, "%u\n", val);
 +}
 +
-+static ssize_t ata_scsi_unload_feature_store(struct device *device,
-+					     struct device_attribute *attr,
-+					     const char *buf, size_t len)
++static ssize_t unload_feature_store(struct device *dev,
++				    struct device_attribute *attr,
++				    const char *buf, size_t len)
 +{
-+	struct scsi_device *sdev = to_scsi_device(device);
-+	struct ata_port *ap;
-+	struct ata_device *dev;
++	ide_drive_t *drive = to_ide_device(dev);
 +	int val;
 +
 +	val = buf[0] - '0';
-+	if ((val != 0 && val != 1) || (buf[1] != '\0' && buf[1] != '\n')
-+	    || buf[2] != '\0')
++	if ((val != 0 && val != 1)
++	    || (buf[1] != '\0' && buf[1] != '\n') || buf[2] != '\0')
 +		return -EINVAL;
-+	ap = ata_shost_to_port(sdev->host);
-+	dev = ata_scsi_find_dev(ap, sdev);
-+	if (!dev)
-+		return -ENODEV;
-+	if (dev->class != ATA_DEV_ATA && dev->class != ATA_DEV_ATAPI)
-+		return -EOPNOTSUPP;
 +
-+	spin_lock_irq(ap->lock);
-+	if (val == 1)
-+		dev->flags &= ~ATA_DFLAG_NO_UNLOAD;
-+	else
-+		dev->flags |= ATA_DFLAG_NO_UNLOAD;
-+	spin_unlock_irq(ap->lock);
++	val = ide_devset_execute(drive, &ide_devset_no_unload, !val);
 +
-+	return len;
-+}
-+DEVICE_ATTR(unload_feature, S_IRUGO | S_IWUSR,
-+	    ata_scsi_unload_feature_show, ata_scsi_unload_feature_store);
-+EXPORT_SYMBOL_GPL(dev_attr_unload_feature);
-+
-+void ata_scsi_park_timeout(unsigned long data)
-+{
-+	ata_scsi_signal_unpark();
++	return val ? val : len;
 +}
 +
- static void ata_scsi_set_sense(struct scsi_cmnd *cmd, u8 sk, u8 asc, u8 ascq)
- {
- 	cmd->result = (DRIVER_SENSE << 24) | SAM_STAT_CHECK_CONDITION;
-@@ -954,6 +1156,9 @@ static int atapi_drain_needed(struct request *rq)
- static int ata_scsi_dev_config(struct scsi_device *sdev,
- 			       struct ata_device *dev)
- {
-+	if (!ata_id_has_unload(dev->id))
-+		dev->flags |= ATA_DFLAG_NO_UNLOAD;
-+
- 	/* configure max sectors */
- 	blk_queue_max_sectors(sdev->request_queue, dev->max_sectors);
- 
-diff --git a/drivers/ata/libata.h b/drivers/ata/libata.h
-index ade5c75..a486577 100644
---- a/drivers/ata/libata.h
-+++ b/drivers/ata/libata.h
-@@ -148,6 +148,15 @@ extern void ata_scsi_hotplug(struct work_struct *work);
- extern void ata_schedule_scsi_eh(struct Scsi_Host *shost);
- extern void ata_scsi_dev_rescan(struct work_struct *work);
- extern int ata_bus_probe(struct ata_port *ap);
-+extern wait_queue_head_t ata_scsi_park_wq;
-+void ata_scsi_park_timeout(unsigned long data);
-+#if defined(CONFIG_PM_SLEEP) || defined(CONFIG_HIBERNATION)
-+extern int ata_scsi_register_pm_notifier(void);
-+extern int ata_scsi_unregister_pm_notifier(void);
-+#else
-+static inline int ata_scsi_register_pm_notifier(void) { return 0; }
-+static inline int ata_scsi_unregister_pm_notifier(void) { return 0; }
-+#endif
- 
- /* libata-eh.c */
- extern unsigned long ata_internal_cmd_timeout(struct ata_device *dev, u8 cmd);
-diff --git a/include/linux/libata.h b/include/linux/libata.h
-index 225bfc5..4b5e073 100644
---- a/include/linux/libata.h
-+++ b/include/linux/libata.h
-@@ -146,6 +146,7 @@ enum {
- 	ATA_DFLAG_SPUNDOWN	= (1 << 14), /* XXX: for spindown_compat */
- 	ATA_DFLAG_SLEEPING	= (1 << 15), /* device is sleeping */
- 	ATA_DFLAG_DUBIOUS_XFER	= (1 << 16), /* data transfer not verified */
-+	ATA_DFLAG_NO_UNLOAD	= (1 << 17), /* device doesn't support unload */
- 	ATA_DFLAG_INIT_MASK	= (1 << 24) - 1,
- 
- 	ATA_DFLAG_DETACH	= (1 << 24),
-@@ -319,6 +320,7 @@ enum {
- 	ATA_EH_RESET		= ATA_EH_SOFTRESET | ATA_EH_HARDRESET,
- 	ATA_EH_ENABLE_LINK	= (1 << 3),
- 	ATA_EH_LPM		= (1 << 4),  /* link power management action */
-+	ATA_EH_PARK		= (1 << 5), /* unload heads and stop I/O */
- 
- 	ATA_EH_PERDEV_MASK	= ATA_EH_REVALIDATE,
- 
-@@ -452,6 +454,8 @@ enum link_pm {
- 	MEDIUM_POWER,
+ static struct device_attribute ide_dev_attrs[] = {
+ 	__ATTR_RO(media),
+ 	__ATTR_RO(drivename),
+@@ -588,6 +865,8 @@ static struct device_attribute ide_dev_attrs[] = {
+ 	__ATTR_RO(model),
+ 	__ATTR_RO(firmware),
+ 	__ATTR(serial, 0400, serial_show, NULL),
++	__ATTR(unload_feature, 0644, unload_feature_show, unload_feature_store),
++	__ATTR(unload_heads, 0644, park_show, park_store),
+ 	__ATTR_NULL
  };
- extern struct device_attribute dev_attr_link_power_management_policy;
-+extern struct device_attribute dev_attr_unload_heads;
-+extern struct device_attribute dev_attr_unload_feature;
- extern struct device_attribute dev_attr_em_message_type;
- extern struct device_attribute dev_attr_em_message;
- extern struct device_attribute dev_attr_sw_activity;
-@@ -714,6 +718,7 @@ struct ata_port {
- 	int			*pm_result;
- 	enum link_pm		pm_policy;
  
-+	struct timer_list	park_timer;
- 	struct timer_list	fastdrain_timer;
- 	unsigned long		fastdrain_cnt;
+@@ -844,6 +1123,12 @@ static int __init ide_init(void)
+ 		goto out_port_class;
+ 	}
  
++	ret = ide_register_pm_notifier();
++	if (ret) {
++		class_destroy(ide_port_class);
++		goto out_port_class;
++	}
++
+ 	proc_ide_create();
+ 
+ 	return 0;
+@@ -858,6 +1143,8 @@ static void __exit ide_exit(void)
+ {
+ 	proc_ide_destroy();
+ 
++	ide_unregister_pm_notifier();
++
+ 	class_destroy(ide_port_class);
+ 
+ 	bus_unregister(&ide_bus_type);
+diff --git a/include/linux/ide.h b/include/linux/ide.h
+index 3eece03..5e1ee98 100644
+--- a/include/linux/ide.h
++++ b/include/linux/ide.h
+@@ -156,6 +156,8 @@ enum {
+  */
+ #define REQ_DRIVE_RESET		0x20
+ #define REQ_DEVSET_EXEC		0x21
++#define REQ_PARK_HEADS		0x22
++#define REQ_UNPARK_HEADS	0x23
+ 
+ /*
+  * Check for an interrupt and acknowledge the interrupt status
+@@ -571,6 +573,8 @@ enum {
+ 	/* retrying in PIO */
+ 	IDE_DFLAG_DMA_PIO_RETRY		= (1 << 25),
+ 	IDE_DFLAG_LBA			= (1 << 26),
++	/* don't unload heads */
++	IDE_DFLAG_NO_UNLOAD		= (1 << 27),
+ };
+ 
+ struct ide_drive_s {
+@@ -818,6 +822,9 @@ typedef struct hwif_s {
+ 	unsigned	sharing_irq: 1;	/* 1 = sharing irq with another hwif */
+ 	unsigned	sg_mapped  : 1;	/* sg_table and sg_nents are ready */
+ 
++	struct timer_list	park_timer;	/* protected by queue_lock */
++	struct work_struct	unpark_work;
++
+ 	struct device		gendev;
+ 	struct device		*portdev;
+ 
+@@ -950,6 +957,11 @@ __IDE_DEVSET(_name, 0, get_##_func, set_##_func)
+ #define ide_ext_devset_rw_sync(_name, _func) \
+ __IDE_DEVSET(_name, DS_SYNC, get_##_func, set_##_func)
+ 
++#define ide_devset_rw_flag(_name, _field) \
++ide_devset_get_flag(_name, _field); \
++ide_devset_set_flag(_name, _field); \
++IDE_DEVSET(_name, DS_SYNC, get_##_name, set_##_name)
++
+ #define ide_decl_devset(_name) \
+ extern const struct ide_devset ide_devset_##_name
+ 
+@@ -969,11 +981,6 @@ ide_devset_get(_name, _field); \
+ ide_devset_set(_name, _field); \
+ IDE_DEVSET(_name, DS_SYNC, get_##_name, set_##_name)
+ 
+-#define ide_devset_rw_flag(_name, _field) \
+-ide_devset_get_flag(_name, _field); \
+-ide_devset_set_flag(_name, _field); \
+-IDE_DEVSET(_name, DS_SYNC, get_##_name, set_##_name)
+-
+ struct ide_proc_devset {
+ 	const char		*name;
+ 	const struct ide_devset	*setting;
 
 
