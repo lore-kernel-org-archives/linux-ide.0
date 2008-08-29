@@ -1,42 +1,38 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH #upstream-fixes] ahci: disable PMP for marvell ahcis
-Date: Fri, 29 Aug 2008 16:03:59 +0200
-Message-ID: <48B801CF.6010703@kernel.org>
+From: Martin Michlmayr <tbm@cyrius.com>
+Subject: Re: [PATCH #upstream-fixes] sata_mv: don't issue two DMA commands
+	concurrently
+Date: Fri, 29 Aug 2008 10:12:01 +0300
+Message-ID: <20080829071201.GB5284@deprecation.cyrius.com>
+References: <489C4F29.6020007@rtr.ca> <489C54D1.5080901@rtr.ca> <48A29E14.3090908@gmail.com> <48A2BBDC.2090201@ngs.ru> <48A2BC5D.5060801@gmail.com> <48A2C35C.7020400@ngs.ru> <48A2C460.6040504@gmail.com> <48AE588C.6080605@garzik.org> <20080822170119.GA18700@deprecation.cyrius.com> <48B40B10.6060301@rtr.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:45131 "EHLO hera.kernel.org"
+Received: from sorrow.cyrius.com ([65.19.161.204]:3904 "EHLO sorrow.cyrius.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752481AbYH2OGH (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 29 Aug 2008 10:06:07 -0400
+	id S1751295AbYH2HMW (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 29 Aug 2008 03:12:22 -0400
+Content-Disposition: inline
+In-Reply-To: <48B40B10.6060301@rtr.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik l <jeff@garzik.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, kueihuan.chen@gmail.com, Mark Lord <liml@rtr.ca>
+To: Mark Lord <liml@rtr.ca>
+Cc: Tejun Heo <htejun@gmail.com>, Artem Bokhan <aptem@ngs.ru>, linux-ide@vger.kernel.org, stable@kernel.org
 
-Marvell ahcis don't play nicely with PMPs.  Disable it.
+* Mark Lord <liml@rtr.ca> [2008-08-26 09:54]:
+>>>> sata_mv allowed issuing two DMA commands concurrently which the
+>>>> hardware allows.  Unfortunately, libata core layer isn't ready for
+>>>> this yet and spews ugly warning message and malfunctions on this.
+>>>> Don't allow concurrent DMA commands for now.
+>>>>
+>>>> Signed-off-by: Tejun Heo <tj@kernel.org>
+>>> applied
+>>
+>> Is this -stable material?
+>
+> Absolutely yes.
 
-Reported by KueiHuan Chen in the following thread.
+Adding stable@kernel.org.  This is commit 4bdee6c5103696a2729d3db2f235d202191788e4
 
-  http://thread.gmane.org/gmane.linux.ide/33296
-
-Signed-off-by: Tejun Heo <tj@kernel.org>
-Cc: KueiHuan Chen <kueihuan.chen@gmail.com>
-Cc: Mark Lord <mlord@pobox.com>
----
- drivers/ata/ahci.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
-index dc7596f..2806366 100644
---- a/drivers/ata/ahci.c
-+++ b/drivers/ata/ahci.c
-@@ -420,7 +420,7 @@ static const struct ata_port_info ahci_port_info[] = {
- 	/* board_ahci_mv */
- 	{
- 		AHCI_HFLAGS	(AHCI_HFLAG_NO_NCQ | AHCI_HFLAG_NO_MSI |
--				 AHCI_HFLAG_MV_PATA),
-+				 AHCI_HFLAG_MV_PATA | AHCI_HFLAG_NO_PMP),
- 		.flags		= ATA_FLAG_SATA | ATA_FLAG_NO_LEGACY |
- 				  ATA_FLAG_MMIO | ATA_FLAG_PIO_DMA,
- 		.pio_mask	= 0x1f, /* pio0-4 */
+-- 
+Martin Michlmayr
+http://www.cyrius.com/
