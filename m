@@ -1,43 +1,52 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: SATA port multiplier(Marvell 6121 with ahci) and Marvell 4140,
- simg 3726
-Date: Fri, 29 Aug 2008 15:28:09 +0200
-Message-ID: <48B7F969.7060600@kernel.org>
-References: <788014650807302022j30cea641wcfe4105ac8702b8c@mail.gmail.com>	 <48918D52.3010404@gmail.com> <48918DD9.9050603@kernel.org>	 <788014650807310612x70347f8dt56ed650dc6b8c5ca@mail.gmail.com>	 <48926F7E.1020807@kernel.org> <48930B2E.9060604@pobox.com>	 <489336E0.7020409@kernel.org>	 <788014650808021053y5b5a8e01y62099464cc96d8a4@mail.gmail.com>	 <48953D42.1010408@kernel.org> <788014650808050154r7f41cb05t5d883ee043497ba5@mail.gmail.com>
+From: Thomas Renninger <trenn@suse.de>
+Subject: Re: Promise 300-TX 4-channel SATA disk going dead under load 2.6.24-7
+Date: Fri, 29 Aug 2008 15:31:20 +0200
+Message-ID: <200808291531.22706.trenn@suse.de>
+References: <48A35FE6.1080903@tlinx.org> <200808291511.02062.trenn@suse.de> <48B7F710.8080007@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain;
+  charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:59527 "EHLO hera.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755988AbYH2NaD (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 29 Aug 2008 09:30:03 -0400
-In-Reply-To: <788014650808050154r7f41cb05t5d883ee043497ba5@mail.gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-acpi-owner@vger.kernel.org>
+In-Reply-To: <48B7F710.8080007@kernel.org>
+Content-Disposition: inline
+Sender: linux-acpi-owner@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: Linda Walsh <lkml@tlinx.org>, linux-ide@vger.kernel.org, Alan Cox <alan@lxorguk.ukuu.org.uk>, linux acpi <linux-acpi@vger.kernel.org>
 List-Id: linux-ide@vger.kernel.org
-To: khchen@synology.com
-Cc: jgarzik@pobox.com, Mark Lord <mlord@pobox.com>, linux-ide@vger.kernel.org
 
-KueiHuan Chen wrote:
-> Hi,
-> 
->   Sorry for delay responding, here is my x86_64 with 2.6.26 dmesg and
-> lspci.  ^__^
+On Friday 29 August 2008 15:18:08 Tejun Heo wrote:
+> Thomas Renninger wrote:
+> >>> There were several acpipnp problems recently, but this is another topic
+> >>> and that needs fixing anyway, Bjorn is doing a real good job here.
+> >>
+> >> Hmm... Maybe what's necessary it to detect IRQ misrouting and turn on
+> >> irqpoll on the specific IRQ (or IRQ handler), which would help 'nobody
+> >> cared' cases too.
+> >
+> > But you risk that things never get fixed correctly.
+> > At least yell loudly at the user that things must get fixed.
+> > IMO the a message (you already see appearing?) at the right place:
+> > try irqpoll, try xyz param is enough.
+>
+> Yeah, the kernel should scream like hell but keep working after screaming.
+>
+> > The current behavior is not that bad and not that much machines
+> > (at least new machines) are affected, but as said I am not
+> > deeply involved in PCI/IRQ things.
+>
+> The thing is IRQ storms occassionally happen on otherwise working
+> machines taking down the IRQ and all the devices running off the IRQ, so
+> it's not as cut and dry as boot or no boot.
+AFAIK legacy IRQs can be routed somewhere else (below 16 while the APIC IRQ is 
+somewhere above), thus the IRQ may happen twice. Sounds a bit like what you 
+explained above.
+At least I remember such a very specific problem from the
+Real Time people.
+(could eventually be switched off by very chipset specific quirks)
 
-Heh.. I out-delayed you.  :-)
+Anyway, this starts to get off topic and I am really the wrong one
+to answer such questions, others probably know much more about this
+than I do.
 
-> Dmesg: hotplug-in 3726 into 6145 , and the unplug, finally plug again
-> ata9: exception Emask 0x10 SAct 0x0 SErr 0x0 action 0xe frozen
-> ata9: irq_stat 0x02400000, PHY RDY changed
-> ata9: hard resetting link
-> ata9: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-> ata9.15: qc timeout (cmd 0xe4)
-> ata9.15: failed to read PMP GSCR[0] (Emask=0x4)
-
-Heh.. failing PMP READs.  Doesn't look like there's anything else to do
-than disabling it.  Will post a patch.
-
-Thanks.
-
--- 
-tejun
+   Thomas
