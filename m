@@ -1,68 +1,53 @@
-From: Thomas Renninger <trenn@suse.de>
+From: Tejun Heo <tj@kernel.org>
 Subject: Re: Promise 300-TX 4-channel SATA disk going dead under load 2.6.24-7
-Date: Fri, 29 Aug 2008 13:39:58 +0200
-Message-ID: <200808291339.59785.trenn@suse.de>
-References: <48A35FE6.1080903@tlinx.org> <200808281436.30089.trenn@suse.de> <48B7CD5E.1050701@kernel.org>
+Date: Fri, 29 Aug 2008 14:02:59 +0200
+Message-ID: <48B7E573.60601@kernel.org>
+References: <48A35FE6.1080903@tlinx.org> <200808281436.30089.trenn@suse.de> <48B7CD5E.1050701@kernel.org> <200808291339.59785.trenn@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ns.suse.de ([195.135.220.2]:41470 "EHLO mx1.suse.de"
+Received: from hera.kernel.org ([140.211.167.34]:51294 "EHLO hera.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753889AbYH2LkC (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 29 Aug 2008 07:40:02 -0400
-In-Reply-To: <48B7CD5E.1050701@kernel.org>
-Content-Disposition: inline
+	id S1753226AbYH2MEl (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 29 Aug 2008 08:04:41 -0400
+In-Reply-To: <200808291339.59785.trenn@suse.de>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
+To: Thomas Renninger <trenn@suse.de>
 Cc: Linda Walsh <lkml@tlinx.org>, linux-ide@vger.kernel.org, Alan Cox <alan@lxorguk.ukuu.org.uk>, linux acpi <linux-acpi@vger.kernel.org>
 
-On Friday 29 August 2008 12:20:14 Tejun Heo wrote:
-> Thomas Renninger wrote:
-> > Also the system is really old. Why don't you stick to pci=noacpi or
-> > even acpi=off?
-> > What advantage do you want to get with ACPI (SATA works?)?
->
-> I think this is the second time I see ACPI IRQ routing doesn't work on
-> old ACPI.
-Hey, that's great. I expected you have seen much more (you inflicted me
-on more than two? :) ).
-There is a cut (date) when it makes sense to use ACPI and when to not
-use it. Ideally one would like to choose for what the machine got
-tested and certified, but you can only guess.
-Thus a lot old machines need acpi=force or acpi=off.
-> Is it possible to detect this and turn off automatically?  Or 
-> does that risk breaking even more machines?
-I do not know the very IRQ and PCI details, but I expect the
-problem is you cannot detect whether an interrupt is wrongly set up.
+Thomas Renninger wrote:
+> On Friday 29 August 2008 12:20:14 Tejun Heo wrote:
+>> Thomas Renninger wrote:
+>>> Also the system is really old. Why don't you stick to pci=noacpi or
+>>> even acpi=off?
+>>> What advantage do you want to get with ACPI (SATA works?)?
+>> I think this is the second time I see ACPI IRQ routing doesn't work on
+>> old ACPI.
+> Hey, that's great. I expected you have seen much more (you inflicted me
+> on more than two? :) ).
 
-While apic vs pic is a real HW switch and once done there is no way back,
-acpi vs legacy IRQ setup, should just be about different ways of parsing and 
-getting info how to set up the irq.
-If you set up the IRQ using ACPI information and you detect that something
-went wrong, it should be no problem (hmm, maybe a solvable design problem in 
-the pci layer) to use PCI config or whatever legacy info to re-set up the
-IRQ.
-But as said, I expect it's not easy/possible to detect when the IRQ is
-wrongly set up. Maybe you can add in the devices:
-test_irq_activity(..)
-If this fails you can try to set it up again..., no I do not think you want
-to do that.
+Yeah, I tend to redirect all IRQ routing related problems to you.  :-P
 
-Also beside old machines which might need the noacpi or acpi=off, pci=noacpi 
-and related boot params we do rather good IMO.
-I remember:
-    - legacy IDE problems, one boiled down to a BIOS Bug
-    - No PCI domain support, that broke one HP machine which seemed to be the
-      only one using it. Maybe it's already supported, rather old.
-    - yeah and some older machines I do not really remember
-where pci=noacpi helped. IMO not worth an automated detection.
-Especially for those old machines..., people know which param to use, you will
-produce more grief than any good.
+...
+> where pci=noacpi helped. IMO not worth an automated detection.
+> Especially for those old machines..., people know which param to use, you will
+> produce more grief than any good.
+> 
+> There were several acpipnp problems recently, but this is another topic and 
+> that needs fixing anyway, Bjorn is doing a real good job here.
 
-There were several acpipnp problems recently, but this is another topic and 
-that needs fixing anyway, Bjorn is doing a real good job here.
+Hmm... Maybe what's necessary it to detect IRQ misrouting and turn on
+irqpoll on the specific IRQ (or IRQ handler), which would help 'nobody
+cared' cases too.  Misrouted or killed IRQs cause a lot of griefs and
+sporadic ones are kinda wide spread.  For example, I got hit by one
+during resume for an IRQ shared by USB, 1394 and sound controller after
+probably hundreds of successful suspend/resume cycles (not in one go) on
+the same machine and that somehow caused the sound driver to get stuck
+leaving no way out than rebooting.
 
-    Thomas
+Thanks.
+
+-- 
+tejun
