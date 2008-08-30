@@ -1,40 +1,64 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH] pata_sil680: remove duplicate pcim_enable_device
-Date: Sat, 30 Aug 2008 13:09:01 +0200
-Message-ID: <48B92A4D.3050801@kernel.org>
-References: <20080829153628.GA20130@dhcp-210.hsv.redhat.com> <20080829165024.6d2ff573@lxorguk.ukuu.org.uk>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: Re: [PATCH] ide: Build fix for CONFIG_IDE_PROC_FS=n
+Date: Sat, 30 Aug 2008 15:19:18 +0400
+Message-ID: <48B92CB6.2090702@ru.mvista.com>
+References: <20080829213217.4826.91622.stgit@denkblock.local>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:49143 "EHLO hera.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751611AbYH3LLD (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 30 Aug 2008 07:11:03 -0400
-In-Reply-To: <20080829165024.6d2ff573@lxorguk.ukuu.org.uk>
+Received: from h155.mvista.com ([63.81.120.155]:30547 "EHLO imap.sh.mvista.com"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751017AbYH3LTZ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 30 Aug 2008 07:19:25 -0400
+In-Reply-To: <20080829213217.4826.91622.stgit@denkblock.local>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: David Milburn <dmilburn@redhat.com>, jeff@garzik.org, linux-ide@vger.kernel.org
+To: Elias Oltmanns <eo@nebensachen.de>
+Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Alan Cox wrote:
-> On Fri, 29 Aug 2008 10:36:28 -0500
-> David Milburn <dmilburn@redhat.com> wrote:
-> 
->> Remove duplicate call to pcim_enable_device in sil680_init_one.
->>
->> Signed-off-by: David Milburn <dmilburn@redhat.com>
-> 
-> Acked-by: Alan Cox <alan@redhat.com>
-> 
-> Doh.. ;)
+Hello.
 
-Doh... was that me?  Going through the log... Yay, it was me in the
-commit f08048e94564d009b19038cfbdd800aa83e79c7f.  Lucky me.  I was
-supposed to move enabling above but apparently forgot to killing the
-original one.  Heh... anyways.  Thanks for spotting this.
+Elias Oltmanns wrote:
+> Recent changes have broken compilation when CONFIG_IDE_PROC_FS is not set.
+>
+> Signed-off-by: Elias Oltmanns <eo@nebensachen.de>
+>   
+[...]
+> diff --git a/drivers/ide/ide-disk.h b/drivers/ide/ide-disk.h
+> index f937772..5254cae 100644
+> --- a/drivers/ide/ide-disk.h
+> +++ b/drivers/ide/ide-disk.h
+> @@ -23,8 +23,10 @@ ide_decl_devset(acoustic);
+>  /* ide-disk_ioctl.c */
+>  int ide_disk_ioctl(struct inode *, struct file *, unsigned int, unsigned long);
+>  
+> +#ifdef CONFIG_IDE_PROC_FS
+>  /* ide-disk_proc.c */
+>  extern ide_proc_entry_t ide_disk_proc[];
+>  extern const struct ide_proc_devset ide_disk_settings[];
+> +#endif /* CONFIG_IDE_PROC_FS */
+>  
+>  #endif /* __IDE_DISK_H */
+> diff --git a/drivers/ide/ide-floppy.h b/drivers/ide/ide-floppy.h
+> index 2ad373e..86ee37e 100644
+> --- a/drivers/ide/ide-floppy.h
+> +++ b/drivers/ide/ide-floppy.h
+> @@ -53,8 +53,10 @@ sector_t ide_floppy_capacity(ide_drive_t *);
+>  /* ide-floppy_ioctl.c */
+>  int ide_floppy_ioctl(struct inode *, struct file *, unsigned, unsigned long);
+>  
+> +#ifdef CONFIG_IDE_PROC_FS
+>  /* ide-floppy_proc.c */
+>  extern ide_proc_entry_t ide_floppy_proc[];
+>  extern const struct ide_proc_devset ide_floppy_settings[];
+> +#endif /* CONFIG_IDE_PROC_FS */
+>   
 
-Embarrassingly-Acked-by: Tejun Heo <tj@kernel.org>
+   Is surrounding 'extern' declarations by #ifdef's really of any value?
+   They shouldn't be used if CONFIG_IDE_PROC_FS=n, so no object file 
+records should be generated.
 
--- 
-tejun
+WBR, Sergei
+
+
