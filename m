@@ -1,64 +1,54 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: Intel AHCI ICH9R not detecting devices
-Date: Sat, 30 Aug 2008 12:40:25 +0200
-Message-ID: <48B92399.6010808@kernel.org>
-References: <WorldClient-F200808221729.AA29360172@butn.net>
+Subject: Re: Problems with ALPM on devices part of raid array
+Date: Sat, 30 Aug 2008 12:53:34 +0200
+Message-ID: <48B926AE.7030108@kernel.org>
+References: <48B17C20.7020203@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:59337 "EHLO hera.kernel.org"
+Received: from hera.kernel.org ([140.211.167.34]:35505 "EHLO hera.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750847AbYH3Kmb (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 30 Aug 2008 06:42:31 -0400
-In-Reply-To: <WorldClient-F200808221729.AA29360172@butn.net>
+	id S1750847AbYH3Kyu (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 30 Aug 2008 06:54:50 -0400
+In-Reply-To: <48B17C20.7020203@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: xerces8 <xerces8@butn.net>
-Cc: linux-ide@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>, stein@hermes.si
+To: =?ISO-8859-1?Q?T=F6r=F6k_Edwin?= <edwintorok@gmail.com>
+Cc: Kristen Carlson Accardi <kristen.c.accardi@intel.com>, linux-ide@vger.kernel.org, jgarzik@pobox.com
 
-Hello,
+T=F6r=F6k Edwin wrote:
+> I have an AHCI capable chipset now (ICH10), so I tried ALPM[*], by
+> echo-ing min_power to:
+> ./class/scsi_host/host0/link_power_management_policy
+> ./class/scsi_host/host5/link_power_management_policy
+>=20
+> The 6 SATA2 drives have 3 partitions each, partition 1 is RAID1,
+> partition 3 is RAID10.
+>=20
+> This soon caused me troubles, as the kernel gave I/O error messages, =
+and
+> unmounted my filesystems running
+> on /dev/md4 (raid10 array). Unfortunately I don't have those messages
+> saved to my logs, because my /var filesystem got automatically unmoun=
+ted.
+> I had no choice but to reboot, and then md kicked 4 drives out of the
+> md4 array (6 total drives), and then refused
+> to assemble (too few drives). The RAID1 array (md3) got reassembled, =
+and
+> resynced successfully.
+> I had to force the assembly of /dev/md4 [and encountered a mdadm bug
+> while doing so: http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=3D49=
+6334]
+>=20
+> I think ALPM should refuse to set link pm if the device is part of a
+> raid array, or the md driver should be aware
+> of ALPM, and wait a little longer for the device to come back online.
+> Mentioning this problem somewhere in the sources/docs would be nice.
 
-xerces8 wrote:
-> I noticed that recent kernels do not detect my SATA devices (two
-> SATA hard drives and one DVD unit).
-> 
-> HW: Asus P5K-E WiFi mainboard, BIOS version 1013 (latest as of now)
-> BIOS setup: SATA adapter mode : AHCI
-> CPU: Intel Core2 Q6600 (not overclocked)
-> RAM: 4x2GB DDR2-800
-> 
-> Kernel: 2.6.26.3 (vanilla unpatched)
-> arch: i386
-> 
-> kernel config : http://pastebin.com/f7640ead2
-> dmesg output : http://pastebin.com/f3b3fac14
-> lspci: http://pastebin.com/f2a3edebf
-> lspci -v -n : http://pastebin.com/f724cf3
-> /proc/cpuinfo: http://pastebin.com/f11930c44
+Being part of RAID is very unlikely to have anything to do with the
+failures.  Can you post kernel, boot log, error messages and the
+output of hdparm -I on array members?
 
-It's usually best to include relevant excerpts inline and then attach
-the whole stuff as attachments.  Posting links to some URL or non-OSDL
-bugzilla entries is likely to significantly increase your chance of
-just being skipped over.  You know, we're cranky nerds who hate the
-web and stick to 80-column terminals.  ;-)
-
- ahci 0000:00:1f.2: AHCI 0001.0200 32 slots 6 ports 3 Gbps 0x3f impl SATA mode
- ahci 0000:00:1f.2: flags: 64bit ncq sntf stag pm led clo pmp pio slum part
- PCI: Setting latency timer of device 0000:00:1f.2 to 64
- ACPI: PCI interrupt for device 0000:00:1f.2 disabled
- ahci: probe of 0000:00:1f.2 failed with error -16
-
-This looks like resource conflict to me, which could have resulted
-from ahci trying to grab all resources.  Can you please post the
-result of "cat /proc/ioports" and "cat /proc/iomem"?
-
-> Funny thing, in 64 bit mode it all works fine (tested and first
-> discovered with RIPLinux 6.3; the above config should match the 32 bit
-> config from riplinux)
-
-Yeah, different arch codes can do strange things to PCI IRQ routing or
-resource allocations.
-
--- 
+--=20
 tejun
