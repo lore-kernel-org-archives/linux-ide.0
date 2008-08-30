@@ -1,56 +1,40 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: SATA ALPM min_power causes > 10s delay on resume
-Date: Sat, 30 Aug 2008 13:02:04 +0200
-Message-ID: <48B928AC.8090007@kernel.org>
-References: <1219598870.11057.2.camel@stinkpad>
+Subject: Re: delay & msgs on S3 wakeup, Dell XPS m1330 laptop
+Date: Sat, 30 Aug 2008 13:03:12 +0200
+Message-ID: <48B928F0.2020106@kernel.org>
+References: <c0a09e5c0808262156u1ed7777ay5f1e6c196a8be6b7@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:38944 "EHLO hera.kernel.org"
+Received: from hera.kernel.org ([140.211.167.34]:38973 "EHLO hera.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751163AbYH3LDP (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 30 Aug 2008 07:03:15 -0400
-In-Reply-To: <1219598870.11057.2.camel@stinkpad>
+	id S1751210AbYH3LEW (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 30 Aug 2008 07:04:22 -0400
+In-Reply-To: <c0a09e5c0808262156u1ed7777ay5f1e6c196a8be6b7@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "Jeffrey W. Baker" <jwbaker@gmail.com>
+To: Andrew Grover <andy.grover@gmail.com>
 Cc: linux-ide@vger.kernel.org
 
-Jeffrey W. Baker wrote:
-> I started using the min_power ALPM setting on my ThinkPad to save power
-> (which works great, thanks!) but it causes a small problem.  When the
-> machine resumes from suspend-to-ram it hangs for about 10s and then
-> prints this on the console:
+Andrew Grover wrote:
+> Laptop comes out of suspend and then spends a long time (10 sec)
+> waiting, and then finishes coming up. Everything seems to be working
+> fine, but the delay is worrisome.
 > 
-> ata1: COMRESET failed (errno=-16)
+> Any tips? Running latest bios (a12) on Ubuntu 2.6.24-19 kernel.
 > 
-> It then proceeds normally.  The full messages are:
-> 
-> ata1: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
-> ata1.00: configured for UDMA/100
-> ata1: failed to recover some devices, retrying in 5 secs
-> ata1: soft resetting link
-> ata1: SATA link down (SStatus 611 SControl 300)
-> ata1: failed to recover some devices, retrying in 5 secs
-> ata1: hard resetting link
-> ata1: port is slow to respond, please be patient (Status 0x80)
-> ata1: COMRESET failed (errno=-16)
-> ata1: hard resetting link
-> ata1: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
-> 
-> After which point the machine works normally.  The SATA controller is an
-> Intel Corporation 82801HBM/HEM (ICH8M/ICH8M-E) SATA AHCI Controller (rev
-> 03) and the SATA target is a SAMSUNG MCBQE32G Rev: PS10.  The kernel is
-> 2.6.24.  I haven't tried anything newer.
-> 
-> If the ALPM setting is left at its default of max_performance then
-> resume from suspend is instant.  Is there any way to work around this?
-> ALPM is worth a solid 30 minutes of extra battery life, so obviously I'd
-> like to use it.  If nothing else, it might be helpful to have a module
-> parameter to shorten the timeout on known-working hardware.
+> [    2.946116] sd 2:0:0:0: [sda] Starting disk
+> [    6.128124] ata3: port is slow to respond, please be patient (Status 0x80)
+> [   10.941192] ata3: softreset failed (device not ready)
+> [   11.240148] ata3: port is slow to respond, please be patient (Status 0x80)
+> [   11.482698] ata3: COMRESET failed (errno=-16)
+> [   11.508223] ata3: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+> [   11.583731] ata3.00: configured for UDMA/133
+> [   11.585389] sd 2:0:0:0: [sda] 488397168 512-byte hardware sectors (250059 MB)
 
-Which kernel version are you using?
+Please post full boot log and the result of "lspci -nn" and do you
+happen to be using ALPM?
 
 -- 
 tejun
