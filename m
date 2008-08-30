@@ -1,54 +1,43 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: Problems with ALPM on devices part of raid array
-Date: Sat, 30 Aug 2008 12:53:34 +0200
-Message-ID: <48B926AE.7030108@kernel.org>
-References: <48B17C20.7020203@gmail.com>
+Subject: Re: GA-MA790FX-DS5 SATA ahci NCQ erros on Jmicron 20360/20363 	(JMB363)
+ kernel 2.6.25-2 Debian/Lenny
+Date: Sat, 30 Aug 2008 13:00:22 +0200
+Message-ID: <48B92846.7050004@kernel.org>
+References: <g8p6po$nm$1@ger.gmane.org> <48B0916C.4080805@garzik.org> <g8q9mg$v2p$1@ger.gmane.org> <WorldClient-F200808241844.AA44240046@butn.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:35505 "EHLO hera.kernel.org"
+Received: from hera.kernel.org ([140.211.167.34]:38903 "EHLO hera.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750847AbYH3Kyu (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 30 Aug 2008 06:54:50 -0400
-In-Reply-To: <48B17C20.7020203@gmail.com>
+	id S1751053AbYH3LBi (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 30 Aug 2008 07:01:38 -0400
+In-Reply-To: <WorldClient-F200808241844.AA44240046@butn.net>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: =?ISO-8859-1?Q?T=F6r=F6k_Edwin?= <edwintorok@gmail.com>
-Cc: Kristen Carlson Accardi <kristen.c.accardi@intel.com>, linux-ide@vger.kernel.org, jgarzik@pobox.com
+To: xerces8 <xerces8@butn.net>
+Cc: Sergey Spiridonov <sena@hurd.homeunix.org>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-T=F6r=F6k Edwin wrote:
-> I have an AHCI capable chipset now (ICH10), so I tried ALPM[*], by
-> echo-ing min_power to:
-> ./class/scsi_host/host0/link_power_management_policy
-> ./class/scsi_host/host5/link_power_management_policy
->=20
-> The 6 SATA2 drives have 3 partitions each, partition 1 is RAID1,
-> partition 3 is RAID10.
->=20
-> This soon caused me troubles, as the kernel gave I/O error messages, =
-and
-> unmounted my filesystems running
-> on /dev/md4 (raid10 array). Unfortunately I don't have those messages
-> saved to my logs, because my /var filesystem got automatically unmoun=
-ted.
-> I had no choice but to reboot, and then md kicked 4 drives out of the
-> md4 array (6 total drives), and then refused
-> to assemble (too few drives). The RAID1 array (md3) got reassembled, =
-and
-> resynced successfully.
-> I had to force the assembly of /dev/md4 [and encountered a mdadm bug
-> while doing so: http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=3D49=
-6334]
->=20
-> I think ALPM should refuse to set link pm if the device is part of a
-> raid array, or the md driver should be aware
-> of ALPM, and wait a little longer for the device to come back online.
-> Mentioning this problem somewhere in the sources/docs would be nice.
+xerces8 wrote:
+> I have a JMB363 myself and it has its share of problems.
+> I would say it is buggy hardware. (why would they otherwise
+> release a new windows driver every week ? if not to workaround
+> bugs in HW ;-)
 
-Being part of RAID is very unlikely to have anything to do with the
-failures.  Can you post kernel, boot log, error messages and the
-output of hdparm -I on array members?
+Well, FWIW, JMB ahci's are one of my favorites and usually very well
+behaved.
 
---=20
+> My WD MyBook Studio Edition 500 GB external eSATA drive does not
+> work on the JMB363 correctly no matter what I try. Both
+> under linux and windows. I think the best was 30 minutes of
+> (apparent) error free operation under windows.
+
+This one is being discussed both with JMB and WD.  It seems the bridge
+chip used in the WD external drives is somehow incompatible with the
+JMB ahci's.  Don't know whose fault it is or how it can be worked
+around yet.  The issue is being tracked in the following bugzilla.
+
+  http://bugzilla.kernel.org/show_bug.cgi?id=9913
+
+-- 
 tejun
