@@ -1,43 +1,56 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: GA-MA790FX-DS5 SATA ahci NCQ erros on Jmicron 20360/20363 	(JMB363)
- kernel 2.6.25-2 Debian/Lenny
-Date: Sat, 30 Aug 2008 13:00:22 +0200
-Message-ID: <48B92846.7050004@kernel.org>
-References: <g8p6po$nm$1@ger.gmane.org> <48B0916C.4080805@garzik.org> <g8q9mg$v2p$1@ger.gmane.org> <WorldClient-F200808241844.AA44240046@butn.net>
+Subject: Re: SATA ALPM min_power causes > 10s delay on resume
+Date: Sat, 30 Aug 2008 13:02:04 +0200
+Message-ID: <48B928AC.8090007@kernel.org>
+References: <1219598870.11057.2.camel@stinkpad>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:38903 "EHLO hera.kernel.org"
+Received: from hera.kernel.org ([140.211.167.34]:38944 "EHLO hera.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751053AbYH3LBi (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 30 Aug 2008 07:01:38 -0400
-In-Reply-To: <WorldClient-F200808241844.AA44240046@butn.net>
+	id S1751163AbYH3LDP (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 30 Aug 2008 07:03:15 -0400
+In-Reply-To: <1219598870.11057.2.camel@stinkpad>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: xerces8 <xerces8@butn.net>
-Cc: Sergey Spiridonov <sena@hurd.homeunix.org>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: "Jeffrey W. Baker" <jwbaker@gmail.com>
+Cc: linux-ide@vger.kernel.org
 
-xerces8 wrote:
-> I have a JMB363 myself and it has its share of problems.
-> I would say it is buggy hardware. (why would they otherwise
-> release a new windows driver every week ? if not to workaround
-> bugs in HW ;-)
+Jeffrey W. Baker wrote:
+> I started using the min_power ALPM setting on my ThinkPad to save power
+> (which works great, thanks!) but it causes a small problem.  When the
+> machine resumes from suspend-to-ram it hangs for about 10s and then
+> prints this on the console:
+> 
+> ata1: COMRESET failed (errno=-16)
+> 
+> It then proceeds normally.  The full messages are:
+> 
+> ata1: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+> ata1.00: configured for UDMA/100
+> ata1: failed to recover some devices, retrying in 5 secs
+> ata1: soft resetting link
+> ata1: SATA link down (SStatus 611 SControl 300)
+> ata1: failed to recover some devices, retrying in 5 secs
+> ata1: hard resetting link
+> ata1: port is slow to respond, please be patient (Status 0x80)
+> ata1: COMRESET failed (errno=-16)
+> ata1: hard resetting link
+> ata1: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+> 
+> After which point the machine works normally.  The SATA controller is an
+> Intel Corporation 82801HBM/HEM (ICH8M/ICH8M-E) SATA AHCI Controller (rev
+> 03) and the SATA target is a SAMSUNG MCBQE32G Rev: PS10.  The kernel is
+> 2.6.24.  I haven't tried anything newer.
+> 
+> If the ALPM setting is left at its default of max_performance then
+> resume from suspend is instant.  Is there any way to work around this?
+> ALPM is worth a solid 30 minutes of extra battery life, so obviously I'd
+> like to use it.  If nothing else, it might be helpful to have a module
+> parameter to shorten the timeout on known-working hardware.
 
-Well, FWIW, JMB ahci's are one of my favorites and usually very well
-behaved.
-
-> My WD MyBook Studio Edition 500 GB external eSATA drive does not
-> work on the JMB363 correctly no matter what I try. Both
-> under linux and windows. I think the best was 30 minutes of
-> (apparent) error free operation under windows.
-
-This one is being discussed both with JMB and WD.  It seems the bridge
-chip used in the WD external drives is somehow incompatible with the
-JMB ahci's.  Don't know whose fault it is or how it can be worked
-around yet.  The issue is being tracked in the following bugzilla.
-
-  http://bugzilla.kernel.org/show_bug.cgi?id=9913
+Which kernel version are you using?
 
 -- 
 tejun
