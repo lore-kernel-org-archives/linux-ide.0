@@ -1,124 +1,347 @@
-From: Justin Piszcz <jpiszcz@lucidpixels.com>
-Subject: Re: exception Emask 0x0 SAct 0x0 SErr 0x0
- action 0x2 frozen
-Date: Sat, 30 Aug 2008 18:12:52 -0400 (EDT)
-Message-ID: <alpine.DEB.1.10.0808301804290.11166@p34.internal.lan>
-References: <48B91198.3020803@xms.se>
-	<alpine.DEB.1.10.0808300708330.19513@p34.internal.lan>
-	<48B9AE15.7010605@xms.se>
-	<alpine.DEB.1.10.0808301710380.11166@p34.internal.lan>
-	<48B9C261.4010609@xms.se>
+From: Elias Oltmanns <eo@nebensachen.de>
+Subject: Re: [PATCH 2/4] libata: Implement disk shock protection support
+Date: Sun, 31 Aug 2008 01:38:58 +0200
+Message-ID: <87k5dym5t9.fsf@denkblock.local>
+References: <87wshzplvk.fsf@denkblock.local>
+	<20080829211345.4355.89284.stgit@denkblock.local>
+	<48B913E6.1000104@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <smartmontools-support-bounces@lists.sourceforge.net>
-In-Reply-To: <48B9C261.4010609@xms.se>
-List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/smartmontools-support>,
-	<mailto:smartmontools-support-request@lists.sourceforge.net?subject=unsubscribe>
-List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum_name=smartmontools-support>
-List-Post: <mailto:smartmontools-support@lists.sourceforge.net>
-List-Help: <mailto:smartmontools-support-request@lists.sourceforge.net?subject=help>
-List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/smartmontools-support>,
-	<mailto:smartmontools-support-request@lists.sourceforge.net?subject=subscribe>
-Sender: smartmontools-support-bounces@lists.sourceforge.net
-Errors-To: smartmontools-support-bounces@lists.sourceforge.net
-To: Jonas Petersson <jonas.petersson@xms.se>
-Cc: linux-ide@vger.kernel.org, smartmontools-support@lists.sourceforge.net, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from nebensachen.de ([195.34.83.29]:59041 "EHLO mail.nebensachen.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755158AbYH3XkL (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 30 Aug 2008 19:40:11 -0400
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, Andrew Morton <akpm@linux-foundation.org>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Jeff Garzik <jeff@garzik.org>, Randy Dunlap <randy.dunlap@oracle.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-
-
-On Sat, 30 Aug 2008, Jonas Petersson wrote:
-
-> Justin Piszcz skrev:
->> On Sat, 30 Aug 2008, Jonas Petersson wrote:
->>> [...]
->> smartctl -a would be useful (#1)
+Tejun Heo <htejun@gmail.com> wrote:
+> Hello,
 >
-> # smartctl -a /dev/sda
-> smartctl version 5.38 [i686-pc-linux-gnu] Copyright (C) 2002-8 Bruce Allen
-> Home page is http://smartmontools.sourceforge.net/
+> Elias Oltmanns wrote:
+>> diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+>> index c729e69..78281af 100644
+>> --- a/drivers/ata/ahci.c
+>> +++ b/drivers/ata/ahci.c
+>> @@ -316,6 +316,8 @@ static struct device_attribute *ahci_shost_attrs[] = {
+>>  
+>>  static struct device_attribute *ahci_sdev_attrs[] = {
+>>  	&dev_attr_sw_activity,
+>> +	&dev_attr_unload_feature,
+>> +	&dev_attr_unload_heads,
+>>  	NULL
+>
+> Ehhh... This really should be in libata core layer.  Please create the
+> default attrs and let ahci define its own.
 
-I have the same controller in my host as well, but it does not appear to
-matter whether it happens on the ICH8 controller or other controllers.
+Right, will do.
 
-I have noticed on Velociraptors I seem to get the same/similar error that
-you do as well, and I ran all the same tests as you, to no avail as to getting
-any closer to finding the root cause/problem.
-(.. more so than the regular old raptor150s)
+[...]
+>> @@ -5267,6 +5267,8 @@ struct ata_port *ata_port_alloc(struct ata_host *host)
+>>  	init_timer_deferrable(&ap->fastdrain_timer);
+>>  	ap->fastdrain_timer.function = ata_eh_fastdrain_timerfn;
+>>  	ap->fastdrain_timer.data = (unsigned long)ap;
+>> +	ap->park_timer.function = ata_scsi_park_timeout;
+>> +	init_timer(&ap->park_timer);
+>
+> Why do you need a timeout when you can just msleep()?
 
-Besides the annoying messages in the kernel log/syslog/dmesg, does it
-affect your system stability in any way as of yet?
+Maybe I'm missing something but I don't see how I could use msleep()
+here, see below.
 
-I must add a very important note here though, you are using an ICH8 chipset
-and so am I, we both have same/similar problems-- however, I also have
-another machine setup VERY similarly (except different HDDs) for the RAID5
-but the RAID1 is the same as one of my ICH8 boxes (dual raptor150s)--
-and to date it has never? or rarely thrown the frozen error except when a disk 
-actually failed (or when NCQ is enabled for a WD drive), (NCQ+Linux for WD) is
-broken.
+>
+>> +static void ata_eh_park_devs(struct ata_port *ap, int park)
+>> +{
+>> +	struct ata_link *link;
+>> +	struct ata_device *dev;
+>> +	struct ata_taskfile tf;
+>> +	struct request_queue *q;
+>> +	unsigned int err_mask;
+>> +
+>> +	ata_port_for_each_link(link, ap) {
+>> +		ata_link_for_each_dev(dev, link) {
+>> +			if (!dev->sdev)
+>> +				continue;
+>
+> You probably want to do if (dev->class != ATA_DEV_ATA) here.
 
-I have disks in a raid set (both raid1 and raid5) that get same/similar
-warnings as I mentioned above and so far it has not had any impact that I have
-noticed in relation to these specific errors.
+Well, I really am concerned about dev->sdev. So far, I haven't quite
+figured out yet whether under which circumstances I can safely assume
+that the scsi counter part of dev including the block layer request
+queue has been completely set up and configured so there won't be any
+null pointer dereferences. However, if you think that I needn't bother
+with stopping the request queue anyway, checking for ATA_DEV_ATA (what
+about ATA_DEV_ATAPI?) should definitely be enough.
 
-I think for now we just have to live with them, I am not sure what else
-to say here..
+>
+>> +			ata_tf_init(dev, &tf);
+>> +			q = dev->sdev->request_queue;
+>> +			spin_lock_irq(q->queue_lock);
+>> +			if (park) {
+>> +				blk_stop_queue(q);
+>
+> Queue is already plugged when EH is entered.  No need for this.
 
-CC'ing linux-ide and linux-kernel with your original error from the start
-of this e-mail thread:
+Quite right. It's just that it will be un- and replugged every
+(3 * HZ) / 1000, so I thought it might be worthwhile to stop the queue
+anyway. Perhaps it really isn't worth bothering and the code would
+certainly be nicer to look at.
 
-Here is a snippet from this morning - this time it came back to life:
+>
+>> +				tf.command = ATA_CMD_IDLEIMMEDIATE;
+>> +				tf.feature = 0x44;
+>> +				tf.lbal = 0x4c;
+>> +				tf.lbam = 0x4e;
+>> +				tf.lbah = 0x55;
+> n> +			} else {
+>> +				blk_start_queue(q);
+>
+> Neither this.
+>
+>> +				tf.command = ATA_CMD_CHK_POWER;
+>> +			}
+>> +			spin_unlock(q->queue_lock);
+>> +			spin_lock(ap->lock);
+>
+> And no need to play with locks at all.
 
-[46874.898690] ata3.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2
-frozen
-[46874.898703] ata3.00: cmd c8/00:08:90:3c:59/00:00:00:00:00/ef tag 0
-dma 4096 in
-[46874.898705]          res 40/00:01:01:4f:c2/00:00:00:00:00/00 Emask
-0x4 (timeout)
-[46874.898709] ata3.00: status: { DRDY }
-[46879.643962] ata3: port is slow to respond, please be patient (Status
-0xd0)
-[46884.473195] ata3: device not ready (errno=-16), forcing hardreset
-[46884.473202] ata3: soft resetting link
-[46912.740010] ata3.00: qc timeout (cmd 0xec)
-[46912.740020] ata3.00: failed to IDENTIFY (I/O error, err_mask=0x4)
-[46912.740023] ata3.00: revalidation failed (errno=-5)
-[46912.740028] ata3: failed to recover some devices, retrying in 5 secs
-[46917.458070] ata3: soft resetting link
-[46917.636464] ata3.00: configured for UDMA/100
-[46917.636482] ata3: EH complete
-[46917.699224] sd 2:0:0:0: [sda] 488397168 512-byte hardware sectors
-(250059 MB)
-[46917.699257] sd 2:0:0:0: [sda] Write Protect is off
-[46917.699263] sd 2:0:0:0: [sda] Mode Sense: 00 3a 00 00
-[46917.699300] sd 2:0:0:0: [sda] Write cache: enabled, read cache:
-enabled, doesn't support DPO or FUA
+Just to be sure, are you just referring to the queue lock, or to the host
+lock as well? Am I wrong in thinking that we have to protect all access
+to dev->flags because bit operations are performed non atomically
+virtually at any time?
 
-Here is an example from my host (same/similar issue):
+>
+>> +			if (dev->flags & ATA_DFLAG_NO_UNLOAD) {
+>> +				spin_unlock_irq(ap->lock);
+>> +				continue;
+>> +			}
+>> +			spin_unlock_irq(ap->lock);
+>> +
+>> +			tf.flags |= ATA_TFLAG_DEVICE | ATA_TFLAG_ISADDR;
+>> +			tf.protocol |= ATA_PROT_NODATA;
+>> +			err_mask = ata_exec_internal(dev, &tf, NULL, DMA_NONE,
+>> +						     NULL, 0, 0);
+>> +			if ((err_mask || tf.lbal != 0xc4) && park)
+>> +				ata_dev_printk(dev, KERN_ERR,
+>> +					       "head unload failed\n");
+>> +		}
+>> +	}
+>> +}
+>> +
+>>  static int ata_eh_revalidate_and_attach(struct ata_link *link,
+>>  					struct ata_device **r_failed_dev)
+>>  {
+>> @@ -2829,6 +2874,12 @@ int ata_eh_recover(struct ata_port *ap, ata_prereset_fn_t prereset,
+>>  		}
+>>  	}
+>>  
+>> +	if (ap->link.eh_context.i.action & ATA_EH_PARK) {
+>> +		ata_eh_park_devs(ap, 1);
+>> +		wait_event(ata_scsi_park_wq, !timer_pending(&ap->park_timer));
+>
+> I would just msleep() here.
 
-Aug 23 20:00:32 p34 kernel: [189770.219773] ata1.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x6 frozen
-Aug 23 20:00:32 p34 kernel: [189770.219784] ata1.00: cmd 35/00:40:9a:d9:7a/00:00:12:00:00/e0 tag 0 dma 32768 out
-Aug 23 20:00:32 p34 kernel: [189770.219786]          res 40/00:ff:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
-Aug 23 20:00:32 p34 kernel: [189770.219790] ata1.00: status: { DRDY }
-Aug 23 20:00:32 p34 kernel: [189770.219795] ata1: hard resetting link
-Aug 23 20:00:32 p34 kernel: [189770.524770] ata1: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-Aug 23 20:00:32 p34 kernel: [189770.543960] ata1.00: configured for UDMA/133
-Aug 23 20:00:32 p34 kernel: [189770.543977] ata1: EH complete
-Aug 23 20:00:32 p34 kernel: [189770.544810] sd 0:0:0:0: [sda] 586072368 512-byte hardware sectors (300069 MB)
-Aug 23 20:00:32 p34 kernel: [189770.551810] sd 0:0:0:0: [sda] Write Protect is off
-Aug 23 20:00:32 p34 kernel: [189770.551810] sd 0:0:0:0: [sda] Mode Sense: 00 3a 00 00
-Aug 23 20:00:32 p34 kernel: [189770.863810] sd 0:0:0:0: [sda] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+Again, see below.
 
-What is the root cause of this? It still seems to be a mystery to most as far
-as I can tell, but the one thing in common is we are both using ICH8 chipsets,
-which, just may happen to be part of the problem?
+>
+>> +		ata_eh_park_devs(ap, 0);
+>
+> And does the device need this explicit wake up?  It will wake up when
+> it's necessary.
 
-Justin.
+Probably, I should insert a comment somewhere. The problem is that
+device internal power management will be disabled until the next command
+is received. If you have laptop mode enabled and the device has received
+the unload command while spinning with no more commands in the queue to
+follow, the device may keep spinning for quite a while and won't go into
+standby which rather defeats the purpose of laptop mode. This behaviour
+is compliant with the specs and I can observe it on my system.
 
+>
+>> diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+>> index 4d066ad..ffcc016 100644
+>> --- a/drivers/ata/libata-scsi.c
+>> +++ b/drivers/ata/libata-scsi.c
+>> @@ -46,6 +46,7 @@
+>>  #include <linux/libata.h>
+>>  #include <linux/hdreg.h>
+>>  #include <linux/uaccess.h>
+>> +#include <linux/suspend.h>
+>>  
+>>  #include "libata.h"
+>>  
+>> @@ -113,6 +114,77 @@ static struct scsi_transport_template ata_scsi_transport_template = {
+>>  	.user_scan		= ata_scsi_user_scan,
+>>  };
+>>  
+>> +DECLARE_WAIT_QUEUE_HEAD(ata_scsi_park_wq);
+>> +
+>> +#if defined(CONFIG_PM_SLEEP) || defined(CONFIG_HIBERNATION)
+>> +static atomic_t ata_scsi_park_count = ATOMIC_INIT(0);
+>> +
+>> +static int ata_scsi_pm_notifier(struct notifier_block *nb, unsigned long val,
+>> +				void *null)
+>> +{
+>> +	switch (val) {
+>> +	case PM_SUSPEND_PREPARE:
+>> +		atomic_dec(&ata_scsi_park_count);
+>> +		wait_event(ata_scsi_park_wq,
+>> +			   atomic_read(&ata_scsi_park_count) == -1);
+>> +		break;
+>> +	case PM_POST_SUSPEND:
+>> +		atomic_inc(&ata_scsi_park_count);
+>> +		break;
+>> +	default:
+>> +		return NOTIFY_DONE;
+>> +	}
+>> +
+>> +	return NOTIFY_OK;
+>> +}
+>> +
+>> +static struct notifier_block ata_scsi_pm_notifier_block = {
+>> +	.notifier_call = ata_scsi_pm_notifier,
+>> +};
+>> +
+>> +int ata_scsi_register_pm_notifier(void)
+>> +{
+>> +	return register_pm_notifier(&ata_scsi_pm_notifier_block);
+>> +}
+>> +
+>> +int ata_scsi_unregister_pm_notifier(void)
+>> +{
+>> +	return unregister_pm_notifier(&ata_scsi_pm_notifier_block);
+>> +}
+>
+> Why are these PM notifiers necessary?
 
--------------------------------------------------------------------------
-This SF.Net email is sponsored by the Moblin Your Move Developer's challenge
-Build the coolest Linux based applications with Moblin SDK & win great prizes
-Grand prize is a trip for two to an Open Source event anywhere in the world
-http://moblin-contest.org/redirect.php?banner_id=100&url=/
+Since it's a user process that controls when we have to keep the heads
+off the platter, a suspend operation has to be blocked *before* process
+freezing when we happen to be in a precarious situation.
+
+>
+>> +static inline void ata_scsi_signal_unpark(void)
+>> +{
+>> +	atomic_dec(&ata_scsi_park_count);
+>> +	wake_up_all(&ata_scsi_park_wq);
+>> +}
+>> +
+>> +static inline int ata_scsi_mod_park_timer(struct timer_list *timer,
+>> +					  unsigned long timeout)
+>> +{
+>> +	if (unlikely(atomic_inc_and_test(&ata_scsi_park_count))) {
+>> +		ata_scsi_signal_unpark();
+>> +		return -EBUSY;
+>> +	}
+>> +	if (mod_timer(timer, timeout)) {
+>> +		atomic_dec(&ata_scsi_park_count);
+>> +		return 1;
+>> +	}
+>> +
+>> +	return 0;
+>> +}
+>>
+>> +#else /* defined(CONFIG_PM_SLEEP) || defined(CONFIG_HIBERNATION) */
+>> +static inline void ata_scsi_signal_unpark(void)
+>> +{
+>> +	wake_up_all(&ata_scsi_park_wq);
+>> +}
+>> +
+>> +static inline int ata_scsi_mod_park_timer(struct timer_list *timer,
+>> +					  unsigned long timeout)
+>> +{
+>> +	return mod_timer(timer, timeout);
+>> +}
+>> +#endif /* defined(CONFIG_PM_SLEEP) || defined(CONFIG_HIBERNATION) */
+>
+> And these all can go.  If you're worried about recurring events you
+> can just update timestamp from the sysfs write function and do...
+>
+>     deadline = last_timestamp + delay;
+>     while ((now = jiffies) < deadline) {
+>         set_current_state(TASK_UNINTERRUPTIBLE);
+> 	schedule_timeout(deadline - now);
+> 	set_current_state(TASK_RUNNING);
+>     }
+
+Ah, I can see that this while loop can replace my call to wait_event() in
+the eh sequence earlier on. However, I wonder how I am to replace the
+call to mod_timer(). As you can see, we perform different actions
+depending on whether the timer has merely been updated, or a new timer
+has been started. Only in the latter case we want to schedule eh. In
+order to achieve the equivalent in your setting while preventing any
+races, I'd have to protect the deadline field in struct ata_port by the
+host lock, i.e. something like:
+
+    spin_lock_irq(ap->lock);
+    now = jiffies;
+    rc = now > ap->deadline;
+    ap->deadline = now + timeout;
+    if (rc) {
+        ap->link.eh_info.action |= ATA_EH_PARK;
+        ata_port_schedule_eh(ap);
+    }
+    ...
+    spin_unlock_irq(ap->lock);
+
+and in the eh code a modified version of your loop:
+
+    spin_lock_irq(ap->lock);
+    while ((now = jiffies) < deadline) {
+        spin_unlock_irq(ap->lock);
+        set_current_state(TASK_UNINTERRUPTIBLE);
+        schedule_timeout(deadline - now);
+        set_current_state(TASK_RUNNING);
+        spin_lock_irq(ap->lock);
+    }
+    spin_unlock_irq(ap->lock);
+
+Is it worth all that or am I missing something? On the other hand, a
+deadline field would occupy less space in the ata_port structure than a
+timer_list field. What are your thoughts?
+
+>
+>> +static ssize_t ata_scsi_unload_feature_store(struct device *device,
+>> +					     struct device_attribute *attr,
+>> +					     const char *buf, size_t len)
+>> +{
+>> +	struct scsi_device *sdev = to_scsi_device(device);
+>> +	struct ata_port *ap;
+>> +	struct ata_device *dev;
+>> +	int val;
+>> +
+>> +	val = buf[0] - '0';
+>> +	if ((val != 0 && val != 1) || (buf[1] != '\0' && buf[1] != '\n')
+>> +	    || buf[2] != '\0')
+>> +		return -EINVAL;
+>> +	ap = ata_shost_to_port(sdev->host);
+>> +	dev = ata_scsi_find_dev(ap, sdev);
+>> +	if (!dev)
+>> +		return -ENODEV;
+>> +	if (dev->class != ATA_DEV_ATA && dev->class != ATA_DEV_ATAPI)
+>> +		return -EOPNOTSUPP;
+>> +
+>> +	spin_lock_irq(ap->lock);
+>> +	if (val == 1)
+>> +		dev->flags &= ~ATA_DFLAG_NO_UNLOAD;
+>> +	else
+>> +		dev->flags |= ATA_DFLAG_NO_UNLOAD;
+>> +	spin_unlock_irq(ap->lock);
+>> +
+>> +	return len;
+>> +}
+>> +DEVICE_ATTR(unload_feature, S_IRUGO | S_IWUSR,
+>> +	    ata_scsi_unload_feature_show, ata_scsi_unload_feature_store);
+>> +EXPORT_SYMBOL_GPL(dev_attr_unload_feature);
+>
+> Hmmm.... Maybe you can just disable it by echoing -1 to the unload file?
+
+Even though disabling it may be desirable in some cases, it's typically
+*enabling* it that users will care about. Still, we can always accept -1
+and -2 and I have to say I rather like the idea. Thanks for the
+suggestion. Indeed, thank you very much for the thorough review.
+
+Regards,
+
+Elias
