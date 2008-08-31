@@ -1,123 +1,108 @@
-From: Tejun Heo <htejun@gmail.com>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 Subject: Re: [PATCH 2/4] libata: Implement disk shock protection support
-Date: Sun, 31 Aug 2008 15:03:24 +0200
-Message-ID: <48BA969C.4060207@gmail.com>
-References: <87wshzplvk.fsf@denkblock.local>	<20080829211345.4355.89284.stgit@denkblock.local>	<48B913E6.1000104@gmail.com> <87k5dym5t9.fsf@denkblock.local>	<48BA638B.2030001@gmail.com> <87ej45mlp3.fsf@denkblock.local>
+Date: Sun, 31 Aug 2008 16:32:04 +0200
+Message-ID: <200808311632.04584.bzolnier@gmail.com>
+References: <87wshzplvk.fsf@denkblock.local> <87ej45mlp3.fsf@denkblock.local> <48BA969C.4060207@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ti-out-0910.google.com ([209.85.142.185]:43887 "EHLO
-	ti-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758065AbYHaNEh (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 31 Aug 2008 09:04:37 -0400
-Received: by ti-out-0910.google.com with SMTP id b6so841155tic.23
-        for <linux-ide@vger.kernel.org>; Sun, 31 Aug 2008 06:04:35 -0700 (PDT)
-In-Reply-To: <87ej45mlp3.fsf@denkblock.local>
+Received: from mu-out-0910.google.com ([209.85.134.191]:26718 "EHLO
+	mu-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756620AbYHaOfR (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 31 Aug 2008 10:35:17 -0400
+Received: by mu-out-0910.google.com with SMTP id g7so1569585muf.1
+        for <linux-ide@vger.kernel.org>; Sun, 31 Aug 2008 07:35:16 -0700 (PDT)
+In-Reply-To: <48BA969C.4060207@gmail.com>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Elias Oltmanns <eo@nebensachen.de>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, Andrew Morton <akpm@linux-foundation.org>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Jeff Garzik <jeff@garzik.org>, Randy Dunlap <randy.dunlap@oracle.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: Elias Oltmanns <eo@nebensachen.de>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Andrew Morton <akpm@linux-foundation.org>, Jeff Garzik <jeff@garzik.org>, Randy Dunlap <randy.dunlap@oracle.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Hello,
 
-Elias Oltmanns wrote:
->> Ah.. you need to part ATAPI too?  If so, just test for
->> ata_dev_enabled().
+Hi,
+
+On Sunday 31 August 2008, Tejun Heo wrote:
+> Hello,
 > 
-> Well, I'm not quite sure really. Perhaps you are right and I'd better
-> leave ATAPI alone, especially given the problem that the unload command
-> might mess up a CD/DVD write operation. As long as no laptop HDs are
-> identified as ATAPI devices, there should be no problem with that.
-
-Hmm... I think it would be safer to stick with ATA for the time being.
-
->> Can you please elaborate a bit?  The reloading is done by the kernel
->> after a timeout, right?  What kind of precarious situation can the
->> kernel get into regarding suspend?
+> Elias Oltmanns wrote:
+> >> Ah.. you need to part ATAPI too?  If so, just test for
+> >> ata_dev_enabled().
+> > 
+> > Well, I'm not quite sure really. Perhaps you are right and I'd better
+> > leave ATAPI alone, especially given the problem that the unload command
+> > might mess up a CD/DVD write operation. As long as no laptop HDs are
+> > identified as ATAPI devices, there should be no problem with that.
 > 
-> Sorry, I haven't expressed myself very clearly there, it seems. The user
-> space process detects some acceleration and starts writing timeouts to
-> the sysfs file. This causes the unload command to be issued to the
-> device and stops all I/O until the user space daemon decides that the
-> danger has passed, writes 0 to the sysfs file and leaves it alone
-> afterwards. Now, if the daemon happens to request head parking right at
-> the beginning of a suspend sequence, this means that we are in danger of
-> falling, i.e. we have to make sure that I/O is stopped until that user
-> space daemon gives the all-clear. However, suspending implies freezing
-> all processes which means that the daemon can't keep checking and
-> signalling to the kernel. The last timeout received before the daemon
-> has been frozen will expire and the suspend procedure goes ahead. By
-> means of the notifiers we can make sure that suspend is blocked until
-> the daemon says that everything is alright.
+> Hmm... I think it would be safer to stick with ATA for the time being.
 
-Is it really worth protecting against that?  What if the machine
-started to fall after the userland tasks have been frozen?  And how
-long the usual timeout would be?  If the machine has been falling for
-10 secs, there really isn't much point in trying to protect anything
-unless there also is ATA DEPLOY PARACHUTE command somewhere in the new
-revision.
+Seconded.  To be honest I also don't like the change to issue UNLOAD to
+all devices on the port (it only needlessly increases complexity right now
+since the _only_ use case at the moment is ThinkPad w/ hdaps + 1 HD).
 
-In libata, as with any other exceptions, suspend/resume are handled by
-EH so while emergency head unload is in progress, suspend won't
-commence which is about the same effect as the posted code sans the
-timeout extension part.  I don't really think there's any significant
-danger in not being able to extend timeout while suspend is in
-progress.  It's not a very big window after all.  If you're really
-worried about it, you can also let libata reject suspend if head
-unload is in progress.
+[ I really hoped for the minimal initial implementation. ]
 
-Also, the suspend operation is unloading the head and spin down the
-drive which sound like a good thing to do before crashing.  Maybe we
-can modify the suspend sequence such that it always unload the head
-first and then issue spindown.  That will ensure the head is in safe
-position as soon as possible.  If it's done this way, it'll be
-probably a good idea to split unloading and loading operations and do
-loading only when EH is being finished and the disk is not spun down.
-
-To me, much more serious problem seems to be during hibernation.  The
-kernel is actively writing memory image to userland and it takes quite
-a while and there's no protection whatsoever during that time.
-
->>     spin_lock_irq(ap->lock);
->>     ap->deadline = jiffies + timeout;
->>     ap->link.eh_info.action |= ATA_EH_PARK;
->>     ata_port_schedule_eh(ap);
->>     spin_unlock_irq(ap->lock);
+> >> Can you please elaborate a bit?  The reloading is done by the kernel
+> >> after a timeout, right?  What kind of precarious situation can the
+> >> kernel get into regarding suspend?
+> > 
+> > Sorry, I haven't expressed myself very clearly there, it seems. The user
+> > space process detects some acceleration and starts writing timeouts to
+> > the sysfs file. This causes the unload command to be issued to the
+> > device and stops all I/O until the user space daemon decides that the
+> > danger has passed, writes 0 to the sysfs file and leaves it alone
+> > afterwards. Now, if the daemon happens to request head parking right at
+> > the beginning of a suspend sequence, this means that we are in danger of
+> > falling, i.e. we have to make sure that I/O is stopped until that user
+> > space daemon gives the all-clear. However, suspending implies freezing
+> > all processes which means that the daemon can't keep checking and
+> > signalling to the kernel. The last timeout received before the daemon
+> > has been frozen will expire and the suspend procedure goes ahead. By
+> > means of the notifiers we can make sure that suspend is blocked until
+> > the daemon says that everything is alright.
 > 
-> Please note that I want to schedule EH (and thus the head unload -
-> check power command sequence) only once in the event of overlapping
-> timeouts. For instance, when the daemon sets a timeout of 2 seconds and
-> does so again after one second has elapsed, I want the following to
-> happen:
+> Is it really worth protecting against that?  What if the machine
+> started to fall after the userland tasks have been frozen?  And how
+> long the usual timeout would be?  If the machine has been falling for
+> 10 secs, there really isn't much point in trying to protect anything
+> unless there also is ATA DEPLOY PARACHUTE command somewhere in the new
+> revision.
 > 
-> [ Daemon writes 2 to the unload_heads file ]
-> 1. Set timer / deadline;
-> 2. eh_info.action |= ATA_EH_PARK;
-> 3. schedule EH;
-> 4. execute EH and sleep, waiting for the timeout to expire;
+> In libata, as with any other exceptions, suspend/resume are handled by
+> EH so while emergency head unload is in progress, suspend won't
+> commence which is about the same effect as the posted code sans the
+> timeout extension part.  I don't really think there's any significant
+> danger in not being able to extend timeout while suspend is in
+> progress.  It's not a very big window after all.  If you're really
+> worried about it, you can also let libata reject suspend if head
+> unload is in progress.
 > 
-> [ Daemon writes 2 to the unload_heads file before the previous timeout
-> has expired. ]
+> Also, the suspend operation is unloading the head and spin down the
+> drive which sound like a good thing to do before crashing.  Maybe we
+> can modify the suspend sequence such that it always unload the head
+> first and then issue spindown.  That will ensure the head is in safe
+> position as soon as possible.  If it's done this way, it'll be
+> probably a good idea to split unloading and loading operations and do
+> loading only when EH is being finished and the disk is not spun down.
 > 
-> 5. update timer / deadline;
-> 6. the EH thread keeps blocking until the new timeout has expired.
-> 
-> In particular, I don't want to reschedule EH in response to the second
-> write to the unload_heads file. Also, we have to consider the case where
-> the daemon signals to resume I/O prematurely by writing a timeout of 0.
-> In this case, the EH thread should be woken up immediately.
+> To me, much more serious problem seems to be during hibernation.  The
+> kernel is actively writing memory image to userland and it takes quite
+> a while and there's no protection whatsoever during that time.
 
-Whether EH is scheduled multiple times or not doesn't matter at all.
-EH can be happily scheduled without any actual action to do and that
-does happen from time to time due to asynchronous nature of events.
-libata EH doesn't have any problem with that.  The only thing that's
-required is there's at least one ata_schedule_eh() after the latest
-EH-worthy event.  So, the simpler code might enter EH one more time
-once in the blue moon, but it won't do any harm.  EH will just look
-around and realize that there's nothing much to do and just exit.
+Which also brings again the question whether it is really the best to
+use user-space solution instead of kernel thread?
 
-Thanks.
+After taking the look into the deamon program and hdaps driver I tend
+to "Nope." answer.  The kernel-space solution would be more reliable,
+should result in significatly less code and would free us from having
+a special purpose libata/ide interfaces.  It should also make the
+maintainance and future enhancements (i.e. making hibernation unload
+friendly) a lot easier.
 
--- 
-tejun
+I imagine that this comes a bit late but can we at least give it an
+another thought, please?
+
+Thanks,
+Bart
