@@ -1,87 +1,151 @@
-From: "Mark Nelson" <mdnelson8@gmail.com>
-Subject: Re: Driver for Promise PDC42819 SATA/SAS controller
-Date: Mon, 1 Sep 2008 22:04:23 +1000
-Message-ID: <65a6ef750809010504q6c4e112cse9163733366bfca0@mail.gmail.com>
-References: <65a6ef750808141846h1104bc1cj9a9c0bb721b62f58@mail.gmail.com>
-	 <18606.60604.356878.363677@harpo.it.uu.se>
-	 <48AF282B.4090904@garzik.org>
-	 <18607.14142.979717.852078@harpo.it.uu.se>
-	 <65a6ef750808230223t6da2560fx1799dbf271e95959@mail.gmail.com>
-	 <18607.58441.367432.715909@harpo.it.uu.se>
-	 <65a6ef750808230340s1d44cb0ajfba8092d9f62f8e@mail.gmail.com>
-	 <18607.64440.810334.137910@harpo.it.uu.se>
-	 <65a6ef750809010410v503ba217u13dc5a55490ef07c@mail.gmail.com>
-	 <18619.54275.742794.192883@harpo.it.uu.se>
+From: Elias Oltmanns <eo@nebensachen.de>
+Subject: Re: [PATCH 2/4] libata: Implement disk shock protection support
+Date: Mon, 01 Sep 2008 16:51:14 +0200
+Message-ID: <87myirly1p.fsf@denkblock.local>
+References: <87wshzplvk.fsf@denkblock.local>
+	<20080829211345.4355.89284.stgit@denkblock.local>
+	<48B913E6.1000104@gmail.com> <87k5dym5t9.fsf@denkblock.local>
+	<48BA638B.2030001@gmail.com> <87ej45mlp3.fsf@denkblock.local>
+	<48BA969C.4060207@gmail.com> <87abetmaap.fsf@denkblock.local>
+	<48BBA8D1.8020604@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from yw-out-2324.google.com ([74.125.46.30]:44578 "EHLO
-	yw-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752478AbYIAMEZ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 1 Sep 2008 08:04:25 -0400
-Received: by yw-out-2324.google.com with SMTP id 9so274338ywe.1
-        for <linux-ide@vger.kernel.org>; Mon, 01 Sep 2008 05:04:23 -0700 (PDT)
-In-Reply-To: <18619.54275.742794.192883@harpo.it.uu.se>
-Content-Disposition: inline
+Received: from nebensachen.de ([195.34.83.29]:36019 "EHLO mail.nebensachen.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751466AbYIAOwH (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 1 Sep 2008 10:52:07 -0400
+In-Reply-To: <48BBA8D1.8020604@gmail.com> (Tejun Heo's message of "Mon, 01 Sep
+	2008 10:33:21 +0200")
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mikael Pettersson <mikpe@it.uu.se>
-Cc: Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, Andrew Morton <akpm@linux-foundation.org>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Jeff Garzik <jeff@garzik.org>, Randy Dunlap <randy.dunlap@oracle.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Mon, Sep 1, 2008 at 9:37 PM, Mikael Pettersson <mikpe@it.uu.se> wrote:
-> Mark Nelson writes:
->  > On Sat, Aug 23, 2008 at 9:59 PM, Mikael Pettersson <mikpe@it.uu.se> wrote:
->  > > Mark Nelson writes:
->  > >  > >  > Forgive my ignorance, but does the fact that the T3 controller can also
->  > >  > >  > use SAS disks mean we should be looking for a SCSI driver?
->  > >  > >
->  > >  > > Promise lists only this one partial-source driver for the tx4650,
->  > >  > > and it /is/ a Linux scsi driver.
->  > >  > >
->  > >  >
->  > >  > Oh sorry, I meant to ask should we be looking at an in-kernel
->  > >  > (or fully open source driver) that is a SCSI driver that we could make
->  > >  > work with the T3? So maybe my question is actually: does the
->  > >  > fact that this controller supports SAS disks mean that the
->  > >  > driver for it should be a scsi driver (rather than an ATA driver)?
->  > >
->  > > The candidate Linux drivers would be ata/sata_promise, ata/sata_sx4,
->  > > block/sx8, and scsi/stex. You tried sata_promise, and from looking
->  > > at the PCI IDs I doubt the others are likely to drive the T3.
->  > >
->  > > If you can find an open-source T3 driver in some other operating
->  > > system, like OpenSolaris, Darwin, or some *BSD, then that would be
->  > > great.
->  > >
->  >
->  > Okay, so after trying all of the above drivers you suggested (as
->  > well as a few other SAS drivers I found) I figured I'd try AHCI.
->  >
->  > And it actually works!
->  >
->  > After making the following simple change:
->  >
->  > --- linux/drivers/ata/ahci.c_orig    2008-09-01 18:42:26.000000000 +1000
->  > +++ linux/drivers/ata/ahci.c 2008-09-01 19:41:29.000000000 +1000
->  > @@ -542,6 +542,9 @@ static const struct pci_device_id ahci_p
->  >      { PCI_VDEVICE(MARVELL, 0x6145), board_ahci_mv },        /* 6145 */
->  >      { PCI_VDEVICE(MARVELL, 0x6121), board_ahci_mv },        /* 6121 */
->  >
->  > +    /* Promise */
->  > +    { PCI_VDEVICE(PROMISE, 0x3f20), board_ahci },           /* T3 */
->  > +
->  >      /* Generic, PCI class code for AHCI */
->  >      { PCI_ANY_ID, PCI_ANY_ID, PCI_ANY_ID, PCI_ANY_ID,
->  >        PCI_CLASS_STORAGE_SATA_AHCI, 0xffffff, board_ahci },
+Tejun Heo <htejun@gmail.com> wrote:
+> Hello,
 >
-> Nice detective work. At least now the chip is usable.
+> Elias Oltmanns wrote:
+[...]
+>>> Also, the suspend operation is unloading the head and spin down the
+>>> drive which sound like a good thing to do before crashing.  Maybe we
+>>> can modify the suspend sequence such that it always unload the head
+>>> first and then issue spindown.  That will ensure the head is in safe
+>>> position as soon as possible.  If it's done this way, it'll be
+>>> probably a good idea to split unloading and loading operations and do
+>>> loading only when EH is being finished and the disk is not spun down.
+>> 
+>> Well, scsi midlayer will also issue a flush cache command. Besides, with
+>> previous implementations I have observed occasional lock ups when
+>> suspending while the unload timer was running. Once we have settled the
+>> timer vs deadline issue, I'm willing to do some more investigation in
+>> this area if you really insist that pm_notifiers should be avoided. But
+>> then I am still not too sure about your reasoning and do feel happier
+>> with these notifiers anyway.
 >
-> /Mikael
->
+> I'm not particularly against pm_notifiers.  I just can't see what
+> advantages it have given the added complexity.  The only race window
+> it closes is the one between suspend start and userland task freeze,
+> which is a relatively short one and there are other much larger gaping
+> holes there, so I don't really see much benefit in the particular
+> pm_notifiers usage.  Maybe we need to keep the task running till the
+> power is pulled?  If we can do that in sane manner which is no easy
+> feat I agree, that can also solve the problem with hibernation.
 
-Thanks! It still might need a bit of tweaking and input from
-the ahci guys but I'm really happy now that I can use those
-extra ports.
+I doubt that is feasible without substantial work especially as long as
+part of it all is implemented in user space. With regard to the
+pm_notifiers, I'll try to figure out exactly what the problem was
+without them (I thought it was related to timers not firing anymore
+after process freezing, but Pavel doubts that and I'm not too sure
+anymore).
 
-Mark
+[...]
+>>>> In particular, I don't want to reschedule EH in response to the second
+>>>> write to the unload_heads file. Also, we have to consider the case where
+>>>> the daemon signals to resume I/O prematurely by writing a timeout of 0.
+>>>> In this case, the EH thread should be woken up immediately.
+>>> Whether EH is scheduled multiple times or not doesn't matter at all.
+>>> EH can be happily scheduled without any actual action to do and that
+>>> does happen from time to time due to asynchronous nature of events.
+>>> libata EH doesn't have any problem with that.  The only thing that's
+>>> required is there's at least one ata_schedule_eh() after the latest
+>>> EH-worthy event.  So, the simpler code might enter EH one more time
+>>> once in the blue moon, but it won't do any harm.  EH will just look
+>>> around and realize that there's nothing much to do and just exit.
+>> 
+>> The whole EH machinery is a very complex beast.
+>
+> The logic is quite complex due to the wonderful ATA but for users
+> requesting actions, it really is quite simple.  Well, at least I think
+> so.  (but I would say that, wouldn't I? :-)
+
+Yes, you would ;-). Seriously though, I do agree that it is easy for
+users to get the right message across to EH but ...
+
+>
+>> Any user of the
+>> emergency head park facility has a particular interest that the system
+>> spends as little time as possible in the EH code even if it's real error
+>> recovery that matters most. Perhaps we could agree on the following
+>> compromise:
+>> 
+>>     spin_lock_irq(ap->lock);
+>>     old_deadline = ap->deadline;
+>>     ap->deadline = jiffies + timeout;
+>>     if (old_deadline < jiffies) {
+>>         ap->link.eh_info.action |= ATA_EH_PARK;
+>>         ata_port_schedule_eh(ap);
+>>     }
+>>     spin_unlock_irq(ap->lock);
+>
+> Really, it doesn't matter at all.  That's just an over optimization.
+> The whole EH machinery pretty much expects spurious EH events and
+> schedules and deals with them quite well.  No need to add extra
+> protection.
+
+... because of its complexity it is hard for me to estimate timing
+impacts and constraints. The questions I'm concerned about are: What is
+the average and worst case time it takes to get the heads parked and
+what can I do if not to improve either of them, then at least not to make
+things worse. In particular, I don't really have a clue about how much
+time it takes to go through EH if no action is requested in comparison
+to, say, the average read / write command. Obviously, I don't want to
+schedule EH unnecessarily if that would mean that I won't be able to
+issue another head unload for considerably longer than during normal I/O
+or, indeed, on an idle system. Arguably, I don't even want to do
+anything that causes more logging than absolutely necessary because this
+will ultimately result in the disk spinning up from standby. But then I
+believe that I only came across this logging issue when I was still
+playing around with eh_revalidate and the like. So, can you set my mind
+at rest that timing is no issue with spurious EH sequences? Now that I
+come to think of it, I suppose it would harm performance anyway, so
+everybody would care about such a delay, right?
+
+>
+>> There is still a race but it is very unlikely to trigger.
+>> 
+>> Still, you have dismissed my point about the equivalent of stopping a
+>> running timer by specifying a 0 timeout. In fact, whenever the new
+>> deadline is *before* the old deadline, we have to signal the sleeping EH
+>> thread to wake up in time. This way we end up with something like
+>> wait_event().
+>
+> Yes, right, reducing the timeout.  How about doing the following?
+>
+> 	wait_event(ata_scsi_part_wq,
+> 		   time_before(jiffies, ap->unload_deadline));
+>
+> Heh... then again, it's not much different from your original code.  I
+> won't object strongly to the original code but I still prefer just
+> setting deadline and kicking EH from the userside instead of directly
+> manipulating the timer.  That way, implementation is more separate
+> from the interface and to me it seems easier to follow the code.
+
+That's fine with me. All I want is that my code doesn't end up leaving
+the system in an unresponsive state (to a head unload request, that is)
+more often than before by spuriously scheduling EH. If that is not a
+problem, I'm content.
+
+Regards,
+
+Elias
