@@ -1,26 +1,50 @@
-From: Matthew Garrett <mjg59@srcf.ucam.org>
-Subject: Re: [PATCH 2/4] libata: Implement disk shock protection support
-Date: Mon, 1 Sep 2008 10:37:56 +0100
-Message-ID: <20080901093756.GA13080@srcf.ucam.org>
-References: <87wshzplvk.fsf@denkblock.local> <87ej45mlp3.fsf@denkblock.local> <48BA969C.4060207@gmail.com> <200808311632.04584.bzolnier@gmail.com> <87wshxkt9c.fsf@denkblock.local> <20080901020821.GA12532@khazad-dum.debian.net>
+From: "xerces8" <xerces8@butn.net>
+Subject: Re: Intel AHCI ICH9R not detecting devices
+Date: Mon, 01 Sep 2008 12:40:58 +0200
+Message-ID: <WorldClient-F200809011240.AA40580113@butn.net>
+References: <WorldClient-F200808221729.AA29360172@butn.net> <48B92399.6010808@kernel.org> <WorldClient-F200808302142.AA42270030@butn.net> <48BBB248.7090904@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1758125AbYIAJjK@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20080901020821.GA12532@khazad-dum.debian.net>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-Cc: Elias Oltmanns <eo@nebensachen.de>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Tejun Heo <htejun@gmail.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Andrew Morton <akpm@linux-foundation.org>, Jeff Garzik <jeff@garzik.org>, Randy Dunlap <randy.dunlap@oracle.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from ikar.perftech.si ([195.246.0.20]:11685 "EHLO ikar.perftech.si"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751466AbYIAKlG (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 1 Sep 2008 06:41:06 -0400
+Received: from dedal.perftech.si (unknown [10.12.0.44])
+	by ikar.perftech.si (Spam Firewall) with ESMTP id DB77D327A3D
+	for <linux-ide@vger.kernel.org>; Mon,  1 Sep 2008 12:41:02 +0200 (CEST)
+Received: from dedal.perftech.si ([10.12.0.44]) by ikar.perftech.si with ESMTP id jOd31zPsiV3QtGQL for <linux-ide@vger.kernel.org>; Mon, 01 Sep 2008 12:41:02 +0200 (CEST)
+Received: from WorldClient by butn.net (MDaemon PRO v9.6.4)
+	with ESMTP id 51-md50000233524.msg
+	for <linux-ide@vger.kernel.org>; Mon, 01 Sep 2008 12:41:00 +0200
+In-Reply-To: <48BBB248.7090904@kernel.org>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: linux-ide@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>
 
-On Sun, Aug 31, 2008 at 11:08:21PM -0300, Henrique de Moraes Holschuh wrote:
-> On Sun, 31 Aug 2008, Elias Oltmanns wrote:
-> > Admittedly, I don't know very much about it myself but I seem to
-> > remember that there are other vendors now shipping similar technology.
+Tejun Heo <tj@kernel.org> wrote:
+
+> xerces8 wrote:
+> >> This looks like resource conflict to me, which could have resulted
+> >> from ahci trying to grab all resources.  Can you please post the
+> >> result of "cat /proc/ioports" and "cat /proc/iomem"?
+> > 
+> > I noticed that in IDE mode the same happens (32bit kernel has problems,
+> > 64bit kernel has not), so here is dmesg, iomem and ioports for all 4
+> > combinations.
 > 
-> Apple, HP.
+> Can you please try the attached debug patch and report boot log.  All
+> resources look fine.
 
-HP typically put the CD drive and hard drive on the same channel.
+(removing stein@hermes.si from CC, that is my other email address)
 
--- 
-Matthew Garrett | mjg59@srcf.ucam.org
+Hi!
+
+I am away from home and will try the patch probably on Friday.
+
+Until then thanks for your support!
+
+David
+
+
