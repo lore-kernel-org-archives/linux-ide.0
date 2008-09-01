@@ -1,150 +1,177 @@
 From: Elias Oltmanns <eo@nebensachen.de>
 Subject: Re: [PATCH 2/4] libata: Implement disk shock protection support
-Date: Mon, 01 Sep 2008 16:51:14 +0200
-Message-ID: <87myirly1p.fsf@denkblock.local>
+Date: Mon, 01 Sep 2008 17:41:44 +0200
+Message-ID: <87iqtflvpj.fsf@denkblock.local>
 References: <87wshzplvk.fsf@denkblock.local>
-	<20080829211345.4355.89284.stgit@denkblock.local>
-	<48B913E6.1000104@gmail.com> <87k5dym5t9.fsf@denkblock.local>
-	<48BA638B.2030001@gmail.com> <87ej45mlp3.fsf@denkblock.local>
-	<48BA969C.4060207@gmail.com> <87abetmaap.fsf@denkblock.local>
-	<48BBA8D1.8020604@gmail.com>
+	<200808311632.04584.bzolnier@gmail.com>
+	<87wshxkt9c.fsf@denkblock.local>
+	<200808312135.56424.bzolnier@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nebensachen.de ([195.34.83.29]:36019 "EHLO mail.nebensachen.de"
+Received: from nebensachen.de ([195.34.83.29]:33413 "EHLO mail.nebensachen.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751466AbYIAOwH (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 1 Sep 2008 10:52:07 -0400
-In-Reply-To: <48BBA8D1.8020604@gmail.com> (Tejun Heo's message of "Mon, 01 Sep
-	2008 10:33:21 +0200")
+	id S1751874AbYIAPmj (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 1 Sep 2008 11:42:39 -0400
+In-Reply-To: <200808312135.56424.bzolnier@gmail.com> (Bartlomiej
+	Zolnierkiewicz's message of "Sun, 31 Aug 2008 21:35:56 +0200")
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, Andrew Morton <akpm@linux-foundation.org>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Jeff Garzik <jeff@garzik.org>, Randy Dunlap <randy.dunlap@oracle.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: Tejun Heo <htejun@gmail.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Andrew Morton <akpm@linux-foundation.org>, Henrique de Moraes Holschuh <hmh@hmh.eng.br>, Jeff Garzik <jeff@garzik.org>, Randy Dunlap <randy.dunlap@oracle.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Tejun Heo <htejun@gmail.com> wrote:
-> Hello,
+Bartlomiej Zolnierkiewicz <bzolnier@gmail.com> wrote:
+> On Sunday 31 August 2008, Elias Oltmanns wrote:
+>> Bartlomiej Zolnierkiewicz <bzolnier@gmail.com> wrote:
 >
-> Elias Oltmanns wrote:
+>> > Hi,
+>> >
+>> > On Sunday 31 August 2008, Tejun Heo wrote:
 [...]
->>> Also, the suspend operation is unloading the head and spin down the
->>> drive which sound like a good thing to do before crashing.  Maybe we
->>> can modify the suspend sequence such that it always unload the head
->>> first and then issue spindown.  That will ensure the head is in safe
->>> position as soon as possible.  If it's done this way, it'll be
->>> probably a good idea to split unloading and loading operations and do
->>> loading only when EH is being finished and the disk is not spun down.
+>> >> To me, much more serious problem seems to be during hibernation.  The
+>> >> kernel is actively writing memory image to userland and it takes quite
+>> >> a while and there's no protection whatsoever during that time.
+>> >
+>> > Which also brings again the question whether it is really the best to
+>> > use user-space solution instead of kernel thread?
+>> >
+>> > After taking the look into the deamon program and hdaps driver I tend
+>> > to "Nope." answer.  The kernel-space solution would be more reliable,
+>> > should result in significatly less code and would free us from having
+>> > a special purpose libata/ide interfaces.  It should also make the
+>> > maintainance and future enhancements (i.e. making hibernation unload
+>> > friendly) a lot easier.
+>> >
+>> > I imagine that this comes a bit late but can we at least give it an
+>> > another thought, please?
 >> 
->> Well, scsi midlayer will also issue a flush cache command. Besides, with
->> previous implementations I have observed occasional lock ups when
->> suspending while the unload timer was running. Once we have settled the
->> timer vs deadline issue, I'm willing to do some more investigation in
->> this area if you really insist that pm_notifiers should be avoided. But
->> then I am still not too sure about your reasoning and do feel happier
->> with these notifiers anyway.
+>> Right, I'll try to give a concise statement of the problem. First
+>> though, I absolutely agree that with regard to the suspend / hibernate
+>> problem, an in kernel solution would ultimately be the safest option.
 >
-> I'm not particularly against pm_notifiers.  I just can't see what
-> advantages it have given the added complexity.  The only race window
-> it closes is the one between suspend start and userland task freeze,
-> which is a relatively short one and there are other much larger gaping
-> holes there, so I don't really see much benefit in the particular
-> pm_notifiers usage.  Maybe we need to keep the task running till the
-> power is pulled?  If we can do that in sane manner which is no easy
-> feat I agree, that can also solve the problem with hibernation.
-
-I doubt that is feasible without substantial work especially as long as
-part of it all is implemented in user space. With regard to the
-pm_notifiers, I'll try to figure out exactly what the problem was
-without them (I thought it was related to timers not firing anymore
-after process freezing, but Pavel doubts that and I'm not too sure
-anymore).
-
-[...]
->>>> In particular, I don't want to reschedule EH in response to the second
->>>> write to the unload_heads file. Also, we have to consider the case where
->>>> the daemon signals to resume I/O prematurely by writing a timeout of 0.
->>>> In this case, the EH thread should be woken up immediately.
->>> Whether EH is scheduled multiple times or not doesn't matter at all.
->>> EH can be happily scheduled without any actual action to do and that
->>> does happen from time to time due to asynchronous nature of events.
->>> libata EH doesn't have any problem with that.  The only thing that's
->>> required is there's at least one ata_schedule_eh() after the latest
->>> EH-worthy event.  So, the simpler code might enter EH one more time
->>> once in the blue moon, but it won't do any harm.  EH will just look
->>> around and realize that there's nothing much to do and just exit.
+> Not only that, IIRC there were some concerns regarding having bigger
+> power consumption with user/kernel-space solution.
+>
+>> However, the way I see it, we would need a module with the following
+>> characteristics:
 >> 
->> The whole EH machinery is a very complex beast.
->
-> The logic is quite complex due to the wonderful ATA but for users
-> requesting actions, it really is quite simple.  Well, at least I think
-> so.  (but I would say that, wouldn't I? :-)
-
-Yes, you would ;-). Seriously though, I do agree that it is easy for
-users to get the right message across to EH but ...
-
->
->> Any user of the
->> emergency head park facility has a particular interest that the system
->> spends as little time as possible in the EH code even if it's real error
->> recovery that matters most. Perhaps we could agree on the following
->> compromise:
+>> - Policy: logic to decide when to park / unpark disks and an interface
+>>   to export tunables to user space.
+>> - Input: capability to recognise and register with acceleration sensors
+>>   in the system and to gather data in an efficient manner. Since this is
+>>   kernel space, we have to make it bulletproof and account for the
+>>   possibility that there may be more than one such sensor installed in
+>>   the system (think: plug and play).
+>> - Action: find all rotating media in the system and decide which of them
+>>   to protect how. Probably, some tunables for the user to fiddle with
+>>   are required here too. Remember that we have docking stations and the
+>>   like so more than one HD may show up on the bus.
 >> 
->>     spin_lock_irq(ap->lock);
->>     old_deadline = ap->deadline;
->>     ap->deadline = jiffies + timeout;
->>     if (old_deadline < jiffies) {
->>         ap->link.eh_info.action |= ATA_EH_PARK;
->>         ata_port_schedule_eh(ap);
->>     }
->>     spin_unlock_irq(ap->lock);
+>> All these corner cases that most users don't care or even tink about
+>> won't hurt anyone as long as the daemon is in user space. This way, we
+>> have a very simple solution for all of them: The user decides for each
+>> instance of the daemon which accelerometer it gets its data from and
+>> which HD it is supposed to protect. I don't like giving impressively
+>> high percentages when all I'm doing is intelligent guess work, but the
+>> vast majority of users will have only one daemon running, getting its
+>> data from one accelerometer and protecting exactly one HD. However, it
+>> is hard to imagine anything disastrous to happen *if* somebody should
+>> happen to install a second accelerometer or connect to the docking
+>> station. In kernel space we would have to take care of the oddest things
+>> because a system supposed to increase security would suffer under a
+>> reputation of locking the machine for good.
 >
-> Really, it doesn't matter at all.  That's just an over optimization.
-> The whole EH machinery pretty much expects spurious EH events and
-> schedules and deals with them quite well.  No need to add extra
-> protection.
+> We may attack the problem from the different angle in which we won't
+> have to worry about any odd corner cases at all:
+>
+> - Add disk_shock module with the needed logic, keeping track of "system
+>   accelerometer" & "system disk" objects, responsible for polling and also
+>   (optionally) exporting tunables.
+>
+> - When ATA devices are initialized check if they support UNLOAD
+>   command and if yes advertise such capability to the block layer
+>   (like we do it with flush cache currently).  We can also solve
+>   the problem of forcing UNLOAD support with using kernel parameters.
+>
+> - Add [un]register_system_accelerometer() interface to disk_shock
+>   and make accelerometer drivers decide whether to use it (currently
+>   only hdaps driver will use it).  Also add some standard methods for
+>   obtaining data from accelerometer drivers.  We may even glue the
+>   new disk_shock with hdaps for now.
+>
+> - Simlarly add [un]register_system_disk() interface (getting us a
+>   access to disk queue) and make storage drivers decide whether to
+>   use it (it is actually easier than in case of system accelerometer
+>   devices since an extra UNLOAD command on shock is not a problem,
+>   while false shock alert is).
+>
+> - On shock disk_shock will queue the special REQ_PARK_HEADS request
+>   and later it will queue REQ_UNPARK_HEADS one (this may need minor
+>   tweaks in block layer as we needed for PM support in ide, which is
+>   done in very similar way).
 
-... because of its complexity it is hard for me to estimate timing
-impacts and constraints. The questions I'm concerned about are: What is
-the average and worst case time it takes to get the heads parked and
-what can I do if not to improve either of them, then at least not to make
-things worse. In particular, I don't really have a clue about how much
-time it takes to go through EH if no action is requested in comparison
-to, say, the average read / write command. Obviously, I don't want to
-schedule EH unnecessarily if that would mean that I won't be able to
-issue another head unload for considerably longer than during normal I/O
-or, indeed, on an idle system. Arguably, I don't even want to do
-anything that causes more logging than absolutely necessary because this
-will ultimately result in the disk spinning up from standby. But then I
-believe that I only came across this logging issue when I was still
-playing around with eh_revalidate and the like. So, can you set my mind
-at rest that timing is no issue with spurious EH sequences? Now that I
-come to think of it, I suppose it would harm performance anyway, so
-everybody would care about such a delay, right?
+First of all, I'm rather adverse to the idea that block layer is the
+right place to interface with storage devices for in this particular
+case. The only arguments for such a decision are that libata and ide
+look the same on that level and that we have solved the issue of
+serialisation. Nonetheless, we really are talking about an ATA specific
+feature here and since I have had no luck with any suggestion to sneak
+REQ_TYPE_LINUX_BLOCK requests past the scsi midlayer, I'd very much like
+to avoid going down this route again. Instead, I'd probably suggest
+something similar to the pm_notifiers for that purpose.
 
 >
->> There is still a race but it is very unlikely to trigger.
->> 
->> Still, you have dismissed my point about the equivalent of stopping a
->> running timer by specifying a 0 timeout. In fact, whenever the new
->> deadline is *before* the old deadline, we have to signal the sleeping EH
->> thread to wake up in time. This way we end up with something like
->> wait_event().
+> Given that at the moment we need to only handle _1_ accelerometer
+> we may start _really_ small and get things working.  Later we can
+> extend the functionality and interfaces as needed (like allowing
+> user to specify arbitrary system accelerometer(s)/disk(s) mappings).
 >
-> Yes, right, reducing the timeout.  How about doing the following?
->
-> 	wait_event(ata_scsi_part_wq,
-> 		   time_before(jiffies, ap->unload_deadline));
->
-> Heh... then again, it's not much different from your original code.  I
-> won't object strongly to the original code but I still prefer just
-> setting deadline and kicking EH from the userside instead of directly
-> manipulating the timer.  That way, implementation is more separate
-> from the interface and to me it seems easier to follow the code.
+> [ It is also entirely possible that we will never need to extend it! ]
 
-That's fine with me. All I want is that my code doesn't end up leaving
-the system in an unresponsive state (to a head unload request, that is)
-more often than before by spuriously scheduling EH. If that is not a
-problem, I'm content.
+I'm not convinced that putting all this directly into the hdaps module
+is the right thing to do or would be accepted by the maintainers, for
+that matter. In fact, since the mainline implementation of hdaps is
+known to be broken and a lot of people (and distros) use the externally
+maintained tp_smapi version instead, I think we should change that code
+as little as possible. Which means that we will have to write a seperate
+module.
+
+>
+> It may sound as we would need to start from scratch and throw out
+> the current solution.  This is not true, majority of code can be
+> nicely-recycled (i.e. logic from daemon, libata/ide UNLOAD support).
+>
+> There is also one big pro of simplified kernel solution from user POV,
+> she/he doesn't have to worry about setting up _anything_.  The feature
+> just "magically" starts working with the next kernel upgrade.
+
+Still, it'll take time to add the missing bits and I'm going to have
+less time to spare for the next few months than I had during the last
+weeks. I wonder whether, from a user's POV, it is more valuable to have
+a solution *now* which doesn't require recompiling the kernel but some
+configuration in user space, or whether a complete solution with choice
+between all-in-kernel or mixed-user-kernel-space some time in the future
+is what they are waiting for. Arguably, this all is going to be obsolete
+in the not so distant future since HDs with everything onboard are on
+the market already. Then, of course, a software solution is more
+flexible.
+
+>
+> PS please note that I'm not NACK-ing the current solution, I'm just
+> thinking loudly if we can and should put some extra effort which will
+> results in better long-term solution (and of course less maintenance
+> work for me :)
+
+Yes, I appreciate that. It's just that I have tried to get this thing
+upstream somehow for quite some time now and I really have no idea how
+long it is going to take me to figure out how to write this disk_shock
+module and to get it past the maintainers (whoever that might be in this
+case). Obviously, me getting impatient isn't a technical (or any good)
+argument in favour of the current solution, but I have to say that your
+PS was well placed in order to help cooling my temper. Don't worry, I'll
+behave myself and listen to your arguments. In fact, I'm very greatful
+for all your responses because at least I have the feeling we are
+getting somewhere and people actually care.
 
 Regards,
 
