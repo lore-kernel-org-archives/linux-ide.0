@@ -1,49 +1,66 @@
-From: Chris Webb <chris@arachsys.com>
-Subject: Re: sata_nv regression on Supermicro H8DMT+ for kernels newer than
-	2.6.25
-Date: Sun, 31 Aug 2008 22:32:58 +0100
-Message-ID: <20080831213258.GE13757@arachsys.com>
-References: <20080831204147.GG30238@arachsys.com>
+From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+Subject: Re: [PATCH 2/4] libata: Implement disk shock protection support
+Date: Sun, 31 Aug 2008 23:08:21 -0300
+Message-ID: <20080901020821.GA12532@khazad-dum.debian.net>
+References: <87wshzplvk.fsf@denkblock.local> <87ej45mlp3.fsf@denkblock.local> <48BA969C.4060207@gmail.com> <200808311632.04584.bzolnier@gmail.com> <87wshxkt9c.fsf@denkblock.local>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from alpha.arachsys.com ([91.203.57.7]:54186 "EHLO
-	alpha.arachsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758264AbYHaVfD (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 31 Aug 2008 17:35:03 -0400
+Received: from out1.smtp.messagingengine.com ([66.111.4.25]:41710 "EHLO
+	out1.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752054AbYIACIa (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 31 Aug 2008 22:08:30 -0400
 Content-Disposition: inline
-In-Reply-To: <20080831204147.GG30238@arachsys.com>
+In-Reply-To: <87wshxkt9c.fsf@denkblock.local>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Elias Oltmanns <eo@nebensachen.de>
+Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Tejun Heo <htejun@gmail.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Andrew Morton <akpm@linux-foundation.org>, Jeff Garzik <jeff@garzik.org>, Randy Dunlap <randy.dunlap@oracle.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Chris Webb <chris@arachsys.com> writes:
+On Sun, 31 Aug 2008, Elias Oltmanns wrote:
+> Admittedly, I don't know very much about it myself but I seem to
+> remember that there are other vendors now shipping similar technology.
 
-> I'm having some trouble with the sata_nv driver on a Supermicro Opteron
-> motherboard. It's an H8DMT+ with an onboard nVidia MCP55V Pro SATA controller
-> running the latest release of the BIOS.
-[...]
-> I imagine this implies that the chipset on this board has trouble with hard
-> resets in some way, but I'd be grateful for any advice as to the most sensible
-> next step to debug this!
+Apple, HP.
 
-Just to follow up to my report, the following patch seems to cure these
-symptoms:
+> Even in the Thinkpad case I don't *know* that all relevant models have
+> HD and optical drives on seperate ports although I'm willing to believe
+> it if somebody tells me so.
 
-diff --git a/drivers/ata/sata_nv.c b/drivers/ata/sata_nv.c
---- a/drivers/ata/sata_nv.c
-+++ b/drivers/ata/sata_nv.c
-@@ -407,7 +407,7 @@
- 
- static struct ata_port_operations nv_generic_ops = {
- 	.inherits		= &ata_bmdma_port_ops,
--	.hardreset		= nv_hardreset,
-+	.hardreset		= ATA_OP_NULL,
- 	.scr_read		= nv_scr_read,
- 	.scr_write		= nv_scr_write,
- };
+All the models I know of have them on separate ports/channels.
 
+> Anyway, I've added Henrique to the Cc: list since he knows far more
+> about Thinkpads than I do and possibly about other notebooks too.
 
-Best wishes,
+I know Apple does it, and they need exactly the same queue freeze + ATA
+unload immediate to have APS working.  But they will want both a kernel
+interface (just using the firmware) and the userspace interface (to use
+something better than whatever is in Apple's firmware).
 
-Chris.
+> There is a lot to be said for the per-port solution as far as libata is
+> concerned. For the sake of consistency I tried to mimic the same
+> behaviour in ide but I agree that it makes things more complex there.
+
+Frankly?  I doubt anybody really cares about the old ide driver for this
+particular functionality.
+
+How many systems have an accelerometer, are portable enough to need APS, and
+have a SATA or PATA bridge that is not better driven by libata instead of
+ide?
+
+> > Which also brings again the question whether it is really the best to
+> > use user-space solution instead of kernel thread?
+
+Choice is good here.  A really good imminent-shock predictor needs to do
+some fairly decent ammount of digital signal processing (in 2d or 3d,
+depending on the sensor).  That stuff is a lot easier to do if you have
+floating point math available to you, for example.  That means userspace.
+
+And some firmware can tell you "please do APS NOW!", so, for those you want
+a kernel interface.
+
+-- 
+  "One disk to rule them all, One disk to find them. One disk to bring
+  them all and in the darkness grind them. In the Land of Redmond
+  where the shadows lie." -- The Silicon Valley Tarot
+  Henrique Holschuh
