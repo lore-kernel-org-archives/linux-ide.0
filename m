@@ -1,37 +1,98 @@
 From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [RFC][PATCH] ahci: Add support for Promise PDC42819
-Date: Tue, 2 Sep 2008 23:30:32 +0100
-Message-ID: <20080902233032.5159688c@lxorguk.ukuu.org.uk>
-References: <65a6ef750809020403i52228319u9e3197e4062941bc@mail.gmail.com>
-	<48BD2136.1020101@garzik.org>
-	<20080902125310.729b0997@lxorguk.ukuu.org.uk>
-	<48BD2B37.6060000@garzik.org>
-	<20080902145710.2034690d@lxorguk.ukuu.org.uk>
-	<48BD9282.702@garzik.org>
+Subject: [PATCH] ahci: Fix long standing Marvell regressions
+Date: Wed, 3 Sep 2008 00:05:38 +0100
+Message-ID: <20080903000538.7500eaf8@lxorguk.ukuu.org.uk>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <48BD9282.702@garzik.org>
-Sender: linux-scsi-owner@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: Mark Nelson <mdnelson8@gmail.com>, linux-ide@vger.kernel.org, Mikael Pettersson <mikpe@it.uu.se>, linux-scsi <linux-scsi@vger.kernel.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:37690 "EHLO
+	lxorguk.ukuu.org.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1753407AbYIBXGl (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 2 Sep 2008 19:06:41 -0400
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: jeff@garzik.org, torvalds@osdl.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Oh and some small other PS items from going back over mail
+pata_marvell: Undo the regressions Jeff caused
+
+From: Alan Cox <alan@redhat.com>
+
+I've been chasing Jeff about this for months so am now giving up and sending
+it directly. Jeff added the Marvell device identifiers to the ahci driver
+without making the AHCI driver handle the PATA port. This means a lot of users
+can't use current kernels and in most distro cases can't even install. This has
+been going on since March 2008 for the 6121 Marvell, and late 2007 for the 6145.
+
+This was all pointed out at the time and repeatedly ignored. Bugs assigned
+to Jeff about this are ignored also.
+
+To quote Jeff in email
+
+"Just switch the order of 'ahci' and 'pata_marvell' in
+/etc/modprobe.conf, then use Fedora's tools regenerate the initrd.
+
+See?  It's not rocket science, and the current configuration can be
+easily made to work for Fedora users."
+
+(Which isn't trivial, isn't end user, shouldn't be needed, and as it usually
+breaks at install time is in fact impossible)
+
+To quote Jeff in August 2007
+
+"   mv-ahci-pata
+Marvell 6121/6141 PATA support.  Needs fixing in the 'PATA controller
+command' area before it is usable, and can go upstream."
+
+Only he applied it all anyway later and broke everything.
+
+The actual fix for the moment is very simple. If the user has included
+the pata_marvell driver let it drive the ports. If they've only selected
+for SATA support give them the AHCI driver which will run the port a fraction
+faster.
 
 
-- You previously (a year ago) stated you had the docs for the extension
+Signed-off-by: Alan Cox <alan@redhat.com>
+---
 
-- You've been ignoring bugs assigned to you about this for months (not
-even replying to them)
-
-- You can't even install most distros to work around this mess you
-created to sort out the initrd
+ drivers/ata/Kconfig |    6 ++++--
+ drivers/ata/ahci.c  |    5 +++++
+ 2 files changed, 9 insertions(+), 2 deletions(-)
 
 
-So I'm simply at this point going to give up and send patches and an
-explanation to Linus. If you care to find the docs you said you had then
-I can fix it nicely, if not then I'll fix it the blunter way.
-
-Alan
+diff --git a/drivers/ata/Kconfig b/drivers/ata/Kconfig
+index ae84949..11c8c19 100644
+--- a/drivers/ata/Kconfig
++++ b/drivers/ata/Kconfig
+@@ -448,8 +448,10 @@ config PATA_MARVELL
+ 	tristate "Marvell PATA support via legacy mode"
+ 	depends on PCI
+ 	help
+-	  This option enables limited support for the Marvell 88SE6145 ATA
+-	  controller.
++	  This option enables limited support for the Marvell 88SE61xx ATA
++	  controllers. If you wish to use only the SATA ports then select
++	  the AHCI driver alone. If you wish to the use the PATA port or
++	  both SATA and PATA include this driver.
+ 
+ 	  If unsure, say N.
+ 
+diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+index c729e69..546865a 100644
+--- a/drivers/ata/ahci.c
++++ b/drivers/ata/ahci.c
+@@ -581,9 +581,14 @@ static const struct pci_device_id ahci_pci_tbl[] = {
+ 	{ PCI_VDEVICE(SI, 0x1185), board_ahci },		/* SiS 968 */
+ 	{ PCI_VDEVICE(SI, 0x0186), board_ahci },		/* SiS 968 */
+ 
++#if  !defined(CONFIG_PATA_MARVELL) && !defined(CONFIG_PATA_MARVELL_MODULE)
+ 	/* Marvell */
++	/* The AHCI driver can only drive the SATA ports, the PATA driver
++	   can drive them all so if both drivers are selected make sure
++	   AHCI stays out of the way */
+ 	{ PCI_VDEVICE(MARVELL, 0x6145), board_ahci_mv },	/* 6145 */
+ 	{ PCI_VDEVICE(MARVELL, 0x6121), board_ahci_mv },	/* 6121 */
++#endif
+ 
+ 	/* Generic, PCI class code for AHCI */
+ 	{ PCI_ANY_ID, PCI_ANY_ID, PCI_ANY_ID, PCI_ANY_ID,
