@@ -1,36 +1,40 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH 3/8] ide: make ide_dma_timeout() available also for CONFIG_BLK_DEV_IDEDMA_SFF=n
-Date: Wed, 03 Sep 2008 01:54:23 +0400
-Message-ID: <48BDB60F.1070806@ru.mvista.com>
-References: <20080902194711.14564.63625.sendpatchset@localhost.localdomain> <20080902194726.14564.348.sendpatchset@localhost.localdomain>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [RFC][PATCH] ahci: Add support for Promise PDC42819
+Date: Tue, 2 Sep 2008 23:18:32 +0100
+Message-ID: <20080902231832.5cb41818@lxorguk.ukuu.org.uk>
+References: <65a6ef750809020403i52228319u9e3197e4062941bc@mail.gmail.com>
+	<48BD2136.1020101@garzik.org>
+	<20080902125310.729b0997@lxorguk.ukuu.org.uk>
+	<48BD2B37.6060000@garzik.org>
+	<20080902145710.2034690d@lxorguk.ukuu.org.uk>
+	<48BD9282.702@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from h155.mvista.com ([63.81.120.155]:16324 "EHLO imap.sh.mvista.com"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751675AbYIBVy2 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 2 Sep 2008 17:54:28 -0400
-In-Reply-To: <20080902194726.14564.348.sendpatchset@localhost.localdomain>
+Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:60601 "EHLO
+	lxorguk.ukuu.org.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751954AbYIBWUx (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 2 Sep 2008 18:20:53 -0400
+In-Reply-To: <48BD9282.702@garzik.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: Mark Nelson <mdnelson8@gmail.com>, linux-ide@vger.kernel.org, Mikael Pettersson <mikpe@it.uu.se>, linux-scsi <linux-scsi@vger.kernel.org>
 
-Bartlomiej Zolnierkiewicz wrote:
+>> Situation before ahci mod:
+> 
+> 	Users with PATA may use pata_marvell.
+> 	Users wanting SATA screwed.
 
-> Make ide_dma_timeout() available also for CONFIG_BLK_DEV_IDEDMA_SFF=n
-> and convert {ics,au1xxx-}ide.c to use it.
->
-> While at it:
-> - dump ATA Status register content on error
-> - use EXPORT_SYMBOL_GPL() to match the rest of SFF DMA functions
->
-> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
->   
+WRONG as I've said repeatedly. pata_marvell handles the SATA ports too as
+legacy
 
-Acked-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+> Just switch the order of 'ahci' and 'pata_marvell' in 
+> /etc/modprobe.conf, then use Fedora's tools regenerate the initrd.
 
-MBR, Sergei
+> See?  It's not rocket science, and the current configuration can be 
+> easily made to work for Fedora users.
 
-
+Well they don't seem to be able to work it out, and your basic premise is
+incorrect anyway. Both ports work with pata_marvell.
