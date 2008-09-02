@@ -1,41 +1,77 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [RFC][PATCH] ahci: Add support for Promise PDC42819
-Date: Tue, 2 Sep 2008 14:57:10 +0100
-Message-ID: <20080902145710.2034690d@lxorguk.ukuu.org.uk>
-References: <65a6ef750809020403i52228319u9e3197e4062941bc@mail.gmail.com>
-	<48BD2136.1020101@garzik.org>
-	<20080902125310.729b0997@lxorguk.ukuu.org.uk>
-	<48BD2B37.6060000@garzik.org>
+From: "Jonas Petersson" <jonas.petersson@xms.se>
+Subject: Re: [smartmontools-support] exception Emask 0x0 SAct 0x0 SErr 0x0
+ action 0x2 frozen
+Date: Tue, 02 Sep 2008 17:49:26 +0200
+Message-ID: <48BD6086.1030101@xms.se>
+References: <48B91198.3020803@xms.se><alpine.DEB.1.10.0808300708330.19513@p34.internal.lan><48B9AE15.7010605@xms.se><alpine.DEB.1.10.0808301710380.11166@p34.internal.lan><48B9C261.4010609@xms.se> <alpine.DEB.1.10.0808301804290.11166@p34.internal.lan> <FAF797E46D786344A7C36218608F791C01F3ABA5@mail1.netezza.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:34291 "EHLO
-	lxorguk.ukuu.org.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751422AbYIBN6K (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 2 Sep 2008 09:58:10 -0400
-In-Reply-To: <48BD2B37.6060000@garzik.org>
+Received: from nat.xms.se ([212.181.93.157]:62834 "EHLO arwen.xms.se"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751295AbYIBPta (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 2 Sep 2008 11:49:30 -0400
+In-Reply-To: <FAF797E46D786344A7C36218608F791C01F3ABA5@mail1.netezza.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: Mark Nelson <mdnelson8@gmail.com>, linux-ide@vger.kernel.org, Mikael Pettersson <mikpe@it.uu.se>, linux-scsi <linux-scsi@vger.kernel.org>
+To: Owen Martin <omartin@netezza.com>
+Cc: Justin Piszcz <jpiszcz@lucidpixels.com>, linux-ide@vger.kernel.org, smartmontools-support@lists.sourceforge.net, linux-kernel@vger.kernel.org
 
-> Refresh my memory...  what is the problem with loading pata_marvell first?
+Hi Owen,
 
-The fact its almost impossible to do with a distribution kernel. eg
-you can't make it work with Fedora (see the Fedora bugs assigned to
-you)
+Owen Martin wrote:
+ > This looks like a timeout during a read command:
+ >
+ > ata3.00: cmd c8/00:08:90:3c:59
+ >
+ > Read dma of 8 blocks from 0x903c59
+ >
+ > Next time it happens, see if it is the same LBA. Since the drive came
+ > back after the bus reset makes me think it was probably in error
+ > recovery for an extended amount of time.
 
-If pata_marvell should be driving these chips please remove the entries
-from the ahci.c driver as I asked before.
+Sounds like a good idea. However, I had the drive swapped yesterday and 
+have now reinstalled on a (seemingly) identical one which so far seems 
+to be free from these messages. Hence, I keep my fingers crossed that 
+this was indeed a hw error.
 
-If ahci.c should be driving them then we need the documentation for
-whatever extension they use driving the ports via AHCI. Clearly there is
-one as its possible under Windows.
+As it was on warranty I was not allowed to keep the bad drive for 
+further experiments.
 
-> AFAICS, if you load pata_marvell before ahci, it will grab the PATA 
-> disks and the PCI device itself.
+ > Sorry, but I am new to using smartmontools for decoding SMART
+ > attributes. Your previous email showed:
+ >
+ > Device is:        Not in smartctl database [for details use: -P showall]
+ >
+ > Does that imply the tool will not know the exact meaning of all the
+ > attributes? I am not familiar with Fujitsu's implementation.
 
-If you have a degree in initrd-foo
+I believe you are correct.
 
-Alan
+ >>From the data you sent about the attributes before, it looks like the
+ > pending and reallocated sector counts are zero, so the block must have
+ > not failed recovery. Can you try to dump the sector using hdparm-8.9 to
+ > see if it reproduces?
+ >
+ > hdparm --read-sector 9452633 /dev/sda
+
+Would if I could... The messages I sent were indeed only from cases 
+where the driver succeeded write to the disk in the end (extracts from 
+/var/log/messages). In the failure cases I did not make a hard copy.
+
+ > What is the timeout set to?
+ >
+ > cat /sys/block/sda/device/timeout
+
+30
+
+ > Maybe try to increase that. You want to be sure that it is not a drive
+ > issue by verifying the block is readable and the raw values from the
+ > pending, uncorrectable or reallocated sector attributes don't change.
+
+Will do if I ever see it again.
+
+			Best / Jonas
+
+
