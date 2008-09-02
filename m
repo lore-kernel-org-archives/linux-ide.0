@@ -1,64 +1,70 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH 2/2] pmac: remove needless pmac_ide_destroy_dmatable() wrapper
-Date: Tue, 2 Sep 2008 20:31:22 +0200
-Message-ID: <200809022031.22922.bzolnier@gmail.com>
+From: Randy Dunlap <randy.dunlap@oracle.com>
+Subject: [PATCH -next] ide: fix Makefile for ide-disk_proc
+Date: Tue, 02 Sep 2008 11:44:54 -0700
+Message-ID: <48BD89A6.1040200@oracle.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from gv-out-0910.google.com ([216.239.58.190]:10259 "EHLO
-	gv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751409AbYIBSdz (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 2 Sep 2008 14:33:55 -0400
-Received: by gv-out-0910.google.com with SMTP id e6so67510gvc.37
-        for <linux-ide@vger.kernel.org>; Tue, 02 Sep 2008 11:33:53 -0700 (PDT)
-Content-Disposition: inline
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-next-owner@vger.kernel.org>
+Sender: linux-next-owner@vger.kernel.org
+To: linux-ide@vger.kernel.org, linux-next@vger.kernel.org
+Cc: akpm <akpm@linux-foundation.org>, bzolnier@gmail.com
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, Benjamin Herrenschmidt <benh@kernel.crashing.org>
 
-hwif->sg_nents is always != 0 when this function is called
-and there is also no need to explicitely zero hwif->sg_nents.
+From: Randy Dunlap <randy.dunlap@oracle.com>
 
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Fix ide-disk_proc build error due to 2 entries in Makefile, one of them
+being unconditional.
+
+When CONFIG_IDE_PROC_FS=n, there are lots of errors/warnings:
+
+linux-next-20080902/drivers/ide/ide-disk_proc.c:100: error: expected '=', ',', ';', 'asm' or '__attribute__' before 'ide_disk_proc'
+linux-next-20080902/drivers/ide/ide-disk_proc.c:109: warning: data definition has no type or storage class
+linux-next-20080902/drivers/ide/ide-disk_proc.c:109: warning: type defaults to 'int' in declaration of 'ide_devset_rw_field'
+linux-next-20080902/drivers/ide/ide-disk_proc.c:109: warning: parameter names (without types) in function declaration
+linux-next-20080902/drivers/ide/ide-disk_proc.c:110: warning: data definition has no type or storage class
+linux-next-20080902/drivers/ide/ide-disk_proc.c:110: warning: type defaults to 'int' in declaration of 'ide_devset_rw_field'
+linux-next-20080902/drivers/ide/ide-disk_proc.c:110: warning: parameter names (without types) in function declaration
+linux-next-20080902/drivers/ide/ide-disk_proc.c:111: warning: data definition has no type or storage class
+linux-next-20080902/drivers/ide/ide-disk_proc.c:111: warning: type defaults to 'int' in declaration of 'ide_devset_rw_field'
+linux-next-20080902/drivers/ide/ide-disk_proc.c:111: warning: parameter names (without types) in function declaration
+linux-next-20080902/drivers/ide/ide-disk_proc.c:112: warning: data definition has no type or storage class
+linux-next-20080902/drivers/ide/ide-disk_proc.c:112: warning: type defaults to 'int' in declaration of 'ide_devset_rw_field'
+linux-next-20080902/drivers/ide/ide-disk_proc.c:112: warning: parameter names (without types) in function declaration
+linux-next-20080902/drivers/ide/ide-disk_proc.c:113: warning: data definition has no type or storage class
+linux-next-20080902/drivers/ide/ide-disk_proc.c:113: warning: type defaults to 'int' in declaration of 'ide_devset_rw_field'
+linux-next-20080902/drivers/ide/ide-disk_proc.c:113: warning: parameter names (without types) in function declaration
+linux-next-20080902/drivers/ide/ide-disk_proc.c:114: warning: data definition has no type or storage class
+linux-next-20080902/drivers/ide/ide-disk_proc.c:114: warning: type defaults to 'int' in declaration of 'ide_devset_rw_field'
+linux-next-20080902/drivers/ide/ide-disk_proc.c:114: warning: parameter names (without types) in function declaration
+linux-next-20080902/drivers/ide/ide-disk_proc.c:116: error: array type has incomplete element type
+linux-next-20080902/drivers/ide/ide-disk_proc.c:117: error: implicit declaration of function 'IDE_PROC_DEVSET'
+linux-next-20080902/drivers/ide/ide-disk_proc.c:117: error: 'acoustic' undeclared here (not in a function)
+linux-next-20080902/drivers/ide/ide-disk_proc.c:118: error: 'address' undeclared here (not in a function)
+linux-next-20080902/drivers/ide/ide-disk_proc.c:119: error: 'bios_cyl' undeclared here (not in a function)
+linux-next-20080902/drivers/ide/ide-disk_proc.c:120: error: 'bios_head' undeclared here (not in a function)
+linux-next-20080902/drivers/ide/ide-disk_proc.c:121: error: 'bios_sect' undeclared here (not in a function)
+linux-next-20080902/drivers/ide/ide-disk_proc.c:122: error: 'failures' undeclared here (not in a function)
+linux-next-20080902/drivers/ide/ide-disk_proc.c:123: error: 'lun' undeclared here (not in a function)
+linux-next-20080902/drivers/ide/ide-disk_proc.c:124: error: 'max_failures' undeclared here (not in a function)
+linux-next-20080902/drivers/ide/ide-disk_proc.c:125: error: 'multcount' undeclared here (not in a function)
+linux-next-20080902/drivers/ide/ide-disk_proc.c:126: error: 'nowerr' undeclared here (not in a function)
+linux-next-20080902/drivers/ide/ide-disk_proc.c:127: error: 'wcache' undeclared here (not in a function)
+make[3]: *** [drivers/ide/ide-disk_proc.o] Error 1
+
+Signed-off-by: Randy Dunlap <randy.dunlap@oracle.com>
 ---
- drivers/ide/ppc/pmac.c |   16 +++-------------
- 1 file changed, 3 insertions(+), 13 deletions(-)
+ drivers/ide/Makefile |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Index: b/drivers/ide/ppc/pmac.c
-===================================================================
---- a/drivers/ide/ppc/pmac.c
-+++ b/drivers/ide/ppc/pmac.c
-@@ -1523,18 +1523,6 @@ use_pio_instead:
- 	return 0; /* revert to PIO for this request */
- }
+--- linux-next-20080902.orig/drivers/ide/Makefile
++++ linux-next-20080902/drivers/ide/Makefile
+@@ -36,7 +36,7 @@ obj-$(CONFIG_IDE_H8300)			+= h8300/
+ obj-$(CONFIG_IDE_GENERIC)		+= ide-generic.o
+ obj-$(CONFIG_BLK_DEV_IDEPNP)		+= ide-pnp.o
  
--/* Teardown mappings after DMA has completed.  */
--static void
--pmac_ide_destroy_dmatable (ide_drive_t *drive)
--{
--	ide_hwif_t *hwif = drive->hwif;
--
--	if (hwif->sg_nents) {
--		ide_destroy_dmatable(drive);
--		hwif->sg_nents = 0;
--	}
--}
--
- /*
-  * Prepare a DMA transfer. We build the DMA table, adjust the timings for
-  * a read on KeyLargo ATA/66 and mark us as waiting for DMA completion
-@@ -1606,7 +1594,9 @@ pmac_ide_dma_end (ide_drive_t *drive)
- 	drive->waiting_for_dma = 0;
- 	dstat = readl(&dma->status);
- 	writel(((RUN|WAKE|DEAD) << 16), &dma->control);
--	pmac_ide_destroy_dmatable(drive);
-+
-+	ide_destroy_dmatable(drive);
-+
- 	/* verify good dma status. we don't check for ACTIVE beeing 0. We should...
- 	 * in theory, but with ATAPI decices doing buffer underruns, that would
- 	 * cause us to disable DMA, which isn't what we want
+-ide-disk_mod-y += ide-disk.o ide-disk_ioctl.o ide-disk_proc.o
++ide-disk_mod-y += ide-disk.o ide-disk_ioctl.o
+ ide-cd_mod-y += ide-cd.o ide-cd_ioctl.o ide-cd_verbose.o
+ ide-floppy_mod-y += ide-floppy.o ide-floppy_ioctl.o
+ 
