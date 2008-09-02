@@ -1,60 +1,218 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [RFC][PATCH] ahci: Add support for Promise PDC42819
-Date: Tue, 02 Sep 2008 15:22:42 -0400
-Message-ID: <48BD9282.702@garzik.org>
-References: <65a6ef750809020403i52228319u9e3197e4062941bc@mail.gmail.com>	<48BD2136.1020101@garzik.org>	<20080902125310.729b0997@lxorguk.ukuu.org.uk>	<48BD2B37.6060000@garzik.org> <20080902145710.2034690d@lxorguk.ukuu.org.uk>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <20080902145710.2034690d@lxorguk.ukuu.org.uk>
-Sender: linux-scsi-owner@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: Mark Nelson <mdnelson8@gmail.com>, linux-ide@vger.kernel.org, Mikael Pettersson <mikpe@it.uu.se>, linux-scsi <linux-scsi@vger.kernel.org>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: [PATCH 1/8] ide: __ide_dma_end() -> ide_dma_end()
+Date: Tue, 02 Sep 2008 21:47:11 +0200
+Message-ID: <20080902194711.14564.63625.sendpatchset@localhost.localdomain>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from ug-out-1314.google.com ([66.249.92.171]:11982 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751518AbYIBTtR (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 2 Sep 2008 15:49:17 -0400
+Received: by ug-out-1314.google.com with SMTP id c2so1759855ugf.37
+        for <linux-ide@vger.kernel.org>; Tue, 02 Sep 2008 12:49:15 -0700 (PDT)
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
+Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-kernel@vger.kernel.org
 
-Alan Cox wrote:
->> Refresh my memory...  what is the problem with loading pata_marvell first?
-> 
-> The fact its almost impossible to do with a distribution kernel. eg
-> you can't make it work with Fedora (see the Fedora bugs assigned to
-> you)
+While at it:
+- use EXPORT_SYMBOL_GPL() to match the rest of SFF DMA functions
 
-Hogwash -- just load one driver before the other.
+Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+---
+ drivers/ide/ide-dma.c          |    7 +++----
+ drivers/ide/pci/alim15x3.c     |    2 +-
+ drivers/ide/pci/cmd64x.c       |    4 ++--
+ drivers/ide/pci/hpt366.c       |    6 +++---
+ drivers/ide/pci/it821x.c       |    2 +-
+ drivers/ide/pci/pdc202xx_old.c |    4 ++--
+ drivers/ide/pci/siimage.c      |    2 +-
+ drivers/ide/pci/sl82c105.c     |    2 +-
+ drivers/ide/pci/tc86c001.c     |    2 +-
+ include/linux/ide.h            |    2 +-
+ 10 files changed, 16 insertions(+), 17 deletions(-)
 
-
-> If pata_marvell should be driving these chips please remove the entries
-> from the ahci.c driver as I asked before.
-> 
-> If ahci.c should be driving them then we need the documentation for
-> whatever extension they use driving the ports via AHCI. Clearly there is
-> one as its possible under Windows.
-
-Situation before ahci mod:
-
-	Users with PATA may use pata_marvell.
-	Users wanting SATA screwed.
-	Users wanting PATA+SATA screwed.
-
-Situation after ahci mod:
-
-	Users with PATA may use pata_marvell
-	Users with SATA may use ahci
-	Users wanting PATA+SATA screwed
-
-
->> AFAICS, if you load pata_marvell before ahci, it will grab the PATA 
->> disks and the PCI device itself.
-> 
-> If you have a degree in initrd-foo
-
-Just switch the order of 'ahci' and 'pata_marvell' in 
-/etc/modprobe.conf, then use Fedora's tools regenerate the initrd.
-
-See?  It's not rocket science, and the current configuration can be 
-easily made to work for Fedora users.
-
-	Jeff
-
-
-
+Index: b/drivers/ide/ide-dma.c
+===================================================================
+--- a/drivers/ide/ide-dma.c
++++ b/drivers/ide/ide-dma.c
+@@ -531,7 +531,7 @@ void ide_dma_start(ide_drive_t *drive)
+ EXPORT_SYMBOL_GPL(ide_dma_start);
+ 
+ /* returns 1 on error, 0 otherwise */
+-int __ide_dma_end (ide_drive_t *drive)
++int ide_dma_end(ide_drive_t *drive)
+ {
+ 	ide_hwif_t *hwif = drive->hwif;
+ 	u8 mmio = (hwif->host_flags & IDE_HFLAG_MMIO) ? 1 : 0;
+@@ -566,8 +566,7 @@ int __ide_dma_end (ide_drive_t *drive)
+ 	wmb();
+ 	return (dma_stat & 7) != 4 ? (0x10 | dma_stat) : 0;
+ }
+-
+-EXPORT_SYMBOL(__ide_dma_end);
++EXPORT_SYMBOL_GPL(ide_dma_end);
+ 
+ /* returns 1 if dma irq issued, 0 otherwise */
+ int ide_dma_test_irq(ide_drive_t *drive)
+@@ -880,7 +879,7 @@ const struct ide_dma_ops sff_dma_ops = {
+ 	.dma_setup		= ide_dma_setup,
+ 	.dma_exec_cmd		= ide_dma_exec_cmd,
+ 	.dma_start		= ide_dma_start,
+-	.dma_end		= __ide_dma_end,
++	.dma_end		= ide_dma_end,
+ 	.dma_test_irq		= ide_dma_test_irq,
+ 	.dma_timeout		= ide_dma_timeout,
+ 	.dma_lost_irq		= ide_dma_lost_irq,
+Index: b/drivers/ide/pci/alim15x3.c
+===================================================================
+--- a/drivers/ide/pci/alim15x3.c
++++ b/drivers/ide/pci/alim15x3.c
+@@ -507,7 +507,7 @@ static const struct ide_dma_ops ali_dma_
+ 	.dma_setup		= ali15x3_dma_setup,
+ 	.dma_exec_cmd		= ide_dma_exec_cmd,
+ 	.dma_start		= ide_dma_start,
+-	.dma_end		= __ide_dma_end,
++	.dma_end		= ide_dma_end,
+ 	.dma_test_irq		= ide_dma_test_irq,
+ 	.dma_lost_irq		= ide_dma_lost_irq,
+ 	.dma_timeout		= ide_dma_timeout,
+Index: b/drivers/ide/pci/cmd64x.c
+===================================================================
+--- a/drivers/ide/pci/cmd64x.c
++++ b/drivers/ide/pci/cmd64x.c
+@@ -228,7 +228,7 @@ static int cmd648_dma_end(ide_drive_t *d
+ {
+ 	ide_hwif_t *hwif	= HWIF(drive);
+ 	unsigned long base	= hwif->dma_base - (hwif->channel * 8);
+-	int err			= __ide_dma_end(drive);
++	int err			= ide_dma_end(drive);
+ 	u8  irq_mask		= hwif->channel ? MRDMODE_INTR_CH1 :
+ 						  MRDMODE_INTR_CH0;
+ 	u8  mrdmode		= inb(base + 1);
+@@ -248,7 +248,7 @@ static int cmd64x_dma_end(ide_drive_t *d
+ 	u8  irq_mask		= hwif->channel ? ARTTIM23_INTR_CH1 :
+ 						  CFR_INTR_CH0;
+ 	u8  irq_stat		= 0;
+-	int err			= __ide_dma_end(drive);
++	int err			= ide_dma_end(drive);
+ 
+ 	(void) pci_read_config_byte(dev, irq_reg, &irq_stat);
+ 	/* clear the interrupt bit */
+Index: b/drivers/ide/pci/hpt366.c
+===================================================================
+--- a/drivers/ide/pci/hpt366.c
++++ b/drivers/ide/pci/hpt366.c
+@@ -833,7 +833,7 @@ static int hpt370_dma_end(ide_drive_t *d
+ 		if (dma_stat & 0x01)
+ 			hpt370_irq_timeout(drive);
+ 	}
+-	return __ide_dma_end(drive);
++	return ide_dma_end(drive);
+ }
+ 
+ static void hpt370_dma_timeout(ide_drive_t *drive)
+@@ -875,7 +875,7 @@ static int hpt374_dma_end(ide_drive_t *d
+ 	pci_read_config_byte(dev, mcr_addr, &mcr);
+ 	if (bwsr & mask)
+ 		pci_write_config_byte(dev, mcr_addr, mcr | 0x30);
+-	return __ide_dma_end(drive);
++	return ide_dma_end(drive);
+ }
+ 
+ /**
+@@ -1454,7 +1454,7 @@ static const struct ide_dma_ops hpt36x_d
+ 	.dma_setup		= ide_dma_setup,
+ 	.dma_exec_cmd		= ide_dma_exec_cmd,
+ 	.dma_start		= ide_dma_start,
+-	.dma_end		= __ide_dma_end,
++	.dma_end		= ide_dma_end,
+ 	.dma_test_irq		= ide_dma_test_irq,
+ 	.dma_lost_irq		= hpt366_dma_lost_irq,
+ 	.dma_timeout		= ide_dma_timeout,
+Index: b/drivers/ide/pci/it821x.c
+===================================================================
+--- a/drivers/ide/pci/it821x.c
++++ b/drivers/ide/pci/it821x.c
+@@ -385,7 +385,7 @@ static int it821x_dma_end(ide_drive_t *d
+ {
+ 	ide_hwif_t *hwif = drive->hwif;
+ 	struct it821x_dev *itdev = ide_get_hwifdata(hwif);
+-	int ret = __ide_dma_end(drive);
++	int ret = ide_dma_end(drive);
+ 	u8 unit = drive->dn & 1;
+ 
+ 	if(itdev->mwdma[unit] != MWDMA_OFF)
+Index: b/drivers/ide/pci/pdc202xx_old.c
+===================================================================
+--- a/drivers/ide/pci/pdc202xx_old.c
++++ b/drivers/ide/pci/pdc202xx_old.c
+@@ -200,7 +200,7 @@ static int pdc202xx_dma_end(ide_drive_t 
+ 	}
+ 	if (drive->current_speed > XFER_UDMA_2)
+ 		pdc_old_disable_66MHz_clock(drive->hwif);
+-	return __ide_dma_end(drive);
++	return ide_dma_end(drive);
+ }
+ 
+ static int pdc202xx_dma_test_irq(ide_drive_t *drive)
+@@ -333,7 +333,7 @@ static const struct ide_dma_ops pdc20246
+ 	.dma_setup		= ide_dma_setup,
+ 	.dma_exec_cmd		= ide_dma_exec_cmd,
+ 	.dma_start		= ide_dma_start,
+-	.dma_end		= __ide_dma_end,
++	.dma_end		= ide_dma_end,
+ 	.dma_test_irq		= pdc202xx_dma_test_irq,
+ 	.dma_lost_irq		= pdc202xx_dma_lost_irq,
+ 	.dma_timeout		= pdc202xx_dma_timeout,
+Index: b/drivers/ide/pci/siimage.c
+===================================================================
+--- a/drivers/ide/pci/siimage.c
++++ b/drivers/ide/pci/siimage.c
+@@ -713,7 +713,7 @@ static const struct ide_dma_ops sil_dma_
+ 	.dma_setup		= ide_dma_setup,
+ 	.dma_exec_cmd		= ide_dma_exec_cmd,
+ 	.dma_start		= ide_dma_start,
+-	.dma_end		= __ide_dma_end,
++	.dma_end		= ide_dma_end,
+ 	.dma_test_irq		= siimage_dma_test_irq,
+ 	.dma_timeout		= ide_dma_timeout,
+ 	.dma_lost_irq		= ide_dma_lost_irq,
+Index: b/drivers/ide/pci/sl82c105.c
+===================================================================
+--- a/drivers/ide/pci/sl82c105.c
++++ b/drivers/ide/pci/sl82c105.c
+@@ -207,7 +207,7 @@ static int sl82c105_dma_end(ide_drive_t 
+ 
+ 	DBG(("%s(drive:%s)\n", __func__, drive->name));
+ 
+-	ret = __ide_dma_end(drive);
++	ret = ide_dma_end(drive);
+ 
+ 	pci_write_config_word(dev, reg, drive->drive_data);
+ 
+Index: b/drivers/ide/pci/tc86c001.c
+===================================================================
+--- a/drivers/ide/pci/tc86c001.c
++++ b/drivers/ide/pci/tc86c001.c
+@@ -186,7 +186,7 @@ static const struct ide_dma_ops tc86c001
+ 	.dma_setup		= ide_dma_setup,
+ 	.dma_exec_cmd		= ide_dma_exec_cmd,
+ 	.dma_start		= tc86c001_dma_start,
+-	.dma_end		= __ide_dma_end,
++	.dma_end		= ide_dma_end,
+ 	.dma_test_irq		= ide_dma_test_irq,
+ 	.dma_lost_irq		= ide_dma_lost_irq,
+ 	.dma_timeout		= ide_dma_timeout,
+Index: b/include/linux/ide.h
+===================================================================
+--- a/include/linux/ide.h
++++ b/include/linux/ide.h
+@@ -1430,7 +1430,7 @@ void ide_dma_host_set(ide_drive_t *, int
+ extern int ide_dma_setup(ide_drive_t *);
+ void ide_dma_exec_cmd(ide_drive_t *, u8);
+ extern void ide_dma_start(ide_drive_t *);
+-extern int __ide_dma_end(ide_drive_t *);
++int ide_dma_end(ide_drive_t *);
+ int ide_dma_test_irq(ide_drive_t *);
+ extern void ide_dma_lost_irq(ide_drive_t *);
+ extern void ide_dma_timeout(ide_drive_t *);
