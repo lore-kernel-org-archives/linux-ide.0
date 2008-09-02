@@ -1,327 +1,144 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH 7/8] ide: cleanup ide-dma.c
-Date: Tue, 02 Sep 2008 21:47:55 +0200
-Message-ID: <20080902194755.14564.10356.sendpatchset@localhost.localdomain>
+Subject: [PATCH 6/8] ide: cleanup ide_build_dmatable()
+Date: Tue, 02 Sep 2008 21:47:48 +0200
+Message-ID: <20080902194748.14564.73545.sendpatchset@localhost.localdomain>
 References: <20080902194711.14564.63625.sendpatchset@localhost.localdomain>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.175]:18529 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752556AbYIBTuB (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 2 Sep 2008 15:50:01 -0400
-Received: by ug-out-1314.google.com with SMTP id c2so1759935ugf.37
-        for <linux-ide@vger.kernel.org>; Tue, 02 Sep 2008 12:50:00 -0700 (PDT)
+Received: from mu-out-0910.google.com ([209.85.134.187]:9758 "EHLO
+	mu-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752420AbYIBTty (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 2 Sep 2008 15:49:54 -0400
+Received: by mu-out-0910.google.com with SMTP id g7so2492518muf.1
+        for <linux-ide@vger.kernel.org>; Tue, 02 Sep 2008 12:49:52 -0700 (PDT)
 In-Reply-To: <20080902194711.14564.63625.sendpatchset@localhost.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
 Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-kernel@vger.kernel.org
 
-- s/HWIF(drive)/drive->hwif/
-- s/HWGROUP(drive)/[drive->]hwif->hwgroup/
-- fixup error messages in ide_dma_intr() & dma_timer_expiry()
-- fix checkpatch.pl errors/warnings
+- use for_each_sg()
+- move printing 'DMA table too small' message below use_pio_instead label
+- merge '64KB bug' comment with function documentation
+- fix intendation
+
+There should be no functional changes caused by this patch.
 
 Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 ---
- drivers/ide/ide-dma.c |   88 +++++++++++++++++++++-----------------------------
- 1 file changed, 38 insertions(+), 50 deletions(-)
+ drivers/ide/ide-dma.c |   71 ++++++++++++++++++++------------------------------
+ 1 file changed, 29 insertions(+), 42 deletions(-)
 
 Index: b/drivers/ide/ide-dma.c
 ===================================================================
 --- a/drivers/ide/ide-dma.c
 +++ b/drivers/ide/ide-dma.c
-@@ -33,11 +33,9 @@
- #include <linux/ide.h>
- #include <linux/scatterlist.h>
- #include <linux/dma-mapping.h>
-+#include <linux/io.h>
- 
--#include <asm/io.h>
--
--static const struct drive_list_entry drive_whitelist [] = {
--
-+static const struct drive_list_entry drive_whitelist[] = {
- 	{ "Micropolis 2112A"	,       NULL		},
- 	{ "CONNER CTMA 4000"	,       NULL		},
- 	{ "CONNER CTT8000-A"	,       NULL		},
-@@ -45,8 +43,7 @@ static const struct drive_list_entry dri
- 	{ NULL			,	NULL		}
- };
- 
--static const struct drive_list_entry drive_blacklist [] = {
--
-+static const struct drive_list_entry drive_blacklist[] = {
- 	{ "WDC AC11000H"	,	NULL 		},
- 	{ "WDC AC22100H"	,	NULL 		},
- 	{ "WDC AC32500H"	,	NULL 		},
-@@ -86,11 +83,11 @@ static const struct drive_list_entry dri
-  *	ide_dma_intr	-	IDE DMA interrupt handler
-  *	@drive: the drive the interrupt is for
+@@ -153,8 +153,11 @@ EXPORT_SYMBOL_GPL(ide_build_sglist);
   *
-- *	Handle an interrupt completing a read/write DMA transfer on an 
-+ *	Handle an interrupt completing a read/write DMA transfer on an
-  *	IDE device
-  */
-- 
--ide_startstop_t ide_dma_intr (ide_drive_t *drive)
-+
-+ide_startstop_t ide_dma_intr(ide_drive_t *drive)
- {
- 	ide_hwif_t *hwif = drive->hwif;
- 	u8 stat = 0, dma_stat = 0;
-@@ -100,17 +97,16 @@ ide_startstop_t ide_dma_intr (ide_drive_
+  *	ide_build_dmatable() prepares a dma request. We map the command
+  *	to get the pci bus addresses of the buffers and then build up
+- *	the PRD table that the IDE layer wants to be fed. The code
+- *	knows about the 64K wrap bug in the CS5530.
++ *	the PRD table that the IDE layer wants to be fed.
++ *
++ *	Most chipsets correctly interpret a length of 0x0000 as 64KB,
++ *	but at least one (e.g. CS5530) misinterprets it as zero (!).
++ *	So we break the 64KB entry into two 32KB entries instead.
+  *
+  *	Returns the number of built PRD entries if all went okay,
+  *	returns 0 otherwise.
+@@ -171,15 +174,12 @@ int ide_build_dmatable (ide_drive_t *dri
+ 	int i;
+ 	struct scatterlist *sg;
  
- 	if (OK_STAT(stat, DRIVE_READY, drive->bad_wstat | ATA_DRQ)) {
- 		if (!dma_stat) {
--			struct request *rq = HWGROUP(drive)->rq;
-+			struct request *rq = hwif->hwgroup->rq;
+-	hwif->sg_nents = i = ide_build_sglist(drive, rq);
+-
+-	if (!i)
++	hwif->sg_nents = ide_build_sglist(drive, rq);
++	if (hwif->sg_nents == 0)
+ 		return 0;
  
- 			task_end_request(drive, rq, stat);
- 			return ide_stopped;
+-	sg = hwif->sg_table;
+-	while (i) {
+-		u32 cur_addr;
+-		u32 cur_len;
++	for_each_sg(hwif->sg_table, sg, hwif->sg_nents, i) {
++		u32 cur_addr, cur_len, xcount, bcount;
+ 
+ 		cur_addr = sg_dma_address(sg);
+ 		cur_len = sg_dma_len(sg);
+@@ -191,40 +191,27 @@ int ide_build_dmatable (ide_drive_t *dri
+ 		 */
+ 
+ 		while (cur_len) {
+-			if (count++ >= PRD_ENTRIES) {
+-				printk(KERN_ERR "%s: DMA table too small\n", drive->name);
++			if (count++ >= PRD_ENTRIES)
+ 				goto use_pio_instead;
+-			} else {
+-				u32 xcount, bcount = 0x10000 - (cur_addr & 0xffff);
+ 
+-				if (bcount > cur_len)
+-					bcount = cur_len;
+-				*table++ = cpu_to_le32(cur_addr);
+-				xcount = bcount & 0xffff;
+-				if (is_trm290)
+-					xcount = ((xcount >> 2) - 1) << 16;
+-				if (xcount == 0x0000) {
+-	/* 
+-	 * Most chipsets correctly interpret a length of 0x0000 as 64KB,
+-	 * but at least one (e.g. CS5530) misinterprets it as zero (!).
+-	 * So here we break the 64KB entry into two 32KB entries instead.
+-	 */
+-					if (count++ >= PRD_ENTRIES) {
+-						printk(KERN_ERR "%s: DMA table too small\n", drive->name);
+-						goto use_pio_instead;
+-					}
+-					*table++ = cpu_to_le32(0x8000);
+-					*table++ = cpu_to_le32(cur_addr + 0x8000);
+-					xcount = 0x8000;
+-				}
+-				*table++ = cpu_to_le32(xcount);
+-				cur_addr += bcount;
+-				cur_len -= bcount;
++			bcount = 0x10000 - (cur_addr & 0xffff);
++			if (bcount > cur_len)
++				bcount = cur_len;
++			*table++ = cpu_to_le32(cur_addr);
++			xcount = bcount & 0xffff;
++			if (is_trm290)
++				xcount = ((xcount >> 2) - 1) << 16;
++			if (xcount == 0x0000) {
++				if (count++ >= PRD_ENTRIES)
++					goto use_pio_instead;
++				*table++ = cpu_to_le32(0x8000);
++				*table++ = cpu_to_le32(cur_addr + 0x8000);
++				xcount = 0x8000;
+ 			}
++			*table++ = cpu_to_le32(xcount);
++			cur_addr += bcount;
++			cur_len -= bcount;
  		}
--		printk(KERN_ERR "%s: dma_intr: bad DMA status (dma_stat=%x)\n", 
--		       drive->name, dma_stat);
-+		printk(KERN_ERR "%s: %s: bad DMA status (0x%02x)\n",
-+			drive->name, __func__, dma_stat);
+-
+-		sg = sg_next(sg);
+-		i--;
  	}
- 	return ide_error(drive, "dma_intr", stat);
- }
--
- EXPORT_SYMBOL_GPL(ide_dma_intr);
  
- static int ide_dma_good_drive(ide_drive_t *drive)
-@@ -131,7 +127,7 @@ static int ide_dma_good_drive(ide_drive_
- 
- int ide_build_sglist(ide_drive_t *drive, struct request *rq)
- {
--	ide_hwif_t *hwif = HWIF(drive);
-+	ide_hwif_t *hwif = drive->hwif;
- 	struct scatterlist *sg = hwif->sg_table;
- 
- 	ide_map_sg(drive, rq);
-@@ -144,7 +140,6 @@ int ide_build_sglist(ide_drive_t *drive,
- 	return dma_map_sg(hwif->dev, sg, hwif->sg_nents,
- 			  hwif->sg_dma_direction);
- }
--
- EXPORT_SYMBOL_GPL(ide_build_sglist);
- 
- #ifdef CONFIG_BLK_DEV_IDEDMA_SFF
-@@ -164,10 +159,10 @@ EXPORT_SYMBOL_GPL(ide_build_sglist);
-  *
-  *	May also be invoked from trm290.c
-  */
-- 
--int ide_build_dmatable (ide_drive_t *drive, struct request *rq)
-+
-+int ide_build_dmatable(ide_drive_t *drive, struct request *rq)
- {
--	ide_hwif_t *hwif	= HWIF(drive);
-+	ide_hwif_t *hwif = drive->hwif;
- 	__le32 *table = (__le32 *)hwif->dmatable_cpu;
- 	unsigned int is_trm290	= (hwif->chipset == ide_trm290) ? 1 : 0;
- 	unsigned int count = 0;
-@@ -241,15 +236,14 @@ EXPORT_SYMBOL_GPL(ide_build_dmatable);
-  *	an oops as only one mapping can be live for each target at a given
-  *	time.
-  */
-- 
--void ide_destroy_dmatable (ide_drive_t *drive)
-+
-+void ide_destroy_dmatable(ide_drive_t *drive)
- {
- 	ide_hwif_t *hwif = drive->hwif;
- 
- 	dma_unmap_sg(hwif->dev, hwif->sg_table, hwif->sg_nents,
- 		     hwif->sg_dma_direction);
- }
--
- EXPORT_SYMBOL_GPL(ide_destroy_dmatable);
- 
- #ifdef CONFIG_BLK_DEV_IDEDMA_SFF
-@@ -263,8 +257,8 @@ EXPORT_SYMBOL_GPL(ide_destroy_dmatable);
-  *	to have DMA handling bugs are also set up appropriately based
-  *	on the good/bad drive lists.
-  */
-- 
--static int config_drive_for_dma (ide_drive_t *drive)
-+
-+static int config_drive_for_dma(ide_drive_t *drive)
- {
- 	ide_hwif_t *hwif = drive->hwif;
- 	u16 *id = drive->id;
-@@ -304,26 +298,26 @@ static int config_drive_for_dma (ide_dri
-  *
-  *	An IDE DMA transfer timed out. In the event of an error we ask
-  *	the driver to resolve the problem, if a DMA transfer is still
-- *	in progress we continue to wait (arguably we need to add a 
-+ *	in progress we continue to wait (arguably we need to add a
-  *	secondary 'I don't care what the drive thinks' timeout here)
-  *	Finally if we have an interrupt we let it complete the I/O.
-  *	But only one time - we clear expiry and if it's still not
-  *	completed after WAIT_CMD, we error and retry in PIO.
-  *	This can occur if an interrupt is lost or due to hang or bugs.
-  */
-- 
--static int dma_timer_expiry (ide_drive_t *drive)
-+
-+static int dma_timer_expiry(ide_drive_t *drive)
- {
--	ide_hwif_t *hwif	= HWIF(drive);
--	u8 dma_stat		= hwif->tp_ops->read_sff_dma_status(hwif);
-+	ide_hwif_t *hwif = drive->hwif;
-+	u8 dma_stat = hwif->tp_ops->read_sff_dma_status(hwif);
- 
--	printk(KERN_WARNING "%s: dma_timer_expiry: dma status == 0x%02x\n",
--		drive->name, dma_stat);
-+	printk(KERN_WARNING "%s: %s: DMA status (0x%02x)\n",
-+		drive->name, __func__, dma_stat);
- 
- 	if ((dma_stat & 0x18) == 0x18)	/* BUSY Stupid Early Timer !! */
- 		return WAIT_CMD;
- 
--	HWGROUP(drive)->expiry = NULL;	/* one free ride for now */
-+	hwif->hwgroup->expiry = NULL;	/* one free ride for now */
- 
- 	/* 1 dmaing, 2 error, 4 intr */
- 	if (dma_stat & 2)	/* ERROR */
-@@ -348,9 +342,9 @@ static int dma_timer_expiry (ide_drive_t
- 
- void ide_dma_host_set(ide_drive_t *drive, int on)
- {
--	ide_hwif_t *hwif	= HWIF(drive);
--	u8 unit			= drive->dn & 1;
--	u8 dma_stat		= hwif->tp_ops->read_sff_dma_status(hwif);
-+	ide_hwif_t *hwif = drive->hwif;
-+	u8 unit = drive->dn & 1;
-+	u8 dma_stat = hwif->tp_ops->read_sff_dma_status(hwif);
- 
- 	if (on)
- 		dma_stat |= (1 << (5 + unit));
-@@ -363,7 +357,6 @@ void ide_dma_host_set(ide_drive_t *drive
- 	else
- 		outb(dma_stat, hwif->dma_base + ATA_DMA_STATUS);
- }
--
- EXPORT_SYMBOL_GPL(ide_dma_host_set);
- #endif /* CONFIG_BLK_DEV_IDEDMA_SFF  */
- 
-@@ -371,7 +364,7 @@ EXPORT_SYMBOL_GPL(ide_dma_host_set);
-  *	ide_dma_off_quietly	-	Generic DMA kill
-  *	@drive: drive to control
-  *
-- *	Turn off the current DMA on this IDE controller. 
-+ *	Turn off the current DMA on this IDE controller.
-  */
- 
- void ide_dma_off_quietly(ide_drive_t *drive)
-@@ -381,7 +374,6 @@ void ide_dma_off_quietly(ide_drive_t *dr
- 
- 	drive->hwif->dma_ops->dma_host_set(drive, 0);
- }
--
- EXPORT_SYMBOL(ide_dma_off_quietly);
- 
- /**
-@@ -397,7 +389,6 @@ void ide_dma_off(ide_drive_t *drive)
- 	printk(KERN_INFO "%s: DMA disabled\n", drive->name);
- 	ide_dma_off_quietly(drive);
- }
--
- EXPORT_SYMBOL(ide_dma_off);
- 
- /**
-@@ -426,13 +417,13 @@ void ide_dma_on(ide_drive_t *drive)
-  *	override this function if they need to
-  *
-  *	Returns 0 on success. If a PIO fallback is required then 1
-- *	is returned. 
-+ *	is returned.
-  */
- 
- int ide_dma_setup(ide_drive_t *drive)
- {
- 	ide_hwif_t *hwif = drive->hwif;
--	struct request *rq = HWGROUP(drive)->rq;
-+	struct request *rq = hwif->hwgroup->rq;
- 	unsigned int reading;
- 	u8 mmio = (hwif->host_flags & IDE_HFLAG_MMIO) ? 1 : 0;
- 	u8 dma_stat;
-@@ -474,13 +465,13 @@ int ide_dma_setup(ide_drive_t *drive)
- 	drive->waiting_for_dma = 1;
- 	return 0;
- }
--
- EXPORT_SYMBOL_GPL(ide_dma_setup);
- 
- void ide_dma_exec_cmd(ide_drive_t *drive, u8 command)
- {
- 	/* issue cmd to drive */
--	ide_execute_command(drive, command, &ide_dma_intr, 2*WAIT_CMD, dma_timer_expiry);
-+	ide_execute_command(drive, command, &ide_dma_intr, 2 * WAIT_CMD,
-+			    dma_timer_expiry);
- }
- EXPORT_SYMBOL_GPL(ide_dma_exec_cmd);
- 
-@@ -506,7 +497,6 @@ void ide_dma_start(ide_drive_t *drive)
- 
- 	wmb();
- }
--
- EXPORT_SYMBOL_GPL(ide_dma_start);
- 
- /* returns 1 on error, 0 otherwise */
-@@ -550,8 +540,8 @@ EXPORT_SYMBOL_GPL(ide_dma_end);
- /* returns 1 if dma irq issued, 0 otherwise */
- int ide_dma_test_irq(ide_drive_t *drive)
- {
--	ide_hwif_t *hwif	= HWIF(drive);
--	u8 dma_stat		= hwif->tp_ops->read_sff_dma_status(hwif);
-+	ide_hwif_t *hwif = drive->hwif;
-+	u8 dma_stat = hwif->tp_ops->read_sff_dma_status(hwif);
- 
- 	/* return 1 if INTR asserted */
- 	if ((dma_stat & 4) == 4)
-@@ -564,7 +554,7 @@ EXPORT_SYMBOL_GPL(ide_dma_test_irq);
- static inline int config_drive_for_dma(ide_drive_t *drive) { return 0; }
- #endif /* CONFIG_BLK_DEV_IDEDMA_SFF */
- 
--int __ide_dma_bad_drive (ide_drive_t *drive)
-+int __ide_dma_bad_drive(ide_drive_t *drive)
- {
- 	u16 *id = drive->id;
- 
-@@ -576,7 +566,6 @@ int __ide_dma_bad_drive (ide_drive_t *dr
+ 	if (count) {
+@@ -233,14 +220,14 @@ int ide_build_dmatable (ide_drive_t *dri
+ 		return count;
  	}
- 	return 0;
+ 
+-	printk(KERN_ERR "%s: empty DMA table?\n", drive->name);
+-
+ use_pio_instead:
++	printk(KERN_ERR "%s: %s\n", drive->name,
++		count ? "DMA table too small" : "empty DMA table?");
++
+ 	ide_destroy_dmatable(drive);
+ 
+ 	return 0; /* revert to PIO for this request */
  }
 -
- EXPORT_SYMBOL(__ide_dma_bad_drive);
- 
- static const u8 xfer_mode_bases[] = {
-@@ -592,7 +581,7 @@ static unsigned int ide_get_mode_mask(id
- 	const struct ide_port_ops *port_ops = hwif->port_ops;
- 	unsigned int mask = 0;
- 
--	switch(base) {
-+	switch (base) {
- 	case XFER_UDMA_0:
- 		if ((id[ATA_ID_FIELD_VALID] & 4) == 0)
- 			break;
-@@ -693,7 +682,6 @@ u8 ide_find_dma_mode(ide_drive_t *drive,
- 
- 	return mode;
- }
--
- EXPORT_SYMBOL_GPL(ide_find_dma_mode);
- 
- static int ide_tune_dma(ide_drive_t *drive)
-@@ -810,7 +798,7 @@ EXPORT_SYMBOL_GPL(ide_dma_lost_irq);
- 
- void ide_dma_timeout(ide_drive_t *drive)
- {
--	ide_hwif_t *hwif = HWIF(drive);
-+	ide_hwif_t *hwif = drive->hwif;
- 
- 	printk(KERN_ERR "%s: timeout waiting for DMA\n", drive->name);
+ EXPORT_SYMBOL_GPL(ide_build_dmatable);
+ #endif
  
