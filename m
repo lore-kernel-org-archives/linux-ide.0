@@ -1,76 +1,81 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: SATA Cold Boot problems on >2.6.25 with NV
-Date: Tue, 02 Sep 2008 06:35:26 +0200
-Message-ID: <48BCC28E.5030009@kernel.org>
-References: <fa.CVrJhjm3R8sjl5Z+EEIzYm7QtW0@ifi.uio.no> <48B80B40.5060002@shaw.ca> <48B80D33.5050806@gmail.com> <20080829212146.GA4321@anita> <48B90F7F.8040308@kernel.org> <20080830205143.GA9726@anita> <48BBCF98.4070003@kernel.org> <20080901174657.GA2114@anita>
+From: "xerces8" <xerces8@butn.net>
+Subject: NCQ usage/support in linux
+Date: Tue, 02 Sep 2008 10:29:54 +0200
+Message-ID: <WorldClient-F200809021029.AA29540056@butn.net>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------050905010105010201080406"
+Content-Type: text/plain; charset="us-ascii"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:38213 "EHLO hera.kernel.org"
+Received: from ikar.perftech.si ([195.246.0.20]:22710 "EHLO ikar.perftech.si"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750867AbYIBEgx (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 2 Sep 2008 00:36:53 -0400
-In-Reply-To: <20080901174657.GA2114@anita>
+	id S1751573AbYIBIaD (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 2 Sep 2008 04:30:03 -0400
+Received: from dedal.perftech.si (unknown [10.12.0.44])
+	by ikar.perftech.si (Spam Firewall) with ESMTP id B4D3D37BCF4
+	for <linux-ide@vger.kernel.org>; Tue,  2 Sep 2008 10:30:00 +0200 (CEST)
+Received: from dedal.perftech.si ([10.12.0.44]) by ikar.perftech.si with ESMTP id ZUvYYMaBjzTggR64 for <linux-ide@vger.kernel.org>; Tue, 02 Sep 2008 10:30:00 +0200 (CEST)
+Received: from WorldClient by butn.net (MDaemon PRO v9.6.4)
+	with ESMTP id 57-md50000233351.msg
+	for <linux-ide@vger.kernel.org>; Tue, 02 Sep 2008 10:29:59 +0200
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-kernel@vger.kernel.org, lists@ku-gbr.de, IDE/ATA development list <linux-ide@vger.kernel.org>
+To: linux-ide@vger.kernel.org
 
-This is a multi-part message in MIME format.
---------------050905010105010201080406
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Hello!
 
-(cc'ing linux-ide)
+I have a few questions about SATA NCQ.
 
-Konstantin Kletschke wrote:
-> Am 2008-09-01 13:18 +0200 schrieb Tejun Heo:
-> 
->>> Hmn, to take my pants down entirely: What is this "EH"?
->> libata EH == libatata exception handling.
-> 
-> Seems this stuff is kinda new since 2.6.25?
+Background story:
+Many users noticed that concurrent (by two programs) read access to a disk
+under Windows goes very slow with modern systems, using SATA AHCI mode.
 
-I think it's more circa 2.6.22 but in my memory terms, which sucks,
-that's a lifetime before so I don't really remember.  :-)
+References:
+ - "Slower concurrent disk access with NCQ ?"
+<http://forums.hexus.net/hexus-hardware/138640-slower-concurrent-disk-access-ncq.html>
+ - "Slower with NCQ ?, Concurent access" <http://forums.storagereview.net/index.php?showtopic=26864>
+ - "NCQ: Best Upgrade For a Power User!" <http://forums.storagereview.net/index.php?showtopic=26965>
 
->> Can you please apply the attached patch and post the resulting dmesg?
-> 
-> Of course. Patch applied, here is dmesg output, looks interesting now -
-> but anything works fine so far.
+(for short summary you can read the 3rd page of the last forum topic linked above)
 
-Hmm... someone is scheduling EH incessantly without any error or action
-set.  Can you please try the attached patch?
+Here is the gist of the issue:
+--quote from a forum post--
+320GB WD Caviar:
 
--- 
-tejun
+Windows:
+63 MB/s: 1 instance
+28 MB/s: 2 instances (both at 0% position)
+9 MB/s: 2 instances (0% position and 90% position)
+15 MB/s: 10 instances (10% gap between each)
 
---------------050905010105010201080406
-Content-Type: text/plain;
- name="debug"
-Content-Transfer-Encoding: base64
-Content-Disposition: inline;
- filename="debug"
+Linux:
+63 MB/s: 1 instance
+63 MB/s: 2 instances (both at 0% position)
+45 MB/s: 2 instances (0% position and 90% position)
+48 MB/s: 10 instances (10% gap between each)
 
-LS0tCiBkcml2ZXJzL2F0YS9saWJhdGEtZWguYyB8ICAgMTIgKysrKysrKysrKy0tCiAxIGZp
-bGUgY2hhbmdlZCwgMTAgaW5zZXJ0aW9ucygrKSwgMiBkZWxldGlvbnMoLSkKCkluZGV4OiB0
-cmVlMC9kcml2ZXJzL2F0YS9saWJhdGEtZWguYwo9PT09PT09PT09PT09PT09PT09PT09PT09
-PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09Ci0tLSB0cmVlMC5v
-cmlnL2RyaXZlcnMvYXRhL2xpYmF0YS1laC5jCisrKyB0cmVlMC9kcml2ZXJzL2F0YS9saWJh
-dGEtZWguYwpAQCAtNjcxLDYgKzY3MSw5IEBAIHN0YXRpYyB2b2lkIGF0YV9laF9zZXRfcGVu
-ZGluZyhzdHJ1Y3QgYXQKIAogCWFwLT5wZmxhZ3MgfD0gQVRBX1BGTEFHX0VIX1BFTkRJTkc7
-CiAKKwlhdGFfcG9ydF9wcmludGsoYXAsIEtFUk5fSU5GTywgIlhYWCBFSF9TRVRfUEVORElO
-R1xuIik7CisJZHVtcF9zdGFjaygpOworCiAJaWYgKCFmYXN0ZHJhaW4pCiAJCXJldHVybjsK
-IApAQCAtMTA3Nyw2ICsxMDgwLDExIEBAIHZvaWQgYXRhX2VoX2Fib3V0X3RvX2RvKHN0cnVj
-dCBhdGFfbGluawogCXN0cnVjdCBhdGFfZWhfY29udGV4dCAqZWhjID0gJmxpbmstPmVoX2Nv
-bnRleHQ7CiAJdW5zaWduZWQgbG9uZyBmbGFnczsKIAorCWlmIChsaW5rKQorCQlhdGFfbGlu
-a19wcmludGsobGluaywgS0VSTl9JTkZPLCAiWFhYIGFib3V0X3RvX2RvICV4XG4iLCBhY3Rp
-b24pOworCWVsc2UgaWYgKGRldikKKwkJYXRhX2Rldl9wcmludGsoZGV2LCBLRVJOX0lORk8s
-ICJYWFggYWJvdXRfdG9fZG8gJXhcbiIsIGFjdGlvbik7CisKIAlzcGluX2xvY2tfaXJxc2F2
-ZShhcC0+bG9jaywgZmxhZ3MpOwogCiAJYXRhX2VoX2NsZWFyX2FjdGlvbihsaW5rLCBkZXYs
-IGVoaSwgYWN0aW9uKTsKQEAgLTE4OTAsOCArMTg5OCw4IEBAIHN0YXRpYyB2b2lkIGF0YV9l
-aF9saW5rX3JlcG9ydChzdHJ1Y3QgYXQKIAkJbnJfZmFpbGVkKys7CiAJfQogCi0JaWYgKCFu
-cl9mYWlsZWQgJiYgIWVoYy0+aS5lcnJfbWFzaykKLQkJcmV0dXJuOworCS8vaWYgKCFucl9m
-YWlsZWQgJiYgIWVoYy0+aS5lcnJfbWFzaykKKwkvLwlyZXR1cm47CiAKIAlmcm96ZW4gPSAi
-IjsKIAlpZiAoYXAtPnBmbGFncyAmIEFUQV9QRkxBR19GUk9aRU4pCg==
---------------050905010105010201080406--
+Linux, stock install of Fedora 9 x64 (2.4.25 kernel).
+
+Linux commands issued:
+dd if=/dev/sdb of=/dev/null bs=256K skip=200K (skip was incremented by 200K each instance which
+corresponds to about 50GB forward in this 320GB drive)
+
+all dd invocations started at the same time (batch).
+
+throughput measured with:
+iostat -m 1 /dev/sdb (m shows in megabytes, 1 is the update interval of graph every second)
+
+Windows commands:
+dd if=\\.\PHYSICALDRIVE1 of=NUL bs=256K skip=200K (as above)
+--end quote--
+
+My question is: How does linux deal with NCQ ?
+Is it used by default ? Any known problems with it ?
+
+In the forum the Seagate 7200.11 harddrive family is mentioned as the only one
+not having the performance issue. Does those drives also behave exceptionally
+in linux ?
+
+Thanks for any answers.
+Sincerely,
+David
+
+
