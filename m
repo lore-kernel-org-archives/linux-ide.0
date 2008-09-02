@@ -1,42 +1,76 @@
-From: Elias Oltmanns <eo@nebensachen.de>
-Subject: Re: [PATCH] ide: Build fix for CONFIG_IDE_PROC_FS=n
-Date: Tue, 02 Sep 2008 00:52:55 +0200
-Message-ID: <878wub1nso.fsf@denkblock.local>
-References: <20080829213217.4826.91622.stgit@denkblock.local>
-	<200808311752.06818.bzolnier@gmail.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: SATA Cold Boot problems on >2.6.25 with NV
+Date: Tue, 02 Sep 2008 06:35:26 +0200
+Message-ID: <48BCC28E.5030009@kernel.org>
+References: <fa.CVrJhjm3R8sjl5Z+EEIzYm7QtW0@ifi.uio.no> <48B80B40.5060002@shaw.ca> <48B80D33.5050806@gmail.com> <20080829212146.GA4321@anita> <48B90F7F.8040308@kernel.org> <20080830205143.GA9726@anita> <48BBCF98.4070003@kernel.org> <20080901174657.GA2114@anita>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/mixed;
+ boundary="------------050905010105010201080406"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nebensachen.de ([195.34.83.29]:48180 "EHLO mail.nebensachen.de"
+Received: from hera.kernel.org ([140.211.167.34]:38213 "EHLO hera.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750984AbYIAWxS (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 1 Sep 2008 18:53:18 -0400
-In-Reply-To: <200808311752.06818.bzolnier@gmail.com> (Bartlomiej
-	Zolnierkiewicz's message of "Sun, 31 Aug 2008 17:52:05 +0200")
+	id S1750867AbYIBEgx (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 2 Sep 2008 00:36:53 -0400
+In-Reply-To: <20080901174657.GA2114@anita>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: linux-kernel@vger.kernel.org, lists@ku-gbr.de, IDE/ATA development list <linux-ide@vger.kernel.org>
 
-Bartlomiej Zolnierkiewicz <bzolnier@gmail.com> wrote:
-> On Friday 29 August 2008, Elias Oltmanns wrote:
->> Recent changes have broken compilation when CONFIG_IDE_PROC_FS is not set.
->> 
->> Signed-off-by: Elias Oltmanns <eo@nebensachen.de>
->
-> Thanks!
->
-> I integrated your fixes into guilty patches ("ide-floppy: move /proc handling
-> to ide-floppy_proc.c" and "ide-disk: move /proc handling to ide-disk_proc.c")
-> to preserve bisection.
+This is a multi-part message in MIME format.
+--------------050905010105010201080406
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-Yes, that's fine with me, but in the case of ide-disk_proc.h things
-apparently went wrong. As of next-20080901, I still have the line
+(cc'ing linux-ide)
 
-ide-disk_mod-y += ide-disk.o ide-disk_ioctl.o ide-disk_proc.o
+Konstantin Kletschke wrote:
+> Am 2008-09-01 13:18 +0200 schrieb Tejun Heo:
+> 
+>>> Hmn, to take my pants down entirely: What is this "EH"?
+>> libata EH == libatata exception handling.
+> 
+> Seems this stuff is kinda new since 2.6.25?
 
-in the Makefile. Could you please truncate that line appropriately?
+I think it's more circa 2.6.22 but in my memory terms, which sucks,
+that's a lifetime before so I don't really remember.  :-)
 
-Regards,
+>> Can you please apply the attached patch and post the resulting dmesg?
+> 
+> Of course. Patch applied, here is dmesg output, looks interesting now -
+> but anything works fine so far.
 
-Elias
+Hmm... someone is scheduling EH incessantly without any error or action
+set.  Can you please try the attached patch?
+
+-- 
+tejun
+
+--------------050905010105010201080406
+Content-Type: text/plain;
+ name="debug"
+Content-Transfer-Encoding: base64
+Content-Disposition: inline;
+ filename="debug"
+
+LS0tCiBkcml2ZXJzL2F0YS9saWJhdGEtZWguYyB8ICAgMTIgKysrKysrKysrKy0tCiAxIGZp
+bGUgY2hhbmdlZCwgMTAgaW5zZXJ0aW9ucygrKSwgMiBkZWxldGlvbnMoLSkKCkluZGV4OiB0
+cmVlMC9kcml2ZXJzL2F0YS9saWJhdGEtZWguYwo9PT09PT09PT09PT09PT09PT09PT09PT09
+PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09Ci0tLSB0cmVlMC5v
+cmlnL2RyaXZlcnMvYXRhL2xpYmF0YS1laC5jCisrKyB0cmVlMC9kcml2ZXJzL2F0YS9saWJh
+dGEtZWguYwpAQCAtNjcxLDYgKzY3MSw5IEBAIHN0YXRpYyB2b2lkIGF0YV9laF9zZXRfcGVu
+ZGluZyhzdHJ1Y3QgYXQKIAogCWFwLT5wZmxhZ3MgfD0gQVRBX1BGTEFHX0VIX1BFTkRJTkc7
+CiAKKwlhdGFfcG9ydF9wcmludGsoYXAsIEtFUk5fSU5GTywgIlhYWCBFSF9TRVRfUEVORElO
+R1xuIik7CisJZHVtcF9zdGFjaygpOworCiAJaWYgKCFmYXN0ZHJhaW4pCiAJCXJldHVybjsK
+IApAQCAtMTA3Nyw2ICsxMDgwLDExIEBAIHZvaWQgYXRhX2VoX2Fib3V0X3RvX2RvKHN0cnVj
+dCBhdGFfbGluawogCXN0cnVjdCBhdGFfZWhfY29udGV4dCAqZWhjID0gJmxpbmstPmVoX2Nv
+bnRleHQ7CiAJdW5zaWduZWQgbG9uZyBmbGFnczsKIAorCWlmIChsaW5rKQorCQlhdGFfbGlu
+a19wcmludGsobGluaywgS0VSTl9JTkZPLCAiWFhYIGFib3V0X3RvX2RvICV4XG4iLCBhY3Rp
+b24pOworCWVsc2UgaWYgKGRldikKKwkJYXRhX2Rldl9wcmludGsoZGV2LCBLRVJOX0lORk8s
+ICJYWFggYWJvdXRfdG9fZG8gJXhcbiIsIGFjdGlvbik7CisKIAlzcGluX2xvY2tfaXJxc2F2
+ZShhcC0+bG9jaywgZmxhZ3MpOwogCiAJYXRhX2VoX2NsZWFyX2FjdGlvbihsaW5rLCBkZXYs
+IGVoaSwgYWN0aW9uKTsKQEAgLTE4OTAsOCArMTg5OCw4IEBAIHN0YXRpYyB2b2lkIGF0YV9l
+aF9saW5rX3JlcG9ydChzdHJ1Y3QgYXQKIAkJbnJfZmFpbGVkKys7CiAJfQogCi0JaWYgKCFu
+cl9mYWlsZWQgJiYgIWVoYy0+aS5lcnJfbWFzaykKLQkJcmV0dXJuOworCS8vaWYgKCFucl9m
+YWlsZWQgJiYgIWVoYy0+aS5lcnJfbWFzaykKKwkvLwlyZXR1cm47CiAKIAlmcm96ZW4gPSAi
+IjsKIAlpZiAoYXAtPnBmbGFncyAmIEFUQV9QRkxBR19GUk9aRU4pCg==
+--------------050905010105010201080406--
