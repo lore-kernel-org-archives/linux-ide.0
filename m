@@ -1,81 +1,41 @@
-From: "xerces8" <xerces8@butn.net>
-Subject: NCQ usage/support in linux
-Date: Tue, 02 Sep 2008 10:29:54 +0200
-Message-ID: <WorldClient-F200809021029.AA29540056@butn.net>
+From: "Maciej Rutecki" <maciej.rutecki@gmail.com>
+Subject: [SOLVED] Re: [2.6.26.*] boot problem (ahci/irq related?)
+Date: Tue, 2 Sep 2008 11:59:50 +0200
+Message-ID: <8db1092f0809020259i91bb979i32ef11ac86e34f1d@mail.gmail.com>
+References: <8db1092f0808111312x3baf819bxbb05030c05693065@mail.gmail.com>
+	 <200808221210.59560.rjw@sisk.pl>
+	 <8db1092f0808220350wc56af7di5c5e1c2eb2421249@mail.gmail.com>
+	 <200808242327.26863.rjw@sisk.pl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ikar.perftech.si ([195.246.0.20]:22710 "EHLO ikar.perftech.si"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751573AbYIBIaD (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 2 Sep 2008 04:30:03 -0400
-Received: from dedal.perftech.si (unknown [10.12.0.44])
-	by ikar.perftech.si (Spam Firewall) with ESMTP id B4D3D37BCF4
-	for <linux-ide@vger.kernel.org>; Tue,  2 Sep 2008 10:30:00 +0200 (CEST)
-Received: from dedal.perftech.si ([10.12.0.44]) by ikar.perftech.si with ESMTP id ZUvYYMaBjzTggR64 for <linux-ide@vger.kernel.org>; Tue, 02 Sep 2008 10:30:00 +0200 (CEST)
-Received: from WorldClient by butn.net (MDaemon PRO v9.6.4)
-	with ESMTP id 57-md50000233351.msg
-	for <linux-ide@vger.kernel.org>; Tue, 02 Sep 2008 10:29:59 +0200
+Received: from wf-out-1314.google.com ([209.85.200.175]:15358 "EHLO
+	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753357AbYIBJ7w (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 2 Sep 2008 05:59:52 -0400
+Received: by wf-out-1314.google.com with SMTP id 27so2260163wfd.4
+        for <linux-ide@vger.kernel.org>; Tue, 02 Sep 2008 02:59:51 -0700 (PDT)
+In-Reply-To: <200808242327.26863.rjw@sisk.pl>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: "Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, Yinghai Lu <yhlu.kernel@gmail.com>, Ingo Molnar <mingo@elte.hu>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>, tj@kernel.org, andi@firstfloor.org, Thomas Gleixner <tglx@linutronix.de>, "H. Peter Anvin" <hpa@zytor.com>, Jesse Barnes <jbarnes@virtuousgeek.org>
 
-Hello!
+I change CONFIG_HZ*. Previous I had CONFIG_HZ=1000, already I have 300:
 
-I have a few questions about SATA NCQ.
+maciek@gumis:~$ cat /boot/config-2.6.26.2 | grep CONFIG_HZ
+# CONFIG_HZ_100 is not set
+# CONFIG_HZ_250 is not set
+CONFIG_HZ_300=y
+# CONFIG_HZ_1000 is not set
+CONFIG_HZ=300
 
-Background story:
-Many users noticed that concurrent (by two programs) read access to a disk
-under Windows goes very slow with modern systems, using SATA AHCI mode.
+If ealier I had boot problem in 2.6.26.2 than now I haven't any
+problem with it. Change timer frequency to lower solves problem, but I
+don't understand why.
 
-References:
- - "Slower concurrent disk access with NCQ ?"
-<http://forums.hexus.net/hexus-hardware/138640-slower-concurrent-disk-access-ncq.html>
- - "Slower with NCQ ?, Concurent access" <http://forums.storagereview.net/index.php?showtopic=26864>
- - "NCQ: Best Upgrade For a Power User!" <http://forums.storagereview.net/index.php?showtopic=26965>
-
-(for short summary you can read the 3rd page of the last forum topic linked above)
-
-Here is the gist of the issue:
---quote from a forum post--
-320GB WD Caviar:
-
-Windows:
-63 MB/s: 1 instance
-28 MB/s: 2 instances (both at 0% position)
-9 MB/s: 2 instances (0% position and 90% position)
-15 MB/s: 10 instances (10% gap between each)
-
-Linux:
-63 MB/s: 1 instance
-63 MB/s: 2 instances (both at 0% position)
-45 MB/s: 2 instances (0% position and 90% position)
-48 MB/s: 10 instances (10% gap between each)
-
-Linux, stock install of Fedora 9 x64 (2.4.25 kernel).
-
-Linux commands issued:
-dd if=/dev/sdb of=/dev/null bs=256K skip=200K (skip was incremented by 200K each instance which
-corresponds to about 50GB forward in this 320GB drive)
-
-all dd invocations started at the same time (batch).
-
-throughput measured with:
-iostat -m 1 /dev/sdb (m shows in megabytes, 1 is the update interval of graph every second)
-
-Windows commands:
-dd if=\\.\PHYSICALDRIVE1 of=NUL bs=256K skip=200K (as above)
---end quote--
-
-My question is: How does linux deal with NCQ ?
-Is it used by default ? Any known problems with it ?
-
-In the forum the Seagate 7200.11 harddrive family is mentioned as the only one
-not having the performance issue. Does those drives also behave exceptionally
-in linux ?
-
-Thanks for any answers.
-Sincerely,
-David
-
-
+-- 
+Maciej Rutecki
+http://www.maciek.unixy.pl
