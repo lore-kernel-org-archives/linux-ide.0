@@ -1,36 +1,60 @@
-From: "Randy.Dunlap" <rdunlap@xenotime.net>
-Subject: Re: [PATCH -next] ide: fix Makefile for ide-disk_proc
-Date: Tue, 2 Sep 2008 11:53:34 -0700 (PDT)
-Message-ID: <Pine.LNX.4.64.0809021151350.13796@shark.he.net>
-References: <48BD89A6.1040200@oracle.com> <200809022047.38151.bzolnier@gmail.com>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [RFC][PATCH] ahci: Add support for Promise PDC42819
+Date: Tue, 02 Sep 2008 15:22:42 -0400
+Message-ID: <48BD9282.702@garzik.org>
+References: <65a6ef750809020403i52228319u9e3197e4062941bc@mail.gmail.com>	<48BD2136.1020101@garzik.org>	<20080902125310.729b0997@lxorguk.ukuu.org.uk>	<48BD2B37.6060000@garzik.org> <20080902145710.2034690d@lxorguk.ukuu.org.uk>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from xenotime.net ([66.160.160.81]:54324 "HELO xenotime.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1751096AbYIBSxl (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 2 Sep 2008 14:53:41 -0400
-Received: from shark.he.net ([66.160.160.2]) by xenotime.net for <linux-ide@vger.kernel.org>; Tue, 2 Sep 2008 11:53:34 -0700
-In-Reply-To: <200809022047.38151.bzolnier@gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <20080902145710.2034690d@lxorguk.ukuu.org.uk>
+Sender: linux-scsi-owner@vger.kernel.org
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: Mark Nelson <mdnelson8@gmail.com>, linux-ide@vger.kernel.org, Mikael Pettersson <mikpe@it.uu.se>, linux-scsi <linux-scsi@vger.kernel.org>
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: Randy Dunlap <randy.dunlap@oracle.com>, linux-ide@vger.kernel.org, linux-next@vger.kernel.org, akpm <akpm@linux-foundation.org>
 
-On Tue, 2 Sep 2008, Bartlomiej Zolnierkiewicz wrote:
-
-> On Tuesday 02 September 2008, Randy Dunlap wrote:
-> > From: Randy Dunlap <randy.dunlap@oracle.com>
-> > 
-> > Fix ide-disk_proc build error due to 2 entries in Makefile, one of them
-> > being unconditional.
-> > 
-> > When CONFIG_IDE_PROC_FS=n, there are lots of errors/warnings:
+Alan Cox wrote:
+>> Refresh my memory...  what is the problem with loading pata_marvell first?
 > 
-> Thanks but this was already fixed in pata tree
-> (http://lkml.org/lkml/2008/9/2/65).
+> The fact its almost impossible to do with a distribution kernel. eg
+> you can't make it work with Fedora (see the Fedora bugs assigned to
+> you)
 
-Thanks, good to hear that...
+Hogwash -- just load one driver before the other.
 
--- 
-~Randy
+
+> If pata_marvell should be driving these chips please remove the entries
+> from the ahci.c driver as I asked before.
+> 
+> If ahci.c should be driving them then we need the documentation for
+> whatever extension they use driving the ports via AHCI. Clearly there is
+> one as its possible under Windows.
+
+Situation before ahci mod:
+
+	Users with PATA may use pata_marvell.
+	Users wanting SATA screwed.
+	Users wanting PATA+SATA screwed.
+
+Situation after ahci mod:
+
+	Users with PATA may use pata_marvell
+	Users with SATA may use ahci
+	Users wanting PATA+SATA screwed
+
+
+>> AFAICS, if you load pata_marvell before ahci, it will grab the PATA 
+>> disks and the PCI device itself.
+> 
+> If you have a degree in initrd-foo
+
+Just switch the order of 'ahci' and 'pata_marvell' in 
+/etc/modprobe.conf, then use Fedora's tools regenerate the initrd.
+
+See?  It's not rocket science, and the current configuration can be 
+easily made to work for Fedora users.
+
+	Jeff
+
+
+
