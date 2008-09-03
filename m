@@ -1,29 +1,36 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: Hotplug
-Date: Wed, 03 Sep 2008 09:01:01 +0200
-Message-ID: <48BE362D.2050705@kernel.org>
-References: <27a624370809021427h5d619e03qf23ea426387b0a6@mail.gmail.com>
+From: Jim Paris <jim@jtan.com>
+Subject: Re: ATA bus error - SError: { RecovData HostInt Handshk }
+Date: Wed, 3 Sep 2008 04:31:20 -0400
+Message-ID: <20080903083120.GA2471@psychosis.jim.sh>
+References: <Pine.LNX.4.64.0809022036390.17666@lancer.cnet.absolutedigital.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:60359 "EHLO hera.kernel.org"
+Received: from a.jim.sh ([75.150.123.25]:51213 "EHLO psychosis.jim.sh"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752359AbYICHC0 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 3 Sep 2008 03:02:26 -0400
-In-Reply-To: <27a624370809021427h5d619e03qf23ea426387b0a6@mail.gmail.com>
+	id S1751271AbYICIqd (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 3 Sep 2008 04:46:33 -0400
+Content-Disposition: inline
+In-Reply-To: <Pine.LNX.4.64.0809022036390.17666@lancer.cnet.absolutedigital.net>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jason Davis <mohadib@openactive.org>
-Cc: linux-ide@vger.kernel.org, "Boulder (Colorado) Linux Users Group -- General Mailing List" <lug@lug.boulder.co.us>
+To: Cal Peake <cp@absolutedigital.net>
+Cc: Kernel IDE Mailing List <linux-ide@vger.kernel.org>
 
-Jason Davis wrote:
-> Hello,
->  I'm trying to confirm hot/warm plugging is working on my system. When
-> I plug in the drive shows up as expected. I just want to make sure the
-> stuff I see in the logs is ok.
+Cal Peake wrote:
+> Hello!
+> 
+> I'm getting the error below on this new system I've built. It appears 
+> sporadicly under heavy drive access (there are six drives on this 
+> controller, has appeared for each one at one point or another). If someone 
+> has a second to take a look I'd appreciate any help.
+..
+> ata1.00: ATA-8: ST31000340AS, SD15, max UDMA/133
 
-Yeah, those are as okay as they get.  :-)
+We ran into similar problems on two different systems we were setting
+up with those same disks.  We swapped power supplies and SATA cables
+and controllers but nothing made the problems go away fully.
+Eventually we replaced the jumper on the back of the disk limiting it
+to 1.5 Gbps and have not had any problems since.
 
--- 
-tejun
+-jim
