@@ -1,76 +1,69 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [PATCH 01/18] ide: add ->read_sff_dma_status method
-Date: Wed, 3 Sep 2008 20:13:08 +0200
-Message-ID: <200809032013.08489.bzolnier@gmail.com>
-References: <20080620213323.13202.71450.sendpatchset@localhost.localdomain> <48BE8EFD.70103@ru.mvista.com>
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Subject: Re: [PATCH] ide/Kconfig: mark ide-scsi as deprecated
+Date: Thu, 4 Sep 2008 03:32:40 +0900
+Message-ID: <20080904033222O.fujita.tomonori@lab.ntt.co.jp>
+References: <200808192111.45351.bzolnier@gmail.com>
+	<20080903094402G.fujita.tomonori@lab.ntt.co.jp>
+	<200809031943.55605.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1756611AbYICSQ2@vger.kernel.org>
-In-Reply-To: <48BE8EFD.70103@ru.mvista.com>
-Content-Disposition: inline
-Sender: linux-kernel-owner@vger.kernel.org
-To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from sh.osrg.net ([192.16.179.4]:46232 "EHLO sh.osrg.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752387AbYICScn (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 3 Sep 2008 14:32:43 -0400
+In-Reply-To: <200809031943.55605.bzolnier@gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: bzolnier@gmail.com
+Cc: fujita.tomonori@lab.ntt.co.jp, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
+On Wed, 3 Sep 2008 19:43:55 +0200
+Bartlomiej Zolnierkiewicz <bzolnier@gmail.com> wrote:
 
-On Wednesday 03 September 2008, Sergei Shtylyov wrote:
-> Bartlomiej Zolnierkiewicz wrote:
+> On Wednesday 03 September 2008, FUJITA Tomonori wrote:
+> > On Tue, 19 Aug 2008 21:11:44 +0200
+> > Bartlomiej Zolnierkiewicz <bzolnier@gmail.com> wrote:
+> > 
+> > > Mark ide-scsi as deprecated and remove stale/bogus documentation.
+> > > 
+> > > Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+> > > ---
+> > >  drivers/ide/Kconfig |   16 +---------------
+> > >  1 file changed, 1 insertion(+), 15 deletions(-)
+> > 
+> > Can we add ide-scsi to Documentation/feature-removal-schedule.txt?
 > 
-> > Add ->read_sff_dma_status method for reading DMA Status register
-> > and use it instead of ->INB.
-> 
-> > While at it:
-> 
-> > * Use inb() directly in ns87415.c::ns87415_dma_end().
-> 
-> > There should be no functional changes caused by this patch.
-> 
-> > Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-> 
-> > Index: b/drivers/ide/ide-iops.c
-> > ===================================================================
-> > --- a/drivers/ide/ide-iops.c
-> > +++ b/drivers/ide/ide-iops.c
-> > @@ -103,6 +103,14 @@ void SELECT_MASK(ide_drive_t *drive, int
-> >  		port_ops->maskproc(drive, mask);
-> >  }
-> >  
-> > +static u8 ide_read_sff_dma_status(ide_hwif_t *hwif)
-> > +{
-> > +	if (hwif->host_flags & IDE_HFLAG_MMIO)
-> > +		return readb((void __iomem *)hwif->dma_status);
-> > +	else
-> > +		return inb(hwif->dma_status);
-> > +}
-> > +
-> 
->     It's probably too late to object now (and I've been busy before) but I 
-> don't understand how reading DMA status ended up here ISO ide-dma.c...
-> 
-> >  static void ide_tf_load(ide_drive_t *drive, ide_task_t *task)
-> >  {
-> >  	ide_hwif_t *hwif = drive->hwif;
-> > @@ -323,6 +331,8 @@ static void ata_output_data(ide_drive_t 
-> >  
-> >  void default_hwif_transport(ide_hwif_t *hwif)
-> >  {
-> > +	hwif->read_sff_dma_status = ide_read_sff_dma_status;
-> > +
-> >  	hwif->tf_load	  = ide_tf_load;
-> >  	hwif->tf_read	  = ide_tf_read;
-> 
->     I also didn't understand the motivation behind putting this method 
-> together with the transport operations... IMO, DMA programming interface 
-> hardly has anything to do with transporting the data over IDE bus.
+> Sure, care to send a patch?
 
-The motivation was that hwif->dma_ops is not available yet when
-->read_sff_dma_status is used in ide_pci_check_simplex().
+2.6.30 is too far?
 
-However I agree that it should somehow find its way into ->dma_ops
-(as usual patches are stongly preffered :).
+=
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Subject: [PATCH] add deprecated ide-scsi to feature-removal-schedule.txt
 
-Thanks,
-Bart
+Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+---
+ Documentation/feature-removal-schedule.txt |    8 ++++++++
+ 1 files changed, 8 insertions(+), 0 deletions(-)
+
+diff --git a/Documentation/feature-removal-schedule.txt b/Documentation/feature-removal-schedule.txt
+index eb1a47b..feb84b0 100644
+--- a/Documentation/feature-removal-schedule.txt
++++ b/Documentation/feature-removal-schedule.txt
+@@ -322,3 +322,11 @@ Why:  Accounting can now be enabled/disabled without kernel recompilation.
+       controlled by a kernel/module/sysfs/sysctl parameter.
+ Who:  Krzysztof Piotr Oledzki <ole@ans.pl>
+ 
++---------------------------
++
++What: ide-scsi (BLK_DEV_IDESCSI)
++When: 2.6.30
++Why:  The 2.6 kernel supports direct writing to ide CD drives, which
++      eliminates the need for ide-scsi. The new method is more
++      efficient in every way.
++Who:  Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+-- 
+1.5.4.2
+
