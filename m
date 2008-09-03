@@ -1,162 +1,115 @@
-From: Jeff Garzik <jeff@garzik.org>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
 Subject: Re: [PATCH] ahci: Fix long standing Marvell regressions
-Date: Tue, 02 Sep 2008 19:40:57 -0400
-Message-ID: <48BDCF09.7000603@garzik.org>
+Date: Wed, 3 Sep 2008 01:27:28 +0100
+Message-ID: <20080903012728.14b19d9b@lxorguk.ukuu.org.uk>
 References: <20080903000538.7500eaf8@lxorguk.ukuu.org.uk>
+	<48BDCF09.7000603@garzik.org>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------090504040208040502030101"
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:42326 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754138AbYIBXlJ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 2 Sep 2008 19:41:09 -0400
-In-Reply-To: <20080903000538.7500eaf8@lxorguk.ukuu.org.uk>
+Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:35688 "EHLO
+	lxorguk.ukuu.org.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1754172AbYICA2u (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 2 Sep 2008 20:28:50 -0400
+In-Reply-To: <48BDCF09.7000603@garzik.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+To: Jeff Garzik <jeff@garzik.org>
 Cc: torvalds@osdl.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-This is a multi-part message in MIME format.
---------------090504040208040502030101
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+> Completely and utterly false.  libata-dev.git#mv-ahci-pata has not yet 
+> gone upstream, as is blatantly clear if you had bothered to LOOK.
 
-Alan Cox wrote:
-> pata_marvell: Undo the regressions Jeff caused
-> 
-> From: Alan Cox <alan@redhat.com>
-> 
-> I've been chasing Jeff about this for months so am now giving up and sending
-> it directly. Jeff added the Marvell device identifiers to the ahci driver
-> without making the AHCI driver handle the PATA port. This means a lot of users
-> can't use current kernels and in most distro cases can't even install. This has
-> been going on since March 2008 for the 6121 Marvell, and late 2007 for the 6145.
-> 
-> This was all pointed out at the time and repeatedly ignored. Bugs assigned
-> to Jeff about this are ignored also.
-> 
-> To quote Jeff in email
-> 
-> "Just switch the order of 'ahci' and 'pata_marvell' in
-> /etc/modprobe.conf, then use Fedora's tools regenerate the initrd.
-> 
-> See?  It's not rocket science, and the current configuration can be
-> easily made to work for Fedora users."
-> 
-> (Which isn't trivial, isn't end user, shouldn't be needed, and as it usually
-> breaks at install time is in fact impossible)
-> 
-> To quote Jeff in August 2007
-> 
-> "   mv-ahci-pata
-> Marvell 6121/6141 PATA support.  Needs fixing in the 'PATA controller
-> command' area before it is usable, and can go upstream."
-> 
-> Only he applied it all anyway later and broke everything.
+Oh I beg your pardon - you only pushed the PCI identifiers that broke
+stuff rather than the code that went with it you never finished. So does
+that actually sound better "hey this was broken, not merged but I pushed
+the IDs part *knowing* it would cause serious regressions" ?
 
-Completely and utterly false.  libata-dev.git#mv-ahci-pata has not yet 
-gone upstream, as is blatantly clear if you had bothered to LOOK.
+Bit rich telling me to LOOK (emphasis yours) when your last email says
 
-It helps to look at source code before posting, Alan:
+"Situation before ahci mod:
 
-         /*
-          * Temporary Marvell 6145 hack: PATA port presence
-          * is asserted through the standard AHCI port
-          * presence register, as bit 4 (counting from 0)
-          */
-         if (hpriv->flags & AHCI_HFLAG_MV_PATA) {
-                 if (pdev->device == 0x6121)
-                         mv = 0x3;
-                 else
-                         mv = 0xf;
+	Users with PATA may use pata_marvell.
+	Users wanting SATA screwed."
 
-Clearly PATA support is not applied, because the code masks out the PATA 
-ports.
+Jeff - pata_marvell has always supported SATA.
 
+> You omit details that hurt your case, namely that a ton of users were 
+> asking for AHCI support EVEN IF IT IS SATA ONLY, because the SATA 
+> support via pata_marvell legacy mode was so poor and problematic.
 
-> The actual fix for the moment is very simple. If the user has included
-> the pata_marvell driver let it drive the ports. If they've only selected
-> for SATA support give them the AHCI driver which will run the port a fraction
-> faster.
+Actually it just works. You don't get Phy diagnostics that is about all
+you lose (and NCQ for performance).
 
-You omit details that hurt your case, namely that a ton of users were 
-asking for AHCI support EVEN IF IT IS SATA ONLY, because the SATA 
-support via pata_marvell legacy mode was so poor and problematic.
-
-Among the pata_marvell complaints I received that were solved were:
-
-* bloody awful error handling, with no hotplug support
-* problems with suspend/resume (apparently some BIOS assumed you were in 
-AHCI/enhanced mode)
-* problems with speed negotiation of 3.0 Gbps SATA devices
-
-So any claim that SATA always worked wonderfully under pata_marvell is 
-specious.
-
-
-
-Finally,
-
-> +#if  !defined(CONFIG_PATA_MARVELL) && !defined(CONFIG_PATA_MARVELL_MODULE)
->  	/* Marvell */
-
-this prevents users from choosing the driver that works best for them, 
-including bringing back all the SATA problems just as you bring back PATA.
-
-The attached patch is more reasonable, but neither your nor my patch 
-actually address the relevant problem:  distros choosing the module.
-
-So at this point, applying your patch would create regressions just as 
-it purports to solve regressions, since Marvell AHCI is out there in 
-active use as well.
-
-
-How to move forward?  I recommend,
-
-1) Applying my attached patch
-
-2) Communicating with distros
-
-3) See if we can get Marvell docs to someone willing to code in support. 
-  Marvell has been very responsive in the past year with regards to 
-'mvsas', so maybe they can help here too.
-
-I kept hoping Marvell would pick up my unfinished #mv-ahci-pata work and 
-polish it up.  They indicated interest, but kept putting it off.
-
-	Jeff
-
-
-
-
---------------090504040208040502030101
-Content-Type: text/plain;
- name="patch"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="patch"
-
-diff --git a/drivers/ata/Makefile b/drivers/ata/Makefile
-index 674965f..56462ee 100644
---- a/drivers/ata/Makefile
-+++ b/drivers/ata/Makefile
-@@ -1,6 +1,8 @@
+> Among the pata_marvell complaints I received that were solved were:
  
- obj-$(CONFIG_ATA)		+= libata.o
- 
-+obj-$(CONFIG_PATA_MARVELL)	+= pata_marvell.o
-+
- obj-$(CONFIG_SATA_AHCI)		+= ahci.o
- obj-$(CONFIG_SATA_SVW)		+= sata_svw.o
- obj-$(CONFIG_ATA_PIIX)		+= ata_piix.o
-@@ -47,7 +49,6 @@ obj-$(CONFIG_PATA_NS87415)	+= pata_ns87415.o
- obj-$(CONFIG_PATA_OPTI)		+= pata_opti.o
- obj-$(CONFIG_PATA_OPTIDMA)	+= pata_optidma.o
- obj-$(CONFIG_PATA_MPC52xx)	+= pata_mpc52xx.o
--obj-$(CONFIG_PATA_MARVELL)	+= pata_marvell.o
- obj-$(CONFIG_PATA_MPIIX)	+= pata_mpiix.o
- obj-$(CONFIG_PATA_OLDPIIX)	+= pata_oldpiix.o
- obj-$(CONFIG_PATA_PCMCIA)	+= pata_pcmcia.o
+> * bloody awful error handling, with no hotplug support
 
---------------090504040208040502030101--
+Full SFF error handling. Warmplug but not automatic hotplug detect. But
+hey at least you *can install the damned machine* and the machine that
+was working in FC 8 might actually still be working.
+
+(But you clearly didn't know this because your last email to linux-ide
+claimed the pata_marvell driver didn't support the SATA ports)
+
+> * problems with suspend/resume (apparently some BIOS assumed you were in 
+> AHCI/enhanced mode)
+
+Some assume you are not too.
+
+> > +#if  !defined(CONFIG_PATA_MARVELL) && !defined(CONFIG_PATA_MARVELL_MODULE)
+> >  	/* Marvell */
+> 
+> this prevents users from choosing the driver that works best for them, 
+> including bringing back all the SATA problems just as you bring back PATA.
+
+Not really, its in the config script. Oh that hard for users, then tell
+me why 'editing the initrd' before installing is acceptable ?
+
+At runtime it might make sense to allow ahci.marvell=1. I can add that in
+about 60 seconds if you want now you've finally been forced to stop
+ignoring the issue. That would allow the distros to ship pata_marvell and
+users to say "actually I want full SATA support".
+
+Unfortunately there isn't a documented way to check the 6121 PATA port
+has a drive attached so pata_marvell can punt if it isn't.
+
+> The attached patch is more reasonable, but neither your nor my patch 
+> actually address the relevant problem:  distros choosing the module.
+
+Currently distributions can't compile in pata_marvell and remove the
+broken ahci support for it. That is a *huge* problem.
+
+> So at this point, applying your patch would create regressions just as 
+> it purports to solve regressions, since Marvell AHCI is out there in 
+> active use as well.
+
+A mess *you* created by repeatedly ignoring the problems that were
+pointed out to you and then ignoring attempts to raise it. Meanwhile I've
+been getting zillions of bug reports and emails about it. You dug the
+hole and ran away with your fingers in your ears while I got all the bugs
+and complaints.
+
+> 1) Applying my attached patch
+
+Your patch is a no-op. No distribution of any note builds them
+non-modular. You know this so I find it incredulous you propose this
+no-op change. Trying to pull the wool over Linus eyes ?
+
+> 2) Communicating with distros
+
+Well you've been ignoring bugzilla for months so doing something about
+that would be a start. It isn't the distros who've not been communicating.
+
+> 3) See if we can get Marvell docs to someone willing to code in support. 
+>   Marvell has been very responsive in the past year with regards to 
+> 'mvsas', so maybe they can help here too.
+
+or to provide docs on the pata port. I'm assuming its probably as trivial
+as "issue one command at a time". In SFF mode the chip does all the
+management itself so it's obvious smart enough to do the work.
+
+But your proposed patch is a joke and you *know* it.
+
+Alan
