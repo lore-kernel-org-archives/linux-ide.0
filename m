@@ -1,46 +1,69 @@
-From: Cal Peake <cp@absolutedigital.net>
-Subject: Re: ATA bus error - SError: { RecovData HostInt Handshk }
-Date: Wed, 3 Sep 2008 07:17:28 -0400 (EDT)
-Message-ID: <Pine.LNX.4.64.0809030708300.6945@lancer.cnet.absolutedigital.net>
-References: <Pine.LNX.4.64.0809022036390.17666@lancer.cnet.absolutedigital.net>
- <20080903083120.GA2471@psychosis.jim.sh>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: Re: [PATCH 01/18] ide: add ->read_sff_dma_status method
+Date: Wed, 03 Sep 2008 17:19:57 +0400
+Message-ID: <48BE8EFD.70103@ru.mvista.com>
+References: <20080620213323.13202.71450.sendpatchset@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from livid.absolutedigital.net ([66.92.46.173]:35912 "EHLO
-	mx2.absolutedigital.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751166AbYICLR1 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 3 Sep 2008 07:17:27 -0400
-In-Reply-To: <20080903083120.GA2471@psychosis.jim.sh>
+Received: from h155.mvista.com ([63.81.120.155]:23457 "EHLO imap.sh.mvista.com"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751687AbYICNT0 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 3 Sep 2008 09:19:26 -0400
+In-Reply-To: <20080620213323.13202.71450.sendpatchset@localhost.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jim Paris <jim@jtan.com>
-Cc: Kernel IDE Mailing List <linux-ide@vger.kernel.org>
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Wed, 3 Sep 2008, Jim Paris wrote:
+Bartlomiej Zolnierkiewicz wrote:
 
-> Cal Peake wrote:
-> > Hello!
-> > 
-> > I'm getting the error below on this new system I've built. It appears 
-> > sporadicly under heavy drive access (there are six drives on this 
-> > controller, has appeared for each one at one point or another). If someone 
-> > has a second to take a look I'd appreciate any help.
-> ..
-> > ata1.00: ATA-8: ST31000340AS, SD15, max UDMA/133
-> 
-> We ran into similar problems on two different systems we were setting
-> up with those same disks.  We swapped power supplies and SATA cables
-> and controllers but nothing made the problems go away fully.
-> Eventually we replaced the jumper on the back of the disk limiting it
-> to 1.5 Gbps and have not had any problems since.
+> Add ->read_sff_dma_status method for reading DMA Status register
+> and use it instead of ->INB.
 
-Yeah, I've already swapped the power supply and the cables. The controller 
-would be a pain since it's part of the motherboard so didn't try that yet. 
-I guess if it really comes to it I can put the jumpers back on but what a 
-sad way to fix things. Thanks for sharing your experience, Jim!
+> While at it:
 
+> * Use inb() directly in ns87415.c::ns87415_dma_end().
 
--- 
-Cal Peake
+> There should be no functional changes caused by this patch.
 
+> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+
+> Index: b/drivers/ide/ide-iops.c
+> ===================================================================
+> --- a/drivers/ide/ide-iops.c
+> +++ b/drivers/ide/ide-iops.c
+> @@ -103,6 +103,14 @@ void SELECT_MASK(ide_drive_t *drive, int
+>  		port_ops->maskproc(drive, mask);
+>  }
+>  
+> +static u8 ide_read_sff_dma_status(ide_hwif_t *hwif)
+> +{
+> +	if (hwif->host_flags & IDE_HFLAG_MMIO)
+> +		return readb((void __iomem *)hwif->dma_status);
+> +	else
+> +		return inb(hwif->dma_status);
+> +}
+> +
+
+    It's probably too late to object now (and I've been busy before) but I 
+don't understand how reading DMA status ended up here ISO ide-dma.c...
+
+>  static void ide_tf_load(ide_drive_t *drive, ide_task_t *task)
+>  {
+>  	ide_hwif_t *hwif = drive->hwif;
+> @@ -323,6 +331,8 @@ static void ata_output_data(ide_drive_t 
+>  
+>  void default_hwif_transport(ide_hwif_t *hwif)
+>  {
+> +	hwif->read_sff_dma_status = ide_read_sff_dma_status;
+> +
+>  	hwif->tf_load	  = ide_tf_load;
+>  	hwif->tf_read	  = ide_tf_read;
+
+    I also didn't understand the motivation behind putting this method 
+together with the transport operations... IMO, DMA programming interface 
+hardly has anything to do with transporting the data over IDE bus.
+
+MBR, Sergei
