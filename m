@@ -1,69 +1,36 @@
-From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: Re: [PATCH] ide/Kconfig: mark ide-scsi as deprecated
-Date: Thu, 4 Sep 2008 03:32:40 +0900
-Message-ID: <20080904033222O.fujita.tomonori@lab.ntt.co.jp>
-References: <200808192111.45351.bzolnier@gmail.com>
-	<20080903094402G.fujita.tomonori@lab.ntt.co.jp>
-	<200809031943.55605.bzolnier@gmail.com>
+From: Richard A Nelson <cowboy@cavein.org>
+Subject: Re: [PATCH] ahci: Fix long standing Marvell regressions
+Date: Wed, 3 Sep 2008 11:54:36 -0700 (PDT)
+Message-ID: <alpine.DEB.1.10.0809031151200.742@hygvzn-guhyr.pnirva.bet>
+References: <20080903000538.7500eaf8@lxorguk.ukuu.org.uk> <48BDCF09.7000603@garzik.org> <20080903142941.3f25d235@lxorguk.ukuu.org.uk> <20080903144834.35276de7@lxorguk.ukuu.org.uk>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from sh.osrg.net ([192.16.179.4]:46232 "EHLO sh.osrg.net"
+Received: from mail.cavein.org ([66.245.249.51]:56180 "EHLO mail.cavein.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752387AbYICScn (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 3 Sep 2008 14:32:43 -0400
-In-Reply-To: <200809031943.55605.bzolnier@gmail.com>
+	id S1753819AbYICTIi (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 3 Sep 2008 15:08:38 -0400
+In-Reply-To: <20080903144834.35276de7@lxorguk.ukuu.org.uk>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: bzolnier@gmail.com
-Cc: fujita.tomonori@lab.ntt.co.jp, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: Jeff Garzik <jeff@garzik.org>, torvalds@osdl.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Wed, 3 Sep 2008 19:43:55 +0200
-Bartlomiej Zolnierkiewicz <bzolnier@gmail.com> wrote:
+On Wed, 3 Sep 2008, Alan Cox wrote:
 
-> On Wednesday 03 September 2008, FUJITA Tomonori wrote:
-> > On Tue, 19 Aug 2008 21:11:44 +0200
-> > Bartlomiej Zolnierkiewicz <bzolnier@gmail.com> wrote:
-> > 
-> > > Mark ide-scsi as deprecated and remove stale/bogus documentation.
-> > > 
-> > > Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-> > > ---
-> > >  drivers/ide/Kconfig |   16 +---------------
-> > >  1 file changed, 1 insertion(+), 15 deletions(-)
-> > 
-> > Can we add ide-scsi to Documentation/feature-removal-schedule.txt?
-> 
-> Sure, care to send a patch?
+> We can't automate that for the other devices as we don't actually know
+> how to check the PATA port on them.
 
-2.6.30 is too far?
+I happen to have one of the others:
+ 	Marvell Technology Group Ltd. 88SE6121 SATA II Controller (rev b1)
 
-=
-From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: [PATCH] add deprecated ide-scsi to feature-removal-schedule.txt
+It is not in use, likely as a result of the issues at hand, I don't
+recall exactly what transpired at the time.
 
-Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
----
- Documentation/feature-removal-schedule.txt |    8 ++++++++
- 1 files changed, 8 insertions(+), 0 deletions(-)
-
-diff --git a/Documentation/feature-removal-schedule.txt b/Documentation/feature-removal-schedule.txt
-index eb1a47b..feb84b0 100644
---- a/Documentation/feature-removal-schedule.txt
-+++ b/Documentation/feature-removal-schedule.txt
-@@ -322,3 +322,11 @@ Why:  Accounting can now be enabled/disabled without kernel recompilation.
-       controlled by a kernel/module/sysfs/sysctl parameter.
- Who:  Krzysztof Piotr Oledzki <ole@ans.pl>
- 
-+---------------------------
-+
-+What: ide-scsi (BLK_DEV_IDESCSI)
-+When: 2.6.30
-+Why:  The 2.6 kernel supports direct writing to ide CD drives, which
-+      eliminates the need for ide-scsi. The new method is more
-+      efficient in every way.
-+Who:  Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+I have no specs, but would be happy to run any software diagnostics
+if they'd be of help
 -- 
-1.5.4.2
-
+Rick Nelson
+"I would rather spend 10 hours reading someone else's source code than
+10 minutes listening to Musak waiting for technical support which isn't."
+(By Dr. Greg Wettstein, Roger Maris Cancer Center)
