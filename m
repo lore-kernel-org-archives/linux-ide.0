@@ -1,206 +1,93 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCH 2/4] libata: Implement disk shock protection support
-Date: Thu, 04 Sep 2008 11:06:48 +0200
-Message-ID: <48BFA528.2040305@gmail.com>
-References: <87wshzplvk.fsf@denkblock.local>	<20080829211345.4355.89284.stgit@denkblock.local>	<48B913E6.1000104@gmail.com> <87k5dym5t9.fsf@denkblock.local>	<48BA638B.2030001@gmail.com> <87ej45mlp3.fsf@denkblock.local>	<48BA969C.4060207@gmail.com> <87abetmaap.fsf@denkblock.local>	<48BBA8D1.8020604@gmail.com> <87myirly1p.fsf@denkblock.local>	<48BC1BB8.2030007@gmail.com> <87fxoh0yil.fsf@denkblock.local>
+From: "=?ISO-8859-2?Q?Pawe=B3?= Sikora" <pluto@agmk.net>
+Subject: [BUG?] pata_marvell doesn't see ide on asus-p5q-pro m/b.
+Date: Thu, 04 Sep 2008 10:59:30 +0200
+Message-ID: <vIHEILms.1220518770.4586010.pluto@agmk.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ti-out-0910.google.com ([209.85.142.187]:2228 "EHLO
-	ti-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752525AbYIDJIQ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 4 Sep 2008 05:08:16 -0400
-Received: by ti-out-0910.google.com with SMTP id b6so1914525tic.23
-        for <linux-ide@vger.kernel.org>; Thu, 04 Sep 2008 02:08:13 -0700 (PDT)
-In-Reply-To: <87fxoh0yil.fsf@denkblock.local>
+Received: from mail.agmk.net ([91.192.224.71]:39988 "EHLO mail.agmk.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752458AbYIDJVc convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 4 Sep 2008 05:21:32 -0400
+Received: from localhost (unknown [91.192.224.71])
+	by mail.agmk.net (Postfix) with ESMTP id 121C639C003
+	for <linux-ide@vger.kernel.org>; Thu,  4 Sep 2008 10:59:35 +0200 (CEST)
+Received: from mail.agmk.net ([91.192.224.71])
+	by localhost (agmk.net [91.192.224.71]) (amavisd-new, port 10024)
+	with ESMTP id Bp1IkOJj3JGB for <linux-ide@vger.kernel.org>;
+	Thu,  4 Sep 2008 10:59:30 +0200 (CEST)
+Received: from agmk.net (unknown [91.192.224.71])
+	by mail.agmk.net (Postfix) with SMTP id 7AEC354C9FA
+	for <linux-ide@vger.kernel.org>; Thu,  4 Sep 2008 10:59:30 +0200 (CEST)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Elias Oltmanns <eo@nebensachen.de>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, Andrew Morton <akpm@linux-foundation.org>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Jeff Garzik <jeff@garzik.org>, Randy Dunlap <randy.dunlap@oracle.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-Elias Oltmanns wrote:
->> Also, generating duplicate events.  Events would be duplicate only
->> when those events occur during EH is in progress, right?
-> 
-> Yes, but that will be the rule rather than the exception because the
-> daemon will hardly ever let the timeout expire. Eitehr it decides that
-> it needs to extend the timeout, or it recons that everything's going to
-> be alright and issues a 0 timeout in order to resume normal operation
-> immediately.
+Hi,
 
-Oh.. I see.  Either way, it should be fine.  There is no reason to
-worry scheduling EH for the second (or n'th) time.
+I have an asus-p5q pro m/b with two controllers:
 
-> diff --git a/drivers/ata/ata_piix.c b/drivers/ata/ata_piix.c
-> index b1d08a8..1b470ad 100644
-> --- a/drivers/ata/ata_piix.c
-> +++ b/drivers/ata/ata_piix.c
-> @@ -298,8 +298,14 @@ static struct pci_driver piix_pci_driver = {
->  #endif
->  };
->  
-> +static struct device_attribute *piix_sdev_attrs[] = {
-> +	&dev_attr_unload_heads,
-> +	NULL
-> +};
-> +
->  static struct scsi_host_template piix_sht = {
->  	ATA_BMDMA_SHT(DRV_NAME),
-> +	.sdev_attrs		= piix_sdev_attrs,
->  };
+first, intel ich10 with 6 sata ports and 2 connected drives:
 
-Hmm... I meant more like
+00:1f.2 SATA controller: Intel Corporation 82801JI (ICH10 Family) SATA
+AHCI Controller
+        Kernel driver in use: ahci
+        Kernel modules: ahci
 
+second, marvell chip with 2 sata ports and 1 ide slot.
 
- extern struct device_attribute **libata_sdev_attrs;
+03:00.0 IDE interface: Marvell Technology Group Ltd. 88SE6121 SATA II
+Controller (rev b2)
+        Kernel driver in use: ahci
+        Kernel modules: ide-pci-generic, pata_marvell, ahci, pata_acpi,
+ata_generic
 
- #define ATA_BASE_SHT(name)				\
- ....
-	.sdev_attrs		= libata_sdev_attrs;	\
- ....
+the ich10 part works fine and detects my disks,
+but the marvell part doesn't see my dvd writer connected
+to the ide slot. the marvell bios detects dvd correctlly,
+so it looks like a bug in pata_marvell module.
 
-Which will give unload_heads to all libata drivers.  As ahci needs its
-own node it would need to define its own sdev_attrs tho.
+here's fragment of dmesg:
 
-> @@ -2830,6 +2864,20 @@ int ata_eh_recover(struct ata_port *ap, ata_prereset_fn_t prereset,
->  		}
->  	}
->  
-> +	if (ap->link.eh_context.i.action & ATA_EH_PARK &&
-> +	    time_after(ap->unpark_deadline, jiffies)) {
-> +		DEFINE_WAIT(wait);
-> +
-> +		ata_eh_park_devs(ap, 1);
-> +		do
-> +			prepare_to_wait(&ata_scsi_park_wq, &wait,
-> +					TASK_UNINTERRUPTIBLE);
-> +		while (schedule_timeout_uninterruptible(ap->unpark_deadline -
-> +							jiffies));
+[    0.316653] ata1: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+[    0.317159] ata1.00: ATA-7: WDC WD1600YD-01NVB1, 10.02E01, max UDMA/133
+[    0.317191] ata1.00: 321672960 sectors, multi 0: LBA48 NCQ (depth 1)
+[    0.463303] ata1.00: configured for UDMA/133
+[    0.369983] ata2: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+[    0.379975] ata2.00: ATA-7: WDC WD1600YD-01NVB1, 10.02E01, max UDMA/133
+[    0.379975] ata2.00: 321672960 sectors, multi 0: LBA48 NCQ (depth 1)
+[    0.733285] ata2.00: configured for UDMA/133
+[    0.413314] ata3: SATA link down (SStatus 0 SControl 300)
+[    0.456644] ata4: SATA link down (SStatus 0 SControl 300)
+[    0.509975] ata5: SATA link down (SStatus 0 SControl 300)
+[    0.553304] ata6: SATA link down (SStatus 0 SControl 300)
+[    0.383308] scsi 0:0:0:0: Direct-Access     ATA      WDC WD1600YD-01N
+10.0 PQ: 0 ANSI: 5
+[    0.383308] scsi 1:0:0:0: Direct-Access     ATA      WDC WD1600YD-01N
+10.0 PQ: 0 ANSI: 5
+[    0.383308] ACPI: PCI Interrupt 0000:03:00.0[A] -> GSI 16 (level, low)
+-> IRQ 16
+[    0.383308] ahci 0000:03:00.0: controller can't do NCQ, turning off
+CAP_NCQ
+[    0.383308] ahci 0000:03:00.0: MV_AHCI HACK: port_map 7 -> 3
+[    0.403330] ahci 0000:03:00.0: AHCI 0001.0000 32 slots 3 ports 3 Gbps
+0x3 impl IDE mode
+[    0.403367] ahci 0000:03:00.0: flags: 64bit stag led pmp slum part
+[    0.403401] PCI: Setting latency timer of device 0000:03:00.0 to 64
+[    0.403543] scsi6 : ahci
+[    0.403697] scsi7 : ahci
+[    0.403846] scsi8 : ahci
+[    0.403935] ata7: SATA max UDMA/133 abar m1024@0xfeaffc00 port
+0xfeaffd00 irq 16
+[    0.403970] ata8: SATA max UDMA/133 abar m1024@0xfeaffc00 port
+0xfeaffd80 irq 16
+[    0.404003] ata9: DUMMY
+[    0.519980] ata7: SATA link down (SStatus 0 SControl 300)
+[    0.563310] ata8: SATA link down (SStatus 0 SControl 300)
 
-Nitpicking: Do you mind taking the schedule_timeout out of the while
-condition?  It's just not very customary to put a statement with that
-level of side effect into a condition clause.  Also, it would force
-the not-so-common do/while w/o braces to go away.
+i'm using the 2.6.25.16 modularized kernel.
+i can provide more info for debugging purposes if you want.
 
-> +static ssize_t ata_scsi_park_show(struct device *device,
-> +				  struct device_attribute *attr, char *buf)
-> +{
-> +	struct scsi_device *sdev = to_scsi_device(device);
-> +	struct ata_port *ap;
-> +	unsigned int seconds;
-> +
-> +	ap = ata_shost_to_port(sdev->host);
-> +
-> +	spin_lock_irq(ap->lock);
-> +	if (time_after(ap->unpark_deadline, jiffies))
-> +		/*
-> +		 * Adding 1 in order to guarantee nonzero value until timer
-> +		 * has actually expired.
-> +		 */
-> +		seconds = jiffies_to_msecs(ap->unpark_deadline - jiffies)
-> +			  / 1000 + 1;
-> +	else
-> +		seconds = 0;
-> +	spin_unlock_irq(ap->lock);
-> +
-> +	return snprintf(buf, 20, "%u\n", seconds);
-
-Isn't seconds a bit too crude? Or it just doesn't matter as it's
-usually adjusted before expiring?  For most time interval values
-(except for transfer timings of course) in ATA land, millisecs seem to
-be good enough and I've been trying to unify things that direction.
-
-> +}
-> +
-> +static ssize_t ata_scsi_park_store(struct device *device,
-> +				   struct device_attribute *attr,
-> +				   const char *buf, size_t len)
-> +{
-> +#define MAX_PARK_TIMEOUT 30
-
-Please move this to the enum list in include/linux/libata.h.
-
-> +	struct scsi_device *sdev = to_scsi_device(device);
-> +	struct ata_port *ap;
-> +	struct ata_device *dev;
-> +	long int input;
-> +	int rc;
-> +
-> +	rc = strict_strtol(buf, 10, &input);
-> +	if (rc || input < -2 || input > MAX_PARK_TIMEOUT)
-> +		return -EINVAL;
-> +
-> +	ap = ata_shost_to_port(sdev->host);
-> +	dev = ata_scsi_find_dev(ap, sdev);
-
-ata_scsi_find_dev() should be inside ap->lock.  Looking through the
-code...  Aiee, We also need to fix slave_config.
-
-> +	if (unlikely(!dev))
-> +		return -ENODEV;
-> +
-> +	spin_lock_irq(ap->lock);
-
-You'll probably want to use spin_lock_irqsave and restore.  It's a
-Jeff thing.
-
-> +	if (dev->class != ATA_DEV_ATA) {
-> +		rc = -EOPNOTSUPP;
-> +		goto unlock;
-> +	}
-> +
-> +	if (input >= 0) {
-> +		if (dev->flags & ATA_DFLAG_NO_UNLOAD) {
-> +			rc = -EOPNOTSUPP;
-> +			goto unlock;
-> +		}
-> +
-> +		ap->link.eh_info.action |= ATA_EH_PARK;
-> +		ata_port_schedule_eh(ap);
-> +		ap->unpark_deadline = ata_deadline(jiffies, input * 1000);
-> +		wake_up_all(&ata_scsi_park_wq);
-
-It doesn't really matter as all these are under the lock but maybe
-moving ata_port_schedule_eh() below unpark_deadline is a good idea
-just for clarification - you know, set the state and trigger the
-event?
-
-> +	} else {
-> +		switch (input) {
-> +		case -1:
-> +			dev->flags &= ~ATA_DFLAG_NO_UNLOAD;
-> +			break;
-> +		case -2:
-> +			dev->flags |= ATA_DFLAG_NO_UNLOAD;
-> +			break;
-
-Hmmm... Sorry to bring another issue with it but I think the interface
-is a bit convoluted.  The unpark node is per-dev but the action is
-per-port but devices can opt out by writing -2.  Also, although the
-sysfs nodes are per-dev, writing to a node changes the value of park
-node in the device sharing the port except when the value is -1 or -2.
-That's strange, right?
-
-How about something like the following?
-
-* In park_store: set dev->unpark_timeout, kick and wake up EH.
-
-* In park EH action: until the latest of all unpark_timeout are
-  passed, park all drives whose unpark_timeout is in future.  When
-  none of the drives needs to be parked (all timers expired), the
-  action completes.
-
-* There probably needs to be a flag to indicate that the timeout is
-  valid; otherwise, we could get spurious head unparking after jiffies
-  wraps (or maybe just use jiffies_64?).
-
-With something like the above, the interface is cleanly per-dev and we
-wouldn't need -1/-2 special cases.  The implementation is still
-per-port but we can change that later without modifying userland
-interface.
-
-Thanks for your patience.  :-)
-
--- 
-tejun
+thanks in advance,
+pawel.
