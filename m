@@ -1,79 +1,50 @@
-From: Bob Stewart <bob@evoria.net>
-Subject: Re: sata_inic162x  LED enable request
-Date: Thu, 4 Sep 2008 08:54:19 -0700 (PDT)
-Message-ID: <695462.9268.qm@web904.biz.mail.mud.yahoo.com>
-References: <48BF8DD4.7050405@yahoo.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+From: bugme-daemon@bugzilla.kernel.org
+Subject: [Bug 11497] New: Polling of IDE CD status can make machine unresponsive
+Date: Thu,  4 Sep 2008 09:57:18 -0700 (PDT)
+Message-ID: <bug-11497-11633@http.bugzilla.kernel.org/>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from web904.biz.mail.mud.yahoo.com ([216.252.100.44]:24750 "HELO
-	web904.biz.mail.mud.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1750941AbYIDPyU (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 4 Sep 2008 11:54:20 -0400
-In-Reply-To: <48BF8DD4.7050405@yahoo.com>
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:38645 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752970AbYIDQ5s (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 4 Sep 2008 12:57:48 -0400
+Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
+	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id m84GvIwx008061
+	for <linux-ide@vger.kernel.org>; Thu, 4 Sep 2008 09:57:19 -0700
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: echo6 <echo6_uk@yahoo.com>
-Cc: Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-Jon,
+http://bugzilla.kernel.org/show_bug.cgi?id=11497
 
-Are you aware that I had a card that "almost" worked, but
-would fail with timeouts under any sort of load?
+           Summary: Polling of IDE CD status can make machine unresponsive
+           Product: IO/Storage
+           Version: 2.5
+     KernelVersion: 2.6.27-rc5
+          Platform: All
+        OS/Version: Linux
+              Tree: Mainline
+            Status: NEW
+          Severity: normal
+          Priority: P1
+         Component: IDE
+        AssignedTo: io_ide@kernel-bugs.osdl.org
+        ReportedBy: bhutchings@solarflare.com
 
 
---- echo6 <echo6_uk@yahoo.com> wrote:
+Whenever a device handled by ide-cd is opened, the driver polls the device
+status for up to 5 seconds waiting for a good status value. Since this is done
+in the open operation, it is holding the BKL all this time. For unknown reasons
+(possibly another driver bug) the DVD-ROM drives in some machines here can get
+into a state where they always return status 0xd0 and ide-cd always polls for
+the full 5 seconds.
 
-> -----BEGIN PGP SIGNED MESSAGE-----
-> Hash: SHA1
-> 
-> Hmmm,  thanks Bob, I guess I need to consider what else may be causing
-> my system to hang with my setup.
-> 
-> Jon.
-> 
-> Bob Stewart wrote:
-> > Tejun,
-> > 
-> > I've been using the new driver to boot my second machine for about 2 weeks,
-> > now, as well as having another 200GB disk hanging off it; all without any
-> > problems.  Well done!  What I would like to see is the LED enabled
-> properly,
-> > although the board uses a different header pin for each drive.  Anyway, if
-> I've
-> > got it right, here is my suggested change.
-> > 
-> > --- linux-2.6.27-rc5.a/drivers/ata/sata_inic162x.c	2008-08-28
-> > 18:52:02.000000000 -0400
-> > +++ linux-2.6.27-rc5.b/drivers/ata/sata_inic162x.c	2008-09-01
-> > 14:05:24.000000000 -0400
-> > @@ -96,6 +96,7 @@
-> >  	PORT_SCR		= 0x20,
-> >  
-> >  	/* HOST_CTL bits */
-> > +	HCTL_LEDEN		= (1 << 3),  /* enable LED operation */
-> >  	HCTL_IRQOFF		= (1 << 8),  /* global IRQ off */
-> >  	HCTL_FTHD0		= (1 << 10), /* fifo threshold 0 */
-> >  	HCTL_FTHD1		= (1 << 11), /* fifo threshold 1*/
-> > @@ -540,7 +541,7 @@
-> >  	void __iomem *port_base = inic_port_base(ap);
-> >  
-> >  	/* fire up the ADMA engine */
-> > -	writew(HCTL_FTHD0, port_base + HOST_CTL);
-> > +	writew(HCTL_FTHD0 + HCTL_LEDEN, port_base + HOST_CTL);
-> >  	writew(IDMA_CTL_GO, port_base + PORT_IDMA_CTL);
-> >  	writeb(0, port_base + PORT_CPB_PTQFIFO);
-> > 
-> 
-> -----BEGIN PGP SIGNATURE-----
-> Version: GnuPG v1.4.6 (GNU/Linux)
-> Comment: Using GnuPG with Mozilla - http://enigmail.mozdev.org
-> 
-> iD8DBQFIv43UbSv1saVS9ucRAj4UAJ4q9JvPtY8NqvO8U872pckCgDDTSQCdGUUm
-> AhMtUYC7/J7i8Cl/H8CS2rc=
-> =bOFu
-> -----END PGP SIGNATURE-----
-> 
-> 
+hal-storage-daemon appears to open CD-ROM devices every 5 seconds, with the
+result that in this state all other operations requiring the BKL can only run
+at 5 second intervals. This is possibly bad behaviour on HAL's part, but the
+driver also seems to be at fault in holding the BKL for so long.
 
+
+-- 
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug, or are watching the assignee.
