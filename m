@@ -1,31 +1,52 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [RFC][PATCH] ahci: Add support for Promise PDC42819
-Date: Thu, 4 Sep 2008 15:28:03 +0100
-Message-ID: <20080904152803.6c4977ce@lxorguk.ukuu.org.uk>
-References: <65a6ef750809020403i52228319u9e3197e4062941bc@mail.gmail.com>
-	<48BD2136.1020101@garzik.org>
-	<65a6ef750809020455q7b7ee6a8jc404b4970f660c50@mail.gmail.com>
-	<18621.11426.870514.781750@harpo.it.uu.se>
-	<65a6ef750809020521wfaca733r8253795860b95f4@mail.gmail.com>
-	<48BFBA5E.5050300@garzik.org>
-	<65a6ef750809040459h3ffe3183nf0b5a35d15ab86e4@mail.gmail.com>
-	<48BFE5FA.9090006@garzik.org>
+From: Bob Stewart <bob@evoria.net>
+Subject: Re: sata_inic162x  LED enable request
+Date: Thu, 4 Sep 2008 08:52:01 -0700 (PDT)
+Message-ID: <495283.8352.qm@web904.biz.mail.mud.yahoo.com>
+References: <48BF98B4.5070307@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <48BFE5FA.9090006@garzik.org>
-Sender: linux-scsi-owner@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: Mark Nelson <mdnelson8@gmail.com>, Mikael Pettersson <mikpe@it.uu.se>, linux-ide@vger.kernel.org, linux-scsi <linux-scsi@vger.kernel.org>
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from web904.biz.mail.mud.yahoo.com ([216.252.100.44]:23752 "HELO
+	web904.biz.mail.mud.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1750822AbYIDPwD (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 4 Sep 2008 11:52:03 -0400
+In-Reply-To: <48BF98B4.5070307@kernel.org>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: echo6 <echo6_uk@yahoo.com>, linux-ide@vger.kernel.org
 
-> > No need for hope - we have ahci now :)
-> 
-> Well, I still think this PCI ID addition leaves open the possibility 
-> that plugging in a SAS disk could hang the system or similar misbehavior.
+--- Tejun Heo <tj@kernel.org> wrote:
+>=20
+> Hmm... according to the datasheet, this is SWLED.
+>=20
+>   SOFTWARE CONTROL LED ENABLE: When set, software has full control of
+>   LED activity. When clear, the LED=E2=80=99s are controlled by hardw=
+are.
+>=20
+> And then there are two more bits, LED0 and LED1 which seem to be the
+> actual control knob for LEDs.  From the description it looks like the
+> bit should stay off so tha the controller hardware can drive LEDs.  I
+> presume this doesn't work as described?
 
-And not adding it means it doesn't work at all and you'll never find out
-as you won't get the bug report from the SAS user 8)
+Uh oh.  It sounds like we may not be looking at the same book.  The one
+I have is "INIC-1620TA2/1622TA2/1623TA2", Version 1.4, October, 2005.
+In this book, the bit is "03  rw  0  (LEDEN)  LED ENABLE: When set, the=
+=20
+LED will flash when the device is busy."  With your driver as-is, both =
+LEDs
+turn on during the boot process and then stay on completely. =20
 
-Alan
+Which book are you using and are all these bits in the Global Control r=
+egister,
+which we call HOST_CTL?  Did I get an old book?
+
+> >  	/* fire up the ADMA engine */
+> > -	writew(HCTL_FTHD0, port_base + HOST_CTL);
+> > +	writew(HCTL_FTHD0 + HCTL_LEDEN, port_base + HOST_CTL);
+>=20
+> Nitpick: for flags, it's customary to use | instead of +.
+
+Oh, duh.  <red face>
+
