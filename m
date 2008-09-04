@@ -1,40 +1,29 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH 5/5] ata_piix: drop merged SCR access and use slave_link
- instead
-Date: Thu, 04 Sep 2008 12:36:35 +0200
-Message-ID: <48BFBA33.30400@kernel.org>
-References: <1217491364-19725-1-git-send-email-tj@kernel.org> <1217491364-19725-6-git-send-email-tj@kernel.org> <48BFBA10.9010102@garzik.org>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [BUG?] pata_marvell doesn't see ide on asus-p5q-pro m/b.
+Date: Thu, 4 Sep 2008 12:16:57 +0100
+Message-ID: <20080904121657.4f04ec9c@lxorguk.ukuu.org.uk>
+References: <vIHEILms.1220518770.4586010.pluto@agmk.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:44049 "EHLO hera.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752543AbYIDKif (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 4 Sep 2008 06:38:35 -0400
-In-Reply-To: <48BFBA10.9010102@garzik.org>
+Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:38355 "EHLO
+	lxorguk.ukuu.org.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1752237AbYIDLRN (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 4 Sep 2008 07:17:13 -0400
+In-Reply-To: <vIHEILms.1220518770.4586010.pluto@agmk.net>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: linux-ide@vger.kernel.org, alan@lxorguk.ukuu.org.uk, JosephChan@via.com.tw
+To: =?UTF-8?B?UGF3ZcWC?= Sikora <pluto@agmk.net>
+Cc: linux-ide@vger.kernel.org
 
-Jeff Garzik wrote:
-> Tejun Heo wrote:
->> Now that libata has slave_link, there's no need to keep ugly merged
->> SCR access.  Drop it and use slave_link instead.  This results in
->> simpler code and much better separate link handling for master and
->> slave.
->>
->> Signed-off-by: Tejun Heo <tj@kernel.org>
-> 
-> ACK patchset, patches 1-5
-> 
-> My only comment is that it would be nice to start moving libata closer
-> to SAS, since this seems to parallel some SAS concepts.
-> 
-> now, off to Puerto Rico for a long weekend!
+> to the ide slot. the marvell bios detects dvd correctlly,
+> so it looks like a bug in pata_marvell module.
 
-Enjoy your long weekend.  :-)
+It's a bug in the AHCI driver which means it takes stuff the pata_marvell
+module needs. I'm hoping this will finally get fixed
 
--- 
-tejun
+> i'm using the 2.6.25.16 modularized kernel.
+> i can provide more info for debugging purposes if you want.
+
+Remove the marvell pci ids from drivers/ata/ahci.c
