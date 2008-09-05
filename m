@@ -1,17 +1,17 @@
 From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
 Subject: Re: HPT374 detection crash with 74811f355f4f69a187fa74892dcf2a684b84ce99
-Date: Fri, 05 Sep 2008 20:16:08 +0400
-Message-ID: <48C15B48.4000305@ru.mvista.com>
+Date: Fri, 05 Sep 2008 20:16:18 +0400
+Message-ID: <48C15B52.6020508@ru.mvista.com>
 References: <1a9da18c0809041610tb3f2a58r6acd6f10a3d50a91@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8;
 	format=flowed
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from h155.mvista.com ([63.81.120.155]:60579 "EHLO imap.sh.mvista.com"
+Received: from h155.mvista.com ([63.81.120.155]:60591 "EHLO imap.sh.mvista.com"
 	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1754007AbYIEQPg (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 5 Sep 2008 12:15:36 -0400
+	id S1754309AbYIEQPp (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 5 Sep 2008 12:15:45 -0400
 In-Reply-To: <1a9da18c0809041610tb3f2a58r6acd6f10a3d50a91@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
@@ -27,7 +27,7 @@ Masoud Sharbiani "=D9=85=D8=B3=D8=B9=D9=88=D8=AF =D8=B4=D8=B1=D8=A8=DB=8C=
 ce99
 >  (hpt366: convert to use ->host_priv)
 
-    Thanks for the bisection.
+    Thanks for doing the bisection.
 
 > has caused the following crash:
 
