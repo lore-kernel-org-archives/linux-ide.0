@@ -1,70 +1,75 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [PATCH] ide/Kconfig: mark ide-scsi as deprecated
-Date: Fri, 5 Sep 2008 19:38:24 +0200
-Message-ID: <200809051938.24933.bzolnier@gmail.com>
-References: <200808192111.45351.bzolnier@gmail.com> <200809031943.55605.bzolnier@gmail.com> <20080904033222O.fujita.tomonori@lab.ntt.co.jp>
+From: =?ISO-8859-1?Q?Dan_No=E9?= <dpn@isomerica.net>
+Subject: libata error/reset
+Date: Fri, 05 Sep 2008 14:47:13 -0400
+Message-ID: <48C17EB1.2020206@isomerica.net>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1755152AbYIERlD@vger.kernel.org>
-In-Reply-To: <20080904033222O.fujita.tomonori@lab.ntt.co.jp>
-Content-Disposition: inline
-Sender: linux-kernel-owner@vger.kernel.org
-To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from colobus.isomerica.net ([216.93.242.10]:47803 "EHLO
+	colobus.isomerica.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755296AbYIESw3 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 5 Sep 2008 14:52:29 -0400
+Received: from [10.12.20.122] (unknown [12.189.151.194])
+	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
+	(No client certificate requested)
+	by colobus.isomerica.net (Postfix) with ESMTP id CE1F510440F7D
+	for <linux-ide@vger.kernel.org>; Fri,  5 Sep 2008 14:47:13 -0400 (EDT)
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
+Just after midnight last night, during an rsync job which copies a lot=20
+of data onto my backup disk (half of a Linux software RAID 1), I=20
+received the following:
 
-Hi,
+-- SNIP --
+ata3.00: exception Emask 0x10 SAct 0x0 SErr 0x10000 action 0xe frozen
+ata3.00: irq_stat 0x00400000, PHY RDY changed
+ata3: SError: { PHYRdyChg }
+ata3.00: cmd 35/00:10:3f:00:34/00:00:22:00:00/e0 tag 0 dma 8192 out
+          res 50/00:00:4e:01:18/00:00:22:00:00/e0 Emask 0x10 (ATA bus e=
+rror)
+ata3.00: status: { DRDY }
+ata3: hard resetting link
+ata3: link is slow to respond, please be patient (ready=3D0)
+ata3: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+ata3.00: qc timeout (cmd 0xec)
+ata3.00: failed to IDENTIFY (I/O error, err_mask=3D0x5)
+ata3.00: revalidation failed (errno=3D-5)
+ata3: failed to recover some devices, retrying in 5 secs
+ata3: hard resetting link
+ata3: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+ata3.00: configured for UDMA/100
+ata3: EH complete
+sd 2:0:0:0: [sdc] 625142448 512-byte hardware sectors (320073 MB)
+sd 2:0:0:0: [sdc] Write Protect is off
+sd 2:0:0:0: [sdc] Mode Sense: 00 3a 00 00
+sd 2:0:0:0: [sdc] Write cache: enabled, read cache: enabled, doesn't=20
+support DPO or FUA
+-- SNIP --
 
-On Wednesday 03 September 2008, FUJITA Tomonori wrote:
-> On Wed, 3 Sep 2008 19:43:55 +0200
-> Bartlomiej Zolnierkiewicz <bzolnier@gmail.com> wrote:
-> 
-> > On Wednesday 03 September 2008, FUJITA Tomonori wrote:
-> > > On Tue, 19 Aug 2008 21:11:44 +0200
-> > > Bartlomiej Zolnierkiewicz <bzolnier@gmail.com> wrote:
-> > > 
-> > > > Mark ide-scsi as deprecated and remove stale/bogus documentation.
-> > > > 
-> > > > Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-> > > > ---
-> > > >  drivers/ide/Kconfig |   16 +---------------
-> > > >  1 file changed, 1 insertion(+), 15 deletions(-)
-> > > 
-> > > Can we add ide-scsi to Documentation/feature-removal-schedule.txt?
-> > 
-> > Sure, care to send a patch?
-> 
-> 2.6.30 is too far?
+The system seems to be working fine now, and there was not even a RAID=20
+failure reported by the md system.  Is this something I should be=20
+concerned about? Hardware issue, software bug?
 
-It is IMHO.
+Linux colobus 2.6.26.3 #1 SMP Thu Aug 21 10:15:38 EDT 2008 i686 Intel(R=
+)=20
+Pentium(R) 4 CPU 3.20GHz GenuineIntel GNU/Linux
 
-> =
-> From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-> Subject: [PATCH] add deprecated ide-scsi to feature-removal-schedule.txt
-> 
-> Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-> ---
->  Documentation/feature-removal-schedule.txt |    8 ++++++++
->  1 files changed, 8 insertions(+), 0 deletions(-)
-> 
-> diff --git a/Documentation/feature-removal-schedule.txt b/Documentation/feature-removal-schedule.txt
-> index eb1a47b..feb84b0 100644
-> --- a/Documentation/feature-removal-schedule.txt
-> +++ b/Documentation/feature-removal-schedule.txt
-> @@ -322,3 +322,11 @@ Why:  Accounting can now be enabled/disabled without kernel recompilation.
->        controlled by a kernel/module/sysfs/sysctl parameter.
->  Who:  Krzysztof Piotr Oledzki <ole@ans.pl>
->  
-> +---------------------------
-> +
-> +What: ide-scsi (BLK_DEV_IDESCSI)
-> +When: 2.6.30
-> +Why:  The 2.6 kernel supports direct writing to ide CD drives, which
-> +      eliminates the need for ide-scsi. The new method is more
-> +      efficient in every way.
-> +Who:  Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+00:1f.2 SATA controller: Intel Corporation 82801FR/FRW (ICH6R/ICH6RW)=20
+SATA Controller (rev 03)
 
-Thanks but I thought that you would also want to handle the removal patch?
+I am using the libata ahci driver.  There are four drives crammed into =
+a=20
+1U with hotplug trays, but AFAIK no one was poking around the system.
+
+Thanks much,
+Dan
+
+--=20
+Dan No=E9
+Software Engineer
+Lime Brokerage LLC
+781-370-2518
