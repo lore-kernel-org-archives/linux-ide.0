@@ -1,75 +1,55 @@
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-Subject: Re: 2.6.27-rc5-mm1: rmmod ide-cd_mod: tried to init an initialized object, something is seriously wrong.
-Date: Fri, 5 Sep 2008 15:28:53 +0200
-Message-ID: <200809051528.54213.rjw@sisk.pl>
-References: <20080904224004.d3dd3076.akpm@linux-foundation.org> <200809051439.32724.m.kozlowski@tuxland.pl>
+From: Mark Lord <liml@rtr.ca>
+Subject: Re: [PATCH] sata_mv: add RocketRaid 1720 PCI ID to driver
+Date: Fri, 05 Sep 2008 09:32:07 -0400
+Message-ID: <48C134D7.9040903@rtr.ca>
+References: <48C05E4E.6090407@rtr.ca> <48C05F53.2020709@rtr.ca>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ogre.sisk.pl ([217.79.144.158]:60586 "EHLO ogre.sisk.pl"
+Received: from rtr.ca ([76.10.145.34]:45572 "EHLO mail.rtr.ca"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752838AbYIENYe (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 5 Sep 2008 09:24:34 -0400
-In-Reply-To: <200809051439.32724.m.kozlowski@tuxland.pl>
-Content-Disposition: inline
+	id S1752888AbYIENcK (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 5 Sep 2008 09:32:10 -0400
+In-Reply-To: <48C05F53.2020709@rtr.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mariusz Kozlowski <m.kozlowski@tuxland.pl>
-Cc: Andrew Morton <akpm@linux-foundation.org>, bzolnier@gmail.com, linux-kernel@vger.kernel.org, kernel-testers@vger.kernel.org, linux-ide@vger.kernel.org
+To: IDE/ATA development list <linux-ide@vger.kernel.org>, Jeff Garzik <jgarzik@pobox.com>, Tejun Heo <htejun@gmail.com>
+Cc: Petr Jelen <petr.jelen@gmail.com>
 
-On Friday, 5 of September 2008, Mariusz Kozlowski wrote:
-> Hello, 
+Mark Lord wrote:
+> Add PCI ID for RocketRAID 1720 to sata_mv.
 > 
-> 	Again 100% reproducible rmmod ide-cd_mod problem. Kernel is tainted because
-> of earlier sysfs acpi problems similar (probably identical) to those reported
-> by Li Zefan here http://marc.info/?l=linux-kernel&m=121921059026064&w=2
+> Signed-off-by: Petr Jelen <petr.jelen@gmail.com>
+> Signed-off-by: Mark Lord <mlord@pobox.com>
+> ---
+> Resending, with fixed whitespace and a colon on the subject line.  :)
+> This is for 2.6.27.  Pretty harmless.
 > 
-> Steps to reproduce: unload ide-cd_mod
+> --- linux-2.6.27-rc4/drivers/ata/sata_mv.c    2008-08-29 
+> 21:35:45.000000000 +0200
+> +++ linux/drivers/ata/sata_mv.c    2008-08-29 21:36:38.000000000 +0200
+> @@ -667,7 +667,8 @@
+>     { PCI_VDEVICE(MARVELL, 0x5041), chip_504x },
+>     { PCI_VDEVICE(MARVELL, 0x5080), chip_5080 },
+>     { PCI_VDEVICE(MARVELL, 0x5081), chip_508x },
+> -    /* RocketRAID 1740/174x have different identifiers */
+> +    /* RocketRAID 1720/174x have different identifiers */
+> +    { PCI_VDEVICE(TTI, 0x1720), chip_6042 },
+>     { PCI_VDEVICE(TTI, 0x1740), chip_508x },
+>     { PCI_VDEVICE(TTI, 0x1742), chip_508x },
 > 
-> kobject (dd9e4a7c): tried to init an initialized object, something is seriously wrong.
-> Pid: 4734, comm: modprobe Tainted: G        W 2.6.27-rc5-mm1 #1
->  [<c01ec982>] kobject_init+0xc4/0xc9
->  [<c02cb84a>] ? _spin_unlock+0x27/0x3f
->  [<c01aff2e>] ? sysfs_find_dirent+0x21/0x2b
->  [<c01aff7e>] ? __sysfs_add_one+0x46/0x6d
->  [<c01affb4>] ? sysfs_add_one+0xf/0x44
->  [<c01b0036>] ? sysfs_addrm_start+0x4d/0x90
->  [<c01b0f31>] ? sysfs_do_create_link+0x9a/0x14c
->  [<c01ec9c5>] kobject_init_and_add+0x14/0x30
->  [<c01b1009>] ? sysfs_create_link+0x12/0x19
->  [<c01e8bad>] blk_register_filter+0x3b/0x46
->  [<ded9e40a>] ide_cd_probe+0x253/0x5a8 [ide_cd_mod]
->  [<c01b0000>] ? sysfs_addrm_start+0x17/0x90
->  [<c01b0f31>] ? sysfs_do_create_link+0x9a/0x14c
->  [<c01b004e>] ? sysfs_addrm_start+0x65/0x90
->  [<c025145f>] generic_ide_probe+0x1f/0x21
->  [<c024c002>] driver_probe_device+0x77/0x15b
->  [<c02cb91b>] ? _spin_unlock_irqrestore+0x39/0x60
->  [<c024c146>] __driver_attach+0x60/0x62
->  [<c024b7bd>] bus_for_each_dev+0x44/0x62
->  [<c0251461>] ? generic_ide_remove+0x0/0x1e
->  [<c024bead>] driver_attach+0x19/0x1b
->  [<c024c0e6>] ? __driver_attach+0x0/0x62
->  [<c024bca8>] bus_add_driver+0x1ab/0x213
->  [<c0251461>] ? generic_ide_remove+0x0/0x1e
->  [<c024c291>] driver_register+0x4f/0x118
->  [<de7bf000>] ? ide_cdrom_init+0x0/0xf [ide_cd_mod]
->  [<de7bf00d>] ide_cdrom_init+0xd/0xf [ide_cd_mod]
->  [<c0101114>] do_one_initcall+0x24/0x12f
->  [<c02c9d8e>] ? mutex_unlock+0x8/0xa
->  [<c01455ca>] sys_init_module+0xa5/0x1c1
->  [<c0176a0a>] ? sys_read+0x3d/0x64
->  [<c01030f1>] sysenter_do_call+0x12/0x35
->  [<c012007b>] ? __set_special_pids+0x43/0x71
-> 
-> First time I modprobe/rmmod ide-cd_mod the system works but quickly gets unstable.
-> Second modprobe/rmmod is 100% fatal. Memory gets corruped seriously I guess.
-> pcspeaker beeps all the time, kernel throws dumps on the screen until
-> its really dead, sadly blinking 'leds of panic' ;)
+..
 
-Can you please verify if that happens with the current mainline?
+Jeff, this is a patch that failed to be picked  up during the 2.6.26 cycle,
+so can we please get it into 2.6.27 now?
 
-Thanks,
-Rafael
+Even Linus says this kind of trivial driver stuff is okay during -rc:
+
+  Principal Penguin wrote:
+  >  - but as a special case, we relax that for totally new drivers (and that 
+  >    includes things like just adding a new PCI or USB ID's to old drivers), 
+  >    because (a) it can't really regress and (b) support for a specific 
+  >    piece of hardware can often be critical.
+
+Thanks
