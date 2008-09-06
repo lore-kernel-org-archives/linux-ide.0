@@ -1,130 +1,176 @@
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-Subject: Re: linux-next: Tree for September 4
-Date: Sat, 6 Sep 2008 13:25:20 +0200
-Message-ID: <200809061325.20924.rjw@sisk.pl>
-References: <20080904193606.573f2cb3.sfr@canb.auug.org.au> <200809051256.36257.rjw@sisk.pl> <20080905113042.0f6d5850.akpm@linux-foundation.org>
+From: FUJITA Tomonori <fujita.tomonori-Zyj7fXuS5i5L9jVzuh4AOg@public.gmane.org>
+Subject: Re: 2.6.27-rc5-mm1: rmmod ide-cd_mod: tried to init an initialized
+ object, something is seriously wrong.
+Date: Sat, 6 Sep 2008 21:35:09 +0900
+Message-ID: <20080906213525V.fujita.tomonori@lab.ntt.co.jp>
+References: <200809051528.54213.rjw@sisk.pl>
+	<200809051544.35443.m.kozlowski@tuxland.pl>
+	<200809051825.04829.m.kozlowski@tuxland.pl>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ogre.sisk.pl ([217.79.144.158]:35939 "EHLO ogre.sisk.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752461AbYIFLVG (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 6 Sep 2008 07:21:06 -0400
-In-Reply-To: <20080905113042.0f6d5850.akpm@linux-foundation.org>
-Content-Disposition: inline
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <kernel-testers-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <200809051825.04829.m.kozlowski-NWF1p15JEu3VItvQsEIGlw@public.gmane.org>
+Sender: kernel-testers-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: m.kozlowski-NWF1p15JEu3VItvQsEIGlw@public.gmane.org
+Cc: rjw-KKrjLPT3xs0@public.gmane.org, fujita.tomonori-Zyj7fXuS5i5L9jVzuh4AOg@public.gmane.org, jens.axboe-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, bzolnier-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-testers-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-ide@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: Stephen Rothwell <sfr@canb.auug.org.au>, linux-next@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
 
-On Friday, 5 of September 2008, Andrew Morton wrote:
-> On Fri, 5 Sep 2008 12:56:35 +0200 "Rafael J. Wysocki" <rjw@sisk.pl> wrote:
-> 
-> > On Friday, 5 of September 2008, Andrew Morton wrote:
-> > > On Thu, 4 Sep 2008 19:36:06 +1000 Stephen Rothwell <sfr@canb.auug.org.au> wrote:
-> > > 
-> > > > I have created today's linux-next tree at
-> > > > git://git.kernel.org/pub/scm/linux/kernel/git/sfr/linux-next.git
-> > > 
-> > > The infamous Vaio hasn't finished catching up with you guys yet. 
-> > > Something in linux-next broke suspend-to-RAM.
-> > > 
-> > > An `echo mem > /sys/power/state' causes "Freezing of tasks failed after
-> > > 20.00 seconds (1 tasks refusing to freeze):"
-> > > 
-> > > dmesg: http://userweb.kernel.org/~akpm/dmesg-sony-suspend.txt
-> > > config: http://userweb.kernel.org/~akpm/config-sony.txt
-> > > 
-> > > This only happens after the X server has been started.
-> > > 
-> > > Mainline is OK.
-> > 
-> > According to your dmesg the process that refused to freeze was
-> > 
-> > hald-addon-stor
-> > 
-> > which got stuck in ... getnstimeofday (???) (can you check what
-> > source code corresponds to getnstimeofday+0x37/0xbc pls?):
-> > 
-> > hald-addon-st D 00000046     0  2322   2282
-> >        f4de5b74 00000046 f4de5b54 00000046 f4de5b5c c0135f56 f6b96e44 f4deaf40 
-> >        f4deb0bc f5580948 f4de5bb0 f4de5b6c c013336e f6aa77c8 f6aa77c8 f6aa77a0 
-> >        f4de5bb0 f4de5b7c c0331f09 f4de5bd0 c01f4205 00000000 00000000 00000000 
-> > Call Trace:
-> >  [<c0135f56>] ? getnstimeofday+0x37/0xbc
-> >  [<c013336e>] ? ktime_get_ts+0x40/0x44
-> >  [<c0331f09>] io_schedule+0x39/0x6c
-> >  [<c01f4205>] get_request_wait+0x80/0xcd
-> > ...
-> 
-> (gdb) x/60i getnstimeofday
-> 0xc0135d63 <getnstimeofday>:    push   %ebp
-> 0xc0135d64 <getnstimeofday+1>:  mov    %esp,%ebp
-> 0xc0135d66 <getnstimeofday+3>:  push   %edi
-> 0xc0135d67 <getnstimeofday+4>:  push   %esi
-> 0xc0135d68 <getnstimeofday+5>:  push   %ebx
-> 0xc0135d69 <getnstimeofday+6>:  sub    $0x8,%esp
-> 0xc0135d6c <getnstimeofday+9>:  mov    %eax,0xffffffec(%ebp)
-> 0xc0135d6f <getnstimeofday+12>: mov    0xc045a2c0,%eax
-> 0xc0135d74 <getnstimeofday+17>: mov    %eax,0xfffffff0(%ebp)
-> 0xc0135d77 <getnstimeofday+20>: test   $0x1,%al
-> 0xc0135d79 <getnstimeofday+22>: je     0xc0135d7f <getnstimeofday+28>
-> 0xc0135d7b <getnstimeofday+24>: pause  
-> 0xc0135d7d <getnstimeofday+26>: jmp    0xc0135d6f <getnstimeofday+12>
-> 0xc0135d7f <getnstimeofday+28>: mov    0xffffffec(%ebp),%ecx
-> 0xc0135d82 <getnstimeofday+31>: mov    0xc05db920,%eax
-> 0xc0135d87 <getnstimeofday+36>: mov    0xc05db924,%edx
-> 0xc0135d8d <getnstimeofday+42>: mov    %eax,(%ecx)
-> 0xc0135d8f <getnstimeofday+44>: mov    %edx,0x4(%ecx)
-> 0xc0135d92 <getnstimeofday+47>: mov    0xc05db938,%eax
-> 0xc0135d97 <getnstimeofday+52>: call   *0x10(%eax)
-> 0xc0135d9a <getnstimeofday+55>: mov    0xc05db938,%esi
-> 0xc0135da0 <getnstimeofday+61>: mov    0x1c(%esi),%ecx
-> 0xc0135da3 <getnstimeofday+64>: sub    0x48(%esi),%eax
-> 0xc0135da6 <getnstimeofday+67>: sbb    0x4c(%esi),%edx
-> 0xc0135da9 <getnstimeofday+70>: and    0x14(%esi),%eax
-> 0xc0135dac <getnstimeofday+73>: and    0x18(%esi),%edx
-> 0xc0135daf <getnstimeofday+76>: mov    %edx,%edi
-> 0xc0135db1 <getnstimeofday+78>: imul   %ecx,%edi
-> 0xc0135db4 <getnstimeofday+81>: mul    %ecx
-> 0xc0135db6 <getnstimeofday+83>: mov    0x24(%esi),%ecx
-> 0xc0135db9 <getnstimeofday+86>: lea    (%edi,%edx,1),%edx
-> 0xc0135dbc <getnstimeofday+89>: mov    %eax,%ebx
-> 0xc0135dbe <getnstimeofday+91>: mov    %edx,%esi
-> 0xc0135dc0 <getnstimeofday+93>: xor    %edi,%edi
-> 0xc0135dc2 <getnstimeofday+95>: shrd   %cl,%edx,%ebx
-> 0xc0135dc5 <getnstimeofday+98>: shr    %cl,%esi
-> 0xc0135dc7 <getnstimeofday+100>:        test   $0x20,%cl
-> 0xc0135dca <getnstimeofday+103>:        cmovne %esi,%ebx
-> 0xc0135dcd <getnstimeofday+106>:        cmovne %edi,%esi
-> 0xc0135dd0 <getnstimeofday+109>:        mov    %ebx,%edx
-> 
-> (gdb) l *0xc0135d9a
-> 0xc0135d9a is in getnstimeofday (kernel/time/timekeeping.c:104).
-> 99      
-> 100                     /* read clocksource: */
-> 101                     cycle_now = clocksource_read(clock);
-> 102     
-> 103                     /* calculate the delta since the last update_wall_time: */
-> 104                     cycle_delta = (cycle_now - clock->cycle_last) & clock->mask;
-> 105     
-> 106                     /* convert to nanoseconds: */
-> 107                     nsecs = cyc2ns(clock, cycle_delta);
-> 108     
-> 
-> Which implies that someone mucked up xtime_lock.
-> 
-> But I don't think any of that is correct.  The getnstimeofday is just
-> stack gunk.  hald is in D state and is asleep in get_request_wait().
+On Fri, 5 Sep 2008 18:25:04 +0200
+Mariusz Kozlowski <m.kozlowski-NWF1p15JEu3VItvQsEIGlw@public.gmane.org> wrote:
 
-Right.  It looks like there was a media change in the CD drive and hald was
-waiting for the device in sr_test_unit_ready() forever.  Apparently, the device
-could not get ready.
+> Hello,
+> 
+> > > > 	Again 100% reproducible rmmod ide-cd_mod problem. Kernel is tainted because
+> > > > of earlier sysfs acpi problems similar (probably identical) to those reported
+> > > > by Li Zefan here http://marc.info/?l=linux-kernel&m=121921059026064&w=2
+> > > > 
+> > > > Steps to reproduce: unload ide-cd_mod
+> > > > 
+> > > > kobject (dd9e4a7c): tried to init an initialized object, something is seriously wrong.
+> > > > Pid: 4734, comm: modprobe Tainted: G        W 2.6.27-rc5-mm1 #1
+> > > >  [<c01ec982>] kobject_init+0xc4/0xc9
+> > > >  [<c02cb84a>] ? _spin_unlock+0x27/0x3f
+> > > >  [<c01aff2e>] ? sysfs_find_dirent+0x21/0x2b
+> > > >  [<c01aff7e>] ? __sysfs_add_one+0x46/0x6d
+> > > >  [<c01affb4>] ? sysfs_add_one+0xf/0x44
+> > > >  [<c01b0036>] ? sysfs_addrm_start+0x4d/0x90
+> > > >  [<c01b0f31>] ? sysfs_do_create_link+0x9a/0x14c
+> > > >  [<c01ec9c5>] kobject_init_and_add+0x14/0x30
+> > > >  [<c01b1009>] ? sysfs_create_link+0x12/0x19
+> > > >  [<c01e8bad>] blk_register_filter+0x3b/0x46
+> > > >  [<ded9e40a>] ide_cd_probe+0x253/0x5a8 [ide_cd_mod]
+> > > >  [<c01b0000>] ? sysfs_addrm_start+0x17/0x90
+> > > >  [<c01b0f31>] ? sysfs_do_create_link+0x9a/0x14c
+> > > >  [<c01b004e>] ? sysfs_addrm_start+0x65/0x90
+> > > >  [<c025145f>] generic_ide_probe+0x1f/0x21
+> > > >  [<c024c002>] driver_probe_device+0x77/0x15b
+> > > >  [<c02cb91b>] ? _spin_unlock_irqrestore+0x39/0x60
+> > > >  [<c024c146>] __driver_attach+0x60/0x62
+> > > >  [<c024b7bd>] bus_for_each_dev+0x44/0x62
+> > > >  [<c0251461>] ? generic_ide_remove+0x0/0x1e
+> > > >  [<c024bead>] driver_attach+0x19/0x1b
+> > > >  [<c024c0e6>] ? __driver_attach+0x0/0x62
+> > > >  [<c024bca8>] bus_add_driver+0x1ab/0x213
+> > > >  [<c0251461>] ? generic_ide_remove+0x0/0x1e
+> > > >  [<c024c291>] driver_register+0x4f/0x118
+> > > >  [<de7bf000>] ? ide_cdrom_init+0x0/0xf [ide_cd_mod]
+> > > >  [<de7bf00d>] ide_cdrom_init+0xd/0xf [ide_cd_mod]
+> > > >  [<c0101114>] do_one_initcall+0x24/0x12f
+> > > >  [<c02c9d8e>] ? mutex_unlock+0x8/0xa
+> > > >  [<c01455ca>] sys_init_module+0xa5/0x1c1
+> > > >  [<c0176a0a>] ? sys_read+0x3d/0x64
+> > > >  [<c01030f1>] sysenter_do_call+0x12/0x35
+> > > >  [<c012007b>] ? __set_special_pids+0x43/0x71
+> > > > 
+> > > > First time I modprobe/rmmod ide-cd_mod the system works but quickly gets unstable.
+> > > > Second modprobe/rmmod is 100% fatal. Memory gets corruped seriously I guess.
+> > > > pcspeaker beeps all the time, kernel throws dumps on the screen until
+> > > > its really dead, sadly blinking 'leds of panic' ;)
+> > > 
+> > > Can you please verify if that happens with the current mainline?
+> > 
+> > Oops. How come I didn't find it earlier? hmm...
+> 
+> It's relatively new, that's why :) And this is the culprit:
+> 
+> abf5439370491dd6fbb4fe1a7939680d2a9bc9d4 is first bad commit
+> commit abf5439370491dd6fbb4fe1a7939680d2a9bc9d4
+> Author: FUJITA Tomonori <fujita.tomonori-Zyj7fXuS5i5L9jVzuh4AOg@public.gmane.org>
+> Date:   Sat Aug 16 14:10:05 2008 +0900
+> 
+>     block: move cmdfilter from gendisk to request_queue
+>     
+>     cmd_filter works only for the block layer SG_IO with SCSI block
+>     devices. It breaks scsi/sg.c, bsg, and the block layer SG_IO with SCSI
+>     character devices (such as st). We hit a kernel crash with them.
+>     
+>     The problem is that cmd_filter code accesses to gendisk (having struct
+>     blk_scsi_cmd_filter) via inode->i_bdev->bd_disk. It works for only
+>     SCSI block device files. With character device files, inode->i_bdev
+>     leads you to struct cdev. inode->i_bdev->bd_disk->blk_scsi_cmd_filter
+>     isn't safe.
+>     
+>     SCSI ULDs don't expose gendisk; they keep it private. bsg needs to be
+>     independent on any protocols. We shouldn't change ULDs to expose their
+>     gendisk.
+>     
+>     This patch moves struct blk_scsi_cmd_filter from gendisk to
+>     request_queue, a common object, which eveyone can access to.
+>     
+>     The user interface doesn't change; users can change the filters via
+>     /sys/block/. gendisk has a pointer to request_queue so the cmd_filter
+>     code accesses to struct blk_scsi_cmd_filter.
+>     
+>     Signed-off-by: FUJITA Tomonori <fujita.tomonori-Zyj7fXuS5i5L9jVzuh4AOg@public.gmane.org>
+>     Signed-off-by: Jens Axboe <jens.axboe-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
+> 
+> > This is current mainline:
+> > 
+> > kobject (ddb049fc): tried to init an initialized object, something is seriously wrong.
+> > Pid: 4650, comm: modprobe Not tainted 2.6.27-rc5-00132-gb380b0d #8
+> >  [<c01e3196>] kobject_init+0x6a/0x6c
+> >  [<c01e35cb>] kobject_init_and_add+0x14/0x30
+> >  [<c01e32f7>] ? kobject_get+0x12/0x17
+> >  [<c01df89c>] blk_register_filter+0x4b/0x5a
+> >  [<de839310>] ide_cd_probe+0x289/0x5ae [ide_cd_mod]
+> >  [<c01aad99>] ? sysfs_addrm_start+0x65/0x90
+> >  [<c01aba69>] ? sysfs_do_create_link+0x9a/0x11c
+> >  [<c024f7a0>] generic_ide_probe+0x1f/0x21
+> >  [<c024a672>] driver_probe_device+0x77/0x15b
+> >  [<c02c8bdb>] ? _spin_unlock_irqrestore+0x39/0x60
+> >  [<c024a7b6>] __driver_attach+0x60/0x62
+> >  [<c0249e2a>] bus_for_each_dev+0x44/0x62
+> >  [<c024f7a2>] ? generic_ide_remove+0x0/0x1e
+> >  [<c024a51d>] driver_attach+0x19/0x1b
+> >  [<c024a756>] ? __driver_attach+0x0/0x62
+> >  [<c024a318>] bus_add_driver+0x1ae/0x216
+> >  [<c024f7a2>] ? generic_ide_remove+0x0/0x1e
+> >  [<c024a901>] driver_register+0x4f/0x118
+> >  [<dee3500d>] ide_cdrom_init+0xd/0xf [ide_cd_mod]
+> >  [<c010111a>] do_one_initcall+0x2a/0x14c
+> >  [<c0108560>] ? native_sched_clock+0x58/0xa1
+> >  [<dee35000>] ? ide_cdrom_init+0x0/0xf [ide_cd_mod]
+> >  [<c013d042>] ? trace_hardirqs_on+0xb/0xd
+> >  [<c013cfaf>] ? trace_hardirqs_on_caller+0xac/0x134
+> >  [<c0147083>] sys_init_module+0x7e/0x19f
+> >  [<c013cfaf>] ? trace_hardirqs_on_caller+0xac/0x134
+> >  [<c01e8144>] ? trace_hardirqs_on_thunk+0xc/0x10
+> >  [<c0103035>] sysenter_do_call+0x12/0x35
+> >  [<c012007b>] ? put_fs_struct+0x5/0x2e
 
-It looks like a SATA/ATA (whatever the CD-ROM is attached to) issue or sr_mod
-breakage.
+ide-cd uses multiple gendisks share one request_queue?
 
-Thanks,
-Rafael
+Here's a patch for mainline.
+
+=
+From: FUJITA Tomonori <fujita.tomonori-Zyj7fXuS5i5L9jVzuh4AOg@public.gmane.org>
+Subject: [PATCH] ide: remove cmd filter support in ide-cd
+
+Signed-off-by: FUJITA Tomonori <fujita.tomonori-Zyj7fXuS5i5L9jVzuh4AOg@public.gmane.org>
+---
+ drivers/ide/ide-cd.c |    2 --
+ 1 files changed, 0 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/ide/ide-cd.c b/drivers/ide/ide-cd.c
+index f148999..49a8c58 100644
+--- a/drivers/ide/ide-cd.c
++++ b/drivers/ide/ide-cd.c
+@@ -1933,7 +1933,6 @@ static void ide_cd_remove(ide_drive_t *drive)
+ 
+ 	ide_proc_unregister_driver(drive, info->driver);
+ 
+-	blk_unregister_filter(info->disk);
+ 	del_gendisk(info->disk);
+ 
+ 	ide_cd_put(info);
+@@ -2159,7 +2158,6 @@ static int ide_cd_probe(ide_drive_t *drive)
+ 	g->fops = &idecd_ops;
+ 	g->flags |= GENHD_FL_REMOVABLE;
+ 	add_disk(g);
+-	blk_register_filter(g);
+ 	return 0;
+ 
+ out_free_cd:
+-- 
+1.5.4.2
