@@ -1,441 +1,330 @@
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-Subject: [PATCH] SATA: Blacklist systems that spin off disks during ACPI power off
-Date: Sat, 6 Sep 2008 19:23:27 +0200
-Message-ID: <200809061923.29020.rjw@sisk.pl>
-References: <200808290002.55026.rjw@sisk.pl> <200808291241.04183.rjw@sisk.pl> <48B7D286.7050104@gmail.com>
+From: "xerces8" <xerces8@butn.net>
+Subject: Re: Intel AHCI ICH9R not detecting devices
+Date: Sat, 06 Sep 2008 20:12:27 +0200
+Message-ID: <WorldClient-F200809062012.AA12270277@butn.net>
+References: <WorldClient-F200808221729.AA29360172@butn.net> <48B92399.6010808@kernel.org> <WorldClient-F200808302142.AA42270030@butn.net> <48BBB248.7090904@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-2"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-acpi-owner@vger.kernel.org>
-In-Reply-To: <48B7D286.7050104@gmail.com>
-Content-Disposition: inline
-Sender: linux-acpi-owner@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: ACPI Devel Maling List <linux-acpi@vger.kernel.org>, linux-ide@vger.kernel.org, Thomas Renninger <trenn@suse.de>, Robert Hancock <hancockr@shaw.ca>, LKML <linux-kernel@vger.kernel.org>, Frans Pop <elendil@planet.nl>, Maciej Rutecki <maciej.rutecki@gmail.com>, Jeff Garzik <jeff@garzik.org>, Andrew Morton <akpm@linux-foundation.org>
+Content-Type: multipart/mixed; boundary="0906-2012-27-PART-BREAK"
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from ikar.perftech.si ([195.246.0.20]:9931 "EHLO ikar.perftech.si"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752401AbYIFSMe (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 6 Sep 2008 14:12:34 -0400
+Received: from dedal.perftech.si (unknown [10.12.0.44])
+	by ikar.perftech.si (Spam Firewall) with ESMTP id B806D1D8ECD
+	for <linux-ide@vger.kernel.org>; Sat,  6 Sep 2008 20:12:31 +0200 (CEST)
+Received: from dedal.perftech.si ([10.12.0.44]) by ikar.perftech.si with ESMTP id 7ug15Lv6XzLEUztf for <linux-ide@vger.kernel.org>; Sat, 06 Sep 2008 20:12:31 +0200 (CEST)
+Received: from WorldClient by butn.net (MDaemon PRO v9.6.4)
+	with ESMTP id 16-md50000234436.msg
+	for <linux-ide@vger.kernel.org>; Sat, 06 Sep 2008 20:12:30 +0200
+In-Reply-To: <48BBB248.7090904@kernel.org>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: linux-ide@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>, stein@hermes.si
 
-On Friday, 29 of August 2008, Tejun Heo wrote:
-> Rafael J. Wysocki wrote:
-> > Actaully, they do belong to it.  This is the part "fixing" the hibernation code
-> > path, in which the disk is also powered off unnecessarily.
+--0906-2012-27-PART-BREAK
+Content-Type: text/plain; charset="us-ascii"
+
+Tejun Heo wrote:
+
+> xerces8 wrote:
+> >> This looks like resource conflict to me, which could have resulted
+> >> from ahci trying to grab all resources.  Can you please post the
+> >> result of "cat /proc/ioports" and "cat /proc/iomem"?
 > > 
-> > Well, probably I should use SYSTEM_HIBERNATE_ENTER or something similar
-> > instead of SYSTEM_SUSPEND_DISK.
-> > 
-> > In short, the idea is to change system_state to something specific to the last
-> > phase of hibernation (after saving the image) and check that in
-> > ata_scsi_start_stop_xlat().  In fact that's completely analogous to what's done
-> > for SYSTEM_POWER_OFF in there.
+> > I noticed that in IDE mode the same happens (32bit kernel has problems,
+> > 64bit kernel has not), so here is dmesg, iomem and ioports for all 4
+> > combinations.
 > 
-> Ah.. right, missed the added check for SUSPEND_DISK in libata-scsi.c.
-> Maybe it's a good idea to note it in the commit message later?
+> Can you please try the attached debug patch and report boot log.  All
+> resources look fine.
 
-After some more debugging and refinements I've obtained the patch below.
+Hi!
 
-Thanks,
-Rafael
+(I was away during the week)
 
----
-From: Rafael J. Wysocki <rjw@sisk.pl>
+I run the patch and the result is attached.
 
-SATA: Blacklist systems that spin off disks during ACPI power off
+Regards,
+David
 
-Some notebooks from HP have the problem that their BIOSes attempt to
-spin down hard drives before entering ACPI system states S4 and S5.
-This leads to a yo-yo effect during system power-off shutdown and the
-last phase of hibernation when the disk is first spun down by the
-kernel and then almost immediately turned on and off by the BIOS.
-This, in turn, may result in shortening the disk's life times.
+--0906-2012-27-PART-BREAK
+Content-Type: application/octet-stream
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment; filename="dmesg.debug"
 
-To prevent this from happening we can blacklist the affected systems
-using DMI information.  However, only the on-board controlles should
-be blacklisted and their PCI slot numbers can be used for this
-purpose.  Unfortunately the existing interface for checking DMI
-information of the system is not very convenient for this purpose,
-because to use it, we would have to define special callback functions
-or create a separate struct dmi_system_id table for each blacklisted
-system.
+cjogNSwgMTMxMDcyIGJ5dGVzKQpUQ1AgZXN0YWJsaXNoZWQgaGFzaCB0YWJsZSBlbnRyaWVzOiAx
+MzEwNzIgKG9yZGVyOiA4LCAxMDQ4NTc2IGJ5dGVzKQpUQ1AgYmluZCBoYXNoIHRhYmxlIGVudHJp
+ZXM6IDY1NTM2IChvcmRlcjogNiwgMjYyMTQ0IGJ5dGVzKQpUQ1A6IEhhc2ggdGFibGVzIGNvbmZp
+Z3VyZWQgKGVzdGFibGlzaGVkIDEzMTA3MiBiaW5kIDY1NTM2KQpUQ1AgcmVubyByZWdpc3RlcmVk
+Ck5FVDogUmVnaXN0ZXJlZCBwcm90b2NvbCBmYW1pbHkgMQpjaGVja2luZyBpZiBpbWFnZSBpcyBp
+bml0cmFtZnMuLi4gaXQgaXMKRnJlZWluZyBpbml0cmQgbWVtb3J5OiA3NTkyNGsgZnJlZWQKaGln
+aG1lbSBib3VuY2UgcG9vbCBzaXplOiA2NCBwYWdlcwpJbnN0YWxsaW5nIGtuZnNkIChjb3B5cmln
+aHQgKEMpIDE5OTYgb2tpckBtb25hZC5zd2IuZGUpLgpmdXNlIGluaXQgKEFQSSB2ZXJzaW9uIDcu
+OSkKSkZTOiBuVHhCbG9jayA9IDgxOTIsIG5UeExvY2sgPSA2NTUzNgpTR0kgWEZTIHdpdGggc2Vj
+dXJpdHkgYXR0cmlidXRlcywgcmVhbHRpbWUsIGxhcmdlIGJsb2NrIG51bWJlcnMsIG5vIGRlYnVn
+IGVuYWJsZWQKbXNnbW5pIGhhcyBiZWVuIHNldCB0byAxNzA4CmFzeW5jX3R4OiBhcGkgaW5pdGlh
+bGl6ZWQgKHN5bmMtb25seSkKaW8gc2NoZWR1bGVyIG5vb3AgcmVnaXN0ZXJlZAppbyBzY2hlZHVs
+ZXIgYW50aWNpcGF0b3J5IHJlZ2lzdGVyZWQgKGRlZmF1bHQpCnBjaSAwMDAwOjAxOjAwLjA6IEJv
+b3QgdmlkZW8gZGV2aWNlCmlucHV0OiBQb3dlciBCdXR0b24gKEZGKSBhcyAvY2xhc3MvaW5wdXQv
+aW5wdXQwCkFDUEk6IFBvd2VyIEJ1dHRvbiAoRkYpIFtQV1JGXQppbnB1dDogUG93ZXIgQnV0dG9u
+IChDTSkgYXMgL2NsYXNzL2lucHV0L2lucHV0MQpBQ1BJOiBQb3dlciBCdXR0b24gKENNKSBbUFdS
+Ql0KQUNQSTogU1NEVCBDRkY4RTBEMCwgMDFEMiAocjEgICAgQU1JICAgQ1BVMVBNICAgICAgICAx
+IElOVEwgMjAwNjAxMTMpCkFDUEk6IEFDUEkwMDA3OjAwIGlzIHJlZ2lzdGVyZWQgYXMgY29vbGlu
+Z19kZXZpY2UwClJlYWwgVGltZSBDbG9jayBEcml2ZXIgdjEuMTJhYwpOb24tdm9sYXRpbGUgbWVt
+b3J5IGRyaXZlciB2MS4yClNlcmlhbDogODI1MC8xNjU1MCBkcml2ZXIgJFJldmlzaW9uOiAxLjkw
+ICQgNCBwb3J0cywgSVJRIHNoYXJpbmcgZGlzYWJsZWQKc2VyaWFsODI1MDogdHR5UzAgYXQgSS9P
+IDB4M2Y4IChpcnEgPSA0KSBpcyBhIDE2NTUwQQowMDowOTogdHR5UzAgYXQgSS9PIDB4M2Y4IChp
+cnEgPSA0KSBpcyBhIDE2NTUwQQpmbG9wcHkwOiBubyBmbG9wcHkgY29udHJvbGxlcnMgZm91bmQK
+YnJkOiBtb2R1bGUgbG9hZGVkCmxvb3A6IG1vZHVsZSBsb2FkZWQKQ29tcGFxIFNNQVJUMiBEcml2
+ZXIgKHYgMi42LjApCkhQIENJU1MgRHJpdmVyICh2IDMuNi4yMCkKSW50ZWwoUikgUFJPLzEwMDAg
+TmV0d29yayBEcml2ZXIgLSB2ZXJzaW9uIDcuMy4yMC1rMgpDb3B5cmlnaHQgKGMpIDE5OTktMjAw
+NiBJbnRlbCBDb3Jwb3JhdGlvbi4KZTEwMDBlOiBJbnRlbChSKSBQUk8vMTAwMCBOZXR3b3JrIERy
+aXZlciAtIDAuMy4zLjMtazIKZTEwMDBlOiBDb3B5cmlnaHQgKGMpIDE5OTktMjAwOCBJbnRlbCBD
+b3Jwb3JhdGlvbi4KSW50ZWwoUikgR2lnYWJpdCBFdGhlcm5ldCBOZXR3b3JrIERyaXZlciAtIHZl
+cnNpb24gMS4wLjgtazIKQ29weXJpZ2h0IChjKSAyMDA3IEludGVsIENvcnBvcmF0aW9uLgppeGdi
+ZTogSW50ZWwoUikgMTAgR2lnYWJpdCBQQ0kgRXhwcmVzcyBOZXR3b3JrIERyaXZlciAtIHZlcnNp
+b24gMS4zLjE4LWsyCml4Z2JlOiBDb3B5cmlnaHQgKGMpIDE5OTktMjAwNyBJbnRlbCBDb3Jwb3Jh
+dGlvbi4KSW50ZWwoUikgUFJPLzEwR2JFIE5ldHdvcmsgRHJpdmVyIC0gdmVyc2lvbiAxLjAuMTI2
+LWs0CkNvcHlyaWdodCAoYykgMTk5OS0yMDA2IEludGVsIENvcnBvcmF0aW9uLgp0ZWh1dGk6IFRl
+aHV0aSBOZXR3b3JrcyhSKSBOZXR3b3JrIERyaXZlciwgNy4yOS4zCnRlaHV0aTogT3B0aW9uczog
+aHdfY3N1bSAKcGNuZXQzMi5jOnYxLjM1IDIxLkFwci4yMDA4IHRzYm9nZW5kQGFscGhhLmZyYW5r
+ZW4uZGUKZTEwMDogSW50ZWwoUikgUFJPLzEwMCBOZXR3b3JrIERyaXZlciwgMy41LjIzLWs0LU5B
+UEkKZTEwMDogQ29weXJpZ2h0KGMpIDE5OTktMjAwNiBJbnRlbCBDb3Jwb3JhdGlvbgpUaHVuZGVy
+TEFOIGRyaXZlciB2MS4xNQpUTEFOOiAwIGRldmljZXMgaW5zdGFsbGVkLCBQQ0k6IDAgIEVJU0E6
+IDAKbnM4MzgyMC5jOiBOYXRpb25hbCBTZW1pY29uZHVjdG9yIERQODM4MjAgMTAvMTAwLzEwMDAg
+ZHJpdmVyLgpBQ1BJOiBQQ0kgSW50ZXJydXB0IDAwMDA6MDI6MDAuMFtBXSAtPiBMaW5rIFtMTktC
+XSAtPiBHU0kgMTAgKGxldmVsLCBsb3cpIC0+IElSUSAxMApQQ0k6IFNldHRpbmcgbGF0ZW5jeSB0
+aW1lciBvZiBkZXZpY2UgMDAwMDowMjowMC4wIHRvIDY0CnNreTIgMDAwMDowMjowMC4wOiB2MS4y
+MSBhZGRyIDB4ZmU5ZmMwMDAgaXJxIDEwIFl1a29uLUVDIFVsdHJhICgweGI0KSByZXYgMgpza3ky
+IGV0aDA6IGFkZHIgMDA6MWU6OGM6MDc6NDE6NTMKY3M4OXgwOmNzODl4MF9wcm9iZSgweDApClBQ
+X2FkZHIgYXQgMzAwW2FdOiAweGZmZmYKZXRoMTogaW5jb3JyZWN0IHNpZ25hdHVyZSBhdCAzMDBb
+Y106IDB4ZmZmZiE9MHg2MzBFClBQX2FkZHIgYXQgMzIwW2FdOiAweGZmZmYKZXRoMTogaW5jb3Jy
+ZWN0IHNpZ25hdHVyZSBhdCAzMjBbY106IDB4ZmZmZiE9MHg2MzBFClBQX2FkZHIgYXQgMzQwW2Fd
+OiAweGZmZmYKZXRoMTogaW5jb3JyZWN0IHNpZ25hdHVyZSBhdCAzNDBbY106IDB4ZmZmZiE9MHg2
+MzBFClBQX2FkZHIgYXQgMzYwW2FdOiAweGZmZmYKZXRoMTogaW5jb3JyZWN0IHNpZ25hdHVyZSBh
+dCAzNjBbY106IDB4ZmZmZiE9MHg2MzBFClBQX2FkZHIgYXQgMjAwW2FdOiAweGZmZmYKZXRoMTog
+aW5jb3JyZWN0IHNpZ25hdHVyZSBhdCAyMDBbY106IDB4ZmZmZiE9MHg2MzBFClBQX2FkZHIgYXQg
+MjIwW2FdOiAweGZmZmYKZXRoMTogaW5jb3JyZWN0IHNpZ25hdHVyZSBhdCAyMjBbY106IDB4ZmZm
+ZiE9MHg2MzBFClBQX2FkZHIgYXQgMjQwW2FdOiAweGZmZmYKZXRoMTogaW5jb3JyZWN0IHNpZ25h
+dHVyZSBhdCAyNDBbY106IDB4ZmZmZiE9MHg2MzBFClBQX2FkZHIgYXQgMjYwW2FdOiAweGZmZmYK
+ZXRoMTogaW5jb3JyZWN0IHNpZ25hdHVyZSBhdCAyNjBbY106IDB4ZmZmZiE9MHg2MzBFClBQX2Fk
+ZHIgYXQgMjgwW2FdOiAweGZmZmYKZXRoMTogaW5jb3JyZWN0IHNpZ25hdHVyZSBhdCAyODBbY106
+IDB4ZmZmZiE9MHg2MzBFClBQX2FkZHIgYXQgMmEwW2FdOiAweGZmZmYKZXRoMTogaW5jb3JyZWN0
+IHNpZ25hdHVyZSBhdCAyYTBbY106IDB4ZmZmZiE9MHg2MzBFClBQX2FkZHIgYXQgMmMwW2FdOiAw
+eGZmZmYKZXRoMTogaW5jb3JyZWN0IHNpZ25hdHVyZSBhdCAyYzBbY106IDB4ZmZmZiE9MHg2MzBF
+ClBQX2FkZHIgYXQgMmUwW2FdOiAweGZmZmYKZXRoMTogaW5jb3JyZWN0IHNpZ25hdHVyZSBhdCAy
+ZTBbY106IDB4ZmZmZiE9MHg2MzBFCmNzODl4MDogbm8gY3M4OTAwIG9yIGNzODkyMCBkZXRlY3Rl
+ZC4gIEJlIHN1cmUgdG8gZGlzYWJsZSBQblAgd2l0aCBTRVRVUApTaWxhbiBTQzkyMDMxIFBDSSBG
+YXN0IEV0aGVybmV0IEFkYXB0ZXIgZHJpdmVyIDIuMGMKZXRoJWQ6IGk4MjU5NiBpbml0aWFsaXph
+dGlvbiB0aW1lZCBvdXQKZG1mZTogRGF2aWNvbSBETTl4eHggbmV0IGRyaXZlciwgdmVyc2lvbiAx
+LjM2LjQgKDIwMDItMDEtMTcpCndpbmJvbmQtODQwLmM6djEuMDEtZSAoMi40IHBvcnQpIFNlcC0x
+MS0yMDA2ICBEb25hbGQgQmVja2VyIDxiZWNrZXJAc2N5bGQuY29tPgogIGh0dHA6Ly93d3cuc2N5
+bGQuY29tL25ldHdvcmsvZHJpdmVycy5odG1sCnVsaTUyNng6IFVMaSBNNTI2MS9NNTI2MyBuZXQg
+ZHJpdmVyLCB2ZXJzaW9uIDAuOS4zICgyMDA1LTctMjkpClVuaWZvcm0gTXVsdGktUGxhdGZvcm0g
+RS1JREUgZHJpdmVyCmlkZTogQXNzdW1pbmcgMzNNSHogc3lzdGVtIGJ1cyBzcGVlZCBmb3IgUElP
+IG1vZGVzOyBvdmVycmlkZSB3aXRoIGlkZWJ1cz14eAppZGVfZ2VuZXJpYzogcGxlYXNlIHVzZSAi
+cHJvYmVfbWFzaz0weDNmIiBtb2R1bGUgcGFyYW1ldGVyIGZvciBwcm9iaW5nIGFsbCBsZWdhY3kg
+SVNBIElERSBwb3J0cwpQcm9iaW5nIElERSBpbnRlcmZhY2UgaWRlMC4uLgpQcm9iaW5nIElERSBp
+bnRlcmZhY2UgaWRlMS4uLgppZGUwIGF0IDB4MWYwLTB4MWY3LDB4M2Y2IG9uIGlycSAxNAppZGUx
+IGF0IDB4MTcwLTB4MTc3LDB4Mzc2IG9uIGlycSAxNQppZGUtZmxvcHB5IGRyaXZlciAxLjAwCkxv
+YWRpbmcgQWRhcHRlYyBJMk8gUkFJRDogVmVyc2lvbiAyLjQgQnVpbGQgNWdvCkRldGVjdGluZyBB
+ZGFwdGVjIEkyTyBSQUlEIGNvbnRyb2xsZXJzLi4uCkFkYXB0ZWMgYWFjcmFpZCBkcml2ZXIgMS4x
+LTVbMjQ1Nl0tbXMKYWljOTR4eDogQWRhcHRlYyBhaWM5NHh4IFNBUy9TQVRBIGRyaXZlciB2ZXJz
+aW9uIDEuMC4zIGxvYWRlZApzY3NpOiA8ZmRvbWFpbj4gRGV0ZWN0aW9uIGZhaWxlZCAobm8gY2Fy
+ZCkKRW11bGV4IExpZ2h0UHVsc2UgRmlicmUgQ2hhbm5lbCBTQ1NJIGRyaXZlciA4LjIuNgpDb3B5
+cmlnaHQoYykgMjAwNC0yMDA4IEVtdWxleC4gIEFsbCByaWdodHMgcmVzZXJ2ZWQuCkZhaWxlZCBp
+bml0aWFsaXphdGlvbiBvZiBXRC03MDAwIFNDU0kgY2FyZCEKbWVnYXJhaWQgY21tOiAyLjIwLjIu
+NyAoUmVsZWFzZSBEYXRlOiBTdW4gSnVsIDE2IDAwOjAxOjAzIEVTVCAyMDA2KQptZWdhcmFpZDog
+Mi4yMC41LjEgKFJlbGVhc2UgRGF0ZTogVGh1IE5vdiAxNiAxNTozMjozNSBFU1QgMjAwNikKbWVn
+YXNhczogMDAuMDAuMDMuMjAtcmMxIE1vbi4gTWFyY2ggMTAgMTE6MDI6MzEgUERUIDIwMDgKR0RU
+LUhBOiBTdG9yYWdlIFJBSUQgQ29udHJvbGxlciBEcml2ZXIuIFZlcnNpb246IDMuMDUKM3dhcmUg
+U3RvcmFnZSBDb250cm9sbGVyIGRldmljZSBkcml2ZXIgZm9yIExpbnV4IHYxLjI2LjAyLjAwMi4K
+M3dhcmUgOTAwMCBTdG9yYWdlIENvbnRyb2xsZXIgZGV2aWNlIGRyaXZlciBmb3IgTGludXggdjIu
+MjYuMDIuMDEwLgpSb2NrZXRSQUlEIDN4eHgvNHh4eCBDb250cm9sbGVyIGRyaXZlciB2MS4zICgw
+NzEyMDMpCnN0OiBWZXJzaW9uIDIwMDgwMjI0LCBmaXhlZCBidWZzaXplIDMyNzY4LCBzL2cgc2Vn
+cyAyNTYKRHJpdmVyICdzdCcgbmVlZHMgdXBkYXRpbmcgLSBwbGVhc2UgdXNlIGJ1c190eXBlIG1l
+dGhvZHMKb3NzdCA6STogVGFwZSBkcml2ZXIgd2l0aCBPblN0cmVhbSBzdXBwb3J0IHZlcnNpb24g
+MC45OS40Cm9zc3QgOkk6ICRJZDogb3NzdC5jLHYgMS43MyAyMDA1LzAxLzAxIDIxOjEzOjM0IHdy
+aWVkZSBFeHAgJApEcml2ZXIgJ29zc3QnIG5lZWRzIHVwZGF0aW5nIC0gcGxlYXNlIHVzZSBidXNf
+dHlwZSBtZXRob2RzCkRyaXZlciAnc2QnIG5lZWRzIHVwZGF0aW5nIC0gcGxlYXNlIHVzZSBidXNf
+dHlwZSBtZXRob2RzCkRyaXZlciAnc3InIG5lZWRzIHVwZGF0aW5nIC0gcGxlYXNlIHVzZSBidXNf
+dHlwZSBtZXRob2RzCmFoY2kgMDAwMDowMDoxZi4yOiB2ZXJzaW9uIDMuMApBQ1BJOiBQQ0kgSW50
+ZXJydXB0IExpbmsgW0xOS0ddIGVuYWJsZWQgYXQgSVJRIDE1ClBDSTogc2V0dGluZyBJUlEgMTUg
+YXMgbGV2ZWwtdHJpZ2dlcmVkCkFDUEk6IFBDSSBJbnRlcnJ1cHQgMDAwMDowMDoxZi4yW0JdIC0+
+IExpbmsgW0xOS0ddIC0+IEdTSSAxNSAobGV2ZWwsIGxvdykgLT4gSVJRIDE1CmFoY2kgMDAwMDow
+MDoxZi4yOiBBSENJIDAwMDEuMDIwMCAzMiBzbG90cyA2IHBvcnRzIDMgR2JwcyAweDNmIGltcGwg
+U0FUQSBtb2RlCmFoY2kgMDAwMDowMDoxZi4yOiBmbGFnczogNjRiaXQgbmNxIHNudGYgc3RhZyBw
+bSBsZWQgY2xvIHBtcCBwaW8gc2x1bSBwYXJ0IApQQ0k6IFNldHRpbmcgbGF0ZW5jeSB0aW1lciBv
+ZiBkZXZpY2UgMDAwMDowMDoxZi4yIHRvIDY0CmFoY2kgMDAwMDowMDoxZi4yOiBhaGNpX2hvc3Rf
+YWN0aXZhdGUoKSBmYWlsZWQgLTE2CkFDUEk6IFBDSSBpbnRlcnJ1cHQgZm9yIGRldmljZSAwMDAw
+OjAwOjFmLjIgZGlzYWJsZWQKYWhjaTogcHJvYmUgb2YgMDAwMDowMDoxZi4yIGZhaWxlZCB3aXRo
+IGVycm9yIC0xNgpBQ1BJOiBQQ0kgSW50ZXJydXB0IDAwMDA6MDM6MDAuMFtBXSAtPiBMaW5rIFtM
+TktBXSAtPiBHU0kgMTEgKGxldmVsLCBsb3cpIC0+IElSUSAxMQphaGNpIDAwMDA6MDM6MDAuMDog
+QUhDSSAwMDAxLjAwMDAgMzIgc2xvdHMgMiBwb3J0cyAzIEdicHMgMHgzIGltcGwgU0FUQSBtb2Rl
+CmFoY2kgMDAwMDowMzowMC4wOiBmbGFnczogNjRiaXQgbmNxIHBtIGxlZCBjbG8gcG1wIHBpbyBz
+bHVtIHBhcnQgClBDSTogU2V0dGluZyBsYXRlbmN5IHRpbWVyIG9mIGRldmljZSAwMDAwOjAzOjAw
+LjAgdG8gNjQKc2NzaTIgOiBhaGNpCnNjc2kzIDogYWhjaQphdGExOiBTQVRBIG1heCBVRE1BLzEz
+MyBhYmFyIG04MTkyQDB4ZmVhZmUwMDAgcG9ydCAweGZlYWZlMTAwIGlycSAxMQphdGEyOiBTQVRB
+IG1heCBVRE1BLzEzMyBhYmFyIG04MTkyQDB4ZmVhZmUwMDAgcG9ydCAweGZlYWZlMTgwIGlycSAx
+MQphdGExOiBTQVRBIGxpbmsgZG93biAoU1N0YXR1cyAwIFNDb250cm9sIDMwMCkKYXRhMjogU0FU
+QSBsaW5rIGRvd24gKFNTdGF0dXMgMCBTQ29udHJvbCAzMDApCkFDUEk6IFBDSSBJbnRlcnJ1cHQg
+MDAwMDowMzowMC4xW0JdIC0+IExpbmsgW0xOS0JdIC0+IEdTSSAxMCAobGV2ZWwsIGxvdykgLT4g
+SVJRIDEwClBDSTogU2V0dGluZyBsYXRlbmN5IHRpbWVyIG9mIGRldmljZSAwMDAwOjAzOjAwLjEg
+dG8gNjQKc2NzaTQgOiBwYXRhX2ptaWNyb24Kc2NzaTUgOiBwYXRhX2ptaWNyb24KYXRhMzogUEFU
+QSBtYXggVURNQS8xMDAgY21kIDB4ZWMwMCBjdGwgMHhlODgwIGJtZG1hIDB4ZTQwMCBpcnEgMTAK
+YXRhNDogUEFUQSBtYXggVURNQS8xMDAgY21kIDB4ZTgwMCBjdGwgMHhlNDgwIGJtZG1hIDB4ZTQw
+OCBpcnEgMTAKRnVzaW9uIE1QVCBiYXNlIGRyaXZlciAzLjA0LjA2CkNvcHlyaWdodCAoYykgMTk5
+OS0yMDA3IExTSSBDb3Jwb3JhdGlvbgpGdXNpb24gTVBUIFNQSSBIb3N0IGRyaXZlciAzLjA0LjA2
+CkZ1c2lvbiBNUFQgRkMgSG9zdCBkcml2ZXIgMy4wNC4wNgpGdXNpb24gTVBUIFNBUyBIb3N0IGRy
+aXZlciAzLjA0LjA2CkZ1c2lvbiBNUFQgbWlzYyBkZXZpY2UgKGlvY3RsKSBkcml2ZXIgMy4wNC4w
+NgptcHRjdGw6IFJlZ2lzdGVyZWQgd2l0aCBGdXNpb24gTVBUIGJhc2UgZHJpdmVyCm1wdGN0bDog
+L2Rldi9tcHRjdGwgQCAobWFqb3IsbWlub3I9MTAsMjIwKQpBQ1BJOiBQQ0kgSW50ZXJydXB0IExp
+bmsgW0xOS0RdIGVuYWJsZWQgYXQgSVJRIDE0ClBDSTogc2V0dGluZyBJUlEgMTQgYXMgbGV2ZWwt
+dHJpZ2dlcmVkCkFDUEk6IFBDSSBJbnRlcnJ1cHQgMDAwMDowNTowMy4wW0FdIC0+IExpbmsgW0xO
+S0RdIC0+IEdTSSAxNCAobGV2ZWwsIGxvdykgLT4gSVJRIDE0Cm9oY2kxMzk0OiBGYWlsZWQgdG8g
+YWxsb2NhdGUgaW50ZXJydXB0IDE0Cm9oY2kxMzk0OiBwcm9iZSBvZiAwMDAwOjA1OjAzLjAgZmFp
+bGVkIHdpdGggZXJyb3IgLTEyCmllZWUxMzk0OiByYXcxMzk0OiAvZGV2L3JhdzEzOTQgZGV2aWNl
+IGluaXRpYWxpemVkCmV0aDEzOTQ6IENhbm5vdCByZWdpc3RlciBDU1Igc3BhY2UKQUNQSTogUENJ
+IEludGVycnVwdCBMaW5rIFtMTktDXSBlbmFibGVkIGF0IElSUSA1ClBDSTogc2V0dGluZyBJUlEg
+NSBhcyBsZXZlbC10cmlnZ2VyZWQKQUNQSTogUENJIEludGVycnVwdCAwMDAwOjAwOjFhLjdbQ10g
+LT4gTGluayBbTE5LQ10gLT4gR1NJIDUgKGxldmVsLCBsb3cpIC0+IElSUSA1ClBDSTogU2V0dGlu
+ZyBsYXRlbmN5IHRpbWVyIG9mIGRldmljZSAwMDAwOjAwOjFhLjcgdG8gNjQKZWhjaV9oY2QgMDAw
+MDowMDoxYS43OiBFSENJIEhvc3QgQ29udHJvbGxlcgplaGNpX2hjZCAwMDAwOjAwOjFhLjc6IG5l
+dyBVU0IgYnVzIHJlZ2lzdGVyZWQsIGFzc2lnbmVkIGJ1cyBudW1iZXIgMQplaGNpX2hjZCAwMDAw
+OjAwOjFhLjc6IGRlYnVnIHBvcnQgMQpQQ0k6IGNhY2hlIGxpbmUgc2l6ZSBvZiAzMiBpcyBub3Qg
+c3VwcG9ydGVkIGJ5IGRldmljZSAwMDAwOjAwOjFhLjcKZWhjaV9oY2QgMDAwMDowMDoxYS43OiBp
+cnEgNSwgaW8gbWVtIDB4ZjlmZmZjMDAKZWhjaV9oY2QgMDAwMDowMDoxYS43OiBVU0IgMi4wIHN0
+YXJ0ZWQsIEVIQ0kgMS4wMCwgZHJpdmVyIDEwIERlYyAyMDA0CnVzYiB1c2IxOiBjb25maWd1cmF0
+aW9uICMxIGNob3NlbiBmcm9tIDEgY2hvaWNlCmh1YiAxLTA6MS4wOiBVU0IgaHViIGZvdW5kCmh1
+YiAxLTA6MS4wOiA2IHBvcnRzIGRldGVjdGVkCkFDUEk6IFBDSSBJbnRlcnJ1cHQgTGluayBbTE5L
+SF0gZW5hYmxlZCBhdCBJUlEgNwpQQ0k6IHNldHRpbmcgSVJRIDcgYXMgbGV2ZWwtdHJpZ2dlcmVk
+CkFDUEk6IFBDSSBJbnRlcnJ1cHQgMDAwMDowMDoxZC43W0FdIC0+IExpbmsgW0xOS0hdIC0+IEdT
+SSA3IChsZXZlbCwgbG93KSAtPiBJUlEgNwpQQ0k6IFNldHRpbmcgbGF0ZW5jeSB0aW1lciBvZiBk
+ZXZpY2UgMDAwMDowMDoxZC43IHRvIDY0CmVoY2lfaGNkIDAwMDA6MDA6MWQuNzogRUhDSSBIb3N0
+IENvbnRyb2xsZXIKZWhjaV9oY2QgMDAwMDowMDoxZC43OiBuZXcgVVNCIGJ1cyByZWdpc3RlcmVk
+LCBhc3NpZ25lZCBidXMgbnVtYmVyIDIKZWhjaV9oY2QgMDAwMDowMDoxZC43OiBkZWJ1ZyBwb3J0
+IDEKUENJOiBjYWNoZSBsaW5lIHNpemUgb2YgMzIgaXMgbm90IHN1cHBvcnRlZCBieSBkZXZpY2Ug
+MDAwMDowMDoxZC43CmVoY2lfaGNkIDAwMDA6MDA6MWQuNzogaXJxIDcsIGlvIG1lbSAweGY5ZmZm
+ODAwCmVoY2lfaGNkIDAwMDA6MDA6MWQuNzogVVNCIDIuMCBzdGFydGVkLCBFSENJIDEuMDAsIGRy
+aXZlciAxMCBEZWMgMjAwNAp1c2IgdXNiMjogY29uZmlndXJhdGlvbiAjMSBjaG9zZW4gZnJvbSAx
+IGNob2ljZQpodWIgMi0wOjEuMDogVVNCIGh1YiBmb3VuZApodWIgMi0wOjEuMDogNiBwb3J0cyBk
+ZXRlY3RlZAoxMTZ4OiBkcml2ZXIgaXNwMTE2eC1oY2QsIDAzIE5vdiAyMDA1Cm9oY2lfaGNkOiAy
+MDA2IEF1Z3VzdCAwNCBVU0IgMS4xICdPcGVuJyBIb3N0IENvbnRyb2xsZXIgKE9IQ0kpIERyaXZl
+cgpVU0IgVW5pdmVyc2FsIEhvc3QgQ29udHJvbGxlciBJbnRlcmZhY2UgZHJpdmVyIHYzLjAKQUNQ
+STogUENJIEludGVycnVwdCAwMDAwOjAwOjFhLjBbQV0gLT4gTGluayBbTE5LQV0gLT4gR1NJIDEx
+IChsZXZlbCwgbG93KSAtPiBJUlEgMTEKUENJOiBTZXR0aW5nIGxhdGVuY3kgdGltZXIgb2YgZGV2
+aWNlIDAwMDA6MDA6MWEuMCB0byA2NAp1aGNpX2hjZCAwMDAwOjAwOjFhLjA6IFVIQ0kgSG9zdCBD
+b250cm9sbGVyCnVoY2lfaGNkIDAwMDA6MDA6MWEuMDogbmV3IFVTQiBidXMgcmVnaXN0ZXJlZCwg
+YXNzaWduZWQgYnVzIG51bWJlciAzCnVoY2lfaGNkIDAwMDA6MDA6MWEuMDogaXJxIDExLCBpbyBi
+YXNlIDB4MDAwMGI4MDAKdXNiIHVzYjM6IGNvbmZpZ3VyYXRpb24gIzEgY2hvc2VuIGZyb20gMSBj
+aG9pY2UKaHViIDMtMDoxLjA6IFVTQiBodWIgZm91bmQKaHViIDMtMDoxLjA6IDIgcG9ydHMgZGV0
+ZWN0ZWQKQUNQSTogUENJIEludGVycnVwdCBMaW5rIFtMTktGXSBlbmFibGVkIGF0IElSUSAzClBD
+STogc2V0dGluZyBJUlEgMyBhcyBsZXZlbC10cmlnZ2VyZWQKQUNQSTogUENJIEludGVycnVwdCAw
+MDAwOjAwOjFhLjFbQl0gLT4gTGluayBbTE5LRl0gLT4gR1NJIDMgKGxldmVsLCBsb3cpIC0+IElS
+USAzClBDSTogU2V0dGluZyBsYXRlbmN5IHRpbWVyIG9mIGRldmljZSAwMDAwOjAwOjFhLjEgdG8g
+NjQKdWhjaV9oY2QgMDAwMDowMDoxYS4xOiBVSENJIEhvc3QgQ29udHJvbGxlcgp1aGNpX2hjZCAw
+MDAwOjAwOjFhLjE6IG5ldyBVU0IgYnVzIHJlZ2lzdGVyZWQsIGFzc2lnbmVkIGJ1cyBudW1iZXIg
+NAp1aGNpX2hjZCAwMDAwOjAwOjFhLjE6IGlycSAzLCBpbyBiYXNlIDB4MDAwMGI4ODAKdXNiIHVz
+YjQ6IGNvbmZpZ3VyYXRpb24gIzEgY2hvc2VuIGZyb20gMSBjaG9pY2UKaHViIDQtMDoxLjA6IFVT
+QiBodWIgZm91bmQKaHViIDQtMDoxLjA6IDIgcG9ydHMgZGV0ZWN0ZWQKdXNiIDEtMzogbmV3IGhp
+Z2ggc3BlZWQgVVNCIGRldmljZSB1c2luZyBlaGNpX2hjZCBhbmQgYWRkcmVzcyAyCkFDUEk6IFBD
+SSBJbnRlcnJ1cHQgMDAwMDowMDoxYS4yW0NdIC0+IExpbmsgW0xOS0NdIC0+IEdTSSA1IChsZXZl
+bCwgbG93KSAtPiBJUlEgNQpQQ0k6IFNldHRpbmcgbGF0ZW5jeSB0aW1lciBvZiBkZXZpY2UgMDAw
+MDowMDoxYS4yIHRvIDY0CnVoY2lfaGNkIDAwMDA6MDA6MWEuMjogVUhDSSBIb3N0IENvbnRyb2xs
+ZXIKdWhjaV9oY2QgMDAwMDowMDoxYS4yOiBuZXcgVVNCIGJ1cyByZWdpc3RlcmVkLCBhc3NpZ25l
+ZCBidXMgbnVtYmVyIDUKdWhjaV9oY2QgMDAwMDowMDoxYS4yOiBpcnEgNSwgaW8gYmFzZSAweDAw
+MDBiYzAwCnVzYiB1c2I1OiBjb25maWd1cmF0aW9uICMxIGNob3NlbiBmcm9tIDEgY2hvaWNlCmh1
+YiA1LTA6MS4wOiBVU0IgaHViIGZvdW5kCmh1YiA1LTA6MS4wOiAyIHBvcnRzIGRldGVjdGVkCnVz
+YiAxLTM6IGNvbmZpZ3VyYXRpb24gIzEgY2hvc2VuIGZyb20gMSBjaG9pY2UKQUNQSTogUENJIElu
+dGVycnVwdCAwMDAwOjAwOjFkLjBbQV0gLT4gTGluayBbTE5LSF0gLT4gR1NJIDcgKGxldmVsLCBs
+b3cpIC0+IElSUSA3ClBDSTogU2V0dGluZyBsYXRlbmN5IHRpbWVyIG9mIGRldmljZSAwMDAwOjAw
+OjFkLjAgdG8gNjQKdWhjaV9oY2QgMDAwMDowMDoxZC4wOiBVSENJIEhvc3QgQ29udHJvbGxlcgp1
+aGNpX2hjZCAwMDAwOjAwOjFkLjA6IG5ldyBVU0IgYnVzIHJlZ2lzdGVyZWQsIGFzc2lnbmVkIGJ1
+cyBudW1iZXIgNgp1aGNpX2hjZCAwMDAwOjAwOjFkLjA6IGlycSA3LCBpbyBiYXNlIDB4MDAwMGIw
+ODAKdXNiIHVzYjY6IGNvbmZpZ3VyYXRpb24gIzEgY2hvc2VuIGZyb20gMSBjaG9pY2UKaHViIDYt
+MDoxLjA6IFVTQiBodWIgZm91bmQKaHViIDYtMDoxLjA6IDIgcG9ydHMgZGV0ZWN0ZWQKQUNQSTog
+UENJIEludGVycnVwdCAwMDAwOjAwOjFkLjFbQl0gLT4gTGluayBbTE5LRF0gLT4gR1NJIDE0IChs
+ZXZlbCwgbG93KSAtPiBJUlEgMTQKUENJOiBTZXR0aW5nIGxhdGVuY3kgdGltZXIgb2YgZGV2aWNl
+IDAwMDA6MDA6MWQuMSB0byA2NAp1aGNpX2hjZCAwMDAwOjAwOjFkLjE6IFVIQ0kgSG9zdCBDb250
+cm9sbGVyCnVoY2lfaGNkIDAwMDA6MDA6MWQuMTogbmV3IFVTQiBidXMgcmVnaXN0ZXJlZCwgYXNz
+aWduZWQgYnVzIG51bWJlciA3CnVoY2lfaGNkIDAwMDA6MDA6MWQuMTogcmVxdWVzdCBpbnRlcnJ1
+cHQgMTQgZmFpbGVkCnVoY2lfaGNkIDAwMDA6MDA6MWQuMTogVVNCIGJ1cyA3IGRlcmVnaXN0ZXJl
+ZApBQ1BJOiBQQ0kgaW50ZXJydXB0IGZvciBkZXZpY2UgMDAwMDowMDoxZC4xIGRpc2FibGVkCnVo
+Y2lfaGNkIDAwMDA6MDA6MWQuMTogaW5pdCAwMDAwOjAwOjFkLjEgZmFpbCwgLTE2CnVoY2lfaGNk
+OiBwcm9iZSBvZiAwMDAwOjAwOjFkLjEgZmFpbGVkIHdpdGggZXJyb3IgLTE2CkFDUEk6IFBDSSBJ
+bnRlcnJ1cHQgMDAwMDowMDoxZC4yW0NdIC0+IExpbmsgW0xOS0NdIC0+IEdTSSA1IChsZXZlbCwg
+bG93KSAtPiBJUlEgNQpQQ0k6IFNldHRpbmcgbGF0ZW5jeSB0aW1lciBvZiBkZXZpY2UgMDAwMDow
+MDoxZC4yIHRvIDY0CnVoY2lfaGNkIDAwMDA6MDA6MWQuMjogVUhDSSBIb3N0IENvbnRyb2xsZXIK
+dWhjaV9oY2QgMDAwMDowMDoxZC4yOiBuZXcgVVNCIGJ1cyByZWdpc3RlcmVkLCBhc3NpZ25lZCBi
+dXMgbnVtYmVyIDcKdWhjaV9oY2QgMDAwMDowMDoxZC4yOiBpcnEgNSwgaW8gYmFzZSAweDAwMDBi
+NDgwCnVzYiB1c2I3OiBjb25maWd1cmF0aW9uICMxIGNob3NlbiBmcm9tIDEgY2hvaWNlCmh1YiA3
+LTA6MS4wOiBVU0IgaHViIGZvdW5kCmh1YiA3LTA6MS4wOiAyIHBvcnRzIGRldGVjdGVkCnVzYiAy
+LTI6IG5ldyBoaWdoIHNwZWVkIFVTQiBkZXZpY2UgdXNpbmcgZWhjaV9oY2QgYW5kIGFkZHJlc3Mg
+MgpzbDgxMTogZHJpdmVyIHNsODExLWhjZCwgMTkgTWF5IDIwMDUKdXNiIDItMjogY29uZmlndXJh
+dGlvbiAjMSBjaG9zZW4gZnJvbSAxIGNob2ljZQp1c2IgNy0xOiBuZXcgbG93IHNwZWVkIFVTQiBk
+ZXZpY2UgdXNpbmcgdWhjaV9oY2QgYW5kIGFkZHJlc3MgMgp1c2IgNy0xOiBjb25maWd1cmF0aW9u
+ICMxIGNob3NlbiBmcm9tIDEgY2hvaWNlCnVzYiA3LTI6IG5ldyBsb3cgc3BlZWQgVVNCIGRldmlj
+ZSB1c2luZyB1aGNpX2hjZCBhbmQgYWRkcmVzcyAzCnVzYiA3LTI6IGNvbmZpZ3VyYXRpb24gIzEg
+Y2hvc2VuIGZyb20gMSBjaG9pY2UKdXNiY29yZTogcmVnaXN0ZXJlZCBuZXcgaW50ZXJmYWNlIGRy
+aXZlciB1c2JscApJbml0aWFsaXppbmcgVVNCIE1hc3MgU3RvcmFnZSBkcml2ZXIuLi4Kc2NzaTYg
+OiBTQ1NJIGVtdWxhdGlvbiBmb3IgVVNCIE1hc3MgU3RvcmFnZSBkZXZpY2VzCnVzYmNvcmU6IHJl
+Z2lzdGVyZWQgbmV3IGludGVyZmFjZSBkcml2ZXIgdXNiLXN0b3JhZ2UKVVNCIE1hc3MgU3RvcmFn
+ZSBzdXBwb3J0IHJlZ2lzdGVyZWQuCnVzYi1zdG9yYWdlOiBkZXZpY2UgZm91bmQgYXQgMgp1c2It
+c3RvcmFnZTogd2FpdGluZyBmb3IgZGV2aWNlIHRvIHNldHRsZSBiZWZvcmUgc2Nhbm5pbmcKdXNi
+Y29yZTogcmVnaXN0ZXJlZCBuZXcgaW50ZXJmYWNlIGRyaXZlciB1c2JsY2QKUE5QOiBQUy8yIENv
+bnRyb2xsZXIgW1BOUDAzMDM6UFMyS10gYXQgMHg2MCwweDY0IGlycSAxClBOUDogUFMvMiBhcHBl
+YXJzIHRvIGhhdmUgQVVYIHBvcnQgZGlzYWJsZWQsIGlmIHRoaXMgaXMgaW5jb3JyZWN0IHBsZWFz
+ZSBib290IHdpdGggaTgwNDIubm9wbnAKc2VyaW86IGk4MDQyIEtCRCBwb3J0IGF0IDB4NjAsMHg2
+NCBpcnEgMQptaWNlOiBQUy8yIG1vdXNlIGRldmljZSBjb21tb24gZm9yIGFsbCBtaWNlCm1kOiBs
+aW5lYXIgcGVyc29uYWxpdHkgcmVnaXN0ZXJlZCBmb3IgbGV2ZWwgLTEKbWQ6IHJhaWQwIHBlcnNv
+bmFsaXR5IHJlZ2lzdGVyZWQgZm9yIGxldmVsIDAKbWQ6IHJhaWQxIHBlcnNvbmFsaXR5IHJlZ2lz
+dGVyZWQgZm9yIGxldmVsIDEKbWQ6IHJhaWQxMCBwZXJzb25hbGl0eSByZWdpc3RlcmVkIGZvciBs
+ZXZlbCAxMApyYWlkNjogaW50MzJ4MSAgICA5NjAgTUIvcwpyYWlkNjogaW50MzJ4MiAgICA5MDYg
+TUIvcwpyYWlkNjogaW50MzJ4NCAgICA3ODAgTUIvcwpyYWlkNjogaW50MzJ4OCAgICA3MDIgTUIv
+cwpyYWlkNjogbW14eDEgICAgIDMwOTMgTUIvcwpyYWlkNjogbW14eDIgICAgIDM1MzUgTUIvcwpy
+YWlkNjogc3NlMXgxICAgIDIxMDggTUIvcwpyYWlkNjogc3NlMXgyICAgIDI3MjggTUIvcwpyYWlk
+Njogc3NlMngxICAgIDM3NjggTUIvcwpyYWlkNjogc3NlMngyICAgIDQzMDcgTUIvcwpyYWlkNjog
+dXNpbmcgYWxnb3JpdGhtIHNzZTJ4MiAoNDMwNyBNQi9zKQptZDogcmFpZDYgcGVyc29uYWxpdHkg
+cmVnaXN0ZXJlZCBmb3IgbGV2ZWwgNgptZDogcmFpZDUgcGVyc29uYWxpdHkgcmVnaXN0ZXJlZCBm
+b3IgbGV2ZWwgNQptZDogcmFpZDQgcGVyc29uYWxpdHkgcmVnaXN0ZXJlZCBmb3IgbGV2ZWwgNApt
+ZDogbXVsdGlwYXRoIHBlcnNvbmFsaXR5IHJlZ2lzdGVyZWQgZm9yIGxldmVsIC00CmRldmljZS1t
+YXBwZXI6IGlvY3RsOiA0LjEzLjAtaW9jdGwgKDIwMDctMTAtMTgpIGluaXRpYWxpc2VkOiBkbS1k
+ZXZlbEByZWRoYXQuY29tCmRldmljZS1tYXBwZXI6IG11bHRpcGF0aDogdmVyc2lvbiAxLjAuNSBs
+b2FkZWQKZGV2aWNlLW1hcHBlcjogbXVsdGlwYXRoIHJvdW5kLXJvYmluOiB2ZXJzaW9uIDEuMC4w
+IGxvYWRlZApkZXZpY2UtbWFwcGVyOiBtdWx0aXBhdGggZW1jOiB2ZXJzaW9uIDAuMC4zIGxvYWRl
+ZApjcHVpZGxlOiB1c2luZyBnb3Zlcm5vciBsYWRkZXIKc2RoY2k6IFNlY3VyZSBEaWdpdGFsIEhv
+c3QgQ29udHJvbGxlciBJbnRlcmZhY2UgZHJpdmVyCnNkaGNpOiBDb3B5cmlnaHQoYykgUGllcnJl
+IE9zc21hbgp3YnNkOiBXaW5ib25kIFc4M0w1MXhEIFNEL01NQyBjYXJkIGludGVyZmFjZSBkcml2
+ZXIKd2JzZDogQ29weXJpZ2h0KGMpIFBpZXJyZSBPc3NtYW4KcGFkbG9jazogVklBIFBhZExvY2sg
+bm90IGRldGVjdGVkLgp1c2Jjb3JlOiByZWdpc3RlcmVkIG5ldyBpbnRlcmZhY2UgZHJpdmVyIGhp
+ZGRldgppbnB1dDogQ0hJQ09OWSBVU0IgS2V5Ym9hcmQgYXMgL2NsYXNzL2lucHV0L2lucHV0Mgpp
+bnB1dDogVVNCIEhJRCB2MS4xMCBLZXlib2FyZCBbQ0hJQ09OWSBVU0IgS2V5Ym9hcmRdIG9uIHVz
+Yi0wMDAwOjAwOjFkLjItMQppbnB1dDogQ0hFU0VOIFBTMiB0byBVU0IgQ29udmVydGVyIGFzIC9j
+bGFzcy9pbnB1dC9pbnB1dDMKaW5wdXQ6IFVTQiBISUQgdjEuMTAgS2V5Ym9hcmQgW0NIRVNFTiBQ
+UzIgdG8gVVNCIENvbnZlcnRlcl0gb24gdXNiLTAwMDA6MDA6MWQuMi0yCmlucHV0OiBDSEVTRU4g
+UFMyIHRvIFVTQiBDb252ZXJ0ZXIgYXMgL2NsYXNzL2lucHV0L2lucHV0NAppbnB1dDogVVNCIEhJ
+RCB2MS4xMCBNb3VzZSBbQ0hFU0VOIFBTMiB0byBVU0IgQ29udmVydGVyXSBvbiB1c2ItMDAwMDow
+MDoxZC4yLTIKdXNiY29yZTogcmVnaXN0ZXJlZCBuZXcgaW50ZXJmYWNlIGRyaXZlciB1c2JoaWQK
+dXNiaGlkOiB2Mi42OlVTQiBISUQgY29yZSBkcml2ZXIKVENQIGN1YmljIHJlZ2lzdGVyZWQKTkVU
+OiBSZWdpc3RlcmVkIHByb3RvY29sIGZhbWlseSAxNwpSUEM6IFJlZ2lzdGVyZWQgdWRwIHRyYW5z
+cG9ydCBtb2R1bGUuClJQQzogUmVnaXN0ZXJlZCB0Y3AgdHJhbnNwb3J0IG1vZHVsZS4KODAyLjFR
+IFZMQU4gU3VwcG9ydCB2MS44IEJlbiBHcmVlYXIgPGdyZWVhcmJAY2FuZGVsYXRlY2guY29tPgpB
+bGwgYnVncyBhZGRlZCBieSBEYXZpZCBTLiBNaWxsZXIgPGRhdmVtQHJlZGhhdC5jb20+ClVzaW5n
+IElQSSBTaG9ydGN1dCBtb2RlCkJJT1MgRUREIGZhY2lsaXR5IHYwLjE2IDIwMDQtSnVuLTI1LCA2
+IGRldmljZXMgZm91bmQKRnJlZWluZyB1bnVzZWQga2VybmVsIG1lbW9yeTogMzAwayBmcmVlZApz
+Y3NpIDY6MDowOjA6IERpcmVjdC1BY2Nlc3MgICAgIFNhbkRpc2sgIFUzIFRpdGFuaXVtICAgICAg
+Mi4xOCBQUTogMCBBTlNJOiAyCnNkIDY6MDowOjA6IFtzZGFdIDIwMDY2NzMgNTEyLWJ5dGUgaGFy
+ZHdhcmUgc2VjdG9ycyAoMTAyNyBNQikKc2QgNjowOjA6MDogW3NkYV0gV3JpdGUgUHJvdGVjdCBp
+cyBvZmYKc2QgNjowOjA6MDogW3NkYV0gTW9kZSBTZW5zZTogMDMgMDAgMDAgMDAKc2QgNjowOjA6
+MDogW3NkYV0gQXNzdW1pbmcgZHJpdmUgY2FjaGU6IHdyaXRlIHRocm91Z2gKc2QgNjowOjA6MDog
+W3NkYV0gMjAwNjY3MyA1MTItYnl0ZSBoYXJkd2FyZSBzZWN0b3JzICgxMDI3IE1CKQpzZCA2OjA6
+MDowOiBbc2RhXSBXcml0ZSBQcm90ZWN0IGlzIG9mZgpzZCA2OjA6MDowOiBbc2RhXSBNb2RlIFNl
+bnNlOiAwMyAwMCAwMCAwMApzZCA2OjA6MDowOiBbc2RhXSBBc3N1bWluZyBkcml2ZSBjYWNoZTog
+d3JpdGUgdGhyb3VnaAogc2RhOiBzZGExCnNkIDY6MDowOjA6IFtzZGFdIEF0dGFjaGVkIFNDU0kg
+cmVtb3ZhYmxlIGRpc2sKc2QgNjowOjA6MDogQXR0YWNoZWQgc2NzaSBnZW5lcmljIHNnMCB0eXBl
+IDAKdXNiLXN0b3JhZ2U6IGRldmljZSBzY2FuIGNvbXBsZXRlCg==
 
-To overcome this difficulty introduce a new function
-dmi_first_match() returning a pointer to the first entry in an array
-of struct dmi_system_id elements that matches the system DMI
-information.  Then, we can use this pointer to access the entry's
-.driver_data field containing the additional information, such as
-the PCI slot number, allowing us to do the desired blacklisting.
+--0906-2012-27-PART-BREAK--
 
-Introduce a new libata flag ATA_FLAG_NO_POWEROFF_SPINDOWN that, if
-set, will prevent disks from being spun off during system power off
-and hibernation (to handle the hibernation case we need a new system
-state SYSTEM_HIBERNATE_ENTER that can be checked against by libata,
-in analogy with SYSTEM_POWER_OFF).  Use dmi_first_match() to set this
-flag for some systems affected by the problem described above (HP nx6325,
-HP nx6310, HP 2510p).
-
-Signed-off-by: Rafael J. Wysocki <rjw@sisk.pl>
----
- drivers/ata/ahci.c          |   32 ++++++++++++++++++++
- drivers/ata/ata_piix.c      |   33 +++++++++++++++++++++
- drivers/ata/libata-scsi.c   |   16 ++++++++--
- drivers/ata/sata_sil.c      |   35 +++++++++++++++++++++-
- drivers/firmware/dmi_scan.c |   69 +++++++++++++++++++++++++++++++++-----------
- include/linux/dmi.h         |    1 
- include/linux/kernel.h      |    2 -
- include/linux/libata.h      |    1 
- kernel/power/disk.c         |    2 +
- 9 files changed, 170 insertions(+), 21 deletions(-)
-
-Index: linux-2.6/drivers/ata/libata-scsi.c
-===================================================================
---- linux-2.6.orig/drivers/ata/libata-scsi.c
-+++ linux-2.6/drivers/ata/libata-scsi.c
-@@ -1181,6 +1181,14 @@ static unsigned int ata_scsi_start_stop_
- 
- 		tf->command = ATA_CMD_VERIFY;	/* READ VERIFY */
- 	} else {
-+		/* Some odd clown BIOSen issue spindown on power off (ACPI S4
-+		 * or S5) causing some drives to spin up and down again.
-+		 */
-+		if ((qc->ap->flags & ATA_FLAG_NO_POWEROFF_SPINDOWN) &&
-+		    (system_state == SYSTEM_POWER_OFF ||
-+		     system_state == SYSTEM_HIBERNATE_ENTER))
-+			goto skip;
-+
- 		/* XXX: This is for backward compatibility, will be
- 		 * removed.  Read Documentation/feature-removal-schedule.txt
- 		 * for more info.
-@@ -1204,8 +1212,7 @@ static unsigned int ata_scsi_start_stop_
- 				scmd->scsi_done = qc->scsidone;
- 				qc->scsidone = ata_delayed_done;
- 			}
--			scmd->result = SAM_STAT_GOOD;
--			return 1;
-+			goto skip;
- 		}
- 
- 		/* Issue ATA STANDBY IMMEDIATE command */
-@@ -1221,10 +1228,13 @@ static unsigned int ata_scsi_start_stop_
- 
- 	return 0;
- 
--invalid_fld:
-+ invalid_fld:
- 	ata_scsi_set_sense(scmd, ILLEGAL_REQUEST, 0x24, 0x0);
- 	/* "Invalid field in cbd" */
- 	return 1;
-+ skip:
-+	scmd->result = SAM_STAT_GOOD;
-+	return 1;
- }
- 
- 
-Index: linux-2.6/drivers/ata/sata_sil.c
-===================================================================
---- linux-2.6.orig/drivers/ata/sata_sil.c
-+++ linux-2.6/drivers/ata/sata_sil.c
-@@ -603,11 +603,38 @@ static void sil_init_controller(struct a
- 	}
- }
- 
-+static bool sil_broken_system_poweroff(struct pci_dev *pdev)
-+{
-+	static const struct dmi_system_id broken_systems[] = {
-+		{
-+			.ident = "HP Compaq nx6325",
-+			.matches = {
-+				DMI_MATCH(DMI_SYS_VENDOR, "Hewlett-Packard"),
-+				DMI_MATCH(DMI_PRODUCT_NAME, "HP Compaq nx6325"),
-+			},
-+			/* PCI slot number of the controller */
-+			.driver_data = (void *)0x12UL,
-+		},
-+
-+		{ }	/* terminate list */
-+	};
-+	const struct dmi_system_id *dmi = dmi_first_match(broken_systems);
-+
-+	if (dmi) {
-+		unsigned long slot = (unsigned long)dmi->driver_data;
-+		/* apply the quirk only to on-board controllers */
-+		return (slot == PCI_SLOT(pdev->devfn));
-+	}
-+
-+	return false;
-+}
-+
- static int sil_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
- {
- 	static int printed_version;
- 	int board_id = ent->driver_data;
--	const struct ata_port_info *ppi[] = { &sil_port_info[board_id], NULL };
-+	struct ata_port_info pi = sil_port_info[board_id];
-+	const struct ata_port_info *ppi[] = { &pi, NULL };
- 	struct ata_host *host;
- 	void __iomem *mmio_base;
- 	int n_ports, rc;
-@@ -621,6 +648,12 @@ static int sil_init_one(struct pci_dev *
- 	if (board_id == sil_3114)
- 		n_ports = 4;
- 
-+	if (sil_broken_system_poweroff(pdev)) {
-+		pi.flags |= ATA_FLAG_NO_POWEROFF_SPINDOWN;
-+		dev_info(&pdev->dev,
-+			   "quirky BIOS, skipping spindown on poweroff\n");
-+	}
-+
- 	host = ata_host_alloc_pinfo(&pdev->dev, ppi, n_ports);
- 	if (!host)
- 		return -ENOMEM;
-Index: linux-2.6/include/linux/libata.h
-===================================================================
---- linux-2.6.orig/include/linux/libata.h
-+++ linux-2.6/include/linux/libata.h
-@@ -187,6 +187,7 @@ enum {
- 					     * doesn't handle PIO interrupts */
- 	ATA_FLAG_NCQ		= (1 << 10), /* host supports NCQ */
- 	ATA_FLAG_DEBUGMSG	= (1 << 13),
-+	ATA_FLAG_NO_POWEROFF_SPINDOWN = (1 << 14), /* don't spindown before poweroff */
- 	ATA_FLAG_IGN_SIMPLEX	= (1 << 15), /* ignore SIMPLEX */
- 	ATA_FLAG_NO_IORDY	= (1 << 16), /* controller lacks iordy */
- 	ATA_FLAG_ACPI_SATA	= (1 << 17), /* need native SATA ACPI layout */
-Index: linux-2.6/kernel/power/disk.c
-===================================================================
---- linux-2.6.orig/kernel/power/disk.c
-+++ linux-2.6/kernel/power/disk.c
-@@ -416,6 +416,7 @@ int hibernation_platform_enter(void)
- 	if (error)
- 		goto Close;
- 
-+	system_state = SYSTEM_HIBERNATE_ENTER;
- 	suspend_console();
- 	ftrace_save = __ftrace_enabled_save();
- 	error = device_suspend(PMSG_HIBERNATE);
-@@ -451,6 +452,7 @@ int hibernation_platform_enter(void)
-  Finish:
- 	hibernation_ops->finish();
-  Resume_devices:
-+	system_state = SYSTEM_RUNNING;
- 	device_resume(PMSG_RESTORE);
- 	__ftrace_enabled_restore(ftrace_save);
- 	resume_console();
-Index: linux-2.6/include/linux/kernel.h
-===================================================================
---- linux-2.6.orig/include/linux/kernel.h
-+++ linux-2.6/include/linux/kernel.h
-@@ -247,7 +247,7 @@ extern enum system_states {
- 	SYSTEM_HALT,
- 	SYSTEM_POWER_OFF,
- 	SYSTEM_RESTART,
--	SYSTEM_SUSPEND_DISK,
-+	SYSTEM_HIBERNATE_ENTER,
- } system_state;
- 
- #define TAINT_PROPRIETARY_MODULE	(1<<0)
-Index: linux-2.6/drivers/ata/ahci.c
-===================================================================
---- linux-2.6.orig/drivers/ata/ahci.c
-+++ linux-2.6/drivers/ata/ahci.c
-@@ -2515,6 +2515,32 @@ static void ahci_p5wdh_workaround(struct
- 	}
- }
- 
-+static bool ahci_broken_system_poweroff(struct pci_dev *pdev)
-+{
-+	static const struct dmi_system_id broken_systems[] = {
-+		{
-+			.ident = "HP Compaq nx6310",
-+			.matches = {
-+				DMI_MATCH(DMI_SYS_VENDOR, "Hewlett-Packard"),
-+				DMI_MATCH(DMI_PRODUCT_NAME, "HP Compaq nx6310"),
-+			},
-+			/* PCI slot number of the controller */
-+			.driver_data = (void *)0x1FUL,
-+		},
-+
-+		{ }	/* terminate list */
-+	};
-+	const struct dmi_system_id *dmi = dmi_first_match(broken_systems);
-+
-+	if (dmi) {
-+		unsigned long slot = (unsigned long)dmi->driver_data;
-+		/* apply the quirk only to on-board controllers */
-+		return (slot == PCI_SLOT(pdev->devfn));
-+	}
-+
-+	return false;
-+}
-+
- static int ahci_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
- {
- 	static int printed_version;
-@@ -2604,6 +2630,12 @@ static int ahci_init_one(struct pci_dev 
- 		}
- 	}
- 
-+	if (ahci_broken_system_poweroff(pdev)) {
-+		pi.flags |= ATA_FLAG_NO_POWEROFF_SPINDOWN;
-+		dev_info(&pdev->dev,
-+			"quirky BIOS, skipping spindown on poweroff\n");
-+	}
-+
- 	/* CAP.NP sometimes indicate the index of the last enabled
- 	 * port, at other times, that of the last possible port, so
- 	 * determining the maximum port number requires looking at
-Index: linux-2.6/drivers/firmware/dmi_scan.c
-===================================================================
---- linux-2.6.orig/drivers/firmware/dmi_scan.c
-+++ linux-2.6/drivers/firmware/dmi_scan.c
-@@ -407,6 +407,27 @@ void __init dmi_scan_machine(void)
- }
- 
- /**
-+ *	dmi_match - check if dmi_system_id structure matches system DMI data
-+ *	@dmi: pointer to the dmi_system_id structure to check
-+ */
-+static bool dmi_match(const struct dmi_system_id *dmi)
-+{
-+	int i;
-+
-+	for (i = 0; i < ARRAY_SIZE(dmi->matches); i++) {
-+		int s = dmi->matches[i].slot;
-+		if (s == DMI_NONE)
-+			continue;
-+		if (dmi_ident[s]
-+		    && strstr(dmi_ident[s], dmi->matches[i].substr))
-+			continue;
-+		/* No match */
-+		return false;
-+	}
-+	return true;
-+}
-+
-+/**
-  *	dmi_check_system - check system DMI data
-  *	@list: array of dmi_system_id structures to match against
-  *		All non-null elements of the list must match
-@@ -421,30 +442,46 @@ void __init dmi_scan_machine(void)
-  */
- int dmi_check_system(const struct dmi_system_id *list)
- {
--	int i, count = 0;
--	const struct dmi_system_id *d = list;
-+	int count = 0;
-+	const struct dmi_system_id *d;
- 
--	while (d->ident) {
--		for (i = 0; i < ARRAY_SIZE(d->matches); i++) {
--			int s = d->matches[i].slot;
--			if (s == DMI_NONE)
--				continue;
--			if (dmi_ident[s] && strstr(dmi_ident[s], d->matches[i].substr))
--				continue;
--			/* No match */
--			goto fail;
-+	for (d = list; d->ident; d++)
-+		if (dmi_match(d)) {
-+			count++;
-+			if (d->callback && d->callback(d))
-+				break;
- 		}
--		count++;
--		if (d->callback && d->callback(d))
--			break;
--fail:		d++;
--	}
- 
- 	return count;
- }
- EXPORT_SYMBOL(dmi_check_system);
- 
- /**
-+ *	dmi_first_match - find dmi_system_id structure matching system DMI data
-+ *	@list: array of dmi_system_id structures to match against
-+ *		All non-null elements of the list must match
-+ *		their slot's (field index's) data (i.e., each
-+ *		list string must be a substring of the specified
-+ *		DMI slot's string data) to be considered a
-+ *		successful match.
-+ *
-+ *	Walk the blacklist table until the first match is found.  Return the
-+ *	pointer to the matching entry or NULL if there's no match.
-+ */
-+struct dmi_system_id *dmi_first_match(const struct dmi_system_id *list)
-+{
-+	int i;
-+	const struct dmi_system_id *d;
-+
-+	for (d = list; d->ident; d++)
-+		if (dmi_match(d))
-+			return d;
-+
-+	return NULL;
-+}
-+EXPORT_SYMBOL(dmi_first_match);
-+
-+/**
-  *	dmi_get_system_info - return DMI data value
-  *	@field: data index (see enum dmi_field)
-  *
-Index: linux-2.6/include/linux/dmi.h
-===================================================================
---- linux-2.6.orig/include/linux/dmi.h
-+++ linux-2.6/include/linux/dmi.h
-@@ -75,6 +75,7 @@ struct dmi_device {
- #ifdef CONFIG_DMI
- 
- extern int dmi_check_system(const struct dmi_system_id *list);
-+struct dmi_system_id *dmi_first_match(const struct dmi_system_id *list);
- extern const char * dmi_get_system_info(int field);
- extern const struct dmi_device * dmi_find_device(int type, const char *name,
- 	const struct dmi_device *from);
-Index: linux-2.6/drivers/ata/ata_piix.c
-===================================================================
---- linux-2.6.orig/drivers/ata/ata_piix.c
-+++ linux-2.6/drivers/ata/ata_piix.c
-@@ -1449,6 +1449,32 @@ static void piix_iocfg_bit18_quirk(struc
- 	}
- }
- 
-+static bool piix_broken_system_poweroff(struct pci_dev *pdev)
-+{
-+	static const struct dmi_system_id broken_systems[] = {
-+		{
-+			.ident = "HP Compaq 2510p",
-+			.matches = {
-+				DMI_MATCH(DMI_SYS_VENDOR, "Hewlett-Packard"),
-+				DMI_MATCH(DMI_PRODUCT_NAME, "HP Compaq 2510p"),
-+			},
-+			/* PCI slot number of the controller */
-+			.driver_data = (void *)0x1FUL,
-+		},
-+
-+		{ }	/* terminate list */
-+	};
-+	const struct dmi_system_id *dmi = dmi_first_match(broken_systems);
-+
-+	if (dmi) {
-+		unsigned long slot = (unsigned long)dmi->driver_data;
-+		/* apply the quirk only to on-board controllers */
-+		return (slot == PCI_SLOT(pdev->devfn));
-+	}
-+
-+	return false;
-+}
-+
- /**
-  *	piix_init_one - Register PIIX ATA PCI device with kernel services
-  *	@pdev: PCI device to register
-@@ -1484,6 +1510,13 @@ static int __devinit piix_init_one(struc
- 	if (!in_module_init)
- 		return -ENODEV;
- 
-+	if (piix_broken_system_poweroff(pdev)) {
-+		piix_port_info[ent->driver_data].flags |=
-+						ATA_FLAG_NO_POWEROFF_SPINDOWN;
-+		dev_info(&pdev->dev,
-+			   "quirky BIOS, skipping spindown on poweroff\n");
-+	}
-+
- 	port_info[0] = piix_port_info[ent->driver_data];
- 	port_info[1] = piix_port_info[ent->driver_data];
- 
