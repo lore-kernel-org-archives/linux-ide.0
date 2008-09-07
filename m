@@ -1,71 +1,67 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [PATCH 01/18] ide: add ->read_sff_dma_status method
-Date: Sun, 7 Sep 2008 21:23:33 +0200
-Message-ID: <200809072123.33695.bzolnier@gmail.com>
-References: <20080620213323.13202.71450.sendpatchset@localhost.localdomain> <200809032013.08489.bzolnier@gmail.com> <48C41A2E.8040907@ru.mvista.com>
+From: "Jonas Petersson" <jonas.petersson@xms.se>
+Subject: Re: exception Emask 0x0 SAct 0x0 SErr 0x0
+ action 0x2 frozen
+Date: Sun, 07 Sep 2008 22:48:48 +0200
+Message-ID: <48C43E30.6020504@xms.se>
+References: <48B91198.3020803@xms.se><alpine.DEB.1.10.0808300708330.19513@p34.internal.lan><48B9AE15.7010605@xms.se><alpine.DEB.1.10.0808301710380.11166@p34.internal.lan><48B9C261.4010609@xms.se>
+	<alpine.DEB.1.10.0808301804290.11166@p34.internal.lan>
+	<FAF797E46D786344A7C36218608F791C01F3ABA5@mail1.netezza.com>
+	<48BD6086.1030101@xms.se>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mu-out-0910.google.com ([209.85.134.187]:10730 "EHLO
-	mu-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754892AbYIGT0D (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 7 Sep 2008 15:26:03 -0400
-Received: by mu-out-0910.google.com with SMTP id g7so1065760muf.1
-        for <linux-ide@vger.kernel.org>; Sun, 07 Sep 2008 12:26:01 -0700 (PDT)
-In-Reply-To: <48C41A2E.8040907@ru.mvista.com>
-Content-Disposition: inline
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <smartmontools-support-bounces@lists.sourceforge.net>
+In-Reply-To: <48BD6086.1030101@xms.se>
+List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/smartmontools-support>,
+	<mailto:smartmontools-support-request@lists.sourceforge.net?subject=unsubscribe>
+List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum_name=smartmontools-support>
+List-Post: <mailto:smartmontools-support@lists.sourceforge.net>
+List-Help: <mailto:smartmontools-support-request@lists.sourceforge.net?subject=help>
+List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/smartmontools-support>,
+	<mailto:smartmontools-support-request@lists.sourceforge.net?subject=subscribe>
+Sender: smartmontools-support-bounces@lists.sourceforge.net
+Errors-To: smartmontools-support-bounces@lists.sourceforge.net
+Cc: linux-ide@vger.kernel.org, smartmontools-support@lists.sourceforge.net, linux-kernel@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Sunday 07 September 2008, Sergei Shtylyov wrote:
-> Hello.
+For the record:
+
+Jonas Petersson wrote:
+> Owen Martin wrote:
+>  > This looks like a timeout during a read command:
+>  >
+>  > ata3.00: cmd c8/00:08:90:3c:59
+>  >
+>  > Read dma of 8 blocks from 0x903c59
+>  >
+>  > Next time it happens, see if it is the same LBA. Since the drive came
+>  > back after the bus reset makes me think it was probably in error
+>  > recovery for an extended amount of time.
 > 
-> Bartlomiej Zolnierkiewicz wrote:
-> 
-> >>> static void ide_tf_load(ide_drive_t *drive, ide_task_t *task)
-> >>> {
-> >>> 	ide_hwif_t *hwif = drive->hwif;
-> >>>@@ -323,6 +331,8 @@ static void ata_output_data(ide_drive_t 
-> >>> 
-> >>> void default_hwif_transport(ide_hwif_t *hwif)
-> >>> {
-> >>>+	hwif->read_sff_dma_status = ide_read_sff_dma_status;
-> >>>+
-> >>> 	hwif->tf_load	  = ide_tf_load;
-> >>> 	hwif->tf_read	  = ide_tf_read;
-> >>
-> >>    I also didn't understand the motivation behind putting this method 
-> >>together with the transport operations... IMO, DMA programming interface 
-> >>hardly has anything to do with transporting the data over IDE bus.
-> 
-> > The motivation was that hwif->dma_ops is not available yet when
-> > ->read_sff_dma_status is used in ide_pci_check_simplex().
-> 
-> > However I agree that it should somehow find its way into ->dma_ops
-> > (as usual patches are stongly preffered :).
-> 
->     Unless I'm missing something changing the place where hwif->dma_ops is 
-> initialized to sff_dma_ops (along the lines it was changed for hwif->dma_base) 
-> seems pretty trivial, so I wonder why you didn't do it in the same patch...
+> Sounds like a good idea. However, I had the drive swapped yesterday and 
+> have now reinstalled on a (seemingly) identical one which so far seems 
+> to be free from these messages. Hence, I keep my fingers crossed that 
+> this was indeed a hw error.
+ > [...]
 
-Indeed, it should be trivial now, one just needs to be careful to:
+I've now stressed the new disk for almost a week and seen no indication 
+at all to the previous error. Everything else is the same as before - I 
+even installed from the very same DVD. My conclusion is therefore that I 
+really had a disk that was broken in a way that normal tests will not 
+detect.
 
-* move 'if (d->dma_ops) ...' from ide_init_port() into
-  ->init_dma/ide_hwif_setup_dma()
+Hence, my tip to anyone having a similar experience: Don't blame the 
+driver, nor the motherboard/chipset - just replace the drive. It would 
+of course be even nicer if the error message could spell this out 
+somewhat clearer too, but I guess the "I/O error" in the middle is a 
+fair hint in retrospect.
 
-* unset ->dma_ops on ->init_dma/ide_hwif_setup_dma() failures
+			Best / Jonas
 
-I guess I overlooked it ATM of making the patch (or the code evolved
-greatly in the meantime)...
 
-[ It is really time consuming and difficult to recall the every small
-  detail of every patch after few months (the patch was posted 10 weeks
-  ago and merged 6 weeks ago)...  The most efficient way of handling
-  such issues upon discovery is with sending patches... ]
 
-Thanks,
-Bart
+-------------------------------------------------------------------------
+This SF.Net email is sponsored by the Moblin Your Move Developer's challenge
+Build the coolest Linux based applications with Moblin SDK & win great prizes
+Grand prize is a trip for two to an Open Source event anywhere in the world
+http://moblin-contest.org/redirect.php?banner_id=100&url=/
