@@ -1,69 +1,52 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH] Fix pointer arithmetic in hpt3xx driver code (3rd try)
-Date: Sun, 07 Sep 2008 13:21:51 +0400
-Message-ID: <48C39D2F.4010701@ru.mvista.com>
-References: <20080906171850.GF26371@google.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+From: Saeed Bishara <saeed@marvell.com>
+Subject: [PATCH] sata_mv: enable active LED blink mode for SoC
+Date: Sun,  7 Sep 2008 00:19:45 -1100
+Message-ID: <12207863853449-git-send-email-saeed@marvell.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from h155.mvista.com ([63.81.120.155]:14374 "EHLO imap.sh.mvista.com"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752814AbYIGJWD (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 7 Sep 2008 05:22:03 -0400
-In-Reply-To: <20080906171850.GF26371@google.com>
+Received: from dakia3.marvell.com ([65.219.4.28]:52505 "EHLO
+	dakia3.marvell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753176AbYIGLTu (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 7 Sep 2008 07:19:50 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Masoud Sharbiani <masouds@google.com>
-Cc: bzolnier@gmail.com, akpm@linux-foundation.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org, linux-arm@vger.kernel.org, jeff@garzik.org
+Cc: liml@rtr.ca, grundler@google.com, elendil@planet.nl, buytenh@marvell.com, nico@marvell.com, tbm@cyrius.com, Saeed Bishara <saeed@marvell.com>
 
-Hello.
+Enabling blink mode makes the SATA active LED more human visible.
 
-Masoud Sharbiani wrote:
+Signed-off-by: Saeed Bishara <saeed@marvell.com>
+---
+ drivers/ata/sata_mv.c |   10 +++++++++-
+ 1 files changed, 9 insertions(+), 1 deletions(-)
 
-> git commit 74811f355f4f69a187fa74892dcf2a684b84ce99 causes crash at
-> module load (or boot) time on my machine with a hpt374 controller.
-> The reason for this is that for initializing second controller which sets
-> (hwif->dev == host->dev[1]) to true (1), adds 1 to a void ptr, which
-> advances it by one byte instead of advancing it by sizeof(hpt_info) bytes.
-> Because of this, all initialization functions get corrupted data in info
-> variable which causes a crash at boot time.
->
-> This patch fixes that and makes my machine boot again.
->   
-
-   This description is better, thanks. You could also mention that 
-you're factoring out the code to get to the 'struct hpt_info' into a 
-separate function...
-
-> Signed-Off-By: Masoud Sharbiani <masouds@google.com>
->
-> diff --git a/drivers/ide/pci/hpt366.c b/drivers/ide/pci/hpt366.c
-> index eb107ee..4eae284 100644
-> --- a/drivers/ide/pci/hpt366.c
-> +++ b/drivers/ide/pci/hpt366.c
-> @@ -613,6 +613,14 @@ static int check_in_drive_list(ide_drive_t *drive, const char **list)
->  	return 0;
->  }
->  
-> +static struct hpt_info *hpt3xx_get_info(struct device *dev)
-> +{
-> +	struct ide_host *host	= pci_get_drvdata(to_pci_dev(pci_dev));
->   
-
-   Oops, this just won't compile. :-/
-   And please re-consider passing 'struct pci_dev *' to this function 
-since it's pre-calculated by the callers and is used by them otherwise 
-in 5 (not even 4) cases out of 7.
-
-> +	struct hpt_info *info	= (struct hpt_info *)host->host_priv;
-> +
-> +	return dev == host->dev[1] ? info + 1 : info;
->   
-
-    The 'dev' here would turn into '&dev->dev' if the parameter type 
-would be changed.
-
-MBR, Sergei
-
+diff --git a/drivers/ata/sata_mv.c b/drivers/ata/sata_mv.c
+index 13c1d2a..302e1f8 100644
+--- a/drivers/ata/sata_mv.c
++++ b/drivers/ata/sata_mv.c
+@@ -208,6 +208,10 @@ enum {
+ 	DMA_IRQ			= (1 << 0),	/* shift by port # */
+ 	HC_COAL_IRQ		= (1 << 4),	/* IRQ coalescing */
+ 	DEV_IRQ			= (1 << 8),	/* shift by port # */
++	SOC_LED_CTRL_OFS	= 0x2c,
++	SOC_LED_CTRL_BLINK	= (1 << 0),	/* Active LED blink */
++	SOC_LED_CTRL_ACT_PRESENCE = (1 << 2),	/* Multiplex presence with */
++						/* the active LED */
+ 
+ 	/* Shadow block registers */
+ 	SHD_BLK_OFS		= 0x100,
+@@ -2616,7 +2620,11 @@ static void mv6_phy_errata(struct mv_host_priv *hpriv, void __iomem *mmio,
+ static void mv_soc_enable_leds(struct mv_host_priv *hpriv,
+ 				      void __iomem *mmio)
+ {
+-	return;
++	void __iomem *hc_mmio = mv_hc_base(mmio, 0);
++	u32 tmp = readl(hc_mmio + SOC_LED_CTRL_OFS);
++
++	/* enable blinking mode */
++	writel(tmp | SOC_LED_CTRL_BLINK, hc_mmio + SOC_LED_CTRL_OFS);
+ }
+ 
+ static void mv_soc_read_preamp(struct mv_host_priv *hpriv, int idx,
+-- 
+1.5.2.5
 
