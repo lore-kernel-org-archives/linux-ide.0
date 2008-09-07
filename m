@@ -1,15 +1,15 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH 09/18] ide: IDE_AFLAG_MEDIA_CHANGED -> IDE_DFLAG_MEDIA_CHANGED
-Date: Mon, 08 Sep 2008 00:15:26 +0200
-Message-ID: <20080907221526.24285.12942.sendpatchset@localhost.localdomain>
+Subject: [PATCH 10/18] ide: IDE_AFLAG_WP -> IDE_DFLAG_WP
+Date: Mon, 08 Sep 2008 00:15:33 +0200
+Message-ID: <20080907221533.24285.39292.sendpatchset@localhost.localdomain>
 References: <20080907221424.24285.81137.sendpatchset@localhost.localdomain>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mu-out-0910.google.com ([209.85.134.190]:33498 "EHLO
-	mu-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755560AbYIGWRf (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 7 Sep 2008 18:17:35 -0400
-Received: by mu-out-0910.google.com with SMTP id g7so1100908muf.1
-        for <linux-ide@vger.kernel.org>; Sun, 07 Sep 2008 15:17:34 -0700 (PDT)
+Received: from ug-out-1314.google.com ([66.249.92.173]:64118 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756017AbYIGWRm (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 7 Sep 2008 18:17:42 -0400
+Received: by ug-out-1314.google.com with SMTP id s2so93719uge.37
+        for <linux-ide@vger.kernel.org>; Sun, 07 Sep 2008 15:17:41 -0700 (PDT)
 In-Reply-To: <20080907221424.24285.81137.sendpatchset@localhost.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
@@ -21,93 +21,57 @@ There should be no functional changes caused by this patch.
 Cc: Borislav Petkov <petkovbb@gmail.com>
 Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 ---
- drivers/ide/ide-cd.c       |    6 +++---
- drivers/ide/ide-cd_ioctl.c |    4 ++--
- drivers/ide/ide-floppy.c   |    6 +++---
- include/linux/ide.h        |    2 +-
- 4 files changed, 9 insertions(+), 9 deletions(-)
+ drivers/ide/ide-floppy.c |    8 ++++----
+ include/linux/ide.h      |    4 ++--
+ 2 files changed, 6 insertions(+), 6 deletions(-)
 
-Index: b/drivers/ide/ide-cd.c
-===================================================================
---- a/drivers/ide/ide-cd.c
-+++ b/drivers/ide/ide-cd.c
-@@ -88,7 +88,7 @@ static void ide_cd_put(struct cdrom_info
- /* Mark that we've seen a media change and invalidate our internal buffers. */
- static void cdrom_saw_media_change(ide_drive_t *drive)
- {
--	drive->atapi_flags |= IDE_AFLAG_MEDIA_CHANGED;
-+	drive->dev_flags |= IDE_DFLAG_MEDIA_CHANGED;
- 	drive->atapi_flags &= ~IDE_AFLAG_TOC_VALID;
- }
- 
-@@ -1882,8 +1882,8 @@ static int ide_cdrom_setup(ide_drive_t *
- 	if (!drive->queue->unplug_delay)
- 		drive->queue->unplug_delay = 1;
- 
--	drive->atapi_flags = IDE_AFLAG_MEDIA_CHANGED | IDE_AFLAG_NO_EJECT |
--		       ide_cd_flags(id);
-+	drive->dev_flags |= IDE_DFLAG_MEDIA_CHANGED;
-+	drive->atapi_flags = IDE_AFLAG_NO_EJECT | ide_cd_flags(id);
- 
- 	if ((drive->atapi_flags & IDE_AFLAG_VERTOS_300_SSD) &&
- 	    fw_rev[4] == '1' && fw_rev[6] <= '2')
-Index: b/drivers/ide/ide-cd_ioctl.c
-===================================================================
---- a/drivers/ide/ide-cd_ioctl.c
-+++ b/drivers/ide/ide-cd_ioctl.c
-@@ -86,8 +86,8 @@ int ide_cdrom_check_media_change_real(st
- 
- 	if (slot_nr == CDSL_CURRENT) {
- 		(void) cdrom_check_status(drive, NULL);
--		retval = (drive->atapi_flags & IDE_AFLAG_MEDIA_CHANGED) ? 1 : 0;
--		drive->atapi_flags &= ~IDE_AFLAG_MEDIA_CHANGED;
-+		retval = (drive->dev_flags & IDE_DFLAG_MEDIA_CHANGED) ? 1 : 0;
-+		drive->dev_flags &= ~IDE_DFLAG_MEDIA_CHANGED;
- 		return retval;
- 	} else {
- 		return -EINVAL;
 Index: b/drivers/ide/ide-floppy.c
 ===================================================================
 --- a/drivers/ide/ide-floppy.c
 +++ b/drivers/ide/ide-floppy.c
-@@ -689,8 +689,8 @@ static int idefloppy_open(struct inode *
+@@ -410,11 +410,11 @@ static int ide_floppy_get_flexible_disk_
+ 	}
+ 
+ 	if (pc.buf[3] & 0x80)
+-		drive->atapi_flags |= IDE_AFLAG_WP;
++		drive->dev_flags |= IDE_DFLAG_WP;
+ 	else
+-		drive->atapi_flags &= ~IDE_AFLAG_WP;
++		drive->dev_flags &= ~IDE_DFLAG_WP;
+ 
+-	set_disk_ro(disk, !!(drive->atapi_flags & IDE_AFLAG_WP));
++	set_disk_ro(disk, !!(drive->dev_flags & IDE_DFLAG_WP));
+ 
+ 	page = &pc.buf[8];
+ 
+@@ -684,7 +684,7 @@ static int idefloppy_open(struct inode *
  			goto out_put_floppy;
  		}
  
--		drive->atapi_flags |= IDE_AFLAG_MEDIA_CHANGED;
- 		ide_set_media_lock(drive, disk, 1);
-+		drive->dev_flags |= IDE_DFLAG_MEDIA_CHANGED;
- 		check_disk_change(inode->i_bdev);
- 	} else if (drive->atapi_flags & IDE_AFLAG_FORMAT_IN_PROGRESS) {
- 		ret = -EBUSY;
-@@ -747,8 +747,8 @@ static int idefloppy_media_changed(struc
- 		drive->dev_flags &= ~IDE_DFLAG_ATTACH;
- 		return 0;
- 	}
--	ret = !!(drive->atapi_flags & IDE_AFLAG_MEDIA_CHANGED);
--	drive->atapi_flags &= ~IDE_AFLAG_MEDIA_CHANGED;
-+	ret = !!(drive->dev_flags & IDE_DFLAG_MEDIA_CHANGED);
-+	drive->dev_flags &= ~IDE_DFLAG_MEDIA_CHANGED;
- 	return ret;
- }
- 
+-		if ((drive->atapi_flags & IDE_AFLAG_WP) && (filp->f_mode & 2)) {
++		if ((drive->dev_flags & IDE_DFLAG_WP) && (filp->f_mode & 2)) {
+ 			ret = -EROFS;
+ 			goto out_put_floppy;
+ 		}
 Index: b/include/linux/ide.h
 ===================================================================
 --- a/include/linux/ide.h
 +++ b/include/linux/ide.h
-@@ -462,7 +462,6 @@ struct ide_acpi_hwif_link;
- /* ATAPI device flags */
- enum {
- 	IDE_AFLAG_DRQ_INTERRUPT		= (1 << 0),
--	IDE_AFLAG_MEDIA_CHANGED		= (1 << 1),
- 	/* Drive cannot lock the door. */
- 	IDE_AFLAG_NO_DOORLOCK		= (1 << 2),
+@@ -501,8 +501,6 @@ enum {
+ 	IDE_AFLAG_CLIK_DRIVE		= (1 << 19),
+ 	/* Requires BH algorithm for packets */
+ 	IDE_AFLAG_ZIP_DRIVE		= (1 << 20),
+-	/* Write protect */
+-	IDE_AFLAG_WP			= (1 << 21),
+ 	/* Supports format progress report */
+ 	IDE_AFLAG_SRFP			= (1 << 22),
  
-@@ -571,6 +570,7 @@ enum {
- 	/* retrying in PIO */
+@@ -571,6 +569,8 @@ enum {
  	IDE_DFLAG_DMA_PIO_RETRY		= (1 << 25),
  	IDE_DFLAG_LBA			= (1 << 26),
-+	IDE_DFLAG_MEDIA_CHANGED		= (1 << 27),
+ 	IDE_DFLAG_MEDIA_CHANGED		= (1 << 27),
++	/* write protect */
++	IDE_DFLAG_WP			= (1 << 28),
  };
  
  struct ide_drive_s {
