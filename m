@@ -1,52 +1,30 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH] Fix pointer arithmetic in hpt3xx driver code (3rd try)
-Date: Sun, 07 Sep 2008 15:20:41 +0400
-Message-ID: <48C3B909.3030405@ru.mvista.com>
-References: <20080906171850.GF26371@google.com> <48C39D2F.4010701@ru.mvista.com>
+From: "saeed bishara" <saeed.bishara@gmail.com>
+Subject: Re: [PATCH] sata_mv: enable active LED blink mode for SoC
+Date: Sun, 7 Sep 2008 14:31:07 +0300
+Message-ID: <c70ff3ad0809070431x4e6fe7e6r88161d62b5902bae@mail.gmail.com>
+References: <12207863853449-git-send-email-saeed@marvell.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from h155.mvista.com ([63.81.120.155]:15349 "EHLO imap.sh.mvista.com"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1753170AbYIGLUs (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 7 Sep 2008 07:20:48 -0400
-In-Reply-To: <48C39D2F.4010701@ru.mvista.com>
+Received: from wf-out-1314.google.com ([209.85.200.173]:44045 "EHLO
+	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753393AbYIGLbI (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 7 Sep 2008 07:31:08 -0400
+Received: by wf-out-1314.google.com with SMTP id 27so1146182wfd.4
+        for <linux-ide@vger.kernel.org>; Sun, 07 Sep 2008 04:31:07 -0700 (PDT)
+In-Reply-To: <12207863853449-git-send-email-saeed@marvell.com>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Masoud Sharbiani <masouds@google.com>
-Cc: bzolnier@gmail.com, akpm@linux-foundation.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: Saeed Bishara <saeed@marvell.com>
+Cc: linux-ide@vger.kernel.org, linux-arm@vger.kernel.org, jeff@garzik.org, liml@rtr.ca, grundler@google.com, elendil@planet.nl, buytenh@marvell.com, nico@marvell.com, tbm@cyrius.com
 
-Hello, I wrote:
->> diff --git a/drivers/ide/pci/hpt366.c b/drivers/ide/pci/hpt366.c
->> index eb107ee..4eae284 100644
->> --- a/drivers/ide/pci/hpt366.c
->> +++ b/drivers/ide/pci/hpt366.c
->> @@ -613,6 +613,14 @@ static int check_in_drive_list(ide_drive_t 
->> *drive, const char **list)
->>      return 0;
->>  }
->>  
->> +static struct hpt_info *hpt3xx_get_info(struct device *dev)
->> +{
->> +    struct ide_host *host    = pci_get_drvdata(to_pci_dev(pci_dev));
->>   
->
->   Oops, this just won't compile. :-/
+> +       SOC_LED_CTRL_ACT_PRESENCE = (1 << 2),   /* Multiplex presence with */
+> +                                               /* the active LED */
+meanwhile this mode (multiplexing presence with active LED) is not
+enabled, but I believe some boards may need it. if your board already
+have this mode then it's probably done by HW by multiplexing the two
+wires into one LED.
 
-   BTW, there's no need to invoke to_pci_dev() at all since 
-pci_get_drvdata(dev) boils down to dev_get_drvdata(&dev->dev) call. So, 
-in order not to waste time on useless pointer tricks, we should just 
-invoke the latter here.
-
->   And please re-consider passing 'struct pci_dev *' to this function 
-> since it's pre-calculated by the callers and is used by them otherwise 
-> in 5 (not even 4) cases out of 7.
->
-
-   Well, since to_pci_dev() is unnecessary here, I'm taking my request 
-back. :-)
-
-MBR, Sergei
-
-
+saeed
