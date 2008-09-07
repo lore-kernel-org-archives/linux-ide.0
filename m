@@ -1,38 +1,52 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [PATCH 1/2] ide-cd: convert driver to new ide debugging macro
-Date: Sun, 7 Sep 2008 20:19:51 +0200
-Message-ID: <200809072019.52821.bzolnier@gmail.com>
-References: <1219496923-20868-1-git-send-email-petkovbb@gmail.com>
+Subject: Re: [PATCH] Fix pointer arithmetic in hpt3xx driver code (3rd try)
+Date: Sun, 7 Sep 2008 20:10:03 +0200
+Message-ID: <200809072010.04122.bzolnier@gmail.com>
+References: <20080906171850.GF26371@google.com> <48C39D2F.4010701@ru.mvista.com> <48C3B909.3030405@ru.mvista.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
-  charset="utf-8"
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mu-out-0910.google.com ([209.85.134.189]:7699 "EHLO
-	mu-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754840AbYIGS11 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 7 Sep 2008 14:27:27 -0400
-Received: by mu-out-0910.google.com with SMTP id g7so1053161muf.1
-        for <linux-ide@vger.kernel.org>; Sun, 07 Sep 2008 11:27:26 -0700 (PDT)
-In-Reply-To: <1219496923-20868-1-git-send-email-petkovbb@gmail.com>
+Received: from nf-out-0910.google.com ([64.233.182.188]:41294 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754561AbYIGS1a (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 7 Sep 2008 14:27:30 -0400
+Received: by nf-out-0910.google.com with SMTP id d3so223023nfc.21
+        for <linux-ide@vger.kernel.org>; Sun, 07 Sep 2008 11:27:21 -0700 (PDT)
+In-Reply-To: <48C3B909.3030405@ru.mvista.com>
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Borislav Petkov <petkovbb@googlemail.com>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Borislav Petkov <petkovbb@gmail.com>
+To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Cc: Masoud Sharbiani <masouds@google.com>, akpm@linux-foundation.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-On Saturday 23 August 2008, Borislav Petkov wrote:
-> Also,
-> 
-> - leave in the possibility for optimizing away all debugging macros
-> - add a PFX macro and prepend all printk calls with it for consistency
-> - add debug macro calls in important driver paths
-> - remove #if 0-ed code
-> - mv restore_request -> ide_cd_restore_request
-> - add a driver registration printk
-> 
-> There should be no functionality change resulting from this patch.
-> 
-> Signed-off-by: Borislav Petkov <petkovbb@gmail.com>
 
-applied
+Hi,
+
+Masoud/Sergei: sorry for the bug and thanks for fixing it.
+
+On Sunday 07 September 2008, Sergei Shtylyov wrote:
+> Hello, I wrote:
+> >> diff --git a/drivers/ide/pci/hpt366.c b/drivers/ide/pci/hpt366.c
+> >> index eb107ee..4eae284 100644
+> >> --- a/drivers/ide/pci/hpt366.c
+> >> +++ b/drivers/ide/pci/hpt366.c
+> >> @@ -613,6 +613,14 @@ static int check_in_drive_list(ide_drive_t 
+> >> *drive, const char **list)
+> >>      return 0;
+> >>  }
+> >>  
+> >> +static struct hpt_info *hpt3xx_get_info(struct device *dev)
+> >> +{
+> >> +    struct ide_host *host    = pci_get_drvdata(to_pci_dev(pci_dev));
+> >>   
+> >
+> >   Oops, this just won't compile. :-/
+> 
+>    BTW, there's no need to invoke to_pci_dev() at all since 
+> pci_get_drvdata(dev) boils down to dev_get_drvdata(&dev->dev) call. So, 
+> in order not to waste time on useless pointer tricks, we should just 
+> invoke the latter here.
+
+I corrected this and applied the patch.
