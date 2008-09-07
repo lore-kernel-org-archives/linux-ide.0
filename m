@@ -1,93 +1,91 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH 01/18] ide: add ->read_sff_dma_status method
-Date: Mon, 08 Sep 2008 02:26:55 +0400
-Message-ID: <48C4552F.9070806@ru.mvista.com>
-References: <20080620213323.13202.71450.sendpatchset@localhost.localdomain> <200809032013.08489.bzolnier@gmail.com> <48C41A2E.8040907@ru.mvista.com> <200809072123.33695.bzolnier@gmail.com>
+From: Antonio Cardoso Martins <digiplan.pt@gmail.com>
+Subject: UDMA with CS5530 using IBM Netvista N2200 (8363)
+Date: Sun, 07 Sep 2008 23:55:43 +0100
+Message-ID: <48C45BEF.5090502@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ns2.mvista.com ([63.81.120.155]:18975 "EHLO imap.sh.mvista.com"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1755532AbYIGW1B (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 7 Sep 2008 18:27:01 -0400
-In-Reply-To: <200809072123.33695.bzolnier@gmail.com>
+Received: from ug-out-1314.google.com ([66.249.92.170]:5167 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750739AbYIGW4A (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 7 Sep 2008 18:56:00 -0400
+Received: by ug-out-1314.google.com with SMTP id s2so99929uge.37
+        for <linux-ide@vger.kernel.org>; Sun, 07 Sep 2008 15:55:58 -0700 (PDT)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-Hello.
+Hello,
 
-Bartlomiej Zolnierkiewicz wrote:
+I have been trying to compile kernel 2.6.24.7 to boot from an IBM
+Netvista N220 (8363) http://jeanchristophe.duber.free.fr/netvista_8363/
+however, some people points that the IDE DMA driver is broken
+(http://www.selfservix.org/n2200.htm).
 
->>>>> static void ide_tf_load(ide_drive_t *drive, ide_task_t *task)
->>>>> {
->>>>> 	ide_hwif_t *hwif = drive->hwif;
->>>>> @@ -323,6 +331,8 @@ static void ata_output_data(ide_drive_t 
->>>>>
->>>>> void default_hwif_transport(ide_hwif_t *hwif)
->>>>> {
->>>>> +	hwif->read_sff_dma_status = ide_read_sff_dma_status;
->>>>> +
->>>>> 	hwif->tf_load	  = ide_tf_load;
->>>>> 	hwif->tf_read	  = ide_tf_read;
->>>>>           
->>>>    I also didn't understand the motivation behind putting this method 
->>>> together with the transport operations... IMO, DMA programming interface 
->>>> hardly has anything to do with transporting the data over IDE bus.
->>>>         
->>> The motivation was that hwif->dma_ops is not available yet when
->>> ->read_sff_dma_status is used in ide_pci_check_simplex().
->>>       
->>> However I agree that it should somehow find its way into ->dma_ops
->>> (as usual patches are stongly preffered :).
->>>       
->>     Unless I'm missing something changing the place where hwif->dma_ops is 
->> initialized to sff_dma_ops (along the lines it was changed for hwif->dma_base) 
->> seems pretty trivial, so I wonder why you didn't do it in the same patch...
->>     
+For sure, i cannot have the kernel option "Cyrix/National Semiconductor
+CS5530 MediaGX chipset support (BLK_DEV_CS5530)" enabled, or the
+Netvista will complain with the messages bellow, using kernel 2.6.24.7
+(i haven't used any more recent kernel because since kernel 2.6.24.7
+they just fail to boot in Netvista 8363).
 
-   Ah, I forgot for a moment that there were two patches and it would 
-have make no sense to do that in the patch that factored out 
-ide_pci_check_simplex()... And then tre was a patch introducing 'struct 
-ide_tp_ops' which incorporated the read_sff_dma_status() method.
+...
+ide: Assuming 33MHz system bus speed for PIO modes; override with idebus=xx
+CS5530: IDE controller (0x1078:0x0102 rev 0x00) at PCI slot 0000:00:12.2
+CS5530: not 100% native mode: will probe irqs later
+          ide0: BM-DMA at 0xfc00-0xfc07, BIOS settings: hda:pio, hdb:pio
+          ide1: BM-DMA at 0xfc08-0xfc0f, BIOS settings: hdc:pio, hdd:pio
+hda: SILICON POWER, ATA DISK drive
+hda: UDMA/33 mode selected
+ide0 at 0x1f0-0x1f7,0x3f6 on irq 14
+hda: max request size: 128KiB
+hda: 2000880 sectors (1024 MB) w/2KiB Cache, CHS=1985/16/63
+ hda:<4>hda: dma_timer_expiry: dma status == 0x20
+hda: DMA timeout retry
+hda: timeout waiting for DMA
+hda: status error: status=0x58 { DriveReady SeekComplete DataRequest }
+ide: failed opcode was: unknown
+hda: drive not ready for command
+ide0: reset: success
+Clocksource tsc unstable (delta = 119999355 ns)
+time: pit clocksource has been installed.
+hda: irq timeout: status=0xd0 { Busy }
+ide: failed opcode was: unknown
+ide0: reset timed-out: status=0x80
+hda: status timeout: status=0x80 { Busy }
+ide: failed opcode was: unknown
+end_request: I/O error, dev hda, sector 0
+Buffer I/O error on device hda, logical block 0
+hda: drive not ready for command
+hda: status timeout: status=0x80 { Busy }
+ide: failed opcode was: unknown
+hda: DMA disabled
+hda: drive not ready for command
+ide0: reset timed-out, status=0x80
+end_request: I/O error, dev hda, sector 0
+Buffer I/O error on device hda, logical block 0
+ unable to read partition table
+...
+VFS: Cannot open root device "<NULL>" or unknown-block(0,0)
+Please append a correct "root=" boot option; here are the available
+partitions:
+0300      1000440 hda driver: ide-disk
+Kernel panic - not syncing: VFS: Unable to mount root fs on
+unknown-block(0,0)
 
-> Indeed, it should be trivial now, one just needs to be careful to:
->
-> * move 'if (d->dma_ops) ...' from ide_init_port() into
->   ->init_dma/ide_hwif_setup_dma()
->
-> * unset ->dma_ops on ->init_dma/ide_hwif_setup_dma() failures
->   
 
-   Sure.
+Does anyone know what could be the problem here?
 
-> I guess I overlooked it ATM of making the patch (or the code evolved
-> greatly in the meantime)...
->   
+IBM Netvista is a thin client with Geode GX1 and boots the kernel
+directly from ext3 without any boot loader. It does not support any
+kernel boot parameters.
 
-   I think I understand now: it's sticking read_sff_dma_status() method 
-into 'struct ide_tp_ops' that was a wrong move that's worth undoing (by 
-putting it where it really belongs).
+Thank you
 
-> [ It is really time consuming and difficult to recall the every small
->   detail of every patch after few months (the patch was posted 10 weeks
->   
-
-   Heh, as if it wasn't time consuming to untange that after a few 
-months (when I'm suposed to spend time elsewhere :-)...
-
->   ago and merged 6 weeks ago)...  The most efficient way of handling
->   such issues upon discovery is with sending patches... ]
->   
-
-    Sigh, I'll see what I can do in my currently very limieted time...
-
-> Thanks,
-> Bart
->   
-
-MBR, Sergei
+-- 
+-----------------------------------------
+Antonio Cardoso Martins
+        digiplan.pt@gmail.com
+-----------------------------------------
 
 
