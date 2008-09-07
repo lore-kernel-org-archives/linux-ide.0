@@ -1,54 +1,43 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH 01/18] ide: add ->read_sff_dma_status method
-Date: Sun, 07 Sep 2008 22:15:10 +0400
-Message-ID: <48C41A2E.8040907@ru.mvista.com>
-References: <20080620213323.13202.71450.sendpatchset@localhost.localdomain> <48BE8EFD.70103@ru.mvista.com> <200809032013.08489.bzolnier@gmail.com>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: [PATCH 2/2] ide-cd: add a debug_mask module parameter
+Date: Sun, 7 Sep 2008 20:21:24 +0200
+Message-ID: <200809072021.25277.bzolnier@gmail.com>
+References: <1219496923-20868-1-git-send-email-petkovbb@gmail.com> <1219496923-20868-2-git-send-email-petkovbb@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain;
+  charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from h155.mvista.com ([63.81.120.155]:17718 "EHLO imap.sh.mvista.com"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1754561AbYIGSOd (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 7 Sep 2008 14:14:33 -0400
-In-Reply-To: <200809032013.08489.bzolnier@gmail.com>
+Received: from mu-out-0910.google.com ([209.85.134.187]:5477 "EHLO
+	mu-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755098AbYIGS13 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 7 Sep 2008 14:27:29 -0400
+Received: by mu-out-0910.google.com with SMTP id g7so1053152muf.1
+        for <linux-ide@vger.kernel.org>; Sun, 07 Sep 2008 11:27:28 -0700 (PDT)
+In-Reply-To: <1219496923-20868-2-git-send-email-petkovbb@gmail.com>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Borislav Petkov <petkovbb@googlemail.com>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Borislav Petkov <petkovbb@gmail.com>
 
-Hello.
+On Saturday 23 August 2008, Borislav Petkov wrote:
+> Signed-off-by: Borislav Petkov <petkovbb@gmail.com>
 
-Bartlomiej Zolnierkiewicz wrote:
+applied
 
->>> static void ide_tf_load(ide_drive_t *drive, ide_task_t *task)
->>> {
->>> 	ide_hwif_t *hwif = drive->hwif;
->>>@@ -323,6 +331,8 @@ static void ata_output_data(ide_drive_t 
->>> 
->>> void default_hwif_transport(ide_hwif_t *hwif)
->>> {
->>>+	hwif->read_sff_dma_status = ide_read_sff_dma_status;
->>>+
->>> 	hwif->tf_load	  = ide_tf_load;
->>> 	hwif->tf_read	  = ide_tf_read;
->>
->>    I also didn't understand the motivation behind putting this method 
->>together with the transport operations... IMO, DMA programming interface 
->>hardly has anything to do with transporting the data over IDE bus.
+> ---
+>  drivers/ide/ide-cd.c |    8 +++++++-
+>  1 files changed, 7 insertions(+), 1 deletions(-)
+> 
+> diff --git a/drivers/ide/ide-cd.c b/drivers/ide/ide-cd.c
+> index cca1011..5e0b9cd 100644
+> --- a/drivers/ide/ide-cd.c
+> +++ b/drivers/ide/ide-cd.c
+> @@ -53,6 +53,8 @@
+>  
+>  #include "ide-cd.h"
+>  
+> +static unsigned long debug_mask = 0x0;
 
-> The motivation was that hwif->dma_ops is not available yet when
-> ->read_sff_dma_status is used in ide_pci_check_simplex().
-
-> However I agree that it should somehow find its way into ->dma_ops
-> (as usual patches are stongly preffered :).
-
-    Unless I'm missing something changing the place where hwif->dma_ops is 
-initialized to sff_dma_ops (along the lines it was changed for hwif->dma_base) 
-seems pretty trivial, so I wonder why you didn't do it in the same patch...
-    Hm, I guess I'm seeing a real issue with this patch...
-
-> Thanks,
-> Bart
-
-MBR, Sergei
+No need to zero it, I fixed it and moved debug_mask next to module_param().
