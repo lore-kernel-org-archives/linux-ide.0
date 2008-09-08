@@ -1,53 +1,42 @@
-From: Mark Lord <liml@rtr.ca>
-Subject: Re: [PATCH] sata_mv: enable active LED blink mode for SoC
-Date: Mon, 08 Sep 2008 14:47:32 -0400
-Message-ID: <48C57344.4060901@rtr.ca>
-References: <12207863853449-git-send-email-saeed@marvell.com> <48C52B53.3030302@rtr.ca> <200809081616.03266.elendil@planet.nl> <200809081625.31131.elendil@planet.nl>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: sata_inic162x  LED enable request
+Date: Mon, 08 Sep 2008 21:09:01 +0200
+Message-ID: <48C5784D.5020206@kernel.org>
+References: <885420.46850.qm@web902.biz.mail.mud.yahoo.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([76.10.145.34]:55389 "EHLO mail.rtr.ca"
+Received: from hera.kernel.org ([140.211.167.34]:56532 "EHLO hera.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751713AbYIHSre (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 8 Sep 2008 14:47:34 -0400
-In-Reply-To: <200809081625.31131.elendil@planet.nl>
+	id S1755005AbYIHTKd (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 8 Sep 2008 15:10:33 -0400
+In-Reply-To: <885420.46850.qm@web902.biz.mail.mud.yahoo.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Frans Pop <elendil@planet.nl>
-Cc: Saeed Bishara <saeed@marvell.com>, linux-ide@vger.kernel.org, linux-arm@vger.kernel.org, jeff@garzik.org, grundler@google.com, buytenh@marvell.com, nico@marvell.com, tbm@cyrius.com
+To: Bob Stewart <bob@evoria.net>
+Cc: echo6 <echo6_uk@yahoo.com>, linux-ide@vger.kernel.org
 
-Frans Pop wrote:
-> On Monday 08 September 2008, Frans Pop wrote:
->> On Monday 08 September 2008, Mark Lord wrote:
->>> Frans Pop wrote:
->>>> So, IMO it is an improvement, but it is definitely not a fix for
->>>> the regression.
->>> With a new copy of hdparm, use "hdparm -Q1 /dev/sd?"
->>> Does that fix your "regression" ?
->> $ sudo hdparm -Q1 /dev/sda
+Bob Stewart wrote:
+> --- Tejun Heo <tj@kernel.org> wrote:
+>> Hmm... I have two - INIC-1622 V1.0 Septermber, 2003 and the one you
+>> have.  Till now, I haven't found any noticeable difference.
+>> Apparently, the meaning of the bit has changed.
 >>
->> /dev/sda:
->>  setting queue_depth to 1
->>  queue_depth   =  1
->>
->> Yes, that does result in the original behavior of the led.
->> (Using version 8.9 of hdparm.)
+>>> Which book are you using and are all these bits in the Global
+>>> Control register, which we call HOST_CTL?  Did I get an old book?
+>> Yes, that's GCTRL.  Can you please do the '+' -> '|' change and resend
+>> the patch?
 > 
-> But that's not new information: we'd already determined some time ago that 
-> disabling NCQ "fixed" the problem, both if it is done at runtime and when 
-> it is disabled in the driver:
-> http://www.spinics.net/lists/linux-ide/msg25642.html
-> http://www.spinics.net/lists/linux-ide/msg25645.html
-..
+> Sure; was just waiting to hear about the book versions in case they
+> had issued still another version.
 
-Still, that's proof that there is NO REGRESSION here,
-so please stop using that term.
+Can you please format the message like the following with
+Signed-off-by and cc jeff@garzik.org?
 
-Older kernels had a working LED without NCQ,
-and so do newer ones.  No regression.
+  http://article.gmane.org/gmane.linux.ide/34108
 
-In the meanwhile, it appears that Saeed is working to determine
-for sure that this is a hardware limitation, as it appears to be.
+Thanks.
 
-Cheers
+-- 
+tejun
