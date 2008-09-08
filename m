@@ -1,43 +1,48 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH] sata_mv: add RocketRaid 1720 PCI ID to driver
-Date: Mon, 08 Sep 2008 12:16:43 -0400
-Message-ID: <48C54FEB.8070402@pobox.com>
-References: <48C05E4E.6090407@rtr.ca> <48C05F53.2020709@rtr.ca>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [PATCH #upstream-fixes] ahci: disable PMP for marvell ahcis
+Date: Mon, 08 Sep 2008 12:16:36 -0400
+Message-ID: <48C54FE4.6010903@garzik.org>
+References: <48B801CF.6010703@kernel.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:37769 "EHLO mail.dvmed.net"
+Received: from srv5.dvmed.net ([207.36.208.214]:37763 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751640AbYIHQQr (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 8 Sep 2008 12:16:47 -0400
-In-Reply-To: <48C05F53.2020709@rtr.ca>
+	id S1753105AbYIHQQk (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 8 Sep 2008 12:16:40 -0400
+In-Reply-To: <48B801CF.6010703@kernel.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark Lord <liml@rtr.ca>
-Cc: IDE/ATA development list <linux-ide@vger.kernel.org>, Tejun Heo <htejun@gmail.com>, Petr Jelen <petr.jelen@gmail.com>
+To: Tejun Heo <tj@kernel.org>
+Cc: IDE/ATA development list <linux-ide@vger.kernel.org>, kueihuan.chen@gmail.com, Mark Lord <liml@rtr.ca>
 
-Mark Lord wrote:
-> Add PCI ID for RocketRAID 1720 to sata_mv.
+Tejun Heo wrote:
+> Marvell ahcis don't play nicely with PMPs.  Disable it.
 > 
-> Signed-off-by: Petr Jelen <petr.jelen@gmail.com>
-> Signed-off-by: Mark Lord <mlord@pobox.com>
+> Reported by KueiHuan Chen in the following thread.
+> 
+>   http://thread.gmane.org/gmane.linux.ide/33296
+> 
+> Signed-off-by: Tejun Heo <tj@kernel.org>
+> Cc: KueiHuan Chen <kueihuan.chen@gmail.com>
+> Cc: Mark Lord <mlord@pobox.com>
 > ---
-> Resending, with fixed whitespace and a colon on the subject line.  :)
-> This is for 2.6.27.  Pretty harmless.
+>  drivers/ata/ahci.c |    2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
 > 
-> --- linux-2.6.27-rc4/drivers/ata/sata_mv.c    2008-08-29 
-> 21:35:45.000000000 +0200
-> +++ linux/drivers/ata/sata_mv.c    2008-08-29 21:36:38.000000000 +0200
-> @@ -667,7 +667,8 @@
->     { PCI_VDEVICE(MARVELL, 0x5041), chip_504x },
->     { PCI_VDEVICE(MARVELL, 0x5080), chip_5080 },
->     { PCI_VDEVICE(MARVELL, 0x5081), chip_508x },
-> -    /* RocketRAID 1740/174x have different identifiers */
-> +    /* RocketRAID 1720/174x have different identifiers */
-> +    { PCI_VDEVICE(TTI, 0x1720), chip_6042 },
->     { PCI_VDEVICE(TTI, 0x1740), chip_508x },
->     { PCI_VDEVICE(TTI, 0x1742), chip_508x },
+> diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+> index dc7596f..2806366 100644
+> --- a/drivers/ata/ahci.c
+> +++ b/drivers/ata/ahci.c
+> @@ -420,7 +420,7 @@ static const struct ata_port_info ahci_port_info[] = {
+>  	/* board_ahci_mv */
+>  	{
+>  		AHCI_HFLAGS	(AHCI_HFLAG_NO_NCQ | AHCI_HFLAG_NO_MSI |
+> -				 AHCI_HFLAG_MV_PATA),
+> +				 AHCI_HFLAG_MV_PATA | AHCI_HFLAG_NO_PMP),
+>  		.flags		= ATA_FLAG_SATA | ATA_FLAG_NO_LEGACY |
+>  				  ATA_FLAG_MMIO | ATA_FLAG_PIO_DMA,
 
 applied
 
