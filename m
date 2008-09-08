@@ -1,44 +1,52 @@
 From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH] pata_sil680: remove duplicate pcim_enable_device
-Date: Mon, 08 Sep 2008 12:16:12 -0400
-Message-ID: <48C54FCC.3030401@garzik.org>
-References: <20080829153628.GA20130@dhcp-210.hsv.redhat.com>
+Subject: Re: [PATCH #upstream-fixes] libata-sff: kill spurious WARN_ON() in
+ ata_hsm_move()
+Date: Mon, 08 Sep 2008 12:16:20 -0400
+Message-ID: <48C54FD4.6000001@garzik.org>
+References: <48B8075F.9040805@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:37746 "EHLO mail.dvmed.net"
+Received: from srv5.dvmed.net ([207.36.208.214]:37753 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754411AbYIHQQQ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 8 Sep 2008 12:16:16 -0400
-In-Reply-To: <20080829153628.GA20130@dhcp-210.hsv.redhat.com>
+	id S1754690AbYIHQQX (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 8 Sep 2008 12:16:23 -0400
+In-Reply-To: <48B8075F.9040805@kernel.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: David Milburn <dmilburn@redhat.com>
-Cc: linux-ide@vger.kernel.org, alan@lxorguk.ukuu.org.uk
+To: Tejun Heo <tj@kernel.org>
+Cc: IDE/ATA development list <linux-ide@vger.kernel.org>
 
-David Milburn wrote:
-> Remove duplicate call to pcim_enable_device in sil680_init_one.
+Tejun Heo wrote:
+> On HSM_ST_ERR, ata_hsm_move() triggers WARN_ON() if AC_ERR_DEV or
+> AC_ERR_HSM is not set.  PHY events may trigger HSM_ST_ERR with other
+> error codes and, with or without it, there just isn't much reason to
+> do WARN_ON() on it.  Even if error code is not set there, core EH
+> logic won't have any problem dealing with the error condition.
 > 
-> Signed-off-by: David Milburn <dmilburn@redhat.com>
+> OSDL bz#11065 reports this problem.
+> 
+> Signed-off-by: Tejun Heo <tj@kernel.org>
 > ---
->  drivers/ata/pata_sil680.c |    3 ---
->  1 files changed, 0 insertions(+), 3 deletions(-)
+>  drivers/ata/libata-sff.c |    5 -----
+>  1 file changed, 5 deletions(-)
 > 
-> diff --git a/drivers/ata/pata_sil680.c b/drivers/ata/pata_sil680.c
-> index 720b864..e970b22 100644
-> --- a/drivers/ata/pata_sil680.c
-> +++ b/drivers/ata/pata_sil680.c
-> @@ -322,9 +322,6 @@ static int __devinit sil680_init_one(struct pci_dev *pdev,
->  	/* Try to acquire MMIO resources and fallback to PIO if
->  	 * that fails
->  	 */
-> -	rc = pcim_enable_device(pdev);
-> -	if (rc)
-> -		return rc;
->  	rc = pcim_iomap_regions(pdev, 1 << SIL680_MMIO_BAR, DRV_NAME);
->  	if (rc)
->  		goto use_ioports;
+> diff --git a/drivers/ata/libata-sff.c b/drivers/ata/libata-sff.c
+> index 304fdc6..2a4c516 100644
+> --- a/drivers/ata/libata-sff.c
+> +++ b/drivers/ata/libata-sff.c
+> @@ -1315,11 +1315,6 @@ fsm_start:
+>  		break;
+>  
+>  	case HSM_ST_ERR:
+> -		/* make sure qc->err_mask is available to
+> -		 * know what's wrong and recover
+> -		 */
+> -		WARN_ON(!(qc->err_mask & (AC_ERR_DEV | AC_ERR_HSM)));
+> -
+>  		ap->hsm_task_state = HSM_ST_IDLE;
+>  
 
 applied
 
