@@ -1,41 +1,44 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: Sparse warning in AHCI
-Date: Mon, 08 Sep 2008 21:12:10 +0200
-Message-ID: <48C5790A.7030900@gmail.com>
-References: <20080908092801.474aa23c@extreme>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH #upstream-fixes] sata_nv: disable hardreset for generic
+Date: Mon, 08 Sep 2008 21:17:30 +0200
+Message-ID: <48C57A4A.2050303@kernel.org>
+References: <4895407B.5030602@kernel.org> <48B803F8.8000306@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ti-out-0910.google.com ([209.85.142.188]:31689 "EHLO
-	ti-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751458AbYIHTNd (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 8 Sep 2008 15:13:33 -0400
-Received: by ti-out-0910.google.com with SMTP id b6so989285tic.23
-        for <linux-ide@vger.kernel.org>; Mon, 08 Sep 2008 12:13:32 -0700 (PDT)
-In-Reply-To: <20080908092801.474aa23c@extreme>
+Received: from hera.kernel.org ([140.211.167.34]:48428 "EHLO hera.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753111AbYIHTTd (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 8 Sep 2008 15:19:33 -0400
+In-Reply-To: <48B803F8.8000306@kernel.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Stephen Hemminger <shemminger@vyatta.com>
-Cc: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org
+To: linux@sun7.cn, IDE/ATA development list <linux-ide@vger.kernel.org>, Jeff Garzik <jeff@garzik.org>, Peer Chen <pchen@nvidia.com>, Kuan Luo <kluo@nvidia.com>
+Cc: stable@kernel.org
 
-Stephen Hemminger wrote:
-> Not sure how you want to fix this:
+Tejun Heo wrote:
+> From 2.6.26, libata is defaulting to hardreset for various reasons one
+> of them being unifying probing, hotplug and EH reset paths uniform.
+> Previously, broken hardreset could go unnoticed as it wasn't used
+> during probing but when something goes wrong or after hotplug the
+> problem will surface and bite hard.
 > 
->   CHECK   drivers/acpi/pci_irq.c
-> drivers/ata/ahci.c:323:2: warning: Initializer entry defined twice
-> drivers/ata/ahci.c:324:3:   also defined here
+> OSDL bug 11195 reports that sata_nv generic flavor falls into this
+> category.  Hardreset itself succeeds but PHY stays offline after
+> hardreset.  I tried longer debounce timing but the result was the
+> same.
 > 
-> This happens because macro ATA_BASE_SHT(drv_name) defines .can_queue
-> then then later in the initializer for ahci_sht, it gets redefined.
+>   http://bugzilla.kernel.org/show_bug.cgi?id=11195
 > 
-> Granted it probably works now, but sparse is correct to complain that
-> this is bad usage.
+> So, it seems we'll have to drop hardreset from the generic flavor.
 > 
+> Signed-off-by: Tejun Heo <tj@kernel.org>
+> Cc: Peer Chen <pchen@nvidia.com>
 
-Hmm... That use is pretty much intentional to provide generic default
-initial value and allow specific drivers to override if necessary and I
-believe it's a valid C usage, no?
+This one definitely should go into -stable too.  The original patch is...
+
+http://article.gmane.org/gmane.linux.ide/34077/raw
 
 Thanks.
 
