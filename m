@@ -1,32 +1,53 @@
-From: Stephen Hemminger <shemminger@vyatta.com>
-Subject: [PATCH] ata: duplicate variable sparse warning
-Date: Mon, 8 Sep 2008 09:31:39 -0700
-Message-ID: <20080908093139.3909a3ac@extreme>
+From: masouds@google.com (Masoud Sharbiani)
+Subject: Re: [PATCH] Fix pointer arithmetic in hpt3xx driver code (3rd try)
+Date: Mon, 8 Sep 2008 10:21:11 -0700
+Message-ID: <20080908172111.GG26371@google.com>
+References: <20080906171850.GF26371@google.com> <48C39D2F.4010701@ru.mvista.com> <48C3B909.3030405@ru.mvista.com> <200809072010.04122.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.vyatta.com ([216.93.170.194]:48506 "EHLO mail.vyatta.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750835AbYIHQbm (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 8 Sep 2008 12:31:42 -0400
+Received: from smtp-out.google.com ([216.239.33.17]:23827 "EHLO
+	smtp-out.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752008AbYIHRWK (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 8 Sep 2008 13:22:10 -0400
+Content-Disposition: inline
+In-Reply-To: <200809072010.04122.bzolnier@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: linux-ide@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: Sergei Shtylyov <sshtylyov@ru.mvista.com>, akpm@linux-foundation.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-drivers/ata/ata_piix.c:1502:7: warning: symbol 'rc' shadows an earlier one
+On Sun, Sep 07, 2008 at 08:10:03PM +0200, Bartlomiej Zolnierkiewicz wrote:
+> 
+> Hi,
+> 
+> Masoud/Sergei: sorry for the bug and thanks for fixing it.
+> 
+> On Sunday 07 September 2008, Sergei Shtylyov wrote:
+> > Hello, I wrote:
+> > >> diff --git a/drivers/ide/pci/hpt366.c b/drivers/ide/pci/hpt366.c
+> > >> index eb107ee..4eae284 100644
+> > >> --- a/drivers/ide/pci/hpt366.c
+> > >> +++ b/drivers/ide/pci/hpt366.c
+> > >> @@ -613,6 +613,14 @@ static int check_in_drive_list(ide_drive_t 
+> > >> *drive, const char **list)
+> > >>      return 0;
+> > >>  }
+> > >>  
+> > >> +static struct hpt_info *hpt3xx_get_info(struct device *dev)
+> > >> +{
+> > >> +    struct ide_host *host    = pci_get_drvdata(to_pci_dev(pci_dev));
+> > >>   
+> > >
+> > >   Oops, this just won't compile. :-/
+> > 
+> >    BTW, there's no need to invoke to_pci_dev() at all since 
+> > pci_get_drvdata(dev) boils down to dev_get_drvdata(&dev->dev) call. So, 
+> > in order not to waste time on useless pointer tricks, we should just 
+> > invoke the latter here.
+> 
+> I corrected this and applied the patch.
 
-Signed-off-by: Stephen Hemminger <shemminger@vyatta.com>
+Thanks!
 
---- a/drivers/ata/ata_piix.c	2008-09-08 09:29:22.000000000 -0700
-+++ b/drivers/ata/ata_piix.c	2008-09-08 09:29:33.000000000 -0700
-@@ -1499,7 +1499,7 @@ static int __devinit piix_init_one(struc
- 	 * off.
- 	 */
- 	if (pdev->vendor == PCI_VENDOR_ID_INTEL && pdev->device == 0x2652) {
--		int rc = piix_disable_ahci(pdev);
-+		rc = piix_disable_ahci(pdev);
- 		if (rc)
- 			return rc;
- 	}
+Masoud
