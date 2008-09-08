@@ -1,79 +1,46 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH 02/18] ide: use I/O ops directly in ide-dma.c
-Date: Mon, 08 Sep 2008 19:49:11 +0400
-Message-ID: <48C54977.6030801@ru.mvista.com>
-References: <20080620213323.13202.71450.sendpatchset@localhost.localdomain> <20080620213330.13202.11017.sendpatchset@localhost.localdomain>
+From: "Saeed Bishara" <saeed@marvell.com>
+Subject: RE: [PATCH] sata_mv: enable active LED blink mode for SoC
+Date: Mon, 8 Sep 2008 18:37:09 +0300
+Message-ID: <B9FFC3F97441D04093A504CEA31B7C4102AA86C6@MSILEXCH01.marvell.com>
+References: <12207863853449-git-send-email-saeed@marvell.com> <48C52B53.3030302@rtr.ca> <200809081616.03266.elendil@planet.nl> <200809081625.31131.elendil@planet.nl> <48C54238.9050106@onelan.co.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from h155.mvista.com ([63.81.120.155]:34089 "EHLO imap.sh.mvista.com"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752583AbYIHPsc (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 8 Sep 2008 11:48:32 -0400
-In-Reply-To: <20080620213330.13202.11017.sendpatchset@localhost.localdomain>
+Received: from galiil.marvell.com ([199.203.130.254]:15209 "EHLO
+	il.marvell.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751945AbYIHQAI convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 8 Sep 2008 12:00:08 -0400
+Content-class: urn:content-classes:message
+In-Reply-To: <48C54238.9050106@onelan.co.uk>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Simon Farnsworth <simon.farnsworth@onelan.co.uk>, Frans Pop <elendil@planet.nl>
+Cc: Mark Lord <liml@rtr.ca>, linux-ide@vger.kernel.org, linux-arm@vger.kernel.org, jeff@garzik.org, grundler@google.com, Lennert Buijtenhek <buytenh@marvell.com>, Nicolas Pitre <nico@marvell.com>, tbm@cyrius.com
 
-Bartlomiej Zolnierkiewicz wrote:
+> 
+> While I don't have the relevant hardware, this sounds like a hardware
+> limitation, not a regression. I suspect that the LED is active
+whenever
+> a command is outstanding; with NCQ allowed to queue more than 1
+command
+> at a time, Linux is keeping the drive fed with commands so that there
+> are always outstanding commands, and thus the light never goes
+inactive
+> during disk activity.
+> 
+> As a result, you never see the LED intensity vary, as the drive never
+> idles waiting for a new command, but is constantly processing commands
+> as fast as it can. Allowing the drive to idle would get you the
+> "flickering" you want, at the expense of the performance gain NCQ
+> provides.
+Frans reported that the LED stays on during disk activity, so it looks
+like the drive always unbusy. I need to check with the HW guys how the
+activity LED behaves in NCQ mode. I suspect that this disk responds
+immediately to new commands telling the host "I got the command and it
+will be handled later", this response clears the ports ATA busy bit. If
+the activity LED reflects only the state of that bit in NCQ mode, then
+that could explain the behavior that Frans described.
 
-> Use I/O ops directly in ide_dma_host_set(), ide_dma_setup(),
-> ide_dma_start() and __ide_dma_end().
-
-> There should be no functional changes caused by this patch.
-
-> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-[...]
-> Index: b/drivers/ide/ide-dma.c
-> ===================================================================
-> --- a/drivers/ide/ide-dma.c
-> +++ b/drivers/ide/ide-dma.c
-> @@ -376,7 +376,10 @@ void ide_dma_host_set(ide_drive_t *drive
->  	else
->  		dma_stat &= ~(1 << (5 + unit));
->  
-> -	hwif->OUTB(dma_stat, hwif->dma_status);
-> +	if (hwif->host_flags & IDE_HFLAG_MMIO)
-> +		writeb(dma_stat, (void __iomem *)hwif->dma_status);
-> +	else
-> +		outb(dma_stat, hwif->dma_status);
->  }
->  
->  EXPORT_SYMBOL_GPL(ide_dma_host_set);
-> @@ -470,13 +474,20 @@ int ide_dma_setup(ide_drive_t *drive)
-[...]
->  	/* read DMA status for INTR & ERROR flags */
->  	dma_stat = hwif->read_sff_dma_status(hwif);
->  
->  	/* clear INTR & ERROR flags */
-> -	hwif->OUTB(dma_stat|6, hwif->dma_status);
-> +	if (mmio)
-> +		writeb(dma_stat | 6, (void __iomem *)hwif->dma_status);
-> +	else
-> +		outb(dma_stat | 6, hwif->dma_status);
-> +
->  	drive->waiting_for_dma = 1;
->  	return 0;
->  }
-> @@ -511,18 +529,31 @@ EXPORT_SYMBOL_GPL(ide_dma_start);
-[...]
->  	/* get DMA status */
->  	dma_stat = hwif->read_sff_dma_status(hwif);
-> -	/* clear the INTR & ERROR bits */
-> -	hwif->OUTB(dma_stat|6, hwif->dma_status);
-> +
-> +	if (mmio)
-> +		/* clear the INTR & ERROR bits */
-> +		writeb(dma_stat | 6, (void __iomem *)hwif->dma_status);
-> +	else
-> +		outb(dma_stat | 6, hwif->dma_status);
-> +
-
-    Seems like the above 3 sequences are asking to be factored out into 
-ide_dma_write_status(); with the latter two possibly factored out into 
-ide_dma_clear_status(). I'm making a notch if you don't mind (or beat me to it 
-:-)...
-
-MBR, Sergei
+- saeed
