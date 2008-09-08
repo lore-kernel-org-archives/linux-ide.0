@@ -1,59 +1,46 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCH] SATA: Blacklist systems that spin off disks during ACPI
- power off
-Date: Mon, 08 Sep 2008 13:38:12 +0200
-Message-ID: <48C50EA4.2020700@gmail.com>
-References: <200808290002.55026.rjw@sisk.pl> <200808291241.04183.rjw@sisk.pl> <48B7D286.7050104@gmail.com> <200809061923.29020.rjw@sisk.pl>
+From: "xerces8" <xerces8@butn.net>
+Subject: Re: Intel AHCI ICH9R not detecting devices
+Date: Mon, 08 Sep 2008 13:43:51 +0200
+Message-ID: <WorldClient-F200809081343.AA43510194@butn.net>
+References: <WorldClient-F200808221729.AA29360172@butn.net> <48B92399.6010808@kernel.org> <WorldClient-F200808302142.AA42270030@butn.net> <48BBB248.7090904@kernel.org> <WorldClient-F200809062012.AA12270277@butn.net> <WorldClient-F200809062331.AA31030286@butn.net> <48C50E1F.9040407@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-2
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-acpi-owner@vger.kernel.org>
-In-Reply-To: <200809061923.29020.rjw@sisk.pl>
-Sender: linux-acpi-owner@vger.kernel.org
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: ACPI Devel Maling List <linux-acpi@vger.kernel.org>, linux-ide@vger.kernel.org, Thomas Renninger <trenn@suse.de>, Robert Hancock <hancockr@shaw.ca>, LKML <linux-kernel@vger.kernel.org>, Frans Pop <elendil@planet.nl>, Maciej Rutecki <maciej.rutecki@gmail.com>, Jeff Garzik <jeff@garzik.org>, Andrew Morton <akpm@linux-foundation.org>
+Content-Type: text/plain; charset="us-ascii"
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from ikar.perftech.si ([195.246.0.20]:22051 "EHLO ikar.perftech.si"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752226AbYIHLoF (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 8 Sep 2008 07:44:05 -0400
+Received: from dedal.perftech.si (unknown [10.12.0.44])
+	by ikar.perftech.si (Spam Firewall) with ESMTP id 96BA11DC9B4
+	for <linux-ide@vger.kernel.org>; Mon,  8 Sep 2008 13:43:57 +0200 (CEST)
+Received: from dedal.perftech.si ([10.12.0.44]) by ikar.perftech.si with ESMTP id UdcQS6PZUbLGppg2 for <linux-ide@vger.kernel.org>; Mon, 08 Sep 2008 13:43:57 +0200 (CEST)
+Received: from WorldClient by butn.net (MDaemon PRO v9.6.4)
+	with ESMTP id 57-md50000233369.msg
+	for <linux-ide@vger.kernel.org>; Mon, 08 Sep 2008 13:43:53 +0200
+In-Reply-To: <48C50E1F.9040407@kernel.org>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: linux-ide@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>, stein@hermes.si
 
-Rafael J. Wysocki wrote:
-> SATA: Blacklist systems that spin off disks during ACPI power off
-> 
-> Some notebooks from HP have the problem that their BIOSes attempt to
-> spin down hard drives before entering ACPI system states S4 and S5.
-> This leads to a yo-yo effect during system power-off shutdown and the
-> last phase of hibernation when the disk is first spun down by the
-> kernel and then almost immediately turned on and off by the BIOS.
-> This, in turn, may result in shortening the disk's life times.
-> 
-> To prevent this from happening we can blacklist the affected systems
-> using DMI information.  However, only the on-board controlles should
-> be blacklisted and their PCI slot numbers can be used for this
-> purpose.  Unfortunately the existing interface for checking DMI
-> information of the system is not very convenient for this purpose,
-> because to use it, we would have to define special callback functions
-> or create a separate struct dmi_system_id table for each blacklisted
-> system.
-> 
-> To overcome this difficulty introduce a new function
-> dmi_first_match() returning a pointer to the first entry in an array
-> of struct dmi_system_id elements that matches the system DMI
-> information.  Then, we can use this pointer to access the entry's
-> .driver_data field containing the additional information, such as
-> the PCI slot number, allowing us to do the desired blacklisting.
-> 
-> Introduce a new libata flag ATA_FLAG_NO_POWEROFF_SPINDOWN that, if
-> set, will prevent disks from being spun off during system power off
-> and hibernation (to handle the hibernation case we need a new system
-> state SYSTEM_HIBERNATE_ENTER that can be checked against by libata,
-> in analogy with SYSTEM_POWER_OFF).  Use dmi_first_match() to set this
-> flag for some systems affected by the problem described above (HP nx6325,
-> HP nx6310, HP 2510p).
-> 
-> Signed-off-by: Rafael J. Wysocki <rjw@sisk.pl>
+Tejun Heo wrote:
 
-libata part looks good to me but I think it would be better to
-separate out DMI changes into a separate patch.
+> xerces8 wrote:
+> > I put more debug in the function that failed and tracked the problem down to setup_irq().
+> > I also enabled CONFIG_DEBUG_SHIRQ. The kernel messages are attached.
+> 
+> Aieee... please disable ide-generic.
 
-Thanks.
+(you mean CONFIG_IDE_GENERIC, right ?)
 
--- 
-tejun
+Can you elaborate ?
+Is this some bug ?
+
+I can't just a tell distro owner to change a kernel build option
+because someone told me to :-)
+(remember, this is a problem with the kernel of RIPLinux, a small recovery live CD)
+
+Regards,
+David
+
+
