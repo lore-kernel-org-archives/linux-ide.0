@@ -1,37 +1,44 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH 2.6.27-rc4] ahci: RAID mode SATA patch for Intel Ibex
- Peak DeviceIDs
-Date: Mon, 08 Sep 2008 12:16:06 -0400
-Message-ID: <48C54FC6.6030109@pobox.com>
-References: <200808271647.22782.seth.heasley@intel.com>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [PATCH] pata_sil680: remove duplicate pcim_enable_device
+Date: Mon, 08 Sep 2008 12:16:12 -0400
+Message-ID: <48C54FCC.3030401@garzik.org>
+References: <20080829153628.GA20130@dhcp-210.hsv.redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:37742 "EHLO mail.dvmed.net"
+Received: from srv5.dvmed.net ([207.36.208.214]:37746 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752728AbYIHQQJ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 8 Sep 2008 12:16:09 -0400
-In-Reply-To: <200808271647.22782.seth.heasley@intel.com>
+	id S1754411AbYIHQQQ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 8 Sep 2008 12:16:16 -0400
+In-Reply-To: <20080829153628.GA20130@dhcp-210.hsv.redhat.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Seth Heasley <seth.heasley@intel.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: David Milburn <dmilburn@redhat.com>
+Cc: linux-ide@vger.kernel.org, alan@lxorguk.ukuu.org.uk
 
-Seth Heasley wrote:
-> This patch adds the Intel Ibex Peak (PCH) SATA RAID Controller DeviceIDs.
+David Milburn wrote:
+> Remove duplicate call to pcim_enable_device in sil680_init_one.
 > 
-> Signed-off-by: Seth Heasley <seth.heasley@intel.com>
+> Signed-off-by: David Milburn <dmilburn@redhat.com>
+> ---
+>  drivers/ata/pata_sil680.c |    3 ---
+>  1 files changed, 0 insertions(+), 3 deletions(-)
 > 
-> --- linux-2.6/drivers/ata/ahci.c.orig	2008-08-27 11:48:10.000000000 -0700
-> +++ linux-2.6/drivers/ata/ahci.c	2008-08-27 11:49:23.000000000 -0700
-> @@ -487,7 +487,9 @@
->  	{ PCI_VDEVICE(INTEL, 0x3a05), board_ahci }, /* ICH10 */
->  	{ PCI_VDEVICE(INTEL, 0x3a25), board_ahci }, /* ICH10 */
->  	{ PCI_VDEVICE(INTEL, 0x3b24), board_ahci }, /* PCH RAID */
-> +	{ PCI_VDEVICE(INTEL, 0x3b25), board_ahci }, /* PCH RAID */
->  	{ PCI_VDEVICE(INTEL, 0x3b2b), board_ahci }, /* PCH RAID */
-> +	{ PCI_VDEVICE(INTEL, 0x3b2c), board_ahci }, /* PCH RAID */
+> diff --git a/drivers/ata/pata_sil680.c b/drivers/ata/pata_sil680.c
+> index 720b864..e970b22 100644
+> --- a/drivers/ata/pata_sil680.c
+> +++ b/drivers/ata/pata_sil680.c
+> @@ -322,9 +322,6 @@ static int __devinit sil680_init_one(struct pci_dev *pdev,
+>  	/* Try to acquire MMIO resources and fallback to PIO if
+>  	 * that fails
+>  	 */
+> -	rc = pcim_enable_device(pdev);
+> -	if (rc)
+> -		return rc;
+>  	rc = pcim_iomap_regions(pdev, 1 << SIL680_MMIO_BAR, DRV_NAME);
+>  	if (rc)
+>  		goto use_ioports;
 
 applied
 
