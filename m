@@ -1,186 +1,118 @@
-From: Randy Dunlap <randy.dunlap@oracle.com>
-Subject: Re: [PATCH 4/4] Add documentation for hard disk shock protection
- interface
-Date: Mon, 8 Sep 2008 15:04:56 -0700
-Message-ID: <20080908150456.5069a551.randy.dunlap@oracle.com>
-References: <87wshzplvk.fsf@denkblock.local>
-	<20080829211345.4355.5630.stgit@denkblock.local>
+From: Antonio Cardoso Martins <digiplan.pt@gmail.com>
+Subject: Re: UDMA with CS5530 using IBM Netvista N2200 (8363)
+Date: Tue, 09 Sep 2008 01:03:21 +0100
+Message-ID: <48C5BD49.6090204@gmail.com>
+References: <48C45BEF.5090502@gmail.com> <20080908094332.7b021b4e@lxorguk.ukuu.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1755860AbYIHWGl@vger.kernel.org>
-In-Reply-To: <20080829211345.4355.5630.stgit@denkblock.local>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Elias Oltmanns <eo@nebensachen.de>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, Andrew Morton <akpm@linux-foundation.org>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Jeff Garzik <jeff@garzik.org>, Tejun Heo <htejun@gmail.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from fk-out-0910.google.com ([209.85.128.186]:30693 "EHLO
+	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753797AbYIIADv (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 8 Sep 2008 20:03:51 -0400
+Received: by fk-out-0910.google.com with SMTP id 18so1328276fkq.5
+        for <linux-ide@vger.kernel.org>; Mon, 08 Sep 2008 17:03:49 -0700 (PDT)
+In-Reply-To: <20080908094332.7b021b4e@lxorguk.ukuu.org.uk>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-On Fri, 29 Aug 2008 23:28:41 +0200 Elias Oltmanns wrote:
+Alan Cox wrote:
+>> Netvista will complain with the messages bellow, using kernel 2.6.24.7
+>> (i haven't used any more recent kernel because since kernel 2.6.24.7
+>> they just fail to boot in Netvista 8363).
+>>     
+>
+> What was the last kernel that did boot correctly ?
+> If you are using a CF/ATA adapter do you have one which is rated for
+> UDMA ?
+> Does 2.6.24.7 work with CS5530=n and CONFIG_PATA_CS5530 enabled instead ?
+> (If it doesn't then the different diagnostics will be useful)
+>
+> Alan
+>
+>   
+>From kernel 2.6.25, using the same .config as in 2.6.24.7, kernel does
+not start. I also tried with 2.6.25.2 and 2.6.26.3 with the same results.
+The ATA adapter is embedded into the motherboard. Looking at the board,
+the chipset reads Cyrix Cx5530. There is some contradictory information
+about whether this chip supports DMA or not. Regarding the CF, i am
+almost sure it supports some form of UDMA. You can see an image of the
+Netvista in http://jeanchristophe.duber.free.fr/netvista_8363/
 
-> Put some information (and pointers to more) into the kernel's doc tree,
-> describing briefly the interface to the kernel's disk head unloading
-> facility. Information about how to set up a complete shock protection
-> system under GNU/Linux can be found on the web and is referenced
-> accordingly.
-> 
-> Signed-off-by: Elias Oltmanns <eo@nebensachen.de>
-> ---
-> 
->  Documentation/laptops/disk-shock-protection.txt |  131 +++++++++++++++++++++++
->  1 files changed, 131 insertions(+), 0 deletions(-)
->  create mode 100644 Documentation/laptops/disk-shock-protection.txt
-> 
-> diff --git a/Documentation/laptops/disk-shock-protection.txt b/Documentation/laptops/disk-shock-protection.txt
-> new file mode 100644
-> index 0000000..bd483a3
-> --- /dev/null
-> +++ b/Documentation/laptops/disk-shock-protection.txt
-> @@ -0,0 +1,131 @@
-> +Hard disk shock protection
-> +==========================
-> +
-> +Author: Elias Oltmanns <eo@nebensachen.de>
-> +Last modified: 2008-08-28
-> +
-> +
-> +0. Contents
-> +-----------
-> +
-> +1. Intro
-> +2. The interface
-> +3. References
-> +4. CREDITS
-> +
-> +
-> +1. Intro
-> +--------
-> +
-> +ATA/ATAPI-7 specifies the IDLE IMMEDIATE command with unload feature.
-> +Issuing this command should cause the drive to switch to idle mode and
-> +unload disk heads. This feature is being used in modern laptops in
-> +conjunction with accelerometers and appropriate software to implement
-> +a shock protection facility. The idea is to stop all I/O operations on
-> +the internal hard drive and park its heads on the ramp when critical
-> +situations are anticipated. The desire to have such a feature
-> +available on GNU/Linux systems has been the original motivation to
-> +implement a generic disk head parking interface in the Linux kernel.
-> +Please note, however, that other components have to be set up on your
-> +system in order to get disk shock protection working (see section
-> +3. Referneces below for pointers to more information about that).
+Booting with CONFIG_BLK_DEV_CS5530=n  and  CONFIG_PATA_CS5530=y  and
+kernel 2.6.24.7 gives:
+...
+ide: Assuming 33MHz system bus speed for PIO modes; override with idebus=xx
+Driver 'sd' needs updating - please use bus_type methods
+scsi0: pata_cs5530
+scsi1: pata_cs5530
+ata1: PATA max UDMA/33 cmd 0x1f0 ctl 0x3f6 bmdma 0xfc00 irq 14
+ata2: PATA max UDMA/33 cmd 0x170 ctl 0x376 bmdma 0xfc08 irq 15
+ata1.00: ATA-5: SILICON POWER, 2.0, mas UDMA/66
+ata1.00: 2000880 sectors, multi 1: LBA
+ata1.00: configured for UDMA/33
+scsi 0:0:0:0: Direct-Access           ATA         SILICON POWER       
+2.0    PQ:   0   ANSI: 5
+sd 0:0:0:0: [sda] 2000880 512-byte hardware sectors (1024 MB)
+sd 0:0:0:0: [sda] Write Protect is off
+sd 0:0:0:0: [sda] Write cache: disabled, read cache: enabled, doesn't
+support DPO or FUA
+sd 0:0:0:0: [sda] 2000880 512-byte hardware sectors (1024 MB)
+sd 0:0:0:0: [sda] Write Protect is off
+sd 0:0:0:0: [sda] Write cache: disabled, read cache: enabled, doesn't
+support DPO or FUA
+ sda:<4>Clocksource tsc unstable (delta = 120000656 ns)
+Time: pit clocksource has been installed.
+ata1.00: exception Emask 0x0 SAct 0x0 SErr 0x0 actions 0x2 frozen
+ata1.00: cmd c8/00:08:00:00:00/00:00:00:00:00/e0 tag 0 dma 4096 in
+                 res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
+ata1.00: status: { DRDY }
+ata1: soft resetting link
+ata1.00: qc timeout (cmd 0xec)
+ata1.00: failed to IDENTIFY (I/O error, err_mask=0x4)
+ata1.00: revalidation failed (errno=-5)
+ata1: failed to recover some devices, retrying in 5 secs
+ata1: port is slow to respond, please be patient (Status 0xd0)
+ata1: device not ready (errno=-16), forcing hardreset
+ata1: soft resetting link
+ata1.00: qc timeout (cmd 0xec)
+ata1.00: failed to IDENTIFY (I/O error, err_mask=0x4)
+ata1.00: revalidation failed (errno=-5)
+ata1: failed to recover some devices, retrying in 5 secs
+ata1: port is slow to respond, please be patient (Status 0x80)
+ata1: device not ready (errno=-16), forcing hardreset
+ata1: soft resetting link
+ata1.00: qc timeout (cmd 0xec)
+ata1.00: failed to IDENTIFY (I/O error, err_mask=0x4)
+ata1.00: revalidation failed (errno=-5)
+ata1.00: disabled
+ata1: port is slow to respond, please be patient (Status 0x80)
+ata1: device not ready (errno=-16), forcing hardreset
+ata1: soft resetting link
+ata1: EH complete
+sd 0:0:0:0: [sda] Result: hostbyte=0x04 driverbyte=0x00
+end_request: I/O error, dev sda, sector 0
+Buffer I/O error on device sda, logical block 0
+sd 0:0:0:0: [sda] Result: hostbyte=0x04 driverbyte=0x00
+end_request: I/O error, dev sda, sector 0
+Buffer I/O error on device sda, logical block 0
+  unable to read partition table
+sd 0:0:0.0: [sda] attached SCSI disk
+sd 0:0:0.0: Attached scsi generic sg0 type 0
+...
+VFS: Cannot open root device "<NULL>" or unknown-block(0,0)
+Please append a correct "root=" boot option; here are the available
+partitions:
+0800        1000440 sda driver: sd
+Kernel panic - not syncing: VFS: Unable to mount root fs on
+unknown-block(0,0)
 
-      References
+Does this give any interesting info to the problem?
+PS: Since i cannot provide parameters to the kernel, i don't know how
+the kernel i have completely working (2.6.22.15) figure out that he
+should continue boot from root=/dev/hda1. This kernel does not seem to
+get to that conclusion.
 
-> +
-> +
-> +2. The interface
-> +----------------
-> +
-> +The interface works as follows: Writing an integer value to
-> +/sys/block/*/device/unload_heads will take the heads of the respective
-> +drive off the platter and block all I/O operations for the specified
-> +number of seconds. When the timeout expires and no further disk head
-> +park request has been issued in the meantime, normal operation will be
-> +resumed. The maximal value accepted for a timeout is 30 seconds.
-> +However, you can always reset a running timer to any value between 0
-> +and 30 by issuing a subsequent head park request before the timer of
-> +the previous one has expired. In particular, the total timeout can
-> +exceed 30 seconds and, more importantly, you can abort a timer and
-> +resume normal operation immediately by specifying a timeout of 0.
-> +Reading from /sys/block/*/device/unload_heads will report zero if no
-> +timer is running and the number of seconds until the timer expires
-> +otherwise.
-> +
-> +There is a technical detail of this implementation that may cause some
-> +confusion and should be discussed here. When a head park request has
-> +been issued to a device successfully, all I/O operations on the
-> +controller port this device is attached to will be deferred. That is
-> +to say, any other device that may be connected to the same port will
-> +be affected too. For that reason, head parking requests will be sent
-> +to all devices that support this feature sharing the same port before
-> +that port is taken offline, as it were. As far as PATA (old style IDE)
-> +configurations are concerned, there can only be two devices attached
-> +to any single port. In SATA world we have port multipliers which means
-> +that a user issued head parking request to one device may actually
-> +result in stopping I/O to a whole bunch of deviices. Hwoever, since
-
-                                              devices.  However,
-
-> +this feature is supposed to be used on laptops and does not seem to be
-> +very useful in any other environment, there will be mostly one device
-> +per port. Even if the CD/DVD writer happens to be connected to the
-> +same port as the hard drive, it generally *should* recover just fine
-> +from the occasional buffer under-run incurred by a head park request
-> +to the HD.
-> +
-> +Write access to /sys/block/*/device/unload_heads is denied with
-> +-EOPNOTSUPP if the device does not support the unload feature. Read
-> +access, on the other hand, is granted on all devices, so it is easy to
-> +find out whether two devices share the same port and are subject to
-> +the limitation described in the previous paragraph. Just do, for
-> +example:
-> +
-> +# echo 30 > /sys/block/sda/device/unload_heads
-> +
-> +and check whether
-> +
-> +# cat /sys/block/device/sdb/unload_heads
-> +
-> +gives you a nonzero value (assuming, of course, there actually are
-
-I prefer:      non-zero
-
-> +devices sda and sdb up and running in your system).
-> +
-> +Finally, there are some hard drives that only comply with an earlier
-> +version of the ATA standard than ATA-7, but do support the unload
-> +feature nonetheless. Unfortunately, there is no safe way Linux can
-> +detect these devices, so you won't be able to write to the
-> +unload_heads attribute. If you know that your device really does
-> +support the unload feature (for instance, because the vendor of your
-> +laptop or the hard drive itself told you so), the you can tell the
-> +kernel to enable the usage of this feature for that drive by means of
-> +the unload_feature attribute:
-> +
-> +# echo 1 > /sys/block/*/device/unload_feature
-> +
-> +will enable the feature on that particular device, and giving 0
-> +instead of 1 will disable it again.
-> +
-> +
-> +3. References
-> +-------------
-> +
-> +There are several laptops from different brands featuring shock
-
-                                            vendors
-
-> +protection capabilities. As manufacturers have refused to support open
-> +source development of the required software components so far, Linux
-> +support for shock protection varies considerably between different
-> +hardware implementations. Ideally, this section should contain a list
-> +of pointers at different projects aiming at an implementation of shock
-> +protection on different systeems. Unfortunately, I only know of a
-> +single project which, although still considered experimental, is fit
-> +for use. Please feel free to add projects that have been the victims
-> +of my ignorance.
-> +
-> +- http://www.thinkwiki.org/wiki/HDAPS
-> +  See this page for information about Linux support of the hard disk
-> +  active protection system as implemented in IBM/Lenovo Thinkpads.
-> +  (FIXME: The information there will have to be updated once this
-> +  patch has been approved or the user interface has been agreed upon
-> +  at least.)
-> +
-> +
-> +4. CREDITS
-> +----------
-> +
-> +This implementation of disk head parking has been based on a patch
-> +originally published by Jon Escombe <lists@dresco.co.uk>. Assisted by
-> +various kernel developers, the author of this document has rewritten
-> +the original patch in order to make it fit for upstream submission.
-
----
-~Randy
-Linux Plumbers Conference, 17-19 September 2008, Portland, Oregon USA
-http://linuxplumbersconf.org/
+Best regards
