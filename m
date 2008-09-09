@@ -1,76 +1,63 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH 5/7] sgiioc4: use ->init_dma method
-Date: Tue, 09 Sep 2008 23:32:24 +0400
-Message-ID: <48C6CF48.5060309@ru.mvista.com>
-References: <200803091631.48968.bzolnier@gmail.com>
+From: Bob Stewart <bob@evoria.net>
+Subject: Re: sata_inic162x  LED enable request
+Date: Tue, 9 Sep 2008 12:41:48 -0700 (PDT)
+Message-ID: <962320.92633.qm@web902.biz.mail.mud.yahoo.com>
+References: <48C62B68.10502@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from gateway-1237.mvista.com ([63.81.120.155]:59486 "EHLO
-	imap.sh.mvista.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752677AbYIITbp (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 9 Sep 2008 15:31:45 -0400
-In-Reply-To: <200803091631.48968.bzolnier@gmail.com>
+Received: from web902.biz.mail.mud.yahoo.com ([216.252.100.42]:30660 "HELO
+	web902.biz.mail.mud.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1753165AbYIITlt (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 9 Sep 2008 15:41:49 -0400
+In-Reply-To: <48C62B68.10502@kernel.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Jeremy Higdon <jeremy@sgi.com>
+To: Tejun Heo <tj@kernel.org>
+Cc: linux-ide@vger.kernel.org, jeff@garzik.org
 
-Bartlomiej Zolnierkiewicz wrote:
 
-> * Move dma_base check from sgiioc4_ide_setup_pci_device()
->   to ide_dma_sgiioc4().
+--- Tejun Heo <tj@kernel.org> wrote:
 
-    This check should've been thrown out -- it's never true.
+> Bob Stewart wrote:
+> > Well, I can try.  But I couldn't figure out how to put the header lines
+> > which list changes, insertions and deletions.  Sorry, but I'm not using
+> > git and not familiar with git-diff or any of this formatting stuff.  I have
+> 
+> > an "a" and a "b" under directory /data/src/linxux-2.6.27-rc5.  I ran the 
+> > following command to get the diff output that follows:
+> 
+> Oh.. You can generate the summary using diffstat.  Just do diffstat
+> -p1 < patch and paste the output in.
+> 
+> Thanks.
 
-> * Replace ide_dma_sgiioc4() 'unsigned long dma_base' argument
->   by 'const struct ide_port_info *d'.
+OK, third try.  Patch to enable LED on sata_inic162x.c
 
-> * Move hwif->INB setup from ide_init_sgiioc4() to
->   sgiioc4_ide_setup_pci_device().
 
-> * Move ide_init_sgiioc4() call from sgiioc4_ide_setup_pci_device()
->   to ide_dma_sgiioc4().
+ drivers/ata/sata_inic162x.c |    3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-> * Convert the driver to use ->init_dma method.
-
-> Cc: Jeremy Higdon <jeremy@sgi.com>
-> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-
-> Index: b/drivers/ide/pci/sgiioc4.c
-> ===================================================================
-> --- a/drivers/ide/pci/sgiioc4.c
-> +++ b/drivers/ide/pci/sgiioc4.c
-> @@ -327,15 +327,21 @@ sgiioc4_INB(unsigned long port)
->  	return reg;
->  }
->  
-> +static void __devinit ide_init_sgiioc4(ide_hwif_t *);
-> +
->  /* Creates a dma map for the scatter-gather list entries */
->  static int __devinit
-> -ide_dma_sgiioc4(ide_hwif_t * hwif, unsigned long dma_base)
-> +ide_dma_sgiioc4(ide_hwif_t *hwif, const struct ide_port_info *d)
->  {
->  	struct pci_dev *dev = to_pci_dev(hwif->dev);
-> +	unsigned long dma_base = pci_resource_start(dev, 0) + IOC4_DMA_OFFSET;
->  	void __iomem *virt_dma_base;
->  	int num_ports = sizeof (ioc4_dma_regs_t);
->  	void *pad;
->  
-> +	if (dma_base == 0)
-> +		return -1;
-> +
-
-    It should be quite obvious that 'dma_base' will never be 0 since 
-IOC4_DMA_OFFSET == 0x140.
-
->  	printk(KERN_INFO "%s: BM-DMA at 0x%04lx-0x%04lx\n", hwif->name,
->  	       dma_base, dma_base + num_ports - 1);
-
-    It should print "MMIO-DMA" since the registers are memory-mapped.
-
-    Making another notch...
-
-MBR, Sergei
+diff --git a/drivers/ata/sata_inic162x.c b/drivers/ata/sata_inic162x.c
+index 3ead02f..5032c32 100644
+--- a/drivers/ata/sata_inic162x.c
++++ b/drivers/ata/sata_inic162x.c
+@@ -96,6 +96,7 @@ enum {
+ 	PORT_SCR		= 0x20,
+ 
+ 	/* HOST_CTL bits */
++	HCTL_LEDEN		= (1 << 3),  /* enable LED operation */
+ 	HCTL_IRQOFF		= (1 << 8),  /* global IRQ off */
+ 	HCTL_FTHD0		= (1 << 10), /* fifo threshold 0 */
+ 	HCTL_FTHD1		= (1 << 11), /* fifo threshold 1*/
+@@ -540,7 +541,7 @@ static unsigned int inic_qc_issue(struct ata_queued_cmd
+*qc)
+ 	void __iomem *port_base = inic_port_base(ap);
+ 
+ 	/* fire up the ADMA engine */
+-	writew(HCTL_FTHD0, port_base + HOST_CTL);
++	writew(HCTL_FTHD0 | HCTL_LEDEN, port_base + HOST_CTL);
+ 	writew(IDMA_CTL_GO, port_base + PORT_IDMA_CTL);
+ 	writeb(0, port_base + PORT_CPB_PTQFIFO);
+ 
