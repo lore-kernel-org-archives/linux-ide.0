@@ -1,63 +1,30 @@
-From: Bob Stewart <bob@evoria.net>
-Subject: Re: sata_inic162x  LED enable request
-Date: Tue, 9 Sep 2008 12:41:48 -0700 (PDT)
-Message-ID: <962320.92633.qm@web902.biz.mail.mud.yahoo.com>
-References: <48C62B68.10502@kernel.org>
+From: Chuck Ebbert <cebbert@redhat.com>
+Subject: Re: [PATCH] ahci: Fix long standing Marvell regressions
+Date: Tue, 09 Sep 2008 18:18:44 -0400
+Message-ID: <48C6F644.9080905@redhat.com>
+References: <20080903000538.7500eaf8@lxorguk.ukuu.org.uk>	<48BDCF09.7000603@garzik.org>	<20080903142941.3f25d235@lxorguk.ukuu.org.uk> <20080903144834.35276de7@lxorguk.ukuu.org.uk> <48C54EFF.3060603@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from web902.biz.mail.mud.yahoo.com ([216.252.100.42]:30660 "HELO
-	web902.biz.mail.mud.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1753165AbYIITlt (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 9 Sep 2008 15:41:49 -0400
-In-Reply-To: <48C62B68.10502@kernel.org>
+Received: from mx1.redhat.com ([66.187.233.31]:34876 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750926AbYIIWV1 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 9 Sep 2008 18:21:27 -0400
+In-Reply-To: <48C54EFF.3060603@garzik.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: linux-ide@vger.kernel.org, jeff@garzik.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, torvalds@osdl.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-
---- Tejun Heo <tj@kernel.org> wrote:
-
-> Bob Stewart wrote:
-> > Well, I can try.  But I couldn't figure out how to put the header lines
-> > which list changes, insertions and deletions.  Sorry, but I'm not using
-> > git and not familiar with git-diff or any of this formatting stuff.  I have
+Jeff Garzik wrote:
+> applied.  I edited the text a bit, for formatting and clarity only (see 
+> attached)
 > 
-> > an "a" and a "b" under directory /data/src/linxux-2.6.27-rc5.  I ran the 
-> > following command to get the diff output that follows:
-> 
-> Oh.. You can generate the summary using diffstat.  Just do diffstat
-> -p1 < patch and paste the output in.
-> 
-> Thanks.
+ >   ahci, pata_marvell: play nicely together
 
-OK, third try.  Patch to enable LED on sata_inic162x.c
+I can't see how that's going to work with a 6145 adapter and no PATA devices
+attached. The AHCI driver will always defer to pata_marvell (unless
+marvell_enable=1 is passed) and pata_marvell will defer to ahci when it doesn't
+see any PATA devices.
 
-
- drivers/ata/sata_inic162x.c |    3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/ata/sata_inic162x.c b/drivers/ata/sata_inic162x.c
-index 3ead02f..5032c32 100644
---- a/drivers/ata/sata_inic162x.c
-+++ b/drivers/ata/sata_inic162x.c
-@@ -96,6 +96,7 @@ enum {
- 	PORT_SCR		= 0x20,
- 
- 	/* HOST_CTL bits */
-+	HCTL_LEDEN		= (1 << 3),  /* enable LED operation */
- 	HCTL_IRQOFF		= (1 << 8),  /* global IRQ off */
- 	HCTL_FTHD0		= (1 << 10), /* fifo threshold 0 */
- 	HCTL_FTHD1		= (1 << 11), /* fifo threshold 1*/
-@@ -540,7 +541,7 @@ static unsigned int inic_qc_issue(struct ata_queued_cmd
-*qc)
- 	void __iomem *port_base = inic_port_base(ap);
- 
- 	/* fire up the ADMA engine */
--	writew(HCTL_FTHD0, port_base + HOST_CTL);
-+	writew(HCTL_FTHD0 | HCTL_LEDEN, port_base + HOST_CTL);
- 	writew(IDMA_CTL_GO, port_base + PORT_IDMA_CTL);
- 	writeb(0, port_base + PORT_CPB_PTQFIFO);
- 
