@@ -1,83 +1,73 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: libata error/reset
-Date: Tue, 09 Sep 2008 13:28:36 +0200
-Message-ID: <48C65DE4.206@kernel.org>
-References: <48C17EB1.2020206@isomerica.net>
+Subject: Re: ich10r ahci with port multiplier or native detaches disks
+Date: Tue, 09 Sep 2008 13:44:27 +0200
+Message-ID: <48C6619B.4020302@kernel.org>
+References: <alpine.DEB.1.10.0809081638330.31178@kurp.hut.fi>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:57021 "EHLO hera.kernel.org"
+Received: from hera.kernel.org ([140.211.167.34]:49637 "EHLO hera.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752645AbYIILaA (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 9 Sep 2008 07:30:00 -0400
-In-Reply-To: <48C17EB1.2020206@isomerica.net>
+	id S1753170AbYIILqO (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 9 Sep 2008 07:46:14 -0400
+In-Reply-To: <alpine.DEB.1.10.0809081638330.31178@kurp.hut.fi>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: =?ISO-8859-1?Q?Dan_No=E9?= <dpn@isomerica.net>
+To: Jan Wagner <jwagner@kurp.hut.fi>
 Cc: linux-ide@vger.kernel.org
 
-Dan No=E9 wrote:
-> Just after midnight last night, during an rsync job which copies a lo=
-t
-> of data onto my backup disk (half of a Linux software RAID 1), I
-> received the following:
->=20
-> -- SNIP --
-> ata3.00: exception Emask 0x10 SAct 0x0 SErr 0x10000 action 0xe frozen
-> ata3.00: irq_stat 0x00400000, PHY RDY changed
-> ata3: SError: { PHYRdyChg }
-> ata3.00: cmd 35/00:10:3f:00:34/00:00:22:00:00/e0 tag 0 dma 8192 out
->          res 50/00:00:4e:01:18/00:00:22:00:00/e0 Emask 0x10 (ATA bus =
-error)
-> ata3.00: status: { DRDY }
-> ata3: hard resetting link
-> ata3: link is slow to respond, please be patient (ready=3D0)
-> ata3: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
-> ata3.00: qc timeout (cmd 0xec)
-> ata3.00: failed to IDENTIFY (I/O error, err_mask=3D0x5)
-> ata3.00: revalidation failed (errno=3D-5)
-> ata3: failed to recover some devices, retrying in 5 secs
-> ata3: hard resetting link
-> ata3: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
-> ata3.00: configured for UDMA/100
-> ata3: EH complete
-> sd 2:0:0:0: [sdc] 625142448 512-byte hardware sectors (320073 MB)
-> sd 2:0:0:0: [sdc] Write Protect is off
-> sd 2:0:0:0: [sdc] Mode Sense: 00 3a 00 00
-> sd 2:0:0:0: [sdc] Write cache: enabled, read cache: enabled, doesn't
-> support DPO or FUA
-> -- SNIP --
->=20
-> The system seems to be working fine now, and there was not even a RAI=
-D
-> failure reported by the md system.  Is this something I should be
-> concerned about? Hardware issue, software bug?
->=20
-> Linux colobus 2.6.26.3 #1 SMP Thu Aug 21 10:15:38 EDT 2008 i686 Intel=
-(R)
-> Pentium(R) 4 CPU 3.20GHz GenuineIntel GNU/Linux
->=20
-> 00:1f.2 SATA controller: Intel Corporation 82801FR/FRW (ICH6R/ICH6RW)
-> SATA Controller (rev 03)
->=20
-> I am using the libata ahci driver.  There are four drives crammed int=
-o a
-> 1U with hotplug trays, but AFAIK no one was poking around the system.
+Jan Wagner wrote:
+> First the minor(?) issue, the ICH10(R) datasheet
+>   http://www.intel.com/Assets/PDF/datasheet/319973.pdf
+> says on page 527, PMS flag: port multipliers are not supported. The
+> PMFSE flag page 542 says neither port multipliers nor FIS pmp are
+> supported.
 
-Transmission errors do occur occassionally on perfectly healthy
-machines so if it doesn't happen regularly, you can just ignore it and
-the kernel will do the right thing.  However, there have been
-non-insignificant number of cases where sucky power supply fail to
-maintain voltage under high IO load and make harddrive go offline
-briefly which would also show up as PHYRdyChg.  In these cases, you
-can usually hear the drive doing emergency unloading (clicking) and
-smartctl -a is likely to show increased values for start/stop count
-and/or emergency unload count.  In these cases, the drive loses data
-in its buffer and filesystem gets corrupted and you really should get
-a better power supply.
+ICH10R works fine with PMP in command-switching mode.  FIS based
+switching is not supported and I agree the doc is somewhat confusing.
+
+> On our ASUS P5Q Pro motherboard with ICH10R, ahci detects 'pmp':
+> 
+> ahci 0000:00:1f.2: AHCI 0001.0200 32 slots 6 ports 3 Gbps 0x3f impl SATA
+> mode
+> ahci 0000:00:1f.2: flags: 64bit ncq sntf stag pm led clo pmp pio slum
+> part ems
+> 
+> In light of the datasheet, perhaps in ahci.c the CAP register (read-only
+> from host) 'pmp' flag should be actively reset to 0 for ich10r?
+> 
+> Ayway the bigger issue with ICH10R is that the SATA disks detach
+> randomly during "heavy" i/o load. This happens withing just a few
+> seconds. If I disable NCQ (echo 1 > nr_requests), it takes "longer" to
+> happen, some ten seconds. I already ruled out the SATA cables, disks
+> themselves, and disk cages as a cause.
+> 
+> The detaching happens at least in these (Ubuntu-patched) kernels:
+> 
+> $ uname -rm
+> 2.6.27-2-generic i686
+> 
+> $ uname -rm
+> 2.6.24-19-generic i686
+> 
+> It happens with disks behind a port multiplier. The ich10r 'pmp'
+> "support" seems to work as CB- but not FIS-based, so it is slow, or just
+> broken.
+> 
+> But the detaches also happen with disks connected to the native ich10r
+> ports.
+> 
+> All in all ich10r seems to work very unreliably. So I was wondering if
+> support for ICH10R in ahci.c is not complete yet?
+> 
+> 
+> Or can someone here shout "ich10r ahci works for me"?
+
+ICH10 works fine w/ or w/o PMP.  Can you please post full kernel log
+including boot messages and error messages?
 
 Thanks.
 
---=20
+-- 
 tejun
