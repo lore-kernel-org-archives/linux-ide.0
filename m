@@ -1,38 +1,58 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: drivers/ata/libata-core.c:4732 ata_qc_issue+0x4c/0x2e0
-Date: Tue, 09 Sep 2008 14:33:55 +0200
-Message-ID: <48C66D33.5010507@kernel.org>
-References: <20080909111643.GB6239@deprecation.cyrius.com> <48C661F8.5000709@kernel.org> <20080909121207.GB31147@uranium.pps.jussieu.fr>
+From: Jens Axboe <jens.axboe@oracle.com>
+Subject: Re: 2.6.27-rc5-mm1: rmmod ide-cd_mod: tried to init an initialized  object, something is seriously wrong.
+Date: Tue, 9 Sep 2008 15:21:42 +0200
+Message-ID: <20080909132142.GM20055@kernel.dk>
+References: <200809051528.54213.rjw@sisk.pl> <200809091107.04629.m.kozlowski@tuxland.pl> <20080909102925.GE20055@kernel.dk> <200809091414.32570.m.kozlowski@tuxland.pl>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:40199 "EHLO hera.kernel.org"
+Received: from pasmtpb.tele.dk ([80.160.77.98]:46142 "EHLO pasmtpB.tele.dk"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753325AbYIIMfa (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 9 Sep 2008 08:35:30 -0400
-In-Reply-To: <20080909121207.GB31147@uranium.pps.jussieu.fr>
+	id S1753215AbYIINVq (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 9 Sep 2008 09:21:46 -0400
+Content-Disposition: inline
+In-Reply-To: <200809091414.32570.m.kozlowski@tuxland.pl>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Pietro Abate <Pietro.Abate@pps.jussieu.fr>
-Cc: Martin Michlmayr <tbm@cyrius.com>, linux-raid@vger.kernel.org, linux-ide@vger.kernel.org
+To: Mariusz Kozlowski <m.kozlowski@tuxland.pl>
+Cc: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, rjw@sisk.pl, akpm@linux-foundation.org, bzolnier@gmail.com, linux-kernel@vger.kernel.org, kernel-testers@vger.kernel.org, linux-ide@vger.kernel.org
 
-Pietro Abate wrote:
-> On Tue, Sep 09, 2008 at 01:46:00PM +0200, Tejun Heo wrote:
->> Martin Michlmayr wrote:
->>> A Debian user reported the following oops (2.6.26, RAID1 + LVM,
->>> running on an ARM platform, sata_mv):
->> Can you please attach full log?
+On Tue, Sep 09 2008, Mariusz Kozlowski wrote:
+> > > On the other hand on newer kernels (post 2.6.26 - these which did not blow up) right
+> > > after boot I have to run rmmod ide-cd_mod exactly three times to have ide-cd_mod
+> > > unloaded. If I modprobe and rmmod again it works as expected. Why is this?
+> > > 
+> > > laptop mako # modprobe ide-cd_mod
+> > > laptop mako # rmmod ide-cd_mod
+> > > laptop mako # rmmod ide-cd_mod
+> > > laptop mako # rmmod ide-cd_mod
+> > > laptop mako # rmmod ide-cd_mod
+> > > ERROR: Module ide_cd_mod does not exist in /proc/modules
+> > > laptop mako # modprobe ide-cd_mod
+> > > laptop mako # rmmod ide-cd_mod
+> > > laptop mako # rmmod ide-cd_mod
+> > > ERROR: Module ide_cd_mod does not exist in /proc/modules
+> > 
+> > Can you try the below patch from Elias?
 > 
-> Well, there you go :) and please don't tell me my disk are just gone banana...
-> as I basically never used them ...
+> Sure. It applied fine to clean current mainline. It looks ok now. No oopses and no BUGs.
+> But still after a fresh boot I see 
+> 
+> # modprobe ide-cd_mod
+> # rmmod ide-cd_mod
+> # rmmod ide-cd_mod
+> # rmmod ide-cd_mod
+> ERROR: Module ide_cd_mod does not exist in /proc/modules
+> # modprobe ide-cd_mod
+> # rmmod ide-cd_mod
+> # rmmod ide-cd_mod
+> ERROR: Module ide_cd_mod does not exist in /proc/modules
+> 
+> You need to rmmod ide-cd_mod twice to get it unloaded. After another
+> modprobe/rmmod it works as expected.
 
-Okay, two things.
-
-* sata_mv ->qc_defer bug is showing up as WARN_ON (the stack dump and
-all).  Fix for this is in the tree and should appear in -stable soon.
-
-* Your drive is going banana.  :-P
+Looks like something for Bart to look into.
 
 -- 
-tejun
+Jens Axboe
+
