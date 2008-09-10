@@ -1,75 +1,149 @@
-From: "Henry, Andrew" <andrew.henry@logica.com>
-Subject: Re: 2.6.25: sata_sil freezes, hard resets port.
-Date: Wed, 10 Sep 2008 15:23:49 +0200
-Message-ID: <3ECBDC05781B3D48ABD520A01ABF2F9B20BA45E73B@SE-EX008.groupinfra.com>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: [PATCH 2/4] libata: Implement disk shock protection support
+Date: Wed, 10 Sep 2008 16:40:21 +0200
+Message-ID: <48C7DC55.30002@gmail.com>
+References: <87wshzplvk.fsf@denkblock.local>	<20080829211345.4355.89284.stgit@denkblock.local>	<48B913E6.1000104@gmail.com> <87k5dym5t9.fsf@denkblock.local>	<48BA638B.2030001@gmail.com> <87ej45mlp3.fsf@denkblock.local>	<48BA969C.4060207@gmail.com> <87abetmaap.fsf@denkblock.local>	<48BBA8D1.8020604@gmail.com> <87myirly1p.fsf@denkblock.local>	<48BC1BB8.2030007@gmail.com> <87fxoh0yil.fsf@denkblock.local>	<48BFA528.2040305@gmail.com> <87ej3zrf3o.fsf@denkblock.local>	<48C0F2F8.1040308@gmail.com> <87ej3snm3s.fsf@denkblock.local>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mailgw10.wm.net ([85.119.129.3]:51126 "EHLO mailgw12.wm.net"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751049AbYIJOOR (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 10 Sep 2008 10:14:17 -0400
-Received: from WMSI001555.corp.wmdata.net (wmsi001555.wmdata.se [164.9.238.11])
-	by mailgw12.wm.net  with ESMTP id m8ADNrX1002996
-	for <linux-ide@vger.kernel.org>; Wed, 10 Sep 2008 15:23:53 +0200
-Content-Language: en-US
+Received: from ti-out-0910.google.com ([209.85.142.186]:41765 "EHLO
+	ti-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752787AbYIJOmI (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 10 Sep 2008 10:42:08 -0400
+Received: by ti-out-0910.google.com with SMTP id b6so1621831tic.23
+        for <linux-ide@vger.kernel.org>; Wed, 10 Sep 2008 07:42:06 -0700 (PDT)
+In-Reply-To: <87ej3snm3s.fsf@denkblock.local>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
+To: Elias Oltmanns <eo@nebensachen.de>
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, Andrew Morton <akpm@linux-foundation.org>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Jeff Garzik <jeff@garzik.org>, Randy Dunlap <randy.dunlap@oracle.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-SGkgVGVqdW4uDQoNCkkgdHJpZWQgdGhlIHBhdGNoIHdkLmRlYnVnLiAgSSBhbSBzb3JyeSB0aGF0
-IGl0IHRvb2sgc28gbG9uZy4gIEkgYXNzdW1lIHRoYXQgdGhpcyB3YXMgdG8gaGVscCB0aGUgd2Fr
-ZS11cCBwcm9ibGVtIHdpdGggdGhlIE15Qm9vayBkcml2ZXMgKCBJIGhhdmUgbWFueSBwcm9ibGVt
-cykuICBJIGFkZGVkIHRoaXMgcGF0Y2ggdG8gMi42LjI1LjkgYW5kIHJhbiB0aGUga2VybmVsIGFu
-ZCB0aGVuIHN0YXJ0ZWQgdXAgbXkgcmFpZC0xIGFycmF5IGFuZCBkaWQgbm90IHVzZSBhbnkgY3Jv
-biBzY3JpcHRzIHRvIGtlZXAgdGhlIGRyaXZlcyBhd2FrZS4gIEkgbGVmdCB0aGUgZHJpdmVzIGlu
-YWN0aXZlIGZvciAzMCBtaW51dGVzIGFuZCB0aGVuIHRyaWVkIHRvIGFjY2VzcyB0aGVtLiAgSXQg
-c2VlbXMgb2suICBJZiB0aGlzIGlzIHdoYXQgdGhlIHBhdGNoIHdhcyBtZWFudCB0byBmaXgsIHRo
-ZW4gaXQgZG9lcyBzZWVtIHRvIHdvcmsuICBJIGhhdmUgb25seSB0ZXN0ZWQgdGhpcyBvbmUgdGlt
-ZSB0aG91Z2guDQoNCkkgaGF2ZSBzbyBtYW55IG90aGVyIGlzc3VlcyB0aGF0IEkgaGF2ZSBnb25l
-IGJhY2sgb3ZlciB0byBVU0IyIGluc3RlYWQgb2YgdXNpbmcgdGhlIHNhdGFfc2lsIDM1MTIgQ2Fy
-ZEJ1cyBjb250cm9sbGVyLCBiZWNhdXNlIGl0IHNlZW1zIHRvIHN0aW5rIGJhZGx5Lg0KDQpPdGhl
-ciBpc3N1ZXMgd2l0aCAzNTEyIGNvbnRyb2xsZXI6DQoNCjEuIFdoZW4gSSB3cml0ZSB0byB0aGUg
-YXJyYXksIHRoZSBhY3Rpdml0eSBsaWdodHMgc2hvdyBidXJzdCBhY3Rpdml0eSwgaS5lLiB0aGUg
-TEVEcyBhcmUgbm90IG9uIGNvbnN0YW50bHksIGJ1dCBidXJzdCB2aXNpYmx5IHdpdGggZ2FwcyBp
-bmJldHdlZW4gd2hlcmUgdGhlcmUgaXMgbm8gYWN0aXZpdHkuICBUaGV5IGJ1cnN0IG1hbnkgdGlt
-ZXMgYSBzZWNvbmQsIGJ1dCBpdCdzIGVub3VnaCB0byBzZWUgdGhhdCBpdHMgbm90IGdvaW5nIGF0
-IG1heCB0aHJvdWdocHV0LiAgSWYgSSByZWFkIGZyb20gdGhlIGRpc2ssIHRoZW4gKnNvbWV0aW1l
-cyogdGhleSBsaWdodCB1cCBjb25zdGFudGx5IHdpdGhvdXQgZ29pbmcgb2ZmLiAgRG9lcyB0aGlz
-IGluZGljYXRlIGluIHNvbWUgd2F5LCB0aGF0IHRoZSBjb250cm9sbGVyIGlzIG5vdCBiZWluZyB1
-dGlsaXplZCB0byBpdCdzIG1heGltdW0gY2FwYWJpbGl0eT8gIFNlZW1zIGxpa2UgdGhlIGNvbnRy
-b2xsZXIgaXMgY2FwYWJsZSBvZiBoaWdoZXIgdGhyb3VnaHB1dCwgYnV0IHNvbWV0aGluZyBpbiB0
-aGUgd2F5IElPIGhhcHBlbnMgaXMgaGluZGVyaW5nIGl0Lg0KMi4gQSBzaHV0ZG93bi9zdGFydHVw
-IG9yIGEgcmVib290IGNhbiBraWxsIHRoZSBhcnJheSwgYW5kIHRoZW4gd2hlbiBpdCBjb21lcyBi
-YWNrIHVwLCBvbmx5IG9uZSBkaXNrIGlzIGluIHRoZSBhcnJheSBhbmQgSSBoYXZlIHRvIHJlLWFk
-ZCB0aGUgb3RoZXIgb25lIGNhdXNpbmcgYSByZS1zeW5jLiAgVGhpcyBuZXZlciBoYXBwZW5zIG9u
-IFVTQjIsIG9ubHkgd2hlbiB1c2luZyAzNTEyIGFuZCBzYXRhX3NpbCBvbiBDYXJkQnVzIGNvbnRy
-b2xsZXIuICBPbmUgdGhpbmcgSSBub3RpY2UgaXMgdGhhdCB3aGVuIHNodXR0aW5nIGRvd24sIGFm
-dGVyIHRoZSB0aGUgZmluYWwgS0lMTCBwcm9jZXNzZXMsIEkgc2VlIGEgbWVzc2FnZSBzYXlpbmcg
-c29tZXRoaW5nIGxpa2UgIm1kIGlzIHN0aWxsIGFjdGl2ZSIgcmlnaHQgYmVmb3JlIHRoZSBQQyBz
-aHV0cyBkb3duLiAgSXMgdGhpcyB3aHkgSSBhbSBsb3NpbmcgYSBkaXNrLCBiZWNhdXNlIG1kIGlz
-IG5vdCBiZWluZyBzaHV0IGRvd24gcHJvcGVybHkgYmVmb3JlIGEgcmVzZXQvcG93ZXJvZmY/DQoz
-LiBXaGVuIHRoZSBkcml2ZXMgaGF2ZSBnb25lIHRvIHNsZWVwIGFuZCBJIHRyeSB0byBhY2Nlc3Mg
-dGhlIG1vdW50ZWQgZmlsZXN5c3RlbSwgb3IgaWYgSSB0eXBlICJmZGlzayAtbCIgYWZ0ZXIgMTAg
-bWludXRlcyBvZiBub3QgYWNjZXNzaW5nIHRoZSBhcnJheSwgdGhlbiB0aGUgYWN0aXZpdHkgbGln
-aHQgb24gdGhlIENhcmRCdXMgY29udHJvbGxlciBsaWdodHMgdXAgYW5kIGRvZXMgbm90IGdvIG91
-dCBmb3IgMSBtaW51dGUuICBGZGlzayAtbCBkb2VzIG5vdCByZXBvcnQgYmFjayB1bnRpbCBhZnRl
-ciB0aGUgYWN0aXZpdHkgbGlnaHQgaGFzIGdvbmUgb2ZmLiAgVGhlIHNhbWUgdGhpbmcgaGFwcGVu
-cyB3aGVuIHVkZXYgc3RhcnRzIHdoZW4gYm9vdGluZyB0aGUgc3lzdGVtLg0KNC4gSWYgSSBlamVj
-dCB0aGUgQ2FyZEJ1cyBjb250cm9sbGVyLCBhZnRlciBoYXZpbiB1bm1vdW50ZWQgdGhlIHJhaWQg
-ZmlsZXN5c3RlbSBhbmQgaGF2aW5nIHN0b3BwZWQgbWQsIHRoZW4gSSBnZXQgYSBjb25zb2xlIG1l
-c3NhZ2Ugc2F5aW5nIHNvbWV0aGluZyBhbG9uZyB0aGUgbGluZXMgb2Y6ICoqREFOR0VSKiogcG93
-ZXIgY291bGQgbm90IGJlIHN0b3BwZWQgW3doZW4gZWplY3RpbmcgdGhlIGNvbnRyb2xsZXIgY2Fy
-ZF0uICBTb3VuZHMgc2VyaW91cy4gIFBvc3NpYmxlIHRoYXQgSSBhbSBkYW1hZ2luZyB0aGUgY29u
-dHJvbGxlciB3aGVuIEkgZG8gdGhpcy4NCjUuIElPIHRpbWVzIGFyZSB2ZXJ5IHBvb3IgdXNpbmcg
-ZVNBVEEgQ2FyZEJ1cyAzNTEyLiAgSSBnZXQgMTVNQi9zIHZzIDM1TUIvcyBvbiBVU0IyIChyZWFk
-cyB1c2luZyAvdXNyL2Jpbi90aW1lIGFuZCBkZCB3aGVyZSBpZiBpcyB0aGUgZGV2aWNlIGFuZCBv
-ZiBpcyAvZGV2L251bGwuDQoNClNlZW1zIGxpa2UgZWl0aGVyIHRoZSAzNTEyIGNvbnRyb2xsZXIg
-Y2FyZCBJIGhhdmUgaXMganVzdCBjcmFwLCBhbmQvb3IgdGhlcmUgYXJlIHNlcmlvdXMgcHJvYmxl
-bXMgd2l0aCB0aGUgc2F0YV9zaWwgZHJpdmVyIHdoZW4gdXNlZCBpbiBjb21iaW5hdGlvbiB3aXRo
-IGEgQ2FyZEJ1cyBjb250cm9sbGVyIChhbnlvbmUgZWxzZSBvdXQgdGhlcmUgd2l0aCBhIENhcmRC
-dXM/KSAgTWF5YmUgdGhlIGlzc3VlcyBkbyBub3QgbWFuaWZlc3QgdGhlbXNlbHZlcyBhcyBtdWNo
-IG9uIFBDSSBjb250cm9sbGVycz8gIEkgYW0gdHJ5aW5nIHRvIHNvdXJjZSBhIENhcmRCdXMgY29u
-dHJvbGxlciBhdCB0aGUgbW9tZW50IHRoYXQgdXNlcyBzYXRhX3NpbDI0IGluc3RlYWQuDQoNCiAt
-LWFuZHJldw0K
+Hello, Elias.
+
+Elias Oltmanns wrote:
+> Does the following patch look like what you've had in mind (still
+> applies to next-20080903)?
+
+Yes, mostly.  Just a few points.
+
+> +static unsigned long ata_eh_park_devs(struct ata_port *ap)
+> +{
+> +	struct ata_link *link;
+> +	struct ata_device *dev;
+> +	struct ata_taskfile tf;
+> +	unsigned int err_mask;
+> +	unsigned long deadline = jiffies;
+> +
+> +	ata_port_for_each_link(link, ap) {
+> +		ata_link_for_each_dev(dev, link) {
+> +			struct ata_eh_context *ehc = &link->eh_context;
+> +			struct ata_eh_info *ehi = &link->eh_info;
+> +
+> +			if (dev->class != ATA_DEV_ATA ||
+> +			    dev->flags & ATA_DFLAG_NO_UNLOAD)
+> +				continue;
+> +
+> +			if (ehc->i.dev_action[dev->devno] & ATA_EH_PARK ||
+> +			    ehi->dev_action[dev->devno] & ATA_EH_PARK) {
+> +				unsigned long tmp = dev->unpark_deadline;
+
+The correct way to do this is ata_eh_about_to_do().  After that, you
+can just look at ehc->i.dev_action[].  Also, you'll need to call
+ata_eh_done() later.
+
+> +				if (time_before(deadline, tmp))
+> +					deadline = tmp;
+> +				else if (time_before_eq(tmp, jiffies))
+> +					continue;
+> +			}
+> +
+> +			if (ehc->did_unload_mask & (1 << dev->devno))
+> +				continue;
+> +
+> +			ata_tf_init(dev, &tf);
+> +			tf.command = ATA_CMD_IDLEIMMEDIATE;
+> +			tf.feature = 0x44;
+> +			tf.lbal = 0x4c;
+> +			tf.lbam = 0x4e;
+> +			tf.lbah = 0x55;
+> +			tf.flags |= ATA_TFLAG_DEVICE | ATA_TFLAG_ISADDR;
+> +			tf.protocol |= ATA_PROT_NODATA;
+> +			err_mask = ata_exec_internal(dev, &tf, NULL, DMA_NONE,
+> +						     NULL, 0, 0);
+> +			if (err_mask || tf.lbal != 0xc4)
+> +				ata_dev_printk(dev, KERN_ERR,
+> +					       "head unload failed!\n");
+> +			else
+> +				ehc->did_unload_mask |= 1 << dev->devno;
+...
+> +static void ata_eh_unpark_devs(struct ata_port *ap)
+> +{
+> +	struct ata_link *link;
+> +	struct ata_device *dev;
+> +	struct ata_taskfile tf;
+> +
+> +	ata_port_for_each_link(link, ap) {
+> +		ata_link_for_each_dev(dev, link) {
+> +			struct ata_eh_context *ehc = &link->eh_context;
+> +
+> +			if (!(ehc->did_unload_mask & (1 << dev->devno)))
+> +				continue;
+> +
+> +			ata_tf_init(dev, &tf);
+> +			tf.command = ATA_CMD_CHK_POWER;
+> +			tf.flags |= ATA_TFLAG_DEVICE | ATA_TFLAG_ISADDR;
+> +			tf.protocol |= ATA_PROT_NODATA;
+> +			ata_exec_internal(dev, &tf, NULL, DMA_NONE, NULL, 0, 0);
+
+And it's probably better to have ehc->unloaded_mask instead of
+ehc->did_unload_mask and clear it here so that if unload is scheduled
+after this point but before EH completes, it does unloading again.
+ie. Something like the following.
+
+	ata_eh_done(ATA_EH_UNLOAD);
+	ehc->i.unloaded_mask &= ~(1 << dev->devno);
+
+> @@ -2830,6 +2904,19 @@ int ata_eh_recover(struct ata_port *ap, ata_prereset_fn_t prereset,
+>  		}
+>  	}
+>  
+> +	do {
+> +		unsigned long now;
+> +
+> +		deadline = ata_eh_park_devs(ap);
+> +		now = jiffies;
+> +		if (time_before_eq(deadline, now))
+> +			break;
+> +		prepare_to_wait(&ata_scsi_park_wq, &wait, TASK_UNINTERRUPTIBLE);
+> +		deadline = schedule_timeout_uninterruptible(deadline - now);
+> +	} while (deadline);
+> +	finish_wait(&ata_scsi_park_wq, &wait);
+> +	ata_eh_unpark_devs(ap);
+
+I think it would be better to put timeout computation and handling out
+here instead of inside ata_eh_park_devs().  ata_eh_park_devs() just
+parks the heads if ATA_DEV_UNLOAD and the outer loop controls when it
+can continue.
+
+> +static ssize_t ata_scsi_park_store(struct device *device,
+> +				   struct device_attribute *attr,
+> +				   const char *buf, size_t len)
+> +{
+...
+
+> +		switch (input) {
+> +		case -1:
+> +			dev->flags &= ~ATA_DFLAG_NO_UNLOAD;
+> +			break;
+> +		case -2:
+> +			dev->flags |= ATA_DFLAG_NO_UNLOAD;
+> +			break;
+
+Can't we just drop ATA_DFLAG_NO_UNLOAD?  It doesn't provide any real
+functionality anymore.
+
+Thanks.
+
+-- 
+tejun
