@@ -1,155 +1,63 @@
-From: Borislav Petkov <petkovbb@googlemail.com>
-Subject: Re: [PATCH 08/18] ide-floppy: use drive->capacity64 for caching
-	current capacity
-Date: Wed, 10 Sep 2008 13:20:06 +0200
-Message-ID: <20080910112006.GA10263@gollum.tnic>
-References: <20080907221424.24285.81137.sendpatchset@localhost.localdomain> <20080907221519.24285.44318.sendpatchset@localhost.localdomain>
-Reply-To: petkovbb@gmail.com
+From: "Antonio Martins" <digiplan.pt@gmail.com>
+Subject: Re: UDMA with CS5530 using IBM Netvista N2200 (8363)
+Date: Wed, 10 Sep 2008 14:14:37 +0100
+Message-ID: <43e9b8530809100614t616154caldb32c4207b5b44ad@mail.gmail.com>
+References: <48C45BEF.5090502@gmail.com>
+	 <20080908094332.7b021b4e@lxorguk.ukuu.org.uk>
+	 <48C5BD49.6090204@gmail.com>
+	 <20080909115248.580eba78@lxorguk.ukuu.org.uk>
+	 <48C70313.6080704@gmail.com>
+	 <20080910093840.0fc9df68@the-village.bc.nu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.155]:33804 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752067AbYIJLVN (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 10 Sep 2008 07:21:13 -0400
-Received: by fg-out-1718.google.com with SMTP id 19so2106232fgg.17
-        for <linux-ide@vger.kernel.org>; Wed, 10 Sep 2008 04:21:11 -0700 (PDT)
+Received: from ag-out-0708.google.com ([72.14.246.241]:59430 "EHLO
+	ag-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752326AbYIJNOj (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 10 Sep 2008 09:14:39 -0400
+Received: by ag-out-0708.google.com with SMTP id 31so6880180agc.10
+        for <linux-ide@vger.kernel.org>; Wed, 10 Sep 2008 06:14:38 -0700 (PDT)
+In-Reply-To: <20080910093840.0fc9df68@the-village.bc.nu>
 Content-Disposition: inline
-In-Reply-To: <20080907221519.24285.44318.sendpatchset@localhost.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-Hi,
+On Wed, Sep 10, 2008 at 9:38 AM, Alan Cox <alan@lxorguk.ukuu.org.uk> wrote:
+>> Booting with CONFIG_BLK_DEV_CS5530=n and CONFIG_PATA_CS5530=y and
+>> libdata_dma_mask=0
+>> kernel 2.6.24.7:
+>> ...
+>> ide: Assuming 33MHz system bus speed for PIO modes; override with idebus=xx
+>> Driver 'sd' needs updating - please use bus_type methods
+>> scsi0: pata_cs5530
+>> scsi1: pata_cs5530
+>> ata1: PATA max UDMA/33 cmd 0x1f0 ctl 0x3f6 bmdma 0xfc00 irq 14
+>> ata2: PATA max UDMA/33 cmd 0x170 ctl 0x376 bmdma 0xfc08 irq 15
+>> ata1.00: ATA-5: SILICON POWER, 2.0, mas UDMA/66
+>> ata1.00: 2000880 sectors, multi 1: LBA
+>> ata1.00: configured for PIO4
+>> scsi 0:0:0:0: Direct-Access      ATA     SILICON POWER    2.0  PQ: 0 ANSI: 5
+>> sd 0:0:0:0: [sda] 2000880 512-byte hardware sectors (1024 MB)
+>> sd 0:0:0:0: [sda] Write Protect is off
+>> sd 0:0:0:0: [sda] Write cache: disabled, read cache: enabled, doesn't support DPO or FUA
+>> sd 0:0:0:0: [sda] 2000880 512-byte hardware sectors (1024 MB)
+>> sd 0:0:0:0: [sda] Write Protect is off
+>> sd 0:0:0:0: [sda] Write cache: disabled, read cache: enabled, doesn't support DPO or FUA
+>>  sda: sda1
+>
+> And now it all works nicely
+>
+>> Kernel panic - not syncing: VFS: Unable to mount root fs on unknown-block(0,0)
+>> So PIO4 is now working. Great. But i am stuck with the root device.
+>
+> I would suggest posting to linux-kernel on that and talking to H Peter
+> Anvin about possible ways to get a real boot loader on the box.
+>
 
-On Mon, Sep 08, 2008 at 12:15:19AM +0200, Bartlomiej Zolnierkiewicz wrote:
-> * Use drive->capacity64 for caching current capacity.
-> 
-> * Switch ide_floppy_capacity() to use drive->capacity64.
-> 
-> * Call set_capacity() in idefloppy_open() and ide_floppy_probe()
->   instead of ide_floppy_get_capacity().
-> 
-> There should be no functional changes caused by this patch.
-> 
-> Cc: Borislav Petkov <petkovbb@gmail.com>
-> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-> ---
->  drivers/ide/ide-floppy.c |   23 +++++++++++++----------
->  1 file changed, 13 insertions(+), 10 deletions(-)
-> 
-> Index: b/drivers/ide/ide-floppy.c
-> ===================================================================
-> --- a/drivers/ide/ide-floppy.c
-> +++ b/drivers/ide/ide-floppy.c
-> @@ -445,7 +445,9 @@ static int ide_floppy_get_flexible_disk_
->  			drive->name, lba_capacity, capacity);
->  		floppy->blocks = floppy->block_size ?
->  			capacity / floppy->block_size : 0;
-> +		drive->capacity64 = floppy->blocks * floppy->bs_factor;
-
-why do we do the assignment only in the capacity < lba_capacity case?
-drive->capacity64 is the total number of sectors, shouldn't we do
-
-drive->capacity64 = floppy->blocks;
-
-in the floppy->bs_factor == 1 case? Otherwise you have the case of calling
-
-idefloppy_setup()
-|-> ide_floppy_get_capacity()
-    |-> ide_floppy_get_flexible_disk_page()
-
-and having drive->capacity64 == 0 in the (capacity >= lba_capacity) case which
-assigns a capacity of 0 to disk->capacity in the set_capacity() call later ...
-
-or am I missing something?
-
->  	}
-> +
->  	return 0;
->  }
->  
-> @@ -466,7 +468,7 @@ static int ide_floppy_get_capacity(ide_d
->  	drive->bios_head = drive->bios_sect = 0;
->  	floppy->blocks = 0;
->  	floppy->bs_factor = 1;
-> -	set_capacity(floppy->disk, 0);
-> +	drive->capacity64 = 0;
->  
->  	ide_floppy_create_read_capacity_cmd(&pc);
->  	if (ide_queue_pc_tail(drive, disk, &pc)) {
-> @@ -523,6 +525,8 @@ static int ide_floppy_get_capacity(ide_d
->  					       "non 512 bytes block size not "
->  					       "fully supported\n",
->  					       drive->name);
-> +				drive->capacity64 =
-> +					floppy->blocks * floppy->bs_factor;
->  				rc = 0;
->  			}
->  			break;
-> @@ -547,17 +551,12 @@ static int ide_floppy_get_capacity(ide_d
->  	if (!(drive->atapi_flags & IDE_AFLAG_CLIK_DRIVE))
->  		(void) ide_floppy_get_flexible_disk_page(drive);
->  
-> -	set_capacity(disk, floppy->blocks * floppy->bs_factor);
-> -
->  	return rc;
->  }
->  
->  sector_t ide_floppy_capacity(ide_drive_t *drive)
->  {
-> -	idefloppy_floppy_t *floppy = drive->driver_data;
-> -	unsigned long capacity = floppy->blocks * floppy->bs_factor;
-> -
-> -	return capacity;
-> +	return drive->capacity64;
-
-you can simplify this one even further by killing ide_floppy_capacity() and
-doing
-
-	set_capacity(disk, floppy->drive->capacity64);
-
-in idefloppy_revalidate_disk().
->  }
->  
->  static void idefloppy_setup(ide_drive_t *drive)
-> @@ -671,14 +670,16 @@ static int idefloppy_open(struct inode *
->  		if (ide_do_test_unit_ready(drive, disk))
->  			ide_do_start_stop(drive, disk, 1);
->  
-> -		if (ide_floppy_get_capacity(drive)
-> -		   && (filp->f_flags & O_NDELAY) == 0
-> +		ret = ide_floppy_get_capacity(drive);
-> +
-> +		set_capacity(disk, ide_floppy_capacity(drive));
-
-ditto.
-
-> +
-> +		if (ret && (filp->f_flags & O_NDELAY) == 0) {
->  		    /*
->  		     * Allow O_NDELAY to open a drive without a disk, or with an
->  		     * unreadable disk, so that we can get the format capacity
->  		     * of the drive or begin the format - Sam
->  		     */
-> -		    ) {
->  			ret = -EIO;
->  			goto out_put_floppy;
->  		}
-> @@ -811,6 +812,8 @@ static int ide_floppy_probe(ide_drive_t 
->  
->  	idefloppy_setup(drive);
->  
-> +	set_capacity(g, ide_floppy_capacity(drive));
-
-ditto.
-
-> +
->  	g->minors = 1 << PARTN_BITS;
->  	g->driverfs_dev = &drive->gendev;
->  	if (drive->dev_flags & IDE_DFLAG_REMOVABLE)
-
--- 
-Regards/Gruss,
-    Boris.
+So regarding DMA, Netvista 8363 has this limitation, and there is no
+DMA or UDMA mode that we can successfully enable. The only way to
+force PIO4, is changing directly in the source code. If kernel
+parameters were supported, we would be able to use some "idebus"
+parameter. Are these statements correct?
