@@ -1,56 +1,53 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCH 2/4] libata: Implement disk shock protection support
-Date: Fri, 12 Sep 2008 01:25:07 +0200
-Message-ID: <48C9A8D3.60408@gmail.com>
-References: <87wshzplvk.fsf@denkblock.local> <20080829211345.4355.89284.stgit@denkblock.local> <48B913E6.1000104@gmail.com> <87k5dym5t9.fsf@denkblock.local> <48BA638B.2030001@gmail.com> <87ej45mlp3.fsf@denkblock.local> <48BA969C.4060207@gmail.com> <87abetmaap.fsf@denkblock.local> <48BBA8D1.8020604@gmail.com> <87myirly1p.fsf@denkblock.local> <48BC1BB8.2030007@gmail.com> <87fxoh0yil.fsf@denkblock.local> <48BFA528.2040305@gmail.com> <87ej3zrf3o.fsf@denkblock.local> <48C0F2F8.1040308@gmail.com> <87ej3snm3s.fsf@denkblock.local> <48C7DC55.30002@gmail.com> <8763p3ol55.fsf@denkblock.local> <48C82CB1.2070308@gmail.com> <871vzrogpz.fsf@denkblock.local> <48C850AA.2030409@gmail.com> <87k5diq35g.fsf@denkblock.local> <48C91458.7090503@gmail.com>            <48C9168C.4090101@gmail.com> <25227.1221157727@
- turing-police.cc.vt.edu>
+From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+Subject: Re: Laptop shock detection and harddisk protection
+Date: Thu, 11 Sep 2008 20:36:07 -0300
+Message-ID: <20080911233607.GD18331@khazad-dum.debian.net>
+References: <48C7FCEE.8060404@kernel.org> <41840b750809110908o54a61f55w7b1b9793abf55634@mail.gmail.com> <48C948A6.3080404@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ti-out-0910.google.com ([209.85.142.186]:28625 "EHLO
-	ti-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754799AbYIKX0i (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 11 Sep 2008 19:26:38 -0400
-Received: by ti-out-0910.google.com with SMTP id b6so337300tic.23
-        for <linux-ide@vger.kernel.org>; Thu, 11 Sep 2008 16:26:36 -0700 (PDT)
-In-Reply-To: <25227.1221157727@turing-police.cc.vt.edu>
+Received: from out1.smtp.messagingengine.com ([66.111.4.25]:37435 "EHLO
+	out1.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754502AbYIKXgR (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 11 Sep 2008 19:36:17 -0400
+Content-Disposition: inline
+In-Reply-To: <48C948A6.3080404@kernel.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Valdis.Kletnieks@vt.edu
-Cc: Elias Oltmanns <eo@nebensachen.de>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Andrew Morton <akpm@linux-foundation.org>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Jeff Garzik <jeff@garzik.org>, Randy Dunlap <randy.dunlap@oracle.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: Shem Multinymous <multinymous@gmail.com>, Elias Oltmanns <eo@nebensachen.de>, Thomas Renninger <trenn@suse.de>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, IDE/ATA development list <linux-ide@vger.kernel.org>
 
-Valdis.Kletnieks@vt.edu wrote:
-> On Thu, 11 Sep 2008 15:01:00 +0200, Tejun Heo said:
->> Ah.. just one more thing.
->>
->> I think it would be easier on the application if the written timeout
->> value is cropped if it's over the maximum instead of failing the
->> write.
+On Thu, 11 Sep 2008, Tejun Heo wrote:
+> > Using the input device interface for the accelerometer (as done by
+> > tp_smapi's hdaps + latest hdapsd) greatly reduces the number of
+> > accelerometer-related timer interrupts on tickless kernels, as
+> > measured by powertop. With syscall polling you have the kernal polling
+> > the hardware at ~50Hz and then the userspace hdapsd polling the kernel
+> > at ~50Hz. When they're out of phase so you can get up to 100
+> > interrupts/sec. With an input device you're always at 50Hz. The phase
+> > difference also induces a small extra delay in the shock handling
+> > response.
 > 
-> Which is better, failing the write so the application *knows* there is a
-> problem, or letting the application proceed with a totally incorrect idea of
-> what the value is set to?
+> That reduction comes because input device supports poll and
+> sysfs_notify_event() does about the same thing.  The uesrland daemon
+> can just poll on a node and read data nodes when poll event on the
+> node triggeres.
 
-It depends.  As -EINVAL either results in program failure or no
-protection for the event.
+If you guys are going to bother with the accelerometer interface (which is
+a completely separate issue from the "queue-freeze-and-park-heads" APIs and
+sysfs interface), you better be aware that there IS an accelerometer class
+in the works, that cathers for directly-attached devices.
 
-> For instance, what happens if the program tries to set 100, it's silently
-> clamped to 10, and it then tries to set a timer for itself to '90% of the
-> value'?  It might be in for an unpleasant surprise when it finds out that
-> it's overshot by 81....
-
-Hitting the limit would be a pretty rare occasion and which way we go
-it's not gonna be too pretty.  e.g. Let's say a program calculates
-timeout according to some algorithm which 99.9% of the time stays in
-the limit but once in the blue moon hits the ceiling.  Given the
-characteristics of the problem and very high limit value, I think it's
-better to have cropped value.
-
-How about returning -OVERFLOW while still setting the timeout to the
-maximum?
-
-Thanks.
+I'd look there first.  And a generic sysfs interface for accelerometers IS a
+reasonably hard problem, so I would have it well separate from the disk-park
+side of things and while it gets sorted out, I'd leave it for userspace to
+deal with the issue (it is not like there is much userspace to worry about
+right now, just hdapsd which is only interested on the hdaps accel
+interface.  Everyone else can do it in-kernel, because their firmware
+already does the imminent-fall detection).
 
 -- 
-tejun
+  "One disk to rule them all, One disk to find them. One disk to bring
+  them all and in the darkness grind them. In the Land of Redmond
+  where the shadows lie." -- The Silicon Valley Tarot
+  Henrique Holschuh
