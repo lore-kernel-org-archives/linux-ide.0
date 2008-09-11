@@ -1,85 +1,67 @@
-From: Elias Oltmanns <eo@nebensachen.de>
+From: "Shem Multinymous" <multinymous@gmail.com>
 Subject: Re: Laptop shock detection and harddisk protection
-Date: Thu, 11 Sep 2008 22:00:37 +0200
-Message-ID: <877i9ipi56.fsf@denkblock.local>
+Date: Thu, 11 Sep 2008 16:25:22 -0400
+Message-ID: <41840b750809111325t30f8ffe2sa4572d401d43dc5a@mail.gmail.com>
 References: <48C7FCEE.8060404@kernel.org>
-	<41840b750809110908o54a61f55w7b1b9793abf55634@mail.gmail.com>
-	<48C948A6.3080404@kernel.org>
+	 <41840b750809110908o54a61f55w7b1b9793abf55634@mail.gmail.com>
+	 <48C948A6.3080404@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nebensachen.de ([195.34.83.29]:37523 "EHLO mail.nebensachen.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751380AbYIKUAr (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 11 Sep 2008 16:00:47 -0400
-Sender: linux-ide-owner@vger.kernel.org
-List-Id: linux-ide@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1756727AbYIKUZf@vger.kernel.org>
+In-Reply-To: <48C948A6.3080404@kernel.org>
+Content-Disposition: inline
+Sender: linux-kernel-owner@vger.kernel.org
 To: Tejun Heo <tj@kernel.org>
-Cc: Shem Multinymous <multinymous@gmail.com>, Thomas Renninger <trenn@suse.de>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, IDE/ATA development list <linux-ide@vger.kernel.org>
+Cc: Elias Oltmanns <eo@nebensachen.de>, Thomas Renninger <trenn@suse.de>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, IDE/ATA development list <linux-ide@vger.kernel.org>
+List-Id: linux-ide@vger.kernel.org
 
-Tejun Heo <tj@kernel.org> wrote:
+Hi Tejun,
+
+On Thu, Sep 11, 2008 at 12:34 PM, Tejun Heo <tj@kernel.org> wrote:
 > Hello, Shem Multinymous.
+>> Using the input device interface for the accelerometer (as done by
+>> tp_smapi's hdaps + latest hdapsd) greatly reduces the number of
+>> accelerometer-related timer interrupts on tickless kernels, as
+>> measured by powertop. With syscall polling you have the kernal polling
+>> the hardware at ~50Hz and then the userspace hdapsd polling the kernel
+>> at ~50Hz. When they're out of phase so you can get up to 100
+>> interrupts/sec. With an input device you're always at 50Hz. The phase
+>> difference also induces a small extra delay in the shock handling
+>> response.
 >
-> Shem Multinymous wrote:
-[...]
->>> 2. If we're gonna unify interface, how much can we unify the backend?
->>>   Some devices are based on polling, others interrupt.  For polling,
->>>   is it better to delegate the whole polling to userland or is it
->>>   better to do some of it in kernel (tp_smapi seems to be doing
->>>   this)?
->> 
->> The ThinkPad accelerometer needs to be polled at very regular
->> intervals (max jitter on the order of 10ms), which sounds like a job
->> for the kernel.
->
-> Yes, I agree.
->
->> This is because in ThinkPads we actually have a 4-level pile:
->> [hdapsd userspace] -> [hdaps kernel] -> [embedded controller] ->
->> [accelerometer A2D]
->> What the kernel polls is actually is the H8S embedded controller (EC)
->> chip, which in turn does its own polling of the accelerometer A2D.
->> Now, the EC has a tiny buffer and strange buffering semantics, and it
->> has its own internal clock, so the software->EC polling should be very
->> regular to minmize EC buffer overflows/underruns.
->
-> So, I think the whole polling should be implemented inside the kernel
-> and the kernel should notify userland when new data is available,
-> which is about what the current joystick implementation does and can
-> be achieved using sysfs_notify_event().
+> That reduction comes because input device supports poll and
+> sysfs_notify_event() does about the same thing.  The uesrland daemon
+> can just poll on a node and read data nodes when poll event on the
+> node triggeres.
 
-Short of a satisfying proposition regarding the questions raised, I just
-want to add two things that would be nice to solve in the future one way
-or another and should perhaps be taken into consideration from the
-beginning:
+Agreed.
+There's another issue with the current sysfs interface, though: hdapsd
+needs to read (x,y,timestamp) tuples, whereas sysfs provides just x
+and y in separate attributes which cannot be read atomically together.
+We can add a sysfs file with "x y timestamp" readouts, though this is
+unusual for sysfs (and certainly incompatible with hwmon).
 
-1. Disable polling completely when it isn't required: once the hd has
-   spun down, there is no need to keep polling the sensors at all. Only
-   when the first request requiring the hd to spin up arrives, the
-   kernel needs to hold back for a short while to gather enough data
-   from the sensors, so shock protection is up and running again.
-2. Make shock protection interact nicely with suspend operations:
-   currently, we are out of luck if anything should happen after
-   processes have been frozen. This is particularly unfortunatel in the
-   case of s2disk.
 
-As far as 1. is concerned, I'm not quite sure yet how to determine when
-the disk has spun down since this may have happened according to vendor
-specific timing rules. Once we have established that the disk is
-sleeping safe and sound, sensor drivers can be notified to stop polling
-the hardware and possibly notify clients (like hdapsd) about that fact.
+> Unloading heads will be simple.  Just echoing timeout in ms to sysfs
+> nodes, so I don't think it's a good idea to push out actual unloading
+> to another process especially as fork doesn't inherit mlockall.
 
-Something along the lines of the disk_shock module approach suggested by
-Bart in [1] sounds promising, but it still needs some careful thinking
-when designing the interfaces to all components involved. As for the
-suspend problem, we could either put some simplified logic into
-disk_shock so it can take over once hdapsd has been frozen, or we can
-find a way to keep hdapsd unfrozen until the hd has been put to sleep.
-Of course, we'd have to think about resume as well, although it'll be
-impossible to protect right from the start in the s2disk case.
+I had in mind another daemon listening for "unload now" events, so no
+forking needed.
+This second daemon might make sense if we push the logic of deciding
+*which* disks to unload into userspace, since this logic is the same
+for the ThinkPad style and the HP style.
 
-Regards,
 
-Elias
+> On a related note, is there any plan to merge tp_smapi to mainline?
+> It seems you put a lot of work into it and I don't really see why it
+> should stay out of tree.
 
-[1] http://marc.info/?l=linux-kernel&m=122021163324843&w=2
+The only issue I'm aware of is finding a reasonably-named maintainer.
+On the technical side, the reviews on my lkml submission of
+thinkpad_ec+hdaps seemed good and all technical comments are since
+addressed. The code has been stable, well-tested and packaged by major
+distros for years.
+
+  Shem
