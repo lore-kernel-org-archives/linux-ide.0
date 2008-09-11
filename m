@@ -1,166 +1,56 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH 1/2] ide: Add tx4939ide driver
-Date: Fri, 12 Sep 2008 02:33:12 +0400
-Message-ID: <48C99CA8.5030602@ru.mvista.com>
-References: <20080910.010824.07456636.anemo@mba.ocn.ne.jp>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: [PATCH 2/4] libata: Implement disk shock protection support
+Date: Fri, 12 Sep 2008 01:25:07 +0200
+Message-ID: <48C9A8D3.60408@gmail.com>
+References: <87wshzplvk.fsf@denkblock.local> <20080829211345.4355.89284.stgit@denkblock.local> <48B913E6.1000104@gmail.com> <87k5dym5t9.fsf@denkblock.local> <48BA638B.2030001@gmail.com> <87ej45mlp3.fsf@denkblock.local> <48BA969C.4060207@gmail.com> <87abetmaap.fsf@denkblock.local> <48BBA8D1.8020604@gmail.com> <87myirly1p.fsf@denkblock.local> <48BC1BB8.2030007@gmail.com> <87fxoh0yil.fsf@denkblock.local> <48BFA528.2040305@gmail.com> <87ej3zrf3o.fsf@denkblock.local> <48C0F2F8.1040308@gmail.com> <87ej3snm3s.fsf@denkblock.local> <48C7DC55.30002@gmail.com> <8763p3ol55.fsf@denkblock.local> <48C82CB1.2070308@gmail.com> <871vzrogpz.fsf@denkblock.local> <48C850AA.2030409@gmail.com> <87k5diq35g.fsf@denkblock.local> <48C91458.7090503@gmail.com>            <48C9168C.4090101@gmail.com> <25227.1221157727@
+ turing-police.cc.vt.edu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from h155.mvista.com ([63.81.120.155]:49820 "EHLO imap.sh.mvista.com"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751810AbYIKWdS (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 11 Sep 2008 18:33:18 -0400
-In-Reply-To: <20080910.010824.07456636.anemo@mba.ocn.ne.jp>
+Received: from ti-out-0910.google.com ([209.85.142.186]:28625 "EHLO
+	ti-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754799AbYIKX0i (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 11 Sep 2008 19:26:38 -0400
+Received: by ti-out-0910.google.com with SMTP id b6so337300tic.23
+        for <linux-ide@vger.kernel.org>; Thu, 11 Sep 2008 16:26:36 -0700 (PDT)
+In-Reply-To: <25227.1221157727@turing-police.cc.vt.edu>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Atsushi Nemoto <anemo@mba.ocn.ne.jp>
-Cc: linux-mips@linux-mips.org, linux-ide@vger.kernel.org, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, ralf@linux-mips.org
+To: Valdis.Kletnieks@vt.edu
+Cc: Elias Oltmanns <eo@nebensachen.de>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Andrew Morton <akpm@linux-foundation.org>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Jeff Garzik <jeff@garzik.org>, Randy Dunlap <randy.dunlap@oracle.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Hello.
+Valdis.Kletnieks@vt.edu wrote:
+> On Thu, 11 Sep 2008 15:01:00 +0200, Tejun Heo said:
+>> Ah.. just one more thing.
+>>
+>> I think it would be easier on the application if the written timeout
+>> value is cropped if it's over the maximum instead of failing the
+>> write.
+> 
+> Which is better, failing the write so the application *knows* there is a
+> problem, or letting the application proceed with a totally incorrect idea of
+> what the value is set to?
 
-Atsushi Nemoto wrote:
+It depends.  As -EINVAL either results in program failure or no
+protection for the event.
 
-> This is the driver for the Toshiba TX4939 SoC ATA controller.
->
-> This controller has standard ATA taskfile registers and DMA
-> command/status registers, but the register layout is swapped on big
-> endian.  There are some other endian issue and some special registers
-> which requires many custom dma_ops/port_ops routines.
->
-> Signed-off-by: Atsushi Nemoto <anemo@mba.ocn.ne.jp>
->   
-[...]
-> diff --git a/drivers/ide/mips/tx4939ide.c b/drivers/ide/mips/tx4939ide.c
-> new file mode 100644
-> index 0000000..ba9776d
-> --- /dev/null
-> +++ b/drivers/ide/mips/tx4939ide.c
-> @@ -0,0 +1,762 @@
->   
-[...]
-> +static void tx4939ide_dma_host_set(ide_drive_t *drive, int on)
-> +{
-> +	ide_hwif_t *hwif	= HWIF(drive);
-> +	u8 unit			= drive->dn & 1;
-> +	unsigned long base = TX4939IDE_BASE(hwif);
-> +	u8 dma_stat = TX4939IDE_readb(base, DMA_stat);
-> +
-> +	if (on)
-> +		dma_stat |= (1 << (5 + unit));
-> +	else
-> +		dma_stat &= ~(1 << (5 + unit));
-> +
-> +	TX4939IDE_writeb(dma_stat, base, DMA_stat);
-> +}
->   
+> For instance, what happens if the program tries to set 100, it's silently
+> clamped to 10, and it then tries to set a timer for itself to '90% of the
+> value'?  It might be in for an unpleasant surprise when it finds out that
+> it's overshot by 81....
 
-   BTW, you could save on using ide_dma_host_set() in LE mode if you'd 
-set hwif->dma_base properly...
+Hitting the limit would be a pretty rare occasion and which way we go
+it's not gonna be too pretty.  e.g. Let's say a program calculates
+timeout according to some algorithm which 99.9% of the time stays in
+the limit but once in the blue moon hits the ceiling.  Given the
+characteristics of the problem and very high limit value, I think it's
+better to have cropped value.
 
-> +static int __tx4939ide_dma_setup(ide_drive_t *drive)
-> +{
-> +	ide_hwif_t *hwif = drive->hwif;
-> +	struct request *rq = HWGROUP(drive)->rq;
-> +	unsigned int reading;
-> +	u8 dma_stat;
-> +	unsigned long base = TX4939IDE_BASE(hwif);
-> +
-[...]
-> +
-> +	/* read DMA status for INTR & ERROR flags */
-> +	dma_stat = TX4939IDE_readb(base, DMA_stat);
-> +
-> +	/* clear INTR & ERROR flags */
-> +	TX4939IDE_writeb(dma_stat | 6, base, DMA_stat);
-> +	/* recover intmask cleared by writing to bit2 of DMA_stat */
-> +	TX4939IDE_writew(TX4939IDE_IGNORE_INTS << 8, base, int_ctl);
->   
+How about returning -OVERFLOW while still setting the timeout to the
+maximum?
 
-   I think it might be worth factoring the BMDMA status clearing code 
-into a separate function...
+Thanks.
 
-> +
-> +	drive->waiting_for_dma = 1;
-> +	return 0;
-> +}
-> +
-> +static int tx4939ide_dma_setup(ide_drive_t *drive)
-> +{
-> +	ide_hwif_t *hwif = HWIF(drive);
-> +	unsigned long base = TX4939IDE_BASE(hwif);
-> +	int is_slave = drive->dn & 1;
-> +	unsigned int nframes;
-> +	int rc, i;
-> +	unsigned int sect_size = queue_hardsect_size(drive->queue);
-> +	u16 select_data;
-> +
-> +	select_data = (hwif->select_data >> (is_slave ? 16 : 0)) & 0xffff;
-> +	TX4939IDE_writew(select_data, base, Sys_Ctl);
-> +	if (is_slave)
-> +		TX4939IDE_writew(sect_size / 2, base, Xfer_Cnt_2);
-> +	else
-> +		TX4939IDE_writew(sect_size / 2, base, Xfer_Cnt_1);
-> +
-> +	rc = __tx4939ide_dma_setup(drive);
->   
-
-   Hm, I think you need to call this earlier and do an early exit if it 
-returns 1.
-
-> +	if (rc == 0) {
->   
-
-   Better check for !=0, return early and avoid unnecessary 
-indentatiuon, isn't it?
-
-> +		/* Number of sectors to transfer. */
-> +		nframes = 0;
-> +		for (i = 0; i < hwif->sg_nents; i++)
-> +			nframes += sg_dma_len(&hwif->sg_table[i]);
-> +		BUG_ON(nframes % sect_size != 0);
-> +		nframes /= sect_size;
-> +		BUG_ON(nframes == 0);
-> +		TX4939IDE_writew(nframes, base, Sec_Cnt);
-> +	}
-> +	return rc;
-> +}
-> +
-> +static void tx4939ide_dma_start(ide_drive_t *drive)
-> +{
-> +	ide_hwif_t *hwif = drive->hwif;
-> +	unsigned long base = TX4939IDE_BASE(hwif);
-> +	u8 dma_cmd;
-> +
-> +	/* Note that this is done *after* the cmd has
-> +	 * been issued to the drive, as per the BM-IDE spec.
-> +	 */
-> +	dma_cmd = TX4939IDE_readb(base, DMA_Cmd);
-> +	/* start DMA */
-> +	TX4939IDE_writeb(dma_cmd | 1, base, DMA_Cmd);
-> +
-> +	wmb();
-> +}
->   
-
-   You could save by using ide_dma_start() in LE mode too...
-
-> +#ifdef __BIG_ENDIAN
-> +/* custom iops (independent from SWAP_IO_SPACE) */
-> +static u8 mm_inb(unsigned long port)
-> +{
-> +	return (u8)readb((void __iomem *)port);
-> +}
-> +static void mm_outb(u8 value, unsigned long port)
-> +{
-> +	writeb(value, (void __iomem *)port);
-> +}
->   
-
-   I'm not sure readb()/writeb() are good substitute for 
-__raw_readb()/__raw_writeb() as __swizzle_addr_b() might be actually 
-changing the address...
-
-MBR, Sergei
-
-
+-- 
+tejun
