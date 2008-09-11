@@ -1,34 +1,85 @@
-From: bugme-daemon@bugzilla.kernel.org
-Subject: [Bug 11540] hda lost irq on boot
-Date: Thu, 11 Sep 2008 11:43:06 -0700 (PDT)
-Message-ID: <20080911184306.6E9BE108048@picon.linux-foundation.org>
-References: <bug-11540-11633@http.bugzilla.kernel.org/>
+From: Elias Oltmanns <eo@nebensachen.de>
+Subject: Re: Laptop shock detection and harddisk protection
+Date: Thu, 11 Sep 2008 22:00:37 +0200
+Message-ID: <877i9ipi56.fsf@denkblock.local>
+References: <48C7FCEE.8060404@kernel.org>
+	<41840b750809110908o54a61f55w7b1b9793abf55634@mail.gmail.com>
+	<48C948A6.3080404@kernel.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:52465 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752235AbYIKSnI (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 11 Sep 2008 14:43:08 -0400
-Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
-	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id m8BIh6Id020012
-	for <linux-ide@vger.kernel.org>; Thu, 11 Sep 2008 11:43:07 -0700
-In-Reply-To: <bug-11540-11633@http.bugzilla.kernel.org/>
+Received: from nebensachen.de ([195.34.83.29]:37523 "EHLO mail.nebensachen.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751380AbYIKUAr (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 11 Sep 2008 16:00:47 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: Shem Multinymous <multinymous@gmail.com>, Thomas Renninger <trenn@suse.de>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, IDE/ATA development list <linux-ide@vger.kernel.org>
 
-http://bugzilla.kernel.org/show_bug.cgi?id=11540
+Tejun Heo <tj@kernel.org> wrote:
+> Hello, Shem Multinymous.
+>
+> Shem Multinymous wrote:
+[...]
+>>> 2. If we're gonna unify interface, how much can we unify the backend?
+>>>   Some devices are based on polling, others interrupt.  For polling,
+>>>   is it better to delegate the whole polling to userland or is it
+>>>   better to do some of it in kernel (tp_smapi seems to be doing
+>>>   this)?
+>> 
+>> The ThinkPad accelerometer needs to be polled at very regular
+>> intervals (max jitter on the order of 10ms), which sounds like a job
+>> for the kernel.
+>
+> Yes, I agree.
+>
+>> This is because in ThinkPads we actually have a 4-level pile:
+>> [hdapsd userspace] -> [hdaps kernel] -> [embedded controller] ->
+>> [accelerometer A2D]
+>> What the kernel polls is actually is the H8S embedded controller (EC)
+>> chip, which in turn does its own polling of the accelerometer A2D.
+>> Now, the EC has a tiny buffer and strange buffering semantics, and it
+>> has its own internal clock, so the software->EC polling should be very
+>> regular to minmize EC buffer overflows/underruns.
+>
+> So, I think the whole polling should be implemented inside the kernel
+> and the kernel should notify userland when new data is available,
+> which is about what the current joystick implementation does and can
+> be achieved using sysfs_notify_event().
 
+Short of a satisfying proposition regarding the questions raised, I just
+want to add two things that would be nice to solve in the future one way
+or another and should perhaps be taken into consideration from the
+beginning:
 
+1. Disable polling completely when it isn't required: once the hd has
+   spun down, there is no need to keep polling the sensors at all. Only
+   when the first request requiring the hd to spin up arrives, the
+   kernel needs to hold back for a short while to gather enough data
+   from the sensors, so shock protection is up and running again.
+2. Make shock protection interact nicely with suspend operations:
+   currently, we are out of luck if anything should happen after
+   processes have been frozen. This is particularly unfortunatel in the
+   case of s2disk.
 
+As far as 1. is concerned, I'm not quite sure yet how to determine when
+the disk has spun down since this may have happened according to vendor
+specific timing rules. Once we have established that the disk is
+sleeping safe and sound, sensor drivers can be notified to stop polling
+the hardware and possibly notify clients (like hdapsd) about that fact.
 
+Something along the lines of the disk_shock module approach suggested by
+Bart in [1] sounds promising, but it still needs some careful thinking
+when designing the interfaces to all components involved. As for the
+suspend problem, we could either put some simplified logic into
+disk_shock so it can take over once hdapsd has been frozen, or we can
+find a way to keep hdapsd unfrozen until the hd has been put to sleep.
+Of course, we'd have to think about resume as well, although it'll be
+impossible to protect right from the start in the s2disk case.
 
-------- Comment #2 from bzolnier@gmail.com  2008-09-11 11:43 -------
-Seems like an IRQ routing problem and not an IDE specific issue.
+Regards,
 
-Please try 2.6.27-rc6 and also post dmesgs from good/bad kernels. 
+Elias
 
-
--- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug, or are watching the assignee.
+[1] http://marc.info/?l=linux-kernel&m=122021163324843&w=2
