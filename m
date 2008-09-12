@@ -1,43 +1,49 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH 1/2] ide: Add tx4939ide driver
-Date: Fri, 12 Sep 2008 21:19:20 +0400
-Message-ID: <48CAA498.9090804@ru.mvista.com>
-References: <48C851ED.4090607@ru.mvista.com>	<20080912.005243.48535230.anemo@mba.ocn.ne.jp>	<48CA8BEE.1090305@ru.mvista.com> <20080913.005904.07457691.anemo@mba.ocn.ne.jp>
+From: Valdis.Kletnieks@vt.edu
+Subject: Re: [PATCH 2/4] libata: Implement disk shock protection support
+Date: Fri, 12 Sep 2008 14:11:05 -0400
+Message-ID: <22453.1221243065@turing-police.cc.vt.edu>
+References: <87wshzplvk.fsf@denkblock.local> <48BA969C.4060207@gmail.com> <87abetmaap.fsf@denkblock.local> <48BBA8D1.8020604@gmail.com> <87myirly1p.fsf@denkblock.local> <48BC1BB8.2030007@gmail.com> <87fxoh0yil.fsf@denkblock.local> <48BFA528.2040305@gmail.com> <87ej3zrf3o.fsf@denkblock.local> <48C0F2F8.1040308@gmail.com> <87ej3snm3s.fsf@denkblock.local> <48C7DC55.30002@gmail.com> <8763p3ol55.fsf@denkblock.local> <48C82CB1.2070308@gmail.com> <871vzrogpz.fsf@denkblock.local> <48C850AA.2030409@gmail.com> <87k5diq35g.fsf@denkblock.local> <48C91458.7090503@gmail.com> <48C9168C.4090101@gmail.com> <48C9A8D3.60408@gmail.com>
+            <87prn9y8jp.fsf@denkblock.local>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: multipart/signed; boundary="==_Exmh_1221243065_3046P";
+	 micalg=pgp-sha1; protocol="application/pgp-signature"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from h155.mvista.com ([63.81.120.155]:4545 "EHLO imap.sh.mvista.com"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751717AbYILRSl (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 12 Sep 2008 13:18:41 -0400
-In-Reply-To: <20080913.005904.07457691.anemo@mba.ocn.ne.jp>
+Received: from turing-police.cc.vt.edu ([128.173.14.107]:58035 "EHLO
+	turing-police.cc.vt.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751788AbYILSMf (ORCPT
+	<RFC822;linux-ide@vger.kernel.org>); Fri, 12 Sep 2008 14:12:35 -0400
+In-Reply-To: Your message of "Fri, 12 Sep 2008 12:15:22 +0200."
+             <87prn9y8jp.fsf@denkblock.local>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Atsushi Nemoto <anemo@mba.ocn.ne.jp>
-Cc: linux-mips@linux-mips.org, linux-ide@vger.kernel.org, bzolnier@gmail.com, ralf@linux-mips.org
+To: Elias Oltmanns <eo@nebensachen.de>
+Cc: Tejun Heo <htejun@gmail.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Andrew Morton <akpm@linux-foundation.org>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Jeff Garzik <jeff@garzik.org>, Randy Dunlap <randy.dunlap@oracle.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Atsushi Nemoto wrote:
+--==_Exmh_1221243065_3046P
+Content-Type: text/plain; charset=us-ascii
 
->>>>>+		/*
->>>>>+		 * If only one of XFERINT and HOST was asserted, mask
->>>>>+		 * this interrupt and wait for an another one.  Note
+On Fri, 12 Sep 2008 12:15:22 +0200, Elias Oltmanns said:
+> Tejun Heo <htejun@gmail.com> wrote:
 
->>>>  This comment somewhat contradicts the code which returns 1 if only 
->>>>HOST interupt is asserted if ERR is set.
+> > How about returning -OVERFLOW while still setting the timeout to the
+> > maximum?
+> 
+> Yes, that makes sense. I'll take care to document it that way:
+> -EINVAL for values < -2, -EOVERFLOW for values > 30000.
 
->>    Which is not its business to test. I think you should remove that above 
->>check -- if there's INTRQ asserted, then it's asserted. I wonder if BMIDE 
->>interrupt bit gets set in that case (suspecting it's not)...
+Works for me...
 
-> Well, let me explain a bit.  The datasheed say I should wait _both_
-> XFERINT and HOST interrupt.  So, if only one of them was asserted, I
-> mask it and wait another one.  But on the error case, only HOST was
-> asserted and XFERINT was never asserted.  Then I could not exit from
-> "waiting another one" state, until timeout.
+--==_Exmh_1221243065_3046P
+Content-Type: application/pgp-signature
 
-    Hmm, I got it: you decide whether it's worth waiting more for XFEREND 
-interrupt based on whether ERR is set or not. I suppose IDE_INT doesn't get 
-set in case the command gets endede with ERR set?
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.9 (GNU/Linux)
+Comment: Exmh version 2.5 07/13/2001
 
-MBR, Sergei
+iD8DBQFIyrC5cC3lWbTT17ARAk8HAJ9O0pfSzivSX+KHjAb6frDlMtndKQCgzyv5
+reFo7zzbGd508tqVfUyPTd4=
+=iC1B
+-----END PGP SIGNATURE-----
+
+--==_Exmh_1221243065_3046P--
