@@ -1,49 +1,76 @@
-From: Valdis.Kletnieks@vt.edu
-Subject: Re: [PATCH 2/4] libata: Implement disk shock protection support
-Date: Fri, 12 Sep 2008 14:11:05 -0400
-Message-ID: <22453.1221243065@turing-police.cc.vt.edu>
-References: <87wshzplvk.fsf@denkblock.local> <48BA969C.4060207@gmail.com> <87abetmaap.fsf@denkblock.local> <48BBA8D1.8020604@gmail.com> <87myirly1p.fsf@denkblock.local> <48BC1BB8.2030007@gmail.com> <87fxoh0yil.fsf@denkblock.local> <48BFA528.2040305@gmail.com> <87ej3zrf3o.fsf@denkblock.local> <48C0F2F8.1040308@gmail.com> <87ej3snm3s.fsf@denkblock.local> <48C7DC55.30002@gmail.com> <8763p3ol55.fsf@denkblock.local> <48C82CB1.2070308@gmail.com> <871vzrogpz.fsf@denkblock.local> <48C850AA.2030409@gmail.com> <87k5diq35g.fsf@denkblock.local> <48C91458.7090503@gmail.com> <48C9168C.4090101@gmail.com> <48C9A8D3.60408@gmail.com>
-            <87prn9y8jp.fsf@denkblock.local>
+From: Greg KH <greg@kroah.com>
+Subject: Re: Laptop shock detection and harddisk protection
+Date: Fri, 12 Sep 2008 09:59:47 -0700
+Message-ID: <20080912165947.GB5094@kroah.com>
+References: <48C7FCEE.8060404@kernel.org> <41840b750809110908o54a61f55w7b1b9793abf55634@mail.gmail.com> <48C948A6.3080404@kernel.org> <41840b750809111325t30f8ffe2sa4572d401d43dc5a@mail.gmail.com> <48C9AB5A.705@kernel.org>
 Mime-Version: 1.0
-Content-Type: multipart/signed; boundary="==_Exmh_1221243065_3046P";
-	 micalg=pgp-sha1; protocol="application/pgp-signature"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from turing-police.cc.vt.edu ([128.173.14.107]:58035 "EHLO
-	turing-police.cc.vt.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751788AbYILSMf (ORCPT
-	<RFC822;linux-ide@vger.kernel.org>); Fri, 12 Sep 2008 14:12:35 -0400
-In-Reply-To: Your message of "Fri, 12 Sep 2008 12:15:22 +0200."
-             <87prn9y8jp.fsf@denkblock.local>
+Received: from bombadil.infradead.org ([18.85.46.34]:49739 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757490AbYILTI7 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 12 Sep 2008 15:08:59 -0400
+Content-Disposition: inline
+In-Reply-To: <48C9AB5A.705@kernel.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Elias Oltmanns <eo@nebensachen.de>
-Cc: Tejun Heo <htejun@gmail.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Andrew Morton <akpm@linux-foundation.org>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Jeff Garzik <jeff@garzik.org>, Randy Dunlap <randy.dunlap@oracle.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: Shem Multinymous <multinymous@gmail.com>, Elias Oltmanns <eo@nebensachen.de>, Thomas Renninger <trenn@suse.de>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, IDE/ATA development list <linux-ide@vger.kernel.org>
 
---==_Exmh_1221243065_3046P
-Content-Type: text/plain; charset=us-ascii
-
-On Fri, 12 Sep 2008 12:15:22 +0200, Elias Oltmanns said:
-> Tejun Heo <htejun@gmail.com> wrote:
-
-> > How about returning -OVERFLOW while still setting the timeout to the
-> > maximum?
+On Fri, Sep 12, 2008 at 01:35:54AM +0200, Tejun Heo wrote:
+> Shem Multinymous wrote:
+> >> That reduction comes because input device supports poll and
+> >> sysfs_notify_event() does about the same thing.  The uesrland daemon
+> >> can just poll on a node and read data nodes when poll event on the
+> >> node triggeres.
+> > 
+> > Agreed.
+> > There's another issue with the current sysfs interface, though: hdapsd
+> > needs to read (x,y,timestamp) tuples, whereas sysfs provides just x
+> > and y in separate attributes which cannot be read atomically together.
+> > We can add a sysfs file with "x y timestamp" readouts, though this is
+> > unusual for sysfs (and certainly incompatible with hwmon).
 > 
-> Yes, that makes sense. I'll take care to document it that way:
-> -EINVAL for values < -2, -EOVERFLOW for values > 30000.
+> Yes, right.  Forgot about the atomicity part altogether.  Thanks for
+> bringing it up.
+> 
+> >> Unloading heads will be simple.  Just echoing timeout in ms to sysfs
+> >> nodes, so I don't think it's a good idea to push out actual unloading
+> >> to another process especially as fork doesn't inherit mlockall.
+> > 
+> > I had in mind another daemon listening for "unload now" events, so no
+> > forking needed.
+> > This second daemon might make sense if we push the logic of deciding
+> > *which* disks to unload into userspace, since this logic is the same
+> > for the ThinkPad style and the HP style.
+> 
+> Hmmm... I can't (yet) see the benefit of having two separate userland
+> daemons.
+> 
+> >> On a related note, is there any plan to merge tp_smapi to mainline?
+> >> It seems you put a lot of work into it and I don't really see why it
+> >> should stay out of tree.
+> > 
+> > The only issue I'm aware of is finding a reasonably-named maintainer.
+> > On the technical side, the reviews on my lkml submission of
+> > thinkpad_ec+hdaps seemed good and all technical comments are since
+> > addressed. The code has been stable, well-tested and packaged by major
+> > distros for years.
+> 
+> Cool, can you please post the patch to the lkml and cc Greg
+> Kroah-Hartman <gregkh@suse.de>, Andrew Morton
+> <akpm@linux-foundation.org> and me?
 
-Works for me...
+Sorry, but no, I can't accept this code as it is coming from a "known
+anonymous" person containing information that it is not known where it
+came from.
 
---==_Exmh_1221243065_3046P
-Content-Type: application/pgp-signature
+We went over this before a number of years ago, that's why this code
+isn't in mainline :(
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.9 (GNU/Linux)
-Comment: Exmh version 2.5 07/13/2001
+In short, "Signed-off-by:" from people who are known to be anonymous is
+not allowed.
 
-iD8DBQFIyrC5cC3lWbTT17ARAk8HAJ9O0pfSzivSX+KHjAb6frDlMtndKQCgzyv5
-reFo7zzbGd508tqVfUyPTd4=
-=iC1B
------END PGP SIGNATURE-----
+thanks,
 
---==_Exmh_1221243065_3046P--
+greg k-h
