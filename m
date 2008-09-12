@@ -1,63 +1,90 @@
-From: Elias Oltmanns <eo@nebensachen.de>
-Subject: Re: [PATCH 3/4] ide: Implement disk shock protection support
-Date: Fri, 12 Sep 2008 13:55:17 +0200
-Message-ID: <87ljxxy3x6.fsf@denkblock.local>
-References: <87wshzplvk.fsf@denkblock.local>
-	<200809012129.14979.bzolnier@gmail.com>
-	<87ljy90zin.fsf@denkblock.local>
-	<200809051933.38888.bzolnier@gmail.com>
-	<87vdx1y9gv.fsf@denkblock.local>
+From: Matthew Wilcox <matthew@wil.cx>
+Subject: Re: PCI: Add ALI M5229 comaptibility mode quirk
+Date: Fri, 12 Sep 2008 06:33:40 -0600
+Message-ID: <20080912123339.GA10844@parisc-linux.org>
+References: <20080912112252.505651015@fluff.org.uk>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nebensachen.de ([195.34.83.29]:52357 "EHLO mail.nebensachen.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752083AbYILL4l (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 12 Sep 2008 07:56:41 -0400
-In-Reply-To: <87vdx1y9gv.fsf@denkblock.local> (Elias Oltmanns's message of
-	"Fri, 12 Sep 2008 11:55:28 +0200")
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-pci-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20080912112252.505651015@fluff.org.uk>
+Sender: linux-pci-owner@vger.kernel.org
+To: Ben Dooks <ben-linux@fluff.org>
+Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org, linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, Andrew Morton <akpm@linux-foundation.org>, Jeff Garzik <jeff@garzik.org>, Randy Dunlap <randy.dunlap@oracle.com>, Tejun Heo <htejun@gmail.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Elias Oltmanns <eo@nebensachen.de> wrote:
-> Bartlomiej Zolnierkiewicz <bzolnier@gmail.com> wrote:
-[...]
->> Since Tejun already raised concerns about multiplexing per-device
->> and per-port settings I'm not repeating them here.  Please just
->> remember to backport fixes from libata version to ide one.
->
-> For the sake of consistency, I've always tried to make ide and libata
-> behave alike (or as close to it as possible). However, the final version
-> of the libata patch is very hard to mimc in ide. Therefore, I wonder
-> whether we can do in ide what we'd really like to do in libata
-> eventually. The patch below is a real per-device implementation of the
-> unload feature. However, I'd like you to confirm the crucial assumption
-> underlying this patch: a port reset is the only way a device can
-> interfere with another device on the same port. In particular, I haven't
-> made an effort to understand pnp and similar stuff completely, but from
-> a first glance I got the impression that these things are done per-port
-> rather than per-device and that nothing sinister will happen behind our
-> back. In short, can you confirm the following:
->
-> Condition:  device A on a port is parked (implies there is at least one
->             request on the queue of that device, i.e we hold a
->             reference to the device and thus to the port).
-> Assumption: nothing will disturb the device because resets due to
->             command failure / timeouts on device B are deferred (see my
->             patch) and spurious commands like IDENTIFY (or whatever
->             actions may be related to pnp and the like) are not 
->             performed while the device is sleeping and a request is
->             waiting on the queue.
+On Fri, Sep 12, 2008 at 12:22:52PM +0100, Ben Dooks wrote:
+> The libata driver will not work with an M5229 set into native IDE
+> mode (the old drivers/pci one does) if the M5229 does not provide
+> it's own IRQ.
+> 
+> The M5229 implementation embedded into the ALI M1543 uses the
+> M1543's ISA PIC to provide the interrupts and thus does not have
+> an valid PCI IRQ set. This quirk detects the abscence of IRQ and
+> sets the M5229 back into compatibility mode to use IRQs 14 and 15
+> so that libata works correctly.
+> 
+> Note, I belive that the check for an valid interrupt line is
+> correct, I only have an M5229 in an ALI M1543 to check this
+> on. It would be useful to confirm that a M5229 with an valid IRQ
+> does not trigger this quirk.
 
-Sorry for spamming you again, but I forgot to mention one more thing: In
-my hardware environment, I cannot easily test the code in do_reset1()
-which is supposed to defer resets if necessary. Since we have something
-very similar in libata (which I have tested), I'm quite confident that
-everything will work out nicely. Still, you may want to pay special
-attention to this piece of code.
+Why does this need to be a quirk rather than something in the libata ALi
+driver?
 
-Regards,
+> Signed-off-by: Ben Dooks <ben-linux@fluff.org>
+> 
+> Index: linux-2.6.27-rc6-cats1/drivers/pci/quirks.c
+> ===================================================================
+> --- linux-2.6.27-rc6-cats1.orig/drivers/pci/quirks.c	2008-09-11 11:26:35.000000000 +0100
+> +++ linux-2.6.27-rc6-cats1/drivers/pci/quirks.c	2008-09-12 12:18:05.000000000 +0100
+> @@ -905,6 +905,34 @@ static void __devinit quirk_svwks_csb5id
+>  }
+>  DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_SERVERWORKS, PCI_DEVICE_ID_SERVERWORKS_CSB5IDE, quirk_svwks_csb5ide);
+>  
+> +/* Some systems set the ALI M5229 in the ALI M1543 bridge to native mode,
+> + * which cannot be supported by the pata_ali.c driver (the old drivers/ide
+> + * makes a compatibility effort to change the IDE interrupts).
+> + */
+> +static void __devinit quirk_ali_ide_compatibility(struct pci_dev *pdev)
+> +{
+> +	u8 tmp;
+> +
+> +	/* pdev->irq and pdev->pin have yet to be initialised, so check
+> +	 * by reading from the configuration header to see if we've got
+> +	 * a valid interrupt line. */
+> +
+> +	pci_read_config_byte(pdev, PCI_INTERRUPT_LINE, &tmp);
+> +	if (tmp != 0xff)
+> +		return;
+> +
+> +	pci_read_config_byte(pdev, PCI_CLASS_PROG, &tmp);
+> +	if (tmp & 0x5) {
+> +		dev_info(&pdev->dev, "quirk: changing to IDE compatibility mode\n");
+> +
+> +		tmp &= ~0x05;
+> +		pdev->class &= ~0x05;
+> +		pci_write_config_byte(pdev, PCI_CLASS_PROG, tmp);
+> +	}
+> +}
+> +
+> +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_AL, PCI_DEVICE_ID_AL_M5229, quirk_ali_ide_compatibility);
+> +
+>  /*
+>   *	Intel 82801CAM ICH3-M datasheet says IDE modes must be the same
+>   */
+> 
+> -- 
+> Ben (ben@fluff.org, http://www.fluff.org/)
+> 
+>   'a smiley only costs 4 bytes'
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-Elias
+-- 
+Matthew Wilcox				Intel Open Source Technology Centre
+"Bill, look, we understand that you're interested in selling us this
+operating system, but compare it to ours.  We can't possibly take such
+a retrograde step."
