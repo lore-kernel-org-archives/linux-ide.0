@@ -1,76 +1,39 @@
-From: Greg KH <greg@kroah.com>
-Subject: Re: Laptop shock detection and harddisk protection
-Date: Fri, 12 Sep 2008 09:59:47 -0700
-Message-ID: <20080912165947.GB5094@kroah.com>
-References: <48C7FCEE.8060404@kernel.org> <41840b750809110908o54a61f55w7b1b9793abf55634@mail.gmail.com> <48C948A6.3080404@kernel.org> <41840b750809111325t30f8ffe2sa4572d401d43dc5a@mail.gmail.com> <48C9AB5A.705@kernel.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: bugme-daemon@bugzilla.kernel.org
+Subject: [Bug 11511] HPT374 detection crash with 74811f355f4f69a187fa74892dcf2a684b84ce99
+Date: Fri, 12 Sep 2008 12:40:00 -0700 (PDT)
+Message-ID: <20080912194000.4DFD310805B@picon.linux-foundation.org>
+References: <bug-11511-11633@http.bugzilla.kernel.org/>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:49739 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757490AbYILTI7 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 12 Sep 2008 15:08:59 -0400
-Content-Disposition: inline
-In-Reply-To: <48C9AB5A.705@kernel.org>
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:37078 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753137AbYILTka (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 12 Sep 2008 15:40:30 -0400
+Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
+	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id m8CJe0OD014302
+	for <linux-ide@vger.kernel.org>; Fri, 12 Sep 2008 12:40:01 -0700
+In-Reply-To: <bug-11511-11633@http.bugzilla.kernel.org/>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: Shem Multinymous <multinymous@gmail.com>, Elias Oltmanns <eo@nebensachen.de>, Thomas Renninger <trenn@suse.de>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, IDE/ATA development list <linux-ide@vger.kernel.org>
+To: linux-ide@vger.kernel.org
 
-On Fri, Sep 12, 2008 at 01:35:54AM +0200, Tejun Heo wrote:
-> Shem Multinymous wrote:
-> >> That reduction comes because input device supports poll and
-> >> sysfs_notify_event() does about the same thing.  The uesrland daemon
-> >> can just poll on a node and read data nodes when poll event on the
-> >> node triggeres.
-> > 
-> > Agreed.
-> > There's another issue with the current sysfs interface, though: hdapsd
-> > needs to read (x,y,timestamp) tuples, whereas sysfs provides just x
-> > and y in separate attributes which cannot be read atomically together.
-> > We can add a sysfs file with "x y timestamp" readouts, though this is
-> > unusual for sysfs (and certainly incompatible with hwmon).
-> 
-> Yes, right.  Forgot about the atomicity part altogether.  Thanks for
-> bringing it up.
-> 
-> >> Unloading heads will be simple.  Just echoing timeout in ms to sysfs
-> >> nodes, so I don't think it's a good idea to push out actual unloading
-> >> to another process especially as fork doesn't inherit mlockall.
-> > 
-> > I had in mind another daemon listening for "unload now" events, so no
-> > forking needed.
-> > This second daemon might make sense if we push the logic of deciding
-> > *which* disks to unload into userspace, since this logic is the same
-> > for the ThinkPad style and the HP style.
-> 
-> Hmmm... I can't (yet) see the benefit of having two separate userland
-> daemons.
-> 
-> >> On a related note, is there any plan to merge tp_smapi to mainline?
-> >> It seems you put a lot of work into it and I don't really see why it
-> >> should stay out of tree.
-> > 
-> > The only issue I'm aware of is finding a reasonably-named maintainer.
-> > On the technical side, the reviews on my lkml submission of
-> > thinkpad_ec+hdaps seemed good and all technical comments are since
-> > addressed. The code has been stable, well-tested and packaged by major
-> > distros for years.
-> 
-> Cool, can you please post the patch to the lkml and cc Greg
-> Kroah-Hartman <gregkh@suse.de>, Andrew Morton
-> <akpm@linux-foundation.org> and me?
+http://bugzilla.kernel.org/show_bug.cgi?id=11511
 
-Sorry, but no, I can't accept this code as it is coming from a "known
-anonymous" person containing information that it is not known where it
-came from.
 
-We went over this before a number of years ago, that's why this code
-isn't in mainline :(
+rjw@sisk.pl changed:
 
-In short, "Signed-off-by:" from people who are known to be anonymous is
-not allowed.
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+             Status|NEW                         |CLOSED
+         Resolution|                            |CODE_FIX
 
-thanks,
 
-greg k-h
+
+
+------- Comment #1 from rjw@sisk.pl  2008-09-12 12:39 -------
+Fixed by commit 62ff2ecf7a4e69f7271b7f7a57aaee76ffe610f2 .
+
+
+-- 
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug, or are watching the assignee.
