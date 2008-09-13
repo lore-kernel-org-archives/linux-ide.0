@@ -1,87 +1,133 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: [git patches] libata fixes
-Date: Sat, 13 Sep 2008 16:59:53 -0400
-Message-ID: <20080913205953.GA4199@havoc.gtf.org>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: Re: [PATCH 1/2] ide: Add tx4939ide driver
+Date: Sun, 14 Sep 2008 01:48:06 +0400
+Message-ID: <48CC3516.9080404@ru.mvista.com>
+References: <20080910.010824.07456636.anemo@mba.ocn.ne.jp>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from havoc.gtf.org ([69.61.125.42]:50757 "EHLO havoc.gtf.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751975AbYIMU7y (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 13 Sep 2008 16:59:54 -0400
-Content-Disposition: inline
+Received: from h155.mvista.com ([63.81.120.155]:20791 "EHLO imap.sh.mvista.com"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1752469AbYIMVsO (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 13 Sep 2008 17:48:14 -0400
+In-Reply-To: <20080910.010824.07456636.anemo@mba.ocn.ne.jp>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>
-Cc: linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
+To: Atsushi Nemoto <anemo@mba.ocn.ne.jp>
+Cc: linux-mips@linux-mips.org, linux-ide@vger.kernel.org, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, ralf@linux-mips.org
+
+Hello.
+
+Atsushi Nemoto wrote:
+
+> This is the driver for the Toshiba TX4939 SoC ATA controller.
+>
+> This controller has standard ATA taskfile registers and DMA
+> command/status registers, but the register layout is swapped on big
+> endian.  There are some other endian issue and some special registers
+> which requires many custom dma_ops/port_ops routines.
+>
+> Signed-off-by: Atsushi Nemoto <anemo@mba.ocn.ne.jp>
+>   
+[...]
+> diff --git a/drivers/ide/mips/tx4939ide.c b/drivers/ide/mips/tx4939ide.c
+> new file mode 100644
+> index 0000000..ba9776d
+> --- /dev/null
+> +++ b/drivers/ide/mips/tx4939ide.c
+> @@ -0,0 +1,762 @@
+>   
+[...]
+> +static void tx4939ide_hwif_init(ide_hwif_t *hwif)
+> +{
+>   
+[...]
+> +
+> +#ifdef __BIG_ENDIAN
+> +	/* This setting does not affect PRD fetch */
+> +	/* ByteSwap=1, Endian=00 */
+> +	TX4939IDE_writew(0xc911, base, Add_Ctl);
+> +#else
+> +	TX4939IDE_writew(0xc901, base, Add_Ctl);
+> +#endif
+>   
+
+   Aren't these the default register values? Is there a sense in writing 
+them?
+
+> +#ifdef __BIG_ENDIAN
+> +/* custom iops (independent from SWAP_IO_SPACE) */
+> +static u8 mm_inb(unsigned long port)
+> +{
+> +	return (u8)readb((void __iomem *)port);
+> +}
+> +static void mm_outb(u8 value, unsigned long port)
+> +{
+> +	writeb(value, (void __iomem *)port);
+> +}
+> +static void mm_tf_load(ide_drive_t *drive, ide_task_t *task)
+> +{
+> +	ide_hwif_t *hwif = drive->hwif;
+> +	struct ide_io_ports *io_ports = &hwif->io_ports;
+> +	struct ide_taskfile *tf = &task->tf;
+> +	u8 HIHI = (task->tf_flags & IDE_TFLAG_LBA48) ? 0xE0 : 0xEF;
+> +
+> +	if (task->tf_flags & IDE_TFLAG_FLAGGED)
+> +		HIHI = 0xFF;
+> +
+> +	if (task->tf_flags & IDE_TFLAG_OUT_DATA) {
+> +		u16 data = (tf->hob_data << 8) | tf->data;
+> +
+> +		__raw_writew(data, (void __iomem *)io_ports->data_addr);
+>   
+
+   This doesn't look consistent (aside from the TX4939IDE_REG8/16 issue) 
+-- mm_outsw_swap() calls cpu_to_le16() before writing 16-bit data but 
+this code doesn't. So, either one of those should be wrong...
+
+> +static void mm_tf_read(ide_drive_t *drive, ide_task_t *task)
+> +{
+> +	ide_hwif_t *hwif = drive->hwif;
+> +	struct ide_io_ports *io_ports = &hwif->io_ports;
+> +	struct ide_taskfile *tf = &task->tf;
+> +
+> +	if (task->tf_flags & IDE_TFLAG_IN_DATA) {
+> +		u16 data;
+> +
+> +		data = __raw_readw((void __iomem *)io_ports->data_addr);
+> +		tf->data = data & 0xff;
+> +		tf->hob_data = (data >> 8) & 0xff;
+>   
+
+    Same here...
+
+> +static void mm_insw_swap(unsigned long port, void *addr, u32 count)
+> +{
+> +	unsigned short *ptr = addr;
+> +	unsigned long size = count * 2;
+> +	port &= ~1;
+> +	while (count--)
+> +		*ptr++ = le16_to_cpu(__raw_readw((void __iomem *)port));
+> +	__ide_flush_dcache_range((unsigned long)addr, size);
+> +}
+> +static void mm_outsw_swap(unsigned long port, void *addr, u32 count)
+> +{
+> +	unsigned short *ptr = addr;
+> +	unsigned long size = count * 2;
+> +	port &= ~1;
+> +	while (count--) {
+> +		__raw_writew(cpu_to_le16(*ptr), (void __iomem *)port);
+> +		ptr++;
+> +	}
+> +	__ide_flush_dcache_range((unsigned long)addr, size);
+> +}
+>   
+
+    Hum... but is it really correct to convert from/to LE order above? 
+I'm prett sure that data is expected in LE order -- look ar 
+ide_fix_driveid() for example...
+
+MBR, Sergei
 
 
-The off-by-one bug fix is notable; see extended commit description.
-Verified by several people as fixing their problem here.
-
-Please pull from 'upstream-linus' branch of
-master.kernel.org:/pub/scm/linux/kernel/git/jgarzik/libata-dev.git upstream-linus
-
-to receive the following updates:
-
- drivers/ata/ata_piix.c      |    2 +-
- drivers/ata/sata_inic162x.c |    3 ++-
- include/linux/ata.h         |    2 +-
- 3 files changed, 4 insertions(+), 3 deletions(-)
-
-Bob Stewart (1):
-      sata_inic162x: enable LED blinking
-
-Stephen Hemminger (1):
-      ata: duplicate variable sparse warning
-
-Taisuke Yamada (1):
-      [libata] LBA28/LBA48 off-by-one bug in ata.h
-
-diff --git a/drivers/ata/ata_piix.c b/drivers/ata/ata_piix.c
-index b1d08a8..e6b4606 100644
---- a/drivers/ata/ata_piix.c
-+++ b/drivers/ata/ata_piix.c
-@@ -1499,7 +1499,7 @@ static int __devinit piix_init_one(struct pci_dev *pdev,
- 	 * off.
- 	 */
- 	if (pdev->vendor == PCI_VENDOR_ID_INTEL && pdev->device == 0x2652) {
--		int rc = piix_disable_ahci(pdev);
-+		rc = piix_disable_ahci(pdev);
- 		if (rc)
- 			return rc;
- 	}
-diff --git a/drivers/ata/sata_inic162x.c b/drivers/ata/sata_inic162x.c
-index 3ead02f..5032c32 100644
---- a/drivers/ata/sata_inic162x.c
-+++ b/drivers/ata/sata_inic162x.c
-@@ -96,6 +96,7 @@ enum {
- 	PORT_SCR		= 0x20,
- 
- 	/* HOST_CTL bits */
-+	HCTL_LEDEN		= (1 << 3),  /* enable LED operation */
- 	HCTL_IRQOFF		= (1 << 8),  /* global IRQ off */
- 	HCTL_FTHD0		= (1 << 10), /* fifo threshold 0 */
- 	HCTL_FTHD1		= (1 << 11), /* fifo threshold 1*/
-@@ -540,7 +541,7 @@ static unsigned int inic_qc_issue(struct ata_queued_cmd *qc)
- 	void __iomem *port_base = inic_port_base(ap);
- 
- 	/* fire up the ADMA engine */
--	writew(HCTL_FTHD0, port_base + HOST_CTL);
-+	writew(HCTL_FTHD0 | HCTL_LEDEN, port_base + HOST_CTL);
- 	writew(IDMA_CTL_GO, port_base + PORT_IDMA_CTL);
- 	writeb(0, port_base + PORT_CPB_PTQFIFO);
- 
-diff --git a/include/linux/ata.h b/include/linux/ata.h
-index 1ce19c1..8a12d71 100644
---- a/include/linux/ata.h
-+++ b/include/linux/ata.h
-@@ -745,7 +745,7 @@ static inline int ata_ok(u8 status)
- static inline int lba_28_ok(u64 block, u32 n_block)
- {
- 	/* check the ending block number */
--	return ((block + n_block - 1) < ((u64)1 << 28)) && (n_block <= 256);
-+	return ((block + n_block) < ((u64)1 << 28)) && (n_block <= 256);
- }
- 
- static inline int lba_48_ok(u64 block, u32 n_block)
