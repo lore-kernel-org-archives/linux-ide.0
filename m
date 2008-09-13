@@ -1,88 +1,38 @@
-From: Robert Hancock <hancockr@shaw.ca>
-Subject: Re: PCI: Add ALI M5229 comaptibility mode quirk
-Date: Sat, 13 Sep 2008 11:31:27 -0600
-Message-ID: <48CBF8EF.7030909@shaw.ca>
-References: <fa.5x39Eh02m9rtrn5GDRnZ3IcV/z8@ifi.uio.no> <fa.bfF4DSr1eMYmEl5E90sppi2wbuU@ifi.uio.no>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: [PATCH] ata: duplicate variable sparse warning
+Date: Sat, 13 Sep 2008 16:43:34 -0400
+Message-ID: <48CC25F6.8050701@pobox.com>
+References: <20080908093139.3909a3ac@extreme>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from idcmail-mo1so.shaw.ca ([24.71.223.10]:35145 "EHLO
-	idcmail-mo1so.shaw.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751380AbYIMRbd (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 13 Sep 2008 13:31:33 -0400
-In-Reply-To: <fa.bfF4DSr1eMYmEl5E90sppi2wbuU@ifi.uio.no>
+Received: from srv5.dvmed.net ([207.36.208.214]:46388 "EHLO mail.dvmed.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752583AbYIMUnh (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 13 Sep 2008 16:43:37 -0400
+In-Reply-To: <20080908093139.3909a3ac@extreme>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: Ben Dooks <ben-linux@fluff.org>, linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org, Linux IDE mailing list <linux-ide@vger.kernel.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>
+To: Stephen Hemminger <shemminger@vyatta.com>
+Cc: linux-ide@vger.kernel.org
 
-Jeff Garzik wrote:
-> Ben Dooks wrote:
->> The libata driver will not work with an M5229 set into native IDE
->> mode (the old drivers/pci one does) if the M5229 does not provide
->> it's own IRQ.
->>
->> The M5229 implementation embedded into the ALI M1543 uses the
->> M1543's ISA PIC to provide the interrupts and thus does not have
->> an valid PCI IRQ set. This quirk detects the abscence of IRQ and
->> sets the M5229 back into compatibility mode to use IRQs 14 and 15
->> so that libata works correctly.
->>
->> Note, I belive that the check for an valid interrupt line is
->> correct, I only have an M5229 in an ALI M1543 to check this
->> on. It would be useful to confirm that a M5229 with an valid IRQ
->> does not trigger this quirk.
->>
->> Signed-off-by: Ben Dooks <ben-linux@fluff.org>
->>
->> Index: linux-2.6.27-rc6-cats1/drivers/pci/quirks.c
->> ===================================================================
->> --- linux-2.6.27-rc6-cats1.orig/drivers/pci/quirks.c    2008-09-11 
->> 11:26:35.000000000 +0100
->> +++ linux-2.6.27-rc6-cats1/drivers/pci/quirks.c    2008-09-12 
->> 12:18:05.000000000 +0100
->> @@ -905,6 +905,34 @@ static void __devinit quirk_svwks_csb5id
->>  }
->>  DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_SERVERWORKS, 
->> PCI_DEVICE_ID_SERVERWORKS_CSB5IDE, quirk_svwks_csb5ide);
->>  
->> +/* Some systems set the ALI M5229 in the ALI M1543 bridge to native 
->> mode,
->> + * which cannot be supported by the pata_ali.c driver (the old 
->> drivers/ide
->> + * makes a compatibility effort to change the IDE interrupts).
->> + */
->> +static void __devinit quirk_ali_ide_compatibility(struct pci_dev *pdev)
->> +{
->> +    u8 tmp;
->> +
->> +    /* pdev->irq and pdev->pin have yet to be initialised, so check
->> +     * by reading from the configuration header to see if we've got
->> +     * a valid interrupt line. */
->> +
->> +    pci_read_config_byte(pdev, PCI_INTERRUPT_LINE, &tmp);
->> +    if (tmp != 0xff)
->> +        return;
->> +
->> +    pci_read_config_byte(pdev, PCI_CLASS_PROG, &tmp);
->> +    if (tmp & 0x5) {
->> +        dev_info(&pdev->dev, "quirk: changing to IDE compatibility 
->> mode\n");
->> +
->> +        tmp &= ~0x05;
->> +        pdev->class &= ~0x05;
->> +        pci_write_config_byte(pdev, PCI_CLASS_PROG, tmp);
->> +    }
->> +}
->> +
->> +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_AL, PCI_DEVICE_ID_AL_M5229, 
->> quirk_ali_ide_compatibility);
+Stephen Hemminger wrote:
+> drivers/ata/ata_piix.c:1502:7: warning: symbol 'rc' shadows an earlier one
 > 
+> Signed-off-by: Stephen Hemminger <shemminger@vyatta.com>
 > 
-> This is a bit surprising, considering that libata works for all IDE mode 
-> of other controllers...
-> 
->     Jeff
+> --- a/drivers/ata/ata_piix.c	2008-09-08 09:29:22.000000000 -0700
+> +++ b/drivers/ata/ata_piix.c	2008-09-08 09:29:33.000000000 -0700
+> @@ -1499,7 +1499,7 @@ static int __devinit piix_init_one(struc
+>  	 * off.
+>  	 */
+>  	if (pdev->vendor == PCI_VENDOR_ID_INTEL && pdev->device == 0x2652) {
+> -		int rc = piix_disable_ahci(pdev);
+> +		rc = piix_disable_ahci(pdev);
+>  		if (rc)
+>  			return rc;
 
-Not if the controller has no native-mode IRQ assigned, it won't..
+applied
+
+
