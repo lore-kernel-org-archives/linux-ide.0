@@ -1,48 +1,48 @@
-From: Atsushi Nemoto <anemo@mba.ocn.ne.jp>
-Subject: Re: [PATCH 1/2] ide: Add tx4939ide driver
-Date: Sat, 13 Sep 2008 21:32:26 +0900 (JST)
-Message-ID: <20080913.213226.106262199.anemo@mba.ocn.ne.jp>
-References: <48CA8BEE.1090305@ru.mvista.com>
-	<20080913.005904.07457691.anemo@mba.ocn.ne.jp>
-	<48CAA498.9090804@ru.mvista.com>
+From: Bruce Allen <ballen@gravity.phys.uwm.edu>
+Subject: Re: regarding crazy head unloads
+Date: Sat, 13 Sep 2008 06:44:09 -0500 (CDT)
+Message-ID: <Pine.LNX.4.64.0809130635260.26283@gc.phys.uwm.edu>
+References: <48361F88.7040400@gmail.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mba.ocn.ne.jp ([122.1.235.107]:52070 "EHLO smtp.mba.ocn.ne.jp"
+Received: from gc.phys.uwm.edu ([129.89.61.147]:49279 "EHLO gc.phys.uwm.edu"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752306AbYIMMcQ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 13 Sep 2008 08:32:16 -0400
-In-Reply-To: <48CAA498.9090804@ru.mvista.com>
+	id S1752498AbYIMMut (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 13 Sep 2008 08:50:49 -0400
+In-Reply-To: <48361F88.7040400@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: sshtylyov@ru.mvista.com
-Cc: linux-mips@linux-mips.org, linux-ide@vger.kernel.org, bzolnier@gmail.com, ralf@linux-mips.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: roland.kletzing@materna.de, Smartmontools Developers List <smartmontools-devel@lists.sourceforge.net>, IDE/ATA development list <linux-ide@vger.kernel.org>, Jeff Garzik <jeff@garzik.org>, Mark Lord <liml@rtr.ca>, Alan Cox <alan@lxorguk.ukuu.org.uk>, scott@ubuntu.com
 
-On Fri, 12 Sep 2008 21:19:20 +0400, Sergei Shtylyov <sshtylyov@ru.mvista.com> wrote:
-> > Well, let me explain a bit.  The datasheed say I should wait _both_
-> > XFERINT and HOST interrupt.  So, if only one of them was asserted, I
-> > mask it and wait another one.  But on the error case, only HOST was
-> > asserted and XFERINT was never asserted.  Then I could not exit from
-> > "waiting another one" state, until timeout.
-> 
->     Hmm, I got it: you decide whether it's worth waiting more for XFEREND 
-> interrupt based on whether ERR is set or not. I suppose IDE_INT doesn't get 
-> set in case the command gets endede with ERR set?
+Hi Tejun,
 
-IIRC, yes.  And anyway, the interrupt signal from this controller to
-CPU is not asserted because HOSTINT was masked by int_ctl register to
-wait for XFERINT interrupt.
+Sorry, this is a really really slow reply.  This email came at an 
+unusually busy time and I did not reply before it got buried in the 
+deluge.
 
-So, regardless of IDE_INT was set or not, no more interrupt raised to
-CPU.
+> 2. This is from Roland.  Make smartd aware of the problem and warn user
+>    if load/unload count per powered on hours goes too high.  Maybe the
+>    warning can direct the user to linux-ata.org page?
 
-Many of strangeness of interrupt handling in this driver is based on
-the fact that the IDE_INT bit in DMA status register does not refrect
-the controllers interrupt status directly.  And the implementation of
-the IDE_INT bit is actually broken.  Claring the IDE_INT bit also
-clears all mask bits in int_ctl registers.  Usually this sort of
-behaviour is called "bug". ;)
+It would be easy to implement this in smartd.  But I'm concerned about 
+three things:
 
----
-Atsushi Nemoto
+   -- most people don't run smartd (I think by default it is off on
+      the main Linux distros).  Those wise enough to run smartd will
+      probably be aware of the issue, since it's gotten lots of buzz. And
+      even if smartd is turned on in the distro it is normally not
+      configured to send warning emails.
+
+   -- I'm not sure if the attribute used for head load/unload is a standard
+      one.  On my current laptop Hitachi disk it is attribute 193.  Does
+      anyone know if this is standard?
+
+   -- I'm not sure at what threshold to send warning emails.  If we send
+      too many false alarms, they will be ignored by users.
+
+Let me know if you have suggestions or comments about these points.
+
+Cheers,
+     Bruce
