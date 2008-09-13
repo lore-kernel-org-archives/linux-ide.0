@@ -1,33 +1,74 @@
-From: Atsushi Nemoto <anemo@mba.ocn.ne.jp>
-Subject: Re: [PATCH 1/2] ide: Add tx4939ide driver
-Date: Sat, 13 Sep 2008 22:37:03 +0900 (JST)
-Message-ID: <20080913.223703.108120497.anemo@mba.ocn.ne.jp>
-References: <20080910.010824.07456636.anemo@mba.ocn.ne.jp>
-	<20080909174459.2aa9808a@lxorguk.ukuu.org.uk>
-	<20080911.000649.39154743.anemo@mba.ocn.ne.jp>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: PCI: Add ALI M5229 comaptibility mode quirk
+Date: Sat, 13 Sep 2008 10:24:29 -0400
+Message-ID: <48CBCD1D.4090300@garzik.org>
+References: <20080912112252.505651015@fluff.org.uk>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mba.ocn.ne.jp ([122.1.235.107]:61347 "EHLO smtp.mba.ocn.ne.jp"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752685AbYIMNgy (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 13 Sep 2008 09:36:54 -0400
-In-Reply-To: <20080911.000649.39154743.anemo@mba.ocn.ne.jp>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-pci-owner@vger.kernel.org>
+In-Reply-To: <20080912112252.505651015@fluff.org.uk>
+Sender: linux-pci-owner@vger.kernel.org
+To: Ben Dooks <ben-linux@fluff.org>
+Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org, Linux IDE mailing list <linux-ide@vger.kernel.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>
 List-Id: linux-ide@vger.kernel.org
-To: alan@lxorguk.ukuu.org.uk
-Cc: linux-mips@linux-mips.org, linux-ide@vger.kernel.org, bzolnier@gmail.com, ralf@linux-mips.org, sshtylyov@ru.mvista.com
 
-On Thu, 11 Sep 2008 00:06:49 +0900 (JST), Atsushi Nemoto <anemo@mba.ocn.ne.jp> wrote:
-> The dmatable_cpu is allocated by pci_alloc_consistent so that flush is
-> not needed.  But... this is not PCI device.  I should not use
-> ide_allocate_dma_engine().  I'll fix it.
+Ben Dooks wrote:
+> The libata driver will not work with an M5229 set into native IDE
+> mode (the old drivers/pci one does) if the M5229 does not provide
+> it's own IRQ.
+> 
+> The M5229 implementation embedded into the ALI M1543 uses the
+> M1543's ISA PIC to provide the interrupts and thus does not have
+> an valid PCI IRQ set. This quirk detects the abscence of IRQ and
+> sets the M5229 back into compatibility mode to use IRQs 14 and 15
+> so that libata works correctly.
+> 
+> Note, I belive that the check for an valid interrupt line is
+> correct, I only have an M5229 in an ALI M1543 to check this
+> on. It would be useful to confirm that a M5229 with an valid IRQ
+> does not trigger this quirk.
+> 
+> Signed-off-by: Ben Dooks <ben-linux@fluff.org>
+> 
+> Index: linux-2.6.27-rc6-cats1/drivers/pci/quirks.c
+> ===================================================================
+> --- linux-2.6.27-rc6-cats1.orig/drivers/pci/quirks.c	2008-09-11 11:26:35.000000000 +0100
+> +++ linux-2.6.27-rc6-cats1/drivers/pci/quirks.c	2008-09-12 12:18:05.000000000 +0100
+> @@ -905,6 +905,34 @@ static void __devinit quirk_svwks_csb5id
+>  }
+>  DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_SERVERWORKS, PCI_DEVICE_ID_SERVERWORKS_CSB5IDE, quirk_svwks_csb5ide);
+>  
+> +/* Some systems set the ALI M5229 in the ALI M1543 bridge to native mode,
+> + * which cannot be supported by the pata_ali.c driver (the old drivers/ide
+> + * makes a compatibility effort to change the IDE interrupts).
+> + */
+> +static void __devinit quirk_ali_ide_compatibility(struct pci_dev *pdev)
+> +{
+> +	u8 tmp;
+> +
+> +	/* pdev->irq and pdev->pin have yet to be initialised, so check
+> +	 * by reading from the configuration header to see if we've got
+> +	 * a valid interrupt line. */
+> +
+> +	pci_read_config_byte(pdev, PCI_INTERRUPT_LINE, &tmp);
+> +	if (tmp != 0xff)
+> +		return;
+> +
+> +	pci_read_config_byte(pdev, PCI_CLASS_PROG, &tmp);
+> +	if (tmp & 0x5) {
+> +		dev_info(&pdev->dev, "quirk: changing to IDE compatibility mode\n");
+> +
+> +		tmp &= ~0x05;
+> +		pdev->class &= ~0x05;
+> +		pci_write_config_byte(pdev, PCI_CLASS_PROG, tmp);
+> +	}
+> +}
+> +
+> +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_AL, PCI_DEVICE_ID_AL_M5229, quirk_ali_ide_compatibility);
 
-Fortunately such a fix will not be needed.  A patch making
-ide_allocate_dma_engine() independent from PCI already posted (
-"[PATCH 4/8] ide: switch to DMA-mapping API part 2").  I can use
-ide_allocate_dma_engine() with non-PCI device safely.  Thanks.
 
----
-Atsushi Nemoto
+This is a bit surprising, considering that libata works for all IDE mode 
+of other controllers...
+
+	Jeff
