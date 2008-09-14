@@ -1,97 +1,139 @@
 From: Borislav Petkov <petkovbb@googlemail.com>
-Subject: [PATCH 10/10] ide-cd: use generic ide_issue_pc
-Date: Sun, 14 Sep 2008 13:35:58 +0200
-Message-ID: <1221392158-3848-11-git-send-email-petkovbb@gmail.com>
+Subject: [PATCH 07/10] ide-atapi: prepare ide-cd expiry handler
+Date: Sun, 14 Sep 2008 13:35:55 +0200
+Message-ID: <1221392158-3848-8-git-send-email-petkovbb@gmail.com>
 References: <1221392158-3848-1-git-send-email-petkovbb@gmail.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.153]:4760 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753226AbYINLgH (ORCPT
+Received: from mu-out-0910.google.com ([209.85.134.186]:15884 "EHLO
+	mu-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753305AbYINLgH (ORCPT
 	<rfc822;linux-ide@vger.kernel.org>); Sun, 14 Sep 2008 07:36:07 -0400
-Received: by fg-out-1718.google.com with SMTP id 19so1047388fgg.17
-        for <linux-ide@vger.kernel.org>; Sun, 14 Sep 2008 04:36:06 -0700 (PDT)
+Received: by mu-out-0910.google.com with SMTP id g7so1209416muf.1
+        for <linux-ide@vger.kernel.org>; Sun, 14 Sep 2008 04:36:05 -0700 (PDT)
 In-Reply-To: <1221392158-3848-1-git-send-email-petkovbb@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: bzolnier@gmail.com
 Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Borislav Petkov <petkovbb@gmail.com>
 
-... and remove cdrom_start_packet_command.
+Push ide-cd expiry handler into the ide-cd header. Also, pass expiry
+handler to ide_execute_command() in ide_issue_pc() for later.
 
 There should be no functional change resulting from this patch.
 
 Signed-off-by: Borislav Petkov <petkovbb@gmail.com>
 ---
- drivers/ide/ide-cd.c |   48 ++++--------------------------------------------
- 1 files changed, 4 insertions(+), 44 deletions(-)
+ drivers/ide/ide-atapi.c |    6 +++++-
+ drivers/ide/ide-cd.c    |   32 --------------------------------
+ drivers/ide/ide-cd.h    |   29 +++++++++++++++++++++++++++++
+ 3 files changed, 34 insertions(+), 33 deletions(-)
 
+diff --git a/drivers/ide/ide-atapi.c b/drivers/ide/ide-atapi.c
+index e1fa52d..480b9f3 100644
+--- a/drivers/ide/ide-atapi.c
++++ b/drivers/ide/ide-atapi.c
+@@ -7,6 +7,8 @@
+ #include <linux/ide.h>
+ #include <scsi/scsi.h>
+ 
++#include "ide-cd.h"
++
+ #ifdef DEBUG
+ #define debug_log(fmt, args...) \
+ 	printk(KERN_INFO "ide: " fmt, ## args)
+@@ -600,8 +602,10 @@ ide_startstop_t ide_issue_pc(ide_drive_t *drive, unsigned int timeout,
+ 	if (drive->atapi_flags & IDE_AFLAG_DRQ_INTERRUPT) {
+ 		if (drive->dma)
+ 			drive->waiting_for_dma = 0;
++
+ 		ide_execute_command(drive, ATA_CMD_PACKET, ide_transfer_pc,
+-				    timeout, NULL);
++				    timeout, expiry);
++
+ 		return ide_started;
+ 	} else {
+ 		ide_execute_pkt_cmd(drive);
 diff --git a/drivers/ide/ide-cd.c b/drivers/ide/ide-cd.c
-index 29bd205..495e5bb 100644
+index 6258c5f..29bd205 100644
 --- a/drivers/ide/ide-cd.c
 +++ b/drivers/ide/ide-cd.c
-@@ -513,50 +513,9 @@ end_request:
+@@ -512,38 +512,6 @@ end_request:
+ 	return 1;
  }
  
- /*
-- * Set up the device registers for transferring a packet command on DEV,
-- * expecting to later transfer XFERLEN bytes.  HANDLER is the routine
-- * which actually transfers the command to the drive.  If this is a
-- * drq_interrupt device, this routine will arrange for HANDLER to be
-- * called when the interrupt from the drive arrives.  Otherwise, HANDLER
-- * will be called immediately after the drive is prepared for the transfer.
-- */
--static ide_startstop_t cdrom_start_packet_command(ide_drive_t *drive,
--						  int xferlen,
--						  ide_handler_t *handler)
+-static int cdrom_timer_expiry(ide_drive_t *drive)
 -{
--	ide_hwif_t *hwif = drive->hwif;
+-	struct request *rq = HWGROUP(drive)->rq;
+-	unsigned long wait = 0;
 -
--	ide_debug_log(IDE_DBG_PC, "Call %s, xferlen: %d\n", __func__, xferlen);
+-	ide_debug_log(IDE_DBG_RQ, "Call %s: rq->cmd[0]: 0x%x\n", __func__,
+-		      rq->cmd[0]);
 -
--	/* FIXME: for Virtual DMA we must check harder */
--	if (drive->dma)
--		drive->dma = !hwif->dma_ops->dma_setup(drive);
--
--	/* set up the controller registers */
--	ide_pktcmd_tf_load(drive, IDE_TFLAG_OUT_NSECT | IDE_TFLAG_OUT_LBAL,
--			   xferlen, drive->dma);
--
--	if (drive->atapi_flags & IDE_AFLAG_DRQ_INTERRUPT) {
--		/* waiting for CDB interrupt, not DMA yet. */
--		if (drive->dma)
--			drive->waiting_for_dma = 0;
--
--		/* packet command */
--		ide_execute_command(drive, ATA_CMD_PACKET, handler,
--				    ATAPI_WAIT_PC, cdrom_timer_expiry);
--		return ide_started;
--	} else {
--		ide_execute_pkt_cmd(drive);
--
--		return (*handler) (drive);
+-	/*
+-	 * Some commands are *slow* and normally take a long time to complete.
+-	 * Usually we can use the ATAPI "disconnect" to bypass this, but not all
+-	 * commands/drives support that. Let ide_timer_expiry keep polling us
+-	 * for these.
+-	 */
+-	switch (rq->cmd[0]) {
+-	case GPCMD_BLANK:
+-	case GPCMD_FORMAT_UNIT:
+-	case GPCMD_RESERVE_RZONE_TRACK:
+-	case GPCMD_CLOSE_TRACK:
+-	case GPCMD_FLUSH_CACHE:
+-		wait = ATAPI_WAIT_PC;
+-		break;
+-	default:
+-		if (!(rq->cmd_flags & REQ_QUIET))
+-			printk(KERN_INFO PFX "cmd 0x%x timed out\n",
+-					 rq->cmd[0]);
+-		wait = 0;
+-		break;
 -	}
+-	return wait;
 -}
 -
--/*
-  * Send a packet command to DRIVE described by CMD_BUF and CMD_LEN. The device
-- * registers must have already been prepared by cdrom_start_packet_command.
-- * HANDLER is the interrupt handler to call when the command completes or
-- * there's data ready.
-+ * registers must have already been prepared by ide_issue_pc. HANDLER is the
-+ * interrupt handler to call when the command completes or there's data ready.
-  */
- #define ATAPI_MIN_CDB_BYTES 12
- static ide_startstop_t cdrom_transfer_packet_command(ide_drive_t *drive,
-@@ -1290,7 +1249,8 @@ static ide_startstop_t ide_cd_do_request(ide_drive_t *drive, struct request *rq,
- 		return ide_stopped;
- 	}
- 
--	return cdrom_start_packet_command(drive, xferlen, fn);
-+	return ide_issue_pc(drive, ATAPI_WAIT_PC, cdrom_timer_expiry,
-+			    xferlen, fn);
- }
- 
  /*
+  * Set up the device registers for transferring a packet command on DEV,
+  * expecting to later transfer XFERLEN bytes.  HANDLER is the routine
+diff --git a/drivers/ide/ide-cd.h b/drivers/ide/ide-cd.h
+index 5882b9a..69c456f 100644
+--- a/drivers/ide/ide-cd.h
++++ b/drivers/ide/ide-cd.h
+@@ -126,4 +126,33 @@ int ide_cdrom_reset(struct cdrom_device_info *cdi);
+ int ide_cdrom_audio_ioctl(struct cdrom_device_info *, unsigned int, void *);
+ int ide_cdrom_packet(struct cdrom_device_info *, struct packet_command *);
+ 
++static inline int cdrom_timer_expiry(ide_drive_t *drive)
++{
++	struct request *rq = drive->hwif->hwgroup->rq;
++	unsigned long wait = 0;
++
++	/*
++	 * Some commands are *slow* and normally take a long time to complete.
++	 * Usually we can use the ATAPI "disconnect" to bypass this, but not all
++	 * commands/drives support that. Let ide_timer_expiry keep polling us
++	 * for these.
++	 */
++	switch (rq->cmd[0]) {
++	case GPCMD_BLANK:
++	case GPCMD_FORMAT_UNIT:
++	case GPCMD_RESERVE_RZONE_TRACK:
++	case GPCMD_CLOSE_TRACK:
++	case GPCMD_FLUSH_CACHE:
++		wait = ATAPI_WAIT_PC;
++		break;
++	default:
++		if (!(rq->cmd_flags & REQ_QUIET))
++			printk(KERN_INFO "ide-cd: cmd 0x%x timed out\n",
++					 rq->cmd[0]);
++		wait = 0;
++		break;
++	}
++	return wait;
++}
++
+ #endif /* _IDE_CD_H */
 -- 
 1.5.5.1
 
