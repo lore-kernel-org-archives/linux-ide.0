@@ -1,14 +1,14 @@
 From: Borislav Petkov <petkovbb@googlemail.com>
-Subject: [PATCH 09/10] ide-atapi: protect ide_atapi_pc pointer from ide-cd code path
-Date: Sun, 14 Sep 2008 13:35:57 +0200
-Message-ID: <1221392158-3848-10-git-send-email-petkovbb@gmail.com>
+Subject: [PATCH 10/10] ide-cd: use generic ide_issue_pc
+Date: Sun, 14 Sep 2008 13:35:58 +0200
+Message-ID: <1221392158-3848-11-git-send-email-petkovbb@gmail.com>
 References: <1221392158-3848-1-git-send-email-petkovbb@gmail.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from fk-out-0910.google.com ([209.85.128.191]:18333 "EHLO
-	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753257AbYINLgH (ORCPT
+Received: from fg-out-1718.google.com ([72.14.220.153]:4760 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753226AbYINLgH (ORCPT
 	<rfc822;linux-ide@vger.kernel.org>); Sun, 14 Sep 2008 07:36:07 -0400
-Received: by fk-out-0910.google.com with SMTP id 18so1486847fkq.5
+Received: by fg-out-1718.google.com with SMTP id 19so1047388fgg.17
         for <linux-ide@vger.kernel.org>; Sun, 14 Sep 2008 04:36:06 -0700 (PDT)
 In-Reply-To: <1221392158-3848-1-git-send-email-petkovbb@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
@@ -16,67 +16,82 @@ List-Id: linux-ide@vger.kernel.org
 To: bzolnier@gmail.com
 Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Borislav Petkov <petkovbb@gmail.com>
 
-... since it is undefined.
+... and remove cdrom_start_packet_command.
 
 There should be no functional change resulting from this patch.
 
 Signed-off-by: Borislav Petkov <petkovbb@gmail.com>
 ---
- drivers/ide/ide-atapi.c |   27 +++++++++++++++------------
- 1 files changed, 15 insertions(+), 12 deletions(-)
+ drivers/ide/ide-cd.c |   48 ++++--------------------------------------------
+ 1 files changed, 4 insertions(+), 44 deletions(-)
 
-diff --git a/drivers/ide/ide-atapi.c b/drivers/ide/ide-atapi.c
-index 733a75a..45e88a9 100644
---- a/drivers/ide/ide-atapi.c
-+++ b/drivers/ide/ide-atapi.c
-@@ -561,9 +561,16 @@ ide_startstop_t ide_issue_pc(ide_drive_t *drive, unsigned int timeout,
- 	u16 bcount;
- 	u8 scsi = !!(drive->dev_flags & IDE_DFLAG_SCSI);
+diff --git a/drivers/ide/ide-cd.c b/drivers/ide/ide-cd.c
+index 29bd205..495e5bb 100644
+--- a/drivers/ide/ide-cd.c
++++ b/drivers/ide/ide-cd.c
+@@ -513,50 +513,9 @@ end_request:
+ }
  
--	/* We haven't transferred any data yet */
--	pc->xferred = 0;
--	pc->cur_pos = pc->buf;
-+	if (!DEV_IS_IDECD(drive)) {
-+		/* We haven't transferred any data yet */
-+		pc->xferred = 0;
-+		pc->cur_pos = pc->buf;
-+
-+		if (pc->flags & PC_FLAG_DMA_ERROR) {
-+			pc->flags &= ~PC_FLAG_DMA_ERROR;
-+			ide_dma_off(drive);
-+		}
-+	}
- 
- 	/* Request to transfer the entire buffer at once */
- 	if (drive->media == ide_tape && scsi == 0)
-@@ -573,14 +580,10 @@ ide_startstop_t ide_issue_pc(ide_drive_t *drive, unsigned int timeout,
- 	else
- 		bcount = min(pc->req_xfer, 63 * 1024);
- 
--	if (pc->flags & PC_FLAG_DMA_ERROR) {
--		pc->flags &= ~PC_FLAG_DMA_ERROR;
--		ide_dma_off(drive);
--	}
+ /*
+- * Set up the device registers for transferring a packet command on DEV,
+- * expecting to later transfer XFERLEN bytes.  HANDLER is the routine
+- * which actually transfers the command to the drive.  If this is a
+- * drq_interrupt device, this routine will arrange for HANDLER to be
+- * called when the interrupt from the drive arrives.  Otherwise, HANDLER
+- * will be called immediately after the drive is prepared for the transfer.
+- */
+-static ide_startstop_t cdrom_start_packet_command(ide_drive_t *drive,
+-						  int xferlen,
+-						  ide_handler_t *handler)
+-{
+-	ide_hwif_t *hwif = drive->hwif;
 -
--	if (((pc->flags & PC_FLAG_DMA_OK) &&
--		(drive->dev_flags & IDE_DFLAG_USING_DMA)) ||
--	    (DEV_IS_IDECD(drive) && drive->dma)) {
-+	if (drive->dma ||
-+	   (!DEV_IS_IDECD(drive) &&
-+	     (pc->flags & PC_FLAG_DMA_OK) &&
-+	     (drive->dev_flags & IDE_DFLAG_USING_DMA))) {
- 		if (scsi)
- 			hwif->sg_mapped = 1;
- 		drive->dma = !hwif->dma_ops->dma_setup(drive);
-@@ -588,7 +591,7 @@ ide_startstop_t ide_issue_pc(ide_drive_t *drive, unsigned int timeout,
- 			hwif->sg_mapped = 0;
+-	ide_debug_log(IDE_DBG_PC, "Call %s, xferlen: %d\n", __func__, xferlen);
+-
+-	/* FIXME: for Virtual DMA we must check harder */
+-	if (drive->dma)
+-		drive->dma = !hwif->dma_ops->dma_setup(drive);
+-
+-	/* set up the controller registers */
+-	ide_pktcmd_tf_load(drive, IDE_TFLAG_OUT_NSECT | IDE_TFLAG_OUT_LBAL,
+-			   xferlen, drive->dma);
+-
+-	if (drive->atapi_flags & IDE_AFLAG_DRQ_INTERRUPT) {
+-		/* waiting for CDB interrupt, not DMA yet. */
+-		if (drive->dma)
+-			drive->waiting_for_dma = 0;
+-
+-		/* packet command */
+-		ide_execute_command(drive, ATA_CMD_PACKET, handler,
+-				    ATAPI_WAIT_PC, cdrom_timer_expiry);
+-		return ide_started;
+-	} else {
+-		ide_execute_pkt_cmd(drive);
+-
+-		return (*handler) (drive);
+-	}
+-}
+-
+-/*
+  * Send a packet command to DRIVE described by CMD_BUF and CMD_LEN. The device
+- * registers must have already been prepared by cdrom_start_packet_command.
+- * HANDLER is the interrupt handler to call when the command completes or
+- * there's data ready.
++ * registers must have already been prepared by ide_issue_pc. HANDLER is the
++ * interrupt handler to call when the command completes or there's data ready.
+  */
+ #define ATAPI_MIN_CDB_BYTES 12
+ static ide_startstop_t cdrom_transfer_packet_command(ide_drive_t *drive,
+@@ -1290,7 +1249,8 @@ static ide_startstop_t ide_cd_do_request(ide_drive_t *drive, struct request *rq,
+ 		return ide_stopped;
  	}
  
--	if (!drive->dma)
-+	if (!drive->dma && !DEV_IS_IDECD(drive))
- 		pc->flags &= ~PC_FLAG_DMA_OK;
+-	return cdrom_start_packet_command(drive, xferlen, fn);
++	return ide_issue_pc(drive, ATAPI_WAIT_PC, cdrom_timer_expiry,
++			    xferlen, fn);
+ }
  
- 	if (scsi)
+ /*
 -- 
 1.5.5.1
 
