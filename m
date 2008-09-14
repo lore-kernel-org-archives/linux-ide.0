@@ -1,173 +1,130 @@
 From: Borislav Petkov <petkovbb@googlemail.com>
-Subject: [PATCH 02/10] ide-cd: move cdrom_info.dma to ide_drive_t.dma
-Date: Sun, 14 Sep 2008 13:35:50 +0200
-Message-ID: <1221392158-3848-3-git-send-email-petkovbb@gmail.com>
+Subject: [PATCH 08/10] ide-atapi: accomodate to ide-cd-specific handlers
+Date: Sun, 14 Sep 2008 13:35:56 +0200
+Message-ID: <1221392158-3848-9-git-send-email-petkovbb@gmail.com>
 References: <1221392158-3848-1-git-send-email-petkovbb@gmail.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.157]:4747 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753074AbYINLgG (ORCPT
+Received: from fk-out-0910.google.com ([209.85.128.184]:17885 "EHLO
+	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753118AbYINLgG (ORCPT
 	<rfc822;linux-ide@vger.kernel.org>); Sun, 14 Sep 2008 07:36:06 -0400
-Received: by fg-out-1718.google.com with SMTP id 19so1047395fgg.17
-        for <linux-ide@vger.kernel.org>; Sun, 14 Sep 2008 04:36:02 -0700 (PDT)
+Received: by fk-out-0910.google.com with SMTP id 18so1486855fkq.5
+        for <linux-ide@vger.kernel.org>; Sun, 14 Sep 2008 04:36:03 -0700 (PDT)
 In-Reply-To: <1221392158-3848-1-git-send-email-petkovbb@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: bzolnier@gmail.com
 Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Borislav Petkov <petkovbb@gmail.com>
 
-There should be no functionality change resulting from this patch.
+.. for the next phase of ide command execution. Thus, export ide_transfer_pc for
+the generic users.
+
+There should be no functional change resulting from this patch.
 
 Signed-off-by: Borislav Petkov <petkovbb@gmail.com>
 ---
- drivers/ide/ide-cd.c |   32 ++++++++++++++------------------
- drivers/ide/ide-cd.h |    1 -
- 2 files changed, 14 insertions(+), 19 deletions(-)
+ drivers/ide/ide-atapi.c  |   10 ++++++----
+ drivers/ide/ide-floppy.c |    2 +-
+ drivers/ide/ide-tape.c   |    2 +-
+ drivers/scsi/ide-scsi.c  |    2 +-
+ include/linux/ide.h      |    4 +++-
+ 5 files changed, 12 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/ide/ide-cd.c b/drivers/ide/ide-cd.c
-index 24d1e69..6258c5f 100644
---- a/drivers/ide/ide-cd.c
-+++ b/drivers/ide/ide-cd.c
-@@ -556,22 +556,21 @@ static ide_startstop_t cdrom_start_packet_command(ide_drive_t *drive,
- 						  int xferlen,
- 						  ide_handler_t *handler)
+diff --git a/drivers/ide/ide-atapi.c b/drivers/ide/ide-atapi.c
+index 480b9f3..733a75a 100644
+--- a/drivers/ide/ide-atapi.c
++++ b/drivers/ide/ide-atapi.c
+@@ -482,7 +482,7 @@ static int ide_delayed_transfer_pc(ide_drive_t *drive)
+ #define DEV_IS_IDECD(drive)	\
+ 		(drive->media == ide_cdrom || drive->media == ide_optical)
+ 
+-static ide_startstop_t ide_transfer_pc(ide_drive_t *drive)
++ide_startstop_t ide_transfer_pc(ide_drive_t *drive)
  {
--	struct cdrom_info *info = drive->driver_data;
+ 	struct ide_atapi_pc *pc = drive->pc;
  	ide_hwif_t *hwif = drive->hwif;
- 
- 	ide_debug_log(IDE_DBG_PC, "Call %s, xferlen: %d\n", __func__, xferlen);
- 
- 	/* FIXME: for Virtual DMA we must check harder */
--	if (info->dma)
--		info->dma = !hwif->dma_ops->dma_setup(drive);
-+	if (drive->dma)
-+		drive->dma = !hwif->dma_ops->dma_setup(drive);
- 
- 	/* set up the controller registers */
- 	ide_pktcmd_tf_load(drive, IDE_TFLAG_OUT_NSECT | IDE_TFLAG_OUT_LBAL,
--			   xferlen, info->dma);
-+			   xferlen, drive->dma);
- 
- 	if (drive->atapi_flags & IDE_AFLAG_DRQ_INTERRUPT) {
- 		/* waiting for CDB interrupt, not DMA yet. */
--		if (info->dma)
-+		if (drive->dma)
- 			drive->waiting_for_dma = 0;
- 
- 		/* packet command */
-@@ -598,7 +597,6 @@ static ide_startstop_t cdrom_transfer_packet_command(ide_drive_t *drive,
- {
- 	ide_hwif_t *hwif = drive->hwif;
- 	int cmd_len;
--	struct cdrom_info *info = drive->driver_data;
- 	ide_startstop_t startstop;
- 
- 	ide_debug_log(IDE_DBG_PC, "Call %s\n", __func__);
-@@ -614,7 +612,7 @@ static ide_startstop_t cdrom_transfer_packet_command(ide_drive_t *drive,
- 			return ide_stopped;
- 
- 		/* ok, next interrupt will be DMA interrupt */
--		if (info->dma)
-+		if (drive->dma)
- 			drive->waiting_for_dma = 1;
- 	} else {
- 		/* otherwise, we must wait for DRQ to get set */
-@@ -635,7 +633,7 @@ static ide_startstop_t cdrom_transfer_packet_command(ide_drive_t *drive,
- 	hwif->tp_ops->output_data(drive, NULL, rq->cmd, cmd_len);
- 
- 	/* start the DMA if need be */
--	if (info->dma)
-+	if (drive->dma)
- 		hwif->dma_ops->dma_start(drive);
+@@ -549,9 +549,11 @@ static ide_startstop_t ide_transfer_pc(ide_drive_t *drive)
  
  	return ide_started;
-@@ -949,7 +947,6 @@ static int cdrom_newpc_intr_dummy_cb(struct request *rq)
- static ide_startstop_t cdrom_newpc_intr(ide_drive_t *drive)
+ }
++EXPORT_SYMBOL_GPL(ide_transfer_pc);
+ 
+ ide_startstop_t ide_issue_pc(ide_drive_t *drive, unsigned int timeout,
+-			     ide_expiry_t *expiry, int xferlen)
++			     ide_expiry_t *expiry, int xferlen,
++			     ide_handler_t *handler)
  {
+ 	struct ide_atapi_pc *pc = drive->pc;
  	ide_hwif_t *hwif = drive->hwif;
--	struct cdrom_info *info = drive->driver_data;
- 	struct request *rq = HWGROUP(drive)->rq;
- 	xfer_func_t *xferfunc;
- 	ide_expiry_t *expiry = NULL;
-@@ -963,9 +960,9 @@ static ide_startstop_t cdrom_newpc_intr(ide_drive_t *drive)
- 		      __func__, rq->cmd[0], write);
+@@ -603,13 +605,13 @@ ide_startstop_t ide_issue_pc(ide_drive_t *drive, unsigned int timeout,
+ 		if (drive->dma)
+ 			drive->waiting_for_dma = 0;
  
- 	/* check for errors */
--	dma = info->dma;
-+	dma = drive->dma;
- 	if (dma) {
--		info->dma = 0;
-+		drive->dma = 0;
- 		dma_error = hwif->dma_ops->dma_end(drive);
- 		if (dma_error) {
- 			printk(KERN_ERR PFX "%s: DMA %s error\n", drive->name,
-@@ -1198,9 +1195,9 @@ static ide_startstop_t cdrom_start_rw(ide_drive_t *drive, struct request *rq)
- 			cdrom_end_request(drive, 0);
- 			return ide_stopped;
- 		}
--		cd->dma = 0;
-+		drive->dma = 0;
- 	} else
--		cd->dma = !!(drive->dev_flags & IDE_DFLAG_USING_DMA);
-+		drive->dma = !!(drive->dev_flags & IDE_DFLAG_USING_DMA);
+-		ide_execute_command(drive, ATA_CMD_PACKET, ide_transfer_pc,
++		ide_execute_command(drive, ATA_CMD_PACKET, handler,
+ 				    timeout, expiry);
  
- 	if (write)
- 		cd->devinfo.media_written = 1;
-@@ -1217,7 +1214,6 @@ static ide_startstop_t cdrom_do_newpc_cont(ide_drive_t *drive)
- 
- static void cdrom_do_block_pc(ide_drive_t *drive, struct request *rq)
- {
--	struct cdrom_info *info = drive->driver_data;
- 
- 	ide_debug_log(IDE_DBG_PC, "Call %s, rq->cmd_type: 0x%x\n", __func__,
- 		      rq->cmd_type);
-@@ -1227,7 +1223,7 @@ static void cdrom_do_block_pc(ide_drive_t *drive, struct request *rq)
- 	else
- 		rq->cmd_flags &= ~REQ_FAILED;
- 
--	info->dma = 0;
-+	drive->dma = 0;
- 
- 	/* sg request */
- 	if (rq->bio || ((rq->cmd_type == REQ_TYPE_ATA_PC) && rq->data_len)) {
-@@ -1240,7 +1236,7 @@ static void cdrom_do_block_pc(ide_drive_t *drive, struct request *rq)
- 		else
- 			buf = rq->data;
- 
--		info->dma = !!(drive->dev_flags & IDE_DFLAG_USING_DMA);
-+		drive->dma = !!(drive->dev_flags & IDE_DFLAG_USING_DMA);
- 
- 		/*
- 		 * check if dma is safe
-@@ -1251,7 +1247,7 @@ static void cdrom_do_block_pc(ide_drive_t *drive, struct request *rq)
- 		alignment = queue_dma_alignment(q) | q->dma_pad_mask;
- 		if ((unsigned long)buf & alignment || rq->data_len & alignment
- 		    || object_is_on_stack(buf))
--			info->dma = 0;
-+			drive->dma = 0;
+ 		return ide_started;
+ 	} else {
+ 		ide_execute_pkt_cmd(drive);
+-		return ide_transfer_pc(drive);
++		return (*handler)(drive);
  	}
  }
+ EXPORT_SYMBOL_GPL(ide_issue_pc);
+diff --git a/drivers/ide/ide-floppy.c b/drivers/ide/ide-floppy.c
+index 3a03e0c..4629e9a 100644
+--- a/drivers/ide/ide-floppy.c
++++ b/drivers/ide/ide-floppy.c
+@@ -246,7 +246,7 @@ static ide_startstop_t idefloppy_issue_pc(ide_drive_t *drive,
  
-@@ -1292,7 +1288,7 @@ static ide_startstop_t ide_cd_do_request(ide_drive_t *drive, struct request *rq,
- 			xferlen = 0;
- 			fn = cdrom_start_seek_continuation;
+ 	pc->retries++;
  
--			info->dma = 0;
-+			drive->dma = 0;
- 			info->start_seek = jiffies;
+-	return ide_issue_pc(drive, WAIT_FLOPPY_CMD, NULL, 0);
++	return ide_issue_pc(drive, WAIT_FLOPPY_CMD, NULL, 0, ide_transfer_pc);
+ }
  
- 			ide_cd_prepare_seek_request(drive, rq);
-diff --git a/drivers/ide/ide-cd.h b/drivers/ide/ide-cd.h
-index 61a4599..5882b9a 100644
---- a/drivers/ide/ide-cd.h
-+++ b/drivers/ide/ide-cd.h
-@@ -88,7 +88,6 @@ struct cdrom_info {
- 	struct request_sense sense_data;
+ void ide_floppy_create_read_capacity_cmd(struct ide_atapi_pc *pc)
+diff --git a/drivers/ide/ide-tape.c b/drivers/ide/ide-tape.c
+index 0ab3766..f327a1b 100644
+--- a/drivers/ide/ide-tape.c
++++ b/drivers/ide/ide-tape.c
+@@ -694,7 +694,7 @@ static ide_startstop_t idetape_issue_pc(ide_drive_t *drive,
  
- 	struct request request_sense_request;
--	int dma;
- 	unsigned long last_block;
- 	unsigned long start_seek;
+ 	pc->retries++;
+ 
+-	return ide_issue_pc(drive, WAIT_TAPE_CMD, NULL, 0);
++	return ide_issue_pc(drive, WAIT_TAPE_CMD, NULL, 0, ide_transfer_pc);
+ }
+ 
+ /* A mode sense command is used to "sense" tape parameters. */
+diff --git a/drivers/scsi/ide-scsi.c b/drivers/scsi/ide-scsi.c
+index 825b890..737e369 100644
+--- a/drivers/scsi/ide-scsi.c
++++ b/drivers/scsi/ide-scsi.c
+@@ -316,7 +316,7 @@ static ide_startstop_t idescsi_issue_pc(ide_drive_t *drive,
+ 	drive->pc = pc;
+ 
+ 	return ide_issue_pc(drive, ide_scsi_get_timeout(pc),
+-			    ide_scsi_expiry, 0);
++			    ide_scsi_expiry, 0, ide_transfer_pc);
+ }
+ 
+ /*
+diff --git a/include/linux/ide.h b/include/linux/ide.h
+index e431e33..e6e8833 100644
+--- a/include/linux/ide.h
++++ b/include/linux/ide.h
+@@ -1233,7 +1233,9 @@ static inline unsigned long ide_scsi_get_timeout(struct ide_atapi_pc *pc)
+ 
+ int ide_scsi_expiry(ide_drive_t *);
+ 
+-ide_startstop_t ide_issue_pc(ide_drive_t *, unsigned int, ide_expiry_t *, int);
++ide_startstop_t ide_issue_pc(ide_drive_t *, unsigned int, ide_expiry_t *, int,
++			     ide_handler_t *);
++ide_startstop_t ide_transfer_pc(ide_drive_t *);
+ 
+ ide_startstop_t do_rw_taskfile(ide_drive_t *, ide_task_t *);
  
 -- 
 1.5.5.1
