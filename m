@@ -1,65 +1,29 @@
-From: Jeremy Fitzhardinge <jeremy@goop.org>
-Subject: Re: Laptop shock detection and harddisk protection
-Date: Sat, 13 Sep 2008 21:41:33 -0700
-Message-ID: <48CC95FD.3090407@goop.org>
-References: <48C7FCEE.8060404@kernel.org>	 <41840b750809110908o54a61f55w7b1b9793abf55634@mail.gmail.com>	 <48C948A6.3080404@kernel.org> <41840b750809111325t30f8ffe2sa4572d401d43dc5a@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+From: Borislav Petkov <petkovbb@googlemail.com>
+Subject: [PATCH 00/10] ide-cd: use generic ide_issue_pc
+Date: Sun, 14 Sep 2008 13:35:48 +0200
+Message-ID: <1221392158-3848-1-git-send-email-petkovbb@gmail.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from gw.goop.org ([64.81.55.164]:37628 "EHLO mail.goop.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751149AbYINElj (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 14 Sep 2008 00:41:39 -0400
-In-Reply-To: <41840b750809111325t30f8ffe2sa4572d401d43dc5a@mail.gmail.com>
+Received: from fk-out-0910.google.com ([209.85.128.191]:18333 "EHLO
+	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752544AbYINLgD (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 14 Sep 2008 07:36:03 -0400
+Received: by fk-out-0910.google.com with SMTP id 18so1486847fkq.5
+        for <linux-ide@vger.kernel.org>; Sun, 14 Sep 2008 04:36:02 -0700 (PDT)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Shem Multinymous <multinymous@gmail.com>
-Cc: Tejun Heo <tj@kernel.org>, Elias Oltmanns <eo@nebensachen.de>, Thomas Renninger <trenn@suse.de>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, IDE/ATA development list <linux-ide@vger.kernel.org>
+To: bzolnier@gmail.com
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Borislav Petkov <petkovbb@gmail.com>
 
-Shem Multinymous wrote:
-> Hi Tejun,
->
-> On Thu, Sep 11, 2008 at 12:34 PM, Tejun Heo <tj@kernel.org> wrote:
->   
->> Hello, Shem Multinymous.
->>     
->>> Using the input device interface for the accelerometer (as done by
->>> tp_smapi's hdaps + latest hdapsd) greatly reduces the number of
->>> accelerometer-related timer interrupts on tickless kernels, as
->>> measured by powertop. With syscall polling you have the kernal polling
->>> the hardware at ~50Hz and then the userspace hdapsd polling the kernel
->>> at ~50Hz. When they're out of phase so you can get up to 100
->>> interrupts/sec. With an input device you're always at 50Hz. The phase
->>> difference also induces a small extra delay in the shock handling
->>> response.
->>>       
->> That reduction comes because input device supports poll and
->> sysfs_notify_event() does about the same thing.  The uesrland daemon
->> can just poll on a node and read data nodes when poll event on the
->> node triggeres.
->>     
->
-> Agreed.
-> There's another issue with the current sysfs interface, though: hdapsd
-> needs to read (x,y,timestamp) tuples, whereas sysfs provides just x
-> and y in separate attributes which cannot be read atomically together.
-> We can add a sysfs file with "x y timestamp" readouts, though this is
-> unusual for sysfs (and certainly incompatible with hwmon).
->   
+Hi Bart,
 
-Assuming timestamp is always updated when the x,y values change, you can do:
+here are some patches converting ide-cd to using ide_issue_pc. Next is
+replacing cdrom_transfer_packet_command with ide_transfer_pc.
 
-	do {
-		ts = read_timestamp();
-		x = read_x();
-		y = read_y();
-		ts2 = read_timestamp();
-	} while(ts != ts2);
-
-
-
-
-
-
-    J
+ drivers/ide/ide-atapi.c  |   71 ++++++++++++++++++++++---------
+ drivers/ide/ide-cd.c     |  104 ++++++---------------------------------------
+ drivers/ide/ide-cd.h     |   30 +++++++++++++-
+ drivers/ide/ide-floppy.c |    2 +-
+ drivers/ide/ide-tape.c   |    2 +-
+ drivers/scsi/ide-scsi.c  |    3 +-
+ include/linux/ide.h      |    5 ++-
+ 7 files changed, 102 insertions(+), 115 deletions(-)
