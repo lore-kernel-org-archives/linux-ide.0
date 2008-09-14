@@ -1,62 +1,65 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH] SATA: Blacklist systems that spin off disks during ACPI
- power off
-Date: Sat, 13 Sep 2008 22:21:54 -0400
-Message-ID: <48CC7542.3010603@garzik.org>
-References: <200808290002.55026.rjw@sisk.pl> <200808291241.04183.rjw@sisk.pl> <48B7D286.7050104@gmail.com> <200809061923.29020.rjw@sisk.pl> <48C50EA4.2020700@gmail.com>
+From: Jeremy Fitzhardinge <jeremy@goop.org>
+Subject: Re: Laptop shock detection and harddisk protection
+Date: Sat, 13 Sep 2008 21:41:33 -0700
+Message-ID: <48CC95FD.3090407@goop.org>
+References: <48C7FCEE.8060404@kernel.org>	 <41840b750809110908o54a61f55w7b1b9793abf55634@mail.gmail.com>	 <48C948A6.3080404@kernel.org> <41840b750809111325t30f8ffe2sa4572d401d43dc5a@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-2; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:53686 "EHLO mail.dvmed.net"
+Received: from gw.goop.org ([64.81.55.164]:37628 "EHLO mail.goop.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751649AbYINCWE (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 13 Sep 2008 22:22:04 -0400
-In-Reply-To: <48C50EA4.2020700@gmail.com>
+	id S1751149AbYINElj (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 14 Sep 2008 00:41:39 -0400
+In-Reply-To: <41840b750809111325t30f8ffe2sa4572d401d43dc5a@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: Tejun Heo <htejun@gmail.com>, ACPI Devel Maling List <linux-acpi@vger.kernel.org>, linux-ide@vger.kernel.org, Thomas Renninger <trenn@suse.de>, Robert Hancock <hancockr@shaw.ca>, LKML <linux-kernel@vger.kernel.org>, Frans Pop <elendil@planet.nl>, Maciej Rutecki <maciej.rutecki@gmail.com>, Andrew Morton <akpm@linux-foundation.org>
+To: Shem Multinymous <multinymous@gmail.com>
+Cc: Tejun Heo <tj@kernel.org>, Elias Oltmanns <eo@nebensachen.de>, Thomas Renninger <trenn@suse.de>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, IDE/ATA development list <linux-ide@vger.kernel.org>
 
-Tejun Heo wrote:
-> Rafael J. Wysocki wrote:
->> SATA: Blacklist systems that spin off disks during ACPI power off
->>
->> Some notebooks from HP have the problem that their BIOSes attempt to
->> spin down hard drives before entering ACPI system states S4 and S5.
->> This leads to a yo-yo effect during system power-off shutdown and the
->> last phase of hibernation when the disk is first spun down by the
->> kernel and then almost immediately turned on and off by the BIOS.
->> This, in turn, may result in shortening the disk's life times.
->>
->> To prevent this from happening we can blacklist the affected systems
->> using DMI information.  However, only the on-board controlles should
->> be blacklisted and their PCI slot numbers can be used for this
->> purpose.  Unfortunately the existing interface for checking DMI
->> information of the system is not very convenient for this purpose,
->> because to use it, we would have to define special callback functions
->> or create a separate struct dmi_system_id table for each blacklisted
->> system.
->>
->> To overcome this difficulty introduce a new function
->> dmi_first_match() returning a pointer to the first entry in an array
->> of struct dmi_system_id elements that matches the system DMI
->> information.  Then, we can use this pointer to access the entry's
->> .driver_data field containing the additional information, such as
->> the PCI slot number, allowing us to do the desired blacklisting.
->>
->> Introduce a new libata flag ATA_FLAG_NO_POWEROFF_SPINDOWN that, if
->> set, will prevent disks from being spun off during system power off
->> and hibernation (to handle the hibernation case we need a new system
->> state SYSTEM_HIBERNATE_ENTER that can be checked against by libata,
->> in analogy with SYSTEM_POWER_OFF).  Use dmi_first_match() to set this
->> flag for some systems affected by the problem described above (HP nx6325,
->> HP nx6310, HP 2510p).
->>
->> Signed-off-by: Rafael J. Wysocki <rjw@sisk.pl>
-> 
-> libata part looks good to me but I think it would be better to
-> separate out DMI changes into a separate patch.
+Shem Multinymous wrote:
+> Hi Tejun,
+>
+> On Thu, Sep 11, 2008 at 12:34 PM, Tejun Heo <tj@kernel.org> wrote:
+>   
+>> Hello, Shem Multinymous.
+>>     
+>>> Using the input device interface for the accelerometer (as done by
+>>> tp_smapi's hdaps + latest hdapsd) greatly reduces the number of
+>>> accelerometer-related timer interrupts on tickless kernels, as
+>>> measured by powertop. With syscall polling you have the kernal polling
+>>> the hardware at ~50Hz and then the userspace hdapsd polling the kernel
+>>> at ~50Hz. When they're out of phase so you can get up to 100
+>>> interrupts/sec. With an input device you're always at 50Hz. The phase
+>>> difference also induces a small extra delay in the shock handling
+>>> response.
+>>>       
+>> That reduction comes because input device supports poll and
+>> sysfs_notify_event() does about the same thing.  The uesrland daemon
+>> can just poll on a node and read data nodes when poll event on the
+>> node triggeres.
+>>     
+>
+> Agreed.
+> There's another issue with the current sysfs interface, though: hdapsd
+> needs to read (x,y,timestamp) tuples, whereas sysfs provides just x
+> and y in separate attributes which cannot be read atomically together.
+> We can add a sysfs file with "x y timestamp" readouts, though this is
+> unusual for sysfs (and certainly incompatible with hwmon).
+>   
 
-Did these changes ever get separated out?
+Assuming timestamp is always updated when the x,y values change, you can do:
 
+	do {
+		ts = read_timestamp();
+		x = read_x();
+		y = read_y();
+		ts2 = read_timestamp();
+	} while(ts != ts2);
+
+
+
+
+
+
+    J
