@@ -1,52 +1,34 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: Laptop shock detection and harddisk protection
-Date: Mon, 15 Sep 2008 01:29:28 -0700
-Message-ID: <48CE1CE8.502@kernel.org>
-References: <48C7FCEE.8060404@kernel.org> <41840b750809110908o54a61f55w7b1b9793abf55634@mail.gmail.com> <48C948A6.3080404@kernel.org> <41840b750809111325t30f8ffe2sa4572d401d43dc5a@mail.gmail.com> <48C9AB5A.705@kernel.org> <20080912165947.GB5094@kroah.com>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: UDMA with CS5530 using IBM Netvista N2200 (8363)
+Date: Mon, 15 Sep 2008 01:49:53 -0700
+Message-ID: <48CE21B1.6070808@gmail.com>
+References: <48C45BEF.5090502@gmail.com>	 <20080908094332.7b021b4e@lxorguk.ukuu.org.uk>	 <48C5BD49.6090204@gmail.com>	 <20080909115248.580eba78@lxorguk.ukuu.org.uk>	 <48C70313.6080704@gmail.com>	 <20080910093840.0fc9df68@the-village.bc.nu> <43e9b8530809100614t616154caldb32c4207b5b44ad@mail.gmail.com> <48C7DFEC.1090109@ru.mvista.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:42688 "EHLO hera.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751308AbYIOIbJ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 15 Sep 2008 04:31:09 -0400
-In-Reply-To: <20080912165947.GB5094@kroah.com>
+Received: from ti-out-0910.google.com ([209.85.142.185]:5029 "EHLO
+	ti-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751241AbYIOIvS (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 15 Sep 2008 04:51:18 -0400
+Received: by ti-out-0910.google.com with SMTP id b6so1097648tic.23
+        for <linux-ide@vger.kernel.org>; Mon, 15 Sep 2008 01:51:17 -0700 (PDT)
+In-Reply-To: <48C7DFEC.1090109@ru.mvista.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Greg KH <greg@kroah.com>
-Cc: Shem Multinymous <multinymous@gmail.com>, Elias Oltmanns <eo@nebensachen.de>, Thomas Renninger <trenn@suse.de>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, IDE/ATA development list <linux-ide@vger.kernel.org>
+To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Cc: Antonio Martins <digiplan.pt@gmail.com>, linux-ide@vger.kernel.org
 
-Greg KH wrote:
->>>> On a related note, is there any plan to merge tp_smapi to mainline?
->>>> It seems you put a lot of work into it and I don't really see why it
->>>> should stay out of tree.
->>> The only issue I'm aware of is finding a reasonably-named maintainer.
->>> On the technical side, the reviews on my lkml submission of
->>> thinkpad_ec+hdaps seemed good and all technical comments are since
->>> addressed. The code has been stable, well-tested and packaged by major
->>> distros for years.
->> Cool, can you please post the patch to the lkml and cc Greg
->> Kroah-Hartman <gregkh@suse.de>, Andrew Morton
->> <akpm@linux-foundation.org> and me?
-> 
-> Sorry, but no, I can't accept this code as it is coming from a "known
-> anonymous" person containing information that it is not known where it
-> came from.
-> 
-> We went over this before a number of years ago, that's why this code
-> isn't in mainline :(
+Sergei Shtylyov wrote:
+>    There's "libata.dma=" option (if you can pass it), set it to 0
+> and DMA won't ever be used.
+>    Note that the "old" IDE code also has the parameter controlling
+> DMA usage (even per drive) -- look for "nodma" in
+> Documentation/ide/ide.txt.
 
-Aieee... didn't know that and was wondering why the hell this wasn't
-in mainline.  :-(
+libata.force can do per device or per-port speed override.
 
-> In short, "Signed-off-by:" from people who are known to be anonymous is
-> not allowed.
-
-Shem Multinymous, I suppose nothing really has changd since the last
-time?
-
-Thanks.
+  libata.force=1.00:pio4
 
 -- 
 tejun
