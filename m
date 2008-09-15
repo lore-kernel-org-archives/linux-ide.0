@@ -1,42 +1,36 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [libata/sata_sil] Error on startup
-Date: Mon, 15 Sep 2008 03:24:54 -0700
-Message-ID: <48CE37F6.40301@kernel.org>
-References: <c58a7a270809120334r16164e3ej9f8ab769a09742ed@mail.gmail.com>	 <c58a7a270809120427p2af9885eo9cbc2d4455372882@mail.gmail.com>	 <48CBB831.9030403@ru.mvista.com>	 <c58a7a270809131023g6c5dad8em8cee2ace3b678209@mail.gmail.com>	 <48CE2389.9080205@kernel.org>	 <c58a7a270809150249qa0bb8e5ifdbfeb7fb5ef0565@mail.gmail.com>	 <48CE3497.4000604@kernel.org> <c58a7a270809150320qd275503lbd5101eb870511c4@mail.gmail.com>
+From: Atsushi Nemoto <anemo@mba.ocn.ne.jp>
+Subject: Re: [PATCH 1/2] ide: Add tx4939ide driver
+Date: Mon, 15 Sep 2008 23:01:32 +0900 (JST)
+Message-ID: <20080915.230132.126142464.anemo@mba.ocn.ne.jp>
+References: <20080910.010824.07456636.anemo@mba.ocn.ne.jp>
+	<48CC3516.9080404@ru.mvista.com>
+	<48CD7A2F.9020306@ru.mvista.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:53884 "EHLO hera.kernel.org"
+Received: from mba.ocn.ne.jp ([122.1.235.107]:58086 "EHLO smtp.mba.ocn.ne.jp"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752146AbYIOK1i (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 15 Sep 2008 06:27:38 -0400
-In-Reply-To: <c58a7a270809150320qd275503lbd5101eb870511c4@mail.gmail.com>
+	id S1753693AbYIOOBT (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 15 Sep 2008 10:01:19 -0400
+In-Reply-To: <48CD7A2F.9020306@ru.mvista.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alex Gonzalez <langabe@gmail.com>
-Cc: Sergei Shtylyov <sshtylyov@ru.mvista.com>, linux-ide@vger.kernel.org
+To: sshtylyov@ru.mvista.com
+Cc: linux-mips@linux-mips.org, linux-ide@vger.kernel.org, bzolnier@gmail.com, ralf@linux-mips.org
 
-Hello,
-
-Alex Gonzalez wrote:
-> I haven't placed the drive under stress test, but it does work OK
-> under normal conditions without errors or timeouts in the log.
-
-Hmm... Okay.
-
->>From the cache error, I know that the physical region iomapped in
-> 0xf0000000 - 0xf0000200 is the PCI memory space, so the exception is
-> being caused by trying to access this area.
+On Mon, 15 Sep 2008 00:55:11 +0400, Sergei Shtylyov <sshtylyov@ru.mvista.com> wrote:
+> >    Hum... but is it really correct to convert from/to LE order above? 
+> > I'm prett sure that data is expected in LE order -- look ar 
+> > ide_fix_driveid() for example...
+> >
 > 
-> I haven't yet looked deeply into it, I was assuming the action of
-> stopping the bmdma engine might have triggered the exception. If not,
-> why not receive an immediate exception without the 10secs timeout?
+>    Assuming that the IDE data words' MSB appears at offset 6 and LSB at 
+> offset 7 (which would seem logical), the data is actually in BE (CPU) 
+> orger, so
+> mm_insw_swap() should use cpu_to_le16() and mm_outsw_swap() le16_to_cpu()...
 
-Yeah, it's caused by EH trying to stop the BMDMA engine but it
-shouldn't.  It works well on other platforms.  Can you try to diagnose
-the bus failure?  Working EH will be able to tell us more about the
-problem.
+Thanks, I see.
 
--- 
-tejun
+---
+Atsushi Nemoto
