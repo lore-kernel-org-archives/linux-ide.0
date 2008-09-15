@@ -1,73 +1,91 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [PATCH 2/5] ide: ->ide_dma_clear_irq() -> ->clear_irq()
-Date: Mon, 15 Sep 2008 15:29:50 -0700
-Message-ID: <200809151529.50424.bzolnier@gmail.com>
-References: <200808192031.40288.bzolnier@gmail.com> <48AB478B.5040209@ru.mvista.com> <48CEDD89.5060107@ru.mvista.com>
+Subject: Re: [PATCH 3/4] ide: Implement disk shock protection support
+Date: Mon, 15 Sep 2008 16:22:04 -0700
+Message-ID: <200809151622.04724.bzolnier@gmail.com>
+References: <87wshzplvk.fsf@denkblock.local> <87vdx1y9gv.fsf@denkblock.local> <87k5ddxltd.fsf@denkblock.local>
 Mime-Version: 1.0
 Content-Type: text/plain;
   charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rv-out-0506.google.com ([209.85.198.225]:29356 "EHLO
+Received: from rv-out-0506.google.com ([209.85.198.225]:33824 "EHLO
 	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753240AbYIOWad (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 15 Sep 2008 18:30:33 -0400
-Received: by rv-out-0506.google.com with SMTP id k40so2360071rvb.1
-        for <linux-ide@vger.kernel.org>; Mon, 15 Sep 2008 15:30:33 -0700 (PDT)
-In-Reply-To: <48CEDD89.5060107@ru.mvista.com>
+	with ESMTP id S1751118AbYIOXW1 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 15 Sep 2008 19:22:27 -0400
+Received: by rv-out-0506.google.com with SMTP id k40so2378065rvb.1
+        for <linux-ide@vger.kernel.org>; Mon, 15 Sep 2008 16:22:26 -0700 (PDT)
+In-Reply-To: <87k5ddxltd.fsf@denkblock.local>
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Elias Oltmanns <eo@nebensachen.de>
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, Andrew Morton <akpm@linux-foundation.org>, Jeff Garzik <jeff@garzik.org>, Randy Dunlap <randy.dunlap@oracle.com>, Tejun Heo <htejun@gmail.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Monday 15 September 2008 15:11:21 Sergei Shtylyov wrote:
-> Hello, I wrote:
-> 
-> >> * Rename ->ide_dma_clear_irq method to ->clear_irq
-> >>   and move it from ide_hwif_t to struct ide_port_ops.
-> >>
-> >> * Move ->waiting_for_dma check inside ->clear_irq method.
-> >>
-> >> * Move ->dma_base check inside ->clear_irq method.
-> >>
-> >> piix.c:
-> >> * Add ich_port_ops and remove init_hwif_ich() wrapper.
-> >>
-> >> There should be no functional changes caused by this patch.
-> >>   
+On Monday 15 September 2008 12:15:26 Elias Oltmanns wrote:
+> Elias Oltmanns <eo@nebensachen.de> wrote:
+> > From: Elias Oltmanns <eo@nebensachen.de>
+> > Subject: [PATCH] ide: Implement disk shock protection support
 > >
-> >   Good. I think it's worth implementing this method in at least 
-> > cmd64x.c which actually reads the IDE interrupt latch bits 
-> > (independent from the DMA interrupt status) in the dma_test_irq() 
-> > methods but never clears them, so the latches may reflect a 
-> > non-current state of the IDE interrupt...
-> 
->    I forgot that it does clear them in its dma_end() methods (which I 
-> myself have reworked :-).
->    It seems however that at least for SFF-8038 compatibles, it makes 
-> sense to leave it that way since INTRQ might be asserted while BMIDE 
-> interrupt bit is not, so the interrupt latch would need clearing even on 
-> DMA timeout...
-> 
-> >   It may also be worth considering turning this method into 
-> > test-and-clear, so that we can get the actual IDE interrupt state on 
-> > the chips that implement this...
-> 
->    Probably might add the test_irq() method to be called on 
-> !hwif->waiting_for_dma. Cleraing the status at once seems impractical...
-
-Or we can test for ->waiting_for_dma inside ->test_irq.
- 
-> >> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+> > On user request (through sysfs), the IDLE IMMEDIATE command with UNLOAD
+> > FEATURE as specified in ATA-7 is issued to the device and processing of
+> > the request queue is stopped thereafter until the specified timeout
+> > expires or user space asks to resume normal operation. This is supposed
+> > to prevent the heads of a hard drive from accidentally crashing onto the
+> > platter when a heavy shock is anticipated (like a falling laptop expected
+> > to hit the floor). Port resets are deferred whenever a device on that
+> > port is in the parked state.
 > >
-> > Acked-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+> > Signed-off-by: Elias Oltmanns <eo@nebensachen.de>
+> [...]
+> > diff --git a/drivers/ide/ide-park.c b/drivers/ide/ide-park.c
+> > new file mode 100644
+> > index 0000000..8cd43f6
+> > --- /dev/null
+> > +++ b/drivers/ide/ide-park.c
+> > @@ -0,0 +1,119 @@
+> > +#include <linux/kernel.h>
+> > +#include <linux/ide.h>
+> > +#include <linux/jiffies.h>
+> > +#include <linux/blkdev.h>
+> > +
+> > +DECLARE_WAIT_QUEUE_HEAD(ide_park_wq);
+> > +
+> > +static int issue_park_cmd(ide_drive_t *drive, unsigned long timeout)
+> > +{
+> > +	struct request_queue *q = drive->queue;
+> > +	struct request *rq;
+> > +	int rc;
+> > +
+> > +	timeout += jiffies;
+> > +	spin_lock_irq(&ide_lock);
+> > +	if (drive->dev_flags & IDE_DFLAG_PARKED) {
+> > +		ide_hwgroup_t *hwgroup = drive->hwif->hwgroup;
+> > +		int reset_timer;
+> > +
+> > +		reset_timer = time_before(timeout, drive->sleep);
+> > +		drive->sleep = timeout;
+> > +		if (reset_timer) {
+> > +			wake_up_all(&ide_park_wq);
+> > +			if (hwgroup->sleeping && del_timer(&hwgroup->timer)) {
+> > +				hwgroup->sleeping = 0;
+> > +				hwgroup->busy = 0;
+> > +				__blk_run_queue(q);
+> > +			}
+> > +		}
+> > +		spin_unlock_irq(&ide_lock);
+> > +		return 0;
+> > +	}
 > 
->    Not feeling sure about this patch -- ->waiting_for_dma probably 
-> should've been left where it was...
+> This wake_up_all() has to go outside the if clause. I'll change this the
+> next time round to be called right after drive->sleep has been set. The
+> two nested if clauses will be unified and the conditions &&'ed.
 
-Well, it doesn't change behavior and I think having ->clear_irq method
-independent from the transfer mode is a preffered approach.
+OK.
+
+I've just audited your latest patch and it all seems good (the assumptions
+taken are valid and all concerns were addressed) so you may add my ACK to
+the next-time-round patch.  Big thanks for patiently improving this patch,
+the final version looks so much better than the initial/draft one. :)
 
 Thanks,
 Bart
