@@ -1,64 +1,64 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: XFS shutting down due to IO timeout on SATA disk (pata_via for
- CX700)
-Date: Mon, 15 Sep 2008 13:43:30 -0700
-Message-ID: <48CEC8F2.4040904@kernel.org>
-References: <20080911193511.7960bc82@neptune.home>	<48CE22E5.9090403@kernel.org> <20080915190242.58d21a8f@neptune.home>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: Re: [PATCH 2/5] ide: ->ide_dma_clear_irq() -> ->clear_irq()
+Date: Tue, 16 Sep 2008 02:11:21 +0400
+Message-ID: <48CEDD89.5060107@ru.mvista.com>
+References: <200808192031.40288.bzolnier@gmail.com> <48AB478B.5040209@ru.mvista.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:56973 "EHLO hera.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752718AbYIOUp1 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 15 Sep 2008 16:45:27 -0400
-In-Reply-To: <20080915190242.58d21a8f@neptune.home>
+Received: from h155.mvista.com ([63.81.120.155]:65131 "EHLO imap.sh.mvista.com"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751795AbYIOWL1 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 15 Sep 2008 18:11:27 -0400
+In-Reply-To: <48AB478B.5040209@ru.mvista.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: =?ISO-8859-1?Q?Bruno_Pr=E9mont?= <bonbons@linux-vserver.org>
-Cc: Linux Kernel <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Hello,
+Hello, I wrote:
 
-Bruno Pr=E9mont wrote:
-> On Mon, 15 September 2008 Tejun Heo <tj@kernel.org> wrote:
->> (please try to wrap paragraphs for 80 column)
-> I try not to break lines from dmesg, lspci and and other commands'
-> (formatted) output as those tend to get pretty hard to read when
-> line-wrapped.  Sorry if I wrapped my text after 80 columns.
-
-Yeap, I was talking only about the text.  Not wrapping outputs and
-code snippets is definitely better.
-
->> Timeout on FLUSH_EXT.  That's a bad sign.  Patch to retry FLUSH is
->> pending but at any rate FLUSH failure is often accompanied by loss o=
-f
->> data and XFS is doing the right thing of giving up on it.
+>> * Rename ->ide_dma_clear_irq method to ->clear_irq
+>>   and move it from ide_hwif_t to struct ide_port_ops.
 >>
->> Can you please post the result of "smartctl -a /dev/sda"?
-> I checked it though there were no errors logged nor any other informa=
-tion
-> that would catch attention. The disk/machine is pretty unused (a year=
- old
-> but low uptime, a few hours those days with uptime)
->=20
-> Anyhow smaprtctl's output is blow.
->=20
+>> * Move ->waiting_for_dma check inside ->clear_irq method.
+>>
+>> * Move ->dma_base check inside ->clear_irq method.
+>>
+>> piix.c:
+>> * Add ich_port_ops and remove init_hwif_ich() wrapper.
+>>
+>> There should be no functional changes caused by this patch.
+>>   
+>
+>   Good. I think it's worth implementing this method in at least 
+> cmd64x.c which actually reads the IDE interrupt latch bits 
+> (independent from the DMA interrupt status) in the dma_test_irq() 
+> methods but never clears them, so the latches may reflect a 
+> non-current state of the IDE interrupt...
 
->   5 Reallocated_Sector_Ct   0x0033   100   100   024    Pre-fail  Alw=
-ays       -       8589934592000
+   I forgot that it does clear them in its dma_end() methods (which I 
+myself have reworked :-).
+   It seems however that at least for SFF-8038 compatibles, it makes 
+sense to leave it that way since INTRQ might be asserted while BMIDE 
+interrupt bit is not, so the interrupt latch would need clearing even on 
+DMA timeout...
 
-Whee... That's unusally high realloc count but I'm not sure whether it
-indicates actual problem or it's just the drive's way of saying I'm
-okay.  But this does look quite suspicious.
+>   It may also be worth considering turning this method into 
+> test-and-clear, so that we can get the actual IDE interrupt state on 
+> the chips that implement this...
 
-> 196 Reallocated_Event_Count 0x0032   100   100   000    Old_age   Alw=
-ays       -       441778176
+   Probably might add the test_irq() method to be called on 
+!hwif->waiting_for_dma. Cleraing the status at once seems impractical...
 
-Hmmm.. Do you happen to have drives of the same model?  If so, can you
-please check what other drives are reporting?
+>> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+>
+> Acked-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
 
-Thanks.
+   Not feeling sure about this patch -- ->waiting_for_dma probably 
+should've been left where it was...
 
---=20
-tejun
+MBR, Sergei
+
+
