@@ -1,68 +1,138 @@
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-Subject: Re: [PATCH] SATA: Blacklist systems that spin off disks during ACPI power off
-Date: Mon, 15 Sep 2008 02:00:55 +0200
-Message-ID: <200809150200.57055.rjw@sisk.pl>
-References: <200808290002.55026.rjw@sisk.pl> <48C50EA4.2020700@gmail.com> <48CC7542.3010603@garzik.org>
+From: "J.A. =?UTF-8?B?TWFnYWxsw7Nu?=" <jamagallon@ono.com>
+Subject: libata flooding syslog
+Date: Mon, 15 Sep 2008 10:09:09 +0200
+Message-ID: <20080915100909.79c1d67b@werewolf.home>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-2"
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-acpi-owner@vger.kernel.org>
-In-Reply-To: <48CC7542.3010603@garzik.org>
-Content-Disposition: inline
-Sender: linux-acpi-owner@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: Tejun Heo <htejun@gmail.com>, ACPI Devel Maling List <linux-acpi@vger.kernel.org>, linux-ide@vger.kernel.org, Thomas Renninger <trenn@suse.de>, Robert Hancock <hancockr@shaw.ca>, LKML <linux-kernel@vger.kernel.org>, Frans Pop <elendil@planet.nl>, Maciej Rutecki <maciej.rutecki@gmail.com>, Andrew Morton <akpm@linux-foundation.org>
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1755840AbYIOIJ3@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Linux-Kernel <linux-kernel@vger.kernel.org>
+Cc: Linux-IDE <linux-ide@vger.kernel.org>
 List-Id: linux-ide@vger.kernel.org
 
-On Sunday, 14 of September 2008, Jeff Garzik wrote:
-> Tejun Heo wrote:
-> > Rafael J. Wysocki wrote:
-> >> SATA: Blacklist systems that spin off disks during ACPI power off
-> >>
-> >> Some notebooks from HP have the problem that their BIOSes attempt to
-> >> spin down hard drives before entering ACPI system states S4 and S5.
-> >> This leads to a yo-yo effect during system power-off shutdown and the
-> >> last phase of hibernation when the disk is first spun down by the
-> >> kernel and then almost immediately turned on and off by the BIOS.
-> >> This, in turn, may result in shortening the disk's life times.
-> >>
-> >> To prevent this from happening we can blacklist the affected systems
-> >> using DMI information.  However, only the on-board controlles should
-> >> be blacklisted and their PCI slot numbers can be used for this
-> >> purpose.  Unfortunately the existing interface for checking DMI
-> >> information of the system is not very convenient for this purpose,
-> >> because to use it, we would have to define special callback functions
-> >> or create a separate struct dmi_system_id table for each blacklisted
-> >> system.
-> >>
-> >> To overcome this difficulty introduce a new function
-> >> dmi_first_match() returning a pointer to the first entry in an array
-> >> of struct dmi_system_id elements that matches the system DMI
-> >> information.  Then, we can use this pointer to access the entry's
-> >> .driver_data field containing the additional information, such as
-> >> the PCI slot number, allowing us to do the desired blacklisting.
-> >>
-> >> Introduce a new libata flag ATA_FLAG_NO_POWEROFF_SPINDOWN that, if
-> >> set, will prevent disks from being spun off during system power off
-> >> and hibernation (to handle the hibernation case we need a new system
-> >> state SYSTEM_HIBERNATE_ENTER that can be checked against by libata,
-> >> in analogy with SYSTEM_POWER_OFF).  Use dmi_first_match() to set this
-> >> flag for some systems affected by the problem described above (HP nx6325,
-> >> HP nx6310, HP 2510p).
-> >>
-> >> Signed-off-by: Rafael J. Wysocki <rjw@sisk.pl>
-> > 
-> > libata part looks good to me but I think it would be better to
-> > separate out DMI changes into a separate patch.
-> 
-> Did these changes ever get separated out?
+Hi all...
 
-I only have the 'combo' patch if that's what you're asking about.  [The latest
-version is at http://bugzilla.kernel.org/attachment.cgi?id=17702&action=view]
+Since some days ago I have notcied my 64bit cooker box was too slow,
+for example, to perform an urpmi update.
+Looking at dmesg/syslog, I have seen an strange message:
 
-Still, I can easily split the patch, although in that case the reason for the
-DMI changes won't be very clear without a reference to the SATA changes IMO.
+ata4: EH pending after 5 tries, giving up
+ata4: EH complete
+ata3: EH pending after 5 tries, giving up
+ata3: EH complete
+ata2: EH complete
+ata4: EH pending after 5 tries, giving up
+ata4: EH complete
+ata3: EH pending after 5 tries, giving up
+ata3: EH complete
 
-Thanks,
-Rafael
+It repeats continuously. But there is nothing attached to ata > 1.
+It looks like a bug in sata_nv, it keeps polling non present devices or
+something like that.
+Kernel is kernel-desktop-2.6.27-0.rc6.1mnb-1-1mnb2 (the mandriva kernel, but
+if this is not a know bug I can try a plain rc6 kernel).
+Some info comes below.
+
+Any ideas ? Known bug in mainline ?
+
+cicely:/var/log# lspci
+00:00.0 Memory controller: nVidia Corporation CK804 Memory Controller (rev a3)
+00:01.0 ISA bridge: nVidia Corporation CK804 ISA Bridge (rev a3)
+00:01.1 SMBus: nVidia Corporation CK804 SMBus (rev a2)
+00:02.0 USB Controller: nVidia Corporation CK804 USB Controller (rev a2)
+00:02.1 USB Controller: nVidia Corporation CK804 USB Controller (rev a3)
+00:04.0 Multimedia audio controller: nVidia Corporation CK804 AC'97 Audio Controller (rev a2)
+00:06.0 IDE interface: nVidia Corporation CK804 IDE (rev f2)
+00:07.0 IDE interface: nVidia Corporation CK804 Serial ATA Controller (rev f3)
+00:08.0 IDE interface: nVidia Corporation CK804 Serial ATA Controller (rev f3)
+00:09.0 PCI bridge: nVidia Corporation CK804 PCI Bridge (rev a2)
+00:0a.0 Bridge: nVidia Corporation CK804 Ethernet Controller (rev a3)
+00:0d.0 PCI bridge: nVidia Corporation CK804 PCIE Bridge (rev a3)
+00:0e.0 PCI bridge: nVidia Corporation CK804 PCIE Bridge (rev a3)
+00:18.0 Host bridge: Advanced Micro Devices [AMD] K8 [Athlon64/Opteron] HyperTransport Technology Configuration
+00:18.1 Host bridge: Advanced Micro Devices [AMD] K8 [Athlon64/Opteron] Address Map
+00:18.2 Host bridge: Advanced Micro Devices [AMD] K8 [Athlon64/Opteron] DRAM Controller
+00:18.3 Host bridge: Advanced Micro Devices [AMD] K8 [Athlon64/Opteron] Miscellaneous Control
+00:19.0 Host bridge: Advanced Micro Devices [AMD] K8 [Athlon64/Opteron] HyperTransport Technology Configuration
+00:19.1 Host bridge: Advanced Micro Devices [AMD] K8 [Athlon64/Opteron] Address Map
+00:19.2 Host bridge: Advanced Micro Devices [AMD] K8 [Athlon64/Opteron] DRAM Controller
+00:19.3 Host bridge: Advanced Micro Devices [AMD] K8 [Athlon64/Opteron] Miscellaneous Control
+01:00.0 VGA compatible controller: nVidia Corporation G80 [GeForce 8800 GTX] (rev a2)
+80:00.0 Memory controller: nVidia Corporation CK804 Memory Controller (rev a3)
+80:01.0 Memory controller: nVidia Corporation CK804 Memory Controller (rev a3)
+80:07.0 IDE interface: nVidia Corporation CK804 Serial ATA Controller (rev f3)
+80:08.0 IDE interface: nVidia Corporation CK804 Serial ATA Controller (rev f3)
+80:0a.0 Bridge: nVidia Corporation CK804 Ethernet Controller (rev a3)
+80:0d.0 PCI bridge: nVidia Corporation CK804 PCIE Bridge (rev a3)
+80:0e.0 PCI bridge: nVidia Corporation CK804 PCIE Bridge (rev a3)
+
+cicely:/var/log# lsscsi
+[0:0:0:0]    disk    ATA      MAXTOR STM332062 3.AA  /dev/sda
+[9:0:0:0]    cd/dvd  PIONEER  DVD-RW  DVR-112D 1.21  /dev/sr0
+
+dmesg on boot:
+
+libata version 3.00 loaded.
+sata_nv 0000:00:07.0: version 3.5
+ACPI: PCI Interrupt Link [LTID] enabled at IRQ 22
+sata_nv 0000:00:07.0: PCI INT A -> Link[LTID] -> GSI 22 (level, low) -> IRQ 22
+sata_nv 0000:00:07.0: setting latency timer to 64
+scsi0 : sata_nv
+scsi1 : sata_nv
+ata1: SATA max UDMA/133 cmd 0xc800 ctl 0xc400 bmdma 0xb800 irq 22
+ata2: SATA max UDMA/133 cmd 0xc000 ctl 0xbc00 bmdma 0xb808 irq 22
+ata1: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+ata1.00: ATA-7: MAXTOR STM3320620AS, 3.AAE, max UDMA/133
+ata1.00: 625142448 sectors, multi 16: LBA48 NCQ (depth 0/32)
+ata1.00: configured for UDMA/133
+input: ImPS/2 Logitech Wheel Mouse as /class/input/input2
+scsi 0:0:0:0: Direct-Access     ATA      MAXTOR STM332062 3.AA PQ: 0 ANSI: 5
+ACPI: PCI Interrupt Link [LTIE] enabled at IRQ 21
+sata_nv 0000:00:08.0: PCI INT A -> Link[LTIE] -> GSI 21 (level, low) -> IRQ 21
+sata_nv 0000:00:08.0: setting latency timer to 64
+scsi2 : sata_nv
+scsi3 : sata_nv
+ata3: SATA max UDMA/133 cmd 0xb400 ctl 0xb000 bmdma 0xa400 irq 21
+ata4: SATA max UDMA/133 cmd 0xac00 ctl 0xa800 bmdma 0xa408 irq 21
+ACPI: PCI Interrupt Link [LT3D] enabled at IRQ 47
+sata_nv 0000:80:07.0: PCI INT A -> Link[LT3D] -> GSI 47 (level, low) -> IRQ 47
+sata_nv 0000:80:07.0: setting latency timer to 64
+scsi4 : sata_nv
+scsi5 : sata_nv
+ata5: SATA max UDMA/133 cmd 0xf800 ctl 0xf400 bmdma 0xe800 irq 47
+ata6: SATA max UDMA/133 cmd 0xf000 ctl 0xec00 bmdma 0xe808 irq 47
+ACPI: PCI Interrupt Link [LT2E] enabled at IRQ 46
+sata_nv 0000:80:08.0: PCI INT A -> Link[LT2E] -> GSI 46 (level, low) -> IRQ 46
+sata_nv 0000:80:08.0: setting latency timer to 64
+scsi6 : sata_nv
+scsi7 : sata_nv
+ata7: SATA max UDMA/133 cmd 0xe400 ctl 0xe000 bmdma 0xd400 irq 46
+ata8: SATA max UDMA/133 cmd 0xdc00 ctl 0xd800 bmdma 0xd408 irq 46
+pata_amd 0000:00:06.0: version 0.3.10
+pata_amd 0000:00:06.0: setting latency timer to 64
+scsi8 : pata_amd
+scsi9 : pata_amd
+ata9: PATA max UDMA/133 cmd 0x1f0 ctl 0x3f6 bmdma 0x3000 irq 14
+ata10: PATA max UDMA/133 cmd 0x170 ctl 0x376 bmdma 0x3008 irq 15
+ata10.00: ATAPI: PIONEER DVD-RW  DVR-112D, 1.21, max UDMA/66
+ata10: nv_mode_filter: 0x1f39f&0x1f01f->0x1f01f, BIOS=0x1f000 (0xc500) ACPI=0x1f
+ata10.00: configured for UDMA/66
+scsi 9:0:0:0: CD-ROM            PIONEER  DVD-RW  DVR-112D 1.21 PQ: 0 ANSI: 5
+Driver 'sd' needs updating - please use bus_type methods
+sd 0:0:0:0: [sda] 625142448 512-byte hardware sectors (320073 MB)
+sd 0:0:0:0: [sda] Write Protect is off
+sd 0:0:0:0: [sda] Mode Sense: 00 3a 00 00
+sd 0:0:0:0: [sda] Write cache: enabled, read cache: enabled, doesn't support DPO
+sd 0:0:0:0: [sda] 625142448 512-byte hardware sectors (320073 MB)
+sd 0:0:0:0: [sda] Write Protect is off
+sd 0:0:0:0: [sda] Mode Sense: 00 3a 00 00
+sd 0:0:0:0: [sda] Write cache: enabled, read cache: enabled, doesn't support DPO
+ sda: sda1 sda2 sda3
+sd 0:0:0:0: [sda] Attached SCSI disk
+
+-- 
+J.A. Magallon <jamagallon()ono!com>     \               Software is like sex:
+                                         \         It's better when it's free
+Mandriva Linux release 2009.0 (Cooker) for i586
+Linux 2.6.25-jam18 (gcc 4.3.1 20080626 (GCC) #1 SMP
