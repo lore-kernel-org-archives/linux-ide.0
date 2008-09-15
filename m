@@ -1,133 +1,145 @@
-From: "Alex Gonzalez" <langabe@gmail.com>
-Subject: Re: [libata/sata_sil] Error on startup
-Date: Mon, 15 Sep 2008 16:53:53 +0100
-Message-ID: <c58a7a270809150853mb9e0752x29cdba7e92097f90@mail.gmail.com>
-References: <c58a7a270809120334r16164e3ej9f8ab769a09742ed@mail.gmail.com>
-	 <c58a7a270809120427p2af9885eo9cbc2d4455372882@mail.gmail.com>
-	 <48CBB831.9030403@ru.mvista.com>
-	 <c58a7a270809131023g6c5dad8em8cee2ace3b678209@mail.gmail.com>
-	 <48CE2389.9080205@kernel.org>
-	 <c58a7a270809150249qa0bb8e5ifdbfeb7fb5ef0565@mail.gmail.com>
-	 <48CE3497.4000604@kernel.org>
-	 <c58a7a270809150320qd275503lbd5101eb870511c4@mail.gmail.com>
-	 <48CE37F6.40301@kernel.org>
+From: Bruno =?UTF-8?B?UHLDqW1vbnQ=?= <bonbons@linux-vserver.org>
+Subject: Re: XFS shutting down due to IO timeout on SATA disk (pata_via for
+ CX700)
+Date: Mon, 15 Sep 2008 19:02:42 +0200
+Message-ID: <20080915190242.58d21a8f@neptune.home>
+References: <20080911193511.7960bc82@neptune.home>
+	<48CE22E5.9090403@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.152]:60534 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753417AbYIOPx4 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 15 Sep 2008 11:53:56 -0400
-Received: by fg-out-1718.google.com with SMTP id 19so1407483fgg.17
-        for <linux-ide@vger.kernel.org>; Mon, 15 Sep 2008 08:53:54 -0700 (PDT)
-In-Reply-To: <48CE37F6.40301@kernel.org>
-Content-Disposition: inline
+Received: from ppp-110-205.adsl.restena.lu ([158.64.110.205]:59304 "EHLO
+	bonbons.gotdns.org" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1753559AbYIORLk (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 15 Sep 2008 13:11:40 -0400
+In-Reply-To: <48CE22E5.9090403@kernel.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Tejun Heo <tj@kernel.org>
-Cc: Sergei Shtylyov <sshtylyov@ru.mvista.com>, linux-ide@vger.kernel.org
+Cc: Linux Kernel <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>
 
-Hi all,
+Hello,
 
-I got some more information regarding this issue.
+On Mon, 15 September 2008 Tejun Heo <tj@kernel.org> wrote:
+> (please try to wrap paragraphs for 80 column)
+I try not to break lines from dmesg, lspci and and other commands'
+(formatted) output as those tend to get pretty hard to read when
+line-wrapped.
+Sorry if I wrapped my text after 80 columns.
 
-After reading "PCI Compatibility and PCI-Native Mode Bus Master
-Adapters" as pointed by Sergei, I printed the Bus Master ATA status
-register (offset 0x2), the PCI status/command (offset 0x4) register
-and the SATA ATA status (offset 0x104), control (offset 0x100) and
-error (offset 0x108) registers looking for clues.
+> > Kernel error output related to XFS shutdown:
+> > [ 9352.420180] ata1.00: exception Emask 0x0 SAct 0x0 SErr 0x0
+> > action 0x6 frozen [ 9352.420247] ata1.00: cmd
+> > ea/00:00:00:00:00/00:00:00:00:00/a0 tag 0 [ 9352.420261]
+> > res 40/00:01:00:4f:c2/00:00:00:00:00/00 Emask 0x4 (timeout)
+> 
+> Timeout on FLUSH_EXT.  That's a bad sign.  Patch to retry FLUSH is
+> pending but at any rate FLUSH failure is often accompanied by loss of
+> data and XFS is doing the right thing of giving up on it.
+> 
+> Can you please post the result of "smartctl -a /dev/sda"?
+I checked it though there were no errors logged nor any other information
+that would catch attention. The disk/machine is pretty unused (a year old
+but low uptime, a few hours those days with uptime)
 
-:***sil_freeze()***
-0:***ata_bmdma_status=00000002
-0:PCI status=02b00016
-0:SATA status 00000113 ctl 00000310 err 00000000
+Anyhow smaprtctl's output is blow.
 
-Everything looks fine to me, except maybe bits 1 and 4 of the PCI
-status. The Silicon Image Sil3512 datasheet specifies that bit 4
-should be hardcoded to zero, and bit 0 (the IO space enable)  is
-strangely zero, maybe it's set dynamically when needed?
-
-Following on Tejun's advise, I found out that just the delay of a
-printk in ata_bmdma_stop(), right after the iowrite8,  gets rid of the
-cache error and it's replaced by this:
-
-[4294671.719000] 0:<7>sata_sil 0000:00:01.0: version 2.1
-[4294671.720000] 0:<6>sata_sil 0000:00:01.0: Applying R_ERR on DMA
-activate FIS errata fix
-[4294671.722000] 0:<6>ata1: SATA max UDMA/100 cmd 0xc0000080 ctl
-0xc000008a bmdma 0xc0000000 irq 24
-[4294671.724000] 0:<6>ata2: SATA max UDMA/100 cmd 0xc00000c0 ctl
-0xc00000ca bmdma 0xc0000008 irq 24
-[4294671.725000] 0:<6>scsi0 : sata_sil
-[4294672.182000] 2:<6>ata1: SATA link up 1.5 Gbps (SStatus 113 SControl 310)
-[4294672.205000] 2:drivers/ata/libata-sff.c:368: Delay
-[4294672.219000] 2:<6>ata1.00: ATA-7: ST3160815AS, 4.AAB, max UDMA/133
-[4294672.238000] 2:<6>ata1.00: 312581808 sectors, multi 0: LBA48 NCQ
-(depth 0/32)
-[4294672.259000] 2:drivers/ata/libata-sff.c:368: Delay
-[4294672.277000] 2:drivers/ata/libata-sff.c:368: Delay
-[4294672.291000] 2:<6>ata1.00: configured for UDMA/100
-[4294672.306000] 0:<6>scsi1 : sata_sil
-[4294672.610000] 2:<6>ata2: SATA link down (SStatus 0 SControl 310)
-[4294672.628000] 0:<5>scsi 0:0:0:0: Direct-Access     ATA
-ST3160815AS      4.AA PQ: 0 ANSI: 5
-[4294672.630000] 0:<5>SCSI device sda: 312581808 512-byte hdwr sectors
-(160042 MB)
-[4294672.631000] 0:<5>sda: Write Protect is off
-[4294672.632000] 0:<7>sda: Mode Sense: 00 3a 00 00
-[4294672.633000] 0:<5>SCSI device sda: write cache: enabled, read
-cache: enabled, doesn't support DPO or FUA
-[4294672.634000] 0:<5>SCSI device sda: 312581808 512-byte hdwr sectors
-(160042 MB)
-[4294672.635000] 0:<5>sda: Write Protect is off
-[4294672.636000] 0:<7>sda: Mode Sense: 00 3a 00 00
-[4294672.637000] 0:<5>SCSI device sda: write cache: enabled, read
-cache: enabled, doesn't support DPO or FUA
-[4294672.638000] 0:<6> sda:0:drivers/ata/libata-sff.c:368: Delay
-[4294702.640000] 0:<3>ata1.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x0
-[4294702.641000] 0:<3>ata1.00: cmd c8/00:08:00:00:00/00:00:00:00:00/e0
-tag 0 cdb 0x0 data 4096 in
-[4294702.641000]          res 40/00:00:00:00:00/00:00:00:00:00/00
-Emask 0x20 (host bus error)
-[4294702.646000] 0:<4>ATA: abnormal status 0x58 on port 0xc0000087
-[4294702.651000] 0:<4>ATA: abnormal status 0x58 on port 0xc0000087
-[4294702.652000] 0:<4>ATA: abnormal status 0x58 on port 0xc0000087
-[4294702.652000] 0:<4>ATA: abnormal status 0x58 on port 0xc0000087
-[4294702.652000] 0:<4>ATA: abnormal status 0x58 on port 0xc0000087
-[4294702.652000] 0:<4>ATA: abnormal status 0x58 on port 0xc0000087
-
-and never comes back.
-
-I'll try to decode the ATA error see where it takes me next.
-
-Thanks for your continued help and patience,
-Alex
+Bruno
 
 
 
-On Mon, Sep 15, 2008 at 11:24 AM, Tejun Heo <tj@kernel.org> wrote:
-> Hello,
->
-> Alex Gonzalez wrote:
->> I haven't placed the drive under stress test, but it does work OK
->> under normal conditions without errors or timeouts in the log.
->
-> Hmm... Okay.
->
->>>From the cache error, I know that the physical region iomapped in
->> 0xf0000000 - 0xf0000200 is the PCI memory space, so the exception is
->> being caused by trying to access this area.
->>
->> I haven't yet looked deeply into it, I was assuming the action of
->> stopping the bmdma engine might have triggered the exception. If not,
->> why not receive an immediate exception without the 10secs timeout?
->
-> Yeah, it's caused by EH trying to stop the BMDMA engine but it
-> shouldn't.  It works well on other platforms.  Can you try to diagnose
-> the bus failure?  Working EH will be able to tell us more about the
-> problem.
->
-> --
-> tejun
->
+smartctl version 5.38 [i686-pc-linux-gnu] Copyright (C) 2002-8 Bruce Allen
+Home page is http://smartmontools.sourceforge.net/
+
+=== START OF INFORMATION SECTION ===
+Device Model:     FUJITSU MHY2250BH
+Serial Number:    K407T7A25THF
+Firmware Version: 0000000B
+User Capacity:    250,059,350,016 bytes
+Device is:        Not in smartctl database [for details use: -P showall]
+ATA Version is:   8
+ATA Standard is:  ATA-8-ACS revision 3f
+Local Time is:    Mon Sep 15 18:52:53 2008 CEST
+SMART support is: Available - device has SMART capability.
+SMART support is: Enabled
+
+=== START OF READ SMART DATA SECTION ===
+SMART overall-health self-assessment test result: PASSED
+
+General SMART Values:
+Offline data collection status:  (0x00) Offline data collection activity
+                                        was never started.
+                                        Auto Offline Data Collection: Disabled.
+Self-test execution status:      (   0) The previous self-test routine completed
+                                        without error or no self-test has ever 
+                                        been run.
+Total time to complete Offline 
+data collection:                 (1009) seconds.
+Offline data collection
+capabilities:                    (0x7b) SMART execute Offline immediate.
+                                        Auto Offline data collection on/off support.
+                                        Suspend Offline collection upon new
+                                        command.
+                                        Offline surface scan supported.
+                                        Self-test supported.
+                                        Conveyance Self-test supported.
+                                        Selective Self-test supported.
+SMART capabilities:            (0x0003) Saves SMART data before entering
+                                        power-saving mode.
+                                        Supports SMART auto save timer.
+Error logging capability:        (0x01) Error logging supported.
+                                        General Purpose Logging supported.
+Short self-test routine 
+recommended polling time:        (   2) minutes.
+Extended self-test routine
+recommended polling time:        ( 143) minutes.
+Conveyance self-test routine
+recommended polling time:        (   2) minutes.
+SCT capabilities:              (0x003d) SCT Status supported.
+                                        SCT Feature Control supported.
+                                        SCT Data Table supported.
+
+SMART Attributes Data Structure revision number: 16
+Vendor Specific SMART Attributes with Thresholds:
+ID# ATTRIBUTE_NAME          FLAG     VALUE WORST THRESH TYPE      UPDATED  WHEN_FAILED RAW_VALUE
+  1 Raw_Read_Error_Rate     0x000f   100   100   046    Pre-fail  Always       -       189618
+  2 Throughput_Performance  0x0005   100   100   030    Pre-fail  Offline      -       53870592
+  3 Spin_Up_Time            0x0003   100   100   025    Pre-fail  Always       -       1
+  4 Start_Stop_Count        0x0032   100   100   000    Old_age   Always       -       168
+  5 Reallocated_Sector_Ct   0x0033   100   100   024    Pre-fail  Always       -       8589934592000
+  7 Seek_Error_Rate         0x000f   100   100   047    Pre-fail  Always       -       679
+  8 Seek_Time_Performance   0x0005   100   100   019    Pre-fail  Offline      -       0
+  9 Power_On_Hours          0x0032   100   100   000    Old_age   Always       -       230
+ 10 Spin_Retry_Count        0x0013   100   100   020    Pre-fail  Always       -       0
+ 12 Power_Cycle_Count       0x0032   100   100   000    Old_age   Always       -       149
+192 Power-Off_Retract_Count 0x0032   100   100   000    Old_age   Always       -       18
+193 Load_Cycle_Count        0x0032   100   100   000    Old_age   Always       -       6674
+194 Temperature_Celsius     0x0022   100   100   000    Old_age   Always       -       27 (Lifetime Min/Max 22/36)
+195 Hardware_ECC_Recovered  0x001a   100   100   000    Old_age   Always       -       606
+196 Reallocated_Event_Count 0x0032   100   100   000    Old_age   Always       -       441778176
+197 Current_Pending_Sector  0x0012   100   100   000    Old_age   Always       -       0
+198 Offline_Uncorrectable   0x0010   100   100   000    Old_age   Offline      -       0
+199 UDMA_CRC_Error_Count    0x003e   200   253   000    Old_age   Always       -       0
+200 Multi_Zone_Error_Rate   0x000f   100   100   060    Pre-fail  Always       -       10312
+203 Run_Out_Cancel          0x0002   100   100   000    Old_age   Always       -       3728055731610
+240 Head_Flying_Hours       0x003e   200   200   000    Old_age   Always       -       0
+
+SMART Error Log Version: 1
+No Errors Logged
+
+SMART Self-test log structure revision number 1
+No self-tests have been logged.  [To run self-tests, use: smartctl -t]
+
+
+SMART Selective self-test log data structure revision number 1
+ SPAN  MIN_LBA  MAX_LBA  CURRENT_TEST_STATUS
+    1        0        0  Not_testing
+    2        0        0  Not_testing
+    3        0        0  Not_testing
+    4        0        0  Not_testing
+    5        0        0  Not_testing
+Selective self-test flags (0x0):
+  After scanning selected spans, do NOT read-scan remainder of disk.
+If Selective self-test is pending on power-up, resume after 0 minute delay.
+
