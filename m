@@ -1,49 +1,88 @@
 From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
 Subject: Re: [PATCH 1/2] ide: Add tx4939ide driver
-Date: Wed, 17 Sep 2008 01:39:25 +0400
-Message-ID: <48D0278D.6090807@ru.mvista.com>
-References: <48CA8BEE.1090305@ru.mvista.com>	<20080913.005904.07457691.anemo@mba.ocn.ne.jp>	<48CAA498.9090804@ru.mvista.com> <20080913.213226.106262199.anemo@mba.ocn.ne.jp> <48D0220B.4090601@ru.mvista.com>
+Date: Wed, 17 Sep 2008 01:59:24 +0400
+Message-ID: <48D02C3C.90705@ru.mvista.com>
+References: <20080910.010824.07456636.anemo@mba.ocn.ne.jp>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from h155.mvista.com ([63.81.120.155]:25974 "EHLO imap.sh.mvista.com"
+Received: from h155.mvista.com ([63.81.120.155]:26193 "EHLO imap.sh.mvista.com"
 	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751417AbYIPVjd (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 16 Sep 2008 17:39:33 -0400
-In-Reply-To: <48D0220B.4090601@ru.mvista.com>
+	id S1751717AbYIPV7b (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 16 Sep 2008 17:59:31 -0400
+In-Reply-To: <20080910.010824.07456636.anemo@mba.ocn.ne.jp>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Atsushi Nemoto <anemo@mba.ocn.ne.jp>
-Cc: linux-mips@linux-mips.org, linux-ide@vger.kernel.org, bzolnier@gmail.com, ralf@linux-mips.org
+Cc: linux-mips@linux-mips.org, linux-ide@vger.kernel.org, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, ralf@linux-mips.org
 
-Hello, I wrote:
+Hello.
 
-> Thats wrong -- According t the spec. the bit should be set following=20
-> any assertion of INTRQ on IDE bus (possibly not at once though --=20
-> after flushing FIFO). Well, no wonder with such description of the=20
-> bits as:
+Atsushi Nemoto wrote:
+
+> This is the driver for the Toshiba TX4939 SoC ATA controller.
 >
+> This controller has standard ATA taskfile registers and DMA
+> command/status registers, but the register layout is swapped on big
+> endian.  There are some other endian issue and some special registers
+> which requires many custom dma_ops/port_ops routines.
 >
-> INT_IDE (RWC) [Interrupt]
-> Is =931=94 when data transfer completes. This bit is cleared by writi=
-ng=20
-> =931=94 to it.
-> When this bit is set to =911=92, the following bits of the ATA Interr=
-upt=20
-> Controller Register will be
-> reset: bits [15:8] (Mask Address Error INT, Mask Reach Multiple INT,=20
-> Mask DEV
-> Timing Error, Mask Ultra DMA DEV Terminate, Mask Timer INT, Mask Bus=20
-> Error, Mask
-> Data Transfer End, Mask Host INT), and bits [1:0] (Data Transfer End,=
-=20
-> Host INT).
+> Signed-off-by: Atsushi Nemoto <anemo@mba.ocn.ne.jp>
+>   
+[...]
+> diff --git a/drivers/ide/mips/tx4939ide.c b/drivers/ide/mips/tx4939ide.c
+> new file mode 100644
+> index 0000000..ba9776d
+> --- /dev/null
+> +++ b/drivers/ide/mips/tx4939ide.c
+> @@ -0,0 +1,762 @@
+>   
+[...]
+> +static int __tx4939ide_dma_setup(ide_drive_t *drive)
+> +{
+> +	ide_hwif_t *hwif = drive->hwif;
+> +	struct request *rq = HWGROUP(drive)->rq;
+> +	unsigned int reading;
+> +	u8 dma_stat;
+> +	unsigned long base = TX4939IDE_BASE(hwif);
+> +
+> +	if (rq_data_dir(rq))
+> +		reading = 0;
+> +	else
+> +		reading = 1 << 3;
+> +
+> +	/* fall back to pio! */
+> +	if (!ide_build_dmatable(drive, rq)) {
+> +		ide_map_sg(drive, rq);
+> +		return 1;
+> +	}
+> +#ifdef __BIG_ENDIAN
+> +	{
+> +		unsigned int *table = hwif->dmatable_cpu;
+>   
 
-   Forgot to mentiom that from this description it's not even clear if=20
-the int_ctl register bits are cleared when 1 is written to this bit or=20
-when the controller sets it. :-)
+   s/unsigned int/__le32/ perhaps?
+
+> +		while (1) {
+> +			cpu_to_le64s((u64 *)table);
+>   
+
+   Wait, PRD is already already in LE format, so this should be 
+le64_to_cpus().
+
+> +			if (*table & 0x80000000)
+>   
+
+   Hum... you don't have to check that with ide_build_dmatable() 
+returning the PRD count...
+
+> +				break;
+> +			table += 2;
+> +		}
+> +	}
+> +#endif
+>   
 
 MBR, Sergei
 
