@@ -1,60 +1,41 @@
-From: "Grant Grundler" <grundler@google.com>
-Subject: Re: XFS shutting down due to IO timeout on SATA disk (pata_via for CX700)
-Date: Tue, 16 Sep 2008 08:07:03 -0700
-Message-ID: <da824cf30809160807y721a6952ub1cd6966d960b7bd@mail.gmail.com>
-References: <20080911193511.7960bc82@neptune.home>
-	 <48CE22E5.9090403@kernel.org> <20080915190242.58d21a8f@neptune.home>
-	 <48CEC8F2.4040904@kernel.org>
+From: Atsushi Nemoto <anemo@mba.ocn.ne.jp>
+Subject: Re: [PATCH 1/2] ide: Add tx4939ide driver
+Date: Wed, 17 Sep 2008 00:20:34 +0900 (JST)
+Message-ID: <20080917.002034.27955909.anemo@mba.ocn.ne.jp>
+References: <48CC3516.9080404@ru.mvista.com>
+	<20080914.220512.126760706.anemo@mba.ocn.ne.jp>
+	<48CF8A87.6030908@ru.mvista.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1755618AbYIPPH1@vger.kernel.org>
-In-Reply-To: <48CEC8F2.4040904@kernel.org>
-Content-Disposition: inline
-Sender: linux-kernel-owner@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: =?UTF-8?Q?Bruno_Pr=C3=A9mont?= <bonbons@linux-vserver.org>, Linux Kernel <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mba.ocn.ne.jp ([122.1.235.107]:55816 "EHLO smtp.mba.ocn.ne.jp"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751823AbYIPPUV (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 16 Sep 2008 11:20:21 -0400
+In-Reply-To: <48CF8A87.6030908@ru.mvista.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: sshtylyov@ru.mvista.com
+Cc: linux-mips@linux-mips.org, linux-ide@vger.kernel.org, bzolnier@gmail.com, ralf@linux-mips.org
 
-On Mon, Sep 15, 2008 at 1:43 PM, Tejun Heo <tj@kernel.org> wrote:
-...
->>   5 Reallocated_Sector_Ct   0x0033   100   100   024    Pre-fail  Always       -       8589934592000
->
-> Whee... That's unusally high realloc count but I'm not sure whether it
-> indicates actual problem or it's just the drive's way of saying I'm
-> okay.  But this does look quite suspicious.
+On Tue, 16 Sep 2008 14:29:27 +0400, Sergei Shtylyov <sshtylyov@ru.mvista.com> wrote:
+> >>    This doesn't look consistent (aside from the TX4939IDE_REG8/16 issue) 
+> >> -- mm_outsw_swap() calls cpu_to_le16() before writing 16-bit data but 
+> >> this code doesn't. So, either one of those should be wrong...
+> >
+> > Thanks, this code should be wrong.  IDE_TFLAG_OUT_DATA is totally
+> > untested...
+> 
+>    Hum, not necessarily...
+>    If the data register is BE, this should work correctly, if I don't 
+> mistake (once you fix the data register's address).
 
-The "raw" values are "vendor defined".
-Often the 6 bytes of raw data are split up into  1 or 2 byte wide fields.
+Hmm... or ide_tf_load()/ide_tf_read() is broken for big endian MIPS ?
+(and possibly SPARC etc.)
 
-Any volunteers to submit a patch to smartmontools to dump
-"raw values" as hexidecimal by default?
+__ide_mm_writesw(port, &data, 1) should be used instead of writew()
+for IDE_TFLAG_OUT_DATA?
 
-(8589934592000 == 0x7D000000000)
-
->> 196 Reallocated_Event_Count 0x0032   100   100   000    Old_age   Always       -       441778176
->
-> Hmmm.. Do you happen to have drives of the same model?  If so, can you
-> please check what other drives are reporting?
-
-441778176 == 0x1a550000
-
-Need to see if the vendor will provide documentation to decode these values.
-
-AFAICT, it's not safe to directly compare raw values between vendors since
-the raw values don't mean exactly the same thing (e.g. more aggressive retries
-might result in few reallocations.)
-
-hth,
-grant
-
->
-> Thanks.
->
-> --
-> tejun
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-ide" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+---
+Atsushi Nemoto
