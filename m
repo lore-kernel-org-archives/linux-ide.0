@@ -1,52 +1,42 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: XFS shutting down due to IO timeout on SATA disk (pata_via for
- CX700)
-Date: Tue, 16 Sep 2008 10:35:13 -0700
-Message-ID: <48CFEE51.2070200@kernel.org>
-References: <20080911193511.7960bc82@neptune.home>	<48CE22E5.9090403@kernel.org>	<20080915190242.58d21a8f@neptune.home>	<48CEC8F2.4040904@kernel.org> <20080916102152.3f35439f@pluto.restena.lu>
+From: James Andrewartha <jamesa@daa.com.au>
+Subject: Re: Recommended PCI Express or PCI-X SATA (Raid) Controller?
+Date: Wed, 17 Sep 2008 04:01:31 +0800
+Message-ID: <1221595291.23098.8.camel@zarvora>
+References: <f4527be0809130200i23053c1m34855368bac129c7@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:40312 "EHLO hera.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752524AbYIPRhQ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 16 Sep 2008 13:37:16 -0400
-In-Reply-To: <20080916102152.3f35439f@pluto.restena.lu>
+Received: from outbound.icp-qv1-irony-out2.iinet.net.au ([203.59.1.107]:31287
+	"EHLO outbound.icp-qv1-irony-out2.iinet.net.au" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751176AbYIPUMZ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 16 Sep 2008 16:12:25 -0400
+In-Reply-To: <f4527be0809130200i23053c1m34855368bac129c7@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: =?ISO-8859-1?Q?Bruno_Pr=E9mont?= <bonbons@linux-vserver.org>
-Cc: Linux Kernel <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>, Mark Lord <liml@rtr.ca>
+To: Andrew Lyon <andrew.lyon@gmail.com>
+Cc: linux-ide@vger.kernel.org
 
-Hello,
+On Sat, 2008-09-13 at 10:00 +0100, Andrew Lyon wrote:
+> I want to add a PCI Express or PCI-X SATA Controller to my system for
+> an additional 2 or 4 sata ports, however I am running Xen so I am
+> stuck with a older kernel version, gentoo xen 2.6.21 has proved to be
+> fairly stable on my hardware but I may attempt to upgrade to 2.6.25 if
+> necessary, can anybody recommend a pci-x or pci express sata
+> controller with 2 or 4 ports that has been well supported since at
+> least 2.6.21?
+> 
+> I assumed that any real hardware raid device would be beyond my budget
+> but I might just be able to afford a Areca ICAe1210, has anybody used
+> Areca cards with older kernels?
 
-Bruno Pr=E9mont wrote:
-> I don't have other drives of the same model, but 3 ones slightly smal=
-ler
-> in size and previous generation, those are just a few months older (b=
-ut
-> also have way more uptime), see below for the smartctl output. I've n=
-ever
-> seen ATA errors on them.
-> These other drives are running on AMD based platform, SB600 SATA with=
- AHCI.
+The Sil 3132 is a good 2-port PCIe controller, or the 3124 is 4 ports on
+PCI-X. Going up a bit, the supermicro AOC-USAS-S8i is an 8-port PCIe SAS
+controller based on the LSISAS1068E which has had a Linux driver for a
+while, but I don't know what the support for SATA drives on it in Linux
+is like.
 
-So, smartctl output seems fine.
+The Areca cards are good and have drivers for older kernels (2.6.18 if
+not earlier).
 
-> Just for the record, on the VIA there were no errors yet with
-> 2.6.27-rc6-git3 though I ran some compiling on it. As such it *could*=
- be
-> that one of the patches pushed by Jeff helped:
->   [libata] LBA28/LBA48 off-by-one bug in ata.h
->   sata_inic162x: enable LED blinking
->   ata: duplicate variable sparse warning
-
-The only patch which could have affected the result is the off-by-one
-one; however, FLUSH timeout is a bit unexpected failure mode for the
-problem.  Can you please keep the system running for a whlie and see
-whether the problem occurs?
-
-Thanks.
-
---=20
-tejun
+James Andrewartha
