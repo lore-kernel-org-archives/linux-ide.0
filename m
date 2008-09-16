@@ -1,16 +1,16 @@
 From: bugme-daemon@bugzilla.kernel.org
 Subject: [Bug 11576] compactflash TRANSCEND at ide adapter failed to IDENTIFY
-Date: Tue, 16 Sep 2008 06:24:45 -0700 (PDT)
-Message-ID: <20080916132445.997B9108047@picon.linux-foundation.org>
+Date: Tue, 16 Sep 2008 07:04:11 -0700 (PDT)
+Message-ID: <20080916140411.87C05108047@picon.linux-foundation.org>
 References: <bug-11576-11633@http.bugzilla.kernel.org/>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:60607 "EHLO
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:52323 "EHLO
 	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752135AbYIPNZQ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 16 Sep 2008 09:25:16 -0400
+	by vger.kernel.org with ESMTP id S1753429AbYIPOEc (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 16 Sep 2008 10:04:32 -0400
 Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
-	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id m8GDOj3G004914
-	for <linux-ide@vger.kernel.org>; Tue, 16 Sep 2008 06:24:46 -0700
+	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id m8GE4B7Y007880
+	for <linux-ide@vger.kernel.org>; Tue, 16 Sep 2008 07:04:12 -0700
 In-Reply-To: <bug-11576-11633@http.bugzilla.kernel.org/>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
@@ -22,12 +22,15 @@ http://bugzilla.kernel.org/show_bug.cgi?id=11576
 
 
 
-------- Comment #3 from werner.hein@gmx.net  2008-09-16 06:24 -------
-Created an attachment (id=17808)
- --> (http://bugzilla.kernel.org/attachment.cgi?id=17808&action=view)
-output of dmidecode
+------- Comment #4 from werner.hein@gmx.net  2008-09-16 07:04 -------
+Created an attachment (id=17809)
+ --> (http://bugzilla.kernel.org/attachment.cgi?id=17809&action=view)
+another dmesg output (w/ libata para dma=0)
 
-detailed view into the system
+an additional dmesg report where the kernel was booted with libata parameter
+dma=0
+result is: error report looks a little bit different but root cause seems to be
+same
 
 
 -- 
