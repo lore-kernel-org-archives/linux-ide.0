@@ -1,42 +1,59 @@
-From: James Andrewartha <jamesa@daa.com.au>
-Subject: Re: Recommended PCI Express or PCI-X SATA (Raid) Controller?
-Date: Wed, 17 Sep 2008 04:01:31 +0800
-Message-ID: <1221595291.23098.8.camel@zarvora>
-References: <f4527be0809130200i23053c1m34855368bac129c7@mail.gmail.com>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: Re: [PATCH 1/2] ide: Add tx4939ide driver
+Date: Wed, 17 Sep 2008 01:02:09 +0400
+Message-ID: <48D01ED1.2010003@ru.mvista.com>
+References: <48CC3516.9080404@ru.mvista.com>	<20080914.220512.126760706.anemo@mba.ocn.ne.jp>	<48CF8A87.6030908@ru.mvista.com> <20080917.002034.27955909.anemo@mba.ocn.ne.jp> <48CFDDAD.4050209@ru.mvista.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outbound.icp-qv1-irony-out2.iinet.net.au ([203.59.1.107]:31287
-	"EHLO outbound.icp-qv1-irony-out2.iinet.net.au" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751176AbYIPUMZ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 16 Sep 2008 16:12:25 -0400
-In-Reply-To: <f4527be0809130200i23053c1m34855368bac129c7@mail.gmail.com>
+Received: from h155.mvista.com ([63.81.120.155]:25485 "EHLO imap.sh.mvista.com"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751432AbYIPVCR (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 16 Sep 2008 17:02:17 -0400
+In-Reply-To: <48CFDDAD.4050209@ru.mvista.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Andrew Lyon <andrew.lyon@gmail.com>
-Cc: linux-ide@vger.kernel.org
+To: Atsushi Nemoto <anemo@mba.ocn.ne.jp>
+Cc: linux-mips@linux-mips.org, linux-ide@vger.kernel.org, bzolnier@gmail.com, ralf@linux-mips.org
 
-On Sat, 2008-09-13 at 10:00 +0100, Andrew Lyon wrote:
-> I want to add a PCI Express or PCI-X SATA Controller to my system for
-> an additional 2 or 4 sata ports, however I am running Xen so I am
-> stuck with a older kernel version, gentoo xen 2.6.21 has proved to be
-> fairly stable on my hardware but I may attempt to upgrade to 2.6.25 if
-> necessary, can anybody recommend a pci-x or pci express sata
-> controller with 2 or 4 ports that has been well supported since at
-> least 2.6.21?
-> 
-> I assumed that any real hardware raid device would be beyond my budget
-> but I might just be able to afford a Areca ICAe1210, has anybody used
-> Areca cards with older kernels?
+Hello, I wrote:
 
-The Sil 3132 is a good 2-port PCIe controller, or the 3124 is 4 ports on
-PCI-X. Going up a bit, the supermicro AOC-USAS-S8i is an 8-port PCIe SAS
-controller based on the LSISAS1068E which has had a Linux driver for a
-while, but I don't know what the support for SATA drives on it in Linux
-is like.
+>>>>>   This doesn't look consistent (aside from the TX4939IDE_REG8/16 
+>>>>> issue) -- mm_outsw_swap() calls cpu_to_le16() before writing 
+>>>>> 16-bit data but this code doesn't. So, either one of those should 
+>>>>> be wrong...
+>>>>
+>>>> Thanks, this code should be wrong.  IDE_TFLAG_OUT_DATA is totally
+>>>> untested...
+>>>
+>>>   Hum, not necessarily...
+>>>   If the data register is BE, this should work correctly, if I don't 
+>>> mistake (once you fix the data register's address).
+>
+>> Hmm... or ide_tf_load()/ide_tf_read() is broken for big endian MIPS ?
+>> (and possibly SPARC etc.)
+>
+>> __ide_mm_writesw(port, &data, 1) should be used instead of writew()
+>> for IDE_TFLAG_OUT_DATA?
+>
+>    Probably the code there relies on the writew() doing the necessary 
+> byte swapping -- the same as ata_{in|out}_data() must be reying on 
+> ins[wl]() and outs[wl]() to do that, as well as on 
+> __ide_mm_reads[wl]() and __ide_mm_writes[wl]() -- which boil down to 
+> reads[wl]() and writes[wl]() on MIPS.
+>    What's not clear to me is why in MIPS read[wlq]() vs reads[wlq](), 
+> write[wlq]() vs writes[wl], in[wlq]() vs ins[wlq](), and out[wlq]() vs 
+> outs[wlq]() are using the different byte swapping: the single form 
+> uses ioswab[wlq]() while the sting form uses __mem_ioswab[wlq]() -- 
+> and those are defined as one swapping bytes and the other not in 
+> incluse/asm-mips/mach-generic/mangle-port.h. Cananybody shed some 
+> light on this?
 
-The Areca cards are good and have drivers for older kernels (2.6.18 if
-not earlier).
+   Oh, I think I understand: the "single" versions take/return the value 
+in host endian but the "string" version must treat the data as a stream 
+of bytes.
 
-James Andrewartha
+MBR, Sergei
+
+
