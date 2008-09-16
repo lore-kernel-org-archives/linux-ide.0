@@ -1,39 +1,60 @@
-From: bugme-daemon@bugzilla.kernel.org
-Subject: [Bug 11576] compactflash TRANSCEND at ide adapter failed to IDENTIFY
-Date: Tue, 16 Sep 2008 07:04:11 -0700 (PDT)
-Message-ID: <20080916140411.87C05108047@picon.linux-foundation.org>
-References: <bug-11576-11633@http.bugzilla.kernel.org/>
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:52323 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753429AbYIPOEc (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 16 Sep 2008 10:04:32 -0400
-Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
-	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id m8GE4B7Y007880
-	for <linux-ide@vger.kernel.org>; Tue, 16 Sep 2008 07:04:12 -0700
-In-Reply-To: <bug-11576-11633@http.bugzilla.kernel.org/>
-Sender: linux-ide-owner@vger.kernel.org
+From: "Grant Grundler" <grundler@google.com>
+Subject: Re: XFS shutting down due to IO timeout on SATA disk (pata_via for CX700)
+Date: Tue, 16 Sep 2008 08:07:03 -0700
+Message-ID: <da824cf30809160807y721a6952ub1cd6966d960b7bd@mail.gmail.com>
+References: <20080911193511.7960bc82@neptune.home>
+	 <48CE22E5.9090403@kernel.org> <20080915190242.58d21a8f@neptune.home>
+	 <48CEC8F2.4040904@kernel.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1755618AbYIPPH1@vger.kernel.org>
+In-Reply-To: <48CEC8F2.4040904@kernel.org>
+Content-Disposition: inline
+Sender: linux-kernel-owner@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: =?UTF-8?Q?Bruno_Pr=C3=A9mont?= <bonbons@linux-vserver.org>, Linux Kernel <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
 
-http://bugzilla.kernel.org/show_bug.cgi?id=11576
+On Mon, Sep 15, 2008 at 1:43 PM, Tejun Heo <tj@kernel.org> wrote:
+...
+>>   5 Reallocated_Sector_Ct   0x0033   100   100   024    Pre-fail  Always       -       8589934592000
+>
+> Whee... That's unusally high realloc count but I'm not sure whether it
+> indicates actual problem or it's just the drive's way of saying I'm
+> okay.  But this does look quite suspicious.
 
+The "raw" values are "vendor defined".
+Often the 6 bytes of raw data are split up into  1 or 2 byte wide fields.
 
+Any volunteers to submit a patch to smartmontools to dump
+"raw values" as hexidecimal by default?
 
+(8589934592000 == 0x7D000000000)
 
+>> 196 Reallocated_Event_Count 0x0032   100   100   000    Old_age   Always       -       441778176
+>
+> Hmmm.. Do you happen to have drives of the same model?  If so, can you
+> please check what other drives are reporting?
 
-------- Comment #4 from werner.hein@gmx.net  2008-09-16 07:04 -------
-Created an attachment (id=17809)
- --> (http://bugzilla.kernel.org/attachment.cgi?id=17809&action=view)
-another dmesg output (w/ libata para dma=0)
+441778176 == 0x1a550000
 
-an additional dmesg report where the kernel was booted with libata parameter
-dma=0
-result is: error report looks a little bit different but root cause seems to be
-same
+Need to see if the vendor will provide documentation to decode these values.
 
+AFAICT, it's not safe to directly compare raw values between vendors since
+the raw values don't mean exactly the same thing (e.g. more aggressive retries
+might result in few reallocations.)
 
--- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug, or are watching the assignee.
+hth,
+grant
+
+>
+> Thanks.
+>
+> --
+> tejun
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-ide" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
