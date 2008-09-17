@@ -1,174 +1,105 @@
 From: Elias Oltmanns <eo@nebensachen.de>
-Subject: Re: [PATCH 2/4] libata: Implement disk shock protection support
-Date: Wed, 17 Sep 2008 17:26:59 +0200
-Message-ID: <874p4eoksc.fsf@denkblock.local>
-References: <87wshzplvk.fsf@denkblock.local> <48B913E6.1000104@gmail.com>
-	<87k5dym5t9.fsf@denkblock.local> <48BA638B.2030001@gmail.com>
-	<87ej45mlp3.fsf@denkblock.local> <48BA969C.4060207@gmail.com>
-	<87abetmaap.fsf@denkblock.local> <48BBA8D1.8020604@gmail.com>
-	<87myirly1p.fsf@denkblock.local> <48BC1BB8.2030007@gmail.com>
-	<87fxoh0yil.fsf@denkblock.local> <48BFA528.2040305@gmail.com>
-	<87ej3zrf3o.fsf@denkblock.local> <48C0F2F8.1040308@gmail.com>
-	<87ej3snm3s.fsf@denkblock.local> <48C7DC55.30002@gmail.com>
-	<8763p3ol55.fsf@denkblock.local> <48C82CB1.2070308@gmail.com>
-	<871vzrogpz.fsf@denkblock.local> <48C850AA.2030409@gmail.com>
-	<87k5diq35g.fsf@denkblock.local>
+Subject: Re: [PATCH 3/4] ide: Implement disk shock protection support
+Date: Wed, 17 Sep 2008 17:28:33 +0200
+Message-ID: <87tzcen65a.fsf@denkblock.local>
+References: <87wshzplvk.fsf@denkblock.local>
+	<200809012129.14979.bzolnier@gmail.com>
+	<87ljy90zin.fsf@denkblock.local>
+	<200809051933.38888.bzolnier@gmail.com>
+	<87vdx1y9gv.fsf@denkblock.local>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nebensachen.de ([195.34.83.29]:45216 "EHLO mail.nebensachen.de"
+Received: from nebensachen.de ([195.34.83.29]:45419 "EHLO mail.nebensachen.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752848AbYIQP1a (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 17 Sep 2008 11:27:30 -0400
+	id S1753262AbYIQP3J (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 17 Sep 2008 11:29:09 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, Andrew Morton <akpm@linux-foundation.org>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Jeff Garzik <jeff@garzik.org>, Randy Dunlap <randy.dunlap@oracle.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, Andrew Morton <akpm@linux-foundation.org>, Jeff Garzik <jeff@garzik.org>, Randy Dunlap <randy.dunlap@oracle.com>, Tejun Heo <htejun@gmail.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
 Elias Oltmanns <eo@nebensachen.de> wrote:
-> What about the following patch?
->
 > From: Elias Oltmanns <eo@nebensachen.de>
-> Subject: [PATCH] libata: Implement disk shock protection support
+> Subject: [PATCH] ide: Implement disk shock protection support
 >
 > On user request (through sysfs), the IDLE IMMEDIATE command with UNLOAD
 > FEATURE as specified in ATA-7 is issued to the device and processing of
 > the request queue is stopped thereafter until the specified timeout
 > expires or user space asks to resume normal operation. This is supposed
 > to prevent the heads of a hard drive from accidentally crashing onto the
-> platter when a heavy shock is anticipated (like a falling laptop
-> expected to hit the floor). In fact, the whole port stops processing
-> commands until the timeout has expired in order to avoid any resets due
-> to failed commands on another device.
+> platter when a heavy shock is anticipated (like a falling laptop expected
+> to hit the floor). Port resets are deferred whenever a device on that
+> port is in the parked state.
 >
 > Signed-off-by: Elias Oltmanns <eo@nebensachen.de>
 > ---
+[...]
+> diff --git a/drivers/ide/ide-iops.c b/drivers/ide/ide-iops.c
+> index 91182eb..ea75c71 100644
+> --- a/drivers/ide/ide-iops.c
+> +++ b/drivers/ide/ide-iops.c
+> @@ -1079,12 +1079,13 @@ static void pre_reset(ide_drive_t *drive)
+>  static ide_startstop_t do_reset1 (ide_drive_t *drive, int do_not_try_atapi)
+>  {
+>  	unsigned int unit;
+> -	unsigned long flags;
+> +	unsigned long flags, timeout;
+>  	ide_hwif_t *hwif;
+>  	ide_hwgroup_t *hwgroup;
+>  	struct ide_io_ports *io_ports;
+>  	const struct ide_tp_ops *tp_ops;
+>  	const struct ide_port_ops *port_ops;
+> +	DEFINE_WAIT(wait);
+>  
+>  	spin_lock_irqsave(&ide_lock, flags);
+>  	hwif = HWIF(drive);
+> @@ -1111,6 +1112,30 @@ static ide_startstop_t do_reset1 (ide_drive_t *drive, int do_not_try_atapi)
+>  		return ide_started;
+>  	}
+>  
+> +	/* We must not disturb devices in the IDE_DFLAG_PARKED state. */
+> +	do {
+> +		unsigned long now;
+> +		int i;
+> +
+> +		timeout = jiffies;
+> +		for (i = 0; i < MAX_DRIVES; i++) {
+> +			ide_drive_t *tdrive = &hwif->drives[i];
+> +
+> +			if (tdrive->dev_flags & IDE_DFLAG_PRESENT &&
+> +			    tdrive->dev_flags & IDE_DFLAG_PARKED &&
+> +			    time_after(tdrive->sleep, timeout))
+> +				timeout = tdrive->sleep;
+> +		}
+> +
+> +		now = jiffies;
+> +		if (time_before_eq(timeout, now))
+> +			break;
+> +
+> +		prepare_to_wait(&ide_park_wq, &wait, TASK_UNINTERRUPTIBLE);
+> +		timeout = schedule_timeout_uninterruptible(timeout - now);
 
-Apart from addressing the issue with timeouts exceeding the limit of
-30000 msec discussed lately, I have also simplified the crucial
-if-clause in ata_scsi_park_show(). Both changes are given below.
-Assuming that you don't have any objections, I'll just go ahead and
-submit the updated patch series shortly.
+It has occurred to me that something is wrong here after all: we need to
+release the lock before sleeping. I'll change that to
+
+		spin_unlock_irqrestore(&ide_lock, flags);
+		prepare_to_wait(&ide_park_wq, &wait, TASK_UNINTERRUPTIBLE);
+		timeout = schedule_timeout_uninterruptible(timeout - now);
+		spin_lock_irqsave(&ide_lock, flags);
+
+> + } while (timeout);
+> +	finish_wait(&ide_park_wq, &wait);
+> +
+>  	/*
+>  	 * First, reset any device state data we were maintaining
+>  	 * for any of the drives on this interface.
+
+Hopefully, this meets with your approval. I'll send out the updated
+patch series shortly. Even though this is a minor change, I don't feel
+comfortable with adding your Acked-by myself now, so please ack the new
+patch.
 
 Regards,
 
 Elias
-
-> +static ssize_t ata_scsi_park_show(struct device *device,
-> +				  struct device_attribute *attr, char *buf)
-> +{
-> +	struct scsi_device *sdev = to_scsi_device(device);
-> +	struct ata_port *ap;
-> +	struct ata_link *link;
-> +	struct ata_device *dev;
-> +	unsigned long flags;
-> +	unsigned int uninitialized_var(msecs);
-> +	int rc = 0;
-> +
-> +	ap = ata_shost_to_port(sdev->host);
-> +
-> +	spin_lock_irqsave(ap->lock, flags);
-> +	dev = ata_scsi_find_dev(ap, sdev);
-> +	if (!dev) {
-> +		rc = -ENODEV;
-> +		goto unlock;
-> +	}
-> +	if (dev->flags & ATA_DFLAG_NO_UNLOAD) {
-> +		rc = -EOPNOTSUPP;
-> +		goto unlock;
-> +	}
-> +
-> +	link = dev->link;
-> +	if (((ap->pflags & ATA_PFLAG_EH_IN_PROGRESS &&
-> +	      (link->eh_context.i.dev_action[dev->devno] & ATA_EH_PARK ||
-> +	       link->eh_info.dev_action[dev->devno] & ATA_EH_PARK)) ||
-> +	     (ap->pflags & ATA_PFLAG_EH_PENDING &&
-> +	      link->eh_info.dev_action[dev->devno])) &&
-> +	    time_after(dev->unpark_deadline, jiffies))
-
-Changed to:
-
-	if (ap->pflags & ATA_PFLAG_EH_IN_PROGRESS &&
-	    link->eh_context.unloaded_mask & (1 << dev->devno) &&
-	    time_after(dev->unpark_deadline, jiffies))
-
-> +		msecs = jiffies_to_msecs(dev->unpark_deadline - jiffies);
-> +	else
-> +		msecs = 0;
-> +
-> +unlock:
-> +	spin_unlock_irq(ap->lock);
-> +
-> +	return rc ? rc : snprintf(buf, 20, "%u\n", msecs);
-> +}
-> +
-> +static ssize_t ata_scsi_park_store(struct device *device,
-> +				   struct device_attribute *attr,
-> +				   const char *buf, size_t len)
-> +{
-> +	struct scsi_device *sdev = to_scsi_device(device);
-> +	struct ata_port *ap;
-> +	struct ata_device *dev;
-> +	long int input;
-> +	unsigned long flags;
-> +	int rc;
-> +
-> +	rc = strict_strtol(buf, 10, &input);
-> +	if (rc || input < -2 || input > ATA_TMOUT_MAX_PARK)
-> +		return -EINVAL;
-
-Changed to:
-
-	if (rc || input < -2)
-		return -EINVAL;
-	if (input > ATA_TMOUT_MAX_PARK) {
-		rc = -EOVERFLOW;
-		input = ATA_TMOUT_MAX_PARK;
-	}
-
-> +
-> +	ap = ata_shost_to_port(sdev->host);
-> +
-> +	spin_lock_irqsave(ap->lock, flags);
-> +	dev = ata_scsi_find_dev(ap, sdev);
-> +	if (unlikely(!dev)) {
-> +		rc = -ENODEV;
-> +		goto unlock;
-> +	}
-> +	if (dev->class != ATA_DEV_ATA) {
-> +		rc = -EOPNOTSUPP;
-> +		goto unlock;
-> +	}
-> +
-> +	if (input >= 0) {
-> +		if (dev->flags & ATA_DFLAG_NO_UNLOAD) {
-> +			rc = -EOPNOTSUPP;
-> +			goto unlock;
-> +		}
-> +
-> +		dev->unpark_deadline = ata_deadline(jiffies, input);
-> +		dev->link->eh_info.dev_action[dev->devno] |= ATA_EH_PARK;
-> +		ata_port_schedule_eh(ap);
-> +		wake_up_all(&ata_scsi_park_wq);
-> +	} else {
-> +		switch (input) {
-> +		case -1:
-> +			dev->flags &= ~ATA_DFLAG_NO_UNLOAD;
-> +			break;
-> +		case -2:
-> +			dev->flags |= ATA_DFLAG_NO_UNLOAD;
-> +			break;
-> +		}
-> +	}
-> +unlock:
-> +	spin_unlock_irqrestore(ap->lock, flags);
-> +
-> +	return rc ? rc : len;
-> +}
-> +DEVICE_ATTR(unload_heads, S_IRUGO | S_IWUSR,
-> +	    ata_scsi_park_show, ata_scsi_park_store);
-> +EXPORT_SYMBOL_GPL(dev_attr_unload_heads);
-> +
->  static void ata_scsi_set_sense(struct scsi_cmnd *cmd, u8 sk, u8 asc, u8 ascq)
->  {
->  	cmd->result = (DRIVER_SENSE << 24) | SAM_STAT_CHECK_CONDITION;
