@@ -1,82 +1,47 @@
 From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH] SATA: Blacklist systems that spin off disks during ACPI
- power off
-Date: Wed, 17 Sep 2008 17:50:54 -0400
-Message-ID: <48D17BBE.5020807@garzik.org>
-References: <200808290002.55026.rjw@sisk.pl> <48C50EA4.2020700@gmail.com> <48CC7542.3010603@garzik.org> <200809150200.57055.rjw@sisk.pl>
+Subject: Re: [PATCH 1/2] ide: Add tx4939ide driver (v2)
+Date: Wed, 17 Sep 2008 17:58:45 -0400
+Message-ID: <48D17D95.6050008@garzik.org>
+References: <20080918.001342.52129176.anemo@mba.ocn.ne.jp>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-2; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:43940 "EHLO mail.dvmed.net"
+Received: from srv5.dvmed.net ([207.36.208.214]:34010 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753193AbYIQVvC (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 17 Sep 2008 17:51:02 -0400
-In-Reply-To: <200809150200.57055.rjw@sisk.pl>
+	id S1753396AbYIQV6w (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 17 Sep 2008 17:58:52 -0400
+In-Reply-To: <20080918.001342.52129176.anemo@mba.ocn.ne.jp>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: Tejun Heo <htejun@gmail.com>, ACPI Devel Maling List <linux-acpi@vger.kernel.org>, linux-ide@vger.kernel.org, Thomas Renninger <trenn@suse.de>, Robert Hancock <hancockr@shaw.ca>, LKML <linux-kernel@vger.kernel.org>, Frans Pop <elendil@planet.nl>, Maciej Rutecki <maciej.rutecki@gmail.com>, Andrew Morton <akpm@linux-foundation.org>
+To: Atsushi Nemoto <anemo@mba.ocn.ne.jp>
+Cc: linux-mips@linux-mips.org, linux-ide@vger.kernel.org, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, ralf@linux-mips.org, sshtylyov@ru.mvista.com
 
-Rafael J. Wysocki wrote:
-> On Sunday, 14 of September 2008, Jeff Garzik wrote:
->> Tejun Heo wrote:
->>> Rafael J. Wysocki wrote:
->>>> SATA: Blacklist systems that spin off disks during ACPI power off
->>>>
->>>> Some notebooks from HP have the problem that their BIOSes attempt to
->>>> spin down hard drives before entering ACPI system states S4 and S5.
->>>> This leads to a yo-yo effect during system power-off shutdown and the
->>>> last phase of hibernation when the disk is first spun down by the
->>>> kernel and then almost immediately turned on and off by the BIOS.
->>>> This, in turn, may result in shortening the disk's life times.
->>>>
->>>> To prevent this from happening we can blacklist the affected systems
->>>> using DMI information.  However, only the on-board controlles should
->>>> be blacklisted and their PCI slot numbers can be used for this
->>>> purpose.  Unfortunately the existing interface for checking DMI
->>>> information of the system is not very convenient for this purpose,
->>>> because to use it, we would have to define special callback functions
->>>> or create a separate struct dmi_system_id table for each blacklisted
->>>> system.
->>>>
->>>> To overcome this difficulty introduce a new function
->>>> dmi_first_match() returning a pointer to the first entry in an array
->>>> of struct dmi_system_id elements that matches the system DMI
->>>> information.  Then, we can use this pointer to access the entry's
->>>> .driver_data field containing the additional information, such as
->>>> the PCI slot number, allowing us to do the desired blacklisting.
->>>>
->>>> Introduce a new libata flag ATA_FLAG_NO_POWEROFF_SPINDOWN that, if
->>>> set, will prevent disks from being spun off during system power off
->>>> and hibernation (to handle the hibernation case we need a new system
->>>> state SYSTEM_HIBERNATE_ENTER that can be checked against by libata,
->>>> in analogy with SYSTEM_POWER_OFF).  Use dmi_first_match() to set this
->>>> flag for some systems affected by the problem described above (HP nx6325,
->>>> HP nx6310, HP 2510p).
->>>>
->>>> Signed-off-by: Rafael J. Wysocki <rjw@sisk.pl>
->>> libata part looks good to me but I think it would be better to
->>> separate out DMI changes into a separate patch.
->> Did these changes ever get separated out?
+Atsushi Nemoto wrote:
+> This is the driver for the Toshiba TX4939 SoC ATA controller.
 > 
-> I only have the 'combo' patch if that's what you're asking about.  [The latest
-> version is at http://bugzilla.kernel.org/attachment.cgi?id=17702&action=view]
+> This controller has standard ATA taskfile registers and DMA
+> command/status registers, but the register layout is swapped on big
+> endian.  There are some other endian issue and some special registers
+> which requires many custom dma_ops/port_ops routines.
 > 
-> Still, I can easily split the patch, although in that case the reason for the
-> DMI changes won't be very clear without a reference to the SATA changes IMO.
+> Signed-off-by: Atsushi Nemoto <anemo@mba.ocn.ne.jp>
+> ---
+> This patch is against linux-next 20080916.
+> 
+> Changes since v1:
+> * rework IO accessors
+> * rework pio/dma timing setup
+> * use ide_get_pair_dev
+> * do not do ATA hard reset
+> * and so on  (Many thanks to Sergei)
+> 
+>  drivers/ide/Kconfig          |    6 +
+>  drivers/ide/mips/Makefile    |    1 +
+>  drivers/ide/mips/tx4939ide.c |  744 ++++++++++++++++++++++++++++++++++++++++++
+>  3 files changed, 751 insertions(+), 0 deletions(-)
+>  create mode 100644 drivers/ide/mips/tx4939ide.c
 
-That's the nature of every single API change -- you have the change, and 
-then you have the users.
-
-Respectfully, please split up the patch as requested, into DMI subsystem 
-and ata subsystem pieces.
-
-Re-reviewing the patch, I would even think that you should split out the 
-kernel/power/disk and linux/kernel.h changes as well.
-
-	Jeff
-
-
+I hope a libata driver is coming, too?
 
 
