@@ -1,45 +1,86 @@
-From: Herton Ronaldo Krzesinski <herton@mandriva.com.br>
-Subject: [PATCH] piix: add Hercules EC-900 mini-notebook to ich_laptop short cable list
-Date: Wed, 17 Sep 2008 14:30:39 -0300
-Message-ID: <200809171430.39291.herton@mandriva.com.br>
+From: Greg KH <greg@kroah.com>
+Subject: Re: Laptop shock detection and harddisk protection
+Date: Wed, 17 Sep 2008 11:04:05 -0700
+Message-ID: <20080917180405.GB3162@kroah.com>
+References: <48C7FCEE.8060404@kernel.org> <41840b750809110908o54a61f55w7b1b9793abf55634@mail.gmail.com> <48C948A6.3080404@kernel.org> <41840b750809111325t30f8ffe2sa4572d401d43dc5a@mail.gmail.com> <48C9AB5A.705@kernel.org> <20080912165947.GB5094@kroah.com> <20080817194520.GB4043@ucw.cz>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from perninha.conectiva.com.br ([200.140.247.100]:58522 "EHLO
-	perninha.conectiva.com.br" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754050AbYIQRaX (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 17 Sep 2008 13:30:23 -0400
-Received: from localhost (perninha.conectiva.com.br [127.0.0.1])
-	by perninha.conectiva.com.br (Postfix) with ESMTP id 209F53EBC
-	for <linux-ide@vger.kernel.org>; Wed, 17 Sep 2008 13:30:40 -0400 (EDT)
-Received: from perninha.conectiva.com.br ([127.0.0.1])
-	by localhost (perninha.conectiva.com.br [127.0.0.1]) (amavisd-new, port 10025)
-	with LMTP id 1Na8SPBgtIeb for <linux-ide@vger.kernel.org>;
-	Wed, 17 Sep 2008 13:30:39 -0400 (EDT)
-Received: from fox.conectiva (fox.conectiva [10.0.2.195])
-	by perninha.conectiva.com.br (Postfix) with ESMTP id C7F1E3EBB
-	for <linux-ide@vger.kernel.org>; Wed, 17 Sep 2008 13:30:39 -0400 (EDT)
-Received: from gotham.conectiva (gotham.conectiva [10.0.2.23])
-	by fox.conectiva (Postfix) with ESMTP id 093492F32F
-	for <linux-ide@vger.kernel.org>; Wed, 17 Sep 2008 14:30:21 -0300 (BRT)
+Received: from bombadil.infradead.org ([18.85.46.34]:45467 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754613AbYIQSF5 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 17 Sep 2008 14:05:57 -0400
 Content-Disposition: inline
+In-Reply-To: <20080817194520.GB4043@ucw.cz>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Pavel Machek <pavel@suse.cz>
+Cc: Tejun Heo <tj@kernel.org>, Shem Multinymous <multinymous@gmail.com>, Elias Oltmanns <eo@nebensachen.de>, Thomas Renninger <trenn@suse.de>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, IDE/ATA development list <linux-ide@vger.kernel.org>
 
-Signed-off-by: Herton Ronaldo Krzesinski <herton@mandriva.com.br>
+On Sun, Aug 17, 2008 at 09:45:21PM +0200, Pavel Machek wrote:
+> On Fri 2008-09-12 09:59:47, Greg KH wrote:
+> > On Fri, Sep 12, 2008 at 01:35:54AM +0200, Tejun Heo wrote:
+> > > Shem Multinymous wrote:
+> > > >> That reduction comes because input device supports poll and
+> > > >> sysfs_notify_event() does about the same thing.  The uesrland daemon
+> > > >> can just poll on a node and read data nodes when poll event on the
+> > > >> node triggeres.
+> > > > 
+> > > > Agreed.
+> > > > There's another issue with the current sysfs interface, though: hdapsd
+> > > > needs to read (x,y,timestamp) tuples, whereas sysfs provides just x
+> > > > and y in separate attributes which cannot be read atomically together.
+> > > > We can add a sysfs file with "x y timestamp" readouts, though this is
+> > > > unusual for sysfs (and certainly incompatible with hwmon).
+> > > 
+> > > Yes, right.  Forgot about the atomicity part altogether.  Thanks for
+> > > bringing it up.
+> > > 
+> > > >> Unloading heads will be simple.  Just echoing timeout in ms to sysfs
+> > > >> nodes, so I don't think it's a good idea to push out actual unloading
+> > > >> to another process especially as fork doesn't inherit mlockall.
+> > > > 
+> > > > I had in mind another daemon listening for "unload now" events, so no
+> > > > forking needed.
+> > > > This second daemon might make sense if we push the logic of deciding
+> > > > *which* disks to unload into userspace, since this logic is the same
+> > > > for the ThinkPad style and the HP style.
+> > > 
+> > > Hmmm... I can't (yet) see the benefit of having two separate userland
+> > > daemons.
+> > > 
+> > > >> On a related note, is there any plan to merge tp_smapi to mainline?
+> > > >> It seems you put a lot of work into it and I don't really see why it
+> > > >> should stay out of tree.
+> > > > 
+> > > > The only issue I'm aware of is finding a reasonably-named maintainer.
+> > > > On the technical side, the reviews on my lkml submission of
+> > > > thinkpad_ec+hdaps seemed good and all technical comments are since
+> > > > addressed. The code has been stable, well-tested and packaged by major
+> > > > distros for years.
+> > > 
+> > > Cool, can you please post the patch to the lkml and cc Greg
+> > > Kroah-Hartman <gregkh@suse.de>, Andrew Morton
+> > > <akpm@linux-foundation.org> and me?
+> > 
+> > Sorry, but no, I can't accept this code as it is coming from a "known
+> > anonymous" person containing information that it is not known where it
+> > came from.
+> 
+> So... what are you worried about?
 
-diff --git a/drivers/ide/pci/piix.c b/drivers/ide/pci/piix.c
-index 30cfc81..214427c 100644
---- a/drivers/ide/pci/piix.c
-+++ b/drivers/ide/pci/piix.c
-@@ -250,6 +250,7 @@ static const struct ich_laptop ich_laptop[] = {
- 	{ 0x27DF, 0x1025, 0x0110 },	/* ICH7 on Acer 3682WLMi */
- 	{ 0x27DF, 0x1043, 0x1267 },	/* ICH7 on Asus W5F */
- 	{ 0x27DF, 0x103C, 0x30A1 },	/* ICH7 on HP Compaq nc2400 */
-+	{ 0x27DF, 0x1071, 0xD221 },	/* ICH7 on Hercules EC-900 */
- 	{ 0x24CA, 0x1025, 0x0061 },	/* ICH4 on Acer Aspire 2023WLMi */
- 	{ 0x2653, 0x1043, 0x82D8 },	/* ICH6M on Asus Eee 701 */
- 	/* end marker */
+Code created by access to specs that were not allowed to be published in
+GPL form by someone who wants to remain anonymous.
+
+Come on, we went over this the last time this came up a few years ago.
+It's just not going to happen due to the legal issues involved, sorry.
+
+If people want to get this kind of code into the tree, they can write a
+new driver from scratch, based on public information on these chips.
+And you will have to defend exactly where this information was found as
+you can not do it by information found in this "tainted" driver, sorry,
+that's not a legally viable way forward.
+
+thanks,
+
+greg k-h
