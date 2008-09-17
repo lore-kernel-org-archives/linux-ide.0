@@ -1,39 +1,41 @@
-From: Alexander Beregalov <a.beregalov@gmail.com>
-Subject: [PATCH] ide-cd: fix printk format warning
-Date: Wed, 17 Sep 2008 22:24:46 +0400
-Message-ID: <20080917182446.GD29966@orion>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: bugme-daemon@bugzilla.kernel.org
+Subject: [Bug 11581] CDRW not detected on boot. 2.6.18 worked ok.
+Date: Wed, 17 Sep 2008 11:28:01 -0700 (PDT)
+Message-ID: <20080917182801.1797210805D@picon.linux-foundation.org>
+References: <bug-11581-11633@http.bugzilla.kernel.org/>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ey-out-2122.google.com ([74.125.78.25]:20620 "EHLO
-	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754222AbYIQSY4 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 17 Sep 2008 14:24:56 -0400
-Received: by ey-out-2122.google.com with SMTP id 6so1481868eyi.37
-        for <linux-ide@vger.kernel.org>; Wed, 17 Sep 2008 11:24:54 -0700 (PDT)
-Content-Disposition: inline
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:46315 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754516AbYIQS2E (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 17 Sep 2008 14:28:04 -0400
+Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
+	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id m8HIS1bL018574
+	for <linux-ide@vger.kernel.org>; Wed, 17 Sep 2008 11:28:02 -0700
+In-Reply-To: <bug-11581-11633@http.bugzilla.kernel.org/>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: bzolnier@gmail.com, linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
+
+http://bugzilla.kernel.org/show_bug.cgi?id=11581
+
+
+axboe@kernel.dk changed:
+
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+                 CC|                            |bzolnier@gmail.com
 
 
 
-Signed-off-by: Alexander Beregalov <a.beregalov@gmail.com>
----
 
- drivers/ide/ide-cd.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+------- Comment #4 from axboe@kernel.dk  2008-09-17 11:28 -------
+Hmm interesting. So the drive is actually detected, but later issued commands
+by udev are timing out. Could you double check if 2.6.27-rc6 is broken or not?
 
-diff --git a/drivers/ide/ide-cd.c b/drivers/ide/ide-cd.c
-index b34c370..3cc2702 100644
---- a/drivers/ide/ide-cd.c
-+++ b/drivers/ide/ide-cd.c
-@@ -1266,7 +1266,7 @@ static ide_startstop_t ide_cd_do_request(ide_drive_t *drive, struct request *rq,
- 	int xferlen;
- 
- 	ide_debug_log(IDE_DBG_RQ, "Call %s, rq->cmd_type: 0x%x, block: %llu\n",
--		      __func__, rq->cmd_type, (u64)block);
-+		      __func__, rq->cmd_type, (unsigned long long)block);
- 
- 	if (blk_fs_request(rq)) {
- 		if (drive->atapi_flags & IDE_AFLAG_SEEKING) {
+CC'ing Bart and Borislav.
+
+
+-- 
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug, or are watching the assignee.
