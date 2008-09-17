@@ -1,73 +1,47 @@
-From: Borislav Petkov <petkovbb@googlemail.com>
-Subject: Re: [PATCH 03/10] ide-atapi: teach ide atapi about
-	drive->waiting_for_dma
-Date: Wed, 17 Sep 2008 12:05:12 +0200
-Message-ID: <20080917100512.GA28378@gollum.tnic>
-References: <1221392158-3848-1-git-send-email-petkovbb@gmail.com> <1221392158-3848-4-git-send-email-petkovbb@gmail.com> <200809152015.51684.bzolnier@gmail.com>
-Reply-To: petkovbb@gmail.com
+From: Sergey Spiridonov <sena@hurd.homeunix.org>
+Subject: Re: GA-MA790FX-DS5 SATA ahci NCQ erros on Jmicron 20360/20363  (JMB363)
+     kernel 2.6.25-2 Debian/Lenny
+Date: Wed, 17 Sep 2008 14:07:26 +0200
+Message-ID: <ug87q5-llh.ln1@legba.gamic.com>
+References: <g8p6po$nm$1@ger.gmane.org> <48B0916C.4080805@garzik.org> <g8q9mg$v2p$1@ger.gmane.org> <48B0E608.4050205@garzik.org> <g8sqp1$jn4$1@ger.gmane.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.153]:59643 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751788AbYIQKFV (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 17 Sep 2008 06:05:21 -0400
-Received: by fg-out-1718.google.com with SMTP id 19so1974681fgg.17
-        for <linux-ide@vger.kernel.org>; Wed, 17 Sep 2008 03:05:18 -0700 (PDT)
-Content-Disposition: inline
-In-Reply-To: <200809152015.51684.bzolnier@gmail.com>
+Received: from main.gmane.org ([80.91.229.2]:55545 "EHLO ciao.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751979AbYIQMIV (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 17 Sep 2008 08:08:21 -0400
+Received: from list by ciao.gmane.org with local (Exim 4.43)
+	id 1KfvpS-00037P-1s
+	for linux-ide@vger.kernel.org; Wed, 17 Sep 2008 12:08:18 +0000
+Received: from pd9ebc424.dip.t-dialin.net ([217.235.196.36])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-ide@vger.kernel.org>; Wed, 17 Sep 2008 12:08:18 +0000
+Received: from sena by pd9ebc424.dip.t-dialin.net with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-ide@vger.kernel.org>; Wed, 17 Sep 2008 12:08:18 +0000
+In-Reply-To: <g8sqp1$jn4$1@ger.gmane.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
 
-Hi,
+Hi
 
-On Mon, Sep 15, 2008 at 08:15:51PM +0200, Bartlomiej Zolnierkiewicz wrote:
-> On Sunday 14 September 2008 13:35:51 Borislav Petkov wrote:
-> > This is in preparation for converting ide-cd to generic code. The actual
-> > rewiring will be done later after the issue_pc/transfer_pc code knows all about
-> > ide-cd.
-> > 
-> > There should be no functional change resulting from this patch.
-> > 
-> > Signed-off-by: Borislav Petkov <petkovbb@gmail.com>
-> > ---
-> >  drivers/ide/ide-atapi.c |   16 +++++++++++++---
-> >  1 files changed, 13 insertions(+), 3 deletions(-)
-> > 
-> > diff --git a/drivers/ide/ide-atapi.c b/drivers/ide/ide-atapi.c
-> > index d557841..763acd7 100644
-> > --- a/drivers/ide/ide-atapi.c
-> > +++ b/drivers/ide/ide-atapi.c
-> > @@ -487,7 +487,13 @@ static ide_startstop_t ide_transfer_pc(ide_drive_t *drive)
-> >  	ide_startstop_t startstop;
-> >  	u8 ireason;
-> >  
-> > -	if (ide_wait_stat(&startstop, drive, ATA_DRQ, ATA_BUSY, WAIT_READY)) {
-> > +	if ((drive->media == ide_cdrom || drive->media == ide_optical) &&
-> > +	    (drive->atapi_flags & IDE_AFLAG_DRQ_INTERRUPT)) {
-> > +		if (drive->dma)
-> > +			drive->waiting_for_dma = 1;
-> > +	}
-> 
-> We really want to do this for all ATAPI devices (as a bugfix).
-> 
-> > +	else if (ide_wait_stat(&startstop, drive, ATA_DRQ, ATA_BUSY,
-> > +			       WAIT_READY)) {
-> 
-> IIRC similar check was removed from ide-cd so maybe this one
-> is also unnecessary?
+Sergey Spiridonov wrote:
 
-Well, according to SFF8020, this chunk is for drives which don't support the
-"Accelerated DRQ" command packet DRQ type and those drives can set the DRQ bit
-as late as 10ms after receiving the PACKET command and I guess those are really
-old. I don't know whether it will be completely safe to remove it - for that
-decision i'm too early in the game :). Anyways, a quick google scan returns
-several bug reports in the past hitting that with ide-scsi, ide-floppy and
-ide-tape but those are either _really_ old or hint at hardware problems with the
-device...
+> Well, it is probably right time to try to get replacement motherboard
+> from store.
+
+I got a replacement motherboard. And I got absolutely same errors and
+problems.
+
+:( :( :(
+
+Will try to live with this...
 
 -- 
-Regards/Gruss,
-    Boris.
+Best regards, Sergey Spiridonov
+
