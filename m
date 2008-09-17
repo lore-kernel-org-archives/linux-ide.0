@@ -1,46 +1,55 @@
-From: "Shem Multinymous" <multinymous@gmail.com>
-Subject: Re: Laptop shock detection and harddisk protection
-Date: Wed, 17 Sep 2008 15:36:36 -0400
-Message-ID: <41840b750809171236s524f1a70i3e1624a2facd9d44@mail.gmail.com>
-References: <48C7FCEE.8060404@kernel.org>
-	 <41840b750809110908o54a61f55w7b1b9793abf55634@mail.gmail.com>
-	 <48C948A6.3080404@kernel.org> <877i9ipi56.fsf@denkblock.local>
-	 <20080817195103.GD4043@ucw.cz> <87d4j2ol2a.fsf@denkblock.local>
+From: Tim Besard <tim.besard@gmail.com>
+Subject: NCQ on Promise SATA300 TX4
+Date: Wed, 17 Sep 2008 23:42:08 +0200
+Message-ID: <1221687728.12558.12.camel@tim-desktop>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wf-out-1314.google.com ([209.85.200.173]:64132 "EHLO
-	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752460AbYIQTgh (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 17 Sep 2008 15:36:37 -0400
-Received: by wf-out-1314.google.com with SMTP id 27so3163834wfd.4
-        for <linux-ide@vger.kernel.org>; Wed, 17 Sep 2008 12:36:36 -0700 (PDT)
-In-Reply-To: <87d4j2ol2a.fsf@denkblock.local>
-Content-Disposition: inline
+Received: from qw-out-2122.google.com ([74.125.92.25]:19484 "EHLO
+	qw-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753668AbYIQVmK (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 17 Sep 2008 17:42:10 -0400
+Received: by qw-out-2122.google.com with SMTP id 3so310409qwe.37
+        for <linux-ide@vger.kernel.org>; Wed, 17 Sep 2008 14:42:08 -0700 (PDT)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Elias Oltmanns <eo@nebensachen.de>
-Cc: Pavel Machek <pavel@suse.cz>, Tejun Heo <tj@kernel.org>, Thomas Renninger <trenn@suse.de>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, IDE/ATA development list <linux-ide@vger.kernel.org>
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: linux-ide@vger.kernel.org
 
-On Wed, Sep 17, 2008 at 11:21 AM, Elias Oltmanns <eo@nebensachen.de> wrote:
->>> 2. Make shock protection interact nicely with suspend operations:
->>>    currently, we are out of luck if anything should happen after
->>>    processes have been frozen. This is particularly unfortunatel in the
->>>    case of s2disk.
->>
->> I'd say that s2disk is similar to early boot... no protection there.
->
-> Well, this is true for resume. However, I can't help thinking that we
-> may do better than that until the disk spins down, particularly while
-> writing the image to disk.
+Hi,
 
-Agreed.
-Practically, disk protection during suspend-to-disk sounds very
-useful, given the typical usage scenario: you press button to
-hibernate and start shuffling around your chair/desk in preparation
-for leaving the room. Dropping the laptop is more likely than ever at
-this point. Resume-from-disk tends to be done after settling down into
-your chair/desk, so the drop risk is lower.
+I recently bough a Promise SATA300 TX4 controller, which I am using in
+combination with an NCQ-capable harddrive. As the controller supports
+NCQ [1], and the libata webpages seems to indicate [2] that the
+sata_promise driver does as well, I am currently trying to enable NCQ
+(kernel 2.6.27).
 
-  Shem
+Without any luck however, my dmesg log indicates the following:
+[    4.244047] ata1: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+[    4.253636] ata1.00: ATA-7: ST3500320AS, SD04, max UDMA/133
+[    4.253639] ata1.00: 976773168 sectors, multi 0: LBA48 NCQ (depth
+0/32)
+[    4.268850] ata1.00: configured for UDMA/133
+
+And the NCQ queue depth flag seems read-only:
+tim@tim-desktop:~$ sudo echo 31 > /sys/block/sdb/device/queue_depth
+bash: /sys/block/sdb/device/queue_depth: Permission denied
+
+The read-only nature of the queue_depth field seems to indicate that the
+SATA module doesn't have NCQ support, but this contradicts with what I
+read on the libata page.
+
+Could you shed some light on this issue? And if the driver doesn't
+support NCQ for this card, is there another way to accomplish this
+(without having to buy a new controller)?
+
+References:
+1:
+http://www.promise.com/product/product_detail_eng.asp?segment=Non-RAID%
+20HBAs&product_id=139
+2: http://linux-ata.org/driver-status.html#tx2
+
+Thanks in advance,
+Tim
+
