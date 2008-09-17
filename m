@@ -1,18 +1,18 @@
 From: Tejun Heo <htejun@gmail.com>
 Subject: Re: [PATCH 2/4 v2] libata: Implement disk shock protection support
-Date: Wed, 17 Sep 2008 11:03:39 -0700
-Message-ID: <48D1467B.2070301@gmail.com>
+Date: Wed, 17 Sep 2008 11:08:28 -0700
+Message-ID: <48D1479C.9040702@gmail.com>
 References: <87d4j2n3dn.fsf@denkblock.local> <20080917163144.9870.97008.stgit@denkblock.local>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ti-out-0910.google.com ([209.85.142.184]:62329 "EHLO
+Received: from ti-out-0910.google.com ([209.85.142.190]:59636 "EHLO
 	ti-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755492AbYIQSGN (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 17 Sep 2008 14:06:13 -0400
-Received: by ti-out-0910.google.com with SMTP id b6so1856323tic.23
-        for <linux-ide@vger.kernel.org>; Wed, 17 Sep 2008 11:06:11 -0700 (PDT)
+	with ESMTP id S1754846AbYIQSLD (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 17 Sep 2008 14:11:03 -0400
+Received: by ti-out-0910.google.com with SMTP id b6so1857048tic.23
+        for <linux-ide@vger.kernel.org>; Wed, 17 Sep 2008 11:11:00 -0700 (PDT)
 In-Reply-To: <20080917163144.9870.97008.stgit@denkblock.local>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
