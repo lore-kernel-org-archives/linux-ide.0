@@ -1,47 +1,36 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [PATCH 1/2] ide: Add tx4939ide driver (v2)
-Date: Thu, 18 Sep 2008 16:45:09 -0700
-Message-ID: <200809181645.10410.bzolnier@gmail.com>
-References: <20080918.001342.52129176.anemo@mba.ocn.ne.jp>
+Subject: Re: [PATCH 3/4 v2] ide: Implement disk shock protection support
+Date: Thu, 18 Sep 2008 16:24:53 -0700
+Message-ID: <200809181624.54248.bzolnier@gmail.com>
+References: <87d4j2n3dn.fsf@denkblock.local> <20080917163144.9870.59732.stgit@denkblock.local>
 Mime-Version: 1.0
 Content-Type: text/plain;
-  charset="iso-8859-1"
+  charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rv-out-0506.google.com ([209.85.198.231]:63767 "EHLO
+Received: from rv-out-0506.google.com ([209.85.198.232]:59350 "EHLO
 	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756911AbYIRXxt (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 18 Sep 2008 19:53:49 -0400
-Received: by rv-out-0506.google.com with SMTP id k40so151226rvb.1
-        for <linux-ide@vger.kernel.org>; Thu, 18 Sep 2008 16:53:49 -0700 (PDT)
-In-Reply-To: <20080918.001342.52129176.anemo@mba.ocn.ne.jp>
+	with ESMTP id S1756268AbYIRXxm (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 18 Sep 2008 19:53:42 -0400
+Received: by rv-out-0506.google.com with SMTP id k40so151227rvb.1
+        for <linux-ide@vger.kernel.org>; Thu, 18 Sep 2008 16:53:42 -0700 (PDT)
+In-Reply-To: <20080917163144.9870.59732.stgit@denkblock.local>
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Atsushi Nemoto <anemo@mba.ocn.ne.jp>
-Cc: linux-mips@linux-mips.org, linux-ide@vger.kernel.org, ralf@linux-mips.org, sshtylyov@ru.mvista.com
+To: Elias Oltmanns <eo@nebensachen.de>
+Cc: Jeff Garzik <jeff@garzik.org>, Randy Dunlap <randy.dunlap@oracle.com>, Tejun Heo <htejun@gmail.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Wednesday 17 September 2008 08:13:42 Atsushi Nemoto wrote:
-> This is the driver for the Toshiba TX4939 SoC ATA controller.
+On Wednesday 17 September 2008 09:38:37 Elias Oltmanns wrote:
+> On user request (through sysfs), the IDLE IMMEDIATE command with UNLOAD
+> FEATURE as specified in ATA-7 is issued to the device and processing of
+> the request queue is stopped thereafter until the specified timeout
+> expires or user space asks to resume normal operation. This is supposed
+> to prevent the heads of a hard drive from accidentally crashing onto the
+> platter when a heavy shock is anticipated (like a falling laptop expected
+> to hit the floor). Port resets are deferred whenever a device on that
+> port is in the parked state.
 > 
-> This controller has standard ATA taskfile registers and DMA
-> command/status registers, but the register layout is swapped on big
-> endian.  There are some other endian issue and some special registers
-> which requires many custom dma_ops/port_ops routines.
-> 
-> Signed-off-by: Atsushi Nemoto <anemo@mba.ocn.ne.jp>
-> ---
-> This patch is against linux-next 20080916.
-> 
-> Changes since v1:
-> * rework IO accessors
-> * rework pio/dma timing setup
-> * use ide_get_pair_dev
-> * do not do ATA hard reset
-> * and so on  (Many thanks to Sergei)
+> Signed-off-by: Elias Oltmanns <eo@nebensachen.de>
 
-Sergei, are you OK with this version?
-
-[ I tentatively applied it to pata tree.  I still see the use of legacy
-  HWIF()/HWGROUP() macros but I can deal with it myself before pushing
-  the patch upstream. ]
+applied
