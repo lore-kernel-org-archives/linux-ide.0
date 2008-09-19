@@ -1,30 +1,50 @@
 From: Elias Oltmanns <eo@nebensachen.de>
-Subject: Disk shock protection in libata
-Date: Fri, 19 Sep 2008 23:41:08 +0200
-Message-ID: <87tzcb7r0r.fsf@denkblock.local>
+Subject: [PATCH 1/2 v3] Introduce ata_id_has_unload()
+Date: Fri, 19 Sep 2008 23:46:01 +0200
+Message-ID: <20080919214359.7183.81870.stgit@denkblock.local>
+References: <87tzcb7r0r.fsf@denkblock.local>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nebensachen.de ([195.34.83.29]:54726 "EHLO mail.nebensachen.de"
+Received: from nebensachen.de ([195.34.83.29]:47008 "EHLO mail.nebensachen.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751016AbYISVlt (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 19 Sep 2008 17:41:49 -0400
+	id S1751872AbYISVrE (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 19 Sep 2008 17:47:04 -0400
+In-Reply-To: <87tzcb7r0r.fsf@denkblock.local>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Tejun Heo <tj@kernel.org>, Jeff Garzik <jeff@garzik.org>
 Cc: linux-ide@vger.kernel.org
 
-Hi all,
+Add a function to check an ATA device's id for head unload support as
+specified in ATA-7.
 
-since Bart has already added patches #1, #3 and #4 of my previous series
-to his pata tree, I'm now going to resend only patches #1 and #2. There
-are no changes to the first one, it is just that the second depends on
-it. The crucial difference between the provious and the new version of
-the second patch is that we now use completion rather than simple wait
-queues and wake up calls, so as not to interfere with msleep() during
-command execution in ata_eh_park_issue_cmd(). The patches have been
-rebased to next-20080919.
+Signed-off-by: Elias Oltmanns <eo@nebensachen.de>
+---
 
-Regards,
+ include/linux/ata.h |    9 +++++++++
+ 1 files changed, 9 insertions(+), 0 deletions(-)
 
-Elias
+diff --git a/include/linux/ata.h b/include/linux/ata.h
+index cea079c..c66a7d6 100644
+--- a/include/linux/ata.h
++++ b/include/linux/ata.h
+@@ -707,6 +707,15 @@ static inline int ata_id_has_dword_io(const u16 *id)
+ 	return 0;
+ }
+ 
++static inline int ata_id_has_unload(const u16 *id)
++{
++	if (ata_id_major_version(id) >= 7 &&
++	    (id[ATA_ID_CFSSE] & 0xC000) == 0x4000 &&
++	    id[ATA_ID_CFSSE] & (1 << 13))
++		return 1;
++	return 0;
++}
++
+ static inline int ata_id_current_chs_valid(const u16 *id)
+ {
+ 	/* For ATA-1 devices, if the INITIALIZE DEVICE PARAMETERS command
+
+
