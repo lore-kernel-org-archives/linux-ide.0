@@ -1,68 +1,59 @@
-From: Elias Oltmanns <eo@nebensachen.de>
-Subject: Re: [PATCH 2/4 v2] libata: Implement disk shock protection support
-Date: Fri, 19 Sep 2008 17:00:16 +0200
-Message-ID: <87fxnwkwov.fsf@denkblock.local>
-References: <87d4j2n3dn.fsf@denkblock.local>
-	<20080917163144.9870.97008.stgit@denkblock.local>
-	<48D147E2.3020601@gmail.com> <87skrwmpng.fsf@denkblock.local>
-	<48D3979F.10305@gmail.com> <87ljxokz67.fsf@denkblock.local>
-	<48D3B3EE.70702@gmail.com>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: [PATCH 1/2] ide: Add tx4939ide driver (v2)
+Date: Fri, 19 Sep 2008 10:10:08 -0700
+Message-ID: <200809191010.09457.bzolnier@gmail.com>
+References: <20080918.001342.52129176.anemo@mba.ocn.ne.jp> <200809181645.10410.bzolnier@gmail.com> <48D37025.2030501@ru.mvista.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nebensachen.de ([195.34.83.29]:56559 "EHLO mail.nebensachen.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752897AbYISPB0 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 19 Sep 2008 11:01:26 -0400
-In-Reply-To: <48D3B3EE.70702@gmail.com> (Tejun Heo's message of "Fri, 19 Sep
-	2008 07:15:10 -0700")
+Received: from rv-out-0506.google.com ([209.85.198.232]:42453 "EHLO
+	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751287AbYISRLF (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 19 Sep 2008 13:11:05 -0400
+Received: by rv-out-0506.google.com with SMTP id k40so530334rvb.1
+        for <linux-ide@vger.kernel.org>; Fri, 19 Sep 2008 10:11:05 -0700 (PDT)
+In-Reply-To: <48D37025.2030501@ru.mvista.com>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Jeff Garzik <jeff@garzik.org>, Randy Dunlap <randy.dunlap@oracle.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Cc: Atsushi Nemoto <anemo@mba.ocn.ne.jp>, linux-mips@linux-mips.org, linux-ide@vger.kernel.org, ralf@linux-mips.org
 
-Tejun Heo <htejun@gmail.com> wrote:
-> Elias Oltmanns wrote:
->>> This should basically work but completion isn't really designed for
->
->>> this type of continuous events where single consumption should clear
->>> all pending events.  INIT_COMPLETION comes close but it doesn't lock,
->>> so can't guarantee anything.  What's necessary is the counterpart for
->>> complete_all() for the wait.
->> 
->> You are right that it isn't designed for this use case and my approach
->> is somewhat hackish. Still, it really does exactly what we want. Please
->> note that ap->park_req_pending is protected by the host lock; the call
->> to complete() is atomic wrt the setting of ATA_EH_PARK for one of the
->> devices on the port and so is the call to INIT_COMPLETION() wrt clearing
->> ATA_EH_PARK requests for *all* devices on the port.
->> 
->>> Well, anyways, I think the issue is slightly out of scope for this
->>> patch and the only side effect is possibly looping over the do {}
->>> while () block several times unnecessarily on certain cases, so I
->>> think just noting about it should be enough for now.
->>>
->>> Can you please add explanation above wait_for_complete_timeout() that
->>> all done counts should be cleared here but aren't and as a result the
->>> loop might repeat determinate number of times unnecessarily and resend
->>> as proper patch?
->> 
->> Well, we don't really care about the done count after
->> wait_for_completion_timeout() has returned. All that matters is that the
->> done counter is cleared when all ATA_EH_PARK actions have been pulled in
->> which happens at the start of each cycle over the loop.
->> 
->> Perhaps I should add comments to this effect before
->> wait_for_completion_timeout() as well as INIT_COMPLETION()?
->
-> Ah... I missed the pull_park_action part.  Yes, in that case, it's
-> correct now but I would really appreciate you explain amply what's
-> going on inside the pull function and why it's needed.
+On Friday 19 September 2008 02:25:57 Sergei Shtylyov wrote:
+> Hello.
+> 
+> Bartlomiej Zolnierkiewicz wrote:
+> 
+> >> This is the driver for the Toshiba TX4939 SoC ATA controller.
+> >>
+> >> This controller has standard ATA taskfile registers and DMA
+> >> command/status registers, but the register layout is swapped on big
+> >> endian.  There are some other endian issue and some special registers
+> >> which requires many custom dma_ops/port_ops routines.
+> >>
+> >> Signed-off-by: Atsushi Nemoto <anemo@mba.ocn.ne.jp>
+> >> ---
+> >> This patch is against linux-next 20080916.
+> >>
+> >> Changes since v1:
+> >> * rework IO accessors
+> >> * rework pio/dma timing setup
+> >> * use ide_get_pair_dev
+> >> * do not do ATA hard reset
+> >> * and so on  (Many thanks to Sergei)
+> >>     
+> >
+> > Sergei, are you OK with this version?
+> >   
+> 
+>    I didn't have tome to look at it.
 
-Will do. By the way, it's just occurred to me that we really need to
-call complete_all() in ata_scsi_park_store(). So, thanks for making me
-think it all through once more.
+I didn't mean to rush you.  I just prefer to have it in pata tree
+because I may not have much time to work on ide next week and also
+since the code looks much better now the further changes could be
+addressed more effectively with the incremental patches.
 
-Regards,
-
-Elias
+Thanks,
+Bart
