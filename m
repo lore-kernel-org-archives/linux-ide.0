@@ -1,50 +1,46 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH 1/2] ide: Add tx4939ide driver (v2)
-Date: Fri, 19 Sep 2008 13:25:57 +0400
-Message-ID: <48D37025.2030501@ru.mvista.com>
-References: <20080918.001342.52129176.anemo@mba.ocn.ne.jp> <200809181645.10410.bzolnier@gmail.com>
+From: Elias Oltmanns <eo@nebensachen.de>
+Subject: Re: [PATCH 4/4 v2] Add documentation for hard disk shockprotection interface
+Date: Fri, 19 Sep 2008 11:50:51 +0200
+Message-ID: <87iqssmpl0.fsf@denkblock.local>
+References: <87d4j2n3dn.fsf@denkblock.local>
+	<20080917163145.9870.8575.stgit@denkblock.local>
+	<1221724782.3261.13.camel@raz>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from gateway-1237.mvista.com ([63.81.120.155]:25635 "EHLO
-	imap.sh.mvista.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1750709AbYISJ0F (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 19 Sep 2008 05:26:05 -0400
-In-Reply-To: <200809181645.10410.bzolnier@gmail.com>
+Received: from nebensachen.de ([195.34.83.29]:45154 "EHLO mail.nebensachen.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751153AbYISJw3 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 19 Sep 2008 05:52:29 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: Atsushi Nemoto <anemo@mba.ocn.ne.jp>, linux-mips@linux-mips.org, linux-ide@vger.kernel.org, ralf@linux-mips.org
+To: Raz Ben-Yehuda <razb@bitband.com>
+Cc: linux-ide@vger.kernel.org
 
-Hello.
+[ For some reason your email has not shown up on linux-ide. ]
 
-Bartlomiej Zolnierkiewicz wrote:
+"Raz Ben-Yehuda" <razb@bitband.com> wrote:
+> Elias
+> looks very interesting.
+> 1. How will it impact VM , swappers , raids ?  
 
->> This is the driver for the Toshiba TX4939 SoC ATA controller.
->>
->> This controller has standard ATA taskfile registers and DMA
->> command/status registers, but the register layout is swapped on big
->> endian.  There are some other endian issue and some special registers
->> which requires many custom dma_ops/port_ops routines.
->>
->> Signed-off-by: Atsushi Nemoto <anemo@mba.ocn.ne.jp>
->> ---
->> This patch is against linux-next 20080916.
->>
->> Changes since v1:
->> * rework IO accessors
->> * rework pio/dma timing setup
->> * use ide_get_pair_dev
->> * do not do ATA hard reset
->> * and so on  (Many thanks to Sergei)
->>     
->
-> Sergei, are you OK with this version?
->   
+What exactly do you want to know? As long as the disk is parked, you can
+do no I/O on it, i.e. no swapping is possible. Since I don't know
+anything about the implementation of raids and don't have a raid setup
+here, I can't really tell how a raid device will behave exactly when one
+of its disks has been parked. Generally, all I/O will be delayed until
+the disk is unparked again.
 
-   I didn't have tome to look at it.
+> 2. you said it has no value for servers ? did you try ?
 
-WBR, Sergei
+Again, I'm not quite sure what you want to know. Obviously, desktops or
+servers for that matter can have disks installed that support the unload
+feature. On these devices you can use the interface as described in my
+document. All I'm saying is that the interface has been designed with
+laptops in mind because I don't see in which situation immediate head
+unloading would be required or even desirable in a classical server
+environment.
 
+Regards,
 
+Elias
