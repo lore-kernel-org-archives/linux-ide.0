@@ -1,66 +1,55 @@
-From: Borislav Petkov <petkovbb@googlemail.com>
-Subject: [PATCH] ide-cd: fix debug printk
-Date: Fri, 19 Sep 2008 19:38:03 +0200
-Message-ID: <20080919173803.GA21355@gollum.tnic>
-Reply-To: petkovbb@gmail.com
+From: raz ben yehuda <razb@bitband.com>
+Subject: Re: [PATCH 4/4 v2] Add documentation for hard disk shockprotection
+	interface
+Date: Fri, 19 Sep 2008 22:03:06 +0200
+Message-ID: <1221854586.7473.16.camel@raz>
+References: <87d4j2n3dn.fsf@denkblock.local>
+	 <20080917163145.9870.8575.stgit@denkblock.local>
+	 <1221724782.3261.13.camel@raz>  <87iqssmpl0.fsf@denkblock.local>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mu-out-0910.google.com ([209.85.134.187]:62371 "EHLO
-	mu-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751808AbYISRiM (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 19 Sep 2008 13:38:12 -0400
-Received: by mu-out-0910.google.com with SMTP id g7so428303muf.1
-        for <linux-ide@vger.kernel.org>; Fri, 19 Sep 2008 10:38:08 -0700 (PDT)
-Content-Disposition: inline
+Received: from fw.bitband.com ([213.8.50.174]:29807 "EHLO mail.bitband.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1754009AbYISUDK (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 19 Sep 2008 16:03:10 -0400
+In-Reply-To: <87iqssmpl0.fsf@denkblock.local>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: bzolnier@gmail.com
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Elias Oltmanns <eo@nebensachen.de>
+Cc: linux-ide@vger.kernel.org
 
-Hi Bart,
 
-please apply.
----
-From: Borislav Petkov <petkovbb@gmail.com>
-Date: Fri, 19 Sep 2008 19:30:46 +0200
-Subject: [PATCH] ide-cd: fix debug printk
+On Fri, 2008-09-19 at 11:50 +0200, Elias Oltmanns wrote:
+> [ For some reason your email has not shown up on linux-ide. ]
+yes. I noticed too.
+> "Raz Ben-Yehuda" <razb@bitband.com> wrote:
+> > Elias
+> > looks very interesting.
+> > 1. How will it impact VM , swappers , raids ?  
+> 
+> What exactly do you want to know? As long as the disk is parked, you can
+> do no I/O on it, i.e. no swapping is possible. Since I don't know
+> anything about the implementation of raids and don't have a raid setup
+> here, I can't really tell how a raid device will behave exactly when one
+> of its disks has been parked. Generally, all I/O will be delayed until
+> the disk is unparked again.
+> > 2. you said it has no value for servers ? did you try ?
+> 
+> Again, I'm not quite sure what you want to know. Obviously, desktops or
+> servers for that matter can have disks installed that support the unload
+> feature. On these devices you can use the interface as described in my
+> document. All I'm saying is that the interface has been designed with
+> laptops in mind because I don't see in which situation immediate head
+> unloading would be required or even desirable in a classical server
+> environment.
+I will rephrase. does head parking increase reliability ( MTBF ... MTTF ) of a disk ? 
+My servers hardly generate IOs at night times, does head parking at nights extend 
+the life of a disk ? or is it the opposite ? does it matter ?
+thank you again
+raz
 
-failed_command can be NULL so check it before accessing it.
-
-Signed-off-by: Borislav Petkov <petkovbb@gmail.com>
----
- drivers/ide/ide-cd.c |    7 +++++--
- 1 files changed, 5 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/ide/ide-cd.c b/drivers/ide/ide-cd.c
-index 3fdf660..5ed925d 100644
---- a/drivers/ide/ide-cd.c
-+++ b/drivers/ide/ide-cd.c
-@@ -221,6 +221,8 @@ static void cdrom_queue_request_sense(ide_drive_t *drive, void *sense,
- 	struct cdrom_info *info		= drive->driver_data;
- 	struct request *rq		= &info->request_sense_request;
- 
-+	ide_debug_log(IDE_DBG_SENSE, "Call %s\n", __func__);
-+
- 	if (sense == NULL)
- 		sense = &info->sense_data;
- 
-@@ -240,8 +242,9 @@ static void cdrom_queue_request_sense(ide_drive_t *drive, void *sense,
- 	/* NOTE! Save the failed command in "rq->buffer" */
- 	rq->buffer = (void *) failed_command;
- 
--	ide_debug_log(IDE_DBG_SENSE, "Call %s, failed_cmd: 0x%x\n", __func__,
--		      failed_command->cmd[0]);
-+	if (failed_command)
-+		ide_debug_log(IDE_DBG_SENSE, "failed_cmd: 0x%x\n",
-+			      failed_command->cmd[0]);
- 
- 	ide_do_drive_cmd(drive, rq);
- }
--- 
-1.5.5.1
-
--- 
-Regards/Gruss,
-    Boris.
+> Regards,
+> 
+> Elias
