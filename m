@@ -1,55 +1,30 @@
-From: raz ben yehuda <razb@bitband.com>
-Subject: Re: [PATCH 4/4 v2] Add documentation for hard disk shockprotection
-	interface
-Date: Fri, 19 Sep 2008 22:03:06 +0200
-Message-ID: <1221854586.7473.16.camel@raz>
-References: <87d4j2n3dn.fsf@denkblock.local>
-	 <20080917163145.9870.8575.stgit@denkblock.local>
-	 <1221724782.3261.13.camel@raz>  <87iqssmpl0.fsf@denkblock.local>
+From: Elias Oltmanns <eo@nebensachen.de>
+Subject: Disk shock protection in libata
+Date: Fri, 19 Sep 2008 23:41:08 +0200
+Message-ID: <87tzcb7r0r.fsf@denkblock.local>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from fw.bitband.com ([213.8.50.174]:29807 "EHLO mail.bitband.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1754009AbYISUDK (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 19 Sep 2008 16:03:10 -0400
-In-Reply-To: <87iqssmpl0.fsf@denkblock.local>
+Received: from nebensachen.de ([195.34.83.29]:54726 "EHLO mail.nebensachen.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751016AbYISVlt (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 19 Sep 2008 17:41:49 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Elias Oltmanns <eo@nebensachen.de>
+To: Tejun Heo <tj@kernel.org>, Jeff Garzik <jeff@garzik.org>
 Cc: linux-ide@vger.kernel.org
 
+Hi all,
 
-On Fri, 2008-09-19 at 11:50 +0200, Elias Oltmanns wrote:
-> [ For some reason your email has not shown up on linux-ide. ]
-yes. I noticed too.
-> "Raz Ben-Yehuda" <razb@bitband.com> wrote:
-> > Elias
-> > looks very interesting.
-> > 1. How will it impact VM , swappers , raids ?  
-> 
-> What exactly do you want to know? As long as the disk is parked, you can
-> do no I/O on it, i.e. no swapping is possible. Since I don't know
-> anything about the implementation of raids and don't have a raid setup
-> here, I can't really tell how a raid device will behave exactly when one
-> of its disks has been parked. Generally, all I/O will be delayed until
-> the disk is unparked again.
-> > 2. you said it has no value for servers ? did you try ?
-> 
-> Again, I'm not quite sure what you want to know. Obviously, desktops or
-> servers for that matter can have disks installed that support the unload
-> feature. On these devices you can use the interface as described in my
-> document. All I'm saying is that the interface has been designed with
-> laptops in mind because I don't see in which situation immediate head
-> unloading would be required or even desirable in a classical server
-> environment.
-I will rephrase. does head parking increase reliability ( MTBF ... MTTF ) of a disk ? 
-My servers hardly generate IOs at night times, does head parking at nights extend 
-the life of a disk ? or is it the opposite ? does it matter ?
-thank you again
-raz
+since Bart has already added patches #1, #3 and #4 of my previous series
+to his pata tree, I'm now going to resend only patches #1 and #2. There
+are no changes to the first one, it is just that the second depends on
+it. The crucial difference between the provious and the new version of
+the second patch is that we now use completion rather than simple wait
+queues and wake up calls, so as not to interfere with msleep() during
+command execution in ata_eh_park_issue_cmd(). The patches have been
+rebased to next-20080919.
 
-> Regards,
-> 
-> Elias
+Regards,
+
+Elias
