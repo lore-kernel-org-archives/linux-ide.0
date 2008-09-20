@@ -1,77 +1,36 @@
-From: "George Spelvin" <linux@horizon.com>
-Subject: What's the SB600 64-bit DMA problem?
-Date: Sat, 20 Sep 2008 11:17:12 -0400
-Message-ID: <20080920151712.10515.qmail@science.horizon.com>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: Re: [PATCH 2/2] TXx9: Add TX4939 ATA support (v2)
+Date: Sat, 20 Sep 2008 19:48:24 +0400
+Message-ID: <48D51B48.2090400@ru.mvista.com>
+References: <20080918.001358.08318211.anemo@mba.ocn.ne.jp>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from science.horizon.com ([192.35.100.1]:13755 "HELO
-	science.horizon.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1751061AbYITPXy (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 20 Sep 2008 11:23:54 -0400
+Received: from h155.mvista.com ([63.81.120.155]:45551 "EHLO imap.sh.mvista.com"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1750713AbYITPsb (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 20 Sep 2008 11:48:31 -0400
+In-Reply-To: <20080918.001358.08318211.anemo@mba.ocn.ne.jp>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
-Cc: linux@horizon.com
+To: Atsushi Nemoto <anemo@mba.ocn.ne.jp>
+Cc: linux-mips@linux-mips.org, linux-ide@vger.kernel.org, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, ralf@linux-mips.org
 
-I just got a couple of MSI KA92 (AMD 790FX-based) motherboards with
-8 GiB of RAM each.  I noticed on boot that the SB600 AHCI implementation
-had a 32-bit DMA limitation, and looking in the archives, it
-appears that folks from AMD think it doesn't need to be there.
+Hello.
 
-So, by way of cautious expoeriment, I removed that quirk from the
-appropriate part of drivers/ata/ahci.c and did the following test:
-- Place the system drives on a plug-in SiI3232 controller
-- Install one scratch drive on the SB600
-- Run "badblocks -s -b512 -w -t random -t 0 /dev/sda 9999999 0", and
-  repeat for consecutive 1e7-sector ranges.
+Atsushi Nemoto wrote:
 
-This produced no errors in an hour or so.
+> Add a helper routine to register tx4939ide driver and use it on
+> RBTX4939 board.
+>   
 
-Next step:
-- Install the system drives on the SB600 ports.
-- boot "init=/bin/sh" so the root file system is read-only
-- "echo check > /sys/block/mdX/md/sync_action"
+  BTW, how about supporting IDE aboard RBTX4938, not worth the trouble?
 
-This also reported no errors.  The next step is to run e2fsck on those
-file systems.
+> Signed-off-by: Atsushi Nemoto <anemo@mba.ocn.ne.jp>
 
-Can anyone suggest any other tests to confirm the presence or absence
-of the 64-bit DMA bug?  My impression from the previous discussion was
-that it was pretty obvious.
+Acked-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
 
-Here's the lspci -nn output:
+MBR, Sergei
 
-00:00.0 Host bridge [0600]: ATI Technologies Inc RD790 Northbridge only dual slot PCI-e_GFX and HT3 K8 part [1002:5956]
-00:03.0 PCI bridge [0604]: ATI Technologies Inc RD790 PCI to PCI bridge (external gfx0 port B) [1002:5979]
-00:04.0 PCI bridge [0604]: ATI Technologies Inc RD790 PCI to PCI bridge (PCI express gpp port A) [1002:597a]
-00:05.0 PCI bridge [0604]: ATI Technologies Inc RD790 PCI to PCI bridge (PCI express gpp port B) [1002:597b]
-00:09.0 PCI bridge [0604]: ATI Technologies Inc RD790 PCI to PCI bridge (PCI express gpp port E) [1002:597e]
-00:0b.0 PCI bridge [0604]: ATI Technologies Inc RD790 PCI to PCI bridge (external gfx1 port A) [1002:5980]
-00:0c.0 PCI bridge [0604]: ATI Technologies Inc RD790 PCI to PCI bridge (external gfx1 port B) [1002:5981]
-00:12.0 SATA controller [0106]: ATI Technologies Inc SB600 Non-Raid-5 SATA [1002:4380]
-00:13.0 USB Controller [0c03]: ATI Technologies Inc SB600 USB (OHCI0) [1002:4387]
-00:13.1 USB Controller [0c03]: ATI Technologies Inc SB600 USB (OHCI1) [1002:4388]
-00:13.2 USB Controller [0c03]: ATI Technologies Inc SB600 USB (OHCI2) [1002:4389]
-00:13.3 USB Controller [0c03]: ATI Technologies Inc SB600 USB (OHCI3) [1002:438a]
-00:13.4 USB Controller [0c03]: ATI Technologies Inc SB600 USB (OHCI4) [1002:438b]
-00:13.5 USB Controller [0c03]: ATI Technologies Inc SB600 USB Controller (EHCI) [1002:4386]
-00:14.0 SMBus [0c05]: ATI Technologies Inc SBx00 SMBus Controller [1002:4385] (rev 14)
-00:14.1 IDE interface [0101]: ATI Technologies Inc SB600 IDE [1002:438c]
-00:14.2 Audio device [0403]: ATI Technologies Inc SBx00 Azalia [1002:4383]
-00:14.3 ISA bridge [0601]: ATI Technologies Inc SB600 PCI to LPC Bridge [1002:438d]
-00:14.4 PCI bridge [0604]: ATI Technologies Inc SBx00 PCI to PCI Bridge [1002:4384]
-00:18.0 Host bridge [0600]: Advanced Micro Devices [AMD] Family 10h [Opteron, Athlon64, Sempron] HyperTransport Configuration [1022:1200]
-00:18.1 Host bridge [0600]: Advanced Micro Devices [AMD] Family 10h [Opteron, Athlon64, Sempron] Address Map [1022:1201]
-00:18.2 Host bridge [0600]: Advanced Micro Devices [AMD] Family 10h [Opteron, Athlon64, Sempron] DRAM Controller [1022:1202]
-00:18.3 Host bridge [0600]: Advanced Micro Devices [AMD] Family 10h [Opteron, Athlon64, Sempron] Miscellaneous Control [1022:1203]
-00:18.4 Host bridge [0600]: Advanced Micro Devices [AMD] Family 10h [Opteron, Athlon64, Sempron] Link Control [1022:1204]
-01:00.0 Mass storage controller [0180]: Silicon Image, Inc. SiI 3132 Serial ATA Raid II Controller [1095:3132] (rev 01)
-02:00.0 Mass storage controller [0180]: Silicon Image, Inc. SiI 3132 Serial ATA Raid II Controller [1095:3132] (rev 01)
-03:00.0 Ethernet controller [0200]: Realtek Semiconductor Co., Ltd. RTL8111/8168B PCI Express Gigabit Ethernet controller [10ec:8168] (rev 01)
-04:00.0 RAID bus controller [0104]: Promise Technology, Inc. Device [105a:3f20]
-05:00.0 VGA compatible controller [0300]: ATI Technologies Inc RV370 5B60 [Radeon X300 (PCIE)] [1002:5b60]
-05:00.1 Display controller [0380]: ATI Technologies Inc RV370 [Radeon X300SE] [1002:5b70]
-06:00.0 Mass storage controller [0180]: Silicon Image, Inc. SiI 3132 Serial ATA Raid II Controller [1095:3132] (rev 01)
-07:00.0 FireWire (IEEE 1394) [0c00]: VIA Technologies, Inc. IEEE 1394 Host Controller [1106:3044] (rev c0)
+
