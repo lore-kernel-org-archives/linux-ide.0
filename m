@@ -1,90 +1,77 @@
-From: Elias Oltmanns <eo@nebensachen.de>
-Subject: Re: [PATCH 2/2 v3] libata: Implement disk shock protection support
-Date: Sat, 20 Sep 2008 13:12:46 +0200
-Message-ID: <87wsh75avl.fsf@denkblock.local>
-References: <87tzcb7r0r.fsf@denkblock.local>
-	<20080919214400.7183.64611.stgit@denkblock.local>
-	<48D4805A.3090707@kernel.org> <87abe37462.fsf@denkblock.local>
+From: "George Spelvin" <linux@horizon.com>
+Subject: What's the SB600 64-bit DMA problem?
+Date: Sat, 20 Sep 2008 11:17:12 -0400
+Message-ID: <20080920151712.10515.qmail@science.horizon.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nebensachen.de ([195.34.83.29]:34423 "EHLO mail.nebensachen.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751492AbYITLNA (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 20 Sep 2008 07:13:00 -0400
-In-Reply-To: <87abe37462.fsf@denkblock.local> (Elias Oltmanns's message of
-	"Sat, 20 Sep 2008 07:54:45 +0200")
+Received: from science.horizon.com ([192.35.100.1]:13755 "HELO
+	science.horizon.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1751061AbYITPXy (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 20 Sep 2008 11:23:54 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: linux-ide@vger.kernel.org
+Cc: linux@horizon.com
 
-[ Readding LKML which I dropped when starting this thread for some
-inexplicable reason. ]
+I just got a couple of MSI KA92 (AMD 790FX-based) motherboards with
+8 GiB of RAM each.  I noticed on boot that the SB600 AHCI implementation
+had a 32-bit DMA limitation, and looking in the archives, it
+appears that folks from AMD think it doesn't need to be there.
 
-Elias Oltmanns <eo@nebensachen.de> wrote:
-> Tejun Heo <tj@kernel.org> wrote:
->>> +static ssize_t ata_scsi_park_store(struct device *device,
->>> +				   struct device_attribute *attr,
->>> +				   const char *buf, size_t len)
->>> +{
->> ...
->>> +		complete_all(&ap->park_req_pending);
->>
->> Sorry to catching this this late but calling complete_all() twice will
->> overflow the done counter.  I think complete() should just work here,
->> no?
->
-> Sorry for missing that in the first place, rather embarrassing that. I
-> had just assumed that the done counter was set to an absolute value
-> rather than added to. I really think that this is what we actually want,
-> so, perhaps, a seperate patch for Ingo or someone is in order?
+So, by way of cautious expoeriment, I removed that quirk from the
+appropriate part of drivers/ata/ahci.c and did the following test:
+- Place the system drives on a plug-in SiI3232 controller
+- Install one scratch drive on the SB600
+- Run "badblocks -s -b512 -w -t random -t 0 /dev/sda 9999999 0", and
+  repeat for consecutive 1e7-sector ranges.
 
-By the way, this doesn't really matter in our particular case. The
-reason is that we only care about whether park_req_pending.done is equal
-or unequal to zero. Since UINT_MAX is of the form 2n+1 (where n is some
-interger value), calling complete_all() m times may overflow but will
-still result in a non-zero value provided that m is smaller than n.
-Assuming that m != 0 is even, we have:
+This produced no errors in an hour or so.
 
-m * n < m / 2 * (2 * n + 2).
+Next step:
+- Install the system drives on the SB600 ports.
+- boot "init=/bin/sh" so the root file system is read-only
+- "echo check > /sys/block/mdX/md/sync_action"
 
-Additionally, we have:
+This also reported no errors.  The next step is to run e2fsck on those
+file systems.
 
-(m / 2 - 1) * (2 * n + 2) == (m - 2) * (n + 1) == m * n + m - (2 * n + 2).
+Can anyone suggest any other tests to confirm the presence or absence
+of the 64-bit DMA bug?  My impression from the previous discussion was
+that it was pretty obvious.
 
-This means that for 0 < m < UINT_MAX (and m even) we get:
+Here's the lspci -nn output:
 
-m * n > (m / 2 - 1) * (2 * n + 2)
-
-and consequently
-
-m * n % (UINT_MAX + 1) == m * n - (m / 2) * (2 * n + 2) == 2 * n + 2 - m
-== UINT_MAX + 1 - m.
-
-Now consider the case that m is odd:
-
-m * n < (m + 1) / 2 * (2 * n + 2).
-
-But
-
-(m - 1) / 2 * (2 * n + 2) == (m - 1) * (n + 1) == m * n + m - n - 1.
-
-For m <= n (and m odd) we get:
-
-m * n >= (m - 1) / 2 * (2 * n + 2)
-
-and consequently
-
-m * n % (UINT_MAX + 1) == m * n - (m - 1) / 2 * (2 * n + 2) == n + 1 - m.
-
-This proves that the done counter will be non-zero if we call
-complete_all() at least once and up to (UINT_MAX - 1) / 2 times. So,
-I'll add some more comments about clearing ATA_EH_PARK and why it's
-needed and then resend the patch. Mind you, I still think that
-complete_all() should be changed. I'll take a look at other use cases in
-the kernel and see whether overflowing is an issue there.
-
-Regards,
-
-Elias
+00:00.0 Host bridge [0600]: ATI Technologies Inc RD790 Northbridge only dual slot PCI-e_GFX and HT3 K8 part [1002:5956]
+00:03.0 PCI bridge [0604]: ATI Technologies Inc RD790 PCI to PCI bridge (external gfx0 port B) [1002:5979]
+00:04.0 PCI bridge [0604]: ATI Technologies Inc RD790 PCI to PCI bridge (PCI express gpp port A) [1002:597a]
+00:05.0 PCI bridge [0604]: ATI Technologies Inc RD790 PCI to PCI bridge (PCI express gpp port B) [1002:597b]
+00:09.0 PCI bridge [0604]: ATI Technologies Inc RD790 PCI to PCI bridge (PCI express gpp port E) [1002:597e]
+00:0b.0 PCI bridge [0604]: ATI Technologies Inc RD790 PCI to PCI bridge (external gfx1 port A) [1002:5980]
+00:0c.0 PCI bridge [0604]: ATI Technologies Inc RD790 PCI to PCI bridge (external gfx1 port B) [1002:5981]
+00:12.0 SATA controller [0106]: ATI Technologies Inc SB600 Non-Raid-5 SATA [1002:4380]
+00:13.0 USB Controller [0c03]: ATI Technologies Inc SB600 USB (OHCI0) [1002:4387]
+00:13.1 USB Controller [0c03]: ATI Technologies Inc SB600 USB (OHCI1) [1002:4388]
+00:13.2 USB Controller [0c03]: ATI Technologies Inc SB600 USB (OHCI2) [1002:4389]
+00:13.3 USB Controller [0c03]: ATI Technologies Inc SB600 USB (OHCI3) [1002:438a]
+00:13.4 USB Controller [0c03]: ATI Technologies Inc SB600 USB (OHCI4) [1002:438b]
+00:13.5 USB Controller [0c03]: ATI Technologies Inc SB600 USB Controller (EHCI) [1002:4386]
+00:14.0 SMBus [0c05]: ATI Technologies Inc SBx00 SMBus Controller [1002:4385] (rev 14)
+00:14.1 IDE interface [0101]: ATI Technologies Inc SB600 IDE [1002:438c]
+00:14.2 Audio device [0403]: ATI Technologies Inc SBx00 Azalia [1002:4383]
+00:14.3 ISA bridge [0601]: ATI Technologies Inc SB600 PCI to LPC Bridge [1002:438d]
+00:14.4 PCI bridge [0604]: ATI Technologies Inc SBx00 PCI to PCI Bridge [1002:4384]
+00:18.0 Host bridge [0600]: Advanced Micro Devices [AMD] Family 10h [Opteron, Athlon64, Sempron] HyperTransport Configuration [1022:1200]
+00:18.1 Host bridge [0600]: Advanced Micro Devices [AMD] Family 10h [Opteron, Athlon64, Sempron] Address Map [1022:1201]
+00:18.2 Host bridge [0600]: Advanced Micro Devices [AMD] Family 10h [Opteron, Athlon64, Sempron] DRAM Controller [1022:1202]
+00:18.3 Host bridge [0600]: Advanced Micro Devices [AMD] Family 10h [Opteron, Athlon64, Sempron] Miscellaneous Control [1022:1203]
+00:18.4 Host bridge [0600]: Advanced Micro Devices [AMD] Family 10h [Opteron, Athlon64, Sempron] Link Control [1022:1204]
+01:00.0 Mass storage controller [0180]: Silicon Image, Inc. SiI 3132 Serial ATA Raid II Controller [1095:3132] (rev 01)
+02:00.0 Mass storage controller [0180]: Silicon Image, Inc. SiI 3132 Serial ATA Raid II Controller [1095:3132] (rev 01)
+03:00.0 Ethernet controller [0200]: Realtek Semiconductor Co., Ltd. RTL8111/8168B PCI Express Gigabit Ethernet controller [10ec:8168] (rev 01)
+04:00.0 RAID bus controller [0104]: Promise Technology, Inc. Device [105a:3f20]
+05:00.0 VGA compatible controller [0300]: ATI Technologies Inc RV370 5B60 [Radeon X300 (PCIE)] [1002:5b60]
+05:00.1 Display controller [0380]: ATI Technologies Inc RV370 [Radeon X300SE] [1002:5b70]
+06:00.0 Mass storage controller [0180]: Silicon Image, Inc. SiI 3132 Serial ATA Raid II Controller [1095:3132] (rev 01)
+07:00.0 FireWire (IEEE 1394) [0c00]: VIA Technologies, Inc. IEEE 1394 Host Controller [1106:3044] (rev c0)
