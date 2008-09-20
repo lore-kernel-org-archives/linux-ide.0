@@ -1,57 +1,94 @@
 From: Elias Oltmanns <eo@nebensachen.de>
-Subject: Re: [PATCH 4/4 v2] Add documentation for hard disk shockprotection interface
-Date: Sat, 20 Sep 2008 00:05:08 +0200
-Message-ID: <87ej3f7pwr.fsf@denkblock.local>
-References: <87d4j2n3dn.fsf@denkblock.local>
-	<20080917163145.9870.8575.stgit@denkblock.local>
-	<1221724782.3261.13.camel@raz> <87iqssmpl0.fsf@denkblock.local>
-	<1221854586.7473.16.camel@raz>
+Subject: Re: [PATCH 2/2 v3] libata: Implement disk shock protection support
+Date: Sat, 20 Sep 2008 07:54:45 +0200
+Message-ID: <87abe37462.fsf@denkblock.local>
+References: <87tzcb7r0r.fsf@denkblock.local>
+	<20080919214400.7183.64611.stgit@denkblock.local>
+	<48D4805A.3090707@kernel.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nebensachen.de ([195.34.83.29]:41752 "EHLO mail.nebensachen.de"
+Received: from nebensachen.de ([195.34.83.29]:41768 "EHLO mail.nebensachen.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750957AbYITFyy (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 20 Sep 2008 01:54:54 -0400
-In-Reply-To: <1221854586.7473.16.camel@raz> (raz ben yehuda's message of "Fri,
-	19 Sep 2008 22:03:06 +0200")
+	id S1750982AbYITFy4 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 20 Sep 2008 01:54:56 -0400
+In-Reply-To: <48D4805A.3090707@kernel.org> (Tejun Heo's message of "Fri, 19
+	Sep 2008 21:47:22 -0700")
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: raz ben yehuda <razb@bitband.com>
-Cc: linux-ide@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org
 
-raz ben yehuda <razb@bitband.com> wrote:
-> On Fri, 2008-09-19 at 11:50 +0200, Elias Oltmanns wrote:
->> "Raz Ben-Yehuda" <razb@bitband.com> wrote:
->> > Elias
->> > looks very interesting.
->> > 1. How will it impact VM , swappers , raids ?  
->> 
->> What exactly do you want to know? As long as the disk is parked, you can
->> do no I/O on it, i.e. no swapping is possible. Since I don't know
->> anything about the implementation of raids and don't have a raid setup
->> here, I can't really tell how a raid device will behave exactly when one
->> of its disks has been parked. Generally, all I/O will be delayed until
->> the disk is unparked again.
->> > 2. you said it has no value for servers ? did you try ?
->> 
->> Again, I'm not quite sure what you want to know. Obviously, desktops or
->> servers for that matter can have disks installed that support the unload
->> feature. On these devices you can use the interface as described in my
->> document. All I'm saying is that the interface has been designed with
->> laptops in mind because I don't see in which situation immediate head
->> unloading would be required or even desirable in a classical server
->> environment.
-> I will rephrase. does head parking increase reliability ( MTBF ... MTTF ) of a disk ? 
-> My servers hardly generate IOs at night times, does head parking at nights extend 
-> the life of a disk ? or is it the opposite ? does it matter ?
+Tejun Heo <tj@kernel.org> wrote:
+> Hello, Elias.
+>
+> Ah... we're so close but no ack yet.  Just a few nits.
 
-Disk head parking is meant as a short term emergency resort. In general,
-it does *not* extend the lifetime of a disk. In fact, emergency head
-unloads are considered to be costly and smart even counts those events
-as an aging factor. It really is just a means to prevent even worse
-damage due to heavy shocks, nothing for regular maintenance.
+A pity ;-) but you are quite right.
 
-Hope that helps,
+>
+> It would be nice if there's explanation why action pulling is
+> necessary in the first place.
+
+Right.
+
+>
+>> +static inline void ata_eh_pull_park_action(struct ata_port *ap)
+>> +{
+>> +	struct ata_link *link;
+>> +	struct ata_device *dev;
+>> +	unsigned long flags;
+>> +
+>> +	/*
+>> +	 * All write accesses to &ap->park_req_pending through
+>> +	 * INIT_COMPLETION() (see below) or complete_all() (see
+>> +	 * ata_scsi_park_store()) are protected by the host lock. As a
+>> +	 * result we have that park_req_pending.done is zero on exit
+>> +	 * from this function, i.e. when ATA_EH_PARK actions for *all*
+>> +	 * devices on port ap have been pulled into the respective
+>> +	 * eh_context structs. If, and only if, park_req_pending.done
+>> +	 * is non-zero by the time we reach
+>> +	 * wait_for_completion_timeout(), another ATA_EH_PARK action
+>> +	 * has been scheduled for at least one of the devices on port
+>> +	 * ap and we have to cycle over the do { } while () loop in
+>> +	 * ata_eh_recover() again.
+>> +	 */
+> ...
+>> +	do {
+>> +		unsigned long now;
+>> +
+>> +		ata_eh_pull_park_action(ap);
+>
+> How about adding the folloiwng to the above line?
+> 						/* clears park_req_pending */
+
+Yes. I take it that this is in addition to some explanation within
+ata_eh_pull_park_action() you have asked for above?
+
+>
+>> +static ssize_t ata_scsi_park_store(struct device *device,
+>> +				   struct device_attribute *attr,
+>> +				   const char *buf, size_t len)
+>> +{
+> ...
+>> +		complete_all(&ap->park_req_pending);
+>
+> Sorry to catching this this late but calling complete_all() twice will
+> overflow the done counter.  I think complete() should just work here,
+> no?
+
+Sorry for missing that in the first place, rather embarrassing that. I
+had just assumed that the done counter was set to an absolute value
+rather than added to. I really think that this is what we actually want,
+so, perhaps, a seperate patch for Ingo or someone is in order?
+
+The reason why I'd like to call complete_all() rather than complete() is
+this: if two drives on seperate ports have been parked and userspace
+updates the timeout for one of them, then complete() will only wake up
+the thread that comes first in the wait queue park_req_pending.wait --
+please note that complete() and complete_all() pass different arguments
+to __wake_up_common(). 
+
+Regards,
 
 Elias
