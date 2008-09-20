@@ -1,434 +1,509 @@
-From: Elias Oltmanns <eo@nebensachen.de>
-Subject: [PATCH 2/2 v4] libata: Implement disk shock protection support
-Date: Sat, 20 Sep 2008 23:44:35 +0200
-Message-ID: <20080920213418.16970.37782.stgit@denkblock.local>
-References: <87tzcb7r0r.fsf@denkblock.local>
-	<20080919214400.7183.64611.stgit@denkblock.local>
-	<48D4805A.3090707@kernel.org> <87abe37462.fsf@denkblock.local>
-	<87wsh75avl.fsf@denkblock.local>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: Re: [PATCH 1/2] ide: Add tx4939ide driver (v2)
+Date: Sun, 21 Sep 2008 01:59:33 +0400
+Message-ID: <48D57245.8060606@ru.mvista.com>
+References: <20080918.001342.52129176.anemo@mba.ocn.ne.jp>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nebensachen.de ([195.34.83.29]:37800 "EHLO mail.nebensachen.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751490AbYITVoy (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 20 Sep 2008 17:44:54 -0400
-In-Reply-To: <87wsh75avl.fsf@denkblock.local>
+Received: from h155.mvista.com ([63.81.120.155]:47816 "EHLO imap.sh.mvista.com"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751470AbYITV7l (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 20 Sep 2008 17:59:41 -0400
+In-Reply-To: <20080918.001342.52129176.anemo@mba.ocn.ne.jp>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>, Jeff Garzik <jeff@garzik.org>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Atsushi Nemoto <anemo@mba.ocn.ne.jp>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: linux-mips@linux-mips.org, linux-ide@vger.kernel.org, ralf@linux-mips.org
 
-On user request (through sysfs), the IDLE IMMEDIATE command with UNLOAD
-FEATURE as specified in ATA-7 is issued to the device and processing of
-the request queue is stopped thereafter until the specified timeout
-expires or user space asks to resume normal operation. This is supposed
-to prevent the heads of a hard drive from accidentally crashing onto the
-platter when a heavy shock is anticipated (like a falling laptop
-expected to hit the floor). In fact, the whole port stops processing
-commands until the timeout has expired in order to avoid any resets due
-to failed commands on another device.
+Hello.
 
-Signed-off-by: Elias Oltmanns <eo@nebensachen.de>
----
-Added comments only.
+Atsushi Nemoto wrote:
 
- drivers/ata/ahci.c        |    1 
- drivers/ata/libata-core.c |    1 
- drivers/ata/libata-eh.c   |  126 +++++++++++++++++++++++++++++++++++++++++++++
- drivers/ata/libata-scsi.c |  108 +++++++++++++++++++++++++++++++++++++++
- include/linux/libata.h    |   13 ++++-
- 5 files changed, 246 insertions(+), 3 deletions(-)
+> This is the driver for the Toshiba TX4939 SoC ATA controller.
+>   
 
-diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
-index 2e1a7cb..fd813fa 100644
---- a/drivers/ata/ahci.c
-+++ b/drivers/ata/ahci.c
-@@ -316,6 +316,7 @@ static struct device_attribute *ahci_shost_attrs[] = {
- 
- static struct device_attribute *ahci_sdev_attrs[] = {
- 	&dev_attr_sw_activity,
-+	&dev_attr_unload_heads,
- 	NULL
- };
- 
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index 79e3a8e..b8102d7 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -5264,6 +5264,7 @@ struct ata_port *ata_port_alloc(struct ata_host *host)
- 	INIT_WORK(&ap->scsi_rescan_task, ata_scsi_dev_rescan);
- 	INIT_LIST_HEAD(&ap->eh_done_q);
- 	init_waitqueue_head(&ap->eh_wait_q);
-+	init_completion(&ap->park_req_pending);
- 	init_timer_deferrable(&ap->fastdrain_timer);
- 	ap->fastdrain_timer.function = ata_eh_fastdrain_timerfn;
- 	ap->fastdrain_timer.data = (unsigned long)ap;
-diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
-index bd0b2bc..9a3c744 100644
---- a/drivers/ata/libata-eh.c
-+++ b/drivers/ata/libata-eh.c
-@@ -2447,6 +2447,80 @@ int ata_eh_reset(struct ata_link *link, int classify,
- 	goto retry;
- }
- 
-+static inline void ata_eh_pull_park_action(struct ata_port *ap)
-+{
-+	struct ata_link *link;
-+	struct ata_device *dev;
-+	unsigned long flags;
-+
-+	/*
-+	 * This function can be thought of as an extended version of
-+	 * ata_eh_about_to_do() specially crafted to accommodate the
-+	 * requirements of ATA_EH_PARK handling. Since the EH thread
-+	 * does not leave the do {} while () loop in ata_eh_recover as
-+	 * long as the timeout for a park request to *one* device on
-+	 * the port has not expired, and since we still want to pick
-+	 * up park requests to other devices on the same port or
-+	 * timeout updates for the same device, we have to pull
-+	 * ATA_EH_PARK actions from eh_info into eh_context.i
-+	 * ourselves at the beginning of each pass over the loop.
-+	 *
-+	 * Additionally, all write accesses to &ap->park_req_pending
-+	 * through INIT_COMPLETION() (see below) or complete_all()
-+	 * (see ata_scsi_park_store()) are protected by the host lock.
-+	 * As a result we have that park_req_pending.done is zero on
-+	 * exit from this function, i.e. when ATA_EH_PARK actions for
-+	 * *all* devices on port ap have been pulled into the
-+	 * respective eh_context structs. If, and only if,
-+	 * park_req_pending.done is non-zero by the time we reach
-+	 * wait_for_completion_timeout(), another ATA_EH_PARK action
-+	 * has been scheduled for at least one of the devices on port
-+	 * ap and we have to cycle over the do {} while () loop in
-+	 * ata_eh_recover() again.
-+	 */
-+
-+	spin_lock_irqsave(ap->lock, flags);
-+	INIT_COMPLETION(ap->park_req_pending);
-+	ata_port_for_each_link(link, ap) {
-+		ata_link_for_each_dev(dev, link) {
-+			struct ata_eh_info *ehi = &link->eh_info;
-+
-+			link->eh_context.i.dev_action[dev->devno] |=
-+				ehi->dev_action[dev->devno] & ATA_EH_PARK;
-+			ata_eh_clear_action(link, dev, ehi, ATA_EH_PARK);
-+		}
-+	}
-+	spin_unlock_irqrestore(ap->lock, flags);
-+}
-+
-+static void ata_eh_park_issue_cmd(struct ata_device *dev, int park)
-+{
-+	struct ata_eh_context *ehc = &dev->link->eh_context;
-+	struct ata_taskfile tf;
-+	unsigned int err_mask;
-+
-+	ata_tf_init(dev, &tf);
-+	if (park) {
-+		ehc->unloaded_mask |= 1 << dev->devno;
-+		tf.command = ATA_CMD_IDLEIMMEDIATE;
-+		tf.feature = 0x44;
-+		tf.lbal = 0x4c;
-+		tf.lbam = 0x4e;
-+		tf.lbah = 0x55;
-+	} else {
-+		ehc->unloaded_mask &= ~(1 << dev->devno);
-+		tf.command = ATA_CMD_CHK_POWER;
-+	}
-+
-+	tf.flags |= ATA_TFLAG_DEVICE | ATA_TFLAG_ISADDR;
-+	tf.protocol |= ATA_PROT_NODATA;
-+	err_mask = ata_exec_internal(dev, &tf, NULL, DMA_NONE, NULL, 0, 0);
-+	if (park && (err_mask || tf.lbal != 0xc4)) {
-+		ata_dev_printk(dev, KERN_ERR, "head unload failed!\n");
-+		ehc->unloaded_mask &= ~(1 << dev->devno);
-+	}
-+}
-+
- static int ata_eh_revalidate_and_attach(struct ata_link *link,
- 					struct ata_device **r_failed_dev)
- {
-@@ -2756,7 +2830,7 @@ int ata_eh_recover(struct ata_port *ap, ata_prereset_fn_t prereset,
- 	struct ata_device *dev;
- 	int nr_failed_devs;
- 	int rc;
--	unsigned long flags;
-+	unsigned long flags, deadline;
- 
- 	DPRINTK("ENTER\n");
- 
-@@ -2830,6 +2904,56 @@ int ata_eh_recover(struct ata_port *ap, ata_prereset_fn_t prereset,
- 		}
- 	}
- 
-+	do {
-+		unsigned long now;
-+
-+		/*
-+		 * clears ATA_EH_PARK in eh_info and resets
-+		 * ap->park_req_pending
-+		 */
-+		ata_eh_pull_park_action(ap);
-+
-+		deadline = jiffies;
-+		ata_port_for_each_link(link, ap) {
-+			ata_link_for_each_dev(dev, link) {
-+				struct ata_eh_context *ehc = &link->eh_context;
-+				unsigned long tmp;
-+
-+				if (dev->class != ATA_DEV_ATA)
-+					continue;
-+				if (!(ehc->i.dev_action[dev->devno] &
-+				      ATA_EH_PARK))
-+					continue;
-+				tmp = dev->unpark_deadline;
-+				if (time_before(deadline, tmp))
-+					deadline = tmp;
-+				else if (time_before_eq(tmp, jiffies))
-+					continue;
-+				if (ehc->unloaded_mask & (1 << dev->devno))
-+					continue;
-+
-+				ata_eh_park_issue_cmd(dev, 1);
-+			}
-+		}
-+
-+		now = jiffies;
-+		if (time_before_eq(deadline, now))
-+			break;
-+
-+		deadline = wait_for_completion_timeout(&ap->park_req_pending,
-+						       deadline - now);
-+	} while (deadline);
-+	ata_port_for_each_link(link, ap) {
-+		ata_link_for_each_dev(dev, link) {
-+			if (!(link->eh_context.unloaded_mask &
-+			      (1 << dev->devno)))
-+				continue;
-+
-+			ata_eh_park_issue_cmd(dev, 0);
-+			ata_eh_done(link, dev, ATA_EH_PARK);
-+		}
-+	}
-+
- 	/* the rest */
- 	ata_port_for_each_link(link, ap) {
- 		struct ata_eh_context *ehc = &link->eh_context;
-diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-index 4d066ad..ceaac17 100644
---- a/drivers/ata/libata-scsi.c
-+++ b/drivers/ata/libata-scsi.c
-@@ -183,6 +183,105 @@ DEVICE_ATTR(link_power_management_policy, S_IRUGO | S_IWUSR,
- 		ata_scsi_lpm_show, ata_scsi_lpm_put);
- EXPORT_SYMBOL_GPL(dev_attr_link_power_management_policy);
- 
-+static ssize_t ata_scsi_park_show(struct device *device,
-+				  struct device_attribute *attr, char *buf)
-+{
-+	struct scsi_device *sdev = to_scsi_device(device);
-+	struct ata_port *ap;
-+	struct ata_link *link;
-+	struct ata_device *dev;
-+	unsigned long flags;
-+	unsigned int uninitialized_var(msecs);
-+	int rc = 0;
-+
-+	ap = ata_shost_to_port(sdev->host);
-+
-+	spin_lock_irqsave(ap->lock, flags);
-+	dev = ata_scsi_find_dev(ap, sdev);
-+	if (!dev) {
-+		rc = -ENODEV;
-+		goto unlock;
-+	}
-+	if (dev->flags & ATA_DFLAG_NO_UNLOAD) {
-+		rc = -EOPNOTSUPP;
-+		goto unlock;
-+	}
-+
-+	link = dev->link;
-+	if (ap->pflags & ATA_PFLAG_EH_IN_PROGRESS &&
-+	    link->eh_context.unloaded_mask & (1 << dev->devno) &&
-+	    time_after(dev->unpark_deadline, jiffies))
-+		msecs = jiffies_to_msecs(dev->unpark_deadline - jiffies);
-+	else
-+		msecs = 0;
-+
-+unlock:
-+	spin_unlock_irq(ap->lock);
-+
-+	return rc ? rc : snprintf(buf, 20, "%u\n", msecs);
-+}
-+
-+static ssize_t ata_scsi_park_store(struct device *device,
-+				   struct device_attribute *attr,
-+				   const char *buf, size_t len)
-+{
-+	struct scsi_device *sdev = to_scsi_device(device);
-+	struct ata_port *ap;
-+	struct ata_device *dev;
-+	long int input;
-+	unsigned long flags;
-+	int rc;
-+
-+	rc = strict_strtol(buf, 10, &input);
-+	if (rc || input < -2)
-+		return -EINVAL;
-+	if (input > ATA_TMOUT_MAX_PARK) {
-+		rc = -EOVERFLOW;
-+		input = ATA_TMOUT_MAX_PARK;
-+	}
-+
-+	ap = ata_shost_to_port(sdev->host);
-+
-+	spin_lock_irqsave(ap->lock, flags);
-+	dev = ata_scsi_find_dev(ap, sdev);
-+	if (unlikely(!dev)) {
-+		rc = -ENODEV;
-+		goto unlock;
-+	}
-+	if (dev->class != ATA_DEV_ATA) {
-+		rc = -EOPNOTSUPP;
-+		goto unlock;
-+	}
-+
-+	if (input >= 0) {
-+		if (dev->flags & ATA_DFLAG_NO_UNLOAD) {
-+			rc = -EOPNOTSUPP;
-+			goto unlock;
-+		}
-+
-+		dev->unpark_deadline = ata_deadline(jiffies, input);
-+		dev->link->eh_info.dev_action[dev->devno] |= ATA_EH_PARK;
-+		ata_port_schedule_eh(ap);
-+		complete_all(&ap->park_req_pending);
-+	} else {
-+		switch (input) {
-+		case -1:
-+			dev->flags &= ~ATA_DFLAG_NO_UNLOAD;
-+			break;
-+		case -2:
-+			dev->flags |= ATA_DFLAG_NO_UNLOAD;
-+			break;
-+		}
-+	}
-+unlock:
-+	spin_unlock_irqrestore(ap->lock, flags);
-+
-+	return rc ? rc : len;
-+}
-+DEVICE_ATTR(unload_heads, S_IRUGO | S_IWUSR,
-+	    ata_scsi_park_show, ata_scsi_park_store);
-+EXPORT_SYMBOL_GPL(dev_attr_unload_heads);
-+
- static void ata_scsi_set_sense(struct scsi_cmnd *cmd, u8 sk, u8 asc, u8 ascq)
- {
- 	cmd->result = (DRIVER_SENSE << 24) | SAM_STAT_CHECK_CONDITION;
-@@ -269,6 +368,12 @@ DEVICE_ATTR(sw_activity, S_IWUGO | S_IRUGO, ata_scsi_activity_show,
- 			ata_scsi_activity_store);
- EXPORT_SYMBOL_GPL(dev_attr_sw_activity);
- 
-+struct device_attribute *ata_common_sdev_attrs[] = {
-+	&dev_attr_unload_heads,
-+	NULL
-+};
-+EXPORT_SYMBOL_GPL(ata_common_sdev_attrs);
-+
- static void ata_scsi_invalid_field(struct scsi_cmnd *cmd,
- 				   void (*done)(struct scsi_cmnd *))
- {
-@@ -954,6 +1059,9 @@ static int atapi_drain_needed(struct request *rq)
- static int ata_scsi_dev_config(struct scsi_device *sdev,
- 			       struct ata_device *dev)
- {
-+	if (!ata_id_has_unload(dev->id))
-+		dev->flags |= ATA_DFLAG_NO_UNLOAD;
-+
- 	/* configure max sectors */
- 	blk_queue_max_sectors(sdev->request_queue, dev->max_sectors);
- 
-diff --git a/include/linux/libata.h b/include/linux/libata.h
-index 225bfc5..adc16cf 100644
---- a/include/linux/libata.h
-+++ b/include/linux/libata.h
-@@ -146,6 +146,7 @@ enum {
- 	ATA_DFLAG_SPUNDOWN	= (1 << 14), /* XXX: for spindown_compat */
- 	ATA_DFLAG_SLEEPING	= (1 << 15), /* device is sleeping */
- 	ATA_DFLAG_DUBIOUS_XFER	= (1 << 16), /* data transfer not verified */
-+	ATA_DFLAG_NO_UNLOAD	= (1 << 17), /* device doesn't support unload */
- 	ATA_DFLAG_INIT_MASK	= (1 << 24) - 1,
- 
- 	ATA_DFLAG_DETACH	= (1 << 24),
-@@ -244,6 +245,7 @@ enum {
- 	ATA_TMOUT_BOOT		= 30000,	/* heuristic */
- 	ATA_TMOUT_BOOT_QUICK	=  7000,	/* heuristic */
- 	ATA_TMOUT_INTERNAL_QUICK = 5000,
-+	ATA_TMOUT_MAX_PARK	= 30000,
- 
- 	/* FIXME: GoVault needs 2s but we can't afford that without
- 	 * parallel probing.  800ms is enough for iVDR disk
-@@ -319,8 +321,9 @@ enum {
- 	ATA_EH_RESET		= ATA_EH_SOFTRESET | ATA_EH_HARDRESET,
- 	ATA_EH_ENABLE_LINK	= (1 << 3),
- 	ATA_EH_LPM		= (1 << 4),  /* link power management action */
-+	ATA_EH_PARK		= (1 << 5), /* unload heads and stop I/O */
- 
--	ATA_EH_PERDEV_MASK	= ATA_EH_REVALIDATE,
-+	ATA_EH_PERDEV_MASK	= ATA_EH_REVALIDATE | ATA_EH_PARK,
- 
- 	/* ata_eh_info->flags */
- 	ATA_EHI_HOTPLUGGED	= (1 << 0),  /* could have been hotplugged */
-@@ -452,6 +455,7 @@ enum link_pm {
- 	MEDIUM_POWER,
- };
- extern struct device_attribute dev_attr_link_power_management_policy;
-+extern struct device_attribute dev_attr_unload_heads;
- extern struct device_attribute dev_attr_em_message_type;
- extern struct device_attribute dev_attr_em_message;
- extern struct device_attribute dev_attr_sw_activity;
-@@ -564,6 +568,7 @@ struct ata_device {
- 	/* n_sector is used as CLEAR_OFFSET, read comment above CLEAR_OFFSET */
- 	u64			n_sectors;	/* size of device, if ATA */
- 	unsigned int		class;		/* ATA_DEV_xxx */
-+	unsigned long		unpark_deadline;
- 
- 	u8			pio_mode;
- 	u8			dma_mode;
-@@ -621,6 +626,7 @@ struct ata_eh_context {
- 					       [ATA_EH_CMD_TIMEOUT_TABLE_SIZE];
- 	unsigned int		classes[ATA_MAX_DEVICES];
- 	unsigned int		did_probe_mask;
-+	unsigned int		unloaded_mask;
- 	unsigned int		saved_ncq_enabled;
- 	u8			saved_xfer_mode[ATA_MAX_DEVICES];
- 	/* timestamp for the last reset attempt or success */
-@@ -709,6 +715,7 @@ struct ata_port {
- 	struct list_head	eh_done_q;
- 	wait_queue_head_t	eh_wait_q;
- 	int			eh_tries;
-+	struct completion	park_req_pending;
- 
- 	pm_message_t		pm_mesg;
- 	int			*pm_result;
-@@ -1098,6 +1105,7 @@ extern void ata_std_error_handler(struct ata_port *ap);
-  */
- extern const struct ata_port_operations ata_base_port_ops;
- extern const struct ata_port_operations sata_port_ops;
-+extern struct device_attribute *ata_common_sdev_attrs[];
- 
- #define ATA_BASE_SHT(drv_name)					\
- 	.module			= THIS_MODULE,			\
-@@ -1112,7 +1120,8 @@ extern const struct ata_port_operations sata_port_ops;
- 	.proc_name		= drv_name,			\
- 	.slave_configure	= ata_scsi_slave_config,	\
- 	.slave_destroy		= ata_scsi_slave_destroy,	\
--	.bios_param		= ata_std_bios_param
-+	.bios_param		= ata_std_bios_param,		\
-+	.sdev_attrs		= ata_common_sdev_attrs
- 
- #define ATA_NCQ_SHT(drv_name)					\
- 	ATA_BASE_SHT(drv_name),					\
+   Wow, the first try (by MontaVista) at submitting it was almost 3 
+years ago! It was hopless back then...
+
+> This controller has standard ATA taskfile registers and DMA
+> command/status registers, but the register layout is swapped on big
+> endian.  There are some other endian issue and some special registers
+> which requires many custom dma_ops/port_ops routines.
+>
+> Signed-off-by: Atsushi Nemoto <anemo@mba.ocn.ne.jp>
+>   
+
+   I thought that I'd only have the stylyistic comments and ACK the 
+patch but it shouldn't even compile... :-/
+
+> diff --git a/drivers/ide/mips/tx4939ide.c b/drivers/ide/mips/tx4939ide.c
+> new file mode 100644
+> index 0000000..e008e1e
+> --- /dev/null
+> +++ b/drivers/ide/mips/tx4939ide.c
+> @@ -0,0 +1,744 @@
+> +/* ATA Shadow Registers (8bit except for DATA which is 16bit) */
+>   
+
+   I think "8-bit" and "16-bit" would be more correct...
+
+> +#define TX4939IDE_DATA	0x000
+> +#define TX4939IDE_Error_Ft	0x001
+>   
+
+   I'd suggest TX4939IDE_Error_Feature -- no point in reducing it when 
+the full name will fit in the following tab anyway. :-)
+
+> +#define TX4939IDE_Sec	0x002
+> +#define TX4939IDE_LBA0	0x003
+> +#define TX4939IDE_LBA1	0x004
+> +#define TX4939IDE_LBA2	0x005
+> +#define TX4939IDE_Device	0x006
+>   
+
+   TX4939IDE_DevHead would be more exact.
+
+> +#define TX4939IDE_St_Cmd	0x007
+> +#define TX4939IDE_Alt_DevCtl	0x402
+>   
+
+   I'd suggest TX4939IDE_Stat_Cmd and TX4939IDE_AltStat_DevCtl...
+
+> +/* ATA100 CORE Registers (16bit) */
+> +#define TX4939IDE_Sys_Ctl	0xc00
+> +#define TX4939IDE_Xfer_Cnt_1	0xc08
+> +#define TX4939IDE_Xfer_Cnt_2	0xc0a
+> +#define TX4939IDE_Sec_Cnt	0xc10
+> +#define TX4939IDE_Strt_AddL	0xc18
+> +#define TX4939IDE_Strt_AddU	0xc20
+>   
+
+   No point in reducing Start too: suggesting 
+TX4939IDE_Start_{Lo|Up}_Addr -- for consistency with other names.
+
+> +#define TX4939IDE_Add_Ctl	0xc28
+> +#define TX4939IDE_Lo_BCnt	0xc30
+> +#define TX4939IDE_Up_BCnt	0xc38
+>   
+   TX4939IDE_{Lo|Up}_Burst_Cnt
+
+> +#define TX4939IDE_PIO_Acc	0xc88
+>   
+
+   Suggesting TX4939IDE_PIO_Addr...
+
+> +#define TX4939IDE_H_Rst_Tim	0xc90
+> +#define TX4939IDE_int_ctl	0xc98
+> +#define TX4939IDE_Pkt_Cmd	0xcb8
+> +#define TX4939IDE_Bxfer_cntH	0xcc0
+> +#define TX4939IDE_Bxfer_cntL	0xcc8
+>   
+
+   Suggesting TX4939IDE_Bxfer_Cnt_{Hi|Lo}...
+
+
+> +#define TX4939IDE_Dev_TErr	0xcd0
+> +#define TX4939IDE_Pkt_xfer_ct	0xcd8
+> +#define TX4939IDE_Strt_AddT	0xce0
+>   
+
+   No point in contracting agaim -- suggesting TX4939IDE_Pkt_Xfer_Ctl 
+and TX4939IDE_Start_TAddr.
+   Would have been good to keep the consistent naming style, i.e. either 
+always have an underscore between name words or only have them after the 
+TX4939IDE prefix and aways use uppercase to start a word...
+
+> +#define TX4939IDE_IGNORE_INTS	\
+> +	(TX4939IDE_INT_ADDRERR | TX4939IDE_INT_REACHMUL | \
+> +	 TX4939IDE_INT_DEVTIMING | TX4939IDE_INT_UDMATERM | \
+> +	 TX4939IDE_INT_TIMER)
+>   
+
+   Note that interrupt on a bus error that you're ot masking is not 
+generated by the SFF-8038i compliant controllers as well...
+
+> +static void tx4939ide_set_pio_mode(ide_drive_t *drive, const u8 pio)
+> +{
+> +	ide_hwif_t *hwif = HWIF(drive);
+> +	int is_slave = drive->dn & 1;
+> +	u32 mask, val;
+> +	u8 safe = pio;
+> +	ide_drive_t *pair;
+> +
+> +	pair = ide_get_pair_dev(drive);
+>   
+
+   Wait, have you tried to compile this driver? The function is called 
+ide_get_paired_drive() -- and I did name it correctly in my previous review.
+
+> +	if (pair)
+> +		safe = min(safe, ide_get_best_pio_mode(pair, 255, 4));
+> +	/*
+> +	 * Update Command Transfer Mode for master/slave and Data
+> +	 * Transfer Mode for this drive.
+> +	 */
+> +	mask = is_slave ? 0x07f00700 : 0x070007f0;
+> +	val = (safe << 24) | (safe << 8) | (pio << (is_slave ? 20 : 4));
+>   
+
+   You are not obliged to set the same command rimings for both drives...
+
+> +	hwif->select_data = (hwif->select_data & ~mask) | val;
+> +	tx4939ide_selectproc(drive);
+>   
+
+   No dire need to do this as ide_config_drive_speed() will be called 
+right after the set_pio_mode() method and it will call the selectproc() 
+method... unless you're dealing with a slow CompactFlash drive.
+   But actually setting the controller's timings prior to issuing SET 
+FEATURES doesn't seem safe anyway. Bart, don't you think that we should 
+always call set_{dma|pio}_mode() AFTER ide_config_drive_speed() --
+we have no guarantee that the drive will accept the mode...
+
+> +}
+> +
+> +static void tx4939ide_set_dma_mode(ide_drive_t *drive, const u8 mode)
+> +{
+> +	ide_hwif_t *hwif = HWIF(drive);
+> +	int is_slave = drive->dn & 1;
+>   
+
+   It's not that you couldn't do without this variable. :-)
+
+> +	u32 mask, val;
+> +
+> +	/* Update Data Transfer Mode for this drive. */
+> +	mask = 0x00f0;
+> +	if (mode >= XFER_UDMA_0)
+> +		val = 8 + (mode - XFER_UDMA_0);
+> +	else if (mode >= XFER_MW_DMA_0)
+> +		val = 5 + (mode - XFER_MW_DMA_0);
+>   
+
+  You hardly need parens above...
+
+> +	else
+> +		val = mode - XFER_PIO_0;
+> +	val <<= 4;
+> +	if (is_slave) {
+> +		mask <<= 16;
+>   
+
+   Could be just:
+
+       mask = 0x00f00000;
+
+> +		val <<= 16;
+> +	}
+> +	hwif->select_data = (hwif->select_data & ~mask) | val;
+> +	tx4939ide_selectproc(drive);
+>   
+
+   No dire need to do this as ide_config_drive_speed() will be called 
+right after the set_dma_mode() method, and it will surely call your 
+selectproc()...
+
+> +static void tx4939ide_check_error_ints(ide_hwif_t *hwif, u16 stat)
+> +{
+>   
+
+   Might be worth reading the register right here and returning the 
+value read in the end.
+
+> +	if (stat & TX4939IDE_INT_BUSERR) {
+> +		void __iomem *base = TX4939IDE_BASE(hwif);
+> +		/* reset FIFO */
+> +		tx4939ide_writew(tx4939ide_readw(base, TX4939IDE_Sys_Ctl) |
+>   
+
+   Probably worth reading the register only once...
+
+> +				 0x4000,
+> +				 base, TX4939IDE_Sys_Ctl);
+> +		/* wait 12GBUSCLK (typ. 60ns @ GBUS200MHz) */
+> +		ndelay(400);
+>   
+
+   But why wait 400 ns?
+
+> +		tx4939ide_writew(tx4939ide_readw(base, TX4939IDE_Sys_Ctl) &
+> +				 ~0x4000,
+> +				 base, TX4939IDE_Sys_Ctl);
+> +	}
+> +	if (stat & (TX4939IDE_INT_ADDRERR | TX4939IDE_INT_REACHMUL |
+> +		    TX4939IDE_INT_DEVTIMING | TX4939IDE_INT_BUSERR))
+> +		pr_err("%s: Error interrupt %#x (%s%s%s%s )\n",
+> +		       hwif->name, stat,
+> +		       (stat & TX4939IDE_INT_ADDRERR) ?
+> +		       " Address-Error" : "",
+> +		       (stat & TX4939IDE_INT_REACHMUL) ?
+> +		       " Reach-Multiple" : "",
+>   
+
+   This is not an error condition and should only happen in so called 
+VDMA mode iff you suspend the transfer, IIUC.
+
+> +static void tx4939ide_clear_dma_status(u8 dma_stat, void __iomem *base)
+> +{
+> +	/* clear INTR & ERROR flags */
+> +	tx4939ide_writeb(dma_stat | 6, base, TX4939IDE_DMA_stat);
+> +	/* recover intmask cleared by writing to bit2 of DMA_stat */
+> +	tx4939ide_writew(TX4939IDE_IGNORE_INTS << 8, base, TX4939IDE_int_ctl);
+> +}
+>   
+
+   What I was suggesting actually was a function that reads the status, 
+then clears it, and return the status read in the end.
+
+> +static int __tx4939ide_dma_setup(ide_drive_t *drive)
+> +{
+> +	ide_hwif_t *hwif = drive->hwif;
+> +	struct request *rq = HWGROUP(drive)->rq;
+> +	unsigned int reading;
+> +	u8 dma_stat;
+> +	void __iomem *base = TX4939IDE_BASE(hwif);
+> +	int nent;
+> +
+> +	if (rq_data_dir(rq))
+> +		reading = 0;
+> +	else
+> +		reading = 1 << 3;
+> +
+> +	/* fall back to pio! */
+> +	nent = ide_build_dmatable(drive, rq);
+> +	if (!nent) {
+> +		ide_map_sg(drive, rq);
+> +		return 1;
+> +	}
+> +#ifdef __BIG_ENDIAN
+> +	{
+> +		__le64 *table = (__le64 *)hwif->dmatable_cpu;
+> +
+> +		while (nent--)
+> +			le64_to_cpus(table++);
+> +	}
+> +#endif
+>   
+
+   Might be worth reimplementing ide_build_dmatable() for BE mode to 
+speed it up...
+
+> +
+> +	/* PRD table */
+> +	tx4939ide_writel(hwif->dmatable_dma, base, TX4939IDE_PRD_Ptr);
+> +
+> +	/* specify r/w */
+> +	tx4939ide_writeb(reading, base, TX4939IDE_DMA_Cmd);
+> +
+> +	/* read DMA status for INTR & ERROR flags */
+> +	dma_stat = tx4939ide_readb(base, TX4939IDE_DMA_stat);
+>   
+
+   Please fold this call into tx4939ide_clear_dma_status() for mode code 
+saving...
+
+> +	/* clear INTR & ERROR flags */
+> +	tx4939ide_clear_dma_status(dma_stat, base);
+> +
+> +	drive->waiting_for_dma = 1;
+> +	return 0;
+> +}
+> +
+> +static int tx4939ide_dma_setup(ide_drive_t *drive)
+> +{
+> +	ide_hwif_t *hwif = HWIF(drive);
+> +	void __iomem *base = TX4939IDE_BASE(hwif);
+> +	int err;
+> +
+> +	err = __tx4939ide_dma_setup(drive);
+>   
+
+   Not sure that you need this function at all...
+
+> +static int tx4939ide_dma_end(ide_drive_t *drive)
+> +{
+> +	ide_hwif_t *hwif = drive->hwif;
+> +	u8 dma_stat = 0, dma_cmd = 0;
+> +	void __iomem *base = TX4939IDE_BASE(hwif);
+> +	u16 ctl = tx4939ide_readw(base, TX4939IDE_int_ctl);
+> +
+> +	drive->waiting_for_dma = 0;
+> +
+> +	/* get DMA command mode */
+> +	dma_cmd = tx4939ide_readb(base, TX4939IDE_DMA_Cmd);
+> +	/* stop DMA */
+> +	tx4939ide_writeb(dma_cmd & ~1, base, TX4939IDE_DMA_Cmd);
+> +
+> +	/* get DMA status */
+> +	dma_stat = tx4939ide_readb(base, TX4939IDE_DMA_stat);
+>   
+
+   Please fold this call into tx4939ide_clear_dma_status().
+
+> +/* returns 1 if dma irq issued, 0 otherwise */
+> +static int tx4939ide_dma_test_irq(ide_drive_t *drive)
+> +{
+> +	ide_hwif_t *hwif = HWIF(drive);
+> +	void __iomem *base = TX4939IDE_BASE(hwif);
+> +	u16 ctl = tx4939ide_readw(base, TX4939IDE_int_ctl);
+> +	u8 dma_stat, stat;
+> +	u16 ide_int;
+> +	int found = 0;
+> +
+> +	tx4939ide_check_error_ints(hwif, ctl);
+> +	ide_int = ctl & (TX4939IDE_INT_XFEREND | TX4939IDE_INT_HOST);
+>   
+
+   Well, since you're effectively ignoring the BUSERR interrupt, there's 
+no point in enabling it...
+
+> +	switch (ide_int) {
+> +	case TX4939IDE_INT_HOST:
+> +		/* On error, XFEREND might not be asserted. */
+> +		stat = tx4939ide_readb(base, TX4939IDE_Alt_DevCtl);
+> +		if ((stat & (ATA_BUSY|ATA_DRQ|ATA_ERR)) == ATA_ERR) {
+> +			pr_err("%s: detect error %x in %s\n",
+> +			       drive->name, stat, __func__);
+>   
+
+  This is a normal condition IDE-wise, so no need to emit an error 
+message. You may emit a warning or info message that the interrupt 
+workaround is used...
+
+> +			found = 1;
+> +		}
+> +		/* FALLTHRU */
+> +	case TX4939IDE_INT_XFEREND:
+> +		/*
+> +		 * If only one of XFERINT and HOST was asserted
+> +		 * (without error --- see above), mask this interrupt
+> +		 * and wait for an another one.  Note that write to
+> +		 * bit2 of DMA_stat will clear all mask bits.
+> +		 */
+> +		ctl |= ide_int << 8;
+> +		break;
+>   
+
+   I'm not sure that we need to *always* unmask XFEREND interrupt. We 
+only need it after we've received HOST interrupt and decided to wait for 
+the transfer end.
+
+> +	case TX4939IDE_INT_HOST | TX4939IDE_INT_XFEREND:
+> +		dma_stat = tx4939ide_readb(base, TX4939IDE_DMA_stat);
+> +		if (!(dma_stat & 4))
+> +			pr_debug("%s: weird interrupt status. "
+>   
+
+   This one is worth pr_warning() or even pr_err()...
+
+> +				 "DMA_stat %#02x int_ctl %#04x\n",
+> +				 hwif->name, dma_stat, ctl);
+>   
+
+   However,  it's already done in the dma_end() method;.do we need 
+really to print 2 messages?
+
+> +static void tx4939ide_init_iops(ide_hwif_t *hwif)
+> +{
+> +	/* use extra_base for base address of the all registers */
+> +	hwif->extra_base = hwif->io_ports.data_addr & ~0xfff;
+> +}
+>   
+
+   Ugh... didn't realize that using hwif->extra_base necessiates the 
+init_iops() method. But why is it necessary? We're not using 
+hwif->extra_base to access the taskfile.
+
+> +static void tx4939ide_init_hwif(ide_hwif_t *hwif)
+> +{
+> +	void __iomem *base = TX4939IDE_BASE(hwif);
+> +
+> +	/* Soft Reset */
+> +	tx4939ide_writew(0x8000, base, TX4939IDE_Sys_Ctl);
+> +	mmiowb();
+> +	udelay(1);	/* at least 20 UPSCLK (100ns for 200MHz GBUSCLK) */
+>   
+
+   Hm, but your delay is 10x that value...
+
+> +static u8 tx4939ide_read_sff_dma_status(ide_hwif_t *hwif)
+> +{
+> +	void __iomem *base = TX4939IDE_BASE(hwif);
+> +	return tx4939ide_readb(base, TX4939IDE_DMA_stat);
+> +}
+>   
+
+   Ah, we do use hwif->extra_base in a transport method... well, putting 
+this into ide_tp_ops was bad move, I have said that already.
+
+> +static void tx4939ide_tf_load(ide_drive_t *drive, ide_task_t *task)
+> +{
+> +	mm_tf_load(drive, task);
+> +	if (task->tf_flags & IDE_TFLAG_OUT_DEVICE) {
+> +		ide_hwif_t *hwif = drive->hwif;
+> +		void __iomem *base = TX4939IDE_BASE(hwif);
+> +		/* Fix ATA100 CORE System Control Register */
+> +		tx4939ide_writew(tx4939ide_readw(base, TX4939IDE_Sys_Ctl) &
+> +				 0x07f0,
+> +				 base, TX4939IDE_Sys_Ctl);
+>   
+
+   Why? Doesn't page 17-4 of the datasheet say that these bits get 
+auto-cleared ona  write to the device/head register? Or is this to 
+address <CAUSION> on page 17-9?
+
+> +static const struct ide_tp_ops tx4939ide_tp_ops = {
+> +	.exec_command		= ide_exec_command,
+> +	.read_status		= ide_read_status,
+> +	.read_altstatus		= ide_read_altstatus,
+> +	.read_sff_dma_status	= tx4939ide_read_sff_dma_status,
+> +
+> +	.set_irq		= ide_set_irq,
+> +
+> +	.tf_load		= tx4939ide_tf_load,
+> +	.tf_read		= mm_tf_read,
+> +
+> +	.input_data		= mmio_input_data_swap,
+> +	.output_data		= mmio_output_data_swap,
+>   
+
+   It would've been more consistent if you used the same function prefix...
+
+> +};
+> +#else	/* __LITTLE_ENDIAN */
+> +static void tx4939ide_tf_load(ide_drive_t *drive, ide_task_t *task)
+> +{
+> +	ide_tf_load(drive, task);
+> +	if (task->tf_flags & IDE_TFLAG_OUT_DEVICE) {
+> +		ide_hwif_t *hwif = drive->hwif;
+> +		void __iomem *base = TX4939IDE_BASE(hwif);
+> +		/* Fix ATA100 CORE System Control Register */
+> +		tx4939ide_writew(tx4939ide_readw(base, TX4939IDE_Sys_Ctl) &
+> +				 0x07f0,
+> +				 base, TX4939IDE_Sys_Ctl);
+>   
+
+   Same question of why this is needed...
+
+> +static const struct ide_port_info tx4939ide_port_info __initdata = {
+> +	.init_iops = tx4939ide_init_iops,
+> +	.init_hwif = tx4939ide_init_hwif,
+> +	.init_dma = tx4939ide_init_dma,
+> +	.port_ops = &tx4939ide_port_ops,
+> +	.dma_ops = &tx4939ide_dma_ops,
+> +	.tp_ops = &tx4939ide_tp_ops,
+> +	.host_flags = IDE_HFLAG_MMIO,
+> +	.pio_mask = ATA_PIO4,
+> +	.mwdma_mask = ATA_MWDMA2,
+> +	.swdma_mask = 0,
+>   
+
+   No need for explicit zero initializer.
+
+   Phew, that was long review...
+
+MBR, Sergei
 
 
