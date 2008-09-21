@@ -1,66 +1,55 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH] IDE-TAPE NULL terminate strings.
-Date: Sun, 21 Sep 2008 23:24:10 +0400
-Message-ID: <48D69F5A.9010201@ru.mvista.com>
-References: <20080921185138.GA16310@localhost>
+From: Bruno =?UTF-8?B?UHLDqW1vbnQ=?= <bonbons@linux-vserver.org>
+Subject: Re: XFS shutting down due to IO timeout on SATA disk (pata_via for
+ CX700)
+Date: Sun, 21 Sep 2008 21:51:57 +0200
+Message-ID: <20080921215157.449ef5b7@neptune.home>
+References: <20080911193511.7960bc82@neptune.home>
+	<48CE22E5.9090403@kernel.org>
+	<20080915190242.58d21a8f@neptune.home>
+	<48CEC8F2.4040904@kernel.org>
+	<20080916102152.3f35439f@pluto.restena.lu>
+	<48CFEE51.2070200@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from gateway-1237.mvista.com ([63.81.120.155]:58026 "EHLO
-	imap.sh.mvista.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751052AbYIUTXO (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 21 Sep 2008 15:23:14 -0400
-In-Reply-To: <20080921185138.GA16310@localhost>
+Received: from ppp-111-195.adsl.restena.lu ([158.64.111.195]:40240 "EHLO
+	bonbons.gotdns.org" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1750877AbYIUUCy (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 21 Sep 2008 16:02:54 -0400
+In-Reply-To: <48CFEE51.2070200@kernel.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark de Wever <koraq@xs4all.nl>
-Cc: Gadi Oxman <gadio@netvision.net.il>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: Linux Kernel <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>, Mark Lord <liml@rtr.ca>
 
-Hello.
+Hello,
 
-Mark de Wever wrote:
+On Tue, 16 September 2008 Tejun Heo <tj@kernel.org> wrote:
+> > Just for the record, on the VIA there were no errors yet with
+> > 2.6.27-rc6-git3 though I ran some compiling on it. As such it
+> > *could* be that one of the patches pushed by Jeff helped:
+> >   [libata] LBA28/LBA48 off-by-one bug in ata.h
+> >   sata_inic162x: enable LED blinking
+> >   ata: duplicate variable sparse warning
+> 
+> The only patch which could have affected the result is the off-by-one
+> one; however, FLUSH timeout is a bit unexpected failure mode for the
+> problem.  Can you please keep the system running for a whlie and see
+> whether the problem occurs?
 
-> After updating my kernel to 2.6.26 the output for the ide-tape drive
-> during booting is garbled eg
-> ide-tape: hdd <-> ht0: Seagate <98>=DF8A51|1=C0<81>=DC=BA<98>=DF STT2=
-0000A rev 8A51|1=C0<81>=DC=BA<98>=DF
+I haven't seen the error happen yet with 2.6.27-rc6-git3, so that off
+by one bug might have had an incidence.
+No warranty on that as I did also slightly change power-saving settings
+for the disk around the time I updated kernel (-B254, -S241 parameters
+to hdparm) and have not seen the error yet on 2.6.27-rc5-git9 since
+then.
 
-> This patch fixes the problem by NULL terminating the strings.
+Will do more testing as time permits over the next days and report if I
+find anything that looks useful (e.g. better way than time to trigger
+the error or some of the hdparm options influencing the probability)
 
-> Regards,
-> Mark de Wever
+In case there is a patch that would eventually be able to get more info
+when the error occurs I would be happy to apply it.
 
-> PS: please CC me since I'm not subscribed.
-> PPS: there are more problems with my tapestreamer in 2.6.26 but I'll
-> post a separate message for that.
-
-> Signed-off-by: Mark de Wever <koraq@xs4all.nl>
-
-> diff --git a/drivers/ide/ide-tape.c b/drivers/ide/ide-tape.c
-> index 1bce84b..fd87b43 100644
-> --- a/drivers/ide/ide-tape.c
-> +++ b/drivers/ide/ide-tape.c
-> @@ -2354,6 +2354,10 @@ static void idetape_get_inquiry_results(ide_dr=
-ive_t *drive)
->  	ide_fixstring(product_id, 18, 0);
->  	ide_fixstring(fw_rev, 6, 0);
-> =20
-> +	fw_rev[4] =3D '\0';
-> +	vendor_id[8] =3D '\0';
-> +	product_id[16] =3D '\0';
-> +
->  	printk(KERN_INFO "ide-tape: %s <-> %s: %s %s rev %s\n",
->  			drive->name, tape->name, vendor_id, product_id, fw_rev);
-
-    This is not quite correct way to tackle this.  More correct would b=
-e to=20
-fix the format specifiers in this printk() to only print no more than N=
- string=20
-characters like this:
-
-  	printk(KERN_INFO "ide-tape: %s <-> %s: %.8s %.16s rev %.4s\n",
-  		drive->name, tape->name, vendor_id, product_id, fw_rev);
-
-MBR, Sergei
+Bruno
