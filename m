@@ -1,59 +1,55 @@
-From: bugme-daemon@bugzilla.kernel.org
-Subject: [Bug 11602] cdrom drive cannot open the tray, but reported this badly in /proc/sys/dev/cdrom/info
-Date: Sat, 20 Sep 2008 22:34:57 -0700 (PDT)
-Message-ID: <20080921053458.0102811D109@picon.linux-foundation.org>
-References: <bug-11602-11633@http.bugzilla.kernel.org/>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: Re: [PATCH 1/2] ide: Add tx4939ide driver (v2)
+Date: Sun, 21 Sep 2008 13:21:19 +0400
+Message-ID: <48D6120F.5000802@ru.mvista.com>
+References: <20080918.001342.52129176.anemo@mba.ocn.ne.jp> <48D57245.8060606@ru.mvista.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:42867 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750743AbYIUFfA (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 21 Sep 2008 01:35:00 -0400
-Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
-	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id m8L5YwPK024781
-	for <linux-ide@vger.kernel.org>; Sat, 20 Sep 2008 22:34:59 -0700
-In-Reply-To: <bug-11602-11633@http.bugzilla.kernel.org/>
+Received: from h155.mvista.com ([63.81.120.155]:52317 "EHLO imap.sh.mvista.com"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1750733AbYIUJV0 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 21 Sep 2008 05:21:26 -0400
+In-Reply-To: <48D57245.8060606@ru.mvista.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Atsushi Nemoto <anemo@mba.ocn.ne.jp>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: linux-mips@linux-mips.org, linux-ide@vger.kernel.org, ralf@linux-mips.org
 
-http://bugzilla.kernel.org/show_bug.cgi?id=11602
+Hello, I wrote:
+
+>> This controller has standard ATA taskfile registers and DMA
+>> command/status registers, but the register layout is swapped on big
+>> endian.  There are some other endian issue and some special registers
+>> which requires many custom dma_ops/port_ops routines.
+>>
+>> Signed-off-by: Atsushi Nemoto <anemo@mba.ocn.ne.jp>
+>>   
+>
+>   I thought that I'd only have the stylyistic comments and ACK the 
+> patch but it shouldn't even compile... :-/
+
+   Hm, it should compile in the context of linux-next tree..
+
+>> +static void tx4939ide_set_pio_mode(ide_drive_t *drive, const u8 pio)
+>> +{
+>> +    ide_hwif_t *hwif = HWIF(drive);
+>> +    int is_slave = drive->dn & 1;
+>> +    u32 mask, val;
+>> +    u8 safe = pio;
+>> +    ide_drive_t *pair;
+>> +
+>> +    pair = ide_get_pair_dev(drive);
+>>   
+>
+>   Wait, have you tried to compile this driver? The function is called 
+> ide_get_paired_drive() -- and I did name it correctly in my previous 
+> review.
+
+   I didn't realize that Bart has renamed the function in one of the 
+pending patches...
+
+MBR, Sergei
 
 
-bbpetkov@yahoo.de changed:
-
-           What    |Removed                     |Added
-----------------------------------------------------------------------------
-                 CC|                            |bbpetkov@yahoo.de
-
-
-
-
-------- Comment #3 from bbpetkov@yahoo.de  2008-09-20 22:34 -------
-On a first look, your check is wrong:
-
-        cdinfo(CD_REG_UNREG, "drive \"/dev/%s\" registered\n", cdi->name);
-+       printk(KERN_DEBUG "%s:%u: cdi->mask=0x%X, (cdi->mask &
-CDC_CLOSE_TRAY)=%s\n",
-+               __FILE__, __LINE__, cdi->mask, (cdi->mask & CDC_CLOSE_TRAY) ?
-"TRUE" : "FALSE");
-
-you're checking against cdi->mask but if you see how CDROM_CAN is defined:
-
-#define CDROM_CAN(type) (cdi->ops->capability & ~cdi->mask & (type))
-
-you see that the mask is negated and also cdi->ops->capability comes into play.
-
-However, the problem is that the CDC_CLOSE_TRAY is turned on (i.e. is going to
-be off in the final check and yes, it _IS_ confusing :)) in the cdi->mask only
-for devices with caddy and popup loading mechanisms. I don't think we can
-reliably detect whether the drive can close its tray now on a drive-by-drive
-basis - from what i see in your dmesg output, your drive is mechtype_tray and
-such drives normally can close the tray. Alternatively, we could make another
-list :( of drive model names which cannot close its mechanism but this is kinda
-overkill imho. Jens, Bart?
-
-
--- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug, or are watching the assignee.
