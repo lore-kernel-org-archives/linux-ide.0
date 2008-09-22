@@ -1,62 +1,99 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH] IDE-TAPE NULL terminate strings.
-Date: Tue, 23 Sep 2008 01:08:25 +0400
-Message-ID: <48D80949.4080901@ru.mvista.com>
-References: <20080921185138.GA16310@localhost> <48D79ABD.8060805@ru.mvista.com> <9ea470500809220656j6dfcf4c9q7a5a4185481ec994@mail.gmail.com> <20080922204129.GA3495@localhost>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+From: akpm@linux-foundation.org
+Subject: [patch 1/3] libata: blackfin Pata Driver: Add proper PM operation into ATAPI driver
+Date: Mon, 22 Sep 2008 14:47:10 -0700
+Message-ID: <200809222147.m8MLlALw031656@imap1.linux-foundation.org>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from homer.mvista.com ([63.81.120.155]:19072 "EHLO
-	imap.sh.mvista.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1753330AbYIVVId (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 22 Sep 2008 17:08:33 -0400
-In-Reply-To: <20080922204129.GA3495@localhost>
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:33300 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753154AbYIVVry (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 22 Sep 2008 17:47:54 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark de Wever <koraq@xs4all.nl>
-Cc: petkovbb@gmail.com, Gadi Oxman <gadio@netvision.net.il>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: jeff@garzik.org
+Cc: linux-ide@vger.kernel.org, akpm@linux-foundation.org, sonic.zhang@analog.com, cooloney@kernel.org
 
-Hello.
+From: Sonic Zhang <sonic.zhang@analog.com>
 
-Mark de Wever wrote:
+[akpm@linux-foundation.org: remove ifdefs, make things static]
+Signed-off-by: Sonic Zhang <sonic.zhang@analog.com>
+Signed-off-by: Bryan Wu <cooloney@kernel.org>
+Cc: Jeff Garzik <jeff@garzik.org>
+Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
+---
 
->> .. and I know why :). Those ide_tape_obj members (char fw_rev[6], vendor_id[10],
->> product_id[18]) were used only once in idetape_get_inquiry_results() so I moved
->> them there as local stack variables. Originally, they were kzalloc'ed as part of
->> struct ide_tape_obj and now they contain stack garbage therefore the funny
->> values. The simple solution would be to zero them out or:
->>
->>
->> Does the following patch help?
->>     
->
-> Yes feel free to add my tested-by.
->   
+ drivers/ata/pata_bf54x.c |   34 +++++++++++++++++++++++++++-------
+ 1 file changed, 27 insertions(+), 7 deletions(-)
 
-   And my NAK too. :-)
-
-> Only not sure whether the static is the best solution, the following
-> patch also works, by zeroing the memory as you suggested.
->
-> Signed-off-by: Mark de Wever <koraq@xs4all.nl>
->
-> diff --git a/drivers/ide/ide-tape.c b/drivers/ide/ide-tape.c
-> index 1bce84b..c41f5b1 100644
-> --- a/drivers/ide/ide-tape.c
-> +++ b/drivers/ide/ide-tape.c
-> @@ -2338,7 +2338,7 @@ static void idetape_get_inquiry_results(ide_drive_t *drive)
->  {
->  	idetape_tape_t *tape = drive->driver_data;
->  	struct ide_atapi_pc pc;
-> -	char fw_rev[6], vendor_id[10], product_id[18];
-> +	char fw_rev[6] = {'\0'}, vendor_id[10] = {'\0'}, product_id[18] = {'\0'};
->   
-
-   Do you realize how much *absolutely unnecessary* code will this bring 
-in? This is certainly worse than your initial patch (if it was correct).
-Ugh, looks like I'll have t submit the patch myself to stop this ugliness...
-
-MBR, Sergei
-
-
+diff -puN drivers/ata/pata_bf54x.c~libata-blackfin-pata-driver-add-proper-pm-operation-into-atapi-driver drivers/ata/pata_bf54x.c
+--- a/drivers/ata/pata_bf54x.c~libata-blackfin-pata-driver-add-proper-pm-operation-into-atapi-driver
++++ a/drivers/ata/pata_bf54x.c
+@@ -1632,6 +1632,8 @@ static int __devinit bfin_atapi_probe(st
+ 		return -ENODEV;
+ 	}
+ 
++	dev_set_drvdata(&pdev->dev, host);
++
+ 	return 0;
+ }
+ 
+@@ -1648,6 +1650,7 @@ static int __devexit bfin_atapi_remove(s
+ 	struct ata_host *host = dev_get_drvdata(dev);
+ 
+ 	ata_host_detach(host);
++	dev_set_drvdata(&pdev->dev, NULL);
+ 
+ 	peripheral_free_list(atapi_io_port);
+ 
+@@ -1655,27 +1658,44 @@ static int __devexit bfin_atapi_remove(s
+ }
+ 
+ #ifdef CONFIG_PM
+-int bfin_atapi_suspend(struct platform_device *pdev, pm_message_t state)
++static int bfin_atapi_suspend(struct platform_device *pdev, pm_message_t state)
+ {
+-	return 0;
++	struct ata_host *host = dev_get_drvdata(&pdev->dev);
++	if (host)
++		return ata_host_suspend(host, state);
++	else
++		return 0;
+ }
+ 
+-int bfin_atapi_resume(struct platform_device *pdev)
++static int bfin_atapi_resume(struct platform_device *pdev)
+ {
++	struct ata_host *host = dev_get_drvdata(&pdev->dev);
++	int ret;
++
++	if (host) {
++		ret = bfin_reset_controller(host);
++		if (ret) {
++			printk(KERN_ERR DRV_NAME ": Error during HW init\n");
++			return ret;
++		}
++		ata_host_resume(host);
++	}
++
+ 	return 0;
+ }
++#else
++#define bfin_atapi_suspend NULL
++#define bfin_atapi_resume NULL
+ #endif
+ 
+ static struct platform_driver bfin_atapi_driver = {
+ 	.probe			= bfin_atapi_probe,
+ 	.remove			= __devexit_p(bfin_atapi_remove),
++	.suspend		= bfin_atapi_suspend,
++	.resume			= bfin_atapi_resume,
+ 	.driver = {
+ 		.name		= DRV_NAME,
+ 		.owner		= THIS_MODULE,
+-#ifdef CONFIG_PM
+-		.suspend	= bfin_atapi_suspend,
+-		.resume		= bfin_atapi_resume,
+-#endif
+ 	},
+ };
+ 
+_
