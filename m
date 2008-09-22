@@ -1,57 +1,62 @@
-From: Mark de Wever <koraq@xs4all.nl>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
 Subject: Re: [PATCH] IDE-TAPE NULL terminate strings.
-Date: Mon, 22 Sep 2008 22:41:29 +0200
-Message-ID: <20080922204129.GA3495@localhost>
-References: <20080921185138.GA16310@localhost> <48D79ABD.8060805@ru.mvista.com> <9ea470500809220656j6dfcf4c9q7a5a4185481ec994@mail.gmail.com>
+Date: Tue, 23 Sep 2008 01:08:25 +0400
+Message-ID: <48D80949.4080901@ru.mvista.com>
+References: <20080921185138.GA16310@localhost> <48D79ABD.8060805@ru.mvista.com> <9ea470500809220656j6dfcf4c9q7a5a4185481ec994@mail.gmail.com> <20080922204129.GA3495@localhost>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp-vbr9.xs4all.nl ([194.109.24.29]:1622 "EHLO
-	smtp-vbr9.xs4all.nl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751857AbYIVUnm (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 22 Sep 2008 16:43:42 -0400
-Content-Disposition: inline
-In-Reply-To: <9ea470500809220656j6dfcf4c9q7a5a4185481ec994@mail.gmail.com>
+Received: from homer.mvista.com ([63.81.120.155]:19072 "EHLO
+	imap.sh.mvista.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1753330AbYIVVId (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 22 Sep 2008 17:08:33 -0400
+In-Reply-To: <20080922204129.GA3495@localhost>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: petkovbb@gmail.com
-Cc: Sergei Shtylyov <sshtylyov@ru.mvista.com>, Gadi Oxman <gadio@netvision.net.il>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Mark de Wever <koraq@xs4all.nl>
+Cc: petkovbb@gmail.com, Gadi Oxman <gadio@netvision.net.il>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Mon, Sep 22, 2008 at 03:56:49PM +0200, Boris Petkov wrote:
-> On Mon, Sep 22, 2008 at 3:16 PM, Sergei Shtylyov
-> <sshtylyov@ru.mvista.com> wrote:
-> > Hello.
-> >
-> .. and I know why :). Those ide_tape_obj members (char fw_rev[6], vendor_id[10],
-> product_id[18]) were used only once in idetape_get_inquiry_results() so I moved
-> them there as local stack variables. Originally, they were kzalloc'ed as part of
-> struct ide_tape_obj and now they contain stack garbage therefore the funny
-> values. The simple solution would be to zero them out or:
-> 
-> 
-> Does the following patch help?
+Hello.
 
-Yes feel free to add my tested-by.
+Mark de Wever wrote:
 
-Only not sure whether the static is the best solution, the following
-patch also works, by zeroing the memory as you suggested.
+>> .. and I know why :). Those ide_tape_obj members (char fw_rev[6], vendor_id[10],
+>> product_id[18]) were used only once in idetape_get_inquiry_results() so I moved
+>> them there as local stack variables. Originally, they were kzalloc'ed as part of
+>> struct ide_tape_obj and now they contain stack garbage therefore the funny
+>> values. The simple solution would be to zero them out or:
+>>
+>>
+>> Does the following patch help?
+>>     
+>
+> Yes feel free to add my tested-by.
+>   
 
-Signed-off-by: Mark de Wever <koraq@xs4all.nl>
+   And my NAK too. :-)
 
-diff --git a/drivers/ide/ide-tape.c b/drivers/ide/ide-tape.c
-index 1bce84b..c41f5b1 100644
---- a/drivers/ide/ide-tape.c
-+++ b/drivers/ide/ide-tape.c
-@@ -2338,7 +2338,7 @@ static void idetape_get_inquiry_results(ide_drive_t *drive)
- {
- 	idetape_tape_t *tape = drive->driver_data;
- 	struct ide_atapi_pc pc;
--	char fw_rev[6], vendor_id[10], product_id[18];
-+	char fw_rev[6] = {'\0'}, vendor_id[10] = {'\0'}, product_id[18] = {'\0'};
- 
- 	idetape_create_inquiry_cmd(&pc);
- 	if (idetape_queue_pc_tail(drive, &pc)) {
+> Only not sure whether the static is the best solution, the following
+> patch also works, by zeroing the memory as you suggested.
+>
+> Signed-off-by: Mark de Wever <koraq@xs4all.nl>
+>
+> diff --git a/drivers/ide/ide-tape.c b/drivers/ide/ide-tape.c
+> index 1bce84b..c41f5b1 100644
+> --- a/drivers/ide/ide-tape.c
+> +++ b/drivers/ide/ide-tape.c
+> @@ -2338,7 +2338,7 @@ static void idetape_get_inquiry_results(ide_drive_t *drive)
+>  {
+>  	idetape_tape_t *tape = drive->driver_data;
+>  	struct ide_atapi_pc pc;
+> -	char fw_rev[6], vendor_id[10], product_id[18];
+> +	char fw_rev[6] = {'\0'}, vendor_id[10] = {'\0'}, product_id[18] = {'\0'};
+>   
 
--- 
-Regards,
-Mark de Wever
+   Do you realize how much *absolutely unnecessary* code will this bring 
+in? This is certainly worse than your initial patch (if it was correct).
+Ugh, looks like I'll have t submit the patch myself to stop this ugliness...
+
+MBR, Sergei
+
+
