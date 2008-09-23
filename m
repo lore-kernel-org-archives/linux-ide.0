@@ -1,41 +1,60 @@
-From: Atsushi Nemoto <anemo@mba.ocn.ne.jp>
-Subject: Re: [PATCH 1/2] ide: Add tx4939ide driver (v2)
-Date: Wed, 24 Sep 2008 02:04:59 +0900 (JST)
-Message-ID: <20080924.020459.128619366.anemo@mba.ocn.ne.jp>
-References: <20080918.001342.52129176.anemo@mba.ocn.ne.jp>
-	<48D57245.8060606@ru.mvista.com>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: Re: [PATCH] IDE-TAPE NULL terminate strings.
+Date: Tue, 23 Sep 2008 21:10:43 +0400
+Message-ID: <48D92313.3060605@ru.mvista.com>
+References: <20080921185138.GA16310@localhost> <48D79ABD.8060805@ru.mvista.com> <9ea470500809220656j6dfcf4c9q7a5a4185481ec994@mail.gmail.com> <20080922204129.GA3495@localhost> <48D80949.4080901@ru.mvista.com> <20080923161434.GA4444@localhost>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mba.ocn.ne.jp ([122.1.235.107]:61897 "EHLO smtp.mba.ocn.ne.jp"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753342AbYIWREj (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 23 Sep 2008 13:04:39 -0400
-In-Reply-To: <48D57245.8060606@ru.mvista.com>
+Received: from h155.mvista.com ([63.81.120.155]:42287 "EHLO imap.sh.mvista.com"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751580AbYIWRJq (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 23 Sep 2008 13:09:46 -0400
+In-Reply-To: <20080923161434.GA4444@localhost>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: sshtylyov@ru.mvista.com
-Cc: bzolnier@gmail.com, linux-mips@linux-mips.org, linux-ide@vger.kernel.org, ralf@linux-mips.org
+To: Mark de Wever <koraq@xs4all.nl>
+Cc: petkovbb@gmail.com, Gadi Oxman <gadio@netvision.net.il>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Sun, 21 Sep 2008 01:59:33 +0400, Sergei Shtylyov <sshtylyov@ru.mvista.com> wrote:
-> > +static int tx4939ide_dma_test_irq(ide_drive_t *drive)
-> > +{
-> > +	ide_hwif_t *hwif = HWIF(drive);
-> > +	void __iomem *base = TX4939IDE_BASE(hwif);
-> > +	u16 ctl = tx4939ide_readw(base, TX4939IDE_int_ctl);
-> > +	u8 dma_stat, stat;
-> > +	u16 ide_int;
-> > +	int found = 0;
-> > +
-> > +	tx4939ide_check_error_ints(hwif, ctl);
-> > +	ide_int = ctl & (TX4939IDE_INT_XFEREND | TX4939IDE_INT_HOST);
-> 
->    Well, since you're effectively ignoring the BUSERR interrupt, there's 
-> no point in enabling it...
+Mark de Wever wrote:
 
-The BUSERR is not ignored.  tx4939ide_check_error_ints() will print a
-message.  It would be better than just ignoring.
+>>>diff --git a/drivers/ide/ide-tape.c b/drivers/ide/ide-tape.c
+>>>index 1bce84b..c41f5b1 100644
+>>>--- a/drivers/ide/ide-tape.c
+>>>+++ b/drivers/ide/ide-tape.c
+>>>@@ -2338,7 +2338,7 @@ static void idetape_get_inquiry_results(ide_drive_t *drive)
+>>> {
+>>> 	idetape_tape_t *tape = drive->driver_data;
+>>> 	struct ide_atapi_pc pc;
+>>>-	char fw_rev[6], vendor_id[10], product_id[18];
+>>>+	char fw_rev[6] = {'\0'}, vendor_id[10] = {'\0'}, product_id[18] = {'\0'};
 
----
-Atsushi Nemoto
+>>  Do you realize how much *absolutely unnecessary* code will this bring
+>>in?
+
+> I did not, I just had a look at the code GCC produced. I did expect much
+> smaller code, but maybe that's only generated with -Os.
+
+    My imagination sufficed to foresee how much code a compiler would have to 
+produce to completely initialize the arrays of the *auto* memory class -- even 
+regardless of optimization. And all that mostly to no purpose.
+
+>>This is certainly worse than your initial patch (if it was correct).
+
+> My initial patch did work, 
+
+    If ide_fixstring() wouldn't have to do any space compression, it would 
+work. If it would have to compress spaces, 2 garbage characters would be 
+copied by it and then printed.
+
+> but that doesn't matter much, since Boris
+> posted another patch based on your suggestions. I like that patch better
+> as my initial patch. I'm testing it now and I expect it to work.
+
+    Me too. :-)
+
+> Regards,
+> Mark de Wever
+
+WBR, Sergei
