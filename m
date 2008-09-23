@@ -1,81 +1,50 @@
-From: "Boris Petkov" <petkovbb@googlemail.com>
-Subject: Re: [PATCH] IDE-TAPE NULL terminate strings.
-Date: Tue, 23 Sep 2008 19:11:04 +0200
-Message-ID: <9ea470500809231011p5ea37fc4u71eeeddf6ccec45a@mail.gmail.com>
-References: <20080921185138.GA16310@localhost> <48D79ABD.8060805@ru.mvista.com>
-	 <9ea470500809220656j6dfcf4c9q7a5a4185481ec994@mail.gmail.com>
-	 <20080922204129.GA3495@localhost> <48D80949.4080901@ru.mvista.com>
-	 <20080923074845.GB5656@gollum.tnic> <20080923165914.GA7803@localhost>
-Reply-To: petkovbb@gmail.com
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: Re: [PATCH 1/2] ide: Add tx4939ide driver (v2)
+Date: Tue, 23 Sep 2008 21:20:05 +0400
+Message-ID: <48D92545.7050307@ru.mvista.com>
+References: <20080918.001342.52129176.anemo@mba.ocn.ne.jp>	<48D57245.8060606@ru.mvista.com> <20080924.020459.128619366.anemo@mba.ocn.ne.jp>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from yx-out-2324.google.com ([74.125.44.28]:64087 "EHLO
-	yx-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751662AbYIWRLF (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 23 Sep 2008 13:11:05 -0400
-Received: by yx-out-2324.google.com with SMTP id 8so333807yxm.1
-        for <linux-ide@vger.kernel.org>; Tue, 23 Sep 2008 10:11:04 -0700 (PDT)
-In-Reply-To: <20080923165914.GA7803@localhost>
-Content-Disposition: inline
+Received: from h155.mvista.com ([63.81.120.155]:42390 "EHLO imap.sh.mvista.com"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1752569AbYIWRTH (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 23 Sep 2008 13:19:07 -0400
+In-Reply-To: <20080924.020459.128619366.anemo@mba.ocn.ne.jp>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark de Wever <koraq@xs4all.nl>
-Cc: Sergei Shtylyov <sshtylyov@ru.mvista.com>, Gadi Oxman <gadio@netvision.net.il>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Atsushi Nemoto <anemo@mba.ocn.ne.jp>
+Cc: bzolnier@gmail.com, linux-mips@linux-mips.org, linux-ide@vger.kernel.org, ralf@linux-mips.org
 
-On Tue, Sep 23, 2008 at 6:59 PM, Mark de Wever <koraq@xs4all.nl> wrote:
-> On Tue, Sep 23, 2008 at 09:48:45AM +0200, Borislav Petkov wrote:
->> ---
->> diff --git a/drivers/ide/ide-tape.c b/drivers/ide/ide-tape.c
->> index 1bce84b..3833189 100644
->> --- a/drivers/ide/ide-tape.c
->> +++ b/drivers/ide/ide-tape.c
->> @@ -2338,7 +2338,7 @@ static void idetape_get_inquiry_results(ide_drive_t *drive)
->>  {
->>       idetape_tape_t *tape = drive->driver_data;
->>       struct ide_atapi_pc pc;
->> -     char fw_rev[6], vendor_id[10], product_id[18];
->> +     char fw_rev[4], vendor_id[8], product_id[16];
->>
->>       idetape_create_inquiry_cmd(&pc);
->>       if (idetape_queue_pc_tail(drive, &pc)) {
->> @@ -2350,11 +2350,11 @@ static void idetape_get_inquiry_results(ide_drive_t *drive)
->>       memcpy(product_id, &pc.buf[16], 16);
->>       memcpy(fw_rev, &pc.buf[32], 4);
->>
->> -     ide_fixstring(vendor_id, 10, 0);
->> -     ide_fixstring(product_id, 18, 0);
->> -     ide_fixstring(fw_rev, 6, 0);
->> +     ide_fixstring(vendor_id, 8, 0);
->> +     ide_fixstring(product_id, 16, 0);
->> +     ide_fixstring(fw_rev, 4, 0);
->>
->> -     printk(KERN_INFO "ide-tape: %s <-> %s: %s %s rev %s\n",
->> +     printk(KERN_INFO "ide-tape: %s <-> %s: %.8s %.16s rev %.4s\n",
->>                       drive->name, tape->name, vendor_id, product_id, fw_rev);
->>  }
->>
->>
->
-> I think this patch looks good, better as all previous versions
-> (including my initial version). I just tested it and it solves the
-> problem. Feel free to add my tested-by.
->
-> Regards,
-> Mark de Wever
->
-> PS I was not able to test earlier ;-)
+Hello.
 
-No worries and thanks. By the way, you mentioned something about other problems
-with ide-tape. FWIW, it seems you're its only user and we were about to kill it
-but decided not to yet and did the whole cleanup kinda only by compile-testing
-since almost no one (well, except you :)) has the hardware. So, feel free to
-send me any dmesg/debug/error messages you get and I'll look into them. Also,
-set IDETAPE_DEBUG_LOG to 1 before compiling for full debug info.
+Atsushi Nemoto wrote:
 
-Thanks.
+>>>+static int tx4939ide_dma_test_irq(ide_drive_t *drive)
+>>>+{
+>>>+	ide_hwif_t *hwif = HWIF(drive);
+>>>+	void __iomem *base = TX4939IDE_BASE(hwif);
+>>>+	u16 ctl = tx4939ide_readw(base, TX4939IDE_int_ctl);
+>>>+	u8 dma_stat, stat;
+>>>+	u16 ide_int;
+>>>+	int found = 0;
+>>>+
+>>>+	tx4939ide_check_error_ints(hwif, ctl);
+>>>+	ide_int = ctl & (TX4939IDE_INT_XFEREND | TX4939IDE_INT_HOST);
 
--- 
-Regards/Gruss,
-Boris
+>>   Well, since you're effectively ignoring the BUSERR interrupt, there's 
+>>no point in enabling it...
+
+> The BUSERR is not ignored.  tx4939ide_check_error_ints() will print a
+> message.  It would be better than just ignoring.
+
+     I mean you're not accounting it as an interrupt.  It will be reported 
+anyway when the dma_timeout() method will call this method on timeout... ah, 
+it wouldn't be called in this case since dma_time_expiry() will most probably 
+return -1 seeing bit 1 of DMA status register set.  You're right then...
+
+> ---
+> Atsushi Nemoto
+
+MBR, Sergei
