@@ -1,35 +1,24 @@
-From: bugme-daemon@bugzilla.kernel.org
-Subject: [Bug 10142] DMA crash with via82cxxx module
-Date: Wed, 24 Sep 2008 06:20:01 -0700 (PDT)
-Message-ID: <20080924132001.E66DD108058@picon.linux-foundation.org>
-References: <bug-10142-11633@http.bugzilla.kernel.org/>
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:49454 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751855AbYIXNUc (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 24 Sep 2008 09:20:32 -0400
-Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
-	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id m8ODK2Jg013160
-	for <linux-ide@vger.kernel.org>; Wed, 24 Sep 2008 06:20:03 -0700
-In-Reply-To: <bug-10142-11633@http.bugzilla.kernel.org/>
-Sender: linux-ide-owner@vger.kernel.org
+From: "Maciej W. Rozycki" <macro@linux-mips.org>
+Subject: Re: [PATCH] IDE: Fix platform device registration in Swarm IDE driver
+Date: Wed, 24 Sep 2008 14:52:07 +0100 (BST)
+Message-ID: <Pine.LNX.4.55.0809241448480.811@cliff.in.clinika.pl>
+References: <20080922122853.GA15210@linux-mips.org> <48DA1F9D.6000501@ru.mvista.com>
+Mime-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-mips-bounce@linux-mips.org>
+In-Reply-To: <48DA1F9D.6000501@ru.mvista.com>
+Sender: linux-mips-bounce@linux-mips.org
+Errors-to: linux-mips-bounce@linux-mips.org
+To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Cc: Ralf Baechle <ralf@linux-mips.org>, bzolnier@gmail.com, linux-ide@vger.kernel.org, linux-mips@linux-mips.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
 
-http://bugzilla.kernel.org/show_bug.cgi?id=10142
+On Wed, 24 Sep 2008, Sergei Shtylyov wrote:
 
+>    Platform device in the driver itself? Interesting... :-)
 
-alan@lxorguk.ukuu.org.uk changed:
+ Better than nothing for platforms which did not have platform
+initialisation at all.  Some driver subsystems do not support
+non-driver-model devices at all or anymore.
 
-           What    |Removed                     |Added
-----------------------------------------------------------------------------
-             Status|NEW                         |REJECTED
-         Resolution|                            |UNREPRODUCIBLE
-
-
-
-
--- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug, or are watching the assignee.
+  Maciej
