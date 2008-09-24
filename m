@@ -1,122 +1,116 @@
-From: Greg KH <greg@kroah.com>
-Subject: Re: Laptop shock detection and harddisk protection
-Date: Tue, 23 Sep 2008 22:14:17 -0700
-Message-ID: <20080924051417.GA29993@kroah.com>
-References: <48C7FCEE.8060404@kernel.org> <20080917180405.GB3162@kroah.com> <20080918111845.GH27832@elf.ucw.cz> <200809191104.00171.trenn@suse.de>
+From: Borislav Petkov <petkovbb@googlemail.com>
+Subject: Re: [PATCH] IDE-TAPE NULL terminate strings.
+Date: Wed, 24 Sep 2008 09:10:55 +0200
+Message-ID: <20080924071055.GB16949@gollum.tnic>
+References: <20080921185138.GA16310@localhost> <48D79ABD.8060805@ru.mvista.com> <9ea470500809220656j6dfcf4c9q7a5a4185481ec994@mail.gmail.com> <20080922204129.GA3495@localhost> <48D80949.4080901@ru.mvista.com> <20080923074845.GB5656@gollum.tnic> <20080923165914.GA7803@localhost>
+Reply-To: petkovbb@gmail.com
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from casper.infradead.org ([85.118.1.10]:55604 "EHLO
-	casper.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751359AbYIXFYj (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 24 Sep 2008 01:24:39 -0400
+Received: from fg-out-1718.google.com ([72.14.220.153]:52043 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750968AbYIXHK7 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 24 Sep 2008 03:10:59 -0400
+Received: by fg-out-1718.google.com with SMTP id 19so1989633fgg.17
+        for <linux-ide@vger.kernel.org>; Wed, 24 Sep 2008 00:10:57 -0700 (PDT)
 Content-Disposition: inline
-In-Reply-To: <200809191104.00171.trenn@suse.de>
+In-Reply-To: <20080923165914.GA7803@localhost>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Thomas Renninger <trenn@suse.de>
-Cc: Pavel Machek <pavel@suse.cz>, Tejun Heo <tj@kernel.org>, Shem Multinymous <multinymous@gmail.com>, Elias Oltmanns <eo@nebensachen.de>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, IDE/ATA development list <linux-ide@vger.kernel.org>
+Cc: Mark de Wever <koraq@xs4all.nl>, Sergei Shtylyov <sshtylyov@ru.mvista.com>, Gadi Oxman <gadio@netvision.net.il>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Fri, Sep 19, 2008 at 11:03:58AM +0200, Thomas Renninger wrote:
-> On Thursday 18 September 2008 13:18:45 Pavel Machek wrote:
-> > On Wed 2008-09-17 11:04:05, Greg KH wrote:
-> > > On Sun, Aug 17, 2008 at 09:45:21PM +0200, Pavel Machek wrote:
-> > > > On Fri 2008-09-12 09:59:47, Greg KH wrote:
-> > > > > On Fri, Sep 12, 2008 at 01:35:54AM +0200, Tejun Heo wrote:
-> > > > > > Shem Multinymous wrote:
-> > > > > > >> That reduction comes because input device supports poll and
-> > > > > > >> sysfs_notify_event() does about the same thing.  The uesrland
-> > > > > > >> daemon can just poll on a node and read data nodes when poll
-> > > > > > >> event on the node triggeres.
-> > > > > > >
-> > > > > > > Agreed.
-> > > > > > > There's another issue with the current sysfs interface, though:
-> > > > > > > hdapsd needs to read (x,y,timestamp) tuples, whereas sysfs
-> > > > > > > provides just x and y in separate attributes which cannot be read
-> > > > > > > atomically together. We can add a sysfs file with "x y timestamp"
-> > > > > > > readouts, though this is unusual for sysfs (and certainly
-> > > > > > > incompatible with hwmon).
-> > > > > >
-> > > > > > Yes, right.  Forgot about the atomicity part altogether.  Thanks
-> > > > > > for bringing it up.
-> > > > > >
-> > > > > > >> Unloading heads will be simple.  Just echoing timeout in ms to
-> > > > > > >> sysfs nodes, so I don't think it's a good idea to push out
-> > > > > > >> actual unloading to another process especially as fork doesn't
-> > > > > > >> inherit mlockall.
-> > > > > > >
-> > > > > > > I had in mind another daemon listening for "unload now" events,
-> > > > > > > so no forking needed.
-> > > > > > > This second daemon might make sense if we push the logic of
-> > > > > > > deciding *which* disks to unload into userspace, since this logic
-> > > > > > > is the same for the ThinkPad style and the HP style.
-> > > > > >
-> > > > > > Hmmm... I can't (yet) see the benefit of having two separate
-> > > > > > userland daemons.
-> > > > > >
-> > > > > > >> On a related note, is there any plan to merge tp_smapi to
-> > > > > > >> mainline? It seems you put a lot of work into it and I don't
-> > > > > > >> really see why it should stay out of tree.
-> > > > > > >
-> > > > > > > The only issue I'm aware of is finding a reasonably-named
-> > > > > > > maintainer. On the technical side, the reviews on my lkml
-> > > > > > > submission of thinkpad_ec+hdaps seemed good and all technical
-> > > > > > > comments are since addressed. The code has been stable,
-> > > > > > > well-tested and packaged by major distros for years.
-> > > > > >
-> > > > > > Cool, can you please post the patch to the lkml and cc Greg
-> > > > > > Kroah-Hartman <gregkh@suse.de>, Andrew Morton
-> > > > > > <akpm@linux-foundation.org> and me?
-> > > > >
-> > > > > Sorry, but no, I can't accept this code as it is coming from a "known
-> > > > > anonymous" person containing information that it is not known where
-> > > > > it came from.
-> > > >
-> > > > So... what are you worried about?
-> > >
-> > > Code created by access to specs that were not allowed to be published in
-> > > GPL form by someone who wants to remain anonymous.
+On Tue, Sep 23, 2008 at 06:59:14PM +0200, Mark de Wever wrote:
+> On Tue, Sep 23, 2008 at 09:48:45AM +0200, Borislav Petkov wrote:
+> > ---
+> > diff --git a/drivers/ide/ide-tape.c b/drivers/ide/ide-tape.c
+> > index 1bce84b..3833189 100644
+> > --- a/drivers/ide/ide-tape.c
+> > +++ b/drivers/ide/ide-tape.c
+> > @@ -2338,7 +2338,7 @@ static void idetape_get_inquiry_results(ide_drive_t *drive)
+> >  {
+> >  	idetape_tape_t *tape = drive->driver_data;
+> >  	struct ide_atapi_pc pc;
+> > -	char fw_rev[6], vendor_id[10], product_id[18];
+> > +	char fw_rev[4], vendor_id[8], product_id[16];
+> >  
+> >  	idetape_create_inquiry_cmd(&pc);
+> >  	if (idetape_queue_pc_tail(drive, &pc)) {
+> > @@ -2350,11 +2350,11 @@ static void idetape_get_inquiry_results(ide_drive_t *drive)
+> >  	memcpy(product_id, &pc.buf[16], 16);
+> >  	memcpy(fw_rev, &pc.buf[32], 4);
+> >  
+> > -	ide_fixstring(vendor_id, 10, 0);
+> > -	ide_fixstring(product_id, 18, 0);
+> > -	ide_fixstring(fw_rev, 6, 0);
+> > +	ide_fixstring(vendor_id, 8, 0);
+> > +	ide_fixstring(product_id, 16, 0);
+> > +	ide_fixstring(fw_rev, 4, 0);
+> >  
+> > -	printk(KERN_INFO "ide-tape: %s <-> %s: %s %s rev %s\n",
+> > +	printk(KERN_INFO "ide-tape: %s <-> %s: %.8s %.16s rev %.4s\n",
+> >  			drive->name, tape->name, vendor_id, product_id, fw_rev);
+> >  }
+> >  
 > >
-> > That anonymous person may have problems if they signed NDA.
-> >
-> > I don't think they did, they even list the sources:
-> >
-> >  *  The embedded controller on ThinkPad laptops has a non-standard
-> > interface, *  where LPC channel 3 of the H8S EC chip is hooked up to IO
-> > ports *  0x1600-0x161F and implements (a special case of) the H8S LPC
-> > protocol. *  The EC LPC interface provides various system management
-> > services (currently *  known: battery information and accelerometer
-> > readouts). This driver *  provides access and mutual exclusion for the EC
-> > interface.
-> > *
-> >  *  The LPC protocol and terminology is documented here:
-> >  *  "H8S/2104B Group Hardware Manual",
-> >  * 
-> > http://documentation.renesas.com/eng/products/mpumcu/rej09b0300_2140bhm.pdf
-> >
-> > H8S chip seems to be documented.
-> Hmm, the EC is not directly used, but ACPI functions of the HP device are 
-> used.
-> For the HP ACPI device: the ACPI functions can *very easily* be re-engineered
-> (which is common for all laptop_acpi.ko drivers):
-> ALRD -> is used by the driver to read out registers of the accelerometer
-> ALWR -> is used by the driver to write a registers of the accelerometer
-> BTW: HP likes to have support for their device.
 > 
-> The acceleromter chip itself is docuemented in detail here:
-> http://www.st.com/stonline/products/literature/ds/12094/lis3lv02dl.pdf
+> I think this patch looks good, better as all previous versions
+> (including my initial version). I just tested it and it solves the
+> problem. Feel free to add my tested-by.
 > 
-> I also do not see any concerns.
-> Greg: Can you please add this one or explain in more detail what else you like 
-> to see to get this integerated.
+> Regards,
+> Mark de Wever
+> 
+> PS I was not able to test earlier ;-)
 
-If you, or anyone else, writes a new driver from the published
-documents, that driver can be accepted.  It can not be based on the
-existing code written by Shem in any form.
+Bart,
 
-We can not accept this driver for reasons I've detailed numerous times
-in the past.  That fact isn't going to change, sorry.
+please apply the following patch.
 
-thanks,
+@Sergei: would you like to add your Signed-off-by too?
 
-greg k-h
+--
+Subject: ide-tape: fix vendor strings
+
+Remove superfluous two bytes from each string buffer and add proper length
+format specifiers.
+
+There should be no functional change resulting from this patch.
+
+Signed-off-by: Borislav Petkov <petkovbb@gmail.com>
+Tested-by: Mark de Wever <koraq@xs4all.nl>
+
+--
+
+diff --git a/drivers/ide/ide-tape.c b/drivers/ide/ide-tape.c
+index 1bce84b..3833189 100644
+--- a/drivers/ide/ide-tape.c
++++ b/drivers/ide/ide-tape.c
+@@ -2338,7 +2338,7 @@ static void idetape_get_inquiry_results(ide_drive_t *drive)
+ {
+ 	idetape_tape_t *tape = drive->driver_data;
+ 	struct ide_atapi_pc pc;
+-	char fw_rev[6], vendor_id[10], product_id[18];
++	char fw_rev[4], vendor_id[8], product_id[16];
+ 
+ 	idetape_create_inquiry_cmd(&pc);
+ 	if (idetape_queue_pc_tail(drive, &pc)) {
+@@ -2350,11 +2350,11 @@ static void idetape_get_inquiry_results(ide_drive_t *drive)
+ 	memcpy(product_id, &pc.buf[16], 16);
+ 	memcpy(fw_rev, &pc.buf[32], 4);
+ 
+-	ide_fixstring(vendor_id, 10, 0);
+-	ide_fixstring(product_id, 18, 0);
+-	ide_fixstring(fw_rev, 6, 0);
++	ide_fixstring(vendor_id, 8, 0);
++	ide_fixstring(product_id, 16, 0);
++	ide_fixstring(fw_rev, 4, 0);
+ 
+-	printk(KERN_INFO "ide-tape: %s <-> %s: %s %s rev %s\n",
++	printk(KERN_INFO "ide-tape: %s <-> %s: %.8s %.16s rev %.4s\n",
+ 			drive->name, tape->name, vendor_id, product_id, fw_rev);
+ }
+ 
+
+-- 
+Regards/Gruss,
+    Boris.
