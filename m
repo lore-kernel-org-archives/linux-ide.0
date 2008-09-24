@@ -1,55 +1,47 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH 1/2] ide: Add tx4939ide driver (v2)
-Date: Wed, 24 Sep 2008 22:26:32 +0400
-Message-ID: <48DA8658.2040107@ru.mvista.com>
-References: <20080918.001342.52129176.anemo@mba.ocn.ne.jp>	<48D57245.8060606@ru.mvista.com> <20080922.013256.128618380.anemo@mba.ocn.ne.jp> <48DA2543.4050304@ru.mvista.com>
+From: "kiran vedere" <vederekiran@gmail.com>
+Subject: libata-core.c
+Date: Wed, 24 Sep 2008 18:11:38 -0400
+Message-ID: <679aeaf0809241511yf6cd812oa1ed5f3a1a37cfba@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from h155.mvista.com ([63.81.120.155]:3837 "EHLO imap.sh.mvista.com"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752789AbYIXSZf (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 24 Sep 2008 14:25:35 -0400
-In-Reply-To: <48DA2543.4050304@ru.mvista.com>
+Received: from wf-out-1314.google.com ([209.85.200.170]:60813 "EHLO
+	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756132AbYIXWLk (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 24 Sep 2008 18:11:40 -0400
+Received: by wf-out-1314.google.com with SMTP id 27so156782wfd.4
+        for <linux-ide@vger.kernel.org>; Wed, 24 Sep 2008 15:11:39 -0700 (PDT)
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Atsushi Nemoto <anemo@mba.ocn.ne.jp>
-Cc: bzolnier@gmail.com, linux-mips@linux-mips.org, linux-ide@vger.kernel.org, ralf@linux-mips.org
+To: jgarzik@pobox.com
+Cc: linux-ide@vger.kernel.org
 
-Hello, I  wrote:
+Hi Jeff:
 
->>>> +static void tx4939ide_tf_load(ide_drive_t *drive, ide_task_t *task)
->>>> +{
->>>> +    mm_tf_load(drive, task);
->>>> +    if (task->tf_flags & IDE_TFLAG_OUT_DEVICE) {
->>>> +        ide_hwif_t *hwif = drive->hwif;
->>>> +        void __iomem *base = TX4939IDE_BASE(hwif);
->>>> +        /* Fix ATA100 CORE System Control Register */
->>>> +        tx4939ide_writew(tx4939ide_readw(base, TX4939IDE_Sys_Ctl) &
->>>> +                 0x07f0,
->>>> +                 base, TX4939IDE_Sys_Ctl);
+I am working on enabling Compact Flash support on an ARM embedded
+Platform. I implemented the Host Controller driver for the ARM
+Platform. I was going through the linux pcmcia subsystem and found
+that there is an existing pata_pcmcia.c client driver to support
+ATA/IDE emulation for PCMCIA/Compact Flash cards. This uses the
+libata-core.c helper library for ATA. I had a couple of questions in
+regard to this which I thought you might be the best person to ask:
 
->>>    Why? Doesn't page 17-4 of the datasheet say that these bits get 
->>> auto-cleared ona  write to the device/head register? Or is this to 
->>> address <CAUSION> on page 17-9?
+1. Is this library generic for all platforms or is it specific to PC
+because it seems to reference PCI in some places. If I have my host
+controller driver, is the current pata_pcmcia.c (and libata helper
+libraries) sufficient to use the Compact Flash in True-IDE mode or
+something additional is needed.
+2. The CF TrueIDE mode supports Multiword DMA and Ultra DMA modes of
+data transfer. Your libata-core.c seems to have support for these
+modes. However I assume I will need to provide the DMA Buffer to
+facilitate this. Do I need to provide call back functions to do this
+or I need to implement a seperate Client Driver to support these
+modes? I assume the pata_pcmcia.c uses PIO mode by default? Correct me
+if I am wrong.
 
->> Yes, that "CAUSION".  I will put it in the comment.
+Thanks in advance.
 
->   Frankly speaking, I couldn't make out much of tht passage:
-
-> <CAUSION>
-> The write to the register by the Device/Head register may cause an 
-> unexpected function by write wrong
-> data to the register. So please rewrite to the System Control register 
-> after write to the Device/Head
-> register to secure write to System Control register in ATA100 Core.
-
-    I thought that this was related to loading the correct transfer mode for 
-the selected drive. But if it's not only that, it would be quite pointless to 
-also implement selectproc() method if you have to hook the tf_load() method...
-    Frankly speaking, I don't understand why they didn't implement 2 timing 
-registers like on TC86C001 while still implementing 2 transfer counter 
-registers...
-
-MBR, Sergei
+Regards,
+kiran
