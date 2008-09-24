@@ -1,116 +1,119 @@
-From: Borislav Petkov <petkovbb@googlemail.com>
-Subject: Re: [PATCH] IDE-TAPE NULL terminate strings.
-Date: Wed, 24 Sep 2008 09:10:55 +0200
-Message-ID: <20080924071055.GB16949@gollum.tnic>
-References: <20080921185138.GA16310@localhost> <48D79ABD.8060805@ru.mvista.com> <9ea470500809220656j6dfcf4c9q7a5a4185481ec994@mail.gmail.com> <20080922204129.GA3495@localhost> <48D80949.4080901@ru.mvista.com> <20080923074845.GB5656@gollum.tnic> <20080923165914.GA7803@localhost>
-Reply-To: petkovbb@gmail.com
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: bugme-daemon@bugzilla.kernel.org
+Subject: [Bug 11635] New: strange message in dmesg for IDE HDD: cannot use LBA48 DMA - PIO mode will be used for accessing sectors > 268435456
+Date: Wed, 24 Sep 2008 02:20:28 -0700 (PDT)
+Message-ID: <bug-11635-11633@http.bugzilla.kernel.org/>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.153]:52043 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750968AbYIXHK7 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 24 Sep 2008 03:10:59 -0400
-Received: by fg-out-1718.google.com with SMTP id 19so1989633fgg.17
-        for <linux-ide@vger.kernel.org>; Wed, 24 Sep 2008 00:10:57 -0700 (PDT)
-Content-Disposition: inline
-In-Reply-To: <20080923165914.GA7803@localhost>
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:53887 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751538AbYIXJVA (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 24 Sep 2008 05:21:00 -0400
+Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
+	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id m8O9KTmL029058
+	for <linux-ide@vger.kernel.org>; Wed, 24 Sep 2008 02:20:30 -0700
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-Cc: Mark de Wever <koraq@xs4all.nl>, Sergei Shtylyov <sshtylyov@ru.mvista.com>, Gadi Oxman <gadio@netvision.net.il>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-On Tue, Sep 23, 2008 at 06:59:14PM +0200, Mark de Wever wrote:
-> On Tue, Sep 23, 2008 at 09:48:45AM +0200, Borislav Petkov wrote:
-> > ---
-> > diff --git a/drivers/ide/ide-tape.c b/drivers/ide/ide-tape.c
-> > index 1bce84b..3833189 100644
-> > --- a/drivers/ide/ide-tape.c
-> > +++ b/drivers/ide/ide-tape.c
-> > @@ -2338,7 +2338,7 @@ static void idetape_get_inquiry_results(ide_drive_t *drive)
-> >  {
-> >  	idetape_tape_t *tape = drive->driver_data;
-> >  	struct ide_atapi_pc pc;
-> > -	char fw_rev[6], vendor_id[10], product_id[18];
-> > +	char fw_rev[4], vendor_id[8], product_id[16];
-> >  
-> >  	idetape_create_inquiry_cmd(&pc);
-> >  	if (idetape_queue_pc_tail(drive, &pc)) {
-> > @@ -2350,11 +2350,11 @@ static void idetape_get_inquiry_results(ide_drive_t *drive)
-> >  	memcpy(product_id, &pc.buf[16], 16);
-> >  	memcpy(fw_rev, &pc.buf[32], 4);
-> >  
-> > -	ide_fixstring(vendor_id, 10, 0);
-> > -	ide_fixstring(product_id, 18, 0);
-> > -	ide_fixstring(fw_rev, 6, 0);
-> > +	ide_fixstring(vendor_id, 8, 0);
-> > +	ide_fixstring(product_id, 16, 0);
-> > +	ide_fixstring(fw_rev, 4, 0);
-> >  
-> > -	printk(KERN_INFO "ide-tape: %s <-> %s: %s %s rev %s\n",
-> > +	printk(KERN_INFO "ide-tape: %s <-> %s: %.8s %.16s rev %.4s\n",
-> >  			drive->name, tape->name, vendor_id, product_id, fw_rev);
-> >  }
-> >  
-> >
-> 
-> I think this patch looks good, better as all previous versions
-> (including my initial version). I just tested it and it solves the
-> problem. Feel free to add my tested-by.
-> 
-> Regards,
-> Mark de Wever
-> 
-> PS I was not able to test earlier ;-)
+http://bugzilla.kernel.org/show_bug.cgi?id=11635
 
-Bart,
+           Summary: strange message in dmesg for IDE HDD: cannot use LBA48
+                    DMA - PIO mode will be used for accessing sectors >
+                    268435456
+           Product: IO/Storage
+           Version: 2.5
+     KernelVersion: 2.6.26.1
+          Platform: All
+        OS/Version: Linux
+              Tree: Mainline
+            Status: NEW
+          Severity: normal
+          Priority: P1
+         Component: IDE
+        AssignedTo: io_ide@kernel-bugs.osdl.org
+        ReportedBy: enrique_pinos@yahoo.es
 
-please apply the following patch.
 
-@Sergei: would you like to add your Signed-off-by too?
+Latest working kernel version: unknown
+Earliest failing kernel version: detected on kernel-2.6.25
+Distribution: gentoo
+Hardware Environment: Asus A7A266 motherboard with BIOS upgraded to latest
+release (no beta version of upgrade) lspci output:
+00:00.0 Host bridge: ALi Corporation M1647 Northbridge [MAGiK 1 / MobileMAGiK
+1] (rev 04)
+00:01.0 PCI bridge: ALi Corporation PCI to AGP Controller
+00:02.0 USB Controller: ALi Corporation USB 1.1 Controller (rev 03)
+00:04.0 IDE interface: ALi Corporation M5229 IDE (rev c4)
+00:05.0 Multimedia audio controller: C-Media Electronics Inc CM8738 (rev 10)
+00:06.0 USB Controller: ALi Corporation USB 1.1 Controller (rev 03)
+00:07.0 ISA bridge: ALi Corporation M1533/M1535 PCI to ISA Bridge [Aladdin
+IV/V/V+]
+00:0a.0 Ethernet controller: Realtek Semiconductor Co., Ltd.
+RTL-8139/8139C/8139C+ (rev 10)
+00:0c.0 Serial controller: Rockwell International HCF 56k Data/Fax Modem (rev
+01)
+00:11.0 Bridge: ALi Corporation M7101 Power Management Controller [PMU]
+01:00.0 VGA compatible controller: nVidia Corporation NV4 [RIVA TNT] (rev 04)
 
---
-Subject: ide-tape: fix vendor strings
+Software Environment: Gentoo Linux.
+Problem Description: Hdd is slow and dmesg show a strange message
 
-Remove superfluous two bytes from each string buffer and add proper length
-format specifiers.
+Steps to reproduce:compile kernel and boot
 
-There should be no functional change resulting from this patch.
+Output of script/ver_linux
+If some fields are empty or look unusual you may have an old version.
+Compare to the current minimal requirements in Documentation/Changes.
 
-Signed-off-by: Borislav Petkov <petkovbb@gmail.com>
-Tested-by: Mark de Wever <koraq@xs4all.nl>
+Linux AServer 2.6.26.1 #1 Wed Sep 24 00:18:06 CEST 2008 i686 AMD Athlon(TM)
+XP1600+ AuthenticAMD GNU/Linux
 
---
+Gnu C                  4.1.2
+Gnu make               3.81
+binutils               2.18
+util-linux             2.13.1.1
+mount                  2.13.1.1
+module-init-tools      3.4
+e2fsprogs              1.40.9
+reiserfsprogs          3.6.19
+Linux C Library        2.6.1
+Dynamic linker (ldd)   2.6.1
+Procps                 3.2.7
+Net-tools              1.60
+Kbd                    1.13
+Sh-utils               6.9
+udev                   124
+Modules Loaded         ipt_REJECT ipt_LOG ipt_addrtype xt_pkttype xt_multiport
+xt_MARK xt_mac xt_iprange xt_tcpudp xt_state nf_conntrack_ipv4 nf_conntrack
+iptable_mangle nfnetlink iptable_filter ip_tables x_tables ohci_hcd usbcore
+i2c_ali1535
 
-diff --git a/drivers/ide/ide-tape.c b/drivers/ide/ide-tape.c
-index 1bce84b..3833189 100644
---- a/drivers/ide/ide-tape.c
-+++ b/drivers/ide/ide-tape.c
-@@ -2338,7 +2338,7 @@ static void idetape_get_inquiry_results(ide_drive_t *drive)
- {
- 	idetape_tape_t *tape = drive->driver_data;
- 	struct ide_atapi_pc pc;
--	char fw_rev[6], vendor_id[10], product_id[18];
-+	char fw_rev[4], vendor_id[8], product_id[16];
- 
- 	idetape_create_inquiry_cmd(&pc);
- 	if (idetape_queue_pc_tail(drive, &pc)) {
-@@ -2350,11 +2350,11 @@ static void idetape_get_inquiry_results(ide_drive_t *drive)
- 	memcpy(product_id, &pc.buf[16], 16);
- 	memcpy(fw_rev, &pc.buf[32], 4);
- 
--	ide_fixstring(vendor_id, 10, 0);
--	ide_fixstring(product_id, 18, 0);
--	ide_fixstring(fw_rev, 6, 0);
-+	ide_fixstring(vendor_id, 8, 0);
-+	ide_fixstring(product_id, 16, 0);
-+	ide_fixstring(fw_rev, 4, 0);
- 
--	printk(KERN_INFO "ide-tape: %s <-> %s: %s %s rev %s\n",
-+	printk(KERN_INFO "ide-tape: %s <-> %s: %.8s %.16s rev %.4s\n",
- 			drive->name, tape->name, vendor_id, product_id, fw_rev);
- }
- 
+dmesg output:
+ide0 at 0x1f0-0x1f7,0x3f6 on irq 14
+ide1 at 0x170-0x177,0x376 on irq 15
+hda: max request size: 128KiB
+hda: cannot use LBA48 DMA - PIO mode will be used for accessing sectors >
+268435456
+hda: 488397168 sectors (250059 MB) w/8192KiB Cache, CHS=30401/255/63
+hda: cache flushes supported
+ hda: hda1 hda2 hda3 hda4
+hdc: max request size: 128KiB
+hdc: cannot use LBA48 DMA - PIO mode will be used for accessing sectors >
+268435456
+hdc: 488397168 sectors (250059 MB) w/8192KiB Cache, CHS=30401/255/63
+
+hdparm output:
+hdparm -Tt /dev/hdc output:
+/dev/hdc:
+ Timing cached reads:   388 MB in  2.01 seconds = 193.07 MB/sec
+ Timing buffered disk reads:  142 MB in  3.03 seconds =  46.89 MB/sec
+(I want to get something above 500MB/sec)
+
+May it help (googled)
+i found that related info:
+https://bugs.launchpad.net/ubuntu/+source/linux-source-2.6.20/+bug/119730
+http://osdir.com/ml/ide/2005-03/msg00064.html
+
 
 -- 
-Regards/Gruss,
-    Boris.
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug, or are watching the assignee.
