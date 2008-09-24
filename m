@@ -1,24 +1,35 @@
-From: "Maciej W. Rozycki" <macro@linux-mips.org>
-Subject: Re: [PATCH] IDE: Fix platform device registration in Swarm IDE driver
-Date: Wed, 24 Sep 2008 14:52:07 +0100 (BST)
-Message-ID: <Pine.LNX.4.55.0809241448480.811@cliff.in.clinika.pl>
-References: <20080922122853.GA15210@linux-mips.org> <48DA1F9D.6000501@ru.mvista.com>
-Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-mips-bounce@linux-mips.org>
-In-Reply-To: <48DA1F9D.6000501@ru.mvista.com>
-Sender: linux-mips-bounce@linux-mips.org
-Errors-to: linux-mips-bounce@linux-mips.org
-To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Cc: Ralf Baechle <ralf@linux-mips.org>, bzolnier@gmail.com, linux-ide@vger.kernel.org, linux-mips@linux-mips.org
+From: bugme-daemon@bugzilla.kernel.org
+Subject: [Bug 3072] ATAPI Zip drive doesn't work properly
+Date: Wed, 24 Sep 2008 07:04:18 -0700 (PDT)
+Message-ID: <20080924140418.F31C5108063@picon.linux-foundation.org>
+References: <bug-3072-11633@http.bugzilla.kernel.org/>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:49722 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750991AbYIXOFT (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 24 Sep 2008 10:05:19 -0400
+Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
+	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id m8OE4mYf016943
+	for <linux-ide@vger.kernel.org>; Wed, 24 Sep 2008 07:04:49 -0700
+In-Reply-To: <bug-3072-11633@http.bugzilla.kernel.org/>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-On Wed, 24 Sep 2008, Sergei Shtylyov wrote:
+http://bugzilla.kernel.org/show_bug.cgi?id=3072
 
->    Platform device in the driver itself? Interesting... :-)
 
- Better than nothing for platforms which did not have platform
-initialisation at all.  Some driver subsystems do not support
-non-driver-model devices at all or anymore.
+alan@lxorguk.ukuu.org.uk changed:
 
-  Maciej
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+             Status|REOPENED                    |REJECTED
+         Resolution|                            |INSUFFICIENT_DATA
+
+
+
+
+-- 
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug, or are watching the assignee.
