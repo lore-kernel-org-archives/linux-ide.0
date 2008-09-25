@@ -1,39 +1,50 @@
-From: Atsushi Nemoto <anemo@mba.ocn.ne.jp>
-Subject: Re: [PATCH 1/2] ide: Add tx4939ide driver (v2)
-Date: Thu, 25 Sep 2008 22:41:23 +0900 (JST)
-Message-ID: <20080925.224123.74566929.anemo@mba.ocn.ne.jp>
-References: <20080922.013256.128618380.anemo@mba.ocn.ne.jp>
-	<48DA2543.4050304@ru.mvista.com>
-	<48DA8658.2040107@ru.mvista.com>
+From: Bill Davidsen <davidsen@tmr.com>
+Subject: Re: exception Emask 0x0 SAct 0x1 / SErr 0x0 action 0x2 frozen
+Date: Thu, 25 Sep 2008 11:17:21 -0400
+Message-ID: <48DBAB81.8050900@tmr.com>
+References: <3E6D0C24877245C3A5A327129A7B4CA7@909927SOSLA>	 <alpine.DEB.1.10.0809220404400.18908@p34.internal.lan>	 <5A4A9A3B0AAA4A20A33BC2D578F5F75F@909927SOSLA>	 <alpine.DEB.1.10.0809220828490.23159@p34.internal.lan>	 <5419A02543384E69AF2BA82FF6E66C14@909927SOSLA>	 <alpine.DEB.1.10.0809220903400.23159@p34.internal.lan>	 <4B1ABD0393EF40FFB0A12242FE8356AF@909927SOSLA>	 <alpine.DEB.1.10.0809220915470.23159@p34.internal.lan>	 <alpine.DEB.1.10.0809220926240.23159@p34.internal.lan> <e7510f760809231114y6cbaf13aqf7c63bd48a73c978@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mba.ocn.ne.jp ([122.1.235.107]:56556 "EHLO smtp.mba.ocn.ne.jp"
+Received: from mail.tmr.com ([64.65.253.246]:51711 "EHLO partygirl.tmr.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752286AbYIYNk6 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 25 Sep 2008 09:40:58 -0400
-In-Reply-To: <48DA8658.2040107@ru.mvista.com>
+	id S1752675AbYIYPRl (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 25 Sep 2008 11:17:41 -0400
+In-Reply-To: <e7510f760809231114y6cbaf13aqf7c63bd48a73c978@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: sshtylyov@ru.mvista.com
-Cc: bzolnier@gmail.com, linux-mips@linux-mips.org, linux-ide@vger.kernel.org, ralf@linux-mips.org
+To: Gwendal Grignou <gwendal@google.com>
+Cc: Justin Piszcz <jpiszcz@lucidpixels.com>, Brian Rademacher <rad@radfiles.net>, linux-ide@vger.kernel.org, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Wed, 24 Sep 2008 22:26:32 +0400, Sergei Shtylyov <sshtylyov@ru.mvista.com> wrote:
-> >   Frankly speaking, I couldn't make out much of tht passage:
-> 
-> > <CAUSION>
-> > The write to the register by the Device/Head register may cause an 
-> > unexpected function by write wrong
-> > data to the register. So please rewrite to the System Control register 
-> > after write to the Device/Head
-> > register to secure write to System Control register in ATA100 Core.
-> 
->     I thought that this was related to loading the correct transfer mode for 
-> the selected drive. But if it's not only that, it would be quite pointless to 
-> also implement selectproc() method if you have to hook the tf_load() method...
+Gwendal Grignou wrote:
+> About ata1:0 problem, as reported in the bugzilla bug: I would try to
+> disable NCQ to see if it helps. Your disks firmware might not fully
+> support it.
+>
+> You can either add the parameter "libata.force=noncq" when loading
+> your kernel, or set queue_depth to 1 for all the Seagate drives behind
+> the Marvell MV88SX6081 controller.
+>
+> About ata5:0 , someone - in user space probably - is trying to do a
+> SMART ENABLE operation, but the device ignores it. I don't know which
+> device you are using, but I assume it does not support ATA SMART
+> feature set. Timeout is an acceptable but not a nice way to answer, a
+> cancel would have been better; check if there is a firmware upgrade
+> for your device.
+>   
 
-Hmm, indeed.  I'will try to get rid of selectproc.
+You certainly called the SMART issue, I was wondering why a new 
+distribution install on some older hardware was getting all the errors, 
+clearly the Fedora "smartd" doesn't check SMART capability before trying 
+to enable the feature. Oddly the drive on which I see this does reply to 
+SMART requests, so the firmware must be "semi-functional." Not a 
+problem, in my case the drive is just used for testing handling of hot 
+swap, and has no data of any value.
 
----
-Atsushi Nemoto
+-- 
+Bill Davidsen <davidsen@tmr.com>
+  "Woe unto the statesman who makes war without a reason that will still
+  be valid when the war is over..." Otto von Bismark 
+
+
