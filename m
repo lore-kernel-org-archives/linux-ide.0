@@ -1,56 +1,39 @@
-From: "kiran vedere" <vederekiran@gmail.com>
-Subject: Re: libata-core.c
-Date: Thu, 25 Sep 2008 09:32:42 -0400
-Message-ID: <679aeaf0809250632m74f80fdex5a86af7e03052888@mail.gmail.com>
-References: <679aeaf0809241511yf6cd812oa1ed5f3a1a37cfba@mail.gmail.com>
-	 <20080924232449.299b5158@lxorguk.ukuu.org.uk>
+From: Atsushi Nemoto <anemo@mba.ocn.ne.jp>
+Subject: Re: [PATCH 1/2] ide: Add tx4939ide driver (v2)
+Date: Thu, 25 Sep 2008 22:41:23 +0900 (JST)
+Message-ID: <20080925.224123.74566929.anemo@mba.ocn.ne.jp>
+References: <20080922.013256.128618380.anemo@mba.ocn.ne.jp>
+	<48DA2543.4050304@ru.mvista.com>
+	<48DA8658.2040107@ru.mvista.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wf-out-1314.google.com ([209.85.200.168]:59439 "EHLO
-	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755104AbYIYNcn (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 25 Sep 2008 09:32:43 -0400
-Received: by wf-out-1314.google.com with SMTP id 27so496584wfd.4
-        for <linux-ide@vger.kernel.org>; Thu, 25 Sep 2008 06:32:43 -0700 (PDT)
-In-Reply-To: <20080924232449.299b5158@lxorguk.ukuu.org.uk>
-Content-Disposition: inline
+Received: from mba.ocn.ne.jp ([122.1.235.107]:56556 "EHLO smtp.mba.ocn.ne.jp"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752286AbYIYNk6 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 25 Sep 2008 09:40:58 -0400
+In-Reply-To: <48DA8658.2040107@ru.mvista.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: jgarzik@pobox.com, linux-ide@vger.kernel.org
+To: sshtylyov@ru.mvista.com
+Cc: bzolnier@gmail.com, linux-mips@linux-mips.org, linux-ide@vger.kernel.org, ralf@linux-mips.org
 
-Hi Alan:
+On Wed, 24 Sep 2008 22:26:32 +0400, Sergei Shtylyov <sshtylyov@ru.mvista.com> wrote:
+> >   Frankly speaking, I couldn't make out much of tht passage:
+> 
+> > <CAUSION>
+> > The write to the register by the Device/Head register may cause an 
+> > unexpected function by write wrong
+> > data to the register. So please rewrite to the System Control register 
+> > after write to the Device/Head
+> > register to secure write to System Control register in ATA100 Core.
+> 
+>     I thought that this was related to loading the correct transfer mode for 
+> the selected drive. But if it's not only that, it would be quite pointless to 
+> also implement selectproc() method if you have to hook the tf_load() method...
 
-Thanks a lot for the clarification.
+Hmm, indeed.  I'will try to get rid of selectproc.
 
-Regards,
-kiran
-
-On Wed, Sep 24, 2008 at 6:24 PM, Alan Cox <alan@lxorguk.ukuu.org.uk> wrote:
->> 1. Is this library generic for all platforms or is it specific to PC
->> because it seems to reference PCI in some places. If I have my host
->> controller driver, is the current pata_pcmcia.c (and libata helper
->> libraries) sufficient to use the Compact Flash in True-IDE mode or
->> something additional is needed.
->
-> libata is generic.
->
->> 2. The CF TrueIDE mode supports Multiword DMA and Ultra DMA modes of
->> data transfer. Your libata-core.c seems to have support for these
->> modes. However I assume I will need to provide the DMA Buffer to
->> facilitate this. Do I need to provide call back functions to do this
->> or I need to implement a seperate Client Driver to support these
->> modes? I assume the pata_pcmcia.c uses PIO mode by default? Correct me
->> if I am wrong.
->
-> If you are in trueide mode the device behaves as an IDE disk, so you will
-> need a driver for whatever ATA controller is being used.
->
-> If you are in PCMCIA mode then you only get PIO0 and the pata_pcmcia
-> driver drives the CF card with the CF card acting as a PCMCIA ATA
-> controller
->
-> Alan
->
+---
+Atsushi Nemoto
