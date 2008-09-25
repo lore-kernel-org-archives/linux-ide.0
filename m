@@ -1,50 +1,106 @@
-From: Bill Davidsen <davidsen@tmr.com>
-Subject: Re: exception Emask 0x0 SAct 0x1 / SErr 0x0 action 0x2 frozen
-Date: Thu, 25 Sep 2008 11:17:21 -0400
-Message-ID: <48DBAB81.8050900@tmr.com>
-References: <3E6D0C24877245C3A5A327129A7B4CA7@909927SOSLA>	 <alpine.DEB.1.10.0809220404400.18908@p34.internal.lan>	 <5A4A9A3B0AAA4A20A33BC2D578F5F75F@909927SOSLA>	 <alpine.DEB.1.10.0809220828490.23159@p34.internal.lan>	 <5419A02543384E69AF2BA82FF6E66C14@909927SOSLA>	 <alpine.DEB.1.10.0809220903400.23159@p34.internal.lan>	 <4B1ABD0393EF40FFB0A12242FE8356AF@909927SOSLA>	 <alpine.DEB.1.10.0809220915470.23159@p34.internal.lan>	 <alpine.DEB.1.10.0809220926240.23159@p34.internal.lan> <e7510f760809231114y6cbaf13aqf7c63bd48a73c978@mail.gmail.com>
+From: Wang Jian <lark@linux.net.cn>
+Subject: Re: [PATCH] pata_platform struct resource signness fix
+Date: Thu, 25 Sep 2008 23:33:35 +0800
+Message-ID: <48DBAF4F.3020003@linux.net.cn>
+References: <20080925083622.GA2701@debian> <48DB51C3.6040504@linux.net.cn>
+	<2a27d3730809250340p5cbd307crb1f70e5fb1a2fc1f@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.tmr.com ([64.65.253.246]:51711 "EHLO partygirl.tmr.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752675AbYIYPRl (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 25 Sep 2008 11:17:41 -0400
-In-Reply-To: <e7510f760809231114y6cbaf13aqf7c63bd48a73c978@mail.gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linuxppc-dev-bounces+glppd-linuxppc64-dev=m.gmane.org@ozlabs.org>
+In-Reply-To: <2a27d3730809250340p5cbd307crb1f70e5fb1a2fc1f@mail.gmail.com>
+List-Unsubscribe: <https://ozlabs.org/mailman/options/linuxppc-dev>,
+	<mailto:linuxppc-dev-request@ozlabs.org?subject=unsubscribe>
+List-Archive: <http://ozlabs.org/pipermail/linuxppc-dev>
+List-Post: <mailto:linuxppc-dev@ozlabs.org>
+List-Help: <mailto:linuxppc-dev-request@ozlabs.org?subject=help>
+List-Subscribe: <https://ozlabs.org/mailman/listinfo/linuxppc-dev>,
+	<mailto:linuxppc-dev-request@ozlabs.org?subject=subscribe>
+Sender: linuxppc-dev-bounces+glppd-linuxppc64-dev=m.gmane.org@ozlabs.org
+Errors-To: linuxppc-dev-bounces+glppd-linuxppc64-dev=m.gmane.org@ozlabs.org
+To: Li Yang <leoli@freescale.com>
+Cc: linuxppc-dev@ozlabs.org, linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Gwendal Grignou <gwendal@google.com>
-Cc: Justin Piszcz <jpiszcz@lucidpixels.com>, Brian Rademacher <rad@radfiles.net>, linux-ide@vger.kernel.org, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Gwendal Grignou wrote:
-> About ata1:0 problem, as reported in the bugzilla bug: I would try to
-> disable NCQ to see if it helps. Your disks firmware might not fully
-> support it.
->
-> You can either add the parameter "libata.force=noncq" when loading
-> your kernel, or set queue_depth to 1 for all the Seagate drives behind
-> the Marvell MV88SX6081 controller.
->
-> About ata5:0 , someone - in user space probably - is trying to do a
-> SMART ENABLE operation, but the device ignores it. I don't know which
-> device you are using, but I assume it does not support ATA SMART
-> feature set. Timeout is an acceptable but not a nice way to answer, a
-> cancel would have been better; check if there is a firmware upgrade
-> for your device.
->   
+Li Yang wrote:
+> On Thu, Sep 25, 2008 at 4:54 PM, Wang Jian <lark@linux.net.cn> wrote:
+>> The alternative fix can be.
+> 
+> This one is better as 0 is defined as 'invalid irq' for all
+> architectures.  Added linux-ide and Anton to cc.
 
-You certainly called the SMART issue, I was wondering why a new 
-distribution install on some older hardware was getting all the errors, 
-clearly the Fedora "smartd" doesn't check SMART capability before trying 
-to enable the feature. Oddly the drive on which I see this does reply to 
-SMART requests, so the firmware must be "semi-functional." Not a 
-problem, in my case the drive is just used for testing handling of hot 
-swap, and has no data of any value.
+However, this is not very true. Just git grep "#define NO_IRQ" and see. It
+seems that the NO_IRQ is in transition from (-1) to (0).
 
--- 
-Bill Davidsen <davidsen@tmr.com>
-  "Woe unto the statesman who makes war without a reason that will still
-  be valid when the war is over..." Otto von Bismark 
+I happened to code the same 2 patches as Anton Vorontsov <avorontsov@ru.mvista.com>
+had done without knowing his earlier work. I think he was also confused by (-1)
+and (0).
 
-
+> 
+> - Leo
+> 
+>> diff --git a/drivers/ata/pata_of_platform.c b/drivers/ata/pata_of_platform.c
+>> index 408da30..1f18ad9 100644
+>> --- a/drivers/ata/pata_of_platform.c
+>> +++ b/drivers/ata/pata_of_platform.c
+>> @@ -52,7 +52,7 @@ static int __devinit pata_of_platform_probe(struct
+>> of_device *ofdev,
+>>
+>>        ret = of_irq_to_resource(dn, 0, &irq_res);
+>>        if (ret == NO_IRQ)
+>> -               irq_res.start = irq_res.end = -1;
+>> +               irq_res.start = irq_res.end = 0;
+>>        else
+>>                irq_res.flags = 0;
+>>
+>> I just didn't spend much time to see which is better.
+>>
+>> Wang Jian wrote:
+>>> Hi,
+>>>
+>>> This patch is to pata_platform.c but at this time, it's powerpc specific
+>>> because it can only be triggerred using openfirmware, so I post the patch
+>>> here. The patch is against 2.6.26-rc8.
+>>>
+>>> The problem is triggerred when ata device is populated using
+>>> pata_of_platform.c, and no irq is assigned (poll mode, such as CF card).
+>>>
+>>> pata_of_platform_probe() parse device tree and
+>>>
+>>>        if (ret == NO_IRQ)
+>>>                        irq_res.start = irq_res.end = -1;
+>>>
+>>> Then irq is 0xffffffff, not NULL. Probe will fail coz irq can't be
+>>> requested.
+>>>
+>>>
+>>> ---
+>>> (irq_res->start > 0) will be true even when it is (-1). When the device
+>>> has no irq, irq_res->start is assigned (-1).
+>>>
+>>> Signed-off-by: Wang Jian <lark@linux.net.cn>
+>>> ---
+>>>  drivers/ata/pata_platform.c |    2 +-
+>>>  1 files changed, 1 insertions(+), 1 deletions(-)
+>>>
+>>> diff --git a/drivers/ata/pata_platform.c b/drivers/ata/pata_platform.c
+>>> index 8f65ad6..b12cd0c 100644
+>>> --- a/drivers/ata/pata_platform.c
+>>> +++ b/drivers/ata/pata_platform.c
+>>> @@ -123,7 +123,7 @@ int __devinit __pata_platform_probe(struct device
+>>> *dev,
+>>>        /*
+>>>         * And the IRQ
+>>>         */
+>>> -       if (irq_res && irq_res->start > 0) {
+>>> +       if (irq_res && irq_res->start != -1) {
+>>>                irq = irq_res->start;
+>>>                irq_flags = irq_res->flags;
+>>>        }
+>> _______________________________________________
+>> Linuxppc-dev mailing list
+>> Linuxppc-dev@ozlabs.org
+>> https://ozlabs.org/mailman/listinfo/linuxppc-dev
+>>
+> 
+> 
