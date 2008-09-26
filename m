@@ -1,27 +1,33 @@
-From: "klaus v." <klaus.viertel@freenet.de>
-Subject: crazy harddisc unloading pt2
-Date: Fri, 26 Sep 2008 19:23:12 +0200
-Message-ID: <1222449792.6178.10.camel@tithonus>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: PROBLEM: SATA PCI on SB600: unable to reserve I/O region
+Date: Fri, 26 Sep 2008 19:32:30 +0100
+Message-ID: <20080926193230.21cbf77b@lxorguk.ukuu.org.uk>
+References: <20080926151346.GA22930@mail.bin>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mout4.freenet.de ([195.4.92.94]:54741 "EHLO mout4.freenet.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751611AbYIZRXQ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 26 Sep 2008 13:23:16 -0400
-Received: from [195.4.92.10] (helo=0.mx.freenet.de)
-	by mout4.freenet.de with esmtpa (ID klaus.viertel@freenet.de) (port 25) (Exim 4.69 #65)
-	id 1KjH2A-00036i-4q
-	for linux-ide@vger.kernel.org; Fri, 26 Sep 2008 19:23:14 +0200
-Received: from g227210231.adsl.alicedsl.de ([92.227.210.231]:58301)
-	by 0.mx.freenet.de with esmtpsa (ID klaus.viertel@freenet.de) (SSLv3:AES256-SHA:256) (port 465) (Exim 4.69 #65)
-	id 1KjH29-0000Qy-Tj
-	for linux-ide@vger.kernel.org; Fri, 26 Sep 2008 19:23:14 +0200
+Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:39525 "EHLO
+	lxorguk.ukuu.org.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1750885AbYIZScd (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 26 Sep 2008 14:32:33 -0400
+In-Reply-To: <20080926151346.GA22930@mail.bin>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Piet Plomp <piet@bioinf.nl>
+Cc: linux-ide@vger.kernel.org
 
-I forget to say: The problem still exists on my system. Neither B255 nor
-B254 could do the job.
+>   0170-0177 : 0000:00:12.0
+>     0170-0177 : ide_generic
+>   01f0-01f7 : 0000:00:12.0
+>     01f0-01f7 : ide_generic
 
+You have old IDE enabled as well so old IDE claimed the device
+
+
+>   Probing IDE interface ide0...
+>   Probing IDE interface ide1...
+>   ide0 at 0x1f0-0x1f7,0x3f6 on irq 14
+>   ide1 at 0x170-0x177,0x376 on irq 15
+
+S
