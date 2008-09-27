@@ -1,40 +1,53 @@
-From: "Jeffrey W. Baker" <jwbaker@gmail.com>
-Subject: AHCI power down unused ports merge status?
-Date: Sat, 27 Sep 2008 12:39:15 -0700
-Message-ID: <1222544355.26413.6.camel@stinklet>
+From: John Clark <clarkjc@runbox.com>
+Subject: Interoperability problem with Quantum CD72SH SATA tape drive and
+ libata
+Date: Sat, 27 Sep 2008 16:25:19 -0400
+Message-ID: <48DE96AF.6090301@runbox.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.177]:55785 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753159AbYI0TjX (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 27 Sep 2008 15:39:23 -0400
-Received: by wa-out-1112.google.com with SMTP id v27so702333wah.21
-        for <linux-ide@vger.kernel.org>; Sat, 27 Sep 2008 12:39:21 -0700 (PDT)
+Received: from aibo.runbox.com ([193.71.199.94]:57181 "EHLO aibo.runbox.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752191AbYI0UwB (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 27 Sep 2008 16:52:01 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: linux-ide@vger.kernel.org
 
-I was just poking around in the ICH8 documentation and /dev/mem and I
-notice that all three of the SATA PHYs on my laptop are enabled, when I
-have only one SATA target device.  AHCI allows the port to be disabled,
-and this saves a lot of power, but this functionality is not exposed in
-Linux.
+Hello,
 
-There are patches floating around on this mailing list to disable the
-port by echoing "power_off" to ALPM in sysfs, but this patch isn't
-merged in libata-dev and I don't see it in 2.6.27-rc7 either.  Is there
-any hope of this getting merged?  Is it dangerous or otherwise not
-advised?  
+I've discovered an issue with the Quantum CD72SH SATA tape drive.  I set 
+it to variable block size, try to write a 5317 byte block with an ATAPI 
+issued WRITE(6), and it hangs.  The drive is connected to an Intel ICH9R 
+in AHCI mode.
 
-I think users would really appreciate having this.  Disabling unused
-ports results in +10% extra battery life on my laptop.
+My debugging efforts have determined that it's a problem with the 
+drive's firmware.  It does not like ATAPI CDBs with odd (& 1) transfer 
+lengths with PIO.  If I let it use DMA, even if it's not a multiple of 
+16 bytes, then it seems to work:
 
-cf http://marc.info/?l=linux-ide&m=121504056904748&w=2
+--- libata-core.c.orig    2008-09-27 16:12:46.000000000 -0400
++++ libata-core.c    2008-09-27 16:11:29.000000000 -0400
+@@ -4669,8 +4669,8 @@
+     /* Don't allow DMA if it isn't multiple of 16 bytes.  Quite a
+      * few ATAPI devices choke on such DMA requests.
+      */
+-    if (unlikely(qc->nbytes & 15))
+-        return 1;
++    // if (unlikely(qc->nbytes & 15))
++    //     return 1;
+ 
+     if (ap->ops->check_atapi_dma)
+         return ap->ops->check_atapi_dma(qc);
 
-I think part 1 is severable from part 2, so perhaps the sysfs bits can
-be merged without the default policy part that seems objectionable.
 
--jwb
 
+This is an acceptable solution for my limited use, but I'd like to see 
+it work out of the box.  It seems frightening that there are ATAPI 
+devices out there that choke on PIO requests.  What would you like to do?
+
+Thank you.
+
+- John
