@@ -1,47 +1,40 @@
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: Re: Multiple MSI, take 3
-Date: Sat, 27 Sep 2008 13:04:52 -0600
-Message-ID: <20080927190452.GQ27204@parisc-linux.org>
-References: <20080711005719.GO14894@parisc-linux.org> <df9815e70809252230x4eef3e1ep40a02f101cb90a87@mail.gmail.com>
+From: "Jeffrey W. Baker" <jwbaker@gmail.com>
+Subject: AHCI power down unused ports merge status?
+Date: Sat, 27 Sep 2008 12:39:15 -0700
+Message-ID: <1222544355.26413.6.camel@stinklet>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from palinux.external.hp.com ([192.25.206.14]:35896 "EHLO
-	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752995AbYI0TFO (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 27 Sep 2008 15:05:14 -0400
-Content-Disposition: inline
-In-Reply-To: <df9815e70809252230x4eef3e1ep40a02f101cb90a87@mail.gmail.com>
+Received: from wa-out-1112.google.com ([209.85.146.177]:55785 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753159AbYI0TjX (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 27 Sep 2008 15:39:23 -0400
+Received: by wa-out-1112.google.com with SMTP id v27so702333wah.21
+        for <linux-ide@vger.kernel.org>; Sat, 27 Sep 2008 12:39:21 -0700 (PDT)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jike Song <albcamus@gmail.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org, grundler@parisc-linux.org, mingo@elte.hu, tglx@linutronix.de, jgarzik@pobox.com, linux-ide@vger.kernel.org, suresh.b.siddha@intel.com, benh@kernel.crashing.org, jbarnes@virtuousgeek.org, rdunlap@xenotime.net, mtk.manpages@gmail.com
+To: linux-ide@vger.kernel.org
 
-On Fri, Sep 26, 2008 at 01:30:11PM +0800, Jike Song wrote:
-> On Fri, Jul 11, 2008 at 8:57 AM, Matthew Wilcox <matthew@wil.cx> wrote:
-> > Patchset available as a git tree from:
-> >
-> > git://git.kernel.org/pub/scm/linux/kernel/git/willy/misc.git multiple-msi
-> > (multiple-msi-20080710 is this patch set in particular)
-> >
-> > Patches will be sent in reply to this message.
-> 
-> Hi Matthew, what's current state of this work? I pulled it into a
-> newly created git branch and tried to rebase it upon the latest Linus
-> tree, found that there are some merge conflicts.
+I was just poking around in the ICH8 documentation and /dev/mem and I
+notice that all three of the SATA PHYs on my laptop are enabled, when I
+have only one SATA target device.  AHCI allows the port to be disabled,
+and this saves a lot of power, but this functionality is not exposed in
+Linux.
 
-The status is that I was working on it on the plane home from Plumbers
-and didn't quite managed to get it working on x86-32 yet.  This is a
-requirement from Ingo before he'll accept the x86-64 implementation.
-I was hoping to work on it some more this week, but a combination of
-being ill and having other things to work on (including a lot of patch
-review) has meant that I have not had time to look at it.
+There are patches floating around on this mailing list to disable the
+port by echoing "power_off" to ALPM in sysfs, but this patch isn't
+merged in libata-dev and I don't see it in 2.6.27-rc7 either.  Is there
+any hope of this getting merged?  Is it dangerous or otherwise not
+advised?  
 
-I did start setting up to test again on Friday ... hopefully I'll have
-time on Monday.
+I think users would really appreciate having this.  Disabling unused
+ports results in +10% extra battery life on my laptop.
 
--- 
-Matthew Wilcox				Intel Open Source Technology Centre
-"Bill, look, we understand that you're interested in selling us this
-operating system, but compare it to ours.  We can't possibly take such
-a retrograde step."
+cf http://marc.info/?l=linux-ide&m=121504056904748&w=2
+
+I think part 1 is severable from part 2, so perhaps the sysfs bits can
+be merged without the default policy part that seems objectionable.
+
+-jwb
+
