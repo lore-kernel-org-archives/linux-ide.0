@@ -1,53 +1,47 @@
-From: John Clark <clarkjc@runbox.com>
-Subject: Interoperability problem with Quantum CD72SH SATA tape drive and
- libata
-Date: Sat, 27 Sep 2008 16:25:19 -0400
-Message-ID: <48DE96AF.6090301@runbox.com>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: [PATCH 1/2] ide: Add tx4939ide driver
+Date: Sun, 28 Sep 2008 07:09:35 +0900
+Message-ID: <48DEAF1F.8040200@gmail.com>
+References: <48C851ED.4090607@ru.mvista.com> <48CA8BEE.1090305@ru.mvista.com> <20080913.005904.07457691.anemo@mba.ocn.ne.jp> <200809271819.19510.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from aibo.runbox.com ([193.71.199.94]:57181 "EHLO aibo.runbox.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752191AbYI0UwB (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 27 Sep 2008 16:52:01 -0400
+Received: from ti-out-0910.google.com ([209.85.142.188]:32300 "EHLO
+	ti-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753366AbYI0WLB (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 27 Sep 2008 18:11:01 -0400
+Received: by ti-out-0910.google.com with SMTP id b6so625781tic.23
+        for <linux-ide@vger.kernel.org>; Sat, 27 Sep 2008 15:11:00 -0700 (PDT)
+In-Reply-To: <200809271819.19510.bzolnier@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: linux-ide@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: Atsushi Nemoto <anemo@mba.ocn.ne.jp>, sshtylyov@ru.mvista.com, linux-mips@linux-mips.org, linux-ide@vger.kernel.org, ralf@linux-mips.org, Jens Axboe <jens.axboe@oracle.com>, James Bottomley <James.Bottomley@HansenPartnership.com>
 
-Hello,
+Bartlomiej Zolnierkiewicz wrote:
+> On Friday 12 September 2008, Atsushi Nemoto wrote:
+>> On Fri, 12 Sep 2008 19:34:06 +0400, Sergei Shtylyov <sshtylyov@ru.mvista.com> wrote:
+> 
+> [...]
+> 
+>>>>>> +	__ide_flush_dcache_range((unsigned long)addr, size);
+>>>>>   Why is this needed BTW?
+>>>> Do you mean __ide_flush_dcache_range?  This is needed to avoid cache
+>>>> inconsistency on PIO drive.  PIO transfer only writes to cache but
+>>>> upper layers expects the data is in main memory.
+>>>     Hum, then I wonder why it's MIPS specific...
+>> SPARC also have it.  And there were some discussions for ARM IIRC.
+> 
+> I was under the impression that it has been addressed by Tejun at
+> the higher-layer level (for both ide/libata) long time ago and that
+> MIPS/SPARC code are just a left-overs which could be removed now?
 
-I've discovered an issue with the Quantum CD72SH SATA tape drive.  I set 
-it to variable block size, try to write a 5317 byte block with an ATAPI 
-issued WRITE(6), and it hangs.  The drive is connected to an Intel ICH9R 
-in AHCI mode.
+cc'ing Jens and James.  IIRC, I posted several patches but they never
+went in.  I don't remember what the objections were or whether any
+alternative fix went in.
 
-My debugging efforts have determined that it's a problem with the 
-drive's firmware.  It does not like ATAPI CDBs with odd (& 1) transfer 
-lengths with PIO.  If I let it use DMA, even if it's not a multiple of 
-16 bytes, then it seems to work:
+Thanks.
 
---- libata-core.c.orig    2008-09-27 16:12:46.000000000 -0400
-+++ libata-core.c    2008-09-27 16:11:29.000000000 -0400
-@@ -4669,8 +4669,8 @@
-     /* Don't allow DMA if it isn't multiple of 16 bytes.  Quite a
-      * few ATAPI devices choke on such DMA requests.
-      */
--    if (unlikely(qc->nbytes & 15))
--        return 1;
-+    // if (unlikely(qc->nbytes & 15))
-+    //     return 1;
- 
-     if (ap->ops->check_atapi_dma)
-         return ap->ops->check_atapi_dma(qc);
-
-
-
-This is an acceptable solution for my limited use, but I'd like to see 
-it work out of the box.  It seems frightening that there are ATAPI 
-devices out there that choke on PIO requests.  What would you like to do?
-
-Thank you.
-
-- John
+-- 
+tejun
