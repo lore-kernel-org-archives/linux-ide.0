@@ -1,50 +1,46 @@
 From: Ralf Baechle <ralf@linux-mips.org>
 Subject: Re: [PATCH] IDE: Fix platform device registration in Swarm IDE
 	driver
-Date: Sun, 28 Sep 2008 12:39:31 +0100
-Message-ID: <20080928113931.GA9207@linux-mips.org>
-References: <20080922122853.GA15210@linux-mips.org> <48DA1F9D.6000501@ru.mvista.com> <200809271859.55304.bzolnier@gmail.com>
+Date: Sun, 28 Sep 2008 12:47:11 +0100
+Message-ID: <20080928114711.GB9207@linux-mips.org>
+References: <20080922122853.GA15210@linux-mips.org> <48DA1F9D.6000501@ru.mvista.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ditditdahdahdah-dahditditditdit.dl5rb.org.uk ([217.169.26.26]:39488
+Received: from ditditdahdahdah-dahditditditdit.dl5rb.org.uk ([217.169.26.26]:39704
 	"EHLO ditditdahdahdah-dahdahdahditdit.dl5rb.org.uk"
 	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751019AbYI1Ljq (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 28 Sep 2008 07:39:46 -0400
+	id S1751231AbYI1LrY (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 28 Sep 2008 07:47:24 -0400
 Content-Disposition: inline
-In-Reply-To: <200809271859.55304.bzolnier@gmail.com>
+In-Reply-To: <48DA1F9D.6000501@ru.mvista.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: Sergei Shtylyov <sshtylyov@ru.mvista.com>, linux-ide@vger.kernel.org, "Maciej W. Rozycki" <macro@linux-mips.org>, linux-mips@linux-mips.org
+To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Cc: bzolnier@gmail.com, linux-ide@vger.kernel.org, "Maciej W. Rozycki" <macro@linux-mips.org>, linux-mips@linux-mips.org
 
-On Sat, Sep 27, 2008 at 06:59:55PM +0200, Bartlomiej Zolnierkiewicz wrote:
+On Wed, Sep 24, 2008 at 03:08:13PM +0400, Sergei Shtylyov wrote:
 
-> > > -	swarm_ide_resource.start = offset;
-> > > -	swarm_ide_resource.end = offset + size - 1;
-> > > -	if (request_resource(&iomem_resource, &swarm_ide_resource)) {
-> > >   
-> > 
-> >    Why drop request_resource() completely? Replace it by 
-> > request_mem_region().
-> 
-> Yes, this needs fixing (otherwise everything looks good).
+>> +{
+>>   
+> [...]
+>> +	pdev = platform_device_register_simple(DEV_NAME, -1,
+>> +		       swarm_ide_resource, ARRAY_SIZE(swarm_ide_resource));
+>>   
+>
+>   If you have the resources as static array anyway, why not have the  
+> device in the static variable too and use platform_device_register()?
 
-No, platform_device_add which is called by platform_device_register*
-will take care of adding the resources - but only if if's told about them
-which the old driver didn't.
+It saves a few lines of code.
 
-Also, in case of a resource conflict a device should not be added at all but
-exactly that is what the old code did.  A resource conflict would have been
-caught by the platform_driver probing code well too late.
+>> -static struct platform_device *swarm_ide_dev;
+>>   
+>
+>   Platform device in the driver itself? Interesting... :-)
 
-> Ralf: I guess that your next step will be dropping swarm-specific platform ide
-> driver in favor of generic one (please see drivers/ide/legacy/ide_platform.c)
-> as they are _very_ similar now? :)
-
-Good point - I was already wondering if something like that does exist.
-What's left over of the swarm driver way too much looks like it can be
-squeezed into some sort of template.
+It works and isn't a too bad idea for certain drivers where adding one half
+of the code to a platform file, another to the driver file is just too
+much fuzz.  It's just that this wasn't done right in case of the Swarm so
+I'm gluing that now.
 
   Ralf
