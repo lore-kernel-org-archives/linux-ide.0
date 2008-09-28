@@ -1,46 +1,61 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH] IDE: Fix platform device registration in Swarm IDE	driver
-Date: Sun, 28 Sep 2008 17:12:27 +0400
-Message-ID: <48DF82BB.8070604@ru.mvista.com>
-References: <20080922122853.GA15210@linux-mips.org> <48DA1F9D.6000501@ru.mvista.com> <200809271859.55304.bzolnier@gmail.com> <20080928113931.GA9207@linux-mips.org>
+From: Geert Uytterhoeven <geert@linux-m68k.org>
+Subject: Re: [PATCH] IDE: Fix platform device registration in Swarm IDE driver
+Date: Sun, 28 Sep 2008 19:18:36 +0200 (CEST)
+Message-ID: <Pine.LNX.4.64.0809281913040.5681@anakin>
+References: <20080922122853.GA15210@linux-mips.org> <48DA1F9D.6000501@ru.mvista.com>
+ <20080928114711.GB9207@linux-mips.org> <48DF7DBC.1080804@ru.mvista.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from homer.mvista.com ([63.81.120.155]:12843 "EHLO
-	imap.sh.mvista.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751938AbYI1NLb (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 28 Sep 2008 09:11:31 -0400
-In-Reply-To: <20080928113931.GA9207@linux-mips.org>
+Received: from yergi.telenet-ops.be ([195.130.132.36]:50968 "EHLO
+	yergi.telenet-ops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752431AbYI1RTN (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 28 Sep 2008 13:19:13 -0400
+Received: from harold.telenet-ops.be (unknown [195.130.133.65])
+	by yergi.telenet-ops.be (Postfix) with ESMTP id C10825CAC8F
+	for <linux-ide@vger.kernel.org>; Sun, 28 Sep 2008 19:19:42 +0200 (CEST)
+In-Reply-To: <48DF7DBC.1080804@ru.mvista.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Ralf Baechle <ralf@linux-mips.org>
-Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-ide@vger.kernel.org, "Maciej W. Rozycki" <macro@linux-mips.org>, linux-mips@linux-mips.org
+To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Cc: Ralf Baechle <ralf@linux-mips.org>, bzolnier@gmail.com, linux-ide@vger.kernel.org, "Maciej W. Rozycki" <macro@linux-mips.org>, linux-mips@linux-mips.org
 
-Hello.
+On Sun, 28 Sep 2008, Sergei Shtylyov wrote:
+> Ralf Baechle wrote:
+> 
+> > > > +{
+> 
+> > > [...]
+> 
+> > > > +	pdev = platform_device_register_simple(DEV_NAME, -1,
+> > > > +		       swarm_ide_resource, ARRAY_SIZE(swarm_ide_resource));
+> 
+> > >  If you have the resources as static array anyway, why not have the
+> > > device in the static variable too and use platform_device_register()?
+> 
+> > It saves a few lines of code.
+> 
+>    And wastes few words of static data since platform_device_register_simple()
+> will kmalloc() the resources and do a copy from these resources after which
+> they are not needed -- so, it's worth making swarm_ide_resource[] __initdata
+> at least.
+>    If you were using platform_device_register() with static platform device,
+> no memory allocation would have happened, and no data would have been wasted.
 
-Ralf Baechle wrote:
+Indeed, there are different static/dynamic memory usage patterns for the
+various ways to register platform devices. Unfortunately (AFAIK) it's not
+properly documented which to use when.
 
->>>>-	swarm_ide_resource.start = offset;
->>>>-	swarm_ide_resource.end = offset + size - 1;
->>>>-	if (request_resource(&iomem_resource, &swarm_ide_resource)) {
+E.g. if some devices may be present (as indicated by e.g. firmware),
+which one is the most optimal to use?
 
->>>   Why drop request_resource() completely? Replace it by 
->>>request_mem_region().
+Gr{oetje,eeting}s,
 
->>Yes, this needs fixing (otherwise everything looks good).
+						Geert
 
-> No, platform_device_add which is called by platform_device_register*
-> will take care of adding the resources - but only if if's told about them
-> which the old driver didn't.
+--
+Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
 
-    Ah, I've missed that the platform device was registered without resources 
-(ugh) -- request_resource() call wasn't pointless then.  Note however that 
-request_mem_region() does somewhat different thing: it pins the memory 
-resource for the driver, setting IORESOURCE_BUSY flag on the resource (and it 
-also walks the resource tree in depth, using __request_resource() on each 
-level.  That's the thing that drivers do routinely on intialization.
-
->   Ralf
-
-MBR, Sergei
+In personal conversations with technical people, I call myself a hacker. But
+when I'm talking to journalists I just say "programmer" or something like that.
+							    -- Linus Torvalds
