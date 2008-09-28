@@ -1,80 +1,39 @@
-From: "Jeffrey W. Baker" <jwbaker@gmail.com>
-Subject: Re: [patch 1/2] allow user to power off unused ports via sysfs
-Date: Sun, 28 Sep 2008 14:58:34 -0700
-Message-ID: <1222639114.12062.10.camel@hannibal>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: What's the SB600 64-bit DMA problem?
+Date: Mon, 29 Sep 2008 08:20:12 +0900
+Message-ID: <48E0112C.7010901@gmail.com>
+References: <20080920151712.10515.qmail@science.horizon.com> <da824cf30809201528o27478ae2h5894e39932622d3b@mail.gmail.com> <20080921001529.23400.qmail@science.horizon.com> <65a6ef750809231730h52f6bf47g23b33db1d2f4ca08@mail.gmail.com> <48DA0C8B.3000406@gmail.com> <B90463BC30D2E446BA423D888DC85E50C8358F@sshaexmb1.amd.com> <20080925032437.6802.qmail@science.horizon.com> <48DCEC6D.1040305@gmail.com> <20080928210422.2578.qmail@science.horizon.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.177]:51394 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752284AbYI1V7D (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 28 Sep 2008 17:59:03 -0400
-Received: by wa-out-1112.google.com with SMTP id v27so853377wah.21
-        for <linux-ide@vger.kernel.org>; Sun, 28 Sep 2008 14:59:01 -0700 (PDT)
+Received: from ti-out-0910.google.com ([209.85.142.184]:33195 "EHLO
+	ti-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752923AbYI1XVj (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 28 Sep 2008 19:21:39 -0400
+Received: by ti-out-0910.google.com with SMTP id b6so784938tic.23
+        for <linux-ide@vger.kernel.org>; Sun, 28 Sep 2008 16:21:36 -0700 (PDT)
+In-Reply-To: <20080928210422.2578.qmail@science.horizon.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
-Cc: kristen.c.accardi@intel.com
+To: George Spelvin <linux@horizon.com>
+Cc: Shane.Huang@amd.com, mdnelson8@gmail.com, linux-ide@vger.kernel.org, jgarzik@redhat.com, grundler@google.com
 
-I tried this patch and it doesn't work on ICH8 because it violates AHCI
-protocol.
+George Spelvin wrote:
+> Tejun Heo <htejun@gmail.com> wrote:
+>>> Q: Does the fact that I'm using the GART IOMMU mean that I'm not really using
+>>> using 64-bit DMA at all?
+>> Can you turn it off and see what happens?
+> 
+> I can if I can verify that every other bus-master PCI device in the
+> system can do 64-bit DMA.
+> 
+> Do you know how to check that?  I haven't found a file under /sys or
+> /proc that tells me what the DMA masks are of various system
+> drivers, but that doesn't mean that it doesn't exist.
 
-kristen.c.accardi@intel.com wrote:
-> --- linux-ahci-phy.orig/drivers/ata/libata-core.c	2008-06-27 13:32:51.000000000 -0700
-> +++ linux-ahci-phy/drivers/ata/libata-core.c	2008-07-01 16:33:00.000000000 -0700
-> @@ -162,6 +162,19 @@ MODULE_DESCRIPTION("Library module for A
->  MODULE_LICENSE("GPL");
->  MODULE_VERSION(DRV_VERSION);
->  
-> +static void ata_phy_offline(struct ata_link *link)
-> +{
-> +	u32 scontrol;
-> +	int rc;
-> +
-> +	/* set DET to 4 */
-> +	rc = sata_scr_read(link, SCR_CONTROL, &scontrol);
-> +	if (rc)
-> +		return;
-> +	scontrol &= ~0xf;
-> +	scontrol |= (1 << 2);
-> +	sata_scr_write(link, SCR_CONTROL, scontrol);
-> +}
+It doesn't really matter.  The kernel will bounce buffers as
+necessary.
 
-On AHCI, you can't change SCTL.DET when the port is running.  This
-version of ata_phy_offline changes SCTL.DET without regard to CMD.ST.
-
-I would propose something more like this:
-
-static void ata_port_offline(struct ata_port *ap)
-{
-        u32 scontrol;
-        int rc;
-        struct ata_link *link = &ap->link;
-
-        if (ap->ops->port_stop)
-                ap->ops->port_stop(ap);
-
-        rc = sata_scr_read(link, SCR_CONTROL, &scontrol);
-        if (rc)
-                return;
-
-        scontrol &= ~0xf;
-        scontrol |= (1<<2);
-
-        sata_scr_write(link, SCR_CONTROL, scontrol);
-}
-
-I tried the above on ICH8 and by poking around in /dev/mem I believe it
-works.  After I set the ALPM to power_off in sysfs, the port shows
-CMD.ST == 0, CMD.FRE == 0, and SSTS.DET == 4.  So I think this is the
-way to go, at least with respect to AHCI.  I can't say whether this
-makes sense generally for the other users of libata-core.
-
-The problem is I didn't save any power this way :(  ThinkPad X61t was
-using minimum 7.6W on a one-minute average before power_off, and same
-power after power_off.  I'd been led to believe that disabling these
-ports would have a substantial power saving effect.
-
--jwb
-
+-- 
+tejun
