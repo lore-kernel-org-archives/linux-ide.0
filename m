@@ -1,40 +1,81 @@
-From: "George Spelvin" <linux@horizon.com>
-Subject: Re: What's the SB600 64-bit DMA problem?
-Date: Sun, 28 Sep 2008 17:04:22 -0400
-Message-ID: <20080928210422.2578.qmail@science.horizon.com>
-References: <20080920151712.10515.qmail@science.horizon.com>
- <da824cf30809201528o27478ae2h5894e39932622d3b@mail.gmail.com>
- <20080921001529.23400.qmail@science.horizon.com>
- <65a6ef750809231730h52f6bf47g23b33db1d2f4ca08@mail.gmail.com>
- <48DA0C8B.3000406@gmail.com>
- <B90463BC30D2E446BA423D888DC85E50C8358F@sshaexmb1.amd.com>
- <20080925032437.6802.qmail@science.horizon.com>
- <48DCEC6D.1040305@gmail.com>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: Re: [PATCH v2] IDE: Fix platform device registration in Swarm IDE
+ driver
+Date: Mon, 29 Sep 2008 01:51:30 +0400
+Message-ID: <48DFFC62.9050300@ru.mvista.com>
+References: <20080922122853.GA15210@linux-mips.org> <48DA1F9D.6000501@ru.mvista.com> <200809271859.55304.bzolnier@gmail.com> <20080928113931.GA9207@linux-mips.org> <20080928175450.GA8478@linux-mips.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from science.horizon.com ([192.35.100.1]:16658 "HELO
-	science.horizon.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1751734AbYI1VEY (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 28 Sep 2008 17:04:24 -0400
-In-Reply-To: <48DCEC6D.1040305@gmail.com>
+Received: from h155.mvista.com ([63.81.120.155]:16333 "EHLO imap.sh.mvista.com"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1752732AbYI1Vvh (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 28 Sep 2008 17:51:37 -0400
+In-Reply-To: <20080928175450.GA8478@linux-mips.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux@horizon.com, htejun@gmail.com
-Cc: Shane.Huang@amd.com, mdnelson8@gmail.com, linux-ide@vger.kernel.org, jgarzik@redhat.com, grundler@google.com
+To: Ralf Baechle <ralf@linux-mips.org>
+Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-ide@vger.kernel.org, "Maciej W. Rozycki" <macro@linux-mips.org>, linux-mips@linux-mips.org
 
-Tejun Heo <htejun@gmail.com> wrote:
->> Q: Does the fact that I'm using the GART IOMMU mean that I'm not really using
->> using 64-bit DMA at all?
+Hello.
+
+Ralf Baechle wrote:
+
+> The Swarm IDE driver uses a release method which is defined in the driver
+> itself thus potentially oopsable.  The simple fix would be to just leak
+> the device but this patch goes the full length and moves the entire
+> handling of the platform device in the platform code and retains only
+> the platform driver code in drivers/ide/mips/swarm.c.
 >
-> Can you turn it off and see what happens?
+> Signed-off-by: Ralf Baechle <ralf@linux-mips.org>
+>   
 
-I can if I can verify that every other bus-master PCI device in the
-system can do 64-bit DMA.
+Acked-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
 
-Do you know how to check that?  I haven't found a file under /sys or
-/proc that tells me what the DMA masks are of various system
-drivers, but that doesn't mean that it doesn't exist.
+> Index: linux-mips/arch/mips/sibyte/swarm/platform.c
+> ===================================================================
+> --- /dev/null
+> +++ linux-mips/arch/mips/sibyte/swarm/platform.c
+> @@ -0,0 +1,81 @@
+> +#include <linux/err.h>
+> +#include <linux/kernel.h>
+> +#include <linux/init.h>
+> +#include <linux/io.h>
+> +#include <linux/platform_device.h>
+> +#include <linux/ata_platform.h>
+> +
+> +#include <asm/sibyte/board.h>
+> +#include <asm/sibyte/sb1250_genbus.h>
+> +#include <asm/sibyte/sb1250_regs.h>
+> +
+> +#define DRV_NAME	"pata-swarm"
+>   
 
-Thanks.
+   Hm, what driver? This is just a platform code. :-)
+
+> +
+> +#define SWARM_IDE_SHIFT	5
+> +#define SWARM_IDE_BASE	0x1f0
+> +#define SWARM_IDE_CTRL	0x3f6
+> +
+> +static struct resource swarm_pata_resource[] = {
+> +	{
+> +		.name	= "Swarm GenBus IDE",
+> +		.flags	= IORESOURCE_MEM,
+> +	}, {
+> +		.name	= "Swarm GenBus IDE",
+> +		.flags	= IORESOURCE_MEM,
+> +	}, {
+> +		.name	= "Swarm GenBus IDE",
+> +		.flags	= IORESOURCE_IRQ,
+> +		.start	= K_INT_GB_IDE,
+> +		.end	= K_INT_GB_IDE,
+>   
+
+   Giving the resources similar names is pointless. You can just leave 
+the 'name' field uninitialized.
+
+MBR, Sergei
+
+
