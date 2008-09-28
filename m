@@ -1,121 +1,128 @@
-From: Sergei Shtylylov <sshtylyov@ru.mvista.com>
-Subject: [PATCH 2/2] sgiioc4: fix messages
-Date: Sun, 28 Sep 2008 23:50:26 +0400
-Message-ID: <200809282350.26303.sshtylyov@ru.mvista.com>
+From: Arjan van de Ven <arjan@infradead.org>
+Subject: Oops/Warning report for the week of September 28th, 2008
+Date: Sun, 28 Sep 2008 13:12:50 -0700
+Message-ID: <20080928131250.112f2a08__43131.606168072$1222632847$gmane$org@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtsoft3.corbina.net ([85.21.88.6]:52879 "EHLO
-	buildserver.ru.mvista.com" rhost-flags-OK-FAIL-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1751896AbYI1Tt2 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 28 Sep 2008 15:49:28 -0400
-Content-Disposition: inline
+Received: from casper.infradead.org ([85.118.1.10]:40111 "EHLO
+	casper.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752115AbYI1UMi (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 28 Sep 2008 16:12:38 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: bzolnier@gmail.com
-Cc: linux-ide@vger.kernel.org, jeremy@sgi.com
+To: linux-kernel@vger.kernel.org, torvalds@linux-foundation.org, akpm@linux-foundation.org, tglx@tglx.de, netdev@vger.kernel.org, linux-scsi@vger.kernel.org, linux-acpi@vger.kernel.orgm
 
-Fix several issues with the log messages printed by ide_dma_sgiioc4() and
-sgiioc4_ide_setup_pci_device():
+The http://www.kerneloops.org website collects kernel oops and
+warning reports from various mailing lists and bugzillas as well as
+with a client users can install to auto-submit oopses.
+Below is a list of the top traces collected in the last 7 days.
+(Reports for version 2.6.25 or earlier have been omitted in collecting the top 10)
 
-- IOC4 registers are memory-mapped but the "BM-DMA at" format corresponds to
-  I/O  mapped registers;
+This week, a total of 3357 oopses and warnings have been reported,
+compared to 2712 reports in the previous week.
 
-- "%p" format specifiers and type casts used to print non-pointer values;
 
-- using KERN_INFO log level for the error message;
+Per file statistics
+639	net/sched/sch_generic.c
+424	drivers/ata/libata-sff.c
+410	external/utrace
+157	fs/jbd/journal.c
+143	drivers/parport/procfs.c
+134	external/fireglx/binary (P)
+105	net/core/dev.c
+103	kernel/timer.c
+81	drivers/base/power/main.c
+70	kernel/sched.c
+42	drivers/char/random.c
+38	drivers/gpu/drm/radeon/radeon_cp.c
 
-- 'hwif->name' printed as drive's name.
 
-While at it, also:
+Unfixed
+-------
 
-- return more fitting -EBUSY if request_mem_region() fails;
+Rank 1: dev_watchdog (oops)
+	Reported 639 times (1496 total reports)
+	Various device timeouts. Patch to report the driver name is in -rc7; per driver data is now
+	coming in but has not made the top 10 yet.
+	This oops was last seen in version 2.6.27-rc7-git1, and first seen in 2.6.26-rc3.
+	More info: http://www.kerneloops.org/searchweek.php?search=dev_watchdog
 
-- make the error message style consistent;
+Rank 3: utrace_control (oops)
+	Reported 409 times (775 total reports)
+	[fedora] Fedora merged a broken utrace patch
+	This oops was last seen in version 2.6.26.5, and first seen in 2.6.26.1.
+	More info: http://www.kerneloops.org/searchweek.php?search=utrace_control
 
-- fix indentation, put the printk() facility and message on the same line;
+Rank 4: journal_update_superblock (warning)
+	Reported 156 times (4183 total reports)
+	Caused by the user removing a USB stick while mounted
+	Ted has a patch to fix this, but isn't merged in Linus' tree yet.
+	This warning was last seen in version 2.6.27-rc7-git1, and first seen in 2.6.24-rc6-git1.
+	More info: http://www.kerneloops.org/searchweek.php?search=journal_update_superblock
 
-- use comparisions with NULL instead of ! operator..
+Rank 6: firegl_ioctl (warning)
+	Reported 105 times (2694 total reports)
+	[external] Bug in the proprietary fireglx driver
+	warning only shows up in tainted kernels
+	This warning was last seen in version 2.6.26.5, and first seen in 2.6.25.
+	More info: http://www.kerneloops.org/searchweek.php?search=firegl_ioctl
 
-Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-                                          
----
-The patch is against the recent Linus' tree.
-                                          
- drivers/ide/pci/sgiioc4.c |   39 ++++++++++++++++-----------------------
- 1 files changed, 16 insertions(+), 23 deletions(-)
+Rank 9: finish_task_switch (lockup)
+	Reported 58 times (139 total reports)
+	This oops was last seen in version 2.6.27-rc2-git1, and first seen in 2.6.24.
+	Potentially fixed by Thomas' timer patches, the jury is still out on this one
+	More info: http://www.kerneloops.org/searchweek.php?search=finish_task_switch
 
-Index: linux-2.6/drivers/ide/pci/sgiioc4.c
-===================================================================
---- linux-2.6.orig/drivers/ide/pci/sgiioc4.c
-+++ linux-2.6/drivers/ide/pci/sgiioc4.c
-@@ -340,23 +340,20 @@ ide_dma_sgiioc4(ide_hwif_t *hwif, const 
- 	if (dma_base == 0)
- 		return -1;
- 
--	printk(KERN_INFO "%s: BM-DMA at 0x%04lx-0x%04lx\n", hwif->name,
--	       dma_base, dma_base + num_ports - 1);
-+	printk(KERN_INFO "    %s: MMIO-DMA\n", hwif->name);
- 
--	if (!request_mem_region(dma_base, num_ports, hwif->name)) {
--		printk(KERN_ERR
--		       "%s(%s) -- ERROR, Addresses 0x%p to 0x%p "
--		       "ALREADY in use\n",
--		       __func__, hwif->name, (void *) dma_base,
--		       (void *) dma_base + num_ports - 1);
-+	if (request_mem_region(dma_base, num_ports, hwif->name) == NULL) {
-+		printk(KERN_ERR "%s(%s) -- ERROR: addresses 0x%08lx to 0x%08lx "
-+		       "already in use\n", __func__, hwif->name,
-+		       dma_base, dma_base + num_ports - 1);
- 		return -1;
- 	}
- 
- 	virt_dma_base = ioremap(dma_base, num_ports);
- 	if (virt_dma_base == NULL) {
--		printk(KERN_ERR
--		       "%s(%s) -- ERROR, Unable to map addresses 0x%lx to 0x%lx\n",
--		       __func__, hwif->name, dma_base, dma_base + num_ports - 1);
-+		printk(KERN_ERR "%s(%s) -- ERROR: unable to map addresses "
-+		       "0x%lx to 0x%lx\n", __func__, hwif->name,
-+		       dma_base, dma_base + num_ports - 1);
- 		goto dma_remap_failure;
- 	}
- 	hwif->dma_base = (unsigned long) virt_dma_base;
-@@ -379,11 +376,9 @@ ide_dma_sgiioc4(ide_hwif_t *hwif, const 
- 
- 	pci_free_consistent(dev, IOC4_PRD_ENTRIES * IOC4_PRD_BYTES,
- 			    hwif->dmatable_cpu, hwif->dmatable_dma);
--	printk(KERN_INFO
--	       "%s() -- Error! Unable to allocate DMA Maps for drive %s\n",
-+	printk(KERN_ERR "%s(%s) -- ERROR: Unable to allocate DMA maps\n",
- 	       __func__, hwif->name);
--	printk(KERN_INFO
--	       "Changing from DMA to PIO mode for Drive %s\n", hwif->name);
-+	printk(KERN_INFO "%s: changing from DMA to PIO mode", hwif->name);
- 
- dma_pci_alloc_failure:
- 	iounmap(virt_dma_base);
-@@ -619,14 +614,12 @@ sgiioc4_ide_setup_pci_device(struct pci_
- 	irqport = (unsigned long) virt_base + IOC4_INTR_OFFSET;
- 
- 	cmd_phys_base = bar0 + IOC4_CMD_OFFSET;
--	if (!request_mem_region(cmd_phys_base, IOC4_CMD_CTL_BLK_SIZE,
--	    DRV_NAME)) {
--		printk(KERN_ERR
--			"%s %s: -- ERROR, Addresses "
--			"0x%p to 0x%p ALREADY in use\n",
--		       DRV_NAME, pci_name(dev), (void *)cmd_phys_base,
--		       (void *) cmd_phys_base + IOC4_CMD_CTL_BLK_SIZE);
--		return -ENOMEM;
-+	if (request_mem_region(cmd_phys_base, IOC4_CMD_CTL_BLK_SIZE,
-+			       DRV_NAME) == NULL) {
-+		printk(KERN_ERR "%s %s -- ERROR: addresses 0x%08lx to 0x%08lx "
-+		       "already in use\n", DRV_NAME, pci_name(dev),
-+		       cmd_phys_base, cmd_phys_base + IOC4_CMD_CTL_BLK_SIZE);
-+		return -EBUSY;
- 	}
- 
- 	/* Initialize the IO registers */
+Rank 10: device_pm_add (warning)
+	Reported 56 times (231 total reports)
+	Bug in the Suspend/Resume code of drivers. Patch to report the actual driver involved is pending for .28
+	This warning was last seen in version 2.6.27-rc4, and first seen in 2.6.26-rc5.
+	More info: http://www.kerneloops.org/searchweek.php?search=device_pm_add
 
+Rank 11: account (oops)
+	Reported 42 times (74 total reports)
+	Bug in the /dev/random driver
+	This oops was last seen in version 2.6.26.3, and first seen in 2.6.26.
+	More info: http://www.kerneloops.org/searchweek.php?search=account
+
+Rank 12: rs_get_rate (warning)
+	Reported 34 times (361 total reports)
+	Bug in the Intel IWL wireless drivers
+	This warning was last seen in version 2.6.27-rc7-git1, and first seen in 2.6.25-rc2-git5.
+	More info: http://www.kerneloops.org/searchweek.php?search=rs_get_rate
+
+Rank 13: ext3_commit_super (warning)
+	Reported 27 times (1069 total reports)
+	Likely caused by the user removing a USB stick while mounted
+	Ted has a patch to fix this, not merged yet.
+	This warning was last seen in version 2.6.27, and first seen in 2.6.24.
+	More info: http://www.kerneloops.org/searchweek.php?search=ext3_commit_super
+
+
+Fixed in Linus' tree
+--------------------
+Rank 2: ata_sff_hsm_move (warning)
+	Reported 420 times (1019 total reports)
+	[fixed] redundant WARN_ON; fixed in 9c2676b61a5a4b6d99e65fb2f438fb3914302eda
+	This warning was last seen in version 2.6.27-rc2-git1, and first seen in 2.6.25.4.
+	More info: http://www.kerneloops.org/searchweek.php?search=ata_sff_hsm_move
+
+Rank 7: run_timer_softirq (oops)
+	Reported 90 times (205 total reports)
+	softlockup that got fixed by Thomas' timer fixes
+	This oops was last seen in version 2.6.27-rc1-git4, and first seen in 2.6.25.
+	More info: http://www.kerneloops.org/searchweek.php?search=run_timer_softirq
+
+Rank 8: __netif_schedule (warning)
+	Reported 88 times (694 total reports)
+	[fixed] issue as a result of the multiqueue feature, fixed for 2.6.27-rc1
+	This warning was last seen in version 2.6.27-rc0-git11, and first seen in 2.6.26-rc8-git.
+	More info: http://www.kerneloops.org/searchweek.php?search=__netif_schedule
+
+
+-- 
+Arjan van de Ven 	Intel Open Source Technology Centre
+For development, discussion and tips for power savings, 
+visit http://www.lesswatts.org
