@@ -1,48 +1,47 @@
-From: bugme-daemon@bugzilla.kernel.org
-Subject: [Bug 11659] CDROM on Laptop  Fudjitsu-siemens Amilo Xa-2528 isn't reconized
-Date: Sat, 27 Sep 2008 23:13:26 -0700 (PDT)
-Message-ID: <20080928061326.36C3B10805B@picon.linux-foundation.org>
-References: <bug-11659-11633@http.bugzilla.kernel.org/>
+From: Ralf Baechle <ralf@linux-mips.org>
+Subject: Re: [PATCH 1/2] ide: Add tx4939ide driver
+Date: Sun, 28 Sep 2008 09:41:06 +0100
+Message-ID: <20080928084106.GA5555@linux-mips.org>
+References: <48C851ED.4090607@ru.mvista.com> <48CA8BEE.1090305@ru.mvista.com> <20080913.005904.07457691.anemo@mba.ocn.ne.jp> <200809271819.19510.bzolnier@gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:57549 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751110AbYI1GN4 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 28 Sep 2008 02:13:56 -0400
-Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
-	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id m8S6DQnl024589
-	for <linux-ide@vger.kernel.org>; Sat, 27 Sep 2008 23:13:27 -0700
-In-Reply-To: <bug-11659-11633@http.bugzilla.kernel.org/>
+Received: from ditditdahdahdah-dahditditditdit.dl5rb.org.uk ([217.169.26.26]:44715
+	"EHLO ditditdahdahdah-dahdahdahditdit.dl5rb.org.uk"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751252AbYI1Il1 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 28 Sep 2008 04:41:27 -0400
+Content-Disposition: inline
+In-Reply-To: <200809271819.19510.bzolnier@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: Atsushi Nemoto <anemo@mba.ocn.ne.jp>, sshtylyov@ru.mvista.com, linux-mips@linux-mips.org, linux-ide@vger.kernel.org, Tejun Heo <htejun@gmail.com>
 
-http://bugzilla.kernel.org/show_bug.cgi?id=11659
+On Sat, Sep 27, 2008 at 06:19:19PM +0200, Bartlomiej Zolnierkiewicz wrote:
 
+> > > >>>+	__ide_flush_dcache_range((unsigned long)addr, size);
+> > > 
+> > > >>   Why is this needed BTW?
+> > > 
+> > > > Do you mean __ide_flush_dcache_range?  This is needed to avoid cache
+> > > > inconsistency on PIO drive.  PIO transfer only writes to cache but
+> > > > upper layers expects the data is in main memory.
+> > > 
+> > >     Hum, then I wonder why it's MIPS specific...
+> > 
+> > SPARC also have it.  And there were some discussions for ARM IIRC.
 
-bbpetkov@yahoo.de changed:
+It should affect any architecture that has virtually indexed data caches
+with aliases.
 
-           What    |Removed                     |Added
-----------------------------------------------------------------------------
-         AssignedTo|io_ide@kernel-bugs.osdl.org |bbpetkov@yahoo.de
-             Status|NEW                         |ASSIGNED
+> I was under the impression that it has been addressed by Tejun at
+> the higher-layer level (for both ide/libata) long time ago and that
+> MIPS/SPARC code are just a left-overs which could be removed now?
 
+I'd highly appreciate that.  The __ide_ins? / __ide_outs? ops don't know
+if a page is mapped to userspace so will have to do unnecessary flushes.
+A mechanism that allows flush_dcache_page to be used would be far
+preferable.
 
-
-
-------- Comment #3 from bbpetkov@yahoo.de  2008-09-27 23:13 -------
-Hi,
-
-can you please try three things, as Bart suggested:
-
-0. pata_amd
-1. 2.6.27-rc7
-2. disabling libata
-
-@Sergei: right, i didn't see the "irq timeout" message on a first glance.
-
-
--- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug, or are watching the assignee.
-You are the assignee for the bug, or are watching the assignee.
+  Ralf
