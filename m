@@ -1,30 +1,48 @@
-From: Ralf Baechle <ralf@linux-mips.org>
-Subject: Re: [PATCH] IDE: Fix platform device registration in Swarm IDE
-	driver
-Date: Sun, 28 Sep 2008 00:51:39 +0100
-Message-ID: <20080927235138.GA6802@linux-mips.org>
-References: <20080922122853.GA15210@linux-mips.org> <48DA1F9D.6000501@ru.mvista.com> <Pine.LNX.4.55.0809241448480.811@cliff.in.clinika.pl>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-mips-bounce@linux-mips.org>
-Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.55.0809241448480.811@cliff.in.clinika.pl>
-Sender: linux-mips-bounce@linux-mips.org
-Errors-to: linux-mips-bounce@linux-mips.org
-To: "Maciej W. Rozycki" <macro@linux-mips.org>
-Cc: Sergei Shtylyov <sshtylyov@ru.mvista.com>, bzolnier@gmail.com, linux-ide@vger.kernel.org, linux-mips@linux-mips.org
+From: bugme-daemon@bugzilla.kernel.org
+Subject: [Bug 11659] CDROM on Laptop  Fudjitsu-siemens Amilo Xa-2528 isn't reconized
+Date: Sat, 27 Sep 2008 23:13:26 -0700 (PDT)
+Message-ID: <20080928061326.36C3B10805B@picon.linux-foundation.org>
+References: <bug-11659-11633@http.bugzilla.kernel.org/>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:57549 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751110AbYI1GN4 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 28 Sep 2008 02:13:56 -0400
+Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
+	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id m8S6DQnl024589
+	for <linux-ide@vger.kernel.org>; Sat, 27 Sep 2008 23:13:27 -0700
+In-Reply-To: <bug-11659-11633@http.bugzilla.kernel.org/>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-On Wed, Sep 24, 2008 at 02:52:07PM +0100, Maciej W. Rozycki wrote:
+http://bugzilla.kernel.org/show_bug.cgi?id=11659
 
-> >    Platform device in the driver itself? Interesting... :-)
-> 
->  Better than nothing for platforms which did not have platform
-> initialisation at all.  Some driver subsystems do not support
-> non-driver-model devices at all or anymore.
 
-Historically registration of the device file in the driver itself wasn't
-uncommon before it turned out to be not such a great idea.  I hope this
-was the last of the affected MIPS-specific drivers.
+bbpetkov@yahoo.de changed:
 
-  Ralf
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+         AssignedTo|io_ide@kernel-bugs.osdl.org |bbpetkov@yahoo.de
+             Status|NEW                         |ASSIGNED
+
+
+
+
+------- Comment #3 from bbpetkov@yahoo.de  2008-09-27 23:13 -------
+Hi,
+
+can you please try three things, as Bart suggested:
+
+0. pata_amd
+1. 2.6.27-rc7
+2. disabling libata
+
+@Sergei: right, i didn't see the "irq timeout" message on a first glance.
+
+
+-- 
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug, or are watching the assignee.
+You are the assignee for the bug, or are watching the assignee.
