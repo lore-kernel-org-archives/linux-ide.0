@@ -1,32 +1,29 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: nx6325 and frequent head unloads
-Date: Mon, 29 Sep 2008 16:34:11 +0900
-Message-ID: <48E084F3.8090609@kernel.org>
-References: <20080919002701.1537ca54@incubo.de>
+Subject: Re: Report drive which perform frequent head unloads under Linux
+Date: Mon, 29 Sep 2008 16:35:04 +0900
+Message-ID: <48E08528.5010300@kernel.org>
+References: <25740.14711.qm@web25404.mail.ukl.yahoo.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:41836 "EHLO hera.kernel.org"
+Received: from hera.kernel.org ([140.211.167.34]:58132 "EHLO hera.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751355AbYI2Hf6 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 29 Sep 2008 03:35:58 -0400
-In-Reply-To: <20080919002701.1537ca54@incubo.de>
+	id S1751734AbYI2Hgr (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 29 Sep 2008 03:36:47 -0400
+In-Reply-To: <25740.14711.qm@web25404.mail.ukl.yahoo.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "A. Klitzing" <aklitzing@online.de>
+To: Stefan Henriet <aladin7501-01@yahoo.de>
 Cc: linux-ide@vger.kernel.org
 
-A. Klitzing wrote:
-> Hi there,
+Stefan Henriet wrote:
+> Following Laptop is affected by frequent head unloads.
 > 
-> my harddrive has this problem [1], too. Here are the outputs of my
-> notebook "HP nx6325 (EY351ET)".
-> 
-> Workaround: hdparm -B 254 /dev/sda
-> But the hdd will be warmer than usual.
+> Laptop: HP G5000
+> workaround: set APM to 255 
 
-How much does the load cycle count increase per hour without the adjustment?
+How much does the load cycle count increase per hour without any adjustment?
 
 Thanks.
 
