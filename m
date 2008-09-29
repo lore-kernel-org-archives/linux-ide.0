@@ -1,7 +1,7 @@
 From: "Rafael J. Wysocki" <rjw@sisk.pl>
-Subject: [PATCH 2/6] DMI: Introduce dmi_first_match to make the interface more flexible
-Date: Tue, 30 Sep 2008 00:13:21 +0200
-Message-ID: <200809300013.22924.rjw@sisk.pl>
+Subject: [PATCH 6/6] SATA PIIX: Blacklist system that spins off disks during ACPI power off
+Date: Tue, 30 Sep 2008 00:18:18 +0200
+Message-ID: <200809300018.19813.rjw@sisk.pl>
 References: <200808290002.55026.rjw@sisk.pl> <48D17BBE.5020807@garzik.org> <200809300006.24919.rjw@sisk.pl>
 Mime-Version: 1.0
 Content-Type: text/plain;
@@ -17,7 +17,7 @@ List-Id: linux-ide@vger.kernel.org
 
 From: Rafael J. Wysocki <rjw@sisk.pl>
 
-DMI: Introduce dmi_first_match to make the interface more flexible
+SATA PIIX: Blacklist system that spins off disks during ACPI power off
 
 Some notebooks from HP have the problem that their BIOSes attempt to
 spin down hard drives before entering ACPI system states S4 and S5.
@@ -27,131 +27,65 @@ kernel and then almost immediately turned on and off by the BIOS.
 This, in turn, may result in shortening the disk's life times.
 
 To prevent this from happening we can blacklist the affected systems
-using DMI information.  However, only the on-board controlles should
-be blacklisted and their PCI slot numbers can be used for this
-purpose.  Unfortunately the existing interface for checking DMI
-information of the system is not very convenient for this purpose,
-because to use it, we would have to define special callback functions
-or create a separate struct dmi_system_id table for each blacklisted
-system.
+using DMI information.
 
-To overcome this difficulty introduce a new function
-dmi_first_match() returning a pointer to the first entry in an array
-of struct dmi_system_id elements that matches the system DMI
-information.  Then, we can use this pointer to access the entry's
-.driver_data field containing the additional information, such as
-the PCI slot number, allowing us to do the desired blacklisting.
+Blacklist HP 2510p that uses the ata_piix driver.
 
 Signed-off-by: Rafael J. Wysocki <rjw@sisk.pl>
 ---
- drivers/firmware/dmi_scan.c |   68 +++++++++++++++++++++++++++++++++-----------
- include/linux/dmi.h         |    1 
- 2 files changed, 53 insertions(+), 16 deletions(-)
+ drivers/ata/ata_piix.c |   34 ++++++++++++++++++++++++++++++++++
+ 1 file changed, 34 insertions(+)
 
-Index: linux-2.6/drivers/firmware/dmi_scan.c
+Index: linux-2.6/drivers/ata/ata_piix.c
 ===================================================================
---- linux-2.6.orig/drivers/firmware/dmi_scan.c
-+++ linux-2.6/drivers/firmware/dmi_scan.c
-@@ -407,6 +407,27 @@ void __init dmi_scan_machine(void)
+--- linux-2.6.orig/drivers/ata/ata_piix.c
++++ linux-2.6/drivers/ata/ata_piix.c
+@@ -1449,6 +1449,32 @@ static void piix_iocfg_bit18_quirk(struc
+ 	}
  }
  
- /**
-+ *	dmi_match - check if dmi_system_id structure matches system DMI data
-+ *	@dmi: pointer to the dmi_system_id structure to check
-+ */
-+static bool dmi_match(const struct dmi_system_id *dmi)
++static bool piix_broken_system_poweroff(struct pci_dev *pdev)
 +{
-+	int i;
++	static const struct dmi_system_id broken_systems[] = {
++		{
++			.ident = "HP Compaq 2510p",
++			.matches = {
++				DMI_MATCH(DMI_SYS_VENDOR, "Hewlett-Packard"),
++				DMI_MATCH(DMI_PRODUCT_NAME, "HP Compaq 2510p"),
++			},
++			/* PCI slot number of the controller */
++			.driver_data = (void *)0x1FUL,
++		},
 +
-+	for (i = 0; i < ARRAY_SIZE(dmi->matches); i++) {
-+		int s = dmi->matches[i].slot;
-+		if (s == DMI_NONE)
-+			continue;
-+		if (dmi_ident[s]
-+		    && strstr(dmi_ident[s], dmi->matches[i].substr))
-+			continue;
-+		/* No match */
-+		return false;
++		{ }	/* terminate list */
++	};
++	const struct dmi_system_id *dmi = dmi_first_match(broken_systems);
++
++	if (dmi) {
++		unsigned long slot = (unsigned long)dmi->driver_data;
++		/* apply the quirk only to on-board controllers */
++		return slot == PCI_SLOT(pdev->devfn);
 +	}
-+	return true;
++
++	return false;
 +}
 +
-+/**
-  *	dmi_check_system - check system DMI data
-  *	@list: array of dmi_system_id structures to match against
-  *		All non-null elements of the list must match
-@@ -421,30 +442,45 @@ void __init dmi_scan_machine(void)
-  */
- int dmi_check_system(const struct dmi_system_id *list)
- {
--	int i, count = 0;
--	const struct dmi_system_id *d = list;
-+	int count = 0;
-+	const struct dmi_system_id *d;
- 
--	while (d->ident) {
--		for (i = 0; i < ARRAY_SIZE(d->matches); i++) {
--			int s = d->matches[i].slot;
--			if (s == DMI_NONE)
--				continue;
--			if (dmi_ident[s] && strstr(dmi_ident[s], d->matches[i].substr))
--				continue;
--			/* No match */
--			goto fail;
-+	for (d = list; d->ident; d++)
-+		if (dmi_match(d)) {
-+			count++;
-+			if (d->callback && d->callback(d))
-+				break;
- 		}
--		count++;
--		if (d->callback && d->callback(d))
--			break;
--fail:		d++;
--	}
- 
- 	return count;
- }
- EXPORT_SYMBOL(dmi_check_system);
- 
  /**
-+ *	dmi_first_match - find dmi_system_id structure matching system DMI data
-+ *	@list: array of dmi_system_id structures to match against
-+ *		All non-null elements of the list must match
-+ *		their slot's (field index's) data (i.e., each
-+ *		list string must be a substring of the specified
-+ *		DMI slot's string data) to be considered a
-+ *		successful match.
-+ *
-+ *	Walk the blacklist table until the first match is found.  Return the
-+ *	pointer to the matching entry or NULL if there's no match.
-+ */
-+const struct dmi_system_id *dmi_first_match(const struct dmi_system_id *list)
-+{
-+	const struct dmi_system_id *d;
-+
-+	for (d = list; d->ident; d++)
-+		if (dmi_match(d))
-+			return d;
-+
-+	return NULL;
-+}
-+EXPORT_SYMBOL(dmi_first_match);
-+
-+/**
-  *	dmi_get_system_info - return DMI data value
-  *	@field: data index (see enum dmi_field)
-  *
-Index: linux-2.6/include/linux/dmi.h
-===================================================================
---- linux-2.6.orig/include/linux/dmi.h
-+++ linux-2.6/include/linux/dmi.h
-@@ -75,6 +75,7 @@ struct dmi_device {
- #ifdef CONFIG_DMI
+  *	piix_init_one - Register PIIX ATA PCI device with kernel services
+  *	@pdev: PCI device to register
+@@ -1484,6 +1510,14 @@ static int __devinit piix_init_one(struc
+ 	if (!in_module_init)
+ 		return -ENODEV;
  
- extern int dmi_check_system(const struct dmi_system_id *list);
-+const struct dmi_system_id *dmi_first_match(const struct dmi_system_id *list);
- extern const char * dmi_get_system_info(int field);
- extern const struct dmi_device * dmi_find_device(int type, const char *name,
- 	const struct dmi_device *from);
++	if (piix_broken_system_poweroff(pdev)) {
++		piix_port_info[ent->driver_data].flags |=
++				ATA_FLAG_NO_POWEROFF_SPINDOWN |
++					ATA_FLAG_NO_HIBERNATE_SPINDOWN;
++		dev_info(&pdev->dev, "quirky BIOS, skipping spindown "
++				"on poweroff and hibernation\n");
++	}
++
+ 	port_info[0] = piix_port_info[ent->driver_data];
+ 	port_info[1] = piix_port_info[ent->driver_data];
+ 
 
