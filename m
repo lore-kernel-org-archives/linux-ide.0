@@ -1,23 +1,27 @@
 From: "Rafael J. Wysocki" <rjw@sisk.pl>
-Subject: [PATCH 6/6] SATA PIIX: Blacklist system that spins off disks during ACPI power off
-Date: Tue, 30 Sep 2008 00:18:18 +0200
-Message-ID: <200809300018.19813.rjw@sisk.pl>
+Subject: [PATCH 4/6] SATA AHCI: Blacklist system that spins off disks during ACPI power off
+Date: Tue, 30 Sep 2008 00:15:16 +0200
+Message-ID: <200809300015.18074.rjw@sisk.pl>
 References: <200808290002.55026.rjw@sisk.pl> <48D17BBE.5020807@garzik.org> <200809300006.24919.rjw@sisk.pl>
 Mime-Version: 1.0
 Content-Type: text/plain;
   charset="iso-8859-2"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-acpi-owner@vger.kernel.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from ogre.sisk.pl ([217.79.144.158]:48244 "EHLO ogre.sisk.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752566AbYI2WPe (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 29 Sep 2008 18:15:34 -0400
 In-Reply-To: <200809300006.24919.rjw@sisk.pl>
 Content-Disposition: inline
-Sender: linux-acpi-owner@vger.kernel.org
+Sender: linux-ide-owner@vger.kernel.org
+List-Id: linux-ide@vger.kernel.org
 To: Jeff Garzik <jeff@garzik.org>
 Cc: Tejun Heo <htejun@gmail.com>, ACPI Devel Maling List <linux-acpi@vger.kernel.org>, linux-ide@vger.kernel.org, Thomas Renninger <trenn@suse.de>, Robert Hancock <hancockr@shaw.ca>, LKML <linux-kernel@vger.kernel.org>, Frans Pop <elendil@planet.nl>, Maciej Rutecki <maciej.rutecki@gmail.com>, Andrew Morton <akpm@linux-foundation.org>
-List-Id: linux-ide@vger.kernel.org
 
 From: Rafael J. Wysocki <rjw@sisk.pl>
 
-SATA PIIX: Blacklist system that spins off disks during ACPI power off
+SATA AHCI: Blacklist system that spins off disks during ACPI power off
 
 Some notebooks from HP have the problem that their BIOSes attempt to
 spin down hard drives before entering ACPI system states S4 and S5.
@@ -29,29 +33,29 @@ This, in turn, may result in shortening the disk's life times.
 To prevent this from happening we can blacklist the affected systems
 using DMI information.
 
-Blacklist HP 2510p that uses the ata_piix driver.
+Blacklist HP nx6310 that uses the AHCI driver.
 
 Signed-off-by: Rafael J. Wysocki <rjw@sisk.pl>
 ---
- drivers/ata/ata_piix.c |   34 ++++++++++++++++++++++++++++++++++
- 1 file changed, 34 insertions(+)
+ drivers/ata/ahci.c |   32 ++++++++++++++++++++++++++++++++
+ 1 file changed, 32 insertions(+)
 
-Index: linux-2.6/drivers/ata/ata_piix.c
+Index: linux-2.6/drivers/ata/ahci.c
 ===================================================================
---- linux-2.6.orig/drivers/ata/ata_piix.c
-+++ linux-2.6/drivers/ata/ata_piix.c
-@@ -1449,6 +1449,32 @@ static void piix_iocfg_bit18_quirk(struc
+--- linux-2.6.orig/drivers/ata/ahci.c
++++ linux-2.6/drivers/ata/ahci.c
+@@ -2528,6 +2528,32 @@ static void ahci_p5wdh_workaround(struct
  	}
  }
  
-+static bool piix_broken_system_poweroff(struct pci_dev *pdev)
++static bool ahci_broken_system_poweroff(struct pci_dev *pdev)
 +{
 +	static const struct dmi_system_id broken_systems[] = {
 +		{
-+			.ident = "HP Compaq 2510p",
++			.ident = "HP Compaq nx6310",
 +			.matches = {
 +				DMI_MATCH(DMI_SYS_VENDOR, "Hewlett-Packard"),
-+				DMI_MATCH(DMI_PRODUCT_NAME, "HP Compaq 2510p"),
++				DMI_MATCH(DMI_PRODUCT_NAME, "HP Compaq nx6310"),
 +			},
 +			/* PCI slot number of the controller */
 +			.driver_data = (void *)0x1FUL,
@@ -70,22 +74,20 @@ Index: linux-2.6/drivers/ata/ata_piix.c
 +	return false;
 +}
 +
- /**
-  *	piix_init_one - Register PIIX ATA PCI device with kernel services
-  *	@pdev: PCI device to register
-@@ -1484,6 +1510,14 @@ static int __devinit piix_init_one(struc
- 	if (!in_module_init)
- 		return -ENODEV;
+ static int ahci_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
+ {
+ 	static int printed_version;
+@@ -2623,6 +2649,12 @@ static int ahci_init_one(struct pci_dev 
+ 		}
+ 	}
  
-+	if (piix_broken_system_poweroff(pdev)) {
-+		piix_port_info[ent->driver_data].flags |=
-+				ATA_FLAG_NO_POWEROFF_SPINDOWN |
-+					ATA_FLAG_NO_HIBERNATE_SPINDOWN;
-+		dev_info(&pdev->dev, "quirky BIOS, skipping spindown "
-+				"on poweroff and hibernation\n");
++	if (ahci_broken_system_poweroff(pdev)) {
++		pi.flags |= ATA_FLAG_NO_POWEROFF_SPINDOWN;
++		dev_info(&pdev->dev,
++			"quirky BIOS, skipping spindown on poweroff\n");
 +	}
 +
- 	port_info[0] = piix_port_info[ent->driver_data];
- 	port_info[1] = piix_port_info[ent->driver_data];
- 
+ 	/* CAP.NP sometimes indicate the index of the last enabled
+ 	 * port, at other times, that of the last possible port, so
+ 	 * determining the maximum port number requires looking at
 
