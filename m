@@ -1,43 +1,53 @@
 From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: PATA: RPC now selects HAVE_PATA_PLATFORM for pata platform driver
-Date: Mon, 29 Sep 2008 00:33:57 -0400
-Message-ID: <48E05AB5.8070106@garzik.org>
-References: <20080926171251.731613895@fluff.org.uk>
+Subject: Re: [PATCH 1/2 v3] Introduce ata_id_has_unload()
+Date: Mon, 29 Sep 2008 00:34:04 -0400
+Message-ID: <48E05ABC.4020802@garzik.org>
+References: <87tzcb7r0r.fsf@denkblock.local> <20080919214359.7183.81870.stgit@denkblock.local>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:40923 "EHLO mail.dvmed.net"
+Received: from srv5.dvmed.net ([207.36.208.214]:40935 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750959AbYI2EeB (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 29 Sep 2008 00:34:01 -0400
-In-Reply-To: <20080926171251.731613895@fluff.org.uk>
+	id S1751136AbYI2EeM (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 29 Sep 2008 00:34:12 -0400
+In-Reply-To: <20080919214359.7183.81870.stgit@denkblock.local>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Ben Dooks <ben-linux@fluff.org>
-Cc: linux-ide@vger.kernel.org, Russell King <rmk@arm.linux.org.uk>
+To: Elias Oltmanns <eo@nebensachen.de>
+Cc: Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org
 
-Ben Dooks wrote:
-> The RPC machine type now selects HAVE_PATA_PLATFORM so we can remove
-> the special case in the PATA_PLATFORM configuration code.
+Elias Oltmanns wrote:
+> Add a function to check an ATA device's id for head unload support as
+> specified in ATA-7.
 > 
-> Cc: Russell King <rmk@arm.linux.org.uk>
-> Signed-off-by: Ben Dooks <ben-linux@fluff.org>
+> Signed-off-by: Elias Oltmanns <eo@nebensachen.de>
+> ---
 > 
-> Index: linux-2.6.26-rc5-quilt1/drivers/ata/Kconfig
-> ===================================================================
-> --- linux-2.6.26-rc5-quilt1.orig/drivers/ata/Kconfig	2008-06-10 12:38:03.000000000 +0100
-> +++ linux-2.6.26-rc5-quilt1/drivers/ata/Kconfig	2008-06-10 12:38:03.000000000 +0100
-> @@ -661,7 +661,7 @@ config HAVE_PATA_PLATFORM
+>  include/linux/ata.h |    9 +++++++++
+>  1 files changed, 9 insertions(+), 0 deletions(-)
+> 
+> diff --git a/include/linux/ata.h b/include/linux/ata.h
+> index cea079c..c66a7d6 100644
+> --- a/include/linux/ata.h
+> +++ b/include/linux/ata.h
+> @@ -707,6 +707,15 @@ static inline int ata_id_has_dword_io(const u16 *id)
+>  	return 0;
+>  }
 >  
->  config PATA_PLATFORM
->  	tristate "Generic platform device PATA support"
-> -	depends on EMBEDDED || ARCH_RPC || PPC || HAVE_PATA_PLATFORM
-> +	depends on EMBEDDED || PPC || HAVE_PATA_PLATFORM
->  	help
->  	  This option enables support for generic directly connected ATA
->  	  devices commonly found on embedded systems.
+> +static inline int ata_id_has_unload(const u16 *id)
+> +{
+> +	if (ata_id_major_version(id) >= 7 &&
+> +	    (id[ATA_ID_CFSSE] & 0xC000) == 0x4000 &&
+> +	    id[ATA_ID_CFSSE] & (1 << 13))
+> +		return 1;
+> +	return 0;
+> +}
+> +
+>  static inline int ata_id_current_chs_valid(const u16 *id)
+>  {
+>  	/* For ATA-1 devices, if the INITIALIZE DEVICE PARAMETERS command
 
-applied
+applied 1-2
 
 
