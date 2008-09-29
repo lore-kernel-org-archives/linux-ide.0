@@ -1,43 +1,72 @@
-From: "Matthew Stoltenberg" <d3matt@gmail.com>
-Subject: Re: pata_marvell woes
-Date: Mon, 29 Sep 2008 08:26:27 -0500
-Message-ID: <3c1bc2140809290626m43f874bw3aca5976da1be35e@mail.gmail.com>
-References: <3c1bc2140809281827h2154039rec8e65482e54a0f4@mail.gmail.com>
-	 <20080929100957.7cf41fdf@lxorguk.ukuu.org.uk>
+From: Anton Vorontsov <avorontsov@ru.mvista.com>
+Subject: [PATCH] pata_of_platform: fix no irq handling
+Date: Mon, 29 Sep 2008 17:32:36 +0400
+Message-ID: <20080929133236.GA19675@oksana.dev.rtsoft.ru>
+References: <20080925083622.GA2701@debian> <48DB51C3.6040504@linux.net.cn> <2a27d3730809250340p5cbd307crb1f70e5fb1a2fc1f@mail.gmail.com> <20080925104847.GA311@oksana.dev.rtsoft.ru> <48E05742.1030609@pobox.com>
+Reply-To: avorontsov@ru.mvista.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=windows-1251
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-gx0-f16.google.com ([209.85.217.16]:44259 "EHLO
-	mail-gx0-f16.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751538AbYI2N03 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 29 Sep 2008 09:26:29 -0400
-Received: by gxk9 with SMTP id 9so10414998gxk.13
-        for <linux-ide@vger.kernel.org>; Mon, 29 Sep 2008 06:26:28 -0700 (PDT)
-In-Reply-To: <20080929100957.7cf41fdf@lxorguk.ukuu.org.uk>
+Received: from rtsoft3.corbina.net ([85.21.88.6]:55693 "EHLO
+	buildserver.ru.mvista.com" rhost-flags-OK-FAIL-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1750819AbYI2Nci (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 29 Sep 2008 09:32:38 -0400
 Content-Disposition: inline
+In-Reply-To: <48E05742.1030609@pobox.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: linux-ide@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: Li Yang <leoli@freescale.com>, Wang Jian <lark@linux.net.cn>, "Steven A. Falco" <sfalco@harris.com>, linuxppc-dev@ozlabs.org, linux-ide@vger.kernel.org
 
-On Mon, Sep 29, 2008 at 4:09 AM, Alan Cox <alan@lxorguk.ukuu.org.uk> wrote:
-> On Sun, 28 Sep 2008 20:27:52 -0500
-> "Matthew Stoltenberg" <d3matt@gmail.com> wrote:
->
->> Hey Alan, Jeff, and the linux-ide ML,
+When no irq specified the pata_of_platform fills the irq_res with -1,
+which is wrong to do for two reasons:
+
+1. By definition, 'no irq' should be IRQ 0, not some negative integer;
+2. pata_platform checks for irq_res.start > 0, but since irq_res.start
+   is unsigned type, the check will be true for `-1'.
+
+Reported-by: Steven A. Falco <sfalco@harris.com>
+Signed-off-by: Anton Vorontsov <avorontsov@ru.mvista.com>
+---
+
+On Mon, Sep 29, 2008 at 12:19:14AM -0400, Jeff Garzik wrote:
+> Anton Vorontsov wrote:
+>> On Thu, Sep 25, 2008 at 06:40:59PM +0800, Li Yang wrote:
+>>> On Thu, Sep 25, 2008 at 4:54 PM, Wang Jian <lark@linux.net.cn> wrote:
+>>>> The alternative fix can be.
+>>> This one is better as 0 is defined as 'invalid irq' for all
+>>> architectures.  Added linux-ide and Anton to cc.
 >>
->> I'm having trouble with a Marvell pata controller.  It's on an Asus
->> P5Q PRO.  It's an intel P45 based board with an added PATA controller.
->>  The manual (and website) says that the chip a Marvell 88SE6111.
+>> Thanks for the correct Cc.
+>>
+>> I've sent a patch to fix the issue more than a month ago.
+>>
+>> http://www.mail-archive.com/linuxppc-dev@ozlabs.org/msg22851.html
+>>
+>> Jeff, could you apply the patch?
 >
-> Known bug. Should be fixed in 2.6.27rc. Jeff merged some stuff which broke
-> the PATA support on the Marvell chips. 2.6.27 merges some changes so that
-> you now get AHCI if you are using just the SATA ports (best choice), or
-> pata_marvell if you are using the PATA port as well.
+> Can you resend, I don't seem to have it...
 
-I tried rc7 and it looks like it's working.  Thanks for the quick response.
+Here it is.
 
-Now to get the happy little nvidia driver to work with rc7 :-/
+Thanks,
 
-Matt
+ drivers/ata/pata_of_platform.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/ata/pata_of_platform.c b/drivers/ata/pata_of_platform.c
+index 408da30..1f18ad9 100644
+--- a/drivers/ata/pata_of_platform.c
++++ b/drivers/ata/pata_of_platform.c
+@@ -52,7 +52,7 @@ static int __devinit pata_of_platform_probe(struct of_device *ofdev,
+ 
+ 	ret = of_irq_to_resource(dn, 0, &irq_res);
+ 	if (ret == NO_IRQ)
+-		irq_res.start = irq_res.end = -1;
++		irq_res.start = irq_res.end = 0;
+ 	else
+ 		irq_res.flags = 0;
+ 
+-- 
+1.5.6.3
+
