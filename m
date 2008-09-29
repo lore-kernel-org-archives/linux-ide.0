@@ -1,128 +1,89 @@
-From: "Matthew Stoltenberg" <d3matt@gmail.com>
-Subject: pata_marvell woes
-Date: Sun, 28 Sep 2008 20:27:52 -0500
-Message-ID: <3c1bc2140809281827h2154039rec8e65482e54a0f4@mail.gmail.com>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: bug report
+Date: Mon, 29 Sep 2008 10:36:31 +0900
+Message-ID: <48E0311F.2030907@gmail.com>
+References: <48DA0B39.5050401@saturnosoft.biz>	 <1222274317.14959.4.camel@odie.local>  <48DA7F1E.5030508@saturnosoft.biz> <1222280712.14959.14.camel@odie.local>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from yw-out-2324.google.com ([74.125.46.31]:22919 "EHLO
-	yw-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751073AbYI2B1y (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 28 Sep 2008 21:27:54 -0400
-Received: by yw-out-2324.google.com with SMTP id 9so281961ywe.1
-        for <linux-ide@vger.kernel.org>; Sun, 28 Sep 2008 18:27:52 -0700 (PDT)
-Content-Disposition: inline
+Received: from ti-out-0910.google.com ([209.85.142.184]:10576 "EHLO
+	ti-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753104AbYI2BiK (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 28 Sep 2008 21:38:10 -0400
+Received: by ti-out-0910.google.com with SMTP id b6so802669tic.23
+        for <linux-ide@vger.kernel.org>; Sun, 28 Sep 2008 18:38:00 -0700 (PDT)
+In-Reply-To: <1222280712.14959.14.camel@odie.local>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: =?UTF-8?B?U2ltb24gSG9sbSBUaMO4Z2Vyc2Vu?= <odie@cs.aau.dk>
+Cc: Todor Gyumyushev <todor@saturnosoft.biz>, Jens Axboe <jens.axboe@oracle.com>, Albert Lee <albertcc@tw.ibm.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-Hey Alan, Jeff, and the linux-ide ML,
+Simon Holm Th=C3=B8gersen wrote:
+> [ CC'ing linux-ide mailing list and the people involved in commit
+>   56c819df (libata: update ATAPI overflow draining) that introduced t=
+he
+>   WARN_ON. ]
+>=20
+> ons, 24 09 2008 kl. 20:55 +0300, skrev Todor Gyumyushev:
+>> Simon Holm Th=C3=B8gersen wrote:
+>>> ons, 24 09 2008 kl. 12:41 +0300, skrev Todor Gyumyushev:
+>>>  =20
+>>>> ------------[ cut here ]------------
+>>>> WARNING: at drivers/ata/libata-sff.c:944 ata_sff_hsm_move+0x4a9/0x=
+6a0()
+>>>> Modules linked in: cdc_acm eth1394 vboxdrv isofs zlib_inflate ath5=
+k=20
+>>>> aes_generic nls_utf8 nls_cp437 vfat fat nls_base i915 drm kvm=20
+>>>> acpi_cpufreq hci_usb rfcomm l2cap pktcdvd nfsd lockd nfs_acl auth_=
+rpcgss=20
+>>>> sunrpc exportfs fan ac battery microcode firmware_class loop usb_s=
+torage=20
+>>>> usbhid snd_hda_intel arc4 snd_pcm_oss sg ecb crypto_blkcipher=20
+>>>> snd_mixer_oss cryptomgr snd_pcm snd_timer tpm_infineon sr_mod usbl=
+p snd=20
+>>>> rng_core cdrom ehci_hcd mac80211 thermal ohci1394 ieee1394 process=
+or=20
+>>>> evdev thermal_sys tpm uhci_hcd iTCO_wdt iTCO_vendor_support soundc=
+ore=20
+>>>> cfg80211 tpm_bios sky2 hwmon snd_page_alloc intel_agp button [last=
+=20
+>>>> unloaded: ath5k]
+>>>> Pid: 0, comm: swapper Tainted: G        W 2.6.26.5 #6
+>>>>    =20
+>>> This warning is not the first produced by your system, see the W fl=
+ag in
+>>> the line above. Can you find an earlier warning in your dmesg/log? =
+Or is
+>>> it similar to this one?
+>>>
+>>>  =20
+>>>> Call Trace:
+>>>>  <IRQ>  [<ffffffff80236214>] warn_on_slowpath+0x64/0xc0
+>>>>  [<ffffffff803c9ec8>] ata_sff_data_xfer+0x98/0xc0
+>>>>  [<ffffffff803c96c9>] ata_sff_hsm_move+0x4a9/0x6a0
+>>>>  [<ffffffff803c9c13>] ata_sff_interrupt+0x1a3/0x2c0
+>>>>  [<ffffffff802748e4>] handle_IRQ_event+0x34/0x70
+>>>>  [<ffffffff80275e60>] handle_edge_irq+0xc0/0x160
+>>>>  [<ffffffff8020ebac>] do_IRQ+0x7c/0x100
+>>>>  [<ffffffff8020bc51>] ret_from_intr+0x0/0xa
+>>>>  <EOI>  [<ffffffff8021c800>] lapic_next_event+0x0/0x10
+>>>>  [<ffffffff803fbc10>] cpuidle_idle_call+0x0/0x120
+>>>>  [<ffffffffa00564bc>] :processor:acpi_idle_enter_simple+0x1c5/0x23=
+5
+>>>>  [<ffffffffa00564b2>] :processor:acpi_idle_enter_simple+0x1bb/0x23=
+5
+>>>>  [<ffffffff803fbc10>] cpuidle_idle_call+0x0/0x120
+>>>>  [<ffffffff803fbce7>] cpuidle_idle_call+0xd7/0x120
+>>>>  [<ffffffff803fbc10>] cpuidle_idle_call+0x0/0x120
+>>>>  [<ffffffff803fbc10>] cpuidle_idle_call+0x0/0x120
+>>>>  [<ffffffff80209410>] default_idle+0x0/0x50
+>>>>  [<ffffffff8020a720>] cpu_idle+0x60/0xd0
 
-I'm having trouble with a Marvell pata controller.  It's on an Asus
-P5Q PRO.  It's an intel P45 based board with an added PATA controller.
- The manual (and website) says that the chip a Marvell 88SE6111.
+Hmm... This shouldn't happen.  Can you please attach full kernel log
+including the boot messages?
 
-Here's where the fun begins.  I've been playing around with different
-distributions lately (I use Fedora at work).  The fedora 9 live cd
-won't boot because it can't find the rootfs (on a PATA dvd drive
-connected through the Marvell controller).  Gentoo's and Ubuntu's
-liveCDs both work, but when I built a gentoo-sources 2.6.25 kernel, it
-doesn't see the drive anymore.
+Thanks.
 
-I've narrowed it down by building vanilla kernels.  It seems that the
-driver stopped working sometime in the 2.6.25 series (and is still
-broken in 2.6.26), but it does work in the 2.6.24 series.  See below
-for dumps from lspci.
-
-I'm not sure to begin to debug this problem, but it looks like there
-might be a bug in the ahci driver since lspci shows that ahci has it
-in use.
-
-Here's what lspci reports in the working 2.6.24.7:
-03:00.0 IDE interface: Marvell Technology Group Ltd. Device 6121 (rev
-b2) (prog-if 8f [Master SecP SecO PriP PriO])
-        Subsystem: ASUSTeK Computer Inc. Device 82e0
-        Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop-
-ParErr- Stepping- SERR- FastB2B- DisINTx-
-        Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort-
-<TAbort- <MAbort- >SERR- <PERR- INTx-
-        Latency: 0, Cache Line Size: 32 bytes
-        Interrupt: pin A routed to IRQ 16
-        Region 0: I/O ports at ec00 [size=8]
-        Region 1: I/O ports at e880 [size=4]
-        Region 2: I/O ports at e800 [size=8]
-        Region 3: I/O ports at e480 [size=4]
-        Region 4: I/O ports at e400 [size=16]
-        Region 5: Memory at feaffc00 (32-bit, non-prefetchable) [size=1K]
-        Capabilities: [48] Power Management version 2
-                Flags: PMEClk- DSI- D1+ D2- AuxCurrent=0mA
-PME(D0+,D1+,D2-,D3hot+,D3cold-)
-                Status: D0 PME-Enable- DSel=0 DScale=1 PME-
-        Capabilities: [50] Message Signalled Interrupts: Mask- 64bit-
-Queue=0/0 Enable-
-                Address: 00000000  Data: 0000
-        Capabilities: [e0] Express (v1) Legacy Endpoint, MSI 00
-                DevCap: MaxPayload 128 bytes, PhantFunc 0, Latency L0s
-unlimited, L1 unlimited
-                        ExtTag- AttnBtn- AttnInd- PwrInd- RBE- FLReset-
-                DevCtl: Report errors: Correctable- Non-Fatal- Fatal-
-Unsupported-
-                        RlxdOrd- ExtTag- PhantFunc- AuxPwr+ NoSnoop-
-                        MaxPayload 128 bytes, MaxReadReq 512 bytes
-                DevSta: CorrErr- UncorrErr- FatalErr- UnsuppReq+
-AuxPwr- TransPend-
-                LnkCap: Port #0, Speed 2.5GT/s, Width x1, ASPM L0s,
-Latency L0 <256ns, L1 unlimited
-                        ClockPM- Suprise- LLActRep- BwNot-
-                LnkCtl: ASPM Disabled; RCB 64 bytes Disabled- Retrain- CommClk-
-                        ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt-
-                LnkSta: Speed 2.5GT/s, Width x1, TrErr- Train-
-SlotClk+ DLActive- BWMgmt- ABWMgmt-
-        Kernel driver in use: pata_marvell
-        Kernel modules: pata_marvell
-
-
-Here's what lspci reports in the not-working 2.6.26.5
-03:00.0 IDE interface: Marvell Technology Group Ltd. Device 6121 (rev
-b2) (prog-if 8f [Master SecP SecO PriP PriO])
-        Subsystem: ASUSTeK Computer Inc. Device 82e0
-        Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop-
-ParErr- Stepping- SERR- FastB2B- DisINTx-
-        Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort-
-<TAbort- <MAbort- >SERR- <PERR- INTx-
-        Latency: 0, Cache Line Size: 32 bytes
-        Interrupt: pin A routed to IRQ 16
-        Region 0: I/O ports at ec00 [size=8]
-        Region 1: I/O ports at e880 [size=4]
-        Region 2: I/O ports at e800 [size=8]
-        Region 3: I/O ports at e480 [size=4]
-        Region 4: I/O ports at e400 [size=16]
-        Region 5: Memory at feaffc00 (32-bit, non-prefetchable) [size=1K]
-        Capabilities: [48] Power Management version 2
-                Flags: PMEClk- DSI- D1+ D2- AuxCurrent=0mA
-PME(D0+,D1+,D2-,D3hot+,D3cold-)
-                Status: D0 PME-Enable- DSel=0 DScale=1 PME-
-        Capabilities: [50] Message Signalled Interrupts: Mask- 64bit-
-Queue=0/0 Enable-
-                Address: 00000000  Data: 0000
-        Capabilities: [e0] Express (v1) Legacy Endpoint, MSI 00
-                DevCap: MaxPayload 128 bytes, PhantFunc 0, Latency L0s
-unlimited, L1 unlimited
-                        ExtTag- AttnBtn- AttnInd- PwrInd- RBE- FLReset-
-                DevCtl: Report errors: Correctable- Non-Fatal- Fatal-
-Unsupported-
-                        RlxdOrd- ExtTag- PhantFunc- AuxPwr+ NoSnoop-
-                        MaxPayload 128 bytes, MaxReadReq 512 bytes
-                DevSta: CorrErr- UncorrErr- FatalErr- UnsuppReq+
-AuxPwr- TransPend-
-                LnkCap: Port #0, Speed 2.5GT/s, Width x1, ASPM L0s,
-Latency L0 <256ns, L1 unlimited
-                        ClockPM- Suprise- LLActRep- BwNot-
-                LnkCtl: ASPM Disabled; RCB 64 bytes Disabled- Retrain- CommClk-
-                        ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt-
-                LnkSta: Speed 2.5GT/s, Width x1, TrErr- Train-
-SlotClk+ DLActive- BWMgmt- ABWMgmt-
-        Capabilities: [100] Advanced Error Reporting <?>
-        Kernel driver in use: ahci
-        Kernel modules: ide-pci-generic, pata_marvell
+--=20
+tejun
