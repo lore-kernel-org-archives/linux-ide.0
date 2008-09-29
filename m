@@ -1,93 +1,40 @@
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-Subject: [PATCH 4/6] SATA AHCI: Blacklist system that spins off disks during ACPI power off
-Date: Tue, 30 Sep 2008 00:15:16 +0200
-Message-ID: <200809300015.18074.rjw@sisk.pl>
-References: <200808290002.55026.rjw@sisk.pl> <48D17BBE.5020807@garzik.org> <200809300006.24919.rjw@sisk.pl>
+From: Kristen Carlson Accardi <kristen.c.accardi@intel.com>
+Subject: Re: [patch 1/2] allow user to power off unused ports via sysfs
+Date: Mon, 29 Sep 2008 16:49:13 -0700
+Message-ID: <20080929164913.6489445c@appleyard>
+References: <1222639114.12062.10.camel@hannibal>
+Reply-To: kristen.c.accardi@intel.com
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-2"
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ogre.sisk.pl ([217.79.144.158]:48244 "EHLO ogre.sisk.pl"
+Received: from mga09.intel.com ([134.134.136.24]:12559 "EHLO mga09.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752566AbYI2WPe (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 29 Sep 2008 18:15:34 -0400
-In-Reply-To: <200809300006.24919.rjw@sisk.pl>
-Content-Disposition: inline
+	id S1751896AbYI2Xtt (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 29 Sep 2008 19:49:49 -0400
+In-Reply-To: <1222639114.12062.10.camel@hannibal>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: Tejun Heo <htejun@gmail.com>, ACPI Devel Maling List <linux-acpi@vger.kernel.org>, linux-ide@vger.kernel.org, Thomas Renninger <trenn@suse.de>, Robert Hancock <hancockr@shaw.ca>, LKML <linux-kernel@vger.kernel.org>, Frans Pop <elendil@planet.nl>, Maciej Rutecki <maciej.rutecki@gmail.com>, Andrew Morton <akpm@linux-foundation.org>
+To: "Jeffrey W. Baker" <jwbaker@gmail.com>
+Cc: linux-ide@vger.kernel.org
 
-From: Rafael J. Wysocki <rjw@sisk.pl>
+On Sun, 28 Sep 2008 14:58:34 -0700
+"Jeffrey W. Baker" <jwbaker@gmail.com> wrote:
 
-SATA AHCI: Blacklist system that spins off disks during ACPI power off
+> 
+> The problem is I didn't save any power this way :(  ThinkPad X61t was
+> using minimum 7.6W on a one-minute average before power_off, and same
+> power after power_off.  I'd been led to believe that disabling these
+> ports would have a substantial power saving effect.
+> 
+> -jwb
+> 
 
-Some notebooks from HP have the problem that their BIOSes attempt to
-spin down hard drives before entering ACPI system states S4 and S5.
-This leads to a yo-yo effect during system power-off shutdown and the
-last phase of hibernation when the disk is first spun down by the
-kernel and then almost immediately turned on and off by the BIOS.
-This, in turn, may result in shortening the disk's life times.
+Hi Jeffrey - the reason you are not seeing any power savings is 
+that this patch isn't actually powering off the ports.  I swear this
+used to work... but I confirmed today it is not doing what it is
+supposed to do.  I'll send out a reworked patch as soon as I figure
+out what the problem is.
 
-To prevent this from happening we can blacklist the affected systems
-using DMI information.
-
-Blacklist HP nx6310 that uses the AHCI driver.
-
-Signed-off-by: Rafael J. Wysocki <rjw@sisk.pl>
----
- drivers/ata/ahci.c |   32 ++++++++++++++++++++++++++++++++
- 1 file changed, 32 insertions(+)
-
-Index: linux-2.6/drivers/ata/ahci.c
-===================================================================
---- linux-2.6.orig/drivers/ata/ahci.c
-+++ linux-2.6/drivers/ata/ahci.c
-@@ -2528,6 +2528,32 @@ static void ahci_p5wdh_workaround(struct
- 	}
- }
- 
-+static bool ahci_broken_system_poweroff(struct pci_dev *pdev)
-+{
-+	static const struct dmi_system_id broken_systems[] = {
-+		{
-+			.ident = "HP Compaq nx6310",
-+			.matches = {
-+				DMI_MATCH(DMI_SYS_VENDOR, "Hewlett-Packard"),
-+				DMI_MATCH(DMI_PRODUCT_NAME, "HP Compaq nx6310"),
-+			},
-+			/* PCI slot number of the controller */
-+			.driver_data = (void *)0x1FUL,
-+		},
-+
-+		{ }	/* terminate list */
-+	};
-+	const struct dmi_system_id *dmi = dmi_first_match(broken_systems);
-+
-+	if (dmi) {
-+		unsigned long slot = (unsigned long)dmi->driver_data;
-+		/* apply the quirk only to on-board controllers */
-+		return slot == PCI_SLOT(pdev->devfn);
-+	}
-+
-+	return false;
-+}
-+
- static int ahci_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
- {
- 	static int printed_version;
-@@ -2623,6 +2649,12 @@ static int ahci_init_one(struct pci_dev 
- 		}
- 	}
- 
-+	if (ahci_broken_system_poweroff(pdev)) {
-+		pi.flags |= ATA_FLAG_NO_POWEROFF_SPINDOWN;
-+		dev_info(&pdev->dev,
-+			"quirky BIOS, skipping spindown on poweroff\n");
-+	}
-+
- 	/* CAP.NP sometimes indicate the index of the last enabled
- 	 * port, at other times, that of the last possible port, so
- 	 * determining the maximum port number requires looking at
+Kristen
 
