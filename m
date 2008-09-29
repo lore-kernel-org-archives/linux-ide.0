@@ -1,67 +1,69 @@
-From: Russell King <rmk@arm.linux.org.uk>
-Subject: Re: PATA: RPC now selects HAVE_PATA_PLATFORM for pata platform driver
-Date: Mon, 29 Sep 2008 17:44:39 +0100
-Message-ID: <20080929164439.GA8298@flint.arm.linux.org.uk>
-References: <20080926171251.731613895@fluff.org.uk> <48E05AB5.8070106@garzik.org>
+From: Paul Rolland (=?UTF-8?B?44Od44O844Or44O744Ot44Op44Oz?=)
+	<rol@witbe.net>
+Subject: Re: regarding frequent head unload problem
+Date: Mon, 29 Sep 2008 20:41:46 +0200
+Message-ID: <20080929204146.19033711@tux.DEF.witbe.net>
+References: <48E08B99.1070508@kernel.org>
+	<20080929110017.341a5255@tux.DEF.witbe.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from caramon.arm.linux.org.uk ([78.32.30.218]:48499 "EHLO
-	caramon.arm.linux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751293AbYI2QpZ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 29 Sep 2008 12:45:25 -0400
-Content-Disposition: inline
-In-Reply-To: <48E05AB5.8070106@garzik.org>
+Received: from smtp.witbe.net ([81.88.96.48]:49239 "EHLO smtp.witbe.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751300AbYI2Smz convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 29 Sep 2008 14:42:55 -0400
+In-Reply-To: <20080929110017.341a5255@tux.DEF.witbe.net>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: Ben Dooks <ben-linux@fluff.org>, linux-ide@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: "Paul Rolland (=?UTF-8?B?44Od44O844Or44O744Ot44Op44Oz?=)" <rol@witbe.net>, "Ivan N. Zlatev" <contact@i-nz.net>, Robert Krawitz <rlk@alum.mit.edu>, Omar A <aliencoder@gmail.com>, Pascal Vandeputte <pascal@asmodeus.be>, Carlos Bessa <carlos.bessa@gmail.com>, Andy Vaselaar <andrew.vaselaar@trinity.edu>, webmaster@dragontower.de, Christian Wolf <wolfchri@gmail.com>, "A. Klitzing" <aklitzing@online.de>, Stefan Henriet <aladin7501-01@yahoo.de>, IDE/ATA development list <linux-ide@vger.kernel.org>rol@witbe.net
 
-On Mon, Sep 29, 2008 at 12:33:57AM -0400, Jeff Garzik wrote:
-> Ben Dooks wrote:
-> >The RPC machine type now selects HAVE_PATA_PLATFORM so we can remove
-> >the special case in the PATA_PLATFORM configuration code.
-> >
-> >Cc: Russell King <rmk@arm.linux.org.uk>
-> >Signed-off-by: Ben Dooks <ben-linux@fluff.org>
+Hello,
 
-Interestingly, the version posted to the ARM lists has:
+On Mon, 29 Sep 2008 11:00:17 +0200
+Paul Rolland (=E3=83=9D=E3=83=BC=E3=83=AB=E3=83=BB=E3=83=AD=E3=83=A9=E3=
+=83=B3)  <rol@witbe.net> wrote:
 
-| The RPC machine type now selects HAVE_PATA_PLATFORM so we can remove
-| the special case in the PATA_PLATFORM configuration code.
-| 
-| Acked-by: Russell King <rmk@arm.linux.org.uk>
-| Signed-off-by: Ben Dooks <ben-linux@fluff.org>
+> Hello,
+>=20
+> On Mon, 29 Sep 2008 17:02:33 +0900
+> Tejun Heo <tj@kernel.org> wrote:
+>=20
+> > Hello,
+> >=20
+> > I'm writing to everyone who reported to me or linux-ide about frequ=
+ent
+> > head unload problem and the report is not yet committed to
+> > storage-fixup.conf.
 
-as the comments... I don't think I acked it, and I certainly wouldn't
-have acked it with that address.  So, no idea what Ben's playing at.
+>=20
+> I also have the following :
+> [root@tux ~]# while : ; do smartctl --all /dev/sda | grep ^193; sleep=
+ 60;
+> done 193 Load_Cycle_Count 0x0012 075 075 000  Old_age Always  - 25758=
+4=20
+> 193 Load_Cycle_Count 0x0012 075 075 000  Old_age Always  - 257590=20
+> 193 Load_Cycle_Count 0x0012 075 075 000  Old_age Always  - 257593
+>=20
 
-But anyway...
+Please note that hdparm -B255 /dev/sda also fixes the issue... Now adde=
+d
+to rc.local ;)
 
-Acked-by: Russell King <rmk+kernel@arm.linux.org.uk>
+Regards,
+Paul
 
-> >
-> >Index: linux-2.6.26-rc5-quilt1/drivers/ata/Kconfig
-> >===================================================================
-> >--- linux-2.6.26-rc5-quilt1.orig/drivers/ata/Kconfig	2008-06-10 
-> >12:38:03.000000000 +0100
-> >+++ linux-2.6.26-rc5-quilt1/drivers/ata/Kconfig	2008-06-10 
-> >12:38:03.000000000 +0100
-> >@@ -661,7 +661,7 @@ config HAVE_PATA_PLATFORM
-> > 
-> > config PATA_PLATFORM
-> > 	tristate "Generic platform device PATA support"
-> >-	depends on EMBEDDED || ARCH_RPC || PPC || HAVE_PATA_PLATFORM
-> >+	depends on EMBEDDED || PPC || HAVE_PATA_PLATFORM
-> > 	help
-> > 	  This option enables support for generic directly connected ATA
-> > 	  devices commonly found on embedded systems.
-> 
-> applied
-> 
-> 
+--=20
+Paul Rolland                                E-Mail : rol(at)witbe.net
+CTO - Witbe.net SA                          Tel. +33 (0)1 47 67 77 77
+Les Collines de l'Arche                     Fax. +33 (0)1 47 67 77 99
+=46-92057 Paris La Defense                    RIPE : PR12-RIPE
 
--- 
-Russell King
- Linux kernel    2.6 ARM Linux   - http://www.arm.linux.org.uk/
- maintainer of:
+Please no HTML, I'm not a browser - Pas d'HTML, je ne suis pas un navig=
+ateur=20
+"Some people dream of success... while others wake up and work hard at =
+it"=20
+
+Alcoholics Anonymous is when you get to drink under someone else's name=
+=2E
