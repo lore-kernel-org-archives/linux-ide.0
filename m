@@ -1,53 +1,53 @@
 From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH 1/2 v3] Introduce ata_id_has_unload()
-Date: Mon, 29 Sep 2008 00:34:04 -0400
-Message-ID: <48E05ABC.4020802@garzik.org>
-References: <87tzcb7r0r.fsf@denkblock.local> <20080919214359.7183.81870.stgit@denkblock.local>
+Subject: Re: [patch 1/1] pata_sil680: convert CONFIG_PPC_MERGE to CONFIG_PPC
+Date: Mon, 29 Sep 2008 00:34:12 -0400
+Message-ID: <48E05AC4.40405@garzik.org>
+References: <200809222147.m8MLlXSa031665@imap1.linux-foundation.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:40935 "EHLO mail.dvmed.net"
+Received: from srv5.dvmed.net ([207.36.208.214]:40939 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751136AbYI2EeM (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 29 Sep 2008 00:34:12 -0400
-In-Reply-To: <20080919214359.7183.81870.stgit@denkblock.local>
+	id S1751143AbYI2EeS (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 29 Sep 2008 00:34:18 -0400
+In-Reply-To: <200809222147.m8MLlXSa031665@imap1.linux-foundation.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Elias Oltmanns <eo@nebensachen.de>
-Cc: Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org
+To: akpm@linux-foundation.org
+Cc: linux-ide@vger.kernel.org, galak@kernel.crashing.org, alan@lxorguk.ukuu.org.uk, benh@kernel.crashing.org, paulus@samba.org
 
-Elias Oltmanns wrote:
-> Add a function to check an ATA device's id for head unload support as
-> specified in ATA-7.
+akpm@linux-foundation.org wrote:
+> From: Kumar Gala <galak@kernel.crashing.org>
 > 
-> Signed-off-by: Elias Oltmanns <eo@nebensachen.de>
+> Now that arch/ppc is dead CONFIG_PPC_MERGE is always defined for all
+> powerpc platforms and we want to get rid of CONFIG_PPC_MERGE use
+> CONFIG_PPC instead.
+> 
+> Signed-off-by: Kumar Gala <galak@kernel.crashing.org>
+> Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+> Cc: Paul Mackerras <paulus@samba.org>
+> Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>
+> Cc: Jeff Garzik <jeff@garzik.org>
+> Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
 > ---
 > 
->  include/linux/ata.h |    9 +++++++++
->  1 files changed, 9 insertions(+), 0 deletions(-)
+>  drivers/ata/pata_sil680.c |    2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
 > 
-> diff --git a/include/linux/ata.h b/include/linux/ata.h
-> index cea079c..c66a7d6 100644
-> --- a/include/linux/ata.h
-> +++ b/include/linux/ata.h
-> @@ -707,6 +707,15 @@ static inline int ata_id_has_dword_io(const u16 *id)
->  	return 0;
->  }
+> diff -puN drivers/ata/pata_sil680.c~pata_sil680-convert-config_ppc_merge-to-config_ppc drivers/ata/pata_sil680.c
+> --- a/drivers/ata/pata_sil680.c~pata_sil680-convert-config_ppc_merge-to-config_ppc
+> +++ a/drivers/ata/pata_sil680.c
+> @@ -230,7 +230,7 @@ static u8 sil680_init_chip(struct pci_de
+>  		tmpbyte & 1, tmpbyte & 0x30);
 >  
-> +static inline int ata_id_has_unload(const u16 *id)
-> +{
-> +	if (ata_id_major_version(id) >= 7 &&
-> +	    (id[ATA_ID_CFSSE] & 0xC000) == 0x4000 &&
-> +	    id[ATA_ID_CFSSE] & (1 << 13))
-> +		return 1;
-> +	return 0;
-> +}
-> +
->  static inline int ata_id_current_chs_valid(const u16 *id)
->  {
->  	/* For ATA-1 devices, if the INITIALIZE DEVICE PARAMETERS command
+>  	*try_mmio = 0;
+> -#ifdef CONFIG_PPC_MERGE
+> +#ifdef CONFIG_PPC
+>  	if (machine_is(cell))
+>  		*try_mmio = (tmpbyte & 1) || pci_resource_start(pdev, 5);
+>  #endif
 
-applied 1-2
+applied
 
 
