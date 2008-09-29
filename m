@@ -1,51 +1,37 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH #upstream-fixes] sata_nv: reinstate nv_hardreset() for
- non generic controllers
-Date: Mon, 29 Sep 2008 00:15:58 -0400
-Message-ID: <48E0567E.4050605@garzik.org>
-References: <48DEB605.6090504@kernel.org>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: [PATCH] pata_platform struct resource signness fix
+Date: Mon, 29 Sep 2008 00:19:14 -0400
+Message-ID: <48E05742.1030609@pobox.com>
+References: <20080925083622.GA2701@debian> <48DB51C3.6040504@linux.net.cn> <2a27d3730809250340p5cbd307crb1f70e5fb1a2fc1f@mail.gmail.com> <20080925104847.GA311@oksana.dev.rtsoft.ru>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=windows-1251; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:34461 "EHLO mail.dvmed.net"
+Received: from srv5.dvmed.net ([207.36.208.214]:34477 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750745AbYI2EQE (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 29 Sep 2008 00:16:04 -0400
-In-Reply-To: <48DEB605.6090504@kernel.org>
+	id S1750801AbYI2ETd (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 29 Sep 2008 00:19:33 -0400
+In-Reply-To: <20080925104847.GA311@oksana.dev.rtsoft.ru>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: IDE/ATA development list <linux-ide@vger.kernel.org>, stable@kernel.org
+To: avorontsov@ru.mvista.com
+Cc: Li Yang <leoli@freescale.com>, Wang Jian <lark@linux.net.cn>, linuxppc-dev@ozlabs.org, linux-ide@vger.kernel.org
 
-Tejun Heo wrote:
-> Commit 2fd673ecf0378ddeeeb87b3605e50212e0c0ddc6 which tried to remove
-> hardreset for generic accidentally removed it for all flavors as all
-> others were inheriting from nv_generic_ops.  This patch reinstates
-> nv_hardreset() and puts it into nv_common_ops which all flavors
-> inherit from.  nv_generic_ops now inherits from nv_common_ops and
-> overrides .hardreset to ATA_OP_NULL.
+Anton Vorontsov wrote:
+> On Thu, Sep 25, 2008 at 06:40:59PM +0800, Li Yang wrote:
+>> On Thu, Sep 25, 2008 at 4:54 PM, Wang Jian <lark@linux.net.cn> wrote:
+>>> The alternative fix can be.
+>> This one is better as 0 is defined as 'invalid irq' for all
+>> architectures.  Added linux-ide and Anton to cc.
 > 
-> While at it, explain why nv_hardreset and ATA_OP_NULL override are
-> necessary.
+> Thanks for the correct Cc.
 > 
-> Signed-off-by: Tejun Heo <tj@kernel.org>
-> ---
-> This fixes the following regression.
+> I've sent a patch to fix the issue more than a month ago.
 > 
->   http://bugzilla.kernel.org/show_bug.cgi?id=11615
+> http://www.mail-archive.com/linuxppc-dev@ozlabs.org/msg22851.html
 > 
-> Jeff, are you off for the vacation already?
-> 
-> Thanks.
-> 
->  drivers/ata/sata_nv.c |   46 ++++++++++++++++++++++++++++++++++++++++------
->  1 file changed, 40 insertions(+), 6 deletions(-)
+> Jeff, could you apply the patch?
 
-applied
-
-Flight leaves in 12 hours! :)
-
-
+Can you resend, I don't seem to have it...
 
 
