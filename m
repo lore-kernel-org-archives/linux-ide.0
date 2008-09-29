@@ -1,43 +1,43 @@
-From: Vincenzo Ciancia <ciancia@di.unipi.it>
-Subject: Re: One drive which perform frequent head unloads under Linux
-Date: Mon, 29 Sep 2008 14:18:46 +0200
-Message-ID: <1222690726.26716.11.camel@frattaglia>
-References: <1222334079.13537.2.camel@frattaglia>
-	 <48E09581.8010504@kernel.org>
+From: "Matthew Stoltenberg" <d3matt@gmail.com>
+Subject: Re: pata_marvell woes
+Date: Mon, 29 Sep 2008 08:26:27 -0500
+Message-ID: <3c1bc2140809290626m43f874bw3aca5976da1be35e@mail.gmail.com>
+References: <3c1bc2140809281827h2154039rec8e65482e54a0f4@mail.gmail.com>
+	 <20080929100957.7cf41fdf@lxorguk.ukuu.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from horus.di.unipi.it ([131.114.3.13]:34702 "EHLO
-	mailserver.di.unipi.it" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751596AbYI2MTH (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 29 Sep 2008 08:19:07 -0400
-In-Reply-To: <48E09581.8010504@kernel.org>
+Received: from mail-gx0-f16.google.com ([209.85.217.16]:44259 "EHLO
+	mail-gx0-f16.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751538AbYI2N03 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 29 Sep 2008 09:26:29 -0400
+Received: by gxk9 with SMTP id 9so10414998gxk.13
+        for <linux-ide@vger.kernel.org>; Mon, 29 Sep 2008 06:26:28 -0700 (PDT)
+In-Reply-To: <20080929100957.7cf41fdf@lxorguk.ukuu.org.uk>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
 Cc: linux-ide@vger.kernel.org
 
-On lun, 2008-09-29 at 17:44 +0900, Tejun Heo wrote:
-> Vincenzo Ciancia wrote:
-> > Hi, I own a toshiba m400 and I already had to replace a disk in less
-> > than one year (luckily, it was covered by warranty). I noticed that
-> > Load_Cycle_Count was indeed increasing. Using hdparm -B 255 fixes it,
-> > but also 254 seems to fix it (and I guess it is better to have some
-> > power management than none at all?). 
-> > 
-> > I am not subscribed to the list so if you need more information just ask
-> > me. I followed instructions at
-> > 
-> > http://ata.wiki.kernel.org/index.php/Known_issues#How_to_determine_whether_a_machine_has_this_problem
-> 
-> I just updated the page.  Can you please read the updated part (which is
-> in bold) and post how much the load cycle count increases per hour
-> without any adjustment?
+On Mon, Sep 29, 2008 at 4:09 AM, Alan Cox <alan@lxorguk.ukuu.org.uk> wrote:
+> On Sun, 28 Sep 2008 20:27:52 -0500
+> "Matthew Stoltenberg" <d3matt@gmail.com> wrote:
+>
+>> Hey Alan, Jeff, and the linux-ide ML,
+>>
+>> I'm having trouble with a Marvell pata controller.  It's on an Asus
+>> P5Q PRO.  It's an intel P45 based board with an added PATA controller.
+>>  The manual (and website) says that the chip a Marvell 88SE6111.
+>
+> Known bug. Should be fixed in 2.6.27rc. Jeff merged some stuff which broke
+> the PATA support on the Marvell chips. 2.6.27 merges some changes so that
+> you now get AHCI if you are using just the SATA ports (best choice), or
+> pata_marvell if you are using the PATA port as well.
 
-The problem is that now I don't know what is the default (I also found
-no way to read the -B setting with hdparm). I tried with hdparm -B 128
-which seems adviced by many for laptops, and I get 130 cycles per hour. 
+I tried rc7 and it looks like it's working.  Thanks for the quick response.
 
-Vincenzo Ciancia
+Now to get the happy little nvidia driver to work with rc7 :-/
 
+Matt
