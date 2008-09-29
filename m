@@ -1,93 +1,100 @@
-From: Pascal Vandeputte <pascal@asmodeus.be>
-Subject: Re: frequent disk head unloads under Linux: additional hardware
-Date: Mon, 29 Sep 2008 23:13:27 +0200
-Message-ID: <48E144F7.7070303@asmodeus.be>
-References: <48C43F98.401@asmodeus.be> <48E08372.2030508@kernel.org>
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+Subject: [PATCH 0/6] SATA: Blacklist systems that spin off disks during ACPI power off
+Date: Tue, 30 Sep 2008 00:06:23 +0200
+Message-ID: <200809300006.24919.rjw@sisk.pl>
+References: <200808290002.55026.rjw@sisk.pl> <200809150200.57055.rjw@sisk.pl> <48D17BBE.5020807@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain;
+  charset="iso-8859-2"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mx-out.mail002.coreserver.be ([83.143.245.22]:48427 "EHLO
-	mx-out.mail002.coreserver.be" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751483AbYI2VN2 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 29 Sep 2008 17:13:28 -0400
-In-Reply-To: <48E08372.2030508@kernel.org>
+Received: from ogre.sisk.pl ([217.79.144.158]:48214 "EHLO ogre.sisk.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751423AbYI2WP2 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 29 Sep 2008 18:15:28 -0400
+In-Reply-To: <48D17BBE.5020807@garzik.org>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: linux-ide@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: Tejun Heo <htejun@gmail.com>, ACPI Devel Maling List <linux-acpi@vger.kernel.org>, linux-ide@vger.kernel.org, Thomas Renninger <trenn@suse.de>, Robert Hancock <hancockr@shaw.ca>, LKML <linux-kernel@vger.kernel.org>, Frans Pop <elendil@planet.nl>, Maciej Rutecki <maciej.rutecki@gmail.com>, Andrew Morton <akpm@linux-foundation.org>
 
-Tejun Heo wrote:
-> Hello,
->
-> Pascal Vandeputte wrote:
->   
->> Hi,
->>
->> I've been highly frustrated for more than a year about this problem with
->> my HP nx7400 laptop and its Seagate Momentus 5400.2 disk (which is
->> otherwise a really fine piece of equipment). By switching from Ubuntu to
->> openSUSE today, I had to look for the Suse way of fixing this up
->> (instead of editing /etc/hdparm.conf on Ubuntu), and I stumbled upon the
->> storage-fixup script which is really nice!
->>
->> As my harddisk isn't included in by default yet, I've attached the
->> required information to this e-mail.
->>
->> Adding this to /etc/storage-fixup.conf solves it:
->>
->>    # Reported drive model: ST9100824AS
->>    rule hp-nx7400
->>    dmi system-manufacturer Hewlett-Packard
->>    dmi system-product-name HP Compaq nx7400*
->>    ata model ST9*AS
->>    act hdparm -B 255 $DEV
->>     
->
-> How much does the Load_Cycle_Count increase under idle usage per hour
-> without the adjustment?
->   
-About thrice per minute:
+On Wednesday, 17 of September 2008, Jeff Garzik wrote:
+> Rafael J. Wysocki wrote:
+> > On Sunday, 14 of September 2008, Jeff Garzik wrote:
+> >> Tejun Heo wrote:
+> >>> Rafael J. Wysocki wrote:
+> >>>> SATA: Blacklist systems that spin off disks during ACPI power off
+> >>>>
+> >>>> Some notebooks from HP have the problem that their BIOSes attempt to
+> >>>> spin down hard drives before entering ACPI system states S4 and S5.
+> >>>> This leads to a yo-yo effect during system power-off shutdown and the
+> >>>> last phase of hibernation when the disk is first spun down by the
+> >>>> kernel and then almost immediately turned on and off by the BIOS.
+> >>>> This, in turn, may result in shortening the disk's life times.
+> >>>>
+> >>>> To prevent this from happening we can blacklist the affected systems
+> >>>> using DMI information.  However, only the on-board controlles should
+> >>>> be blacklisted and their PCI slot numbers can be used for this
+> >>>> purpose.  Unfortunately the existing interface for checking DMI
+> >>>> information of the system is not very convenient for this purpose,
+> >>>> because to use it, we would have to define special callback functions
+> >>>> or create a separate struct dmi_system_id table for each blacklisted
+> >>>> system.
+> >>>>
+> >>>> To overcome this difficulty introduce a new function
+> >>>> dmi_first_match() returning a pointer to the first entry in an array
+> >>>> of struct dmi_system_id elements that matches the system DMI
+> >>>> information.  Then, we can use this pointer to access the entry's
+> >>>> .driver_data field containing the additional information, such as
+> >>>> the PCI slot number, allowing us to do the desired blacklisting.
+> >>>>
+> >>>> Introduce a new libata flag ATA_FLAG_NO_POWEROFF_SPINDOWN that, if
+> >>>> set, will prevent disks from being spun off during system power off
+> >>>> and hibernation (to handle the hibernation case we need a new system
+> >>>> state SYSTEM_HIBERNATE_ENTER that can be checked against by libata,
+> >>>> in analogy with SYSTEM_POWER_OFF).  Use dmi_first_match() to set this
+> >>>> flag for some systems affected by the problem described above (HP nx6325,
+> >>>> HP nx6310, HP 2510p).
+> >>>>
+> >>>> Signed-off-by: Rafael J. Wysocki <rjw@sisk.pl>
+> >>> libata part looks good to me but I think it would be better to
+> >>> separate out DMI changes into a separate patch.
+> >> Did these changes ever get separated out?
+> > 
+> > I only have the 'combo' patch if that's what you're asking about.  [The latest
+> > version is at http://bugzilla.kernel.org/attachment.cgi?id=17702&action=view]
+> > 
+> > Still, I can easily split the patch, although in that case the reason for the
+> > DMI changes won't be very clear without a reference to the SATA changes IMO.
+> 
+> That's the nature of every single API change -- you have the change, and 
+> then you have the users.
+> 
+> Respectfully, please split up the patch as requested, into DMI subsystem 
+> and ata subsystem pieces.
+> 
+> Re-reviewing the patch, I would even think that you should split out the 
+> kernel/power/disk and linux/kernel.h changes as well.
 
-# while : ; do smartctl --all /dev/sda | grep ^193; sleep 60; done
-193 Load_Cycle_Count        0x0032   037   037   000    Old_age  
-Always       -       126856
-193 Load_Cycle_Count        0x0032   037   037   000    Old_age  
-Always       -       126859
-193 Load_Cycle_Count        0x0032   037   037   000    Old_age  
-Always       -       126862
-193 Load_Cycle_Count        0x0032   037   037   000    Old_age  
-Always       -       126865
-193 Load_Cycle_Count        0x0032   037   037   000    Old_age  
-Always       -       126867
-193 Load_Cycle_Count        0x0032   037   037   000    Old_age  
-Always       -       126869
+Here you go (sorry for the delay).  I have also split the SATA changes so that
+the driver patches are droppable individually if there are problems with them
+(not anticipated).
 
-I reached the first 120000 cycles within 10 months of moderate usage
-(it's my personal laptop, not used for my day job).
+Thanks,
+Rafael
 
-It occurs in Windows XP as well, but not as frequently.
+---
+SATA: Blacklist systems that spin off disks during ACPI power off
 
->> An unfortunate side-effect of meddling with the power saving on my
->> system occurs at shutdown: for some reason I can clearly hear the drive
->> spin down and then suddenly spin up and initialize again before the
->> power is killed... This doesn't happen if I leave everything at default
->> settings. Restoring the default setting (128) manually before shutting
->> down doesn't prevent this either. It's weird and I've been working
->> around it by rebooting and using the power button when I see GRUB appear.
->>     
->
-> That's a known problem of certain HP laptops.  Please take a look at the
-> following bug report.
->
->   http://bugzilla.kernel.org/show_bug.cgi?id=8855
->
-> Thanks.
->   
-Thanks for the pointer, I have already submitted my own data in that
-topic in the mean time. I hope that someday I can install the latest
-distro without worrying about hdparm tweaks :-)
+Some notebooks from HP have the problem that their BIOSes attempt to
+spin down hard drives before entering ACPI system states S4 and S5.
+This leads to a yo-yo effect during system power-off shutdown and the
+last phase of hibernation when the disk is first spun down by the
+kernel and then almost immediately turned on and off by the BIOS.
+This, in turn, may result in shortening the disk's life times.
 
-Greetings,
+To prevent this from happening we can blacklist the affected systems
+using DMI information, which is implemented by the following series of
+patches.
 
-Pascal
