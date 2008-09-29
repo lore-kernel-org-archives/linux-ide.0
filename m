@@ -1,33 +1,53 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: SATA disk detect problem with silicon image 3132
-Date: Mon, 29 Sep 2008 13:28:37 +0900
-Message-ID: <48E05975.1030608@gmail.com>
-References: <788014650809241914h46b153e0w6d88c2a1c8c65df3@mail.gmail.com>	 <48E032BA.10907@gmail.com>	 <788014650809282052q98e7b5bmd7b3bcf9ab9b4bf5@mail.gmail.com>	 <48E05184.9060706@gmail.com> <788014650809282112v56fe33b8gc5a0bbd2abe809a7@mail.gmail.com>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [PATCH 1/5] libata: make SCR access ops per-link
+Date: Mon, 29 Sep 2008 00:33:49 -0400
+Message-ID: <48E05AAD.80102@garzik.org>
+References: <1217491364-19725-1-git-send-email-tj@kernel.org> <1217491364-19725-2-git-send-email-tj@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ti-out-0910.google.com ([209.85.142.186]:62475 "EHLO
-	ti-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751207AbYI2EaC (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 29 Sep 2008 00:30:02 -0400
-Received: by ti-out-0910.google.com with SMTP id b6so838863tic.23
-        for <linux-ide@vger.kernel.org>; Sun, 28 Sep 2008 21:30:01 -0700 (PDT)
-In-Reply-To: <788014650809282112v56fe33b8gc5a0bbd2abe809a7@mail.gmail.com>
+Received: from srv5.dvmed.net ([207.36.208.214]:40917 "EHLO mail.dvmed.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750759AbYI2Edz (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 29 Sep 2008 00:33:55 -0400
+In-Reply-To: <1217491364-19725-2-git-send-email-tj@kernel.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: khchen@synology.com
-Cc: linux-ide@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: linux-ide@vger.kernel.org, alan@lxorguk.ukuu.org.uk, JosephChan@via.com.tw
 
-KueiHuan Chen wrote:
-> Eh,  my 6145 using AHCI, not sata_mv. And it has the AHCI_HFLAG_NO_MSI
-> flag. Is there any possible ?
+Tejun Heo wrote:
+> Logically, SCR access ops should take @link; however, there was no
+> compelling reason to convert all SCR access ops when adding @link
+> abstraction as there's one-to-one mapping between a port and a non-PMP
+> link.  However, that assumption won't hold anymore with the scheduled
+> addition of slave link.
+> 
+> Make SCR access ops per-link.
+> 
+> Signed-off-by: Tejun Heo <tj@kernel.org>
+> ---
+>  drivers/ata/ahci.c            |   24 ++++++++++++------------
+>  drivers/ata/ata_piix.c        |   15 +++++++++++----
+>  drivers/ata/libata-core.c     |   13 ++++---------
+>  drivers/ata/sata_fsl.c        |   26 +++++++++++++-------------
+>  drivers/ata/sata_inic162x.c   |    8 ++++----
+>  drivers/ata/sata_mv.c         |   28 ++++++++++++++--------------
+>  drivers/ata/sata_nv.c         |   16 ++++++++--------
+>  drivers/ata/sata_promise.c    |   16 +++++++++-------
+>  drivers/ata/sata_qstor.c      |   12 ++++++------
+>  drivers/ata/sata_sil.c        |   16 ++++++++--------
+>  drivers/ata/sata_sil24.c      |   12 ++++++------
+>  drivers/ata/sata_sis.c        |   28 ++++++++++++++++------------
+>  drivers/ata/sata_svw.c        |   10 ++++++----
+>  drivers/ata/sata_uli.c        |   24 ++++++++++++------------
+>  drivers/ata/sata_via.c        |   24 ++++++++++++------------
+>  drivers/ata/sata_vsc.c        |   10 ++++++----
+>  drivers/scsi/libsas/sas_ata.c |    8 ++++----
+>  include/linux/libata.h        |    4 ++--
+>  18 files changed, 153 insertions(+), 141 deletions(-)
 
-Eh... right, 6145 is ahci.  Anyways, yeah, given that pci-e line
-interrupts are emulated too, it's quite unlikely that IRQ delivery
-gets broken only for sil24 but well I've seen weirder problems and the
-failing log definitely looks like IRQ delivery problem.  Does irqpoll
-help?
+applied 1-5
 
--- 
-tejun
+
