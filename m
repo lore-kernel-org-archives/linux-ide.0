@@ -1,40 +1,34 @@
-From: Kristen Carlson Accardi <kristen.c.accardi@intel.com>
-Subject: Re: [patch 1/2] allow user to power off unused ports via sysfs
-Date: Mon, 29 Sep 2008 16:49:13 -0700
-Message-ID: <20080929164913.6489445c@appleyard>
-References: <1222639114.12062.10.camel@hannibal>
-Reply-To: kristen.c.accardi@intel.com
+From: "Jeffrey W. Baker" <jwbaker@gmail.com>
+Subject: Re: SATA ALPM min_power causes > 10s delay on resume
+Date: Mon, 29 Sep 2008 17:20:03 -0700
+Message-ID: <1222734003.19009.1.camel@stinkpad>
+References: <1219598870.11057.2.camel@stinkpad>
+	 <48B928AC.8090007@kernel.org>
+	 <fd145f7d0808301059y20e91ba7w22b9ddd6c54d9554@mail.gmail.com>
+	 <48BA65E8.1080408@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:12559 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751896AbYI2Xtt (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 29 Sep 2008 19:49:49 -0400
-In-Reply-To: <1222639114.12062.10.camel@hannibal>
+Received: from rv-out-0506.google.com ([209.85.198.229]:53100 "EHLO
+	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752173AbYI3AUG (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 29 Sep 2008 20:20:06 -0400
+Received: by rv-out-0506.google.com with SMTP id k40so2556823rvb.1
+        for <linux-ide@vger.kernel.org>; Mon, 29 Sep 2008 17:20:05 -0700 (PDT)
+In-Reply-To: <48BA65E8.1080408@kernel.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "Jeffrey W. Baker" <jwbaker@gmail.com>
+To: Tejun Heo <tj@kernel.org>
 Cc: linux-ide@vger.kernel.org
 
-On Sun, 28 Sep 2008 14:58:34 -0700
-"Jeffrey W. Baker" <jwbaker@gmail.com> wrote:
-
+On Sun, 2008-08-31 at 11:35 +0200, Tejun Heo wrote: 
+> Jeffrey Baker wrote:
+> > 2.6.24 (2.6.24-19-generic package in Ubuntu 8.04).
 > 
-> The problem is I didn't save any power this way :(  ThinkPad X61t was
-> using minimum 7.6W on a one-minute average before power_off, and same
-> power after power_off.  I'd been led to believe that disabling these
-> ports would have a substantial power saving effect.
-> 
-> -jwb
-> 
+> Can you please give more recent kernel a try?  2.6.26.3 preferably?
 
-Hi Jeffrey - the reason you are not seeing any power savings is 
-that this patch isn't actually powering off the ports.  I swear this
-used to work... but I confirmed today it is not doing what it is
-supposed to do.  I'll send out a reworked patch as soon as I figure
-out what the problem is.
+I wasn't able to try 2.6.26.3 but in 2.6.27 this seems fixed.
 
-Kristen
+-jwb
 
