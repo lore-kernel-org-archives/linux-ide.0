@@ -1,116 +1,64 @@
-From: "George Spelvin" <linux@horizon.com>
-Subject: Re: What's the SB600 64-bit DMA problem?
-Date: Mon, 29 Sep 2008 22:00:02 -0400
-Message-ID: <20080930020002.26564.qmail@science.horizon.com>
-References: <20080920151712.10515.qmail@science.horizon.com>
- <da824cf30809201528o27478ae2h5894e39932622d3b@mail.gmail.com>
- <20080921001529.23400.qmail@science.horizon.com>
- <65a6ef750809231730h52f6bf47g23b33db1d2f4ca08@mail.gmail.com>
- <48DA0C8B.3000406@gmail.com>
- <B90463BC30D2E446BA423D888DC85E50C8358F@sshaexmb1.amd.com>
- <20080925032437.6802.qmail@science.horizon.com>
- <48DCEC6D.1040305@gmail.com>
- <20080928210422.2578.qmail@science.horizon.com>
- <48E0112C.7010901@gmail.com>
- <20080929040812.8784.qmail@science.horizon.com>
- <48E058D2.7050704@gmail.com>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: regarding crazy head unloads
+Date: Tue, 30 Sep 2008 14:36:16 +0900
+Message-ID: <48E1BAD0.5040608@gmail.com>
+References: <48361F88.7040400@gmail.com> <Pine.LNX.4.64.0809130635260.26283@gc.phys.uwm.edu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from science.horizon.com ([192.35.100.1]:19388 "HELO
-	science.horizon.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1753199AbYI3CAG (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 29 Sep 2008 22:00:06 -0400
-In-Reply-To: <48E058D2.7050704@gmail.com>
+Received: from ti-out-0910.google.com ([209.85.142.188]:18642 "EHLO
+	ti-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751273AbYI3FiB (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 30 Sep 2008 01:38:01 -0400
+Received: by ti-out-0910.google.com with SMTP id b6so1090309tic.23
+        for <linux-ide@vger.kernel.org>; Mon, 29 Sep 2008 22:37:59 -0700 (PDT)
+In-Reply-To: <Pine.LNX.4.64.0809130635260.26283@gc.phys.uwm.edu>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux@horizon.com, htejun@gmail.com
-Cc: Shane.Huang@amd.com, mdnelson8@gmail.com, linux-ide@vger.kernel.org, jgarzik@redhat.com, grundler@google.com
+To: Bruce Allen <ballen@gravity.phys.uwm.edu>
+Cc: roland.kletzing@materna.de, Smartmontools Developers List <smartmontools-devel@lists.sourceforge.net>, IDE/ATA development list <linux-ide@vger.kernel.org>, Jeff Garzik <jeff@garzik.org>, Mark Lord <liml@rtr.ca>, Alan Cox <alan@lxorguk.ukuu.org.uk>, scott@ubuntu.com
 
-Tejun Heo <htejun@gmail.com> wrote:
+Bruce Allen wrote:
+> Hi Tejun,
+> 
+> Sorry, this is a really really slow reply.  This email came at an
+> unusually busy time and I did not reply before it got buried in the deluge.
 
-> George Spelvin wrote:
->> ATM I'm just recompiling the kernel from -rc6 to -rc7.
->> 
->> It's in single-user mode so I can't ssh over the boot messages, but
->> they definitely included "64bit" from ahci_print_info().
->
-> Thanks for verifying.  I would love to lift the 32 restriction from
-> SB600 but it's been quite a rocky ride and I still can't tell what's
-> the determining factor.  :-(
+Well, you were slow but I'm slower.  :-)
 
-H'm.... 64-bit support comes through in multiple places.
-I wonder if it's just one of them?
-- HBA memory-mapped registers (which are in fact limited to 32 bits)
-- Port x command list base address
-- Port x FIS base address
-- Command table base address (command header, offset 8)
-- Data base address (physical region descriptor, offset 0)
+>> 2. This is from Roland.  Make smartd aware of the problem and warn user
+>>    if load/unload count per powered on hours goes too high.  Maybe the
+>>    warning can direct the user to linux-ata.org page?
+> 
+> It would be easy to implement this in smartd.  But I'm concerned about
+> three things:
+> 
+>   -- most people don't run smartd (I think by default it is off on
+>      the main Linux distros).  Those wise enough to run smartd will
+>      probably be aware of the issue, since it's gotten lots of buzz. And
+>      even if smartd is turned on in the distro it is normally not
+>      configured to send warning emails.
 
-What we really care about is that the data physical regions can
-be anywhere in 64-bit space.  If any of the others were limited to
-32 bits, that would only be slightly annoying.
+We only have to hit one instance of each configuration where such
+problem is occurring.  I think adding warning message out smartctl
+output or letting smartd warn it to users via email or log messages
+should be good enough for this problem.
 
-But...
-The base addresses are already above 4G.  Aobve 8G, actually.
+>   -- I'm not sure if the attribute used for head load/unload is a standard
+>      one.  On my current laptop Hitachi disk it is attribute 193.  Does
+>      anyone know if this is standard?
 
-Port 0 base addresses: 02 1f1e 0000, 02 1f1e 0400
-Port 1 base addresses: 02 1f1a 0000, 02 1f1a 0400
-Port 2 base addresses: 02 1f98 0000, 02 1f98 0400
-Port 3 base addresses: 02 1f9e 0000, 02 1f9e 0400
+I have no idea whatsoever.  Maybe implement a regexp matching on
+attribute name?
 
-/proc/iomem looks like:
-00000000-0009fbff : System RAM
-0009fc00-0009ffff : reserved
-000c0000-000cffff : pnp 00:0e
-000e4000-000fffff : reserved
-00100000-dffbffff : System RAM
-  00200000-005187db : Kernel code
-  005187dc-006c310f : Kernel data
-  0073f000-007bb4cf : Kernel bss
-  20000000-23ffffff : GART
-dffc0000-dffcdfff : ACPI Tables
-dffce000-dffeffff : ACPI Non-volatile Storage
-dfff0000-dfffdfff : reserved
-e0000000-efffffff : PCI MMCONFIG 0
-fc000000-fdffffff : PCI Bus 0000:03
-  fc000000-fdffffff : 0000:03:00.0
-fe7f4000-fe7f7fff : 0000:00:14.2
-fe7fa000-fe7fafff : 0000:00:13.4
-  fe7fa000-fe7fafff : ohci_hcd
-fe7fb000-fe7fbfff : 0000:00:13.3
-  fe7fb000-fe7fbfff : ohci_hcd
-fe7fc000-fe7fcfff : 0000:00:13.2
-  fe7fc000-fe7fcfff : ohci_hcd
-fe7fd000-fe7fdfff : 0000:00:13.1
-  fe7fd000-fe7fdfff : ohci_hcd
-fe7fe000-fe7fefff : 0000:00:13.0
-  fe7fe000-fe7fefff : ohci_hcd
-fe7ff000-fe7ff0ff : 0000:00:13.5
-  fe7ff000-fe7ff0ff : ehci_hcd
-fe7ff800-fe7ffbff : 0000:00:12.0
-  fe7ff800-fe7ffbff : ahci
-fe800000-fe8fffff : PCI Bus 0000:01
-  fe8c0000-fe8dffff : 0000:01:00.0
-  fe8ff000-fe8fffff : 0000:01:00.0
-    fe8ff000-fe8fffff : r8169
-fe900000-fe9fffff : PCI Bus 0000:02
-  fe9c0000-fe9dffff : 0000:02:00.0
-    fe9c0000-fe9dffff : ahci
-  fe9fc000-fe9fdfff : 0000:02:00.0
-    fe9fc000-fe9fdfff : ahci
-  fe9ff000-fe9fffff : 0000:02:00.0
-    fe9ff000-fe9fffff : ahci
-fea00000-feafffff : PCI Bus 0000:03
-  feac0000-feadffff : 0000:03:00.0
-  feae0000-feaeffff : 0000:03:00.1
-  feaf0000-feafffff : 0000:03:00.0
-feb00000-febfffff : PCI Bus 0000:04
-  febff800-febfffff : 0000:04:00.0
-fec00000-fec00fff : IOAPIC 0
-fed00000-fed003ff : HPET 2
-fee00000-fee00fff : Local APIC
-fff00000-ffffffff : reserved
-100000000-21fffffff : System RAM
+>   -- I'm not sure at what threshold to send warning emails.  If we send
+>      too many false alarms, they will be ignored by users.
 
+To get it correct completely, I think we'll need per-device database.
+Not easy....  :-(
+
+Thanks.
+
+-- 
+tejun
