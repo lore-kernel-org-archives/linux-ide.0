@@ -1,312 +1,688 @@
-From: Tejun Heo <teheo@suse.de>
-Subject: [Fwd: Re: [PATCH] Three new entries for storage-fixup.conf + hdd
- info logs]
-Date: Wed, 01 Oct 2008 04:06:46 +0900
-Message-ID: <48E278C6.2070609@suse.de>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: Drives which perform frequent head unloads under Linux
+Date: Wed, 01 Oct 2008 04:10:36 +0900
+Message-ID: <48E279AC.6000708@kernel.org>
+References: <d212b62f0809062304p639731c9k2e0f36bfb3e619d7@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------090903020701030708040204"
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from cantor.suse.de ([195.135.220.2]:42455 "EHLO mx1.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752739AbYI3TIL (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 30 Sep 2008 15:08:11 -0400
-Received: from Relay1.suse.de (relay-ext.suse.de [195.135.221.8])
-	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
-	(No client certificate requested)
-	by mx1.suse.de (Postfix) with ESMTP id 32AA5417E6
-	for <linux-ide@vger.kernel.org>; Tue, 30 Sep 2008 21:08:09 +0200 (CEST)
-Sender: linux-ide-owner@vger.kernel.org
-List-Id: linux-ide@vger.kernel.org
-To: IDE/ATA development list <linux-ide@vger.kernel.org>
-
-This is a multi-part message in MIME format.
---------------090903020701030708040204
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from hera.kernel.org ([140.211.167.34]:42740 "EHLO hera.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752052AbYI3TMB (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 30 Sep 2008 15:12:01 -0400
+In-Reply-To: <d212b62f0809062304p639731c9k2e0f36bfb3e619d7@mail.gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
+List-Id: linux-ide@vger.kernel.org
+To: Omar A <aliencoder@gmail.com>
+Cc: linux-ide@vger.kernel.org
 
-Forwarding to linux-ide for reference.
+Omar A wrote:
+> Please note that I changed the settings manually using hdparam -B 254
+> and -S 0, but I was looking for a more permanent fix.  Will try to
+> edit the config file as well
+> Output below..
+> 
+> 
+> Output from dmidecode:
+> 
+> # dmidecode 2.9
+> SMBIOS 2.4 present.
+> 43 structures occupying 1896 bytes.
+> Table at 0x000F7670.
+> 
+> Handle 0xDA00, DMI type 218, 251 bytes
+> OEM-specific Type
+>     Header and Data:
+>         DA FB 00 DA B2 00 0D 5F 1F 37 40 7D 00 00 00 00
+>         00 7E 00 02 00 00 00 40 00 04 00 01 00 41 00 04
+>         00 00 00 65 00 05 00 00 00 66 00 05 00 01 00 5E
+>         00 06 00 01 00 5F 00 06 00 00 00 89 01 07 00 00
+>         00 8A 01 07 00 01 00 42 00 08 00 01 00 43 00 08
+>         00 00 00 55 00 09 00 00 00 6D 00 09 00 01 00 2D
+>         00 0A 00 02 00 6E 00 0A 00 01 00 2E 00 0A 00 00
+>         00 11 01 0B 00 00 00 10 01 0B 00 01 00 F0 00 0C
+>         00 01 00 ED 00 0C 00 00 00 41 01 0D 00 01 00 40
+>         01 0D 00 00 00 47 01 0E 00 01 00 46 01 0E 00 00
+>         00 4A 01 0F 00 00 00 4B 01 0F 00 01 00 52 01 10
+>         00 01 00 53 01 10 00 00 00 80 01 11 00 01 00 7F
+>         01 11 00 00 00 94 01 12 00 00 00 93 01 12 00 01
+>         00 86 01 13 00 01 00 85 01 13 00 00 00 82 01 14
+>         00 01 00 81 01 14 00 00 00 9B 01 15 00 00 00 9C
+>         01 15 00 01 00 FF FF 00 00 00 00
+> 
+> Handle 0xDA01, DMI type 218, 239 bytes
+> OEM-specific Type
+>     Header and Data:
+>         DA EF 01 DA B2 00 0D 5F 1F 37 40 9D 01 15 00 02
+>         00 9E 01 15 00 03 00 8B 01 16 00 00 00 8C 01 16
+>         00 01 00 EA 00 17 00 00 00 EB 00 17 00 01 00 EC
+>         00 17 00 02 00 28 00 18 00 00 00 29 00 18 00 01
+>         00 2A 00 18 00 02 00 2B 00 19 00 00 00 2C 00 1A
+>         00 00 00 E7 00 1B 00 01 00 E6 00 1B 00 00 00 0E
+>         01 1C 00 01 00 0F 01 1C 00 00 00 9B 00 1D 00 01
+>         00 9C 00 1D 00 00 00 4D 01 1E 00 01 00 4C 01 1E
+>         00 00 00 01 01 1F 00 00 00 02 01 1F 00 01 00 04
+>         01 1F 00 02 00 37 01 20 00 00 00 38 01 20 00 01
+>         00 D9 01 21 00 01 00 D8 01 21 00 00 00 EA 01 22
+>         00 00 00 EB 01 22 00 01 00 76 01 76 01 01 00 75
+>         01 75 01 01 00 13 02 13 02 01 00 14 02 14 02 00
+>         00 01 F0 01 F0 00 00 02 F0 02 F0 00 00 03 F0 03
+>         F0 00 00 04 F0 04 F0 00 00 FF FF 00 00 00 00
+> 
+> Handle 0x0000, DMI type 0, 24 bytes
+> BIOS Information
+>     Vendor: Dell Inc.
+>     Version: A00
+>     Release Date: 05/05/2008
+>     Address: 0xF0000
+>     Runtime Size: 64 kB
+>     ROM Size: 2048 kB
+>     Characteristics:
+>         ISA is supported
+>         PCI is supported
+>         PC Card (PCMCIA) is supported
+>         PNP is supported
+>         BIOS is upgradeable
+>         BIOS shadowing is allowed
+>         Boot from CD is supported
+>         Selectable boot is supported
+>         3.5"/720 KB floppy services are supported (int 13h)
+>         Print screen service is supported (int 5h)
+>         8042 keyboard services are supported (int 9h)
+>         Serial services are supported (int 14h)
+>         Printer services are supported (int 17h)
+>         CGA/mono video services are supported (int 10h)
+>         ACPI is supported
+>         USB legacy is supported
+>         AGP is supported
+>         Smart battery is supported
+>         BIOS boot specification is supported
+>         Function key-initiated network boot is supported
+>         Targeted content distribution is supported
+>     BIOS Revision: 0.0
+>     Firmware Revision: 0.0
+> 
+> Handle 0x0100, DMI type 1, 27 bytes
+> System Information
+>     Manufacturer: Dell Inc.
+>     Product Name: Inspiron 1318
+>     Version: Not Specified
+>     Serial Number: 9D0D6G1
+>     UUID: 44454C4C-4400-1030-8044-
+> B9C04F364731
+>     Wake-up Type: Power Switch
+>     SKU Number: Not Specified
+>     Family:
+> 
+> Handle 0x0200, DMI type 2, 9 bytes
+> Base Board Information
+>     Manufacturer: Dell Inc.
+>     Product Name: 0C236D
+>     Version:
+>     Serial Number: .9D0D6G1.CN70166881026W.
+> 
+> Handle 0x0300, DMI type 3, 13 bytes
+> Chassis Information
+>     Manufacturer: Dell Inc.
+>     Type: Portable
+>     Lock: Not Present
+>     Version: Not Specified
+>     Serial Number: 9D0D6G1
+>     Asset Tag: Not Specified
+>     Boot-up State: Safe
+>     Power Supply State: Safe
+>     Thermal State: Safe
+>     Security Status: None
+> 
+> Handle 0x0400, DMI type 4, 40 bytes
+> Processor Information
+>     Socket Designation: Microprocessor
+>     Type: Central Processor
+>     Family: <OUT OF SPEC>
+>     Manufacturer: Intel
+>     ID: FD 06 00 00 FF FB EB BF
+>     Version: Not Specified
+>     Voltage: 3.3 V
+>     External Clock: 166 MHz
+>     Max Speed: 2000 MHz
+>     Current Speed: 2000 MHz
+>     Status: Populated, Enabled
+>     Upgrade: None
+>     L1 Cache Handle: 0x0700
+>     L2 Cache Handle: 0x0701
+>     L3 Cache Handle: Not Provided
+>     Serial Number: Not Specified
+>     Asset Tag: Not Specified
+>     Part Number: Not Specified
+>     Core Count: 2
+>     Core Enabled: 2
+>     Thread Count: 2
+>     Characteristics:
+>         64-bit capable
+> 
+> Handle 0x0700, DMI type 7, 19 bytes
+> Cache Information
+>     Socket Designation: Not Specified
+>     Configuration: Enabled, Not Socketed, Level 1
+>     Operational Mode: Write Back
+>     Location: Internal
+>     Installed Size: 32 KB
+>     Maximum Size: 32 KB
+>     Supported SRAM Types:
+>         Unknown
+>     Installed SRAM Type: Unknown
+>     Speed: Unknown
+>     Error Correction Type: None
+>     System Type: Data
+>     Associativity: 4-way Set-associative
+> 
+> Handle 0x0701, DMI type 7, 19 bytes
+> Cache Information
+>     Socket Designation: Not Specified
+>     Configuration: Enabled, Not Socketed, Level 2
+>     Operational Mode: Varies With Memory Address
+>     Location: Internal
+>     Installed Size: 2048 KB
+>     Maximum Size: 2048 KB
+>     Supported SRAM Types:
+>         Pipeline Burst
+>     Installed SRAM Type: Pipeline Burst
+>     Speed: 15 ns
+>     Error Correction Type: None
+>     System Type: Unified
+>     Associativity: Other
+> 
+> Handle 0x0804, DMI type 8, 9 bytes
+> Port Connector Information
+>     Internal Reference Designator: USB
+>     Internal Connector Type: None
+>     External Reference Designator: Not Specified
+>     External Connector Type: Access Bus (USB)
+>     Port Type: USB
+> 
+> Handle 0x0806, DMI type 8, 9 bytes
+> Port Connector Information
+>     Internal Reference Designator: MONITOR
+>     Internal Connector Type: None
+>     External Reference Designator: Not Specified
+>     External Connector Type: DB-15 female
+>     Port Type: Video Port
+> 
+> Handle 0x080B, DMI type 8, 9 bytes
+> Port Connector Information
+>     Internal Reference Designator: FireWire
+>     Internal Connector Type: None
+>     External Reference Designator: Not Specified
+>     External Connector Type: IEEE 1394
+>     Port Type: Firewire (IEEE P1394)
+> 
+> Handle 0x080D, DMI type 8, 9 bytes
+> Port Connector Information
+>     Internal Reference Designator: Ethernet
+>     Internal Connector Type: None
+>     External Reference Designator: Not Specified
+>     External Connector Type: RJ-45
+>     Port Type: Network Port
+> 
+> Handle 0x0A00, DMI type 10, 6 bytes
+> On Board Device Information
+>     Type: Video
+>     Status: Enabled
+>     Description: Intel Crestline Graphics
+> 
+> Handle 0x0A01, DMI type 10, 6 bytes
+> On Board Device Information
+>     Type: Sound
+>     Status: Enabled
+>     Description: IDT 9228
+> 
+> Handle 0x0B00, DMI type 11, 5 bytes
+> OEM Strings
+>     String 1: Dell System
+>     String 2: 5[0003]
+>     String 3: 13[PP25L]
+> 
+> Handle 0x0D00, DMI type 13, 22 bytes
+> BIOS Language Information
+>     Installable Languages: 1
+>         en|US|iso8859-1
+>     Currently Installed Language: en|US|iso8859-1
+> 
+> Handle 0x1000, DMI type 16, 15 bytes
+> Physical Memory Array
+>     Location: System Board Or Motherboard
+>     Use: System Memory
+>     Error Correction Type: None
+>     Maximum Capacity: 4 GB
+>     Error Information Handle: Not Provided
+>     Number Of Devices: 2
+> 
+> Handle 0x1100, DMI type 17, 27 bytes
+> Memory Device
+>     Array Handle: 0x1000
+>     Error Information Handle: Not Provided
+>     Total Width: 64 bits
+>     Data Width: 64 bits
+>     Size: 1024 MB
+>     Form Factor: DIMM
+>     Set: None
+>     Locator: DIMM_A
+>     Bank Locator: Not Specified
+>     Type: DDR
+>     Type Detail: Synchronous
+>     Speed: 667 MHz (1.5 ns)
+>     Manufacturer: AD00000000000000
+>     Serial Number: 00003022
+>     Asset Tag: 000827
+>     Part Number: HYMP112S64CP6-Y5
+> 
+> Handle 0x1101, DMI type 17, 27 bytes
+> Memory Device
+>     Array Handle: 0x1000
+>     Error Information Handle: Not Provided
+>     Total Width: 64 bits
+>     Data Width: 64 bits
+>     Size: 2048 MB
+>     Form Factor: DIMM
+>     Set: None
+>     Locator: DIMM_B
+>     Bank Locator: Not Specified
+>     Type: DDR
+>     Type Detail: Synchronous
+>     Speed: 667 MHz (1.5 ns)
+>     Manufacturer: CE00000000000000
+>     Serial Number: 75866A0B
+>     Asset Tag: 510822
+>     Part Number: M4 70T5663QZ3-CE6
+> 
+> Handle 0x1301, DMI type 19, 15 bytes
+> Memory Array Mapped Address
+>     Starting Address: 0x00000000000
+>     Ending Address: 0x000BFFFFFFF
+>     Range Size: 3 GB
+>     Physical Array Handle: 0x1000
+>     Partition Width: 0
+> 
+> Handle 0x1401, DMI type 20, 19 bytes
+> Memory Device Mapped Address
+>     Starting Address: 0x00000000000
+>     Ending Address: 0x0007FFFFFFF
+>     Range Size: 2 GB
+>     Physical Device Handle: 0x1100
+>     Memory Array Mapped Address Handle: 0x1301
+>     Partition Row Position: 1
+>     Interleave Position: 1
+>     Interleaved Data Depth: 8
+> 
+> Handle 0x1411, DMI type 126, 19 bytes
+> Inactive
+> 
+> Handle 0x1402, DMI type 20, 19 bytes
+> Memory Device Mapped Address
+>     Starting Address: 0x00000000000
+>     Ending Address: 0x0007FFFFFFF
+>     Range Size: 2 GB
+>     Physical Device Handle: 0x1101
+>     Memory Array Mapped Address Handle: 0x1301
+>     Partition Row Position: 1
+>     Interleave Position: 2
+>     Interleaved Data Depth: 8
+> 
+> Handle 0x1412, DMI type 20, 19 bytes
+> Memory Device Mapped Address
+>     Starting Address: 0x00080000000
+>     Ending Address: 0x000BFFFFFFF
+>     Range Size: 1 GB
+>     Physical Device Handle: 0x1101
+>     Memory Array Mapped Address Handle: 0x1301
+>     Partition Row Position: 1
+> 
+> Handle 0x1500, DMI type 21, 7 bytes
+> Built-in Pointing Device
+>     Type: Touch Pad
+>     Interface: Bus Mouse
+>     Buttons: 2
+> 
+> Handle 0x1600, DMI type 22, 26 bytes
+> Portable Battery
+>     Location: Sys. Battery Bay
+>     Manufacturer: Sanyo
+>     Name: DELL UM2307A
+>     Design Capacity: 78000 mWh
+>     Design Voltage: 11100 mV
+>     SBDS Version: 1.0
+>     Maximum Error: 0%
+>     SBDS Serial Number: 01FD
+>     SBDS Manufacture Date: 2007-10-04
+>     SBDS Chemistry: LION
+>     OEM-specific Information: 0x00000001
+> 
+> Handle 0x1B00, DMI type 27, 12 bytes
+> Cooling Device
+>     Type: Fan
+>     Status: OK
+>     OEM-specific Information: 0x0000DD00
+> 
+> Handle 0x1C00, DMI type 28, 20 bytes
+> Temperature Probe
+>     Description: CPU Internal Temperature
+>     Location: Processor
+>     Status: OK
+>     Maximum Value: 127.0 deg C
+>     Minimum Value 0.0 deg C
+>     Resolution: 1.000 deg C
+>     Tolerance: 0.5 deg C
+>     Accuracy: Unknown
+>     OEM-specific Information: 0x0000DC00
+> 
+> Handle 0x2000, DMI type 32, 11 bytes
+> System Boot Information
+>     Status: No errors detected
+> 
+> Handle 0xB000, DMI type 176, 5 bytes
+> OEM-specific Type
+>     Header and Data:
+>         B0 05 00 B0 01
+> 
+> Handle 0xB100, DMI type 177, 12 bytes
+> OEM-specific Type
+>     Header and Data:
+>         B1 0C 00 B1 02 00 00 00 00 00 00 00
+> 
+> Handle 0xB200, DMI type 178, 6 bytes
+> OEM-specific Type
+>     Header and Data:
+>         B2 06 00 B2 99 99
+> 
+> Handle 0xD000, DMI type 208, 10 bytes
+> OEM-specific Type
+>     Header and Data:
+>         D0 0A 00 D0 01 04 FE 00 86 02
+> 
+> Handle 0xD800, DMI type 216, 9 bytes
+> OEM-specific Type
+>     Header and Data:
+>         D8 09 00 D8 01 03 01 F0 03
+>     Strings:
+>         Intel Corp.
+> 
+>         1566
+> 
+> 
+> Handle 0xD900, DMI type 217, 8 bytes
+> OEM-specific Type
+>     Header and Data:
+>         D9 08 00 D9 01 02 01 03
+>     Strings:
+>         US-101
+>         Proprietary
+> 
+> Handle 0xDB00, DMI type 219, 9 bytes
+> OEM-specific Type
+>     Header and Data:
+>         DB 09 00 DB 03 01 02 03 FF
+>     Strings:
+>         System Device Bay
+>         Floppy, Battery, CD-ROM, CD-RW, DVD, DVD+RW, DVD+/-RW, Hard
+> Disk, BLU-RAY
+>         DVD+/-RW
+> 
+> Handle 0xDC00, DMI type 220, 22 bytes
+> OEM-specific Type
+>     Header and Data:
+>         DC 16 00 DC 01 F0 00 00 02 F0 00 00 00 00 03 F0
+>         04 F0 00 00 00 00
+> 
+> Handle 0xDD00, DMI type 221, 19 bytes
+> OEM-specific Type
+>     Header and Data:
+>         DD 13 00 DD 00 00 00 00 00 00 00 00 00 00 00 00
+>         00 00 00
+> 
+> Handle 0xD400, DMI type 212, 37 bytes
+> OEM-specific Type
+>     Header and Data:
+>         D4 25 00 D4 74 00 75 00 00 10 2D 2E 5C 00 78 BF
+>         40 5D 00 78 BF 00 08 00 1D DF 00 03 00 1D DF 00
+>         FF FF 00 00 00
+> 
+> Handle 0xD401, DMI type 212, 17 bytes
+> OEM-specific Type
+>     Header and Data:
+>         D4 11 01 D4 74 00 75 00 03 40 49 4A FF FF 00 00
+>         00
+> 
+> Handle 0xDE00, DMI type 222, 16 bytes
+> OEM-specific Type
+>     Header and Data:
+>         DE 10 00 DE 01 02 FF FF 00 00 00 00 00 00 00 01
+> 
+> Handle 0x7F00, DMI type 127, 4 bytes
+> End Of Table
+> 
+> hdparm output:
+> /dev/sda:
+> 
+> ATA device, with non-removable media
+>     Model Number:       WDC WD2500BEVS-75UST0
+>     Serial Number:      WD-WXE708HR3348
+>     Firmware Revision:  01.01A01
+> Standards:
+>     Supported: 8 7 6 5
+>     Likely used: 8
+> Configuration:
+>     Logical        max    current
+>     cylinders    16383    16383
+>     heads        16    16
+>     sectors/track    63    63
+>     --
+>     CHS current addressable sectors:   16514064
+>     LBA    user addressable sectors:  268435455
+>     LBA48  user addressable sectors:  488397168
+>     device size with M = 1024*1024:      238475 MBytes
+>     device size with M = 1000*1000:      250059 MBytes (250 GB)
+> Capabilities:
+>     LBA, IORDY(can be disabled)
+>     Queue depth: 32
+>     Standby timer values: spec'd by Standard, with device specific minimum
+>     R/W multiple sector transfer: Max = 16    Current = 8
+>     Advanced power management level: 254
+>     Recommended acoustic management value: 128, current value: 254
+>     DMA: mdma0 mdma1 mdma2 udma0 udma1 udma2 udma3 udma4 udma5 *udma6
+>          Cycle time: min=120ns recommended=120ns
+>     PIO: pio0 pio1 pio2 pio3 pio4
+>          Cycle time: no flow control=120ns  IORDY flow control=120ns
+> Commands/features:
+>     Enabled    Supported:
+>        *    SMART feature set
+>             Security Mode feature set
+>        *    Power Management feature set
+>        *    Write cache
+>        *    Look-ahead
+>        *    Host Protected Area feature set
+>        *    WRITE_BUFFER command
+>        *    READ_BUFFER command
+>        *    NOP cmd
+>        *    DOWNLOAD_MICROCODE
+>        *    Advanced Power Management feature set
+>             SET_MAX security extension
+>        *    Automatic Acoustic Management feature set
+>        *    48-bit Address feature set
+>        *    Device Configuration Overlay feature set
+>        *    Mandatory FLUSH_CACHE
+>        *    FLUSH_CACHE_EXT
+>        *    SMART error logging
+>        *    SMART self-test
+>        *    General Purpose Logging feature set
+>        *    WRITE_{DMA|MULTIPLE}_FUA_EXT
+>        *    64-bit World wide name
+>        *    IDLE_IMMEDIATE with UNLOAD
+>        *    Segmented DOWNLOAD_MICROCODE
+>        *    SATA-I signaling speed (1.5Gb/s)
+>        *    Native Command Queueing (NCQ)
+>        *    Host-initiated interface power management
+>        *    Phy event counters
+>             DMA Setup Auto-Activate optimization
+>             Device-initiated interface power management
+>        *    Software settings preservation
+>        *    SMART Command Transport (SCT) feature set
+>        *    SCT Long Sector Access (AC1)
+>        *    SCT LBA Segment Access (AC2)
+>        *    SCT Error Recovery Control (AC3)
+>        *    SCT Features Control (AC4)
+>        *    SCT Data Tables (AC5)
+>             unknown 206[12] (vendor specific)
+>             unknown 206[13] (vendor specific)
+> Security:
+>     Master password revision code = 65534
+>         supported
+>     not    enabled
+>     not    locked
+>         frozen
+>     not    expired: security count
+>     not    supported: enhanced erase
+>     92min for SECURITY ERASE UNIT.
+> Logical Unit WWN Device Identifier: 50014ee25720269e
+>     NAA        : 5
+>     IEEE OUI    : 14ee
+>     Unique ID    : 25720269e
+> Checksum: correct
+> 
+> 
+> smartctl output
+> 
+> smartctl 5.39 2008-05-08 21:56 [i686-pc-linux-gnu] (local build)
+> Copyright (C) 2002-8 by Bruce Allen, http://smartmontools.sourceforge.net
+> 
+> === START OF INFORMATION SECTION ===
+> Model Family:     Western Digital Scorpio family
+> Device Model:     WDC WD2500BEVS-75UST0
+> Serial Number:    WD-WXE708HR3348
+> Firmware Version: 01.01A01
+> User Capacity:    250,059,350,016 bytes
+> Device is:        In smartctl database [for details use: -P show]
+> ATA Version is:   8
+> ATA Standard is:  Exact ATA specification draft version not indicated
+> Local Time is:    Sun Sep  7 00:49:55 2008 CDT
+> SMART support is: Available - device has SMART capability.
+> SMART support is: Enabled
+> 
+> === START OF READ SMART DATA SECTION ===
+> SMART overall-health self-assessment test result: PASSED
+> 
+> General SMART Values:
+> Offline data collection status:  (0x00)    Offline data collection activity
+>                     was never started.
+>                     Auto Offline Data Collection: Disabled.
+> Self-test execution status:      (   0)    The previous self-test
+> routine completed
+>                     without error or no self-test has ever
+>                     been run.
+> Total time to complete Offline
+> data collection:          (9180) seconds.
+> Offline data collection
+> capabilities:              (0x7b) SMART execute Offline immediate.
+>                     Auto Offline data collection on/off support.
+>                     Suspend Offline collection upon new
+>                     command.
+>                     Offline surface scan supported.
+>                     Self-test supported.
+>                     Conveyance Self-test supported.
+>                     Selective Self-test supported.
+> SMART capabilities:            (0x0003)    Saves SMART data before entering
+>                     power-saving mode.
+>                     Supports SMART auto save timer.
+> Error logging capability:        (0x01)    Error logging supported.
+>                     General Purpose Logging supported.
+> Short self-test routine
+> recommended polling time:      (   2) minutes.
+> Extended self-test routine
+> recommended polling time:      ( 110) minutes.
+> Conveyance self-test routine
+> recommended polling time:      (   5) minutes.
+> SCT capabilities:            (0x303f)    SCT Status supported.
+>                     SCT Feature Control supported.
+>                     SCT Data Table supported.
+> 
+> SMART Attributes Data Structure revision number: 16
+> Vendor Specific SMART Attributes with Thresholds:
+> ID# ATTRIBUTE_NAME          FLAG     VALUE WORST THRESH TYPE
+> UPDATED  WHEN_FAILED RAW_VALUE
+>   1 Raw_Read_Error_Rate     0x000f   200   200   051    Pre-fail
+> Always       -       0
+>   3 Spin_Up_Time            0x0003   188   188   021    Pre-fail
+> Always       -       1600
+>   4 Start_Stop_Count        0x0032   100   100   000    Old_age
+> Always       -       22
+>   5 Reallocated_Sector_Ct   0x0033   200   200   140    Pre-fail
+> Always       -       0
+>   7 Seek_Error_Rate         0x000e   100   253   051    Old_age
+> Always       -       0
+>   9 Power_On_Hours          0x0032   100   100   000    Old_age
+> Always       -       13
+>  10 Spin_Retry_Count        0x0012   100   253   051    Old_age
+> Always       -       0
+>  11 Calibration_Retry_Count 0x0012   100   253   051    Old_age
+> Always       -       0
+>  12 Power_Cycle_Count       0x0032   100   100   000    Old_age
+> Always       -       21
+> 192 Power-Off_Retract_Count 0x0032   200   200   000    Old_age
+> Always       -       3
+> 193 Load_Cycle_Count        0x0032   200   200   000    Old_age
+> Always       -       141
+> 194 Temperature_Celsius     0x0022   108   104   000    Old_age
+> Always       -       39
+> 196 Reallocated_Event_Count 0x0032   200   200   000    Old_age
+> Always       -       0
+> 197 Current_Pending_Sector  0x0012   200   200   000    Old_age
+> Always       -       0
+> 198 Offline_Uncorrectable   0x0010   100   253   000    Old_age
+> Offline      -       0
+> 199 UDMA_CRC_Error_Count    0x003e   200   200   000    Old_age
+> Always       -       0
+> 200 Multi_Zone_Error_Rate   0x0008   100   253   051    Old_age
+> Offline      -       0
+> 240 Head_Flying_Hours       0x0032   100   100   000    Old_age
+> Always       -       14
+> 241 Unknown_Attribute       0x0032   200   200   000    Old_age
+> Always       -       858998242602
+> 242 Unknown_Attribute       0x0032   200   200   000    Old_age
+> Always       -       61985358
+> 
+> SMART Error Log Version: 1
+> No Errors Logged
+> 
+> SMART Self-test log structure revision number 1
+> Num  Test_Description    Status                  Remaining
+> LifeTime(hours)  LBA_of_first_error
+> # 1  Short offline       Completed without error       00%         4         -
+> # 2  Short offline       Completed without error       00%         1         -
+> # 3  Short offline       Completed without error       00%         0         -
+> # 4  Short offline       Completed without error       00%         0         -
+> 
+> SMART Selective self-test log data structure revision number 1
+>  SPAN  MIN_LBA  MAX_LBA  CURRENT_TEST_STATUS
+>     1        0        0  Not_testing
+>     2        0        0  Not_testing
+>     3        0        0  Not_testing
+>     4        0        0  Not_testing
+>     5        0        0  Not_testing
+> Selective self-test flags (0x0):
+>   After scanning selected spans, do NOT read-scan remainder of disk.
+> If Selective self-test is pending on power-up, resume after 0 minute delay.
+> 
+> Cheers
+> 
+> 
+> --
+> Am I the Alien?? I guess we will never know :-)
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-ide" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+added
 
 -- 
 tejun
-
---------------090903020701030708040204
-Content-Type: message/rfc822;
- name="Re: [PATCH] Three new entries for storage-fixup.conf + hdd info logs.eml"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename*0="Re: [PATCH] Three new entries for storage-fixup.conf + hdd i";
- filename*1="nfo logs.eml"
-
-Return-Path: <contact@i-nz.net>
-X-Original-To: tj@localhost
-Delivered-To: tj@localhost.dyndns.org
-Received: from htj.dyndns.org (localhost [127.0.0.1])
-	by htj.dyndns.org (Postfix) with ESMTP id C291213A82DE
-	for <tj@localhost>; Tue, 30 Sep 2008 07:09:43 +0900 (KST)
-Received: from imap.novell.com [130.57.4.228]
-	by htj.dyndns.org with IMAP (fetchmail-6.3.8)
-	for <tj@localhost> (single-drop); Tue, 30 Sep 2008 07:09:43 +0900 (KST)
-Received: from Relay2.suse.de ([::ffff:149.44.160.89])
-	by gwia-smtp.id2.novell.com with ESMTP (TLS encrypted); Mon, 29 Sep 2008 23:10:46 +0100
-Received: by Relay2.suse.de (Postfix)
-	id 27A053405165; Tue, 30 Sep 2008 00:10:46 +0200 (CEST)
-Received: from relay2.suse.de (localhost [127.0.0.1])
-	by Relay2.suse.de (Postfix) with ESMTP id 1C61A3405163
-	for <teheo@suse.de>; Tue, 30 Sep 2008 00:10:46 +0200 (CEST)
-X-Virus-Scanned: by amavisd-new at relay2.suse.de
-X-Spam-Score: 0
-X-Spam-Level: 
-X-Spam-Status: No, score=0 tagged_above=-20 required=5 tests=[BAYES_50=0.001,
-	SPF_PASS=-0.001]
-Received: from mx1.suse.de ([195.135.220.2])
-	by relay2.suse.de (relay2.suse.de [149.44.160.89]) (amavisd-new, port 10025)
-	with ESMTP id lB9UzrKXlVV2 for <teheo@suse.de>;
-	Tue, 30 Sep 2008 00:10:44 +0200 (CEST)
-Received: from rv-out-0506.google.com (rv-out-0506.google.com [209.85.198.226])
-	by mx1.suse.de (Postfix) with ESMTP id 0FE8841844
-	for <teheo@suse.de>; Tue, 30 Sep 2008 00:10:43 +0200 (CEST)
-Received: by rv-out-0506.google.com with SMTP id k40so2069630rvb.57
-        for <teheo@suse.de>; Mon, 29 Sep 2008 15:10:43 -0700 (PDT)
-Received: by 10.140.148.3 with SMTP id v3mr2937404rvd.139.1222726243001;
-        Mon, 29 Sep 2008 15:10:43 -0700 (PDT)
-Received: by 10.141.69.19 with HTTP; Mon, 29 Sep 2008 15:10:42 -0700 (PDT)
-Message-ID: <3db1ec7f0809291510p4892f4cek2dbae095017df2c8@mail.gmail.com>
-Date: Mon, 29 Sep 2008 23:10:42 +0100
-From: "Ivan N. Zlatev" <contact@i-nz.net>
-To: "Tejun Heo" <teheo@suse.de>
-Subject: Re: [PATCH] Three new entries for storage-fixup.conf + hdd info logs
-In-Reply-To: <3db1ec7f0809291509r324eb5f7y1d7ae336d2a3bbb3@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: multipart/mixed;
-	boundary="----=_Part_33833_22692470.1222726242989"
-References: <3db1ec7f0809291509r324eb5f7y1d7ae336d2a3bbb3@mail.gmail.com>
-
-------=_Part_33833_22692470.1222726242989
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
-
-Forgot to attach the hdd logs, sorry.
-
-On Mon, Sep 29, 2008 at 11:09 PM, Ivan N. Zlatev <contact@i-nz.net> wrote:
-> Attached you will find the merged previous patches plus a third extra
-> entry. Also attached as per your request the hdd info logs supplied by
-> the users after:
->
-> sudo hdparm -I /dev/sda > hdd-info.log && sudo dmidecode >>
-> hdd-info.log && sudo smartctl --all /dev/sda >> hdd-info.log
->
-> --
-> Kind Regards,
-> Ivan N. Zlatev
->
-
-
-
--- 
-Kind Regards,
-Ivan N. Zlatev
-
-------=_Part_33833_22692470.1222726242989
-Content-Type: application/x-bzip2; name=hdd-info-logs.tar.bz2
-Content-Transfer-Encoding: base64
-X-Attachment-Id: f_flpnmyy31
-Content-Disposition: attachment; filename=hdd-info-logs.tar.bz2
-
-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
-qH6BLUJCzrvOrgSFQLBcQD/Au5IpwoSEqP01sA==
-------=_Part_33833_22692470.1222726242989--
-
---------------090903020701030708040204--
