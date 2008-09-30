@@ -1,43 +1,38 @@
-From: Diego Rondini <panda84@inwind.it>
-Subject: [Affected devices] Frequent head unload under Linux
-Date: Tue, 30 Sep 2008 10:53:42 +0200
-Message-ID: <48E1E916.9080202@inwind.it>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: bug report
+Date: Tue, 30 Sep 2008 20:47:35 +0900
+Message-ID: <48E211D7.8090304@gmail.com>
+References: <48DA0B39.5050401@saturnosoft.biz>	 <1222274317.14959.4.camel@odie.local>  <48DA7F1E.5030508@saturnosoft.biz> <1222280712.14959.14.camel@odie.local> <48E0311F.2030907@gmail.com> <48E09223.4000807@saturnosoft.biz>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-15; format=flowed
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from averell.mail.tiscali.it ([213.205.33.55]:57591 "EHLO
-	averell.mail.tiscali.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751401AbYI3JBP (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 30 Sep 2008 05:01:15 -0400
-Received: from [10.10.5.35] (84.223.84.135) by averell.mail.tiscali.it (8.0.022)
-        id 48DC961100257357 for linux-ide@vger.kernel.org; Tue, 30 Sep 2008 10:55:12 +0200
+Received: from ti-out-0910.google.com ([209.85.142.186]:2267 "EHLO
+	ti-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751551AbYI3LtB (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 30 Sep 2008 07:49:01 -0400
+Received: by ti-out-0910.google.com with SMTP id b6so1154691tic.23
+        for <linux-ide@vger.kernel.org>; Tue, 30 Sep 2008 04:48:58 -0700 (PDT)
+In-Reply-To: <48E09223.4000807@saturnosoft.biz>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Todor Gyumyushev <todor@saturnosoft.biz>
+Cc: =?UTF-8?B?U2ltb24gSG9sbSBUaMO4Z2Vyc2Vu?= <odie@cs.aau.dk>, Jens Axboe <jens.axboe@oracle.com>, Albert Lee <albertcc@tw.ibm.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-As asked in this page:
-http://ata.wiki.kernel.org/index.php/Known_issues
-I report you of two notebook with this issue.
+Todor Gyumyushev wrote:
+>> Hmm... This shouldn't happen.  Can you please attach full kernel log
+>> including the boot messages?
+>>
+>> Thanks.
+>>
+>>   
+> Hi, here is attached the full kernel log.
+> It seems something is happening with ath5k module ?
 
-Unfortunately I haven't access to these notebooks anymore (I installed 
-Linux in an install party) so I cannot attach the output of the several 
-commands.
+Does the problem occur w/o ath5k?  I don't really see how ata_piix can
+trigger the WARN_ON().
 
-Both of them did very frequent unloads, for sure more than 5 per minute, 
-but maybe even more. So that's more than 180 per hour!
+Thanks.
 
-The notebook were very different, the first was a 5 years old HP Compaq 
-NX 9005 with a 30GB drive:
-http://h18000.www1.hp.com/products/quickspecs/11602_na/11602_na.HTML#Storage
-Probably the drive was a Hitachi model:
-http://www.itreviews.co.uk/hardware/h504.htm
-
-The other one was a brand new HP Compaq F760EL with a 120GB drive, but I 
-didn't managed to know which kind of drive it's using...
-
-Sorry for the incomplete informations provided, hope it's better than 
-nothing.
-
-Bye,
-Diego
+-- 
+tejun
