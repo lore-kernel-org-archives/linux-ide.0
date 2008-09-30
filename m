@@ -1,38 +1,42 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: bug report
-Date: Tue, 30 Sep 2008 20:47:35 +0900
-Message-ID: <48E211D7.8090304@gmail.com>
-References: <48DA0B39.5050401@saturnosoft.biz>	 <1222274317.14959.4.camel@odie.local>  <48DA7F1E.5030508@saturnosoft.biz> <1222280712.14959.14.camel@odie.local> <48E0311F.2030907@gmail.com> <48E09223.4000807@saturnosoft.biz>
+From: Atsushi Nemoto <anemo@mba.ocn.ne.jp>
+Subject: Re: [PATCH 1/2] ide: Add tx4939ide driver
+Date: Tue, 30 Sep 2008 22:07:22 +0900 (JST)
+Message-ID: <20080930.220722.72708027.anemo@mba.ocn.ne.jp>
+References: <20080913.005904.07457691.anemo@mba.ocn.ne.jp>
+	<200809271819.19510.bzolnier@gmail.com>
+	<48DEAF1F.8040200@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ti-out-0910.google.com ([209.85.142.186]:2267 "EHLO
-	ti-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751551AbYI3LtB (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 30 Sep 2008 07:49:01 -0400
-Received: by ti-out-0910.google.com with SMTP id b6so1154691tic.23
-        for <linux-ide@vger.kernel.org>; Tue, 30 Sep 2008 04:48:58 -0700 (PDT)
-In-Reply-To: <48E09223.4000807@saturnosoft.biz>
+Received: from mba.ocn.ne.jp ([122.1.235.107]:60206 "EHLO smtp.mba.ocn.ne.jp"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752099AbYI3NHX (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 30 Sep 2008 09:07:23 -0400
+In-Reply-To: <48DEAF1F.8040200@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Todor Gyumyushev <todor@saturnosoft.biz>
-Cc: =?UTF-8?B?U2ltb24gSG9sbSBUaMO4Z2Vyc2Vu?= <odie@cs.aau.dk>, Jens Axboe <jens.axboe@oracle.com>, Albert Lee <albertcc@tw.ibm.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: htejun@gmail.com
+Cc: bzolnier@gmail.com, sshtylyov@ru.mvista.com, linux-mips@linux-mips.org, linux-ide@vger.kernel.org, ralf@linux-mips.org, jens.axboe@oracle.com, James.Bottomley@HansenPartnership.com
 
-Todor Gyumyushev wrote:
->> Hmm... This shouldn't happen.  Can you please attach full kernel log
->> including the boot messages?
->>
->> Thanks.
->>
->>   
-> Hi, here is attached the full kernel log.
-> It seems something is happening with ath5k module ?
+On Sun, 28 Sep 2008 07:09:35 +0900, Tejun Heo <htejun@gmail.com> wrote:
+> >>>> Do you mean __ide_flush_dcache_range?  This is needed to avoid cache
+> >>>> inconsistency on PIO drive.  PIO transfer only writes to cache but
+> >>>> upper layers expects the data is in main memory.
+> >>>     Hum, then I wonder why it's MIPS specific...
+> >> SPARC also have it.  And there were some discussions for ARM IIRC.
+> > 
+> > I was under the impression that it has been addressed by Tejun at
+> > the higher-layer level (for both ide/libata) long time ago and that
+> > MIPS/SPARC code are just a left-overs which could be removed now?
+> 
+> cc'ing Jens and James.  IIRC, I posted several patches but they never
+> went in.  I don't remember what the objections were or whether any
+> alternative fix went in.
 
-Does the problem occur w/o ath5k?  I don't really see how ata_piix can
-trigger the WARN_ON().
+I suppose you mean thread http://lkml.org/lkml/2006/1/13/156.
 
-Thanks.
+IIUC flushing in ide string ops is still needed for MIPS.
 
--- 
-tejun
+---
+Atsushi Nemoto
