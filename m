@@ -1,58 +1,63 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: Interoperability problem with Quantum CD72SH SATA tape drive
- and libata
-Date: Wed, 01 Oct 2008 12:21:12 +0900
-Message-ID: <48E2ECA8.8060808@kernel.org>
-References: <48DE96AF.6090301@runbox.com>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: [PATCH 2/6] DMI: Introduce dmi_first_match to make the interface
+ more flexible
+Date: Wed, 01 Oct 2008 12:31:57 +0900
+Message-ID: <48E2EF2D.4030006@gmail.com>
+References: <200808290002.55026.rjw@sisk.pl> <48D17BBE.5020807@garzik.org> <200809300006.24919.rjw@sisk.pl> <200809300013.22924.rjw@sisk.pl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=ISO-8859-2
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:47853 "EHLO hera.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753401AbYJADXR (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 30 Sep 2008 23:23:17 -0400
-In-Reply-To: <48DE96AF.6090301@runbox.com>
+Received: from ti-out-0910.google.com ([209.85.142.188]:36262 "EHLO
+	ti-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751696AbYJADdg (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 30 Sep 2008 23:33:36 -0400
+Received: by ti-out-0910.google.com with SMTP id b6so108967tic.23
+        for <linux-ide@vger.kernel.org>; Tue, 30 Sep 2008 20:33:34 -0700 (PDT)
+In-Reply-To: <200809300013.22924.rjw@sisk.pl>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: John Clark <clarkjc@runbox.com>
-Cc: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org
+To: "Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: Jeff Garzik <jeff@garzik.org>, ACPI Devel Maling List <linux-acpi@vger.kernel.org>, linux-ide@vger.kernel.org, Thomas Renninger <trenn@suse.de>, Robert Hancock <hancockr@shaw.ca>, LKML <linux-kernel@vger.kernel.org>, Frans Pop <elendil@planet.nl>, Maciej Rutecki <maciej.rutecki@gmail.com>, Andrew Morton <akpm@linux-foundation.org>, Len Brown <lenb@kernel.org>, Jean Delvare <jdelvare@suse.de>, ralf@linux-mips.org
 
-John Clark wrote:
-> Hello,
+Rafael J. Wysocki wrote:
+> From: Rafael J. Wysocki <rjw@sisk.pl>
 > 
-> I've discovered an issue with the Quantum CD72SH SATA tape drive.  I set
-> it to variable block size, try to write a 5317 byte block with an ATAPI
-> issued WRITE(6), and it hangs.  The drive is connected to an Intel ICH9R
-> in AHCI mode.
+> DMI: Introduce dmi_first_match to make the interface more flexible
 > 
-> My debugging efforts have determined that it's a problem with the
-> drive's firmware.  It does not like ATAPI CDBs with odd (& 1) transfer
-> lengths with PIO.  If I let it use DMA, even if it's not a multiple of
-> 16 bytes, then it seems to work:
+> Some notebooks from HP have the problem that their BIOSes attempt to
+> spin down hard drives before entering ACPI system states S4 and S5.
+> This leads to a yo-yo effect during system power-off shutdown and the
+> last phase of hibernation when the disk is first spun down by the
+> kernel and then almost immediately turned on and off by the BIOS.
+> This, in turn, may result in shortening the disk's life times.
 > 
-> --- libata-core.c.orig    2008-09-27 16:12:46.000000000 -0400
-> +++ libata-core.c    2008-09-27 16:11:29.000000000 -0400
-> @@ -4669,8 +4669,8 @@
->     /* Don't allow DMA if it isn't multiple of 16 bytes.  Quite a
->      * few ATAPI devices choke on such DMA requests.
->      */
-> -    if (unlikely(qc->nbytes & 15))
-> -        return 1;
-> +    // if (unlikely(qc->nbytes & 15))
-> +    //     return 1;
+> To prevent this from happening we can blacklist the affected systems
+> using DMI information.  However, only the on-board controlles should
+> be blacklisted and their PCI slot numbers can be used for this
+> purpose.  Unfortunately the existing interface for checking DMI
+> information of the system is not very convenient for this purpose,
+> because to use it, we would have to define special callback functions
+> or create a separate struct dmi_system_id table for each blacklisted
+> system.
 > 
->     if (ap->ops->check_atapi_dma)
->         return ap->ops->check_atapi_dma(qc);
+> To overcome this difficulty introduce a new function
+> dmi_first_match() returning a pointer to the first entry in an array
+> of struct dmi_system_id elements that matches the system DMI
+> information.  Then, we can use this pointer to access the entry's
+> .driver_data field containing the additional information, such as
+> the PCI slot number, allowing us to do the desired blacklisting.
 > 
-> 
-> 
-> This is an acceptable solution for my limited use, but I'd like to see
-> it work out of the box.  It seems frightening that there are ATAPI
-> devices out there that choke on PIO requests.  What would you like to do?
+> Signed-off-by: Rafael J. Wysocki <rjw@sisk.pl>
 
-We can create a HORKAGE for it.  Can you please post the result of
-"hdparm -I" of the device?
+Acked-by: Tejun Heo <tj@kernel.org>
+
+(cc'ing recent committers to dmi)
+
+If no one objects, I'd like to push this through libata-dev#upstream.
+Any objections?
+
+Thanks.
 
 -- 
 tejun
