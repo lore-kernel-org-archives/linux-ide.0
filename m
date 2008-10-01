@@ -1,106 +1,171 @@
-From: Justin Piszcz <jpiszcz@lucidpixels.com>
-Subject: Re: exception Emask 0x0 SAct 0x1 / SErr 0x0 action 0x2 frozen
-Date: Tue, 30 Sep 2008 17:18:43 -0400 (EDT)
-Message-ID: <alpine.DEB.1.10.0809301715280.14600@p34.internal.lan>
-References: <3E6D0C24877245C3A5A327129A7B4CA7@909927SOSLA>  <alpine.DEB.1.10.0809220828490.23159@p34.internal.lan>  <5419A02543384E69AF2BA82FF6E66C14@909927SOSLA>  <alpine.DEB.1.10.0809220903400.23159@p34.internal.lan>  <4B1ABD0393EF40FFB0A12242FE8356AF@909927SOSLA>
-  <alpine.DEB.1.10.0809220915470.23159@p34.internal.lan>  <alpine.DEB.1.10.0809220926240.23159@p34.internal.lan>  <e7510f760809231114y6cbaf13aqf7c63bd48a73c978@mail.gmail.com>  <48DBAB81.8050900@tmr.com> <48E08E2D.6050905@kernel.org>
- <a52a95e30809301347s70b57ebfh280a6871329afd72@mail.gmail.com>
+From: Andrew Morton <akpm@linux-foundation.org>
+Subject: Re: sata dvdroms fails to be recognized by MCP55 controller with
+ the 2.6.26.5 kernel
+Date: Tue, 30 Sep 2008 17:08:49 -0700
+Message-ID: <20080930170849.52c00228.akpm@linux-foundation.org>
+References: <64630f150809291601w3511febdyc769b8871db75602@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from lucidpixels.com ([75.144.35.66]:40593 "EHLO lucidpixels.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752965AbYI3VSo (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 30 Sep 2008 17:18:44 -0400
-In-Reply-To: <a52a95e30809301347s70b57ebfh280a6871329afd72@mail.gmail.com>
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:41290 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752327AbYJAAIw (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 30 Sep 2008 20:08:52 -0400
+In-Reply-To: <64630f150809291601w3511febdyc769b8871db75602@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tom Mortensen <tmmlkml@gmail.com>
-Cc: Tejun Heo <tj@kernel.org>, Bill Davidsen <davidsen@tmr.com>, Gwendal Grignou <gwendal@google.com>, Brian Rademacher <rad@radfiles.net>, linux-ide@vger.kernel.org, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, Bruce Allen <ballen@gravity.phys.uwm.edu>
+To: gettinther <gettinther@gmail.com>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
+(cc linux-ide)
 
+On Tue, 30 Sep 2008 00:01:34 +0100 gettinther <gettinther@gmail.com> wrote:
 
-On Tue, 30 Sep 2008, Tom Mortensen wrote:
+> Hi,
+> 
+> I'm currently trying to get the 2.6.26.5 kernel to work but cannot get
+> the sata dvdrom to be recognized by the MCP55.  The controller works
+> with the 2.6.24.4 and 2.6.25.17 kernels.  I had to use
+> CONFIG_ACPI_DOCK=y for the 2.6.25.17 but this did not work with the
+> 2.6.26.5.  The problem has been confirmed on at least 2 machines.
 
-> Don't know if this is the original poster's problem, but if the drive
-> is spun down, then enabling SMART or trying to read SMART attributes
-> causes the drive to spin up and the command is delayed until this has
-> occurred.
->
-> The fix is to increase the timeout given to scsi_execute() in
-> drivers/ata/libata-scsi.c.
->
-> ie, current code (2.6.26.5) is:
->
->        /* Good values for timeout and retries?  Values below
->           from scsi_ioctl_send_command() for default case... */
->        cmd_result = scsi_execute(scsidev, scsi_cmd, data_dir, argbuf, argsize,
->                                  sensebuf, (10*HZ), 5, 0);
->
-> Should be changed to:
->
->        /* Good values for timeout and retries?  Values below
->           from scsi_ioctl_send_command() for default case... */
->        cmd_result = scsi_execute(scsidev, scsi_cmd, data_dir, argbuf, argsize,
->                                  sensebuf, (30*HZ), 5, 0);
->
-> Using a 1TB Hitachi hard drive, this command times out because it
-> takes this drive about 15 seconds to spin up.  Virtutally all hard
-> drives spin up in less than 30 sec, but perhaps make this higher in
-> case there are slower drives out there?
->
-> Cheers,
-> Tom
+It's a regression.
 
-Velociraptor 10k drive here (2.6.26.5):
-
-Sep 30 15:55:06 p34 kernel: [420781.333179] ata6.00: exception Emask 0x0 SAct
-0x0 SErr 0x0 action 0x6 frozen
-Sep 30 15:55:06 p34 kernel: [420781.333189] ata6.00: cmd
-b0/d8:00:00:4f:c2/00:00:00:00:00/00 tag 0
-Sep 30 15:55:06 p34 kernel: [420781.333190]          res
-40/00:ff:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
-Sep 30 15:55:06 p34 kernel: [420781.333194] ata6.00: status: { DRDY }
-Sep 30 15:55:06 p34 kernel: [420781.333200] ata6: hard resetting link
-Sep 30 15:55:06 p34 kernel: [420781.638589] ata6: SATA link up 3.0 Gbps (SStatus
-123 SControl 300)
-Sep 30 15:55:06 p34 kernel: [420781.662166] ata6.00: configured for UDMA/133
-Sep 30 15:55:06 p34 kernel: [420781.669416] sd 5:0:0:0: [sdf] Write Protect is
-off
-Sep 30 15:55:06 p34 kernel: [420781.669416] sd 5:0:0:0: [sdf] Mode Sense: 00 3a
-00 00
-Sep 30 15:55:06 p34 kernel: [420781.669416] sd 5:0:0:0: [sdf] Write cache:
-enabled, read cache: enabled, doesn't support DPO or FUA
-
-Nothing wrong with the disk, it just happens... :(  Linux/kernel bug?
-It happens on multiple controllers, Intel, SiI, Marvell, does not seem to
-matter.
-
-SMART Self-test log structure revision number 1
-Num  Test_Description    Status                  Remaining  LifeTime(hours)  LBA
-_of_first_error
-# 1  Short offline       Completed without error       00%      2761         -
-# 2  Short offline       Completed without error       00%      2737         -
-# 3  Extended offline    Completed without error       00%      2714         -
-# 4  Short offline       Completed without error       00%      2689         -
-# 5  Extended offline    Completed without error       00%      2514         -
-# 6  Short offline       Completed without error       00%      2306         -
-# 7  Short offline       Completed without error       00%      2282         -
-# 8  Short offline       Completed without error       00%      2258         -
-# 9  Short offline       Completed without error       00%      2234         -
-#10  Extended offline    Completed without error       00%      2211         -
-#11  Short offline       Completed without error       00%      2186         -
-#12  Short offline       Completed without error       00%      2138         -
-#13  Short offline       Completed without error       00%      2114         -
-#14  Short offline       Completed without error       00%      2090         -
-#15  Short offline       Completed without error       00%      2066         -
-#16  Extended offline    Completed without error       00%      2043         -
-#17  Short offline       Completed without error       00%      2018         -
-#18  Short offline       Completed without error       00%      1970         -
-#19  Short offline       Completed without error       00%      1947         -
-#20  Short offline       Completed without error       00%      1923         -
-#21  Short offline       Completed without error       00%      1899         -
-
-
-Justin.
-
+> I have tried various boot options (pci=nomsi, acpi=off and any other
+> relevant code I could find) but nothing seems to work.  The odd thing
+> is the sata dvdrom was recognized twice by the 2.6.26.5 kernel (2
+> different kernel tests) for no apparent reason (could not get it to
+> work afterward).
+> 
+> Here's the cut info for each kernel from /var/log/messages (2.6.25.17,
+> 2.6.26.5 working, 2.6.26.5 not working).  If you require further
+> information I can submit it. I don't want to put too much on the first
+> message.
+> 
+> Thank you
+> 
+> Cyrille
+> 
+> Kernel-2.6.25.17, working
+> 
+> Sep 28 14:49:43 localhost kernel: SCSI subsystem initialized
+> Sep 28 14:49:43 localhost kernel: ACPI: PCI Interrupt Link [LSA0]
+> enabled at IRQ 23
+> Sep 28 14:49:43 localhost kernel: ACPI: PCI Interrupt 0000:00:05.0[A]
+> -> Link [LSA0] -> GSI 23 (level, low) -> IRQ 23
+> Sep 28 14:49:43 localhost kernel: scsi0 : sata_nv
+> Sep 28 14:49:43 localhost kernel: scsi1 : sata_nv
+> Sep 28 14:49:43 localhost kernel: ata1: SATA max UDMA/133 cmd 0xc480
+> ctl 0xc400 bmdma 0xbc00 irq 23
+> Sep 28 14:49:43 localhost kernel: ata2: SATA max UDMA/133 cmd 0xc080
+> ctl 0xc000 bmdma 0xbc08 irq 23
+> Sep 28 14:49:43 localhost kernel: ata1: SATA link up 3.0 Gbps (SStatus
+> 123 SControl 300)
+> Sep 28 14:49:43 localhost kernel: ata1.00: ATA-7: ST3120211AS, 3.AAE,
+> max UDMA/133
+> Sep 28 14:49:43 localhost kernel: ata1.00: 234441648 sectors, multi
+> 16: LBA48 NCQ (depth 0/32)
+> Sep 28 14:49:43 localhost kernel: ata1.00: configured for UDMA/133
+> Sep 28 14:49:43 localhost kernel: input: ImPS/2 Generic Wheel Mouse as
+> /class/input/input1
+> Sep 28 14:49:43 localhost kernel: ata2: SATA link up 1.5 Gbps (SStatus
+> 113 SControl 300)
+> Sep 28 14:49:43 localhost kernel: ata2.00: ATAPI: DVDRW IDE H16X, VER
+> B02K, max UDMA/33
+> Sep 28 14:49:43 localhost kernel: ata2.00: applying bridge limits
+> Sep 28 14:49:43 localhost kernel: ata2.00: configured for UDMA/33
+> Sep 28 14:49:43 localhost kernel: scsi 0:0:0:0: Direct-Access     ATA
+>     ST3120211AS      3.AA PQ: 0 ANSI: 5
+> Sep 28 14:49:43 localhost kernel: scsi 1:0:0:0: CD-ROM
+> DVDRW    IDE H16X         B02K PQ: 0 ANSI: 5
+> 
+> Kernel-2.6.26.5, Successful launch
+> 
+> Sep 28 14:52:39 localhost kernel: SCSI subsystem initialized
+> Sep 28 14:52:39 localhost kernel: ACPI: PCI Interrupt Link [LSA0]
+> enabled at IRQ 23
+> Sep 28 14:52:39 localhost kernel: ACPI: PCI Interrupt 0000:00:05.0[A]
+> -> Link [LSA0] -> GSI 23 (level, low) -> IRQ 23
+> Sep 28 14:52:39 localhost kernel: sata_nv 0000:00:05.0: Using SWNCQ mode
+> Sep 28 14:52:39 localhost kernel: scsi0 : sata_nv
+> Sep 28 14:52:39 localhost kernel: scsi1 : sata_nv
+> Sep 28 14:52:39 localhost kernel: ata1: SATA max UDMA/133 cmd 0xc480
+> ctl 0xc400 bmdma 0xbc00 irq 23
+> Sep 28 14:52:39 localhost kernel: ata2: SATA max UDMA/133 cmd 0xc080
+> ctl 0xc000 bmdma 0xbc08 irq 23
+> Sep 28 14:52:39 localhost kernel: ata1: SATA link up 3.0 Gbps (SStatus
+> 123 SControl 300)
+> Sep 28 14:52:39 localhost kernel: ata1.00: ATA-7: ST3120211AS, 3.AAE,
+> max UDMA/133
+> Sep 28 14:52:39 localhost kernel: ata1.00: 234441648 sectors, multi
+> 16: LBA48 NCQ (depth 31/32)
+> Sep 28 14:52:39 localhost kernel: ata1.00: configured for UDMA/133
+> Sep 28 14:52:39 localhost kernel: input: ImPS/2 Generic Wheel Mouse as
+> /class/input/input1
+> Sep 28 14:52:39 localhost kernel: ata2: SATA link up 1.5 Gbps (SStatus
+> 113 SControl 300)
+> Sep 28 14:52:39 localhost kernel: ata2.00: ATAPI: DVDRW IDE H16X, VER
+> B02K, max UDMA/33
+> Sep 28 14:52:39 localhost kernel: ata2.00: applying bridge limits
+> Sep 28 14:52:39 localhost kernel: ata2.00: Drive reports diagnostics
+> failure. This may indicate a drive
+> Sep 28 14:52:39 localhost kernel: ata2.00: fault or invalid emulation.
+> Contact drive vendor for information.
+> Sep 28 14:52:39 localhost kernel: ata2.00: configured for UDMA/33
+> Sep 28 14:52:39 localhost kernel: scsi 0:0:0:0: Direct-Access     ATA
+>     ST3120211AS      3.AA PQ: 0 ANSI: 5
+> Sep 28 14:52:39 localhost kernel: scsi 1:0:0:0: CD-ROM
+> DVDRW    IDE H16X         B02K PQ: 0 ANSI: 5
+> 
+> Kernel-2.6.26.5, Failed launches
+> 
+> Sep 28 15:08:11 localhost syslogd 1.4.1: restart.
+> Sep 28 15:08:11 localhost INIT: Loading ACPI module wmi: successfull
+> Sep 28 15:08:11 localhost kernel: klogd 1.4.1, log source = /proc/kmsg started.
+> Sep 28 15:08:11 localhost kernel: Inspecting /boot/System.map-2.6.26.5.tex3
+> Sep 28 15:08:11 localhost crond[2823]: (CRON) STARTUP (V5.0)
+> Sep 28 15:08:12 localhost kernel: Loaded 29671 symbols from
+> /boot/System.map-2.6.26.5.tex3.
+> Sep 28 15:08:12 localhost kernel: Symbols match kernel version 2.6.26.
+> Sep 28 15:08:12 localhost kernel: No module symbols loaded - kernel
+> modules not enabled.
+> Sep 28 15:08:12 localhost kernel: ta1: SATA link up 3.0 Gbps (SStatus
+> 123 SControl 300)
+> Sep 28 15:08:12 localhost kernel: ata1.00: ATA-7: ST3120211AS, 3.AAE,
+> max UDMA/133
+> Sep 28 15:08:12 localhost kernel: ata1.00: 234441648 sectors, multi
+> 16: LBA48 NCQ (depth 31/32)
+> Sep 28 15:08:12 localhost kernel: ata1.00: configured for UDMA/133
+> Sep 28 15:08:12 localhost kernel: input: ImPS/2 Generic Wheel Mouse as
+> /class/input/input1
+> Sep 28 15:08:12 localhost kernel: ata2: SATA link up 1.5 Gbps (SStatus
+> 113 SControl 300)
+> Sep 28 15:08:12 localhost kernel: ata2.00: qc timeout (cmd 0xa1)
+> Sep 28 15:08:12 localhost kernel: ata2.00: failed to IDENTIFY (I/O
+> error, err_mask=0x4)
+> Sep 28 15:08:12 localhost kernel: ata2: failed to recover some
+> devices, retrying in 5 secs
+> Sep 28 15:08:12 localhost kernel: ata2: SATA link up 1.5 Gbps (SStatus
+> 113 SControl 300)
+> Sep 28 15:08:12 localhost kernel: ata2.00: qc timeout (cmd 0xa1)
+> Sep 28 15:08:12 localhost kernel: ata2.00: failed to IDENTIFY (I/O
+> error, err_mask=0x4)
+> Sep 28 15:08:12 localhost kernel: ata2: failed to recover some
+> devices, retrying in 5 secs
+> Sep 28 15:08:12 localhost kernel: ata2: SATA link up 1.5 Gbps (SStatus
+> 113 SControl 300)
+> Sep 28 15:08:12 localhost kernel: ata2.00: qc timeout (cmd 0xa1)
+> Sep 28 15:08:12 localhost kernel: ata2.00: failed to IDENTIFY (I/O
+> error, err_mask=0x4)
+> Sep 28 15:08:12 localhost kernel: ata2: failed to recover some
+> devices, retrying in 5 secs
+> Sep 28 15:08:12 localhost kernel: ata2: SATA link up 1.5 Gbps (SStatus
+> 113 SControl 300)
+> Sep 28 15:08:12 localhost kernel: scsi 0:0:0:0: Direct-Access     ATA
+>     ST3120211AS      3.AA PQ: 0 ANSI: 5
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Please read the FAQ at  http://www.tux.org/lkml/
