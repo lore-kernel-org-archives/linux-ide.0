@@ -1,43 +1,73 @@
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-Subject: Re: [PATCH 3/6] SATA: Blacklisting of systems that spin off disks during ACPI power off
-Date: Wed, 1 Oct 2008 13:36:44 +0200
-Message-ID: <200810011336.45863.rjw@sisk.pl>
-References: <200808290002.55026.rjw@sisk.pl> <200809300014.28983.rjw@sisk.pl> <48E2EFB3.1060202@gmail.com>
+From: Bill Davidsen <davidsen@tmr.com>
+Subject: Re: exception Emask 0x0 SAct 0x1 / SErr 0x0 action 0x2 frozen
+Date: Wed, 01 Oct 2008 11:09:18 -0400
+Message-ID: <48E3929E.7060501@tmr.com>
+References: <3E6D0C24877245C3A5A327129A7B4CA7@909927SOSLA>	 <alpine.DEB.1.10.0809220404400.18908@p34.internal.lan>	 <5A4A9A3B0AAA4A20A33BC2D578F5F75F@909927SOSLA>	 <alpine.DEB.1.10.0809220828490.23159@p34.internal.lan>	 <5419A02543384E69AF2BA82FF6E66C14@909927SOSLA>	 <alpine.DEB.1.10.0809220903400.23159@p34.internal.lan>	 <4B1ABD0393EF40FFB0A12242FE8356AF@909927SOSLA>	 <alpine.DEB.1.10.0809220915470.23159@p34.internal.lan>	 <alpine.DEB.1.10.0809220926240.23159@p34.internal.lan> <e7510f760809231114y6cbaf13aqf7c63bd48a73c978@mail.gmail.com> <48DBAB81.8050900@tmr.com> <48E08E2D.6050905@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-2"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ogre.sisk.pl ([217.79.144.158]:57078 "EHLO ogre.sisk.pl"
+Received: from mail.tmr.com ([64.65.253.246]:50376 "EHLO partygirl.tmr.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753568AbYJALcQ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 1 Oct 2008 07:32:16 -0400
-In-Reply-To: <48E2EFB3.1060202@gmail.com>
-Content-Disposition: inline
+	id S1752411AbYJAPJ5 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 1 Oct 2008 11:09:57 -0400
+In-Reply-To: <48E08E2D.6050905@kernel.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Jeff Garzik <jeff@garzik.org>, ACPI Devel Maling List <linux-acpi@vger.kernel.org>, linux-ide@vger.kernel.org, Thomas Renninger <trenn@suse.de>, Robert Hancock <hancockr@shaw.ca>, LKML <linux-kernel@vger.kernel.org>, Frans Pop <elendil@planet.nl>, Maciej Rutecki <maciej.rutecki@gmail.com>, Andrew Morton <akpm@linux-foundation.org>
+To: Tejun Heo <tj@kernel.org>
+Cc: Gwendal Grignou <gwendal@google.com>, Justin Piszcz <jpiszcz@lucidpixels.com>, Brian Rademacher <rad@radfiles.net>, linux-ide@vger.kernel.org, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, Bruce Allen <ballen@gravity.phys.uwm.edu>
 
-On Wednesday, 1 of October 2008, Tejun Heo wrote:
-> Rafael J. Wysocki wrote:
-> > From: Rafael J. Wysocki <rjw@sisk.pl>
-> > 
-> > SATA: Blacklisting of systems that spin off disks during ACPI power off
-> > 
-> > Introduce new libata flags ATA_FLAG_NO_POWEROFF_SPINDOWN and
-> > ATA_FLAG_NO_HIBERNATE_SPINDOWN that, if set, will prevent disks from
-> > being spun off during system power off and hibernation, respectively
-> > (to handle the hibernation case we need the new system state
-> > SYSTEM_HIBERNATE_ENTER that can be checked against by libata, in
-> > analogy with SYSTEM_POWER_OFF).
-> > 
-> > Signed-off-by: Rafael J. Wysocki <rjw@sisk.pl>
-> 
-> ACK 3-6.  I'll push these through libata-dev after the first two
-> prerequsite patches are cleared.
+Tejun Heo wrote:
+> Bill Davidsen wrote:
+>   
+>> Gwendal Grignou wrote:
+>>     
+>>> About ata1:0 problem, as reported in the bugzilla bug: I would try to
+>>> disable NCQ to see if it helps. Your disks firmware might not fully
+>>> support it.
+>>>
+>>> You can either add the parameter "libata.force=noncq" when loading
+>>> your kernel, or set queue_depth to 1 for all the Seagate drives behind
+>>> the Marvell MV88SX6081 controller.
+>>>
+>>> About ata5:0 , someone - in user space probably - is trying to do a
+>>> SMART ENABLE operation, but the device ignores it. I don't know which
+>>> device you are using, but I assume it does not support ATA SMART
+>>> feature set. Timeout is an acceptable but not a nice way to answer, a
+>>> cancel would have been better; check if there is a firmware upgrade
+>>> for your device.
+>>>   
+>>>       
+>> You certainly called the SMART issue, I was wondering why a new
+>> distribution install on some older hardware was getting all the errors,
+>> clearly the Fedora "smartd" doesn't check SMART capability before trying
+>> to enable the feature. Oddly the drive on which I see this does reply to
+>> SMART requests, so the firmware must be "semi-functional." Not a
+>> problem, in my case the drive is just used for testing handling of hot
+>> swap, and has no data of any value.
+>>     
+>
+> Can you post full kernel log including the boot messages and the error
+> messages?  Also, please attach the output of hdparm -I on the drive
+> which fails the smart command.
+>   
 
-OK, thanks.
+Belatedly, the drive was retired after I got thinking about it, I'm just 
+calling it an old bad drive and leaving it at that. I'm not goinf to 
+re-install a dubious 20GB drive, it's out of the hot-swap carrier, 
+cleared with dban, and in the recycle bin. You seem to have far better 
+examples of the issue, so I don't feel I would hold up progress. :-)
+> (cc'ing Bruce, hi!) Bruce, this is the second report I see about drive
+> timing out SMART ENABLE OPERATIONS.  Does anything ring a bell?
+>
+> Thanks.
+>
+>   
 
-Best,
-Rafael
+
+-- 
+Bill Davidsen <davidsen@tmr.com>
+  "Woe unto the statesman who makes war without a reason that will still
+  be valid when the war is over..." Otto von Bismark 
+
+
