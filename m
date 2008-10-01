@@ -1,49 +1,39 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: Load/Unload issue: HP NX6325
-Date: Wed, 01 Oct 2008 11:46:20 +0900
-Message-ID: <48E2E47C.7020506@kernel.org>
-References: <c68c8f1f0809210359o5f0169c7v9d47088517e264ed@mail.gmail.com>
+Subject: Re: nx6325 and frequent head unloads
+Date: Wed, 01 Oct 2008 11:46:12 +0900
+Message-ID: <48E2E474.5030903@kernel.org>
+References: <20080919002701.1537ca54@incubo.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:35186 "EHLO hera.kernel.org"
+Received: from hera.kernel.org ([140.211.167.34]:35187 "EHLO hera.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751126AbYJACrt (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 30 Sep 2008 22:47:49 -0400
-In-Reply-To: <c68c8f1f0809210359o5f0169c7v9d47088517e264ed@mail.gmail.com>
+	id S1752262AbYJACrw (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 30 Sep 2008 22:47:52 -0400
+In-Reply-To: <20080919002701.1537ca54@incubo.de>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Christian Wolf <wolfchri@gmail.com>
+To: "A. Klitzing" <aklitzing@online.de>
 Cc: linux-ide@vger.kernel.org
 
-Christian Wolf wrote:
-> Hello,
-> 
-> pls see attached files for more info on this load/unload issue on the HP NX6325.
-> 
-> hdparm -B 254 /dev/sda does "fix" it, the drive also does not overheat
-> from this value - in opposite to some other drives. 255 does not help,
-> in opposite as some fellow user states in the Ubuntu notebook wiki, on
-> this drive.
-> 
-> As far as I can tell from now nearly 1 yr with this parameter, it does
-> not harm the drive but helps to stop unloading the heads.
-> 
-> More about the issue on the HP NX6325 on my blog:
-> http://vale.homelinux.net/wordpress/2007/10/24/potential-risk-for-your-nx6325s-harddrive/
-> 
-> In case you are employed by HP, could you please consider me as your
-> future notebook Linux evangelist? ;-)
-> 
-> Greetings from Munich,
-> 
-> Christian
-> 
-> 
-> 
-> 
-added
+A. Klitzing wrote:
+> Hi there,
+>=20
+> my harddrive has this problem [1], too. Here are the outputs of my
+> notebook "HP nx6325 (EY351ET)".
+>=20
+> Workaround: hdparm -B 254 /dev/sda
+> But the hdd will be warmer than usual.
+>=20
+> Best regards,
+> Andr=C3=A9 Klitzing
+>=20
+> [1]
+> http://ata.wiki.kernel.org/index.php/Known_issues#Drives_which_perfor=
+m_frequent_head_unloads_under_Linux
 
--- 
+added.
+
+--=20
 tejun
