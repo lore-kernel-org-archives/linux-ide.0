@@ -1,73 +1,93 @@
-From: Bill Davidsen <davidsen@tmr.com>
-Subject: Re: exception Emask 0x0 SAct 0x1 / SErr 0x0 action 0x2 frozen
-Date: Wed, 01 Oct 2008 11:09:18 -0400
-Message-ID: <48E3929E.7060501@tmr.com>
-References: <3E6D0C24877245C3A5A327129A7B4CA7@909927SOSLA>	 <alpine.DEB.1.10.0809220404400.18908@p34.internal.lan>	 <5A4A9A3B0AAA4A20A33BC2D578F5F75F@909927SOSLA>	 <alpine.DEB.1.10.0809220828490.23159@p34.internal.lan>	 <5419A02543384E69AF2BA82FF6E66C14@909927SOSLA>	 <alpine.DEB.1.10.0809220903400.23159@p34.internal.lan>	 <4B1ABD0393EF40FFB0A12242FE8356AF@909927SOSLA>	 <alpine.DEB.1.10.0809220915470.23159@p34.internal.lan>	 <alpine.DEB.1.10.0809220926240.23159@p34.internal.lan> <e7510f760809231114y6cbaf13aqf7c63bd48a73c978@mail.gmail.com> <48DBAB81.8050900@tmr.com> <48E08E2D.6050905@kernel.org>
+From: "George Spelvin" <linux@horizon.com>
+Subject: Re: What's the SB600 64-bit DMA problem?
+Date: Wed, 01 Oct 2008 09:26:23 -0400
+Message-ID: <20081001132623.18758.qmail@science.horizon.com>
+References: <20080920151712.10515.qmail@science.horizon.com>
+ <da824cf30809201528o27478ae2h5894e39932622d3b@mail.gmail.com>
+ <20080921001529.23400.qmail@science.horizon.com>
+ <65a6ef750809231730h52f6bf47g23b33db1d2f4ca08@mail.gmail.com>
+ <48DA0C8B.3000406@gmail.com>
+ <B90463BC30D2E446BA423D888DC85E50C8358F@sshaexmb1.amd.com>
+ <20080925032437.6802.qmail@science.horizon.com>
+ <48DCEC6D.1040305@gmail.com>
+ <20080928210422.2578.qmail@science.horizon.com>
+ <48E0112C.7010901@gmail.com>
+ <20080929040812.8784.qmail@science.horizon.com>
+ <48E058D2.7050704@gmail.com>
+ <20080930020002.26564.qmail@science.horizon.com>
+ <48E2F53A.6000104@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.tmr.com ([64.65.253.246]:50376 "EHLO partygirl.tmr.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752411AbYJAPJ5 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 1 Oct 2008 11:09:57 -0400
-In-Reply-To: <48E08E2D.6050905@kernel.org>
+Received: from science.horizon.com ([192.35.100.1]:15603 "HELO
+	science.horizon.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1752386AbYJAPNH (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 1 Oct 2008 11:13:07 -0400
+In-Reply-To: <48E2F53A.6000104@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: Gwendal Grignou <gwendal@google.com>, Justin Piszcz <jpiszcz@lucidpixels.com>, Brian Rademacher <rad@radfiles.net>, linux-ide@vger.kernel.org, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, Bruce Allen <ballen@gravity.phys.uwm.edu>
+To: linux@horizon.com, htejun@gmail.com
+Cc: Shane.Huang@amd.com, mdnelson8@gmail.com, linux-ide@vger.kernel.org, jgarzik@redhat.com, grundler@google.com
 
-Tejun Heo wrote:
-> Bill Davidsen wrote:
->   
->> Gwendal Grignou wrote:
->>     
->>> About ata1:0 problem, as reported in the bugzilla bug: I would try to
->>> disable NCQ to see if it helps. Your disks firmware might not fully
->>> support it.
->>>
->>> You can either add the parameter "libata.force=noncq" when loading
->>> your kernel, or set queue_depth to 1 for all the Seagate drives behind
->>> the Marvell MV88SX6081 controller.
->>>
->>> About ata5:0 , someone - in user space probably - is trying to do a
->>> SMART ENABLE operation, but the device ignores it. I don't know which
->>> device you are using, but I assume it does not support ATA SMART
->>> feature set. Timeout is an acceptable but not a nice way to answer, a
->>> cancel would have been better; check if there is a firmware upgrade
->>> for your device.
->>>   
->>>       
->> You certainly called the SMART issue, I was wondering why a new
->> distribution install on some older hardware was getting all the errors,
->> clearly the Fedora "smartd" doesn't check SMART capability before trying
->> to enable the feature. Oddly the drive on which I see this does reply to
->> SMART requests, so the firmware must be "semi-functional." Not a
->> problem, in my case the drive is just used for testing handling of hot
->> swap, and has no data of any value.
->>     
+Tejun Heo <htejun@gmail.com> wrote:
+> George Spelvin wrote:
+>> But...
+>> The base addresses are already above 4G.  Aobve 8G, actually.
+>> 
+>> Port 0 base addresses: 02 1f1e 0000, 02 1f1e 0400
+>> Port 1 base addresses: 02 1f1a 0000, 02 1f1a 0400
+>> Port 2 base addresses: 02 1f98 0000, 02 1f98 0400
+>> Port 3 base addresses: 02 1f9e 0000, 02 1f9e 0400
 >
-> Can you post full kernel log including the boot messages and the error
-> messages?  Also, please attach the output of hdparm -I on the drive
-> which fails the smart command.
->   
+> Where are these numbers from?
 
-Belatedly, the drive was retired after I got thinking about it, I'm just 
-calling it an old bad drive and leaving it at that. I'm not goinf to 
-re-install a dubious 20GB drive, it's out of the hot-swap carrier, 
-cleared with dban, and in the recycle bin. You seem to have far better 
-examples of the issue, so I don't feel I would hold up progress. :-)
-> (cc'ing Bruce, hi!) Bruce, this is the second report I see about drive
-> timing out SMART ENABLE OPERATIONS.  Does anything ring a bell?
->
-> Thanks.
->
->   
+A dump of the appropriate region of memory (1k @ 0xfe7ff800), offsets
+0x100, 0x180, 0x200 and 0x280.  Here's a full dump (rebooted in between,
+so the addresses might change).
 
-
--- 
-Bill Davidsen <davidsen@tmr.com>
-  "Woe unto the statesman who makes war without a reason that will still
-  be valid when the war is over..." Otto von Bismark 
-
+dd if=/dev/mem bs=1024 skip=4169726 count=1 | od -Ax -tx4
+1+0 records in
+1+0 records out
+1024 bytes (1.0 kB) copied, 0.000203726 s, 5.0 MB/s
+000000 f722ff83 80000002 00000000 0000000f
+000010 00010100 000101f8 00000000 00000000
+000020 00000000 00000000 00000000 00000000
+*
+0000f0 00000000 00000000 00000000 03ef99fc
+000100 1f1e0000 00000002 1f1e0400 00000002
+000110 00000000 7840007f 00042017 00000000
+000120 00000040 00000101 00000113 00000300
+000130 00000000 00000000 00000000 00000000
+000140 0001000f 00000000 00000000 00000000
+000150 00000000 00000000 00000000 00000000
+*
+000170 00000000 00000000 00000000 08001c00
+000180 1f1a0000 00000002 1f1a0400 00000002
+000190 00000000 7840007f 0004a017 00000000
+0001a0 00000040 00000101 00000113 00000300
+0001b0 00000000 00000001 00000000 00000000
+0001c0 0001000f 00000000 00000000 00000000
+0001d0 00000000 00000000 00000000 00000000
+*
+0001f0 00000000 00000000 00000000 08001c00
+000200 1f980000 00000002 1f980400 00000002
+000210 00000000 7840007f 00042017 00000000
+000220 00000040 00000101 00000113 00000300
+000230 00000000 00000000 00000000 00000000
+000240 0001000f 00000000 00000000 00000000
+000250 00000000 00000000 00000000 00000000
+*
+000270 00000000 00000000 00000000 08001c00
+000280 1f9e0000 00000002 1f9e0400 00000002
+000290 00000000 7840007f 00042017 00000000
+0002a0 00000040 00000101 00000113 00000300
+0002b0 00000000 00000000 00000000 00000000
+0002c0 0001000f 00000000 00000000 00000000
+0002d0 00000000 00000000 00000000 00000000
+*
+0002f0 00000000 00000000 00000000 08001c00
+000300 00000000 00000000 00000000 00000000
+*
+000400
 
