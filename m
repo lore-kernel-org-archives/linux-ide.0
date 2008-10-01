@@ -1,64 +1,94 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: lockdep warning inside ide/bio
-Date: Wed, 01 Oct 2008 13:12:35 -0500
-Message-ID: <1222884755.3230.38.camel@localhost.localdomain>
-References: <20081001172138.GA17806@doriath.ww600.siemens.net>
+From: John Clark <clarkjc@runbox.com>
+Subject: Re: Interoperability problem with Quantum CD72SH SATA tape drive
+ and libata
+Date: Wed, 01 Oct 2008 19:13:25 -0400
+Message-ID: <48E40415.7050607@runbox.com>
+References: <48DE96AF.6090301@runbox.com> <48E2ECA8.8060808@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:36352 "EHLO
-	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753273AbYJASNH (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 1 Oct 2008 14:13:07 -0400
-In-Reply-To: <20081001172138.GA17806@doriath.ww600.siemens.net>
+Received: from aibo.runbox.com ([193.71.199.94]:40235 "EHLO aibo.runbox.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752134AbYJAXNx (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 1 Oct 2008 19:13:53 -0400
+In-Reply-To: <48E2ECA8.8060808@kernel.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Dmitry Baryshkov <dbaryshkov@gmail.com>
-Cc: linux-arm-kernel@lists.arm.linux.org.uk, Mikael Pettersson <mikpe@it.uu.se>, linux-ide@vger.kernel.org, Peter Zijlstra <peterz@infradead.org>, Ingo Molnar <mingo@elte.hu>, Thomas Gleixner <tglx@linutronix.de>
+To: Tejun Heo <tj@kernel.org>
+Cc: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org
 
-lockdep people cc'd, thread is at
+Tejun Heo wrote:
+> John Clark wrote:
+>   
+>> Hello,
+>>
+>> I've discovered an issue with the Quantum CD72SH SATA tape drive.  I set
+>> it to variable block size, try to write a 5317 byte block with an ATAPI
+>> issued WRITE(6), and it hangs.  The drive is connected to an Intel ICH9R
+>> in AHCI mode.
+>>
+>> My debugging efforts have determined that it's a problem with the
+>> drive's firmware.  It does not like ATAPI CDBs with odd (& 1) transfer
+>> lengths with PIO.  If I let it use DMA, even if it's not a multiple of
+>> 16 bytes, then it seems to work:
+>>
+>> --- libata-core.c.orig    2008-09-27 16:12:46.000000000 -0400
+>> +++ libata-core.c    2008-09-27 16:11:29.000000000 -0400
+>> @@ -4669,8 +4669,8 @@
+>>     /* Don't allow DMA if it isn't multiple of 16 bytes.  Quite a
+>>      * few ATAPI devices choke on such DMA requests.
+>>      */
+>> -    if (unlikely(qc->nbytes & 15))
+>> -        return 1;
+>> +    // if (unlikely(qc->nbytes & 15))
+>> +    //     return 1;
+>>
+>>     if (ap->ops->check_atapi_dma)
+>>         return ap->ops->check_atapi_dma(qc);
+>>
+>>
+>>
+>> This is an acceptable solution for my limited use, but I'd like to see
+>> it work out of the box.  It seems frightening that there are ATAPI
+>> devices out there that choke on PIO requests.  What would you like to do?
+>>     
+>
+> We can create a HORKAGE for it.  Can you please post the result of
+> "hdparm -I" of the device?
+>
+>   
+Tejun,
 
-http://marc.info/?l=linux-ide&m=122288193424170
+Here it is:
 
-On Wed, 2008-10-01 at 21:21 +0400, Dmitry Baryshkov wrote:
-> After 88c381bf09d7b3f2c2e8749150087aff2c434be4 soon after rootfs is
-> mounted I'm getting the following lockdep trace (the machine in
-> question is my tosa, booted from CF card with ide-cs driver).
+/dev/nst0:
 
-I've no idea what a tosa is, but from the traces, I guess it's a VIVT
-arm system?
+ATAPI Sequential-access device, with removable media
+    Model Number:       QUANTUM DAT    DAT72-000               
+    Serial Number:      JR001H1            
+    Firmware Revision:  VC090000
+Standards:
+    Used: ATA/ATAPI-7 T13 1532D revision 4a
+    Supported: 7 6 5 4
+Configuration:
+    DRQ response: 50us.
+    Packet size: 12 bytes
+Capabilities:
+    LBA, IORDY(can be disabled)
+    DMA: mdma0 mdma1 mdma2 udma0 udma1 udma2 udma3 udma4 udma5 *udma6
+         Cycle time: min=120ns recommended=120ns
+    PIO: pio0 pio1 pio2 pio3 pio4
+         Cycle time: no flow control=120ns  IORDY flow control=120ns
+Commands/features:
+    Enabled    Supported:
+       *    Power Management feature set
+       *    PACKET command feature set
+       *    DEVICE_RESET command
+       *    NOP cmd
+       *    SATA-I signaling speed (1.5Gb/s)
+Integrity word not set (found 0x0000, expected 0x6da5)
 
-> ------------[ cut here ]------------
-> WARNING: at /home/lumag/tosa-tree/kernel/lockdep.c:2195 trace_hardirqs_on_caller+0xf0/0x170()
-> Modules linked in:
-> [<c0029fe4>] (dump_stack+0x0/0x14) from [<c003fc40>] (warn_on_slowpath+0x4c/0x84)
-> [<c003fbf4>] (warn_on_slowpath+0x0/0x84) from [<c00629ac>] (trace_hardirqs_on_caller+0xf0/0x170)
->  r6:c0062a40 r5:00000001 r4:c381b080
-> [<c00628bc>] (trace_hardirqs_on_caller+0x0/0x170) from [<c0062a40>] (trace_hardirqs_on+0x14/0x18)
->  r6:00000092 r5:00000000 r4:c3412b30
-> [<c0062a2c>] (trace_hardirqs_on+0x0/0x18) from [<c03172b0>] (_spin_unlock_irq+0x30/0x60)
-> [<c0317280>] (_spin_unlock_irq+0x0/0x60) from [<c002c3f4>] (__flush_dcache_aliases+0xec/0xf8)
->  r4:c3412b50
-> [<c002c308>] (__flush_dcache_aliases+0x0/0xf8) from [<c002c474>] (flush_dcache_page+0x74/0x9c)
-> [<c002c400>] (flush_dcache_page+0x0/0x9c) from [<c008f958>] (copy_to_high_bio_irq+0x64/0xb0)
->  r5:c386d668 r4:c3a2b000
+Thank you.
 
-OK, so this is the problem and it's coming from within arch/arm.  The
-complaint is that we're still running at hardirq context but the
-spin_unlock_irq would enable interrupts.
-
-This is because of the definition in asm/cacheflush.h of
-flush_dcache_mmap_unlock().
-
-This looks to be a lockdep bug:  IDE interrupts don't have IRQF_DISABLED
-set, so they're supposed to be running with interrupts enabled.
-However, lockdep actually turns interrupts off anyway and complains
-bitterly (in this case) if they get turned on for any reason.
-
-A work around would be to run without lockdep, but I think we really
-need lockdep fixing to work properly when IRQF_DISABLED isn't set.
-
-James
-
-
+- John
