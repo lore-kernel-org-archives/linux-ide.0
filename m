@@ -1,51 +1,44 @@
-From: <JosephChan@via.com.tw>
-Subject: RE: VIA SATA id 5372 & Pioneer DVR-215 DVD burner problem
-Date: Thu, 2 Oct 2008 09:52:43 +0800
-Message-ID: <C80EF34A3D2E494DBAF9AC29C7AE4EB807DC7F62@exchtp03.taipei.via.com.tw>
-References: <48E4272A.1090105@kernel.org>
+From: Tejun Heo <tj@kernel.org>
+Subject: [RFC PATCH 0/2] sata_via: fix TF access and add 8251 support
+Date: Thu, 02 Oct 2008 10:53:09 +0900
+Message-ID: <48E42985.60400@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="big5"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1753029AbYJBBw5@vger.kernel.org>
-Content-class: urn:content-classes:message
-In-Reply-To: <48E4272A.1090105@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: tj@kernel.org, akpm@linux-foundation.org
-Cc: scottpitcher@netspace.net.au, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from hera.kernel.org ([140.211.167.34]:56303 "EHLO hera.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751384AbYJBByy (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 1 Oct 2008 21:54:54 -0400
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Joseph Chan <JosephChan@via.com.tw>, IDE/ATA development list <linux-ide@vger.kernel.org>, HaraldWelte@viatech.com
 
-Tejun.
+Hello, Joseph and Harald.
 
-Sorry, I'm not familiar with git. 
-Would you please send me a link to download? 
+I'm gonna send two patches as reply to this message.  Can you please
+review them?  Both are separated out from Joseph's original patch.
 
-In addition, I'm on vacation between 10/3 ~ 10/12.
-I will test it after I'm back.
+  http://thread.gmane.org/gmane.linux.kernel.commits.mm/40640
 
-BRs,
-Joseph Chan 
+The former one (fix TF load) is rather straight-forward and it seems
+to work on my vt6421's but I couldn't test 8251 support as I don't
+have any.  I thought the controller you sent me was 8251 but it was
+6421, right?  I think I asked for 6421 not knowing what I wanted was
+8251.  So, it would be great if you can test whether the 8251 support
+works.  Please post the kernel log whether it succeeds or not.
 
------Original Message-----
-From: Tejun Heo [mailto:tj@kernel.org] 
-Sent: Thursday, October 02, 2008 9:43 AM
-To: Andrew Morton
-Cc: Scott Pitcher; linux-kernel@vger.kernel.org; linux-ide@vger.kernel.org; Joseph Chan
-Subject: Re: VIA SATA id 5372 & Pioneer DVR-215 DVD burner problem
+For the time being, I skipped support for 0581 and 5324 as they were
+not on the PCI device ID list of the original patch.  Do they have the
+same configuration?  Or are they SATA/PATA mixed?
 
-Tejun Heo wrote:
-> Hello,
-> 
-> Can you please test the attached patch?  It's on top of the upstream 
-> branch of Jeff's libata-dev tree.
-> 
->   http://www.kernel.org/pub/scm/linux/kernel/git/jgarzik/libata-dev.git
->   git://git.kernel.org/pub/scm/linux/kernel/git/jgarzik/libata-dev.git
-> 
-> If you're unfamiliar with git, just lemme know.  I'll send you a patch 
-> against 2.6.27-rc8.
+The patches are on top of the upstream branch of Jeff's libata-dev
+tree.
 
-And I of course forgot to actually attach the patch.
+ git://git.kernel.org/pub/scm/linux/kernel/git/jgarzik/libata-dev.git
+ http://www.kernel.org/pub/scm/linux/kernel/git/jgarzik/libata-dev.git
 
---
+Thanks.
+
+-- 
 tejun
