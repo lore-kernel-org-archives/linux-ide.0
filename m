@@ -1,32 +1,30 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [PATCH 1/2] sgiioc4: sgiioc4_read_status drive busy check fix
-Date: Fri, 3 Oct 2008 18:49:10 +0200
-Message-ID: <200810031849.11365.bzolnier@gmail.com>
-References: <200809282348.52748.sshtylyov@ru.mvista.com>
+Subject: Re: [PATCH 1/3] ide-cd: debug log enhancements
+Date: Fri, 3 Oct 2008 19:15:40 +0200
+Message-ID: <200810031915.41344.bzolnier@gmail.com>
+References: <1222669799-6565-1-git-send-email-petkovbb@gmail.com> <1222669799-6565-2-git-send-email-petkovbb@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
-  charset="iso-8859-1"
+  charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from gv-out-0910.google.com ([216.239.58.191]:31658 "EHLO
+Received: from gv-out-0910.google.com ([216.239.58.184]:33468 "EHLO
 	gv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753282AbYJCRnh (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 3 Oct 2008 13:43:37 -0400
-Received: by gv-out-0910.google.com with SMTP id e6so296255gvc.37
-        for <linux-ide@vger.kernel.org>; Fri, 03 Oct 2008 10:43:36 -0700 (PDT)
-In-Reply-To: <200809282348.52748.sshtylyov@ru.mvista.com>
+	with ESMTP id S1753318AbYJCRnk (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 3 Oct 2008 13:43:40 -0400
+Received: by gv-out-0910.google.com with SMTP id e6so296304gvc.37
+        for <linux-ide@vger.kernel.org>; Fri, 03 Oct 2008 10:43:38 -0700 (PDT)
+In-Reply-To: <1222669799-6565-2-git-send-email-petkovbb@gmail.com>
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Sergei Shtylylov <sshtylyov@ru.mvista.com>
-Cc: linux-ide@vger.kernel.org, jeremy@sgi.com
+To: Borislav Petkov <petkovbb@googlemail.com>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Borislav Petkov <petkovbb@gmail.com>
 
-On Sunday 28 September 2008, Sergei Shtylylov wrote:
-> Fix the drive non-busy criterion used by sgiioc4_read_status(): neither of the
-> bits it expects to be set guarantees that the drive is not busy (and might be
-> interrupting), only the BSY bit itself being zero gurantees that.
-> While at it, use ATA_BUSY instead of hardcoded value everywhere...
+On Monday 29 September 2008, Borislav Petkov wrote:
+> Add some more verbosity to key function calls in ide-cd debug code. While at it,
+> delete a superfluous comment.
 > 
-> Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+> Signed-off-by: Borislav Petkov <petkovbb@gmail.com>
 
-applied patches #1-2
+applied
