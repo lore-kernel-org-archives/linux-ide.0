@@ -1,39 +1,43 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [PATCH 2/3] ide-cd: small drive type print fix
-Date: Fri, 3 Oct 2008 19:18:15 +0200
-Message-ID: <200810031918.15455.bzolnier@gmail.com>
-References: <1222669799-6565-1-git-send-email-petkovbb@gmail.com> <1222669799-6565-3-git-send-email-petkovbb@gmail.com>
+Subject: Re: [PATCH v2] IDE: Fix platform device registration in Swarm IDE driver
+Date: Fri, 3 Oct 2008 19:00:54 +0200
+Message-ID: <200810031900.55214.bzolnier@gmail.com>
+References: <20080922122853.GA15210@linux-mips.org> <20080928175450.GA8478@linux-mips.org> <48DFFC62.9050300@ru.mvista.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
-  charset="utf-8"
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1753533AbYJCRoN@vger.kernel.org>
-In-Reply-To: <1222669799-6565-3-git-send-email-petkovbb@gmail.com>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from gv-out-0910.google.com ([216.239.58.191]:31658 "EHLO
+	gv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753275AbYJCRne (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 3 Oct 2008 13:43:34 -0400
+Received: by gv-out-0910.google.com with SMTP id e6so296255gvc.37
+        for <linux-ide@vger.kernel.org>; Fri, 03 Oct 2008 10:43:33 -0700 (PDT)
+In-Reply-To: <48DFFC62.9050300@ru.mvista.com>
 Content-Disposition: inline
-Sender: linux-kernel-owner@vger.kernel.org
-To: Borislav Petkov <petkovbb@googlemail.com>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Borislav Petkov <petkovbb@gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Cc: Ralf Baechle <ralf@linux-mips.org>, linux-ide@vger.kernel.org, "Maciej W. Rozycki" <macro@linux-mips.org>, linux-mips@linux-mips.org
 
-On Monday 29 September 2008, Borislav Petkov wrote:
-> Signed-off-by: Borislav Petkov <petkovbb@gmail.com>
-
-applied (though I fail to see "an added value" of this change)
-
-> ---
->  drivers/ide/ide-cd.c |    2 +-
->  1 files changed, 1 insertions(+), 1 deletions(-)
+On Sunday 28 September 2008, Sergei Shtylyov wrote:
+> Hello.
 > 
-> diff --git a/drivers/ide/ide-cd.c b/drivers/ide/ide-cd.c
-> index 9ffce7f..e41b94d 100644
-> --- a/drivers/ide/ide-cd.c
-> +++ b/drivers/ide/ide-cd.c
-> @@ -1784,7 +1784,7 @@ static int ide_cdrom_probe_capabilities(ide_drive_t *drive)
->  	if ((cdi->mask & CDC_DVD_R) == 0 || (cdi->mask & CDC_DVD_RAM) == 0)
->  		printk(KERN_CONT " DVD%s%s",
->  				 (cdi->mask & CDC_DVD_R) ? "" : "-R",
-> -				 (cdi->mask & CDC_DVD_RAM) ? "" : "-RAM");
-> +				 (cdi->mask & CDC_DVD_RAM) ? "" : "/RAM");
->  
->  	if ((cdi->mask & CDC_CD_R) == 0 || (cdi->mask & CDC_CD_RW) == 0)
->  		printk(KERN_CONT " CD%s%s",
+> Ralf Baechle wrote:
+> 
+> > The Swarm IDE driver uses a release method which is defined in the driver
+> > itself thus potentially oopsable.  The simple fix would be to just leak
+> > the device but this patch goes the full length and moves the entire
+> > handling of the platform device in the platform code and retains only
+> > the platform driver code in drivers/ide/mips/swarm.c.
+> >
+> > Signed-off-by: Ralf Baechle <ralf@linux-mips.org>
+
+wow, v2 happened really quickly :)
+
+> Acked-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+
+applied
+
+[ I removed no longer needed BLK_DEV_IDE_SWARM from ide/Kconfig while at it ]
