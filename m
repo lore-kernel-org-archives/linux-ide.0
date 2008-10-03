@@ -1,65 +1,90 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [PATCH 3/3] ide-cd: shorten ide_cd_request_sense_fixup's param list
-Date: Fri, 3 Oct 2008 19:29:23 +0200
-Message-ID: <200810031929.24291.bzolnier@gmail.com>
-References: <1222669799-6565-1-git-send-email-petkovbb@gmail.com> <1222669799-6565-4-git-send-email-petkovbb@gmail.com>
+Subject: Re: Bug 11602
+Date: Fri, 3 Oct 2008 18:38:41 +0200
+Message-ID: <200810031838.41337.bzolnier@gmail.com>
+References: <20080922045859.GA30163@gollum.tnic> <200809271939.52785.bzolnier@gmail.com> <20080927191044.GB11672@gollum.tnic>
 Mime-Version: 1.0
 Content-Type: text/plain;
-  charset="utf-8"
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1754768AbYJCRo3@vger.kernel.org>
-In-Reply-To: <1222669799-6565-4-git-send-email-petkovbb@gmail.com>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from gv-out-0910.google.com ([216.239.58.191]:31658 "EHLO
+	gv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753213AbYJCRna (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 3 Oct 2008 13:43:30 -0400
+Received: by gv-out-0910.google.com with SMTP id e6so296255gvc.37
+        for <linux-ide@vger.kernel.org>; Fri, 03 Oct 2008 10:43:28 -0700 (PDT)
+In-Reply-To: <20080927191044.GB11672@gollum.tnic>
 Content-Disposition: inline
-Sender: linux-kernel-owner@vger.kernel.org
-To: Borislav Petkov <petkovbb@googlemail.com>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Borislav Petkov <petkovbb@gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: petkovbb@gmail.com
+Cc: Jens Axboe <jens.axboe@oracle.com>, linux-ide@vger.kernel.org
 
-On Monday 29 September 2008, Borislav Petkov wrote:
-> ... since HWGROUP(drive)->rq points to the same rq as in the irq handler. While
 
-Since we already have obtained rq pointer why not pass it to the helper
-function instead of having the helper function waste cycles on it?
+[ added linux-ide@ to cc: ]
 
-Moreover it results in slightly bigger code...
-
-> at it, remove stale comment.
-
-I applied this part only.
-
-> There should be no functionality change resulting from this patch.
+On Saturday 27 September 2008, Borislav Petkov wrote:
+> > so just a minor nitpicks and I could have applied it now
+> > (since I see in bugzilla that it has been successfully tested)
+> > except that it completely lacks the patch description...
+> 
+> Here we go:
+> 
+> ---
+> From: Borislav Petkov <petkovbb@gmail.com>
+> Date: Thu, 25 Sep 2008 07:57:07 +0200
+> Subject: [PATCH] ide-cd: temporary tray close fix
+> 
+> This one fixes http://bugzilla.kernel.org/show_bug.cgi?id=11602. A more generic fix
+> for drives which cannot autoclose tray will follow.
 > 
 > Signed-off-by: Borislav Petkov <petkovbb@gmail.com>
+
+applied, thanks!
+
 > ---
->  drivers/ide/ide-cd.c |    9 ++++-----
->  1 files changed, 4 insertions(+), 5 deletions(-)
+>  drivers/ide/ide-cd.c |    5 ++++-
+>  include/linux/ide.h  |    3 ++-
+>  2 files changed, 6 insertions(+), 2 deletions(-)
 > 
 > diff --git a/drivers/ide/ide-cd.c b/drivers/ide/ide-cd.c
-> index e41b94d..bf92cd6 100644
+> index 49a8c58..a3198f6 100644
 > --- a/drivers/ide/ide-cd.c
 > +++ b/drivers/ide/ide-cd.c
-> @@ -843,12 +843,11 @@ static void ide_cd_restore_request(ide_drive_t *drive, struct request *rq)
->  	rq->q->prep_rq_fn(rq->q, rq);
->  }
+> @@ -1661,7 +1661,9 @@ static int ide_cdrom_probe_capabilities(ide_drive_t *drive)
+>  		cdi->mask &= ~CDC_PLAY_AUDIO;
 >  
-> -/*
-> - * All other packet commands.
-> - */
-> -static void ide_cd_request_sense_fixup(ide_drive_t *drive, struct request *rq)
-> +static void ide_cd_request_sense_fixup(ide_drive_t *drive)
->  {
+>  	mechtype = buf[8 + 6] >> 5;
+> -	if (mechtype == mechtype_caddy || mechtype == mechtype_popup)
+> +	if (mechtype == mechtype_caddy ||
+> +	    mechtype == mechtype_popup ||
+> +	    drive->atapi_flags & IDE_AFLAG_NO_AUTOCLOSE)
+
+I added an extra parentheses for consistency with the rest of kernel code
+
+>  		cdi->mask |= CDC_CLOSE_TRAY;
 >  
-> +	struct request *rq = HWGROUP(drive)->rq;
-> +
->  	ide_debug_log(IDE_DBG_FUNC, "Call %s, rq->cmd[0]: 0x%x\n",
->  		      __func__, rq->cmd[0]);
+>  	if (cdi->sanyo_slot > 0) {
+> @@ -1859,6 +1861,7 @@ static const struct cd_list_entry ide_cd_quirks_list[] = {
+>  	{ "MATSHITADVD-ROM SR-8176", NULL,   IDE_AFLAG_PLAY_AUDIO_OK	     },
+>  	{ "MATSHITADVD-ROM SR-8174", NULL,   IDE_AFLAG_PLAY_AUDIO_OK	     },
+>  	{ "Optiarc DVD RW AD-5200A", NULL,   IDE_AFLAG_PLAY_AUDIO_OK	     },
+> +	{ "Optiarc DVD RW AD-7543A", NULL,   IDE_AFLAG_NO_AUTOCLOSE	     },
+>  	{ NULL, NULL, 0 }
+>  };
 >  
-> @@ -1021,7 +1020,7 @@ static ide_startstop_t cdrom_newpc_intr(ide_drive_t *drive)
->  			cdrom_end_request(drive, uptodate);
->  			return ide_stopped;
->  		} else if (!blk_pc_request(rq)) {
-> -			ide_cd_request_sense_fixup(drive, rq);
-> +			ide_cd_request_sense_fixup(drive);
->  			/* complain if we still have data left to transfer */
->  			uptodate = rq->data_len ? 0 : 1;
->  		}
+> diff --git a/include/linux/ide.h b/include/linux/ide.h
+> index 1524829..d0c73f7 100644
+> --- a/include/linux/ide.h
+> +++ b/include/linux/ide.h
+> @@ -366,7 +366,8 @@ enum {
+>  	/* Currently on a filemark */
+>  	IDE_AFLAG_FILEMARK		= (1 << 25),
+>  	/* 0 = no tape is loaded, so we don't rewind after ejecting */
+> -	IDE_AFLAG_MEDIUM_PRESENT	= (1 << 26)
+> +	IDE_AFLAG_MEDIUM_PRESENT	= (1 << 26),
+> +	IDE_AFLAG_NO_AUTOCLOSE		= (1 << 27),
+>  };
+>  
+>  struct ide_drive_s {
