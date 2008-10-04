@@ -1,40 +1,34 @@
 From: "Rafael J. Wysocki" <rjw@sisk.pl>
-Subject: Re: #tj-upstream build fails because system_entering_hibernation is not exported
-Date: Sun, 5 Oct 2008 00:24:31 +0200
-Message-ID: <200810050024.31789.rjw@sisk.pl>
-References: <48E7D49D.4080808@kernel.org> <48E7D72C.9080307@kernel.org>
+Subject: Re: [PATCH 1/6] Hibernation: Introduce system_entering_hibernation
+Date: Sun, 5 Oct 2008 00:30:17 +0200
+Message-ID: <200810050030.18814.rjw@sisk.pl>
+References: <200808290002.55026.rjw@sisk.pl> <20081004225008.2cc08201@lxorguk.ukuu.org.uk> <48E7E5B1.8010101@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
-  charset="utf-8"
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ogre.sisk.pl ([217.79.144.158]:45484 "EHLO ogre.sisk.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753660AbYJDWUd (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 4 Oct 2008 18:20:33 -0400
-In-Reply-To: <48E7D72C.9080307@kernel.org>
+Return-path: <linux-acpi-owner@vger.kernel.org>
+In-Reply-To: <48E7E5B1.8010101@gmail.com>
 Content-Disposition: inline
-Sender: linux-ide-owner@vger.kernel.org
+Sender: linux-acpi-owner@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, Andrew Morton <akpm@linux-foundation.org>, Jeff Garzik <jeff@garzik.org>, ACPI Devel Maling List <linux-acpi@vger.kernel.org>, linux-ide@vger.kernel.org, Thomas Renninger <trenn@suse.de>, Robert Hancock <hancockr@shaw.ca>, LKML <linux-kernel@vger.kernel.org>, Frans Pop <elendil@planet.nl>, Maciej Rutecki <maciej.rutecki@gmail.com>
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: IDE/ATA development list <linux-ide@vger.kernel.org>
 
 On Saturday, 4 of October 2008, Tejun Heo wrote:
-> Tejun Heo wrote:
-> > Hello, Rafael.
+> Alan Cox wrote:
+> >> Hm, I'm not sure what you mean exactly, but the point is to blacklist the
+> >> on-board controllers only and a devfn of the controller is needed for that,
+> >> or a part of it (like the slot number I'm using).  Could that be done above
+> >> the driver level?
 > > 
-> > #tj-upstream fails to build with the following message.
-> > 
-> > ERROR: "system_entering_hibernation" [drivers/ata/libata.ko] undefined!
+> > It can be done in one place via the libata core code I think rather than
+> > in each driver. Might need to be a helper function but you'd at least
+> > remove all the duplication.
 > 
-> Okay, I just added EXPORT_SYMBOL_GPL() right below the function body and
-> rebased #tj-upstream.  Is that okay?
+> I think it's better to keep the list in each LLD but having a helper in
+> libata-core would be nice.
 
-Yes, it is, thanks for fixing.
-
-I wonder why it didn't show up for me, though.  Most likely, because I tend to
-compile libata in.
-
-[Note to self: test allmodconfig compilation sometimes.]
+Well, I can try to introduce one in a future patch.  Will that be OK?
 
 Rafael
