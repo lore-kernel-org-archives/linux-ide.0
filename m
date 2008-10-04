@@ -1,34 +1,43 @@
 From: "Rafael J. Wysocki" <rjw@sisk.pl>
 Subject: Re: [PATCH 1/6] Hibernation: Introduce system_entering_hibernation
-Date: Sat, 4 Oct 2008 12:13:21 +0200
-Message-ID: <200810041213.22249.rjw@sisk.pl>
-References: <200808290002.55026.rjw@sisk.pl> <200810032351.46869.rjw@sisk.pl> <20081004002724.47fab174@lxorguk.ukuu.org.uk>
+Date: Sat, 4 Oct 2008 12:14:08 +0200
+Message-ID: <200810041214.09680.rjw@sisk.pl>
+References: <200808290002.55026.rjw@sisk.pl> <200810032351.46869.rjw@sisk.pl> <48E71514.90505@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
   charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ogre.sisk.pl ([217.79.144.158]:43060 "EHLO ogre.sisk.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752179AbYJDKJJ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 4 Oct 2008 06:09:09 -0400
-In-Reply-To: <20081004002724.47fab174@lxorguk.ukuu.org.uk>
+Return-path: <linux-acpi-owner@vger.kernel.org>
+In-Reply-To: <48E71514.90505@gmail.com>
 Content-Disposition: inline
-Sender: linux-ide-owner@vger.kernel.org
+Sender: linux-acpi-owner@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Jeff Garzik <jeff@garzik.org>, ACPI Devel Maling List <linux-acpi@vger.kernel.org>, linux-ide@vger.kernel.org, Thomas Renninger <trenn@suse.de>, Robert Hancock <hancockr@shaw.ca>, LKML <linux-kernel@vger.kernel.org>, Frans Pop <elendil@planet.nl>, Maciej Rutecki <maciej.rutecki@gmail.com>
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Jeff Garzik <jeff@garzik.org>, Tejun Heo <htejun@gmail.com>, ACPI Devel Maling List <linux-acpi@vger.kernel.org>, linux-ide@vger.kernel.org, Thomas Renninger <trenn@suse.de>, Robert Hancock <hancockr@shaw.ca>, LKML <linux-kernel@vger.kernel.org>, Frans Pop <elendil@planet.nl>, Maciej Rutecki <maciej.rutecki@gmail.com>
 
-On Saturday, 4 of October 2008, Alan Cox wrote:
+On Saturday, 4 of October 2008, Tejun Heo wrote:
+> Rafael J. Wysocki wrote:
+> > From: Rafael J. Wysocki <rjw@sisk.pl>
+> > 
+> > Hibernation: Introduce system_entering_hibernation
+> > 
+> > Introduce boolean function system_entering_hibernation() returning
+> > 'true' during the last phase of hibernation, in which devices are
+> > being put into low power states and the sleep state (for example,
+> > ACPI S4) is finally entered.
+> > 
+> > Some device drivers need such a function to check if the system is
 > > in the final phase of hibernation.  In particular, some SATA drivers
 > > are going to use it for blacklisting systems in which the disks
 > > should not be spun down during the last phase of hibernation (the
 > > BIOS will do that anyway).
+> > 
+> > Signed-off-by: Rafael J. Wysocki <rjw@sisk.pl>
 > 
-> If you added the PCI ids for the controller to your tables you could
-> implement this series once instead of in multiple drivers
+> applied 1-6 to tj-upstream
+> 
+>   git://git.kernel.org/pub/scm/linux/kernel/git/tj/libata-dev.git tj-upstream
+>   http://git.kernel.org/?p=linux/kernel/git/tj/libata-dev.git;a=shortlog;h=tj-upstream
 
-Hm, I'm not sure what you mean exactly, but the point is to blacklist the
-on-board controllers only and a devfn of the controller is needed for that,
-or a part of it (like the slot number I'm using).  Could that be done above
-the driver level?
+Thanks a lot,
+Rafael
