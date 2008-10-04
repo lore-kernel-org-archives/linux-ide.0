@@ -1,50 +1,32 @@
-From: bugme-daemon@bugzilla.kernel.org
-Subject: [Bug 11697] New: CD tray closes spontaneously after opening it
-Date: Sat,  4 Oct 2008 11:19:23 -0700 (PDT)
-Message-ID: <bug-11697-11633@http.bugzilla.kernel.org/>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: libata: Fix a potential race condition in ata_scsi_park_show()
+Date: Sun, 05 Oct 2008 05:17:40 +0900
+Message-ID: <48E7CF64.4050206@kernel.org>
+References: <87prmgzohf.fsf@denkblock.local>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:59315 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752409AbYJDSTx (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 4 Oct 2008 14:19:53 -0400
-Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
-	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id m94IJNPO004673
-	for <linux-ide@vger.kernel.org>; Sat, 4 Oct 2008 11:19:24 -0700
+Received: from hera.kernel.org ([140.211.167.34]:39846 "EHLO hera.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754835AbYJDUTk (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 4 Oct 2008 16:19:40 -0400
+In-Reply-To: <87prmgzohf.fsf@denkblock.local>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Elias Oltmanns <eo@nebensachen.de>
+Cc: Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org
 
-http://bugzilla.kernel.org/show_bug.cgi?id=11697
+Elias Oltmanns wrote:
+> Peter Moulder has pointed out that there is a slight chance that a
+> negative value might be passed to jiffies_to_msecs() in
+> ata_scsi_park_show(). This is fixed by saving the value of jiffies in a
+> local variable, thus also reducing code since the volatile variable
+> jiffies is accessed only once.
+> 
+> Signed-off-by: Elias Oltmanns <eo@nebensachen.de>
 
-           Summary: CD tray closes spontaneously after opening it
-           Product: IO/Storage
-           Version: 2.5
-     KernelVersion: 2.6.27-rc
-          Platform: All
-        OS/Version: Linux
-              Tree: Mainline
-            Status: NEW
-          Severity: normal
-          Priority: P1
-         Component: IDE
-        AssignedTo: io_ide@kernel-bugs.osdl.org
-        ReportedBy: rjw@sisk.pl
-OtherBugsDependingO 11167
-             nThis:
-        Regression: 1
-
-
-Subject    : CD tray closes spontaneously after opening it
-Submitter  : Frans Pop <elendil@planet.nl>
-Date       : 2008-09-30 10:47
-References : http://marc.info/?l=linux-kernel&m=122277167125264&w=4
-Handled-By : "Kay Sievers" <kay.sievers@vrfy.org>
-
-This entry is being used for tracking a regression from 2.6.26.  Please don't
-close it until the problem is fixed in the mainline.
-
+added to #tj-upstream.  Thanks.
 
 -- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug, or are watching the assignee.
+tejun
