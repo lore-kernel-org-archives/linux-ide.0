@@ -1,30 +1,39 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [PATCH 1/6] Hibernation: Introduce system_entering_hibernation
-Date: Sat, 4 Oct 2008 00:27:24 +0100
-Message-ID: <20081004002724.47fab174@lxorguk.ukuu.org.uk>
-References: <200808290002.55026.rjw@sisk.pl>
-	<200810031703.32114.rjw@sisk.pl>
-	<200810032348.59709.rjw@sisk.pl>
-	<200810032351.46869.rjw@sisk.pl>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: exception Emask 0x0 SAct 0x1 / SErr 0x0 action 0x2 frozen
+Date: Sat, 04 Oct 2008 11:27:13 +0900
+Message-ID: <48E6D481.7050407@kernel.org>
+References: <3E6D0C24877245C3A5A327129A7B4CA7@909927SOSLA>  <alpine.DEB.1.10.0809220828490.23159@p34.internal.lan>  <5419A02543384E69AF2BA82FF6E66C14@909927SOSLA>  <alpine.DEB.1.10.0809220903400.23159@p34.internal.lan>  <4B1ABD0393EF40FFB0A12242FE8356AF@909927SOSLA>  <alpine.DEB.1.10.0809220915470.23159@p34.internal.lan>  <alpine.DEB.1.10.0809220926240.23159@p34.internal.lan>  <e7510f760809231114y6cbaf13aqf7c63bd48a73c978@mail.gmail.com>  <48DBAB81.8050900@tmr.com> <48E08E2D.6050905@kernel.org> <a52a95e30809301347s70b57ebfh280a6871329afd72@mail.gmail.com> <alpine.DEB.1.10.0809301715280.14600@p34.internal.lan> <alpine.LNX.2.00.0809301946020.16014@filesrv1.baby-dragons.com> <alpine.DEB.1.10.0810010403500.16900@p34.internal.lan> <alpine.DEB.1.10.0810010710520.22435@p34.internal.lan>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:45280 "EHLO
-	lxorguk.ukuu.org.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1753878AbYJCX2O (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 3 Oct 2008 19:28:14 -0400
-In-Reply-To: <200810032351.46869.rjw@sisk.pl>
+Received: from hera.kernel.org ([140.211.167.34]:43945 "EHLO hera.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751939AbYJDC3h (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 3 Oct 2008 22:29:37 -0400
+In-Reply-To: <alpine.DEB.1.10.0810010710520.22435@p34.internal.lan>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Jeff Garzik <jeff@garzik.org>, Tejun Heo <htejun@gmail.com>, ACPI Devel Maling List <linux-acpi@vger.kernel.org>, linux-ide@vger.kernel.org, Thomas Renninger <trenn@suse.de>, Robert Hancock <hancockr@shaw.ca>, LKML <linux-kernel@vger.kernel.org>, Frans Pop <elendil@planet.nl>, Maciej Rutecki <maciej.rutecki@gmail.com>
+To: Justin Piszcz <jpiszcz@lucidpixels.com>
+Cc: "Mr. James W. Laferriere" <babydr@baby-dragons.com>, Tom Mortensen <tmmlkml@gmail.com>, Bill Davidsen <davidsen@tmr.com>, Gwendal Grignou <gwendal@google.com>, Brian Rademacher <rad@radfiles.net>, linux-ide@vger.kernel.org, linux-raid maillist <linux-raid@vger.kernel.org>, Linux Kernel Maillist <linux-kernel@vger.kernel.org>, Bruce Allen <ballen@gravity.phys.uwm.edu>
 
-> in the final phase of hibernation.  In particular, some SATA drivers
-> are going to use it for blacklisting systems in which the disks
-> should not be spun down during the last phase of hibernation (the
-> BIOS will do that anyway).
+Justin Piszcz wrote:
+> [469680.004654] ata2.00: status: { DRDY }
+> [469680.004660] ata2: hard resetting link
+> [469680.309567] ata2: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+> [469680.333461] ata2.00: configured for UDMA/133
+> [469680.333477] ata2: EH complete
+> [469680.333461] sd 1:0:0:0: [sdb] 586072368 512-byte hardware sectors
+> (300069 MB)
+> [469680.340461] sd 1:0:0:0: [sdb] Write Protect is off
+> [469680.340461] sd 1:0:0:0: [sdb] Mode Sense: 00 3a 00 00
+> [469680.345461] sd 1:0:0:0: [sdb] Write cache: enabled, read cache:
+> enabled, doesn't support DPO or FUA
 
-If you added the PCI ids for the controller to your tables you could
-implement this series once instead of in multiple drivers
+You're leaving the good part out.  Please always attach full kernel
+log.
 
+Thanks.
+
+-- 
+tejun
