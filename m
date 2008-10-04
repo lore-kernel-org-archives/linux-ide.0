@@ -1,52 +1,56 @@
 From: Borislav Petkov <petkovbb@googlemail.com>
-Subject: Re: [PATCH 2/3] ide-cd: small drive type print fix
-Date: Sat, 4 Oct 2008 10:28:28 +0200
-Message-ID: <20081004082827.GA4160@gollum.tnic>
-References: <1222669799-6565-1-git-send-email-petkovbb@gmail.com> <1222669799-6565-3-git-send-email-petkovbb@gmail.com> <200810031918.15455.bzolnier@gmail.com>
+Subject: Bug 11581
+Date: Sat, 4 Oct 2008 11:12:32 +0200
+Message-ID: <20081004091232.GB4160@gollum.tnic>
 Reply-To: petkovbb@gmail.com
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.152]:54666 "EHLO
+Received: from fg-out-1718.google.com ([72.14.220.157]:7366 "EHLO
 	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751529AbYJDI2f (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 4 Oct 2008 04:28:35 -0400
-Received: by fg-out-1718.google.com with SMTP id 19so1304085fgg.17
-        for <linux-ide@vger.kernel.org>; Sat, 04 Oct 2008 01:28:33 -0700 (PDT)
+	with ESMTP id S1751793AbYJDJMk (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 4 Oct 2008 05:12:40 -0400
+Received: by fg-out-1718.google.com with SMTP id 19so1311302fgg.17
+        for <linux-ide@vger.kernel.org>; Sat, 04 Oct 2008 02:12:38 -0700 (PDT)
 Content-Disposition: inline
-In-Reply-To: <200810031918.15455.bzolnier@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: Santiago Vila <sanvila@unex.es>
+Cc: bzolnier@gmail.com, axboe@kernel.dk, linux-ide@vger.kernel.org
 
-On Fri, Oct 03, 2008 at 07:18:15PM +0200, Bartlomiej Zolnierkiewicz wrote:
-> On Monday 29 September 2008, Borislav Petkov wrote:
-> > Signed-off-by: Borislav Petkov <petkovbb@gmail.com>
-> 
-> applied (though I fail to see "an added value" of this change)
+Hi,
 
-It simply makes the format consistent with the lines below: CD-R/RW - which is
-the more common way of enumerating supported media you find in different specs
-than DVD-R-RAM, don't you think?
+can you please apply the following revised inquiry patch and send me your dmesg
+so that we get more info on what exactly triggers that begavior with your drive?
 
-> > ---
-> >  drivers/ide/ide-cd.c |    2 +-
-> >  1 files changed, 1 insertions(+), 1 deletions(-)
-> > 
-> > diff --git a/drivers/ide/ide-cd.c b/drivers/ide/ide-cd.c
-> > index 9ffce7f..e41b94d 100644
-> > --- a/drivers/ide/ide-cd.c
-> > +++ b/drivers/ide/ide-cd.c
-> > @@ -1784,7 +1784,7 @@ static int ide_cdrom_probe_capabilities(ide_drive_t *drive)
-> >  	if ((cdi->mask & CDC_DVD_R) == 0 || (cdi->mask & CDC_DVD_RAM) == 0)
-> >  		printk(KERN_CONT " DVD%s%s",
-> >  				 (cdi->mask & CDC_DVD_R) ? "" : "-R",
-> > -				 (cdi->mask & CDC_DVD_RAM) ? "" : "-RAM");
-> > +				 (cdi->mask & CDC_DVD_RAM) ? "" : "/RAM");
-> >  
-> >  	if ((cdi->mask & CDC_CD_R) == 0 || (cdi->mask & CDC_CD_RW) == 0)
-> >  		printk(KERN_CONT " CD%s%s",
+Thanks.
+
+---
+ drivers/ide/ide-cd.c |    9 +++++++++
+ 1 files changed, 9 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/ide/ide-cd.c b/drivers/ide/ide-cd.c
+index 1f2df24..d5106d0 100644
+--- a/drivers/ide/ide-cd.c
++++ b/drivers/ide/ide-cd.c
+@@ -1329,6 +1329,15 @@ static ide_startstop_t ide_cd_do_request(ide_drive_t *drive, struct request *rq,
+ 		if (!rq->timeout)
+ 			rq->timeout = ATAPI_WAIT_PC;
+ 
++		if (blk_pc_request(rq)) {
++			printk(KERN_ERR "Sending BLOCK_PC to drive! Fixed.\n");
++			blk_dump_rq_flags(rq, "Original rq: ");
++			printk(KERN_ERR "rq->cmd_len: %d\n", rq->cmd_len);
++			rq->cmd_type = REQ_TYPE_ATA_PC;
++
++			dump_stack();
++		}
++
+ 		cdrom_do_block_pc(drive, rq);
+ 	} else if (blk_special_request(rq)) {
+ 		/* right now this can only be a reset... */
+-- 
+1.5.5.4
 
 -- 
 Regards/Gruss,
