@@ -1,57 +1,56 @@
-From: Borislav Petkov <petkovbb@googlemail.com>
-Subject: Bug 11581
-Date: Sat, 4 Oct 2008 11:12:32 +0200
-Message-ID: <20081004091232.GB4160@gollum.tnic>
-Reply-To: petkovbb@gmail.com
+From: Elias Oltmanns <eo@nebensachen.de>
+Subject: libata: Fix a potential race condition in ata_scsi_park_show()
+Date: Sat, 04 Oct 2008 11:41:32 +0200
+Message-ID: <87prmgzohf.fsf@denkblock.local>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.157]:7366 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751793AbYJDJMk (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 4 Oct 2008 05:12:40 -0400
-Received: by fg-out-1718.google.com with SMTP id 19so1311302fgg.17
-        for <linux-ide@vger.kernel.org>; Sat, 04 Oct 2008 02:12:38 -0700 (PDT)
-Content-Disposition: inline
+Received: from nebensachen.de ([195.34.83.29]:41256 "EHLO mail.nebensachen.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752214AbYJDJlo (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 4 Oct 2008 05:41:44 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Santiago Vila <sanvila@unex.es>
-Cc: bzolnier@gmail.com, axboe@kernel.dk, linux-ide@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>, Tejun Heo <tj@kernel.org>
+Cc: linux-ide@vger.kernel.org
 
-Hi,
+Peter Moulder has pointed out that there is a slight chance that a
+negative value might be passed to jiffies_to_msecs() in
+ata_scsi_park_show(). This is fixed by saving the value of jiffies in a
+local variable, thus also reducing code since the volatile variable
+jiffies is accessed only once.
 
-can you please apply the following revised inquiry patch and send me your dmesg
-so that we get more info on what exactly triggers that begavior with your drive?
-
-Thanks.
-
+Signed-off-by: Elias Oltmanns <eo@nebensachen.de>
 ---
- drivers/ide/ide-cd.c |    9 +++++++++
- 1 files changed, 9 insertions(+), 0 deletions(-)
+Applies to your upstream branch.
 
-diff --git a/drivers/ide/ide-cd.c b/drivers/ide/ide-cd.c
-index 1f2df24..d5106d0 100644
---- a/drivers/ide/ide-cd.c
-+++ b/drivers/ide/ide-cd.c
-@@ -1329,6 +1329,15 @@ static ide_startstop_t ide_cd_do_request(ide_drive_t *drive, struct request *rq,
- 		if (!rq->timeout)
- 			rq->timeout = ATAPI_WAIT_PC;
+ drivers/ata/libata-scsi.c |    7 ++++---
+ 1 files changed, 4 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+index fccd5e4..e1f916f 100644
+--- a/drivers/ata/libata-scsi.c
++++ b/drivers/ata/libata-scsi.c
+@@ -190,7 +190,7 @@ static ssize_t ata_scsi_park_show(struct device *device,
+ 	struct ata_port *ap;
+ 	struct ata_link *link;
+ 	struct ata_device *dev;
+-	unsigned long flags;
++	unsigned long flags, now;
+ 	unsigned int uninitialized_var(msecs);
+ 	int rc = 0;
  
-+		if (blk_pc_request(rq)) {
-+			printk(KERN_ERR "Sending BLOCK_PC to drive! Fixed.\n");
-+			blk_dump_rq_flags(rq, "Original rq: ");
-+			printk(KERN_ERR "rq->cmd_len: %d\n", rq->cmd_len);
-+			rq->cmd_type = REQ_TYPE_ATA_PC;
-+
-+			dump_stack();
-+		}
-+
- 		cdrom_do_block_pc(drive, rq);
- 	} else if (blk_special_request(rq)) {
- 		/* right now this can only be a reset... */
--- 
-1.5.5.4
-
--- 
-Regards/Gruss,
-    Boris.
+@@ -208,10 +208,11 @@ static ssize_t ata_scsi_park_show(struct device *device,
+ 	}
+ 
+ 	link = dev->link;
++	now = jiffies;
+ 	if (ap->pflags & ATA_PFLAG_EH_IN_PROGRESS &&
+ 	    link->eh_context.unloaded_mask & (1 << dev->devno) &&
+-	    time_after(dev->unpark_deadline, jiffies))
+-		msecs = jiffies_to_msecs(dev->unpark_deadline - jiffies);
++	    time_after(dev->unpark_deadline, now))
++		msecs = jiffies_to_msecs(dev->unpark_deadline - now);
+ 	else
+ 		msecs = 0;
+ 
