@@ -1,56 +1,115 @@
 From: Elias Oltmanns <eo@nebensachen.de>
-Subject: libata: Fix a potential race condition in ata_scsi_park_show()
-Date: Sat, 04 Oct 2008 11:41:32 +0200
-Message-ID: <87prmgzohf.fsf@denkblock.local>
+Subject: Re: [PATCH 3/4 v2] ide: Implement disk shock protection support
+Date: Sat, 04 Oct 2008 11:44:35 +0200
+Message-ID: <87fxnczocc.fsf@denkblock.local>
+References: <87d4j2n3dn.fsf@denkblock.local>
+	<20080917163144.9870.59732.stgit@denkblock.local>
+	<200809181624.54248.bzolnier@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nebensachen.de ([195.34.83.29]:41256 "EHLO mail.nebensachen.de"
+Received: from nebensachen.de ([195.34.83.29]:41497 "EHLO mail.nebensachen.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752214AbYJDJlo (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 4 Oct 2008 05:41:44 -0400
+	id S1752173AbYJDJol (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 4 Oct 2008 05:44:41 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>, Tejun Heo <tj@kernel.org>
-Cc: linux-ide@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Peter Moulder has pointed out that there is a slight chance that a
-negative value might be passed to jiffies_to_msecs() in
-ata_scsi_park_show(). This is fixed by saving the value of jiffies in a
-local variable, thus also reducing code since the volatile variable
-jiffies is accessed only once.
+Bartlomiej Zolnierkiewicz <bzolnier@gmail.com> wrote:
+> On Wednesday 17 September 2008 09:38:37 Elias Oltmanns wrote:
+>> On user request (through sysfs), the IDLE IMMEDIATE command with UNLOAD
+>
+>> FEATURE as specified in ATA-7 is issued to the device and processing of
+>> the request queue is stopped thereafter until the specified timeout
+>> expires or user space asks to resume normal operation. This is supposed
+>> to prevent the heads of a hard drive from accidentally crashing onto the
+>> platter when a heavy shock is anticipated (like a falling laptop expected
+>> to hit the floor). Port resets are deferred whenever a device on that
+>> port is in the parked state.
+>> 
+>> Signed-off-by: Elias Oltmanns <eo@nebensachen.de>
+>
+> applied
+
+Hi Bart,
+
+may I ask you to apply yet another inter-diff? This is in order to
+address three issues:
+
+1. Make sure that no negative value is being passed to
+   jiffies_to_msecs() in ide_park_show().
+2. Drop the superfluous variable hwif in ide_special_rq().
+3. Skip initialisation of task and tf in ide_special_rq() if we are not
+   handling a (un)park request.
+
+#1 and #3 have been suggested to me by Peter Moulder off-list.
+
+Regards,
+
+Elias
 
 Signed-off-by: Elias Oltmanns <eo@nebensachen.de>
 ---
-Applies to your upstream branch.
-
- drivers/ata/libata-scsi.c |    7 ++++---
- 1 files changed, 4 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-index fccd5e4..e1f916f 100644
---- a/drivers/ata/libata-scsi.c
-+++ b/drivers/ata/libata-scsi.c
-@@ -190,7 +190,7 @@ static ssize_t ata_scsi_park_show(struct device *device,
- 	struct ata_port *ap;
- 	struct ata_link *link;
- 	struct ata_device *dev;
--	unsigned long flags;
-+	unsigned long flags, now;
- 	unsigned int uninitialized_var(msecs);
- 	int rc = 0;
+diff --git a/drivers/ide/ide-io.c b/drivers/ide/ide-io.c
+index 09d10a5..1f5948e 100644
+--- a/drivers/ide/ide-io.c
++++ b/drivers/ide/ide-io.c
+@@ -672,12 +672,16 @@ EXPORT_SYMBOL_GPL(ide_devset_execute);
  
-@@ -208,10 +208,11 @@ static ssize_t ata_scsi_park_show(struct device *device,
+ static ide_startstop_t ide_special_rq(ide_drive_t *drive, struct request *rq)
+ {
+-	ide_hwif_t *hwif = drive->hwif;
+ 	ide_task_t task;
+-	struct ide_taskfile *tf = &task.tf;
++	struct ide_taskfile *tf;
++	u8 cmd = rq->cmd[0];
+ 
+-	memset(&task, 0, sizeof(task));
+-	switch (rq->cmd[0]) {
++	if (cmd == REQ_PARK_HEADS || cmd == REQ_UNPARK_HEADS) {
++		memset(&task, 0, sizeof(task));
++		tf = &task.tf;
++	}
++
++	switch (cmd) {
+ 	case REQ_PARK_HEADS:
+ 		drive->sleep = *(unsigned long *)rq->special;
+ 		drive->dev_flags |= IDE_DFLAG_SLEEPING;
+@@ -710,9 +714,10 @@ static ide_startstop_t ide_special_rq(ide_drive_t *drive, struct request *rq)
+ 		ide_end_request(drive, 0, 0);
+ 		return ide_stopped;
  	}
++
+ 	task.tf_flags |= IDE_TFLAG_TF | IDE_TFLAG_DEVICE;
+ 	task.rq = rq;
+-	hwif->data_phase = task.data_phase = TASKFILE_NO_DATA;
++	drive->hwif->data_phase = task.data_phase = TASKFILE_NO_DATA;
+ 	return do_rw_taskfile(drive, &task);
+ }
  
- 	link = dev->link;
+diff --git a/drivers/ide/ide-park.c b/drivers/ide/ide-park.c
+index 35fc3ee..02d7e35 100644
+--- a/drivers/ide/ide-park.c
++++ b/drivers/ide/ide-park.c
+@@ -61,15 +61,17 @@ ssize_t ide_park_show(struct device *dev, struct device_attribute *attr,
+ 		      char *buf)
+ {
+ 	ide_drive_t *drive = to_ide_device(dev);
++	unsigned long now;
+ 	unsigned int msecs;
+ 
+ 	if (drive->dev_flags & IDE_DFLAG_NO_UNLOAD)
+ 		return -EOPNOTSUPP;
+ 
+ 	spin_lock_irq(&ide_lock);
 +	now = jiffies;
- 	if (ap->pflags & ATA_PFLAG_EH_IN_PROGRESS &&
- 	    link->eh_context.unloaded_mask & (1 << dev->devno) &&
--	    time_after(dev->unpark_deadline, jiffies))
--		msecs = jiffies_to_msecs(dev->unpark_deadline - jiffies);
-+	    time_after(dev->unpark_deadline, now))
-+		msecs = jiffies_to_msecs(dev->unpark_deadline - now);
+ 	if (drive->dev_flags & IDE_DFLAG_PARKED &&
+-	    time_after(drive->sleep, jiffies))
+-		msecs = jiffies_to_msecs(drive->sleep - jiffies);
++	    time_after(drive->sleep, now))
++		msecs = jiffies_to_msecs(drive->sleep - now);
  	else
  		msecs = 0;
- 
+ 	spin_unlock_irq(&ide_lock);
