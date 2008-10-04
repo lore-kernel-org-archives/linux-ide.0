@@ -1,74 +1,150 @@
-From: Borislav Petkov <petkovbb@googlemail.com>
-Subject: Re: New CD/DVD reports 'Can Play Audio    NO'
-Date: Sat, 4 Oct 2008 15:41:30 +0200
-Message-ID: <20081004134130.GA17429@gollum.tnic>
-References: <bjbMi-2A6-1@gated-at.bofh.it> <E1Km5HY-0001Yj-Gx@be1.7eggert.dyndns.org>
-Reply-To: petkovbb@gmail.com
+From: Elias Oltmanns <eo@nebensachen.de>
+Subject: Re: [PATCH 3/4 v2] ide: Implement disk shock protection support
+Date: Sat, 04 Oct 2008 15:49:25 +0200
+Message-ID: <87d4igqxlm.fsf@denkblock.local>
+References: <87d4j2n3dn.fsf@denkblock.local>
+	<20080917163144.9870.59732.stgit@denkblock.local>
+	<200809181624.54248.bzolnier@gmail.com>
+	<87fxnczocc.fsf@denkblock.local>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.154]:27209 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752387AbYJDNli (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 4 Oct 2008 09:41:38 -0400
-Received: by fg-out-1718.google.com with SMTP id 19so1359655fgg.17
-        for <linux-ide@vger.kernel.org>; Sat, 04 Oct 2008 06:41:36 -0700 (PDT)
-Content-Disposition: inline
-In-Reply-To: <E1Km5HY-0001Yj-Gx@be1.7eggert.dyndns.org>
+Received: from nebensachen.de ([195.34.83.29]:37901 "EHLO mail.nebensachen.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752684AbYJDNtc (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 4 Oct 2008 09:49:32 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bodo Eggert <7eggert@gmx.de>
-Cc: Nick Warne <nick@ukfsn.org>, linux-ide@vger.kernel.org, bzolnier@gmail.com
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Sat, Oct 04, 2008 at 01:26:44PM +0200, Bodo Eggert wrote:
-> Nick Warne <nick@ukfsn.org> wrote:
-> 
-> > Very strange issue.  I recently bought a new machine that came with a
-> > CD/DVD burner.  All functions normally, except I cannot play audio CD.
-> > 
-> > Information:
-> > 
-> > Slackware 12.1 running latest stable kernel 2.6.26.5
-> > 
-> > The drive is:
-> > 
-> > Vendor                      : Optiarc
-> > Model                       : DVD RW AD-7200A
-> > Revision                    : 1.06
-> > 
-> > Now, I have another drive (I purchased last year) that could play audio
-> > CD, so I installed that as master, and put the new drive as slave
-> > (old->hda new->hdb).  The old(er) drive can and does play audio OK.
-> > 
-> > I see this in /proc/sys/dev/cdrom/info:
-> 
-> > Can play audio:         0       1
-> 
-> Same as
-> https://bugs.launchpad.net/ubuntu/+source/linux/+bug/186664/comments/9
-> 
-> Please complain to the vendor, so he stops doing this bull*.
-> 
-> Signed-Off-By: Bodo Eggert
-> X-Tested: Not at all
-> 
-> --- linux-2.6.26/drivers/ide/ide-cd.c.ori       2008-10-04 13:21:17.000000000 +0200
-> +++ linux-2.6.26/drivers/ide/ide-cd.c   2008-10-04 13:22:15.000000000 +0200
-> @@ -1842,6 +1842,7 @@ static const struct cd_list_entry ide_cd
->         { "MATSHITADVD-ROM SR-8176", NULL,   IDE_CD_FLAG_PLAY_AUDIO_OK      },
->         { "MATSHITADVD-ROM SR-8174", NULL,   IDE_CD_FLAG_PLAY_AUDIO_OK      },
->         { "Optiarc DVD RW AD-5200A", NULL,   IDE_CD_FLAG_PLAY_AUDIO_OK      },
-> +       { "Optiarc DVD RW AD-7200A", NULL,   IDE_CD_FLAG_PLAY_AUDIO_OK      },
->         { NULL, NULL, 0 }
->  };
+Elias Oltmanns <eo@nebensachen.de> wrote:
+> Bartlomiej Zolnierkiewicz <bzolnier@gmail.com> wrote:
+>> On Wednesday 17 September 2008 09:38:37 Elias Oltmanns wrote:
+>
+>>> On user request (through sysfs), the IDLE IMMEDIATE command with UNLOAD
+>>
+>>> FEATURE as specified in ATA-7 is issued to the device and processing of
+>>> the request queue is stopped thereafter until the specified timeout
+>>> expires or user space asks to resume normal operation. This is supposed
+>>> to prevent the heads of a hard drive from accidentally crashing onto the
+>>> platter when a heavy shock is anticipated (like a falling laptop expected
+>>> to hit the floor). Port resets are deferred whenever a device on that
+>>> port is in the parked state.
+>>> 
+>>> Signed-off-by: Elias Oltmanns <eo@nebensachen.de>
+>>
+>> applied
+>
+> Hi Bart,
+>
+> may I ask you to apply yet another inter-diff? This is in order to
+> address three issues:
+>
+> 1. Make sure that no negative value is being passed to
+>    jiffies_to_msecs() in ide_park_show().
+> 2. Drop the superfluous variable hwif in ide_special_rq().
+> 3. Skip initialisation of task and tf in ide_special_rq() if we are not
+>    handling a (un)park request.
 
-ACK, although I vehemently object all those driver bloating lists of model
-names. I'll think of something better. In the meantime, Bodo do you care to redo
-your patch according to Documentation/SubmittingPatches? E.g. it is missing a
-comment, the Signed-off-by: misses an email address, etc.
+Well, #3 should have been done differently because we donn't want to
+check for REQ_(UN)?PARK_HEADS more often than is necessary. Here is a
+revised version of the inter-diff.
 
-Thanks.
+Regards,
 
--- 
-Regards/Gruss,
-    Boris.
+Elias
+
+
+Signed-off-by: Elias Oltmanns <eo@nebensachen.de>
+---
+diff --git a/drivers/ide/ide-io.c b/drivers/ide/ide-io.c
+index 09d10a5..77c6eae 100644
+--- a/drivers/ide/ide-io.c
++++ b/drivers/ide/ide-io.c
+@@ -672,25 +672,32 @@ EXPORT_SYMBOL_GPL(ide_devset_execute);
+ 
+ static ide_startstop_t ide_special_rq(ide_drive_t *drive, struct request *rq)
+ {
+-	ide_hwif_t *hwif = drive->hwif;
+-	ide_task_t task;
+-	struct ide_taskfile *tf = &task.tf;
++	u8 cmd = rq->cmd[0];
++
++	if (cmd == REQ_PARK_HEADS || cmd == REQ_UNPARK_HEADS) {
++		ide_task_t task;
++		struct ide_taskfile *tf = &task.tf;
++
++		memset(&task, 0, sizeof(task));
++		if (cmd == REQ_PARK_HEADS) {
++			drive->sleep = *(unsigned long *)rq->special;
++			drive->dev_flags |= IDE_DFLAG_SLEEPING;
++			tf->command = ATA_CMD_IDLEIMMEDIATE;
++			tf->feature = 0x44;
++			tf->lbal = 0x4c;
++			tf->lbam = 0x4e;
++			tf->lbah = 0x55;
++			task.tf_flags |= IDE_TFLAG_CUSTOM_HANDLER;
++		} else		/* cmd == REQ_UNPARK_HEADS */
++			tf->command = ATA_CMD_CHK_POWER;
++
++		task.tf_flags |= IDE_TFLAG_TF | IDE_TFLAG_DEVICE;
++		task.rq = rq;
++		drive->hwif->data_phase = task.data_phase = TASKFILE_NO_DATA;
++		return do_rw_taskfile(drive, &task);
++	}
+ 
+-	memset(&task, 0, sizeof(task));
+-	switch (rq->cmd[0]) {
+-	case REQ_PARK_HEADS:
+-		drive->sleep = *(unsigned long *)rq->special;
+-		drive->dev_flags |= IDE_DFLAG_SLEEPING;
+-		tf->command = ATA_CMD_IDLEIMMEDIATE;
+-		tf->feature = 0x44;
+-		tf->lbal = 0x4c;
+-		tf->lbam = 0x4e;
+-		tf->lbah = 0x55;
+-		task.tf_flags |= IDE_TFLAG_CUSTOM_HANDLER;
+-		break;
+-	case REQ_UNPARK_HEADS:
+-		tf->command = ATA_CMD_CHK_POWER;
+-		break;
++	switch (cmd) {
+ 	case REQ_DEVSET_EXEC:
+ 	{
+ 		int err, (*setfunc)(ide_drive_t *, int) = rq->special;
+@@ -710,10 +717,6 @@ static ide_startstop_t ide_special_rq(ide_drive_t *drive, struct request *rq)
+ 		ide_end_request(drive, 0, 0);
+ 		return ide_stopped;
+ 	}
+-	task.tf_flags |= IDE_TFLAG_TF | IDE_TFLAG_DEVICE;
+-	task.rq = rq;
+-	hwif->data_phase = task.data_phase = TASKFILE_NO_DATA;
+-	return do_rw_taskfile(drive, &task);
+ }
+ 
+ static void ide_check_pm_state(ide_drive_t *drive, struct request *rq)
+diff --git a/drivers/ide/ide-park.c b/drivers/ide/ide-park.c
+index 35fc3ee..02d7e35 100644
+--- a/drivers/ide/ide-park.c
++++ b/drivers/ide/ide-park.c
+@@ -61,15 +61,17 @@ ssize_t ide_park_show(struct device *dev, struct device_attribute *attr,
+ 		      char *buf)
+ {
+ 	ide_drive_t *drive = to_ide_device(dev);
++	unsigned long now;
+ 	unsigned int msecs;
+ 
+ 	if (drive->dev_flags & IDE_DFLAG_NO_UNLOAD)
+ 		return -EOPNOTSUPP;
+ 
+ 	spin_lock_irq(&ide_lock);
++	now = jiffies;
+ 	if (drive->dev_flags & IDE_DFLAG_PARKED &&
+-	    time_after(drive->sleep, jiffies))
+-		msecs = jiffies_to_msecs(drive->sleep - jiffies);
++	    time_after(drive->sleep, now))
++		msecs = jiffies_to_msecs(drive->sleep - now);
+ 	else
+ 		msecs = 0;
+ 	spin_unlock_irq(&ide_lock);
