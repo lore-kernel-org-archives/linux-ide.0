@@ -1,108 +1,60 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [sata_mv]: enable FIS Based Switching when a Port Multiplier
- is connected
-Date: Sat, 04 Oct 2008 16:19:57 +0900
-Message-ID: <48E7191D.7030806@kernel.org>
-References: <e7510f760809211336s9b31924x7c243562fd805272@mail.gmail.com>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: sata dvdroms fails to be recognized by MCP55 controller with
+ the 2.6.26.5 kernel
+Date: Sat, 04 Oct 2008 16:27:40 +0900
+Message-ID: <48E71AEC.8020701@gmail.com>
+References: <64630f150809291601w3511febdyc769b8871db75602@mail.gmail.com>	 <20080930170849.52c00228.akpm@linux-foundation.org>	 <48E2E8A1.8090204@gmail.com>	 <64630f150810010131g18c1a00m91b3f68ea29a1067@mail.gmail.com> <64630f150810011601y4e729decq24c614f0b7994f3f@mail.gmail.com> <48E71ACE.4000505@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:38735 "EHLO hera.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751585AbYJDHV1 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 4 Oct 2008 03:21:27 -0400
-In-Reply-To: <e7510f760809211336s9b31924x7c243562fd805272@mail.gmail.com>
+Received: from ti-out-0910.google.com ([209.85.142.190]:33341 "EHLO
+	ti-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751636AbYJDH3H (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 4 Oct 2008 03:29:07 -0400
+Received: by ti-out-0910.google.com with SMTP id b6so910763tic.23
+        for <linux-ide@vger.kernel.org>; Sat, 04 Oct 2008 00:29:05 -0700 (PDT)
+In-Reply-To: <48E71ACE.4000505@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Gwendal Grignou <gwendal@google.com>
-Cc: IDE/ATA development list <linux-ide@vger.kernel.org>
+To: gettinther <gettinther@gmail.com>
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, IDE/ATA development list <linux-ide@vger.kernel.org>
 
-Hello, Gwendal.
+(restoring lkml and linux-ide.  please don't drop cc list)
 
-Patch was line wrapped.  Can you please repost?
-
-Gwendal Grignou wrote:
-> diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-> index 79e3a8e..fcc7ce2 100644
-> --- a/drivers/ata/libata-core.c
-> +++ b/drivers/ata/libata-core.c
-> @@ -4607,8 +4607,11 @@ static void fill_result_tf(struct ata_queued_cmd *qc)
->  {
->  	struct ata_port *ap = qc->ap;
+Tejun Heo wrote:
+> Hello,
 > 
-> -	qc->result_tf.flags = qc->tf.flags;
-> -	ap->ops->qc_fill_rtf(qc);
-> +	if ((qc->flags & ATA_QCFLAG_RTF_VALID) == 0) {
-> +		qc->result_tf.flags = qc->tf.flags;
-> +		qc->flags |= ATA_QCFLAG_RTF_VALID;
-> +		ap->ops->qc_fill_rtf(qc);
-> +	}
->  }
-
-Please separate out RTF_VALID changes into a separate patch and if
-possible please update other LLDs too.  I think I posted RTF_VALID
-patch sometime ago and it probably contains changes for other drivers.
-
->  static void ata_verify_xfer(struct ata_queued_cmd *qc)
-> diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
-> index c1db2f2..b5d753e 100644
-> --- a/drivers/ata/libata-eh.c
-> +++ b/drivers/ata/libata-eh.c
-> @@ -1518,6 +1518,7 @@ void ata_eh_analyze_ncq_error(struct ata_link *link)
->  	memcpy(&qc->result_tf, &tf, sizeof(tf));
->  	qc->result_tf.flags = ATA_TFLAG_ISADDR | ATA_TFLAG_LBA | ATA_TFLAG_LBA48;
->  	qc->err_mask |= AC_ERR_DEV | AC_ERR_NCQ;
-> +	qc->flags |= ATA_QCFLAG_RTF_VALID;
->  	ehc->i.err_mask &= ~AC_ERR_DEV;
->  }
-
-Ditto.
-
-> @@ -1642,23 +1643,24 @@ static void mv_pmp_error_handler(struct ata_port *ap)
->  	struct mv_port_priv *pp = ap->private_data;
+> gettinther wrote:
+>> 00:05.2 IDE interface: GeForce 8800 GT 512 MCP55 SATA Controller (rev
+>> a2) (prog-if 85 [Master SecO PriO])
 > 
->  	if (pp->pp_flags & MV_PP_FLAG_DELAYED_EH) {
-> -		/*
-> -		 * Perform NCQ error analysis on failed PMPs
-> -		 * before we freeze the port entirely.
-> -		 *
-> -		 * The failed PMPs are marked earlier by mv_pmp_eh_prep().
-> -		 */
-> -		pmp_map = pp->delayed_eh_pmp_map;
->  		pp->pp_flags &= ~MV_PP_FLAG_DELAYED_EH;
-> -		for (pmp = 0; pmp_map != 0; pmp++) {
-> -			unsigned int this_pmp = (1 << pmp);
-> -			if (pmp_map & this_pmp) {
-> -				struct ata_link *link = &ap->pmp_link[pmp];
-> -				pmp_map &= ~this_pmp;
-> -				ata_eh_analyze_ncq_error(link);
-> +		if (pp->pp_flags & MV_PP_FLAG_NCQ_EN) {
-> +			/*
-> +			 * Perform NCQ error analysis on failed PMPs
-> +			 * before we freeze the port entirely.
-> +			 *
-> +			 * The failed PMPs are marked earlier by mv_pmp_eh_prep().
-> +			 */
-> +			pmp_map = pp->delayed_eh_pmp_map;
-> +			for (pmp = 0; pmp_map != 0; pmp++) {
-> +				unsigned int this_pmp = (1 << pmp);
-> +				if (pmp_map & this_pmp) {
-> +					struct ata_link *link = &ap->pmp_link[pmp];
-> +					pmp_map &= ~this_pmp;
-> +					ata_eh_analyze_ncq_error(link);
-> +				}
+> Ah.. okay.  MCP55.  I've missed that part in the first message.
+> sata_nv is a bit messed up for 2.6.26.  What happened was...
+> 
+> * During 2.6.26-rc, libata switched to prefer hardreset over softreset
+>   for various reasons.
+> 
+> * After 2.6.26 release, sata_nv generic flavors (MCP55/66) were
+>   reported to have problems probing devices with hardreset.  Hardreset
+>   simply doesn't work.
+> 
+> * Patch posted to disable hardreset for generic but it accidentally
+>   disabled hardreset for all flavors (generic/nf2/3/ck804).
+> 
+> * Which broke ck804.
+> 
+> * Another patch posted to reinstate hardreset for nf2/3 and ck804.
+> 
+> * It somehow mysteriously broke nf2/3.  This is still being
+>   investigated.
+> 
+> Sorry about the mess but I am puzzled too.  I'll report back when I
+> know more.
+> 
+> Thanks.
+> 
 
-I don't have much idea what's going on here but it looks like
-DELAYED_EH clearing is gone.  Is this intended?
-
-I'll try to review deeper on your next posting.  If I can tell it's
-gonna be okay, I'll include it into #tj-upstream.  Don't depend on it
-as I don't know much about sata_mv but Mark will be away for several
-more weeks, so I'll try my best but if I can't tell whether it's okay
-or not I'll put it into a separate branch and push it to #linux-next.
-
-Thanks.
 
 -- 
 tejun
