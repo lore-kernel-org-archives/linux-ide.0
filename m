@@ -1,46 +1,106 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCH 1/6] Hibernation: Introduce system_entering_hibernation
-Date: Sat, 04 Oct 2008 16:02:44 +0900
-Message-ID: <48E71514.90505@gmail.com>
-References: <200808290002.55026.rjw@sisk.pl> <200810031703.32114.rjw@sisk.pl> <200810032348.59709.rjw@sisk.pl> <200810032351.46869.rjw@sisk.pl>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [sata_mv]: enable FIS Based Switching when a Port Multiplier
+ is connected
+Date: Sat, 04 Oct 2008 16:19:57 +0900
+Message-ID: <48E7191D.7030806@kernel.org>
+References: <e7510f760809211336s9b31924x7c243562fd805272@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ti-out-0910.google.com ([209.85.142.191]:26695 "EHLO
-	ti-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751540AbYJDHEM (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 4 Oct 2008 03:04:12 -0400
-Received: by ti-out-0910.google.com with SMTP id b6so902773tic.23
-        for <linux-ide@vger.kernel.org>; Sat, 04 Oct 2008 00:04:10 -0700 (PDT)
-In-Reply-To: <200810032351.46869.rjw@sisk.pl>
+Received: from hera.kernel.org ([140.211.167.34]:38735 "EHLO hera.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751585AbYJDHV1 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 4 Oct 2008 03:21:27 -0400
+In-Reply-To: <e7510f760809211336s9b31924x7c243562fd805272@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Jeff Garzik <jeff@garzik.org>, ACPI Devel Maling List <linux-acpi@vger.kernel.org>, linux-ide@vger.kernel.org, Thomas Renninger <trenn@suse.de>, Robert Hancock <hancockr@shaw.ca>, LKML <linux-kernel@vger.kernel.org>, Frans Pop <elendil@planet.nl>, Maciej Rutecki <maciej.rutecki@gmail.com>
+To: Gwendal Grignou <gwendal@google.com>
+Cc: IDE/ATA development list <linux-ide@vger.kernel.org>
 
-Rafael J. Wysocki wrote:
-> From: Rafael J. Wysocki <rjw@sisk.pl>
-> 
-> Hibernation: Introduce system_entering_hibernation
-> 
-> Introduce boolean function system_entering_hibernation() returning
-> 'true' during the last phase of hibernation, in which devices are
-> being put into low power states and the sleep state (for example,
-> ACPI S4) is finally entered.
-> 
-> Some device drivers need such a function to check if the system is
-> in the final phase of hibernation.  In particular, some SATA drivers
-> are going to use it for blacklisting systems in which the disks
-> should not be spun down during the last phase of hibernation (the
-> BIOS will do that anyway).
-> 
-> Signed-off-by: Rafael J. Wysocki <rjw@sisk.pl>
+Hello, Gwendal.
 
-applied 1-6 to tj-upstream
+Patch was line wrapped.  Can you please repost?
 
-  git://git.kernel.org/pub/scm/linux/kernel/git/tj/libata-dev.git tj-upstream
-  http://git.kernel.org/?p=linux/kernel/git/tj/libata-dev.git;a=shortlog;h=tj-upstream
+Gwendal Grignou wrote:
+> diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+> index 79e3a8e..fcc7ce2 100644
+> --- a/drivers/ata/libata-core.c
+> +++ b/drivers/ata/libata-core.c
+> @@ -4607,8 +4607,11 @@ static void fill_result_tf(struct ata_queued_cmd *qc)
+>  {
+>  	struct ata_port *ap = qc->ap;
+> 
+> -	qc->result_tf.flags = qc->tf.flags;
+> -	ap->ops->qc_fill_rtf(qc);
+> +	if ((qc->flags & ATA_QCFLAG_RTF_VALID) == 0) {
+> +		qc->result_tf.flags = qc->tf.flags;
+> +		qc->flags |= ATA_QCFLAG_RTF_VALID;
+> +		ap->ops->qc_fill_rtf(qc);
+> +	}
+>  }
+
+Please separate out RTF_VALID changes into a separate patch and if
+possible please update other LLDs too.  I think I posted RTF_VALID
+patch sometime ago and it probably contains changes for other drivers.
+
+>  static void ata_verify_xfer(struct ata_queued_cmd *qc)
+> diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
+> index c1db2f2..b5d753e 100644
+> --- a/drivers/ata/libata-eh.c
+> +++ b/drivers/ata/libata-eh.c
+> @@ -1518,6 +1518,7 @@ void ata_eh_analyze_ncq_error(struct ata_link *link)
+>  	memcpy(&qc->result_tf, &tf, sizeof(tf));
+>  	qc->result_tf.flags = ATA_TFLAG_ISADDR | ATA_TFLAG_LBA | ATA_TFLAG_LBA48;
+>  	qc->err_mask |= AC_ERR_DEV | AC_ERR_NCQ;
+> +	qc->flags |= ATA_QCFLAG_RTF_VALID;
+>  	ehc->i.err_mask &= ~AC_ERR_DEV;
+>  }
+
+Ditto.
+
+> @@ -1642,23 +1643,24 @@ static void mv_pmp_error_handler(struct ata_port *ap)
+>  	struct mv_port_priv *pp = ap->private_data;
+> 
+>  	if (pp->pp_flags & MV_PP_FLAG_DELAYED_EH) {
+> -		/*
+> -		 * Perform NCQ error analysis on failed PMPs
+> -		 * before we freeze the port entirely.
+> -		 *
+> -		 * The failed PMPs are marked earlier by mv_pmp_eh_prep().
+> -		 */
+> -		pmp_map = pp->delayed_eh_pmp_map;
+>  		pp->pp_flags &= ~MV_PP_FLAG_DELAYED_EH;
+> -		for (pmp = 0; pmp_map != 0; pmp++) {
+> -			unsigned int this_pmp = (1 << pmp);
+> -			if (pmp_map & this_pmp) {
+> -				struct ata_link *link = &ap->pmp_link[pmp];
+> -				pmp_map &= ~this_pmp;
+> -				ata_eh_analyze_ncq_error(link);
+> +		if (pp->pp_flags & MV_PP_FLAG_NCQ_EN) {
+> +			/*
+> +			 * Perform NCQ error analysis on failed PMPs
+> +			 * before we freeze the port entirely.
+> +			 *
+> +			 * The failed PMPs are marked earlier by mv_pmp_eh_prep().
+> +			 */
+> +			pmp_map = pp->delayed_eh_pmp_map;
+> +			for (pmp = 0; pmp_map != 0; pmp++) {
+> +				unsigned int this_pmp = (1 << pmp);
+> +				if (pmp_map & this_pmp) {
+> +					struct ata_link *link = &ap->pmp_link[pmp];
+> +					pmp_map &= ~this_pmp;
+> +					ata_eh_analyze_ncq_error(link);
+> +				}
+
+I don't have much idea what's going on here but it looks like
+DELAYED_EH clearing is gone.  Is this intended?
+
+I'll try to review deeper on your next posting.  If I can tell it's
+gonna be okay, I'll include it into #tj-upstream.  Don't depend on it
+as I don't know much about sata_mv but Mark will be away for several
+more weeks, so I'll try my best but if I can't tell whether it's okay
+or not I'll put it into a separate branch and push it to #linux-next.
 
 Thanks.
 
