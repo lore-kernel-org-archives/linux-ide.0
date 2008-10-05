@@ -1,452 +1,227 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [git pull] IDE fixes
-Date: Sun, 5 Oct 2008 18:38:44 +0200
-Message-ID: <200810051838.44451.bzolnier@gmail.com>
+From: Peter Alfredsen <loki_val@gentoo.org>
+Subject: SATA Burner Pioneer DVR-216-DBK won't burn
+Date: Sun, 5 Oct 2008 20:04:50 +0200
+Message-ID: <200810052005.04920.loki_val@gentoo.org>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: multipart/signed;
+  boundary="nextPart1784702.ibx1SnnRSH";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ey-out-2122.google.com ([74.125.78.24]:29335 "EHLO
-	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757090AbYJEQlr (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 5 Oct 2008 12:41:47 -0400
-Received: by ey-out-2122.google.com with SMTP id 6so737909eyi.37
-        for <linux-ide@vger.kernel.org>; Sun, 05 Oct 2008 09:41:45 -0700 (PDT)
-Content-Disposition: inline
+Received: from smtp.gentoo.org ([140.211.166.183]:41221 "EHLO smtp.gentoo.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755000AbYJESFj (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 5 Oct 2008 14:05:39 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Stephen Rothwell <sfr@canb.auug.org.au>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: linux-kernel@vger.kernel.org
+Cc: linux-ide@vger.kernel.org
+
+--nextPart1784702.ibx1SnnRSH
+Content-Type: text/plain;
+  charset="utf-8"
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
+
+[please CC me on replies]
+Linux loki 2.6.27-rc8 #5 SMP PREEMPT Sun Oct 5 17:56:00 CEST 2008 x86_64=20
+Intel(R) Core(TM)2 Quad CPU Q9550 @ 2.83GHz GenuineIntel GNU/Linux
+
+I recently acquired a DVR-216-DBK Pioneer SATA burner. With my old=20
+burner, a DVR-110D,  I am able to burn a DVD. With the DVR-216DBK, I'm=20
+not, it stops always at 98%, no matter which speed I burn at.
+
+My motherboard is a ASUS P5Q-EM, I have 8GB of ram and am running Gentoo=20
+Linux. I've tried both cdrkit and cdrtools.
+DVR-216-DBK Fails, connected to ICH10R AHCI SATA controller
+DVR-110D Succeeds, connected to Marvell 6101 PATA_MARVELL controller
+
+I've located other people who seem to be experiencing the same thing:
+
+http://bugs.kde.org/show_bug.cgi?id=3D169294
+http://ubuntuforums.org/showthread.php?t=3D543483
+
+This seems to me to point to a problem with the AHCI driver's=20
+interaction with the drive.
+
+Attached is lspci -k and debug output from K3B:
+
+00:00.0 Host bridge: Intel Corporation 4 Series Chipset DRAM Controller=20
+(rev 03)
+        Kernel driver in use: agpgart-intel
+00:02.0 VGA compatible controller: Intel Corporation 4 Series Chipset=20
+Integrated Graphics Controller (rev 03)
+00:02.1 Display controller: Intel Corporation 4 Series Chipset=20
+Integrated Graphics Controller (rev 03)
+00:1a.0 USB Controller: Intel Corporation 82801JI (ICH10 Family) USB=20
+UHCI Controller #4
+        Kernel driver in use: uhci_hcd
+00:1a.1 USB Controller: Intel Corporation 82801JI (ICH10 Family) USB=20
+UHCI Controller #5
+        Kernel driver in use: uhci_hcd
+00:1a.2 USB Controller: Intel Corporation 82801JI (ICH10 Family) USB=20
+UHCI Controller #6
+        Kernel driver in use: uhci_hcd
+00:1a.7 USB Controller: Intel Corporation 82801JI (ICH10 Family) USB2=20
+EHCI Controller #2
+        Kernel driver in use: ehci_hcd
+00:1b.0 Audio device: Intel Corporation 82801JI (ICH10 Family) HD Audio=20
+Controller
+        Kernel driver in use: HDA Intel
+00:1c.0 PCI bridge: Intel Corporation 82801JI (ICH10 Family) PCI Express=20
+Port 1
+        Kernel driver in use: pcieport-driver
+00:1c.4 PCI bridge: Intel Corporation 82801JI (ICH10 Family) PCI Express=20
+Port 5
+        Kernel driver in use: pcieport-driver
+00:1c.5 PCI bridge: Intel Corporation 82801JI (ICH10 Family) PCI Express=20
+Port 6
+        Kernel driver in use: pcieport-driver
+00:1d.0 USB Controller: Intel Corporation 82801JI (ICH10 Family) USB=20
+UHCI Controller #1
+        Kernel driver in use: uhci_hcd
+00:1d.1 USB Controller: Intel Corporation 82801JI (ICH10 Family) USB=20
+UHCI Controller #2
+        Kernel driver in use: uhci_hcd
+00:1d.2 USB Controller: Intel Corporation 82801JI (ICH10 Family) USB=20
+UHCI Controller #3
+        Kernel driver in use: uhci_hcd
+00:1d.7 USB Controller: Intel Corporation 82801JI (ICH10 Family) USB2=20
+EHCI Controller #1
+        Kernel driver in use: ehci_hcd
+00:1e.0 PCI bridge: Intel Corporation 82801 PCI Bridge (rev 90)
+00:1f.0 ISA bridge: Intel Corporation 82801JIR (ICH10R) LPC Interface=20
+Controller
+00:1f.2 SATA controller: Intel Corporation 82801JI (ICH10 Family) SATA=20
+AHCI Controller
+        Kernel driver in use: ahci
+00:1f.3 SMBus: Intel Corporation 82801JI (ICH10 Family) SMBus Controller
+        Kernel driver in use: i801_smbus
+01:00.0 Ethernet controller: Realtek Semiconductor Co., Ltd.=20
+RTL8111/8168B PCI Express Gigabit Ethernet controller (rev 02)
+        Kernel driver in use: r8169
+02:00.0 IDE interface: Marvell Technology Group Ltd. 88SE6101=20
+single-port PATA133 interface (rev b2)
+        Kernel driver in use: pata_marvell
+        Kernel modules: pata_marvell
+04:03.0 FireWire (IEEE 1394): Agere Systems FW323 (rev 70)
+        Kernel driver in use: firewire_ohci
 
 
-The final polishing touch for 2.6.27...
-
-[ Swarm commit outstands in diffstat but is a straightforward change. ]
 
 
-Linus, please pull from:
+System
+=2D----------------------
+K3b Version: 1.0.5
 
-master.kernel.org:/pub/scm/linux/kernel/git/bart/ide-2.6.git/
+KDE Version: 3.5.10
+QT Version:  3.3.8b
+Kernel:      2.6.27-rc8
+Devices
+=2D----------------------
+PIONEER DVD-RW  DVR-110D 1.41 (/dev/sr1, ) [CD-R, CD-RW, CD-ROM,=20
+DVD-ROM, DVD-R, DVD-RW, DVD-R DL, DVD+R, DVD+RW, DVD+R DL] [DVD-ROM,=20
+DVD-R Sequential, DVD-R Dual Layer Sequential, DVD-R Dual Layer Jump,=20
+DVD-RW Restricted Overwrite, DVD-RW Sequential, DVD+RW, DVD+R, DVD+R=20
+Dual Layer, CD-ROM, CD-R, CD-RW] [SAO, TAO, RAW, SAO/R96P, SAO/R96R,=20
+RAW/R16, RAW/R96P, RAW/R96R, Restricted Overwrite, Layer Jump]
 
-to receive the following updates:
+PIONEER DVD-RW  DVR-216D 1.04 (/dev/sr0, ) [CD-R, CD-RW, CD-ROM,=20
+DVD-ROM, DVD-R, DVD-RW, DVD-R DL, DVD+R, DVD+RW, DVD+R DL] [DVD-ROM,=20
+DVD-R Sequential, DVD-R Dual Layer Sequential, DVD-R Dual Layer Jump,=20
+DVD-RW Restricted Overwrite, DVD-RW Sequential, DVD+RW, DVD+R, DVD+R=20
+Dual Layer, CD-ROM, CD-R, CD-RW] [SAO, TAO, RAW, SAO/R96P, SAO/R96R,=20
+RAW/R16, RAW/R96P, RAW/R96R, Restricted Overwrite, Layer Jump]
+Burned media
+=2D----------------------
+DVD-R Sequential
 
- arch/mips/sibyte/swarm/Makefile   |    3 +-
- arch/mips/sibyte/swarm/platform.c |   81 +++++++++++++++
- drivers/ide/Kconfig               |    4 -
- drivers/ide/ide-cd.c              |    6 +-
- drivers/ide/ide-dma.c             |    2 +-
- drivers/ide/ide-probe.c           |    2 +-
- drivers/ide/mips/Makefile         |    1 -
- drivers/ide/mips/swarm.c          |  197 -------------------------------------
- include/linux/ide.h               |    4 +-
- 9 files changed, 93 insertions(+), 207 deletions(-)
- create mode 100644 arch/mips/sibyte/swarm/platform.c
- delete mode 100644 drivers/ide/mips/swarm.c
+K3bIsoImager
+=2D----------------------
+mkisofs print size result: 1957074 (4008087552 bytes)
+Pipe throughput: 4008087552 bytes read, 4008087552 bytes written.
+
+Used versions
+=2D----------------------
+mkisofs: 2.1.1a50
+growisofs: 7.1
+
+growisofs
+=2D----------------------
+Executing 'builtin_dd if=3D/dev/fd/0 of=3D/dev/sr0 obs=3D32k seek=3D0'
+/dev/sr0: engaging DVD-R DAO upon user request...
+/dev/sr0: reserving 1957074 blocks
+/dev/sr0: "Current Write Speed" is 20.5x1352KBps.
+    1572864/4008087552 ( 0.0%) @0.0x, remaining 212:16 RBU 100.0% UBU  =20
+2.0%
+[A lot of the same omitted]
+ 3942252544/4008087552 (98.4%) @16.8x, remaining 0:03 RBU 100.0% UBU=20
+100.0%
+:-[ WRITE@LBA=3D1ddcd0h failed with SK=3D5h/ASC=3DA8h/ACQ=3D04h]: Input/out=
+put=20
+error
+:-( write failed: Input/output error
+/dev/sr0: flushing cache
+
+growisofs command:
+=2D----------------------
+/usr/bin/growisofs -Z /dev/sr0=3D/dev/fd/0 -use-the-force-luke=3Dnotray -us=
+e-the-force-luke=3Dtty -use-the-force-luke=3Dtracksize:1957074 -use-the-for=
+ce-luke=3Ddao:1957074 -dvd-compat -speed=3D20 -use-the-force-luke=3Dbufsize=
+:32m=20
+
+mkisofs
+=2D----------------------
+1957074
+/usr/bin/mkisofs: Warning: Cannot add inode hints with -no-cache-inodes.
+/usr/bin/mkisofs: Warning: Cannot add inode hints with -no-cache-inodes.
+/usr/bin/mkisofs: Warning: Cannot add inode hints with -no-cache-inodes.
+Setting input-charset to 'UTF-8' from locale.
+  0.03% done, estimate finish Sun Oct  5 19:10:06 2008
+[a few houndred lines omitted for brevity's sake]
+ 99.97% done, estimate finish Sun Oct  5 19:14:14 2008
+Total translation table size: 0
+Total rockridge attributes bytes: 0
+Total directory bytes: 4248
+Path table size(bytes): 42
+Max brk space used 0
+1957074 extents written (3822 MB)
+
+mkisofs calculate size command:
+=2D----------------------
+/usr/bin/mkisofs -gui -graft-points -print-size -quiet -volid=20
+madrid07 -volset  -appid K3B THE CD KREATOR (C) 1998-2006 SEBASTIAN=20
+TRUEG AND THE K3B TEAM -publisher  -preparer  -sysid LINUX -volset-size=20
+1 -volset-seqno=20
+1 -sort /tmp/kde-pa/k3b26pqfa.tmp -no-cache-inodes -udf -iso-level=20
+1 -path-list /tmp/kde-pa/k3bdhn4Wb.tmp -dvd-video -f /tmp/kde-pa/k3bVideoDv=
+d0=20
+
+mkisofs command:
+=2D----------------------
+/usr/bin/mkisofs -gui -graft-points -volid madrid07 -volset  -appid K3B=20
+THE CD KREATOR (C) 1998-2006 SEBASTIAN TRUEG AND THE K3B=20
+TEAM -publisher  -preparer  -sysid LINUX -volset-size 1 -volset-seqno=20
+1 -sort /tmp/kde-pa/k3bKNxcVb.tmp -no-cache-inodes -udf -iso-level=20
+1 -path-list /tmp/kde-pa/k3bM12aPb.tmp -dvd-video -f /tmp/kde-pa/k3bVideoDv=
+d0=20
 
 
-Bartlomiej Zolnierkiewicz (1):
-      ide: workaround for bogus gcc warning in ide_sysfs_register_port()
 
-Bodo Eggert (1):
-      ide-cd: Optiarc DVD RW AD-7200A does play audio
+=2D-=20
+/PA
 
-Borislav Petkov (1):
-      ide-cd: temporary tray close fix
+--nextPart1784702.ibx1SnnRSH
+Content-Type: application/pgp-signature; name=signature.asc 
+Content-Description: This is a digitally signed message part.
 
-Ralf Baechle (1):
-      IDE: Fix platform device registration in Swarm IDE driver (v2)
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.9 (GNU/Linux)
 
-Sergei Shtylylov (1):
-      ide-dma: fix ide_build_dmatable() for TRM290
+iEYEABECAAYFAkjpAdAACgkQtEGUx4TfHiQ7bQCgi6rY+9vofYH/i7dg8NVWKaKs
+s/gAn3yZ8GUy8me036VjR+tlJZbKRJ+c
+=EU26
+-----END PGP SIGNATURE-----
 
-
-diff --git a/arch/mips/sibyte/swarm/Makefile b/arch/mips/sibyte/swarm/Makefile
-index f18ba92..7b45f19 100644
---- a/arch/mips/sibyte/swarm/Makefile
-+++ b/arch/mips/sibyte/swarm/Makefile
-@@ -1,3 +1,4 @@
--obj-y				:= setup.o rtc_xicor1241.o rtc_m41t81.o
-+obj-y				:= platform.o setup.o rtc_xicor1241.o \
-+				   rtc_m41t81.o
- 
- obj-$(CONFIG_I2C_BOARDINFO)	+= swarm-i2c.o
-diff --git a/arch/mips/sibyte/swarm/platform.c b/arch/mips/sibyte/swarm/platform.c
-new file mode 100644
-index 0000000..dd0e5b9
---- /dev/null
-+++ b/arch/mips/sibyte/swarm/platform.c
-@@ -0,0 +1,81 @@
-+#include <linux/err.h>
-+#include <linux/kernel.h>
-+#include <linux/init.h>
-+#include <linux/io.h>
-+#include <linux/platform_device.h>
-+#include <linux/ata_platform.h>
-+
-+#include <asm/sibyte/board.h>
-+#include <asm/sibyte/sb1250_genbus.h>
-+#include <asm/sibyte/sb1250_regs.h>
-+
-+#define DRV_NAME	"pata-swarm"
-+
-+#define SWARM_IDE_SHIFT	5
-+#define SWARM_IDE_BASE	0x1f0
-+#define SWARM_IDE_CTRL	0x3f6
-+
-+static struct resource swarm_pata_resource[] = {
-+	{
-+		.name	= "Swarm GenBus IDE",
-+		.flags	= IORESOURCE_MEM,
-+	}, {
-+		.name	= "Swarm GenBus IDE",
-+		.flags	= IORESOURCE_MEM,
-+	}, {
-+		.name	= "Swarm GenBus IDE",
-+		.flags	= IORESOURCE_IRQ,
-+		.start	= K_INT_GB_IDE,
-+		.end	= K_INT_GB_IDE,
-+	},
-+};
-+
-+static struct pata_platform_info pata_platform_data = {
-+	.ioport_shift	= SWARM_IDE_SHIFT,
-+};
-+
-+static struct platform_device swarm_pata_device = {
-+	.name		= "pata_platform",
-+	.id		= -1,
-+	.resource	= swarm_pata_resource,
-+	.num_resources	= ARRAY_SIZE(swarm_pata_resource),
-+	.dev  = {
-+		.platform_data		= &pata_platform_data,
-+		.coherent_dma_mask	= ~0,	/* grumble */
-+	},
-+};
-+
-+static int __init swarm_pata_init(void)
-+{
-+	u8 __iomem *base;
-+	phys_t offset, size;
-+	struct resource *r;
-+
-+	if (!SIBYTE_HAVE_IDE)
-+		return -ENODEV;
-+
-+	base = ioremap(A_IO_EXT_BASE, 0x800);
-+	offset = __raw_readq(base + R_IO_EXT_REG(R_IO_EXT_START_ADDR, IDE_CS));
-+	size = __raw_readq(base + R_IO_EXT_REG(R_IO_EXT_MULT_SIZE, IDE_CS));
-+	iounmap(base);
-+
-+	offset = G_IO_START_ADDR(offset) << S_IO_ADDRBASE;
-+	size = (G_IO_MULT_SIZE(size) + 1) << S_IO_REGSIZE;
-+	if (offset < A_PHYS_GENBUS || offset >= A_PHYS_GENBUS_END) {
-+		pr_info(DRV_NAME ": PATA interface at GenBus disabled\n");
-+
-+		return -EBUSY;
-+	}
-+
-+	pr_info(DRV_NAME ": PATA interface at GenBus slot %i\n", IDE_CS);
-+
-+	r = swarm_pata_resource;
-+	r[0].start = offset + (SWARM_IDE_BASE << SWARM_IDE_SHIFT);
-+	r[0].end   = offset + ((SWARM_IDE_BASE + 8) << SWARM_IDE_SHIFT) - 1;
-+	r[1].start = offset + (SWARM_IDE_CTRL << SWARM_IDE_SHIFT);
-+	r[1].end   = offset + ((SWARM_IDE_CTRL + 1) << SWARM_IDE_SHIFT) - 1;
-+
-+	return platform_device_register(&swarm_pata_device);
-+}
-+
-+device_initcall(swarm_pata_init);
-diff --git a/drivers/ide/Kconfig b/drivers/ide/Kconfig
-index 8e93a79..052879a 100644
---- a/drivers/ide/Kconfig
-+++ b/drivers/ide/Kconfig
-@@ -780,10 +780,6 @@ config BLK_DEV_IDEDMA_PMAC
- 	  to transfer data to and from memory.  Saying Y is safe and improves
- 	  performance.
- 
--config BLK_DEV_IDE_SWARM
--	tristate "IDE for Sibyte evaluation boards"
--	depends on SIBYTE_SB1xxx_SOC
--
- config BLK_DEV_IDE_AU1XXX
-        bool "IDE for AMD Alchemy Au1200"
-        depends on SOC_AU1200
-diff --git a/drivers/ide/ide-cd.c b/drivers/ide/ide-cd.c
-index 49a8c58..f16bb46 100644
---- a/drivers/ide/ide-cd.c
-+++ b/drivers/ide/ide-cd.c
-@@ -1661,7 +1661,9 @@ static int ide_cdrom_probe_capabilities(ide_drive_t *drive)
- 		cdi->mask &= ~CDC_PLAY_AUDIO;
- 
- 	mechtype = buf[8 + 6] >> 5;
--	if (mechtype == mechtype_caddy || mechtype == mechtype_popup)
-+	if (mechtype == mechtype_caddy ||
-+	    mechtype == mechtype_popup ||
-+	    (drive->atapi_flags & IDE_AFLAG_NO_AUTOCLOSE))
- 		cdi->mask |= CDC_CLOSE_TRAY;
- 
- 	if (cdi->sanyo_slot > 0) {
-@@ -1859,6 +1861,8 @@ static const struct cd_list_entry ide_cd_quirks_list[] = {
- 	{ "MATSHITADVD-ROM SR-8176", NULL,   IDE_AFLAG_PLAY_AUDIO_OK	     },
- 	{ "MATSHITADVD-ROM SR-8174", NULL,   IDE_AFLAG_PLAY_AUDIO_OK	     },
- 	{ "Optiarc DVD RW AD-5200A", NULL,   IDE_AFLAG_PLAY_AUDIO_OK	     },
-+	{ "Optiarc DVD RW AD-7200A", NULL,   IDE_AFLAG_PLAY_AUDIO_OK	     },
-+	{ "Optiarc DVD RW AD-7543A", NULL,   IDE_AFLAG_NO_AUTOCLOSE	     },
- 	{ NULL, NULL, 0 }
- };
- 
-diff --git a/drivers/ide/ide-dma.c b/drivers/ide/ide-dma.c
-index adc6827..3fa07c0 100644
---- a/drivers/ide/ide-dma.c
-+++ b/drivers/ide/ide-dma.c
-@@ -211,7 +211,7 @@ int ide_build_dmatable (ide_drive_t *drive, struct request *rq)
- 				xcount = bcount & 0xffff;
- 				if (is_trm290)
- 					xcount = ((xcount >> 2) - 1) << 16;
--				if (xcount == 0x0000) {
-+				else if (xcount == 0x0000) {
- 	/* 
- 	 * Most chipsets correctly interpret a length of 0x0000 as 64KB,
- 	 * but at least one (e.g. CS5530) misinterprets it as zero (!).
-diff --git a/drivers/ide/ide-probe.c b/drivers/ide/ide-probe.c
-index 994e410..a51a30e 100644
---- a/drivers/ide/ide-probe.c
-+++ b/drivers/ide/ide-probe.c
-@@ -1492,7 +1492,7 @@ static struct device_attribute *ide_port_attrs[] = {
- 
- static int ide_sysfs_register_port(ide_hwif_t *hwif)
- {
--	int i, rc;
-+	int i, uninitialized_var(rc);
- 
- 	for (i = 0; ide_port_attrs[i]; i++) {
- 		rc = device_create_file(hwif->portdev, ide_port_attrs[i]);
-diff --git a/drivers/ide/mips/Makefile b/drivers/ide/mips/Makefile
-index 677c7b2..5873fa0 100644
---- a/drivers/ide/mips/Makefile
-+++ b/drivers/ide/mips/Makefile
-@@ -1,4 +1,3 @@
--obj-$(CONFIG_BLK_DEV_IDE_SWARM)		+= swarm.o
- obj-$(CONFIG_BLK_DEV_IDE_AU1XXX)	+= au1xxx-ide.o
- 
- EXTRA_CFLAGS    := -Idrivers/ide
-diff --git a/drivers/ide/mips/swarm.c b/drivers/ide/mips/swarm.c
-deleted file mode 100644
-index 39c9ee9..0000000
---- a/drivers/ide/mips/swarm.c
-+++ /dev/null
-@@ -1,197 +0,0 @@
--/*
-- * Copyright (C) 2001, 2002, 2003 Broadcom Corporation
-- * Copyright (C) 2004 MontaVista Software Inc.
-- *	Author:	Manish Lachwani, mlachwani@mvista.com
-- * Copyright (C) 2004  MIPS Technologies, Inc.  All rights reserved.
-- *	Author: Maciej W. Rozycki <macro@mips.com>
-- * Copyright (c) 2006, 2008  Maciej W. Rozycki
-- *
-- * This program is free software; you can redistribute it and/or
-- * modify it under the terms of the GNU General Public License
-- * as published by the Free Software Foundation; either version 2
-- * of the License, or (at your option) any later version.
-- *
-- * This program is distributed in the hope that it will be useful,
-- * but WITHOUT ANY WARRANTY; without even the implied warranty of
-- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-- * GNU General Public License for more details.
-- *
-- * You should have received a copy of the GNU General Public License
-- * along with this program; if not, write to the Free Software
-- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
-- */
--
--/*
-- *  Derived loosely from ide-pmac.c, so:
-- *  Copyright (C) 1998 Paul Mackerras.
-- *  Copyright (C) 1995-1998 Mark Lord
-- */
--
--/*
-- * Boards with SiByte processors so far have supported IDE devices via
-- * the Generic Bus, PCI bus, and built-in PCMCIA interface.  In all
-- * cases, byte-swapping must be avoided for these devices (whereas
-- * other PCI devices, for example, will require swapping).  Any
-- * SiByte-targetted kernel including IDE support will include this
-- * file.  Probing of a Generic Bus for an IDE device is controlled by
-- * the definition of "SIBYTE_HAVE_IDE", which is provided by
-- * <asm/sibyte/board.h> for Broadcom boards.
-- */
--
--#include <linux/ide.h>
--#include <linux/ioport.h>
--#include <linux/kernel.h>
--#include <linux/types.h>
--#include <linux/platform_device.h>
--
--#include <asm/io.h>
--
--#include <asm/sibyte/board.h>
--#include <asm/sibyte/sb1250_genbus.h>
--#include <asm/sibyte/sb1250_regs.h>
--
--#define DRV_NAME "ide-swarm"
--
--static char swarm_ide_string[] = DRV_NAME;
--
--static struct resource swarm_ide_resource = {
--	.name	= "SWARM GenBus IDE",
--	.flags	= IORESOURCE_MEM,
--};
--
--static struct platform_device *swarm_ide_dev;
--
--static const struct ide_port_info swarm_port_info = {
--	.name			= DRV_NAME,
--	.host_flags		= IDE_HFLAG_MMIO | IDE_HFLAG_NO_DMA,
--};
--
--/*
-- * swarm_ide_probe - if the board header indicates the existence of
-- * Generic Bus IDE, allocate a HWIF for it.
-- */
--static int __devinit swarm_ide_probe(struct device *dev)
--{
--	u8 __iomem *base;
--	struct ide_host *host;
--	phys_t offset, size;
--	int i, rc;
--	hw_regs_t hw, *hws[] = { &hw, NULL, NULL, NULL };
--
--	if (!SIBYTE_HAVE_IDE)
--		return -ENODEV;
--
--	base = ioremap(A_IO_EXT_BASE, 0x800);
--	offset = __raw_readq(base + R_IO_EXT_REG(R_IO_EXT_START_ADDR, IDE_CS));
--	size = __raw_readq(base + R_IO_EXT_REG(R_IO_EXT_MULT_SIZE, IDE_CS));
--	iounmap(base);
--
--	offset = G_IO_START_ADDR(offset) << S_IO_ADDRBASE;
--	size = (G_IO_MULT_SIZE(size) + 1) << S_IO_REGSIZE;
--	if (offset < A_PHYS_GENBUS || offset >= A_PHYS_GENBUS_END) {
--		printk(KERN_INFO DRV_NAME
--		       ": IDE interface at GenBus disabled\n");
--		return -EBUSY;
--	}
--
--	printk(KERN_INFO DRV_NAME ": IDE interface at GenBus slot %i\n",
--	       IDE_CS);
--
--	swarm_ide_resource.start = offset;
--	swarm_ide_resource.end = offset + size - 1;
--	if (request_resource(&iomem_resource, &swarm_ide_resource)) {
--		printk(KERN_ERR DRV_NAME
--		       ": can't request I/O memory resource\n");
--		return -EBUSY;
--	}
--
--	base = ioremap(offset, size);
--
--	memset(&hw, 0, sizeof(hw));
--	for (i = 0; i <= 7; i++)
--		hw.io_ports_array[i] =
--				(unsigned long)(base + ((0x1f0 + i) << 5));
--	hw.io_ports.ctl_addr =
--				(unsigned long)(base + (0x3f6 << 5));
--	hw.irq = K_INT_GB_IDE;
--	hw.chipset = ide_generic;
--
--	rc = ide_host_add(&swarm_port_info, hws, &host);
--	if (rc)
--		goto err;
--
--	dev_set_drvdata(dev, host);
--
--	return 0;
--err:
--	release_resource(&swarm_ide_resource);
--	iounmap(base);
--	return rc;
--}
--
--static struct device_driver swarm_ide_driver = {
--	.name	= swarm_ide_string,
--	.bus	= &platform_bus_type,
--	.probe	= swarm_ide_probe,
--};
--
--static void swarm_ide_platform_release(struct device *device)
--{
--	struct platform_device *pldev;
--
--	/* free device */
--	pldev = to_platform_device(device);
--	kfree(pldev);
--}
--
--static int __devinit swarm_ide_init_module(void)
--{
--	struct platform_device *pldev;
--	int err;
--
--	printk(KERN_INFO "SWARM IDE driver\n");
--
--	if (driver_register(&swarm_ide_driver)) {
--		printk(KERN_ERR "Driver registration failed\n");
--		err = -ENODEV;
--		goto out;
--	}
--
--        if (!(pldev = kzalloc(sizeof (*pldev), GFP_KERNEL))) {
--		err = -ENOMEM;
--		goto out_unregister_driver;
--	}
--
--	pldev->name		= swarm_ide_string;
--	pldev->id		= 0;
--	pldev->dev.release	= swarm_ide_platform_release;
--
--	if (platform_device_register(pldev)) {
--		err = -ENODEV;
--		goto out_free_pldev;
--	}
--
--        if (!pldev->dev.driver) {
--		/*
--		 * The driver was not bound to this device, there was
--                 * no hardware at this address. Unregister it, as the
--		 * release fuction will take care of freeing the
--		 * allocated structure
--		 */
--		platform_device_unregister (pldev);
--	}
--
--	swarm_ide_dev = pldev;
--
--	return 0;
--
--out_free_pldev:
--	kfree(pldev);
--
--out_unregister_driver:
--	driver_unregister(&swarm_ide_driver);
--out:
--	return err;
--}
--
--module_init(swarm_ide_init_module);
-diff --git a/include/linux/ide.h b/include/linux/ide.h
-index 1524829..6514db8 100644
---- a/include/linux/ide.h
-+++ b/include/linux/ide.h
-@@ -366,7 +366,9 @@ enum {
- 	/* Currently on a filemark */
- 	IDE_AFLAG_FILEMARK		= (1 << 25),
- 	/* 0 = no tape is loaded, so we don't rewind after ejecting */
--	IDE_AFLAG_MEDIUM_PRESENT	= (1 << 26)
-+	IDE_AFLAG_MEDIUM_PRESENT	= (1 << 26),
-+
-+	IDE_AFLAG_NO_AUTOCLOSE		= (1 << 27),
- };
- 
- struct ide_drive_s {
+--nextPart1784702.ibx1SnnRSH--
