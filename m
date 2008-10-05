@@ -1,165 +1,105 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Can you please test the attached patch for nv hardreset problem?
-Date: Sun, 05 Oct 2008 09:49:21 +0900
-Message-ID: <48E80F11.3060101@kernel.org>
+Subject: Re: New CD/DVD reports 'Can Play Audio    NO'
+Date: Sun, 05 Oct 2008 12:09:15 +0900
+Message-ID: <48E82FDB.6020009@kernel.org>
+References: <20081004103355.407fc303@sauron.linicks.net>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------040404060404070906000207"
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:37746 "EHLO hera.kernel.org"
+Received: from hera.kernel.org ([140.211.167.34]:46625 "EHLO hera.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754053AbYJEAv2 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 4 Oct 2008 20:51:28 -0400
+	id S1752393AbYJEDLS (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 4 Oct 2008 23:11:18 -0400
+In-Reply-To: <20081004103355.407fc303@sauron.linicks.net>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: IDE/ATA development list <linux-ide@vger.kernel.org>, lists@ku-gbr.de, linux@sun7.cn, gettinther@gmail.com
-Cc: Robert Hancock <hancockr@shaw.ca>
+To: Nick Warne <nick@ukfsn.org>
+Cc: linux-kernel@vger.kernel.org, D Bray <db1986@internetdog.org>, IDE/ATA development list <linux-ide@vger.kernel.org>
 
-This is a multi-part message in MIME format.
---------------040404060404070906000207
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+(cc'ing linux-ide)
 
-Hello,
+Nick Warne wrote:
+> Hi all,
+> 
+> Very strange issue.  I recently bought a new machine that came with a
+> CD/DVD burner.  All functions normally, except I cannot play audio CD.
+> 
+> Information:
+> 
+> Slackware 12.1 running latest stable kernel 2.6.26.5
+> 
+> The drive is:
+> 
+> Vendor                      : Optiarc 
+> Model                       : DVD RW AD-7200A 
+> Revision                    : 1.06
+> 
+> Now, I have another drive (I purchased last year) that could play audio
+> CD, so I installed that as master, and put the new drive as slave
+> (old->hda new->hdb).  The old(er) drive can and does play audio OK.
+> 
+> I see this in /proc/sys/dev/cdrom/info:
+> 
+> drive name:             hdb     hda
+> drive speed:            48      48
+> drive # of slots:       1       1
+> Can close tray:         1       1
+> Can open tray:          1       1
+> Can lock tray:          1       1
+> Can change speed:       1       1
+> Can select disk:        0       0
+> Can read multisession:  1       1
+> Can read MCN:           1       1
+> Reports media changed:  1       1
+> Can play audio:         0       1
+> Can write CD-R:         1       1
+> Can write CD-RW:        1       1
+> Can read DVD:           1       1
+> Can write DVD-R:        1       1
+> Can write DVD-RAM:      1       1
+> Can read MRW:           1       1
+> Can write MRW:          1       1
+> Can write RAM:          1       1
+> 
+> log/messages:
+> Oct  4 09:27:01 sauron kernel: hda: UDMA/66 mode selected
+> Oct  4 09:27:01 sauron kernel: hdb: UDMA/66 mode selected
+> Oct  4 09:27:01 sauron kernel: hda: ATAPI 48X DVD-ROM DVD-R-RAM CD-R/RW
+> drive, 2048kB Cache
+> Oct  4 09:27:01 sauron kernel: Uniform CD-ROM
+> driver Revision: 3.20
+> Oct  4 09:27:01 sauron kernel: hdb: ATAPI 48X
+> DVD-ROM DVD-R-RAM CD-R/RW drive, 2048kB Cache
+> 
+> /log/syslog
+> Oct  4 09:27:01 sauron kernel: hda: TSSTcorp CDDVDW SH-S202J, ATAPI
+> CD/DVD-ROM drive
+> Oct  4 09:27:01 sauron kernel: hdb: Optiarc DVD RW
+> AD-7200A, ATAPI CD/DVD-ROM drive
+> 
+> 
+> I have investigated this, but can't find any information at all - there
+> are very few hits doing a search, but relevant pages I found are:
+> 
+> D. Bray filled a very verbose bug report of a similar issue:
+> http://lists.debian.org/debian-user/2008/09/msg01696.html
+> 
+> A Gentoo user with the same drive reports another issue, but his CDROM
+> info dump also reports this model cannot play audio CDs:
+> http://bugs.gentoo.org/show_bug.cgi?id=218413
+> 
+> A Ubuntu user with the same drive also rpeorts audio CDs cannot be
+> played:
+> http://ubuntuforums.org/showthread.php?t=675812
+> 
+> 
+> Myself and D. Bray had a discussion on this, and we both feel this
+> could be a kernel issue.
+> 
+> I would be able to debug this issue if required.
 
-Please verify whether the attached patch fixes all hardreset / probing
-related issues.  The patch is on top of v2.6.27-rc8.  Sorry about all
-the mess but it was quite a confusing problem.  Here's what went down.
-
-* During 2.6.27-rcX, libata switched to prefer hardreset.
-
-* Which broke, generic flavor of sata_nv.  Some sata_nv's fail to
-  bring the link up after hardreset.
-
-* A fix patch went in to disable hardreset for generic flavor.  But it
-  accidentaly disabled hardreset for all flavors.
-
-* Which broke nf2/3 and CK804, because their hotplug interrupt bits
-  never get cleared.  They're apparently cleared by hardreset
-  sequence.
-
-* Another fix patch went in to reinstate nv_hardreset for nf2/3 and
-  CK804.
-
-* Which broke nf2/3, which was because nf2/3's hardreset was broken in
-  different way.
-
-So, to sum up, each generation of sata_nv controllers exhibits
-different hardreset behaviors.
-
-* generic: doesn't work.
-
-* nf2/3: signature D2H Reg FIS delivery doesn't work.
-
-* ck804: works.
-
-So, all three require different treatments to prefer hardreset and any
-solution which didn't do that was broken.  The attached patch should
-solve all the problems.
-
-It was messy but this at least fixes hardreset for all flavors of nv
-controllers, so it will generally improve reliability.
-
-Thanks.
+Can you try libata driver and see whether anything is different?
 
 -- 
 tejun
-
---------------040404060404070906000207
-Content-Type: text/x-patch;
- name="nv-hardreset.patch"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="nv-hardreset.patch"
-
-diff --git a/drivers/ata/sata_nv.c b/drivers/ata/sata_nv.c
-index 14601dc..ce77619 100644
---- a/drivers/ata/sata_nv.c
-+++ b/drivers/ata/sata_nv.c
-@@ -309,8 +309,6 @@ static void nv_nf2_freeze(struct ata_port *ap);
- static void nv_nf2_thaw(struct ata_port *ap);
- static void nv_ck804_freeze(struct ata_port *ap);
- static void nv_ck804_thaw(struct ata_port *ap);
--static int nv_hardreset(struct ata_link *link, unsigned int *class,
--			unsigned long deadline);
- static int nv_adma_slave_config(struct scsi_device *sdev);
- static int nv_adma_check_atapi_dma(struct ata_queued_cmd *qc);
- static void nv_adma_qc_prep(struct ata_queued_cmd *qc);
-@@ -405,17 +403,8 @@ static struct scsi_host_template nv_swncq_sht = {
- 	.slave_configure	= nv_swncq_slave_config,
- };
- 
--/* OSDL bz3352 reports that some nv controllers can't determine device
-- * signature reliably and nv_hardreset is implemented to work around
-- * the problem.  This was reported on nf3 and it's unclear whether any
-- * other controllers are affected.  However, the workaround has been
-- * applied to all variants and there isn't much to gain by trying to
-- * find out exactly which ones are affected at this point especially
-- * because NV has moved over to ahci for newer controllers.
-- */
- static struct ata_port_operations nv_common_ops = {
- 	.inherits		= &ata_bmdma_port_ops,
--	.hardreset		= nv_hardreset,
- 	.scr_read		= nv_scr_read,
- 	.scr_write		= nv_scr_write,
- };
-@@ -429,12 +418,17 @@ static struct ata_port_operations nv_generic_ops = {
- 	.hardreset		= ATA_OP_NULL,
- };
- 
-+/* OSDL bz3352 reports that nf2/3 controllers can't determine device
-+ * signature reliably.  Use sata_std_hardreset().
-+ */
- static struct ata_port_operations nv_nf2_ops = {
- 	.inherits		= &nv_common_ops,
- 	.freeze			= nv_nf2_freeze,
- 	.thaw			= nv_nf2_thaw,
-+	.hardreset		= sata_std_hardreset,
- };
- 
-+/* CK804 finally gets hardreset right */
- static struct ata_port_operations nv_ck804_ops = {
- 	.inherits		= &nv_common_ops,
- 	.freeze			= nv_ck804_freeze,
-@@ -443,7 +437,7 @@ static struct ata_port_operations nv_ck804_ops = {
- };
- 
- static struct ata_port_operations nv_adma_ops = {
--	.inherits		= &nv_common_ops,
-+	.inherits		= &nv_ck804_ops,
- 
- 	.check_atapi_dma	= nv_adma_check_atapi_dma,
- 	.sff_tf_read		= nv_adma_tf_read,
-@@ -467,7 +461,7 @@ static struct ata_port_operations nv_adma_ops = {
- };
- 
- static struct ata_port_operations nv_swncq_ops = {
--	.inherits		= &nv_common_ops,
-+	.inherits		= &nv_generic_ops,
- 
- 	.qc_defer		= ata_std_qc_defer,
- 	.qc_prep		= nv_swncq_qc_prep,
-@@ -1605,21 +1599,6 @@ static void nv_mcp55_thaw(struct ata_port *ap)
- 	ata_sff_thaw(ap);
- }
- 
--static int nv_hardreset(struct ata_link *link, unsigned int *class,
--			unsigned long deadline)
--{
--	int rc;
--
--	/* SATA hardreset fails to retrieve proper device signature on
--	 * some controllers.  Request follow up SRST.  For more info,
--	 * see http://bugzilla.kernel.org/show_bug.cgi?id=3352
--	 */
--	rc = sata_sff_hardreset(link, class, deadline);
--	if (rc)
--		return rc;
--	return -EAGAIN;
--}
--
- static void nv_adma_error_handler(struct ata_port *ap)
- {
- 	struct nv_adma_port_priv *pp = ap->private_data;
-
---------------040404060404070906000207--
