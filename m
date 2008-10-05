@@ -1,101 +1,35 @@
-From: Nick Warne <nick@ukfsn.org>
-Subject: Re: New CD/DVD reports 'Can Play Audio    NO'
-Date: Sun, 5 Oct 2008 12:08:09 +0100
-Message-ID: <20081005120809.38eb4826@sauron.linicks.net>
-References: <20081004103355.407fc303@sauron.linicks.net>
-	<48E82FDB.6020009@kernel.org>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: [PATCH 2/3] ide-cd: small drive type print fix
+Date: Sun, 5 Oct 2008 17:54:15 +0200
+Message-ID: <200810051754.24062.bzolnier@gmail.com>
+References: <1222669799-6565-1-git-send-email-petkovbb@gmail.com> <200810031918.15455.bzolnier@gmail.com> <20081004082827.GA4160@gollum.tnic>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1755428AbYJELIY@vger.kernel.org>
-In-Reply-To: <48E82FDB.6020009@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: linux-kernel@vger.kernel.org, D Bray <db1986@internetdog.org>, IDE/ATA development list <linux-ide@vger.kernel.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mu-out-0910.google.com ([209.85.134.185]:40222 "EHLO
+	mu-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759532AbYJEQlf (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 5 Oct 2008 12:41:35 -0400
+Received: by mu-out-0910.google.com with SMTP id g7so1966563muf.1
+        for <linux-ide@vger.kernel.org>; Sun, 05 Oct 2008 09:41:33 -0700 (PDT)
+In-Reply-To: <20081004082827.GA4160@gollum.tnic>
+Content-Disposition: inline
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: petkovbb@gmail.com
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-On Sun, 05 Oct 2008 12:09:15 +0900
-Tejun Heo <tj@kernel.org> wrote:
-
- 
-> > The drive is:
+On Saturday 04 October 2008, Borislav Petkov wrote:
+> On Fri, Oct 03, 2008 at 07:18:15PM +0200, Bartlomiej Zolnierkiewicz wrote:
+> > On Monday 29 September 2008, Borislav Petkov wrote:
+> > > Signed-off-by: Borislav Petkov <petkovbb@gmail.com>
 > > 
-> > Vendor                      : Optiarc 
-> > Model                       : DVD RW AD-7200A 
-> > Revision                    : 1.06
-> > 
-
-> > I see this in /proc/sys/dev/cdrom/info:
-> > 
-> > drive name:             hdb     hda
-> > drive speed:            48      48
-> > drive # of slots:       1       1
-> > Can close tray:         1       1
-> > Can open tray:          1       1
-> > Can lock tray:          1       1
-> > Can change speed:       1       1
-> > Can select disk:        0       0
-> > Can read multisession:  1       1
-> > Can read MCN:           1       1
-> > Reports media changed:  1       1
-> > Can play audio:         0       1
-> > Can write CD-R:         1       1
-> > Can write CD-RW:        1       1
-> > Can read DVD:           1       1
-> > Can write DVD-R:        1       1
-> > Can write DVD-RAM:      1       1
-> > Can read MRW:           1       1
-> > Can write MRW:          1       1
-> > Can write RAM:          1       1
-
-> Can you try libata driver and see whether anything is different?
+> > applied (though I fail to see "an added value" of this change)
 > 
+> It simply makes the format consistent with the lines below: CD-R/RW - which is
+> the more common way of enumerating supported media you find in different specs
+> than DVD-R-RAM, don't you think?
 
-/messages
-Oct  5 11:54:13 sauron kernel: ata5: PATA max UDMA/133 cmd 0x1f0 ctl
-0x3f6 bmdma 0xf400 irq 14
-Oct  5 11:54:13 sauron kernel: ata6: PATA max
-UDMA/133 cmd 0x170 ctl 0x376 bmdma 0xf408 irq 15
-Oct  5 11:54:13 sauron kernel: ata5.00: ATAPI: TSSTcorp CDDVDW
-SH-S202J, SB00, max UDMA/66
-Oct  5 11:54:13 sauron kernel: ata5.01: ATAPI: Optiarc DVD RW AD-7200A,
-1.06, max UDMA/66
-Oct  5 11:54:13 sauron kernel: ata5.00: configured for UDMA/66
-Oct  5 11:54:13 sauron kernel: ata5.01: configured for
-UDMA/66
-
-/syslog
-Oct  5 11:54:13 sauron kernel: sr0: scsi3-mmc drive: 48x/48x writer
-dvd-ram cd/rw xa/form2 cdda tray
-Oct  5 11:54:13 sauron kernel: sr1:
-scsi3-mmc drive: 48x/48x writer dvd-ram cd/rw xa/form2 cdda tray
-
-/proc/sys/dev/cdrom/info
-
-drive name:             sr1     sr0
-drive speed:            48      48
-drive # of slots:       1       1
-Can close tray:         1       1
-Can open tray:          1       1
-Can lock tray:          1       1
-Can change speed:       1       1
-Can select disk:        0       0
-Can read multisession:  1       1
-Can read MCN:           1       1
-Reports media changed:  1       1
-Can play audio:         1       1
-Can write CD-R:         1       1
-Can write CD-RW:        1       1
-Can read DVD:           1       1
-Can write DVD-R:        1       1
-Can write DVD-RAM:      1       1
-Can read MRW:           1       1
-Can write MRW:          1       1
-Can write RAM:          1       1
-
-
-Works and plays fine!
-
-Nick
--- 
-Free Software Foundation Associate Member 5508
+Indeed, thanks for explaining it.
