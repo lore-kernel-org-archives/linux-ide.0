@@ -1,36 +1,45 @@
-From: Harald Welte <HaraldWelte@viatech.com>
-Subject: Re: [RFC PATCH 0/2] sata_via: fix TF access and add 8251 support
-Date: Mon, 6 Oct 2008 11:56:52 +0200
-Message-ID: <20081006095652.GJ4028@prithivi.gnumonks.org>
-References: <48E42985.60400@kernel.org>
+From: Anton Vorontsov <avorontsov@ru.mvista.com>
+Subject: [PATCH] pata_of_platform: fix no irq handling
+Date: Mon, 6 Oct 2008 21:26:54 +0400
+Message-ID: <20081006172653.GA26427@oksana.dev.rtsoft.ru>
+Reply-To: avorontsov@ru.mvista.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ganesha.gnumonks.org ([213.95.27.120]:54540 "EHLO
-	ganesha.gnumonks.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752618AbYJFM6z (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 6 Oct 2008 08:58:55 -0400
+Content-Type: text/plain; charset=windows-1251
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1755577AbYJFR1Q@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <48E42985.60400@kernel.org>
-Sender: linux-ide-owner@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: Li Yang <leoli@freescale.com>, Wang Jian <lark@linux.net.cn>, "Steven A. Falco" <sfalco@harris.com>, linuxppc-dev@ozlabs.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: Joseph Chan <JosephChan@via.com.tw>, IDE/ATA development list <linux-ide@vger.kernel.org>
 
-On Thu, Oct 02, 2008 at 10:53:09AM +0900, Tejun Heo wrote:
+When no irq specified the pata_of_platform fills the irq_res with -1,
+which is wrong to do for two reasons:
+
+1. By definition, 'no irq' should be IRQ 0, not some negative integer;
+2. pata_platform checks for irq_res.start > 0, but since irq_res.start
+   is unsigned type, the check will be true for `-1'.
+
+Reported-by: Steven A. Falco <sfalco@harris.com>
+Signed-off-by: Anton Vorontsov <avorontsov@ru.mvista.com>
+---
+
+Resending again...
+
+ drivers/ata/pata_of_platform.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/ata/pata_of_platform.c b/drivers/ata/pata_of_platform.c
+index 408da30..1f18ad9 100644
+--- a/drivers/ata/pata_of_platform.c
++++ b/drivers/ata/pata_of_platform.c
+@@ -52,7 +52,7 @@ static int __devinit pata_of_platform_probe(struct of_device *ofdev,
  
-> I'm gonna send two patches as reply to this message.  Can you please
-> review them?  Both are separated out from Joseph's original patch.
-
-Hi Tejun,
-
-I'm not an expert with regard to VIA's storage chipsets, and I also don't have
-the hardware to test your patch.  However, I have passed your request to VIA's
-R&D, asking who would be able to test your patches, and also inquired whether
-we can provide you with a 8251 board.
-
-Cheers,
+ 	ret = of_irq_to_resource(dn, 0, &irq_res);
+ 	if (ret == NO_IRQ)
+-		irq_res.start = irq_res.end = -1;
++		irq_res.start = irq_res.end = 0;
+ 	else
+ 		irq_res.flags = 0;
+ 
 -- 
-- Harald Welte <HaraldWelte@viatech.com>	    http://linux.via.com.tw/
-============================================================================
-VIA Open Source Liaison
+1.5.6.3
