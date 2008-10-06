@@ -1,45 +1,42 @@
-From: Anton Vorontsov <avorontsov@ru.mvista.com>
-Subject: [PATCH] pata_of_platform: fix no irq handling
-Date: Mon, 6 Oct 2008 21:26:54 +0400
-Message-ID: <20081006172653.GA26427@oksana.dev.rtsoft.ru>
-Reply-To: avorontsov@ru.mvista.com
+From: John Clark <clarkjc@runbox.com>
+Subject: Re: Interoperability problem with Quantum CD72SH SATA tape drive
+ and libata
+Date: Mon, 06 Oct 2008 15:36:55 -0400
+Message-ID: <48EA68D7.3060701@runbox.com>
+References: <48DE96AF.6090301@runbox.com> <48E2ECA8.8060808@kernel.org> <48E40415.7050607@runbox.com> <48E7D5CD.2000003@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1251
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1755577AbYJFR1Q@vger.kernel.org>
-Content-Disposition: inline
-Sender: linux-kernel-owner@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: Li Yang <leoli@freescale.com>, Wang Jian <lark@linux.net.cn>, "Steven A. Falco" <sfalco@harris.com>, linuxppc-dev@ozlabs.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from aibo.runbox.com ([193.71.199.94]:58831 "EHLO aibo.runbox.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751559AbYJFThe (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 6 Oct 2008 15:37:34 -0400
+In-Reply-To: <48E7D5CD.2000003@kernel.org>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, Alan Cox <alan@lxorguk.ukuu.org.uk>
 
-When no irq specified the pata_of_platform fills the irq_res with -1,
-which is wrong to do for two reasons:
+Tejun Heo wrote:
+> Can you please test the attached patch?
+>
+> Alan, John Clark is reporting that the above tape drive chokes on odd
+> byte PIO transfer, so the default condition check (qc->nbytes & 15) in
+> atapi_check_dma() breaks the SATA tape drive, so there's always one
+> which breaks the other way around.  :-(
+>
+> For the time being, I think the horkage should do.  I was wondering
+> whether you still think we should lift the default mod16 check in
+> atapi_check_dma().
+>
+> Thanks.
+>   
 
-1. By definition, 'no irq' should be IRQ 0, not some negative integer;
-2. pata_platform checks for irq_res.start > 0, but since irq_res.start
-   is unsigned type, the check will be true for `-1'.
+Tejun,
 
-Reported-by: Steven A. Falco <sfalco@harris.com>
-Signed-off-by: Anton Vorontsov <avorontsov@ru.mvista.com>
----
+I have tested the patch you supplied.  It works, as expected.
 
-Resending again...
+Thanks.
 
- drivers/ata/pata_of_platform.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
-
-diff --git a/drivers/ata/pata_of_platform.c b/drivers/ata/pata_of_platform.c
-index 408da30..1f18ad9 100644
---- a/drivers/ata/pata_of_platform.c
-+++ b/drivers/ata/pata_of_platform.c
-@@ -52,7 +52,7 @@ static int __devinit pata_of_platform_probe(struct of_device *ofdev,
- 
- 	ret = of_irq_to_resource(dn, 0, &irq_res);
- 	if (ret == NO_IRQ)
--		irq_res.start = irq_res.end = -1;
-+		irq_res.start = irq_res.end = 0;
- 	else
- 		irq_res.flags = 0;
- 
--- 
-1.5.6.3
+- John
