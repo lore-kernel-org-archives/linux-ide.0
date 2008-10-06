@@ -1,227 +1,134 @@
-From: Peter Alfredsen <loki_val@gentoo.org>
-Subject: SATA Burner Pioneer DVR-216-DBK won't burn
-Date: Sun, 5 Oct 2008 20:04:50 +0200
-Message-ID: <200810052005.04920.loki_val@gentoo.org>
+From: "Gwendal Grignou" <gwendal@google.com>
+Subject: [PATH 0/2] [sata_mv] enable FIS Based Switching when a Port Multiplier is connected
+Date: Sun, 5 Oct 2008 18:07:40 -0700
+Message-ID: <e7510f760810051807kcfb6099r4a3ea4934a2ad499@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart1784702.ibx1SnnRSH";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp.gentoo.org ([140.211.166.183]:41221 "EHLO smtp.gentoo.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755000AbYJESFj (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 5 Oct 2008 14:05:39 -0400
+Received: from smtp-out.google.com ([216.239.33.17]:50374 "EHLO
+	smtp-out.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751214AbYJFBHz (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 5 Oct 2008 21:07:55 -0400
+Received: from zps37.corp.google.com (zps37.corp.google.com [172.25.146.37])
+	by smtp-out.google.com with ESMTP id m9617hFJ013991
+	for <linux-ide@vger.kernel.org>; Mon, 6 Oct 2008 02:07:44 +0100
+Received: from fg-out-1718.google.com (fgg19.prod.google.com [10.86.7.19])
+	by zps37.corp.google.com with ESMTP id m9617fbW006534
+	for <linux-ide@vger.kernel.org>; Sun, 5 Oct 2008 18:07:42 -0700
+Received: by fg-out-1718.google.com with SMTP id 19so1949950fgg.42
+        for <linux-ide@vger.kernel.org>; Sun, 05 Oct 2008 18:07:40 -0700 (PDT)
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-kernel@vger.kernel.org
-Cc: linux-ide@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: IDE/ATA development list <linux-ide@vger.kernel.org>
 
---nextPart1784702.ibx1SnnRSH
-Content-Type: text/plain;
-  charset="utf-8"
-Content-Transfer-Encoding: quoted-printable
-Content-Disposition: inline
+This patchset enabled FBS in 2 steps:
+- add a flag in libata to allow storing ATA task file [tf] while still
+on the data path. Today tf is retrieve during error handling, so the
+driver must store it somewhere or the HBA operation must have stopped.
+- enable FBS in sata_mv.
 
-[please CC me on replies]
-Linux loki 2.6.27-rc8 #5 SMP PREEMPT Sun Oct 5 17:56:00 CEST 2008 x86_64=20
-Intel(R) Core(TM)2 Quad CPU Q9550 @ 2.83GHz GenuineIntel GNU/Linux
+Thanks Tejun for the review, my comments inline.
 
-I recently acquired a DVR-216-DBK Pioneer SATA burner. With my old=20
-burner, a DVR-110D,  I am able to burn a DVD. With the DVR-216DBK, I'm=20
-not, it stops always at 98%, no matter which speed I burn at.
+Gwendal.
 
-My motherboard is a ASUS P5Q-EM, I have 8GB of ram and am running Gentoo=20
-Linux. I've tried both cdrkit and cdrtools.
-DVR-216-DBK Fails, connected to ICH10R AHCI SATA controller
-DVR-110D Succeeds, connected to Marvell 6101 PATA_MARVELL controller
+On Sat, Oct 4, 2008 at 12:19 AM, Tejun Heo <tj@kernel.org> wrote:
+> Hello, Gwendal.
+>
+> Patch was line wrapped.  Can you please repost?
+Sure.
+>
+> Gwendal Grignou wrote:
+>> diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+>> index 79e3a8e..fcc7ce2 100644
+>> --- a/drivers/ata/libata-core.c
+>> +++ b/drivers/ata/libata-core.c
+>> @@ -4607,8 +4607,11 @@ static void fill_result_tf(struct ata_queued_cmd *qc)
+>>  {
+>>       struct ata_port *ap = qc->ap;
+>>
+>> -     qc->result_tf.flags = qc->tf.flags;
+>> -     ap->ops->qc_fill_rtf(qc);
+>> +     if ((qc->flags & ATA_QCFLAG_RTF_VALID) == 0) {
+>> +             qc->result_tf.flags = qc->tf.flags;
+>> +             qc->flags |= ATA_QCFLAG_RTF_VALID;
+>> +             ap->ops->qc_fill_rtf(qc);
+>> +     }
+>>  }
+>
+> Please separate out RTF_VALID changes into a separate patch and if
+> possible please update other LLDs too.  I think I posted RTF_VALID
+> patch sometime ago and it probably contains changes for other drivers.
+I am not sure other drivers needs it. It is not necessary when NCQ is disabled.
+(ATA devices have a special log for NCQ where they store the ATA
+registers of the first
+offending command).
+>
+>>  static void ata_verify_xfer(struct ata_queued_cmd *qc)
+>> diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
+>> index c1db2f2..b5d753e 100644
+>> --- a/drivers/ata/libata-eh.c
+>> +++ b/drivers/ata/libata-eh.c
+>> @@ -1518,6 +1518,7 @@ void ata_eh_analyze_ncq_error(struct ata_link *link)
+>>       memcpy(&qc->result_tf, &tf, sizeof(tf));
+>>       qc->result_tf.flags = ATA_TFLAG_ISADDR | ATA_TFLAG_LBA | ATA_TFLAG_LBA48;
+>>       qc->err_mask |= AC_ERR_DEV | AC_ERR_NCQ;
+>> +     qc->flags |= ATA_QCFLAG_RTF_VALID;
+>>       ehc->i.err_mask &= ~AC_ERR_DEV;
+>>  }
+>
+> Ditto.
+>
+>> @@ -1642,23 +1643,24 @@ static void mv_pmp_error_handler(struct ata_port *ap)
+>>       struct mv_port_priv *pp = ap->private_data;
+>>
+>>       if (pp->pp_flags & MV_PP_FLAG_DELAYED_EH) {
+>> -             /*
+>> -              * Perform NCQ error analysis on failed PMPs
+>> -              * before we freeze the port entirely.
+>> -              *
+>> -              * The failed PMPs are marked earlier by mv_pmp_eh_prep().
+>> -              */
+>> -             pmp_map = pp->delayed_eh_pmp_map;
+>>               pp->pp_flags &= ~MV_PP_FLAG_DELAYED_EH;
+This line is the only one remaining.
 
-I've located other people who seem to be experiencing the same thing:
-
-http://bugs.kde.org/show_bug.cgi?id=3D169294
-http://ubuntuforums.org/showthread.php?t=3D543483
-
-This seems to me to point to a problem with the AHCI driver's=20
-interaction with the drive.
-
-Attached is lspci -k and debug output from K3B:
-
-00:00.0 Host bridge: Intel Corporation 4 Series Chipset DRAM Controller=20
-(rev 03)
-        Kernel driver in use: agpgart-intel
-00:02.0 VGA compatible controller: Intel Corporation 4 Series Chipset=20
-Integrated Graphics Controller (rev 03)
-00:02.1 Display controller: Intel Corporation 4 Series Chipset=20
-Integrated Graphics Controller (rev 03)
-00:1a.0 USB Controller: Intel Corporation 82801JI (ICH10 Family) USB=20
-UHCI Controller #4
-        Kernel driver in use: uhci_hcd
-00:1a.1 USB Controller: Intel Corporation 82801JI (ICH10 Family) USB=20
-UHCI Controller #5
-        Kernel driver in use: uhci_hcd
-00:1a.2 USB Controller: Intel Corporation 82801JI (ICH10 Family) USB=20
-UHCI Controller #6
-        Kernel driver in use: uhci_hcd
-00:1a.7 USB Controller: Intel Corporation 82801JI (ICH10 Family) USB2=20
-EHCI Controller #2
-        Kernel driver in use: ehci_hcd
-00:1b.0 Audio device: Intel Corporation 82801JI (ICH10 Family) HD Audio=20
-Controller
-        Kernel driver in use: HDA Intel
-00:1c.0 PCI bridge: Intel Corporation 82801JI (ICH10 Family) PCI Express=20
-Port 1
-        Kernel driver in use: pcieport-driver
-00:1c.4 PCI bridge: Intel Corporation 82801JI (ICH10 Family) PCI Express=20
-Port 5
-        Kernel driver in use: pcieport-driver
-00:1c.5 PCI bridge: Intel Corporation 82801JI (ICH10 Family) PCI Express=20
-Port 6
-        Kernel driver in use: pcieport-driver
-00:1d.0 USB Controller: Intel Corporation 82801JI (ICH10 Family) USB=20
-UHCI Controller #1
-        Kernel driver in use: uhci_hcd
-00:1d.1 USB Controller: Intel Corporation 82801JI (ICH10 Family) USB=20
-UHCI Controller #2
-        Kernel driver in use: uhci_hcd
-00:1d.2 USB Controller: Intel Corporation 82801JI (ICH10 Family) USB=20
-UHCI Controller #3
-        Kernel driver in use: uhci_hcd
-00:1d.7 USB Controller: Intel Corporation 82801JI (ICH10 Family) USB2=20
-EHCI Controller #1
-        Kernel driver in use: ehci_hcd
-00:1e.0 PCI bridge: Intel Corporation 82801 PCI Bridge (rev 90)
-00:1f.0 ISA bridge: Intel Corporation 82801JIR (ICH10R) LPC Interface=20
-Controller
-00:1f.2 SATA controller: Intel Corporation 82801JI (ICH10 Family) SATA=20
-AHCI Controller
-        Kernel driver in use: ahci
-00:1f.3 SMBus: Intel Corporation 82801JI (ICH10 Family) SMBus Controller
-        Kernel driver in use: i801_smbus
-01:00.0 Ethernet controller: Realtek Semiconductor Co., Ltd.=20
-RTL8111/8168B PCI Express Gigabit Ethernet controller (rev 02)
-        Kernel driver in use: r8169
-02:00.0 IDE interface: Marvell Technology Group Ltd. 88SE6101=20
-single-port PATA133 interface (rev b2)
-        Kernel driver in use: pata_marvell
-        Kernel modules: pata_marvell
-04:03.0 FireWire (IEEE 1394): Agere Systems FW323 (rev 70)
-        Kernel driver in use: firewire_ohci
-
-
-
-
-System
-=2D----------------------
-K3b Version: 1.0.5
-
-KDE Version: 3.5.10
-QT Version:  3.3.8b
-Kernel:      2.6.27-rc8
-Devices
-=2D----------------------
-PIONEER DVD-RW  DVR-110D 1.41 (/dev/sr1, ) [CD-R, CD-RW, CD-ROM,=20
-DVD-ROM, DVD-R, DVD-RW, DVD-R DL, DVD+R, DVD+RW, DVD+R DL] [DVD-ROM,=20
-DVD-R Sequential, DVD-R Dual Layer Sequential, DVD-R Dual Layer Jump,=20
-DVD-RW Restricted Overwrite, DVD-RW Sequential, DVD+RW, DVD+R, DVD+R=20
-Dual Layer, CD-ROM, CD-R, CD-RW] [SAO, TAO, RAW, SAO/R96P, SAO/R96R,=20
-RAW/R16, RAW/R96P, RAW/R96R, Restricted Overwrite, Layer Jump]
-
-PIONEER DVD-RW  DVR-216D 1.04 (/dev/sr0, ) [CD-R, CD-RW, CD-ROM,=20
-DVD-ROM, DVD-R, DVD-RW, DVD-R DL, DVD+R, DVD+RW, DVD+R DL] [DVD-ROM,=20
-DVD-R Sequential, DVD-R Dual Layer Sequential, DVD-R Dual Layer Jump,=20
-DVD-RW Restricted Overwrite, DVD-RW Sequential, DVD+RW, DVD+R, DVD+R=20
-Dual Layer, CD-ROM, CD-R, CD-RW] [SAO, TAO, RAW, SAO/R96P, SAO/R96R,=20
-RAW/R16, RAW/R96P, RAW/R96R, Restricted Overwrite, Layer Jump]
-Burned media
-=2D----------------------
-DVD-R Sequential
-
-K3bIsoImager
-=2D----------------------
-mkisofs print size result: 1957074 (4008087552 bytes)
-Pipe throughput: 4008087552 bytes read, 4008087552 bytes written.
-
-Used versions
-=2D----------------------
-mkisofs: 2.1.1a50
-growisofs: 7.1
-
-growisofs
-=2D----------------------
-Executing 'builtin_dd if=3D/dev/fd/0 of=3D/dev/sr0 obs=3D32k seek=3D0'
-/dev/sr0: engaging DVD-R DAO upon user request...
-/dev/sr0: reserving 1957074 blocks
-/dev/sr0: "Current Write Speed" is 20.5x1352KBps.
-    1572864/4008087552 ( 0.0%) @0.0x, remaining 212:16 RBU 100.0% UBU  =20
-2.0%
-[A lot of the same omitted]
- 3942252544/4008087552 (98.4%) @16.8x, remaining 0:03 RBU 100.0% UBU=20
-100.0%
-:-[ WRITE@LBA=3D1ddcd0h failed with SK=3D5h/ASC=3DA8h/ACQ=3D04h]: Input/out=
-put=20
-error
-:-( write failed: Input/output error
-/dev/sr0: flushing cache
-
-growisofs command:
-=2D----------------------
-/usr/bin/growisofs -Z /dev/sr0=3D/dev/fd/0 -use-the-force-luke=3Dnotray -us=
-e-the-force-luke=3Dtty -use-the-force-luke=3Dtracksize:1957074 -use-the-for=
-ce-luke=3Ddao:1957074 -dvd-compat -speed=3D20 -use-the-force-luke=3Dbufsize=
-:32m=20
-
-mkisofs
-=2D----------------------
-1957074
-/usr/bin/mkisofs: Warning: Cannot add inode hints with -no-cache-inodes.
-/usr/bin/mkisofs: Warning: Cannot add inode hints with -no-cache-inodes.
-/usr/bin/mkisofs: Warning: Cannot add inode hints with -no-cache-inodes.
-Setting input-charset to 'UTF-8' from locale.
-  0.03% done, estimate finish Sun Oct  5 19:10:06 2008
-[a few houndred lines omitted for brevity's sake]
- 99.97% done, estimate finish Sun Oct  5 19:14:14 2008
-Total translation table size: 0
-Total rockridge attributes bytes: 0
-Total directory bytes: 4248
-Path table size(bytes): 42
-Max brk space used 0
-1957074 extents written (3822 MB)
-
-mkisofs calculate size command:
-=2D----------------------
-/usr/bin/mkisofs -gui -graft-points -print-size -quiet -volid=20
-madrid07 -volset  -appid K3B THE CD KREATOR (C) 1998-2006 SEBASTIAN=20
-TRUEG AND THE K3B TEAM -publisher  -preparer  -sysid LINUX -volset-size=20
-1 -volset-seqno=20
-1 -sort /tmp/kde-pa/k3b26pqfa.tmp -no-cache-inodes -udf -iso-level=20
-1 -path-list /tmp/kde-pa/k3bdhn4Wb.tmp -dvd-video -f /tmp/kde-pa/k3bVideoDv=
-d0=20
-
-mkisofs command:
-=2D----------------------
-/usr/bin/mkisofs -gui -graft-points -volid madrid07 -volset  -appid K3B=20
-THE CD KREATOR (C) 1998-2006 SEBASTIAN TRUEG AND THE K3B=20
-TEAM -publisher  -preparer  -sysid LINUX -volset-size 1 -volset-seqno=20
-1 -sort /tmp/kde-pa/k3bKNxcVb.tmp -no-cache-inodes -udf -iso-level=20
-1 -path-list /tmp/kde-pa/k3bM12aPb.tmp -dvd-video -f /tmp/kde-pa/k3bVideoDv=
-d0=20
-
-
-
-=2D-=20
-/PA
-
---nextPart1784702.ibx1SnnRSH
-Content-Type: application/pgp-signature; name=signature.asc 
-Content-Description: This is a digitally signed message part.
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.9 (GNU/Linux)
-
-iEYEABECAAYFAkjpAdAACgkQtEGUx4TfHiQ7bQCgi6rY+9vofYH/i7dg8NVWKaKs
-s/gAn3yZ8GUy8me036VjR+tlJZbKRJ+c
-=EU26
------END PGP SIGNATURE-----
-
---nextPart1784702.ibx1SnnRSH--
+>> -             for (pmp = 0; pmp_map != 0; pmp++) {
+>> -                     unsigned int this_pmp = (1 << pmp);
+>> -                     if (pmp_map & this_pmp) {
+>> -                             struct ata_link *link = &ap->pmp_link[pmp];
+>> -                             pmp_map &= ~this_pmp;
+>> -                             ata_eh_analyze_ncq_error(link);
+>> +             if (pp->pp_flags & MV_PP_FLAG_NCQ_EN) {
+>> +                     /*
+>> +                      * Perform NCQ error analysis on failed PMPs
+>> +                      * before we freeze the port entirely.
+>> +                      *
+>> +                      * The failed PMPs are marked earlier by mv_pmp_eh_prep().
+>> +                      */
+>> +                     pmp_map = pp->delayed_eh_pmp_map;
+>> +                     for (pmp = 0; pmp_map != 0; pmp++) {
+>> +                             unsigned int this_pmp = (1 << pmp);
+>> +                             if (pmp_map & this_pmp) {
+>> +                                     struct ata_link *link = &ap->pmp_link[pmp];
+>> +                                     pmp_map &= ~this_pmp;
+>> +                                     ata_eh_analyze_ncq_error(link);
+>> +                             }
+>
+> I don't have much idea what's going on here but it looks like
+> DELAYED_EH clearing is gone.  Is this intended?
+See above, it is the only one remaining...
+>
+> I'll try to review deeper on your next posting.  If I can tell it's
+> gonna be okay, I'll include it into #tj-upstream.  Don't depend on it
+> as I don't know much about sata_mv but Mark will be away for several
+> more weeks, so I'll try my best but if I can't tell whether it's okay
+> or not I'll put it into a separate branch and push it to #linux-next.
+>
+> Thanks.
+>
+> --
+> tejun
+>
