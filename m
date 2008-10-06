@@ -1,260 +1,168 @@
-From: gwendal@google.com (Gwendal Grignou)
-Subject: [PATH 2/2] [sata_mv] enable FIS Based Switching when a Port Multiplier is connected
-Date: Sun,  5 Oct 2008 18:28:26 -0700 (PDT)
-Message-ID: <20081006012826.BCCFF2E29AC@localhost>
+From: gettinther <gettinther@gmail.com>
+Subject: Re: sata dvdroms fails to be recognized by MCP55 controller with the 2.6.26.5 kernel
+Date: Mon, 6 Oct 2008 10:08:30 +0100
+Message-ID: <64630f150810060208q22b61900xd7487500eac4e145@mail.gmail.com>
+References: <64630f150809291601w3511febdyc769b8871db75602@mail.gmail.com>
+	 <20080930170849.52c00228.akpm@linux-foundation.org>
+	 <48E2E8A1.8090204@gmail.com>
+	 <64630f150810010131g18c1a00m91b3f68ea29a1067@mail.gmail.com>
+	 <64630f150810011601y4e729decq24c614f0b7994f3f@mail.gmail.com>
+	 <48E71ACE.4000505@gmail.com> <48E71AEC.8020701@gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp-out.google.com ([216.239.33.17]:51658 "EHLO
-	smtp-out.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752172AbYJFB2k (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 5 Oct 2008 21:28:40 -0400
+Received: from wr-out-0506.google.com ([64.233.184.239]:42803 "EHLO
+	wr-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752159AbYJFJIc (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 6 Oct 2008 05:08:32 -0400
+Received: by wr-out-0506.google.com with SMTP id 69so1233163wri.5
+        for <linux-ide@vger.kernel.org>; Mon, 06 Oct 2008 02:08:31 -0700 (PDT)
+In-Reply-To: <48E71AEC.8020701@gmail.com>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: gwendal@gmail.com, tj@kernel.org
-Cc: linux-ide@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, IDE/ATA development list <linux-ide@vger.kernel.org>
 
- When sata_mv controller is connected to disks via port multiplier
- but NCQ is disabled, FBS allows more than one oustanding command
- per port, one to each drive.
+On Sat, Oct 4, 2008 at 8:27 AM, Tejun Heo <htejun@gmail.com> wrote:
+> (restoring lkml and linux-ide.  please don't drop cc list)
+>
+> Tejun Heo wrote:
+>> Hello,
+>>
+>> gettinther wrote:
+>>> 00:05.2 IDE interface: GeForce 8800 GT 512 MCP55 SATA Controller (rev
+>>> a2) (prog-if 85 [Master SecO PriO])
+>>
+>> Ah.. okay.  MCP55.  I've missed that part in the first message.
+>> sata_nv is a bit messed up for 2.6.26.  What happened was...
+>>
+>> * During 2.6.26-rc, libata switched to prefer hardreset over softreset
+>>   for various reasons.
+>>
+>> * After 2.6.26 release, sata_nv generic flavors (MCP55/66) were
+>>   reported to have problems probing devices with hardreset.  Hardreset
+>>   simply doesn't work.
+>>
+>> * Patch posted to disable hardreset for generic but it accidentally
+>>   disabled hardreset for all flavors (generic/nf2/3/ck804).
+>>
+>> * Which broke ck804.
+>>
+>> * Another patch posted to reinstate hardreset for nf2/3 and ck804.
+>>
+>> * It somehow mysteriously broke nf2/3.  This is still being
+>>   investigated.
+>>
+>> Sorry about the mess but I am puzzled too.  I'll report back when I
+>> know more.
+>>
+>> Thanks.
+>>
+>
+>
+> --
+> tejun
+>
 
+Tejun,
 
-Signed-off-by: Gwendal Grignou <gwendal@google.com>
----
- drivers/ata/sata_mv.c |  139 ++++++++++++++++++++++++++-----------------------
- 1 files changed, 74 insertions(+), 65 deletions(-)
+I have tested the patch you sent me and it solves the issue with the
+sata dvdrom detection with the 2.6.27.rc8.  The issue is still present
+on the 2.6.26.5 kernel.  Are you backporting the solution to that
+kernel?
 
-diff --git a/drivers/ata/sata_mv.c b/drivers/ata/sata_mv.c
-index c815f8e..46c0a9a 100644
---- a/drivers/ata/sata_mv.c
-+++ b/drivers/ata/sata_mv.c
-@@ -219,6 +219,9 @@ enum {
- 	SATA_FIS_IRQ_CAUSE_OFS	= 0x364,
- 	SATA_FIS_IRQ_AN		= (1 << 9),	/* async notification */
- 
-+	/* FIS registers */
-+	SATA_FIS_DW0		= 0x370,
-+
- 	LTMODE_OFS		= 0x30c,
- 	LTMODE_BIT8		= (1 << 8),	/* unknown, but necessary */
- 
-@@ -1145,6 +1148,14 @@ static int mv_qc_defer(struct ata_queued_cmd *qc)
- 	    (pp->pp_flags & MV_PP_FLAG_NCQ_EN) && ata_is_ncq(qc->tf.protocol))
- 		return 0;
- 
-+	/*
-+	 * Allow DMA commands when EDMA is enabled only on different links
-+	 */
-+	if ((pp->pp_flags & MV_PP_FLAG_EDMA_EN) &&
-+	    (pp->pp_flags & MV_PP_FLAG_FBS_EN) && ata_is_dma(qc->tf.protocol) &&
-+	    !ata_tag_valid(link->active_tag) && !link->sactive)
-+		return 0;
-+
- 	return ATA_DEFER_PORT;
+Thank you very much for the fix.
+
+I post below the patch for record.
+
+diff --git a/drivers/ata/sata_nv.c b/drivers/ata/sata_nv.c
+index 14601dc..ce77619 100644
+--- a/drivers/ata/sata_nv.c
++++ b/drivers/ata/sata_nv.c
+@@ -309,8 +309,6 @@ static void nv_nf2_freeze(struct ata_port *ap);
+ static void nv_nf2_thaw(struct ata_port *ap);
+ static void nv_ck804_freeze(struct ata_port *ap);
+ static void nv_ck804_thaw(struct ata_port *ap);
+-static int nv_hardreset(struct ata_link *link, unsigned int *class,
+-			unsigned long deadline);
+ static int nv_adma_slave_config(struct scsi_device *sdev);
+ static int nv_adma_check_atapi_dma(struct ata_queued_cmd *qc);
+ static void nv_adma_qc_prep(struct ata_queued_cmd *qc);
+@@ -405,17 +403,8 @@ static struct scsi_host_template nv_swncq_sht = {
+ 	.slave_configure	= nv_swncq_slave_config,
+ };
+
+-/* OSDL bz3352 reports that some nv controllers can't determine device
+- * signature reliably and nv_hardreset is implemented to work around
+- * the problem.  This was reported on nf3 and it's unclear whether any
+- * other controllers are affected.  However, the workaround has been
+- * applied to all variants and there isn't much to gain by trying to
+- * find out exactly which ones are affected at this point especially
+- * because NV has moved over to ahci for newer controllers.
+- */
+ static struct ata_port_operations nv_common_ops = {
+ 	.inherits		= &ata_bmdma_port_ops,
+-	.hardreset		= nv_hardreset,
+ 	.scr_read		= nv_scr_read,
+ 	.scr_write		= nv_scr_write,
+ };
+@@ -429,12 +418,17 @@ static struct ata_port_operations nv_generic_ops = {
+ 	.hardreset		= ATA_OP_NULL,
+ };
+
++/* OSDL bz3352 reports that nf2/3 controllers can't determine device
++ * signature reliably.  Use sata_std_hardreset().
++ */
+ static struct ata_port_operations nv_nf2_ops = {
+ 	.inherits		= &nv_common_ops,
+ 	.freeze			= nv_nf2_freeze,
+ 	.thaw			= nv_nf2_thaw,
++	.hardreset		= sata_std_hardreset,
+ };
+
++/* CK804 finally gets hardreset right */
+ static struct ata_port_operations nv_ck804_ops = {
+ 	.inherits		= &nv_common_ops,
+ 	.freeze			= nv_ck804_freeze,
+@@ -443,7 +437,7 @@ static struct ata_port_operations nv_ck804_ops = {
+ };
+
+ static struct ata_port_operations nv_adma_ops = {
+-	.inherits		= &nv_common_ops,
++	.inherits		= &nv_ck804_ops,
+
+ 	.check_atapi_dma	= nv_adma_check_atapi_dma,
+ 	.sff_tf_read		= nv_adma_tf_read,
+@@ -467,7 +461,7 @@ static struct ata_port_operations nv_adma_ops = {
+ };
+
+ static struct ata_port_operations nv_swncq_ops = {
+-	.inherits		= &nv_common_ops,
++	.inherits		= &nv_generic_ops,
+
+ 	.qc_defer		= ata_std_qc_defer,
+ 	.qc_prep		= nv_swncq_qc_prep,
+@@ -1605,21 +1599,6 @@ static void nv_mcp55_thaw(struct ata_port *ap)
+ 	ata_sff_thaw(ap);
  }
- 
-@@ -1165,9 +1176,8 @@ static void mv_config_fbs(void __iomem *port_mmio, int want_ncq, int want_fbs)
- 	if (want_fbs) {
- 		new_fiscfg = old_fiscfg | FISCFG_SINGLE_SYNC;
- 		new_ltmode = old_ltmode | LTMODE_BIT8;
--		if (want_ncq)
--			new_haltcond &= ~EDMA_ERR_DEV;
--		else
-+		new_haltcond &= ~EDMA_ERR_DEV;
-+		if (!want_ncq)
- 			new_fiscfg |=  FISCFG_WAIT_DEV_ERR;
- 	}
- 
-@@ -1214,15 +1224,6 @@ static void mv_edma_cfg(struct ata_port *ap, int want_ncq)
- 
- 	} else if (IS_GEN_IIE(hpriv)) {
- 		int want_fbs = sata_pmp_attached(ap);
--		/*
--		 * Possible future enhancement:
--		 *
--		 * The chip can use FBS with non-NCQ, if we allow it,
--		 * But first we need to have the error handling in place
--		 * for this mode (datasheet section 7.3.15.4.2.3).
--		 * So disallow non-NCQ FBS for now.
--		 */
--		want_fbs &= want_ncq;
- 
- 		mv_config_fbs(port_mmio, want_ncq, want_fbs);
- 
-@@ -1642,23 +1643,24 @@ static void mv_pmp_error_handler(struct ata_port *ap)
- 	struct mv_port_priv *pp = ap->private_data;
- 
- 	if (pp->pp_flags & MV_PP_FLAG_DELAYED_EH) {
--		/*
--		 * Perform NCQ error analysis on failed PMPs
--		 * before we freeze the port entirely.
--		 *
--		 * The failed PMPs are marked earlier by mv_pmp_eh_prep().
--		 */
--		pmp_map = pp->delayed_eh_pmp_map;
- 		pp->pp_flags &= ~MV_PP_FLAG_DELAYED_EH;
--		for (pmp = 0; pmp_map != 0; pmp++) {
--			unsigned int this_pmp = (1 << pmp);
--			if (pmp_map & this_pmp) {
--				struct ata_link *link = &ap->pmp_link[pmp];
--				pmp_map &= ~this_pmp;
--				ata_eh_analyze_ncq_error(link);
-+		if (pp->pp_flags & MV_PP_FLAG_NCQ_EN) {
-+			/*
-+			 * Perform NCQ error analysis on failed PMPs
-+			 * before we freeze the port entirely.
-+			 *
-+			 * The failed PMPs are marked earlier by mv_pmp_eh_prep().
-+			 */
-+			pmp_map = pp->delayed_eh_pmp_map;
-+			for (pmp = 0; pmp_map != 0; pmp++) {
-+				unsigned int this_pmp = (1 << pmp);
-+				if (pmp_map & this_pmp) {
-+					struct ata_link *link = &ap->pmp_link[pmp];
-+					pmp_map &= ~this_pmp;
-+					ata_eh_analyze_ncq_error(link);
-+				}
- 			}
- 		}
--		ata_port_freeze(ap);
- 	}
- 	sata_pmp_error_handler(ap);
- }
-@@ -1742,7 +1744,6 @@ static int mv_handle_fbs_ncq_dev_err(struct ata_port *ap)
- 
- 	if (ap->nr_active_links <= failed_links && mv_req_q_empty(ap)) {
- 		mv_process_crpb_entries(ap, pp);
--		mv_stop_edma(ap);
- 		mv_eh_freeze(ap);
- 		ata_port_printk(ap, KERN_INFO, "%s: done\n", __func__);
- 		return 1;	/* handled */
-@@ -1753,18 +1754,43 @@ static int mv_handle_fbs_ncq_dev_err(struct ata_port *ap)
- 
- static int mv_handle_fbs_non_ncq_dev_err(struct ata_port *ap)
- {
-+	u8 fis[6 * 4];
-+	u8 pmp;
-+	void __iomem *port_mmio = mv_ap_base(ap);
-+	struct ata_queued_cmd *qc;
-+	unsigned int tag;
-+
- 	/*
--	 * Possible future enhancement:
--	 *
--	 * FBS+non-NCQ operation is not yet implemented.
--	 * See related notes in mv_edma_cfg().
--	 *
- 	 * Device error during FBS+non-NCQ operation:
- 	 *
- 	 * We need to snapshot the shadow registers for each failed command.
- 	 * Follow recovery sequence from 6042/7042 datasheet (7.3.15.4.2.3).
- 	 */
--	return 0;	/* not handled */
-+	memcpy_fromio(fis, port_mmio + SATA_FIS_DW0, sizeof(fis));
-+	pmp = fis[1] & 0xf;
-+
-+	/* If we are in FBS mode, we have a pmp attached */
-+	WARN_ON(!sata_pmp_attached(ap));
-+	if (pmp >= ap->nr_pmp_links) {
-+		ata_port_printk(ap, KERN_ERR,
-+				"%s: invalid FIS from device DW0=0x%08x\n",
-+				__func__, *(u32*)(fis));
-+		return 0;
-+	}
-+	tag = ap->pmp_link[pmp].active_tag;
-+	qc = ata_qc_from_tag(ap, tag);
-+	if (qc) {
-+		qc->flags |= ATA_QCFLAG_RTF_VALID;
-+		qc->result_tf.flags = qc->tf.flags;
-+		ata_tf_from_fis(fis, &qc->result_tf);
-+
-+		return mv_handle_fbs_ncq_dev_err(ap);
-+	}
-+	else {
-+		ata_port_printk(ap, KERN_ERR, "%s: no qc for tag=%d\n",
-+				__func__, tag);
-+		return 0;
-+	}
- }
- 
- static int mv_handle_dev_err(struct ata_port *ap, u32 edma_err_cause)
-@@ -1779,34 +1805,12 @@ static int mv_handle_dev_err(struct ata_port *ap, u32 edma_err_cause)
- 	if (!(edma_err_cause & EDMA_ERR_DEV))
- 		return 0;	/* non DEV error: not handled */
- 	edma_err_cause &= ~EDMA_ERR_IRQ_TRANSIENT;
--	if (edma_err_cause & ~(EDMA_ERR_DEV | EDMA_ERR_SELF_DIS))
-+	if (edma_err_cause & ~EDMA_ERR_DEV)
- 		return 0;	/* other problems: not handled */
- 
- 	if (pp->pp_flags & MV_PP_FLAG_NCQ_EN) {
--		/*
--		 * EDMA should NOT have self-disabled for this case.
--		 * If it did, then something is wrong elsewhere,
--		 * and we cannot handle it here.
--		 */
--		if (edma_err_cause & EDMA_ERR_SELF_DIS) {
--			ata_port_printk(ap, KERN_WARNING,
--				"%s: err_cause=0x%x pp_flags=0x%x\n",
--				__func__, edma_err_cause, pp->pp_flags);
--			return 0; /* not handled */
--		}
- 		return mv_handle_fbs_ncq_dev_err(ap);
- 	} else {
--		/*
--		 * EDMA should have self-disabled for this case.
--		 * If it did not, then something is wrong elsewhere,
--		 * and we cannot handle it here.
--		 */
--		if (!(edma_err_cause & EDMA_ERR_SELF_DIS)) {
--			ata_port_printk(ap, KERN_WARNING,
--				"%s: err_cause=0x%x pp_flags=0x%x\n",
--				__func__, edma_err_cause, pp->pp_flags);
--			return 0; /* not handled */
--		}
- 		return mv_handle_fbs_non_ncq_dev_err(ap);
- 	}
- 	return 0;	/* not handled */
-@@ -1855,7 +1859,7 @@ static void mv_err_intr(struct ata_port *ap)
- 	unsigned int action = 0, err_mask = 0;
- 	struct ata_eh_info *ehi = &ap->link.eh_info;
- 	struct ata_queued_cmd *qc;
--	int abort = 0;
-+	int abort = 0, handled = 0;
- 
- 	/*
- 	 * Read and clear the SError and err_cause bits.
-@@ -1866,20 +1870,25 @@ static void mv_err_intr(struct ata_port *ap)
- 	sata_scr_write_flush(&ap->link, SCR_ERROR, serr);
- 
- 	edma_err_cause = readl(port_mmio + EDMA_ERR_IRQ_CAUSE_OFS);
--	if (IS_GEN_IIE(hpriv) && (edma_err_cause & EDMA_ERR_TRANS_IRQ_7)) {
--		fis_cause = readl(port_mmio + SATA_FIS_IRQ_CAUSE_OFS);
--		writelfl(~fis_cause, port_mmio + SATA_FIS_IRQ_CAUSE_OFS);
--	}
--	writelfl(~edma_err_cause, port_mmio + EDMA_ERR_IRQ_CAUSE_OFS);
+
+-static int nv_hardreset(struct ata_link *link, unsigned int *class,
+-			unsigned long deadline)
+-{
+-	int rc;
 -
- 	if (edma_err_cause & EDMA_ERR_DEV) {
- 		/*
- 		 * Device errors during FIS-based switching operation
- 		 * require special handling.
- 		 */
--		if (mv_handle_dev_err(ap, edma_err_cause))
--			return;
-+		handled = mv_handle_dev_err(ap, edma_err_cause);
- 	}
-+	if (IS_GEN_IIE(hpriv) &&
-+	    ((edma_err_cause & EDMA_ERR_TRANS_IRQ_7) ||
-+	     ((edma_err_cause & EDMA_ERR_DEV) &&
-+	      (pp->pp_flags & MV_PP_FLAG_FBS_EN) &&
-+	      !(pp->pp_flags & MV_PP_FLAG_NCQ_EN)))) {
-+		fis_cause = readl(port_mmio + SATA_FIS_IRQ_CAUSE_OFS);
-+		writelfl(~fis_cause, port_mmio + SATA_FIS_IRQ_CAUSE_OFS);
-+	}
-+	writelfl(~edma_err_cause, port_mmio + EDMA_ERR_IRQ_CAUSE_OFS);
-+
-+	if (handled)
-+		return;
- 
- 	qc = mv_get_active_qc(ap);
- 	ata_ehi_clear_desc(ehi);
--- 
-1.5.4.5
-
+-	/* SATA hardreset fails to retrieve proper device signature on
+-	 * some controllers.  Request follow up SRST.  For more info,
+-	 * see http://bugzilla.kernel.org/show_bug.cgi?id=3352
+-	 */
+-	rc = sata_sff_hardreset(link, class, deadline);
+-	if (rc)
+-		return rc;
+-	return -EAGAIN;
+-}
+-
+ static void nv_adma_error_handler(struct ata_port *ap)
+ {
+ 	struct nv_adma_port_priv *pp = ap->private_data;
