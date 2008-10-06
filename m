@@ -1,66 +1,36 @@
-From: Matt Sealey <matt@genesi-usa.com>
+From: Anton Vorontsov <avorontsov@ru.mvista.com>
 Subject: Re: [PATCH] pata_of_platform: fix no irq handling
-Date: Mon, 06 Oct 2008 15:41:19 -0500
-Message-ID: <48EA77EF.6080502@genesi-usa.com>
-References: <20081006172653.GA26427@oksana.dev.rtsoft.ru>
+Date: Tue, 7 Oct 2008 01:32:09 +0400
+Message-ID: <20081006213209.GA13072@oksana.dev.rtsoft.ru>
+References: <20081006172653.GA26427@oksana.dev.rtsoft.ru> <48EA77EF.6080502@genesi-usa.com>
+Reply-To: avorontsov@ru.mvista.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=windows-1251
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from qw-out-2122.google.com ([74.125.92.27]:9678 "EHLO
-	qw-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753531AbYJFUlV (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 6 Oct 2008 16:41:21 -0400
-Received: by qw-out-2122.google.com with SMTP id 3so645724qwe.37
-        for <linux-ide@vger.kernel.org>; Mon, 06 Oct 2008 13:41:20 -0700 (PDT)
-In-Reply-To: <20081006172653.GA26427@oksana.dev.rtsoft.ru>
+Received: from rtsoft3.corbina.net ([85.21.88.6]:26204 "EHLO
+	buildserver.ru.mvista.com" rhost-flags-OK-FAIL-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1753358AbYJFVcL (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 6 Oct 2008 17:32:11 -0400
+Content-Disposition: inline
+In-Reply-To: <48EA77EF.6080502@genesi-usa.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: avorontsov@ru.mvista.com
+To: Matt Sealey <matt@genesi-usa.com>
 Cc: Jeff Garzik <jgarzik@pobox.com>, linuxppc-dev@ozlabs.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Li Yang <leoli@freescale.com>, Wang Jian <lark@linux.net.cn>
 
-There is a simple problem with the patch which is that an "IRQ 0" can and does
-actually exist on a bunch of platforms, at least to the best of my knowledge.
+On Mon, Oct 06, 2008 at 03:41:19PM -0500, Matt Sealey wrote:
+> There is a simple problem with the patch which is that an "IRQ 0" can and does
+> actually exist on a bunch of platforms, at least to the best of my knowledge.
+> 
+> Checking for -1 (which means for definite, no irq at all, because it is
+> totally unambiguous, as a -1 IRQ numbering is "impossible") is more correct.
 
-Checking for -1 (which means for definite, no irq at all, because it is
-totally unambiguous, as a -1 IRQ numbering is "impossible") is more correct.
+This was discussed years ago.
 
-The problem is the check against an unsigned value for interrupts (is there
-any reason why you would need 4 billion interrupts possible instead of just
-2 billion?) although I must say, the patch will work, and probably 99.9999999%
-of people will never see a problem with it :)
+http://lkml.org/lkml/2005/11/22/159
+http://lkml.org/lkml/2005/11/22/227
 
 -- 
-Matt Sealey <matt@genesi-usa.com>
-Genesi, Manager, Developer Relations
-
-Anton Vorontsov wrote:
-> When no irq specified the pata_of_platform fills the irq_res with -1,
-> which is wrong to do for two reasons:
-> 
-> 1. By definition, 'no irq' should be IRQ 0, not some negative integer;
-> 2. pata_platform checks for irq_res.start > 0, but since irq_res.start
->    is unsigned type, the check will be true for `-1'.
-> 
-> Reported-by: Steven A. Falco <sfalco@harris.com>
-> Signed-off-by: Anton Vorontsov <avorontsov@ru.mvista.com>
-> ---
-> 
-> Resending again...
-> 
->  drivers/ata/pata_of_platform.c |    2 +-
->  1 files changed, 1 insertions(+), 1 deletions(-)
-> 
-> diff --git a/drivers/ata/pata_of_platform.c b/drivers/ata/pata_of_platform.c
-> index 408da30..1f18ad9 100644
-> --- a/drivers/ata/pata_of_platform.c
-> +++ b/drivers/ata/pata_of_platform.c
-> @@ -52,7 +52,7 @@ static int __devinit pata_of_platform_probe(struct of_device *ofdev,
->  
->  	ret = of_irq_to_resource(dn, 0, &irq_res);
->  	if (ret == NO_IRQ)
-> -		irq_res.start = irq_res.end = -1;
-> +		irq_res.start = irq_res.end = 0;
->  	else
->  		irq_res.flags = 0;
->  
+Anton Vorontsov
+email: cbouatmailru@gmail.com
+irc://irc.freenode.net/bd2
