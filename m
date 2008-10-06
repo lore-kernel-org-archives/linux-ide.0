@@ -1,23 +1,23 @@
 From: "Gwendal Grignou" <gwendal@google.com>
 Subject: [PATH 2/2] [sata_mv] enable FIS Based Switching when a Port Multiplier is connected
-Date: Sun, 5 Oct 2008 18:13:15 -0700
-Message-ID: <e7510f760810051813x7deb46aasc53e15349e61dc14@mail.gmail.com>
+Date: Sun, 5 Oct 2008 18:17:35 -0700
+Message-ID: <e7510f760810051817p725038bdjc5a0c94f24ad975e@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp-out.google.com ([216.239.33.17]:50710 "EHLO
-	smtp-out3.google.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751249AbYJFBNW (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 5 Oct 2008 21:13:22 -0400
-Received: from wpaz1.hot.corp.google.com (wpaz1.hot.corp.google.com [172.24.198.65])
-	by smtp-out.google.com with ESMTP id m961DHBl017198
-	for <linux-ide@vger.kernel.org>; Mon, 6 Oct 2008 02:13:18 +0100
-Received: from fg-out-1718.google.com (fgg19.prod.google.com [10.86.7.19])
-	by wpaz1.hot.corp.google.com with ESMTP id m961DF2x021322
-	for <linux-ide@vger.kernel.org>; Sun, 5 Oct 2008 18:13:16 -0700
-Received: by fg-out-1718.google.com with SMTP id 19so2126646fgg.16
-        for <linux-ide@vger.kernel.org>; Sun, 05 Oct 2008 18:13:15 -0700 (PDT)
+Received: from smtp-out.google.com ([216.239.33.17]:51049 "EHLO
+	smtp-out.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751432AbYJFBRr (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 5 Oct 2008 21:17:47 -0400
+Received: from spaceape8.eur.corp.google.com (spaceape8.eur.corp.google.com [172.28.16.142])
+	by smtp-out.google.com with ESMTP id m961HbrR022130
+	for <linux-ide@vger.kernel.org>; Mon, 6 Oct 2008 02:17:37 +0100
+Received: from fg-out-1718.google.com (fgae21.prod.google.com [10.86.56.21])
+	by spaceape8.eur.corp.google.com with ESMTP id m961HZcI009901
+	for <linux-ide@vger.kernel.org>; Sun, 5 Oct 2008 18:17:36 -0700
+Received: by fg-out-1718.google.com with SMTP id e21so1629959fga.12
+        for <linux-ide@vger.kernel.org>; Sun, 05 Oct 2008 18:17:35 -0700 (PDT)
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
