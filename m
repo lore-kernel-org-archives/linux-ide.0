@@ -1,44 +1,40 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: Interoperability problem with Quantum CD72SH SATA tape drive
- and libata
-Date: Tue, 07 Oct 2008 10:29:23 +0900
-Message-ID: <48EABB73.5080002@kernel.org>
-References: <48DE96AF.6090301@runbox.com> <48E2ECA8.8060808@kernel.org> <48E40415.7050607@runbox.com> <48E7D5CD.2000003@kernel.org> <48EA68D7.3060701@runbox.com>
+Subject: Re: [PATCH] pata_of_platform: fix no irq handling
+Date: Tue, 07 Oct 2008 10:30:59 +0900
+Message-ID: <48EABBD3.1010401@kernel.org>
+References: <20081006172653.GA26427@oksana.dev.rtsoft.ru> <48EA77EF.6080502@genesi-usa.com> <20081006213209.GA13072@oksana.dev.rtsoft.ru>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=windows-1251
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:58859 "EHLO hera.kernel.org"
+Received: from hera.kernel.org ([140.211.167.34]:34190 "EHLO hera.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752560AbYJGBbW (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 6 Oct 2008 21:31:22 -0400
-In-Reply-To: <48EA68D7.3060701@runbox.com>
+	id S1752487AbYJGBdH (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 6 Oct 2008 21:33:07 -0400
+In-Reply-To: <20081006213209.GA13072@oksana.dev.rtsoft.ru>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: John Clark <clarkjc@runbox.com>
-Cc: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, Alan Cox <alan@lxorguk.ukuu.org.uk>
+To: avorontsov@ru.mvista.com
+Cc: Matt Sealey <matt@genesi-usa.com>, Jeff Garzik <jgarzik@pobox.com>, linuxppc-dev@ozlabs.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Li Yang <leoli@freescale.com>, Wang Jian <lark@linux.net.cn>
 
-John Clark wrote:
-> Tejun Heo wrote:
->> Can you please test the attached patch?
+Anton Vorontsov wrote:
+> On Mon, Oct 06, 2008 at 03:41:19PM -0500, Matt Sealey wrote:
+>> There is a simple problem with the patch which is that an "IRQ 0" can and does
+>> actually exist on a bunch of platforms, at least to the best of my knowledge.
 >>
->> Alan, John Clark is reporting that the above tape drive chokes on odd
->> byte PIO transfer, so the default condition check (qc->nbytes & 15) in
->> atapi_check_dma() breaks the SATA tape drive, so there's always one
->> which breaks the other way around.  :-(
->>
->> For the time being, I think the horkage should do.  I was wondering
->> whether you still think we should lift the default mod16 check in
->> atapi_check_dma().
->>
->> Thanks.
->>   
+>> Checking for -1 (which means for definite, no irq at all, because it is
+>> totally unambiguous, as a -1 IRQ numbering is "impossible") is more correct.
 > 
-> Tejun,
+> This was discussed years ago.
 > 
-> I have tested the patch you supplied.  It works, as expected.
+> http://lkml.org/lkml/2005/11/22/159
+> http://lkml.org/lkml/2005/11/22/227
+> 
 
-applied to #tj-upstream.  Thanks.
+Would this break any existing platforms?  If so, can those be fixed
+together or does it become a much bigger problem that way?
+
+Thanks.
 
 -- 
 tejun
