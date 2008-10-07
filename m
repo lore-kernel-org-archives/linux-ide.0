@@ -1,59 +1,56 @@
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Subject: Re: [PATCH] pata_of_platform: fix no irq handling
-Date: Tue, 07 Oct 2008 21:04:45 +1100
-Message-ID: <1223373885.8157.49.camel@pasglop>
-References: <20081006172653.GA26427@oksana.dev.rtsoft.ru>
-	<48EA77EF.6080502@genesi-usa.com>
-	<20081006213209.GA13072@oksana.dev.rtsoft.ru>
-	<48EABBD3.1010401@kernel.org>
-	<20081007092605.GA28907@oksana.dev.rtsoft.ru>
-Reply-To: benh@kernel.crashing.org
+From: Jens Axboe <jens.axboe@oracle.com>
+Subject: Re: [PATCH 1/2] ide: Add tx4939ide driver
+Date: Tue, 7 Oct 2008 14:09:35 +0200
+Message-ID: <20081007120935.GX19428@kernel.dk>
+References: <48C851ED.4090607@ru.mvista.com> <48CA8BEE.1090305@ru.mvista.com> <20080913.005904.07457691.anemo@mba.ocn.ne.jp> <200809271819.19510.bzolnier@gmail.com> <48DEAF1F.8040200@gmail.com> <1222787387.3232.26.camel@localhost.localdomain> <48E6DB55.2050800@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <linuxppc-dev-bounces+glppd-linuxppc64-dev=m.gmane.org@ozlabs.org>
-In-Reply-To: <20081007092605.GA28907@oksana.dev.rtsoft.ru>
-List-Unsubscribe: <https://ozlabs.org/mailman/options/linuxppc-dev>,
-	<mailto:linuxppc-dev-request@ozlabs.org?subject=unsubscribe>
-List-Archive: <http://ozlabs.org/pipermail/linuxppc-dev>
-List-Post: <mailto:linuxppc-dev@ozlabs.org>
-List-Help: <mailto:linuxppc-dev-request@ozlabs.org?subject=help>
-List-Subscribe: <https://ozlabs.org/mailman/listinfo/linuxppc-dev>,
-	<mailto:linuxppc-dev-request@ozlabs.org?subject=subscribe>
-Sender: linuxppc-dev-bounces+glppd-linuxppc64-dev=m.gmane.org@ozlabs.org
-Errors-To: linuxppc-dev-bounces+glppd-linuxppc64-dev=m.gmane.org@ozlabs.org
-To: avorontsov@ru.mvista.com
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linuxppc-dev@ozlabs.org, Tejun Heo <tj@kernel.org>, Li Yang <leoli@freescale.com>, Jeff Garzik <jgarzik@pobox.com>, Wang Jian <lark@linux.net.cn>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from pasmtpa.tele.dk ([80.160.77.114]:34370 "EHLO pasmtpA.tele.dk"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752474AbYJGMKG (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 7 Oct 2008 08:10:06 -0400
+Content-Disposition: inline
+In-Reply-To: <48E6DB55.2050800@gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Atsushi Nemoto <anemo@mba.ocn.ne.jp>, sshtylyov@ru.mvista.com, linux-mips@linux-mips.org, linux-ide@vger.kernel.org, ralf@linux-mips.org
 
-On Tue, 2008-10-07 at 13:26 +0400, Anton Vorontsov wrote:
-> On Tue, Oct 07, 2008 at 10:30:59AM +0900, Tejun Heo wrote:
-> > Anton Vorontsov wrote:
-> > > On Mon, Oct 06, 2008 at 03:41:19PM -0500, Matt Sealey wrote:
-> > >> There is a simple problem with the patch which is that an "IRQ 0" can and does
-> > >> actually exist on a bunch of platforms, at least to the best of my knowledge.
-> > >>
-> > >> Checking for -1 (which means for definite, no irq at all, because it is
-> > >> totally unambiguous, as a -1 IRQ numbering is "impossible") is more correct.
-> > > 
-> > > This was discussed years ago.
-> > > 
-> > > http://lkml.org/lkml/2005/11/22/159
-> > > http://lkml.org/lkml/2005/11/22/227
-> > > 
+On Sat, Oct 04 2008, Tejun Heo wrote:
+> James Bottomley wrote:
+> > On Sun, 2008-09-28 at 07:09 +0900, Tejun Heo wrote:
+> >> Bartlomiej Zolnierkiewicz wrote:
+> >>> On Friday 12 September 2008, Atsushi Nemoto wrote:
+> >>>> On Fri, 12 Sep 2008 19:34:06 +0400, Sergei Shtylyov <sshtylyov@ru.mvista.com> wrote:
+> >>> [...]
+> >>>
+> >>>>>>>> +	__ide_flush_dcache_range((unsigned long)addr, size);
+> >>>>>>>   Why is this needed BTW?
+> >>>>>> Do you mean __ide_flush_dcache_range?  This is needed to avoid cache
+> >>>>>> inconsistency on PIO drive.  PIO transfer only writes to cache but
+> >>>>>> upper layers expects the data is in main memory.
+> >>>>>     Hum, then I wonder why it's MIPS specific...
+> >>>> SPARC also have it.  And there were some discussions for ARM IIRC.
+> >>> I was under the impression that it has been addressed by Tejun at
+> >>> the higher-layer level (for both ide/libata) long time ago and that
+> >>> MIPS/SPARC code are just a left-overs which could be removed now?
+> >> cc'ing Jens and James.  IIRC, I posted several patches but they never
+> >> went in.  I don't remember what the objections were or whether any
+> >> alternative fix went in.
 > > 
-> > Would this break any existing platforms?
+> > Which patches were these?  We have several methods of doing PIO
+> > fallback, the most common one being
+> > scatterlist.c:sg_copy_from/to_buffer() which does the cache coherency.
 > 
-> Nope.
+> The thread Atsushi found seems to be the correct one.
 > 
-> The driver is only available for PPC platforms.
+>   http://lkml.org/lkml/2006/1/13/156
 > 
-> As time goes by one can change `depend on PPC_OF' to just `depends on
-> OF', so that the driver will be also available for SPARC. And still
-> it will work, because SPARC also understands VIRQ0 as invalid VIRQ.
-> 
+> Thanks.
 
-Yup, I agree. I'll pick it up in my next batch.
+I agreed to them last time... Shall we get this merged up?
 
-Cheers,
-Ben.
+-- 
+Jens Axboe
+
