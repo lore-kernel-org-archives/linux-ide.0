@@ -1,106 +1,51 @@
-From: Greg KH <greg@kroah.com>
-Subject: Re: Laptop shock detection and harddisk protection
-Date: Tue, 7 Oct 2008 15:03:03 -0700
-Message-ID: <20081007220303.GA9066@kroah.com>
-References: <48C7FCEE.8060404@kernel.org> <20080917180405.GB3162@kroah.com> <20080918111845.GH27832@elf.ucw.cz> <200809191104.00171.trenn@suse.de> <20080924051417.GA29993@kroah.com> <20081007204011.GG6604@elf.ucw.cz> <20081007211905.GB8151@kroah.com> <20081007214006.GL6604@elf.ucw.cz>
+From: bugme-daemon@bugzilla.kernel.org
+Subject: [Bug 11697] CD tray closes spontaneously after opening it
+Date: Tue,  7 Oct 2008 15:33:32 -0700 (PDT)
+Message-ID: <20081007223332.D4563108057@picon.linux-foundation.org>
+References: <bug-11697-11633@http.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from kroah.org ([198.145.64.141]:35120 "EHLO coco.kroah.org"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1754059AbYJGWGo (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 7 Oct 2008 18:06:44 -0400
-Content-Disposition: inline
-In-Reply-To: <20081007214006.GL6604@elf.ucw.cz>
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:41719 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754305AbYJGWeD convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 7 Oct 2008 18:34:03 -0400
+Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
+	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id m97MXWJn023018
+	for <linux-ide@vger.kernel.org>; Tue, 7 Oct 2008 15:33:33 -0700
+In-Reply-To: <bug-11697-11633@http.bugzilla.kernel.org/>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Pavel Machek <pavel@suse.cz>
-Cc: Thomas Renninger <trenn@suse.de>, Tejun Heo <tj@kernel.org>, Shem Multinymous <multinymous@gmail.com>, Elias Oltmanns <eo@nebensachen.de>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, IDE/ATA development list <linux-ide@vger.kernel.org>
+To: linux-ide@vger.kernel.org
 
-On Tue, Oct 07, 2008 at 11:40:06PM +0200, Pavel Machek wrote:
+http://bugzilla.kernel.org/show_bug.cgi?id=11697
+
+
+
+
+
+------- Comment #1 from rjw@sisk.pl  2008-10-07 15:33 -------
+On Wednesday, 8 of October 2008, Frans Pop wrote:
+> On Saturday 04 October 2008, Rafael J. Wysocki wrote:
+> > The following bug entry is on the current list of known regressions
+> > from 2.6.26.  Please verify if it still should be listed and let me
+> > know (either way).
+> >
+> > Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=11697
+> > Subject	: CD tray closes spontaneously after opening it
+> > Submitter	: Frans Pop <elendil@planet.nl>
+> > Date		: 2008-09-30 10:47 (5 days old)
+> > References	: http://marc.info/?l=linux-kernel&m=122277167125264&w=4
+> > Handled-By	: Kay Sievers <kay.sievers@vrfy.org>
 > 
-> > > > If you, or anyone else, writes a new driver from the published
-> > > > documents, that driver can be accepted.  It can not be based on the
-> > > > existing code written by Shem in any form.
-> > > 
-> > > Can you detail what "published" means?
-> > 
-> > Published in a way that has NOTHING to do with these source files.
-> > 
-> > > Either I can take his sources on sourceforge.net (quite well known
-> > > place, right) as published information, or I could not use other well
-> > > known sources such as wikipedia.
-> > 
-> > If the wikipedia information was written based on these source files,
-> > no, we can't use that, sorry.
-> 
-> How do I know?
+> I have not been able to reproduce this recently. I also don't think it's 
+> really worth tracking this as a regression as there's still a lot of 
+> uncertainty as to what the cause is.
 
-Unfortunatly, you can't, so don't use it.
 
-> > > Sources on sourceforge.net seem published-enough to me, and if you
-> > > insist they can't be used, you should provide some reasons...
-> > > 
-> > > [And no, just calling it "tainted" is not enough.]
-> > 
-> > {sigh}
-> > 
-> > Again, for the last time:
-> >   - this code was written by an anonymous person, using documents or
-> >     information that was obtained and used in a manner that was not
-> >     legal according to their employment agreement.
-> 
-> This code is written by anonymous person. He may have used documents
-> improperly, but I see no signs of that, and don't see why I should
-> believe you saying so.
-> 
-> If have proof of that, you should talk to sourceforge to take that
-> code down... or probably their employer should ask sourceforge to do
-> that.
-> 
-> The documents are on the web from more than year now, on
-> well-known. That seems to indicate that your theory is not true.
-
-Yes, I know this is true, for a variety of reasons of what people
-(including the individual in question) told me in private.
-
-And I'm not going to go around asking for code to be taken down, as I'm
-not the one whose contract was invalidated.
-
-All I can say is that I can not accept such code into the Linux kernel
-as it is known to be created in an illegal manner.
-
-This has been discussed with both the Linux Foundations lawyers
-(actually it was OSDL at the time), and with Novell's lawyers.
-
-And as a Novell employee, you aren't allowed to put this code into the
-kernel either, sorry, that's the rule we were told.
-
-> >   - so, to get something like this into the kernel, we need to rewrite
-> >     the code, using information obtained LEGALLY from either the
-> >     manufacturer of the chips or computers, or from another TOTALLY
-> >     SEPARATE location.
-> 
-> I'm LEGALLY obtaining the information from sourceforge.net. That is
-> rather well-known, and non-anonymous source. They continue to publish
-> this information.
-
-If the information there is known to be posted in a manner that was
-obtained illegally, it does not make the fact that you take it any more
-"legal".
-
-Ok, once again:
-  - we know this code was created illegally.
-  - that is why we (Linux Foundation / Novell) can not accept such code.
-
-If some other company wants to step up, and put their "Signed-off-by:"
-on it, I will be glad to have the Linux Foundation lawyers contact them
-to find out if this is now acceptable, and from what background they
-have gotten the information.
-
-So can we please just drop this?  Or do you want me to point you at the
-lawyers?
-
-thanks,
-
-greg k-h
+-- 
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug, or are watching the assignee.
