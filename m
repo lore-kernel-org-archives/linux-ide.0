@@ -1,96 +1,86 @@
-From: "Rob Whitton" <rwhitton@bluearc.com>
-Subject: RE: "SCR access via SIDPR is available but doesn't work"
-Date: Wed, 8 Oct 2008 11:37:09 +0100
-Message-ID: <3D76E016F4A2A749A1EB1A3FD83E22BC01E0D723@uk-email.terastack.bluearc.com>
-References: <3D76E016F4A2A749A1EB1A3FD83E22BC01D6E466@uk-email.terastack.bluearc.com> <48E6D8F4.2080207@gmail.com>
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+Subject: Re: Top kernel oopses/warnings for the week of October 7th, 2008
+Date: Wed, 8 Oct 2008 14:43:16 +0200
+Message-ID: <200810081443.17852.rjw@sisk.pl>
+References: <48EBBE15.9030905@linux.intel.com> <200810081106.55730.rjw@sisk.pl> <20081008092136.GA22387@elte.hu>
 Mime-Version: 1.0
 Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from p01c12o143.mxlogic.net ([208.65.145.66]:43190 "EHLO
-	p01c12o143.mxlogic.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753248AbYJHLGi convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 8 Oct 2008 07:06:38 -0400
-Content-class: urn:content-classes:message
-In-Reply-To: <48E6D8F4.2080207@gmail.com>
+Received: from ogre.sisk.pl ([217.79.144.158]:38085 "EHLO ogre.sisk.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753873AbYJHMjM (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 8 Oct 2008 08:39:12 -0400
+In-Reply-To: <20081008092136.GA22387@elte.hu>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: linux-ide@vger.kernel.org
+To: Ingo Molnar <mingo@elte.hu>
+Cc: David Miller <davem@davemloft.net>, alan@lxorguk.ukuu.org.uk, arjan@linux.intel.com, linux-kernel@vger.kernel.org, torvalds@linux-foundation.org, akpm@linux-foundation.org, netdev@vger.kernel.org, linux-acpi@vger.kernel.org, tglx@tglx.de, tytso@mit.edu, linux-ide@vger.kernel.org
 
-
-
-> -----Original Message-----
-> From: Tejun Heo [mailto:htejun@gmail.com]
-> Sent: 04 October 2008 03:46
-> To: Rob Whitton
-> Subject: Re: "SCR access via SIDPR is available but doesn't work"
+On Wednesday, 8 of October 2008, Ingo Molnar wrote:
 > 
-> Hello,
+> * Rafael J. Wysocki <rjw@sisk.pl> wrote:
 > 
-> Sorry for the late reply.  I was traveling.  Can you please cc
-> linux-ide@vger.kernel.org when replying?  And if possible please use
-> plain text instead of html.
+> > On Wednesday, 8 of October 2008, David Miller wrote:
+> > > From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+> > > Date: Tue, 7 Oct 2008 23:58:33 +0100
+> > > 
+> > > > > This should have been fixed by:
+> > > > > http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commit;h=f5a6d958b5d0a10e7e7a9dee1862fb31d08c6d26
+> > > > 
+> > > > You mean - hidden by - that change should IMHO be reverted
+> > > 
+> > > Grrr... I totally agree.
+> > 
+> > Even though they are false positives in many cases?
+> > 
+> > (Yes, they are).
 > 
-> Rob Whitton wrote:
-> > I'm sorry to trouble you but I believe that you were the author of
-> > the patch that generates the message in the subject of this
-> > email. This patch appears to have been giving us considerable
-> > problems on motherboards using the Intel ICH9R IO chip under some
-> > circumstances.  When we have a sata disk attached to the second sata
-> > controller (address xxxx:xx:1f.5) in the intel device then (it seems
-> > to depend on timing we can get it to work sometimes) this piece of
-> > code activates and Linux then fails to boot from the sata disk
-> > although we can see from the log that it has managed to get as far
-> > as querying the manufacturer info from the disk.
-> >
-> > We have worked around the problem by forcing AHCI mode in the BIOS
-> > so we are using the Linux ahci driver rather than ata_piix this
-> > works fine.
-> >
-> > I have attached two boot log files. One shows Linux booting fine
-> > with the sata disk plugged into SATA port 0 which uses the first
-> > sata controller (address 0000:00:1f.2) and one with the sata disk
-> > plugged into SATA port 5 which uses the second sata controller
-> > (address 0000:00:1f.5). In the failing case the last output in the
-> > boot log is Attached SCSI disk. Linux makes no further progress to
-> > boot after this point. All other aspects of the test are identical,
-> > the only change is to move the SATA disk from port 0 to port 5.
-> >
-> > As I mentioned we have a work around for the problem so this email
-> > is just for your information. I would be interested in your thoughts
-> > of course.
+> it's your judgement call i guess - i just wanted to challenge the 
+> terminology of calling it a fix ;-)
+
+Well, since I added the WARN_ON() and then reallized it did more harm than
+good, I consider it as a fix. :-)
+
+> Can you think of any good way of reintroducing the good aspect of the 
+> WARN(), without the false positives? [ If not, and if the WARN()s do 
+> more harm than good then it's the right change. ]
+
+Unfortunately not.  In particular, the MMC subsystem is known to trigger this
+WARN_ON() which in turn is not related to any functional problem (it's a design
+issue in this case) and it's not going to be fixed any time soon IMO.
+
+USB used to trigger it too, but that has been fixed already.
+
+> But generally the trend is the opposite direction: we try to add as many 
+> WARN()s as possible, and we need even more good WARN()s in the kernel. 
+> When we meet false positives we try to improve the quality/yield of the 
+> warning, not eliminate it.
 > 
-> That's one strange failure mode.  I can't really think of anything
-> libata can do to cause such behavior.  After the booting stops, is the
-> machine alive?  Can you turn the numlock LED on/off by pressing the
-> numlock button?  Can you capture the output of sysrq-t
-> (ctrl-alt-sysrq-t)?
+> Granted, they are a bit embarrassing when they show up in the top 10 but 
+> they are also very helpful and are tracked very nicely and lead to 
+> actual bugfixes that _matter_.
 > 
-> Thanks.
+> Kerneloops.org is a wonderful tool: it enables a broad spectrum of users 
+> to help us out with their feedback, without them being forced into any 
+> manual work, and without them having to understand the kernel bug 
+> reporting workflow. Its scale is already enormous: 3000+ bugs reported 
+> per week. (many kudos Arjan!)
 > 
-> --
-> tejun
+> Once its growth stabilizes (all the large distros have it either enabled 
+> today or have the client in their pipeline) we can even observe 
+> long-term trends and estimate release-to-release suckiness. That was 
+> impossible before and maintainers were left largely to imprecise 
+> intuitive guesses about where we stand wrt. kernel quality.
 
-I have run this test and I can confirm that NumLock does still work,
-although unreliably. What I mean by this is that once we get to this
-point often it takes a number of presses of numlock to get the state of
-the LED to change. Before we get to this point it seems to behave fine.
-Ctrl-alt-sysrq-t doesn't appear to dump anything to the console. After
-doing ctrl-alt-sysrq-t numlock no longer functions at all.
+While I agree with all that, I also think that it's not really reasonable to
+use WARNs causing people to waste their time for reporting issues that actually
+don't need to be reported.
 
-Something I forgot to mention in my original email is that using
-"noapic" at boot is also a work around for the problem. It isn't an
-option for us as we are going to be using advanced features such as MSI
-that are only available via the APIC route.
+IMO it will make sense to add this WARN_ON() back again in future, but not at
+the moment.
 
-I hope this helps.
-
-Cheers
-
-Rob
-
-
-
-
+Thanks,
+Rafael
