@@ -1,99 +1,41 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH 5/7] ide: push ide_lock to __ide_end_request()
-Date: Wed, 08 Oct 2008 22:30:10 +0200
-Message-ID: <20081008203010.19112.41726.sendpatchset@localhost.localdomain>
-References: <20081008202930.19112.90371.sendpatchset@localhost.localdomain>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: "SCR access via SIDPR is available but doesn't work"
+Date: Thu, 09 Oct 2008 06:48:38 +0900
+Message-ID: <48ED2AB6.4010905@gmail.com>
+References: <3D76E016F4A2A749A1EB1A3FD83E22BC01D6E466@uk-email.terastack.bluearc.com> <48E6D8F4.2080207@gmail.com> <3D76E016F4A2A749A1EB1A3FD83E22BC01E0D723@uk-email.terastack.bluearc.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ik-out-1112.google.com ([66.249.90.181]:16922 "EHLO
-	ik-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756501AbYJHUbq (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 8 Oct 2008 16:31:46 -0400
-Received: by ik-out-1112.google.com with SMTP id c30so2646846ika.5
-        for <linux-ide@vger.kernel.org>; Wed, 08 Oct 2008 13:31:44 -0700 (PDT)
-In-Reply-To: <20081008202930.19112.90371.sendpatchset@localhost.localdomain>
+Received: from ti-out-0910.google.com ([209.85.142.186]:53388 "EHLO
+	ti-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752788AbYJHVuM (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 8 Oct 2008 17:50:12 -0400
+Received: by ti-out-0910.google.com with SMTP id b6so2370128tic.23
+        for <linux-ide@vger.kernel.org>; Wed, 08 Oct 2008 14:50:09 -0700 (PDT)
+In-Reply-To: <3D76E016F4A2A749A1EB1A3FD83E22BC01E0D723@uk-email.terastack.bluearc.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
-Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-kernel@vger.kernel.org
+To: Rob Whitton <rwhitton@bluearc.com>
+Cc: linux-ide@vger.kernel.org
 
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH] ide: push ide_lock to __ide_end_request()
+Rob Whitton wrote:
+> I have run this test and I can confirm that NumLock does still work,
+> although unreliably. What I mean by this is that once we get to this
+> point often it takes a number of presses of numlock to get the state of
+> the LED to change. Before we get to this point it seems to behave fine.
+> Ctrl-alt-sysrq-t doesn't appear to dump anything to the console. After
+> doing ctrl-alt-sysrq-t numlock no longer functions at all.
+> 
+> Something I forgot to mention in my original email is that using
+> "noapic" at boot is also a work around for the problem. It isn't an
+> option for us as we are going to be using advanced features such as MSI
+> that are only available via the APIC route.
 
-__ide_end_request() needs ide_lock only for __blk_end_request()
-call so push ide_lock taking inside __ide_end_requests().
+I don't think MSI has anything to do with noapic.  Can you please post
+the result of "lspci -nn"?  Also, what kind of motherboard is it?
 
-Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
----
- drivers/ide/ide-io.c |   28 +++++++++-------------------
- 1 file changed, 9 insertions(+), 19 deletions(-)
+Thanks.
 
-Index: b/drivers/ide/ide-io.c
-===================================================================
---- a/drivers/ide/ide-io.c
-+++ b/drivers/ide/ide-io.c
-@@ -58,6 +58,7 @@
- static int __ide_end_request(ide_drive_t *drive, struct request *rq,
- 			     int uptodate, unsigned int nr_bytes, int dequeue)
- {
-+	unsigned long flags;
- 	int ret = 1;
- 	int error = 0;
- 
-@@ -84,11 +85,13 @@ static int __ide_end_request(ide_drive_t
- 		ide_dma_on(drive);
- 	}
- 
--	if (!__blk_end_request(rq, error, nr_bytes)) {
--		if (dequeue)
--			HWGROUP(drive)->rq = NULL;
-+	spin_lock_irqsave(&ide_lock, flags);
-+	if (!__blk_end_request(rq, error, nr_bytes))
- 		ret = 0;
--	}
-+	spin_unlock_irqrestore(&ide_lock, flags);
-+
-+	if (ret == 0 && dequeue)
-+		drive->hwif->hwgroup->rq = NULL;
- 
- 	return ret;
- }
-@@ -108,8 +111,6 @@ int ide_end_request (ide_drive_t *drive,
- {
- 	unsigned int nr_bytes = nr_sectors << 9;
- 	struct request *rq = drive->hwif->hwgroup->rq;
--	unsigned long flags;
--	int ret = 1;
- 
- 	if (!nr_bytes) {
- 		if (blk_pc_request(rq))
-@@ -118,11 +119,7 @@ int ide_end_request (ide_drive_t *drive,
- 			nr_bytes = rq->hard_cur_sectors << 9;
- 	}
- 
--	spin_lock_irqsave(&ide_lock, flags);
--	ret = __ide_end_request(drive, rq, uptodate, nr_bytes, 1);
--	spin_unlock_irqrestore(&ide_lock, flags);
--
--	return ret;
-+	return __ide_end_request(drive, rq, uptodate, nr_bytes, 1);
- }
- EXPORT_SYMBOL(ide_end_request);
- 
-@@ -232,16 +229,9 @@ out_do_tf:
- int ide_end_dequeued_request(ide_drive_t *drive, struct request *rq,
- 			     int uptodate, int nr_sectors)
- {
--	unsigned long flags;
--	int ret;
--
- 	BUG_ON(!blk_rq_started(rq));
- 
--	spin_lock_irqsave(&ide_lock, flags);
--	ret = __ide_end_request(drive, rq, uptodate, nr_sectors << 9, 0);
--	spin_unlock_irqrestore(&ide_lock, flags);
--
--	return ret;
-+	return __ide_end_request(drive, rq, uptodate, nr_sectors << 9, 0);
- }
- EXPORT_SYMBOL_GPL(ide_end_dequeued_request);
- 
+-- 
+tejun
