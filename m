@@ -1,15 +1,15 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH 3/7] ide: __ide_port_unregister_devices() doesn't need an ide_lock held
-Date: Wed, 08 Oct 2008 22:29:53 +0200
-Message-ID: <20081008202953.19112.36835.sendpatchset@localhost.localdomain>
+Subject: [PATCH 2/7] ide: IDE settings don't need an ide_lock held
+Date: Wed, 08 Oct 2008 22:29:45 +0200
+Message-ID: <20081008202945.19112.66822.sendpatchset@localhost.localdomain>
 References: <20081008202930.19112.90371.sendpatchset@localhost.localdomain>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.189]:50797 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756166AbYJHUb3 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 8 Oct 2008 16:31:29 -0400
-Received: by nf-out-0910.google.com with SMTP id d3so1657755nfc.21
-        for <linux-ide@vger.kernel.org>; Wed, 08 Oct 2008 13:31:28 -0700 (PDT)
+Received: from gv-out-0910.google.com ([216.239.58.189]:25367 "EHLO
+	gv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755877AbYJHUbV (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 8 Oct 2008 16:31:21 -0400
+Received: by gv-out-0910.google.com with SMTP id e6so694837gvc.37
+        for <linux-ide@vger.kernel.org>; Wed, 08 Oct 2008 13:31:20 -0700 (PDT)
 In-Reply-To: <20081008202930.19112.90371.sendpatchset@localhost.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
@@ -17,60 +17,91 @@ To: linux-ide@vger.kernel.org
 Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-kernel@vger.kernel.org
 
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH] ide: __ide_port_unregister_devices() doesn't need an ide_lock held
+Subject: [PATCH] ide: IDE settings don't need an ide_lock held
 
-[ and ide_cfg_mtx mutex provides a sufficient protection for callers ]
+IDE settings are protected by ide_setting_mtx mutex so there is
+no need to hold ide_lock in ide_setting_ioctl(), ide_read_setting()
+and ide_proc_unregister_driver().
 
 Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 ---
- drivers/ide/ide.c |    7 -------
- 1 file changed, 7 deletions(-)
+ drivers/ide/ide-ioctls.c |    3 ---
+ drivers/ide/ide-proc.c   |   25 ++++---------------------
+ 2 files changed, 4 insertions(+), 24 deletions(-)
 
-Index: b/drivers/ide/ide.c
+Index: b/drivers/ide/ide-ioctls.c
 ===================================================================
---- a/drivers/ide/ide.c	2008-09-17 22:17:58.000000000 -0700
-+++ b/drivers/ide/ide.c	2008-09-17 22:20:15.000000000 -0700
-@@ -130,7 +130,6 @@
- 	}
- }
- 
--/* Called with ide_lock held. */
- static void __ide_port_unregister_devices(ide_hwif_t *hwif)
+--- a/drivers/ide/ide-ioctls.c
++++ b/drivers/ide/ide-ioctls.c
+@@ -19,7 +19,6 @@ int ide_setting_ioctl(ide_drive_t *drive
+ 		      const struct ide_ioctl_devset *s)
  {
- 	int i;
-@@ -139,10 +138,8 @@
- 		ide_drive_t *drive = &hwif->drives[i];
+ 	const struct ide_devset *ds;
+-	unsigned long flags;
+ 	int err = -EOPNOTSUPP;
  
- 		if (drive->dev_flags & IDE_DFLAG_PRESENT) {
--			spin_unlock_irq(&ide_lock);
- 			device_unregister(&drive->gendev);
- 			wait_for_completion(&drive->gendev_rel_comp);
--			spin_lock_irq(&ide_lock);
- 		}
- 	}
+ 	for (; (ds = s->setting); s++) {
+@@ -33,9 +32,7 @@ int ide_setting_ioctl(ide_drive_t *drive
+ 
+ read_val:
+ 	mutex_lock(&ide_setting_mtx);
+-	spin_lock_irqsave(&ide_lock, flags);
+ 	err = ds->get(drive);
+-	spin_unlock_irqrestore(&ide_lock, flags);
+ 	mutex_unlock(&ide_setting_mtx);
+ 	return err >= 0 ? put_user(err, (long __user *)arg) : err;
+ 
+Index: b/drivers/ide/ide-proc.c
+===================================================================
+--- a/drivers/ide/ide-proc.c
++++ b/drivers/ide/ide-proc.c
+@@ -155,13 +155,8 @@ static int ide_read_setting(ide_drive_t 
+ 	const struct ide_devset *ds = setting->setting;
+ 	int val = -EINVAL;
+ 
+-	if (ds->get) {
+-		unsigned long flags;
+-
+-		spin_lock_irqsave(&ide_lock, flags);
++	if (ds->get)
+ 		val = ds->get(drive);
+-		spin_unlock_irqrestore(&ide_lock, flags);
+-	}
+ 
+ 	return val;
  }
-@@ -150,11 +147,9 @@
- void ide_port_unregister_devices(ide_hwif_t *hwif)
+@@ -583,31 +578,19 @@ EXPORT_SYMBOL(ide_proc_register_driver);
+  *	Clean up the driver specific /proc files and IDE settings
+  *	for a given drive.
+  *
+- *	Takes ide_setting_mtx and ide_lock.
+- *	Caller must hold none of the locks.
++ *	Takes ide_setting_mtx.
+  */
+ 
+ void ide_proc_unregister_driver(ide_drive_t *drive, ide_driver_t *driver)
  {
- 	mutex_lock(&ide_cfg_mtx);
--	spin_lock_irq(&ide_lock);
- 	__ide_port_unregister_devices(hwif);
- 	hwif->present = 0;
- 	ide_port_init_devices_data(hwif);
--	spin_unlock_irq(&ide_lock);
- 	mutex_unlock(&ide_cfg_mtx);
+-	unsigned long flags;
+-
+ 	ide_remove_proc_entries(drive->proc, driver->proc_entries(drive));
+ 
+ 	mutex_lock(&ide_setting_mtx);
+-	spin_lock_irqsave(&ide_lock, flags);
+ 	/*
+-	 * ide_setting_mtx protects the settings list
+-	 * ide_lock protects the use of settings
+-	 *
+-	 * so we need to hold both, ide_settings_sem because we want to
+-	 * modify the settings list, and ide_lock because we cannot take
+-	 * a setting out that is being used.
+-	 *
+-	 * OTOH both ide_{read,write}_setting are only ever used under
+-	 * ide_setting_mtx.
++	 * ide_setting_mtx protects both the settings list and the use
++	 * of settings (we cannot take a setting out that is being used).
+ 	 */
+ 	drive->settings = NULL;
+-	spin_unlock_irqrestore(&ide_lock, flags);
+ 	mutex_unlock(&ide_setting_mtx);
  }
- EXPORT_SYMBOL_GPL(ide_port_unregister_devices);
-@@ -192,12 +187,10 @@
- 
- 	mutex_lock(&ide_cfg_mtx);
- 
--	spin_lock_irq(&ide_lock);
- 	if (hwif->present) {
- 		__ide_port_unregister_devices(hwif);
- 		hwif->present = 0;
- 	}
--	spin_unlock_irq(&ide_lock);
- 
- 	ide_proc_unregister_port(hwif);
- 
+ EXPORT_SYMBOL(ide_proc_unregister_driver);
