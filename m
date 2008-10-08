@@ -1,26 +1,50 @@
-From: David Miller <davem@davemloft.net>
-Subject: Re: Top kernel oopses/warnings for the week of October 7th, 2008
-Date: Tue, 07 Oct 2008 16:08:35 -0700 (PDT)
-Message-ID: <20081007.160835.257227518.davem@davemloft.net>
-References: <48EBBE15.9030905@linux.intel.com>
-	<200810072213.16103.rjw@sisk.pl>
-	<20081007235833.1a89948f@lxorguk.ukuu.org.uk>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: [smartmontools-support] inactive SATA drives won't stay in standby
+ or sleep, PATA models did. (fwd)
+Date: Wed, 08 Oct 2008 09:28:11 +0900
+Message-ID: <48EBFE9B.9070503@gmail.com>
+References: <D73D40172004714D95D7A84AC3E68EC802282133@wdscexbe03.sc.wdc.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-acpi-owner@vger.kernel.org>
-In-Reply-To: <20081007235833.1a89948f@lxorguk.ukuu.org.uk>
-Sender: linux-acpi-owner@vger.kernel.org
-To: alan@lxorguk.ukuu.org.uk
-Cc: rjw@sisk.pl, arjan@linux.intel.com, linux-kernel@vger.kernel.org, torvalds@linux-foundation.org, akpm@linux-foundation.org, mingo@elte.hu, netdev@vger.kernel.org, linux-acpi@vger.kernel.org, tglx@tglx.de, tytso@mit.edu, linux-ide@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from ti-out-0910.google.com ([209.85.142.186]:25207 "EHLO
+	ti-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755238AbYJHAaF (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 7 Oct 2008 20:30:05 -0400
+Received: by ti-out-0910.google.com with SMTP id b6so2074075tic.23
+        for <linux-ide@vger.kernel.org>; Tue, 07 Oct 2008 17:30:02 -0700 (PDT)
+In-Reply-To: <D73D40172004714D95D7A84AC3E68EC802282133@wdscexbe03.sc.wdc.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Christian Mueller <Christian.Mueller@wdc.com>
+Cc: Bruce Allen <ballen@gravity.phys.uwm.edu>, Smartmontools Mailing List <smartmontools-support@lists.sourceforge.net>, LKML <linux-kernel@vger.kernel.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, Mikael Pettersson <mikpe@it.uu.se>
 
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Date: Tue, 7 Oct 2008 23:58:33 +0100
+(cc'ing linux-ide and Mikael Pettersson)
 
-> > This should have been fixed by:
-> > http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commit;h=f5a6d958b5d0a10e7e7a9dee1862fb31d08c6d26
-> 
-> You mean - hidden by - that change should IMHO be reverted
+Christian Mueller wrote:
+> The messages I saw on the screen.
 
-Grrr... I totally agree.
+If the drive doesn't wake up and times out the smart command while
+suspended (which probably is a bug in the firmware but it also can be
+the controller's fault), then after the timeout, the driver should kick
+in and reset the drive which will wake up the device and retry the
+command.  It's not the prettiest picture but it's still gonna work.  In
+Linda's case, it looks like the controller (sata_promise) went bonkers
+on hardreset and requires power cycle to get back to working state.
+That's why I asked Linda to try another controller.
+
+Anyways, if you're seeing a similar problem, the driver or controller
+probably can't do proper reset after timeout and I can't really help
+with SAS driver on FreeBSD.  :-P
+
+Mikael, the original thread is the following.
+
+  http://article.gmane.org/gmane.linux.utilities.smartmontools/5842
+
+Any ideas why hardreset doesn't work after SMART command timed out?
+
+Thanks.
+
+-- 
+tejun
