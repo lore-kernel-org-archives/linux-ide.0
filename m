@@ -1,35 +1,28 @@
-From: bugme-daemon@bugzilla.kernel.org
-Subject: [Bug 11498] Teac DV28EV stops working with ide-cd
-Date: Wed,  8 Oct 2008 01:13:39 -0700 (PDT)
-Message-ID: <20081008081339.7830B10805B@picon.linux-foundation.org>
-References: <bug-11498-11633@http.bugzilla.kernel.org/>
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:41898 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753904AbYJHIOI (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 8 Oct 2008 04:14:08 -0400
-Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
-	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id m988DdJC019688
-	for <linux-ide@vger.kernel.org>; Wed, 8 Oct 2008 01:13:40 -0700
-In-Reply-To: <bug-11498-11633@http.bugzilla.kernel.org/>
-Sender: linux-ide-owner@vger.kernel.org
+From: David Woodhouse <dwmw2@infradead.org>
+Subject: Re: [PATCH] pata_of_platform: fix no irq handling
+Date: Wed, 08 Oct 2008 09:40:54 +0100
+Message-ID: <1223455254.3145.143.camel@macbook.infradead.org>
+References: <20081006172653.GA26427@oksana.dev.rtsoft.ru>
+	 <48EA77EF.6080502@genesi-usa.com>
+	 <20081006213209.GA13072@oksana.dev.rtsoft.ru> <48EABBD3.1010401@kernel.org>
+	 <20081007103723.0224671e@lxorguk.ukuu.org.uk>
+Mime-Version: 1.0
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1755241AbYJHIl3@vger.kernel.org>
+In-Reply-To: <20081007103723.0224671e@lxorguk.ukuu.org.uk>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: Tejun Heo <tj@kernel.org>, avorontsov@ru.mvista.com, Matt Sealey <matt@genesi-usa.com>, Jeff Garzik <jgarzik@pobox.com>, linuxppc-dev@ozlabs.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Li Yang <leoli@freescale.com>, Wang Jian <lark@linux.net.cn>
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
 
-http://bugzilla.kernel.org/show_bug.cgi?id=11498
+On Tue, 2008-10-07 at 10:37 +0100, Alan Cox wrote:
+> Zero means no IRQ. Any platform with bits of code left over exposing IRQ
+> 0 is already not supported by lots of driver code including libata.
 
-
-dcl@hppine99.gbr.hp.com changed:
-
-           What    |Removed                     |Added
-----------------------------------------------------------------------------
-  Attachment #18210|application/octet-stream    |text/plain
-          mime type|                            |
-
-
-
+...and must implement some kind of interrupt remapping crap just to work
+around this bogus design decision.
 
 -- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug, or are watching the assignee.
+David Woodhouse                            Open Source Technology Centre
+David.Woodhouse@intel.com                              Intel Corporation
