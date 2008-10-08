@@ -1,15 +1,15 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH 1/7] ide: unify ide_intr()'s exit points
-Date: Wed, 08 Oct 2008 22:29:37 +0200
-Message-ID: <20081008202937.19112.15735.sendpatchset@localhost.localdomain>
+Subject: [PATCH 3/7] ide: __ide_port_unregister_devices() doesn't need an ide_lock held
+Date: Wed, 08 Oct 2008 22:29:53 +0200
+Message-ID: <20081008202953.19112.36835.sendpatchset@localhost.localdomain>
 References: <20081008202930.19112.90371.sendpatchset@localhost.localdomain>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.171]:10615 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755169AbYJHUbP (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 8 Oct 2008 16:31:15 -0400
-Received: by ug-out-1314.google.com with SMTP id k3so697271ugf.37
-        for <linux-ide@vger.kernel.org>; Wed, 08 Oct 2008 13:31:12 -0700 (PDT)
+Received: from nf-out-0910.google.com ([64.233.182.189]:50797 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756166AbYJHUb3 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 8 Oct 2008 16:31:29 -0400
+Received: by nf-out-0910.google.com with SMTP id d3so1657755nfc.21
+        for <linux-ide@vger.kernel.org>; Wed, 08 Oct 2008 13:31:28 -0700 (PDT)
 In-Reply-To: <20081008202930.19112.90371.sendpatchset@localhost.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
@@ -17,87 +17,60 @@ To: linux-ide@vger.kernel.org
 Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-kernel@vger.kernel.org
 
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH] ide: unify ide_intr()'s exit points
+Subject: [PATCH] ide: __ide_port_unregister_devices() doesn't need an ide_lock held
 
-Just a preparation for future changes.
-
-There should be no functional changes caused by this patch.
+[ and ide_cfg_mtx mutex provides a sufficient protection for callers ]
 
 Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 ---
- drivers/ide/ide-io.c |   27 ++++++++++++++-------------
- 1 file changed, 14 insertions(+), 13 deletions(-)
+ drivers/ide/ide.c |    7 -------
+ 1 file changed, 7 deletions(-)
 
-Index: b/drivers/ide/ide-io.c
+Index: b/drivers/ide/ide.c
 ===================================================================
---- a/drivers/ide/ide-io.c
-+++ b/drivers/ide/ide-io.c
-@@ -1363,14 +1363,13 @@ irqreturn_t ide_intr (int irq, void *dev
- 	ide_drive_t *drive;
- 	ide_handler_t *handler;
- 	ide_startstop_t startstop;
-+	irqreturn_t irq_ret = IRQ_NONE;
- 
- 	spin_lock_irqsave(&ide_lock, flags);
- 	hwif = hwgroup->hwif;
- 
--	if (!ide_ack_intr(hwif)) {
--		spin_unlock_irqrestore(&ide_lock, flags);
--		return IRQ_NONE;
--	}
-+	if (!ide_ack_intr(hwif))
-+		goto out;
- 
- 	if ((handler = hwgroup->handler) == NULL || hwgroup->polling) {
- 		/*
-@@ -1406,9 +1405,9 @@ irqreturn_t ide_intr (int irq, void *dev
- 			(void)hwif->tp_ops->read_status(hwif);
- #endif /* CONFIG_BLK_DEV_IDEPCI */
- 		}
--		spin_unlock_irqrestore(&ide_lock, flags);
--		return IRQ_NONE;
-+		goto out;
+--- a/drivers/ide/ide.c	2008-09-17 22:17:58.000000000 -0700
++++ b/drivers/ide/ide.c	2008-09-17 22:20:15.000000000 -0700
+@@ -130,7 +130,6 @@
  	}
-+
- 	drive = hwgroup->drive;
- 	if (!drive) {
- 		/*
-@@ -1417,10 +1416,10 @@ irqreturn_t ide_intr (int irq, void *dev
- 		 *
- 		 * [Note - this can occur if the drive is hot unplugged]
- 		 */
--		spin_unlock_irqrestore(&ide_lock, flags);
--		return IRQ_HANDLED;
-+		goto out_handled;
- 	}
--	if (!drive_is_ready(drive)) {
-+
-+	if (!drive_is_ready(drive))
- 		/*
- 		 * This happens regularly when we share a PCI IRQ with
- 		 * another device.  Unfortunately, it can also happen
-@@ -1428,9 +1427,8 @@ irqreturn_t ide_intr (int irq, void *dev
- 		 * their status register is up to date.  Hopefully we have
- 		 * enough advance overhead that the latter isn't a problem.
- 		 */
--		spin_unlock_irqrestore(&ide_lock, flags);
--		return IRQ_NONE;
--	}
-+		goto out;
-+
- 	if (!hwgroup->busy) {
- 		hwgroup->busy = 1;	/* paranoia */
- 		printk(KERN_ERR "%s: ide_intr: hwgroup->busy was 0 ??\n", drive->name);
-@@ -1467,8 +1465,11 @@ irqreturn_t ide_intr (int irq, void *dev
- 				"on exit\n", drive->name);
- 		}
- 	}
-+out_handled:
-+	irq_ret = IRQ_HANDLED;
-+out:
- 	spin_unlock_irqrestore(&ide_lock, flags);
--	return IRQ_HANDLED;
-+	return irq_ret;
  }
  
- /**
+-/* Called with ide_lock held. */
+ static void __ide_port_unregister_devices(ide_hwif_t *hwif)
+ {
+ 	int i;
+@@ -139,10 +138,8 @@
+ 		ide_drive_t *drive = &hwif->drives[i];
+ 
+ 		if (drive->dev_flags & IDE_DFLAG_PRESENT) {
+-			spin_unlock_irq(&ide_lock);
+ 			device_unregister(&drive->gendev);
+ 			wait_for_completion(&drive->gendev_rel_comp);
+-			spin_lock_irq(&ide_lock);
+ 		}
+ 	}
+ }
+@@ -150,11 +147,9 @@
+ void ide_port_unregister_devices(ide_hwif_t *hwif)
+ {
+ 	mutex_lock(&ide_cfg_mtx);
+-	spin_lock_irq(&ide_lock);
+ 	__ide_port_unregister_devices(hwif);
+ 	hwif->present = 0;
+ 	ide_port_init_devices_data(hwif);
+-	spin_unlock_irq(&ide_lock);
+ 	mutex_unlock(&ide_cfg_mtx);
+ }
+ EXPORT_SYMBOL_GPL(ide_port_unregister_devices);
+@@ -192,12 +187,10 @@
+ 
+ 	mutex_lock(&ide_cfg_mtx);
+ 
+-	spin_lock_irq(&ide_lock);
+ 	if (hwif->present) {
+ 		__ide_port_unregister_devices(hwif);
+ 		hwif->present = 0;
+ 	}
+-	spin_unlock_irq(&ide_lock);
+ 
+ 	ide_proc_unregister_port(hwif);
+ 
