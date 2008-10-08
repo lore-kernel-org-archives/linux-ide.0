@@ -1,15 +1,15 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH 4/7] ide: ide_hwgroup_t.rq doesn't need an ide_lock held
-Date: Wed, 08 Oct 2008 22:30:02 +0200
-Message-ID: <20081008203002.19112.519.sendpatchset@localhost.localdomain>
+Subject: [PATCH 6/7] ide: ide_lock + __blk_end_request() -> blk_end_request()
+Date: Wed, 08 Oct 2008 22:30:18 +0200
+Message-ID: <20081008203018.19112.43718.sendpatchset@localhost.localdomain>
 References: <20081008202930.19112.90371.sendpatchset@localhost.localdomain>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from gv-out-0910.google.com ([216.239.58.189]:25367 "EHLO
-	gv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756304AbYJHUbh (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 8 Oct 2008 16:31:37 -0400
-Received: by gv-out-0910.google.com with SMTP id e6so694837gvc.37
-        for <linux-ide@vger.kernel.org>; Wed, 08 Oct 2008 13:31:36 -0700 (PDT)
+Received: from ug-out-1314.google.com ([66.249.92.171]:10722 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755229AbYJHUbz (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 8 Oct 2008 16:31:55 -0400
+Received: by ug-out-1314.google.com with SMTP id k3so697519ugf.37
+        for <linux-ide@vger.kernel.org>; Wed, 08 Oct 2008 13:31:53 -0700 (PDT)
 In-Reply-To: <20081008202930.19112.90371.sendpatchset@localhost.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
@@ -17,191 +17,119 @@ To: linux-ide@vger.kernel.org
 Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-kernel@vger.kernel.org
 
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH] ide: ide_hwgroup_t.rq doesn't need an ide_lock held
+Subject: [PATCH] ide: ide_lock + __blk_end_request() -> blk_end_request()
 
-While at it:
-- no need to check for hwgroup presence in ide_dump_opcode()
+Use blk_end_request() instead of ide_lock + __blk_end_request()
+in cdrom_end_request(), cdrom_newpc_intr(), __ide_end_request(),
+ide_complete_pm_request() and ide_end_drive_cmd().
+
+[ ide_lock is currently also used as queue lock ]
 
 Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 ---
- drivers/ide/ide-cd.c  |   12 ++++++++----
- drivers/ide/ide-io.c  |   40 +++++++++++++++++++---------------------
- drivers/ide/ide-lib.c |    7 +------
- 3 files changed, 28 insertions(+), 31 deletions(-)
+ drivers/ide/ide-cd.c |   12 +++---------
+ drivers/ide/ide-io.c |   16 ++++------------
+ 2 files changed, 7 insertions(+), 21 deletions(-)
 
 Index: b/drivers/ide/ide-cd.c
 ===================================================================
 --- a/drivers/ide/ide-cd.c
 +++ b/drivers/ide/ide-cd.c
-@@ -317,7 +317,8 @@ static void ide_dump_status_no_sense(ide
- static int cdrom_decode_status(ide_drive_t *drive, int good_stat, int *stat_ret)
- {
- 	ide_hwif_t *hwif = drive->hwif;
--	struct request *rq = hwif->hwgroup->rq;
-+	ide_hwgroup_t *hwgroup = hwif->hwgroup;
-+	struct request *rq = hwgroup->rq;
- 	int stat, err, sense_key;
+@@ -262,7 +262,6 @@ static void cdrom_end_request(ide_drive_
+ 		struct request *failed = (struct request *) rq->buffer;
+ 		struct cdrom_info *info = drive->driver_data;
+ 		void *sense = &info->sense_data;
+-		unsigned long flags;
  
- 	/* check for errors */
-@@ -508,9 +509,10 @@ end_request:
+ 		if (failed) {
+ 			if (failed->sense) {
+@@ -278,11 +277,9 @@ static void cdrom_end_request(ide_drive_
+ 						failed->hard_nr_sectors))
+ 					BUG();
+ 			} else {
+-				spin_lock_irqsave(&ide_lock, flags);
+-				if (__blk_end_request(failed, -EIO,
+-						      failed->data_len))
++				if (blk_end_request(failed, -EIO,
++						    failed->data_len))
+ 					BUG();
+-				spin_unlock_irqrestore(&ide_lock, flags);
+ 			}
+ 		} else
+ 			cdrom_analyze_sense_data(drive, NULL, sense);
+@@ -1151,16 +1148,13 @@ static ide_startstop_t cdrom_newpc_intr(
  
- 		spin_lock_irqsave(&ide_lock, flags);
- 		blkdev_dequeue_request(rq);
--		HWGROUP(drive)->rq = NULL;
- 		spin_unlock_irqrestore(&ide_lock, flags);
+ end_request:
+ 	if (blk_pc_request(rq)) {
+-		unsigned long flags;
+ 		unsigned int dlen = rq->data_len;
  
-+		hwgroup->rq = NULL;
-+
- 		cdrom_queue_request_sense(drive, rq->sense, rq);
- 	} else
- 		cdrom_end_request(drive, 0);
-@@ -950,7 +952,8 @@ static int cdrom_newpc_intr_dummy_cb(str
- static ide_startstop_t cdrom_newpc_intr(ide_drive_t *drive)
- {
- 	ide_hwif_t *hwif = drive->hwif;
--	struct request *rq = HWGROUP(drive)->rq;
-+	ide_hwgroup_t *hwgroup = hwif->hwgroup;
-+	struct request *rq = hwgroup->rq;
- 	xfer_func_t *xferfunc;
- 	ide_expiry_t *expiry = NULL;
- 	int dma_error = 0, dma, stat, thislen, uptodate = 0;
-@@ -1157,8 +1160,9 @@ end_request:
- 		spin_lock_irqsave(&ide_lock, flags);
- 		if (__blk_end_request(rq, 0, dlen))
+ 		if (dma)
+ 			rq->data_len = 0;
+ 
+-		spin_lock_irqsave(&ide_lock, flags);
+-		if (__blk_end_request(rq, 0, dlen))
++		if (blk_end_request(rq, 0, dlen))
  			BUG();
--		HWGROUP(drive)->rq = NULL;
- 		spin_unlock_irqrestore(&ide_lock, flags);
-+
-+		hwgroup->rq = NULL;
+-		spin_unlock_irqrestore(&ide_lock, flags);
+ 
+ 		hwgroup->rq = NULL;
  	} else {
- 		if (!uptodate)
- 			rq->cmd_flags |= REQ_FAILED;
 Index: b/drivers/ide/ide-io.c
 ===================================================================
 --- a/drivers/ide/ide-io.c
 +++ b/drivers/ide/ide-io.c
-@@ -107,17 +107,10 @@ static int __ide_end_request(ide_drive_t
- int ide_end_request (ide_drive_t *drive, int uptodate, int nr_sectors)
+@@ -58,7 +58,6 @@
+ static int __ide_end_request(ide_drive_t *drive, struct request *rq,
+ 			     int uptodate, unsigned int nr_bytes, int dequeue)
  {
- 	unsigned int nr_bytes = nr_sectors << 9;
--	struct request *rq;
-+	struct request *rq = drive->hwif->hwgroup->rq;
- 	unsigned long flags;
+-	unsigned long flags;
  	int ret = 1;
+ 	int error = 0;
  
--	/*
--	 * room for locking improvements here, the calls below don't
--	 * need the queue lock held at all
--	 */
--	spin_lock_irqsave(&ide_lock, flags);
--	rq = HWGROUP(drive)->rq;
--
- 	if (!nr_bytes) {
- 		if (blk_pc_request(rq))
- 			nr_bytes = rq->data_len;
-@@ -125,9 +118,10 @@ int ide_end_request (ide_drive_t *drive,
- 			nr_bytes = rq->hard_cur_sectors << 9;
+@@ -85,10 +84,8 @@ static int __ide_end_request(ide_drive_t
+ 		ide_dma_on(drive);
  	}
  
-+	spin_lock_irqsave(&ide_lock, flags);
- 	ret = __ide_end_request(drive, rq, uptodate, nr_bytes, 1);
--
- 	spin_unlock_irqrestore(&ide_lock, flags);
-+
- 	return ret;
- }
- EXPORT_SYMBOL(ide_end_request);
-@@ -241,8 +235,9 @@ int ide_end_dequeued_request(ide_drive_t
- 	unsigned long flags;
- 	int ret;
- 
 -	spin_lock_irqsave(&ide_lock, flags);
- 	BUG_ON(!blk_rq_started(rq));
-+
-+	spin_lock_irqsave(&ide_lock, flags);
- 	ret = __ide_end_request(drive, rq, uptodate, nr_sectors << 9, 0);
- 	spin_unlock_irqrestore(&ide_lock, flags);
- 
-@@ -274,7 +269,11 @@ static void ide_complete_pm_request (ide
- 		drive->dev_flags &= ~IDE_DFLAG_BLOCKED;
- 		blk_start_queue(drive->queue);
- 	}
--	HWGROUP(drive)->rq = NULL;
-+	spin_unlock_irqrestore(&ide_lock, flags);
-+
-+	drive->hwif->hwgroup->rq = NULL;
-+
-+	spin_lock_irqsave(&ide_lock, flags);
- 	if (__blk_end_request(rq, 0, 0))
- 		BUG();
- 	spin_unlock_irqrestore(&ide_lock, flags);
-@@ -296,12 +295,9 @@ static void ide_complete_pm_request (ide
-  
- void ide_end_drive_cmd (ide_drive_t *drive, u8 stat, u8 err)
- {
-+	ide_hwgroup_t *hwgroup = drive->hwif->hwgroup;
-+	struct request *rq = hwgroup->rq;
- 	unsigned long flags;
--	struct request *rq;
--
--	spin_lock_irqsave(&ide_lock, flags);
--	rq = HWGROUP(drive)->rq;
+-	if (!__blk_end_request(rq, error, nr_bytes))
++	if (!blk_end_request(rq, error, nr_bytes))
+ 		ret = 0;
 -	spin_unlock_irqrestore(&ide_lock, flags);
+ 
+ 	if (ret == 0 && dequeue)
+ 		drive->hwif->hwgroup->rq = NULL;
+@@ -263,10 +260,8 @@ static void ide_complete_pm_request (ide
+ 
+ 	drive->hwif->hwgroup->rq = NULL;
+ 
+-	spin_lock_irqsave(&ide_lock, flags);
+-	if (__blk_end_request(rq, 0, 0))
++	if (blk_end_request(rq, 0, 0))
+ 		BUG();
+-	spin_unlock_irqrestore(&ide_lock, flags);
+ }
+ 
+ /**
+@@ -287,7 +282,6 @@ void ide_end_drive_cmd (ide_drive_t *dri
+ {
+ 	ide_hwgroup_t *hwgroup = drive->hwif->hwgroup;
+ 	struct request *rq = hwgroup->rq;
+-	unsigned long flags;
  
  	if (rq->cmd_type == REQ_TYPE_ATA_TASKFILE) {
  		ide_task_t *task = (ide_task_t *)rq->special;
-@@ -332,15 +328,16 @@ void ide_end_drive_cmd (ide_drive_t *dri
- 		return;
- 	}
+@@ -322,11 +316,9 @@ void ide_end_drive_cmd (ide_drive_t *dri
  
--	spin_lock_irqsave(&ide_lock, flags);
--	HWGROUP(drive)->rq = NULL;
-+	hwgroup->rq = NULL;
-+
  	rq->errors = err;
-+
-+	spin_lock_irqsave(&ide_lock, flags);
- 	if (unlikely(__blk_end_request(rq, (rq->errors ? -EIO : 0),
- 				       blk_rq_bytes(rq))))
- 		BUG();
- 	spin_unlock_irqrestore(&ide_lock, flags);
- }
--
- EXPORT_SYMBOL(ide_end_drive_cmd);
- 
- static void ide_kill_rq(ide_drive_t *drive, struct request *rq)
-@@ -1489,11 +1486,12 @@ out:
- 
- void ide_do_drive_cmd(ide_drive_t *drive, struct request *rq)
- {
-+	ide_hwgroup_t *hwgroup = drive->hwif->hwgroup;
- 	unsigned long flags;
--	ide_hwgroup_t *hwgroup = HWGROUP(drive);
  
 -	spin_lock_irqsave(&ide_lock, flags);
- 	hwgroup->rq = NULL;
-+
-+	spin_lock_irqsave(&ide_lock, flags);
- 	__elv_add_request(drive->queue, rq, ELEVATOR_INSERT_FRONT, 1);
- 	__generic_unplug_device(drive->queue);
- 	spin_unlock_irqrestore(&ide_lock, flags);
-Index: b/drivers/ide/ide-lib.c
-===================================================================
---- a/drivers/ide/ide-lib.c
-+++ b/drivers/ide/ide-lib.c
-@@ -277,14 +277,9 @@ int ide_set_xfer_rate(ide_drive_t *drive
- 
- static void ide_dump_opcode(ide_drive_t *drive)
- {
--	struct request *rq;
-+	struct request *rq = drive->hwif->hwgroup->rq;
- 	ide_task_t *task = NULL;
- 
--	spin_lock(&ide_lock);
--	rq = NULL;
--	if (HWGROUP(drive))
--		rq = HWGROUP(drive)->rq;
--	spin_unlock(&ide_lock);
- 	if (!rq)
- 		return;
+-	if (unlikely(__blk_end_request(rq, (rq->errors ? -EIO : 0),
+-				       blk_rq_bytes(rq))))
++	if (unlikely(blk_end_request(rq, (rq->errors ? -EIO : 0),
++				     blk_rq_bytes(rq))))
+ 		BUG();
+-	spin_unlock_irqrestore(&ide_lock, flags);
+ }
+ EXPORT_SYMBOL(ide_end_drive_cmd);
  
