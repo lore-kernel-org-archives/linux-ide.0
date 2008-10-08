@@ -1,86 +1,70 @@
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-Subject: Re: Top kernel oopses/warnings for the week of October 7th, 2008
-Date: Wed, 8 Oct 2008 14:43:16 +0200
-Message-ID: <200810081443.17852.rjw@sisk.pl>
-References: <48EBBE15.9030905@linux.intel.com> <200810081106.55730.rjw@sisk.pl> <20081008092136.GA22387@elte.hu>
+From: Mark de Wever <koraq@xs4all.nl>
+Subject: Re: [patch][repost] ide-tape build fix
+Date: Wed, 8 Oct 2008 17:45:52 +0200
+Message-ID: <20081008154552.GA3907@localhost>
+References: <48D79ABD.8060805@ru.mvista.com> <9ea470500809220656j6dfcf4c9q7a5a4185481ec994@mail.gmail.com> <20080922204129.GA3495@localhost> <48D80949.4080901@ru.mvista.com> <20080923074845.GB5656@gollum.tnic> <20080923165914.GA7803@localhost> <9ea470500809231011p5ea37fc4u71eeeddf6ccec45a@mail.gmail.com> <20080923212018.GA3348@localhost> <20081007182615.GA2400@localhost> <20081008063352.GA13530@gollum.tnic>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ogre.sisk.pl ([217.79.144.158]:38085 "EHLO ogre.sisk.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753873AbYJHMjM (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 8 Oct 2008 08:39:12 -0400
-In-Reply-To: <20081008092136.GA22387@elte.hu>
+Received: from smtp-vbr7.xs4all.nl ([194.109.24.27]:1974 "EHLO
+	smtp-vbr7.xs4all.nl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751998AbYJHPrB (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 8 Oct 2008 11:47:01 -0400
 Content-Disposition: inline
+In-Reply-To: <20081008063352.GA13530@gollum.tnic>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Ingo Molnar <mingo@elte.hu>
-Cc: David Miller <davem@davemloft.net>, alan@lxorguk.ukuu.org.uk, arjan@linux.intel.com, linux-kernel@vger.kernel.org, torvalds@linux-foundation.org, akpm@linux-foundation.org, netdev@vger.kernel.org, linux-acpi@vger.kernel.org, tglx@tglx.de, tytso@mit.edu, linux-ide@vger.kernel.org
+To: petkovbb@gmail.com, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Sergei Shtylyov <sshtylyov@ru.mvista.com>, Gadi Oxman <gadio@netvision.net.il>, linux-ide@vger.kernel.org, linux-ke
 
-On Wednesday, 8 of October 2008, Ingo Molnar wrote:
-> 
-> * Rafael J. Wysocki <rjw@sisk.pl> wrote:
-> 
-> > On Wednesday, 8 of October 2008, David Miller wrote:
-> > > From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-> > > Date: Tue, 7 Oct 2008 23:58:33 +0100
-> > > 
-> > > > > This should have been fixed by:
-> > > > > http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commit;h=f5a6d958b5d0a10e7e7a9dee1862fb31d08c6d26
-> > > > 
-> > > > You mean - hidden by - that change should IMHO be reverted
-> > > 
-> > > Grrr... I totally agree.
-> > 
-> > Even though they are false positives in many cases?
-> > 
-> > (Yes, they are).
-> 
-> it's your judgement call i guess - i just wanted to challenge the 
-> terminology of calling it a fix ;-)
+On Wed, Oct 08, 2008 at 08:33:52AM +0200, Borislav Petkov wrote:
+Hi,
+> Bugger, I should be getting at least warnings when compiling this but I don't.
+> This is because I don't have CONFIG_LBD enabled. However, the %ld and %d
+> format specifiers are also not entirely correct but gcc doesn't warn about them
+> - I guess it checks only size but not signedness...
 
-Well, since I added the WARN_ON() and then reallized it did more harm than
-good, I consider it as a fix. :-)
+I guess so too.
 
-> Can you think of any good way of reintroducing the good aspect of the 
-> WARN(), without the false positives? [ If not, and if the WARN()s do 
-> more harm than good then it's the right change. ]
+> Would you like to redo your patch and add a proper comment ontop?
 
-Unfortunately not.  In particular, the MMC subsystem is known to trigger this
-WARN_ON() which in turn is not related to any functional problem (it's a design
-issue in this case) and it's not going to be fixed any time soon IMO.
+Here you go.
 
-USB used to trigger it too, but that has been fixed already.
+@Boris do you want to add your Signed-off-by too?
 
-> But generally the trend is the opposite direction: we try to add as many 
-> WARN()s as possible, and we need even more good WARN()s in the kernel. 
-> When we meet false positives we try to improve the quality/yield of the 
-> warning, not eliminate it.
-> 
-> Granted, they are a bit embarrassing when they show up in the top 10 but 
-> they are also very helpful and are tracked very nicely and lead to 
-> actual bugfixes that _matter_.
-> 
-> Kerneloops.org is a wonderful tool: it enables a broad spectrum of users 
-> to help us out with their feedback, without them being forced into any 
-> manual work, and without them having to understand the kernel bug 
-> reporting workflow. Its scale is already enormous: 3000+ bugs reported 
-> per week. (many kudos Arjan!)
-> 
-> Once its growth stabilizes (all the large distros have it either enabled 
-> today or have the client in their pipeline) we can even observe 
-> long-term trends and estimate release-to-release suckiness. That was 
-> impossible before and maintainers were left largely to imprecise 
-> intuitive guesses about where we stand wrt. kernel quality.
+@Bart please apply this patch.
 
-While I agree with all that, I also think that it's not really reasonable to
-use WARNs causing people to waste their time for reporting issues that actually
-don't need to be reported.
+--
+Subject: ide-tape: Buildfix when IDETAPE_DEBUG_LOG is set to 1.
 
-IMO it will make sense to add this WARN_ON() back again in future, but not at
-the moment.
+The format specifier for rq->sector didn't specify the proper size and
+signedness. Borislav Petkov discovered that the signedness for
+rq->nr_sectors and rq->current_nr_sectors also were incorrect.
 
-Thanks,
-Rafael
+Signed-off-by: Mark de Wever <koraq@xs4all.nl>
+---
+ drivers/ide/ide-tape.c |    7 ++++---
+ 1 files changed, 4 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/ide/ide-tape.c b/drivers/ide/ide-tape.c
+index 3833189..3d5f782 100644
+--- a/drivers/ide/ide-tape.c
++++ b/drivers/ide/ide-tape.c
+@@ -978,9 +978,10 @@ static ide_startstop_t idetape_do_request(ide_drive_t *drive,
+ 	struct request *postponed_rq = tape->postponed_rq;
+ 	u8 stat;
+ 
+-	debug_log(DBG_SENSE, "sector: %ld, nr_sectors: %ld,"
+-			" current_nr_sectors: %d\n",
+-			rq->sector, rq->nr_sectors, rq->current_nr_sectors);
++	debug_log(DBG_SENSE, "sector: %llu, nr_sectors: %lu,"
++			" current_nr_sectors: %u\n",
++			(unsigned long long)rq->sector, rq->nr_sectors, 
++			rq->current_nr_sectors);
+ 
+ 	if (!blk_special_request(rq)) {
+ 		/* We do not support buffer cache originated requests. */
+-- 
+1.5.6.5
+
+Regards,
+Mark de Wever
