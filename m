@@ -1,43 +1,48 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: "SCR access via SIDPR is available but doesn't work"
-Date: Thu, 09 Oct 2008 06:50:27 +0900
-Message-ID: <48ED2B23.8000209@kernel.org>
-References: <3D76E016F4A2A749A1EB1A3FD83E22BC01D6E466@uk-email.terastack.bluearc.com> <48E6D8F4.2080207@gmail.com> <3D76E016F4A2A749A1EB1A3FD83E22BC01E0D723@uk-email.terastack.bluearc.com> <48ED2AB6.4010905@gmail.com>
+From: Jens Axboe <jens.axboe@oracle.com>
+Subject: Re: [PATCH 0/7] ide: locking improvements
+Date: Thu, 9 Oct 2008 08:51:43 +0200
+Message-ID: <20081009065141.GV19428@kernel.dk>
+References: <20081008202930.19112.90371.sendpatchset@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:34811 "EHLO hera.kernel.org"
+Received: from pasmtpa.tele.dk ([80.160.77.114]:46726 "EHLO pasmtpA.tele.dk"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752602AbYJHVwA (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 8 Oct 2008 17:52:00 -0400
-In-Reply-To: <48ED2AB6.4010905@gmail.com>
+	id S1752087AbYJIGwP (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 9 Oct 2008 02:52:15 -0400
+Content-Disposition: inline
+In-Reply-To: <20081008202930.19112.90371.sendpatchset@localhost.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Rob Whitton <rwhitton@bluearc.com>
-Cc: linux-ide@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Tejun Heo wrote:
-> Rob Whitton wrote:
->> I have run this test and I can confirm that NumLock does still work,
->> although unreliably. What I mean by this is that once we get to this
->> point often it takes a number of presses of numlock to get the state of
->> the LED to change. Before we get to this point it seems to behave fine.
->> Ctrl-alt-sysrq-t doesn't appear to dump anything to the console. After
->> doing ctrl-alt-sysrq-t numlock no longer functions at all.
->>
->> Something I forgot to mention in my original email is that using
->> "noapic" at boot is also a work around for the problem. It isn't an
->> option for us as we are going to be using advanced features such as MSI
->> that are only available via the APIC route.
+On Wed, Oct 08 2008, Bartlomiej Zolnierkiewicz wrote:
 > 
-> I don't think MSI has anything to do with noapic.  Can you please post
-> the result of "lspci -nn"?  Also, what kind of motherboard is it?
+> Locking improvements in preparation for replacing the global ide_lock
+> spinlock by per-hwgroup spinlocks [1].
+> 
+> [1] patch (which is partially based on 2005 patch from Scalex86) for this
+> is also ready but it needs some more audit and testing
+> 
+> diffstat:
+>  drivers/ide/ide-cd.c     |   38 ++++++-------
+>  drivers/ide/ide-io.c     |  129 ++++++++++++++++++++---------------------------
+>  drivers/ide/ide-ioctls.c |    3 -
+>  drivers/ide/ide-lib.c    |    7 --
+>  drivers/ide/ide-proc.c   |   25 +--------
+>  drivers/ide/ide.c        |    7 --
+>  6 files changed, 80 insertions(+), 129 deletions(-)
 
-Oh.. and one more thing, can you please confirm that commenting out
-PIIX_FLAG_SIDPR settings in piix_port_info structures fix the problem?
+Sorry, but I just have to ask 'why'? IDE is seeing a whole lot of churn
+for something that should essentially be a stable code base in
+maintenance mode, and now scalability improvements?
 
-Thanks.
+Just doesn't make ANY sense to me, sorry. We may end up with a cleaner
+code base, but likely also a buggier one. It's not like hardware
+coverage testing is all that great, considering some of the ancient
+stuff it supports :-)
 
 -- 
-tejun
+Jens Axboe
+
