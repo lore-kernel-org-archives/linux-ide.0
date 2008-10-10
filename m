@@ -1,97 +1,480 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: exception Emask 0x0 SAct 0x1 / SErr 0x0 action 0x2 frozen
-Date: Fri, 10 Oct 2008 20:27:51 +0100
-Message-ID: <20081010202751.67a6d122@lxorguk.ukuu.org.uk>
-References: <3E6D0C24877245C3A5A327129A7B4CA7@909927SOSLA>
-	<alpine.DEB.1.10.0809220828490.23159@p34.internal.lan>
-	<5419A02543384E69AF2BA82FF6E66C14@909927SOSLA>
-	<alpine.DEB.1.10.0809220903400.23159@p34.internal.lan>
-	<4B1ABD0393EF40FFB0A12242FE8356AF@909927SOSLA>
-	<alpine.DEB.1.10.0809220915470.23159@p34.internal.lan>
-	<alpine.DEB.1.10.0809220926240.23159@p34.internal.lan>
-	<e7510f760809231114y6cbaf13aqf7c63bd48a73c978@mail.gmail.com>
-	<48DBAB81.8050900@tmr.com>
-	<48E08E2D.6050905@kernel.org>
-	<a52a95e30809301347s70b57ebfh280a6871329afd72@mail.gmail.com>
-	<alpine.DEB.1.10.0809301715280.14600@p34.internal.lan>
-	<alpine.LNX.2.00.0809301946020.16014@filesrv1.baby-dragons.com>
-	<alpine.DEB.1.10.0810010403500.16900@p34.internal.lan>
-	<alpine.DEB.1.10.0810010710520.22435@p34.internal.lan>
-	<48E6D481.7050407@kernel.org>
-	<alpine.DEB.1.10.0810040410170.14969@p34.internal.lan>
-	<alpine.DEB.1.10.0810101505420.12937@p34.internal.lan>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: [PATCH 2/2] ide: add proper PCI PM support
+Date: Fri, 10 Oct 2008 21:22:07 +0200
+Message-ID: <200810102122.07573.bzolnier@gmail.com>
+References: <200808021917.04847.bzolnier@gmail.com> <20080819153437.68272594.akpm@linux-foundation.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:46871 "EHLO
-	lxorguk.ukuu.org.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1759625AbYJJT3E (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 10 Oct 2008 15:29:04 -0400
-In-Reply-To: <alpine.DEB.1.10.0810101505420.12937@p34.internal.lan>
+Received: from gv-out-0910.google.com ([216.239.58.186]:33029 "EHLO
+	gv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1762554AbYJJTbC (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 10 Oct 2008 15:31:02 -0400
+Received: by gv-out-0910.google.com with SMTP id e6so262522gvc.37
+        for <linux-ide@vger.kernel.org>; Fri, 10 Oct 2008 12:30:59 -0700 (PDT)
+In-Reply-To: <20080819153437.68272594.akpm@linux-foundation.org>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Justin Piszcz <jpiszcz@lucidpixels.com>
-Cc: Tejun Heo <tj@kernel.org>, "Mr. James W. Laferriere" <babydr@baby-dragons.com>, Tom Mortensen <tmmlkml@gmail.com>, Bill Davidsen <davidsen@tmr.com>, Gwendal Grignou <gwendal@google.com>, Brian Rademacher <rad@radfiles.net>, linux-ide@vger.kernel.org, linux-raid maillist <linux-raid@vger.kernel.org>, Linux Kernel Maillist <linux-kernel@vger.kernel.org>, Bruce Allen <ballen@gravity.phys.uwm.edu>, smartmontools-support@lists.sourceforge.net, xfs@oss.sgi.com
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, rjw@sisk.pl
 
-> [420781.333189] ata6.00: cmd b0/d8:00:00:4f:c2/00:00:00:00:00/00 tag 0
->                               ^^ ^^(b0/d8)^^ ^^(4f:c2)
-> [420781.333190]          res 40/00:ff:00:00:00/00:00:00:00:00/00 Emask 0x4
-> (timeout)                    ^^ 40:00:ff
-> [420781.333194] ata6.00: status: { DRDY }
+On Wednesday 20 August 2008, Andrew Morton wrote:
+> On Sat, 2 Aug 2008 19:17:04 +0200
+> Bartlomiej Zolnierkiewicz <bzolnier@gmail.com> wrote:
+> 
+> > -static unsigned int __devinit init_chipset_aec62xx(struct pci_dev *dev)
+> > +static unsigned int init_chipset_aec62xx(struct pci_dev *dev)
+> >  {
+> >  	/* These are necessary to get AEC6280 Macintosh cards to work */
+> >  	if ((dev->device == PCI_DEVICE_ID_ARTOP_ATP865) ||
+> > @@ -307,6 +307,10 @@ static struct pci_driver driver = {
+> >  	.id_table	= aec62xx_pci_tbl,
+> >  	.probe		= aec62xx_init_one,
+> >  	.remove		= aec62xx_remove,
+> > +#ifdef CONFIG_PM
+> > +	.suspend	= ide_pci_suspend,
+> > +	.resume		= ide_pci_resume,
+> > +#endif
+> >  };
+> >  
+> >  static int __init aec62xx_ide_init(void)
+> > Index: b/drivers/ide/pci/alim15x3.c
+> > ===================================================================
+> > --- a/drivers/ide/pci/alim15x3.c
+> > +++ b/drivers/ide/pci/alim15x3.c
+> > @@ -213,7 +213,7 @@ static int ali15x3_dma_setup(ide_drive_t
+> >   *	appropriate also sets up the 1533 southbridge.
+> >   */
+> >  
+> > -static unsigned int __devinit init_chipset_ali15x3(struct pci_dev *dev)
+> > +static unsigned int init_chipset_ali15x3(struct pci_dev *dev)
+> >  {
+> >  	unsigned long flags;
+> >  	u8 tmpbyte;
+> > @@ -581,6 +581,10 @@ static struct pci_driver driver = {
+> >  	.id_table	= alim15x3_pci_tbl,
+> >  	.probe		= alim15x3_init_one,
+> >  	.remove		= ide_pci_remove,
+> > +#ifdef CONFIG_PM
+> > +	.suspend	= ide_pci_suspend,
+> > +	.resume		= ide_pci_resume,
+> > +#endif
+> 
+> Please do
+> 
+> #ifndef CONFIG_PM
+> #define ide_pci_suspend NULL
+> #define ide_pci_resume NULL
+> #endif
+> 
+> in a header file and then remove all these ifdefs.
+> 
+> It's a pretty common convention and will clean things up rather a lot.
 
-They are the send and received task file (command blocks) for the failed
-command.
+Thanks for the hint.
 
-> [420781.333200] ata6: hard resetting link
-> [420781.638589] ata6: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-> [420781.662166] ata6.00: configured for UDMA/133
-> [420781.662166] ata6: EH complete
-> 
-> (at the time there was little to no I/O occuring on this block device, but 
-> disks on the raid5 volume were being accessed at the time, so there was 
-> system activity, mainly disk reads 300-500KiB/s over ethernet)
-> 
->   Nick's(?) problem:
-> 
-> > Nick
-> > 
-> > ata1.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 frozen
-> > ata1.00: cmd ea/00:00:00:00:00/00:00:00:00:00/a0 tag 0
->                 ^^ ^^ (ea/00) vs. (b0/d8) - mind are always the same (FYI)
-> >         res 40/00:00:00:00:00/00:00:00:00:00/a0 Emask 0x4 (timeout)
->                ^^ ^^ (40:00: but no ff)
-> 
->            The rest of the messages are the same.  Is there any correlation
->            that can be made here?  When this happens to others, is it
->            always the same codes as shown above or do they change?  If they
->            do not change, how come they vary between users who have this
->            problem?
-> 
-> > ata1.00: status: { DRDY }
-> > ata1: soft resetting link
-> > ata1: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-> > ata1.00: configured for UDMA/133
-> > ata1: EH complete
-> > sd 1:0:0:0: [sda] 2930277168 512-byte hardware sectors (1500302 MB)
-> > sd 1:0:0:0: [sda] Write Protect is off
-> > sd 1:0:0:0: [sda] Mode Sense: 00 3a 00 00
-> > sd 1:0:0:0: [sda] Write cache: enabled, read cache: enabled, doesn't
-> > support DPO or FUA
-> 
-> Can anything be said about these errors, can we classify them into groups?
-> Or are they just random? It does not appear to happen more or less with 
-> one filesystem or another either, one guy is using ext3, I am using XFS-- 
-> certainly something much deeper..
-> 
-> Justin.
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-ide" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+"better late than never" v1 -> v2 inter-diff:
+
+...
+v2:
+* Cleanup CONFIG_PM #ifdef-s per akpm's suggestion.
+
+Cc: Andrew Morton <akpm@linux-foundation.org>
+...
+
+diff -u b/drivers/ide/pci/aec62xx.c b/drivers/ide/pci/aec62xx.c
+--- b/drivers/ide/pci/aec62xx.c
++++ b/drivers/ide/pci/aec62xx.c
+@@ -307,10 +307,8 @@
+ 	.id_table	= aec62xx_pci_tbl,
+ 	.probe		= aec62xx_init_one,
+ 	.remove		= __devexit_p(aec62xx_remove),
+-#ifdef CONFIG_PM
+ 	.suspend	= ide_pci_suspend,
+ 	.resume		= ide_pci_resume,
+-#endif
+ };
+ 
+ static int __init aec62xx_ide_init(void)
+diff -u b/drivers/ide/pci/alim15x3.c b/drivers/ide/pci/alim15x3.c
+--- b/drivers/ide/pci/alim15x3.c
++++ b/drivers/ide/pci/alim15x3.c
+@@ -581,10 +581,8 @@
+ 	.id_table	= alim15x3_pci_tbl,
+ 	.probe		= alim15x3_init_one,
+ 	.remove		= ide_pci_remove,
+-#ifdef CONFIG_PM
+ 	.suspend	= ide_pci_suspend,
+ 	.resume		= ide_pci_resume,
+-#endif
+ };
+ 
+ static int __init ali15x3_ide_init(void)
+diff -u b/drivers/ide/pci/amd74xx.c b/drivers/ide/pci/amd74xx.c
+--- b/drivers/ide/pci/amd74xx.c
++++ b/drivers/ide/pci/amd74xx.c
+@@ -324,10 +324,8 @@
+ 	.id_table	= amd74xx_pci_tbl,
+ 	.probe		= amd74xx_probe,
+ 	.remove		= ide_pci_remove,
+-#ifdef CONFIG_PM
+ 	.suspend	= ide_pci_suspend,
+ 	.resume		= ide_pci_resume,
+-#endif
+ };
+ 
+ static int __init amd74xx_ide_init(void)
+diff -u b/drivers/ide/pci/atiixp.c b/drivers/ide/pci/atiixp.c
+--- b/drivers/ide/pci/atiixp.c
++++ b/drivers/ide/pci/atiixp.c
+@@ -187,10 +187,8 @@
+ 	.id_table	= atiixp_pci_tbl,
+ 	.probe		= atiixp_init_one,
+ 	.remove		= ide_pci_remove,
+-#ifdef CONFIG_PM
+ 	.suspend	= ide_pci_suspend,
+ 	.resume		= ide_pci_resume,
+-#endif
+ };
+ 
+ static int __init atiixp_ide_init(void)
+diff -u b/drivers/ide/pci/cmd64x.c b/drivers/ide/pci/cmd64x.c
+--- b/drivers/ide/pci/cmd64x.c
++++ b/drivers/ide/pci/cmd64x.c
+@@ -510,10 +510,8 @@
+ 	.id_table	= cmd64x_pci_tbl,
+ 	.probe		= cmd64x_init_one,
+ 	.remove		= ide_pci_remove,
+-#ifdef CONFIG_PM
+ 	.suspend	= ide_pci_suspend,
+ 	.resume		= ide_pci_resume,
+-#endif
+ };
+ 
+ static int __init cmd64x_ide_init(void)
+diff -u b/drivers/ide/pci/cs5520.c b/drivers/ide/pci/cs5520.c
+--- b/drivers/ide/pci/cs5520.c
++++ b/drivers/ide/pci/cs5520.c
+@@ -149,10 +149,8 @@
+ 	.name		= "Cyrix_IDE",
+ 	.id_table	= cs5520_pci_tbl,
+ 	.probe		= cs5520_init_one,
+-#ifdef CONFIG_PM
+ 	.suspend	= ide_pci_suspend,
+ 	.resume		= ide_pci_resume,
+-#endif
+ };
+ 
+ static int __init cs5520_ide_init(void)
+diff -u b/drivers/ide/pci/cs5530.c b/drivers/ide/pci/cs5530.c
+--- b/drivers/ide/pci/cs5530.c
++++ b/drivers/ide/pci/cs5530.c
+@@ -272,10 +272,8 @@
+ 	.id_table	= cs5530_pci_tbl,
+ 	.probe		= cs5530_init_one,
+ 	.remove		= ide_pci_remove,
+-#ifdef CONFIG_PM
+ 	.suspend	= ide_pci_suspend,
+ 	.resume		= ide_pci_resume,
+-#endif
+ };
+ 
+ static int __init cs5530_ide_init(void)
+diff -u b/drivers/ide/pci/cs5535.c b/drivers/ide/pci/cs5535.c
+--- b/drivers/ide/pci/cs5535.c
++++ b/drivers/ide/pci/cs5535.c
+@@ -197,10 +197,8 @@
+ 	.id_table	= cs5535_pci_tbl,
+ 	.probe		= cs5535_init_one,
+ 	.remove		= ide_pci_remove,
+-#ifdef CONFIG_PM
+ 	.suspend	= ide_pci_suspend,
+ 	.resume		= ide_pci_resume,
+-#endif
+ };
+ 
+ static int __init cs5535_ide_init(void)
+diff -u b/drivers/ide/pci/cy82c693.c b/drivers/ide/pci/cy82c693.c
+--- b/drivers/ide/pci/cy82c693.c
++++ b/drivers/ide/pci/cy82c693.c
+@@ -448,10 +448,8 @@
+ 	.id_table	= cy82c693_pci_tbl,
+ 	.probe		= cy82c693_init_one,
+ 	.remove		= __devexit_p(cy82c693_remove),
+-#ifdef CONFIG_PM
+ 	.suspend	= ide_pci_suspend,
+ 	.resume		= ide_pci_resume,
+-#endif
+ };
+ 
+ static int __init cy82c693_ide_init(void)
+diff -u b/drivers/ide/pci/generic.c b/drivers/ide/pci/generic.c
+--- b/drivers/ide/pci/generic.c
++++ b/drivers/ide/pci/generic.c
+@@ -171,10 +171,8 @@
+ 	.id_table	= generic_pci_tbl,
+ 	.probe		= generic_init_one,
+ 	.remove		= ide_pci_remove,
+-#ifdef CONFIG_PM
+ 	.suspend	= ide_pci_suspend,
+ 	.resume		= ide_pci_resume,
+-#endif
+ };
+ 
+ static int __init generic_ide_init(void)
+diff -u b/drivers/ide/pci/hpt34x.c b/drivers/ide/pci/hpt34x.c
+--- b/drivers/ide/pci/hpt34x.c
++++ b/drivers/ide/pci/hpt34x.c
+@@ -171,10 +171,8 @@
+ 	.id_table	= hpt34x_pci_tbl,
+ 	.probe		= hpt34x_init_one,
+ 	.remove		= ide_pci_remove,
+-#ifdef CONFIG_PM
+ 	.suspend	= ide_pci_suspend,
+ 	.resume		= ide_pci_resume,
+-#endif
+ };
+ 
+ static int __init hpt34x_ide_init(void)
+diff -u b/drivers/ide/pci/hpt366.c b/drivers/ide/pci/hpt366.c
+--- b/drivers/ide/pci/hpt366.c
++++ b/drivers/ide/pci/hpt366.c
+@@ -1627,10 +1627,8 @@
+ 	.id_table	= hpt366_pci_tbl,
+ 	.probe		= hpt366_init_one,
+ 	.remove		= __devexit_p(hpt366_remove),
+-#ifdef CONFIG_PM
+ 	.suspend	= ide_pci_suspend,
+ 	.resume		= ide_pci_resume,
+-#endif
+ };
+ 
+ static int __init hpt366_ide_init(void)
+diff -u b/drivers/ide/pci/it8213.c b/drivers/ide/pci/it8213.c
+--- b/drivers/ide/pci/it8213.c
++++ b/drivers/ide/pci/it8213.c
+@@ -194,10 +194,8 @@
+ 	.id_table	= it8213_pci_tbl,
+ 	.probe		= it8213_init_one,
+ 	.remove		= ide_pci_remove,
+-#ifdef CONFIG_PM
+ 	.suspend	= ide_pci_suspend,
+ 	.resume		= ide_pci_resume,
+-#endif
+ };
+ 
+ static int __init it8213_ide_init(void)
+diff -u b/drivers/ide/pci/it821x.c b/drivers/ide/pci/it821x.c
+--- b/drivers/ide/pci/it821x.c
++++ b/drivers/ide/pci/it821x.c
+@@ -685,10 +685,8 @@
+ 	.id_table	= it821x_pci_tbl,
+ 	.probe		= it821x_init_one,
+ 	.remove		= __devexit_p(it821x_remove),
+-#ifdef CONFIG_PM
+ 	.suspend	= ide_pci_suspend,
+ 	.resume		= ide_pci_resume,
+-#endif
+ };
+ 
+ static int __init it821x_ide_init(void)
+diff -u b/drivers/ide/pci/jmicron.c b/drivers/ide/pci/jmicron.c
+--- b/drivers/ide/pci/jmicron.c
++++ b/drivers/ide/pci/jmicron.c
+@@ -154,10 +154,8 @@
+ 	.id_table	= jmicron_pci_tbl,
+ 	.probe		= jmicron_init_one,
+ 	.remove		= ide_pci_remove,
+-#ifdef CONFIG_PM
+ 	.suspend	= ide_pci_suspend,
+ 	.resume		= ide_pci_resume,
+-#endif
+ };
+ 
+ static int __init jmicron_ide_init(void)
+diff -u b/drivers/ide/pci/ns87415.c b/drivers/ide/pci/ns87415.c
+--- b/drivers/ide/pci/ns87415.c
++++ b/drivers/ide/pci/ns87415.c
+@@ -339,10 +339,8 @@
+ 	.id_table	= ns87415_pci_tbl,
+ 	.probe		= ns87415_init_one,
+ 	.remove		= ide_pci_remove,
+-#ifdef CONFIG_PM
+ 	.suspend	= ide_pci_suspend,
+ 	.resume		= ide_pci_resume,
+-#endif
+ };
+ 
+ static int __init ns87415_ide_init(void)
+diff -u b/drivers/ide/pci/opti621.c b/drivers/ide/pci/opti621.c
+--- b/drivers/ide/pci/opti621.c
++++ b/drivers/ide/pci/opti621.c
+@@ -225,10 +225,8 @@
+ 	.id_table	= opti621_pci_tbl,
+ 	.probe		= opti621_init_one,
+ 	.remove		= ide_pci_remove,
+-#ifdef CONFIG_PM
+ 	.suspend	= ide_pci_suspend,
+ 	.resume		= ide_pci_resume,
+-#endif
+ };
+ 
+ static int __init opti621_ide_init(void)
+diff -u b/drivers/ide/pci/pdc202xx_new.c b/drivers/ide/pci/pdc202xx_new.c
+--- b/drivers/ide/pci/pdc202xx_new.c
++++ b/drivers/ide/pci/pdc202xx_new.c
+@@ -566,10 +566,8 @@
+ 	.id_table	= pdc202new_pci_tbl,
+ 	.probe		= pdc202new_init_one,
+ 	.remove		= __devexit_p(pdc202new_remove),
+-#ifdef CONFIG_PM
+ 	.suspend	= ide_pci_suspend,
+ 	.resume		= ide_pci_resume,
+-#endif
+ };
+ 
+ static int __init pdc202new_ide_init(void)
+diff -u b/drivers/ide/pci/pdc202xx_old.c b/drivers/ide/pci/pdc202xx_old.c
+--- b/drivers/ide/pci/pdc202xx_old.c
++++ b/drivers/ide/pci/pdc202xx_old.c
+@@ -431,10 +431,8 @@
+ 	.id_table	= pdc202xx_pci_tbl,
+ 	.probe		= pdc202xx_init_one,
+ 	.remove		= ide_pci_remove,
+-#ifdef CONFIG_PM
+ 	.suspend	= ide_pci_suspend,
+ 	.resume		= ide_pci_resume,
+-#endif
+ };
+ 
+ static int __init pdc202xx_ide_init(void)
+diff -u b/drivers/ide/pci/piix.c b/drivers/ide/pci/piix.c
+--- b/drivers/ide/pci/piix.c
++++ b/drivers/ide/pci/piix.c
+@@ -449,10 +449,8 @@
+ 	.id_table	= piix_pci_tbl,
+ 	.probe		= piix_init_one,
+ 	.remove		= ide_pci_remove,
+-#ifdef CONFIG_PM
+ 	.suspend	= ide_pci_suspend,
+ 	.resume		= ide_pci_resume,
+-#endif
+ };
+ 
+ static int __init piix_ide_init(void)
+diff -u b/drivers/ide/pci/serverworks.c b/drivers/ide/pci/serverworks.c
+--- b/drivers/ide/pci/serverworks.c
++++ b/drivers/ide/pci/serverworks.c
+@@ -448,10 +448,8 @@
+ 	.id_table	= svwks_pci_tbl,
+ 	.probe		= svwks_init_one,
+ 	.remove		= ide_pci_remove,
+-#ifdef CONFIG_PM
+ 	.suspend	= ide_pci_suspend,
+ 	.resume		= ide_pci_resume,
+-#endif
+ };
+ 
+ static int __init svwks_ide_init(void)
+diff -u b/drivers/ide/pci/siimage.c b/drivers/ide/pci/siimage.c
+--- b/drivers/ide/pci/siimage.c
++++ b/drivers/ide/pci/siimage.c
+@@ -834,10 +834,8 @@
+ 	.id_table	= siimage_pci_tbl,
+ 	.probe		= siimage_init_one,
+ 	.remove		= __devexit_p(siimage_remove),
+-#ifdef CONFIG_PM
+ 	.suspend	= ide_pci_suspend,
+ 	.resume		= ide_pci_resume,
+-#endif
+ };
+ 
+ static int __init siimage_ide_init(void)
+diff -u b/drivers/ide/pci/sis5513.c b/drivers/ide/pci/sis5513.c
+--- b/drivers/ide/pci/sis5513.c
++++ b/drivers/ide/pci/sis5513.c
+@@ -610,10 +610,8 @@
+ 	.id_table	= sis5513_pci_tbl,
+ 	.probe		= sis5513_init_one,
+ 	.remove		= __devexit_p(sis5513_remove),
+-#ifdef CONFIG_PM
+ 	.suspend	= ide_pci_suspend,
+ 	.resume		= ide_pci_resume,
+-#endif
+ };
+ 
+ static int __init sis5513_ide_init(void)
+diff -u b/drivers/ide/pci/sl82c105.c b/drivers/ide/pci/sl82c105.c
+--- b/drivers/ide/pci/sl82c105.c
++++ b/drivers/ide/pci/sl82c105.c
+@@ -350,10 +350,8 @@
+ 	.id_table	= sl82c105_pci_tbl,
+ 	.probe		= sl82c105_init_one,
+ 	.remove		= ide_pci_remove,
+-#ifdef CONFIG_PM
+ 	.suspend	= ide_pci_suspend,
+ 	.resume		= ide_pci_resume,
+-#endif
+ };
+ 
+ static int __init sl82c105_ide_init(void)
+diff -u b/drivers/ide/pci/slc90e66.c b/drivers/ide/pci/slc90e66.c
+--- b/drivers/ide/pci/slc90e66.c
++++ b/drivers/ide/pci/slc90e66.c
+@@ -159,10 +159,8 @@
+ 	.id_table	= slc90e66_pci_tbl,
+ 	.probe		= slc90e66_init_one,
+ 	.remove		= ide_pci_remove,
+-#ifdef CONFIG_PM
+ 	.suspend	= ide_pci_suspend,
+ 	.resume		= ide_pci_resume,
+-#endif
+ };
+ 
+ static int __init slc90e66_ide_init(void)
+diff -u b/drivers/ide/pci/triflex.c b/drivers/ide/pci/triflex.c
+--- b/drivers/ide/pci/triflex.c
++++ b/drivers/ide/pci/triflex.c
+@@ -119,10 +119,8 @@
+ 	.id_table	= triflex_pci_tbl,
+ 	.probe		= triflex_init_one,
+ 	.remove		= ide_pci_remove,
+-#ifdef CONFIG_PM
+ 	.suspend	= ide_pci_suspend,
+ 	.resume		= ide_pci_resume,
+-#endif
+ };
+ 
+ static int __init triflex_ide_init(void)
+diff -u b/drivers/ide/pci/via82cxxx.c b/drivers/ide/pci/via82cxxx.c
+--- b/drivers/ide/pci/via82cxxx.c
++++ b/drivers/ide/pci/via82cxxx.c
+@@ -492,10 +492,8 @@
+ 	.id_table 	= via_pci_tbl,
+ 	.probe 		= via_init_one,
+ 	.remove		= __devexit_p(via_remove),
+-#ifdef CONFIG_PM
+ 	.suspend	= ide_pci_suspend,
+ 	.resume		= ide_pci_resume,
+-#endif
+ };
+ 
+ static int __init via_ide_init(void)
+diff -u b/include/linux/ide.h b/include/linux/ide.h
+--- b/include/linux/ide.h
++++ b/include/linux/ide.h
+@@ -1269,6 +1269,9 @@
+ #ifdef CONFIG_PM
+ int ide_pci_suspend(struct pci_dev *, pm_message_t);
+ int ide_pci_resume(struct pci_dev *);
++#else
++#define ide_pci_suspend NULL
++#define ide_pci_resume NULL
+ #endif
+ 
+ void ide_map_sg(ide_drive_t *, struct request *);
 
 
--- 
---
-	"Alan, I'm getting a bit worried about you."
-				-- Linus Torvalds
