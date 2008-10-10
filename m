@@ -1,28 +1,27 @@
 From: Elias Oltmanns <eo@nebensachen.de>
-Subject: Re: [PATCH 7/7] ide: use queue lock instead of ide_lock when possible
-Date: Fri, 10 Oct 2008 10:43:11 +0200
-Message-ID: <87zllcet7k.fsf@denkblock.local>
+Subject: Re: [PATCH 4/7] ide: ide_hwgroup_t.rq doesn't need an ide_lock held
+Date: Fri, 10 Oct 2008 10:34:28 +0200
+Message-ID: <87abdcg86j.fsf@denkblock.local>
 References: <20081008202930.19112.90371.sendpatchset@localhost.localdomain>
-	<20081008203027.19112.20883.sendpatchset@localhost.localdomain>
+	<20081008203002.19112.519.sendpatchset@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nebensachen.de ([195.34.83.29]:39832 "EHLO mail.nebensachen.de"
+Received: from nebensachen.de ([195.34.83.29]:39817 "EHLO mail.nebensachen.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751694AbYJJIrR (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 10 Oct 2008 04:47:17 -0400
+	id S1751561AbYJJIrP (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 10 Oct 2008 04:47:15 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Jens Axboe <jens.axboe@oracle.com>
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
 Bartlomiej Zolnierkiewicz <bzolnier@gmail.com> wrote:
 > From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-> Subject: [PATCH] ide: use queue lock instead of ide_lock when possible
+> Subject: [PATCH] ide: ide_hwgroup_t.rq doesn't need an ide_lock held
 >
-> This is just a preparation for future changes and there should be no
-> functional changes caused by this patch since ide_lock is currently
-> also used as queue lock.
+> While at it:
+> - no need to check for hwgroup presence in ide_dump_opcode()
 >
 > Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 > ---
@@ -32,30 +31,21 @@ Bartlomiej Zolnierkiewicz <bzolnier@gmail.com> wrote:
 > --- a/drivers/ide/ide-io.c
 > +++ b/drivers/ide/ide-io.c
 [...]
-> @@ -1469,16 +1470,16 @@ out:
->  void ide_do_drive_cmd(ide_drive_t *drive, struct request *rq)
->  {
->  	ide_hwgroup_t *hwgroup = drive->hwif->hwgroup;
-> +	struct request_queue *q = drive->queue;
->  	unsigned long flags;
->  
->  	hwgroup->rq = NULL;
->  
-> -	spin_lock_irqsave(&ide_lock, flags);
-> -	__elv_add_request(drive->queue, rq, ELEVATOR_INSERT_FRONT, 1);
-> -	__generic_unplug_device(drive->queue);
-> -	spin_unlock_irqrestore(&ide_lock, flags);
-> +	spin_lock_irqsave(q->queue_lock, flags);
-> +	__elv_add_request(q, rq, ELEVATOR_INSERT_FRONT, 1);
-> +	__generic_unplug_device(q);
+> @@ -274,7 +269,11 @@ static void ide_complete_pm_request (ide
+>  		drive->dev_flags &= ~IDE_DFLAG_BLOCKED;
+>  		blk_start_queue(drive->queue);
+>  	}
+> -	HWGROUP(drive)->rq = NULL;
+> +	spin_unlock_irqrestore(&ide_lock, flags);
+> +
+> +	drive->hwif->hwgroup->rq = NULL;
+> +
+> +	spin_lock_irqsave(&ide_lock, flags);
+>  	if (__blk_end_request(rq, 0, 0))
+>  		BUG();
+>  	spin_unlock_irqrestore(&ide_lock, flags);
 
-By the way, wouldn't blk_run_queue() be more appropriate here? It looks
-to me as if blk_run_queue() was the thing intended for general usage by
-low level drivers who don't know and care about schedulers, whereas the
-usage of __generic_unplug_device() should mostly be restricted to the
-block layer. On the other hand, there are other drivers in
-drivers/block/ that use __generic_unplug_device(), so I may well be
-wrong. Jens?
+Is it really an improvement to release the lock here?
 
 Regards,
 
