@@ -1,61 +1,54 @@
-From: Jens Axboe <jens.axboe@oracle.com>
-Subject: Re: [PATCH 4/7] ide: ide_hwgroup_t.rq doesn't need an ide_lock held
-Date: Fri, 10 Oct 2008 11:01:17 +0200
-Message-ID: <20081010090116.GX19428@kernel.dk>
-References: <20081008202930.19112.90371.sendpatchset@localhost.localdomain> <20081008203002.19112.519.sendpatchset@localhost.localdomain> <87abdcg86j.fsf@denkblock.local>
+From: gettinther <gettinther@gmail.com>
+Subject: Re: sata dvdroms fails to be recognized by MCP55 controller with the 2.6.26.5 kernel
+Date: Fri, 10 Oct 2008 10:07:23 +0100
+Message-ID: <64630f150810100207g312088ep67c00ca15929091d@mail.gmail.com>
+References: <64630f150809291601w3511febdyc769b8871db75602@mail.gmail.com>
+	 <20080930170849.52c00228.akpm@linux-foundation.org>
+	 <48E2E8A1.8090204@gmail.com>
+	 <64630f150810010131g18c1a00m91b3f68ea29a1067@mail.gmail.com>
+	 <64630f150810011601y4e729decq24c614f0b7994f3f@mail.gmail.com>
+	 <48E71ACE.4000505@gmail.com> <48E71AEC.8020701@gmail.com>
+	 <64630f150810060208q22b61900xd7487500eac4e145@mail.gmail.com>
+	 <48EAB71B.1050002@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from pasmtpb.tele.dk ([80.160.77.98]:54202 "EHLO pasmtpB.tele.dk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751561AbYJJJBv (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 10 Oct 2008 05:01:51 -0400
+Received: from an-out-0708.google.com ([209.85.132.241]:39545 "EHLO
+	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751296AbYJJJHY (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 10 Oct 2008 05:07:24 -0400
+Received: by an-out-0708.google.com with SMTP id d40so47136and.103
+        for <linux-ide@vger.kernel.org>; Fri, 10 Oct 2008 02:07:23 -0700 (PDT)
+In-Reply-To: <48EAB71B.1050002@gmail.com>
 Content-Disposition: inline
-In-Reply-To: <87abdcg86j.fsf@denkblock.local>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Elias Oltmanns <eo@nebensachen.de>
-Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, IDE/ATA development list <linux-ide@vger.kernel.org>
 
-On Fri, Oct 10 2008, Elias Oltmanns wrote:
-> Bartlomiej Zolnierkiewicz <bzolnier@gmail.com> wrote:
-> > From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-> > Subject: [PATCH] ide: ide_hwgroup_t.rq doesn't need an ide_lock held
-> >
-> > While at it:
-> > - no need to check for hwgroup presence in ide_dump_opcode()
-> >
-> > Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-> > ---
-> [...]
-> > Index: b/drivers/ide/ide-io.c
-> > ===================================================================
-> > --- a/drivers/ide/ide-io.c
-> > +++ b/drivers/ide/ide-io.c
-> [...]
-> > @@ -274,7 +269,11 @@ static void ide_complete_pm_request (ide
-> >  		drive->dev_flags &= ~IDE_DFLAG_BLOCKED;
-> >  		blk_start_queue(drive->queue);
-> >  	}
-> > -	HWGROUP(drive)->rq = NULL;
-> > +	spin_unlock_irqrestore(&ide_lock, flags);
-> > +
-> > +	drive->hwif->hwgroup->rq = NULL;
-> > +
-> > +	spin_lock_irqsave(&ide_lock, flags);
-> >  	if (__blk_end_request(rq, 0, 0))
-> >  		BUG();
-> >  	spin_unlock_irqrestore(&ide_lock, flags);
-> 
-> Is it really an improvement to release the lock here?
+On Tue, Oct 7, 2008 at 2:10 AM, Tejun Heo <htejun@gmail.com> wrote:
+> gettinther wrote:
+>> I have tested the patch you sent me and it solves the issue with the
+>> sata dvdrom detection with the 2.6.27.rc8.  The issue is still present
+>> on the 2.6.26.5 kernel.  Are you backporting the solution to that
+>> kernel?
+>
+> It seems nf2/3 still have issues.  Once nf2/3 are cleared, I'll
+> forward the patch to -stable.
+>
+> Thanks.
+>
+> --
+> tejun
+>
 
-And more importantly, is it even safe? What serializes ->rq assignments
-and checks without the ide_lock? Looks fishy.
+Tejun,
 
-But yes, dropping a lock for an assigment just to regrab it right after
-is never a win. There's no contention gain, but possible bouncing
-problems.
+I applied your patch to the 2.6.26 tree (slightly modified to suit)
+and it also fixes the issue there.
+I can post the patch this evening if you want to.
 
--- 
-Jens Axboe
+Thank you again,
 
+Cyrille
