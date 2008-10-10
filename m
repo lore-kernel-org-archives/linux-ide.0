@@ -1,41 +1,49 @@
-From: bugme-daemon@bugzilla.kernel.org
-Subject: [Bug 11732] Oops while mounting a DVD-ROM
-Date: Fri, 10 Oct 2008 12:32:13 -0700 (PDT)
-Message-ID: <20081010193213.2FDA4108059@picon.linux-foundation.org>
-References: <bug-11732-11633@http.bugzilla.kernel.org/>
+From: Jens Axboe <jens.axboe@oracle.com>
+Subject: Re: libata: set queue SSD flag for SSD devices
+Date: Fri, 10 Oct 2008 22:05:28 +0200
+Message-ID: <20081010200528.GJ19428@kernel.dk>
+References: <200810101904.m9AJ42Gq018897@hera.kernel.org> <20081010202515.446857cc@lxorguk.ukuu.org.uk>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:44617 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1760977AbYJJTdP (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 10 Oct 2008 15:33:15 -0400
-Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
-	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id m9AJWfdj030413
-	for <linux-ide@vger.kernel.org>; Fri, 10 Oct 2008 12:32:43 -0700
-In-Reply-To: <bug-11732-11633@http.bugzilla.kernel.org/>
+Received: from pasmtpb.tele.dk ([80.160.77.98]:41662 "EHLO pasmtpB.tele.dk"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1760421AbYJJUGV (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 10 Oct 2008 16:06:21 -0400
+Content-Disposition: inline
+In-Reply-To: <20081010202515.446857cc@lxorguk.ukuu.org.uk>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, torvalds@osdl.org
 
-http://bugzilla.kernel.org/show_bug.cgi?id=11732
+On Fri, Oct 10 2008, Alan Cox wrote:
+> > +	ATA_ID_ROT_SPEED	= 217,
+> >  	ATA_ID_PIO4		= (1 << 1),
+> >  
+> >  	ATA_ID_SERNO_LEN	= 20,
+> > @@ -691,6 +692,11 @@ static inline int ata_id_is_cfa(const u16 *id)
+> >  	return 0;
+> >  }
+> >  
+> > +static inline int ata_id_is_ssd(const u16 *id)
+> > +{
+> > +	return id[ATA_ID_ROT_SPEED] == 0x01;
+> > +}
+> 
+> This patch is buggy.
+> 
+> Word 217 only has a defined meaning in late revision ATA standards so a
+> version check is needed. Please copy ATA patch copies to linux-ide.
 
+Good point, I'll be sure to submit an updated patch. I did mean to copy
+linux-ide, the intention was actually to pass this libata enable patch
+through Jeff after testing, but it slipped through.
 
-alan@lxorguk.ukuu.org.uk changed:
-
-           What    |Removed                     |Added
-----------------------------------------------------------------------------
-         AssignedTo|io_ide@kernel-bugs.osdl.org |platform_x86_64@kernel-
-                   |                            |bugs.osdl.org
-
-
-
-
-------- Comment #2 from alan@lxorguk.ukuu.org.uk  2008-10-10 12:32 -------
-Not idea - trace is a completely gaga mmu mapping failure. I'd say its a bust
-box or someone has loaded corrupting modules
-
+In this specific patch, it'll do no harm at least since I very much
+doubt we'll see a false positive. And even if, the consequences wont be
+dire. But it does want the version check, of course.
 
 -- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug, or are watching the assignee.
-You are the assignee for the bug, or are watching the assignee.
+Jens Axboe
+
