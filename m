@@ -1,49 +1,58 @@
-From: Jens Axboe <jens.axboe@oracle.com>
-Subject: Re: libata: set queue SSD flag for SSD devices
-Date: Fri, 10 Oct 2008 22:05:28 +0200
-Message-ID: <20081010200528.GJ19428@kernel.dk>
-References: <200810101904.m9AJ42Gq018897@hera.kernel.org> <20081010202515.446857cc@lxorguk.ukuu.org.uk>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: bugme-daemon@bugzilla.kernel.org
+Subject: [Bug 11735] New: delkin_cb fails after resume
+Date: Fri, 10 Oct 2008 13:48:18 -0700 (PDT)
+Message-ID: <bug-11735-11633@http.bugzilla.kernel.org/>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from pasmtpb.tele.dk ([80.160.77.98]:41662 "EHLO pasmtpB.tele.dk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1760421AbYJJUGV (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 10 Oct 2008 16:06:21 -0400
-Content-Disposition: inline
-In-Reply-To: <20081010202515.446857cc@lxorguk.ukuu.org.uk>
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:56530 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1760040AbYJJUtU (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 10 Oct 2008 16:49:20 -0400
+Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
+	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id m9AKmmrZ003367
+	for <linux-ide@vger.kernel.org>; Fri, 10 Oct 2008 13:48:49 -0700
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, torvalds@osdl.org
+To: linux-ide@vger.kernel.org
 
-On Fri, Oct 10 2008, Alan Cox wrote:
-> > +	ATA_ID_ROT_SPEED	= 217,
-> >  	ATA_ID_PIO4		= (1 << 1),
-> >  
-> >  	ATA_ID_SERNO_LEN	= 20,
-> > @@ -691,6 +692,11 @@ static inline int ata_id_is_cfa(const u16 *id)
-> >  	return 0;
-> >  }
-> >  
-> > +static inline int ata_id_is_ssd(const u16 *id)
-> > +{
-> > +	return id[ATA_ID_ROT_SPEED] == 0x01;
-> > +}
-> 
-> This patch is buggy.
-> 
-> Word 217 only has a defined meaning in late revision ATA standards so a
-> version check is needed. Please copy ATA patch copies to linux-ide.
+http://bugzilla.kernel.org/show_bug.cgi?id=11735
 
-Good point, I'll be sure to submit an updated patch. I did mean to copy
-linux-ide, the intention was actually to pass this libata enable patch
-through Jeff after testing, but it slipped through.
+           Summary: delkin_cb fails after resume
+           Product: IO/Storage
+           Version: 2.5
+     KernelVersion: 2.6.27-rc9
+          Platform: All
+        OS/Version: Linux
+              Tree: Mainline
+            Status: NEW
+          Severity: normal
+          Priority: P1
+         Component: IDE
+        AssignedTo: io_ide@kernel-bugs.osdl.org
+        ReportedBy: bumble.bee@xs4all.nl
 
-In this specific patch, it'll do no harm at least since I very much
-doubt we'll see a false positive. And even if, the consequences wont be
-dire. But it does want the version check, of course.
+
+Distribution:
+gentoo
+Hardware Environment:
+x86 (Dell laptop, yenta cardbus), "02:00.0 Mass storage controller [0180]:
+Workbit Corporation Device [1145:f021] (rev 01)"
+Problem Description:
+The delkin_cb driver works with ~3 mb/s performance, top shows the CPU in 98%
+wait state with heavy I/O. If you suspend to ram or disk, the system comes up
+but any further I/O to a CF card in the adapter will not complete, top shows
+~100% wait state but commands to read from the card do not complete.
+pata_ninja32 not tested because it performs much worse than delkin_cb (~1
+mb/s).
+Steps to reproduce: 
+1. boot, mount a CF card through the adapter (or have root on the CF card, as I
+do)
+2. echo mem > /sys/power/state
+3. resume from sleep
+4. do I/O from the card, say "ls /mnt/card"
+5. <crickets chirp> ... top shows 100% wait state
+
 
 -- 
-Jens Axboe
-
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug, or are watching the assignee.
