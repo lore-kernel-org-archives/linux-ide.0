@@ -1,129 +1,68 @@
-From: Elias Oltmanns <eo@nebensachen.de>
-Subject: Re: [PATCH] libata: Better timeout recovery
-Date: Fri, 10 Oct 2008 10:46:21 +0200
-Message-ID: <87od1set2a.fsf@denkblock.local>
-References: <20081009164351.26205.50193.stgit@localhost.localdomain>
+From: Jens Axboe <jens.axboe@oracle.com>
+Subject: Re: [PATCH 7/7] ide: use queue lock instead of ide_lock when possible
+Date: Fri, 10 Oct 2008 10:52:50 +0200
+Message-ID: <20081010085249.GW19428@kernel.dk>
+References: <20081008202930.19112.90371.sendpatchset@localhost.localdomain> <20081008203027.19112.20883.sendpatchset@localhost.localdomain> <87zllcet7k.fsf@denkblock.local>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nebensachen.de ([195.34.83.29]:39814 "EHLO mail.nebensachen.de"
+Received: from pasmtpa.tele.dk ([80.160.77.114]:39616 "EHLO pasmtpA.tele.dk"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751554AbYJJIrO (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 10 Oct 2008 04:47:14 -0400
+	id S1751414AbYJJIxY (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 10 Oct 2008 04:53:24 -0400
+Content-Disposition: inline
+In-Reply-To: <87zllcet7k.fsf@denkblock.local>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@redhat.com>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: Elias Oltmanns <eo@nebensachen.de>
+Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Alan Cox <alan@redhat.com> wrote:
-> Check for completed commands on a timeout, also implement data draining as
-> Mark Lord suggested. The former should help a lot on various promise
-> controllers which show random IRQ loss now and then, the latter at least for
-> me fixes the hanging DRQ cases I can test.
->
-> To get the lost IRQ recovery working better we really need to short circuit a
-> lot fo the recovery paths we trigger needlessly when EH finds that actually
-> all was well.
->
-> Signed-off-by: Alan Cox <alan@redhat.com>
-> ---
+On Fri, Oct 10 2008, Elias Oltmanns wrote:
+> Bartlomiej Zolnierkiewicz <bzolnier@gmail.com> wrote:
+> > From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+> > Subject: [PATCH] ide: use queue lock instead of ide_lock when possible
+> >
+> > This is just a preparation for future changes and there should be no
+> > functional changes caused by this patch since ide_lock is currently
+> > also used as queue lock.
+> >
+> > Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+> > ---
+> [...]
+> > Index: b/drivers/ide/ide-io.c
+> > ===================================================================
+> > --- a/drivers/ide/ide-io.c
+> > +++ b/drivers/ide/ide-io.c
+> [...]
+> > @@ -1469,16 +1470,16 @@ out:
+> >  void ide_do_drive_cmd(ide_drive_t *drive, struct request *rq)
+> >  {
+> >  	ide_hwgroup_t *hwgroup = drive->hwif->hwgroup;
+> > +	struct request_queue *q = drive->queue;
+> >  	unsigned long flags;
+> >  
+> >  	hwgroup->rq = NULL;
+> >  
+> > -	spin_lock_irqsave(&ide_lock, flags);
+> > -	__elv_add_request(drive->queue, rq, ELEVATOR_INSERT_FRONT, 1);
+> > -	__generic_unplug_device(drive->queue);
+> > -	spin_unlock_irqrestore(&ide_lock, flags);
+> > +	spin_lock_irqsave(q->queue_lock, flags);
+> > +	__elv_add_request(q, rq, ELEVATOR_INSERT_FRONT, 1);
+> > +	__generic_unplug_device(q);
+> 
+> By the way, wouldn't blk_run_queue() be more appropriate here? It looks
+> to me as if blk_run_queue() was the thing intended for general usage by
+> low level drivers who don't know and care about schedulers, whereas the
+> usage of __generic_unplug_device() should mostly be restricted to the
+> block layer. On the other hand, there are other drivers in
+> drivers/block/ that use __generic_unplug_device(), so I may well be
+> wrong. Jens?
 
-This patch has a lot of style issues. Most of them are caught by
-checkpatch. A few more are indicated below:
+Yes, that is correct. But it's ok for now, there are too many variants
+of this around as it is already. I'm about to do a run and clean them up
+and make sure we have a single sane way of doing it that is exported.
 
-> diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
-> index c1db2f2..fa48031 100644
-> --- a/drivers/ata/libata-eh.c
-> +++ b/drivers/ata/libata-eh.c
-[...]
-> @@ -530,7 +530,19 @@ void ata_scsi_error(struct Scsi_Host *host)
->  		int nr_timedout = 0;
->  
->  		spin_lock_irqsave(ap->lock, flags);
-> -
-> +		
-> +		/* This must occur under the ap->lock as we don't want
-> +		   a polled recovery to race the real interrupt handler
-> +		   
-> +		   The lost_interrupt handler checks for any completed but
-> +		   non-notified command and completes much like an IRQ handler.
-> +		   
-> +		   We then fall into the error recovery code which will treat
-> +		   this as if normal completion won the race */
+-- 
+Jens Axboe
 
-I'd very much prefer comments to be formatted like this:
-
-		/* This must occur under the ap->lock as we don't want
-		 * a polled recovery to race the real interrupt handler
-		 *
-		 * The lost_interrupt handler checks for any completed but
-		 * non-notified command and completes much like an IRQ handler.
-		 *
-		 * We then fall into the error recovery code which will treat
-		 * this as if normal completion won the race
-		 */
-
-There are more of those which I won't bore you with.
-
-[...]
-> diff --git a/drivers/ata/libata-sff.c b/drivers/ata/libata-sff.c
-> index 2a4c516..ea7f0e1 100644
-> --- a/drivers/ata/libata-sff.c
-> +++ b/drivers/ata/libata-sff.c
-[...]
-> @@ -1533,7 +1536,7 @@ bool ata_sff_qc_fill_rtf(struct ata_queued_cmd *qc)
->   *	RETURNS:
->   *	One if interrupt was handled, zero if not (shared irq).
->   */
-> -inline unsigned int ata_sff_host_intr(struct ata_port *ap,
-> +unsigned int ata_sff_host_intr(struct ata_port *ap,
->  				      struct ata_queued_cmd *qc)
-
-Indentation should be adjusted here.
-
-[...]
-> @@ -2073,6 +2117,39 @@ void ata_sff_postreset(struct ata_link *link, unsigned int *classes)
->  }
->  
->  /**
-> + *	ata_sff_drain_fifo - Stock FIFO drain logic for SFF controllers
-> + *	@ap: port to drain
-> + *	@qc: command
-> + *
-> + *	Drain the FIFO and device of any stuck data following a command
-> + *	failing to complete. In some cases this is neccessary before a
-> + *	reset will recover the device.
-> + *
-> + */
-> + 
-> +void ata_sff_drain_fifo(struct ata_queued_cmd *qc)
-> +{
-> +	int count;
-> +	struct ata_port *ap;
-> +
-> +	/* We only need to flush incoming data when a command was running */
-> +	if (qc == NULL || qc->dma_dir == DMA_TO_DEVICE)
-> +		return;
-> +
-> +	ap = qc->ap;
-> +	/* Drain up to 64K of data before we give up this recovery method */
-> +	for (count = 0; (ap->ops->sff_check_status(ap) & ATA_DRQ)
-> +						&& count < 32768; count++)
-> +		ioread16(ap->ioaddr.data_addr);
-> +
-> +	/* Can become DEBUG later */
-> +	if (count)
-> +		ata_port_printk(ap, KERN_WARNING,
-> +			"drained %d bytes to clear DRQ.\n", count);
-> +
-> +}
-
-Presumably, you didn't intentionally leave a blank line before the
-closing brace.
-
-Sorry if you were aware of all that and just sent the patch as a first
-draft in order to get comments on the actual code.
-
-Regards,
-
-Elias
