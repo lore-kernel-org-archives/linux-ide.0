@@ -1,42 +1,64 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [PATCH] libata: Better timeout recovery
-Date: Fri, 10 Oct 2008 10:19:41 +0100
-Message-ID: <20081010101941.5822926e@lxorguk.ukuu.org.uk>
-References: <20081009164351.26205.50193.stgit@localhost.localdomain>
-	<87od1set2a.fsf@denkblock.local>
+From: Elias Oltmanns <eo@nebensachen.de>
+Subject: Re: [PATCH 4/7] ide: ide_hwgroup_t.rq doesn't need an ide_lock held
+Date: Fri, 10 Oct 2008 11:37:22 +0200
+Message-ID: <87wsggdc4t.fsf@denkblock.local>
+References: <20081008202930.19112.90371.sendpatchset@localhost.localdomain>
+	<20081008203002.19112.519.sendpatchset@localhost.localdomain>
+	<87abdcg86j.fsf@denkblock.local> <20081010090116.GX19428@kernel.dk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:44326 "EHLO
-	lxorguk.ukuu.org.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751479AbYJJJT5 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 10 Oct 2008 05:19:57 -0400
-In-Reply-To: <87od1set2a.fsf@denkblock.local>
+Received: from nebensachen.de ([195.34.83.29]:41151 "EHLO mail.nebensachen.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751991AbYJJJhb (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 10 Oct 2008 05:37:31 -0400
+In-Reply-To: <20081010090116.GX19428@kernel.dk> (Jens Axboe's message of "Fri,
+	10 Oct 2008 11:01:17 +0200")
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Elias Oltmanns <eo@nebensachen.de>
-Cc: Alan Cox <alan@redhat.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: Jens Axboe <jens.axboe@oracle.com>
+Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-> I'd very much prefer comments to be formatted like this:
+Jens Axboe <jens.axboe@oracle.com> wrote:
+> On Fri, Oct 10 2008, Elias Oltmanns wrote:
+>> Bartlomiej Zolnierkiewicz <bzolnier@gmail.com> wrote:
+>
+>> > From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+>> > Subject: [PATCH] ide: ide_hwgroup_t.rq doesn't need an ide_lock held
+>> >
+>> > While at it:
+>> > - no need to check for hwgroup presence in ide_dump_opcode()
+>> >
+>> > Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+>> > ---
+>> [...]
+>> > Index: b/drivers/ide/ide-io.c
+>> > ===================================================================
+>> > --- a/drivers/ide/ide-io.c
+>> > +++ b/drivers/ide/ide-io.c
+>> [...]
+>> > @@ -274,7 +269,11 @@ static void ide_complete_pm_request (ide
+>> >  		drive->dev_flags &= ~IDE_DFLAG_BLOCKED;
+>> >  		blk_start_queue(drive->queue);
+>> >  	}
+>> > -	HWGROUP(drive)->rq = NULL;
+>> > +	spin_unlock_irqrestore(&ide_lock, flags);
+>> > +
+>> > +	drive->hwif->hwgroup->rq = NULL;
+>> > +
+>> > +	spin_lock_irqsave(&ide_lock, flags);
+>> >  	if (__blk_end_request(rq, 0, 0))
+>> >  		BUG();
+>> >  	spin_unlock_irqrestore(&ide_lock, flags);
+>> 
+>> Is it really an improvement to release the lock here?
+>
+> And more importantly, is it even safe? What serializes ->rq assignments
+> and checks without the ide_lock? Looks fishy.
 
-Would you... ;)
+Well, I haven't quite made up my mind whether it'll work in all cases,
+but I think the hwgroup->busy flag is supposed to take care of that.
 
-> > +	/* Can become DEBUG later */
-> > +	if (count)
-> > +		ata_port_printk(ap, KERN_WARNING,
-> > +			"drained %d bytes to clear DRQ.\n", count);
-> > +
-> > +}
-> 
-> Presumably, you didn't intentionally leave a blank line before the
-> closing brace.
+Regards,
 
-Yes I did, it looked cleaner.
-
-> Sorry if you were aware of all that and just sent the patch as a first
-> draft in order to get comments on the actual code.
-
-At the moment the main concern is the code quality - but you are right
-I've not run the result through the style checker and probably should do
-so.
+Elias
