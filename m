@@ -1,79 +1,50 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [PATCH 4/7] ide: ide_hwgroup_t.rq doesn't need an ide_lock held
-Date: Fri, 10 Oct 2008 18:20:18 +0200
-Message-ID: <200810101820.18641.bzolnier@gmail.com>
-References: <20081008202930.19112.90371.sendpatchset@localhost.localdomain> <20081008203002.19112.519.sendpatchset@localhost.localdomain> <87abdcg86j.fsf@denkblock.local>
+From: Paul Mundt <lethal@linux-sh.org>
+Subject: Re: [PATCH] pata_of_platform: fix no irq handling
+Date: Sat, 11 Oct 2008 02:55:17 +0900
+Message-ID: <20081010175516.GD10579@linux-sh.org>
+References: <20081006172653.GA26427@oksana.dev.rtsoft.ru> <48EA77EF.6080502@genesi-usa.com> <20081006213209.GA13072@oksana.dev.rtsoft.ru> <48EABBD3.1010401@kernel.org> <20081007103723.0224671e@lxorguk.ukuu.org.uk> <1223455254.3145.143.camel@macbook.infradead.org> <20081008100025.1c535401@lxorguk.ukuu.org.uk> <Pine.LNX.4.64.0810081159240.24611@vixen.sonytel.be>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-gx0-f16.google.com ([209.85.217.16]:52701 "EHLO
-	mail-gx0-f16.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758428AbYJJQXE (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 10 Oct 2008 12:23:04 -0400
-Received: by gxk9 with SMTP id 9so864954gxk.13
-        for <linux-ide@vger.kernel.org>; Fri, 10 Oct 2008 09:23:02 -0700 (PDT)
-In-Reply-To: <87abdcg86j.fsf@denkblock.local>
+Received: from mta23.gyao.ne.jp ([125.63.38.249]:37537 "EHLO mx.gate01.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1757864AbYJJRzk (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 10 Oct 2008 13:55:40 -0400
 Content-Disposition: inline
+In-Reply-To: <Pine.LNX.4.64.0810081159240.24611@vixen.sonytel.be>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Elias Oltmanns <eo@nebensachen.de>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Geert Uytterhoeven <Geert.Uytterhoeven@sonycom.com>
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, David Woodhouse <dwmw2@infradead.org>, Li Yang <leoli@freescale.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linuxppc-dev@ozlabs.org, Tejun Heo <tj@kernel.org>, Jeff Garzik <jgarzik@pobox.com>, Wang Jian <lark@linux.net.cn>
 
-On Friday 10 October 2008, Elias Oltmanns wrote:
-> Bartlomiej Zolnierkiewicz <bzolnier@gmail.com> wrote:
-> > From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-> > Subject: [PATCH] ide: ide_hwgroup_t.rq doesn't need an ide_lock held
-> >
-> > While at it:
-> > - no need to check for hwgroup presence in ide_dump_opcode()
-> >
-> > Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-> > ---
-> [...]
-> > Index: b/drivers/ide/ide-io.c
-> > ===================================================================
-> > --- a/drivers/ide/ide-io.c
-> > +++ b/drivers/ide/ide-io.c
-> [...]
-> > @@ -274,7 +269,11 @@ static void ide_complete_pm_request (ide
-> >  		drive->dev_flags &= ~IDE_DFLAG_BLOCKED;
-> >  		blk_start_queue(drive->queue);
-> >  	}
-> > -	HWGROUP(drive)->rq = NULL;
-> > +	spin_unlock_irqrestore(&ide_lock, flags);
-> > +
-> > +	drive->hwif->hwgroup->rq = NULL;
-> > +
-> > +	spin_lock_irqsave(&ide_lock, flags);
-> >  	if (__blk_end_request(rq, 0, 0))
-> >  		BUG();
-> >  	spin_unlock_irqrestore(&ide_lock, flags);
+On Wed, Oct 08, 2008 at 11:59:59AM +0200, Geert Uytterhoeven wrote:
+> On Wed, 8 Oct 2008, Alan Cox wrote:
+> > On Wed, 08 Oct 2008 09:40:54 +0100
+> > David Woodhouse <dwmw2@infradead.org> wrote:
+> > 
+> > > On Tue, 2008-10-07 at 10:37 +0100, Alan Cox wrote:
+> > > > Zero means no IRQ. Any platform with bits of code left over exposing IRQ
+> > > > 0 is already not supported by lots of driver code including libata.
+> > > 
+> > > ...and must implement some kind of interrupt remapping crap just to work
+> > > around this bogus design decision.
+> > 
+> > I'll leave you to argue with Linus about that, but since that was the
+> > decision back in 2005 (for good C reasons) we can safely rely on it.
 > 
-> Is it really an improvement to release the lock here?
+> `git grep NO_IRQ include arch/*/include' is still quite enlightening...
+> 
+In the case of PCI where IRQ is unsigned int, that's certainly bogus. The
+problem originates on platforms where a 1:1 mapping between vector and
+IRQ exists, where 0 is a valid value. This then needs to be remapped in
+to an IRQ cookie that has a non-0 value in order to be assigned to
+dev->irq. Despite whether this is bogus or not, there's not much to be
+done about it. Those of us with vectored IRQ platforms generally have
+enough sources that the use of IRQ-0 doesn't matter, and it's not worth
+the headache of setting up the remapping crap.
 
-Yes since it is a preparation for using the right lock here
-(drive->queue->queue_lock instead of ide_lock) which is done
-in patch #6/7:
-
-@@ -263,10 +260,8 @@ static void ide_complete_pm_request (ide
- 
- 	drive->hwif->hwgroup->rq = NULL;
- 
--	spin_lock_irqsave(&ide_lock, flags);
--	if (__blk_end_request(rq, 0, 0))
-+	if (blk_end_request(rq, 0, 0))
- 		BUG();
--	spin_unlock_irqrestore(&ide_lock, flags);
- }
-
-[ ide_lock and drive->queue->queue_lock are the same lock at the moment
-  (which is wrong since they are meant to protect completely different
-  things) but after this patchset it should be quite easy to address  ]
-
-Also ide_complete_pm_request() above is used only for completion of
-PM suspend/resume requests and is not really performance critical.
-
-Thanks,
-Bart
+As an example, on SH, IRQ-0 is mapped to vector 0x200. It is '0' for
+symbolic reasons only. It's just as easy to pad out irq_desc and treat it
+as an off-by-1 to work around all of code that assumes NO_IRQ == 0. There
+is enough code in the kernel today that makes the non-zero IRQ cookie
+assumption that platforms that do otherwise are simply broken.
