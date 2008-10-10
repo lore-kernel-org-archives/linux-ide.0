@@ -1,45 +1,34 @@
-From: bugme-daemon@bugzilla.kernel.org
-Subject: [Bug 11732] Oops while mounting a DVD-ROM
-Date: Fri, 10 Oct 2008 12:17:55 -0700 (PDT)
-Message-ID: <20081010191755.EE1D6108058@picon.linux-foundation.org>
-References: <bug-11732-11633@http.bugzilla.kernel.org/>
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:57879 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1763550AbYJJTSO (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 10 Oct 2008 15:18:14 -0400
-Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
-	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id m9AJHtbL029300
-	for <linux-ide@vger.kernel.org>; Fri, 10 Oct 2008 12:17:57 -0700
-In-Reply-To: <bug-11732-11633@http.bugzilla.kernel.org/>
-Sender: linux-ide-owner@vger.kernel.org
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: libata: set queue SSD flag for SSD devices
+Date: Fri, 10 Oct 2008 20:25:15 +0100
+Message-ID: <20081010202515.446857cc@lxorguk.ukuu.org.uk>
+References: <200810101904.m9AJ42Gq018897@hera.kernel.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1761906AbYJJT0k@vger.kernel.org>
+In-Reply-To: <200810101904.m9AJ42Gq018897@hera.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Cc: linux-ide@vger.kernel.org, torvalds@osdl.org, jens.axboe@oracle.com
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
 
-http://bugzilla.kernel.org/show_bug.cgi?id=11732
+> +	ATA_ID_ROT_SPEED	= 217,
+>  	ATA_ID_PIO4		= (1 << 1),
+>  
+>  	ATA_ID_SERNO_LEN	= 20,
+> @@ -691,6 +692,11 @@ static inline int ata_id_is_cfa(const u16 *id)
+>  	return 0;
+>  }
+>  
+> +static inline int ata_id_is_ssd(const u16 *id)
+> +{
+> +	return id[ATA_ID_ROT_SPEED] == 0x01;
+> +}
 
+This patch is buggy.
 
-akpm@osdl.org changed:
+Word 217 only has a defined meaning in late revision ATA standards so a
+version check is needed. Please copy ATA patch copies to linux-ide.
 
-           What    |Removed                     |Added
-----------------------------------------------------------------------------
-                 CC|                            |akpm@osdl.org
-         AssignedTo|io_other@kernel-            |io_ide@kernel-bugs.osdl.org
-                   |bugs.osdl.org               |
-          Component|Other                       |IDE
-         Regression|0                           |1
-
-
-
-
-------- Comment #1 from akpm@osdl.org  2008-10-10 12:17 -------
-I recategorised this to IDE.
-
-I assume it is a regression also.  It might be that we just
-added more debug stuff and the problme has been there for some time.
-
-
--- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug, or are watching the assignee.
+Alan
