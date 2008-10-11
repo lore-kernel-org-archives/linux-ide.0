@@ -1,72 +1,44 @@
-From: Borislav Petkov <petkovbb@googlemail.com>
+From: Jens Axboe <jens.axboe@oracle.com>
 Subject: Re: [PATCH 0/7] ide: locking improvements
-Date: Sat, 11 Oct 2008 14:01:37 +0200
-Message-ID: <20081011120137.GA26835@gollum.tnic>
-References: <fa.Ke90oacfRjgiI4x5LejzjssRBEg@ifi.uio.no> <fa.8TkQ+xA96EhlNKL9gIbVTxVrcUE@ifi.uio.no> <48F010AB.7010009@shaw.ca> <200810111339.44998.bzolnier@gmail.com>
-Reply-To: petkovbb@gmail.com
+Date: Sat, 11 Oct 2008 15:53:00 +0200
+Message-ID: <20081011135300.GP19428@kernel.dk>
+References: <fa.Ke90oacfRjgiI4x5LejzjssRBEg@ifi.uio.no> <fa.8TkQ+xA96EhlNKL9gIbVTxVrcUE@ifi.uio.no> <48F010AB.7010009@shaw.ca> <200810111339.44998.bzolnier@gmail.com> <20081011120137.GA26835@gollum.tnic>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.158]:46737 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751505AbYJKMCA (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 11 Oct 2008 08:02:00 -0400
-Received: by fg-out-1718.google.com with SMTP id 19so614719fgg.17
-        for <linux-ide@vger.kernel.org>; Sat, 11 Oct 2008 05:01:57 -0700 (PDT)
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1756992AbYJKNxt@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <200810111339.44998.bzolnier@gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
+In-Reply-To: <20081011120137.GA26835@gollum.tnic>
+Sender: linux-kernel-owner@vger.kernel.org
+To: petkovbb@gmail.com
+Cc: Robert Hancock <hancockr@shaw.ca>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Robert Hancock <hancockr@shaw.ca>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: Jens Axboe <jens.axboe@oracle.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Hi,
-
-On Sat, Oct 11, 2008 at 01:39:44PM +0200, Bartlomiej Zolnierkiewicz wrote:
-> On Saturday 11 October 2008, Robert Hancock wrote:
-> > Bartlomiej Zolnierkiewicz wrote:
-> > >> Sorry, but I just have to ask 'why'? IDE is seeing a whole lot of churn
-> > >> for something that should essentially be a stable code base in
-> > >> maintenance mode, and now scalability improvements?
-> > > 
-> > > It is the stable code but being in "maintenance only mode" has never
-> > > been true and as long as there are active users & developers there is
-> > > really no reason to change it.
-> > 
-> > Are there really many active users at this point? I'm not aware of any 
-> > new distributions that are using it. The only people I can see that 
-> > might still want to be using it would be people with old setups or old 
-> > embedded devices.. many of those wouldn't be using newer kernels anyway.
+On Sat, Oct 11 2008, Borislav Petkov wrote:
+> > >From my perspective the main gain of these patches is the increased
+> > maintainability and sanity of the code, scalability improvements are
+> > just an added bonus.
 > 
-> Like I said before: as long as there are any active users/developers
-> there is no real reason to stop IDE improvements (especially since there
-> is no complete replacement available).
+> and better code/improved scalability is a bad thing because... ?!
 
-... and to be completely clear on things, what Bart and other guys are doing
-_is_ maintenance - simply keeping the codebase from becoming a big stinking pile
-of sh*t which noone can maintain with time. If you do the effort and count what
-percentage of the patches have "There should be no functional change resulting
-from this patch" in them you'll see that this is the majority and they rather
-clean up/simplify/fix code than add anything new, not even mentioning new
-features. So yes, this _is_ maintenance on a larger scale and this is a good(tm)
-thing.
+It's a bad thing because nobody on earth cares about IDE scalability,
+from a performance POV a modern SATA controller is just better on
+several levels. I don't think anybody cares about IDE scaling on 8-16
+cores or more, simply because NOBODY is using IDE on such systems.
 
-> I also wouldn't worry that much about what some distros are doing.  They
-> are free to make their own decisions based on whatever criteria they like.
+As such, trying to improve locking is a pointless exercise. And that is
+a bad thing, because code change invariably brings in code bugs. Then
+see previous mail on lack of coverage testing, and it can naturally be
+harmful.
+
+> > > rather like putting makeup on a corpse to me..
 > 
-> > These kinds of changes only will really help scalability on multi-core 
-> > machines which are unlikely to be using this code anyway.. They seem 
-> 
-> >From my perspective the main gain of these patches is the increased
-> maintainability and sanity of the code, scalability improvements are
-> just an added bonus.
+> so _NOT_ true.
 
-and better code/improved scalability is a bad thing because... ?!
-
-> > rather like putting makeup on a corpse to me..
-
-so _NOT_ true.
+Depends on what you think is the corpse. Since IDE is essentially dead
+and frozen, it IS a corpse and the phrase is then very appropriate. This
+is not a personal jab at the IDE guys and does not reflect on the
+(mostly) good work they do, just a reflection on the state of IDE in
+general.
 
 -- 
-Regards/Gruss,
-    Boris.
+Jens Axboe
