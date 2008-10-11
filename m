@@ -1,38 +1,69 @@
-From: Arjan van de Ven <arjan@infradead.org>
-Subject: Re: libata: set queue SSD flag for SSD devices
-Date: Fri, 10 Oct 2008 17:55:08 -0700
-Message-ID: <20081010175508.3d1ed2a4@infradead.org>
-References: <200810101904.m9AJ42Gq018897@hera.kernel.org>
-	<20081010202515.446857cc@lxorguk.ukuu.org.uk>
-	<20081010200528.GJ19428@kernel.dk>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+From: bugme-daemon@bugzilla.kernel.org
+Subject: [Bug 11735] delkin_cb fails after resume
+Date: Fri, 10 Oct 2008 19:01:37 -0700 (PDT)
+Message-ID: <20081011020137.AAF30108047@picon.linux-foundation.org>
+References: <bug-11735-11633@http.bugzilla.kernel.org/>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from casper.infradead.org ([85.118.1.10]:44748 "EHLO
-	casper.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754201AbYJKAzP (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 10 Oct 2008 20:55:15 -0400
-In-Reply-To: <20081010200528.GJ19428@kernel.dk>
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:50542 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754471AbYJKCBj (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 10 Oct 2008 22:01:39 -0400
+Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
+	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id m9B21bIR019430
+	for <linux-ide@vger.kernel.org>; Fri, 10 Oct 2008 19:01:38 -0700
+In-Reply-To: <bug-11735-11633@http.bugzilla.kernel.org/>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jens Axboe <jens.axboe@oracle.com>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, torvalds@osdl.org
+To: linux-ide@vger.kernel.org
 
-On Fri, 10 Oct 2008 22:05:28 +0200
-Jens Axboe <jens.axboe@oracle.com> wrote:
-> 
-> In this specific patch, it'll do no harm at least since I very much
-> doubt we'll see a false positive. And even if, the consequences wont
-> be dire. But it does want the version check, of course.
-> 
+http://bugzilla.kernel.org/show_bug.cgi?id=11735
 
-also, is "is an ssd" the right question or is "doesn't have seek
-latency" the right one?
-(difference is.. well EMC boxes with lots of ram etc)
+
+
+
+
+------- Comment #4 from bumble.bee@xs4all.nl  2008-10-10 19:01 -------
+To clarify, in addition to the CF card this laptop has a "regular" HDD. I had
+switched to an all-libata setup for both the HDD and the ninja32, which is when
+the kacpid cpu hog shows up.
+I've now also built a kernel with the old ata driver for the HDD and only the
+ninja32 in libata. That shows the same behavior as the delkin_cb driver (100%
+wait state on resume). With that kernel, I've managed to capture this in the
+syslog after resume:
+
+ata1.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x6 frozen
+ala1.00: cmd 30/00:30:90:12:ea/00:00:00:00:00/e0 tag 0 pio 24576 out
+res 40/00:00:00:00:00/00:00:00:00:00/e0 Emask 0x4 (timeout)
+ata1.00: status: { DRDY }
+ata1: soft resetting link
+ata1.00: failed to IDENTIFY (INIT_DEV_PARAMS failed, err_mask=0x80)
+ata1.00: revalidation failed (errno=-5)
+ata1: soft resetting link
+ata1.00: failed to IDENTIFY (INIT_DEV_PARAMS failed, err_mask=0x80)
+ata1.00: revalidation failed (errno=-5)
+ata1: soft resetting link
+ata1.00: failed to IDENTIFY (INIT_DEV_PARAMS failed, err_mask=0x80)
+ata1.00: revalidation failed (errno=-5)
+ata1.00: disabled
+ata1.00: EH complete
+sd 0:0:0:0: [sda] Result: hostbyte=0x04 driverbyte=0x00
+end_request: I/O error, dev sda, sector 15340176
+sd 0:0:0:0: [sda] Result: hostbyte=0x04 driverbyte=0x00
+end_request: I/O error, dev sda, sector 18719176
+Buffer I/O error on device dm-1, logical block 2323832
+lost page write due to I/O error on dm-1
+
+It's dm-1 because the filesystem on the card is on an encrypted block device.
+After this error the system goes back to 100% idle, and if I try to access the
+filesystem I get I/O errors from ls.
+
+To answer your question, I've not had problems with resuming on this machine
+before (with only the HDD, using the old IDE driver). I can't really test
+resume without the card right now, since it holds the root filesystem, but I
+could dd it back to the HDD if that's necessary.
 
 
 -- 
-Arjan van de Ven 	Intel Open Source Technology Centre
-For development, discussion and tips for power savings, 
-visit http://www.lesswatts.org
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug, or are watching the assignee.
