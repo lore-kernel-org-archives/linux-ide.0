@@ -1,119 +1,66 @@
-From: Lars Michael Jogback <lm@jogback.se>
-Subject: Problem w/ hotplug on sata_sil24 w/ PMP (sil3726)
-Date: Sat, 11 Oct 2008 16:27:35 +0200
-Message-ID: <20081011142735.GB5904@cleopatra.jogback.se>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: libata: set queue SSD flag for SSD devices
+Date: Sat, 11 Oct 2008 17:44:13 +0200
+Message-ID: <1223739853.4159.17.camel@localhost.localdomain>
+References: <200810101904.m9AJ42Gq018897@hera.kernel.org>
+	 <20081010202515.446857cc@lxorguk.ukuu.org.uk>
+	 <20081010200528.GJ19428@kernel.dk> <20081010175508.3d1ed2a4@infradead.org>
+	 <1223710417.4159.11.camel@localhost.localdomain>
+	 <20081011140600.GR19428@kernel.dk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.jogback.se ([192.165.82.10]:60135 "EHLO mail.jogback.se"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753296AbYJKP2m (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 11 Oct 2008 11:28:42 -0400
-Received: from [2a00:801:a:1::1:1] (HELO cleopatra.jogback.se)
-  by mail.jogback.se (CommuniGate Pro SMTP 5.2.6)
-  with ESMTPS id 8267801 for linux-ide@vger.kernel.org; Sat, 11 Oct 2008 16:28:29 +0200
-Content-Disposition: inline
+Received: from accolon.hansenpartnership.com ([76.243.235.52]:57171 "EHLO
+	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754225AbYJKPoT (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 11 Oct 2008 11:44:19 -0400
+In-Reply-To: <20081011140600.GR19428@kernel.dk>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Jens Axboe <jens.axboe@oracle.com>
+Cc: Arjan van de Ven <arjan@infradead.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, torvalds@osdl.org
 
-I've got trouble to get a drive to reconnect to the system after
-hotplug.
+On Sat, 2008-10-11 at 16:06 +0200, Jens Axboe wrote:
+> On Sat, Oct 11 2008, James Bottomley wrote:
+> > On Fri, 2008-10-10 at 17:55 -0700, Arjan van de Ven wrote:
+> > > On Fri, 10 Oct 2008 22:05:28 +0200
+> > > Jens Axboe <jens.axboe@oracle.com> wrote:
+> > > > 
+> > > > In this specific patch, it'll do no harm at least since I very much
+> > > > doubt we'll see a false positive. And even if, the consequences wont
+> > > > be dire. But it does want the version check, of course.
+> > > > 
+> > > 
+> > > also, is "is an ssd" the right question or is "doesn't have seek
+> > > latency" the right one?
+> > > (difference is.. well EMC boxes with lots of ram etc)
+> > 
+> > For libata, the is ssd is the right test.
+> > 
+> > For things like the symmetrix we probably need to look at the caching
+> > mode page and treat it like ssd if the cache is say > 1GB or whatever
+> > heuristic is needed.
+> 
+> Still wont quite work, you're still going to have occasional seek
+> latencies no matter how large the cache is (unless it's == device size
+> :-)
 
-I'm using Linux 2.6.26 (Debian 2.6.26-8) on AMD64. The controller card
-is any Sil3124-based, and the disks are connected to a Sil3726.
+True (just not very often) ... but statistically, the big symmetrixes
+get better performance with the noop scheduler (which is treating them
+like a SSD).  The occasional time they hiccough and seek tends to be
+statistically in the noise.
 
-The disks in this case (but I've got the same behaviour on different
-disks) is SAMSUNG HD103UJ. Their Spin_Up_Time according to smartctl is
-11030 (which I translate to approx 11 seconds, right?)
+As long as we do this stuff in userspace anyway, nothing needs to change
+in the SCSI subsystem.
 
-The disks are mounted in drivecages.
+> So we need something a bit more involved, but not too complex. A fine
+> line...
 
-When I yank the disk this happens:
-[75044.264218] ata4.03: exception Emask 0x10 SAct 0x0 SErr 0x4010000 action 0xf
-[75044.264322] ata4: SError: { PHYRdyChg DevExch }
-[75044.264971] ata4.03: hard resetting link
-[75045.007015] ata4.03: SATA link down (SStatus 0 SControl 320)
-[75045.007164] ata4: failed to recover some devices, retrying in 5 secs
-[75050.035389] ata4.03: hard resetting link
-[75050.371528] ata4.03: SATA link down (SStatus 0 SControl 320)
-[75050.371672] ata4: failed to recover some devices, retrying in 5 secs
-[75055.387768] ata4.03: hard resetting link
-[75055.724346] ata4.03: SATA link down (SStatus 0 SControl 320)
-[75055.724797] ata4.03: disabled
-[75056.228377] ata4: EH complete
-[75056.228469] ata4.03: detaching (SCSI 4:3:0:0)
-[75056.228830] sd 4:3:0:0: [sdt] Synchronizing SCSI cache
-[75056.228959] sd 4:3:0:0: [sdt] Result: hostbyte=DID_BAD_TARGET driverbyte=DRIVER_OK,SUGGEST_OK
-[75056.229149] sd 4:3:0:0: [sdt] Stopping disk
-[75056.229250] sd 4:3:0:0: [sdt] START_STOP FAILED
-[75056.229346] sd 4:3:0:0: [sdt] Result: hostbyte=DID_BAD_TARGET driverbyte=DRIVER_OK,SUGGEST_OK
+It's a policy ... just let userspace do it so the user can tune it.
+That's what EMC does now (except I think they key of inquiry strings
+rather than cache size).
 
-And when I plug the disk this happens.
-[75096.396748] ata4.03: exception Emask 0x10 SAct 0x0 SErr 0x4050000 action 0xf
-[75096.396849] ata4: SError: { PHYRdyChg CommWake DevExch }
-[75096.716825] ata4.03: hard resetting link
-[75097.461358] ata4.03: SATA link up 3.0 Gbps (SStatus 123 SControl 320)
-[75097.477638] ata4.03: failed to IDENTIFY (I/O error, err_mask=0x11)
-[75097.477745] ata4.15: hard resetting link
-[75099.622365] ata4.15: SATA link up 3.0 Gbps (SStatus 123 SControl 0)
-[75099.943070] ata4.00: hard resetting link
-[75100.278871] ata4.00: SATA link up 3.0 Gbps (SStatus 123 SControl 320)
-[75100.278971] ata4.01: hard resetting link
-[75100.615444] ata4.01: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-[75100.615545] ata4.02: hard resetting link
-[75100.950786] ata4.02: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-[75100.950887] ata4.03: hard resetting link
-[75101.287528] ata4.03: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-[75101.287626] ata4.05: hard resetting link
-[75101.624445] ata4.05: SATA link up 1.5 Gbps (SStatus 113 SControl 320)
-[75101.640432] ata4.00: configured for UDMA/100
-[75101.652704] ata4.01: configured for UDMA/100
-[75101.666964] ata4.02: configured for UDMA/100
-[75101.684114] ata4.03: failed to IDENTIFY (I/O error, err_mask=0x11)
-[75101.684211] ata4.15: hard resetting link
-[75103.828553] ata4.15: SATA link up 3.0 Gbps (SStatus 123 SControl 0)
-[75104.149612] ata4.00: hard resetting link
-[75104.486756] ata4.00: SATA link up 3.0 Gbps (SStatus 123 SControl 320)
-[75104.486855] ata4.01: hard resetting link
-[75104.823978] ata4.01: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-[75104.824079] ata4.02: hard resetting link
-[75105.162597] ata4.02: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-[75105.162698] ata4.03: hard resetting link
-[75105.501892] ata4.03: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-[75105.501993] ata4.05: hard resetting link
-[75105.838207] ata4.05: SATA link up 1.5 Gbps (SStatus 113 SControl 320)
-[75105.851061] ata4.00: configured for UDMA/100
-[75105.863553] ata4.01: configured for UDMA/100
-[75105.876447] ata4.02: configured for UDMA/100
-[75105.890214] ata4.03: failed to IDENTIFY (I/O error, err_mask=0x11)
-[75105.890321] ata4.03: failed to recover link after 3 tries, disabling
-[75105.890415] ata4: failed to recover PMP, retrying in 5 secs
-[75110.903191] ata4.15: hard resetting link
-[75113.144415] ata4.15: SATA link up 3.0 Gbps (SStatus 123 SControl 0)
-[75113.788536] ata4.00: hard resetting link
-[75114.127956] ata4.00: SATA link up 3.0 Gbps (SStatus 123 SControl 320)
-[75114.127956] ata4.01: hard resetting link
-[75114.468727] ata4.01: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-[75114.468830] ata4.02: hard resetting link
-[75114.803270] ata4.02: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-[75114.803371] ata4.05: hard resetting link
-[75115.143819] ata4.05: SATA link up 1.5 Gbps (SStatus 113 SControl 320)
-[75115.157855] ata4.00: configured for UDMA/100
-[75115.170739] ata4.01: configured for UDMA/100
-[75115.183895] ata4.02: configured for UDMA/100
-[75115.841430] ata4: EH complete
+James
 
-As I understand it, the first IDENTIFY happens 1 second after hotplug,
-the second 5 seconds after hotplug, and the last and third one happens 9
-seconds after the hotplug, and as I understand this disk need at least
-11 seconds to spin-up.
-
-The only way I can get the disk back online is to yank the cable between
-the controller and the PMP, then it works.
-
-Is it someway to extend the timeout to wait for spin-up of the disk?
-
-Best Regards,
-/LM
 
