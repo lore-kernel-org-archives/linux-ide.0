@@ -1,71 +1,43 @@
-From: Arjan van de Ven <arjan@infradead.org>
-Subject: Re: libata: set queue SSD flag for SSD devices
-Date: Sat, 11 Oct 2008 09:49:30 -0700
-Message-ID: <20081011094930.3cf55ea5@infradead.org>
-References: <200810101904.m9AJ42Gq018897@hera.kernel.org>
-	<20081010202515.446857cc@lxorguk.ukuu.org.uk>
-	<20081010200528.GJ19428@kernel.dk>
-	<20081010175508.3d1ed2a4@infradead.org>
-	<1223710417.4159.11.camel@localhost.localdomain>
-	<20081011140600.GR19428@kernel.dk>
-	<1223739853.4159.17.camel@localhost.localdomain>
-	<20081011090407.6de9b8b4@infradead.org>
-	<1223743124.4159.27.camel@localhost.localdomain>
+From: Borislav Petkov <petkovbb@googlemail.com>
+Subject: Re: [PATCH 0/7] ide: locking improvements
+Date: Sat, 11 Oct 2008 19:06:10 +0200
+Message-ID: <20081011170610.GA7574@gollum.tnic>
+References: <fa.Ke90oacfRjgiI4x5LejzjssRBEg@ifi.uio.no> <200810111645.27847.bzolnier@gmail.com> <20081011150532.GU19428@kernel.dk> <200810111756.37278.bzolnier@gmail.com>
+Reply-To: petkovbb@gmail.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from casper.infradead.org ([85.118.1.10]:53158 "EHLO
-	casper.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754329AbYJKQtj (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 11 Oct 2008 12:49:39 -0400
-In-Reply-To: <1223743124.4159.27.camel@localhost.localdomain>
+Received: from fg-out-1718.google.com ([72.14.220.156]:3243 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759383AbYJKRGO (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 11 Oct 2008 13:06:14 -0400
+Received: by fg-out-1718.google.com with SMTP id 19so677935fgg.17
+        for <linux-ide@vger.kernel.org>; Sat, 11 Oct 2008 10:06:12 -0700 (PDT)
+Content-Disposition: inline
+In-Reply-To: <200810111756.37278.bzolnier@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Jens Axboe <jens.axboe@oracle.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, torvalds@osdl.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Jens Axboe <jens.axboe@oracle.com>
+Cc: Robert Hancock <hancockr@shaw.ca>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Sat, 11 Oct 2008 18:38:44 +0200
-James Bottomley <James.Bottomley@HansenPartnership.com> wrote:
+On Sat, Oct 11, 2008 at 05:56:37PM +0200, Bartlomiej Zolnierkiewicz wrote:
+> On Saturday 11 October 2008, Jens Axboe wrote:
+> > On Sat, Oct 11 2008, Bartlomiej Zolnierkiewicz wrote:
+> > > On Saturday 11 October 2008, Jens Axboe wrote:
+> > > > On Sat, Oct 11 2008, Borislav Petkov wrote:
 
-> On Sat, 2008-10-11 at 09:04 -0700, Arjan van de Ven wrote:
-> > On Sat, 11 Oct 2008 17:44:13 +0200
-> > James Bottomley <James.Bottomley@HansenPartnership.com> wrote:
-> > 
-> > > 
-> > > > So we need something a bit more involved, but not too complex. A
-> > > > fine line...
-> > > 
-> > > It's a policy ... just let userspace do it so the user can tune
-> > > it. That's what EMC does now (except I think they key of inquiry
-> > > strings rather than cache size).
-> > 
-> > 
-> > while the chosen elevator obviously is policy, the kernel really
-> > should pick a sensible default based on what it knows.
-> > Lets put it this way: if userland needs to do a tuning to the kernel
-> > based on data only provided by the kernel, and will always do it the
-> > same way, we should have made that choice the default policy in the
-> > kernel in the first place.
-> 
-> Well, this is a bit of a nasty layering problem.  We certainly don't
-> want the Block layer to know how to poke at SATA, SCSI and other
-> esoteric media to see what elevator should be the default, so we'd
-> have to craft a new block API that the lower subsystems would
-> implement for this.  I'm really not sure it's worth the trouble when
-> the boot system can do it simply from userspace, but I'll defer to
-> Jens.
-> 
+[... ]
 
-these devices already give the elevator layer information about the
-device, like optimal/max io size etc.
-having the elevator take a "don't bother optimizing for seeks" flag
-is very much along the same lines, it's a device property that the
-elevator needs to learn about in order to send the right kinds of IO
-down.
+Don't you just love it when all gets resolved peacefully and everything is fine
+and dandy afterwards. I'm so happy we've straightened that one out. Just a final
+quick note which by no means is targetting to resparkle the discussion: I have
+another bug report, hm, well :), but still, the machine is a 8-core AMD Dell box
+(with the option of upgrading to 16 cores) which _is_ using ide-cd so, there are
+some people using that code, after all :). I'm sure those people will be happier
+when it scales to that many cores.
 
+http://bugzilla.kernel.org/show_bug.cgi?id=11498.
 
 -- 
-Arjan van de Ven 	Intel Open Source Technology Centre
-For development, discussion and tips for power savings, 
-visit http://www.lesswatts.org
+Regards/Gruss,
+    Boris.
