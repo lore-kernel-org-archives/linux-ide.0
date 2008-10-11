@@ -1,36 +1,40 @@
-From: Robert Hancock <hancockr@shaw.ca>
-Subject: Re: [PATCH 0/7] ide: locking improvements
-Date: Fri, 10 Oct 2008 20:34:19 -0600
-Message-ID: <48F010AB.7010009@shaw.ca>
-References: <fa.Ke90oacfRjgiI4x5LejzjssRBEg@ifi.uio.no> <fa.5sGSpBgVBoMAsIwwLABWnjDzM38@ifi.uio.no> <fa.8TkQ+xA96EhlNKL9gIbVTxVrcUE@ifi.uio.no>
+From: Jens Axboe <jens.axboe@oracle.com>
+Subject: Re: libata: set queue SSD flag for SSD devices
+Date: Sat, 11 Oct 2008 08:36:51 +0200
+Message-ID: <20081011063650.GL19428@kernel.dk>
+References: <200810101904.m9AJ42Gq018897@hera.kernel.org> <20081010202515.446857cc@lxorguk.ukuu.org.uk> <20081010200528.GJ19428@kernel.dk> <20081010175508.3d1ed2a4@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from idcmail-mo2no.shaw.ca ([64.59.134.9]:5247 "EHLO
-	idcmail-mo2no.shaw.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753549AbYJKCeX (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 10 Oct 2008 22:34:23 -0400
-In-Reply-To: <fa.8TkQ+xA96EhlNKL9gIbVTxVrcUE@ifi.uio.no>
+Received: from pasmtpb.tele.dk ([80.160.77.98]:41482 "EHLO pasmtpB.tele.dk"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754061AbYJKGh2 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 11 Oct 2008 02:37:28 -0400
+Content-Disposition: inline
+In-Reply-To: <20081010175508.3d1ed2a4@infradead.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: Jens Axboe <jens.axboe@oracle.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Arjan van de Ven <arjan@infradead.org>
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, torvalds@osdl.org
 
-Bartlomiej Zolnierkiewicz wrote:
->> Sorry, but I just have to ask 'why'? IDE is seeing a whole lot of churn
->> for something that should essentially be a stable code base in
->> maintenance mode, and now scalability improvements?
+On Fri, Oct 10 2008, Arjan van de Ven wrote:
+> On Fri, 10 Oct 2008 22:05:28 +0200
+> Jens Axboe <jens.axboe@oracle.com> wrote:
+> > 
+> > In this specific patch, it'll do no harm at least since I very much
+> > doubt we'll see a false positive. And even if, the consequences wont
+> > be dire. But it does want the version check, of course.
+> > 
 > 
-> It is the stable code but being in "maintenance only mode" has never
-> been true and as long as there are active users & developers there is
-> really no reason to change it.
+> also, is "is an ssd" the right question or is "doesn't have seek
+> latency" the right one?
+> (difference is.. well EMC boxes with lots of ram etc)
 
-Are there really many active users at this point? I'm not aware of any 
-new distributions that are using it. The only people I can see that 
-might still want to be using it would be people with old setups or old 
-embedded devices.. many of those wouldn't be using newer kernels anyway.
+The block layer uses the 'non rotational' nomenclature for this, but
+that's not perfect either. And neither is 'no seek', a single
+"parameter" is not enough to describe the device. But it's good enough I
+think, it'll be expanded later with a (bit) fuller profile.
 
-These kinds of changes only will really help scalability on multi-core 
-machines which are unlikely to be using this code anyway.. They seem 
-rather like putting makeup on a corpse to me..
+-- 
+Jens Axboe
+
