@@ -1,43 +1,58 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: libata: set queue SSD flag for SSD devices
-Date: Sat, 11 Oct 2008 09:33:37 +0200
-Message-ID: <1223710417.4159.11.camel@localhost.localdomain>
-References: <200810101904.m9AJ42Gq018897@hera.kernel.org>
-	 <20081010202515.446857cc@lxorguk.ukuu.org.uk>
-	 <20081010200528.GJ19428@kernel.dk>  <20081010175508.3d1ed2a4@infradead.org>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: [PATCH 0/7] ide: locking improvements
+Date: Sat, 11 Oct 2008 13:39:44 +0200
+Message-ID: <200810111339.44998.bzolnier@gmail.com>
+References: <fa.Ke90oacfRjgiI4x5LejzjssRBEg@ifi.uio.no> <fa.8TkQ+xA96EhlNKL9gIbVTxVrcUE@ifi.uio.no> <48F010AB.7010009@shaw.ca>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:55552 "EHLO
-	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750816AbYJKHdp (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 11 Oct 2008 03:33:45 -0400
-In-Reply-To: <20081010175508.3d1ed2a4@infradead.org>
+Received: from mu-out-0910.google.com ([209.85.134.184]:12424 "EHLO
+	mu-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751944AbYJKLl4 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 11 Oct 2008 07:41:56 -0400
+Received: by mu-out-0910.google.com with SMTP id g7so814886muf.1
+        for <linux-ide@vger.kernel.org>; Sat, 11 Oct 2008 04:41:54 -0700 (PDT)
+In-Reply-To: <48F010AB.7010009@shaw.ca>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Arjan van de Ven <arjan@infradead.org>
-Cc: Jens Axboe <jens.axboe@oracle.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, torvalds@osdl.org
+To: Robert Hancock <hancockr@shaw.ca>
+Cc: Jens Axboe <jens.axboe@oracle.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Fri, 2008-10-10 at 17:55 -0700, Arjan van de Ven wrote:
-> On Fri, 10 Oct 2008 22:05:28 +0200
-> Jens Axboe <jens.axboe@oracle.com> wrote:
+On Saturday 11 October 2008, Robert Hancock wrote:
+> Bartlomiej Zolnierkiewicz wrote:
+> >> Sorry, but I just have to ask 'why'? IDE is seeing a whole lot of churn
+> >> for something that should essentially be a stable code base in
+> >> maintenance mode, and now scalability improvements?
 > > 
-> > In this specific patch, it'll do no harm at least since I very much
-> > doubt we'll see a false positive. And even if, the consequences wont
-> > be dire. But it does want the version check, of course.
-> > 
+> > It is the stable code but being in "maintenance only mode" has never
+> > been true and as long as there are active users & developers there is
+> > really no reason to change it.
 > 
-> also, is "is an ssd" the right question or is "doesn't have seek
-> latency" the right one?
-> (difference is.. well EMC boxes with lots of ram etc)
+> Are there really many active users at this point? I'm not aware of any 
+> new distributions that are using it. The only people I can see that 
+> might still want to be using it would be people with old setups or old 
+> embedded devices.. many of those wouldn't be using newer kernels anyway.
 
-For libata, the is ssd is the right test.
+Like I said before: as long as there are any active users/developers
+there is no real reason to stop IDE improvements (especially since there
+is no complete replacement available).
 
-For things like the symmetrix we probably need to look at the caching
-mode page and treat it like ssd if the cache is say > 1GB or whatever
-heuristic is needed.
+I also wouldn't worry that much about what some distros are doing.  They
+are free to make their own decisions based on whatever criteria they like.
 
-James
+> These kinds of changes only will really help scalability on multi-core 
+> machines which are unlikely to be using this code anyway.. They seem 
 
+>From my perspective the main gain of these patches is the increased
+maintainability and sanity of the code, scalability improvements are
+just an added bonus.
 
+> rather like putting makeup on a corpse to me..
+
+Please refrain from such comments.  Not only the metaphor is completely
+bogus but it may sound disrespectful to some IDE developers.
+
+Thanks,
+Bart
