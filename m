@@ -1,97 +1,67 @@
-From: Elias Oltmanns <eo@nebensachen.de>
-Subject: ide: Bug fixes and improvements in the disk head parking code
-Date: Sat, 11 Oct 2008 19:37:20 +0200
-Message-ID: <87fxn3hw33.fsf@denkblock.local>
+From: Jens Axboe <jens.axboe@oracle.com>
+Subject: Re: libata: set queue SSD flag for SSD devices
+Date: Sat, 11 Oct 2008 19:48:59 +0200
+Message-ID: <20081011174859.GV19428@kernel.dk>
+References: <200810101904.m9AJ42Gq018897@hera.kernel.org> <20081010202515.446857cc@lxorguk.ukuu.org.uk> <20081010200528.GJ19428@kernel.dk> <20081010175508.3d1ed2a4@infradead.org> <1223710417.4159.11.camel@localhost.localdomain> <20081011140600.GR19428@kernel.dk> <1223739853.4159.17.camel@localhost.localdomain> <20081011090407.6de9b8b4@infradead.org> <1223743124.4159.27.camel@localhost.localdomain> <20081011094930.3cf55ea5@infradead.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nebensachen.de ([195.34.83.29]:53716 "EHLO mail.nebensachen.de"
+Received: from pasmtpb.tele.dk ([80.160.77.98]:56846 "EHLO pasmtpB.tele.dk"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1761679AbYJKRhz (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 11 Oct 2008 13:37:55 -0400
+	id S932177AbYJKRti (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 11 Oct 2008 13:49:38 -0400
+Content-Disposition: inline
+In-Reply-To: <20081011094930.3cf55ea5@infradead.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: linux-ide@vger.kernel.org
+To: Arjan van de Ven <arjan@infradead.org>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, torvalds@osdl.org
 
-Fix a memory leak due to a missing blk_put_request() in
-issue_park_cmd(). Additionally, we should plug the queue when enqueueing
-the unpark request because there is no guarantee that the park timeout
-has not expired by then. Even though the chance for that to happen is
-very slim, the request might end up hanging in the queue until the next
-I/O operation is queued up. While at it, clean up the code a little:
-- make issue_park_cmd() a function of type void since nobody cares for
-  the return value anyway;
-- use blk_start_queueing() instead of __blk_run_queue() since we don't
-  have to worry about recursion;
-- remove a superfluous pointer deference in task_no_data_intr().
+On Sat, Oct 11 2008, Arjan van de Ven wrote:
+> On Sat, 11 Oct 2008 18:38:44 +0200
+> James Bottomley <James.Bottomley@HansenPartnership.com> wrote:
+> 
+> > On Sat, 2008-10-11 at 09:04 -0700, Arjan van de Ven wrote:
+> > > On Sat, 11 Oct 2008 17:44:13 +0200
+> > > James Bottomley <James.Bottomley@HansenPartnership.com> wrote:
+> > > 
+> > > > 
+> > > > > So we need something a bit more involved, but not too complex. A
+> > > > > fine line...
+> > > > 
+> > > > It's a policy ... just let userspace do it so the user can tune
+> > > > it. That's what EMC does now (except I think they key of inquiry
+> > > > strings rather than cache size).
+> > > 
+> > > 
+> > > while the chosen elevator obviously is policy, the kernel really
+> > > should pick a sensible default based on what it knows.
+> > > Lets put it this way: if userland needs to do a tuning to the kernel
+> > > based on data only provided by the kernel, and will always do it the
+> > > same way, we should have made that choice the default policy in the
+> > > kernel in the first place.
+> > 
+> > Well, this is a bit of a nasty layering problem.  We certainly don't
+> > want the Block layer to know how to poke at SATA, SCSI and other
+> > esoteric media to see what elevator should be the default, so we'd
+> > have to craft a new block API that the lower subsystems would
+> > implement for this.  I'm really not sure it's worth the trouble when
+> > the boot system can do it simply from userspace, but I'll defer to
+> > Jens.
+> > 
+> 
+> these devices already give the elevator layer information about the
+> device, like optimal/max io size etc.
+> having the elevator take a "don't bother optimizing for seeks" flag
+> is very much along the same lines, it's a device property that the
+> elevator needs to learn about in order to send the right kinds of IO
+> down.
 
-Signed-off-by: Elias Oltmanns <eo@nebensachen.de>
----
-Feel free to merge with original patch if Linus hasn't pulled your tree
-yet.
+Completely agree. And this is very different from the 'choose elevator
+based on device properties', a way of thinking that I don't agree with.
+This 'non rotational' flag does just that, passes down more information
+to the IO scheduler so it can make more informed choices.
 
- ide-park.c     |   11 ++++++-----
- ide-taskfile.c |    2 +-
- 2 files changed, 7 insertions(+), 6 deletions(-)
+-- 
+Jens Axboe
 
-diff --git a/drivers/ide/ide-park.c b/drivers/ide/ide-park.c
-index 02d7e35..03b00e5 100644
---- a/drivers/ide/ide-park.c
-+++ b/drivers/ide/ide-park.c
-@@ -5,7 +5,7 @@
- 
- DECLARE_WAIT_QUEUE_HEAD(ide_park_wq);
- 
--static int issue_park_cmd(ide_drive_t *drive, unsigned long timeout)
-+static void issue_park_cmd(ide_drive_t *drive, unsigned long timeout)
- {
- 	struct request_queue *q = drive->queue;
- 	struct request *rq;
-@@ -24,10 +24,10 @@ static int issue_park_cmd(ide_drive_t *drive, unsigned long timeout)
- 		    del_timer(&hwgroup->timer)) {
- 			hwgroup->sleeping = 0;
- 			hwgroup->busy = 0;
--			__blk_run_queue(q);
-+			blk_start_queueing(q);
- 		}
- 		spin_unlock_irq(&ide_lock);
--		return 0;
-+		return;
- 	}
- 	spin_unlock_irq(&ide_lock);
- 
-@@ -37,6 +37,7 @@ static int issue_park_cmd(ide_drive_t *drive, unsigned long timeout)
- 	rq->cmd_type = REQ_TYPE_SPECIAL;
- 	rq->special = &timeout;
- 	rc = blk_execute_rq(q, NULL, rq, 1);
-+	blk_put_request(rq);
- 	if (rc)
- 		goto out;
- 
-@@ -51,10 +52,10 @@ static int issue_park_cmd(ide_drive_t *drive, unsigned long timeout)
- 	rq->cmd[0] = REQ_UNPARK_HEADS;
- 	rq->cmd_len = 1;
- 	rq->cmd_type = REQ_TYPE_SPECIAL;
--	elv_add_request(q, rq, ELEVATOR_INSERT_FRONT, 0);
-+	elv_add_request(q, rq, ELEVATOR_INSERT_FRONT, 1);
- 
- out:
--	return rc;
-+	return;
- }
- 
- ssize_t ide_park_show(struct device *dev, struct device_attribute *attr,
-diff --git a/drivers/ide/ide-taskfile.c b/drivers/ide/ide-taskfile.c
-index 480c97f..bf4fb9d 100644
---- a/drivers/ide/ide-taskfile.c
-+++ b/drivers/ide/ide-taskfile.c
-@@ -153,7 +153,7 @@ static ide_startstop_t task_no_data_intr(ide_drive_t *drive)
- 	if (!custom)
- 		ide_end_drive_cmd(drive, stat, ide_read_error(drive));
- 	else if (tf->command == ATA_CMD_IDLEIMMEDIATE) {
--		drive->hwif->tp_ops->tf_read(drive, task);
-+		hwif->tp_ops->tf_read(drive, task);
- 		if (tf->lbal != 0xc4) {
- 			printk(KERN_ERR "%s: head unload failed!\n",
- 			       drive->name);
