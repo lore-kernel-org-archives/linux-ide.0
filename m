@@ -1,187 +1,46 @@
-From: Wang Jian <lark@linux.net.cn>
-Subject: [PATCH RFC] pata_platform: add 8 bit data io support
-Date: Sun, 12 Oct 2008 02:00:14 +0800
-Message-ID: <20081011180014.GA4908@debian>
+From: Borislav Petkov <petkovbb@googlemail.com>
+Subject: Re: [PATCH 0/7] ide: locking improvements
+Date: Sat, 11 Oct 2008 20:34:36 +0200
+Message-ID: <20081011183436.GA10948@gollum.tnic>
+References: <fa.Ke90oacfRjgiI4x5LejzjssRBEg@ifi.uio.no> <200810111645.27847.bzolnier@gmail.com> <20081011150532.GU19428@kernel.dk> <200810111756.37278.bzolnier@gmail.com> <20081011175617.GX19428@kernel.dk>
+Reply-To: petkovbb@gmail.com
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from [210.82.31.146] ([210.82.31.146]:42842 "EHLO mx.linux.net.cn"
-	rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org with ESMTP
-	id S1762078AbYJKSAE (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 11 Oct 2008 14:00:04 -0400
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1762430AbYJKSey@vger.kernel.org>
 Content-Disposition: inline
-Sender: linux-ide-owner@vger.kernel.org
+In-Reply-To: <20081011175617.GX19428@kernel.dk>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Jens Axboe <jens.axboe@oracle.com>
+Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Robert Hancock <hancockr@shaw.ca>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linuxppc-dev@ozlabs.org
-Cc: linux-ide@vger.kernel.org, Tejun Heo <htejun@gmail.com>
 
-To avoid adding another rare used ata_port member, new bit is added to
-ata_port->flags.
+> > The actual users' feedback about amount of IDE changes have been mostly
+> > positive (some ask for even more changes :) so I don't think that it
+> > should be a reason of a great worries.  I hope that all other concerns
+> > have been also cleared now.
+> 
+> Heck that's good, I do hope that I'm mostly over-concerned! I'm not
+> trying to create a problem where there isn't one, mainly looking for
+> clarity into the situation.
+> 
+> I noticed one ide-tape tested complaining something broke, and it seems
+> like he was the only one out there actually using current kernels and
+> testing it. I worry mostly about the changes breaking somebodys distro 3
+> years down the line, by which point people may have moved on (and the
+> old code would have worked).
 
-Originally, I hacked pata_platform to make it 8bit only to support 8bit
-data wired CF card. This patch is more generic.
+We try to fix those as fast as possible and they become
+highest priority. If we're talking about the same thing, aka
+801bd32e205ca6ef78dcaf80121f1eccb89b8c1e, this is obviously already fixed.
 
-With this patch, __pata_platform_probe() interface is changed, and
-pata_of_platform is broken, so a small patch is needed.
+It's not like everything is fine with the older code either. For example, I'm
+staring at traces w.r.t. bug 11581 which somehow broke ide-cd around the 2.6.19
+timeframe and this has been broken for that particular user since then. So I
+think that what we do now, generally that anyone is doing something about that
+code, replying to bug reports and working with users to solve problems is, IMO,
+a lot bigger advantage than doing nothing at all. But your concern is also valid
+and we're doing our best to avoid such regressions.
 
-Signed-off-by: Wang Jian <lark@linux.net.cn>
----
- drivers/ata/pata_platform.c  |   63 ++++++++++++++++++++++++++++++++++++++++--
- include/linux/ata.h          |    8 +++++
- include/linux/ata_platform.h |    4 ++
- include/linux/libata.h       |    1 +
- 4 files changed, 73 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/ata/pata_platform.c b/drivers/ata/pata_platform.c
-index 8f65ad6..d2276ad 100644
---- a/drivers/ata/pata_platform.c
-+++ b/drivers/ata/pata_platform.c
-@@ -50,9 +50,62 @@ static struct scsi_host_template pata_platform_sht = {
- 	ATA_PIO_SHT(DRV_NAME),
- };
- 
-+static void pata_platform_postreset(struct ata_link *link, unsigned int *classes)
-+{
-+	struct ata_port *ap = link->ap;
-+	struct ata_device *dev;
-+	u8 select = ATA_DEVICE_OBS;
-+
-+	/* Call default callback first */
-+	ata_sff_postreset(link, classes);
-+
-+	if (!(ap->flags & ATA_FLAG_8BIT_DATA))
-+		return;
-+
-+	/* Set 8-bit mode. We know we can do that */
-+	ata_link_for_each_dev(dev, link) {
-+		if (dev->devno)
-+			select |= ATA_DEV1;
-+
-+		iowrite8(SETFEATURES_8BIT_ON, ap->ioaddr.feature_addr);
-+		iowrite8(select, ap->ioaddr.device_addr);
-+		iowrite8(ATA_CMD_SET_FEATURES, ap->ioaddr.command_addr);
-+	}
-+}
-+
-+static unsigned int pata_platform_data_xfer(struct ata_device *dev,
-+	unsigned char *buf, unsigned int buflen, int rw)
-+{
-+	struct ata_port *ap = dev->link->ap;
-+
-+	if (!(ap->flags & ATA_FLAG_8BIT_DATA))
-+		return ata_sff_data_xfer(dev, buf, buflen, rw);
-+
-+	if (rw == READ)
-+		ioread8_rep(ap->ioaddr.data_addr, buf, buflen);
-+	else
-+		iowrite8_rep(ap->ioaddr.data_addr, buf, buflen);
-+
-+	return buflen;
-+}
-+
-+static unsigned int pata_platform_data_xfer_noirq(struct ata_device *dev,
-+	unsigned char *buf, unsigned int buflen, int rw)
-+{
-+	unsigned long flags;
-+	unsigned int consumed;
-+
-+	local_irq_save(flags);
-+	consumed = pata_platform_data_xfer(dev, buf, buflen, rw);
-+	local_irq_restore(flags);
-+
-+	return consumed;
-+}
-+
- static struct ata_port_operations pata_platform_port_ops = {
- 	.inherits		= &ata_sff_port_ops,
--	.sff_data_xfer		= ata_sff_data_xfer_noirq,
-+	.postreset		= pata_platform_postreset,
-+	.sff_data_xfer		= pata_platform_data_xfer_noirq,
- 	.cable_detect		= ata_cable_unknown,
- 	.set_mode		= pata_platform_set_mode,
- 	.port_start		= ATA_OP_NULL,
-@@ -106,7 +159,8 @@ int __devinit __pata_platform_probe(struct device *dev,
- 				    struct resource *ctl_res,
- 				    struct resource *irq_res,
- 				    unsigned int ioport_shift,
--				    int __pio_mask)
-+				    int __pio_mask,
-+				    unsigned int data_width)
- {
- 	struct ata_host *host;
- 	struct ata_port *ap;
-@@ -140,6 +194,9 @@ int __devinit __pata_platform_probe(struct device *dev,
- 	ap->pio_mask = __pio_mask;
- 	ap->flags |= ATA_FLAG_SLAVE_POSS;
- 
-+	if (data_width == ATA_DATA_WIDTH_8BIT)
-+		ap->flags |= ATA_FLAG_8BIT_DATA;
-+
- 	/*
- 	 * Use polling mode if there's no IRQ
- 	 */
-@@ -242,7 +299,7 @@ static int __devinit pata_platform_probe(struct platform_device *pdev)
- 
- 	return __pata_platform_probe(&pdev->dev, io_res, ctl_res, irq_res,
- 				     pp_info ? pp_info->ioport_shift : 0,
--				     pio_mask);
-+				     pio_mask, pp_info->data_width);
- }
- 
- static int __devexit pata_platform_remove(struct platform_device *pdev)
-diff --git a/include/linux/ata.h b/include/linux/ata.h
-index be00973..4ce26df 100644
---- a/include/linux/ata.h
-+++ b/include/linux/ata.h
-@@ -45,6 +45,11 @@ enum {
- 	ATA_MAX_SECTORS_LBA48	= 65535,/* TODO: 65536? */
- 	ATA_MAX_SECTORS_TAPE	= 65535,
- 
-+	ATA_DATA_WIDTH_8BIT	= 1,
-+	ATA_DATA_WIDTH_16BIT	= 2,
-+	ATA_DATA_WIDTH_DEFAULT	= 2,
-+	ATA_DATA_WIDTH_32BIT	= 4,
-+
- 	ATA_ID_WORDS		= 256,
- 	ATA_ID_CONFIG		= 0,
- 	ATA_ID_CYLS		= 1,
-@@ -280,6 +285,9 @@ enum {
- 	XFER_PIO_0		= 0x08,
- 	XFER_PIO_SLOW		= 0x00,
- 
-+	SETFEATURES_8BIT_ON	= 0x01,	/* Enable 8 bit data transfers */
-+	SETFEATURES_8BIT_OFF	= 0x81,	/* Disable 8 bit data transfers */
-+
- 	SETFEATURES_WC_ON	= 0x02, /* Enable write cache */
- 	SETFEATURES_WC_OFF	= 0x82, /* Disable write cache */
- 
-diff --git a/include/linux/ata_platform.h b/include/linux/ata_platform.h
-index 9a26c83..434fe49 100644
---- a/include/linux/ata_platform.h
-+++ b/include/linux/ata_platform.h
-@@ -13,6 +13,10 @@ struct pata_platform_info {
- 	 * IRQ flags when call request_irq()
- 	 */
- 	unsigned int irq_flags;
-+	/*
-+	 * Data I/O width (in byte)
-+	 */
-+	unsigned int data_width;
- };
- 
- extern int __devinit __pata_platform_probe(struct device *dev,
-diff --git a/include/linux/libata.h b/include/linux/libata.h
-index 947cf84..156b7d3 100644
---- a/include/linux/libata.h
-+++ b/include/linux/libata.h
-@@ -187,6 +187,7 @@ enum {
- 	ATA_FLAG_PIO_POLLING	= (1 << 9), /* use polling PIO if LLD
- 					     * doesn't handle PIO interrupts */
- 	ATA_FLAG_NCQ		= (1 << 10), /* host supports NCQ */
-+	ATA_FLAG_8BIT_DATA	= (1 << 11), /* Host using 8 bit data */
- 	ATA_FLAG_DEBUGMSG	= (1 << 13),
- 	ATA_FLAG_IGN_SIMPLEX	= (1 << 15), /* ignore SIMPLEX */
- 	ATA_FLAG_NO_IORDY	= (1 << 16), /* controller lacks iordy */
 -- 
-1.5.6.5
-
+Regards/Gruss,
+    Boris.
