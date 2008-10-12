@@ -1,77 +1,74 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [PATCH 0/7] ide: locking improvements
-Date: Sun, 12 Oct 2008 11:05:39 +0200
-Message-ID: <200810121105.39318.bzolnier@gmail.com>
-References: <fa.Ke90oacfRjgiI4x5LejzjssRBEg@ifi.uio.no> <200810112046.23557.bzolnier@gmail.com> <48F1552F.7090600@shaw.ca>
+From: Mikael Pettersson <mikpe@it.uu.se>
+Subject: Re: [smartmontools-support] inactive SATA drives won't stay in standby
+ or sleep, PATA models did. (fwd)
+Date: Sun, 12 Oct 2008 16:55:45 +0200
+Message-ID: <18674.4081.839329.116533@harpo.it.uu.se>
+References: <D73D40172004714D95D7A84AC3E68EC802282133@wdscexbe03.sc.wdc.com>
+	<48EBFE9B.9070503@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.157]:55596 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751452AbYJLJIK (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 12 Oct 2008 05:08:10 -0400
-Received: by fg-out-1718.google.com with SMTP id 19so856226fgg.17
-        for <linux-ide@vger.kernel.org>; Sun, 12 Oct 2008 02:08:07 -0700 (PDT)
-In-Reply-To: <48F1552F.7090600@shaw.ca>
-Content-Disposition: inline
+Received: from aun.it.uu.se ([130.238.12.36]:44502 "EHLO aun.it.uu.se"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753553AbYJLO4H (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 12 Oct 2008 10:56:07 -0400
+In-Reply-To: <48EBFE9B.9070503@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Robert Hancock <hancockr@shaw.ca>
-Cc: Jens Axboe <jens.axboe@oracle.com>, petkovbb@gmail.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: Christian Mueller <Christian.Mueller@wdc.com>, Bruce Allen <ballen@gravity.phys.uwm.edu>, Smartmontools Mailing List <smartmontools-support@lists.sourceforge.net>, LKML <linux-kernel@vger.kernel.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, Mikael Pettersson <mikpe@it.uu.se>
 
-On Sunday 12 October 2008, Robert Hancock wrote:
-> Bartlomiej Zolnierkiewicz wrote:
-> > The work has already been done and it is a wortwhile work.  The risk is
-> > quite low (this is the statement based on rather deep understanding of
-> > IDE subsystem, the complete audit of all code-paths affected and all the
-> > testing experiences from Scalex86/me).
-> > 
-> > Moreover the patch won't be merged after few months of extra testing.
-> > 
-> > I feel that you still keep on questioning the point of improving IDE
-> > and insist on putting it into "bug-fixes only" mode.  If this is really
-> > the case I'm completely uninterested in discussing it any further.
-> 
-> What, exactly, is the point of making more than bug-fix-only changes to 
+Tejun Heo writes:
+ > (cc'ing linux-ide and Mikael Pettersson)
+ > 
+ > Christian Mueller wrote:
+ > > The messages I saw on the screen.
+ > 
+ > If the drive doesn't wake up and times out the smart command while
+ > suspended (which probably is a bug in the firmware but it also can be
+ > the controller's fault), then after the timeout, the driver should kick
+ > in and reset the drive which will wake up the device and retry the
+ > command.  It's not the prettiest picture but it's still gonna work.  In
+ > Linda's case, it looks like the controller (sata_promise) went bonkers
+ > on hardreset and requires power cycle to get back to working state.
+ > That's why I asked Linda to try another controller.
+ > 
+ > Anyways, if you're seeing a similar problem, the driver or controller
+ > probably can't do proper reset after timeout and I can't really help
+ > with SAS driver on FreeBSD.  :-P
+ > 
+ > Mikael, the original thread is the following.
+ > 
+ >   http://article.gmane.org/gmane.linux.utilities.smartmontools/5842
+ > 
+ > Any ideas why hardreset doesn't work after SMART command timed out?
 
-Please stop this bug-fix-only nonsense already.
+I've looked at the above posting and tried to reproduce the problem.
 
-Take a look at the bug #11581.  I posted the link in my reply to Jens
-because it is a best example that bug-fix-only mode won't really guarantee
-a stable, bug-free code in the long-term.  Many of issues at such level
-as driver subsystems happen because of "collateral damage" caused by
-changes at the higher level.
+Linda wrote that "smartctl -n standby -A <device>" sometimes wakes
+the device up, even though it shouldn't. On my Promise test box
+(FC6 user-space with kernel 2.6.27 and smartmontools-5.37-1.2.fc6,
+I put my test disks in standby with "hdparm -y /dev/sdb", and then
+ran numerous "smartctl -n standby -A /dev/sdb -d ata" commands.
+smartctl always noticed the standby state and never woke any disk.
 
-[ The fact that #11581 was bisected to Jens' commit is just an additional
-  spice.  It is likely that bisection went wrong but with git-bisect you
-  are guilty-until-proven-innocent so Jens please (finally) help us with
-  resolving it. ]
+I then dropped the "-n standby" to observe the wakeup behaviour.
+On one disk (Seagate Barracuda 7200.9) the wakeups were completely
+reliable with no signs of timeouts or libata EH activity.
+On another disk (Hitachi Deskstar HDS722525VLSA80) the first one or
+two times I ran "smartctl -A /dev/sdb -d ata" when the disk was in
+standby it would wake up ok, but the next time it would suffer from
+timeouts, failed COMRESETs, and eventually libata would disable the port.
+When reloading sata_promise that port would fail detection but other
+ports would be ok.
 
-Additionally with open-source projects you have to keep a certain level
-of developers' interests because otherwise everybody will be bored to
-death and go away work on some other things (unless of course they are
-paid to actually work on bugfixes).  Which in turn will result in less
-people reviewing changes or doing bugfixes.
+So I suspect two issues:
+- smartctl -n standby waking Linda's disks from standby is probably
+  a disk firmware issue or a smartctl issue. I see no evidence that
+  sata_promise is to blame for that.
+- hardreset in sata_promise seems broken. I'll take a closer look
+  at that in about a week's time (I'll be busy with other work the
+  next couple of days).
 
-IOW in the long-term bug-fix-only code will result in less stable code.
-
-> the IDE code today, when we have libata around which is a much better 
-> code base to work from? I'm afraid it still escapes me. I don't mean to 
-
-Simply:
-
-* Not all hardware is supported by libata.
-
-* Today's IDE code is not so different from libata's.
-
-* I'm much more familiar with IDE's code than libata's. :)
-
-> denigrate the work that you and other people working on IDE are doing, 
-> but can't help but think there would be more productive outlets for it..
-
-I don't really care.  I work on IDE because it is _fun_.
-
-Thanks,
-Bart
+/Mikael
