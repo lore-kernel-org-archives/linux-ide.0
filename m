@@ -1,44 +1,42 @@
-From: "Grant Grundler" <grundler@google.com>
+From: kenneth johansson <ken@kenjo.org>
 Subject: Re: weird throughput on write to SATA disk
-Date: Mon, 13 Oct 2008 14:07:15 -0700
-Message-ID: <da824cf30810131407m1a73bd11xa30fd118ee5a4c8f@mail.gmail.com>
+Date: Mon, 13 Oct 2008 23:22:36 +0200
+Message-ID: <1223932956.3947.22.camel@duo>
 References: <1223925629.3947.7.camel@duo>
+	 <da824cf30810131407m1a73bd11xa30fd118ee5a4c8f@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp-out.google.com ([216.239.33.17]:55421 "EHLO
-	smtp-out.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755251AbYJMVHu (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 13 Oct 2008 17:07:50 -0400
-In-Reply-To: <1223925629.3947.7.camel@duo>
-Content-Disposition: inline
+Received: from 1-1-4-20a.ras.sth.bostream.se ([82.182.72.90]:45427 "EHLO
+	amd.kenjo.org" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1756004AbYJMVWj (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 13 Oct 2008 17:22:39 -0400
+In-Reply-To: <da824cf30810131407m1a73bd11xa30fd118ee5a4c8f@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: kenneth johansson <ken@kenjo.org>
+To: Grant Grundler <grundler@google.com>
 Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Mon, Oct 13, 2008 at 12:19 PM, kenneth johansson <ken@kenjo.org> wrote:
-> When writing data to /dev/sdb (that is the whole disk and no filesystem)
-> it starts out ok around 100MB/sec but soon end up doing considerably
-> worse. For prolonged times lasting several minutes it hovers in the
-> 20-30MB/sec.
+On Mon, 2008-10-13 at 14:07 -0700, Grant Grundler wrote:
+> On Mon, Oct 13, 2008 at 12:19 PM, kenneth johansson <ken@kenjo.org> wrote:
+> > When writing data to /dev/sdb (that is the whole disk and no filesystem)
+> > it starts out ok around 100MB/sec but soon end up doing considerably
+> > worse. For prolonged times lasting several minutes it hovers in the
+> > 20-30MB/sec.
+> 
+> Is the application using "O_DIRECT"?
 
-Is the application using "O_DIRECT"?
-If not, could be issue with how VM writeback is (not) working.
+no just open then write no fancy stuff
 
-Can you reproduce this using fio or even "dd"?
-(See git://git.kernel.dk/fio)
+> If not, could be issue with how VM writeback is (not) working.
 
-grant
+the access pattern is the simplest possible. Is there any knobs I could
+try to adjust.
 
->
-> This happens on two different SATA disk one samsung and one seagate and
-> on both 2.6.26 and 2.6.27 kernel. The disk are connected to the external
-> esata connector. Controller is 00:1f.2 SATA controller: Intel
-> Corporation 82801HB (ICH8) 4 port SATA AHCI Controller (rev 02)
->
-> What could be the reason for this ?? reading is no problem.
->
->
->
+> Can you reproduce this using fio or even "dd"?
+> (See git://git.kernel.dk/fio)
+
+dd is having the same effect. 
+
+
