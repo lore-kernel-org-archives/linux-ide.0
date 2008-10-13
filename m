@@ -1,31 +1,71 @@
-From: Dominik Brodowski <linux@dominikbrodowski.net>
-Subject: Re: [PATCH 04/49] pcmcia: use pcmcia_loop_config in pata and ide drivers
-Date: Mon, 13 Oct 2008 20:26:56 +0200
-Message-ID: <20081013182656.GA29664@isilmar.linta.de>
-References: <20081013173803.GA18569@comet.dominikbrodowski.net> <1223920114-19788-4-git-send-email-linux@dominikbrodowski.net> <20081013191900.446abf29@lxorguk.ukuu.org.uk>
+From: Pierre Ossman <drzeus-list@drzeus.cx>
+Subject: How to determine performance bottleneck?
+Date: Mon, 13 Oct 2008 20:28:36 +0200
+Message-ID: <20081013202836.3fc62c3e@mjolnir.drzeus.cx>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/signed; protocol="application/pgp-signature"; micalg=PGP-SHA1; boundary="=_freyr.drzeus.cx-28170-1223922526-0001-2"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from isilmar.linta.de ([213.133.102.198]:35128 "EHLO linta.de"
+Received: from server.drzeus.cx ([85.8.24.28]:41354 "EHLO smtp.drzeus.cx"
 	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751468AbYJMS07 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 13 Oct 2008 14:26:59 -0400
-Content-Disposition: inline
-In-Reply-To: <20081013191900.446abf29@lxorguk.ukuu.org.uk>
+	id S1758072AbYJMS2r (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 13 Oct 2008 14:28:47 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: linux-pcmcia@lists.infradead.org, Tejun Heo <htejun@gmail.com>, linux-ide@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>, Tejun Heo <tj@kernel.org>
+Cc: linux-ide@vger.kernel.org
 
-On Mon, Oct 13, 2008 at 07:19:00PM +0100, Alan Cox wrote:
-> 
-> > +	/* Not sure if this is right... look up the current Vcc */
-> 
-> Not reassuring for a patch going upstream ? or is it just a stale
-> comment ?
+This is a MIME-formatted message.  If you see this text it means that your
+E-mail software does not support MIME-formatted messages.
 
-Stale comment to be found on the many places which get unified using this
-function.
+--=_freyr.drzeus.cx-28170-1223922526-0001-2
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-Best,
-	Dominik
+I'm playing around with performance tuning my disk access, but there is
+something limiting my bandwidth to the disks. I was hoping you could
+help me determine what.
+
+My setup is a sil3132 controller, connected to a PMP with five disks
+behind it. I'm using iostat to measure disk traffic and I'm using reads
+via dd for testing.
+
+When I'm accessing a single disk, the bandwidth is 70 - 80 MiB/s. When
+I access a second disk, the bandwidth is about 50 MiB/s/disk, and all
+five results in 25 MiB/s/disk. In other words, something is limiting
+things to about 100 MiB/s. Now the question is what that limiting
+factor is.
+
+The PCIe bus can sustain 250 MiB/s, so even with overhead that should
+be plenty. The SATA links are in theory 300 MiB/s, so that can't be it
+either. The remaining factors are the controller and the multiplier
+chip, and/or the way we access them.
+
+Tejun, what kind of throughput have you seen when you have been testing
+the sil3132 and multipliers?
+
+Rgds
+--=20
+     -- Pierre Ossman
+
+  Linux kernel, MMC maintainer        http://www.kernel.org
+  rdesktop, core developer          http://www.rdesktop.org
+
+  WARNING: This correspondence is being monitored by the
+  Swedish government. Make sure your server uses encryption
+  for SMTP traffic and consider using PGP for end-to-end
+  encryption.
+
+--=_freyr.drzeus.cx-28170-1223922526-0001-2
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment; filename=signature.asc
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.9 (GNU/Linux)
+
+iEYEARECAAYFAkjzk1oACgkQ7b8eESbyJLiXJACgrnyvOD1wjZUvQPSYAKQzKnfi
+Oo8An39Urz1qogRx5xY6LZOpqyAF55Sg
+=PO6F
+-----END PGP SIGNATURE-----
+
+--=_freyr.drzeus.cx-28170-1223922526-0001-2--
