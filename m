@@ -1,59 +1,51 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH] pata_of_platform: fix no irq handling
-Date: Mon, 13 Oct 2008 22:53:34 +0900
-Message-ID: <48F352DE.8060001@kernel.org>
-References: <20081006172653.GA26427@oksana.dev.rtsoft.ru> <48F2F138.6020103@kernel.org> <48F34CB9.3020000@pobox.com>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: I have returned!
+Date: Mon, 13 Oct 2008 15:02:31 +0100
+Message-ID: <20081013150231.294b38b6@lxorguk.ukuu.org.uk>
+References: <20081006172653.GA26427@oksana.dev.rtsoft.ru>
+	<48F2F138.6020103@kernel.org>
+	<48F34CB9.3020000@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1251
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:39856 "EHLO hera.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752118AbYJMN7y (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 13 Oct 2008 09:59:54 -0400
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1754593AbYJMOE0@vger.kernel.org>
 In-Reply-To: <48F34CB9.3020000@pobox.com>
-Sender: linux-ide-owner@vger.kernel.org
-List-Id: linux-ide@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 To: Jeff Garzik <jgarzik@pobox.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+List-Id: linux-ide@vger.kernel.org
 
-Jeff Garzik wrote:
-> Tejun Heo wrote:
->> Anton Vorontsov wrote:
->>> When no irq specified the pata_of_platform fills the irq_res with -1,
->>> which is wrong to do for two reasons:
->>>
->>> 1. By definition, 'no irq' should be IRQ 0, not some negative integer;
->>> 2. pata_platform checks for irq_res.start > 0, but since irq_res.start
->>>    is unsigned type, the check will be true for `-1'.
->>>
->>> Reported-by: Steven A. Falco <sfalco@harris.com>
->>> Signed-off-by: Anton Vorontsov <avorontsov@ru.mvista.com>
->>
->> applied to #tj-upstream (will soon be sent upstream)
-> 
 > I have returned!  muhahahahahaha....
 
-Ah.. great.  Hope you enjoyed the vacation.  Can you please pull from
-#tj-upstream?
+Oh good..
+--
 
- git://git.kernel.org/pub/scm/linux/kernel/git/tj/libata-dev.git tj-upstream
- http://git.kernel.org/?p=linux/kernel/git/tj/libata-dev.git;a=shortlog;h=tj-upstream
+ibmtr: PCMCIA IBMTR is ok on 64bit
 
-Nothing much.  Rafael's skip-spin-off patchset + Elias's small fix +
-ATA_HORKAGE_ATAPI_MOD16_DMA + pata_of_platform irq fix.
+From: Alan Cox <alan@redhat.com>
 
-Gwendal posted patches to enable FIS based switching when NCQ is
-disabled on sata_mv but I think this should be put into separate
-branch and stay in linux-next till Mark Lord comes back and reviews it
-as I don't know much about the driver and don't know of anyone other
-than Gwendal and Mark who do.
+For whatever value of 'OK' can be applied to the use of token ring. Seems
+the 32bit to 64bit cleanups missed re-enabling the pcmcia driver
 
-sata_nv detection problem is still not resolved.  I figured out
-generic and ck804 but nf2/3 is still malfunctioning.  I asked for more
-tests and am waiting for results.
+Closes #7133 and also reviewed the code in question
 
-Eh... I guess that's about it.  Enjoy your INBOX.  :-P
+Signed-off-by: Alan Cox <alan@redhat.com>
+---
 
--- 
-tejun
+ drivers/net/pcmcia/Kconfig |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
+
+
+diff --git a/drivers/net/pcmcia/Kconfig b/drivers/net/pcmcia/Kconfig
+index e8f55d8..9b8f793 100644
+--- a/drivers/net/pcmcia/Kconfig
++++ b/drivers/net/pcmcia/Kconfig
+@@ -111,7 +111,7 @@ config ARCNET_COM20020_CS
+ 
+ config PCMCIA_IBMTR
+ 	tristate "IBM PCMCIA tokenring adapter support"
+-	depends on IBMTR!=y && TR && !64BIT
++	depends on IBMTR!=y && TR
+ 	help
+ 	  Say Y here if you intend to attach this type of Token Ring PCMCIA
+ 	  card to your computer. You then also need to say Y to "Token Ring
