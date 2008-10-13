@@ -1,61 +1,94 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: "SCR access via SIDPR is available but doesn't work"
-Date: Mon, 13 Oct 2008 16:28:14 +0900
-Message-ID: <48F2F88E.5070504@kernel.org>
-References: <3D76E016F4A2A749A1EB1A3FD83E22BC01D6E466@uk-email.terastack.bluearc.com> <48E6D8F4.2080207@gmail.com> <3D76E016F4A2A749A1EB1A3FD83E22BC01E0D723@uk-email.terastack.bluearc.com> <48ED2AB6.4010905@gmail.com> <48ED2B23.8000209@kernel.org> <3D76E016F4A2A749A1EB1A3FD83E22BC01E0D94C@uk-email.terastack.bluearc.com>
+From: Wang Jian <lark@linux.net.cn>
+Subject: Re: [PATCH RFC] pata_platform: add 8 bit data io support
+Date: Mon, 13 Oct 2008 16:04:24 +0800
+Message-ID: <48F30108.2040409@linux.net.cn>
+References: <20081011180014.GA4908@debian> <48F2F5EE.6060201@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:40460 "EHLO hera.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753602AbYJMH3q (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 13 Oct 2008 03:29:46 -0400
-In-Reply-To: <3D76E016F4A2A749A1EB1A3FD83E22BC01E0D94C@uk-email.terastack.bluearc.com>
+Received: from [210.82.31.146] ([210.82.31.146]:41013 "EHLO mx.linux.net.cn"
+	rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org with ESMTP
+	id S1754422AbYJMIE0 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 13 Oct 2008 04:04:26 -0400
+In-Reply-To: <48F2F5EE.6060201@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Rob Whitton <rwhitton@bluearc.com>
-Cc: linux-ide@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: linuxppc-dev@ozlabs.org, linux-ide@vger.kernel.org
 
-Hello,
-
-Rob Whitton wrote:
-> We experience the same problem with two different motherboards (the only
-> motherboards we have tried in this system):
+Tejun Heo wrote:
+> Hello,
 > 
->   TYAN S5211
->   Intel S3210SHLC
+> Wang Jian wrote:
+>> +static void pata_platform_postreset(struct ata_link *link, unsigned int *classes)
+>> +{
+>> +	struct ata_port *ap = link->ap;
+>> +	struct ata_device *dev;
+>> +	u8 select = ATA_DEVICE_OBS;
+>> +
+>> +	/* Call default callback first */
+>> +	ata_sff_postreset(link, classes);
+>> +
+>> +	if (!(ap->flags & ATA_FLAG_8BIT_DATA))
+>> +		return;
+>> +
+>> +	/* Set 8-bit mode. We know we can do that */
+>> +	ata_link_for_each_dev(dev, link) {
+>> +		if (dev->devno)
+>> +			select |= ATA_DEV1;
+>> +
+>> +		iowrite8(SETFEATURES_8BIT_ON, ap->ioaddr.feature_addr);
+>> +		iowrite8(select, ap->ioaddr.device_addr);
+>> +		iowrite8(ATA_CMD_SET_FEATURES, ap->ioaddr.command_addr);
 > 
-> The original boot logs were from the Tyan motherboard which is what we
-> have been working with almost exclusively. However, in the lab we
-> currently have the Intel board in use and as such I've recreated the
-> failing and succeeding boot logs on the Intel board so that the boots
-> logs are consistent with the output of "lspci -nn" which is also
-> attached.
+> Aieee... Please don't do this.  I think it best belongs to
+> ata_dev_configure() or ->dev_config() if you wanna put it in low level
+> driver.
 > 
-> With regard to changing piix_port_info structures this will have to wait
-> for the moment. Our kernel building expert is currently on vacation. But
-> maybe this step will be unnecessary - see below.
 
-I think that will be an easy way to rule out whether the SIDPR is the
-offending piece or not.
+Good.
 
-> I note that in the Intel boot logs whilst booting stops at the same
-> point it doesn't display the message which started this thread and
-> tended to point the finger of suspicion at the PIIX driver (probably
-> should change the subject line of the email). Maybe it is a more
-> fundamental kernel problem? I'm still very surprised that simply moving
-> the SATA disk between ports causes this problem. Maybe it relates to
-> interrupt routing or similar. I assume that the two SATA controllers in
-> the Intel chipset use different interrupts.
+I remember the spec states that this setfeature command should be issued
+every time reset is issued. This is just a quick and safe hack.
 
-Yes, they use different IRQs but IRQ lock ups are usually a bit more
-verbose.  The last two ports on ICH9 seem to have rather obscure
-problems (PMP detection failure for one) and this might be one of
-those.  Anyways, please confirm whether SIDPR is the offending piece
-or not.
+I will look into libata deeper and figure out how to do it better per your
+suggestion.
 
-Thanks.
+>> @@ -106,7 +159,8 @@ int __devinit __pata_platform_probe(struct device *dev,
+>>  				    struct resource *ctl_res,
+>>  				    struct resource *irq_res,
+>>  				    unsigned int ioport_shift,
+>> -				    int __pio_mask)
+>> +				    int __pio_mask,
+>> +				    unsigned int data_width)
+>>  {
+>>  	struct ata_host *host;
+>>  	struct ata_port *ap;
+>> @@ -140,6 +194,9 @@ int __devinit __pata_platform_probe(struct device *dev,
+>>  	ap->pio_mask = __pio_mask;
+>>  	ap->flags |= ATA_FLAG_SLAVE_POSS;
+>>  
+>> +	if (data_width == ATA_DATA_WIDTH_8BIT)
+>> +		ap->flags |= ATA_FLAG_8BIT_DATA;
+> 
+> It's strange to define ATA_DATA_WIDTH_* constants in ata.h and only
+> use it in ata_platform.
 
--- 
-tejun
+I have expressed in another reply that the best place the code belongs to
+should be decided first. The usage of flags looks ugly too :)
+
+> 
+> Overall, I think the bulk of the 8bit PIO implementation should go
+> into the libata core layer and transfer width should be property of
+> struct ata_device - probably right above or below pio/dma_mode and
+> xfer_mode/shift fields.
+> 
+
+Yes, I agree it'd better go into libata core layer. But for transfer
+width, I think it is not belongs to ata_device. It's about how ata
+controller wired for data line. (In my case, it is how CF card wired).
+Am I wrong?
+
+
+Best regards
