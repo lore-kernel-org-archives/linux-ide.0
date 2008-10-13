@@ -1,60 +1,44 @@
 From: gettinther <gettinther@gmail.com>
-Subject: Re: sata dvdroms fails to be recognized by MCP55 controller with the 2.6.26.5 kernel
-Date: Mon, 13 Oct 2008 20:11:34 +0100
-Message-ID: <64630f150810131211s2e0d7759k41b0156013cb35dd@mail.gmail.com>
-References: <64630f150809291601w3511febdyc769b8871db75602@mail.gmail.com>
-	 <20080930170849.52c00228.akpm@linux-foundation.org>
-	 <48E2E8A1.8090204@gmail.com>
-	 <64630f150810010131g18c1a00m91b3f68ea29a1067@mail.gmail.com>
-	 <64630f150810011601y4e729decq24c614f0b7994f3f@mail.gmail.com>
-	 <48E71ACE.4000505@gmail.com> <48E71AEC.8020701@gmail.com>
-	 <64630f150810060208q22b61900xd7487500eac4e145@mail.gmail.com>
-	 <48EAB71B.1050002@gmail.com>
-	 <64630f150810100207g312088ep67c00ca15929091d@mail.gmail.com>
+Subject: Re: Can you please test the attached patch for nv hardreset problem?
+Date: Mon, 13 Oct 2008 20:13:14 +0100
+Message-ID: <64630f150810131213m64d8fc72j38debf71a692db16@mail.gmail.com>
+References: <48E80F11.3060101@kernel.org>
+	 <64630f150810111634gbe4cfdfjccafc9f6f781edcc@mail.gmail.com>
+	 <48F30678.7020807@kernel.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from an-out-0708.google.com ([209.85.132.251]:59801 "EHLO
-	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753609AbYJMTLg (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 13 Oct 2008 15:11:36 -0400
-Received: by an-out-0708.google.com with SMTP id d40so141097and.103
-        for <linux-ide@vger.kernel.org>; Mon, 13 Oct 2008 12:11:34 -0700 (PDT)
-In-Reply-To: <64630f150810100207g312088ep67c00ca15929091d@mail.gmail.com>
+Received: from yx-out-2324.google.com ([74.125.44.30]:9302 "EHLO
+	yx-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752215AbYJMTNQ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 13 Oct 2008 15:13:16 -0400
+Received: by yx-out-2324.google.com with SMTP id 8so435352yxm.1
+        for <linux-ide@vger.kernel.org>; Mon, 13 Oct 2008 12:13:14 -0700 (PDT)
+In-Reply-To: <48F30678.7020807@kernel.org>
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, IDE/ATA development list <linux-ide@vger.kernel.org>
+To: Tejun Heo <tj@kernel.org>
+Cc: IDE/ATA development list <linux-ide@vger.kernel.org>, lists@ku-gbr.de, linux@sun7.cn, Robert Hancock <hancockr@shaw.ca>
 
-On Fri, Oct 10, 2008 at 10:07 AM, gettinther <gettinther@gmail.com> wrote:
-> On Tue, Oct 7, 2008 at 2:10 AM, Tejun Heo <htejun@gmail.com> wrote:
->> gettinther wrote:
->>> I have tested the patch you sent me and it solves the issue with the
->>> sata dvdrom detection with the 2.6.27.rc8.  The issue is still present
->>> on the 2.6.26.5 kernel.  Are you backporting the solution to that
->>> kernel?
->>
->> It seems nf2/3 still have issues.  Once nf2/3 are cleared, I'll
->> forward the patch to -stable.
->>
->> Thanks.
->>
->> --
->> tejun
->>
+On Mon, Oct 13, 2008 at 9:27 AM, Tejun Heo <tj@kernel.org> wrote:
+> gettinther wrote:
+>> OK, patching the 2.6.26 based on your patch doesn't work properly.  It
+>> works for sata devices but not sata emulated devices (but these do
+>> work with the 2.6.27).
 >
-> Tejun,
+> Eh... what do you mean it doesn't work on 2.6.26?  The same change
+> doesn't work on 2.6.26 but it does on 2.6.27?  How did you apply the
+> change to 2.6.26?  Can you post the diff?
 >
-> I applied your patch to the 2.6.26 tree (slightly modified to suit)
-> and it also fixes the issue there.
-> I can post the patch this evening if you want to.
+> Thanks.
 >
-> Thank you again,
+> --
+> tejun
 >
-> Cyrille
->
+
+Sorry, replied on the wrong thread
 
 Here's the patch I applied
 
