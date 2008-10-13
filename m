@@ -1,77 +1,99 @@
-From: bugme-daemon@bugzilla.kernel.org
-Subject: [Bug 11742] Device buffer on a DVD multi standard writer runs out burning a CD
-Date: Mon, 13 Oct 2008 01:25:30 -0700 (PDT)
-Message-ID: <20081013082530.4400711D10A@picon.linux-foundation.org>
-References: <bug-11742-11633@http.bugzilla.kernel.org/>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: [PATCH RFC] pata_platform: add 8 bit data io support
+Date: Mon, 13 Oct 2008 17:25:47 +0900
+Message-ID: <48F3060B.3040703@gmail.com>
+References: <20081011180014.GA4908@debian> <48F2F5EE.6060201@gmail.com> <48F30108.2040409@linux.net.cn>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:52804 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755887AbYJMI0E convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 13 Oct 2008 04:26:04 -0400
-Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
-	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id m9D8PUkD004991
-	for <linux-ide@vger.kernel.org>; Mon, 13 Oct 2008 01:25:31 -0700
-In-Reply-To: <bug-11742-11633@http.bugzilla.kernel.org/>
+Received: from wa-out-1112.google.com ([209.85.146.177]:39277 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754981AbYJMI1T (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 13 Oct 2008 04:27:19 -0400
+Received: by wa-out-1112.google.com with SMTP id v27so791638wah.21
+        for <linux-ide@vger.kernel.org>; Mon, 13 Oct 2008 01:27:18 -0700 (PDT)
+In-Reply-To: <48F30108.2040409@linux.net.cn>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Wang Jian <lark@linux.net.cn>
+Cc: linuxppc-dev@ozlabs.org, linux-ide@vger.kernel.org, Alan Cox <alan@lxorguk.ukuu.org.uk>
 
-http://bugzilla.kernel.org/show_bug.cgi?id=3D11742
+Wang Jian wrote:
+> Tejun Heo wrote:
+>> Hello,
+>>
+>> Wang Jian wrote:
+>>> +static void pata_platform_postreset(struct ata_link *link, unsigned
+>>> int *classes)
+>>> +{
+>>> +    struct ata_port *ap = link->ap;
+>>> +    struct ata_device *dev;
+>>> +    u8 select = ATA_DEVICE_OBS;
+>>> +
+>>> +    /* Call default callback first */
+>>> +    ata_sff_postreset(link, classes);
+>>> +
+>>> +    if (!(ap->flags & ATA_FLAG_8BIT_DATA))
+>>> +        return;
+>>> +
+>>> +    /* Set 8-bit mode. We know we can do that */
+>>> +    ata_link_for_each_dev(dev, link) {
+>>> +        if (dev->devno)
+>>> +            select |= ATA_DEV1;
+>>> +
+>>> +        iowrite8(SETFEATURES_8BIT_ON, ap->ioaddr.feature_addr);
+>>> +        iowrite8(select, ap->ioaddr.device_addr);
+>>> +        iowrite8(ATA_CMD_SET_FEATURES, ap->ioaddr.command_addr);
+>>
+>> Aieee... Please don't do this.  I think it best belongs to
+>> ata_dev_configure() or ->dev_config() if you wanna put it in low level
+>> driver.
+>>
+> 
+> Good.
+> 
+> I remember the spec states that this setfeature command should be issued
+> every time reset is issued. This is just a quick and safe hack.
+> 
+> I will look into libata deeper and figure out how to do it better per your
+> suggestion.
 
+Yeap, ata_dev_configure() exactly is the place you're looking for.
+It's reponsible for reprogramming the device after it has been reset.
 
+>>> +    if (data_width == ATA_DATA_WIDTH_8BIT)
+>>> +        ap->flags |= ATA_FLAG_8BIT_DATA;
+>>
+>> It's strange to define ATA_DATA_WIDTH_* constants in ata.h and only
+>> use it in ata_platform.
+> 
+> I have expressed in another reply that the best place the code belongs to
+> should be decided first. The usage of flags looks ugly too :)
 
+:-)
 
+>> Overall, I think the bulk of the 8bit PIO implementation should go
+>> into the libata core layer and transfer width should be property of
+>> struct ata_device - probably right above or below pio/dma_mode and
+>> xfer_mode/shift fields.
+>>
+> 
+> Yes, I agree it'd better go into libata core layer. But for transfer
+> width, I think it is not belongs to ata_device. It's about how ata
+> controller wired for data line. (In my case, it is how CF card wired).
+> Am I wrong?
 
-------- Comment #2 from anonymous@kernel-bugs.osdl.org  2008-10-13 01:2=
-5 -------
-Reply-To: valerio.passini@unicam.it
+Well, yes, it primarily depends on the controller but ISTR cases where
+PIO issues resolved by turning off 32bit PIO (dunno why that is, some
+timing issue?) and for things like that to work, the setting should be
+per-device.  I'm not too sure about this.  Cc'ing Alan.  He should
+know much better than I do.
 
-Alle luned=C3=AC 13 ottobre 2008, hai scritto:
-> http://bugzilla.kernel.org/show_bug.cgi?id=3D11742
->
->
->
->
->
-> ------- Comment #1 from bbpetkov@yahoo.de  2008-10-12 23:44 -------
-> Can you send me your .config and dmesg pls?
->
-> Thanks.
+Alan, where does 8/16/32-bit PIO transfer belong?  Host, port or
+device?
 
-Of course I can. Here they are.
-Cheers
+Thanks.
 
-Valerio
-
-Here some information about the attached config files.
-
-config-2.6.27 it's my custom config with some drivers compiled statical=
-ly=20
-(i.e: SATA and ext3), many unnecessary modules removed to speed up=20
-compilation and other options to fit better my architecture (core duo 2=
-=20
-64bit).
-
-config-2.6.27b it's more similar to the Debian configuration of stock k=
-ernel=20
-(2.6.26), I just made some changes to fit architecture and removed driv=
-ers=20
-obviously (IMO :) ) not related to my problem (bug 11742) like ALSA mod=
-ules,=20
-V4L modules and so on. I have just tried to check if it worked better b=
-ut it=20
-didn't.
-
-dmesg.txt is related to the kernel made with the first config in attach=
-ment=20
-(config-2.6.27)
-
-
---=20
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=3Demail
-------- You are receiving this mail because: -------
-You are the assignee for the bug, or are watching the assignee.
+-- 
+tejun
