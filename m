@@ -1,73 +1,53 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: Porting old hardware from ide to libata (was [PATCH 0/7] ide: locking improvements)
-Date: Mon, 13 Oct 2008 23:45:51 +0200
-Message-ID: <200810132345.51836.bzolnier@gmail.com>
-References: <678468.92529.qm@web57414.mail.re1.yahoo.com>
+From: kenneth johansson <ken@kenjo.org>
+Subject: Re: weird throughput on write to SATA disk
+Date: Tue, 14 Oct 2008 00:19:11 +0200
+Message-ID: <1223936351.3947.41.camel@duo>
+References: <1223925629.3947.7.camel@duo>
+	 <da824cf30810131407m1a73bd11xa30fd118ee5a4c8f@mail.gmail.com>
+	 <1223932956.3947.22.camel@duo>
+	 <da824cf30810131434r34179666kc8d075c7eecdbbae@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from gv-out-0910.google.com ([216.239.58.186]:49264 "EHLO
-	gv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754090AbYJMVsJ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 13 Oct 2008 17:48:09 -0400
-Received: by gv-out-0910.google.com with SMTP id e6so428248gvc.37
-        for <linux-ide@vger.kernel.org>; Mon, 13 Oct 2008 14:48:08 -0700 (PDT)
-In-Reply-To: <678468.92529.qm@web57414.mail.re1.yahoo.com>
-Content-Disposition: inline
+Received: from 1-1-4-20a.ras.sth.bostream.se ([82.182.72.90]:35250 "EHLO
+	amd.kenjo.org" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1759233AbYJMWTO (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 13 Oct 2008 18:19:14 -0400
+In-Reply-To: <da824cf30810131434r34179666kc8d075c7eecdbbae@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: stan.cunningham@yahoo.com
-Cc: linux-ide@vger.kernel.org
+To: Grant Grundler <grundler@google.com>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Monday 13 October 2008, Stan Cunningham wrote:
-> Bartlomiej Zolnierkiewicz wrote:
-> > > the IDE code today, when we have libata around which is a much better 
-> > > code base to work from? I'm afraid it still escapes me. I don't mean to 
-> > 
-> > Simply:
-> > 
-> > * Not all hardware is supported by libata.
+On Mon, 2008-10-13 at 14:34 -0700, Grant Grundler wrote:
+> On Mon, Oct 13, 2008 at 2:22 PM, kenneth johansson <ken@kenjo.org> wrote:
+> > On Mon, 2008-10-13 at 14:07 -0700, Grant Grundler wrote:
+> >> On Mon, Oct 13, 2008 at 12:19 PM, kenneth johansson <ken@kenjo.org> wrote:
+> >> > When writing data to /dev/sdb (that is the whole disk and no filesystem)
+> >> > it starts out ok around 100MB/sec but soon end up doing considerably
+> >> > worse. For prolonged times lasting several minutes it hovers in the
+> >> > 20-30MB/sec.
+> >>
+> >> Is the application using "O_DIRECT"?
+> >
+> > no just open then write no fancy stuff
+> >
+> >> If not, could be issue with how VM writeback is (not) working.
+> >
+> > the access pattern is the simplest possible. Is there any knobs I could
+> > try to adjust.
+> >
+> >> Can you reproduce this using fio or even "dd"?
+> >> (See git://git.kernel.dk/fio)
+> >
+> > dd is having the same effect.
 > 
-> Then it would be best to port that hardware from ide to libata. Make a page on http://ata.wiki.kernel.org listing every single functionality that is present in ide but missing from libata, and then start tackling the points one by one. A lot of these points were discussed in this thread:
-> 
-> http://marc.info/?t=121777915500001&r=1&w=2
-> 
-> Go through the ide drivers with a fine tooth comb and make sure all the quirks and PCI IDs are transfered to the corresponding libata driver.
-> 
-> It seems that Bart, Boris and the other recent ide contributors care a lot about old hardware, which is great because the corporate-sponsored libata developers are paid to focus on new hardware. You should in theory complement each other well, but please work on the same codebase so that the optimizations one group makes to the framework help everybody.
-> 
-> > * Today's IDE code is not so different from libata's.
-> 
-> All the more reason porting missing functionality to libata should be easier.
-> 
-> > * I'm much more familiar with IDE's code than libata's. :)
-> 
-> Sorry, but that's a bad excuse. If you want your work to reach and help the greatest number of people, you should work on improving libata because that  is what the vast majority of developers are working to optimize. Porting old hardware to libata will allow that old hardware to take advantage of many of optimizations and new features that the libata framework already provides! 
-> 
-> I know many distros still use ide for CD drives, but that *sucks* for users because the two driver frameworks loaded simultaneously waste memory and step on each other's toes. Plus, obscure fixes to one framework will not help the other, so users have to stumble on the same bug *twice* before it's fixed for good. But most likely it will get fixed in one framework and overlooked in the other.
+> Can you try "dd oflag=direct if=/dev/null of=/dev/sdb bs=64k"?
 
-It is not mine fault.  Please complain to the right people.
+I changed to use O_DIRECT and it's much more consistent now. 69-75 with
+74 about 95% of the time. the disk is supposed to have 105 115 sustained
+data rate. 
 
-You may want to dig into archives and learn about history of libata.
-Especially under what conditions it has been ACK-ed and merged _five_
-years ago.  Just to quickly recall, there were two such conditions:
 
-* PATA support would be moved from IDE to libata in an evolutionary way.
 
-  Didn't happen.  Instead we had code split, loss of git history, user
-  confusion and unimaginable waste of time/resources (quick stunt trick
-  and more then three long years of rediscovering the wheel...).
-
-* It would be moved out of SCSI in the long-term.
-
-  Didn't happen.  Five years is more than enough time for that.
-
-> So please, take the time to overcome the libata learning curve and start systematically porting support for the remaining old hardware to libata.
-
-I don't mind somebody doing it.
-
-I just have zero motivation to do it myself in my private time.
-
-PS It is not like I don't know the libata's code completely... ;)
