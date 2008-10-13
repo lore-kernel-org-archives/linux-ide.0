@@ -1,43 +1,37 @@
 From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [PATCH RFC] pata_platform: add 8 bit data io support
-Date: Mon, 13 Oct 2008 15:29:51 +0100
-Message-ID: <20081013152951.53e548ee@lxorguk.ukuu.org.uk>
-References: <20081011180014.GA4908@debian>
-	<48F2F5EE.6060201@gmail.com>
+Subject: Re: [PATCH] mptsas: remove pointless null check
+Date: Mon, 13 Oct 2008 15:37:01 +0100
+Message-ID: <20081013153701.61f22485@lxorguk.ukuu.org.uk>
+References: <20081006172653.GA26427@oksana.dev.rtsoft.ru>
+	<48F2F138.6020103@kernel.org>
+	<48F34CB9.3020000@pobox.com>
+	<20081013150529.75f22702@lxorguk.ukuu.org.uk>
+	<1223907778.5566.3.camel@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:41021 "EHLO
+Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:52936 "EHLO
 	lxorguk.ukuu.org.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1756548AbYJMOaN (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 13 Oct 2008 10:30:13 -0400
-In-Reply-To: <48F2F5EE.6060201@gmail.com>
+	with ESMTP id S1755272AbYJMOhy (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 13 Oct 2008 10:37:54 -0400
+In-Reply-To: <1223907778.5566.3.camel@localhost.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Wang Jian <lark@linux.net.cn>, linuxppc-dev@ozlabs.org, linux-ide@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linux-scsi <linux-scsi@vger.kernel.org>
 
-On Mon, 13 Oct 2008 16:17:02 +0900
-Tejun Heo <htejun@gmail.com> wrote:
+> If I remember rightly this check is necessary because phy_info can be
+> NULL in certain situations.  Your patch will trip this to oops.  What
 
-> Hello,
-> 
-> Wang Jian wrote:
-> > +static void pata_platform_postreset(struct ata_link *link, unsigned int *classes)
-> > +{
-> > +	struct ata_port *ap = link->ap;
-> > +	struct ata_device *dev;
-> > +	u8 select = ATA_DEVICE_OBS;
-> > +
-> > +	/* Call default callback first */
-> > +	ata_sff_postreset(link, classes);
-> > +
-> > +	if (!(ap->flags & ATA_FLAG_8BIT_DATA))
-> > +		return;
-> > +
-> > +	/* Set 8-bit mode. We know we can do that */
+In which case it will already have crashed
 
-Not really - the 8bit transfer command is CFA specific not ATA or ATAPI,
-in addition it is not needed with most hardware that is running in 8bit
-modes. 
+> your description needs to say is that we no longer need to check this
+> pointer for NULL because it was checked somewhere else in the stack ...
+> but I can't see where that is, where is it?
+
+We don't check: but if it was NULL we then fall straight through and
+dereference it unconditionally... so either its a wrong NULL check and
+the old code oopses (which a trawl says it doesn't) or the check is bogus.
+
+Alan
