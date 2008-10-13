@@ -1,29 +1,44 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: Porting old hardware from ide to libata (was [PATCH 0/7] ide:
- locking improvements)
-Date: Mon, 13 Oct 2008 21:24:36 +0100
-Message-ID: <20081013212436.2db6277f@lxorguk.ukuu.org.uk>
-References: <678468.92529.qm@web57414.mail.re1.yahoo.com>
+From: "Grant Grundler" <grundler@google.com>
+Subject: Re: weird throughput on write to SATA disk
+Date: Mon, 13 Oct 2008 14:07:15 -0700
+Message-ID: <da824cf30810131407m1a73bd11xa30fd118ee5a4c8f@mail.gmail.com>
+References: <1223925629.3947.7.camel@duo>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:48820 "EHLO
-	lxorguk.ukuu.org.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1760086AbYJMUYg (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 13 Oct 2008 16:24:36 -0400
-In-Reply-To: <678468.92529.qm@web57414.mail.re1.yahoo.com>
+Received: from smtp-out.google.com ([216.239.33.17]:55421 "EHLO
+	smtp-out.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755251AbYJMVHu (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 13 Oct 2008 17:07:50 -0400
+In-Reply-To: <1223925629.3947.7.camel@duo>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: stan.cunningham@yahoo.com
-Cc: linux-ide@vger.kernel.org
+To: kenneth johansson <ken@kenjo.org>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-> It seems that Bart, Boris and the other recent ide contributors care a lot about old hardware, which is great because the corporate-sponsored libata developers are paid to focus on new hardware.
+On Mon, Oct 13, 2008 at 12:19 PM, kenneth johansson <ken@kenjo.org> wrote:
+> When writing data to /dev/sdb (that is the whole disk and no filesystem)
+> it starts out ok around 100MB/sec but soon end up doing considerably
+> worse. For prolonged times lasting several minutes it hovers in the
+> 20-30MB/sec.
 
-***Parp***
+Is the application using "O_DIRECT"?
+If not, could be issue with how VM writeback is (not) working.
 
-sorry thats completely bogus: Libata supports more prehistoric pointless
-ISA and VLB controllers than drivers/ide. Not that it matters as every
-vendor I know of ships Libata and ships with the ISA/VLB stuff disabled 8)
+Can you reproduce this using fio or even "dd"?
+(See git://git.kernel.dk/fio)
 
-Alan
+grant
+
+>
+> This happens on two different SATA disk one samsung and one seagate and
+> on both 2.6.26 and 2.6.27 kernel. The disk are connected to the external
+> esata connector. Controller is 00:1f.2 SATA controller: Intel
+> Corporation 82801HB (ICH8) 4 port SATA AHCI Controller (rev 02)
+>
+> What could be the reason for this ?? reading is no problem.
+>
+>
+>
