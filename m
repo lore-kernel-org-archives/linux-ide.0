@@ -1,47 +1,78 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [smartmontools-support] inactive SATA drives won't stay in standby
- or sleep, PATA models did. (fwd)
-Date: Mon, 13 Oct 2008 16:08:20 +0900
-Message-ID: <48F2F3E4.4030800@gmail.com>
-References: <D73D40172004714D95D7A84AC3E68EC802282133@wdscexbe03.sc.wdc.com>	<48EBFE9B.9070503@gmail.com>	<18674.4081.839329.116533@harpo.it.uu.se>	<48F2D9A8.1030502@gmail.com> <18674.62170.845285.407281@harpo.it.uu.se>
+Subject: Re: [PATCH RFC] pata_platform: add 8 bit data io support
+Date: Mon, 13 Oct 2008 16:17:02 +0900
+Message-ID: <48F2F5EE.6060201@gmail.com>
+References: <20081011180014.GA4908@debian>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ti-out-0910.google.com ([209.85.142.188]:31527 "EHLO
+Received: from ti-out-0910.google.com ([209.85.142.185]:22949 "EHLO
 	ti-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753247AbYJMHJw (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 13 Oct 2008 03:09:52 -0400
-Received: by ti-out-0910.google.com with SMTP id b6so809306tic.23
-        for <linux-ide@vger.kernel.org>; Mon, 13 Oct 2008 00:09:50 -0700 (PDT)
-In-Reply-To: <18674.62170.845285.407281@harpo.it.uu.se>
+	with ESMTP id S1751473AbYJMHSf (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 13 Oct 2008 03:18:35 -0400
+Received: by ti-out-0910.google.com with SMTP id b6so812095tic.23
+        for <linux-ide@vger.kernel.org>; Mon, 13 Oct 2008 00:18:33 -0700 (PDT)
+In-Reply-To: <20081011180014.GA4908@debian>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mikael Pettersson <mikpe@it.uu.se>
-Cc: Christian Mueller <Christian.Mueller@wdc.com>, Bruce Allen <ballen@gravity.phys.uwm.edu>, Smartmontools Mailing List <smartmontools-support@lists.sourceforge.net>, LKML <linux-kernel@vger.kernel.org>, IDE/ATA development list <linux-ide@vger.kernel.org>
+To: Wang Jian <lark@linux.net.cn>
+Cc: linuxppc-dev@ozlabs.org, linux-ide@vger.kernel.org
 
-Mikael Pettersson wrote:
-> Tejun Heo writes:
->  > > - hardreset in sata_promise seems broken. I'll take a closer look
->  > >   at that in about a week's time (I'll be busy with other work the
->  > >   next couple of days).
->  > 
->  > This looks like a rather serious problem, so please take a look at
->  > this.  Also, after the drive went down, does unplugging and replugging
->  > the signal cable fix the problem, if not does doing the same thing
->  > with the power cable make any difference?
-> 
-> I couldn't bring the port back up with any combination of signal/power
-> cable hotplugging.
+Hello,
 
-Heh.. that rules out drive firmware stuck in wonderland.
+Wang Jian wrote:
+> +static void pata_platform_postreset(struct ata_link *link, unsigned int *classes)
+> +{
+> +	struct ata_port *ap = link->ap;
+> +	struct ata_device *dev;
+> +	u8 select = ATA_DEVICE_OBS;
+> +
+> +	/* Call default callback first */
+> +	ata_sff_postreset(link, classes);
+> +
+> +	if (!(ap->flags & ATA_FLAG_8BIT_DATA))
+> +		return;
+> +
+> +	/* Set 8-bit mode. We know we can do that */
+> +	ata_link_for_each_dev(dev, link) {
+> +		if (dev->devno)
+> +			select |= ATA_DEV1;
+> +
+> +		iowrite8(SETFEATURES_8BIT_ON, ap->ioaddr.feature_addr);
+> +		iowrite8(select, ap->ioaddr.device_addr);
+> +		iowrite8(ATA_CMD_SET_FEATURES, ap->ioaddr.command_addr);
 
-> Even rmmod sata_promise; modprobe sata_promise failed to bring the
-> port back up. Hence my suspicion that hardreset is borked or doesn't
-> kick in.
+Aieee... Please don't do this.  I think it best belongs to
+ata_dev_configure() or ->dev_config() if you wanna put it in low level
+driver.
 
-It looks like the controller requires harder or more proper kick in
-the ass to return to sane state.  :-)
+> @@ -106,7 +159,8 @@ int __devinit __pata_platform_probe(struct device *dev,
+>  				    struct resource *ctl_res,
+>  				    struct resource *irq_res,
+>  				    unsigned int ioport_shift,
+> -				    int __pio_mask)
+> +				    int __pio_mask,
+> +				    unsigned int data_width)
+>  {
+>  	struct ata_host *host;
+>  	struct ata_port *ap;
+> @@ -140,6 +194,9 @@ int __devinit __pata_platform_probe(struct device *dev,
+>  	ap->pio_mask = __pio_mask;
+>  	ap->flags |= ATA_FLAG_SLAVE_POSS;
+>  
+> +	if (data_width == ATA_DATA_WIDTH_8BIT)
+> +		ap->flags |= ATA_FLAG_8BIT_DATA;
+
+It's strange to define ATA_DATA_WIDTH_* constants in ata.h and only
+use it in ata_platform.
+
+Overall, I think the bulk of the 8bit PIO implementation should go
+into the libata core layer and transfer width should be property of
+struct ata_device - probably right above or below pio/dma_mode and
+xfer_mode/shift fields.
+
+Thanks.
 
 -- 
 tejun
