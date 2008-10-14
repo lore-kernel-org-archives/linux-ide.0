@@ -1,63 +1,55 @@
-From: "Boris Petkov" <petkovbb@googlemail.com>
-Subject: Re: New CD/DVD reports 'Can Play Audio NO'
-Date: Tue, 14 Oct 2008 11:03:01 +0200
-Message-ID: <9ea470500810140203l56cbc1d3i9a798580efe91867@mail.gmail.com>
-References: <20081004103355.407fc303@sauron.linicks.net>
-	 <48E82FDB.6020009@kernel.org>
-	 <20081005120809.38eb4826@sauron.linicks.net>
-	 <48F441F0.90408@kernel.org>
-	 <9ea470500810140126v3058d99dn47768834bd087111@mail.gmail.com>
-	 <48F45D70.7000904@kernel.org>
-Reply-To: petkovbb@gmail.com
+From: kenneth johansson <ken@kenjo.org>
+Subject: Re: weird throughput on write to SATA disk
+Date: Tue, 14 Oct 2008 11:14:54 +0200
+Message-ID: <1223975694.3947.77.camel@duo>
+References: <1223925629.3947.7.camel@duo>
+	 <da824cf30810131407m1a73bd11xa30fd118ee5a4c8f@mail.gmail.com>
+	 <1223932956.3947.22.camel@duo>
+	 <da824cf30810131434r34179666kc8d075c7eecdbbae@mail.gmail.com>
+	 <1223936351.3947.41.camel@duo>
+	 <da824cf30810131833g6e509d0dvb6cce6c7220a1a28@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rn-out-0910.google.com ([64.233.170.187]:1326 "EHLO
-	rn-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753672AbYJNJDF (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 14 Oct 2008 05:03:05 -0400
-Received: by rn-out-0910.google.com with SMTP id k40so981343rnd.17
-        for <linux-ide@vger.kernel.org>; Tue, 14 Oct 2008 02:03:01 -0700 (PDT)
-In-Reply-To: <48F45D70.7000904@kernel.org>
-Content-Disposition: inline
+Received: from 1-1-4-20a.ras.sth.bostream.se ([82.182.72.90]:57059 "EHLO
+	amd.kenjo.org" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1752479AbYJNJO5 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 14 Oct 2008 05:14:57 -0400
+In-Reply-To: <da824cf30810131833g6e509d0dvb6cce6c7220a1a28@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: Nick Warne <nick@ukfsn.org>, linux-kernel@vger.kernel.org, D Bray <db1986@internetdog.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+To: Grant Grundler <grundler@google.com>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-[..]
+On Mon, 2008-10-13 at 18:33 -0700, Grant Grundler wrote:
+> On Mon, Oct 13, 2008 at 3:19 PM, kenneth johansson <ken@kenjo.org> wrote:
+> ...
+> >> Can you try "dd oflag=direct if=/dev/null of=/dev/sdb bs=64k"?
+> >
+> > I changed to use O_DIRECT and it's much more consistent now. 69-75 with
+> > 74 about 95% of the time.
+> 
+> That's low but it could be worse. Many things can contribute to slow
+> disks. 
+Well my main problem was that it was fluctuating so much that can't be
+right. 
 
->>> Thanks.  sr.c just doesn't check whether the drive reports audio play
->>> capability or not.  It just sets it while ide-cd actually checks for
->>> the capability.  The drive is not reporting it while it can so ide-cd
->>> needs blacklist entry for it.  Now that idecd has blacklist entry, all
->>> should be fine.  Eh... I'm not sure whether we need to update sr to
->>> follow what ide-cd is doing or not.
->>>
->>> Thanks.
->>
->> Actually, as I already pointed out, I'm not at all happy with blacklisting
->> stuff. What sounds more sane to me (and this is only me) would be what sr.c
->> does: assume that per se the drive can play audio and try to play it. But how
->> many drives are there that cannot play audio, aka, would it be a safe assumption
->> to say that their number is so diminishingly small that it would be better to
->> announce that a drive can play audio by default and fail graciously in the
->> _very_ seldom case it actually cannot ...
->>
->
-> Hmm... I don't know.  I think the flag indicates whether the drive has
-> DAC and analog audio output, right?
+> Favorites are overtemp (See SMART field 194) and vibration (no
+> measurement possible w/o special equipment). "dd" isn't exactly a
+> performance application until one uses really big block sizes (1MB or
+> larger).
+All my numbers comes from using 1MB blocks. but I'm not using dd.
+After removing the logic that actually put some data into the buffers I
+do get about 105 MB/sec using O_DIRECT. I'm doing a full disk write now
+to get a reference plot. Not using O_DIRECT should be almost identical. 
 
-Currently, ide-cd checks the AudioPlay bit advertized in the CD-ROM Capabilities
-and Mechanical Status Page.
 
-> I have quite some SATA drives which
-> don't have audio output at all.  I haven't check what they report on the
-> mode sense page yet.  Eh... well, having the bit set when the drive
-> doesn't support it doesn't hurt too much (yet).  Bartlomiej, what do you
-> think?
+> > the disk is supposed to have 105 115 sustained
+> > data rate.
+> 
+> Where did 105-115 number come from?
+datasheet . they listed two drives in the same column so that was not
+the range it was sustained OD and the model I have max out at 105. 
 
--- 
-Regards/Gruss,
-Boris
+
