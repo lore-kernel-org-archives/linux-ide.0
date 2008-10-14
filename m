@@ -1,52 +1,54 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: How to determine performance bottleneck?
-Date: Tue, 14 Oct 2008 14:37:41 +0900
-Message-ID: <48F43025.8050705@kernel.org>
-References: <20081013202836.3fc62c3e@mjolnir.drzeus.cx>	<48F3D8E2.8000006@kernel.org> <20081014070728.386a9cf2@mjolnir.drzeus.cx>
+Subject: Re: Problem w/ hotplug on sata_sil24 w/ PMP (sil3726)
+Date: Tue, 14 Oct 2008 14:51:54 +0900
+Message-ID: <48F4337A.50307@kernel.org>
+References: <20081011142735.GB5904@cleopatra.jogback.se>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:34186 "EHLO hera.kernel.org"
+Received: from hera.kernel.org ([140.211.167.34]:43635 "EHLO hera.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750958AbYJNFjp (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 14 Oct 2008 01:39:45 -0400
-In-Reply-To: <20081014070728.386a9cf2@mjolnir.drzeus.cx>
+	id S1751672AbYJNFxx (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 14 Oct 2008 01:53:53 -0400
+In-Reply-To: <20081011142735.GB5904@cleopatra.jogback.se>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Pierre Ossman <drzeus-list@drzeus.cx>
-Cc: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org
+To: Lars Michael Jogback <lm@jogback.se>
+Cc: linux-ide@vger.kernel.org
 
-Pierre Ossman wrote:
-> On Tue, 14 Oct 2008 08:25:22 +0900
-> Tejun Heo <tj@kernel.org> wrote:
+Lars Michael Jogback wrote:
+> I've got trouble to get a drive to reconnect to the system after
+> hotplug.
 > 
->> Pierre Ossman wrote:
->>> When I'm accessing a single disk, the bandwidth is 70 - 80 MiB/s. When
->>> I access a second disk, the bandwidth is about 50 MiB/s/disk, and all
->>> five results in 25 MiB/s/disk. In other words, something is limiting
->>> things to about 100 MiB/s. Now the question is what that limiting
->>> factor is.
->>>
->> That's the limit of sil3124/3132.  Dunno why but you can't go over that.
+> I'm using Linux 2.6.26 (Debian 2.6.26-8) on AMD64. The controller card
+> is any Sil3124-based, and the disks are connected to a Sil3726.
 > 
-> Bummer. Is this per port, or is it the PCIe side of the chip that is
-> limited to this speed?
-
-I think it's on the host bus side.
-
-> What do the silicon image guys have to say about it?
-
-ISTR they confirmed the problem but I don't remember talking too much
-about it.
-
->>  There's 3132-2 chip on the market.  Maybe it's worth a try?
+> The disks in this case (but I've got the same behaviour on different
+> disks) is SAMSUNG HD103UJ. Their Spin_Up_Time according to smartctl is
+> 11030 (which I translate to approx 11 seconds, right?)
 >
-> Now that model number was not something that was easily found on
-> google, nor on silicon image's website. Know of any boards with that
-> chip?
+...
+> [75101.684114] ata4.03: failed to IDENTIFY (I/O error, err_mask=0x11)
+...
+> 
+> As I understand it, the first IDENTIFY happens 1 second after hotplug,
+> the second 5 seconds after hotplug, and the last and third one happens 9
+> seconds after the hotplug, and as I understand this disk need at least
+> 11 seconds to spin-up.
+> 
+> The only way I can get the disk back online is to yank the cable between
+> the controller and the PMP, then it works.
+> 
+> Is it someway to extend the timeout to wait for spin-up of the disk?
 
-Somebody wrote me an email about it.  Looking up... eh.. can't find.  Sorry.
+Hmmm.. drives usually make reset wait while they're spinning up so
+that's where the spin wait logic is implemented.  Strange.  Can you
+post full boot log and the result of "hdparm -I" on the drive?  Also,
+if you first spin up the drive by conneciting only the power connector
+and then connect the SATA cable a bit later, does it work?
+
+Thanks.
 
 -- 
 tejun
