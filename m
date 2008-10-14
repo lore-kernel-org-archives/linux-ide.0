@@ -1,32 +1,73 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: http://ata.wiki.kernel.org/index.php/Known_issues#Drives_which_perform_frequent_head_unloads_under_Linux
-Date: Tue, 14 Oct 2008 15:19:07 +0900
-Message-ID: <48F439DB.5010508@kernel.org>
-References: <48EE2225.4050006@gmx.ch>
+Subject: Re: New CD/DVD reports 'Can Play Audio    NO'
+Date: Tue, 14 Oct 2008 15:53:36 +0900
+Message-ID: <48F441F0.90408@kernel.org>
+References: <20081004103355.407fc303@sauron.linicks.net>	<48E82FDB.6020009@kernel.org> <20081005120809.38eb4826@sauron.linicks.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-15
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:48413 "EHLO hera.kernel.org"
+Received: from hera.kernel.org ([140.211.167.34]:36064 "EHLO hera.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752651AbYJNGVF (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 14 Oct 2008 02:21:05 -0400
-In-Reply-To: <48EE2225.4050006@gmx.ch>
+	id S1751074AbYJNGzo (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 14 Oct 2008 02:55:44 -0400
+In-Reply-To: <20081005120809.38eb4826@sauron.linicks.net>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Ele <ele1@gmx.ch>
-Cc: linux-ide@vger.kernel.org
+To: Nick Warne <nick@ukfsn.org>
+Cc: linux-kernel@vger.kernel.org, D Bray <db1986@internetdog.org>, IDE/ATA development list <linux-ide@vger.kernel.org>
 
-Ele wrote:
-> Hi
+Nick Warne wrote:
+> /messages
+> Oct  5 11:54:13 sauron kernel: ata5: PATA max UDMA/133 cmd 0x1f0 ctl
+> 0x3f6 bmdma 0xf400 irq 14
+> Oct  5 11:54:13 sauron kernel: ata6: PATA max
+> UDMA/133 cmd 0x170 ctl 0x376 bmdma 0xf408 irq 15
+> Oct  5 11:54:13 sauron kernel: ata5.00: ATAPI: TSSTcorp CDDVDW
+> SH-S202J, SB00, max UDMA/66
+> Oct  5 11:54:13 sauron kernel: ata5.01: ATAPI: Optiarc DVD RW AD-7200A,
+> 1.06, max UDMA/66
+> Oct  5 11:54:13 sauron kernel: ata5.00: configured for UDMA/66
+> Oct  5 11:54:13 sauron kernel: ata5.01: configured for
+> UDMA/66
 > 
-> Please add to your wiki page for WD green drives:
-> "workaround: Requires vendor specific tool wdidle3.exe to change the
-> configuration.
-> The tool can only be obtained via WD support*, _but_ in some cases
-> calling it with  paramter /D does not disable automatic unloads.*"
+> /syslog
+> Oct  5 11:54:13 sauron kernel: sr0: scsi3-mmc drive: 48x/48x writer
+> dvd-ram cd/rw xa/form2 cdda tray
+> Oct  5 11:54:13 sauron kernel: sr1:
+> scsi3-mmc drive: 48x/48x writer dvd-ram cd/rw xa/form2 cdda tray
+> 
+> /proc/sys/dev/cdrom/info
+> 
+> drive name:             sr1     sr0
+> drive speed:            48      48
+> drive # of slots:       1       1
+> Can close tray:         1       1
+> Can open tray:          1       1
+> Can lock tray:          1       1
+> Can change speed:       1       1
+> Can select disk:        0       0
+> Can read multisession:  1       1
+> Can read MCN:           1       1
+> Reports media changed:  1       1
+> Can play audio:         1       1
+> Can write CD-R:         1       1
+> Can write CD-RW:        1       1
+> Can read DVD:           1       1
+> Can write DVD-R:        1       1
+> Can write DVD-RAM:      1       1
+> Can read MRW:           1       1
+> Can write MRW:          1       1
+> Can write RAM:          1       1
 
-Care to share a bit more details?
+Thanks.  sr.c just doesn't check whether the drive reports audio play
+capability or not.  It just sets it while ide-cd actually checks for
+the capability.  The drive is not reporting it while it can so ide-cd
+needs blacklist entry for it.  Now that idecd has blacklist entry, all
+should be fine.  Eh... I'm not sure whether we need to update sr to
+follow what ide-cd is doing or not.
+
+Thanks.
 
 -- 
 tejun
