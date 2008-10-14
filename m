@@ -1,237 +1,92 @@
-From: "Jonas Jensen" <jonas.jensen@gmail.com>
-Subject: pata_via "frozen" DVD drive (TSSTcorp SN-S083A on EPIA EX15000)
-Date: Tue, 14 Oct 2008 11:30:12 +0200
-Message-ID: <338a6b6d0810140230t16f8da53y6facbcee174cad3@mail.gmail.com>
+From: Damazy <damazy@gmail.com>
+Subject: Re: sata_sil for 3512A chip on kernel 2.6.26.3
+Date: Tue, 14 Oct 2008 12:49:08 +0200
+Message-ID: <48F47924.9040504@gmail.com>
+References: <48E48BF2.1010403@gmail.com> <48E71DBC.5090301@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rv-out-0506.google.com ([209.85.198.227]:1482 "EHLO
-	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752930AbYJNJaN (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 14 Oct 2008 05:30:13 -0400
-Received: by rv-out-0506.google.com with SMTP id k40so2287206rvb.1
-        for <linux-ide@vger.kernel.org>; Tue, 14 Oct 2008 02:30:12 -0700 (PDT)
-Content-Disposition: inline
+Received: from fk-out-0910.google.com ([209.85.128.188]:6750 "EHLO
+	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755065AbYJNKsz (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 14 Oct 2008 06:48:55 -0400
+Received: by fk-out-0910.google.com with SMTP id 18so2103079fkq.5
+        for <linux-ide@vger.kernel.org>; Tue, 14 Oct 2008 03:48:52 -0700 (PDT)
+In-Reply-To: <48E71DBC.5090301@kernel.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: jgarzik@pobox.com, linux-ide@vger.kernel.org
 
-Hello!
+Tejun Heo wrote:
 
-I'm running kernel 2.6.26.5 no patches and came across this after
-installing a new DVD drive. This is a Samsung SN-S083A slimline
-optical connected with SATA cable to VIA EPIA EX15000 motherboard. I
-get the exception trying a blank command such as "wodim dev=0,1,0
-blank=fast".
+ > Please post full kernel log including the boot messages and error
+ > messages.
+ > Thanks.
 
-HDD and DVD are detectable only with pata_via, this seems strange as
-they are SATA drives connected with SATA cable. I have tried both AHCI
-and sata_via, leaving out pata_via, but that always ends up in
-kernelpanic and unbootable root filesystem. I assume no drives were
-found (kernel text scrolls too fast to read).
-
-When the DVD fails it seems to drag the HDD with it. Eventually the
-HDD comes back but after that the DVD is nowhere to be found. I am
-unsure what I can do to fix this issue but changing kernel is
-definately an option if that helps.
-
-syslog:
-
-Oct 13 20:51:56 silverstone kernel: ata1.01: exception Emask 0x0 SAct
-0x0 SErr 0x0 action 0x6 frozen
-Oct 13 20:51:56 silverstone kernel: ata1.01: cmd
-a0/00:00:00:00:00/00:00:00:00:00/b0 tag 0
-Oct 13 20:51:56 silverstone kernel:          cdb 54 01 00 00 00 00 00
-00  00 00 00 00 00 00 00 00
-Oct 13 20:51:56 silverstone kernel:          res
-40/00:02:00:4c:00/00:00:00:00:00/b0 Emask 0x4 (timeout)
-Oct 13 20:51:56 silverstone kernel: ata1.01: status: { DRDY }
-Oct 13 20:51:56 silverstone kernel: ata1: soft resetting link
-Oct 13 20:51:56 silverstone kernel: ata1.01: qc timeout (cmd 0xa1)
-Oct 13 20:51:56 silverstone kernel: ata1.01: failed to IDENTIFY (I/O
-error, err_mask=0x4)
-Oct 13 20:51:56 silverstone kernel: ata1.01: revalidation failed (errno=-5)
-Oct 13 20:51:56 silverstone kernel: ata1: failed to recover some
-devices, retrying in 5 secs
-Oct 13 20:51:56 silverstone kernel: ata1: link is slow to respond,
-please be patient (ready=0)
-Oct 13 20:51:56 silverstone kernel: ata1: device not ready
-(errno=-16), forcing hardreset
-Oct 13 20:51:56 silverstone kernel: ata1: soft resetting link
-Oct 13 20:51:56 silverstone kernel: ata1.01: qc timeout (cmd 0xa1)
-Oct 13 20:51:56 silverstone kernel: ata1.01: failed to IDENTIFY (I/O
-error, err_mask=0x4)
-Oct 13 20:51:56 silverstone kernel: ata1.01: revalidation failed (errno=-5)
-Oct 13 20:51:56 silverstone kernel: ata1: failed to recover some
-devices, retrying in 5 secs
-Oct 13 20:51:56 silverstone kernel: ata1: link is slow to respond,
-please be patient (ready=0)
-Oct 13 20:51:56 silverstone kernel: ata1: device not ready
-(errno=-16), forcing hardreset
-Oct 13 20:51:56 silverstone kernel: ata1: soft resetting link
-Oct 13 20:51:56 silverstone kernel: ata1.01: qc timeout (cmd 0xa1)
-Oct 13 20:51:56 silverstone kernel: ata1.01: failed to IDENTIFY (I/O
-error, err_mask=0x4)
-Oct 13 20:51:56 silverstone kernel: ata1.01: revalidation failed (errno=-5)
-Oct 13 20:51:56 silverstone kernel: ata1.01: disabled
-Oct 13 20:51:56 silverstone kernel: ata1.00: failed to IDENTIFY (I/O
-error, err_mask=0x40)
-Oct 13 20:51:56 silverstone kernel: ata1.00: revalidation failed (errno=-5)
-Oct 13 20:51:56 silverstone kernel: ata1: failed to recover some
-devices, retrying in 5 secs
-Oct 13 20:51:56 silverstone kernel: ata1: link is slow to respond,
-please be patient (ready=0)
-Oct 13 20:51:56 silverstone kernel: ata1: device not ready
-(errno=-16), forcing hardreset
-Oct 13 20:51:56 silverstone kernel: ata1: soft resetting link
-Oct 13 20:51:56 silverstone kernel: ata1.00: configured for UDMA/133
-Oct 13 20:51:56 silverstone kernel: ata1: EH complete
-Oct 13 20:51:56 silverstone kernel: sd 0:0:0:0: [sda] 976773168
-512-byte hardware sectors (500108 MB)
-Oct 13 20:51:56 silverstone kernel: sd 0:0:0:0: [sda] Write Protect is off
-Oct 13 20:51:56 silverstone kernel: sd 0:0:0:0: [sda] Mode Sense: 00 3a 00 00
-Oct 13 20:51:56 silverstone kernel: sd 0:0:0:0: [sda] Write cache:
-enabled, read cache: enabled, doesn't support DPO or FUA
-
-
-hdparm -I /dev/sr0:
-
-/dev/sr0:
-
-ATAPI CD-ROM, with removable media
-        Model Number:       TSSTcorp CDDVDW SN-S083A
-        Serial Number:
-        Firmware Revision:  SB01
-Standards:
-        Supported: CD-ROM ATAPI-3 -4 -5 -6 -7
-Configuration:
-        DRQ response: 50us.
-        Packet size: 12 bytes
-Capabilities:
-        LBA, IORDY(can be disabled)
-        DMA: mdma0 mdma1 mdma2 udma0 udma1 udma2 udma3 udma4 *udma5
-             Cycle time: min=120ns recommended=120ns
-        PIO: pio0 pio1 pio2 pio3 pio4
-             Cycle time: no flow control=383ns  IORDY flow control=120ns
-Commands/features:
-        Enabled Supported:
-           *    SATA-I signaling speed (1.5Gb/s)
-           *    Host-initiated interface power management
-           *    Phy event counters
-                Device-initiated interface power management
-                unknown 78[5]
-           *    Software settings preservation
-
-dmesg:
-
-Linux version 2.6.26.5 (root@silverstone) (gcc version 4.2.3 20071014
-(prerelease) (Debian 4.2.2-3)) #6 Mon Oct 13 21:39:01 CEST 2008
-BIOS-provided physical RAM map:
- BIOS-e820: 0000000000000000 - 000000000009f800 (usable)
- BIOS-e820: 000000000009f800 - 00000000000a0000 (reserved)
- BIOS-e820: 00000000000f0000 - 0000000000100000 (reserved)
- BIOS-e820: 0000000000100000 - 000000001bef0000 (usable)
- BIOS-e820: 000000001bef0000 - 000000001bef3000 (ACPI NVS)
- BIOS-e820: 000000001bef3000 - 000000001bf00000 (ACPI data)
- BIOS-e820: 00000000e0000000 - 00000000f0000000 (reserved)
- BIOS-e820: 00000000fec00000 - 00000000fec01000 (reserved)
- BIOS-e820: 00000000fee00000 - 00000000fee01000 (reserved)
- BIOS-e820: 00000000ffff0000 - 0000000100000000 (reserved)
-446MB LOWMEM available.
-Entering add_active_range(0, 0, 114416) 0 entries of 256 used
-Zone PFN ranges:
-  DMA             0 ->     4096
-  Normal       4096 ->   114416
-Movable zone start PFN for each node
-early_node_map[1] active PFN ranges
-    0:        0 ->   114416
-On node 0 totalpages: 114416
-  DMA zone: 32 pages used for memmap
-  DMA zone: 0 pages reserved
-  DMA zone: 4064 pages, LIFO batch:0
-  Normal zone: 862 pages used for memmap
-  Normal zone: 109458 pages, LIFO batch:31
-  Movable zone: 0 pages used for memmap
-DMI 2.3 present.
-ACPI: RSDP 000F92A0, 0014 (r0 CX700 )
-ACPI: RSDT 1BEF3040, 0030 (r1 CX700  AWRDACPI 30302E32 AWRD        0)
-ACPI: FACP 1BEF30C0, 0084 (r2 CX700  AWRDACPI 30302E32 AWRD        0)
-ACPI: DSDT 1BEF31C0, 3D9A (r1 CX700  AWRDACPI     1000 MSFT  100000E)
-ACPI: FACS 1BEF0000, 0040
-ACPI: MCFG 1BEF7080, 003C (r1 CX700  AWRDACPI 30302E32 AWRD        0)
-ACPI: APIC 1BEF6FC0, 005A (r1 CX700  AWRDACPI 30302E32 AWRD        0)
-ACPI: PM-Timer IO Port: 0x408
-Allocating PCI resources starting at 20000000 (gap: 1bf00000:c4100000)
-Built 1 zonelists in Zone order, mobility grouping on.  Total pages: 113522
-Kernel command line: root=/dev/sda1 ro
-Enabling fast FPU save and restore... done.
-Enabling unmasked SIMD FPU exception support... done.
-Initializing CPU#0
-PID hash table entries: 2048 (order: 11, 8192 bytes)
-Detected 1499.975 MHz processor.
-Console: colour VGA+ 80x25
-console [tty0] enabled
-Dentry cache hash table entries: 65536 (order: 6, 262144 bytes)
-Inode-cache hash table entries: 32768 (order: 5, 131072 bytes)
-Memory: 449420k/457664k available (2242k kernel code, 7744k reserved,
-1075k data, 148k init, 0k highmem)
-virtual kernel memory layout:
-    fixmap  : 0xffff6000 - 0xfffff000   (  36 kB)
-    vmalloc : 0xdc800000 - 0xffff4000   ( 567 MB)
-    lowmem  : 0xc0000000 - 0xdbef0000   ( 446 MB)
-      .init : 0xc0440000 - 0xc0465000   ( 148 kB)
-      .data : 0xc03309d3 - 0xc043d708   (1075 kB)
-      .text : 0xc0100000 - 0xc03309d3   (2242 kB)
+Hello.
+Thank you for your replay.
+ This is dmesg:
+=======================================================
+p  : 0xfffa8000 - 0xfffff000   ( 348 kB)
+    pkmap   : 0xff800000 - 0xffc00000   (4096 kB)
+    vmalloc : 0xf8800000 - 0xff7fe000   ( 111 MB)
+    lowmem  : 0xc0000000 - 0xf8000000   ( 896 MB)
+      .init : 0xc03ae000 - 0xc03e5000   ( 220 kB)
+      .data : 0xc02f15e2 - 0xc03ab460   ( 743 kB)
+      .text : 0xc0100000 - 0xc02f15e2   (1989 kB)
 Checking if this processor honours the WP bit even in supervisor mode...Ok.
 CPA: page pool initialized 1 of 1 pages preallocated
-Calibrating delay using timer specific routine.. 3001.98 BogoMIPS (lpj=6003961)
+Calibrating delay using timer specific routine.. 4849.79 BogoMIPS 
+(lpj=2424897)
 Mount-cache hash table entries: 512
-CPU: L1 I Cache: 64K (64 bytes/line), D cache 64K (64 bytes/line)
-CPU: L2 Cache: 128K (64 bytes/line)
-CPU: Centaur VIA Esther processor 1500MHz stepping 09
+CPU: Trace cache: 12K uops, L1 D cache: 8K
+CPU: L2 cache: 512K
+Intel machine check architecture supported.
+Intel machine check reporting enabled on CPU#0.
+CPU0: Intel P4/Xeon Extended MCE MSRs (12) available
+CPU: Intel(R) Pentium(R) 4 CPU 1.80GHz stepping 07
 Checking 'hlt' instruction... OK.
 Freeing SMP alternatives: 0k freed
 ACPI: Core revision 20080321
-ACPI: setting ELCR to 0200 (from 0e28)
-net_namespace: 192 bytes
+ENABLING IO-APIC IRQs
+..TIMER: vector=0x31 apic1=0 pin1=2 apic2=-1 pin2=-1
+net_namespace: 484 bytes
 NET: Registered protocol family 16
 No dock devices found.
 ACPI: bus type pci registered
-PCI: MCFG configuration 0: base e0000000 segment 0 buses 2 - 2
-PCI: MCFG area at e0000000 reserved in E820
-PCI: Using MMCONFIG for extended config space
+PCI: PCI BIOS revision 2.10 entry at 0xf1eb0, last bus=2
 PCI: Using configuration type 1 for base access
 Setting up standard PCI resources
 ACPI: EC: Look up EC in DSDT
-ACPI Error (dsobject-0501): Package List length (8) larger than
-NumElements count (2), truncated
- [20080321]
-ACPI Error (dsobject-0501): Package List length (8) larger than
-NumElements count (2), truncated
- [20080321]
 ACPI: Interpreter enabled
-ACPI: (supports S0 S1 S3 S5)
-ACPI: Using PIC for interrupt routing
+ACPI: (supports S0 S1 S5)
+ACPI: Using IOAPIC for interrupt routing
 ACPI: PCI Root Bridge [PCI0] (0000:00)
-pci 0000:00:11.7: Disabling VIA CX700 PCI parking
-pci 0000:00:11.7: Disabling VIA CX700 PCI caching
-PCI: Transparent bridge - 0000:00:13.1
+* The chipset may have PM-Timer Bug. Due to workarounds for a bug,
+* this clock source is slow. If you are sure your timer does not have
+* this bug, please use "acpi_pm_good" to disable the workaround
+pci 0000:00:1f.0: Enabled i801 SMBus device
+pci 0000:00:1f.0: quirk: region e400-e47f claimed by ICH4 ACPI/GPIO/TCO
+pci 0000:00:1f.0: quirk: region ec00-ec3f claimed by ICH4 GPIO
+PCI: Transparent bridge - 0000:00:1e.0
 ACPI: PCI Interrupt Routing Table [\_SB_.PCI0._PRT]
-ACPI: PCI Interrupt Routing Table [\_SB_.PCI0.P2PE._PRT]
-ACPI: PCI Interrupt Routing Table [\_SB_.PCI0.P2PB._PRT]
-ACPI: PCI Interrupt Link [LNKA] (IRQs 3 4 6 7 *10 11 12)
-ACPI: PCI Interrupt Link [LNKB] (IRQs 3 4 6 7 10 11 12) *5
-ACPI: PCI Interrupt Link [LNKC] (IRQs 3 4 6 7 10 *11 12)
-ACPI: PCI Interrupt Link [LNKD] (IRQs *3 4 6 7 10 11 12)
-ACPI: PCI Interrupt Link [LNKE] (IRQs 3 4 6 7 10 11 12) *0, disabled.
-ACPI: PCI Interrupt Link [LNKF] (IRQs 3 4 6 7 10 11 12) *0, disabled.
-ACPI: PCI Interrupt Link [LNK0] (IRQs 3 4 6 7 10 11 12) *0, disabled.
-ACPI: PCI Interrupt Link [LNK1] (IRQs 3 4 6 7 10 11 12) *0, disabled.
+ACPI: PCI Interrupt Routing Table [\_SB_.PCI0.PCI1._PRT]
+ACPI: PCI Interrupt Routing Table [\_SB_.PCI0.PCI2._PRT]
+ACPI: PCI Interrupt Link [LNKA] (IRQs 3 4 5 6 7 9 10 *11 12 14 15)
+ACPI: PCI Interrupt Link [LNKB] (IRQs 3 4 5 6 7 9 10 11 12 14 15) *0, 
+disabled.
+ACPI: PCI Interrupt Link [LNKC] (IRQs 3 4 5 6 7 9 *10 11 12 14 15)
+ACPI: PCI Interrupt Link [LNKD] (IRQs 3 *4 5 6 7 9 10 11 12 14 15)
+ACPI: PCI Interrupt Link [LNKE] (IRQs 3 4 *5 6 7 9 10 11 12 14 15)
+ACPI: PCI Interrupt Link [LNKF] (IRQs 3 4 5 *6 7 9 10 11 12 14 15)
+ACPI: PCI Interrupt Link [LNKG] (IRQs 3 4 5 6 7 *9 10 11 12 14 15)
+ACPI: PCI Interrupt Link [LNKH] (IRQs 3 4 5 6 7 *9 10 11 12 14 15)
 Linux Plug and Play Support v0.97 (c) Adam Belay
 pnp: PnP ACPI init
 ACPI: bus type pnp registered
-pnp: PnP ACPI: found 10 devices
+pnp: PnP ACPI: found 13 devices
 ACPI: ACPI bus type pnp unregistered
 SCSI subsystem initialized
 libata version 3.00 loaded.
@@ -239,203 +94,960 @@ usbcore: registered new interface driver usbfs
 usbcore: registered new interface driver hub
 usbcore: registered new device driver usb
 PCI: Using ACPI for IRQ routing
-system 00:01: ioport range 0x400-0x47f has been reserved
-system 00:01: ioport range 0x500-0x50f has been reserved
-system 00:02: iomem range 0xf0000000-0xf0000fff has been reserved
+system 00:00: iomem range 0x0-0x9ffff could not be reserved
+system 00:00: iomem range 0xf0000-0xfffff could not be reserved
+system 00:00: iomem range 0x100000-0x3fffffff could not be reserved
+system 00:00: iomem range 0xfec00000-0xfec000ff could not be reserved
+system 00:00: iomem range 0xfee00000-0xfee00fff could not be reserved
+system 00:02: ioport range 0xe400-0xe47f has been reserved
+system 00:02: ioport range 0xe800-0xe81f has been reserved
+system 00:02: ioport range 0xec00-0xec3f has been reserved
+system 00:02: ioport range 0x4d6-0x4d6 has been reserved
+system 00:02: iomem range 0xfff80000-0xffffffff could not be reserved
+system 00:02: iomem range 0xffb80000-0xffbfffff has been reserved
 system 00:03: ioport range 0x4d0-0x4d1 has been reserved
-system 00:03: ioport range 0x800-0x87f has been reserved
-system 00:03: ioport range 0x880-0x8ff has been reserved
-system 00:08: iomem range 0xe0000000-0xefffffff could not be reserved
-system 00:09: iomem range 0xd0000-0xd3fff has been reserved
-system 00:09: iomem range 0xda000-0xdbfff has been reserved
-system 00:09: iomem range 0xf0000-0xfbfff could not be reserved
-system 00:09: iomem range 0xfc000-0xfffff could not be reserved
-system 00:09: iomem range 0x1bef0000-0x1befffff could not be reserved
-system 00:09: iomem range 0xffff0000-0xffffffff could not be reserved
-system 00:09: iomem range 0x0-0x9ffff could not be reserved
-system 00:09: iomem range 0x100000-0x1beeffff could not be reserved
-system 00:09: iomem range 0xfec00000-0xfec00fff could not be reserved
-system 00:09: iomem range 0xfee00000-0xfee00fff could not be reserved
-system 00:09: iomem range 0xfff80000-0xfffeffff has been reserved
+system 00:0c: ioport range 0x3f0-0x3f1 has been reserved
 PCI: Bridge: 0000:00:01.0
-  IO window: e000-efff
-  MEM window: 0xdd000000-0xdeffffff
-  PREFETCH window: 0x00000000a0000000-0x00000000bfffffff
-PCI: Bridge: 0000:00:13.0
-  IO window: d000-dfff
-  MEM window: 0xdfe00000-0xdfefffff
-  PREFETCH window: 0x00000000dfd00000-0x00000000dfdfffff
-PCI: Bridge: 0000:00:13.1
-  IO window: c000-cfff
-  MEM window: 0xdfc00000-0xdfcfffff
-  PREFETCH window: 0x00000000dfb00000-0x00000000dfbfffff
-PCI: Setting latency timer of device 0000:00:01.0 to 64
-PCI: Setting latency timer of device 0000:00:13.0 to 64
-PCI: Setting latency timer of device 0000:00:13.1 to 64
+  IO window: disabled.
+  MEM window: 0xf7800000-0xf87fffff
+  PREFETCH window: 0x00000000f9f00000-0x00000000fbffffff
+PCI: Bridge: 0000:00:1e.0
+  IO window: 9000-bfff
+  MEM window: 0xf5000000-0xf6ffffff
+  PREFETCH window: 0x00000000f8800000-0x00000000f9efffff
+PCI: Setting latency timer of device 0000:00:1e.0 to 64
 NET: Registered protocol family 2
-IP route cache hash table entries: 4096 (order: 2, 16384 bytes)
-TCP established hash table entries: 16384 (order: 5, 131072 bytes)
-TCP bind hash table entries: 16384 (order: 4, 65536 bytes)
-TCP: Hash tables configured (established 16384 bind 16384)
+IP route cache hash table entries: 32768 (order: 5, 131072 bytes)
+TCP established hash table entries: 131072 (order: 8, 1048576 bytes)
+TCP bind hash table entries: 65536 (order: 6, 262144 bytes)
+TCP: Hash tables configured (established 131072 bind 65536)
 TCP reno registered
 NET: Registered protocol family 1
-eps: Detected VIA Model A C7
-eps: Current voltage = 1004mV
-eps: Current multiplier = 15
-eps: Highest voltage = 1004mV
-eps: Highest multiplier = 15
-eps: Lowest voltage = 956mV
-eps: Lowest multiplier = 8
-Installing knfsd (copyright (C) 1996 okir@monad.swb.de).
-msgmni has been set to 877
+Simple Boot Flag at 0x3a set to 0x1
+audit: initializing netlink socket (disabled)
+type=2000 audit(1223285079.155:1): initialized
+highmem bounce pool size: 64 pages
+VFS: Disk quotas dquot_6.5.1
+Dquot-cache hash table entries: 1024 (order 0, 4096 bytes)
+msgmni has been set to 1767
 io scheduler noop registered
-io scheduler anticipatory registered
-io scheduler deadline registered (default)
-io scheduler cfq registered
-PCI: VIA PCI bridge detected.Disabling DAC.
+io scheduler deadline registered
+io scheduler cfq registered (default)
 pci 0000:01:00.0: Boot video device
-input: Power Button (FF) as /class/input/input0
-ACPI: Power Button (FF) [PWRF]
-input: Power Button (CM) as /class/input/input1
-ACPI: Power Button (CM) [PWRB]
-input: Sleep Button (CM) as /class/input/input2
-ACPI: Sleep Button (CM) [SLPB]
-ACPI: ACPI0007:00 is registered as cooling_device0
-Linux agpgart interface v0.103
-agpgart: Detected VIA CX700 chipset
-agpgart: AGP aperture is 128M @ 0xd0000000
-[drm] Initialized drm 1.1.0 20060810
-ACPI: PCI Interrupt Link [LNKA] enabled at IRQ 10
-PCI: setting IRQ 10 as level-triggered
-ACPI: PCI Interrupt 0000:01:00.0[A] -> Link [LNKA] -> GSI 10 (level,
-low) -> IRQ 10
-[drm] Initialized via 2.11.1 20070202 on minor 0
-Serial: 8250/16550 driver $Revision: 1.90 $ 4 ports, IRQ sharing enabled
+floppy0: no floppy controllers found
+brd: module loaded
 loop: module loaded
-via-rhine: Broken BIOS detected, avoid_D3 enabled.
-via-rhine.c:v1.10-LK1.4.3 2007-03-06 Written by Donald Becker
-ACPI: PCI Interrupt Link [LNKC] enabled at IRQ 11
-PCI: setting IRQ 11 as level-triggered
-ACPI: PCI Interrupt 0000:03:08.0[A] -> Link [LNKC] -> GSI 11 (level,
-low) -> IRQ 11
-eth0: VIA Rhine III at 0xdfcff000, 00:40:63:ed:a4:d9, IRQ 11.
-eth0: MII PHY found at address 1, status 0x786d advertising 05e1 Link 45e1.
+Uniform Multi-Platform E-IDE driver
+ide: Assuming 33MHz system bus speed for PIO modes; override with idebus=xx
+ICH4: IDE controller (0x8086:0x24cb rev 0x01) at  PCI slot 0000:00:1f.1
+ACPI: PCI Interrupt 0000:00:1f.1[A] -> GSI 18 (level, low) -> IRQ 18
+ICH4: not 100% native mode: will probe irqs later
+    ide0: BM-DMA at 0xf000-0xf007
+    ide1: BM-DMA at 0xf008-0xf00f
+Probing IDE interface ide0...
+hda: WDC WD800JB-00FSA0, ATA DISK drive
+hdb: SAMSUNG SV1021H, ATA DISK drive
+hda: host max PIO4 wanted PIO255(auto-tune) selected PIO4
+hda: UDMA/100 mode selected
+hdb: host max PIO4 wanted PIO255(auto-tune) selected PIO4
+hdb: UDMA/100 mode selected
+Probing IDE interface ide1...
+hdc: HL-DT-STDVD-RAM GSA-H50L, ATAPI CD/DVD-ROM drive
+hdd: HL-DT-STDVD-ROM GDR8162B, ATAPI CD/DVD-ROM drive
+hdc: host max PIO4 wanted PIO255(auto-tune) selected PIO4
+hdc: UDMA/66 mode selected
+hdd: host max PIO4 wanted PIO255(auto-tune) selected PIO4
+hdd: UDMA/33 mode selected
+ide0 at 0x1f0-0x1f7,0x3f6 on irq 14
+ide1 at 0x170-0x177,0x376 on irq 15
+hda: max request size: 512KiB
+hda: 156301488 sectors (80026 MB) w/8192KiB Cache, CHS=16383/255/63
+hda: cache flushes supported
+ hda: hda1 hda2 < hda5 hda6 hda7 hda8 hda9 hda10 > hda3
+hdb: max request size: 128KiB
+hdb: 19932192 sectors (10205 MB) w/426KiB Cache, CHS=19774/16/63
+hdb: cache flushes not supported
+ hdb: hdb1 hdb2 hdb3 hdb4 < hdb5 hdb6 hdb7 hdb8 >
+hdc: ATAPI 48X DVD-ROM DVD-R-RAM CD-R/RW drive, 2048kB Cache
+Uniform CD-ROM driver Revision: 3.20
+hdd: ATAPI 48X DVD-ROM drive, 256kB Cache
 Driver 'sd' needs updating - please use bus_type methods
-Driver 'sr' needs updating - please use bus_type methods
-pata_via 0000:00:0f.0: version 0.3.3
-scsi0 : pata_via
-scsi1 : pata_via
-ata1: PATA max UDMA/133 cmd 0x1f0 ctl 0x3f6 bmdma 0xfc00 irq 14
-ata2: PATA max UDMA/133 cmd 0x170 ctl 0x376 bmdma 0xfc08 irq 15
-ata1.00: ATA-7: ST3500630AS, 3.AAE, max UDMA/133
-ata1.00: 976773168 sectors, multi 16: LBA48 NCQ (depth 0/32)
-ata1.01: ATAPI: TSSTcorp CDDVDW SN-S083A, SB01, max UDMA/100
-ata1.01: applying bridge limits
-ata1.00: configured for UDMA/133
-ata1.01: configured for UDMA/100 (device error ignored)
-scsi 0:0:0:0: Direct-Access     ATA      ST3500630AS      3.AA PQ: 0 ANSI: 5
-sd 0:0:0:0: [sda] 976773168 512-byte hardware sectors (500108 MB)
+sata_sil 0000:02:0b.0: version 2.3
+ACPI: PCI Interrupt 0000:02:0b.0[A] -> GSI 23 (level, low) -> IRQ 23
+scsi0 : sata_sil
+scsi1 : sata_sil
+ata1: SATA max UDMA/100 mmio m512@0xf6000000 tf 0xf6000080 irq 23
+ata2: SATA max UDMA/100 mmio m512@0xf6000000 tf 0xf60000c0 irq 23
+ata1: SATA link up 1.5 Gbps (SStatus 113 SControl 310)
+ata1.00: HPA detected: current 976771055, native 976773168
+ata1.00: ATA-7: SAMSUNG HD502IJ, 1AA01112, max UDMA7
+ata1.00: 976771055 sectors, multi 16: LBA48 NCQ (depth 0/32)
+ata1.00: configured for UDMA/100
+ata2: SATA link up 1.5 Gbps (SStatus 113 SControl 310)
+ata2.00: ATA-7: SAMSUNG HD502IJ, 1AA01112, max UDMA7
+ata2.00: 976773168 sectors, multi 16: LBA48 NCQ (depth 0/32)
+ata2.00: configured for UDMA/100
+scsi 0:0:0:0: Direct-Access     ATA      SAMSUNG HD502IJ  1AA0 PQ: 0 ANSI: 5
+sd 0:0:0:0: [sda] 976771055 512-byte hardware sectors (500107 MB)
 sd 0:0:0:0: [sda] Write Protect is off
 sd 0:0:0:0: [sda] Mode Sense: 00 3a 00 00
-sd 0:0:0:0: [sda] Write cache: enabled, read cache: enabled, doesn't
+sd 0:0:0:0: [sda] Write cache: enabled, read cache: enabled, doesn't 
 support DPO or FUA
-sd 0:0:0:0: [sda] 976773168 512-byte hardware sectors (500108 MB)
+sd 0:0:0:0: [sda] 976771055 512-byte hardware sectors (500107 MB)
 sd 0:0:0:0: [sda] Write Protect is off
 sd 0:0:0:0: [sda] Mode Sense: 00 3a 00 00
-sd 0:0:0:0: [sda] Write cache: enabled, read cache: enabled, doesn't
+sd 0:0:0:0: [sda] Write cache: enabled, read cache: enabled, doesn't 
 support DPO or FUA
  sda: sda1
 sd 0:0:0:0: [sda] Attached SCSI disk
-sd 0:0:0:0: Attached scsi generic sg0 type 0
-scsi 0:0:1:0: CD-ROM            TSSTcorp CDDVDW SN-S083A  SB01 PQ: 0 ANSI: 5
-sr0: scsi3-mmc drive: 24x/24x writer dvd-ram cd/rw xa/form2 cdda tray
-Uniform CD-ROM driver Revision: 3.20
-sr 0:0:1:0: Attached scsi CD-ROM sr0
-sr 0:0:1:0: Attached scsi generic sg1 type 5
-ACPI: PCI Interrupt Link [LNKD] enabled at IRQ 3
-PCI: setting IRQ 3 as level-triggered
-ACPI: PCI Interrupt 0000:00:10.4[D] -> Link [LNKD] -> GSI 3 (level,
-low) -> IRQ 3
-ehci_hcd 0000:00:10.4: EHCI Host Controller
-ehci_hcd 0000:00:10.4: new USB bus registered, assigned bus number 1
-ehci_hcd 0000:00:10.4: debug port 1
-ehci_hcd 0000:00:10.4: irq 3, io mem 0xdffff000
-ehci_hcd 0000:00:10.4: USB 2.0 started, EHCI 1.00, driver 10 Dec 2004
+scsi 1:0:0:0: Direct-Access     ATA      SAMSUNG HD502IJ  1AA0 PQ: 0 ANSI: 5
+sd 1:0:0:0: [sdb] 976773168 512-byte hardware sectors (500108 MB)
+sd 1:0:0:0: [sdb] Write Protect is off
+sd 1:0:0:0: [sdb] Mode Sense: 00 3a 00 00
+sd 1:0:0:0: [sdb] Write cache: enabled, read cache: enabled, doesn't 
+support DPO or FUA
+sd 1:0:0:0: [sdb] 976773168 512-byte hardware sectors (500108 MB)
+sd 1:0:0:0: [sdb] Write Protect is off
+sd 1:0:0:0: [sdb] Mode Sense: 00 3a 00 00
+sd 1:0:0:0: [sdb] Write cache: enabled, read cache: enabled, doesn't 
+support DPO or FUA
+ sdb: sdb1
+sd 1:0:0:0: [sdb] Attached SCSI disk
+usbmon: debugfs is not available
+PNP: PS/2 Controller [PNP0303:PS2K,PNP0f13:PS2M] at 0x60,0x64 irq 1,12
+serio: i8042 KBD port at 0x60,0x64 irq 1
+serio: i8042 AUX port at 0x60,0x64 irq 12
+mice: PS/2 mouse device common for all mice
+md: linear personality registered for level -1
+md: raid0 personality registered for level 0
+md: raid1 personality registered for level 1
+cpuidle: using governor ladder
+TCP cubic registered
+Using IPI Shortcut mode
+input: AT Translated Set 2 keyboard as /class/input/input0
+input: ImPS/2 Generic Wheel Mouse as /class/input/input1
+md: Autodetecting RAID arrays.
+md: Scanned 0 and added 0 devices.
+md: autorun ...
+md: ... autorun DONE.
+VFS: Mounted root (ext2 filesystem) readonly.
+Freeing unused kernel memory: 220k freed
+hdb: UDMA/100 mode selected
+hda: UDMA/100 mode selected
+Real Time Clock Driver v1.12ac
+Adding 522072k swap on /dev/hda5.  Priority:-1 extents:1 across:522072k
+Initializing XFRM netlink socket
+NET: Registered protocol family 17
+IPv4 over IPv4 tunneling driver
+parport_pc 00:08: reported by Plug and Play ACPI
+parport0: PC-style at 0x378, irq 7 [PCSPP,TRISTATE,EPP]
+Linux video capture interface: v2.00
+lp0: using parport0 (interrupt-driven).
+nbd: registered device at major 43
+usbcore: registered new interface driver usbhid
+usbhid: v2.6:USB HID core driver
+ppdev: user-space parallel port driver
+arp_tables: (C) 2002 David S. Miller
+nf_conntrack version 0.5.0 (16384 buckets, 65536 max)
+ip_tables: (C) 2000-2006 Netfilter Core Team
+Linux agpgart interface v0.103
+agpgart: Detected an Intel 845G Chipset.
+agpgart: AGP aperture is 32M @ 0xfc000000
+Serial: 8250/16550 driver $Revision: 1.90 $ 2 ports, IRQ sharing disabled
+serial8250: ttyS1 at I/O 0x2f8 (irq = 3) is a 16550A
+[drm] Initialized drm 1.1.0 20060810
+ACPI: PCI Interrupt 0000:01:00.0[A] -> GSI 16 (level, low) -> IRQ 16
+[drm] Initialized mga 3.2.1 20051102 on minor 0
+bttv: driver version 0.9.17 loaded
+bttv: using 8 buffers with 2080k (520 pages) each for capture
+bttv: Bt8xx card found (0).
+ACPI: PCI Interrupt 0000:02:0c.0[A] -> GSI 20 (level, low) -> IRQ 20
+bttv0: Bt878 (rev 17) at 0000:02:0c.0, irq: 20, latency: 32, mmio: 
+0xf9000000
+bttv0: using: Prolink PV-BT878P+4E / PixelView PlayTV PAK / Lenco 
+MXTV-9578 CP [card=50,insmod option]
+bttv0: gpio: en=00000000, out=00000000 in=00fbff10 [init]
+bttv0: tuner type=5
+bttv0: i2c: checking for Bt832 @ 0x88... not found
+bttv0: i2c: checking for Bt832 @ 0x8a... found
+bttv0: i2c: checking for TDA9875 @ 0xb0... not found
+bttv0: i2c: checking for TDA7432 @ 0x8a... found
+tda7432 0-0045: chip found @ 0x8a (bt878 #0 [sw])
+tuner' 0-0061: chip found @ 0xc2 (bt878 #0 [sw])
+tuner-simple 0-0061: creating new instance
+tuner-simple 0-0061: type set to 5 (Philips PAL_BG (FI1216 and compatibles))
+bttv0: registered device video0
+bttv0: registered device vbi0
+bttv0: registered device radio0
+bttv0: PLL: 28636363 => 35468950 .. ok
+input: bttv IR (card=50) as /class/input/input2
+fuse init (API version 7.9)
+tun: Universal TUN/TAP device driver, 1.6
+tun: (C) 1999-2004 Max Krasnyansky <maxk@qualcomm.com>
+8139too Fast Ethernet driver 0.9.28
+ACPI: PCI Interrupt 0000:02:0d.0[A] -> GSI 21 (level, low) -> IRQ 21
+eth0: RealTek RTL8139 at 0x9800, 00:05:1c:10:c8:ef, IRQ 21
+eth0:  Identified 8139 chip type 'RTL-8100B/8139D'
+ACPI: PCI Interrupt 0000:02:0e.0[A] -> GSI 18 (level, low) -> IRQ 18
+eth1: RealTek RTL8139 at 0x9400, 00:50:ba:31:d3:36, IRQ 18
+eth1:  Identified 8139 chip type 'RTL-8139B'
+ieee80211_crypt: registered algorithm 'NULL'
+ieee80211: 802.11 data/management/control stack, git-1.1.13
+ieee80211: Copyright (C) 2004-2005 Intel Corporation 
+<jketreno@linux.intel.com>
+ACPI: PCI Interrupt 0000:00:1d.7[D] -> GSI 23 (level, low) -> IRQ 23
+PCI: Setting latency timer of device 0000:00:1d.7 to 64
+ehci_hcd 0000:00:1d.7: EHCI Host Controller
+ehci_hcd 0000:00:1d.7: new USB bus registered, assigned bus number 1
+ehci_hcd 0000:00:1d.7: debug port 1
+PCI: cache line size of 128 is not supported by device 0000:00:1d.7
+ehci_hcd 0000:00:1d.7: irq 23, io mem 0xf7000000
+ehci_hcd 0000:00:1d.7: USB 2.0 started, EHCI 1.00, driver 10 Dec 2004
 usb usb1: configuration #1 chosen from 1 choice
 hub 1-0:1.0: USB hub found
 hub 1-0:1.0: 6 ports detected
 USB Universal Host Controller Interface driver v3.0
-ACPI: PCI Interrupt 0000:00:10.0[A] -> Link [LNKA] -> GSI 10 (level,
-low) -> IRQ 10
-uhci_hcd 0000:00:10.0: UHCI Host Controller
-uhci_hcd 0000:00:10.0: new USB bus registered, assigned bus number 2
-uhci_hcd 0000:00:10.0: irq 10, io base 0x0000f800
+ACPI: PCI Interrupt 0000:00:1d.0[A] -> GSI 16 (level, low) -> IRQ 16
+PCI: Setting latency timer of device 0000:00:1d.0 to 64
+uhci_hcd 0000:00:1d.0: UHCI Host Controller
+uhci_hcd 0000:00:1d.0: new USB bus registered, assigned bus number 2
+uhci_hcd 0000:00:1d.0: irq 16, io base 0x0000d800
 usb usb2: configuration #1 chosen from 1 choice
 hub 2-0:1.0: USB hub found
 hub 2-0:1.0: 2 ports detected
-ACPI: PCI Interrupt Link [LNKB] enabled at IRQ 11
-ACPI: PCI Interrupt 0000:00:10.1[B] -> Link [LNKB] -> GSI 11 (level,
-low) -> IRQ 11
-uhci_hcd 0000:00:10.1: UHCI Host Controller
-uhci_hcd 0000:00:10.1: new USB bus registered, assigned bus number 3
-uhci_hcd 0000:00:10.1: irq 11, io base 0x0000f400
+ACPI: PCI Interrupt 0000:00:1d.1[B] -> GSI 19 (level, low) -> IRQ 19
+PCI: Setting latency timer of device 0000:00:1d.1 to 64
+uhci_hcd 0000:00:1d.1: UHCI Host Controller
+uhci_hcd 0000:00:1d.1: new USB bus registered, assigned bus number 3
+uhci_hcd 0000:00:1d.1: irq 19, io base 0x0000d400
 usb usb3: configuration #1 chosen from 1 choice
 hub 3-0:1.0: USB hub found
 hub 3-0:1.0: 2 ports detected
-ACPI: PCI Interrupt 0000:00:10.2[C] -> Link [LNKC] -> GSI 11 (level,
-low) -> IRQ 11
-uhci_hcd 0000:00:10.2: UHCI Host Controller
-uhci_hcd 0000:00:10.2: new USB bus registered, assigned bus number 4
-uhci_hcd 0000:00:10.2: irq 11, io base 0x0000f000
+ACPI: PCI Interrupt 0000:00:1d.2[C] -> GSI 18 (level, low) -> IRQ 18
+PCI: Setting latency timer of device 0000:00:1d.2 to 64
+uhci_hcd 0000:00:1d.2: UHCI Host Controller
+uhci_hcd 0000:00:1d.2: new USB bus registered, assigned bus number 4
+uhci_hcd 0000:00:1d.2: irq 18, io base 0x0000d000
 usb usb4: configuration #1 chosen from 1 choice
 hub 4-0:1.0: USB hub found
 hub 4-0:1.0: 2 ports detected
 Initializing USB Mass Storage driver...
-usb 2-2: new full speed USB device using uhci_hcd and address 2
-usb 2-2: configuration #1 chosen from 1 choice
-hub 2-2:1.0: USB hub found
-hub 2-2:1.0: 4 ports detected
-usb 2-2.1: new low speed USB device using uhci_hcd and address 3
-usb 2-2.1: configuration #1 chosen from 1 choice
+usb 3-2: new full speed USB device using uhci_hcd and address 2
+usb 3-2: configuration #1 chosen from 1 choice
+hub 3-2:1.0: USB hub found
+hub 3-2:1.0: 4 ports detected
+usb 3-2.1: new low speed USB device using uhci_hcd and address 3
+usb 3-2.1: configuration #1 chosen from 1 choice
+input: Cellink Co., LTD. Wireless RF Mouse as /class/input/input3
+input: USB HID v1.10 Mouse [Cellink Co., LTD. Wireless RF Mouse] on 
+usb-0000:00:1d.1-2.1
 usbcore: registered new interface driver usb-storage
 USB Mass Storage support registered.
-PNP: No PS/2 controller found. Probing ports directly.
-serio: i8042 KBD port at 0x60,0x64 irq 1
-serio: i8042 AUX port at 0x60,0x64 irq 12
-mice: PS/2 mouse device common for all mice
-cpuidle: using governor ladder
-usbcore: registered new interface driver hiddev
-input: NOVATEK USB Keyboard as /class/input/input3
-input: USB HID v1.10 Keyboard [NOVATEK USB Keyboard] on usb-0000:00:10.0-2.1
-input: NOVATEK USB Keyboard as /class/input/input4
-input,hiddev96: USB HID v1.10 Device [NOVATEK USB Keyboard] on
-usb-0000:00:10.0-2.1
-usbcore: registered new interface driver usbhid
-usbhid: v2.6:USB HID core driver
-Advanced Linux Sound Architecture Driver Version 1.0.16.
-ACPI: PCI Interrupt 0000:02:01.0[A] -> Link [LNKB] -> GSI 11 (level,
-low) -> IRQ 11
-PCI: Setting latency timer of device 0000:02:01.0 to 64
-PCI: Disallowing DAC for device 0000:02:01.0
-ALSA device list:
-  #0: HDA VIA VT82xx at 0xdfefc000 irq 11
-TCP cubic registered
-NET: Registered protocol family 17
-RPC: Registered udp transport module.
-RPC: Registered tcp transport module.
-Using IPI Shortcut mode
-ReiserFS: sda1: found reiserfs format "3.6" with standard journal
-ReiserFS: sda1: using ordered data mode
-ReiserFS: sda1: journal params: device sda1, size 8192, journal first
-block 18, max trans len 1024, max batch 900, max commit age 30, max
-trans age 30
-ReiserFS: sda1: checking transaction log (sda1)
-ReiserFS: sda1: Using r5 hash to sort names
-VFS: Mounted root (reiserfs filesystem) readonly.
-Freeing unused kernel memory: 148k freed
-cdrom: module is already loaded
-sr_mod: module is already loaded
-Adding 524280k swap on /swapfile.  Priority:-1 extents:159 across:651028k
+kjournald starting.  Commit interval 5 seconds
+EXT3 FS on hda9, internal journal
+EXT3-fs: mounted filesystem with ordered data mode.
+kjournald starting.  Commit interval 5 seconds
+EXT3 FS on hda8, internal journal
+EXT3-fs: mounted filesystem with ordered data mode.
+kjournald starting.  Commit interval 5 seconds
+EXT3 FS on hda7, internal journal
+EXT3-fs: mounted filesystem with ordered data mode.
+kjournald starting.  Commit interval 5 seconds
+EXT3 FS on hda6, internal journal
+EXT3-fs: mounted filesystem with ordered data mode.
+kjournald starting.  Commit interval 5 seconds
+EXT3 FS on hda10, internal journal
+EXT3-fs: mounted filesystem with ordered data mode.
+kjournald starting.  Commit interval 5 seconds
+EXT3 FS on sdb1, internal journal
+EXT3-fs: mounted filesystem with ordered data mode.
+eth0: link up, 100Mbps, full-duplex, lpa 0x41E1
 eth1: link up, 100Mbps, full-duplex, lpa 0x45E1
-NFSD: Using /var/lib/nfs/v4recovery as the NFSv4 state recovery directory
-NFSD: starting 90-second grace period
+ACPI: PCI Interrupt 0000:02:03.0[A] -> GSI 21 (level, low) -> IRQ 21
+=======================================================
+
+and this is kern.log with errors:
+=======================================================
+Oct 14 09:51:36 debian-stacja kernel: kjournald starting.  Commit 
+interval 5 seconds
+Oct 14 09:51:36 debian-stacja kernel: EXT3 FS on sdb1, internal journal
+Oct 14 09:51:36 debian-stacja kernel: EXT3-fs: mounted filesystem with 
+ordered data mode.
+Oct 14 09:53:25 debian-stacja kernel: ata2.00: exception Emask 0x0 SAct 
+0x0 SErr 0x0 action 0x6 frozen
+Oct 14 09:53:25 debian-stacja kernel: ata2.00: cmd 
+25/00:00:67:69:9e/00:01:24:00:00/e0 tag 0 dma 131072 in
+Oct 14 09:53:25 debian-stacja kernel:          res 
+40/00:00:01:4f:c2/00:00:00:00:00/00 Emask 0x4 (timeout)
+Oct 14 09:53:25 debian-stacja kernel: ata2.00: status: { DRDY }
+Oct 14 09:53:25 debian-stacja kernel: ata2: hard resetting link
+Oct 14 09:53:26 debian-stacja kernel: ata2: SATA link up 1.5 Gbps 
+(SStatus 113 SControl 310)
+Oct 14 09:53:26 debian-stacja kernel: ata2.00: configured for UDMA/100
+Oct 14 09:53:26 debian-stacja kernel: ata2: EH complete
+Oct 14 09:53:26 debian-stacja kernel: sd 1:0:0:0: [sdb] 976773168 
+512-byte hardware sectors (500108 MB)
+Oct 14 09:53:26 debian-stacja kernel: sd 1:0:0:0: [sdb] Write Protect is off
+Oct 14 09:53:26 debian-stacja kernel: sd 1:0:0:0: [sdb] Mode Sense: 00 
+3a 00 00
+Oct 14 09:53:26 debian-stacja kernel: sd 1:0:0:0: [sdb] Write cache: 
+enabled, read cache: enabled, doesn't support DPO or FUA
+Oct 14 09:54:55 debian-stacja kernel: ata2.00: exception Emask 0x0 SAct 
+0x0 SErr 0x0 action 0x0
+Oct 14 09:54:55 debian-stacja kernel: ata2.00: BMDMA2 stat 0x6d0009
+Oct 14 09:54:55 debian-stacja kernel: ata2.00: cmd 
+25/00:00:47:01:95/00:01:24:00:00/e0 tag 0 dma 131072 in
+Oct 14 09:54:55 debian-stacja kernel:          res 
+51/04:af:98:01:95/00:00:24:00:00/e0 Emask 0x1 (device error)
+Oct 14 09:54:55 debian-stacja kernel: ata2.00: status: { DRDY ERR }
+Oct 14 09:54:55 debian-stacja kernel: ata2.00: error: { ABRT }
+Oct 14 09:54:55 debian-stacja kernel: ata2.00: failed to IDENTIFY (I/O 
+error, err_mask=0x1)
+Oct 14 09:54:55 debian-stacja kernel: ata2.00: revalidation failed 
+(errno=-5)
+Oct 14 09:54:55 debian-stacja kernel: ata2: failed to recover some 
+devices, retrying in 5 secs
+Oct 14 09:55:00 debian-stacja kernel: ata2: hard resetting link
+Oct 14 09:55:01 debian-stacja kernel: ata2: SATA link up 1.5 Gbps 
+(SStatus 113 SControl 310)
+Oct 14 09:55:01 debian-stacja kernel: ata2.00: configured for UDMA/100
+Oct 14 09:55:01 debian-stacja kernel: ata2: EH complete
+Oct 14 09:55:01 debian-stacja kernel: sd 1:0:0:0: [sdb] 976773168 
+512-byte hardware sectors (500108 MB)
+Oct 14 09:55:01 debian-stacja kernel: sd 1:0:0:0: [sdb] Write Protect is off
+Oct 14 09:55:01 debian-stacja kernel: sd 1:0:0:0: [sdb] Mode Sense: 00 
+3a 00 00
+Oct 14 09:55:01 debian-stacja kernel: sd 1:0:0:0: [sdb] Write cache: 
+enabled, read cache: enabled, doesn't support DPO or FUA
+Oct 14 09:55:02 debian-stacja kernel: ata2.00: exception Emask 0x0 SAct 
+0x0 SErr 0x0 action 0x6 frozen
+Oct 14 09:55:02 debian-stacja kernel: ata2.00: cmd 
+25/00:00:7f:a8:0b/00:01:24:00:00/e0 tag 0 dma 131072 in
+Oct 14 09:55:02 debian-stacja kernel:          res 
+ff/ff:ff:ff:ff:ff/ff:ff:ff:ff:ff/ff Emask 0x2 (HSM violation)
+Oct 14 09:55:02 debian-stacja kernel: ata2.00: status: { Busy }
+Oct 14 09:55:02 debian-stacja kernel: ata2.00: error: { ICRC UNC IDNF ABRT }
+Oct 14 09:55:02 debian-stacja kernel: ata2: hard resetting link
+Oct 14 09:55:02 debian-stacja kernel: ata2: SATA link up 1.5 Gbps 
+(SStatus 113 SControl 310)
+Oct 14 09:55:02 debian-stacja kernel: ata2.00: configured for UDMA/100
+Oct 14 09:55:02 debian-stacja kernel: ata2: EH complete
+Oct 14 09:55:02 debian-stacja kernel: ata2.00: exception Emask 0x0 SAct 
+0x0 SErr 0x0 action 0x6 frozen
+Oct 14 09:55:02 debian-stacja kernel: ata2.00: cmd 
+25/00:00:7f:a8:0b/00:01:24:00:00/e0 tag 0 dma 131072 in
+Oct 14 09:55:02 debian-stacja kernel:          res 
+ff/ff:ff:ff:ff:ff/ff:ff:ff:ff:ff/ff Emask 0x2 (HSM violation)
+Oct 14 09:55:02 debian-stacja kernel: ata2.00: status: { Busy }
+Oct 14 09:55:02 debian-stacja kernel: ata2.00: error: { ICRC UNC IDNF ABRT }
+Oct 14 09:55:02 debian-stacja kernel: ata2: hard resetting link
+Oct 14 09:55:02 debian-stacja kernel: ata2: SATA link up 1.5 Gbps 
+(SStatus 113 SControl 310)
+Oct 14 09:55:02 debian-stacja kernel: ata2.00: configured for UDMA/100
+Oct 14 09:55:02 debian-stacja kernel: ata2: EH complete
+Oct 14 09:55:03 debian-stacja kernel: sd 1:0:0:0: [sdb] 976773168 
+512-byte hardware sectors (500108 MB)
+Oct 14 09:55:03 debian-stacja kernel: sd 1:0:0:0: [sdb] Write Protect is off
+Oct 14 09:55:03 debian-stacja kernel: sd 1:0:0:0: [sdb] Mode Sense: 00 
+3a 00 00
+Oct 14 09:55:03 debian-stacja kernel: sd 1:0:0:0: [sdb] Write cache: 
+enabled, read cache: enabled, doesn't support DPO or FUA
+Oct 14 09:55:03 debian-stacja kernel: sd 1:0:0:0: [sdb] 976773168 
+512-byte hardware sectors (500108 MB)
+Oct 14 09:55:03 debian-stacja kernel: sd 1:0:0:0: [sdb] Write Protect is off
+Oct 14 09:55:03 debian-stacja kernel: sd 1:0:0:0: [sdb] Mode Sense: 00 
+3a 00 00
+Oct 14 09:55:03 debian-stacja kernel: sd 1:0:0:0: [sdb] Write cache: 
+enabled, read cache: enabled, doesn't support DPO or FUA
+Oct 14 09:55:03 debian-stacja kernel: ata2.00: exception Emask 0x0 SAct 
+0x0 SErr 0x0 action 0x0
+Oct 14 09:55:03 debian-stacja kernel: ata2.00: BMDMA2 stat 0x6d0009
+Oct 14 09:55:03 debian-stacja kernel: ata2.00: cmd 
+25/00:90:7f:b7:0b/00:00:24:00:00/e0 tag 0 dma 73728 in
+Oct 14 09:55:03 debian-stacja kernel:          res 
+51/04:3f:d0:b7:0b/00:00:24:00:00/e0 Emask 0x1 (device error)
+Oct 14 09:55:03 debian-stacja kernel: ata2.00: status: { DRDY ERR }
+Oct 14 09:55:03 debian-stacja kernel: ata2.00: error: { ABRT }
+Oct 14 09:55:03 debian-stacja kernel: ata2.00: failed to IDENTIFY (I/O 
+error, err_mask=0x1)
+Oct 14 09:55:03 debian-stacja kernel: ata2.00: revalidation failed 
+(errno=-5)
+Oct 14 09:55:03 debian-stacja kernel: ata2: failed to recover some 
+devices, retrying in 5 secs
+Oct 14 09:55:08 debian-stacja kernel: ata2: hard resetting link
+Oct 14 09:55:08 debian-stacja kernel: ata2: SATA link up 1.5 Gbps 
+(SStatus 113 SControl 310)
+Oct 14 09:55:08 debian-stacja kernel: ata2.00: configured for UDMA/100
+Oct 14 09:55:08 debian-stacja kernel: ata2: EH complete
+Oct 14 09:55:08 debian-stacja kernel: sd 1:0:0:0: [sdb] 976773168 
+512-byte hardware sectors (500108 MB)
+Oct 14 09:55:08 debian-stacja kernel: sd 1:0:0:0: [sdb] Write Protect is off
+Oct 14 09:55:08 debian-stacja kernel: sd 1:0:0:0: [sdb] Mode Sense: 00 
+3a 00 00
+Oct 14 09:55:08 debian-stacja kernel: sd 1:0:0:0: [sdb] Write cache: 
+enabled, read cache: enabled, doesn't support DPO or FUA
+Oct 14 09:55:08 debian-stacja kernel: ata2.00: limiting speed to 
+UDMA/66:PIO4
+Oct 14 09:55:08 debian-stacja kernel: ata2.00: exception Emask 0x0 SAct 
+0x0 SErr 0x0 action 0x6 frozen
+Oct 14 09:55:08 debian-stacja kernel: ata2.00: cmd 
+25/00:00:cf:4c:90/00:01:24:00:00/e0 tag 0 dma 131072 in
+Oct 14 09:55:08 debian-stacja kernel:          res 
+ff/ff:ff:ff:ff:ff/ff:ff:ff:ff:ff/ff Emask 0x2 (HSM violation)
+Oct 14 09:55:08 debian-stacja kernel: ata2.00: status: { Busy }
+Oct 14 09:55:08 debian-stacja kernel: ata2.00: error: { ICRC UNC IDNF ABRT }
+Oct 14 09:55:08 debian-stacja kernel: ata2: hard resetting link
+Oct 14 09:55:09 debian-stacja kernel: ata2: SATA link up 1.5 Gbps 
+(SStatus 113 SControl 310)
+Oct 14 09:55:09 debian-stacja kernel: ata2.00: configured for UDMA/66
+Oct 14 09:55:09 debian-stacja kernel: ata2: EH complete
+Oct 14 09:55:09 debian-stacja kernel: sd 1:0:0:0: [sdb] 976773168 
+512-byte hardware sectors (500108 MB)
+Oct 14 09:55:09 debian-stacja kernel: sd 1:0:0:0: [sdb] Write Protect is off
+Oct 14 09:55:09 debian-stacja kernel: sd 1:0:0:0: [sdb] Mode Sense: 00 
+3a 00 00
+Oct 14 09:55:09 debian-stacja kernel: sd 1:0:0:0: [sdb] Write cache: 
+enabled, read cache: enabled, doesn't support DPO or FUA
+Oct 14 09:55:09 debian-stacja kernel: ata2.00: exception Emask 0x0 SAct 
+0x0 SErr 0x0 action 0x0
+Oct 14 09:55:09 debian-stacja kernel: ata2.00: BMDMA2 stat 0x6d0009
+Oct 14 09:55:09 debian-stacja kernel: ata2.00: cmd 
+25/00:00:3f:11:bd/00:01:24:00:00/e0 tag 0 dma 131072 in
+Oct 14 09:55:09 debian-stacja kernel:          res 
+51/04:ef:50:11:bd/00:00:24:00:00/e0 Emask 0x1 (device error)
+Oct 14 09:55:09 debian-stacja kernel: ata2.00: status: { DRDY ERR }
+Oct 14 09:55:09 debian-stacja kernel: ata2.00: error: { ABRT }
+Oct 14 09:55:09 debian-stacja kernel: ata2.00: failed to IDENTIFY (I/O 
+error, err_mask=0x1)
+Oct 14 09:55:09 debian-stacja kernel: ata2.00: revalidation failed 
+(errno=-5)
+Oct 14 09:55:09 debian-stacja kernel: ata2: failed to recover some 
+devices, retrying in 5 secs
+Oct 14 09:55:14 debian-stacja kernel: ata2: hard resetting link
+Oct 14 09:55:15 debian-stacja kernel: ata2: SATA link up 1.5 Gbps 
+(SStatus 113 SControl 310)
+Oct 14 09:55:15 debian-stacja kernel: ata2.00: configured for UDMA/66
+Oct 14 09:55:15 debian-stacja kernel: ata2: EH complete
+Oct 14 09:55:15 debian-stacja kernel: sd 1:0:0:0: [sdb] 976773168 
+512-byte hardware sectors (500108 MB)
+Oct 14 09:55:15 debian-stacja kernel: sd 1:0:0:0: [sdb] Write Protect is off
+Oct 14 09:55:15 debian-stacja kernel: sd 1:0:0:0: [sdb] Mode Sense: 00 
+3a 00 00
+Oct 14 09:55:15 debian-stacja kernel: sd 1:0:0:0: [sdb] Write cache: 
+enabled, read cache: enabled, doesn't support DPO or FUA
+Oct 14 09:55:15 debian-stacja kernel: ata2.00: exception Emask 0x0 SAct 
+0x0 SErr 0x0 action 0x0
+Oct 14 09:55:15 debian-stacja kernel: ata2.00: BMDMA2 stat 0x6d0009
+Oct 14 09:55:15 debian-stacja kernel: ata2.00: cmd 
+25/00:00:7f:ab:c1/00:01:24:00:00/e0 tag 0 dma 131072 in
+Oct 14 09:55:15 debian-stacja kernel:          res 
+51/04:cf:b0:ab:c1/00:00:24:00:00/e0 Emask 0x1 (device error)
+Oct 14 09:55:15 debian-stacja kernel: ata2.00: status: { DRDY ERR }
+Oct 14 09:55:15 debian-stacja kernel: ata2.00: error: { ABRT }
+Oct 14 09:55:15 debian-stacja kernel: ata2.00: failed to IDENTIFY (I/O 
+error, err_mask=0x1)
+Oct 14 09:55:15 debian-stacja kernel: ata2.00: revalidation failed 
+(errno=-5)
+Oct 14 09:55:15 debian-stacja kernel: ata2: failed to recover some 
+devices, retrying in 5 secs
+Oct 14 09:55:20 debian-stacja kernel: ata2: hard resetting link
+Oct 14 09:55:20 debian-stacja kernel: ata2: SATA link up 1.5 Gbps 
+(SStatus 113 SControl 310)
+Oct 14 09:55:20 debian-stacja kernel: ata2.00: configured for UDMA/66
+Oct 14 09:55:20 debian-stacja kernel: ata2: EH complete
+Oct 14 09:55:20 debian-stacja kernel: sd 1:0:0:0: [sdb] 976773168 
+512-byte hardware sectors (500108 MB)
+Oct 14 09:55:20 debian-stacja kernel: sd 1:0:0:0: [sdb] Write Protect is off
+Oct 14 09:55:20 debian-stacja kernel: sd 1:0:0:0: [sdb] Mode Sense: 00 
+3a 00 00
+Oct 14 09:55:20 debian-stacja kernel: sd 1:0:0:0: [sdb] Write cache: 
+enabled, read cache: enabled, doesn't support DPO or FUA
+Oct 14 09:55:51 debian-stacja kernel: ata2.00: exception Emask 0x0 SAct 
+0x0 SErr 0x0 action 0x6 frozen
+Oct 14 09:55:51 debian-stacja kernel: ata2.00: cmd 
+25/00:00:4f:68:c1/00:01:24:00:00/e0 tag 0 dma 131072 in
+Oct 14 09:55:51 debian-stacja kernel:          res 
+40/00:cf:b0:ab:c1/00:00:24:00:00/e0 Emask 0x4 (timeout)
+Oct 14 09:55:51 debian-stacja kernel: ata2.00: status: { DRDY }
+Oct 14 09:55:51 debian-stacja kernel: ata2: hard resetting link
+Oct 14 09:55:51 debian-stacja kernel: ata2: SATA link up 1.5 Gbps 
+(SStatus 113 SControl 310)
+Oct 14 09:55:51 debian-stacja kernel: ata2.00: configured for UDMA/66
+Oct 14 09:55:51 debian-stacja kernel: ata2: EH complete
+Oct 14 09:55:51 debian-stacja kernel: sd 1:0:0:0: [sdb] 976773168 
+512-byte hardware sectors (500108 MB)
+Oct 14 09:55:51 debian-stacja kernel: sd 1:0:0:0: [sdb] Write Protect is off
+Oct 14 09:55:51 debian-stacja kernel: sd 1:0:0:0: [sdb] Mode Sense: 00 
+3a 00 00
+Oct 14 09:55:51 debian-stacja kernel: sd 1:0:0:0: [sdb] Write cache: 
+enabled, read cache: enabled, doesn't support DPO or FUA
+Oct 14 09:55:52 debian-stacja kernel: ata2.00: exception Emask 0x0 SAct 
+0x0 SErr 0x0 action 0x6 frozen
+Oct 14 09:55:52 debian-stacja kernel: ata2.00: cmd 
+25/00:00:4f:6e:c1/00:02:24:00:00/e0 tag 0 dma 262144 in
+Oct 14 09:55:52 debian-stacja kernel:          res 
+ff/ff:ff:ff:ff:ff/ff:ff:ff:ff:ff/ff Emask 0x2 (HSM violation)
+Oct 14 09:55:52 debian-stacja kernel: ata2.00: status: { Busy }
+Oct 14 09:55:52 debian-stacja kernel: ata2.00: error: { ICRC UNC IDNF ABRT }
+Oct 14 09:55:52 debian-stacja kernel: ata2: hard resetting link
+Oct 14 09:55:52 debian-stacja kernel: ata2: SATA link up 1.5 Gbps 
+(SStatus 113 SControl 310)
+Oct 14 09:55:52 debian-stacja kernel: ata2.00: configured for UDMA/66
+Oct 14 09:55:52 debian-stacja kernel: ata2: EH complete
+Oct 14 09:55:52 debian-stacja kernel: sd 1:0:0:0: [sdb] 976773168 
+512-byte hardware sectors (500108 MB)
+Oct 14 09:55:52 debian-stacja kernel: sd 1:0:0:0: [sdb] Write Protect is off
+Oct 14 09:55:52 debian-stacja kernel: sd 1:0:0:0: [sdb] Mode Sense: 00 
+3a 00 00
+Oct 14 09:55:52 debian-stacja kernel: sd 1:0:0:0: [sdb] Write cache: 
+enabled, read cache: enabled, doesn't support DPO or FUA
+Oct 14 09:56:23 debian-stacja kernel: ata2.00: exception Emask 0x0 SAct 
+0x0 SErr 0x0 action 0x6 frozen
+Oct 14 09:56:23 debian-stacja kernel: ata2.00: cmd 
+25/00:00:6f:e3:a3/00:02:24:00:00/e0 tag 0 dma 262144 in
+Oct 14 09:56:23 debian-stacja kernel:          res 
+40/00:00:01:4f:c2/ff:ff:ff:ff:ff/00 Emask 0x4 (timeout)
+Oct 14 09:56:23 debian-stacja kernel: ata2.00: status: { DRDY }
+Oct 14 09:56:23 debian-stacja kernel: ata2: hard resetting link
+Oct 14 09:56:23 debian-stacja kernel: ata2: SATA link up 1.5 Gbps 
+(SStatus 113 SControl 310)
+Oct 14 09:56:23 debian-stacja kernel: ata2.00: configured for UDMA/66
+Oct 14 09:56:23 debian-stacja kernel: ata2: EH complete
+Oct 14 09:56:23 debian-stacja kernel: sd 1:0:0:0: [sdb] 976773168 
+512-byte hardware sectors (500108 MB)
+Oct 14 09:56:23 debian-stacja kernel: sd 1:0:0:0: [sdb] Write Protect is off
+Oct 14 09:56:23 debian-stacja kernel: sd 1:0:0:0: [sdb] Mode Sense: 00 
+3a 00 00
+Oct 14 09:56:23 debian-stacja kernel: sd 1:0:0:0: [sdb] Write cache: 
+enabled, read cache: enabled, doesn't support DPO or FUA
+Oct 14 09:56:24 debian-stacja kernel: ata2.00: limiting speed to 
+UDMA/33:PIO4
+Oct 14 09:56:24 debian-stacja kernel: ata2.00: exception Emask 0x0 SAct 
+0x0 SErr 0x0 action 0x6 frozen
+Oct 14 09:56:24 debian-stacja kernel: ata2.00: cmd 
+25/00:00:bf:80:ae/00:01:24:00:00/e0 tag 0 dma 131072 in
+Oct 14 09:56:24 debian-stacja kernel:          res 
+ff/ff:ff:ff:ff:ff/ff:ff:ff:ff:ff/ff Emask 0x2 (HSM violation)
+Oct 14 09:56:24 debian-stacja kernel: ata2.00: status: { Busy }
+Oct 14 09:56:24 debian-stacja kernel: ata2.00: error: { ICRC UNC IDNF ABRT }
+Oct 14 09:56:24 debian-stacja kernel: ata2: hard resetting link
+Oct 14 09:56:25 debian-stacja kernel: ata2: SATA link up 1.5 Gbps 
+(SStatus 113 SControl 310)
+Oct 14 09:56:25 debian-stacja kernel: ata2.00: configured for UDMA/33
+Oct 14 09:56:25 debian-stacja kernel: ata2: EH complete
+Oct 14 09:56:25 debian-stacja kernel: sd 1:0:0:0: [sdb] 976773168 
+512-byte hardware sectors (500108 MB)
+Oct 14 09:56:25 debian-stacja kernel: sd 1:0:0:0: [sdb] Write Protect is off
+Oct 14 09:56:25 debian-stacja kernel: sd 1:0:0:0: [sdb] Mode Sense: 00 
+3a 00 00
+Oct 14 09:56:25 debian-stacja kernel: sd 1:0:0:0: [sdb] Write cache: 
+enabled, read cache: enabled, doesn't support DPO or FUA
+Oct 14 09:56:25 debian-stacja kernel: ata2.00: exception Emask 0x0 SAct 
+0x0 SErr 0x0 action 0x6 frozen
+Oct 14 09:56:25 debian-stacja kernel: ata2.00: cmd 
+25/00:00:bf:8d:ae/00:01:24:00:00/e0 tag 0 dma 131072 in
+Oct 14 09:56:25 debian-stacja kernel:          res 
+ff/ff:ff:ff:ff:ff/ff:ff:ff:ff:ff/ff Emask 0x2 (HSM violation)
+Oct 14 09:56:25 debian-stacja kernel: ata2.00: status: { Busy }
+Oct 14 09:56:25 debian-stacja kernel: ata2.00: error: { ICRC UNC IDNF ABRT }
+Oct 14 09:56:25 debian-stacja kernel: ata2: hard resetting link
+Oct 14 09:56:25 debian-stacja kernel: ata2: SATA link up 1.5 Gbps 
+(SStatus 113 SControl 310)
+Oct 14 09:56:25 debian-stacja kernel: ata2.00: configured for UDMA/33
+Oct 14 09:56:25 debian-stacja kernel: ata2: EH complete
+Oct 14 09:56:25 debian-stacja kernel: sd 1:0:0:0: [sdb] 976773168 
+512-byte hardware sectors (500108 MB)
+Oct 14 09:56:25 debian-stacja kernel: sd 1:0:0:0: [sdb] Write Protect is off
+Oct 14 09:56:25 debian-stacja kernel: sd 1:0:0:0: [sdb] Mode Sense: 00 
+3a 00 00
+Oct 14 09:56:25 debian-stacja kernel: sd 1:0:0:0: [sdb] Write cache: 
+enabled, read cache: enabled, doesn't support DPO or FUA
+Oct 14 09:56:25 debian-stacja kernel: ata2.00: exception Emask 0x0 SAct 
+0x0 SErr 0x0 action 0x0
+Oct 14 09:56:25 debian-stacja kernel: ata2.00: BMDMA2 stat 0x6d0009
+Oct 14 09:56:25 debian-stacja kernel: ata2.00: cmd 
+25/00:90:97:65:b1/00:00:24:00:00/e0 tag 0 dma 73728 in
+Oct 14 09:56:25 debian-stacja kernel:          res 
+51/04:7f:a8:65:b1/00:00:24:00:00/e0 Emask 0x1 (device error)
+Oct 14 09:56:25 debian-stacja kernel: ata2.00: status: { DRDY ERR }
+Oct 14 09:56:25 debian-stacja kernel: ata2.00: error: { ABRT }
+Oct 14 09:56:25 debian-stacja kernel: ata2.00: failed to IDENTIFY (I/O 
+error, err_mask=0x1)
+Oct 14 09:56:25 debian-stacja kernel: ata2.00: revalidation failed 
+(errno=-5)
+Oct 14 09:56:25 debian-stacja kernel: ata2: failed to recover some 
+devices, retrying in 5 secs
+Oct 14 09:56:30 debian-stacja kernel: ata2: hard resetting link
+Oct 14 09:56:30 debian-stacja kernel: ata2: SATA link up 1.5 Gbps 
+(SStatus 113 SControl 310)
+Oct 14 09:56:31 debian-stacja kernel: ata2.00: configured for UDMA/33
+Oct 14 09:56:31 debian-stacja kernel: ata2: EH complete
+Oct 14 09:56:31 debian-stacja kernel: sd 1:0:0:0: [sdb] 976773168 
+512-byte hardware sectors (500108 MB)
+Oct 14 09:56:31 debian-stacja kernel: sd 1:0:0:0: [sdb] Write Protect is off
+Oct 14 09:56:31 debian-stacja kernel: sd 1:0:0:0: [sdb] Mode Sense: 00 
+3a 00 00
+Oct 14 09:56:31 debian-stacja kernel: sd 1:0:0:0: [sdb] Write cache: 
+enabled, read cache: enabled, doesn't support DPO or FUA
+Oct 14 09:57:01 debian-stacja kernel: ata2.00: exception Emask 0x0 SAct 
+0x0 SErr 0x0 action 0x6 frozen
+Oct 14 09:57:01 debian-stacja kernel: ata2.00: cmd 
+25/00:00:27:89:07/00:01:25:00:00/e0 tag 0 dma 131072 in
+Oct 14 09:57:01 debian-stacja kernel:          res 
+40/00:7f:a8:65:b1/00:00:24:00:00/e0 Emask 0x4 (timeout)
+Oct 14 09:57:01 debian-stacja kernel: ata2.00: status: { DRDY }
+Oct 14 09:57:01 debian-stacja kernel: ata2: hard resetting link
+Oct 14 09:57:02 debian-stacja kernel: ata2: SATA link up 1.5 Gbps 
+(SStatus 113 SControl 310)
+Oct 14 09:57:02 debian-stacja kernel: ata2.00: configured for UDMA/33
+Oct 14 09:57:02 debian-stacja kernel: ata2: EH complete
+Oct 14 09:57:02 debian-stacja kernel: sd 1:0:0:0: [sdb] 976773168 
+512-byte hardware sectors (500108 MB)
+Oct 14 09:57:02 debian-stacja kernel: sd 1:0:0:0: [sdb] Write Protect is off
+Oct 14 09:57:02 debian-stacja kernel: sd 1:0:0:0: [sdb] Mode Sense: 00 
+3a 00 00
+Oct 14 09:57:02 debian-stacja kernel: sd 1:0:0:0: [sdb] Write cache: 
+enabled, read cache: enabled, doesn't support DPO or FUA
+Oct 14 09:57:05 debian-stacja kernel: ata2.00: exception Emask 0x0 SAct 
+0x0 SErr 0x0 action 0x6 frozen
+Oct 14 09:57:05 debian-stacja kernel: ata2.00: cmd 
+25/00:00:a7:49:c5/00:01:24:00:00/e0 tag 0 dma 131072 in
+Oct 14 09:57:05 debian-stacja kernel:          res 
+ff/ff:ff:ff:ff:ff/ff:ff:ff:ff:ff/ff Emask 0x2 (HSM violation)
+Oct 14 09:57:05 debian-stacja kernel: ata2.00: status: { Busy }
+Oct 14 09:57:05 debian-stacja kernel: ata2.00: error: { ICRC UNC IDNF ABRT }
+Oct 14 09:57:05 debian-stacja kernel: ata2: hard resetting link
+Oct 14 09:57:05 debian-stacja kernel: ata2: SATA link up 1.5 Gbps 
+(SStatus 113 SControl 310)
+Oct 14 09:57:05 debian-stacja kernel: ata2.00: configured for UDMA/33
+Oct 14 09:57:05 debian-stacja kernel: ata2: EH complete
+Oct 14 09:57:05 debian-stacja kernel: sd 1:0:0:0: [sdb] 976773168 
+512-byte hardware sectors (500108 MB)
+Oct 14 09:57:05 debian-stacja kernel: sd 1:0:0:0: [sdb] Write Protect is off
+Oct 14 09:57:05 debian-stacja kernel: sd 1:0:0:0: [sdb] Mode Sense: 00 
+3a 00 00
+Oct 14 09:57:05 debian-stacja kernel: sd 1:0:0:0: [sdb] Write cache: 
+enabled, read cache: enabled, doesn't support DPO or FUA
+Oct 14 09:57:11 debian-stacja kernel: ata2.00: exception Emask 0x0 SAct 
+0x0 SErr 0x0 action 0x6 frozen
+Oct 14 09:57:11 debian-stacja kernel: ata2.00: cmd 
+25/00:00:0f:2b:1e/00:01:25:00:00/e0 tag 0 dma 131072 in
+Oct 14 09:57:11 debian-stacja kernel:          res 
+ff/ff:ff:ff:ff:ff/ff:ff:ff:ff:ff/ff Emask 0x2 (HSM violation)
+Oct 14 09:57:11 debian-stacja kernel: ata2.00: status: { Busy }
+Oct 14 09:57:11 debian-stacja kernel: ata2.00: error: { ICRC UNC IDNF ABRT }
+Oct 14 09:57:11 debian-stacja kernel: ata2: hard resetting link
+Oct 14 09:57:12 debian-stacja kernel: ata2: SATA link up 1.5 Gbps 
+(SStatus 113 SControl 310)
+Oct 14 09:57:12 debian-stacja kernel: ata2.00: configured for UDMA/33
+Oct 14 09:57:12 debian-stacja kernel: ata2: EH complete
+Oct 14 09:57:12 debian-stacja kernel: sd 1:0:0:0: [sdb] 976773168 
+512-byte hardware sectors (500108 MB)
+Oct 14 09:57:12 debian-stacja kernel: sd 1:0:0:0: [sdb] Write Protect is off
+Oct 14 09:57:12 debian-stacja kernel: sd 1:0:0:0: [sdb] Mode Sense: 00 
+3a 00 00
+Oct 14 09:57:12 debian-stacja kernel: sd 1:0:0:0: [sdb] Write cache: 
+enabled, read cache: enabled, doesn't support DPO or FUA
+Oct 14 09:57:12 debian-stacja kernel: ata2.00: exception Emask 0x0 SAct 
+0x0 SErr 0x0 action 0x0
+Oct 14 09:57:12 debian-stacja kernel: ata2.00: BMDMA2 stat 0x6c0009
+Oct 14 09:57:12 debian-stacja kernel: ata2.00: cmd 
+25/00:00:87:07:21/00:01:25:00:00/e0 tag 0 dma 131072 in
+Oct 14 09:57:12 debian-stacja kernel:          res 
+51/04:00:86:08:21/00:00:25:00:00/e0 Emask 0x1 (device error)
+Oct 14 09:57:12 debian-stacja kernel: ata2.00: status: { DRDY ERR }
+Oct 14 09:57:12 debian-stacja kernel: ata2.00: error: { ABRT }
+Oct 14 09:57:12 debian-stacja kernel: ata2.00: failed to IDENTIFY (I/O 
+error, err_mask=0x1)
+Oct 14 09:57:12 debian-stacja kernel: ata2.00: revalidation failed 
+(errno=-5)
+Oct 14 09:57:12 debian-stacja kernel: ata2: failed to recover some 
+devices, retrying in 5 secs
+Oct 14 09:57:17 debian-stacja kernel: ata2: hard resetting link
+Oct 14 09:57:17 debian-stacja kernel: ata2: SATA link up 1.5 Gbps 
+(SStatus 113 SControl 310)
+Oct 14 09:57:17 debian-stacja kernel: ata2.00: configured for UDMA/33
+Oct 14 09:57:17 debian-stacja kernel: ata2: EH complete
+Oct 14 09:57:17 debian-stacja kernel: sd 1:0:0:0: [sdb] 976773168 
+512-byte hardware sectors (500108 MB)
+Oct 14 09:57:17 debian-stacja kernel: sd 1:0:0:0: [sdb] Write Protect is off
+Oct 14 09:57:17 debian-stacja kernel: sd 1:0:0:0: [sdb] Mode Sense: 00 
+3a 00 00
+Oct 14 09:57:17 debian-stacja kernel: sd 1:0:0:0: [sdb] Write cache: 
+enabled, read cache: enabled, doesn't support DPO or FUA
+Oct 14 09:57:18 debian-stacja kernel: ata2.00: exception Emask 0x0 SAct 
+0x0 SErr 0x0 action 0x6 frozen
+Oct 14 09:57:18 debian-stacja kernel: ata2.00: cmd 
+25/00:00:1f:8f:d6/00:01:24:00:00/e0 tag 0 dma 131072 in
+Oct 14 09:57:18 debian-stacja kernel:          res 
+ff/ff:ff:ff:ff:ff/ff:ff:ff:ff:ff/ff Emask 0x2 (HSM violation)
+Oct 14 09:57:18 debian-stacja kernel: ata2.00: status: { Busy }
+Oct 14 09:57:18 debian-stacja kernel: ata2.00: error: { ICRC UNC IDNF ABRT }
+Oct 14 09:57:18 debian-stacja kernel: ata2: hard resetting link
+Oct 14 09:57:18 debian-stacja kernel: ata2: SATA link up 1.5 Gbps 
+(SStatus 113 SControl 310)
+Oct 14 09:57:18 debian-stacja kernel: ata2.00: configured for UDMA/33
+Oct 14 09:57:18 debian-stacja kernel: ata2: EH complete
+Oct 14 09:57:18 debian-stacja kernel: sd 1:0:0:0: [sdb] 976773168 
+512-byte hardware sectors (500108 MB)
+Oct 14 09:57:18 debian-stacja kernel: sd 1:0:0:0: [sdb] Write Protect is off
+Oct 14 09:57:18 debian-stacja kernel: sd 1:0:0:0: [sdb] Mode Sense: 00 
+3a 00 00
+Oct 14 09:57:18 debian-stacja kernel: sd 1:0:0:0: [sdb] Write cache: 
+enabled, read cache: enabled, doesn't support DPO or FUA
+Oct 14 09:57:21 debian-stacja kernel: ata2.00: exception Emask 0x0 SAct 
+0x0 SErr 0x0 action 0x0
+Oct 14 09:57:21 debian-stacja kernel: ata2.00: BMDMA2 stat 0x6d0009
+Oct 14 09:57:21 debian-stacja kernel: ata2.00: cmd 
+25/00:00:1f:c0:d3/00:01:23:00:00/e0 tag 0 dma 131072 in
+Oct 14 09:57:21 debian-stacja kernel:          res 
+51/04:ef:30:c0:d3/00:00:23:00:00/e0 Emask 0x1 (device error)
+Oct 14 09:57:21 debian-stacja kernel: ata2.00: status: { DRDY ERR }
+Oct 14 09:57:21 debian-stacja kernel: ata2.00: error: { ABRT }
+Oct 14 09:57:21 debian-stacja kernel: ata2.00: failed to IDENTIFY (I/O 
+error, err_mask=0x1)
+Oct 14 09:57:21 debian-stacja kernel: ata2.00: revalidation failed 
+(errno=-5)
+Oct 14 09:57:21 debian-stacja kernel: ata2: failed to recover some 
+devices, retrying in 5 secs
+Oct 14 09:57:26 debian-stacja kernel: ata2: hard resetting link
+Oct 14 09:57:26 debian-stacja kernel: ata2: SATA link up 1.5 Gbps 
+(SStatus 113 SControl 310)
+Oct 14 09:57:26 debian-stacja kernel: ata2.00: configured for UDMA/33
+Oct 14 09:57:26 debian-stacja kernel: ata2: EH complete
+Oct 14 09:57:26 debian-stacja kernel: sd 1:0:0:0: [sdb] 976773168 
+512-byte hardware sectors (500108 MB)
+Oct 14 09:57:26 debian-stacja kernel: sd 1:0:0:0: [sdb] Write Protect is off
+Oct 14 09:57:26 debian-stacja kernel: sd 1:0:0:0: [sdb] Mode Sense: 00 
+3a 00 00
+Oct 14 09:57:26 debian-stacja kernel: sd 1:0:0:0: [sdb] Write cache: 
+enabled, read cache: enabled, doesn't support DPO or FUA
+Oct 14 09:58:00 debian-stacja kernel: ata2.00: exception Emask 0x0 SAct 
+0x0 SErr 0x0 action 0x6 frozen
+Oct 14 09:58:00 debian-stacja kernel: ata2.00: cmd 
+25/00:00:97:d9:d3/00:01:24:00:00/e0 tag 0 dma 131072 in
+Oct 14 09:58:00 debian-stacja kernel:          res 
+40/00:ef:30:c0:d3/00:00:23:00:00/e0 Emask 0x4 (timeout)
+Oct 14 09:58:00 debian-stacja kernel: ata2.00: status: { DRDY }
+Oct 14 09:58:00 debian-stacja kernel: ata2: hard resetting link
+Oct 14 09:58:00 debian-stacja kernel: ata2: SATA link up 1.5 Gbps 
+(SStatus 113 SControl 310)
+Oct 14 09:58:00 debian-stacja kernel: ata2.00: configured for UDMA/33
+Oct 14 09:58:00 debian-stacja kernel: ata2: EH complete
+Oct 14 09:58:00 debian-stacja kernel: sd 1:0:0:0: [sdb] 976773168 
+512-byte hardware sectors (500108 MB)
+Oct 14 09:58:00 debian-stacja kernel: sd 1:0:0:0: [sdb] Write Protect is off
+Oct 14 09:58:00 debian-stacja kernel: sd 1:0:0:0: [sdb] Mode Sense: 00 
+3a 00 00
+Oct 14 09:58:00 debian-stacja kernel: sd 1:0:0:0: [sdb] Write cache: 
+enabled, read cache: enabled, doesn't support DPO or FUA
+Oct 14 09:58:00 debian-stacja kernel: ata2.00: exception Emask 0x0 SAct 
+0x0 SErr 0x0 action 0x0
+Oct 14 09:58:00 debian-stacja kernel: ata2.00: BMDMA2 stat 0x6d0009
+Oct 14 09:58:00 debian-stacja kernel: ata2.00: cmd 
+25/00:00:1f:2e:c3/00:01:23:00:00/e0 tag 0 dma 131072 in
+Oct 14 09:58:00 debian-stacja kernel:          res 
+51/04:bf:60:2e:c3/00:00:23:00:00/e0 Emask 0x1 (device error)
+Oct 14 09:58:00 debian-stacja kernel: ata2.00: status: { DRDY ERR }
+Oct 14 09:58:00 debian-stacja kernel: ata2.00: error: { ABRT }
+Oct 14 09:58:00 debian-stacja kernel: ata2.00: failed to IDENTIFY (I/O 
+error, err_mask=0x1)
+Oct 14 09:58:00 debian-stacja kernel: ata2.00: revalidation failed 
+(errno=-5)
+Oct 14 09:58:00 debian-stacja kernel: ata2: failed to recover some 
+devices, retrying in 5 secs
+Oct 14 09:58:05 debian-stacja kernel: ata2: hard resetting link
+Oct 14 09:58:05 debian-stacja kernel: ata2: SATA link up 1.5 Gbps 
+(SStatus 113 SControl 310)
+Oct 14 09:58:05 debian-stacja kernel: ata2.00: configured for UDMA/33
+Oct 14 09:58:05 debian-stacja kernel: ata2: EH complete
+Oct 14 09:58:05 debian-stacja kernel: sd 1:0:0:0: [sdb] 976773168 
+512-byte hardware sectors (500108 MB)
+Oct 14 09:58:05 debian-stacja kernel: sd 1:0:0:0: [sdb] Write Protect is off
+Oct 14 09:58:05 debian-stacja kernel: sd 1:0:0:0: [sdb] Mode Sense: 00 
+3a 00 00
+Oct 14 09:58:05 debian-stacja kernel: sd 1:0:0:0: [sdb] Write cache: 
+enabled, read cache: enabled, doesn't support DPO or FUA
+Oct 14 09:58:07 debian-stacja kernel: ata2.00: exception Emask 0x0 SAct 
+0x0 SErr 0x0 action 0x6 frozen
+Oct 14 09:58:07 debian-stacja kernel: ata2.00: cmd 
+25/00:90:0f:a1:3f/00:00:24:00:00/e0 tag 0 dma 73728 in
+Oct 14 09:58:07 debian-stacja kernel:          res 
+ff/ff:ff:ff:ff:ff/ff:ff:ff:ff:ff/ff Emask 0x2 (HSM violation)
+Oct 14 09:58:07 debian-stacja kernel: ata2.00: status: { Busy }
+Oct 14 09:58:07 debian-stacja kernel: ata2.00: error: { ICRC UNC IDNF ABRT }
+Oct 14 09:58:07 debian-stacja kernel: ata2: hard resetting link
+Oct 14 09:58:07 debian-stacja kernel: ata2: SATA link up 1.5 Gbps 
+(SStatus 113 SControl 310)
+Oct 14 09:58:07 debian-stacja kernel: ata2.00: configured for UDMA/33
+Oct 14 09:58:07 debian-stacja kernel: ata2: EH complete
+Oct 14 09:58:07 debian-stacja kernel: sd 1:0:0:0: [sdb] 976773168 
+512-byte hardware sectors (500108 MB)
+Oct 14 09:58:07 debian-stacja kernel: sd 1:0:0:0: [sdb] Write Protect is off
+Oct 14 09:58:07 debian-stacja kernel: sd 1:0:0:0: [sdb] Mode Sense: 00 
+3a 00 00
+Oct 14 09:58:07 debian-stacja kernel: sd 1:0:0:0: [sdb] Write cache: 
+enabled, read cache: enabled, doesn't support DPO or FUA
+Oct 14 09:58:38 debian-stacja kernel: ata2.00: exception Emask 0x0 SAct 
+0x0 SErr 0x0 action 0x6 frozen
+Oct 14 09:58:38 debian-stacja kernel: ata2.00: cmd 
+25/00:00:3f:c5:a7/00:01:23:00:00/e0 tag 0 dma 131072 in
+Oct 14 09:58:38 debian-stacja kernel:          res 
+40/00:ff:ff:ff:ff/ff:ff:ff:ff:ff/ff Emask 0x4 (timeout)
+Oct 14 09:58:38 debian-stacja kernel: ata2.00: status: { DRDY }
+Oct 14 09:58:38 debian-stacja kernel: ata2: hard resetting link
+Oct 14 09:58:38 debian-stacja kernel: ata2: SATA link up 1.5 Gbps 
+(SStatus 113 SControl 310)
+Oct 14 09:58:38 debian-stacja kernel: ata2.00: configured for UDMA/33
+Oct 14 09:58:38 debian-stacja kernel: ata2: EH complete
+Oct 14 09:58:38 debian-stacja kernel: sd 1:0:0:0: [sdb] 976773168 
+512-byte hardware sectors (500108 MB)
+Oct 14 09:58:38 debian-stacja kernel: sd 1:0:0:0: [sdb] Write Protect is off
+Oct 14 09:58:38 debian-stacja kernel: sd 1:0:0:0: [sdb] Mode Sense: 00 
+3a 00 00
+Oct 14 09:58:38 debian-stacja kernel: sd 1:0:0:0: [sdb] Write cache: 
+enabled, read cache: enabled, doesn't support DPO or FUA
+Oct 14 09:59:09 debian-stacja kernel: ata2.00: exception Emask 0x0 SAct 
+0x0 SErr 0x0 action 0x6 frozen
+Oct 14 09:59:09 debian-stacja kernel: ata2.00: cmd 
+25/00:00:a7:36:9e/00:01:23:00:00/e0 tag 0 dma 131072 in
+Oct 14 09:59:09 debian-stacja kernel:          res 
+40/00:ff:ff:ff:ff/ff:ff:ff:ff:ff/ff Emask 0x4 (timeout)
+Oct 14 09:59:09 debian-stacja kernel: ata2.00: status: { DRDY }
+Oct 14 09:59:09 debian-stacja kernel: ata2: hard resetting link
+Oct 14 09:59:10 debian-stacja kernel: ata2: SATA link up 1.5 Gbps 
+(SStatus 113 SControl 310)
+Oct 14 09:59:10 debian-stacja kernel: ata2.00: configured for UDMA/33
+Oct 14 09:59:10 debian-stacja kernel: ata2: EH complete
+Oct 14 09:59:10 debian-stacja kernel: sd 1:0:0:0: [sdb] 976773168 
+512-byte hardware sectors (500108 MB)
+Oct 14 09:59:10 debian-stacja kernel: sd 1:0:0:0: [sdb] Write Protect is off
+Oct 14 09:59:10 debian-stacja kernel: sd 1:0:0:0: [sdb] Mode Sense: 00 
+3a 00 00
+Oct 14 09:59:10 debian-stacja kernel: sd 1:0:0:0: [sdb] Write cache: 
+enabled, read cache: enabled, doesn't support DPO or FUA
+Oct 14 09:59:40 debian-stacja kernel: ata2.00: exception Emask 0x0 SAct 
+0x0 SErr 0x0 action 0x6 frozen
+Oct 14 09:59:40 debian-stacja kernel: ata2.00: cmd 
+25/00:00:ef:1a:76/00:01:24:00:00/e0 tag 0 dma 131072 in
+Oct 14 09:59:40 debian-stacja kernel:          res 
+40/00:ff:ff:ff:ff/ff:ff:ff:ff:ff/ff Emask 0x4 (timeout)
+Oct 14 09:59:40 debian-stacja kernel: ata2.00: status: { DRDY }
+Oct 14 09:59:40 debian-stacja kernel: ata2: hard resetting link
+Oct 14 09:59:40 debian-stacja kernel: ata2: SATA link up 1.5 Gbps 
+(SStatus 113 SControl 310)
+Oct 14 09:59:41 debian-stacja kernel: ata2.00: configured for UDMA/33
+Oct 14 09:59:41 debian-stacja kernel: ata2: EH complete
+Oct 14 09:59:41 debian-stacja kernel: sd 1:0:0:0: [sdb] 976773168 
+512-byte hardware sectors (500108 MB)
+Oct 14 09:59:41 debian-stacja kernel: sd 1:0:0:0: [sdb] Write Protect is off
+Oct 14 09:59:41 debian-stacja kernel: sd 1:0:0:0: [sdb] Mode Sense: 00 
+3a 00 00
+Oct 14 09:59:41 debian-stacja kernel: sd 1:0:0:0: [sdb] Write cache: 
+enabled, read cache: enabled, doesn't support DPO or FUA
+Oct 14 09:59:47 debian-stacja kernel: ata2.00: exception Emask 0x0 SAct 
+0x0 SErr 0x0 action 0x6 frozen
+Oct 14 09:59:47 debian-stacja kernel: ata2.00: cmd 
+25/00:90:67:7c:f3/00:01:24:00:00/e0 tag 0 dma 204800 in
+Oct 14 09:59:47 debian-stacja kernel:          res 
+ff/ff:ff:ff:ff:ff/ff:ff:ff:ff:ff/ff Emask 0x2 (HSM violation)
+Oct 14 09:59:47 debian-stacja kernel: ata2.00: status: { Busy }
+Oct 14 09:59:47 debian-stacja kernel: ata2.00: error: { ICRC UNC IDNF ABRT }
+Oct 14 09:59:47 debian-stacja kernel: ata2: hard resetting link
+Oct 14 09:59:47 debian-stacja kernel: ata2: SATA link up 1.5 Gbps 
+(SStatus 113 SControl 310)
+Oct 14 09:59:47 debian-stacja kernel: ata2.00: configured for UDMA/33
+Oct 14 09:59:47 debian-stacja kernel: ata2: EH complete
+Oct 14 09:59:47 debian-stacja kernel: sd 1:0:0:0: [sdb] 976773168 
+512-byte hardware sectors (500108 MB)
+Oct 14 09:59:47 debian-stacja kernel: sd 1:0:0:0: [sdb] Write Protect is off
+Oct 14 09:59:47 debian-stacja kernel: sd 1:0:0:0: [sdb] Mode Sense: 00 
+3a 00 00
+Oct 14 09:59:47 debian-stacja kernel: sd 1:0:0:0: [sdb] Write cache: 
+enabled, read cache: enabled, doesn't support DPO or FUA
+Oct 14 09:59:48 debian-stacja kernel: ata2.00: exception Emask 0x0 SAct 
+0x0 SErr 0x0 action 0x6 frozen
+Oct 14 09:59:48 debian-stacja kernel: ata2.00: cmd 
+25/00:68:0f:ce:95/00:00:24:00:00/e0 tag 0 dma 53248 in
+Oct 14 09:59:48 debian-stacja kernel:          res 
+ff/ff:ff:ff:ff:ff/ff:ff:ff:ff:ff/ff Emask 0x2 (HSM violation)
+Oct 14 09:59:48 debian-stacja kernel: ata2.00: status: { Busy }
+Oct 14 09:59:48 debian-stacja kernel: ata2.00: error: { ICRC UNC IDNF ABRT }
+Oct 14 09:59:48 debian-stacja kernel: ata2: hard resetting link
+Oct 14 09:59:48 debian-stacja kernel: ata2: SATA link up 1.5 Gbps 
+(SStatus 113 SControl 310)
+Oct 14 09:59:48 debian-stacja kernel: ata2.00: configured for UDMA/33
+Oct 14 09:59:48 debian-stacja kernel: ata2: EH complete
+Oct 14 09:59:48 debian-stacja kernel: sd 1:0:0:0: [sdb] 976773168 
+512-byte hardware sectors (500108 MB)
+Oct 14 09:59:48 debian-stacja kernel: sd 1:0:0:0: [sdb] Write Protect is off
+Oct 14 09:59:48 debian-stacja kernel: sd 1:0:0:0: [sdb] Mode Sense: 00 
+3a 00 00
+Oct 14 09:59:48 debian-stacja kernel: sd 1:0:0:0: [sdb] Write cache: 
+enabled, read cache: enabled, doesn't support DPO or FUA
+Oct 14 09:59:49 debian-stacja kernel: ata2.00: exception Emask 0x0 SAct 
+0x0 SErr 0x0 action 0x6 frozen
+Oct 14 09:59:49 debian-stacja kernel: ata2.00: cmd 
+25/00:00:1f:ab:9d/00:01:24:00:00/e0 tag 0 dma 131072 in
+Oct 14 09:59:49 debian-stacja kernel:          res 
+ff/ff:ff:ff:ff:ff/ff:ff:ff:ff:ff/ff Emask 0x2 (HSM violation)
+Oct 14 09:59:49 debian-stacja kernel: ata2.00: status: { Busy }
+Oct 14 09:59:49 debian-stacja kernel: ata2.00: error: { ICRC UNC IDNF ABRT }
+Oct 14 09:59:49 debian-stacja kernel: ata2: hard resetting link
+Oct 14 09:59:49 debian-stacja kernel: ata2: SATA link up 1.5 Gbps 
+(SStatus 113 SControl 310)
+Oct 14 09:59:49 debian-stacja kernel: ata2.00: configured for UDMA/33
+Oct 14 09:59:49 debian-stacja kernel: ata2: EH complete
+Oct 14 09:59:49 debian-stacja kernel: sd 1:0:0:0: [sdb] 976773168 
+512-byte hardware sectors (500108 MB)
+Oct 14 09:59:49 debian-stacja kernel: sd 1:0:0:0: [sdb] Write Protect is off
+Oct 14 09:59:49 debian-stacja kernel: sd 1:0:0:0: [sdb] Mode Sense: 00 
+3a 00 00
+Oct 14 09:59:49 debian-stacja kernel: sd 1:0:0:0: [sdb] Write cache: 
+enabled, read cache: enabled, doesn't support DPO or FUA
+Oct 14 09:59:50 debian-stacja kernel: ata2.00: exception Emask 0x0 SAct 
+0x0 SErr 0x0 action 0x0
+Oct 14 09:59:50 debian-stacja kernel: ata2.00: BMDMA2 stat 0x6d0009
+Oct 14 09:59:50 debian-stacja kernel: ata2.00: cmd 
+25/00:00:4f:0d:6f/00:01:25:00:00/e0 tag 0 dma 131072 in
+Oct 14 09:59:50 debian-stacja kernel:          res 
+51/04:6f:e0:0d:6f/00:00:25:00:00/e0 Emask 0x1 (device error)
+Oct 14 09:59:50 debian-stacja kernel: ata2.00: status: { DRDY ERR }
+Oct 14 09:59:50 debian-stacja kernel: ata2.00: error: { ABRT }
+Oct 14 09:59:50 debian-stacja kernel: ata2.00: failed to IDENTIFY (I/O 
+error, err_mask=0x1)
+Oct 14 09:59:50 debian-stacja kernel: ata2.00: revalidation failed 
+(errno=-5)
+Oct 14 09:59:50 debian-stacja kernel: ata2: failed to recover some 
+devices, retrying in 5 secs
+Oct 14 09:59:55 debian-stacja kernel: ata2: hard resetting link
+Oct 14 09:59:55 debian-stacja kernel: ata2: SATA link up 1.5 Gbps 
+(SStatus 113 SControl 310)
+Oct 14 09:59:55 debian-stacja kernel: ata2.00: configured for UDMA/33
+Oct 14 09:59:55 debian-stacja kernel: ata2: EH complete
+Oct 14 09:59:55 debian-stacja kernel: sd 1:0:0:0: [sdb] 976773168 
+512-byte hardware sectors (500108 MB)
+Oct 14 09:59:55 debian-stacja kernel: sd 1:0:0:0: [sdb] Write Protect is off
+Oct 14 09:59:55 debian-stacja kernel: sd 1:0:0:0: [sdb] Mode Sense: 00 
+3a 00 00
+Oct 14 09:59:55 debian-stacja kernel: sd 1:0:0:0: [sdb] Write cache: 
+enabled, read cache: enabled, doesn't support DPO or FUA
+Oct 14 09:59:57 debian-stacja kernel: ata2.00: exception Emask 0x0 SAct 
+0x0 SErr 0x0 action 0x0
+Oct 14 09:59:57 debian-stacja kernel: ata2.00: BMDMA2 stat 0x6d0009
+Oct 14 09:59:57 debian-stacja kernel: ata2.00: cmd 
+25/00:00:af:cc:b5/00:01:24:00:00/e0 tag 0 dma 131072 in
+Oct 14 09:59:57 debian-stacja kernel:          res 
+51/04:df:d0:cc:b5/00:00:24:00:00/e0 Emask 0x1 (device error)
+Oct 14 09:59:57 debian-stacja kernel: ata2.00: status: { DRDY ERR }
+Oct 14 09:59:57 debian-stacja kernel: ata2.00: error: { ABRT }
+Oct 14 09:59:57 debian-stacja kernel: ata2.00: failed to IDENTIFY (I/O 
+error, err_mask=0x1)
+Oct 14 09:59:57 debian-stacja kernel: ata2.00: revalidation failed 
+(errno=-5)
+Oct 14 09:59:57 debian-stacja kernel: ata2: failed to recover some 
+devices, retrying in 5 secs
+=======================================================
+
+Best regards.
+ Damazy
