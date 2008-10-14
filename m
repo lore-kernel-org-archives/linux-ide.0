@@ -1,50 +1,47 @@
 From: "Grant Grundler" <grundler@google.com>
-Subject: Re: weird throughput on write to SATA disk
-Date: Tue, 14 Oct 2008 09:09:21 -0700
-Message-ID: <da824cf30810140909y11bdd92akf9046c996c367130@mail.gmail.com>
-References: <1223925629.3947.7.camel@duo>
-	 <da824cf30810131407m1a73bd11xa30fd118ee5a4c8f@mail.gmail.com>
-	 <1223932956.3947.22.camel@duo>
-	 <da824cf30810131434r34179666kc8d075c7eecdbbae@mail.gmail.com>
-	 <1223936351.3947.41.camel@duo>
-	 <da824cf30810131833g6e509d0dvb6cce6c7220a1a28@mail.gmail.com>
-	 <1223975694.3947.77.camel@duo>
+Subject: Re: How to determine performance bottleneck?
+Date: Tue, 14 Oct 2008 09:29:55 -0700
+Message-ID: <da824cf30810140929o4b82f69fs9a826ef880d3f462@mail.gmail.com>
+References: <20081013202836.3fc62c3e@mjolnir.drzeus.cx>
+	 <48F3D8E2.8000006@kernel.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp-out.google.com ([216.239.33.17]:7686 "EHLO
-	smtp-out3.google.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751046AbYJNQJi (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 14 Oct 2008 12:09:38 -0400
-In-Reply-To: <1223975694.3947.77.camel@duo>
+Received: from smtp-out.google.com ([216.239.33.17]:11754 "EHLO
+	smtp-out.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751097AbYJNQaF (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 14 Oct 2008 12:30:05 -0400
+Received: from zps38.corp.google.com (zps38.corp.google.com [172.25.146.38])
+	by smtp-out.google.com with ESMTP id m9EGTwAm001357
+	for <linux-ide@vger.kernel.org>; Tue, 14 Oct 2008 17:29:59 +0100
+Received: from ug-out-1314.google.com (ugfk3.prod.google.com [10.66.187.3])
+	by zps38.corp.google.com with ESMTP id m9EGTu9i009397
+	for <linux-ide@vger.kernel.org>; Tue, 14 Oct 2008 09:29:57 -0700
+Received: by ug-out-1314.google.com with SMTP id k3so868477ugf.9
+        for <linux-ide@vger.kernel.org>; Tue, 14 Oct 2008 09:29:56 -0700 (PDT)
+In-Reply-To: <48F3D8E2.8000006@kernel.org>
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: kenneth johansson <ken@kenjo.org>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: Pierre Ossman <drzeus-list@drzeus.cx>, Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org
 
-On Tue, Oct 14, 2008 at 2:14 AM, kenneth johansson <ken@kenjo.org> wrote:
+On Mon, Oct 13, 2008 at 4:25 PM, Tejun Heo <tj@kernel.org> wrote:
 ...
-> All my numbers comes from using 1MB blocks. but I'm not using dd.
-> After removing the logic that actually put some data into the buffers I
-> do get about 105 MB/sec using O_DIRECT.
+>> Tejun, what kind of throughput have you seen when you have been testing
+>> the sil3132 and multipliers?
+>
+> That's the limit of sil3124/3132.  Dunno why but you can't go over that.
 
-Ok. Good.
+To be clear, I understood "that" ==  ~100 MB/s
 
-> I'm doing a full disk write now to get a reference plot.
+>  There's 3132-2 chip on the market.  Maybe it's worth a try?
 
-See http://hdperf.sourceforge.net/  and http://nathan.laredo.name/hdperf/
-Simple tool to (relatively) quickly measure the perf across the disk platter.
+Are you possibly thinking of 3124-2 ? (4-port PCI-X device, not PCI-e)
 
-> Not using O_DIRECT should be almost identical.
+I didn't see mention of 3132-2 on
+http://www.siliconimage.com/products/product.aspx?id=32
 
-*should* - but there are known problems with writeback.
-Some of them are described nicely by Dave Chinner as "Random Thought #3":
-    http://iou.parisc-linux.org/lsf2008/linux_storage_scalability-Dave_Chinner.odp
-
-Look for "writeback" for a summary of the discussion:
-    http://iou.parisc-linux.org/lsf2008/SUMMARY-Storage.txt
-
-hth,
+thanks,
 grant
