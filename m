@@ -1,54 +1,45 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: Problem w/ hotplug on sata_sil24 w/ PMP (sil3726)
-Date: Tue, 14 Oct 2008 14:51:54 +0900
-Message-ID: <48F4337A.50307@kernel.org>
-References: <20081011142735.GB5904@cleopatra.jogback.se>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+From: bugme-daemon@bugzilla.kernel.org
+Subject: [Bug 11742] Device buffer on a DVD multi standard writer runs out burning a CD
+Date: Mon, 13 Oct 2008 22:55:00 -0700 (PDT)
+Message-ID: <20081014055500.88CF510805A@picon.linux-foundation.org>
+References: <bug-11742-11633@http.bugzilla.kernel.org/>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:43635 "EHLO hera.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751672AbYJNFxx (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 14 Oct 2008 01:53:53 -0400
-In-Reply-To: <20081011142735.GB5904@cleopatra.jogback.se>
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:51662 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752092AbYJNFzb (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 14 Oct 2008 01:55:31 -0400
+Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
+	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id m9E5t0U9005745
+	for <linux-ide@vger.kernel.org>; Mon, 13 Oct 2008 22:55:01 -0700
+In-Reply-To: <bug-11742-11633@http.bugzilla.kernel.org/>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Lars Michael Jogback <lm@jogback.se>
-Cc: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-Lars Michael Jogback wrote:
-> I've got trouble to get a drive to reconnect to the system after
-> hotplug.
-> 
-> I'm using Linux 2.6.26 (Debian 2.6.26-8) on AMD64. The controller card
-> is any Sil3124-based, and the disks are connected to a Sil3726.
-> 
-> The disks in this case (but I've got the same behaviour on different
-> disks) is SAMSUNG HD103UJ. Their Spin_Up_Time according to smartctl is
-> 11030 (which I translate to approx 11 seconds, right?)
->
-...
-> [75101.684114] ata4.03: failed to IDENTIFY (I/O error, err_mask=0x11)
-...
-> 
-> As I understand it, the first IDENTIFY happens 1 second after hotplug,
-> the second 5 seconds after hotplug, and the last and third one happens 9
-> seconds after the hotplug, and as I understand this disk need at least
-> 11 seconds to spin-up.
-> 
-> The only way I can get the disk back online is to yank the cable between
-> the controller and the PMP, then it works.
-> 
-> Is it someway to extend the timeout to wait for spin-up of the disk?
+http://bugzilla.kernel.org/show_bug.cgi?id=11742
 
-Hmmm.. drives usually make reset wait while they're spinning up so
-that's where the spin wait logic is implemented.  Strange.  Can you
-post full boot log and the result of "hdparm -I" on the drive?  Also,
-if you first spin up the drive by conneciting only the power connector
-and then connect the SATA cable a bit later, does it work?
 
-Thanks.
+bbpetkov@yahoo.de changed:
+
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+                 CC|                            |bbpetkov@yahoo.de
+
+
+
+
+------- Comment #3 from bbpetkov@yahoo.de  2008-10-13 22:55 -------
+Hi,
+
+I don't see your attachments probably because you have to add the attachments
+over the bugzilla interface "Create a New Attachment" usually found at the
+lower end of the bugpage. Simply attaching them to the mail won't work, imho.
+
+Thanks,
+Boris.
+
 
 -- 
-tejun
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug, or are watching the assignee.
