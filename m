@@ -1,94 +1,41 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: New CD/DVD reports 'Can Play Audio NO'
-Date: Tue, 14 Oct 2008 17:50:56 +0900
-Message-ID: <48F45D70.7000904@kernel.org>
-References: <20081004103355.407fc303@sauron.linicks.net>	 <48E82FDB.6020009@kernel.org>	 <20081005120809.38eb4826@sauron.linicks.net>	 <48F441F0.90408@kernel.org> <9ea470500810140126v3058d99dn47768834bd087111@mail.gmail.com>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: Porting old hardware from ide to libata (was [PATCH 0/7] ide:
+ locking improvements)
+Date: Tue, 14 Oct 2008 10:01:23 +0100
+Message-ID: <20081014100123.41beb64f@lxorguk.ukuu.org.uk>
+References: <20081013234648.41cfca48@lxorguk.ukuu.org.uk>
+	<232037.89022.qm@web57407.mail.re1.yahoo.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:39472 "EHLO hera.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754517AbYJNIw6 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 14 Oct 2008 04:52:58 -0400
-In-Reply-To: <9ea470500810140126v3058d99dn47768834bd087111@mail.gmail.com>
+Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:43699 "EHLO
+	lxorguk.ukuu.org.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751771AbYJNJBZ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 14 Oct 2008 05:01:25 -0400
+In-Reply-To: <232037.89022.qm@web57407.mail.re1.yahoo.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: petkovbb@gmail.com
-Cc: Nick Warne <nick@ukfsn.org>, linux-kernel@vger.kernel.org, D Bray <db1986@internetdog.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+To: stan.cunningham@yahoo.com
+Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-ide@vger.kernel.org
 
-(cc'ing Bartlomiej, hi!)
+On Mon, 13 Oct 2008 19:11:04 -0700 (PDT)
+Stan Cunningham <stan.cunningham@yahoo.com> wrote:
 
-Boris Petkov wrote:
-> On Tue, Oct 14, 2008 at 8:53 AM, Tejun Heo <tj@kernel.org> wrote:
->> Nick Warne wrote:
->>> /messages
->>> Oct  5 11:54:13 sauron kernel: ata5: PATA max UDMA/133 cmd 0x1f0 ctl
->>> 0x3f6 bmdma 0xf400 irq 14
->>> Oct  5 11:54:13 sauron kernel: ata6: PATA max
->>> UDMA/133 cmd 0x170 ctl 0x376 bmdma 0xf408 irq 15
->>> Oct  5 11:54:13 sauron kernel: ata5.00: ATAPI: TSSTcorp CDDVDW
->>> SH-S202J, SB00, max UDMA/66
->>> Oct  5 11:54:13 sauron kernel: ata5.01: ATAPI: Optiarc DVD RW AD-7200A,
->>> 1.06, max UDMA/66
->>> Oct  5 11:54:13 sauron kernel: ata5.00: configured for UDMA/66
->>> Oct  5 11:54:13 sauron kernel: ata5.01: configured for
->>> UDMA/66
->>>
->>> /syslog
->>> Oct  5 11:54:13 sauron kernel: sr0: scsi3-mmc drive: 48x/48x writer
->>> dvd-ram cd/rw xa/form2 cdda tray
->>> Oct  5 11:54:13 sauron kernel: sr1:
->>> scsi3-mmc drive: 48x/48x writer dvd-ram cd/rw xa/form2 cdda tray
->>>
->>> /proc/sys/dev/cdrom/info
->>>
->>> drive name:             sr1     sr0
->>> drive speed:            48      48
->>> drive # of slots:       1       1
->>> Can close tray:         1       1
->>> Can open tray:          1       1
->>> Can lock tray:          1       1
->>> Can change speed:       1       1
->>> Can select disk:        0       0
->>> Can read multisession:  1       1
->>> Can read MCN:           1       1
->>> Reports media changed:  1       1
->>> Can play audio:         1       1
->>> Can write CD-R:         1       1
->>> Can write CD-RW:        1       1
->>> Can read DVD:           1       1
->>> Can write DVD-R:        1       1
->>> Can write DVD-RAM:      1       1
->>> Can read MRW:           1       1
->>> Can write MRW:          1       1
->>> Can write RAM:          1       1
->> Thanks.  sr.c just doesn't check whether the drive reports audio play
->> capability or not.  It just sets it while ide-cd actually checks for
->> the capability.  The drive is not reporting it while it can so ide-cd
->> needs blacklist entry for it.  Now that idecd has blacklist entry, all
->> should be fine.  Eh... I'm not sure whether we need to update sr to
->> follow what ide-cd is doing or not.
->>
->> Thanks.
+> --- On Mon, 10/13/08, Alan Cox <alan@lxorguk.ukuu.org.uk> wrote:
 > 
-> Actually, as I already pointed out, I'm not at all happy with blacklisting
-> stuff. What sounds more sane to me (and this is only me) would be what sr.c
-> does: assume that per se the drive can play audio and try to play it. But how
-> many drives are there that cannot play audio, aka, would it be a safe assumption
-> to say that their number is so diminishingly small that it would be better to
-> announce that a drive can play audio by default and fail graciously in the
-> _very_ seldom case it actually cannot ...
+> > Libata supports more prehistoric pointless
+> > ISA and VLB controllers than drivers/ide.
 > 
+> Perhaps, but the ultimate goal for libata should be to support *all* the hardware that works under drivers/ide. Until that's achieved, drivers/ide is still needed despite the drawbacks of having two frameworks.
 
-Hmm... I don't know.  I think the flag indicates whether the drive has
-DAC and analog audio output, right?  I have quite some SATA drives which
-don't have audio output at all.  I haven't check what they report on the
-mode sense page yet.  Eh... well, having the bit set when the drive
-doesn't support it doesn't hurt too much (yet).  Bartlomiej, what do you
-think?
+I don't have a problem having two frameworks, one of which is just used
+by things like the commode amiga and other ancient relics. If one of the
+tiny number of users of the port wants libata they can probably port it
+over in a few minutes and then spend a week recompiling ;)
 
-Thanks.
+> BTW, I recall there was another attempt at writing a libata driver for Apple hardware, namely pata_macio by Benjamin Herrenschmidt.
 
--- 
-tejun
+Yes Ben is working on this stuff now
+
+Alan
