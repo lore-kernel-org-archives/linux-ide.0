@@ -1,42 +1,52 @@
-From: bugme-daemon@bugzilla.kernel.org
-Subject: [Bug 11742] Device buffer on a DVD multi standard writer runs out burning a CD
-Date: Wed, 15 Oct 2008 04:22:02 -0700 (PDT)
-Message-ID: <20081015112202.60C77108056@picon.linux-foundation.org>
-References: <bug-11742-11633@http.bugzilla.kernel.org/>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: Re: [PATCH 1/3] ide: mask interrupt in ide_config_drive_speed()
+Date: Wed, 15 Oct 2008 16:10:29 +0400
+Message-ID: <48F5DDB5.6060608@ru.mvista.com>
+References: <200810150018.31003.sshtylyov@ru.mvista.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:44469 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752501AbYJOLWE (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 15 Oct 2008 07:22:04 -0400
-Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
-	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id m9FBM2VU015196
-	for <linux-ide@vger.kernel.org>; Wed, 15 Oct 2008 04:22:03 -0700
-In-Reply-To: <bug-11742-11633@http.bugzilla.kernel.org/>
+Received: from h155.mvista.com ([63.81.120.155]:26347 "EHLO imap.sh.mvista.com"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751557AbYJOMKe (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 15 Oct 2008 08:10:34 -0400
+In-Reply-To: <200810150018.31003.sshtylyov@ru.mvista.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: bzolnier@gmail.com
+Cc: linux-ide@vger.kernel.org
 
-http://bugzilla.kernel.org/show_bug.cgi?id=11742
+Hello, I wrote:
+
+> Apparently, there is no sense in unmasking IRQ on the controller when you call
+> disable_irq_nosync() before doing this, set the nIEN bit afterwards, and then
+> unmask IRQ again after the command completion, hence 1 passed to SELECT_MASK()
+>   
+
+   s/1/0/, of course...
+
+> before issuing the command in ide_config_drive_speed() is probably just a typo.
+>
+> Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+>
+>  drivers/ide/ide-iops.c |    2 +-
+>  1 files changed, 1 insertion(+), 1 deletion(-)
+>
+> Index: linux-2.6/drivers/ide/ide-iops.c
+> ===================================================================
+> --- linux-2.6.orig/drivers/ide/ide-iops.c
+> +++ linux-2.6/drivers/ide/ide-iops.c
+> @@ -840,7 +840,7 @@ int ide_config_drive_speed(ide_drive_t *
+>  	 
+>  	udelay(1);
+>  	SELECT_DRIVE(drive);
+> -	SELECT_MASK(drive, 0);
+> +	SELECT_MASK(drive, 1);
+>  	udelay(1);
+>  	tp_ops->set_irq(hwif, 0);
+>   
+
+MBR, Sergei
 
 
-
-
-
-------- Comment #12 from valerio.p@libero.it  2008-10-15 04:22 -------
-the previous dmesg that I've posted yesterday is referred to the non working
-kernel 2.6.27.
-
-> Can you give a shot at ata_piix and see whether it behaves any differently?
-
-Do you mean to try with or without? As you can see from the above attached
-lsmod belonging from 2.6.27 kernel, ata_piix is loaded as module automatically.
-If you wanted me to disable it, please send me a kernel option I can give at
-boot time to GRUB to override this default behaviour of the kernel.
-
-See you
-
-
--- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug, or are watching the assignee.
