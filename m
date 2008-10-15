@@ -1,91 +1,224 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [PATCH 09/18] ide: add ->set_irq method
-Date: Wed, 15 Oct 2008 20:22:44 +0200
-Message-ID: <200810152022.44708.bzolnier@gmail.com>
-References: <20080620213323.13202.71450.sendpatchset@localhost.localdomain> <20080620213424.13202.16889.sendpatchset@localhost.localdomain> <48F5DFF7.9010908@ru.mvista.com>
+Subject: Re: [PATCH] ide: don't execute the next queued command from the hard-IRQ context
+Date: Wed, 15 Oct 2008 21:06:45 +0200
+Message-ID: <200810152106.45728.bzolnier@gmail.com>
+References: <200810111617.51298.bzolnier@gmail.com> <874p3hd74p.fsf@denkblock.local>
 Mime-Version: 1.0
 Content-Type: text/plain;
   charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from gv-out-0910.google.com ([216.239.58.184]:61913 "EHLO
+Received: from gv-out-0910.google.com ([216.239.58.191]:59673 "EHLO
 	gv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753556AbYJOTuO (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 15 Oct 2008 15:50:14 -0400
-Received: by gv-out-0910.google.com with SMTP id e6so701040gvc.37
-        for <linux-ide@vger.kernel.org>; Wed, 15 Oct 2008 12:50:13 -0700 (PDT)
-In-Reply-To: <48F5DFF7.9010908@ru.mvista.com>
+	with ESMTP id S1754305AbYJOTuT (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 15 Oct 2008 15:50:19 -0400
+Received: by gv-out-0910.google.com with SMTP id e6so701047gvc.37
+        for <linux-ide@vger.kernel.org>; Wed, 15 Oct 2008 12:50:18 -0700 (PDT)
+In-Reply-To: <874p3hd74p.fsf@denkblock.local>
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Elias Oltmanns <eo@nebensachen.de>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-On Wednesday 15 October 2008, Sergei Shtylyov wrote:
-> Hello.
-> 
-> Bartlomiej Zolnierkiewicz wrote:
-> 
-> > Add ->set_irq method for setting nIEN bit of ATA Device Control
-> > register and use it instead of ide_set_irq().
+On Sunday 12 October 2008, Elias Oltmanns wrote:
+> Bartlomiej Zolnierkiewicz <bzolnier@gmail.com> wrote:
+> > From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+> > Subject: [PATCH] ide: don't execute the next queued command from the hard-IRQ context
+> >
+> > * Tell the block layer that we are not done handling requests by using
+> >   blk_plug_device() in ide_do_request() (request handling function)
+> >   and ide_timer_expiry() (timeout handler) if the queue is not empty.
+> >
+> > * Remove optimization which directly calls ide_do_request() for the next
+> >   queued command from the ide_intr() (IRQ handler) and ide_timer_expiry().
+> >
+> > * Remove no longer needed IRQ masking from ide_do_request() - in case of
+> >   IDE ports needing serialization disable_irq_nosync()/enable_irq() was
+> >   used for the (possibly shared) IRQ of the other IDE port.
+> >
+> > * Put the misplaced comment in the right place in ide_do_request().
+> >
+> > * Drop no longer needed 'int masked_irq' argument from ide_do_request().
+> >
+> > * Merge ide_do_request() into do_ide_request().
+> >
+> > * Remove no longer needed IDE_NO_IRQ define.
 > >
 > > While at it:
 > >
-> > * Use ->set_irq in init_irq() and do_reset1().
+> > * Don't use HWGROUP() macro in do_ide_request().
 > >
-> > * Don't use HWIF() macro in ide_check_pm_state().
+> > * Use __func__ in ide_intr().
 > >
-> > There should be no functional changes caused by this patch.
+> > This patch reduces IRQ hadling latency for IDE and improves the system-wide
+> > handling of shared IRQs (which should result in more timeout resistant and
+> > stable IDE systems).  It also makes it possible to do some further changes
+> > later (i.e. replace some busy-waiting delays with sleeping equivalents).
 > >
 > > Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-> >   
-> [...]
-> > Index: b/drivers/ide/ide-iops.c
-> > ===================================================================
-> > --- a/drivers/ide/ide-iops.c
-> > +++ b/drivers/ide/ide-iops.c
-> > @@ -135,6 +135,23 @@ static u8 ide_read_sff_dma_status(ide_hw
-> >  		return inb(hwif->dma_base + ATA_DMA_STATUS);
-> >  }
-> >  
-> > +static void ide_set_irq(ide_hwif_t *hwif, int on)
-> > +{
-> > +	u8 ctl = ATA_DEVCTL_OBS;
-> > +
-> > +	if (on == 4) { /* hack for SRST */
-> > +		ctl |= 4;
-> > +		on &= ~4;
-> > +	}
-> > +
-> > +	ctl |= on ? 0 : 2;
-> > +
-> > +	if (hwif->host_flags & IDE_HFLAG_MMIO)
-> > +		writeb(ctl, (void __iomem *)hwif->io_ports.ctl_addr);
-> > +	else
-> > +		outb(ctl, hwif->io_ports.ctl_addr);
-> > +}
-> > +
-> >  static void ide_tf_load(ide_drive_t *drive, ide_task_t *task)
-> >  {
-> >  	ide_hwif_t *hwif = drive->hwif;
-> >   
-> [...]
-> > @@ -1162,16 +1180,15 @@ static ide_startstop_t do_reset1 (ide_dr
-> >  	 * immediate interrupt due to the edge transition it produces.
-> >  	 * This single interrupt gives us a "fast poll" for drives that
-> >  	 * recover from reset very quickly, saving us the first 50ms wait time.
-> > +	 *
-> > +	 * TODO: add ->softreset method and stop abusing ->set_irq
-> >  	 */
-> >  	/* set SRST and nIEN */
-> > -	hwif->OUTBSYNC(hwif, ATA_DEVCTL_OBS | 6, io_ports->ctl_addr);
-> > +	hwif->set_irq(hwif, 4);
-> >  	/* more than enough time */
-> >  	udelay(10);
+> > ---
+> > on top of per-hwgroup locks patch and with a special dedication to people
+> > complaining about improving IDE ;)
 > 
->    It seems to me that the whole idea of having 2 separate methods for 
-> writing the single device control register is a wrong idea.
-> I'm suggesting to convert set_irq() method to write_devctrl() method and 
-> pass the register value directly to it.
+> Some comments / questions. Admittedly, I don't always know enough about
+> the things I'm talking about here, but I'm hoping to learn something
+> that way ;-).
+> 
+> [...]
+> > Index: b/drivers/ide/ide-io.c
+> > ===================================================================
+> > --- a/drivers/ide/ide-io.c
+> > +++ b/drivers/ide/ide-io.c
+> [...]
+> > @@ -999,8 +1001,11 @@ static void ide_do_request (ide_hwgroup_
+> >  			}
+> >  
+> >  			/* no more work for this hwgroup (for now) */
+> > -			return;
+> > +			goto plug_device;
+> >  		}
+> > +
+> > +		if (drive != orig_drive)
+> > +			goto plug_device;
+> >  	again:
+> >  		hwif = HWIF(drive);
+> 
+> Didn't you want to get rid of HWIF() too?
 
-Makes sense.  Care to make a patch?
+Fixed.
+
+> >  		if (hwgroup->hwif->sharing_irq && hwif != hwgroup->hwif) {
+> > @@ -1055,41 +1060,27 @@ static void ide_do_request (ide_hwgroup_
+> >  				goto again;
+> >  			/* We clear busy, there should be no pending ATA command at this point. */
+> >  			hwgroup->busy = 0;
+> > -			break;
+> > +			goto plug_device;
+> >  		}
+> >  
+> >  		hwgroup->rq = rq;
+> >  
+> > -		/*
+> > -		 * Some systems have trouble with IDE IRQs arriving while
+> > -		 * the driver is still setting things up.  So, here we disable
+> > -		 * the IRQ used by this interface while the request is being started.
+> > -		 * This may look bad at first, but pretty much the same thing
+> > -		 * happens anyway when any interrupt comes in, IDE or otherwise
+> > -		 *  -- the kernel masks the IRQ while it is being handled.
+> > -		 */
+> > -		if (masked_irq != IDE_NO_IRQ && hwif->irq != masked_irq)
+> > -			disable_irq_nosync(hwif->irq);
+> >  		spin_unlock(&hwgroup->lock);
+> > +		/* allow other IRQs while we start this request */
+> >  		local_irq_enable_in_hardirq();
+> > -			/* allow other IRQs while we start this request */
+> 
+> That's the part I don't understand completely. Wouldn't it be alright to
+> do just spin_unlock_irq() here and be done with it? SCSI does exactly
+> that and as far as I can see, IDE is in a similar situation now that the
+> ->request_fn() is not called from ide_intr() and ide_timer_expiry()
+> anymore, i.e. the ->request_fn() will always be executed in process
+> context.
+
+Fixed.
+
+> >  		startstop = start_request(drive, rq);
+> >  		spin_lock_irq(&hwgroup->lock);
+> > -		if (masked_irq != IDE_NO_IRQ && hwif->irq != masked_irq)
+> > -			enable_irq(hwif->irq);
+> > -		if (startstop == ide_stopped)
+> > +
+> > +		if (startstop == ide_stopped) {
+> >  			hwgroup->busy = 0;
+> > +			goto plug_device;
+> 
+> This goto statement is wrong. Simply set ->busy to zero and be done with
+> it. This way, the loop will start again and either elv_next_request()
+> returns NULL, in which case the queue need not be plugged, or the next
+> request will be processed immediately, which is exactly what we want.
+
+The problem is that the next loop can choose the different drive than
+the current one so we can end up with the situation where we will "lose"
+the blk_plug_device() call.
+
+I fixed it by just inlining "plug_device" code for now.
+
+> [...]
+> > @@ -1438,11 +1431,11 @@ irqreturn_t ide_intr (int irq, void *dev
+> >  	if (startstop == ide_stopped) {
+> >  		if (hwgroup->handler == NULL) {	/* paranoia */
+> >  			hwgroup->busy = 0;
+> > -			ide_do_request(hwgroup, hwif->irq);
+> > -		} else {
+> > -			printk(KERN_ERR "%s: ide_intr: huh? expected NULL handler "
+> > -				"on exit\n", drive->name);
+> > -		}
+> > +			if (!elv_queue_empty(drive->queue))
+> > +				blk_plug_device(drive->queue);
+> 
+> This is perhaps not exactly what you really want. It basically means
+> that there will be a delay (q->unplug_delay) after each command which
+> may well hurt I/O performance. Instead, I'd suggest something like the
+> following:
+> 
+> 	if (!elv_queue_empty(drive->queue))
+> 		blk_schedule_queue_run(drive->queue);
+> 
+> and a function
+> 
+> void blk_schedule_queue_run(struct request_queue *q)
+> {
+> 	blk_plug_device(q);
+> 	kblockd_schedule_work(&q->unplug_work);
+> }
+> 
+> in blk-core.c. This can also be used as a helper function in blk-core.c
+> itself.
+
+Care to make a patch adding such helper to blk-core.c?
+
+I'll update this patch to use it then, in the meantime v1->v2 interdiff:
+
+...
+v2:
+Changes per review from Elias Oltmanns:
+- fix wrong goto statement in 'if (startstop == ide_stopped)' block
+- use spin_unlock_irq()
+- don't use obsolete HWIF() macro
+...
+
+diff -u b/drivers/ide/ide-io.c b/drivers/ide/ide-io.c
+--- b/drivers/ide/ide-io.c
++++ b/drivers/ide/ide-io.c
+@@ -1006,8 +1006,9 @@
+ 
+ 		if (drive != orig_drive)
+ 			goto plug_device;
+-	again:
+-		hwif = HWIF(drive);
++again:
++		hwif = drive->hwif;
++
+ 		if (hwgroup->hwif->sharing_irq && hwif != hwgroup->hwif) {
+ 			/*
+ 			 * set nIEN for previous hwif, drives in the
+@@ -1065,15 +1066,14 @@
+ 
+ 		hwgroup->rq = rq;
+ 
+-		spin_unlock(&hwgroup->lock);
+-		/* allow other IRQs while we start this request */
+-		local_irq_enable_in_hardirq();
++		spin_unlock_irq(&hwgroup->lock);
+ 		startstop = start_request(drive, rq);
+ 		spin_lock_irq(&hwgroup->lock);
+ 
+ 		if (startstop == ide_stopped) {
+ 			hwgroup->busy = 0;
+-			goto plug_device;
++			if (!elv_queue_empty(orig_drive->queue))
++				blk_plug_device(orig_drive->queue);
+ 		}
+ 	}
+ 	return;
