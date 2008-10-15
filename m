@@ -1,29 +1,40 @@
-From: "Nokia'N'Series Program" <info@nokia.co.uk>
-Subject: Nokia'N'Series
-Date: Wed, 15 Oct 2008 15:57:59 -0400
-Message-ID: <20081015155759.v3heyxqty0w0w40g__28006.7922467881$1224101680$gmane$org@webmail.coqui.net>
-Reply-To: nokiamobiledepartment@live.com
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+From: bugme-daemon@bugzilla.kernel.org
+Subject: [Bug 11697] CD tray closes spontaneously after opening it
+Date: Wed, 15 Oct 2008 13:22:15 -0700 (PDT)
+Message-ID: <20081015202215.64484108058@picon.linux-foundation.org>
+References: <bug-11697-11633@http.bugzilla.kernel.org/>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from avas5.coqui.net ([196.28.61.131]:24444 "EHLO avas5.coqui.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755385AbYJOUNR convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 15 Oct 2008 16:13:17 -0400
-Content-Disposition: inline
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:38576 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754949AbYJOUWR (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 15 Oct 2008 16:22:17 -0400
+Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
+	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id m9FKMFWp008546
+	for <linux-ide@vger.kernel.org>; Wed, 15 Oct 2008 13:22:16 -0700
+In-Reply-To: <bug-11697-11633@http.bugzilla.kernel.org/>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
+
+http://bugzilla.kernel.org/show_bug.cgi?id=11697
 
 
-Contact Mr.Anderson Maxwell of Nokia'N'Series Program for your grant of
-=C2=A31,000,000.00 GBP.
-Email:nokiamobiledepartment@live.com
+bzolnier@gmail.com changed:
+
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+         AssignedTo|io_ide@kernel-bugs.osdl.org |bzolnier@gmail.com
+             Status|NEW                         |ASSIGNED
 
 
 
 
+------- Comment #2 from bzolnier@gmail.com  2008-10-15 13:22 -------
+I'll close it then.  Please re-open if the problem re-occurs.
 
 
-----------------------------------------------------------------
-This message was sent using http://webmail.coqui.net
+-- 
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug, or are watching the assignee.
+You are the assignee for the bug, or are watching the assignee.
