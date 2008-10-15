@@ -1,37 +1,45 @@
-From: Mark Salter <msalter@redhat.com>
-Subject: [PATCH] Support slave devices on SCH PATA controller
-Date: Wed, 15 Oct 2008 13:42:57 -0400
-Message-ID: <1224092577.6065.8.camel@deneb.localdomain>
+From: matthieu castet <castet.matthieu@free.fr>
+Subject: Re: [smartmontools-support] SMART to USB/sata dock in 2.6.27-rc5
+ doesn't work
+Date: Wed, 15 Oct 2008 21:16:51 +0200
+Message-ID: <48F641A3.5080609@free.fr>
+References: <48EE7E0A.8040701@dgreaves.com> <48F40164.5000502@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mx2.redhat.com ([66.187.237.31]:51930 "EHLO mx2.redhat.com"
+Received: from smtp6-g19.free.fr ([212.27.42.36]:35747 "EHLO smtp6-g19.free.fr"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752650AbYJORm7 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 15 Oct 2008 13:42:59 -0400
+	id S1752306AbYJOTRm (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 15 Oct 2008 15:17:42 -0400
+In-Reply-To: <48F40164.5000502@kernel.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: alek.du@intel.com
-Cc: linux-ide@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: David Greaves <david@dgreaves.com>, linux-ide@vger.kernel.org, Smartmontools Mailing List <smartmontools-support@lists.sourceforge.net>, linux-kernel@vger.kernel.org
 
+Hi,
 
-Add capability flag to support slave devices with pata_sch driver.
+Tejun Heo wrote:
+> David Greaves wrote:
+>> Error Counter logging not supported
+>> Device does not support Self Test logging
+> 
+> The USB bridge should support SAT (SCSI-ATA translation) and many
+> don't.  Nothing much can be done about it.  The hardware just don't know
+> how to do it.
+> 
+That true that the hardware should support SAT, but even if it support 
+it, linux need some patches to support SAT over USB. See 
+http://thread.gmane.org/gmane.linux.scsi/43688 and the patch mentioned 
+in the thread.
 
-Signed-off-by: Mark Salter <msalter@redhat.com>
----
-diff --git a/drivers/ata/pata_sch.c b/drivers/ata/pata_sch.c
-index c8cc027..6aeeeeb 100644
---- a/drivers/ata/pata_sch.c
-+++ b/drivers/ata/pata_sch.c
-@@ -83,7 +83,7 @@ static struct ata_port_operations sch_pata_ops = {
- };
- 
- static struct ata_port_info sch_port_info = {
--	.flags		= 0,
-+	.flags		= ATA_FLAG_SLAVE_POSS,
- 	.pio_mask	= ATA_PIO4,   /* pio0-4 */
- 	.mwdma_mask	= ATA_MWDMA2, /* mwdma0-2 */
- 	.udma_mask	= ATA_UDMA5,  /* udma0-5 */
+Unfortunately I am a bit busy to try to resubmit it. But I won't care if 
+somebody improve it/resubmit it ;)
+
+Matthieu
+
+PS : there also  http://thread.gmane.org/gmane.linux.usb.general/7145 
+that is pending.
 
 
