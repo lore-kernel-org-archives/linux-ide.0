@@ -1,42 +1,64 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: sata_sil for 3512A chip on kernel 2.6.26.3
-Date: Wed, 15 Oct 2008 16:25:29 +0900
-Message-ID: <48F59AE9.7050203@kernel.org>
-References: <48E48BF2.1010403@gmail.com> <48E71DBC.5090301@kernel.org> <48F47924.9040504@gmail.com> <48F54E4C.1020704@kernel.org> <48F58FBE.909@gmail.com> <48F591CC.6090609@kernel.org> <48F595CA.5000807@gmail.com> <48F5965A.5000709@kernel.org> <48F5998E.4090205@gmail.com>
+From: Andrew Morton <akpm@linux-foundation.org>
+Subject: Re: warning report
+Date: Wed, 15 Oct 2008 01:41:12 -0700
+Message-ID: <20081015014112.a2c806cf.akpm@linux-foundation.org>
+References: <48F236EA.2060404@saturnosoft.biz>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:49557 "EHLO hera.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751841AbYJOH1O (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 15 Oct 2008 03:27:14 -0400
-In-Reply-To: <48F5998E.4090205@gmail.com>
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:50140 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751338AbYJOIlW (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 15 Oct 2008 04:41:22 -0400
+In-Reply-To: <48F236EA.2060404@saturnosoft.biz>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Damazy <damazy@gmail.com>
-Cc: jgarzik@pobox.com, linux-ide@vger.kernel.org
+To: Todor Gyumyushev <todor@saturnosoft.biz>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-Damazy wrote:
-> Tejun Heo wrote:
->>
->> I'm afraid there's nothing much can be done from the driver here.  Looks
->> like your drive's PHY is just bonkers or it just doesn't like talking to
->> the controller.  Can you try the drive on a different controller?
->>
->> Thanks.
->>
+(cc linux-ide)
+
+> On Sun, 12 Oct 2008 20:42:02 +0300 Todor Gyumyushev <todor@saturnosoft.biz> wrote:
+> [ 3724.989177] cdrom: This disc doesn't have any tracks I recognize!
+> [ 4953.736107] ------------[ cut here ]------------
+> [ 4953.736117] WARNING: at drivers/ata/libata-sff.c:944 
+> ata_sff_hsm_move+0x47d/0x6a0 [libata]()
+> [ 4953.736121] Modules linked in: i915 drm eth1394 ipt_MASQUERADE 
+> iptable_nat nf_nat nf_conntrack_ipv4 nf_conntrack ip_tables x_tables tun 
+> kvm acpi_cpufreq freq_table hci_usb rfcomm l2cap bluetooth vboxdrv nfsd 
+> lockd nfs_acl auth_rpcgss sunrpc exportfs ipv6 ac battery fuse loop 
+> snd_hda_intel snd_pcm_oss snd_mixer_oss arc4 ecb snd_pcm 
+> crypto_blkcipher snd_timer video ath5k snd mac80211 backlight usblp 
+> led_class soundcore rng_core tpm_infineon intel_agp iTCO_wdt 
+> snd_page_alloc output iTCO_vendor_support i2c_i801 rtc_cmos tpm cfg80211 
+> i2c_core button tpm_bios evdev usbhid hid ext3 jbd mbcache sg sr_mod 
+> cdrom sd_mod crc_t10dif ohci1394 ata_piix libata scsi_mod ieee1394 dock 
+> ehci_hcd uhci_hcd sky2 thermal processor fan thermal_sys hwmon [last 
+> unloaded: kvm_intel]
+> [ 4953.736215] Pid: 0, comm: swapper Not tainted 2.6.27 #1
+> [ 4953.736218]
+> [ 4953.736219] Call Trace:
+> [ 4953.736223]  <IRQ>  [<ffffffff8023c9c4>] warn_on_slowpath+0x64/0xb0
+> [ 4953.736255]  [<ffffffffa0062ac8>] scsi_dispatch_cmd+0x128/0x2d0 
+> [scsi_mod]
+> [ 4953.736278]  [<ffffffffa0068e85>] scsi_request_fn+0x95/0x420 [scsi_mod]
+> [ 4953.736282]  [<ffffffff80346b25>] __blk_run_queue+0x65/0x110
+> [ 4953.736293]  [<ffffffffa00a06c8>] ata_sff_data_xfer+0x98/0xc0 [libata]
+> [ 4953.736297]  [<ffffffff80340000>] crypto_attr_alg_name+0x30/0x40
+> [ 4953.736307]  [<ffffffffa009fe9d>] ata_sff_hsm_move+0x47d/0x6a0 [libata]
+> [ 4953.736317]  [<ffffffffa0069693>] scsi_end_request+0xa3/0xb0 [scsi_mod]
+> [ 4953.736328]  [<ffffffffa00a0413>] ata_sff_interrupt+0x1a3/0x2c0 [libata]
+> [ 4953.736331]  [<ffffffff80283aa4>] handle_IRQ_event+0x34/0x70
+> [ 4953.736334]  [<ffffffff802850f0>] handle_edge_irq+0xc0/0x160
+> [ 4953.736337]  [<ffffffff8020f92c>] do_IRQ+0x7c/0x100
+> [ 4953.736339]  [<ffffffff8020c941>] ret_from_intr+0x0/0xa
+> [ 4953.736341]  <EOI>  [<ffffffffa000d637>] 
+> acpi_idle_enter_simple+0x1c7/0x237 [processor]
+> [ 4953.736352]  [<ffffffffa000d62d>] acpi_idle_enter_simple+0x1bd/0x237 
+> [processor]
+> [ 4953.736356]  [<ffffffff803eebf7>] cpuidle_idle_call+0xd7/0x120
+> [ 4953.736358]  [<ffffffff8020b306>] cpu_idle+0x66/0xf0
+> [ 4953.736360]
+> [ 4953.736361] ---[ end trace 8d1ccc07ba5c0659 ]---
 > 
-> As I wrote before, it was tested on different platform with different os
-> and it workek just fine.
-
-Ah.. so, different drive works fine on the same configuration and the
-same drive works fine on different configuration.  I don't have much
-idea how to fix it.  It looks like a bad combination of hardware to me.
- Maybe the add-on card is wiring cables slightly out of spec and the
-receiving PHY of the drive is a bit too sensitive about it (note that
-the controller is not reporting any PHY events but the drive is
-reporting ICRC).
-
--- 
-tejun
