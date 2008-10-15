@@ -1,88 +1,59 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: Problem w/ hotplug on sata_sil24 w/ PMP (sil3726)
-Date: Wed, 15 Oct 2008 16:03:55 +0900
-Message-ID: <48F595DB.4030301@kernel.org>
-References: <20081011142735.GB5904@cleopatra.jogback.se> <48F4337A.50307@kernel.org> <20081014201917.GA5974@cleopatra.jogback.se>
+Subject: Re: sata_sil for 3512A chip on kernel 2.6.26.3
+Date: Wed, 15 Oct 2008 16:06:02 +0900
+Message-ID: <48F5965A.5000709@kernel.org>
+References: <48E48BF2.1010403@gmail.com> <48E71DBC.5090301@kernel.org> <48F47924.9040504@gmail.com> <48F54E4C.1020704@kernel.org> <48F58FBE.909@gmail.com> <48F591CC.6090609@kernel.org> <48F595CA.5000807@gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------000008050707090303010707"
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:45519 "EHLO hera.kernel.org"
+Received: from hera.kernel.org ([140.211.167.34]:54018 "EHLO hera.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751518AbYJOHF3 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 15 Oct 2008 03:05:29 -0400
-In-Reply-To: <20081014201917.GA5974@cleopatra.jogback.se>
+	id S1751400AbYJOHIF (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 15 Oct 2008 03:08:05 -0400
+In-Reply-To: <48F595CA.5000807@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Lars Michael Jogback <lm@jogback.se>
-Cc: linux-ide@vger.kernel.org
+To: Damazy <damazy@gmail.com>
+Cc: jgarzik@pobox.com, linux-ide@vger.kernel.org
 
-This is a multi-part message in MIME format.
---------------000008050707090303010707
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-
-Lars Michael Jogback wrote:
-> * Tejun Heo <tj@kernel.org> [2008-10-14 14:51:54]:
+Damazy wrote:
+> Tejun Heo wrote:
+>> Damazy wrote:
+>>> Error 190 occurred at disk power-on lifetime: 0 hours (0 days + 0 hours)
+>>>   When the command that caused the error occurred, the device was active
+>>> or idle.
+>>
+>> The time record seems screwed.
+>>
+>>>   After command completion occurred, registers were:
+>>>   ER ST SC SN CL CH DH
+>>>   -- -- -- -- -- -- --
+>>>   84 51 3f 00 ee 1d e0  Error: ICRC, ABRT 63 sectors at LBA = 0x001dee00
+>>> = 1961472
+>>
+>> But the recorded error is consistent with the kernel messages.  It
+>> looks like you're suffering serious transmission problem over the SATA
+>> cable.  Those transmission errors appear as timeouts or when the drive
+>> detects it ABRTs w/ ICRC.  Please check cable, power and try to
+>> connect the drive to other ports.
+>>
+>> Thanks.
+>>
 > 
->> Hmmm.. drives usually make reset wait while they're spinning up so
->> that's where the spin wait logic is implemented.  Strange.  Can you
->> post full boot log and the result of "hdparm -I" on the drive?  Also,
->> if you first spin up the drive by conneciting only the power connector
->> and then connect the SATA cable a bit later, does it work?
-> 
-> OK, The drives are placed in hotswap-cages in an external enclosure with
-> it's own powersupply. I have no possibility to connect the power to the
-> actual drive before signal when I'm hotswapping. I don't think that'll
-> make a difference though, since I have the same issue when I do a "cold
-> boot".
-> 
-> With "cold boot" I mean that I turn the power on the enclosure first and
-> then boot the PC. With a "warm boot" I reboot the PC a second time 
-> without powercycling the disc enclosure or the discs.
+> I'v already try several cable and external power supply, but with the
+> same result.
+> This sata chip have only two sata port. If I connect to other one,
+> errors still appear.
+> I don't know what can I do else.
+> The only thing works fine is when I copy something from disk connected
+> to my Intel 82801DB (ICH4).
 
-Okay, that's enough.  That means spinning up doesn't have anything to
-do with the detection failure.
-
-> When I boot the first drive on the PMP is detected by the Sil3124. If
-> it's a "cold boot", the second drive is not detected in Linux with the
-> same error as when I hotplug the drive.
-> 
-> When I "warm boot" everything detects and is fine until I hotplug a
-> disc.
-> 
-> Attached is dmesg from cold and warm boot, and hdparm -I on one of the
-> disks.
-
-Can you please try the followings?
-
-1. If you swap the drive on the second slot with another one, does the
-   detection problem stay with the port or follow the drive?
-
-2. Does "libata.force=1.5Gbps" make any difference?
-
-3. Apply the patch and post log after failed hotplug.
+I'm afraid there's nothing much can be done from the driver here.  Looks
+like your drive's PHY is just bonkers or it just doesn't like talking to
+the controller.  Can you try the drive on a different controller?
 
 Thanks.
 
 -- 
 tejun
-
---------------000008050707090303010707
-Content-Type: text/plain;
- name="pmp-detection-debug"
-Content-Transfer-Encoding: base64
-Content-Disposition: inline;
- filename="pmp-detection-debug"
-
-LS0tCiBkcml2ZXJzL2F0YS9zYXRhX3NpbDI0LmMgfCAgICAxICsKIDEgZmlsZSBjaGFuZ2Vk
-LCAxIGluc2VydGlvbigrKQoKSW5kZXg6IHRyZWUwL2RyaXZlcnMvYXRhL3NhdGFfc2lsMjQu
-Ywo9PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
-PT09PT09PT09PT09PT09Ci0tLSB0cmVlMC5vcmlnL2RyaXZlcnMvYXRhL3NhdGFfc2lsMjQu
-YworKysgdHJlZTAvZHJpdmVycy9hdGEvc2F0YV9zaWwyNC5jCkBAIC05NzgsNiArOTc4LDcg
-QEAgc3RhdGljIHZvaWQgc2lsMjRfZXJyb3JfaW50cihzdHJ1Y3QgYXRhXwogCWVoaSA9ICZs
-aW5rLT5laF9pbmZvOwogCWF0YV9laGlfY2xlYXJfZGVzYyhlaGkpOwogCisJYXRhX3BvcnRf
-cHJpbnRrKGFwLCAiWFhYIGVycm9yX2ludHIgaXJxX3N0YXQ9MHgleFxuIiwgaXJxX3N0YXQp
-OwogCWF0YV9laGlfcHVzaF9kZXNjKGVoaSwgImlycV9zdGF0IDB4JTA4eCIsIGlycV9zdGF0
-KTsKIAogCWlmIChpcnFfc3RhdCAmIFBPUlRfSVJRX1NEQl9OT1RJRlkpIHsK
---------------000008050707090303010707--
