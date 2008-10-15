@@ -1,51 +1,37 @@
-From: Kristen Carlson Accardi <kristen.c.accardi@intel.com>
-Subject: Re: [patch 1/2] allow user to power off unused ports via sysfs
-Date: Wed, 15 Oct 2008 09:43:58 -0700
-Message-ID: <20081015094358.6af8dfec@appleyard>
-References: <1222639114.12062.10.camel@hannibal>
-	<20080929164913.6489445c@appleyard>
-Reply-To: kristen.c.accardi@intel.com
+From: Mark Salter <msalter@redhat.com>
+Subject: [PATCH] Support slave devices on SCH PATA controller
+Date: Wed, 15 Oct 2008 13:42:57 -0400
+Message-ID: <1224092577.6065.8.camel@deneb.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:3035 "EHLO mga11.intel.com"
+Received: from mx2.redhat.com ([66.187.237.31]:51930 "EHLO mx2.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751757AbYJOQpz (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 15 Oct 2008 12:45:55 -0400
-In-Reply-To: <20080929164913.6489445c@appleyard>
+	id S1752650AbYJORm7 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 15 Oct 2008 13:42:59 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "Jeffrey W. Baker" <jwbaker@gmail.com>, linux-ide@vger.kernel.org
+To: alek.du@intel.com
+Cc: linux-ide@vger.kernel.org
 
-On Mon, 29 Sep 2008 16:49:13 -0700
-Kristen Carlson Accardi <kristen.c.accardi@intel.com> wrote:
 
-> On Sun, 28 Sep 2008 14:58:34 -0700
-> "Jeffrey W. Baker" <jwbaker@gmail.com> wrote:
-> 
-> > 
-> > The problem is I didn't save any power this way :(  ThinkPad X61t was
-> > using minimum 7.6W on a one-minute average before power_off, and same
-> > power after power_off.  I'd been led to believe that disabling these
-> > ports would have a substantial power saving effect.
-> > 
-> > -jwb
-> > 
-> 
-> Hi Jeffrey - the reason you are not seeing any power savings is 
-> that this patch isn't actually powering off the ports.  I swear this
-> used to work... but I confirmed today it is not doing what it is
-> supposed to do.  I'll send out a reworked patch as soon as I figure
-> out what the problem is.
-> 
-> Kristen
-> 
+Add capability flag to support slave devices with pata_sch driver.
 
-Hi - I took another look at this patch - and I was wrong, it is 
-working just fine for me.  the reason I thought it wasn't working
-was because I was trying to power off a dummy port (doh).  I
-confirmed with a power meter that you should see .2 Watts per
-port saved when powering down an unused port.  Just keep in mind
-that you can't power off an occupied port, and don't do like I
-did and try to power off a dummy port.  
+Signed-off-by: Mark Salter <msalter@redhat.com>
+---
+diff --git a/drivers/ata/pata_sch.c b/drivers/ata/pata_sch.c
+index c8cc027..6aeeeeb 100644
+--- a/drivers/ata/pata_sch.c
++++ b/drivers/ata/pata_sch.c
+@@ -83,7 +83,7 @@ static struct ata_port_operations sch_pata_ops = {
+ };
+ 
+ static struct ata_port_info sch_port_info = {
+-	.flags		= 0,
++	.flags		= ATA_FLAG_SLAVE_POSS,
+ 	.pio_mask	= ATA_PIO4,   /* pio0-4 */
+ 	.mwdma_mask	= ATA_MWDMA2, /* mwdma0-2 */
+ 	.udma_mask	= ATA_UDMA5,  /* udma0-5 */
+
+
