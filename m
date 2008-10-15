@@ -1,184 +1,283 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH] ide-cd: remove obsolete seek optimization
-Date: Wed, 15 Oct 2008 21:47:47 +0200
-Message-ID: <200810152147.47534.bzolnier@gmail.com>
+Subject: [PATCH] ide: remove broken hpt34x driver
+Date: Wed, 15 Oct 2008 21:56:25 +0200
+Message-ID: <200810152156.25754.bzolnier@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
   charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from gv-out-0910.google.com ([216.239.58.184]:61913 "EHLO
+Received: from gv-out-0910.google.com ([216.239.58.187]:62806 "EHLO
 	gv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755497AbYJOTue (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 15 Oct 2008 15:50:34 -0400
-Received: by gv-out-0910.google.com with SMTP id e6so701040gvc.37
-        for <linux-ide@vger.kernel.org>; Wed, 15 Oct 2008 12:50:33 -0700 (PDT)
+	with ESMTP id S1752316AbYJOT6I (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 15 Oct 2008 15:58:08 -0400
+Received: by gv-out-0910.google.com with SMTP id e6so703505gvc.37
+        for <linux-ide@vger.kernel.org>; Wed, 15 Oct 2008 12:58:06 -0700 (PDT)
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, Borislav Petkov <petkovbb@googlemail.com>
+Cc: linux-kernel@vger.kernel.org
 
-It doesn't make much sense nowadays and is problematic on some drives.
+No big loss since HPT343/363 controllers are properly supported
+by pata_hpt3x3 driver from Alan Cox.
 
-Cc: Borislav Petkov <petkovbb@googlemail.com>
 Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 ---
-against pata tree
+ drivers/ide/Kconfig      |   24 -----
+ drivers/ide/pci/Makefile |    1 
+ drivers/ide/pci/hpt34x.c |  193 -----------------------------------------------
+ 3 files changed, 1 insertion(+), 217 deletions(-)
 
- drivers/ide/ide-cd.c |   89 +++------------------------------------------------
- drivers/ide/ide-cd.h |    2 -
- include/linux/ide.h  |    4 --
- 3 files changed, 6 insertions(+), 89 deletions(-)
-
-Index: b/drivers/ide/ide-cd.c
+Index: b/drivers/ide/Kconfig
 ===================================================================
---- a/drivers/ide/ide-cd.c
-+++ b/drivers/ide/ide-cd.c
-@@ -774,52 +774,6 @@ static ide_startstop_t cdrom_start_rw_co
- 	return cdrom_transfer_packet_command(drive, rq, cdrom_newpc_intr);
- }
+--- a/drivers/ide/Kconfig
++++ b/drivers/ide/Kconfig
+@@ -328,7 +328,7 @@ config IDEPCI_PCIBUS_ORDER
+ # TODO: split it on per host driver config options (or module parameters)
+ config BLK_DEV_OFFBOARD
+ 	bool "Boot off-board chipsets first support (DEPRECATED)"
+-	depends on BLK_DEV_IDEPCI && (BLK_DEV_AEC62XX || BLK_DEV_GENERIC || BLK_DEV_HPT34X || BLK_DEV_HPT366 || BLK_DEV_PDC202XX_NEW || BLK_DEV_PDC202XX_OLD || BLK_DEV_TC86C001)
++	depends on BLK_DEV_IDEPCI && (BLK_DEV_AEC62XX || BLK_DEV_GENERIC || BLK_DEV_HPT366 || BLK_DEV_PDC202XX_NEW || BLK_DEV_PDC202XX_OLD || BLK_DEV_TC86C001)
+ 	help
+ 	  Normally, IDE controllers built into the motherboard (on-board
+ 	  controllers) are assigned to ide0 and ide1 while those on add-in PCI
+@@ -478,28 +478,6 @@ config BLK_DEV_CS5535
  
--#define IDECD_SEEK_THRESHOLD	(1000)			/* 1000 blocks */
--#define IDECD_SEEK_TIMER	(5 * WAIT_MIN_SLEEP)	/* 100 ms */
--#define IDECD_SEEK_TIMEOUT	(2 * WAIT_CMD)		/* 20 sec */
+ 	  It is safe to say Y to this question.
+ 
+-config BLK_DEV_HPT34X
+-	tristate "HPT34X chipset support"
+-	depends on BROKEN
+-	select BLK_DEV_IDEDMA_PCI
+-	help
+-	  This driver adds up to 4 more EIDE devices sharing a single
+-	  interrupt. The HPT343 chipset in its current form is a non-bootable
+-	  controller; the HPT345/HPT363 chipset is a bootable (needs BIOS FIX)
+-	  PCI UDMA controllers. This driver requires dynamic tuning of the
+-	  chipset during the ide-probe at boot time. It is reported to support
+-	  DVD II drives, by the manufacturer.
 -
--static ide_startstop_t cdrom_seek_intr(ide_drive_t *drive)
+-config HPT34X_AUTODMA
+-	bool "HPT34X AUTODMA support (EXPERIMENTAL)"
+-	depends on BLK_DEV_HPT34X && EXPERIMENTAL
+-	help
+-	  This is a dangerous thing to attempt currently! Please read the
+-	  comments at the top of <file:drivers/ide/pci/hpt34x.c>.  If you say Y
+-	  here, then say Y to "Use DMA by default when available" as well.
+-
+-	  If unsure, say N.
+-
+ config BLK_DEV_HPT366
+ 	tristate "HPT36X/37X chipset support"
+ 	select BLK_DEV_IDEDMA_PCI
+Index: b/drivers/ide/pci/Makefile
+===================================================================
+--- a/drivers/ide/pci/Makefile
++++ b/drivers/ide/pci/Makefile
+@@ -11,7 +11,6 @@ obj-$(CONFIG_BLK_DEV_CS5535)		+= cs5535.
+ obj-$(CONFIG_BLK_DEV_SC1200)		+= sc1200.o
+ obj-$(CONFIG_BLK_DEV_CY82C693)		+= cy82c693.o
+ obj-$(CONFIG_BLK_DEV_DELKIN)		+= delkin_cb.o
+-obj-$(CONFIG_BLK_DEV_HPT34X)		+= hpt34x.o
+ obj-$(CONFIG_BLK_DEV_HPT366)		+= hpt366.o
+ obj-$(CONFIG_BLK_DEV_IT8213)		+= it8213.o
+ obj-$(CONFIG_BLK_DEV_IT821X)		+= it821x.o
+Index: b/drivers/ide/pci/hpt34x.c
+===================================================================
+--- a/drivers/ide/pci/hpt34x.c
++++ /dev/null
+@@ -1,193 +0,0 @@
+-/*
+- * Copyright (C) 1998-2000	Andre Hedrick <andre@linux-ide.org>
+- *
+- * May be copied or modified under the terms of the GNU General Public License
+- *
+- *
+- * 00:12.0 Unknown mass storage controller:
+- * Triones Technologies, Inc.
+- * Unknown device 0003 (rev 01)
+- *
+- * hde: UDMA 2 (0x0000 0x0002) (0x0000 0x0010)
+- * hdf: UDMA 2 (0x0002 0x0012) (0x0010 0x0030)
+- * hde: DMA 2  (0x0000 0x0002) (0x0000 0x0010)
+- * hdf: DMA 2  (0x0002 0x0012) (0x0010 0x0030)
+- * hdg: DMA 1  (0x0012 0x0052) (0x0030 0x0070)
+- * hdh: DMA 1  (0x0052 0x0252) (0x0070 0x00f0)
+- *
+- * ide-pci.c reference
+- *
+- * Since there are two cards that report almost identically,
+- * the only discernable difference is the values reported in pcicmd.
+- * Booting-BIOS card or HPT363 :: pcicmd == 0x07
+- * Non-bootable card or HPT343 :: pcicmd == 0x05
+- */
+-
+-#include <linux/module.h>
+-#include <linux/types.h>
+-#include <linux/kernel.h>
+-#include <linux/ioport.h>
+-#include <linux/interrupt.h>
+-#include <linux/pci.h>
+-#include <linux/init.h>
+-#include <linux/ide.h>
+-
+-#define DRV_NAME "hpt34x"
+-
+-#define HPT343_DEBUG_DRIVE_INFO		0
+-
+-static void hpt34x_set_mode(ide_drive_t *drive, const u8 speed)
 -{
--	struct cdrom_info *info = drive->driver_data;
--	int stat;
--	static int retry = 10;
+-	struct pci_dev *dev = to_pci_dev(drive->hwif->dev);
+-	u32 reg1= 0, tmp1 = 0, reg2 = 0, tmp2 = 0;
+-	u8			hi_speed, lo_speed;
 -
--	ide_debug_log(IDE_DBG_FUNC, "Call %s\n", __func__);
+-	hi_speed = speed >> 4;
+-	lo_speed = speed & 0x0f;
 -
--	if (cdrom_decode_status(drive, 0, &stat))
--		return ide_stopped;
--
--	drive->atapi_flags |= IDE_AFLAG_SEEKING;
--
--	if (retry && time_after(jiffies, info->start_seek + IDECD_SEEK_TIMER)) {
--		if (--retry == 0)
--			drive->dev_flags &= ~IDE_DFLAG_DSC_OVERLAP;
+-	if (hi_speed & 7) {
+-		hi_speed = (hi_speed & 4) ? 0x01 : 0x10;
+-	} else {
+-		lo_speed <<= 5;
+-		lo_speed >>= 5;
 -	}
--	return ide_stopped;
+-
+-	pci_read_config_dword(dev, 0x44, &reg1);
+-	pci_read_config_dword(dev, 0x48, &reg2);
+-	tmp1 = ((lo_speed << (3*drive->dn)) | (reg1 & ~(7 << (3*drive->dn))));
+-	tmp2 = ((hi_speed << drive->dn) | (reg2 & ~(0x11 << drive->dn)));
+-	pci_write_config_dword(dev, 0x44, tmp1);
+-	pci_write_config_dword(dev, 0x48, tmp2);
+-
+-#if HPT343_DEBUG_DRIVE_INFO
+-	printk("%s: %s drive%d (0x%04x 0x%04x) (0x%04x 0x%04x)" \
+-		" (0x%02x 0x%02x)\n",
+-		drive->name, ide_xfer_verbose(speed),
+-		drive->dn, reg1, tmp1, reg2, tmp2,
+-		hi_speed, lo_speed);
+-#endif /* HPT343_DEBUG_DRIVE_INFO */
 -}
 -
--static void ide_cd_prepare_seek_request(ide_drive_t *drive, struct request *rq)
+-static void hpt34x_set_pio_mode(ide_drive_t *drive, const u8 pio)
 -{
--	sector_t frame = rq->sector;
--
--	ide_debug_log(IDE_DBG_FUNC, "Call %s\n", __func__);
--
--	sector_div(frame, queue_hardsect_size(drive->queue) >> SECTOR_BITS);
--
--	memset(rq->cmd, 0, BLK_MAX_CDB);
--	rq->cmd[0] = GPCMD_SEEK;
--	put_unaligned(cpu_to_be32(frame), (unsigned int *) &rq->cmd[2]);
--
--	rq->timeout = ATAPI_WAIT_PC;
+-	hpt34x_set_mode(drive, XFER_PIO_0 + pio);
 -}
 -
--static ide_startstop_t cdrom_start_seek_continuation(ide_drive_t *drive)
+-/*
+- * If the BIOS does not set the IO base addaress to XX00, 343 will fail.
+- */
+-#define	HPT34X_PCI_INIT_REG		0x80
+-
+-static unsigned int init_chipset_hpt34x(struct pci_dev *dev)
 -{
--	struct request *rq = drive->hwif->hwgroup->rq;
+-	int i = 0;
+-	unsigned long hpt34xIoBase = pci_resource_start(dev, 4);
+-	unsigned long hpt_addr[4] = { 0x20, 0x34, 0x28, 0x3c };
+-	unsigned long hpt_addr_len[4] = { 7, 3, 7, 3 };
+-	u16 cmd;
+-	unsigned long flags;
 -
--	return cdrom_transfer_packet_command(drive, rq, &cdrom_seek_intr);
+-	local_irq_save(flags);
+-
+-	pci_write_config_byte(dev, HPT34X_PCI_INIT_REG, 0x00);
+-	pci_read_config_word(dev, PCI_COMMAND, &cmd);
+-
+-	if (cmd & PCI_COMMAND_MEMORY)
+-		pci_write_config_byte(dev, PCI_LATENCY_TIMER, 0xF0);
+-	else
+-		pci_write_config_byte(dev, PCI_LATENCY_TIMER, 0x20);
+-
+-	/*
+-	 * Since 20-23 can be assigned and are R/W, we correct them.
+-	 */
+-	pci_write_config_word(dev, PCI_COMMAND, cmd & ~PCI_COMMAND_IO);
+-	for(i=0; i<4; i++) {
+-		dev->resource[i].start = (hpt34xIoBase + hpt_addr[i]);
+-		dev->resource[i].end = dev->resource[i].start + hpt_addr_len[i];
+-		dev->resource[i].flags = IORESOURCE_IO;
+-		pci_write_config_dword(dev,
+-				(PCI_BASE_ADDRESS_0 + (i * 4)),
+-				dev->resource[i].start);
+-	}
+-	pci_write_config_word(dev, PCI_COMMAND, cmd);
+-
+-	local_irq_restore(flags);
+-
+-	return dev->irq;
 -}
 -
- /*
-  * Fix up a possibly partially-processed request so that we can start it over
-  * entirely, or even put it back on the request queue.
-@@ -1259,7 +1213,6 @@ static void cdrom_do_block_pc(ide_drive_
- static ide_startstop_t ide_cd_do_request(ide_drive_t *drive, struct request *rq,
- 					sector_t block)
- {
--	struct cdrom_info *info = drive->driver_data;
- 	ide_handler_t *fn;
- 	int xferlen;
- 
-@@ -1269,44 +1222,14 @@ static ide_startstop_t ide_cd_do_request
- 		      (unsigned long long)block);
- 
- 	if (blk_fs_request(rq)) {
--		if (drive->atapi_flags & IDE_AFLAG_SEEKING) {
--			ide_hwif_t *hwif = drive->hwif;
--			unsigned long elapsed = jiffies - info->start_seek;
--			int stat = hwif->tp_ops->read_status(hwif);
+-static const struct ide_port_ops hpt34x_port_ops = {
+-	.set_pio_mode		= hpt34x_set_pio_mode,
+-	.set_dma_mode		= hpt34x_set_mode,
+-};
 -
--			if ((stat & ATA_DSC) != ATA_DSC) {
--				if (elapsed < IDECD_SEEK_TIMEOUT) {
--					ide_stall_queue(drive,
--							IDECD_SEEK_TIMER);
--					return ide_stopped;
--				}
--				printk(KERN_ERR PFX "%s: DSC timeout\n",
--						drive->name);
--			}
--			drive->atapi_flags &= ~IDE_AFLAG_SEEKING;
--		}
--		if (rq_data_dir(rq) == READ &&
--		    IDE_LARGE_SEEK(info->last_block, block,
--			    IDECD_SEEK_THRESHOLD) &&
--		    (drive->dev_flags & IDE_DFLAG_DSC_OVERLAP)) {
--			xferlen = 0;
--			fn = cdrom_start_seek_continuation;
+-#define IDE_HFLAGS_HPT34X \
+-	(IDE_HFLAG_NO_ATAPI_DMA | \
+-	 IDE_HFLAG_NO_DSC | \
+-	 IDE_HFLAG_NO_AUTODMA)
 -
--			drive->dma = 0;
--			info->start_seek = jiffies;
+-static const struct ide_port_info hpt34x_chipsets[] __devinitdata = {
+-	{ /* 0: HPT343 */
+-		.name		= DRV_NAME,
+-		.init_chipset	= init_chipset_hpt34x,
+-		.port_ops	= &hpt34x_port_ops,
+-		.host_flags	= IDE_HFLAGS_HPT34X | IDE_HFLAG_NON_BOOTABLE,
+-		.pio_mask	= ATA_PIO5,
+-	},
+-	{ /* 1: HPT345 */
+-		.name		= DRV_NAME,
+-		.init_chipset	= init_chipset_hpt34x,
+-		.port_ops	= &hpt34x_port_ops,
+-		.host_flags	= IDE_HFLAGS_HPT34X | IDE_HFLAG_OFF_BOARD,
+-		.pio_mask	= ATA_PIO5,
+-#ifdef CONFIG_HPT34X_AUTODMA
+-		.swdma_mask	= ATA_SWDMA2,
+-		.mwdma_mask	= ATA_MWDMA2,
+-		.udma_mask	= ATA_UDMA2,
+-#endif
+-	}
+-};
 -
--			ide_cd_prepare_seek_request(drive, rq);
--		} else {
--			xferlen = 32768;
--			fn = cdrom_start_rw_cont;
-+		xferlen = 32768;
-+		fn = cdrom_start_rw_cont;
- 
--			if (cdrom_start_rw(drive, rq) == ide_stopped)
--				return ide_stopped;
-+		if (cdrom_start_rw(drive, rq) == ide_stopped)
-+			return ide_stopped;
- 
--			if (ide_cd_prepare_rw_request(drive, rq) == ide_stopped)
--				return ide_stopped;
--		}
--		info->last_block = block;
-+		if (ide_cd_prepare_rw_request(drive, rq) == ide_stopped)
-+			return ide_stopped;
- 	} else if (blk_sense_request(rq) || blk_pc_request(rq) ||
- 		   rq->cmd_type == REQ_TYPE_ATA_PC) {
- 		xferlen = rq->data_len;
-Index: b/drivers/ide/ide-cd.h
-===================================================================
---- a/drivers/ide/ide-cd.h
-+++ b/drivers/ide/ide-cd.h
-@@ -88,8 +88,6 @@ struct cdrom_info {
- 	struct request_sense sense_data;
- 
- 	struct request request_sense_request;
--	unsigned long last_block;
--	unsigned long start_seek;
- 
- 	u8 max_speed;		/* Max speed of the drive. */
- 	u8 current_speed;	/* Current speed of the drive. */
-Index: b/include/linux/ide.h
-===================================================================
---- a/include/linux/ide.h
-+++ b/include/linux/ide.h
-@@ -122,8 +122,6 @@ struct ide_io_ports {
- #define MAX_DRIVES	2	/* per interface; 2 assumed by lots of code */
- #define SECTOR_SIZE	512
- 
--#define IDE_LARGE_SEEK(b1,b2,t)	(((b1) > (b2) + (t)) || ((b2) > (b1) + (t)))
+-static int __devinit hpt34x_init_one(struct pci_dev *dev, const struct pci_device_id *id)
+-{
+-	const struct ide_port_info *d;
+-	u16 pcicmd = 0;
 -
- /*
-  * Timeouts for various operations:
-  */
-@@ -496,8 +494,6 @@ enum {
- 	 * when more than one interrupt is needed.
- 	 */
- 	IDE_AFLAG_LIMIT_NFRAMES		= (1 << 7),
--	/* Seeking in progress. */
--	IDE_AFLAG_SEEKING		= (1 << 8),
- 	/* Saved TOC information is current. */
- 	IDE_AFLAG_TOC_VALID		= (1 << 9),
- 	/* We think that the drive door is locked. */
+-	pci_read_config_word(dev, PCI_COMMAND, &pcicmd);
+-
+-	d = &hpt34x_chipsets[(pcicmd & PCI_COMMAND_MEMORY) ? 1 : 0];
+-
+-	return ide_pci_init_one(dev, d, NULL);
+-}
+-
+-static const struct pci_device_id hpt34x_pci_tbl[] = {
+-	{ PCI_VDEVICE(TTI, PCI_DEVICE_ID_TTI_HPT343), 0 },
+-	{ 0, },
+-};
+-MODULE_DEVICE_TABLE(pci, hpt34x_pci_tbl);
+-
+-static struct pci_driver hpt34x_pci_driver = {
+-	.name		= "HPT34x_IDE",
+-	.id_table	= hpt34x_pci_tbl,
+-	.probe		= hpt34x_init_one,
+-	.remove		= ide_pci_remove,
+-	.suspend	= ide_pci_suspend,
+-	.resume		= ide_pci_resume,
+-};
+-
+-static int __init hpt34x_ide_init(void)
+-{
+-	return ide_pci_register_driver(&hpt34x_pci_driver);
+-}
+-
+-static void __exit hpt34x_ide_exit(void)
+-{
+-	pci_unregister_driver(&hpt34x_pci_driver);
+-}
+-
+-module_init(hpt34x_ide_init);
+-module_exit(hpt34x_ide_exit);
+-
+-MODULE_AUTHOR("Andre Hedrick");
+-MODULE_DESCRIPTION("PCI driver module for Highpoint 34x IDE");
+-MODULE_LICENSE("GPL");
