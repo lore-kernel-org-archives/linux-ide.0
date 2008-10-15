@@ -1,100 +1,45 @@
 From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH 09/18] ide: add ->set_irq method
-Date: Thu, 16 Oct 2008 01:22:50 +0400
-Message-ID: <48F65F2A.9020007@ru.mvista.com>
-References: <20080620213323.13202.71450.sendpatchset@localhost.localdomain> <20080620213424.13202.16889.sendpatchset@localhost.localdomain> <48F5DFF7.9010908@ru.mvista.com> <200810152022.44708.bzolnier@gmail.com>
+Subject: Re: [PATCH 1/2] hpt366: add hpt3xx_disable_fast_irq() helper
+Date: Thu, 16 Oct 2008 01:55:06 +0400
+Message-ID: <48F666BA.9040104@ru.mvista.com>
+References: <200808021915.03424.bzolnier@gmail.com> <48F50649.9080507@ru.mvista.com> <200810152011.18478.bzolnier@gmail.com> <48F65E48.8080301@ru.mvista.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from gateway-1237.mvista.com ([63.81.120.155]:36772 "EHLO
+Received: from gateway-1237.mvista.com ([63.81.120.155]:37184 "EHLO
 	imap.sh.mvista.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1753714AbYJOVWz (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 15 Oct 2008 17:22:55 -0400
-In-Reply-To: <200810152022.44708.bzolnier@gmail.com>
+	with ESMTP id S1751839AbYJOVzL (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 15 Oct 2008 17:55:11 -0400
+In-Reply-To: <48F65E48.8080301@ru.mvista.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Hello.
+Hello, I just wrote:
 
-Bartlomiej Zolnierkiewicz wrote:
+>> Not such a big deal, we just have to make an another one...
+>>
+>> From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+>> Subject: [PATCH] hpt366: fix compile warning
+>>
+>> Fixup for commit 1785192b5310ee25165768f5bb80f13146788e3e
+>> ("hpt366: add hpt3xx_disable_fast_irq() helper"):
+>>
+>>    CC      drivers/ide/pci/hpt366.o
+>> drivers/ide/pci/hpt366.c: In function `init_hwif_hpt366':
+>> drivers/ide/pci/hpt366.c:1290: warning: unused variable `dev'
+>>
+>> Reported-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+>> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+>>   
+>
+>   Duh. I've posted this patch a bit earlier. ;-)
 
->>> Add ->set_irq method for setting nIEN bit of ATA Device Control
->>> register and use it instead of ide_set_irq().
->>>
->>> While at it:
->>>
->>> * Use ->set_irq in init_irq() and do_reset1().
->>>
->>> * Don't use HWIF() macro in ide_check_pm_state().
->>>
->>> There should be no functional changes caused by this patch.
->>>
->>> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
->>>   
->>>       
->> [...]
->>     
->>> Index: b/drivers/ide/ide-iops.c
->>> ===================================================================
->>> --- a/drivers/ide/ide-iops.c
->>> +++ b/drivers/ide/ide-iops.c
->>> @@ -135,6 +135,23 @@ static u8 ide_read_sff_dma_status(ide_hw
->>>  		return inb(hwif->dma_base + ATA_DMA_STATUS);
->>>  }
->>>  
->>> +static void ide_set_irq(ide_hwif_t *hwif, int on)
->>> +{
->>> +	u8 ctl = ATA_DEVCTL_OBS;
->>> +
->>> +	if (on == 4) { /* hack for SRST */
->>> +		ctl |= 4;
->>> +		on &= ~4;
->>> +	}
->>> +
->>> +	ctl |= on ? 0 : 2;
->>> +
->>> +	if (hwif->host_flags & IDE_HFLAG_MMIO)
->>> +		writeb(ctl, (void __iomem *)hwif->io_ports.ctl_addr);
->>> +	else
->>> +		outb(ctl, hwif->io_ports.ctl_addr);
->>> +}
->>> +
->>>  static void ide_tf_load(ide_drive_t *drive, ide_task_t *task)
->>>  {
->>>  	ide_hwif_t *hwif = drive->hwif;
->>>   
->>>       
->> [...]
->>     
->>> @@ -1162,16 +1180,15 @@ static ide_startstop_t do_reset1 (ide_dr
->>>  	 * immediate interrupt due to the edge transition it produces.
->>>  	 * This single interrupt gives us a "fast poll" for drives that
->>>  	 * recover from reset very quickly, saving us the first 50ms wait time.
->>> +	 *
->>> +	 * TODO: add ->softreset method and stop abusing ->set_irq
->>>  	 */
->>>  	/* set SRST and nIEN */
->>> -	hwif->OUTBSYNC(hwif, ATA_DEVCTL_OBS | 6, io_ports->ctl_addr);
->>> +	hwif->set_irq(hwif, 4);
->>>  	/* more than enough time */
->>>  	udelay(10);
->>>       
->>    It seems to me that the whole idea of having 2 separate methods for 
->> writing the single device control register is a wrong idea.
->> I'm suggesting to convert set_irq() method to write_devctrl() method and 
->> pass the register value directly to it.
->>     
+   No, you were the first, so just add my:
 
-   Perhaps with the method itself forcing the obsolete bit 3 set like 
-it's done now...
-
-> Makes sense.  Care to make a patch?
->   
-
-   I would if I had the time. Can only make another notch for now...
+Acked-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
 
 MBR, Sergei
 
