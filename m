@@ -1,68 +1,46 @@
-From: Andrew Morton <akpm@linux-foundation.org>
-Subject: Re: Stack dump from GIT HEAD if CONFIG_ATA_SFF is not set
-Date: Wed, 15 Oct 2008 01:41:28 -0700
-Message-ID: <20081015014128.1bde68cb.akpm@linux-foundation.org>
-References: <48F3D8EA.4080708@lwfinger.net>
+From: "Jonas Jensen" <jonas.jensen@gmail.com>
+Subject: Re: pata_via "frozen" DVD drive (TSSTcorp SN-S083A on EPIA EX15000)
+Date: Wed, 15 Oct 2008 11:44:45 +0200
+Message-ID: <338a6b6d0810150244w2ef4e0a4q482c866113aa6595@mail.gmail.com>
+References: <338a6b6d0810140230t16f8da53y6facbcee174cad3@mail.gmail.com>
+	 <48F598FA.9060500@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:36378 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753807AbYJOIlt (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 15 Oct 2008 04:41:49 -0400
-In-Reply-To: <48F3D8EA.4080708@lwfinger.net>
+Received: from rv-out-0506.google.com ([209.85.198.224]:62723 "EHLO
+	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751823AbYJOJoq (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 15 Oct 2008 05:44:46 -0400
+Received: by rv-out-0506.google.com with SMTP id k40so2833310rvb.1
+        for <linux-ide@vger.kernel.org>; Wed, 15 Oct 2008 02:44:46 -0700 (PDT)
+In-Reply-To: <48F598FA.9060500@kernel.org>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: linux-ide@vger.kernel.org
 
-(cc linux-ide)
+On 15/10/2008, Tejun Heo <tj@kernel.org> wrote:
+> The drive times out SEND_OPC and then never comes back.  The command
+> is non-data command which just tells the drive to perform calibration,
+> so there's nothing much the driver can do wrong about it.  It looks
+> like the drive could have hardware problem performing OPC.  Can you
+> test the drive under different operating system or different hardware
+> configuration (different controller, different media, etc...)?
 
-> On Mon, 13 Oct 2008 16:25:30 -0700 Larry Finger <Larry.Finger@lwfinger.net> wrote:
-> I am using kernel 2.6.27-Linus-03151-g4480f15b-dirty. On booting a system built
-> with CONFIG_ATA_SFF not set, the following appears in my dmesg output. The
-> "dirtiness" of the kernel is due to some code included to trace down messages
-> coming from the usb system, and is not involved here. If CONFIG_ATA_SFF=y, the
-> message does not appear. From Google results, it seems that this parameter
-> should be set for most systems, but one should get clean runs without it.
-> 
-> ata1: SATA max UDMA/133 abar m8192@0xfc484000 port 0xfc484100 irq 4349
-> ata2: SATA max UDMA/133 abar m8192@0xfc484000 port 0xfc484180 irq 4349
-> ata3: SATA max UDMA/133 abar m8192@0xfc484000 port 0xfc484200 irq 4349
-> ata4: SATA max UDMA/133 abar m8192@0xfc484000 port 0xfc484280 irq 4349
-> INFO: trying to register non-static key.
-> the code is fine but needs lockdep annotation.
-> turning off the locking correctness validator.
-> Pid: 504, comm: scsi_eh_0 Not tainted 2.6.27-Linus-03151-g4480f15b-dirty #174
-> Call Trace:
->  [<ffffffff80255af9>] static_obj+0x51/0x6b
->  [<ffffffff80258d16>] __lock_acquire+0xd28/0x142f
->  [<ffffffff8022f003>] find_busiest_group+0x329/0x7da
->  [<ffffffff8025946f>] lock_acquire+0x52/0x6b
->  [<ffffffff802483de>] __cancel_work_timer+0xbf/0x1e6
->  [<ffffffff80248415>] __cancel_work_timer+0xf6/0x1e6
->  [<ffffffff802483de>] __cancel_work_timer+0xbf/0x1e6
->  [<ffffffff8025776c>] trace_hardirqs_on_caller+0xef/0x113
->  [<ffffffff8041e3e8>] _spin_unlock_irq+0x24/0x27
->  [<ffffffff80234882>] finish_task_switch+0x5f/0xc5
->  [<ffffffff80234823>] finish_task_switch+0x0/0xc5
->  [<ffffffff8041c18a>] thread_return+0x3d/0xbe
->  [<ffffffffa0034dd6>] ata_port_flush_task+0x10/0x3b [libata]
->  [<ffffffffa0041d4d>] ata_scsi_error+0x20/0x57b [libata]
->  [<ffffffff8041e3e8>] _spin_unlock_irq+0x24/0x27
->  [<ffffffff80234823>] finish_task_switch+0x0/0xc5
->  [<ffffffffa000c68a>] scsi_error_handler+0xda/0x535 [scsi_mod]
->  [<ffffffffa000c5b0>] scsi_error_handler+0x0/0x535 [scsi_mod]
->  [<ffffffff8024b2a3>] kthread+0x47/0x73
->  [<ffffffff8041e05e>] trace_hardirqs_on_thunk+0x3a/0x3f
->  [<ffffffff8020ce79>] child_rip+0xa/0x11
->  [<ffffffff8020c4af>] restore_args+0x0/0x30
->  [<ffffffff8024b237>] kthreadd+0x174/0x199
->  [<ffffffff8024b25c>] kthread+0x0/0x73
->  [<ffffffff8020ce6f>] child_rip+0x0/0x11
-> input: PS/2 Mouse as /class/input/input2
-> input: AlpsPS/2 ALPS GlidePoint as /class/input/input3
-> ata1: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-> ata1.00: ATA-8: TOSHIBA MK2546GSX, LB014C, max UDMA/100
-> 
+Thank you for your reply,
+
+I tested the drive some more yesterday and found that it doesn't have
+the same problem on CD-RW media. And the FujiFilm DVD-RW that causes
+the problem it has no problem reading from. I'm not sure if it's just
+that brand but it seems like it's a problem with the media. However,
+it surprises me that bad media can cause the drive to fail into an
+unrecoverable state. Looks like a cheap shitty device, atleast it
+wasn't expensive :)
+
+I can test the device under different OS/controller if you feel like
+you need that information.
+
+Best regards,
+Jonas
