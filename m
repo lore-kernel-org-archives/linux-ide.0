@@ -1,46 +1,43 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH 1/2] hpt366: add hpt3xx_disable_fast_irq() helper
-Date: Thu, 16 Oct 2008 01:55:06 +0400
-Message-ID: <48F666BA.9040104@ru.mvista.com>
-References: <200808021915.03424.bzolnier@gmail.com> <48F50649.9080507@ru.mvista.com> <200810152011.18478.bzolnier@gmail.com> <48F65E48.8080301@ru.mvista.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+From: bugme-daemon@bugzilla.kernel.org
+Subject: [Bug 11732] Oops while mounting a DVD-ROM
+Date: Wed, 15 Oct 2008 16:01:06 -0700 (PDT)
+Message-ID: <20081015230106.AA9FA108056@picon.linux-foundation.org>
+References: <bug-11732-11633@http.bugzilla.kernel.org/>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from gateway-1237.mvista.com ([63.81.120.155]:37184 "EHLO
-	imap.sh.mvista.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751839AbYJOVzL (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 15 Oct 2008 17:55:11 -0400
-In-Reply-To: <48F65E48.8080301@ru.mvista.com>
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:53256 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753370AbYJOXBk (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 15 Oct 2008 19:01:40 -0400
+Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
+	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id m9FN1869018503
+	for <linux-ide@vger.kernel.org>; Wed, 15 Oct 2008 16:01:09 -0700
+In-Reply-To: <bug-11732-11633@http.bugzilla.kernel.org/>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-Hello, I just wrote:
-
->> Not such a big deal, we just have to make an another one...
->>
->> From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
->> Subject: [PATCH] hpt366: fix compile warning
->>
->> Fixup for commit 1785192b5310ee25165768f5bb80f13146788e3e
->> ("hpt366: add hpt3xx_disable_fast_irq() helper"):
->>
->>    CC      drivers/ide/pci/hpt366.o
->> drivers/ide/pci/hpt366.c: In function `init_hwif_hpt366':
->> drivers/ide/pci/hpt366.c:1290: warning: unused variable `dev'
->>
->> Reported-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
->> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
->>   
->
->   Duh. I've posted this patch a bit earlier. ;-)
-
-   No, you were the first, so just add my:
-
-Acked-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-
-MBR, Sergei
+http://bugzilla.kernel.org/show_bug.cgi?id=11732
 
 
+tglx@linutronix.de changed:
+
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+                 CC|                            |axboe@kernel.dk
+         AssignedTo|platform_x86_64@kernel-     |io_ide@kernel-bugs.osdl.org
+                   |bugs.osdl.org               |
+
+
+
+
+------- Comment #6 from tglx@linutronix.de  2008-10-15 16:01 -------
+> IDE gets arguments for dma_map_sg() from blk_rq_map_sg() so everything should
+> be sweet...
+
+Adding Jens to the mix :)
+
+
+-- 
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug, or are watching the assignee.
