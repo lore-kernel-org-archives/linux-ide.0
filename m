@@ -1,64 +1,68 @@
 From: Andrew Morton <akpm@linux-foundation.org>
-Subject: Re: warning report
-Date: Wed, 15 Oct 2008 01:41:12 -0700
-Message-ID: <20081015014112.a2c806cf.akpm@linux-foundation.org>
-References: <48F236EA.2060404@saturnosoft.biz>
+Subject: Re: Stack dump from GIT HEAD if CONFIG_ATA_SFF is not set
+Date: Wed, 15 Oct 2008 01:41:28 -0700
+Message-ID: <20081015014128.1bde68cb.akpm@linux-foundation.org>
+References: <48F3D8EA.4080708@lwfinger.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:50140 "EHLO
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:36378 "EHLO
 	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751338AbYJOIlW (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 15 Oct 2008 04:41:22 -0400
-In-Reply-To: <48F236EA.2060404@saturnosoft.biz>
+	by vger.kernel.org with ESMTP id S1753807AbYJOIlt (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 15 Oct 2008 04:41:49 -0400
+In-Reply-To: <48F3D8EA.4080708@lwfinger.net>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Todor Gyumyushev <todor@saturnosoft.biz>
+To: Larry Finger <Larry.Finger@lwfinger.net>
 Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
 (cc linux-ide)
 
-> On Sun, 12 Oct 2008 20:42:02 +0300 Todor Gyumyushev <todor@saturnosoft.biz> wrote:
-> [ 3724.989177] cdrom: This disc doesn't have any tracks I recognize!
-> [ 4953.736107] ------------[ cut here ]------------
-> [ 4953.736117] WARNING: at drivers/ata/libata-sff.c:944 
-> ata_sff_hsm_move+0x47d/0x6a0 [libata]()
-> [ 4953.736121] Modules linked in: i915 drm eth1394 ipt_MASQUERADE 
-> iptable_nat nf_nat nf_conntrack_ipv4 nf_conntrack ip_tables x_tables tun 
-> kvm acpi_cpufreq freq_table hci_usb rfcomm l2cap bluetooth vboxdrv nfsd 
-> lockd nfs_acl auth_rpcgss sunrpc exportfs ipv6 ac battery fuse loop 
-> snd_hda_intel snd_pcm_oss snd_mixer_oss arc4 ecb snd_pcm 
-> crypto_blkcipher snd_timer video ath5k snd mac80211 backlight usblp 
-> led_class soundcore rng_core tpm_infineon intel_agp iTCO_wdt 
-> snd_page_alloc output iTCO_vendor_support i2c_i801 rtc_cmos tpm cfg80211 
-> i2c_core button tpm_bios evdev usbhid hid ext3 jbd mbcache sg sr_mod 
-> cdrom sd_mod crc_t10dif ohci1394 ata_piix libata scsi_mod ieee1394 dock 
-> ehci_hcd uhci_hcd sky2 thermal processor fan thermal_sys hwmon [last 
-> unloaded: kvm_intel]
-> [ 4953.736215] Pid: 0, comm: swapper Not tainted 2.6.27 #1
-> [ 4953.736218]
-> [ 4953.736219] Call Trace:
-> [ 4953.736223]  <IRQ>  [<ffffffff8023c9c4>] warn_on_slowpath+0x64/0xb0
-> [ 4953.736255]  [<ffffffffa0062ac8>] scsi_dispatch_cmd+0x128/0x2d0 
-> [scsi_mod]
-> [ 4953.736278]  [<ffffffffa0068e85>] scsi_request_fn+0x95/0x420 [scsi_mod]
-> [ 4953.736282]  [<ffffffff80346b25>] __blk_run_queue+0x65/0x110
-> [ 4953.736293]  [<ffffffffa00a06c8>] ata_sff_data_xfer+0x98/0xc0 [libata]
-> [ 4953.736297]  [<ffffffff80340000>] crypto_attr_alg_name+0x30/0x40
-> [ 4953.736307]  [<ffffffffa009fe9d>] ata_sff_hsm_move+0x47d/0x6a0 [libata]
-> [ 4953.736317]  [<ffffffffa0069693>] scsi_end_request+0xa3/0xb0 [scsi_mod]
-> [ 4953.736328]  [<ffffffffa00a0413>] ata_sff_interrupt+0x1a3/0x2c0 [libata]
-> [ 4953.736331]  [<ffffffff80283aa4>] handle_IRQ_event+0x34/0x70
-> [ 4953.736334]  [<ffffffff802850f0>] handle_edge_irq+0xc0/0x160
-> [ 4953.736337]  [<ffffffff8020f92c>] do_IRQ+0x7c/0x100
-> [ 4953.736339]  [<ffffffff8020c941>] ret_from_intr+0x0/0xa
-> [ 4953.736341]  <EOI>  [<ffffffffa000d637>] 
-> acpi_idle_enter_simple+0x1c7/0x237 [processor]
-> [ 4953.736352]  [<ffffffffa000d62d>] acpi_idle_enter_simple+0x1bd/0x237 
-> [processor]
-> [ 4953.736356]  [<ffffffff803eebf7>] cpuidle_idle_call+0xd7/0x120
-> [ 4953.736358]  [<ffffffff8020b306>] cpu_idle+0x66/0xf0
-> [ 4953.736360]
-> [ 4953.736361] ---[ end trace 8d1ccc07ba5c0659 ]---
+> On Mon, 13 Oct 2008 16:25:30 -0700 Larry Finger <Larry.Finger@lwfinger.net> wrote:
+> I am using kernel 2.6.27-Linus-03151-g4480f15b-dirty. On booting a system built
+> with CONFIG_ATA_SFF not set, the following appears in my dmesg output. The
+> "dirtiness" of the kernel is due to some code included to trace down messages
+> coming from the usb system, and is not involved here. If CONFIG_ATA_SFF=y, the
+> message does not appear. From Google results, it seems that this parameter
+> should be set for most systems, but one should get clean runs without it.
+> 
+> ata1: SATA max UDMA/133 abar m8192@0xfc484000 port 0xfc484100 irq 4349
+> ata2: SATA max UDMA/133 abar m8192@0xfc484000 port 0xfc484180 irq 4349
+> ata3: SATA max UDMA/133 abar m8192@0xfc484000 port 0xfc484200 irq 4349
+> ata4: SATA max UDMA/133 abar m8192@0xfc484000 port 0xfc484280 irq 4349
+> INFO: trying to register non-static key.
+> the code is fine but needs lockdep annotation.
+> turning off the locking correctness validator.
+> Pid: 504, comm: scsi_eh_0 Not tainted 2.6.27-Linus-03151-g4480f15b-dirty #174
+> Call Trace:
+>  [<ffffffff80255af9>] static_obj+0x51/0x6b
+>  [<ffffffff80258d16>] __lock_acquire+0xd28/0x142f
+>  [<ffffffff8022f003>] find_busiest_group+0x329/0x7da
+>  [<ffffffff8025946f>] lock_acquire+0x52/0x6b
+>  [<ffffffff802483de>] __cancel_work_timer+0xbf/0x1e6
+>  [<ffffffff80248415>] __cancel_work_timer+0xf6/0x1e6
+>  [<ffffffff802483de>] __cancel_work_timer+0xbf/0x1e6
+>  [<ffffffff8025776c>] trace_hardirqs_on_caller+0xef/0x113
+>  [<ffffffff8041e3e8>] _spin_unlock_irq+0x24/0x27
+>  [<ffffffff80234882>] finish_task_switch+0x5f/0xc5
+>  [<ffffffff80234823>] finish_task_switch+0x0/0xc5
+>  [<ffffffff8041c18a>] thread_return+0x3d/0xbe
+>  [<ffffffffa0034dd6>] ata_port_flush_task+0x10/0x3b [libata]
+>  [<ffffffffa0041d4d>] ata_scsi_error+0x20/0x57b [libata]
+>  [<ffffffff8041e3e8>] _spin_unlock_irq+0x24/0x27
+>  [<ffffffff80234823>] finish_task_switch+0x0/0xc5
+>  [<ffffffffa000c68a>] scsi_error_handler+0xda/0x535 [scsi_mod]
+>  [<ffffffffa000c5b0>] scsi_error_handler+0x0/0x535 [scsi_mod]
+>  [<ffffffff8024b2a3>] kthread+0x47/0x73
+>  [<ffffffff8041e05e>] trace_hardirqs_on_thunk+0x3a/0x3f
+>  [<ffffffff8020ce79>] child_rip+0xa/0x11
+>  [<ffffffff8020c4af>] restore_args+0x0/0x30
+>  [<ffffffff8024b237>] kthreadd+0x174/0x199
+>  [<ffffffff8024b25c>] kthread+0x0/0x73
+>  [<ffffffff8020ce6f>] child_rip+0x0/0x11
+> input: PS/2 Mouse as /class/input/input2
+> input: AlpsPS/2 ALPS GlidePoint as /class/input/input3
+> ata1: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+> ata1.00: ATA-8: TOSHIBA MK2546GSX, LB014C, max UDMA/100
 > 
