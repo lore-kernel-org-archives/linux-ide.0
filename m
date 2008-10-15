@@ -1,64 +1,37 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: pata_via "frozen" DVD drive (TSSTcorp SN-S083A on EPIA EX15000)
-Date: Wed, 15 Oct 2008 16:17:14 +0900
-Message-ID: <48F598FA.9060500@kernel.org>
-References: <338a6b6d0810140230t16f8da53y6facbcee174cad3@mail.gmail.com>
+From: Damazy <damazy@gmail.com>
+Subject: Re: sata_sil for 3512A chip on kernel 2.6.26.3
+Date: Wed, 15 Oct 2008 09:19:42 +0200
+Message-ID: <48F5998E.4090205@gmail.com>
+References: <48E48BF2.1010403@gmail.com> <48E71DBC.5090301@kernel.org> <48F47924.9040504@gmail.com> <48F54E4C.1020704@kernel.org> <48F58FBE.909@gmail.com> <48F591CC.6090609@kernel.org> <48F595CA.5000807@gmail.com> <48F5965A.5000709@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:48490 "EHLO hera.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751815AbYJOHSp (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 15 Oct 2008 03:18:45 -0400
-In-Reply-To: <338a6b6d0810140230t16f8da53y6facbcee174cad3@mail.gmail.com>
+Received: from fk-out-0910.google.com ([209.85.128.187]:53716 "EHLO
+	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751789AbYJOHT2 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 15 Oct 2008 03:19:28 -0400
+Received: by fk-out-0910.google.com with SMTP id 18so2535852fkq.5
+        for <linux-ide@vger.kernel.org>; Wed, 15 Oct 2008 00:19:26 -0700 (PDT)
+In-Reply-To: <48F5965A.5000709@kernel.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jonas Jensen <jonas.jensen@gmail.com>
-Cc: linux-ide@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: jgarzik@pobox.com, linux-ide@vger.kernel.org
 
-Hello,
-
-Jonas Jensen wrote:
-> I'm running kernel 2.6.26.5 no patches and came across this after
-> installing a new DVD drive. This is a Samsung SN-S083A slimline
-> optical connected with SATA cable to VIA EPIA EX15000 motherboard. I
-> get the exception trying a blank command such as "wodim dev=0,1,0
-> blank=fast".
+Tejun Heo wrote:
 > 
-> HDD and DVD are detectable only with pata_via, this seems strange as
-> they are SATA drives connected with SATA cable. I have tried both AHCI
-> and sata_via, leaving out pata_via, but that always ends up in
-> kernelpanic and unbootable root filesystem. I assume no drives were
-> found (kernel text scrolls too fast to read).
-
-VIA added SATA support to what used to be PATA controllers and the
-naming got kind of meaningless.  It just doesn't really matter
-anymore.
-
-> When the DVD fails it seems to drag the HDD with it. Eventually the
-> HDD comes back but after that the DVD is nowhere to be found. I am
-> unsure what I can do to fix this issue but changing kernel is
-> definately an option if that helps.
+> I'm afraid there's nothing much can be done from the driver here.  Looks
+> like your drive's PHY is just bonkers or it just doesn't like talking to
+> the controller.  Can you try the drive on a different controller?
 > 
-> syslog:
+> Thanks.
 > 
-> Oct 13 20:51:56 silverstone kernel: ata1.01: exception Emask 0x0 SAct
-> 0x0 SErr 0x0 action 0x6 frozen
-> Oct 13 20:51:56 silverstone kernel: ata1.01: cmd
-> a0/00:00:00:00:00/00:00:00:00:00/b0 tag 0
-> Oct 13 20:51:56 silverstone kernel:          cdb 54 01 00 00 00 00 00
-> 00  00 00 00 00 00 00 00 00
-> Oct 13 20:51:56 silverstone kernel:          res
 
-The drive times out SEND_OPC and then never comes back.  The command
-is non-data command which just tells the drive to perform calibration,
-so there's nothing much the driver can do wrong about it.  It looks
-like the drive could have hardware problem performing OPC.  Can you
-test the drive under different operating system or different hardware
-configuration (different controller, different media, etc...)?
+As I wrote before, it was tested on different platform with different os 
+and it workek just fine.
 
-Thanks.
+TIA
 
 -- 
-tejun
+Damazy
