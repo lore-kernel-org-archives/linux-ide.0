@@ -1,50 +1,39 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: Can you please test the attached patch for nv hardreset problem?
-Date: Thu, 16 Oct 2008 10:44:41 +0900
-Message-ID: <48F69C89.5070900@kernel.org>
-References: <48E80F11.3060101@kernel.org>	 <64630f150810111634gbe4cfdfjccafc9f6f781edcc@mail.gmail.com>	 <48F30678.7020807@kernel.org>	 <64630f150810131213m64d8fc72j38debf71a692db16@mail.gmail.com>	 <48F3F368.2090901@kernel.org>	 <64630f150810141431r1d070cddl1c2a6b32ae80b64c@mail.gmail.com>	 <48F57E0B.6050403@kernel.org> <64630f150810151323k68ded27eie9a24e1b0579288a@mail.gmail.com>
+Subject: Re: [PATCH] stop gcc warning about uninitialized 'dev' in	ata_scsi_scan_host
+Date: Thu, 16 Oct 2008 11:11:51 +0900
+Message-ID: <48F6A2E7.5090005@kernel.org>
+References: <20081015232505.GB9272@ldl.fc.hp.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:49665 "EHLO hera.kernel.org"
+Received: from hera.kernel.org ([140.211.167.34]:35831 "EHLO hera.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752828AbYJPBqd (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 15 Oct 2008 21:46:33 -0400
-In-Reply-To: <64630f150810151323k68ded27eie9a24e1b0579288a@mail.gmail.com>
+	id S1753465AbYJPCNh (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 15 Oct 2008 22:13:37 -0400
+In-Reply-To: <20081015232505.GB9272@ldl.fc.hp.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: gettinther <gettinther@gmail.com>
-Cc: IDE/ATA development list <linux-ide@vger.kernel.org>, lists@ku-gbr.de, linux@sun7.cn, Robert Hancock <hancockr@shaw.ca>
+To: Alex Chiang <achiang@hp.com>, jeff@redhat.com, linux-ide@vger.kernel.org, linux-kernel <linux-kernel@vger.kernel.org>
 
-gettinther wrote:
-> On Wed, Oct 15, 2008 at 6:22 AM, Tejun Heo <tj@kernel.org> wrote:
->> gettinther wrote:
->>> The log simply ignores the drive altogether.
->>>
->>> from the sound coming from the drive, it does seem that the drive
->>> initially starts at boot, then stops.  After that stage the device
->>> detection takes place.  as the item is a pata to sata converter
->>> (emulated sata), it does not support hot plugging.
->>>
->>> I also need to mention that this behavior (start-stop during boot) did
->>> not happen on the 2.6.24 and I need to check the 2.6.27.  However the
->>> device is detected by both of these kernels.
->> Hmmm...
->>
->>> Oct 14 21:18:12 localhost kernel: ata2: SATA link up 1.5 Gbps (SStatus
->>> 113 SControl 300)
->> Hmmm... Can you please apply the attached patch on top of it and
->> report the boot log?
->>
->> --
->> tejun
->>
+Alex Chiang wrote:
+> Shuts up gcc-3.4.5-glibc-2.3.6 when it complains of:
 > 
-> here it is.  Let me know if you need other parts of the logs.
+> drivers/ata/libata-scsi.c: In function `ata_scsi_scan_host':
+> drivers/ata/libata-scsi.c:3225: warning: 'dev' might be used
+> uninitialized in this function
+> 
+> Signed-off-by: Alex Chiang <achiang@hp.com>
 
-Ah.. okay, you need to change .hardreset to ATA_OP_NULL instead of
-sata_std_hardreset.
+Nacked-by: Tejun Heo <tj@kernel.org>
+
+Some gcc versions complain about sata_via, others complain about
+something else.  Some versions complain about some iterator usages while
+not complaining about others, but none of those complaints is actually
+wrong or dangerous.  I don't think adding = NULL whenever some version
+of gcc complains is the right approach.
+
+Thanks.
 
 -- 
 tejun
