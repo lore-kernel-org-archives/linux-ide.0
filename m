@@ -1,39 +1,43 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [PATCH] ide: remove broken hpt34x driver
-Date: Thu, 16 Oct 2008 11:18:51 +0100
-Message-ID: <20081016111851.4f519c58@lxorguk.ukuu.org.uk>
-References: <200810152156.25754.bzolnier@gmail.com>
-	<48F70DDA.4010805@ru.mvista.com>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: Re: powerpc allmodconfig
+Date: Thu, 16 Oct 2008 14:21:17 +0400
+Message-ID: <48F7159D.4040709@ru.mvista.com>
+References: <20081015213337.a99a9595.akpm@linux-foundation.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:44983 "EHLO
-	lxorguk.ukuu.org.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751322AbYJPKTE (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 16 Oct 2008 06:19:04 -0400
-In-Reply-To: <48F70DDA.4010805@ru.mvista.com>
+Received: from h155.mvista.com ([63.81.120.155]:55028 "EHLO imap.sh.mvista.com"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1750972AbYJPKVX (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 16 Oct 2008 06:21:23 -0400
+In-Reply-To: <20081015213337.a99a9595.akpm@linux-foundation.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: linux-ide@vger.kernel.org, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Ralf Baechle <ralf@linux-mips.org>, linux-kernel@vger.kernel.org, anemo@mba.ocn.ne.jp
 
-On Thu, 16 Oct 2008 13:48:10 +0400
-Sergei Shtylyov <sshtylyov@ru.mvista.com> wrote:
+Hello.
 
-> Hello.
-> 
-> Bartlomiej Zolnierkiewicz wrote:
-> 
-> > No big loss since HPT343/363 controllers are properly supported
-> > by pata_hpt3x3 driver from Alan Cox.
-> >
-> > Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-> >   
-> 
->    Hum, interesting way of fixing the driver... :-)
->    Shouldn't the PCI IDs be added to drivers/ide/pci/generic.c?
+Andrew Morton wrote:
+> drivers/ide/pci/hpt366.c: In function 'init_hwif_hpt366':
+> drivers/ide/pci/hpt366.c:1292: warning: unused variable 'dev'
+>   
 
-Won't work. The device isn't actually generic IDE. You have to sort the
-register mappings out and use the right mapping window for the chip to
-work.
+   Patch (even two) for this one has been submitted
+
+> drivers/ide/pci/scc_pata.c: In function 'init_hwif_scc':
+> drivers/ide/pci/scc_pata.c:846: warning: unused variable 'ports'
+>   
+
+   Hm, but not for this one...
+
+> drivers/serial/serial_txx9.c: In function 'serial_txx9_probe':
+> drivers/serial/serial_txx9.c:1041: warning: format '%x' expects type 'unsigned int', but argument 5 has type 'long unsigned int'
+>   
+
+   Atsushi-san, are you seeing this one?
+
+MBR, Sergei
+
+
