@@ -1,55 +1,145 @@
-From: David Miller <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>
-Subject: Re: powerpc allmodconfig
-Date: Thu, 16 Oct 2008 12:49:23 -0700 (PDT)
-Message-ID: <20081016.124923.222595655.davem@davemloft.net>
-References: <20081015213337.a99a9595.akpm@linux-foundation.org>
-	<20081015.220247.262683261.davem@davemloft.net>
-	<1224169039.735.57.camel@johannes.berg>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: [PATCH] delkin_cb: add PM support
+Date: Thu, 16 Oct 2008 21:27:39 +0200
+Message-ID: <200810162127.40790.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-wireless-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <1224169039.735.57.camel-YfaajirXv214zXjbi5bjpg@public.gmane.org>
-Sender: linux-wireless-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: johannes-cdvu00un1VgdHxzADdlk8Q@public.gmane.org
-Cc: akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, dan.j.williams-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, tiwai-l3A5Bk7waGM@public.gmane.org, linux-ext4-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, bzolnier-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, marek.vasut-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, dwmw2-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, mark.fasheh-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, ralf-6z/3iImG2C8G8FEW9MqTrA@public.gmane.org, mchehab-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, linux-wireless-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linuxppc-dev-mnsaURCQ41sdnm+yROfE0A@public.gmane.org, arjan-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from gv-out-0910.google.com ([216.239.58.187]:10957 "EHLO
+	gv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757690AbYJPTwf (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 16 Oct 2008 15:52:35 -0400
+Received: by gv-out-0910.google.com with SMTP id e6so107071gvc.37
+        for <linux-ide@vger.kernel.org>; Thu, 16 Oct 2008 12:52:33 -0700 (PDT)
+Content-Disposition: inline
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, bumble.bee@xs4all.nl, Alan Cox <alan@lxorguk.ukuu.org.uk>
 
-From: Johannes Berg <johannes-cdvu00un1VgdHxzADdlk8Q@public.gmane.org>
-Date: Thu, 16 Oct 2008 16:57:19 +0200
+* Factor out chipset initialization code from delkin_cb_probe()
+  to delkin_cb_init_chipset().
 
-> On Wed, 2008-10-15 at 22:02 -0700, David Miller wrote:
-> > 
-> > 
-> > > net/sched/sch_generic.c: In function 'dev_watchdog':
-> > > net/sched/sch_generic.c:224: warning: unused variable 'drivername'
-> > 
-> > Sucky, if WARN_ONCE() evaluates to nothing the sprintf() string buffer
-> > on the stack looks unused.
-> 
-> I've complained about this to Arjan before, we actually lose all
-> messages passed to WARN() or WARN_ONCE() on platforms that use bug traps
-> for warnings too.
+* Assign ->init_chipset in struct delkin_cb_port_info.
 
-Ok I see how that works, yes, it should be fixed.
+* Add delkin_cb_{suspend,resume}() (->suspend/->resume methods).
 
-If the platform defines a __WARN (which powerpc does) the
-whole format string and printf args go unevaluated, it's
-because of the following sequence in asm-generic/bug.h:
+Fixes kernel bugzilla bug #11735:
 
-#ifndef __WARN
-#ifndef __ASSEMBLY__
-extern void warn_on_slowpath(const char *file, const int line);
-extern void warn_slowpath(const char *file, const int line,
-		const char *fmt, ...) __attribute__((format(printf, 3, 4)));
-#define WANT_WARN_ON_SLOWPATH
-#endif
-#define __WARN() warn_on_slowpath(__FILE__, __LINE__)
-#define __WARN_printf(arg...) warn_slowpath(__FILE__, __LINE__, arg)
-#else
-#define __WARN_printf(arg...) __WARN()
-#endif
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+http://bugzilla.kernel.org/show_bug.cgi?id=11735
+
+Tested-by: bumble.bee@xs4all.nl
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+---
+ drivers/ide/pci/delkin_cb.c |   63 +++++++++++++++++++++++++++++++++++++++-----
+ 1 file changed, 56 insertions(+), 7 deletions(-)
+
+Index: b/drivers/ide/pci/delkin_cb.c
+===================================================================
+--- a/drivers/ide/pci/delkin_cb.c
++++ b/drivers/ide/pci/delkin_cb.c
+@@ -46,10 +46,27 @@ static const struct ide_port_ops delkin_
+ 	.quirkproc		= ide_undecoded_slave,
+ };
+ 
++static unsigned int delkin_cb_init_chipset(struct pci_dev *dev)
++{
++	unsigned long base = pci_resource_start(dev, 0);
++	int i;
++
++	outb(0x02, base + 0x1e);	/* set nIEN to block interrupts */
++	inb(base + 0x17);		/* read status to clear interrupts */
++
++	for (i = 0; i < sizeof(setup); ++i) {
++		if (setup[i])
++			outb(setup[i], base + i);
++	}
++
++	return 0;
++}
++
+ static const struct ide_port_info delkin_cb_port_info = {
+ 	.port_ops		= &delkin_cb_port_ops,
+ 	.host_flags		= IDE_HFLAG_IO_32BIT | IDE_HFLAG_UNMASK_IRQS |
+ 				  IDE_HFLAG_NO_DMA,
++	.init_chipset		= delkin_cb_init_chipset,
+ };
+ 
+ static int __devinit
+@@ -57,7 +74,7 @@ delkin_cb_probe (struct pci_dev *dev, co
+ {
+ 	struct ide_host *host;
+ 	unsigned long base;
+-	int i, rc;
++	int rc;
+ 	hw_regs_t hw, *hws[] = { &hw, NULL, NULL, NULL };
+ 
+ 	rc = pci_enable_device(dev);
+@@ -72,12 +89,8 @@ delkin_cb_probe (struct pci_dev *dev, co
+ 		return rc;
+ 	}
+ 	base = pci_resource_start(dev, 0);
+-	outb(0x02, base + 0x1e);	/* set nIEN to block interrupts */
+-	inb(base + 0x17);		/* read status to clear interrupts */
+-	for (i = 0; i < sizeof(setup); ++i) {
+-		if (setup[i])
+-			outb(setup[i], base + i);
+-	}
++
++	delkin_cb_init_chipset(dev);
+ 
+ 	memset(&hw, 0, sizeof(hw));
+ 	ide_std_init_ports(&hw, base + 0x10, base + 0x1e);
+@@ -110,6 +123,40 @@ delkin_cb_remove (struct pci_dev *dev)
+ 	pci_disable_device(dev);
+ }
+ 
++#ifdef CONFIG_PM
++static int delkin_cb_suspend(struct pci_dev *dev, pm_message_t state)
++{
++	pci_save_state(dev);
++	pci_disable_device(dev);
++	pci_set_power_state(dev, pci_choose_state(dev, state));
++
++	return 0;
++}
++
++static int delkin_cb_resume(struct pci_dev *dev)
++{
++	struct ide_host *host = pci_get_drvdata(dev);
++	int rc;
++
++	pci_set_power_state(dev, PCI_D0);
++
++	rc = pci_enable_device(dev);
++	if (rc)
++		return rc;
++
++	pci_restore_state(dev);
++	pci_set_master(dev);
++
++	if (host->init_chipset)
++		host->init_chipset(dev);
++
++	return 0;
++}
++#else
++#define delkin_cb_suspend NULL
++#define delkin_cb_resume NULL
++#endif
++
+ static struct pci_device_id delkin_cb_pci_tbl[] __devinitdata = {
+ 	{ 0x1145, 0xf021, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0},
+ 	{ 0x1145, 0xf024, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0},
+@@ -122,6 +169,8 @@ static struct pci_driver delkin_cb_pci_d
+ 	.id_table	= delkin_cb_pci_tbl,
+ 	.probe		= delkin_cb_probe,
+ 	.remove		= delkin_cb_remove,
++	.suspend	= delkin_cb_suspend,
++	.resume		= delkin_cb_resume,
+ };
+ 
+ static int __init delkin_cb_init(void)
