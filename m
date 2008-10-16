@@ -1,38 +1,45 @@
-From: "Randy.Dunlap" <rdunlap@xenotime.net>
-Subject: Re: [PATCH] stop gcc warning about uninitialized 'dev' in
- ata_scsi_scan_host
-Date: Thu, 16 Oct 2008 14:24:27 -0700 (PDT)
-Message-ID: <Pine.LNX.4.64.0810161424080.14604@shark.he.net>
-References: <20081015232505.GB9272@ldl.fc.hp.com> <48F6A2E7.5090005@kernel.org>
- <20081016034042.GA27621@ldl.fc.hp.com> <20081016061638.GA23630@cs181140183.pp.htv.fi>
- <20081016212244.GB18274@ldl.fc.hp.com>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: Re: ide-dma: fix ide_build_dmatable() for TRM290
+Date: Fri, 17 Oct 2008 02:50:05 +0400
+Message-ID: <48F7C51D.3010406@ru.mvista.com>
+References: <200809282241.26289.sshtylyov@ru.mvista.com> <48F72CC7.2040202@ru.mvista.com> <48F73198.20209@ru.mvista.com> <200810162148.47262.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from xenotime.net ([66.160.160.81]:57008 "HELO xenotime.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1755314AbYJPVYb (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 16 Oct 2008 17:24:31 -0400
-Received: from shark.he.net ([66.160.160.2]) by xenotime.net for <linux-ide@vger.kernel.org>; Thu, 16 Oct 2008 14:24:27 -0700
-In-Reply-To: <20081016212244.GB18274@ldl.fc.hp.com>
+Received: from h155.mvista.com ([63.81.120.155]:8080 "EHLO imap.sh.mvista.com"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1758396AbYJPWuK (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 16 Oct 2008 18:50:10 -0400
+In-Reply-To: <200810162148.47262.bzolnier@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alex Chiang <achiang@hp.com>
-Cc: Adrian Bunk <bunk@kernel.org>, Tejun Heo <tj@kernel.org>, jeff@redhat.com, linux-ide@vger.kernel.org, linux-kernel <linux-kernel@vger.kernel.org>
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: linux-ide@vger.kernel.org
 
-> > > I guess we don't want to sprinkle these around all over the place
-> > > just to solve cosmetic issues, which makes sense, but is there
-> > > some other approach we could take instead? Any suggestions? Or
-> > > just live with it?
-> > 
-> > We have an annotation for these kinds of warnings in the kernel.
-> 
-> Oh, is it this?
-> 
-> from linux/compiler-gcc3.h
-> #define uninitialized_var(x) x = x
+Hello.
 
-Yes, you got it.
+Bartlomiej Zolnierkiewicz wrote:
 
--- 
-~Randy
+> Thanks for noticing and sorry for that.
+>   
+
+   Not that it was an important patch... :-)
+
+> From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+> Subject: [PATCH] ide: re-add TRM290 fix lost during ide_build_dmatable() cleanup
+>
+> commit 14c123f37187aba0b4e0e893a969efc6820c4170 ("ide: cleanup
+> ide_build_dmatable()") accidentally reverted TRM290 fix introduced
+> by commit 22e05b4549bf2405d6aca128540b20cd2dd33f1f ("ide-dma: fix
+> ide_build_dmatable() for TRM290").
+>
+> Reported-by: Sergei Shtylylov <sshtylyov@ru.mvista.com>
+> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+>   
+
+Acked-by: Sergei Shtylylov <sshtylyov@ru.mvista.com>
+
+WBR, Sergei
+
+
