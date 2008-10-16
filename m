@@ -1,39 +1,31 @@
-From: Alex Chiang <achiang@hp.com>
-Subject: [PATCH] stop gcc warning about uninitialized 'dev' in
-	ata_scsi_scan_host
-Date: Wed, 15 Oct 2008 17:25:05 -0600
-Message-ID: <20081015232505.GB9272@ldl.fc.hp.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: SATA Burner Pioneer DVR-216-DBK won't burn
+Date: Thu, 16 Oct 2008 09:10:48 +0900
+Message-ID: <48F68688.9060408@kernel.org>
+References: <200810052005.04920.loki_val@gentoo.org> <48F44706.7060701@kernel.org> <200810151647.04059.loki_val@gentoo.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from g1t0026.austin.hp.com ([15.216.28.33]:25222 "EHLO
-	g1t0026.austin.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752119AbYJOXZG (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 15 Oct 2008 19:25:06 -0400
-Content-Disposition: inline
+Received: from hera.kernel.org ([140.211.167.34]:46951 "EHLO hera.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751757AbYJPAMU (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 15 Oct 2008 20:12:20 -0400
+In-Reply-To: <200810151647.04059.loki_val@gentoo.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: jeff@redhat.com
-Cc: linux-ide@vger.kernel.org, linux-kernel <linux-kernel@vger.kernel.org>
+To: Peter Alfredsen <loki_val@gentoo.org>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-Shuts up gcc-3.4.5-glibc-2.3.6 when it complains of:
+Peter Alfredsen wrote:
+> I've tried to burn other things in the meantime. Some things, I'm
+> actually able to burn. But when I can't burn something, I have so far
+> been able to reproduce the failure. Very strange.
 
-drivers/ata/libata-scsi.c: In function `ata_scsi_scan_host':
-drivers/ata/libata-scsi.c:3225: warning: 'dev' might be used
-uninitialized in this function
+Eh... is it dependent on the specific media or content you're trying
+to burn?
 
-Signed-off-by: Alex Chiang <achiang@hp.com>
----
-diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-index 5d312dc..4e27c68 100644
---- a/drivers/ata/libata-scsi.c
-+++ b/drivers/ata/libata-scsi.c
-@@ -3222,7 +3222,7 @@ void ata_scsi_scan_host(struct ata_port *ap, int sync)
- 	int tries = 5;
- 	struct ata_device *last_failed_dev = NULL;
- 	struct ata_link *link;
--	struct ata_device *dev;
-+	struct ata_device *dev = NULL;
- 
- 	if (ap->flags & ATA_FLAG_DISABLED)
- 		return;
+Thanks.
+
+-- 
+tejun
