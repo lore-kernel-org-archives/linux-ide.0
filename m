@@ -1,67 +1,58 @@
-From: Adrian Bunk <bunk@kernel.org>
-Subject: Re: [PATCH] stop gcc warning about uninitialized 'dev' in
-	ata_scsi_scan_host
-Date: Thu, 16 Oct 2008 09:16:38 +0300
-Message-ID: <20081016061638.GA23630@cs181140183.pp.htv.fi>
-References: <20081015232505.GB9272@ldl.fc.hp.com> <48F6A2E7.5090005@kernel.org> <20081016034042.GA27621@ldl.fc.hp.com>
+From: Brice Goglin <brice@myri.com>
+Subject: Re: powerpc allmodconfig
+Date: Thu, 16 Oct 2008 08:55:08 +0200
+Message-ID: <48F6E54C.5010207@myri.com>
+References: <20081015213337.a99a9595.akpm@linux-foundation.org>	
+	<20081015.220247.262683261.davem@davemloft.net>
+	<1224137292.26782.5.camel@dwillia2-linux.ch.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp5.pp.htv.fi ([213.243.153.39]:47445 "EHLO smtp5.pp.htv.fi"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756244AbYJPGQq (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 16 Oct 2008 02:16:46 -0400
-Content-Disposition: inline
-In-Reply-To: <20081016034042.GA27621@ldl.fc.hp.com>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <linuxppc-dev-bounces+glppd-linuxppc64-dev=m.gmane.org@ozlabs.org>
+In-Reply-To: <1224137292.26782.5.camel@dwillia2-linux.ch.intel.com>
+List-Unsubscribe: <https://ozlabs.org/mailman/options/linuxppc-dev>,
+	<mailto:linuxppc-dev-request@ozlabs.org?subject=unsubscribe>
+List-Archive: <http://ozlabs.org/pipermail/linuxppc-dev>
+List-Post: <mailto:linuxppc-dev@ozlabs.org>
+List-Help: <mailto:linuxppc-dev-request@ozlabs.org?subject=help>
+List-Subscribe: <https://ozlabs.org/mailman/listinfo/linuxppc-dev>,
+	<mailto:linuxppc-dev-request@ozlabs.org?subject=subscribe>
+Sender: linuxppc-dev-bounces+glppd-linuxppc64-dev=m.gmane.org@ozlabs.org
+Errors-To: linuxppc-dev-bounces+glppd-linuxppc64-dev=m.gmane.org@ozlabs.org
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: bzolnier@gmail.com, marek.vasut@gmail.com, tiwai@suse.de, netdev@vger.kernel.org, linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org, ralf@linux-mips.org, mark.fasheh@oracle.com, linuxppc-dev@ozlabs.org, linux-ide@vger.kernel.org, jesse.brandeburg@intel.com, akpm@linux-foundation.org, linux-ext4@vger.kernel.org, dwmw2@infradead.org, David Miller <davem@davemloft.net>, mchehab@infradead.org
 List-Id: linux-ide@vger.kernel.org
-To: Alex Chiang <achiang@hp.com>, Tejun Heo <tj@kernel.org>, jeff@redhat.com, linux-ide@vger.kernel.org, linux-kernel <linux-kernel@vger.kernel.org>
 
-On Wed, Oct 15, 2008 at 09:40:42PM -0600, Alex Chiang wrote:
-> * Tejun Heo <tj@kernel.org>:
-> > Alex Chiang wrote:
-> > > Shuts up gcc-3.4.5-glibc-2.3.6 when it complains of:
-> > > 
-> > > drivers/ata/libata-scsi.c: In function `ata_scsi_scan_host':
-> > > drivers/ata/libata-scsi.c:3225: warning: 'dev' might be used
-> > > uninitialized in this function
-> > > 
-> > > Signed-off-by: Alex Chiang <achiang@hp.com>
-> > 
-> > Nacked-by: Tejun Heo <tj@kernel.org>
-> > 
-> > Some gcc versions complain about sata_via, others complain
-> > about something else.  Some versions complain about some
-> > iterator usages while not complaining about others, but none of
-> > those complaints is actually wrong or dangerous.  I don't think
-> > adding = NULL whenever some version of gcc complains is the
-> > right approach.
-> 
-> Hm, ok.
-> 
-> I guess we don't want to sprinkle these around all over the place
-> just to solve cosmetic issues, which makes sense, but is there
-> some other approach we could take instead? Any suggestions? Or
-> just live with it?
+Dan Williams wrote:
+> On Wed, 2008-10-15 at 22:02 -0700, David Miller wrote:
+>   
+>>> drivers/dma/ioat_dca.c: In function 'dca_enabled_in_bios':
+>>> drivers/dma/ioat_dca.c:81: error: implicit declaration of function 'cpuid_eax'
+>>> drivers/dma/ioat_dca.c: In function 'system_has_dca_enabled':
+>>> drivers/dma/ioat_dca.c:91: error: implicit declaration of function 'boot_cpu_has'
+>>> drivers/dma/ioat_dca.c:91: error: 'X86_FEATURE_DCA' undeclared (first use in this function)
+>>> drivers/dma/ioat_dca.c:91: error: (Each undeclared identifier is reported only once
+>>> drivers/dma/ioat_dca.c:91: error: for each function it appears in.)
+>>> drivers/dma/ioat_dca.c: In function 'ioat_dca_get_tag':
+>>> drivers/dma/ioat_dca.c:190: error: implicit declaration of function 'cpu_physical_id'
+>>>       
+>> Known issue.  I tried to ping Jeff Garzik about doing a driver bug fix run in
+>> order to fix this, but he hasn't shown any signs of life.
+>>
+>> So I'll do it myself later tonight. :-/
+>>
+>>     
+> The following seems to fix this up...
+>
+> ---snip--->
+> ixgbe, myri10ge: INTEL_IOATDMA can only be selected when X86=y
+>   
 
-We have an annotation for these kinds of warnings in the kernel.
+There's already a completely different fix queued in netdev patchworks
+(for myri10ge only right now, to be duplicated for Intel drivers). The
+idea is to stop having almost-unrelated drivers select each other
+directly, let people select which drivers they really want, and have
+Kconfig handle modules/builtin-stuff correctly. See
+http://patchwork.ozlabs.org/patch/4506/
 
-But we'll never get a warning-free compilation with all seven (sic) 
-supported gcc release series.
-
-A warning-free compilation with gcc 4.3 is worth some efforts, but 
-cluttering our code to fix bogus warnings with older gcc versions
-is not a good thing.
-
-> /ac
-
-cu
-Adrian
-
--- 
-
-       "Is there not promise of rain?" Ling Tan asked suddenly out
-        of the darkness. There had been need of rain for many days.
-       "Only a promise," Lao Er said.
-                                       Pearl S. Buck - Dragon Seed
-
+Brice
