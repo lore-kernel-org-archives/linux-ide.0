@@ -1,41 +1,65 @@
-From: Arjan van de Ven <arjan@infradead.org>
-Subject: Re: powerpc allmodconfig
-Date: Thu, 16 Oct 2008 13:02:37 -0700
-Message-ID: <20081016130237.4984967c@infradead.org>
-References: <20081015213337.a99a9595.akpm@linux-foundation.org>
-	<20081015.220247.262683261.davem@davemloft.net>
-	<1224169039.735.57.camel@johannes.berg>
-	<20081016.124923.222595655.davem@davemloft.net>
+From: Alex Chiang <achiang@hp.com>
+Subject: Re: [PATCH] stop gcc warning about uninitialized 'dev' in
+	ata_scsi_scan_host
+Date: Thu, 16 Oct 2008 15:21:22 -0600
+Message-ID: <20081016212122.GA18274@ldl.fc.hp.com>
+References: <20081015232505.GB9272@ldl.fc.hp.com> <48F6A2E7.5090005@kernel.org> <20081016034042.GA27621@ldl.fc.hp.com> <20081016061638.GA23630@cs181140183.pp.htv.fi>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from casper.infradead.org ([85.118.1.10]:47653 "EHLO
-	casper.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753449AbYJPUDV (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 16 Oct 2008 16:03:21 -0400
-In-Reply-To: <20081016.124923.222595655.davem@davemloft.net>
+Received: from g1t0028.austin.hp.com ([15.216.28.35]:35043 "EHLO
+	g1t0028.austin.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754512AbYJPVVX (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 16 Oct 2008 17:21:23 -0400
+Content-Disposition: inline
+In-Reply-To: <20081016061638.GA23630@cs181140183.pp.htv.fi>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: David Miller <davem@davemloft.net>
-Cc: johannes@sipsolutions.net, akpm@linux-foundation.org, dan.j.williams@intel.com, tiwai@suse.de, linux-ext4@vger.kernel.org, netdev@vger.kernel.org, linux-ide@vger.kernel.org, bzolnier@gmail.com, marek.vasut@gmail.com, dwmw2@infradead.org, mark.fasheh@oracle.com, ralf@linux-mips.org, mchehab@infradead.org, linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org, linuxppc-dev@ozlabs.org
+To: Adrian Bunk <bunk@kernel.org>
+Cc: Tejun Heo <tj@kernel.org>, jeff@redhat.com, linux-ide@vger.kernel.org, linux-kernel <linux-kernel@vger.kernel.org>
 
-On Thu, 16 Oct 2008 12:49:23 -0700 (PDT)
-David Miller <davem@davemloft.net> wrote:
-> #endif
-> #define __WARN() warn_on_slowpath(__FILE__, __LINE__)
-> #define __WARN_printf(arg...) warn_slowpath(__FILE__, __LINE__, arg)
-> #else
-> #define __WARN_printf(arg...) __WARN()
+* Adrian Bunk <bunk@kernel.org>:
+> On Wed, Oct 15, 2008 at 09:40:42PM -0600, Alex Chiang wrote:
+> > * Tejun Heo <tj@kernel.org>:
+> > > Alex Chiang wrote:
+> > > > Shuts up gcc-3.4.5-glibc-2.3.6 when it complains of:
+> > > > 
+> > > > drivers/ata/libata-scsi.c: In function `ata_scsi_scan_host':
+> > > > drivers/ata/libata-scsi.c:3225: warning: 'dev' might be used
+> > > > uninitialized in this function
+> > > > 
+> > > > Signed-off-by: Alex Chiang <achiang@hp.com>
+> > > 
+> > > Nacked-by: Tejun Heo <tj@kernel.org>
+> > > 
+> > > Some gcc versions complain about sata_via, others complain
+> > > about something else.  Some versions complain about some
+> > > iterator usages while not complaining about others, but none of
+> > > those complaints is actually wrong or dangerous.  I don't think
+> > > adding = NULL whenever some version of gcc complains is the
+> > > right approach.
+> > 
+> > Hm, ok.
+> > 
+> > I guess we don't want to sprinkle these around all over the place
+> > just to solve cosmetic issues, which makes sense, but is there
+> > some other approach we could take instead? Any suggestions? Or
+> > just live with it?
+> 
+> We have an annotation for these kinds of warnings in the kernel.
 
-the easiest way I suppose would be to do
+What is the annotation?
 
-#define __WARN_printf(arg..) do { printk(arg); __WARN(); } while (0)
+> But we'll never get a warning-free compilation with all seven (sic) 
+> supported gcc release series.
+> 
+> A warning-free compilation with gcc 4.3 is worth some efforts, but 
+> cluttering our code to fix bogus warnings with older gcc versions
+> is not a good thing.
 
-any obvious problems with this ?
+Ok, I already agree with this point.
 
+Thanks.
 
--- 
-Arjan van de Ven 	Intel Open Source Technology Centre
-For development, discussion and tips for power savings, 
-visit http://www.lesswatts.org
+/ac
+
