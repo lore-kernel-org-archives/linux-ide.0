@@ -1,33 +1,39 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH] ide-floppy: remove idefloppy_floppy_t typedef
-Date: Thu, 16 Oct 2008 13:58:57 +0400
-Message-ID: <48F71061.2080909@ru.mvista.com>
-References: <200810152136.48019.bzolnier@gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+From: bugme-daemon@bugzilla.kernel.org
+Subject: [Bug 11742] Device buffer on a DVD multi standard writer runs out burning a CD
+Date: Thu, 16 Oct 2008 03:00:20 -0700 (PDT)
+Message-ID: <20081016100020.AAC2E108042@picon.linux-foundation.org>
+References: <bug-11742-11633@http.bugzilla.kernel.org/>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from h155.mvista.com ([63.81.120.155]:54195 "EHLO imap.sh.mvista.com"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752656AbYJPJ7C (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 16 Oct 2008 05:59:02 -0400
-In-Reply-To: <200810152136.48019.bzolnier@gmail.com>
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:56878 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752656AbYJPKAX (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 16 Oct 2008 06:00:23 -0400
+Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
+	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id m9GA0K70024838
+	for <linux-ide@vger.kernel.org>; Thu, 16 Oct 2008 03:00:22 -0700
+In-Reply-To: <bug-11742-11633@http.bugzilla.kernel.org/>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Borislav Petkov <petkovbb@googlemail.com>
+To: linux-ide@vger.kernel.org
 
-Hello.
-
-Bartlomiej Zolnierkiewicz wrote:
-
-> There should be no functional changes caused by this patch.
->
-> Cc: Borislav Petkov <petkovbb@googlemail.com>
-> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-
-Acked-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-
-MBR, Sergei
+http://bugzilla.kernel.org/show_bug.cgi?id=11742
 
 
+
+
+
+------- Comment #15 from bbpetkov@yahoo.de  2008-10-16 03:00 -------
+Hang the developer :)
+
+You could bisect search for the commit which is causing that regression -
+this'll be of great help. Here's a good tutorial on that:
+
+http://www.kernel.org/doc/local/git-quick.html
+
+Thanks.
+
+
+-- 
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug, or are watching the assignee.
