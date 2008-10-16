@@ -1,62 +1,55 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: [PATCH] scc_pata: kill unused variables
-Date: Thu, 16 Oct 2008 23:05:31 +0400
-Message-ID: <200810162305.31300.sshtylyov@ru.mvista.com>
+From: David Miller <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>
+Subject: Re: powerpc allmodconfig
+Date: Thu, 16 Oct 2008 12:49:23 -0700 (PDT)
+Message-ID: <20081016.124923.222595655.davem@davemloft.net>
+References: <20081015213337.a99a9595.akpm@linux-foundation.org>
+	<20081015.220247.262683261.davem@davemloft.net>
+	<1224169039.735.57.camel@johannes.berg>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtsoft3.corbina.net ([85.21.88.6]:7507 "EHLO
-	buildserver.ru.mvista.com" rhost-flags-OK-FAIL-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1754660AbYJPTFt (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 16 Oct 2008 15:05:49 -0400
-Content-Disposition: inline
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-wireless-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <1224169039.735.57.camel-YfaajirXv214zXjbi5bjpg@public.gmane.org>
+Sender: linux-wireless-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: johannes-cdvu00un1VgdHxzADdlk8Q@public.gmane.org
+Cc: akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, dan.j.williams-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, tiwai-l3A5Bk7waGM@public.gmane.org, linux-ext4-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, bzolnier-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, marek.vasut-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, dwmw2-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, mark.fasheh-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, ralf-6z/3iImG2C8G8FEW9MqTrA@public.gmane.org, mchehab-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, linux-wireless-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linuxppc-dev-mnsaURCQ41sdnm+yROfE0A@public.gmane.org, arjan-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org
 List-Id: linux-ide@vger.kernel.org
-To: bzolnier@gmail.com
-Cc: linux-ide@vger.kernel.org
 
-Fix the "unused variable" warning in init_hwif_scc() caused by the commit
-48c3c1072651922ed153bcf0a33ea82cf20df390 (ide: add struct ide_host (take 3)).
-Moreover, remove the write-only variable 'dma_status_port' in init_setup_scc()
-about which gcc gives no warning and which has been there from the very start...
+From: Johannes Berg <johannes-cdvu00un1VgdHxzADdlk8Q@public.gmane.org>
+Date: Thu, 16 Oct 2008 16:57:19 +0200
 
-Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+> On Wed, 2008-10-15 at 22:02 -0700, David Miller wrote:
+> > 
+> > 
+> > > net/sched/sch_generic.c: In function 'dev_watchdog':
+> > > net/sched/sch_generic.c:224: warning: unused variable 'drivername'
+> > 
+> > Sucky, if WARN_ONCE() evaluates to nothing the sprintf() string buffer
+> > on the stack looks unused.
+> 
+> I've complained about this to Arjan before, we actually lose all
+> messages passed to WARN() or WARN_ONCE() on platforms that use bug traps
+> for warnings too.
 
----
-This patch is against the recent Linus' kernel...
+Ok I see how that works, yes, it should be fixed.
 
- drivers/ide/pci/scc_pata.c |    4 ----
- 1 files changed, 4 deletions(-)
+If the platform defines a __WARN (which powerpc does) the
+whole format string and printf args go unevaluated, it's
+because of the following sequence in asm-generic/bug.h:
 
-Index: linux-2.6/drivers/ide/pci/scc_pata.c
-===================================================================
---- linux-2.6.orig/drivers/ide/pci/scc_pata.c
-+++ linux-2.6/drivers/ide/pci/scc_pata.c
-@@ -617,7 +617,6 @@ static int __devinit init_setup_scc(stru
- 	unsigned long intmask_port;
- 	unsigned long mode_port;
- 	unsigned long ecmode_port;
--	unsigned long dma_status_port;
- 	u32 reg = 0;
- 	struct scc_ports *ports;
- 	int rc;
-@@ -637,7 +636,6 @@ static int __devinit init_setup_scc(stru
- 	intmask_port = dma_base + 0x010;
- 	mode_port = ctl_base + 0x024;
- 	ecmode_port = ctl_base + 0xf00;
--	dma_status_port = dma_base + 0x004;
- 
- 	/* controller initialization */
- 	reg = 0;
-@@ -843,8 +841,6 @@ static u8 scc_cable_detect(ide_hwif_t *h
- 
- static void __devinit init_hwif_scc(ide_hwif_t *hwif)
- {
--	struct scc_ports *ports = ide_get_hwifdata(hwif);
--
- 	/* PTERADD */
- 	out_be32((void __iomem *)(hwif->dma_base + 0x018), hwif->dmatable_dma);
- 
-
+#ifndef __WARN
+#ifndef __ASSEMBLY__
+extern void warn_on_slowpath(const char *file, const int line);
+extern void warn_slowpath(const char *file, const int line,
+		const char *fmt, ...) __attribute__((format(printf, 3, 4)));
+#define WANT_WARN_ON_SLOWPATH
+#endif
+#define __WARN() warn_on_slowpath(__FILE__, __LINE__)
+#define __WARN_printf(arg...) warn_slowpath(__FILE__, __LINE__, arg)
+#else
+#define __WARN_printf(arg...) __WARN()
+#endif
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
