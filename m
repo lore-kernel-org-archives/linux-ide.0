@@ -1,49 +1,39 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH 1/2] sgiioc4: kill useless address checks
-Date: Thu, 16 Oct 2008 14:08:05 +0400
-Message-ID: <48F71285.8080308@ru.mvista.com>
-References: <200810152329.20095.sshtylyov@ru.mvista.com> <48F70C37.3060800@ru.mvista.com>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [PATCH] ide: remove broken hpt34x driver
+Date: Thu, 16 Oct 2008 11:18:51 +0100
+Message-ID: <20081016111851.4f519c58@lxorguk.ukuu.org.uk>
+References: <200810152156.25754.bzolnier@gmail.com>
+	<48F70DDA.4010805@ru.mvista.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from h155.mvista.com ([63.81.120.155]:54502 "EHLO imap.sh.mvista.com"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752941AbYJPKIK (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 16 Oct 2008 06:08:10 -0400
-In-Reply-To: <48F70C37.3060800@ru.mvista.com>
+Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:44983 "EHLO
+	lxorguk.ukuu.org.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751322AbYJPKTE (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 16 Oct 2008 06:19:04 -0400
+In-Reply-To: <48F70DDA.4010805@ru.mvista.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: bzolnier@gmail.com
-Cc: linux-ide@vger.kernel.org, jeremy@sgi.com
+To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Hello, I wrote:
+On Thu, 16 Oct 2008 13:48:10 +0400
+Sergei Shtylyov <sshtylyov@ru.mvista.com> wrote:
 
->> would always evaluate as true:
->>   
-> The driver performs a number of checks on the virtual/physical 
-> addresses which
->
->    Oops, s/true/false/, of course -- except in sgiioc4_read_status()
+> Hello.
+> 
+> Bartlomiej Zolnierkiewicz wrote:
+> 
+> > No big loss since HPT343/363 controllers are properly supported
+> > by pata_hpt3x3 driver from Alan Cox.
+> >
+> > Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+> >   
+> 
+>    Hum, interesting way of fixing the driver... :-)
+>    Shouldn't the PCI IDs be added to drivers/ide/pci/generic.c?
 
-   I got totally muddled. :-/
-  The checks indeed evaluate as true except in ide_dma_sgiioc4().
-
->>   guarantees that 'ctrl_port' and 'irq_port' parameters are never 0;
->>
->> - in sgiioc4_read_status(), we always read the IDE status register, 
->> so there's
->>   no need to check the register's address (must be a leftover from 
->> the times
->>   when this function implemented the INB() method);
->>
->> - in ide_dma_sgiioc4(), 'dma_base' can never be 0 as IOC4_DMA_OFFSET 
->> is not 0.
->>
->> Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-> - for sgiioc4_init_hwif_ports(), its caller, 
-> sgiioc4_ide_setup_pci_device(),
-
-MBR, Sergei
-
-
+Won't work. The device isn't actually generic IDE. You have to sort the
+register mappings out and use the right mapping window for the chip to
+work.
