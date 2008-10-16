@@ -1,62 +1,67 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH] stop gcc warning about uninitialized 'dev' in	ata_scsi_scan_host
-Date: Thu, 16 Oct 2008 15:08:55 +0900
-Message-ID: <48F6DA77.7090303@kernel.org>
-References: <20081015232505.GB9272@ldl.fc.hp.com>	<48F6A2E7.5090005@kernel.org> <20081016034042.GA27621@ldl.fc.hp.com>	<48F6BAFE.6080106@kernel.org> <87r66hjcwv.fsf@denkblock.local>
+From: Adrian Bunk <bunk@kernel.org>
+Subject: Re: [PATCH] stop gcc warning about uninitialized 'dev' in
+	ata_scsi_scan_host
+Date: Thu, 16 Oct 2008 09:16:38 +0300
+Message-ID: <20081016061638.GA23630@cs181140183.pp.htv.fi>
+References: <20081015232505.GB9272@ldl.fc.hp.com> <48F6A2E7.5090005@kernel.org> <20081016034042.GA27621@ldl.fc.hp.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:56786 "EHLO hera.kernel.org"
+Received: from smtp5.pp.htv.fi ([213.243.153.39]:47445 "EHLO smtp5.pp.htv.fi"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751826AbYJPGLh (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 16 Oct 2008 02:11:37 -0400
-In-Reply-To: <87r66hjcwv.fsf@denkblock.local>
+	id S1756244AbYJPGQq (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 16 Oct 2008 02:16:46 -0400
+Content-Disposition: inline
+In-Reply-To: <20081016034042.GA27621@ldl.fc.hp.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Elias Oltmanns <eo@nebensachen.de>
-Cc: Alex Chiang <achiang@hp.com>, jeff@redhat.com, linux-ide@vger.kernel.org, linux-kernel <linux-kernel@vger.kernel.org>
+To: Alex Chiang <achiang@hp.com>, Tejun Heo <tj@kernel.org>, jeff@redhat.com, linux-ide@vger.kernel.org, linux-kernel <linux-kernel@vger.kernel.org>
 
-Elias Oltmanns wrote:
->> I think the current policy is blaming gcc but I also added quite a few
->> bogus NULL initializations here and there and caught several bugs thanks
->> to those warnings.  We can think about adding an additional annotation
->> with leading double underbars which indicate that certain pointer
->> arguments to functions expect (or are okay with) pointers to
->> uninitialized variables which should be able to remove many of those
->> spurious warnings (on the caller side, the compiler can ignore the
->> warning and on the callee side the compiler can check whether it's being
->> dereferenced without being written to).  Does anyone know whether gcc
->> already has that type of annotation?
+On Wed, Oct 15, 2008 at 09:40:42PM -0600, Alex Chiang wrote:
+> * Tejun Heo <tj@kernel.org>:
+> > Alex Chiang wrote:
+> > > Shuts up gcc-3.4.5-glibc-2.3.6 when it complains of:
+> > > 
+> > > drivers/ata/libata-scsi.c: In function `ata_scsi_scan_host':
+> > > drivers/ata/libata-scsi.c:3225: warning: 'dev' might be used
+> > > uninitialized in this function
+> > > 
+> > > Signed-off-by: Alex Chiang <achiang@hp.com>
+> > 
+> > Nacked-by: Tejun Heo <tj@kernel.org>
+> > 
+> > Some gcc versions complain about sata_via, others complain
+> > about something else.  Some versions complain about some
+> > iterator usages while not complaining about others, but none of
+> > those complaints is actually wrong or dangerous.  I don't think
+> > adding = NULL whenever some version of gcc complains is the
+> > right approach.
 > 
-> Well, I don't know of this particular kind of annotation. However, I
-> don't quite see how that would solve the reported issue.
-
-I was thinking about the warning in sata_via.c and for such cases the
-compiler doesn't have any other way of figuring out whether it's okay
-or not (the sata_via case, the compiler can actually do as the callee
-is in the same file but you know what I mean).
-
-> Here, dev is a local variable and the warning is generated due to
-> the line
+> Hm, ok.
 > 
-> 		if (dev != last_failed_dev) {
-> 
-> For this sort of thing we have:
-> 
-> 	struct ata_device *uninitialized_var(dev);
+> I guess we don't want to sprinkle these around all over the place
+> just to solve cosmetic issues, which makes sense, but is there
+> some other approach we could take instead? Any suggestions? Or
+> just live with it?
 
-Ah.. thanks.
+We have an annotation for these kinds of warnings in the kernel.
 
-> Or is that precisely the thing you did *not* want?
+But we'll never get a warning-free compilation with all seven (sic) 
+supported gcc release series.
 
-I don't know.  Later versions of gcc doesn't issue warning because it
-knows "if (!link)" always triggers if dev is not initialized.  I don't
-think we should be adding those annotations if the current gen
-compiler can already figure that out as it only decreases
-debuggability when something actually gets broken there.
+A warning-free compilation with gcc 4.3 is worth some efforts, but 
+cluttering our code to fix bogus warnings with older gcc versions
+is not a good thing.
 
-Thanks.
+> /ac
+
+cu
+Adrian
 
 -- 
-tejun
+
+       "Is there not promise of rain?" Ling Tan asked suddenly out
+        of the darkness. There had been need of rain for many days.
+       "Only a promise," Lao Er said.
+                                       Pearl S. Buck - Dragon Seed
+
