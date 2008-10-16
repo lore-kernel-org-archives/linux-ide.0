@@ -1,49 +1,52 @@
-From: Atsushi Nemoto <anemo@mba.ocn.ne.jp>
-Subject: Re: [PATCH] ide: Add tx4939ide driver (v3)
-Date: Fri, 17 Oct 2008 01:31:01 +0900 (JST)
-Message-ID: <20081017.013101.128619577.anemo@mba.ocn.ne.jp>
-References: <20081003.000838.27954527.anemo@mba.ocn.ne.jp>
-	<48F7391D.8050109@ru.mvista.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+From: bugme-daemon@bugzilla.kernel.org
+Subject: [Bug 11742] Device buffer on a DVD multi standard writer runs out burning a CD
+Date: Thu, 16 Oct 2008 09:33:49 -0700 (PDT)
+Message-ID: <20081016163349.9AC88108040@picon.linux-foundation.org>
+References: <bug-11742-11633@http.bugzilla.kernel.org/>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mba.ocn.ne.jp ([122.1.235.107]:53673 "EHLO smtp.mba.ocn.ne.jp"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754353AbYJPQa4 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 16 Oct 2008 12:30:56 -0400
-In-Reply-To: <48F7391D.8050109@ru.mvista.com>
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:41447 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752495AbYJPQdv (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 16 Oct 2008 12:33:51 -0400
+Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
+	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id m9GGXnq9016801
+	for <linux-ide@vger.kernel.org>; Thu, 16 Oct 2008 09:33:50 -0700
+In-Reply-To: <bug-11742-11633@http.bugzilla.kernel.org/>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: sshtylyov@ru.mvista.com
-Cc: linux-mips@linux-mips.org, linux-ide@vger.kernel.org, bzolnier@gmail.com, ralf@linux-mips.org
+To: linux-ide@vger.kernel.org
 
-On Thu, 16 Oct 2008 16:52:45 +0400, Sergei Shtylyov <sshtylyov@ru.mvista.com> wrote:
-> > This is the driver for the Toshiba TX4939 SoC ATA controller.
-> 
->    Mostly ACK but there's still a few minor nits...
+http://bugzilla.kernel.org/show_bug.cgi?id=11742
 
-Welcome back!  I will address all of your points except for followings.
 
-> > +			xcount = bcount & 0xffff;
-> > +			if (xcount == 0x0000) {
-> >   
-> 
->    Hm, I'm not sure this is necessary here... although I didn't see an 
-> explicit mention that zero count means 64 KB in the datasheet -- which 
-> it must mean if the BMIDE spec. was followed).
-> In ide-dma.c this check was added because of CS5530's brain damage...
 
-Hmm, if I could test this case easily I will drop this.  Otherwise I
-will keep it as is for future investigation.
 
-> > +	if ((dma_stat & 7) == 0 &&
-> > +	    (ctl & (TX4939IDE_INT_XFEREND | TX4939IDE_INT_HOST)) ==
-> > +	    (TX4939IDE_INT_XFEREND | TX4939IDE_INT_HOST))
-> 
->    Parens around & and | are hardly needed...
 
-You mean more parens are needed?
+------- Comment #21 from valerio.p@libero.it  2008-10-16 09:33 -------
+Thank Boris and Stan for you replies.
 
----
-Atsushi Nemoto
+Stan said:
+>If ata_piix works for you, just use that. Please attach the boot time errors
+>you mentioned in Comment #14 so that they can be fixed in libata/ata_piix.
+
+Don't worry, it was "my" mistake. In the procedure I've found to blacklist piix
+it was not mentioned to "depmod -ae" before creating an initrd image. Anyhow,
+now that I have fixed it, there is no more any warning at boot time :).
+It's time to be happy, relax and take a coffee ;)
+
+
+>You could bisect search for the commit which is causing that regression -
+>this'll be of great help. Here's a good tutorial on that:
+Ok, it seems not easy, but sadly now I've a lot of free time and I think that
+spending it on helping in fixing this bug is not that bad... at least until you
+have both frameworks in the kernel. I don't want to mess in the discussion, I'm
+not a developer, just an user. But I have a practical approach to almost
+everything and IMO until we have both, we should have them working and avoid
+problems to other users. I consider this as a service to the community. That's
+all
+
+
+-- 
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug, or are watching the assignee.
