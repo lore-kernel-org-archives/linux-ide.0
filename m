@@ -1,70 +1,62 @@
-From: gettinther <gettinther@gmail.com>
-Subject: Re: Can you please test the attached patch for nv hardreset problem?
-Date: Thu, 16 Oct 2008 08:04:42 +0100
-Message-ID: <64630f150810160004o77d2819dy40a6f58d13af098d@mail.gmail.com>
-References: <48E80F11.3060101@kernel.org>
-	 <64630f150810111634gbe4cfdfjccafc9f6f781edcc@mail.gmail.com>
-	 <48F30678.7020807@kernel.org>
-	 <64630f150810131213m64d8fc72j38debf71a692db16@mail.gmail.com>
-	 <48F3F368.2090901@kernel.org>
-	 <64630f150810141431r1d070cddl1c2a6b32ae80b64c@mail.gmail.com>
-	 <48F57E0B.6050403@kernel.org>
-	 <64630f150810151323k68ded27eie9a24e1b0579288a@mail.gmail.com>
-	 <48F69C89.5070900@kernel.org>
+From: Geert Uytterhoeven <geert@linux-m68k.org>
+Subject: Re: powerpc allmodconfig
+Date: Thu, 16 Oct 2008 09:31:29 +0200 (CEST)
+Message-ID: <Pine.LNX.4.64.0810160930300.25933@anakin>
+References: <20081015213337.a99a9595.akpm@linux-foundation.org>
+ <20081015.220247.262683261.davem@davemloft.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-gx0-f16.google.com ([209.85.217.16]:58755 "EHLO
-	mail-gx0-f16.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752316AbYJPHEo (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 16 Oct 2008 03:04:44 -0400
-Received: by gxk9 with SMTP id 9so7919315gxk.13
-        for <linux-ide@vger.kernel.org>; Thu, 16 Oct 2008 00:04:42 -0700 (PDT)
-In-Reply-To: <48F69C89.5070900@kernel.org>
-Content-Disposition: inline
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1755345AbYJPHbn@vger.kernel.org>
+In-Reply-To: <20081015.220247.262683261.davem@davemloft.net>
+Sender: linux-kernel-owner@vger.kernel.org
+To: David Miller <davem@davemloft.net>
+Cc: akpm@linux-foundation.org, dan.j.williams@intel.com, tiwai@suse.de, linux-ext4@vger.kernel.org, netdev@vger.kernel.org, linux-ide@vger.kernel.org, bzolnier@gmail.com, marek.vasut@gmail.com, dwmw2@infradead.org, mark.fasheh@oracle.com, ralf@linux-mips.org, mchehab@infradead.org, linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org, linuxppc-dev@ozlabs.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: IDE/ATA development list <linux-ide@vger.kernel.org>, lists@ku-gbr.de, linux@sun7.cn, Robert Hancock <hancockr@shaw.ca>
 
-On Thu, Oct 16, 2008 at 2:44 AM, Tejun Heo <tj@kernel.org> wrote:
-> gettinther wrote:
->> On Wed, Oct 15, 2008 at 6:22 AM, Tejun Heo <tj@kernel.org> wrote:
->>> gettinther wrote:
->>>> The log simply ignores the drive altogether.
->>>>
->>>> from the sound coming from the drive, it does seem that the drive
->>>> initially starts at boot, then stops.  After that stage the device
->>>> detection takes place.  as the item is a pata to sata converter
->>>> (emulated sata), it does not support hot plugging.
->>>>
->>>> I also need to mention that this behavior (start-stop during boot) did
->>>> not happen on the 2.6.24 and I need to check the 2.6.27.  However the
->>>> device is detected by both of these kernels.
->>> Hmmm...
->>>
->>>> Oct 14 21:18:12 localhost kernel: ata2: SATA link up 1.5 Gbps (SStatus
->>>> 113 SControl 300)
->>> Hmmm... Can you please apply the attached patch on top of it and
->>> report the boot log?
->>>
->>> --
->>> tejun
->>>
->>
->> here it is.  Let me know if you need other parts of the logs.
->
-> Ah.. okay, you need to change .hardreset to ATA_OP_NULL instead of
-> sata_std_hardreset.
->
-> --
-> tejun
->
+On Wed, 15 Oct 2008, David Miller wrote:
+> > kernel/resource.c: In function '__reserve_region_with_split':
+> > kernel/resource.c:554: warning: format '%llx' expects type 'long long unsigned int', but argument 3 has type 'resource_size_t'
+> > kernel/resource.c:554: warning: format '%llx' expects type 'long long unsigned int', but argument 4 has type 'resource_size_t'
+> > kernel/resource.c:554: warning: format '%llx' expects type 'long long unsigned int', but argument 6 has type 'resource_size_t'
+> > kernel/resource.c:554: warning: format '%llx' expects type 'long long unsigned int', but argument 7 has type 'resource_size_t'
+> 
+> Known issue, Ben wants to add a new variant of %pX in order to print resources so that
+> resource_size_t vs. unsigned long stuff doesn't matter like this any more.
 
-On both 2.6.26 and 2.6.27 or just the 2.6.26?  The initial patch does
-work on the 2.6.27
+Will still give a warning, as resource_size_t is not a pointer.
 
-Thanks,
+> > drivers/rtc/rtc-ds1286.c: In function 'ds1286_rtc_read':
+> > drivers/rtc/rtc-ds1286.c:33: error: implicit declaration of function '__raw_readl'
+> > drivers/rtc/rtc-ds1286.c: In function 'ds1286_rtc_write':
+> > drivers/rtc/rtc-ds1286.c:38: error: implicit declaration of function '__raw_writel'
+> > drivers/rtc/rtc-ds1286.c: In function 'ds1286_probe':
+> > drivers/rtc/rtc-ds1286.c:345: error: implicit declaration of function 'ioremap'
+> > drivers/rtc/rtc-ds1286.c:345: warning: assignment makes pointer from integer without a cast
+> > drivers/rtc/rtc-ds1286.c:365: error: implicit declaration of function 'iounmap'
+> 
+> Missing asm/io.h include.
 
-Cyrille
+Nah, <linux/io.h> ;-)
+
+> > drivers/rtc/rtc-m48t35.c: In function 'm48t35_read_time':
+> > drivers/rtc/rtc-m48t35.c:59: error: implicit declaration of function 'readb'
+> > drivers/rtc/rtc-m48t35.c:60: error: implicit declaration of function 'writeb'
+> > drivers/rtc/rtc-m48t35.c: In function 'm48t35_probe':
+> > drivers/rtc/rtc-m48t35.c:168: error: implicit declaration of function 'ioremap'
+> > drivers/rtc/rtc-m48t35.c:168: warning: assignment makes pointer from integer without a cast
+> > drivers/rtc/rtc-m48t35.c:188: error: implicit declaration of function 'iounmap'
+> 
+> Likewise.
+
+Already sent a patch for these two...
+
+Gr{oetje,eeting}s,
+
+						Geert
+
+--
+Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
+
+In personal conversations with technical people, I call myself a hacker. But
+when I'm talking to journalists I just say "programmer" or something like that.
+							    -- Linus Torvalds
