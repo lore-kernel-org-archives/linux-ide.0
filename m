@@ -1,50 +1,61 @@
-From: bugme-daemon@bugzilla.kernel.org
-Subject: [Bug 11742] Device buffer on a DVD multi standard writer runs out burning a CD
-Date: Thu, 16 Oct 2008 10:16:03 -0700 (PDT)
-Message-ID: <20081016171603.ADFF1108056@picon.linux-foundation.org>
-References: <bug-11742-11633@http.bugzilla.kernel.org/>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: Re: [PATCH] ide: Add tx4939ide driver (v3)
+Date: Thu, 16 Oct 2008 21:23:07 +0400
+Message-ID: <48F7787B.2060807@ru.mvista.com>
+References: <20081003.000838.27954527.anemo@mba.ocn.ne.jp>	<48F7391D.8050109@ru.mvista.com> <20081017.013101.128619577.anemo@mba.ocn.ne.jp>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:53787 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756745AbYJPRQF (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 16 Oct 2008 13:16:05 -0400
-Received: from picon.linux-foundation.org (picon.linux-foundation.org [140.211.169.79])
-	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id m9GHG3xG019590
-	for <linux-ide@vger.kernel.org>; Thu, 16 Oct 2008 10:16:04 -0700
-In-Reply-To: <bug-11742-11633@http.bugzilla.kernel.org/>
+Received: from h155.mvista.com ([63.81.120.155]:2542 "EHLO imap.sh.mvista.com"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1758563AbYJPRXY (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 16 Oct 2008 13:23:24 -0400
+In-Reply-To: <20081017.013101.128619577.anemo@mba.ocn.ne.jp>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Atsushi Nemoto <anemo@mba.ocn.ne.jp>
+Cc: linux-mips@linux-mips.org, linux-ide@vger.kernel.org, bzolnier@gmail.com, ralf@linux-mips.org
 
-http://bugzilla.kernel.org/show_bug.cgi?id=11742
+Hello.
 
+Atsushi Nemoto wrote:
 
-bbpetkov@yahoo.de changed:
+>>>This is the driver for the Toshiba TX4939 SoC ATA controller.
 
-           What    |Removed                     |Added
-----------------------------------------------------------------------------
-         AssignedTo|io_ide@kernel-bugs.osdl.org |bbpetkov@yahoo.de
-             Status|NEW                         |ASSIGNED
+>>   Mostly ACK but there's still a few minor nits...
 
+> Welcome back!
 
+    Indeed, it turned out to be hard to drown in the Dead see. :-)
 
+>  I will address all of your points except for followings.
 
-------- Comment #23 from bbpetkov@yahoo.de  2008-10-16 10:16 -------
-Ok, you can do the following if !GIT:
+>>>+			xcount = bcount & 0xffff;
+>>>+			if (xcount == 0x0000) {
+>>>  
 
-patch -p1 -R --dry-run < [patch]
+>>   Hm, I'm not sure this is necessary here... although I didn't see an 
+>>explicit mention that zero count means 64 KB in the datasheet -- which 
+>>it must mean if the BMIDE spec. was followed).
+>>In ide-dma.c this check was added because of CS5530's brain damage...
 
-(in case there are no rejects, remove the --dry-run option)
+> Hmm, if I could test this case easily I will drop this.  Otherwise I
+> will keep it as is for future investigation.
 
-ontop of 2.6.27. It should revert cleanly, though. Then recompile the kernel,
-boot. The [patch] above is following in an attachment.
+    OK.
 
-Thanks,
-Boris.
+>>>+	if ((dma_stat & 7) == 0 &&
+>>>+	    (ctl & (TX4939IDE_INT_XFEREND | TX4939IDE_INT_HOST)) ==
+>>>+	    (TX4939IDE_INT_XFEREND | TX4939IDE_INT_HOST))
+>>
+>>   Parens around & and | are hardly needed...
 
+> You mean more parens are needed?
 
--- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug, or are watching the assignee.
-You are the assignee for the bug, or are watching the assignee.
+    I mean less. :-)
+
+> ---
+> Atsushi Nemoto
+
+MBR, Sergei
