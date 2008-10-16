@@ -1,53 +1,70 @@
-From: David Miller <davem@davemloft.net>
-Subject: Re: powerpc allmodconfig
-Date: Wed, 15 Oct 2008 23:58:44 -0700 (PDT)
-Message-ID: <20081015.235844.206136521.davem@davemloft.net>
-References: <20081015.220247.262683261.davem@davemloft.net>
-	<1224137292.26782.5.camel@dwillia2-linux.ch.intel.com>
-	<48F6E54C.5010207@myri.com>
+From: gettinther <gettinther@gmail.com>
+Subject: Re: Can you please test the attached patch for nv hardreset problem?
+Date: Thu, 16 Oct 2008 08:04:42 +0100
+Message-ID: <64630f150810160004o77d2819dy40a6f58d13af098d@mail.gmail.com>
+References: <48E80F11.3060101@kernel.org>
+	 <64630f150810111634gbe4cfdfjccafc9f6f781edcc@mail.gmail.com>
+	 <48F30678.7020807@kernel.org>
+	 <64630f150810131213m64d8fc72j38debf71a692db16@mail.gmail.com>
+	 <48F3F368.2090901@kernel.org>
+	 <64630f150810141431r1d070cddl1c2a6b32ae80b64c@mail.gmail.com>
+	 <48F57E0B.6050403@kernel.org>
+	 <64630f150810151323k68ded27eie9a24e1b0579288a@mail.gmail.com>
+	 <48F69C89.5070900@kernel.org>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ext4-owner@vger.kernel.org>
-In-Reply-To: <48F6E54C.5010207@myri.com>
-Sender: linux-ext4-owner@vger.kernel.org
-To: brice@myri.com
-Cc: dan.j.williams@intel.com, akpm@linux-foundation.org, tiwai@suse.de, linux-ext4@vger.kernel.org, netdev@vger.kernel.org, linux-ide@vger.kernel.org, bzolnier@gmail.com, marek.vasut@gmail.com, dwmw2@infradead.org, mark.fasheh@oracle.com, ralf@linux-mips.org, mchehab@infradead.org, linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org, linuxppc-dev@ozlabs.org, jesse.brandeburg@intel.com
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-gx0-f16.google.com ([209.85.217.16]:58755 "EHLO
+	mail-gx0-f16.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752316AbYJPHEo (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 16 Oct 2008 03:04:44 -0400
+Received: by gxk9 with SMTP id 9so7919315gxk.13
+        for <linux-ide@vger.kernel.org>; Thu, 16 Oct 2008 00:04:42 -0700 (PDT)
+In-Reply-To: <48F69C89.5070900@kernel.org>
+Content-Disposition: inline
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: IDE/ATA development list <linux-ide@vger.kernel.org>, lists@ku-gbr.de, linux@sun7.cn, Robert Hancock <hancockr@shaw.ca>
 
-From: Brice Goglin <brice@myri.com>
-Date: Thu, 16 Oct 2008 08:55:08 +0200
+On Thu, Oct 16, 2008 at 2:44 AM, Tejun Heo <tj@kernel.org> wrote:
+> gettinther wrote:
+>> On Wed, Oct 15, 2008 at 6:22 AM, Tejun Heo <tj@kernel.org> wrote:
+>>> gettinther wrote:
+>>>> The log simply ignores the drive altogether.
+>>>>
+>>>> from the sound coming from the drive, it does seem that the drive
+>>>> initially starts at boot, then stops.  After that stage the device
+>>>> detection takes place.  as the item is a pata to sata converter
+>>>> (emulated sata), it does not support hot plugging.
+>>>>
+>>>> I also need to mention that this behavior (start-stop during boot) did
+>>>> not happen on the 2.6.24 and I need to check the 2.6.27.  However the
+>>>> device is detected by both of these kernels.
+>>> Hmmm...
+>>>
+>>>> Oct 14 21:18:12 localhost kernel: ata2: SATA link up 1.5 Gbps (SStatus
+>>>> 113 SControl 300)
+>>> Hmmm... Can you please apply the attached patch on top of it and
+>>> report the boot log?
+>>>
+>>> --
+>>> tejun
+>>>
+>>
+>> here it is.  Let me know if you need other parts of the logs.
+>
+> Ah.. okay, you need to change .hardreset to ATA_OP_NULL instead of
+> sata_std_hardreset.
+>
+> --
+> tejun
+>
 
-> Dan Williams wrote:
-> > On Wed, 2008-10-15 at 22:02 -0700, David Miller wrote:
-> >   
-> >>> drivers/dma/ioat_dca.c: In function 'dca_enabled_in_bios':
-> >>> drivers/dma/ioat_dca.c:81: error: implicit declaration of function 'cpuid_eax'
-> >>> drivers/dma/ioat_dca.c: In function 'system_has_dca_enabled':
-> >>> drivers/dma/ioat_dca.c:91: error: implicit declaration of function 'boot_cpu_has'
-> >>> drivers/dma/ioat_dca.c:91: error: 'X86_FEATURE_DCA' undeclared (first use in this function)
-> >>> drivers/dma/ioat_dca.c:91: error: (Each undeclared identifier is reported only once
-> >>> drivers/dma/ioat_dca.c:91: error: for each function it appears in.)
-> >>> drivers/dma/ioat_dca.c: In function 'ioat_dca_get_tag':
-> >>> drivers/dma/ioat_dca.c:190: error: implicit declaration of function 'cpu_physical_id'
-> >>>       
-> >> Known issue.  I tried to ping Jeff Garzik about doing a driver bug fix run in
-> >> order to fix this, but he hasn't shown any signs of life.
-> >>
-> >> So I'll do it myself later tonight. :-/
-> >>
-> >>     
-> > The following seems to fix this up...
-> >
-> > ---snip--->
-> > ixgbe, myri10ge: INTEL_IOATDMA can only be selected when X86=y
-> >   
-> 
-> There's already a completely different fix queued in netdev patchworks
-> (for myri10ge only right now, to be duplicated for Intel drivers). The
-> idea is to stop having almost-unrelated drivers select each other
-> directly, let people select which drivers they really want, and have
-> Kconfig handle modules/builtin-stuff correctly. See
-> http://patchwork.ozlabs.org/patch/4506/
+On both 2.6.26 and 2.6.27 or just the 2.6.26?  The initial patch does
+work on the 2.6.27
 
-Right, my plan was to duplicate this for the other drivers.
+Thanks,
+
+Cyrille
