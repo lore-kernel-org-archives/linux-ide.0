@@ -1,88 +1,98 @@
-From: Ingo Molnar <mingo@elte.hu>
-Subject: Re: powerpc allmodconfig
-Date: Fri, 17 Oct 2008 13:09:45 +0200
-Message-ID: <20081017110945.GA32364@elte.hu>
-References: <20081015213337.a99a9595.akpm@linux-foundation.org> <20081015.220247.262683261.davem@davemloft.net>
+From: Artem Bokhan <aptem@ngs.ru>
+Subject: sata_mv, io stucks
+Date: Fri, 17 Oct 2008 19:25:45 +0700
+Message-ID: <48F88449.1000704@ngs.ru>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-ext4-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20081015.220247.262683261.davem@davemloft.net>
-Sender: linux-ext4-owner@vger.kernel.org
-To: David Miller <davem@davemloft.net>
-Cc: akpm@linux-foundation.org, dan.j.williams@intel.com, tiwai@suse.de, linux-ext4@vger.kernel.org, netdev@vger.kernel.org, linux-ide@vger.kernel.org, bzolnier@gmail.com, marek.vasut@gmail.com, dwmw2@infradead.org, mark.fasheh@oracle.com, ralf@linux-mips.org, mchehab@infradead.org, linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org, linuxppc-dev@ozlabs.org
+Content-Type: text/plain; charset=KOI8-R; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from smtpout1.ngs.ru ([195.93.186.195]:45295 "EHLO smtpout1.ngs.ru"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753468AbYJQMcT (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 17 Oct 2008 08:32:19 -0400
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org, tj@kernel.org
+
+I try to simulate random reads  with "sysbench --test=fileio 
+--num-threads=16 --max-requests=9999999 --max-time=60 --init-rng=on 
+--file-num=16 --file-fsync-freq=0 --file-test-mode=rndrd 
+--file-total-size=30G run"
+
+Two marvell controllers, 16 disks, software raid10, IO stucks on 
+different disks, kernel 2.6.26.5.
+With default ubuntu's 8.04 2.6.24 kernel the problem can not be repeated
 
 
-* David Miller <davem@davemloft.net> wrote:
+[  289.851609] ata11.00: exception Emask 0x0 SAct 0x1 SErr 0x0 action 
+0x6 frozen
+[  289.851695] ata11.00: cmd 61/08:00:60:1e:bf/00:00:01:00:00/40 tag 0 
+ncq 4096 out
+[  289.851697]          res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 
+0x4 (timeout)
+[  289.851774] ata11.00: status: { DRDY }
+[  289.851834] ata11: hard resetting link
+[  290.649259] ata11: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+[  290.749239] ata11.00: max_sectors limited to 256 for NCQ
+[  290.809189] ata11.00: max_sectors limited to 256 for NCQ
+[  290.809194] ata11.00: configured for UDMA/133
+[  290.809200] ata11: EH complete
+[  290.809242] sd 10:0:0:0: [sdk] 1953525168 512-byte hardware sectors 
+(1000205 MB)
+[  290.809258] sd 10:0:0:0: [sdk] Write Protect is off
+[  290.809263] sd 10:0:0:0: [sdk] Mode Sense: 00 3a 00 00
+[  290.809286] sd 10:0:0:0: [sdk] Write cache: enabled, read cache: 
+enabled, doesn't support DPO or FUA
 
-> > net/dccp/options.c: In function 'dccp_parse_options':=20
-> > net/dccp/options.c:67: warning: 'value' may be used uninitialized i=
-n=20
-> > this function
->=20
-> Known issue, not trivial to fix, gcc is just being incredibly silly=20
-> here as it can't see all of the control flow.
 
-i just ran into this - do you have any objection against the patch=20
-below?
+lspci:
 
-Should we have a cleaner annotation perhaps instead of=20
-uninitialized_var()? Something like:
+05:01.0 SCSI storage controller: Marvell Technology Group Ltd. 
+MV88SX6081 8-port SATA II PCI-X Controller (rev 09)
+        Subsystem: Marvell Technology Group Ltd. Unknown device 11ab
+        Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV+ VGASnoop- 
+ParErr+ Stepping- SERR+ FastB2B+
+        Status: Cap+ 66MHz+ UDF- FastB2B+ ParErr- DEVSEL=medium >TAbort- 
+<TAbort- <MAbort- >SERR- <PERR-
+        Latency: 32, Cache Line Size: 32 bytes
+        Interrupt: pin A routed to IRQ 24
+        Region 0: Memory at d8200000 (64-bit, non-prefetchable) [size=1M]
+        Region 2: I/O ports at 3000 [size=256]
+        Capabilities: [40] Power Management version 2
+                Flags: PMEClk- DSI- D1- D2- AuxCurrent=0mA 
+PME(D0-,D1-,D2-,D3hot-,D3cold-)
+                Status: D0 PME-Enable- DSel=0 DScale=0 PME-
+        Capabilities: [50] Message Signalled Interrupts: Mask- 64bit+ 
+Queue=0/0 Enable-
+                Address: 0000000000000000  Data: 0000
+        Capabilities: [60] PCI-X non-bridge device
+                Command: DPERE- ERO- RBC=512 OST=4
+                Status: Dev=05:01.0 64bit+ 133MHz+ SCD- USC- DC=simple 
+DMMRBC=512 DMOST=4 DMCRS=8 RSCEM- 266MHz- 533MHz-
 
- #define __used          __attribute__((used))
+05:02.0 SCSI storage controller: Marvell Technology Group Ltd. 
+MV88SX6081 8-port SATA II PCI-X Controller (rev 09)
+        Subsystem: Marvell Technology Group Ltd. Unknown device 11ab
+        Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV+ VGASnoop- 
+ParErr+ Stepping- SERR+ FastB2B+
+        Status: Cap+ 66MHz+ UDF- FastB2B+ ParErr- DEVSEL=medium >TAbort- 
+<TAbort- <MAbort- >SERR- <PERR-
+        Latency: 32, Cache Line Size: 32 bytes
+        Interrupt: pin A routed to IRQ 28
+        Region 0: Memory at d8300000 (64-bit, non-prefetchable) [size=1M]
+        Region 2: I/O ports at 3400 [size=256]
+        Region 3: [virtual] Memory at d8800000 (32-bit, 
+non-prefetchable) [size=4M]
+        [virtual] Expansion ROM at d9000000 [disabled] [size=4M]
+        Capabilities: [40] Power Management version 2
+                Flags: PMEClk- DSI- D1- D2- AuxCurrent=0mA 
+PME(D0-,D1-,D2-,D3hot-,D3cold-)
+                Status: D0 PME-Enable- DSel=0 DScale=0 PME-
+        Capabilities: [50] Message Signalled Interrupts: Mask- 64bit+ 
+Queue=0/0 Enable-
+                Address: 0000000000000000  Data: 0000
+        Capabilities: [60] PCI-X non-bridge device
+                Command: DPERE- ERO- RBC=512 OST=4
+                Status: Dev=05:02.0 64bit+ 133MHz+ SCD- USC- DC=simple 
+DMMRBC=512 DMOST=4 DMCRS=8 RSCEM- 266MHz- 533MHz-
 
-?
-
-	Ingo
-
----------->
-=46rom d917af0bd043eab40d57f79cba9cf7a7b265a205 Mon Sep 17 00:00:00 200=
-1
-=46rom: Ingo Molnar <mingo@elte.hu>
-Date: Fri, 17 Oct 2008 12:41:30 +0200
-Subject: [PATCH] fix warning in net/dccp/options.c
-MIME-Version: 1.0
-Content-Type: text/plain; charset=3Dutf-8
-Content-Transfer-Encoding: 8bit
-
-fix this warning:
-
-  net/dccp/options.c: In function =E2=80=98dccp_parse_options=E2=80=99:
-  net/dccp/options.c:67: warning: =E2=80=98value=E2=80=99 may be used u=
-ninitialized in this function
-
-This is a bogus GCC warning. The compiler does not recognize the relati=
-on
-between "value" and "mandatory" variables: the code flow can ever reach
-the "out_invalid_option:" label if 'mandatory' is set to 1, and when
-'mandatory' is non-zero, we'll always have 'value' initialized.
-
-Help out the compiler by annotating the variable.
-
-Signed-off-by: Ingo Molnar <mingo@elte.hu>
----
- net/dccp/options.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
-
-diff --git a/net/dccp/options.c b/net/dccp/options.c
-index 0809b63..18dcfb9 100644
---- a/net/dccp/options.c
-+++ b/net/dccp/options.c
-@@ -64,7 +64,7 @@ int dccp_parse_options(struct sock *sk, struct dccp_r=
-equest_sock *dreq,
- 					(dh->dccph_doff * 4);
- 	struct dccp_options_received *opt_recv =3D &dp->dccps_options_receive=
-d;
- 	unsigned char opt, len;
--	unsigned char *value;
-+	unsigned char *uninitialized_var(value);
- 	u32 elapsed_time;
- 	__be32 opt_val;
- 	int rc;
---
-To unsubscribe from this list: send the line "unsubscribe linux-ext4" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
