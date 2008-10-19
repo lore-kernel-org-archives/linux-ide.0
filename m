@@ -1,47 +1,48 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH #upstream-fixes] libata-sff: fix ata_sff_post_internal_cmd()
-Date: Mon, 20 Oct 2008 13:10:21 +0900
-Message-ID: <48FC04AD.7050309@kernel.org>
+From: Mark Lord <liml@rtr.ca>
+Subject: Re: A USB enclosure that supports SCSI-ATA-Passthru (cheap!)
+Date: Sun, 19 Oct 2008 12:38:05 -0400
+Message-ID: <48FB626D.4070205@rtr.ca>
+References: <48FB60CC.5000008@rtr.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:55636 "EHLO hera.kernel.org"
+Received: from rtr.ca ([76.10.145.34]:37928 "EHLO mail.rtr.ca"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751484AbYJTEM1 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 20 Oct 2008 00:12:27 -0400
+	id S1751478AbYJSQhe (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 19 Oct 2008 12:37:34 -0400
+In-Reply-To: <48FB60CC.5000008@rtr.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>, IDE/ATA development list <linux-ide@vger.kernel.org>
+To: IDE/ATA development list <linux-ide@vger.kernel.org>, Alan Cox <alan@redhat.com>, Tejun Heo <htejun@gmail.com>, Jeff Garzik <jgarzik@pobox.com>, Bruce Allen <ballen@gravity.phys.uwm.edu>
 
-ata_sff_post_internal_cmd() needs to grab port lock before calling
-ata_bmdma_stop() and also need to clear hsm_task_state.  Fix it.
+Mark Lord wrote:
+> I believe this is of possible interest to others here:
+> 
+> Most newer USB enclosures now support SCSI STOP/START commands.
+> 
+> But.. the Western Digital 2.5" mobile USB2 enclosures (SATA inside)
+> appear to also support the SCSI-ATA-Command-Passthru protocol.
+> These are the first ones I have seen here that do this.
+> 
+> So, things like "hdparm -I /dev/sdb" work without fuss on an
+> external USB drive when used with these enclosures.
+> As does setting automatic spin-down with "hdparm -S".
+..
+> Model:  WD-250XMS-00 (with 250GB drive inside, removeable).
+> USB info:  1058:0702 Western Digital Technologies, Inc.
+> Bridge chip by InitIO:  INIC-1606L
+..
 
-Signed-off-by: Tejun Heo <tj@kernel.org>
----
- drivers/ata/libata-sff.c |   11 ++++++++++-
- 1 file changed, 10 insertions(+), 1 deletion(-)
+Mmm.. I also have two NexStar-3 2.5" USB/eSata enclosures here,
+but they are not identical on the inside.
 
-Index: work/drivers/ata/libata-sff.c
-===================================================================
---- work.orig/drivers/ata/libata-sff.c
-+++ work/drivers/ata/libata-sff.c
-@@ -2153,8 +2153,17 @@ void ata_sff_error_handler(struct ata_po
-  */
- void ata_sff_post_internal_cmd(struct ata_queued_cmd *qc)
- {
--	if (qc->ap->ioaddr.bmdma_addr)
-+	struct ata_port *ap = qc->ap;
-+	unsigned long flags;
-+
-+	spin_lock_irqsave(ap->lock, flags);
-+
-+	ap->hsm_task_state = HSM_ST_IDLE;
-+
-+	if (ap->ioaddr.bmdma_addr)
- 		ata_bmdma_stop(qc);
-+
-+	spin_unlock_irqrestore(ap->lock, flags);
- }
- 
- /**
+The one with an InitIO INIC-1610L chip does *not* support SAT,
+but the second one with an InitIO INIC-1611L chip *does* work with SAT!
+
+Good to see these chips getting out there now,
+as it allows external storage to be spun-down much
+of the time when only rarely needed -- keeps the drives
+from cooking the rest of the time.
+
+Cheers
