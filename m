@@ -1,83 +1,162 @@
-From: Mikael Pettersson <mikpe@it.uu.se>
-Subject: Re: [smartmontools-support] inactive SATA drives won't stay in standby
- or sleep, PATA models did. (fwd)
-Date: Mon, 20 Oct 2008 01:40:21 +0200
-Message-ID: <18683.50533.786782.474536@harpo.it.uu.se>
-References: <D73D40172004714D95D7A84AC3E68EC802282133@wdscexbe03.sc.wdc.com>
-	<48EBFE9B.9070503@gmail.com>
-	<18674.4081.839329.116533@harpo.it.uu.se>
-	<48F2D9A8.1030502@gmail.com>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: Re: [PATCH] ide: Add tx4938ide driver
+Date: Sun, 19 Oct 2008 20:32:13 +0400
+Message-ID: <48FB610D.3020901@ru.mvista.com>
+References: <20081017.231130.82350696.anemo@mba.ocn.ne.jp>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1751970AbYJSXlD@vger.kernel.org>
-In-Reply-To: <48F2D9A8.1030502@gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Mikael Pettersson <mikpe@it.uu.se>, Christian Mueller <Christian.Mueller@wdc.com>, Bruce Allen <ballen@gravity.phys.uwm.edu>, Smartmontools Mailing List <smartmontools-support@lists.sourceforge.net>, LKML <linux-kernel@vger.kernel.org>, IDE/ATA development list <linux-ide@vger.kernel.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from homer.mvista.com ([63.81.120.155]:9394 "EHLO imap.sh.mvista.com"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751359AbYJSQcb (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 19 Oct 2008 12:32:31 -0400
+In-Reply-To: <20081017.231130.82350696.anemo@mba.ocn.ne.jp>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Atsushi Nemoto <anemo@mba.ocn.ne.jp>
+Cc: linux-mips@linux-mips.org, linux-ide@vger.kernel.org, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, ralf@linux-mips.org
 
-On Mon, 13 Oct 2008 14:16:24 +0900, Tejun Heo wrote:
->Mikael Pettersson wrote:
->> - hardreset in sata_promise seems broken. I'll take a closer look
->>   at that in about a week's time (I'll be busy with other work the
->>   next couple of days).
->
->This looks like a rather serious problem, so please take a look at
->this.
+Hello.
 
-I've done more tests now, and the problem is that errors detected
-outside of sata_promise itself, typically timeouts, don't trigger
-the pdc_reset_port() call needed to bring the ATA engine behind the
-port back to sanity.
+Atsushi Nemoto wrote:
 
-And the reason no Promise-specific reset is done on timeouts is
-that libata-eh freezes the port before calling ->error_handler.
-sata_promise's error_handler only does a reset if the port is
-non-frozen, and I think that's because we don't want to destroy
-error status bits needed by EH autopsy.
+> This is the driver for the Toshiba TX4938 SoC EBUS controller ATA mode.
+> It has custom set_pio_mode and some hacks for big endian.
 
-The solution I've been testing is the straightforward one of
-overriding ->prereset with code which calls pdc_reset_port()
-before calling the default prereset. (See patch below.)
-(Promise's own driver issues resets whenever there's a sign
-of a problem.)
+> Signed-off-by: Atsushi Nemoto <anemo@mba.ocn.ne.jp>
 
-One of my test disks will often trigger a timeout if smartctl
-accesses it when it's spun down. Previously the port would not
-recover from that, but now it's just a brief reset/detect and
-then it's up again.
+[...]
 
-/Mikael
+> diff --git a/drivers/ide/mips/tx4938ide.c b/drivers/ide/mips/tx4938ide.c
+> new file mode 100644
+> index 0000000..2e5778d
+> --- /dev/null
+> +++ b/drivers/ide/mips/tx4938ide.c
+> @@ -0,0 +1,319 @@
+[...]
+> +static void tx4938ide_tune_ebusc(unsigned int ebus_ch,
+> +				 unsigned int gbus_clock,
+> +				 u8 pio)
+> +{
+> +	struct ide_timing *t = ide_timing_find_mode(XFER_PIO_0 + pio);
+> +	u64 cr = __raw_readq(&tx4938_ebuscptr->cr[ebus_ch]);
+> +	unsigned int sp = ((unsigned int)cr >> 4) & 3;
+> +	unsigned int clock = gbus_clock / (4 - sp);
+> +	unsigned int cycle = 1000000000 / clock;
+> +	unsigned int wt, shwt;
+> +
+> +	/* IORDY setup time: 35ns */
+> +	wt = (35 + cycle - 1) / cycle;
 
---- linux-2.6.27/drivers/ata/sata_promise.c.~1~	2008-07-14 10:22:36.000000000 +0200
-+++ linux-2.6.27/drivers/ata/sata_promise.c	2008-10-20 00:20:58.000000000 +0200
-@@ -153,6 +153,7 @@ static void pdc_freeze(struct ata_port *
- static void pdc_sata_freeze(struct ata_port *ap);
- static void pdc_thaw(struct ata_port *ap);
- static void pdc_sata_thaw(struct ata_port *ap);
-+static int pdc_prereset(struct ata_link *link, unsigned long deadline);
- static void pdc_error_handler(struct ata_port *ap);
- static void pdc_post_internal_cmd(struct ata_queued_cmd *qc);
- static int pdc_pata_cable_detect(struct ata_port *ap);
-@@ -175,6 +176,7 @@ static const struct ata_port_operations 
- 	.sff_irq_clear		= pdc_irq_clear,
- 
- 	.post_internal_cmd	= pdc_post_internal_cmd,
-+	.prereset		= pdc_prereset,
- 	.error_handler		= pdc_error_handler,
- };
- 
-@@ -691,6 +693,12 @@ static void pdc_sata_thaw(struct ata_por
- 	readl(host_mmio + hotplug_offset); /* flush */
- }
- 
-+static int pdc_prereset(struct ata_link *link, unsigned long deadline)
-+{
-+	pdc_reset_port(link->ap);
-+	return ata_sff_prereset(link, deadline);
-+}
-+
- static void pdc_error_handler(struct ata_port *ap)
- {
- 	if (!(ap->pflags & ATA_PFLAG_FROZEN))
+    It's not that simple I'm afraid: you can't just wait IORDY for 35 ns as 
+that won't guarantee the minimum DIOx- actime time for the current PIO mode; 
+so t->act8 (since it's >= t->act) should be part of the equation here, 
+possibly with subtraction of couple cycles, if I'm interpreting the timing 
+diagrams in the datasheet correctly...
+    And please use DIV_ROUND_UP() -- like the other drivers do.
+
+> +	/* actual wait-cycle is max(wt & ~1, 1) */
+
+    I got an impression that WT[0] bit is used otherwise in the ready mode, 
+and PWT[1:0]:WT[3:1] = 00000 would mean 0 cycles, not 1...
+
+> +	if (wt > 2 && (wt & 1))
+> +		wt++;
+> +	wt &= ~1;
+> +	/* Address valid to DIOR/DIOW setup */
+> +	shwt = (t->setup + cycle - 1) / cycle;
+
+    Use DIV_ROUND_UP() here too.
+
+> +
+> +	pr_debug("tx4938ide: ebus %d, bus cycle %dns, WT %d, SHWT %d\n",
+> +		 ebus_ch, cycle, wt, shwt);
+> +
+> +	__raw_writeq((cr & ~(0x3f007ull)) | (wt << 12) | shwt,
+> +		     &tx4938_ebuscptr->cr[ebus_ch]);
+> +}
+
+[...]
+
+> +static const struct ide_port_info tx4938ide_port_info __initdata = {
+> +	.port_ops = &tx4938ide_port_ops,
+> +#ifdef __BIG_ENDIAN
+> +	.tp_ops = &tx4938ide_tp_ops,
+> +#endif
+> +	.host_flags = IDE_HFLAG_MMIO | IDE_HFLAG_NO_DMA, /* no SFF-style DMA */
+
+    DMA is not required to be SFF-style. It's just that TX4938 doesn't support 
+any kind of IDE DMA, IIUC...
+
+> +	.pio_mask = ATA_PIO5,
+> +};
+> +
+> +static int __init tx4938ide_probe(struct platform_device *pdev)
+> +{
+> +	hw_regs_t hw;
+> +	hw_regs_t *hws[] = { &hw, NULL, NULL, NULL };
+> +	struct ide_host *host;
+> +	unsigned long port[2], port_size[2];
+> +	void __iomem *mmport[2];
+> +	struct tx4938ide_platform_info *pdata = pdev->dev.platform_data;
+> +	unsigned int ebus_ch;
+> +	int irq;
+> +	int ret;
+> +	int i;
+
+    Why not declare all 3 on the same line?
+
+> +
+> +	irq = platform_get_irq(pdev, 0);
+> +	if (irq < 0)
+> +		return -ENODEV;
+> +
+> +	ebus_ch = pdata->ebus_ch;
+> +	port[0] = ((__raw_readq(&tx4938_ebuscptr->cr[ebus_ch]) >> 48) << 20)
+> +		+ 0x10000;
+> +	port[1] = port[0] + 0x10000;
+
+    Why not pass these as platform device resources?
+
+> +	port_size[0] = 8;
+> +	port_size[1] = 1;
+> +	port[1] += (6 << pdata->ioport_shift);
+> +	for (i = 0; i < 2; i++)
+> +		port_size[i] <<= pdata->ioport_shift;
+
+    Why not do it right in the assignments above?
+
+> +	for (i = 0; i < 2; i++) {
+> +		if (!devm_request_mem_region(&pdev->dev,
+> +					     port[i], port_size[i],
+> +					     "tx4938ide"))
+> +			return -EBUSY;
+
+    From the datasheet I got an impression that whole 128 KB at offset 0x10000 
+trigger IDE -CS0/1 signals, so why not request all 128 KB?
+
+> +		mmport[i] = devm_ioremap(&pdev->dev, port[i], port_size[i]);
+> +		if (!mmport[i])
+> +			return -EBUSY;
+> +	}
+> +
+> +	memset(&hw, 0, sizeof(hw));
+> +	if (pdata->ioport_shift) {
+> +		hw.io_ports_array[0] = (unsigned long)mmport[0];
+> +#ifdef __BIG_ENDIAN
+> +		mmport[0]++;
+> +		mmport[1]++;
+> +#endif
+> +		for (i = 1; i <= 7; i++)
+> +			hw.io_ports_array[i] = (unsigned long)mmport[0] +
+> +				(i << pdata->ioport_shift);
+> +		hw.io_ports.ctl_addr = (unsigned long)mmport[1];
+> +	} else
+> +		ide_std_init_ports(&hw, (unsigned long)mmport[0],
+> +				   (unsigned long)mmport[1]);
+
+    From the datasheet I got an impression that this case is not possible...
+
+MBR, Sergei
+
