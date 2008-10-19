@@ -1,101 +1,81 @@
-From: Jens Axboe <jens.axboe@oracle.com>
-Subject: Re: [PATCH] ata: ata_id_is_ssd() bugfix
-Date: Sun, 19 Oct 2008 21:12:02 +0200
-Message-ID: <20081019191202.GW19428@kernel.dk>
-References: <200810182222.13281.bzolnier@gmail.com> <20081019180545.GT19428@kernel.dk> <200810192052.47819.bzolnier@gmail.com>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: Re: [PATCH] TXx9: Add TX4938 ATA support
+Date: Sun, 19 Oct 2008 22:34:06 +0400
+Message-ID: <48FB7D9E.4030803@ru.mvista.com>
+References: <20081017.231036.26097587.anemo@mba.ocn.ne.jp>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1752276AbYJSTNG@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <200810192052.47819.bzolnier@gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-mips-bounce@linux-mips.org>
+In-Reply-To: <20081017.231036.26097587.anemo@mba.ocn.ne.jp>
+Sender: linux-mips-bounce@linux-mips.org
+Errors-to: linux-mips-bounce@linux-mips.org
+To: Atsushi Nemoto <anemo@mba.ocn.ne.jp>
+Cc: linux-mips@linux-mips.org, linux-ide@vger.kernel.org, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, ralf@linux-mips.org
 List-Id: linux-ide@vger.kernel.org
 
-On Sun, Oct 19 2008, Bartlomiej Zolnierkiewicz wrote:
-> On Sunday 19 October 2008, Jens Axboe wrote:
-> > On Sat, Oct 18 2008, Bartlomiej Zolnierkiewicz wrote:
-> > > We need to explicitly check for major and minor version
-> > > of supported ATA spec as earlier revisions used word 217
-> > > for different purposes.
-> > 
-> > What did they use to put in that word? Just curious if it does any harm,
-> > 
-> > because as it stands, this patch will prevent ANY ssd from being
-> > correctly flagged as such. So I'm inclined to file this as too much spec
-> > fiddling, it'll do more harm than good.
-> 
-> IIRC it was marked as Reserved for < ATA8 (however I didn't go through
-> all previous specs) and some ATA8 minor versions (i.e. 3f) put "NV Cache
-> Read Transfer Speed in MB/s" there.
-> 
-> Well, we may also drop minor versions checking assuming that no NV Cache
-> actually will have 1MB/s speed and major version checking assuming that
-> no vendor put anything special there but this would need an ACK from Alan
-> and maybe a comment on why we do it...
+Hello.
 
-OK, so it's just NV cache. I'd consider that a non-issue.
+Atsushi Nemoto wrote:
 
-> > > [ The issue was originally spotted by Alan Cox. ]
-> > > 
-> > > This patch fixes regression introduced by:
-> > > commit 8bff7c6b0f63c7ee9c5e3a076338d74125b8debb
-> > > ("libata: set queue SSD flag for SSD devices").
-> > > 
-> > > Cc: Jeff Garzik <jgarzik@pobox.com>
-> > > Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>
-> > > Cc: Jens Axboe <jens.axboe@oracle.com>
-> > > Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-> > > ---
-> > > somebody owe me one for going through all these spec drafts... ;)
-> > > 
-> > >  include/linux/ata.h |    8 +++++++-
-> > >  1 file changed, 7 insertions(+), 1 deletion(-)
-> > > 
-> > > Index: b/include/linux/ata.h
-> > > ===================================================================
-> > > --- a/include/linux/ata.h
-> > > +++ b/include/linux/ata.h
-> > > @@ -75,6 +75,7 @@ enum {
-> > >  	ATA_ID_EIDE_PIO_IORDY	= 68,
-> > >  	ATA_ID_QUEUE_DEPTH	= 75,
-> > >  	ATA_ID_MAJOR_VER	= 80,
-> > > +	ATA_ID_MINOR_VER	= 81,
-> > >  	ATA_ID_COMMAND_SET_1	= 82,
-> > >  	ATA_ID_COMMAND_SET_2	= 83,
-> > >  	ATA_ID_CFSSE		= 84,
-> > > @@ -743,7 +744,12 @@ static inline int ata_id_is_cfa(const u1
-> > >  
-> > >  static inline int ata_id_is_ssd(const u16 *id)
-> > >  {
-> > > -	return id[ATA_ID_ROT_SPEED] == 0x01;
-> > > +	/* ATA8-ACS version 4c or higher (=> 4c or 6 at the moment) */
-> > > +	if (ata_id_major_version(id) >= 8 &&
-> > > +	    (id[ATA_ID_MINOR_VER] == 0x39 || id[ATA_ID_MINOR_VER] == 0x28) &&
-> > > +	    id[ATA_ID_ROT_SPEED] == 0x01)
-> > > +		return 1;
-> > > +	return 0;
-> > 
-> > Is the check even correct? It'll match version 8 AND the currently
-> > listed minor version, not newer.
-> 
-> Checking minor versions is a non-trivial bussiness and improvements
-> are welcomed (though ATA8-ACS version 6 is the newest revision ATM).
-> 
-> It could also be that the we should be checking something else than
-> the ATA_ID_ROT_SPEED to detect SSDs reliably but I don't know and don't
-> have time currently to look into it.  In the future please post ATA
+> Add a helper routine to register tx4938ide driver and use it on
+> RBTX4938 board.
 
-Rotation speed == 1 is THE way to check for an SSD. The problem is just
-that lots of drives are out there and don't claim ATA8 compliance, since
-it was finalized until last month. Most of them SHOULD use word 217
-though, the ones I looked at sure do.
+> Signed-off-by: Atsushi Nemoto <anemo@mba.ocn.ne.jp>
 
-> patches to linux-ide@ so issues can be spotted and discussed early...
+> diff --git a/arch/mips/txx9/generic/setup_tx4938.c b/arch/mips/txx9/generic/setup_tx4938.c
+> index af724e5..a5951ed 100644
+> --- a/arch/mips/txx9/generic/setup_tx4938.c
+> +++ b/arch/mips/txx9/generic/setup_tx4938.c
+> @@ -16,6 +16,7 @@
+>  #include <linux/param.h>
+>  #include <linux/ptrace.h>
+>  #include <linux/mtd/physmap.h>
+> +#include <linux/platform_device.h>
+>  #include <asm/reboot.h>
+>  #include <asm/traps.h>
+>  #include <asm/txx9irq.h>
+> @@ -335,6 +336,43 @@ void __init tx4938_mtd_init(int ch)
+>  	txx9_physmap_flash_init(ch, start, size, &pdata);
+>  }
+>  
+> +void __init tx4938_ata_init(unsigned int irq, unsigned int shift, int tune)
+> +{
+> +	struct platform_device *pdev;
+> +	struct resource res[] = {
+> +		{
+> +			.start = irq,
+> +			.flags = IORESOURCE_IRQ,
+> +		},
+> +	};
 
-As I already mentioned, it was not even intended to go upstream. It was
-committed for testing and I left it in by mistake.
+    Device without a resource for its registers? That's... interesting. :-)
 
--- 
-Jens Axboe
+> +	struct tx4938ide_platform_info pdata = {
+> +		.ioport_shift = shift,
+> +		.gbus_clock = tune ? txx9_gbus_clock : 0,
+
+    Any reason not to supply the GBUS clock?
+    I'm afraid you can't just early return from the set_pio_mode() method...
+
+> +	};
+> +	int i;
+> +
+> +	if ((__raw_readq(&tx4938_ccfgptr->pcfg) &
+> +	     (TX4938_PCFG_ATA_SEL | TX4938_PCFG_NDF_SEL))
+> +	    != TX4938_PCFG_ATA_SEL)
+> +		return;
+> +	for (i = 0; i < 8; i++) {
+> +		/* check EBCCRn.ISA, EBCCRn.BSZ, EBCCRn.ME */
+> +		if ((__raw_readq(&tx4938_ebuscptr->cr[i]) & 0x00f00008)
+> +		    == 0x00e00008)
+> +			break;
+> +	}
+> +	if (i == 8)
+> +		return;
+> +	pdata.ebus_ch = i;
+
+    Why not grab the base address from this register as well and put it into 
+the resource?
+
+WBR, Sergei
