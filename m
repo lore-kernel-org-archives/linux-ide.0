@@ -1,67 +1,56 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH] ata: ata_id_is_ssd() bugfix
-Date: Sat, 18 Oct 2008 22:22:12 +0200
-Message-ID: <200810182222.13281.bzolnier@gmail.com>
+From: Mark Lord <liml@rtr.ca>
+Subject: A USB enclosure that supports SCSI-ATA-Passthru (cheap!)
+Date: Sun, 19 Oct 2008 12:31:08 -0400
+Message-ID: <48FB60CC.5000008@rtr.ca>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mu-out-0910.google.com ([209.85.134.187]:55441 "EHLO
-	mu-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750954AbYJRU0V (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 18 Oct 2008 16:26:21 -0400
-Received: by mu-out-0910.google.com with SMTP id g7so1066179muf.1
-        for <linux-ide@vger.kernel.org>; Sat, 18 Oct 2008 13:26:19 -0700 (PDT)
-Content-Disposition: inline
+Received: from rtr.ca ([76.10.145.34]:57139 "EHLO mail.rtr.ca"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751384AbYJSQai (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 19 Oct 2008 12:30:38 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-kernel@vger.kernel.org
-Cc: linux-ide@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Jens Axboe <jens.axboe@oracle.com>
+To: IDE/ATA development list <linux-ide@vger.kernel.org>, Alan Cox <alan@redhat.com>, Tejun Heo <htejun@gmail.com>, Jeff Garzik <jgarzik@pobox.com>, Bruce Allen <ballen@gravity.phys.uwm.edu>
 
-We need to explicitly check for major and minor version
-of supported ATA spec as earlier revisions used word 217
-for different purposes.
+I believe this is of possible interest to others here:
 
-[ The issue was originally spotted by Alan Cox. ]
+Most newer USB enclosures now support SCSI STOP/START commands.
 
-This patch fixes regression introduced by:
-commit 8bff7c6b0f63c7ee9c5e3a076338d74125b8debb
-("libata: set queue SSD flag for SSD devices").
+But.. the Western Digital 2.5" mobile USB2 enclosures (SATA inside)
+appear to also support the SCSI-ATA-Command-Passthru protocol.
+These are the first ones I have seen here that do this.
 
-Cc: Jeff Garzik <jgarzik@pobox.com>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: Jens Axboe <jens.axboe@oracle.com>
-Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
----
-somebody owe me one for going through all these spec drafts... ;)
+So, things like "hdparm -I /dev/sdb" work without fuss on an
+external USB drive when used with these enclosures.
+As does setting automatic spin-down with "hdparm -S".
 
- include/linux/ata.h |    8 +++++++-
- 1 file changed, 7 insertions(+), 1 deletion(-)
+And as an added bonus, they're rather cheaply priced with drive included.
 
-Index: b/include/linux/ata.h
-===================================================================
---- a/include/linux/ata.h
-+++ b/include/linux/ata.h
-@@ -75,6 +75,7 @@ enum {
- 	ATA_ID_EIDE_PIO_IORDY	= 68,
- 	ATA_ID_QUEUE_DEPTH	= 75,
- 	ATA_ID_MAJOR_VER	= 80,
-+	ATA_ID_MINOR_VER	= 81,
- 	ATA_ID_COMMAND_SET_1	= 82,
- 	ATA_ID_COMMAND_SET_2	= 83,
- 	ATA_ID_CFSSE		= 84,
-@@ -743,7 +744,12 @@ static inline int ata_id_is_cfa(const u1
- 
- static inline int ata_id_is_ssd(const u16 *id)
- {
--	return id[ATA_ID_ROT_SPEED] == 0x01;
-+	/* ATA8-ACS version 4c or higher (=> 4c or 6 at the moment) */
-+	if (ata_id_major_version(id) >= 8 &&
-+	    (id[ATA_ID_MINOR_VER] == 0x39 || id[ATA_ID_MINOR_VER] == 0x28) &&
-+	    id[ATA_ID_ROT_SPEED] == 0x01)
-+		return 1;
-+	return 0;
- }
- 
- static inline int ata_drive_40wire(const u16 *dev_id)
+On the downside, smartctl does not work with the one I have here,
+complaining thusly:
+
+> $ smartctl -a  -T permissive -T permissive /dev/sdb
+> smartctl version 5.38 [i686-pc-linux-gnu] Copyright (C) 2002-8 Bruce Allen
+> Home page is http://smartmontools.sourceforge.net/
+> 
+> Device: WD       823AS  External  Version: 1.04
+> scsiModePageOffset: response length too short, resp_len=4 offset=4 bd_len=0
+> >> Terminate command early due to bad response to IEC mode page
+> 
+> Error Counter logging not supported
+> scsiModePageOffset: response length too short, resp_len=4 offset=4 bd_len=0
+> Device does not support Self Test logging
+
+
+Regardless, these devices are commonly available at Costco and other
+discount retailers.  Mine came with a 250GB drive inside, and has
+model number WS2500XMS-00 on the outside.  I hope to pick up another
+with a 320GB drive soon-ish, and see if it also has passthru.
+
+Model:  WD-250XMS-00 (with 250GB drive inside, removeable).
+USB info:  1058:0702 Western Digital Technologies, Inc.
+Bridge chip by InitIO:  INIC-1606L
+
+Cheers
