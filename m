@@ -1,65 +1,83 @@
-From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: Re: http://bugzilla.kernel.org/show_bug.cgi?id=11742
-Date: Mon, 20 Oct 2008 11:20:49 +0900
-Message-ID: <20081020112039W.fujita.tomonori@lab.ntt.co.jp>
-References: <20081018180747.GA29577@gollum.tnic>
+From: Mikael Pettersson <mikpe@it.uu.se>
+Subject: Re: [smartmontools-support] inactive SATA drives won't stay in standby
+ or sleep, PATA models did. (fwd)
+Date: Mon, 20 Oct 2008 01:40:21 +0200
+Message-ID: <18683.50533.786782.474536@harpo.it.uu.se>
+References: <D73D40172004714D95D7A84AC3E68EC802282133@wdscexbe03.sc.wdc.com>
+	<48EBFE9B.9070503@gmail.com>
+	<18674.4081.839329.116533@harpo.it.uu.se>
+	<48F2D9A8.1030502@gmail.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from sh.osrg.net ([192.16.179.4]:55582 "EHLO sh.osrg.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750992AbYJTCU5 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 19 Oct 2008 22:20:57 -0400
-In-Reply-To: <20081018180747.GA29577@gollum.tnic>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1751970AbYJSXlD@vger.kernel.org>
+In-Reply-To: <48F2D9A8.1030502@gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: Mikael Pettersson <mikpe@it.uu.se>, Christian Mueller <Christian.Mueller@wdc.com>, Bruce Allen <ballen@gravity.phys.uwm.edu>, Smartmontools Mailing List <smartmontools-support@lists.sourceforge.net>, LKML <linux-kernel@vger.kernel.org>, IDE/ATA development list <linux-ide@vger.kernel.org>
 List-Id: linux-ide@vger.kernel.org
-To: petkovbb@gmail.com, valerio.p@libero.it
-Cc: fujita.tomonori@lab.ntt.co.jp, linux-ide@vger.kernel.org
 
-On Sat, 18 Oct 2008 20:07:47 +0200
-Borislav Petkov <petkovbb@googlemail.com> wrote:
+On Mon, 13 Oct 2008 14:16:24 +0900, Tejun Heo wrote:
+>Mikael Pettersson wrote:
+>> - hardreset in sata_promise seems broken. I'll take a closer look
+>>   at that in about a week's time (I'll be busy with other work the
+>>   next couple of days).
+>
+>This looks like a rather serious problem, so please take a look at
+>this.
 
-> would you please take a look at this bug caused by
-> 
-> http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commitdiff_plain;h=e5318b531b008c79d2a0c0df06a7b8628da38e2f
+I've done more tests now, and the problem is that errors detected
+outside of sata_promise itself, typically timeouts, don't trigger
+the pdc_reset_port() call needed to bring the ATA engine behind the
+port back to sanity.
 
-Did he confirm that this patch causes this bug?
+And the reason no Promise-specific reset is done on timeouts is
+that libata-eh freezes the port before calling ->error_handler.
+sata_promise's error_handler only does a reset if the port is
+non-frozen, and I think that's because we don't want to destroy
+error status bits needed by EH autopsy.
 
-But, yes, this patch might be the cause.
+The solution I've been testing is the straightforward one of
+overriding ->prereset with code which calls pdc_reset_port()
+before calling the default prereset. (See patch below.)
+(Promise's own driver issues resets whenever there's a sign
+of a problem.)
 
-Using the dma safe check for all the non fs commands is the right
-thing. But blk_queue_update_dma_pad() has side effects. It might be
-the cause (but I'm not sure about it since I don't know how the ide
-code completes requests).
+One of my test disks will often trigger a timeout if smartctl
+accesses it when it's spun down. Previously the port would not
+recover from that, but now it's just a brief reset/detect and
+then it's up again.
 
-IDE simply disables DMA for unaligned requests (unlike libata) so
-there is no point to tell the block layer about the dma padding
-limitation.
+/Mikael
 
-Valerio, can you try this patch?
-
-Thanks,
-
-
-diff --git a/drivers/ide/ide-cd.c b/drivers/ide/ide-cd.c
-index 3308b1c..6961877 100644
---- a/drivers/ide/ide-cd.c
-+++ b/drivers/ide/ide-cd.c
-@@ -1250,7 +1250,7 @@ static void cdrom_do_block_pc(ide_drive_t *drive, struct request *rq)
- 		 * NOTE! The "len" and "addr" checks should possibly have
- 		 * separate masks.
- 		 */
--		alignment = queue_dma_alignment(q) | q->dma_pad_mask;
-+		alignment = queue_dma_alignment(q) | 15;
- 		if ((unsigned long)buf & alignment || rq->data_len & alignment
- 		    || object_is_on_stack(buf))
- 			drive->dma = 0;
-@@ -1981,7 +1981,6 @@ static int ide_cdrom_setup(ide_drive_t *drive)
+--- linux-2.6.27/drivers/ata/sata_promise.c.~1~	2008-07-14 10:22:36.000000000 +0200
++++ linux-2.6.27/drivers/ata/sata_promise.c	2008-10-20 00:20:58.000000000 +0200
+@@ -153,6 +153,7 @@ static void pdc_freeze(struct ata_port *
+ static void pdc_sata_freeze(struct ata_port *ap);
+ static void pdc_thaw(struct ata_port *ap);
+ static void pdc_sata_thaw(struct ata_port *ap);
++static int pdc_prereset(struct ata_link *link, unsigned long deadline);
+ static void pdc_error_handler(struct ata_port *ap);
+ static void pdc_post_internal_cmd(struct ata_queued_cmd *qc);
+ static int pdc_pata_cable_detect(struct ata_port *ap);
+@@ -175,6 +176,7 @@ static const struct ata_port_operations 
+ 	.sff_irq_clear		= pdc_irq_clear,
  
- 	blk_queue_prep_rq(drive->queue, ide_cdrom_prep_fn);
- 	blk_queue_dma_alignment(drive->queue, 31);
--	blk_queue_update_dma_pad(drive->queue, 15);
- 	drive->queue->unplug_delay = (1 * HZ) / 1000;
- 	if (!drive->queue->unplug_delay)
- 		drive->queue->unplug_delay = 1;
+ 	.post_internal_cmd	= pdc_post_internal_cmd,
++	.prereset		= pdc_prereset,
+ 	.error_handler		= pdc_error_handler,
+ };
+ 
+@@ -691,6 +693,12 @@ static void pdc_sata_thaw(struct ata_por
+ 	readl(host_mmio + hotplug_offset); /* flush */
+ }
+ 
++static int pdc_prereset(struct ata_link *link, unsigned long deadline)
++{
++	pdc_reset_port(link->ap);
++	return ata_sff_prereset(link, deadline);
++}
++
+ static void pdc_error_handler(struct ata_port *ap)
+ {
+ 	if (!(ap->pflags & ATA_PFLAG_FROZEN))
