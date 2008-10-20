@@ -1,48 +1,65 @@
-From: Mark Lord <liml@rtr.ca>
-Subject: Re: A USB enclosure that supports SCSI-ATA-Passthru (cheap!)
-Date: Sun, 19 Oct 2008 12:38:05 -0400
-Message-ID: <48FB626D.4070205@rtr.ca>
-References: <48FB60CC.5000008@rtr.ca>
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Subject: Re: http://bugzilla.kernel.org/show_bug.cgi?id=11742
+Date: Mon, 20 Oct 2008 11:20:49 +0900
+Message-ID: <20081020112039W.fujita.tomonori@lab.ntt.co.jp>
+References: <20081018180747.GA29577@gollum.tnic>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([76.10.145.34]:37928 "EHLO mail.rtr.ca"
+Received: from sh.osrg.net ([192.16.179.4]:55582 "EHLO sh.osrg.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751478AbYJSQhe (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 19 Oct 2008 12:37:34 -0400
-In-Reply-To: <48FB60CC.5000008@rtr.ca>
+	id S1750992AbYJTCU5 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 19 Oct 2008 22:20:57 -0400
+In-Reply-To: <20081018180747.GA29577@gollum.tnic>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: IDE/ATA development list <linux-ide@vger.kernel.org>, Alan Cox <alan@redhat.com>, Tejun Heo <htejun@gmail.com>, Jeff Garzik <jgarzik@pobox.com>, Bruce Allen <ballen@gravity.phys.uwm.edu>
+To: petkovbb@gmail.com, valerio.p@libero.it
+Cc: fujita.tomonori@lab.ntt.co.jp, linux-ide@vger.kernel.org
 
-Mark Lord wrote:
-> I believe this is of possible interest to others here:
+On Sat, 18 Oct 2008 20:07:47 +0200
+Borislav Petkov <petkovbb@googlemail.com> wrote:
+
+> would you please take a look at this bug caused by
 > 
-> Most newer USB enclosures now support SCSI STOP/START commands.
-> 
-> But.. the Western Digital 2.5" mobile USB2 enclosures (SATA inside)
-> appear to also support the SCSI-ATA-Command-Passthru protocol.
-> These are the first ones I have seen here that do this.
-> 
-> So, things like "hdparm -I /dev/sdb" work without fuss on an
-> external USB drive when used with these enclosures.
-> As does setting automatic spin-down with "hdparm -S".
-..
-> Model:  WD-250XMS-00 (with 250GB drive inside, removeable).
-> USB info:  1058:0702 Western Digital Technologies, Inc.
-> Bridge chip by InitIO:  INIC-1606L
-..
+> http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commitdiff_plain;h=e5318b531b008c79d2a0c0df06a7b8628da38e2f
 
-Mmm.. I also have two NexStar-3 2.5" USB/eSata enclosures here,
-but they are not identical on the inside.
+Did he confirm that this patch causes this bug?
 
-The one with an InitIO INIC-1610L chip does *not* support SAT,
-but the second one with an InitIO INIC-1611L chip *does* work with SAT!
+But, yes, this patch might be the cause.
 
-Good to see these chips getting out there now,
-as it allows external storage to be spun-down much
-of the time when only rarely needed -- keeps the drives
-from cooking the rest of the time.
+Using the dma safe check for all the non fs commands is the right
+thing. But blk_queue_update_dma_pad() has side effects. It might be
+the cause (but I'm not sure about it since I don't know how the ide
+code completes requests).
 
-Cheers
+IDE simply disables DMA for unaligned requests (unlike libata) so
+there is no point to tell the block layer about the dma padding
+limitation.
+
+Valerio, can you try this patch?
+
+Thanks,
+
+
+diff --git a/drivers/ide/ide-cd.c b/drivers/ide/ide-cd.c
+index 3308b1c..6961877 100644
+--- a/drivers/ide/ide-cd.c
++++ b/drivers/ide/ide-cd.c
+@@ -1250,7 +1250,7 @@ static void cdrom_do_block_pc(ide_drive_t *drive, struct request *rq)
+ 		 * NOTE! The "len" and "addr" checks should possibly have
+ 		 * separate masks.
+ 		 */
+-		alignment = queue_dma_alignment(q) | q->dma_pad_mask;
++		alignment = queue_dma_alignment(q) | 15;
+ 		if ((unsigned long)buf & alignment || rq->data_len & alignment
+ 		    || object_is_on_stack(buf))
+ 			drive->dma = 0;
+@@ -1981,7 +1981,6 @@ static int ide_cdrom_setup(ide_drive_t *drive)
+ 
+ 	blk_queue_prep_rq(drive->queue, ide_cdrom_prep_fn);
+ 	blk_queue_dma_alignment(drive->queue, 31);
+-	blk_queue_update_dma_pad(drive->queue, 15);
+ 	drive->queue->unplug_delay = (1 * HZ) / 1000;
+ 	if (!drive->queue->unplug_delay)
+ 		drive->queue->unplug_delay = 1;
