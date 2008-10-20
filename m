@@ -1,53 +1,46 @@
 From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: [PATCH 1/2] sgiioc4: fix error cleanup path (take 2)
-Date: Mon, 20 Oct 2008 17:23:06 +0400
-Message-ID: <200810201723.06653.sshtylyov@ru.mvista.com>
+Subject: Re: [PATCH] TXx9: Add TX4938 ATA support
+Date: Mon, 20 Oct 2008 18:40:56 +0400
+Message-ID: <48FC9878.4030306@ru.mvista.com>
+References: <20081017.231036.26097587.anemo@mba.ocn.ne.jp>	<48FB7D9E.4030803@ru.mvista.com> <20081020.231450.51866269.anemo@mba.ocn.ne.jp>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtsoft3.corbina.net ([85.21.88.6]:23731 "EHLO
-	buildserver.ru.mvista.com" rhost-flags-OK-FAIL-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1751794AbYJTNXY (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 20 Oct 2008 09:23:24 -0400
-Content-Disposition: inline
+Received: from gateway-1237.mvista.com ([63.81.120.155]:35142 "EHLO
+	imap.sh.mvista.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1750769AbYJTOlP (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 20 Oct 2008 10:41:15 -0400
+In-Reply-To: <20081020.231450.51866269.anemo@mba.ocn.ne.jp>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: bzolnier@gmail.com
-Cc: linux-ide@vger.kernel.org, jeremy@sgi.com
+To: Atsushi Nemoto <anemo@mba.ocn.ne.jp>
+Cc: linux-mips@linux-mips.org, linux-ide@vger.kernel.org, bzolnier@gmail.com, ralf@linux-mips.org
 
-The driver "forgot" to call iounmap() iff request_mem_region() call failed in
-sgiioc4_ide_setup_pci_device()...
+Hello.
 
-Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-                                          
----
-This patch is against the recent Linus' tree.
+Atsushi Nemoto wrote:
 
- drivers/ide/pci/sgiioc4.c |    4 +++-
- 1 files changed, 3 insertions(+), 1 deletion(-)
+>>>+	struct tx4938ide_platform_info pdata = {
+>>>+		.ioport_shift = shift,
+>>>+		.gbus_clock = tune ? txx9_gbus_clock : 0,
 
-Index: linux-2.6/drivers/ide/pci/sgiioc4.c
-===================================================================
---- linux-2.6.orig/drivers/ide/pci/sgiioc4.c
-+++ linux-2.6/drivers/ide/pci/sgiioc4.c
-@@ -617,7 +617,8 @@ sgiioc4_ide_setup_pci_device(struct pci_
- 		printk(KERN_ERR "%s %s -- ERROR: addresses 0x%08lx to 0x%08lx "
- 		       "already in use\n", DRV_NAME, pci_name(dev),
- 		       cmd_phys_base, cmd_phys_base + IOC4_CMD_CTL_BLK_SIZE);
--		return -EBUSY;
-+		rc = -EBUSY;
-+		goto req_mem_rgn_err;
- 	}
- 
- 	/* Initialize the IO registers */
-@@ -645,6 +646,7 @@ err_free:
- 	ide_host_free(host);
- err:
- 	release_mem_region(cmd_phys_base, IOC4_CMD_CTL_BLK_SIZE);
-+req_mem_rgn_err:
- 	iounmap(virt_base);
- 	return rc;
- }
+>>    Any reason not to supply the GBUS clock?
 
+> The EBUS channel might be used for both ATA and ISA or other local bus
+> devices.  In that case, the board setup code should initialize best
+> timings for all devices and the IDE driver should not overrite it.
+
+    Ah, I forgot about the ATA address space being appeandage to ISA address 
+space on TX4939...
+
+>>    I'm afraid you can't just early return from the set_pio_mode() method...
+
+> Do you mean I should use IDE_HFLAG_NO_SET_MODE instead of just
+> returning from set_pio_mode?
+
+    No, that's for the smart RAID controllers that program the transfer modes 
+themselves. In your case, hwif->port_ops->set_pio_mode() must be NULL -- if 
+you're not going to allow the mode programming, that is.
+
+MBR, Sergei
