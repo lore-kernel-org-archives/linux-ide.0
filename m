@@ -1,46 +1,33 @@
-From: Borislav Petkov <petkovbb@googlemail.com>
-Subject: Re: http://bugzilla.kernel.org/show_bug.cgi?id=11742
-Date: Mon, 20 Oct 2008 08:07:03 +0200
-Message-ID: <20081020060703.GA4266@gollum.tnic>
-References: <20081018180747.GA29577@gollum.tnic> <20081020112039W.fujita.tomonori@lab.ntt.co.jp>
-Reply-To: petkovbb@gmail.com
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: Re: [PATCH 1/2] sgiioc4: fix error cleanup path
+Date: Mon, 20 Oct 2008 14:17:21 +0400
+Message-ID: <48FC5AB1.8090908@ru.mvista.com>
+References: <200810192213.57242.sshtylyov@ru.mvista.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.152]:33037 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750769AbYJTGHM (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 20 Oct 2008 02:07:12 -0400
-Received: by fg-out-1718.google.com with SMTP id 19so1287774fgg.17
-        for <linux-ide@vger.kernel.org>; Sun, 19 Oct 2008 23:07:10 -0700 (PDT)
-Content-Disposition: inline
-In-Reply-To: <20081020112039W.fujita.tomonori@lab.ntt.co.jp>
+Received: from h155.mvista.com ([63.81.120.155]:27935 "EHLO imap.sh.mvista.com"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1750911AbYJTKR1 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 20 Oct 2008 06:17:27 -0400
+In-Reply-To: <200810192213.57242.sshtylyov@ru.mvista.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Cc: valerio.p@libero.it, linux-ide@vger.kernel.org
+To: bzolnier@gmail.com
+Cc: linux-ide@vger.kernel.org
 
-On Mon, Oct 20, 2008 at 11:20:49AM +0900, FUJITA Tomonori wrote:
-> On Sat, 18 Oct 2008 20:07:47 +0200
-> Borislav Petkov <petkovbb@googlemail.com> wrote:
-> 
-> > would you please take a look at this bug caused by
-> > 
-> > http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commitdiff_plain;h=e5318b531b008c79d2a0c0df06a7b8628da38e2f
-> 
-> Did he confirm that this patch causes this bug?
-> 
-> But, yes, this patch might be the cause.
-> 
-> Using the dma safe check for all the non fs commands is the right
-> thing. But blk_queue_update_dma_pad() has side effects. It might be
-> the cause (but I'm not sure about it since I don't know how the ide
-> code completes requests).
+Hello, I wrote:
 
-Well, imho and judging from __ide_end_request(), which wraps around
-__blk_end_request(), it reenables dma for 3 times (3 being random magic) and
-after that remains in pio.
+> The driver "forgot" to call iounmap() if request_mem_region() call failed in
+> sgiioc4_ide_setup_pci_device(). While fixing this, rename the 'err' label to
+> 'alloc_err' and get rid of the 'err_free' label altogether...
+>
+> Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
 
--- 
-Regards/Gruss,
-    Boris.
+   Don't apply these 2 patches yet, I'm going to recast them to avoid 
+changing the same code twice...
+
+MBR, Sergei
+
+
