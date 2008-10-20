@@ -1,91 +1,46 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [PATCH] ata: ata_id_is_ssd() bugfix
-Date: Sun, 19 Oct 2008 20:52:47 +0200
-Message-ID: <200810192052.47819.bzolnier@gmail.com>
-References: <200810182222.13281.bzolnier@gmail.com> <20081019180545.GT19428@kernel.dk>
+From: Borislav Petkov <petkovbb@googlemail.com>
+Subject: Re: http://bugzilla.kernel.org/show_bug.cgi?id=11742
+Date: Mon, 20 Oct 2008 08:07:03 +0200
+Message-ID: <20081020060703.GA4266@gollum.tnic>
+References: <20081018180747.GA29577@gollum.tnic> <20081020112039W.fujita.tomonori@lab.ntt.co.jp>
+Reply-To: petkovbb@gmail.com
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1752058AbYJSSzW@vger.kernel.org>
-In-Reply-To: <20081019180545.GT19428@kernel.dk>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from fg-out-1718.google.com ([72.14.220.152]:33037 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750769AbYJTGHM (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 20 Oct 2008 02:07:12 -0400
+Received: by fg-out-1718.google.com with SMTP id 19so1287774fgg.17
+        for <linux-ide@vger.kernel.org>; Sun, 19 Oct 2008 23:07:10 -0700 (PDT)
 Content-Disposition: inline
-Sender: linux-kernel-owner@vger.kernel.org
-To: Jens Axboe <jens.axboe@oracle.com>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>
+In-Reply-To: <20081020112039W.fujita.tomonori@lab.ntt.co.jp>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Cc: valerio.p@libero.it, linux-ide@vger.kernel.org
 
-On Sunday 19 October 2008, Jens Axboe wrote:
-> On Sat, Oct 18 2008, Bartlomiej Zolnierkiewicz wrote:
-> > We need to explicitly check for major and minor version
-> > of supported ATA spec as earlier revisions used word 217
-> > for different purposes.
+On Mon, Oct 20, 2008 at 11:20:49AM +0900, FUJITA Tomonori wrote:
+> On Sat, 18 Oct 2008 20:07:47 +0200
+> Borislav Petkov <petkovbb@googlemail.com> wrote:
 > 
-> What did they use to put in that word? Just curious if it does any harm,
+> > would you please take a look at this bug caused by
+> > 
+> > http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commitdiff_plain;h=e5318b531b008c79d2a0c0df06a7b8628da38e2f
 > 
-> because as it stands, this patch will prevent ANY ssd from being
-> correctly flagged as such. So I'm inclined to file this as too much spec
-> fiddling, it'll do more harm than good.
-
-IIRC it was marked as Reserved for < ATA8 (however I didn't go through
-all previous specs) and some ATA8 minor versions (i.e. 3f) put "NV Cache
-Read Transfer Speed in MB/s" there.
-
-Well, we may also drop minor versions checking assuming that no NV Cache
-actually will have 1MB/s speed and major version checking assuming that
-no vendor put anything special there but this would need an ACK from Alan
-and maybe a comment on why we do it...
-
-> > [ The issue was originally spotted by Alan Cox. ]
-> > 
-> > This patch fixes regression introduced by:
-> > commit 8bff7c6b0f63c7ee9c5e3a076338d74125b8debb
-> > ("libata: set queue SSD flag for SSD devices").
-> > 
-> > Cc: Jeff Garzik <jgarzik@pobox.com>
-> > Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>
-> > Cc: Jens Axboe <jens.axboe@oracle.com>
-> > Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-> > ---
-> > somebody owe me one for going through all these spec drafts... ;)
-> > 
-> >  include/linux/ata.h |    8 +++++++-
-> >  1 file changed, 7 insertions(+), 1 deletion(-)
-> > 
-> > Index: b/include/linux/ata.h
-> > ===================================================================
-> > --- a/include/linux/ata.h
-> > +++ b/include/linux/ata.h
-> > @@ -75,6 +75,7 @@ enum {
-> >  	ATA_ID_EIDE_PIO_IORDY	= 68,
-> >  	ATA_ID_QUEUE_DEPTH	= 75,
-> >  	ATA_ID_MAJOR_VER	= 80,
-> > +	ATA_ID_MINOR_VER	= 81,
-> >  	ATA_ID_COMMAND_SET_1	= 82,
-> >  	ATA_ID_COMMAND_SET_2	= 83,
-> >  	ATA_ID_CFSSE		= 84,
-> > @@ -743,7 +744,12 @@ static inline int ata_id_is_cfa(const u1
-> >  
-> >  static inline int ata_id_is_ssd(const u16 *id)
-> >  {
-> > -	return id[ATA_ID_ROT_SPEED] == 0x01;
-> > +	/* ATA8-ACS version 4c or higher (=> 4c or 6 at the moment) */
-> > +	if (ata_id_major_version(id) >= 8 &&
-> > +	    (id[ATA_ID_MINOR_VER] == 0x39 || id[ATA_ID_MINOR_VER] == 0x28) &&
-> > +	    id[ATA_ID_ROT_SPEED] == 0x01)
-> > +		return 1;
-> > +	return 0;
+> Did he confirm that this patch causes this bug?
 > 
-> Is the check even correct? It'll match version 8 AND the currently
-> listed minor version, not newer.
+> But, yes, this patch might be the cause.
+> 
+> Using the dma safe check for all the non fs commands is the right
+> thing. But blk_queue_update_dma_pad() has side effects. It might be
+> the cause (but I'm not sure about it since I don't know how the ide
+> code completes requests).
 
-Checking minor versions is a non-trivial bussiness and improvements
-are welcomed (though ATA8-ACS version 6 is the newest revision ATM).
+Well, imho and judging from __ide_end_request(), which wraps around
+__blk_end_request(), it reenables dma for 3 times (3 being random magic) and
+after that remains in pio.
 
-It could also be that the we should be checking something else than
-the ATA_ID_ROT_SPEED to detect SSDs reliably but I don't know and don't
-have time currently to look into it.  In the future please post ATA
-patches to linux-ide@ so issues can be spotted and discussed early...
-
-Thanks,
-Bart
+-- 
+Regards/Gruss,
+    Boris.
