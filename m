@@ -1,62 +1,56 @@
-From: Mikael Pettersson <mikpe@it.uu.se>
-Subject: Re: [smartmontools-support] inactive SATA drives won't stay in standby
- or sleep, PATA models did. (fwd)
-Date: Tue, 21 Oct 2008 11:30:25 +0200
-Message-ID: <18685.41265.560866.890756@harpo.it.uu.se>
-References: <D73D40172004714D95D7A84AC3E68EC802282133@wdscexbe03.sc.wdc.com>
-	<48EBFE9B.9070503@gmail.com>
-	<18674.4081.839329.116533@harpo.it.uu.se>
-	<48F2D9A8.1030502@gmail.com>
-	<18683.50533.786782.474536@harpo.it.uu.se>
-	<48FD580E.4080101@gmail.com>
-	<18685.35653.125899.390135@harpo.it.uu.se>
-	<48FD9A90.8000205@gmail.com>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: Re: [PATCH 04/22] libata-sff: clear IRQ from ata_sff_error_handler()
+ only when necessary
+Date: Tue, 21 Oct 2008 13:53:06 +0400
+Message-ID: <48FDA682.2020301@ru.mvista.com>
+References: <1224580680-13698-1-git-send-email-tj@kernel.org> <1224580680-13698-5-git-send-email-tj@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from aun.it.uu.se ([130.238.12.36]:38808 "EHLO aun.it.uu.se"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752383AbYJUJfn (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 21 Oct 2008 05:35:43 -0400
-In-Reply-To: <48FD9A90.8000205@gmail.com>
+Received: from h155.mvista.com ([63.81.120.155]:57807 "EHLO imap.sh.mvista.com"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1750955AbYJUJxN (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 21 Oct 2008 05:53:13 -0400
+In-Reply-To: <1224580680-13698-5-git-send-email-tj@kernel.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Mikael Pettersson <mikpe@it.uu.se>, Christian Mueller <Christian.Mueller@wdc.com>, Bruce Allen <ballen@gravity.phys.uwm.edu>, Smartmontools Mailing List <smartmontools-support@lists.sourceforge.net>, LKML <linux-kernel@vger.kernel.org>, IDE/ATA development list <linux-ide@vger.kernel.org>
+To: Tejun Heo <tj@kernel.org>
+Cc: jeff@garzik.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 
-Tejun Heo writes:
- > Hello,
- > 
- > Mikael Pettersson wrote:
- > > Tejun Heo writes:
- > >  > Hello, Mikael.
- > >  > I would put this into ->hardreset itself as the controller can also
- > >  > get out of sync with reality during reset.
- > > 
- > > The only thing I see going on between prereset and (hard/soft)reset
- > > is an optional freeze, so I don't see why moving the pdc_reset_port()
- > > into the beginning of hardreset() would make any difference.
- > > 
- > > sata_promise currently uses the ->hardreset and ->softreset inherited
- > > from ata_sff_port_ops, so it would need to override both to ensure that
- > > we always do pdc_reset_port() before libata does its thing. That's why
- > > I felt doing that in ->prereset would be the right solution.
- > 
- > Hmm.. reset sequence goes on like the following.
- > 
- >  1. prereset
- >  2. hardreset, if fail, retry
- >  3. follow-up softreset if requested, if fail, goto #2
- >  4. postreset, if successful
- > 
- > So, if some PHY event happens while the reset is waiting for device
- > readiness and makes the controller state go out of sync with the
- > drive.  ->prereset() will NOT be called for the following retry.
+Hello.
 
-I see. Ok, then I'll forget about ->prereset and bind ->hardreset to
-code which does pdc_reset_port() before invoking sata_sff_hardreset().
+Tejun Heo wrote:
 
-Thanks for your input.
+> Clearing IRQ from ata_sff_error_handler() is necessary only when the
+> port is gonna be thawed before performing EH actions and some
+> controllers don't like being accessed after certain fail modes until
+> they're reset.  Clear IRQ iff the port is being thawed.  Also, remove
+> unnecessary ata_sff_sync() while at it.
+>
+> Signed-off-by: Tejun Heo <tj@kernel.org>
+>   
 
-/Mikael
+   Sorry for the grammar nipicking but...
+
+> diff --git a/drivers/ata/libata-sff.c b/drivers/ata/libata-sff.c
+> index 4b47394..b9fb068 100644
+> --- a/drivers/ata/libata-sff.c
+> +++ b/drivers/ata/libata-sff.c
+> @@ -2119,11 +2119,13 @@ void ata_sff_error_handler(struct ata_port *ap)
+>  		}
+>  
+>  		ap->ops->bmdma_stop(qc);
+> -	}
+>  
+> -	ata_sff_sync(ap);		/* FIXME: We don't need this */
+> -	ap->ops->sff_check_status(ap);
+> -	ap->ops->sff_irq_clear(ap);
+> +		/* if we're gonna thaw, make sure IRQ is clear */
+>   
+
+   IRQ cannot be clear, only cleared. :-)
+
+MBR, Sergei
+
+
