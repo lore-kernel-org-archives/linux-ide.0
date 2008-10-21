@@ -1,57 +1,38 @@
-From: Arjan van de Ven <arjan@infradead.org>
-Subject: [PATCH] pci: use pci_ioremap_bar() in drivers/ide
-Date: Mon, 20 Oct 2008 21:48:30 -0700
-Message-ID: <20081020214830.1586704c@infradead.org>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH #upstream-fixes] libata-eh: fix slave link EH action mask
+ handling
+Date: Tue, 21 Oct 2008 14:12:35 +0900
+Message-ID: <48FD64C3.8020103@kernel.org>
+References: <48FD5EE0.9040407@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from casper.infradead.org ([85.118.1.10]:35277 "EHLO
-	casper.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750936AbYJUEsQ convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 21 Oct 2008 00:48:16 -0400
-Received: from c-71-193-193-226.hsd1.or.comcast.net ([71.193.193.226] helo=localhost.localdomain)
-	by casper.infradead.org with esmtpsa (Exim 4.69 #1 (Red Hat Linux))
-	id 1Ks9AE-0001uS-My
-	for linux-ide@vger.kernel.org; Tue, 21 Oct 2008 04:48:15 +0000
+Received: from hera.kernel.org ([140.211.167.34]:53091 "EHLO hera.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751474AbYJUFOl (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 21 Oct 2008 01:14:41 -0400
+In-Reply-To: <48FD5EE0.9040407@kernel.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, stable@kernel.org
 
->From 9233d7e38207749586c47410b400afcf3e7e59fb Mon Sep 17 00:00:00 2001
-From: Arjan van de Ven <arjan@linux.intel.com>
-Date: Sun, 28 Sep 2008 16:14:10 -0700
-Subject: [PATCH] pci: use pci_ioremap_bar() in drivers/ide
+Tejun Heo wrote:
+> Slave link action mask is transferred to masater link and all the EH
+> actions are taken by the master link.  ata_eh_about_to_do() and
+> ata_eh_done() are called with ATA_EH_ALL_ACTIONS to clear the slave
+> link actions during transfer.  This always sets ATA_PFLAG_RECOVERED
+> flag causing spurious "EH complete" messages.
+> 
+> Don't set ATA_PFLAG_RECOVERED for slave link actions.
+> 
+> Signed-off-by: Tejun Heo <tj@kernel.org>
 
-Use the newly introduced pci_ioremap_bar() function in drivers/ide.
-pci_ioremap_bar() just takes a pci device and a bar number, with the goal
-of making it really hard to get wrong, while also having a central place
-to stick sanity checks.
+Oops, slave link is not included in 2.6.27, so this fix doesn't need to
+go into -stable.  Stable team, please ignore this patch.  Sorry about
+the noise.
 
-Signed-off-by: Arjan van de Ven <arjan@linux.intel.com>
----
- drivers/ide/pci/sgiioc4.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
-
-diff --git a/drivers/ide/pci/sgiioc4.c b/drivers/ide/pci/sgiioc4.c
-index 8af9b23..9233217 100644
---- a/drivers/ide/pci/sgiioc4.c
-+++ b/drivers/ide/pci/sgiioc4.c
-@@ -574,7 +574,7 @@ sgiioc4_ide_setup_pci_device(struct pci_dev *dev)
- 
- 	/*  Get the CmdBlk and CtrlBlk Base Registers */
- 	bar0 = pci_resource_start(dev, 0);
--	virt_base = ioremap(bar0, pci_resource_len(dev, 0));
-+	virt_base = pci_ioremap_bar(dev, 0);
- 	if (virt_base == NULL) {
- 		printk(KERN_ERR "%s: Unable to remap BAR 0 address: 0x%lx\n",
- 				DRV_NAME, bar0);
--- 
-1.5.5.1
-
-
+Thanks.
 
 -- 
-Arjan van de Ven 	Intel Open Source Technology Centre
-For development, discussion and tips for power savings, 
-visit http://www.lesswatts.org
+tejun
