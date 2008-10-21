@@ -1,103 +1,67 @@
-From: gettinther <gettinther@gmail.com>
-Subject: Re: Can you please test the attached patch for nv hardreset problem?
-Date: Tue, 21 Oct 2008 08:02:32 +0100
-Message-ID: <64630f150810210002l711313f2tc1dc0a63346e3d48@mail.gmail.com>
-References: <48E80F11.3060101@kernel.org> <48F30678.7020807@kernel.org>
-	 <64630f150810131213m64d8fc72j38debf71a692db16@mail.gmail.com>
-	 <48F3F368.2090901@kernel.org>
-	 <64630f150810141431r1d070cddl1c2a6b32ae80b64c@mail.gmail.com>
-	 <48F57E0B.6050403@kernel.org>
-	 <64630f150810151323k68ded27eie9a24e1b0579288a@mail.gmail.com>
-	 <48F69C89.5070900@kernel.org>
-	 <64630f150810160004o77d2819dy40a6f58d13af098d@mail.gmail.com>
-	 <64630f150810170125r546f4f26w202b45c6eaaecf3d@mail.gmail.com>
+From: Mikael Pettersson <mikpe@it.uu.se>
+Subject: Re: [smartmontools-support] inactive SATA drives won't stay in standby
+ or sleep, PATA models did. (fwd)
+Date: Tue, 21 Oct 2008 09:56:53 +0200
+Message-ID: <18685.35653.125899.390135@harpo.it.uu.se>
+References: <D73D40172004714D95D7A84AC3E68EC802282133@wdscexbe03.sc.wdc.com>
+	<48EBFE9B.9070503@gmail.com>
+	<18674.4081.839329.116533@harpo.it.uu.se>
+	<48F2D9A8.1030502@gmail.com>
+	<18683.50533.786782.474536@harpo.it.uu.se>
+	<48FD580E.4080101@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-gx0-f16.google.com ([209.85.217.16]:57046 "EHLO
-	mail-gx0-f16.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750718AbYJUHCd (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 21 Oct 2008 03:02:33 -0400
-Received: by gxk9 with SMTP id 9so5016017gxk.13
-        for <linux-ide@vger.kernel.org>; Tue, 21 Oct 2008 00:02:32 -0700 (PDT)
-In-Reply-To: <64630f150810170125r546f4f26w202b45c6eaaecf3d@mail.gmail.com>
-Content-Disposition: inline
+Received: from aun.it.uu.se ([130.238.12.36]:37173 "EHLO aun.it.uu.se"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751482AbYJUH6J (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 21 Oct 2008 03:58:09 -0400
+In-Reply-To: <48FD580E.4080101@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: IDE/ATA development list <linux-ide@vger.kernel.org>, lists@ku-gbr.de, linux@sun7.cn, Robert Hancock <hancockr@shaw.ca>
+To: Tejun Heo <htejun@gmail.com>
+Cc: Mikael Pettersson <mikpe@it.uu.se>, Christian Mueller <Christian.Mueller@wdc.com>, Bruce Allen <ballen@gravity.phys.uwm.edu>, Smartmontools Mailing List <smartmontools-support@lists.sourceforge.net>, LKML <linux-kernel@vger.kernel.org>, IDE/ATA development list <linux-ide@vger.kernel.org>
 
-On Fri, Oct 17, 2008 at 9:25 AM, gettinther <gettinther@gmail.com> wrote:
-> On Thu, Oct 16, 2008 at 8:04 AM, gettinther <gettinther@gmail.com> wrote:
->> On Thu, Oct 16, 2008 at 2:44 AM, Tejun Heo <tj@kernel.org> wrote:
->>> gettinther wrote:
->>>> On Wed, Oct 15, 2008 at 6:22 AM, Tejun Heo <tj@kernel.org> wrote:
->>>>> gettinther wrote:
->>>>>> The log simply ignores the drive altogether.
->>>>>>
->>>>>> from the sound coming from the drive, it does seem that the drive
->>>>>> initially starts at boot, then stops.  After that stage the device
->>>>>> detection takes place.  as the item is a pata to sata converter
->>>>>> (emulated sata), it does not support hot plugging.
->>>>>>
->>>>>> I also need to mention that this behavior (start-stop during boot) did
->>>>>> not happen on the 2.6.24 and I need to check the 2.6.27.  However the
->>>>>> device is detected by both of these kernels.
->>>>> Hmmm...
->>>>>
->>>>>> Oct 14 21:18:12 localhost kernel: ata2: SATA link up 1.5 Gbps (SStatus
->>>>>> 113 SControl 300)
->>>>> Hmmm... Can you please apply the attached patch on top of it and
->>>>> report the boot log?
->>>>>
->>>>> --
->>>>> tejun
->>>>>
->>>>
->>>> here it is.  Let me know if you need other parts of the logs.
->>>
->>> Ah.. okay, you need to change .hardreset to ATA_OP_NULL instead of
->>> sata_std_hardreset.
->>>
->>> --
->>> tejun
->>>
->>
->> On both 2.6.26 and 2.6.27 or just the 2.6.26?  The initial patch does
->> work on the 2.6.27
->>
->> Thanks,
->>
->> Cyrille
->>
->
-> Tried replacing sata_std_hardreset with  ATA_OP_NULL but it didn't
-> work.  I'll add back the debug patch and post the results
->
+Tejun Heo writes:
+ > Hello, Mikael.
+ > 
+ > > --- linux-2.6.27/drivers/ata/sata_promise.c.~1~	2008-07-14 10:22:36.000000000 +0200
+ > > +++ linux-2.6.27/drivers/ata/sata_promise.c	2008-10-20 00:20:58.000000000 +0200
+ > > @@ -153,6 +153,7 @@ static void pdc_freeze(struct ata_port *
+ > >  static void pdc_sata_freeze(struct ata_port *ap);
+ > >  static void pdc_thaw(struct ata_port *ap);
+ > >  static void pdc_sata_thaw(struct ata_port *ap);
+ > > +static int pdc_prereset(struct ata_link *link, unsigned long deadline);
+ > >  static void pdc_error_handler(struct ata_port *ap);
+ > >  static void pdc_post_internal_cmd(struct ata_queued_cmd *qc);
+ > >  static int pdc_pata_cable_detect(struct ata_port *ap);
+ > > @@ -175,6 +176,7 @@ static const struct ata_port_operations 
+ > >  	.sff_irq_clear		= pdc_irq_clear,
+ > >  
+ > >  	.post_internal_cmd	= pdc_post_internal_cmd,
+ > > +	.prereset		= pdc_prereset,
+ > >  	.error_handler		= pdc_error_handler,
+ > >  };
+ > >  
+ > > @@ -691,6 +693,12 @@ static void pdc_sata_thaw(struct ata_por
+ > >  	readl(host_mmio + hotplug_offset); /* flush */
+ > >  }
+ > >  
+ > > +static int pdc_prereset(struct ata_link *link, unsigned long deadline)
+ > > +{
+ > > +	pdc_reset_port(link->ap);
+ > 
+ > I would put this into ->hardreset itself as the controller can also
+ > get out of sync with reality during reset.
 
-Sorry for the delay
+The only thing I see going on between prereset and (hard/soft)reset
+is an optional freeze, so I don't see why moving the pdc_reset_port()
+into the beginning of hardreset() would make any difference.
 
-Here's the message with debug
+sata_promise currently uses the ->hardreset and ->softreset inherited
+from ata_sff_port_ops, so it would need to override both to ensure that
+we always do pdc_reset_port() before libata does its thing. That's why
+I felt doing that in ->prereset would be the right solution.
 
-Oct 21 07:39:35 dranagh1 kernel: sata_nv 0000:00:05.1: Using SWNCQ mode
-Oct 21 07:39:35 dranagh1 kernel: scsi2 : sata_nv
-Oct 21 07:39:35 dranagh1 kernel: scsi3 : sata_nv
-Oct 21 07:39:35 dranagh1 kernel: ata3: SATA max UDMA/133 cmd 0xb880
-ctl 0xb800 bmdma 0xb080 irq 22
-Oct 21 07:39:35 dranagh1 kernel: ata4: SATA max UDMA/133 cmd 0xb480
-ctl 0xb400 bmdma 0xb088 irq 22
-Oct 21 07:39:35 dranagh1 kernel: ata3: hard resetting link
-Oct 21 07:39:35 dranagh1 kernel: XXX classify 12/00
-Oct 21 07:39:35 dranagh1 kernel: ata3: SATA link up 1.5 Gbps (SStatus
-113 SControl 300)
-Oct 21 07:39:35 dranagh1 kernel: ata3: EH complete
-Oct 21 07:39:35 dranagh1 kernel: ata4: hard resetting link
-Oct 21 07:39:35 dranagh1 kernel: ata4: SATA link down (SStatus 0 SControl 300)
-Oct 21 07:39:35 dranagh1 kernel: ata4: EH complete
-Oct 21 07:39:35 dranagh1 kernel: ACPI: PCI Interrupt Link [LSA2]
-enabled at IRQ 21
-Oct 21 07:39:35 dranagh1 kernel: ACPI: PCI Interrupt 0000:00:05.2[C]
--> Link [LSA2] -> GSI 21 (level, low) -> IRQ 21
-Oct 21 07:39:35 dranagh1 kernel: sata_nv 0000:00:05.2: Using SWNCQ mode
-Oct 21 07:39:35 dranagh1 kernel: scsi4 : sata_nv
+/Mikael
