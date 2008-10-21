@@ -1,26 +1,31 @@
 From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH 21/22] sata_qstor: kill dummy BMDMA ops
-Date: Tue, 21 Oct 2008 14:10:42 +0400
-Message-ID: <48FDAAA2.7090002@ru.mvista.com>
-References: <1224580680-13698-1-git-send-email-tj@kernel.org> <1224580680-13698-22-git-send-email-tj@kernel.org>
+Subject: Re: [PATCH #upstream-fixes] libata-eh: fix slave link EH action mask
+ handling
+Date: Tue, 21 Oct 2008 14:47:00 +0400
+Message-ID: <48FDB324.1050701@ru.mvista.com>
+References: <48FD5EE0.9040407@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <1224580680-13698-22-git-send-email-tj@kernel.org>
-Sender: linux-scsi-owner@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: jeff@garzik.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from h155.mvista.com ([63.81.120.155]:59662 "EHLO imap.sh.mvista.com"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1752611AbYJUKrH (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 21 Oct 2008 06:47:07 -0400
+In-Reply-To: <48FD5EE0.9040407@kernel.org>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: Jeff Garzik <jeff@garzik.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, stable@kernel.org
 
 Hello.
 
 Tejun Heo wrote:
 
-> Now that SFF and BMDMA are completely separate, sata_qstor which
+> Slave link action mask is transferred to masater link and all the EH
 >   
 
-   SFF and BMDMA being separate sounds funny. :-)
+   s/masater/master/
 
 MBR, Sergei
 
