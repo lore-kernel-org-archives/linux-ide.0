@@ -1,33 +1,26 @@
 From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH] pci: use pci_ioremap_bar() in drivers/ide
-Date: Tue, 21 Oct 2008 14:02:39 +0400
-Message-ID: <48FDA8BF.20206@ru.mvista.com>
-References: <20081020214830.1586704c@infradead.org>
+Subject: Re: [PATCH 21/22] sata_qstor: kill dummy BMDMA ops
+Date: Tue, 21 Oct 2008 14:10:42 +0400
+Message-ID: <48FDAAA2.7090002@ru.mvista.com>
+References: <1224580680-13698-1-git-send-email-tj@kernel.org> <1224580680-13698-22-git-send-email-tj@kernel.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from h155.mvista.com ([63.81.120.155]:58048 "EHLO imap.sh.mvista.com"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752128AbYJUKCp (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 21 Oct 2008 06:02:45 -0400
-In-Reply-To: <20081020214830.1586704c@infradead.org>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <1224580680-13698-22-git-send-email-tj@kernel.org>
+Sender: linux-scsi-owner@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: jeff@garzik.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Arjan van de Ven <arjan@infradead.org>, linux-ide@vger.kernel.org
 
 Hello.
 
-Arjan van de Ven wrote:
+Tejun Heo wrote:
 
-> Use the newly introduced pci_ioremap_bar() function in drivers/ide.
-> pci_ioremap_bar() just takes a pci device and a bar number, with the goal
-> of making it really hard to get wrong, while also having a central place
-> to stick sanity checks.
->
-> Signed-off-by: Arjan van de Ven <arjan@linux.intel.com>
+> Now that SFF and BMDMA are completely separate, sata_qstor which
+>   
 
-Acked-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+   SFF and BMDMA being separate sounds funny. :-)
 
 MBR, Sergei
 
