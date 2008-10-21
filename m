@@ -1,100 +1,607 @@
-From: Andrew Morton <akpm@linux-foundation.org>
-Subject: Re: [Bugme-new] [Bug 11789] New: [sata_sil] failed to IDENTIFY (I/O
- error, err_mask=0x3)
-Date: Tue, 21 Oct 2008 11:56:33 -0700
-Message-ID: <20081021115633.627e1aca.akpm@linux-foundation.org>
-References: <bug-11789-10286@http.bugzilla.kernel.org/>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: [git pull] IDE updates #4
+Date: Tue, 21 Oct 2008 21:00:52 +0200
+Message-ID: <200810212100.52985.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:47952 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751074AbYJUS5F (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 21 Oct 2008 14:57:05 -0400
-In-Reply-To: <bug-11789-10286@http.bugzilla.kernel.org/>
+Received: from gv-out-0910.google.com ([216.239.58.191]:8052 "EHLO
+	gv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752086AbYJUTFI (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 21 Oct 2008 15:05:08 -0400
+Received: by gv-out-0910.google.com with SMTP id e6so487197gvc.37
+        for <linux-ide@vger.kernel.org>; Tue, 21 Oct 2008 12:05:06 -0700 (PDT)
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
-Cc: bugme-daemon@bugzilla.kernel.org, skgsergio@gmail.com
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Stephen Rothwell <sfr@canb.auug.org.au>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
 
-(switched to email.  Please respond via emailed reply-to-all, not via the
-bugzilla web interface).
+Remove needless/confusing subdirs from drivers/ide/.
 
-On Sun, 19 Oct 2008 11:40:12 -0700 (PDT)
-bugme-daemon@bugzilla.kernel.org wrote:
 
-> http://bugzilla.kernel.org/show_bug.cgi?id=11789
-> 
->            Summary: [sata_sil] failed to IDENTIFY (I/O error, err_mask=0x3)
->            Product: IO/Storage
->            Version: 2.5
->      KernelVersion: 2.6.27.x
->           Platform: All
->         OS/Version: Linux
->               Tree: Mainline
->             Status: NEW
->           Severity: normal
->           Priority: P1
->          Component: Serial ATA
->         AssignedTo: jgarzik@pobox.com
->         ReportedBy: skgsergio@gmail.com
-> 
-> 
-> Latest working kernel version: Any without sata_sil support
-> 
-> Earliest failing kernel version: 2.6.27 to 2.6.27.2 (Vanilla)
-> 
-> Distribution: ArchLinux, Gentoo
-> 
-> Hardware Environment: Acer Aspire 5051AWXMi
-> 
-> Software Environment: ArchLinux
-> 
-> Problem Description:
-> At boot I have this problem and it slows the boot proces (dmesg):
-> 
-> SCSI subsystem initialized
-> libata version 3.00 loaded.
-> pata_acpi 0000:00:12.0: PCI INT A -> GSI 22 (level, low) -> IRQ 22
-> pata_acpi 0000:00:14.1: PCI INT A -> GSI 16 (level, low) -> IRQ 16
-> pata_acpi 0000:00:14.1: setting latency timer to 64
-> scsi0 : pata_atiixp
-> scsi1 : pata_atiixp
-> ata1: PATA max UDMA/100 cmd 0x1f0 ctl 0x3f6 bmdma 0x8420 irq 14
-> ata2: PATA max UDMA/100 cmd 0x170 ctl 0x376 bmdma 0x8428 irq 15
-> input: AT Translated Set 2 keyboard as /class/input/input1
-> ata1.00: ATA-7: WDC WD1200UE-22KVT0, 01.03K01, max UDMA/100
-> ata1.00: 234441648 sectors, multi 16: LBA48
-> ata1.01: ATAPI: MATSHITADVD-RAM UJ-850S, 1.20, max UDMA/33
-> ata1.00: configured for UDMA/100
-> ata1.01: configured for UDMA/33
-> Switched to high resolution mode on CPU 0
-> isa bounce pool size: 16 pages
-> scsi 0:0:0:0: Direct-Access ATA WDC WD1200UE-22K 01.0 PQ: 0 ANSI: 5
-> scsi 0:0:1:0: CD-ROM MATSHITA DVD-RAM UJ-850S 1.20 PQ: 0 ANSI: 5
-> sata_sil 0000:00:12.0: version 2.3
-> scsi2 : sata_sil
-> scsi3 : sata_sil
-> ata3: SATA max UDMA/100 mmio m512@0xc0004000 tf 0xc0004080 irq 22
-> ata4: SATA max UDMA/100 mmio m512@0xc0004000 tf 0xc00040c0 irq 22
-> ata3: SATA link up 1.5 Gbps (SStatus 113 SControl 310)
-> ata3.00: failed to IDENTIFY (I/O error, err_mask=0x3)
-> ata3: SATA link up 1.5 Gbps (SStatus 113 SControl 310)
-> ata3.00: failed to IDENTIFY (I/O error, err_mask=0x3)
-> ata3: SATA link up 1.5 Gbps (SStatus 113 SControl 310)
-> ata3.00: failed to IDENTIFY (I/O error, err_mask=0x3)
-> ata3: SATA link up 1.5 Gbps (SStatus 113 SControl 310)
-> ata4: SATA link up 1.5 Gbps (SStatus 113 SControl 310)
-> ata4.00: failed to IDENTIFY (I/O error, err_mask=0x3)
-> ata4: SATA link up 1.5 Gbps (SStatus 113 SControl 310)
-> ata4.00: failed to IDENTIFY (I/O error, err_mask=0x3)
-> ata4: SATA link up 1.5 Gbps (SStatus 113 SControl 310)
-> ata4.00: failed to IDENTIFY (I/O error, err_mask=0x3)
-> ata4: SATA link up 1.5 Gbps (SStatus 113 SControl 310)
-> 
-> Steps to reproduce:
-> 1) Use sata_sil
-> 
+Linus, please pull from:
 
+master.kernel.org:/pub/scm/linux/kernel/git/bart/ide-2.6.git/
+
+to receive the following updates:
+
+ drivers/ide/Makefile                    |   84 +++++++++++++++++++++++--------
+ drivers/ide/{pci => }/aec62xx.c         |    0 
+ drivers/ide/{legacy => }/ali14xx.c      |    0 
+ drivers/ide/{pci => }/alim15x3.c        |    0 
+ drivers/ide/{pci => }/amd74xx.c         |    0 
+ drivers/ide/arm/Makefile                |   10 ----
+ drivers/ide/{pci => }/atiixp.c          |    0 
+ drivers/ide/{mips => }/au1xxx-ide.c     |    0 
+ drivers/ide/{legacy => }/buddha.c       |    0 
+ drivers/ide/{pci => }/cmd640.c          |    0 
+ drivers/ide/{pci => }/cmd64x.c          |    0 
+ drivers/ide/{pci => }/cs5520.c          |    0 
+ drivers/ide/{pci => }/cs5530.c          |    0 
+ drivers/ide/{pci => }/cs5535.c          |    0 
+ drivers/ide/{pci => }/cy82c693.c        |    0 
+ drivers/ide/{pci => }/delkin_cb.c       |    0 
+ drivers/ide/{legacy => }/dtc2278.c      |    0 
+ drivers/ide/{legacy => }/falconide.c    |    0 
+ drivers/ide/{legacy => }/gayle.c        |    0 
+ drivers/ide/{pci => }/generic.c         |    0 
+ drivers/ide/h8300/Makefile              |    2 -
+ drivers/ide/{pci => }/hpt366.c          |    0 
+ drivers/ide/{legacy => }/ht6560b.c      |    0 
+ drivers/ide/{arm => }/icside.c          |    0 
+ drivers/ide/{legacy => }/ide-4drives.c  |    0 
+ drivers/ide/{legacy => }/ide-cs.c       |    0 
+ drivers/ide/{h8300 => }/ide-h8300.c     |    0 
+ drivers/ide/{arm => }/ide_arm.c         |    0 
+ drivers/ide/{legacy => }/ide_platform.c |    0 
+ drivers/ide/{pci => }/it8213.c          |    0 
+ drivers/ide/{pci => }/it821x.c          |    0 
+ drivers/ide/{pci => }/jmicron.c         |    0 
+ drivers/ide/legacy/Makefile             |   25 ---------
+ drivers/ide/{legacy => }/macide.c       |    0 
+ drivers/ide/mips/Makefile               |    3 -
+ drivers/ide/{pci => }/ns87415.c         |    0 
+ drivers/ide/{pci => }/opti621.c         |    0 
+ drivers/ide/{arm => }/palm_bk3710.c     |    0 
+ drivers/ide/pci/Makefile                |   43 ----------------
+ drivers/ide/{pci => }/pdc202xx_new.c    |    0 
+ drivers/ide/{pci => }/pdc202xx_old.c    |    0 
+ drivers/ide/{pci => }/piix.c            |    0 
+ drivers/ide/{ppc => }/pmac.c            |    0 
+ drivers/ide/ppc/Makefile                |    2 -
+ drivers/ide/{legacy => }/q40ide.c       |    0 
+ drivers/ide/{legacy => }/qd65xx.c       |    0 
+ drivers/ide/{legacy => }/qd65xx.h       |    0 
+ drivers/ide/{arm => }/rapide.c          |    0 
+ drivers/ide/{pci => }/rz1000.c          |    0 
+ drivers/ide/{pci => }/sc1200.c          |    0 
+ drivers/ide/{pci => }/scc_pata.c        |    0 
+ drivers/ide/{pci => }/serverworks.c     |    0 
+ drivers/ide/{pci => }/sgiioc4.c         |    0 
+ drivers/ide/{pci => }/siimage.c         |    0 
+ drivers/ide/{pci => }/sis5513.c         |    0 
+ drivers/ide/{pci => }/sl82c105.c        |    0 
+ drivers/ide/{pci => }/slc90e66.c        |    0 
+ drivers/ide/{pci => }/tc86c001.c        |    0 
+ drivers/ide/{pci => }/triflex.c         |    0 
+ drivers/ide/{pci => }/trm290.c          |    0 
+ drivers/ide/{legacy => }/umc8672.c      |    0 
+ drivers/ide/{pci => }/via82cxxx.c       |    0 
+ 62 files changed, 63 insertions(+), 106 deletions(-)
+ rename drivers/ide/{pci => }/aec62xx.c (100%)
+ rename drivers/ide/{legacy => }/ali14xx.c (100%)
+ rename drivers/ide/{pci => }/alim15x3.c (100%)
+ rename drivers/ide/{pci => }/amd74xx.c (100%)
+ delete mode 100644 drivers/ide/arm/Makefile
+ rename drivers/ide/{pci => }/atiixp.c (100%)
+ rename drivers/ide/{mips => }/au1xxx-ide.c (100%)
+ rename drivers/ide/{legacy => }/buddha.c (100%)
+ rename drivers/ide/{pci => }/cmd640.c (100%)
+ rename drivers/ide/{pci => }/cmd64x.c (100%)
+ rename drivers/ide/{pci => }/cs5520.c (100%)
+ rename drivers/ide/{pci => }/cs5530.c (100%)
+ rename drivers/ide/{pci => }/cs5535.c (100%)
+ rename drivers/ide/{pci => }/cy82c693.c (100%)
+ rename drivers/ide/{pci => }/delkin_cb.c (100%)
+ rename drivers/ide/{legacy => }/dtc2278.c (100%)
+ rename drivers/ide/{legacy => }/falconide.c (100%)
+ rename drivers/ide/{legacy => }/gayle.c (100%)
+ rename drivers/ide/{pci => }/generic.c (100%)
+ delete mode 100644 drivers/ide/h8300/Makefile
+ rename drivers/ide/{pci => }/hpt366.c (100%)
+ rename drivers/ide/{legacy => }/ht6560b.c (100%)
+ rename drivers/ide/{arm => }/icside.c (100%)
+ rename drivers/ide/{legacy => }/ide-4drives.c (100%)
+ rename drivers/ide/{legacy => }/ide-cs.c (100%)
+ rename drivers/ide/{h8300 => }/ide-h8300.c (100%)
+ rename drivers/ide/{arm => }/ide_arm.c (100%)
+ rename drivers/ide/{legacy => }/ide_platform.c (100%)
+ rename drivers/ide/{pci => }/it8213.c (100%)
+ rename drivers/ide/{pci => }/it821x.c (100%)
+ rename drivers/ide/{pci => }/jmicron.c (100%)
+ delete mode 100644 drivers/ide/legacy/Makefile
+ rename drivers/ide/{legacy => }/macide.c (100%)
+ delete mode 100644 drivers/ide/mips/Makefile
+ rename drivers/ide/{pci => }/ns87415.c (100%)
+ rename drivers/ide/{pci => }/opti621.c (100%)
+ rename drivers/ide/{arm => }/palm_bk3710.c (100%)
+ delete mode 100644 drivers/ide/pci/Makefile
+ rename drivers/ide/{pci => }/pdc202xx_new.c (100%)
+ rename drivers/ide/{pci => }/pdc202xx_old.c (100%)
+ rename drivers/ide/{pci => }/piix.c (100%)
+ rename drivers/ide/{ppc => }/pmac.c (100%)
+ delete mode 100644 drivers/ide/ppc/Makefile
+ rename drivers/ide/{legacy => }/q40ide.c (100%)
+ rename drivers/ide/{legacy => }/qd65xx.c (100%)
+ rename drivers/ide/{legacy => }/qd65xx.h (100%)
+ rename drivers/ide/{arm => }/rapide.c (100%)
+ rename drivers/ide/{pci => }/rz1000.c (100%)
+ rename drivers/ide/{pci => }/sc1200.c (100%)
+ rename drivers/ide/{pci => }/scc_pata.c (100%)
+ rename drivers/ide/{pci => }/serverworks.c (100%)
+ rename drivers/ide/{pci => }/sgiioc4.c (100%)
+ rename drivers/ide/{pci => }/siimage.c (100%)
+ rename drivers/ide/{pci => }/sis5513.c (100%)
+ rename drivers/ide/{pci => }/sl82c105.c (100%)
+ rename drivers/ide/{pci => }/slc90e66.c (100%)
+ rename drivers/ide/{pci => }/tc86c001.c (100%)
+ rename drivers/ide/{pci => }/triflex.c (100%)
+ rename drivers/ide/{pci => }/trm290.c (100%)
+ rename drivers/ide/{legacy => }/umc8672.c (100%)
+ rename drivers/ide/{pci => }/via82cxxx.c (100%)
+
+
+Bartlomiej Zolnierkiewicz (1):
+      ide: remove useless subdirs from drivers/ide/
+
+
+diff --git a/drivers/ide/Makefile b/drivers/ide/Makefile
+index 093d324..9cf92ac 100644
+--- a/drivers/ide/Makefile
++++ b/drivers/ide/Makefile
+@@ -18,22 +18,66 @@ ide-core-$(CONFIG_BLK_DEV_IDEACPI)	+= ide-acpi.o
+ 
+ obj-$(CONFIG_IDE)			+= ide-core.o
+ 
+-ifeq ($(CONFIG_IDE_ARM), y)
+-	ide-arm-core-y += arm/ide_arm.o
+-	obj-y += ide-arm-core.o
+-endif
+-
+-obj-$(CONFIG_IDE)			+= legacy/ pci/
++obj-$(CONFIG_IDE_ARM)			+= ide_arm.o
++
++obj-$(CONFIG_BLK_DEV_ALI14XX)		+= ali14xx.o
++obj-$(CONFIG_BLK_DEV_UMC8672)		+= umc8672.o
++obj-$(CONFIG_BLK_DEV_DTC2278)		+= dtc2278.o
++obj-$(CONFIG_BLK_DEV_HT6560B)		+= ht6560b.o
++obj-$(CONFIG_BLK_DEV_QD65XX)		+= qd65xx.o
++obj-$(CONFIG_BLK_DEV_4DRIVES)		+= ide-4drives.o
++
++obj-$(CONFIG_BLK_DEV_GAYLE)		+= gayle.o
++obj-$(CONFIG_BLK_DEV_FALCON_IDE)	+= falconide.o
++obj-$(CONFIG_BLK_DEV_MAC_IDE)		+= macide.o
++obj-$(CONFIG_BLK_DEV_Q40IDE)		+= q40ide.o
++obj-$(CONFIG_BLK_DEV_BUDDHA)		+= buddha.o
++
++obj-$(CONFIG_BLK_DEV_AEC62XX)		+= aec62xx.o
++obj-$(CONFIG_BLK_DEV_ALI15X3)		+= alim15x3.o
++obj-$(CONFIG_BLK_DEV_AMD74XX)		+= amd74xx.o
++obj-$(CONFIG_BLK_DEV_ATIIXP)		+= atiixp.o
++obj-$(CONFIG_BLK_DEV_CELLEB)		+= scc_pata.o
++obj-$(CONFIG_BLK_DEV_CMD64X)		+= cmd64x.o
++obj-$(CONFIG_BLK_DEV_CS5520)		+= cs5520.o
++obj-$(CONFIG_BLK_DEV_CS5530)		+= cs5530.o
++obj-$(CONFIG_BLK_DEV_CS5535)		+= cs5535.o
++obj-$(CONFIG_BLK_DEV_SC1200)		+= sc1200.o
++obj-$(CONFIG_BLK_DEV_CY82C693)		+= cy82c693.o
++obj-$(CONFIG_BLK_DEV_DELKIN)		+= delkin_cb.o
++obj-$(CONFIG_BLK_DEV_HPT366)		+= hpt366.o
++obj-$(CONFIG_BLK_DEV_IT8213)		+= it8213.o
++obj-$(CONFIG_BLK_DEV_IT821X)		+= it821x.o
++obj-$(CONFIG_BLK_DEV_JMICRON)		+= jmicron.o
++obj-$(CONFIG_BLK_DEV_NS87415)		+= ns87415.o
++obj-$(CONFIG_BLK_DEV_OPTI621)		+= opti621.o
++obj-$(CONFIG_BLK_DEV_PDC202XX_OLD)	+= pdc202xx_old.o
++obj-$(CONFIG_BLK_DEV_PDC202XX_NEW)	+= pdc202xx_new.o
++obj-$(CONFIG_BLK_DEV_PIIX)		+= piix.o
++obj-$(CONFIG_BLK_DEV_RZ1000)		+= rz1000.o
++obj-$(CONFIG_BLK_DEV_SVWKS)		+= serverworks.o
++obj-$(CONFIG_BLK_DEV_SGIIOC4)		+= sgiioc4.o
++obj-$(CONFIG_BLK_DEV_SIIMAGE)		+= siimage.o
++obj-$(CONFIG_BLK_DEV_SIS5513)		+= sis5513.o
++obj-$(CONFIG_BLK_DEV_SL82C105)		+= sl82c105.o
++obj-$(CONFIG_BLK_DEV_SLC90E66)		+= slc90e66.o
++obj-$(CONFIG_BLK_DEV_TC86C001)		+= tc86c001.o
++obj-$(CONFIG_BLK_DEV_TRIFLEX)		+= triflex.o
++obj-$(CONFIG_BLK_DEV_TRM290)		+= trm290.o
++obj-$(CONFIG_BLK_DEV_VIA82CXXX)		+= via82cxxx.o
++
++# Must appear at the end of the block
++obj-$(CONFIG_BLK_DEV_GENERIC)		+= ide-pci-generic.o
++ide-pci-generic-y			+= generic.o
+ 
+ obj-$(CONFIG_IDEPCI_PCIBUS_ORDER)	+= ide-scan-pci.o
+ 
+-ifeq ($(CONFIG_BLK_DEV_CMD640), y)
+-	cmd640-core-y += pci/cmd640.o
+-	obj-y += cmd640-core.o
+-endif
++obj-$(CONFIG_BLK_DEV_CMD640)		+= cmd640.o
++
++obj-$(CONFIG_BLK_DEV_IDE_PMAC)		+= pmac.o
++
++obj-$(CONFIG_IDE_H8300)			+= ide-h8300.o
+ 
+-obj-$(CONFIG_IDE)			+= ppc/
+-obj-$(CONFIG_IDE_H8300)			+= h8300/
+ obj-$(CONFIG_IDE_GENERIC)		+= ide-generic.o
+ obj-$(CONFIG_BLK_DEV_IDEPNP)		+= ide-pnp.o
+ 
+@@ -58,14 +102,12 @@ obj-$(CONFIG_IDE_GD)			+= ide-gd_mod.o
+ obj-$(CONFIG_BLK_DEV_IDECD)		+= ide-cd_mod.o
+ obj-$(CONFIG_BLK_DEV_IDETAPE)		+= ide-tape.o
+ 
+-ifeq ($(CONFIG_BLK_DEV_IDECS), y)
+-	ide-cs-core-y += legacy/ide-cs.o
+-	obj-y += ide-cs-core.o
+-endif
++obj-$(CONFIG_BLK_DEV_IDECS)		+= ide-cs.o
+ 
+-ifeq ($(CONFIG_BLK_DEV_PLATFORM), y)
+-	ide-platform-core-y += legacy/ide_platform.o
+-	obj-y += ide-platform-core.o
+-endif
++obj-$(CONFIG_BLK_DEV_PLATFORM)		+= ide_platform.o
++
++obj-$(CONFIG_BLK_DEV_IDE_ICSIDE)	+= icside.o
++obj-$(CONFIG_BLK_DEV_IDE_RAPIDE)	+= rapide.o
++obj-$(CONFIG_BLK_DEV_PALMCHIP_BK3710)	+= palm_bk3710.o
+ 
+-obj-$(CONFIG_IDE)			+= arm/ mips/
++obj-$(CONFIG_BLK_DEV_IDE_AU1XXX)	+= au1xxx-ide.o
+diff --git a/drivers/ide/pci/aec62xx.c b/drivers/ide/aec62xx.c
+similarity index 100%
+rename from drivers/ide/pci/aec62xx.c
+rename to drivers/ide/aec62xx.c
+diff --git a/drivers/ide/legacy/ali14xx.c b/drivers/ide/ali14xx.c
+similarity index 100%
+rename from drivers/ide/legacy/ali14xx.c
+rename to drivers/ide/ali14xx.c
+diff --git a/drivers/ide/pci/alim15x3.c b/drivers/ide/alim15x3.c
+similarity index 100%
+rename from drivers/ide/pci/alim15x3.c
+rename to drivers/ide/alim15x3.c
+diff --git a/drivers/ide/pci/amd74xx.c b/drivers/ide/amd74xx.c
+similarity index 100%
+rename from drivers/ide/pci/amd74xx.c
+rename to drivers/ide/amd74xx.c
+diff --git a/drivers/ide/arm/Makefile b/drivers/ide/arm/Makefile
+deleted file mode 100644
+index 5bc2605..0000000
+--- a/drivers/ide/arm/Makefile
++++ /dev/null
+@@ -1,10 +0,0 @@
+-
+-obj-$(CONFIG_BLK_DEV_IDE_ICSIDE)	+= icside.o
+-obj-$(CONFIG_BLK_DEV_IDE_RAPIDE)	+= rapide.o
+-obj-$(CONFIG_BLK_DEV_PALMCHIP_BK3710)	+= palm_bk3710.o
+-
+-ifeq ($(CONFIG_IDE_ARM), m)
+-	obj-m += ide_arm.o
+-endif
+-
+-EXTRA_CFLAGS	:= -Idrivers/ide
+diff --git a/drivers/ide/pci/atiixp.c b/drivers/ide/atiixp.c
+similarity index 100%
+rename from drivers/ide/pci/atiixp.c
+rename to drivers/ide/atiixp.c
+diff --git a/drivers/ide/mips/au1xxx-ide.c b/drivers/ide/au1xxx-ide.c
+similarity index 100%
+rename from drivers/ide/mips/au1xxx-ide.c
+rename to drivers/ide/au1xxx-ide.c
+diff --git a/drivers/ide/legacy/buddha.c b/drivers/ide/buddha.c
+similarity index 100%
+rename from drivers/ide/legacy/buddha.c
+rename to drivers/ide/buddha.c
+diff --git a/drivers/ide/pci/cmd640.c b/drivers/ide/cmd640.c
+similarity index 100%
+rename from drivers/ide/pci/cmd640.c
+rename to drivers/ide/cmd640.c
+diff --git a/drivers/ide/pci/cmd64x.c b/drivers/ide/cmd64x.c
+similarity index 100%
+rename from drivers/ide/pci/cmd64x.c
+rename to drivers/ide/cmd64x.c
+diff --git a/drivers/ide/pci/cs5520.c b/drivers/ide/cs5520.c
+similarity index 100%
+rename from drivers/ide/pci/cs5520.c
+rename to drivers/ide/cs5520.c
+diff --git a/drivers/ide/pci/cs5530.c b/drivers/ide/cs5530.c
+similarity index 100%
+rename from drivers/ide/pci/cs5530.c
+rename to drivers/ide/cs5530.c
+diff --git a/drivers/ide/pci/cs5535.c b/drivers/ide/cs5535.c
+similarity index 100%
+rename from drivers/ide/pci/cs5535.c
+rename to drivers/ide/cs5535.c
+diff --git a/drivers/ide/pci/cy82c693.c b/drivers/ide/cy82c693.c
+similarity index 100%
+rename from drivers/ide/pci/cy82c693.c
+rename to drivers/ide/cy82c693.c
+diff --git a/drivers/ide/pci/delkin_cb.c b/drivers/ide/delkin_cb.c
+similarity index 100%
+rename from drivers/ide/pci/delkin_cb.c
+rename to drivers/ide/delkin_cb.c
+diff --git a/drivers/ide/legacy/dtc2278.c b/drivers/ide/dtc2278.c
+similarity index 100%
+rename from drivers/ide/legacy/dtc2278.c
+rename to drivers/ide/dtc2278.c
+diff --git a/drivers/ide/legacy/falconide.c b/drivers/ide/falconide.c
+similarity index 100%
+rename from drivers/ide/legacy/falconide.c
+rename to drivers/ide/falconide.c
+diff --git a/drivers/ide/legacy/gayle.c b/drivers/ide/gayle.c
+similarity index 100%
+rename from drivers/ide/legacy/gayle.c
+rename to drivers/ide/gayle.c
+diff --git a/drivers/ide/pci/generic.c b/drivers/ide/generic.c
+similarity index 100%
+rename from drivers/ide/pci/generic.c
+rename to drivers/ide/generic.c
+diff --git a/drivers/ide/h8300/Makefile b/drivers/ide/h8300/Makefile
+deleted file mode 100644
+index 5eba16f..0000000
+--- a/drivers/ide/h8300/Makefile
++++ /dev/null
+@@ -1,2 +0,0 @@
+-
+-obj-$(CONFIG_IDE_H8300)			+= ide-h8300.o
+diff --git a/drivers/ide/pci/hpt366.c b/drivers/ide/hpt366.c
+similarity index 100%
+rename from drivers/ide/pci/hpt366.c
+rename to drivers/ide/hpt366.c
+diff --git a/drivers/ide/legacy/ht6560b.c b/drivers/ide/ht6560b.c
+similarity index 100%
+rename from drivers/ide/legacy/ht6560b.c
+rename to drivers/ide/ht6560b.c
+diff --git a/drivers/ide/arm/icside.c b/drivers/ide/icside.c
+similarity index 100%
+rename from drivers/ide/arm/icside.c
+rename to drivers/ide/icside.c
+diff --git a/drivers/ide/legacy/ide-4drives.c b/drivers/ide/ide-4drives.c
+similarity index 100%
+rename from drivers/ide/legacy/ide-4drives.c
+rename to drivers/ide/ide-4drives.c
+diff --git a/drivers/ide/legacy/ide-cs.c b/drivers/ide/ide-cs.c
+similarity index 100%
+rename from drivers/ide/legacy/ide-cs.c
+rename to drivers/ide/ide-cs.c
+diff --git a/drivers/ide/h8300/ide-h8300.c b/drivers/ide/ide-h8300.c
+similarity index 100%
+rename from drivers/ide/h8300/ide-h8300.c
+rename to drivers/ide/ide-h8300.c
+diff --git a/drivers/ide/arm/ide_arm.c b/drivers/ide/ide_arm.c
+similarity index 100%
+rename from drivers/ide/arm/ide_arm.c
+rename to drivers/ide/ide_arm.c
+diff --git a/drivers/ide/legacy/ide_platform.c b/drivers/ide/ide_platform.c
+similarity index 100%
+rename from drivers/ide/legacy/ide_platform.c
+rename to drivers/ide/ide_platform.c
+diff --git a/drivers/ide/pci/it8213.c b/drivers/ide/it8213.c
+similarity index 100%
+rename from drivers/ide/pci/it8213.c
+rename to drivers/ide/it8213.c
+diff --git a/drivers/ide/pci/it821x.c b/drivers/ide/it821x.c
+similarity index 100%
+rename from drivers/ide/pci/it821x.c
+rename to drivers/ide/it821x.c
+diff --git a/drivers/ide/pci/jmicron.c b/drivers/ide/jmicron.c
+similarity index 100%
+rename from drivers/ide/pci/jmicron.c
+rename to drivers/ide/jmicron.c
+diff --git a/drivers/ide/legacy/Makefile b/drivers/ide/legacy/Makefile
+deleted file mode 100644
+index 6939329..0000000
+--- a/drivers/ide/legacy/Makefile
++++ /dev/null
+@@ -1,25 +0,0 @@
+-
+-# link order is important here
+-
+-obj-$(CONFIG_BLK_DEV_ALI14XX)		+= ali14xx.o
+-obj-$(CONFIG_BLK_DEV_UMC8672)		+= umc8672.o
+-obj-$(CONFIG_BLK_DEV_DTC2278)		+= dtc2278.o
+-obj-$(CONFIG_BLK_DEV_HT6560B)		+= ht6560b.o
+-obj-$(CONFIG_BLK_DEV_QD65XX)		+= qd65xx.o
+-obj-$(CONFIG_BLK_DEV_4DRIVES)		+= ide-4drives.o
+-
+-obj-$(CONFIG_BLK_DEV_GAYLE)		+= gayle.o
+-obj-$(CONFIG_BLK_DEV_FALCON_IDE)	+= falconide.o
+-obj-$(CONFIG_BLK_DEV_MAC_IDE)		+= macide.o
+-obj-$(CONFIG_BLK_DEV_Q40IDE)		+= q40ide.o
+-obj-$(CONFIG_BLK_DEV_BUDDHA)		+= buddha.o
+-
+-ifeq ($(CONFIG_BLK_DEV_IDECS), m)
+-	obj-m += ide-cs.o
+-endif
+-
+-ifeq ($(CONFIG_BLK_DEV_PLATFORM), m)
+-	obj-m += ide_platform.o
+-endif
+-
+-EXTRA_CFLAGS	:= -Idrivers/ide
+diff --git a/drivers/ide/legacy/macide.c b/drivers/ide/macide.c
+similarity index 100%
+rename from drivers/ide/legacy/macide.c
+rename to drivers/ide/macide.c
+diff --git a/drivers/ide/mips/Makefile b/drivers/ide/mips/Makefile
+deleted file mode 100644
+index 5873fa0..0000000
+--- a/drivers/ide/mips/Makefile
++++ /dev/null
+@@ -1,3 +0,0 @@
+-obj-$(CONFIG_BLK_DEV_IDE_AU1XXX)	+= au1xxx-ide.o
+-
+-EXTRA_CFLAGS    := -Idrivers/ide
+diff --git a/drivers/ide/pci/ns87415.c b/drivers/ide/ns87415.c
+similarity index 100%
+rename from drivers/ide/pci/ns87415.c
+rename to drivers/ide/ns87415.c
+diff --git a/drivers/ide/pci/opti621.c b/drivers/ide/opti621.c
+similarity index 100%
+rename from drivers/ide/pci/opti621.c
+rename to drivers/ide/opti621.c
+diff --git a/drivers/ide/arm/palm_bk3710.c b/drivers/ide/palm_bk3710.c
+similarity index 100%
+rename from drivers/ide/arm/palm_bk3710.c
+rename to drivers/ide/palm_bk3710.c
+diff --git a/drivers/ide/pci/Makefile b/drivers/ide/pci/Makefile
+deleted file mode 100644
+index ab44a1f..0000000
+--- a/drivers/ide/pci/Makefile
++++ /dev/null
+@@ -1,43 +0,0 @@
+-
+-obj-$(CONFIG_BLK_DEV_AEC62XX)		+= aec62xx.o
+-obj-$(CONFIG_BLK_DEV_ALI15X3)		+= alim15x3.o
+-obj-$(CONFIG_BLK_DEV_AMD74XX)		+= amd74xx.o
+-obj-$(CONFIG_BLK_DEV_ATIIXP)		+= atiixp.o
+-obj-$(CONFIG_BLK_DEV_CELLEB)		+= scc_pata.o
+-obj-$(CONFIG_BLK_DEV_CMD64X)		+= cmd64x.o
+-obj-$(CONFIG_BLK_DEV_CS5520)		+= cs5520.o
+-obj-$(CONFIG_BLK_DEV_CS5530)		+= cs5530.o
+-obj-$(CONFIG_BLK_DEV_CS5535)		+= cs5535.o
+-obj-$(CONFIG_BLK_DEV_SC1200)		+= sc1200.o
+-obj-$(CONFIG_BLK_DEV_CY82C693)		+= cy82c693.o
+-obj-$(CONFIG_BLK_DEV_DELKIN)		+= delkin_cb.o
+-obj-$(CONFIG_BLK_DEV_HPT366)		+= hpt366.o
+-obj-$(CONFIG_BLK_DEV_IT8213)		+= it8213.o
+-obj-$(CONFIG_BLK_DEV_IT821X)		+= it821x.o
+-obj-$(CONFIG_BLK_DEV_JMICRON)		+= jmicron.o
+-obj-$(CONFIG_BLK_DEV_NS87415)		+= ns87415.o
+-obj-$(CONFIG_BLK_DEV_OPTI621)		+= opti621.o
+-obj-$(CONFIG_BLK_DEV_PDC202XX_OLD)	+= pdc202xx_old.o
+-obj-$(CONFIG_BLK_DEV_PDC202XX_NEW)	+= pdc202xx_new.o
+-obj-$(CONFIG_BLK_DEV_PIIX)		+= piix.o
+-obj-$(CONFIG_BLK_DEV_RZ1000)		+= rz1000.o
+-obj-$(CONFIG_BLK_DEV_SVWKS)		+= serverworks.o
+-obj-$(CONFIG_BLK_DEV_SGIIOC4)		+= sgiioc4.o
+-obj-$(CONFIG_BLK_DEV_SIIMAGE)		+= siimage.o
+-obj-$(CONFIG_BLK_DEV_SIS5513)		+= sis5513.o
+-obj-$(CONFIG_BLK_DEV_SL82C105)		+= sl82c105.o
+-obj-$(CONFIG_BLK_DEV_SLC90E66)		+= slc90e66.o
+-obj-$(CONFIG_BLK_DEV_TC86C001)		+= tc86c001.o
+-obj-$(CONFIG_BLK_DEV_TRIFLEX)		+= triflex.o
+-obj-$(CONFIG_BLK_DEV_TRM290)		+= trm290.o
+-obj-$(CONFIG_BLK_DEV_VIA82CXXX)		+= via82cxxx.o
+-
+-# Must appear at the end of the block
+-obj-$(CONFIG_BLK_DEV_GENERIC)		+= ide-pci-generic.o
+-ide-pci-generic-y			+= generic.o
+-
+-ifeq ($(CONFIG_BLK_DEV_CMD640), m)
+-	obj-m += cmd640.o
+-endif
+-
+-EXTRA_CFLAGS	:= -Idrivers/ide
+diff --git a/drivers/ide/pci/pdc202xx_new.c b/drivers/ide/pdc202xx_new.c
+similarity index 100%
+rename from drivers/ide/pci/pdc202xx_new.c
+rename to drivers/ide/pdc202xx_new.c
+diff --git a/drivers/ide/pci/pdc202xx_old.c b/drivers/ide/pdc202xx_old.c
+similarity index 100%
+rename from drivers/ide/pci/pdc202xx_old.c
+rename to drivers/ide/pdc202xx_old.c
+diff --git a/drivers/ide/pci/piix.c b/drivers/ide/piix.c
+similarity index 100%
+rename from drivers/ide/pci/piix.c
+rename to drivers/ide/piix.c
+diff --git a/drivers/ide/ppc/pmac.c b/drivers/ide/pmac.c
+similarity index 100%
+rename from drivers/ide/ppc/pmac.c
+rename to drivers/ide/pmac.c
+diff --git a/drivers/ide/ppc/Makefile b/drivers/ide/ppc/Makefile
+deleted file mode 100644
+index 74e52ad..0000000
+--- a/drivers/ide/ppc/Makefile
++++ /dev/null
+@@ -1,2 +0,0 @@
+-
+-obj-$(CONFIG_BLK_DEV_IDE_PMAC)		+= pmac.o
+diff --git a/drivers/ide/legacy/q40ide.c b/drivers/ide/q40ide.c
+similarity index 100%
+rename from drivers/ide/legacy/q40ide.c
+rename to drivers/ide/q40ide.c
+diff --git a/drivers/ide/legacy/qd65xx.c b/drivers/ide/qd65xx.c
+similarity index 100%
+rename from drivers/ide/legacy/qd65xx.c
+rename to drivers/ide/qd65xx.c
+diff --git a/drivers/ide/legacy/qd65xx.h b/drivers/ide/qd65xx.h
+similarity index 100%
+rename from drivers/ide/legacy/qd65xx.h
+rename to drivers/ide/qd65xx.h
+diff --git a/drivers/ide/arm/rapide.c b/drivers/ide/rapide.c
+similarity index 100%
+rename from drivers/ide/arm/rapide.c
+rename to drivers/ide/rapide.c
+diff --git a/drivers/ide/pci/rz1000.c b/drivers/ide/rz1000.c
+similarity index 100%
+rename from drivers/ide/pci/rz1000.c
+rename to drivers/ide/rz1000.c
+diff --git a/drivers/ide/pci/sc1200.c b/drivers/ide/sc1200.c
+similarity index 100%
+rename from drivers/ide/pci/sc1200.c
+rename to drivers/ide/sc1200.c
+diff --git a/drivers/ide/pci/scc_pata.c b/drivers/ide/scc_pata.c
+similarity index 100%
+rename from drivers/ide/pci/scc_pata.c
+rename to drivers/ide/scc_pata.c
+diff --git a/drivers/ide/pci/serverworks.c b/drivers/ide/serverworks.c
+similarity index 100%
+rename from drivers/ide/pci/serverworks.c
+rename to drivers/ide/serverworks.c
+diff --git a/drivers/ide/pci/sgiioc4.c b/drivers/ide/sgiioc4.c
+similarity index 100%
+rename from drivers/ide/pci/sgiioc4.c
+rename to drivers/ide/sgiioc4.c
+diff --git a/drivers/ide/pci/siimage.c b/drivers/ide/siimage.c
+similarity index 100%
+rename from drivers/ide/pci/siimage.c
+rename to drivers/ide/siimage.c
+diff --git a/drivers/ide/pci/sis5513.c b/drivers/ide/sis5513.c
+similarity index 100%
+rename from drivers/ide/pci/sis5513.c
+rename to drivers/ide/sis5513.c
+diff --git a/drivers/ide/pci/sl82c105.c b/drivers/ide/sl82c105.c
+similarity index 100%
+rename from drivers/ide/pci/sl82c105.c
+rename to drivers/ide/sl82c105.c
+diff --git a/drivers/ide/pci/slc90e66.c b/drivers/ide/slc90e66.c
+similarity index 100%
+rename from drivers/ide/pci/slc90e66.c
+rename to drivers/ide/slc90e66.c
+diff --git a/drivers/ide/pci/tc86c001.c b/drivers/ide/tc86c001.c
+similarity index 100%
+rename from drivers/ide/pci/tc86c001.c
+rename to drivers/ide/tc86c001.c
+diff --git a/drivers/ide/pci/triflex.c b/drivers/ide/triflex.c
+similarity index 100%
+rename from drivers/ide/pci/triflex.c
+rename to drivers/ide/triflex.c
+diff --git a/drivers/ide/pci/trm290.c b/drivers/ide/trm290.c
+similarity index 100%
+rename from drivers/ide/pci/trm290.c
+rename to drivers/ide/trm290.c
+diff --git a/drivers/ide/legacy/umc8672.c b/drivers/ide/umc8672.c
+similarity index 100%
+rename from drivers/ide/legacy/umc8672.c
+rename to drivers/ide/umc8672.c
+diff --git a/drivers/ide/pci/via82cxxx.c b/drivers/ide/via82cxxx.c
+similarity index 100%
+rename from drivers/ide/pci/via82cxxx.c
+rename to drivers/ide/via82cxxx.c
