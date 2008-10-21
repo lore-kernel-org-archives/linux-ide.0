@@ -1,64 +1,43 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [smartmontools-support] inactive SATA drives won't stay in standby
- or sleep, PATA models did. (fwd)
-Date: Tue, 21 Oct 2008 18:02:08 +0900
-Message-ID: <48FD9A90.8000205@gmail.com>
-References: <D73D40172004714D95D7A84AC3E68EC802282133@wdscexbe03.sc.wdc.com>	<48EBFE9B.9070503@gmail.com>	<18674.4081.839329.116533@harpo.it.uu.se>	<48F2D9A8.1030502@gmail.com>	<18683.50533.786782.474536@harpo.it.uu.se>	<48FD580E.4080101@gmail.com> <18685.35653.125899.390135@harpo.it.uu.se>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+From: Tejun Heo <tj@kernel.org>
+Subject: [PATCH 03/22] sata_mv: remove unnecessary initialization
+Date: Tue, 21 Oct 2008 18:17:41 +0900
+Message-ID: <1224580680-13698-4-git-send-email-tj@kernel.org>
+References: <1224580680-13698-1-git-send-email-tj@kernel.org>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ti-out-0910.google.com ([209.85.142.184]:40517 "EHLO
-	ti-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751897AbYJUJEM (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 21 Oct 2008 05:04:12 -0400
-Received: by ti-out-0910.google.com with SMTP id b6so1071381tic.23
-        for <linux-ide@vger.kernel.org>; Tue, 21 Oct 2008 02:04:10 -0700 (PDT)
-In-Reply-To: <18685.35653.125899.390135@harpo.it.uu.se>
+Received: from hera.kernel.org ([140.211.167.34]:45975 "EHLO hera.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751908AbYJUJUU (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 21 Oct 2008 05:20:20 -0400
+In-Reply-To: <1224580680-13698-1-git-send-email-tj@kernel.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mikael Pettersson <mikpe@it.uu.se>
-Cc: Christian Mueller <Christian.Mueller@wdc.com>, Bruce Allen <ballen@gravity.phys.uwm.edu>, Smartmontools Mailing List <smartmontools-support@lists.sourceforge.net>, LKML <linux-kernel@vger.kernel.org>, IDE/ATA development list <linux-ide@vger.kernel.org>
+To: jeff@garzik.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+Cc: Tejun Heo <tj@kernel.org>
 
-Hello,
+sata_mv initializes unused ioports fields including bmdma_addr to
+NULL.  As later changes will conditionalize BMDMA, this makes sata_mv
+unnecessarily dependent on BMDMA.  Remove the unnecessary
+initialization.
 
-Mikael Pettersson wrote:
-> Tejun Heo writes:
->  > Hello, Mikael.
->  > I would put this into ->hardreset itself as the controller can also
->  > get out of sync with reality during reset.
-> 
-> The only thing I see going on between prereset and (hard/soft)reset
-> is an optional freeze, so I don't see why moving the pdc_reset_port()
-> into the beginning of hardreset() would make any difference.
-> 
-> sata_promise currently uses the ->hardreset and ->softreset inherited
-> from ata_sff_port_ops, so it would need to override both to ensure that
-> we always do pdc_reset_port() before libata does its thing. That's why
-> I felt doing that in ->prereset would be the right solution.
+Signed-off-by: Tejun Heo <tj@kernel.org>
+---
+ drivers/ata/sata_mv.c |    3 ---
+ 1 files changed, 0 insertions(+), 3 deletions(-)
 
-Hmm.. reset sequence goes on like the following.
-
- 1. prereset
- 2. hardreset, if fail, retry
- 3. follow-up softreset if requested, if fail, goto #2
- 4. postreset, if successful
-
-So, if some PHY event happens while the reset is waiting for device
-readiness and makes the controller state go out of sync with the
-drive.  ->prereset() will NOT be called for the following retry.
-
-As a rule, ->hardreset should be able to reset the controller from all
-possible situations.  ->prereset can be used to smooth out initial
-reset tries (ie. during initial probing, waiting for device readiness
-before SRST for SFF controllers w/o hardreset) but at best its
-function is advisory.  When things go wrong, ->hardreset should be
-able to provide solution whatever state the controller is in.
-
-If both hard and soft resets work better with the controller reset
-added, I think it would be best to override both.
-
-Thanks.
-
+diff --git a/drivers/ata/sata_mv.c b/drivers/ata/sata_mv.c
+index 2b24ae5..92f3ad8 100644
+--- a/drivers/ata/sata_mv.c
++++ b/drivers/ata/sata_mv.c
+@@ -2861,9 +2861,6 @@ static void mv_port_init(struct ata_ioports *port,  void __iomem *port_mmio)
+ 	/* special case: control/altstatus doesn't have ATA_REG_ address */
+ 	port->altstatus_addr = port->ctl_addr = shd_base + SHD_CTL_AST_OFS;
+ 
+-	/* unused: */
+-	port->cmd_addr = port->bmdma_addr = port->scr_addr = NULL;
+-
+ 	/* Clear any currently outstanding port interrupt conditions */
+ 	serr_ofs = mv_scr_offset(SCR_ERROR);
+ 	writelfl(readl(port_mmio + serr_ofs), port_mmio + serr_ofs);
 -- 
-tejun
+1.5.4.5
+
