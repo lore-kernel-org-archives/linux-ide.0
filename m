@@ -1,63 +1,116 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH #upstream-fixes] libata: set device class to NONE if phys_offline
-Date: Wed, 22 Oct 2008 00:31:34 +0900
-Message-ID: <48FDF5D6.20707@kernel.org>
+Subject: [PATCH 1/2 #upstream-fixes] sata_via: load DEVICE register when CTL
+ changes
+Date: Wed, 22 Oct 2008 00:45:57 +0900
+Message-ID: <48FDF935.6010307@kernel.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:49187 "EHLO hera.kernel.org"
+Received: from hera.kernel.org ([140.211.167.34]:57061 "EHLO hera.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751843AbYJUPbq (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 21 Oct 2008 11:31:46 -0400
+	id S1751704AbYJUPqJ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 21 Oct 2008 11:46:09 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>, IDE/ATA development list <linux-ide@vger.kernel.org>
+To: Jeff Garzik <jeff@garzik.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, Joseph Chan <JosephChan@via.com.tw>
 
-Reset methods don't have access to phys link status for slave links
-and may incorrectly indicate device presence causing unnecessary probe
-failures for unoccupied links.  This patch clears device class to NONE
-during post-reset processing if phys link is offline.
+VIA controllers clear DEVICE register when IEN changes.  Make sure
+DEVICE is updated along with CTL.
 
-As on/offliness semantics is strictly defined and used in multiple
-places by the core layer, this won't change behavior for drivers which
-don't use slave links.
+This change is separated from Joseph Chan's larger patch.
+
+  http://thread.gmane.org/gmane.linux.kernel.commits.mm/40640
 
 Signed-off-by: Tejun Heo <tj@kernel.org>
+Cc: Joseph Chan <JosephChan@via.com.tw>
 ---
-vt8251 incorrectly reports the same signature for unoccupied device if
-the other device on the channel is present.  This patch fixes the
-problem.
+These two patches are on top of
 
-I integrated this patch into separate-sff-bmdma git tree.
+linus#master
++ [1] libata-eh-fix-slave-link-EH-action-mask-handling
++ [2] libata-transfer-EHI-control-flags-to-slave-ehc_i
++ [3] libata-set-device-class-to-NONE-if-phys_offline
 
- drivers/ata/libata-eh.c |   16 ++++++++--------
- 1 file changed, 8 insertions(+), 8 deletions(-)
+[1] http://article.gmane.org/gmane.linux.ide/35390
+[2] http://article.gmane.org/gmane.linux.ide/35393
+[3] http://article.gmane.org/gmane.linux.ide/35436
 
-Index: work/drivers/ata/libata-eh.c
+and finally gets vt8251 working.  I'll integrate this into the
+separate-sff-bmdma git tree.  :-)
+
+ drivers/ata/sata_via.c |   35 ++++++++++++++++++++++++++++++++---
+ 1 file changed, 32 insertions(+), 3 deletions(-)
+
+Index: work/drivers/ata/sata_via.c
 ===================================================================
---- work.orig/drivers/ata/libata-eh.c
-+++ work/drivers/ata/libata-eh.c
-@@ -2455,14 +2455,14 @@ int ata_eh_reset(struct ata_link *link,
- 		dev->pio_mode = XFER_PIO_0;
- 		dev->flags &= ~ATA_DFLAG_SLEEPING;
+--- work.orig/drivers/ata/sata_via.c
++++ work/drivers/ata/sata_via.c
+@@ -70,6 +70,7 @@ enum {
+ static int svia_init_one(struct pci_dev *pdev, const struct pci_device_id *ent);
+ static int svia_scr_read(struct ata_link *link, unsigned int sc_reg, u32 *val);
+ static int svia_scr_write(struct ata_link *link, unsigned int sc_reg, u32 val);
++static void svia_tf_load(struct ata_port *ap, const struct ata_taskfile *tf);
+ static void svia_noop_freeze(struct ata_port *ap);
+ static int vt6420_prereset(struct ata_link *link, unsigned long deadline);
+ static int vt6421_pata_cable_detect(struct ata_port *ap);
+@@ -103,21 +104,26 @@ static struct scsi_host_template svia_sh
+ 	ATA_BMDMA_SHT(DRV_NAME),
+ };
  
--		if (ata_phys_link_offline(ata_dev_phys_link(dev)))
--			continue;
--
--		/* apply class override */
--		if (lflags & ATA_LFLAG_ASSUME_ATA)
--			classes[dev->devno] = ATA_DEV_ATA;
--		else if (lflags & ATA_LFLAG_ASSUME_SEMB)
--			classes[dev->devno] = ATA_DEV_SEMB_UNSUP; /* not yet */
-+		if (!ata_phys_link_offline(ata_dev_phys_link(dev))) {
-+			/* apply class override */
-+			if (lflags & ATA_LFLAG_ASSUME_ATA)
-+				classes[dev->devno] = ATA_DEV_ATA;
-+			else if (lflags & ATA_LFLAG_ASSUME_SEMB)
-+				classes[dev->devno] = ATA_DEV_SEMB_UNSUP;
-+		} else
-+			classes[dev->devno] = ATA_DEV_NONE;
- 	}
+-static struct ata_port_operations vt6420_sata_ops = {
++static struct ata_port_operations svia_base_ops = {
+ 	.inherits		= &ata_bmdma_port_ops,
++	.sff_tf_load		= svia_tf_load,
++};
++
++static struct ata_port_operations vt6420_sata_ops = {
++	.inherits		= &svia_base_ops,
+ 	.freeze			= svia_noop_freeze,
+ 	.prereset		= vt6420_prereset,
+ };
  
- 	/* record current link speed */
+ static struct ata_port_operations vt6421_pata_ops = {
+-	.inherits		= &ata_bmdma_port_ops,
++	.inherits		= &svia_base_ops,
+ 	.cable_detect		= vt6421_pata_cable_detect,
+ 	.set_piomode		= vt6421_set_pio_mode,
+ 	.set_dmamode		= vt6421_set_dma_mode,
+ };
+ 
+ static struct ata_port_operations vt6421_sata_ops = {
+-	.inherits		= &ata_bmdma_port_ops,
++	.inherits		= &svia_base_ops,
+ 	.scr_read		= svia_scr_read,
+ 	.scr_write		= svia_scr_write,
+ };
+@@ -168,6 +174,29 @@ static int svia_scr_write(struct ata_lin
+ 	return 0;
+ }
+ 
++/**
++ *	svia_tf_load - send taskfile registers to host controller
++ *	@ap: Port to which output is sent
++ *	@tf: ATA taskfile register set
++ *
++ *	Outputs ATA taskfile to standard ATA host controller.
++ *
++ *	This is to fix the internal bug of via chipsets, which will
++ *	reset the device register after changing the IEN bit on ctl
++ *	register.
++ */
++static void svia_tf_load(struct ata_port *ap, const struct ata_taskfile *tf)
++{
++	struct ata_taskfile ttf;
++
++	if (tf->ctl != ap->last_ctl)  {
++		ttf = *tf;
++		ttf.flags |= ATA_TFLAG_DEVICE;
++		tf = &ttf;
++	}
++	ata_sff_tf_load(ap, tf);
++}
++
+ static void svia_noop_freeze(struct ata_port *ap)
+ {
+ 	/* Some VIA controllers choke if ATA_NIEN is manipulated in
