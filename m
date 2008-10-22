@@ -1,91 +1,58 @@
-From: "Boris Petkov" <petkovbb@googlemail.com>
-Subject: Re: http://bugzilla.kernel.org/show_bug.cgi?id=11742
-Date: Wed, 22 Oct 2008 17:57:14 +0200
-Message-ID: <9ea470500810220857o153dd0fica23dc877fa895ce@mail.gmail.com>
-References: <20081020112039W.fujita.tomonori@lab.ntt.co.jp>
-	 <20081022155025S.fujita.tomonori@lab.ntt.co.jp>
-	 <9ea470500810220427w30485f0fs5017c2da08fd1796@mail.gmail.com>
-	 <200810221645.22289.valerio.passini@unicam.it>
-Reply-To: petkovbb@gmail.com
+From: Atsushi Nemoto <anemo@mba.ocn.ne.jp>
+Subject: Re: [PATCH] ide: Add tx4939ide driver (v5)
+Date: Thu, 23 Oct 2008 01:00:55 +0900 (JST)
+Message-ID: <20081023.010055.128619796.anemo@mba.ocn.ne.jp>
+References: <20081020.212701.59651580.anemo@mba.ocn.ne.jp>
+	<48FDFE89.5030501@ru.mvista.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-gx0-f16.google.com ([209.85.217.16]:48329 "EHLO
-	mail-gx0-f16.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750815AbYJVP5Q (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 22 Oct 2008 11:57:16 -0400
-Received: by gxk9 with SMTP id 9so7610810gxk.13
-        for <linux-ide@vger.kernel.org>; Wed, 22 Oct 2008 08:57:14 -0700 (PDT)
-In-Reply-To: <200810221645.22289.valerio.passini@unicam.it>
-Content-Disposition: inline
+Received: from mba.ocn.ne.jp ([122.1.235.107]:65275 "EHLO smtp.mba.ocn.ne.jp"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753338AbYJVQAq (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 22 Oct 2008 12:00:46 -0400
+In-Reply-To: <48FDFE89.5030501@ru.mvista.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Valerio Passini <valerio.passini@unicam.it>
-Cc: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, linux-ide@vger.kernel.org
+To: sshtylyov@ru.mvista.com
+Cc: linux-mips@linux-mips.org, linux-ide@vger.kernel.org, bzolnier@gmail.com, ralf@linux-mips.org
 
-Hi,
+On Tue, 21 Oct 2008 20:08:41 +0400, Sergei Shtylyov <sshtylyov@ru.mvista.com> wrote:
+> > This is the driver for the Toshiba TX4939 SoC ATA controller.
+> 
+>     I'm inclined to ACK the driver (besides, TX49xx patches are
+> holding up my own series of patches since it needs to modify both
+> these drivers) but I'm not sure about the error cleanup path now
+> that I looked at it again -- probably' devres' handles all that
+> automagically but peering into the sources didn't enlignten me on
+> how it does it, so I would like to be explicitly assured. :-)
 
-On Wed, Oct 22, 2008 at 4:45 PM, Valerio Passini
-<valerio.passini@unicam.it> wrote:
+Yes, devres do it, as written in Documentation/driver-model/devres.txt.
 
-[.. ]
+If in doubt, 'probe_failed:' label in drivers/base/dd.c:really_probe()
+is probably where you want to look at :-)
 
-> Hi Boris, please send me patches already formatted to be applied by patch
-> program, because the substitution of spaces with tabs and other indentation
-> characters requires a lot of time and it has never worked (or explain me how
-> to make it work :))
+>     There are also some nits, mostly ignorable...
 
-Ups, sorry, I had the wrong branch here. This patch below should be fine:
+OK, I will send v6 patch which fixes most of them.
 
-[.. ]
+> > +	tx4939ide_writew(0x0008, base, TX4939IDE_Lo_Burst_Cnt);
+> > +	tx4939ide_writew(0, base, TX4939IDE_Up_Burst_Cnt);
+> 
+>     I think that these fit better to tx4939ide_init_dma().
 
-> P.S: I have received messages from bugzilla, but I have subscribed to this
-> mailing list on Fujita's suggestion just to ease communication. What do you
-> prefer between bugzilla and linux-ide?
+Unfortunately (and surprisingly) this did not work.  The kernel
+crashed with strange memory corruption.  It seems Burst_Cnt must be
+initialized before any transfer including PIO.  I don't know why...
 
-Let's keep the conversation on linux-ide. I'll upload the fix to bugzilla
-after we've figured out the root cause.
+>     Same question about the error cleanup here -- will the acquired resources 
+> be auto-released? If so, then:
+> 
+> Acked-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
 
-Thanks.
-
--- 
-Regards/Gruss,
-Boris
-
+Yes.  So I will send v6 patch with your Acked-by line.  Thank you very
+much!
 
 ---
-diff --git a/drivers/ide/ide-cd.c b/drivers/ide/ide-cd.c
-index f16bb46..98051e4 100644
---- a/drivers/ide/ide-cd.c
-+++ b/drivers/ide/ide-cd.c
-@@ -1165,7 +1165,6 @@ static void cdrom_do_block_pc(ide_drive_t
-*drive, struct request *rq)
- 		struct request_queue *q = drive->queue;
- 		unsigned int alignment;
- 		unsigned long addr;
--		unsigned long stack_mask = ~(THREAD_SIZE - 1);
-
- 		if (rq->bio)
- 			addr = (unsigned long)bio_data(rq->bio);
-@@ -1181,12 +1180,15 @@ static void cdrom_do_block_pc(ide_drive_t
-*drive, struct request *rq)
- 		 * separate masks.
- 		 */
- 		alignment = queue_dma_alignment(q) | q->dma_pad_mask;
--		if (addr & alignment || rq->data_len & alignment)
--			info->dma = 0;
--
--		if (!((addr & stack_mask) ^
--		      ((unsigned long)current->stack & stack_mask)))
-+		if (addr & alignment || rq->data_len & alignment
-+			|| object_is_on_stack((void *)addr)) {
-+			printk(KERN_ERR "Disabling dma for ATA_PC, "
-+					"queue_dma_alignment: 0x%x, q->dma_pad_mask: 0x%x,"
-+					"addr: 0x%lx, rq->data_len: 0x%x, on_stack: %d\n",
-+					queue_dma_alignment(q), q->dma_pad_mask, addr,
-+					rq->data_len, object_is_on_stack((void *)addr));
- 			info->dma = 0;
-+		}
- 	}
- }
+Atsushi Nemoto
