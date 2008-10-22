@@ -1,38 +1,30 @@
-From: Elias Oltmanns <eo@nebensachen.de>
-Subject: Smart plugging of multiple devices connected to a single controller
-Date: Wed, 22 Oct 2008 20:24:27 +0200
-Message-ID: <87y70gpjxg.fsf@denkblock.local>
+From: Chris Dearman <chris@linux-mips.org>
+Subject: [PATCH 0/1] sata_sil: Option to use IO space to access TF registers.
+Date: Wed, 22 Oct 2008 11:23:34 -0700
+Message-ID: <20081022182243.9471.87443.stgit@linux-chris2.mips.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Sender: linux-scsi-owner@vger.kernel.org
-To: Jens Axboe <jens.axboe@oracle.com>
-Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from dns1.mips.com ([63.167.95.197]:36705 "EHLO dns1.mips.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754322AbYJVSaa (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 22 Oct 2008 14:30:30 -0400
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: linux-ide@vger.kernel.org
 
-Hi Jens,
+I'm working on a board where byte reads from the processor get
+converted into word reads on the PCI bus. This doesn't mix well
+with reading the TaskFile registers...
 
-in an effort to avoid calling the ->request_fn() from hard irq context
-in ide, a patch like the one attached below would seem convenient (not
-even compile tested yet). However, before implementing this or, indeed,
-in case you should outright reject this patch, I'd like to ask for your
-opinion about a more general approach: Since ide, scsi and libata (once
-it has moved out of scsi) have very similar issues with devices that
-cannot process the request queue in parallel (typically because they are
-connected to the same controller), would it be appropriate to deal with
-that in the block layer directly? Currently, I'm mainly concerned with
-the problem that devices connected to the same controller are served
-without too much discrimination due to races in the (un)plug logic,
-which is currently being dealt with more or less cleverly in scsi / ide.
-Generally though, there might be other shared resources (like a tag map,
-etc.) that could be maintained in a in a block layer structure similar to
-struct Scsi_Host. All request queues belonging to such a group could be
-added to a circular link list rooted at the structure containing the
-shared resources, i.e. the unplug_timer and whatever you deem adequate
-to be moved there.
+IO space reads do generate the correct byte enables so this patch
+gives the option of accessing the TF registers via IO space.
 
-What do you think about it?
+I'm not sure if its worth adding this to the driver... it's a work
+around for the "unfortunate" PCI behaviour on this board, but there
+may be other challenged hardware out there, so it might be worth
+considering. 
 
-Regards,
-
-Elias
+Chris
