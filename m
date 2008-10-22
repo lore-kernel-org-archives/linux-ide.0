@@ -1,78 +1,37 @@
 From: Elias Oltmanns <eo@nebensachen.de>
-Subject: Re: [PATCH 1/2] libata: get rid of ATA_MAX_QUEUE loop in ata_qc_complete_multiple()
-Date: Wed, 22 Oct 2008 20:23:50 +0200
-Message-ID: <878wsgqyix.fsf@denkblock.local>
-References: <1224661243-7929-1-git-send-email-jens.axboe@oracle.com>
-	<1224661243-7929-2-git-send-email-jens.axboe@oracle.com>
+Subject: Smart plugging of multiple devices connected to a single controller
+Date: Wed, 22 Oct 2008 20:24:27 +0200
+Message-ID: <87y70gpjxg.fsf@denkblock.local>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nebensachen.de ([195.34.83.29]:45975 "EHLO mail.nebensachen.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751232AbYJVSYC (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 22 Oct 2008 14:24:02 -0400
-Sender: linux-ide-owner@vger.kernel.org
-List-Id: linux-ide@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Sender: linux-scsi-owner@vger.kernel.org
 To: Jens Axboe <jens.axboe@oracle.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, tj@kernel.org, jeff@garzik.org
+Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+List-Id: linux-ide@vger.kernel.org
 
-Jens Axboe <jens.axboe@oracle.com> wrote:
-> We very rarely (if ever) complete more than one command in the
-> sactive mask at the time, even for extremely high IO rates. So
-> looping over the entire range of possible tags is pointless,
-> instead use __ffs() to just find the completed tags directly.
->
-> Signed-off-by: Jens Axboe <jens.axboe@oracle.com>
-> ---
->  drivers/ata/libata-core.c |   15 +++++++++------
->  1 files changed, 9 insertions(+), 6 deletions(-)
->
-> diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-> index 1ee9499..c3c53e7 100644
-> --- a/drivers/ata/libata-core.c
-> +++ b/drivers/ata/libata-core.c
-> @@ -4799,9 +4799,9 @@ void ata_qc_complete(struct ata_queued_cmd *qc)
->   */
->  int ata_qc_complete_multiple(struct ata_port *ap, u32 qc_active)
->  {
-> +	unsigned int i = 0;
->  	int nr_done = 0;
->  	u32 done_mask;
-> -	int i;
->  
->  	done_mask = ap->qc_active ^ qc_active;
->  
-> @@ -4811,16 +4811,19 @@ int ata_qc_complete_multiple(struct ata_port *ap, u32 qc_active)
->  		return -EINVAL;
->  	}
->  
-> -	for (i = 0; i < ATA_MAX_QUEUE; i++) {
-> +	while (done_mask) {
->  		struct ata_queued_cmd *qc;
-> +		unsigned int next = __ffs(done_mask);
->  
-> -		if (!(done_mask & (1 << i)))
-> -			continue;
-> -
-> -		if ((qc = ata_qc_from_tag(ap, i))) {
-> +		qc = ata_qc_from_tag(ap, i + next);
-> +		if (qc) {
->  			ata_qc_complete(qc);
->  			nr_done++;
->  		}
-> +		if (++next >= ATA_MAX_QUEUE)
-> +			break;
+Hi Jens,
 
-If you think about it, this statement is equivalent to
+in an effort to avoid calling the ->request_fn() from hard irq context
+in ide, a patch like the one attached below would seem convenient (not
+even compile tested yet). However, before implementing this or, indeed,
+in case you should outright reject this patch, I'd like to ask for your
+opinion about a more general approach: Since ide, scsi and libata (once
+it has moved out of scsi) have very similar issues with devices that
+cannot process the request queue in parallel (typically because they are
+connected to the same controller), would it be appropriate to deal with
+that in the block layer directly? Currently, I'm mainly concerned with
+the problem that devices connected to the same controller are served
+without too much discrimination due to races in the (un)plug logic,
+which is currently being dealt with more or less cleverly in scsi / ide.
+Generally though, there might be other shared resources (like a tag map,
+etc.) that could be maintained in a in a block layer structure similar to
+struct Scsi_Host. All request queues belonging to such a group could be
+added to a circular link list rooted at the structure containing the
+shared resources, i.e. the unplug_timer and whatever you deem adequate
+to be moved there.
 
-	if (ap->qc_active ^ qc_active == (1 << (ATA_MAX_QUEUE - 1)))
-
-To fix this, you could say
-
-	if (++next + i >= ATA_MAX_QUEUE)
-
-but perhaps it would be even more efficient (or not much worse) to skip
-this check entirely.
+What do you think about it?
 
 Regards,
 
