@@ -1,81 +1,59 @@
 From: Valerio Passini <valerio.passini@unicam.it>
 Subject: Re: http://bugzilla.kernel.org/show_bug.cgi?id=11742
-Date: Wed, 22 Oct 2008 15:30:49 +0200
-Message-ID: <200810221530.50157.valerio.passini@unicam.it>
+Date: Wed, 22 Oct 2008 16:45:22 +0200
+Message-ID: <200810221645.22289.valerio.passini@unicam.it>
 References: <20081020112039W.fujita.tomonori@lab.ntt.co.jp> <20081022155025S.fujita.tomonori@lab.ntt.co.jp> <9ea470500810220427w30485f0fs5017c2da08fd1796@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp.unicam.it ([193.204.8.1]:38470 "HELO unicam.it"
+Received: from smtp.unicam.it ([193.204.8.1]:35871 "HELO unicam.it"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1752504AbYJVOa5 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 22 Oct 2008 10:30:57 -0400
+	id S1751174AbYJVOqT (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 22 Oct 2008 10:46:19 -0400
 In-Reply-To: <9ea470500810220427w30485f0fs5017c2da08fd1796@mail.gmail.com>
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: petkovbb@gmail.com
-Cc: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, bzolnier@gmail.com, linux-ide@vger.kernel.org
+Cc: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, linux-ide@vger.kernel.org
 
-Alle mercoled=EC 22 ottobre 2008, Boris Petkov ha scritto:
 
-Hi all, first I've just subscribed to ide-linux to post the results I h=
-ave=20
-obtained from previous patches, as asked by Fujita (sorry I have=20
-misunderstood your message and replied to bugzilla).
+> diff --git a/drivers/ide/ide-cd.c b/drivers/ide/ide-cd.c
+> index 13265a8..6943462 100644
+> --- a/drivers/ide/ide-cd.c
+> +++ b/drivers/ide/ide-cd.c
+> @@ -1251,8 +1251,14 @@ static void cdrom_do_block_pc(ide_drive_t
+> *drive, struct request *rq)
+>  		 */
+>  		alignment = queue_dma_alignment(q) | q->dma_pad_mask;
+>  		if ((unsigned long)buf & alignment || rq->data_len & alignment
+> -		    || object_is_on_stack(buf))
+> +		    || object_is_on_stack(buf)) {
+> +			printk(KERN_ERR "Disabling dma for ATA_PC, "
+> +			       "queue_dma_alignment: 0x%x, q->dma_pad_mask: 0x%x,"
+> +			       "buf: %p, rq->data_len: 0x%x, on_stack: %d\n",
+> +			       queue_dma_alignment(q), q->dma_pad_mask, buf,
+> +			       rq->data_len, object_is_on_stack(buf));
+>  			drive->dma = 0;
+> +		}
+>  	}
+>  }
 
-> more about the problem after we dump the relevant data. Valerio, can =
-you
-> try the following patch and send back the output after retrying to bu=
-rn on
-> your machine?
-I will test this new patch as soon as possible. Should I try it on 2.6.=
-27 or=20
-on the newest  stable release subversion?
+Hi Boris, please send me patches already formatted to be applied by patch 
+program, because the substitution of spaces with tabs and other indentation 
+characters requires a lot of time and it has never worked (or explain me how 
+to make it work :))
 
-Another question. Should I enable some more level of debugging to give =
-you=20
-more information? Just in case tell me how-to.
+Anyhow, I have given a look to the patch compared to the original file. Is it 
+possible to apply to plain 2.6.27 kernel? From a brief look, it is very 
+different from 2.6.27 ide-cd.c file and maybe I need to download the 
+development branch of the kernel with GIT to apply it or a more recent 
+subversion like 2.6.27.2.
 
-> Honestly, I don't know. It might just as well be only a problem with =
-this
-> single drive since I'm not familiar with other similar regressions.
-My drive is a fairly popular model produced by Samsung/Toshiba and inst=
-alled=20
-inside many laptops (Acer, Dell and many others): it's named TSST corp =
-CDDVDW=20
-TS-L632H. Probably if the problem is not only mine, you will get other =
-bug=20
-reports soon, but I admit I have upgraded the firmware 5 months ago so =
-maybe=20
-my bug is peculiar to me.
-Is it possible that a strange combination of firmware in the device and=
- ide-cd=20
-linux module can lead to my problem?  (Just guessing)
+Waiting for you.
 
-I want to recall that I had not any problem until the last  stable rele=
-ase and=20
-my DVD drive works well with ata-piix instead of piix as controller in=20
-2.6.27.
-
-Here are the previous test results I have posted on bugzilla which is n=
-ot the=20
-proper place...
-
-1. I have applied the Boris' patch to 2.6.27 past Sunday and I=20
-have used that patched kernel for burning CD without any problems (inde=
-ed is=20
-my default kernel now).
-
-2. Applying Tomonori's patch doesn't reach the same result. The patched=
- kernel=20
-with his fixes is behaving from an user point of view as the plain 2.6.=
-27=20
-kernel.
-Burning a CD is problematic because the main processor is intensively w=
-orking=20
-and the device buffer reaches 0% quite often, obliging k3b to slowdown =
-the=20
-burning speed.
-
+P.S: I have received messages from bugzilla, but I have subscribed to this 
+mailing list on Fujita's suggestion just to ease communication. What do you 
+prefer between bugzilla and linux-ide? 
