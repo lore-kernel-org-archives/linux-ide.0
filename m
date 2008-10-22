@@ -1,57 +1,81 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [git pull] IDE updates #4
-Date: Wed, 22 Oct 2008 16:44:55 +0400
-Message-ID: <48FF2047.6000509@ru.mvista.com>
-References: <200810212100.52985.bzolnier@gmail.com>	 <48FF134F.2070509@ru.mvista.com> <58cb370e0810220514x419c9669jba1b7be942d3644a@mail.gmail.com>
+From: Valerio Passini <valerio.passini@unicam.it>
+Subject: Re: http://bugzilla.kernel.org/show_bug.cgi?id=11742
+Date: Wed, 22 Oct 2008 15:30:49 +0200
+Message-ID: <200810221530.50157.valerio.passini@unicam.it>
+References: <20081020112039W.fujita.tomonori@lab.ntt.co.jp> <20081022155025S.fujita.tomonori@lab.ntt.co.jp> <9ea470500810220427w30485f0fs5017c2da08fd1796@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from h155.mvista.com ([63.81.120.155]:35327 "EHLO imap.sh.mvista.com"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752451AbYJVMpD (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 22 Oct 2008 08:45:03 -0400
-In-Reply-To: <58cb370e0810220514x419c9669jba1b7be942d3644a@mail.gmail.com>
+Received: from smtp.unicam.it ([193.204.8.1]:38470 "HELO unicam.it"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1752504AbYJVOa5 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 22 Oct 2008 10:30:57 -0400
+In-Reply-To: <9ea470500810220427w30485f0fs5017c2da08fd1796@mail.gmail.com>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>, Andrew Morton <akpm@linux-foundation.org>, Stephen Rothwell <sfr@canb.auug.org.au>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: petkovbb@gmail.com
+Cc: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, bzolnier@gmail.com, linux-ide@vger.kernel.org
 
-Hello.
+Alle mercoled=EC 22 ottobre 2008, Boris Petkov ha scritto:
 
-Bartlomiej Zolnierkiewicz wrote:
+Hi all, first I've just subscribed to ide-linux to post the results I h=
+ave=20
+obtained from previous patches, as asked by Fujita (sorry I have=20
+misunderstood your message and replied to bugzilla).
 
->>> Remove needless/confusing subdirs from drivers/ide/.
->> I think that with 2 new drivers being submitted/reworked based on feedback
->> and several patches submitted and pending submission to the pata-2.6 series
->> this really could have waited till 2.6.29...
->>     
->
-> The situation is perfect right now for this change as there are no outstanding
-> patches in pata-2.6 tree 
+> more about the problem after we dump the relevant data. Valerio, can =
+you
+> try the following patch and send back the output after retrying to bu=
+rn on
+> your machine?
+I will test this new patch as soon as possible. Should I try it on 2.6.=
+27 or=20
+on the newest  stable release subversion?
 
-   There was one patch (already stale TX4939 version driver) as of 
-yesterday.
+Another question. Should I enable some more level of debugging to give =
+you=20
+more information? Just in case tell me how-to.
 
-> and number of new submitted patches is < 10 (I'll take
-> care of fixing them up, ditto for all other new stuff that will be using old
-> naming scheme).
->   
+> Honestly, I don't know. It might just as well be only a problem with =
+this
+> single drive since I'm not familiar with other similar regressions.
+My drive is a fairly popular model produced by Samsung/Toshiba and inst=
+alled=20
+inside many laptops (Acer, Dell and many others): it's named TSST corp =
+CDDVDW=20
+TS-L632H. Probably if the problem is not only mine, you will get other =
+bug=20
+reports soon, but I admit I have upgraded the firmware 5 months ago so =
+maybe=20
+my bug is peculiar to me.
+Is it possible that a strange combination of firmware in the device and=
+ ide-cd=20
+linux module can lead to my problem?  (Just guessing)
 
-   Thanks for clarifying this.
-   This rename only added more uncertainty for my pending patchset 
-(which had been already dependant on at least TX4939 driver which keeps 
-being recast by Atsushi and being stale in pata-2.6 series) as I can't 
-predict when you and Linus will merge the changes and this is getting on 
-my nerves, as I don't have time on any extra rework and I'm running out 
-of time with the submission. I know I should have done this earlier and 
-I'd have done this if its not for my unfortunate vacations... I aslso 
-kept finding new issues looking on the IOC4 driver. :-/
+I want to recall that I had not any problem until the last  stable rele=
+ase and=20
+my DVD drive works well with ata-piix instead of piix as controller in=20
+2.6.27.
 
-> Thanks,
-> Bart
->   
+Here are the previous test results I have posted on bugzilla which is n=
+ot the=20
+proper place...
 
-MBR. Sergei
+1. I have applied the Boris' patch to 2.6.27 past Sunday and I=20
+have used that patched kernel for burning CD without any problems (inde=
+ed is=20
+my default kernel now).
 
+2. Applying Tomonori's patch doesn't reach the same result. The patched=
+ kernel=20
+with his fixes is behaving from an user point of view as the plain 2.6.=
+27=20
+kernel.
+Burning a CD is problematic because the main processor is intensively w=
+orking=20
+and the device buffer reaches 0% quite often, obliging k3b to slowdown =
+the=20
+burning speed.
 
