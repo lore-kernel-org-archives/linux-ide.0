@@ -1,111 +1,51 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [git pull] IDE updates #4
-Date: Thu, 23 Oct 2008 02:56:59 +0400
-Message-ID: <48FFAFBB.8020709@ru.mvista.com>
-References: <200810212100.52985.bzolnier@gmail.com> <58cb370e0810220514x419c9669jba1b7be942d3644a@mail.gmail.com> <48FF2047.6000509@ru.mvista.com> <200810222337.42218.bzolnier@gmail.com>
+From: Chris Dearman <chris@ftp.linux-mips.org>
+Subject: Re: [PATCH 0/1] sata_sil: Option to use IO space to access TF
+	registers.
+Date: Thu, 23 Oct 2008 00:34:39 +0100
+Message-ID: <20081022233439.GA30488@ftp.linux-mips.org>
+References: <20081022182243.9471.87443.stgit@linux-chris2.mips.com> <20081022221623.344aea62@lxorguk.ukuu.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from h155.mvista.com ([63.81.120.155]:54013 "EHLO imap.sh.mvista.com"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751963AbYJVW5H (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 22 Oct 2008 18:57:07 -0400
-In-Reply-To: <200810222337.42218.bzolnier@gmail.com>
+Received: from ftp.linux-mips.org ([213.58.128.207]:52254 "EHLO
+	ftp.linux-mips.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752270AbYJVXek (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 22 Oct 2008 19:34:40 -0400
+Received: (from localhost user: 'chris' uid#10014 fake: STDIN
+	(chris@ftp.linux-mips.org)) by ftp.linux-mips.org id S22165899AbYJVXej
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 23 Oct 2008 00:34:39 +0100
+Content-Disposition: inline
+In-Reply-To: <20081022221623.344aea62@lxorguk.ukuu.org.uk>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: jgarzik@pobox.com, linux-ide@vger.kernel.org
 
-Hello.
+Hi Alan,
 
-Bartlomiej Zolnierkiewicz wrote:
+> You need to fix your ioread8/iowrite8 and other accessors to work around
+> this if at all possible and that will cover all your devices.
 
->>> and number of new submitted patches is < 10 (I'll take
->>> care of fixing them up, ditto for all other new stuff that will be using old
->>> naming scheme).
->>>   
->>>       
->>    Thanks for clarifying this.
->>    This rename only added more uncertainty for my pending patchset 
->> (which had been already dependant on at least TX4939 driver which keeps 
->> being recast by Atsushi and being stale in pata-2.6 series) as I can't 
->> predict when you and Linus will merge the changes and this is getting on 
->> my nerves, as I don't have time on any extra rework and I'm running out 
->> of time with the submission. I know I should have done this earlier and 
->>     
->
-> Maybe some parts could be submitted separately?
-> (so keeping them up-to-date in pata-2.6 would be my task)
->   
+ I would like to have a generic solution for all devices, but
+unfortunately I don't think that's possible. There is no way to
+generate a read cycle to PCI memory space on this hardware without all
+of the byte enables being set. Normally this isn't a problem, a full
+word is read on the PCI bus and the processor picks out the bytes it
+needs, but memory mapped registers with access restrictions are a
+problem.  PCI memory writes and PCI IO reads/writes do generate the
+correct byte enables.
 
-   2 (maybe even 3) out of 4 can be but that doesn't make much sense 
-already (and would incur the patch reordering for me) -- the best thing 
-you can do is to merge ASAP the last verison of TX4939 which has my ACK. 
-I'm not sure about TX4938 driver yet -- will look at it after some sleep...
+  I did consider checking for accesses to particular locations on
+particular PCI devices in ioread8/ioread16 and silently converting
+them into equivalent IO accesses (assuming one exists of course...),
+but it gets pretty nasty. Eg on this SATA chip I would have to map
+the IO BARS behind the drivers back, and it's still not a generic
+solution - for each new device I would have to add affected
+addresses to ioread8/ioread16. 
 
-> Also I didn't know anything about your patchset and its
-> dependency on TX4939, otherwise I'll be pushing things in
->   
+  The patch is a relatively clean work around for limitations in the
+hardware I'm using, but I know it probably looks like just more
+cruft from an outside perspective so I won't be championing it :)
 
-   The patchset consists of a large patch moving read_sff_dma_status() 
-to its porper place, one small preparatory patch, and 2 followup 
-patches, so unfortunately it's dependent on TX4939 in its main patch 
-(worse, the relevant part of this driver has changed after your last 
-merged driver version)...
-
-> different order or even skip this pull request if needed
-> (TX493x drivers are new stuff and were still under review,
-> such things can be also submitted after the merge window
-> closes so they were given the lowest priority).
->   
-
-   Unfortunately, that driver has been submitted first back 9/09, long 
-before my patchset was even created, so the dependence was just natural.
-
-> Please ping me about such issues, I'm certainly willing to
-> adjust my workflow if this is going to help other people with
-> their work but I can't do much if I don't know anything...
->   
-
-   I probably should've followed up to your first mail expressing the 
-intent to remove the subdirs in 2.6.28 but haven't... anyway, it's hard 
-to predict how the things would go (unless you always expect them to go 
-the worst possible way -- that expectation seems to never fail :-).
-
->> I'd have done this if its not for my unfortunate vacations... I aslso 
->> kept finding new issues looking on the IOC4 driver. :-/
->>     
-
-  Though I only was looking at it because of the TX4939 driver being 
-outdated in pata-2.6 series... otherwise I'd have spent my time on the 
-patchset in question. BTW, the reviews I've been doing have also been 
-time consuming... and that's not speaking of the MUSB issues I've been 
-trying to deal with at the same time at work. :-)
-
-> I remember about your SGIIOC4 fixes and they are going to
-> make the next git pull request so sooner this one gets in the
-> better.  Also maybe you could get some help with fixing this
-> driver from SGI folks if there are still some issues left?
->   
-
-   Frankly speaking, I don't see much SGI's interest in this driver (e. 
-g., I bet they could've implemented DMA tuning having the docs but never 
-done that). I've just fixed what my sight fell at (there are 3 pending 
-cleanup patches but those will have to wait now).
-
-   To continue my whining, the bad news of the past day were that I 
-discovered that my pet Geode board stopped to come up, and that hard 
-drive plugged into HPT371N chip on my other pet Alchemy board didn't get 
-detected by the recent kernel -- and that's not due to my patches (which 
-I was sanity-testing on this board). When I plugged the drive into 
-Promise IDE card (PDC20269), it got detected alright. I don't know what 
-that means yet -- need to try Rocket100 (HPT370) card yet...
-
-> Thanks,
-> Bart
->   
-
-MBR, Sergei
-
-
+Chris
