@@ -1,28 +1,36 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [PATCH 2/4] libata: Drain data on errors
-Date: Wed, 22 Oct 2008 17:44:42 +0100
-Message-ID: <20081022174442.08e6f265@lxorguk.ukuu.org.uk>
-References: <20081017180655.7781.15021.stgit@localhost.localdomain>
-	<20081017180837.7781.26372.stgit@localhost.localdomain>
-	<87od1cskcv.fsf@denkblock.local>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: Re: [PATCH] pci: use pci_ioremap_bar() in drivers/ide
+Date: Wed, 22 Oct 2008 21:40:37 +0400
+Message-ID: <48FF6595.5040203@ru.mvista.com>
+References: <20081020214830.1586704c@infradead.org> <48FDA8BF.20206@ru.mvista.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:51813 "EHLO
-	lxorguk.ukuu.org.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751085AbYJVQoq (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 22 Oct 2008 12:44:46 -0400
-In-Reply-To: <87od1cskcv.fsf@denkblock.local>
+Received: from gateway-1237.mvista.com ([63.81.120.155]:44570 "EHLO
+	imap.sh.mvista.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1758922AbYJVRk7 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 22 Oct 2008 13:40:59 -0400
+In-Reply-To: <48FDA8BF.20206@ru.mvista.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Elias Oltmanns <eo@nebensachen.de>
-Cc: jeff@garzik.org, linux-ide@vger.kernel.org
+To: Arjan van de Ven <arjan@infradead.org>
+Cc: linux-ide@vger.kernel.org, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 
-> > +	/* Drain up to 64K of data before we give up this recovery method */
-> > +	for (count = 0; (ap->ops->sff_check_status(ap) & ATA_DRQ)
-> > +							&& count < 65536;)
-> 
-> Missing count++. Sorry for not spotting that in the previous round.
+Hello, I wrote:
 
-Thanks - well spotted
+>> Use the newly introduced pci_ioremap_bar() function in drivers/ide.
+>> pci_ioremap_bar() just takes a pci device and a bar number, with the goal
+>> of making it really hard to get wrong, while also having a central place
+>> to stick sanity checks.
+
+>> Signed-off-by: Arjan van de Ven <arjan@linux.intel.com>
+
+> Acked-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+
+    No, I'm takign back my ACK.
+    Since the patch intends to address all drivers/ide/, it's clearly no 
+compolete -- siimage.c and scc_pata.c beg for the alike change (it will even 
+permit to kill 4 local variables in the latter driver).
+
+MBR, Sergei
