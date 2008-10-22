@@ -1,137 +1,120 @@
-From: Chris Dearman <chris@linux-mips.org>
-Subject: [PATCH 1/1] sata_sil: Option to use IO space to access TF registers.
-Date: Wed, 22 Oct 2008 11:24:27 -0700
-Message-ID: <20081022182339.9471.45405.stgit@linux-chris2.mips.com>
-References: <20081022182243.9471.87443.stgit@linux-chris2.mips.com>
+From: Elias Oltmanns <eo@nebensachen.de>
+Subject: Re: Smart plugging of multiple devices connected to a single controller
+Date: Wed, 22 Oct 2008 21:22:38 +0200
+Message-ID: <87skqoph8h.fsf@denkblock.local>
+References: <87y70gpjxg.fsf@denkblock.local>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from dns1.mips.com ([63.167.95.197]:43837 "EHLO dns1.mips.com"
+Received: from nebensachen.de ([195.34.83.29]:56207 "EHLO mail.nebensachen.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751417AbYJVSot (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 22 Oct 2008 14:44:49 -0400
-In-Reply-To: <20081022182243.9471.87443.stgit@linux-chris2.mips.com>
+	id S1758920AbYJVTWv (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 22 Oct 2008 15:22:51 -0400
+In-Reply-To: <87y70gpjxg.fsf@denkblock.local> (Elias Oltmanns's message of
+	"Wed, 22 Oct 2008 20:24:27 +0200")
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: linux-ide@vger.kernel.org
+To: Jens Axboe <jens.axboe@oracle.com>
+Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 
-Provide an alternative way to access the TaskFile registers if mmio
-doesn't work.
+Elias Oltmanns <eo@nebensachen.de> wrote:
+> Hi Jens,
+>
+> in an effort to avoid calling the ->request_fn() from hard irq context
+> in ide, a patch like the one attached below would seem convenient (not
+> even compile tested yet).
 
-Signed-off-by: Chris Dearman <chris@linux-mips.org>
+Well, I should have actually attach the patch. Here it is then.
+
+> However, before implementing this or, indeed, in case you should
+> outright reject this patch, I'd like to ask for your opinion about a
+> more general approach: Since ide, scsi and libata (once it has moved
+> out of scsi) have very similar issues with devices that cannot process
+> the request queue in parallel (typically because they are connected to
+> the same controller), would it be appropriate to deal with that in the
+> block layer directly? Currently, I'm mainly concerned with the problem
+> that devices connected to the same controller are served without too
+> much discrimination due to races in the (un)plug logic, which is
+> currently being dealt with more or less cleverly in scsi / ide.
+> Generally though, there might be other shared resources (like a tag
+> map, etc.) that could be maintained in a in a block layer structure
+> similar to struct Scsi_Host. All request queues belonging to such a
+> group could be added to a circular link list rooted at the structure
+> containing the shared resources, i.e. the unplug_timer and whatever
+> you deem adequate to be moved there.
+>
+> What do you think about it?
+>
+> Regards,
+>
+> Elias
+
 ---
+ block/blk-core.c       |   27 ++++++++++++++++++---------
+ include/linux/blkdev.h |    1 +
+ 2 files changed, 19 insertions(+), 9 deletions(-)
 
- drivers/ata/Kconfig    |   12 ++++++++++++
- drivers/ata/sata_sil.c |   43 +++++++++++++++++++++++++++++++++++++++++++
- 2 files changed, 55 insertions(+), 0 deletions(-)
-
-diff --git a/drivers/ata/Kconfig b/drivers/ata/Kconfig
-index ae84949..28f7b5a 100644
---- a/drivers/ata/Kconfig
-+++ b/drivers/ata/Kconfig
-@@ -169,6 +169,18 @@ config SATA_SIL
+diff --git a/block/blk-core.c b/block/blk-core.c
+index c3df30c..fcdcb09 100644
+--- a/block/blk-core.c
++++ b/block/blk-core.c
+@@ -322,6 +322,15 @@ void blk_unplug(struct request_queue *q)
+ }
+ EXPORT_SYMBOL(blk_unplug);
  
- 	  If unsure, say N.
- 
-+config SATA_SIL_IO
-+	bool "Use IO space to access device registers"
-+	depends on SATA_SIL
-+	default n
-+	help
-+	  Some registers on this device require byte accesses. If your
-+	  PCI controller promotes byte reads to word reads on the PCI bus
-+	  enabling this option makes the driver use IO accesses for these
-+	  registers,
++void blk_schedule_queue_run(struct request_queue *q)
++{
++	if (!elv_queue_empty(q)) {
++		queue_flag_set(QUEUE_FLAG_PLUGGED, q);
++		kblockd_schedule_work(q, &q->unplug_work);
++	}
++}
++EXPORT_SYMBOL_GPL(blk_schedule_queue_run);
 +
-+	  If unsure, say N.
-+
- config SATA_SIS
- 	tristate "SiS 964/965/966/180 SATA support"
- 	depends on PCI
-diff --git a/drivers/ata/sata_sil.c b/drivers/ata/sata_sil.c
-index 88bf421..94f4895 100644
---- a/drivers/ata/sata_sil.c
-+++ b/drivers/ata/sata_sil.c
-@@ -49,6 +49,12 @@
- #define DRV_VERSION	"2.3"
+ static void blk_invoke_request_fn(struct request_queue *q)
+ {
+ 	if (unlikely(blk_queue_stopped(q)))
+@@ -331,13 +340,14 @@ static void blk_invoke_request_fn(struct request_queue *q)
+ 	 * one level of recursion is ok and is much faster than kicking
+ 	 * the unplug handling
+ 	 */
+-	if (!queue_flag_test_and_set(QUEUE_FLAG_REENTER, q)) {
+-		q->request_fn(q);
+-		queue_flag_clear(QUEUE_FLAG_REENTER, q);
+-	} else {
+-		queue_flag_set(QUEUE_FLAG_PLUGGED, q);
+-		kblockd_schedule_work(q, &q->unplug_work);
+-	}
++	if (!test_bit(QUEUE_FLAG_REENTER, &q->queue_flags)) {
++		if (!elv_queue_empty(q)) {
++			queue_flag_set(QUEUE_FLAG_REENTER, q);
++			q->request_fn(q);
++			queue_flag_clear(QUEUE_FLAG_REENTER, q);
++		}
++	} else
++		blk_schedule_queue_run(q);
+ }
  
- enum {
-+#ifdef CONFIG_SATA_SIL_IO
-+	SIL_IO_IDE0TF_BAR	= 0,
-+	SIL_IO_IDE0CTL_BAR	= 1,
-+	SIL_IO_IDE1TF_BAR	= 2,
-+	SIL_IO_IDE1CTL_BAR	= 3,
-+#endif
- 	SIL_MMIO_BAR		= 5,
+ /**
+@@ -417,8 +427,7 @@ void __blk_run_queue(struct request_queue *q)
+ 	 * Only recurse once to avoid overrunning the stack, let the unplug
+ 	 * handling reinvoke the handler shortly if we already got there.
+ 	 */
+-	if (!elv_queue_empty(q))
+-		blk_invoke_request_fn(q);
++	blk_invoke_request_fn(q);
+ }
+ EXPORT_SYMBOL(__blk_run_queue);
  
- 	/*
-@@ -237,6 +243,19 @@ static const struct {
- 	{ 0x2C0, 0x2CA, 0x208, 0x218, 0x244, 0x380, 0x3c8, 0x2f4, 0x3cc },
- 	/* ... port 3 */
- };
-+#ifdef CONFIG_SATA_SIL_IO
-+static const struct {
-+	unsigned int tfbar;	/* ATA taskfile BAR */
-+	unsigned int tf;	/* ATA taskfile register block */
-+	unsigned int ctlbar;	/* ATA control/altstatus BAR */
-+	unsigned int ctl;	/* ATA control/altstatus register block */
-+} sil_ioport[] = {
-+	{ SIL_IO_IDE0TF_BAR, 0, SIL_IO_IDE0CTL_BAR, 2 },
-+	{ SIL_IO_IDE1TF_BAR, 0, SIL_IO_IDE1CTL_BAR, 2 },
-+	{ SIL_IO_IDE0TF_BAR, 0, SIL_IO_IDE0CTL_BAR, 2 },
-+	{ SIL_IO_IDE1TF_BAR, 0, SIL_IO_IDE1CTL_BAR, 2 }
-+};
-+#endif
- 
- MODULE_AUTHOR("Jeff Garzik");
- MODULE_DESCRIPTION("low-level driver for Silicon Image SATA controller");
-@@ -630,7 +649,17 @@ static int sil_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
- 	if (rc)
- 		return rc;
- 
-+#ifdef CONFIG_SATA_SIL_IO
-+	rc = pcim_iomap_regions(pdev,
-+				(1 << SIL_IO_IDE0TF_BAR) |
-+				(1 << SIL_IO_IDE0CTL_BAR) |
-+				(1 << SIL_IO_IDE1TF_BAR) |
-+				(1 << SIL_IO_IDE1CTL_BAR) |
-+				(1 << SIL_MMIO_BAR),
-+				DRV_NAME);
-+#else
- 	rc = pcim_iomap_regions(pdev, 1 << SIL_MMIO_BAR, DRV_NAME);
-+#endif
- 	if (rc == -EBUSY)
- 		pcim_pin_device(pdev);
- 	if (rc)
-@@ -649,7 +678,20 @@ static int sil_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
- 	for (i = 0; i < host->n_ports; i++) {
- 		struct ata_port *ap = host->ports[i];
- 		struct ata_ioports *ioaddr = &ap->ioaddr;
-+#ifdef CONFIG_SATA_SIL_IO
-+		void __iomem *tf_iobase = host->iomap[sil_ioport[i].tfbar];
-+		void __iomem *ctl_iobase = host->iomap[sil_ioport[i].ctlbar];
-+		ioaddr->cmd_addr = tf_iobase + sil_ioport[i].tf;
-+		ioaddr->altstatus_addr =
-+		ioaddr->ctl_addr = ctl_iobase + sil_ioport[i].ctl;
-+		ioaddr->bmdma_addr = mmio_base + sil_port[i].bmdma;
-+		ioaddr->scr_addr = mmio_base + sil_port[i].scr;
-+		ata_sff_std_ports(ioaddr);
- 
-+		ata_port_pbar_desc(ap, SIL_MMIO_BAR, -1, "mmio");
-+		ata_port_pbar_desc(ap, sil_ioport[i].tfbar, -1, "tf");
-+		ata_port_pbar_desc(ap, sil_ioport[i].ctlbar, -1, "ctl");
-+#else
- 		ioaddr->cmd_addr = mmio_base + sil_port[i].tf;
- 		ioaddr->altstatus_addr =
- 		ioaddr->ctl_addr = mmio_base + sil_port[i].ctl;
-@@ -659,6 +701,7 @@ static int sil_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
- 
- 		ata_port_pbar_desc(ap, SIL_MMIO_BAR, -1, "mmio");
- 		ata_port_pbar_desc(ap, SIL_MMIO_BAR, sil_port[i].tf, "tf");
-+#endif
- 	}
- 
- 	/* initialize and activate */
-
+diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
+index b4fe68f..516851e 100644
+--- a/include/linux/blkdev.h
++++ b/include/linux/blkdev.h
+@@ -753,6 +753,7 @@ extern void blk_sync_queue(struct request_queue *q);
+ extern void __blk_stop_queue(struct request_queue *q);
+ extern void __blk_run_queue(struct request_queue *);
+ extern void blk_run_queue(struct request_queue *);
++extern void blk_schedule_queue_run(struct request_queue *q);
+ extern void blk_start_queueing(struct request_queue *);
+ extern int blk_rq_map_user(struct request_queue *, struct request *,
+ 			   struct rq_map_data *, void __user *, unsigned long,
