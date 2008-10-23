@@ -1,48 +1,42 @@
 From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH 1/2 #upstream-fixes] sata_via: load DEVICE register when
- CTL changes
-Date: Wed, 22 Oct 2008 20:43:06 -0400
-Message-ID: <48FFC89A.6010104@garzik.org>
-References: <48FDF935.6010307@kernel.org>
+Subject: Re: [PATCH 2/2] libata: switch to using block layer tagging support
+Date: Wed, 22 Oct 2008 20:46:38 -0400
+Message-ID: <48FFC96E.5060604@garzik.org>
+References: <1224661243-7929-1-git-send-email-jens.axboe@oracle.com> <1224661243-7929-3-git-send-email-jens.axboe@oracle.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:50745 "EHLO mail.dvmed.net"
+Received: from srv5.dvmed.net ([207.36.208.214]:38488 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753178AbYJWAnN (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 22 Oct 2008 20:43:13 -0400
-In-Reply-To: <48FDF935.6010307@kernel.org>
+	id S1753168AbYJWAqm (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 22 Oct 2008 20:46:42 -0400
+In-Reply-To: <1224661243-7929-3-git-send-email-jens.axboe@oracle.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: IDE/ATA development list <linux-ide@vger.kernel.org>, Joseph Chan <JosephChan@via.com.tw>
+To: Jens Axboe <jens.axboe@oracle.com>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, tj@kernel.org
 
-Tejun Heo wrote:
-> VIA controllers clear DEVICE register when IEN changes.  Make sure
-> DEVICE is updated along with CTL.
+Jens Axboe wrote:
+> libata currently has a pretty dumb ATA_MAX_QUEUE loop for finding
+> a free tag to use. Instead of fixing that up, convert libata to
+> using block layer tagging - gets rid of code in libata, and is also
+> much faster.
 > 
-> This change is separated from Joseph Chan's larger patch.
-> 
->   http://thread.gmane.org/gmane.linux.kernel.commits.mm/40640
-> 
-> Signed-off-by: Tejun Heo <tj@kernel.org>
-> Cc: Joseph Chan <JosephChan@via.com.tw>
+> Signed-off-by: Jens Axboe <jens.axboe@oracle.com>
 > ---
-> These two patches are on top of
-> 
-> linus#master
-> + [1] libata-eh-fix-slave-link-EH-action-mask-handling
-> + [2] libata-transfer-EHI-control-flags-to-slave-ehc_i
-> + [3] libata-set-device-class-to-NONE-if-phys_offline
-> 
-> [1] http://article.gmane.org/gmane.linux.ide/35390
-> [2] http://article.gmane.org/gmane.linux.ide/35393
-> [3] http://article.gmane.org/gmane.linux.ide/35436
-> 
-> and finally gets vt8251 working.  I'll integrate this into the
-> separate-sff-bmdma git tree.  :-)
+>  drivers/ata/libata-core.c |   66 ++++----------------------------------------
+>  drivers/ata/libata-scsi.c |   10 +++++-
+>  drivers/ata/libata.h      |   19 +++++++++++-
+>  include/linux/libata.h    |    1 -
+>  4 files changed, 31 insertions(+), 65 deletions(-)
 
-applied
+Just to be sure, I take it this patch series is for 2.6.29?
+
+Seems nice to have, but since it wasn't ready for the merge window 
+opening...
+
+	Jeff
+
 
 
