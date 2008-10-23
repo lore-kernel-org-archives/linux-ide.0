@@ -1,57 +1,85 @@
-From: "Boris Petkov" <petkovbb@googlemail.com>
-Subject: Re: [PATCH] cdrom: add TEAC CD-224E to the NO_AUTOCLOSE list
-Date: Thu, 23 Oct 2008 14:37:44 +0200
-Message-ID: <9ea470500810230537u559fff3chda7c6f47927bf1b0@mail.gmail.com>
-References: <4900655E.7050906@freemail.hu>
-Reply-To: petkovbb@gmail.com
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: Re: [PATCH] TXx9: Add TX4938 ATA support (v2)
+Date: Thu, 23 Oct 2008 17:37:59 +0400
+Message-ID: <49007E37.5080605@ru.mvista.com>
+References: <20081023.011646.51867355.anemo@mba.ocn.ne.jp>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-gx0-f16.google.com ([209.85.217.16]:38358 "EHLO
-	mail-gx0-f16.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752430AbYJWMhr convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 23 Oct 2008 08:37:47 -0400
-Received: by gxk9 with SMTP id 9so1209148gxk.13
-        for <linux-ide@vger.kernel.org>; Thu, 23 Oct 2008 05:37:44 -0700 (PDT)
-In-Reply-To: <4900655E.7050906@freemail.hu>
-Content-Disposition: inline
+Received: from h155.mvista.com ([63.81.120.155]:9636 "EHLO imap.sh.mvista.com"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1756526AbYJWNiJ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 23 Oct 2008 09:38:09 -0400
+In-Reply-To: <20081023.011646.51867355.anemo@mba.ocn.ne.jp>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: =?ISO-8859-1?Q?N=E9meth_M=E1rton?= <nm127@freemail.hu>
-Cc: linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+To: Atsushi Nemoto <anemo@mba.ocn.ne.jp>
+Cc: linux-mips@linux-mips.org, linux-ide@vger.kernel.org, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, ralf@linux-mips.org
 
-On Thu, Oct 23, 2008 at 1:51 PM, N=E9meth M=E1rton <nm127@freemail.hu> =
-wrote:
-> From: M=E1rton N=E9meth <nm127@freemail.hu>
->
-> The "TEAC CD-ROM CD-224E" cannot close its tray, so add it to the NO_=
-AUTOCLOSE list. This
-> will correct the "Can close tray" field of /proc/sys/dev/cdrom/info.
->
-> Signed-off-by: M=E1rton N=E9meth <nm127@freemail.hu>
+Hello.
 
-Acked-by: Borislav Petkov <petkovbb@gmail.com>
+Atsushi Nemoto wrote:
 
-> ---
-> --- linux-2.6.27/drivers/ide/ide-cd.c.orig      2008-10-10 00:13:53.0=
-00000000 +0200
-> +++ linux-2.6.27/drivers/ide/ide-cd.c   2008-10-23 11:34:59.000000000=
- +0200
-> @@ -1863,6 +1863,7 @@ static const struct cd_list_entry ide_cd
->        { "Optiarc DVD RW AD-5200A", NULL,   IDE_AFLAG_PLAY_AUDIO_OK  =
-       },
->        { "Optiarc DVD RW AD-7200A", NULL,   IDE_AFLAG_PLAY_AUDIO_OK  =
-       },
->        { "Optiarc DVD RW AD-7543A", NULL,   IDE_AFLAG_NO_AUTOCLOSE   =
-       },
-> +       { "TEAC CD-ROM CD-224E",     NULL,   IDE_AFLAG_NO_AUTOCLOSE  =
-        },
->        { NULL, NULL, 0 }
->  };
+> Add a helper routine to register tx4938ide driver and use it on
+> RBTX4938 board.
 >
->
+> Signed-off-by: Atsushi Nemoto <anemo@mba.ocn.ne.jp>
+>   
 
---=20
-Regards/Gruss,
-Boris
+Acked-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+
+> diff --git a/arch/mips/include/asm/txx9/tx4938.h b/arch/mips/include/asm/txx9/tx4938.h
+> index 989e775..3dada66 100644
+> --- a/arch/mips/include/asm/txx9/tx4938.h
+> +++ b/arch/mips/include/asm/txx9/tx4938.h
+> @@ -292,4 +292,17 @@ void tx4938_setup_pcierr_irq(void);
+>  void tx4938_irq_init(void);
+>  void tx4938_mtd_init(int ch);
+>  
+> +struct tx4938ide_platform_info {
+> +	/*
+> +	 * I/O port shift, for platforms with ports that are
+> +	 * constantly spaced and need larger than the 1-byte
+> +	 * spacing used by ata_std_ports().
+> +	 */
+> +	unsigned int ioport_shift;
+> +	unsigned int gbus_clock;	/*  0 means no-autotune. */
+>   
+
+   I'd say "no PIO mode tuning" since the mode can also be changed via 
+HDIO_SET_PIO_MODE which e.g. 'hdparm -p' calls...
+
+> diff --git a/arch/mips/txx9/generic/setup_tx4938.c b/arch/mips/txx9/generic/setup_tx4938.c
+> index af724e5..e6c558e 100644
+> --- a/arch/mips/txx9/generic/setup_tx4938.c
+> +++ b/arch/mips/txx9/generic/setup_tx4938.c
+>   
+[...]
+> @@ -335,6 +336,52 @@ void __init tx4938_mtd_init(int ch)
+>  	txx9_physmap_flash_init(ch, start, size, &pdata);
+>  }
+>  
+> +void __init tx4938_ata_init(unsigned int irq, unsigned int shift, int tune)
+> +{
+> +	struct platform_device *pdev;
+> +	struct resource res[] = {
+> +		{
+> +			/* .start and .end are filled in later */
+> +			.flags = IORESOURCE_MEM,
+> +		}, {
+> +			.start = irq,
+> +			.flags = IORESOURCE_IRQ,
+> +		},
+> +	};
+> +	struct tx4938ide_platform_info pdata = {
+> +		.ioport_shift = shift,
+> +		/*
+> +		 * The ide driver should not do autotune if other ISA
+>   
+
+  "The IDE driver should not change bus timings", I'd say.
+
+MBR, Sergei
+
+
