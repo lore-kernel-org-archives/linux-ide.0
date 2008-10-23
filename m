@@ -1,55 +1,38 @@
-From: Jens Axboe <jens.axboe@oracle.com>
-Subject: Re: [PATCH 1/2] libata: get rid of ATA_MAX_QUEUE loop in ata_qc_complete_multiple()
-Date: Thu, 23 Oct 2008 08:43:57 +0200
-Message-ID: <20081023064357.GT22217@kernel.dk>
-References: <1224661243-7929-1-git-send-email-jens.axboe@oracle.com> <1224661243-7929-2-git-send-email-jens.axboe@oracle.com> <48FFFA15.8060603@kernel.org>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [PATCH 0/1] sata_sil: Option to use IO space to access TF
+ registers.
+Date: Thu, 23 Oct 2008 08:32:15 +0100
+Message-ID: <20081023083215.74e48b03@lxorguk.ukuu.org.uk>
+References: <20081022182243.9471.87443.stgit@linux-chris2.mips.com>
+	<20081022221623.344aea62@lxorguk.ukuu.org.uk>
+	<20081022233439.GA30488@ftp.linux-mips.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from pasmtpb.tele.dk ([80.160.77.98]:51824 "EHLO pasmtpB.tele.dk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756007AbYJWGoz (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 23 Oct 2008 02:44:55 -0400
-Content-Disposition: inline
-In-Reply-To: <48FFFA15.8060603@kernel.org>
+Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:33463 "EHLO
+	lxorguk.ukuu.org.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751416AbYJWHdb (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 23 Oct 2008 03:33:31 -0400
+In-Reply-To: <20081022233439.GA30488@ftp.linux-mips.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, jeff@garzik.org
+To: Chris Dearman <chris@ftp.linux-mips.org>
+Cc: jgarzik@pobox.com, linux-ide@vger.kernel.org
 
-On Thu, Oct 23 2008, Tejun Heo wrote:
-> while (done_mask) {
->         struct ata_queued_cmd *qc;
->         unsigned int next = __ffs(done_mask);
-> 
->         tag += next;
->         if ((qc = ata_qc_from_tag(ap, tag))) {
->                 ata_qc_complete(qc);
->                 nr_done++;
->         }
->         next++;
->         tag += next;
->         done_mask >>= next;
-> }
+> unfortunately I don't think that's possible. There is no way to
+> generate a read cycle to PCI memory space on this hardware without all
+> of the byte enables being set. Normally this isn't a problem, a full
 
-That doesn't work (you're adding next to tag twice), it needs a little
-tweak:
+Ok so this isn't about not being able to do the workaround, you have
+hardware which is just busted ? Is this devel hardware or stuff in mass
+circulation ?
 
-while (done_mask) {
-        struct ata_queued_cmd *qc;
-        unsigned int next = __ffs(done_mask);
+>   The patch is a relatively clean work around for limitations in the
+> hardware I'm using, but I know it probably looks like just more
+> cruft from an outside perspective so I won't be championing it :)
 
-        if ((qc = ata_qc_from_tag(ap, tag + next))) {
-                ata_qc_complete(qc);
-                nr_done++;
-        }
-        next++;
-        tag += next;
-        done_mask >>= next;
-}
+I would make the switch a runtime value personally - some network drivers
+do this for similar reasons.
 
-and I think it should work. Not tested yet :-)
-
--- 
-Jens Axboe
-
+Alan
