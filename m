@@ -1,42 +1,47 @@
 From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH #upstream-fixes] libata: set device class to NONE if phys_offline
-Date: Wed, 22 Oct 2008 20:42:58 -0400
-Message-ID: <48FFC892.3020608@garzik.org>
-References: <48FDF5D6.20707@kernel.org>
+Subject: Re: [PATCH 1/2 #upstream-fixes] sata_via: load DEVICE register when
+ CTL changes
+Date: Wed, 22 Oct 2008 20:43:06 -0400
+Message-ID: <48FFC89A.6010104@garzik.org>
+References: <48FDF935.6010307@kernel.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:50737 "EHLO mail.dvmed.net"
+Received: from srv5.dvmed.net ([207.36.208.214]:50745 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752767AbYJWAnB (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 22 Oct 2008 20:43:01 -0400
-In-Reply-To: <48FDF5D6.20707@kernel.org>
+	id S1753178AbYJWAnN (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 22 Oct 2008 20:43:13 -0400
+In-Reply-To: <48FDF935.6010307@kernel.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Tejun Heo <tj@kernel.org>
-Cc: IDE/ATA development list <linux-ide@vger.kernel.org>
+Cc: IDE/ATA development list <linux-ide@vger.kernel.org>, Joseph Chan <JosephChan@via.com.tw>
 
 Tejun Heo wrote:
-> Reset methods don't have access to phys link status for slave links
-> and may incorrectly indicate device presence causing unnecessary probe
-> failures for unoccupied links.  This patch clears device class to NONE
-> during post-reset processing if phys link is offline.
+> VIA controllers clear DEVICE register when IEN changes.  Make sure
+> DEVICE is updated along with CTL.
 > 
-> As on/offliness semantics is strictly defined and used in multiple
-> places by the core layer, this won't change behavior for drivers which
-> don't use slave links.
+> This change is separated from Joseph Chan's larger patch.
+> 
+>   http://thread.gmane.org/gmane.linux.kernel.commits.mm/40640
 > 
 > Signed-off-by: Tejun Heo <tj@kernel.org>
+> Cc: Joseph Chan <JosephChan@via.com.tw>
 > ---
-> vt8251 incorrectly reports the same signature for unoccupied device if
-> the other device on the channel is present.  This patch fixes the
-> problem.
+> These two patches are on top of
 > 
-> I integrated this patch into separate-sff-bmdma git tree.
+> linus#master
+> + [1] libata-eh-fix-slave-link-EH-action-mask-handling
+> + [2] libata-transfer-EHI-control-flags-to-slave-ehc_i
+> + [3] libata-set-device-class-to-NONE-if-phys_offline
 > 
->  drivers/ata/libata-eh.c |   16 ++++++++--------
->  1 file changed, 8 insertions(+), 8 deletions(-)
+> [1] http://article.gmane.org/gmane.linux.ide/35390
+> [2] http://article.gmane.org/gmane.linux.ide/35393
+> [3] http://article.gmane.org/gmane.linux.ide/35436
+> 
+> and finally gets vt8251 working.  I'll integrate this into the
+> separate-sff-bmdma git tree.  :-)
 
 applied
 
