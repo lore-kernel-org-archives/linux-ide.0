@@ -1,51 +1,43 @@
-From: Chris Dearman <chris@ftp.linux-mips.org>
-Subject: Re: [PATCH 0/1] sata_sil: Option to use IO space to access TF
-	registers.
-Date: Thu, 23 Oct 2008 00:34:39 +0100
-Message-ID: <20081022233439.GA30488@ftp.linux-mips.org>
-References: <20081022182243.9471.87443.stgit@linux-chris2.mips.com> <20081022221623.344aea62@lxorguk.ukuu.org.uk>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [PATCH 4/4] libata: clean up the SFF code for coding style
+Date: Wed, 22 Oct 2008 20:35:42 -0400
+Message-ID: <48FFC6DE.7060605@garzik.org>
+References: <20081017180655.7781.15021.stgit@localhost.localdomain>	<20081017180903.7781.51521.stgit@localhost.localdomain>	<874p34ska1.fsf@denkblock.local> <20081022170218.32122780@lxorguk.ukuu.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ftp.linux-mips.org ([213.58.128.207]:52254 "EHLO
-	ftp.linux-mips.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752270AbYJVXek (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 22 Oct 2008 19:34:40 -0400
-Received: (from localhost user: 'chris' uid#10014 fake: STDIN
-	(chris@ftp.linux-mips.org)) by ftp.linux-mips.org id S22165899AbYJVXej
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 23 Oct 2008 00:34:39 +0100
-Content-Disposition: inline
-In-Reply-To: <20081022221623.344aea62@lxorguk.ukuu.org.uk>
+Received: from srv5.dvmed.net ([207.36.208.214]:46315 "EHLO mail.dvmed.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752058AbYJWAfv (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 22 Oct 2008 20:35:51 -0400
+In-Reply-To: <20081022170218.32122780@lxorguk.ukuu.org.uk>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: jgarzik@pobox.com, linux-ide@vger.kernel.org
+Cc: Elias Oltmanns <eo@nebensachen.de>, linux-ide@vger.kernel.org
 
-Hi Alan,
+Alan Cox wrote:
+>>>  		if (ata_is_atapi(qc->tf.protocol) &&
+>>> -		    !(qc->dev->flags & ATA_DFLAG_CDB_INTR))
+>>> +		   !(qc->dev->flags & ATA_DFLAG_CDB_INTR))
+>> Ditto.
+> 
+> Its lining up the bracketing but hey I'm not fussed, just twiddling where
+> checkpatch warned and the like.
+> 
+>>> - err_out:
+>>> +err_out:
+>> Yes, I've wondered about these myself occasionally. Personally, I don't
+>> insert a blank before those labels either and would be in favour of such
+>> a change. But do we actually have a convention regarding this matter?
+> 
+> CodingStyle chapter 7 which is of course overridable by Jeff ;)
 
-> You need to fix your ioread8/iowrite8 and other accessors to work around
-> this if at all possible and that will cover all your devices.
+libata style has always matched that:  labels go in column 1, without 
+any preceding whitespace.
 
- I would like to have a generic solution for all devices, but
-unfortunately I don't think that's possible. There is no way to
-generate a read cycle to PCI memory space on this hardware without all
-of the byte enables being set. Normally this isn't a problem, a full
-word is read on the PCI bus and the processor picks out the bytes it
-needs, but memory mapped registers with access restrictions are a
-problem.  PCI memory writes and PCI IO reads/writes do generate the
-correct byte enables.
+	Jeff
 
-  I did consider checking for accesses to particular locations on
-particular PCI devices in ioread8/ioread16 and silently converting
-them into equivalent IO accesses (assuming one exists of course...),
-but it gets pretty nasty. Eg on this SATA chip I would have to map
-the IO BARS behind the drivers back, and it's still not a generic
-solution - for each new device I would have to add affected
-addresses to ioread8/ioread16. 
 
-  The patch is a relatively clean work around for limitations in the
-hardware I'm using, but I know it probably looks like just more
-cruft from an outside perspective so I won't be championing it :)
 
-Chris
