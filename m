@@ -1,38 +1,84 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [PATCH 0/1] sata_sil: Option to use IO space to access TF
- registers.
-Date: Thu, 23 Oct 2008 08:32:15 +0100
-Message-ID: <20081023083215.74e48b03@lxorguk.ukuu.org.uk>
-References: <20081022182243.9471.87443.stgit@linux-chris2.mips.com>
-	<20081022221623.344aea62@lxorguk.ukuu.org.uk>
-	<20081022233439.GA30488@ftp.linux-mips.org>
+From: Jens Axboe <jens.axboe@oracle.com>
+Subject: Re: [PATCH 1/2] libata: get rid of ATA_MAX_QUEUE loop in ata_qc_complete_multiple()
+Date: Thu, 23 Oct 2008 10:23:40 +0200
+Message-ID: <20081023082340.GX22217@kernel.dk>
+References: <1224661243-7929-1-git-send-email-jens.axboe@oracle.com> <1224661243-7929-2-git-send-email-jens.axboe@oracle.com> <878wsgqyix.fsf@denkblock.local>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:33463 "EHLO
-	lxorguk.ukuu.org.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751416AbYJWHdb (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 23 Oct 2008 03:33:31 -0400
-In-Reply-To: <20081022233439.GA30488@ftp.linux-mips.org>
+Received: from pasmtpb.tele.dk ([80.160.77.98]:36546 "EHLO pasmtpB.tele.dk"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751260AbYJWIYj (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 23 Oct 2008 04:24:39 -0400
+Content-Disposition: inline
+In-Reply-To: <878wsgqyix.fsf@denkblock.local>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Chris Dearman <chris@ftp.linux-mips.org>
-Cc: jgarzik@pobox.com, linux-ide@vger.kernel.org
+To: Elias Oltmanns <eo@nebensachen.de>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, tj@kernel.org, jeff@garzik.org
 
-> unfortunately I don't think that's possible. There is no way to
-> generate a read cycle to PCI memory space on this hardware without all
-> of the byte enables being set. Normally this isn't a problem, a full
+On Wed, Oct 22 2008, Elias Oltmanns wrote:
+> Jens Axboe <jens.axboe@oracle.com> wrote:
+> > We very rarely (if ever) complete more than one command in the
+> > sactive mask at the time, even for extremely high IO rates. So
+> > looping over the entire range of possible tags is pointless,
+> > instead use __ffs() to just find the completed tags directly.
+> >
+> > Signed-off-by: Jens Axboe <jens.axboe@oracle.com>
+> > ---
+> >  drivers/ata/libata-core.c |   15 +++++++++------
+> >  1 files changed, 9 insertions(+), 6 deletions(-)
+> >
+> > diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+> > index 1ee9499..c3c53e7 100644
+> > --- a/drivers/ata/libata-core.c
+> > +++ b/drivers/ata/libata-core.c
+> > @@ -4799,9 +4799,9 @@ void ata_qc_complete(struct ata_queued_cmd *qc)
+> >   */
+> >  int ata_qc_complete_multiple(struct ata_port *ap, u32 qc_active)
+> >  {
+> > +	unsigned int i = 0;
+> >  	int nr_done = 0;
+> >  	u32 done_mask;
+> > -	int i;
+> >  
+> >  	done_mask = ap->qc_active ^ qc_active;
+> >  
+> > @@ -4811,16 +4811,19 @@ int ata_qc_complete_multiple(struct ata_port *ap, u32 qc_active)
+> >  		return -EINVAL;
+> >  	}
+> >  
+> > -	for (i = 0; i < ATA_MAX_QUEUE; i++) {
+> > +	while (done_mask) {
+> >  		struct ata_queued_cmd *qc;
+> > +		unsigned int next = __ffs(done_mask);
+> >  
+> > -		if (!(done_mask & (1 << i)))
+> > -			continue;
+> > -
+> > -		if ((qc = ata_qc_from_tag(ap, i))) {
+> > +		qc = ata_qc_from_tag(ap, i + next);
+> > +		if (qc) {
+> >  			ata_qc_complete(qc);
+> >  			nr_done++;
+> >  		}
+> > +		if (++next >= ATA_MAX_QUEUE)
+> > +			break;
+> 
+> If you think about it, this statement is equivalent to
+> 
+> 	if (ap->qc_active ^ qc_active == (1 << (ATA_MAX_QUEUE - 1)))
+> 
+> To fix this, you could say
+> 
+> 	if (++next + i >= ATA_MAX_QUEUE)
+> 
+> but perhaps it would be even more efficient (or not much worse) to skip
+> this check entirely.
 
-Ok so this isn't about not being able to do the workaround, you have
-hardware which is just busted ? Is this devel hardware or stuff in mass
-circulation ?
+Yeah, the check should just be killed, that's the version I posted in
+the reply to Tejun as well.
 
->   The patch is a relatively clean work around for limitations in the
-> hardware I'm using, but I know it probably looks like just more
-> cruft from an outside perspective so I won't be championing it :)
+-- 
+Jens Axboe
 
-I would make the switch a runtime value personally - some network drivers
-do this for similar reasons.
-
-Alan
