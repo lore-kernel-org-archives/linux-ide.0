@@ -1,53 +1,33 @@
-From: "Mark Nelson" <mdnelson8@gmail.com>
-Subject: [PATCH] ahci: Add support for Promise PDC42819
-Date: Thu, 23 Oct 2008 14:08:16 +1100
-Message-ID: <65a6ef750810222008o139600e3o8d7c7cf50a4e4ea0@mail.gmail.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH 2/2] libata: switch to using block layer tagging support
+Date: Thu, 23 Oct 2008 12:41:34 +0900
+Message-ID: <48FFF26E.5040904@kernel.org>
+References: <1224661243-7929-1-git-send-email-jens.axboe@oracle.com> <1224661243-7929-3-git-send-email-jens.axboe@oracle.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Content-Disposition: inline
-Sender: linux-scsi-owner@vger.kernel.org
-To: jeff@garzik.org, linux-ide@vger.kernel.org
-Cc: alan@lxorguk.ukuu.org.uk, mikpe@it.uu.se, linux-scsi@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from hera.kernel.org ([140.211.167.34]:32814 "EHLO hera.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751481AbYJWDlw (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 22 Oct 2008 23:41:52 -0400
+In-Reply-To: <1224661243-7929-3-git-send-email-jens.axboe@oracle.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Jens Axboe <jens.axboe@oracle.com>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, jeff@garzik.org
 
-Add an appropriate entry for the Promise PDC42819 controller. It has an
-AHCI mode and so far works correctly with board_ahci.
+Jens Axboe wrote:
+> libata currently has a pretty dumb ATA_MAX_QUEUE loop for finding
+> a free tag to use. Instead of fixing that up, convert libata to
+> using block layer tagging - gets rid of code in libata, and is also
+> much faster.
+> 
+> Signed-off-by: Jens Axboe <jens.axboe@oracle.com>
 
-This chip is found on Promise's FastTrak TX2650 (2 port) and TX4650 (4 port)
-software-based RAID cards (for which there is a binary driver, t3sas) and
-can be found on some motherboards, for example the MSI K9A2 Platinum,
-which calls the chip a Promise T3 controller.
+Acked-by: Tejun Heo <tj@kernel.org>
 
-Although this controller also supports SAS devices, its default bootup mode
-is AHCI and the binary driver has to do some magic to get the chip into the
-appropriate mode to drive SAS disks.
+Thanks.
 
-Seeing as no documentation is provided by Promise, adding this entry to the
-ahci driver allows the controller to be useful to people as a SATA
-controller (with no ill effects on the system if a SAS disk is connected -
-probing of the port just times out with "link online but device
-misclassified"), without having to resort to using the binary driver. Users
-who require SAS or the proprietary software raid can get this functionality
-using the binary driver.
-
-Signed-off-by: Mark Nelson <mdnelson8@gmail.com>
----
- drivers/ata/ahci.c |    3 +++
- 1 file changed, 3 insertions(+)
-
-Index: libata-dev/drivers/ata/ahci.c
-===================================================================
---- libata-dev.orig/drivers/ata/ahci.c
-+++ libata-dev/drivers/ata/ahci.c
-@@ -588,6 +588,9 @@ static const struct pci_device_id ahci_p
- 	{ PCI_VDEVICE(MARVELL, 0x6145), board_ahci_mv },	/* 6145 */
- 	{ PCI_VDEVICE(MARVELL, 0x6121), board_ahci_mv },	/* 6121 */
-
-+	/* Promise */
-+	{ PCI_VDEVICE(PROMISE, 0x3f20), board_ahci },	/* PDC42819 */
-+
- 	/* Generic, PCI class code for AHCI */
- 	{ PCI_ANY_ID, PCI_ANY_ID, PCI_ANY_ID, PCI_ANY_ID,
- 	  PCI_CLASS_STORAGE_SATA_AHCI, 0xffffff, board_ahci },
+-- 
+tejun
