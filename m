@@ -1,86 +1,70 @@
-From: Elias Oltmanns <eo@nebensachen.de>
-Subject: Re: [PATCH 1/2] libata: get rid of ATA_MAX_QUEUE loop in ata_qc_complete_multiple()
-Date: Thu, 23 Oct 2008 17:19:12 +0200
-Message-ID: <87tzb39w5r.fsf@denkblock.local>
-References: <1224661243-7929-1-git-send-email-jens.axboe@oracle.com>
-	<1224661243-7929-2-git-send-email-jens.axboe@oracle.com>
-	<48FFFA15.8060603@kernel.org> <20081023064357.GT22217@kernel.dk>
-	<20081023134017.GA22217@kernel.dk>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: Re: [git pull] IDE updates #4
+Date: Thu, 23 Oct 2008 19:57:14 +0400
+Message-ID: <49009EDA.2030707@ru.mvista.com>
+References: <200810212100.52985.bzolnier@gmail.com> <58cb370e0810220514x419c9669jba1b7be942d3644a@mail.gmail.com> <48FF2047.6000509@ru.mvista.com> <200810222337.42218.bzolnier@gmail.com> <48FFAFBB.8020709@ru.mvista.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nebensachen.de ([195.34.83.29]:57558 "EHLO mail.nebensachen.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751349AbYJWPT1 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 23 Oct 2008 11:19:27 -0400
-In-Reply-To: <20081023134017.GA22217@kernel.dk> (Jens Axboe's message of "Thu,
-	23 Oct 2008 15:40:18 +0200")
+Received: from h155.mvista.com ([63.81.120.155]:12336 "EHLO imap.sh.mvista.com"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751953AbYJWP5e (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 23 Oct 2008 11:57:34 -0400
+In-Reply-To: <48FFAFBB.8020709@ru.mvista.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jens Axboe <jens.axboe@oracle.com>
-Cc: Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, jeff@garzik.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Jens Axboe <jens.axboe@oracle.com> wrote:
-> On Thu, Oct 23 2008, Jens Axboe wrote:
->> On Thu, Oct 23 2008, Tejun Heo wrote:
->
->> > while (done_mask) {
->> >         struct ata_queued_cmd *qc;
->> >         unsigned int next = __ffs(done_mask);
->> > 
->> >         tag += next;
->> >         if ((qc = ata_qc_from_tag(ap, tag))) {
->> >                 ata_qc_complete(qc);
->> >                 nr_done++;
->> >         }
->> >         next++;
->> >         tag += next;
->> >         done_mask >>= next;
->> > }
->> 
->> That doesn't work (you're adding next to tag twice), it needs a little
->> tweak:
->> 
->> while (done_mask) {
->>         struct ata_queued_cmd *qc;
->>         unsigned int next = __ffs(done_mask);
->> 
->>         if ((qc = ata_qc_from_tag(ap, tag + next))) {
->>                 ata_qc_complete(qc);
->>                 nr_done++;
->>         }
->>         next++;
->>         tag += next;
->>         done_mask >>= next;
->> }
->> 
->> and I think it should work. Not tested yet :-)
->
-> Pondered some more, and it can't work. The problem is that if we
-> complete tag 31, we attempt to shift done_mask down by 32 bits. On a
-> 32-bit arch, that's not defined. So we DO need a check like the existing
-> one, or something similar.
->
-> So I don't think we need to make changes to this patch either, at least
-> unless one of you can come up with a better check that avoids a branch.
+Hello, I wrote:
 
-What about a switch outside the while loop:
+>>>> and number of new submitted patches is < 10 (I'll take
+>>>> care of fixing them up, ditto for all other new stuff that will be 
+>>>> using old
+>>>> naming scheme).
 
-	if (done_mask == ATA_MAX_QUEUE >> 1) {
-		if ((qc = ata_qc_from_tag(ap, ATA_MAX_QUEUE >> 1))) {
-			ata_qc_complete(qc);
-			nr_done = 1;
-		}
-	} else
-		while (done_mask)
-			...
+>>>    Thanks for clarifying this.
+>>>    This rename only added more uncertainty for my pending patchset 
+>>> (which had been already dependant on at least TX4939 driver which 
+>>> keeps being recast by Atsushi and being stale in pata-2.6 series) as 
+>>> I can't predict when you and Linus will merge the changes and this is 
+>>> getting on my nerves, as I don't have time on any extra rework and 
+>>> I'm running out of time with the submission. I know I should have 
+>>> done this earlier and     
 
-Alternatively, you could just alter tag and done_mask (tag =
-ATA_MAX_QUEUE >> 2, done_mask = 2) and enter the while loop
-unconditionally. But then, you claimed that there will hardly ever be
-more than one command to complete, so my suggestions will probably not
-improve anything in real life.
+>> Maybe some parts could be submitted separately?
+>> (so keeping them up-to-date in pata-2.6 would be my task)
 
-Regards,
+>   2 (maybe even 3) out of 4 can be but that doesn't make much sense 
+> already (and would incur the patch reordering for me) -- the best thing 
+> you can do is to merge ASAP the last verison of TX4939 which has my ACK.
+> I'm not sure about TX4938 driver yet -- will look at it after some sleep...
 
-Elias
+    Still haven't looked at it... too little sleep and incuring headache. :-/
+
+>> Also I didn't know anything about your patchset and its
+>> dependency on TX4939, otherwise I'll be pushing things in
+
+>   The patchset consists of a large patch moving read_sff_dma_status() to 
+> its porper place, one small preparatory patch, and 2 followup patches, 
+> so unfortunately it's dependent on TX4939 in its main patch (worse, the 
+> relevant part of this driver has changed after your last merged driver 
+> version)...
+
+>> different order or even skip this pull request if needed
+>> (TX493x drivers are new stuff and were still under review,
+>> such things can be also submitted after the merge window
+>> closes so they were given the lowest priority).
+
+>   Unfortunately, that driver has been submitted first back 9/09, long 
+> before my patchset was even created, so the dependence was just natural.
+
+    I could also rip out TX4939 part from the patch and leave Atsushi to deal 
+with the fallout (though I could give him the ripped out part to simply be 
+merged to the driver) if you would queue my patchset ahead of the driver. 
+Though I feel it's too late now for my patchset to get into 2.6.28 the way 
+things have been happening... :-/
+
+MBR, Sergei
+
