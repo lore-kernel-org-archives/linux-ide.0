@@ -1,70 +1,59 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [git pull] IDE updates #4
-Date: Thu, 23 Oct 2008 19:57:14 +0400
-Message-ID: <49009EDA.2030707@ru.mvista.com>
-References: <200810212100.52985.bzolnier@gmail.com> <58cb370e0810220514x419c9669jba1b7be942d3644a@mail.gmail.com> <48FF2047.6000509@ru.mvista.com> <200810222337.42218.bzolnier@gmail.com> <48FFAFBB.8020709@ru.mvista.com>
+From: Mark Lord <liml@rtr.ca>
+Subject: Re: SMART to USB/sata dock in 2.6.27-rc5 doesn't work
+Date: Thu, 23 Oct 2008 12:01:27 -0400
+Message-ID: <49009FD7.9000504@rtr.ca>
+References: <48EE7E0A.8040701@dgreaves.com> <48F40164.5000502@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from h155.mvista.com ([63.81.120.155]:12336 "EHLO imap.sh.mvista.com"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751953AbYJWP5e (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 23 Oct 2008 11:57:34 -0400
-In-Reply-To: <48FFAFBB.8020709@ru.mvista.com>
+Received: from rtr.ca ([76.10.145.34]:40629 "EHLO mail.rtr.ca"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755025AbYJWQAz (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 23 Oct 2008 12:00:55 -0400
+In-Reply-To: <48F40164.5000502@kernel.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: David Greaves <david@dgreaves.com>, Smartmontools Mailing List <smartmontools-support@lists.sourceforge.net>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-Hello, I wrote:
+Tejun Heo wrote:
+> David Greaves wrote:
+>> I just bought a usb/sata adapter like this:
+>>   http://www.thinkgeek.com/computing/drives/a7ea/?cpg=ab
+>> lsusb -v is below
+>>
+>> Works OK as a hot-plug SATA disk so I can check what's on that old disk in the
+>> corner; but smartctl doesn't work so I can't see if it has any errors, run
+>> selftests etc.
+>>
+>> Kernel is 2.6.27-rc5 (I've also tried older kernels)
+>>
+>> I plugged a previously zeroed drive in and...
+>>
+>> root@ash:~ # smartctl -a /dev/sde
+>> smartctl version 5.38 [i686-pc-linux-gnu] Copyright (C) 2002-8 Bruce Allen
+>> Home page is http://smartmontools.sourceforge.net/
+>>
+>> Device: ST332062 0AS              Version:
+>> Device type: disk
+>> Local Time is: Thu Oct  9 21:38:16 2008 BST
+>> Device supports SMART and is Enabled
+>> Temperature Warning Disabled or Not Supported
+>> SMART Health Status: OK
+>>
+>> Error Counter logging not supported
+>> Device does not support Self Test logging
+> 
+> The USB bridge should support SAT (SCSI-ATA translation) and many
+> don't.  Nothing much can be done about it.  The hardware just don't know
+> how to do it.
+..
 
->>>> and number of new submitted patches is < 10 (I'll take
->>>> care of fixing them up, ditto for all other new stuff that will be 
->>>> using old
->>>> naming scheme).
+That may be true, or not.  Try "hdparm -I /dev/sde" on it.
+If that *works*, then the USB interface *does* support SAT!
 
->>>    Thanks for clarifying this.
->>>    This rename only added more uncertainty for my pending patchset 
->>> (which had been already dependant on at least TX4939 driver which 
->>> keeps being recast by Atsushi and being stale in pata-2.6 series) as 
->>> I can't predict when you and Linus will merge the changes and this is 
->>> getting on my nerves, as I don't have time on any extra rework and 
->>> I'm running out of time with the submission. I know I should have 
->>> done this earlier and     
+Many, many new USB enclosures now have the modern InitIO bridge chips with SAT.
 
->> Maybe some parts could be submitted separately?
->> (so keeping them up-to-date in pata-2.6 would be my task)
-
->   2 (maybe even 3) out of 4 can be but that doesn't make much sense 
-> already (and would incur the patch reordering for me) -- the best thing 
-> you can do is to merge ASAP the last verison of TX4939 which has my ACK.
-> I'm not sure about TX4938 driver yet -- will look at it after some sleep...
-
-    Still haven't looked at it... too little sleep and incuring headache. :-/
-
->> Also I didn't know anything about your patchset and its
->> dependency on TX4939, otherwise I'll be pushing things in
-
->   The patchset consists of a large patch moving read_sff_dma_status() to 
-> its porper place, one small preparatory patch, and 2 followup patches, 
-> so unfortunately it's dependent on TX4939 in its main patch (worse, the 
-> relevant part of this driver has changed after your last merged driver 
-> version)...
-
->> different order or even skip this pull request if needed
->> (TX493x drivers are new stuff and were still under review,
->> such things can be also submitted after the merge window
->> closes so they were given the lowest priority).
-
->   Unfortunately, that driver has been submitted first back 9/09, long 
-> before my patchset was even created, so the dependence was just natural.
-
-    I could also rip out TX4939 part from the patch and leave Atsushi to deal 
-with the fallout (though I could give him the ripped out part to simply be 
-merged to the driver) if you would queue my patchset ahead of the driver. 
-Though I feel it's too late now for my patchset to get into 2.6.28 the way 
-things have been happening... :-/
-
-MBR, Sergei
+Cheers
 
