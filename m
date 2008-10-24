@@ -1,36 +1,71 @@
 From: Atsushi Nemoto <anemo@mba.ocn.ne.jp>
 Subject: Re: [PATCH] ide: Add tx4938ide driver (v2)
-Date: Fri, 24 Oct 2008 23:20:57 +0900 (JST)
-Message-ID: <20081024.232057.85420526.anemo@mba.ocn.ne.jp>
+Date: Sat, 25 Oct 2008 00:55:44 +0900 (JST)
+Message-ID: <20081025.005544.92344156.anemo@mba.ocn.ne.jp>
 References: <20081023.012013.52129771.anemo@mba.ocn.ne.jp>
-	<200810232247.05686.bzolnier@gmail.com>
-	<4901AD8F.4000007@ru.mvista.com>
+	<4900B6A8.30705@ru.mvista.com>
 Mime-Version: 1.0
 Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mba.ocn.ne.jp ([122.1.235.107]:61485 "EHLO smtp.mba.ocn.ne.jp"
+Received: from mba.ocn.ne.jp ([122.1.235.107]:65204 "EHLO smtp.mba.ocn.ne.jp"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751479AbYJXOUu (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 24 Oct 2008 10:20:50 -0400
-In-Reply-To: <4901AD8F.4000007@ru.mvista.com>
+	id S1755204AbYJXPz2 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 24 Oct 2008 11:55:28 -0400
+In-Reply-To: <4900B6A8.30705@ru.mvista.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: sshtylyov@ru.mvista.com
-Cc: bzolnier@gmail.com, linux-mips@linux-mips.org, linux-ide@vger.kernel.org, ralf@linux-mips.org
+Cc: linux-mips@linux-mips.org, linux-ide@vger.kernel.org, bzolnier@gmail.com, ralf@linux-mips.org
 
-On Fri, 24 Oct 2008 15:12:15 +0400, Sergei Shtylyov <sshtylyov@ru.mvista.com> wrote:
->    I've realized that I have a question to Atsushi on why he chose the 
-> same way of implemnting the register accesses as on TX4939 despite 
-> TX4938 IDE is not really a SoC but a board level device (so probable 
-> should be using the normal, not the "raw" I/O accessors)...
+On Thu, 23 Oct 2008 21:38:48 +0400, Sergei Shtylyov <sshtylyov@ru.mvista.com> wrote:
+> > +	unsigned int sp = (cr >> 4) & 3;
+> > +	unsigned int clock = gbus_clock / (4 - sp);
+> > +	unsigned int cycle = 1000000000 / clock;
+> 
+>     Hm, couldn't all these values be calculated only once?
+> 
+> > +	unsigned int wt, shwt;
+> > +
+> > +	/* Minimum DIOx- active time */
+> > +	wt = DIV_ROUND_UP(t->act8b, cycle) - 2;
+> > +	/* IORDY setup time: 35ns */
+> > +	wt = max(wt, DIV_ROUND_UP(35, cycle));
+> 
+>     Same comment about calculating only once...
 
-Well, because it behaves like SoC registers, not as other PCI IDE
-registers (which are swapped on big endian).
+Yes.  But are there any good place to hold calculated values?  I don't
+think it is not worth to allocate a local structure just for holding
+such values.  And this is not a critical path anyway :-)
 
-Maybe new board designer can chose another option, so it might be
-worth to add 'do_swap' member in tx4938ide_platform_info.  But anyway
-current code just works with both endian on RBTX4938 board :-)
+> > +	/* actual wait-cycle is max(wt & ~1, 1) */
+> > +	if (wt > 2 && (wt & 1))
+> > +		wt++;
+> > +	wt &= ~1;
+> > +	/* Address-valid to DIOR/DIOW setup */
+> 
+>     It's really address valid to -CSx assertion and -CSx to -DIOx assertion
+> setup time, and contrarywise, -DIOx to -CSx release and -CSx release to 
+> address invalid hold time, so it actualy applies 4 times and so constitutes 
+> -DIOx recovery time. It's worth to check if the minimum cycle time is reached 
+> with the setup time -- for PIO mode 0, minimum setup is 70 ns, multiplying 
+> that by 4 gives 280 ns recovery and adding 290 ns active time gives 570 ns 
+> cycle while the minimum is 600 ns.  Luckily, PIO0 seems the only problematic 
+> mode as I doubt that EBUS controller can do back-to-back IDE reads/writes 
+> keeping address and/or -CSx asserted in-between amounting to recovery time 
+> being only 2x/3x setup times -- in the worst, 2x case PIO mode 3 would also 
+> have too little cycle/recovery time...
+
+Oh I had not considered the total cycle time at all...  I agree with
+your analysis that PIO0 is the only problematic case.
+
+And I also noticed that the calculated shwt value can be begger than 7
+(which is max SHWT value) on fast GBUS and slow drive.  I will add
+some check for it.
+
+
+I'll address all other issues too (and send incremental patch).
+Thanks!
 
 ---
 Atsushi Nemoto
