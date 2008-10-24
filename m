@@ -1,73 +1,42 @@
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-Subject: Re: [Regression] 2.6.28-rc1 (2fca5c): libata: kernel cant boot (was: Re: 2.6.27-rc1 (2fca5c): libata: kernel cant boot)
-Date: Fri, 24 Oct 2008 10:56:01 +0200
-Message-ID: <200810241056.01967.rjw@sisk.pl>
-References: <a4423d670810240004t2d7c3bdah2bea77a6a49bb7c4@mail.gmail.com> <200810241018.53645.rjw@sisk.pl> <20081024081626.GZ22217@kernel.dk>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: Re: [PATCH] ide: Add tx4938ide driver (v2)
+Date: Fri, 24 Oct 2008 15:12:15 +0400
+Message-ID: <4901AD8F.4000007@ru.mvista.com>
+References: <20081023.012013.52129771.anemo@mba.ocn.ne.jp> <200810232247.05686.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ogre.sisk.pl ([217.79.144.158]:43112 "EHLO ogre.sisk.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751037AbYJXIvl (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 24 Oct 2008 04:51:41 -0400
-In-Reply-To: <20081024081626.GZ22217@kernel.dk>
-Content-Disposition: inline
+Received: from h155.mvista.com ([63.81.120.155]:36345 "EHLO imap.sh.mvista.com"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751752AbYJXLMZ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 24 Oct 2008 07:12:25 -0400
+In-Reply-To: <200810232247.05686.bzolnier@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jens Axboe <jens.axboe@oracle.com>
-Cc: Alexander Beregalov <a.beregalov@gmail.com>, tj@kernel.org, torvalds@linux-foundation.org, LKML <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: Atsushi Nemoto <anemo@mba.ocn.ne.jp>, linux-mips@linux-mips.org, linux-ide@vger.kernel.org, ralf@linux-mips.org
 
-On Friday, 24 of October 2008, Jens Axboe wrote:
-> On Fri, Oct 24 2008, Rafael J. Wysocki wrote:
-> > On Friday, 24 of October 2008, Jens Axboe wrote:
-> > > On Fri, Oct 24 2008, Rafael J. Wysocki wrote:
-> > > > On Friday, 24 of October 2008, Jens Axboe wrote:
-> > > > > On Fri, Oct 24 2008, Alexander Beregalov wrote:
-> > > > > > Hi
-> > > > > > 
-> > > > > > commit 2fca5ccf97d2c28bcfce44f5b07d85e74e3cd18e
-> > > > > > Author: Jens Axboe <jens.axboe@oracle.com>
-> > > > > > Date:   Wed Oct 22 09:34:49 2008 +0200
-> > > > > > 
-> > > > > >     libata: switch to using block layer tagging support
-> > > > > > 
-> > > > > > 
-> > > > > > This kernel can not read even 0 sector on disk with rootfs. It
-> > > > > > initialized disk, but cant read it at all.
-> > > > > >  CMD646 on Sparc
-> > > > > > 
-> > > > > > Rverting helped.
-> > > > 
-> > > > Confirmed on hp nx6325 w/ pata_atiixp (apparently, SCSI commands time out).
-> > > 
-> > > Basically it'll dererence ->qcmd[] with -1 index so it'll break in
-> > > various interesting ways, I'm sure.
-> > > 
-> > > > Reverting the commit also helps here.
-> > > > 
-> > > > [I guess it's going to break things left and right.]
-> > > 
-> > > Indeed.
-> > > 
-> > > > > Doh, how annoying! What driver does that controller use? PATA doesn't
-> > > > > even use NCQ, so it's a bit of an oddity that it makes a difference at
-> > > > > all.
-> > > > > 
-> > > > > Can you provide the boot messages?
-> > > > 
-> > > > If I'm able to reproduce the breakage of Asus L5D, I will.
-> > > 
-> > > I don't need that anymore, I realized the mistake right after sending
-> > > that.
-> > 
-> > The fix you posted helps here too. :-)
-> 
-> Good, please boot your regression time machine and get it committed
-> before -rc1 was released :-)
+Hello.
 
-Well, in fact it won't be listed if Linus merges the fix quickly enough. ;-)
+Bartlomiej Zolnierkiewicz wrote:
 
-Thanks,
-Rafael
+>> This is the driver for the Toshiba TX4938 SoC EBUS controller ATA mode.
+>> It has custom set_pio_mode and some hacks for big endian.
+>>
+>> Signed-off-by: Atsushi Nemoto <anemo@mba.ocn.ne.jp>
+>>     
+>
+> I applied it so please address issues left (if any) with incremental patches.
+>   
+
+   I'm not sure there was really a need to haste it into -rc1 (if you 
+could push it to Linus later anyway)...
+   I've realized that I have a question to Atsushi on why he chose the 
+same way of implemnting the register accesses as on TX4939 despite 
+TX4938 IDE is not really a SoC but a board level device (so probable 
+should be using the normal, not the "raw" I/O accessors)...
+
+MBR, Sergei
+
+
