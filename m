@@ -1,75 +1,73 @@
-From: Jens Axboe <jens.axboe@oracle.com>
-Subject: Re: 2.6.27-rc1 (2fca5c): libata: kernel cant boot
-Date: Fri, 24 Oct 2008 10:48:18 +0200
-Message-ID: <20081024084818.GB22217@kernel.dk>
-References: <a4423d670810240004t2d7c3bdah2bea77a6a49bb7c4@mail.gmail.com> <20081024070955.GN22217@kernel.dk> <20081024071329.GO22217@kernel.dk> <20081024071608.GA3879@linux-sh.org> <20081024072428.GP22217@kernel.dk> <873aimv0v8.fsf@denkblock.local>
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+Subject: Re: [Regression] 2.6.28-rc1 (2fca5c): libata: kernel cant boot (was: Re: 2.6.27-rc1 (2fca5c): libata: kernel cant boot)
+Date: Fri, 24 Oct 2008 10:56:01 +0200
+Message-ID: <200810241056.01967.rjw@sisk.pl>
+References: <a4423d670810240004t2d7c3bdah2bea77a6a49bb7c4@mail.gmail.com> <200810241018.53645.rjw@sisk.pl> <20081024081626.GZ22217@kernel.dk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from pasmtpb.tele.dk ([80.160.77.98]:56074 "EHLO pasmtpB.tele.dk"
+Received: from ogre.sisk.pl ([217.79.144.158]:43112 "EHLO ogre.sisk.pl"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751135AbYJXItT (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 24 Oct 2008 04:49:19 -0400
+	id S1751037AbYJXIvl (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 24 Oct 2008 04:51:41 -0400
+In-Reply-To: <20081024081626.GZ22217@kernel.dk>
 Content-Disposition: inline
-In-Reply-To: <873aimv0v8.fsf@denkblock.local>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Elias Oltmanns <eo@nebensachen.de>
-Cc: Paul Mundt <lethal@linux-sh.org>, Alexander Beregalov <a.beregalov@gmail.com>, tj@kernel.org, torvalds@linux-foundation.org, LKML <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org
+To: Jens Axboe <jens.axboe@oracle.com>
+Cc: Alexander Beregalov <a.beregalov@gmail.com>, tj@kernel.org, torvalds@linux-foundation.org, LKML <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org
 
-On Fri, Oct 24 2008, Elias Oltmanns wrote:
-> Jens Axboe <jens.axboe@oracle.com> wrote:
-> > From e598055dde1951c47c8b3522616f6ebff0ed9847 Mon Sep 17 00:00:00 2001
-> > From: Jens Axboe <jens.axboe@oracle.com>
-> > Date: Fri, 24 Oct 2008 09:22:42 +0200
-> > Subject: [PATCH] libata: fix bug with non-ncq devices
-> >
-> > The recent commit 201f1b98822078c808b5e2d379a6ddbfc0a06ee1 to enable
+On Friday, 24 of October 2008, Jens Axboe wrote:
+> On Fri, Oct 24 2008, Rafael J. Wysocki wrote:
+> > On Friday, 24 of October 2008, Jens Axboe wrote:
+> > > On Fri, Oct 24 2008, Rafael J. Wysocki wrote:
+> > > > On Friday, 24 of October 2008, Jens Axboe wrote:
+> > > > > On Fri, Oct 24 2008, Alexander Beregalov wrote:
+> > > > > > Hi
+> > > > > > 
+> > > > > > commit 2fca5ccf97d2c28bcfce44f5b07d85e74e3cd18e
+> > > > > > Author: Jens Axboe <jens.axboe@oracle.com>
+> > > > > > Date:   Wed Oct 22 09:34:49 2008 +0200
+> > > > > > 
+> > > > > >     libata: switch to using block layer tagging support
+> > > > > > 
+> > > > > > 
+> > > > > > This kernel can not read even 0 sector on disk with rootfs. It
+> > > > > > initialized disk, but cant read it at all.
+> > > > > >  CMD646 on Sparc
+> > > > > > 
+> > > > > > Rverting helped.
+> > > > 
+> > > > Confirmed on hp nx6325 w/ pata_atiixp (apparently, SCSI commands time out).
+> > > 
+> > > Basically it'll dererence ->qcmd[] with -1 index so it'll break in
+> > > various interesting ways, I'm sure.
+> > > 
+> > > > Reverting the commit also helps here.
+> > > > 
+> > > > [I guess it's going to break things left and right.]
+> > > 
+> > > Indeed.
+> > > 
+> > > > > Doh, how annoying! What driver does that controller use? PATA doesn't
+> > > > > even use NCQ, so it's a bit of an oddity that it makes a difference at
+> > > > > all.
+> > > > > 
+> > > > > Can you provide the boot messages?
+> > > > 
+> > > > If I'm able to reproduce the breakage of Asus L5D, I will.
+> > > 
+> > > I don't need that anymore, I realized the mistake right after sending
+> > > that.
+> > 
+> > The fix you posted helps here too. :-)
 > 
-> Wouldn't that be commit 2fca5ccf97d2c28bcfce44f5b07d85e74e3cd18e?
+> Good, please boot your regression time machine and get it committed
+> before -rc1 was released :-)
 
-Yes that is correct, the other commit is actually a private one in my
-tree for other libata changes. Updated patch below, thanks for checking!
+Well, in fact it won't be listed if Linus merges the fix quickly enough. ;-)
 
->From e598055dde1951c47c8b3522616f6ebff0ed9847 Mon Sep 17 00:00:00 2001
-From: Jens Axboe <jens.axboe@oracle.com>
-Date: Fri, 24 Oct 2008 09:22:42 +0200
-Subject: [PATCH] libata: fix bug with non-ncq devices
-
-The recent commit 2fca5ccf97d2c28bcfce44f5b07d85e74e3cd18e to enable
-support for block layer tagging in libata was broken for non-NCQ
-devices. The block layer initializes the tag field to -1 to detect
-invalid uses of a tag, and if the libata devices does NOT support
-NCQ, we just used that field to index the internal command list.
-So we need to check for -1 first and only use the tag field if
-it's valid.
-
-Signed-off-by: Jens Axboe <jens.axboe@oracle.com>
----
- drivers/ata/libata-scsi.c |    6 +++++-
- 1 files changed, 5 insertions(+), 1 deletions(-)
-
-diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-index d5b9b72..4b95c43 100644
---- a/drivers/ata/libata-scsi.c
-+++ b/drivers/ata/libata-scsi.c
-@@ -708,7 +708,11 @@ static struct ata_queued_cmd *ata_scsi_qc_new(struct ata_device *dev,
- {
- 	struct ata_queued_cmd *qc;
- 
--	qc = ata_qc_new_init(dev, cmd->request->tag);
-+	if (cmd->request->tag != -1)
-+		qc = ata_qc_new_init(dev, cmd->request->tag);
-+	else
-+		qc = ata_qc_new_init(dev, 0);
-+
- 	if (qc) {
- 		qc->scsicmd = cmd;
- 		qc->scsidone = done;
--- 
-1.6.0.2.588.g3102
-
-
--- 
-Jens Axboe
-
+Thanks,
+Rafael
