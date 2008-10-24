@@ -1,47 +1,32 @@
-From: "Maciej Rutecki" <maciej.rutecki@gmail.com>
-Subject: Re: [Re: Linux 2.6.28-rc1] scsi 4:0:0:0: timing out command, waited 22s
-Date: Fri, 24 Oct 2008 20:43:37 +0200
-Message-ID: <8db1092f0810241143l1e5c3ea8g2587a2db452c3b9e@mail.gmail.com>
-References: <8db1092f0810241057j51f0b70eo3cea4499422f0d38@mail.gmail.com>
-	 <1224871587.3307.19.camel@localhost.localdomain>
+From: matthieu castet <castet.matthieu@free.fr>
+Subject: Re: [smartmontools-support] SMART to USB/sata dock in 2.6.27-rc5
+ doesn't work
+Date: Fri, 24 Oct 2008 20:54:47 +0200
+Message-ID: <490219F7.7030908@free.fr>
+References: <48EE7E0A.8040701@dgreaves.com> <48F40164.5000502@kernel.org> <48F641A3.5080609@free.fr> <4900A0A7.3090102@rtr.ca> <4900C949.6040604@free.fr> <4900DCE4.3020901@rtr.ca> <4900E051.9040608@rtr.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <1224871587.3307.19.camel@localhost.localdomain>
-Content-Disposition: inline
-Sender: linux-scsi-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@hansenpartnership.com>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, SCSI development list <linux-scsi@vger.kernel.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from smtp3-g19.free.fr ([212.27.42.29]:49207 "EHLO smtp3-g19.free.fr"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751953AbYJXSyv (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 24 Oct 2008 14:54:51 -0400
+In-Reply-To: <4900E051.9040608@rtr.ca>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Mark Lord <liml@rtr.ca>
+Cc: Tejun Heo <tj@kernel.org>, David Greaves <david@dgreaves.com>, linux-ide@vger.kernel.org, Smartmontools Mailing List <smartmontools-support@lists.sourceforge.net>, linux-kernel@vger.kernel.org
 
-Thanks for quick response. I added patch, and DVD works OK.
-
-Tested-by: Maciej Rutecki <maciej.rutecki@gmail.com>
-
-> diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-> index d5b9b72..4b95c43 100644
-> --- a/drivers/ata/libata-scsi.c
-> +++ b/drivers/ata/libata-scsi.c
-> @@ -708,7 +708,11 @@ static struct ata_queued_cmd *ata_scsi_qc_new(struct ata_device *dev,
->  {
->        struct ata_queued_cmd *qc;
->
-> -       qc = ata_qc_new_init(dev, cmd->request->tag);
-> +       if (cmd->request->tag != -1)
-> +               qc = ata_qc_new_init(dev, cmd->request->tag);
-> +       else
-> +               qc = ata_qc_new_init(dev, 0);
-> +
->        if (qc) {
->                qc->scsicmd = cmd;
->                qc->scsidone = done;
->
->
->
+Mark Lord wrote:
+> Mark Lord wrote:
+> I guess it "works" by accident, since the 00 device status
+> doesn't have the ATA error bit set.  But I suppose this also
+> means that a failed ATA command would not be noticed either..
+> At least not without the patch.
+Yes that seem to case.
+I wonder with the patch doesn't make smartctl work without permisive. 
+May be your usb id wasn't in the patch.
 
 
-Regards
--- 
-Maciej Rutecki
-http://www.maciek.unixy.pl
+Matthieu
