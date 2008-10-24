@@ -1,31 +1,50 @@
-From: Atsushi Nemoto <anemo@mba.ocn.ne.jp>
-Subject: Re: [PATCH] ide: Add tx4938ide driver (v2)
-Date: Sat, 25 Oct 2008 01:06:17 +0900 (JST)
-Message-ID: <20081025.010617.78730272.anemo@mba.ocn.ne.jp>
-References: <20081023.012013.52129771.anemo@mba.ocn.ne.jp>
-	<4900B6A8.30705@ru.mvista.com>
-	<20081025.005544.92344156.anemo@mba.ocn.ne.jp>
+From: "Maciej Rutecki" <maciej.rutecki@gmail.com>
+Subject: [Re: Linux 2.6.28-rc1] scsi 4:0:0:0: timing out command, waited 22s
+Date: Fri, 24 Oct 2008 19:57:03 +0200
+Message-ID: <8db1092f0810241057j51f0b70eo3cea4499422f0d38@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mba.ocn.ne.jp ([122.1.235.107]:52131 "EHLO smtp.mba.ocn.ne.jp"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751925AbYJXQGB (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 24 Oct 2008 12:06:01 -0400
-In-Reply-To: <20081025.005544.92344156.anemo@mba.ocn.ne.jp>
+Received: from qw-out-2122.google.com ([74.125.92.24]:5673 "EHLO
+	qw-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751863AbYJXR5F (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 24 Oct 2008 13:57:05 -0400
+Received: by qw-out-2122.google.com with SMTP id 3so483783qwe.37
+        for <linux-ide@vger.kernel.org>; Fri, 24 Oct 2008 10:57:04 -0700 (PDT)
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: sshtylyov@ru.mvista.com
-Cc: linux-mips@linux-mips.org, linux-ide@vger.kernel.org, bzolnier@gmail.com, ralf@linux-mips.org
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, SCSI development list <linux-scsi@vger.kernel.org>
 
-On Sat, 25 Oct 2008 00:55:44 +0900 (JST), Atsushi Nemoto <anemo@mba.ocn.ne.jp> wrote:
-> >     Same comment about calculating only once...
-> 
-> Yes.  But are there any good place to hold calculated values?  I don't
-> think it is not worth to allocate a local structure just for holding
-> such values.  And this is not a critical path anyway :-)
+During boot I have this message:
 
-Oh, I mean "I don't think it is worth to ...".
----
-Atsushi Nemoto
+ata_piix 0000:00:1f.1: version 2.12
+ata_piix 0000:00:1f.1: PCI INT A -> GSI 16 (level, low) -> IRQ 16
+ata_piix 0000:00:1f.1: setting latency timer to 64
+scsi4 : ata_piix
+scsi5 : ata_piix
+ata5: PATA max UDMA/100 cmd 0x1f0 ctl 0x3f6 bmdma 0x60a0 irq 14
+ata6: PATA max UDMA/100 cmd 0x170 ctl 0x376 bmdma 0x60a8 irq 15
+ata5.00: ATAPI: MATSHITADVD-RAM UJ-840S, 1.11, max MWDMA2
+ata5.00: configured for MWDMA2
+ata6: port disabled. ignoring.
+scsi 4:0:0:0: timing out command, waited 22s
+scsi 4:0:0:0: timing out command, waited 22s
+scsi 4:0:0:0: timing out command, waited 22s
+scsi 4:0:0:0: timing out command, waited 22s
+scsi 4:0:0:0: timing out command, waited 22s
+scsi 4:0:0:0: timing out command, waited 22s
+	ata5: WARNING: synchronous SCSI scan failed without making any progress,
+                  switching to async
+
+DVD drive doesn't work. Under 2.6.27 (stable and -rc) works OK.
+
+Dmesg ang config:
+http://unixy.pl/maciek/download/kernel/2.6.28-rc1/
+
+Regards
+-- 
+Maciej Rutecki
+http://www.maciek.unixy.pl
