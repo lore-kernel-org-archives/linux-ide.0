@@ -1,33 +1,84 @@
-From: "Alexander Beregalov" <a.beregalov@gmail.com>
-Subject: 2.6.27-rc1 (2fca5c): libata: kernel cant boot
-Date: Fri, 24 Oct 2008 11:04:21 +0400
-Message-ID: <a4423d670810240004t2d7c3bdah2bea77a6a49bb7c4@mail.gmail.com>
+From: Paul Mundt <lethal@linux-sh.org>
+Subject: Re: [PATCH 2/2] libata: switch to using block layer tagging support
+Date: Fri, 24 Oct 2008 16:08:57 +0900
+Message-ID: <20081024070857.GA3785@linux-sh.org>
+References: <1224661243-7929-1-git-send-email-jens.axboe@oracle.com> <1224661243-7929-3-git-send-email-jens.axboe@oracle.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from an-out-0708.google.com ([209.85.132.251]:31110 "EHLO
-	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751483AbYJXHEW (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 24 Oct 2008 03:04:22 -0400
-Received: by an-out-0708.google.com with SMTP id d40so80850and.103
-        for <linux-ide@vger.kernel.org>; Fri, 24 Oct 2008 00:04:21 -0700 (PDT)
+Received: from mta23.gyao.ne.jp ([125.63.38.249]:19067 "EHLO mx.gate01.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751913AbYJXHJe (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 24 Oct 2008 03:09:34 -0400
 Content-Disposition: inline
+In-Reply-To: <1224661243-7929-3-git-send-email-jens.axboe@oracle.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: jens.axboe@oracle.com, tj@kernel.org, torvalds@linux-foundation.org, LKML <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org
+To: Jens Axboe <jens.axboe@oracle.com>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, tj@kernel.org, jeff@garzik.org
 
-Hi
+On Wed, Oct 22, 2008 at 09:40:43AM +0200, Jens Axboe wrote:
+> libata currently has a pretty dumb ATA_MAX_QUEUE loop for finding
+> a free tag to use. Instead of fixing that up, convert libata to
+> using block layer tagging - gets rid of code in libata, and is also
+> much faster.
+> 
+> Signed-off-by: Jens Axboe <jens.axboe@oracle.com>
 
-commit 2fca5ccf97d2c28bcfce44f5b07d85e74e3cd18e
-Author: Jens Axboe <jens.axboe@oracle.com>
-Date:   Wed Oct 22 09:34:49 2008 +0200
+Unfortunately this change breaks SATA for me, bisecting picked out this
+commit especially.
 
-    libata: switch to using block layer tagging support
+Before:
 
+sata_sil 0000:00:01.0: Applying R_ERR on DMA activate FIS errata fix
+scsi0 : sata_sil
+scsi1 : sata_sil
+ata1: SATA max UDMA/100 mmio m512@0xfd000200 tf 0xfd000280 irq 66
+ata2: SATA max UDMA/100 mmio m512@0xfd000200 tf 0xfd0002c0 irq 66
+ata1: SATA link up 1.5 Gbps (SStatus 113 SControl 310)
+ata1.00: ATA-7: SAMSUNG HM080JI, YC100-02, max UDMA7
+ata1.00: 156368016 sectors, multi 0: LBA48 NCQ (depth 0/32)
+ata1.00: configured for UDMA/100
+ata2: SATA link down (SStatus 0 SControl 310)
+scsi 0:0:0:0: Direct-Access     ATA      SAMSUNG HM080JI  YC10 PQ: 0 ANSI: 5
+sd 0:0:0:0: [sda] 156368016 512-byte hardware sectors: (80.0 GB/74.5 GiB)
+sd 0:0:0:0: [sda] Write Protect is off
+sd 0:0:0:0: [sda] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+sd 0:0:0:0: [sda] 156368016 512-byte hardware sectors: (80.0 GB/74.5 GiB)
+sd 0:0:0:0: [sda] Write Protect is off
+sd 0:0:0:0: [sda] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+ sda: sda1 sda2
+sd 0:0:0:0: [sda] Attached SCSI disk
 
-This kernel can not read even 0 sector on disk with rootfs. It
-initialized disk, but cant read it at all.
- CMD646 on Sparc
+After:
 
-Rverting helped.
+sata_sil 0000:00:01.0: Applying R_ERR on DMA activate FIS errata fix
+scsi0 : sata_sil
+scsi1 : sata_sil
+ata1: SATA max UDMA/100 mmio m512@0xfd000200 tf 0xfd000280 irq 66
+ata2: SATA max UDMA/100 mmio m512@0xfd000200 tf 0xfd0002c0 irq 66
+ata1: SATA link up 1.5 Gbps (SStatus 113 SControl 310)
+ata1.00: ATA-7: SAMSUNG HM080JI, YC100-02, max UDMA7
+ata1.00: 156368016 sectors, multi 0: LBA48 NCQ (depth 0/32)
+ata1.00: configured for UDMA/100
+ata2: SATA link down (SStatus 0 SControl 310)
+scsi 0:0:0:0: Direct-Access     ATA      SAMSUNG HM080JI  YC10 PQ: 0 ANSI: 5
+sd 0:0:0:0: [sda] 156368016 512-byte hardware sectors: (80.0 GB/74.5 GiB)
+sd 0:0:0:0: [sda] Write Protect is off
+sd 0:0:0:0: [sda] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+sd 0:0:0:0: [sda] 156368016 512-byte hardware sectors: (80.0 GB/74.5 GiB)
+sd 0:0:0:0: [sda] Write Protect is off
+sd 0:0:0:0: [sda] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+ sda:
+
+Where it hangs until it times out after 180 seconds.
+
+Built with:
+
+CONFIG_ATA=y
+CONFIG_SATA_PMP=y
+CONFIG_ATA_SFF=y
+CONFIG_SATA_SIL=y
+
+I have no idea where to start looking at this, so hopefully someone has some
+suggestions :-)
