@@ -1,56 +1,33 @@
-From: Borislav Petkov <petkovbb@googlemail.com>
-Subject: Re: http://bugzilla.kernel.org/show_bug.cgi?id=11742
-Date: Fri, 24 Oct 2008 08:50:43 +0200
-Message-ID: <20081024065043.GA4762@gollum.tnic>
-References: <20081020112039W.fujita.tomonori@lab.ntt.co.jp> <20081022061207.GB30682@gollum.tnic> <20081022155025S.fujita.tomonori@lab.ntt.co.jp> <200810222215.02762.bzolnier@gmail.com>
-Reply-To: petkovbb@gmail.com
+From: "Alexander Beregalov" <a.beregalov@gmail.com>
+Subject: 2.6.27-rc1 (2fca5c): libata: kernel cant boot
+Date: Fri, 24 Oct 2008 11:04:21 +0400
+Message-ID: <a4423d670810240004t2d7c3bdah2bea77a6a49bb7c4@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.154]:64100 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751589AbYJXGux (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 24 Oct 2008 02:50:53 -0400
-Received: by fg-out-1718.google.com with SMTP id 19so863207fgg.17
-        for <linux-ide@vger.kernel.org>; Thu, 23 Oct 2008 23:50:51 -0700 (PDT)
+Received: from an-out-0708.google.com ([209.85.132.251]:31110 "EHLO
+	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751483AbYJXHEW (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 24 Oct 2008 03:04:22 -0400
+Received: by an-out-0708.google.com with SMTP id d40so80850and.103
+        for <linux-ide@vger.kernel.org>; Fri, 24 Oct 2008 00:04:21 -0700 (PDT)
 Content-Disposition: inline
-In-Reply-To: <200810222215.02762.bzolnier@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, valerio.p@libero.it, linux-ide@vger.kernel.org
+To: jens.axboe@oracle.com, tj@kernel.org, torvalds@linux-foundation.org, LKML <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org
 
-Hi,
+Hi
 
-> Is the culprit REQ_TYPE_BLOCK_PC request or REQ_TYPE_ATA_PC one?
+commit 2fca5ccf97d2c28bcfce44f5b07d85e74e3cd18e
+Author: Jens Axboe <jens.axboe@oracle.com>
+Date:   Wed Oct 22 09:34:49 2008 +0200
 
-Well, from what I see from the latest traces Valerio sent me, it is always a
-REQ_TYPE_BLOCK_PC with sizes for rq->data_len which fail in the alignment test:
+    libata: switch to using block layer tagging support
 
-rq->data_len: 0xc,
-rq->data_len: 0xf810,
-rq->data_len: 0xf810,
-rq->data_len: 0xf810,
-rq->data_len: 0xf810,
-rq->data_len: 0xf810,
-rq->data_len: 0xf810,
-rq->data_len: 0xf810,
-rq->data_len: 0xf810,
-rq->data_len: 0xf810,
-rq->data_len: 0xf810,
-rq->data_len: 0xf810,
-rq->data_len: 0xf810,
-rq->data_len: 0xf810,
-rq->data_len: 0xf810,
-rq->data_len: 0xf810,
-rq->data_len: 0xf810,
 
-Those are, according to Valerio, taken during burning which looks like something
-aroung 64K requests which fail the rq->data_len & alignment test where alignment
-is 0x1f. The would've passed the old test rq->data_len & 0xf.
+This kernel can not read even 0 sector on disk with rootfs. It
+initialized disk, but cant read it at all.
+ CMD646 on Sparc
 
-/me researching DMA alignment requirements...
-
--- 
-Regards/Gruss,
-    Boris.
+Rverting helped.
