@@ -1,49 +1,53 @@
-From: Borislav Petkov <petkovbb@googlemail.com>
-Subject: Re: http://bugzilla.kernel.org/show_bug.cgi?id=11742
-Date: Sat, 25 Oct 2008 20:43:17 +0200
-Message-ID: <20081025184317.GA3962@gollum.tnic>
-References: <20081020112039W.fujita.tomonori@lab.ntt.co.jp> <200810222215.02762.bzolnier@gmail.com> <20081024065043.GA4762@gollum.tnic> <200810251458.46140.bzolnier@gmail.com> <49032230.3080603@ru.mvista.com> <20081025174710.GA32108@gollum.tnic> <4903638F.4060309@ru.mvista.com>
-Reply-To: petkovbb@gmail.com
+From: Jens Axboe <jens.axboe@oracle.com>
+Subject: Re: 2.6.27-rc1 (2fca5c): libata: kernel cant boot
+Date: Sat, 25 Oct 2008 20:45:08 +0200
+Message-ID: <20081025184506.GM22217@kernel.dk>
+References: <a4423d670810240004t2d7c3bdah2bea77a6a49bb7c4@mail.gmail.com> <20081024070955.GN22217@kernel.dk> <20081024071329.GO22217@kernel.dk> <20081024071608.GA3879@linux-sh.org> <20081024072428.GP22217@kernel.dk> <873aimv0v8.fsf@denkblock.local> <20081024084818.GB22217@kernel.dk> <4903004D.2050904@vc.cvut.cz>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from fk-out-0910.google.com ([209.85.128.189]:6104 "EHLO
-	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751513AbYJYSnX (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 25 Oct 2008 14:43:23 -0400
-Received: by fk-out-0910.google.com with SMTP id 18so1243808fkq.5
-        for <linux-ide@vger.kernel.org>; Sat, 25 Oct 2008 11:43:21 -0700 (PDT)
+Received: from pasmtpa.tele.dk ([80.160.77.114]:34678 "EHLO pasmtpA.tele.dk"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751273AbYJYSqZ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 25 Oct 2008 14:46:25 -0400
 Content-Disposition: inline
-In-Reply-To: <4903638F.4060309@ru.mvista.com>
+In-Reply-To: <4903004D.2050904@vc.cvut.cz>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, valerio.p@libero.it, linux-ide@vger.kernel.org
+To: Petr Vandrovec <vandrove@vc.cvut.cz>
+Cc: Elias Oltmanns <eo@nebensachen.de>, Paul Mundt <lethal@linux-sh.org>, Alexander Beregalov <a.beregalov@gmail.com>, tj@kernel.org, torvalds@linux-foundation.org, LKML <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org
 
-On Sat, Oct 25, 2008 at 10:21:03PM +0400, Sergei Shtylyov wrote:
-> Hello.
->
-> Borislav Petkov wrote:
->
->>>> For 'addr' we may try to use 4 bytes instead of the current 32 ones but lets
->>>> fix the regression first.
->>>>       
->>>   Alas, TX4939 requeires 8-byte DMA address (and byte count) 
->>> alignment.  Another semi-compatible SFF-8038 implementation...
->>>     
->>
->> ... which calls for a field in the capabilities and mechanical status page
->> saying something like: hello, I'm a xy device and I can do z bytes dma
->> alignment, otherwise I get cranky and don't work anymore :)
->>   
->
->   I didn't get it -- TX4939 is IDE host controller and I can't imagine  
-> how an ATAPI device could care about the buffer address alignment on the  
-> host side...
+On Sat, Oct 25 2008, Petr Vandrovec wrote:
+> Jens Axboe wrote:
+> >On Fri, Oct 24 2008, Elias Oltmanns wrote:
+> >>Jens Axboe <jens.axboe@oracle.com> wrote:
+> >>>From e598055dde1951c47c8b3522616f6ebff0ed9847 Mon Sep 17 00:00:00 2001
+> >>>From: Jens Axboe <jens.axboe@oracle.com>
+> >>>Date: Fri, 24 Oct 2008 09:22:42 +0200
+> >>>Subject: [PATCH] libata: fix bug with non-ncq devices
+> >>>
+> >>>The recent commit 201f1b98822078c808b5e2d379a6ddbfc0a06ee1 to enable
+> >>Wouldn't that be commit 2fca5ccf97d2c28bcfce44f5b07d85e74e3cd18e?
+> >
+> >Yes that is correct, the other commit is actually a private one in my
+> >tree for other libata changes. Updated patch below, thanks for checking!
+> >
+> >From e598055dde1951c47c8b3522616f6ebff0ed9847 Mon Sep 17 00:00:00 2001
+> >From: Jens Axboe <jens.axboe@oracle.com>
+> >Date: Fri, 24 Oct 2008 09:22:42 +0200
+> >Subject: [PATCH] libata: fix bug with non-ncq devices
+> 
+> Hello,
+>   this fixes my DVD, but unfortunately NCQ devices connected to PMP are 
+> still dead - apparently as soon as mount() tries to do serious I/O on 
+> the drive.  Backing out both post-2.6.28-rc1 fix as well as your 
+> original change brings storage back.  I suspect that problem is that 
+> with PMP same tag cannot be (should not be?  must not be?) used on 
+> multiple devices behind PMP - and before your change tags were allocated 
+> per-port, while now they are allocated per-device.
 
-Sorry about that - I was talking only about the ATAPI device. Totally unrelated,
-my bad.
+That would indeed break, this requires allocating the tag map in the
 
 -- 
-Regards/Gruss,
-    Boris.
+Jens Axboe
+
