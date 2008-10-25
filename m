@@ -1,33 +1,44 @@
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Subject: Re: linux-next: Tree for October 24 - powerpc - build failure with
-	!CONFIG_BLK_DEV_IDEDMA_PMAC
-Date: Sat, 25 Oct 2008 10:10:18 +1100
-Message-ID: <1224889818.7654.466.camel@pasglop>
-References: <20081024171932.1e8131d0.sfr@canb.auug.org.au>
-	 <20081024113856.GA4252@linux.vnet.ibm.com> <4901BC5E.7040607@ru.mvista.com>
-	 <1224886062.7654.464.camel@pasglop>  <49024EA3.1080404@ru.mvista.com>
-Reply-To: benh@kernel.crashing.org
+From: Tejun Heo <tj@kernel.org>
+Subject: [PATCH #upstream-fixes] sata_sil24: configure max read request size
+ to 4k
+Date: Sat, 25 Oct 2008 14:26:54 +0900
+Message-ID: <4902AE1E.5020504@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1758596AbYJXXPm@vger.kernel.org>
-In-Reply-To: <49024EA3.1080404@ru.mvista.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Cc: Kamalesh Babulal <kamalesh@linux.vnet.ibm.com>, Stephen Rothwell <sfr@canb.auug.org.au>, linux-next@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, bzolnier@gmail.com
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from hera.kernel.org ([140.211.167.34]:57673 "EHLO hera.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750846AbYJYF1I (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 25 Oct 2008 01:27:08 -0400
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Pierre Ossman <drzeus-list@drzeus.cx>, Jeff Garzik <jeff@garzik.org>, IDE/ATA development list <linux-ide@vger.kernel.org>
 
-On Sat, 2008-10-25 at 02:39 +0400, Sergei Shtylyov wrote:
-> >>    Hm, looks like this configuration was never buildable --
-> #ifdef's are 
-> >> missing and wrongly placed. CCing Ben Herrenschmidt...
-> >>     
-> >
-> > What configuration ?
-> >   
-> 
->    See the subject.
+Due to request posting limitations, bandwidth of sil3132 is limited to
+around 120MB/s with the minimum pci-e payload size (128bytes) which is
+used by most consumer systems.  However, write throughput can be
+slightly (~3%) increased by increasing the max read requeset size.
+Configure it to 4k which is the maximum supported.  This optimization
+is also done by SIMG's windows driver.
 
-Ah ok. We should probably just remove the option...
-
-Ben.
+Signed-off-by: Tejun Heo <tj@kernel.org>
+---
+ drivers/ata/sata_sil24.c |    5 +++++
+ 1 file changed, 5 insertions(+)
+diff --git a/drivers/ata/sata_sil24.c b/drivers/ata/sata_sil24.c
+index 4621807..ccee930 100644
+--- a/drivers/ata/sata_sil24.c
++++ b/drivers/ata/sata_sil24.c
+@@ -1329,6 +1329,11 @@ static int sil24_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 		}
+ 	}
+ 
++	/* Set max read request size to 4096.  This slightly increases
++	 * write throughput for pci-e variants.
++	 */
++	pcie_set_readrq(pdev, 4096);
++
+ 	sil24_init_controller(host);
+ 
+ 	pci_set_master(pdev);
