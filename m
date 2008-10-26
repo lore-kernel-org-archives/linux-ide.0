@@ -1,72 +1,41 @@
-From: Jens Axboe <jens.axboe@oracle.com>
-Subject: Re: 2.6.27-rc1 (2fca5c): libata: kernel cant boot
-Date: Sun, 26 Oct 2008 18:34:22 +0100
-Message-ID: <20081026173421.GN22217@kernel.dk>
-References: <a4423d670810240004t2d7c3bdah2bea77a6a49bb7c4@mail.gmail.com> <20081024070955.GN22217@kernel.dk> <20081024071329.GO22217@kernel.dk> <20081024071608.GA3879@linux-sh.org> <20081024072428.GP22217@kernel.dk> <873aimv0v8.fsf@denkblock.local> <20081024084818.GB22217@kernel.dk> <4903004D.2050904@vc.cvut.cz> <20081025184506.GM22217@kernel.dk>
+From: Valerio Passini <valerio.passini@unicam.it>
+Subject: Re: http://bugzilla.kernel.org/show_bug.cgi?id=11742
+Date: Sun, 26 Oct 2008 21:01:42 +0100
+Message-ID: <200810262101.42874.valerio.passini@unicam.it>
+References: <20081020112039W.fujita.tomonori@lab.ntt.co.jp> <200810260938.55709.valerio.passini@unicam.it> <20081026145819.GA1320@gollum.tnic>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from pasmtpb.tele.dk ([80.160.77.98]:44052 "EHLO pasmtpB.tele.dk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755451AbYJZRf1 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 26 Oct 2008 13:35:27 -0400
+Received: from smtp.unicam.it ([193.204.8.1]:45296 "HELO unicam.it"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1751478AbYJZUBp (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 26 Oct 2008 16:01:45 -0400
+In-Reply-To: <20081026145819.GA1320@gollum.tnic>
 Content-Disposition: inline
-In-Reply-To: <20081025184506.GM22217@kernel.dk>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Petr Vandrovec <vandrove@vc.cvut.cz>
-Cc: Elias Oltmanns <eo@nebensachen.de>, Paul Mundt <lethal@linux-sh.org>, Alexander Beregalov <a.beregalov@gmail.com>, tj@kernel.org, torvalds@linux-foundation.org, LKML <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org
+To: petkovbb@gmail.com
+Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, valerio.p@libero.it, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, linux-ide@vger.kernel.org
 
-On Sat, Oct 25 2008, Jens Axboe wrote:
-> On Sat, Oct 25 2008, Petr Vandrovec wrote:
-> > Jens Axboe wrote:
-> > >On Fri, Oct 24 2008, Elias Oltmanns wrote:
-> > >>Jens Axboe <jens.axboe@oracle.com> wrote:
-> > >>>From e598055dde1951c47c8b3522616f6ebff0ed9847 Mon Sep 17 00:00:00 2001
-> > >>>From: Jens Axboe <jens.axboe@oracle.com>
-> > >>>Date: Fri, 24 Oct 2008 09:22:42 +0200
-> > >>>Subject: [PATCH] libata: fix bug with non-ncq devices
-> > >>>
-> > >>>The recent commit 201f1b98822078c808b5e2d379a6ddbfc0a06ee1 to enable
-> > >>Wouldn't that be commit 2fca5ccf97d2c28bcfce44f5b07d85e74e3cd18e?
-> > >
-> > >Yes that is correct, the other commit is actually a private one in my
-> > >tree for other libata changes. Updated patch below, thanks for checking!
-> > >
-> > >From e598055dde1951c47c8b3522616f6ebff0ed9847 Mon Sep 17 00:00:00 2001
-> > >From: Jens Axboe <jens.axboe@oracle.com>
-> > >Date: Fri, 24 Oct 2008 09:22:42 +0200
-> > >Subject: [PATCH] libata: fix bug with non-ncq devices
+Alle domenica 26 ottobre 2008, Borislav Petkov ha scritto:
+> On Sun, Oct 26, 2008 at 09:38:55AM +0100, Valerio Passini wrote:
 > > 
-> > Hello,
-> >   this fixes my DVD, but unfortunately NCQ devices connected to PMP are 
-> > still dead - apparently as soon as mount() tries to do serious I/O on 
-> > the drive.  Backing out both post-2.6.28-rc1 fix as well as your 
-> > original change brings storage back.  I suspect that problem is that 
-> > with PMP same tag cannot be (should not be?  must not be?) used on 
-> > multiple devices behind PMP - and before your change tags were allocated 
-> > per-port, while now they are allocated per-device.
+> > > Valerio, care to try the patch against 2.6.27 below? Additionally, I've
+> > > attached it to this mail in case you're having trouble with kmail.
+> > 
+> > Patched kernel has been compiled this night but not yet tested because I have a family problem and to travel a lot. I'll take care of testing it in this late evening (hopefully). See you
 > 
-> That would indeed break, this requires allocating the tag map in the
+> Hi Valerio,
+> 
+> no need to hurry at all, the testing can wait.
+> 
 
-Totally untested, does this work?
+Hi all,
 
-diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-index 4b95c43..0785c46 100644
---- a/drivers/ata/libata-scsi.c
-+++ b/drivers/ata/libata-scsi.c
-@@ -1107,6 +1107,10 @@ static int ata_scsi_dev_config(struct scsi_device *sdev,
- 
- 		depth = min(sdev->host->can_queue, ata_id_queue_depth(dev->id));
- 		depth = min(ATA_MAX_QUEUE - 1, depth);
-+
-+		if (dev->link->ap->pmp_link)
-+			scsi_init_shared_tag_map(sdev->host, ATA_MAX_QUEUE - 1);
-+
- 		scsi_set_tag_type(sdev, MSG_SIMPLE_TAG);
- 		scsi_activate_tcq(sdev, depth);
- 	}
+Here I am, thus the patched kernel has been installed and tested.
+Burning CD's and simulation work perfectly and everything seems fine.
+:)
 
--- 
-Jens Axboe
-
+Valerio
