@@ -1,41 +1,40 @@
-From: Valerio Passini <valerio.passini@unicam.it>
-Subject: Re: http://bugzilla.kernel.org/show_bug.cgi?id=11742
-Date: Sun, 26 Oct 2008 21:01:42 +0100
-Message-ID: <200810262101.42874.valerio.passini@unicam.it>
-References: <20081020112039W.fujita.tomonori@lab.ntt.co.jp> <200810260938.55709.valerio.passini@unicam.it> <20081026145819.GA1320@gollum.tnic>
+From: Chuck Ebbert <cebbert@redhat.com>
+Subject: [patch, resend] libata: Fix LBA48 on pata_it821x RAID volumes.
+Date: Sun, 26 Oct 2008 18:10:19 -0400
+Message-ID: <20081026181019.073dd529@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp.unicam.it ([193.204.8.1]:45296 "HELO unicam.it"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1751478AbYJZUBp (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 26 Oct 2008 16:01:45 -0400
-In-Reply-To: <20081026145819.GA1320@gollum.tnic>
-Content-Disposition: inline
+Received: from mx2.redhat.com ([66.187.237.31]:47891 "EHLO mx2.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752504AbYJZWKr (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 26 Oct 2008 18:10:47 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: petkovbb@gmail.com
-Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, valerio.p@libero.it, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, linux-ide@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: linux-ide@vger.kernel.org, Ondrej Zary <linux@rainbow-software.org>, Alan Cox <alan@redhat.com>
 
-Alle domenica 26 ottobre 2008, Borislav Petkov ha scritto:
-> On Sun, Oct 26, 2008 at 09:38:55AM +0100, Valerio Passini wrote:
-> > 
-> > > Valerio, care to try the patch against 2.6.27 below? Additionally, I've
-> > > attached it to this mail in case you're having trouble with kmail.
-> > 
-> > Patched kernel has been compiled this night but not yet tested because I have a family problem and to travel a lot. I'll take care of testing it in this late evening (hopefully). See you
-> 
-> Hi Valerio,
-> 
-> no need to hurry at all, the testing can wait.
-> 
+From: Ondrej Zary <linux@rainbow-software.org>
 
-Hi all,
+libata: Fix LBA48 on pata_it821x RAID volumes.
 
-Here I am, thus the patched kernel has been installed and tested.
-Burning CD's and simulation work perfectly and everything seems fine.
-:)
+[http://lkml.org/lkml/2008/10/18/82]
 
-Valerio
+Signed-off-by: Ondrej Zary <linux@rainbow-software.org>
+Acked-by: Alan Cox <alan@redhat.com>
+
+--- linux-2.6.27-orig/drivers/ata/pata_it821x.c	2008-10-18 17:09:07.000000000 +0200
++++ linux-2.6.27-pentium/drivers/ata/pata_it821x.c	2008-10-18 17:10:24.000000000 +0200
+@@ -557,9 +557,8 @@
+ 	if (strstr(model_num, "Integrated Technology Express")) {
+ 		/* Set feature bits the firmware neglects */
+ 		id[49] |= 0x0300;	/* LBA, DMA */
+-		id[82] |= 0x0400;	/* LBA48 */
+ 		id[83] &= 0x7FFF;
+-		id[83] |= 0x4000;	/* Word 83 is valid */
++		id[83] |= 0x4400;	/* Word 83 is valid and LBA48 */
+ 		id[86] |= 0x0400;	/* LBA48 on */
+ 		id[ATA_ID_MAJOR_VER] |= 0x1F;
+ 	}
+
