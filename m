@@ -1,36 +1,48 @@
-From: Borislav Petkov <petkovbb@googlemail.com>
-Subject: Re: http://bugzilla.kernel.org/show_bug.cgi?id=11742
-Date: Sun, 26 Oct 2008 15:58:19 +0100
-Message-ID: <20081026145819.GA1320@gollum.tnic>
-References: <20081020112039W.fujita.tomonori@lab.ntt.co.jp> <200810251458.46140.bzolnier@gmail.com> <20081025181246.GB32108@gollum.tnic> <200810260938.55709.valerio.passini@unicam.it>
-Reply-To: petkovbb@gmail.com
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: Timeout regression introduced by
+	242f9dcb8ba6f68fcd217a119a7648a4f69290e9
+Date: Sun, 26 Oct 2008 10:15:05 -0500
+Message-ID: <1225034105.3958.4.camel@localhost.localdomain>
+References: <49043C7C.8050207@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from yx-out-2324.google.com ([74.125.44.28]:18965 "EHLO
-	yx-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752826AbYJZO60 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 26 Oct 2008 10:58:26 -0400
-Received: by yx-out-2324.google.com with SMTP id 8so459686yxm.1
-        for <linux-ide@vger.kernel.org>; Sun, 26 Oct 2008 07:58:24 -0700 (PDT)
-Content-Disposition: inline
-In-Reply-To: <200810260938.55709.valerio.passini@unicam.it>
+Received: from accolon.hansenpartnership.com ([76.243.235.52]:42835 "EHLO
+	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754558AbYJZPPJ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 26 Oct 2008 11:15:09 -0400
+In-Reply-To: <49043C7C.8050207@kernel.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Valerio Passini <valerio.passini@unicam.it>
-Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, valerio.p@libero.it, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, linux-ide@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: Jens Axboe <jens.axboe@oracle.com>, linux-scsi <linux-scsi@vger.kernel.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>
 
-On Sun, Oct 26, 2008 at 09:38:55AM +0100, Valerio Passini wrote:
+On Sun, 2008-10-26 at 18:46 +0900, Tejun Heo wrote:
+> Hello, Jens.
 > 
-> > Valerio, care to try the patch against 2.6.27 below? Additionally, I've
-> > attached it to this mail in case you're having trouble with kmail.
+> Commit 242f9dcb8ba6f68fcd217a119a7648a4f69290e9 introduces a strange
+> regression for libata.  The second timeout gives puts different
+> pointer from the issued command onto eh_cmd_q breaking libata EH
+> command matching which triggers WARN_ON() in ata_eh_finish() and hangs
+> command processing or causes oops later depending on circumstances.
 > 
-> Patched kernel has been compiled this night but not yet tested because I have a family problem and to travel a lot. I'll take care of testing it in this late evening (hopefully). See you
+> Here are logs with induced timeouts (patch attached).  In commit
+> 242f9dcb8, the XXX messages for the second timeout shows different
+> scsi_cmd pointers for eh_cmd_q and qc->scmd which is initialized by
+> ata_scsi_qc_new() during command translation.
 
-Hi Valerio,
+I can't see a way we could be getting a different command passed in from
+the actual one, since the only way to lose the command from the request
+is to go through the command completion routines which free it (and end
+the request).
 
-no need to hurry at all, the testing can wait.
+However, since the WARN_ON is specifically comparing the command with
+the one found by the active tag, could this actually be a problem caused
+by block tags?  I note that libata still uses its own array of
+outstanding tags (ap->qcmd[tag]) instead of finding them using
+blk_queue_find_tag() (or scsi_find_tag()).
 
--- 
-Regards/Gruss,
-    Boris.
+James
+
+
