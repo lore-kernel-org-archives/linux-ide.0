@@ -1,38 +1,78 @@
-From: Randy Dunlap <randy.dunlap@oracle.com>
-Subject: [PATCH] libata: add missing kernel-doc
-Date: Sun, 26 Oct 2008 20:19:32 -0700
-Message-ID: <20081026201932.d012e8dc.randy.dunlap@oracle.com>
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Subject: Re: http://bugzilla.kernel.org/show_bug.cgi?id=11742
+Date: Mon, 27 Oct 2008 14:46:20 +0900
+Message-ID: <20081027144610A.fujita.tomonori@lab.ntt.co.jp>
+References: <200810222215.02762.bzolnier@gmail.com>
+	<20081024065043.GA4762@gollum.tnic>
+	<200810251458.46140.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from agminet01.oracle.com ([141.146.126.228]:15928 "EHLO
-	agminet01.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750846AbYJ0DT7 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 26 Oct 2008 23:19:59 -0400
+Received: from sh.osrg.net ([192.16.179.4]:59412 "EHLO sh.osrg.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750967AbYJ0Fqb (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 27 Oct 2008 01:46:31 -0400
+In-Reply-To: <200810251458.46140.bzolnier@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: ide <linux-ide@vger.kernel.org>
-Cc: jgarzik <jgarzik@pobox.com>, akpm <akpm@linux-foundation.org>
+To: bzolnier@gmail.com
+Cc: petkovbb@gmail.com, fujita.tomonori@lab.ntt.co.jp, valerio.p@libero.it, linux-ide@vger.kernel.org
 
-From: Randy Dunlap <randy.dunlap@oracle.com>
+On Sat, 25 Oct 2008 14:58:45 +0200
+Bartlomiej Zolnierkiewicz <bzolnier@gmail.com> wrote:
 
-Fix libata missing kernel-doc:
+> On Friday 24 October 2008, Borislav Petkov wrote:
+> > Hi,
+> > 
+> > > Is the culprit REQ_TYPE_BLOCK_PC request or REQ_TYPE_ATA_PC one?
+> > 
+> > Well, from what I see from the latest traces Valerio sent me, it is always a
+> > REQ_TYPE_BLOCK_PC with sizes for rq->data_len which fail in the alignment test:
+> > 
+> > rq->data_len: 0xc,
+> > rq->data_len: 0xf810,
+> 
+> [...]
+> 
+> > Those are, according to Valerio, taken during burning which looks like something
+> > aroung 64K requests which fail the rq->data_len & alignment test where alignment
+> > is 0x1f. The would've passed the old test rq->data_len & 0xf.
+> 
+> OK, I see it now after your mail & looking at the original commit:
+> 
+> @@ -1205,7 +1210,8 @@ static ide_startstop_t cdrom_do_block_pc(ide_drive_t *drive, struct request *rq)
+>  		 * NOTE! The "len" and "addr" checks should possibly have
+>  		 * separate masks.
+>  		 */
+> -		if ((rq->data_len & 15) || (addr & mask))
+> +		alignment = queue_dma_alignment(q) | q->dma_pad_mask;
+> +		if (addr & alignment || rq->data_len & alignment)
+>  			info->dma = 0;
+>  
+>  		if (!((addr & stack_mask) ^
+> 
+> Please note the comment about separate masks...  This chunk of commit
+> needs to be reverted as it clearly wasn't an intended change.
+> 
+> > /me researching DMA alignment requirements...
+> 
+> It is a combination of host and device requirements.
+> 
+> For 'rq->data_len' it should be 16 bytes because some devices fail otherwise.
+> 
+> For 'addr' we may try to use 4 bytes instead of the current 32 ones but lets
+> fix the regression first.
 
-Warning(lin2628-rc2//drivers/ata/libata-core.c:4562): No description found for parameter 'tag'
+The most mysterious part for me (as I wrote before), ide-cd sets
+dma_alignment to 31 and dma_pad_mask to 15. So the current code
+enables DMA if data_len is a multiple of 32. The old code enables DMA
+if data_len is a multiple of 16. So the current code tightens DMA
+requirement; the current code disables DMA for requests which the old
+code enabled DMA for. I thought that disabling DMA is a safe option
+(that is, we can always disable DMA for any commands).
 
-Signed-off-by: Randy Dunlap <randy.dunlap@oracle.com>
----
- drivers/ata/libata-core.c |    1 +
- 1 file changed, 1 insertion(+)
+If Borislav's patch fixes the problem, the above assumption is
+wrong...
 
---- lin2628-rc2.orig/drivers/ata/libata-core.c
-+++ lin2628-rc2/drivers/ata/libata-core.c
-@@ -4553,6 +4553,7 @@ void swap_buf_le16(u16 *buf, unsigned in
- /**
-  *	ata_qc_new_init - Request an available ATA command, and initialize it
-  *	@dev: Device from whom we request an available command structure
-+ *	@tag: command tag
-  *
-  *	LOCKING:
-  *	None.
+Very sorry about the breakage and thanks a lot for tracking it down!
