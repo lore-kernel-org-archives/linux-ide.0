@@ -1,63 +1,91 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: Problem w/ hotplug on sata_sil24 w/ PMP (sil3726)
-Date: Mon, 27 Oct 2008 16:38:18 +0900
-Message-ID: <49056FEA.4070405@kernel.org>
-References: <20081011142735.GB5904@cleopatra.jogback.se> <48F4337A.50307@kernel.org> <20081014201917.GA5974@cleopatra.jogback.se> <48F595DB.4030301@kernel.org> <20081018165209.GA7754@cleopatra.jogback.se> <20081023181443.GA7323@cleopatra.jogback.se> <49056F2C.20101@kernel.org>
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Subject: Re: http://bugzilla.kernel.org/show_bug.cgi?id=11742
+Date: Mon, 27 Oct 2008 17:37:47 +0900
+Message-ID: <20081027152147B.fujita.tomonori@lab.ntt.co.jp>
+References: <20081024065043.GA4762@gollum.tnic>
+	<200810251458.46140.bzolnier@gmail.com>
+	<20081027144610A.fujita.tomonori@lab.ntt.co.jp>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------020904060203070905070800"
+Content-Type: Text/Plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:57944 "EHLO hera.kernel.org"
+Received: from sh.osrg.net ([192.16.179.4]:53596 "EHLO sh.osrg.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751921AbYJ0HiZ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 27 Oct 2008 03:38:25 -0400
-In-Reply-To: <49056F2C.20101@kernel.org>
+	id S1750786AbYJ0Ihz (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 27 Oct 2008 04:37:55 -0400
+In-Reply-To: <20081027144610A.fujita.tomonori@lab.ntt.co.jp>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Lars Michael Jogback <lm@jogback.se>
-Cc: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
+Cc: bzolnier@gmail.com, petkovbb@gmail.com, valerio.p@libero.it
 
-This is a multi-part message in MIME format.
---------------020904060203070905070800
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+On Mon, 27 Oct 2008 14:46:20 +0900
+FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp> wrote:
 
-Oh.. one more thing.  Can you please try the attached patch and post the
-failing log?
+> On Sat, 25 Oct 2008 14:58:45 +0200
+> Bartlomiej Zolnierkiewicz <bzolnier@gmail.com> wrote:
+> 
+> > On Friday 24 October 2008, Borislav Petkov wrote:
+> > > Hi,
+> > > 
+> > > > Is the culprit REQ_TYPE_BLOCK_PC request or REQ_TYPE_ATA_PC one?
+> > > 
+> > > Well, from what I see from the latest traces Valerio sent me, it is always a
+> > > REQ_TYPE_BLOCK_PC with sizes for rq->data_len which fail in the alignment test:
+> > > 
+> > > rq->data_len: 0xc,
+> > > rq->data_len: 0xf810,
+> > 
+> > [...]
+> > 
+> > > Those are, according to Valerio, taken during burning which looks like something
+> > > aroung 64K requests which fail the rq->data_len & alignment test where alignment
+> > > is 0x1f. The would've passed the old test rq->data_len & 0xf.
+> > 
+> > OK, I see it now after your mail & looking at the original commit:
+> > 
+> > @@ -1205,7 +1210,8 @@ static ide_startstop_t cdrom_do_block_pc(ide_drive_t *drive, struct request *rq)
+> >  		 * NOTE! The "len" and "addr" checks should possibly have
+> >  		 * separate masks.
+> >  		 */
+> > -		if ((rq->data_len & 15) || (addr & mask))
+> > +		alignment = queue_dma_alignment(q) | q->dma_pad_mask;
+> > +		if (addr & alignment || rq->data_len & alignment)
+> >  			info->dma = 0;
+> >  
+> >  		if (!((addr & stack_mask) ^
+> > 
+> > Please note the comment about separate masks...  This chunk of commit
+> > needs to be reverted as it clearly wasn't an intended change.
+> > 
+> > > /me researching DMA alignment requirements...
+> > 
+> > It is a combination of host and device requirements.
+> > 
+> > For 'rq->data_len' it should be 16 bytes because some devices fail otherwise.
+> > 
+> > For 'addr' we may try to use 4 bytes instead of the current 32 ones but lets
+> > fix the regression first.
+> 
+> The most mysterious part for me (as I wrote before), ide-cd sets
+> dma_alignment to 31 and dma_pad_mask to 15. So the current code
+> enables DMA if data_len is a multiple of 32. The old code enables DMA
+> if data_len is a multiple of 16.
 
-Thanks.
+Of course, 'multiple of' description is wrong. Should have been
+32-byte and 16-byte alignment respectively.
 
--- 
-tejun
 
---------------020904060203070905070800
-Content-Type: text/plain;
- name="patch"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="patch"
-
-diff --git a/drivers/ata/sata_sil24.c b/drivers/ata/sata_sil24.c
-index 4621807..f8b9898 100644
---- a/drivers/ata/sata_sil24.c
-+++ b/drivers/ata/sata_sil24.c
-@@ -978,6 +978,8 @@ static void sil24_error_intr(struct ata_port *ap)
- 	ehi = &link->eh_info;
- 	ata_ehi_clear_desc(ehi);
- 
-+	ata_port_printk(ap, KERN_INFO,
-+			"XXX error_intr irq_stat=0x%x\n", irq_stat);
- 	ata_ehi_push_desc(ehi, "irq_stat 0x%08x", irq_stat);
- 
- 	if (irq_stat & PORT_IRQ_SDB_NOTIFY) {
-@@ -1045,6 +1047,8 @@ static void sil24_error_intr(struct ata_port *ap)
- 
- 		/* analyze CMD_ERR */
- 		cerr = readl(port + PORT_CMD_ERR);
-+		ata_port_printk(ap, KERN_INFO,
-+				"XXX error_intr cerr=%u\n", cerr);
- 		if (cerr < ARRAY_SIZE(sil24_cerr_db))
- 			ci = &sil24_cerr_db[cerr];
- 
-
---------------020904060203070905070800--
+> So the current code tightens DMA
+> requirement; the current code disables DMA for requests which the old
+> code enabled DMA for. I thought that disabling DMA is a safe option
+> (that is, we can always disable DMA for any commands).
+> 
+> If Borislav's patch fixes the problem, the above assumption is
+> wrong...
+> 
+> Very sorry about the breakage and thanks a lot for tracking it down!
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-ide" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
