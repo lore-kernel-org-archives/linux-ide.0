@@ -1,33 +1,54 @@
-From: Phil Sutter <n0-1@freewrt.org>
-Subject: Re: [PATCH] irq handler must disable the handled irq
-Date: Mon, 27 Oct 2008 21:51:24 +0100
-Message-ID: <20081027205124.GB27227@nuty>
-References: <1225116107-9753-1-git-send-email-n0-1@freewrt.org> <20081027141509.2d0be2c7@lxorguk.ukuu.org.uk> <20081027154106.GA27227@nuty> <200810272038.45346.bzolnier@gmail.com>
+From: Mike Anderson <andmike@linux.vnet.ibm.com>
+Subject: Re: Timeout regression introduced by
+	242f9dcb8ba6f68fcd217a119a7648a4f69290e9
+Date: Mon, 27 Oct 2008 14:30:06 -0700
+Message-ID: <20081027213006.GB17946@linux.vnet.ibm.com>
+References: <49043C7C.8050207@kernel.org> <1225034105.3958.4.camel@localhost.localdomain> <49051EA4.3040403@kernel.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from orbit.nwl.cc ([81.169.176.177]:55012 "EHLO
-	mail.ifyouseekate.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751193AbYJ0Uug (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 27 Oct 2008 16:50:36 -0400
-Received: from nuty (localhost [127.0.0.1])
-	by mail.ifyouseekate.net (Postfix) with ESMTP id F361C38C2BF5
-	for <linux-ide@vger.kernel.org>; Mon, 27 Oct 2008 21:50:29 +0100 (CET)
+Received: from e36.co.us.ibm.com ([32.97.110.154]:40826 "EHLO
+	e36.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752334AbYJ0VaM (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 27 Oct 2008 17:30:12 -0400
 Content-Disposition: inline
-In-Reply-To: <200810272038.45346.bzolnier@gmail.com>
+In-Reply-To: <49051EA4.3040403@kernel.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Jens Axboe <jens.axboe@oracle.com>, linux-scsi <linux-scsi@vger.kernel.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>
 
-On Mon, Oct 27, 2008 at 08:38:45PM +0100, Bartlomiej Zolnierkiewicz wrote:
-> Any reason why it has not been submitted?
+Tejun Heo <tj@kernel.org> wrote:
+> James Bottomley wrote:
+> > On Sun, 2008-10-26 at 18:46 +0900, Tejun Heo wrote:
+> >> Hello, Jens.
+> >>
+> >> Commit 242f9dcb8ba6f68fcd217a119a7648a4f69290e9 introduces a strange
+> >> regression for libata.  The second timeout gives puts different
+> >> pointer from the issued command onto eh_cmd_q breaking libata EH
+> >> command matching which triggers WARN_ON() in ata_eh_finish() and hangs
+> >> command processing or causes oops later depending on circumstances.
+> >>
+> >> Here are logs with induced timeouts (patch attached).  In commit
+> >> 242f9dcb8, the XXX messages for the second timeout shows different
+> >> scsi_cmd pointers for eh_cmd_q and qc->scmd which is initialized by
+> >> ata_scsi_qc_new() during command translation.
+> > 
+> > I can't see a way we could be getting a different command passed in from
+> > the actual one, since the only way to lose the command from the request
+> > is to go through the command completion routines which free it (and end
+> > the request).
+> 
+> I have no idea either.  It's something in the timeout logic because on
+> the issue path the scmd pointer is identical but on tiemout pointer
+> for another scmd is queued on eh_cmd_q, which doesn't make much sense.
+> 
 
-Not really. Two years ago I was working at the 2.6 port of the board in
-a lab semester. Shortly after having contacted the linux-mips maintainer
-(who also told me to send the mentioned driver to this list) the
-semester was over and everyday life at the university hit me again.
+I was trying to recreate this error using ata_ram wth v2.6.28-rc2.
+Currently I am not able to see this error on timeout recovery using this
+setup. Does IO load (or other factors) effect the error being seen?
 
-If there is demand for it, I could try to port it to git and the
-already existing board support.
-
-Greetings, Phil
+-andmike
+--
+Michael Anderson
+andmike@linux.vnet.ibm.com
