@@ -1,44 +1,36 @@
 From: Mark Lord <liml@rtr.ca>
-Subject: Re: [PATCH 2/4] libata: Drain data on errors
-Date: Mon, 27 Oct 2008 15:14:51 -0400
-Message-ID: <4906132B.1000502@rtr.ca>
-References: <20081017180655.7781.15021.stgit@localhost.localdomain> <20081017180837.7781.26372.stgit@localhost.localdomain>
+Subject: Re: [PATCHSET #upstream] libata: separate out SFF and BMDMA
+Date: Mon, 27 Oct 2008 15:43:27 -0400
+Message-ID: <490619DF.6020804@rtr.ca>
+References: <1224580680-13698-1-git-send-email-tj@kernel.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([76.10.145.34]:37378 "EHLO mail.rtr.ca"
+Received: from rtr.ca ([76.10.145.34]:48709 "EHLO mail.rtr.ca"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753686AbYJ0TOV (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 27 Oct 2008 15:14:21 -0400
-In-Reply-To: <20081017180837.7781.26372.stgit@localhost.localdomain>
+	id S1752139AbYJ0Tmz (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 27 Oct 2008 15:42:55 -0400
+In-Reply-To: <1224580680-13698-1-git-send-email-tj@kernel.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: jeff@garzik.org, linux-ide@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: jeff@garzik.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 
-Alan Cox wrote:
-> From: Alan Cox <alan@redhat.com>
-> 
-> If the device is signalling that there is data to drain after an error we
-> should read the bytes out and throw them away. Without this some devices
-> and controllers get wedged and don't recover.
-> 
-> Based on earlier work by Mark Lord
-> 
-> Signed-off-by: Alan Cox <alan@redhat.com>
+Tejun Heo wrote:
 ..
-> +	/* Drain up to 64K of data before we give up this recovery method */
-> +	for (count = 0; (ap->ops->sff_check_status(ap) & ATA_DRQ)
-> +							&& count < 65536;)
-> +		ioread8(ap->ioaddr.data_addr);
+> This patchset further separates SFF/BMDMA support from the rest of the
+> libata and separate out BMDMA from SFF.  This patchset contains the
+> following 22 patches.
 ..
 
-I'm just catching up on a few things here now that holiday season is over.
-In the above loop, I wonder if it might be better to only check status
-every NN iterations, where NN > 1 (say, 16), to speed things up a fair amount (?).
+Heh.. I wonder how this will fit with an upcoming task on my list:
+adding ATAPI support to sata_mv..
 
-Sure it's rare, but when it happens the entire system is probably stopped
-waiting for us to recover, so speed might matter some.
+Currently sata_mv is a more-or-less purely FIS-based driver,
+with little need for SFF and no need for BMDMA.
+
+But ATAPI on those chips uses BMDMA, as does target-mode (also on the list).
+It'll be interesting.
 
 Cheers
