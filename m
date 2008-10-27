@@ -1,78 +1,73 @@
-From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+From: Borislav Petkov <petkovbb@googlemail.com>
 Subject: Re: http://bugzilla.kernel.org/show_bug.cgi?id=11742
-Date: Mon, 27 Oct 2008 14:46:20 +0900
-Message-ID: <20081027144610A.fujita.tomonori@lab.ntt.co.jp>
-References: <200810222215.02762.bzolnier@gmail.com>
-	<20081024065043.GA4762@gollum.tnic>
-	<200810251458.46140.bzolnier@gmail.com>
+Date: Mon, 27 Oct 2008 07:15:57 +0100
+Message-ID: <20081027061556.GA17928@gollum.tnic>
+References: <20081020112039W.fujita.tomonori@lab.ntt.co.jp> <200810260938.55709.valerio.passini@unicam.it> <20081026145819.GA1320@gollum.tnic> <200810262101.42874.valerio.passini@unicam.it>
+Reply-To: petkovbb@gmail.com
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from sh.osrg.net ([192.16.179.4]:59412 "EHLO sh.osrg.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750967AbYJ0Fqb (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 27 Oct 2008 01:46:31 -0400
-In-Reply-To: <200810251458.46140.bzolnier@gmail.com>
+Received: from fg-out-1718.google.com ([72.14.220.152]:41335 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751372AbYJ0GQQ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 27 Oct 2008 02:16:16 -0400
+Received: by fg-out-1718.google.com with SMTP id 19so1824915fgg.17
+        for <linux-ide@vger.kernel.org>; Sun, 26 Oct 2008 23:16:00 -0700 (PDT)
+Content-Disposition: inline
+In-Reply-To: <200810262101.42874.valerio.passini@unicam.it>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: bzolnier@gmail.com
-Cc: petkovbb@gmail.com, fujita.tomonori@lab.ntt.co.jp, valerio.p@libero.it, linux-ide@vger.kernel.org
+To: Valerio Passini <valerio.passini@unicam.it>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: valerio.p@libero.it, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, linux-ide@vger.kernel.org
 
-On Sat, 25 Oct 2008 14:58:45 +0200
-Bartlomiej Zolnierkiewicz <bzolnier@gmail.com> wrote:
+On Sun, Oct 26, 2008 at 09:01:42PM +0100, Valerio Passini wrote:
 
-> On Friday 24 October 2008, Borislav Petkov wrote:
-> > Hi,
-> > 
-> > > Is the culprit REQ_TYPE_BLOCK_PC request or REQ_TYPE_ATA_PC one?
-> > 
-> > Well, from what I see from the latest traces Valerio sent me, it is always a
-> > REQ_TYPE_BLOCK_PC with sizes for rq->data_len which fail in the alignment test:
-> > 
-> > rq->data_len: 0xc,
-> > rq->data_len: 0xf810,
-> 
-> [...]
-> 
-> > Those are, according to Valerio, taken during burning which looks like something
-> > aroung 64K requests which fail the rq->data_len & alignment test where alignment
-> > is 0x1f. The would've passed the old test rq->data_len & 0xf.
-> 
-> OK, I see it now after your mail & looking at the original commit:
-> 
-> @@ -1205,7 +1210,8 @@ static ide_startstop_t cdrom_do_block_pc(ide_drive_t *drive, struct request *rq)
->  		 * NOTE! The "len" and "addr" checks should possibly have
->  		 * separate masks.
->  		 */
-> -		if ((rq->data_len & 15) || (addr & mask))
-> +		alignment = queue_dma_alignment(q) | q->dma_pad_mask;
-> +		if (addr & alignment || rq->data_len & alignment)
->  			info->dma = 0;
->  
->  		if (!((addr & stack_mask) ^
-> 
-> Please note the comment about separate masks...  This chunk of commit
-> needs to be reverted as it clearly wasn't an intended change.
-> 
-> > /me researching DMA alignment requirements...
-> 
-> It is a combination of host and device requirements.
-> 
-> For 'rq->data_len' it should be 16 bytes because some devices fail otherwise.
-> 
-> For 'addr' we may try to use 4 bytes instead of the current 32 ones but lets
-> fix the regression first.
+[.. ]
 
-The most mysterious part for me (as I wrote before), ide-cd sets
-dma_alignment to 31 and dma_pad_mask to 15. So the current code
-enables DMA if data_len is a multiple of 32. The old code enables DMA
-if data_len is a multiple of 16. So the current code tightens DMA
-requirement; the current code disables DMA for requests which the old
-code enabled DMA for. I thought that disabling DMA is a safe option
-(that is, we can always disable DMA for any commands).
+> Here I am, thus the patched kernel has been installed and tested.
+> Burning CD's and simulation work perfectly and everything seems fine.
+> :)
 
-If Borislav's patch fixes the problem, the above assumption is
-wrong...
+Well, nice to hear :). Thanks for your debugging effort and patience.
 
-Very sorry about the breakage and thanks a lot for tracking it down!
+Bart, please apply.
+
+---
+From: Borislav Petkov <petkovbb@gmail.com>
+Date: Mon, 27 Oct 2008 06:59:14 +0100
+Subject: [PATCH] ide-cd: fix dma alignment regression
+
+e5318b531b008c79d2a0c0df06a7b8628da38e2f introduced a regression which
+caused some ATAPI drives to turn off dma for REQ_TYPE_ATA_PC commands
+while burning and thus degrating performance and ultimately causing an
+excessive amount of underruns. The issue is documented also in
+http://bugzilla.kernel.org/show_bug.cgi?id=11742.
+
+Signed-off-by: Borislav Petkov <petkovbb@gmail.com>
+CC: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Tested-by: Valerio Passini <valerio.passini@unicam.it>
+---
+ drivers/ide/ide-cd.c |    3 ++-
+ 1 files changed, 2 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/ide/ide-cd.c b/drivers/ide/ide-cd.c
+index 64b9cb1..ea35e94 100644
+--- a/drivers/ide/ide-cd.c
++++ b/drivers/ide/ide-cd.c
+@@ -1204,7 +1204,8 @@ static void cdrom_do_block_pc(ide_drive_t *drive, struct request *rq)
+ 		 * separate masks.
+ 		 */
+ 		alignment = queue_dma_alignment(q) | q->dma_pad_mask;
+-		if ((unsigned long)buf & alignment || rq->data_len & alignment
++		if ((unsigned long)buf & alignment
++		    || rq->data_len & q->dma_pad_mask
+ 		    || object_is_on_stack(buf))
+ 			drive->dma = 0;
+ 	}
+-- 
+1.5.6.5
+
+
+-- 
+Regards/Gruss,
+    Boris.
