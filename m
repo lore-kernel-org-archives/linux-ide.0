@@ -1,50 +1,62 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: http://bugzilla.kernel.org/show_bug.cgi?id=11742
-Date: Mon, 27 Oct 2008 14:15:22 +0300
-Message-ID: <4905A2CA.3030309@ru.mvista.com>
-References: <20081020112039W.fujita.tomonori@lab.ntt.co.jp>	 <200810260938.55709.valerio.passini@unicam.it>	 <20081026145819.GA1320@gollum.tnic>	 <200810262101.42874.valerio.passini@unicam.it>	 <20081027061556.GA17928@gollum.tnic> <49059C56.2010405@ru.mvista.com> <9ea470500810270355t568c88f2p24fcd45d51ef4164@mail.gmail.com>
+From: Santiago Vila <sanvila@unex.es>
+Subject: Re: Bug 11581
+Date: Mon, 27 Oct 2008 12:58:12 +0100 (CET)
+Message-ID: <Pine.LNX.4.64.0810271242590.2778@cantor.unex.es>
+References: <Pine.LNX.4.64.0810141314590.2555@cantor.unex.es>
+ <9ea470500810140453m6e1f7eb6raf179ee78414e19e@mail.gmail.com>
+ <Pine.LNX.4.64.0810141709450.4529@cantor.unex.es> <20081026154657.GA2578@gollum.tnic>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from gateway-1237.mvista.com ([63.81.120.155]:37137 "EHLO
-	imap.sh.mvista.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752310AbYJ0LP3 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 27 Oct 2008 07:15:29 -0400
-In-Reply-To: <9ea470500810270355t568c88f2p24fcd45d51ef4164@mail.gmail.com>
+Received: from guadiana.unex.es ([158.49.17.23]:38065 "EHLO guadiana.unex.es"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751642AbYJ0L62 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 27 Oct 2008 07:58:28 -0400
+In-Reply-To: <20081026154657.GA2578@gollum.tnic>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: petkovbb@gmail.com
-Cc: Valerio Passini <valerio.passini@unicam.it>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, valerio.p@libero.it, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, linux-ide@vger.kernel.org
+Cc: bzolnier@gmail.com, axboe@kernel.dk, linux-ide@vger.kernel.org
 
-Hello.
+Hi.
 
-Boris Petkov wrote:
+Would you believe that I get compilation errors for 2.6.18?
 
->>  More nipicking... :-)
->>     
->
-> Admit that you secretly like doing that :)
->   
+  CC      arch/i386/lib/strstr.o
+  CC      arch/i386/lib/usercopy.o
+  AR      arch/i386/lib/lib.a
+  GEN     .version
+  CHK     include/linux/compile.h
+  UPD     include/linux/compile.h
+  CC      init/version.o
+  LD      init/built-in.o
+  LD      .tmp_vmlinux1
+kernel/built-in.o: In function `getnstimeofday':
+(.text+0xec8e): undefined reference to `__umoddi3'
+kernel/built-in.o: In function `do_gettimeofday':
+(.text+0xed39): undefined reference to `__udivdi3'
+kernel/built-in.o: In function `do_gettimeofday':
+(.text+0xed56): undefined reference to `__umoddi3'
+kernel/built-in.o: In function `do_timer':
+(.text+0xfbe0): undefined reference to `__udivdi3'
+kernel/built-in.o: In function `do_timer':
+(.text+0xfbfd): undefined reference to `__umoddi3'
+make[1]: *** [.tmp_vmlinux1] Error 1
 
-   Sure, I'm quite pedantic. :-<
+This is using linux-source-2.6.18.tar.bz2 which comes with the Debian
+linux-source-2.6.18 package, from which the "last working kernel" is
+derived.
 
-> s/nipcking/nitpicking/
->   
+Now I'm going to try this:
 
-   Oops, was caught on it myself. :-)
+(A) Vanilla 2.6.18 from kernel.org.
 
->>> caused some ATAPI drives to turn off dma for REQ_TYPE_ATA_PC commands
->> Hm, why "ATAPI" but "dma"? Is "dma" a neologism now in English? :-)
->>     
->
-> Are you're referring to "... Once the Command Packet has been sent, the command
-> proceeds as a normal ATA command would. The Command Packet bytes shall always be
-> transferred via PIO and never using DMA." from SFF8020?
->   
+(B) A build environment based on Debian stable (I'm using testing almost
+  everywhere these days).
 
-   No, just to the fact that DMA is still an acronym, like ATAPI. ;-)
-
-MBR, Sergei
+(C) Both (A) and (B) at once.
 
 
+but other ideas are welcome.
+
+Stay tuned.
