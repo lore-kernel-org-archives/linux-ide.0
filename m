@@ -1,78 +1,72 @@
-From: Atsushi Nemoto <anemo@mba.ocn.ne.jp>
-Subject: Re: [PATCH 1/2] tx4938ide: Check minimum cycle time and SHWT range
-Date: Mon, 27 Oct 2008 23:52:24 +0900 (JST)
-Message-ID: <20081027.235224.82088530.anemo@mba.ocn.ne.jp>
-References: <20081027.223913.128619425.anemo@mba.ocn.ne.jp>
-	<4905CB09.5020805@ru.mvista.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: warning report
+Date: Mon, 27 Oct 2008 23:57:35 +0900
+Message-ID: <4905D6DF.8050201@kernel.org>
+References: <48F236EA.2060404@saturnosoft.biz> <20081015014112.a2c806cf.akpm@linux-foundation.org>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mba.ocn.ne.jp ([122.1.235.107]:54539 "EHLO smtp.mba.ocn.ne.jp"
+Received: from hera.kernel.org ([140.211.167.34]:44798 "EHLO hera.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750713AbYJ0Ow0 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 27 Oct 2008 10:52:26 -0400
-In-Reply-To: <4905CB09.5020805@ru.mvista.com>
+	id S1751197AbYJ0O5s (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 27 Oct 2008 10:57:48 -0400
+In-Reply-To: <20081015014112.a2c806cf.akpm@linux-foundation.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: sshtylyov@ru.mvista.com
-Cc: linux-mips@linux-mips.org, linux-ide@vger.kernel.org, bzolnier@gmail.com, ralf@linux-mips.org
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: Todor Gyumyushev <todor@saturnosoft.biz>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-On Mon, 27 Oct 2008 17:07:05 +0300, Sergei Shtylyov <sshtylyov@ru.mvista.com> wrote:
-> > +	/* -DIOx recovery time (SHWT * 4) and cycle time requirement */
-> > +	while (shwt * cycle * 4 + t->act8b < t->cycle)
+Andrew Morton wrote:
+> (cc linux-ide)
 > 
->     This can lead to adding an extra setup cycle due to use of "non-quantized" 
-> active time, here's more precise expression for the cycle time:
-> 
->     (shwt * 4 + wt + (wt ? 2 : 3)) * cycle
-> 
-> or even this, more obsure:
-> 
->     (shwt * 4 + wt + !wt + 2) * cycle
+>> On Sun, 12 Oct 2008 20:42:02 +0300 Todor Gyumyushev <todor@saturnosoft.biz> wrote:
+>> [ 3724.989177] cdrom: This disc doesn't have any tracks I recognize!
+>> [ 4953.736107] ------------[ cut here ]------------
+>> [ 4953.736117] WARNING: at drivers/ata/libata-sff.c:944 
+>> ata_sff_hsm_move+0x47d/0x6a0 [libata]()
+>> [ 4953.736121] Modules linked in: i915 drm eth1394 ipt_MASQUERADE 
+>> iptable_nat nf_nat nf_conntrack_ipv4 nf_conntrack ip_tables x_tables tun 
+>> kvm acpi_cpufreq freq_table hci_usb rfcomm l2cap bluetooth vboxdrv nfsd 
+>> lockd nfs_acl auth_rpcgss sunrpc exportfs ipv6 ac battery fuse loop 
+>> snd_hda_intel snd_pcm_oss snd_mixer_oss arc4 ecb snd_pcm 
+>> crypto_blkcipher snd_timer video ath5k snd mac80211 backlight usblp 
+>> led_class soundcore rng_core tpm_infineon intel_agp iTCO_wdt 
+>> snd_page_alloc output iTCO_vendor_support i2c_i801 rtc_cmos tpm cfg80211 
+>> i2c_core button tpm_bios evdev usbhid hid ext3 jbd mbcache sg sr_mod 
+>> cdrom sd_mod crc_t10dif ohci1394 ata_piix libata scsi_mod ieee1394 dock 
+>> ehci_hcd uhci_hcd sky2 thermal processor fan thermal_sys hwmon [last 
+>> unloaded: kvm_intel]
+>> [ 4953.736215] Pid: 0, comm: swapper Not tainted 2.6.27 #1
+>> [ 4953.736218]
+>> [ 4953.736219] Call Trace:
+>> [ 4953.736223]  <IRQ>  [<ffffffff8023c9c4>] warn_on_slowpath+0x64/0xb0
+>> [ 4953.736255]  [<ffffffffa0062ac8>] scsi_dispatch_cmd+0x128/0x2d0 
+>> [scsi_mod]
+>> [ 4953.736278]  [<ffffffffa0068e85>] scsi_request_fn+0x95/0x420 [scsi_mod]
+>> [ 4953.736282]  [<ffffffff80346b25>] __blk_run_queue+0x65/0x110
+>> [ 4953.736293]  [<ffffffffa00a06c8>] ata_sff_data_xfer+0x98/0xc0 [libata]
+>> [ 4953.736297]  [<ffffffff80340000>] crypto_attr_alg_name+0x30/0x40
+>> [ 4953.736307]  [<ffffffffa009fe9d>] ata_sff_hsm_move+0x47d/0x6a0 [libata]
+>> [ 4953.736317]  [<ffffffffa0069693>] scsi_end_request+0xa3/0xb0 [scsi_mod]
+>> [ 4953.736328]  [<ffffffffa00a0413>] ata_sff_interrupt+0x1a3/0x2c0 [libata]
+>> [ 4953.736331]  [<ffffffff80283aa4>] handle_IRQ_event+0x34/0x70
+>> [ 4953.736334]  [<ffffffff802850f0>] handle_edge_irq+0xc0/0x160
+>> [ 4953.736337]  [<ffffffff8020f92c>] do_IRQ+0x7c/0x100
+>> [ 4953.736339]  [<ffffffff8020c941>] ret_from_intr+0x0/0xa
+>> [ 4953.736341]  <EOI>  [<ffffffffa000d637>] 
+>> acpi_idle_enter_simple+0x1c7/0x237 [processor]
+>> [ 4953.736352]  [<ffffffffa000d62d>] acpi_idle_enter_simple+0x1bd/0x237 
+>> [processor]
+>> [ 4953.736356]  [<ffffffff803eebf7>] cpuidle_idle_call+0xd7/0x120
+>> [ 4953.736358]  [<ffffffff8020b306>] cpu_idle+0x66/0xf0
+>> [ 4953.736360]
+>> [ 4953.736361] ---[ end trace 8d1ccc07ba5c0659 ]---
 
-Hm, indeed.  I prefer former one.  Revised.  Thanks!
+Eh... this really shouldn't happen.  How often does the problem occur?
+Is there a way to reproduce this problem reliably?
 
+Thanks.
 
-From: Atsushi Nemoto <anemo@mba.ocn.ne.jp>
-Subject: [PATCH] tx4938ide: Check minimum cycle time and SHWT range (v2)
-
-SHWT value is used as address valid to -CSx assertion and -CSx to -DIOx
-assertion setup time, and contrarywise, -DIOx to -CSx release and -CSx
-release to address invalid hold time, so it actualy applies 4 times and
-so constitutes -DIOx recovery time.  Check requirement of the recovery
-time and cycle time.  Also check SHWT maximum value.
-
-Suggested-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Signed-off-by: Atsushi Nemoto <anemo@mba.ocn.ne.jp>
----
- drivers/ide/tx4938ide.c |    9 ++++++++-
- 1 files changed, 8 insertions(+), 1 deletions(-)
-
-diff --git a/drivers/ide/tx4938ide.c b/drivers/ide/tx4938ide.c
-index a0d10a9..796289c 100644
---- a/drivers/ide/tx4938ide.c
-+++ b/drivers/ide/tx4938ide.c
-@@ -39,10 +39,17 @@ static void tx4938ide_tune_ebusc(unsigned int ebus_ch,
- 	/* Address-valid to DIOR/DIOW setup */
- 	shwt = DIV_ROUND_UP(t->setup, cycle);
- 
-+	/* -DIOx recovery time (SHWT * 4) and cycle time requirement */
-+	while ((shwt * 4 + wt + (wt ? 2 : 3)) * cycle < t->cycle)
-+		shwt++;
-+	if (shwt > 7) {
-+		pr_warning("tx4938ide: SHWT violation (%d)\n", shwt);
-+		shwt = 7;
-+	}
- 	pr_debug("tx4938ide: ebus %d, bus cycle %dns, WT %d, SHWT %d\n",
- 		 ebus_ch, cycle, wt, shwt);
- 
--	__raw_writeq((cr & ~(0x3f007ull)) | (wt << 12) | shwt,
-+	__raw_writeq((cr & ~0x3f007ull) | (wt << 12) | shwt,
- 		     &tx4938_ebuscptr->cr[ebus_ch]);
- }
- 
 -- 
-1.5.6.3
-
-
+tejun
