@@ -1,91 +1,78 @@
-From: Mikael Pettersson <mikpe@it.uu.se>
-Subject: [PATCH 2.6.28-rc2] sata_promise: proper hardreset
-Date: Mon, 27 Oct 2008 01:49:42 +0100 (MET)
-Message-ID: <200810270049.m9R0ngI8027933@harpo.it.uu.se>
+From: Petr Vandrovec <vandrove@vc.cvut.cz>
+Subject: Re: 2.6.27-rc1 (2fca5c): libata: kernel cant boot
+Date: Sun, 26 Oct 2008 18:28:29 -0700
+Message-ID: <4905193D.90607@vc.cvut.cz>
+References: <a4423d670810240004t2d7c3bdah2bea77a6a49bb7c4@mail.gmail.com> <20081024070955.GN22217@kernel.dk> <20081024071329.GO22217@kernel.dk> <20081024071608.GA3879@linux-sh.org> <20081024072428.GP22217@kernel.dk> <873aimv0v8.fsf@denkblock.local> <20081024084818.GB22217@kernel.dk> <4903004D.2050904@vc.cvut.cz> <20081025184506.GM22217@kernel.dk> <20081026173421.GN22217@kernel.dk>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from aun.it.uu.se ([130.238.12.36]:64967 "EHLO aun.it.uu.se"
+Received: from mailgw.cvut.cz ([147.32.3.235]:46183 "EHLO mailgw.cvut.cz"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751541AbYJ0At4 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 26 Oct 2008 20:49:56 -0400
+	id S1750790AbYJ0B2e (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 26 Oct 2008 21:28:34 -0400
+In-Reply-To: <20081026173421.GN22217@kernel.dk>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: jgarzik@pobox.com
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, stable@kernel.org
+To: Jens Axboe <jens.axboe@oracle.com>
+Cc: Elias Oltmanns <eo@nebensachen.de>, Paul Mundt <lethal@linux-sh.org>, Alexander Beregalov <a.beregalov@gmail.com>, tj@kernel.org, torvalds@linux-foundation.org, LKML <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org
 
-Promise ATA engines need to be reset when errors are detected.
-That's currently done for errors detected by sata_promise itself,
-but it's not done for errors like timeouts detected outside of
-the low-level driver.
+Jens Axboe wrote:
+> On Sat, Oct 25 2008, Jens Axboe wrote:
+>> On Sat, Oct 25 2008, Petr Vandrovec wrote:
+>>> Jens Axboe wrote:
+>>>> On Fri, Oct 24 2008, Elias Oltmanns wrote:
+>>>>> Jens Axboe <jens.axboe@oracle.com> wrote:
+>>>>> >From e598055dde1951c47c8b3522616f6ebff0ed9847 Mon Sep 17 00:00:00 2001
+>>>>>> From: Jens Axboe <jens.axboe@oracle.com>
+>>>>>> Date: Fri, 24 Oct 2008 09:22:42 +0200
+>>>>>> Subject: [PATCH] libata: fix bug with non-ncq devices
+>>>>>>
+>>>>>> The recent commit 201f1b98822078c808b5e2d379a6ddbfc0a06ee1 to enable
+>>>>> Wouldn't that be commit 2fca5ccf97d2c28bcfce44f5b07d85e74e3cd18e?
+>>>> Yes that is correct, the other commit is actually a private one in my
+>>>> tree for other libata changes. Updated patch below, thanks for checking!
+>>>>
+>>> >From e598055dde1951c47c8b3522616f6ebff0ed9847 Mon Sep 17 00:00:00 2001
+>>>> From: Jens Axboe <jens.axboe@oracle.com>
+>>>> Date: Fri, 24 Oct 2008 09:22:42 +0200
+>>>> Subject: [PATCH] libata: fix bug with non-ncq devices
+>>> Hello,
+>>>   this fixes my DVD, but unfortunately NCQ devices connected to PMP are 
+>>> still dead - apparently as soon as mount() tries to do serious I/O on 
+>>> the drive.  Backing out both post-2.6.28-rc1 fix as well as your 
+>>> original change brings storage back.  I suspect that problem is that 
+>>> with PMP same tag cannot be (should not be?  must not be?) used on 
+>>> multiple devices behind PMP - and before your change tags were allocated 
+>>> per-port, while now they are allocated per-device.
+>> That would indeed break, this requires allocating the tag map in the
+> 
+> Totally untested, does this work?
+> 
+> diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+> index 4b95c43..0785c46 100644
+> --- a/drivers/ata/libata-scsi.c
+> +++ b/drivers/ata/libata-scsi.c
+> @@ -1107,6 +1107,10 @@ static int ata_scsi_dev_config(struct scsi_device *sdev,
+>  
+>  		depth = min(sdev->host->can_queue, ata_id_queue_depth(dev->id));
+>  		depth = min(ATA_MAX_QUEUE - 1, depth);
+> +
+> +		if (dev->link->ap->pmp_link)
+> +			scsi_init_shared_tag_map(sdev->host, ATA_MAX_QUEUE - 1);
+> +
+>  		scsi_set_tag_type(sdev, MSG_SIMPLE_TAG);
+>  		scsi_activate_tcq(sdev, depth);
+>  	}
 
-The effect of this omission is that a timeout tends to result
-in a sequence of failed COMRESETs after which libata EH gives
-up and disables the port. At that point the port's ATA engine
-hangs and even reloading the driver will not resume it.
+No.  It went through same story as without patch - first it declared 
+drive #2 hung, after port reset drives #0,1,2 were declared hung, after 
+second port reset drive #2 was declared dead, after third port reset 
+drive #3 was hung, after fourth reset it said that /dev/sde changed 
+capacity from 0 to 1TB, and at that point I decided that it is time to 
+hit alt-sysrq-b to prevent damage...
 
-To fix this, make sata_promise override ->hardreset with code
-which calls pdc_reset_port() on the port in question before
-calling libata's hardreset. libata ignores its own hardreset on
-PATA ports, so we need a special ->hardreset for PATA ports
-that doesn't call into libata after the pdc_reset_port().
+Also I think that this change leaks memory a bit...
+						Petr
+						Petr
 
-Signed-off-by: Mikael Pettersson <mikpe@it.uu.se>
----
-This should also go into the 2.6.27 and 2.6.26 stable branches.
-In older branches libata EH is different and I'm seeing different
-behaviour on timeouts, so I don't think this should go in as-is
-in 2.6.25 and older.
-
- drivers/ata/sata_promise.c |   20 ++++++++++++++++++++
- 1 file changed, 20 insertions(+)
-
-diff -rupN linux-2.6.28-rc2/drivers/ata/sata_promise.c linux-2.6.28-rc2.sata_promise-proper-hardreset/drivers/ata/sata_promise.c
---- linux-2.6.28-rc2/drivers/ata/sata_promise.c	2008-10-26 21:35:33.000000000 +0100
-+++ linux-2.6.28-rc2.sata_promise-proper-hardreset/drivers/ata/sata_promise.c	2008-10-26 23:46:03.000000000 +0100
-@@ -153,6 +153,10 @@ static void pdc_freeze(struct ata_port *
- static void pdc_sata_freeze(struct ata_port *ap);
- static void pdc_thaw(struct ata_port *ap);
- static void pdc_sata_thaw(struct ata_port *ap);
-+static int pdc_pata_hardreset(struct ata_link *link, unsigned int *class,
-+			      unsigned long deadline);
-+static int pdc_sata_hardreset(struct ata_link *link, unsigned int *class,
-+			      unsigned long deadline);
- static void pdc_error_handler(struct ata_port *ap);
- static void pdc_post_internal_cmd(struct ata_queued_cmd *qc);
- static int pdc_pata_cable_detect(struct ata_port *ap);
-@@ -186,6 +190,7 @@ static struct ata_port_operations pdc_sa
- 	.scr_read		= pdc_sata_scr_read,
- 	.scr_write		= pdc_sata_scr_write,
- 	.port_start		= pdc_sata_port_start,
-+	.hardreset		= pdc_sata_hardreset,
- };
- 
- /* First-generation chips need a more restrictive ->check_atapi_dma op */
-@@ -200,6 +205,7 @@ static struct ata_port_operations pdc_pa
- 	.freeze			= pdc_freeze,
- 	.thaw			= pdc_thaw,
- 	.port_start		= pdc_common_port_start,
-+	.hardreset		= pdc_pata_hardreset,
- };
- 
- static const struct ata_port_info pdc_port_info[] = {
-@@ -693,6 +699,20 @@ static void pdc_sata_thaw(struct ata_por
- 	readl(host_mmio + hotplug_offset); /* flush */
- }
- 
-+static int pdc_pata_hardreset(struct ata_link *link, unsigned int *class,
-+			      unsigned long deadline)
-+{
-+	pdc_reset_port(link->ap);
-+	return 0;
-+}
-+
-+static int pdc_sata_hardreset(struct ata_link *link, unsigned int *class,
-+			      unsigned long deadline)
-+{
-+	pdc_reset_port(link->ap);
-+	return sata_sff_hardreset(link, class, deadline);
-+}
-+
- static void pdc_error_handler(struct ata_port *ap)
- {
- 	if (!(ap->pflags & ATA_PFLAG_FROZEN))
