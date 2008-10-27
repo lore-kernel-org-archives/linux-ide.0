@@ -1,45 +1,47 @@
-From: Valerio Passini <valerio.passini@unicam.it>
-Subject: Re: http://bugzilla.kernel.org/show_bug.cgi?id=11742
-Date: Mon, 27 Oct 2008 11:14:28 +0100
-Message-ID: <200810271114.28986.valerio.passini@unicam.it>
-References: <20081020112039W.fujita.tomonori@lab.ntt.co.jp> <200810262101.42874.valerio.passini@unicam.it> <20081027061556.GA17928@gollum.tnic>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH #upstream-fixes 2/4] libata: beef up iterators
+Date: Mon, 27 Oct 2008 19:17:21 +0900
+Message-ID: <49059531.8030903@kernel.org>
+References: <49041323.9020309@kernel.org> <4904135B.4040901@kernel.org>	<87tzaz77ix.fsf@denkblock.local> <490584A6.3020005@kernel.org> <87abcqtm0c.fsf@denkblock.local>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp.unicam.it ([193.204.8.1]:59865 "HELO unicam.it"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1753235AbYJ0KOg (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 27 Oct 2008 06:14:36 -0400
-In-Reply-To: <20081027061556.GA17928@gollum.tnic>
-Content-Disposition: inline
+Received: from hera.kernel.org ([140.211.167.34]:41924 "EHLO hera.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751558AbYJ0KRd (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 27 Oct 2008 06:17:33 -0400
+In-Reply-To: <87abcqtm0c.fsf@denkblock.local>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: petkovbb@gmail.com
-Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, valerio.p@libero.it, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, linux-ide@vger.kernel.org
+To: Elias Oltmanns <eo@nebensachen.de>
+Cc: Jeff Garzik <jeff@garzik.org>, IDE/ATA development list <linux-ide@vger.kernel.org>
 
-Alle luned=EC 27 ottobre 2008, Borislav Petkov ha scritto:
-> On Sun, Oct 26, 2008 at 09:01:42PM +0100, Valerio Passini wrote:
->=20
-> [.. ]
->=20
-> > Here I am, thus the patched kernel has been installed and tested.
-> > Burning CD's and simulation work perfectly and everything seems fin=
-e.
-> > :)
->=20
-> Well, nice to hear :). Thanks for your debugging effort and patience.
+Elias Oltmanns wrote:
+> Tejun Heo <tj@kernel.org> wrote:
+>> Hello,
+>>
+>> Elias Oltmanns wrote:
+>>>> -		ata_port_for_each_link(link, ap) {
+>>>> -			ata_link_for_each_dev(dev, link)
+>>>> +		ata_for_each_link(link, ap, EDGE) {
+>>>> +			ata_for_each_dev(dev, link, ALL)
+>>> Where did these short forms (EDGE, ALL) spring from? Does this code even
+>>> compile?
+>> +#define ata_for_each_link(link, ap, mode) \
+>> +	for ((link) = ata_link_next(NULL, (ap), ATA_LITER_##mode); (link); \
+>> +	     (link) = ata_link_next((link), (ap), ATA_LITER_##mode))
+>> +
+>> +#define ata_for_each_dev(dev, link, mode) \
+>> +	for ((dev) = ata_dev_next(NULL, (link), ATA_DITER_##mode); (dev); \
+>> +	     (dev) = ata_dev_next((dev), (link), ATA_DITER_##mode))
+> 
+> Sorry, I should have been more explicit. I was referring to EDGE and ALL
+> as opposed to ATA_LITER_EDGE and ATA_DITER_ALL. Unless I've missed
+> something, the former aren't defined anywhere in your patch.
 
-My pleasure!
+I seriously can't be more explicit.  Please take a shower and read my
+reply again, especially, the "ATA_[LD]ITER_##mode" part.  :-)
 
-> > The most mysterious part for me (as I wrote before), ide-cd sets
-> > dma_alignment to 31 and dma_pad_mask to 15. So the current code
-> > enables DMA if data_len is a multiple of 32. The old code enables D=
-MA
-> > if data_len is a multiple of 16.
->=20
-> Of course, 'multiple of' description is wrong. Should have been
-> 32-byte and 16-byte alignment respectively.
-
-If you have another patch that solves the problem and you want to try i=
-t, just send it to me, I will be glad to test it. Bye
+-- 
+tejun
