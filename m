@@ -1,53 +1,35 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH 1/2] tx4938ide: Check minimum cycle time and SHWT range
-Date: Mon, 27 Oct 2008 17:07:05 +0300
-Message-ID: <4905CB09.5020805@ru.mvista.com>
-References: <20081027.223913.128619425.anemo@mba.ocn.ne.jp>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+From: Phil Sutter <n0-1@freewrt.org>
+Subject: [PATCH] irq handler must disable the handled irq
+Date: Mon, 27 Oct 2008 15:01:47 +0100
+Message-ID: <1225116107-9753-1-git-send-email-n0-1@freewrt.org>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from gateway-1237.mvista.com ([63.81.120.155]:38637 "EHLO
-	imap.sh.mvista.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751215AbYJ0OH3 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 27 Oct 2008 10:07:29 -0400
-In-Reply-To: <20081027.223913.128619425.anemo@mba.ocn.ne.jp>
+Received: from orbit.nwl.cc ([81.169.176.177]:43826 "EHLO
+	mail.ifyouseekate.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750729AbYJ0OMn (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 27 Oct 2008 10:12:43 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Atsushi Nemoto <anemo@mba.ocn.ne.jp>
-Cc: linux-mips@linux-mips.org, linux-ide@vger.kernel.org, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, ralf@linux-mips.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: linux-ide@vger.kernel.org, Florian Fainelli <florian@openwrt.org>
 
-Hello.
+Signed-off-by: Florian Fainelli <florian@openwrt.org>
+---
+ drivers/ata/pata_rb532_cf.c |    2 ++
+ 1 files changed, 2 insertions(+), 0 deletions(-)
 
-Atsushi Nemoto wrote:
+diff --git a/drivers/ata/pata_rb532_cf.c b/drivers/ata/pata_rb532_cf.c
+index f8b3ffc..a1d44a6 100644
+--- a/drivers/ata/pata_rb532_cf.c
++++ b/drivers/ata/pata_rb532_cf.c
+@@ -116,6 +116,8 @@ static irqreturn_t rb532_pata_irq_handler(int irq, void *dev_instance)
+ 		set_irq_type(info->irq, IRQ_TYPE_LEVEL_HIGH);
+ 	}
+ 
++	disable_irq(irq);
++
+ 	return IRQ_HANDLED;
+ }
+ 
+-- 
+1.5.6.4
 
-> SHWT value is used as address valid to -CSx assertion and -CSx to -DIOx
-> assertion setup time, and contrarywise, -DIOx to -CSx release and -CSx
-> release to address invalid hold time, so it actualy applies 4 times and
-> so constitutes -DIOx recovery time.  Check requirement of the recovery
-> time and cycle time.  Also check SHWT maximum value.
-
-> Suggested-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-> Signed-off-by: Atsushi Nemoto <anemo@mba.ocn.ne.jp>
-
-> diff --git a/drivers/ide/tx4938ide.c b/drivers/ide/tx4938ide.c
-> index fa660f9..7e4820e 100644
-> --- a/drivers/ide/tx4938ide.c
-> +++ b/drivers/ide/tx4938ide.c
-> @@ -39,10 +39,17 @@ static void tx4938ide_tune_ebusc(unsigned int ebus_ch,
->  	/* Address-valid to DIOR/DIOW setup */
->  	shwt = DIV_ROUND_UP(t->setup, cycle);
->  
-> +	/* -DIOx recovery time (SHWT * 4) and cycle time requirement */
-> +	while (shwt * cycle * 4 + t->act8b < t->cycle)
-
-    This can lead to adding an extra setup cycle due to use of "non-quantized" 
-active time, here's more precise expression for the cycle time:
-
-    (shwt * 4 + wt + (wt ? 2 : 3)) * cycle
-
-or even this, more obsure:
-
-    (shwt * 4 + wt + !wt + 2) * cycle
-
-MBR, Sergei
