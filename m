@@ -1,73 +1,37 @@
-From: Borislav Petkov <petkovbb@googlemail.com>
-Subject: Re: http://bugzilla.kernel.org/show_bug.cgi?id=11742
-Date: Mon, 27 Oct 2008 07:15:57 +0100
-Message-ID: <20081027061556.GA17928@gollum.tnic>
-References: <20081020112039W.fujita.tomonori@lab.ntt.co.jp> <200810260938.55709.valerio.passini@unicam.it> <20081026145819.GA1320@gollum.tnic> <200810262101.42874.valerio.passini@unicam.it>
-Reply-To: petkovbb@gmail.com
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: Problem w/ hotplug on sata_sil24 w/ PMP (sil3726)
+Date: Mon, 27 Oct 2008 16:35:08 +0900
+Message-ID: <49056F2C.20101@kernel.org>
+References: <20081011142735.GB5904@cleopatra.jogback.se> <48F4337A.50307@kernel.org> <20081014201917.GA5974@cleopatra.jogback.se> <48F595DB.4030301@kernel.org> <20081018165209.GA7754@cleopatra.jogback.se> <20081023181443.GA7323@cleopatra.jogback.se>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.152]:41335 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751372AbYJ0GQQ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 27 Oct 2008 02:16:16 -0400
-Received: by fg-out-1718.google.com with SMTP id 19so1824915fgg.17
-        for <linux-ide@vger.kernel.org>; Sun, 26 Oct 2008 23:16:00 -0700 (PDT)
-Content-Disposition: inline
-In-Reply-To: <200810262101.42874.valerio.passini@unicam.it>
+Received: from hera.kernel.org ([140.211.167.34]:37457 "EHLO hera.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751591AbYJ0HfR (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 27 Oct 2008 03:35:17 -0400
+In-Reply-To: <20081023181443.GA7323@cleopatra.jogback.se>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Valerio Passini <valerio.passini@unicam.it>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: valerio.p@libero.it, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, linux-ide@vger.kernel.org
+To: Lars Michael Jogback <lm@jogback.se>
+Cc: linux-ide@vger.kernel.org
 
-On Sun, Oct 26, 2008 at 09:01:42PM +0100, Valerio Passini wrote:
+Lars Michael Jogback wrote:
+> Hi,
+> 
+> I did installed an earlier kernel on the machine, and then hotplug
+> worked.
+> 
+> This is the log when I did hotplug using v2.6.24 (the kernel from Debian
+> Etch-n-half)
 
-[.. ]
+Hmmm... 2.6.24 works but 2.6.26 doesn't, strange.  I've been trying to
+reproduce the problem here but it doesn't happen with any drive I
+have.  I just ordered a similar drive, so I might have better luck
+with it.  I'll write back when I know more.
 
-> Here I am, thus the patched kernel has been installed and tested.
-> Burning CD's and simulation work perfectly and everything seems fine.
-> :)
-
-Well, nice to hear :). Thanks for your debugging effort and patience.
-
-Bart, please apply.
-
----
-From: Borislav Petkov <petkovbb@gmail.com>
-Date: Mon, 27 Oct 2008 06:59:14 +0100
-Subject: [PATCH] ide-cd: fix dma alignment regression
-
-e5318b531b008c79d2a0c0df06a7b8628da38e2f introduced a regression which
-caused some ATAPI drives to turn off dma for REQ_TYPE_ATA_PC commands
-while burning and thus degrating performance and ultimately causing an
-excessive amount of underruns. The issue is documented also in
-http://bugzilla.kernel.org/show_bug.cgi?id=11742.
-
-Signed-off-by: Borislav Petkov <petkovbb@gmail.com>
-CC: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Tested-by: Valerio Passini <valerio.passini@unicam.it>
----
- drivers/ide/ide-cd.c |    3 ++-
- 1 files changed, 2 insertions(+), 1 deletions(-)
-
-diff --git a/drivers/ide/ide-cd.c b/drivers/ide/ide-cd.c
-index 64b9cb1..ea35e94 100644
---- a/drivers/ide/ide-cd.c
-+++ b/drivers/ide/ide-cd.c
-@@ -1204,7 +1204,8 @@ static void cdrom_do_block_pc(ide_drive_t *drive, struct request *rq)
- 		 * separate masks.
- 		 */
- 		alignment = queue_dma_alignment(q) | q->dma_pad_mask;
--		if ((unsigned long)buf & alignment || rq->data_len & alignment
-+		if ((unsigned long)buf & alignment
-+		    || rq->data_len & q->dma_pad_mask
- 		    || object_is_on_stack(buf))
- 			drive->dma = 0;
- 	}
--- 
-1.5.6.5
-
+Thanks.
 
 -- 
-Regards/Gruss,
-    Boris.
+tejun
