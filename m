@@ -1,62 +1,55 @@
-From: Santiago Vila <sanvila@unex.es>
-Subject: Re: Bug 11581
-Date: Mon, 27 Oct 2008 12:58:12 +0100 (CET)
-Message-ID: <Pine.LNX.4.64.0810271242590.2778@cantor.unex.es>
-References: <Pine.LNX.4.64.0810141314590.2555@cantor.unex.es>
- <9ea470500810140453m6e1f7eb6raf179ee78414e19e@mail.gmail.com>
- <Pine.LNX.4.64.0810141709450.4529@cantor.unex.es> <20081026154657.GA2578@gollum.tnic>
+From: Elias Oltmanns <eo@nebensachen.de>
+Subject: Re: [PATCH #upstream-fixes 2/4] libata: beef up iterators
+Date: Mon, 27 Oct 2008 12:58:19 +0100
+Message-ID: <874p2ytfl0.fsf@denkblock.local>
+References: <49041323.9020309@kernel.org> <4904135B.4040901@kernel.org>
+	<87tzaz77ix.fsf@denkblock.local> <490584A6.3020005@kernel.org>
+	<87abcqtm0c.fsf@denkblock.local> <49059531.8030903@kernel.org>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from guadiana.unex.es ([158.49.17.23]:38065 "EHLO guadiana.unex.es"
+Received: from nebensachen.de ([195.34.83.29]:35153 "EHLO mail.nebensachen.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751642AbYJ0L62 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 27 Oct 2008 07:58:28 -0400
-In-Reply-To: <20081026154657.GA2578@gollum.tnic>
+	id S1751642AbYJ0L6k (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 27 Oct 2008 07:58:40 -0400
+In-Reply-To: <49059531.8030903@kernel.org> (Tejun Heo's message of "Mon, 27
+	Oct 2008 19:17:21 +0900")
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: petkovbb@gmail.com
-Cc: bzolnier@gmail.com, axboe@kernel.dk, linux-ide@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: Jeff Garzik <jeff@garzik.org>, IDE/ATA development list <linux-ide@vger.kernel.org>
 
-Hi.
+Tejun Heo <tj@kernel.org> wrote:
+> Elias Oltmanns wrote:
+>> Tejun Heo <tj@kernel.org> wrote:
+>
+>>> Hello,
+>>>
+>>> Elias Oltmanns wrote:
+>>>>> -		ata_port_for_each_link(link, ap) {
+>>>>> -			ata_link_for_each_dev(dev, link)
+>>>>> +		ata_for_each_link(link, ap, EDGE) {
+>>>>> +			ata_for_each_dev(dev, link, ALL)
+>>>> Where did these short forms (EDGE, ALL) spring from? Does this code even
+>>>> compile?
+>>> +#define ata_for_each_link(link, ap, mode) \
+>>> +	for ((link) = ata_link_next(NULL, (ap), ATA_LITER_##mode); (link); \
+>>> +	     (link) = ata_link_next((link), (ap), ATA_LITER_##mode))
+>>> +
+>>> +#define ata_for_each_dev(dev, link, mode) \
+>>> +	for ((dev) = ata_dev_next(NULL, (link), ATA_DITER_##mode); (dev); \
+>>> +	     (dev) = ata_dev_next((dev), (link), ATA_DITER_##mode))
+>> 
+>> Sorry, I should have been more explicit. I was referring to EDGE and ALL
+>> as opposed to ATA_LITER_EDGE and ATA_DITER_ALL. Unless I've missed
+>> something, the former aren't defined anywhere in your patch.
+>
+> I seriously can't be more explicit.  Please take a shower and read my
+> reply again, especially, the "ATA_[LD]ITER_##mode" part.  :-)
 
-Would you believe that I get compilation errors for 2.6.18?
+Oh dear, I really need to drop that idea that a macro does what I think
+it does. Sorry for the noise.
 
-  CC      arch/i386/lib/strstr.o
-  CC      arch/i386/lib/usercopy.o
-  AR      arch/i386/lib/lib.a
-  GEN     .version
-  CHK     include/linux/compile.h
-  UPD     include/linux/compile.h
-  CC      init/version.o
-  LD      init/built-in.o
-  LD      .tmp_vmlinux1
-kernel/built-in.o: In function `getnstimeofday':
-(.text+0xec8e): undefined reference to `__umoddi3'
-kernel/built-in.o: In function `do_gettimeofday':
-(.text+0xed39): undefined reference to `__udivdi3'
-kernel/built-in.o: In function `do_gettimeofday':
-(.text+0xed56): undefined reference to `__umoddi3'
-kernel/built-in.o: In function `do_timer':
-(.text+0xfbe0): undefined reference to `__udivdi3'
-kernel/built-in.o: In function `do_timer':
-(.text+0xfbfd): undefined reference to `__umoddi3'
-make[1]: *** [.tmp_vmlinux1] Error 1
+Regards,
 
-This is using linux-source-2.6.18.tar.bz2 which comes with the Debian
-linux-source-2.6.18 package, from which the "last working kernel" is
-derived.
-
-Now I'm going to try this:
-
-(A) Vanilla 2.6.18 from kernel.org.
-
-(B) A build environment based on Debian stable (I'm using testing almost
-  everywhere these days).
-
-(C) Both (A) and (B) at once.
-
-
-but other ideas are welcome.
-
-Stay tuned.
+Elias
