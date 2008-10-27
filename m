@@ -1,54 +1,34 @@
-From: Mike Anderson <andmike@linux.vnet.ibm.com>
-Subject: Re: Timeout regression introduced by
-	242f9dcb8ba6f68fcd217a119a7648a4f69290e9
-Date: Mon, 27 Oct 2008 14:30:06 -0700
-Message-ID: <20081027213006.GB17946@linux.vnet.ibm.com>
-References: <49043C7C.8050207@kernel.org> <1225034105.3958.4.camel@localhost.localdomain> <49051EA4.3040403@kernel.org>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [PATCH 2/4] libata: Drain data on errors
+Date: Mon, 27 Oct 2008 21:54:58 +0000
+Message-ID: <20081027215458.72c69618@lxorguk.ukuu.org.uk>
+References: <20081017180655.7781.15021.stgit@localhost.localdomain>
+	<20081017180837.7781.26372.stgit@localhost.localdomain>
+	<4906132B.1000502@rtr.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from e36.co.us.ibm.com ([32.97.110.154]:40826 "EHLO
-	e36.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752334AbYJ0VaM (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 27 Oct 2008 17:30:12 -0400
-Content-Disposition: inline
-In-Reply-To: <49051EA4.3040403@kernel.org>
+Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:40598 "EHLO
+	lxorguk.ukuu.org.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751595AbYJ0VzB (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 27 Oct 2008 17:55:01 -0400
+In-Reply-To: <4906132B.1000502@rtr.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Jens Axboe <jens.axboe@oracle.com>, linux-scsi <linux-scsi@vger.kernel.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>
+To: Mark Lord <liml@rtr.ca>
+Cc: jeff@garzik.org, linux-ide@vger.kernel.org
 
-Tejun Heo <tj@kernel.org> wrote:
-> James Bottomley wrote:
-> > On Sun, 2008-10-26 at 18:46 +0900, Tejun Heo wrote:
-> >> Hello, Jens.
-> >>
-> >> Commit 242f9dcb8ba6f68fcd217a119a7648a4f69290e9 introduces a strange
-> >> regression for libata.  The second timeout gives puts different
-> >> pointer from the issued command onto eh_cmd_q breaking libata EH
-> >> command matching which triggers WARN_ON() in ata_eh_finish() and hangs
-> >> command processing or causes oops later depending on circumstances.
-> >>
-> >> Here are logs with induced timeouts (patch attached).  In commit
-> >> 242f9dcb8, the XXX messages for the second timeout shows different
-> >> scsi_cmd pointers for eh_cmd_q and qc->scmd which is initialized by
-> >> ata_scsi_qc_new() during command translation.
-> > 
-> > I can't see a way we could be getting a different command passed in from
-> > the actual one, since the only way to lose the command from the request
-> > is to go through the command completion routines which free it (and end
-> > the request).
-> 
-> I have no idea either.  It's something in the timeout logic because on
-> the issue path the scmd pointer is identical but on tiemout pointer
-> for another scmd is queued on eh_cmd_q, which doesn't make much sense.
-> 
+O> I'm just catching up on a few things here now that holiday season is over.
+> In the above loop, I wonder if it might be better to only check status
+> every NN iterations, where NN > 1 (say, 16), to speed things up a fair amount (?).
 
-I was trying to recreate this error using ata_ram wth v2.6.28-rc2.
-Currently I am not able to see this error on timeout recovery using this
-setup. Does IO load (or other factors) effect the error being seen?
+And hang some controllers probably.
 
--andmike
---
-Michael Anderson
-andmike@linux.vnet.ibm.com
+> Sure it's rare, but when it happens the entire system is probably stopped
+> waiting for us to recover, so speed might matter some.
+
+Correctness first. If we have to optimise this case we are (as you note)
+doing something seriously wrong!
+
+Alan
