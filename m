@@ -1,28 +1,69 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH] libata: ahci enclosure management led sync
-Date: Mon, 27 Oct 2008 23:58:13 +0900
-Message-ID: <4905D705.6060107@kernel.org>
-References: <20081016142619.GA8282@dhcp-210.hsv.redhat.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: Timeout regression introduced
+	by	242f9dcb8ba6f68fcd217a119a7648a4f69290e9
+Date: Mon, 27 Oct 2008 10:03:09 -0500
+Message-ID: <1225119789.5146.5.camel@localhost.localdomain>
+References: <49043C7C.8050207@kernel.org>
+	 <1225034105.3958.4.camel@localhost.localdomain>
+	 <49051EA4.3040403@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:44830 "EHLO hera.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752321AbYJ0O6b (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 27 Oct 2008 10:58:31 -0400
-In-Reply-To: <20081016142619.GA8282@dhcp-210.hsv.redhat.com>
+Received: from accolon.hansenpartnership.com ([76.243.235.52]:51902 "EHLO
+	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750717AbYJ0PDO (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 27 Oct 2008 11:03:14 -0400
+In-Reply-To: <49051EA4.3040403@kernel.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: David Milburn <dmilburn@redhat.com>
-Cc: jeff@garzik.org, linux-ide@vger.kernel.org, kristen.c.accardi@intel.com
+To: Tejun Heo <tj@kernel.org>
+Cc: Jens Axboe <jens.axboe@oracle.com>, linux-scsi <linux-scsi@vger.kernel.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>
 
-David Milburn wrote:
-> Synchronize ahci_sw_activity and ahci_sw_activity_blink with ata_port lock.
+On Mon, 2008-10-27 at 10:51 +0900, Tejun Heo wrote:
+> James Bottomley wrote:
+> > On Sun, 2008-10-26 at 18:46 +0900, Tejun Heo wrote:
+> >> Hello, Jens.
+> >>
+> >> Commit 242f9dcb8ba6f68fcd217a119a7648a4f69290e9 introduces a strange
+> >> regression for libata.  The second timeout gives puts different
+> >> pointer from the issued command onto eh_cmd_q breaking libata EH
+> >> command matching which triggers WARN_ON() in ata_eh_finish() and hangs
+> >> command processing or causes oops later depending on circumstances.
+> >>
+> >> Here are logs with induced timeouts (patch attached).  In commit
+> >> 242f9dcb8, the XXX messages for the second timeout shows different
+> >> scsi_cmd pointers for eh_cmd_q and qc->scmd which is initialized by
+> >> ata_scsi_qc_new() during command translation.
+> > 
+> > I can't see a way we could be getting a different command passed in from
+> > the actual one, since the only way to lose the command from the request
+> > is to go through the command completion routines which free it (and end
+> > the request).
 > 
-> Signed-off-by: David Milburn <dmilburn@redhat.com>
+> I have no idea either.  It's something in the timeout logic because on
+> the issue path the scmd pointer is identical but on tiemout pointer
+> for another scmd is queued on eh_cmd_q, which doesn't make much sense.
 
-Acked-by: Tejun Heo <tj@kernel.org>
+OK, so if we take the first trace as definitive, since it shows the same
+command going around twice (being freed and reallocated from the slab in
+between), it does tend to imply the one on eh_cmd_q is bogus.
 
--- 
-tejun
+Could you print out all scsi commands going into ata_qc_issue so we can
+see if there's a clue in where this one is coming from?
+
+> > However, since the WARN_ON is specifically comparing the command with
+> > the one found by the active tag, could this actually be a problem caused
+> > by block tags?  I note that libata still uses its own array of
+> > outstanding tags (ap->qcmd[tag]) instead of finding them using
+> > blk_queue_find_tag() (or scsi_find_tag()).
+> 
+> Nope, the tested commits are before the block queue tag transition and
+> I tested two consecutive commits.  242f9dcb^ is okay.  242f9dcb is
+> not.
+
+Well, it was worth a shot.
+
+James
+
+
