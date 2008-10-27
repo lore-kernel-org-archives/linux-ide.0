@@ -1,41 +1,33 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH 1/2] ali14xx: doesn't use shared IRQs
-Date: Mon, 27 Oct 2008 20:57:22 +0100
-Message-ID: <200810272057.22255.bzolnier@gmail.com>
+From: Phil Sutter <n0-1@freewrt.org>
+Subject: Re: [PATCH] irq handler must disable the handled irq
+Date: Mon, 27 Oct 2008 21:51:24 +0100
+Message-ID: <20081027205124.GB27227@nuty>
+References: <1225116107-9753-1-git-send-email-n0-1@freewrt.org> <20081027141509.2d0be2c7@lxorguk.ukuu.org.uk> <20081027154106.GA27227@nuty> <200810272038.45346.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from gv-out-0910.google.com ([216.239.58.185]:29609 "EHLO
-	gv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752427AbYJ0UCl (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 27 Oct 2008 16:02:41 -0400
-Received: by gv-out-0910.google.com with SMTP id e6so301593gvc.37
-        for <linux-ide@vger.kernel.org>; Mon, 27 Oct 2008 13:02:39 -0700 (PDT)
+Received: from orbit.nwl.cc ([81.169.176.177]:55012 "EHLO
+	mail.ifyouseekate.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751193AbYJ0Uug (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 27 Oct 2008 16:50:36 -0400
+Received: from nuty (localhost [127.0.0.1])
+	by mail.ifyouseekate.net (Postfix) with ESMTP id F361C38C2BF5
+	for <linux-ide@vger.kernel.org>; Mon, 27 Oct 2008 21:50:29 +0100 (CET)
 Content-Disposition: inline
+In-Reply-To: <200810272038.45346.bzolnier@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
 
-init_irq() shouldn't use IRQF_SHARED for ali14xx IDE IRQ handler.
+On Mon, Oct 27, 2008 at 08:38:45PM +0100, Bartlomiej Zolnierkiewicz wrote:
+> Any reason why it has not been submitted?
 
-Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
----
- drivers/ide/ide-probe.c |    3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+Not really. Two years ago I was working at the 2.6 port of the board in
+a lab semester. Shortly after having contacted the linux-mips maintainer
+(who also told me to send the mentioned driver to this list) the
+semester was over and everyday life at the university hit me again.
 
-Index: b/drivers/ide/ide-probe.c
-===================================================================
---- a/drivers/ide/ide-probe.c
-+++ b/drivers/ide/ide-probe.c
-@@ -1123,8 +1123,7 @@ static int init_irq (ide_hwif_t *hwif)
- 		sa = IRQF_SHARED;
- #endif /* __mc68000__ */
- 
--		if (hwif->chipset == ide_pci || hwif->chipset == ide_cmd646 ||
--		    hwif->chipset == ide_ali14xx)
-+		if (hwif->chipset == ide_pci || hwif->chipset == ide_cmd646)
- 			sa = IRQF_SHARED;
- 
- 		if (io_ports->ctl_addr)
+If there is demand for it, I could try to port it to git and the
+already existing board support.
+
+Greetings, Phil
