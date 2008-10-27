@@ -1,70 +1,123 @@
-From: "Boris Petkov" <petkovbb@googlemail.com>
-Subject: Re: http://bugzilla.kernel.org/show_bug.cgi?id=11742
-Date: Mon, 27 Oct 2008 11:55:24 +0100
-Message-ID: <9ea470500810270355t568c88f2p24fcd45d51ef4164@mail.gmail.com>
-References: <20081020112039W.fujita.tomonori@lab.ntt.co.jp>
-	 <200810260938.55709.valerio.passini@unicam.it>
-	 <20081026145819.GA1320@gollum.tnic>
-	 <200810262101.42874.valerio.passini@unicam.it>
-	 <20081027061556.GA17928@gollum.tnic> <49059C56.2010405@ru.mvista.com>
-Reply-To: petkovbb@gmail.com
+From: Tejun Heo <tj@kernel.org>
+Subject: [PATCH #upstream-fixes 1/4 UPDATED] libata: fix device iteration
+ bugs
+Date: Mon, 27 Oct 2008 19:59:23 +0900
+Message-ID: <49059F0B.3000508@kernel.org>
+References: <49041323.9020309@kernel.org> <49044ABA.7050104@ru.mvista.com> <490584EF.8040700@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-gx0-f16.google.com ([209.85.217.16]:48627 "EHLO
-	mail-gx0-f16.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751954AbYJ0Kz0 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 27 Oct 2008 06:55:26 -0400
-Received: by gxk9 with SMTP id 9so2113244gxk.13
-        for <linux-ide@vger.kernel.org>; Mon, 27 Oct 2008 03:55:24 -0700 (PDT)
-In-Reply-To: <49059C56.2010405@ru.mvista.com>
-Content-Disposition: inline
+Received: from hera.kernel.org ([140.211.167.34]:59290 "EHLO hera.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752083AbYJ0K7j (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 27 Oct 2008 06:59:39 -0400
+In-Reply-To: <490584EF.8040700@kernel.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Cc: Valerio Passini <valerio.passini@unicam.it>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, valerio.p@libero.it, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, linux-ide@vger.kernel.org
+Cc: Jeff Garzik <jeff@garzik.org>, IDE/ATA development list <linux-ide@vger.kernel.org>
 
-On Mon, Oct 27, 2008 at 11:47 AM, Sergei Shtylyov
-<sshtylyov@ru.mvista.com> wrote:
-> Hello.
->
-> Borislav Petkov wrote:
->
->  More nipicking... :-)
+There were several places where only enabled devices should be
+iterated over but device enabledness wasn't checked.
 
-Admit that you secretly like doing that :)
+* IDENTIFY data 40 wire check in cable_is_40wire()
+* xfer_mode/ncq_enabled saving in ata_scsi_error()
+* DUBIOUS_XFER handling in ata_set_mode()
 
-s/nipcking/nitpicking/
+While at it, reformat comments in cable_is_40wire().
 
->> From: Borislav Petkov <petkovbb@gmail.com>
->> Date: Mon, 27 Oct 2008 06:59:14 +0100
->> Subject: [PATCH] ide-cd: fix dma alignment regression
->>
->> e5318b531b008c79d2a0c0df06a7b8628da38e2f introduced a regression which
->>
->
->  I remember Linus asking to put the commit's one-liner in parens after its
-> SHA1...
+Signed-off-by: Tejun Heo <tj@kernel.org>
+---
+Comments reformatted as per Sergei's comment.
 
-I remember reading something in the likes of it, will fix.
+ drivers/ata/libata-core.c |   32 ++++++++++++++++++--------------
+ drivers/ata/libata-eh.c   |    9 +++++++++
+ 2 files changed, 27 insertions(+), 14 deletions(-)
 
->> caused some ATAPI drives to turn off dma for REQ_TYPE_ATA_PC commands
->>
->
->  Hm, why "ATAPI" but "dma"? Is "dma" a neologism now in English? :-)
-
-Are you're referring to "... Once the Command Packet has been sent, the command
-proceeds as a normal ATA command would. The Command Packet bytes shall always be
-transferred via PIO and never using DMA." from SFF8020?
-
->> while burning and thus degrating performance and ultimately causing an
->>
->
->   s/degrating/degrading/
-
-Already fixed. Will resend later, thanks.
-
--- 
-Regards/Gruss,
-Boris
+Index: work/drivers/ata/libata-core.c
+===================================================================
+--- work.orig/drivers/ata/libata-core.c
++++ work/drivers/ata/libata-core.c
+@@ -4158,29 +4158,33 @@ static int cable_is_40wire(struct ata_po
+ 	struct ata_link *link;
+ 	struct ata_device *dev;
+ 
+-	/* If the controller thinks we are 40 wire, we are */
++	/* If the controller thinks we are 40 wire, we are. */
+ 	if (ap->cbl == ATA_CBL_PATA40)
+ 		return 1;
+-	/* If the controller thinks we are 80 wire, we are */
++
++	/* If the controller thinks we are 80 wire, we are. */
+ 	if (ap->cbl == ATA_CBL_PATA80 || ap->cbl == ATA_CBL_SATA)
+ 		return 0;
+-	/* If the system is known to be 40 wire short cable (eg laptop),
+-	   then we allow 80 wire modes even if the drive isn't sure */
++
++	/* If the system is known to be 40 wire short cable (eg
++	 * laptop), then we allow 80 wire modes even if the drive
++	 * isn't sure.
++	 */
+ 	if (ap->cbl == ATA_CBL_PATA40_SHORT)
+ 		return 0;
+-	/* If the controller doesn't know we scan
+ 
+-	   - Note: We look for all 40 wire detects at this point.
+-	     Any 80 wire detect is taken to be 80 wire cable
+-	     because
+-	     - In many setups only the one drive (slave if present)
+-               will give a valid detect
+-             - If you have a non detect capable drive you don't
+-               want it to colour the choice
+-        */
++	/* If the controller doesn't know, we scan.
++	 *
++	 * Note: We look for all 40 wire detects at this point.  Any
++	 *       80 wire detect is taken to be 80 wire cable because
++	 * - in many setups only the one drive (slave if present) will
++	 *   give a valid detect
++	 * - if you have a non detect capable drive you don't want it
++	 *   to colour the choice
++	 */
+ 	ata_port_for_each_link(link, ap) {
+ 		ata_link_for_each_dev(dev, link) {
+-			if (!ata_is_40wire(dev))
++			if (ata_dev_enabled(dev) && !ata_is_40wire(dev))
+ 				return 0;
+ 		}
+ 	}
+Index: work/drivers/ata/libata-eh.c
+===================================================================
+--- work.orig/drivers/ata/libata-eh.c
++++ work/drivers/ata/libata-eh.c
+@@ -603,6 +603,9 @@ void ata_scsi_error(struct Scsi_Host *ho
+ 			ata_link_for_each_dev(dev, link) {
+ 				int devno = dev->devno;
+ 
++				if (!ata_dev_enabled(dev))
++					continue;
++
+ 				ehc->saved_xfer_mode[devno] = dev->xfer_mode;
+ 				if (ata_ncq_enabled(dev))
+ 					ehc->saved_ncq_enabled |= 1 << devno;
+@@ -2790,6 +2793,9 @@ int ata_set_mode(struct ata_link *link,
+ 
+ 	/* if data transfer is verified, clear DUBIOUS_XFER on ering top */
+ 	ata_link_for_each_dev(dev, link) {
++		if (!ata_dev_enabled(dev))
++			continue;
++
+ 		if (!(dev->flags & ATA_DFLAG_DUBIOUS_XFER)) {
+ 			struct ata_ering_entry *ent;
+ 
+@@ -2811,6 +2817,9 @@ int ata_set_mode(struct ata_link *link,
+ 		u8 saved_xfer_mode = ehc->saved_xfer_mode[dev->devno];
+ 		u8 saved_ncq = !!(ehc->saved_ncq_enabled & (1 << dev->devno));
+ 
++		if (!ata_dev_enabled(dev))
++			continue;
++
+ 		if (dev->xfer_mode != saved_xfer_mode ||
+ 		    ata_ncq_enabled(dev) != saved_ncq)
+ 			dev->flags |= ATA_DFLAG_DUBIOUS_XFER;
