@@ -1,42 +1,78 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [PATCH] irq handler must disable the handled irq
-Date: Mon, 27 Oct 2008 14:15:09 +0000
-Message-ID: <20081027141509.2d0be2c7@lxorguk.ukuu.org.uk>
-References: <1225116107-9753-1-git-send-email-n0-1@freewrt.org>
+From: Atsushi Nemoto <anemo@mba.ocn.ne.jp>
+Subject: Re: [PATCH 1/2] tx4938ide: Check minimum cycle time and SHWT range
+Date: Mon, 27 Oct 2008 23:52:24 +0900 (JST)
+Message-ID: <20081027.235224.82088530.anemo@mba.ocn.ne.jp>
+References: <20081027.223913.128619425.anemo@mba.ocn.ne.jp>
+	<4905CB09.5020805@ru.mvista.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:47723 "EHLO
-	lxorguk.ukuu.org.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1750790AbYJ0OPJ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 27 Oct 2008 10:15:09 -0400
-In-Reply-To: <1225116107-9753-1-git-send-email-n0-1@freewrt.org>
+Received: from mba.ocn.ne.jp ([122.1.235.107]:54539 "EHLO smtp.mba.ocn.ne.jp"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750713AbYJ0Ow0 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 27 Oct 2008 10:52:26 -0400
+In-Reply-To: <4905CB09.5020805@ru.mvista.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Phil Sutter <n0-1@freewrt.org>
-Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-ide@vger.kernel.org, Florian Fainelli <florian@openwrt.org>
+To: sshtylyov@ru.mvista.com
+Cc: linux-mips@linux-mips.org, linux-ide@vger.kernel.org, bzolnier@gmail.com, ralf@linux-mips.org
 
-On Mon, 27 Oct 2008 15:01:47 +0100
-Phil Sutter <n0-1@freewrt.org> wrote:
-
-> Signed-off-by: Florian Fainelli <florian@openwrt.org>
-> ---
->  drivers/ata/pata_rb532_cf.c |    2 ++
->  1 files changed, 2 insertions(+), 0 deletions(-)
+On Mon, 27 Oct 2008 17:07:05 +0300, Sergei Shtylyov <sshtylyov@ru.mvista.com> wrote:
+> > +	/* -DIOx recovery time (SHWT * 4) and cycle time requirement */
+> > +	while (shwt * cycle * 4 + t->act8b < t->cycle)
 > 
-> diff --git a/drivers/ata/pata_rb532_cf.c b/drivers/ata/pata_rb532_cf.c
-> index f8b3ffc..a1d44a6 100644
-> --- a/drivers/ata/pata_rb532_cf.c
-> +++ b/drivers/ata/pata_rb532_cf.c
-> @@ -116,6 +116,8 @@ static irqreturn_t rb532_pata_irq_handler(int irq, void *dev_instance)
->  		set_irq_type(info->irq, IRQ_TYPE_LEVEL_HIGH);
->  	}
->  
-> +	disable_irq(irq);
-> +
+>     This can lead to adding an extra setup cycle due to use of "non-quantized" 
+> active time, here's more precise expression for the cycle time:
+> 
+>     (shwt * 4 + wt + (wt ? 2 : 3)) * cycle
+> 
+> or even this, more obsure:
+> 
+>     (shwt * 4 + wt + !wt + 2) * cycle
 
-You can't call disable_irq in an IRQ handler. What are you actually
-trying to do ?
+Hm, indeed.  I prefer former one.  Revised.  Thanks!
 
-Alan
+
+From: Atsushi Nemoto <anemo@mba.ocn.ne.jp>
+Subject: [PATCH] tx4938ide: Check minimum cycle time and SHWT range (v2)
+
+SHWT value is used as address valid to -CSx assertion and -CSx to -DIOx
+assertion setup time, and contrarywise, -DIOx to -CSx release and -CSx
+release to address invalid hold time, so it actualy applies 4 times and
+so constitutes -DIOx recovery time.  Check requirement of the recovery
+time and cycle time.  Also check SHWT maximum value.
+
+Suggested-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Signed-off-by: Atsushi Nemoto <anemo@mba.ocn.ne.jp>
+---
+ drivers/ide/tx4938ide.c |    9 ++++++++-
+ 1 files changed, 8 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/ide/tx4938ide.c b/drivers/ide/tx4938ide.c
+index a0d10a9..796289c 100644
+--- a/drivers/ide/tx4938ide.c
++++ b/drivers/ide/tx4938ide.c
+@@ -39,10 +39,17 @@ static void tx4938ide_tune_ebusc(unsigned int ebus_ch,
+ 	/* Address-valid to DIOR/DIOW setup */
+ 	shwt = DIV_ROUND_UP(t->setup, cycle);
+ 
++	/* -DIOx recovery time (SHWT * 4) and cycle time requirement */
++	while ((shwt * 4 + wt + (wt ? 2 : 3)) * cycle < t->cycle)
++		shwt++;
++	if (shwt > 7) {
++		pr_warning("tx4938ide: SHWT violation (%d)\n", shwt);
++		shwt = 7;
++	}
+ 	pr_debug("tx4938ide: ebus %d, bus cycle %dns, WT %d, SHWT %d\n",
+ 		 ebus_ch, cycle, wt, shwt);
+ 
+-	__raw_writeq((cr & ~(0x3f007ull)) | (wt << 12) | shwt,
++	__raw_writeq((cr & ~0x3f007ull) | (wt << 12) | shwt,
+ 		     &tx4938_ebuscptr->cr[ebus_ch]);
+ }
+ 
+-- 
+1.5.6.3
+
+
