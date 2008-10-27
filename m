@@ -1,34 +1,56 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [PATCH 2/4] libata: Drain data on errors
-Date: Mon, 27 Oct 2008 21:54:58 +0000
-Message-ID: <20081027215458.72c69618@lxorguk.ukuu.org.uk>
-References: <20081017180655.7781.15021.stgit@localhost.localdomain>
-	<20081017180837.7781.26372.stgit@localhost.localdomain>
-	<4906132B.1000502@rtr.ca>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: Re: [PATCH 1/2] tx4938ide: Check minimum cycle time and SHWT range
+Date: Tue, 28 Oct 2008 02:12:10 +0300
+Message-ID: <49064ACA.20200@ru.mvista.com>
+References: <20081027.223913.128619425.anemo@mba.ocn.ne.jp>	<4905CB09.5020805@ru.mvista.com> <20081027.235224.82088530.anemo@mba.ocn.ne.jp>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:40598 "EHLO
-	lxorguk.ukuu.org.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751595AbYJ0VzB (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 27 Oct 2008 17:55:01 -0400
-In-Reply-To: <4906132B.1000502@rtr.ca>
+Received: from gateway-1237.mvista.com ([63.81.120.155]:43197 "EHLO
+	imap.sh.mvista.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751116AbYJ0XMT (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 27 Oct 2008 19:12:19 -0400
+In-Reply-To: <20081027.235224.82088530.anemo@mba.ocn.ne.jp>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark Lord <liml@rtr.ca>
-Cc: jeff@garzik.org, linux-ide@vger.kernel.org
+To: Atsushi Nemoto <anemo@mba.ocn.ne.jp>
+Cc: linux-mips@linux-mips.org, linux-ide@vger.kernel.org, bzolnier@gmail.com, ralf@linux-mips.org
 
-O> I'm just catching up on a few things here now that holiday season is over.
-> In the above loop, I wonder if it might be better to only check status
-> every NN iterations, where NN > 1 (say, 16), to speed things up a fair amount (?).
+Hello.
 
-And hang some controllers probably.
+Atsushi Nemoto wrote:
 
-> Sure it's rare, but when it happens the entire system is probably stopped
-> waiting for us to recover, so speed might matter some.
+> From: Atsushi Nemoto <anemo@mba.ocn.ne.jp>
+> Subject: [PATCH] tx4938ide: Check minimum cycle time and SHWT range (v2)
+>
+> SHWT value is used as address valid to -CSx assertion and -CSx to -DIOx
+> assertion setup time, and contrarywise, -DIOx to -CSx release and -CSx
+> release to address invalid hold time, so it actualy applies 4 times and
+> so constitutes -DIOx recovery time.  Check requirement of the recovery
+> time and cycle time.  Also check SHWT maximum value.
+>
+> Suggested-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+> Signed-off-by: Atsushi Nemoto <anemo@mba.ocn.ne.jp>
+>   
 
-Correctness first. If we have to optimise this case we are (as you note)
-doing something seriously wrong!
+Acked-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
 
-Alan
+> diff --git a/drivers/ide/tx4938ide.c b/drivers/ide/tx4938ide.c
+> index a0d10a9..796289c 100644
+> --- a/drivers/ide/tx4938ide.c
+> +++ b/drivers/ide/tx4938ide.c
+> @@ -39,10 +39,17 @@ static void tx4938ide_tune_ebusc(unsigned int ebus_ch,
+>  	/* Address-valid to DIOR/DIOW setup */
+>  	shwt = DIV_ROUND_UP(t->setup, cycle);
+>  
+> +	/* -DIOx recovery time (SHWT * 4) and cycle time requirement */
+> +	while ((shwt * 4 + wt + (wt ? 2 : 3)) * cycle < t->cycle)
+>   
+
+   Besides, it's worth making 'wt' variable signed, otherwise you're 
+risking underflow when subtracting 2 above...
+
+WBR, Sergei
+
+
