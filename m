@@ -1,99 +1,45 @@
-From: Elias Oltmanns <eo@nebensachen.de>
-Subject: Re: [PATCH #upstream-fixes 2/4] libata: beef up iterators
-Date: Mon, 27 Oct 2008 10:39:31 +0100
-Message-ID: <87abcqtm0c.fsf@denkblock.local>
-References: <49041323.9020309@kernel.org> <4904135B.4040901@kernel.org>
-	<87tzaz77ix.fsf@denkblock.local> <490584A6.3020005@kernel.org>
+From: Valerio Passini <valerio.passini@unicam.it>
+Subject: Re: http://bugzilla.kernel.org/show_bug.cgi?id=11742
+Date: Mon, 27 Oct 2008 11:14:28 +0100
+Message-ID: <200810271114.28986.valerio.passini@unicam.it>
+References: <20081020112039W.fujita.tomonori@lab.ntt.co.jp> <200810262101.42874.valerio.passini@unicam.it> <20081027061556.GA17928@gollum.tnic>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nebensachen.de ([195.34.83.29]:51589 "EHLO mail.nebensachen.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751098AbYJ0JlB (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 27 Oct 2008 05:41:01 -0400
+Received: from smtp.unicam.it ([193.204.8.1]:59865 "HELO unicam.it"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1753235AbYJ0KOg (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 27 Oct 2008 06:14:36 -0400
+In-Reply-To: <20081027061556.GA17928@gollum.tnic>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: Jeff Garzik <jeff@garzik.org>, IDE/ATA development list <linux-ide@vger.kernel.org>
+To: petkovbb@gmail.com
+Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, valerio.p@libero.it, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, linux-ide@vger.kernel.org
 
-Tejun Heo <tj@kernel.org> wrote:
-> Hello,
->
-> Elias Oltmanns wrote:
->>> -		ata_port_for_each_link(link, ap) {
->>> -			ata_link_for_each_dev(dev, link)
->>> +		ata_for_each_link(link, ap, EDGE) {
->>> +			ata_for_each_dev(dev, link, ALL)
->> 
->> Where did these short forms (EDGE, ALL) spring from? Does this code even
->> compile?
->
-> +#define ata_for_each_link(link, ap, mode) \
-> +	for ((link) = ata_link_next(NULL, (ap), ATA_LITER_##mode); (link); \
-> +	     (link) = ata_link_next((link), (ap), ATA_LITER_##mode))
-> +
-> +#define ata_for_each_dev(dev, link, mode) \
-> +	for ((dev) = ata_dev_next(NULL, (link), ATA_DITER_##mode); (dev); \
-> +	     (dev) = ata_dev_next((dev), (link), ATA_DITER_##mode))
+Alle luned=EC 27 ottobre 2008, Borislav Petkov ha scritto:
+> On Sun, Oct 26, 2008 at 09:01:42PM +0100, Valerio Passini wrote:
+>=20
+> [.. ]
+>=20
+> > Here I am, thus the patched kernel has been installed and tested.
+> > Burning CD's and simulation work perfectly and everything seems fin=
+e.
+> > :)
+>=20
+> Well, nice to hear :). Thanks for your debugging effort and patience.
 
-Sorry, I should have been more explicit. I was referring to EDGE and ALL
-as opposed to ATA_LITER_EDGE and ATA_DITER_ALL. Unless I've missed
-something, the former aren't defined anywhere in your patch.
+My pleasure!
 
->
->>> @@ -2891,7 +2881,7 @@ static int ata_link_nr_vacant(struct ata
->>>  	struct ata_device *dev;
->>>  	int cnt = 0;
->>>  
->>> -	ata_link_for_each_dev(dev, link)
->>> +	ata_for_each_dev(dev, link, ALL)
->>>  		if (dev->class == ATA_DEV_UNKNOWN)
->>>  			cnt++;
->>>  	return cnt;
->> 
->> What about making the two above (ata_link_nr_*()) static inline while
->> you are at it? Or is this another one of those cases where the compiler
->> knows best anyway?
->
-> Yeah, it's a static function used only in single place.  Should be
-> pretty straight forward for the compiler and even if it fails to
-> notice it, it doesn't hurt at all.
+> > The most mysterious part for me (as I wrote before), ide-cd sets
+> > dma_alignment to 31 and dma_pad_mask to 15. So the current code
+> > enables DMA if data_len is a multiple of 32. The old code enables D=
+MA
+> > if data_len is a multiple of 16.
+>=20
+> Of course, 'multiple of' description is wrong. Should have been
+> 32-byte and 16-byte alignment respectively.
 
-I should have guessed, I suppose. Probably just was too lazy to check,
-sorry.
-
->
->> [...]
->>> Index: work/drivers/ata/libata-scsi.c
->>> ===================================================================
->>> --- work.orig/drivers/ata/libata-scsi.c
->>> +++ work/drivers/ata/libata-scsi.c
->> [...]
->>> @@ -3254,9 +3254,9 @@ void ata_scsi_scan_host(struct ata_port
->>>  	 * failure occurred, scan would have failed silently.  Check
->>>  	 * whether all devices are attached.
->>>  	 */
->>> -	ata_port_for_each_link(link, ap) {
->>> -		ata_link_for_each_dev(dev, link) {
->>> -			if (ata_dev_enabled(dev) && !dev->sdev)
->>> +	ata_for_each_link(link, ap, EDGE) {
->>> +		ata_for_each_dev(dev, link, ENABLED) {
->>> +			if (!dev->sdev)
->>>  				goto exit_loop;
->>>  		}
->>>  	}
->> 
->> Getting rid of those braces would make things even cleaner in my
->> opinion. (That's my nit picking since Sergei picked on that comment
->> formatting issue shortly before I was going to ;-) ).
->
-> Yeah, maybe.  I don't know.  The reason why I added braces there in
-> the first place was because emacs has some problem dealing with nested
-> non-standard looping constructs.
-
-Right, I seem to remember having trouble with that myself. So I'm all in
-favour of keeping them after all ;-).
-
-Regards,
-
-Elias
+If you have another patch that solves the problem and you want to try i=
+t, just send it to me, I will be glad to test it. Bye
