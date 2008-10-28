@@ -1,47 +1,72 @@
-From: Atsushi Nemoto <anemo@mba.ocn.ne.jp>
-Subject: [PATCH] tx4938ide: Avoid underflow on calculation of a wait cycle
-Date: Tue, 28 Oct 2008 22:09:04 +0900 (JST)
-Message-ID: <20081028.220904.128617360.anemo@mba.ocn.ne.jp>
+From: Kel Modderman <kel@otaku42.de>
+Subject: [PATCH 5/5] storage-fixup: a Makefile
+Date: Wed, 29 Oct 2008 09:11:51 +1000
+Message-ID: <200810290911.51961.kel@otaku42.de>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Content-Type: text/plain;
+  charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mba.ocn.ne.jp ([122.1.235.107]:57674 "EHLO smtp.mba.ocn.ne.jp"
+Received: from venema.h4ckr.net ([217.24.1.135]:43264 "EHLO venema.h4ckr.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753123AbYJ1NJG (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 28 Oct 2008 09:09:06 -0400
+	id S1752083AbYJ1Xlp (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 28 Oct 2008 19:41:45 -0400
+Received: from localhost (localhost [127.0.0.1])
+	by venema.h4ckr.net (Postfix) with ESMTP id 858693067CC
+	for <linux-ide@vger.kernel.org>; Wed, 29 Oct 2008 00:12:45 +0100 (CET)
+Received: from venema.h4ckr.net ([127.0.0.1])
+	by localhost (venema.h4ckr.net [127.0.0.1]) (amavisd-new, port 10024)
+	with ESMTP id cOcw85lRW6xl for <linux-ide@vger.kernel.org>;
+	Wed, 29 Oct 2008 00:12:43 +0100 (CET)
+Received: from [192.168.1.99] (anikodeak.plus.com [80.229.152.168])
+	by venema.h4ckr.net (Postfix) with ESMTP id A05AF3067CD
+	for <linux-ide@vger.kernel.org>; Wed, 29 Oct 2008 00:12:39 +0100 (CET)
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-mips@linux-mips.org
-Cc: linux-ide@vger.kernel.org, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, ralf@linux-mips.org, sshtylyov@ru.mvista.com
+To: linux-ide@vger.kernel.org
 
-Make 'wt' variable signed while it can be negative during calculation.
+Add a Makefile for convenience of installation and preparing dist. tarball.
 
-Suggested-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Signed-off-by: Atsushi Nemoto <anemo@mba.ocn.ne.jp>
+This could be handy for distributions/admins who want to deploy this workaround
+in a package.
+
+Signed-off-by: Kel Modderman <kel@otaku42.de>
 ---
- drivers/ide/tx4938ide.c |    5 +++--
- 1 files changed, 3 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/ide/tx4938ide.c b/drivers/ide/tx4938ide.c
-index 796289c..9120063 100644
---- a/drivers/ide/tx4938ide.c
-+++ b/drivers/ide/tx4938ide.c
-@@ -26,12 +26,13 @@ static void tx4938ide_tune_ebusc(unsigned int ebus_ch,
- 	unsigned int sp = (cr >> 4) & 3;
- 	unsigned int clock = gbus_clock / (4 - sp);
- 	unsigned int cycle = 1000000000 / clock;
--	unsigned int wt, shwt;
-+	unsigned int shwt;
-+	int wt;
- 
- 	/* Minimum DIOx- active time */
- 	wt = DIV_ROUND_UP(t->act8b, cycle) - 2;
- 	/* IORDY setup time: 35ns */
--	wt = max(wt, DIV_ROUND_UP(35, cycle));
-+	wt = max_t(int, wt, DIV_ROUND_UP(35, cycle));
- 	/* actual wait-cycle is max(wt & ~1, 1) */
- 	if (wt > 2 && (wt & 1))
- 		wt++;
--- 
-1.5.6.3
+--- /dev/null
++++ b/Makefile
+@@ -0,0 +1,33 @@
++#!/usr/bin/make -f
++
++NAME    := storage-fixup
++FILES   := $(NAME) $(NAME).conf $(NAME).8 LICENSE Makefile
++VERSION := $(shell /bin/bash ./$(NAME) -V)
++BINDIR  := /usr/sbin
++ETCDIR  := /etc
++MANDIR  := /usr/share/man/man8
++MKDIR   := mkdir -p
++INSTALL := install
++
++all:
++	$(info Nothing to be done, ready for "$(MAKE) install" ...)
++
++%.gz: %
++	gzip -9 < $< > $@
++
++install: $(NAME).8.gz
++	$(MKDIR) $(DESTDIR)$(BINDIR)
++	$(INSTALL) -t $(DESTDIR)$(BINDIR) -m 755 $(NAME)
++	$(MKDIR) $(DESTDIR)$(ETCDIR)
++	$(INSTALL) -t $(DESTDIR)$(ETCDIR) -m 644 $(NAME).conf
++	$(MKDIR) $(DESTDIR)$(MANDIR)
++	$(INSTALL) -t $(DESTDIR)$(MANDIR) -m 644 $(NAME).8.gz
++
++clean:
++	$(RM) $(NAME).8.gz
++
++dist: clean
++	git-archive --format=tar --prefix=$(NAME)-$(VERSION)/ HEAD \
++		$(FILES) | tar -C.. -xf -
++	tar -czvf ../$(NAME)-$(VERSION).tar.gz -C.. $(NAME)-$(VERSION)/
++	$(RM) -r ../$(NAME)-$(VERSION)/
+---
