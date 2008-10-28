@@ -1,43 +1,50 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH] libata: add missing kernel-doc
-Date: Mon, 27 Oct 2008 23:57:51 -0400
-Message-ID: <49068DBF.8080407@pobox.com>
-References: <20081026201932.d012e8dc.randy.dunlap@oracle.com>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [PATCH #upstream-fixes] sata_sil24: configure max read request
+ size to 4k
+Date: Mon, 27 Oct 2008 23:58:02 -0400
+Message-ID: <49068DCA.8010205@garzik.org>
+References: <4902AE1E.5020504@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:54361 "EHLO mail.dvmed.net"
+Received: from srv5.dvmed.net ([207.36.208.214]:54375 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752045AbYJ1D55 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 27 Oct 2008 23:57:57 -0400
-In-Reply-To: <20081026201932.d012e8dc.randy.dunlap@oracle.com>
+	id S1751372AbYJ1D6K (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 27 Oct 2008 23:58:10 -0400
+In-Reply-To: <4902AE1E.5020504@kernel.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Randy Dunlap <randy.dunlap@oracle.com>
-Cc: ide <linux-ide@vger.kernel.org>, akpm <akpm@linux-foundation.org>
+To: Tejun Heo <tj@kernel.org>
+Cc: Pierre Ossman <drzeus-list@drzeus.cx>, IDE/ATA development list <linux-ide@vger.kernel.org>
 
-Randy Dunlap wrote:
-> From: Randy Dunlap <randy.dunlap@oracle.com>
+Tejun Heo wrote:
+> Due to request posting limitations, bandwidth of sil3132 is limited to
+> around 120MB/s with the minimum pci-e payload size (128bytes) which is
+> used by most consumer systems.  However, write throughput can be
+> slightly (~3%) increased by increasing the max read requeset size.
+> Configure it to 4k which is the maximum supported.  This optimization
+> is also done by SIMG's windows driver.
 > 
-> Fix libata missing kernel-doc:
-> 
-> Warning(lin2628-rc2//drivers/ata/libata-core.c:4562): No description found for parameter 'tag'
-> 
-> Signed-off-by: Randy Dunlap <randy.dunlap@oracle.com>
+> Signed-off-by: Tejun Heo <tj@kernel.org>
 > ---
->  drivers/ata/libata-core.c |    1 +
->  1 file changed, 1 insertion(+)
-> 
-> --- lin2628-rc2.orig/drivers/ata/libata-core.c
-> +++ lin2628-rc2/drivers/ata/libata-core.c
-> @@ -4553,6 +4553,7 @@ void swap_buf_le16(u16 *buf, unsigned in
->  /**
->   *	ata_qc_new_init - Request an available ATA command, and initialize it
->   *	@dev: Device from whom we request an available command structure
-> + *	@tag: command tag
->   *
->   *	LOCKING:
+>  drivers/ata/sata_sil24.c |    5 +++++
+>  1 file changed, 5 insertions(+)
+> diff --git a/drivers/ata/sata_sil24.c b/drivers/ata/sata_sil24.c
+> index 4621807..ccee930 100644
+> --- a/drivers/ata/sata_sil24.c
+> +++ b/drivers/ata/sata_sil24.c
+> @@ -1329,6 +1329,11 @@ static int sil24_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
+>  		}
+>  	}
+>  
+> +	/* Set max read request size to 4096.  This slightly increases
+> +	 * write throughput for pci-e variants.
+> +	 */
+> +	pcie_set_readrq(pdev, 4096);
+> +
+>  	sil24_init_controller(host);
+>  
 
 applied
 
