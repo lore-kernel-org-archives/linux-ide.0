@@ -1,35 +1,42 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH 2/2] tx4938ide: Do not call devm_ioremap for whole 128KB
-Date: Tue, 28 Oct 2008 02:52:10 +0300
-Message-ID: <4906542A.9090905@ru.mvista.com>
-References: <20081027.223939.59650930.anemo@mba.ocn.ne.jp>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCHSET #upstream] libata: separate out SFF and BMDMA
+Date: Tue, 28 Oct 2008 10:06:47 +0900
+Message-ID: <490665A7.9050002@kernel.org>
+References: <1224580680-13698-1-git-send-email-tj@kernel.org> <490619DF.6020804@rtr.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from gateway-1237.mvista.com ([63.81.120.155]:43507 "EHLO
-	imap.sh.mvista.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752584AbYJ0XwS (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 27 Oct 2008 19:52:18 -0400
-In-Reply-To: <20081027.223939.59650930.anemo@mba.ocn.ne.jp>
+Received: from hera.kernel.org ([140.211.167.34]:60875 "EHLO hera.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752056AbYJ1BHC (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 27 Oct 2008 21:07:02 -0400
+In-Reply-To: <490619DF.6020804@rtr.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Atsushi Nemoto <anemo@mba.ocn.ne.jp>
-Cc: linux-mips@linux-mips.org, linux-ide@vger.kernel.org, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, ralf@linux-mips.org
+To: Mark Lord <liml@rtr.ca>
+Cc: jeff@garzik.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 
-Hello.
+Mark Lord wrote:
+> Tejun Heo wrote:
+> ..
+>> This patchset further separates SFF/BMDMA support from the rest of the
+>> libata and separate out BMDMA from SFF.  This patchset contains the
+>> following 22 patches.
+> ..
+> 
+> Heh.. I wonder how this will fit with an upcoming task on my list:
+> adding ATAPI support to sata_mv..
+> 
+> Currently sata_mv is a more-or-less purely FIS-based driver,
+> with little need for SFF and no need for BMDMA.
+> 
+> But ATAPI on those chips uses BMDMA, as does target-mode (also on the
+> list).
+> It'll be interesting.
 
-Atsushi Nemoto wrote:
-> Call devm_ioremap() for CS0 and CS1 separetely.
-> And some style cleanups.
->
-> Suggested-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-> Signed-off-by: Atsushi Nemoto <anemo@mba.ocn.ne.jp>
->   
+Nah... just move it to 'dependent on BMDMA' and inherit from
+ata_bmdma_port_ops.  There are other drivers which do the same thing.
 
-Acked-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-
-
-MBR, Sergei
-
-
+-- 
+tejun
