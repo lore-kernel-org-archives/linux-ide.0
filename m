@@ -1,38 +1,58 @@
 From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH #upstream-fixes 4/4] libata: perform port detach in EH
-Date: Tue, 28 Oct 2008 00:02:01 -0400
-Message-ID: <49068EB9.8040203@garzik.org>
-References: <49041323.9020309@kernel.org> <4904135B.4040901@kernel.org> <4904138E.7010905@kernel.org> <490413B9.5030602@kernel.org>
+Subject: Re: [PATCH 04/22] libata-sff: clear IRQ from ata_sff_error_handler()
+ only when necessary
+Date: Tue, 28 Oct 2008 00:10:52 -0400
+Message-ID: <490690CC.50500@garzik.org>
+References: <1224580680-13698-1-git-send-email-tj@kernel.org> <1224580680-13698-5-git-send-email-tj@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:47149 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750831AbYJ1ECF (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 28 Oct 2008 00:02:05 -0400
-In-Reply-To: <490413B9.5030602@kernel.org>
-Sender: linux-ide-owner@vger.kernel.org
-List-Id: linux-ide@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <1224580680-13698-5-git-send-email-tj@kernel.org>
+Sender: linux-scsi-owner@vger.kernel.org
 To: Tejun Heo <tj@kernel.org>
-Cc: IDE/ATA development list <linux-ide@vger.kernel.org>
+Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+List-Id: linux-ide@vger.kernel.org
 
 Tejun Heo wrote:
-> ata_port_detach() first made sure EH saw ATA_PFLAG_UNLOADING and then
-> assumed EH context belongs to it and performed detach operation
-> itself.  However, UNLOADING doesn't disable all of EH and this could
-> lead to problems including triggering WARN_ON()'s in EH path.
-> 
-> This patch makes port detach behave more like other EH actions such
-> that ata_port_detach() requests EH to detach and waits for completion.
+> Clearing IRQ from ata_sff_error_handler() is necessary only when the
+> port is gonna be thawed before performing EH actions and some
+> controllers don't like being accessed after certain fail modes until
+> they're reset.  Clear IRQ iff the port is being thawed.  Also, remove
+> unnecessary ata_sff_sync() while at it.
 > 
 > Signed-off-by: Tejun Heo <tj@kernel.org>
 > ---
->  drivers/ata/libata-core.c |   23 ++++-------------------
->  drivers/ata/libata-eh.c   |   32 +++++++++++++++++++++++++++++++-
->  include/linux/libata.h    |    3 ++-
->  3 files changed, 37 insertions(+), 21 deletions(-)
+>  drivers/ata/libata-sff.c |   10 ++++++----
+>  1 files changed, 6 insertions(+), 4 deletions(-)
+> 
+> diff --git a/drivers/ata/libata-sff.c b/drivers/ata/libata-sff.c
+> index 4b47394..b9fb068 100644
+> --- a/drivers/ata/libata-sff.c
+> +++ b/drivers/ata/libata-sff.c
+> @@ -2119,11 +2119,13 @@ void ata_sff_error_handler(struct ata_port *ap)
+>  		}
+>  
+>  		ap->ops->bmdma_stop(qc);
+> -	}
+>  
+> -	ata_sff_sync(ap);		/* FIXME: We don't need this */
+> -	ap->ops->sff_check_status(ap);
+> -	ap->ops->sff_irq_clear(ap);
+> +		/* if we're gonna thaw, make sure IRQ is clear */
+> +		if (thaw) {
+> +			ap->ops->sff_check_status(ap);
+> +			ap->ops->sff_irq_clear(ap);
+> +		}
+> +	}
 
-dropped patches 3-4 as well, due to dropping patch #2
+I'll allow it, but, this description is not strictly true.  This 
+clearing was done in the error handler unconditionally in an attempt to 
+catch outstanding conditions.  The logic being that it is safer (FSVO 
+safe) to clear on error just in case interrupts were screaming.
+
+	Jeff
+
+
 
 
