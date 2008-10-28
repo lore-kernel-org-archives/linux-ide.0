@@ -1,52 +1,48 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: Timeout regression introduced by	242f9dcb8ba6f68fcd217a119a7648a4f69290e9
-Date: Tue, 28 Oct 2008 10:11:50 +0900
-Message-ID: <490666D6.8090603@kernel.org>
-References: <49043C7C.8050207@kernel.org> <1225034105.3958.4.camel@localhost.localdomain> <49051EA4.3040403@kernel.org> <20081027213006.GB17946@linux.vnet.ibm.com>
+Subject: Re: [PATCH 4/4] libata: clean up the SFF code for coding style
+Date: Tue, 28 Oct 2008 10:49:31 +0900
+Message-ID: <49066FAB.2080101@kernel.org>
+References: <20081017180655.7781.15021.stgit@localhost.localdomain>	<20081017180903.7781.51521.stgit@localhost.localdomain>	<874p34ska1.fsf@denkblock.local> <20081022170218.32122780@lxorguk.ukuu.org.uk> <48FFC6DE.7060605@garzik.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:54849 "EHLO hera.kernel.org"
+Received: from hera.kernel.org ([140.211.167.34]:53311 "EHLO hera.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752087AbYJ1BMz (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 27 Oct 2008 21:12:55 -0400
-In-Reply-To: <20081027213006.GB17946@linux.vnet.ibm.com>
+	id S1752041AbYJ1Btz (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 27 Oct 2008 21:49:55 -0400
+In-Reply-To: <48FFC6DE.7060605@garzik.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mike Anderson <andmike@linux.vnet.ibm.com>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Jens Axboe <jens.axboe@oracle.com>, linux-scsi <linux-scsi@vger.kernel.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>
+To: Jeff Garzik <jeff@garzik.org>
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, Elias Oltmanns <eo@nebensachen.de>, linux-ide@vger.kernel.org
 
-Mike Anderson wrote:
-> Tejun Heo <tj@kernel.org> wrote:
->> James Bottomley wrote:
->>> On Sun, 2008-10-26 at 18:46 +0900, Tejun Heo wrote:
->>>> Hello, Jens.
->>>>
->>>> Commit 242f9dcb8ba6f68fcd217a119a7648a4f69290e9 introduces a strange
->>>> regression for libata.  The second timeout gives puts different
->>>> pointer from the issued command onto eh_cmd_q breaking libata EH
->>>> command matching which triggers WARN_ON() in ata_eh_finish() and hangs
->>>> command processing or causes oops later depending on circumstances.
->>>>
->>>> Here are logs with induced timeouts (patch attached).  In commit
->>>> 242f9dcb8, the XXX messages for the second timeout shows different
->>>> scsi_cmd pointers for eh_cmd_q and qc->scmd which is initialized by
->>>> ata_scsi_qc_new() during command translation.
->>> I can't see a way we could be getting a different command passed in from
->>> the actual one, since the only way to lose the command from the request
->>> is to go through the command completion routines which free it (and end
->>> the request).
->> I have no idea either.  It's something in the timeout logic because on
->> the issue path the scmd pointer is identical but on tiemout pointer
->> for another scmd is queued on eh_cmd_q, which doesn't make much sense.
+Jeff Garzik wrote:
+> Alan Cox wrote:
+>>>>          if (ata_is_atapi(qc->tf.protocol) &&
+>>>> -            !(qc->dev->flags & ATA_DFLAG_CDB_INTR))
+>>>> +           !(qc->dev->flags & ATA_DFLAG_CDB_INTR))
+>>> Ditto.
 >>
+>> Its lining up the bracketing but hey I'm not fussed, just twiddling where
+>> checkpatch warned and the like.
+>>
+>>>> - err_out:
+>>>> +err_out:
+>>> Yes, I've wondered about these myself occasionally. Personally, I don't
+>>> insert a blank before those labels either and would be in favour of such
+>>> a change. But do we actually have a convention regarding this matter?
+>>
+>> CodingStyle chapter 7 which is of course overridable by Jeff ;)
 > 
-> I was trying to recreate this error using ata_ram wth v2.6.28-rc2.
-> Currently I am not able to see this error on timeout recovery using this
-> setup. Does IO load (or other factors) effect the error being seen?
+> libata style has always matched that:  labels go in column 1, without
+> any preceding whitespace.
 
-Not at all.  That's the only write command I issued.
+Heh... I am the one who is always putting in the extra space there,
+mainly because emacs dictates how I format my code. :-) I'll try to turn
+it off.
+
+Thanks.
 
 -- 
 tejun
