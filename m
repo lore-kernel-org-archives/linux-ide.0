@@ -1,48 +1,33 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH 4/4] libata: clean up the SFF code for coding style
-Date: Tue, 28 Oct 2008 10:49:31 +0900
-Message-ID: <49066FAB.2080101@kernel.org>
-References: <20081017180655.7781.15021.stgit@localhost.localdomain>	<20081017180903.7781.51521.stgit@localhost.localdomain>	<874p34ska1.fsf@denkblock.local> <20081022170218.32122780@lxorguk.ukuu.org.uk> <48FFC6DE.7060605@garzik.org>
+Subject: Re: possible bug related to wodim / scsi
+Date: Tue, 28 Oct 2008 10:52:09 +0900
+Message-ID: <49067049.5070005@kernel.org>
+References: <a91986340810211053n6b5b0199r99d60cb828b34e22@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:53311 "EHLO hera.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752041AbYJ1Btz (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 27 Oct 2008 21:49:55 -0400
-In-Reply-To: <48FFC6DE.7060605@garzik.org>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <a91986340810211053n6b5b0199r99d60cb828b34e22@mail.gmail.com>
+Sender: linux-scsi-owner@vger.kernel.org
+To: Mike Steiner <mike65536@gmail.com>
+Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, Elias Oltmanns <eo@nebensachen.de>, linux-ide@vger.kernel.org
 
-Jeff Garzik wrote:
-> Alan Cox wrote:
->>>>          if (ata_is_atapi(qc->tf.protocol) &&
->>>> -            !(qc->dev->flags & ATA_DFLAG_CDB_INTR))
->>>> +           !(qc->dev->flags & ATA_DFLAG_CDB_INTR))
->>> Ditto.
->>
->> Its lining up the bracketing but hey I'm not fussed, just twiddling where
->> checkpatch warned and the like.
->>
->>>> - err_out:
->>>> +err_out:
->>> Yes, I've wondered about these myself occasionally. Personally, I don't
->>> insert a blank before those labels either and would be in favour of such
->>> a change. But do we actually have a convention regarding this matter?
->>
->> CodingStyle chapter 7 which is of course overridable by Jeff ;)
+Mike Steiner wrote:
+> I'm running Ubuntu Hardy and get errors when burning a DVD+R but can
+> burn CD-R's fine. I ran wodim with -VV to get the detailed log of scsi
+> requests/responses (it's 83k).
 > 
-> libata style has always matched that:  labels go in column 1, without
-> any preceding whitespace.
+> My question is: Is this the right list to report this (to find out if
+> it's a wodim or scsi driver bug)?
 
-Heh... I am the one who is always putting in the extra space there,
-mainly because emacs dictates how I format my code. :-) I'll try to turn
-it off.
+I would much prefer if you ping the wodim guys first but I'm fairly sure
+they feel the same way in the other direction.
 
-Thanks.
+> If so, I can post the log and more details of my hardware
+> configuration (or send it wherever it should go).
+
+Yeap, give it a go.
 
 -- 
 tejun
