@@ -1,33 +1,33 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: possible bug related to wodim / scsi
-Date: Tue, 28 Oct 2008 10:52:09 +0900
-Message-ID: <49067049.5070005@kernel.org>
-References: <a91986340810211053n6b5b0199r99d60cb828b34e22@mail.gmail.com>
+Subject: Re: [PATCH 0/1] sata_sil: Option to use IO space to access TF registers.
+Date: Tue, 28 Oct 2008 10:56:55 +0900
+Message-ID: <49067167.8030205@kernel.org>
+References: <20081022182243.9471.87443.stgit@linux-chris2.mips.com>	<20081022221623.344aea62@lxorguk.ukuu.org.uk>	<20081022233439.GA30488@ftp.linux-mips.org> <20081023083215.74e48b03@lxorguk.ukuu.org.uk>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <a91986340810211053n6b5b0199r99d60cb828b34e22@mail.gmail.com>
-Sender: linux-scsi-owner@vger.kernel.org
-To: Mike Steiner <mike65536@gmail.com>
-Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from hera.kernel.org ([140.211.167.34]:39754 "EHLO hera.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752089AbYJ1B5Q (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 27 Oct 2008 21:57:16 -0400
+In-Reply-To: <20081023083215.74e48b03@lxorguk.ukuu.org.uk>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: Chris Dearman <chris@ftp.linux-mips.org>, jgarzik@pobox.com, linux-ide@vger.kernel.org
 
-Mike Steiner wrote:
-> I'm running Ubuntu Hardy and get errors when burning a DVD+R but can
-> burn CD-R's fine. I ran wodim with -VV to get the detailed log of scsi
-> requests/responses (it's 83k).
+Alan Cox wrote:
+>>   The patch is a relatively clean work around for limitations in the
+>> hardware I'm using, but I know it probably looks like just more
+>> cruft from an outside perspective so I won't be championing it :)
 > 
-> My question is: Is this the right list to report this (to find out if
-> it's a wodim or scsi driver bug)?
+> I would make the switch a runtime value personally - some network drivers
+> do this for similar reasons.
 
-I would much prefer if you ping the wodim guys first but I'm fairly sure
-they feel the same way in the other direction.
+I agree.  Please make it a module parameter.
 
-> If so, I can post the log and more details of my hardware
-> configuration (or send it wherever it should go).
-
-Yeap, give it a go.
+Thanks.
 
 -- 
 tejun
