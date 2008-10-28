@@ -1,38 +1,44 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH 2.6.28-rc2] sata_promise: proper hardreset
-Date: Tue, 28 Oct 2008 11:06:35 +0900
-Message-ID: <490673AB.2090502@kernel.org>
-References: <200810270049.m9R0ngI8027933@harpo.it.uu.se>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [PATCH] ahci: Add support for Promise PDC42819
+Date: Mon, 27 Oct 2008 23:57:32 -0400
+Message-ID: <49068DAC.605@garzik.org>
+References: <65a6ef750810222008o139600e3o8d7c7cf50a4e4ea0@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:33902 "EHLO hera.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752113AbYJ1CHJ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 27 Oct 2008 22:07:09 -0400
-In-Reply-To: <200810270049.m9R0ngI8027933@harpo.it.uu.se>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <65a6ef750810222008o139600e3o8d7c7cf50a4e4ea0@mail.gmail.com>
+Sender: linux-scsi-owner@vger.kernel.org
+To: Mark Nelson <mdnelson8@gmail.com>
+Cc: linux-ide@vger.kernel.org, alan@lxorguk.ukuu.org.uk, mikpe@it.uu.se, linux-scsi@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mikael Pettersson <mikpe@it.uu.se>
-Cc: jgarzik@pobox.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, stable@kernel.org
 
-Hello, Mikael.
+Mark Nelson wrote:
+> Add an appropriate entry for the Promise PDC42819 controller. It has an
+> AHCI mode and so far works correctly with board_ahci.
+> 
+> This chip is found on Promise's FastTrak TX2650 (2 port) and TX4650 (4 port)
+> software-based RAID cards (for which there is a binary driver, t3sas) and
+> can be found on some motherboards, for example the MSI K9A2 Platinum,
+> which calls the chip a Promise T3 controller.
+> 
+> Although this controller also supports SAS devices, its default bootup mode
+> is AHCI and the binary driver has to do some magic to get the chip into the
+> appropriate mode to drive SAS disks.
+> 
+> Seeing as no documentation is provided by Promise, adding this entry to the
+> ahci driver allows the controller to be useful to people as a SATA
+> controller (with no ill effects on the system if a SAS disk is connected -
+> probing of the port just times out with "link online but device
+> misclassified"), without having to resort to using the binary driver. Users
+> who require SAS or the proprietary software raid can get this functionality
+> using the binary driver.
+> 
+> Signed-off-by: Mark Nelson <mdnelson8@gmail.com>
+> ---
+>  drivers/ata/ahci.c |    3 +++
+>  1 file changed, 3 insertions(+)
 
-Mikael Pettersson wrote:
-> +static int pdc_pata_hardreset(struct ata_link *link, unsigned int *class,
-> +			      unsigned long deadline)
-> +{
-> +	pdc_reset_port(link->ap);
-> +	return 0;
-> +}
+applied
 
-You either need to return -EAGAIN here to ask for follow-up SRST or
-override softreset.  I think pdc_reset_port() doesn't actually reset the
-ATA channel, right?  In that case, the latter would be the correct thing
-to do.
 
-Thanks.
-
--- 
-tejun
