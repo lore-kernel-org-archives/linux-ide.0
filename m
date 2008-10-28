@@ -1,45 +1,81 @@
 From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [patch, resend] libata: Fix LBA48 on pata_it821x RAID volumes.
-Date: Mon, 27 Oct 2008 23:58:20 -0400
-Message-ID: <49068DDC.8030001@garzik.org>
-References: <20081026181019.073dd529@redhat.com>
+Subject: Re: [PATCH #upstream-fixes 2/4] libata: beef up iterators
+Date: Tue, 28 Oct 2008 00:01:35 -0400
+Message-ID: <49068E9F.1040308@garzik.org>
+References: <49041323.9020309@kernel.org> <4904135B.4040901@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:54402 "EHLO mail.dvmed.net"
+Received: from srv5.dvmed.net ([207.36.208.214]:47141 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752087AbYJ1D60 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 27 Oct 2008 23:58:26 -0400
-In-Reply-To: <20081026181019.073dd529@redhat.com>
+	id S1750793AbYJ1EBj (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 28 Oct 2008 00:01:39 -0400
+In-Reply-To: <4904135B.4040901@kernel.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Chuck Ebbert <cebbert@redhat.com>
-Cc: linux-ide@vger.kernel.org, Ondrej Zary <linux@rainbow-software.org>, Alan Cox <alan@redhat.com>
+To: Tejun Heo <tj@kernel.org>
+Cc: IDE/ATA development list <linux-ide@vger.kernel.org>
 
-Chuck Ebbert wrote:
-> From: Ondrej Zary <linux@rainbow-software.org>
+Tejun Heo wrote:
+> There currently are the following loop constructs.
 > 
-> libata: Fix LBA48 on pata_it821x RAID volumes.
+> * __ata_port_for_each_link() for all available links
+> * ata_port_for_each_link() for edge links
+> * ata_link_for_each_dev() for all devices
+> * ata_link_for_each_dev_reverse() for all devices in reverse order
 > 
-> [http://lkml.org/lkml/2008/10/18/82]
+> Now there's a need for loop construct which is similar to
+> __ata_port_for_each_link() but iterates over PMP links before the host
+> link.  Instead of adding another one with long name, do the following
+> cleanup.
 > 
-> Signed-off-by: Ondrej Zary <linux@rainbow-software.org>
-> Acked-by: Alan Cox <alan@redhat.com>
+> * Implement and export ata_link_next() and ata_dev_next() which take
+>   @mode parameter and can be used to build custom loop.
+> * Implement ata_for_each_link() and ata_for_each_dev() which take
+>   looping mode explicitly.
 > 
-> --- linux-2.6.27-orig/drivers/ata/pata_it821x.c	2008-10-18 17:09:07.000000000 +0200
-> +++ linux-2.6.27-pentium/drivers/ata/pata_it821x.c	2008-10-18 17:10:24.000000000 +0200
-> @@ -557,9 +557,8 @@
->  	if (strstr(model_num, "Integrated Technology Express")) {
->  		/* Set feature bits the firmware neglects */
->  		id[49] |= 0x0300;	/* LBA, DMA */
-> -		id[82] |= 0x0400;	/* LBA48 */
->  		id[83] &= 0x7FFF;
-> -		id[83] |= 0x4000;	/* Word 83 is valid */
-> +		id[83] |= 0x4400;	/* Word 83 is valid and LBA48 */
->  		id[86] |= 0x0400;	/* LBA48 on */
->  		id[ATA_ID_MAJOR_VER] |= 0x1F;
+> The following iteration modes are implemented.
+> 
+> * ATA_LITER_EDGE		: loop over edge links
+> * ATA_LITER_HOST_FIRST		: loop over all links, host link first
+> * ATA_LITER_PMP_FIRST		: loop over all links, PMP links first
+> 
+> * ATA_DITER_ENABLED		: loop over enabled devices
+> * ATA_DITER_ENABLED_REVERSE	: loop over enabled devices in reverse order
+> * ATA_DITER_ALL			: loop over all devices
+> * ATA_DITER_ALL_REVERSE		: loop over all devices in reverse order
+> 
+> This change removes exlicit device enabledness checks from many loops
+> and makes it clear which ones are iterated over in which direction.
+> 
+> Signed-off-by: Tejun Heo <tj@kernel.org>
+> ---
+>  drivers/ata/ahci.c           |    8 -
+>  drivers/ata/ata_generic.c    |    5 -
+>  drivers/ata/libata-acpi.c    |   19 +---
+>  drivers/ata/libata-core.c    |  183 ++++++++++++++++++++++++++++---------------
+>  drivers/ata/libata-eh.c      |   84 ++++++++-----------
+>  drivers/ata/libata-pmp.c     |   22 ++---
+>  drivers/ata/libata-scsi.c    |   22 ++---
+>  drivers/ata/pata_it821x.c    |   34 +++----
+>  drivers/ata/pata_ixp4xx_cf.c |   14 +--
+>  drivers/ata/pata_legacy.c    |   17 +--
+>  drivers/ata/pata_pdc2027x.c  |   27 ++----
+>  drivers/ata/pata_platform.c  |   14 +--
+>  drivers/ata/pata_rz1000.c    |   16 +--
+>  drivers/ata/sata_sil.c       |    2 
+>  include/linux/libata.h       |   50 +++++++----
+>  15 files changed, 279 insertions(+), 238 deletions(-)
 
-applied
+ACK... for 2.6.29.  I think this is too much change for -rc2.  It's a 
+good idea though.
+
+Also, it could use more documentation than just the commit message... 
+something that programmers can easily refer to (header file comment?)
+
+	Jeff
+
+
 
 
