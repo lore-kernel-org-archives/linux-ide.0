@@ -1,72 +1,537 @@
 From: Kel Modderman <kel@otaku42.de>
-Subject: [PATCH 5/5] storage-fixup: a Makefile
-Date: Wed, 29 Oct 2008 09:11:51 +1000
-Message-ID: <200810290911.51961.kel@otaku42.de>
+Subject: [PATCH 0/5] storage-fixup: add a new drive and some extras
+Date: Wed, 29 Oct 2008 09:07:08 +1000
+Message-ID: <200810290907.08466.kel@otaku42.de>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: Multipart/Mixed;
+  boundary="Boundary-00=_cs5BJHc9voS7Tzf"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from venema.h4ckr.net ([217.24.1.135]:43264 "EHLO venema.h4ckr.net"
+Received: from venema.h4ckr.net ([217.24.1.135]:43263 "EHLO venema.h4ckr.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752083AbYJ1Xlp (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	id S1751299AbYJ1Xlp (ORCPT <rfc822;linux-ide@vger.kernel.org>);
 	Tue, 28 Oct 2008 19:41:45 -0400
 Received: from localhost (localhost [127.0.0.1])
-	by venema.h4ckr.net (Postfix) with ESMTP id 858693067CC
-	for <linux-ide@vger.kernel.org>; Wed, 29 Oct 2008 00:12:45 +0100 (CET)
+	by venema.h4ckr.net (Postfix) with ESMTP id 80C943067C6
+	for <linux-ide@vger.kernel.org>; Wed, 29 Oct 2008 00:12:40 +0100 (CET)
 Received: from venema.h4ckr.net ([127.0.0.1])
 	by localhost (venema.h4ckr.net [127.0.0.1]) (amavisd-new, port 10024)
-	with ESMTP id cOcw85lRW6xl for <linux-ide@vger.kernel.org>;
-	Wed, 29 Oct 2008 00:12:43 +0100 (CET)
+	with ESMTP id 2JUcI9fSApjO for <linux-ide@vger.kernel.org>;
+	Wed, 29 Oct 2008 00:12:38 +0100 (CET)
 Received: from [192.168.1.99] (anikodeak.plus.com [80.229.152.168])
-	by venema.h4ckr.net (Postfix) with ESMTP id A05AF3067CD
-	for <linux-ide@vger.kernel.org>; Wed, 29 Oct 2008 00:12:39 +0100 (CET)
+	by venema.h4ckr.net (Postfix) with ESMTP id 2CB283067C4
+	for <linux-ide@vger.kernel.org>; Wed, 29 Oct 2008 00:12:37 +0100 (CET)
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
 
-Add a Makefile for convenience of installation and preparing dist. tarball.
+--Boundary-00=_cs5BJHc9voS7Tzf
+Content-Type: text/plain;
+  charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
-This could be handy for distributions/admins who want to deploy this workaround
-in a package.
+Hi Tejun,
 
-Signed-off-by: Kel Modderman <kel@otaku42.de>
----
---- /dev/null
-+++ b/Makefile
-@@ -0,0 +1,33 @@
-+#!/usr/bin/make -f
-+
-+NAME    := storage-fixup
-+FILES   := $(NAME) $(NAME).conf $(NAME).8 LICENSE Makefile
-+VERSION := $(shell /bin/bash ./$(NAME) -V)
-+BINDIR  := /usr/sbin
-+ETCDIR  := /etc
-+MANDIR  := /usr/share/man/man8
-+MKDIR   := mkdir -p
-+INSTALL := install
-+
-+all:
-+	$(info Nothing to be done, ready for "$(MAKE) install" ...)
-+
-+%.gz: %
-+	gzip -9 < $< > $@
-+
-+install: $(NAME).8.gz
-+	$(MKDIR) $(DESTDIR)$(BINDIR)
-+	$(INSTALL) -t $(DESTDIR)$(BINDIR) -m 755 $(NAME)
-+	$(MKDIR) $(DESTDIR)$(ETCDIR)
-+	$(INSTALL) -t $(DESTDIR)$(ETCDIR) -m 644 $(NAME).conf
-+	$(MKDIR) $(DESTDIR)$(MANDIR)
-+	$(INSTALL) -t $(DESTDIR)$(MANDIR) -m 644 $(NAME).8.gz
-+
-+clean:
-+	$(RM) $(NAME).8.gz
-+
-+dist: clean
-+	git-archive --format=tar --prefix=$(NAME)-$(VERSION)/ HEAD \
-+		$(FILES) | tar -C.. -xf -
-+	tar -czvf ../$(NAME)-$(VERSION).tar.gz -C.. $(NAME)-$(VERSION)/
-+	$(RM) -r ../$(NAME)-$(VERSION)/
----
+My laptop seems to suffer from too frequent head unloads, thus I find your
+workaround hack useful, wish to add my information to it as well as a small
+patch, a manpage and a Makefile (which may encourage you to run 'make dist'
+and put a proper versioned and released tarball somehwere).
+
+Attached is dmidecode and hdparm -I output.
+
+Thanks, Kel.
+
+--Boundary-00=_cs5BJHc9voS7Tzf
+Content-Type: text/plain;
+  charset="iso 8859-15";
+  name="hdparm.txt"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment;
+	filename="hdparm.txt"
+
+
+/dev/sda:
+
+ATA device, with non-removable media
+	Model Number:       ST9200420AS                             
+	Serial Number:      5SH07BHD
+	Firmware Revision:  3.AAA   
+Standards:
+	Supported: 7 6 5 4 
+	Likely used: 8
+Configuration:
+	Logical		max	current
+	cylinders	16383	16383
+	heads		16	16
+	sectors/track	63	63
+	--
+	CHS current addressable sectors:   16514064
+	LBA    user addressable sectors:  268435455
+	LBA48  user addressable sectors:  390721968
+	device size with M = 1024*1024:      190782 MBytes
+	device size with M = 1000*1000:      200049 MBytes (200 GB)
+Capabilities:
+	LBA, IORDY(can be disabled)
+	Queue depth: 32
+	Standby timer values: spec'd by Standard, no device specific minimum
+	R/W multiple sector transfer: Max = 16	Current = 16
+	Advanced power management level: 254
+	Recommended acoustic management value: 254, current value: 0
+	DMA: mdma0 mdma1 mdma2 udma0 udma1 udma2 udma3 udma4 udma5 *udma6 
+	     Cycle time: min=120ns recommended=120ns
+	PIO: pio0 pio1 pio2 pio3 pio4 
+	     Cycle time: no flow control=120ns  IORDY flow control=120ns
+Commands/features:
+	Enabled	Supported:
+	   *	SMART feature set
+	    	Security Mode feature set
+	   *	Power Management feature set
+	   *	Write cache
+	   *	Look-ahead
+	   *	Host Protected Area feature set
+	   *	WRITE_BUFFER command
+	   *	READ_BUFFER command
+	   *	DOWNLOAD_MICROCODE
+	   *	Advanced Power Management feature set
+	    	SET_MAX security extension
+	   *	48-bit Address feature set
+	   *	Device Configuration Overlay feature set
+	   *	Mandatory FLUSH_CACHE
+	   *	FLUSH_CACHE_EXT
+	   *	SMART error logging
+	   *	SMART self-test
+	   *	IDLE_IMMEDIATE with UNLOAD
+	   *	SATA-I signaling speed (1.5Gb/s)
+	   *	Native Command Queueing (NCQ)
+	   *	Phy event counters
+	    	Device-initiated interface power management
+	   *	Software settings preservation
+	   *	SMART Command Transport (SCT) feature set
+Security: 
+	Master password revision code = 65534
+		supported
+	not	enabled
+	not	locked
+		frozen
+	not	expired: security count
+	not	supported: enhanced erase
+Checksum: correct
+
+--Boundary-00=_cs5BJHc9voS7Tzf
+Content-Type: text/plain;
+  charset="iso 8859-15";
+  name="dmidecode.txt"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment;
+	filename="dmidecode.txt"
+
+# dmidecode 2.9
+SMBIOS 2.4 present.
+34 structures occupying 1772 bytes.
+Table at 0x000FC640.
+
+Handle 0x0000, DMI type 0, 24 bytes
+BIOS Information
+	Vendor: American Megatrends Inc.
+	Version: 303    
+	Release Date: 03/31/2008
+	Address: 0xF0000
+	Runtime Size: 64 kB
+	ROM Size: 1024 kB
+	Characteristics:
+		ISA is supported
+		PCI is supported
+		PNP is supported
+		BIOS is upgradeable
+		BIOS shadowing is allowed
+		ESCD support is available
+		Boot from CD is supported
+		Selectable boot is supported
+		EDD is supported
+		5.25"/1.2 MB floppy services are supported (int 13h)
+		3.5"/720 KB floppy services are supported (int 13h)
+		3.5"/2.88 MB floppy services are supported (int 13h)
+		Print screen service is supported (int 5h)
+		8042 keyboard services are supported (int 9h)
+		Printer services are supported (int 17h)
+		CGA/mono video services are supported (int 10h)
+		ACPI is supported
+		USB legacy is supported
+		Smart battery is supported
+		BIOS boot specification is supported
+		Function key-initiated network boot is supported
+		Targeted content distribution is supported
+	BIOS Revision: 3.3
+	Firmware Revision: 161.11
+
+Handle 0x0001, DMI type 1, 27 bytes
+System Information
+	Manufacturer: ASUSTeK Computer Inc.        
+	Product Name: F6S                 
+	Version: 1.0       
+	Serial Number: NF1S8308820003      
+	UUID: FE3E81DC-ED18-6C86-2180-001FC632F7CC
+	Wake-up Type: Power Switch
+	SKU Number:                     
+	Family:                     
+
+Handle 0x0002, DMI type 2, 15 bytes
+Base Board Information
+	Manufacturer: ASUSTeK Computer Inc.        
+	Product Name: F6S       
+	Version: 1.0       
+	Serial Number: BSN12345678901234567
+	Asset Tag: ATN12345678901234567
+	Features:
+		Board is a hosting board
+		Board requires at least one daughter board
+		Board is replaceable
+	Location In Chassis: MIDDLE              
+	Chassis Handle: 0x0003
+	Type: Motherboard
+	Contained Object Handles: 0
+
+Handle 0x0003, DMI type 3, 21 bytes
+Chassis Information
+	Manufacturer: ASUSTeK Computer Inc.        
+	Type: Notebook
+	Lock: Not Present
+	Version: 1.0       
+	Serial Number: CSN12345678901234567
+	Asset Tag: ATN12345678901234567
+	Boot-up State: Safe
+	Power Supply State: Safe
+	Thermal State: Other
+	Security Status: Other
+	OEM Information: 0x00000000
+	Height: Unspecified
+	Number Of Power Cords: 1
+	Contained Elements: 0
+
+Handle 0x0004, DMI type 4, 35 bytes
+Processor Information
+	Socket Designation: Socket 478
+	Type: Central Processor
+	Family: Pentium M
+	Manufacturer: Intel            
+	ID: 76 06 01 00 FF FB EB BF
+	Signature: Type 0, Family 6, Model 23, Stepping 6
+	Flags:
+		FPU (Floating-point unit on-chip)
+		VME (Virtual mode extension)
+		DE (Debugging extension)
+		PSE (Page size extension)
+		TSC (Time stamp counter)
+		MSR (Model specific registers)
+		PAE (Physical address extension)
+		MCE (Machine check exception)
+		CX8 (CMPXCHG8 instruction supported)
+		APIC (On-chip APIC hardware supported)
+		SEP (Fast system call)
+		MTRR (Memory type range registers)
+		PGE (Page global enable)
+		MCA (Machine check architecture)
+		CMOV (Conditional move instruction supported)
+		PAT (Page attribute table)
+		PSE-36 (36-bit page size extension)
+		CLFSH (CLFLUSH instruction supported)
+		DS (Debug store)
+		ACPI (ACPI supported)
+		MMX (MMX technology supported)
+		FXSR (Fast floating-point save and restore)
+		SSE (Streaming SIMD extensions)
+		SSE2 (Streaming SIMD extensions 2)
+		SS (Self-snoop)
+		HTT (Hyper-threading technology)
+		TM (Thermal monitor supported)
+		PBE (Pending break enabled)
+	Version: Intel(R) Core(TM)2 Duo CPU T8300 @ 2.40GHz          
+	Voltage: 1.2 V
+	External Clock: 200 MHz
+	Max Speed: 2400 MHz
+	Current Speed: 2400 MHz
+	Status: Populated, Enabled
+	Upgrade: Socket 423
+	L1 Cache Handle: 0x0005
+	L2 Cache Handle: 0x0006
+	L3 Cache Handle: Not Provided
+	Serial Number: PSN12345678901234567
+	Asset Tag: PATN1234567890123456
+	Part Number: PPN12345678901234567
+
+Handle 0x0005, DMI type 7, 19 bytes
+Cache Information
+	Socket Designation: L1-Cache
+	Configuration: Enabled, Not Socketed, Level 1
+	Operational Mode: Write Back
+	Location: Internal
+	Installed Size: 32 KB
+	Maximum Size: 32 KB
+	Supported SRAM Types:
+		Other
+	Installed SRAM Type: Other
+	Speed: Unknown
+	Error Correction Type: Parity
+	System Type: Data
+	Associativity: 8-way Set-associative
+
+Handle 0x0006, DMI type 7, 19 bytes
+Cache Information
+	Socket Designation: L2-Cache
+	Configuration: Enabled, Not Socketed, Level 2
+	Operational Mode: Write Back
+	Location: Internal
+	Installed Size: 3072 KB
+	Maximum Size: 3072 KB
+	Supported SRAM Types:
+		Other
+	Installed SRAM Type: Other
+	Speed: Unknown
+	Error Correction Type: Single-bit ECC
+	System Type: Unified
+	Associativity: Other
+
+Handle 0x0007, DMI type 8, 9 bytes
+Port Connector Information
+	Internal Reference Designator: J1A1
+	Internal Connector Type: None
+	External Reference Designator: PS2Mouse
+	External Connector Type: PS/2
+	Port Type: Mouse Port
+
+Handle 0x0008, DMI type 8, 9 bytes
+Port Connector Information
+	Internal Reference Designator: J1A1
+	Internal Connector Type: None
+	External Reference Designator: Keyboard
+	External Connector Type: PS/2
+	Port Type: Keyboard Port
+
+Handle 0x0009, DMI type 8, 9 bytes
+Port Connector Information
+	Internal Reference Designator: J2A2
+	Internal Connector Type: None
+	External Reference Designator: USB1
+	External Connector Type: Access Bus (USB)
+	Port Type: USB
+
+Handle 0x000A, DMI type 8, 9 bytes
+Port Connector Information
+	Internal Reference Designator: J2A2
+	Internal Connector Type: None
+	External Reference Designator: USB2
+	External Connector Type: Access Bus (USB)
+	Port Type: USB
+
+Handle 0x000B, DMI type 8, 9 bytes
+Port Connector Information
+	Internal Reference Designator: J4A1
+	Internal Connector Type: None
+	External Reference Designator: LPT 1
+	External Connector Type: DB-25 male
+	Port Type: Parallel Port ECP/EPP
+
+Handle 0x000C, DMI type 8, 9 bytes
+Port Connector Information
+	Internal Reference Designator: J2A1
+	Internal Connector Type: None
+	External Reference Designator: COM A
+	External Connector Type: DB-9 male
+	Port Type: Serial Port 16550A Compatible
+
+Handle 0x000D, DMI type 8, 9 bytes
+Port Connector Information
+	Internal Reference Designator: J6A1
+	Internal Connector Type: None
+	External Reference Designator: Audio Mic In
+	External Connector Type: Mini Jack (headphones)
+	Port Type: Audio Port
+
+Handle 0x000E, DMI type 8, 9 bytes
+Port Connector Information
+	Internal Reference Designator: J6A1
+	Internal Connector Type: None
+	External Reference Designator: Audio Line In
+	External Connector Type: Mini Jack (headphones)
+	Port Type: Audio Port
+
+Handle 0x000F, DMI type 8, 9 bytes
+Port Connector Information
+	Internal Reference Designator: J6A1
+	Internal Connector Type: None
+	External Reference Designator: Audio Line Out
+	External Connector Type: Mini Jack (headphones)
+	Port Type: Audio Port
+
+Handle 0x0010, DMI type 8, 9 bytes
+Port Connector Information
+	Internal Reference Designator: J5A1
+	Internal Connector Type: None
+	External Reference Designator: USB3
+	External Connector Type: Access Bus (USB)
+	Port Type: USB
+
+Handle 0x0011, DMI type 8, 9 bytes
+Port Connector Information
+	Internal Reference Designator: J5A1
+	Internal Connector Type: None
+	External Reference Designator: USB4
+	External Connector Type: Access Bus (USB)
+	Port Type: USB
+
+Handle 0x0012, DMI type 8, 9 bytes
+Port Connector Information
+	Internal Reference Designator: J5A1
+	Internal Connector Type: None
+	External Reference Designator: LAN
+	External Connector Type: RJ-45
+	Port Type: Network Port
+
+Handle 0x0013, DMI type 9, 13 bytes
+System Slot Information
+	Designation: PCIE1
+	Type: x1 PCI Express
+	Current Usage: Available
+	Length: Short
+	ID: 1
+	Characteristics:
+		3.3 V is provided
+		PME signal is supported
+
+Handle 0x0014, DMI type 10, 6 bytes
+On Board Device Information
+	Type: Video
+	Status: Enabled
+	Description:   To Be Filled By O.E.M.
+
+Handle 0x0015, DMI type 10, 6 bytes
+On Board Device Information
+	Type: SCSI Controller
+	Status: Disabled
+	Description:  To Be Filled By O.E.M.
+
+Handle 0x0016, DMI type 10, 6 bytes
+On Board Device Information
+	Type: Ethernet
+	Status: Enabled
+	Description: To Be Filled By O.E.M.
+
+Handle 0x0017, DMI type 10, 6 bytes
+On Board Device Information
+	Type: Token Ring
+	Status: Enabled
+	Description:  To Be Filled By O.E.M.
+
+Handle 0x0018, DMI type 13, 22 bytes
+BIOS Language Information
+	Installable Languages: 1
+		en|US|iso8859-1
+	Currently Installed Language: en|US|iso8859-1
+
+Handle 0x0019, DMI type 16, 15 bytes
+Physical Memory Array
+	Location: System Board Or Motherboard
+	Use: System Memory
+	Error Correction Type: None
+	Maximum Capacity: 8 GB
+	Error Information Handle: Not Provided
+	Number Of Devices: 2
+
+Handle 0x001A, DMI type 19, 15 bytes
+Memory Array Mapped Address
+	Starting Address: 0x00000000000
+	Ending Address: 0x000FFFFFFFF
+	Range Size: 4 GB
+	Physical Array Handle: 0x0019
+	Partition Width: 0
+
+Handle 0x001B, DMI type 17, 27 bytes
+Memory Device
+	Array Handle: 0x0019
+	Error Information Handle: Not Provided
+	Total Width: 64 bits
+	Data Width: 64 bits
+	Size: 2048 MB
+	Form Factor: SODIMM
+	Set: None
+	Locator: SODIMM0
+	Bank Locator: BANK0
+	Type: DDR2
+	Type Detail: Synchronous
+	Speed: 667 MHz (1.5 ns)
+	Manufacturer: N/A                           
+	Serial Number: N/A                           
+	Asset Tag: N/A                           
+	Part Number: N/A                           
+
+Handle 0x001C, DMI type 20, 19 bytes
+Memory Device Mapped Address
+	Starting Address: 0x00000000400
+	Ending Address: 0x000032E87FF
+	Range Size: 52129 kB
+	Physical Device Handle: 0x001B
+	Memory Array Mapped Address Handle: 0x001A
+	Partition Row Position: Unknown
+	Interleave Position: Unknown
+	Interleaved Data Depth: Unknown
+
+Handle 0x001D, DMI type 17, 27 bytes
+Memory Device
+	Array Handle: 0x0019
+	Error Information Handle: Not Provided
+	Total Width: 64 bits
+	Data Width: 64 bits
+	Size: 2048 MB
+	Form Factor: SODIMM
+	Set: None
+	Locator: SODIMM1
+	Bank Locator: BANK1
+	Type: DDR2
+	Type Detail: Synchronous
+	Speed: 667 MHz (1.5 ns)
+	Manufacturer: N/A                           
+	Serial Number: N/A                           
+	Asset Tag: N/A                           
+	Part Number: N/A                           
+
+Handle 0x001E, DMI type 20, 19 bytes
+Memory Device Mapped Address
+	Starting Address: 0x00000000800
+	Ending Address: 0x000033173FF
+	Range Size: 52315 kB
+	Physical Device Handle: 0x001D
+	Memory Array Mapped Address Handle: 0x001A
+	Partition Row Position: Unknown
+	Interleave Position: Unknown
+	Interleaved Data Depth: Unknown
+
+Handle 0x001F, DMI type 22, 26 bytes
+Portable Battery
+	Location: Left side of System
+	Manufacturer: Nikon Battery
+	Manufacture Date: 08/11/97
+	Serial Number: NI00123
+	Name: Nikon Ultra Plus
+	Chemistry: Nickel Cadmium
+	Design Capacity: Unknown
+	Design Voltage: Unknown
+	SBDS Version: SMART Ver 0123
+	Maximum Error: Unknown
+	OEM-specific Information: 0x00000000
+
+Handle 0x0020, DMI type 200, 27 bytes
+OEM-specific Type
+	Header and Data:
+		C8 1B 20 00 01 02 03 00 00 00 00 00 00 00 00 00
+		00 00 00 00 00 00 00 00 00 00 00
+	Strings:
+		ASUSTeK Computer Inc.        
+		Notebook  
+		1.0       
+
+Handle 0x0021, DMI type 127, 4 bytes
+End Of Table
+
+
+--Boundary-00=_cs5BJHc9voS7Tzf--
