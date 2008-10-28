@@ -1,31 +1,48 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH 0/1] sata_sil: Option to use IO space to access TF registers.
-Date: Tue, 28 Oct 2008 10:56:55 +0900
-Message-ID: <49067167.8030205@kernel.org>
-References: <20081022182243.9471.87443.stgit@linux-chris2.mips.com>	<20081022221623.344aea62@lxorguk.ukuu.org.uk>	<20081022233439.GA30488@ftp.linux-mips.org> <20081023083215.74e48b03@lxorguk.ukuu.org.uk>
+Subject: Re: Accessing 3.4 TB RAID Drive
+Date: Tue, 28 Oct 2008 11:01:39 +0900
+Message-ID: <49067283.7040306@kernel.org>
+References: <4901CDDB.8000409@mindspring.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:39754 "EHLO hera.kernel.org"
+Received: from hera.kernel.org ([140.211.167.34]:51976 "EHLO hera.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752089AbYJ1B5Q (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 27 Oct 2008 21:57:16 -0400
-In-Reply-To: <20081023083215.74e48b03@lxorguk.ukuu.org.uk>
+	id S1751566AbYJ1CBp (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 27 Oct 2008 22:01:45 -0400
+In-Reply-To: <4901CDDB.8000409@mindspring.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: Chris Dearman <chris@ftp.linux-mips.org>, jgarzik@pobox.com, linux-ide@vger.kernel.org
+To: PairOfTwins <PairOfTwins@mindspring.com>
+Cc: linux-ide@vger.kernel.org
 
-Alan Cox wrote:
->>   The patch is a relatively clean work around for limitations in the
->> hardware I'm using, but I know it probably looks like just more
->> cruft from an outside perspective so I won't be championing it :)
+PairOfTwins wrote:
+> Folks (I was referred here by my local Linux group):
 > 
-> I would make the switch a runtime value personally - some network drivers
-> do this for similar reasons.
+> I'm replacing RHEL 3.2 with something newer, and need to access an
+> external eSATA RAID array (Venus T5, Sil4726 chipset) about 3.4 TB.
+> 
+> Using a RIP (Recovery Is Possible) Live CD, I was able to read the GPT
+> partition table and attempt to mount the device (though it was flagged
+> dirty), on one test system.
+> However, after installing Ubuntu Server 8.04 and 8.10 beta on a
+> production box, I'm getting lots of errors.  One big difference, though,
+> is the RIP test was using PCI eSATA card (Silicon Image Sil3124), and
+> the production box has PCI-E eSATA card (Sil3132).
+> 
+> With Ubuntu Server 8.04 fully updated, kernel 2.6.24-21-server, driver
+> sata_sil24, syslog says:
+...
+> Any hints appreciated, like what software needs updating, or shall I
+> replace PCI-E card with PCI ?
 
-I agree.  Please make it a module parameter.
+That's because sata_sil24 supports PMP and 4726 is a (weird) PMP device.
+ If you use PMP reset protocol, it reveals more about itself and when
+the device is configured in hardware raid mode, it presents pseudo
+devices on PMP links which doesn't behave in accordance with the ATA
+spec and doesn't like libata's init sequence.  Just put 4726 into JBOD
+mode and sil24 will happily see all the individual disks.
 
 Thanks.
 
