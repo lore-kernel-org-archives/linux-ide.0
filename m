@@ -1,81 +1,38 @@
 From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH #upstream-fixes 2/4] libata: beef up iterators
-Date: Tue, 28 Oct 2008 00:01:35 -0400
-Message-ID: <49068E9F.1040308@garzik.org>
-References: <49041323.9020309@kernel.org> <4904135B.4040901@kernel.org>
+Subject: Re: [PATCH #upstream-fixes 4/4] libata: perform port detach in EH
+Date: Tue, 28 Oct 2008 00:02:01 -0400
+Message-ID: <49068EB9.8040203@garzik.org>
+References: <49041323.9020309@kernel.org> <4904135B.4040901@kernel.org> <4904138E.7010905@kernel.org> <490413B9.5030602@kernel.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:47141 "EHLO mail.dvmed.net"
+Received: from srv5.dvmed.net ([207.36.208.214]:47149 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750793AbYJ1EBj (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 28 Oct 2008 00:01:39 -0400
-In-Reply-To: <4904135B.4040901@kernel.org>
+	id S1750831AbYJ1ECF (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 28 Oct 2008 00:02:05 -0400
+In-Reply-To: <490413B9.5030602@kernel.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Tejun Heo <tj@kernel.org>
 Cc: IDE/ATA development list <linux-ide@vger.kernel.org>
 
 Tejun Heo wrote:
-> There currently are the following loop constructs.
+> ata_port_detach() first made sure EH saw ATA_PFLAG_UNLOADING and then
+> assumed EH context belongs to it and performed detach operation
+> itself.  However, UNLOADING doesn't disable all of EH and this could
+> lead to problems including triggering WARN_ON()'s in EH path.
 > 
-> * __ata_port_for_each_link() for all available links
-> * ata_port_for_each_link() for edge links
-> * ata_link_for_each_dev() for all devices
-> * ata_link_for_each_dev_reverse() for all devices in reverse order
-> 
-> Now there's a need for loop construct which is similar to
-> __ata_port_for_each_link() but iterates over PMP links before the host
-> link.  Instead of adding another one with long name, do the following
-> cleanup.
-> 
-> * Implement and export ata_link_next() and ata_dev_next() which take
->   @mode parameter and can be used to build custom loop.
-> * Implement ata_for_each_link() and ata_for_each_dev() which take
->   looping mode explicitly.
-> 
-> The following iteration modes are implemented.
-> 
-> * ATA_LITER_EDGE		: loop over edge links
-> * ATA_LITER_HOST_FIRST		: loop over all links, host link first
-> * ATA_LITER_PMP_FIRST		: loop over all links, PMP links first
-> 
-> * ATA_DITER_ENABLED		: loop over enabled devices
-> * ATA_DITER_ENABLED_REVERSE	: loop over enabled devices in reverse order
-> * ATA_DITER_ALL			: loop over all devices
-> * ATA_DITER_ALL_REVERSE		: loop over all devices in reverse order
-> 
-> This change removes exlicit device enabledness checks from many loops
-> and makes it clear which ones are iterated over in which direction.
+> This patch makes port detach behave more like other EH actions such
+> that ata_port_detach() requests EH to detach and waits for completion.
 > 
 > Signed-off-by: Tejun Heo <tj@kernel.org>
 > ---
->  drivers/ata/ahci.c           |    8 -
->  drivers/ata/ata_generic.c    |    5 -
->  drivers/ata/libata-acpi.c    |   19 +---
->  drivers/ata/libata-core.c    |  183 ++++++++++++++++++++++++++++---------------
->  drivers/ata/libata-eh.c      |   84 ++++++++-----------
->  drivers/ata/libata-pmp.c     |   22 ++---
->  drivers/ata/libata-scsi.c    |   22 ++---
->  drivers/ata/pata_it821x.c    |   34 +++----
->  drivers/ata/pata_ixp4xx_cf.c |   14 +--
->  drivers/ata/pata_legacy.c    |   17 +--
->  drivers/ata/pata_pdc2027x.c  |   27 ++----
->  drivers/ata/pata_platform.c  |   14 +--
->  drivers/ata/pata_rz1000.c    |   16 +--
->  drivers/ata/sata_sil.c       |    2 
->  include/linux/libata.h       |   50 +++++++----
->  15 files changed, 279 insertions(+), 238 deletions(-)
+>  drivers/ata/libata-core.c |   23 ++++-------------------
+>  drivers/ata/libata-eh.c   |   32 +++++++++++++++++++++++++++++++-
+>  include/linux/libata.h    |    3 ++-
+>  3 files changed, 37 insertions(+), 21 deletions(-)
 
-ACK... for 2.6.29.  I think this is too much change for -rc2.  It's a 
-good idea though.
-
-Also, it could use more documentation than just the commit message... 
-something that programmers can easily refer to (header file comment?)
-
-	Jeff
-
-
+dropped patches 3-4 as well, due to dropping patch #2
 
 
