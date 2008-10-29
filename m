@@ -1,31 +1,44 @@
-From: Phil Sutter <n0-1@freewrt.org>
-Subject: Re: [PATCH] include old-style rb532 CompactFlash support
-Date: Wed, 29 Oct 2008 19:56:46 +0100
-Message-ID: <20081029185646.GA17108@nuty>
-References: <20081027205124.GB27227@nuty> <1225304359-11290-1-git-send-email-n0-1@freewrt.org>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: [PATCH 1/2] tx4938ide: Check minimum cycle time and SHWT range
+Date: Wed, 29 Oct 2008 20:12:19 +0100
+Message-ID: <200810292012.19750.bzolnier@gmail.com>
+References: <20081027.223913.128619425.anemo@mba.ocn.ne.jp> <20081027.235224.82088530.anemo@mba.ocn.ne.jp> <49064ACA.20200@ru.mvista.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from orbit.nwl.cc ([81.169.176.177]:50330 "EHLO
-	mail.ifyouseekate.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752785AbYJ2Szr (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 29 Oct 2008 14:55:47 -0400
-Received: from nuty (localhost [127.0.0.1])
-	by mail.ifyouseekate.net (Postfix) with ESMTP id 0C98C3891A92
-	for <linux-ide@vger.kernel.org>; Wed, 29 Oct 2008 19:55:44 +0100 (CET)
+Received: from yw-out-2324.google.com ([74.125.46.28]:35072 "EHLO
+	yw-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753042AbYJ2T2w (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 29 Oct 2008 15:28:52 -0400
+Received: by yw-out-2324.google.com with SMTP id 9so58729ywe.1
+        for <linux-ide@vger.kernel.org>; Wed, 29 Oct 2008 12:28:50 -0700 (PDT)
+In-Reply-To: <49064ACA.20200@ru.mvista.com>
 Content-Disposition: inline
-In-Reply-To: <1225304359-11290-1-git-send-email-n0-1@freewrt.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Cc: Atsushi Nemoto <anemo@mba.ocn.ne.jp>, linux-mips@linux-mips.org, linux-ide@vger.kernel.org, ralf@linux-mips.org
 
-On Wed, Oct 29, 2008 at 07:19:19PM +0100, Phil Sutter wrote:
-> The changes to gpio.c are rather a dirty hack - the existing code for
-> gpiolib is so broken, I could not find a way to use the set/get
-> functions to cleanly access any register other than GPIOD.
+On Tuesday 28 October 2008, Sergei Shtylyov wrote:
+> Hello.
+> 
+> Atsushi Nemoto wrote:
+> 
+> > From: Atsushi Nemoto <anemo@mba.ocn.ne.jp>
+> > Subject: [PATCH] tx4938ide: Check minimum cycle time and SHWT range (v2)
+> >
+> > SHWT value is used as address valid to -CSx assertion and -CSx to -DIOx
+> > assertion setup time, and contrarywise, -DIOx to -CSx release and -CSx
+> > release to address invalid hold time, so it actualy applies 4 times and
+> > so constitutes -DIOx recovery time.  Check requirement of the recovery
+> > time and cycle time.  Also check SHWT maximum value.
+> >
+> > Suggested-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+> > Signed-off-by: Atsushi Nemoto <anemo@mba.ocn.ne.jp>
+> >   
+> 
+> Acked-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
 
-Just read up on gpiolib: the rb532 code is not broken, gpiolib just
-doesn't support pin multiplexing. I'll contact the linux-mips list for
-the best solution.
-
-Greetings, Phil
+applied
