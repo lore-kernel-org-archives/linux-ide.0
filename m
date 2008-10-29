@@ -1,56 +1,81 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH 4/4] libata: clean up the SFF code for coding style
-Date: Wed, 29 Oct 2008 11:05:18 +0900
-Message-ID: <4907C4DE.1030702@kernel.org>
-References: <20081017180655.7781.15021.stgit@localhost.localdomain>	<20081017180903.7781.51521.stgit@localhost.localdomain>	<874p34ska1.fsf@denkblock.local>	<20081022170218.32122780@lxorguk.ukuu.org.uk>	<48FFC6DE.7060605@garzik.org> <49066FAB.2080101@kernel.org> <87zlkprqzq.fsf@denkblock.local>
+From: Borislav Petkov <petkovbb@googlemail.com>
+Subject: [RFC PATCH] ide-floppy partitions
+Date: Wed, 29 Oct 2008 08:13:19 +0100
+Message-ID: <20081029071319.GA9205@gollum.tnic>
+Reply-To: petkovbb@gmail.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:37008 "EHLO hera.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753541AbYJ2CFx (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 28 Oct 2008 22:05:53 -0400
-In-Reply-To: <87zlkprqzq.fsf@denkblock.local>
+Received: from fg-out-1718.google.com ([72.14.220.157]:55000 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752329AbYJ2HNW (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 29 Oct 2008 03:13:22 -0400
+Received: by fg-out-1718.google.com with SMTP id 19so2643692fgg.17
+        for <linux-ide@vger.kernel.org>; Wed, 29 Oct 2008 00:13:20 -0700 (PDT)
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Elias Oltmanns <eo@nebensachen.de>
-Cc: Jeff Garzik <jeff@garzik.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-ide@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: bzolnier@gmail.com, axboe@kernel.dk, linux-ide@vger.kernel.org
 
-Elias Oltmanns wrote:
-> Tejun Heo <tj@kernel.org> wrote:
->> Jeff Garzik wrote:
->>> Alan Cox wrote:
->>>>>>          if (ata_is_atapi(qc->tf.protocol) &&
->>>>>> -            !(qc->dev->flags & ATA_DFLAG_CDB_INTR))
->>>>>> +           !(qc->dev->flags & ATA_DFLAG_CDB_INTR))
->>>>> Ditto.
->>>> Its lining up the bracketing but hey I'm not fussed, just twiddling where
->>>> checkpatch warned and the like.
->>>>
->>>>>> - err_out:
->>>>>> +err_out:
->>>>> Yes, I've wondered about these myself occasionally. Personally, I don't
->>>>> insert a blank before those labels either and would be in favour of such
->>>>> a change. But do we actually have a convention regarding this matter?
->>>> CodingStyle chapter 7 which is of course overridable by Jeff ;)
->>> libata style has always matched that:  labels go in column 1, without
->>> any preceding whitespace.
->> Heh... I am the one who is always putting in the extra space there,
->> mainly because emacs dictates how I format my code. :-) I'll try to turn
->> it off.
-> 
-> (defun my-c-mode-hook ()
->   (if (and (buffer-file-name)
-> 	   (string-match "/home/eo/source/kernel/" (buffer-file-name)))
->       (c-set-style "linux")))
-> (add-hook 'c-mode-hook 'my-c-mode-hook)
-> 
-> works very nicely for me and it doesn't insert the extra blank in front
-> of labels either except for the situation where the code following the
-> label is at indentation level > 1.
+Hi Tejun,
 
-Cool, thanks a lot.  :-)
+recent changes at 0762b8bde9729f10f8e6249809660ff2ec3ad735 and around
+break ide-floppy. Since it is a removable media drive and the partition
+scan during boot returns empty (no media in the drive), when you later
+put in a disk and try to mount it, mount returns saying
+
+/dev/hdc4 is not a valid block device.
+
+Which brings me to the other possible issue: Since having a hdc4
+partition as a single FAT16 partition on a ZIP drive is the "factory
+default" you could fabricate a case where you have a partition number> 1
+as the only partition on a hard drive too, i.e. no continuous
+partition numbering and the mount would theoretically fail there too
+since, for example, there's a check in disk_get_part() which does:
+
+if (likely(partno < ptbl->len)) {
+
+and in this case the check will fail if partno >= 1 while you have only
+one partition on the disk with a number higher than the partition table
+length and the above described failure will happen too. Anyways, this is
+just a hypothesis, but it happens with the ZIP drive here so other block
+devices should behave similarly.
+
+Here's a patch that fixes the ide-floppy case a bit clumsily, I admit.
+
+---
+diff --git a/fs/block_dev.c b/fs/block_dev.c
+index 88a776f..b798ea0 100644
+--- a/fs/block_dev.c
++++ b/fs/block_dev.c
+@@ -1011,6 +1011,23 @@ static int __blkdev_get(struct block_device *bdev, fmode_t mode, int for_part)
+ 	disk = get_gendisk(bdev->bd_dev, &partno);
+ 	if (!disk)
+ 		goto out_unlock_kernel;
++
++	part = disk_get_part(disk, partno);
++	if (!part) {
++		struct block_device *whole;
++
++		mutex_lock_nested(&bdev->bd_mutex, for_part);
++		whole = bdget_disk(disk, 0);
++		ret = -ENOMEM;
++		if (!whole)
++			goto out_clear;
++		ret = __blkdev_get(whole, mode, 1);
++		if (ret)
++			goto out_clear;
++		bdev->bd_contains = whole;
++		mutex_unlock(&bdev->bd_mutex);
++	}
++
+ 	part = disk_get_part(disk, partno);
+ 	if (!part)
+ 		goto out_unlock_kernel;
+
+
 
 -- 
-tejun
+Regards/Gruss,
+    Boris.
