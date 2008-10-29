@@ -1,81 +1,57 @@
 From: Borislav Petkov <petkovbb@googlemail.com>
-Subject: [RFC PATCH] ide-floppy partitions
-Date: Wed, 29 Oct 2008 08:13:19 +0100
-Message-ID: <20081029071319.GA9205@gollum.tnic>
+Subject: [PATCH] ide-gd: re-get floppy capacity on revalidate
+Date: Wed, 29 Oct 2008 08:42:20 +0100
+Message-ID: <20081029074220.GA11117@gollum.tnic>
+References: <20081029071319.GA9205@gollum.tnic>
 Reply-To: petkovbb@gmail.com
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.157]:55000 "EHLO
+Received: from fg-out-1718.google.com ([72.14.220.158]:8779 "EHLO
 	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752329AbYJ2HNW (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 29 Oct 2008 03:13:22 -0400
-Received: by fg-out-1718.google.com with SMTP id 19so2643692fgg.17
-        for <linux-ide@vger.kernel.org>; Wed, 29 Oct 2008 00:13:20 -0700 (PDT)
+	with ESMTP id S1751701AbYJ2HmX (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 29 Oct 2008 03:42:23 -0400
+Received: by fg-out-1718.google.com with SMTP id 19so2653003fgg.17
+        for <linux-ide@vger.kernel.org>; Wed, 29 Oct 2008 00:42:22 -0700 (PDT)
 Content-Disposition: inline
+In-Reply-To: <20081029071319.GA9205@gollum.tnic>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: bzolnier@gmail.com, axboe@kernel.dk, linux-ide@vger.kernel.org
+To: bzolnier@gmail.com
+Cc: Tejun Heo <tj@kernel.org>, axboe@kernel.dk, linux-ide@vger.kernel.org
 
-Hi Tejun,
+Hi Bart,
 
-recent changes at 0762b8bde9729f10f8e6249809660ff2ec3ad735 and around
-break ide-floppy. Since it is a removable media drive and the partition
-scan during boot returns empty (no media in the drive), when you later
-put in a disk and try to mount it, mount returns saying
-
-/dev/hdc4 is not a valid block device.
-
-Which brings me to the other possible issue: Since having a hdc4
-partition as a single FAT16 partition on a ZIP drive is the "factory
-default" you could fabricate a case where you have a partition number> 1
-as the only partition on a hard drive too, i.e. no continuous
-partition numbering and the mount would theoretically fail there too
-since, for example, there's a check in disk_get_part() which does:
-
-if (likely(partno < ptbl->len)) {
-
-and in this case the check will fail if partno >= 1 while you have only
-one partition on the disk with a number higher than the partition table
-length and the above described failure will happen too. Anyways, this is
-just a hypothesis, but it happens with the ZIP drive here so other block
-devices should behave similarly.
-
-Here's a patch that fixes the ide-floppy case a bit clumsily, I admit.
+by the way we need to following in ide-gd otherwise
+rescan_partitions returns early due to the capacity being 0.
 
 ---
-diff --git a/fs/block_dev.c b/fs/block_dev.c
-index 88a776f..b798ea0 100644
---- a/fs/block_dev.c
-+++ b/fs/block_dev.c
-@@ -1011,6 +1011,23 @@ static int __blkdev_get(struct block_device *bdev, fmode_t mode, int for_part)
- 	disk = get_gendisk(bdev->bd_dev, &partno);
- 	if (!disk)
- 		goto out_unlock_kernel;
-+
-+	part = disk_get_part(disk, partno);
-+	if (!part) {
-+		struct block_device *whole;
-+
-+		mutex_lock_nested(&bdev->bd_mutex, for_part);
-+		whole = bdget_disk(disk, 0);
-+		ret = -ENOMEM;
-+		if (!whole)
-+			goto out_clear;
-+		ret = __blkdev_get(whole, mode, 1);
-+		if (ret)
-+			goto out_clear;
-+		bdev->bd_contains = whole;
-+		mutex_unlock(&bdev->bd_mutex);
-+	}
-+
- 	part = disk_get_part(disk, partno);
- 	if (!part)
- 		goto out_unlock_kernel;
+From: Borislav Petkov <petkovbb@gmail.com>
+Subject: ide-gd: re-get capacity on revalidate
 
+We need to re-get a removable media's capacity when revalidating the
+disk so that its partitions get rescanned by the block layer.
 
+Signed-off-by: Borislav Petkov <petkovbb@gmail.com>
 
+diff --git a/drivers/ide/ide-gd.c b/drivers/ide/ide-gd.c
+index 7b66628..b8078b3 100644
+--- a/drivers/ide/ide-gd.c
++++ b/drivers/ide/ide-gd.c
+@@ -281,7 +281,12 @@ static int ide_gd_media_changed(struct gendisk *disk)
+ static int ide_gd_revalidate_disk(struct gendisk *disk)
+ {
+ 	struct ide_disk_obj *idkp = ide_drv_g(disk, ide_disk_obj);
+-	set_capacity(disk, ide_gd_capacity(idkp->drive));
++	ide_drive_t *drive = idkp->drive;
++
++	if (ide_gd_media_changed(disk))
++		drive->disk_ops->get_capacity(drive);
++
++	set_capacity(disk, ide_gd_capacity(drive));
+ 	return 0;
+ }
+ 
 -- 
 Regards/Gruss,
     Boris.
