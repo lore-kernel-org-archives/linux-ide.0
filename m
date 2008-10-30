@@ -1,95 +1,32 @@
-From: Jens Axboe <jens.axboe@oracle.com>
+From: Tejun Heo <tj@kernel.org>
 Subject: Re: [PATCH] block: add timer on blkdev_dequeue_request() not elv_next_request()
-Date: Thu, 30 Oct 2008 08:29:56 +0100
-Message-ID: <20081030072956.GL31673@kernel.dk>
-References: <490927CD.2010205@kernel.org>
+Date: Thu, 30 Oct 2008 16:55:17 +0900
+Message-ID: <49096865.2050006@kernel.org>
+References: <490927CD.2010205@kernel.org> <20081030072956.GL31673@kernel.dk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from pasmtpb.tele.dk ([80.160.77.98]:55839 "EHLO pasmtpB.tele.dk"
+Received: from hera.kernel.org ([140.211.167.34]:47630 "EHLO hera.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752041AbYJ3HbI (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 30 Oct 2008 03:31:08 -0400
-Content-Disposition: inline
-In-Reply-To: <490927CD.2010205@kernel.org>
+	id S1752810AbYJ3Hzd (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 30 Oct 2008 03:55:33 -0400
+In-Reply-To: <20081030072956.GL31673@kernel.dk>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
+To: Jens Axboe <jens.axboe@oracle.com>
 Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi <linux-scsi@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>, IDE/ATA development list <linux-ide@vger.kernel.org>
 
-On Thu, Oct 30 2008, Tejun Heo wrote:
-> Block queue supports two usage models - one where block driver peeks
-> at the front of queue using elv_next_request(), processes it and
-> finishes it and the other where block driver peeks at the front of
-> queue, dequeue the request using blkdev_dequeue_request() and finishes
-> it.  The latter is more flexible as it allows the driver to process
-> multiple commands concurrently.
-> 
-> These two inconsistent usage models affect the block layer
-> implementation confusing.  For some, elv_next_request() is considered
-> the issue point while others consider blkdev_dequeue_request() the
-> issue point.
-> 
-> Till now the inconsistency mostly affect only accounting, so it didn't
-> really break anything seriously; however, with block layer timeout,
-> this inconsistency hits hard.  Block layer considers
-> elv_next_request() the issue point and adds timer but SCSI layer
-> thinks it was just peeking and when the request can't process the
-> command right away, it's just left there without further processing.
-> This makes the request dangling on the timer list and, when the timer
-> goes off, the request which the SCSI layer and below think is still on
-> the block queue ends up in the EH queue, causing various problems - EH
-> hang (failed count goes over busy count and EH never wakes up),
-> WARN_ON() and oopses as low level driver trying to handle the unknown
-> command, etc. depending on the timing.
-> 
-> As SCSI midlayer is the only user of block layer timer at the moment,
-> moving blk_add_timer() to elv_dequeue_request() fixes the problem;
-> however, this two usage models definitely need to be cleaned up in the
-> future.
-> 
-> Signed-off-by: Tejun Heo <tj@kernel.org>
-> ---
->  block/elevator.c |   12 ++++++------
->  1 file changed, 6 insertions(+), 6 deletions(-)
-> 
-> Index: work/block/elevator.c
-> ===================================================================
-> --- work.orig/block/elevator.c
-> +++ work/block/elevator.c
-> @@ -773,12 +773,6 @@ struct request *elv_next_request(struct
->  			 */
->  			rq->cmd_flags |= REQ_STARTED;
->  			blk_add_trace_rq(q, rq, BLK_TA_ISSUE);
-> -
-> -			/*
-> -			 * We are now handing the request to the hardware,
-> -			 * add the timeout handler
-> -			 */
-> -			blk_add_timer(rq);
->  		}
->  
->  		if (!q->boundary_rq || q->boundary_rq == rq) {
-> @@ -850,6 +844,12 @@ void elv_dequeue_request(struct request_
->  	 */
->  	if (blk_account_rq(rq))
->  		q->in_flight++;
-> +
-> +	/*
-> +	 * We are now handing the request to the hardware, add the
-> +	 * timeout handler.
-> +	 */
-> +	blk_add_timer(rq);
->  }
->  EXPORT_SYMBOL(elv_dequeue_request);
+Jens Axboe wrote:
+> That's actually a pretty dumb error, I'm surprised it hasn't reared its
+> ugly face in more ways. Presumably because the timeout is usually so
+> long, that we'll get to actually issuing and completing it within the
+> normal timeout anyway.
 
-That's actually a pretty dumb error, I'm surprised it hasn't reared its
-ugly face in more ways. Presumably because the timeout is usually so
-long, that we'll get to actually issuing and completing it within the
-normal timeout anyway.
+Heh... it showed its ugly face in many different ways while I was
+playing with PMP connected via a very long eSATA cable.
 
-Thanks, applied!
+Thanks.  :-)
 
 -- 
-Jens Axboe
-
+tejun
