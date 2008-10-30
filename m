@@ -1,59 +1,95 @@
-From: Randy Dunlap <randy.dunlap@oracle.com>
-Subject: [PATCH 5/7] ATA: remove excess kernel-doc notation
-Date: Wed, 29 Oct 2008 22:35:08 -0700
-Message-ID: <20081029223508.c824f8dc.randy.dunlap@oracle.com>
+From: Jens Axboe <jens.axboe@oracle.com>
+Subject: Re: [PATCH] block: add timer on blkdev_dequeue_request() not elv_next_request()
+Date: Thu, 30 Oct 2008 08:29:56 +0100
+Message-ID: <20081030072956.GL31673@kernel.dk>
+References: <490927CD.2010205@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rgminet01.oracle.com ([148.87.113.118]:47190 "EHLO
-	rgminet01.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754343AbYJ3FgH (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 30 Oct 2008 01:36:07 -0400
+Received: from pasmtpb.tele.dk ([80.160.77.98]:55839 "EHLO pasmtpB.tele.dk"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752041AbYJ3HbI (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 30 Oct 2008 03:31:08 -0400
+Content-Disposition: inline
+In-Reply-To: <490927CD.2010205@kernel.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: ide <linux-ide@vger.kernel.org>
-Cc: akpm <akpm@linux-foundation.org>, jgarzik <jgarzik@pobox.com>
+To: Tejun Heo <tj@kernel.org>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi <linux-scsi@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>, IDE/ATA development list <linux-ide@vger.kernel.org>
 
-From: Randy Dunlap <randy.dunlap@oracle.com>
+On Thu, Oct 30 2008, Tejun Heo wrote:
+> Block queue supports two usage models - one where block driver peeks
+> at the front of queue using elv_next_request(), processes it and
+> finishes it and the other where block driver peeks at the front of
+> queue, dequeue the request using blkdev_dequeue_request() and finishes
+> it.  The latter is more flexible as it allows the driver to process
+> multiple commands concurrently.
+> 
+> These two inconsistent usage models affect the block layer
+> implementation confusing.  For some, elv_next_request() is considered
+> the issue point while others consider blkdev_dequeue_request() the
+> issue point.
+> 
+> Till now the inconsistency mostly affect only accounting, so it didn't
+> really break anything seriously; however, with block layer timeout,
+> this inconsistency hits hard.  Block layer considers
+> elv_next_request() the issue point and adds timer but SCSI layer
+> thinks it was just peeking and when the request can't process the
+> command right away, it's just left there without further processing.
+> This makes the request dangling on the timer list and, when the timer
+> goes off, the request which the SCSI layer and below think is still on
+> the block queue ends up in the EH queue, causing various problems - EH
+> hang (failed count goes over busy count and EH never wakes up),
+> WARN_ON() and oopses as low level driver trying to handle the unknown
+> command, etc. depending on the timing.
+> 
+> As SCSI midlayer is the only user of block layer timer at the moment,
+> moving blk_add_timer() to elv_dequeue_request() fixes the problem;
+> however, this two usage models definitely need to be cleaned up in the
+> future.
+> 
+> Signed-off-by: Tejun Heo <tj@kernel.org>
+> ---
+>  block/elevator.c |   12 ++++++------
+>  1 file changed, 6 insertions(+), 6 deletions(-)
+> 
+> Index: work/block/elevator.c
+> ===================================================================
+> --- work.orig/block/elevator.c
+> +++ work/block/elevator.c
+> @@ -773,12 +773,6 @@ struct request *elv_next_request(struct
+>  			 */
+>  			rq->cmd_flags |= REQ_STARTED;
+>  			blk_add_trace_rq(q, rq, BLK_TA_ISSUE);
+> -
+> -			/*
+> -			 * We are now handing the request to the hardware,
+> -			 * add the timeout handler
+> -			 */
+> -			blk_add_timer(rq);
+>  		}
+>  
+>  		if (!q->boundary_rq || q->boundary_rq == rq) {
+> @@ -850,6 +844,12 @@ void elv_dequeue_request(struct request_
+>  	 */
+>  	if (blk_account_rq(rq))
+>  		q->in_flight++;
+> +
+> +	/*
+> +	 * We are now handing the request to the hardware, add the
+> +	 * timeout handler.
+> +	 */
+> +	blk_add_timer(rq);
+>  }
+>  EXPORT_SYMBOL(elv_dequeue_request);
 
-Remove excess kernel-doc function parameter notation from drivers/ata/:
+That's actually a pretty dumb error, I'm surprised it hasn't reared its
+ugly face in more ways. Presumably because the timeout is usually so
+long, that we'll get to actually issuing and completing it within the
+normal timeout anyway.
 
-Warning(drivers/ata/libata-core.c:1622): Excess function parameter or struct member 'fn' description in 'ata_pio_queue_task'
-Warning(drivers/ata/libata-core.c:4655): Excess function parameter or struct member 'err_mask' description in 'ata_qc_complete'
-Warning(drivers/ata/ata_piix.c:751): Excess function parameter or struct member 'udma' description in 'do_pata_set_dmamode'
+Thanks, applied!
 
-Signed-off-by: Randy Dunlap <randy.dunlap@oracle.com>
----
- drivers/ata/ata_piix.c    |    1 -
- drivers/ata/libata-core.c |    2 --
- 2 files changed, 3 deletions(-)
+-- 
+Jens Axboe
 
---- lin2628-rc2.orig/drivers/ata/ata_piix.c
-+++ lin2628-rc2/drivers/ata/ata_piix.c
-@@ -738,7 +738,6 @@ static void piix_set_piomode(struct ata_
-  *	do_pata_set_dmamode - Initialize host controller PATA PIO timings
-  *	@ap: Port whose timings we are configuring
-  *	@adev: Drive in question
-- *	@udma: udma mode, 0 - 6
-  *	@isich: set if the chip is an ICH device
-  *
-  *	Set UDMA mode for device, in host controller PCI config space.
---- lin2628-rc2.orig/drivers/ata/libata-core.c
-+++ lin2628-rc2/drivers/ata/libata-core.c
-@@ -1602,7 +1602,6 @@ unsigned long ata_id_xfermask(const u16 
- /**
-  *	ata_pio_queue_task - Queue port_task
-  *	@ap: The ata_port to queue port_task for
-- *	@fn: workqueue function to be scheduled
-  *	@data: data for @fn to use
-  *	@delay: delay time in msecs for workqueue function
-  *
-@@ -4643,7 +4642,6 @@ static void ata_verify_xfer(struct ata_q
- /**
-  *	ata_qc_complete - Complete an active ATA command
-  *	@qc: Command to complete
-- *	@err_mask: ATA Status register contents
-  *
-  *	Indicate to the mid and upper layers that an ATA
-  *	command has completed, with either an ok or not-ok status.
