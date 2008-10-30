@@ -1,81 +1,59 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH] block: add timer on blkdev_dequeue_request() not elv_next_request()
-Date: Thu, 30 Oct 2008 12:19:41 +0900
-Message-ID: <490927CD.2010205@kernel.org>
+From: Randy Dunlap <randy.dunlap@oracle.com>
+Subject: [PATCH 5/7] ATA: remove excess kernel-doc notation
+Date: Wed, 29 Oct 2008 22:35:08 -0700
+Message-ID: <20081029223508.c824f8dc.randy.dunlap@oracle.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:42447 "EHLO hera.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752345AbYJ3DTv (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 29 Oct 2008 23:19:51 -0400
+Received: from rgminet01.oracle.com ([148.87.113.118]:47190 "EHLO
+	rgminet01.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754343AbYJ3FgH (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 30 Oct 2008 01:36:07 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jens Axboe <jens.axboe@oracle.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi <linux-scsi@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>, IDE
+To: ide <linux-ide@vger.kernel.org>
+Cc: akpm <akpm@linux-foundation.org>, jgarzik <jgarzik@pobox.com>
 
-Block queue supports two usage models - one where block driver peeks
-at the front of queue using elv_next_request(), processes it and
-finishes it and the other where block driver peeks at the front of
-queue, dequeue the request using blkdev_dequeue_request() and finishes
-it.  The latter is more flexible as it allows the driver to process
-multiple commands concurrently.
+From: Randy Dunlap <randy.dunlap@oracle.com>
 
-These two inconsistent usage models affect the block layer
-implementation confusing.  For some, elv_next_request() is considered
-the issue point while others consider blkdev_dequeue_request() the
-issue point.
+Remove excess kernel-doc function parameter notation from drivers/ata/:
 
-Till now the inconsistency mostly affect only accounting, so it didn't
-really break anything seriously; however, with block layer timeout,
-this inconsistency hits hard.  Block layer considers
-elv_next_request() the issue point and adds timer but SCSI layer
-thinks it was just peeking and when the request can't process the
-command right away, it's just left there without further processing.
-This makes the request dangling on the timer list and, when the timer
-goes off, the request which the SCSI layer and below think is still on
-the block queue ends up in the EH queue, causing various problems - EH
-hang (failed count goes over busy count and EH never wakes up),
-WARN_ON() and oopses as low level driver trying to handle the unknown
-command, etc. depending on the timing.
+Warning(drivers/ata/libata-core.c:1622): Excess function parameter or struct member 'fn' description in 'ata_pio_queue_task'
+Warning(drivers/ata/libata-core.c:4655): Excess function parameter or struct member 'err_mask' description in 'ata_qc_complete'
+Warning(drivers/ata/ata_piix.c:751): Excess function parameter or struct member 'udma' description in 'do_pata_set_dmamode'
 
-As SCSI midlayer is the only user of block layer timer at the moment,
-moving blk_add_timer() to elv_dequeue_request() fixes the problem;
-however, this two usage models definitely need to be cleaned up in the
-future.
-
-Signed-off-by: Tejun Heo <tj@kernel.org>
+Signed-off-by: Randy Dunlap <randy.dunlap@oracle.com>
 ---
- block/elevator.c |   12 ++++++------
- 1 file changed, 6 insertions(+), 6 deletions(-)
+ drivers/ata/ata_piix.c    |    1 -
+ drivers/ata/libata-core.c |    2 --
+ 2 files changed, 3 deletions(-)
 
-Index: work/block/elevator.c
-===================================================================
---- work.orig/block/elevator.c
-+++ work/block/elevator.c
-@@ -773,12 +773,6 @@ struct request *elv_next_request(struct
- 			 */
- 			rq->cmd_flags |= REQ_STARTED;
- 			blk_add_trace_rq(q, rq, BLK_TA_ISSUE);
--
--			/*
--			 * We are now handing the request to the hardware,
--			 * add the timeout handler
--			 */
--			blk_add_timer(rq);
- 		}
- 
- 		if (!q->boundary_rq || q->boundary_rq == rq) {
-@@ -850,6 +844,12 @@ void elv_dequeue_request(struct request_
- 	 */
- 	if (blk_account_rq(rq))
- 		q->in_flight++;
-+
-+	/*
-+	 * We are now handing the request to the hardware, add the
-+	 * timeout handler.
-+	 */
-+	blk_add_timer(rq);
- }
- EXPORT_SYMBOL(elv_dequeue_request);
- 
+--- lin2628-rc2.orig/drivers/ata/ata_piix.c
++++ lin2628-rc2/drivers/ata/ata_piix.c
+@@ -738,7 +738,6 @@ static void piix_set_piomode(struct ata_
+  *	do_pata_set_dmamode - Initialize host controller PATA PIO timings
+  *	@ap: Port whose timings we are configuring
+  *	@adev: Drive in question
+- *	@udma: udma mode, 0 - 6
+  *	@isich: set if the chip is an ICH device
+  *
+  *	Set UDMA mode for device, in host controller PCI config space.
+--- lin2628-rc2.orig/drivers/ata/libata-core.c
++++ lin2628-rc2/drivers/ata/libata-core.c
+@@ -1602,7 +1602,6 @@ unsigned long ata_id_xfermask(const u16 
+ /**
+  *	ata_pio_queue_task - Queue port_task
+  *	@ap: The ata_port to queue port_task for
+- *	@fn: workqueue function to be scheduled
+  *	@data: data for @fn to use
+  *	@delay: delay time in msecs for workqueue function
+  *
+@@ -4643,7 +4642,6 @@ static void ata_verify_xfer(struct ata_q
+ /**
+  *	ata_qc_complete - Complete an active ATA command
+  *	@qc: Command to complete
+- *	@err_mask: ATA Status register contents
+  *
+  *	Indicate to the mid and upper layers that an ATA
+  *	command has completed, with either an ok or not-ok status.
