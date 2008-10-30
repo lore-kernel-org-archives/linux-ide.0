@@ -1,83 +1,38 @@
-From: "Borislav Petkov" <petkovbb@googlemail.com>
-Subject: Re: Linux 2.6.28-rc2 lost IDE disk on old laptop
-Date: Thu, 30 Oct 2008 15:33:38 +0100
-Message-ID: <9ea470500810300733u34dab7d2rd69a8d806b85ac65@mail.gmail.com>
-References: <alpine.LFD.2.00.0810261221350.3386@nehalem.linux-foundation.org>
-	 <20081030135017.GA8325@erig.dyndns.org>
-Reply-To: petkovbb@gmail.com
+From: Elias Oltmanns <eo@nebensachen.de>
+Subject: Re: libata: Fix a potential race condition in ata_scsi_park_show()
+Date: Thu, 30 Oct 2008 22:39:23 +0100
+Message-ID: <87r65x225w.fsf@denkblock.local>
+References: <87prmgzohf.fsf@denkblock.local> <48E7CF64.4050206@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1755965AbYJ3Odw@vger.kernel.org>
-In-Reply-To: <20081030135017.GA8325@erig.dyndns.org>
-Content-Disposition: inline
-Sender: linux-kernel-owner@vger.kernel.org
-To: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Cc: IDE/ATA development list <linux-ide@vger.kernel.org>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from nebensachen.de ([195.34.83.29]:36344 "EHLO mail.nebensachen.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752472AbYJ3Vji (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 30 Oct 2008 17:39:38 -0400
+In-Reply-To: <48E7CF64.4050206@kernel.org> (Tejun Heo's message of "Sun, 05
+	Oct 2008 05:17:40 +0900")
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org
 
-Hi,
+Tejun Heo <tj@kernel.org> wrote:
+> Elias Oltmanns wrote:
+>> Peter Moulder has pointed out that there is a slight chance that a
+>
+>> negative value might be passed to jiffies_to_msecs() in
+>> ata_scsi_park_show(). This is fixed by saving the value of jiffies in a
+>> local variable, thus also reducing code since the volatile variable
+>> jiffies is accessed only once.
+>> 
+>> Signed-off-by: Elias Oltmanns <eo@nebensachen.de>
+>
+> added to #tj-upstream.  Thanks.
 
-On Thu, Oct 30, 2008 at 2:50 PM, Wolfgang Erig <Wolfgang.Erig@gmx.de> wrote:
-> Hi,
->
-> the kernel 2.6.28-rc2 does not boot on my old laptop.
-> Panic ... cannot access (301) ... aka /dev/hda1
-> The previously used version 2.6.27-rc8 runs fine.
->
-> During 'make oldconfig' I saw questions about IDE (or ATA)
-> but I see no obvious problem with my .config
->
-> Wolfgang
->
->
-> $ lspci
-> 00:00.0 Host bridge: Intel Corporation 430TX - 82439TX MTXC (rev 01)
-> 00:01.0 Bridge: Intel Corporation 82371AB/EB/MB PIIX4 ISA (rev 01)
-> 00:01.1 IDE interface: Intel Corporation 82371AB/EB/MB PIIX4 IDE (rev 01)
+Has this branch been pulled in yet? My patch, for one, is not even in
+linux-next even though it had been intended for 2.6.28 at the time.
 
-Have you tried compiling your kernel with CONFIG_BLK_DEV_PIIX enabled and
-CONFIG_IDE_GENERIC disabled?
+Regards,
 
-> 00:01.2 USB Controller: Intel Corporation 82371AB/EB/MB PIIX4 USB (rev 01)
-> 00:01.3 Bridge: Intel Corporation 82371AB/EB/MB PIIX4 ACPI (rev 01)
-> 00:06.0 VGA compatible controller: Chips and Technologies F65554 (rev c2)
-> 00:14.0 CardBus bridge: Cirrus Logic PD 6832 PCMCIA/CardBus Ctrlr (rev c1)
-> 00:14.1 CardBus bridge: Cirrus Logic PD 6832 PCMCIA/CardBus Ctrlr (rev c1)
->
-> $ egrep -i 'ide|ata' .config
-> # CONFIG_X86_MCE_NONFATAL is not set
-> # CONFIG_ATALK is not set
-> CONFIG_HAVE_IDE=y
-> CONFIG_IDE=y
-> # Please see Documentation/ide/ide.txt for help/info on IDE drives
-> # CONFIG_BLK_DEV_IDE_SATA is not set
-> CONFIG_IDE_GD=y
-> CONFIG_IDE_GD_ATA=y
-> # CONFIG_IDE_GD_ATAPI is not set
-> # CONFIG_BLK_DEV_IDECS is not set
-> CONFIG_BLK_DEV_IDECD=y
-> CONFIG_BLK_DEV_IDECD_VERBOSE_ERRORS=y
-> # CONFIG_BLK_DEV_IDETAPE is not set
-> # CONFIG_BLK_DEV_IDESCSI is not set
-> # CONFIG_IDE_TASK_IOCTL is not set
-> # CONFIG_IDE_PROC_FS is not set
-> # IDE chipset support/bugfixes
-> CONFIG_IDE_GENERIC=y
-> # CONFIG_BLK_DEV_IDEPNP is not set
-> # PCI IDE chipsets support
-> # Other IDE chipsets support
-> # CONFIG_BLK_DEV_IDEDMA is not set
-> # CONFIG_ATA is not set
-> # CONFIG_VIDEO_DEV is not set
-> # CONFIG_VIDEO_MEDIA is not set
-> CONFIG_VIDEO_OUTPUT_CONTROL=m
-> # CONFIG_USB_STORAGE_DATAFAB is not set
-> # CONFIG_USB_STORAGE_CYPRESS_ATACB is not set
-> # CONFIG_PROVIDE_OHCI1394_DMA_INIT is not set
-> # Authenticated Encryption with Associated Data
->
-
--- 
-Regards/Gruss,
-Boris
+Elias
