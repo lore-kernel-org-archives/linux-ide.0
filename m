@@ -1,93 +1,36 @@
-From: Mikael Pettersson <mikpe@it.uu.se>
-Subject: [PATCH 2.6.28-rc2] sata_promise: add ATA engine reset to reset ops
-Date: Fri, 31 Oct 2008 08:03:55 +0100 (MET)
-Message-ID: <200810310703.m9V73tAk019180@harpo.it.uu.se>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [PATCH 0/1] sata_sil: Option to use IO space to access TF
+ registers.
+Date: Fri, 31 Oct 2008 08:48:20 +0000
+Message-ID: <20081031084820.78190319@lxorguk.ukuu.org.uk>
+References: <20081022182243.9471.87443.stgit@linux-chris2.mips.com>
+	<20081022221623.344aea62@lxorguk.ukuu.org.uk>
+	<20081022233439.GA30488@ftp.linux-mips.org>
+	<20081023083215.74e48b03@lxorguk.ukuu.org.uk>
+	<20081030225853.GA525@ftp.linux-mips.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from aun.it.uu.se ([130.238.12.36]:35741 "EHLO aun.it.uu.se"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752472AbYJaHEM (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 31 Oct 2008 03:04:12 -0400
+Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:35266 "EHLO
+	lxorguk.ukuu.org.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1752392AbYJaIsV (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 31 Oct 2008 04:48:21 -0400
+In-Reply-To: <20081030225853.GA525@ftp.linux-mips.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: jgarzik@pobox.com
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, stable@kernel.org
+To: Chris Dearman <chris@linux-mips.org>
+Cc: jgarzik@pobox.com, linux-ide@vger.kernel.org
 
-Promise ATA engines need to be reset when errors occur.
-That's currently done for errors detected by sata_promise itself,
-but it's not done for errors like timeouts detected outside of
-the low-level driver.
+On Thu, 30 Oct 2008 22:58:53 +0000
+Chris Dearman <chris@linux-mips.org> wrote:
 
-The effect of this omission is that a timeout tends to result
-in a sequence of failed COMRESETs after which libata EH gives
-up and disables the port. At that point the port's ATA engine
-hangs and even reloading the driver will not resume it.
+> On Thu, Oct 23, 2008 at 08:32:15AM +0100, Alan Cox wrote:
+> > I would make the switch a runtime value personally - some network drivers
+> > do this for similar reasons.
+> 
+> OK. Something like this?
 
-To fix this, make sata_promise override ->hardreset on SATA
-ports with code which calls pdc_reset_port() on the port in
-question before calling libata's hardreset. PATA ports don't
-use ->hardreset, so for those we override ->softreset instead.
+Yep something exactly like that. Looks good to me
 
-Signed-off-by: Mikael Pettersson <mikpe@it.uu.se>
----
-Updated to add pdc_reset_port() to ->softreset not ->hardreset
-on PATA ports. Patch title adjusted accordingly.
-
-This should also go into the 2.6.27 and 2.6.26 stable branches.
-In older branches libata EH is different and I'm seeing different
-behaviour on timeouts, so I don't think this should go in as-is
-in 2.6.25 and older.
-
- drivers/ata/sata_promise.c |   20 ++++++++++++++++++++
- 1 file changed, 20 insertions(+)
-
-diff -rupN linux-2.6.28-rc2/drivers/ata/sata_promise.c linux-2.6.28-rc2.sata_promise-proper-hardreset-v2/drivers/ata/sata_promise.c
---- linux-2.6.28-rc2/drivers/ata/sata_promise.c	2008-10-26 21:35:33.000000000 +0100
-+++ linux-2.6.28-rc2.sata_promise-proper-hardreset-v2/drivers/ata/sata_promise.c	2008-10-31 00:27:40.000000000 +0100
-@@ -153,6 +153,10 @@ static void pdc_freeze(struct ata_port *
- static void pdc_sata_freeze(struct ata_port *ap);
- static void pdc_thaw(struct ata_port *ap);
- static void pdc_sata_thaw(struct ata_port *ap);
-+static int pdc_pata_softreset(struct ata_link *link, unsigned int *class,
-+			      unsigned long deadline);
-+static int pdc_sata_hardreset(struct ata_link *link, unsigned int *class,
-+			      unsigned long deadline);
- static void pdc_error_handler(struct ata_port *ap);
- static void pdc_post_internal_cmd(struct ata_queued_cmd *qc);
- static int pdc_pata_cable_detect(struct ata_port *ap);
-@@ -186,6 +190,7 @@ static struct ata_port_operations pdc_sa
- 	.scr_read		= pdc_sata_scr_read,
- 	.scr_write		= pdc_sata_scr_write,
- 	.port_start		= pdc_sata_port_start,
-+	.hardreset		= pdc_sata_hardreset,
- };
- 
- /* First-generation chips need a more restrictive ->check_atapi_dma op */
-@@ -200,6 +205,7 @@ static struct ata_port_operations pdc_pa
- 	.freeze			= pdc_freeze,
- 	.thaw			= pdc_thaw,
- 	.port_start		= pdc_common_port_start,
-+	.softreset		= pdc_pata_softreset,
- };
- 
- static const struct ata_port_info pdc_port_info[] = {
-@@ -693,6 +699,20 @@ static void pdc_sata_thaw(struct ata_por
- 	readl(host_mmio + hotplug_offset); /* flush */
- }
- 
-+static int pdc_pata_softreset(struct ata_link *link, unsigned int *class,
-+			      unsigned long deadline)
-+{
-+	pdc_reset_port(link->ap);
-+	return ata_sff_softreset(link, class, deadline);
-+}
-+
-+static int pdc_sata_hardreset(struct ata_link *link, unsigned int *class,
-+			      unsigned long deadline)
-+{
-+	pdc_reset_port(link->ap);
-+	return sata_sff_hardreset(link, class, deadline);
-+}
-+
- static void pdc_error_handler(struct ata_port *ap)
- {
- 	if (!(ap->pflags & ATA_PFLAG_FROZEN))
+Alan
