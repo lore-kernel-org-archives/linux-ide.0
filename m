@@ -1,88 +1,51 @@
 From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: libata bridge limits
-Date: Fri, 31 Oct 2008 01:45:27 -0400
-Message-ID: <490A9B77.5070300@garzik.org>
-References: <20080826072841.GS20055@kernel.dk> <20080826104237.4b1cd7f6@lxorguk.ukuu.org.uk> <20080826101713.GW20055@kernel.dk> <48B3F7C3.6010600@wasp.net.au> <20080826124816.GA20055@kernel.dk> <48B3FD40.3000109@kernel.org> <20080826130657.GB20055@kernel.dk> <20080826135822.GE20055@kernel.dk> <48B45B33.1050703@garzik.org> <20080827132318.GH20055@kernel.dk>
+Subject: Re: [PATCH 1/2 #upstream-fixes] sata_via: fix support for 5287
+Date: Fri, 31 Oct 2008 01:45:38 -0400
+Message-ID: <490A9B82.7070704@garzik.org>
+References: <48FDF935.6010307@kernel.org> <48FDF95C.8090809@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:50922 "EHLO mail.dvmed.net"
+Received: from srv5.dvmed.net ([207.36.208.214]:50927 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752472AbYJaFpm (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 31 Oct 2008 01:45:42 -0400
-In-Reply-To: <20080827132318.GH20055@kernel.dk>
+	id S1752472AbYJaFpo (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 31 Oct 2008 01:45:44 -0400
+In-Reply-To: <48FDF95C.8090809@kernel.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jens Axboe <jens.axboe@oracle.com>
-Cc: Tejun Heo <tj@kernel.org>, Brad Campbell <brad@wasp.net.au>, Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-ide@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: IDE/ATA development list <linux-ide@vger.kernel.org>, Joseph Chan <JosephChan@via.com.tw>
 
-Jens Axboe wrote:
-> On Tue, Aug 26 2008, Jeff Garzik wrote:
->> Jens Axboe wrote:
->>> OK, something like this. Jeff, if you think this is fine, let me know
->>> and I'll submit a proper patch with description and so on.
->>>
->>> diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
->>> index 79e3a8e..879ceac 100644
->>> --- a/drivers/ata/libata-core.c
->>> +++ b/drivers/ata/libata-core.c
->>> @@ -2100,6 +2100,10 @@ retry:
->>> static inline u8 ata_dev_knobble(struct ata_device *dev)
->>> {
->>> 	struct ata_port *ap = dev->link->ap;
->>> +
->>> +	if (ata_dev_blacklisted(dev) & ATA_HORKAGE_BRIDGE_OK)
->>> +		return 0;
->>> +
->>> 	return ((ap->cbl == ATA_CBL_SATA) && (!ata_id_is_sata(dev->id)));
->>> }
->>>
->>> @@ -3998,6 +4002,9 @@ static const struct ata_blacklist_entry 
->>> ata_device_blacklist [] = {
->>> 	{ "TSSTcorp CDDVDW SH-S202N", "SB00",	  ATA_HORKAGE_IVB, },
->>> 	{ "TSSTcorp CDDVDW SH-S202N", "SB01",	  ATA_HORKAGE_IVB, },
->>>
->>> +	/* Devices that do not need bridging limits applied */
->>> +	{ "Mtron",		NULL,		0, },
->>> +
->>> 	/* End Marker */
->>> 	{ }
->>> };
->>> diff --git a/include/linux/libata.h b/include/linux/libata.h
->>> index 225bfc5..9f194c0 100644
->>> --- a/include/linux/libata.h
->>> +++ b/include/linux/libata.h
->>> @@ -364,6 +364,7 @@ enum {
->>> 	ATA_HORKAGE_IPM		= (1 << 7),	/* Link PM problems */
->>> 	ATA_HORKAGE_IVB		= (1 << 8),	/* cbl det validity bit bugs 
->>> 	*/
->>> 	ATA_HORKAGE_STUCK_ERR	= (1 << 9),	/* stuck ERR on next PACKET 
->>> 	*/
->>> +	ATA_HORKAGE_BRIDGE_OK	= (1 << 10),	/* no bridge limits */
->>>
->>> 	 /* DMA mask for user DMA control: User visible values; DO NOT
->>> 	    renumber */
->>
->> This one seems fine to me...
+Tejun Heo wrote:
+> 5287 used to be treated as vt6420 but it didn't work.  It's new family
+> of controllers called vt8251 which hosts four SATA ports as M/S of the
+> two ATA ports.  This configuration is rather peculiar in that although
+> the M/S devices are on the same port, each have its own SCR (or
+> equivalent link status/control) registers which screws up the
+> port-link-device hierarchy assumed by libata.  Another controller
+> which falls into this category is ata_piix w/ SIDPR access.
 > 
-> OK, so here's a version that I also tested. I applied the bridge ok flag
-> to MTRON MSP-SATA, that is the closest match to the 70xx and 75xx
-> series.
+> libata now has facility to deal with this class of controllers named
+> slave_link.  A low level driver for such controllers can just call
+> ata_slave_link_init() on the respective ports and libata will handle
+> all the difficult parts like following up with single SRST after
+> hardresetting both ports.
 > 
+> This patch creates new controller class vt8251, implements slave_link
+> aware init sequence and config space based SCR access for it and moves
+> 5287 to the new class.
+> 
+> This patch is based on Joseph Chan's larger patch which was created
+> before slave_link was implemented in libata.
+> 
+>   http://thread.gmane.org/gmane.linux.kernel.commits.mm/40640
+> 
+> Signed-off-by: Tejun Heo <tj@kernel.org>
+> Cc: Joseph Chan <JosephChan@via.com.tw>
 > ---
-> 
-> From: Jens Axboe <jens.axboe@oracle.com>
-> Subject: [PATCH] libata: add whitelist for devices with known good pata-sata bridges
-> 
-> libata currently imposes a UDMA5 max transfer rate and 200 sector max
-> transfer size for SATA devices that sit behind a pata-sata bridge. Lots
-> of devices have known good bridges that don't need this limit applied.
-> The MTRON SSD disks are such devices. Transfer rates are increased by
-> 20-30% with the restriction removed.
-> 
-> So add a "blacklist" entry for the MTRON devices, with a flag indicating
-> that the bridge is known good.
+>  drivers/ata/sata_via.c |  155 +++++++++++++++++++++++++++++++++++++++++++++----
+>  1 file changed, 143 insertions(+), 12 deletions(-)
 
 applied
 
