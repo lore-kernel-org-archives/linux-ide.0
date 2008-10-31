@@ -1,72 +1,145 @@
-From: Phil Sutter <n0-1@freewrt.org>
-Subject: Re: [PATCH] fix pata-rb532-cf
-Date: Fri, 31 Oct 2008 01:09:12 +0100
-Message-ID: <20081031000912.GB10620@nuty>
-References: <1225403251-15705-1-git-send-email-n0-1@freewrt.org> <490A4156.5080302@ru.mvista.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH 0/1] sata_sil: Option to use IO space to access TF	registers.
+Date: Fri, 31 Oct 2008 11:26:06 +0900
+Message-ID: <490A6CBE.8030906@kernel.org>
+References: <20081022182243.9471.87443.stgit@linux-chris2.mips.com> <20081022221623.344aea62@lxorguk.ukuu.org.uk> <20081022233439.GA30488@ftp.linux-mips.org> <20081023083215.74e48b03@lxorguk.ukuu.org.uk> <20081030225853.GA525@ftp.linux-mips.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from orbit.nwl.cc ([81.169.176.177]:48604 "EHLO
-	mail.ifyouseekate.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754116AbYJaAIJ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 30 Oct 2008 20:08:09 -0400
-Received: from nuty (localhost [127.0.0.1])
-	by mail.ifyouseekate.net (Postfix) with ESMTP id 75DE138C5FB6
-	for <linux-ide@vger.kernel.org>; Fri, 31 Oct 2008 01:08:05 +0100 (CET)
-Content-Disposition: inline
-In-Reply-To: <490A4156.5080302@ru.mvista.com>
+Received: from hera.kernel.org ([140.211.167.34]:47898 "EHLO hera.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752503AbYJaC00 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 30 Oct 2008 22:26:26 -0400
+In-Reply-To: <20081030225853.GA525@ftp.linux-mips.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Chris Dearman <chris@linux-mips.org>
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, jgarzik@pobox.com, linux-ide@vger.kernel.org
 
-Hi,
+Hello,
 
-On Fri, Oct 31, 2008 at 02:20:54AM +0300, Sergei Shtylyov wrote:
->   Some of the changes look unneeded and some just strange...
+Just some nitpickings.
 
-you're completely right, my apologies for that.
-
-> >-#define RB500_CF_REG_CMD	0x0800
-> >+#define RB500_CF_REG_BASE	0x0800
-> > #define RB500_CF_REG_CTRL	0x080E
-> > #define RB500_CF_REG_DATA	0x0C00
-> >+#define RB500_CF_REG_ERR	0x080D
-> >  
+Chris Dearman wrote:
+> sata_sil: Option to use IO space to access TF registers.
 > 
->   Hm...
-
-The original driver (see my patch) accesses 0x80D to read error codes,
-so I assumed this is correct. Indeed, the driver works also with the
-standard setting. Is there a way I can clearly verify which is the right
-offset?
-
-> >-static void rb532_pata_data_xfer(struct ata_device *adev, unsigned char 
-> >*buf,
-> >+static unsigned int rb532_pata_data_xfer(struct ata_device *adev, 
-> >unsigned char *buf,
-> > 				unsigned int buflen, int write_data)
-> > {
-> > 	struct ata_port *ap = adev->link->ap;
-> > 	void __iomem *ioaddr = ap->ioaddr.data_addr;
-> >+	unsigned int ret = buflen;
-> > 
-> > 	if (write_data) {
-> > 		for (; buflen > 0; buflen--, buf++)
-> >@@ -87,6 +94,8 @@ static void rb532_pata_data_xfer(struct ata_device 
-> >*adev, unsigned char *buf,
-> > 	}
-> > 
-> > 	rb532_pata_finish_io(adev->link->ap);
-> >+
-> >+	return ret;
-> >  
+> From: Chris Dearman <chris@linux-mips.org>
 > 
->   Totally unneeded variable.
+> Provide an alternative way to access the TaskFile registers if mmio
+> doesn't work.
+> 
+> Signed-off-by: Chris Dearman <chris@linux-mips.org>
+> ---
+> 
+>  drivers/ata/sata_sil.c |   67 ++++++++++++++++++++++++++++++++++++++++--------
+>  1 files changed, 56 insertions(+), 11 deletions(-)
+> 
+> 
+> diff --git a/drivers/ata/sata_sil.c b/drivers/ata/sata_sil.c
+> index 88bf421..79f974a 100644
+> --- a/drivers/ata/sata_sil.c
+> +++ b/drivers/ata/sata_sil.c
+> @@ -49,6 +49,10 @@
+>  #define DRV_VERSION	"2.3"
+>  
+>  enum {
+> +	SIL_IO_IDE0TF_BAR	= 0,
+> +	SIL_IO_IDE0CTL_BAR	= 1,
+> +	SIL_IO_IDE1TF_BAR	= 2,
+> +	SIL_IO_IDE1CTL_BAR	= 3,
+>  	SIL_MMIO_BAR		= 5,
+>  
+>  	/*
+> @@ -237,6 +241,18 @@ static const struct {
+>  	{ 0x2C0, 0x2CA, 0x208, 0x218, 0x244, 0x380, 0x3c8, 0x2f4, 0x3cc },
+>  	/* ... port 3 */
+>  };
 
-I wanted to preserve the behaviour of ata_sff_data_xfer(), i.e.
-returning the number of bytes written. The variable exists, because
-buflen is being decremented in the loop and therefore zero afterwards.
-Returning a static value also should be no alternative, as it could lead
-to unexpected behaviour on the caller side. So, do I miss something?
+Care to put a blank line here?
 
-Greetings, Phil
+> +/* per-port IO based register offsets */
+> +static const struct {
+> +	unsigned int tfbar;	/* ATA taskfile BAR */
+> +	unsigned int tf;	/* ATA taskfile register block */
+> +	unsigned int ctlbar;	/* ATA control/altstatus BAR */
+> +	unsigned int ctl;	/* ATA control/altstatus register block */
+> +} sil_ioport[] = {
+> +	{ SIL_IO_IDE0TF_BAR, 0, SIL_IO_IDE0CTL_BAR, 2 },
+> +	{ SIL_IO_IDE1TF_BAR, 0, SIL_IO_IDE1CTL_BAR, 2 },
+> +	{ SIL_IO_IDE0TF_BAR, 0, SIL_IO_IDE0CTL_BAR, 2 },
+> +	{ SIL_IO_IDE1TF_BAR, 0, SIL_IO_IDE1CTL_BAR, 2 }
+> +};
+>  
+>  MODULE_AUTHOR("Jeff Garzik");
+>  MODULE_DESCRIPTION("low-level driver for Silicon Image SATA controller");
+> @@ -248,6 +264,9 @@ static int slow_down;
+>  module_param(slow_down, int, 0444);
+>  MODULE_PARM_DESC(slow_down, "Sledgehammer used to work around random problems, by limiting commands to 15 sectors (0=off, 1=on)");
+>  
+> +static int tfio;
+> +module_param(tfio, int, 0444);
+> +MODULE_PARM_DESC(tfio, "Access Taskfile registers via IO space (0=off, 1=on)");
+>  
+>  static unsigned char sil_get_device_cache_line(struct pci_dev *pdev)
+>  {
+> @@ -630,7 +649,17 @@ static int sil_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
+>  	if (rc)
+>  		return rc;
+>  
+> -	rc = pcim_iomap_regions(pdev, 1 << SIL_MMIO_BAR, DRV_NAME);
+> +	if (tfio)
+> +		rc = pcim_iomap_regions(pdev,
+> +					(1 << SIL_IO_IDE0TF_BAR) |
+> +					(1 << SIL_IO_IDE0CTL_BAR) |
+> +					(1 << SIL_IO_IDE1TF_BAR) |
+> +					(1 << SIL_IO_IDE1CTL_BAR) |
+> +					(1 << SIL_MMIO_BAR),
+> +					DRV_NAME);
+> +	else
+> +		rc = pcim_iomap_regions(pdev, 1 << SIL_MMIO_BAR, DRV_NAME);
+> +
+
+You can move pcim_iomap_regions() downward such that
+pcim_iomap_regions() and ioaddr initialization can live in the same
+if/else blocks.
+
+>  	if (rc == -EBUSY)
+>  		pcim_pin_device(pdev);
+>  	if (rc)
+> @@ -649,16 +678,32 @@ static int sil_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
+>  	for (i = 0; i < host->n_ports; i++) {
+>  		struct ata_port *ap = host->ports[i];
+>  		struct ata_ioports *ioaddr = &ap->ioaddr;
+> -
+> -		ioaddr->cmd_addr = mmio_base + sil_port[i].tf;
+> -		ioaddr->altstatus_addr =
+> -		ioaddr->ctl_addr = mmio_base + sil_port[i].ctl;
+> -		ioaddr->bmdma_addr = mmio_base + sil_port[i].bmdma;
+> -		ioaddr->scr_addr = mmio_base + sil_port[i].scr;
+> -		ata_sff_std_ports(ioaddr);
+> -
+> -		ata_port_pbar_desc(ap, SIL_MMIO_BAR, -1, "mmio");
+> -		ata_port_pbar_desc(ap, SIL_MMIO_BAR, sil_port[i].tf, "tf");
+> +		void __iomem *tf_iobase = host->iomap[sil_ioport[i].tfbar];
+> +		void __iomem *ctl_iobase = host->iomap[sil_ioport[i].ctlbar];
+
+Please put a blank line here too.
+
+> +		if (tfio) {
+> +			ioaddr->cmd_addr = tf_iobase + sil_ioport[i].tf;
+> +			ioaddr->altstatus_addr =
+> +			ioaddr->ctl_addr = ctl_iobase + sil_ioport[i].ctl;
+> +			ioaddr->bmdma_addr = mmio_base + sil_port[i].bmdma;
+> +			ioaddr->scr_addr = mmio_base + sil_port[i].scr;
+
+Hmm... so, mmio access to tf and ctl don't work but bmdma and scr are
+okay?  Ah... it's those odd bytes accesses, right.  Anyways, please
+put a brief comment explanining why it's useful and
+ata_port_pbar_desc() or a dev_printk() to indicate that tfio mode is
+in use.
+
+Thanks.
+
+-- 
+tejun
