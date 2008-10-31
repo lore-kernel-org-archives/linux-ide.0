@@ -1,90 +1,48 @@
-From: "Greg Freemyer" <greg.freemyer@gmail.com>
-Subject: Re: [git patches] libata fixes
-Date: Fri, 31 Oct 2008 09:20:36 -0400
-Message-ID: <87f94c370810310620u77f2b31r85b196d7261ef75f@mail.gmail.com>
-References: <20081031054949.GA10474@havoc.gtf.org>
+From: Elad Lahav <elahav@uwaterloo.ca>
+Subject: Kernel 2.6.27: Problems with DVD drive/nVidia MCP51
+Date: Fri, 31 Oct 2008 10:02:15 -0400
+Message-ID: <490B0FE7.1020107@uwaterloo.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from yw-out-2324.google.com ([74.125.46.29]:18911 "EHLO
-	yw-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750869AbYJaNUh (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 31 Oct 2008 09:20:37 -0400
-In-Reply-To: <20081031054949.GA10474@havoc.gtf.org>
-Content-Disposition: inline
+Received: from services110.cs.uwaterloo.ca ([129.97.152.166]:38872 "EHLO
+	services110.cs.uwaterloo.ca" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751398AbYJaOAN (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 31 Oct 2008 10:00:13 -0400
+Received: from [129.97.75.6] (jethro.cs.uwaterloo.ca [129.97.75.6])
+	(authenticated bits=0)
+	by services110.cs.uwaterloo.ca (8.13.8/8.13.8) with ESMTP id m9VE09V4012447
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-ide@vger.kernel.org>; Fri, 31 Oct 2008 10:00:11 -0400 (EDT)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
+To: linux-ide@vger.kernel.org
 
-On Fri, Oct 31, 2008 at 1:49 AM, Jeff Garzik <jeff@garzik.org> wrote:
->
-> Notes:
->
-> 1) 1.5TB drive fix from Roland
->
-> 2) Tejun's sata_via brings a non-working via configuration thanks to a
->   new facility also being used in recent (ICH9/10) ata_piix.
->
->   Change is longer than one might like, but it accurately describes the
->   hardware now, the previous stuff wasn't working, and the newly added
->   support code shouldn't touch non-broken VIA controllers.
->
->
->
-> Please pull from 'upstream-linus' branch of
-> master.kernel.org:/pub/scm/linux/kernel/git/jgarzik/libata-dev.git upstream-linus
->
-> to receive the following updates:
->
->  drivers/ata/ata_piix.c    |    1 -
->  drivers/ata/libata-core.c |   11 +++-
->  drivers/ata/sata_via.c    |  155 +++++++++++++++++++++++++++++++++++++++++----
->  include/linux/libata.h    |    1 +
->  4 files changed, 152 insertions(+), 16 deletions(-)
->
-> Jens Axboe (1):
->      libata: add whitelist for devices with known good pata-sata bridges
->
-> Randy Dunlap (1):
->      ATA: remove excess kernel-doc notation
->
-> Roland Dreier (1):
->      libata: Avoid overflow in ata_tf_to_lba48() when tf->hba_lbal > 127
->
-> Tejun Heo (1):
->      sata_via: fix support for 5287
-<snip>
+After upgrading from 2.6.26.5 to 2.6.27.4, my DVD drive started having problems during 
+boot time. Here is the relevant part from dmesg:
 
-> diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-> index 2ff633c..82af701 100644
-> --- a/drivers/ata/libata-core.c
-> +++ b/drivers/ata/libata-core.c
-> @@ -1268,7 +1268,7 @@ u64 ata_tf_to_lba48(const struct ata_taskfile *tf)
->
->        sectors |= ((u64)(tf->hob_lbah & 0xff)) << 40;
->        sectors |= ((u64)(tf->hob_lbam & 0xff)) << 32;
-> -       sectors |= (tf->hob_lbal & 0xff) << 24;
-> +       sectors |= ((u64)(tf->hob_lbal & 0xff)) << 24;
->        sectors |= (tf->lbah & 0xff) << 16;
->        sectors |= (tf->lbam & 0xff) << 8;
->        sectors |= (tf->lbal & 0xff);
-<snip>
+ata2: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+ata2.00: ATAPI: HL-DT-ST DVD+/-RW GSA-T11N, A103, max UDMA/33
+ata2.00: applying bridge limits
+ata2.00: Drive reports diagnostics failure. This may indicate a drive
+ata2.00: fault or invalid emulation. Contact drive vendor for information.
+ata2.00: configured for UDMA/33
+scsi 0:0:0:0: Direct-Access     ATA      ST3250820AS      3.AD PQ: 0 ANSI: 5
+ata2.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x6 frozen
+ata2.00: cmd a0/00:00:00:24:00/00:00:00:00:00/a0 tag 0 pio 36 in
+          cdb 12 00 00 00 24 00 00 00  00 00 00 00 00 00 00 00
+          res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
+ata2.00: status: { DRDY }
+ata2: hard resetting link
+[continue ad inifitum....]
 
-That looks really serious.
+The drive is reported as "HL-DT-ST DVD+/-RW GSA-T11N, A103", connected to an nVidia MCP51 
+controller. Googling around, I found similar complaints in the past for other nVidia 
+controllers using the sata_nv driver (though I couldn't find anything about the MCP51). I 
+tried compiling the version of sata_nv that comes with 2.6.26.5, but that did not solve my 
+problems.
 
-What happens with all previous / stable kernels when connecting up a
-1.5TB drive and the user tries to use the last portion of the drive?
+I can provide further details if necessary.
 
-Greg
--- 
-Greg Freemyer
-Litigation Triage Solutions Specialist
-http://www.linkedin.com/in/gregfreemyer
-First 99 Days Litigation White Paper -
-http://www.norcrossgroup.com/forms/whitepapers/99%20Days%20whitepaper.pdf
-
-The Norcross Group
-The Intersection of Evidence & Technology
-http://www.norcrossgroup.com
+--Elad
