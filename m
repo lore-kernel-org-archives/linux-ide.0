@@ -1,33 +1,38 @@
 From: Phil Sutter <n0-1@freewrt.org>
 Subject: [PATCH] read and write data in 4-byte blocks
-Date: Sat,  1 Nov 2008 19:11:38 +0100
-Message-ID: <1225563098-11447-1-git-send-email-n0-1@freewrt.org>
-References: <1225562973-8843-1-git-send-email-n0-1@freewrt.org>
+Date: Sat,  1 Nov 2008 19:21:10 +0100
+Message-ID: <1225563670-23236-1-git-send-email-n0-1@freewrt.org>
+References: <1225563098-11447-1-git-send-email-n0-1@freewrt.org>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from orbit.nwl.cc ([81.169.176.177]:57182 "EHLO
+Received: from orbit.nwl.cc ([81.169.176.177]:56554 "EHLO
 	mail.ifyouseekate.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752010AbYKASLn (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 1 Nov 2008 14:11:43 -0400
+	with ESMTP id S1753495AbYKASVP (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 1 Nov 2008 14:21:15 -0400
 Received: from base (localhost [127.0.0.1])
-	by mail.ifyouseekate.net (Postfix) with ESMTP id 6F835386DBBE
-	for <linux-ide@vger.kernel.org>; Sat,  1 Nov 2008 19:11:42 +0100 (CET)
-In-Reply-To: <1225562973-8843-1-git-send-email-n0-1@freewrt.org>
+	by mail.ifyouseekate.net (Postfix) with ESMTP id C5CE4386DBBE
+	for <linux-ide@vger.kernel.org>; Sat,  1 Nov 2008 19:21:13 +0100 (CET)
+In-Reply-To: <1225563098-11447-1-git-send-email-n0-1@freewrt.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
+
+I forgot to include the one line changing rb532_pata_data_xfer()'s signature,
+sorry for that. So here's the correct version.
 
 * rename the offset definition to avoid abiguity with the standard ATA
   IO address
 * read and write four bytes at once
 * use writesl() and readsl() which implicitly iterate over the data
+* fix the signature of rb532_pata_data_xfer() to mach the function
+  pointer definition and return the number of bytes consumed
 
 Signed-off-by: Phil Sutter <n0-1@freewrt.org>
 ---
- drivers/ata/pata_rb532_cf.c |   17 ++++++++---------
- 1 files changed, 8 insertions(+), 9 deletions(-)
+ drivers/ata/pata_rb532_cf.c |   19 +++++++++----------
+ 1 files changed, 9 insertions(+), 10 deletions(-)
 
 diff --git a/drivers/ata/pata_rb532_cf.c b/drivers/ata/pata_rb532_cf.c
-index 7b11f40..0ae377f 100644
+index 7b11f40..e265577 100644
 --- a/drivers/ata/pata_rb532_cf.c
 +++ b/drivers/ata/pata_rb532_cf.c
 @@ -43,7 +43,8 @@
@@ -40,7 +45,14 @@ index 7b11f40..0ae377f 100644
  
  struct rb532_cf_info {
  	void __iomem	*iobase;
-@@ -80,15 +81,13 @@ static void rb532_pata_data_xfer(struct ata_device *adev, unsigned char *buf,
+@@ -74,21 +75,19 @@ static void rb532_pata_exec_command(struct ata_port *ap,
+ 	rb532_pata_finish_io(ap);
+ }
+ 
+-static void rb532_pata_data_xfer(struct ata_device *adev, unsigned char *buf,
++static unsigned int rb532_pata_data_xfer(struct ata_device *adev, unsigned char *buf,
+ 				unsigned int buflen, int write_data)
+ {
  	struct ata_port *ap = adev->link->ap;
  	void __iomem *ioaddr = ap->ioaddr.data_addr;
  
